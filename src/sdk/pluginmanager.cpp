@@ -28,6 +28,8 @@
 #include <wx/menu.h>
 #include <wx/dynlib.h>
 
+#include "dlgaboutplugin.h"
+
 #include "pluginmanager.h" // class's header file
 #include "cbplugin.h"
 #include "messagemanager.h"
@@ -36,6 +38,11 @@
 #include "pluginsconfigurationdlg.h"
 #include "configmanager.h"
 #include "managerproxy.h"
+
+#include <wx/xrc/xmlres.h>
+
+int idSettingsConfigurePlugins = XRCID("idSettingsConfigurePlugins");
+int idHelpPlugins = XRCID("idHelpPlugins");
 
 PluginManager* PluginManager::Get()
 {
@@ -60,10 +67,11 @@ void PluginManager::Free()
 }
 
 // class constructor
-PluginManager::PluginManager()
+PluginManager::PluginManager():m_ReconfiguringPlugins(false)
 {
     SC_CONSTRUCTOR_BEGIN
 	ConfigManager::AddConfiguration(_("Plugin Manager"), "/plugins");
+    Manager::Get()->GetAppWindow()->PushEventHandler(this);	
 }
 
 // class destructor
@@ -92,6 +100,7 @@ int PluginManager::ScanForPlugins(const wxString& path)
 #else
 	#define PLUGINS_MASK "*.so"
 #endif
+    m_PluginIDsMap.clear();
 
     int count = 0;
     wxDir dir(path);
@@ -386,29 +395,278 @@ int PluginManager::Configure()
     PluginsConfigurationDlg dlg(Manager::Get()->GetAppWindow());
     if (dlg.ShowModal() == wxID_CANCEL)
         return wxID_CANCEL;
-
-    // mandrav: disabled on-the-fly plugins enabling/disabling (still has glitches)
-/*
-    for (unsigned int i = 0; i < m_Plugins.GetCount(); ++i)
-    {
-        cbPlugin* plug = m_Plugins[i]->plugin;
-
-        // do not load it if the user has explicitely asked not to...
-        wxString baseKey;
-        baseKey << "/plugins/" << m_Plugins[i]->name;
-        bool loadIt = ConfigManager::Get()->Read(baseKey, true);
-
-        if (!loadIt && plug->IsAttached())
-            plug->Release(false);
-        else if (loadIt && !plug->IsAttached())
-        {
-            ConfigManager::Get()->Write("/plugins/try_to_load", plug->GetInfo()->title);
-            plug->Attach();
-        }
-    }
-    wxLogNull ln;
-    ConfigManager::Get()->DeleteEntry("/plugins/try_to_load");
-*/
     return wxID_OK;
 }
 
+void PluginManager::OnPluginLoaded(CodeBlocksEvent& event,
+    wxMenuBar *mb,wxToolBar *tb)
+{
+    SANITY_CHECK();
+    cbPlugin* plug = event.GetPlugin();
+    if (plug)
+	{
+        if (!m_ReconfiguringPlugins)
+            DoAddPlugin(plug,mb,tb);
+        wxString msg = plug->GetInfo()->title;
+        Manager::Get()->GetMessageManager()->DebugLog(_("%s plugin loaded"), msg.c_str());
+	}
+}
+
+void PluginManager::LoadPluginsToolBars(wxToolBar *toolBar)
+{
+    SANITY_CHECK();
+	for (unsigned int i = 0; i < m_Plugins.GetCount(); ++i)
+	{
+		cbPlugin* plug = m_Plugins[i]->plugin;
+		if (plug && plug->IsAttached())
+		{
+			if (plug->GetType() != ptTool)
+				BuildPluginToolBar(plug,toolBar);
+		}
+	}
+}
+
+void PluginManager::LoadPluginsMenus(wxMenuBar *menuBar)
+{
+    SANITY_CHECK();
+	for (unsigned int i = 0; i < m_Plugins.GetCount(); ++i)
+	{
+		cbPlugin* plug = m_Plugins[i]->plugin;
+		if (plug && plug->IsAttached())
+		{
+			if (plug->GetType() != ptTool)
+				BuildPluginMenu(plug,menuBar);
+		}
+	}
+}
+
+// ****************** Toolbar and Menubar plugin loading *******************
+// Loads each plugin's toolbar and menu items
+// Currently it calls each plugin's functions, but later it will be changed
+// *************************************************************************
+
+void PluginManager::BuildPluginToolBar(cbPlugin *plug,wxToolBar *toolBar)
+{
+    if(!plug || !toolBar)
+        return;
+    plug->BuildToolBar(toolBar); // to be replaced in future versions
+}
+
+void PluginManager::BuildPluginMenu(cbPlugin *plug,wxMenuBar *menuBar)
+{
+    if(!plug || !menuBar)
+        return;
+    plug->BuildMenu(menuBar); // to be replaced in future versions
+}
+
+// ******************* FUNCTIONS MOVED FROM MAIN.CPP ************************
+// These functions administrate the plugins' menus and toolbars
+// Since all they need is a pointer to a menubar to work, these don't belong
+// in main.cpp
+// **************************************************************************
+
+void PluginManager::BuildAllPluginsMenus(wxMenuBar *mbar)
+{
+    SANITY_CHECK();
+    if(!mbar) 
+        return;
+
+    int tmpidx;
+    wxMenuItem *tmpitem=0L;
+    wxMenu *plugs=0L,*settingsPlugins=0L,*pluginsM=0L;
+    
+    tmpidx=mbar->FindMenu("P&lugins");
+    if(tmpidx!=wxNOT_FOUND)
+        plugs = mbar->GetMenu(tmpidx);
+        
+    if(tmpitem = mbar->FindItem(idSettingsConfigurePlugins,NULL))
+        settingsPlugins = tmpitem->GetSubMenu();
+    if(tmpitem = mbar->FindItem(idHelpPlugins,NULL))
+        pluginsM = tmpitem->GetSubMenu();
+    
+	m_PluginsMenu = plugs ? plugs : new wxMenu();
+	m_SettingsMenu = settingsPlugins ? settingsPlugins : new wxMenu();
+	m_HelpPluginsMenu = pluginsM ? pluginsM : new wxMenu();
+
+	for (unsigned int i = 0; i < m_Plugins.GetCount(); ++i)
+	{
+		cbPlugin* plug = m_Plugins[i]->plugin;
+		if (plug && plug->IsAttached())
+		{
+            AddPluginInSettingsMenu(plug);
+            AddPluginInHelpPluginsMenu(plug);
+			if (plug->GetType() == ptTool)
+                AddPluginInPluginsMenu(plug);
+		}
+	}
+    LoadPluginsMenus(mbar);
+}
+
+// MOVED (pluginmanager.cpp) :
+void PluginManager::DoAddPlugin(cbPlugin* plugin,wxMenuBar *mbar,wxToolBar *tbar)
+{
+    SANITY_CHECK();
+
+    //m_pMsgMan->DebugLog(_("Adding plugin: %s"), plugin->GetInfo()->name.c_str());
+    AddPluginInSettingsMenu(plugin);
+    AddPluginInHelpPluginsMenu(plugin);
+    if (plugin->GetType() == ptTool)
+    {
+        AddPluginInPluginsMenu(plugin);
+    }
+    // offer menu and toolbar space for other plugins
+	else
+    {
+        // menu
+        if(mbar)
+            BuildPluginMenu(plugin,mbar);
+        // toolbar
+        if(tbar)
+            BuildPluginToolBar(plugin,tbar);
+    }
+}
+
+// MOVED (from main.cpp) :
+void PluginManager::AddPluginInMenus(wxMenu* menu, cbPlugin* plugin, wxObjectEventFunction callback, int pos)
+{
+    SANITY_CHECK();
+    if (!plugin || !menu)
+		return;
+
+    PluginIDsMap::iterator it;
+    for (it = m_PluginIDsMap.begin(); it != m_PluginIDsMap.end(); ++it)
+    {
+        if (it->second == plugin->GetInfo()->name)
+        {
+            if (menu->FindItem(it->first) != 0)
+                return;
+        }
+    }
+
+    int id = wxNewId();
+    m_PluginIDsMap[id] = plugin->GetInfo()->name;
+    if (pos == -1)
+        menu->Append(id, plugin->GetInfo()->title);
+    else
+        menu->Insert(pos, id, plugin->GetInfo()->title);
+
+    if(callback)
+        Connect( id,  wxEVT_COMMAND_MENU_SELECTED, callback );
+}
+
+// MOVED (from main.cpp) :
+void PluginManager::AddPluginInPluginsMenu(cbPlugin* plugin)
+{
+    SANITY_CHECK();
+    if(!plugin || !m_PluginsMenu) 
+        return;
+    wxObjectEventFunction PluginsMenuCallback;
+    PluginsMenuCallback=(wxObjectEventFunction)&PluginManager::OnPluginsExecuteMenu;
+        
+    // "Plugins" menu is special case because it contains "Manage plugins",
+    // which must stay at the end of the menu
+    // So we insert entries, not append...
+    
+    // this will insert a separator when the first plugin is added in the "Plugins" menu
+    if (m_PluginsMenu->GetMenuItemCount() == 1)
+        m_PluginsMenu->Insert(0, wxID_ANY, "");
+
+    AddPluginInMenus(m_PluginsMenu, plugin, PluginsMenuCallback, m_PluginsMenu->GetMenuItemCount() - 2);
+}
+
+// MOVED (from main.cpp) :
+void PluginManager::AddPluginInSettingsMenu(cbPlugin* plugin)
+{
+    SANITY_CHECK();
+    if(!plugin || !m_SettingsMenu) 
+        return;
+    if (!plugin->GetInfo()->hasConfigure)
+        return;
+    wxObjectEventFunction SettingsMenuCallback;
+    SettingsMenuCallback=(wxObjectEventFunction)&PluginManager::OnPluginSettingsMenu;
+        
+    AddPluginInMenus(m_SettingsMenu, plugin, SettingsMenuCallback);
+}
+
+// MOVED (from main.cpp) :
+void PluginManager::AddPluginInHelpPluginsMenu(cbPlugin* plugin)
+{
+    SANITY_CHECK();
+    if(!plugin || !m_HelpPluginsMenu)
+        return;
+    wxObjectEventFunction HelpMenuCallback;
+    HelpMenuCallback=(wxObjectEventFunction)&PluginManager::OnHelpPluginMenu;
+    AddPluginInMenus(m_HelpPluginsMenu, plugin, HelpMenuCallback);
+}
+
+// **************************************************************************
+
+// event handlers
+
+// MOVED (from main.cpp)
+void PluginManager::OnPluginsExecuteMenu(wxCommandEvent& event)
+{
+    SANITY_CHECK();
+    wxString pluginName = m_PluginIDsMap[event.GetId()];
+    if (!pluginName.IsEmpty())
+        ExecutePlugin(pluginName);
+    else
+        Manager::Get()->GetMessageManager()->DebugLog(_("No plugin found for ID %d"), event.GetId());
+}
+
+void PluginManager::OnPluginSettingsMenu(wxCommandEvent& event)
+{
+    SANITY_CHECK();
+    wxString pluginName = m_PluginIDsMap[event.GetId()];
+    if (!pluginName.IsEmpty())
+        ConfigurePlugin(pluginName);
+    else
+        Manager::Get()->GetMessageManager()->DebugLog(_("No plugin found for ID %d"), event.GetId());
+}
+
+void PluginManager::OnHelpPluginMenu(wxCommandEvent& event)
+{
+    SANITY_CHECK();
+    wxString pluginName = m_PluginIDsMap[event.GetId()];
+    if (!pluginName.IsEmpty())
+    {
+        const PluginInfo* pi = GetPluginInfo(pluginName);
+        if (!pi)
+        {
+            Manager::Get()->GetMessageManager()->DebugLog(_("No plugin info for %s!"), pluginName.c_str());
+            return;
+        }
+        dlgAboutPlugin* dlg = new dlgAboutPlugin(Manager::Get()->GetAppWindow(), pi);
+        dlg->ShowModal();
+        delete dlg;
+    }
+    else
+        Manager::Get()->GetMessageManager()->DebugLog(_("No plugin found for ID %d"), event.GetId());
+}
+
+bool PluginManager::ReconfigurePlugins(bool flag)
+{
+    SANITY_CHECK(false);
+    bool oldflag=m_ReconfiguringPlugins;
+    m_ReconfiguringPlugins=flag;
+    return oldflag;
+}
+
+bool PluginManager::isReconfiguringPlugins()
+{
+    SANITY_CHECK(false);
+    return m_ReconfiguringPlugins;
+}
+
+void PluginManager::DoConfigDialog()
+{
+    SANITY_CHECK();
+    // bool oldflag=ReconfigurePlugins(true);
+	if (Configure() == wxID_OK)
+	{
+        wxMessageBox(_("Changes will take effect on the next startup."),
+                    _("Information"),
+                    wxICON_INFORMATION);
+	}
+    // ReconfigurePlugins(oldflag);
+}

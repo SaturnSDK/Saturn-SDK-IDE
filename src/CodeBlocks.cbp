@@ -1371,6 +1371,16 @@
 			<Option link="0"/>
 			<Option target="sdk"/>
 		</Unit>
+		<Unit filename="sdk\dlgaboutplugin.cpp">
+			<Option compilerVar="CPP"/>
+			<Option target="sdk"/>
+		</Unit>
+		<Unit filename="sdk\dlgaboutplugin.h">
+			<Option compilerVar=""/>
+			<Option compile="0"/>
+			<Option link="0"/>
+			<Option target="sdk"/>
+		</Unit>
 		<Unit filename="sdk\editarrayfiledlg.cpp">
 			<Option compilerVar="CPP"/>
 			<Option target="sdk"/>
@@ -1993,9 +2003,11 @@
 			<Option link="0"/>
 			<Option target="src"/>
 		</Unit>
-		<Unit filename="src\dlgaboutplugin.cpp">
-			<Option compilerVar="CPP"/>
-			<Option target="src"/>
+		<Unit filename="src\dlgaboutplugin.h">
+			<Option compilerVar=""/>
+			<Option compile="0"/>
+			<Option link="0"/>
+			<Option target="sdk"/>
 		</Unit>
 		<Unit filename="src\dlgaboutplugin.h">
 			<Option compilerVar=""/>

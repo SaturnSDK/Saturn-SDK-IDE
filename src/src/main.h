@@ -10,8 +10,12 @@
 #include "../sdk/sdk_events.h"
 
 WX_DECLARE_HASH_MAP(int, wxString, wxIntegerHash, wxIntegerEqual, WindowIDsMap);
-WX_DECLARE_HASH_MAP(int, wxString, wxIntegerHash, wxIntegerEqual, PluginIDsMap);
-WX_DECLARE_HASH_MAP(cbPlugin*, wxToolBar*, wxPointerHash, wxPointerEqual, PluginToolbarsMap);
+
+// MOVED (pluginmanager.h) :
+// WX_DECLARE_HASH_MAP(int, wxString, wxIntegerHash, wxIntegerEqual, PluginIDsMap);
+
+// REMOVED (not in use) :
+// WX_DECLARE_HASH_MAP(cbPlugin*, wxToolBar*, wxPointerHash, wxPointerEqual, PluginToolbarsMap);
 
 class MainFrame : public wxMDIParentFrame
 {
@@ -82,17 +86,13 @@ class MainFrame : public wxMDIParentFrame
 		void OnProjectImportMSVS(wxCommandEvent& event);
 		void OnProjectImportMSVSWksp(wxCommandEvent& event);
 
-        void OnPluginsExecuteMenu(wxCommandEvent& event);
-
+        void OnSettingsPlugins(wxCommandEvent& event);
 		void OnSettingsEnvironment(wxCommandEvent& event);
         void OnSettingsEditor(wxCommandEvent& event);
-        void OnSettingsPlugins(wxCommandEvent& event);
-        void OnPluginSettingsMenu(wxCommandEvent& event);
         void OnSettingsImpExpConfig(wxCommandEvent& event);
 
         void OnHelpAbout(wxCommandEvent& event);
         void OnHelpTips(wxCommandEvent& event);
-        void OnHelpPluginMenu(wxCommandEvent& event);
 
         void OnSize(wxSizeEvent& event);
         void OnToggleBar(wxCommandEvent& event);
@@ -100,9 +100,7 @@ class MainFrame : public wxMDIParentFrame
         void OnFocusEditor(wxCommandEvent& event);
         void OnToggleFullScreen(wxCommandEvent& event);
         
-        // plugin events
         void OnPluginLoaded(CodeBlocksEvent& event);
-        void OnPluginUnloaded(CodeBlocksEvent& event);
 		
 		// general UpdateUI events
         void OnEditorUpdateUI(CodeBlocksEvent& event);
@@ -123,15 +121,7 @@ class MainFrame : public wxMDIParentFrame
         void CreateToolbars();
         void ScanForPlugins();
 		void AddToolbarItem(int id, const wxString& title, const wxString& shortHelp, const wxString& longHelp, const wxString& image);
-        wxMenu* RecreateMenu(wxMenuBar* mbar, const wxString& name);
 
-        void DoAddPlugin(cbPlugin* plugin);
-        void AddPluginInPluginsMenu(cbPlugin* plugin);
-        void AddPluginInSettingsMenu(cbPlugin* plugin);
-        void AddPluginInHelpPluginsMenu(cbPlugin* plugin);
-        void AddPluginInMenus(wxMenu* menu, cbPlugin* plugin, wxObjectEventFunction callback, int pos = -1);
-        void RemovePluginFromMenus(const wxString& pluginName);
-		
 		void AddEditorInWindowMenu(const wxString& filename, const wxString& title);
 		void RemoveEditorFromWindowMenu(const wxString& filename);
 		int IsEditorInWindowMenu(const wxString& filename);
@@ -162,18 +152,9 @@ class MainFrame : public wxMDIParentFrame
 		EditorManager* m_pEdMan;
 		ProjectManager* m_pPrjMan;
 		MessageManager* m_pMsgMan;
-		
-        wxToolBar* m_pToolbar;
-        PluginToolbarsMap m_PluginsTools;
-
-		WindowIDsMap m_WindowIDsMap;
-        PluginIDsMap m_PluginIDsMap;
+		wxToolBar* m_pToolbar;
+        WindowIDsMap m_WindowIDsMap;
         wxMenu* m_ToolsMenu;
-		wxMenu* m_PluginsMenu;
-        wxMenu* m_SettingsMenu;
-        wxMenu* m_HelpPluginsMenu;
-        
-        bool m_ReconfiguringPlugins;
         bool m_SmallToolBar;
 		
         DECLARE_EVENT_TABLE()

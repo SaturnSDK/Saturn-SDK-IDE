@@ -49,7 +49,8 @@
 #include "../sdk/templatemanager.h"
 #include "../sdk/toolsmanager.h"
 
-#include "dlgaboutplugin.h"
+// MOVED (pluginmanager.cpp)
+// #include "dlgaboutplugin.h" 
 #include "dlgabout.h"
 
 int idFileNew = XRCID("idFileNew");
@@ -120,11 +121,9 @@ int idProjectImportMSVSWksp = XRCID("idProjectImportMSVSWksp");
 int idSettingsEnvironment = XRCID("idSettingsEnvironment");
 int idSettingsEditor = XRCID("idSettingsEditor");
 int idPluginsManagePlugins = XRCID("idPluginsManagePlugins");
-int idSettingsConfigurePlugins = XRCID("idSettingsConfigurePlugins");
 int idSettingsImpExpConfig = XRCID("idSettingsImpExpConfig");
 
 int idHelpTips = XRCID("idHelpTips");
-int idHelpPlugins = XRCID("idHelpPlugins");
 
 int idLeftSash = XRCID("idLeftSash");
 int idBottomSash = XRCID("idBottomSash");
@@ -274,10 +273,7 @@ MainFrame::MainFrame(wxWindow* parent)
 	   m_pPrjMan(0L),
 	   m_pMsgMan(0L),
 	   m_pToolbar(0L),
-       m_ToolsMenu(0L),
-       m_SettingsMenu(0L),
-       m_HelpPluginsMenu(0L),
-       m_ReconfiguringPlugins(false)
+       m_ToolsMenu(0L)
 {
 #if defined( _MSC_VER ) && defined( _DEBUG )
 	int tmpFlag = _CrtSetDbgFlag( _CRTDBG_REPORT_FLAG );
@@ -286,6 +282,7 @@ MainFrame::MainFrame(wxWindow* parent)
 #endif
 
     m_SmallToolBar = ConfigManager::Get()->Read("/environment/toolbar_size", (long int)0) == 1;
+    Manager::Get()->Loadxrc("/resources.zip#zip:*.xrc");
 	CreateIDE();
 	m_pEdMan->SetEditorInterfaceType(eitMDI);
 
@@ -377,65 +374,20 @@ void MainFrame::CreateIDE()
         CreateToolbars();
 }
 
-wxMenu* MainFrame::RecreateMenu(wxMenuBar* mbar, const wxString& name)
-{
-    wxMenu* menu = 0;
-    int idx = mbar->FindMenu(name);
-    if (idx != wxNOT_FOUND)
-        menu = mbar->GetMenu(idx);
-
-    if (!menu)
-    {
-        menu = new wxMenu();
-        mbar->Append(menu, name);
-    }
-    else
-    {
-        while (menu->GetMenuItemCount() > 0)
-        {
-            menu->Destroy(menu->GetMenuItems()[0]);
-        }
-    }
-
-    return menu;
-}
-
 void MainFrame::CreateMenubar()
 {
 	int tmpidx;
 	wxMenuBar* mbar=0L;
-	wxMenu *tools=0L, *plugs=0L, *pluginsM=0L, *settingsPlugins=0L;
-	wxMenuItem *tmpitem=0L;
+	wxMenu *tools=0L;
 	
-    wxString resPath = ConfigManager::Get()->Read("data_path", wxEmptyString);
-    wxXmlResource *myres = wxXmlResource::Get();
-    myres->Load(resPath + "/resources.zip#zip:main_menu.xrc");
-    mbar = myres->LoadMenuBar("main_menu_bar");
-    if(!mbar)
-    {
-      mbar = new wxMenuBar(); // Some error happened.
-      SetMenuBar(mbar);
-    }
-    
+    mbar = Manager::Get()->LoadMenuBar("main_menu_bar",true);
+
     // Find Menus that we'll change later
     
     tmpidx=mbar->FindMenu("&Tools");
     if(tmpidx!=wxNOT_FOUND)
         tools = mbar->GetMenu(tmpidx);
-
-    tmpidx=mbar->FindMenu("P&lugins");
-    if(tmpidx!=wxNOT_FOUND)
-        plugs = mbar->GetMenu(tmpidx);
-        
-    if(tmpitem = mbar->FindItem(idSettingsConfigurePlugins,NULL))
-        settingsPlugins = tmpitem->GetSubMenu();
-    if(tmpitem = mbar->FindItem(idHelpPlugins,NULL))
-        pluginsM = tmpitem->GetSubMenu();
-    
 	m_ToolsMenu = tools ? tools : new wxMenu();
-	m_PluginsMenu = plugs ? plugs : new wxMenu();
-	m_SettingsMenu = settingsPlugins ? settingsPlugins : new wxMenu();
-	m_HelpPluginsMenu = pluginsM ? pluginsM : new wxMenu();
 
 	// core modules: create menus
 	m_pPrjMan->CreateMenu(mbar);
@@ -443,84 +395,25 @@ void MainFrame::CreateMenubar()
 	m_pMsgMan->CreateMenu(mbar);
 
 	// ask all plugins to rebuild their menus
-	PluginElementsArray plugins = Manager::Get()->GetPluginManager()->GetPlugins();
-	for (unsigned int i = 0; i < plugins.GetCount(); ++i)
-	{
-		cbPlugin* plug = plugins[i]->plugin;
-		if (plug && plug->IsAttached())
-		{
-			if (plug->GetType() == ptTool)
-			{
-                DoAddPlugin(plug);
-            }
-			else
-			{
-                AddPluginInSettingsMenu(plug);
-                AddPluginInHelpPluginsMenu(plug);
-				plug->BuildMenu(mbar);
-            }
-		}
-	}
 
+    Manager::Get()->GetPluginManager()->BuildAllPluginsMenus(mbar);
 	Manager::Get()->GetToolsManager()->BuildToolsMenu(m_ToolsMenu);
-
 	SetMenuBar(mbar);
     InitializeRecentFilesHistory();
 }
 
 void MainFrame::CreateToolbars()
 {
-	wxXmlResource *myres = wxXmlResource::Get();
-	if (m_pToolbar)
-	{
-		SetToolBar(0L);
-		delete m_pToolbar;
-		m_pToolbar = 0L;
-	}
-    // *** Begin new Toolbar routine ***
-    wxString resPath = ConfigManager::Get()->Read("data_path", wxEmptyString);
-    wxString xrcToolbarName = "main_toolbar";
-    if(m_SmallToolBar) // Insert logic here
-        xrcToolbarName += "_16x16";
-    myres->Load(resPath + "/resources.zip#zip:*.xrc");
-    m_pMsgMan->DebugLog("Loading toolbar...");
-    wxToolBar *mytoolbar = myres->LoadToolBar(this,xrcToolbarName);
-    
-    if(mytoolbar==0L)
-    {
-        m_pMsgMan->DebugLog(wxString("failed!"));          
-        int flags = wxTB_HORIZONTAL;
-        int major;
-        int minor;
-        // version==wxWINDOWS_NT && major==5 && minor==1 => windowsXP
-        bool isXP = wxGetOsVersion(&major, &minor) == wxWINDOWS_NT && major == 5 && minor == 1;
-        if (!isXP)
-            flags |= wxTB_FLAT;
-        mytoolbar = CreateToolBar(flags, wxID_ANY);  
-        if(m_SmallToolBar)
-            mytoolbar->SetToolBitmapSize(wxSize(16, 16));
-        else
-            mytoolbar->SetToolBitmapSize(wxSize(22, 22));        
-    }
-    
-    m_pToolbar=mytoolbar;
+	if (m_pToolbar) // This function is a one-timer now.
+        return; 
+
+    wxString xrcToolbarName = wxString("main_toolbar") + (m_SmallToolBar ? "_16x16" : "");
+    m_pToolbar = Manager::Get()->LoadToolBar(this,xrcToolbarName,m_SmallToolBar);
     SetToolBar(m_pToolbar);
-    // *** End new Toolbar routine ***
 
-//    wxString res = ConfigManager::Get()->Read("data_path") + "/images/";
 	// ask all plugins to rebuild their toolbars
-	PluginElementsArray plugins = Manager::Get()->GetPluginManager()->GetPlugins();
-	for (unsigned int i = 0; i < plugins.GetCount(); ++i)
-	{
-		cbPlugin* plug = plugins[i]->plugin;
-		if (plug && plug->IsAttached())
-		{
-			if (plug->GetType() != ptTool)
-				plug->BuildToolBar(m_pToolbar);
-		}
-	}
-
-	wxYield();
+	Manager::Get()->GetPluginManager()->LoadPluginsToolBars(m_pToolbar);
+	wxYieldIfNeeded();
 //	m_pToolbar->SetRows(2);
 	m_pToolbar->Realize();
 }
@@ -534,10 +427,9 @@ void MainFrame::AddToolbarItem(int id, const wxString& title, const wxString& sh
 
 void MainFrame::ScanForPlugins()
 {
-    m_PluginIDsMap.clear();
-    
+    // MOVED (pluginmanager.cpp) :
+    // m_PluginIDsMap.clear();
     PluginManager* m_PluginManager = Manager::Get()->GetPluginManager();
-
     wxString path = ConfigManager::Get()->Read("data_path") + "/plugins";
     m_pMsgMan->Log(_("Scanning for plugins in %s..."), path.c_str());
     int count = m_PluginManager->ScanForPlugins(path);
@@ -546,98 +438,6 @@ void MainFrame::ScanForPlugins()
     // actually load plugins
     m_PluginManager->LoadAllPlugins();
 //    m_pMsgMan->DebugLog(_("%d plugins loaded"), count);
-}
-
-void MainFrame::AddPluginInMenus(wxMenu* menu, cbPlugin* plugin, wxObjectEventFunction callback, int pos)
-{
-    if (!plugin || !menu)
-		return;
-
-    PluginIDsMap::iterator it;
-    for (it = m_PluginIDsMap.begin(); it != m_PluginIDsMap.end(); ++it)
-    {
-        if (it->second == plugin->GetInfo()->name)
-        {
-            if (menu->FindItem(it->first) != 0)
-                return;
-        }
-    }
-
-    int id = wxNewId();
-    m_PluginIDsMap[id] = plugin->GetInfo()->name;
-    if (pos == -1)
-        menu->Append(id, plugin->GetInfo()->title);
-    else
-        menu->Insert(pos, id, plugin->GetInfo()->title);
-    Connect( id,  wxEVT_COMMAND_MENU_SELECTED, callback );
-}
-
-void MainFrame::AddPluginInPluginsMenu(cbPlugin* plugin)
-{
-    // "Plugins" menu is special case because it contains "Manage plugins",
-    // which must stay at the end of the menu
-    // So we insert entries, not append...
-    
-    // this will insert a separator when the first plugin is added in the "Plugins" menu
-    if (m_PluginsMenu->GetMenuItemCount() == 1)
-        m_PluginsMenu->Insert(0, wxID_ANY, "");
-
-    AddPluginInMenus(m_PluginsMenu, plugin,
-                    (wxObjectEventFunction)(wxEventFunction)(wxCommandEventFunction)&MainFrame::OnPluginsExecuteMenu,
-                    m_PluginsMenu->GetMenuItemCount() - 2);
-}
-
-void MainFrame::AddPluginInSettingsMenu(cbPlugin* plugin)
-{
-    if(!plugin)
-        return;
-    if (!plugin->GetInfo()->hasConfigure)
-        return;
-    AddPluginInMenus(m_SettingsMenu, plugin,
-                    (wxObjectEventFunction)(wxEventFunction)(wxCommandEventFunction)&MainFrame::OnPluginSettingsMenu);
-}
-
-void MainFrame::AddPluginInHelpPluginsMenu(cbPlugin* plugin)
-{
-    AddPluginInMenus(m_HelpPluginsMenu, plugin,
-                    (wxObjectEventFunction)(wxEventFunction)(wxCommandEventFunction)&MainFrame::OnHelpPluginMenu);
-}
-
-void MainFrame::RemovePluginFromMenus(const wxString& pluginName)
-{
-    //m_pMsgMan->DebugLog("Unloading %s plugin", pluginName.c_str());
-	if (pluginName.IsEmpty())
-		return;
-	
-	// look for plugin's id
-	wxArrayInt id;
-	PluginIDsMap::iterator it = m_PluginIDsMap.begin();
-	while (it != m_PluginIDsMap.end())
-	{
-		if (pluginName.Matches(it->second))
-		{
-			id.Add(it->first);
-			PluginIDsMap::iterator it2 = it;
-			++it;
-			m_PluginIDsMap.erase(it2);
-        }
-        else
-            ++it;
-	}
-    //m_pMsgMan->DebugLog("id=%d", id);
-	if (id.GetCount() == 0)
-		return; // not found
-	
-	for (unsigned int i = 0; i < id.GetCount(); ++i)
-	{
-		Disconnect( id[i],  wxEVT_COMMAND_MENU_SELECTED,
-			(wxObjectEventFunction) (wxEventFunction) (wxCommandEventFunction)
-			&MainFrame::OnPluginsExecuteMenu );
-		m_PluginIDsMap.erase(id[i]);
-		m_PluginsMenu->Delete(id[i]);
-		m_HelpPluginsMenu->Delete(id[i]);
-		m_SettingsMenu->Delete(id[i]);
-	}
 }
 
 void MainFrame::LoadWindowState()
@@ -695,25 +495,6 @@ void MainFrame::SaveWindowState()
 
     // toolbar visibility
 	ConfigManager::Get()->Write("/main_frame/layout/toolbar_show", m_pToolbar != 0);
-}
-
-void MainFrame::DoAddPlugin(cbPlugin* plugin)
-{
-    //m_pMsgMan->DebugLog(_("Adding plugin: %s"), plugin->GetInfo()->name.c_str());
-    AddPluginInSettingsMenu(plugin);
-    AddPluginInHelpPluginsMenu(plugin);
-    if (plugin->GetType() == ptTool)
-    {
-        AddPluginInPluginsMenu(plugin);
-    }
-    // offer menu and toolbar space for other plugins
-	else
-    {
-        // menu
-        plugin->BuildMenu(GetMenuBar());
-        // toolbar
-        plugin->BuildToolBar(GetToolBar());
-    }
 }
 
 bool MainFrame::Open(const wxString& filename, bool addToHistory)
@@ -929,45 +710,6 @@ void MainFrame::TerminateRecentFilesHistory()
         if (recentFiles)
             m_FilesHistory.RemoveMenu(recentFiles);
     }
-}
-
-// event handlers
-
-void MainFrame::OnPluginsExecuteMenu(wxCommandEvent& event)
-{
-    wxString pluginName = m_PluginIDsMap[event.GetId()];
-    if (!pluginName.IsEmpty())
-        Manager::Get()->GetPluginManager()->ExecutePlugin(pluginName);
-    else
-        m_pMsgMan->DebugLog(_("No plugin found for ID %d"), event.GetId());
-}
-
-void MainFrame::OnPluginSettingsMenu(wxCommandEvent& event)
-{
-    wxString pluginName = m_PluginIDsMap[event.GetId()];
-    if (!pluginName.IsEmpty())
-        Manager::Get()->GetPluginManager()->ConfigurePlugin(pluginName);
-    else
-        m_pMsgMan->DebugLog(_("No plugin found for ID %d"), event.GetId());
-}
-
-void MainFrame::OnHelpPluginMenu(wxCommandEvent& event)
-{
-    wxString pluginName = m_PluginIDsMap[event.GetId()];
-    if (!pluginName.IsEmpty())
-    {
-        const PluginInfo* pi = Manager::Get()->GetPluginManager()->GetPluginInfo(pluginName);
-        if (!pi)
-        {
-            m_pMsgMan->DebugLog(_("No plugin info for %s!"), pluginName.c_str());
-            return;
-        }
-        dlgAboutPlugin* dlg = new dlgAboutPlugin(this, pi);
-        dlg->ShowModal();
-        delete dlg;
-    }
-    else
-        m_pMsgMan->DebugLog(_("No plugin found for ID %d"), event.GetId());
 }
 
 void MainFrame::OnSize(wxSizeEvent& WXUNUSED(event))
@@ -1683,33 +1425,8 @@ void MainFrame::OnToggleFullScreen(wxCommandEvent& event)
 
 void MainFrame::OnPluginLoaded(CodeBlocksEvent& event)
 {
-    cbPlugin* plug = event.GetPlugin();
-    if (plug)
-	{
-        if (!m_ReconfiguringPlugins)
-            DoAddPlugin(plug);
-        wxString msg = plug->GetInfo()->title;
-        m_pMsgMan->DebugLog(_("%s plugin loaded"), msg.c_str());
-	}
+    Manager::Get()->GetPluginManager()->OnPluginLoaded(event,GetMenuBar(),GetToolBar());
 }
-
-#if 0
-void MainFrame::OnPluginUnloaded(CodeBlocksEvent& event)
-{
-    cbPlugin* plug = event.GetPlugin();
-    if (plug)
-    {
-        if (!m_ReconfiguringPlugins)
-        {
-            RemovePluginFromMenus(plug->GetInfo()->name);
-            CreateToolbars();
-            CreateMenubar();
-		}
-        wxString msg = plug->GetInfo()->title;
-        m_pMsgMan->DebugLog(_("%s plugin unloaded"), msg.c_str());
-    }
-}
-#endif
 
 void MainFrame::OnSettingsEnvironment(wxCommandEvent& event)
 {
@@ -1731,18 +1448,7 @@ void MainFrame::OnSettingsEditor(wxCommandEvent& event)
 
 void MainFrame::OnSettingsPlugins(wxCommandEvent& event)
 {
-    m_ReconfiguringPlugins = true;
-	if (Manager::Get()->GetPluginManager()->Configure() == wxID_OK)
-	{
-        // mandrav: disabled on-the-fly plugins enabling/disabling (still has glitches)
-        wxMessageBox(_("Changes will take effect on the next startup."),
-                    _("Information"),
-                    wxICON_INFORMATION);
-//        wxBusyCursor busy;
-//        CreateMenubar();
-//        CreateToolbars();
-	}
-    m_ReconfiguringPlugins = false;
+    Manager::Get()->GetPluginManager()->DoConfigDialog();
 }
 
 void MainFrame::OnSettingsImpExpConfig(wxCommandEvent& event)
