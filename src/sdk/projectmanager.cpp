@@ -677,6 +677,7 @@ bool ProjectManager::CloseActiveProject(bool dontsave)
         SetProject(m_pProjects->Item(0));
     else
         SetProject(0L);
+    Manager::Get()->GetEditorManager()->RebuildOpenedFilesTree();
     return true;
 }
 
