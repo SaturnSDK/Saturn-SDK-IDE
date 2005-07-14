@@ -276,16 +276,17 @@ void DebuggerGDB::BuildModuleMenu(const ModuleType type, wxMenu* menu, const wxS
 	menu->Insert(2, idMenuDebuggerAddWatch,  s);
 }
 
-void DebuggerGDB::BuildToolBar(wxToolBar* toolBar)
+bool DebuggerGDB::BuildToolBar(wxToolBar* toolBar)
 {
     /* Loads toolbar using new Manager class functions */
 #ifdef implement_debugger_toolbar
     if (!m_IsAttached)
-		return;
+		return false;
     wxString my_16x16=Manager::isToolBar16x16(toolBar) ? "_16x16" : "";
     Manager::AddonToolBar(toolBar,wxString("debugger_toolbar")+my_16x16);
     toolBar->Realize();
 #endif    
+    return true;
 }
 
 void DebuggerGDB::DoWatches()

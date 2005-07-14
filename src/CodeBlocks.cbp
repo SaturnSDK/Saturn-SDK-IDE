@@ -111,7 +111,7 @@
 					<Add library="libcodeblocks.a"/>
 					<Add library="libstc.a"/>
 					<Add library="libwxxrc.a"/>
-					<Add library="libwxmsw$(WX_VER).a"/>
+					<Add library="wxmsw242"/>
 					<Add directory="devel"/>
 				</Linker>
 			</Target>
@@ -139,7 +139,7 @@
 					<Add library="libcodeblocks.a"/>
 					<Add library="libstc.a"/>
 					<Add library="libwxxrc.a"/>
-					<Add library="libwxmsw$(WX_VER).a"/>
+					<Add library="wxmsw242"/>
 					<Add directory="devel"/>
 				</Linker>
 			</Target>
@@ -165,7 +165,7 @@
 					<Add library="libcodeblocks.a"/>
 					<Add library="libstc.a"/>
 					<Add library="libwxxrc.a"/>
-					<Add library="libwxmsw$(WX_VER).a"/>
+					<Add library="wxmsw242"/>
 					<Add directory="devel"/>
 				</Linker>
 			</Target>
@@ -191,7 +191,7 @@
 					<Add library="libcodeblocks.a"/>
 					<Add library="libstc.a"/>
 					<Add library="libwxxrc.a"/>
-					<Add library="libwxmsw$(WX_VER).a"/>
+					<Add library="wxmsw242"/>
 					<Add directory="devel"/>
 				</Linker>
 			</Target>
@@ -217,7 +217,7 @@
 					<Add library="libcodeblocks.a"/>
 					<Add library="libstc.a"/>
 					<Add library="libwxxrc.a"/>
-					<Add library="libwxmsw$(WX_VER).a"/>
+					<Add library="wxmsw242"/>
 					<Add directory="devel"/>
 				</Linker>
 			</Target>
@@ -242,7 +242,7 @@
 					<Add option="-Wl,--add-stdcall-alias"/>
 					<Add library="codeblocks"/>
 					<Add library="wxxrc"/>
-					<Add library="wxmsw$(WX_VER)"/>
+					<Add library="wxmsw242"/>
 					<Add directory="devel"/>
 				</Linker>
 			</Target>
@@ -268,7 +268,7 @@
 					<Add library="libcodeblocks.a"/>
 					<Add library="libstc.a"/>
 					<Add library="libwxxrc.a"/>
-					<Add library="libwxmsw$(WX_VER).a"/>
+					<Add library="wxmsw242"/>
 					<Add directory="devel"/>
 				</Linker>
 			</Target>
@@ -289,7 +289,7 @@
 					<Add option="-Wl,--enable-auto-image-base"/>
 					<Add option="-Wl,--add-stdcall-alias"/>
 					<Add library="libcodeblocks.a"/>
-					<Add library="libwxmsw$(WX_VER).a"/>
+					<Add library="wxmsw242"/>
 					<Add directory="devel"/>
 				</Linker>
 			</Target>
@@ -312,7 +312,7 @@
 					<Add option="-Wl,--enable-auto-image-base"/>
 					<Add option="-Wl,--add-stdcall-alias"/>
 					<Add library="libcodeblocks.a"/>
-					<Add library="libwxmsw$(WX_VER).a"/>
+					<Add library="wxmsw242"/>
 					<Add directory="devel"/>
 				</Linker>
 			</Target>
@@ -350,6 +350,9 @@
 					<Add before="doxygen sdk.doxy"/>
 				</ExtraCommands>
 			</Target>
+			<Environment>
+				<Variable name="WX_DIR" value="C:\Devel\wxWindows-2.4.2"/>
+			</Environment>
 		</Build>
 		<Compiler>
 			<Add option="-Wall"/>
@@ -362,10 +365,19 @@
 			<Add option="-D__GNUWIN32__"/>
 			<Add option="-D__WXMSW__"/>
 			<Add option="-DWXUSINGDLL"/>
+			<Add directory="..\..\wxDockit\include"/>
+			<Add directory="$(WX_DIR)\include"/>
+			<Add directory="$(WX_DIR)\lib\mswdll"/>
+			<Add directory="$(WX_DIR)\contrib\include"/>
 		</Compiler>
+		<ResourceCompiler>
+			<Add directory="$(WX_DIR)\include"/>
+		</ResourceCompiler>
 		<Linker>
-			<Add library="libwxmsw$(WX_VER).a"/>
+			<Add library="wxmsw242"/>
 			<Add directory="sdk\tinyxml"/>
+			<Add directory="..\..\wxDockit\lib"/>
+			<Add directory="$(WX_DIR)\lib"/>
 		</Linker>
 		<Unit filename="devel\share\CodeBlocks\images\codecompletion\README.txt">
 			<Option compilerVar=""/>
@@ -862,16 +874,6 @@
 			<Option target="plugin_CompilerGCC"/>
 		</Unit>
 		<Unit filename="plugins\compilergcc\compileroptionsdlg.h">
-			<Option compilerVar=""/>
-			<Option compile="0"/>
-			<Option link="0"/>
-			<Option target="plugin_CompilerGCC"/>
-		</Unit>
-		<Unit filename="plugins\compilergcc\customvars.cpp">
-			<Option compilerVar="CPP"/>
-			<Option target="plugin_CompilerGCC"/>
-		</Unit>
-		<Unit filename="plugins\compilergcc\customvars.h">
 			<Option compilerVar=""/>
 			<Option compile="0"/>
 			<Option link="0"/>
@@ -1579,6 +1581,16 @@
 			<Option link="0"/>
 			<Option target="sdk"/>
 		</Unit>
+		<Unit filename="sdk\customvars.cpp">
+			<Option compilerVar="CPP"/>
+			<Option target="sdk"/>
+		</Unit>
+		<Unit filename="sdk\customvars.h">
+			<Option compilerVar=""/>
+			<Option compile="0"/>
+			<Option link="0"/>
+			<Option target="sdk"/>
+		</Unit>
 		<Unit filename="sdk\devcpploader.cpp">
 			<Option compilerVar="CPP"/>
 			<Option target="sdk"/>
@@ -2096,6 +2108,66 @@
 			<Option target="sdk"/>
 		</Unit>
 		<Unit filename="sdk\resources\incremental_select_list.xrc">
+			<Option compilerVar=""/>
+			<Option compile="0"/>
+			<Option link="0"/>
+			<Option target="sdk"/>
+		</Unit>
+		<Unit filename="sdk\resources\lexers\lexer_cpp.sample">
+			<Option compilerVar=""/>
+			<Option compile="0"/>
+			<Option link="0"/>
+			<Option target="sdk"/>
+		</Unit>
+		<Unit filename="sdk\resources\lexers\lexer_cpp.xml">
+			<Option compilerVar=""/>
+			<Option compile="0"/>
+			<Option link="0"/>
+			<Option target="sdk"/>
+		</Unit>
+		<Unit filename="sdk\resources\lexers\lexer_gm.sample">
+			<Option compilerVar=""/>
+			<Option compile="0"/>
+			<Option link="0"/>
+			<Option target="sdk"/>
+		</Unit>
+		<Unit filename="sdk\resources\lexers\lexer_gm.xml">
+			<Option compilerVar=""/>
+			<Option compile="0"/>
+			<Option link="0"/>
+			<Option target="sdk"/>
+		</Unit>
+		<Unit filename="sdk\resources\lexers\lexer_hitasm.sample">
+			<Option compilerVar=""/>
+			<Option compile="0"/>
+			<Option link="0"/>
+			<Option target="sdk"/>
+		</Unit>
+		<Unit filename="sdk\resources\lexers\lexer_hitasm.xml">
+			<Option compilerVar=""/>
+			<Option compile="0"/>
+			<Option link="0"/>
+			<Option target="sdk"/>
+		</Unit>
+		<Unit filename="sdk\resources\lexers\lexer_lua.sample">
+			<Option compilerVar=""/>
+			<Option compile="0"/>
+			<Option link="0"/>
+			<Option target="sdk"/>
+		</Unit>
+		<Unit filename="sdk\resources\lexers\lexer_lua.xml">
+			<Option compilerVar=""/>
+			<Option compile="0"/>
+			<Option link="0"/>
+			<Option target="sdk"/>
+		</Unit>
+		<Unit filename="sdk\resources\lexers\lexer_rc.sample">
+			<Option compilerVar=""/>
+			<Option compile="0"/>
+			<Option link="0"/>
+			<Option target="sdk"/>
+		</Unit>
+		<Unit filename="sdk\resources\lexers\lexer_rc.xml">
 			<Option compilerVar=""/>
 			<Option compile="0"/>
 			<Option link="0"/>

@@ -14,14 +14,11 @@
 // #include "cbproject.h"
 #include "printing_types.h"
 
-extern int ID_EditorManager;
-extern int idEditorManagerCheckFiles;
-class EditorBase;
-
-WX_DECLARE_LIST(EditorBase, EditorsList);
-WX_DECLARE_STRING_HASH_MAP(wxString, AutoCompleteMap);
+DLLIMPORT extern int ID_EditorManager;
+DLLIMPORT extern int idEditorManagerCheckFiles;
 
 // forward decls
+class EditorBase;
 class wxNotebook;
 class wxNotebookEvent;
 class wxMenuBar;
@@ -31,6 +28,9 @@ class ProjectFile;
 class cbEditor;
 class wxStyledTextCtrl;
 class SimpleListLog;
+
+WX_DECLARE_LIST(EditorBase, EditorsList);
+WX_DECLARE_STRING_HASH_MAP(wxString, AutoCompleteMap);
 
 struct cbFindReplaceData
 {
