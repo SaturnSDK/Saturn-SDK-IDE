@@ -964,6 +964,7 @@ void MainFrame::DoUpdateLayout()
         return;
 	wxLayoutAlgorithm layout;
     layout.LayoutFrame(this, m_pEdMan->GetNotebook());
+    m_pEdMan->RefreshOpenFilesTree();
 
 #if (wxMAJOR_VERSION == 2) && (wxMINOR_VERSION < 5)	
 	/**

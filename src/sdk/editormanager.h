@@ -126,6 +126,8 @@ class DLLIMPORT EditorManager : public wxEvtHandler
         bool OpenFilesTreeSupported();
         /// Show/hide the opened files tree
         void ShowOpenFilesTree(bool show);
+        /// Refresh the open files tree
+        void RefreshOpenFilesTree();
         /// Return true if opened files tree is visible, false if not
         bool IsOpenFilesTreeVisible();
         /** Builds Opened Files tree in the Projects tab
@@ -189,8 +191,10 @@ class DLLIMPORT EditorManager : public wxEvtHandler
         bool m_LastModifiedflag;
         SimpleListLog* m_pSearchLog;
         int m_SearchLogIndex;
-    DECLARE_EVENT_TABLE()
-    DECLARE_SANITY_CHECK
+        int m_SashPosition;
+
+        DECLARE_EVENT_TABLE()
+        DECLARE_SANITY_CHECK
 
 };
 
