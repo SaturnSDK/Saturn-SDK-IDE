@@ -157,11 +157,6 @@ bool NewFromTemplateDlg::SelectedTemplate()
             XRCCTRL(*this, "listTemplates", wxListCtrl)->GetSelectedItemCount() != 0;
 }
 
-bool NewFromTemplateDlg::DoNotCreateFiles()
-{
-    return XRCCTRL(*this, "chkDoNotCreateFiles", wxCheckBox)->IsChecked();
-}
-
 bool NewFromTemplateDlg::SelectedUserTemplate()
 {
     return  XRCCTRL(*this, "nbMain", wxNotebook)->GetSelection() == 1 &&
