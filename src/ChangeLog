@@ -1,6 +1,13 @@
 Changes for version 1.0-RC1
 -------------------------------
 
+2005-07-25 22:26  mandrav
+
+	* Fixed error, under certain circumstances, in output filename when
+	  importing MSVC projects (patch #1244692 by zieQ).
+	* Updated setup file (mingw bundle).
+	* Removed a compiler warning from editormanager.cpp.
+
 2005-07-25 22:05  mandrav
 
 	* Updated unix project files and makefiles
