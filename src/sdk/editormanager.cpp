@@ -155,7 +155,7 @@ EditorManager::~EditorManager()
     m_EditorsList.DeleteContents(true); // Set this to false to preserve
     m_EditorsList.Clear();              // linked data.
 
-    m_pNotebook->Destroy();
+//    m_pNotebook->Destroy();
 
     SC_DESTRUCTOR_END
 }
