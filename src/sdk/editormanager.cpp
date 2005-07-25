@@ -1438,7 +1438,6 @@ void EditorManager::RefreshOpenFilesTree()
         return;
     wxWindow* win = Manager::Get()->GetNotebookPage(_("Projects"),wxTAB_TRAVERSAL | wxCLIP_CHILDREN,true);
     wxSplitPanel* mypanel = (wxSplitPanel*)(win);
-    wxSplitterWindow* mysplitter = mypanel->GetSplitter();
     mypanel->RefreshSplitter(ID_EditorManager,ID_ProjectManager);
 }
 

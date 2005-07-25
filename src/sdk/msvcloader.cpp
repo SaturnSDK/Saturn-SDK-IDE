@@ -203,7 +203,9 @@ bool MSVCLoader::ParseConfiguration(int index)
             if (!line.IsEmpty())
             {
                 wxFileName out = bt->GetOutputFilename();
-                out.SetPath(out.GetPath() + wxFileName::GetPathSeparator() + tmp);
+                out.SetPath(tmp); // out could be a full path name and not only a relative one !
+                if (out.IsRelative())
+                    out.MakeAbsolute(m_Filename.GetPath(wxPATH_GET_VOLUME | wxPATH_GET_SEPARATOR));
                 bt->SetOutputFilename(out.GetFullPath());
             }
         }
