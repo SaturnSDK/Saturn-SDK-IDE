@@ -4,12 +4,13 @@
 #include <settings.h>
 #include <cbproject.h>
 #include "compilergcc.h"
-#include "customvars.h"
 #include <compiler.h>
 
 WX_DEFINE_ARRAY(ProjectBuildTarget*, TargetsArray);
 WX_DEFINE_ARRAY(ProjectFile*, FilesArray); // keep our own copy, to sort it by file weight (priority)
 WX_DEFINE_ARRAY(ProjectFile*, ObjectFilesArray); // holds object files already included in the Makefile
+
+class CustomVars;
 
 /*
  * No description
@@ -22,15 +23,15 @@ class MakefileGenerator
 		// class destructor
 		~MakefileGenerator();
         bool CreateMakefile();
-        void ReplaceMacros(ProjectFile* pf, wxString& text);
-        void QuoteStringIfNeeded(wxString& str);
+        void ReplaceMacros(ProjectBuildTarget* bt, ProjectFile* pf, wxString& text);
+        void QuoteStringIfNeeded(wxString& str, bool force = false);
         wxString CreateSingleFileCompileCmd(CommandType et,
                                             ProjectBuildTarget* target,
                                             ProjectFile* pf,
                                             const wxString& file,
                                             const wxString& object,
                                             const wxString& deps);
-        void ConvertToMakefileFriendly(wxString& str);
+        void ConvertToMakefileFriendly(wxString& str, bool force = false);
     private:
         void DoAppendCompilerOptions(wxString& cmd, ProjectBuildTarget* target = 0L, bool useGlobalOptions = false);
         void DoAppendLinkerOptions(wxString& cmd, ProjectBuildTarget* target = 0L, bool useGlobalOptions = false);
@@ -38,6 +39,7 @@ class MakefileGenerator
         void DoAppendIncludeDirs(wxString& cmd, ProjectBuildTarget* target = 0L, const wxString& prefix = "-I", bool useGlobalOptions = false);
         void DoAppendResourceIncludeDirs(wxString& cmd, ProjectBuildTarget* target = 0L, const wxString& prefix = "-I", bool useGlobalOptions = false);
         void DoAppendLibDirs(wxString& cmd, ProjectBuildTarget* target = 0L, const wxString& prefix = "-L", bool useGlobalOptions = false);
+        void DoAddVarsSet(wxString& buffer, CustomVars& vars);
         void DoAddMakefileVars(wxString& buffer);
 #ifdef __WXMSW__
         void DoAddMakefileResources(wxString& buffer);
@@ -88,7 +90,6 @@ class MakefileGenerator
         FilesArray m_Files;
         ObjectFilesArray m_ObjectFiles;
         int m_LogIndex;
-		CustomVars m_Vars;
 		
 		wxString m_Quiet; // used for compiler simple log
     private:

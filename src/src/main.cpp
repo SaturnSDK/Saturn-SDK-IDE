@@ -360,7 +360,7 @@ MainFrame::MainFrame(wxWindow* parent)
     
     this->SetAcceleratorTable(*m_pAccel);
     
-    m_SmallToolBar = ConfigManager::Get()->Read("/environment/toolbar_size", (long int)0) == 1;
+    m_SmallToolBar = ConfigManager::Get()->Read("/environment/toolbar_size", 1L) == 1;
 	CreateIDE();
 
 #ifdef __WXMSW__
@@ -964,6 +964,7 @@ void MainFrame::DoUpdateLayout()
         return;
 	wxLayoutAlgorithm layout;
     layout.LayoutFrame(this, m_pEdMan->GetNotebook());
+    m_pEdMan->RefreshOpenFilesTree();
 
 #if (wxMAJOR_VERSION == 2) && (wxMINOR_VERSION < 5)	
 	/**
@@ -1805,7 +1806,7 @@ void MainFrame::OnHelpTips(wxCommandEvent& event)
 
 void MainFrame::OnFileMenuUpdateUI(wxUpdateUIEvent& event)
 {
-    cbEditor* ed = m_pEdMan ? m_pEdMan->GetBuiltinEditor(m_pEdMan->GetActiveEditor()) : 0;
+    EditorBase* ed = m_pEdMan ? m_pEdMan->GetActiveEditor() : 0;
     wxMenuBar* mbar = GetMenuBar();
 
     bool canCloseProject = (ProjectManager::CanShutdown() && EditorManager::CanShutdown());

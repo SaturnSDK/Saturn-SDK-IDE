@@ -29,8 +29,10 @@
 #include <pipedprocess.h>
 #include <configmanager.h>
 #include <messagemanager.h>
+#include <macrosmanager.h>
 #include <projectmanager.h>
 #include <editormanager.h>
+#include <customvars.h>
 #include "makefilegenerator.h"
 #include "compileroptionsdlg.h"
 #include "compilerMINGW.h"
@@ -157,6 +159,7 @@ CompilerGCC::CompilerGCC()
 	m_ErrorsMenu(0L),
     m_Project(0L),
     m_Process(0L),
+    m_pTbar(0L),
     m_Pid(0),
     m_Log(0L),
 	m_pListLog(0L),
@@ -168,7 +171,6 @@ CompilerGCC::CompilerGCC()
 	m_BackupActiveProject(0L),
 	m_ProjectIndex(0),
 	m_LastExitCode(0),
-	m_Vars(this),
 	m_HasTargetAll(false),
 	m_QueueIndex(0),
 	m_DeleteTempMakefile(true)
@@ -435,10 +437,11 @@ void CompilerGCC::BuildModuleMenu(const ModuleType type, wxMenu* menu, const wxS
     }
 }
 
-void CompilerGCC::BuildToolBar(wxToolBar* toolBar)
+bool CompilerGCC::BuildToolBar(wxToolBar* toolBar)
 {
 	if (!m_IsAttached || !toolBar)
-		return;
+		return false;
+    m_pTbar = toolBar;
     wxString my_16x16=Manager::isToolBar16x16(toolBar) ? "_16x16" : "";
     Manager::Get()->AddonToolBar(toolBar,"compiler_toolbar"+my_16x16);
     
@@ -448,6 +451,7 @@ void CompilerGCC::BuildToolBar(wxToolBar* toolBar)
     #endif
     toolBar->Realize();
     DoRecreateTargetMenu(); // make sure the tool target combo is up-to-date
+    return true;
 }
 
 void CompilerGCC::SetupEnvironment()
@@ -648,13 +652,10 @@ int CompilerGCC::DoRunQueue()
     msgMan->SwitchTo(m_PageIndex);
     
 	// leave if no active project
-//    if (!CheckProject())
     AskForActiveProject();
-    if (!m_Project)
-        return -1;
         
     // make sure all project files are saved
-    if (!Manager::Get()->GetProjectManager()->GetActiveProject()->SaveAllFiles())
+    if (m_Project && !m_Project->SaveAllFiles())
         msgMan->Log(_("Could not save all files..."));
 
     if (m_Queue.GetCount() == 0)
@@ -698,14 +699,22 @@ int CompilerGCC::DoRunQueue()
             ProjectBuildTarget* bt = m_Project->GetBuildTarget(cmd);
             if (bt)
             {
-//                msgMan->Log(m_PageIndex, _("Switching compiler to: %s"), CompilerFactory::Compilers[bt->GetCompilerIndex()]->GetName().c_str());
                 SwitchCompiler(bt->GetCompilerIndex());
+                // re-apply the env vars for this target
+                if (CompilerFactory::CompilerIndexOK(m_CompilerIdx))
+                    CompilerFactory::Compilers[m_CompilerIdx]->GetCustomVars().ApplyVarsToEnvironment();
+                m_Project->GetCustomVars().ApplyVarsToEnvironment();
+                bt->GetCustomVars().ApplyVarsToEnvironment();
             }
             else
                 msgMan->Log(m_PageIndex, _("Can't locate target '%s'!"), cmd.c_str());
         }
         else
+        {
+        	// compile command; apply custom vars
+        	Manager::Get()->GetMacrosManager()->ReplaceEnvVars(cmd);
             break;
+        }
 
         ++m_QueueIndex;
         if (m_QueueIndex >= m_Queue.GetCount())
@@ -919,7 +928,9 @@ bool CompilerGCC::UseMake(ProjectBuildTarget* target)
         idx = target->GetCompilerIndex();
     else if (m_Project)
         idx = m_Project->GetCompilerIndex();
-    return CompilerFactory::Compilers[idx]->GetSwitches().buildMethod == cbmUseMake;
+    if (CompilerFactory::CompilerIndexOK(idx))
+        return CompilerFactory::Compilers[idx]->GetSwitches().buildMethod == cbmUseMake;
+    return false;
 }
 
 bool CompilerGCC::CompilerValid(ProjectBuildTarget* target)
@@ -1111,6 +1122,7 @@ int CompilerGCC::Run(ProjectBuildTarget* target)
     }
 
     Manager::Get()->GetMessageManager()->Log(m_PageIndex, _("Executing: %s (in %s)"), cmd.c_str(), m_CdRun.c_str());
+    Manager::Get()->GetMacrosManager()->ReplaceEnvVars(m_CdRun);
 	m_Queue.Add(cmd);
 
 	m_IsRun = true;
@@ -1123,6 +1135,10 @@ int CompilerGCC::Clean(ProjectBuildTarget* target)
 	DoPrepareQueue();
 	if (!CompilerValid(target))
 		return -1;
+
+    if (CompilerFactory::CompilerIndexOK(m_CompilerIdx))
+        CompilerFactory::Compilers[m_CompilerIdx]->GetCustomVars().ApplyVarsToEnvironment();
+    m_Project->GetCustomVars().ApplyVarsToEnvironment();
 
     Manager::Get()->GetMessageManager()->Open();
 
@@ -1158,6 +1174,10 @@ int CompilerGCC::DistClean(ProjectBuildTarget* target)
 	DoPrepareQueue();
 	if (!CompilerValid(target))
 		return -1;
+
+    if (CompilerFactory::CompilerIndexOK(m_CompilerIdx))
+        CompilerFactory::Compilers[m_CompilerIdx]->GetCustomVars().ApplyVarsToEnvironment();
+    m_Project->GetCustomVars().ApplyVarsToEnvironment();
 
     Manager::Get()->GetMessageManager()->Open();
 
@@ -1242,6 +1262,10 @@ int CompilerGCC::Compile(ProjectBuildTarget* target)
 	if (!m_Project || !CompilerValid(target))
         return -2;
 
+    if (CompilerFactory::CompilerIndexOK(m_CompilerIdx))
+        CompilerFactory::Compilers[m_CompilerIdx]->GetCustomVars().ApplyVarsToEnvironment();
+    m_Project->GetCustomVars().ApplyVarsToEnvironment();
+
     Manager::Get()->GetMessageManager()->Open();
 
     wxString cmd;
@@ -1269,6 +1293,10 @@ int CompilerGCC::Rebuild(ProjectBuildTarget* target)
 	DoPrepareQueue();
 	if (!CompilerValid(target))
 		return -1;
+
+    if (CompilerFactory::CompilerIndexOK(m_CompilerIdx))
+        CompilerFactory::Compilers[m_CompilerIdx]->GetCustomVars().ApplyVarsToEnvironment();
+    m_Project->GetCustomVars().ApplyVarsToEnvironment();
 
     Manager::Get()->GetMessageManager()->Open();
 
@@ -1351,6 +1379,41 @@ int CompilerGCC::KillProcess()
     return ret;
 }
 
+ProjectBuildTarget* CompilerGCC::GetBuildTargetForFile(ProjectFile* pf)
+{
+    if (!pf)
+        return 0;
+
+    if (!pf->buildTargets.GetCount())
+    {
+        wxMessageBox(_("That file isn't assigned to any target."),
+                    _("Information"), wxICON_INFORMATION);
+        return 0;
+    }
+    else if (pf->buildTargets.GetCount() == 1)
+        return m_Project->GetBuildTarget(pf->buildTargets[0]);
+    // belongs to two or more build targets
+    ProjectBuildTarget* bt = 0;
+    // if "All" is selected, ask for build target
+    if (m_HasTargetAll && m_TargetIndex == -1)
+    {
+        int idx = DoGUIAskForTarget();
+        if (idx == -1)
+            return 0;
+        bt = m_Project->GetBuildTarget(idx);
+    }
+    else // use the currently selected build target
+        bt = m_Project->GetBuildTarget(m_TargetIndex); // pick the selected target
+
+    return bt;
+}
+
+ProjectBuildTarget* CompilerGCC::GetBuildTargetForFile(const wxString& file)
+{
+    ProjectFile* pf = m_Project ? m_Project->GetFileByFilename(file, true, false) : 0;
+    return GetBuildTargetForFile(pf);
+}
+
 int CompilerGCC::CompileFile(const wxString& file)
 {
 	DoPrepareQueue();
@@ -1359,40 +1422,59 @@ int CompilerGCC::CompileFile(const wxString& file)
 
     Manager::Get()->GetMessageManager()->Open();
 
-    wxSetWorkingDirectory(m_Project->GetBasePath());
-    if (UseMake())
+    if (m_Project)
+        wxSetWorkingDirectory(m_Project->GetBasePath());
+
+    ProjectFile* pf = m_Project ? m_Project->GetFileByFilename(file, true, false) : 0;
+    ProjectBuildTarget* bt = GetBuildTargetForFile(pf);
+    bool useMake = UseMake(bt);
+
+    if (!pf)
     {
-        wxFileName f(file);
-// TODO (mandrav#1#): Fix this to take into account the obj output dir
-        wxString fname = UnixFilename(f.GetPath() + ".objs/" + f.GetFullName());
-        MakefileGenerator mg(this, 0, "", 0);
-        mg.ConvertToMakefileFriendly(fname);
+        // compile single file not belonging to a project
+        
+        // switch to the default compiler
+        SwitchCompiler(CompilerFactory::GetDefaultCompilerIndex());
+
+        if (useMake)
+        {
+            wxMessageBox(_("That file doesn't belong to a project.\n"
+                            "If you want to compile it as stand-alone, please use the \"Invoke compiler directly\" build method\n"
+                            "(Settings->Compiler->Other->Build method)"),
+                        _("Information"), wxICON_INFORMATION);
+        }
+        else
+        {
+            // get compile commands for file (always linked as console-executable)
+            DirectCommands dc(this, CompilerFactory::GetDefaultCompiler(), 0, m_PageIndex);
+            wxArrayString compile = dc.GetCompileSingleFileCommand(file);
+            dc.AppendArray(compile, m_Queue);
     
+            // apply global custom vars
+            CompilerFactory::GetDefaultCompiler()->GetCustomVars().ApplyVarsToEnvironment();
+        }
+        return DoRunQueue();
+    }
+
+    if (!bt)
+        return -2;
+    if (useMake)
+    {
+        wxFileName tmp = pf->GetObjName();
+        wxFileName o_file(bt->GetObjectOutput() + wxFILE_SEP_PATH + tmp.GetFullPath());
+        wxString fname = UnixFilename(o_file.GetFullPath());
+        MakefileGenerator mg(this, 0, "", 0);
+        mg.ConvertToMakefileFriendly(fname, true);
+
+        // apply global custom vars
+        CompilerFactory::Compilers[bt->GetCompilerIndex()]->GetCustomVars().ApplyVarsToEnvironment();
+
         wxString make = CompilerFactory::Compilers[m_CompilerIdx]->GetPrograms().MAKE;
+        m_Queue.Add(make + " -f " + m_LastTempMakefile + " depend_" + bt->GetTitle() + "_DIRS"); // make the output dir
         m_Queue.Add(make + " -f " + m_LastTempMakefile + " " + fname);
     }
     else
     {
-        ProjectFile* pf = m_Project->GetFileByFilename(file, true, false);
-        if (!pf)
-        {
-            wxMessageBox(_("Only files that belong to the active project can be compiled..."),
-                        _("Information"), wxICON_INFORMATION);
-            return -1;
-        }
-		if (!pf->buildTargets.GetCount())
-		{
-            wxMessageBox(_("That file isn't assigned to any target."),
-                        _("Information"), wxICON_INFORMATION);
-			return -2;
-		}
-        ProjectBuildTarget* bt = 0;
-        if (m_HasTargetAll && m_TargetIndex == -1)
-            bt = m_Project->GetBuildTarget(pf->buildTargets[0]); // pick the first target
-        else
-            bt = m_Project->GetBuildTarget(m_TargetIndex); // pick the selected target
-        if (!bt)
-            return -2;
         DirectCommands dc(this, CompilerFactory::Compilers[bt->GetCompilerIndex()], m_Project, m_PageIndex);
         wxArrayString compile = dc.CompileFile(bt, pf);
         dc.AppendArray(compile, m_Queue);
@@ -1482,7 +1564,8 @@ void CompilerGCC::OnCompileFile(wxCommandEvent& event)
         }
     }
 
-    file.MakeRelativeTo(m_Project->GetFilename());
+    if (m_Project)
+        file.MakeRelativeTo(m_Project->GetBasePath());
 #ifdef ALWAYS_USE_MAKEFILE
 	file.SetExt(OBJECT_EXT);
 #endif
@@ -1718,9 +1801,6 @@ void CompilerGCC::OnCreateDist(wxCommandEvent& event)
 
 void CompilerGCC::OnUpdateUI(wxUpdateUIEvent& event)
 {
-    static bool flag_init=false;
-    static bool toolflag,toolflag2;
-    bool tmpflag,tmpflag2;
 	cbProject* prj = Manager::Get()->GetProjectManager()->GetActiveProject();
     cbEditor* ed = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
     wxMenuBar* mbar = Manager::Get()->GetAppWindow()->GetMenuBar();
@@ -1730,7 +1810,7 @@ void CompilerGCC::OnUpdateUI(wxUpdateUIEvent& event)
         mbar->Enable(idMenuCompileAll, !m_Process && prj);
         mbar->Enable(idMenuCompileFromProjectManager, !m_Process && prj);
         mbar->Enable(idMenuCompileTargetFromProjectManager, !m_Process && prj);
-        mbar->Enable(idMenuCompileFile, !m_Process && prj && ed);
+        mbar->Enable(idMenuCompileFile, !m_Process && ed);
         mbar->Enable(idMenuCompileFileFromProjectManager, !m_Process && prj);
         mbar->Enable(idMenuRebuild, !m_Process && prj);
         mbar->Enable(idMenuRebuildAll, !m_Process && prj);
@@ -1759,26 +1839,18 @@ void CompilerGCC::OnUpdateUI(wxUpdateUIEvent& event)
     }
 
 	// enable/disable compiler toolbar buttons
-	wxToolBar* tbar = Manager::Get()->GetAppWindow()->GetToolBar();
+	wxToolBar* tbar = m_pTbar;//Manager::Get()->GetAppWindow()->GetToolBar();
 	if (tbar)
 	{
-		tmpflag=(!m_Process && prj);
-		tmpflag2=(m_Process && prj);
-		if(tmpflag!=toolflag || tmpflag2!=toolflag2 || !flag_init)
-		{
-            if(!flag_init) flag_init=true;
-            toolflag=tmpflag;
-            toolflag2=tmpflag2;
-            tbar->EnableTool(idMenuCompile,toolflag);
-            tbar->EnableTool(idMenuRun,toolflag);
-            tbar->EnableTool(idMenuCompileAndRun,toolflag);
-            tbar->EnableTool(idMenuRebuild,toolflag);
-            tbar->EnableTool(idMenuKillProcess,toolflag2);
+        tbar->EnableTool(idMenuCompile, !m_Process && prj);
+        tbar->EnableTool(idMenuRun, !m_Process && prj);
+        tbar->EnableTool(idMenuCompileAndRun, !m_Process && prj);
+        tbar->EnableTool(idMenuRebuild, !m_Process && prj);
+        tbar->EnableTool(idMenuKillProcess, m_Process && prj);
 
-            m_ToolTarget = XRCCTRL(*tbar, "idToolTarget", wxComboBox);
-            if (m_ToolTarget)
-                m_ToolTarget->Enable(toolflag);
-        }
+        m_ToolTarget = XRCCTRL(*tbar, "idToolTarget", wxComboBox);
+        if (m_ToolTarget)
+            m_ToolTarget->Enable(!m_Process && prj);
     }
 	
     // allow other UpdateUI handlers to process this event

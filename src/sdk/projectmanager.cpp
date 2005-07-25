@@ -215,7 +215,7 @@ void ProjectManager::InitPane()
     wxSplitterWindow* mysplitter = mypanel->GetSplitter();
     BuildTree(mysplitter);
     mypanel->SetAutoLayout(true);
-    mypanel->RefreshSplitter(ID_EditorManager,ID_ProjectManager,200);
+    mypanel->RefreshSplitter(ID_EditorManager,ID_ProjectManager,150);
 }
 
 void ProjectManager::BuildTree(wxWindow* parent)
@@ -238,6 +238,9 @@ void ProjectManager::BuildTree(wxWindow* parent)
     bmp.LoadFile(prefix + "folder_open.png", wxBITMAP_TYPE_PNG); // folder
     m_pImages->Add(bmp);
     m_pTree->SetImageList(m_pImages);
+    
+    // make sure tree is not "frozen"
+    UnfreezeTree(true);
 }
 // class destructor
 ProjectManager::~ProjectManager()
@@ -615,7 +618,10 @@ bool ProjectManager::CloseAllProjects(bool dontsave)
     while (m_pProjects->GetCount() != 0)
     {
         if (!CloseActiveProject(true))
+        {
+            UnfreezeTree(true);
             return false;
+        }
     }
     RebuildTree();
     UnfreezeTree(true);
@@ -823,6 +829,7 @@ bool ProjectManager::LoadWorkspace(const wxString& filename)
     if(m_pTopEditor)
         m_pTopEditor->Activate();
     Manager::Get()->GetEditorManager()->RefreshOpenedFilesTree(true);
+    UnfreezeTree(true);
     return m_pWorkspace->IsOK();
 }
 
@@ -886,7 +893,7 @@ bool ProjectManager::CloseWorkspace()
 bool ProjectManager::IsLoading()
 {
     SANITY_CHECK(false);
-    return (m_IsLoadingProject | m_IsLoadingWorkspace);
+    return (m_IsLoadingProject || m_IsLoadingWorkspace);
 }
 
 void ProjectManager::FreezeTree()
@@ -894,7 +901,10 @@ void ProjectManager::FreezeTree()
     SANITY_CHECK();
     if (!m_pTree)
         return;
+// wx 2.5.x implement nested Freeze()/Thaw() calls correctly
+#if !wxCHECK_VERSION(2,5,0)
     ++m_TreeFreezeCounter;
+#endif
     m_pTree->Freeze();
 }
 
@@ -903,12 +913,17 @@ void ProjectManager::UnfreezeTree(bool force)
     SANITY_CHECK();
     if (!m_pTree)
         return;
+// wx 2.5.x implement nested Freeze()/Thaw() calls correctly
+#if !wxCHECK_VERSION(2,5,0)
     --m_TreeFreezeCounter;
     if (force || m_TreeFreezeCounter <= 0)
     {
         m_pTree->Thaw();
         m_TreeFreezeCounter = 0;
     }
+#else
+    m_pTree->Thaw();
+#endif
 }
 
 void ProjectManager::RebuildTree()
