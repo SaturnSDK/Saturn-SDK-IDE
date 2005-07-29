@@ -570,11 +570,12 @@ bool cbEditor::SaveAs()
                             fname.GetFullName(),
                             SOURCE_FILES_DIALOG_FILTER,
                             wxSAVE | wxOVERWRITE_PROMPT);
-    dlg->SetFilterIndex(SOURCE_FILES_FILTER_INDEX);
+    dlg->SetFilterIndex(7);// all files;
 
     if (dlg->ShowModal() != wxID_OK)
         return false;
     m_Filename = dlg->GetPath();
+    LOGSTREAM << m_Filename << '\n';
     fname.Assign(m_Filename);
     m_Shortname = fname.GetFullName();
 	SetEditorTitle(m_Shortname);
