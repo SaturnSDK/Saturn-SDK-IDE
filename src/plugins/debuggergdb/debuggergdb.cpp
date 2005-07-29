@@ -1613,7 +1613,7 @@ void DebuggerGDB::OnValueTooltip(CodeBlocksEvent& event)
 		r.Inflate(0, 32);
 		r.Offset(0, -16);
 #else
-		int fontsize = ed->GetControl()->GetFont().GetPointSize();
+		int fontsize = ed->GetControl()->GetFont().GetPointSize() * 2;
 		wxPoint pt2(r.x, r.y);
 		pt2 = Manager::Get()->GetAppWindow()->ClientToScreen(pt2);
 		pt2 = ed->GetControl()->ScreenToClient(pt2);
