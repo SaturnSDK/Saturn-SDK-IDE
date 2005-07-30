@@ -1899,11 +1899,10 @@ void MainFrame::OnViewMenuUpdateUI(wxUpdateUIEvent& event)
 
 void MainFrame::OnSearchMenuUpdateUI(wxUpdateUIEvent& event)
 {
-    cbProject* prj = m_pPrjMan ? m_pPrjMan->GetActiveProject() : 0;
     cbEditor* ed = m_pEdMan ? m_pEdMan->GetBuiltinEditor(m_pEdMan->GetActiveEditor()) : 0;
     wxMenuBar* mbar = GetMenuBar();
 
-    mbar->Enable(idSearchFind, prj);
+    mbar->Enable(idSearchFind, ed);
     mbar->Enable(idSearchFindNext, ed);
     mbar->Enable(idSearchFindPrevious, ed);
     mbar->Enable(idSearchReplace, ed);
@@ -1911,7 +1910,7 @@ void MainFrame::OnSearchMenuUpdateUI(wxUpdateUIEvent& event)
 
 	if (m_pToolbar)
 	{
-		m_pToolbar->EnableTool(idSearchFind, prj);
+		m_pToolbar->EnableTool(idSearchFind, ed);
 		m_pToolbar->EnableTool(idSearchReplace, ed);
 	}
 	
