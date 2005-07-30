@@ -262,11 +262,13 @@ void DebuggerGDB::BuildMenu(wxMenuBar* menuBar)
 
 void DebuggerGDB::BuildModuleMenu(const ModuleType type, wxMenu* menu, const wxString& arg)
 {
+	cbProject* prj = Manager::Get()->GetProjectManager()->GetActiveProject();
 	if (!m_IsAttached)
 		return;
     // we 're only interested in editor menus
     // we 'll add a "debug watches" entry only when the debugger is running...
     if (type != mtEditorManager || !menu) return;
+    if (!prj) return;
     // Insert toggle breakpoint
     menu->Insert(0,idMenuToggleBreakpoint, _("Toggle breakpoint"));
 	// Insert Run to Cursor
@@ -1221,7 +1223,7 @@ void DebuggerGDB::OnUpdateUI(wxUpdateUIEvent& event)
         mbar->Enable(idMenuStep, prj && m_ProgramIsStopped);
         mbar->Enable(idMenuStepOut, m_pProcess && prj && m_ProgramIsStopped);
  		mbar->Enable(idMenuRunToCursor, prj && ed && m_ProgramIsStopped);
-		mbar->Enable(idMenuToggleBreakpoint, ed && m_ProgramIsStopped);
+		mbar->Enable(idMenuToggleBreakpoint, prj && ed && m_ProgramIsStopped);
 		mbar->Enable(idMenuSendCommandToGDB, m_pProcess && m_ProgramIsStopped);
  		mbar->Enable(idMenuAddSymbolFile, m_pProcess && m_ProgramIsStopped);
  		mbar->Enable(idMenuBacktrace, m_pProcess && m_ProgramIsStopped);
@@ -1610,26 +1612,7 @@ void DebuggerGDB::OnValueTooltip(CodeBlocksEvent& event)
         tip = token + " = " + tip;
 		if (m_EvalWin)
             m_EvalWin->Destroy();
-		m_EvalWin = new wxTipWindow(Manager::Get()->GetAppWindow(), tip, 640, &m_EvalWin);
-		// set the rect that when the cursor gets out of, the tip window closes
-		// just use the tipwindow's rect, a little bit enlarged vertically
-		// (because it displays below the cursor)
-		wxRect r = m_EvalWin->GetRect();
-#if !(wxCHECK_VERSION(2,5,0))
-		r.Inflate(0, 32);
-		r.Offset(0, -16);
-#else
-		int fontsize = ed->GetControl()->GetFont().GetPointSize() * 2;
-		wxPoint pt2(r.x, r.y);
-		pt2 = Manager::Get()->GetAppWindow()->ClientToScreen(pt2);
-		pt2 = ed->GetControl()->ScreenToClient(pt2);
-		r.x = pt2.x;
-		r.y = pt2.y - fontsize;
-		int diffy = r.y - pt.y + fontsize;
-		r.height += diffy;
-#endif
-		m_EvalWin->SetBoundingRect(r);
-//		Manager::Get()->GetMessageManager()->Log(m_PageIndex, _("fontsize: %d - diffy: %d - Pt: %d,%d - Rect: %d,%d,%d,%d"), fontsize, diffy, pt.x, pt.y, r.x, r.y, r.width, r.height);
+		m_EvalWin = new wxTipWindow(Manager::Get()->GetAppWindow(), tip, 640, &m_EvalWin, &m_EvalRect);
 	}
 }
 
