@@ -34,6 +34,7 @@
 #include <projectmanager.h>
 #include <pluginmanager.h>
 #include <editormanager.h>
+#include <macrosmanager.h>
 #include <projectbuildtarget.h>
 #include <sdk_events.h>
 #include <editarraystringdlg.h>
@@ -509,6 +510,7 @@ int DebuggerGDB::Debug()
 //        if (it == project)
 //            continue;
         wxString filename = it->GetBasePath();
+        Manager::Get()->GetMacrosManager()->ReplaceEnvVars(filename); // apply env vars
         msgMan->Log(m_PageIndex, _("Adding source dir: %s"), filename.c_str());
         ConvertToGDBDirectory(filename, "", false);//project->GetBasePath(), true);
         SendCommand("directory " + filename);
@@ -522,6 +524,7 @@ int DebuggerGDB::Debug()
 		case ttConsoleOnly:
 			// "-async" option is not really supported, at least under Win32, as far as I know
 			out = UnixFilename(target->GetOutputFilename());
+            Manager::Get()->GetMacrosManager()->ReplaceEnvVars(out); // apply env vars
 			msgMan->Log(m_PageIndex, _("Adding file: %s"), out.c_str());
             ConvertToGDBDirectory(out);
 			cmd << "file " << out;
@@ -541,6 +544,7 @@ int DebuggerGDB::Debug()
 				return 4;
 			}
 			out = UnixFilename(target->GetHostApplication());
+            Manager::Get()->GetMacrosManager()->ReplaceEnvVars(out); // apply env vars
 			msgMan->Log(m_PageIndex, _("Adding file: %s"), out.c_str());
 			ConvertToGDBDirectory(out);
 			cmd << "file " << out;
@@ -549,6 +553,7 @@ int DebuggerGDB::Debug()
 			{
 				wxString symbols;
 				out = UnixFilename(target->GetOutputFilename());
+                Manager::Get()->GetMacrosManager()->ReplaceEnvVars(out); // apply env vars
 				msgMan->Log(m_PageIndex, _("Adding symbol file: %s"), out.c_str());
                 ConvertToGDBDirectory(out);
 				symbols << "add-symbol-file " << out;
@@ -568,6 +573,7 @@ int DebuggerGDB::Debug()
     wxString path = UnixFilename(target->GetWorkingDir());
     if (!path.IsEmpty())
     {
+        Manager::Get()->GetMacrosManager()->ReplaceEnvVars(path); // apply env vars
         cmd.Clear();
         ConvertToGDBDirectory(path);
         if (path != _(".")) // avoid silly message "changing to ."
