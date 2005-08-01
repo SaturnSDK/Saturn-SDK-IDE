@@ -195,6 +195,8 @@
                       <item>relative filename (to the project file)</item>
                     </content>
                     <selection>0</selection>
+                    <dimension>1</dimension>
+                    <style>wxRA_SPECIFY_COLS</style>
                   </object>
                   <flag>wxALL|wxGROW</flag>
                   <border>8</border>

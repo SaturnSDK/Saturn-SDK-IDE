@@ -79,6 +79,8 @@
                           <item>Open blank workspace</item>
                         </content>
                         <selection>1</selection>
+                        <dimension>1</dimension>
+                        <style>wxRA_SPECIFY_COLS</style>
                       </object>
                       <flag>wxGROW</flag>
                     </object>
@@ -91,6 +93,8 @@
                           <item>Do not open any files</item>
                         </content>
                         <selection>1</selection>
+                        <dimension>1</dimension>
+                        <style>wxRA_SPECIFY_COLS</style>
                       </object>
                       <flag>wxGROW</flag>
                     </object>
@@ -102,6 +106,8 @@
                           <item>16 x 16 - Small</item>
                         </content>
                         <selection>0</selection>
+                        <dimension>1</dimension>
+                        <style>wxRA_SPECIFY_COLS</style>
                       </object>
                       <flag>wxGROW</flag>
                     </object>

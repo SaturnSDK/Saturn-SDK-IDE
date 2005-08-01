@@ -31,6 +31,7 @@
 #include <wx/filefn.h>
 #include <wx/msgdlg.h>
 #include <wx/choicdlg.h>
+#include <wx/notebook.h>
 #include <configmanager.h>
 #include <editormanager.h>
 #include <projectmanager.h>
@@ -212,8 +213,8 @@ bool CodeBlocksApp::OnInit()
 {
     m_pSplash = 0;
     
-// NOTE (mandrav#1#): My wx2.6.1 build has define wxUSE_ON_FATAL_EXCEPTION
-//                        but still I get errors compiling with it...
+// NOTE (mandrav#1#): My wx2.6.1 build has define wxUSE_ON_FATAL_EXCEPTION 
+//                    but still I get errors compiling with it...
 #ifdef wxHandleFatalExceptions
     wxHandleFatalExceptions(true);
 #endif
@@ -618,5 +619,10 @@ void CodeBlocksApp::OnAppActivate(wxActivateEvent& event)
                     ? Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor()
                     : 0;
 	if (ed)
+	{
+		// hack for linux: without it, the editor loses the caret every second activate o.O
+		Manager::Get()->GetEditorManager()->GetNotebook()->SetFocus();
+
 		ed->GetControl()->SetFocus();
+	}
 }

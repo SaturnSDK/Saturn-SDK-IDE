@@ -111,14 +111,12 @@ void ToDoListView::FillList()
 			GetListControl()->SetItem(idx, 5, item.filename);
 		}
 	}
-
 	GetListControl()->Thaw();
-
 }
 
 void ToDoListView::Parse()
 {
-    wxBusyCursor busy;
+//    wxBusyCursor busy;
 
 	// based on user prefs, parse files for todo items
 	m_Items.Clear();

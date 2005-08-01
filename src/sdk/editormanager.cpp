@@ -1444,7 +1444,7 @@ void EditorManager::OnCheckForModifiedFiles(wxCommandEvent& event)
 #ifdef USE_OPENFILES_TREE
 bool EditorManager::OpenFilesTreeSupported()
 {
-    #if defined(__WXGTK__) || defined(DONT_USE_OPENFILES_TREE)
+    #ifdef DONT_USE_OPENFILES_TREE
     return false;
     #else
     return true;
