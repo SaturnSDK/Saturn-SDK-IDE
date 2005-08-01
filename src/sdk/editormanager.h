@@ -16,7 +16,7 @@
 
 DLLIMPORT extern int ID_EditorManager;
 DLLIMPORT extern int idEditorManagerCheckFiles;
-
+DLLIMPORT extern int ID_EditorManagerCloseButton;
 // forward decls
 class EditorBase;
 class wxNotebook;
@@ -58,6 +58,7 @@ class DLLIMPORT EditorManager : public wxEvtHandler
         friend class Manager; // give Manager access to our private members
         static bool CanShutdown(){ return s_CanShutdown; }
         wxNotebook* GetNotebook(){ return m_pNotebook; }
+        wxPanel* GetPanel() { return m_pPanel; }
         void CreateMenu(wxMenuBar* menuBar);
         void ReleaseMenu(wxMenuBar* menuBar);
         void Configure();        
@@ -179,6 +180,7 @@ class DLLIMPORT EditorManager : public wxEvtHandler
         void OnCheckForModifiedFiles(wxCommandEvent& event);
 
         wxNotebook* m_pNotebook;
+        wxPanel* m_pPanel;
         EditorsList m_EditorsList;
         cbFindReplaceData* m_LastFindReplaceData;
         EditorColorSet* m_Theme;

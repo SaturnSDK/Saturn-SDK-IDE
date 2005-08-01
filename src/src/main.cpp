@@ -159,6 +159,7 @@ int idLeftSash = XRCID("idLeftSash");
 int idBottomSash = XRCID("idBottomSash");
 int idCloseFullScreen = XRCID("idCloseFullScreen");
 int idShiftTab = wxNewId();
+DLLIMPORT extern int ID_EditorManagerCloseButton;
 
 BEGIN_EVENT_TABLE(MainFrame, wxFrame)
     EVT_SIZE(MainFrame::OnSize)
@@ -234,6 +235,7 @@ BEGIN_EVENT_TABLE(MainFrame, wxFrame)
     EVT_MENU(idFileSaveAllFiles,  MainFrame::OnFileSaveAllFiles)
     EVT_MENU(idFileSaveWorkspace,  MainFrame::OnFileSaveWorkspace)
     EVT_MENU(idFileSaveWorkspaceAs,  MainFrame::OnFileSaveWorkspaceAs)
+    EVT_BUTTON(ID_EditorManagerCloseButton,MainFrame::OnFileClose)
     EVT_MENU(idFileClose,  MainFrame::OnFileClose)
     EVT_MENU(idFileCloseAll,  MainFrame::OnFileCloseAll)
     EVT_MENU(idFilePrintSetup,  MainFrame::OnFilePrintSetup)
@@ -963,7 +965,7 @@ void MainFrame::DoUpdateLayout()
     if (!m_pEdMan)
         return;
 	wxLayoutAlgorithm layout;
-    layout.LayoutFrame(this, m_pEdMan->GetNotebook());
+    layout.LayoutFrame(this, m_pEdMan->GetPanel());
     m_pEdMan->RefreshOpenFilesTree();
 
 #if (wxMAJOR_VERSION == 2) && (wxMINOR_VERSION < 5)	
@@ -1267,6 +1269,7 @@ void MainFrame::OnFileClose(wxCommandEvent& WXUNUSED(event))
 {
     m_pEdMan->CloseActive();
     DoUpdateStatusBar();
+    Refresh();
 }
 
 void MainFrame::OnFileCloseAll(wxCommandEvent& WXUNUSED(event))

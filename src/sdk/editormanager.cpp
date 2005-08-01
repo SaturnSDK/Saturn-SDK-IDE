@@ -27,11 +27,13 @@
 #include <wx/menu.h>
 #include <wx/splitter.h>
 #include <wx/imaglist.h>
+#include <wx/bmpbuttn.h>
 #include <wx/file.h>
 #include <wx/stc/stc.h>
 
 #include "editormanager.h" // class's header file
 #include "configmanager.h"
+#include <wx/xrc/xmlres.h>
 #include "messagemanager.h"
 #include "projectmanager.h"
 #include "manager.h"
@@ -58,6 +60,8 @@ WX_DEFINE_LIST(EditorsList);
 
 int ID_NBEditorManager = wxNewId();
 int ID_EditorManager = wxNewId();
+int ID_EditorManagerCloseButton = XRCID("ID_EditorManagerCloseButton");
+int ID_EditorManagerPanel = XRCID("ID_EditorManagerPanel");
 int idEditorManagerCheckFiles = wxNewId();
 
 BEGIN_EVENT_TABLE(EditorManager, wxEvtHandler)
@@ -76,6 +80,8 @@ END_EVENT_TABLE()
 
 // static
 bool EditorManager::s_CanShutdown = true;
+wxButton *edman_closebutton = NULL; // for private use
+
 
 EditorManager* EditorManager::Get(wxWindow* parent)
 {
@@ -101,7 +107,10 @@ void EditorManager::Free()
 
 // class constructor
 EditorManager::EditorManager(wxWindow* parent)
-    : m_LastFindReplaceData(0L),
+    : 
+    m_pNotebook(0L),
+    m_pPanel(0L),
+    m_LastFindReplaceData(0L),
     m_pImages(0L),
     m_pTree(0L),
     m_LastActiveFile(""),
@@ -112,7 +121,15 @@ EditorManager::EditorManager(wxWindow* parent)
 {
 	SC_CONSTRUCTOR_BEGIN
 	EditorManagerProxy::Set(this);
-	m_pNotebook = new wxNotebook(parent, ID_NBEditorManager, wxDefaultPosition, wxDefaultSize,  wxNO_FULL_REPAINT_ON_RESIZE | wxCLIP_CHILDREN);
+
+	// *** Load Panel and close button from XRC ***
+	m_pPanel = wxXmlResource::Get()->LoadPanel(parent,_T("ID_EditorManagerPanel"));
+	wxBitmapButton* myclosebutton = XRCCTRL(*m_pPanel,_T("ID_EditorManagerCloseButton"),wxBitmapButton);
+	edman_closebutton = (wxButton*)myclosebutton;
+	m_pNotebook = new wxNotebook(m_pPanel, ID_NBEditorManager, wxDefaultPosition, wxDefaultSize,  wxNO_FULL_REPAINT_ON_RESIZE | wxCLIP_CHILDREN);
+	m_pPanel->GetSizer()->Prepend(m_pNotebook,1,wxGROW);
+	// ***
+
 	m_EditorsList.Clear();
     #ifdef USE_OPENFILES_TREE
 	ShowOpenFilesTree(ConfigManager::Get()->Read("/editor/show_opened_files_tree", true));
@@ -154,7 +171,7 @@ EditorManager::~EditorManager()
     // free-up any memory used for editors
     m_EditorsList.DeleteContents(true); // Set this to false to preserve
     m_EditorsList.Clear();              // linked data.
-
+    edman_closebutton = NULL;
 //    m_pNotebook->Destroy();
 
     SC_DESTRUCTOR_END
@@ -1792,8 +1809,14 @@ void EditorManager::OnUpdateUI(wxUpdateUIEvent& event)
     if(!Manager::isappShuttingDown())
         RefreshOpenedFilesTree();
 
+    if(edman_closebutton)
+    {
+        edman_closebutton->Show(GetActiveEditor()!=NULL);
+    }
+
     // allow other UpdateUI handlers to process this event
     // *very* important! don't forget it...
+    
     event.Skip();
 }
 
