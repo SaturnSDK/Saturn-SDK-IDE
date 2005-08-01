@@ -128,6 +128,14 @@ EditorManager::EditorManager(wxWindow* parent)
 	edman_closebutton = (wxButton*)myclosebutton;
 	m_pNotebook = new wxNotebook(m_pPanel, ID_NBEditorManager, wxDefaultPosition, wxDefaultSize,  wxNO_FULL_REPAINT_ON_RESIZE | wxCLIP_CHILDREN);
 	m_pPanel->GetSizer()->Prepend(m_pNotebook,1,wxGROW);
+
+    // remove the ugly close-button, if not enabled in configuration
+    if (ConfigManager::Get()->Read("/editor/show_close_button", 0L) == 0)
+    {
+        m_pPanel->GetSizer()->Remove(edman_closebutton);
+        delete edman_closebutton;
+        edman_closebutton = 0;
+    }
 	// ***
 
 	m_EditorsList.Clear();

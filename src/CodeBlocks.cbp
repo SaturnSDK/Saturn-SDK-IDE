@@ -15,6 +15,7 @@
 				<Option object_output=".objs"/>
 				<Option deps_output=".deps"/>
 				<Option external_deps=""/>
+				<Option additional_depfiles=""/>
 				<Option type="2"/>
 				<Option compiler="0"/>
 				<Option projectResourceIncludeDirsRelation="2"/>
@@ -29,6 +30,7 @@
 				<Option object_output=".objs"/>
 				<Option deps_output=".deps"/>
 				<Option external_deps=""/>
+				<Option additional_depfiles=""/>
 				<Option type="3"/>
 				<Option compiler="0"/>
 				<Option parameters="--debug-log --no-check-associations"/>
@@ -54,6 +56,7 @@
 				<Option object_output=".objs"/>
 				<Option deps_output=".deps"/>
 				<Option external_deps=""/>
+				<Option additional_depfiles=""/>
 				<Option type="0"/>
 				<Option compiler="0"/>
 				<Option parameters="--debug-log --no-check-associations -ns"/>
@@ -95,6 +98,7 @@
 				<Option object_output=".objs"/>
 				<Option deps_output=".deps"/>
 				<Option external_deps=""/>
+				<Option additional_depfiles=""/>
 				<Option type="3"/>
 				<Option compiler="0"/>
 				<Option projectLinkerOptionsRelation="1"/>
@@ -121,6 +125,7 @@
 				<Option object_output=".objs"/>
 				<Option deps_output=".deps"/>
 				<Option external_deps=""/>
+				<Option additional_depfiles=""/>
 				<Option type="3"/>
 				<Option compiler="0"/>
 				<Option projectLinkerOptionsRelation="1"/>
@@ -149,6 +154,7 @@
 				<Option object_output=".objs"/>
 				<Option deps_output=".deps"/>
 				<Option external_deps=""/>
+				<Option additional_depfiles=""/>
 				<Option type="3"/>
 				<Option compiler="0"/>
 				<Option projectLinkerOptionsRelation="1"/>
@@ -175,6 +181,7 @@
 				<Option object_output=".objs"/>
 				<Option deps_output=".deps"/>
 				<Option external_deps=""/>
+				<Option additional_depfiles=""/>
 				<Option type="3"/>
 				<Option compiler="0"/>
 				<Option projectLinkerOptionsRelation="1"/>
@@ -201,6 +208,7 @@
 				<Option object_output=".objs"/>
 				<Option deps_output=".deps"/>
 				<Option external_deps=""/>
+				<Option additional_depfiles=""/>
 				<Option type="3"/>
 				<Option compiler="0"/>
 				<Option projectLinkerOptionsRelation="1"/>
@@ -227,6 +235,7 @@
 				<Option object_output=".objs"/>
 				<Option deps_output=".deps"/>
 				<Option external_deps=""/>
+				<Option additional_depfiles=""/>
 				<Option type="3"/>
 				<Option compiler="0"/>
 				<Option projectLinkerOptionsRelation="1"/>
@@ -252,6 +261,7 @@
 				<Option object_output=".objs"/>
 				<Option deps_output=".deps"/>
 				<Option external_deps=""/>
+				<Option additional_depfiles=""/>
 				<Option type="3"/>
 				<Option compiler="0"/>
 				<Option projectLinkerOptionsRelation="1"/>
@@ -278,6 +288,7 @@
 				<Option object_output=".objs"/>
 				<Option deps_output=".deps"/>
 				<Option external_deps=""/>
+				<Option additional_depfiles=""/>
 				<Option type="3"/>
 				<Option compiler="0"/>
 				<Compiler>
@@ -299,6 +310,7 @@
 				<Option object_output=".objs"/>
 				<Option deps_output=".deps"/>
 				<Option external_deps=""/>
+				<Option additional_depfiles=""/>
 				<Option type="3"/>
 				<Option compiler="0"/>
 				<Option projectIncludeDirsRelation="2"/>
@@ -331,6 +343,7 @@
 				<Option object_output=".objs"/>
 				<Option deps_output=".deps"/>
 				<Option external_deps=""/>
+				<Option additional_depfiles=""/>
 				<Option type="1"/>
 				<Option compiler="0"/>
 				<Option projectCompilerOptionsRelation="0"/>
@@ -339,6 +352,7 @@
 				<Option projectResourceIncludeDirsRelation="1"/>
 				<Compiler>
 					<Add option="-Os"/>
+					<Add option="-D__WXMSW__"/>
 				</Compiler>
 			</Target>
 			<Target title="doc">

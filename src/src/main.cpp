@@ -2081,6 +2081,7 @@ void MainFrame::OnPluginUnloaded(CodeBlocksEvent& event)
 void MainFrame::OnSettingsEnvironment(wxCommandEvent& event)
 {
     bool tbarsmall = m_SmallToolBar;
+    bool edmanCloseBtn = ConfigManager::Get()->Read("/editor/show_close_button", (long int)0);
 
 	EnvironmentSettingsDlg dlg(this);
 	if (dlg.ShowModal() == wxID_OK)
@@ -2090,6 +2091,13 @@ void MainFrame::OnSettingsEnvironment(wxCommandEvent& event)
             CreateToolbars();
         m_pMsgMan->EnableAutoHide(ConfigManager::Get()->Read("/message_manager/auto_hide", 0L));
         ShowHideStartPage();
+        
+        if (ConfigManager::Get()->Read("/editor/show_close_button", (long int)0) != edmanCloseBtn)
+        {
+        	wxMessageBox(_("Some of the changes you made will be applied after you restart Code::Blocks."),
+                            _("Information"),
+                            wxICON_INFORMATION);
+        }
 	}
 }
 

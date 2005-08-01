@@ -122,6 +122,14 @@
                   <border>8</border>
                 </object>
                 <object class="sizeritem">
+                  <object class="wxCheckBox" name="chkShowEditorCloseButton">
+                    <label>Show &quot;close button&quot; near editors</label>
+                    <checked>0</checked>
+                  </object>
+                  <flag>wxBOTTOM|wxLEFT|wxRIGHT|wxGROW</flag>
+                  <border>8</border>
+                </object>
+                <object class="sizeritem">
                   <object class="wxCheckBox" name="chkAutoHideMessages">
                     <label>Auto-hide message pane</label>
                     <checked>1</checked>

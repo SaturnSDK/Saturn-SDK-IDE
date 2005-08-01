@@ -196,7 +196,7 @@
                     </content>
                     <selection>0</selection>
                   </object>
-                  <flag>wxTOP|wxLEFT|wxRIGHT|wxGROW</flag>
+                  <flag>wxALL|wxGROW</flag>
                   <border>8</border>
                 </object>
               </object>
