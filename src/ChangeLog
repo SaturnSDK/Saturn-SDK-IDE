@@ -1,3 +1,172 @@
+Changes for version 1.0-RC1-1
+-------------------------------
+
+2005-08-02 22:11  mandrav
+
+	* Updated win32 Makefile and setup file for 1.0-RC1-1
+
+2005-08-02 04:14  rickg22
+
+	* 	Moved "Close button" to the left
+
+2005-08-01 14:28  mandrav
+
+	* Updated unix project file and Makefile.unix
+	* Fixed editor caret and focus line disappearing under linux
+	* Fixed all dialogs to appear correctly under linux
+	* Enabled opened files tree under linux
+
+2005-08-01 14:23  mandrav
+
+	* Fixed editor caret and focus line disappearing under linux
+	* Fixed all dialogs to appear correctly under linux
+	* Enabled opened files tree under linux
+
+2005-08-01 12:45  mandrav
+
+	* Added configuration for editor's new close-button (disabled by
+	  default)
+
+2005-08-01 07:41  rickg22
+
+	* 	Added "close button" a-la Firefox to close tabs
+
+2005-07-31 13:28  mandrav
+
+	* Fixed more bugs in compiler "Run" command when the target's output
+	  or host application used environment variables. Should be OK now.
+
+2005-07-31 12:03  mandrav
+
+	* Fixed bug in compiler "Run" command when the target's output used
+	  environment variables
+
+2005-07-31 11:37  mandrav
+
+	* Merged latest change from VERSION_1_0, mainly regarding compiler
+	  options dialog
+
+2005-07-31 02:10  rickg22
+
+	* 	Revamped the design of the compiler settings to make it more
+	  user-friendly. Added "cancel button" for Compiler Settings and
+	  Project's Build Options.
+
+2005-07-31 02:03  rickg22
+
+	* 	Search and Settings menus were given more common shortcuts
+
+2005-07-31 01:44  byo_spoon
+
+	* 	Working on dragging layer
+
+2005-07-30 22:18  mandrav
+
+	* When pressing "Run" it checks if the project isn't built and
+	  displays a message (bug #1245691)
+
+2005-07-30 15:35  mandrav
+
+	* Enabled "Find" function for files without project (bug #1247438)
+
+2005-07-30 15:30  mandrav
+
+	* Fixed code-completion wrong type recognition when type was close
+	  to << (bug #1243639)
+
+2005-07-30 13:57  mandrav
+
+	* Improved MinGW detection from registry (patch #1247912 by zieQ)
+
+2005-07-30 13:48  mandrav
+
+	* Fixed notebook flickering while opening project files (thanks to
+	  Thomas).
+
+2005-07-30 13:20  mandrav
+
+	* Fixed wrong expanding of environment variables in the
+	  code-completion parser, resulting to innacurate parsing
+
+2005-07-30 12:56  mandrav
+
+	* Added patch for wxHandleFatalExceptions (patch #1236036 by
+	  orfanik)
+
+2005-07-30 12:49  mandrav
+
+	* Updated setup files to use a treeview for plugins selection
+	  (thanks to Julien Lecomte)
+	* Applied msvc loader patches from zieQ
+	* Applied elegant debugger tooltip fix from kjliew (along with a
+	  couple of improvements)
+
+2005-07-30 12:47  mandrav
+
+	* Updated setup files to use a treeview for plugins selection
+	  (thanks to Julien Lecomte)
+
+2005-07-30 12:35  mandrav
+
+	* Merged last updates from VERSION_1_0 branch
+
+2005-07-30 11:57  mandrav
+
+	* Fixed GCC commands for non-win32 platforms
+	* Debugger is now aware of environment variables
+
+2005-07-29 12:25  mandrav
+
+	* Fixed debugger tooltip evaluation not shown (bug #1240575)
+	* Added more options for the MSVC compiler (patch #1247085 by zieQ)
+	* When creating new file, do not default to .rc extension. Does not
+	  append an extension anymore.
+	* Fixed setting for default editor background color.
+
+2005-07-29 12:24  mandrav
+
+	* Fixed a small wx2.6 calculation error in debugger tooltip
+	  evaluation not shown (bug #1240575)
+
+2005-07-29 12:04  mandrav
+
+	* Fixed debugger tooltip evaluation not shown (bug #1240575)
+
+2005-07-29 11:55  mandrav
+
+	* Added more options for the MSVC compiler (patch #1247085 by zieQ)
+
+2005-07-29 11:41  mandrav
+
+	* When creating new file, do not default to .rc extension. Does not
+	  append an extension anymore.
+
+2005-07-29 03:45  byo_spoon
+
+	* 	Started working on size/position change using mouse
+
+2005-07-29 02:34  byo_spoon
+
+	* 	Minor bug fixes
+
+2005-07-28 10:32  ceniza
+
+	* 	Bugfix when adding a new help file. Any file can be added as help
+	  file and it'll run with the associated program. The beginning of
+	  crossplatform.
+
+2005-07-26 23:43  byo_spoon
+
+	* 	Minor bug fixes
+
+2005-07-26 21:00  mandrav
+
+	* Fix for correctly applying the editor background color.
+
+2005-07-25 22:28  mandrav
+
+	* Updated ChangeLog
+
 Changes for version 1.0-RC1
 -------------------------------
 
