@@ -9,8 +9,6 @@
                     <bitmap>images/closebutton.png</bitmap>
                 </object>
                 <option>0</option>
-                <flag>wxTOP</flag>
-                <border>20</border>
             </object> 
         </object>
     </object> 
