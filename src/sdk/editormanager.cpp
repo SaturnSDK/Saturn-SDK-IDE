@@ -27,11 +27,13 @@
 #include <wx/menu.h>
 #include <wx/splitter.h>
 #include <wx/imaglist.h>
+#include <wx/bmpbuttn.h>
 #include <wx/file.h>
 #include <wx/stc/stc.h>
 
 #include "editormanager.h" // class's header file
 #include "configmanager.h"
+#include <wx/xrc/xmlres.h>
 #include "messagemanager.h"
 #include "projectmanager.h"
 #include "manager.h"
@@ -58,6 +60,8 @@ WX_DEFINE_LIST(EditorsList);
 
 int ID_NBEditorManager = wxNewId();
 int ID_EditorManager = wxNewId();
+int ID_EditorManagerCloseButton = XRCID("ID_EditorManagerCloseButton");
+int ID_EditorManagerPanel = XRCID("ID_EditorManagerPanel");
 int idEditorManagerCheckFiles = wxNewId();
 
 BEGIN_EVENT_TABLE(EditorManager, wxEvtHandler)
@@ -76,6 +80,8 @@ END_EVENT_TABLE()
 
 // static
 bool EditorManager::s_CanShutdown = true;
+wxButton *edman_closebutton = NULL; // for private use
+
 
 EditorManager* EditorManager::Get(wxWindow* parent)
 {
@@ -101,17 +107,37 @@ void EditorManager::Free()
 
 // class constructor
 EditorManager::EditorManager(wxWindow* parent)
-    : m_LastFindReplaceData(0L),
+    : 
+    m_pNotebook(0L),
+    m_pPanel(0L),
+    m_LastFindReplaceData(0L),
     m_pImages(0L),
     m_pTree(0L),
     m_LastActiveFile(""),
     m_LastModifiedflag(false),
     m_pSearchLog(0),
-    m_SearchLogIndex(-1)
+    m_SearchLogIndex(-1),
+    m_SashPosition(150) // no longer used
 {
 	SC_CONSTRUCTOR_BEGIN
 	EditorManagerProxy::Set(this);
-	m_pNotebook = new wxNotebook(parent, ID_NBEditorManager, wxDefaultPosition, wxDefaultSize,  wxNO_FULL_REPAINT_ON_RESIZE | wxCLIP_CHILDREN);
+
+	// *** Load Panel and close button from XRC ***
+	m_pPanel = wxXmlResource::Get()->LoadPanel(parent,_T("ID_EditorManagerPanel"));
+	wxBitmapButton* myclosebutton = XRCCTRL(*m_pPanel,_T("ID_EditorManagerCloseButton"),wxBitmapButton);
+	edman_closebutton = (wxButton*)myclosebutton;
+	m_pNotebook = new wxNotebook(m_pPanel, ID_NBEditorManager, wxDefaultPosition, wxDefaultSize,  wxNO_FULL_REPAINT_ON_RESIZE | wxCLIP_CHILDREN);
+	m_pPanel->GetSizer()->Add(m_pNotebook,1,wxGROW);
+
+    // remove the ugly close-button, if not enabled in configuration
+    if (ConfigManager::Get()->Read("/editor/show_close_button", 0L) == 0)
+    {
+        m_pPanel->GetSizer()->Remove(edman_closebutton);
+        delete edman_closebutton;
+        edman_closebutton = 0;
+    }
+	// ***
+
 	m_EditorsList.Clear();
     #ifdef USE_OPENFILES_TREE
 	ShowOpenFilesTree(ConfigManager::Get()->Read("/editor/show_opened_files_tree", true));
@@ -132,7 +158,7 @@ EditorManager::EditorManager(wxWindow* parent)
 EditorManager::~EditorManager()
 {
 	SC_DESTRUCTOR_BEGIN
-	
+
 	SaveAutoComplete();
 
 	if (m_Theme)
@@ -153,8 +179,8 @@ EditorManager::~EditorManager()
     // free-up any memory used for editors
     m_EditorsList.DeleteContents(true); // Set this to false to preserve
     m_EditorsList.Clear();              // linked data.
-
-    m_pNotebook->Destroy();
+    edman_closebutton = NULL;
+//    m_pNotebook->Destroy();
 
     SC_DESTRUCTOR_END
 }
@@ -1418,17 +1444,15 @@ void EditorManager::OnCheckForModifiedFiles(wxCommandEvent& event)
 #ifdef USE_OPENFILES_TREE
 bool EditorManager::OpenFilesTreeSupported()
 {
-    #if defined(__WXGTK__) || defined(DONT_USE_OPENFILES_TREE)
+    #ifdef DONT_USE_OPENFILES_TREE
     return false;
     #else
     return true;
     #endif
 }
 
-void EditorManager::ShowOpenFilesTree(bool show)
+void EditorManager::RefreshOpenFilesTree()
 {
-    static int s_SashPosition = 200;
-
     if (!OpenFilesTreeSupported())
         return;
     if (!m_pTree)
@@ -1439,18 +1463,24 @@ void EditorManager::ShowOpenFilesTree(bool show)
         return;
     wxWindow* win = Manager::Get()->GetNotebookPage(_("Projects"),wxTAB_TRAVERSAL | wxCLIP_CHILDREN,true);
     wxSplitPanel* mypanel = (wxSplitPanel*)(win);
-    wxSplitterWindow* mysplitter = mypanel->GetSplitter();
+    mypanel->RefreshSplitter(ID_EditorManager,ID_ProjectManager);
+}
+
+void EditorManager::ShowOpenFilesTree(bool show)
+{
+    if (!OpenFilesTreeSupported())
+        return;
+    if (!m_pTree)
+        InitPane();
+    if (!m_pTree)
+        return;
+    if(Manager::isappShuttingDown())
+        return;
     if (show && !IsOpenFilesTreeVisible())
-    {
         m_pTree->Show(true);
-        mypanel->RefreshSplitter(ID_EditorManager,ID_ProjectManager,s_SashPosition);
-    }
     else if (!show && IsOpenFilesTreeVisible())
-    {
-        s_SashPosition = mysplitter->GetSashPosition();
         m_pTree->Show(false);
-        mypanel->RefreshSplitter(ID_EditorManager,ID_ProjectManager,s_SashPosition);
-    }
+    RefreshOpenFilesTree();
     // update user prefs
     ConfigManager::Get()->Write("/editor/show_opened_files_tree", show);
 }
@@ -1624,7 +1654,8 @@ void EditorManager::InitPane()
     wxSplitterWindow* mysplitter = mypanel->GetSplitter();
     BuildOpenedFilesTree(mysplitter);
     mypanel->SetAutoLayout(true);
-    mypanel->RefreshSplitter(ID_EditorManager,ID_ProjectManager,200);
+    mypanel->SetConfigEntryForSplitter("/editor/opened_files_tree_height");
+    mypanel->RefreshSplitter(ID_EditorManager,ID_ProjectManager);
 }
 
 void EditorManager::BuildOpenedFilesTree(wxWindow* parent)
@@ -1786,8 +1817,14 @@ void EditorManager::OnUpdateUI(wxUpdateUIEvent& event)
     if(!Manager::isappShuttingDown())
         RefreshOpenedFilesTree();
 
+    if(edman_closebutton)
+    {
+        edman_closebutton->Show(GetActiveEditor()!=NULL);
+    }
+
     // allow other UpdateUI handlers to process this event
     // *very* important! don't forget it...
+    
     event.Skip();
 }
 

@@ -22,6 +22,7 @@ EnvironmentSettingsDlg::EnvironmentSettingsDlg(wxWindow* parent)
 	XRCCTRL(*this, "rbProjectOpen", wxRadioBox)->SetSelection(ConfigManager::Get()->Read("/project_manager/open_files", (long int)1));
 	XRCCTRL(*this, "rbToolbarSize", wxRadioBox)->SetSelection(ConfigManager::Get()->Read("/environment/toolbar_size", (long int)0));
 	XRCCTRL(*this, "chkAutoHideMessages", wxCheckBox)->SetValue(ConfigManager::Get()->Read("/message_manager/auto_hide", 0L));
+	XRCCTRL(*this, "chkShowEditorCloseButton", wxCheckBox)->SetValue(ConfigManager::Get()->Read("/editor/show_close_button", 0L));
 	XRCCTRL(*this, "chkShowStartPage", wxCheckBox)->SetValue(ConfigManager::Get()->Read("/environment/start_here_page", 1));
 }
 
@@ -45,6 +46,7 @@ void EnvironmentSettingsDlg::EndModal(int retCode)
         ConfigManager::Get()->Write("/project_manager/open_files", XRCCTRL(*this, "rbProjectOpen", wxRadioBox)->GetSelection());
         ConfigManager::Get()->Write("/environment/toolbar_size", XRCCTRL(*this, "rbToolbarSize", wxRadioBox)->GetSelection());
         ConfigManager::Get()->Write("/message_manager/auto_hide", XRCCTRL(*this, "chkAutoHideMessages", wxCheckBox)->GetValue());
+        ConfigManager::Get()->Write("/editor/show_close_button", XRCCTRL(*this, "chkShowEditorCloseButton", wxCheckBox)->GetValue());
         ConfigManager::Get()->Write("/environment/start_here_page", XRCCTRL(*this, "chkShowStartPage", wxCheckBox)->GetValue());
 	}
 

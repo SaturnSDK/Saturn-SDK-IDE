@@ -273,7 +273,7 @@
       </object>
     </object>
     <object class="wxMenu" name="menu_search">
-      <label>&amp;Search</label>
+      <label>Sea&amp;rch</label>
       <object class="wxMenuItem" name="idSearchFind">
         <label>&amp;Find...</label>
         <accel>Ctrl-F</accel>
@@ -382,7 +382,7 @@
       </object>
     </object>
     <object class="wxMenu" name="menu_settings">
-      <label>Sett&amp;ings</label>
+      <label>&amp;Settings</label>
       <object class="wxMenuItem" name="idSettingsEnvironment">
         <label>&amp;Environment</label>
         <help>Change environment settings</help>
@@ -392,7 +392,7 @@
         <help>Change editor's settings</help>
       </object>
       <object class="wxMenu" name="idSettingsConfigurePlugins">
-        <label>&amp;Configure plugins</label>
+        <label>&amp;Plugins' settings</label>
       </object>
       <object class="separator"/>
       <object class="wxMenuItem" name="idSettingsImpExpConfig">

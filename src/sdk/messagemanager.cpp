@@ -365,7 +365,7 @@ void MessageManager::Open()
     sash->SetDefaultSize(wxSize(1, m_OpenSize));
 
 	wxLayoutAlgorithm layout;
-    layout.LayoutFrame(Manager::Get()->GetAppWindow(), Manager::Get()->GetEditorManager()->GetNotebook());
+    layout.LayoutFrame(Manager::Get()->GetAppWindow(), Manager::Get()->GetEditorManager()->GetPanel());
 }
 
 void MessageManager::Close(bool force)
@@ -386,7 +386,7 @@ void MessageManager::Close(bool force)
     m_Open = false;
 
 	wxLayoutAlgorithm layout;
-    layout.LayoutFrame(Manager::Get()->GetAppWindow(), Manager::Get()->GetEditorManager()->GetNotebook());
+    layout.LayoutFrame(Manager::Get()->GetAppWindow(), Manager::Get()->GetEditorManager()->GetPanel());
 }
 
 void MessageManager::LockOpen()
