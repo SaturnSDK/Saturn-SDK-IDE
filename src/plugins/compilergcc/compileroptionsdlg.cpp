@@ -1192,7 +1192,7 @@ void CompilerOptionsDlg::OnAddLibClick(wxCommandEvent& event)
             "",
             m_pProject ? m_pProject->GetBasePath() : "",
             _("Add library"),
-            _("Chose library to link"),
+            _("Choose library to link"),
             false,
             _("Library files (*.a, *.lib)|*.a;*.lib|All files (*)|*"));
             
@@ -1215,8 +1215,8 @@ void CompilerOptionsDlg::OnEditLibClick(wxCommandEvent& event)
     EditPathDlg dlg(this,
             lstLibs->GetStringSelection(),
             m_pProject ? m_pProject->GetBasePath() : "",
-            _("Add library"),
-            _("Chose library to link"),
+            _("Edit library"),
+            _("Choose library to link"),
             false,
             _("Library files (*.a, *.lib)|*.a;*.lib|All files (*)|*"));
                
