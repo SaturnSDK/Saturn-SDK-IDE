@@ -66,6 +66,8 @@ void EditPathDlg::OnBrowse(wxCommandEvent& event)
         if (dlg.ShowModal() == wxID_OK) {
             path = dlg.GetPath();
         }
+        else
+            return;
     }
     
     if (m_AskMakeRelative && !m_Basepath.IsEmpty())

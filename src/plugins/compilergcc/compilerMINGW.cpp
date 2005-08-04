@@ -9,6 +9,8 @@
 #include <wx/fileconf.h>
 #include <wx/msgdlg.h>
 #include <wx/log.h>
+#include "manager.h"
+#include "messagemanager.h"
 
 #include <configmanager.h>
 
@@ -127,30 +129,38 @@ void CompilerMINGW::Reset()
     m_Commands[(int)ctCompileObjectCmd] = "$compiler $options $includes -c $file -o $object";
     m_Commands[(int)ctGenDependenciesCmd] = "$compiler -MM $options -MF $dep_object -MT $object $includes $file";
     m_Commands[(int)ctCompileResourceCmd] = "$rescomp -i $file -J rc -o $resource_output -O coff $res_includes";
-    m_Commands[(int)ctLinkExeCmd] = "$linker $libdirs -o $exe_output $link_objects $link_resobjects $link_options $libs -mwindows";
     m_Commands[(int)ctLinkConsoleExeCmd] = "$linker $libdirs -o $exe_output $link_objects $link_resobjects $link_options $libs";
 #ifdef __WXMSW__
+    m_Commands[(int)ctLinkExeCmd] = "$linker $libdirs -o $exe_output $link_objects $link_resobjects $link_options $libs -mwindows";
     m_Commands[(int)ctLinkDynamicCmd] = "$linker -shared -Wl,--output-def=$def_output -Wl,--out-implib=$static_output -Wl,--dll $libdirs $link_objects $link_resobjects -o $exe_output $link_options $libs";
 #else
-    m_Commands[(int)ctLinkDynamicCmd] = "$linker -shared -Wl,--output-def=$def_output -Wl,--out-implib=$static_output $libdirs $link_objects $link_resobjects -o $exe_output $link_options $libs";
+    m_Commands[(int)ctLinkExeCmd] = m_Commands[(int)ctLinkConsoleExeCmd]; // no -mwindows
+    m_Commands[(int)ctLinkDynamicCmd] = "$linker -shared $libdirs $link_objects $link_resobjects -o $exe_output $link_options $libs";
 #endif
     m_Commands[(int)ctLinkStaticCmd] = "$lib_linker -r $static_output $link_objects\n\tranlib $exe_output";
 
-    m_RegExes.Clear();
-    m_RegExes.Add(RegExStruct(_("Fatal error"), cltError, "FATAL:[ \t]*(.*)", 1));
-    m_RegExes.Add(RegExStruct(_("Preprocessor error"), cltError, "([ \tA-Za-z0-9_:+/\\.-]+):([0-9]+):[0-9]+:[ \t](.*)", 3, 1, 2));
-    m_RegExes.Add(RegExStruct(_("Compiler warning"), cltWarning, "([ \tA-Za-z0-9_:+/\\.-]+):([0-9]+):[ \t][Ww]arning:[ \t](.*)", 3, 1, 2));
-    m_RegExes.Add(RegExStruct(_("Compiler error"), cltError, "([ \tA-Za-z0-9_:+/\\.-]+):([0-9]+):[ \t](.*)", 3, 1, 2));
-    m_RegExes.Add(RegExStruct(_("Linker error"), cltError, "([ \tA-Za-z0-9_:+/\\.-]+):([0-9]+):[0-9]+:[ \t](.*)", 3, 1, 2));
-    m_RegExes.Add(RegExStruct(_("Linker error (2)"), cltError, "[ \tA-Za-z0-9_:+/\\.-]+\\(.text\\+[0-9A-Za-z]+\\):([ \tA-Za-z0-9_:+/\\.-]+):[ \t](.*)", 2, 1));
-    m_RegExes.Add(RegExStruct(_("Undefined reference"), cltError, "([ \tA-Za-z0-9_:+/\\.-]+):[ \t](undefined reference.*)", 2, 1));
-    m_RegExes.Add(RegExStruct(_("Resource compiler error"), cltError, "windres.exe:[ \t](.*)", 1));
+    LoadDefaultRegExArray();
 
     m_CompilerOptions.Clear();
     m_LinkerOptions.Clear();
     m_LinkLibs.Clear();
     m_CmdsBefore.Clear();
     m_CmdsAfter.Clear();
+}
+
+void CompilerMINGW::LoadDefaultRegExArray()
+{
+    m_RegExes.Clear();
+    m_RegExes.Add(RegExStruct(_("Fatal error"), cltError, "FATAL:[ \t]*(.*)", 1));
+    m_RegExes.Add(RegExStruct(_("Preprocessor warning"), cltWarning, "([ \tA-Za-z0-9_:+/\\.-]+):([0-9]+):([0-9]+):[ \t]([Ww]arning:[ \t].*)", 4, 1, 2));
+    m_RegExes.Add(RegExStruct(_("Preprocessor error"), cltError, "([ \tA-Za-z0-9_:+/\\.-]+):([0-9]+):[0-9]+:[ \t](.*)", 3, 1, 2));
+    m_RegExes.Add(RegExStruct(_("Compiler warning"), cltWarning, "([ \tA-Za-z0-9_:+/\\.-]+):([0-9]+):[ \t]([Ww]arning:[ \t].*)", 3, 1, 2));
+    m_RegExes.Add(RegExStruct(_("Compiler error"), cltError, "([ \tA-Za-z0-9_:+/\\.-]+):([0-9]+):[ \t](.*)", 3, 1, 2));
+    m_RegExes.Add(RegExStruct(_("Linker error"), cltError, "([ \tA-Za-z0-9_:+/\\.-]+):([0-9]+):[0-9]+:[ \t](.*)", 3, 1, 2));
+    m_RegExes.Add(RegExStruct(_("Linker error (2)"), cltError, "[ \tA-Za-z0-9_:+/\\.-]+\\(.text\\+[0-9A-Za-z]+\\):([ \tA-Za-z0-9_:+/\\.-]+):[ \t](.*)", 2, 1));
+    m_RegExes.Add(RegExStruct(_("Linker error (lib not found)"), cltError, ".*(ld.exe):[ \t](cannot find.*)", 2, 1));
+    m_RegExes.Add(RegExStruct(_("Undefined reference"), cltError, "([ \tA-Za-z0-9_:+/\\.-]+):[ \t](undefined reference.*)", 2, 1));
+    m_RegExes.Add(RegExStruct(_("Resource compiler error"), cltError, "windres.exe:[ \t](.*)", 1));
 }
 
 AutoDetectResult CompilerMINGW::AutoDetectInstallationDir()
@@ -172,9 +182,28 @@ AutoDetectResult CompilerMINGW::AutoDetectInstallationDir()
             wxLogNull ln;
             wxRegKey key; // defaults to HKCR
             key.SetName("HKEY_LOCAL_MACHINE\\Software\\Dev-C++");
-            if (key.Open())
+            if (key.Open()) {
                 // found; read it
                 key.QueryValue("Install_Dir", m_MasterPath);
+            }
+            else {
+                // installed by inno-setup
+                // HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Minimalist GNU for Windows 4.1_is1
+            	wxString name;
+            	long index;
+            	key.SetName("HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall");                               
+            	//key.SetName("HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion");                               
+                bool ok = key.GetFirstKey(name, index);
+                while (ok && !name.StartsWith("Minimalist GNU for Windows")) {
+                    ok = key.GetNextKey(name, index);
+                }
+                if (ok) {
+                	name = key.GetName() + "\\" + name;
+                    key.SetName(name);
+                    Manager::Get()->GetMessageManager()->DebugLog("name: %s", name.c_str());
+                    if (key.Exists()) key.QueryValue("InstallLocation", m_MasterPath);
+                }
+            }
         }
     }
     else

@@ -31,6 +31,7 @@
 #include <configmanager.h>
 #include <messagemanager.h>
 #include <projectmanager.h>
+#include <customvars.h>
 #include "editpathdlg.h"
 
 BEGIN_EVENT_TABLE(CompilerOptionsDlg, wxDialog)
@@ -120,22 +121,22 @@ CompilerOptionsDlg::CompilerOptionsDlg(wxWindow* parent, CompilerGCC* compiler, 
 	m_BuildingTree(false)
 {
 	wxXmlResource::Get()->LoadDialog(this, parent, _("dlgCompilerOptions"));
-	
+
 	DoFillCompilerSets();
 	DoFillCompilerPrograms();
-	DoFillPrograms();
 	DoFillOthers();
 	DoFillCategories();
 	DoFillTree(project, target);
+	DoFillVars();
 
     wxTreeCtrl* tree = XRCCTRL(*this, "tcScope", wxTreeCtrl);
     wxSizer* sizer = tree->GetContainingSizer();
     if (!project)
     {
         // global settings
-        SetTitle(_("Global compiler options"));
+        SetTitle(_("Compiler Settings"));
+        sizer->Show(tree,false);
         sizer->Remove(tree);
-        tree->Show(false);
         wxNotebook* nb = XRCCTRL(*this, "nbMain", wxNotebook);
         nb->DeletePage(3); // remove "Commands" page
 	}
@@ -143,11 +144,10 @@ CompilerOptionsDlg::CompilerOptionsDlg(wxWindow* parent, CompilerGCC* compiler, 
 	{
         m_InitialCompilerIdx = project->GetCompilerIndex();
         // project settings
-        SetTitle(_("Project's compiler options"));
+        SetTitle(_("Project's Build options"));
 
         wxNotebook* nb = XRCCTRL(*this, "nbMain", wxNotebook);
         nb->DeletePage(6); // remove "Other" page
-        nb->DeletePage(5); // remove "Custom vars" page
         nb->DeletePage(4); // remove "Programs" page
         
         // remove "Compiler" buttons
@@ -159,6 +159,10 @@ CompilerOptionsDlg::CompilerOptionsDlg(wxWindow* parent, CompilerGCC* compiler, 
     }
     sizer->Layout();
     Layout();
+    GetSizer()->Layout();
+    GetSizer()->SetSizeHints(this);
+    this->SetSize(-1, -1, 0, 0);
+    this->CenterOnScreen();
 }
 
 CompilerOptionsDlg::~CompilerOptionsDlg()
@@ -222,17 +226,21 @@ void CompilerOptionsDlg::DoFillCompilerPrograms()
     }
 }
 
-void CompilerOptionsDlg::DoFillPrograms()
+void CompilerOptionsDlg::DoFillVars(CustomVars* vars)
 {
 	wxListBox* lst = XRCCTRL(*this, "lstVars", wxListBox);
 	if (!lst)
         return;
 	lst->Clear();
-	const VarsArray& vars = m_Compiler->GetCustomVars().GetVars();
+	if (!vars)
+        vars = GetCustomVars();
+    if (!vars)
+        return;
+	const VarsArray& varsarr = vars->GetVars();
 	//Manager::Get()->GetMessageManager()->DebugLog("[0x%8.8x] Current var count is %d (0x%8.8x)", m_Compiler, vars.GetCount(), &vars);
-	for (unsigned int i = 0; i < vars.GetCount(); ++i)
+	for (unsigned int i = 0; i < varsarr.GetCount(); ++i)
 	{
-		Var* v = &vars[i];
+		Var* v = &varsarr[i];
 		if (!v->builtin)
 		{
             wxString text = v->name + " = " + v->value;
@@ -619,6 +627,7 @@ void CompilerOptionsDlg::DoLoadOptions(int compilerIdx, ScopeTreeData* data)
 	}
 	TextToOptions();
 
+    DoFillVars();
 	DoFillOptions();
 	DoFillCompileDirs(m_IncludeDirs, XRCCTRL(*this, "lstIncludeDirs", wxListBox));
 	DoFillCompileDirs(m_LibDirs, XRCCTRL(*this, "lstLibDirs", wxListBox));
@@ -896,6 +905,31 @@ wxListBox* CompilerOptionsDlg::GetDirsListBox()
     return 0;
 }
 
+CustomVars* CompilerOptionsDlg::GetCustomVars()
+{
+	wxTreeCtrl* tc = XRCCTRL(*this, "tcScope", wxTreeCtrl);
+    ScopeTreeData* data = tc ? (ScopeTreeData*)tc->GetItemData(tc->GetSelection()) : 0;
+    CustomVars* vars = 0;
+    if (!data)
+        vars = GetCustomVars(0);
+    else
+    {
+        if (data->GetTarget())
+            vars = &data->GetTarget()->GetCustomVars();
+        else
+            vars = &m_pProject->GetCustomVars();
+    }
+    return vars;
+}
+
+CustomVars* CompilerOptionsDlg::GetCustomVars(CompileOptionsBase* base)
+{
+	if (base)
+        return &base->GetCustomVars();
+    Compiler* compiler = CompilerFactory::Compilers[m_LastCompilerIdx];
+    return compiler ? &compiler->GetCustomVars() : 0;
+}
+
 void CompilerOptionsDlg::OnCategoryChanged(wxCommandEvent& event)
 {
 	DoFillOptions();
@@ -995,9 +1029,12 @@ void CompilerOptionsDlg::OnAddVarClick(wxCommandEvent& event)
 	wxString value = wxGetTextFromUser(_("Please enter value for the new variable:"), title);
 	if (!value.IsEmpty())
 	{
-		CustomVars& vars = m_Compiler->GetCustomVars();
-		vars.Add(name, value);
-		DoFillPrograms();
+        CustomVars* vars = GetCustomVars();
+        if (vars)
+        {
+            vars->Add(name, value);
+            DoFillVars(vars);
+        }
 	}
 }
 
@@ -1013,9 +1050,12 @@ void CompilerOptionsDlg::OnEditVarClick(wxCommandEvent& event)
 		return;
 		
 	wxString value = wxGetTextFromUser(_("Please edit the variable value:"), title, var->value);
-	if (!value.IsEmpty())
+	if (!value.IsEmpty() && value != var->value)
 	{
 		var->value = value;
+        CustomVars* vars = GetCustomVars();
+        if (vars)
+            vars->SetModified(true);
 		XRCCTRL(*this, "lstVars", wxListBox)->SetString(sel, var->name + " = " + var->value);
 	}
 }
@@ -1032,8 +1072,12 @@ void CompilerOptionsDlg::OnRemoveVarClick(wxCommandEvent& event)
 		Var* var = static_cast<Var*>(XRCCTRL(*this, "lstVars", wxListBox)->GetClientData(sel));
 		if (var)
 		{
-			m_Compiler->GetCustomVars().DeleteVar(var);
-			DoFillPrograms();
+            CustomVars* vars = GetCustomVars();
+            if (vars)
+            {
+    			vars->DeleteVar(var);
+                DoFillVars(vars);
+            }
 		}
 	}
 }
@@ -1148,7 +1192,7 @@ void CompilerOptionsDlg::OnAddLibClick(wxCommandEvent& event)
             "",
             m_pProject ? m_pProject->GetBasePath() : "",
             _("Add library"),
-            _("Chose library to link"),
+            _("Choose library to link"),
             false,
             _("Library files (*.a, *.lib)|*.a;*.lib|All files (*)|*"));
             
@@ -1171,8 +1215,8 @@ void CompilerOptionsDlg::OnEditLibClick(wxCommandEvent& event)
     EditPathDlg dlg(this,
             lstLibs->GetStringSelection(),
             m_pProject ? m_pProject->GetBasePath() : "",
-            _("Add library"),
-            _("Chose library to link"),
+            _("Edit library"),
+            _("Choose library to link"),
             false,
             _("Library files (*.a, *.lib)|*.a;*.lib|All files (*)|*"));
                
@@ -1488,7 +1532,7 @@ void CompilerOptionsDlg::EndModal(int retCode)
 	ScopeTreeData* data = (ScopeTreeData*)tc->GetItemData(tc->GetSelection());
     int compilerIdx = XRCCTRL(*this, "cmbCompiler", wxComboBox)->GetSelection();
 	DoSaveOptions(compilerIdx, data);
-	m_Compiler->GetCustomVars().Save();
+	CompilerFactory::SaveSettings();
 
     // compiler set
     int idx = XRCCTRL(*this, "cmbCompiler", wxComboBox)->GetSelection();

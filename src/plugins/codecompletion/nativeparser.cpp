@@ -30,6 +30,8 @@
 #include <pluginmanager.h>
 #include <messagemanager.h>
 #include <editormanager.h>
+#include <macrosmanager.h>
+#include <customvars.h>
 #include <cbeditor.h>
 #include <cbproject.h>
 #include "classbrowser.h"
@@ -154,10 +156,23 @@ void NativeParser::AddCompilerDirs(Parser* parser, cbProject* project)
     parser->IncludeDirs().Clear();
     wxString base = project->GetBasePath();
 
+    Compiler* compiler = 0;
+    // apply compiler global vars
+	if (CompilerFactory::Compilers.GetCount() > 0 && CompilerFactory::CompilerIndexOK(project->GetCompilerIndex()))
+	{
+		compiler = CompilerFactory::Compilers[project->GetCompilerIndex()];
+        compiler->GetCustomVars().ApplyVarsToEnvironment();
+	}
+    // apply project vars
+    project->GetCustomVars().ApplyVarsToEnvironment();
+
     // get project include dirs
     for (unsigned int i = 0; i < project->GetIncludeDirs().GetCount(); ++i)
     {
-        wxFileName dir(project->GetIncludeDirs()[i]);
+    	wxString out = project->GetIncludeDirs()[i];
+    	Manager::Get()->GetMacrosManager()->ReplaceEnvVars(out);
+        wxFileName dir(out);
+        wxLogNull ln; // hide the error log about "too many ..", if the relative path is invalid
         if (!dir.IsAbsolute())
             dir.Normalize(wxPATH_NORM_ALL & ~wxPATH_NORM_CASE, base);
         if (dir.IsOk() && parser->IncludeDirs().Index(dir.GetFullPath()) == wxNOT_FOUND)
@@ -173,9 +188,14 @@ void NativeParser::AddCompilerDirs(Parser* parser, cbProject* project)
         ProjectBuildTarget* target = project->GetBuildTarget(i);
         if (target)
         {
+        	// apply target vars
+            target->GetCustomVars().ApplyVarsToEnvironment();
             for (unsigned int ti = 0; ti < target->GetIncludeDirs().GetCount(); ++ti)
             {
-                wxFileName dir(target->GetIncludeDirs()[ti]);
+                wxString out = target->GetIncludeDirs()[ti];
+                Manager::Get()->GetMacrosManager()->ReplaceEnvVars(out);
+                wxFileName dir(out);
+                wxLogNull ln; // hide the error log about "too many ..", if the relative path is invalid
                 if (!dir.IsAbsolute())
                     dir.Normalize(wxPATH_NORM_ALL & ~wxPATH_NORM_CASE, base);
                 if (dir.IsOk() && parser->IncludeDirs().Index(dir.GetFullPath()) == wxNOT_FOUND)
@@ -188,14 +208,16 @@ void NativeParser::AddCompilerDirs(Parser* parser, cbProject* project)
     }
 
     // add compiler include dirs
-	if (CompilerFactory::Compilers.GetCount() > 0 && CompilerFactory::CompilerIndexOK(project->GetCompilerIndex()))
+	if (compiler)
 	{
-		Compiler* compiler = CompilerFactory::Compilers[project->GetCompilerIndex()];
 		const wxArrayString& dirs = compiler->GetIncludeDirs();
 		for (unsigned int i = 0; i < dirs.GetCount(); ++i)
 		{
 			//Manager::Get()->GetMessageManager()->Log(mltDevDebug, "Adding %s", dirs[i].c_str());
-            wxFileName dir(dirs[i]);
+            wxString out = dirs[i];
+            Manager::Get()->GetMacrosManager()->ReplaceEnvVars(out);
+            wxFileName dir(out);
+            wxLogNull ln; // hide the error log about "too many ..", if the relative path is invalid
             if (!dir.IsAbsolute())
                 dir.Normalize(wxPATH_NORM_ALL & ~wxPATH_NORM_CASE, base);
             if (dir.IsOk() && parser->IncludeDirs().Index(dir.GetFullPath()) == wxNOT_FOUND)
@@ -809,21 +831,28 @@ int NativeParser::AI(cbEditor* editor, Parser* parser, const wxString& lineText,
 		else
 		{
 			Token* token = 0L;
+			// try #1 - special case
 			if (tok.Matches("this")) // <-- special case
 			{
                 token = scopeToken;
                 parentToken = scopeToken;
 			}
-            else
-            {
-                Manager::Get()->GetMessageManager()->DebugLog("Looking for %s under %s", tok.c_str(), parentToken ? parentToken->m_Name.c_str() : "Unknown");
-                token = parser->FindChildTokenByName(parentToken, tok, true);
-            }
+			// try #2 - function's class member
 			if (!token)
 			{
                 Manager::Get()->GetMessageManager()->DebugLog("Looking for %s under %s", tok.c_str(), scopeToken ? scopeToken->m_Name.c_str() : "Unknown");
 				token = parser->FindChildTokenByName(scopeToken, tok, true); // try local scope
             }
+            // try #3 - everything else
+            if (!token)
+            {
+                Manager::Get()->GetMessageManager()->DebugLog("Looking for %s under %s", tok.c_str(), parentToken ? parentToken->m_Name.c_str() : "Unknown");
+                token = parser->FindChildTokenByName(parentToken, tok, true);
+            }
+            // NOTE: Now that #2 is checked before #3, class member supersedes similarly named
+            //       function argument (if any). But if we put #3 before #2, we 'll be checking
+            //       global tokens first, which is not what we want...
+
 			if (token)
                 Manager::Get()->GetMessageManager()->DebugLog("Token found %s, type '%s'", token->m_Name.c_str(), token->m_ActualType.c_str());
 			if (token && !token->m_ActualType.IsEmpty())

@@ -159,6 +159,7 @@ int idLeftSash = XRCID("idLeftSash");
 int idBottomSash = XRCID("idBottomSash");
 int idCloseFullScreen = XRCID("idCloseFullScreen");
 int idShiftTab = wxNewId();
+DLLIMPORT extern int ID_EditorManagerCloseButton;
 
 BEGIN_EVENT_TABLE(MainFrame, wxFrame)
     EVT_SIZE(MainFrame::OnSize)
@@ -234,6 +235,7 @@ BEGIN_EVENT_TABLE(MainFrame, wxFrame)
     EVT_MENU(idFileSaveAllFiles,  MainFrame::OnFileSaveAllFiles)
     EVT_MENU(idFileSaveWorkspace,  MainFrame::OnFileSaveWorkspace)
     EVT_MENU(idFileSaveWorkspaceAs,  MainFrame::OnFileSaveWorkspaceAs)
+    EVT_BUTTON(ID_EditorManagerCloseButton,MainFrame::OnFileClose)
     EVT_MENU(idFileClose,  MainFrame::OnFileClose)
     EVT_MENU(idFileCloseAll,  MainFrame::OnFileCloseAll)
     EVT_MENU(idFilePrintSetup,  MainFrame::OnFilePrintSetup)
@@ -360,7 +362,7 @@ MainFrame::MainFrame(wxWindow* parent)
     
     this->SetAcceleratorTable(*m_pAccel);
     
-    m_SmallToolBar = ConfigManager::Get()->Read("/environment/toolbar_size", (long int)0) == 1;
+    m_SmallToolBar = ConfigManager::Get()->Read("/environment/toolbar_size", 1L) == 1;
 	CreateIDE();
 
 #ifdef __WXMSW__
@@ -963,7 +965,8 @@ void MainFrame::DoUpdateLayout()
     if (!m_pEdMan)
         return;
 	wxLayoutAlgorithm layout;
-    layout.LayoutFrame(this, m_pEdMan->GetNotebook());
+    layout.LayoutFrame(this, m_pEdMan->GetPanel());
+    m_pEdMan->RefreshOpenFilesTree();
 
 #if (wxMAJOR_VERSION == 2) && (wxMINOR_VERSION < 5)	
 	/**
@@ -1266,6 +1269,7 @@ void MainFrame::OnFileClose(wxCommandEvent& WXUNUSED(event))
 {
     m_pEdMan->CloseActive();
     DoUpdateStatusBar();
+    Refresh();
 }
 
 void MainFrame::OnFileCloseAll(wxCommandEvent& WXUNUSED(event))
@@ -1805,7 +1809,7 @@ void MainFrame::OnHelpTips(wxCommandEvent& event)
 
 void MainFrame::OnFileMenuUpdateUI(wxUpdateUIEvent& event)
 {
-    cbEditor* ed = m_pEdMan ? m_pEdMan->GetBuiltinEditor(m_pEdMan->GetActiveEditor()) : 0;
+    EditorBase* ed = m_pEdMan ? m_pEdMan->GetActiveEditor() : 0;
     wxMenuBar* mbar = GetMenuBar();
 
     bool canCloseProject = (ProjectManager::CanShutdown() && EditorManager::CanShutdown());
@@ -1898,11 +1902,10 @@ void MainFrame::OnViewMenuUpdateUI(wxUpdateUIEvent& event)
 
 void MainFrame::OnSearchMenuUpdateUI(wxUpdateUIEvent& event)
 {
-    cbProject* prj = m_pPrjMan ? m_pPrjMan->GetActiveProject() : 0;
     cbEditor* ed = m_pEdMan ? m_pEdMan->GetBuiltinEditor(m_pEdMan->GetActiveEditor()) : 0;
     wxMenuBar* mbar = GetMenuBar();
 
-    mbar->Enable(idSearchFind, prj);
+    mbar->Enable(idSearchFind, ed);
     mbar->Enable(idSearchFindNext, ed);
     mbar->Enable(idSearchFindPrevious, ed);
     mbar->Enable(idSearchReplace, ed);
@@ -1910,7 +1913,7 @@ void MainFrame::OnSearchMenuUpdateUI(wxUpdateUIEvent& event)
 
 	if (m_pToolbar)
 	{
-		m_pToolbar->EnableTool(idSearchFind, prj);
+		m_pToolbar->EnableTool(idSearchFind, ed);
 		m_pToolbar->EnableTool(idSearchReplace, ed);
 	}
 	
@@ -2078,6 +2081,7 @@ void MainFrame::OnPluginUnloaded(CodeBlocksEvent& event)
 void MainFrame::OnSettingsEnvironment(wxCommandEvent& event)
 {
     bool tbarsmall = m_SmallToolBar;
+    bool edmanCloseBtn = ConfigManager::Get()->Read("/editor/show_close_button", (long int)0);
 
 	EnvironmentSettingsDlg dlg(this);
 	if (dlg.ShowModal() == wxID_OK)
@@ -2087,6 +2091,13 @@ void MainFrame::OnSettingsEnvironment(wxCommandEvent& event)
             CreateToolbars();
         m_pMsgMan->EnableAutoHide(ConfigManager::Get()->Read("/message_manager/auto_hide", 0L));
         ShowHideStartPage();
+        
+        if (ConfigManager::Get()->Read("/editor/show_close_button", (long int)0) != edmanCloseBtn)
+        {
+        	wxMessageBox(_("Some of the changes you made will be applied after you restart Code::Blocks."),
+                            _("Information"),
+                            wxICON_INFORMATION);
+        }
 	}
 }
 

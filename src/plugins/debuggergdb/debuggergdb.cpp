@@ -34,6 +34,7 @@
 #include <projectmanager.h>
 #include <pluginmanager.h>
 #include <editormanager.h>
+#include <macrosmanager.h>
 #include <projectbuildtarget.h>
 #include <sdk_events.h>
 #include <editarraystringdlg.h>
@@ -49,8 +50,6 @@
 #ifdef __WXMSW__
     #include <winbase.h> //For GetShortPathName()...only for windows systems
 #endif
-
-#define USE_DEBUG_LOG 0 // set it to 1, to enable the debugger's debug log
 
 #define implement_debugger_toolbar
 
@@ -131,6 +130,7 @@ DebuggerGDB::DebuggerGDB()
 	m_pLog(0L),
 	m_pDbgLog(0L),
 	m_pProcess(0L),
+	m_pTbar(0L),
 	m_PageIndex(-1),
 	m_DbgPageIndex(-1),
 	m_ProgramIsStopped(true),
@@ -143,6 +143,7 @@ DebuggerGDB::DebuggerGDB()
 	m_NoDebugInfo(false),
 	m_BreakOnEntry(false),
 	m_HaltAtLine(0),
+	m_HasDebugLog(false),
 	m_pDisassembly(0),
 	m_pBacktrace(0)
 {
@@ -177,14 +178,16 @@ void DebuggerGDB::OnAttach()
     bmp.LoadFile(prefix + "misc_16x16.png", wxBITMAP_TYPE_PNG);
     Manager::Get()->GetMessageManager()->SetLogImage(m_pLog, bmp);
 
-#if USE_DEBUG_LOG
-    m_pDbgLog = new SimpleTextLog(msgMan, m_PluginInfo.title + _(" (debug)"));
-    m_pDbgLog->GetTextControl()->SetFont(font);
-    m_DbgPageIndex = msgMan->AddLog(m_pDbgLog);
-    // set log image
-    bmp.LoadFile(prefix + "contents_16x16.png", wxBITMAP_TYPE_PNG);
-    Manager::Get()->GetMessageManager()->SetLogImage(m_pDbgLog, bmp);
-#endif
+    m_HasDebugLog = ConfigManager::Get()->Read("debugger_gdb/debug_log", (long int)0L);
+    if (m_HasDebugLog)
+    {
+        m_pDbgLog = new SimpleTextLog(msgMan, m_PluginInfo.title + _(" (debug)"));
+        m_pDbgLog->GetTextControl()->SetFont(font);
+        m_DbgPageIndex = msgMan->AddLog(m_pDbgLog);
+        // set log image
+        bmp.LoadFile(prefix + "contents_16x16.png", wxBITMAP_TYPE_PNG);
+        Manager::Get()->GetMessageManager()->SetLogImage(m_pDbgLog, bmp);
+    }
 
 	if (!m_pTree)
 		m_pTree = new DebuggerTree(this, Manager::Get()->GetNotebook());
@@ -211,9 +214,8 @@ void DebuggerGDB::OnRelease(bool appShutDown)
 
     if (Manager::Get()->GetMessageManager())
     {
-#if USE_DEBUG_LOG
-        Manager::Get()->GetMessageManager()->DeletePage(m_DbgPageIndex);
-#endif
+        if (m_HasDebugLog)
+            Manager::Get()->GetMessageManager()->DeletePage(m_DbgPageIndex);
         Manager::Get()->GetMessageManager()->DeletePage(m_PageIndex);
     }
 }
@@ -225,7 +227,13 @@ DebuggerGDB::~DebuggerGDB()
 int DebuggerGDB::Configure()
 {
 	DebuggerOptionsDlg dlg(Manager::Get()->GetAppWindow());
-	return dlg.ShowModal();
+	int ret = dlg.ShowModal();
+	
+	bool needsRestart = ConfigManager::Get()->Read("debugger_gdb/debug_log", (long int)0L) != m_HasDebugLog;
+	if (needsRestart)
+        wxMessageBox(_("Code::Blocks needs to be restarted for the changes to take effect."), _("Information"), wxICON_INFORMATION);
+	
+	return ret;
 }
 
 void DebuggerGDB::BuildMenu(wxMenuBar* menuBar)
@@ -254,16 +262,18 @@ void DebuggerGDB::BuildMenu(wxMenuBar* menuBar)
 
 void DebuggerGDB::BuildModuleMenu(const ModuleType type, wxMenu* menu, const wxString& arg)
 {
+	cbProject* prj = Manager::Get()->GetProjectManager()->GetActiveProject();
 	if (!m_IsAttached)
 		return;
     // we 're only interested in editor menus
     // we 'll add a "debug watches" entry only when the debugger is running...
     if (type != mtEditorManager || !menu) return;
+    if (!prj) return;
     // Insert toggle breakpoint
     menu->Insert(0,idMenuToggleBreakpoint, _("Toggle breakpoint"));
 	// Insert Run to Cursor
 	menu->Insert(1,idMenuRunToCursor, _("Run to cursor"));
-	menu->Insert(2,-1, "-");
+	menu->Insert(2,wxID_SEPARATOR, _T("-"));
     
     if (!m_pProcess) return;
     // has to have a word under the caret...
@@ -276,16 +286,20 @@ void DebuggerGDB::BuildModuleMenu(const ModuleType type, wxMenu* menu, const wxS
 	menu->Insert(2, idMenuDebuggerAddWatch,  s);
 }
 
-void DebuggerGDB::BuildToolBar(wxToolBar* toolBar)
+bool DebuggerGDB::BuildToolBar(wxToolBar* toolBar)
 {
+	m_pTbar = toolBar;
     /* Loads toolbar using new Manager class functions */
 #ifdef implement_debugger_toolbar
-    if (!m_IsAttached)
-		return;
+    if (!m_IsAttached || !toolBar)
+		return false;
     wxString my_16x16=Manager::isToolBar16x16(toolBar) ? "_16x16" : "";
     Manager::AddonToolBar(toolBar,wxString("debugger_toolbar")+my_16x16);
     toolBar->Realize();
-#endif    
+    return true;
+#else
+    return false;
+#endif
 }
 
 void DebuggerGDB::DoWatches()
@@ -498,6 +512,7 @@ int DebuggerGDB::Debug()
 //        if (it == project)
 //            continue;
         wxString filename = it->GetBasePath();
+        Manager::Get()->GetMacrosManager()->ReplaceEnvVars(filename); // apply env vars
         msgMan->Log(m_PageIndex, _("Adding source dir: %s"), filename.c_str());
         ConvertToGDBDirectory(filename, "", false);//project->GetBasePath(), true);
         SendCommand("directory " + filename);
@@ -511,6 +526,7 @@ int DebuggerGDB::Debug()
 		case ttConsoleOnly:
 			// "-async" option is not really supported, at least under Win32, as far as I know
 			out = UnixFilename(target->GetOutputFilename());
+            Manager::Get()->GetMacrosManager()->ReplaceEnvVars(out); // apply env vars
 			msgMan->Log(m_PageIndex, _("Adding file: %s"), out.c_str());
             ConvertToGDBDirectory(out);
 			cmd << "file " << out;
@@ -530,6 +546,7 @@ int DebuggerGDB::Debug()
 				return 4;
 			}
 			out = UnixFilename(target->GetHostApplication());
+            Manager::Get()->GetMacrosManager()->ReplaceEnvVars(out); // apply env vars
 			msgMan->Log(m_PageIndex, _("Adding file: %s"), out.c_str());
 			ConvertToGDBDirectory(out);
 			cmd << "file " << out;
@@ -538,6 +555,7 @@ int DebuggerGDB::Debug()
 			{
 				wxString symbols;
 				out = UnixFilename(target->GetOutputFilename());
+                Manager::Get()->GetMacrosManager()->ReplaceEnvVars(out); // apply env vars
 				msgMan->Log(m_PageIndex, _("Adding symbol file: %s"), out.c_str());
                 ConvertToGDBDirectory(out);
 				symbols << "add-symbol-file " << out;
@@ -557,6 +575,7 @@ int DebuggerGDB::Debug()
     wxString path = UnixFilename(target->GetWorkingDir());
     if (!path.IsEmpty())
     {
+        Manager::Get()->GetMacrosManager()->ReplaceEnvVars(path); // apply env vars
         cmd.Clear();
         ConvertToGDBDirectory(path);
         if (path != _(".")) // avoid silly message "changing to ."
@@ -702,9 +721,8 @@ void DebuggerGDB::SendCommand(const wxString& cmd)
 {
     if (!m_pProcess || !m_ProgramIsStopped)
         return;
-#if USE_DEBUG_LOG
-	Manager::Get()->GetMessageManager()->Log(m_DbgPageIndex, "> " + cmd);
-#endif
+    if (m_HasDebugLog)
+        Manager::Get()->GetMessageManager()->Log(m_DbgPageIndex, "> " + cmd);
 	m_pProcess->SendString(cmd);
 }
 
@@ -734,10 +752,11 @@ wxString DebuggerGDB::GetNextOutputLine(bool useStdErr)
 			bufferOut << ch;
 	}
 
-#if USE_DEBUG_LOG
-	if (!bufferOut.IsEmpty())
-		m_pDbgLog->AddLog(bufferOut);
-#endif
+    if (m_HasDebugLog)
+    {
+        if (!bufferOut.IsEmpty())
+            m_pDbgLog->AddLog(bufferOut);
+    }
 	return bufferOut;
 }
 
@@ -909,10 +928,16 @@ void DebuggerGDB::CmdToggleBreakpoint()
 
 void DebuggerGDB::CmdStop()
 {
-	if (m_pProcess && m_Pid){ 
-		m_pProcess->CloseOutput();
-		if (m_ProgramIsStopped)	RunCommand(CMD_STOP);
-		else {
+	if (m_pProcess && m_Pid)
+	{
+		if (m_ProgramIsStopped)
+		{
+            RunCommand(CMD_STOP);
+            m_pProcess->CloseOutput();
+		}
+		else
+		{
+            m_pProcess->CloseOutput();
 			wxKillError err = m_pProcess->Kill(m_Pid, wxSIGKILL);
 			if (err == wxKILL_OK){
 /*				
@@ -931,9 +956,8 @@ void DebuggerGDB::ParseOutput(const wxString& output)
 	if (buffer.StartsWith(g_EscapeChars)) // ->->
 	{
 		buffer.Remove(0, 2); // remove ->->
-#if USE_DEBUG_LOG
-		m_pDbgLog->AddLog(buffer); // write it in the full debugger log
-#endif		
+        if (m_HasDebugLog)
+            m_pDbgLog->AddLog(buffer); // write it in the full debugger log
 		// Is the program running?
 		if (buffer.Matches("starting"))
 			m_ProgramIsStopped = false;
@@ -1199,7 +1223,7 @@ void DebuggerGDB::OnUpdateUI(wxUpdateUIEvent& event)
         mbar->Enable(idMenuStep, prj && m_ProgramIsStopped);
         mbar->Enable(idMenuStepOut, m_pProcess && prj && m_ProgramIsStopped);
  		mbar->Enable(idMenuRunToCursor, prj && ed && m_ProgramIsStopped);
-		mbar->Enable(idMenuToggleBreakpoint, ed && m_ProgramIsStopped);
+		mbar->Enable(idMenuToggleBreakpoint, prj && ed && m_ProgramIsStopped);
 		mbar->Enable(idMenuSendCommandToGDB, m_pProcess && m_ProgramIsStopped);
  		mbar->Enable(idMenuAddSymbolFile, m_pProcess && m_ProgramIsStopped);
  		mbar->Enable(idMenuBacktrace, m_pProcess && m_ProgramIsStopped);
@@ -1455,9 +1479,6 @@ void DebuggerGDB::OnGDBOutput(wxCommandEvent& event)
 	wxString msg = event.GetString();
 	if (!msg.IsEmpty())
 	{
-#if USE_DEBUG_LOG
-		//m_pDbgLog->AddLog(msg); // write it in the full debugger log
-#endif
 		ParseOutput(msg);
 	}
 }
@@ -1467,9 +1488,6 @@ void DebuggerGDB::OnGDBError(wxCommandEvent& event)
 	wxString msg = event.GetString();
 	if (!msg.IsEmpty())
 	{
-#if USE_DEBUG_LOG
-		//m_pDbgLog->AddLog(msg); // write it in the full debugger log
-#endif
 		ParseOutput(msg);
 	}
 }
@@ -1575,7 +1593,7 @@ void DebuggerGDB::OnValueTooltip(CodeBlocksEvent& event)
 	
 	if (!token.IsEmpty())
 	{
-//		Manager::Get()->GetMessageManager()->Log(m_PageIndex, _("Value of %s:"), token.c_str());
+		Manager::Get()->GetMessageManager()->AppendLog(m_PageIndex, _("Value of %s: "), token.c_str());
 		pt = ed->GetControl()->PointFromPosition(start);
 		pt = ed->GetControl()->ClientToScreen(pt);
 		m_EvalRect.x = pt.x;
@@ -1590,17 +1608,11 @@ void DebuggerGDB::OnValueTooltip(CodeBlocksEvent& event)
         int pos = tip.First('\n'); // tip is e.g. "$1 = \n<value>"
         if (pos != -1)
             tip.Remove(0, pos + 1); // discard first line
+		Manager::Get()->GetMessageManager()->AppendLog(m_PageIndex, _("%s\n"), tip.c_str());
         tip = token + " = " + tip;
 		if (m_EvalWin)
             m_EvalWin->Destroy();
-		m_EvalWin = new wxTipWindow(ed->GetControl(), tip, 640, &m_EvalWin);
-		// set the rect that when the cursor gets out of, the tip window closes
-		// just use the tipwindow's rect, a little bit enlarged vertically
-		// (because it displays below the cursor)
-		wxRect r = m_EvalWin->GetRect();
-		r.Inflate(0, 32);
-		r.Offset(0, -16);
-		m_EvalWin->SetBoundingRect(r);
+		m_EvalWin = new wxTipWindow(Manager::Get()->GetAppWindow(), tip, 640, &m_EvalWin, &m_EvalRect);
 	}
 }
 

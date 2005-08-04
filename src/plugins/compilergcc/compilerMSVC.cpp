@@ -66,6 +66,7 @@ void CompilerMSVC::Reset()
 	m_Options.AddOption(_("Treat warnings as errors"), "/WX", _("Warnings"));
 	m_Options.AddOption(_("Enable global optimization"), "/Og", _("Optimization"));
 	m_Options.AddOption(_("Maximum optimization (no need for other options)"), "/Ox", _("Optimization"));
+	m_Options.AddOption(_("Disable optimizations"), "/Od", _("Optimization")); //added no optimization
 	m_Options.AddOption(_("Minimize space"), "/O1", _("Optimization"));
 	m_Options.AddOption(_("Maximize speed"), "/O2", _("Optimization"));
 	m_Options.AddOption(_("Favor code space"), "/Os", _("Optimization"));
@@ -85,6 +86,14 @@ void CompilerMSVC::Reset()
 	m_Options.AddOption(_("__cdecl calling convention"), "/Gd", _("Others"));
 	m_Options.AddOption(_("__fastcall calling convention"), "/Gr", _("Others"));
 	m_Options.AddOption(_("__stdcall calling convention"), "/Gz", _("Others"));
+    // Added Runtime options for cl.exe, that is the runtime library selection
+    m_Options.AddOption(_("Single-threaded Runtime Library"), "/ML", _("Runtime"));
+    m_Options.AddOption(_("Single-threaded Debug Runtime Library"), "/MLd", _("Runtime"));
+    m_Options.AddOption(_("Multi-threaded Runtime Library"), "/MT", _("Runtime"), "", true);
+    m_Options.AddOption(_("Multi-threaded Debug Runtime Library"), "/MTd", _("Runtime"));
+    m_Options.AddOption(_("Multi-threaded DLL Runtime Library"), "/MD", _("Runtime"));
+    m_Options.AddOption(_("Multi-threaded DLL Debug Runtime Library"), "/MDd", _("Runtime"));
+
 
     m_Commands[(int)ctCompileObjectCmd] = "$compiler /nologo $options $includes /c $file /Fo$object";
     m_Commands[(int)ctCompileResourceCmd] = "$rescomp $res_includes -fo$resource_output $file";
@@ -93,17 +102,22 @@ void CompilerMSVC::Reset()
     m_Commands[(int)ctLinkDynamicCmd] = "$linker /dll /nologo $libdirs /out:$exe_output $libs $link_objects $link_options";
     m_Commands[(int)ctLinkStaticCmd] = "$lib_linker /lib /nologo $libdirs /out:$static_output $libs $link_objects $link_options";
 
-    m_RegExes.Clear();
-    m_RegExes.Add(RegExStruct(_("Compiler warning"), cltWarning, "([ \tA-Za-z0-9_:\\-\\+/\\.-]+)\\(([0-9]+)\\) :[ \t]([Ww]arning[ \t].*)", 3, 1, 2));
-    m_RegExes.Add(RegExStruct(_("Compiler error"), cltError, "([ \tA-Za-z0-9_:\\-\\+/\\.-]+)\\(([0-9]+)\\) :[ \t](.*[Ee]rror[ \t].*)", 3, 1, 2));
-    m_RegExes.Add(RegExStruct(_("Linker warning"), cltWarning, "([ \tA-Za-z0-9_:\\-\\+/\\.\\(\\)-]*)[ \t]+:[ \t]+(.*warning LNK[0-9]+.*)", 2, 1, 0));
-    m_RegExes.Add(RegExStruct(_("Linker error"), cltError, "([ \tA-Za-z0-9_:\\-\\+/\\.\\(\\)-]*)[ \t]+:[ \t]+(.*error LNK[0-9]+.*)", 2, 1, 0));
+    LoadDefaultRegExArray();
 
     m_CompilerOptions.Clear();
     m_LinkerOptions.Clear();
     m_LinkLibs.Clear();
     m_CmdsBefore.Clear();
     m_CmdsAfter.Clear();
+}
+
+void CompilerMSVC::LoadDefaultRegExArray()
+{
+    m_RegExes.Clear();
+    m_RegExes.Add(RegExStruct(_("Compiler warning"), cltWarning, "([ \tA-Za-z0-9_:\\-\\+/\\.-]+)\\(([0-9]+)\\) :[ \t]([Ww]arning[ \t].*)", 3, 1, 2));
+    m_RegExes.Add(RegExStruct(_("Compiler error"), cltError, "([ \tA-Za-z0-9_:\\-\\+/\\.-]+)\\(([0-9]+)\\) :[ \t](.*[Ee]rror[ \t].*)", 3, 1, 2));
+    m_RegExes.Add(RegExStruct(_("Linker warning"), cltWarning, "([ \tA-Za-z0-9_:\\-\\+/\\.\\(\\)-]*)[ \t]+:[ \t]+(.*warning LNK[0-9]+.*)", 2, 1, 0));
+    m_RegExes.Add(RegExStruct(_("Linker error"), cltError, "([ \tA-Za-z0-9_:\\-\\+/\\.\\(\\)-]*)[ \t]+:[ \t]+(.*error LNK[0-9]+.*)", 2, 1, 0));
 }
 
 AutoDetectResult CompilerMSVC::AutoDetectInstallationDir()

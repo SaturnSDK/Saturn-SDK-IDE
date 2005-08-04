@@ -91,12 +91,19 @@ EditorConfigurationDlg::EditorConfigurationDlg(wxWindow* parent)
    	XRCCTRL(*this, "chkTabIndents", wxCheckBox)->SetValue(ConfigManager::Get()->Read("/editor/tab_indents", 1));
    	XRCCTRL(*this, "chkBackspaceUnindents", wxCheckBox)->SetValue(ConfigManager::Get()->Read("/editor/backspace_unindents", 1));
    	XRCCTRL(*this, "chkWordWrap", wxCheckBox)->SetValue(ConfigManager::Get()->Read("/editor/word_wrap", 0l));
-   	XRCCTRL(*this, "chkShowEOL", wxCheckBox)->SetValue(ConfigManager::Get()->Read("/editor/show_eol", 0l));
    	XRCCTRL(*this, "chkShowLineNumbers", wxCheckBox)->SetValue(ConfigManager::Get()->Read("/editor/show_line_numbers", 0l));
    	XRCCTRL(*this, "chkHighlightCaretLine", wxCheckBox)->SetValue(ConfigManager::Get()->Read("/editor/highlight_caret_line", 1));
    	XRCCTRL(*this, "spnTabSize", wxSpinCtrl)->SetValue(ConfigManager::Get()->Read("/editor/tab_size", 4));
    	XRCCTRL(*this, "cmbViewWS", wxComboBox)->SetSelection(ConfigManager::Get()->Read("/editor/view_whitespace", 0l));
    	XRCCTRL(*this, "rbTabText", wxRadioBox)->SetSelection(ConfigManager::Get()->Read("/editor/tab_text_relative", 1));
+
+   	// end-of-line
+   	XRCCTRL(*this, "chkShowEOL", wxCheckBox)->SetValue(ConfigManager::Get()->Read("/editor/show_eol", 0l));
+   	XRCCTRL(*this, "chkStripTrailings", wxCheckBox)->SetValue(ConfigManager::Get()->Read("/editor/eol/strip_trailing_spaces", 1));
+   	XRCCTRL(*this, "chkEnsureFinalEOL", wxCheckBox)->SetValue(ConfigManager::Get()->Read("/editor/eol/ensure_final_line_end", 0l));
+    XRCCTRL(*this, "cmbEOLMode", wxComboBox)->SetSelection(ConfigManager::Get()->Read("/editor/eol/eolmode",0L));
+
+   	
 	//folding
    	XRCCTRL(*this, "chkEnableFolding", wxCheckBox)->SetValue(ConfigManager::Get()->Read("/editor/folding/show_folds", 1));
    	XRCCTRL(*this, "chkFoldOnOpen", wxCheckBox)->SetValue(ConfigManager::Get()->Read("/editor/folding/fold_all_on_open", 0L));
@@ -679,6 +686,8 @@ void EditorConfigurationDlg::OnAutoCompKeyword(wxCommandEvent& event)
 
 void EditorConfigurationDlg::OnOK(wxCommandEvent& event)
 {
+// TODO (rickg22#9#): Implement EOL Mode configuration
+
     ConfigManager::Get()->Write("/editor/font", XRCCTRL(*this, "lblEditorFont", wxStaticText)->GetFont().GetNativeFontInfoDesc());
 
     ConfigManager::Get()->Write("/editor/auto_indent",			XRCCTRL(*this, "chkAutoIndent", wxCheckBox)->GetValue());
@@ -688,7 +697,6 @@ void EditorConfigurationDlg::OnOK(wxCommandEvent& event)
    	ConfigManager::Get()->Write("/editor/tab_indents", 			XRCCTRL(*this, "chkTabIndents", wxCheckBox)->GetValue());
    	ConfigManager::Get()->Write("/editor/backspace_unindents", 	XRCCTRL(*this, "chkBackspaceUnindents", wxCheckBox)->GetValue());
    	ConfigManager::Get()->Write("/editor/word_wrap", 			XRCCTRL(*this, "chkWordWrap", wxCheckBox)->GetValue());
-   	ConfigManager::Get()->Write("/editor/show_eol", 			XRCCTRL(*this, "chkShowEOL", wxCheckBox)->GetValue());
    	ConfigManager::Get()->Write("/editor/show_line_numbers", 	XRCCTRL(*this, "chkShowLineNumbers", wxCheckBox)->GetValue());
    	ConfigManager::Get()->Write("/editor/highlight_caret_line", XRCCTRL(*this, "chkHighlightCaretLine", wxCheckBox)->GetValue());
    	ConfigManager::Get()->Write("/editor/tab_size",             XRCCTRL(*this, "spnTabSize", wxSpinCtrl)->GetValue());
@@ -700,6 +708,11 @@ void EditorConfigurationDlg::OnOK(wxCommandEvent& event)
    	ConfigManager::Get()->Write("/editor/folding/fold_preprocessor", 	XRCCTRL(*this, "chkFoldPreprocessor", wxCheckBox)->GetValue());
    	ConfigManager::Get()->Write("/editor/folding/fold_comments", 		XRCCTRL(*this, "chkFoldComments", wxCheckBox)->GetValue());
    	ConfigManager::Get()->Write("/editor/folding/fold_xml", 		    XRCCTRL(*this, "chkFoldXml", wxCheckBox)->GetValue());
+
+   	ConfigManager::Get()->Write("/editor/show_eol", 			        XRCCTRL(*this, "chkShowEOL", wxCheckBox)->GetValue());
+   	ConfigManager::Get()->Write("/editor/eol/strip_trailing_spaces",    XRCCTRL(*this, "chkStripTrailings", wxCheckBox)->GetValue());
+   	ConfigManager::Get()->Write("/editor/eol/ensure_final_line_end",    XRCCTRL(*this, "chkEnsureFinalEOL", wxCheckBox)->GetValue());
+    ConfigManager::Get()->Write("/editor/eol/eolmode",                  XRCCTRL(*this, "cmbEOLMode", wxComboBox)->GetSelection());
 
 	//gutter
     ConfigManager::Get()->Write("/editor/gutter/mode", 			XRCCTRL(*this, "lstGutterMode", wxChoice)->GetSelection());

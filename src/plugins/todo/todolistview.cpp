@@ -111,14 +111,12 @@ void ToDoListView::FillList()
 			GetListControl()->SetItem(idx, 5, item.filename);
 		}
 	}
-
 	GetListControl()->Thaw();
-
 }
 
 void ToDoListView::Parse()
 {
-    wxBusyCursor busy;
+//    wxBusyCursor busy;
 
 	// based on user prefs, parse files for todo items
 	m_Items.Clear();
@@ -171,7 +169,10 @@ int ToDoListView::CalculateLineNumber(const wxString& buffer, int upTo)
 	int line = 0;
 	for (int i = 0; i < upTo; ++i)
 	{
-		if (buffer.GetChar(i) == '\n')
+		if (buffer.GetChar(i) == '\r' && buffer.GetChar(i + 1) == '\n') // CR+LF
+			continue; // we 'll count on \n (next loop)
+		else if (buffer.GetChar(i) == '\r' || // CR only
+                buffer.GetChar(i) == '\n') // lf only
 			++line;
 	}
 	return line;

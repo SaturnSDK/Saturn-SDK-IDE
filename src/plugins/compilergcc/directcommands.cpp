@@ -44,21 +44,33 @@ pfDetails::pfDetails(DirectCommands* cmds, ProjectBuildTarget* target, ProjectFi
     d_file.MakeAbsolute(prjbase.GetFullPath());
     dep_dir_native = d_file.GetPath(wxPATH_GET_VOLUME | wxPATH_GET_SEPARATOR);
     dep_file_absolute_native = o_file.GetFullPath();
-    
+
     source_file = UnixFilename(source_file_native);
     cmds->QuoteStringIfNeeded(source_file);
-    
+
     object_file = UnixFilename(object_file_native);
     cmds->QuoteStringIfNeeded(object_file);
-    
+
     dep_file = UnixFilename(dep_file_native);
     cmds->QuoteStringIfNeeded(dep_file);
-    
+
     object_dir = UnixFilename(object_dir_native);
     cmds->QuoteStringIfNeeded(object_dir);
 
     dep_dir = UnixFilename(dep_dir_native);
     cmds->QuoteStringIfNeeded(dep_dir);
+
+    Manager::Get()->GetMacrosManager()->ReplaceEnvVars(object_file_native);
+    Manager::Get()->GetMacrosManager()->ReplaceEnvVars(object_dir_native);
+    Manager::Get()->GetMacrosManager()->ReplaceEnvVars(object_file_absolute_native);
+    Manager::Get()->GetMacrosManager()->ReplaceEnvVars(dep_file_native);
+    Manager::Get()->GetMacrosManager()->ReplaceEnvVars(dep_dir_native);
+    Manager::Get()->GetMacrosManager()->ReplaceEnvVars(dep_file_absolute_native);
+    Manager::Get()->GetMacrosManager()->ReplaceEnvVars(dep_dir);
+    Manager::Get()->GetMacrosManager()->ReplaceEnvVars(object_dir);
+    Manager::Get()->GetMacrosManager()->ReplaceEnvVars(dep_file);
+    Manager::Get()->GetMacrosManager()->ReplaceEnvVars(object_file);
+    Manager::Get()->GetMacrosManager()->ReplaceEnvVars(source_file);
 }
 
 DirectCommands::DirectCommands(CompilerGCC* compilerPlugin, Compiler* compiler, cbProject* project, int logPageIndex)
@@ -69,6 +81,8 @@ DirectCommands::DirectCommands(CompilerGCC* compilerPlugin, Compiler* compiler, 
     m_pCurrTarget(0)
 {
     //ctor
+    if (!m_pProject)
+        return; // probably a compile file cmd without a project
     depsStart();
     wxFileName cwd;
     cwd.Assign(m_pProject->GetBasePath());
@@ -82,6 +96,9 @@ DirectCommands::DirectCommands(CompilerGCC* compilerPlugin, Compiler* compiler, 
 DirectCommands::~DirectCommands()
 {
     //dtor
+    if (!m_pProject)
+        return; // probably a compile file cmd without a project
+
     struct depsStats stats;
     depsGetStats(&stats);
     if (stats.cache_updated)
@@ -116,17 +133,6 @@ void DirectCommands::AppendArray(const wxArrayString& from, wxArrayString& to)
 void DirectCommands::AddCommandsToArray(const wxString& cmds, wxArrayString& array)
 {
     wxString cmd = cmds;
-
-    // macros and custom vars substitution
-    CustomVars customvars(m_pCompilerPlugin);
-    const VarsArray& vars = customvars.GetVars();
-    for (unsigned int i = 0; i < vars.GetCount(); ++i)
-    {
-        Var& var = vars[i];
-        cmd.Replace("$(" + var.name + ")", var.value);
-    }
-    Manager::Get()->GetMacrosManager()->ReplaceMacros(cmd, true);
-    
     while (!cmd.IsEmpty())
     {
         int idx = cmd.Find("\n");
@@ -257,6 +263,79 @@ wxArrayString DirectCommands::GetCompileFileCommand(ProjectBuildTarget* target, 
     return ret;
 }
 
+/// This is to be used *only* for files not belonging to a project!!!
+wxArrayString DirectCommands::GetCompileSingleFileCommand(const wxString& filename)
+{
+    wxLogNull ln;
+    wxArrayString ret;
+
+    // lookup file's type
+    FileType ft = FileTypeOf(filename);
+
+    // is it compilable?
+    if (ft != ftSource)
+        return ret;
+
+    wxFileName fname(filename);
+    fname.SetExt(m_pCompiler->GetSwitches().objectExtension);
+    wxString o_filename = fname.GetFullPath();
+    fname.SetExt(EXECUTABLE_EXT);
+    wxString exe_filename = fname.GetFullPath();
+
+    wxString s_filename = filename;
+    QuoteStringIfNeeded(s_filename);
+    QuoteStringIfNeeded(o_filename);
+
+    MakefileGenerator mg(m_pCompilerPlugin, 0, "", 0); // don't worry! we just need a couple of utility funcs from it
+
+    wxString compilerCmd = mg.CreateSingleFileCompileCmd(ctCompileObjectCmd,
+                                                         0,
+                                                         0,
+                                                         s_filename,
+                                                         o_filename,
+                                                         wxEmptyString);
+    wxString linkerCmd = mg.CreateSingleFileCompileCmd(ctLinkConsoleExeCmd,
+                                                         0,
+                                                         0,
+                                                         wxEmptyString,
+                                                         o_filename,
+                                                         wxEmptyString);
+
+    if (!compilerCmd.IsEmpty())
+    {
+        switch (m_pCompiler->GetSwitches().logging)
+        {
+            case clogFull:
+                ret.Add(wxString(COMPILER_SIMPLE_LOG) + compilerCmd);
+                break;
+            
+            case clogSimple:
+                ret.Add(wxString(COMPILER_SIMPLE_LOG) + _("Compiling: ") + filename);
+                break;
+            
+            default:
+                break;
+        }
+        AddCommandsToArray(compilerCmd, ret);
+    }
+    
+    if (!linkerCmd.IsEmpty())
+    {
+        switch (m_pCompiler->GetSwitches().logging)
+        {
+            case clogFull:
+                ret.Add(wxString(COMPILER_SIMPLE_LOG) + linkerCmd);
+                break;
+
+            default:
+                ret.Add(wxString(COMPILER_SIMPLE_LOG) + _("Linking console executable: ") + exe_filename);
+                break;
+        }
+        AddCommandsToArray(linkerCmd, ret);
+    }
+    return ret;
+}
+
 wxArrayString DirectCommands::GetCompileCommands(ProjectBuildTarget* target, bool force)
 {
     wxArrayString ret;
@@ -279,11 +358,14 @@ wxArrayString DirectCommands::GetCompileCommands(ProjectBuildTarget* target, boo
             }
         }
 
-        if (ret.GetCount() == counter  && !m_pProject->GetAlwaysRunPreBuildSteps())
+        bool needPost = ret.GetCount() != counter;
+
+        // remove pre-build commands if no compile needed and not always run pre-build commands
+        if (!needPost  && !m_pProject->GetAlwaysRunPreBuildSteps())
             ret.Clear();
 
         // add post-build commands
-        if (ret.GetCount() != 0 || m_pProject->GetAlwaysRunPostBuildSteps())
+        if (needPost || m_pProject->GetAlwaysRunPostBuildSteps())
             AppendArray(GetPostBuildCommands(0L), ret);
     }
     return ret;
@@ -313,7 +395,13 @@ wxArrayString DirectCommands::GetTargetCompileCommands(ProjectBuildTarget* targe
     if (target->GetTargetType() == ttCommandsOnly)
     {
         // commands-only target
-        AppendArray(GetPostBuildCommands(target), ret);
+        wxString added = target->GetAdditionalOutputFiles();
+        if (added.IsEmpty() || // no additional output files assigned
+            target->GetAlwaysRunPostBuildSteps() || // or always run post-build steps
+            AreExternalDepsOutdated(wxEmptyString, added, target->GetExternalDeps())) // or external dependencies say relink
+        {
+            AppendArray(GetPostBuildCommands(target), ret);
+        }
         return ret;
     }
 
@@ -351,11 +439,14 @@ wxArrayString DirectCommands::GetTargetCompileCommands(ProjectBuildTarget* targe
     wxArrayString link = GetLinkCommands(target, ret.GetCount() != counter);
     AppendArray(link, ret);
 
+    bool needPost = ret.GetCount() != counter;
+
+    // remove pre-build commands if no compile needed and not always run pre-build commands
     if (ret.GetCount() == counter && !target->GetAlwaysRunPreBuildSteps())
         ret.Clear();
 
     // add post-build commands
-    if (ret.GetCount() != counter || target->GetAlwaysRunPostBuildSteps())
+    if (needPost || target->GetAlwaysRunPostBuildSteps())
         AppendArray(GetPostBuildCommands(target), ret);
 
     return ret;
@@ -462,6 +553,7 @@ wxArrayString DirectCommands::GetTargetLinkCommands(ProjectBuildTarget* target, 
     wxFileName out = UnixFilename(target->GetOutputFilename());
 
     wxString output = target->GetOutputFilename();
+    Manager::Get()->GetMacrosManager()->ReplaceEnvVars(output);
     wxString linkfiles;
     wxString resfiles;
 
@@ -469,7 +561,7 @@ wxArrayString DirectCommands::GetTargetLinkCommands(ProjectBuildTarget* target, 
     depsTimeStamp(output.c_str(), &outputtime);
     if (!outputtime)
         force = true;
-    if (AreExternalDepsOutdated(out.GetFullPath(), target->GetExternalDeps()))
+    if (AreExternalDepsOutdated(out.GetFullPath(), target->GetAdditionalOutputFiles(), target->GetExternalDeps()))
         force = true;
 
     // get all the linkable objects for the target
@@ -500,6 +592,7 @@ wxArrayString DirectCommands::GetTargetLinkCommands(ProjectBuildTarget* target, 
     // create output dir
     out.MakeAbsolute(m_pProject->GetBasePath());
     wxString dstname = out.GetPath(wxPATH_GET_VOLUME | wxPATH_GET_SEPARATOR);
+    Manager::Get()->GetMacrosManager()->ReplaceEnvVars(dstname);
     if (!dstname.IsEmpty() && !wxDirExists(dstname))
     {
         if (!CreateDirRecursively(dstname, 0755))
@@ -613,26 +706,52 @@ wxArrayString DirectCommands::GetTargetCleanCommands(ProjectBuildTarget* target,
   * e.g. a static library linked to the project is an external dep (if set as such by the user)
   * so that a re-linking is forced if the static lib is updated
   */
-bool DirectCommands::AreExternalDepsOutdated(const wxString& buildOutput, const wxString& externalDeps)
+bool DirectCommands::AreExternalDepsOutdated(const wxString& buildOutput, const wxString& additionalFiles, const wxString& externalDeps)
 {
     // array is separated by ;
     wxArrayString deps = GetArrayFromString(externalDeps, ";");
+    wxArrayString files = GetArrayFromString(additionalFiles, ";");
     for (size_t i = 0; i < deps.GetCount(); ++i)
     {
         if (deps[i].IsEmpty())
             continue;
 
+        Manager::Get()->GetMacrosManager()->ReplaceEnvVars(deps[i]);
         time_t timeSrc;
         depsTimeStamp(deps[i].c_str(), &timeSrc);
         // if external dep doesn't exist, no need to relink
         if (!timeSrc)
             return false;
 
+        // let's check the additional output files
+        for (size_t x = 0; x < files.GetCount(); ++x)
+        {
+        	if (files[i].IsEmpty())
+                continue;
+            
+            Manager::Get()->GetMacrosManager()->ReplaceEnvVars(files[i]);
+            time_t addT;
+            depsTimeStamp(files[i].c_str(), &addT);
+            // if additional file doesn't exist, we can skip it
+            if (!addT)
+                continue;
+            
+            // if external dep is newer than additional file, relink
+            if (timeSrc > addT)
+                return true;
+        }
+
+        // now check the target's output
+        // this is moved last because, for "commands only" targets,
+        // it would return before we had a chance to check the
+        // additional output files (above)
+        wxString output = buildOutput;
+        Manager::Get()->GetMacrosManager()->ReplaceEnvVars(output);
         time_t timeExe;
-        depsTimeStamp(buildOutput.c_str(), &timeExe);
+        depsTimeStamp(output.c_str(), &timeExe);
         // if build output doesn't exist, relink
         if (!timeExe)
-            return false;
+            return true;
         
         // if external dep is newer than build output, relink
         if (timeSrc > timeExe)
@@ -681,8 +800,14 @@ void DirectCommands::DepsSearchStart(ProjectBuildTarget* target)
 {
     depsSearchStart();
 
-    const wxArrayString& prj_incs = m_pProject->GetIncludeDirs();
-    const wxArrayString& tgt_incs = target->GetIncludeDirs();
+    wxArrayString prj_incs = m_pProject->GetIncludeDirs();
+    wxArrayString tgt_incs = target->GetIncludeDirs();
+
+    // replace custom vars in include dirs
+    for (unsigned int i = 0; i < prj_incs.GetCount(); ++i)
+        Manager::Get()->GetMacrosManager()->ReplaceEnvVars(prj_incs[i]);
+    for (unsigned int i = 0; i < tgt_incs.GetCount(); ++i)
+        Manager::Get()->GetMacrosManager()->ReplaceEnvVars(tgt_incs[i]);
 
     OptionsRelation relation = target->GetOptionRelation(ortIncludeDirs);
     switch (relation)
