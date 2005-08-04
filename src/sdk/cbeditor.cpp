@@ -65,7 +65,10 @@ struct cbEditorInternalData
 {
     cbEditorInternalData(cbEditor* owner)
         : m_pOwner(owner),
-        lastPosForCodeCompletion(0)
+        lastPosForCodeCompletion(0),
+        m_strip_trailing_spaces(true),
+        m_ensure_final_line_end(false),
+        m_ensure_consistent_line_ends(true)
     {}
     cbEditor* m_pOwner;
 
@@ -107,9 +110,32 @@ struct cbEditorInternalData
         }
         return -1;
     }
+    
+    /** Strip Trailing Blanks before saving */
+    void StripTrailingSpaces()
+    {
+        wxStyledTextCtrl* control = m_pOwner->GetControl();
+    	
+    }
+    
+    /** Add extra blank line to the file */
+    void EnsureFinalLineEnd()
+    {
+    	wxStyledTextCtrl* control = m_pOwner->GetControl();
+    }
+    
+    /** Make sure all the lines end with the same EOL mode */
+    void EnsureConsistentLineEnds()
+    {
+    	wxStyledTextCtrl* control = m_pOwner->GetControl();
+    }
 
     //vars
     int lastPosForCodeCompletion;
+    bool m_strip_trailing_spaces;
+    bool m_ensure_final_line_end;
+    bool m_ensure_consistent_line_ends;
+
 };
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -371,7 +397,7 @@ void cbEditor::SetEditorStyle()
 {
     wxFont font(8, wxMODERN, wxNORMAL, wxNORMAL);
     wxString fontstring = ConfigManager::Get()->Read("/editor/font", wxEmptyString);
-
+    int eolmode = wxSTC_EOL_CRLF;
     if (!fontstring.IsEmpty())
     {
         wxNativeFontInfo nfi;
@@ -429,6 +455,25 @@ void cbEditor::SetEditorStyle()
 	m_pControl->MarkerDefine(BOOKMARK_MARKER, BOOKMARK_STYLE, wxNullColour, wxColour(0xA0, 0xA0, 0xFF));
 	m_pControl->MarkerDefine(BREAKPOINT_MARKER, BREAKPOINT_STYLE, wxNullColour, wxColour(0xFF, 0x00, 0x00));
 
+    // EOL properties
+    m_pData->m_strip_trailing_spaces = ConfigManager::Get()->Read("/editor/eol/strip_trailing_spaces", 1) ? true : false;
+    m_pData->m_ensure_final_line_end = ConfigManager::Get()->Read("/editor/eol/ensure_final_line_end", 0L) ? true : false;
+    m_pData->m_ensure_consistent_line_ends = true;
+    
+    switch(ConfigManager::Get()->Read("/editor/eol/eolmode", 0L))
+    {
+    	case 0: 
+        default:
+            eolmode = wxSTC_EOL_CRLF;
+        break;
+        case 1: 
+            eolmode = wxSTC_EOL_CR;
+        break;
+        case 2:
+            eolmode = wxSTC_EOL_LF;
+    }
+    m_pControl->SetEOLMode(eolmode);
+    
     // folding margin
     m_pControl->SetProperty("fold", ConfigManager::Get()->Read("/editor/folding/show_folds", 1) ? "1" : "0");
     m_pControl->SetProperty("fold.html", ConfigManager::Get()->Read("/editor/folding/fold_xml", 1) ? "1" : "0");
