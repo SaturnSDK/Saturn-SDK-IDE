@@ -60,8 +60,8 @@ enum FileType
 extern "C" {
 #endif
 // global helper funcs
-extern DLLIMPORT wxString GetStringFromArray(const wxArrayString& array, const wxString& separator = ";");
-extern DLLIMPORT wxArrayString GetArrayFromString(const wxString& text, const wxString& separator = ";");
+extern DLLIMPORT wxString GetStringFromArray(const wxArrayString& array, const wxString& separator = _T(";"));
+extern DLLIMPORT wxArrayString GetArrayFromString(const wxString& text, const wxString& separator = _T(";"));
 extern DLLIMPORT bool CreateDirRecursively(const wxString& full_path, int perms = 0755);
 extern DLLIMPORT wxString UnixFilename(const wxString& filename);
 extern DLLIMPORT FileType FileTypeOf(const wxString& filename);
