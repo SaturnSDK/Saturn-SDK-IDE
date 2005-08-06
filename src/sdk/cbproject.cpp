@@ -463,7 +463,7 @@ bool cbProject::LoadLayout()
                     ProjectFile* f = loader.GetTopProjectFile();
                     if (f)
                     {
-                        Manager::Get()->GetMessageManager()->DebugLog(_T("Top Editor: %s"),_T(f->file.GetFullPath().c_str()));
+                        Manager::Get()->GetMessageManager()->DebugLog(_T("Top Editor: %s"),f->file.GetFullPath().c_str());
                         EditorBase* eb = Manager::Get()->GetEditorManager()->Open(f->file.GetFullPath());
                         if(eb)
                         {

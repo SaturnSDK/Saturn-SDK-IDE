@@ -195,7 +195,7 @@ void TemplateManager::NewProjectFromTemplate(NewFromTemplateDlg& dlg)
                         _("Save project"),
                         wxEmptyString,
                         pt->m_Name,
-                        _T(CODEBLOCKS_FILES_FILTER),
+                        CODEBLOCKS_FILES_FILTER,
                         wxSAVE | wxOVERWRITE_PROMPT);
 
     if (fdlg.ShowModal() != wxID_OK)
@@ -249,7 +249,7 @@ void TemplateManager::NewProjectFromTemplate(NewFromTemplateDlg& dlg)
                                         _("Save file as..."),
                                         wxEmptyString,
                                         dst,
-                                        _T(SOURCE_FILES_FILTER),
+                                        SOURCE_FILES_FILTER,
                                         wxSAVE);
                     if (fdlg.ShowModal() == wxID_CANCEL)
                     {

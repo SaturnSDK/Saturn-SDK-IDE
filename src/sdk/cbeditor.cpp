@@ -613,7 +613,7 @@ bool cbEditor::SaveAs()
                             _("Save file"),
                             fname.GetPath(),
                             fname.GetFullName(),
-                            _T(SOURCE_FILES_DIALOG_FILTER),
+                            SOURCE_FILES_DIALOG_FILTER,
                             wxSAVE | wxOVERWRITE_PROMPT);
     dlg->SetFilterIndex(7);// all files;
 
@@ -828,8 +828,8 @@ void cbEditor::MarkerToggle(int marker, int line)
 			int i = sscanf(lb.mb_str(), "%[0-9A-Za-z_~]::%[0-9A-Za-z_~](", bufBase, bufMethod);
 			if (i == 2)
             {
-				wxString strBase = wxString(bufBase,wxConvUTF8);
-				wxString strMethod = wxString(bufMethod,wxConvUTF8);
+				wxString strBase = _U(bufBase);
+				wxString strMethod = _U(bufMethod);
                 cppClassName << strBase;
 				cppDestructor << cppClassName;
 				if (cppClassName.Matches(strMethod) || cppDestructor.Matches(strMethod))

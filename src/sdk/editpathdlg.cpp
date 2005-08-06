@@ -23,7 +23,7 @@ EditPathDlg::EditPathDlg(wxWindow* parent,
         const wxString& filter)
 {
 	//ctor
-	wxXmlResource::Get()->LoadDialog(this, parent, _("dlgEditPath"));
+	wxXmlResource::Get()->LoadDialog(this, parent, _T("dlgEditPath"));
 
 	XRCCTRL(*this, "txtPath", wxTextCtrl)->SetValue(path);
 	XRCCTRL(*this, "dlgEditPath", wxDialog)->SetTitle(title);

@@ -47,7 +47,7 @@ cbPlugin::cbPlugin()
     m_PluginInfo.authorEmail = _T("");
     m_PluginInfo.authorWebsite = _T("");
     m_PluginInfo.thanksTo = _T("");
-    m_PluginInfo.license = _(LICENSE_GPL);
+    m_PluginInfo.license = LICENSE_GPL;
 	m_PluginInfo.hasConfigure = false;
 }
 

@@ -113,7 +113,7 @@ EditorManager::EditorManager(wxWindow* parent)
     m_LastFindReplaceData(0L),
     m_pImages(0L),
     m_pTree(0L),
-    m_LastActiveFile(""),
+    m_LastActiveFile(_T("")),
     m_LastModifiedflag(false),
     m_pSearchLog(0),
     m_SearchLogIndex(-1),
@@ -124,13 +124,13 @@ EditorManager::EditorManager(wxWindow* parent)
 
 	// *** Load Panel and close button from XRC ***
 	m_pPanel = wxXmlResource::Get()->LoadPanel(parent,_T("ID_EditorManagerPanel"));
-	wxBitmapButton* myclosebutton = XRCCTRL(*m_pPanel,_T("ID_EditorManagerCloseButton"),wxBitmapButton);
+	wxBitmapButton* myclosebutton = XRCCTRL(*m_pPanel,"ID_EditorManagerCloseButton",wxBitmapButton);
 	edman_closebutton = (wxButton*)myclosebutton;
 	m_pNotebook = new wxNotebook(m_pPanel, ID_NBEditorManager, wxDefaultPosition, wxDefaultSize,  wxNO_FULL_REPAINT_ON_RESIZE | wxCLIP_CHILDREN);
 	m_pPanel->GetSizer()->Add(m_pNotebook,1,wxGROW);
 
     // remove the ugly close-button, if not enabled in configuration
-    if (ConfigManager::Get()->Read("/editor/show_close_button", 0L) == 0)
+    if (ConfigManager::Get()->Read(_T("/editor/show_close_button"), 0L) == 0)
     {
         m_pPanel->GetSizer()->Remove(edman_closebutton);
         delete edman_closebutton;
@@ -140,10 +140,10 @@ EditorManager::EditorManager(wxWindow* parent)
 
 	m_EditorsList.Clear();
     #ifdef USE_OPENFILES_TREE
-	ShowOpenFilesTree(ConfigManager::Get()->Read("/editor/show_opened_files_tree", true));
+	ShowOpenFilesTree(ConfigManager::Get()->Read(_T("/editor/show_opened_files_tree"), true));
 	#endif
-	m_Theme = new EditorColorSet(ConfigManager::Get()->Read("/editor/color_sets/active_color_set", COLORSET_DEFAULT));
-	ConfigManager::AddConfiguration(_("Editor"), "/editor");
+	m_Theme = new EditorColorSet(ConfigManager::Get()->Read(_T("/editor/color_sets/active_color_set"), COLORSET_DEFAULT));
+	ConfigManager::AddConfiguration(_("Editor"), _T("/editor"));
 	parent->PushEventHandler(this);
 
     CreateSearchLog();
@@ -228,8 +228,8 @@ void EditorManager::CreateSearchLog()
 
     // set log image
     wxBitmap bmp;
-	wxString prefix = ConfigManager::Get()->Read("data_path") + "/images/";
-    bmp.LoadFile(prefix + "filefind.png", wxBITMAP_TYPE_PNG);
+	wxString prefix = ConfigManager::Get()->Read(_T("data_path")) + _T("/images/");
+    bmp.LoadFile(prefix + _T("filefind.png"), wxBITMAP_TYPE_PNG);
     Manager::Get()->GetMessageManager()->SetLogImage(m_pSearchLog, bmp);
 }
 
@@ -239,10 +239,10 @@ void EditorManager::LogSearch(const wxString& file, int line, const wxString& li
     wxString lineTextL;
     wxString lineStr;
 
-    lineStr.Printf("%d", line);
+    lineStr.Printf(_T("%d"), line);
     lineTextL = lineText;
-    lineTextL.Replace("\r", " ");
-    lineTextL.Replace("\n", " ");
+    lineTextL.Replace(_T("\r"), _T(" "));
+    lineTextL.Replace(_T("\n"), _T(" "));
     lineTextL.Trim(false);
     lineTextL.Trim(true);
 
@@ -261,16 +261,16 @@ void EditorManager::LoadAutoComplete()
 	wxString entry;
 	wxConfigBase* conf = ConfigManager::Get();
 	wxString oldPath = conf->GetPath();
-	conf->SetPath(_("/editor/auto_complete"));
+	conf->SetPath(_T("/editor/auto_complete"));
 	conf->SetExpandEnvVars(false);
 	bool cont = conf->GetFirstEntry(entry, cookie);
 	while (cont)
 	{
-        wxString code = conf->Read(entry, _(""));
+        wxString code = conf->Read(entry, _T(""));
         // convert non-printable chars to printable
-        code.Replace(_("\\n"), _("\n"));
-        code.Replace(_("\\r"), _("\r"));
-        code.Replace(_("\\t"), _("\t"));
+        code.Replace(_T("\\n"), _T("\n"));
+        code.Replace(_T("\\r"), _T("\r"));
+        code.Replace(_T("\\t"), _T("\t"));
         m_AutoCompleteMap[entry] = code;
 		cont = conf->GetNextEntry(entry, cookie);
 	}
@@ -280,34 +280,34 @@ void EditorManager::LoadAutoComplete()
     if (m_AutoCompleteMap.size() == 0)
     {
         // default auto-complete items
-        m_AutoCompleteMap[_("if")] = _("if (|)\n\t;");
-        m_AutoCompleteMap[_("ifb")] = _("if (|)\n{\n\t\n}");
-        m_AutoCompleteMap[_("ife")] = _("if (|)\n{\n\t\n}\nelse\n{\n\t\n}");
-        m_AutoCompleteMap[_("ifei")] = _("if (|)\n{\n\t\n}\nelse if ()\n{\n\t\n}\nelse\n{\n\t\n}");
-        m_AutoCompleteMap[_("while")] = _("while (|)\n\t;");
-        m_AutoCompleteMap[_("whileb")] = _("while (|)\n{\n\t\n}");
-        m_AutoCompleteMap[_("for")] = _("for (|; ; )\n\t;");
-        m_AutoCompleteMap[_("forb")] = _("for (|; ; )\n{\n\t\n}");
-        m_AutoCompleteMap[_("class")] = _("class $(Class name)|\n{\n\tpublic:\n\t\t$(Class name)();\n\t\t~$(Class name)();\n\tprotected:\n\t\t\n\tprivate:\n\t\t\n};\n");
-        m_AutoCompleteMap[_("struct")] = _("struct |\n{\n\t\n};\n");
+        m_AutoCompleteMap[_T("if")] = _T("if (|)\n\t;");
+        m_AutoCompleteMap[_T("ifb")] = _T("if (|)\n{\n\t\n}");
+        m_AutoCompleteMap[_T("ife")] = _T("if (|)\n{\n\t\n}\nelse\n{\n\t\n}");
+        m_AutoCompleteMap[_T("ifei")] = _T("if (|)\n{\n\t\n}\nelse if ()\n{\n\t\n}\nelse\n{\n\t\n}");
+        m_AutoCompleteMap[_T("while")] = _T("while (|)\n\t;");
+        m_AutoCompleteMap[_T("whileb")] = _T("while (|)\n{\n\t\n}");
+        m_AutoCompleteMap[_T("for")] = _T("for (|; ; )\n\t;");
+        m_AutoCompleteMap[_T("forb")] = _T("for (|; ; )\n{\n\t\n}");
+        m_AutoCompleteMap[_T("class")] = _T("class $(Class name)|\n{\n\tpublic:\n\t\t$(Class name)();\n\t\t~$(Class name)();\n\tprotected:\n\t\t\n\tprivate:\n\t\t\n};\n");
+        m_AutoCompleteMap[_T("struct")] = _T("struct |\n{\n\t\n};\n");
     }
 }
 
 void EditorManager::SaveAutoComplete()
 {
 	wxConfigBase* conf = ConfigManager::Get();
-	conf->DeleteGroup(_("/editor/auto_complete"));
+	conf->DeleteGroup(_T("/editor/auto_complete"));
 	wxString oldPath = conf->GetPath();
-	conf->SetPath(_("/editor/auto_complete"));
+	conf->SetPath(_T("/editor/auto_complete"));
 	conf->SetExpandEnvVars(false);
 	AutoCompleteMap::iterator it;
 	for (it = m_AutoCompleteMap.begin(); it != m_AutoCompleteMap.end(); ++it)
 	{
         wxString code = it->second;
         // convert non-printable chars to printable
-        code.Replace(_("\n"), _("\\n"));
-        code.Replace(_("\r"), _("\\r"));
-        code.Replace(_("\t"), _("\\t"));
+        code.Replace(_T("\n"), _T("\\n"));
+        code.Replace(_T("\r"), _T("\\r"));
+        code.Replace(_T("\t"), _T("\\t"));
 		conf->Write(it->first, code);
 	}
 	conf->SetExpandEnvVars(true);
@@ -420,7 +420,7 @@ cbEditor* EditorManager::Open(const wxString& filename, int pos,ProjectFile* dat
         // as a parameter
         if(data) 
         {
-            Manager::Get()->GetMessageManager()->DebugLog("project data set for %s", data->file.GetFullPath().c_str());
+            Manager::Get()->GetMessageManager()->DebugLog(_("project data set for %s"), data->file.GetFullPath().c_str());
         }
         else
         {
@@ -431,7 +431,7 @@ cbEditor* EditorManager::Open(const wxString& filename, int pos,ProjectFile* dat
                 ProjectFile* pf = prj->GetFileByFilename(ed->GetFilename(), false);
                 if (pf)
                 {
-                    Manager::Get()->GetMessageManager()->DebugLog("found %s", pf->file.GetFullPath().c_str());
+                    Manager::Get()->GetMessageManager()->DebugLog(_("found %s"), pf->file.GetFullPath().c_str());
                     data = pf;
                     break;
                 }
@@ -508,7 +508,7 @@ cbEditor* EditorManager::New()
 
     // add default text
     wxString key;
-    key.Printf("/editor/default_code/%d", (int)FileTypeOf(ed->GetFilename()));
+    key.Printf(_T("/editor/default_code/%d"), (int)FileTypeOf(ed->GetFilename()));
     wxString code = ConfigManager::Get()->Read(key, wxEmptyString);
     ed->GetControl()->SetText(code);
 
@@ -875,7 +875,7 @@ void EditorManager::CheckForExternallyModifiedFiles()
     if (failedFiles.GetCount())
     {
         wxString msg;
-        msg.Printf(_("Could not reload all files:\n\n%s"), GetStringFromArray(failedFiles, "\n").c_str());
+        msg.Printf(_("Could not reload all files:\n\n%s"), GetStringFromArray(failedFiles, _T("\n")).c_str());
         wxMessageBox(msg, _("Error"), wxICON_ERROR);
     }
 }
@@ -1302,7 +1302,7 @@ int EditorManager::FindInFiles(cbFindReplaceData* data)
         if (!prj)
             return 0;
         
-        wxString fullpath = "";            
+        wxString fullpath = _T("");
         for (int i = 0; i < prj->GetFilesCount(); ++i)
         {
             ProjectFile* pf = prj->GetFile(i);
@@ -1336,7 +1336,7 @@ int EditorManager::FindInFiles(cbFindReplaceData* data)
         // first load the file in the control
         if (!control->LoadFile(filesList[i]))
         {
-            LOGSTREAM << "Failed opening " << filesList[i] << '\n';
+            LOGSTREAM << _("Failed opening ") << filesList[i] << wxT('\n');
             continue; // failed
         }
         
@@ -1482,7 +1482,7 @@ void EditorManager::ShowOpenFilesTree(bool show)
         m_pTree->Show(false);
     RefreshOpenFilesTree();
     // update user prefs
-    ConfigManager::Get()->Write("/editor/show_opened_files_tree", show);
+    ConfigManager::Get()->Write(_T("/editor/show_opened_files_tree"), show);
 }
 
 bool EditorManager::IsOpenFilesTreeVisible()
@@ -1505,7 +1505,7 @@ wxTreeItemId EditorManager::FindTreeFile(const wxString& filename)
     {
         if(Manager::isappShuttingDown())
             break;
-        if(filename=="")
+        if(filename==_T(""))
             break;
         wxTreeCtrl *tree=GetTree();
         if(!tree || !m_TreeOpenedFiles)
@@ -1528,17 +1528,17 @@ wxTreeItemId EditorManager::FindTreeFile(const wxString& filename)
 
 wxString EditorManager::GetTreeItemFilename(wxTreeItemId item)
 {
-    SANITY_CHECK("");
+    SANITY_CHECK(_T(""));
     if(Manager::isappShuttingDown())
-        return "";
+        return _T("");
     wxTreeCtrl *tree=GetTree();
     if(!tree || !m_TreeOpenedFiles || !item)
-        return "";
+        return _T("");
     MiscTreeItemData *data=(MiscTreeItemData*)tree->GetItemData(item);
     if(!data)
-        return "";
+        return _T("");
     if(data->GetOwner()!=this)
-        return "";
+        return _T("");
     return ((EditorTreeData*)data)->GetFullName();
 }
 
@@ -1654,7 +1654,7 @@ void EditorManager::InitPane()
     wxSplitterWindow* mysplitter = mypanel->GetSplitter();
     BuildOpenedFilesTree(mysplitter);
     mypanel->SetAutoLayout(true);
-    mypanel->SetConfigEntryForSplitter("/editor/opened_files_tree_height");
+    mypanel->SetConfigEntryForSplitter(_T("/editor/opened_files_tree_height"));
     mypanel->RefreshSplitter(ID_EditorManager,ID_ProjectManager);
 }
 
@@ -1670,15 +1670,15 @@ void EditorManager::BuildOpenedFilesTree(wxWindow* parent)
 
     wxBitmap bmp;
     m_pImages = new wxImageList(16, 16);
-    wxString prefix = ConfigManager::Get()->Read("data_path") + "/images/";
-    bmp.LoadFile(prefix + "folder_open.png", wxBITMAP_TYPE_PNG); // folder
+    wxString prefix = ConfigManager::Get()->Read(_T("data_path")) + _T("/images/");
+    bmp.LoadFile(prefix + _T("folder_open.png"), wxBITMAP_TYPE_PNG); // folder
     m_pImages->Add(bmp);
-    bmp.LoadFile(prefix + "ascii.png", wxBITMAP_TYPE_PNG); // file
+    bmp.LoadFile(prefix + _T("ascii.png"), wxBITMAP_TYPE_PNG); // file
     m_pImages->Add(bmp);
-    bmp.LoadFile(prefix + "modified_file.png", wxBITMAP_TYPE_PNG); // modified file
+    bmp.LoadFile(prefix + _T("modified_file.png"), wxBITMAP_TYPE_PNG); // modified file
     m_pImages->Add(bmp);
     m_pTree->SetImageList(m_pImages);
-    m_TreeOpenedFiles=m_pTree->AddRoot("Opened Files", 0, 0);
+    m_TreeOpenedFiles=m_pTree->AddRoot(_T("Opened Files"), 0, 0);
     m_pTree->SetItemBold(m_TreeOpenedFiles);
     RebuildOpenedFilesTree(m_pTree);
 }
@@ -1787,7 +1787,7 @@ void EditorManager::OnTreeItemActivated(wxTreeEvent &event)
     if(!MiscTreeItemData::OwnerCheck(event,GetTree(),this,true))
         return;
     wxString filename=GetTreeItemFilename(event.GetItem());
-    if(filename=="")
+    if(filename==_T(""))
         return;
     Open(filename);
 }

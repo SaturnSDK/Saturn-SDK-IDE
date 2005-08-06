@@ -190,12 +190,12 @@ ProjectManager::ProjectManager(wxNotebook* parent)
     InitPane();
 
 	m_pFileGroups = new FilesGroupsAndMasks;
-	m_TreeCategorize = ConfigManager::Get()->Read("/project_manager/categorize_tree", 1);
-	m_TreeUseFolders = ConfigManager::Get()->Read("/project_manager/use_folders", 1);
+	m_TreeCategorize = ConfigManager::Get()->Read(_T("/project_manager/categorize_tree"), 1);
+	m_TreeUseFolders = ConfigManager::Get()->Read(_T("/project_manager/use_folders"), 1);
 
     RebuildTree();
 
-	ConfigManager::AddConfiguration(_("Project Manager"), "/project_manager");
+	ConfigManager::AddConfiguration(_("Project Manager"), _T("/project_manager"));
 
 	// Event handling. This must be THE LAST THING activated on startup.
 	// Constructors and destructors must always follow the LIFO rule:
@@ -210,7 +210,7 @@ void ProjectManager::InitPane()
         return;
     if(m_pTree)
         return;
-    wxSplitPanel* mypanel = (wxSplitPanel*)(Manager::Get()->GetNotebookPage("Projects",wxTAB_TRAVERSAL | wxCLIP_CHILDREN,true));
+    wxSplitPanel* mypanel = (wxSplitPanel*)(Manager::Get()->GetNotebookPage(_("Projects"),wxTAB_TRAVERSAL | wxCLIP_CHILDREN,true));
     m_pPanel = mypanel;
     wxSplitterWindow* mysplitter = mypanel->GetSplitter();
     BuildTree(mysplitter);
@@ -228,14 +228,14 @@ void ProjectManager::BuildTree(wxWindow* parent)
 
     wxBitmap bmp;
     m_pImages = new wxImageList(16, 16);
-    wxString prefix = ConfigManager::Get()->Read("data_path") + "/images/";
-    bmp.LoadFile(prefix + "gohome.png", wxBITMAP_TYPE_PNG); // workspace
+    wxString prefix = ConfigManager::Get()->Read(_T("data_path")) + _T("/images/");
+    bmp.LoadFile(prefix + _T("gohome.png"), wxBITMAP_TYPE_PNG); // workspace
     m_pImages->Add(bmp);
-    bmp.LoadFile(prefix + "codeblocks.png", wxBITMAP_TYPE_PNG); // project
+    bmp.LoadFile(prefix + _T("codeblocks.png"), wxBITMAP_TYPE_PNG); // project
     m_pImages->Add(bmp);
-    bmp.LoadFile(prefix + "ascii.png", wxBITMAP_TYPE_PNG); // file
+    bmp.LoadFile(prefix + _T("ascii.png"), wxBITMAP_TYPE_PNG); // file
     m_pImages->Add(bmp);
-    bmp.LoadFile(prefix + "folder_open.png", wxBITMAP_TYPE_PNG); // folder
+    bmp.LoadFile(prefix + _T("folder_open.png"), wxBITMAP_TYPE_PNG); // folder
     m_pImages->Add(bmp);
     m_pTree->SetImageList(m_pImages);
     
@@ -288,7 +288,7 @@ void ProjectManager::CreateMenu(wxMenuBar* menuBar)
 		if (menu)
 		{
             menu->Insert(menu->GetMenuItemCount() - 1, idMenuFileProperties, _("Properties"));
-            menu->Insert(menu->GetMenuItemCount() - 1, wxID_SEPARATOR, ""); // instead of AppendSeparator();
+            menu->Insert(menu->GetMenuItemCount() - 1, wxID_SEPARATOR, _T("")); // instead of AppendSeparator();
         }
 
         pos = menuBar->FindMenu(_("Project"));
@@ -311,8 +311,8 @@ It is duplicated in ShowMenu() */
             treeprops->AppendSeparator();
             treeprops->AppendCheckItem(idMenuViewCategorize, _("Categorize by file types"));
             treeprops->AppendCheckItem(idMenuViewUseFolders, _("Display folders as on disk"));
-            treeprops->Check(idMenuViewCategorize, ConfigManager::Get()->Read("/project_manager/categorize_tree", 1));
-            treeprops->Check(idMenuViewUseFolders, ConfigManager::Get()->Read("/project_manager/use_folders", 1));
+            treeprops->Check(idMenuViewCategorize, ConfigManager::Get()->Read(_T("/project_manager/categorize_tree"), 1));
+            treeprops->Check(idMenuViewUseFolders, ConfigManager::Get()->Read(_T("/project_manager/use_folders"), 1));
             treeprops->Append(idMenuViewFileMasks, _("Edit file types && categories..."));
             menu->AppendSeparator();
             menu->Append(idMenuProjectTreeProps, _("Project tree"), treeprops);
@@ -427,8 +427,8 @@ It is duplicated in CreateMenu() */
 it differs from the block currently in CreateMenu() by the following two IDs */
             treeprops->AppendCheckItem(idMenuViewCategorizePopup, _("Categorize by file types"));
             treeprops->AppendCheckItem(idMenuViewUseFoldersPopup, _("Display folders as on disk"));
-            treeprops->Check(idMenuViewCategorizePopup, ConfigManager::Get()->Read("/project_manager/categorize_tree", 1));
-            treeprops->Check(idMenuViewUseFoldersPopup, ConfigManager::Get()->Read("/project_manager/use_folders", 1));
+            treeprops->Check(idMenuViewCategorizePopup, ConfigManager::Get()->Read(_T("/project_manager/categorize_tree"), 1));
+            treeprops->Check(idMenuViewUseFoldersPopup, ConfigManager::Get()->Read(_T("/project_manager/use_folders"), 1));
             treeprops->Append(idMenuViewFileMasks, _("Edit file types && categories..."));
 
             menu.Append(idMenuProjectTreeProps, _("Project tree"), treeprops);
@@ -473,7 +473,7 @@ wxMenu* ProjectManager::GetProjectMenu()
         wxMenuBar* mb = frame->GetMenuBar();
         if(!mb)
             break;
-        result = mb->GetMenu(mb->FindMenu("Project"));
+        result = mb->GetMenu(mb->FindMenu(_("Project")));
         break;
     }while(false);
     return result;    
@@ -795,7 +795,7 @@ cbWorkspace* ProjectManager::GetWorkspace()
     SANITY_CHECK(0L);
     if (!m_pWorkspace)
     {
-        m_pWorkspace = new cbWorkspace("");
+        m_pWorkspace = new cbWorkspace(_T(""));
         m_pWorkspace->SetTitle(_("Workspace"));
         m_pWorkspace->SetModified(false);
     }
@@ -850,7 +850,7 @@ bool ProjectManager::QueryCloseWorkspace()
         return true;
 
     // don't ask to save the default workspace, if blank workspace is used on app startup
-    if (m_pWorkspace->IsDefault() && ConfigManager::Get()->Read("/environment/blank_workspace", 0L) == 1)
+    if (m_pWorkspace->IsDefault() && ConfigManager::Get()->Read(_T("/environment/blank_workspace"), 0L) == 1)
         return true;
 
     if (m_pWorkspace->GetModified())
@@ -938,11 +938,11 @@ void ProjectManager::RebuildTree()
             project->SaveTreeState(m_pTree);
     }
     m_pTree->DeleteAllItems();
-    wxString title="";
+    wxString title=_T("");
     if(m_pWorkspace)
         title=m_pWorkspace->GetTitle();
-     if(title=="")
-         title="Workspace";
+     if(title==_T(""))
+         title=_("Workspace");
     m_TreeRoot = m_pTree->AddRoot(title, 0, 0);
     for (int i = 0; i < count; ++i)
     {
@@ -1207,7 +1207,7 @@ void ProjectManager::OnRightClick(wxCommandEvent& event)
     wxMenu menu;
 
     // ask any plugins to add items in this menu
-    Manager::Get()->GetPluginManager()->AskPluginsForModuleMenu(mtProjectManager, &menu, "");
+    Manager::Get()->GetPluginManager()->AskPluginsForModuleMenu(mtProjectManager, &menu, _T(""));
 
     // if plugins added to this menu, add a separator
     if (menu.GetMenuItemCount() != 0)
@@ -1441,11 +1441,11 @@ void ProjectManager::OnRemoveFileFromProject(wxCommandEvent& event)
                 ProjectFile* pf = prj->GetFile(indices[i]);
                 if (!pf)
                 {
-                    Manager::Get()->GetMessageManager()->DebugLog("Invalid project file: Index %d", indices[i]);
+                    Manager::Get()->GetMessageManager()->DebugLog(_("Invalid project file: Index %d"), indices[i]);
                     continue;
                 }
                 wxString filename = pf->file.GetFullPath();
-                Manager::Get()->GetMessageManager()->DebugLog("Removing index %d, %s", indices[i], filename.c_str());
+                Manager::Get()->GetMessageManager()->DebugLog(_("Removing index %d, %s"), indices[i], filename.c_str());
                 prj->RemoveFile(indices[i]);
                 CodeBlocksEvent evt(cbEVT_PROJECT_FILE_REMOVED);
                 evt.SetProject(prj);
@@ -1523,7 +1523,7 @@ void ProjectManager::OnProperties(wxCommandEvent& event)
     SANITY_CHECK();
     if (event.GetId() == idMenuProjectProperties)
     {
-        wxString backupTitle = m_pActiveProject ? m_pActiveProject->GetTitle() : "";
+        wxString backupTitle = m_pActiveProject ? m_pActiveProject->GetTitle() : _T("");
         if (m_pActiveProject && m_pActiveProject->ShowOptions())
         {
             // make sure that cbEVT_PROJECT_ACTIVATE
@@ -1538,7 +1538,7 @@ void ProjectManager::OnProperties(wxCommandEvent& event)
         FileTreeData* ftd = (FileTreeData*)m_pTree->GetItemData(sel);
     
         cbProject* project = ftd ? ftd->GetProject() : m_pActiveProject;
-        wxString backupTitle = project ? project->GetTitle() : "";
+        wxString backupTitle = project ? project->GetTitle() : _T("");
         if (project && project->ShowOptions() && project == m_pActiveProject)
         {
             // rebuild tree and make sure that cbEVT_PROJECT_ACTIVATE
@@ -1607,7 +1607,7 @@ void ProjectManager::OnViewCategorize(wxCommandEvent& event)
         isChecked = !isChecked;
     m_TreeCategorize = isChecked;
     Manager::Get()->GetAppWindow()->GetMenuBar()->Check(idMenuViewCategorize, m_TreeCategorize);
-	ConfigManager::Get()->Write("/project_manager/categorize_tree", m_TreeCategorize);
+	ConfigManager::Get()->Write(_T("/project_manager/categorize_tree"), m_TreeCategorize);
     RebuildTree();
 }
 
@@ -1619,7 +1619,7 @@ void ProjectManager::OnViewUseFolders(wxCommandEvent& event)
         isChecked = !isChecked;
     m_TreeUseFolders = isChecked;
     Manager::Get()->GetAppWindow()->GetMenuBar()->Check(idMenuViewUseFolders, m_TreeUseFolders);
-	ConfigManager::Get()->Write("/project_manager/use_folders", m_TreeUseFolders);
+	ConfigManager::Get()->Write(_T("/project_manager/use_folders"), m_TreeUseFolders);
     RebuildTree();
 }
 

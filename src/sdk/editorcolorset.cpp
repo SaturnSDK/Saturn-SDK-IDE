@@ -100,7 +100,7 @@ void EditorColorSet::ClearAllOptionColors()
 void EditorColorSet::LoadAvailableSets()
 {
     m_LanguageID = 0;
-	wxString path = ConfigManager::Get()->Read("data_path") + "/lexers";
+	wxString path = ConfigManager::Get()->Read(_T("data_path")) + _T("/lexers");
     wxDir dir(path);
 
     if (!dir.IsOpened())
@@ -108,10 +108,10 @@ void EditorColorSet::LoadAvailableSets()
 
 	EditorLexerLoader lex(this);
     wxString filename;
-    bool ok = dir.GetFirst(&filename, "lexer_*.xml", wxDIR_FILES);
+    bool ok = dir.GetFirst(&filename, _T("lexer_*.xml"), wxDIR_FILES);
     while (ok)
     {
-        lex.Load(path + "/" + filename);
+        lex.Load(path + _T("/") + filename);
         ok = dir.GetNext(&filename);
     }
 }
@@ -345,18 +345,18 @@ void EditorColorSet::Apply(HighlightLanguage lang, wxStyledTextCtrl* control)
             if (opt->value == cbHIGHLIGHT_LINE)
             {
                 control->SetCaretLineBack(opt->back);
-                ConfigManager::Get()->Write("/editor/highlight_caret_line_color/red",	opt->back.Red());
-                ConfigManager::Get()->Write("/editor/highlight_caret_line_color/green", opt->back.Green());
-                ConfigManager::Get()->Write("/editor/highlight_caret_line_color/blue",  opt->back.Blue());
+                ConfigManager::Get()->Write(_T("/editor/highlight_caret_line_color/red"),	opt->back.Red());
+                ConfigManager::Get()->Write(_T("/editor/highlight_caret_line_color/green"), opt->back.Green());
+                ConfigManager::Get()->Write(_T("/editor/highlight_caret_line_color/blue"),  opt->back.Blue());
             }
             else if (opt->value == cbSELECTION)
             {
                 if (opt->back != wxNullColour)
                 {
                     control->SetSelBackground(true, opt->back);
-                    ConfigManager::Get()->Write("/editor/selection_color/red",	 opt->back.Red());
-                    ConfigManager::Get()->Write("/editor/selection_color/green", opt->back.Green());
-                    ConfigManager::Get()->Write("/editor/selection_color/blue",  opt->back.Blue());
+                    ConfigManager::Get()->Write(_T("/editor/selection_color/red"),	 opt->back.Red());
+                    ConfigManager::Get()->Write(_T("/editor/selection_color/green"), opt->back.Green());
+                    ConfigManager::Get()->Write(_T("/editor/selection_color/blue"),  opt->back.Blue());
                 }
                 else
                     control->SetSelBackground(false, wxColour(0xC0, 0xC0, 0xC0));
@@ -378,41 +378,41 @@ void EditorColorSet::Save()
 	for (int x = 0; x < HL_LAST; ++x)
 	{
 		wxString lang = m_Sets[x].m_Langs;
-		lang.Replace("/", "_");
-		lang.Replace("\\", "_");
+		lang.Replace(_T("/"), _T("_"));
+		lang.Replace(_T("\\"), _T("_"));
 		if (lang.IsEmpty())
             continue;
         key.Clear();
-		key << "/editor/color_sets/" << m_Name << "/" << lang;
+		key << _T("/editor/color_sets/") << m_Name << _T("/") << lang;
 		for (unsigned int i = 0; i < m_Sets[x].m_Colors.GetCount(); ++i)
 		{
 			OptionColor* opt = m_Sets[x].m_Colors.Item(i);
 			wxString tmpKey;
-			tmpKey << key << "/" << opt->name;
+			tmpKey << key << _T("/") << opt->name;
 			
 			if (opt->fore != wxNullColour)
 			{
-                ConfigManager::Get()->Write(tmpKey + "/fore/red",   opt->fore.Red());
-                ConfigManager::Get()->Write(tmpKey + "/fore/green", opt->fore.Green());
-                ConfigManager::Get()->Write(tmpKey + "/fore/blue",  opt->fore.Blue());
+                ConfigManager::Get()->Write(tmpKey + _T("/fore/red"),   opt->fore.Red());
+                ConfigManager::Get()->Write(tmpKey + _T("/fore/green"), opt->fore.Green());
+                ConfigManager::Get()->Write(tmpKey + _T("/fore/blue"),  opt->fore.Blue());
 			}
 			if (opt->back != wxNullColour)
 			{
-                ConfigManager::Get()->Write(tmpKey + "/back/red",   opt->back.Red());
-                ConfigManager::Get()->Write(tmpKey + "/back/green", opt->back.Green());
-                ConfigManager::Get()->Write(tmpKey + "/back/blue",  opt->back.Blue());
+                ConfigManager::Get()->Write(tmpKey + _T("/back/red"),   opt->back.Red());
+                ConfigManager::Get()->Write(tmpKey + _T("/back/green"), opt->back.Green());
+                ConfigManager::Get()->Write(tmpKey + _T("/back/blue"),  opt->back.Blue());
             }
 	
-			ConfigManager::Get()->Write(tmpKey + "/bold",       opt->bold);
-			ConfigManager::Get()->Write(tmpKey + "/italics",    opt->italics);
-			ConfigManager::Get()->Write(tmpKey + "/underlined", opt->underlined);
+			ConfigManager::Get()->Write(tmpKey + _T("/bold"),       opt->bold);
+			ConfigManager::Get()->Write(tmpKey + _T("/italics"),    opt->italics);
+			ConfigManager::Get()->Write(tmpKey + _T("/underlined"), opt->underlined);
 	
-			ConfigManager::Get()->Write(tmpKey + "/isStyle", opt->isStyle);
+			ConfigManager::Get()->Write(tmpKey + _T("/isStyle"), opt->isStyle);
 		}
 		for (int i = 0; i < 3; ++i)
 		{
 			wxString tmpkey;
-			tmpkey.Printf("%s/editor/keywords/%d", key.c_str(), i);
+			tmpkey.Printf(_T("%s/editor/keywords/%d"), key.c_str(), i);
             ConfigManager::Get()->Write(tmpkey, m_Sets[x].m_Keywords[i]);
 		}
 	}
@@ -425,45 +425,45 @@ void EditorColorSet::Load()
 	for (int x = 0; x < HL_LAST; ++x)
 	{
 		wxString lang = m_Sets[x].m_Langs;
-		lang.Replace("/", "_");
-		lang.Replace("\\", "_");
+		lang.Replace(_T("/"), _T("_"));
+		lang.Replace(_T("\\"), _T("_"));
 		if (lang.IsEmpty())
             continue;
 		key.Clear();
-		key << "/editor/color_sets/" << m_Name << "/" << lang;
+		key << _T("/editor/color_sets/") << m_Name << _T("/") << lang;
 		if (!ConfigManager::Get()->HasGroup(key))
 			continue;
 		for (unsigned int i = 0; i < m_Sets[x].m_Colors.GetCount(); ++i)
 		{
 			OptionColor* opt = m_Sets[x].m_Colors.Item(i);
 			wxString tmpKey;
-			tmpKey << key << "/" << opt->name;
+			tmpKey << key << _T("/") << opt->name;
 			
-			if (ConfigManager::Get()->HasGroup(tmpKey + "/fore"))
+			if (ConfigManager::Get()->HasGroup(tmpKey + _T("/fore")))
 			{
-                opt->fore = wxColour(ConfigManager::Get()->Read(tmpKey + "/fore/red",  opt->fore.Red()),
-                                    ConfigManager::Get()->Read(tmpKey + "/fore/green", opt->fore.Green()),
-                                    ConfigManager::Get()->Read(tmpKey + "/fore/blue",  opt->fore.Blue())
+                opt->fore = wxColour(ConfigManager::Get()->Read(tmpKey + _T("/fore/red"),  opt->fore.Red()),
+                                    ConfigManager::Get()->Read(tmpKey + _T("/fore/green"), opt->fore.Green()),
+                                    ConfigManager::Get()->Read(tmpKey + _T("/fore/blue"),  opt->fore.Blue())
                                     );
             }
-			if (ConfigManager::Get()->HasGroup(tmpKey + "/back"))
+			if (ConfigManager::Get()->HasGroup(tmpKey + _T("/back")))
 			{
-                opt->back = wxColour(ConfigManager::Get()->Read(tmpKey+ "/back/red",   opt->back.Red()),
-                                    ConfigManager::Get()->Read(tmpKey + "/back/green", opt->back.Green()),
-                                    ConfigManager::Get()->Read(tmpKey + "/back/blue",  opt->back.Blue())
+                opt->back = wxColour(ConfigManager::Get()->Read(tmpKey+ _T("/back/red"),   opt->back.Red()),
+                                    ConfigManager::Get()->Read(tmpKey + _T("/back/green"), opt->back.Green()),
+                                    ConfigManager::Get()->Read(tmpKey + _T("/back/blue"),  opt->back.Blue())
                                     );
             }
-			opt->bold = ConfigManager::Get()->Read(tmpKey + "/bold", opt->bold);
-			opt->italics = ConfigManager::Get()->Read(tmpKey + "/italics", opt->italics);
-			opt->underlined = ConfigManager::Get()->Read(tmpKey + "/underlined", opt->underlined);
+			opt->bold = ConfigManager::Get()->Read(tmpKey + _T("/bold"), opt->bold);
+			opt->italics = ConfigManager::Get()->Read(tmpKey + _T("/italics"), opt->italics);
+			opt->underlined = ConfigManager::Get()->Read(tmpKey + _T("/underlined"), opt->underlined);
 	
-			opt->isStyle = ConfigManager::Get()->Read(tmpKey + "/isStyle", opt->underlined);
+			opt->isStyle = ConfigManager::Get()->Read(tmpKey + _T("/isStyle"), opt->underlined);
 		}
         for (int i = 0; i < 3; ++i)
         {
             wxString tmpkey;
-            tmpkey.Printf("%s/editor/keywords/%d", key.c_str(), i);
-            m_Sets[x].m_Keywords[i] = ConfigManager::Get()->Read(tmpkey, "");
+            tmpkey.Printf(_T("%s/editor/keywords/%d"), key.c_str(), i);
+            m_Sets[x].m_Keywords[i] = ConfigManager::Get()->Read(tmpkey, _T(""));
         }
 	}
 }
@@ -472,7 +472,7 @@ void EditorColorSet::Reset(HighlightLanguage lang)
 {
     wxLogNull ln;
     wxString key;
-    key << "/editor/color_sets/" << m_Name << "/" << GetLanguageName(lang);
+    key << _T("/editor/color_sets/") << m_Name << _T("/") << GetLanguageName(lang);
     if (ConfigManager::Get()->HasGroup(key))
         ConfigManager::Get()->DeleteGroup(key);
 
@@ -490,10 +490,10 @@ void EditorColorSet::SetKeywords(HighlightLanguage lang, int idx, const wxString
     if (lang != HL_NONE && idx >=0 && idx < 3)
     {
         m_Sets[lang].m_Keywords[idx] = keywords;
-        m_Sets[lang].m_Keywords[idx].Replace("\r", " ");
-        m_Sets[lang].m_Keywords[idx].Replace("\n", " ");
-        m_Sets[lang].m_Keywords[idx].Replace("\t", " ");
-        while (m_Sets[lang].m_Keywords[idx].Replace("  ", " "))
+        m_Sets[lang].m_Keywords[idx].Replace(_T("\r"), _T(" "));
+        m_Sets[lang].m_Keywords[idx].Replace(_T("\n"), _T(" "));
+        m_Sets[lang].m_Keywords[idx].Replace(_T("\t"), _T(" "));
+        while (m_Sets[lang].m_Keywords[idx].Replace(_T("  "), _T(" ")))
             ;
     }
 }
@@ -519,7 +519,7 @@ wxString EditorColorSet::GetSampleCode(HighlightLanguage lang, int* breakLine, i
         *debugLine = m_Sets[lang].m_DebugLine;
     if (errorLine)
         *errorLine = m_Sets[lang].m_ErrorLine;
-	wxString path = ConfigManager::Get()->Read("data_path") + "/lexers/";
+	wxString path = ConfigManager::Get()->Read(_T("data_path")) + _T("/lexers/");
     if (!m_Sets[lang].m_SampleCode.IsEmpty())
         return path + m_Sets[lang].m_SampleCode;
     return wxEmptyString;

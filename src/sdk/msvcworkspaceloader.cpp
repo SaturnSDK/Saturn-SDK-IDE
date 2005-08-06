@@ -62,23 +62,23 @@ bool MSVCWorkspaceLoader::Open(const wxString& filename)
         wxString line = input.ReadLine();
         if (line.IsEmpty())
         {
-            Manager::Get()->GetMessageManager()->DebugLog("Unsupported format.");
+            Manager::Get()->GetMessageManager()->DebugLog(_("Unsupported format."));
             return false;
         }
-        comps = GetArrayFromString(line, ",");
+        comps = GetArrayFromString(line, _T(","));
         line = comps[0];
         line.Trim(true);
         line.Trim(false);
-        if (line != "Microsoft Developer Studio Workspace File")
+        if (line != _T("Microsoft Developer Studio Workspace File"))
         {
-            Manager::Get()->GetMessageManager()->DebugLog("Unsupported format.");
+            Manager::Get()->GetMessageManager()->DebugLog(_("Unsupported format."));
             return false;
         }
         line = comps.GetCount() > 1 ? comps[1] : wxString(wxEmptyString);
         line.Trim(true);
         line.Trim(false);
-        if (line != "Format Version 6.00")
-            Manager::Get()->GetMessageManager()->DebugLog("Format not recognized. Will try to parse though...");
+        if (line != _T("Format Version 6.00"))
+            Manager::Get()->GetMessageManager()->DebugLog(_("Format not recognized. Will try to parse though..."));
     }
     
     ImportersGlobals::UseDefaultCompiler = !askForCompiler;
@@ -100,7 +100,7 @@ bool MSVCWorkspaceLoader::Open(const wxString& filename)
         * and add the dependency/link of the VstSDK project to the current project
         * be carefull, the dependent projects could not have already been read, so we have to remember them
         */
-        if (line.StartsWith("Project_Dep_Name")) {
+        if (line.StartsWith(_T("Project_Dep_Name"))) {
           line.Remove(0, 16);
           line.Trim(false);
           if (currentProject) addDependency(currentProject, line);
@@ -111,13 +111,13 @@ bool MSVCWorkspaceLoader::Open(const wxString& filename)
 //Project: "Demo_BSP"=.\Samples\BSP\scripts\Demo_BSP.dsp - Package Owner=<4>
         //if (!line.StartsWith("Project:"))
         //    continue;
-        if (line.StartsWith("Project:")) {
+        if (line.StartsWith(_T("Project:"))) {
           line.Remove(0, 8); // remove "Project:"
           // now we need to find the equal sign (=) that separates the
           // project title from the filename, and the minus sign (-)
           // that separates the filename from junk info - at least to this importer ;)
-          int equal = line.Find('=');
-          int minus = line.Find('-', true); // search from end
+          int equal = line.Find(_T('='));
+          int minus = line.Find(_T('-'), true); // search from end
 
           if (equal == -1 || minus == -1)
             continue;
@@ -128,7 +128,7 @@ bool MSVCWorkspaceLoader::Open(const wxString& filename)
           prjTitle.Trim(false);
           if (prjTitle.IsEmpty())
             continue;
-          if (prjTitle.GetChar(0) == '\"')
+          if (prjTitle.GetChar(0) == _T('\"'))
           {
             prjTitle.Truncate(prjTitle.Length() - 1);
             prjTitle.Remove(0, 1);
@@ -141,7 +141,7 @@ bool MSVCWorkspaceLoader::Open(const wxString& filename)
           prjFile.Trim(false);
           if (prjFile.IsEmpty())
             continue;
-          if (prjFile.GetChar(0) == '\"')
+          if (prjFile.GetChar(0) == _T('\"'))
           {
             prjFile.Truncate(prjFile.Length() - 1);
             prjFile.Remove(0, 1);
@@ -151,7 +151,7 @@ bool MSVCWorkspaceLoader::Open(const wxString& filename)
           wxFileName wfname = filename;
           wxFileName fname = prjFile;
           fname.MakeAbsolute(wfname.GetPath(wxPATH_GET_VOLUME | wxPATH_GET_SEPARATOR));
-          Manager::Get()->GetMessageManager()->DebugLog("Found project '%s' in '%s'", prjTitle.c_str(), fname.GetFullPath().c_str());
+          Manager::Get()->GetMessageManager()->DebugLog(_("Found project '%s' in '%s'"), prjTitle.c_str(), fname.GetFullPath().c_str());
           currentProject = Manager::Get()->GetProjectManager()->LoadProject(fname.GetFullPath());
           if (currentProject) initDependencies(currentProject);
         }

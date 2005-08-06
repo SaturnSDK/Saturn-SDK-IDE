@@ -10,7 +10,7 @@
 class cbEditor;
 class wxStyledTextCtrl;
 
-#define COLORSET_DEFAULT	_("default")
+#define COLORSET_DEFAULT	_T("default")
 
 typedef short int HighlightLanguage;
 #define HL_NONE     -1

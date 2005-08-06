@@ -3,8 +3,8 @@
 
 #include "ibaseloader.h"
 
-#define PROJECT_FILE_VERSION_MAJOR "1"
-#define PROJECT_FILE_VERSION_MINOR "1"
+#define PROJECT_FILE_VERSION_MAJOR _T("1")
+#define PROJECT_FILE_VERSION_MINOR _T("1")
 
 class cbProject;
 class ProjectBuildTarget;
