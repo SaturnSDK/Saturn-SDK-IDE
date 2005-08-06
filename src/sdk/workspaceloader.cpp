@@ -61,7 +61,8 @@ bool WorkspaceLoader::Open(const wxString& filename)
         GetpMsg()->DebugLog(_("No 'Workspace' element in file..."));
         return false;
     }
-    m_Title = wksp->Attribute("title"); // Conversion to unicode is automatic (see wxString::operator= )
+
+    m_Title = wxString(wksp->Attribute("title"),wxConvUTF8); // Conversion to unicode is automatic (see wxString::operator= )
     if (m_Title.IsEmpty())
         m_Title = _("Default workspace");
 
@@ -76,7 +77,7 @@ bool WorkspaceLoader::Open(const wxString& filename)
     {
         if(Manager::isappShuttingDown() || !GetpMan() || !GetpMsg())
             return false;
-        projectFilename = proj->Attribute("filename");
+        projectFilename = wxString(proj->Attribute("filename"),wxConvUTF8);
         if (projectFilename.IsEmpty())
         {
             GetpMsg()->DebugLog(_("'Project' node exists, but no filename?!?"));
