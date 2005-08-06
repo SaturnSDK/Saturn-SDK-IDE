@@ -52,11 +52,11 @@
 cbProject::cbProject(const wxString& filename)
     : m_ActiveTarget(-1),
     m_DefaultExecuteTarget(-1),
-    m_Makefile(""),
+    m_Makefile(_T("")),
     m_CustomMakefile(false),
     m_Loaded(false),
     m_CurrentlyLoading(false),
-    m_BasePath("")
+    m_BasePath(_T(""))
 {
     SetCompilerIndex(CompilerFactory::GetDefaultCompilerIndex());
 
@@ -193,7 +193,7 @@ wxString cbProject::CreateUniqueFilename()
 			break;
         ++iter;
     }
-    return tmp << "." << CODEBLOCKS_EXT;
+    return tmp << _T(".") << CODEBLOCKS_EXT;
 }
 
 void cbProject::ClearAllProperties()
@@ -322,18 +322,18 @@ void cbProject::CalculateCommonTopLevelPath()
     // in their paths
     wxString sep = wxFileName::GetPathSeparator();
     wxFileName base = GetBasePath() + sep;
-    Manager::Get()->GetMessageManager()->DebugLog("Project's base path: %s", base.GetFullPath().c_str());
+    Manager::Get()->GetMessageManager()->DebugLog(_("Project's base path: %s"), base.GetFullPath().c_str());
     for (FilesList::Node* node = m_Files.GetFirst(); node; node = node->GetNext())
     {
         ProjectFile* f = node->GetData();
         wxString tmp = f->relativeFilename;
         wxFileName tmpbase = GetBasePath() + sep;
-        while (tmp.StartsWith(_("..")))
+        while (tmp.StartsWith(_T("..")))
         {
-            tmpbase.AppendDir(_(".."));
+            tmpbase.AppendDir(_T(".."));
             tmp.Remove(0, 2); // two dots
             // remove separator(s) after dots
-            while (!tmp.IsEmpty() &&  (tmp.GetChar(0) == '/' || tmp.GetChar(0) == '\\'))
+            while (!tmp.IsEmpty() &&  (tmp.GetChar(0) == _T('/') || tmp.GetChar(0) == _T('\\')))
                 tmp.Remove(0, 1);
         }
         tmpbase.Normalize(wxPATH_NORM_ALL & ~wxPATH_NORM_CASE);
@@ -352,7 +352,7 @@ void cbProject::CalculateCommonTopLevelPath()
         f->SetObjName(f->relativeToCommonTopLevelPath);
     }
     m_CommonTopLevelPath = base.GetFullPath();
-    Manager::Get()->GetMessageManager()->DebugLog("Project's common toplevel path: %s", m_CommonTopLevelPath.c_str());
+    Manager::Get()->GetMessageManager()->DebugLog(_("Project's common toplevel path: %s"), m_CommonTopLevelPath.c_str());
 }
 
 wxString cbProject::GetCommonTopLevelPath()
@@ -406,7 +406,7 @@ bool cbProject::SaveLayout()
         return false;
 
 	wxFileName fname(m_Filename);
-	fname.SetExt("layout");
+	fname.SetExt(_T("layout"));
     ProjectLayoutLoader loader(this);
     return loader.Save(fname.GetFullPath());
 }
@@ -415,7 +415,7 @@ bool cbProject::LoadLayout()
 {
     if (m_Filename.IsEmpty())
         return false;
-    int openmode = ConfigManager::Get()->Read("/project_manager/open_files", (long int)1);
+    int openmode = ConfigManager::Get()->Read(_T("/project_manager/open_files"), (long int)1);
     switch (openmode)
     {
         case 0: // open all files
@@ -443,7 +443,7 @@ bool cbProject::LoadLayout()
         case 1: // open last open files
             {
                 wxFileName fname(m_Filename);
-                fname.SetExt("layout");
+                fname.SetExt(_T("layout"));
                 ProjectLayoutLoader loader(this);
                 if (loader.Open(fname.GetFullPath()))
                 {
@@ -539,13 +539,13 @@ ProjectFile* cbProject::AddFile(int targetIndex, const wxString& filename, bool 
 	ext = fname.GetExt().Lower();
 	if (ext.Matches(CPP_EXT) ||
 		ext.Matches(CXX_EXT))
-        f->compilerVar = "CPP";
+        f->compilerVar = _T("CPP");
 	else if (ext.Matches(C_EXT) ||
 		ext.Matches(CC_EXT))
-        f->compilerVar = "CC";
+        f->compilerVar = _T("CC");
 #ifdef __WXMSW__
 	else if (ext.Matches(RESOURCE_EXT))
-        f->compilerVar = "WINDRES";
+        f->compilerVar = _T("WINDRES");
 #endif
 
     if (!m_Targets.GetCount())
@@ -583,7 +583,7 @@ ProjectFile* cbProject::AddFile(int targetIndex, const wxString& filename, bool 
     
     fname.Assign(fname.GetFullPath());
     f->file.Assign(fname);
-	//Manager::Get()->GetMessageManager()->Log("Adding %s", f->file.GetFullPath().c_str());
+	//Manager::Get()->GetMessageManager()->Log(_T("Adding %s"), f->file.GetFullPath().c_str());
     fname.MakeRelativeTo(m_BasePath);
     f->relativeFilename = fname.GetFullPath();
     
@@ -693,9 +693,9 @@ void cbProject::AddTreeNode(wxTreeCtrl* tree, const wxString& text, const wxTree
     // with the same name and recurse with the result...
     
     wxString path = text;
-    int pos = path.Find('/');
+    int pos = path.Find(_T('/'));
     if (pos == -1)
-        pos = path.Find('\\');
+        pos = path.Find(_T('\\'));
     if (useFolders && pos >= 0)
     {
         // ok, we got it. now split it up and recurse
@@ -786,8 +786,8 @@ const wxString& cbProject::GetMakefile()
 		
 	wxFileName makefile(m_Makefile);
     makefile.Assign(m_Filename);
-    makefile.SetName("Makefile");
-    makefile.SetExt("");
+    makefile.SetName(_T("Makefile"));
+    makefile.SetExt(_T(""));
     makefile.MakeRelativeTo(GetBasePath());
 
     m_Makefile = makefile.GetFullPath();
@@ -821,7 +821,7 @@ ProjectFile* cbProject::GetFileByFilename(const wxString& filename, bool isRelat
         // make sure filename doesn't start with ".\"
         // our own relative files don't have it, so the search would fail
         // this happens when importing MS projects...
-        if (tmp.StartsWith(".\\"))
+        if (tmp.StartsWith(_T(".\\")))
             tmp.Remove(0, 2);
     }
 
@@ -912,7 +912,7 @@ int cbProject::SelectTarget(int initial, bool evenIfOne)
 
 ProjectBuildTarget* cbProject::AddDefaultBuildTarget()
 {
-    return AddBuildTarget("default");
+    return AddBuildTarget(_T("default"));
 }
 
 ProjectBuildTarget* cbProject::AddBuildTarget(const wxString& targetName)
@@ -921,9 +921,9 @@ ProjectBuildTarget* cbProject::AddBuildTarget(const wxString& targetName)
     target->m_Filename = m_Filename; // really important
     target->SetTitle(targetName);
     target->SetOutputFilename(GetOutputFilename());
-    target->SetWorkingDir(".");
-    target->SetObjectOutput(".objs");
-    target->SetDepsOutput(".deps");
+    target->SetWorkingDir(_T("."));
+    target->SetObjectOutput(_T(".objs"));
+    target->SetDepsOutput(_T(".deps"));
     m_Targets.Add(target);
 
     SetModified(true);
