@@ -339,9 +339,10 @@ wxString CodeBlocksApp::GetAppPath() const
     // SELFPATH is a macro from prefix.h (binreloc)
     // it returns the absolute filename of us
     // similar to win32 GetModuleFileName()...
-    base = wxFileName(SELFPATH).GetPath();
+    base = wxString(SELFPATH,wxConvUTF8);
+    base = wxFileName(base).GetPath();
 	if (base.IsEmpty())
-		base = ".";
+		base = _T(".");
 #endif
     return base;
 }
