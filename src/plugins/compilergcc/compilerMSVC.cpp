@@ -173,7 +173,7 @@ AutoDetectResult CompilerMSVC::AutoDetectInstallationDir()
         }
     }
 #else
-    m_MasterPath="."; // doesn't matter under non-win32 platforms...
+    m_MasterPath=_T("."); // doesn't matter under non-win32 platforms...
 #endif
 
     return wxFileExists(m_MasterPath + sep + _T("bin") + sep + m_Programs.C) ? adrDetected : adrGuessed;
