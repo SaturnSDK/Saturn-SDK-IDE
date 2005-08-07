@@ -94,9 +94,9 @@ int PluginManager::ScanForPlugins(const wxString& path)
 {
     SANITY_CHECK(0);
 #ifdef __WXMSW__
-	#define PLUGINS_MASK "*.dll"
+	#define PLUGINS_MASK _T("*.dll")
 #else
-	#define PLUGINS_MASK "*.so"
+	#define PLUGINS_MASK _T("*.so")
 #endif
 
     int count = 0;
@@ -106,7 +106,7 @@ int PluginManager::ScanForPlugins(const wxString& path)
         return count;
 
     wxString filename;
-    bool ok = dir.GetFirst(&filename, _T(PLUGINS_MASK), wxDIR_FILES);
+    bool ok = dir.GetFirst(&filename, PLUGINS_MASK, wxDIR_FILES);
     while (ok)
     {
 //		Manager::Get()->GetMessageManager()->AppendDebugLog(_("Trying %s: "), filename.c_str());
