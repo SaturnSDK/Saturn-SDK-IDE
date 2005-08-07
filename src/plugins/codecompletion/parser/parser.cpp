@@ -62,51 +62,51 @@ Parser::Parser(wxEvtHandler* parent)
 	m_pImageList = new wxImageList(16, 16);
 	wxBitmap bmp;
 	wxString prefix;
-    prefix = ConfigManager::Get()->Read("data_path") + "/images/codecompletion/";
+    prefix = ConfigManager::Get()->Read(_T("data_path")) + _T("/images/codecompletion/");
     // bitmaps must be added by order of PARSER_IMG_* consts
-    bmp.LoadFile(prefix + "class_folder.png", wxBITMAP_TYPE_PNG);
+    bmp.LoadFile(prefix + _T("class_folder.png"), wxBITMAP_TYPE_PNG);
     m_pImageList->Add(bmp); // PARSER_IMG_CLASS_FOLDER
-    bmp.LoadFile(prefix + "class.png", wxBITMAP_TYPE_PNG);
+    bmp.LoadFile(prefix + _T("class.png"), wxBITMAP_TYPE_PNG);
     m_pImageList->Add(bmp); // PARSER_IMG_CLASS
-    bmp.LoadFile(prefix + "ctor_private.png", wxBITMAP_TYPE_PNG);
+    bmp.LoadFile(prefix + _T("ctor_private.png"), wxBITMAP_TYPE_PNG);
     m_pImageList->Add(bmp); // PARSER_IMG_CTOR_PRIVATE
-    bmp.LoadFile(prefix + "ctor_protected.png", wxBITMAP_TYPE_PNG);
+    bmp.LoadFile(prefix + _T("ctor_protected.png"), wxBITMAP_TYPE_PNG);
     m_pImageList->Add(bmp); // PARSER_IMG_CTOR_PROTECTED
-    bmp.LoadFile(prefix + "ctor_public.png", wxBITMAP_TYPE_PNG);
+    bmp.LoadFile(prefix + _T("ctor_public.png"), wxBITMAP_TYPE_PNG);
     m_pImageList->Add(bmp); // PARSER_IMG_CTOR_PUBLIC
-    bmp.LoadFile(prefix + "dtor_private.png", wxBITMAP_TYPE_PNG);
+    bmp.LoadFile(prefix + _T("dtor_private.png"), wxBITMAP_TYPE_PNG);
     m_pImageList->Add(bmp); // PARSER_IMG_DTOR_PRIVATE
-    bmp.LoadFile(prefix + "dtor_protected.png", wxBITMAP_TYPE_PNG);
+    bmp.LoadFile(prefix + _T("dtor_protected.png"), wxBITMAP_TYPE_PNG);
     m_pImageList->Add(bmp); // PARSER_IMG_DTOR_PROTECTED
-    bmp.LoadFile(prefix + "dtor_public.png", wxBITMAP_TYPE_PNG);
+    bmp.LoadFile(prefix + _T("dtor_public.png"), wxBITMAP_TYPE_PNG);
     m_pImageList->Add(bmp); // PARSER_IMG_DTOR_PUBLIC
-    bmp.LoadFile(prefix + "method_private.png", wxBITMAP_TYPE_PNG);
+    bmp.LoadFile(prefix + _T("method_private.png"), wxBITMAP_TYPE_PNG);
     m_pImageList->Add(bmp); // PARSER_IMG_FUNC_PRIVATE
-    bmp.LoadFile(prefix + "method_protected.png", wxBITMAP_TYPE_PNG);
+    bmp.LoadFile(prefix + _T("method_protected.png"), wxBITMAP_TYPE_PNG);
     m_pImageList->Add(bmp); // PARSER_IMG_FUNC_PRIVATE
-    bmp.LoadFile(prefix + "method_public.png", wxBITMAP_TYPE_PNG);
+    bmp.LoadFile(prefix + _T("method_public.png"), wxBITMAP_TYPE_PNG);
     m_pImageList->Add(bmp); // PARSER_IMG_FUNC_PUBLIC
-    bmp.LoadFile(prefix + "var_private.png", wxBITMAP_TYPE_PNG);
+    bmp.LoadFile(prefix + _T("var_private.png"), wxBITMAP_TYPE_PNG);
     m_pImageList->Add(bmp); // PARSER_IMG_VAR_PRIVATE
-    bmp.LoadFile(prefix + "var_protected.png", wxBITMAP_TYPE_PNG);
+    bmp.LoadFile(prefix + _T("var_protected.png"), wxBITMAP_TYPE_PNG);
     m_pImageList->Add(bmp); // PARSER_IMG_VAR_PROTECTED
-    bmp.LoadFile(prefix + "var_public.png", wxBITMAP_TYPE_PNG);
+    bmp.LoadFile(prefix + _T("var_public.png"), wxBITMAP_TYPE_PNG);
     m_pImageList->Add(bmp); // PARSER_IMG_VAR_PUBLIC
-    bmp.LoadFile(prefix + "preproc.png", wxBITMAP_TYPE_PNG);
+    bmp.LoadFile(prefix + _T("preproc.png"), wxBITMAP_TYPE_PNG);
     m_pImageList->Add(bmp); // PARSER_IMG_PREPROCESSOR
-    bmp.LoadFile(prefix + "enum.png", wxBITMAP_TYPE_PNG);
+    bmp.LoadFile(prefix + _T("enum.png"), wxBITMAP_TYPE_PNG);
     m_pImageList->Add(bmp); // PARSER_IMG_ENUM
-    bmp.LoadFile(prefix + "enumerator.png", wxBITMAP_TYPE_PNG);
+    bmp.LoadFile(prefix + _T("enumerator.png"), wxBITMAP_TYPE_PNG);
     m_pImageList->Add(bmp); // PARSER_IMG_ENUMERATOR
-    bmp.LoadFile(prefix + "namespace.png", wxBITMAP_TYPE_PNG);
+    bmp.LoadFile(prefix + _T("namespace.png"), wxBITMAP_TYPE_PNG);
     m_pImageList->Add(bmp); // PARSER_IMG_NAMESPACE
-    bmp.LoadFile(prefix + "symbols_folder.png", wxBITMAP_TYPE_PNG);
+    bmp.LoadFile(prefix + _T("symbols_folder.png"), wxBITMAP_TYPE_PNG);
     m_pImageList->Add(bmp); // PARSER_IMG_SYMBOLS_FOLDER
-    bmp.LoadFile(prefix + "enums_folder.png", wxBITMAP_TYPE_PNG);
+    bmp.LoadFile(prefix + _T("enums_folder.png"), wxBITMAP_TYPE_PNG);
     m_pImageList->Add(bmp); // PARSER_IMG_ENUMS_FOLDER
-    bmp.LoadFile(prefix + "preproc_folder.png", wxBITMAP_TYPE_PNG);
+    bmp.LoadFile(prefix + _T("preproc_folder.png"), wxBITMAP_TYPE_PNG);
     m_pImageList->Add(bmp); // PARSER_IMG_PREPROC_FOLDER
-    bmp.LoadFile(prefix + "others_folder.png", wxBITMAP_TYPE_PNG);
+    bmp.LoadFile(prefix + _T("others_folder.png"), wxBITMAP_TYPE_PNG);
     m_pImageList->Add(bmp); // PARSER_IMG_OTHERS_FOLDER
 #endif // STANDALONE
     ConnectEvents();
@@ -156,28 +156,28 @@ void Parser::ReadOptions()
 	m_BrowserOptions.showInheritance = false;
 	m_BrowserOptions.viewFlat = false;
 #else // !STANDALONE
-	m_MaxThreadsCount = ConfigManager::Get()->Read("/code_completion/max_threads", 8);
-	m_Options.followLocalIncludes = ConfigManager::Get()->Read("/code_completion/parser_follow_local_includes", 1L);
-	m_Options.followGlobalIncludes = ConfigManager::Get()->Read("/code_completion/parser_follow_global_includes", 0L);
-	m_Options.caseSensitive = ConfigManager::Get()->Read("/code_completion/case_sensitive", 1);
-	m_Options.useSmartSense = ConfigManager::Get()->Read("/code_completion/use_SmartSense", 1);
-	m_Options.wantPreprocessor = ConfigManager::Get()->Read("/code_completion/want_preprocessor", 0L);
-	m_BrowserOptions.showInheritance = ConfigManager::Get()->Read("/code_completion/browser_show_inheritance", 0L);
-	m_BrowserOptions.viewFlat = ConfigManager::Get()->Read("/code_completion/browser_view_flat", 0L);
+	m_MaxThreadsCount = ConfigManager::Get()->Read(_T("/code_completion/max_threads"), 8);
+	m_Options.followLocalIncludes = ConfigManager::Get()->Read(_T("/code_completion/parser_follow_local_includes"), 1L);
+	m_Options.followGlobalIncludes = ConfigManager::Get()->Read(_T("/code_completion/parser_follow_global_includes"), 0L);
+	m_Options.caseSensitive = ConfigManager::Get()->Read(_T("/code_completion/case_sensitive"), 1);
+	m_Options.useSmartSense = ConfigManager::Get()->Read(_T("/code_completion/use_SmartSense"), 1);
+	m_Options.wantPreprocessor = ConfigManager::Get()->Read(_T("/code_completion/want_preprocessor"), 0L);
+	m_BrowserOptions.showInheritance = ConfigManager::Get()->Read(_T("/code_completion/browser_show_inheritance"), 0L);
+	m_BrowserOptions.viewFlat = ConfigManager::Get()->Read(_T("/code_completion/browser_view_flat"), 0L);
 #endif // STANDALONE
 }
 
 void Parser::WriteOptions()
 {
 #ifndef STANDALONE
-	ConfigManager::Get()->Write("/code_completion/max_threads", (int)m_MaxThreadsCount);
-	ConfigManager::Get()->Write("/code_completion/parser_follow_local_includes", m_Options.followLocalIncludes);
-	ConfigManager::Get()->Write("/code_completion/parser_follow_global_includes", m_Options.followGlobalIncludes);
-	ConfigManager::Get()->Write("/code_completion/case_sensitive", m_Options.caseSensitive);
-	ConfigManager::Get()->Write("/code_completion/use_SmartSense", m_Options.useSmartSense);
-	ConfigManager::Get()->Write("/code_completion/want_preprocessor", m_Options.wantPreprocessor);
-	ConfigManager::Get()->Write("/code_completion/browser_show_inheritance", m_BrowserOptions.showInheritance);
-	ConfigManager::Get()->Write("/code_completion/browser_view_flat", m_BrowserOptions.viewFlat);
+	ConfigManager::Get()->Write(_T("/code_completion/max_threads"), (int)m_MaxThreadsCount);
+	ConfigManager::Get()->Write(_T("/code_completion/parser_follow_local_includes"), m_Options.followLocalIncludes);
+	ConfigManager::Get()->Write(_T("/code_completion/parser_follow_global_includes"), m_Options.followGlobalIncludes);
+	ConfigManager::Get()->Write(_T("/code_completion/case_sensitive"), m_Options.caseSensitive);
+	ConfigManager::Get()->Write(_T("/code_completion/use_SmartSense"), m_Options.useSmartSense);
+	ConfigManager::Get()->Write(_T("/code_completion/want_preprocessor"), m_Options.wantPreprocessor);
+	ConfigManager::Get()->Write(_T("/code_completion/browser_show_inheritance"), m_BrowserOptions.showInheritance);
+	ConfigManager::Get()->Write(_T("/code_completion/browser_view_flat"), m_BrowserOptions.viewFlat);
 #endif // STANDALONE
 }
 
@@ -365,9 +365,9 @@ inline bool Parser::LoadStringFromFile(wxFile* f, wxString& str)
     bool ok = true;
     if (size > 0 && size < 512)
     {
-        static char buf[512];
+        static wxChar buf[512];
         ok = f->Read(buf, size) == size;
-        buf[size] = '\0';
+        buf[size] = _T('\0');
         str = buf;
     }
     else // doesn't fit in our buffer, but still we have to skip it
@@ -641,7 +641,7 @@ void Parser::LinkInheritance(bool tempsOnly)
 			continue;
 
 		//Manager::Get()->GetMessageManager()->DebugLog("Token %s, Ancestors %s", token->m_Name.c_str(), token->m_AncestorsString.c_str());
-		wxStringTokenizer tkz(token->m_AncestorsString, ",");
+		wxStringTokenizer tkz(token->m_AncestorsString, _T(","));
 		while (tkz.HasMoreTokens())
 		{
 			wxString ancestor = tkz.GetNextToken();
@@ -705,7 +705,7 @@ bool Parser::Parse(const wxString& bufferOrFilename, bool isLocal, ParserThreadO
 	if (thread->Create() != wxTHREAD_NO_ERROR)
 	{
 #ifndef STANDALONE
-        Manager::Get()->GetMessageManager()->DebugLog("Can't create new thread!");
+        Manager::Get()->GetMessageManager()->DebugLog(_("Can't create new thread!"));
 #endif
         thread->Delete();
 		return false;
@@ -776,7 +776,7 @@ bool Parser::Reparse(const wxString& filename, bool isLocal)
 		return false; // if still parsing, exit with error
 
 	wxString file = UnixFilename(filename);
-	Manager::Get()->GetMessageManager()->DebugLog("Reparsing %s", file.c_str());
+	Manager::Get()->GetMessageManager()->DebugLog(_("Reparsing %s"), file.c_str());
 	RemoveFile(file);
 	ClearTemporaries();
 	wxMutexLocker* lock = new wxMutexLocker(s_mutexListProtection);
@@ -1076,7 +1076,7 @@ void Parser::AddTreeNode(wxTreeCtrl& tree, const wxTreeItemId& parentNode, Token
 #endif
 	wxString str = token->m_Name + token->m_Args;
 	if (!token->m_ActualType.IsEmpty())
-		 str = str + " : " + token->m_ActualType;
+		 str = str + _T(" : ") + token->m_ActualType;
 	wxTreeItemId node = childrenOnly ? parentNode : tree.AppendItem(parentNode, str, image, -1, ctd);
 	
 	// add children
