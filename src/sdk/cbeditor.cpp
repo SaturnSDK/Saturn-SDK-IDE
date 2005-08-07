@@ -65,7 +65,10 @@ struct cbEditorInternalData
 {
     cbEditorInternalData(cbEditor* owner)
         : m_pOwner(owner),
-        lastPosForCodeCompletion(0)
+        lastPosForCodeCompletion(0),
+        m_strip_trailing_spaces(true),
+        m_ensure_final_line_end(false),
+        m_ensure_consistent_line_ends(true)
     {}
     cbEditor* m_pOwner;
 
@@ -80,8 +83,8 @@ struct cbEditorInternalData
             position = control->GetCurrentPos();
         while (position)
         {
-            wxChar c = control->GetCharAt(position--);
-            if (c != ' ' && c != '\t' && c != '\n' && c != '\r')
+            wxChar c = control->GetCharAt(--position);
+            if (c != _T(' ') && c != _T('\t') && c != _T('\n') && c != _T('\r'))
                 return c;
         }
         return 0;
@@ -107,9 +110,32 @@ struct cbEditorInternalData
         }
         return -1;
     }
+    
+    /** Strip Trailing Blanks before saving */
+    void StripTrailingSpaces()
+    {
+        wxStyledTextCtrl* control = m_pOwner->GetControl();
+    	
+    }
+    
+    /** Add extra blank line to the file */
+    void EnsureFinalLineEnd()
+    {
+    	wxStyledTextCtrl* control = m_pOwner->GetControl();
+    }
+    
+    /** Make sure all the lines end with the same EOL mode */
+    void EnsureConsistentLineEnds()
+    {
+    	wxStyledTextCtrl* control = m_pOwner->GetControl();
+    }
 
     //vars
     int lastPosForCodeCompletion;
+    bool m_strip_trailing_spaces;
+    bool m_ensure_final_line_end;
+    bool m_ensure_consistent_line_ends;
+
 };
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -206,7 +232,7 @@ cbEditor::cbEditor(wxWindow* parent, const wxString& filename, EditorColorSet* t
     m_timerWait.SetOwner(this);
     
     InitFilename(filename);
-//    Manager::Get()->GetMessageManager()->DebugLog("ctor: Filename=%s\nShort=%s", m_Filename.c_str(), m_Shortname.c_str());
+//    Manager::Get()->GetMessageManager()->DebugLog(_("ctor: Filename=%s\nShort=%s"), m_Filename.c_str(), m_Shortname.c_str());
 
 	CreateEditor();
 	SetEditorStyle();
@@ -224,7 +250,7 @@ cbEditor::~cbEditor()
 {
 //    if (!Manager::Get())
 //        return;
-//    Manager::Get()->GetMessageManager()->DebugLog("~cbEditor(): " + m_Filename);
+//    Manager::Get()->GetMessageManager()->DebugLog(_("~cbEditor(): ") + m_Filename);
 	NotifyPlugins(cbEVT_EDITOR_CLOSE, 0, m_Filename);
 	UpdateProjectFile();
 	if (m_pControl)
@@ -295,7 +321,7 @@ void cbEditor::SetProjectFile(ProjectFile* project_file,bool preserve_modified)
 		m_pProjectFile->editorOpen = true;
 		SetBreakpoints();
 		
-		if (ConfigManager::Get()->Read("/editor/tab_text_relative", 1) == 1)
+		if (ConfigManager::Get()->Read(_T("/editor/tab_text_relative"), 1) == 1)
             m_Shortname = m_pProjectFile->relativeToCommonTopLevelPath;
         else
             m_Shortname = m_pProjectFile->file.GetFullName();
@@ -303,11 +329,11 @@ void cbEditor::SetProjectFile(ProjectFile* project_file,bool preserve_modified)
 	}
 #if 0
 	wxString dbg;
-	dbg << "[ed] Filename: " << GetFilename() << '\n';
-	dbg << "[ed] Short name: " << GetShortName() << '\n';
-	dbg << "[ed] Modified: " << GetModified() << '\n';
-	dbg << "[ed] Project: " << ((m_pProjectFile && m_pProjectFile->project) ? m_pProjectFile->project->GetTitle() : "unknown") << '\n';
-	dbg << "[ed] Project file: " << (m_pProjectFile ? m_pProjectFile->relativeFilename : "unknown") << '\n';
+	dbg << _T("[ed] Filename: ") << GetFilename() << _T('\n');
+	dbg << _T("[ed] Short name: ") << GetShortName() << _T('\n');
+	dbg << _T("[ed] Modified: ") << GetModified() << _T('\n');
+	dbg << _T("[ed] Project: ") << ((m_pProjectFile && m_pProjectFile->project) ? m_pProjectFile->project->GetTitle() : _T("unknown")) << _T('\n');
+	dbg << _T("[ed] Project file: ") << (m_pProjectFile ? m_pProjectFile->relativeFilename : _T("unknown")) << _T('\n');
 	Manager::Get()->GetMessageManager()->DebugLog(dbg);
 #endif
     if(preserve_modified)
@@ -361,17 +387,17 @@ void cbEditor::CreateEditor()
 
 wxColour cbEditor::GetOptionColour(const wxString& option, const wxColour _default)
 {
-    return wxColour (ConfigManager::Get()->Read(option + "/red", _default.Red()),
-    				ConfigManager::Get()->Read(option + "/green", _default.Green()),
-    				ConfigManager::Get()->Read(option + "/blue", _default.Blue())
+    return wxColour (ConfigManager::Get()->Read(option + _T("/red"), _default.Red()),
+    				ConfigManager::Get()->Read(option + _T("/green"), _default.Green()),
+    				ConfigManager::Get()->Read(option + _T("/blue"), _default.Blue())
 	);
 }
 
 void cbEditor::SetEditorStyle()
 {
     wxFont font(8, wxMODERN, wxNORMAL, wxNORMAL);
-    wxString fontstring = ConfigManager::Get()->Read("/editor/font", wxEmptyString);
-
+    wxString fontstring = ConfigManager::Get()->Read(_T("/editor/font"), wxEmptyString);
+    int eolmode = wxSTC_EOL_CRLF;
     if (!fontstring.IsEmpty())
     {
         wxNativeFontInfo nfi;
@@ -382,7 +408,7 @@ void cbEditor::SetEditorStyle()
     // update the tab text based on preferences
     if (m_pProjectFile)
     {
-		if (ConfigManager::Get()->Read("/editor/tab_text_relative", 1) == 1)
+		if (ConfigManager::Get()->Read(_T("/editor/tab_text_relative"), 1) == 1)
             m_Shortname = m_pProjectFile->relativeToCommonTopLevelPath;
         else
             m_Shortname = m_pProjectFile->file.GetFullName();
@@ -391,28 +417,28 @@ void cbEditor::SetEditorStyle()
 
 	m_pControl->SetMouseDwellTime(1000);
 
-	m_pControl->SetCaretLineVisible(ConfigManager::Get()->Read("/editor/highlight_caret_line", 1));
-	m_pControl->SetCaretLineBack(GetOptionColour("/editor/highlight_caret_line_color", wxColour(0xFF, 0xFF, 0x00)));
+	m_pControl->SetCaretLineVisible(ConfigManager::Get()->Read(_T("/editor/highlight_caret_line"), 1));
+	m_pControl->SetCaretLineBack(GetOptionColour(_T("/editor/highlight_caret_line_color"), wxColour(0xFF, 0xFF, 0x00)));
 
-    m_pControl->SetUseTabs(ConfigManager::Get()->Read("/editor/use_tab", 0L));
-	m_pControl->SetIndentationGuides(ConfigManager::Get()->Read("/editor/show_indent_guides", 0L));
-    m_pControl->SetTabIndents(ConfigManager::Get()->Read("/editor/tab_indents", 1));
-    m_pControl->SetBackSpaceUnIndents(ConfigManager::Get()->Read("/editor/backspace_unindents", 1));
-    m_pControl->SetWrapMode(ConfigManager::Get()->Read("/editor/word_wrap", 0L));
-    m_pControl->SetViewEOL(ConfigManager::Get()->Read("/editor/show_eol", 0L));
-    m_pControl->SetViewWhiteSpace(ConfigManager::Get()->Read("/editor/view_whitespace", 0L));
+    m_pControl->SetUseTabs(ConfigManager::Get()->Read(_T("/editor/use_tab"), 0L));
+	m_pControl->SetIndentationGuides(ConfigManager::Get()->Read(_T("/editor/show_indent_guides"), 0L));
+    m_pControl->SetTabIndents(ConfigManager::Get()->Read(_T("/editor/tab_indents"), 1));
+    m_pControl->SetBackSpaceUnIndents(ConfigManager::Get()->Read(_T("/editor/backspace_unindents"), 1));
+    m_pControl->SetWrapMode(ConfigManager::Get()->Read(_T("/editor/word_wrap"), 0L));
+    m_pControl->SetViewEOL(ConfigManager::Get()->Read(_T("/editor/show_eol"), 0L));
+    m_pControl->SetViewWhiteSpace(ConfigManager::Get()->Read(_T("/editor/view_whitespace"), 0L));
 	//gutter
-    m_pControl->SetEdgeMode(ConfigManager::Get()->Read("/editor/gutter/mode", 1));
-    m_pControl->SetEdgeColour(GetOptionColour("/editor/gutter/color", wxColour(0xC0, 0xC0, 0xC0)));
-    m_pControl->SetEdgeColumn(ConfigManager::Get()->Read("/editor/gutter/column", 80));
+    m_pControl->SetEdgeMode(ConfigManager::Get()->Read(_T("/editor/gutter/mode"), 1));
+    m_pControl->SetEdgeColour(GetOptionColour(_T("/editor/gutter/color"), wxColour(0xC0, 0xC0, 0xC0)));
+    m_pControl->SetEdgeColumn(ConfigManager::Get()->Read(_T("/editor/gutter/column"), 80));
 
     m_pControl->StyleSetFont(wxSTC_STYLE_DEFAULT, font);
     m_pControl->StyleClearAll();
 
-    m_pControl->SetTabWidth(ConfigManager::Get()->Read("/editor/tab_size", 4));
+    m_pControl->SetTabWidth(ConfigManager::Get()->Read(_T("/editor/tab_size"), 4));
 
     // line numbering
-   	if (ConfigManager::Get()->Read("/editor/show_line_numbers", 0L))
+   	if (ConfigManager::Get()->Read(_T("/editor/show_line_numbers"), 0L))
     {
 	    m_pControl->SetMarginType(0, wxSTC_MARGIN_NUMBER);
     	m_pControl->SetMarginWidth(0, 48);
@@ -429,13 +455,32 @@ void cbEditor::SetEditorStyle()
 	m_pControl->MarkerDefine(BOOKMARK_MARKER, BOOKMARK_STYLE, wxNullColour, wxColour(0xA0, 0xA0, 0xFF));
 	m_pControl->MarkerDefine(BREAKPOINT_MARKER, BREAKPOINT_STYLE, wxNullColour, wxColour(0xFF, 0x00, 0x00));
 
+    // EOL properties
+    m_pData->m_strip_trailing_spaces = ConfigManager::Get()->Read(_T("/editor/eol/strip_trailing_spaces"), 1) ? true : false;
+    m_pData->m_ensure_final_line_end = ConfigManager::Get()->Read(_T("/editor/eol/ensure_final_line_end"), 0L) ? true : false;
+    m_pData->m_ensure_consistent_line_ends = true;
+    
+    switch(ConfigManager::Get()->Read(_T("/editor/eol/eolmode"), 0L))
+    {
+    	case 0: 
+        default:
+            eolmode = wxSTC_EOL_CRLF;
+        break;
+        case 1: 
+            eolmode = wxSTC_EOL_CR;
+        break;
+        case 2:
+            eolmode = wxSTC_EOL_LF;
+    }
+    m_pControl->SetEOLMode(eolmode);
+    
     // folding margin
-    m_pControl->SetProperty("fold", ConfigManager::Get()->Read("/editor/folding/show_folds", 1) ? "1" : "0");
-    m_pControl->SetProperty("fold.html", ConfigManager::Get()->Read("/editor/folding/fold_xml", 1) ? "1" : "0");
-    m_pControl->SetProperty("fold.comment", ConfigManager::Get()->Read("/editor/folding/fold_comments", 0L) ? "1" : "0");
-    m_pControl->SetProperty("fold.compact", "0");
-    m_pControl->SetProperty("fold.preprocessor", ConfigManager::Get()->Read("/editor/folding/fold_preprocessor", 0L) ? "1" : "0");
-   	if (ConfigManager::Get()->Read("/editor/folding/show_folds", 1))
+    m_pControl->SetProperty(_T("fold"), ConfigManager::Get()->Read(_T("/editor/folding/show_folds"), 1) ? _T("1") : _T("0"));
+    m_pControl->SetProperty(_T("fold.html"), ConfigManager::Get()->Read(_T("/editor/folding/fold_xml"), 1) ? _T("1") : _T("0"));
+    m_pControl->SetProperty(_T("fold.comment"), ConfigManager::Get()->Read(_T("/editor/folding/fold_comments"), 0L) ? _T("1") : _T("0"));
+    m_pControl->SetProperty(_T("fold.compact"), _T("0"));
+    m_pControl->SetProperty(_T("fold.preprocessor"), ConfigManager::Get()->Read(_T("/editor/folding/fold_preprocessor"), 0L) ? _T("1") : _T("0"));
+   	if (ConfigManager::Get()->Read(_T("/editor/folding/show_folds"), 1))
     {
         m_pControl->SetFoldFlags(16);
         m_pControl->SetMarginType(2, wxSTC_MARGIN_SYMBOL);
@@ -500,7 +545,7 @@ bool cbEditor::Open()
     if (!file.IsOpened())
         return false;
 
-    char* buff = st.GetWriteBuf(file.Length());
+    wxChar* buff = st.GetWriteBuf(file.Length());
     file.Read(buff, file.Length());
     file.Close();
     st.UngetWriteBuf();
@@ -518,7 +563,7 @@ bool cbEditor::Open()
             m_pControl->StyleSetBackground(i, wxSystemSettings::GetColour(wxSYS_COLOUR_BTNFACE));
     }
 
-	if (ConfigManager::Get()->Read("/editor/fold_all_on_open", 0L))
+	if (ConfigManager::Get()->Read(_T("/editor/fold_all_on_open"), 0L))
 		FoldAll();
     
     wxFileName fname(m_Filename);
@@ -570,11 +615,12 @@ bool cbEditor::SaveAs()
                             fname.GetFullName(),
                             SOURCE_FILES_DIALOG_FILTER,
                             wxSAVE | wxOVERWRITE_PROMPT);
-    dlg->SetFilterIndex(SOURCE_FILES_FILTER_INDEX);
+    dlg->SetFilterIndex(7);// all files;
 
     if (dlg->ShowModal() != wxID_OK)
         return false;
     m_Filename = dlg->GetPath();
+    LOGSTREAM << m_Filename << _T('\n');
     fname.Assign(m_Filename);
     m_Shortname = fname.GetFullName();
 	SetEditorTitle(m_Shortname);
@@ -605,7 +651,7 @@ void cbEditor::AutoComplete()
     int wordStartPos = m_pControl->WordStartPosition(curPos, true);
     wxString keyword = m_pControl->GetTextRange(wordStartPos, curPos);
     wxString lineIndent = GetLineIndentString(m_pControl->GetCurrentLine());
-    msgMan->DebugLog("Auto-complete keyword: %s", keyword.c_str());
+    msgMan->DebugLog(_("Auto-complete keyword: %s"), keyword.c_str());
     
     AutoCompleteMap::iterator it;
     for (it = map.begin(); it != map.end(); ++it)
@@ -613,47 +659,47 @@ void cbEditor::AutoComplete()
         if (keyword == it->first)
         {
             // found; auto-complete it
-            msgMan->DebugLog("Match found");
+            msgMan->DebugLog(_("Match found"));
             m_pControl->BeginUndoAction();
             
             // indent code accordingly
             wxString code = it->second;
-            code.Replace("\n", '\n' + lineIndent);
+            code.Replace(_T("\n"), _T('\n') + lineIndent);
 
             // look for and replace macros
-            int macroPos = code.Find("$(");
+            int macroPos = code.Find(_T("$("));
             while (macroPos != -1)
             {
                 // locate ending parenthesis
                 int macroPosEnd = macroPos + 2;
                 int len = (int)code.Length();
-                while (macroPosEnd < len && code.GetChar(macroPosEnd) != ')')
+                while (macroPosEnd < len && code.GetChar(macroPosEnd) != _T(')'))
                     ++macroPosEnd;
                 if (macroPosEnd == len)
                     break; // no ending parenthesis
                 
                 wxString macroName = code.SubString(macroPos + 2, macroPosEnd - 1);
-                msgMan->DebugLog("Found macro: %s", macroName.c_str());
-                wxString macro = wxGetTextFromUser(_("Please enter the text for \"" + macroName + "\":"), _("Macro substitution"));
-                code.Replace(_("$(") + macroName + _(")"), macro);
-                macroPos = code.Find("$(");
+                msgMan->DebugLog(_("Found macro: %s"), macroName.c_str());
+                wxString macro = wxGetTextFromUser(_("Please enter the text for \"") + macroName + _T("\":"), _("Macro substitution"));
+                code.Replace(_T("$(") + macroName + _T(")"), macro);
+                macroPos = code.Find(_T("$("));
             }
 
             // delete keyword
             m_pControl->SetSelection(wordStartPos, curPos);
-            m_pControl->ReplaceSelection("");
+            m_pControl->ReplaceSelection(_T(""));
             curPos = wordStartPos;
 
             // add the text
             m_pControl->InsertText(curPos, code);
 
             // put cursor where "|" appears in code (if it appears)
-            int caretPos = code.Find('|');
+            int caretPos = code.Find(_T('|'));
             if (caretPos != -1)
             {
                 m_pControl->SetCurrentPos(curPos + caretPos);
                 m_pControl->SetSelection(curPos + caretPos, curPos + caretPos + 1);
-                m_pControl->ReplaceSelection("");
+                m_pControl->ReplaceSelection(_T(""));
             }
 
             m_pControl->EndUndoAction();
@@ -776,15 +822,18 @@ void cbEditor::MarkerToggle(int marker, int line)
             //Workaround for GDB to break on C++ constructor/destructor
 			wxString lb = m_pControl->GetLine(line);
 			wxString cppClassName;
-            wxString cppDestructor = _("~");
-			char bufBase[40], bufMethod[40];
-			int i = sscanf((const char *)lb, _("%[0-9A-Za-z_~]::%[0-9A-Za-z_~]("), bufBase, bufMethod);
+            wxString cppDestructor = _T("~");
+			char bufBase[255], bufMethod[255];
+// NOTE (rickg22#1#): Had to do some changes to convert to unicode
+			int i = sscanf(lb.mb_str(), "%[0-9A-Za-z_~]::%[0-9A-Za-z_~](", bufBase, bufMethod);
 			if (i == 2)
             {
-				cppClassName << bufBase;
+				wxString strBase = _U(bufBase);
+				wxString strMethod = _U(bufMethod);
+                cppClassName << strBase;
 				cppDestructor << cppClassName;
-				if (cppClassName.Matches(bufMethod) || cppDestructor.Matches(bufMethod))
-					bp->func << cppClassName << "::" << bufMethod;
+				if (cppClassName.Matches(strMethod) || cppDestructor.Matches(strMethod))
+					bp->func << cppClassName << _T("::") << strMethod;
 				else
                     bp->func.Empty();
 			}
@@ -843,7 +892,7 @@ void cbEditor::MarkLine(int marker, int line)
 		m_pControl->SetCaretLineVisible(false);
 	}
 	else
-		m_pControl->SetCaretLineVisible(ConfigManager::Get()->Read("/editor/highlight_caret_line", 1));
+		m_pControl->SetCaretLineVisible(ConfigManager::Get()->Read(_T("/editor/highlight_caret_line"), 1));
 }
 
 void cbEditor::HighlightBraces()
@@ -860,9 +909,9 @@ void cbEditor::HighlightBraces()
         m_pControl->BraceHighlight(currPos, newPos);
     else
     {
-        char ch = m_pControl->GetCharAt(currPos);
-        if (ch == '{' || ch == '[' || ch == '(' || ch == '<' ||
-            ch == '}' || ch == ']' || ch == ')' || ch == '>')
+        wxChar ch = m_pControl->GetCharAt(currPos);
+        if (ch == _T('{') || ch == _T('[') || ch == _T('(') || ch == _T('<') ||
+            ch == _T('}') || ch == _T(']') || ch == _T(')') || ch == _T('>'))
             m_pControl->BraceBadLight(currPos);
         else
             m_pControl->BraceHighlight(-1, -1);
@@ -880,9 +929,9 @@ int cbEditor::GetLineIndentInSpaces(int line)
     int spaceCount = 0;
     for (unsigned int i = 0; i < len; ++i)
     {
-        if (text[i] == ' ')
+        if (text[i] == _T(' '))
             ++spaceCount;
-        else if (text[i] == '\t')
+        else if (text[i] == _T('\t'))
             spaceCount += m_pControl->GetTabWidth();
         else 
             break;
@@ -900,7 +949,7 @@ wxString cbEditor::GetLineIndentString(int line)
     wxString indent;
     for (unsigned int i = 0; i < len; ++i)
     {
-        if (text[i] == ' ' || text[i] == '\t')
+        if (text[i] == _T(' ') || text[i] == _T('\t'))
             indent << text[i];
         else 
             break;
@@ -1095,7 +1144,7 @@ void cbEditor::OnContextMenuEntry(wxCommandEvent& event)
     }
     else
         event.Skip();
-	//Manager::Get()->GetMessageManager()->DebugLog("Leaving OnContextMenuEntry");
+	//Manager::Get()->GetMessageManager()->DebugLog(_("Leaving OnContextMenuEntry"));
 }
 
 void cbEditor::OnMarginClick(wxStyledTextEvent& event)
@@ -1142,14 +1191,14 @@ void cbEditor::OnEditorCharAdded(wxStyledTextEvent& event)
 
     m_timerWait.Stop();
 	int pos = m_pControl->GetCurrentPos();
-	char ch = event.GetKey();
-	if (ch == '(')
+	wxChar ch = event.GetKey();
+	if (ch == _T('('))
 	{
 		if (m_pControl->CallTipActive())
 			++m_ActiveCalltipsNest;
 		NotifyPlugins(cbEVT_EDITOR_CALLTIP);
 	}
-	if (ch == ')')
+	if (ch == _T(')'))
 	{
 		// cancel any active calltip
 		m_pControl->CallTipCancel();
@@ -1159,12 +1208,12 @@ void cbEditor::OnEditorCharAdded(wxStyledTextEvent& event)
 			NotifyPlugins(cbEVT_EDITOR_CALLTIP);
 		}
 	}
-	else if (ch == '\n')
+	else if (ch == _T('\n'))
 	{
         m_pControl->BeginUndoAction();
 		// new-line: adjust indentation
-		bool autoIndent = ConfigManager::Get()->Read("/editor/auto_indent", true);
-		bool smartIndent = ConfigManager::Get()->Read("/editor/smart_indent", true);
+		bool autoIndent = ConfigManager::Get()->Read(_T("/editor/auto_indent"), true);
+		bool smartIndent = ConfigManager::Get()->Read(_T("/editor/smart_indent"), true);
 		int currLine = m_pControl->LineFromPosition(pos);
 		if (autoIndent && currLine > 0)
 		{
@@ -1174,17 +1223,17 @@ void cbEditor::OnEditorCharAdded(wxStyledTextEvent& event)
                 // if the last entered char before newline was an opening curly brace,
                 // increase indentation level (the closing brace is handled in another block)
                 wxChar b = m_pData->GetLastNonWhitespaceChar();
-                if (b == '{')
-                    indent << '\t'; // TODO: decide between spaces/tabs
+                if (b == _T('{'))
+                    indent << _T('\t'); // TODO: decide between spaces/tabs
             }
 			m_pControl->InsertText(pos, indent);
 			m_pControl->GotoPos(pos + indent.Length());
 		}
 		m_pControl->EndUndoAction();
 	}
-	else if (ch == '}')
+	else if (ch == _T('}'))
 	{
-		bool smartIndent = ConfigManager::Get()->Read("/editor/smart_indent", true);
+		bool smartIndent = ConfigManager::Get()->Read(_T("/editor/smart_indent"), true);
 		if (smartIndent)
 		{
             m_pControl->BeginUndoAction();
@@ -1192,16 +1241,16 @@ void cbEditor::OnEditorCharAdded(wxStyledTextEvent& event)
             wxString str = m_pControl->GetLine(m_pControl->GetCurrentLine());
             str.Trim(false);
             str.Trim(true);
-            if (str.Matches(_("}")))
+            if (str.Matches(_T("}")))
             {
                 // just the brace here; unindent
                 // find opening brace (skipping nested blocks)
                 int pos = m_pControl->GetCurrentPos() - 2;
-                pos = m_pData->FindBlockStart(pos, '{', '}');
+                pos = m_pData->FindBlockStart(pos, _T('{'), _T('}'));
                 if (pos != -1)
                 {
                     wxString indent = GetLineIndentString(m_pControl->LineFromPosition(pos));
-                    indent << '}';
+                    indent << _T('}');
                     m_pControl->DelLineLeft();
                     m_pControl->DelLineRight();
                     pos = m_pControl->GetCurrentPos();
@@ -1213,15 +1262,15 @@ void cbEditor::OnEditorCharAdded(wxStyledTextEvent& event)
         }
 	}
 	// we use -2 because the char has already been added and Pos is ahead of it...
-	else if ((ch == '"') || // this and the next one are for #include's completion
-            (ch == '<') ||
-            (ch == '.') ||
-			((ch == '>') && (m_pControl->GetCharAt(pos - 2) == '-')) ||
-			((ch == ':') && (m_pControl->GetCharAt(pos - 2) == ':')))
+	else if ((ch == _T('"')) || // this and the next one are for #include's completion
+             (ch == _T('<')) ||
+             (ch == _T('.')) ||
+			((ch == _T('>')) && (m_pControl->GetCharAt(pos - 2) == _T('-'))) ||
+			((ch == _T(':')) && (m_pControl->GetCharAt(pos - 2) == _T(':'))))
 	{
         int style = m_pControl->GetStyleAt(pos);
 		//Manager::Get()->GetMessageManager()->DebugLog(_("Style at %d is %d (char '%c')"), pos, style, ch);
-        if (ch == '"' || ch == '<')
+        if (ch == _T('"') || ch == _T('<'))
         {
              if (style != wxSTC_C_PREPROCESSOR)
                 return;
@@ -1232,7 +1281,7 @@ void cbEditor::OnEditorCharAdded(wxStyledTextEvent& event)
                 return;
         }
 
-		int timerDelay = ConfigManager::Get()->Read("/editor/cc_delay", 500);
+		int timerDelay = ConfigManager::Get()->Read(_T("/editor/cc_delay"), 500);
 		if (timerDelay == 0)
 			DoAskForCodeCompletion();
 		else

@@ -41,7 +41,7 @@ class DebuggerGDB : public cbDebuggerPlugin
 		int Configure();
 		void BuildMenu(wxMenuBar* menuBar);
 		void BuildModuleMenu(const ModuleType type, wxMenu* menu, const wxString& arg);
-		void BuildToolBar(wxToolBar* toolBar);
+		bool BuildToolBar(wxToolBar* toolBar);
 		void OnAttach(); // fires when the plugin is attached to the application
 		void OnRelease(bool appShutDown); // fires when the plugin is released from the application
 
@@ -64,7 +64,7 @@ class DebuggerGDB : public cbDebuggerPlugin
 		void SyncEditor(const wxString& filename, int line);
 	protected:
         void ConvertToGDBFriendly(wxString& str);
-        void ConvertToGDBDirectory(wxString& str, wxString base = "", bool relative = true);
+        void ConvertToGDBDirectory(wxString& str, wxString base = _T(""), bool relative = true);
         void StripQuotes(wxString& str);
 	private:
 		void ParseOutput(const wxString& output);
@@ -107,6 +107,7 @@ class DebuggerGDB : public cbDebuggerPlugin
         SimpleTextLog* m_pLog;
         SimpleTextLog* m_pDbgLog;
 		PipedProcess* m_pProcess;
+		wxToolBar* m_pTbar;
         int m_PageIndex;
         int m_DbgPageIndex;
 		wxRegEx reSource;
@@ -126,6 +127,7 @@ class DebuggerGDB : public cbDebuggerPlugin
 		bool m_NoDebugInfo;
 		bool m_BreakOnEntry;
 		int m_HaltAtLine;
+		bool m_HasDebugLog;
 		// current frame info
 		StackFrame m_CurrentFrame;
 		

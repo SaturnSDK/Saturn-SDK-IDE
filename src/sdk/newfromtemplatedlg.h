@@ -16,6 +16,8 @@ class NewFromTemplateDlg : public wxDialog
 		virtual ~NewFromTemplateDlg();
 		
 		ProjectTemplateLoader* GetTemplate(){ return m_Template; }
+        bool DoNotCreateFiles();
+		bool SelectedTemplate();
 		bool SelectedUserTemplate();
 		wxString GetSelectedUserTemplate();
 		int GetOptionIndex();
@@ -26,6 +28,7 @@ class NewFromTemplateDlg : public wxDialog
 		void FillTemplate(ProjectTemplateLoader* pt);
 		void OnListSelection(wxListEvent& event);
 		void OnCategoryChanged(wxCommandEvent& event);
+		void OnUpdateUI(wxUpdateUIEvent& event);
 	private:
 		ProjectTemplateLoader* m_Template;
 		wxImageList m_ImageList;

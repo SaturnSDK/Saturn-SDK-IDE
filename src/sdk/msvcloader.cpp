@@ -26,7 +26,7 @@ MSVCLoader::MSVCLoader(cbProject* project)
     m_ConvertSwitches(true)
 {
 	//ctor
-}
+} 
 
 MSVCLoader::~MSVCLoader()
 {
@@ -62,7 +62,7 @@ bool MSVCLoader::Open(const wxString& filename)
         MultiSelectDlg dlg(0, m_Configurations, true, _("Select configurations to import:"), m_Filename.GetName());
         if (dlg.ShowModal() == wxID_CANCEL)
         {
-            Manager::Get()->GetMessageManager()->DebugLog("Canceled...");
+            Manager::Get()->GetMessageManager()->DebugLog(_T("Canceled..."));
             return false;
         }
         selected_indices = dlg.GetSelectedIndices();
@@ -89,7 +89,6 @@ bool MSVCLoader::ReadConfigurations()
 {
     m_Configurations.Clear();
     m_ConfigurationsLineIndex.Clear();
-    m_Type = ttExecutable;
     m_BeginTargetLine = -1;
 
     wxFileInputStream file(m_Filename.GetFullPath());
@@ -107,31 +106,54 @@ bool MSVCLoader::ReadConfigurations()
         line.Trim(true);
         line.Trim(false);
         int size = -1;
-        if (line.StartsWith("# TARGTYPE"))
+        if (line.StartsWith(_T("# TARGTYPE")))
         {
+          	// # TARGTYPE "Win32 (x86) Application" 0x0103
             int idx = line.Find(' ', true);
             if (idx != -1)
             {
-                int typ = atoi(line.Mid(idx + 3, 4));
-                switch (typ)
-                {
-                    case 101: m_Type = ttExecutable; break;
-                    case 102: m_Type = ttDynamicLib; break;
-                    case 103: m_Type = ttConsoleOnly; break;
-                    case 104: m_Type = ttStaticLib; break;
-                    // I 've seen 0x010a "Generic project" which was empty.
-                    // don't know what to do with it...
-                    default: break;
+            	TargetType type;
+                wxString targtype = line.Mid(12, idx-1-12);
+                wxString projcode = line.Mid(idx+3, 4);
+                if      (projcode.Matches(_T("0101"))) type = ttExecutable;
+                else if (projcode.Matches(_T("0102"))) type = ttDynamicLib;
+                else if (projcode.Matches(_T("0103"))) type = ttConsoleOnly;
+                else if (projcode.Matches(_T("0104"))) type = ttStaticLib; 
+                else if (projcode.Matches(_T("010a"))) type = ttCommandsOnly;
+                else {
+                  type = ttCommandsOnly;
+                  Manager::Get()->GetMessageManager()->DebugLog(_("unrecognized target type"));
                 }
-                Manager::Get()->GetMessageManager()->DebugLog("Project type set to %d", typ);
+
+                Manager::Get()->GetMessageManager()->DebugLog(_("TargType '%s' -> %d"), targtype.c_str(), type);            
+                m_TargType[targtype] = type;
             }
             continue;
         }
-        else if (line.StartsWith("!IF  \"$(CFG)\" =="))
+        else if (line.StartsWith(_T("!MESSAGE \""))) {
+        //  !MESSAGE "anothertest - Win32 Release" (based on "Win32 (x86) Application")
+            //line.
+            int pos;
+            pos = line.Find('\"');
+            line.Remove(0, pos+1);
+            pos = line.Find('\"');
+            wxString target = line.Left(pos);
+            line.Remove(0, pos+1);
+            pos = line.Find('\"');
+            line.Remove(0, pos+1);
+            pos = line.Find('\"');
+            wxString basedOn = line.Left(pos);
+            TargetType type = ttCommandsOnly;
+            HashTargetType::iterator it = m_TargType.find(basedOn);
+            if (it != m_TargType.end()) type = it->second;
+            m_TargetBasedOn[target] = type;
+            Manager::Get()->GetMessageManager()->DebugLog(_("Target '%s' is of type %d"), target.c_str(), type);            
+        }
+        else if (line.StartsWith(_T("!IF  \"$(CFG)\" ==")))
             size = 16;
-        else if (line.StartsWith("!ELSEIF  \"$(CFG)\" =="))
+        else if (line.StartsWith(_T("!ELSEIF  \"$(CFG)\" ==")))
             size = 20;
-        else if (line == "# Begin Target")
+        else if (line == _T("# Begin Target"))
         {
             // done
             m_BeginTargetLine = currentLine;
@@ -148,7 +170,7 @@ bool MSVCLoader::ReadConfigurations()
             {
                 m_Configurations.Add(tmp);
                 m_ConfigurationsLineIndex.Add(currentLine);
-                Manager::Get()->GetMessageManager()->DebugLog("Detected configuration '%s' at line %d", tmp.c_str(), currentLine);
+                Manager::Get()->GetMessageManager()->DebugLog(_T("Detected configuration '%s' at line %d"), tmp.c_str(), currentLine);
             }
         }
     }
@@ -166,6 +188,9 @@ bool MSVCLoader::ParseConfiguration(int index)
     if (!bt)
         return false;
     bt->SetCompilerIndex(m_pProject->GetCompilerIndex());
+    m_Type = ttCommandsOnly;
+    HashTargetType::iterator it = m_TargetBasedOn.find(m_Configurations[index]);
+    if (it != m_TargetBasedOn.end()) m_Type = it->second;
     bt->SetTargetType(m_Type);
     bt->SetOutputFilename(bt->SuggestOutputFilename());
 
@@ -194,7 +219,7 @@ bool MSVCLoader::ParseConfiguration(int index)
             continue;
         
 //        if (line.StartsWith("# PROP BASE Output_Dir "))
-        if (line.StartsWith("# PROP Output_Dir "))
+        if (line.StartsWith(_T("# PROP Output_Dir ")))
         {
             line.Remove(0, 18);
             line.Trim(true);
@@ -203,12 +228,14 @@ bool MSVCLoader::ParseConfiguration(int index)
             if (!line.IsEmpty())
             {
                 wxFileName out = bt->GetOutputFilename();
-                out.SetPath(out.GetPath() + wxFileName::GetPathSeparator() + tmp);
+                out.SetPath(tmp); // out could be a full path name and not only a relative one !
+                if (out.IsRelative())
+                    out.MakeAbsolute(m_Filename.GetPath(wxPATH_GET_VOLUME | wxPATH_GET_SEPARATOR));
                 bt->SetOutputFilename(out.GetFullPath());
             }
         }
 //        else if (line.StartsWith("# PROP BASE Intermediate_Dir "))
-        else if (line.StartsWith("# PROP Intermediate_Dir "))
+        else if (line.StartsWith(_T("# PROP Intermediate_Dir ")))
         {
             line.Remove(0, 24);
             line.Trim(true);
@@ -219,28 +246,28 @@ bool MSVCLoader::ParseConfiguration(int index)
                 bt->SetObjectOutput(tmp);
             }
         }
-        else if (line.StartsWith("# ADD BASE CPP "))
+        else if (line.StartsWith(_T("# ADD BASE CPP ")))
         {
             line.Remove(0, 15);
             line.Trim(true);
             line.Trim(false);
             ProcessCompilerOptions(bt, line);
         }
-        else if (line.StartsWith("# ADD CPP "))
+        else if (line.StartsWith(_T("# ADD CPP ")))
         {
             line.Remove(0, 10);
             line.Trim(true);
             line.Trim(false);
             ProcessCompilerOptions(bt, line);
         }
-        else if (line.StartsWith("# ADD BASE LIB32 "))
+        else if (line.StartsWith(_T("# ADD BASE LIB32 ")))
         {
             line.Remove(0, 17);
             line.Trim(true);
             line.Trim(false);
             ProcessLinkerOptions(bt, line);
         }
-        else if (line.StartsWith("# ADD LIB32 "))
+        else if (line.StartsWith(_T("# ADD LIB32 ")))
         {
             line.Remove(0, 12);
             line.Trim(true);
@@ -274,7 +301,7 @@ bool MSVCLoader::ParseSourceFiles()
         line.Trim(false);
 
         // we 're only interested in lines starting with SOURCE=
-        if (!line.StartsWith("SOURCE="))
+        if (!line.StartsWith(_T("SOURCE=")))
             continue;
         
         line.Remove(0, 7);
@@ -295,7 +322,7 @@ bool MSVCLoader::ParseSourceFiles()
 void MSVCLoader::ProcessCompilerOptions(ProjectBuildTarget* target, const wxString& opts)
 {
     wxArrayString array;
-    array = GetArrayFromString(opts, " ");
+    array = GetArrayFromString(opts, _T(" "));
     
     for (unsigned int i = 0; i < array.GetCount(); ++i)
     {
@@ -304,68 +331,69 @@ void MSVCLoader::ProcessCompilerOptions(ProjectBuildTarget* target, const wxStri
 
         if (m_ConvertSwitches)
         {
-            if (opt.Matches("/D"))
-                target->AddCompilerOption("-D" + RemoveQuotes(array[++i]));
-            else if (opt.Matches("/U"))
-                target->AddCompilerOption("-U" + RemoveQuotes(array[++i]));
-            else if (opt.Matches("/Zi") || opt.Matches("/ZI"))
-                target->AddCompilerOption("-g");
-            else if (opt.Matches("/I"))
+            if (opt.Matches(_T("/D")))
+                target->AddCompilerOption(_T("-D") + RemoveQuotes(array[++i]));
+            else if (opt.Matches(_T("/U")))
+                target->AddCompilerOption(_T("-U") + RemoveQuotes(array[++i]));
+            else if (opt.Matches(_T("/Zi")) || opt.Matches(_T("/ZI")))
+                target->AddCompilerOption(_T("-g"));
+            else if (opt.Matches(_T("/I")))
                 target->AddIncludeDir(RemoveQuotes(array[++i]));
-            else if (opt.Matches("/W0"))
-                target->AddCompilerOption("-w");
-            else if (opt.Matches("/O1") ||
-                    opt.Matches("/O2") ||
-                    opt.Matches("/O3"))
-                target->AddCompilerOption("-O2");
-            else if (opt.Matches("/W1") ||
-                    opt.Matches("/W2") ||
-                    opt.Matches("/W3"))
-                target->AddCompilerOption("-W");
-            else if (opt.Matches("/W4"))
-                target->AddCompilerOption("-Wall");
-            else if (opt.Matches("/WX"))
-                target->AddCompilerOption("-Werror");
-            else if (opt.Matches("/GX"))
-                target->AddCompilerOption("-fexceptions");
-            else if (opt.Matches("/Ob0"))
-                target->AddCompilerOption("-fno-inline");
-            else if (opt.Matches("/Ob2"))
-                target->AddCompilerOption("-finline-functions");
-            else if (opt.Matches("/Oy"))
-                target->AddCompilerOption("-fomit-frame-pointer");
-            else if (opt.Matches("/GB"))
-                target->AddCompilerOption("-mcpu=pentiumpro -D_M_IX86=500");
-            else if (opt.Matches("/G6"))
-                target->AddCompilerOption("-mcpu=pentiumpro -D_M_IX86=600");
-            else if (opt.Matches("/G5"))
-                target->AddCompilerOption("-mcpu=pentium -D_M_IX86=500");
-            else if (opt.Matches("/G4"))
-                target->AddCompilerOption("-mcpu=i486 -D_M_IX86=400");
-            else if (opt.Matches("/G3"))
-                target->AddCompilerOption("-mcpu=i386 -D_M_IX86=300");
-            else if (opt.Matches("/Za"))
-                target->AddCompilerOption("-ansi");
-            else if (opt.Matches("/Zp1"))
-                target->AddCompilerOption("-fpack-struct");
-            else if (opt.Matches("/nologo"))
+            else if (opt.Matches(_T("/W0")))
+                target->AddCompilerOption(_T("-w"));
+            else if (opt.Matches(_T("/O1")) ||
+                    opt.Matches(_T("/O2")) ||
+                    opt.Matches(_T("/O3")))
+                target->AddCompilerOption(_T("-O2"));
+            else if (opt.Matches(_T("/W1")) ||
+                    opt.Matches(_T("/W2")) ||
+                    opt.Matches(_T("/W3")))
+                target->AddCompilerOption(_T("-W"));
+            else if (opt.Matches(_T("/W4")))
+                target->AddCompilerOption(_T("-Wall"));
+            else if (opt.Matches(_T("/WX")))
+                target->AddCompilerOption(_T("-Werror"));
+            else if (opt.Matches(_T("/GX")))
+                target->AddCompilerOption(_T("-fexceptions"));
+            else if (opt.Matches(_T("/Ob0")))
+                target->AddCompilerOption(_T("-fno-inline"));
+            else if (opt.Matches(_T("/Ob2")))
+                target->AddCompilerOption(_T("-finline-functions"));
+            else if (opt.Matches(_T("/Oy")))
+                target->AddCompilerOption(_T("-fomit-frame-pointer"));
+            else if (opt.Matches(_T("/GB")))
+                target->AddCompilerOption(_T("-mcpu=pentiumpro -D_M_IX86=500"));
+            else if (opt.Matches(_T("/G6")))
+                target->AddCompilerOption(_T("-mcpu=pentiumpro -D_M_IX86=600"));
+            else if (opt.Matches(_T("/G5")))
+                target->AddCompilerOption(_T("-mcpu=pentium -D_M_IX86=500"));
+            else if (opt.Matches(_T("/G4")))
+                target->AddCompilerOption(_T("-mcpu=i486 -D_M_IX86=400"));
+            else if (opt.Matches(_T("/G3")))
+                target->AddCompilerOption(_T("-mcpu=i386 -D_M_IX86=300"));
+            else if (opt.Matches(_T("/Za")))
+                target->AddCompilerOption(_T("-ansi"));
+            else if (opt.Matches(_T("/Zp1")))
+                target->AddCompilerOption(_T("-fpack-struct"));
+            else if (opt.Matches(_T("/nologo")))
             {
                 // do nothing (ignore silently)
             }
-            else
-                Manager::Get()->GetMessageManager()->DebugLog("Unhandled compiler option: " + opt);
+            else if (opt.Matches(_T("/c"))) {} // do nothing
+            //else Manager::Get()->GetMessageManager()->DebugLog("Unhandled compiler option: " + opt);
         }
         else // !m_ConvertSwitches
         {
             // only differentiate includes and definitions
-            if (opt.Matches("/I"))
+            if (opt.Matches(_T("/I")))
                 target->AddIncludeDir(RemoveQuotes(array[++i]));
-            else if (opt.Matches("/D"))
-                target->AddCompilerOption("/D" + RemoveQuotes(array[++i]));
-            else if (opt.Matches("/U"))
-                target->AddCompilerOption("/U" + RemoveQuotes(array[++i]));
-            else if (opt.StartsWith("/Yu"))
-                Manager::Get()->GetMessageManager()->DebugLog("Ignoring precompiled headers option (/Yu)");
+            else if (opt.Matches(_T("/D")))
+                target->AddCompilerOption(_T("/D") + RemoveQuotes(array[++i]));
+            else if (opt.Matches(_T("/U")))
+                target->AddCompilerOption(_T("/U") + RemoveQuotes(array[++i]));
+            else if (opt.StartsWith(_T("/Yu")))
+                Manager::Get()->GetMessageManager()->DebugLog(_("Ignoring precompiled headers option (/Yu)"));
+            else if (opt.Matches(_T("/c")) || opt.Matches(_T("/nologo"))) {} // do nothing
             else
                 target->AddCompilerOption(opt);
         }
@@ -375,7 +403,7 @@ void MSVCLoader::ProcessCompilerOptions(ProjectBuildTarget* target, const wxStri
 void MSVCLoader::ProcessLinkerOptions(ProjectBuildTarget* target, const wxString& opts)
 {
     wxArrayString array;
-    array = GetArrayFromString(opts, " ");
+    array = GetArrayFromString(opts, _T(" "));
     
     for (unsigned int i = 0; i < array.GetCount(); ++i)
     {
@@ -384,71 +412,72 @@ void MSVCLoader::ProcessLinkerOptions(ProjectBuildTarget* target, const wxString
         
         if (m_ConvertSwitches)
         {
-            if (opt.StartsWith("/libpath:"))
+            if (opt.StartsWith(_T("/libpath:")))
             {
                 opt.Remove(0, 9);
                 target->AddLibDir(RemoveQuotes(opt));
             }
-            else if (opt.StartsWith("/base:"))
+            else if (opt.StartsWith(_T("/base:")))
             {
                 opt.Remove(0, 6);
-                target->AddLinkerOption("--image-base " + RemoveQuotes(opt));
+                target->AddLinkerOption(_T("--image-base ") + RemoveQuotes(opt));
             }
-            else if (opt.StartsWith("/implib:"))
+            else if (opt.StartsWith(_T("/implib:")))
             {
                 opt.Remove(0, 8);
-                target->AddLinkerOption("--implib " + RemoveQuotes(opt));
+                target->AddLinkerOption(_T("--implib ") + RemoveQuotes(opt));
             }
-            else if (opt.StartsWith("/map:"))
+            else if (opt.StartsWith(_T("/map:")))
             {
                 opt.Remove(0, 5);
-                target->AddLinkerOption("-Map " + RemoveQuotes(opt) + ".map");
+                target->AddLinkerOption(_T("-Map ") + RemoveQuotes(opt) + _T(".map"));
             }
-            else if (opt.Matches("/nologo"))
+            else if (opt.Matches(_T("/nologo")))
             {
                 // do nothing (ignore silently)
             }
-            else if (opt.StartsWith("/out:"))
+            else if (opt.StartsWith(_T("/out:")))
             {
                 // do nothing; it is handled below, in common options
             }
             else
-                Manager::Get()->GetMessageManager()->DebugLog("Unknown linker option: " + opt);
+                Manager::Get()->GetMessageManager()->DebugLog(_("Unknown linker option: " + opt));
         }
         else // !m_ConvertSwitches
         {
-            if (opt.StartsWith("/libpath:"))
+            if (opt.StartsWith(_T("/libpath:")))
             {
                 opt.Remove(0, 9);
                 target->AddLibDir(RemoveQuotes(opt));
             }
+            else if (opt.Matches(_T("/nologo"))) {} // ignore silently
             else
             {
                 // don't add linking lib (added below, in common options)
-                int idx = opt.Find(".lib");
+                int idx = opt.Find(_T(".lib"));
                 if (idx == -1)
                     target->AddLinkerOption(opt);
             }
         }
 
         // common options
-        if (!opt.StartsWith("/"))
+        if (!opt.StartsWith(_T("/")))
         {
             // probably linking lib
-            int idx = opt.Find(".lib");
+            int idx = opt.Find(_T(".lib"));
             if (idx != -1)
             {
                 opt.Remove(idx);
                 target->AddLinkLib(opt);
             }
         }
-        else if (opt.StartsWith("/out:"))
+        else if (opt.StartsWith(_T("/out:")))
         {
             opt.Remove(0, 5);
             opt = RemoveQuotes(opt);
             if (m_Type == ttStaticLib)
             {
-                // convert lib filename based on compiler
+              // convert lib filename based on compiler
 /* NOTE (mandrav#1#): I think I should move this code somewhere more accessible...
 I need it here and there... */
                 wxFileName orig = target->GetOutputFilename();
@@ -472,7 +501,7 @@ I need it here and there... */
 wxString MSVCLoader::RemoveQuotes(const wxString& src)
 {
     wxString res = src;
-    if (res.StartsWith("\""))
+    if (res.StartsWith(_T("\"")))
     {
         res.Remove(0, 1);
         res.Remove(res.Length() - 1);

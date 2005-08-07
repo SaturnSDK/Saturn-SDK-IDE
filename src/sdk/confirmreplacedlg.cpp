@@ -36,8 +36,8 @@ END_EVENT_TABLE()
 
 ConfirmReplaceDlg::ConfirmReplaceDlg(wxWindow* parent, const wxString& label)
 {
-	wxXmlResource::Get()->LoadDialog(this, parent, _("dlgConfirmReplace"));
-	XRCCTRL(*this, _("lblMessage"), wxStaticText)->SetLabel(label);
+	wxXmlResource::Get()->LoadDialog(this, parent, _T("dlgConfirmReplace"));
+	XRCCTRL(*this, "lblMessage", wxStaticText)->SetLabel(label);
 }
 
 ConfirmReplaceDlg::~ConfirmReplaceDlg()

@@ -159,6 +159,7 @@ int idLeftSash = XRCID("idLeftSash");
 int idBottomSash = XRCID("idBottomSash");
 int idCloseFullScreen = XRCID("idCloseFullScreen");
 int idShiftTab = wxNewId();
+DLLIMPORT extern int ID_EditorManagerCloseButton;
 
 BEGIN_EVENT_TABLE(MainFrame, wxFrame)
     EVT_SIZE(MainFrame::OnSize)
@@ -234,6 +235,7 @@ BEGIN_EVENT_TABLE(MainFrame, wxFrame)
     EVT_MENU(idFileSaveAllFiles,  MainFrame::OnFileSaveAllFiles)
     EVT_MENU(idFileSaveWorkspace,  MainFrame::OnFileSaveWorkspace)
     EVT_MENU(idFileSaveWorkspaceAs,  MainFrame::OnFileSaveWorkspaceAs)
+    EVT_BUTTON(ID_EditorManagerCloseButton,MainFrame::OnFileClose)
     EVT_MENU(idFileClose,  MainFrame::OnFileClose)
     EVT_MENU(idFileCloseAll,  MainFrame::OnFileCloseAll)
     EVT_MENU(idFilePrintSetup,  MainFrame::OnFilePrintSetup)
@@ -322,7 +324,7 @@ BEGIN_EVENT_TABLE(MainFrame, wxFrame)
 END_EVENT_TABLE()
 
 MainFrame::MainFrame(wxWindow* parent)
-       : wxFrame(parent, -1, "MainWin", wxDefaultPosition, wxDefaultSize, wxDEFAULT_FRAME_STYLE | wxNO_FULL_REPAINT_ON_RESIZE),
+       : wxFrame(parent, -1, _T("MainWin"), wxDefaultPosition, wxDefaultSize, wxDEFAULT_FRAME_STYLE | wxNO_FULL_REPAINT_ON_RESIZE),
 	   m_pAccel(0L),
 	   m_pCloseFullScreenBtn(0L),
        m_pNotebook(0L),
@@ -360,7 +362,7 @@ MainFrame::MainFrame(wxWindow* parent)
     
     this->SetAcceleratorTable(*m_pAccel);
     
-    m_SmallToolBar = ConfigManager::Get()->Read("/environment/toolbar_size", (long int)0) == 1;
+    m_SmallToolBar = ConfigManager::Get()->Read(_T("/environment/toolbar_size"), 1L) == 1;
 	CreateIDE();
 
 #ifdef __WXMSW__
@@ -374,7 +376,7 @@ MainFrame::MainFrame(wxWindow* parent)
     SetStatusText(_("Welcome to "APP_NAME"!"));
 #endif // wxUSE_STATUSBAR
 
-    SetTitle(_(APP_NAME" v"APP_VERSION));
+    SetTitle(APP_NAME _T(" v") APP_VERSION);
 
     ScanForPlugins();
     LoadWindowState();
@@ -391,8 +393,8 @@ MainFrame::MainFrame(wxWindow* parent)
     InitPrinting();
     ShowHideStartPage();
 
-    ConfigManager::AddConfiguration(_("Application"), "/main_frame");
-    ConfigManager::AddConfiguration(_("Environment"), "/environment");
+    ConfigManager::AddConfiguration(_("Application"), _T("/main_frame"));
+    ConfigManager::AddConfiguration(_("Environment"), _T("/environment"));
 }
 
 MainFrame::~MainFrame()
@@ -406,24 +408,24 @@ MainFrame::~MainFrame()
 
 void MainFrame::ShowTips(bool forceShow)
 {
-    bool showAtStartup = ConfigManager::Get()->Read("/show_tips", 1) != 0;
+    bool showAtStartup = ConfigManager::Get()->Read(_T("/show_tips"), 1) != 0;
     if (forceShow || showAtStartup)
     {
         wxLogNull null; // disable error message if tips file does not exist
-        wxString tipsFile = ConfigManager::Get()->Read("/app_path") + "/tips.txt";
-        long tipsIndex = ConfigManager::Get()->Read("/next_tip", (long)0);
+        wxString tipsFile = ConfigManager::Get()->Read(_T("/app_path")) + _T("/tips.txt");
+        long tipsIndex = ConfigManager::Get()->Read(_T("/next_tip"), (long)0);
         wxTipProvider* tipProvider = wxCreateFileTipProvider(tipsFile, tipsIndex);
         showAtStartup = wxShowTip(this, tipProvider, showAtStartup);
         delete tipProvider;
-        ConfigManager::Get()->Write("/show_tips", showAtStartup);
-        ConfigManager::Get()->Write("/next_tip", (long)tipProvider->GetCurrentTip());
+        ConfigManager::Get()->Write(_T("/show_tips"), showAtStartup);
+        ConfigManager::Get()->Write(_T("/next_tip"), (long)tipProvider->GetCurrentTip());
     }
 }
 
 void MainFrame::CreateIDE()
 {
-	int leftW = ConfigManager::Get()->Read("/main_frame/layout/left_block_width", 200);
-	int bottomH = ConfigManager::Get()->Read("/main_frame/layout/bottom_block_height", 150);
+	int leftW = ConfigManager::Get()->Read(_T("/main_frame/layout/left_block_width"), 200);
+	int bottomH = ConfigManager::Get()->Read(_T("/main_frame/layout/bottom_block_height"), 150);
 
 	// Create CloseFullScreen Button, and hide it initially
 	m_pCloseFullScreenBtn = new wxButton(this, idCloseFullScreen, _( "Close Fullscreen" ), wxDefaultPosition );
@@ -487,10 +489,10 @@ void MainFrame::CreateMenubar()
 	wxMenu *tools=0L, *plugs=0L, *pluginsM=0L, *settingsPlugins=0L;
 	wxMenuItem *tmpitem=0L;
 	
-    wxString resPath = ConfigManager::Get()->Read("data_path", wxEmptyString);
+    wxString resPath = ConfigManager::Get()->Read(_T("data_path"), wxEmptyString);
     wxXmlResource *myres = wxXmlResource::Get();
-    myres->Load(resPath + "/resources.zip#zip:main_menu.xrc");
-    mbar = myres->LoadMenuBar("main_menu_bar");
+    myres->Load(resPath + _T("/resources.zip#zip:main_menu.xrc"));
+    mbar = myres->LoadMenuBar(_T("main_menu_bar"));
     if(!mbar)
     {
       mbar = new wxMenuBar(); // Some error happened.
@@ -499,11 +501,11 @@ void MainFrame::CreateMenubar()
     
     // Find Menus that we'll change later
     
-    tmpidx=mbar->FindMenu("&Tools");
+    tmpidx=mbar->FindMenu(_("&Tools"));
     if(tmpidx!=wxNOT_FOUND)
         tools = mbar->GetMenu(tmpidx);
 
-    tmpidx=mbar->FindMenu("P&lugins");
+    tmpidx=mbar->FindMenu(_("P&lugins"));
     if(tmpidx!=wxNOT_FOUND)
         plugs = mbar->GetMenu(tmpidx);
         
@@ -558,17 +560,17 @@ void MainFrame::CreateToolbars()
 		m_pToolbar = 0L;
 	}
     // *** Begin new Toolbar routine ***
-    wxString resPath = ConfigManager::Get()->Read("data_path", wxEmptyString);
-    wxString xrcToolbarName = "main_toolbar";
+    wxString resPath = ConfigManager::Get()->Read(_T("data_path"), wxEmptyString);
+    wxString xrcToolbarName = _T("main_toolbar");
     if(m_SmallToolBar) // Insert logic here
-        xrcToolbarName += "_16x16";
-    myres->Load(resPath + "/resources.zip#zip:*.xrc");
-    m_pMsgMan->DebugLog("Loading toolbar...");
+        xrcToolbarName += _T("_16x16");
+    myres->Load(resPath + _T("/resources.zip#zip:*.xrc"));
+    m_pMsgMan->DebugLog(_("Loading toolbar..."));
     wxToolBar *mytoolbar = myres->LoadToolBar(this,xrcToolbarName);
     
     if(mytoolbar==0L)
     {
-        m_pMsgMan->DebugLog(wxString("failed!"));          
+        m_pMsgMan->DebugLog(_("failed!"));          
         int flags = wxTB_HORIZONTAL;
         int major;
         int minor;
@@ -618,7 +620,7 @@ void MainFrame::ScanForPlugins()
     
     PluginManager* m_PluginManager = Manager::Get()->GetPluginManager();
 
-    wxString path = ConfigManager::Get()->Read("data_path") + "/plugins";
+    wxString path = ConfigManager::Get()->Read(_T("data_path")) + _T("/plugins");
     m_pMsgMan->Log(_("Scanning for plugins in %s..."), path.c_str());
     int count = m_PluginManager->ScanForPlugins(path);
     m_pMsgMan->AppendLog(_("Found %d plugins: "), count);
@@ -660,7 +662,7 @@ void MainFrame::AddPluginInPluginsMenu(cbPlugin* plugin)
     
     // this will insert a separator when the first plugin is added in the "Plugins" menu
     if (m_PluginsMenu->GetMenuItemCount() == 1)
-         m_PluginsMenu->Insert(0, wxID_SEPARATOR, "");
+         m_PluginsMenu->Insert(0, wxID_SEPARATOR, _T(""));
 
     AddPluginInMenus(m_PluginsMenu, plugin,
                     (wxObjectEventFunction)(wxEventFunction)(wxCommandEventFunction)&MainFrame::OnPluginsExecuteMenu,
@@ -724,32 +726,32 @@ void MainFrame::LoadWindowState()
 {
     const wxString& personalityKey = Manager::Get()->GetPersonalityManager()->GetPersonalityKey();
 
-    SetSize(ConfigManager::Get()->Read(personalityKey + "/main_frame/left", 0L),
-            ConfigManager::Get()->Read(personalityKey + "/main_frame/top", 0L),
-            ConfigManager::Get()->Read(personalityKey + "/main_frame/width", 640),
-            ConfigManager::Get()->Read(personalityKey + "/main_frame/height", 480));
+    SetSize(ConfigManager::Get()->Read(personalityKey + _T("/main_frame/left"), 0L),
+            ConfigManager::Get()->Read(personalityKey + _T("/main_frame/top"), 0L),
+            ConfigManager::Get()->Read(personalityKey + _T("/main_frame/width"), 640),
+            ConfigManager::Get()->Read(personalityKey + _T("/main_frame/height"), 480));
 
     // toolbar visibility
 	if (m_pToolbar)
-        m_pToolbar->Show(ConfigManager::Get()->Read(personalityKey + "/main_frame/layout/toolbar_show", 1));
+        m_pToolbar->Show(ConfigManager::Get()->Read(personalityKey + _T("/main_frame/layout/toolbar_show"), 1));
 
 	// sash sizes are set on creation in CreateIDE()
 	DoUpdateLayout();
 
     // position manager tree left or right
-    bool left = ConfigManager::Get()->Read(personalityKey + "/main_frame/layout/left_block_is_left", true);
+    bool left = ConfigManager::Get()->Read(personalityKey + _T("/main_frame/layout/left_block_is_left"), true);
     RePositionManagerTree(left);
 
 	// load manager and messages selected page
-	Manager::Get()->GetNotebook()->SetSelection(ConfigManager::Get()->Read(personalityKey + "/main_frame/layout/left_block_selection", 0L));
-	m_pMsgMan->SetSelection(ConfigManager::Get()->Read(personalityKey + "/main_frame/layout/bottom_block_selection", 0L));
+	Manager::Get()->GetNotebook()->SetSelection(ConfigManager::Get()->Read(personalityKey + _T("/main_frame/layout/left_block_selection"), 0L));
+	m_pMsgMan->SetSelection(ConfigManager::Get()->Read(personalityKey + _T("/main_frame/layout/bottom_block_selection"), 0L));
 
 	// load manager and messages visibility state
-	m_pLeftSash->Show(ConfigManager::Get()->Read(personalityKey + "/main_frame/layout/left_block_show", 1));
-	m_pBottomSash->Show(ConfigManager::Get()->Read(personalityKey + "/main_frame/layout/bottom_block_show", 1));
+	m_pLeftSash->Show(ConfigManager::Get()->Read(personalityKey + _T("/main_frame/layout/left_block_show"), 1));
+	m_pBottomSash->Show(ConfigManager::Get()->Read(personalityKey + _T("/main_frame/layout/bottom_block_show"), 1));
 
     // maximized?
-    if (ConfigManager::Get()->Read(personalityKey + "/main_frame/maximized", 0L))
+    if (ConfigManager::Get()->Read(personalityKey + _T("/main_frame/maximized"), 0L))
         Maximize();
 
     // close message manager (if auto-hiding)
@@ -760,37 +762,37 @@ void MainFrame::SaveWindowState()
 {
     const wxString& personalityKey = Manager::Get()->GetPersonalityManager()->GetPersonalityKey();
 
-    ConfigManager::Get()->Write(personalityKey + "/main_frame/maximized", IsMaximized());
+    ConfigManager::Get()->Write(personalityKey + _T("/main_frame/maximized"), IsMaximized());
     if (!IsMaximized() && !IsIconized())
     {
-        ConfigManager::Get()->Write(personalityKey + "/main_frame/left", GetPosition().x);
-        ConfigManager::Get()->Write(personalityKey + "/main_frame/top", GetPosition().y);
-        ConfigManager::Get()->Write(personalityKey + "/main_frame/width", GetSize().x);
-        ConfigManager::Get()->Write(personalityKey + "/main_frame/height", GetSize().y);
+        ConfigManager::Get()->Write(personalityKey + _T("/main_frame/left"), GetPosition().x);
+        ConfigManager::Get()->Write(personalityKey + _T("/main_frame/top"), GetPosition().y);
+        ConfigManager::Get()->Write(personalityKey + _T("/main_frame/width"), GetSize().x);
+        ConfigManager::Get()->Write(personalityKey + _T("/main_frame/height"), GetSize().y);
     }
 
     // save manager tree position
-    ConfigManager::Get()->Write(personalityKey + "/main_frame/layout/left_block_is_left", m_pLeftSash->GetAlignment() == wxLAYOUT_LEFT);
+    ConfigManager::Get()->Write(personalityKey + _T("/main_frame/layout/left_block_is_left"), m_pLeftSash->GetAlignment() == wxLAYOUT_LEFT);
 
 	// save block sizes
-	ConfigManager::Get()->Write(personalityKey + "/main_frame/layout/left_block_width", m_pLeftSash->GetSize().GetWidth());
-    ConfigManager::Get()->Write(personalityKey + "/main_frame/layout/bottom_block_height", m_pMsgMan->GetOpenSize());
+	ConfigManager::Get()->Write(personalityKey + _T("/main_frame/layout/left_block_width"), m_pLeftSash->GetSize().GetWidth());
+    ConfigManager::Get()->Write(personalityKey + _T("/main_frame/layout/bottom_block_height"), m_pMsgMan->GetOpenSize());
 
 	// save manager and messages selected page
-	ConfigManager::Get()->Write(personalityKey + "/main_frame/layout/left_block_selection", Manager::Get()->GetNotebook()->GetSelection());
-	ConfigManager::Get()->Write(personalityKey + "/main_frame/layout/bottom_block_selection", m_pMsgMan->GetSelection());
+	ConfigManager::Get()->Write(personalityKey + _T("/main_frame/layout/left_block_selection"), Manager::Get()->GetNotebook()->GetSelection());
+	ConfigManager::Get()->Write(personalityKey + _T("/main_frame/layout/bottom_block_selection"), m_pMsgMan->GetSelection());
 
     // save manager and messages visibility state
     // only if *not* in fullscreen mode (in this case the values were saved
     // before going fullscreen)
     if (!IsFullScreen())
     {
-        ConfigManager::Get()->Write(personalityKey + "/main_frame/layout/left_block_show", m_pLeftSash->IsShown());
-        ConfigManager::Get()->Write(personalityKey + "/main_frame/layout/bottom_block_show", m_pBottomSash->IsShown());
+        ConfigManager::Get()->Write(personalityKey + _T("/main_frame/layout/left_block_show"), m_pLeftSash->IsShown());
+        ConfigManager::Get()->Write(personalityKey + _T("/main_frame/layout/bottom_block_show"), m_pBottomSash->IsShown());
 	}
 
     // toolbar visibility
-	ConfigManager::Get()->Write(personalityKey + "/main_frame/layout/toolbar_show", m_pToolbar->IsShown());
+	ConfigManager::Get()->Write(personalityKey + _T("/main_frame/layout/toolbar_show"), m_pToolbar->IsShown());
 }
 
 void MainFrame::DoAddPlugin(cbPlugin* plugin)
@@ -963,7 +965,8 @@ void MainFrame::DoUpdateLayout()
     if (!m_pEdMan)
         return;
 	wxLayoutAlgorithm layout;
-    layout.LayoutFrame(this, m_pEdMan->GetNotebook());
+    layout.LayoutFrame(this, m_pEdMan->GetPanel());
+    m_pEdMan->RefreshOpenFilesTree();
 
 #if (wxMAJOR_VERSION == 2) && (wxMINOR_VERSION < 5)	
 	/**
@@ -986,7 +989,7 @@ void MainFrame::DoUpdateAppTitle()
 	if (prj)
 	    SetTitle(APP_NAME" - " + prj->GetTitle());
 	else
-		SetTitle(_(APP_NAME" v"APP_VERSION));
+		SetTitle(APP_NAME" v"APP_VERSION);
 }
 
 void MainFrame::RePositionManagerTree(bool left)
@@ -1016,7 +1019,7 @@ void MainFrame::ShowHideStartPage(bool forceHasProject)
     // and ProjectManager::GetActiveProject() are updated...
     bool show = !forceHasProject &&
                 m_pPrjMan->GetProjects()->GetCount() == 0 &&
-                ConfigManager::Get()->Read("/environment/start_here_page", 1);
+                ConfigManager::Get()->Read(_T("/environment/start_here_page"), 1);
 
     EditorBase* sh = m_pEdMan->GetEditor(g_StartHereTitle);
     if (show && !sh)
@@ -1061,18 +1064,18 @@ void MainFrame::InitializeRecentFilesHistory()
         if (recentFiles)
         {
             m_FilesHistory.UseMenu(recentFiles);
-            ConfigManager::Get()->SetPath("/recent_files");
+            ConfigManager::Get()->SetPath(_T("/recent_files"));
             m_FilesHistory.Load(*ConfigManager::Get());
-            ConfigManager::Get()->SetPath("/");
+            ConfigManager::Get()->SetPath(_T("/"));
         }
     }
 }
 
 void MainFrame::TerminateRecentFilesHistory()
 {
-    ConfigManager::Get()->SetPath("/recent_files");
+    ConfigManager::Get()->SetPath(_T("/recent_files"));
     m_FilesHistory.Save(*ConfigManager::Get());
-    ConfigManager::Get()->SetPath("/");
+    ConfigManager::Get()->SetPath(_T("/"));
 
     wxMenuBar* mbar = GetMenuBar();
     if (!mbar)
@@ -1218,7 +1221,7 @@ void MainFrame::OnFileOpenRecentClearHistory(wxCommandEvent& event)
     while (m_FilesHistory.GetCount())
 	{
         m_FilesHistory.RemoveFileFromHistory(0);
-		ConfigManager::Get()->DeleteGroup("/recent_files");
+		ConfigManager::Get()->DeleteGroup(_T("/recent_files"));
 	}
 }
 
@@ -1258,7 +1261,7 @@ void MainFrame::OnFileSaveWorkspace(wxCommandEvent& event)
 
 void MainFrame::OnFileSaveWorkspaceAs(wxCommandEvent& event)
 {
-    if (m_pPrjMan->SaveWorkspaceAs(""))
+    if (m_pPrjMan->SaveWorkspaceAs(_T("")))
         m_FilesHistory.AddFileToHistory(m_pPrjMan->GetWorkspace()->GetFilename());
 }
 
@@ -1266,6 +1269,7 @@ void MainFrame::OnFileClose(wxCommandEvent& WXUNUSED(event))
 {
     m_pEdMan->CloseActive();
     DoUpdateStatusBar();
+    Refresh();
 }
 
 void MainFrame::OnFileCloseAll(wxCommandEvent& WXUNUSED(event))
@@ -1676,7 +1680,8 @@ void MainFrame::OnSearchGotoLine(wxCommandEvent& event)
 								_("Goto line"),
 								_( "" ),
 								this );
-	int line = atol( strLine.c_str() );
+	long int line = 0;
+	strLine.ToLong(&line);
 	if ( line > 1 && line <= max )
 		ed->GetControl()->GotoPos(ed->GetControl()->PositionFromLine(line - 1));
 }
@@ -1805,7 +1810,7 @@ void MainFrame::OnHelpTips(wxCommandEvent& event)
 
 void MainFrame::OnFileMenuUpdateUI(wxUpdateUIEvent& event)
 {
-    cbEditor* ed = m_pEdMan ? m_pEdMan->GetBuiltinEditor(m_pEdMan->GetActiveEditor()) : 0;
+    EditorBase* ed = m_pEdMan ? m_pEdMan->GetActiveEditor() : 0;
     wxMenuBar* mbar = GetMenuBar();
 
     bool canCloseProject = (ProjectManager::CanShutdown() && EditorManager::CanShutdown());
@@ -1898,11 +1903,10 @@ void MainFrame::OnViewMenuUpdateUI(wxUpdateUIEvent& event)
 
 void MainFrame::OnSearchMenuUpdateUI(wxUpdateUIEvent& event)
 {
-    cbProject* prj = m_pPrjMan ? m_pPrjMan->GetActiveProject() : 0;
     cbEditor* ed = m_pEdMan ? m_pEdMan->GetBuiltinEditor(m_pEdMan->GetActiveEditor()) : 0;
     wxMenuBar* mbar = GetMenuBar();
 
-    mbar->Enable(idSearchFind, prj);
+    mbar->Enable(idSearchFind, ed);
     mbar->Enable(idSearchFindNext, ed);
     mbar->Enable(idSearchFindPrevious, ed);
     mbar->Enable(idSearchReplace, ed);
@@ -1910,7 +1914,7 @@ void MainFrame::OnSearchMenuUpdateUI(wxUpdateUIEvent& event)
 
 	if (m_pToolbar)
 	{
-		m_pToolbar->EnableTool(idSearchFind, prj);
+		m_pToolbar->EnableTool(idSearchFind, ed);
 		m_pToolbar->EnableTool(idSearchReplace, ed);
 	}
 	
@@ -1999,8 +2003,8 @@ void MainFrame::OnToggleFullScreen(wxCommandEvent& event)
     {
         // we are going to toggle to fullscreen: save current sashes state
         // so that we can restore it when leaving fullscreen...
-        ConfigManager::Get()->Write("/main_frame/layout/left_block_show", m_pLeftSash->IsShown());
-        ConfigManager::Get()->Write("/main_frame/layout/bottom_block_show", m_pBottomSash->IsShown());
+        ConfigManager::Get()->Write(_T("/main_frame/layout/left_block_show"), m_pLeftSash->IsShown());
+        ConfigManager::Get()->Write(_T("/main_frame/layout/bottom_block_show"), m_pBottomSash->IsShown());
 	}
 
     ShowFullScreen( !IsFullScreen(), wxFULLSCREEN_NOTOOLBAR | wxFULLSCREEN_NOSTATUSBAR 
@@ -2030,8 +2034,8 @@ void MainFrame::OnToggleFullScreen(wxCommandEvent& event)
         m_pCloseFullScreenBtn->Show( false );
         
         // leaving fullscreen: restore sashes state
-        m_pLeftSash->Show(ConfigManager::Get()->Read("/main_frame/layout/left_block_show", 1));
-        m_pBottomSash->Show(ConfigManager::Get()->Read("/main_frame/layout/bottom_block_show", 1));
+        m_pLeftSash->Show(ConfigManager::Get()->Read(_T("/main_frame/layout/left_block_show"), 1));
+        m_pBottomSash->Show(ConfigManager::Get()->Read(_T("/main_frame/layout/bottom_block_show"), 1));
     }
     /// @todo Check whether hiding all panes is desirable.
     /// Perhaps make it customizable?
@@ -2078,15 +2082,23 @@ void MainFrame::OnPluginUnloaded(CodeBlocksEvent& event)
 void MainFrame::OnSettingsEnvironment(wxCommandEvent& event)
 {
     bool tbarsmall = m_SmallToolBar;
+    bool edmanCloseBtn = ConfigManager::Get()->Read(_T("/editor/show_close_button"), (long int)0);
 
 	EnvironmentSettingsDlg dlg(this);
 	if (dlg.ShowModal() == wxID_OK)
 	{
-        m_SmallToolBar = ConfigManager::Get()->Read("/environment/toolbar_size", (long int)0) == 1;
+        m_SmallToolBar = ConfigManager::Get()->Read(_T("/environment/toolbar_size"), (long int)0) == 1;
         if (m_SmallToolBar != tbarsmall)
             CreateToolbars();
-        m_pMsgMan->EnableAutoHide(ConfigManager::Get()->Read("/message_manager/auto_hide", 0L));
+        m_pMsgMan->EnableAutoHide(ConfigManager::Get()->Read(_T("/message_manager/auto_hide"), 0L));
         ShowHideStartPage();
+        
+        if (ConfigManager::Get()->Read(_T("/editor/show_close_button"), (long int)0) != edmanCloseBtn)
+        {
+        	wxMessageBox(_("Some of the changes you made will be applied after you restart Code::Blocks."),
+                            _("Information"),
+                            wxICON_INFORMATION);
+        }
 	}
 }
 

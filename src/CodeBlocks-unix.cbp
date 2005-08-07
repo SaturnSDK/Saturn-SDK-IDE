@@ -300,6 +300,10 @@
 					<Add option="-Os"/>
 				</Compiler>
 			</Target>
+			<Environment>
+				<Variable name="LIB_WXXRC" value="wx_gtk2_xrc-2.4"/>
+				<Variable name="LIB_WXSTC" value="wx_gtk2_stc-2.4"/>
+			</Environment>
 		</Build>
 		<Compiler>
 			<Add option="-Wall"/>
@@ -824,16 +828,6 @@
 			<Option target="plugin_CompilerGCC"/>
 		</Unit>
 		<Unit filename="plugins/compilergcc/compileroptionsdlg.h">
-			<Option compilerVar=""/>
-			<Option compile="0"/>
-			<Option link="0"/>
-			<Option target="plugin_CompilerGCC"/>
-		</Unit>
-		<Unit filename="plugins/compilergcc/customvars.cpp">
-			<Option compilerVar="CPP"/>
-			<Option target="plugin_CompilerGCC"/>
-		</Unit>
-		<Unit filename="plugins/compilergcc/customvars.h">
 			<Option compilerVar=""/>
 			<Option compile="0"/>
 			<Option link="0"/>
@@ -1397,6 +1391,16 @@
 			<Option link="0"/>
 			<Option target="sdk"/>
 		</Unit>
+		<Unit filename="sdk/customvars.cpp">
+			<Option compilerVar="CPP"/>
+			<Option target="sdk"/>
+		</Unit>
+		<Unit filename="sdk/customvars.h">
+			<Option compilerVar=""/>
+			<Option compile="0"/>
+			<Option link="0"/>
+			<Option target="sdk"/>
+		</Unit>
 		<Unit filename="sdk/devcpploader.cpp">
 			<Option compilerVar="CPP"/>
 			<Option target="sdk"/>
@@ -1502,6 +1506,16 @@
 			<Option target="sdk"/>
 		</Unit>
 		<Unit filename="sdk/edittooldlg.h">
+			<Option compilerVar=""/>
+			<Option compile="0"/>
+			<Option link="0"/>
+			<Option target="sdk"/>
+		</Unit>
+		<Unit filename="sdk/externaldepsdlg.cpp">
+			<Option compilerVar="CPP"/>
+			<Option target="sdk"/>
+		</Unit>
+		<Unit filename="sdk/externaldepsdlg.h">
 			<Option compilerVar=""/>
 			<Option compile="0"/>
 			<Option link="0"/>

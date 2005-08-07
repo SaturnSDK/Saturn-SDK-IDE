@@ -10,11 +10,10 @@
 #include "compilermessages.h"
 #include <wx/process.h>
 #include "compilererrors.h"
-#include "customvars.h"
 #include <compilerfactory.h>
 
 #define MAX_TARGETS 64
-#define DEFAULT_CONSOLE_SHELL "xterm -T $TITLE -e"
+#define DEFAULT_CONSOLE_SHELL _T("xterm -T $TITLE -e")
 
 enum CompilerOptionsType
 {
@@ -46,7 +45,7 @@ class CompilerGCC : public cbCompilerPlugin
         virtual void OnRelease(bool appShutDown);
         virtual void BuildMenu(wxMenuBar* menuBar); // offer for menu space by host
         virtual void BuildModuleMenu(const ModuleType type, wxMenu* menu, const wxString& arg); // offer for menu space by a module
-        virtual void BuildToolBar(wxToolBar* toolBar);
+        virtual bool BuildToolBar(wxToolBar* toolBar);
 
         virtual int Run(ProjectBuildTarget* target = 0L);
         virtual int Clean(ProjectBuildTarget* target = 0L);
@@ -61,8 +60,6 @@ class CompilerGCC : public cbCompilerPlugin
 		virtual bool IsRunning(){ return m_Process; }
 		virtual int GetExitCode(){ return m_LastExitCode; }
 		virtual int Configure(cbProject* project, ProjectBuildTarget* target = 0L);
-		
-		CustomVars& GetCustomVars(){ return m_Vars; }
 		
 		void SwitchCompiler(int compilerIdx);
 		int GetCurrentCompilerIndex();
@@ -105,7 +102,7 @@ class CompilerGCC : public cbCompilerPlugin
 		bool DoPrepareMultiProjectCommand(MultiProjectJob job);
 		void DoPrepareQueue();
         int DoRunQueue();
-        bool DoCreateMakefile(bool temporary = true, const wxString& makefile = "");
+        bool DoCreateMakefile(bool temporary = true, const wxString& makefile = _T(""));
         void DoDeleteTempMakefile();
 		void DoClearTargetMenu();
 		void DoRecreateTargetMenu();
@@ -124,6 +121,8 @@ class CompilerGCC : public cbCompilerPlugin
         void PrintBanner();
         bool UseMake(ProjectBuildTarget* target = 0);
 		bool CompilerValid(ProjectBuildTarget* target = 0);
+		ProjectBuildTarget* GetBuildTargetForFile(ProjectFile* pf);
+		ProjectBuildTarget* GetBuildTargetForFile(const wxString& file);
 
 		// programs
 		int m_CompilerIdx;
@@ -139,6 +138,7 @@ class CompilerGCC : public cbCompilerPlugin
         wxMenu* m_ErrorsMenu;
         cbProject* m_Project;
         wxProcess* m_Process;
+        wxToolBar* m_pTbar;
         long int m_Pid;
         wxTimer m_timerIdleWakeUp;
         SimpleTextLog* m_Log;
@@ -154,7 +154,6 @@ class CompilerGCC : public cbCompilerPlugin
 		wxString m_RunCmd;
 		bool m_LastExitCode;
 		CompilerErrors m_Errors;
-		CustomVars m_Vars;
 		bool m_HasTargetAll;
 
 		unsigned int m_QueueIndex;

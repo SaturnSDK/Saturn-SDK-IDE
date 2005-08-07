@@ -28,14 +28,14 @@
 #include "../sdk/licenses.h"
 #include "../sdk/configmanager.h"
 
-#define DESCR		"Welcome to "APP_NAME" v"APP_VERSION"!\n" \
+#define DESCR		_("Welcome to "APP_NAME" v"APP_VERSION"!\n" \
 					APP_NAME" is a full-featured IDE (Integrated Development Environment) " \
 					"aiming to make the individual developer (and the development team) " \
 					"work in a nice programming environment offering everything he/they " \
 					"would ever need from a program of that kind.\n" \
 					"Its pluggable architecture allows you, the developer, to add " \
 					"any kind of functionality to the core program, through the use of " \
-					"plugins...\n"
+					"plugins...\n")
 
 // class constructor
 dlgAbout::dlgAbout(wxWindow* parent)
@@ -43,14 +43,13 @@ dlgAbout::dlgAbout(wxWindow* parent)
 	wxXmlResource::Get()->LoadDialog(this, parent, _("dlgAbout"));
 
 	wxBitmap bmp;
-	wxString file = ConfigManager::Get()->Read("data_path") + "/images/splash.png"; 
+	wxString file = ConfigManager::Get()->Read(_T("data_path")) + _T("/images/splash.png"); 
 	bmp.LoadFile(file, wxBITMAP_TYPE_PNG);
 	XRCCTRL(*this, "lblTitle", wxStaticBitmap)->SetBitmap(bmp);
-	XRCCTRL(*this, "lblBuildTimestamp", wxStaticText)->SetLabel("Build: "APP_BUILD_TIMESTAMP);
+	XRCCTRL(*this, "lblBuildTimestamp", wxStaticText)->SetLabel(wxString(_T("Build: ")) + APP_BUILD_TIMESTAMP);
 	XRCCTRL(*this, "txtDescription", wxTextCtrl)->SetValue(DESCR);
 	XRCCTRL(*this, "txtThanksTo", wxTextCtrl)->SetValue(
-        _("My wife and family\n"
-        "The wxWidgets project (http://www.wxwidgets.org)\n"
+        _("The wxWidgets project (http://www.wxwidgets.org)\n"
         "TinyXML parser (http://http://www.grinninglizard.com/tinyxml)\n"
         "The GNU Software Foundation (http://www.gnu.org)\n"
         "Last, but not least, the open-source community\n\n"
@@ -60,19 +59,22 @@ dlgAbout::dlgAbout(wxWindow* parent)
         "\n"
         "Contributors (in no special order):\n"
         "-----------------------------------\n"
+        "byo, Tiwag,\n"
+        "elvstone, me22: Conversion to Unicode\n"
+        "byo, cyberkoa : wxSmith RAD plugin (WIP)\n"
+        "P. A. Jimenez : Help and AStyle plugins\n"
         "Hakki Dogusan : DigitalMars compiler support\n"
+        "ybx           : OpenWatcom compiler support\n"
         "Tim Baker     : Patches for the direct-compile-mode\n"
         "                dependencies generation system\n"
-        "Eric Burnett  : GDB debugger patch correcting filenames\n"
-        "                sent to the debugger plus allowing debugging\n"
-        "                of filenames with spaces\n"
+        "Eric Burnett  : GDB debugger plugin patches\n"
         "Chris Raschko : Design of the 3D logo for Code::Blocks\n"
         "J.A. Ortega   : 3D Icon based on the above"
         ));
 	XRCCTRL(*this, "txtLicense", wxTextCtrl)->SetValue(LICENSE_GPL);
 	XRCCTRL(*this, "lblName", wxStaticText)->SetLabel(APP_NAME);
 	XRCCTRL(*this, "lblVersion", wxStaticText)->SetLabel(APP_ACTUAL_VERSION);
-	XRCCTRL(*this, "lblAuthor", wxStaticText)->SetLabel("Yiannis An. Mandravellos");
+	XRCCTRL(*this, "lblAuthor", wxStaticText)->SetLabel(_("Yiannis An. Mandravellos"));
 	XRCCTRL(*this, "lblEmail", wxStaticText)->SetLabel(APP_CONTACT_EMAIL);
 	XRCCTRL(*this, "lblWebsite", wxStaticText)->SetLabel(APP_URL);
 }

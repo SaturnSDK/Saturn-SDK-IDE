@@ -82,26 +82,26 @@ CodeCompletion::CodeCompletion()
 {
     wxFileSystem::AddHandler(new wxZipFSHandler);
     wxXmlResource::Get()->InitAllHandlers();
-    wxString resPath = ConfigManager::Get()->Read("data_path", wxEmptyString);
-    wxXmlResource::Get()->Load(resPath + "/code_completion.zip#zip:*.xrc");
+    wxString resPath = ConfigManager::Get()->Read(_T("data_path"), wxEmptyString);
+    wxXmlResource::Get()->Load(resPath + _T("/code_completion.zip#zip:*.xrc"));
 
-    m_PluginInfo.name = "CodeCompletion";
-    m_PluginInfo.title = "Code completion";
-    m_PluginInfo.version = "0.1";
-    m_PluginInfo.description = "This plugin provides a class browser for your projects "
+    m_PluginInfo.name = _T("CodeCompletion");
+    m_PluginInfo.title = _T("Code completion");
+    m_PluginInfo.version = _T("0.1");
+    m_PluginInfo.description = _T("This plugin provides a class browser for your projects "
                                "and code-completion inside the editor\n\n"
-                               "Note: Only C/C++ language is supported by this plugin...";
-    m_PluginInfo.author = "Yiannis An. Mandravellos";
-    m_PluginInfo.authorEmail = "info@codeblocks.org";
-    m_PluginInfo.authorWebsite = "www.codeblocks.org";
-    m_PluginInfo.thanksTo = "";
+                               "Note: Only C/C++ language is supported by this plugin...");
+    m_PluginInfo.author = _T("Yiannis An. Mandravellos");
+    m_PluginInfo.authorEmail = _T("info@codeblocks.org");
+    m_PluginInfo.authorWebsite = _T("www.codeblocks.org");
+    m_PluginInfo.thanksTo = _T("");
 	m_PluginInfo.hasConfigure = true;
 
     m_PageIndex = -1;
     m_EditMenu = 0L;
 	m_SearchMenu = 0L;
 
-	ConfigManager::AddConfiguration(m_PluginInfo.title, "/code_completion");
+	ConfigManager::AddConfiguration(m_PluginInfo.title, _T("/code_completion"));
 }
 
 CodeCompletion::~CodeCompletion()
@@ -155,7 +155,7 @@ void CodeCompletion::BuildModuleMenu(const ModuleType type, wxMenu* menu, const 
 
 	if (type == mtEditorManager)
 	{
-        int insertId = menu->FindItem("Insert...");
+        int insertId = menu->FindItem(_("Insert..."));
         if (insertId != wxNOT_FOUND)
         {
             wxMenuItem* insertMenu = menu->FindItem(insertId, NULL);
@@ -177,9 +177,10 @@ void CodeCompletion::BuildModuleMenu(const ModuleType type, wxMenu* menu, const 
 	}
 }
 
-void CodeCompletion::BuildToolBar(wxToolBar* toolBar)
+bool CodeCompletion::BuildToolBar(wxToolBar* toolBar)
 {
 	// no need for toolbar items
+	return false;
 }
 
 void CodeCompletion::OnAttach()
@@ -268,7 +269,7 @@ void CodeCompletion::CodeCompleteIncludes()
     wxString line = ed->GetControl()->GetLine(ed->GetControl()->GetCurrentLine());
     //Manager::Get()->GetMessageManager()->DebugLog("#include cc for \"%s\"", line.c_str());
     line.Trim();
-    if (line.IsEmpty() || !line.StartsWith("#include"))
+    if (line.IsEmpty() || !line.StartsWith(_T("#include")))
         return;
     
     // find opening quote (" or <)
@@ -314,7 +315,7 @@ void CodeCompletion::CodeCompleteIncludes()
     {
         files.Sort();
         ed->GetControl()->AutoCompSetIgnoreCase(caseSens);
-        ed->GetControl()->AutoCompShow(pos - lineStartPos - found, GetStringFromArray(files, " "));
+        ed->GetControl()->AutoCompShow(pos - lineStartPos - found, GetStringFromArray(files, _T(" ")));
     }
 }
 
@@ -430,7 +431,7 @@ void CodeCompletion::DoCodeComplete()
 void CodeCompletion::DoInsertCodeCompleteToken(wxString tokName)
 {
 	// remove arguments
-	int pos = tokName.Find("(");
+	int pos = tokName.Find(_T("("));
 	if (pos != wxNOT_FOUND)
 		tokName.Remove(pos);
 		
@@ -443,7 +444,7 @@ void CodeCompletion::DoInsertCodeCompleteToken(wxString tokName)
 
 	int end = ed->GetControl()->GetCurrentPos() > m_NativeParsers.GetEditorEndWord() ? ed->GetControl()->GetCurrentPos() : m_NativeParsers.GetEditorEndWord();
 	ed->GetControl()->SetSelection(m_NativeParsers.GetEditorStartWord(), end);
-	ed->GetControl()->ReplaceSelection("");
+	ed->GetControl()->ReplaceSelection(_T(""));
 	ed->GetControl()->InsertText(m_NativeParsers.GetEditorStartWord(), tokName);
 	ed->GetControl()->GotoPos(m_NativeParsers.GetEditorStartWord() + tokName.Length());
 }
@@ -534,6 +535,8 @@ void CodeCompletion::OnUpdateUI(wxUpdateUIEvent& event)
 
 void CodeCompletion::OnCodeComplete(wxCommandEvent& event)
 {
+    if (ConfigManager::Get()->Read(_T("/code_completion/use_code_completion"), 1L) == 0)
+        return;
     if (m_IsAttached)
 		DoCodeComplete();
     event.Skip();
@@ -578,7 +581,7 @@ void CodeCompletion::OnGotoFunction(wxCommandEvent& event)
             Token* token = tokens[i];
             if (token && token->m_DisplayName.Matches(sel))
             {
-                Manager::Get()->GetMessageManager()->DebugLog("Token found at line %d", token->m_Line);
+                Manager::Get()->GetMessageManager()->DebugLog(_("Token found at line %d"), token->m_Line);
                 ed->GetControl()->GotoLine(token->m_Line - 1);
             }
         }
