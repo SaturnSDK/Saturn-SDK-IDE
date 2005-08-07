@@ -58,7 +58,7 @@ void ClassWizardDlg::DoGuardBlock()
 	wxFileName headerFname(m_Header);
 	wxString GuardWord = headerFname.GetFullName();
 	GuardWord.MakeUpper();
-	GuardWord.Replace(".", "_");
+	GuardWord.Replace(_T("."), _T("_"));
 	XRCCTRL(*this, "txtGuardBlock", wxTextCtrl)->SetValue(GuardWord);
 }
 
@@ -68,8 +68,8 @@ void ClassWizardDlg::OnNameChange(wxCommandEvent& event)
 {
 	wxString name = XRCCTRL(*this, "txtName", wxTextCtrl)->GetValue();
 	name.MakeLower();
-	XRCCTRL(*this, "txtHeader", wxTextCtrl)->SetValue(name + ".h");
-	XRCCTRL(*this, "txtImplementation", wxTextCtrl)->SetValue(name + ".cpp");
+	XRCCTRL(*this, "txtHeader", wxTextCtrl)->SetValue(name + _T(".h"));
+	XRCCTRL(*this, "txtImplementation", wxTextCtrl)->SetValue(name + _T(".cpp"));
 	DoGuardBlock();
 }
 
@@ -109,35 +109,35 @@ void ClassWizardDlg::OnOKClick(wxCommandEvent& event)
 	// let's start with the header file
 	if (GuardBlock)
 	{
-		buffer << "#ifndef " << GuardWord << '\n';
-		buffer << "#define " << GuardWord << '\n';
-		buffer << '\n';
+		buffer << _T("#ifndef ") << GuardWord << _T('\n');
+		buffer << _T("#define ") << GuardWord << _T('\n');
+		buffer << _T('\n');
 	}
 
     if (!AncestorFilename.IsEmpty())
     {
-        buffer << "#include <" << AncestorFilename << ">" << '\n';
-        buffer << '\n';
+        buffer << _T("#include <") << AncestorFilename << _T(">") << _T('\n');
+        buffer << _T('\n');
     }
-	buffer << "class " << Name;
+	buffer << _T("class ") << Name;
 	if (Inherits)
-		buffer << " : " << AncestorScope << " " << Ancestor;
-	buffer << '\n';
-	buffer << "{" << '\n';
-	buffer << '\t' << "public:" << '\n';
-	buffer << '\t' << '\t' << Name << "(" << Constructor << ");" << '\n';
-    buffer << '\t' << '\t';
+		buffer << _T(" : ") << AncestorScope << _T(" ") << Ancestor;
+	buffer << _T('\n');
+	buffer << _T("{") << _T('\n');
+	buffer << _T('\t') << _T("public:") << _T('\n');
+	buffer << _T('\t') << _T('\t') << Name << _T("(") << Constructor << _T(");") << _T('\n');
+    buffer << _T('\t') << _T('\t');
 	if (VirtualDestructor)
-		buffer << "virtual ";
-    buffer << '~' << Name << "();" << '\n';
-	buffer << '\t' << "protected:" << '\n';
-	buffer << '\t' << "private:" << '\n';
-	buffer << "};" << '\n';
+		buffer << _T("virtual ");
+    buffer << '~' << Name << _T("();") << _T('\n');
+	buffer << _T('\t') << _T("protected:") << _T('\n');
+	buffer << _T('\t') << _T("private:") << _T('\n');
+	buffer << _T("};") << _T('\n');
 
 	if (GuardBlock)
 	{
-		buffer << '\n';
-		buffer << "#endif // " << GuardWord << '\n';
+		buffer << _T('\n');
+		buffer << _T("#endif // ") << GuardWord << _T('\n');
 	}
 
 	// write buffer to disk
@@ -155,18 +155,18 @@ void ClassWizardDlg::OnOKClick(wxCommandEvent& event)
 	
 	// now the implementation file
 	buffer.Clear();
-	buffer << "#include \"" << headerFname.GetFullName() << "\"" << '\n';
-	buffer << '\n';
-	buffer << Name << "::" << Name << "(" << Constructor << ")" << '\n';
-	buffer << "{" << '\n';
-	buffer << '\t' << "//ctor" << '\n';
-	buffer << "}" << '\n';
-	buffer << '\n';
-	buffer << Name << "::~" << Name << "()" << '\n';
-	buffer << "{" << '\n';
-	buffer << '\t' << "//dtor" << '\n';
-	buffer << "}" << '\n';
-	buffer << '\n';
+	buffer << _T("#include \"") << headerFname.GetFullName() << _T("\"") << _T('\n');
+	buffer << _T('\n');
+	buffer << Name << _T("::") << Name << _T("(") << Constructor << _T(")") << _T('\n');
+	buffer << _T("{") << _T('\n');
+	buffer << _T('\t') << _T("//ctor") << _T('\n');
+	buffer << _T("}") << _T('\n');
+	buffer << _T('\n');
+	buffer << Name << _T("::~") << Name << _T("()") << _T('\n');
+	buffer << _T("{") << _T('\n');
+	buffer << _T('\t') << _T("//dtor") << _T('\n');
+	buffer << _T("}") << _T('\n');
+	buffer << _T('\n');
 	// write buffer to disk
 	wxFile impl(UnixFilename(m_Implementation), wxFile::write);
 	if (!impl.IsOpened())
