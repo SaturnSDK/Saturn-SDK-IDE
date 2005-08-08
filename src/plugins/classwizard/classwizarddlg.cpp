@@ -35,6 +35,7 @@
 #include <wx/msgdlg.h>
 #include <wx/log.h>
 #include <globals.h>
+#include "../../sdk/configmanager.h"
 
 BEGIN_EVENT_TABLE(ClassWizardDlg, wxDialog)
 	EVT_UPDATE_UI(-1, ClassWizardDlg::OnUpdateUI)
@@ -103,41 +104,54 @@ void ClassWizardDlg::OnOKClick(wxCommandEvent& event)
 		DoGuardBlock();
 	wxFileName headerFname(UnixFilename(m_Header));
 	
+	bool usestabs = (ConfigManager::Get()->Read(_T("/editor/use_tab"), 0l) != 0);
+	int tabsize = ConfigManager::Get()->Read(_T("/editor/tab_size"), 4);
+	int eolmode = ConfigManager::Get()->Read(_T("/editor/eol/eolmode"),0L);
+	
 	wxString buffer;
+	wxString tabstr = usestabs ? wxString(_T("\t")) : wxString(_T(' '),tabsize);
+	wxString eolstr;
+	if(eolmode == 2)
+        eolstr = _T("\n");
+    else if(eolmode == 1)
+        eolstr = _T("\r");
+    else
+        eolstr = _T("\r\n");
+    
 
 	// actual creation starts here
 	// let's start with the header file
 	if (GuardBlock)
 	{
-		buffer << _T("#ifndef ") << GuardWord << _T('\n');
-		buffer << _T("#define ") << GuardWord << _T('\n');
-		buffer << _T('\n');
+		buffer << _T("#ifndef ") << GuardWord << eolstr;
+		buffer << _T("#define ") << GuardWord << eolstr;
+		buffer << eolstr;
 	}
 
     if (!AncestorFilename.IsEmpty())
     {
-        buffer << _T("#include <") << AncestorFilename << _T(">") << _T('\n');
-        buffer << _T('\n');
+        buffer << _T("#include <") << AncestorFilename << _T(">") << eolstr;
+        buffer << eolstr;
     }
 	buffer << _T("class ") << Name;
 	if (Inherits)
 		buffer << _T(" : ") << AncestorScope << _T(" ") << Ancestor;
-	buffer << _T('\n');
-	buffer << _T("{") << _T('\n');
-	buffer << _T('\t') << _T("public:") << _T('\n');
-	buffer << _T('\t') << _T('\t') << Name << _T("(") << Constructor << _T(");") << _T('\n');
-    buffer << _T('\t') << _T('\t');
+	buffer << eolstr;
+	buffer << _T("{") << eolstr;
+	buffer << tabstr << _T("public:") << eolstr;
+	buffer << tabstr << tabstr << Name << _T("(") << Constructor << _T(");") << eolstr;
+    buffer << tabstr << tabstr;
 	if (VirtualDestructor)
 		buffer << _T("virtual ");
-    buffer << '~' << Name << _T("();") << _T('\n');
-	buffer << _T('\t') << _T("protected:") << _T('\n');
-	buffer << _T('\t') << _T("private:") << _T('\n');
-	buffer << _T("};") << _T('\n');
+    buffer << '~' << Name << _T("();") << eolstr;
+	buffer << tabstr << _T("protected:") << eolstr;
+	buffer << tabstr << _T("private:") << eolstr;
+	buffer << _T("};") << eolstr;
 
 	if (GuardBlock)
 	{
-		buffer << _T('\n');
-		buffer << _T("#endif // ") << GuardWord << _T('\n');
+		buffer << eolstr;
+		buffer << _T("#endif // ") << GuardWord << eolstr;
 	}
 
 	// write buffer to disk
@@ -155,18 +169,18 @@ void ClassWizardDlg::OnOKClick(wxCommandEvent& event)
 	
 	// now the implementation file
 	buffer.Clear();
-	buffer << _T("#include \"") << headerFname.GetFullName() << _T("\"") << _T('\n');
-	buffer << _T('\n');
-	buffer << Name << _T("::") << Name << _T("(") << Constructor << _T(")") << _T('\n');
-	buffer << _T("{") << _T('\n');
-	buffer << _T('\t') << _T("//ctor") << _T('\n');
-	buffer << _T("}") << _T('\n');
-	buffer << _T('\n');
-	buffer << Name << _T("::~") << Name << _T("()") << _T('\n');
-	buffer << _T("{") << _T('\n');
-	buffer << _T('\t') << _T("//dtor") << _T('\n');
-	buffer << _T("}") << _T('\n');
-	buffer << _T('\n');
+	buffer << _T("#include \"") << headerFname.GetFullName() << _T("\"") << eolstr;
+	buffer << eolstr;
+	buffer << Name << _T("::") << Name << _T("(") << Constructor << _T(")") << eolstr;
+	buffer << _T("{") << eolstr;
+	buffer << tabstr << _T("//ctor") << eolstr;
+	buffer << _T("}") << eolstr;
+	buffer << eolstr;
+	buffer << Name << _T("::~") << Name << _T("()") << eolstr;
+	buffer << _T("{") << eolstr;
+	buffer << tabstr << _T("//dtor") << eolstr;
+	buffer << _T("}") << eolstr;
+	buffer << eolstr;
 	// write buffer to disk
 	wxFile impl(UnixFilename(m_Implementation), wxFile::write);
 	if (!impl.IsOpened())

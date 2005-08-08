@@ -51,7 +51,7 @@ ClassWizard::ClassWizard()
 
     m_PluginInfo.name = _T("ClassWizard");
     m_PluginInfo.title = _("Class wizard");
-    m_PluginInfo.version = _("0.1");
+    m_PluginInfo.version = _("0.2");
     m_PluginInfo.description = _("This plugin provides an easy way to create a " \
                                "new C++ class file pair. It's by no means " \
                                "complete yet but it's here nevertheless;)");
