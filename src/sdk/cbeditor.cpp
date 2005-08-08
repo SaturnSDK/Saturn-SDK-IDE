@@ -81,9 +81,22 @@ struct cbEditorInternalData
         wxStyledTextCtrl* control = m_pOwner->GetControl();
         if (position == -1)
             position = control->GetCurrentPos();
+        
+        int count = 0; // Used to count the number of blank lines
+        bool foundlf = false; // For the rare case of CR's without LF's
         while (position)
         {
             wxChar c = control->GetCharAt(--position);
+            if (c == _T('\n')) 
+            {
+            	count++;
+            	foundlf = true;
+            }
+            else if (c == _T('\r') && !foundlf) 
+            	count++;
+            else 
+                foundlf = false;
+            if (count > 1) return 0; // Don't over-indent
             if (c != _T(' ') && c != _T('\t') && c != _T('\n') && c != _T('\r'))
                 return c;
         }
@@ -1224,7 +1237,12 @@ void cbEditor::OnEditorCharAdded(wxStyledTextEvent& event)
                 // increase indentation level (the closing brace is handled in another block)
                 wxChar b = m_pData->GetLastNonWhitespaceChar();
                 if (b == _T('{'))
-                    indent << _T('\t'); // TODO: decide between spaces/tabs
+                {
+                    if(m_pControl->GetUseTabs())
+                        indent << _T('\t'); // 1 tab
+                    else
+                        indent << wxString(_T(' '), m_pControl->GetTabWidth()); // n spaces
+                }
             }
 			m_pControl->InsertText(pos, indent);
 			m_pControl->GotoPos(pos + indent.Length());
