@@ -2087,7 +2087,7 @@ void MainFrame::OnSettingsEnvironment(wxCommandEvent& event)
 	EnvironmentSettingsDlg dlg(this);
 	if (dlg.ShowModal() == wxID_OK)
 	{
-        m_SmallToolBar = ConfigManager::Get()->Read(_T("/environment/toolbar_size"), (long int)0) == 1;
+        m_SmallToolBar = ConfigManager::Get()->Read(_T("/environment/toolbar_size"), (long int)1) == 1;
         if (m_SmallToolBar != tbarsmall)
             CreateToolbars();
         m_pMsgMan->EnableAutoHide(ConfigManager::Get()->Read(_T("/message_manager/auto_hide"), 0L));

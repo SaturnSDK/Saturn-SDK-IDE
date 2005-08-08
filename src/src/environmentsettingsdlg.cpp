@@ -20,7 +20,7 @@ EnvironmentSettingsDlg::EnvironmentSettingsDlg(wxWindow* parent)
 	XRCCTRL(*this, "chkDebugLog", wxCheckBox)->SetValue(ConfigManager::Get()->Read(_T("/message_manager/has_debug_log"), (long int)0));
 	XRCCTRL(*this, "rbAppStart", wxRadioBox)->SetSelection(ConfigManager::Get()->Read(_T("/environment/blank_workspace"), (long int)0));
 	XRCCTRL(*this, "rbProjectOpen", wxRadioBox)->SetSelection(ConfigManager::Get()->Read(_T("/project_manager/open_files"), (long int)1));
-	XRCCTRL(*this, "rbToolbarSize", wxRadioBox)->SetSelection(ConfigManager::Get()->Read(_T("/environment/toolbar_size"), (long int)0));
+	XRCCTRL(*this, "rbToolbarSize", wxRadioBox)->SetSelection(ConfigManager::Get()->Read(_T("/environment/toolbar_size"), (long int)1));
 	XRCCTRL(*this, "chkAutoHideMessages", wxCheckBox)->SetValue(ConfigManager::Get()->Read(_T("/message_manager/auto_hide"), 0L));
 	XRCCTRL(*this, "chkShowEditorCloseButton", wxCheckBox)->SetValue(ConfigManager::Get()->Read(_T("/editor/show_close_button"), 0L));
 	XRCCTRL(*this, "chkShowStartPage", wxCheckBox)->SetValue(ConfigManager::Get()->Read(_T("/environment/start_here_page"), 1));
