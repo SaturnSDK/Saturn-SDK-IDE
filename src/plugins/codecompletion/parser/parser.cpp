@@ -159,7 +159,7 @@ void Parser::ReadOptions()
 	m_MaxThreadsCount = ConfigManager::Get()->Read(_T("/code_completion/max_threads"), 8);
 	m_Options.followLocalIncludes = ConfigManager::Get()->Read(_T("/code_completion/parser_follow_local_includes"), 1L);
 	m_Options.followGlobalIncludes = ConfigManager::Get()->Read(_T("/code_completion/parser_follow_global_includes"), 0L);
-	m_Options.caseSensitive = ConfigManager::Get()->Read(_T("/code_completion/case_sensitive"), 1);
+	m_Options.caseSensitive = ConfigManager::Get()->Read(_T("/code_completion/case_sensitive"), 0L);
 	m_Options.useSmartSense = ConfigManager::Get()->Read(_T("/code_completion/use_SmartSense"), 1);
 	m_Options.wantPreprocessor = ConfigManager::Get()->Read(_T("/code_completion/want_preprocessor"), 0L);
 	m_BrowserOptions.showInheritance = ConfigManager::Get()->Read(_T("/code_completion/browser_show_inheritance"), 0L);
