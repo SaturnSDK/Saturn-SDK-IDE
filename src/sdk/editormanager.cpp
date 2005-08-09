@@ -1136,6 +1136,7 @@ int EditorManager::Replace(wxStyledTextCtrl* control, cbFindReplaceData* data)
 		if (confirm)
 		{
 			ConfirmReplaceDlg dlg(Manager::Get()->GetAppWindow());
+            dlg.CalcPosition(control);
 			switch (dlg.ShowModal())
 			{
 				case crYes:
