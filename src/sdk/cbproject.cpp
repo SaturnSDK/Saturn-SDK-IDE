@@ -99,6 +99,8 @@ void cbProject::NotifyPlugins(wxEventType type)
 
 void cbProject::SetCompilerIndex(int compilerIdx)
 {
+    if(compilerIdx>=CompilerFactory::Compilers.GetCount())
+        return; // Invalid compiler
     if (compilerIdx != m_CompilerIdx)
     {
         // update object filenames
