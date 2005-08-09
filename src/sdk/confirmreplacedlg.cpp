@@ -82,7 +82,6 @@ void ConfirmReplaceDlg::CalcPosition(wxStyledTextCtrl* ed)
 	pt = ed->ClientToScreen(pt);
 	
 	int lineHeight = ed->TextHeight(ed->GetCurrentLine());
-	pt.y += lineHeight;
 	
 	int screenW = wxSystemSettings::GetMetric(wxSYS_SCREEN_X);
 	int screenH = wxSystemSettings::GetMetric(wxSYS_SCREEN_Y);
@@ -100,25 +99,20 @@ void ConfirmReplaceDlg::CalcPosition(wxStyledTextCtrl* ed)
 		pt.x = screenW - w;
 
 	// for the vertical axis, more work has to be done...
-	if (pt.y + h > screenH)
-	{
-		// it doesn't fit to the bottom of the screen
-		// check if it fits to the top
-		if (h < pt.y)
-			pt.y -= h + lineHeight; // fits
-		else
-		{
-			// we have to shrink the height...
-			// determine if pt.y is closer to top or bottom
-			if (pt.y <= screenH / 2)
-				h = screenH = pt.y; // to top
-			else
-			{
-				h = pt.y - lineHeight; // to bottom
-				pt.y = 0;
-			}
-		}
-	}
+	
+    // Does it fit 4 lines above current line?
+    if (h + 4*lineHeight < pt.y)
+        pt.y -= h + 4*lineHeight;
+    else if (pt.y + lineHeight + (2*h) <= screenH)
+    {
+        // One line below current line?
+        pt.y += lineHeight;
+    }
+    else
+    {
+        // Top of the screen
+        pt.y = 0;
+    }
 	// we should be OK now
 	SetSize(pt.x, pt.y, w, h);
 }
