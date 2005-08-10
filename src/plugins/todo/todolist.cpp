@@ -145,6 +145,13 @@ void ToDoList::LoadTypes()
 		cont = conf->GetNextEntry(entry, cookie);
 	}
 	conf->SetPath(oldPath);
+	if(m_Types.GetCount()==0)
+	{
+        m_Types.Add(_T("TODO"));
+        m_Types.Add(_T("FIXME"));
+        m_Types.Add(_T("NOTE"));
+	}
+    SaveTypes();
 }
 
 void ToDoList::SaveTypes()
