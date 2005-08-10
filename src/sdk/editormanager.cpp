@@ -69,7 +69,7 @@ BEGIN_EVENT_TABLE(EditorManager, wxEvtHandler)
     EVT_APP_START_SHUTDOWN(EditorManager::OnAppStartShutdown)
     EVT_NOTEBOOK_PAGE_CHANGED(ID_NBEditorManager, EditorManager::OnPageChanged)
     EVT_NOTEBOOK_PAGE_CHANGING(ID_NBEditorManager, EditorManager::OnPageChanging)
-    EVT_MENU(idEditorManagerCheckFiles, EditorManager::OnCheckForModifiedFiles)   
+    EVT_MENU(idEditorManagerCheckFiles, EditorManager::OnCheckForModifiedFiles)
 #ifdef USE_OPENFILES_TREE
     EVT_UPDATE_UI(ID_EditorManager, EditorManager::OnUpdateUI)
     EVT_TREE_SEL_CHANGING(ID_EditorManager, EditorManager::OnTreeItemActivated)
@@ -87,7 +87,7 @@ EditorManager* EditorManager::Get(wxWindow* parent)
 {
     if(Manager::isappShuttingDown()) // The mother of all sanity checks
         EditorManager::Free();
-    else 
+    else
     if (!EditorManagerProxy::Get())
 	{
 		EditorManagerProxy::Set( new EditorManager(parent) );
@@ -107,7 +107,7 @@ void EditorManager::Free()
 
 // class constructor
 EditorManager::EditorManager(wxWindow* parent)
-    : 
+    :
     m_pNotebook(0L),
     m_pPanel(0L),
     m_LastFindReplaceData(0L),
@@ -149,10 +149,10 @@ EditorManager::EditorManager(wxWindow* parent)
 
     CreateSearchLog();
 	LoadAutoComplete();
-	
+
 #if !wxCHECK_VERSION(2, 5, 0)
 	/*wxNotebookSizer* nbs =*/ new wxNotebookSizer(m_pNotebook);
-#endif	
+#endif
 }
 
 // class destructor
@@ -164,7 +164,7 @@ EditorManager::~EditorManager()
 
 	if (m_Theme)
 		delete m_Theme;
-		
+
 	if (m_LastFindReplaceData)
 		delete m_LastFindReplaceData;
     if (m_pTree)
@@ -336,8 +336,14 @@ EditorBase* EditorManager::IsOpen(const wxString& filename)
 	{
         EditorBase* eb = node->GetData();
         wxString fname = eb->GetFilename();
+#ifdef __WXMSW__
+        // MSW must use case-insensitive comparison
+        if (fname.IsSameAs(uFilename,false) || fname.IsSameAs(EDITOR_MODIFIED + uFilename,false))
+            return eb;
+#else
         if (fname.IsSameAs(uFilename) || fname.IsSameAs(EDITOR_MODIFIED + uFilename))
             return eb;
+#endif
 	}
 
 	return NULL;
@@ -357,7 +363,7 @@ void EditorManager::SetColorSet(EditorColorSet* theme)
     SANITY_CHECK();
 	if (m_Theme)
 		delete m_Theme;
-	
+
 	// copy locally
 	m_Theme = new EditorColorSet(*theme);
 
@@ -413,13 +419,13 @@ cbEditor* EditorManager::Open(const wxString& filename, int pos,ProjectFile* dat
             ed->GetControl()->SetFocus();
         }
     }
-    
+
     // check for ProjectFile
     if (ed && !ed->GetProjectFile())
     {
         // First checks if we're already being passed a ProjectFile
         // as a parameter
-        if(data) 
+        if(data)
         {
             Manager::Get()->GetMessageManager()->DebugLog(_("project data set for %s"), data->file.GetFullPath().c_str());
         }
@@ -604,7 +610,7 @@ bool EditorManager::CloseAllExcept(EditorBase* editor,bool dontsave)
     if(!editor)
         SANITY_CHECK(true);
     SANITY_CHECK(false);
-    
+
     int count = m_EditorsList.GetCount();
 	EditorsList::Node* node = m_EditorsList.GetFirst();
     if(!dontsave)
@@ -617,7 +623,7 @@ bool EditorManager::CloseAllExcept(EditorBase* editor,bool dontsave)
             node = node->GetNext();
         }
     }
-    
+
     count = m_EditorsList.GetCount();
     node = m_EditorsList.GetFirst();
     while (node)
@@ -646,7 +652,7 @@ bool EditorManager::CloseActive(bool dontsave)
 
 bool EditorManager::QueryClose(EditorBase *ed)
 {
-    if(!ed) 
+    if(!ed)
         return true;
     if (ed->GetModified())
     {
@@ -697,10 +703,13 @@ bool EditorManager::Close(EditorBase* editor,bool dontsave)
                 if(!QueryClose(editor))
                     return false;
             wxString filename = editor->GetFilename();
+            // WARNING! The DeleteObject must be BEFORE DeletePage!
+            // Also, do NOT use DeleteNode. Doing so can result
+            // in a segfault (bug #1247249, confirmed several times).
+            m_EditorsList.DeleteObject(editor); // deletes the node, but not the editor
             int edpage = FindPageFromEditor(editor);
             if (edpage != -1)
                 m_pNotebook->DeletePage(edpage);
-            m_EditorsList.DeleteNode(node);
             #ifdef USE_OPENFILES_TREE
             DeleteFilefromTree(filename);
             #endif
@@ -815,7 +824,7 @@ void EditorManager::Print(PrintScope ps, PrintColorMode pcm)
                 cbEditor* ed = InternalGetBuiltinEditor(node);
                 if (ed)
                     ed->Print(false, pcm);
-                    
+
             }
             break;
         }
@@ -872,7 +881,7 @@ void EditorManager::CheckForExternallyModifiedFiles()
                 ed->Touch();
         }
     }
-    
+
     if (failedFiles.GetCount())
     {
         wxString msg;
@@ -894,7 +903,7 @@ bool EditorManager::SwapActiveHeaderSource()
 
     // create a list of search dirs
     wxArrayString dirs;
-    
+
     // get project's include dirs
     cbProject* project = Manager::Get()->GetProjectManager()->GetActiveProject();
     if (project)
@@ -912,7 +921,7 @@ bool EditorManager::SwapActiveHeaderSource()
                     dirs.Add(dir);
             }
         }
-        
+
         // get targets include dirs
         for (int i = 0; i < project->GetBuildTargetsCount(); ++i)
         {
@@ -996,7 +1005,7 @@ int EditorManager::ShowFindDialog(bool replace)
 	if (ed)
 	{
         control = ed->GetControl();
-    
+
         int wordStart = control->WordStartPosition(control->GetCurrentPos(), true);
         int wordEnd = control->WordEndPosition(control->GetCurrentPos(), true);
         wordAtCursor = control->GetTextRange(wordStart, wordEnd);
@@ -1021,10 +1030,10 @@ int EditorManager::ShowFindDialog(bool replace)
 		delete dlg;
 		return -2;
 	}
-	
+
 	if (!m_LastFindReplaceData)
 		m_LastFindReplaceData = new cbFindReplaceData;
-		
+
 	m_LastFindReplaceData->start = 0;
 	m_LastFindReplaceData->end = 0;
 	m_LastFindReplaceData->findText = dlg->GetFindString();
@@ -1037,9 +1046,9 @@ int EditorManager::ShowFindDialog(bool replace)
 	m_LastFindReplaceData->directionDown = dlg->GetDirection() == 1;
 	m_LastFindReplaceData->originEntireScope = dlg->GetOrigin() == 1;
 	m_LastFindReplaceData->scopeSelectedText = dlg->GetScope() == 1;
-	
+
 	delete dlg;
-	
+
 	if (!replace)
 	{
         if (m_LastFindReplaceData->findInFiles)
@@ -1059,7 +1068,7 @@ void EditorManager::CalculateFindReplaceStartEnd(wxStyledTextCtrl* control, cbFi
 
 	data->start = 0;
 	data->end = control->GetLength();
-		
+
 	if (!data->findInFiles)
 	{
 		if (!data->originEntireScope) // from pos
@@ -1099,14 +1108,14 @@ int EditorManager::Replace(wxStyledTextCtrl* control, cbFindReplaceData* data)
 	int start = data->start;
 	int end = data->end;
 	CalculateFindReplaceStartEnd(control, data);
-	
+
 	if ((data->directionDown && (data->start < start)) ||
 		(!data->directionDown && (data->start > start)))
 		data->start = start;
 	if ((data->directionDown && (data->end < end)) ||
 		(!data->directionDown && (data->end > end)))
 		data->end = end;
-	
+
 	if (data->matchWord)
 		flags |= wxSTC_FIND_WHOLEWORD;
 	if (data->startWord)
@@ -1115,7 +1124,7 @@ int EditorManager::Replace(wxStyledTextCtrl* control, cbFindReplaceData* data)
 		flags |= wxSTC_FIND_MATCHCASE;
 	if (data->regEx)
 		flags |= wxSTC_FIND_REGEXP;
-	
+
 	control->BeginUndoAction();
 	int pos = -1;
 	bool replace = false;
@@ -1133,7 +1142,7 @@ int EditorManager::Replace(wxStyledTextCtrl* control, cbFindReplaceData* data)
 		control->SetSelection(pos, pos + lengthFound);
 		data->start = pos;
 		//Manager::Get()->GetMessageManager()->DebugLog("pos=%d, selLen=%d, length=%d", pos, data->end - data->start, lengthFound);
-		
+
 		if (confirm)
 		{
 			ConfirmReplaceDlg dlg(Manager::Get()->GetAppWindow());
@@ -1155,7 +1164,7 @@ int EditorManager::Replace(wxStyledTextCtrl* control, cbFindReplaceData* data)
 					break;
 			}
 		}
-		
+
 		if (!stop)
 		{
 			if (replace)
@@ -1186,7 +1195,7 @@ int EditorManager::Replace(wxStyledTextCtrl* control, cbFindReplaceData* data)
 		}
 	}
 	control->EndUndoAction();
-	
+
 	return pos;
 }
 
@@ -1200,14 +1209,14 @@ int EditorManager::Find(wxStyledTextCtrl* control, cbFindReplaceData* data)
 	int start = data->start;
 	int end = data->end;
 	CalculateFindReplaceStartEnd(control, data);
-	
+
 	if ((data->directionDown && (data->start < start)) ||
 		(!data->directionDown && (data->start > start)))
 		data->start = start;
 	if ((data->directionDown && (data->end < end)) ||
 		(!data->directionDown && (data->end > end)))
 		data->end = end;
-	
+
 	if (data->matchWord)
 		flags |= wxSTC_FIND_WHOLEWORD;
 	if (data->startWord)
@@ -1216,7 +1225,7 @@ int EditorManager::Find(wxStyledTextCtrl* control, cbFindReplaceData* data)
 		flags |= wxSTC_FIND_MATCHCASE;
 	if (data->regEx)
 		flags |= wxSTC_FIND_REGEXP;
-	
+
 	int pos = -1;
 	while (true) // loop while not found and user selects to start again from the top
 	{
@@ -1270,7 +1279,7 @@ int EditorManager::Find(wxStyledTextCtrl* control, cbFindReplaceData* data)
         else
             break; // done
     }
-	
+
 	return pos;
 }
 
@@ -1283,7 +1292,7 @@ int EditorManager::FindInFiles(cbFindReplaceData* data)
         return 0;
 
     bool findInOpenFiles = data->scopeSelectedText; // i.e. find in open files
-    
+
     // let's make a list of all the files to search in
     wxArrayString filesList;
 
@@ -1303,7 +1312,7 @@ int EditorManager::FindInFiles(cbFindReplaceData* data)
         cbProject* prj = Manager::Get()->GetProjectManager()->GetActiveProject();
         if (!prj)
             return 0;
-        
+
         wxString fullpath = _T("");
         for (int i = 0; i < prj->GetFilesCount(); ++i)
         {
@@ -1316,7 +1325,7 @@ int EditorManager::FindInFiles(cbFindReplaceData* data)
             }
         }
     }
-    
+
     // if the list is empty, leave
     if (filesList.GetCount() == 0)
         return 0;
@@ -1341,7 +1350,7 @@ int EditorManager::FindInFiles(cbFindReplaceData* data)
             LOGSTREAM << _("Failed opening ") << filesList[i] << wxT('\n');
             continue; // failed
         }
-        
+
         // now search for first occurence
         if (Find(control, data) == -1)
             continue; // none
@@ -1394,7 +1403,7 @@ int EditorManager::FindNext(bool goingDown, wxStyledTextCtrl* control, cbFindRep
         data = m_LastFindReplaceData;
 	if (!data || !control)
 		return -1;
-	
+
 	if (!goingDown && data->directionDown)
 		data->end = 0;
 	else if (goingDown && !data->directionDown)
@@ -1514,7 +1523,7 @@ wxTreeItemId EditorManager::FindTreeFile(const wxString& filename)
         wxTreeCtrl *tree=GetTree();
         if(!tree || !m_TreeOpenedFiles)
             break;
-#if (wxMAJOR_VERSION == 2) && (wxMINOR_VERSION < 5)	
+#if (wxMAJOR_VERSION == 2) && (wxMINOR_VERSION < 5)
         long int cookie = 0;
 #else
         wxTreeItemIdValue cookie; //2.6.0
@@ -1557,7 +1566,7 @@ void EditorManager::DeleteItemfromTree(wxTreeItemId item)
     wxTreeItemId itemparent=tree->GetItemParent(item);
     if(itemparent!=m_TreeOpenedFiles)
         return;
-    tree->Delete(item);    
+    tree->Delete(item);
 }
 
 void EditorManager::DeleteFilefromTree(const wxString& filename)
@@ -1566,7 +1575,7 @@ void EditorManager::DeleteFilefromTree(const wxString& filename)
     if(Manager::isappShuttingDown())
         return;
     DeleteItemfromTree(FindTreeFile(filename));
-    RefreshOpenedFilesTree();    
+    RefreshOpenedFilesTree();
 }
 
 void EditorManager::AddFiletoTree(EditorBase* ed)
@@ -1603,7 +1612,7 @@ bool EditorManager::RenameTreeFile(const wxString& oldname, const wxString& newn
     wxTreeCtrl *tree = GetTree();
     if(!tree)
         return false;
-#if (wxMAJOR_VERSION == 2) && (wxMINOR_VERSION < 5)	
+#if (wxMAJOR_VERSION == 2) && (wxMINOR_VERSION < 5)
     long int cookie = 0;
 #else
     wxTreeItemIdValue cookie; //2.6.0
@@ -1688,7 +1697,7 @@ void EditorManager::BuildOpenedFilesTree(wxWindow* parent)
 }
 
 void EditorManager::RebuildOpenedFilesTree(wxTreeCtrl *tree)
-{    
+{
 #if defined(DONT_USE_OPENFILES_TREE)
     return;
 #endif
@@ -1718,7 +1727,7 @@ void EditorManager::RebuildOpenedFilesTree(wxTreeCtrl *tree)
         if(GetActiveEditor()==ed)
             tree->SelectItem(item);
     }
-    tree->Expand(m_TreeOpenedFiles);    
+    tree->Expand(m_TreeOpenedFiles);
     tree->Thaw();
 }
 
@@ -1741,14 +1750,14 @@ void EditorManager::RefreshOpenedFilesTree(bool force)
         return;
     bool ismodif=aed->GetModified();
     fname=aed->GetFilename();
-    
+
     if(!force && m_LastActiveFile==fname && m_LastModifiedflag==ismodif)
         return; // Nothing to do
 
     m_LastActiveFile=fname;
     m_LastModifiedflag=ismodif;
     Manager::Get()->GetProjectManager()->FreezeTree();
-#if (wxMAJOR_VERSION == 2) && (wxMINOR_VERSION < 5)	
+#if (wxMAJOR_VERSION == 2) && (wxMINOR_VERSION < 5)
     long int cookie = 0;
 #else
     wxTreeItemIdValue cookie; //2.6.0
@@ -1833,7 +1842,7 @@ void EditorManager::OnUpdateUI(wxUpdateUIEvent& event)
 
     // allow other UpdateUI handlers to process this event
     // *very* important! don't forget it...
-    
+
     event.Skip();
 }
 
@@ -1843,12 +1852,12 @@ void EditorManager::OnTreeItemSelected(wxTreeEvent &event)
     event.Skip();
 }
 
-void EditorManager::OnTreeItemActivated(wxTreeEvent &event) 
+void EditorManager::OnTreeItemActivated(wxTreeEvent &event)
 {
     event.Skip();
 }
 
-void EditorManager::OnTreeItemRightClick(wxTreeEvent &event) 
+void EditorManager::OnTreeItemRightClick(wxTreeEvent &event)
 {
     event.Skip();
 }
