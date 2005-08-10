@@ -73,12 +73,28 @@ struct cbEditorInternalData
     cbEditor* m_pOwner;
 
     // add member vars/funcs below
-    
+    wxString GetEOLString() const
+    {
+        wxString eolstring;
+        cbStyledTextCtrl* control = m_pOwner->GetControl();
+        switch (control->GetEOLMode()) 
+        {
+            case wxSTC_EOL_LF:
+                eolstring = _T("\n");
+                break;
+            case wxSTC_EOL_CR:
+                eolstring = _T("\r");
+                break;
+            default:
+                eolstring = _T("\r\n");
+        }
+        return eolstring;
+    }
     // funcs
     /** Get the last non-whitespace character before position */
     wxChar GetLastNonWhitespaceChar(int position = -1)
     {
-        wxStyledTextCtrl* control = m_pOwner->GetControl();
+        cbStyledTextCtrl* control = m_pOwner->GetControl();
         if (position == -1)
             position = control->GetCurrentPos();
         
@@ -105,7 +121,7 @@ struct cbEditorInternalData
 
     int FindBlockStart(int position, wxChar blockStart, wxChar blockEnd, bool skipNested = true)
     {
-        wxStyledTextCtrl* control = m_pOwner->GetControl();
+        cbStyledTextCtrl* control = m_pOwner->GetControl();
         int lvl = 0;
         wxChar b = control->GetCharAt(position);
         while (b)
@@ -127,20 +143,46 @@ struct cbEditorInternalData
     /** Strip Trailing Blanks before saving */
     void StripTrailingSpaces()
     {
-        wxStyledTextCtrl* control = m_pOwner->GetControl();
+        cbStyledTextCtrl* control = m_pOwner->GetControl();
+        // The following code was adapted from the SciTE sourcecode
+
+        int maxLines = control->GetLineCount();
+        for (int line = 0; line < maxLines; line++) {
+            int lineStart = control->PositionFromLine(line);
+            int lineEnd = control->GetLineEndPosition(line);
+            int i = lineEnd-1;
+            wxChar ch = (wxChar)(control->GetCharAt(i));
+            while ((i >= lineStart) && ((ch == _T(' ')) || (ch == _T('\t')))) 
+            {
+                i--;
+                ch = (wxChar)(control->GetCharAt(i));
+            }
+            if (i < (lineEnd-1)) {
+                control->SetTargetStart(i+1);
+                control->SetTargetEnd(lineEnd);
+                control->ReplaceTarget(_T(""));
+            }
+        }
     	
     }
     
     /** Add extra blank line to the file */
     void EnsureFinalLineEnd()
     {
-    	wxStyledTextCtrl* control = m_pOwner->GetControl();
+    	cbStyledTextCtrl* control = m_pOwner->GetControl();
+        // The following code was adapted from the SciTE sourcecode
+        int maxLines = control->GetLineCount();
+        int enddoc = control->PositionFromLine(maxLines);
+        if(maxLines <= 1 || enddoc > control->PositionFromLine(maxLines-1))
+            control->InsertText(enddoc,GetEOLString());
     }
     
     /** Make sure all the lines end with the same EOL mode */
     void EnsureConsistentLineEnds()
     {
     	wxStyledTextCtrl* control = m_pOwner->GetControl();
+        // The following code was adapted from the SciTE sourcecode
+    	control->ConvertEOLs(control->GetEOLMode());
     }
 
     //vars
@@ -591,6 +633,13 @@ bool cbEditor::Save()
 {
 	if (!GetModified())
 		return true;
+		
+    if(m_pData->m_strip_trailing_spaces)
+        m_pData->StripTrailingSpaces();
+    if(m_pData->m_ensure_consistent_line_ends)
+        m_pData->EnsureConsistentLineEnds();
+    if(m_pData->m_ensure_final_line_end)
+        m_pData->EnsureFinalLineEnd();
 		
     if (!m_IsOK)
     {

@@ -116,14 +116,12 @@
                                 <object class="sizeritem">
                                   <object class="wxCheckBox" name="chkStripTrailings">
                                     <label>Strip trailing blanks</label>
-                                    <enabled>0</enabled>
                                     <checked>1</checked>
                                   </object>
                                 </object>
                                 <object class="sizeritem">
                                   <object class="wxCheckBox" name="chkEnsureFinalEOL">
                                     <label>End files with extra LF</label>
-                                    <enabled>0</enabled>
                                   </object>
                                 </object>
                                 <object class="sizeritem">
@@ -138,7 +136,6 @@
                                         </object>
                                         <object class="sizeritem">
                                           <object class="wxComboBox" name="cmbEOLMode">
-                                            <enabled>1</enabled>
                                             <content>
                                               <item>CR LF</item>
                                               <item>CR</item>
