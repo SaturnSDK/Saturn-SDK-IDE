@@ -626,6 +626,7 @@ bool EditorManager::CloseAllExcept(EditorBase* editor,bool dontsave)
 
     count = m_EditorsList.GetCount();
     node = m_EditorsList.GetFirst();
+    m_pNotebook->Hide();
     while (node)
 	{
         EditorBase* eb = node->GetData();
@@ -638,6 +639,7 @@ bool EditorManager::CloseAllExcept(EditorBase* editor,bool dontsave)
         else
             node = node->GetNext();
     }
+    m_pNotebook->Show();
     #ifdef USE_OPENFILES_TREE
     RebuildOpenedFilesTree();
     #endif
