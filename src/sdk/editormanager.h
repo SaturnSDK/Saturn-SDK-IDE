@@ -129,8 +129,11 @@ class DLLIMPORT EditorManager : public wxEvtHandler
         void ShowOpenFilesTree(bool show);
         /// Refresh the open files tree
         void RefreshOpenFilesTree();
-        /// Return true if opened files tree is visible, false if not
+        /// Return true if opened files tree is visible, false if not        
         bool IsOpenFilesTreeVisible();
+        /// Tells EditorManager that the OpenFilesTree needs repainting
+        void InvalidateTree() { if(this) m_needsrefresh = true; }
+
         /** Builds Opened Files tree in the Projects tab
           */
         wxTreeCtrl *EditorManager::GetTree();
@@ -188,6 +191,7 @@ class DLLIMPORT EditorManager : public wxEvtHandler
         wxImageList* m_pImages;
         wxTreeCtrl* m_pTree;
         wxTreeItemId m_TreeOpenedFiles;
+        bool m_needsrefresh;
         #endif
         wxString m_LastActiveFile;
         bool m_LastModifiedflag;

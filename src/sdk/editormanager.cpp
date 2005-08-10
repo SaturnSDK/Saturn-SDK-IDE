@@ -140,6 +140,7 @@ EditorManager::EditorManager(wxWindow* parent)
 
 	m_EditorsList.Clear();
     #ifdef USE_OPENFILES_TREE
+    m_needsrefresh = false;
 	ShowOpenFilesTree(ConfigManager::Get()->Read(_T("/editor/show_opened_files_tree"), true));
 	#endif
 	m_Theme = new EditorColorSet(ConfigManager::Get()->Read(_T("/editor/color_sets/active_color_set"), COLORSET_DEFAULT));
@@ -1465,6 +1466,8 @@ void EditorManager::RefreshOpenFilesTree()
     wxWindow* win = Manager::Get()->GetNotebookPage(_("Projects"),wxTAB_TRAVERSAL | wxCLIP_CHILDREN,true);
     wxSplitPanel* mypanel = (wxSplitPanel*)(win);
     mypanel->RefreshSplitter(ID_EditorManager,ID_ProjectManager);
+    mypanel->Refresh();
+    m_pTree->Refresh();
 }
 
 void EditorManager::ShowOpenFilesTree(bool show)
@@ -1817,6 +1820,11 @@ void EditorManager::OnUpdateUI(wxUpdateUIEvent& event)
 //    SANITY_CHECK();
     if(!Manager::isappShuttingDown())
         RefreshOpenedFilesTree();
+    if(m_pTree && m_needsrefresh)
+    {
+        m_pTree->Refresh();
+        m_needsrefresh=false;
+    }
 
     if(edman_closebutton)
     {

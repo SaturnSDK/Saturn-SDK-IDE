@@ -658,6 +658,9 @@ bool ProjectManager::CloseProject(cbProject* project,bool dontsave)
 bool ProjectManager::CloseActiveProject(bool dontsave)
 {
     SANITY_CHECK(false);
+    #ifdef USE_OPENFILES_TREE
+    Manager::Get()->GetEditorManager()->InvalidateTree();
+    #endif
     if (!m_pActiveProject)
         return true;
     if(m_sanitycheck_shutdown) // if shutdown, don't ask.
@@ -683,6 +686,10 @@ bool ProjectManager::CloseActiveProject(bool dontsave)
         SetProject(m_pProjects->Item(0));
     else
         SetProject(0L);
+
+    #ifdef USE_OPENFILES_TREE
+    Manager::Get()->GetEditorManager()->InvalidateTree();
+    #endif
     return true;
 }
 
@@ -1496,6 +1503,7 @@ void ProjectManager::OnCloseProject(wxCommandEvent& event)
         else
             CloseProject(proj);
     }
+    Manager::Get()->GetAppWindow()->Refresh();
 }
 
 void ProjectManager::OnCloseFile(wxCommandEvent& event)

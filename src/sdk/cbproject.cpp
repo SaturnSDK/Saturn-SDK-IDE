@@ -99,7 +99,7 @@ void cbProject::NotifyPlugins(wxEventType type)
 
 void cbProject::SetCompilerIndex(int compilerIdx)
 {
-    if(compilerIdx>=CompilerFactory::Compilers.GetCount())
+    if(abs(compilerIdx)>=CompilerFactory::Compilers.GetCount())
         return; // Invalid compiler
     if (compilerIdx != m_CompilerIdx)
     {
@@ -422,7 +422,9 @@ bool cbProject::LoadLayout()
     {
         case 0: // open all files
             {
-                Manager::Get()->GetAppWindow()->Freeze();
+//                Manager::Get()->GetAppWindow()->Freeze();
+                if (Manager::Get()->GetEditorManager()->GetNotebook())
+                    Manager::Get()->GetEditorManager()->GetNotebook()->Hide();
                 FilesList::Node* node = m_Files.GetFirst();
                 while(node)
                 {
@@ -430,7 +432,10 @@ bool cbProject::LoadLayout()
                     Manager::Get()->GetEditorManager()->Open(f->file.GetFullPath(),0,f);
                     node = node->GetNext();
                 }
-                Manager::Get()->GetAppWindow()->Thaw();
+//                Manager::Get()->GetAppWindow()->Thaw();
+                if (Manager::Get()->GetEditorManager()->GetNotebook())
+                    Manager::Get()->GetEditorManager()->GetNotebook()->Show();
+
 #if !wxCHECK_VERSION(2,5,0)
                 // this is the only way I 've found to correctly refresh
                 // under wx2.4.2
@@ -439,6 +444,7 @@ bool cbProject::LoadLayout()
                 if (Manager::Get()->GetEditorManager()->GetActiveEditor())
                     Manager::Get()->GetEditorManager()->GetActiveEditor()->Refresh();
 #endif
+                Manager::Get()->GetAppWindow()->Refresh();
             }
             break;
         
@@ -450,7 +456,9 @@ bool cbProject::LoadLayout()
                 if (loader.Open(fname.GetFullPath()))
                 {
                     FilesList::Node* node = m_Files.GetFirst();
-                    Manager::Get()->GetAppWindow()->Freeze();
+                    if (Manager::Get()->GetEditorManager()->GetNotebook())
+                        Manager::Get()->GetEditorManager()->GetNotebook()->Hide();
+//                    Manager::Get()->GetAppWindow()->Freeze();
                     while(node)
                     {
                         ProjectFile* f = node->GetData();
@@ -473,7 +481,10 @@ bool cbProject::LoadLayout()
                             eb->Activate();
                         }
                     }
-                    Manager::Get()->GetAppWindow()->Thaw();
+                    if (Manager::Get()->GetEditorManager()->GetNotebook())
+                        Manager::Get()->GetEditorManager()->GetNotebook()->Show();
+
+//                    Manager::Get()->GetAppWindow()->Thaw();
 #if !wxCHECK_VERSION(2,5,0)
                     // this is the only way I 've found to correctly refresh
                     // under wx2.4.2
@@ -482,6 +493,7 @@ bool cbProject::LoadLayout()
                     if (Manager::Get()->GetEditorManager()->GetActiveEditor())
                         Manager::Get()->GetEditorManager()->GetActiveEditor()->Refresh();
 #endif
+                    Manager::Get()->GetAppWindow()->Refresh();
                     return true;
                 }
             }
@@ -860,7 +872,7 @@ bool cbProject::CloseAllFiles(bool dontsave)
 
 	// now free the rest of the project files
     int count = m_Files.GetCount();
-Manager::Get()->GetAppWindow()->Freeze();
+    Manager::Get()->GetAppWindow()->Freeze();
     FilesList::Node* node = m_Files.GetFirst();
     while(node)
     {
@@ -875,7 +887,8 @@ Manager::Get()->GetAppWindow()->Freeze();
         else
             node = node->GetNext();
     }
-Manager::Get()->GetAppWindow()->Thaw();
+    Manager::Get()->GetAppWindow()->Thaw();
+    Manager::Get()->GetAppWindow()->Refresh();
     return count == 0;
 }
 
