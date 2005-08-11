@@ -18,11 +18,12 @@ enum std_widgets
     wxsStaticTextId,
     wxsComboBoxId,
     wxsListBoxId,
+    wxsPanelId,
     
     /* Windows */
     wxsDialogId,
     wxsFrameId,
-    wxsPanelId,
+    wxsPanelrId,
     
     /* Count */
     wxsStdIdCount
@@ -44,7 +45,7 @@ class wxsStdManagerT : public wxsWidgetManager
         virtual const wxsWidgetInfo* GetWidgetInfo(int Number);
         
         /** Getting new widget */
-        virtual wxsWidget* ProduceWidget(int Id);
+        virtual wxsWidget* ProduceWidget(int Id,wxsWindowRes* Res);
         
         /** Killing widget */
         virtual void KillWidget(wxsWidget* Widget);

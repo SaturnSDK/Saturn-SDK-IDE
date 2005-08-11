@@ -7,6 +7,7 @@
 #include "wxspalette.h"
 #include "wxsmith.h"
 #include "wxsresource.h"
+#include "wxsdragwindow.h"
 
 wxsWindowEditor::wxsWindowEditor(wxWindow* parent, const wxString& title,wxsResource* Resource):
     wxsEditor(parent,title,Resource),
@@ -24,11 +25,9 @@ wxsWindowEditor::wxsWindowEditor(wxWindow* parent, const wxString& title,wxsReso
     Scroll->SetBackgroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_APPWORKSPACE));
     
     SetSizer(Sizer);
-    SetAutoLayout(true);
-    
-    wxsEvent SelectEvent(wxEVT_SELECT_RES,0,Resource);
-    wxPostEvent(wxSmith::Get(),SelectEvent);
 
+    DragWnd = new wxsDragWindow(Scroll,NULL,Scroll->GetSize());
+    DragWnd->Hide();
 }
 
 wxsWindowEditor::~wxsWindowEditor()
@@ -55,33 +54,42 @@ void wxsWindowEditor::BuildPreview(wxsWidget* TopWidget)
     Freeze();
     
     KillCurrentPreview();
-
+   
     // Creating new sizer
 
     wxWindow* TopPreviewWindow = TopWidget ? TopWidget->CreatePreview(Scroll,this) : NULL;
     CurrentWidget = TopWidget;
     
-    SetVirtualSizeHints(1,1);
     if ( TopPreviewWindow )
     {
         wxSizer* NewSizer = new wxGridSizer(1);
-        NewSizer->Add(TopPreviewWindow,0,wxALIGN_CENTRE_VERTICAL|wxALIGN_CENTRE_HORIZONTAL|wxALL,10);
+        NewSizer->Add(TopPreviewWindow,0,/*wxALIGN_CENTRE_VERTICAL|wxALIGN_CENTRE_HORIZONTAL|*/wxALL,10);
         Scroll->SetVirtualSizeHints(1,1);
         Scroll->SetSizer(NewSizer);
         NewSizer->SetVirtualSizeHints(Scroll);
-        TopPreviewWindow->Refresh();
+        Layout();
+        wxSize Virtual = Scroll->GetVirtualSize();
+        wxSize Real = Scroll->GetSize();
+        wxSize Drag(Virtual.GetWidth() > Real.GetWidth() ? Virtual.GetWidth() : Real.GetWidth(),
+                    Virtual.GetHeight() > Real.GetHeight() ? Virtual.GetHeight() : Real.GetHeight());
+        DragWnd->SetSize(Drag);
+        DragWnd->SetWidget(TopWidget);
+        DragWnd->Show();
     }
     
     Thaw();
-    Layout();
-    WidgetRefreshReq(this);
+
+    #if !wxCHECK_VERSION(2,6,0)
+        WidgetRefreshReq(this);
+    #endif
 }
 
 void wxsWindowEditor::KillCurrentPreview()
 {
+    Scroll->SetSizer(NULL);
     if ( CurrentWidget ) CurrentWidget->KillPreview();
     CurrentWidget = NULL;
-   
+    DragWnd->Hide();
 }
 
 void wxsWindowEditor::OnMouseClick(wxMouseEvent& event)
@@ -96,9 +104,16 @@ void wxsWindowEditor::OnActivate(wxActivateEvent& event)
 {
     if ( event.GetActive() )
     {
-        wxsEvent Select(wxEVT_SELECT_RES,0,GetResource());
-        wxPostEvent(wxSmith::Get(),Select);
+    	wxsSelectRes(GetResource());
     }
+}
+
+void wxsWindowEditor::OnSelectWidget(wxsEvent& event)
+{
+	if ( DragWnd )
+	{
+		DragWnd->ProcessEvent(event);
+	}
 }
 
 void wxsWindowEditor::PreviewReshaped()
@@ -117,22 +132,17 @@ void wxsWindowEditor::PreviewReshaped()
 
 void wxsWindowEditor::MyUnbind()
 {
-    wxsEvent Unselect(wxEVT_UNSELECT_RES,0,GetResource());
-    wxPostEvent(wxSmith::Get(),Unselect);
+	wxsUnselectRes(GetResource());
     KillCurrentPreview();
 }
 
 bool wxsWindowEditor::Close()
 {
-	if ( GetResource() )
-	{
-		GetResource()->NotifyChange();
-	}
-	
 	return wxsEditor::Close();
 }
 
 BEGIN_EVENT_TABLE(wxsWindowEditor,wxsEditor)
     EVT_LEFT_DOWN(wxsWindowEditor::OnMouseClick)
     EVT_ACTIVATE(wxsWindowEditor::OnActivate)
+    EVT_SELECT_WIDGET(wxsWindowEditor::OnSelectWidget)
 END_EVENT_TABLE()

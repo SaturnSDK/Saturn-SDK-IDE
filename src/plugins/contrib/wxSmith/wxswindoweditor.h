@@ -6,8 +6,10 @@
 #include "wxsproject.h"
 #include "wxseditor.h"
 #include "wxscoder.h"
+#include "wxsevent.h"
 
 class wxsWidget;
+class wxsDragWindow;
 
 class wxsWindowEditor : public wxsEditor
 {
@@ -51,9 +53,13 @@ class wxsWindowEditor : public wxsEditor
 		/* Event handlers */
         void OnMouseClick(wxMouseEvent& event);
         void OnActivate(wxActivateEvent& event);
+        void OnSelectWidget(wxsEvent& event);
         
         /** Root widget of currently edited window */
         wxsWidget* CurrentWidget;
+        
+        /** New layer used for dragging widgets */
+        wxsDragWindow* DragWnd;
         
         DECLARE_EVENT_TABLE()
 };
