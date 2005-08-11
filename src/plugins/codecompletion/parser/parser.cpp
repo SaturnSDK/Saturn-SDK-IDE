@@ -208,7 +208,7 @@ bool Parser::ReadFromCache(wxFile* f)
     }
 
     LinkInheritance(); // fix ancestors relationships
-    
+
     m_UsingCache = true;
     m_CacheFilesCount = m_ParsedFiles.GetCount();
     m_CacheTokensCount = m_Tokens.GetCount();
@@ -268,7 +268,7 @@ Token* Parser::LoadTokenFromCache(wxFile* f, Token* parent)
 
     Token* token = new Token;
     token->m_pParent = parent;
-    
+
     bool ok = false;
     // this loop actually runs only once
     // it is a block that if we break before ok==true, the token is considered
@@ -290,7 +290,7 @@ Token* Parser::LoadTokenFromCache(wxFile* f, Token* parent)
         if (!LoadIntFromFile(f, (int*)&token->m_TokenKind)) break;
         if (!LoadIntFromFile(f, (int*)&token->m_IsOperator)) break;
         if (!LoadIntFromFile(f, (int*)&token->m_IsLocal)) break;
-        
+
         ok = true;
         m_Tokens.Add(token);
         if (parent)
@@ -301,7 +301,7 @@ Token* Parser::LoadTokenFromCache(wxFile* f, Token* parent)
 
         for (int i = 0; i < ccount; ++i)
             LoadTokenFromCache(f, token);
-        
+
         break; // no looping
     }
 
@@ -432,19 +432,19 @@ int Parser::GetTokenKindImage(Token* token)
 {
     if (!token)
         return PARSER_IMG_NONE;
-        
+
 	switch (token->m_TokenKind)
 	{
 		case tkPreprocessor: return PARSER_IMG_PREPROCESSOR;
-		
+
 		case tkEnum: return PARSER_IMG_ENUM;
-		
+
 		case tkEnumerator: return PARSER_IMG_ENUMERATOR;
-		
+
 		case tkClass: return PARSER_IMG_CLASS;
 
 		case tkNamespace: return PARSER_IMG_NAMESPACE;
-		
+
 		case tkConstructor:
 			switch (token->m_Scope)
 			{
@@ -460,7 +460,7 @@ int Parser::GetTokenKindImage(Token* token)
 				case tsPrivate: return PARSER_IMG_DTOR_PRIVATE;
 				default: return PARSER_IMG_DTOR_PUBLIC;
 			}
-			
+
 		case tkFunction:
 			switch (token->m_Scope)
 			{
@@ -468,7 +468,7 @@ int Parser::GetTokenKindImage(Token* token)
 				case tsPrivate: return PARSER_IMG_FUNC_PRIVATE;
 				default: return PARSER_IMG_FUNC_PUBLIC;
 			}
-			
+
 		case tkVariable:
 			switch (token->m_Scope)
 			{
@@ -554,7 +554,7 @@ void Parser::ScheduleThreads()
 		thread->Run();
 	}
 	delete lock;
-	
+
 	if (Done())
 	{
         lock = new wxMutexLocker(s_mutexListProtection);
@@ -621,10 +621,10 @@ void Parser::LinkInheritance(bool tempsOnly)
 	for (unsigned int i = 0; i < m_Tokens.GetCount(); ++i)
 	{
 		Token* token = m_Tokens[i];
-		
+
 		if (token->m_TokenKind != tkClass)
 			continue;
-			
+
 		if (tempsOnly && !token->m_IsTemporary)
 			continue;
 
@@ -696,7 +696,7 @@ bool Parser::Parse(const wxString& bufferOrFilename, bool isLocal, ParserThreadO
 #endif
 		return false; // already parsed
     }
-	
+
 	ParserThread* thread = new ParserThread(this,&this->m_abort_flag,
 											buffOrFile,
 											isLocal,
@@ -708,16 +708,17 @@ bool Parser::Parse(const wxString& bufferOrFilename, bool isLocal, ParserThreadO
         Manager::Get()->GetMessageManager()->DebugLog(_("Can't create new thread!"));
 #endif
         thread->Delete();
+        delete thread;
 		return false;
 	}
-	
+
 	if (!opts.useBuffer)
 	{
 		lock = new wxMutexLocker(s_mutexListProtection);
 		m_ThreadsStore.Add(thread);
 		m_ParsedFiles.Add(buffOrFile);
 		delete lock;
-	
+
 		ScheduleThreads();
 		return true;
 	}
@@ -725,6 +726,7 @@ bool Parser::Parse(const wxString& bufferOrFilename, bool isLocal, ParserThreadO
 	{
 		bool ret = thread->Parse();
 		LinkInheritance(true);
+		thread->Delete();
 		delete thread;
 		return ret;
 	}
@@ -748,7 +750,7 @@ bool Parser::RemoveFile(const wxString& filename)
 {
 	wxMutexLocker lock(s_mutexListProtection);
 	wxMutexLocker lock1(s_mutexProtection);
-	
+
 	wxString file = UnixFilename(filename);
 	if (m_ParsedFiles.Index(file) != wxNOT_FOUND)
 	{
@@ -782,7 +784,7 @@ bool Parser::Reparse(const wxString& filename, bool isLocal)
 	wxMutexLocker* lock = new wxMutexLocker(s_mutexListProtection);
 	m_ReparsedFiles.Add(file);
 	delete lock;
-	
+
 	return Parse(file, isLocal);
 }
 
@@ -796,14 +798,14 @@ void Parser::Clear()
 	m_ParsedFiles.Clear();
 	m_ReparsedFiles.Clear();
 	m_IncludeDirs.Clear();
-	
+
 	wxMutexLocker lock(s_mutexProtection);
 	WX_CLEAR_ARRAY(m_Tokens);
 	m_Tokens.Clear();
 
 	wxSafeYield();
 	ConnectEvents();
-	
+
 	m_UsingCache = false;
 	m_CacheFilesCount = 0;
 	m_CacheTokensCount = 0;
@@ -813,7 +815,7 @@ void Parser::ClearTemporaries()
 {
 	if (!Done())
 		return;
-	
+
 	unsigned int i = 0;
 	while (i < m_Tokens.GetCount())
 	{
@@ -902,7 +904,7 @@ void Parser::OnParseFile(wxCommandEvent& event)
 {
 	// a ParserThread ran into an #include directive
 	// it's up to us to decide to parse this file...
-	
+
 	if ((event.GetInt() == 0 && !m_Options.followLocalIncludes) ||
 		(event.GetInt() == 1 && !m_Options.followGlobalIncludes))
 		return;
@@ -913,7 +915,7 @@ void Parser::OnParseFile(wxCommandEvent& event)
 	wxFileName fname;
 	wxFileName source;
 	wxString base;
-	
+
 	if (idx == -1)
 		return;
 	fname.Assign(filename.Mid(idx + 1));
@@ -944,7 +946,7 @@ void Parser::OnParseFile(wxCommandEvent& event)
 	if (abort)
 		return; // the file is being re-parsed; don't follow includes
 	*/
-	
+
 	if (m_ParsedFiles.Index(filename) != wxNOT_FOUND) // parsed file
         return;
 //	Manager::Get()->GetMessageManager()->DebugLog("Adding in parse queue: %s", filename.c_str());
@@ -1078,14 +1080,14 @@ void Parser::AddTreeNode(wxTreeCtrl& tree, const wxTreeItemId& parentNode, Token
 	if (!token->m_ActualType.IsEmpty())
 		 str = str + _T(" : ") + token->m_ActualType;
 	wxTreeItemId node = childrenOnly ? parentNode : tree.AppendItem(parentNode, str, image, -1, ctd);
-	
+
 	// add children
 	for (unsigned int i = 0; i < token->m_Children.GetCount(); ++i)
 	{
 		Token* childToken = token->m_Children[i];
 		AddTreeNode(tree, node, childToken);
 	}
-	
+
 	if (!m_BrowserOptions.showInheritance || (token->m_TokenKind != tkClass && token->m_TokenKind != tkNamespace))
 		return;
 	// add ancestor's children
