@@ -29,6 +29,7 @@
 #include <wx/dir.h>
 #include <wx/textdlg.h>
 #include <wx/splitter.h>
+#include <wx/filename.h>
 
 #include "projectmanager.h" // class's header file
 #include "sdk_events.h"
@@ -178,9 +179,11 @@ ProjectManager::ProjectManager(wxNotebook* parent)
     m_TreeUseFolders(true),
     m_TreeFreezeCounter(0),
     m_IsLoadingProject(false),
-	m_IsLoadingWorkspace(false)
+	m_IsLoadingWorkspace(false),
+	m_InitialDir(_T(""))
 {
     SC_CONSTRUCTOR_BEGIN
+    m_InitialDir=wxFileName::GetCwd();
     m_pParent = parent;
     m_pActiveProject = 0L;
     m_pProjects = new ProjectsArray;
@@ -636,6 +639,8 @@ bool ProjectManager::CloseAllProjects(bool dontsave)
     }
     RebuildTree();
     UnfreezeTree(true);
+    if(!m_InitialDir.IsEmpty())
+        wxFileName::SetCwd(m_InitialDir);
     return true;
 }
 
@@ -663,7 +668,9 @@ bool ProjectManager::CloseProject(cbProject* project,bool dontsave)
 
     if (!same)
 	    SetProject(tmp);
-	return ret;
+    if(!m_InitialDir.IsEmpty()) // Restore the working directory
+        wxFileName::SetCwd(m_InitialDir);
+    return ret;
 }
 
 bool ProjectManager::CloseActiveProject(bool dontsave)
