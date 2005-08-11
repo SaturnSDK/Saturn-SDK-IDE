@@ -12,6 +12,7 @@
 #include "projectloader.h"
 #include "compilerfactory.h"
 #include "globals.h"
+#include "customvars.h"
 
 ProjectLoader::ProjectLoader(cbProject* project)
     : m_pProject(project),
@@ -31,25 +32,25 @@ bool ProjectLoader::Open(const wxString& filename)
     if (!pMsg)
         return false;
 
-    pMsg->DebugLog("Loading project file...");
-    TiXmlDocument doc(filename.c_str());
+    pMsg->DebugLog(_("Loading project file..."));
+    TiXmlDocument doc(filename.mb_str());
     if (!doc.LoadFile())
         return false;
 
-    pMsg->DebugLog("Parsing project file...");
+    pMsg->DebugLog(_("Parsing project file..."));
     TiXmlElement* root;
     TiXmlElement* proj;
     
     root = doc.FirstChildElement("Code::Blocks_project_file");
     if (!root)
     {
-        pMsg->DebugLog("Not a valid Code::Blocks project file...");
+        pMsg->DebugLog(_("Not a valid Code::Blocks project file..."));
         return false;
     }
     proj = root->FirstChildElement("Project");
     if (!proj)
     {
-        pMsg->DebugLog("No 'Project' element in file...");
+        pMsg->DebugLog(_("No 'Project' element in file..."));
         return false;
     }
     
@@ -127,7 +128,7 @@ void ProjectLoader::ConvertLibraries(CompileTargetBase* object)
             opt.Remove(0, 2);
             wxString ext = compiler->GetSwitches().libExtension;
             if (!ext.IsEmpty())
-                ext = "." + ext;
+                ext = _T(".") + ext;
             linkLibs.Add(compiler->GetSwitches().libPrefix + opt + ext);
             linkerOpts.RemoveAt(i, 1);
         }
@@ -161,10 +162,10 @@ void ProjectLoader::DoProjectOptions(TiXmlElement* parentNode)
     while (node)
     {
         if (node->Attribute("title"))
-            title = node->Attribute("title");
+            title = _U(node->Attribute("title"));
         
         if (node->Attribute("makefile"))
-            makefile = node->Attribute("makefile");
+            makefile = _U(node->Attribute("makefile"));
 
         if (node->Attribute("makefile_is_custom"))
             makefile_custom = strncmp(node->Attribute("makefile_is_custom"), "1", 1) == 0;
@@ -195,6 +196,7 @@ void ProjectLoader::DoBuild(TiXmlElement* parentNode)
     while (node)
     {
         DoBuildTarget(node);
+        DoEnvironment(node, m_pProject);
         node = node->NextSiblingElement("Build");
     }
 }
@@ -208,13 +210,13 @@ void ProjectLoader::DoBuildTarget(TiXmlElement* parentNode)
     while (node)
     {
         ProjectBuildTarget* target = 0L;
-        wxString title = node->Attribute("title");
+        wxString title = _U(node->Attribute("title"));
         if (!title.IsEmpty())
             target = m_pProject->AddBuildTarget(title);
 
         if (target)
         {
-            Manager::Get()->GetMessageManager()->DebugLog("Loading target %s", title.c_str());
+            Manager::Get()->GetMessageManager()->DebugLog(_("Loading target %s"), title.c_str());
             DoBuildTargetOptions(node, target);
             DoCompilerOptions(node, target);
             DoResourceCompilerOptions(node, target);
@@ -222,6 +224,7 @@ void ProjectLoader::DoBuildTarget(TiXmlElement* parentNode)
             DoIncludesOptions(node, target);
             DoLibsOptions(node, target);
             DoExtraCommands(node, target);
+            DoEnvironment(node, target);
         }
 
         node = node->NextSiblingElement("Target");
@@ -258,19 +261,19 @@ void ProjectLoader::DoBuildTargetOptions(TiXmlElement* parentNode, ProjectBuildT
             use_console_runner = strncmp(node->Attribute("use_console_runner"), "0", 1) != 0;
 
         if (node->Attribute("output"))
-            output = node->Attribute("output");
+            output = _U(node->Attribute("output"));
 
         if (node->Attribute("working_dir"))
-            working_dir = node->Attribute("working_dir");
+            working_dir = _U(node->Attribute("working_dir"));
 
         if (node->Attribute("object_output"))
-            obj_output = node->Attribute("object_output");
+            obj_output = _U(node->Attribute("object_output"));
 
         if (node->Attribute("deps_output"))
-            deps_output = node->Attribute("deps_output");
+            deps_output = _U(node->Attribute("deps_output"));
             
         if (node->Attribute("external_deps"))
-            deps = node->Attribute("external_deps");
+            deps = _U(node->Attribute("external_deps"));
             
         if (node->Attribute("type"))
             type = atoi(node->Attribute("type"));
@@ -279,10 +282,10 @@ void ProjectLoader::DoBuildTargetOptions(TiXmlElement* parentNode, ProjectBuildT
             compilerIdx = atoi(node->Attribute("compiler"));
 
         if (node->Attribute("parameters"))
-            parameters = node->Attribute("parameters");
+            parameters = _U(node->Attribute("parameters"));
 
         if (node->Attribute("host_application"))
-            hostApplication = node->Attribute("host_application");
+            hostApplication = _U(node->Attribute("host_application"));
             
         if (node->Attribute("includeInTargetAll"))
             includeInTargetAll = atoi(node->Attribute("includeInTargetAll")) != 0;
@@ -342,8 +345,8 @@ void ProjectLoader::DoCompilerOptions(TiXmlElement* parentNode, ProjectBuildTarg
     TiXmlElement* child = node->FirstChildElement("Add");
     while (child)
     {
-        wxString option = child->Attribute("option");
-        wxString dir = child->Attribute("directory");
+        wxString option = _U(child->Attribute("option"));
+        wxString dir = _U(child->Attribute("directory"));
         if (!option.IsEmpty())
         {
             if (target)
@@ -372,7 +375,7 @@ void ProjectLoader::DoResourceCompilerOptions(TiXmlElement* parentNode, ProjectB
     TiXmlElement* child = node->FirstChildElement("Add");
     while (child)
     {
-        wxString dir = child->Attribute("directory");
+        wxString dir = _U(child->Attribute("directory"));
         if (!dir.IsEmpty())
         {
             if (target)
@@ -394,9 +397,9 @@ void ProjectLoader::DoLinkerOptions(TiXmlElement* parentNode, ProjectBuildTarget
     TiXmlElement* child = node->FirstChildElement("Add");
     while (child)
     {
-        wxString option = child->Attribute("option");
-        wxString dir = child->Attribute("directory");
-        wxString lib = child->Attribute("library");
+        wxString option = _U(child->Attribute("option"));
+        wxString dir = _U(child->Attribute("directory"));
+        wxString lib = _U(child->Attribute("library"));
         if (!option.IsEmpty())
         {
             if (target)
@@ -432,7 +435,7 @@ void ProjectLoader::DoIncludesOptions(TiXmlElement* parentNode, ProjectBuildTarg
     TiXmlElement* child = node->FirstChildElement("Add");
     while (child)
     {
-        wxString option = child->Attribute("option");
+        wxString option = _U(child->Attribute("option"));
         if (!option.IsEmpty())
         {
             if (target)
@@ -454,7 +457,7 @@ void ProjectLoader::DoLibsOptions(TiXmlElement* parentNode, ProjectBuildTarget* 
     TiXmlElement* child = node->FirstChildElement("Add");
     while (child)
     {
-        wxString option = child->Attribute("option");
+        wxString option = _U(child->Attribute("option"));
         if (!option.IsEmpty())
         {
             if (target)
@@ -476,11 +479,11 @@ void ProjectLoader::DoExtraCommands(TiXmlElement* parentNode, ProjectBuildTarget
         TiXmlElement* child = node->FirstChildElement("Mode");
         while (child)
         {
-            wxString mode = child->Attribute("before");
-            if (mode == "always")
+            wxString mode = _U(child->Attribute("before"));
+            if (mode == _T("always"))
                 base->SetAlwaysRunPreBuildSteps(true);
-            mode = child->Attribute("after");
-            if (mode == "always")
+            mode = _U(child->Attribute("after"));
+            if (mode == _T("always"))
                 base->SetAlwaysRunPostBuildSteps(true);
     
             child = child->NextSiblingElement("Mode");
@@ -493,9 +496,9 @@ void ProjectLoader::DoExtraCommands(TiXmlElement* parentNode, ProjectBuildTarget
             wxString after;
             
             if (child->Attribute("before"))
-                before = child->Attribute("before");
+                before = _U(child->Attribute("before"));
             if (child->Attribute("after"))
-                after = child->Attribute("after");
+                after = _U(child->Attribute("after"));
     
             if (!before.IsEmpty())
                 base->AddCommandsBeforeBuild(before);
@@ -508,18 +511,41 @@ void ProjectLoader::DoExtraCommands(TiXmlElement* parentNode, ProjectBuildTarget
     }
 }
 
+void ProjectLoader::DoEnvironment(TiXmlElement* parentNode, CompileOptionsBase* base)
+{
+	if (!base)
+        return;
+    CustomVars& vars = base->GetCustomVars();
+
+    TiXmlElement* node = parentNode->FirstChildElement("Environment");
+    while (node)
+    {
+        TiXmlElement* child = node->FirstChildElement("Variable");
+        while (child)
+        {
+            wxString name = _U(child->Attribute("name"));
+            wxString value = _U(child->Attribute("value"));
+            if (!name.IsEmpty())
+            	vars.Add(name, value);
+    
+            child = child->NextSiblingElement("Variable");
+        }
+        node = node->NextSiblingElement("Environment");
+    }
+}
+
 void ProjectLoader::DoUnits(TiXmlElement* parentNode)
 {
-    Manager::Get()->GetMessageManager()->DebugLog("Generating project tree...");
+    Manager::Get()->GetMessageManager()->DebugLog(_U("Generating project tree..."));
     TiXmlElement* unit = parentNode->FirstChildElement("Unit");
     while (unit)
     {
-        wxString filename = unit->Attribute("filename");
+        wxString filename = _U(unit->Attribute("filename"));
         if (!filename.IsEmpty())
         {
             ProjectFile* file = m_pProject->AddFile(-1, filename);
             if (!file)
-                Manager::Get()->GetMessageManager()->DebugLog("Can't add file '%s'", filename.c_str());
+                Manager::Get()->GetMessageManager()->DebugLog(_("Can't add file '%s'"), filename.c_str());
             else
                 DoUnitOptions(unit, file);
         }
@@ -534,7 +560,7 @@ void ProjectLoader::DoUnitOptions(TiXmlElement* parentNode, ProjectFile* file)
     while (node)
     {
         if (node->Attribute("compilerVar"))
-            file->compilerVar = node->Attribute("compilerVar");
+            file->compilerVar = _U(node->Attribute("compilerVar"));
         if (node->Attribute("compile"))
             file->compile = atoi(node->Attribute("compile")) != 0;
         if (node->Attribute("link"))
@@ -545,10 +571,10 @@ void ProjectLoader::DoUnitOptions(TiXmlElement* parentNode, ProjectFile* file)
             file->useCustomBuildCommand = atoi(node->Attribute("useBuildCommand")) != 0;
         if (node->Attribute("buildCommand"))
         {
-            wxString tmp = node->Attribute("buildCommand");
+            wxString tmp = _U(node->Attribute("buildCommand"));
             if (!tmp.IsEmpty())
             {
-                tmp.Replace("\\n", "\n");
+                tmp.Replace(_T("\\n"), _T("\n"));
                 file->buildCommand = tmp;
             }
         }
@@ -556,16 +582,16 @@ void ProjectLoader::DoUnitOptions(TiXmlElement* parentNode, ProjectFile* file)
             file->autoDeps = atoi(node->Attribute("autoDeps")) != 0;
         if (node->Attribute("customDeps"))
         {
-            wxString tmp = node->Attribute("customDeps");
+            wxString tmp = _U(node->Attribute("customDeps"));
             if (!tmp.IsEmpty())
             {
-                tmp.Replace("\\n", "\n");
+                tmp.Replace(_T("\\n"), _T("\n"));
                 file->customDeps = tmp;
             }
         }
         if (node->Attribute("objectName"))
         {
-            wxFileName objName(node->Attribute("objectName"));
+            wxFileName objName(_U(node->Attribute("objectName")));
             FileType ft = FileTypeOf(file->relativeFilename);
             if (ft != ftResource && ft != ftResourceBin)
             {
@@ -574,7 +600,7 @@ void ProjectLoader::DoUnitOptions(TiXmlElement* parentNode, ProjectFile* file)
             }
         }
         if (node->Attribute("target"))
-            file->AddBuildTarget(node->Attribute("target"));
+            file->AddBuildTarget(_U(node->Attribute("target")));
 
         node = node->NextSiblingElement("Option");
     }
@@ -584,124 +610,131 @@ bool ProjectLoader::Save(const wxString& filename)
 {
     wxString buffer;
     wxArrayString array;
+    CustomVars* vars = 0;
 
-    buffer << "<?xml version=\"1.0\"?>" << '\n';
-    buffer << "<!DOCTYPE Code::Blocks_project_file>" << '\n';
-    buffer << "<Code::Blocks_project_file>" << '\n';
-    buffer << '\t' << "<FileVersion major=\"" << PROJECT_FILE_VERSION_MAJOR << "\" minor=\"" << PROJECT_FILE_VERSION_MINOR << "\"/>" << '\n';
-    buffer << '\t' << "<Project>" << '\n';
-    buffer << '\t' << '\t' << "<Option title=\"" << FixEntities(m_pProject->GetTitle()) << "\"/>" << '\n';
-    buffer << '\t' << '\t' << "<Option makefile=\"" << FixEntities(m_pProject->GetMakefile()) << "\"/>" << '\n';
-    buffer << '\t' << '\t' << "<Option makefile_is_custom=\"" << m_pProject->IsMakefileCustom() << "\"/>" << '\n';
+    buffer << _T("<?xml version=\"1.0\"?>") << _T('\n');
+    buffer << _T("<!DOCTYPE Code::Blocks_project_file>") << _T('\n');
+    buffer << _T("<Code::Blocks_project_file>") << _T('\n');
+    buffer << _T('\t') << _T("<FileVersion major=\"") << PROJECT_FILE_VERSION_MAJOR << _T("\" minor=\"") << PROJECT_FILE_VERSION_MINOR << _T("\"/>") << _T('\n');
+    buffer << _T('\t') << _T("<Project>") << _T('\n');
+    buffer << _T('\t') << _T('\t') << _T("<Option title=\"") << FixEntities(m_pProject->GetTitle()) << _T("\"/>") << _T('\n');
+    buffer << _T('\t') << _T('\t') << _T("<Option makefile=\"") << FixEntities(m_pProject->GetMakefile()) << _T("\"/>") << _T('\n');
+    buffer << _T('\t') << _T('\t') << _T("<Option makefile_is_custom=\"") << m_pProject->IsMakefileCustom() << _T("\"/>") << _T('\n');
     if (m_pProject->GetDefaultExecuteTargetIndex() != 0)
-        buffer << '\t' << '\t' << "<Option default_target=\"" << m_pProject->GetDefaultExecuteTargetIndex() << "\"/>" << '\n';
+        buffer << _T('\t') << _T('\t') << _T("<Option default_target=\"") << m_pProject->GetDefaultExecuteTargetIndex() << _T("\"/>") << _T('\n');
     if (m_pProject->GetActiveBuildTarget() != -1)
-        buffer << '\t' << '\t' << "<Option active_target=\"" << m_pProject->GetActiveBuildTarget() << "\"/>" << '\n';
-    buffer << '\t' << '\t' << "<Option compiler=\"" << m_pProject->GetCompilerIndex() << "\"/>" << '\n';
+        buffer << _T('\t') << _T('\t') << _T("<Option active_target=\"") << m_pProject->GetActiveBuildTarget() << _T("\"/>") << _T('\n');
+    buffer << _T('\t') << _T('\t') << _T("<Option compiler=\"") << m_pProject->GetCompilerIndex() << _T("\"/>") << _T('\n');
 
-    buffer << '\t' << '\t' << "<Build>" << '\n';
+    buffer << _T('\t') << _T('\t') << _T("<Build>") << _T('\n');
     for (int i = 0; i < m_pProject->GetBuildTargetsCount(); ++i)
     {
         ProjectBuildTarget* target = m_pProject->GetBuildTarget(i);
         if (!target)
             break;
             
-        buffer << '\t' << '\t' << '\t' << "<Target title=\"" << FixEntities(target->GetTitle()) << "\">" << '\n';
+        buffer << _T('\t') << _T('\t') << _T('\t') << _T("<Target title=\"") << FixEntities(target->GetTitle()) << _T("\">") << _T('\n');
         if (target->GetTargetType() != ttCommandsOnly)
         {
-            buffer << '\t' << '\t' << '\t' << '\t' << "<Option output=\"" << FixEntities(target->GetOutputFilename()) << "\"/>" << '\n';
-            buffer << '\t' << '\t' << '\t' << '\t' << "<Option working_dir=\"" << FixEntities(target->GetWorkingDir()) << "\"/>" << '\n';
-            buffer << '\t' << '\t' << '\t' << '\t' << "<Option object_output=\"" << FixEntities(target->GetObjectOutput()) << "\"/>" << '\n';
-            buffer << '\t' << '\t' << '\t' << '\t' << "<Option deps_output=\"" << FixEntities(target->GetDepsOutput()) << "\"/>" << '\n';
-            buffer << '\t' << '\t' << '\t' << '\t' << "<Option external_deps=\"" << FixEntities(target->GetExternalDeps()) << "\"/>" << '\n';
+            buffer << _T('\t') << _T('\t') << _T('\t') << _T('\t') << _T("<Option output=\"") << FixEntities(target->GetOutputFilename()) << _T("\"/>") << _T('\n');
+            buffer << _T('\t') << _T('\t') << _T('\t') << _T('\t') << _T("<Option working_dir=\"") << FixEntities(target->GetWorkingDir()) << _T("\"/>") << _T('\n');
+            buffer << _T('\t') << _T('\t') << _T('\t') << _T('\t') << _T("<Option object_output=\"") << FixEntities(target->GetObjectOutput()) << _T("\"/>") << _T('\n');
+            buffer << _T('\t') << _T('\t') << _T('\t') << _T('\t') << _T("<Option deps_output=\"") << FixEntities(target->GetDepsOutput()) << _T("\"/>") << _T('\n');
+            buffer << _T('\t') << _T('\t') << _T('\t') << _T('\t') << _T("<Option external_deps=\"") << FixEntities(target->GetExternalDeps()) << _T("\"/>") << _T('\n');
         }
-        buffer << '\t' << '\t' << '\t' << '\t' << "<Option type=\"" << target->GetTargetType() << "\"/>" << '\n';
-        buffer << '\t' << '\t' << '\t' << '\t' << "<Option compiler=\"" << target->GetCompilerIndex() << "\"/>" << '\n';
+        buffer << _T('\t') << _T('\t') << _T('\t') << _T('\t') << _T("<Option type=\"") << target->GetTargetType() << _T("\"/>") << _T('\n');
+        buffer << _T('\t') << _T('\t') << _T('\t') << _T('\t') << _T("<Option compiler=\"") << target->GetCompilerIndex() << _T("\"/>") << _T('\n');
         if (target->GetTargetType() == ttConsoleOnly && !target->GetUseConsoleRunner())
-            buffer << '\t' << '\t' << '\t' << '\t' << "<Option use_console_runner=\"0\"/>" << '\n';
+            buffer << _T('\t') << _T('\t') << _T('\t') << _T('\t') << _T("<Option use_console_runner=\"0\"/>") << _T('\n');
         if (!target->GetExecutionParameters().IsEmpty())
-            buffer << '\t' << '\t' << '\t' << '\t' << "<Option parameters=\"" << FixEntities(target->GetExecutionParameters()) << "\"/>" << '\n';
+            buffer << _T('\t') << _T('\t') << _T('\t') << _T('\t') << _T("<Option parameters=\"") << FixEntities(target->GetExecutionParameters()) << _T("\"/>") << _T('\n');
         if (!target->GetHostApplication().IsEmpty())
-            buffer << '\t' << '\t' << '\t' << '\t' << "<Option host_application=\"" << FixEntities(target->GetHostApplication()) << "\"/>" << '\n';
+            buffer << _T('\t') << _T('\t') << _T('\t') << _T('\t') << _T("<Option host_application=\"") << FixEntities(target->GetHostApplication()) << _T("\"/>") << _T('\n');
         if (!target->GetIncludeInTargetAll())
-            buffer << '\t' << '\t' << '\t' << '\t' << "<Option includeInTargetAll=\"0\"/>" << '\n';
+            buffer << _T('\t') << _T('\t') << _T('\t') << _T('\t') << _T("<Option includeInTargetAll=\"0\"/>") << _T('\n');
         if ((target->GetTargetType() == ttStaticLib || target->GetTargetType() == ttDynamicLib) && target->GetCreateDefFile())
-            buffer << '\t' << '\t' << '\t' << '\t' << "<Option createDefFile=\"1\"/>" << '\n';
+            buffer << _T('\t') << _T('\t') << _T('\t') << _T('\t') << _T("<Option createDefFile=\"1\"/>") << _T('\n');
         if (target->GetTargetType() == ttDynamicLib && target->GetCreateStaticLib())
-            buffer << '\t' << '\t' << '\t' << '\t' << "<Option createStaticLib=\"1\"/>" << '\n';
+            buffer << _T('\t') << _T('\t') << _T('\t') << _T('\t') << _T("<Option createStaticLib=\"1\"/>") << _T('\n');
         if (target->GetOptionRelation(ortCompilerOptions) != 3) // 3 is the default
-            buffer << '\t' << '\t' << '\t' << '\t' << "<Option projectCompilerOptionsRelation=\"" << target->GetOptionRelation(ortCompilerOptions) << "\"/>" << '\n';
+            buffer << _T('\t') << _T('\t') << _T('\t') << _T('\t') << _T("<Option projectCompilerOptionsRelation=\"") << target->GetOptionRelation(ortCompilerOptions) << _T("\"/>") << _T('\n');
         if (target->GetOptionRelation(ortLinkerOptions) != 3) // 3 is the default
-            buffer << '\t' << '\t' << '\t' << '\t' << "<Option projectLinkerOptionsRelation=\"" << target->GetOptionRelation(ortLinkerOptions) << "\"/>" << '\n';
+            buffer << _T('\t') << _T('\t') << _T('\t') << _T('\t') << _T("<Option projectLinkerOptionsRelation=\"") << target->GetOptionRelation(ortLinkerOptions) << _T("\"/>") << _T('\n');
         if (target->GetOptionRelation(ortIncludeDirs) != 3) // 3 is the default
-            buffer << '\t' << '\t' << '\t' << '\t' << "<Option projectIncludeDirsRelation=\"" << target->GetOptionRelation(ortIncludeDirs) << "\"/>" << '\n';
+            buffer << _T('\t') << _T('\t') << _T('\t') << _T('\t') << _T("<Option projectIncludeDirsRelation=\"") << target->GetOptionRelation(ortIncludeDirs) << _T("\"/>") << _T('\n');
         if (target->GetOptionRelation(ortResDirs) != 3) // 3 is the default
-            buffer << '\t' << '\t' << '\t' << '\t' << "<Option projectResourceIncludeDirsRelation=\"" << target->GetOptionRelation(ortResDirs) << "\"/>" << '\n';
+            buffer << _T('\t') << _T('\t') << _T('\t') << _T('\t') << _T("<Option projectResourceIncludeDirsRelation=\"") << target->GetOptionRelation(ortResDirs) << _T("\"/>") << _T('\n');
         if (target->GetOptionRelation(ortLibDirs) != 3) // 3 is the default
-            buffer << '\t' << '\t' << '\t' << '\t' << "<Option projectLibDirsRelation=\"" << target->GetOptionRelation(ortLibDirs) << "\"/>" << '\n';
+            buffer << _T('\t') << _T('\t') << _T('\t') << _T('\t') << _T("<Option projectLibDirsRelation=\"") << target->GetOptionRelation(ortLibDirs) << _T("\"/>") << _T('\n');
         SaveCompilerOptions(buffer, target, 4);
         SaveResourceCompilerOptions(buffer, target, 4);
         SaveLinkerOptions(buffer, target, 4);
-        SaveOptions(buffer, target->GetCommandsBeforeBuild(), "ExtraCommands", 4, "before", target->GetAlwaysRunPreBuildSteps() ? "<Mode before=\"always\" />" : "");
-        SaveOptions(buffer, target->GetCommandsAfterBuild(), "ExtraCommands", 4, "after", target->GetAlwaysRunPostBuildSteps() ? "<Mode after=\"always\" />" : "");
-        buffer << '\t' << '\t' << '\t' << "</Target>" << '\n';
+        SaveOptions(buffer, target->GetCommandsBeforeBuild(), _T("ExtraCommands"), 4, _T("before"), target->GetAlwaysRunPreBuildSteps() ? _T("<Mode before=\"always\" />") : _T(""));
+        SaveOptions(buffer, target->GetCommandsAfterBuild(), _T("ExtraCommands"), 4, _T("after"), target->GetAlwaysRunPostBuildSteps() ? _T("<Mode after=\"always\" />") : _T(""));
+
+        vars = &target->GetCustomVars();
+        SaveEnvironment(buffer, vars, 4);
+
+        buffer << _T('\t') << _T('\t') << _T('\t') << _T("</Target>") << _T('\n');
     }
-    buffer << '\t' << '\t' << "</Build>" << '\n';
+    vars = &m_pProject->GetCustomVars();
+    SaveEnvironment(buffer, vars, 3);
+    buffer << _T('\t') << _T('\t') << _T("</Build>") << _T('\n');
 
     SaveCompilerOptions(buffer, m_pProject, 2);
     SaveResourceCompilerOptions(buffer, m_pProject, 2);
     SaveLinkerOptions(buffer, m_pProject, 2);
-    SaveOptions(buffer, m_pProject->GetCommandsBeforeBuild(), "ExtraCommands", 2, "before", m_pProject->GetAlwaysRunPreBuildSteps() ? "<Mode before=\"always\" />" : "");
-    SaveOptions(buffer, m_pProject->GetCommandsAfterBuild(), "ExtraCommands", 2, "after", m_pProject->GetAlwaysRunPostBuildSteps() ? "<Mode after=\"always\" />" : "");
+    SaveOptions(buffer, m_pProject->GetCommandsBeforeBuild(), wxString(_T("ExtraCommands")), 2, _T("before"), m_pProject->GetAlwaysRunPreBuildSteps() ? _T("<Mode before=\"always\" />") : _T(""));
+    SaveOptions(buffer, m_pProject->GetCommandsAfterBuild(), wxString(_T("ExtraCommands")), 2, _T("after"), m_pProject->GetAlwaysRunPostBuildSteps() ? _T("<Mode after=\"always\" />") : _T(""));
 
     int count = m_pProject->GetFilesCount();
     for (int i = 0; i < count; ++i)
     {
         ProjectFile* f = m_pProject->GetFile(i);
-        buffer << '\t' << '\t' << "<Unit filename=\"" << FixEntities(f->relativeFilename) << "\">" << '\n';
-        buffer << '\t' << '\t' << '\t' << "<Option compilerVar=\"" << FixEntities(f->compilerVar) << "\"/>" << '\n';
+        buffer << _T('\t') << _T('\t') << _T("<Unit filename=\"") << FixEntities(f->relativeFilename) << _T("\">") << _T('\n');
+        buffer << _T('\t') << _T('\t') << _T('\t') << _T("<Option compilerVar=\"") << FixEntities(f->compilerVar) << _T("\"/>") << _T('\n');
         if (!f->compile)
-            buffer << '\t' << '\t' << '\t' << "<Option compile=\"0\"/>" << '\n';
+            buffer << _T('\t') << _T('\t') << _T('\t') << _T("<Option compile=\"0\"/>") << _T('\n');
         if (!f->link)
-            buffer << '\t' << '\t' << '\t' << "<Option link=\"0\"/>" << '\n';
+            buffer << _T('\t') << _T('\t') << _T('\t') << _T("<Option link=\"0\"/>") << _T('\n');
         if (f->weight != 50)
-            buffer << '\t' << '\t' << '\t' << "<Option weight=\"" << f->weight << "\"/>" << '\n';
+            buffer << _T('\t') << _T('\t') << _T('\t') << _T("<Option weight=\"") << f->weight << _T("\"/>") << _T('\n');
         if (f->useCustomBuildCommand)
-            buffer << '\t' << '\t' << '\t' << "<Option useBuildCommand=\"1\"/>" << '\n';
+            buffer << _T('\t') << _T('\t') << _T('\t') << _T("<Option useBuildCommand=\"1\"/>") << _T('\n');
         if (!f->buildCommand.IsEmpty())
         {
-            f->buildCommand.Replace("\n", "\\n");
-            buffer << '\t' << '\t' << '\t' << "<Option buildCommand=\"" << FixEntities(f->buildCommand) << "\"/>" << '\n';
+            f->buildCommand.Replace(_T("\n"), _T("\\n"));
+            buffer << _T('\t') << _T('\t') << _T('\t') << _T("<Option buildCommand=\"") << FixEntities(f->buildCommand) << _T("\"/>") << _T('\n');
         }
         if (!f->autoDeps)
-            buffer << '\t' << '\t' << '\t' << "<Option autoDeps=\"0\"/>" << '\n';
+            buffer << _T('\t') << _T('\t') << _T('\t') << _T("<Option autoDeps=\"0\"/>") << _T('\n');
         if (!f->customDeps.IsEmpty())
         {
-            f->customDeps.Replace("\n", "\\n");
-            buffer << '\t' << '\t' << '\t' << "<Option customDeps=\"" << FixEntities(f->customDeps) << "\"/>" << '\n';
+            f->customDeps.Replace(_T("\n"), _T("\\n"));
+            buffer << _T('\t') << _T('\t') << _T('\t') << _T("<Option customDeps=\"") << FixEntities(f->customDeps) << _T("\"/>") << _T('\n');
         }
         if (!f->GetObjName().IsEmpty())
         {
             wxFileName tmp(f->GetObjName());
             if (tmp.GetExt() != CompilerFactory::Compilers[m_pProject->GetCompilerIndex()]->GetSwitches().objectExtension)
-                buffer << '\t' << '\t' << '\t' << "<Option objectName=\"" << FixEntities(f->GetObjName()) << "\"/>" << '\n';
+                buffer << _T('\t') << _T('\t') << _T('\t') << _T("<Option objectName=\"") << FixEntities(f->GetObjName()) << _T("\"/>") << _T('\n');
         }
         for (unsigned int x = 0; x < f->buildTargets.GetCount(); ++x)
-            buffer << '\t' << '\t' << '\t' << "<Option target=\"" << FixEntities(f->buildTargets[x]) << "\"/>" << '\n';
+            buffer << _T('\t') << _T('\t') << _T('\t') << _T("<Option target=\"") << FixEntities(f->buildTargets[x]) << _T("\"/>") << _T('\n');
         for (unsigned int x = 0; x < f->breakpoints.GetCount(); ++x)
 		{
 			DebuggerBreakpoint* bp = f->breakpoints[x];
-            buffer << '\t' << '\t' << '\t' << "<Breakpoint ";
-			buffer << "line=\"" << bp->line << "\" ";
-			buffer << "enabled=\"" << bp->enabled << "\" ";
-			buffer << "pass=\"" << bp->ignoreCount << "\" ";
-			buffer << "/>" << '\n';
+            buffer << _T('\t') << _T('\t') << _T('\t') << _T("<Breakpoint ");
+			buffer << _T("line=\"") << bp->line << _T("\" ");
+			buffer << _T("enabled=\"") << bp->enabled << _T("\" ");
+			buffer << _T("pass=\"") << bp->ignoreCount << _T("\" ");
+			buffer << _T("/>") << _T('\n');
 		}
-		buffer << '\t' << '\t' << "</Unit>" << '\n';
+		buffer << _T('\t') << _T('\t') << _T("</Unit>") << _T('\n');
     }
 
-    buffer << '\t' << "</Project>" << '\n';
-    buffer << "</Code::Blocks_project_file>" << '\n';
+    buffer << _T('\t') << _T("</Project>") << _T('\n');
+    buffer << _T("</Code::Blocks_project_file>") << _T('\n');
 
     wxFile file(filename, wxFile::write);
     if (file.Write(buffer, buffer.Length()) == buffer.Length())
@@ -715,12 +748,12 @@ bool ProjectLoader::Save(const wxString& filename)
 void ProjectLoader::SaveCompilerOptions(wxString& buffer, CompileOptionsBase* object, int nrOfTabs)
 {
     wxString compopts;
-    BeginOptionSection(compopts, "Compiler", nrOfTabs);
-    bool hasCompOpts = DoOptionSection(compopts, object->GetCompilerOptions(), nrOfTabs + 1, "option");
-    bool hasCompDirs = DoOptionSection(compopts, object->GetIncludeDirs(), nrOfTabs + 1, "directory");
+    BeginOptionSection(compopts, _T("Compiler"), nrOfTabs);
+    bool hasCompOpts = DoOptionSection(compopts, object->GetCompilerOptions(), nrOfTabs + 1, _T("option"));
+    bool hasCompDirs = DoOptionSection(compopts, object->GetIncludeDirs(), nrOfTabs + 1, _T("directory"));
     if (hasCompOpts || hasCompDirs)
     {
-        EndOptionSection(compopts, "Compiler", nrOfTabs);
+        EndOptionSection(compopts, _T("Compiler"), nrOfTabs);
         buffer << compopts;
     }
 }
@@ -728,11 +761,11 @@ void ProjectLoader::SaveCompilerOptions(wxString& buffer, CompileOptionsBase* ob
 void ProjectLoader::SaveResourceCompilerOptions(wxString& buffer, CompileOptionsBase* object, int nrOfTabs)
 {
     wxString compopts;
-    BeginOptionSection(compopts, "ResourceCompiler", nrOfTabs);
-    bool hasCompDirs = DoOptionSection(compopts, object->GetResourceIncludeDirs(), nrOfTabs + 1, "directory");
+    BeginOptionSection(compopts, _T("ResourceCompiler"), nrOfTabs);
+    bool hasCompDirs = DoOptionSection(compopts, object->GetResourceIncludeDirs(), nrOfTabs + 1, _T("directory"));
     if (hasCompDirs)
     {
-        EndOptionSection(compopts, "ResourceCompiler", nrOfTabs);
+        EndOptionSection(compopts, _T("ResourceCompiler"), nrOfTabs);
         buffer << compopts;
     }
 }
@@ -740,23 +773,42 @@ void ProjectLoader::SaveResourceCompilerOptions(wxString& buffer, CompileOptions
 void ProjectLoader::SaveLinkerOptions(wxString& buffer, CompileOptionsBase* object, int nrOfTabs)
 {
     wxString linkopts;
-    BeginOptionSection(linkopts, "Linker", nrOfTabs);
-    bool hasLinkOpts = DoOptionSection(linkopts, object->GetLinkerOptions(), nrOfTabs + 1, "option");
-    bool hasLibs = DoOptionSection(linkopts, object->GetLinkLibs(), nrOfTabs + 1, "library");
-    bool hasLinkDirs = DoOptionSection(linkopts, object->GetLibDirs(), nrOfTabs + 1, "directory");
+    BeginOptionSection(linkopts, _T("Linker"), nrOfTabs);
+    bool hasLinkOpts = DoOptionSection(linkopts, object->GetLinkerOptions(), nrOfTabs + 1, _T("option"));
+    bool hasLibs = DoOptionSection(linkopts, object->GetLinkLibs(), nrOfTabs + 1, _T("library"));
+    bool hasLinkDirs = DoOptionSection(linkopts, object->GetLibDirs(), nrOfTabs + 1, _T("directory"));
     if (hasLinkOpts || hasLibs || hasLinkDirs)
     {
-        EndOptionSection(linkopts, "Linker", nrOfTabs);
+        EndOptionSection(linkopts, _T("Linker"), nrOfTabs);
         buffer << linkopts;
     }
+}
+
+void ProjectLoader::SaveEnvironment(wxString& buffer, CustomVars* vars, int nrOfTabs)
+{
+    if (!vars)
+        return;
+    const VarsArray& v = vars->GetVars();
+    if (v.GetCount() == 0)
+        return;
+    for (int x = 0; x < nrOfTabs; ++x) buffer << _T('\t');
+    buffer << _T("<Environment>") << _T('\n');
+    for (unsigned int i = 0; i < v.GetCount(); ++i)
+    {
+        Var& var = v[i];
+        for (int x = 0; x <= nrOfTabs; ++x) buffer << _T('\t');
+        buffer << _T("<Variable name=\"") << var.name << _T("\" value=\"") << var.value << _T("\"/>") << _T('\n');
+    }
+    for (int x = 0; x < nrOfTabs; ++x) buffer << _T('\t');
+    buffer << _T("</Environment>") << _T('\n');
 }
 
 void ProjectLoader::BeginOptionSection(wxString& buffer, const wxString& sectionName, int nrOfTabs)
 {
     wxString local;
     for (int i = 0; i < nrOfTabs; ++i)
-        local << '\t';
-    local << "<" << sectionName << ">" << '\n';
+        local << _T('\t');
+    local << _T("<") << sectionName << _T(">") << _T('\n');
     buffer << local;
 }
 
@@ -774,8 +826,8 @@ bool ProjectLoader::DoOptionSection(wxString& buffer, const wxArrayString& array
         
         empty = false;
         for (int x = 0; x < nrOfTabs; ++x)
-            local << '\t';
-        local << "<Add " << optionName << "=\"" << FixEntities(array[i]) << "\"/>" << '\n';
+            local << _T('\t');
+        local << _T("<Add ") << optionName << _T("=\"") << FixEntities(array[i]) << _T("\"/>") << _T('\n');
     }
     buffer << local;
     return !empty;
@@ -785,8 +837,8 @@ void ProjectLoader::EndOptionSection(wxString& buffer, const wxString& sectionNa
 {
     wxString local;
     for (int i = 0; i < nrOfTabs; ++i)
-        local << '\t';
-    local << "</" << sectionName << ">" << '\n';
+        local << _T('\t');
+    local << _T("</") << sectionName << _T(">") << _T('\n');
     buffer << local;
 }
 
@@ -800,8 +852,8 @@ void ProjectLoader::SaveOptions(wxString& buffer, const wxArrayString& array, co
     if (!extra.IsEmpty())
     {
         for (int i = 0; i < nrOfTabs + 1; ++i)
-            local << '\t';
-        local << extra << '\n';
+            local << _T('\t');
+        local << extra << _T('\n');
     }
     bool notEmpty = DoOptionSection(local, array, nrOfTabs + 1, optionName);
     if (notEmpty || !extra.IsEmpty())

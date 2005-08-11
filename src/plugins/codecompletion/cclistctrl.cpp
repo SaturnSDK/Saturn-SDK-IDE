@@ -28,7 +28,7 @@
 #include <wx/msgdlg.h>
 #include "cclist.h"
 
-#define CUSTOM_DATA_TYPE "cc_items"
+#define CUSTOM_DATA_TYPE _T("cc_items")
 
 BEGIN_EVENT_TABLE(CCListCtrl, wxGrid)
 	//EVT_CHAR(CCListCtrl::OnChar)

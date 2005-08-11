@@ -14,14 +14,11 @@
 // #include "cbproject.h"
 #include "printing_types.h"
 
-extern int ID_EditorManager;
-extern int idEditorManagerCheckFiles;
-class EditorBase;
-
-WX_DECLARE_LIST(EditorBase, EditorsList);
-WX_DECLARE_STRING_HASH_MAP(wxString, AutoCompleteMap);
-
+DLLIMPORT extern int ID_EditorManager;
+DLLIMPORT extern int idEditorManagerCheckFiles;
+DLLIMPORT extern int ID_EditorManagerCloseButton;
 // forward decls
+class EditorBase;
 class wxNotebook;
 class wxNotebookEvent;
 class wxMenuBar;
@@ -31,6 +28,9 @@ class ProjectFile;
 class cbEditor;
 class wxStyledTextCtrl;
 class SimpleListLog;
+
+WX_DECLARE_LIST(EditorBase, EditorsList);
+WX_DECLARE_STRING_HASH_MAP(wxString, AutoCompleteMap);
 
 struct cbFindReplaceData
 {
@@ -58,6 +58,7 @@ class DLLIMPORT EditorManager : public wxEvtHandler
         friend class Manager; // give Manager access to our private members
         static bool CanShutdown(){ return s_CanShutdown; }
         wxNotebook* GetNotebook(){ return m_pNotebook; }
+        wxPanel* GetPanel() { return m_pPanel; }
         void CreateMenu(wxMenuBar* menuBar);
         void ReleaseMenu(wxMenuBar* menuBar);
         void Configure();        
@@ -126,8 +127,13 @@ class DLLIMPORT EditorManager : public wxEvtHandler
         bool OpenFilesTreeSupported();
         /// Show/hide the opened files tree
         void ShowOpenFilesTree(bool show);
-        /// Return true if opened files tree is visible, false if not
+        /// Refresh the open files tree
+        void RefreshOpenFilesTree();
+        /// Return true if opened files tree is visible, false if not        
         bool IsOpenFilesTreeVisible();
+        /// Tells EditorManager that the OpenFilesTree needs repainting
+        void InvalidateTree() { if(this) m_needsrefresh = true; }
+
         /** Builds Opened Files tree in the Projects tab
           */
         wxTreeCtrl *EditorManager::GetTree();
@@ -177,6 +183,7 @@ class DLLIMPORT EditorManager : public wxEvtHandler
         void OnCheckForModifiedFiles(wxCommandEvent& event);
 
         wxNotebook* m_pNotebook;
+        wxPanel* m_pPanel;
         EditorsList m_EditorsList;
         cbFindReplaceData* m_LastFindReplaceData;
         EditorColorSet* m_Theme;
@@ -184,13 +191,16 @@ class DLLIMPORT EditorManager : public wxEvtHandler
         wxImageList* m_pImages;
         wxTreeCtrl* m_pTree;
         wxTreeItemId m_TreeOpenedFiles;
+        bool m_needsrefresh;
         #endif
         wxString m_LastActiveFile;
         bool m_LastModifiedflag;
         SimpleListLog* m_pSearchLog;
         int m_SearchLogIndex;
-    DECLARE_EVENT_TABLE()
-    DECLARE_SANITY_CHECK
+        int m_SashPosition;
+
+        DECLARE_EVENT_TABLE()
+        DECLARE_SANITY_CHECK
 
 };
 

@@ -128,7 +128,7 @@ Manager::Manager(wxFrame* appWindow, wxNotebook* notebook)
     // any resources we 'll be using...
     
     Initxrc(true);
-    Loadxrc("/manager_resources.zip#zip:*.xrc");
+    Loadxrc(_T("/manager_resources.zip#zip:*.xrc"));
 }
 
 // class destructor
@@ -153,7 +153,7 @@ void Manager::Initxrc(bool force)
 void Manager::Loadxrc(wxString relpath)
 {
     Manager::Initxrc();
-    wxString resPath = ConfigManager::Get()->Read("data_path", wxEmptyString);
+    wxString resPath = ConfigManager::Get()->Read(_T("data_path"), wxEmptyString);
     wxXmlResource::Get()->Load(resPath + relpath);
 }
 
@@ -167,7 +167,7 @@ wxMenuBar *Manager::LoadMenuBar(wxString resid,bool createonfailure)
 wxMenu *Manager::LoadMenu(wxString menu_id,bool createonfailure)
 {
     wxMenu *m = wxXmlResource::Get()->LoadMenu(menu_id);
-    if(!m && createonfailure) m=new wxMenu("");
+    if(!m && createonfailure) m=new wxMenu(_T(""));
     return m;
 }
 
@@ -196,7 +196,7 @@ void Manager::AddonToolBar(wxToolBar* toolBar,wxString resid)
 {
     if(!toolBar)
         return;
-    wxXmlResource::Get()->LoadObject(toolBar,NULL,resid,"wxToolBarAddOn");    
+    wxXmlResource::Get()->LoadObject(toolBar,NULL,resid,_T("wxToolBarAddOn"));
 }
 
 bool Manager::isToolBar16x16(wxToolBar* toolBar)

@@ -58,7 +58,7 @@ bool Tokenizer::Init(const wxString& filename)
 	{
 		if (m_Filename.IsEmpty())
 		{
-			wxMessageBox("Tokenizer::Init() called without filename...");
+			wxMessageBox(_T("Tokenizer::Init() called without filename..."));
 			return false;
 		}
 	}
@@ -70,7 +70,7 @@ bool Tokenizer::Init(const wxString& filename)
 
 	if (!ReadFile())
 	{
-		wxMessageBox("File " + filename + " does not exist...");
+		wxMessageBox(_T("File ") + filename + _T(" does not exist..."));
 		return false;
 	}
 
@@ -121,7 +121,7 @@ bool Tokenizer::ReadFile()
     if (!file.IsOpened())
         return false;
 
-    char* buff = m_Buffer.GetWriteBuf(file.Length());
+    wxChar* buff = m_Buffer.GetWriteBuf(file.Length());
     file.Read(buff, file.Length());
     m_Buffer.UngetWriteBuf();
 	m_BufferLen = m_Buffer.Length();
@@ -175,7 +175,7 @@ bool Tokenizer::SkipWhiteSpace()
 	return true;
 }
 
-bool Tokenizer::SkipToChar(const char& ch)
+bool Tokenizer::SkipToChar(const wxChar& ch)
 {
 	// skip everything until we find ch
 	while (1)
@@ -309,12 +309,12 @@ bool Tokenizer::SkipUnwanted()
 			(!m_IsOperator && CurrentChar() == '=') ||
 			(!m_IsOperator && CurrentChar() == '[') ||
 			CurrentChar() == '?' ||
-			m_Buffer.Mid(m_TokenIndex, 2) == "//" ||
-			m_Buffer.Mid(m_TokenIndex, 2) == "/*")
+			m_Buffer.Mid(m_TokenIndex, 2) == _T("//") ||
+			m_Buffer.Mid(m_TokenIndex, 2) == _T("/*"))
 	{
 		bool skipPreprocessor = false; // used for #include
-		while (m_Buffer.Mid(m_TokenIndex, 2) == "//" ||
-				m_Buffer.Mid(m_TokenIndex, 2) == "/*")
+		while (m_Buffer.Mid(m_TokenIndex, 2) == _T("//") ||
+				m_Buffer.Mid(m_TokenIndex, 2) == _T("/*"))
 		{
 			// C/C++ style comments
 			bool cstyle = NextChar() == '*';
@@ -459,7 +459,7 @@ wxString Tokenizer::DoGetToken()
 		if (IsEOF())
 			return wxEmptyString;
 		m_Str = m_Buffer.Mid(start, m_TokenIndex - start);
-		m_IsOperator = m_Str.Matches("operator");
+		m_IsOperator = m_Str.Matches(_T("operator"));
 	}
 	else if (isdigit(CurrentChar()))
 	{
@@ -488,12 +488,12 @@ wxString Tokenizer::DoGetToken()
 		{
 			MoveToNextChar();
 			MoveToNextChar();
-			m_Str = "::";
+			m_Str = _T("::");
 		}
 		else
 		{
 			MoveToNextChar();
-			m_Str = ":";
+			m_Str = _T(":");
 		}
 	}
 	else if (CurrentChar() == '(')
@@ -503,9 +503,9 @@ wxString Tokenizer::DoGetToken()
 		if (!SkipBlock(CurrentChar()))
 			return wxEmptyString;
 		wxString tmp = m_Buffer.Mid(start, m_TokenIndex - start);
-		tmp.Replace("\t", " "); // replace tabs with spaces
-		tmp.Replace("\n", " "); // replace LF with spaces
-		tmp.Replace("\r", " "); // replace CR with spaces
+		tmp.Replace(_T("\t"), _T(" ")); // replace tabs with spaces
+		tmp.Replace(_T("\n"), _T(" ")); // replace LF with spaces
+		tmp.Replace(_T("\r"), _T(" ")); // replace CR with spaces
 		// fix-up arguments (remove excessive spaces/tabs/newlines)
 		for (unsigned int i = 0; i < tmp.Length() - 1; ++i)
 		{
@@ -549,9 +549,9 @@ wxString Tokenizer::DoGetToken()
 			m_Str << tmp.GetChar(i);
 		}
 		m_Str << ')'; // add closing parenthesis (see "i < tmp.Length() - 1" in previous "for")
-		m_Str.Replace("  ", " "); // replace two-spaces with single-space (introduced if it skipped comments or assignments)
-		m_Str.Replace("( ", "(");
-		m_Str.Replace(" )", ")");
+		m_Str.Replace(_T("  "), _T(" ")); // replace two-spaces with single-space (introduced if it skipped comments or assignments)
+		m_Str.Replace(_T("( "), _T("("));
+		m_Str.Replace(_T(" )"), _T(")"));
 	}
 	else
 	{
@@ -563,9 +563,9 @@ wxString Tokenizer::DoGetToken()
 		MoveToNextChar();
 	}
 
-	if (m_LastWasPreprocessor && !m_Str.Matches("#") && !m_LastPreprocessor.Matches("#"))
+	if (m_LastWasPreprocessor && !m_Str.Matches(_T("#")) && !m_LastPreprocessor.Matches(_T("#")))
 	{
-		if (!m_LastPreprocessor.Matches("#include"))
+		if (!m_LastPreprocessor.Matches(_T("#include")))
 		{
 			// except for #include, all other preprocessor directives need only
 			// one word exactly after the directive, e.g. #define THIS_WORD

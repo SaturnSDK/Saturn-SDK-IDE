@@ -7,32 +7,29 @@
 #include <configmanager.h>
 #include "addtododlg.h"
 
-#define CONF_GROUP "/todo/users"
+#define CONF_GROUP _T("/todo/users")
 
 AddTodoDlg::AddTodoDlg(wxWindow* parent, wxArrayString& types)
     : m_Types(types)
 {
-	wxXmlResource::Get()->LoadDialog(this, parent, "dlgAddToDo");
+	wxXmlResource::Get()->LoadDialog(this, parent, _T("dlgAddToDo"));
 	LoadUsers();
 
     // load types
     wxComboBox* cmb = XRCCTRL(*this, "cmbType", wxComboBox);
     cmb->Clear();
-    if (m_Types.GetCount() == 0)
+    for (unsigned int i = 0; i < m_Types.GetCount(); ++i)
     {
-        cmb->Append("TODO");
-        cmb->Append("FIXME");
-        cmb->Append("NOTE");
+        cmb->Append(m_Types[i]);
     }
-    else
-    {
-        for (unsigned int i = 0; i < m_Types.GetCount(); ++i)
-        {
-            cmb->Append(m_Types[i]);
-        }
-    }
+    if (m_Types.Index(_T("TODO")) == wxNOT_FOUND)
+        cmb->Append(_T("TODO"));
+    if (m_Types.Index(_T("FIXME")) == wxNOT_FOUND)
+        cmb->Append(_T("FIXME"));
+    if (m_Types.Index(_T("NOTE")) == wxNOT_FOUND)
+        cmb->Append(_T("NOTE"));
     
-    wxString sels = ConfigManager::Get()->Read("/todo/last_used_type", "");
+    wxString sels = ConfigManager::Get()->Read(_T("/todo/last_used_type"), _T(""));
     if (!sels.IsEmpty())
     {
         int sel = cmb->FindString(sels);
@@ -137,7 +134,7 @@ void AddTodoDlg::EndModal(int retVal)
             m_Types.Add(cmb->GetString(i));
         }
 
-        ConfigManager::Get()->Write("/todo/last_used_type", cmb->GetValue());
+        ConfigManager::Get()->Write(_T("/todo/last_used_type"), cmb->GetValue());
 	}
 
 	wxDialog::EndModal(retVal);
