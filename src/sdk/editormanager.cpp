@@ -158,9 +158,15 @@ EditorManager::EditorManager(wxWindow* parent)
 // class destructor
 EditorManager::~EditorManager()
 {
+	SaveAutoComplete();
+	// Close all editors unconditionally
+	CloseAll(true);
+
 	SC_DESTRUCTOR_BEGIN
 
-	SaveAutoComplete();
+    // Clean up editor list
+    m_EditorsList.DeleteContents(false);
+    m_EditorsList.Clear();
 
 	if (m_Theme)
 		delete m_Theme;
@@ -177,11 +183,8 @@ EditorManager::~EditorManager()
         delete m_pImages;
         m_pImages = 0L;
     }
-    // free-up any memory used for editors
-    m_EditorsList.DeleteContents(true); // Set this to false to preserve
-    m_EditorsList.Clear();              // linked data.
+
     edman_closebutton = NULL;
-//    m_pNotebook->Destroy();
 
     SC_DESTRUCTOR_END
 }
