@@ -676,9 +676,6 @@ bool ProjectManager::CloseProject(cbProject* project,bool dontsave)
 bool ProjectManager::CloseActiveProject(bool dontsave)
 {
     SANITY_CHECK(false);
-    #ifdef USE_OPENFILES_TREE
-    Manager::Get()->GetEditorManager()->InvalidateTree();
-    #endif
     if (!m_pActiveProject)
         return true;
     if(m_sanitycheck_shutdown) // if shutdown, don't ask.
@@ -705,9 +702,6 @@ bool ProjectManager::CloseActiveProject(bool dontsave)
     else
         SetProject(0L);
 
-    #ifdef USE_OPENFILES_TREE
-    Manager::Get()->GetEditorManager()->InvalidateTree();
-    #endif
     return true;
 }
 

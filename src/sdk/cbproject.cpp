@@ -132,7 +132,7 @@ bool cbProject::GetModified()
 {
 	if (CompileOptionsBase::GetModified())
 		return true;
-	
+
 	// check targets
     for (unsigned int i = 0; i < m_Targets.GetCount(); ++i)
     {
@@ -140,14 +140,14 @@ bool cbProject::GetModified()
         if (target->GetModified())
             return true;
     }
-	
+
 	return false;
 }
 
 void cbProject::SetModified(bool modified)
 {
 	CompileOptionsBase::SetModified(modified);
-	
+
 	// modify targets
     for (unsigned int i = 0; i < m_Targets.GetCount(); ++i)
     {
@@ -178,7 +178,7 @@ wxString cbProject::CreateUniqueFilename()
     {
         tmp.Clear();
         tmp << prefix << iter;
-        
+
 		ok = true;
         for (int i = 0; i < projCount; ++i)
         {
@@ -205,7 +205,7 @@ void cbProject::ClearAllProperties()
     m_LinkerOptions.Clear();
     m_IncludeDirs.Clear();
     m_LibDirs.Clear();
-    
+
     while (m_Targets.GetCount())
     {
         ProjectBuildTarget* target = m_Targets[0];
@@ -227,13 +227,13 @@ void cbProject::Open()
         wxMessageBox(msg, _("Error"), wxOK | wxCENTRE | wxICON_ERROR);
         return;
     }
-	
+
 	bool fileUpgraded = false;
     wxFileName fname(m_Filename);
 	FileType ft = FileTypeOf(m_Filename);
     if (ft == ftCodeBlocksProject)
     {
-		Manager::Get()->GetMessageManager()->AppendLog(_("Opening %s: "), m_Filename.c_str());    
+		Manager::Get()->GetMessageManager()->AppendLog(_("Opening %s: "), m_Filename.c_str());
         m_CurrentlyLoading = true;
         ProjectLoader loader(this);
         m_Loaded = loader.Open(m_Filename);
@@ -242,7 +242,7 @@ void cbProject::Open()
     }
     else
     {
-        Manager::Get()->GetMessageManager()->AppendLog(_("Importing %s: "), m_Filename.c_str());    
+        Manager::Get()->GetMessageManager()->AppendLog(_("Importing %s: "), m_Filename.c_str());
         IBaseLoader* loader = 0L;
         switch (ft)
         {
@@ -260,7 +260,7 @@ void cbProject::Open()
             // select compiler for the imported project
             // need to do it before actual import, because the importer might need
             // project's compiler information (like the object files extension etc).
-    
+
             // first build a list of available compilers
             wxString* comps = new wxString[CompilerFactory::Compilers.GetCount()];
             for (unsigned int i = 0; i < CompilerFactory::Compilers.GetCount(); ++i)
@@ -294,16 +294,16 @@ void cbProject::Open()
             m_Loaded = false;
         delete loader;
     }
-	
+
     if (m_Loaded)
 	{
         CalculateCommonTopLevelPath();
-		Manager::Get()->GetMessageManager()->Log(_("done"));    
+		Manager::Get()->GetMessageManager()->Log(_("done"));
 		if (!m_Targets.GetCount())
 			AddDefaultBuildTarget();
 		SetModified(ft != ftCodeBlocksProject || fileUpgraded);
 		NotifyPlugins(cbEVT_PROJECT_OPEN);
-		
+
 		if (fileUpgraded)
 		{
             wxString msg;
@@ -313,7 +313,7 @@ void cbProject::Open()
         }
 	}
 	else
-		Manager::Get()->GetMessageManager()->Log(_("failed"));    
+		Manager::Get()->GetMessageManager()->Log(_("failed"));
 }
 
 void cbProject::CalculateCommonTopLevelPath()
@@ -418,93 +418,65 @@ bool cbProject::LoadLayout()
     if (m_Filename.IsEmpty())
         return false;
     int openmode = ConfigManager::Get()->Read(_T("/project_manager/open_files"), (long int)1);
-    switch (openmode)
+    bool result = false;
+
+    if(openmode==2)
     {
-        case 0: // open all files
+        // Do not open any files
+        result = true;
+    }
+    else
+    {
+        Manager::Get()->GetEditorManager()->HideNotebook();
+        if(openmode == 0) // Open all files
+        {
+            FilesList::Node* node = m_Files.GetFirst();
+            while(node)
             {
-//                Manager::Get()->GetAppWindow()->Freeze();
-                if (Manager::Get()->GetEditorManager()->GetNotebook())
-                    Manager::Get()->GetEditorManager()->GetNotebook()->Hide();
+                ProjectFile* f = node->GetData();
+                Manager::Get()->GetEditorManager()->Open(f->file.GetFullPath(),0,f);
+                node = node->GetNext();
+            }
+            result = true;
+        }
+        else if(openmode == 1)// Open last open files
+        {
+            wxFileName fname(m_Filename);
+            fname.SetExt(_T("layout"));
+            ProjectLayoutLoader loader(this);
+            if (loader.Open(fname.GetFullPath()))
+            {
                 FilesList::Node* node = m_Files.GetFirst();
                 while(node)
                 {
                     ProjectFile* f = node->GetData();
-                    Manager::Get()->GetEditorManager()->Open(f->file.GetFullPath(),0,f);
+                    if (f->editorOpen)
+                    {
+                        cbEditor* ed = Manager::Get()->GetEditorManager()->Open(f->file.GetFullPath(),0,f);
+                        if (ed)
+                            ed->SetProjectFile(f);
+                    }
                     node = node->GetNext();
                 }
-//                Manager::Get()->GetAppWindow()->Thaw();
-                if (Manager::Get()->GetEditorManager()->GetNotebook())
-                    Manager::Get()->GetEditorManager()->GetNotebook()->Show();
-
-#if !wxCHECK_VERSION(2,5,0)
-                // this is the only way I 've found to correctly refresh
-                // under wx2.4.2
-                if (Manager::Get()->GetEditorManager()->GetNotebook())
-                    Manager::Get()->GetEditorManager()->GetNotebook()->Refresh();
-                if (Manager::Get()->GetEditorManager()->GetActiveEditor())
-                    Manager::Get()->GetEditorManager()->GetActiveEditor()->Refresh();
-#endif
-                Manager::Get()->GetAppWindow()->Refresh();
-            }
-            break;
-        
-        case 1: // open last open files
-            {
-                wxFileName fname(m_Filename);
-                fname.SetExt(_T("layout"));
-                ProjectLayoutLoader loader(this);
-                if (loader.Open(fname.GetFullPath()))
+                ProjectFile* f = loader.GetTopProjectFile();
+                if (f)
                 {
-                    FilesList::Node* node = m_Files.GetFirst();
-                    if (Manager::Get()->GetEditorManager()->GetNotebook())
-                        Manager::Get()->GetEditorManager()->GetNotebook()->Hide();
-//                    Manager::Get()->GetAppWindow()->Freeze();
-                    while(node)
+                    Manager::Get()->GetMessageManager()->DebugLog(_T("Top Editor: %s"),f->file.GetFullPath().c_str());
+                    EditorBase* eb = Manager::Get()->GetEditorManager()->Open(f->file.GetFullPath());
+                    if(eb)
                     {
-                        ProjectFile* f = node->GetData();
-                        if (f->editorOpen)
-                        {
-                            cbEditor* ed = Manager::Get()->GetEditorManager()->Open(f->file.GetFullPath(),0,f);
-                            if (ed)
-                                ed->SetProjectFile(f);
-                        }
-                        node = node->GetNext();
+                        Manager::Get()->GetProjectManager()->SetTopEditor(eb);
+                        eb->Activate();
                     }
-                    ProjectFile* f = loader.GetTopProjectFile();
-                    if (f)
-                    {
-                        Manager::Get()->GetMessageManager()->DebugLog(_T("Top Editor: %s"),f->file.GetFullPath().c_str());
-                        EditorBase* eb = Manager::Get()->GetEditorManager()->Open(f->file.GetFullPath());
-                        if(eb)
-                        {
-                            Manager::Get()->GetProjectManager()->SetTopEditor(eb);
-                            eb->Activate();
-                        }
-                    }
-                    if (Manager::Get()->GetEditorManager()->GetNotebook())
-                        Manager::Get()->GetEditorManager()->GetNotebook()->Show();
-
-//                    Manager::Get()->GetAppWindow()->Thaw();
-#if !wxCHECK_VERSION(2,5,0)
-                    // this is the only way I 've found to correctly refresh
-                    // under wx2.4.2
-                    if (Manager::Get()->GetEditorManager()->GetNotebook())
-                        Manager::Get()->GetEditorManager()->GetNotebook()->Refresh();
-                    if (Manager::Get()->GetEditorManager()->GetActiveEditor())
-                        Manager::Get()->GetEditorManager()->GetActiveEditor()->Refresh();
-#endif
-                    Manager::Get()->GetAppWindow()->Refresh();
-                    return true;
                 }
             }
-            break;
-
-        case 2: // do not open any files
-            return true;
-        
-        default: break;
+            result = true;
+        }
+        else
+            result = false;
+        Manager::Get()->GetEditorManager()->ShowNotebook();
     }
-	return false;
+    return result;
 }
 
 ProjectFile* cbProject::AddFile(const wxString& targetName, const wxString& filename, bool compile, bool link, unsigned short int weight)
@@ -587,24 +559,24 @@ ProjectFile* cbProject::AddFile(int targetIndex, const wxString& filename, bool 
 				ft == ftResourceBin ||
 				ft == ftStaticLib);
 
-    
+
     f->compile = localCompile;
     f->link = localLink;
     fname.Assign(UnixFilename(filename));
     if(!m_CurrentlyLoading || m_BasePath.IsEmpty())
         m_BasePath = GetBasePath();
     fname.Normalize(wxPATH_NORM_ALL & ~wxPATH_NORM_CASE, m_BasePath);
-    
+
     fname.Assign(fname.GetFullPath());
     f->file.Assign(fname);
 	//Manager::Get()->GetMessageManager()->Log(_T("Adding %s"), f->file.GetFullPath().c_str());
     fname.MakeRelativeTo(m_BasePath);
     f->relativeFilename = fname.GetFullPath();
-    
+
     m_Files.Append(f);
     if (!m_CurrentlyLoading)
     {
-        CalculateCommonTopLevelPath();        
+        CalculateCommonTopLevelPath();
     }
     SetModified(true);
     m_ProjectFilesMap[UnixFilename(f->relativeFilename)] = f; // add to hashmap
@@ -616,10 +588,10 @@ bool cbProject::RemoveFile(int index)
     ProjectFile* f = m_Files[index];
     m_ProjectFilesMap.erase(UnixFilename(f->relativeFilename)); // remove from hashmap
     Manager::Get()->GetEditorManager()->Close(f->file.GetFullPath());
-    
+
     FilesList::Node* node = m_Files.Item(index);
     m_Files.DeleteNode(node);
-	
+
     SetModified(true);
 	return true;
 }
@@ -633,14 +605,14 @@ void cbProject::BuildTree(wxTreeCtrl* tree, const wxTreeItemId& root, bool categ
 {
     if (!tree)
         return;
-    
+
     //sort list of files
     m_Files.Sort(filesSort);
-    
+
     FileTreeData* ftd = new FileTreeData(this);
     m_ProjectNode = tree->AppendItem(root, GetTitle(), 1, 1, ftd);
     wxTreeItemId others = m_ProjectNode;
-    
+
     // create file-type categories nodes (if enabled)
     wxTreeItemId* pGroupNodes = 0L;
     if (categorize && fgam)
@@ -705,7 +677,7 @@ void cbProject::AddTreeNode(wxTreeCtrl* tree, const wxString& text, const wxTree
     // see if the text contains any path info, e.g. plugins/compilergcc/compilergcc.cpp
     // in that case, take the first element (plugins in this example), create a sub-folder
     // with the same name and recurse with the result...
-    
+
     wxString path = text;
     int pos = path.Find(_T('/'));
     if (pos == -1)
@@ -715,9 +687,9 @@ void cbProject::AddTreeNode(wxTreeCtrl* tree, const wxString& text, const wxTree
         // ok, we got it. now split it up and recurse
         wxString folder = path.Left(pos);
         path = path.Right(path.Length() - pos - 1);
-        
+
         // see if we already have this path
-#if (wxMAJOR_VERSION == 2) && (wxMINOR_VERSION < 5)	
+#if (wxMAJOR_VERSION == 2) && (wxMINOR_VERSION < 5)
         long int cookie = 0;
 #else
         wxTreeItemIdValue cookie; //2.6.0
@@ -730,12 +702,12 @@ void cbProject::AddTreeNode(wxTreeCtrl* tree, const wxString& text, const wxTree
                 break;
             newparent = tree->GetNextChild(parent, cookie);
         }
-        
+
         if (!newparent)
 		{
 			// in order not to override wxTreeCtrl to sort alphabetically but the
 			// folders be always on top, we just search here where to put the new folder...
-#if (wxMAJOR_VERSION == 2) && (wxMINOR_VERSION < 5)	
+#if (wxMAJOR_VERSION == 2) && (wxMINOR_VERSION < 5)
             long int cookie2 = 0;
 #else
             wxTreeItemIdValue cookie2; //2.6.0
@@ -797,7 +769,7 @@ const wxString& cbProject::GetMakefile()
 {
 	if (!m_Makefile.IsEmpty())
 		return m_Makefile;
-		
+
 	wxFileName makefile(m_Makefile);
     makefile.Assign(m_Filename);
     makefile.SetName(_T("Makefile"));
@@ -805,7 +777,7 @@ const wxString& cbProject::GetMakefile()
     makefile.MakeRelativeTo(GetBasePath());
 
     m_Makefile = makefile.GetFullPath();
-	
+
 	SetModified(true);
 	return m_Makefile;
 }
@@ -815,7 +787,7 @@ ProjectFile* cbProject::GetFile(int index)
     FilesList::Node* node = m_Files.Item(index);
     if (node)
         return node->GetData();
-        
+
     return NULL;
 }
 
@@ -865,14 +837,14 @@ bool cbProject::QueryCloseAllFiles()
 bool cbProject::CloseAllFiles(bool dontsave)
 {
 	// first try to close modified editors
-	
+
     if(!dontsave)
         if(!QueryCloseAllFiles())
             return false;
 
 	// now free the rest of the project files
     int count = m_Files.GetCount();
-    Manager::Get()->GetAppWindow()->Freeze();
+    Manager::Get()->GetEditorManager()->HideNotebook();
     FilesList::Node* node = m_Files.GetFirst();
     while(node)
     {
@@ -887,8 +859,7 @@ bool cbProject::CloseAllFiles(bool dontsave)
         else
             node = node->GetNext();
     }
-    Manager::Get()->GetAppWindow()->Thaw();
-    Manager::Get()->GetAppWindow()->Refresh();
+    Manager::Get()->GetEditorManager()->ShowNotebook();
     return count == 0;
 }
 
@@ -957,7 +928,7 @@ bool cbProject::RenameBuildTarget(int index, const wxString& targetName)
             pf->RenameBuildTarget(target->GetTitle(), targetName);
         }
         target->SetTitle(targetName);
-        SetModified(true); 
+        SetModified(true);
         return true;
     }
     return false;
@@ -981,7 +952,7 @@ bool cbProject::RemoveBuildTarget(int index)
         }
         delete target;
         m_Targets.RemoveAt(index);
-        SetModified(true); 
+        SetModified(true);
         return true;
     }
     return false;
@@ -1068,7 +1039,7 @@ void cbProject::ReOrderTargets(const wxArrayString& nameOrder)
         msgMan->DebugLog(_("cbProject::ReOrderTargets() : Count does not match (%d sent, %d had)..."), nameOrder.GetCount(), m_Targets.GetCount());
         return;
     }
-    
+
     for (unsigned int i = 0; i < nameOrder.GetCount(); ++i)
     {
         ProjectBuildTarget* target = GetBuildTarget(nameOrder[i]);
@@ -1077,11 +1048,11 @@ void cbProject::ReOrderTargets(const wxArrayString& nameOrder)
             msgMan->DebugLog(_("cbProject::ReOrderTargets() : Target \"%s\" not found..."), nameOrder[i].c_str());
             break;
         }
-        
+
         m_Targets.Remove(target);
         m_Targets.Insert(target, i);
     }
-    SetModified(true); 
+    SetModified(true);
 }
 
 #ifdef USE_OPENFILES_TREE
@@ -1089,8 +1060,8 @@ bool MiscTreeItemData::OwnerCheck(wxTreeEvent& event,wxTreeCtrl *tree,wxEvtHandl
 {
     if(!tree)   // No tree to get data from - ignore event
         return false;
-        
-    MiscTreeItemData* data = 
+
+    MiscTreeItemData* data =
         (MiscTreeItemData*)tree->GetItemData(event.GetItem());
     if(!data)
     {
@@ -1100,12 +1071,12 @@ bool MiscTreeItemData::OwnerCheck(wxTreeEvent& event,wxTreeCtrl *tree,wxEvtHandl
         {
             event.Skip();
             return false;
-        }         
+        }
     }
     wxEvtHandler *h = data->GetOwner();
     if((h && h!=handler) || (strict && !h))
     {   // Tree Item belongs to another handler - skip
-        event.Skip(); 
+        event.Skip();
         return false;
     }
     return true;
