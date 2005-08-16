@@ -20,14 +20,14 @@
 
 	/*
 	Disable the warning:
-	"<Unknown>' has C-linkage specified, but returns UDT 'wxString' which is 
+	"<Unknown>' has C-linkage specified, but returns UDT 'wxString' which is
 	incompatible with C"
 	This is Ok, because we're always using the returned UDT from within C++
 	*/
 	#pragma warning(disable:4190)
 
 	// Fix 'for loop scoping' for visual C++ 6
-	/// @todo Fix this version number...My SP5 VC++6 is version 1200, but what about 
+	/// @todo Fix this version number...My SP5 VC++6 is version 1200, but what about
 	/// other SPs? (1-4,6)
 	#if _MSC_VER <= 1200
 		#define for if(0); else for
@@ -132,6 +132,18 @@ from DLLs. Instead, we build "sdk" as a static library
 	#define RESOURCE_EXT	_T("")
 	#define RESOURCEBIN_EXT	_T("")
 #endif
+
+// Convenience Macros for the SDK
+#define  EDMAN() Manager::Get()->GetEditorManager()
+#define PRJMAN() Manager::Get()->GetProjectManager()
+#define MSGMAN() Manager::Get()->GetMessageManager()
+#define TLSMAN() Manager::Get()->GetToolsManager()
+#define MACMAN() Manager::Get()->GetMacrosManager()
+#define PRSMAN() Manager::Get()->GetPersonalityManager()
+
+#define CFGMAN() ConfigManager::Get()
+#define CFG_READ(...)    ConfigManager::Get()->Read(__VA_ARGS__)
+#define CFG_WRITE(...) ConfigManager::Get()->Write(__VA_ARGS__)
 
 #endif // SETTINGS_H
 
