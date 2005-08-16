@@ -41,7 +41,7 @@
 MessageManager* MessageManager::Get(wxWindow* parent)
 {
     if(Manager::isappShuttingDown()) // The mother of all sanity checks
-        MessageManager::Free();        
+        MessageManager::Free();
     else if (!MessageManagerProxy::Get())
 	{
 		MessageManagerProxy::Set( new MessageManager(parent) );
@@ -72,7 +72,7 @@ MessageManager::MessageManager(wxWindow* parent)
     m_Open(false)
 {
     SC_CONSTRUCTOR_BEGIN
-    
+
     wxImageList* images = new wxImageList(16, 16);
 
     // add default log and debug images (index 0 and 1)
@@ -97,7 +97,7 @@ MessageManager::MessageManager(wxWindow* parent)
     }
 
     ConfigManager::AddConfiguration(_("Message Manager"), _T("/message_manager"));
-    
+
     m_OpenSize = ConfigManager::Get()->Read(_T("/main_frame/layout/bottom_block_height"), 150);
     m_AutoHide = ConfigManager::Get()->Read(_T("/message_manager/auto_hide"), 0L);
     Open();
@@ -143,7 +143,8 @@ void MessageManager::Log(const wxChar* msg, ...)
     va_end(arg_list);
 
     m_Logs[mltLog]->AddLog(tmp);
-	wxYield(); //wxSafeYield(this,true);
+	if(!Manager::isappShuttingDown())
+        wxYield();
 }
 
 void MessageManager::DebugLog(const wxChar* msg, ...)
@@ -160,7 +161,8 @@ void MessageManager::DebugLog(const wxChar* msg, ...)
 
 	wxDateTime timestamp = wxDateTime::UNow();
     m_Logs[mltDebug]->AddLog(_T("[") + timestamp.Format(_T("%X.%l")) + _T("]: ") + tmp);
-	wxYield(); //wxSafeYield(this,true);
+	if(!Manager::isappShuttingDown())
+        wxYield();
 }
 
 void MessageManager::DebugLogWarning(const wxChar* msg, ...)
@@ -228,7 +230,8 @@ void MessageManager::Log(int id, const wxChar* msg, ...)
     va_end(arg_list);
 
     m_LogIDs[id]->AddLog(tmp);
-	wxYield(); //wxSafeYield(this,true);
+	if(!Manager::isappShuttingDown())
+        wxYield();
 }
 
 void MessageManager::AppendLog(const wxChar* msg, ...)
@@ -242,7 +245,8 @@ void MessageManager::AppendLog(const wxChar* msg, ...)
     va_end(arg_list);
 
     m_Logs[mltLog]->AddLog(tmp, false);
-	wxYield(); //wxSafeYield(this,true);
+	if(!Manager::isappShuttingDown())
+        wxYield();
 }
 
 void MessageManager::AppendLog(int id, const wxChar* msg, ...)
@@ -259,7 +263,8 @@ void MessageManager::AppendLog(int id, const wxChar* msg, ...)
     va_end(arg_list);
 
     m_LogIDs[id]->AddLog(tmp, false);
-	wxYield(); //wxSafeYield(this,true);
+	if(!Manager::isappShuttingDown())
+        wxYield();
 }
 
 // switch to log page
@@ -348,7 +353,7 @@ int MessageManager::GetOpenSize()
             y = GetSize().y + 3; // Shouldn't happen. Added for safety.
             // 3 is the difference between both sizes (found empirically).
     }
-    return y; 
+    return y;
     // return (m_Open || !m_AutoHide) ? (GetSize().y + 3) : m_OpenSize;
 }
 
@@ -415,6 +420,6 @@ void MessageManager::OnSelChange(wxNotebookEvent& event)
     {
         Open();
     }
-    
+
     event.Skip();
 }

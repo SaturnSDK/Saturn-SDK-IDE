@@ -68,7 +68,7 @@ class MainFrame : public wxFrame
         void OnEditUncommentSelected(wxCommandEvent& event);
         void OnEditToggleCommentSelected(wxCommandEvent & event);
         void OnEditAutoComplete(wxCommandEvent& event);
-		
+
 		void OnEditBookmarksToggle(wxCommandEvent& event);
 		void OnEditBookmarksNext(wxCommandEvent& event);
 		void OnEditBookmarksPrevious(wxCommandEvent& event);
@@ -112,11 +112,11 @@ class MainFrame : public wxFrame
         void OnFocusEditor(wxCommandEvent& event);
         void OnToggleFullScreen(wxCommandEvent& event);
         void OnPositionManagerTree(wxCommandEvent& event);
-        
+
         // plugin events
         void OnPluginLoaded(CodeBlocksEvent& event);
         void OnPluginUnloaded(CodeBlocksEvent& event);
-		
+
 		// general UpdateUI events
         void OnEditorUpdateUI(CodeBlocksEvent& event);
 		void OnFileMenuUpdateUI(wxUpdateUIEvent& event);
@@ -124,10 +124,10 @@ class MainFrame : public wxFrame
 		void OnViewMenuUpdateUI(wxUpdateUIEvent& event);
 		void OnSearchMenuUpdateUI(wxUpdateUIEvent& event);
 		void OnProjectMenuUpdateUI(wxUpdateUIEvent& event);
-		
+
 		// sash events
 		void OnDragSash(wxSashEvent& event);
-		
+
 		// project events
 		void OnProjectActivated(CodeBlocksEvent& event);
 		void OnProjectOpened(CodeBlocksEvent& event);
@@ -147,7 +147,7 @@ class MainFrame : public wxFrame
         void AddPluginInHelpPluginsMenu(cbPlugin* plugin);
         void AddPluginInMenus(wxMenu* menu, cbPlugin* plugin, wxObjectEventFunction callback, int pos = -1);
         void RemovePluginFromMenus(const wxString& pluginName);
-		
+
 		void AddEditorInWindowMenu(const wxString& filename, const wxString& title);
 		void RemoveEditorFromWindowMenu(const wxString& filename);
 		int IsEditorInWindowMenu(const wxString& filename);
@@ -163,25 +163,22 @@ class MainFrame : public wxFrame
 
         void RePositionManagerTree(bool left);
         void ShowHideStartPage(bool forceHasProject = false);
-		
+
         void LoadWindowState();
         void SaveWindowState();
 
         void InitializeRecentFilesHistory();
         void TerminateRecentFilesHistory();
-        
+
         wxFileHistory m_FilesHistory;
 
         /// "Close FullScreen" button. Only shown when in FullScreen view
         wxButton* m_pCloseFullScreenBtn;
-        
+
         wxNotebook* m_pNotebook;
 		wxSashLayoutWindow* m_pLeftSash;
 		wxSashLayoutWindow* m_pBottomSash;
-		EditorManager* m_pEdMan;
-		ProjectManager* m_pPrjMan;
-		MessageManager* m_pMsgMan;
-		
+
         wxToolBar* m_pToolbar;
         PluginToolbarsMap m_PluginsTools;
 
@@ -191,10 +188,10 @@ class MainFrame : public wxFrame
 		wxMenu* m_PluginsMenu;
         wxMenu* m_SettingsMenu;
         wxMenu* m_HelpPluginsMenu;
-        
+
         bool m_ReconfiguringPlugins;
         bool m_SmallToolBar;
-		
+
         DECLARE_EVENT_TABLE()
 };
 

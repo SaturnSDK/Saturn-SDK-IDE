@@ -77,7 +77,7 @@ struct cbEditorInternalData
     {
         wxString eolstring;
         cbStyledTextCtrl* control = m_pOwner->GetControl();
-        switch (control->GetEOLMode()) 
+        switch (control->GetEOLMode())
         {
             case wxSTC_EOL_LF:
                 eolstring = _T("\n");
@@ -97,20 +97,20 @@ struct cbEditorInternalData
         cbStyledTextCtrl* control = m_pOwner->GetControl();
         if (position == -1)
             position = control->GetCurrentPos();
-        
+
         int count = 0; // Used to count the number of blank lines
         bool foundlf = false; // For the rare case of CR's without LF's
         while (position)
         {
             wxChar c = control->GetCharAt(--position);
-            if (c == _T('\n')) 
+            if (c == _T('\n'))
             {
             	count++;
             	foundlf = true;
             }
-            else if (c == _T('\r') && !foundlf) 
+            else if (c == _T('\r') && !foundlf)
             	count++;
-            else 
+            else
                 foundlf = false;
             if (count > 1) return 0; // Don't over-indent
             if (c != _T(' ') && c != _T('\t') && c != _T('\n') && c != _T('\r'))
@@ -139,7 +139,7 @@ struct cbEditorInternalData
         }
         return -1;
     }
-    
+
     /** Strip Trailing Blanks before saving */
     void StripTrailingSpaces()
     {
@@ -152,7 +152,7 @@ struct cbEditorInternalData
             int lineEnd = control->GetLineEndPosition(line);
             int i = lineEnd-1;
             wxChar ch = (wxChar)(control->GetCharAt(i));
-            while ((i >= lineStart) && ((ch == _T(' ')) || (ch == _T('\t')))) 
+            while ((i >= lineStart) && ((ch == _T(' ')) || (ch == _T('\t'))))
             {
                 i--;
                 ch = (wxChar)(control->GetCharAt(i));
@@ -163,9 +163,9 @@ struct cbEditorInternalData
                 control->ReplaceTarget(_T(""));
             }
         }
-    	
+
     }
-    
+
     /** Add extra blank line to the file */
     void EnsureFinalLineEnd()
     {
@@ -176,7 +176,7 @@ struct cbEditorInternalData
         if(maxLines <= 1 || enddoc > control->PositionFromLine(maxLines-1))
             control->InsertText(enddoc,GetEOLString());
     }
-    
+
     /** Make sure all the lines end with the same EOL mode */
     void EnsureConsistentLineEnds()
     {
@@ -247,7 +247,7 @@ BEGIN_EVENT_TABLE(cbEditor, EditorBase)
     EVT_CLOSE(cbEditor::OnClose)
     EVT_TIMER(-1, cbEditor::OnTimer)
     // we got dynamic events; look in CreateEditor()
-	
+
 	EVT_MENU(idUndo, cbEditor::OnContextMenuEntry)
 	EVT_MENU(idRedo, cbEditor::OnContextMenuEntry)
 	EVT_MENU(idCut, cbEditor::OnContextMenuEntry)
@@ -285,7 +285,7 @@ cbEditor::cbEditor(wxWindow* parent, const wxString& filename, EditorColorSet* t
     m_IsBuiltinEditor = true;
 
     m_timerWait.SetOwner(this);
-    
+
     InitFilename(filename);
 //    Manager::Get()->GetMessageManager()->DebugLog(_("ctor: Filename=%s\nShort=%s"), m_Filename.c_str(), m_Shortname.c_str());
 
@@ -333,8 +333,8 @@ void cbEditor::NotifyPlugins(wxEventType type, int intArg, const wxString& strAr
 }
 
 bool cbEditor::GetModified()
-{ 
-    return m_Modified || m_pControl->GetModify(); 
+{
+    return m_Modified || m_pControl->GetModify();
 }
 
 void cbEditor::SetModified(bool modified)
@@ -362,7 +362,7 @@ void cbEditor::SetProjectFile(ProjectFile* project_file,bool preserve_modified)
 	bool wasmodified = false;
 	if(preserve_modified)
         wasmodified = GetModified();
-		
+
 	m_pProjectFile = project_file;
 	if (m_pProjectFile)
 	{
@@ -375,7 +375,7 @@ void cbEditor::SetProjectFile(ProjectFile* project_file,bool preserve_modified)
 
 		m_pProjectFile->editorOpen = true;
 		SetBreakpoints();
-		
+
 		if (ConfigManager::Get()->Read(_T("/editor/tab_text_relative"), 1) == 1)
             m_Shortname = m_pProjectFile->relativeToCommonTopLevelPath;
         else
@@ -514,21 +514,21 @@ void cbEditor::SetEditorStyle()
     m_pData->m_strip_trailing_spaces = ConfigManager::Get()->Read(_T("/editor/eol/strip_trailing_spaces"), 1) ? true : false;
     m_pData->m_ensure_final_line_end = ConfigManager::Get()->Read(_T("/editor/eol/ensure_final_line_end"), 0L) ? true : false;
     m_pData->m_ensure_consistent_line_ends = true;
-    
+
     switch(ConfigManager::Get()->Read(_T("/editor/eol/eolmode"), 0L))
     {
-    	case 0: 
+    	case 0:
         default:
             eolmode = wxSTC_EOL_CRLF;
         break;
-        case 1: 
+        case 1:
             eolmode = wxSTC_EOL_CR;
         break;
         case 2:
             eolmode = wxSTC_EOL_LF;
     }
     m_pControl->SetEOLMode(eolmode);
-    
+
     // folding margin
     m_pControl->SetProperty(_T("fold"), ConfigManager::Get()->Read(_T("/editor/folding/show_folds"), 1) ? _T("1") : _T("0"));
     m_pControl->SetProperty(_T("fold.html"), ConfigManager::Get()->Read(_T("/editor/folding/fold_xml"), 1) ? _T("1") : _T("0"));
@@ -572,7 +572,7 @@ bool cbEditor::Reload()
     // call open
     if (!Open())
         return false;
-    
+
     // return (if possible) to old pos
     if (m_pControl)
         m_pControl->GotoPos(pos);
@@ -620,7 +620,7 @@ bool cbEditor::Open()
 
 	if (ConfigManager::Get()->Read(_T("/editor/fold_all_on_open"), 0L))
 		FoldAll();
-    
+
     wxFileName fname(m_Filename);
     m_LastModified = fname.GetModificationTime();
 
@@ -633,19 +633,19 @@ bool cbEditor::Save()
 {
 	if (!GetModified())
 		return true;
-		
+
     if(m_pData->m_strip_trailing_spaces)
         m_pData->StripTrailingSpaces();
     if(m_pData->m_ensure_consistent_line_ends)
         m_pData->EnsureConsistentLineEnds();
     if(m_pData->m_ensure_final_line_end)
         m_pData->EnsureFinalLineEnd();
-		
+
     if (!m_IsOK)
     {
         return SaveAs();
     }
-    
+
     wxFile file(m_Filename, wxFile::write);
     if (file.Write(m_pControl->GetText().c_str(), m_pControl->GetTextLength()) == 0 &&
         m_pControl->GetTextLength() != 0)
@@ -654,7 +654,7 @@ bool cbEditor::Save()
     }
     file.Flush();
     file.Close();
-    
+
     wxFileName fname(m_Filename);
     m_LastModified = fname.GetModificationTime();
 
@@ -662,7 +662,7 @@ bool cbEditor::Save()
 
     m_pControl->SetSavePoint();
     SetModified(false);
-    
+
 	NotifyPlugins(cbEVT_EDITOR_SAVE);
     return true;
 }
@@ -714,7 +714,7 @@ void cbEditor::AutoComplete()
     wxString keyword = m_pControl->GetTextRange(wordStartPos, curPos);
     wxString lineIndent = GetLineIndentString(m_pControl->GetCurrentLine());
     msgMan->DebugLog(_("Auto-complete keyword: %s"), keyword.c_str());
-    
+
     AutoCompleteMap::iterator it;
     for (it = map.begin(); it != map.end(); ++it)
     {
@@ -723,7 +723,7 @@ void cbEditor::AutoComplete()
             // found; auto-complete it
             msgMan->DebugLog(_("Match found"));
             m_pControl->BeginUndoAction();
-            
+
             // indent code accordingly
             wxString code = it->second;
             code.Replace(_T("\n"), _T('\n') + lineIndent);
@@ -739,7 +739,7 @@ void cbEditor::AutoComplete()
                     ++macroPosEnd;
                 if (macroPosEnd == len)
                     break; // no ending parenthesis
-                
+
                 wxString macroName = code.SubString(macroPos + 2, macroPosEnd - 1);
                 msgMan->DebugLog(_("Found macro: %s"), macroName.c_str());
                 wxString macro = wxGetTextFromUser(_("Please enter the text for \"") + macroName + _T("\":"), _("Macro substitution"));
@@ -866,7 +866,7 @@ void cbEditor::MarkerToggle(int marker, int line)
 		m_pControl->MarkerDelete(line, marker);
 	else
 		m_pControl->MarkerAdd(line, marker);
-		
+
 	if (marker == BREAKPOINT_MARKER) // more to do with breakpoints
 	{
 		ProjectFile* pf = GetProjectFile();
@@ -932,7 +932,7 @@ void cbEditor::SetBreakpoints()
 	ProjectFile* pf = GetProjectFile();
 	if (!pf)
 		return;
-		
+
 	m_pControl->MarkerDeleteAll(BREAKPOINT_MARKER);
 	m_pControl->MarkerDeleteAll(BREAKPOINT_LINE);
 	for (unsigned int i = 0; i < pf->breakpoints.GetCount(); ++i)
@@ -995,7 +995,7 @@ int cbEditor::GetLineIndentInSpaces(int line)
             ++spaceCount;
         else if (text[i] == _T('\t'))
             spaceCount += m_pControl->GetTabWidth();
-        else 
+        else
             break;
     }
     return spaceCount;
@@ -1013,7 +1013,7 @@ wxString cbEditor::GetLineIndentString(int line)
     {
         if (text[i] == _T(' ') || text[i] == _T('\t'))
             indent << text[i];
-        else 
+        else
             break;
     }
     return indent;
@@ -1041,14 +1041,19 @@ wxMenu* cbEditor::CreateContextSubMenu(long id)
         menu->Append(idDelete, _("Delete"));
         menu->AppendSeparator();
         menu->Append(idSelectAll, _("Select All"));
-    
+
         bool hasSel = m_pControl->GetSelectionEnd() - m_pControl->GetSelectionStart() != 0;
-    
+
         menu->Enable(idUndo, m_pControl->CanUndo());
         menu->Enable(idRedo, m_pControl->CanRedo());
         menu->Enable(idCut, hasSel);
         menu->Enable(idCopy, hasSel);
+#ifdef __WXGTK__
+        // a wxGTK bug causes the triggering of unexpected events
+        menu->Enable(idPaste, true);
+#else
         menu->Enable(idPaste, m_pControl->CanPaste());
+#endif
         menu->Enable(idDelete, hasSel);
     }
     else if(id == idBookmarks)
@@ -1071,7 +1076,7 @@ wxMenu* cbEditor::CreateContextSubMenu(long id)
     }
     else
         menu = EditorBase::CreateContextSubMenu(id);
-    
+
     return menu;
 }
 
@@ -1109,7 +1114,7 @@ void cbEditor::AddToContextMenu(wxMenu* popup,bool noeditor,bool pluginsdone)
         if(!noeditor)
             popup->Append(idConfigureEditor, _("Configure editor"));
         popup->Append(idProperties, _("Properties"));
-        
+
         // remove "Insert/Empty" if more than one entry
         wxMenu* insert = 0;
         wxMenuItem* insertitem = popup->FindItem(idInsert);
@@ -1162,7 +1167,7 @@ void cbEditor::OnContextMenuEntry(wxCommandEvent& event)
 	// the whole project (almost) but more importantly, to
 	// *not* break cbEditor's interface for such a trivial task...
 	const int id = event.GetId();
-	
+
 	if (id == idUndo)
 		m_pControl->Undo();
 	else if (id == idRedo)
@@ -1217,7 +1222,7 @@ void cbEditor::OnMarginClick(wxStyledTextEvent& event)
 			{
 				int lineYpix = event.GetPosition();
 				int line = m_pControl->LineFromPosition(lineYpix);
-		
+
 				MarkerToggle(BREAKPOINT_MARKER, line);
 				break;
 			}
@@ -1225,7 +1230,7 @@ void cbEditor::OnMarginClick(wxStyledTextEvent& event)
 			{
 				int lineYpix = event.GetPosition();
 				int line = m_pControl->LineFromPosition(lineYpix);
-		
+
 				m_pControl->ToggleFold(line);
 				break;
 			}

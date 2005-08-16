@@ -208,15 +208,25 @@ EditorManager::EditorManager(wxWindow* parent)
 // class destructor
 EditorManager::~EditorManager()
 {
-	SaveAutoComplete();
-	// Close all editors unconditionally
-	CloseAll(true);
-
 	SC_DESTRUCTOR_BEGIN
+	SaveAutoComplete();
 
-    // Clean up editor list
-    m_EditorsList.DeleteContents(false);
+    // Clean up the notebook to prevent segfaults later
+    if(m_pNotebook)
+    {
+        m_pNotebook->Freeze(); // To prevent UpdateUI events
+        while(m_pNotebook->GetPageCount())
+            m_pNotebook->RemovePage(0); // Deletes the page, not the object
+    }
+
+    // Clean up editor list. The notebook is empty, we're free to wipe them out
+    // with no fear of segfaults! :)
+    m_EditorsList.DeleteContents(true);
     m_EditorsList.Clear();
+
+    if(m_pNotebook)
+        m_pNotebook->Thaw();
+
 
 	if (m_Theme)
 		delete m_Theme;
@@ -228,6 +238,7 @@ EditorManager::~EditorManager()
         m_pTree->Destroy();
         m_pTree = NULL;
     }
+
     if (m_pData->m_pImages)
     {
         delete m_pData->m_pImages;
@@ -239,7 +250,7 @@ EditorManager::~EditorManager()
         delete m_pData;
         m_pData = NULL;
     }
-    edman_closebutton = NULL;
+    edman_closebutton = NULL; // will be deleted by the window
 
     SC_DESTRUCTOR_END
 }
