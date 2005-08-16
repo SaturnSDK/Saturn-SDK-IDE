@@ -1323,6 +1323,7 @@ void MainFrame::OnApplicationClose(wxCloseEvent& event)
     TerminateRecentFilesHistory();
 
     Hide(); // Hide the window
+    Refresh();
     // remove all event handlers from this window
     while (GetEventHandler()!=this)
         PopEventHandler(false);

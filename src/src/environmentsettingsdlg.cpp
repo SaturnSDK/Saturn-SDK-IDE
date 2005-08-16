@@ -10,7 +10,7 @@
 EnvironmentSettingsDlg::EnvironmentSettingsDlg(wxWindow* parent)
 {
 	wxXmlResource::Get()->LoadDialog(this, parent, _("dlgEnvironmentSettings"));
-	
+
 	// tab "General"
 	XRCCTRL(*this, "chkShowSplash", wxCheckBox)->SetValue(ConfigManager::Get()->Read(_T("/environment/show_splash"), 1));
 	XRCCTRL(*this, "chkDDE", wxCheckBox)->SetValue(ConfigManager::Get()->Read(_T("/environment/use_dde"), 1));
@@ -24,6 +24,7 @@ EnvironmentSettingsDlg::EnvironmentSettingsDlg(wxWindow* parent)
 	XRCCTRL(*this, "chkAutoHideMessages", wxCheckBox)->SetValue(ConfigManager::Get()->Read(_T("/message_manager/auto_hide"), 0L));
 	XRCCTRL(*this, "chkShowEditorCloseButton", wxCheckBox)->SetValue(ConfigManager::Get()->Read(_T("/editor/show_close_button"), 0L));
 	XRCCTRL(*this, "chkShowStartPage", wxCheckBox)->SetValue(ConfigManager::Get()->Read(_T("/environment/start_here_page"), 1));
+	XRCCTRL(*this, "chkSafebutSlow", wxCheckBox)->SetValue(ConfigManager::Get()->Read(_T("/message_manager/safe_but_slow"), 0L));
 }
 
 EnvironmentSettingsDlg::~EnvironmentSettingsDlg()
@@ -48,6 +49,7 @@ void EnvironmentSettingsDlg::EndModal(int retCode)
         ConfigManager::Get()->Write(_T("/message_manager/auto_hide"), XRCCTRL(*this, "chkAutoHideMessages", wxCheckBox)->GetValue());
         ConfigManager::Get()->Write(_T("/editor/show_close_button"), XRCCTRL(*this, "chkShowEditorCloseButton", wxCheckBox)->GetValue());
         ConfigManager::Get()->Write(_T("/environment/start_here_page"), XRCCTRL(*this, "chkShowStartPage", wxCheckBox)->GetValue());
+        ConfigManager::Get()->Write(_T("/message_manager/safe_but_slow"), XRCCTRL(*this, "chkSafebutSlow", wxCheckBox)->GetValue());
 	}
 
 	wxDialog::EndModal(retCode);

@@ -38,6 +38,19 @@
 #include "simpletextlog.h"
 #include "managerproxy.h"
 
+#define CBYIELD() \
+  {                                                         \
+      if(m_SafebutSlow)                                     \
+      {                                                     \
+          if(Manager::Get()->GetAppWindow())                \
+              Manager::Get()->GetAppWindow()->Refresh();    \
+      }                                                     \
+      else                                                  \
+      {                                                     \
+          wxTheApp->Yield();                                \
+      }                                                     \
+  }
+
 MessageManager* MessageManager::Get(wxWindow* parent)
 {
     if(Manager::isappShuttingDown()) // The mother of all sanity checks
@@ -69,7 +82,8 @@ MessageManager::MessageManager(wxWindow* parent)
     m_LockCounter(0),
     m_OpenSize(150),
     m_AutoHide(false),
-    m_Open(false)
+    m_Open(false),
+    m_SafebutSlow(false)
 {
     SC_CONSTRUCTOR_BEGIN
 
@@ -89,6 +103,7 @@ MessageManager::MessageManager(wxWindow* parent)
     m_LogIDs.clear();
     DoAddLog(mltLog, new SimpleTextLog(this, _("Code::Blocks")));
 	m_HasDebugLog = ConfigManager::Get()->Read(_T("/message_manager/has_debug_log"), 0L);
+	m_SafebutSlow = ConfigManager::Get()->Read(_T("/message_manager/safe_but_slow"), 0L);
 
 	if (m_HasDebugLog)
 	{
@@ -97,6 +112,7 @@ MessageManager::MessageManager(wxWindow* parent)
     }
 
     ConfigManager::AddConfiguration(_("Message Manager"), _T("/message_manager"));
+	ConfigManager::Get()->Write(_T("/message_manager/safe_but_slow"), m_SafebutSlow);
 
     m_OpenSize = ConfigManager::Get()->Read(_T("/main_frame/layout/bottom_block_height"), 150);
     m_AutoHide = ConfigManager::Get()->Read(_T("/message_manager/auto_hide"), 0L);
@@ -109,6 +125,24 @@ MessageManager::~MessageManager()
 {
     SC_DESTRUCTOR_BEGIN
     SC_DESTRUCTOR_END
+}
+
+bool MessageManager::GetSafebutSlow()
+{
+    if(!this)
+        return false;
+    return m_SafebutSlow;
+}
+
+void MessageManager::SetSafebutSlow(bool flag, bool dosave)
+{
+    if(this)
+    {
+        m_SafebutSlow = flag;
+        if(dosave)
+            CFG_WRITE(_T("/message_manager/safe_but_slow"), m_SafebutSlow);
+    }
+
 }
 
 void MessageManager::CreateMenu(wxMenuBar* menuBar)
@@ -143,8 +177,10 @@ void MessageManager::Log(const wxChar* msg, ...)
     va_end(arg_list);
 
     m_Logs[mltLog]->AddLog(tmp);
+    m_Logs[mltLog]->Refresh();
+
 	if(!Manager::isappShuttingDown())
-        wxYield();
+        CBYIELD();
 }
 
 void MessageManager::DebugLog(const wxChar* msg, ...)
@@ -161,8 +197,10 @@ void MessageManager::DebugLog(const wxChar* msg, ...)
 
 	wxDateTime timestamp = wxDateTime::UNow();
     m_Logs[mltDebug]->AddLog(_T("[") + timestamp.Format(_T("%X.%l")) + _T("]: ") + tmp);
+    m_Logs[mltDebug]->Refresh();
+
 	if(!Manager::isappShuttingDown())
-        wxYield();
+        CBYIELD();
 }
 
 void MessageManager::DebugLogWarning(const wxChar* msg, ...)
@@ -230,8 +268,10 @@ void MessageManager::Log(int id, const wxChar* msg, ...)
     va_end(arg_list);
 
     m_LogIDs[id]->AddLog(tmp);
+    m_LogIDs[id]->Refresh();
+
 	if(!Manager::isappShuttingDown())
-        wxYield();
+        CBYIELD();
 }
 
 void MessageManager::AppendLog(const wxChar* msg, ...)
@@ -245,8 +285,9 @@ void MessageManager::AppendLog(const wxChar* msg, ...)
     va_end(arg_list);
 
     m_Logs[mltLog]->AddLog(tmp, false);
+    m_Logs[mltLog]->Refresh();
 	if(!Manager::isappShuttingDown())
-        wxYield();
+        CBYIELD();
 }
 
 void MessageManager::AppendLog(int id, const wxChar* msg, ...)
@@ -263,8 +304,9 @@ void MessageManager::AppendLog(int id, const wxChar* msg, ...)
     va_end(arg_list);
 
     m_LogIDs[id]->AddLog(tmp, false);
+    m_LogIDs[id]->Refresh();
 	if(!Manager::isappShuttingDown())
-        wxYield();
+        CBYIELD();
 }
 
 // switch to log page
