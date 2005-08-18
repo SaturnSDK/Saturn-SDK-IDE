@@ -41,6 +41,8 @@
 #include "cbplugin.h"
 #include "cbeditorprintout.h"
 
+#include <cstring> // std::strlen
+
 /* This struct holds private data for the cbEditor class.
  * It's a paradigm to avoid rebuilding the entire project (as cbEditor is a basic dependency)
  * for just adding a private var or method.
@@ -600,13 +602,12 @@ bool cbEditor::Open()
     if (!file.IsOpened())
         return false;
 
-    wxChar* buff = st.GetWriteBuf(file.Length());
+    void* buff = st.GetWriteBuf(file.Length());
     file.Read(buff, file.Length());
     file.Close();
-    st.UngetWriteBuf();
-
-    m_pControl->InsertText(0, st);
+    m_pControl->InsertText(0, _U( (char const *)buff ));
     m_pControl->EmptyUndoBuffer();
+    st.UngetWriteBuf();
 
     // mark the file read-only, if applicable
     bool read_only = !wxFile::Access(m_Filename.c_str(), wxFile::write);
@@ -647,8 +648,9 @@ bool cbEditor::Save()
     }
 
     wxFile file(m_Filename, wxFile::write);
-    if (file.Write(m_pControl->GetText().c_str(), m_pControl->GetTextLength()) == 0 &&
-        m_pControl->GetTextLength() != 0)
+    const wxWX2MBbuf utf_text = _C(m_pControl->GetText());
+    size_t utf_text_length = std::strlen( utf_text );
+    if (file.Write( utf_text, utf_text_length ) == 0 && utf_text_length != 0)
     {
         return false; // failed; file is read-only?
     }

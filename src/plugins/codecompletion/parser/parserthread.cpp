@@ -29,6 +29,8 @@
 #include <wx/msgdlg.h>
 #include <globals.h>
 
+#include <cctype>
+
 int THREAD_START = wxNewId();
 int THREAD_END = wxNewId();
 int NEW_TOKEN = wxNewId();
@@ -49,7 +51,7 @@ ParserThread::ParserThread(wxEvtHandler* parent,bool* abortflag,
 	m_pAbort=abortflag;
 	//ctor
 	m_Tokens.m_Options.wantPreprocessor = options.wantPreprocessor;
-	
+
 	if (!bufferOrFilename.IsEmpty())
 	{
 		if (!options.useBuffer)
@@ -174,7 +176,7 @@ bool ParserThread::ParseBufferForFunctions(const wxString& buffer)
 
 	m_Str.Clear();
     m_EncounteredNamespaces.Clear();
-	
+
 	while (1)
 	{
         if (!m_pTokens || TestDestroy())
@@ -274,12 +276,12 @@ bool ParserThread::Parse()
         return false;
 #if 0
 	if (!m_Options.useBuffer)
-		Log("Parsing " + m_Filename); 
+		Log("Parsing " + m_Filename);
 #endif
 
 	if (!m_Tokens.IsOK())
 	{
-		//Log("Cannot parse " + m_Filename); 
+		//Log("Cannot parse " + m_Filename);
 		return false;
     }
 
@@ -295,7 +297,7 @@ bool ParserThread::Parse()
 	{
 		if (!m_pTokens || TestDestroy())
 			break;
-		
+
 		wxString token = m_Tokens.GetToken();
 		if (token.IsEmpty())
 			break;
@@ -590,7 +592,7 @@ Token* ParserThread::TokenExists(const wxString& name, Token* parent, short int 
 
 wxString ParserThread::GetActualTokenType()
 {
-    // we will compensate for spaces between 
+    // we will compensate for spaces between
     // namespaces (e.g. NAMESPACE :: SomeType) wich is valid C++ construct
     // we 'll remove spaces that follow a semicolon
 	int pos = 0;
@@ -618,7 +620,7 @@ wxString ParserThread::GetActualTokenType()
 	// not * or &
 	//                        const wxString&
 	// in this example, we would stop here ^
-    while (pos >= 0 && 
+    while (pos >= 0 &&
             (isspace(m_Str.GetChar(pos)) ||
             m_Str.GetChar(pos) == '*' ||
             m_Str.GetChar(pos) == '&'))
@@ -684,7 +686,7 @@ Token* ParserThread::DoAddToken(TokenKind kind, const wxString& name, const wxSt
     }
 
 	newToken->m_Type = m_Str;
-	newToken->m_ActualType = GetActualTokenType();	
+	newToken->m_ActualType = GetActualTokenType();
 	newToken->m_Args = args;
 	newToken->m_Scope = m_LastScope;
 	newToken->m_TokenKind = kind;
@@ -743,7 +745,7 @@ void ParserThread::HandleIncludes()
 			}
 		}
 	}
-	
+
 	if (!filename.IsEmpty())
 	{
 		wxCommandEvent event(wxEVT_COMMAND_MENU_SELECTED, FILE_NEEDS_PARSING);
@@ -782,7 +784,7 @@ void ParserThread::HandleNamespace()
 {
     wxString ns = m_Tokens.GetToken();
     wxString next = m_Tokens.PeekToken();
-    
+
     if (next.Matches(_T("{")))
     {
         // use the existing copy (if any)
@@ -793,16 +795,16 @@ void ParserThread::HandleNamespace()
             return;
 
         m_Tokens.GetToken(); // eat {
-            
+
         Token* lastParent = m_pLastParent;
         TokenScope lastScope = m_LastScope;
-        
+
         m_pLastParent = newToken;
         // default scope is: public for namespaces (actually no, but emulate it)
         m_LastScope = tsPublic;
-        
+
         Parse();
-        
+
         m_pLastParent = lastParent;
         m_LastScope = lastScope;
     }
@@ -863,7 +865,7 @@ void ParserThread::HandleClass(bool isClass)
                                 ++nest;
                             else if (tmp1.Matches(_T(">")))
                                 --nest;
-                                
+
                             if (tmp1.IsEmpty() ||
                                 tmp1.Matches(_T("{")) ||
                                 tmp1.Matches(_T(";")) ||
@@ -877,7 +879,7 @@ void ParserThread::HandleClass(bool isClass)
 				}
                 //Log("Ancestors: " + ancestors);
 			}
-			
+
 			if (current.Matches(_T("{"))) // unnamed class/struct
 			{
 				Token* lastParent = m_pLastParent;
@@ -885,9 +887,9 @@ void ParserThread::HandleClass(bool isClass)
 
 				// default scope is: private for classes, public for structs
 				m_LastScope = isClass ? tsPrivate : tsPublic;
-				
+
 				Parse();
-				
+
 				m_pLastParent = lastParent;
 				m_LastScope = lastScope;
                 break;
@@ -901,16 +903,16 @@ void ParserThread::HandleClass(bool isClass)
 				newToken->m_AncestorsString = ancestors;
 
                 m_Tokens.GetToken(); // eat {
-					
+
 				Token* lastParent = m_pLastParent;
 				TokenScope lastScope = m_LastScope;
-				
+
 				m_pLastParent = newToken;
 				// default scope is: private for classes, public for structs
 				m_LastScope = isClass ? tsPrivate : tsPublic;
-				
+
 				Parse();
-				
+
 				m_pLastParent = lastParent;
 				m_LastScope = lastScope;
                 break;
@@ -952,7 +954,7 @@ void ParserThread::HandleFunction(const wxString& name, bool isOperator)
                 CtorDtor = localParent && name.Matches(localParent->m_Name);
             }
 		}
-		
+
 		if (CtorDtor)
 		{
 			m_Str.Trim();
@@ -983,7 +985,7 @@ void ParserThread::HandleEnum()
 		m_Tokens.UngetToken(); // return '{' back
 		isUnnamed = true;
     }
-	
+
 	Token* newEnum = 0L;
 	unsigned int level = 0;
 	if (isalpha(token.GetChar(0)))
@@ -1009,7 +1011,7 @@ void ParserThread::HandleEnum()
 			return;
 		level = m_Tokens.GetNestingLevel() - 1; // we 've already entered the { block
 	}
-	
+
 	while (1)
 	{
 		// process enumerators

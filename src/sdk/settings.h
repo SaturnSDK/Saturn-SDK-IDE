@@ -2,12 +2,15 @@
 #define SETTINGS_H
 
 #ifdef wxUSE_UNICODE
-  #define _U(x) wxString((x),wxConvUTF8)
-  #define _UU(x,y) wxString((x),y)
+    #define _UU(x,y) wxString((x),(y))
+    #define _CC(x,y) (x).mb_str((y))
 #else
-  #define _U(x) (x)
-  #define _UU(x,y) (x)
+    #define _UU(x,y) (x)
+    #define _CC(x,y) (x)
 #endif
+
+#define _U(x) _UU((x),wxConvUTF8)
+#define _C(x) _CC((x),wxConvUTF8)
 
 #if defined(_MSC_VER)
 	/*

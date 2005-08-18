@@ -28,6 +28,8 @@
 #include <wx/file.h>
 #include <wx/msgdlg.h>
 
+#include <cctype>
+
 Tokenizer::Tokenizer(const wxString& filename)
 	: m_Filename(filename),
 	m_BufferLen(0),
@@ -125,7 +127,7 @@ bool Tokenizer::ReadFile()
     file.Read(buff, file.Length());
     m_Buffer.UngetWriteBuf();
 	m_BufferLen = m_Buffer.Length();
-	
+
     return true;
 }
 
@@ -186,7 +188,7 @@ bool Tokenizer::SkipToChar(const wxChar& ch)
 			break;
 		else
 		{
-			// check for "\\" 
+			// check for "\\"
 			if (m_TokenIndex - 2 >= 0 && m_Buffer.GetChar(m_TokenIndex - 2) == '\\')
 				break;
 		}
@@ -277,7 +279,7 @@ bool Tokenizer::SkipBlock(const wxChar& ch)
 		case '<': match = '>'; break;
 		default : return false;
 	}
-	
+
 	MoveToNextChar();
 	int count = 1; // counter for nested blocks (xxx())
 	while (!IsEOF())
@@ -349,7 +351,7 @@ bool Tokenizer::SkipUnwanted()
 			if (!SkipWhiteSpace())
 				return false;
 		}
-		
+
 		while (CurrentChar() == '#')
 		{
 			// preprocessor directives
@@ -386,7 +388,7 @@ bool Tokenizer::SkipUnwanted()
 			if (!SkipWhiteSpace())
 				return false;
 		}
-	
+
 		while (CurrentChar() == '=')
 		{
 			// skip assignments
@@ -394,7 +396,7 @@ bool Tokenizer::SkipUnwanted()
 			if (!SkipToOneOfChars(",;}", true))
 				return false;
 		}
-	
+
 		while (CurrentChar() == '?')
 		{
 			// skip "condition ? true : false"
@@ -439,13 +441,13 @@ wxString Tokenizer::DoGetToken()
 {
 	if (IsEOF())
 		return wxEmptyString;
-	
+
 	if (!SkipWhiteSpace())
 		return wxEmptyString;
 
 	if (!SkipUnwanted())
 		return wxEmptyString;
-	
+
 	int start = m_TokenIndex;
 	wxString m_Str;
 
@@ -534,7 +536,7 @@ wxString Tokenizer::DoGetToken()
 						++level;
 					else if (tmp.GetChar(i) == ')')
 						--level;
-					if ((tmp.GetChar(i) == ',' && level == 0) || 
+					if ((tmp.GetChar(i) == ',' && level == 0) ||
 						(tmp.GetChar(i) == ')' && level < 0))
 						break;
 					++i;
@@ -543,7 +545,7 @@ wxString Tokenizer::DoGetToken()
                     --i;
 				continue; // we are done here
 			}
-			
+
 			if (i < tmp.Length() - 1 && tmp.GetChar(i) == ' ' && tmp.GetChar(i + 1) == ' ')
 				continue; // skip excessive spaces
 			m_Str << tmp.GetChar(i);
@@ -577,6 +579,6 @@ wxString Tokenizer::DoGetToken()
 
 	if (m_LastWasPreprocessor)
 		m_LastPreprocessor << m_Str;
-	
+
 	return m_Str;
 }
