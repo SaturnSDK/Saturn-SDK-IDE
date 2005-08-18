@@ -59,6 +59,20 @@ void ProjectBuildTarget::SetExternalDeps(const wxString& deps)
     }
 }
 
+const wxString & ProjectBuildTarget::GetAdditionalOutputFiles()
+{
+    return m_AdditionalOutputFiles;
+}
+
+void ProjectBuildTarget::SetAdditionalOutputFiles(const wxString& files)
+{
+    if (m_AdditionalOutputFiles != files)
+    {
+        m_AdditionalOutputFiles = files;
+        SetModified(true);
+    }
+}
+
 bool ProjectBuildTarget::GetIncludeInTargetAll()
 {
 	return m_BuildWithAll;
@@ -213,7 +227,7 @@ void ProjectFile::ToggleBreakpoint(int line)
 wxString ProjectFile::GetBaseName()
 {
     wxFileName fname(relativeFilename);
-    fname.SetExt("");
+    fname.SetExt(_T(""));
     return fname.GetFullPath();
 }
 
@@ -235,7 +249,7 @@ void ProjectFile::SetObjName(const wxString& name)
         if (project && CompilerFactory::CompilerIndexOK(project->GetCompilerIndex()))
             fname.SetExt(CompilerFactory::Compilers[project->GetCompilerIndex()]->GetSwitches().objectExtension);
         else
-            fname.SetExt(".o"); // fallback?
+            fname.SetExt(_T(".o")); // fallback?
     }
     m_ObjName = fname.GetFullPath();
 }

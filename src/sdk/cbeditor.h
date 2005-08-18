@@ -1,7 +1,7 @@
 #ifndef EDITOR_H
 #define EDITOR_H
 
-#define EDITOR_MODIFIED             "*"
+#define EDITOR_MODIFIED             _T("*")
 
 #define BOOKMARK_MARKER					0
 #define BOOKMARK_STYLE 					wxSTC_MARK_ARROW

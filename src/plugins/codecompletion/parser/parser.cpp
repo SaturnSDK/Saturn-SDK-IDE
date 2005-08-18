@@ -62,51 +62,51 @@ Parser::Parser(wxEvtHandler* parent)
 	m_pImageList = new wxImageList(16, 16);
 	wxBitmap bmp;
 	wxString prefix;
-    prefix = ConfigManager::Get()->Read("data_path") + "/images/codecompletion/";
+    prefix = ConfigManager::Get()->Read(_T("data_path")) + _T("/images/codecompletion/");
     // bitmaps must be added by order of PARSER_IMG_* consts
-    bmp.LoadFile(prefix + "class_folder.png", wxBITMAP_TYPE_PNG);
+    bmp.LoadFile(prefix + _T("class_folder.png"), wxBITMAP_TYPE_PNG);
     m_pImageList->Add(bmp); // PARSER_IMG_CLASS_FOLDER
-    bmp.LoadFile(prefix + "class.png", wxBITMAP_TYPE_PNG);
+    bmp.LoadFile(prefix + _T("class.png"), wxBITMAP_TYPE_PNG);
     m_pImageList->Add(bmp); // PARSER_IMG_CLASS
-    bmp.LoadFile(prefix + "ctor_private.png", wxBITMAP_TYPE_PNG);
+    bmp.LoadFile(prefix + _T("ctor_private.png"), wxBITMAP_TYPE_PNG);
     m_pImageList->Add(bmp); // PARSER_IMG_CTOR_PRIVATE
-    bmp.LoadFile(prefix + "ctor_protected.png", wxBITMAP_TYPE_PNG);
+    bmp.LoadFile(prefix + _T("ctor_protected.png"), wxBITMAP_TYPE_PNG);
     m_pImageList->Add(bmp); // PARSER_IMG_CTOR_PROTECTED
-    bmp.LoadFile(prefix + "ctor_public.png", wxBITMAP_TYPE_PNG);
+    bmp.LoadFile(prefix + _T("ctor_public.png"), wxBITMAP_TYPE_PNG);
     m_pImageList->Add(bmp); // PARSER_IMG_CTOR_PUBLIC
-    bmp.LoadFile(prefix + "dtor_private.png", wxBITMAP_TYPE_PNG);
+    bmp.LoadFile(prefix + _T("dtor_private.png"), wxBITMAP_TYPE_PNG);
     m_pImageList->Add(bmp); // PARSER_IMG_DTOR_PRIVATE
-    bmp.LoadFile(prefix + "dtor_protected.png", wxBITMAP_TYPE_PNG);
+    bmp.LoadFile(prefix + _T("dtor_protected.png"), wxBITMAP_TYPE_PNG);
     m_pImageList->Add(bmp); // PARSER_IMG_DTOR_PROTECTED
-    bmp.LoadFile(prefix + "dtor_public.png", wxBITMAP_TYPE_PNG);
+    bmp.LoadFile(prefix + _T("dtor_public.png"), wxBITMAP_TYPE_PNG);
     m_pImageList->Add(bmp); // PARSER_IMG_DTOR_PUBLIC
-    bmp.LoadFile(prefix + "method_private.png", wxBITMAP_TYPE_PNG);
+    bmp.LoadFile(prefix + _T("method_private.png"), wxBITMAP_TYPE_PNG);
     m_pImageList->Add(bmp); // PARSER_IMG_FUNC_PRIVATE
-    bmp.LoadFile(prefix + "method_protected.png", wxBITMAP_TYPE_PNG);
+    bmp.LoadFile(prefix + _T("method_protected.png"), wxBITMAP_TYPE_PNG);
     m_pImageList->Add(bmp); // PARSER_IMG_FUNC_PRIVATE
-    bmp.LoadFile(prefix + "method_public.png", wxBITMAP_TYPE_PNG);
+    bmp.LoadFile(prefix + _T("method_public.png"), wxBITMAP_TYPE_PNG);
     m_pImageList->Add(bmp); // PARSER_IMG_FUNC_PUBLIC
-    bmp.LoadFile(prefix + "var_private.png", wxBITMAP_TYPE_PNG);
+    bmp.LoadFile(prefix + _T("var_private.png"), wxBITMAP_TYPE_PNG);
     m_pImageList->Add(bmp); // PARSER_IMG_VAR_PRIVATE
-    bmp.LoadFile(prefix + "var_protected.png", wxBITMAP_TYPE_PNG);
+    bmp.LoadFile(prefix + _T("var_protected.png"), wxBITMAP_TYPE_PNG);
     m_pImageList->Add(bmp); // PARSER_IMG_VAR_PROTECTED
-    bmp.LoadFile(prefix + "var_public.png", wxBITMAP_TYPE_PNG);
+    bmp.LoadFile(prefix + _T("var_public.png"), wxBITMAP_TYPE_PNG);
     m_pImageList->Add(bmp); // PARSER_IMG_VAR_PUBLIC
-    bmp.LoadFile(prefix + "preproc.png", wxBITMAP_TYPE_PNG);
+    bmp.LoadFile(prefix + _T("preproc.png"), wxBITMAP_TYPE_PNG);
     m_pImageList->Add(bmp); // PARSER_IMG_PREPROCESSOR
-    bmp.LoadFile(prefix + "enum.png", wxBITMAP_TYPE_PNG);
+    bmp.LoadFile(prefix + _T("enum.png"), wxBITMAP_TYPE_PNG);
     m_pImageList->Add(bmp); // PARSER_IMG_ENUM
-    bmp.LoadFile(prefix + "enumerator.png", wxBITMAP_TYPE_PNG);
+    bmp.LoadFile(prefix + _T("enumerator.png"), wxBITMAP_TYPE_PNG);
     m_pImageList->Add(bmp); // PARSER_IMG_ENUMERATOR
-    bmp.LoadFile(prefix + "namespace.png", wxBITMAP_TYPE_PNG);
+    bmp.LoadFile(prefix + _T("namespace.png"), wxBITMAP_TYPE_PNG);
     m_pImageList->Add(bmp); // PARSER_IMG_NAMESPACE
-    bmp.LoadFile(prefix + "symbols_folder.png", wxBITMAP_TYPE_PNG);
+    bmp.LoadFile(prefix + _T("symbols_folder.png"), wxBITMAP_TYPE_PNG);
     m_pImageList->Add(bmp); // PARSER_IMG_SYMBOLS_FOLDER
-    bmp.LoadFile(prefix + "enums_folder.png", wxBITMAP_TYPE_PNG);
+    bmp.LoadFile(prefix + _T("enums_folder.png"), wxBITMAP_TYPE_PNG);
     m_pImageList->Add(bmp); // PARSER_IMG_ENUMS_FOLDER
-    bmp.LoadFile(prefix + "preproc_folder.png", wxBITMAP_TYPE_PNG);
+    bmp.LoadFile(prefix + _T("preproc_folder.png"), wxBITMAP_TYPE_PNG);
     m_pImageList->Add(bmp); // PARSER_IMG_PREPROC_FOLDER
-    bmp.LoadFile(prefix + "others_folder.png", wxBITMAP_TYPE_PNG);
+    bmp.LoadFile(prefix + _T("others_folder.png"), wxBITMAP_TYPE_PNG);
     m_pImageList->Add(bmp); // PARSER_IMG_OTHERS_FOLDER
 #endif // STANDALONE
     ConnectEvents();
@@ -156,28 +156,28 @@ void Parser::ReadOptions()
 	m_BrowserOptions.showInheritance = false;
 	m_BrowserOptions.viewFlat = false;
 #else // !STANDALONE
-	m_MaxThreadsCount = ConfigManager::Get()->Read("/code_completion/max_threads", 8);
-	m_Options.followLocalIncludes = ConfigManager::Get()->Read("/code_completion/parser_follow_local_includes", 1L);
-	m_Options.followGlobalIncludes = ConfigManager::Get()->Read("/code_completion/parser_follow_global_includes", 0L);
-	m_Options.caseSensitive = ConfigManager::Get()->Read("/code_completion/case_sensitive", 1);
-	m_Options.useSmartSense = ConfigManager::Get()->Read("/code_completion/use_SmartSense", 1);
-	m_Options.wantPreprocessor = ConfigManager::Get()->Read("/code_completion/want_preprocessor", 0L);
-	m_BrowserOptions.showInheritance = ConfigManager::Get()->Read("/code_completion/browser_show_inheritance", 0L);
-	m_BrowserOptions.viewFlat = ConfigManager::Get()->Read("/code_completion/browser_view_flat", 0L);
+	m_MaxThreadsCount = ConfigManager::Get()->Read(_T("/code_completion/max_threads"), 8);
+	m_Options.followLocalIncludes = ConfigManager::Get()->Read(_T("/code_completion/parser_follow_local_includes"), 1L);
+	m_Options.followGlobalIncludes = ConfigManager::Get()->Read(_T("/code_completion/parser_follow_global_includes"), 0L);
+	m_Options.caseSensitive = ConfigManager::Get()->Read(_T("/code_completion/case_sensitive"), 0L);
+	m_Options.useSmartSense = ConfigManager::Get()->Read(_T("/code_completion/use_SmartSense"), 1);
+	m_Options.wantPreprocessor = ConfigManager::Get()->Read(_T("/code_completion/want_preprocessor"), 0L);
+	m_BrowserOptions.showInheritance = ConfigManager::Get()->Read(_T("/code_completion/browser_show_inheritance"), 0L);
+	m_BrowserOptions.viewFlat = ConfigManager::Get()->Read(_T("/code_completion/browser_view_flat"), 0L);
 #endif // STANDALONE
 }
 
 void Parser::WriteOptions()
 {
 #ifndef STANDALONE
-	ConfigManager::Get()->Write("/code_completion/max_threads", (int)m_MaxThreadsCount);
-	ConfigManager::Get()->Write("/code_completion/parser_follow_local_includes", m_Options.followLocalIncludes);
-	ConfigManager::Get()->Write("/code_completion/parser_follow_global_includes", m_Options.followGlobalIncludes);
-	ConfigManager::Get()->Write("/code_completion/case_sensitive", m_Options.caseSensitive);
-	ConfigManager::Get()->Write("/code_completion/use_SmartSense", m_Options.useSmartSense);
-	ConfigManager::Get()->Write("/code_completion/want_preprocessor", m_Options.wantPreprocessor);
-	ConfigManager::Get()->Write("/code_completion/browser_show_inheritance", m_BrowserOptions.showInheritance);
-	ConfigManager::Get()->Write("/code_completion/browser_view_flat", m_BrowserOptions.viewFlat);
+	ConfigManager::Get()->Write(_T("/code_completion/max_threads"), (int)m_MaxThreadsCount);
+	ConfigManager::Get()->Write(_T("/code_completion/parser_follow_local_includes"), m_Options.followLocalIncludes);
+	ConfigManager::Get()->Write(_T("/code_completion/parser_follow_global_includes"), m_Options.followGlobalIncludes);
+	ConfigManager::Get()->Write(_T("/code_completion/case_sensitive"), m_Options.caseSensitive);
+	ConfigManager::Get()->Write(_T("/code_completion/use_SmartSense"), m_Options.useSmartSense);
+	ConfigManager::Get()->Write(_T("/code_completion/want_preprocessor"), m_Options.wantPreprocessor);
+	ConfigManager::Get()->Write(_T("/code_completion/browser_show_inheritance"), m_BrowserOptions.showInheritance);
+	ConfigManager::Get()->Write(_T("/code_completion/browser_view_flat"), m_BrowserOptions.viewFlat);
 #endif // STANDALONE
 }
 
@@ -208,7 +208,7 @@ bool Parser::ReadFromCache(wxFile* f)
     }
 
     LinkInheritance(); // fix ancestors relationships
-    
+
     m_UsingCache = true;
     m_CacheFilesCount = m_ParsedFiles.GetCount();
     m_CacheTokensCount = m_Tokens.GetCount();
@@ -268,7 +268,7 @@ Token* Parser::LoadTokenFromCache(wxFile* f, Token* parent)
 
     Token* token = new Token;
     token->m_pParent = parent;
-    
+
     bool ok = false;
     // this loop actually runs only once
     // it is a block that if we break before ok==true, the token is considered
@@ -290,7 +290,7 @@ Token* Parser::LoadTokenFromCache(wxFile* f, Token* parent)
         if (!LoadIntFromFile(f, (int*)&token->m_TokenKind)) break;
         if (!LoadIntFromFile(f, (int*)&token->m_IsOperator)) break;
         if (!LoadIntFromFile(f, (int*)&token->m_IsLocal)) break;
-        
+
         ok = true;
         m_Tokens.Add(token);
         if (parent)
@@ -301,7 +301,7 @@ Token* Parser::LoadTokenFromCache(wxFile* f, Token* parent)
 
         for (int i = 0; i < ccount; ++i)
             LoadTokenFromCache(f, token);
-        
+
         break; // no looping
     }
 
@@ -346,6 +346,8 @@ void Parser::SaveTokenToCache(wxFile* f, Token* token)
 inline void Parser::SaveStringToFile(wxFile* f, const wxString& str)
 {
     int size = str.Length();
+    if (size > 512)
+        size = 512;
     SaveIntToFile(f, size);
     f->Write(str.c_str(), size);
 }
@@ -363,11 +365,13 @@ inline bool Parser::LoadStringFromFile(wxFile* f, wxString& str)
     bool ok = true;
     if (size > 0 && size < 512)
     {
-        static char buf[512];
+        static wxChar buf[512];
         ok = f->Read(buf, size) == size;
-        buf[size] = '\0';
+        buf[size] = _T('\0');
         str = buf;
     }
+    else // doesn't fit in our buffer, but still we have to skip it
+        f->Seek(size, wxFromCurrent);
     return ok;
 }
 
@@ -428,19 +432,19 @@ int Parser::GetTokenKindImage(Token* token)
 {
     if (!token)
         return PARSER_IMG_NONE;
-        
+
 	switch (token->m_TokenKind)
 	{
 		case tkPreprocessor: return PARSER_IMG_PREPROCESSOR;
-		
+
 		case tkEnum: return PARSER_IMG_ENUM;
-		
+
 		case tkEnumerator: return PARSER_IMG_ENUMERATOR;
-		
+
 		case tkClass: return PARSER_IMG_CLASS;
 
 		case tkNamespace: return PARSER_IMG_NAMESPACE;
-		
+
 		case tkConstructor:
 			switch (token->m_Scope)
 			{
@@ -456,7 +460,7 @@ int Parser::GetTokenKindImage(Token* token)
 				case tsPrivate: return PARSER_IMG_DTOR_PRIVATE;
 				default: return PARSER_IMG_DTOR_PUBLIC;
 			}
-			
+
 		case tkFunction:
 			switch (token->m_Scope)
 			{
@@ -464,7 +468,7 @@ int Parser::GetTokenKindImage(Token* token)
 				case tsPrivate: return PARSER_IMG_FUNC_PRIVATE;
 				default: return PARSER_IMG_FUNC_PUBLIC;
 			}
-			
+
 		case tkVariable:
 			switch (token->m_Scope)
 			{
@@ -550,7 +554,7 @@ void Parser::ScheduleThreads()
 		thread->Run();
 	}
 	delete lock;
-	
+
 	if (Done())
 	{
         lock = new wxMutexLocker(s_mutexListProtection);
@@ -617,10 +621,10 @@ void Parser::LinkInheritance(bool tempsOnly)
 	for (unsigned int i = 0; i < m_Tokens.GetCount(); ++i)
 	{
 		Token* token = m_Tokens[i];
-		
+
 		if (token->m_TokenKind != tkClass)
 			continue;
-			
+
 		if (tempsOnly && !token->m_IsTemporary)
 			continue;
 
@@ -637,7 +641,7 @@ void Parser::LinkInheritance(bool tempsOnly)
 			continue;
 
 		//Manager::Get()->GetMessageManager()->DebugLog("Token %s, Ancestors %s", token->m_Name.c_str(), token->m_AncestorsString.c_str());
-		wxStringTokenizer tkz(token->m_AncestorsString, ",");
+		wxStringTokenizer tkz(token->m_AncestorsString, _T(","));
 		while (tkz.HasMoreTokens())
 		{
 			wxString ancestor = tkz.GetNextToken();
@@ -692,7 +696,7 @@ bool Parser::Parse(const wxString& bufferOrFilename, bool isLocal, ParserThreadO
 #endif
 		return false; // already parsed
     }
-	
+
 	ParserThread* thread = new ParserThread(this,&this->m_abort_flag,
 											buffOrFile,
 											isLocal,
@@ -701,19 +705,20 @@ bool Parser::Parse(const wxString& bufferOrFilename, bool isLocal, ParserThreadO
 	if (thread->Create() != wxTHREAD_NO_ERROR)
 	{
 #ifndef STANDALONE
-        Manager::Get()->GetMessageManager()->DebugLog("Can't create new thread!");
+        Manager::Get()->GetMessageManager()->DebugLog(_("Can't create new thread!"));
 #endif
         thread->Delete();
+        delete thread;
 		return false;
 	}
-	
+
 	if (!opts.useBuffer)
 	{
 		lock = new wxMutexLocker(s_mutexListProtection);
 		m_ThreadsStore.Add(thread);
 		m_ParsedFiles.Add(buffOrFile);
 		delete lock;
-	
+
 		ScheduleThreads();
 		return true;
 	}
@@ -721,6 +726,7 @@ bool Parser::Parse(const wxString& bufferOrFilename, bool isLocal, ParserThreadO
 	{
 		bool ret = thread->Parse();
 		LinkInheritance(true);
+		thread->Delete();
 		delete thread;
 		return ret;
 	}
@@ -744,7 +750,7 @@ bool Parser::RemoveFile(const wxString& filename)
 {
 	wxMutexLocker lock(s_mutexListProtection);
 	wxMutexLocker lock1(s_mutexProtection);
-	
+
 	wxString file = UnixFilename(filename);
 	if (m_ParsedFiles.Index(file) != wxNOT_FOUND)
 	{
@@ -772,13 +778,13 @@ bool Parser::Reparse(const wxString& filename, bool isLocal)
 		return false; // if still parsing, exit with error
 
 	wxString file = UnixFilename(filename);
-	Manager::Get()->GetMessageManager()->DebugLog("Reparsing %s", file.c_str());
+	Manager::Get()->GetMessageManager()->DebugLog(_("Reparsing %s"), file.c_str());
 	RemoveFile(file);
 	ClearTemporaries();
 	wxMutexLocker* lock = new wxMutexLocker(s_mutexListProtection);
 	m_ReparsedFiles.Add(file);
 	delete lock;
-	
+
 	return Parse(file, isLocal);
 }
 
@@ -792,14 +798,14 @@ void Parser::Clear()
 	m_ParsedFiles.Clear();
 	m_ReparsedFiles.Clear();
 	m_IncludeDirs.Clear();
-	
+
 	wxMutexLocker lock(s_mutexProtection);
 	WX_CLEAR_ARRAY(m_Tokens);
 	m_Tokens.Clear();
 
 	wxSafeYield();
 	ConnectEvents();
-	
+
 	m_UsingCache = false;
 	m_CacheFilesCount = 0;
 	m_CacheTokensCount = 0;
@@ -809,7 +815,7 @@ void Parser::ClearTemporaries()
 {
 	if (!Done())
 		return;
-	
+
 	unsigned int i = 0;
 	while (i < m_Tokens.GetCount())
 	{
@@ -898,7 +904,7 @@ void Parser::OnParseFile(wxCommandEvent& event)
 {
 	// a ParserThread ran into an #include directive
 	// it's up to us to decide to parse this file...
-	
+
 	if ((event.GetInt() == 0 && !m_Options.followLocalIncludes) ||
 		(event.GetInt() == 1 && !m_Options.followGlobalIncludes))
 		return;
@@ -909,7 +915,7 @@ void Parser::OnParseFile(wxCommandEvent& event)
 	wxFileName fname;
 	wxFileName source;
 	wxString base;
-	
+
 	if (idx == -1)
 		return;
 	fname.Assign(filename.Mid(idx + 1));
@@ -940,7 +946,7 @@ void Parser::OnParseFile(wxCommandEvent& event)
 	if (abort)
 		return; // the file is being re-parsed; don't follow includes
 	*/
-	
+
 	if (m_ParsedFiles.Index(filename) != wxNOT_FOUND) // parsed file
         return;
 //	Manager::Get()->GetMessageManager()->DebugLog("Adding in parse queue: %s", filename.c_str());
@@ -1072,16 +1078,16 @@ void Parser::AddTreeNode(wxTreeCtrl& tree, const wxTreeItemId& parentNode, Token
 #endif
 	wxString str = token->m_Name + token->m_Args;
 	if (!token->m_ActualType.IsEmpty())
-		 str = str + " : " + token->m_ActualType;
+		 str = str + _T(" : ") + token->m_ActualType;
 	wxTreeItemId node = childrenOnly ? parentNode : tree.AppendItem(parentNode, str, image, -1, ctd);
-	
+
 	// add children
 	for (unsigned int i = 0; i < token->m_Children.GetCount(); ++i)
 	{
 		Token* childToken = token->m_Children[i];
 		AddTreeNode(tree, node, childToken);
 	}
-	
+
 	if (!m_BrowserOptions.showInheritance || (token->m_TokenKind != tkClass && token->m_TokenKind != tkNamespace))
 		return;
 	// add ancestor's children

@@ -12,6 +12,7 @@ class wxsResource;
 class wxsDialogRes;
 class wxsFrameRes;
 class wxsPanelRes;
+class wxsWindowRes;
 
 /******************************************************************************/
 
@@ -80,6 +81,15 @@ class wxsProject
         
         /** Adding previously created dialog resource */
         void AddDialog(wxsDialogRes* Dialog);
+        
+        /** Adding previously created frame resource */
+        void AddFrame(wxsFrameRes* Frame);
+        
+        /** Adding previously created panel resource */
+        void AddPanel(wxsPanelRes* Panel);
+        
+        /** Spreading eventg to all resource editors opened inside this project */
+        void SendEventToEditors(wxEvent& event);
 		
     protected:
         
@@ -91,41 +101,49 @@ class wxsProject
         
         /** Function loading dialog resource from xml tree */
         void AddDialogResource(
-            const char* FileName,
-            const char* ClassName,
-            const char* SourceName,
-            const char* HeaderName);
+            const wxString& FileName,
+            const wxString& ClassName,
+            const wxString& SourceName,
+            const wxString& HeaderName);
         
         /** Function loading frame resource from xml tree */
         void AddFrameResource(
-            const char* FileName,
-            const char* ClassName,
-            const char* SourceName,
-            const char* HeaderName);
+            const wxString& FileName,
+            const wxString& ClassName,
+            const wxString& SourceName,
+            const wxString& HeaderName);
         
         /** Function loading panel resource from xml tree */
         void AddPanelResource(
-            const char* FileName,
-            const char* ClassName,
-            const char* SourceName,
-            const char* HeaderName);
+            const wxString& FileName,
+            const wxString& ClassName,
+            const wxString& SourceName,
+            const wxString& HeaderName);
         
 	private:
 	
-        /** Deleting dialog resource from project
-         *
-         * This should be called from Resource's destructor
-         */
+        /** Adding resourcee of given type */
+        void AddWindowResource(            
+            const wxString& FileName,
+            const wxString& ClassName,
+            const wxString& SourceName,
+            const wxString& HeaderName,
+            int Type);
+	
+        /** Deleting dialog resource from project */
         void DeleteDialog(wxsDialogRes* Resource);
+        
+        /** Deleting frame resource from project */
+        void DeleteFrame(wxsFrameRes* Resource);
+        
+        /** Deleting panel resource from project */
+        void DeletePanel(wxsPanelRes* Resource);
         
         /** Function building tree for resources in this project */
         void BuildTree(wxTreeCtrl* Tree,wxTreeItemId WhereToAdd);        
         
-        /** Diagnostic function dumping structure of given xml tree to wxTreeCtrl */
-        static void DumpXml(const TiXmlNode* Elem, wxTreeCtrl* Tree,wxTreeItemId id);
-
         /** checling if given file is insided current project */
-        bool CheckProjFileExists(const char* FileName);
+        bool CheckProjFileExists(const wxString& FileName);
 
         /** Function clearing project structures */
         inline void Clear();            
@@ -157,7 +175,7 @@ class wxsProject
         
         bool DuringClear;               ///< Set to true when inside Clear call
         
-        friend class wxsDialogRes;
+        friend class wxsWindowRes;
 };
 
 

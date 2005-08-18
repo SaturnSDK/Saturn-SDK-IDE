@@ -14,14 +14,11 @@
 // #include "cbproject.h"
 #include "printing_types.h"
 
-extern int ID_EditorManager;
-extern int idEditorManagerCheckFiles;
-class EditorBase;
-
-WX_DECLARE_LIST(EditorBase, EditorsList);
-WX_DECLARE_STRING_HASH_MAP(wxString, AutoCompleteMap);
-
+DLLIMPORT extern int ID_EditorManager;
+DLLIMPORT extern int idEditorManagerCheckFiles;
+DLLIMPORT extern int ID_EditorManagerCloseButton;
 // forward decls
+class EditorBase;
 class wxNotebook;
 class wxNotebookEvent;
 class wxMenuBar;
@@ -31,6 +28,10 @@ class ProjectFile;
 class cbEditor;
 class wxStyledTextCtrl;
 class SimpleListLog;
+struct EditorManagerInternalData;
+
+WX_DECLARE_LIST(EditorBase, EditorsList);
+WX_DECLARE_STRING_HASH_MAP(wxString, AutoCompleteMap);
 
 struct cbFindReplaceData
 {
@@ -58,9 +59,10 @@ class DLLIMPORT EditorManager : public wxEvtHandler
         friend class Manager; // give Manager access to our private members
         static bool CanShutdown(){ return s_CanShutdown; }
         wxNotebook* GetNotebook(){ return m_pNotebook; }
+        wxPanel* GetPanel() { return m_pPanel; }
         void CreateMenu(wxMenuBar* menuBar);
         void ReleaseMenu(wxMenuBar* menuBar);
-        void Configure();        
+        void Configure();
         int GetEditorsCount(){ return m_EditorsList.GetCount(); }
         AutoCompleteMap& GetAutoCompleteMap(){ return m_AutoCompleteMap; }
 
@@ -85,7 +87,7 @@ class DLLIMPORT EditorManager : public wxEvtHandler
         EditorColorSet* GetColorSet(){ return (this==NULL) ? 0 : m_Theme; }
         void SetColorSet(EditorColorSet* theme);
         cbEditor* New();
-        
+
         // these are used *only* for custom editors
         void AddCustomEditor(EditorBase* eb);
         void RemoveCustomEditor(EditorBase* eb);
@@ -97,7 +99,7 @@ class DLLIMPORT EditorManager : public wxEvtHandler
         bool Close(EditorBase* editor,bool dontsave = false);
         bool Close(int index,bool dontsave = false);
 
-        // If file is modified, queries to save (yes/no/cancel). 
+        // If file is modified, queries to save (yes/no/cancel).
         // Returns false on "cancel".
         bool QueryClose(EditorBase* editor);
         bool QueryCloseAll();
@@ -117,17 +119,23 @@ class DLLIMPORT EditorManager : public wxEvtHandler
 
         void Print(PrintScope ps, PrintColorMode pcm);
 
+        /** Hides the editor notebook for layout purposes */
+        void HideNotebook();
+        /** Shows the previously hidden editor notebook */
+        void ShowNotebook();
         /** Check if one of the open files has been modified outside the IDE. If so, ask to reload it. */
         void CheckForExternallyModifiedFiles();
-        
+
         /// Open Files Tree functions
-        #ifdef USE_OPENFILES_TREE
         /// Is the opened files tree supported? (depends on platform)
         bool OpenFilesTreeSupported();
         /// Show/hide the opened files tree
         void ShowOpenFilesTree(bool show);
+        /// Refresh the open files tree
+        void RefreshOpenFilesTree();
         /// Return true if opened files tree is visible, false if not
         bool IsOpenFilesTreeVisible();
+
         /** Builds Opened Files tree in the Projects tab
           */
         wxTreeCtrl *EditorManager::GetTree();
@@ -136,8 +144,7 @@ class DLLIMPORT EditorManager : public wxEvtHandler
         void BuildOpenedFilesTree(wxWindow* parent);
         void RebuildOpenedFilesTree(wxTreeCtrl *tree = 0L);
         void RefreshOpenedFilesTree(bool force = false);
-        #endif
-        
+
         void OnPageChanged(wxNotebookEvent& event);
         void OnPageChanging(wxNotebookEvent& event);
         void OnAppDoneStartup(wxCommandEvent& event);
@@ -146,26 +153,24 @@ class DLLIMPORT EditorManager : public wxEvtHandler
         void OnTreeItemSelected(wxTreeEvent &event);
         void OnTreeItemActivated(wxTreeEvent &event);
         void OnTreeItemRightClick(wxTreeEvent &event);
-        
+
     protected:
         // m_EditorsList access
         void AddEditorBase(EditorBase* eb);
         void RemoveEditorBase(EditorBase* eb, bool deleteObject = true);
         cbEditor* InternalGetBuiltinEditor(EditorsList::Node* node);
-        
+
         void CreateSearchLog();
         void LogSearch(const wxString& file, int line, const wxString& lineText);
 
         void LoadAutoComplete();
         void SaveAutoComplete();
 
-        #ifdef USE_OPENFILES_TREE
         void DeleteItemfromTree(wxTreeItemId item);
         void DeleteFilefromTree(const wxString& filename);
         void AddFiletoTree(EditorBase* ed);
         bool RenameTreeFile(const wxString& oldname, const wxString& newname);
         void InitPane();
-        #endif
 
         AutoCompleteMap m_AutoCompleteMap;
     private:
@@ -177,20 +182,22 @@ class DLLIMPORT EditorManager : public wxEvtHandler
         void OnCheckForModifiedFiles(wxCommandEvent& event);
 
         wxNotebook* m_pNotebook;
+        wxPanel* m_pPanel;
         EditorsList m_EditorsList;
         cbFindReplaceData* m_LastFindReplaceData;
         EditorColorSet* m_Theme;
-        #ifdef USE_OPENFILES_TREE
-        wxImageList* m_pImages;
         wxTreeCtrl* m_pTree;
-        wxTreeItemId m_TreeOpenedFiles;
-        #endif
         wxString m_LastActiveFile;
         bool m_LastModifiedflag;
         SimpleListLog* m_pSearchLog;
         int m_SearchLogIndex;
-    DECLARE_EVENT_TABLE()
-    DECLARE_SANITY_CHECK
+        int m_SashPosition;
+
+        friend struct EditorManagerInternalData;
+        EditorManagerInternalData* m_pData;
+
+        DECLARE_EVENT_TABLE()
+        DECLARE_SANITY_CHECK
 
 };
 

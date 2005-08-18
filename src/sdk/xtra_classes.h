@@ -21,13 +21,13 @@ public:
     wxSplitPanel::wxSplitPanel() { /*nothing to init, really */ }
     wxSplitPanel::wxSplitPanel(wxWindow* parent, wxWindowID id = -1,
                                const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize,
-                               long style = wxTAB_TRAVERSAL, const wxString& name = "splitpanel")
+                               long style = wxTAB_TRAVERSAL, const wxString& name = _T("splitpanel"))
     {
         Create(parent, id, pos, size, style, name);
     }
     bool Create(wxWindow* parent, wxWindowID id = -1,
                 const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize,
-                long style = wxTAB_TRAVERSAL, const wxString& name = "splitpanel");
+                long style = wxTAB_TRAVERSAL, const wxString& name = _T("splitpanel"));
 
     /** Refreshes the splitter. Windows displayed are searched by Id.
       * If only one is found, the panel is not split.
@@ -37,9 +37,11 @@ public:
 
     virtual wxSplitPanel::~wxSplitPanel();
     wxSplitterWindow* GetSplitter() { return (this) ? m_splitter : 0L; }
+    void SetConfigEntryForSplitter(const wxString& splitterconfig){ m_SplitterConfig = splitterconfig; }
 private:
     wxSplitterWindow* m_splitter;
     wxBoxSizer* m_sizer;
+    wxString m_SplitterConfig;
     DECLARE_DYNAMIC_CLASS(wxSplitPanel)
 };
 

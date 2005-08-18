@@ -35,6 +35,7 @@
 #include <wx/msgdlg.h>
 #include <wx/log.h>
 #include <globals.h>
+#include "../../sdk/configmanager.h"
 
 BEGIN_EVENT_TABLE(ClassWizardDlg, wxDialog)
 	EVT_UPDATE_UI(-1, ClassWizardDlg::OnUpdateUI)
@@ -58,7 +59,7 @@ void ClassWizardDlg::DoGuardBlock()
 	wxFileName headerFname(m_Header);
 	wxString GuardWord = headerFname.GetFullName();
 	GuardWord.MakeUpper();
-	GuardWord.Replace(".", "_");
+	GuardWord.Replace(_T("."), _T("_"));
 	XRCCTRL(*this, "txtGuardBlock", wxTextCtrl)->SetValue(GuardWord);
 }
 
@@ -68,8 +69,8 @@ void ClassWizardDlg::OnNameChange(wxCommandEvent& event)
 {
 	wxString name = XRCCTRL(*this, "txtName", wxTextCtrl)->GetValue();
 	name.MakeLower();
-	XRCCTRL(*this, "txtHeader", wxTextCtrl)->SetValue(name + ".h");
-	XRCCTRL(*this, "txtImplementation", wxTextCtrl)->SetValue(name + ".cpp");
+	XRCCTRL(*this, "txtHeader", wxTextCtrl)->SetValue(name + _T(".h"));
+	XRCCTRL(*this, "txtImplementation", wxTextCtrl)->SetValue(name + _T(".cpp"));
 	DoGuardBlock();
 }
 
@@ -103,41 +104,54 @@ void ClassWizardDlg::OnOKClick(wxCommandEvent& event)
 		DoGuardBlock();
 	wxFileName headerFname(UnixFilename(m_Header));
 	
+	bool usestabs = (ConfigManager::Get()->Read(_T("/editor/use_tab"), 0l) != 0);
+	int tabsize = ConfigManager::Get()->Read(_T("/editor/tab_size"), 4);
+	int eolmode = ConfigManager::Get()->Read(_T("/editor/eol/eolmode"),0L);
+	
 	wxString buffer;
+	wxString tabstr = usestabs ? wxString(_T("\t")) : wxString(_T(' '),tabsize);
+	wxString eolstr;
+	if(eolmode == 2)
+        eolstr = _T("\n");
+    else if(eolmode == 1)
+        eolstr = _T("\r");
+    else
+        eolstr = _T("\r\n");
+    
 
 	// actual creation starts here
 	// let's start with the header file
 	if (GuardBlock)
 	{
-		buffer << "#ifndef " << GuardWord << '\n';
-		buffer << "#define " << GuardWord << '\n';
-		buffer << '\n';
+		buffer << _T("#ifndef ") << GuardWord << eolstr;
+		buffer << _T("#define ") << GuardWord << eolstr;
+		buffer << eolstr;
 	}
 
     if (!AncestorFilename.IsEmpty())
     {
-        buffer << "#include <" << AncestorFilename << ">" << '\n';
-        buffer << '\n';
+        buffer << _T("#include <") << AncestorFilename << _T(">") << eolstr;
+        buffer << eolstr;
     }
-	buffer << "class " << Name;
+	buffer << _T("class ") << Name;
 	if (Inherits)
-		buffer << " : " << AncestorScope << " " << Ancestor;
-	buffer << '\n';
-	buffer << "{" << '\n';
-	buffer << '\t' << "public:" << '\n';
-	buffer << '\t' << '\t' << Name << "(" << Constructor << ");" << '\n';
-    buffer << '\t' << '\t';
+		buffer << _T(" : ") << AncestorScope << _T(" ") << Ancestor;
+	buffer << eolstr;
+	buffer << _T("{") << eolstr;
+	buffer << tabstr << _T("public:") << eolstr;
+	buffer << tabstr << tabstr << Name << _T("(") << Constructor << _T(");") << eolstr;
+    buffer << tabstr << tabstr;
 	if (VirtualDestructor)
-		buffer << "virtual ";
-    buffer << '~' << Name << "();" << '\n';
-	buffer << '\t' << "protected:" << '\n';
-	buffer << '\t' << "private:" << '\n';
-	buffer << "};" << '\n';
+		buffer << _T("virtual ");
+    buffer << '~' << Name << _T("();") << eolstr;
+	buffer << tabstr << _T("protected:") << eolstr;
+	buffer << tabstr << _T("private:") << eolstr;
+	buffer << _T("};") << eolstr;
 
 	if (GuardBlock)
 	{
-		buffer << '\n';
-		buffer << "#endif // " << GuardWord << '\n';
+		buffer << eolstr;
+		buffer << _T("#endif // ") << GuardWord << eolstr;
 	}
 
 	// write buffer to disk
@@ -155,18 +169,18 @@ void ClassWizardDlg::OnOKClick(wxCommandEvent& event)
 	
 	// now the implementation file
 	buffer.Clear();
-	buffer << "#include \"" << headerFname.GetFullName() << "\"" << '\n';
-	buffer << '\n';
-	buffer << Name << "::" << Name << "(" << Constructor << ")" << '\n';
-	buffer << "{" << '\n';
-	buffer << '\t' << "//ctor" << '\n';
-	buffer << "}" << '\n';
-	buffer << '\n';
-	buffer << Name << "::~" << Name << "()" << '\n';
-	buffer << "{" << '\n';
-	buffer << '\t' << "//dtor" << '\n';
-	buffer << "}" << '\n';
-	buffer << '\n';
+	buffer << _T("#include \"") << headerFname.GetFullName() << _T("\"") << eolstr;
+	buffer << eolstr;
+	buffer << Name << _T("::") << Name << _T("(") << Constructor << _T(")") << eolstr;
+	buffer << _T("{") << eolstr;
+	buffer << tabstr << _T("//ctor") << eolstr;
+	buffer << _T("}") << eolstr;
+	buffer << eolstr;
+	buffer << Name << _T("::~") << Name << _T("()") << eolstr;
+	buffer << _T("{") << eolstr;
+	buffer << tabstr << _T("//dtor") << eolstr;
+	buffer << _T("}") << eolstr;
+	buffer << eolstr;
 	// write buffer to disk
 	wxFile impl(UnixFilename(m_Implementation), wxFile::write);
 	if (!impl.IsOpened())

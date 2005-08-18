@@ -4,7 +4,7 @@
 /** Structure describing one widget's stule */
 struct wxsStyle
 {
-    const char* Name;
+    wxString Name;
     unsigned int Value;
 };
 
@@ -24,15 +24,15 @@ struct wxsStyle
     
 /** Adding new style into list */
 #define WXS_ST(name)                            \
-    { #name, name },
+    { _T(#name), name },
     
 /** Beginning new  category */    
 #define WXS_ST_CATEGORY(name)                   \
-    { name, 0 },
+    { _T(name), ((unsigned int)-1) },
     
 /** Ending creation of list */    
 #define WXS_ST_END(name)                        \
-    { NULL, 0 } };                              \
+    { _T(""), 0 } };                            \
     wxsStyle* name = __##name##__;
     
 /** adding all default window's style */
@@ -47,12 +47,12 @@ struct wxsStyle
     WXS_ST(wxTRANSPARENT_WINDOW)                \
     WXS_ST(wxTAB_TRAVERSAL)                     \
     WXS_ST(wxWANTS_CHARS)                       \
-    /*WXS_ST(wxNO_FULL_REPAINT_ON_RESIZE)*/     \
+    WXS_ST(wxNO_FULL_REPAINT_ON_RESIZE)         \
     WXS_ST(wxVSCROLL)                           \
     WXS_ST(wxHSCROLL)                           \
     WXS_ST(wxALWAYS_SHOW_SB)                    \
     WXS_ST(wxCLIP_CHILDREN)                     \
-    /*WXS_ST(wxFULL_REPAINT_ON_RESIZE)*/
+    WXS_ST(wxFULL_REPAINT_ON_RESIZE)
     
 
 #endif

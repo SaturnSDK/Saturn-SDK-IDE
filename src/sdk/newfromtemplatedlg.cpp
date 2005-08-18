@@ -26,6 +26,7 @@
 #include <wx/intl.h>
 #include <wx/xrc/xmlres.h>
 #include <wx/combobox.h>
+#include <wx/checkbox.h>
 #include <wx/button.h>
 #include <wx/listbox.h>
 #include <wx/notebook.h>
@@ -36,6 +37,7 @@
 
 
 BEGIN_EVENT_TABLE(NewFromTemplateDlg, wxDialog)
+    EVT_UPDATE_UI(-1, NewFromTemplateDlg::OnUpdateUI)
 	EVT_LIST_ITEM_SELECTED(XRCID("listTemplates"), NewFromTemplateDlg::OnListSelection)
 	EVT_COMBOBOX(XRCID("cmbCategories"), NewFromTemplateDlg::OnCategoryChanged)
 END_EVENT_TABLE()
@@ -46,7 +48,7 @@ NewFromTemplateDlg::NewFromTemplateDlg(const ProjectTemplateArray& templates, co
 	m_Templates(templates)
 {
 	//ctor
-	wxXmlResource::Get()->LoadDialog(this, 0L, _("dlgNewFromTemplate"));
+	wxXmlResource::Get()->LoadDialog(this, 0L, _T("dlgNewFromTemplate"));
 	BuildCategories();
 	BuildList();
 
@@ -97,8 +99,8 @@ void NewFromTemplateDlg::BuildList()
 
 	wxBitmap bmp;
 	bool all = cat->GetSelection() == 0;
-	wxString baseDir = ConfigManager::Get()->Read("/data_path");
-	baseDir << "/templates/";
+	wxString baseDir = ConfigManager::Get()->Read(_T("/data_path"));
+	baseDir << _T("/templates/");
 	for (unsigned int x = 0; x < m_Templates.GetCount(); ++x)
 	{
 		ProjectTemplateLoader* pt = m_Templates[x];
@@ -142,9 +144,17 @@ void NewFromTemplateDlg::FillTemplate(ProjectTemplateLoader* pt)
 	XRCCTRL(*this, "cmbOptions", wxComboBox)->SetSelection(0);
 	XRCCTRL(*this, "cmbFileSets", wxComboBox)->Enable(pt->m_FileSets.GetCount());
 	XRCCTRL(*this, "cmbFileSets", wxComboBox)->SetSelection(0);
+}
 
-	XRCCTRL(*this, "wxID_OK", wxButton)->Enable(pt->m_TemplateOptions.GetCount() && pt->m_FileSets.GetCount() ||
-                                                XRCCTRL(*this, "lstUser", wxListBox)->GetSelection() != -1);
+bool NewFromTemplateDlg::DoNotCreateFiles()
+{
+    return XRCCTRL(*this, "chkDoNotCreateFiles", wxCheckBox)->IsChecked();
+}
+
+bool NewFromTemplateDlg::SelectedTemplate()
+{
+    return  XRCCTRL(*this, "nbMain", wxNotebook)->GetSelection() == 0 &&
+            XRCCTRL(*this, "listTemplates", wxListCtrl)->GetSelectedItemCount() != 0;
 }
 
 bool NewFromTemplateDlg::SelectedUserTemplate()
@@ -156,13 +166,12 @@ bool NewFromTemplateDlg::SelectedUserTemplate()
 wxString NewFromTemplateDlg::GetSelectedUserTemplate()
 {
     int sel = XRCCTRL(*this, "lstUser", wxListBox)->GetSelection();
-    return sel != -1 ? XRCCTRL(*this, "lstUser", wxListBox)->GetString(sel) : "";
+    return sel != -1 ? XRCCTRL(*this, "lstUser", wxListBox)->GetString(sel) : _T("");
 }
 
 void NewFromTemplateDlg::OnListSelection(wxListEvent& event)
 {
 	ProjectTemplateLoader* data = (ProjectTemplateLoader*)event.GetData();
-	XRCCTRL(*this, "wxID_OK", wxButton)->Enable(false);
 	XRCCTRL(*this, "cmbOptions", wxComboBox)->Enable(event.GetIndex() != -1 && data);
 	XRCCTRL(*this, "cmbFileSets", wxComboBox)->Enable(event.GetIndex() != -1 && data);
 	
@@ -172,4 +181,9 @@ void NewFromTemplateDlg::OnListSelection(wxListEvent& event)
 void NewFromTemplateDlg::OnCategoryChanged(wxCommandEvent& event)
 {
 	BuildList();
+}
+
+void NewFromTemplateDlg::OnUpdateUI(wxUpdateUIEvent& event)
+{
+	XRCCTRL(*this, "wxID_OK", wxButton)->Enable(SelectedTemplate() || SelectedUserTemplate());
 }

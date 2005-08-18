@@ -60,7 +60,7 @@ void CCList::Free()
 }
 
 CCList::CCList(wxEvtHandler* parent, wxStyledTextCtrl* editor, Parser* parser)
-	: wxFrame(editor, -1, "CC", wxDefaultPosition, wxDefaultSize,
+	: wxFrame(editor, -1, _T("CC"), wxDefaultPosition, wxDefaultSize,
 			wxFRAME_NO_TASKBAR | wxRESIZE_BORDER | wxNO_FULL_REPAINT_ON_RESIZE),
 	m_pParent(parent),
 	m_pEditor(editor),
@@ -80,8 +80,8 @@ CCList::CCList(wxEvtHandler* parent, wxStyledTextCtrl* editor, Parser* parser)
 
 CCList::~CCList()
 {
-	ConfigManager::Get()->Write("/code_completion/size/width", GetSize().GetWidth());
-	ConfigManager::Get()->Write("/code_completion/size/height", GetSize().GetHeight());
+	ConfigManager::Get()->Write(_T("/code_completion/size/width"), GetSize().GetWidth());
+	ConfigManager::Get()->Write(_T("/code_completion/size/height"), GetSize().GetHeight());
 	m_pEditor->SetFocus();
 	delete m_pList;
 	g_CCList = 0L;
@@ -94,8 +94,8 @@ void CCList::PositionMe()
 	int lineHeight = m_pEditor->TextHeight(m_pEditor->GetCurrentLine());
 	pt.y += lineHeight;
 	
-	int w = ConfigManager::Get()->Read("/code_completion/size/width", 320);
-	int h = ConfigManager::Get()->Read("/code_completion/size/height", 160);
+	int w = ConfigManager::Get()->Read(_T("/code_completion/size/width"), 320);
+	int h = ConfigManager::Get()->Read(_T("/code_completion/size/height"), 160);
 	int screenW = wxSystemSettings::GetMetric(wxSYS_SCREEN_X);
 	int screenH = wxSystemSettings::GetMetric(wxSYS_SCREEN_Y);
 	// sanity check
@@ -153,15 +153,15 @@ void CCList::SelectCurrent(wxChar ch)
 		if (token->m_TokenKind == tkFunction)
 		{
 			// if token is a function, add ()
-			replace << "()";
-			funcHasArgs = !token->m_Args.Matches("()") && !token->m_Args.Matches("(void)");
+			replace << _T("()");
+			funcHasArgs = !token->m_Args.Matches(_T("()")) && !token->m_Args.Matches(_T("(void)"));
 			if (funcHasArgs)
 				offset = 1; // adjust cursor position inside parentheses, only if func takes args
 		}
 
 		if (ch == '-' || ch == '>')
 		{
-			replace << "->";
+			replace << _T("->");
 			codeCompleteAgain = true;
 			if (funcHasArgs)
 				offset += 2; // adjust cursor position inside parentheses, only if func takes args
@@ -215,15 +215,15 @@ void CCList::OnLeftClick(wxGridEvent& event)
 	if (token)
 	{
 		wxString msg;
-		msg << "\"" << token->m_Name << "\" breaks down to:\n\n";
-		msg << "Kind: " << token->GetTokenKindString() << '\n';
-		msg << "Namespace: " << token->GetNamespace() << '\n';
-		msg << "Name: " << token->m_Name << '\n';
-		msg << "Arguments: " << token->m_Args << '\n';
-		msg << "Return value: " << token->m_Type << '\n';
-		msg << "Actual return value: " << token->m_ActualType << '\n';
-		msg << "Scope: " << token->GetTokenScopeString() << "\n\n";
-		msg << "and is met in " << token->m_Filename << ", at line " << token->m_Line;
+		msg << _T("\"") << token->m_Name << _T("\" breaks down to:\n\n");
+		msg << _T("Kind: ") << token->GetTokenKindString() << '\n';
+		msg << _T("Namespace: ") << token->GetNamespace() << '\n';
+		msg << _T("Name: ") << token->m_Name << '\n';
+		msg << _T("Arguments: ") << token->m_Args << '\n';
+		msg << _T("Return value: ") << token->m_Type << '\n';
+		msg << _T("Actual return value: ") << token->m_ActualType << '\n';
+		msg << _T("Scope: ") << token->GetTokenScopeString() << _T("\n\n");
+		msg << _T("and is met in ") << token->m_Filename << _T(", at line ") << token->m_Line;
 		wxMessageBox(msg);
 	}
 }

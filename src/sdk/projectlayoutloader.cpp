@@ -23,9 +23,12 @@ ProjectLayoutLoader::~ProjectLayoutLoader()
 	//dtor
 }
 
+// IMPORTANT! We have to be careful of what to unicode and what not to.
+// TinyXML must use NON-unicode strings!
+
 bool ProjectLayoutLoader::Open(const wxString& filename)
 {
-    TiXmlDocument doc(filename.c_str());
+    TiXmlDocument doc(filename.mb_str());
     if (!doc.LoadFile())
         return false;
     
@@ -46,23 +49,23 @@ bool ProjectLayoutLoader::Open(const wxString& filename)
     root = doc.FirstChildElement("Code::Blocks_layout_file");
     if (!root)
     {
-        pMsg->DebugLog("Not a valid Code::Blocks layout file...");
+        pMsg->DebugLog(_("Not a valid Code::Blocks layout file..."));
         return false;
     }
     elem = root->FirstChildElement("File");
     if (!elem)
     {
-        //pMsg->DebugLog("No 'File' element in file...");
+        //pMsg->DebugLog(_("No 'File' element in file..."));
         return false;
     }
     
     while (elem)
     {
         //pMsg->DebugLog(elem->Value());
-        fname = elem->Attribute("name");
+        fname = _U(elem->Attribute("name"));
         if (fname.IsEmpty())
         {
-            //pMsg->DebugLog("'File' node exists, but no filename?!?");
+            //pMsg->DebugLog(_("'File' node exists, but no filename?!?"));
             pf = 0L;
         }
         else
@@ -107,9 +110,9 @@ bool ProjectLayoutLoader::Save(const wxString& filename)
     wxArrayString array;
 	
 
-    buffer << "<?xml version=\"1.0\"?>" << '\n';
-    buffer << "<!DOCTYPE Code::Blocks_layout_file>" << '\n';
-    buffer << "<Code::Blocks_layout_file>" << '\n';
+    buffer << _T("<?xml version=\"1.0\"?>") << _T('\n');
+    buffer << _T("<!DOCTYPE Code::Blocks_layout_file>") << _T('\n');
+    buffer << _T("<Code::Blocks_layout_file>") << _T('\n');
 
 	ProjectFile* active = 0L;
     cbEditor* ed = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
@@ -123,21 +126,21 @@ bool ProjectLayoutLoader::Save(const wxString& filename)
 
 		if (f->editorOpen || f->editorPos || f->editorTopLine)
 		{
-			buffer << '\t' << "<File name=\"" << f->relativeFilename << "\" ";
-			buffer << "open=\"" << f->editorOpen << "\" ";
-			buffer << "top=\"" << (f == active) << "\">" << '\n';
-			buffer << '\t' << '\t' << "<Cursor position=\"" << f->editorPos << "\" topLine=\"" << f->editorTopLine << "\"/>" << '\n';
-			buffer << '\t' << "</File>" << '\n';
+			buffer << _T('\t') << _T("<File name=\"") << f->relativeFilename << _T("\" ");
+			buffer << _T("open=\"") << f->editorOpen << _T("\" ");
+			buffer << _T("top=\"") << (f == active) << _T("\">") << _T('\n');
+			buffer << _T('\t') << _T('\t') << _T("<Cursor position=\"") << f->editorPos << _T("\" topLine=\"") << f->editorTopLine << _T("\"/>") << _T('\n');
+			buffer << _T('\t') << _T("</File>") << _T('\n');
 		}
 	}
 	const wxArrayString& en = m_pProject->ExpandedNodes();
 	for (unsigned int i = 0; i < en.GetCount(); ++i)
 	{
 		if (!en[i].IsEmpty())
-			buffer << '\t' << "<Expand folder=\"" << en[i] << "\"/>" << '\n';
+			buffer << _T('\t') << _T("<Expand folder=\"") << en[i] << _T("\"/>") << _T('\n');
 	}
 
-    buffer << "</Code::Blocks_layout_file>" << '\n';
+    buffer << _T("</Code::Blocks_layout_file>") << _T('\n');
 
     wxFile file(filename, wxFile::write);
     return file.Write(buffer, buffer.Length()) == buffer.Length();

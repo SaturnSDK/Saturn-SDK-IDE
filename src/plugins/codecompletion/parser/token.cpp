@@ -59,7 +59,7 @@ wxString Token::GetNamespace()
 	Token* parent = m_pParent;
 	while (parent)
 	{
-		res = parent->m_Name + "::" + res;
+		res = parent->m_Name + _T("::") + res;
 		parent = parent->m_pParent;
 	}
 	return res;

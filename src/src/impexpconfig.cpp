@@ -37,7 +37,7 @@ ImpExpConfig::~ImpExpConfig()
 
 wxString ImpExpConfig::AskForFile(const wxString& msg, int flags)
 {
-    wxFileDialog dlg(this, msg, "", "", "*.*", flags);
+    wxFileDialog dlg(this, msg, _T(""), _T(""), _T("*.*"), flags);
     if (dlg.ShowModal() == wxID_OK)
         return dlg.GetPath();
     return wxEmptyString;
