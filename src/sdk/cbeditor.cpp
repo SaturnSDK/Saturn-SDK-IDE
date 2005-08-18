@@ -648,9 +648,11 @@ bool cbEditor::Save()
     }
 
     wxFile file(m_Filename, wxFile::write);
-    const wxWX2MBbuf utf_text = _C(m_pControl->GetText());
-    size_t utf_text_length = std::strlen( utf_text );
-    if (file.Write( utf_text, utf_text_length ) == 0 && utf_text_length != 0)
+// TODO (rickg22#9#): This is currently not well implemented in unicode.
+//   We need the *real* length of the mb_str() in there.
+
+    if (file.Write(m_pControl->GetText().mb_str(), m_pControl->GetTextLength()) == 0 &&
+        m_pControl->GetTextLength() != 0)
     {
         return false; // failed; file is read-only?
     }
