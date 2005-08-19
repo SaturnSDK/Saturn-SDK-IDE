@@ -324,7 +324,7 @@ void PluginWizardDlg::OnOKClick(wxCommandEvent& event)
 		DoGuardBlock();
 	wxFileName headerFname(UnixFilename(m_Header));
 	wxFileName implFname(UnixFilename(m_Implementation));
-	
+
 	wxString buffer;
 
 	// actual creation starts here
@@ -353,12 +353,12 @@ void PluginWizardDlg::OnOKClick(wxCommandEvent& event)
 	buffer << _T("// For compilers that support precompilation, includes <wx/wx.h>") << _T('\n');
 	buffer << _T("#include <wx/wxprec.h>") << _T('\n');
 	buffer << _T('\n');
-	
+
 	buffer << _T("#ifdef __BORLANDC__") << _T('\n');
 	buffer << _T("\t#pragma hdrstop") << _T('\n');
 	buffer << _T("#endif") << _T('\n');
 	buffer << _T('\n');
-	
+
 	buffer << _T("#ifndef WX_PRECOMP") << _T('\n');
 	buffer << _T("\t#include <wx/wx.h>") << _T('\n');
 	buffer << _T("#endif") << _T('\n');
@@ -382,7 +382,7 @@ void PluginWizardDlg::OnOKClick(wxCommandEvent& event)
 	buffer << _T('\t') << _T("public:") << _T('\n');
 	buffer << _T('\t') << _T('\t') << m_Info.name << _T("();") << _T('\n');
 	buffer << _T('\t') << _T('\t') << _T("~") << m_Info.name << _T("();") << _T('\n');
-	
+
 	buffer << _T('\t') << _T('\t') << _T("int Configure()");
 	DoAddHeaderOption(buffer, hasConfigure, wxEmptyString);
 	if (type != 1 && type != 5) // not cbToolPlugin and not cbMimePlugin
@@ -436,10 +436,9 @@ void PluginWizardDlg::OnOKClick(wxCommandEvent& event)
 	buffer << _T('\n');
 	// write buffer to disk
 	wxFile hdr(UnixFilename(m_Header), wxFile::write);
-	hdr.Write(buffer, buffer.Length());
-	hdr.Flush();
+	cbWrite(hdr,buffer);
 	// end of header file
-	
+
 	// now the implementation file
 	buffer.Clear();
 	buffer << _T("/***************************************************************") << _T('\n');
@@ -593,9 +592,8 @@ void PluginWizardDlg::OnOKClick(wxCommandEvent& event)
 	}
 	// write buffer to disk
 	wxFile impl(UnixFilename(m_Implementation), wxFile::write);
-	impl.Write(buffer, buffer.Length());
-	impl.Flush();
+	cbWrite(impl,buffer);
 	// end of implementation file
-	
+
 	EndModal(wxID_OK);
 }

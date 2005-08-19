@@ -31,7 +31,7 @@ bool ProjectLayoutLoader::Open(const wxString& filename)
     TiXmlDocument doc(filename.mb_str());
     if (!doc.LoadFile())
         return false;
-    
+
     ProjectManager* pMan = Manager::Get()->GetProjectManager();
     MessageManager* pMsg = Manager::Get()->GetMessageManager();
     if (!pMan || !pMsg)
@@ -45,7 +45,7 @@ bool ProjectLayoutLoader::Open(const wxString& filename)
     TiXmlElement* elem;
     wxString fname;
     ProjectFile* pf;
-    
+
     root = doc.FirstChildElement("Code::Blocks_layout_file");
     if (!root)
     {
@@ -58,7 +58,7 @@ bool ProjectLayoutLoader::Open(const wxString& filename)
         //pMsg->DebugLog(_("No 'File' element in file..."));
         return false;
     }
-    
+
     while (elem)
     {
         //pMsg->DebugLog(elem->Value());
@@ -70,7 +70,7 @@ bool ProjectLayoutLoader::Open(const wxString& filename)
         }
         else
             pf = pProject->GetFileByFilename(fname);
-        
+
         if (pf)
         {
             pf->editorOpen = false;
@@ -81,7 +81,7 @@ bool ProjectLayoutLoader::Open(const wxString& filename)
             if (elem->QueryIntAttribute("open", &open) == TIXML_SUCCESS)
                 pf->editorOpen = open != 0;
             if (elem->QueryIntAttribute("top", &top) == TIXML_SUCCESS)
-            {   
+            {
                 if(top)
                     m_TopProjectFile = pf;
             }
@@ -100,7 +100,7 @@ bool ProjectLayoutLoader::Open(const wxString& filename)
 
         elem = elem->NextSiblingElement();
     }
-    
+
     return true;
 }
 
@@ -108,7 +108,7 @@ bool ProjectLayoutLoader::Save(const wxString& filename)
 {
     wxString buffer;
     wxArrayString array;
-	
+
 
     buffer << _T("<?xml version=\"1.0\"?>") << _T('\n');
     buffer << _T("<!DOCTYPE Code::Blocks_layout_file>") << _T('\n');
@@ -143,5 +143,5 @@ bool ProjectLayoutLoader::Save(const wxString& filename)
     buffer << _T("</Code::Blocks_layout_file>") << _T('\n');
 
     wxFile file(filename, wxFile::write);
-    return file.Write(buffer, buffer.Length()) == buffer.Length();
+    return cbWrite(file,buffer);
 }

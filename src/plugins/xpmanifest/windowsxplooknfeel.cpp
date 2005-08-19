@@ -96,7 +96,7 @@ int WindowsXPLookNFeel::Execute()
 		Manager::Get()->GetMessageManager()->DebugLog(msg);
 		return -1;
 	}
-	
+
 	wxArrayString targetNames;
 	ProjectBuildTarget* target = 0L;
 	for (int i = 0; i < project->GetBuildTargetsCount(); ++i)
@@ -113,7 +113,7 @@ int WindowsXPLookNFeel::Execute()
 			target = tgt;
 		}
 	}
-	
+
 	if (!target)
 	{
 		// not even one executable target...
@@ -128,8 +128,8 @@ int WindowsXPLookNFeel::Execute()
 		if (targetIndex > -1)
 			target = project->GetBuildTarget(targetIndex);
 	}
-	
-	
+
+
 	if (target)
 	{
 		if (wxMessageBox(_("Do you want to create the manifest file?"),
@@ -142,7 +142,7 @@ int WindowsXPLookNFeel::Execute()
 		fname.Normalize(wxPATH_NORM_ALL & ~wxPATH_NORM_CASE, project->GetBasePath());
 		filename = fname.GetFullPath();
 		Manager::Get()->GetMessageManager()->DebugLog(_("WindowsXPLookNFeel: Creating Manifest '%s'"), filename.c_str());
-		
+
 		wxString buffer;
 		buffer << _T("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>") << _T('\n');
 		buffer << _T("<assembly") << _T('\n');
@@ -169,13 +169,13 @@ int WindowsXPLookNFeel::Execute()
 		buffer << _T("    </dependentAssembly>") << _T('\n');
 		buffer << _T("</dependency>") << _T('\n');
 		buffer << _T("</assembly>") << _T('\n');
-		
+
 		wxFile file(filename, wxFile::write);
-		file.Write(buffer);
+		cbWrite(file,buffer);
 
 		wxMessageBox(_("Manifest file created"));
 	}
-	
+
 	return 0;
 }
 

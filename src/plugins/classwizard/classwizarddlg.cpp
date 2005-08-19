@@ -35,6 +35,7 @@
 #include <wx/msgdlg.h>
 #include <wx/log.h>
 #include <globals.h>
+#include "../../sdk/manager.h"
 #include "../../sdk/configmanager.h"
 
 BEGIN_EVENT_TABLE(ClassWizardDlg, wxDialog)
@@ -85,7 +86,7 @@ void ClassWizardDlg::OnUpdateUI(wxUpdateUIEvent& event)
 void ClassWizardDlg::OnOKClick(wxCommandEvent& event)
 {
     wxLogNull null_logger; // we do all file checks ourselves
-    
+
 	// set some variable for easy reference
 	wxString Name = XRCCTRL(*this, "txtName", wxTextCtrl)->GetValue();
 	wxString Constructor = XRCCTRL(*this, "txtConstructor", wxTextCtrl)->GetValue();
@@ -103,11 +104,11 @@ void ClassWizardDlg::OnOKClick(wxCommandEvent& event)
 	if (GuardWord.IsEmpty())
 		DoGuardBlock();
 	wxFileName headerFname(UnixFilename(m_Header));
-	
+
 	bool usestabs = (ConfigManager::Get()->Read(_T("/editor/use_tab"), 0l) != 0);
 	int tabsize = ConfigManager::Get()->Read(_T("/editor/tab_size"), 4);
 	int eolmode = ConfigManager::Get()->Read(_T("/editor/eol/eolmode"),0L);
-	
+
 	wxString buffer;
 	wxString tabstr = usestabs ? wxString(_T("\t")) : wxString(_T(' '),tabsize);
 	wxString eolstr;
@@ -117,7 +118,7 @@ void ClassWizardDlg::OnOKClick(wxCommandEvent& event)
         eolstr = _T("\r");
     else
         eolstr = _T("\r\n");
-    
+
 
 	// actual creation starts here
 	// let's start with the header file
@@ -163,10 +164,9 @@ void ClassWizardDlg::OnOKClick(wxCommandEvent& event)
         wxMessageBox(msg, _("Error"), wxICON_ERROR);
         return;
 	}
-	hdr.Write(buffer, buffer.Length());
-	hdr.Flush();
+	cbWrite(hdr,buffer);
 	// end of header file
-	
+
 	// now the implementation file
 	buffer.Clear();
 	buffer << _T("#include \"") << headerFname.GetFullName() << _T("\"") << eolstr;
@@ -190,10 +190,9 @@ void ClassWizardDlg::OnOKClick(wxCommandEvent& event)
         wxMessageBox(msg, _("Error"), wxICON_ERROR);
         return;
 	}
-	impl.Write(buffer, buffer.Length());
-	impl.Flush();
+	cbWrite(impl,buffer);
 	// end of implementation file
-	
+
 	EndModal(wxID_OK);
 }
 

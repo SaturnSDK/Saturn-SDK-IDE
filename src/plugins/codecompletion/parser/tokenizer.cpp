@@ -27,7 +27,7 @@
 #include <wx/utils.h>
 #include <wx/file.h>
 #include <wx/msgdlg.h>
-
+#include "../../../sdk/manager.h"
 #include <cctype>
 
 Tokenizer::Tokenizer(const wxString& filename)
@@ -120,12 +120,8 @@ bool Tokenizer::ReadFile()
     // open file
     wxFile file(m_Filename);
 
-    if (!file.IsOpened())
+    if (!cbRead(file,m_Buffer))
         return false;
-
-    wxChar* buff = m_Buffer.GetWriteBuf(file.Length());
-    file.Read(buff, file.Length());
-    m_Buffer.UngetWriteBuf();
 	m_BufferLen = m_Buffer.Length();
 
     return true;

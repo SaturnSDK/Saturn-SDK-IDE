@@ -28,7 +28,7 @@ bool WorkspaceLoader::Open(const wxString& filename)
     TiXmlDocument doc(filename.mb_str());
     if (!doc.LoadFile())
         return false;
-    
+
 //    ProjectManager* pMan = Manager::Get()->GetProjectManager();
 //    MessageManager* pMsg = Manager::Get()->GetMessageManager();
 
@@ -39,7 +39,7 @@ bool WorkspaceLoader::Open(const wxString& filename)
     // If I click close AFTER pMan and pMsg are calculated,
     // I get a segfault.
     // I modified classes projectmanager and messagemanager,
-    // so that when self==NULL, they do nothing 
+    // so that when self==NULL, they do nothing
     // (constructors, destructors and static functions excempted from this)
     // This way, we'll use the *manager::Get() functions to check for nulls.
 
@@ -48,7 +48,7 @@ bool WorkspaceLoader::Open(const wxString& filename)
     TiXmlElement* proj;
     cbProject* loadedProject;
     wxString projectFilename;
-    
+
     root = doc.FirstChildElement("Code::Blocks_workspace_file");
     if (!root)
     {
@@ -72,7 +72,7 @@ bool WorkspaceLoader::Open(const wxString& filename)
         GetpMsg()->DebugLog(_("Workspace file contains no projects..."));
         return false;
     }
-    
+
     while (proj)
     {
         if(Manager::isappShuttingDown() || !GetpMan() || !GetpMsg())
@@ -110,10 +110,10 @@ bool WorkspaceLoader::Open(const wxString& filename)
         }
         proj = proj->NextSiblingElement();
     }
-    
+
     if (m_pActiveProj)
         GetpMan()->SetProject(m_pActiveProj);
-    
+
     return true;
 }
 
@@ -128,7 +128,7 @@ bool WorkspaceLoader::Save(const wxString& title, const wxString& filename)
     buffer << _T("<!DOCTYPE Code::Blocks_workspace_file>") << _T("\n");
     buffer << _T("<Code::Blocks_workspace_file>") << _T("\n");
     buffer << _T("\t") << _T("<Workspace title=\"") << title << _T("\">") << _T("\n");
-    
+
     for (unsigned int i = 0; i < arr->GetCount(); ++i)
     {
         cbProject* prj = arr->Item(i);
@@ -147,5 +147,5 @@ bool WorkspaceLoader::Save(const wxString& title, const wxString& filename)
     buffer << _T("</Code::Blocks_workspace_file>") << _T("\n");
 
     wxFile file(filename, wxFile::write);
-    return file.Write(buffer, buffer.Length()) == buffer.Length();
+    return cbWrite(file,buffer);
 }

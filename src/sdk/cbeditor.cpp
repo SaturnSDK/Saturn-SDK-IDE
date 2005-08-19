@@ -602,12 +602,8 @@ bool cbEditor::Open()
     if (!file.IsOpened())
         return false;
 
-    void* buff = st.GetWriteBuf(file.Length());
-    file.Read(buff, file.Length());
-    file.Close();
-    m_pControl->InsertText(0, _U( (char const *)buff ));
+    m_pControl->InsertText(0, cbRead(file));
     m_pControl->EmptyUndoBuffer();
-    st.UngetWriteBuf();
 
     // mark the file read-only, if applicable
     bool read_only = !wxFile::Access(m_Filename.c_str(), wxFile::write);
@@ -648,11 +644,8 @@ bool cbEditor::Save()
     }
 
     wxFile file(m_Filename, wxFile::write);
-// TODO (rickg22#9#): This is currently not well implemented in unicode.
-//   We need the *real* length of the mb_str() in there.
 
-    if (file.Write(m_pControl->GetText().mb_str(), m_pControl->GetTextLength()) == 0 &&
-        m_pControl->GetTextLength() != 0)
+    if(!cbWrite(file,m_pControl->GetText()))
     {
         return false; // failed; file is read-only?
     }

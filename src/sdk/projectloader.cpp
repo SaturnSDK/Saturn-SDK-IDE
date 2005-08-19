@@ -40,7 +40,7 @@ bool ProjectLoader::Open(const wxString& filename)
     pMsg->DebugLog(_("Parsing project file..."));
     TiXmlElement* root;
     TiXmlElement* proj;
-    
+
     root = doc.FirstChildElement("Code::Blocks_project_file");
     if (!root)
     {
@@ -53,7 +53,7 @@ bool ProjectLoader::Open(const wxString& filename)
         pMsg->DebugLog(_("No 'Project' element in file..."));
         return false;
     }
-    
+
     DoProjectOptions(proj);
     DoBuild(proj);
     DoCompilerOptions(proj);
@@ -99,7 +99,7 @@ void ProjectLoader::ConvertVersion_Pre_1_1()
     {
         // project first
         ConvertLibraries(m_pProject);
-        
+
         for (int i = 0; i < m_pProject->GetBuildTargetsCount(); ++i)
         {
             ConvertLibraries(m_pProject->GetBuildTarget(i));
@@ -140,7 +140,7 @@ void ProjectLoader::ConvertLibraries(CompileTargetBase* object)
         else
             ++i;
     }
-    
+
     object->SetLinkerOptions(linkerOpts);
     object->SetLinkLibs(linkLibs);
 }
@@ -150,26 +150,26 @@ void ProjectLoader::DoProjectOptions(TiXmlElement* parentNode)
     TiXmlElement* node = parentNode->FirstChildElement("Option");
     if (!node)
         return; // no options
-    
+
     wxString title;
     wxString makefile;
     bool makefile_custom = false;
     int defaultTarget = 0;
     int activeTarget = -1;
     int compilerIdx = 0;
-    
+
     // loop through all options
     while (node)
     {
         if (node->Attribute("title"))
             title = _U(node->Attribute("title"));
-        
+
         if (node->Attribute("makefile"))
             makefile = _U(node->Attribute("makefile"));
 
         if (node->Attribute("makefile_is_custom"))
             makefile_custom = strncmp(node->Attribute("makefile_is_custom"), "1", 1) == 0;
-        
+
         if (node->Attribute("default_target"))
             defaultTarget = atoi(node->Attribute("default_target"));
 
@@ -178,10 +178,10 @@ void ProjectLoader::DoProjectOptions(TiXmlElement* parentNode)
 
         if (node->Attribute("compiler"))
             compilerIdx = atoi(node->Attribute("compiler"));
-        
+
         node = node->NextSiblingElement("Option");
     }
-    
+
     m_pProject->SetTitle(title);
     m_pProject->SetMakefile(makefile);
     m_pProject->SetMakefileCustom(makefile_custom);
@@ -236,7 +236,7 @@ void ProjectLoader::DoBuildTargetOptions(TiXmlElement* parentNode, ProjectBuildT
     TiXmlElement* node = parentNode->FirstChildElement("Option");
     if (!node)
         return; // no options
-    
+
     bool use_console_runner = true;
     wxString output;
     wxString working_dir;
@@ -254,7 +254,7 @@ void ProjectLoader::DoBuildTargetOptions(TiXmlElement* parentNode, ProjectBuildT
     int projectLinkerOptionsRelation = 3;
     int projectIncludeDirsRelation = 3;
     int projectLibDirsRelation = 3;
-    
+
     while (node)
     {
         if (node->Attribute("use_console_runner"))
@@ -271,13 +271,13 @@ void ProjectLoader::DoBuildTargetOptions(TiXmlElement* parentNode, ProjectBuildT
 
         if (node->Attribute("deps_output"))
             deps_output = _U(node->Attribute("deps_output"));
-            
+
         if (node->Attribute("external_deps"))
             deps = _U(node->Attribute("external_deps"));
-            
+
         if (node->Attribute("type"))
             type = atoi(node->Attribute("type"));
-            
+
         if (node->Attribute("compiler"))
             compilerIdx = atoi(node->Attribute("compiler"));
 
@@ -286,7 +286,7 @@ void ProjectLoader::DoBuildTargetOptions(TiXmlElement* parentNode, ProjectBuildT
 
         if (node->Attribute("host_application"))
             hostApplication = _U(node->Attribute("host_application"));
-            
+
         if (node->Attribute("includeInTargetAll"))
             includeInTargetAll = atoi(node->Attribute("includeInTargetAll")) != 0;
 
@@ -307,10 +307,10 @@ void ProjectLoader::DoBuildTargetOptions(TiXmlElement* parentNode, ProjectBuildT
 
         if (node->Attribute("projectLibDirsRelation"))
             projectLibDirsRelation = atoi(node->Attribute("projectLibDirsRelation"));
-        
+
         node = node->NextSiblingElement("Option");
     }
-    
+
     if (type != -1)
     {
         target->SetTargetType((TargetType)type); // type *must* come before output filename!
@@ -485,26 +485,26 @@ void ProjectLoader::DoExtraCommands(TiXmlElement* parentNode, ProjectBuildTarget
             mode = _U(child->Attribute("after"));
             if (mode == _T("always"))
                 base->SetAlwaysRunPostBuildSteps(true);
-    
+
             child = child->NextSiblingElement("Mode");
         }
-    
+
         child = node->FirstChildElement("Add");
         while (child)
         {
             wxString before;
             wxString after;
-            
+
             if (child->Attribute("before"))
                 before = _U(child->Attribute("before"));
             if (child->Attribute("after"))
                 after = _U(child->Attribute("after"));
-    
+
             if (!before.IsEmpty())
                 base->AddCommandsBeforeBuild(before);
             if (!after.IsEmpty())
                 base->AddCommandsAfterBuild(after);
-    
+
             child = child->NextSiblingElement("Add");
         }
         node = node->NextSiblingElement("ExtraCommands");
@@ -527,7 +527,7 @@ void ProjectLoader::DoEnvironment(TiXmlElement* parentNode, CompileOptionsBase* 
             wxString value = _U(child->Attribute("value"));
             if (!name.IsEmpty())
             	vars.Add(name, value);
-    
+
             child = child->NextSiblingElement("Variable");
         }
         node = node->NextSiblingElement("Environment");
@@ -549,7 +549,7 @@ void ProjectLoader::DoUnits(TiXmlElement* parentNode)
             else
                 DoUnitOptions(unit, file);
         }
-        
+
         unit = unit->NextSiblingElement("Unit");
     }
 }
@@ -632,7 +632,7 @@ bool ProjectLoader::Save(const wxString& filename)
         ProjectBuildTarget* target = m_pProject->GetBuildTarget(i);
         if (!target)
             break;
-            
+
         buffer << _T('\t') << _T('\t') << _T('\t') << _T("<Target title=\"") << FixEntities(target->GetTitle()) << _T("\">") << _T('\n');
         if (target->GetTargetType() != ttCommandsOnly)
         {
@@ -737,7 +737,7 @@ bool ProjectLoader::Save(const wxString& filename)
     buffer << _T("</Code::Blocks_project_file>") << _T('\n');
 
     wxFile file(filename, wxFile::write);
-    if (file.Write(buffer, buffer.Length()) == buffer.Length())
+    if (cbWrite(file,buffer))
     {
 		m_pProject->SetModified(false);
         return true;
@@ -823,7 +823,7 @@ bool ProjectLoader::DoOptionSection(wxString& buffer, const wxArrayString& array
     {
         if (array[i].IsEmpty())
             continue;
-        
+
         empty = false;
         for (int x = 0; x < nrOfTabs; ++x)
             local << _T('\t');
