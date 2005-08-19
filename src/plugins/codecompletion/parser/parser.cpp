@@ -702,18 +702,18 @@ bool Parser::Parse(const wxString& bufferOrFilename, bool isLocal, ParserThreadO
 											isLocal,
 											opts,
 											&m_Tokens);
-	if (thread->Create() != wxTHREAD_NO_ERROR)
-	{
-#ifndef STANDALONE
-        Manager::Get()->GetMessageManager()->DebugLog(_("Can't create new thread!"));
-#endif
-        thread->Delete();
-        delete thread;
-		return false;
-	}
-
 	if (!opts.useBuffer)
 	{
+		wxLogNull ln; // no other logging
+		int ret = thread->Create();
+        if (ret != wxTHREAD_NO_ERROR)
+        {
+            #ifndef STANDALONE
+            Manager::Get()->GetMessageManager()->DebugLog("Can't create new thread: [%d] %s", ret, opts.useBuffer ? "<buffer>" : buffOrFile.c_str());
+            #endif
+            thread->Delete();
+            return false;
+        }
 		lock = new wxMutexLocker(s_mutexListProtection);
 		m_ThreadsStore.Add(thread);
 		m_ParsedFiles.Add(buffOrFile);
