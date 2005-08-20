@@ -17,7 +17,7 @@ END_EVENT_TABLE()
 ImpExpConfig::ImpExpConfig(wxWindow* parent)
 {
 	//ctor
-	wxXmlResource::Get()->LoadDialog(this, parent, _("dlgImpExpConfig"));
+	wxXmlResource::Get()->LoadDialog(this, parent, _T("dlgImpExpConfig"));
 	
 	// fill list
 	wxCheckListBox* list = XRCCTRL(*this, "lstConf", wxCheckListBox);

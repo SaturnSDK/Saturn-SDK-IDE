@@ -12,6 +12,7 @@
 */
 #if !defined(WX_PRECOMP) || defined(_MSC_VER)
     #include <wx/wx.h>
+    #include <wx/intl.h>
     #include <wx/laywin.h>
     #include <wx/image.h>
     #include <wx/filename.h>
@@ -59,6 +60,7 @@ class CodeBlocksApp : public wxApp
         bool InitXRCStuff();
         void InitFrame();
         void CheckVersion();
+        wxLocale m_locale; // locale we'll be using
     private:
         void ShowSplashScreen();
         void HideSplashScreen();

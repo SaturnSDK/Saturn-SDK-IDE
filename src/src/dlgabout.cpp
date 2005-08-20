@@ -28,6 +28,16 @@
 #include "../sdk/licenses.h"
 #include "../sdk/configmanager.h"
 
+#define DESCR		(_("Welcome to ")+wxString(APP_NAME)+wxString(" v")+wxString(APP_VERSION)+wxString("!\n") +\
+					wxString(APP_NAME)+_(" is a full-featured IDE (Integrated Development Environment) " \
+					"aiming to make the individual developer (and the development team) " \
+					"work in a nice programming environment offering everything he/they " \
+					"would ever need from a program of that kind.\n" \
+					"Its pluggable architecture allows you, the developer, to add " \
+					"any kind of functionality to the core program, through the use of " \
+					"plugins...\n"))
+
+/*
 #define DESCR		_("Welcome to "APP_NAME" v"APP_VERSION"!\n" \
 					APP_NAME" is a full-featured IDE (Integrated Development Environment) " \
 					"aiming to make the individual developer (and the development team) " \
@@ -36,11 +46,11 @@
 					"Its pluggable architecture allows you, the developer, to add " \
 					"any kind of functionality to the core program, through the use of " \
 					"plugins...\n")
-
+*/
 // class constructor
 dlgAbout::dlgAbout(wxWindow* parent)
 {
-	wxXmlResource::Get()->LoadDialog(this, parent, _("dlgAbout"));
+	wxXmlResource::Get()->LoadDialog(this, parent, _T("dlgAbout"));
 
 	wxBitmap bmp;
 	wxString file = ConfigManager::Get()->Read(_T("data_path")) + _T("/images/splash.png"); 

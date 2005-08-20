@@ -9,8 +9,8 @@
 
 EnvironmentSettingsDlg::EnvironmentSettingsDlg(wxWindow* parent)
 {
-	wxXmlResource::Get()->LoadDialog(this, parent, _("dlgEnvironmentSettings"));
-
+	wxXmlResource::Get()->LoadDialog(this, parent, _T("dlgEnvironmentSettings"));
+	
 	// tab "General"
 	XRCCTRL(*this, "chkShowSplash", wxCheckBox)->SetValue(ConfigManager::Get()->Read(_T("/environment/show_splash"), 1));
 	XRCCTRL(*this, "chkDDE", wxCheckBox)->SetValue(ConfigManager::Get()->Read(_T("/environment/use_dde"), 1));
