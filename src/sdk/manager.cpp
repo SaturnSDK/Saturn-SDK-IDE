@@ -59,7 +59,7 @@ bool cbRead(wxFile& file,wxString& st)
         file.Close();
         return true;
     }
-#ifdef wxUSE_UNICODE
+#if wxUSE_UNICODE
     char* buff = new char[len+1];
     if (!buff)
     {

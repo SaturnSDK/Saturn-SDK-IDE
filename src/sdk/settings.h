@@ -1,7 +1,7 @@
 #ifndef SETTINGS_H
 #define SETTINGS_H
 
-#ifdef wxUSE_UNICODE
+#if wxUSE_UNICODE
     #define _UU(x,y) wxString((x),(y))
     #define _CC(x,y) (x).mb_str((y))
 #else
