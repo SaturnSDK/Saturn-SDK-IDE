@@ -80,7 +80,7 @@ bool MSVC7WorkspaceLoader::Open(const wxString& filename)
         if (line != _T("Format Version 7.00"))
             Manager::Get()->GetMessageManager()->DebugLog(_T("Format not recognized. Will try to parse though..."));
     }
-    
+
     ImportersGlobals::UseDefaultCompiler = !askForCompiler;
     ImportersGlobals::ImportAllTargets = !askForTargets;
 
@@ -101,12 +101,12 @@ bool MSVC7WorkspaceLoader::Open(const wxString& filename)
             wxArrayString keyvalue = GetArrayFromString(line, _T("="));
             if (keyvalue.GetCount() != 2)
                 continue;
-        
+
             // the second part contains the project title and filename
             comps = GetArrayFromString(keyvalue[1], _T(","));
             if (comps.GetCount() < 3)
                 continue;
-        
+
             // read project title and trim quotes
             wxString prjTitle = comps[0];
             prjTitle.Trim(true);
@@ -141,7 +141,7 @@ bool MSVC7WorkspaceLoader::Open(const wxString& filename)
             wxFileName wfname = filename;
             wxFileName fname = prjFile;
             fname.MakeAbsolute(wfname.GetPath(wxPATH_GET_VOLUME | wxPATH_GET_SEPARATOR));
-            Manager::Get()->GetMessageManager()->DebugLog(_U("Found project '%s' in '%s'"), prjTitle.c_str(), fname.GetFullPath().c_str());
+            Manager::Get()->GetMessageManager()->DebugLog(_("Found project '%s' in '%s'"), prjTitle.c_str(), fname.GetFullPath().c_str());
             currentProject = Manager::Get()->GetProjectManager()->LoadProject(fname.GetFullPath());
             if (currentProject) initDependencies(currentProject, currentIdcode);
         }
@@ -155,13 +155,13 @@ bool MSVC7WorkspaceLoader::Open(const wxString& filename)
         }
         else if (depSection && (line.StartsWith(_T("EndGlobalSection")) || line.StartsWith(_T("EndProjectSection")))) {
         	depSection = false;
-        }        
+        }
         else if (depSection && line.StartsWith(_T("{"))) { // start reading a dependency
         	wxArrayString idx = GetArrayFromString(line, _T("="));
         	if (idx.GetCount() != 2) continue;
         	if (globalDeps) {
 // {31635C8-67BF-4808-A918-0FBF822771BD}.0 = {658BFA12-8417-49E5-872A-33F0973544DC}
-// i.e. project on the left of '=' depend on the project on the right        		
+// i.e. project on the left of '=' depend on the project on the right
                 idx[0]= idx[0].BeforeFirst(_T('}'));
                 idx[0].Replace(_T("{"), _T(""));
                 idx[1].Replace(_T("{"), _T(""));
@@ -229,19 +229,19 @@ void MSVC7WorkspaceLoader::resolveDependencies() {
                     if (type==ttDynamicLib) {
                         // target1->GetStaticLibFilename() do not work since it uses the filename instead of output filename
                         Compiler* compiler = CompilerFactory::Compilers[sIt->second._project->GetCompilerIndex()];
-                        wxString prefix = compiler->GetSwitches().libPrefix;                        
+                        wxString prefix = compiler->GetSwitches().libPrefix;
                         wxString suffix = compiler->GetSwitches().libExtension;
                         wxFileName fname = target1->GetOutputFilename();
                         if (!fname.GetName().StartsWith(prefix)) fname.SetName(prefix + fname.GetName());
-                        fname.SetExt(suffix);                        
+                        fname.SetExt(suffix);
                         target2->AddLinkLib(fname.GetFullPath());
                     }
                     else if (type==ttStaticLib) target2->AddLinkLib(target1->GetOutputFilename());
-               }                    
+               }
             }
-        }        
+        }
     }
-    
+
     //target->AddCommandsBeforeBuild(const wxString& command);
 }
 
