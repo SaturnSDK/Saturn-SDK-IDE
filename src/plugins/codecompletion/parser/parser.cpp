@@ -346,16 +346,24 @@ void Parser::SaveTokenToCache(wxFile* f, Token* token)
 inline void Parser::SaveStringToFile(wxFile* f, const wxString& str)
 {
     const char* psz = str.mb_str(wxConvUTF8);
-    int size = wxStrlen(psz);
+    int size = psz?strlen(psz):0; // wxStrlen(psz); // wxStrlen uses wxChars
     if (size >= 512)
         size = 512;
     SaveIntToFile(f, size);
-    f->Write(psz, size);
+    if(size)
+        f->Write(psz, size);
 }
 
 inline void Parser::SaveIntToFile(wxFile* f, int i)
 {
-    f->Write(&i, sizeof(int));
+    /* This used to be done as
+        f->Write(&i, sizeof(int));
+    which is incorrect because it assumes a consistant byte order
+    and a constant int size */
+
+    unsigned int const j = i; // rshifts aren't well-defined for negatives
+    unsigned char c[4] = { j>>0&0xFF, j>>8&0xFF, j>>16&0xFF, j>>24&0xFF };
+    f->Write( c, 4 );
 }
 
 inline bool Parser::LoadStringFromFile(wxFile* f, wxString& str)
@@ -374,6 +382,7 @@ inline bool Parser::LoadStringFromFile(wxFile* f, wxString& str)
     else // doesn't fit in our buffer, but still we have to skip it
     {
         str.Empty();
+        size = size & 0xFFFFFF; // Can't get any longer than that
         f->Seek(size, wxFromCurrent);
     }
     return ok;
@@ -381,7 +390,13 @@ inline bool Parser::LoadStringFromFile(wxFile* f, wxString& str)
 
 inline bool Parser::LoadIntFromFile(wxFile* f, int* i)
 {
-    return f->Read(i, sizeof(int)) == sizeof(int);
+//    See SaveIntToFile
+//    return f->Read(i, sizeof(int)) == sizeof(int);
+
+    unsigned char c[4];
+    if ( f->Read( c, 4 ) != 4 ) return false;
+    *i = ( c[0]<<0 | c[1]<<8 | c[2]<<16 | c[3]<<24 );
+    return true;
 }
 
 unsigned int Parser::GetThreadsCount()
