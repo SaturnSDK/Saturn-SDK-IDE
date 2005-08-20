@@ -41,8 +41,6 @@
 #include "cbplugin.h"
 #include "cbeditorprintout.h"
 
-#include <cstring> // std::strlen
-
 /* This struct holds private data for the cbEditor class.
  * It's a paradigm to avoid rebuilding the entire project (as cbEditor is a basic dependency)
  * for just adding a private var or method.
