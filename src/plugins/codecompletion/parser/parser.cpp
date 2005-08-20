@@ -709,7 +709,7 @@ bool Parser::Parse(const wxString& bufferOrFilename, bool isLocal, ParserThreadO
         if (ret != wxTHREAD_NO_ERROR)
         {
             #ifndef STANDALONE
-            Manager::Get()->GetMessageManager()->DebugLog("Can't create new thread: [%d] %s", ret, opts.useBuffer ? "<buffer>" : buffOrFile.c_str());
+            Manager::Get()->GetMessageManager()->DebugLog(_("Can't create new thread: [%d] %s"), ret, opts.useBuffer ? _("<buffer>") : buffOrFile.c_str());
             #endif
             thread->Delete();
             return false;

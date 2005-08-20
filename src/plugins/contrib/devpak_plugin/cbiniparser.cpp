@@ -47,7 +47,7 @@ bool IniParser::ParseBuffer(wxString& buffer)
         if (line.IsEmpty())
             continue;
 
-        if (line.GetChar(0) == '[')
+        if (line.GetChar(0) == _T('['))
         {
             // new group
             IniGroup newgroup;
@@ -60,7 +60,7 @@ bool IniParser::ParseBuffer(wxString& buffer)
         }
         else
         {
-            int pos = line.Find('=');
+            int pos = line.Find(_T('='));
             if (pos == -1)
                 pos = line.Length();
             IniKeyValuePair newpair;
@@ -70,7 +70,7 @@ bool IniParser::ParseBuffer(wxString& buffer)
             newpair.key.Trim(true);
             newpair.value.Trim(false);
             newpair.value.Trim(true);
-            if (newpair.key.IsEmpty() || newpair.key.GetChar(0) < 'A' || newpair.key.GetChar(0) > 'z')
+            if (newpair.key.IsEmpty() || newpair.key.GetChar(0) < _T('A') || newpair.key.GetChar(0) > _T('z'))
                 continue;
             if (m_Array.GetCount() == 0)
             {
@@ -89,10 +89,10 @@ wxString IniParser::ReadLineFromBuffer(wxString& buffer)
 {
     int len = buffer.Length();
     int i = 0;
-    while (i < len && buffer.GetChar(i) != '\n')
+    while (i < len && buffer.GetChar(i) != _T('\n'))
         ++i;
     wxString str = buffer.Left(i);
-    while (i < len && (buffer.GetChar(i) == '\n' || buffer.GetChar(i) == '\r'))
+    while (i < len && (buffer.GetChar(i) == _T('\n') || buffer.GetChar(i) == _T('\r')))
         ++i;
     buffer.Remove(0, i);
     buffer.Trim();
