@@ -50,27 +50,29 @@ static bool appShutingDown = false;
 /// Reads a wxString from a non-unicode file. File must be open. File is closed automatically.
 bool cbRead(wxFile& file,wxString& st)
 {
+    st.Empty();
     if (!file.IsOpened())
-    {
-        st = _T("");
         return false;
-    }
     int len = file.Length();
     if(!len)
     {
         file.Close();
-        st = _T("");
         return true;
     }
 #ifdef wxUSE_UNICODE
-    wxString tmp;
-    void* buff = tmp.GetWriteBuf(len);
+    char* buff = new char[len+1];
+    if (!buff)
+    {
+        file.Close();
+        return false;
+    }
     file.Read((void*)buff, len);
     file.Close();
+    buff[len]='\0';
     st = wxString((const char *)buff, wxConvUTF8);
-    tmp.UngetWriteBuf();
+    delete[] buff;
 #else
-    void* buff = st.GetWriteBuf(len); // GetWriteBuf already handles the extra '\0'.
+    char* buff = st.GetWriteBuf(len); // GetWriteBuf already handles the extra '\0'.
     file.Read((void*)buff, len);
     file.Close();
     st.UngetWriteBuf();
