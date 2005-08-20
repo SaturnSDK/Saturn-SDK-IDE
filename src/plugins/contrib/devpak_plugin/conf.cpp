@@ -35,6 +35,19 @@ UpdateRec* ReadConf(const IniParser& ini, int* recCount, const wxString& current
     	UpdateRec& rec = list[i];
 
     	rec.title = ini.GetGroupName(i);
+    	
+    	// fix title
+    	// devpaks.org has changed the title to contain some extra info
+        // e.g.: [libunicows   Library version: 1.1.1   Devpak revision: 1sid]
+    	// we don't need this extra info, so if we find it we remove it
+    	int pos = rec.title.Find(_T("Library version:"));
+    	if (pos != -1)
+    	{
+    		rec.title.Truncate(pos);
+    		rec.title = rec.title.Trim(false);
+    		rec.title = rec.title.Trim(true);
+    	}
+
     	rec.name = ini.GetKeyValue(i, _T("Name"));
     	rec.desc = ini.GetKeyValue(i, _T("Description"));
     	rec.remote_file = ini.GetKeyValue(i, _T("RemoteFilename"));

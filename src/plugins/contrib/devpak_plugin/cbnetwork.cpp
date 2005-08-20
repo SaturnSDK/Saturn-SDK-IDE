@@ -2,6 +2,7 @@
 #include <wx/txtstrm.h>
 #include <wx/wfstream.h>
 #include <wx/app.h> // wxPostEvent
+#include <wx/msgdlg.h>
 #include <wx/filename.h>
 
 DECLARE_EVT_CBNET(cbEVT_CBNET_CONNECT);
@@ -76,7 +77,10 @@ bool cbNetwork::Connect(const wxString& remote)
 {
     Disconnect();
 
-    m_pURL = new wxURL(m_ServerURL + _T("/") + remote);
+    wxString sep = _T("/");
+    if (m_ServerURL.Last() == sep.GetChar(0) || remote.StartsWith(sep))
+        sep.Clear();
+    m_pURL = new wxURL(m_ServerURL + sep + remote);
     if (m_pURL->GetError() != wxURL_NOERR)
         return false;
     
