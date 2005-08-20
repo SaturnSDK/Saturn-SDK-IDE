@@ -74,7 +74,7 @@ void CompilerDMC::Reset()
 	m_Options.AddOption(_("Generate .cod (assemply) file"), _T("-cod"), _("Others"));
 	m_Options.AddOption(_("No inline function expansion"), _T("-C"), _("Debugging"));
 	m_Options.AddOption(_("Generate .dep (make dependency) file"), _T("-d"), _("Others"));
-	m_Options.AddOption(_("#define DEBUG 1"), _T("-D"), _("Debugging"));
+	m_Options.AddOption(_T("#define DEBUG 1"), _T("-D"), _("Debugging"));
 	m_Options.AddOption(_("Show results of preprocessor"), _T("-e"), _("Others"));
 	m_Options.AddOption(_("Do not elide comments"), _T("-EC"), _("Others"));
 	m_Options.AddOption(_("#line directives not output"), _T("-EL"), _("Others"));
@@ -100,7 +100,7 @@ void CompilerDMC::Reset()
 	//. m_Options.AddOption(_("Asian language characters (Taiwanese/Chinese)"), _T("-j1"), _("Others"));
 	//. m_Options.AddOption(_("Asian language characters (Korean)"), _T("-j2"), _("Others"));
 	m_Options.AddOption(_("Relaxed type checking"), _T("-Jm"), _("Others"));
-	m_Options.AddOption(_("char==unsigned"), _T("-Ju"), _("Others"));
+	m_Options.AddOption(_T("char==unsigned"), _T("-Ju"), _("Others"));
 	m_Options.AddOption(_("No empty base class optimization"), _T("-Jb"), _("Optimization"));
 	m_Options.AddOption(_("chars are unsigned"), _T("-J"), _("Others"));
 	//. m_Options.AddOption(_("Generate list file"), _T("-l[listfile]"), _("Others"));

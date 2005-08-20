@@ -87,7 +87,7 @@ END_EVENT_TABLE()
 CCOptionsDlg::CCOptionsDlg(wxWindow* parent)
 	: m_Parser(this)
 {
-	wxXmlResource::Get()->LoadDialog(this, parent, _("dlgCCSettings"));
+	wxXmlResource::Get()->LoadDialog(this, parent, _T("dlgCCSettings"));
 	XRCCTRL(*this, "spnThreads", wxSpinCtrl)->SetValue(m_Parser.GetMaxThreads());
 	XRCCTRL(*this, "chkLocals", wxCheckBox)->SetValue(m_Parser.Options().followLocalIncludes);
 	XRCCTRL(*this, "chkGlobals", wxCheckBox)->SetValue(m_Parser.Options().followGlobalIncludes);

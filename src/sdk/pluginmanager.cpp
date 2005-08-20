@@ -204,7 +204,7 @@ void PluginManager::LoadAllPlugins()
             plug->Attach();
 		}
     }
-	Manager::Get()->GetMessageManager()->Log(_(""));
+	Manager::Get()->GetMessageManager()->Log(_T(""));
 
     wxLogNull ln;
     ConfigManager::Get()->DeleteEntry(personalityKey + _T("/plugins/try_to_activate"));

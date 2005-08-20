@@ -97,7 +97,7 @@ wxString Token::GetTokenKindString()
 		case tkDestructor: return _("destructor");
 		case tkPreprocessor: return _("preprocessor");
 		case tkVariable: return _("variable");
-		default: return _(""); // tkUndefined
+		default: return _T(""); // tkUndefined
 	}
 }
 
@@ -108,6 +108,6 @@ wxString Token::GetTokenScopeString()
 		case tsPrivate: return _("private");
 		case tsProtected: return _("protected");
 		case tsPublic: return _("public");
-		default: return _("");
+		default: return _T("");
 	}
 }

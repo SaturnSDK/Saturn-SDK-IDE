@@ -86,9 +86,9 @@ CodeCompletion::CodeCompletion()
     wxXmlResource::Get()->Load(resPath + _T("/code_completion.zip#zip:*.xrc"));
 
     m_PluginInfo.name = _T("CodeCompletion");
-    m_PluginInfo.title = _T("Code completion");
+    m_PluginInfo.title = _("Code completion");
     m_PluginInfo.version = _T("0.1");
-    m_PluginInfo.description = _T("This plugin provides a class browser for your projects "
+    m_PluginInfo.description = _("This plugin provides a class browser for your projects "
                                "and code-completion inside the editor\n\n"
                                "Note: Only C/C++ language is supported by this plugin...");
     m_PluginInfo.author = _T("Yiannis An. Mandravellos");
@@ -127,7 +127,7 @@ void CodeCompletion::BuildMenu(wxMenuBar* menuBar)
 //	if (m_EditMenu)
 //    	return; // already set-up
 
-    int pos = menuBar->FindMenu(_("Edit"));
+    int pos = menuBar->FindMenu(_("&Edit"));
     if (pos != wxNOT_FOUND)
     {
 		m_EditMenu = menuBar->GetMenu(pos);
@@ -137,7 +137,7 @@ void CodeCompletion::BuildMenu(wxMenuBar* menuBar)
     }
     else
     	Manager::Get()->GetMessageManager()->DebugLog(_("Could not find Edit menu!"));
-    pos = menuBar->FindMenu(_("Search"));
+    pos = menuBar->FindMenu(_("Sea&rch"));
     if (pos != wxNOT_FOUND)
     {
 		m_SearchMenu = menuBar->GetMenu(pos);

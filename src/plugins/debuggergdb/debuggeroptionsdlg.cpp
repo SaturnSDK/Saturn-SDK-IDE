@@ -33,7 +33,7 @@
 DebuggerOptionsDlg::DebuggerOptionsDlg(wxWindow* parent)
 {
 	//ctor
-	wxXmlResource::Get()->LoadDialog(this, parent, _("dlgDebuggerOptions"));
+	wxXmlResource::Get()->LoadDialog(this, parent, _T("dlgDebuggerOptions"));
 	
 	XRCCTRL(*this, "txtInit", wxTextCtrl)->SetValue(ConfigManager::Get()->Read(_T("debugger_gdb/init_commands"), _T("")));
 	XRCCTRL(*this, "chkWatchArgs", wxCheckBox)->SetValue(ConfigManager::Get()->Read(_T("debugger_gdb/watch_args"), 0L));

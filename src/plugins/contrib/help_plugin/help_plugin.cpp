@@ -177,7 +177,7 @@ void HelpPlugin::AddToHelpMenu(int id, const wxString &help)
 {
     if (!m_pMenuBar)
         return;
-    int pos = m_pMenuBar->FindMenu(_("Help"));
+    int pos = m_pMenuBar->FindMenu(_("&Help"));
     if (pos != wxNOT_FOUND)
     {
 		wxMenu* helpMenu = m_pMenuBar->GetMenu(pos);
@@ -191,7 +191,7 @@ void HelpPlugin::RemoveFromHelpMenu(int id,const wxString &help)
 {
     if (!m_pMenuBar)
         return;
-    int pos = m_pMenuBar->FindMenu(_("Help"));
+    int pos = m_pMenuBar->FindMenu(_("&Help"));
     if (pos != wxNOT_FOUND)
     {
 		wxMenu* helpMenu = m_pMenuBar->GetMenu(pos);

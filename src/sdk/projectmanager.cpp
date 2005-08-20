@@ -282,12 +282,12 @@ void ProjectManager::CreateMenu(wxMenuBar* menuBar)
 /* TODO (mandrav#1#): Move menu items from main.cpp, here */
 	if (menuBar)
 	{
-		int pos = menuBar->FindMenu(_("Search"));
+		int pos = menuBar->FindMenu(_("Sea&rch"));
 		wxMenu* menu = menuBar->GetMenu(pos);
 		if (menu)
 			menu->Append(idMenuGotoFile, _("Goto file...\tAlt-G"));
 
-		pos = menuBar->FindMenu(_("File"));
+		pos = menuBar->FindMenu(_("&File"));
 		menu = menuBar->GetMenu(pos);
 		if (menu)
 		{
@@ -295,7 +295,7 @@ void ProjectManager::CreateMenu(wxMenuBar* menuBar)
             menu->Insert(menu->GetMenuItemCount() - 1, wxID_SEPARATOR, _T("")); // instead of AppendSeparator();
         }
 
-        pos = menuBar->FindMenu(_("Project"));
+        pos = menuBar->FindMenu(_("&Project"));
 		menu = menuBar->GetMenu(pos);
 		if (menu)
         {
@@ -488,7 +488,7 @@ wxMenu* ProjectManager::GetProjectMenu()
         wxMenuBar* mb = frame->GetMenuBar();
         if(!mb)
             break;
-        result = mb->GetMenu(mb->FindMenu(_("Project")));
+        result = mb->GetMenu(mb->FindMenu(_("&Project")));
         break;
     }while(false);
     return result;

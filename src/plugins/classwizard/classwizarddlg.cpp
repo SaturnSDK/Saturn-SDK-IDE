@@ -47,7 +47,7 @@ END_EVENT_TABLE()
 
 ClassWizardDlg::ClassWizardDlg(wxWindow* parent)
 {
-	wxXmlResource::Get()->LoadDialog(this, parent, _("dlgNewClass"));
+	wxXmlResource::Get()->LoadDialog(this, parent, _T("dlgNewClass"));
 }
 
 ClassWizardDlg::~ClassWizardDlg()

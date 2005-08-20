@@ -340,33 +340,33 @@ void CompilerGCC::BuildMenu(wxMenuBar* menuBar)
 	// b) locate "Project" menu and insert after it
 	// c) if not found (?), insert at pos 5
 	int finalPos = 5;
-	int projMenuPos = menuBar->FindMenu(_T("Debug"));
+	int projMenuPos = menuBar->FindMenu(_("&Debug"));
 	if (projMenuPos != wxNOT_FOUND)
 		finalPos = projMenuPos;
 	else
 	{
-		projMenuPos = menuBar->FindMenu(_T("Project"));
+		projMenuPos = menuBar->FindMenu(_("&Project"));
 		if (projMenuPos != wxNOT_FOUND)
 			finalPos = projMenuPos + 1;
 	}
     menuBar->Insert(finalPos, m_Menu, _("&Compile"));
     
     // now add some entries in Project menu
-	projMenuPos = menuBar->FindMenu(_T("Project"));
+	projMenuPos = menuBar->FindMenu(_("&Project"));
 	if (projMenuPos != wxNOT_FOUND)
 	{
         wxMenu* prj = menuBar->GetMenu(projMenuPos);
         // look if we have a "Properties" item. If yes, we 'll insert
         // before it, else we 'll just append...
         size_t propsPos = prj->GetMenuItemCount(); // append
-        int propsID = prj->FindItem(_T("Properties"));
+        int propsID = prj->FindItem(_("Properties"));
         if (propsID != wxNOT_FOUND)
             prj->FindChildItem(propsID, &propsPos);
         prj->Insert(propsPos, idMenuProjectCompilerOptions, _("Build options"), _("Set the project's build options"));        
         prj->InsertSeparator(propsPos);
     }
     // Add entry in settings menu (outside "plugins")
-    int settingsMenuPos = menuBar->FindMenu(_T("Settings"));
+    int settingsMenuPos = menuBar->FindMenu(_("&Settings"));
     if (settingsMenuPos != wxNOT_FOUND)
     {
         wxMenu* settingsmenu = menuBar->GetMenu(settingsMenuPos);

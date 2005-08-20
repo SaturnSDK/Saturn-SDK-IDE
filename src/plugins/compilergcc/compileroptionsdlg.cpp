@@ -120,7 +120,7 @@ CompilerOptionsDlg::CompilerOptionsDlg(wxWindow* parent, CompilerGCC* compiler, 
 	m_pTarget(target),
 	m_BuildingTree(false)
 {
-	wxXmlResource::Get()->LoadDialog(this, parent, _("dlgCompilerOptions"));
+	wxXmlResource::Get()->LoadDialog(this, parent, _T("dlgCompilerOptions"));
 
 	DoFillCompilerSets();
 	DoFillCompilerPrograms();

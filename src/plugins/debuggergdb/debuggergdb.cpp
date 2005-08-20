@@ -248,12 +248,12 @@ void DebuggerGDB::BuildMenu(wxMenuBar* menuBar)
 	// b) locate "Project" menu and insert after it
 	// c) if not found (?), insert at pos 5
 	int finalPos = 5;
-	int projcompMenuPos = menuBar->FindMenu(_("Compile"));
+	int projcompMenuPos = menuBar->FindMenu(_("&Compile"));
 	if (projcompMenuPos != wxNOT_FOUND)
 		finalPos = projcompMenuPos + 1;
 	else
 	{
-		projcompMenuPos = menuBar->FindMenu(_("Project"));
+		projcompMenuPos = menuBar->FindMenu(_("&Project"));
 		if (projcompMenuPos != wxNOT_FOUND)
 			finalPos = projcompMenuPos + 1;
 	}
@@ -1608,7 +1608,7 @@ void DebuggerGDB::OnValueTooltip(CodeBlocksEvent& event)
         int pos = tip.First(_T('\n')); // tip is e.g. "$1 = \n<value>"
         if (pos != -1)
             tip.Remove(0, pos + 1); // discard first line
-		Manager::Get()->GetMessageManager()->AppendLog(m_PageIndex, _("%s\n"), tip.c_str());
+		Manager::Get()->GetMessageManager()->AppendLog(m_PageIndex, _T("%s\n"), tip.c_str());
         tip = token + _T(" = ") + tip;
 		if (m_EvalWin)
             m_EvalWin->Destroy();

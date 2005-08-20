@@ -21,7 +21,7 @@ END_EVENT_TABLE()
 AstyleConfigDlg::AstyleConfigDlg(wxWindow* parent)
 {
 	//ctor
-	wxXmlResource::Get()->LoadDialog(this, parent, _("dlgAstyleConfig"));
+	wxXmlResource::Get()->LoadDialog(this, parent, _T("dlgAstyleConfig"));
 	wxFont font(10, wxMODERN, wxNORMAL, wxNORMAL);
 	XRCCTRL(*this, "txtSample", wxTextCtrl)->SetFont(font);
     
