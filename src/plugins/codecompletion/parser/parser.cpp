@@ -345,11 +345,12 @@ void Parser::SaveTokenToCache(wxFile* f, Token* token)
 
 inline void Parser::SaveStringToFile(wxFile* f, const wxString& str)
 {
-    int size = str.Length();
-    if (size > 512)
+    const char* psz = str.mb_str(wxConvUTF8);
+    int size = wxStrlen(psz);
+    if (size >= 512)
         size = 512;
     SaveIntToFile(f, size);
-    f->Write(str.c_str(), size);
+    f->Write(psz, size);
 }
 
 inline void Parser::SaveIntToFile(wxFile* f, int i)
@@ -363,15 +364,18 @@ inline bool Parser::LoadStringFromFile(wxFile* f, wxString& str)
     if (!LoadIntFromFile(f, &size))
         return false;
     bool ok = true;
-    if (size > 0 && size < 512)
+    if (size > 0 && size <= 512)
     {
-        static wxChar buf[512];
+        static char buf[513];
         ok = f->Read(buf, size) == size;
-        buf[size] = _T('\0');
-        str = buf;
+        buf[size] = '\0';
+        str = _U(buf);
     }
     else // doesn't fit in our buffer, but still we have to skip it
+    {
+        str.Empty();
         f->Seek(size, wxFromCurrent);
+    }
     return ok;
 }
 
