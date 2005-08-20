@@ -26,11 +26,19 @@ bool IniParser::ParseFile(const wxString& filename)
     wxFile file(filename);
     if (!file.IsOpened())
         return false;
+    int len = file.Length();
 
-    char* buff = buffer.GetWriteBuf(file.Length());
-    file.Read(buff, file.Length());
+    if(len==0)
+        buffer.Clear();
+    else
+    {
+        char* buff = new char[len+1];
+        file.Read(buff, len);
+        buff[len]='\0';
+        buffer = wxString(buff,wxConvUTF8);
+        delete[] buff;
+    }
     file.Close();
-    buffer.UngetWriteBuf();
 
     return ParseBuffer(buffer);
 }
@@ -81,7 +89,7 @@ bool IniParser::ParseBuffer(wxString& buffer)
             m_Array[m_Array.GetCount() - 1].pairs.Add(newpair);
         }
     }
-    
+
     return true;
 }
 
@@ -165,7 +173,7 @@ const wxString & IniParser::GetValue(const wxString& group, const wxString& key,
 {
     static wxString ret;
     ret.Clear();
-    
+
     int g = FindGroupByName(group, caseSensitive);
     int k = FindKeyByName(g, key, caseSensitive);
     if (g != -1 && k != -1)

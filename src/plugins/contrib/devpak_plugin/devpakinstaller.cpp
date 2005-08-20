@@ -103,7 +103,7 @@ bool DevPakInstaller::Uninstall(const wxString& entry)
     m_Status.Clear();
     IniParser* p = new IniParser;
     p->ParseFile(entry);
-    
+
     int idx = p->FindGroupByName(_T("Files"), false);
     if (idx == -1)
     {
@@ -159,15 +159,15 @@ void DevPakInstaller::RemoveControlFile(const wxString& filename)
 }
 
 bool DevPakInstaller::Decompress(const wxString& filename, const wxString& tmpfile)
-{    
+{
     // open file
-    FILE* f = fopen(filename.c_str(), _T("rb"));
+    FILE* f = fopen(filename.mb_str(), "rb");
     if (!f)
     {
         m_Status = _("Error opening input file!");
         return false;
     }
-    
+
     // open BZIP2 stream
     int bzerror;
     BZFILE* bz = BZ2_bzReadOpen(&bzerror, f, 0, 0, 0L, 0);
@@ -179,7 +179,7 @@ bool DevPakInstaller::Decompress(const wxString& filename, const wxString& tmpfi
     }
 
     // open output file
-    FILE* fo = fopen(tmpfile.c_str(), _T("wb"));
+    FILE* fo = fopen(tmpfile.mb_str(), "wb");
     if (!fo)
     {
         m_Status = _("Error opening output file!");

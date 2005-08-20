@@ -26,10 +26,10 @@ bool TAR::Open(const wxString& filename)
         return false;
     Close();
 
-    m_pFile = fopen(filename.c_str(), _T("rb"));
+    m_pFile = fopen(filename.mb_str(), "rb");
     if (!m_pFile)
         return false;
-    
+
     fseek(m_pFile, 0, SEEK_END);
     m_Size = ftell(m_pFile);
     fseek(m_pFile, 0, SEEK_SET);
@@ -56,7 +56,7 @@ void TAR::Reset()
 int TAR::OctToInt(const char* oct)
 {
 	int i = 0;
-	if (sscanf(oct, _T("%o"), &i) != 1)
+	if (sscanf(oct, "%o", &i) != 1)
         i = 0;
 //        return 1;
     return i;
@@ -90,7 +90,7 @@ bool TAR::Next(TAR::Record* rec)
         return false;
 
     rec->pos = pos;
-    rec->name = buffer.name;
+    rec->name = _U(buffer.name);
     rec->size = OctToInt(buffer.size);
 
 #if 1
@@ -235,7 +235,7 @@ bool TAR::ExtractFile(Record* rec, const wxString& dirname, wxString& status, wx
             if (convertedFile)
                 *convertedFile = path;
 
-            FILE* out = fopen(path.c_str(), _T("wb"));
+            FILE* out = fopen(path.mb_str(), "wb");
             if (!out)
             {
                 status << wxString(_("Can't open file ")) << path << _T("\n");

@@ -35,7 +35,7 @@ UpdateRec* ReadConf(const IniParser& ini, int* recCount, const wxString& current
     	UpdateRec& rec = list[i];
 
     	rec.title = ini.GetGroupName(i);
-    	
+
     	// fix title
     	// devpaks.org has changed the title to contain some extra info
         // e.g.: [libunicows   Library version: 1.1.1   Devpak revision: 1sid]
@@ -52,20 +52,20 @@ UpdateRec* ReadConf(const IniParser& ini, int* recCount, const wxString& current
     	rec.desc = ini.GetKeyValue(i, _T("Description"));
     	rec.remote_file = ini.GetKeyValue(i, _T("RemoteFilename"));
     	rec.local_file = ini.GetKeyValue(i, _T("LocalFilename"));
-    	rec.groups = GetArrayFromString(ini.GetKeyValue(i, _T("Group")), ",");
+    	rec.groups = GetArrayFromString(ini.GetKeyValue(i, _T("Group")), _T(","));
     	rec.install = ini.GetKeyValue(i, _T("InstallPath"));
     	rec.version = ini.GetKeyValue(i, _T("Version"));
-        rec.bytes = atol(ini.GetKeyValue(i, _T("Size")));
+        ini.GetKeyValue(i, _T("Size")).ToLong(&rec.bytes);
     	rec.date = ini.GetKeyValue(i, _T("Date"));
-    	rec.installable = ini.GetKeyValue(i, _T("Execute")) == "1";
+    	rec.installable = ini.GetKeyValue(i, _T("Execute")) == _T("1");
 
         // read .entry file (if exists)
         rec.entry = (!rec.name.IsEmpty() ? rec.name : wxFileName(rec.local_file).GetName()) + _T(".entry");
         IniParser p;
         p.ParseFile(appPath + rec.entry);
         rec.installed_version = p.GetValue(_T("Setup"), _T("AppVersion"));
-        
-        rec.downloaded = wxFileExists(appPath + "/" + rec.local_file);
+
+        rec.downloaded = wxFileExists(appPath + _T("/") + rec.local_file);
         rec.installed = !rec.installed_version.IsEmpty();
 
         // calculate size
@@ -87,7 +87,7 @@ UpdateRec* ReadConf(const IniParser& ini, int* recCount, const wxString& current
         else
             rec.remote_server = currentServer;
     }
-    
+
     *recCount = groupsCount;
     return list;
 }
