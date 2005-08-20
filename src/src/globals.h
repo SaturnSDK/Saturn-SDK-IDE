@@ -7,6 +7,25 @@
 #define APP_ACTUAL_VERSION		_T("1.0-RC1")
 #define APP_URL					_T("http://www.codeblocks.org")
 #define APP_CONTACT_EMAIL		_T("mandrav@codeblocks.org")
-#define APP_BUILD_TIMESTAMP		(wxString(wxT(__DATE__)) + wxT(", ") + wxT(__TIME__))
+
+#if defined(__WXMSW__)
+  #define APP_PLATFORM _T("Windows")
+#elif defined(__WXOS2__)
+  #define APP_PLATFORM _T("OS/2")
+#elif defined(__WXMAC__)
+  #define APP_PLATFORM _T("Mac OS/X")
+#elif defined(__UNIX__)
+  #define APP_PLATFORM _T("Linux")
+#else
+  #define APP_PLATFORM _T("Unknown")
+#endif
+
+#if wxUSE_UNICODE
+  #define APP_WXANSI_UNICODE wxT("unicode")
+#else
+  #define APP_WXANSI_UNICODE wxT("ANSI")
+#endif
+
+#define APP_BUILD_TIMESTAMP	(wxString(wxT(__DATE__)) + wxT(", ") + wxT(__TIME__) + wxT(" - wx") + wxString(wxT(wxVERSION_NUM_DOT_STRING)) + wxT(" (") + APP_PLATFORM + wxT(", ") + APP_WXANSI_UNICODE + wxT(")") )
 
 #endif // GLOBALS_H
