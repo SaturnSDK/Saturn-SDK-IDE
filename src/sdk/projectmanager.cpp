@@ -167,6 +167,7 @@ BEGIN_EVENT_TABLE(ProjectManager, wxEvtHandler)
     EVT_MENU(idMenuViewUseFolders, ProjectManager::OnViewUseFolders)
     EVT_MENU(idMenuViewUseFoldersPopup, ProjectManager::OnViewUseFolders)
     EVT_MENU(idMenuViewFileMasks, ProjectManager::OnViewFileMasks)
+    EVT_IDLE(ProjectManager::OnIdle)
 END_EVENT_TABLE()
 
 // class constructor
@@ -1652,4 +1653,9 @@ void ProjectManager::OnViewFileMasks(wxCommandEvent& event)
 		m_pFileGroups->Save();
 		RebuildTree();
 	}
+}
+
+void ProjectManager::OnIdle(wxIdleEvent& event)
+{
+    event.Skip();
 }

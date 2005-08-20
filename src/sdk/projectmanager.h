@@ -305,6 +305,7 @@ class DLLIMPORT ProjectManager : public wxEvtHandler
         void OnViewCategorize(wxCommandEvent& event);
         void OnViewUseFolders(wxCommandEvent& event);
         void OnViewFileMasks(wxCommandEvent& event);
+        void OnIdle(wxIdleEvent& event);
         void DoOpenSelectedFile();
 		void DoOpenFile(ProjectFile* pf, const wxString& filename);
 		int DoAddFileToProject(const wxString& filename, cbProject* project, wxArrayInt& targets);
