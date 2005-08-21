@@ -546,7 +546,7 @@ wxString Tokenizer::DoGetToken()
 				continue; // skip excessive spaces
 			m_Str << tmp.GetChar(i);
 		}
-		m_Str << ')'; // add closing parenthesis (see "i < tmp.Length() - 1" in previous "for")
+		m_Str << _T(')'); // add closing parenthesis (see "i < tmp.Length() - 1" in previous "for")
 		m_Str.Replace(_T("  "), _T(" ")); // replace two-spaces with single-space (introduced if it skipped comments or assignments)
 		m_Str.Replace(_T("( "), _T("("));
 		m_Str.Replace(_T(" )"), _T(")"));
