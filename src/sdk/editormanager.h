@@ -14,6 +14,7 @@
 // #include "cbproject.h"
 #include "printing_types.h"
 
+DLLIMPORT extern int ID_NBEditorManager;
 DLLIMPORT extern int ID_EditorManager;
 DLLIMPORT extern int idEditorManagerCheckFiles;
 DLLIMPORT extern int ID_EditorManagerCloseButton;

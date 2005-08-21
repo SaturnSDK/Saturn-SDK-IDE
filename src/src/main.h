@@ -4,6 +4,7 @@
 #include <wx/toolbar.h>
 #include <wx/laywin.h>
 #include <wx/docview.h> // for wxFileHistory
+#include <wx/notebook.h>
 #include <../sdk/cbeditor.h>
 #include "../sdk/manager.h"
 #include "../sdk/cbplugin.h"
@@ -135,6 +136,12 @@ class MainFrame : public wxFrame
 		void OnProjectActivated(CodeBlocksEvent& event);
 		void OnProjectOpened(CodeBlocksEvent& event);
 		void OnProjectClosed(CodeBlocksEvent& event);
+
+		// editor changed events
+		void OnEditorOpened(CodeBlocksEvent& event);
+		void OnEditorClosed(CodeBlocksEvent& event);
+		void OnEditorSaved(CodeBlocksEvent& event);
+		void OnPageChanged(wxNotebookEvent& event);
         void OnShiftTab(wxCommandEvent& event);
     protected:
         void CreateIDE();

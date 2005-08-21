@@ -315,6 +315,11 @@ BEGIN_EVENT_TABLE(MainFrame, wxFrame)
 	EVT_PROJECT_ACTIVATE(MainFrame::OnProjectActivated)
 	EVT_PROJECT_OPEN(MainFrame::OnProjectOpened)
 	EVT_PROJECT_CLOSE(MainFrame::OnProjectClosed)
+	EVT_EDITOR_CLOSE(MainFrame::OnEditorClosed)
+	EVT_EDITOR_OPEN(MainFrame::OnEditorOpened)
+	EVT_EDITOR_SAVE(MainFrame::OnEditorSaved)
+
+    EVT_NOTEBOOK_PAGE_CHANGED(ID_NBEditorManager, MainFrame::OnPageChanged)
 
 	/// CloseFullScreen event handling
 	EVT_BUTTON( idCloseFullScreen, MainFrame::OnToggleFullScreen )
@@ -980,11 +985,36 @@ void MainFrame::DoUpdateLayout()
 
 void MainFrame::DoUpdateAppTitle()
 {
-	cbProject* prj = PRJMAN() ? PRJMAN()->GetActiveProject() : 0L;
-	if (prj)
-	    SetTitle(APP_NAME" - " + prj->GetTitle());
+	EditorBase* ed = EDMAN() ? EDMAN()->GetActiveEditor() : 0L;
+	cbProject* prj = 0;
+	if(ed && ed->IsBuiltinEditor())
+	{
+	    ProjectFile* prjf = ((cbEditor*)ed)->GetProjectFile();
+	    if(prjf)
+            prj = prjf->project;
+	}
 	else
-		SetTitle(APP_NAME" v"APP_VERSION);
+        prj = PRJMAN() ? PRJMAN()->GetActiveProject() : 0L;
+	wxString projname=_T(""),edname=_T(""),fulltitle=_T("");
+	if(ed || prj)
+	{
+        if(prj)
+        {
+            if(PRJMAN()->GetActiveProject() == prj)
+                projname = wxString(_T("[")) + prj->GetTitle() + _T("] ");
+            else
+                projname = wxString(_T("(")) + prj->GetTitle() + _T(") ");
+        }
+        if(ed)
+            edname = ed->GetTitle();
+        fulltitle = projname + edname;
+        if(!fulltitle.IsEmpty())
+            fulltitle.Append(_T(" - "));
+        fulltitle.Append(APP_NAME);
+	}
+	else
+        fulltitle = APP_NAME" v"APP_VERSION;
+    SetTitle(fulltitle);
 }
 
 void MainFrame::RePositionManagerTree(bool left)
@@ -1065,7 +1095,7 @@ void MainFrame::OnStartHereLink(wxCommandEvent& event)
 void MainFrame::OnStartHereVarSubst(wxCommandEvent& event)
 {
 	wxString buf = event.GetString();
-	
+
 	// replace history vars
 	for (int i = 0; i < 9; ++i)
 	{
@@ -2238,12 +2268,38 @@ void MainFrame::OnProjectActivated(CodeBlocksEvent& event)
 void MainFrame::OnProjectOpened(CodeBlocksEvent& event)
 {
     ShowHideStartPage(true);
+    DoUpdateAppTitle();
+    event.Skip();
+}
+
+void MainFrame::OnEditorOpened(CodeBlocksEvent& event)
+{
+    DoUpdateAppTitle();
+    event.Skip();
+}
+
+void MainFrame::OnEditorClosed(CodeBlocksEvent& event)
+{
+    DoUpdateAppTitle();
+    event.Skip();
+}
+
+void MainFrame::OnEditorSaved(CodeBlocksEvent& event)
+{
+    DoUpdateAppTitle();
     event.Skip();
 }
 
 void MainFrame::OnProjectClosed(CodeBlocksEvent& event)
 {
     ShowHideStartPage();
+    DoUpdateAppTitle();
+    event.Skip();
+}
+
+void MainFrame::OnPageChanged(wxNotebookEvent& event)
+{
+    DoUpdateAppTitle();
     event.Skip();
 }
 
