@@ -567,6 +567,7 @@ void Parser::ScheduleThreads()
 	wxMutexLocker* lock = new wxMutexLocker(s_mutexListProtection);
 	if (m_Threads.GetCount() < m_MaxThreadsCount && m_ThreadsStore.GetCount())
 	{
+        wxLogNull ln; // no other logging
 		ParserThread* thread = m_ThreadsStore[0];
 		m_ThreadsStore.RemoveAt(0);
 		m_Threads.Add(thread);
@@ -743,6 +744,7 @@ bool Parser::Parse(const wxString& bufferOrFilename, bool isLocal, ParserThreadO
 	}
 	else
 	{
+        wxLogNull ln; // no other logging
 		bool ret = thread->Parse();
 		LinkInheritance(true);
 		thread->Delete();
@@ -848,6 +850,7 @@ void Parser::ClearTemporaries()
 
 void Parser::TerminateAllThreads()
 {
+    wxLogNull ln; // no other logging
 	wxMutexLocker lock(s_mutexListProtection);
 	ParserThread::abort(&this->m_abort_flag,false); // Quickly abort all threads
 	while (m_Threads.GetCount())
@@ -872,6 +875,7 @@ void Parser::TerminateAllThreads()
 
 void Parser::PauseAllThreads()
 {
+    wxLogNull ln; // no other logging
 	wxMutexLocker lock(s_mutexListProtection);
 	for (unsigned int i = 0; i < m_Threads.GetCount(); ++i)
 		m_Threads[i]->Pause();
@@ -879,6 +883,7 @@ void Parser::PauseAllThreads()
 
 void Parser::ResumeAllThreads()
 {
+    wxLogNull ln; // no other logging
 	wxMutexLocker lock(s_mutexListProtection);
 	for (unsigned int i = 0; i < m_Threads.GetCount(); ++i)
 		m_Threads[i]->Resume();
