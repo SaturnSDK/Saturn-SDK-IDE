@@ -323,9 +323,10 @@ BEGIN_EVENT_TABLE(MainFrame, wxFrame)
 
 END_EVENT_TABLE()
 
-MainFrame::MainFrame(wxWindow* parent)
+MainFrame::MainFrame(wxLocale& lang, wxWindow* parent)
        : wxFrame(parent, -1, _T("MainWin"), wxDefaultPosition, wxDefaultSize, wxDEFAULT_FRAME_STYLE | wxNO_FULL_REPAINT_ON_RESIZE),
 	   m_pAccel(0L),
+	   m_locale(lang),
 	   m_pCloseFullScreenBtn(0L),
        m_pNotebook(0L),
 	   m_pLeftSash(0L),
@@ -370,7 +371,7 @@ MainFrame::MainFrame(wxWindow* parent)
 
     DoCreateStatusBar();
 #if wxUSE_STATUSBAR
-    SetStatusText(_("Welcome to "APP_NAME"!"));
+    SetStatusText(_("Welcome to ")+wxString(APP_NAME"!"));
 #endif // wxUSE_STATUSBAR
 
     SetTitle(APP_NAME _T(" v") APP_VERSION);
@@ -1027,15 +1028,15 @@ void MainFrame::OnStartHereLink(wxCommandEvent& event)
 {
     wxCommandEvent evt;
     wxString link = event.GetString();
-    if (link.Matches(_("CB_CMD_NEW_PROJECT")))
+    if (link.Matches(_T("CB_CMD_NEW_PROJECT")))
         TemplateManager::Get()->NewProject();
-    else if (link.Matches(_("CB_CMD_OPEN_PROJECT")))
+    else if (link.Matches(_T("CB_CMD_OPEN_PROJECT")))
         OnFileOpen(evt);
-    else if (link.Matches(_("CB_CMD_CONF_ENVIRONMENT")))
+    else if (link.Matches(_T("CB_CMD_CONF_ENVIRONMENT")))
         OnSettingsEnvironment(evt);
-    else if (link.Matches(_("CB_CMD_CONF_EDITOR")))
-        EDMAN()->Configure();
-    else if (link.Matches(_("CB_CMD_CONF_COMPILER")))
+    else if (link.Matches(_T("CB_CMD_CONF_EDITOR")))
+        Manager::Get()->GetEditorManager()->Configure();
+    else if (link.Matches(_T("CB_CMD_CONF_COMPILER")))
     {
         PluginsArray arr = Manager::Get()->GetPluginManager()->GetCompilerOffers();
         if (arr.GetCount() != 0)
@@ -1440,7 +1441,7 @@ void MainFrame::OnEditCommentSelected(wxCommandEvent& event)
 
                 // Comment
                 /// @todo This should be language-dependent. We're currently assuming C++
-                stc->InsertText( stc->PositionFromLine( startLine ), _( "//" ) );
+                stc->InsertText( stc->PositionFromLine( startLine ), _T( "//" ) );
 
 				startLine++;
 			}
@@ -1481,12 +1482,12 @@ void MainFrame::OnEditUncommentSelected(wxCommandEvent& event)
 			{
 				// For each line: if it is commented, uncomment.
 				strLine = stc->GetLine( startLine );
-				int commentPos = strLine.Strip( wxString::leading ).Find( _( "//" ) );
+				int commentPos = strLine.Strip( wxString::leading ).Find( _T( "//" ) );
 
 				if( commentPos ==0 )
 				{
 					// Uncomment
-					strLine.Replace( _( "//" ), _( "" ), false );
+					strLine.Replace( _T( "//" ), _T( "" ), false );
 
 					// Update
 					int start = stc->PositionFromLine( startLine );
@@ -1534,18 +1535,18 @@ void MainFrame::OnEditToggleCommentSelected(wxCommandEvent& event)
 			{
 				// For each line: If it's commented, uncomment. Otherwise, comment.
 				strLine = stc->GetLine( startLine );
-				int commentPos = strLine.Strip( wxString::leading ).Find( _( "//" ) );
+				int commentPos = strLine.Strip( wxString::leading ).Find( _T( "//" ) );
 
 				if( -1 == commentPos || commentPos > 0 )
 				{
 					// Comment
 					/// @todo This should be language-dependent. We're currently assuming C++
-					stc->InsertText( stc->PositionFromLine( startLine ), _( "//" ) );
+					stc->InsertText( stc->PositionFromLine( startLine ), _T( "//" ) );
 				}
 				else
 				{
 					// Uncomment
-					strLine.Replace( _( "//" ), _( "" ), false );
+					strLine.Replace( _T( "//" ), _T( "" ), false );
 
 					// Update
 					int start = stc->PositionFromLine( startLine );
@@ -1670,7 +1671,7 @@ void MainFrame::OnSearchGotoLine(wxCommandEvent& event)
 	*/
     wxString strLine = wxGetTextFromUser( _("Line: "),
 								_("Goto line"),
-								_( "" ),
+								_T( "" ),
 								this );
 	long int line = 0;
 	strLine.ToLong(&line);

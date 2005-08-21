@@ -60,6 +60,7 @@ class CodeBlocksApp : public wxApp
         bool InitXRCStuff();
         void InitFrame();
         void CheckVersion();
+        void InitLocale();
         wxLocale m_locale; // locale we'll be using
     private:
         void ShowSplashScreen();

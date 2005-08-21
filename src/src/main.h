@@ -17,8 +17,10 @@ class MainFrame : public wxFrame
 {
     public:
         wxAcceleratorTable* m_pAccel;
-        MainFrame(wxWindow* parent = (wxWindow*)NULL);
+        MainFrame(wxLocale& locale, wxWindow* parent = (wxWindow*)NULL);
         ~MainFrame();
+
+        wxLocale& m_locale;
 
         bool Open(const wxString& filename, bool addToHistory = true);
         bool OnDropFiles(wxCoord x, wxCoord y, const wxArrayString& filenames);
