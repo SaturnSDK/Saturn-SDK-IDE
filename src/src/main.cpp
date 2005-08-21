@@ -1065,7 +1065,7 @@ void MainFrame::OnStartHereLink(wxCommandEvent& event)
 void MainFrame::OnStartHereVarSubst(wxCommandEvent& event)
 {
 	wxString buf = event.GetString();
-
+	
 	// replace history vars
 	for (int i = 0; i < 9; ++i)
 	{
