@@ -28,7 +28,7 @@
 #include "../sdk/licenses.h"
 #include "../sdk/configmanager.h"
 
-#define DESCR		(_("Welcome to ")+wxString(APP_NAME)+wxString(" v")+wxString(APP_VERSION)+wxString("!\n") +\
+#define DESCR		(_("Welcome to ")+wxString(APP_NAME)+wxString(_T(" v"))+wxString(APP_VERSION)+wxString(_T("!\n")) +\
 					wxString(APP_NAME)+_(" is a full-featured IDE (Integrated Development Environment) " \
 					"aiming to make the individual developer (and the development team) " \
 					"work in a nice programming environment offering everything he/they " \
@@ -53,7 +53,7 @@ dlgAbout::dlgAbout(wxWindow* parent)
 	wxXmlResource::Get()->LoadDialog(this, parent, _T("dlgAbout"));
 
 	wxBitmap bmp;
-	wxString file = ConfigManager::Get()->Read(_T("data_path")) + _T("/images/splash.png"); 
+	wxString file = ConfigManager::Get()->Read(_T("data_path")) + _T("/images/splash.png");
 	bmp.LoadFile(file, wxBITMAP_TYPE_PNG);
 	XRCCTRL(*this, "lblTitle", wxStaticBitmap)->SetBitmap(bmp);
 	XRCCTRL(*this, "lblBuildTimestamp", wxStaticText)->SetLabel(wxString(_T("Build: ")) + APP_BUILD_TIMESTAMP);
