@@ -1065,13 +1065,16 @@ void MainFrame::OnStartHereLink(wxCommandEvent& event)
 void MainFrame::OnStartHereVarSubst(wxCommandEvent& event)
 {
 	wxString buf = event.GetString();
-	
+
 	// replace history vars
-	for (int i = 0; i < m_FilesHistory.GetCount(); ++i)
+	for (int i = 0; i < 9; ++i)
 	{
 		wxString base;
 		base.Printf(_T("CB_VAR_HISTORY_FILE_%d"), i + 1);
-		buf.Replace(base, m_FilesHistory.GetHistoryFile(i));
+		if (i < m_FilesHistory.GetCount())
+            buf.Replace(base, m_FilesHistory.GetHistoryFile(i));
+        else
+            buf.Replace(base, _T(""));
 	}
 
     // update page
