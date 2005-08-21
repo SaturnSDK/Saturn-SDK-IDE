@@ -4,7 +4,7 @@
 #include <wx/toolbar.h>
 #include <wx/laywin.h>
 #include <wx/docview.h> // for wxFileHistory
-#include <wx/stc/stc.h>
+#include <../sdk/cbeditor.h>
 #include "../sdk/manager.h"
 #include "../sdk/cbplugin.h"
 #include "../sdk/sdk_events.h"
@@ -34,6 +34,7 @@ class MainFrame : public wxFrame
         // event handlers
         void OnApplicationClose(wxCloseEvent& event);
         void OnStartHereLink(wxCommandEvent& event);
+        void OnStartHereVarSubst(wxCommandEvent& event);
 
         void OnFileNewEmpty(wxCommandEvent& event);
         void OnFileOpen(wxCommandEvent& event);

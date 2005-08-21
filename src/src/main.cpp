@@ -308,6 +308,7 @@ BEGIN_EVENT_TABLE(MainFrame, wxFrame)
     EVT_MENU(idHelpTips, MainFrame::OnHelpTips)
 
 	EVT_MENU(idStartHerePageLink, MainFrame::OnStartHereLink)
+	EVT_MENU(idStartHerePageVarSubst, MainFrame::OnStartHereVarSubst)
 
 	EVT_SASH_DRAGGED(-1, MainFrame::OnDragSash)
 
@@ -1042,6 +1043,41 @@ void MainFrame::OnStartHereLink(wxCommandEvent& event)
         if (arr.GetCount() != 0)
             arr[0]->Configure();
     }
+    else if (link.StartsWith(_T("CB_CMD_OPEN_HISTORY_")))
+    {
+    	// history file
+// NOTE (mandrav#1#): This thing works for up to 9 history files.
+//                    The good thing is that the current start here page
+//                    displays only 5.
+//                    Things could be done better though...
+    	wxChar num = link.Last();
+        for (int i = 0; i < m_FilesHistory.GetCount(); ++i)
+        {
+        	if (num - _T('1') == i)
+        	{
+        		OpenGeneric(m_FilesHistory.GetHistoryFile(i), true);
+        		break;
+        	}
+        }
+    }
+}
+
+void MainFrame::OnStartHereVarSubst(wxCommandEvent& event)
+{
+	wxString buf = event.GetString();
+	
+	// replace history vars
+	for (int i = 0; i < m_FilesHistory.GetCount(); ++i)
+	{
+		wxString base;
+		base.Printf(_T("CB_VAR_HISTORY_FILE_%d"), i + 1);
+		buf.Replace(base, m_FilesHistory.GetHistoryFile(i));
+	}
+
+    // update page
+    EditorBase* sh = EDMAN()->GetEditor(g_StartHereTitle);
+	if (sh)
+        ((StartHerePage*)sh)->SetPageContent(buf);
 }
 
 void MainFrame::InitializeRecentFilesHistory()
@@ -1414,7 +1450,7 @@ void MainFrame::OnEditCommentSelected(wxCommandEvent& event)
 	{
         ed->GetControl()->BeginUndoAction();
 		cbStyledTextCtrl *stc = ed->GetControl();
-		if( wxSTC_INVALID_POSITION != stc->GetSelectionStart() )
+		if( wxSCI_INVALID_POSITION != stc->GetSelectionStart() )
 		{
 			int startLine = stc->LineFromPosition( stc->GetSelectionStart() );
 			int endLine   = stc->LineFromPosition( stc->GetSelectionEnd() );
@@ -1458,7 +1494,7 @@ void MainFrame::OnEditUncommentSelected(wxCommandEvent& event)
 	{
         ed->GetControl()->BeginUndoAction();
 		cbStyledTextCtrl *stc = ed->GetControl();
-		if( wxSTC_INVALID_POSITION != stc->GetSelectionStart() )
+		if( wxSCI_INVALID_POSITION != stc->GetSelectionStart() )
 		{
 			int startLine = stc->LineFromPosition( stc->GetSelectionStart() );
 			int endLine   = stc->LineFromPosition( stc->GetSelectionEnd() );
@@ -1511,7 +1547,7 @@ void MainFrame::OnEditToggleCommentSelected(wxCommandEvent& event)
 	{
         ed->GetControl()->BeginUndoAction();
 		cbStyledTextCtrl *stc = ed->GetControl();
-		if( wxSTC_INVALID_POSITION != stc->GetSelectionStart() )
+		if( wxSCI_INVALID_POSITION != stc->GetSelectionStart() )
 		{
 			int startLine = stc->LineFromPosition( stc->GetSelectionStart() );
 			int endLine   = stc->LineFromPosition( stc->GetSelectionEnd() );
@@ -1620,11 +1656,11 @@ void MainFrame::OnEditEOLMode(wxCommandEvent& event)
         int mode = -1;
 
         if (event.GetId() == idEditEOLCRLF)
-            mode = wxSTC_EOL_CRLF;
+            mode = wxSCI_EOL_CRLF;
         else if (event.GetId() == idEditEOLCR)
-            mode = wxSTC_EOL_CR;
+            mode = wxSCI_EOL_CR;
         else if (event.GetId() == idEditEOLLF)
-            mode = wxSTC_EOL_LF;
+            mode = wxSCI_EOL_LF;
 
 		if (mode != -1 && mode != ed->GetControl()->GetEOLMode())
 		{
@@ -1884,9 +1920,9 @@ void MainFrame::OnEditMenuUpdateUI(wxUpdateUIEvent& event)
 	mbar->Enable(idEditEOLCRLF, ed);
 	mbar->Enable(idEditEOLCR, ed);
 	mbar->Enable(idEditEOLLF, ed);
-	mbar->Check(idEditEOLCRLF, eolMode == wxSTC_EOL_CRLF);
-	mbar->Check(idEditEOLCR, eolMode == wxSTC_EOL_CR);
-	mbar->Check(idEditEOLLF, eolMode == wxSTC_EOL_LF);
+	mbar->Check(idEditEOLCRLF, eolMode == wxSCI_EOL_CRLF);
+	mbar->Check(idEditEOLCR, eolMode == wxSCI_EOL_CR);
+	mbar->Check(idEditEOLLF, eolMode == wxSCI_EOL_LF);
 	mbar->Enable(idEditCommentSelected, ed);
 	mbar->Enable(idEditAutoComplete, ed);
 	mbar->Enable(idEditUncommentSelected, ed);

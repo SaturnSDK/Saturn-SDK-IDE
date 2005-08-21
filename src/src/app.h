@@ -28,7 +28,6 @@
 	#include <wx/ipc.h>
 #endif
 
-#include <wx/stc/stc.h>
 #include <wx/splash.h>
 #include <wx/snglinst.h>
 #include "../sdk/manager.h"

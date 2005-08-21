@@ -23,7 +23,6 @@
 * $Date$
 */
 
-#include <wx/stc/stc.h>
 #include <wx/xrc/xmlres.h>
 #include <wx/colordlg.h>
 #include <wx/fontdlg.h>
@@ -165,63 +164,8 @@ void EditorConfigurationDlg::CreateColorsSample()
 {
 	if (m_TextColorControl)
 		delete m_TextColorControl;
-	m_TextColorControl = new wxStyledTextCtrl(this, wxID_ANY);
+	m_TextColorControl = new cbStyledTextCtrl(this, wxID_ANY);
 	m_TextColorControl->SetTabWidth(4);
-//	wxString buffer;
-//	if (m_Lang == wxSTC_LEX_CPP)
-//	{
-//		buffer << "/*" << '\n';
-//		buffer << " * Sample preview code" << '\n';
-//		buffer << " * This is a block comment" << '\n';
-//		buffer << " */" << '\n';
-//		buffer << "" << '\n';
-//		buffer << "#include <iostream> // this is a line comment" << '\n';
-//		buffer << "#include <cstdio>" << '\n';
-//		buffer << "" << '\n';
-//		buffer << "/**" << '\n';
-//		buffer << "  * This is a documentation comment block" << '\n';
-//		buffer << "  * @param xxx does this (this is the documentation keyword)" << '\n';
-//		buffer << "  * @author some user (this is the documentation keyword error)" << '\n';
-//		buffer << "  */" << '\n';
-//		buffer << "" << '\n';
-//		buffer << "int main(int argc, char **argv)" << '\n';
-//		buffer << "{" << '\n';
-//		buffer << '\t' << "/// This is a documentation comment line" << '\n';
-//		buffer << '\t' << "int numbers[20];" << '\n';
-//		buffer << '\t' << "int average = 0;" << '\n';
-//		buffer << '\t' << "char ch = '\\n';" << '\n';
-//		buffer << '\t' << "for (int i = 0; i < 20; ++i) // a breakpoint is set" << '\n';
-//		buffer << '\t' << "{" << '\n';
-//		buffer << '\t' << '\t' << "numbers[i] = i; // active line (during debugging)" << '\n';
-//		buffer << '\t' << '\t' << "total += i; // error line" << '\n';
-//		buffer << '\t' << "}" << '\n';
-//		buffer << '\t' << "average = total / 20;" << '\n';
-//		buffer << '\t' << "std::cout << numbers[0] << '\\n' << numbers[19] << '\\n';" << '\n';
-//		buffer << '\t' << "std::cout << \"total:\" << total << \"average:\" << average << '\\n';" << '\n';
-//		buffer << '\t' << "std::cout << \"Press any key...\" << '\\n';" << '\n';
-//		buffer << '\t' << "getch();" << '\n';
-//		buffer << "}" << '\n';
-//	}
-//	else if (m_Lang == wxSTC_LEX_LUA)
-//	{
-//		buffer << "-- LUA sample script" << '\n';
-//		buffer << "-- comments start with --" << '\n';
-//		buffer << "--[[ and this is a multi-line" << '\n';
-//		buffer << "     comment]]" << '\n';
-//		buffer << "" << '\n';
-//		buffer << "print(\"Hello world\")" << '\n';
-//		buffer << "" << '\n';
-//		buffer << "function SomeFunction(a, b)" << '\n';
-//		buffer << '\t' << "local x = a" << '\n';
-//		buffer << '\t' << "x = x + 1" << '\n';
-//		buffer << '\t' << "print(a,b,'x='..x)" << '\n';
-//		buffer << "end" << '\n';
-//		buffer << "" << '\n';
-//		buffer << "SomeFunction(1, 2)" << '\n';
-//		buffer << "var = {x = 0, y = 0)" << '\n';
-//		buffer << "print(var, var.x, var.y)" << '\n';
-//	}
-//	m_TextColorControl->SetText(buffer);
 
     int breakLine = -1;
     int debugLine = -1;
@@ -232,7 +176,7 @@ void EditorConfigurationDlg::CreateColorsSample()
 
 	m_TextColorControl->SetReadOnly(true);
 	m_TextColorControl->SetCaretWidth(0);
-    m_TextColorControl->SetMarginType(0, wxSTC_MARGIN_NUMBER);
+    m_TextColorControl->SetMarginType(0, wxSCI_MARGIN_NUMBER);
     m_TextColorControl->SetMarginWidth(0, 32);
 	ApplyColors();
 
@@ -249,9 +193,9 @@ void EditorConfigurationDlg::CreateAutoCompText()
 {
 	if (m_AutoCompTextControl)
 		delete m_AutoCompTextControl;
-	m_AutoCompTextControl = new wxStyledTextCtrl(this, wxID_ANY);
+	m_AutoCompTextControl = new cbStyledTextCtrl(this, wxID_ANY);
 	m_AutoCompTextControl->SetTabWidth(4);
-    m_AutoCompTextControl->SetMarginType(0, wxSTC_MARGIN_NUMBER);
+    m_AutoCompTextControl->SetMarginType(0, wxSCI_MARGIN_NUMBER);
     m_AutoCompTextControl->SetMarginWidth(0, 32);
     m_AutoCompTextControl->SetViewWhiteSpace(1);
 	ApplyColors();
@@ -279,13 +223,13 @@ void EditorConfigurationDlg::ApplyColors()
 		wxFont fnt = XRCCTRL(*this, "lblEditorFont", wxStaticText)->GetFont();
 		if (m_TextColorControl)
 		{
-            m_TextColorControl->StyleSetFont(wxSTC_STYLE_DEFAULT,fnt); 
+            m_TextColorControl->StyleSetFont(wxSCI_STYLE_DEFAULT,fnt); 
             m_Theme->Apply(m_Lang, m_TextColorControl);
         }
 		if (m_AutoCompTextControl)
 		{
-            m_AutoCompTextControl->StyleSetFont(wxSTC_STYLE_DEFAULT,fnt); 
-            m_Theme->Apply(wxSTC_LEX_CPP, m_AutoCompTextControl);
+            m_AutoCompTextControl->StyleSetFont(wxSCI_STYLE_DEFAULT,fnt); 
+            m_Theme->Apply(wxSCI_LEX_CPP, m_AutoCompTextControl);
         }
 	}
 }

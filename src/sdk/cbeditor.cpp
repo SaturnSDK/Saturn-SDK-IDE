@@ -41,6 +41,30 @@
 #include "cbplugin.h"
 #include "cbeditorprintout.h"
 
+BEGIN_EVENT_TABLE(cbStyledTextCtrl, wxScintilla)
+	EVT_CONTEXT_MENU(cbStyledTextCtrl::OnContextMenu)
+END_EVENT_TABLE()
+
+cbStyledTextCtrl::cbStyledTextCtrl(wxWindow* pParent, int id, const wxPoint& pos, const wxSize& size, long style)
+	: wxScintilla(pParent, id, pos, size, style),
+	m_pParent(pParent)
+{
+	//ctor
+}
+
+cbStyledTextCtrl::~cbStyledTextCtrl()
+{
+	//dtor
+}
+
+// events
+
+void cbStyledTextCtrl::OnContextMenu(wxContextMenuEvent& event)
+{
+	if (m_pParent)
+		((cbEditor*)m_pParent)->DisplayContextMenu(event.GetPosition());
+}
+
 /* This struct holds private data for the cbEditor class.
  * It's a paradigm to avoid rebuilding the entire project (as cbEditor is a basic dependency)
  * for just adding a private var or method.
@@ -79,10 +103,10 @@ struct cbEditorInternalData
         cbStyledTextCtrl* control = m_pOwner->GetControl();
         switch (control->GetEOLMode())
         {
-            case wxSTC_EOL_LF:
+            case wxSCI_EOL_LF:
                 eolstring = _T("\n");
                 break;
-            case wxSTC_EOL_CR:
+            case wxSCI_EOL_CR:
                 eolstring = _T("\r");
                 break;
             default:
@@ -180,7 +204,7 @@ struct cbEditorInternalData
     /** Make sure all the lines end with the same EOL mode */
     void EnsureConsistentLineEnds()
     {
-    	wxStyledTextCtrl* control = m_pOwner->GetControl();
+    	cbStyledTextCtrl* control = m_pOwner->GetControl();
         // The following code was adapted from the SciTE sourcecode
     	control->ConvertEOLs(control->GetEOLMode());
     }
@@ -193,30 +217,6 @@ struct cbEditorInternalData
 
 };
 ////////////////////////////////////////////////////////////////////////////////
-
-BEGIN_EVENT_TABLE(cbStyledTextCtrl, wxStyledTextCtrl)
-	EVT_CONTEXT_MENU(cbStyledTextCtrl::OnContextMenu)
-END_EVENT_TABLE()
-
-cbStyledTextCtrl::cbStyledTextCtrl(cbEditor* pParent, int id, const wxPoint& pos, const wxSize& size, long style)
-	: wxStyledTextCtrl(pParent, id, pos, size, style),
-	m_pParent(pParent)
-{
-	//ctor
-}
-
-cbStyledTextCtrl::~cbStyledTextCtrl()
-{
-	//dtor
-}
-
-// events
-
-void cbStyledTextCtrl::OnContextMenu(wxContextMenuEvent& event)
-{
-	if (m_pParent)
-		m_pParent->DisplayContextMenu(event.GetPosition());
-}
 
 const int idEmptyMenu = wxNewId();
 const int idEdit = wxNewId();
@@ -417,26 +417,26 @@ void cbEditor::CreateEditor()
     SetAutoLayout(true);
 
     // dynamic events
-    Connect( m_ID,  -1, wxEVT_STC_MARGINCLICK,
-                  (wxObjectEventFunction) (wxEventFunction) (wxStyledTextEventFunction)
+    Connect( m_ID,  -1, wxEVT_SCI_MARGINCLICK,
+                  (wxObjectEventFunction) (wxEventFunction) (wxScintillaEventFunction)
                   &cbEditor::OnMarginClick );
-    Connect( m_ID,  -1, wxEVT_STC_UPDATEUI,
-                  (wxObjectEventFunction) (wxEventFunction) (wxStyledTextEventFunction)
+    Connect( m_ID,  -1, wxEVT_SCI_UPDATEUI,
+                  (wxObjectEventFunction) (wxEventFunction) (wxScintillaEventFunction)
                   &cbEditor::OnEditorUpdateUI );
-    Connect( m_ID,  -1, wxEVT_STC_CHANGE,
-                  (wxObjectEventFunction) (wxEventFunction) (wxStyledTextEventFunction)
+    Connect( m_ID,  -1, wxEVT_SCI_CHANGE,
+                  (wxObjectEventFunction) (wxEventFunction) (wxScintillaEventFunction)
                   &cbEditor::OnEditorChange );
-    Connect( m_ID,  -1, wxEVT_STC_CHARADDED,
-                  (wxObjectEventFunction) (wxEventFunction) (wxStyledTextEventFunction)
+    Connect( m_ID,  -1, wxEVT_SCI_CHARADDED,
+                  (wxObjectEventFunction) (wxEventFunction) (wxScintillaEventFunction)
                   &cbEditor::OnEditorCharAdded );
-    Connect( m_ID,  -1, wxEVT_STC_DWELLSTART,
-                  (wxObjectEventFunction) (wxEventFunction) (wxStyledTextEventFunction)
+    Connect( m_ID,  -1, wxEVT_SCI_DWELLSTART,
+                  (wxObjectEventFunction) (wxEventFunction) (wxScintillaEventFunction)
                   &cbEditor::OnEditorDwellStart );
-    Connect( m_ID,  -1, wxEVT_STC_DWELLEND,
-                  (wxObjectEventFunction) (wxEventFunction) (wxStyledTextEventFunction)
+    Connect( m_ID,  -1, wxEVT_SCI_DWELLEND,
+                  (wxObjectEventFunction) (wxEventFunction) (wxScintillaEventFunction)
                   &cbEditor::OnEditorDwellEnd );
-    Connect( m_ID,  -1, wxEVT_STC_USERLISTSELECTION,
-                  (wxObjectEventFunction) (wxEventFunction) (wxStyledTextEventFunction)
+    Connect( m_ID,  -1, wxEVT_SCI_USERLISTSELECTION,
+                  (wxObjectEventFunction) (wxEventFunction) (wxScintillaEventFunction)
                   &cbEditor::OnUserListSelection );
 }
 
@@ -452,7 +452,7 @@ void cbEditor::SetEditorStyle()
 {
     wxFont font(8, wxMODERN, wxNORMAL, wxNORMAL);
     wxString fontstring = ConfigManager::Get()->Read(_T("/editor/font"), wxEmptyString);
-    int eolmode = wxSTC_EOL_CRLF;
+    int eolmode = wxSCI_EOL_CRLF;
     if (!fontstring.IsEmpty())
     {
         wxNativeFontInfo nfi;
@@ -473,7 +473,7 @@ void cbEditor::SetEditorStyle()
 	m_pControl->SetMouseDwellTime(1000);
 
 	m_pControl->SetCaretLineVisible(ConfigManager::Get()->Read(_T("/editor/highlight_caret_line"), 1));
-	m_pControl->SetCaretLineBack(GetOptionColour(_T("/editor/highlight_caret_line_color"), wxColour(0xFF, 0xFF, 0x00)));
+	m_pControl->SetCaretLineBackground(GetOptionColour(_T("/editor/highlight_caret_line_color"), wxColour(0xFF, 0xFF, 0x00)));
 
     m_pControl->SetUseTabs(ConfigManager::Get()->Read(_T("/editor/use_tab"), 0L));
 	m_pControl->SetIndentationGuides(ConfigManager::Get()->Read(_T("/editor/show_indent_guides"), 0L));
@@ -487,7 +487,7 @@ void cbEditor::SetEditorStyle()
     m_pControl->SetEdgeColour(GetOptionColour(_T("/editor/gutter/color"), wxColour(0xC0, 0xC0, 0xC0)));
     m_pControl->SetEdgeColumn(ConfigManager::Get()->Read(_T("/editor/gutter/column"), 80));
 
-    m_pControl->StyleSetFont(wxSTC_STYLE_DEFAULT, font);
+    m_pControl->StyleSetFont(wxSCI_STYLE_DEFAULT, font);
     m_pControl->StyleClearAll();
 
     m_pControl->SetTabWidth(ConfigManager::Get()->Read(_T("/editor/tab_size"), 4));
@@ -495,7 +495,7 @@ void cbEditor::SetEditorStyle()
     // line numbering
    	if (ConfigManager::Get()->Read(_T("/editor/show_line_numbers"), 0L))
     {
-	    m_pControl->SetMarginType(0, wxSTC_MARGIN_NUMBER);
+	    m_pControl->SetMarginType(0, wxSCI_MARGIN_NUMBER);
     	m_pControl->SetMarginWidth(0, 48);
     }
 	else
@@ -504,11 +504,13 @@ void cbEditor::SetEditorStyle()
     // margin for bookmarks, breakpoints etc.
 	// FIXME: how to display a mark with an offset???
 	m_pControl->SetMarginWidth(1, 16);
-    m_pControl->SetMarginType(1, wxSTC_MARGIN_SYMBOL);
+    m_pControl->SetMarginType(1, wxSCI_MARGIN_SYMBOL);
     m_pControl->SetMarginSensitive(1, 1);
     m_pControl->SetMarginMask(1, (1 << BOOKMARK_MARKER) | (1 << BREAKPOINT_MARKER));
-	m_pControl->MarkerDefine(BOOKMARK_MARKER, BOOKMARK_STYLE, wxNullColour, wxColour(0xA0, 0xA0, 0xFF));
-	m_pControl->MarkerDefine(BREAKPOINT_MARKER, BREAKPOINT_STYLE, wxNullColour, wxColour(0xFF, 0x00, 0x00));
+	m_pControl->MarkerDefine(BOOKMARK_MARKER, BOOKMARK_STYLE);
+	m_pControl->MarkerSetBackground(BOOKMARK_MARKER, wxColour(0xA0, 0xA0, 0xFF));
+	m_pControl->MarkerDefine(BREAKPOINT_MARKER, BREAKPOINT_STYLE);
+	m_pControl->MarkerSetBackground(BREAKPOINT_MARKER, wxColour(0xFF, 0x00, 0x00));
 
     // EOL properties
     m_pData->m_strip_trailing_spaces = ConfigManager::Get()->Read(_T("/editor/eol/strip_trailing_spaces"), 1) ? true : false;
@@ -519,13 +521,13 @@ void cbEditor::SetEditorStyle()
     {
     	case 0:
         default:
-            eolmode = wxSTC_EOL_CRLF;
+            eolmode = wxSCI_EOL_CRLF;
         break;
         case 1:
-            eolmode = wxSTC_EOL_CR;
+            eolmode = wxSCI_EOL_CR;
         break;
         case 2:
-            eolmode = wxSTC_EOL_LF;
+            eolmode = wxSCI_EOL_LF;
     }
     m_pControl->SetEOLMode(eolmode);
 
@@ -538,18 +540,32 @@ void cbEditor::SetEditorStyle()
    	if (ConfigManager::Get()->Read(_T("/editor/folding/show_folds"), 1))
     {
         m_pControl->SetFoldFlags(16);
-        m_pControl->SetMarginType(2, wxSTC_MARGIN_SYMBOL);
+        m_pControl->SetMarginType(2, wxSCI_MARGIN_SYMBOL);
         m_pControl->SetMarginWidth(2, 16);
-        m_pControl->SetMarginMask(2, wxSTC_MASK_FOLDERS);
+        m_pControl->SetMarginMask(2, wxSCI_MASK_FOLDERS);
         m_pControl->SetMarginSensitive(2, 1);
 
-        m_pControl->MarkerDefine(wxSTC_MARKNUM_FOLDEROPEN, wxSTC_MARK_BOXMINUS, wxColour(0xff, 0xff, 0xff), wxColour(0x80, 0x80, 0x80));
-        m_pControl->MarkerDefine(wxSTC_MARKNUM_FOLDER, wxSTC_MARK_BOXPLUS, wxColour(0xff, 0xff, 0xff), wxColour(0x80, 0x80, 0x80));
-        m_pControl->MarkerDefine(wxSTC_MARKNUM_FOLDERSUB, wxSTC_MARK_VLINE, wxColour(0xff, 0xff, 0xff), wxColour(0x80, 0x80, 0x80));
-        m_pControl->MarkerDefine(wxSTC_MARKNUM_FOLDERTAIL, wxSTC_MARK_LCORNER, wxColour(0xff, 0xff, 0xff), wxColour(0x80, 0x80, 0x80));
-        m_pControl->MarkerDefine(wxSTC_MARKNUM_FOLDEREND, wxSTC_MARK_BOXPLUSCONNECTED, wxColour(0xff, 0xff, 0xff), wxColour(0x80, 0x80, 0x80));
-        m_pControl->MarkerDefine(wxSTC_MARKNUM_FOLDEROPENMID, wxSTC_MARK_BOXMINUSCONNECTED, wxColour(0xff, 0xff, 0xff), wxColour(0x80, 0x80, 0x80));
-        m_pControl->MarkerDefine(wxSTC_MARKNUM_FOLDERMIDTAIL, wxSTC_MARK_TCORNER, wxColour(0xff, 0xff, 0xff), wxColour(0x80, 0x80, 0x80));
+        m_pControl->MarkerDefine(wxSCI_MARKNUM_FOLDEROPEN, wxSCI_MARK_BOXMINUS);
+        m_pControl->MarkerSetForeground(wxSCI_MARKNUM_FOLDEROPEN, wxColour(0xff, 0xff, 0xff));
+        m_pControl->MarkerSetBackground(wxSCI_MARKNUM_FOLDEROPEN, wxColour(0x80, 0x80, 0x80));
+        m_pControl->MarkerDefine(wxSCI_MARKNUM_FOLDER, wxSCI_MARK_BOXPLUS);
+        m_pControl->MarkerSetForeground(wxSCI_MARKNUM_FOLDER, wxColour(0xff, 0xff, 0xff));
+        m_pControl->MarkerSetBackground(wxSCI_MARKNUM_FOLDER, wxColour(0x80, 0x80, 0x80));
+        m_pControl->MarkerDefine(wxSCI_MARKNUM_FOLDERSUB, wxSCI_MARK_VLINE);
+        m_pControl->MarkerSetForeground(wxSCI_MARKNUM_FOLDERSUB, wxColour(0xff, 0xff, 0xff));
+        m_pControl->MarkerSetBackground(wxSCI_MARKNUM_FOLDERSUB, wxColour(0x80, 0x80, 0x80));
+        m_pControl->MarkerDefine(wxSCI_MARKNUM_FOLDERTAIL, wxSCI_MARK_LCORNER);
+        m_pControl->MarkerSetForeground(wxSCI_MARKNUM_FOLDERTAIL, wxColour(0xff, 0xff, 0xff));
+        m_pControl->MarkerSetBackground(wxSCI_MARKNUM_FOLDERTAIL, wxColour(0x80, 0x80, 0x80));
+        m_pControl->MarkerDefine(wxSCI_MARKNUM_FOLDEREND, wxSCI_MARK_BOXPLUSCONNECTED);
+        m_pControl->MarkerSetForeground(wxSCI_MARKNUM_FOLDEREND, wxColour(0xff, 0xff, 0xff));
+        m_pControl->MarkerSetBackground(wxSCI_MARKNUM_FOLDEREND, wxColour(0x80, 0x80, 0x80));
+        m_pControl->MarkerDefine(wxSCI_MARKNUM_FOLDEROPENMID, wxSCI_MARK_BOXMINUSCONNECTED);
+        m_pControl->MarkerSetForeground(wxSCI_MARKNUM_FOLDEROPENMID, wxColour(0xff, 0xff, 0xff));
+        m_pControl->MarkerSetBackground(wxSCI_MARKNUM_FOLDEROPENMID, wxColour(0x80, 0x80, 0x80));
+        m_pControl->MarkerDefine(wxSCI_MARKNUM_FOLDERMIDTAIL, wxSCI_MARK_TCORNER);
+        m_pControl->MarkerSetForeground(wxSCI_MARKNUM_FOLDERMIDTAIL, wxColour(0xff, 0xff, 0xff));
+        m_pControl->MarkerSetBackground(wxSCI_MARKNUM_FOLDERMIDTAIL, wxColour(0x80, 0x80, 0x80));
 	}
 	else
 		m_pControl->SetMarginWidth(2, 0);
@@ -609,7 +625,7 @@ bool cbEditor::Open()
     // if editor is read-only, override bg color for *all* styles...
     if (read_only)
     {
-        for (int i = 0; i < wxSTC_STYLE_MAX; ++i)
+        for (int i = 0; i < wxSCI_STYLE_MAX; ++i)
             m_pControl->StyleSetBackground(i, wxSystemSettings::GetColour(wxSYS_COLOUR_BTNFACE));
     }
 
@@ -788,8 +804,8 @@ void cbEditor::DoFoldBlockFromLine(int line, int fold)
 bool cbEditor::DoFoldLine(int line, int fold)
 {
 	int level = m_pControl->GetFoldLevel(line);
-	if ((level & wxSTC_FOLDLEVELHEADERFLAG) &&
-		(wxSTC_FOLDLEVELBASE == (level & wxSTC_FOLDLEVELNUMBERMASK)))
+	if ((level & wxSCI_FOLDLEVELHEADERFLAG) &&
+		(wxSCI_FOLDLEVELBASE == (level & wxSCI_FOLDLEVELNUMBERMASK)))
 	{
 		bool expand = false;
 		int maxLine = m_pControl->GetLastChild(line, -1);
@@ -957,12 +973,12 @@ void cbEditor::HighlightBraces()
     ////// BRACES HIGHLIGHTING ///////
     int currPos = m_pControl->GetCurrentPos();
     int newPos = m_pControl->BraceMatch(currPos);
-    if (newPos == wxSTC_INVALID_POSITION)
+    if (newPos == wxSCI_INVALID_POSITION)
     {
         if(currPos > 0) currPos--;
         newPos = m_pControl->BraceMatch(currPos);
     }
-    if (newPos != wxSTC_INVALID_POSITION)
+    if (newPos != wxSCI_INVALID_POSITION)
         m_pControl->BraceHighlight(currPos, newPos);
     else
     {
@@ -1128,16 +1144,16 @@ void cbEditor::Print(bool selectionOnly, PrintColorMode pcm)
     switch (pcm)
     {
         case pcmAsIs:
-            m_pControl->SetPrintColourMode(wxSTC_PRINT_NORMAL);
+            m_pControl->SetPrintColourMode(wxSCI_PRINT_NORMAL);
             break;
         case pcmBlackAndWhite:
-            m_pControl->SetPrintColourMode(wxSTC_PRINT_BLACKONWHITE);
+            m_pControl->SetPrintColourMode(wxSCI_PRINT_BLACKONWHITE);
             break;
         case pcmColorOnWhite:
-            m_pControl->SetPrintColourMode(wxSTC_PRINT_COLOURONWHITE);
+            m_pControl->SetPrintColourMode(wxSCI_PRINT_COLOURONWHITE);
             break;
         case pcmInvertColors:
-            m_pControl->SetPrintColourMode(wxSTC_PRINT_INVERTLIGHT);
+            m_pControl->SetPrintColourMode(wxSCI_PRINT_INVERTLIGHT);
             break;
     }
     wxPrinter printer;
@@ -1209,7 +1225,7 @@ void cbEditor::OnContextMenuEntry(wxCommandEvent& event)
 	//Manager::Get()->GetMessageManager()->DebugLog(_("Leaving OnContextMenuEntry"));
 }
 
-void cbEditor::OnMarginClick(wxStyledTextEvent& event)
+void cbEditor::OnMarginClick(wxScintillaEvent& event)
 {
     switch (event.GetMargin())
 	{
@@ -1232,7 +1248,7 @@ void cbEditor::OnMarginClick(wxStyledTextEvent& event)
 	}
 }
 
-void cbEditor::OnEditorUpdateUI(wxStyledTextEvent& event)
+void cbEditor::OnEditorUpdateUI(wxScintillaEvent& event)
 {
 	if (Manager::Get()->GetEditorManager()->GetActiveEditor() == this)
 	{
@@ -1241,12 +1257,12 @@ void cbEditor::OnEditorUpdateUI(wxStyledTextEvent& event)
     }
 }
 
-void cbEditor::OnEditorChange(wxStyledTextEvent& event)
+void cbEditor::OnEditorChange(wxScintillaEvent& event)
 {
     SetModified(m_pControl->GetModify());
 }
 
-void cbEditor::OnEditorCharAdded(wxStyledTextEvent& event)
+void cbEditor::OnEditorCharAdded(wxScintillaEvent& event)
 {
     // if message manager is auto-hiding, this will close it if not needed open
     Manager::Get()->GetMessageManager()->Close();
@@ -1339,12 +1355,12 @@ void cbEditor::OnEditorCharAdded(wxStyledTextEvent& event)
 		//Manager::Get()->GetMessageManager()->DebugLog(_("Style at %d is %d (char '%c')"), pos, style, ch);
         if (ch == _T('"') || ch == _T('<'))
         {
-             if (style != wxSTC_C_PREPROCESSOR)
+             if (style != wxSCI_C_PREPROCESSOR)
                 return;
         }
         else
         {
-            if (style != wxSTC_C_DEFAULT && style != wxSTC_C_OPERATOR && style != wxSTC_C_IDENTIFIER)
+            if (style != wxSCI_C_DEFAULT && style != wxSCI_C_OPERATOR && style != wxSCI_C_IDENTIFIER)
                 return;
         }
 
@@ -1359,19 +1375,19 @@ void cbEditor::OnEditorCharAdded(wxStyledTextEvent& event)
     }
 }
 
-void cbEditor::OnEditorDwellStart(wxStyledTextEvent& event)
+void cbEditor::OnEditorDwellStart(wxScintillaEvent& event)
 {
 	int pos = m_pControl->PositionFromPoint(wxPoint(event.GetX(), event.GetY()));
     int style = m_pControl->GetStyleAt(pos);
     NotifyPlugins(cbEVT_EDITOR_TOOLTIP, style, wxEmptyString, event.GetX(), event.GetY());
 }
 
-void cbEditor::OnEditorDwellEnd(wxStyledTextEvent& event)
+void cbEditor::OnEditorDwellEnd(wxScintillaEvent& event)
 {
 	NotifyPlugins(cbEVT_EDITOR_TOOLTIP_CANCEL);
 }
 
-void cbEditor::OnUserListSelection(wxStyledTextEvent& event)
+void cbEditor::OnUserListSelection(wxScintillaEvent& event)
 {
 	NotifyPlugins(cbEVT_EDITOR_USERLIST_SELECTION, 0, event.GetText());
 }
@@ -1391,11 +1407,11 @@ void cbEditor::OnClose(wxCloseEvent& event)
 void cbEditor::DoIndent()
 {
     if(m_pControl)
-        m_pControl->SendMsg(2327); // wxSTC_CMD_TAB
+        m_pControl->SendMsg(2327); // wxSCI_CMD_TAB
 }
 
 void cbEditor::DoUnIndent()
 {
     if(m_pControl)
-        m_pControl->SendMsg(2328); // wxSTC_CMD_BACKTAB
+        m_pControl->SendMsg(2328); // wxSCI_CMD_BACKTAB
 }

@@ -26,7 +26,7 @@ class EditorColorSet;
 class cbProject;
 class ProjectFile;
 class cbEditor;
-class wxStyledTextCtrl;
+class cbStyledTextCtrl;
 class SimpleListLog;
 struct EditorManagerInternalData;
 
@@ -112,10 +112,10 @@ class DLLIMPORT EditorManager : public wxEvtHandler
         bool SaveActiveAs();
         bool SaveAll();
         int ShowFindDialog(bool replace);
-        int Find(wxStyledTextCtrl* control, cbFindReplaceData* data);
+        int Find(cbStyledTextCtrl* control, cbFindReplaceData* data);
         int FindInFiles(cbFindReplaceData* data);
-        int Replace(wxStyledTextCtrl* control, cbFindReplaceData* data);
-        int FindNext(bool goingDown, wxStyledTextCtrl* control = 0, cbFindReplaceData* data = 0);
+        int Replace(cbStyledTextCtrl* control, cbFindReplaceData* data);
+        int FindNext(bool goingDown, cbStyledTextCtrl* control = 0, cbFindReplaceData* data = 0);
 
         void Print(PrintScope ps, PrintColorMode pcm);
 
@@ -178,7 +178,7 @@ class DLLIMPORT EditorManager : public wxEvtHandler
         static void Free();
         EditorManager(wxWindow* parent);
         ~EditorManager();
-        void CalculateFindReplaceStartEnd(wxStyledTextCtrl* control, cbFindReplaceData* data);
+        void CalculateFindReplaceStartEnd(cbStyledTextCtrl* control, cbFindReplaceData* data);
         void OnCheckForModifiedFiles(wxCommandEvent& event);
 
         wxNotebook* m_pNotebook;

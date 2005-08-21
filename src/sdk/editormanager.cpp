@@ -29,7 +29,6 @@
 #include <wx/imaglist.h>
 #include <wx/bmpbuttn.h>
 #include <wx/file.h>
-#include <wx/stc/stc.h>
 
 #include "editormanager.h" // class's header file
 #include "configmanager.h"
@@ -1071,7 +1070,7 @@ int EditorManager::ShowFindDialog(bool replace)
 
 	wxString wordAtCursor;
 	bool hasSelection = false;
-	wxStyledTextCtrl* control = 0;
+	cbStyledTextCtrl* control = 0;
 
 	cbEditor* ed = GetBuiltinEditor(GetActiveEditor());
 	if (ed)
@@ -1132,7 +1131,7 @@ int EditorManager::ShowFindDialog(bool replace)
 		return Replace(control, m_LastFindReplaceData);
 }
 
-void EditorManager::CalculateFindReplaceStartEnd(wxStyledTextCtrl* control, cbFindReplaceData* data)
+void EditorManager::CalculateFindReplaceStartEnd(cbStyledTextCtrl* control, cbFindReplaceData* data)
 {
     SANITY_CHECK();
 	if (!control || !data)
@@ -1170,7 +1169,7 @@ void EditorManager::CalculateFindReplaceStartEnd(wxStyledTextCtrl* control, cbFi
 	}
 }
 
-int EditorManager::Replace(wxStyledTextCtrl* control, cbFindReplaceData* data)
+int EditorManager::Replace(cbStyledTextCtrl* control, cbFindReplaceData* data)
 {
     SANITY_CHECK(-1);
 	if (!control || !data)
@@ -1189,13 +1188,13 @@ int EditorManager::Replace(wxStyledTextCtrl* control, cbFindReplaceData* data)
 		data->end = end;
 
 	if (data->matchWord)
-		flags |= wxSTC_FIND_WHOLEWORD;
+		flags |= wxSCI_FIND_WHOLEWORD;
 	if (data->startWord)
-		flags |= wxSTC_FIND_WORDSTART;
+		flags |= wxSCI_FIND_WORDSTART;
 	if (data->matchCase)
-		flags |= wxSTC_FIND_MATCHCASE;
+		flags |= wxSCI_FIND_MATCHCASE;
 	if (data->regEx)
-		flags |= wxSTC_FIND_REGEXP;
+		flags |= wxSCI_FIND_REGEXP;
 
 	control->BeginUndoAction();
 	int pos = -1;
@@ -1271,7 +1270,7 @@ int EditorManager::Replace(wxStyledTextCtrl* control, cbFindReplaceData* data)
 	return pos;
 }
 
-int EditorManager::Find(wxStyledTextCtrl* control, cbFindReplaceData* data)
+int EditorManager::Find(cbStyledTextCtrl* control, cbFindReplaceData* data)
 {
     SANITY_CHECK(-1);
 	if (!control || !data)
@@ -1290,13 +1289,13 @@ int EditorManager::Find(wxStyledTextCtrl* control, cbFindReplaceData* data)
 		data->end = end;
 
 	if (data->matchWord)
-		flags |= wxSTC_FIND_WHOLEWORD;
+		flags |= wxSCI_FIND_WHOLEWORD;
 	if (data->startWord)
-		flags |= wxSTC_FIND_WORDSTART;
+		flags |= wxSCI_FIND_WORDSTART;
 	if (data->matchCase)
-		flags |= wxSTC_FIND_MATCHCASE;
+		flags |= wxSCI_FIND_MATCHCASE;
 	if (data->regEx)
-		flags |= wxSTC_FIND_REGEXP;
+		flags |= wxSCI_FIND_REGEXP;
 
 	int pos = -1;
 	while (true) // loop while not found and user selects to start again from the top
@@ -1403,8 +1402,8 @@ int EditorManager::FindInFiles(cbFindReplaceData* data)
         return 0;
 
     // now that are list is filled, we 'll search
-    // but first we 'll create a hidden wxStyledTextCtrl to do the search for us ;)
-    wxStyledTextCtrl* control = new wxStyledTextCtrl(m_pNotebook, -1);
+    // but first we 'll create a hidden cbStyledTextCtrl to do the search for us ;)
+    cbStyledTextCtrl* control = new cbStyledTextCtrl(m_pNotebook, -1);
     control->Show(false); //hidden
 
     // keep a copy of the find struct
@@ -1460,7 +1459,7 @@ int EditorManager::FindInFiles(cbFindReplaceData* data)
     return count;
 }
 
-int EditorManager::FindNext(bool goingDown, wxStyledTextCtrl* control, cbFindReplaceData* data)
+int EditorManager::FindNext(bool goingDown, cbStyledTextCtrl* control, cbFindReplaceData* data)
 {
     SANITY_CHECK(-1);
 //    if (m_LastFindReplaceData->findInFiles) // no "find next" for find in files

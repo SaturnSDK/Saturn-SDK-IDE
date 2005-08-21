@@ -10,9 +10,11 @@
 #include <editormanager.h>
 #include <configmanager.h>
 #include "startherepage.h"
+#include "globals.h"
 
 wxString g_StartHereTitle = _("Start here");
 int idStartHerePageLink = wxNewId();
+int idStartHerePageVarSubst = wxNewId();
 int idWin = wxNewId();
 
 class MyHtmlWin : public wxHtmlWindow
@@ -54,8 +56,47 @@ StartHerePage::StartHerePage(wxEvtHandler* owner, wxWindow* parent)
 
     wxString resPath = ConfigManager::Get()->Read(_T("/data_path"));
 	m_pWin = new MyHtmlWin(this, idWin, wxPoint(0,0), GetSize());
+
+    // must load the page this way because if we don't the image can't be found...
 	m_pWin->LoadPage(resPath + _T("/start_here.zip#zip:start_here.html"));
-//	m_pWin->SetPage("<html><body><h1>Welcome to Code::Blocks!</h1></body></html>");
+
+    // alternate way to read the file so we can perform some search and replace
+    // the C::B image referenced in the default start page can be found now
+    // because we used LoadPage() above...
+    wxString buf;
+    wxFileSystem* fs = new wxFileSystem;
+    wxFSFile* f = fs->OpenFile(resPath + _T("/start_here.zip#zip:start_here.html"));
+    if (f)
+    {
+    	wxInputStream* is = f->GetStream();
+    	char tmp[1024] = {};
+    	while (!is->Eof() && is->CanRead())
+    	{
+    		memset(tmp, 0, sizeof(tmp));
+    		is->Read(tmp, sizeof(tmp) - 1);
+    		buf << tmp;
+    	}
+        delete f;
+    }
+    else
+        buf = _("<html><body><h1>Welcome to Code::Blocks!</h1><br>The default start page seems to be missing...</body></html>");
+    delete fs;
+
+    // perform var substitution
+    buf.Replace(_T("CB_VAR_VERSION_VERB"), APP_ACTUAL_VERSION_VERB);
+    buf.Replace(_T("CB_VAR_VERSION"), APP_ACTUAL_VERSION);
+    m_pWin->SetPage(buf);
+
+    // ask our parent to perform any more substitutions
+    // (for unknown vars to this, as CB_VAR_HISTORY_FILE_*)
+    // if the parent performs substitutions, it should call
+    // SetPageContent() on this...
+    if (m_pOwner)
+    {
+        wxCommandEvent evt(wxEVT_COMMAND_MENU_SELECTED, idStartHerePageVarSubst);
+        evt.SetString(buf);
+        m_pOwner->ProcessEvent(evt); // direct call
+    }
 
     bs->Add(m_pWin, 1, wxEXPAND);
     SetSizer(bs);
@@ -66,6 +107,11 @@ StartHerePage::~StartHerePage()
 {
 	//dtor
 	m_pWin->Destroy();
+}
+
+void StartHerePage::SetPageContent(const wxString& buffer)
+{
+    m_pWin->SetPage(buffer);
 }
 
 bool StartHerePage::LinkClicked(const wxHtmlLinkInfo& link)

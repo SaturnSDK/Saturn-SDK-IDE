@@ -23,7 +23,6 @@
 * $Date$
 */
 
-#include <wx/stc/stc.h>
 #include <wx/log.h>
 #include <wx/dir.h>
 
@@ -85,7 +84,7 @@ void EditorColorSet::ClearAllOptionColors()
         WX_CLEAR_ARRAY(m_Sets[i].m_Colors);
 		m_Sets[i].m_Colors.Clear();
 		m_Sets[i].m_Langs.Clear();
-		m_Sets[i].m_Lexers = wxSTC_LEX_NULL;
+		m_Sets[i].m_Lexers = wxSCI_LEX_NULL;
 		m_Sets[i].m_Keywords[0].Clear();
 		m_Sets[i].m_Keywords[1].Clear();
 		m_Sets[i].m_Keywords[2].Clear();
@@ -119,8 +118,8 @@ void EditorColorSet::LoadAvailableSets()
 HighlightLanguage EditorColorSet::AddHighlightLanguage(int lexer, const wxString& name)
 {
 	if (m_LanguageID == HL_LAST ||
-        lexer <= wxSTC_LEX_NULL ||
-        lexer > wxSTC_LEX_MMIXAL ||
+        lexer <= wxSCI_LEX_NULL ||
+        lexer > wxSCI_LEX_CSOUND ||
         name.IsEmpty() ||
         GetHighlightLanguage(name) != HL_NONE)
     {
@@ -287,7 +286,7 @@ wxString EditorColorSet::GetLanguageName(HighlightLanguage lang)
     return _("Unknown");
 }
 
-void EditorColorSet::DoApplyStyle(wxStyledTextCtrl* control, int value, OptionColor* option)
+void EditorColorSet::DoApplyStyle(cbStyledTextCtrl* control, int value, OptionColor* option)
 {
 	// option->value is ignored here...
 	// value is used instead
@@ -311,7 +310,7 @@ void EditorColorSet::Apply(cbEditor* editor)
 }
 
 
-void EditorColorSet::Apply(HighlightLanguage lang, wxStyledTextCtrl* control)
+void EditorColorSet::Apply(HighlightLanguage lang, cbStyledTextCtrl* control)
 {
 	control->StyleClearAll();
 
@@ -319,7 +318,7 @@ void EditorColorSet::Apply(HighlightLanguage lang, wxStyledTextCtrl* control)
     OptionColor* defaults = GetOptionByName(lang, _("Default"));
     if (defaults)
     {
-        for (int i = 0; i < wxSTC_STYLE_MAX; ++i)
+        for (int i = 0; i < wxSCI_STYLE_MAX; ++i)
         {
             if (i < 33 || i > 39)
                 DoApplyStyle(control, i, defaults);
@@ -330,7 +329,7 @@ void EditorColorSet::Apply(HighlightLanguage lang, wxStyledTextCtrl* control)
 	// for some strange reason, when switching styles, the line numbering changes color
 	// too, though we didn't ask it to...
 	// this makes sure it stays the correct color
-    control->StyleSetForeground(wxSTC_STYLE_LINENUMBER, wxSystemSettings::GetColour(wxSYS_COLOUR_BTNTEXT));
+    control->StyleSetForeground(wxSCI_STYLE_LINENUMBER, wxSystemSettings::GetColour(wxSYS_COLOUR_BTNTEXT));
 
 	for (unsigned int i = 0; i < m_Sets[lang].m_Colors.GetCount(); ++i)
 	{
@@ -344,7 +343,7 @@ void EditorColorSet::Apply(HighlightLanguage lang, wxStyledTextCtrl* control)
 		{
             if (opt->value == cbHIGHLIGHT_LINE)
             {
-                control->SetCaretLineBack(opt->back);
+                control->SetCaretLineBackground(opt->back);
                 ConfigManager::Get()->Write(_T("/editor/highlight_caret_line_color/red"),	opt->back.Red());
                 ConfigManager::Get()->Write(_T("/editor/highlight_caret_line_color/green"), opt->back.Green());
                 ConfigManager::Get()->Write(_T("/editor/highlight_caret_line_color/blue"),  opt->back.Blue());
@@ -362,7 +361,10 @@ void EditorColorSet::Apply(HighlightLanguage lang, wxStyledTextCtrl* control)
                     control->SetSelBackground(false, wxColour(0xC0, 0xC0, 0xC0));
             }
             else
-                control->MarkerDefine(-opt->value, 1, wxNullColour, opt->back);
+            {
+                control->MarkerDefine(-opt->value, 1);
+                control->MarkerSetBackground(-opt->value, opt->back);
+            }
 		}
 	}
 	control->SetLexer(m_Sets[lang].m_Lexers);

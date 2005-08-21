@@ -58,7 +58,7 @@ CCListCtrl::CCListCtrl(wxWindow* parent, int id, Parser* parser, const wxString&
  	SetDefaultRenderer(m_pRenderer);
  
  	// create list of tokens
- 	m_pEditor = (wxStyledTextCtrl*)m_pParent->GetParent();
+ 	m_pEditor = (cbStyledTextCtrl*)m_pParent->GetParent();
  	PrepareTokens();
 }
 
@@ -141,6 +141,6 @@ void CCListCtrl::AddChar(const wxChar& ch)
 void CCListCtrl::RemoveLastChar()
 {
 	m_Initial.RemoveLast();
-	m_pEditor->CmdKeyExecute(wxSTC_CMD_DELETEBACKNOTLINE);
+	m_pEditor->CmdKeyExecute(wxSCI_CMD_DELETEBACKNOTLINE);
 	PrepareTokens();
 }

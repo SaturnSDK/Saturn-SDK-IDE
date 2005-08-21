@@ -195,8 +195,9 @@ void MessageManager::DebugLog(const wxChar* msg, ...)
     tmp = wxString::FormatV(msg, arg_list);
     va_end(arg_list);
 
-	wxDateTime timestamp = wxDateTime::UNow();
-    m_Logs[mltDebug]->AddLog(_T("[") + timestamp.Format(_T("%X.%l")) + _T("]: ") + tmp);
+//	wxDateTime timestamp = wxDateTime::UNow();
+//    m_Logs[mltDebug]->AddLog(_T("[") + timestamp.Format(_T("%X.%l")) + _T("]: ") + tmp);
+    m_Logs[mltDebug]->AddLog(tmp);
     m_Logs[mltDebug]->Refresh();
 
 	if(!Manager::isappShuttingDown())

@@ -105,9 +105,9 @@ int AStylePlugin::Execute()
     wxString eolChars;
     switch (ed->GetControl()->GetEOLMode())
     {
-        case wxSTC_EOL_CRLF: eolChars = _T("\r\n"); break;
-        case wxSTC_EOL_CR: eolChars = _T("\r"); break;
-        case wxSTC_EOL_LF: eolChars = _T("\n"); break;
+        case wxSCI_EOL_CRLF: eolChars = _T("\r\n"); break;
+        case wxSCI_EOL_CR: eolChars = _T("\r"); break;
+        case wxSCI_EOL_LF: eolChars = _T("\n"); break;
     }
     
     //ASStreamIterator iter(edText, eolChars);

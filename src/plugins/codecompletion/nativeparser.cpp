@@ -1066,8 +1066,8 @@ int NativeParser::FindCurrentBlockStart(cbEditor* editor)
 	while (line >= 0)
 	{
 		int level = editor->GetControl()->GetFoldLevel(line);
-		if ((level & wxSTC_FOLDLEVELHEADERFLAG) &&
-			(wxSTC_FOLDLEVELBASE == (level & wxSTC_FOLDLEVELNUMBERMASK)))
+		if ((level & wxSCI_FOLDLEVELHEADERFLAG) &&
+			(wxSCI_FOLDLEVELBASE == (level & wxSCI_FOLDLEVELNUMBERMASK)))
 		{
 			// we 're at block start (maybe '{')
 			wxString lineStr = editor->GetControl()->GetLine(line);

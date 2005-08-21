@@ -415,14 +415,14 @@ void CodeCompletion::DoCodeComplete()
 
     int style = ed->GetControl()->GetStyleAt(ed->GetControl()->GetCurrentPos());
 //	Manager::Get()->GetMessageManager()->DebugLog(_("Style at %d is %d"), ed->GetControl()->GetCurrentPos(), style);
-//	Manager::Get()->GetMessageManager()->DebugLog(_("wxSTC_C_PREPROCESSOR is %d"), wxSTC_C_PREPROCESSOR);
-    if (style == wxSTC_C_PREPROCESSOR)
+//	Manager::Get()->GetMessageManager()->DebugLog(_("wxSCI_C_PREPROCESSOR is %d"), wxSCI_C_PREPROCESSOR);
+    if (style == wxSCI_C_PREPROCESSOR)
     {
         CodeCompleteIncludes();
         return;
     }
     
-    if (style != wxSTC_C_DEFAULT && style != wxSTC_C_OPERATOR && style != wxSTC_C_IDENTIFIER)
+    if (style != wxSCI_C_DEFAULT && style != wxSCI_C_OPERATOR && style != wxSCI_C_IDENTIFIER)
         return;
 
 	CodeComplete();

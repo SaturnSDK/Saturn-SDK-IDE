@@ -199,9 +199,9 @@ void ToDoList::OnAddItem(wxCommandEvent& event)
 		// calculate insertion point by skipping next newline
 		switch (control->GetEOLMode())
 		{
-			case wxSTC_EOL_CR:
-			case wxSTC_EOL_LF: crlfLen = 1; break;
-			case wxSTC_EOL_CRLF: crlfLen = 2; break;
+			case wxSCI_EOL_CR:
+			case wxSCI_EOL_LF: crlfLen = 1; break;
+			case wxSCI_EOL_CRLF: crlfLen = 2; break;
 		}
 		idx += crlfLen;
 	}
@@ -255,9 +255,9 @@ void ToDoList::OnAddItem(wxCommandEvent& event)
 		switch (control->GetEOLMode())
 		{
 			// NOTE: maybe this switch, should make it in the SDK (maybe as cbStyledTextCtrl::GetEOLString())???
-			case wxSTC_EOL_CR: buffer << _T("\n"); break;
-			case wxSTC_EOL_CRLF: buffer << _T("\r\n"); break;
-			case wxSTC_EOL_LF: buffer << _T("\r"); break;
+			case wxSCI_EOL_CR: buffer << _T("\n"); break;
+			case wxSCI_EOL_CRLF: buffer << _T("\r\n"); break;
+			case wxSCI_EOL_LF: buffer << _T("\r"); break;
 		}
 	}
 

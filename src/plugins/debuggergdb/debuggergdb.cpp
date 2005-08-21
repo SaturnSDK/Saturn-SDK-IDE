@@ -1573,7 +1573,7 @@ void DebuggerGDB::OnValueTooltip(CodeBlocksEvent& event)
 		return;
 
     int style = event.GetInt();
-    if (style != wxSTC_C_DEFAULT && style != wxSTC_C_OPERATOR && style != wxSTC_C_IDENTIFIER)
+    if (style != wxSCI_C_DEFAULT && style != wxSCI_C_OPERATOR && style != wxSCI_C_IDENTIFIER)
         return;
 
 	wxPoint pt;

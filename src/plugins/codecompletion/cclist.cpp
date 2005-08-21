@@ -43,7 +43,7 @@ BEGIN_EVENT_TABLE(CCList, wxFrame)
 	EVT_GRID_SELECT_CELL(CCList::OnCellChanged)
 END_EVENT_TABLE()
 
-CCList* CCList::Get(wxEvtHandler* parent, wxStyledTextCtrl* editor, Parser* parser)
+CCList* CCList::Get(wxEvtHandler* parent, cbStyledTextCtrl* editor, Parser* parser)
 {
 	if (!g_CCList)
 		g_CCList = new CCList(parent, editor, parser);
@@ -59,7 +59,7 @@ void CCList::Free()
 	}
 }
 
-CCList::CCList(wxEvtHandler* parent, wxStyledTextCtrl* editor, Parser* parser)
+CCList::CCList(wxEvtHandler* parent, cbStyledTextCtrl* editor, Parser* parser)
 	: wxFrame(editor, -1, _T("CC"), wxDefaultPosition, wxDefaultSize,
 			wxFRAME_NO_TASKBAR | wxRESIZE_BORDER | wxNO_FULL_REPAINT_ON_RESIZE),
 	m_pParent(parent),

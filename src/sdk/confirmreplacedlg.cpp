@@ -25,7 +25,6 @@
 
 #include "confirmreplacedlg.h"
 #include "configmanager.h"
-#include <wx/stc/stc.h>
 #include <wx/xrc/xmlres.h>
 #include <wx/stattext.h>
 
@@ -66,7 +65,7 @@ void ConfirmReplaceDlg::OnCancel(wxCommandEvent& event)
 	EndModal(crCancel);
 }
 
-void ConfirmReplaceDlg::CalcPosition(wxStyledTextCtrl* ed)
+void ConfirmReplaceDlg::CalcPosition(cbStyledTextCtrl* ed)
 {
 	if(!ed) 
         return;
