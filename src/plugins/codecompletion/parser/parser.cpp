@@ -345,8 +345,8 @@ void Parser::SaveTokenToCache(wxFile* f, Token* token)
 
 inline void Parser::SaveStringToFile(wxFile* f, const wxString& str)
 {
-    const char* psz = str.mb_str(wxConvUTF8);
-    int size = psz?strlen(psz):0; // wxStrlen(psz); // wxStrlen uses wxChars
+    const wxWX2MBbuf psz = str.mb_str(wxConvUTF8);
+    int size = psz ? strlen(psz) : 0;
     if (size >= 512)
         size = 512;
     SaveIntToFile(f, size);
