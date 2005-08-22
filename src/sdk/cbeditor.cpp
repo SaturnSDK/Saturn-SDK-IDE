@@ -657,13 +657,14 @@ bool cbEditor::Save()
         return SaveAs();
     }
 
-    wxTempFile file(m_Filename);
-    if (!cbWrite(file,m_pControl->GetText()))
+    wxFile file(m_Filename, wxFile::write);
+
+    if(!cbWrite(file,m_pControl->GetText()))
     {
-        return false; // failed; could not create temporary file or failed writing to it
+        return false; // failed; file is read-only?
     }
-    if (!file.Commit())
-        return false; // could not replace old file with temp file; file is read-only?
+    file.Flush();
+    file.Close();
 
     wxFileName fname(m_Filename);
     m_LastModified = fname.GetModificationTime();
