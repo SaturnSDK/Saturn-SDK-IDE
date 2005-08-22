@@ -40,6 +40,7 @@
 #include "compilerBCC.h"
 #include "compilerDMC.h"
 #include "compilerOW.h"
+#include "compilerSDCC.h"
 #include "directcommands.h"
 #include <wx/xrc/xmlres.h>
 
@@ -207,6 +208,8 @@ CompilerGCC::CompilerGCC()
 	CompilerFactory::RegisterCompiler(new CompilerDMC);
 	CompilerFactory::RegisterCompiler(new CompilerOW);
 #endif
+	CompilerFactory::RegisterCompiler(new CompilerSDCC);
+
 	// register (if any) user-copies of built-in compilers
 	CompilerFactory::RegisterUserCompilers();
 

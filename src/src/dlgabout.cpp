@@ -60,7 +60,7 @@ dlgAbout::dlgAbout(wxWindow* parent)
 	XRCCTRL(*this, "txtDescription", wxTextCtrl)->SetValue(DESCR);
 	XRCCTRL(*this, "txtThanksTo", wxTextCtrl)->SetValue(
         _("The wxWidgets project (http://www.wxwidgets.org)\n"
-        "TinyXML parser (http://http://www.grinninglizard.com/tinyxml)\n"
+        "TinyXML parser (http://www.grinninglizard.com/tinyxml)\n"
         "The GNU Software Foundation (http://www.gnu.org)\n"
         "Last, but not least, the open-source community\n\n"
         "Co-developers:\n"
