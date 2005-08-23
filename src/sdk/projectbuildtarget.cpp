@@ -32,7 +32,7 @@
 WX_DEFINE_LIST(FilesList);
 
 // class constructor
-ProjectBuildTarget::ProjectBuildTarget()
+ProjectBuildTarget::ProjectBuildTarget(cbProject* parentProject) : m_Project(parentProject)
 {
     m_BuildWithAll = true;
     m_CreateStaticLib = true;
@@ -43,6 +43,14 @@ ProjectBuildTarget::ProjectBuildTarget()
 // class destructor
 ProjectBuildTarget::~ProjectBuildTarget()
 {
+}
+
+cbProject* ProjectBuildTarget::GetParentProject() {
+    return m_Project;
+}
+
+wxString ProjectBuildTarget::GetFullTitle() {
+    return m_Project->GetTitle() + " - " + GetTitle();
 }
 
 const wxString & ProjectBuildTarget::GetExternalDeps()
@@ -137,6 +145,17 @@ void ProjectBuildTarget::SetTargetType(const TargetType& pt)
         SetUseConsoleRunner(true); // by default, use console runner
 }
 
+// target dependencies: targets to be compiled (if necessary) before this one
+void ProjectBuildTarget::AddTargetDep(ProjectBuildTarget* target) {
+	m_TargetDeps.Add(target);
+}
+
+// get the list of dependency targets of this target
+BuildTargets& ProjectBuildTarget::GetTargetDeps() {
+	return m_TargetDeps;
+}
+
+
 //// PROJECTFILE //////////////////////
 
 ProjectFile::ProjectFile()
@@ -227,7 +246,7 @@ void ProjectFile::ToggleBreakpoint(int line)
 wxString ProjectFile::GetBaseName()
 {
     wxFileName fname(relativeFilename);
-    fname.SetExt(_T(""));
+    fname.SetExt("");
     return fname.GetFullPath();
 }
 
@@ -249,7 +268,8 @@ void ProjectFile::SetObjName(const wxString& name)
         if (project && CompilerFactory::CompilerIndexOK(project->GetCompilerIndex()))
             fname.SetExt(CompilerFactory::Compilers[project->GetCompilerIndex()]->GetSwitches().objectExtension);
         else
-            fname.SetExt(_T(".o")); // fallback?
+            fname.SetExt(".o"); // fallback?
     }
     m_ObjName = fname.GetFullPath();
 }
+
