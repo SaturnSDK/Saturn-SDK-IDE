@@ -1178,12 +1178,12 @@ void MakefileGenerator::DoAddMakefileCommands(const wxString& desc, const wxStri
         if (!prefix.IsEmpty())
             buffer << prefix << _T(": ") << _T('\n');
         if (m_CompilerSet->GetSwitches().logging == clogSimple)
-            buffer << '\t' << _T("@echo ") << desc << _T('\n');
+            buffer << _T('\t') << _T("@echo ") << desc << _T('\n');
 		for (unsigned int i = 0; i < commands.GetCount(); ++i)
 		{
 			wxString tmp = commands[i];
 			Manager::Get()->GetMacrosManager()->ReplaceMacros(tmp);
-			buffer << '\t' << m_Quiet << tmp << _T('\n');
+			buffer << _T('\t') << m_Quiet << tmp << _T('\n');
 		}
         buffer << _T('\n');
 	}
@@ -1230,8 +1230,8 @@ void MakefileGenerator::DoAddMakefileTarget_Clean(wxString& buffer)
 
         buffer << _T("clean_") << target->GetTitle() << _T(":") << _T('\n');
 		if (m_CompilerSet->GetSwitches().logging == clogSimple)
-			buffer << '\t' << _T("@echo Cleaning target \"") << target->GetTitle() << _T("\"...") << _T('\n');
-        buffer << '\t' << m_Quiet << _T("$(RM) $(") << target->GetTitle() << _T("_BIN) ");
+			buffer << _T('\t') << _T("@echo Cleaning target \"") << target->GetTitle() << _T("\"...") << _T('\n');
+        buffer << _T('\t') << m_Quiet << _T("$(RM) $(") << target->GetTitle() << _T("_BIN) ");
         buffer << _T("$(") << target->GetTitle() << _T("_OBJS) ");
         buffer << _T("$(") << target->GetTitle() << _T("_RESOURCE) ");
         if (target->GetTargetType() == ttDynamicLib)
@@ -1244,8 +1244,8 @@ void MakefileGenerator::DoAddMakefileTarget_Clean(wxString& buffer)
 
         buffer << _T("distclean_") << target->GetTitle() << _T(":") << _T('\n');
 		if (m_CompilerSet->GetSwitches().logging == clogSimple)
-			buffer << '\t' << _T("@echo Dist-cleaning target \"") << target->GetTitle() << _T("\"...") << _T('\n');
-        buffer << '\t' << m_Quiet << _T("$(RM) $(") << target->GetTitle() << _T("_BIN) ");
+			buffer << _T('\t') << _T("@echo Dist-cleaning target \"") << target->GetTitle() << _T("\"...") << _T('\n');
+        buffer << _T('\t') << m_Quiet << _T("$(RM) $(") << target->GetTitle() << _T("_BIN) ");
         buffer << _T("$(") << target->GetTitle() << _T("_OBJS) ");
         buffer << _T("$(") << target->GetTitle() << _T("_DEPS) ");
         buffer << _T("$(") << target->GetTitle() << _T("_RESOURCE) ");
@@ -1275,7 +1275,7 @@ void MakefileGenerator::DoAddMakefileTarget_Dist(wxString& buffer)
     QuoteStringIfNeeded(projname);
 
     buffer << _T("dist:") << _T('\n');
-    buffer << '\t' << _T("@zip ") << projname << _T(".zip ") << tmp << _T('\n');
+    buffer << _T('\t') << _T("@zip ") << projname << _T(".zip ") << tmp << _T('\n');
     buffer << _T('\n');
 }
 
@@ -1360,27 +1360,27 @@ void MakefileGenerator::DoAddMakefileTarget_Link(wxString& buffer)
             {
                 CommandType ct = target->GetTargetType() == ttConsoleOnly ? ctLinkConsoleExeCmd : ctLinkExeCmd;
                 if (m_CompilerSet->GetSwitches().logging == clogSimple)
-					buffer << '\t' << _T("@echo Linking executable \"") << target->GetOutputFilename() << _T("\"...") << _T('\n');
+					buffer << _T('\t') << _T("@echo Linking executable \"") << target->GetOutputFilename() << _T("\"...") << _T('\n');
 				wxString compilerCmd = ReplaceCompilerMacros(ct, _T(""), target, _T(""), _T(""), _T(""));
-				buffer << '\t' << m_Quiet << compilerCmd<< _T('\n');
+				buffer << _T('\t') << m_Quiet << compilerCmd<< _T('\n');
 				break;
 			}
 
 			case ttStaticLib:
 			{
                 if (m_CompilerSet->GetSwitches().logging == clogSimple)
-					buffer << '\t' << _T("@echo Linking static library \"") << target->GetOutputFilename() << _T("\"...") << _T('\n');
+					buffer << _T('\t') << _T("@echo Linking static library \"") << target->GetOutputFilename() << _T("\"...") << _T('\n');
 				wxString compilerCmd = ReplaceCompilerMacros(ctLinkStaticCmd, _T(""), target, _T(""), _T(""), _T(""));
-				buffer << '\t' << m_Quiet << compilerCmd<< _T('\n');
+				buffer << _T('\t') << m_Quiet << compilerCmd<< _T('\n');
 				break;
             }
 
 			case ttDynamicLib:
 			{
                 if (m_CompilerSet->GetSwitches().logging == clogSimple)
-					buffer << '\t' << _T("@echo Linking shared library \"") << target->GetOutputFilename() << _T("\"...") << _T('\n');
+					buffer << _T('\t') << _T("@echo Linking shared library \"") << target->GetOutputFilename() << _T("\"...") << _T('\n');
 				wxString compilerCmd = ReplaceCompilerMacros(ctLinkDynamicCmd, _T(""), target, _T(""), _T(""), _T(""));
-				buffer << '\t' << m_Quiet << compilerCmd<< _T('\n');
+				buffer << _T('\t') << m_Quiet << compilerCmd<< _T('\n');
 				break;
             }
             default: break;
@@ -1494,7 +1494,7 @@ void MakefileGenerator::DoAddMakefileTarget_Objs(wxString& buffer)
                             // depend rule
                             buffer << d_file << _T(": ") << c_file << _T('\n');
                             if (m_CompilerSet->GetSwitches().logging == clogSimple)
-                                buffer << '\t' << _T("@echo Calculating dependencies for \"") << pf->relativeFilename << _T("\"...") << _T('\n');
+                                buffer << _T('\t') << _T("@echo Calculating dependencies for \"") << pf->relativeFilename << _T("\"...") << _T('\n');
                             // gather all object files generated from this source file (multiple targets case)
                             wxString tmpdep;
                             for (unsigned int i = 0; i < pf->buildTargets.GetCount(); ++i)
@@ -1507,7 +1507,7 @@ void MakefileGenerator::DoAddMakefileTarget_Objs(wxString& buffer)
                                 tmpdep.RemoveLast();
                             wxString compilerCmd = ReplaceCompilerMacros(ctGenDependenciesCmd, pf->compilerVar, target, c_file, tmpdep, d_file);
                             if (!compilerCmd.IsEmpty())
-                                buffer << '\t' << m_Quiet << compilerCmd << _T('\n');
+                                buffer << _T('\t') << m_Quiet << compilerCmd << _T('\n');
                             buffer << _T('\n');
                         }
                         else if (!pf->customDeps.IsEmpty())
@@ -1518,8 +1518,8 @@ void MakefileGenerator::DoAddMakefileTarget_Objs(wxString& buffer)
 
                             buffer << d_file << _T(": ") << c_file << _T('\n');
                             if (m_CompilerSet->GetSwitches().logging == clogSimple)
-                                buffer << '\t' << _T("@echo Generating dependencies for \"") << pf->relativeFilename << _T("\"... (custom dependencies)") << _T('\n');
-                            buffer << '\t' << m_Quiet << customDeps << _T('\n');
+                                buffer << _T('\t') << _T("@echo Generating dependencies for \"") << pf->relativeFilename << _T("\"... (custom dependencies)") << _T('\n');
+                            buffer << _T('\t') << m_Quiet << customDeps << _T('\n');
                             buffer << _T('\n');
                         }
                     }
@@ -1535,8 +1535,8 @@ void MakefileGenerator::DoAddMakefileTarget_Objs(wxString& buffer)
                         ConvertToMakefileFriendly(obj_file);
 						buffer << obj_file << _T(": ") << d_file << _T('\n');
                         if (m_CompilerSet->GetSwitches().logging == clogSimple)
-							buffer << '\t' << _T("@echo Compiling \"") << pf->relativeFilename << _T("\" (custom command)...") << _T('\n');
-						buffer << '\t' << m_Quiet << customBuild << _T('\n');
+							buffer << _T('\t') << _T("@echo Compiling \"") << pf->relativeFilename << _T("\" (custom command)...") << _T('\n');
+						buffer << _T('\t') << m_Quiet << customBuild << _T('\n');
 						buffer << _T('\n');
 					}
 					else
@@ -1544,11 +1544,11 @@ void MakefileGenerator::DoAddMakefileTarget_Objs(wxString& buffer)
 						// compile rule
 						buffer << o_file << _T(": ") << d_file << _T('\n');
                         if (m_CompilerSet->GetSwitches().logging == clogSimple)
-							buffer << '\t' << _T("@echo Compiling \"") << pf->relativeFilename << _T("\"...") << _T('\n');
+							buffer << _T('\t') << _T("@echo Compiling \"") << pf->relativeFilename << _T("\"...") << _T('\n');
 //                        AddCreateSubdir(buffer, target->GetBasePath(), pf->GetObjName(), target->GetObjectOutput());
 						wxString compilerCmd = ReplaceCompilerMacros(ctCompileObjectCmd, pf->compilerVar, target, c_file, o_file, d_file);
 						if (!compilerCmd.IsEmpty())
-                            buffer << '\t' << m_Quiet << compilerCmd << _T('\n');
+                            buffer << _T('\t') << m_Quiet << compilerCmd << _T('\n');
 						buffer << _T('\n');
 					}
                 }
@@ -1577,16 +1577,16 @@ void MakefileGenerator::DoAddMakefileTarget_Objs(wxString& buffer)
                  buffer << resources;
             buffer << _T('\n');
             if (m_CompilerSet->GetSwitches().logging == clogSimple)
-				buffer << '\t' << _T("@echo Compiling resources...") << _T('\n');
+				buffer << _T('\t') << _T("@echo Compiling resources...") << _T('\n');
             wxString compilerCmd = ReplaceCompilerMacros(ctCompileResourceCmd, _T(""), target, UnixFilename(resFile.GetFullPath()), _T(""), _T(""));
             if (!compilerCmd.IsEmpty())
-                buffer << '\t' << m_Quiet << compilerCmd << _T('\n');
-            /*buffer << '\t' << m_Quiet << _T("$(RESCOMP) -i ") << UnixFilename(resFile.GetFullPath()) << _T(" -J rc ";
-            buffer << _T("-o $(") << target->GetTitle() << _T("_RESOURCE) -O coff ";
+                buffer << _T('\t') << m_Quiet << compilerCmd << _T('\n');
+            /*buffer << _T('\t') << m_Quiet << _T("$(RESCOMP) -i ") << UnixFilename(resFile.GetFullPath()) << _T(" -J rc ");
+            buffer << _T("-o $(") << target->GetTitle() << _T("_RESOURCE) -O coff ");
 
-			DoAppendIncludeDirs(buffer, 0L, "--include-dir=", true);
-			DoAppendIncludeDirs(buffer, 0L, "--include-dir=");
-			DoAppendIncludeDirs(buffer, target, "--include-dir=");*/
+			DoAppendIncludeDirs(buffer, 0L, _T("--include-dir="), true);
+			DoAppendIncludeDirs(buffer, 0L, _T("--include-dir=");
+			DoAppendIncludeDirs(buffer, target, _T("--include-dir=");*/
 			buffer << _T('\n');
         }
         buffer << _T('\n');
