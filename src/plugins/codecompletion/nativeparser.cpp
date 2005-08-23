@@ -465,7 +465,7 @@ int NativeParser::MarkItemsByAI(bool reallyUseAI)
 					buffer.Remove(0, 1); // remove (
 					buffer.RemoveLast(); // remove )
 					buffer.Replace(_T(","), _T(";")); // replace commas with semi-colons
-					buffer << ';'; // aid parser ;)
+					buffer << _T(';'); // aid parser ;)
 					Manager::Get()->GetMessageManager()->DebugLog(_("Parsing arguments: \"%s\""), buffer.c_str());
 					if (!parser->ParseBuffer(buffer, false))
 						Manager::Get()->GetMessageManager()->DebugLog(_("ERROR parsing block:\n%s"), buffer.c_str());

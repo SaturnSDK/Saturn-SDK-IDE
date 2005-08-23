@@ -93,7 +93,7 @@ void CCList::PositionMe()
 	pt = m_pEditor->ClientToScreen(pt);
 	int lineHeight = m_pEditor->TextHeight(m_pEditor->GetCurrentLine());
 	pt.y += lineHeight;
-	
+
 	int w = ConfigManager::Get()->Read(_T("/code_completion/size/width"), 320);
 	int h = ConfigManager::Get()->Read(_T("/code_completion/size/height"), 160);
 	int screenW = wxSystemSettings::GetMetric(wxSYS_SCREEN_X);
@@ -103,10 +103,10 @@ void CCList::PositionMe()
 		w = screenW;
 	if (h > screenH)
 		h = screenH;
-	
+
 	// now we 're where we want to be, but check that the whole window is visible...
 	// the main goal here is that the caret *should* be visible...
-	
+
 	// for the horizontal axis, easy stuff
 	if (pt.x + w > screenW)
 		pt.x = screenW - w;
@@ -216,12 +216,12 @@ void CCList::OnLeftClick(wxGridEvent& event)
 	{
 		wxString msg;
 		msg << _T("\"") << token->m_Name << _T("\" breaks down to:\n\n");
-		msg << _T("Kind: ") << token->GetTokenKindString() << '\n';
-		msg << _T("Namespace: ") << token->GetNamespace() << '\n';
-		msg << _T("Name: ") << token->m_Name << '\n';
-		msg << _T("Arguments: ") << token->m_Args << '\n';
-		msg << _T("Return value: ") << token->m_Type << '\n';
-		msg << _T("Actual return value: ") << token->m_ActualType << '\n';
+		msg << _T("Kind: ") << token->GetTokenKindString() << _T('\n');
+		msg << _T("Namespace: ") << token->GetNamespace() << _T('\n');
+		msg << _T("Name: ") << token->m_Name << _T('\n');
+		msg << _T("Arguments: ") << token->m_Args << _T('\n');
+		msg << _T("Return value: ") << token->m_Type << _T('\n');
+		msg << _T("Actual return value: ") << token->m_ActualType << _T('\n');
 		msg << _T("Scope: ") << token->GetTokenScopeString() << _T("\n\n");
 		msg << _T("and is met in ") << token->m_Filename << _T(", at line ") << token->m_Line;
 		wxMessageBox(msg);
@@ -291,7 +291,7 @@ void CCList::OnKeyDown(wxKeyEvent& event)
 			SelectCurrent();
 			break;
 		}
-		
+
 		case WXK_BACK:
 		{
 			if (m_pEditor->GetCurrentPos() <= m_StartPos)
@@ -311,7 +311,7 @@ void CCList::OnKeyDown(wxKeyEvent& event)
 			m_pList->AddChar(c);
 			break;
 		}
-		
+
 		case '~':
 		{
 			if (event.ShiftDown())
@@ -327,7 +327,7 @@ void CCList::OnKeyDown(wxKeyEvent& event)
 				SelectCurrent(c);
 			break;
 		}
-		
+
 		case '0': case '1': case '2': case '3':
 		case '4': case '5': case '6': case '7':
 		case '8':
