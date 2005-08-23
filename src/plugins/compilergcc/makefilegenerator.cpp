@@ -1348,7 +1348,7 @@ void MakefileGenerator::DoAddMakefileTarget_Link(wxString& buffer)
         wxArrayString array = GetArrayFromString(target->GetExternalDeps());
         for (unsigned int i = 0; i < array.GetCount(); ++i)
         {
-            buffer << ' ' << UnixFilename(array[i]);
+            buffer << _T(' ') << UnixFilename(array[i]);
         }
 		buffer << _T('\n');
 
@@ -1401,7 +1401,7 @@ void MakefileGenerator::ConvertToMakefileFriendly(wxString& str, bool force)
     str.Replace(_T("\\"), _T("/"));
     for (unsigned int i = 0; i < str.Length(); ++i)
     {
-        if (str[i] == ' ' && (i > 0 && str[i - 1] != _T('\\')))
+        if (str[i] == _T(' ') && (i > 0 && str[i - 1] != _T('\\')))
             str.insert(i, _T('\\'));
     }
 //    str.Replace("\\\\", "/");
@@ -1501,9 +1501,9 @@ void MakefileGenerator::DoAddMakefileTarget_Objs(wxString& buffer)
                             {
                                 ProjectBuildTarget* tmptarget = m_Project->GetBuildTarget(pf->buildTargets[i]);
                                 if (tmptarget)
-                                    tmpdep << GetObjectFile(pf, tmptarget) << ',';
+                                    tmpdep << GetObjectFile(pf, tmptarget) << _T(',');
                             }
-                            if (tmpdep.Last() == ',')
+                            if (tmpdep.Last() == _T(','))
                                 tmpdep.RemoveLast();
                             wxString compilerCmd = ReplaceCompilerMacros(ctGenDependenciesCmd, pf->compilerVar, target, c_file, tmpdep, d_file);
                             if (!compilerCmd.IsEmpty())

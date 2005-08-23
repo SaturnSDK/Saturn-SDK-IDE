@@ -279,15 +279,15 @@ void CodeCompletion::CodeCompleteIncludes()
     while (idx > 0)
     {
         wxChar c = line.GetChar(idx);
-        if (c == '>')
+        if (c == _T('>'))
             return; // the quote is closed already...
-        else if (c == '"' || c == '<')
+        else if (c == _T('"') || c == _T('<'))
         {
             if (found != -1)
                 return; // the already found quote was the closing one...
             found = idx + 1;
         }
-        else if (c != ' ' && c != '\t' && !found)
+        else if (c != _T(' ') && c != _T('\t') && !found)
             filename << c;
         --idx;
     }

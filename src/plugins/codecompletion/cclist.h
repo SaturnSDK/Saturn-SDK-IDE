@@ -15,7 +15,7 @@ class CCList : public wxFrame
 	public:
 		static CCList* Get(wxEvtHandler* parent, cbStyledTextCtrl* editor, Parser* parser);
 		static void Free();
-		void SelectCurrent(wxChar ch = '\0');
+		void SelectCurrent(wxChar ch = _T('\0'));
 		int GetStartPos(){ return m_StartPos; }
 	protected:
 		CCList(wxEvtHandler* parent, cbStyledTextCtrl* editor, Parser* parser);
@@ -30,7 +30,7 @@ class CCList : public wxFrame
 		void OnLeftDClick(wxGridEvent& event);
 		void OnChar(wxKeyEvent& event);
 		void OnCellChanged(wxGridEvent& event);
-		
+
 		wxEvtHandler* m_pParent;
 		cbStyledTextCtrl* m_pEditor;
 		Parser* m_pParser;

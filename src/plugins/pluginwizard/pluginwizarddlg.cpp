@@ -334,7 +334,7 @@ void PluginWizardDlg::OnOKClick(wxCommandEvent& event)
 	buffer << _T(" * Purpose:   Code::Blocks plugin") << _T('\n');
 	buffer << _T(" * Author:    ") << m_Info.author << _T("<") << m_Info.authorEmail << _T(">") << _T('\n');
 	buffer << _T(" * Created:   ") << wxDateTime::Now().Format(_("%c"), wxDateTime::Local) << _T('\n');
-	buffer << _T(" * Copyright: (c) ") << m_Info.author <<  '\n';
+	buffer << _T(" * Copyright: (c) ") << m_Info.author <<  _T('\n');
 	buffer << _T(" * License:   GPL") << _T('\n');
 	buffer << _T(" **************************************************************/") << _T('\n');
 	buffer << _T('\n');
@@ -446,7 +446,7 @@ void PluginWizardDlg::OnOKClick(wxCommandEvent& event)
 	buffer << _T(" * Purpose:   Code::Blocks plugin") << _T('\n');
 	buffer << _T(" * Author:    ") << m_Info.author << _T("<") << m_Info.authorEmail << _T(">") << _T('\n');
 	buffer << _T(" * Created:   ") << wxDateTime::Now().Format(_("%c"), wxDateTime::Local) << _T('\n');
-	buffer << _T(" * Copyright: (c) ") << m_Info.author <<  '\n';
+	buffer << _T(" * Copyright: (c) ") << m_Info.author <<  _T('\n');
 	buffer << _T(" * License:   GPL") << _T('\n');
 	buffer << _T(" **************************************************************/") << _T('\n');
 	buffer << _T('\n');

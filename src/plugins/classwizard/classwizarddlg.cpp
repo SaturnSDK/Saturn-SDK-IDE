@@ -144,7 +144,7 @@ void ClassWizardDlg::OnOKClick(wxCommandEvent& event)
     buffer << tabstr << tabstr;
 	if (VirtualDestructor)
 		buffer << _T("virtual ");
-    buffer << '~' << Name << _T("();") << eolstr;
+    buffer << _T('~') << Name << _T("();") << eolstr;
 	buffer << tabstr << _T("protected:") << eolstr;
 	buffer << tabstr << _T("private:") << eolstr;
 	buffer << _T("};") << eolstr;
