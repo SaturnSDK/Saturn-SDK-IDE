@@ -2,7 +2,7 @@
  * $Id$
  */
 
-#include "CompilerSDCC.h"
+#include "compilerSDCC.h"
 #include <wx/intl.h>
 #include <wx/regex.h>
 #include <wx/config.h>
@@ -184,7 +184,7 @@ AutoDetectResult CompilerSDCC::AutoDetectInstallationDir()
     }
 
 #else
-    m_MasterPath="/usr/local/bin"; // default
+    m_MasterPath=_T("/usr/local/bin"); // default
 #endif
 
     return wxFileExists(m_MasterPath + wxFILE_SEP_PATH + wxT("bin") + wxFILE_SEP_PATH + m_Programs.C) ? adrDetected : adrGuessed;
