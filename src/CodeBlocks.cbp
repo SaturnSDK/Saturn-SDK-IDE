@@ -15,7 +15,6 @@
 				<Option object_output=".objs"/>
 				<Option deps_output=".deps"/>
 				<Option external_deps=""/>
-				<Option additional_depfiles=""/>
 				<Option type="2"/>
 				<Option compiler="0"/>
 				<Option projectResourceIncludeDirsRelation="2"/>
@@ -30,7 +29,6 @@
 				<Option object_output=".objs"/>
 				<Option deps_output=".deps"/>
 				<Option external_deps=""/>
-				<Option additional_depfiles=""/>
 				<Option type="3"/>
 				<Option compiler="0"/>
 				<Option createStaticLib="1"/>
@@ -54,7 +52,6 @@
 				<Option object_output=".objs"/>
 				<Option deps_output=".deps"/>
 				<Option external_deps=""/>
-				<Option additional_depfiles=""/>
 				<Option type="3"/>
 				<Option compiler="0"/>
 				<Option parameters="--debug-log --no-check-associations"/>
@@ -81,7 +78,6 @@
 				<Option object_output=".objs"/>
 				<Option deps_output=".deps"/>
 				<Option external_deps=""/>
-				<Option additional_depfiles=""/>
 				<Option type="0"/>
 				<Option compiler="0"/>
 				<Option parameters="--debug-log --no-check-associations -ns"/>
@@ -123,7 +119,6 @@
 				<Option object_output=".objs"/>
 				<Option deps_output=".deps"/>
 				<Option external_deps=""/>
-				<Option additional_depfiles=""/>
 				<Option type="3"/>
 				<Option compiler="0"/>
 				<Option projectLinkerOptionsRelation="1"/>
@@ -150,7 +145,6 @@
 				<Option object_output=".objs"/>
 				<Option deps_output=".deps"/>
 				<Option external_deps=""/>
-				<Option additional_depfiles=""/>
 				<Option type="3"/>
 				<Option compiler="0"/>
 				<Option projectLinkerOptionsRelation="1"/>
@@ -179,7 +173,6 @@
 				<Option object_output=".objs"/>
 				<Option deps_output=".deps"/>
 				<Option external_deps=""/>
-				<Option additional_depfiles=""/>
 				<Option type="3"/>
 				<Option compiler="0"/>
 				<Option projectLinkerOptionsRelation="1"/>
@@ -206,7 +199,6 @@
 				<Option object_output=".objs"/>
 				<Option deps_output=".deps"/>
 				<Option external_deps=""/>
-				<Option additional_depfiles=""/>
 				<Option type="3"/>
 				<Option compiler="0"/>
 				<Option projectLinkerOptionsRelation="1"/>
@@ -233,7 +225,6 @@
 				<Option object_output=".objs"/>
 				<Option deps_output=".deps"/>
 				<Option external_deps=""/>
-				<Option additional_depfiles=""/>
 				<Option type="3"/>
 				<Option compiler="0"/>
 				<Option projectLinkerOptionsRelation="1"/>
@@ -260,7 +251,6 @@
 				<Option object_output=".objs"/>
 				<Option deps_output=".deps"/>
 				<Option external_deps=""/>
-				<Option additional_depfiles=""/>
 				<Option type="3"/>
 				<Option compiler="0"/>
 				<Option projectLinkerOptionsRelation="1"/>
@@ -286,7 +276,6 @@
 				<Option object_output=".objs"/>
 				<Option deps_output=".deps"/>
 				<Option external_deps=""/>
-				<Option additional_depfiles=""/>
 				<Option type="3"/>
 				<Option compiler="0"/>
 				<Option projectLinkerOptionsRelation="1"/>
@@ -313,7 +302,6 @@
 				<Option object_output=".objs"/>
 				<Option deps_output=".deps"/>
 				<Option external_deps=""/>
-				<Option additional_depfiles=""/>
 				<Option type="3"/>
 				<Option compiler="0"/>
 				<Compiler>
@@ -336,7 +324,6 @@
 				<Option object_output=".objs"/>
 				<Option deps_output=".deps"/>
 				<Option external_deps=""/>
-				<Option additional_depfiles=""/>
 				<Option type="3"/>
 				<Option compiler="0"/>
 				<Option projectIncludeDirsRelation="2"/>
@@ -360,7 +347,6 @@
 				<Option object_output=".objs"/>
 				<Option deps_output=".deps"/>
 				<Option external_deps=""/>
-				<Option additional_depfiles=""/>
 				<Option type="3"/>
 				<Option compiler="0"/>
 				<Option includeInTargetAll="0"/>
@@ -374,7 +360,6 @@
 				<Option object_output=".objs"/>
 				<Option deps_output=".deps"/>
 				<Option external_deps=""/>
-				<Option additional_depfiles=""/>
 				<Option type="1"/>
 				<Option compiler="0"/>
 				<Option projectCompilerOptionsRelation="0"/>
@@ -392,7 +377,6 @@
 				<Option object_output=".objs"/>
 				<Option deps_output=".deps"/>
 				<Option external_deps=""/>
-				<Option additional_depfiles=""/>
 				<Option type="1"/>
 				<Option compiler="0"/>
 				<Option includeInTargetAll="0"/>
@@ -2238,6 +2222,18 @@
 			<Option target="sdk"/>
 		</Unit>
 		<Unit filename="sdk\resources\lexers\lexer_lua.xml">
+			<Option compilerVar=""/>
+			<Option compile="0"/>
+			<Option link="0"/>
+			<Option target="sdk"/>
+		</Unit>
+		<Unit filename="sdk\resources\lexers\lexer_prg.sample">
+			<Option compilerVar=""/>
+			<Option compile="0"/>
+			<Option link="0"/>
+			<Option target="sdk"/>
+		</Unit>
+		<Unit filename="sdk\resources\lexers\lexer_prg.xml">
 			<Option compilerVar=""/>
 			<Option compile="0"/>
 			<Option link="0"/>
