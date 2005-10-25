@@ -23,6 +23,8 @@
 * $Date$
 */
 
+#include "sdk_precomp.h"
+
 #ifndef wxUSE_CHOICEDLG
 #define wxUSE_CHOICEDLG 1
 #endif

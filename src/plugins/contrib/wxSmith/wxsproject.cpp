@@ -1,3 +1,4 @@
+#include "wxsheaders.h"
 #include "wxsproject.h"
 
 #include "widget.h"
@@ -456,8 +457,7 @@ void wxsProject::AddDialog(wxsDialogRes* Dialog)
 {
     if ( !Dialog ) return;
     Dialogs.push_back(Dialog);
-    wxTreeCtrl* Tree = wxsTREE();
-    Dialog->GetDialog().BuildTree(Tree, Tree->AppendItem( DialogId, Dialog->GetClassName(), -1, -1, new wxsResourceTreeData(Dialog) ) );
+    Dialog->BuildTree(wxsTREE(), DialogId, true);
     SetModified(true);
 }
 
@@ -465,8 +465,7 @@ void wxsProject::AddFrame(wxsFrameRes* Frame)
 {
     if ( !Frame ) return;
     Frames.push_back(Frame);
-    wxTreeCtrl* Tree = wxsTREE();
-    Frame->GetFrame().BuildTree(Tree, Tree->AppendItem( FrameId, Frame->GetClassName(), -1, -1, new wxsResourceTreeData(Frame) ) );
+    Frame->BuildTree(wxsTREE(), FrameId, true);
     SetModified(true);
 }
 
@@ -474,8 +473,7 @@ void wxsProject::AddPanel(wxsPanelRes* Panel)
 {
     if ( !Panel ) return;
     Panels.push_back(Panel);
-    wxTreeCtrl* Tree = wxsTREE();
-    Panel->GetPanel().BuildTree(Tree, Tree->AppendItem( PanelId, Panel->GetClassName(), -1, -1, new wxsResourceTreeData(Panel) ) );
+    Panel->BuildTree(wxsTREE(), PanelId, true);
     SetModified(true);
 }
 

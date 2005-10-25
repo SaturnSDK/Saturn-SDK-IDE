@@ -7,10 +7,7 @@
  * License:   GPL
  **************************************************************/
 
-#if defined(__GNUG__) && !defined(__APPLE__) && !defined(FASTCOMPILE)
-	#pragma implementation "wxsmith.h"
-#endif
-
+#include "wxsheaders.h"
 #include <licenses.h>
 #include <manager.h>
 #include <tinyxml/tinyxml.h>
@@ -19,6 +16,7 @@
 #include <projectmanager.h>
 #include <wx/notebook.h>
 #include <wx/sashwin.h>
+#include <configmanager.h>
 
 #include "wxsmith.h"
 #include "wxswindoweditor.h"
@@ -32,6 +30,7 @@
 #include "wxsnewwindowdlg.h"
 #include "wxsimportxrcdlg.h"
 #include "wxsresourcetree.h"
+#include "wxssettingsdlg.h"
 
 static int NewDialogId = wxNewId();
 static int NewFrameId = wxNewId();
@@ -80,7 +79,7 @@ wxSmith::~wxSmith()
 
 void wxSmith::OnAttach()
 {
-    wxNotebook* Notebook = Manager::Get()->GetNotebook();
+    ConfigManager::AddConfiguration(m_PluginInfo.title, _T("/wxsmith"));     wxNotebook* Notebook = Manager::Get()->GetNotebook();
 	if ( Notebook )
 	{
         // Creating main splitting objects
@@ -162,7 +161,9 @@ void wxSmith::OnRelease(bool appShutDown)
 
 int wxSmith::Configure()
 {
-	return -1;
+	wxsSettingsDlg Dlg(NULL);
+	Dlg.ShowModal();
+	return 0;
 }
 
 void wxSmith::BuildMenu(wxMenuBar* menuBar)
@@ -285,17 +286,13 @@ void wxSmith::OnImportXrc(wxCommandEvent& event)
     // Loading xrc file into xml document
 
     TiXmlDocument Doc(FileName.mb_str());
-    TiXmlElement* Resource;
-    if (! Doc.LoadFile() ||
+    TiXmlElement* Resource;     if (! Doc.LoadFile() ||
         ! (Resource = Doc.FirstChildElement("resource")) )
     {
     	wxMessageBox(_("Couldn't load XRC file."));
         return;
-    }
-    // Generating list of objects
-    wxArrayString Resources;
-    TiXmlElement* Element = Resource->FirstChildElement("object");
-    while ( Element )
+    }     // Generating list of objects
+    wxArrayString Resources;     TiXmlElement* Element = Resource->FirstChildElement("object");     while ( Element )
     {
     	const char* Class = Element->Attribute("class");
     	const char* Name = Element->Attribute("name");
@@ -343,8 +340,7 @@ void wxSmith::OnImportXrc(wxCommandEvent& event)
             break;
         }
         Element = Element->NextSiblingElement("object");
-    }
-    if ( !Element ) return;
+    }     if ( !Element ) return;
 
     // Creating fake resource and testing if xrc can be loaded without any errors
     wxsWidget* Test = wxsGEN(wxString(Element->Attribute("class"),wxConvUTF8),NULL);

@@ -1,3 +1,4 @@
+#include "wxsheaders.h"
 #include "widget.h"
 
 #include "properties/wxsstyleproperty.h"
@@ -231,18 +232,11 @@ bool wxsWidget::PropertiesUpdated(bool Validate,bool Correct)
 
 void wxsWidget::KillPreview()
 {
-    /* Killing child windows */
-    int Cnt = GetChildCount();
-    for ( int i=0; i<Cnt; i++ )
-    {
-        GetChild(i)->KillPreview();
-    }
-
     /* Killing this one */
     if ( Preview != NULL )
     {
-        MyDeletePreview(Preview);
-        Preview = NULL;
+        delete Preview;
+        PreviewDestroyed();
     }
 }
 
@@ -826,6 +820,12 @@ const wxsWidget::CodeDefines& wxsWidget::GetCodeDefines()
     CDefines.Style = _T("");
     CDefines.InitCode = _T("");
 
+    wxString SelectCode = _T("");
+    if ( GetParent() )
+    {
+        SelectCode << BaseParams.VarName << _T("->");
+    }
+
     // Filling up styles
 
     wxsStyle* Style = GetInfo().Styles;
@@ -886,7 +886,7 @@ const wxsWidget::CodeDefines& wxsWidget::GetCodeDefines()
 
         if ( BaseParams.BgType == wxsCUSTOM_COLOUR )
         {
-        	FColour.Printf(_T("wxColour(%d,%d,%d)"),
+        	BColour.Printf(_T("wxColour(%d,%d,%d)"),
                 BaseParams.Bg.Red(),
                 BaseParams.Bg.Green(),
                 BaseParams.Bg.Blue());
@@ -906,22 +906,22 @@ const wxsWidget::CodeDefines& wxsWidget::GetCodeDefines()
 
         if ( !FColour.empty() )
         {
-            CDefines.InitCode << BaseParams.VarName << _T("->SetForegroundColour(")
-                              << FColour << _T(");");
+            CDefines.InitCode << SelectCode << _T("SetForegroundColour(")
+                              << FColour    << _T(");");
         }
 
         if ( !BColour.empty() )
         {
-            CDefines.InitCode << BaseParams.VarName << _T("->SetBackgroundColour(")
-                              << BColour << _T(");");
+            CDefines.InitCode << SelectCode << _T("SetBackgroundColour(")
+                              << BColour    << _T(");");
         }
     }
 
     if ( pType & bptFont && BaseParams.UseFont )
     {
     	wxFont& Font = BaseParams.Font;
-    	CDefines.InitCode << BaseParams.VarName << _T("->SetFont(wxFont(") <<
-                             Font.GetPointSize() << _T(',');
+    	CDefines.InitCode << SelectCode          << _T("SetFont(wxFont(")
+    	                  << Font.GetPointSize() << _T(",");
 
     	switch ( Font.GetFamily() )
     	{
@@ -971,22 +971,22 @@ const wxsWidget::CodeDefines& wxsWidget::GetCodeDefines()
 
     if ( pType & bptEnabled && !BaseParams.Enabled )
     {
-    	CDefines.InitCode <<  BaseParams.VarName << _T("->Disable();");
+    	CDefines.InitCode << SelectCode << _T("Disable();");
     }
 
     if ( pType & bptFocused && BaseParams.Focused )
     {
-        CDefines.InitCode <<  BaseParams.VarName << _T("->SetFocus();");
+        CDefines.InitCode << SelectCode << _T("SetFocus();");
     }
 
     if ( pType & bptHidden && BaseParams.Hidden )
     {
-    	CDefines.InitCode <<  BaseParams.VarName << _T("->Hide();");
+    	CDefines.InitCode << SelectCode << _T("Hide();");
     }
 
     if ( pType & bptToolTip && !BaseParams.ToolTip.empty() )
     {
-    	CDefines.InitCode << BaseParams.VarName << _T("->SetToolTip(")
+    	CDefines.InitCode << SelectCode << _T("SetToolTip(")
     	                  << GetWxString(BaseParams.ToolTip) << _T(");");
     }
 
@@ -1117,6 +1117,16 @@ void wxsWidget::KillTree(wxTreeCtrl* Tree)
 		Tree->Delete(TreeId);
         InvalidateTreeIds();
 	}
+}
+
+void wxsWidget::PreviewDestroyed()
+{
+    int Cnt = GetChildCount();
+    for ( int i=0; i<Cnt; i++ )
+    {
+        GetChild(i)->PreviewDestroyed();
+    }
+    Preview = NULL;
 }
 
 void wxsWidget::InvalidateTreeIds()

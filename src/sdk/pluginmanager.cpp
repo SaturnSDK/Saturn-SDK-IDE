@@ -23,6 +23,7 @@
 * $Date$
 */
 
+#include "sdk_precomp.h"
 #include <wx/string.h>
 #include <wx/dir.h>
 #include <wx/menu.h>
@@ -262,7 +263,7 @@ void PluginManager::LoadAllPlugins()
             }
             catch (cbException& exception)
             {
-                Manager::Get()->GetMessageManager()->AppendLog(_T("[failed]"));
+                Manager::Get()->GetMessageManager()->AppendLog(_T("[failed] "));
                 exception.ShowErrorMessage(false);
 
                 wxString msg;
@@ -348,7 +349,16 @@ int PluginManager::ExecutePlugin(const wxString& pluginName)
             msgMan->DebugLog(_("Plugin %s is not a tool to have Execute() method!"), plug->GetInfo()->name.c_str());
         }
         else
-            return ((cbToolPlugin*)plug)->Execute();
+        {
+            try
+            {
+                return ((cbToolPlugin*)plug)->Execute();
+            }
+            catch (cbException& exception)
+            {
+                exception.ShowErrorMessage(false);
+            }
+        }
     }
 
 	return 0;
@@ -359,7 +369,16 @@ int PluginManager::ConfigurePlugin(const wxString& pluginName)
     SANITY_CHECK(0);
     cbPlugin* plug = FindPluginByName(pluginName);
     if (plug)
-        return plug->Configure();
+    {
+        try
+        {
+            return plug->Configure();
+        }
+        catch (cbException& exception)
+        {
+            exception.ShowErrorMessage(false);
+        }
+    }
 	return 0;
 }
 
@@ -424,7 +443,16 @@ void PluginManager::AskPluginsForModuleMenu(const ModuleType type, wxMenu* menu,
     {
         cbPlugin* plug = m_Plugins[i]->plugin;
         if (plug)
-            plug->BuildModuleMenu(type, menu, arg);
+        {
+            try
+            {
+                plug->BuildModuleMenu(type, menu, arg);
+            }
+            catch (cbException& exception)
+            {
+                exception.ShowErrorMessage(false);
+            }
+        }
     }
 }
 

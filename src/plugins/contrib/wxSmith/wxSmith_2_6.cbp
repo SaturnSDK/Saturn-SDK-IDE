@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
-<!DOCTYPE Code::Blocks_project_file>
-<Code::Blocks_project_file>
+<!DOCTYPE CodeBlocks_project_file>
+<CodeBlocks_project_file>
 	<FileVersion major="1" minor="1"/>
 	<Project>
 		<Option title="wxSmith for wx 2.6"/>
@@ -14,7 +14,6 @@
 				<Option working_dir=""/>
 				<Option object_output=".objs"/>
 				<Option deps_output=".deps"/>
-				<Option external_deps=""/>
 				<Option type="2"/>
 				<Option compiler="0"/>
 				<Option projectResourceIncludeDirsRelation="2"/>
@@ -29,7 +28,6 @@
 				<Option working_dir="..\..\..\devel"/>
 				<Option object_output=".objs"/>
 				<Option deps_output=".deps"/>
-				<Option external_deps=""/>
 				<Option type="3"/>
 				<Option compiler="0"/>
 				<Option host_application="./codeblocks.exe"/>
@@ -51,10 +49,19 @@
 		<Compiler>
 			<Add option="-Wall"/>
 			<Add option="-g"/>
-			<Add option="-ggdb"/>
-			<Add option="-D__GNUWIN32__"/>
-			<Add option="-DBUILDING_PLUGIN"/>
+			<Add option="-pipe"/>
+			<Add option="-mthreads"/>
+			<Add option="-fmessage-length=0"/>
+			<Add option="-fexceptions"/>
+			<Add option="-Winvalid-pch"/>
+			<Add option="-DHAVE_W32API_H"/>
+			<Add option="-D__WXMSW__"/>
+			<Add option="-DWXUSINGDLL"/>
+			<Add option="-DcbDEBUG"/>
 			<Add option="-DTIXML_USE_STL"/>
+			<Add option="-DCB_PRECOMP"/>
+			<Add option="-DWX_PRECOMP"/>
+			<Add option="-DBUILDING_PLUGIN"/>
 			<Add directory="..\..\..\sdk"/>
 			<Add directory="..\..\..\sdk\wxscintilla\include"/>
 			<Add directory="propgrid\include"/>
@@ -64,6 +71,7 @@
 			<Add directory="$(WX_DIR)\contrib\include"/>
 		</Compiler>
 		<Linker>
+			<Add option="-i"/>
 			<Add directory="..\..\..\devel"/>
 			<Add directory="propgrid"/>
 			<Add directory="$(WX_DIR)\lib\gcc_dll"/>
@@ -589,16 +597,6 @@
 			<Option link="0"/>
 			<Option target="wxSmith"/>
 		</Unit>
-		<Unit filename="wxsdefevthandler.cpp">
-			<Option compilerVar="CPP"/>
-			<Option target="wxSmith"/>
-		</Unit>
-		<Unit filename="wxsdefevthandler.h">
-			<Option compilerVar=""/>
-			<Option compile="0"/>
-			<Option link="0"/>
-			<Option target="wxSmith"/>
-		</Unit>
 		<Unit filename="wxsdefsizer.cpp">
 			<Option compilerVar="CPP"/>
 			<Option target="wxSmith"/>
@@ -667,6 +665,12 @@
 			<Option compilerVar=""/>
 			<Option compile="0"/>
 			<Option link="0"/>
+			<Option target="wxSmith"/>
+		</Unit>
+		<Unit filename="wxsheaders.h">
+			<Option compilerVar="CPP"/>
+			<Option link="0"/>
+			<Option weight="0"/>
 			<Option target="wxSmith"/>
 		</Unit>
 		<Unit filename="wxsimportxrcdlg.cpp">
@@ -759,6 +763,16 @@
 			<Option link="0"/>
 			<Option target="wxSmith"/>
 		</Unit>
+		<Unit filename="wxssettingsdlg.cpp">
+			<Option compilerVar="CPP"/>
+			<Option target="wxSmith"/>
+		</Unit>
+		<Unit filename="wxssettingsdlg.h">
+			<Option compilerVar=""/>
+			<Option compile="0"/>
+			<Option link="0"/>
+			<Option target="wxSmith"/>
+		</Unit>
 		<Unit filename="wxssplitterwindow.cpp">
 			<Option compilerVar="CPP"/>
 			<Option target="wxSmith"/>
@@ -822,4 +836,4 @@
 			<Option target="wxSmith"/>
 		</Unit>
 	</Project>
-</Code::Blocks_project_file>
+</CodeBlocks_project_file>

@@ -9,7 +9,7 @@ class PrintDialog : public wxDialog
 	public:
 		PrintDialog(wxWindow* parent);
 		virtual ~PrintDialog();
-		
+
 		PrintScope GetPrintScope();
 		PrintColorMode GetPrintColorMode();
 	protected:

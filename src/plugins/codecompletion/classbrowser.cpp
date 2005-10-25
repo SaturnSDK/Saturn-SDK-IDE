@@ -23,6 +23,7 @@
 * $Date$
 */
 
+#include <sdk.h>
 #include "classbrowser.h" // class's header file
 #include "nativeparser.h"
 #include <wx/intl.h>
@@ -268,11 +269,11 @@ void ClassBrowser::OnCBViewMode(wxCommandEvent& event)
 		return;
 
 	if (event.GetId() == idCBViewInheritance)
-		m_pParser->ClassBrowserOptions().showInheritance = !event.IsChecked();
+		m_pParser->ClassBrowserOptions().showInheritance = event.IsChecked();
 	else if (event.GetId() == idCBViewModeFlat)
-		m_pParser->ClassBrowserOptions().viewFlat = !event.IsChecked();
-	else if (event.GetId() == idCBViewModeStructured)
 		m_pParser->ClassBrowserOptions().viewFlat = event.IsChecked();
+	else if (event.GetId() == idCBViewModeStructured)
+		m_pParser->ClassBrowserOptions().viewFlat = !event.IsChecked();
 	else
 		return;
 

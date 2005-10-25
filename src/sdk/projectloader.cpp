@@ -1,3 +1,4 @@
+#include "sdk_precomp.h"
 #include <wx/confbase.h>
 #include <wx/fileconf.h>
 #include <wx/log.h>
@@ -567,19 +568,38 @@ void ProjectLoader::DoUnits(TiXmlElement* parentNode)
 
 void ProjectLoader::DoUnitOptions(TiXmlElement* parentNode, ProjectFile* file)
 {
+    int tempval = 0;
+    bool foundCompile = false;
+    bool foundLink = false;
+    bool foundCompilerVar = false;
+
     TiXmlElement* node = parentNode->FirstChildElement("Option");
     while (node)
     {
         if (node->Attribute("compilerVar"))
+        {
             file->compilerVar = _U(node->Attribute("compilerVar"));
-        if (node->Attribute("compile"))
-            file->compile = atoi(node->Attribute("compile")) != 0;
-        if (node->Attribute("link"))
-            file->link = atoi(node->Attribute("link")) != 0;
-        if (node->Attribute("weight"))
-            file->weight = atoi(node->Attribute("weight"));
-        if (node->Attribute("useBuildCommand"))
-            file->useCustomBuildCommand = atoi(node->Attribute("useBuildCommand")) != 0;
+            foundCompilerVar = true;
+        }
+        //
+        if (node->QueryIntAttribute("compile", &tempval) == TIXML_SUCCESS)
+        {
+            file->compile = tempval != 0;
+            foundCompile = true;
+        }
+        //
+        if (node->QueryIntAttribute("link", &tempval) == TIXML_SUCCESS)
+        {
+            file->link = tempval != 0;
+            foundLink = true;
+        }
+        //
+        if (node->QueryIntAttribute("weight", &tempval) == TIXML_SUCCESS)
+            file->weight = tempval;
+        //
+        if (node->QueryIntAttribute("useBuildCommand", &tempval) == TIXML_SUCCESS)
+            file->useCustomBuildCommand = tempval != 0;
+        //
         if (node->Attribute("buildCommand"))
         {
             wxString tmp = _U(node->Attribute("buildCommand"));
@@ -589,8 +609,10 @@ void ProjectLoader::DoUnitOptions(TiXmlElement* parentNode, ProjectFile* file)
                 file->buildCommand = tmp;
             }
         }
-        if (node->Attribute("autoDeps"))
-            file->autoDeps = atoi(node->Attribute("autoDeps")) != 0;
+        //
+        if (node->QueryIntAttribute("autoDeps", &tempval) == TIXML_SUCCESS)
+            file->autoDeps = tempval != 0;
+        //
         if (node->Attribute("customDeps"))
         {
             wxString tmp = _U(node->Attribute("customDeps"));
@@ -600,6 +622,7 @@ void ProjectLoader::DoUnitOptions(TiXmlElement* parentNode, ProjectFile* file)
                 file->customDeps = tmp;
             }
         }
+        //
         if (node->Attribute("objectName"))
         {
             wxFileName objName(_U(node->Attribute("objectName")));
@@ -610,11 +633,20 @@ void ProjectLoader::DoUnitOptions(TiXmlElement* parentNode, ProjectFile* file)
                     file->SetObjName(file->relativeFilename);
             }
         }
+        //
         if (node->Attribute("target"))
             file->AddBuildTarget(_U(node->Attribute("target")));
 
         node = node->NextSiblingElement("Option");
     }
+
+    // make sure the "compile" and "link" flags are honored
+    if (!foundCompile)
+        file->compile = true;
+    if (!foundLink)
+        file->link = true;
+    if (!foundCompilerVar)
+        file->compilerVar = _T("CPP");
 }
 
 bool ProjectLoader::Save(const wxString& filename)
@@ -730,8 +762,11 @@ bool ProjectLoader::Save(const wxString& filename)
         if (!f->GetObjName().IsEmpty())
         {
             wxFileName tmp(f->GetObjName());
-            if (tmp.GetExt() != CompilerFactory::Compilers[m_pProject->GetCompilerIndex()]->GetSwitches().objectExtension)
+            if (FileTypeOf(f->relativeFilename) != ftHeader &&
+                tmp.GetExt() != CompilerFactory::Compilers[m_pProject->GetCompilerIndex()]->GetSwitches().objectExtension)
+            {
                 buffer << _T('\t') << _T('\t') << _T('\t') << _T("<Option objectName=\"") << FixEntities(f->GetObjName()) << _T("\"/>") << _T('\n');
+            }
         }
         for (unsigned int x = 0; x < f->buildTargets.GetCount(); ++x)
             buffer << _T('\t') << _T('\t') << _T('\t') << _T("<Option target=\"") << FixEntities(f->buildTargets[x]) << _T("\"/>") << _T('\n');

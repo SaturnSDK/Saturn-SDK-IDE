@@ -23,6 +23,7 @@
 * $Date$
 */
 
+#include <sdk.h>
 #include "app.h"
 #include <wx/fs_zip.h>
 #include <wx/xrc/xmlres.h>
@@ -395,12 +396,17 @@ void CodeBlocksApp::ShowSplashScreen()
 	if (!m_NoSplash && ConfigManager::Get()->Read(_T("/environment/show_splash"), 1) == 1)
 	{
 		wxBitmap bitmap;
-		if (bitmap.LoadFile(CFG_READ(_T("/data_path")) + _T("/images/splash.png"), wxBITMAP_TYPE_PNG))
+		#ifdef __WXMSW__
+			#define SPLASH_IMAGE _T("/images/splash_new.png")
+		#else
+			#define SPLASH_IMAGE _T("/images/splash.png")
+		#endif
+		if (bitmap.LoadFile(CFG_READ(_T("/data_path")) + SPLASH_IMAGE, wxBITMAP_TYPE_PNG))
 		{
 			m_pSplash = new wxSplashScreen(bitmap,
 										wxSPLASH_CENTRE_ON_SCREEN,// | wxSPLASH_TIMEOUT,
 										6000, NULL, -1, wxDefaultPosition, wxDefaultSize,
-										wxSIMPLE_BORDER);// | wxSTAY_ON_TOP);
+										wxBORDER_NONE);
 		}
 		wxSafeYield();
 	}

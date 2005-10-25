@@ -1,19 +1,22 @@
+#include "wxsheaders.h"
 #include "wxsdragwindow.h"
 
 #include <wx/dcclient.h>
+#include <wx/dcbuffer.h>
+#include <configmanager.h>
 
 #include "widget.h"
 #include "wxsevent.h"
 #include "wxsmith.h"
-
-DECLARE_EVENT_TYPE(wxEVT_FETCH_BACK, -1)
-DEFINE_EVENT_TYPE(wxEVT_FETCH_BACK)
-
+#include "resources/wxswindowres.h"
 
 wxsDragWindow::wxsDragWindow(wxWindow* Cover,wxsWidget* Wdg,const wxSize& Size):
-    wxControl(Cover,-1,wxDefaultPosition,Size,wxNO_BORDER/*|wxTRANSPARENT_WINDOW*/|wxSTAY_ON_TOP),
+    wxControl(Cover,-1,wxDefaultPosition,Size,wxNO_BORDER|wxSTAY_ON_TOP),
     RootWidget(Wdg), CurDragPoint(NULL), CurDragWidget(NULL), RefreshTimer(this,1),
-    Background(NULL), BackFetchMode(true), PaintAfterFetch(false), BlockWidgetSelect(false)
+    BackFetchTimer(this,2), Background(NULL), BackFetchMode(true), PaintAfterFetch(false),
+    BlockTimerRefresh(false), BlockWidgetSelect(false),
+    DragParent(NULL), DragParentBitmap(NULL),
+    DragTarget(NULL), DragTargetBitmap(NULL)
 {
 	RefreshTimer.Start(50);
 	Background = new wxBitmap(GetSize().GetWidth(),GetSize().GetHeight());
@@ -23,6 +26,8 @@ wxsDragWindow::~wxsDragWindow()
 {
 	ClearDragPoints();
 	delete Background;
+	if ( DragTargetBitmap ) delete DragTargetBitmap;
+	if ( DragParentBitmap ) delete DragParentBitmap;
 }
 
 void wxsDragWindow::OnPaint(wxPaintEvent& event)
@@ -33,20 +38,22 @@ void wxsDragWindow::OnPaint(wxPaintEvent& event)
 	{
         AddGraphics(DC);
         PaintAfterFetch = false;
+        BlockTimerRefresh = false;
 	}
 	else
 	{
+	    BlockTimerRefresh = true;
 	    // When in background fetch mode, this widget is hidden in order
 	    // to fetch background image
 	    Hide();
-	    FetchArea = GetUpdateRegion();
-		wxCommandEvent Evt(wxEVT_FETCH_BACK,-1);
-		AddPendingEvent(Evt);
+	    FetchArea.Union(GetUpdateRegion());
+		BackFetchTimer.Start(wxsDWFetchDelay,true);
 	}
 }
 
 void wxsDragWindow::TimerRefresh(wxTimerEvent& event)
 {
+    if ( BlockTimerRefresh ) return;
     wxClientDC DC(this);
 	AddGraphics(DC);
 }
@@ -68,44 +75,58 @@ void wxsDragWindow::OnMouse(wxMouseEvent& event)
     int MouseY = event.GetY();
     wxsWidget* UnderCursor = FindWidgetAtPos(MouseX,MouseY,RootWidget);
 
+    // If we're out of window
+    if ( !UnderCursor )
+    {
+        UnderCursor = RootWidget;
+        // Small trick - changing to probably best container
+        while ( UnderCursor->GetChildCount()==1 &&
+                UnderCursor->GetChild(0)->IsContainer() )
+        {
+            UnderCursor = UnderCursor->GetChild(0);
+        }
+    }
+
     // Posting this event to previews
     ForwardMouseEventToPreview(event,UnderCursor);
 
     // Disabling background fetch mode when dragging
     BackFetchMode = !event.Dragging();
 
+    BlockTimerRefresh = event.Dragging();
+
     // Searching for items covered by mouse
     NewDragPoint = FindCoveredPoint(MouseX,MouseY);
     if ( !NewDragPoint ) NewDragPoint = FindCoveredEdge(MouseX,MouseY);
     if ( !NewDragPoint ) NewDragWidget = UnderCursor;
 
-	// Processing events
+    // Updating drag assist
+    UpdateAssist(event.Dragging(),UnderCursor);
 
-    if ( event.LeftDown() ) DragInit(NewDragPoint,NewDragWidget,event.ControlDown(),MouseX,MouseY);
-    if ( event.Dragging() ) DragProcess(MouseX,MouseY,UnderCursor);
-    if ( event.LeftUp()   ) DragFinish(UnderCursor);
+	// Processing events
+         if ( event.LeftUp()   ) DragFinish(UnderCursor);
+    else if ( event.Dragging() ) DragProcess(MouseX,MouseY,UnderCursor);
+    else if ( event.LeftDown() ) DragInit(NewDragPoint,NewDragWidget,event.ControlDown(),MouseX,MouseY);
 
     // Changing cursor
-
-    UpdateCursor(event.Dragging());
+    UpdateCursor(event.Dragging(),NewDragPoint,NewDragWidget);
 }
 
 void wxsDragWindow::ForwardMouseEventToPreview(wxMouseEvent& event,wxsWidget* Widget)
 {
-// TODO (SpOoN#1#): Make this work
-//    if ( Widget )
-//    {
-//    	int WidgetRelativeX = MouseX;
-//    	int WidgetRelativeY = MouseY;
-//    	ClientToScreen(&WidgetRelativeX,&WidgetRelativeY);
-//    	Widget->GetPreview()->ScreenToClient(&WidgetRelativeX,&WidgetRelativeY);
-//    	event.m_x = WidgetRelativeX;
-//    	event.m_y = WidgetRelativeY;
-//    	Widget->PreviewMouseEvent(event);
-//    }
+    if ( Widget )
+    {
+    	int WidgetRelativeX = event.GetX();
+    	int WidgetRelativeY = event.GetY();
+    	ClientToScreen(&WidgetRelativeX,&WidgetRelativeY);
+    	Widget->GetPreview()->ScreenToClient(&WidgetRelativeX,&WidgetRelativeY);
+    	event.m_x = WidgetRelativeX;
+    	event.m_y = WidgetRelativeY;
+    	Widget->PreviewMouseEvent(event);
+    }
 }
 
-wxsDragWindow::DragPointData* wxsDragWindow::FindCoveredPoint(int PosX,int PosY)
+wxsDragWindow::DragPointData* wxsDragWindow::FindCoveredPoint(int MouseX,int MouseY)
 {
     DragPointData* Found = NULL;
     for ( DragPointsI i = DragPoints.begin(); i!=DragPoints.end(); ++i )
@@ -114,10 +135,10 @@ wxsDragWindow::DragPointData* wxsDragWindow::FindCoveredPoint(int PosX,int PosY)
         int PosX = (*i)->PosX - DragBoxSize/2;
         int PosY = (*i)->PosY - DragBoxSize/2;
 
-        if ( PosX >= PosX &&
-             PosY >= PosY &&
-             PosX <= PosX + DragBoxSize &&
-             PosY <= PosY + DragBoxSize )
+        if ( MouseX >= PosX &&
+             MouseY >= PosY &&
+             MouseX <= PosX + DragBoxSize &&
+             MouseY <= PosY + DragBoxSize )
         {
             Found = *i;
             if ( !Found->NoAction ) break;
@@ -126,7 +147,7 @@ wxsDragWindow::DragPointData* wxsDragWindow::FindCoveredPoint(int PosX,int PosY)
     return Found;
 }
 
-wxsDragWindow::DragPointData* wxsDragWindow::FindCoveredEdge(int PosX,int PosY)
+wxsDragWindow::DragPointData* wxsDragWindow::FindCoveredEdge(int MouseX,int MouseY)
 {
     DragPointData* Found = NULL;
 
@@ -142,15 +163,18 @@ wxsDragWindow::DragPointData* wxsDragWindow::FindCoveredEdge(int PosX,int PosY)
             case Btm:
                 {
                     int PosX1, PosX2;
+                    int SizeW, SizeH;
+                    DPD->Widget->GetPreview()->GetSize(&SizeW,&SizeH);
+                    if ( SizeH < DragBoxSize ) break; // There must be place to drag this widget
                     FindAbsolutePosition(DPD->Widget,&PosX1,&PosX2);
                     ScreenToClient(&PosX1,&PosX2);
-                    PosX2 = PosX1 + DPD->Widget->GetPreview()->GetSize().GetWidth();
+                    PosX2 = PosX1 + SizeW;
                     int PosY = DPD->PosY - DragBoxSize / 2;
 
-                    if ( PosX > PosX1 &&
-                         PosX < PosX2 &&
-                         PosY >= PosY &&
-                         PosY <= PosY + DragBoxSize )
+                    if ( MouseX >= PosX1 &&
+                         MouseX <= PosX2 &&
+                         MouseY >= PosY &&
+                         MouseY <= PosY + DragBoxSize )
                     {
                         Found = DPD;
                     }
@@ -161,17 +185,20 @@ wxsDragWindow::DragPointData* wxsDragWindow::FindCoveredEdge(int PosX,int PosY)
             case Right:
                 {
                     int PosY1, PosY2;
+                    int SizeW, SizeH;
+                    DPD->Widget->GetPreview()->GetSize(&SizeW,&SizeH);
+                    if ( SizeW < DragBoxSize ) break; // There must be place to drag this widget
                     FindAbsolutePosition(DPD->Widget,&PosY1,&PosY2);
                     ScreenToClient(&PosY1,&PosY2);
 
                     PosY1 = PosY2;
-                    PosY2 = PosY1 + DPD->Widget->GetPreview()->GetSize().GetHeight();
+                    PosY2 = PosY1 + SizeH;
                     int PosX = DPD->PosX - DragBoxSize / 2;
 
-                    if ( PosY > PosY1 &&
-                         PosY < PosY2 &&
-                         PosX >= PosX &&
-                         PosX <= PosX + DragBoxSize )
+                    if ( MouseY >= PosY1 &&
+                         MouseY <= PosY2 &&
+                         MouseX >= PosX &&
+                         MouseX <= PosX + DragBoxSize )
                     {
                         Found = DPD;
                     }
@@ -202,18 +229,18 @@ wxsDragWindow::DragPointData* wxsDragWindow::FindLeftTop(wxsWidget* Widget)
 
 void wxsDragWindow::DragInit(wxsDragWindow::DragPointData* NewDragPoint,wxsWidget* NewDragWidget,bool MultipleSel,int MouseX,int MouseY)
 {
-    if ( MultipleSel ) { GrayDragPoints (); }
-    else               { ClearDragPoints(); }
-
     if ( NewDragPoint || NewDragWidget )
     {
         DragMouseBegX = MouseX;
         DragMouseBegY = MouseY;
         DragDistanceSmall = true;
-        CaptureMouse();
+        //CaptureMouse();
 
         if ( NewDragWidget )
         {
+            if ( MultipleSel ) { GrayDragPoints (); }
+            else               { ClearDragPoints(); }
+
             CurDragWidget = NewDragWidget;
             CurDragPoint = FindLeftTop(CurDragWidget);
 
@@ -229,7 +256,8 @@ void wxsDragWindow::DragInit(wxsDragWindow::DragPointData* NewDragPoint,wxsWidge
                 GrayDragPoints();
                 BlackDragPoints(CurDragWidget);
             }
-
+            SelectWidget(CurDragWidget);
+            UpdateGraphics();
         }
         else
         {
@@ -238,10 +266,6 @@ void wxsDragWindow::DragInit(wxsDragWindow::DragPointData* NewDragPoint,wxsWidge
             CurDragPoint = NewDragPoint;
         }
 
-        BlockWidgetSelect = true;
-        wxsSelectWidget(NewDragPoint->Widget);
-        BlockWidgetSelect = false;
-
         for ( DragPointsI i = DragPoints.begin(); i!=DragPoints.end(); ++i )
         {
             // Copying initial position data
@@ -249,6 +273,7 @@ void wxsDragWindow::DragInit(wxsDragWindow::DragPointData* NewDragPoint,wxsWidge
             DPD->DragInitPosX = DPD->PosX;
             DPD->DragInitPosY = DPD->PosY;
         }
+
     }
     else
     {
@@ -279,7 +304,9 @@ void wxsDragWindow::DragProcess(int MouseX,int MouseY,wxsWidget* UnderCursor)
     if ( CurDragWidget )
     {
         // Snapping to sizer area
-        if ( UnderCursor && !UnderCursor->IsContainer() )
+        if ( UnderCursor && !UnderCursor->IsContainer() &&
+
+             (wxsDWAssistType == wxsDTNone) )
         {
             wxsWidget* Parent = UnderCursor->GetParent();
             if ( Parent && Parent->GetInfo().Sizer )
@@ -300,6 +327,7 @@ void wxsDragWindow::DragProcess(int MouseX,int MouseY,wxsWidget* UnderCursor)
             (*i)->PosY = (*i)->DragInitPosY + ShiftY;
         }
 
+        RebuildEdgePoints(WidgetPoints);
     }
     else
     {
@@ -357,23 +385,13 @@ void wxsDragWindow::DragProcess(int MouseX,int MouseY,wxsWidget* UnderCursor)
             default:;
         }
 
-        // Rebuilding edge points
-
-        WidgetPoints[Top  ]->PosX = ( WidgetPoints[LeftTop ]->PosX + WidgetPoints[RightTop]->PosX ) / 2;
-        WidgetPoints[Top  ]->PosY =   WidgetPoints[LeftTop ]->PosY;
-        WidgetPoints[Left ]->PosX =   WidgetPoints[LeftTop ]->PosX;
-        WidgetPoints[Left ]->PosY = ( WidgetPoints[LeftTop ]->PosY + WidgetPoints[LeftBtm ]->PosY ) / 2;
-        WidgetPoints[Right]->PosX =   WidgetPoints[RightTop]->PosX;
-        WidgetPoints[Right]->PosY = ( WidgetPoints[RightTop]->PosY + WidgetPoints[RightBtm]->PosY ) / 2;
-        WidgetPoints[Btm  ]->PosX = ( WidgetPoints[LeftBtm ]->PosX + WidgetPoints[RightBtm]->PosX ) / 2;
-        WidgetPoints[Btm  ]->PosY =   WidgetPoints[LeftBtm ]->PosY;
+        RebuildEdgePoints(WidgetPoints);
     }
 
     #undef DoShiftX
     #undef DoShiftY
 
-    Refresh();
-    Update();
+    UpdateGraphics();
 }
 
 void wxsDragWindow::DragFinish(wxsWidget* UnderCursor)
@@ -389,20 +407,37 @@ void wxsDragWindow::DragFinish(wxsWidget* UnderCursor)
         wxsWidget* Widget = CurDragPoint->Widget;
         Widget->GetPreview()->GetPosition(&PosX,&PosY);
 
-        // Updating Widget's position and size
-
-        DragPointData* LeftTopPoint = CurDragPoint->WidgetPoints[LeftTop];
+        // Calculating new widget's position and size
+        DragPointData* LeftTopPoint = FindLeftTop(CurDragPoint);
         PosX += LeftTopPoint->PosX - LeftTopPoint->DragInitPosX;
         PosY += LeftTopPoint->PosY - LeftTopPoint->DragInitPosY;
         SizeX = LeftTopPoint->WidgetPoints[Right]->PosX - LeftTopPoint->PosX;
         SizeY = LeftTopPoint->WidgetPoints[Btm]->PosY - LeftTopPoint->PosY;
 
-        // Applying changes
+        // Correcting negative size
+        if ( SizeX < 0 )
+        {
+            PosX += SizeX;
+            LeftTopPoint->PosX += SizeX;
+            SizeX = -SizeX;
+        }
+        if ( SizeY < 0 )
+        {
+            PosY += SizeY;
+            LeftTopPoint->PosY += SizeY;
+            SizeY = -SizeY;
+        }
 
+        // Applying changes
         wxsWidgetBaseParams& Params = Widget->GetBaseParams();
-        Params.DefaultPosition = false;
-        Params.PosX = PosX;
-        Params.PosY = PosY;
+        if ( LeftTopPoint->PosX != LeftTopPoint->DragInitPosX ||
+             LeftTopPoint->PosY != LeftTopPoint->DragInitPosY )
+        {
+            Params.DefaultPosition =
+                Widget->GetParent() && Widget->GetParent()->GetInfo().Sizer;
+            Params.PosX = PosX;
+            Params.PosY = PosY;
+        }
         Params.DefaultSize = false;
         Params.SizeX = SizeX;
         Params.SizeY = SizeY;
@@ -411,86 +446,138 @@ void wxsDragWindow::DragFinish(wxsWidget* UnderCursor)
     }
     else
     {
-        /*
-        // Finding out what new parent widget will be
-
-        wxsWidget* NewParent = UnderCursor;
-        int NewChildIndex = -1;
-
-        if ( NewParent->IsContainer() )
-        {
-            NewParent = NewParent->GetParent();
-            if ( NewParent->GetInfo().Sizer )
-            {
-                NewChildIndex = NewParent->FindChild(UnderCursor);
-            }
-        }
+        wxsWindowEditor* Editor = (wxsWindowEditor*)RootWidget->GetResource()->GetEditor();
 
         std::vector<wxsWidget*> AllToMove;
         GetSelectionNoChildren(AllToMove);
 
+        // Finding out what new parent widget will be
+        wxsWidget* NewParent = UnderCursor;
+
+        bool NewParentIsSizer = NewParent->GetInfo().Sizer;
+        int NewInSizerPos = -1;
         int Cnt = (int)AllToMove.size();
+
+        for(;;)
+        {
+            bool ForceMoreParent = false;
+            for ( int i=0; i<Cnt; i++ )
+            {
+                if ( AllToMove[i] == NewParent ) ForceMoreParent = true;
+            }
+
+            if ( NewParent->IsContainer() && !ForceMoreParent ) break;
+            NewParent = NewParent->GetParent();
+            if ( !NewParent )
+            {
+                CurDragPoint = NULL;
+                CurDragWidget = NULL;
+                return;
+            }
+
+            NewParentIsSizer = NewParent->GetInfo().Sizer;
+            if ( NewParentIsSizer )
+            {
+                NewInSizerPos = NewParent->FindChild(UnderCursor);
+
+                // To make dragging more natural, we have to
+                // change insert pos little bit
+
+                if ( (CurDragWidget->GetParent() == NewParent) &&
+                     (NewParent->FindChild(CurDragWidget) < NewInSizerPos) )
+                {
+                    NewInSizerPos++;
+                }
+            }
+        }
+
+        // First pass - checking if widget can be moved and
+        //              recalculating position
+        for ( int i=0; i<Cnt; i++ )
+        {
+            wxsWidget* Moved = AllToMove[i];
+            if ( (Moved != NewParent) &&
+                 (Moved->FindChild(NewParent,0) < 0) &&
+                  NewParent->CanAddChild(Moved) )
+            {
+                wxsWidgetBaseParams& Params = Moved->GetBaseParams();
+                DragPointData* LeftTopPoint = FindLeftTop(Moved);
+                if ( LeftTopPoint )
+                {
+                    FindAbsolutePosition(Moved,&PosX,&PosY);
+                    PosX += LeftTopPoint->PosX - LeftTopPoint->DragInitPosX;
+                    PosY += LeftTopPoint->PosY - LeftTopPoint->DragInitPosY;
+
+                    NewParent->GetPreview()->ScreenToClient(&PosX,&PosY);
+                    Params.PosX = PosX;
+                    Params.PosY = PosY;
+                }
+            }
+            else
+            {
+                // This widget won't be moved
+                AllToMove.erase(AllToMove.begin()+i);
+                i--;
+                Cnt--;
+            }
+        }
+
+        // Second pass - changing resource structure
+        // Must kill preview to avoid seg faults caused by
+        // differences between preview structure and resource's
+        // structure
+        Editor->KillPreview();
         for ( int i=0; i<Cnt; i++ )
         {
             wxsWidget* Moved = AllToMove[i];
             wxsWidget* OldParent = Moved->GetParent();
             int OldInSizerPos = OldParent->FindChild(Moved);
 
-            Moved->KillTree(wxsTREE());
             if ( NewParent == OldParent )
             {
-                if ( OldParent->GetInfo().Sizer &&
-                     NewInSizerPos != OldInSizerPos )
+                if ( NewParentIsSizer )
                 {
-                    OldParent->ChangeChildPos(OldInSizerPos,NewInSizerPos);
+                    if ( NewInSizerPos != OldInSizerPos )
+                    {
+                        Moved->KillTree(wxsTREE());
+                        OldParent->ChangeChildPos(OldInSizerPos,NewInSizerPos);
+                        NewInSizerPos = OldParent->FindChild(Moved);
+                        Moved->BuildTree(wxsTREE(),NewParent->GetTreeId(),NewInSizerPos);
+                    }
                 }
             }
             else
             {
+                Moved->KillTree(wxsTREE());
                 OldParent->DelChildId(OldInSizerPos);
                 NewParent->AddChild(Moved,NewInSizerPos);
+                Moved->BuildTree(wxsTREE(),NewParent->GetTreeId(),NewInSizerPos);
             }
-            Moved->BuildTree(wxsTREE(),NewParent->GetTreeId(),NewInSizerPos);
-            NewInSizerPos++;
+
+            wxsWidgetBaseParams& Params = Moved->GetBaseParams();
+            Params.DefaultPosition = NewParentIsSizer;
+            if ( NewInSizerPos >= 0 )
+            {
+                NewInSizerPos++;
+            }
         }
 
-
-        */
-
-        for ( DragPointsI i = DragPoints.begin(); i != DragPoints.end(); ++i )
-        {
-            DragPointData* LeftTopPoint = *i;
-            if ( LeftTopPoint->Type != LeftTop ) continue;
-            wxsWidget* Widget = LeftTopPoint->Widget;
-            Widget->GetPreview()->GetPosition(&PosX,&PosY);
-
-            // Updating Widget's position
-
-            PosX += LeftTopPoint->PosX - LeftTopPoint->DragInitPosX;
-            PosY += LeftTopPoint->PosY - LeftTopPoint->DragInitPosY;
-
-            // Applying changes
-
-            wxsWidgetBaseParams& Params = Widget->GetBaseParams();
-            Params.DefaultPosition = false;
-            Params.PosX = PosX;
-            Params.PosY = PosY;
-            Widget->UpdateProperties();
-            Widget->PropertiesUpdated(false,false);
-        }
+        wxsTREE()->Refresh();
+        RootWidget->PropertiesUpdated(false,false);
     }
 
     CurDragPoint = NULL;
     CurDragWidget = NULL;
 }
 
-void wxsDragWindow::UpdateCursor(bool Dragging)
+void wxsDragWindow::UpdateCursor(bool Dragging,DragPointData* NewDragPoint,wxsWidget* NewDragWidget)
 {
     if ( !Dragging )
     {
-    	if ( !CurDragWidget && CurDragPoint )
+        // We're not dragging - checkign what's under cursor
+    	if ( !NewDragWidget && NewDragPoint )
     	{
-    		switch ( CurDragPoint->Type )
+    		switch ( NewDragPoint->Type )
     		{
                 case LeftTop:
                 case RightBtm:
@@ -512,7 +599,8 @@ void wxsDragWindow::UpdateCursor(bool Dragging)
                     SetCur(wxCURSOR_SIZEWE);
                     break;
 
-                default:;
+                default:
+                    SetCur(wxCURSOR_ARROW);
     		}
     	}
     	else
@@ -522,18 +610,18 @@ void wxsDragWindow::UpdateCursor(bool Dragging)
     }
     else
     {
-    	if ( CurDragWidget )
-    	{
-    		SetCur( CurDragPoint->NoAction ? wxCURSOR_NO_ENTRY : wxCURSOR_SIZING );
-    	}
+        if ( CurDragWidget )
+        {
+            SetCur( CurDragPoint->NoAction ? wxCURSOR_NO_ENTRY : wxCURSOR_SIZING );
+        }
         else if ( CurDragPoint )
-    	{
-    		if ( CurDragPoint->NoAction ) SetCur(wxCURSOR_NO_ENTRY);
-    	}
-    	else
-    	{
-    		SetCur(wxCURSOR_ARROW);
-    	}
+        {
+            if ( CurDragPoint->NoAction ) SetCur(wxCURSOR_NO_ENTRY);
+        }
+        else
+        {
+            SetCur(wxCURSOR_ARROW);
+        }
     }
 }
 
@@ -560,10 +648,7 @@ void wxsDragWindow::OnSelectWidget(wxsEvent& event)
             BlackDragPoints(Wdg);
         }
     }
-    BackFetchMode = true;
     Refresh();
-    Update();
-    BackFetchMode = false;
 }
 
 void wxsDragWindow::OnUnselectWidget(wxsEvent& event)
@@ -580,6 +665,7 @@ void wxsDragWindow::OnUnselectWidget(wxsEvent& event)
     		i++;
     	}
     }
+    UpdateGraphics();
 }
 
 void wxsDragWindow::ClearDragPoints()
@@ -622,7 +708,7 @@ void wxsDragWindow::UpdateDragPointData(wxsWidget* Widget,DragPointData** Widget
 {
     int PosX, PosY;
     int SizeX, SizeY;
-    bool NoAction = ! ( Widget->GetBPType() & ( wxsWidget::bptSize | wxsWidget::bptPosition ) );
+    bool NoAction = false;// ! ( Widget->GetBPType() & ( wxsWidget::bptSize | wxsWidget::bptPosition ) );
 
     FindAbsolutePosition(Widget,&PosX,&PosY);
 
@@ -759,6 +845,97 @@ wxsWidget* wxsDragWindow::FindWidgetAtPos(int PosX,int PosY,wxsWidget* Widget)
 
 void wxsDragWindow::AddGraphics(wxDC& DC)
 {
+    int DragAssistType = wxsDWAssistType;
+
+    if ( DragAssistType )
+    {
+        if ( DragParent && DragParent->GetPreview() )
+        {
+            int PosX, PosY;
+            int SizeX, SizeY;
+            FindAbsolutePosition(DragParent,&PosX,&PosY);
+            ScreenToClient(&PosX,&PosY);
+            DragParent->GetPreview()->GetSize(&SizeX,&SizeY);
+            long Col = wxsDWParentCol;
+            int R = (Col>>16)&0xFF;
+            int G = (Col>> 8)&0xFF;
+            int B = (Col    )&0xFF;
+
+            if ( DragAssistType == 1 )
+            {
+                DC.SetPen(wxPen(wxColour(R,G,B),2));
+                DC.SetBrush(*wxTRANSPARENT_BRUSH);
+                DC.DrawRectangle(PosX,PosY,SizeX,SizeY);
+            }
+            else
+            {
+                if ( !DragParentBitmap )
+                {
+                    wxImage Covered = Background->GetSubBitmap(wxRect(PosX,PosY,SizeX,SizeY)).ConvertToImage();
+                    for ( int y=0; y<SizeY; y++ )
+                    {
+                        for ( int x=0; x<SizeX; x++ )
+                        {
+                            Covered.SetRGB(x,y,
+                                ( Covered.GetRed(x,y)   + R ) / 2,
+                                ( Covered.GetGreen(x,y) + G ) / 2,
+                                ( Covered.GetBlue(x,y)  + B ) / 2 );
+                        }
+                    }
+                    DragParentBitmap = new wxBitmap(Covered);
+                }
+
+                if ( DragParentBitmap )
+                {
+                    DC.DrawBitmap(*DragParentBitmap,PosX,PosY);
+                }
+            }
+        }
+
+        if ( DragTarget && (DragTarget!=DragParent) && DragTarget->GetPreview() )
+        {
+            int PosX, PosY;
+            int SizeX, SizeY;
+            FindAbsolutePosition(DragTarget,&PosX,&PosY);
+            ScreenToClient(&PosX,&PosY);
+            DragTarget->GetPreview()->GetSize(&SizeX,&SizeY);
+            long Col = wxsDWTargetCol;
+            int R = (Col>>16)&0xFF;
+            int G = (Col>> 8)&0xFF;
+            int B = (Col    )&0xFF;
+
+            if ( DragAssistType == 1 )
+            {
+                DC.SetPen(wxPen(wxColour(R,G,B),2));
+                DC.SetBrush(*wxTRANSPARENT_BRUSH);
+                DC.DrawRectangle(PosX,PosY,SizeX,SizeY);
+            }
+            else
+            {
+                if ( !DragTargetBitmap )
+                {
+                    wxImage Covered = Background->GetSubBitmap(wxRect(PosX,PosY,SizeX,SizeY)).ConvertToImage();
+                    for ( int y=0; y<SizeY; y++ )
+                    {
+                        for ( int x=0; x<SizeX; x++ )
+                        {
+                            Covered.SetRGB(x,y,
+                                ( Covered.GetRed(x,y)   + R ) / 2,
+                                ( Covered.GetGreen(x,y) + G ) / 2,
+                                ( Covered.GetBlue(x,y)  + B ) / 2 );
+                        }
+                    }
+                    DragTargetBitmap = new wxBitmap(Covered);
+                }
+
+                if ( DragTargetBitmap )
+                {
+                    DC.DrawBitmap(*DragTargetBitmap,PosX,PosY);
+                }
+            }
+        }
+    }
+
     for ( DragPointsI i = DragPoints.begin(); i != DragPoints.end(); ++i )
     {
     	DragPointData* DPD = *i;
@@ -801,7 +978,7 @@ wxsWidget* wxsDragWindow::GetSelection()
 	{
 		if ( !(*i)->Inactive )
 		{
-			// Here's active drag point - it's at the edget of current selection
+			// Here's active drag point - it's at the edge of current selection
 			return (*i)->Widget;
 		}
 	}
@@ -820,8 +997,18 @@ wxsWidget* wxsDragWindow::GetMultipleSelWidget(int Index)
 	return DragPoints[Index]->Widget;
 }
 
-void wxsDragWindow::OnFetchBackground(wxCommandEvent& event)
+void wxsDragWindow::OnFetchBackground(wxTimerEvent& event)
 {
+    if ( DragTargetBitmap )
+    {
+        delete DragTargetBitmap;
+        DragTargetBitmap = NULL;
+    }
+    if ( DragParentBitmap )
+    {
+        delete DragParentBitmap;
+        DragParentBitmap = NULL;
+    }
 	wxScreenDC DC;
 	wxMemoryDC DestDC;
     int X = 0, Y = 0;
@@ -837,6 +1024,7 @@ void wxsDragWindow::OnFetchBackground(wxCommandEvent& event)
         DestDC.Blit(x,y,W,H,&DC,X+x,Y+y);
         upd++;
     }
+    FetchArea.Clear();
 
     ProcessPendingEvents();
 	PaintAfterFetch = true;
@@ -877,6 +1065,7 @@ void wxsDragWindow::BlackDragPoints(wxsWidget* Widget)
 
 bool wxsDragWindow::IsInside(wxsWidget* What,wxsWidget* Where )
 {
+    if ( !Where ) return false;
 	return Where->FindChild(What,0) >= 0;
 }
 
@@ -891,32 +1080,110 @@ bool wxsDragWindow::IsVisible(wxsWidget* Widget)
 void wxsDragWindow::GetSelectionNoChildren(std::vector<wxsWidget*>& Vector)
 {
 	Vector.clear();
-	int Cnt = GetMultipleSelCount();
-	for ( int i=0; i<Cnt; i++ )
+	GetSelectionNoChildrenReq(RootWidget,Vector);
+}
+
+void wxsDragWindow::GetSelectionNoChildrenReq(wxsWidget* Widget,std::vector<wxsWidget*>& Vector)
+{
+    if ( !Widget )
+    {
+        return;
+    }
+
+	if ( IsSelected(Widget) )
 	{
-		Vector.push_back(GetMultipleSelWidget(i));
+	    Vector.push_back(Widget);
+	    return;
 	}
 
-	for ( int i=0; i<Cnt; i++ )
-	{
-		for ( int j=0; j<Cnt; j++ )
-		{
-			// Yes, I know it could be O(n) ;)
-			wxsWidget* Check = Vector[i];
-			while ( Check = Check->GetParent() )
-			{
-				if ( Check == Vector[j] ) break;
-			}
-			if ( Check )
-			{
-                // i-th vector item has selected (grand)parent, it must be removed
-                Vector.erase(Vector.begin()+i);
-                --i;
-                --Cnt;
-                break;
-            }
-		}
-	}
+    int Cnt = Widget->GetChildCount();
+    for ( int i=0; i<Cnt; i++ )
+    {
+        GetSelectionNoChildrenReq(Widget->GetChild(i),Vector);
+    }
+}
+
+void wxsDragWindow::SelectWidget(wxsWidget* Widget)
+{
+    BlockWidgetSelect = true;
+    wxsSelectWidget(Widget);
+    BlockWidgetSelect = false;
+}
+
+void wxsDragWindow::UpdateGraphics()
+{
+    wxClientDC ClientDC(this);
+
+    wxBufferedDC DC(&ClientDC,GetSize());
+    DC.DrawBitmap(*Background,0,0,false);
+    AddGraphics(DC);
+}
+
+bool wxsDragWindow::IsSelected(wxsWidget* Widget)
+{
+    for ( DragPointsI i = DragPoints.begin(); i!=DragPoints.end(); ++i )
+    {
+        if ( (*i)->Widget == Widget ) return true;
+    }
+    return false;
+}
+
+void wxsDragWindow::UpdateAssist(bool Dragging,wxsWidget* UnderCursor)
+{
+    if ( !Dragging || !UnderCursor || DragDistanceSmall || !CurDragWidget )
+    {
+        DragTarget = NULL;
+        DragParent = NULL;
+        if ( DragTargetBitmap )
+        {
+            delete DragTargetBitmap;
+            DragTargetBitmap = NULL;
+        }
+        if ( DragParentBitmap )
+        {
+            delete DragParentBitmap;
+            DragParentBitmap = NULL;
+        }
+        return;
+    }
+
+    wxsWidget* Parent = UnderCursor;
+    if ( !Parent->IsContainer() )
+    {
+        Parent = Parent->GetParent();
+    }
+
+    if ( DragTarget != UnderCursor )
+    {
+        DragTarget = UnderCursor;
+        if ( DragTargetBitmap )
+        {
+            delete DragTargetBitmap;
+            DragTargetBitmap = NULL;
+        }
+    }
+
+    if ( DragParent != Parent )
+    {
+        DragParent = Parent;
+        if ( DragParentBitmap )
+        {
+            delete DragParentBitmap;
+            DragParentBitmap = NULL;
+        }
+    }
+}
+
+void wxsDragWindow::RebuildEdgePoints(wxsDragWindow::DragPointData** WidgetPoints)
+{
+    WidgetPoints[Top  ]->PosX = ( WidgetPoints[LeftTop ]->PosX + WidgetPoints[RightTop]->PosX ) / 2;
+    WidgetPoints[Top  ]->PosY =   WidgetPoints[LeftTop ]->PosY;
+    WidgetPoints[Left ]->PosX =   WidgetPoints[LeftTop ]->PosX;
+    WidgetPoints[Left ]->PosY = ( WidgetPoints[LeftTop ]->PosY + WidgetPoints[LeftBtm ]->PosY ) / 2;
+    WidgetPoints[Right]->PosX =   WidgetPoints[RightTop]->PosX;
+    WidgetPoints[Right]->PosY = ( WidgetPoints[RightTop]->PosY + WidgetPoints[RightBtm]->PosY ) / 2;
+    WidgetPoints[Btm  ]->PosX = ( WidgetPoints[LeftBtm ]->PosX + WidgetPoints[RightBtm]->PosX ) / 2;
+    WidgetPoints[Btm  ]->PosY =   WidgetPoints[LeftBtm ]->PosY;
 }
 
 BEGIN_EVENT_TABLE(wxsDragWindow,wxControl)
@@ -924,8 +1191,8 @@ BEGIN_EVENT_TABLE(wxsDragWindow,wxControl)
     EVT_MOUSE_EVENTS(wxsDragWindow::OnMouse)
     EVT_ERASE_BACKGROUND(wxsDragWindow::OnEraseBack)
     EVT_TIMER(1,wxsDragWindow::TimerRefresh)
+    EVT_TIMER(2,wxsDragWindow::OnFetchBackground)
     EVT_SELECT_WIDGET(wxsDragWindow::OnSelectWidget)
     EVT_UNSELECT_WIDGET(wxsDragWindow::OnUnselectWidget)
     EVT_SIZE(wxsDragWindow::OnSize)
-    EVT_COMMAND(wxID_ANY,wxEVT_FETCH_BACK,wxsDragWindow::OnFetchBackground)
 END_EVENT_TABLE()

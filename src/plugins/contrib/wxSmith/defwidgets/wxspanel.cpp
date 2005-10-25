@@ -1,3 +1,4 @@
+#include "../wxsheaders.h"
 #include "wxspanel.h"
 
 #include <wx/frame.h>
@@ -58,12 +59,14 @@ WXS_ST_BEGIN(wxsPanelrStyles)
 WXS_ST_END(wxsPanelrStyles)
 
 WXS_EV_BEGIN(wxsPanelrEvents)
+    WXS_EV(EVT_INIT_DIALOG,wxInitDialogEvent,Init)
     WXS_EV_DEFAULTS()
 WXS_EV_END(wxsPanelrEvents)
 
 wxsPanelr::wxsPanelr(wxsWidgetManager* Man,wxsWindowRes* Res):
     wxsWindow(Man,Res,propWindow)
 {
+    GetBaseParams().Style = wxTAB_TRAVERSAL;
 }
 
 wxsPanelr::~wxsPanelr()
@@ -73,4 +76,12 @@ wxsPanelr::~wxsPanelr()
 const wxsWidgetInfo& wxsPanelr::GetInfo()
 {
     return *wxsStdManager.GetWidgetInfo(wxsPanelrId);
+}
+
+wxString wxsPanelr::GetProducingCode(wxsCodeParams& Params)
+{
+    CodeDefines CDefs = GetCodeDefines();
+    return wxString::Format(_T("Create(parent,id,%s,%s,%s);%s"),
+        CDefs.Pos.c_str(),CDefs.Size.c_str(),
+        CDefs.Style.c_str(),CDefs.InitCode.c_str());
 }

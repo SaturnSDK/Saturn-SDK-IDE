@@ -23,6 +23,7 @@
 * $Date$
 */
 
+#include <sdk.h>
 #include "pluginwizarddlg.h"
 #include "enterinfodlg.h"
 #include <wx/intl.h>
@@ -367,6 +368,11 @@ void PluginWizardDlg::OnEditInfoClick(wxCommandEvent& event)
 
 void PluginWizardDlg::OnOKClick(wxCommandEvent& event)
 {
+	EndModal(wxID_OK);
+}
+
+void PluginWizardDlg::CreateFiles()
+{
 	int type = XRCCTRL(*this, "cmbType", wxComboBox)->GetSelection();
 	bool isTool = type == 1;
 	// set some variable for easy reference
@@ -453,8 +459,8 @@ void PluginWizardDlg::OnOKClick(wxCommandEvent& event)
         DoAddHeaderOption(buffer, hasMenu, wxEmptyString);
         buffer << _T('\t') << _T('\t') << _T("void BuildModuleMenu(const ModuleType type, wxMenu* menu, const wxString& arg)");
         DoAddHeaderOption(buffer, hasModuleMenu, wxEmptyString);
-        buffer << _T('\t') << _T('\t') << _T("void BuildToolBar(wxToolBar* toolBar)");
-        DoAddHeaderOption(buffer, hasToolbar, wxEmptyString);
+        buffer << _T('\t') << _T('\t') << _T("bool BuildToolBar(wxToolBar* toolBar)");
+        DoAddHeaderOption(buffer, hasToolbar, _T("false"));
 	}
 	switch (type)
 	{
@@ -630,13 +636,14 @@ void PluginWizardDlg::OnOKClick(wxCommandEvent& event)
         }
         if (hasToolbar)
         {
-            buffer << _T("void ") << m_Info.name << _T("::BuildToolBar(wxToolBar* toolBar)") << _T('\n');
+            buffer << _T("bool ") << m_Info.name << _T("::BuildToolBar(wxToolBar* toolBar)") << _T('\n');
             buffer << _T("{") << _T('\n');
             buffer << _T('\t') << _T("//The application is offering its toolbar for your plugin,") << _T('\n');
             buffer << _T('\t') << _T("//to add any toolbar items you want...") << _T('\n');
             buffer << _T('\t') << _T("//Append any items you need on the toolbar...") << _T('\n');
             buffer << _T('\t') << _T("NotImplemented(_T(\"") << m_Info.name << _T("::BuildToolBar()") << _T("\"));") << _T('\n');
-            buffer << _T('\t') << _T("return;") << _T('\n');
+            buffer << _T('\t') << _T("// return true if you add toolbar items") << _T('\n');
+            buffer << _T('\t') << _T("return false;") << _T('\n');
             buffer << _T("}") << _T('\n');
             buffer << _T('\n');
         }
@@ -666,6 +673,4 @@ void PluginWizardDlg::OnOKClick(wxCommandEvent& event)
 	wxFile impl(UnixFilename(m_Implementation), wxFile::write);
 	cbWrite(impl,buffer);
 	// end of implementation file
-
-	EndModal(wxID_OK);
 }

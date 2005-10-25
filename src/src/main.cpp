@@ -23,6 +23,7 @@
 * $Date$
 */
 
+#include <sdk.h>
 #include "app.h"
 #include "main.h"
 #include "globals.h"
@@ -50,6 +51,7 @@
 #include <templatemanager.h>
 #include <toolsmanager.h>
 #include <personalitymanager.h>
+#include <cbexception.h>
 
 #include "dlgaboutplugin.h"
 #include "dlgabout.h"
@@ -80,6 +82,8 @@ int idFileOpenRecentClearHistory = XRCID("idFileOpenRecentClearHistory");
 int idFileSave = XRCID("idFileSave");
 int idFileSaveAs = XRCID("idFileSaveAs");
 int idFileSaveAllFiles = XRCID("idFileSaveAllFiles");
+int idFileSaveProject = XRCID("idFileSaveProject");
+int idFileSaveProjectAs = XRCID("idFileSaveProjectAs");
 int idFileSaveWorkspace = XRCID("idFileSaveWorkspace");
 int idFileSaveWorkspaceAs = XRCID("idFileSaveWorkspaceAs");
 int idFileClose = XRCID("idFileClose");
@@ -232,6 +236,8 @@ BEGIN_EVENT_TABLE(MainFrame, wxFrame)
     EVT_MENU(idFileSave,  MainFrame::OnFileSave)
     EVT_MENU(idFileSaveAs,  MainFrame::OnFileSaveAs)
     EVT_MENU(idFileSaveAllFiles,  MainFrame::OnFileSaveAllFiles)
+    EVT_MENU(idFileSaveProject,  MainFrame::OnProjectSaveProject)
+    EVT_MENU(idFileSaveProjectAs,  MainFrame::OnProjectSaveProjectAs)
     EVT_MENU(idFileSaveWorkspace,  MainFrame::OnFileSaveWorkspace)
     EVT_MENU(idFileSaveWorkspaceAs,  MainFrame::OnFileSaveWorkspaceAs)
     EVT_BUTTON(ID_EditorManagerCloseButton,MainFrame::OnFileClose)
@@ -566,7 +572,14 @@ void MainFrame::CreateMenubar()
 			{
                 AddPluginInSettingsMenu(plug);
                 AddPluginInHelpPluginsMenu(plug);
-				plug->BuildMenu(mbar);
+                try
+                {
+                    plug->BuildMenu(mbar);
+                }
+                catch (cbException& e)
+                {
+                    e.ShowErrorMessage();
+                }
             }
 		}
 	}
@@ -774,6 +787,18 @@ void MainFrame::LoadWindowState()
 	Manager::Get()->GetNotebook()->SetSelection(CFG_READ(personalityKey + _T("/main_frame/layout/left_block_selection"), 0L));
 	MSGMAN()->SetSelection(CFG_READ(personalityKey + _T("/main_frame/layout/bottom_block_selection"), 0L));
 
+    if (!IsMaximized() && !IsIconized())
+    {
+        // load window size and position
+        SetSize(CFG_READ(personalityKey + _T("/main_frame/left"), 0L),
+                CFG_READ(personalityKey + _T("/main_frame/top"), 0L),
+                CFG_READ(personalityKey + _T("/main_frame/width"), 640),
+                CFG_READ(personalityKey + _T("/main_frame/height"), 480));
+        // maximized?
+        if (CFG_READ(personalityKey + _T("/main_frame/maximized"), 0L))
+            Maximize();
+    }
+
     // close message manager (if auto-hiding)
     MSGMAN()->Close();
 }
@@ -795,6 +820,17 @@ void MainFrame::SaveWindowState()
 	// save manager and messages selected page
 	CFG_WRITE(personalityKey + _T("/main_frame/layout/left_block_selection"), Manager::Get()->GetNotebook()->GetSelection());
 	CFG_WRITE(personalityKey + _T("/main_frame/layout/bottom_block_selection"), MSGMAN()->GetSelection());
+
+    // save window size and position
+    CFG_WRITE(personalityKey + _T("/main_frame/maximized"), IsMaximized());
+    if (!IsMaximized() && !IsIconized())
+    {
+        CFG_WRITE(personalityKey + _T("/main_frame/left"), GetPosition().x);
+        CFG_WRITE(personalityKey + _T("/main_frame/top"), GetPosition().y);
+        CFG_WRITE(personalityKey + _T("/main_frame/width"), GetSize().x);
+        CFG_WRITE(personalityKey + _T("/main_frame/height"), GetSize().y);
+    }
+
 }
 
 void MainFrame::DoAddPluginToolbar(cbPlugin* plugin)
@@ -823,7 +859,14 @@ void MainFrame::DoAddPlugin(cbPlugin* plugin)
 	else
     {
         // menu
-        plugin->BuildMenu(GetMenuBar());
+        try
+        {
+            plugin->BuildMenu(GetMenuBar());
+        }
+        catch (cbException& e)
+        {
+            e.ShowErrorMessage();
+        }
         // toolbar
         DoAddPluginToolbar(plugin);
     }
@@ -869,7 +912,9 @@ bool MainFrame::OpenGeneric(const wxString& filename, bool addToHistory)
         case ftMSVCWorkspace:
             // fallthrough
         case ftMSVSWorkspace:
-            if (DoCloseCurrentWorkspace())
+            // verify that it's not the same as the one already open
+            if (filename != PRJMAN()->GetWorkspace()->GetFilename() &&
+                DoCloseCurrentWorkspace())
             {
                 PRJMAN()->LoadWorkspace(filename);
                 m_FilesHistory.AddFileToHistory(filename);
@@ -1725,7 +1770,10 @@ void MainFrame::OnSearchGotoLine(wxCommandEvent& event)
 	long int line = 0;
 	strLine.ToLong(&line);
 	if ( line > 1 && line <= max )
+	{
 		ed->GetControl()->GotoPos(ed->GetControl()->PositionFromLine(line - 1));
+		ed->UnfoldBlockFromLine(-1);
+	}
 }
 
 void MainFrame::OnProjectNewEmpty(wxCommandEvent& event)
@@ -1858,6 +1906,7 @@ void MainFrame::OnFileMenuUpdateUI(wxUpdateUIEvent& event)
         return;
     }
     EditorBase* ed = EDMAN() ? EDMAN()->GetActiveEditor() : 0;
+    cbProject* prj = PRJMAN() ? PRJMAN()->GetActiveProject() : 0L;
     wxMenuBar* mbar = GetMenuBar();
 
     bool canCloseProject = (ProjectManager::CanShutdown() && EditorManager::CanShutdown());
@@ -1869,6 +1918,8 @@ void MainFrame::OnFileMenuUpdateUI(wxUpdateUIEvent& event)
     mbar->Enable(idFileSave, ed && ed->GetModified());
     mbar->Enable(idFileSaveAs, ed);
     mbar->Enable(idFileSaveAllFiles, ed);
+    mbar->Enable(idFileSaveProject, prj && prj->GetModified() && canCloseProject);
+    mbar->Enable(idFileSaveProjectAs, prj && canCloseProject);
     mbar->Enable(idFileSaveWorkspace, PRJMAN() && canCloseProject);
     mbar->Enable(idFileSaveWorkspaceAs, PRJMAN() && canCloseProject);
     mbar->Enable(idFilePrint, EDMAN() && EDMAN()->GetActiveEditor());
@@ -1986,7 +2037,7 @@ void MainFrame::OnSearchMenuUpdateUI(wxUpdateUIEvent& event)
     cbEditor* ed = EDMAN() ? EDMAN()->GetBuiltinEditor(EDMAN()->GetActiveEditor()) : 0;
     wxMenuBar* mbar = GetMenuBar();
 
-    mbar->Enable(idSearchFind, ed);
+    // 'Find' is always enabled for find-in-files
     mbar->Enable(idSearchFindNext, ed);
     mbar->Enable(idSearchFindPrevious, ed);
     mbar->Enable(idSearchReplace, ed);
@@ -2163,7 +2214,10 @@ void MainFrame::OnSettingsEnvironment(wxCommandEvent& event)
 	{
         m_SmallToolBar = CFG_READ(_T("/environment/toolbar_size"), (long int)1) == 1;
         needRestart = m_SmallToolBar != tbarsmall;
-        MSGMAN()->EnableAutoHide(CFG_READ(_T("/message_manager/auto_hide"), 0L));
+        bool autoHide = CFG_READ(_T("/message_manager/auto_hide"), 0L);
+        MSGMAN()->EnableAutoHide(autoHide);
+        if (!autoHide)
+            pDockWindow2->Show(true); // make sure it's shown
         ShowHideStartPage();
 
         if (CFG_READ(_T("/editor/show_close_button"), (long int)0) != edmanCloseBtn)

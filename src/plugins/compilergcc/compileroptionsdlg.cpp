@@ -23,6 +23,7 @@
 * $Date$
 */
 
+#include <sdk.h>
 #include "compileroptionsdlg.h"
 #include "compilergcc.h"
 #include "advancedcompileroptionsdlg.h"
@@ -829,6 +830,9 @@ void CompilerOptionsDlg::CompilerChanged(ScopeTreeData* data)
 		return;
 	DoLoadOptions(compilerIdx, data);
 	m_LastCompilerIdx = compilerIdx;
+
+	// this relies on GetCustomVars(), which relies on m_LastCompilerIdx
+	DoFillVars();
 }
 
 void CompilerOptionsDlg::UpdateCompilerForTargets(int compilerIdx)

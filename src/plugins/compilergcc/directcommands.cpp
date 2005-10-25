@@ -1,3 +1,4 @@
+#include <sdk.h>
 #include <wx/log.h>
 #include <wx/intl.h>
 #include <wx/filename.h>
@@ -5,6 +6,7 @@
 #include <wx/stream.h>
 #include <wx/wfstream.h>
 #include <wx/txtstrm.h>
+#include <wx/regex.h> // used in QUICK hack at line 574
 #include <compiler.h>
 #include <cbproject.h>
 #include <projectbuildtarget.h>
@@ -29,9 +31,12 @@ pfDetails::pfDetails(DirectCommands* cmds, ProjectBuildTarget* target, ProjectFi
     source_file_absolute_native = pf->file.GetFullPath();
 
     tmp = pf->GetObjName();
-    object_file_native = (target ? target->GetObjectOutput() : _T(".")) +
-                          sep +
-                          tmp.GetFullPath();
+    if (FileTypeOf(pf->relativeFilename) == ftHeader)
+        object_file_native = pf->GetObjName(); // support for precompiled headers
+    else
+        object_file_native = (target ? target->GetObjectOutput() : _T(".")) +
+                              sep +
+                              tmp.GetFullPath();
     wxFileName o_file(object_file_native);
     o_file.MakeAbsolute(prjbase.GetFullPath());
     object_dir_native = o_file.GetPath(wxPATH_GET_VOLUME | wxPATH_GET_SEPARATOR);
@@ -220,31 +225,24 @@ wxArrayString DirectCommands::GetCompileFileCommand(ProjectBuildTarget* target, 
     }
 
     bool isResource = ft == ftResource;
+    bool isHeader = ft == ftHeader;
 #ifndef __WXMSW__
     // not supported under non-win32 platforms
     if (isResource)
         return ret;
 #endif
-    if (pf->useCustomBuildCommand)
-    {
-        wxString msg;
-        msg.Printf(_("File %s has a custom build command set."
-                    "This feature only works when using GNU \"make\""
-                    "for the build process..."), pfd.source_file_native.c_str());
-        ret.Add(wxString(COMPILER_SIMPLE_LOG) + msg);
-        return ret;
-    }
-    wxString compilerCmd;
-    compilerCmd = mg.CreateSingleFileCompileCmd(isResource ? ctCompileResourceCmd : ctCompileObjectCmd,
-                                                 target,
-                                                 pf,
-                                                 pfd.source_file,
-                                                 pfd.object_file,
-                                                 pfd.dep_file);
+    Compiler* compiler = target ? CompilerFactory::Compilers[target->GetCompilerIndex()] : m_pCompiler;
+    wxString compilerCmd = mg.CreateSingleFileCompileCmd(pf->useCustomBuildCommand
+                                                            ? pf->buildCommand
+                                                            : compiler->GetCommand(isResource ? ctCompileResourceCmd : ctCompileObjectCmd),
+                                                         target,
+                                                         pf,
+                                                         pfd.source_file,
+                                                         pfd.object_file,
+                                                         pfd.dep_file);
 
     if (!compilerCmd.IsEmpty())
     {
-        Compiler* compiler = target ? CompilerFactory::Compilers[target->GetCompilerIndex()] : m_pCompiler;
         switch (compiler->GetSwitches().logging)
         {
             case clogFull:
@@ -252,7 +250,10 @@ wxArrayString DirectCommands::GetCompileFileCommand(ProjectBuildTarget* target, 
                 break;
 
             case clogSimple:
-                ret.Add(wxString(COMPILER_SIMPLE_LOG) + _("Compiling: ") + pfd.source_file_native);
+                if (isHeader)
+                    ret.Add(wxString(COMPILER_SIMPLE_LOG) + _("Precompiling header: ") + pfd.source_file_native);
+                else
+                    ret.Add(wxString(COMPILER_SIMPLE_LOG) + _("Compiling: ") + pfd.source_file_native);
                 break;
 
             default:
@@ -570,6 +571,27 @@ wxArrayString DirectCommands::GetTargetLinkCommands(ProjectBuildTarget* target, 
     if (AreExternalDepsOutdated(out.GetFullPath(), target->GetAdditionalOutputFiles(), target->GetExternalDeps()))
         force = true;
 
+    wxString prependHack; // part of the following hack
+    if (target->GetTargetType() == ttStaticLib)
+    {
+        // QUICK HACK: some linkers (e.g. bcc, dmc) require a - or + in front of
+        // object files for static library. What we 'll do here until we redesign
+        // the thing, is to accept this symbol as part of the $link_objects macro
+        // like this:
+        // $+link_objects
+        // $-link_objects
+        // $-+link_objects
+        // $+-link_objects
+        //
+        // So, we first scan the command for this special case and, if found,
+        // set a flag so that the linkfiles array is filled with the correct options
+        Compiler* compiler = target ? CompilerFactory::Compilers[target->GetCompilerIndex()] : m_pCompiler;
+        wxString compilerCmd = compiler->GetCommand(ctLinkStaticCmd);
+        wxRegEx re(_T("\\$([-+]+)link_objects"));
+        if (re.Matches(compilerCmd))
+            prependHack = re.GetMatch(compilerCmd, 1);
+    }
+
     // get all the linkable objects for the target
     MyFilesArray files = GetProjectFilesSortedByWeight(target, false, true);
     for (unsigned int i = 0; i < files.GetCount(); ++i)
@@ -580,7 +602,7 @@ wxArrayString DirectCommands::GetTargetLinkCommands(ProjectBuildTarget* target, 
         if (FileTypeOf(pf->relativeFilename) == ftResource)
             resfiles << pfd.object_file << _T(" ");
         else
-            linkfiles << pfd.object_file << _T(" ");
+            linkfiles << prependHack << pfd.object_file << _T(" "); // see QUICK HACK above (prependHack)
 
         // timestamp check
         if (!force)

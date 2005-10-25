@@ -23,6 +23,7 @@
 * $Date$
 */
 
+#include <sdk.h>
 #include <wx/txtstrm.h>
 #include <wx/regex.h>
 #include <wx/dialog.h>
@@ -763,7 +764,7 @@ wxString DebuggerGDB::GetNextOutputLine(bool useStdErr)
 			useStdErr ? m_pProcess->IsErrorAvailable() : m_pProcess->IsInputAvailable() &&
 			!m_pOut->Eof())
 	{
-		char ch = m_pOut->GetC();
+		wxChar ch = m_pOut->GetC();
 		if (ch == _T('\n') || ch == _T('\r'))
 		{
 			while (useStdErr ? m_pProcess->IsErrorAvailable() : m_pProcess->IsInputAvailable() &&
