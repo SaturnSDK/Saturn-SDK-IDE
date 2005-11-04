@@ -2046,7 +2046,6 @@ void CompilerGCC::OnJobEnd()
 
 	if (ended)
     {
-        m_Project->SetCurrentlyCompilingTarget(0);
         long int elapsed = wxGetElapsedTime() / 1000;
         int mins = elapsed / 60;
         int secs = (elapsed % 60);

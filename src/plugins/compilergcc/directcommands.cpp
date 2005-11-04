@@ -244,6 +244,9 @@ wxArrayString DirectCommands::GetCompileFileCommand(ProjectBuildTarget* target, 
     wxLogNull ln;
     wxArrayString ret;
 
+    if(target)
+        target->GetParentProject()->SetCurrentlyCompilingTarget(target);
+
     // is it compilable?
     if (!pf->compile || pf->compilerVar.IsEmpty())
         return ret;
@@ -413,7 +416,8 @@ wxArrayString DirectCommands::GetCompileCommands(ProjectBuildTarget* target, boo
         // add post-build commands
         if (needPost || m_pProject->GetAlwaysRunPostBuildSteps())
             AppendArray(GetPostBuildCommands(0L), ret);
-    }
+	}
+    m_pProject->SetCurrentlyCompilingTarget(0);
     return ret;
 }
 
