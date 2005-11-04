@@ -42,6 +42,8 @@
 #include <projectmanager.h>
 #include <personalitymanager.h>
 #include <sdk_events.h>
+#include <manager.h>
+#include <scriptingmanager.h>
 
 #ifdef __WXMSW__
 	#include <wx/msw/registry.h>
@@ -205,6 +207,10 @@ void CodeBlocksApp::InitFrame()
     #endif
     HideSplashScreen();
     frame->Show(TRUE);
+
+    // run startup script
+    Manager::Get()->GetScriptingManager()->LoadScript(_T("startup.script"));
+
     SetTopWindow(frame);
     if (ParseCmdLine(frame) == 0)
     {

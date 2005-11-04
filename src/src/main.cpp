@@ -51,6 +51,7 @@
 #include <templatemanager.h>
 #include <toolsmanager.h>
 #include <personalitymanager.h>
+#include <scriptingmanager.h>
 #include <cbexception.h>
 
 #include "dlgaboutplugin.h"
@@ -92,6 +93,7 @@ int idFileClose = XRCID("idFileClose");
 int idFileCloseAll = XRCID("idFileCloseAll");
 int idFilePrintSetup = XRCID("idFilePrintSetup");
 int idFilePrint = XRCID("idFilePrint");
+int idFileRunScript = XRCID("idFileRunScript");
 int idFileExit = XRCID("idFileExit");
 int idFileNext = wxNewId();
 int idFilePrev = wxNewId();
@@ -248,6 +250,7 @@ BEGIN_EVENT_TABLE(MainFrame, wxFrame)
     EVT_MENU(idFileCloseAll,  MainFrame::OnFileCloseAll)
     EVT_MENU(idFilePrintSetup,  MainFrame::OnFilePrintSetup)
     EVT_MENU(idFilePrint,  MainFrame::OnFilePrint)
+    EVT_MENU(idFileRunScript,  MainFrame::OnFileRunScript)
     EVT_MENU(idFileExit,  MainFrame::OnFileQuit)
     EVT_MENU(idFileNext,  MainFrame::OnFileNext)
     EVT_MENU(idFilePrev,  MainFrame::OnFilePrev)
@@ -1390,6 +1393,19 @@ void MainFrame::OnFilePrint(wxCommandEvent& event)
     PrintDialog dlg(this);
     if (dlg.ShowModal() == wxID_OK)
         EDMAN()->Print(dlg.GetPrintScope(), dlg.GetPrintColorMode());
+}
+
+void MainFrame::OnFileRunScript(wxCommandEvent& WXUNUSED(event))
+{
+    wxFileDialog* dlg = new wxFileDialog(this,
+                            _("Run script"),
+                            wxEmptyString,
+                            wxEmptyString,
+                            _T("Script files (*.script)|*.script"),
+                            wxOPEN);
+    if (dlg->ShowModal() == wxID_OK)
+        Manager::Get()->GetScriptingManager()->LoadScript(dlg->GetPath());
+    delete dlg;
 }
 
 void MainFrame::OnFileQuit(wxCommandEvent& WXUNUSED(event))

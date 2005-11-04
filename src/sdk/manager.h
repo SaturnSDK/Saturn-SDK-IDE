@@ -19,6 +19,7 @@ class wxMenu;
 class wxMenuBar;
 class wxToolBar;
 class UserVariableManager;
+class ScriptingManager;
 
 /*
  * No description
@@ -47,7 +48,8 @@ class DLLIMPORT Manager
 		ToolsManager* GetToolsManager();
 		MacrosManager* GetMacrosManager();
 		PersonalityManager* GetPersonalityManager();
-		UserVariableManager *GetUserVariableManager();
+		UserVariableManager* GetUserVariableManager();
+		ScriptingManager* GetScriptingManager();
 		static bool isappShutingDown();
 		// stupid typo ;-P
 		static bool isappShuttingDown();

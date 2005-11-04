@@ -108,7 +108,7 @@ class DLLIMPORT cbProject : public CompileTargetBase
         void RestoreTreeState(wxTreeCtrl* tree);
 		int SelectTarget(int initial = -1, bool evenIfOne = false);
         void RenameInTree(const wxString &newname);
-        ProjectBuildTarget *GetCurrentlyCompilingTarget(){return currentlyCompilingTarget;};
+        ProjectBuildTarget *GetCurrentlyCompilingTarget(){return m_CurrentlyCompilingTarget;};
 
         // This function is for internal use by compilers only.
         // Using this function outside in any other place results in undefined behaviour!
@@ -141,7 +141,7 @@ class DLLIMPORT cbProject : public CompileTargetBase
 
         // hashmap for fast searches in cbProject::GetFileByFilename()
         ProjectFiles m_ProjectFilesMap; // keeps UnixFilename(ProjectFile::relativeFilename)
-	   ProjectBuildTarget *currentlyCompilingTarget;
+        ProjectBuildTarget* m_CurrentlyCompilingTarget;
 };
 
 #endif // DEVPROJECT_H

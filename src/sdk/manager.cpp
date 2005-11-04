@@ -39,8 +39,10 @@
 #include "toolsmanager.h"
 #include "macrosmanager.h"
 #include "configmanager.h"
+#include "scriptingmanager.h"
 #include "templatemanager.h"
 #include "personalitymanager.h"
+#include "uservarmanager.h"
 #include "managerproxy.h"
 #include "xtra_classes.h" // Our custom set of wxWidgets classes
 #include "xtra_res.h" // our new ToolBarAddOn handler
@@ -128,6 +130,7 @@ void Manager::Free()
                     changed to cbPlugin::Release(bool appShutDown). Please
                     test under MSVC too...
         */
+        ScriptingManager::Free();
 		MacrosManager::Free();
 		ToolsManager::Free();
 		TemplateManager::Free();
@@ -323,6 +326,11 @@ PersonalityManager* Manager::GetPersonalityManager()
 UserVariableManager* Manager::GetUserVariableManager()
 {
     return appShutingDown ? 0 : UserVariableManager::Get();
+}
+
+ScriptingManager* Manager::GetScriptingManager()
+{
+    return appShutingDown ? 0 : ScriptingManager::Get();
 }
 
 wxWindow* Manager::GetNotebookPage(const wxString &name, long style,bool issplit)
