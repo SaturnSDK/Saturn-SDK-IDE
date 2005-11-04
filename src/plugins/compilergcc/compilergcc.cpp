@@ -727,12 +727,14 @@ int CompilerGCC::DoRunQueue()
             ProjectBuildTarget* bt = m_Project->GetBuildTarget(cmd);
             if (bt)
             {
+                m_Project->SetCurrentlyCompilingTarget(bt);
                 SwitchCompiler(bt->GetCompilerIndex());
                 // re-apply the env vars for this target
                 if (CompilerFactory::CompilerIndexOK(m_CompilerIdx))
                     CompilerFactory::Compilers[m_CompilerIdx]->GetCustomVars().ApplyVarsToEnvironment();
                 m_Project->GetCustomVars().ApplyVarsToEnvironment();
                 bt->GetCustomVars().ApplyVarsToEnvironment();
+
             }
             else
                 msgMan->Log(m_PageIndex, _("Can't locate target '%s'!"), cmd.c_str());
@@ -2044,6 +2046,7 @@ void CompilerGCC::OnJobEnd()
 
 	if (ended)
     {
+        m_Project->SetCurrentlyCompilingTarget(0);
         long int elapsed = wxGetElapsedTime() / 1000;
         int mins = elapsed / 60;
         int secs = (elapsed % 60);

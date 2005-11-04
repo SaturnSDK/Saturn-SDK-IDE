@@ -59,7 +59,8 @@ cbProject::cbProject(const wxString& filename)
     m_Loaded(false),
     m_CurrentlyLoading(false),
     m_BasePath(_T("")),
-    m_PCHMode(pchSourceDir)
+    m_PCHMode(pchSourceDir),
+    currentlyCompilingTarget(0)
 {
     SetCompilerIndex(CompilerFactory::GetDefaultCompilerIndex());
 
@@ -1087,6 +1088,11 @@ void cbProject::ReOrderTargets(const wxArrayString& nameOrder)
     }
     SetModified(true);
 }
+
+void cbProject::SetCurrentlyCompilingTarget(ProjectBuildTarget* bt)
+    {
+    currentlyCompilingTarget = bt;
+    }
 
 #ifdef USE_OPENFILES_TREE
 bool MiscTreeItemData::OwnerCheck(wxTreeEvent& event,wxTreeCtrl *tree,wxEvtHandler *handler,bool strict)

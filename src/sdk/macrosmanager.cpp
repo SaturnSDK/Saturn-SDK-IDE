@@ -105,8 +105,10 @@ void MacrosManager::ReplaceMacros(wxString& buffer, bool envVarsToo)
 		${ACTIVE_EDITOR_FILENAME}
 		${ALL_PROJECT_FILES}
 		${MAKEFILE}
-		${OUTPUT_FILE} // per target
-		${OUTPUT_DIR} // per target
+		${FOO_OUTPUT_FILE} // per target
+		${BAR_OUTPUT_DIR} // per target
+		$(TARGET_OUTPUT_DIR) // the current target's out dir
+		$(TARGET_NAME)       // the current target's name (title)
 
 		${AMP} TODO: implement AddMacro() for custom macros (like this)
 	*/
@@ -119,6 +121,8 @@ void MacrosManager::ReplaceMacros(wxString& buffer, bool envVarsToo)
 
 	cbProject* project = Manager::Get()->GetProjectManager()->GetActiveProject();
 	EditorBase* editor = Manager::Get()->GetEditorManager()->GetActiveEditor();
+	ProjectBuildTarget* target = project ? project->GetCurrentlyCompilingTarget() : 0;
+
 	wxFileName prjname;
 	if (project)
 		prjname.Assign(project->GetFilename());
@@ -155,6 +159,10 @@ void MacrosManager::ReplaceMacros(wxString& buffer, bool envVarsToo)
                     replace = UnixFilename(ConfigManager::Get()->Read(_T("data_path"), wxEmptyString));
                 else if (env.Matches(_T("PLUGINS")))
                     replace = UnixFilename(ConfigManager::Get()->Read(_T("data_path"), wxEmptyString) + _T("/plugins"));
+                else if (target && env.Matches(_T("TARGET_OUTPUT_DIR")))
+                    replace = UnixFilename(target->GetBasePath());
+                else if (target && env.Matches(_T("TARGET_NAME")))
+                    replace = UnixFilename(target->GetTitle());
                 else if (env.Matches(_T("ALL_PROJECT_FILES")))
                 {
                     if (project)
