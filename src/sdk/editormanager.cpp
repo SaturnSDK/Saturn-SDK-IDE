@@ -1445,7 +1445,7 @@ int EditorManager::FindInFiles(cbFindReplaceData* data)
             if (pf)
             {
                 fullpath = pf->file.GetFullPath();
-                if (filesList.Index(fullpath) == -1) // avoid adding dulpicates
+                if (filesList.Index(fullpath) == -1) // avoid adding duplicates
                 {
                     if(wxFileExists(fullpath))  // Does the file exist?
                         filesList.Add(fullpath);
@@ -1498,6 +1498,7 @@ int EditorManager::FindInFiles(cbFindReplaceData* data)
     // keep a copy of the find struct
     cbFindReplaceData localData = *data;
 
+    int lastline = -1;
     int count = 0;
     for (size_t i = 0; i < filesList.GetCount(); ++i)
     {
@@ -1516,9 +1517,13 @@ int EditorManager::FindInFiles(cbFindReplaceData* data)
 
         // now search for first occurence
         if (Find(control, data) == -1)
-            continue; // none
+            {
+        	  lastline = -1;
+            continue;
+            }
 
         int line = control->LineFromPosition(control->GetSelectionStart());
+        lastline = line;
 
         // log it
         LogSearch(filesList[i], line + 1, control->GetLine(line));
@@ -1529,6 +1534,10 @@ int EditorManager::FindInFiles(cbFindReplaceData* data)
         {
             // log it
             line = control->LineFromPosition(control->GetSelectionStart());
+            if(line == lastline)  // avoid multiple hits on the same line (try search for "manager")
+			continue;
+
+            lastline = line;
             LogSearch(filesList[i], line + 1, control->GetLine(line));
             ++count;
         }
