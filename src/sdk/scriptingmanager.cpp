@@ -8,6 +8,7 @@
 #include "as/bindings/scriptbindings.h"
 #include <wx/msgdlg.h>
 #include <wx/file.h>
+#include <settings.h>
 
 static wxString s_Errors;
 
@@ -16,7 +17,7 @@ class asCOutputStream : public asIOutputStream
     public:
         void Write(const char *text)
         {
-            s_Errors << text;
+            s_Errors << _U(text);
         }
 };
 
@@ -42,7 +43,7 @@ ScriptingManager::ScriptingManager()
     //ctor
 	m_pEngine = asCreateScriptEngine(ANGELSCRIPT_VERSION);
 	if (!m_pEngine)
-        cbThrow(_("Can't create scripting engine!"));
+        cbThrow(_T("Can't create scripting engine!"));
 
     m_pEngine->SetCommonMessageStream(&asOut);
 
@@ -94,60 +95,67 @@ bool ScriptingManager::DoLoadScript(const wxString& filename, wxString& script)
 //    LOGSTREAM << _T("Trying to open script: ") << filename << '\n';
     wxLogNull ln;
     wxFile file(filename);
-    if (!file.IsOpened())
-        return false;
-    int len = file.Length();
-    if(!len)
-    {
-        file.Close();
-        return false;
-    }
-    script.Clear();
-    wxChar* buff = script.GetWriteBuf(len); // GetWriteBuf already handles the extra '\0'.
-    file.Read((void*)buff, len);
-    file.Close();
-    script.UngetWriteBuf();
-    return true;
+    return cbRead(file, script);
 }
 
 int ScriptingManager::LoadScript(const wxString& filename, const wxString& module)
 {
-    wxString script;
+//    wxString script;
     // try to load as-passed
-    if (!DoLoadScript(filename, script))
+//    if (!DoLoadScript(filename, script))
+//    {
+//        // try in <data_path>/scripts/
+//        if (!DoLoadScript(ConfigManager::Get()->Read(_T("/data_path")) + _T("/scripts/") + filename, script))
+//        {
+////            wxMessageBox(_("Can't open script ") + filename, _("Error"), wxICON_ERROR);
+//            return -1;
+//        }
+//    }
+
+    FILE* fp = fopen(_C(filename), "r");
+    if (!fp)
     {
-        // try in <data_path>/scripts/
-        if (!DoLoadScript(ConfigManager::Get()->Read(_T("/data_path")) + _T("/scripts/") + filename, script))
+        fp = fopen(_C(ConfigManager::Get()->Read(_T("/data_path")) + _T("/scripts/") + filename), "r");
+        if(!fp)
         {
-//            wxMessageBox(_("Can't open script ") + filename, _("Error"), wxICON_ERROR);
+            wxMessageBox(_("Can't open script ") + filename, _("Error"), wxICON_ERROR);
             return -1;
         }
     }
+    fseek(fp, 0, SEEK_END);
+    int size = ftell(fp);
+    rewind(fp);
+    char* script = new char[size + 1];
+    memset(script, 0, size + 1);
+    fread(script, 1, size, fp);
+    script[size] = 0;
+    fclose(fp);
 
     s_Errors.Clear();
 
     // build script
-	m_pEngine->AddScriptSection(module.c_str(), filename.c_str(), script.c_str(), script.Length(), 0, false);
-	m_pEngine->Build(module.c_str());
+	m_pEngine->AddScriptSection(_C(module), _C(filename), script, strlen(script), 0, false);
+	m_pEngine->Build(_C(module));
 
     // locate and run "int main()"
-	int funcID = FindFunctionByDeclaration("int main()", module);
+	int funcID = FindFunctionByDeclaration(_T("int main()"), module);
 	Executor<int> exec(funcID);
 	int ret = exec.Call();
 
     // display errors (if any)
     if (!s_Errors.IsEmpty())
-        wxMessageBox(s_Errors, _("Script error"), wxICON_ERROR);
+        wxMessageBox(s_Errors + _T("\n\nScript:\n") + _U(script), _("Script error"), wxICON_ERROR);
 
+    delete[] script;
 	return ret;
 }
 
 int ScriptingManager::FindFunctionByDeclaration(const wxString& decl, const wxString& module)
 {
-	return m_pEngine->GetFunctionIDByDecl(module.c_str(), decl);
+	return m_pEngine->GetFunctionIDByDecl(_C(module), _C(decl));
 }
 
 int ScriptingManager::FindFunctionByName(const wxString& name, const wxString& module)
 {
-	return m_pEngine->GetFunctionIDByName(module.c_str(), name);
+	return m_pEngine->GetFunctionIDByName(_C(module), _C(name));
 }

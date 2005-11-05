@@ -29,7 +29,6 @@
 #include <wx/notebook.h>
 #include <wx/menu.h>
 #include <wx/toolbar.h>
-#include <wx/file.h>
 
 #include "manager.h" // class's header file
 #include "projectmanager.h"
@@ -49,61 +48,6 @@
 
 
 static bool appShutingDown = false;
-
-/// Reads a wxString from a non-unicode file. File must be open. File is closed automatically.
-bool cbRead(wxFile& file,wxString& st)
-{
-    st.Empty();
-    if (!file.IsOpened())
-        return false;
-    int len = file.Length();
-    if(!len)
-    {
-        file.Close();
-        return true;
-    }
-#if wxUSE_UNICODE
-    char* buff = new char[len+1];
-    if (!buff)
-    {
-        file.Close();
-        return false;
-    }
-    file.Read((void*)buff, len);
-    file.Close();
-    buff[len]='\0';
-    st = wxString((const char *)buff, wxConvUTF8);
-    delete[] buff;
-#else
-    char* buff = st.GetWriteBuf(len); // GetWriteBuf already handles the extra '\0'.
-    file.Read((void*)buff, len);
-    file.Close();
-    st.UngetWriteBuf();
-#endif
-    return true;
-}
-
-const wxString cbRead(wxFile& file)
-{
-    wxString st;
-    cbRead(file,st);
-    return st;
-}
-
-/// Writes a wxString to a non-unicode file. File must be open. File is closed automatically.
-bool cbWrite(wxFile& file, const wxString& buff)
-{
-    bool result = false;
-    if (file.IsOpened())
-    {
-        result = file.Write(buff,wxConvUTF8);
-        if(result)
-            file.Flush();
-        file.Close();
-    }
-    return result;
-}
-
 
 Manager* Manager::Get(wxFrame* appWindow, wxNotebook* notebook, wxWindow* clientWin)
 {
@@ -207,8 +151,8 @@ void Manager::Initxrc(bool force)
     if(!xrcok || force)
     {
         wxFileSystem::AddHandler(new wxZipFSHandler);
-        wxXmlResource::Get()->InitAllHandlers();
         wxXmlResource::Get()->InsertHandler(new wxToolBarAddOnXmlHandler);
+        wxXmlResource::Get()->InitAllHandlers();
 
         xrcok=true;
     }

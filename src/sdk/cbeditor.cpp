@@ -623,7 +623,7 @@ bool cbEditor::Open()
     if (!file.IsOpened())
         return false;
 
-    m_pControl->InsertText(0, cbRead(file));
+    m_pControl->InsertText(0, cbReadFileContents(file));
     m_pControl->EmptyUndoBuffer();
 
     // mark the file read-only, if applicable

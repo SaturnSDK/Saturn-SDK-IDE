@@ -1,4 +1,5 @@
 #include <sdk_precomp.h>
+#include <settings.h>
 #include "scriptbindings.h"
 #include "sc_wxstring.h"
 #include "sc_wxarraystring.h"
@@ -39,7 +40,7 @@ void gSetAcceleratorFor(const wxString& m, const wxString& s)
     wxMenuItem* item = bar->FindItem(id);
     if (!item) return;
 
-    item->SetText(item->GetText().BeforeFirst('\t') + '\t' + s);
+    item->SetText(item->GetText().BeforeFirst('\t') + _T('\t') + s);
 }
 
 //------------------------------------------------------------------------------
@@ -77,38 +78,38 @@ void RegisterBindings(asIScriptEngine* engine)
 //------------------------------------------------------------------------------
 template <class T> void Register_CompileOptionsBase(asIScriptEngine* engine, const wxString& classname)
 {
-    engine->RegisterObjectMethod(classname, "void SetBuildConfiguration(int)", asMETHOD(T, SetBuildConfiguration), asCALL_THISCALL);
-    engine->RegisterObjectMethod(classname, "void SetLinkerOptions(const wxArrayString& in)", asMETHOD(T, SetLinkerOptions), asCALL_THISCALL);
-    engine->RegisterObjectMethod(classname, "void SetLinkLibs(const wxArrayString& in)", asMETHOD(T, SetLinkLibs), asCALL_THISCALL);
-    engine->RegisterObjectMethod(classname, "void SetCompilerOptions(const wxArrayString& in)", asMETHOD(T, SetCompilerOptions), asCALL_THISCALL);
-    engine->RegisterObjectMethod(classname, "void SetIncludeDirs(const wxArrayString& in)", asMETHOD(T, SetIncludeDirs), asCALL_THISCALL);
-    engine->RegisterObjectMethod(classname, "void SetResourceIncludeDirs(const wxArrayString& in)", asMETHOD(T, SetResourceIncludeDirs), asCALL_THISCALL);
-    engine->RegisterObjectMethod(classname, "void SetLibDirs(const wxArrayString& in)", asMETHOD(T, SetLibDirs), asCALL_THISCALL);
-    engine->RegisterObjectMethod(classname, "void SetCommandsBeforeBuild(const wxArrayString& in)", asMETHOD(T, SetCommandsBeforeBuild), asCALL_THISCALL);
-    engine->RegisterObjectMethod(classname, "void SetCommandsAfterBuild(const wxArrayString& in)", asMETHOD(T, SetCommandsAfterBuild), asCALL_THISCALL);
-    engine->RegisterObjectMethod(classname, "int& GetBuildConfiguration()", asMETHOD(T, GetBuildConfiguration), asCALL_THISCALL);
-    engine->RegisterObjectMethod(classname, "wxArrayString& GetLinkerOptions()", asMETHOD(T, GetLinkerOptions), asCALL_THISCALL);
-    engine->RegisterObjectMethod(classname, "wxArrayString& GetLinkLibs()", asMETHOD(T, GetLinkLibs), asCALL_THISCALL);
-    engine->RegisterObjectMethod(classname, "wxArrayString& GetCompilerOptions()", asMETHOD(T, GetCompilerOptions), asCALL_THISCALL);
-    engine->RegisterObjectMethod(classname, "wxArrayString& GetIncludeDirs()", asMETHOD(T, GetIncludeDirs), asCALL_THISCALL);
-    engine->RegisterObjectMethod(classname, "wxArrayString& GetResourceIncludeDirs()", asMETHOD(T, GetResourceIncludeDirs), asCALL_THISCALL);
-    engine->RegisterObjectMethod(classname, "wxArrayString& GetLibDirs()", asMETHOD(T, GetLibDirs), asCALL_THISCALL);
-    engine->RegisterObjectMethod(classname, "wxArrayString& GetCommandsBeforeBuild()", asMETHOD(T, GetCommandsBeforeBuild), asCALL_THISCALL);
-    engine->RegisterObjectMethod(classname, "wxArrayString& GetCommandsAfterBuild()", asMETHOD(T, GetCommandsAfterBuild), asCALL_THISCALL);
-    engine->RegisterObjectMethod(classname, "bool GetModified()", asMETHOD(T, GetModified), asCALL_THISCALL);
-    engine->RegisterObjectMethod(classname, "void SetModified(bool)", asMETHOD(T, SetModified), asCALL_THISCALL);
-    engine->RegisterObjectMethod(classname, "void AddLinkerOption(const wxString& in)", asMETHOD(T, AddLinkerOption), asCALL_THISCALL);
-    engine->RegisterObjectMethod(classname, "void AddLinkLib(const wxString& in)", asMETHOD(T, AddLinkLib), asCALL_THISCALL);
-    engine->RegisterObjectMethod(classname, "void AddCompilerOption(const wxString& in)", asMETHOD(T, AddCompilerOption), asCALL_THISCALL);
-    engine->RegisterObjectMethod(classname, "void AddIncludeDir(const wxString& in)", asMETHOD(T, AddIncludeDir), asCALL_THISCALL);
-    engine->RegisterObjectMethod(classname, "void AddResourceIncludeDir(const wxString& in)", asMETHOD(T, AddResourceIncludeDir), asCALL_THISCALL);
-    engine->RegisterObjectMethod(classname, "void AddLibDir(const wxString& in)", asMETHOD(T, AddLibDir), asCALL_THISCALL);
-    engine->RegisterObjectMethod(classname, "void AddCommandsBeforeBuild(const wxString& in)", asMETHOD(T, AddCommandsBeforeBuild), asCALL_THISCALL);
-    engine->RegisterObjectMethod(classname, "void AddCommandsAfterBuild(const wxString& in)", asMETHOD(T, AddCommandsAfterBuild), asCALL_THISCALL);
-    engine->RegisterObjectMethod(classname, "bool GetAlwaysRunPreBuildSteps()", asMETHOD(T, GetAlwaysRunPreBuildSteps), asCALL_THISCALL);
-    engine->RegisterObjectMethod(classname, "bool GetAlwaysRunPostBuildSteps()", asMETHOD(T, GetAlwaysRunPostBuildSteps), asCALL_THISCALL);
-    engine->RegisterObjectMethod(classname, "void SetAlwaysRunPreBuildSteps(bool)", asMETHOD(T, SetAlwaysRunPreBuildSteps), asCALL_THISCALL);
-    engine->RegisterObjectMethod(classname, "void SetAlwaysRunPostBuildSteps(bool)", asMETHOD(T, SetAlwaysRunPostBuildSteps), asCALL_THISCALL);
+    engine->RegisterObjectMethod(_C(classname), "void SetBuildConfiguration(int)", asMETHOD(T, SetBuildConfiguration), asCALL_THISCALL);
+    engine->RegisterObjectMethod(_C(classname), "void SetLinkerOptions(const wxArrayString& in)", asMETHOD(T, SetLinkerOptions), asCALL_THISCALL);
+    engine->RegisterObjectMethod(_C(classname), "void SetLinkLibs(const wxArrayString& in)", asMETHOD(T, SetLinkLibs), asCALL_THISCALL);
+    engine->RegisterObjectMethod(_C(classname), "void SetCompilerOptions(const wxArrayString& in)", asMETHOD(T, SetCompilerOptions), asCALL_THISCALL);
+    engine->RegisterObjectMethod(_C(classname), "void SetIncludeDirs(const wxArrayString& in)", asMETHOD(T, SetIncludeDirs), asCALL_THISCALL);
+    engine->RegisterObjectMethod(_C(classname), "void SetResourceIncludeDirs(const wxArrayString& in)", asMETHOD(T, SetResourceIncludeDirs), asCALL_THISCALL);
+    engine->RegisterObjectMethod(_C(classname), "void SetLibDirs(const wxArrayString& in)", asMETHOD(T, SetLibDirs), asCALL_THISCALL);
+    engine->RegisterObjectMethod(_C(classname), "void SetCommandsBeforeBuild(const wxArrayString& in)", asMETHOD(T, SetCommandsBeforeBuild), asCALL_THISCALL);
+    engine->RegisterObjectMethod(_C(classname), "void SetCommandsAfterBuild(const wxArrayString& in)", asMETHOD(T, SetCommandsAfterBuild), asCALL_THISCALL);
+    engine->RegisterObjectMethod(_C(classname), "int& GetBuildConfiguration()", asMETHOD(T, GetBuildConfiguration), asCALL_THISCALL);
+    engine->RegisterObjectMethod(_C(classname), "wxArrayString& GetLinkerOptions()", asMETHOD(T, GetLinkerOptions), asCALL_THISCALL);
+    engine->RegisterObjectMethod(_C(classname), "wxArrayString& GetLinkLibs()", asMETHOD(T, GetLinkLibs), asCALL_THISCALL);
+    engine->RegisterObjectMethod(_C(classname), "wxArrayString& GetCompilerOptions()", asMETHOD(T, GetCompilerOptions), asCALL_THISCALL);
+    engine->RegisterObjectMethod(_C(classname), "wxArrayString& GetIncludeDirs()", asMETHOD(T, GetIncludeDirs), asCALL_THISCALL);
+    engine->RegisterObjectMethod(_C(classname), "wxArrayString& GetResourceIncludeDirs()", asMETHOD(T, GetResourceIncludeDirs), asCALL_THISCALL);
+    engine->RegisterObjectMethod(_C(classname), "wxArrayString& GetLibDirs()", asMETHOD(T, GetLibDirs), asCALL_THISCALL);
+    engine->RegisterObjectMethod(_C(classname), "wxArrayString& GetCommandsBeforeBuild()", asMETHOD(T, GetCommandsBeforeBuild), asCALL_THISCALL);
+    engine->RegisterObjectMethod(_C(classname), "wxArrayString& GetCommandsAfterBuild()", asMETHOD(T, GetCommandsAfterBuild), asCALL_THISCALL);
+    engine->RegisterObjectMethod(_C(classname), "bool GetModified()", asMETHOD(T, GetModified), asCALL_THISCALL);
+    engine->RegisterObjectMethod(_C(classname), "void SetModified(bool)", asMETHOD(T, SetModified), asCALL_THISCALL);
+    engine->RegisterObjectMethod(_C(classname), "void AddLinkerOption(const wxString& in)", asMETHOD(T, AddLinkerOption), asCALL_THISCALL);
+    engine->RegisterObjectMethod(_C(classname), "void AddLinkLib(const wxString& in)", asMETHOD(T, AddLinkLib), asCALL_THISCALL);
+    engine->RegisterObjectMethod(_C(classname), "void AddCompilerOption(const wxString& in)", asMETHOD(T, AddCompilerOption), asCALL_THISCALL);
+    engine->RegisterObjectMethod(_C(classname), "void AddIncludeDir(const wxString& in)", asMETHOD(T, AddIncludeDir), asCALL_THISCALL);
+    engine->RegisterObjectMethod(_C(classname), "void AddResourceIncludeDir(const wxString& in)", asMETHOD(T, AddResourceIncludeDir), asCALL_THISCALL);
+    engine->RegisterObjectMethod(_C(classname), "void AddLibDir(const wxString& in)", asMETHOD(T, AddLibDir), asCALL_THISCALL);
+    engine->RegisterObjectMethod(_C(classname), "void AddCommandsBeforeBuild(const wxString& in)", asMETHOD(T, AddCommandsBeforeBuild), asCALL_THISCALL);
+    engine->RegisterObjectMethod(_C(classname), "void AddCommandsAfterBuild(const wxString& in)", asMETHOD(T, AddCommandsAfterBuild), asCALL_THISCALL);
+    engine->RegisterObjectMethod(_C(classname), "bool GetAlwaysRunPreBuildSteps()", asMETHOD(T, GetAlwaysRunPreBuildSteps), asCALL_THISCALL);
+    engine->RegisterObjectMethod(_C(classname), "bool GetAlwaysRunPostBuildSteps()", asMETHOD(T, GetAlwaysRunPostBuildSteps), asCALL_THISCALL);
+    engine->RegisterObjectMethod(_C(classname), "void SetAlwaysRunPreBuildSteps(bool)", asMETHOD(T, SetAlwaysRunPreBuildSteps), asCALL_THISCALL);
+    engine->RegisterObjectMethod(_C(classname), "void SetAlwaysRunPostBuildSteps(bool)", asMETHOD(T, SetAlwaysRunPostBuildSteps), asCALL_THISCALL);
 }
 
 //------------------------------------------------------------------------------
@@ -119,32 +120,32 @@ template <class T> void Register_CompileTargetBase(asIScriptEngine* engine, cons
     // add CompileOptionsBase methods/properties
     Register_CompileOptionsBase<T>(engine, classname);
 
-    engine->RegisterObjectMethod(classname, "wxString& GetFilename()", asMETHOD(T, GetFilename), asCALL_THISCALL);
-    engine->RegisterObjectMethod(classname, "wxString& GetTitle()", asMETHOD(T, GetTitle), asCALL_THISCALL);
-    engine->RegisterObjectMethod(classname, "void SetTitle(const wxString& in)", asMETHOD(T, SetTitle), asCALL_THISCALL);
-    engine->RegisterObjectMethod(classname, "void SetOutputFilename(const wxString& in)", asMETHOD(T, SetOutputFilename), asCALL_THISCALL);
-    engine->RegisterObjectMethod(classname, "void SetWorkingDir(const wxString& in)", asMETHOD(T, SetWorkingDir), asCALL_THISCALL);
-    engine->RegisterObjectMethod(classname, "void SetObjectOutput(const wxString& in)", asMETHOD(T, SetObjectOutput), asCALL_THISCALL);
-    engine->RegisterObjectMethod(classname, "void SetDepsOutput(const wxString& in)", asMETHOD(T, SetDepsOutput), asCALL_THISCALL);
-    engine->RegisterObjectMethod(classname, "int GetOptionRelation(int)", asMETHOD(T, GetOptionRelation), asCALL_THISCALL);
-    engine->RegisterObjectMethod(classname, "void SetOptionRelation(int,int)", asMETHOD(T, SetOptionRelation), asCALL_THISCALL);
-    engine->RegisterObjectMethod(classname, "wxString GetWorkingDir()", asMETHOD(T, GetWorkingDir), asCALL_THISCALL);
-    engine->RegisterObjectMethod(classname, "wxString GetObjectOutput()", asMETHOD(T, GetObjectOutput), asCALL_THISCALL);
-    engine->RegisterObjectMethod(classname, "wxString GetDepsOutput()", asMETHOD(T, GetDepsOutput), asCALL_THISCALL);
-    engine->RegisterObjectMethod(classname, "wxString GetOutputFilename()", asMETHOD(T, GetOutputFilename), asCALL_THISCALL);
-    engine->RegisterObjectMethod(classname, "wxString SuggestOutputFilename()", asMETHOD(T, SuggestOutputFilename), asCALL_THISCALL);
-    engine->RegisterObjectMethod(classname, "wxString GetExecutableFilename()", asMETHOD(T, GetExecutableFilename), asCALL_THISCALL);
-    engine->RegisterObjectMethod(classname, "wxString GetDynamicLibFilename()", asMETHOD(T, GetDynamicLibFilename), asCALL_THISCALL);
-    engine->RegisterObjectMethod(classname, "wxString GetStaticLibFilename()", asMETHOD(T, GetStaticLibFilename), asCALL_THISCALL);
-    engine->RegisterObjectMethod(classname, "wxString GetBasePath()", asMETHOD(T, GetBasePath), asCALL_THISCALL);
-    engine->RegisterObjectMethod(classname, "void SetTargetType(int)", asMETHOD(T, SetTargetType), asCALL_THISCALL);
-    engine->RegisterObjectMethod(classname, "int& GetTargetType()", asMETHOD(T, GetTargetType), asCALL_THISCALL);
-    engine->RegisterObjectMethod(classname, "wxString& GetExecutionParameters()", asMETHOD(T, GetExecutionParameters), asCALL_THISCALL);
-    engine->RegisterObjectMethod(classname, "void SetExecutionParameters(const wxString& in)", asMETHOD(T, SetExecutionParameters), asCALL_THISCALL);
-    engine->RegisterObjectMethod(classname, "wxString& GetHostApplication()", asMETHOD(T, GetHostApplication), asCALL_THISCALL);
-    engine->RegisterObjectMethod(classname, "void SetHostApplication(const wxString& in)", asMETHOD(T, SetHostApplication), asCALL_THISCALL);
-    engine->RegisterObjectMethod(classname, "void SetCompilerIndex(int)", asMETHOD(T, SetCompilerIndex), asCALL_THISCALL);
-    engine->RegisterObjectMethod(classname, "int GetCompilerIndex()", asMETHOD(T, GetCompilerIndex), asCALL_THISCALL);
+    engine->RegisterObjectMethod(_C(classname), "wxString& GetFilename()", asMETHOD(T, GetFilename), asCALL_THISCALL);
+    engine->RegisterObjectMethod(_C(classname), "wxString& GetTitle()", asMETHOD(T, GetTitle), asCALL_THISCALL);
+    engine->RegisterObjectMethod(_C(classname), "void SetTitle(const wxString& in)", asMETHOD(T, SetTitle), asCALL_THISCALL);
+    engine->RegisterObjectMethod(_C(classname), "void SetOutputFilename(const wxString& in)", asMETHOD(T, SetOutputFilename), asCALL_THISCALL);
+    engine->RegisterObjectMethod(_C(classname), "void SetWorkingDir(const wxString& in)", asMETHOD(T, SetWorkingDir), asCALL_THISCALL);
+    engine->RegisterObjectMethod(_C(classname), "void SetObjectOutput(const wxString& in)", asMETHOD(T, SetObjectOutput), asCALL_THISCALL);
+    engine->RegisterObjectMethod(_C(classname), "void SetDepsOutput(const wxString& in)", asMETHOD(T, SetDepsOutput), asCALL_THISCALL);
+    engine->RegisterObjectMethod(_C(classname), "int GetOptionRelation(int)", asMETHOD(T, GetOptionRelation), asCALL_THISCALL);
+    engine->RegisterObjectMethod(_C(classname), "void SetOptionRelation(int,int)", asMETHOD(T, SetOptionRelation), asCALL_THISCALL);
+    engine->RegisterObjectMethod(_C(classname), "wxString GetWorkingDir()", asMETHOD(T, GetWorkingDir), asCALL_THISCALL);
+    engine->RegisterObjectMethod(_C(classname), "wxString GetObjectOutput()", asMETHOD(T, GetObjectOutput), asCALL_THISCALL);
+    engine->RegisterObjectMethod(_C(classname), "wxString GetDepsOutput()", asMETHOD(T, GetDepsOutput), asCALL_THISCALL);
+    engine->RegisterObjectMethod(_C(classname), "wxString GetOutputFilename()", asMETHOD(T, GetOutputFilename), asCALL_THISCALL);
+    engine->RegisterObjectMethod(_C(classname), "wxString SuggestOutputFilename()", asMETHOD(T, SuggestOutputFilename), asCALL_THISCALL);
+    engine->RegisterObjectMethod(_C(classname), "wxString GetExecutableFilename()", asMETHOD(T, GetExecutableFilename), asCALL_THISCALL);
+    engine->RegisterObjectMethod(_C(classname), "wxString GetDynamicLibFilename()", asMETHOD(T, GetDynamicLibFilename), asCALL_THISCALL);
+    engine->RegisterObjectMethod(_C(classname), "wxString GetStaticLibFilename()", asMETHOD(T, GetStaticLibFilename), asCALL_THISCALL);
+    engine->RegisterObjectMethod(_C(classname), "wxString GetBasePath()", asMETHOD(T, GetBasePath), asCALL_THISCALL);
+    engine->RegisterObjectMethod(_C(classname), "void SetTargetType(int)", asMETHOD(T, SetTargetType), asCALL_THISCALL);
+    engine->RegisterObjectMethod(_C(classname), "int& GetTargetType()", asMETHOD(T, GetTargetType), asCALL_THISCALL);
+    engine->RegisterObjectMethod(_C(classname), "wxString& GetExecutionParameters()", asMETHOD(T, GetExecutionParameters), asCALL_THISCALL);
+    engine->RegisterObjectMethod(_C(classname), "void SetExecutionParameters(const wxString& in)", asMETHOD(T, SetExecutionParameters), asCALL_THISCALL);
+    engine->RegisterObjectMethod(_C(classname), "wxString& GetHostApplication()", asMETHOD(T, GetHostApplication), asCALL_THISCALL);
+    engine->RegisterObjectMethod(_C(classname), "void SetHostApplication(const wxString& in)", asMETHOD(T, SetHostApplication), asCALL_THISCALL);
+    engine->RegisterObjectMethod(_C(classname), "void SetCompilerIndex(int)", asMETHOD(T, SetCompilerIndex), asCALL_THISCALL);
+    engine->RegisterObjectMethod(_C(classname), "int GetCompilerIndex()", asMETHOD(T, GetCompilerIndex), asCALL_THISCALL);
 }
 
 //------------------------------------------------------------------------------
@@ -182,7 +183,7 @@ void Register_ProjectFile(asIScriptEngine* engine)
 void Register_ProjectBuildTarget(asIScriptEngine* engine)
 {
     // add CompileTargetBase methods/properties
-    Register_CompileTargetBase<ProjectBuildTarget>(engine, "BuildTarget");
+    Register_CompileTargetBase<ProjectBuildTarget>(engine, _T("BuildTarget"));
 
     engine->RegisterObjectMethod("BuildTarget", "Project@ GetParentProject()", asMETHOD(ProjectBuildTarget, GetParentProject), asCALL_THISCALL);
     engine->RegisterObjectMethod("BuildTarget", "wxString GetFullTitle()", asMETHOD(ProjectBuildTarget, GetFullTitle), asCALL_THISCALL);
@@ -206,7 +207,7 @@ void Register_ProjectBuildTarget(asIScriptEngine* engine)
 void Register_Project(asIScriptEngine* engine)
 {
     // add CompileTargetBase methods/properties
-    Register_CompileTargetBase<cbProject>(engine, "Project");
+    Register_CompileTargetBase<cbProject>(engine, _T("Project"));
 
     engine->RegisterObjectMethod("Project", "bool GetModified()", asMETHOD(cbProject, GetModified), asCALL_THISCALL);
     engine->RegisterObjectMethod("Project", "void SetModified(bool)", asMETHOD(cbProject, SetModified), asCALL_THISCALL);

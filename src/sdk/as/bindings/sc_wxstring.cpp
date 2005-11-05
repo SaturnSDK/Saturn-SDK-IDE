@@ -1,6 +1,7 @@
 #include <new>
 #include <angelscript.h>
 #include "sc_wxstring.h"
+#include <settings.h>
 
 //--------------
 // constructors
@@ -89,7 +90,7 @@ scWxString *operator+(const scWxString &a, const scWxString &b)
 
 static scWxString &AssignBitsToString(asDWORD i, scWxString &dest)
 {
-	dest.buffer.Printf("%ld", i);
+	dest.buffer.Printf(_T("%ld"), i);
 
 	// Return a reference to the object
 	return dest;
@@ -97,25 +98,25 @@ static scWxString &AssignBitsToString(asDWORD i, scWxString &dest)
 
 static scWxString &AssignUIntToString(unsigned int i, scWxString &dest)
 {
-	dest.buffer.Printf("%ud", i);
+	dest.buffer.Printf(_T("%ud"), i);
 	return dest;
 }
 
 static scWxString &AssignIntToString(int i, scWxString &dest)
 {
-	dest.buffer.Printf("%d", i);
+	dest.buffer.Printf(_T("%d"), i);
 	return dest;
 }
 
 static scWxString &AssignFloatToString(float f, scWxString &dest)
 {
-	dest.buffer.Printf("%f", f);
+	dest.buffer.Printf(_T("%f"), f);
 	return dest;
 }
 
 static scWxString &AssignDoubleToString(double f, scWxString &dest)
 {
-	dest.buffer.Printf("%f", f); // TODO: 'double' specifier?
+	dest.buffer.Printf(_T("%f"), f); // TODO: 'double' specifier?
 	return dest;
 }
 
@@ -125,31 +126,31 @@ static scWxString &AssignDoubleToString(double f, scWxString &dest)
 
 static scWxString &AddAssignBitsToString(asDWORD i, scWxString &dest)
 {
-	dest.buffer << wxString::Format("%ld", i);
+	dest.buffer << wxString::Format(_T("%ld"), i);
 	return dest;
 }
 
 static scWxString &AddAssignUIntToString(unsigned int i, scWxString &dest)
 {
-	dest.buffer << wxString::Format("%ud", i);
+	dest.buffer << wxString::Format(_T("%ud"), i);
 	return dest;
 }
 
 static scWxString &AddAssignIntToString(int i, scWxString &dest)
 {
-	dest.buffer << wxString::Format("%d", i);
+	dest.buffer << wxString::Format(_T("%d"), i);
 	return dest;
 }
 
 static scWxString &AddAssignFloatToString(float f, scWxString &dest)
 {
-	dest.buffer << wxString::Format("%f", f);
+	dest.buffer << wxString::Format(_T("%f"), f);
 	return dest;
 }
 
 static scWxString &AddAssignDoubleToString(double f, scWxString &dest)
 {
-	dest.buffer << wxString::Format("%f", f);
+	dest.buffer << wxString::Format(_T("%f"), f);
 	return dest;
 }
 
@@ -159,27 +160,27 @@ static scWxString &AddAssignDoubleToString(double f, scWxString &dest)
 
 static scWxString *AddStringBits(const scWxString &str, asDWORD i)
 {
-	return new scWxString(str.buffer + wxString::Format("%ld", i));
+	return new scWxString(str.buffer + wxString::Format(_T("%ld"), i));
 }
 
 static scWxString *AddStringUInt(const scWxString &str, unsigned int i)
 {
-	return new scWxString(str.buffer + wxString::Format("%ud", i));
+	return new scWxString(str.buffer + wxString::Format(_T("%ud"), i));
 }
 
 static scWxString *AddStringInt(const scWxString &str, int i)
 {
-	return new scWxString(str.buffer + wxString::Format("%d", i));
+	return new scWxString(str.buffer + wxString::Format(_T("%d"), i));
 }
 
 static scWxString *AddStringFloat(const scWxString &str, float f)
 {
-	return new scWxString(str.buffer + wxString::Format("%f", f));
+	return new scWxString(str.buffer + wxString::Format(_T("%f"), f));
 }
 
 static scWxString *AddStringDouble(const scWxString &str, double f)
 {
-	return new scWxString(str.buffer + wxString::Format("%f", f));
+	return new scWxString(str.buffer + wxString::Format(_T("%f"), f));
 }
 
 //----------------
@@ -188,27 +189,27 @@ static scWxString *AddStringDouble(const scWxString &str, double f)
 
 static scWxString *AddBitsString(asDWORD i, const scWxString &str)
 {
-	return new scWxString(wxString::Format("%ld", i) + str.buffer);
+	return new scWxString(wxString::Format(_T("%ld"), i) + str.buffer);
 }
 
 static scWxString *AddIntString(int i, const scWxString &str)
 {
-	return new scWxString(wxString::Format("%d", i) + str.buffer);
+	return new scWxString(wxString::Format(_T("%d"), i) + str.buffer);
 }
 
 static scWxString *AddUIntString(unsigned int i, const scWxString &str)
 {
-	return new scWxString(wxString::Format("%ud", i) + str.buffer);
+	return new scWxString(wxString::Format(_T("%ud"), i) + str.buffer);
 }
 
 static scWxString *AddFloatString(float f, const scWxString &str)
 {
-	return new scWxString(wxString::Format("%f", f) + str.buffer);
+	return new scWxString(wxString::Format(_T("%f"), f) + str.buffer);
 }
 
 static scWxString *AddDoubleString(double f, const scWxString &str)
 {
-	return new scWxString(wxString::Format("%f", f) + str.buffer);
+	return new scWxString(wxString::Format(_T("%f"), f) + str.buffer);
 }
 
 //----------
@@ -227,7 +228,10 @@ static char *StringCharAt(unsigned int i, scWxString &str)
 		return 0;
 	}
 
-	return &str.buffer[i];
+    const char* s = _C(str.buffer);
+    return (char*)&s[i];
+//    static char c = str.buffer.GetChar(i);
+//	return &c;
 }
 
 //-----------------------
@@ -251,7 +255,7 @@ static void StringFree(void *p)
 static scWxString *StringFactory(asUINT length, const char *s)
 {
 	// Return a script handle to a new wxString
-	return new scWxString(s);
+	return new scWxString(_U(s));
 }
 
 // This is a wrapper for the default scWxString constructor, since

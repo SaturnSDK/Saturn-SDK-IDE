@@ -675,7 +675,7 @@ int CompilerGCC::DoRunQueue()
 		return -2;
 
     MessageManager* msgMan = Manager::Get()->GetMessageManager();
-    msgMan->SwitchTo(m_PageIndex);
+//    msgMan->SwitchTo(m_PageIndex);
 
 	// leave if no active project
     AskForActiveProject();
@@ -1043,6 +1043,7 @@ void CompilerGCC::PrintBanner()
 		return;
     if (!m_Project)
         return;
+    Manager::Get()->GetMessageManager()->Open();
     Manager::Get()->GetMessageManager()->SwitchTo(m_PageIndex);
     Manager::Get()->GetMessageManager()->Log(m_PageIndex, _("Project   : %s"), m_Project->GetTitle().c_str());
     Manager::Get()->GetMessageManager()->Log(m_PageIndex, _("Compiler  : %s (%s)"), CompilerFactory::Compilers[m_Project->GetCompilerIndex()]->GetName().c_str(),
@@ -1076,8 +1077,6 @@ int CompilerGCC::Run(ProjectBuildTarget* target)
 	DoPrepareQueue();
 	if (!CompilerValid(target))
 		return -1;
-
-    Manager::Get()->GetMessageManager()->Open();
 
 	if (!target)
 	{
@@ -1201,8 +1200,6 @@ int CompilerGCC::Clean(ProjectBuildTarget* target)
         CompilerFactory::Compilers[m_CompilerIdx]->GetCustomVars().ApplyVarsToEnvironment();
     m_Project->GetCustomVars().ApplyVarsToEnvironment();
 
-    Manager::Get()->GetMessageManager()->Open();
-
     wxSetWorkingDirectory(m_Project->GetBasePath());
     if (UseMake(target))
     {
@@ -1240,8 +1237,6 @@ int CompilerGCC::DistClean(ProjectBuildTarget* target)
         CompilerFactory::Compilers[m_CompilerIdx]->GetCustomVars().ApplyVarsToEnvironment();
     m_Project->GetCustomVars().ApplyVarsToEnvironment();
 
-    Manager::Get()->GetMessageManager()->Open();
-
     wxSetWorkingDirectory(m_Project->GetBasePath());
     if (UseMake(target))
     {
@@ -1275,8 +1270,6 @@ int CompilerGCC::CreateDist()
 	if (!CompilerValid())
 		return -1;
 
-    Manager::Get()->GetMessageManager()->Open();
-
     wxString cmd;
     if (UseMake())
     {
@@ -1298,8 +1291,6 @@ void CompilerGCC::OnExportMakefile(wxCommandEvent& event)
 	wxString makefile = wxGetTextFromUser(_("Please enter the \"Makefile\" name:"), _("Export Makefile"), ProjectMakefile());
 	if (makefile.IsEmpty())
 		return;
-
-    Manager::Get()->GetMessageManager()->Open();
 
     wxSetWorkingDirectory(m_Project->GetBasePath());
     if (UseMake())
@@ -1327,8 +1318,6 @@ int CompilerGCC::Compile(ProjectBuildTarget* target)
         CompilerFactory::Compilers[m_CompilerIdx]->GetCustomVars().ApplyVarsToEnvironment();
     m_Project->GetCustomVars().ApplyVarsToEnvironment();
 
-    Manager::Get()->GetMessageManager()->Open();
-
     wxString cmd;
     wxSetWorkingDirectory(m_Project->GetBasePath());
     if (UseMake(target))
@@ -1342,9 +1331,12 @@ int CompilerGCC::Compile(ProjectBuildTarget* target)
     }
     else
     {
+//        DBGLOG(_T("Creating commands factory"));
         DirectCommands dc(this, CompilerFactory::Compilers[m_CompilerIdx], m_Project, m_PageIndex);
+//        DBGLOG(_T("Generating commands"));
         wxArrayString compile = dc.GetCompileCommands(target);
-        dc.AppendArray(compile, m_Queue);
+        AppendArray(compile, m_Queue);
+//        DBGLOG(_T("Commands generated"));
     }
     return DoRunQueue();
 }
@@ -1358,8 +1350,6 @@ int CompilerGCC::Rebuild(ProjectBuildTarget* target)
     if (CompilerFactory::CompilerIndexOK(m_CompilerIdx))
         CompilerFactory::Compilers[m_CompilerIdx]->GetCustomVars().ApplyVarsToEnvironment();
     m_Project->GetCustomVars().ApplyVarsToEnvironment();
-
-    Manager::Get()->GetMessageManager()->Open();
 
     if (UseMake(target))
     {
@@ -1392,7 +1382,6 @@ int CompilerGCC::Rebuild(ProjectBuildTarget* target)
 
 int CompilerGCC::CompileAll()
 {
-    Manager::Get()->GetMessageManager()->Open();
     DoPrepareMultiProjectCommand(mpjCompile);
     DoPrepareQueue();
     ClearLog();
@@ -1402,7 +1391,6 @@ int CompilerGCC::CompileAll()
 
 int CompilerGCC::RebuildAll()
 {
-    Manager::Get()->GetMessageManager()->Open();
     DoPrepareMultiProjectCommand(mpjRebuild);
     DoPrepareQueue();
     ClearLog();
@@ -1481,8 +1469,6 @@ int CompilerGCC::CompileFile(const wxString& file)
 	if (!CompilerValid())
 		return -1;
 
-    Manager::Get()->GetMessageManager()->Open();
-
     if (m_Project)
         wxSetWorkingDirectory(m_Project->GetBasePath());
 
@@ -1509,7 +1495,7 @@ int CompilerGCC::CompileFile(const wxString& file)
             // get compile commands for file (always linked as console-executable)
             DirectCommands dc(this, CompilerFactory::GetDefaultCompiler(), 0, m_PageIndex);
             wxArrayString compile = dc.GetCompileSingleFileCommand(file);
-            dc.AppendArray(compile, m_Queue);
+            AppendArray(compile, m_Queue);
 
             // apply global custom vars
             CompilerFactory::GetDefaultCompiler()->GetCustomVars().ApplyVarsToEnvironment();
@@ -1538,7 +1524,7 @@ int CompilerGCC::CompileFile(const wxString& file)
     {
         DirectCommands dc(this, CompilerFactory::Compilers[bt->GetCompilerIndex()], m_Project, m_PageIndex);
         wxArrayString compile = dc.CompileFile(bt, pf);
-        dc.AppendArray(compile, m_Queue);
+        AppendArray(compile, m_Queue);
     }
     return DoRunQueue();
 }

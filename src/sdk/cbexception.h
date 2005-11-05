@@ -42,7 +42,12 @@ class cbException
 		wxString File;
 		int Line;
 };
-#define cbThrow(message) throw cbException(message, __FILE__, __LINE__)
+
+#ifdef wxUSE_UNICODE
+    #define cbThrow(message) throw cbException(message, _T(__FILE__), __LINE__)
+#else
+    #define cbThrow(message) throw cbException(message, __FILE__, __LINE__)
+#endif
 
 #ifndef cbDEBUG
     #define cbAssert(expr)

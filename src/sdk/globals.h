@@ -63,13 +63,26 @@ enum FileType
 extern "C" {
 #endif
 // global helper funcs
+/// Reads a wxString from a non-unicode file. File must be open. File is closed automatically.
+extern DLLIMPORT bool cbRead(wxFile& file, wxString& st);
+/// Reads a wxString from a non-unicode file. File must be open. File is closed automatically.
+extern DLLIMPORT wxString cbReadFileContents(wxFile& file);
+/// Writes a wxString to a non-unicode file. File must be open. File is closed automatically.
+extern DLLIMPORT bool cbWrite(wxFile& file, const wxString& buff);
+
 extern DLLIMPORT wxString GetStringFromArray(const wxArrayString& array, const wxString& separator = DEFAULT_ARRAY_SEP);
 extern DLLIMPORT wxArrayString GetArrayFromString(const wxString& text, const wxString& separator = DEFAULT_ARRAY_SEP, bool trimSpaces = true);
-extern DLLIMPORT bool CreateDirRecursively(const wxString& full_path, int perms = 0755);
+extern DLLIMPORT void AppendArray(const wxArrayString& from, wxArrayString& to);
+
 extern DLLIMPORT wxString UnixFilename(const wxString& filename);
+extern DLLIMPORT void QuoteStringIfNeeded(wxString& str);
+
 extern DLLIMPORT FileType FileTypeOf(const wxString& filename);
+
 extern DLLIMPORT void SaveTreeState(wxTreeCtrl* tree, const wxTreeItemId& parent, wxArrayString& nodePaths);
 extern DLLIMPORT void RestoreTreeState(wxTreeCtrl* tree, const wxTreeItemId& parent, wxArrayString& nodePaths);
+
+extern DLLIMPORT bool CreateDirRecursively(const wxString& full_path, int perms = 0755);
 extern DLLIMPORT wxString ChooseDirectory(wxWindow* parent,
                                           const wxString& message = _("Select directory"),
                                           const wxString& initialPath = _T(""),

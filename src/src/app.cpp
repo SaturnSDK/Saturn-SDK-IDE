@@ -207,10 +207,6 @@ void CodeBlocksApp::InitFrame()
     #endif
     HideSplashScreen();
     frame->Show(TRUE);
-
-    // run startup script
-    Manager::Get()->GetScriptingManager()->LoadScript(_T("startup.script"));
-
     SetTopWindow(frame);
     if (ParseCmdLine(frame) == 0)
     {
@@ -334,6 +330,9 @@ bool CodeBlocksApp::OnInit()
     CodeBlocksEvent event(cbEVT_APP_STARTUP_DONE);
     Manager::Get()->ProcessEvent(event);
     wxYield();
+
+    // run startup script
+    Manager::Get()->GetScriptingManager()->LoadScript(_T("startup.script"));
 
 	return TRUE;
 }

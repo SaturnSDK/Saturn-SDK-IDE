@@ -24,14 +24,6 @@ class ScriptingManager;
 /*
  * No description
  */
-
-/// Reads a wxString from a non-unicode file. File must be open. File is closed automatically.
-bool DLLIMPORT cbRead(wxFile& file,wxString& st);
-const wxString DLLIMPORT cbRead(wxFile& file);
-
-/// Writes a wxString to a non-unicode file. File must be open. File is closed automatically.
-bool DLLIMPORT cbWrite(wxFile& file, const wxString& buff);
-
 class DLLIMPORT Manager
 {
 	public:

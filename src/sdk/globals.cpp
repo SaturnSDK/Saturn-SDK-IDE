@@ -29,6 +29,7 @@
 #include <wx/filename.h>
 #include <wx/dirdlg.h>
 #include <wx/msgdlg.h>
+#include <wx/file.h>
 
 wxString GetStringFromArray(const wxArrayString& array, const wxString& separator)
 {
@@ -70,20 +71,12 @@ wxArrayString GetArrayFromString(const wxString& text, const wxString& separator
     return out;
 }
 
-bool CreateDirRecursively(const wxString& full_path, int perms)
+void AppendArray(const wxArrayString& from, wxArrayString& to)
 {
-    wxFileName tmp(full_path);
-    wxString sep = wxFileName::GetPathSeparator();
-    wxString currdir = tmp.GetVolume() + tmp.GetVolumeSeparator() + sep;
-    wxArrayString dirs = tmp.GetDirs();
-    for (size_t i = 0; i < dirs.GetCount(); ++i)
+    for (unsigned int i = 0; i < from.GetCount(); ++i)
     {
-        currdir << dirs[i];
-        if (!wxDirExists(currdir) && !wxMkdir(currdir, perms))
-            return false;
-        currdir << sep;
+        to.Add(from[i]);
     }
-    return true;
 }
 
 wxString UnixFilename(const wxString& filename)
@@ -101,6 +94,12 @@ wxString UnixFilename(const wxString& filename)
         ;
 #endif
     return result;
+}
+
+void QuoteStringIfNeeded(wxString& str)
+{
+    if (!str.IsEmpty() && str.Find(_T(' ')) != -1 && str.GetChar(0) != _T('"'))
+        str = wxString(_T("\"")) + str + _T("\"");
 }
 
 FileType FileTypeOf(const wxString& filename)
@@ -268,6 +267,22 @@ void RestoreTreeState(wxTreeCtrl* tree, const wxTreeItemId& parent, wxArrayStrin
     nodePaths.Clear();
 }
 
+bool CreateDirRecursively(const wxString& full_path, int perms)
+{
+    wxFileName tmp(full_path);
+    wxString sep = wxFileName::GetPathSeparator();
+    wxString currdir = tmp.GetVolume() + tmp.GetVolumeSeparator() + sep;
+    wxArrayString dirs = tmp.GetDirs();
+    for (size_t i = 0; i < dirs.GetCount(); ++i)
+    {
+        currdir << dirs[i];
+        if (!wxDirExists(currdir) && !wxMkdir(currdir, perms))
+            return false;
+        currdir << sep;
+    }
+    return true;
+}
+
 wxString ChooseDirectory(wxWindow* parent,
                          const wxString& message,
                          const wxString& initialPath,
@@ -295,4 +310,58 @@ wxString ChooseDirectory(wxWindow* parent,
         }
     }
     return path.GetFullPath();
+}
+
+/// Reads a wxString from a non-unicode file. File must be open. File is closed automatically.
+bool cbRead(wxFile& file, wxString& st)
+{
+    st.Empty();
+    if (!file.IsOpened())
+        return false;
+    int len = file.Length();
+    if(!len)
+    {
+        file.Close();
+        return true;
+    }
+#if wxUSE_UNICODE
+    char* buff = new char[len+1];
+    if (!buff)
+    {
+        file.Close();
+        return false;
+    }
+    file.Read((void*)buff, len);
+    file.Close();
+    buff[len]='\0';
+    st = wxString((const char *)buff, wxConvUTF8);
+    delete[] buff;
+#else
+    char* buff = st.GetWriteBuf(len); // GetWriteBuf already handles the extra '\0'.
+    file.Read((void*)buff, len);
+    file.Close();
+    st.UngetWriteBuf();
+#endif
+    return true;
+}
+
+wxString cbReadFileContents(wxFile& file)
+{
+    wxString st;
+    cbRead(file,st);
+    return st;
+}
+
+/// Writes a wxString to a non-unicode file. File must be open. File is closed automatically.
+bool cbWrite(wxFile& file, const wxString& buff)
+{
+    bool result = false;
+    if (file.IsOpened())
+    {
+        result = file.Write(buff,wxConvUTF8);
+        if(result)
+            file.Flush();
+        file.Close();
+    }
+    return result;
 }

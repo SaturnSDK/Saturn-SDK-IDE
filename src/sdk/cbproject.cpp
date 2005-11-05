@@ -532,7 +532,7 @@ ProjectFile* cbProject::AddFile(int targetIndex, const wxString& filename, bool 
         return f;
 
     // OK, add file
-    f = new ProjectFile;
+    f = new ProjectFile(this);
     bool localCompile, localLink;
     wxFileName fname;
     wxString ext;
@@ -913,7 +913,20 @@ bool cbProject::SaveAllFiles()
 bool cbProject::ShowOptions()
 {
     ProjectOptionsDlg dlg(Manager::Get()->GetAppWindow(), this);
-    return dlg.ShowModal() == wxID_OK;
+    if (dlg.ShowModal() == wxID_OK)
+    {
+        // update file details
+        int count = m_Files.GetCount();
+        FilesList::Node* node = m_Files.GetFirst();
+        while(node)
+        {
+            ProjectFile* f = node->GetData();
+            f->UpdateFileDetails();
+            node = node->GetNext();
+        }
+        return true;
+    }
+    return false;
 }
 
 int cbProject::SelectTarget(int initial, bool evenIfOne)
