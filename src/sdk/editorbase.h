@@ -90,6 +90,7 @@ class DLLIMPORT EditorBase : public wxPanel
         void BasicAddToContextMenu(wxMenu* popup,bool noeditor);
         SwitchToMap m_SwitchTo;
         wxString m_WinTitle;
+        wxString lastWord;
 };
 
 #endif // EDITORBASE_H
