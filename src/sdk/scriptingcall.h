@@ -56,6 +56,72 @@ template <> inline double ExecuteGetRet(asIScriptContext* ctx){ return ctx->GetR
 template <> inline float ExecuteGetRet(asIScriptContext* ctx){ return ctx->GetReturnFloat(); }
 template <> inline void* ExecuteGetRet(asIScriptContext* ctx){ return ctx->GetReturnObject(); }
 
+class ScriptingCall
+{
+    public:
+        ScriptingCall(int functionID)
+            : m_pCtx(0),
+            m_Success(true),
+            m_Line(0)
+        {
+            // create the context
+            m_pCtx = Manager::Get()->GetScriptingManager()->GetEngine()->CreateContext();
+            if (!m_pCtx)
+                return;
+            // prepare the script function
+            int r = m_pCtx->Prepare(functionID);
+            if (r < 0)
+            {
+                if (r == asEXECUTION_EXCEPTION)
+                    RecordContextFailure();
+                m_pCtx->Release();
+                m_pCtx = 0;
+            }
+        }
+        virtual ~ScriptingCall(){}
+        /** Returns the created context (NULL if invalid). */
+        inline asIScriptContext* GetContext(){ return m_pCtx; }
+
+        virtual bool Success(){ return m_Success; }
+        virtual const wxString& GetFunction(){ return m_Function; }
+        virtual const wxString& GetModule(){ return m_Module; }
+        virtual const wxString& GetSection(){ return m_Section; }
+        virtual const wxString& GetError(){ return m_Error; }
+        virtual int GetLineNumber(){ return m_Line; }
+
+        virtual wxString CreateErrorString()
+        {
+            if (m_Success)
+                return wxEmptyString;
+            wxString result;
+            result << m_Error << _T("\n\n");
+            result << _T("Module: ") << m_Module << _T("\n");
+            result << _T("Section: ") << m_Section << _T("\n");
+            result << _T("Function: ") << m_Function << _T("\n");
+            result << _T("Line: ") << m_Line;
+            return result;
+        }
+    protected:
+        void RecordContextFailure()
+        {
+            m_Success = false;
+            asIScriptEngine* engine = Manager::Get()->GetScriptingManager()->GetEngine();
+            int funcID = m_pCtx->GetExceptionFunction();
+            m_Function = engine->GetFunctionDeclaration(funcID);
+            m_Module = engine->GetModuleNameFromIndex(asMODULEIDX(funcID));
+            m_Section = engine->GetFunctionSection(funcID);
+            m_Line = m_pCtx->GetExceptionLineNumber();
+            m_Error = m_pCtx->GetExceptionString();
+        }
+        asIScriptContext* m_pCtx;
+        bool m_Success;
+        wxString m_Function;
+        wxString m_Module;
+        wxString m_Section;
+        wxString m_Error;
+        int m_Line;
+};
+
 /** Executes a function taking as many as 10 parameters.
   *
   * This is the version that doesn't return a value (void).
@@ -83,10 +149,8 @@ template <typename OP1 = DummyOperand, typename OP2 = DummyOperand,
           typename OP5 = DummyOperand, typename OP6 = DummyOperand,
           typename OP7 = DummyOperand, typename OP8 = DummyOperand,
           typename OP9 = DummyOperand, typename OP10 = DummyOperand>
-class VoidExecutor
+class VoidExecutor : public ScriptingCall
 {
-    private:
-        asIScriptContext* m_pCtx;
     public:
         /** Constructor.
           *
@@ -98,21 +162,9 @@ class VoidExecutor
           * @param releaseContextWhenDone If this is true (default), the context will be released when
           * done with it. If false, it is up to you to release it.
           */
-        VoidExecutor(int functionID) // in SEGL, we know how to get to the engine ;)
-            : m_pCtx(0)
+        VoidExecutor(int functionID)
+            : ScriptingCall(functionID)
         {
-            // create the context
-            m_pCtx = Manager::Get()->GetScriptingManager()->GetEngine()->CreateContext();
-            if (!m_pCtx)
-                return;
-            // prepare the script function
-            int r = m_pCtx->Prepare(functionID);
-            if (r < 0)
-            {
-                m_pCtx->Release();
-                m_pCtx = 0;
-                return;
-            }
         }
 
         /** Destructor.
@@ -121,9 +173,6 @@ class VoidExecutor
           * If you haven't , you should release it yourself...
           */
         ~VoidExecutor(){}
-
-        /** Returns the created context (NULL if invalid). */
-        inline asIScriptContext* GetContext(){ return m_pCtx; }
 
         /** Set the execution arguments.
           * Up to 10 arguments can be set.
@@ -161,11 +210,11 @@ class VoidExecutor
             SetArguments(op1, op2, op3, op4, op5, op6, op7, op8, op9, op10);
             // this takes care of coroutines and such.
             // it also releases the context when done.
-            m_pCtx->Execute();
+            if (m_pCtx->Execute() == asEXECUTION_EXCEPTION)
+                RecordContextFailure();
             m_pCtx->Release();
             m_pCtx = 0;
         }
-
 };
 
 /** Executes a function taking as many as 10 parameters.
@@ -198,10 +247,8 @@ template <typename RET,
           typename OP5 = DummyOperand, typename OP6 = DummyOperand,
           typename OP7 = DummyOperand, typename OP8 = DummyOperand,
           typename OP9 = DummyOperand, typename OP10 = DummyOperand>
-class Executor
+class Executor : public ScriptingCall
 {
-    private:
-        asIScriptContext* m_pCtx;
     public:
         /** Constructor.
           *
@@ -212,21 +259,9 @@ class Executor
           * @param The engine.
           * @param functionID The function's ID to call. You can get this by a call to GetFunctionIDByDecl().
           */
-        Executor(int functionID) // in SEGL, we know how to get to the engine ;)
-            : m_pCtx(0)
+        Executor(int functionID)
+            : ScriptingCall(functionID)
         {
-            // create the context
-            m_pCtx = Manager::Get()->GetScriptingManager()->GetEngine()->CreateContext();
-            if (!m_pCtx)
-                return;
-            // prepare the script function
-            int r = m_pCtx->Prepare(functionID);
-            if (r < 0)
-            {
-                m_pCtx->Release();
-                m_pCtx = 0;
-                return;
-            }
         }
 
         /** Destructor.
@@ -235,9 +270,6 @@ class Executor
           * If you haven't , you should release it yourself...
           */
         ~Executor(){}
-
-        /** Returns the created context (NULL if invalid). */
-        inline asIScriptContext* GetContext(){ return m_pCtx; }
 
         /** Set the execution arguments.
           * Up to 10 arguments can be set.
@@ -275,7 +307,8 @@ class Executor
         {
             if (!m_pCtx) return (RET)0;
             SetArguments(op1, op2, op3, op4, op5, op6, op7, op8, op9, op10);
-            m_pCtx->Execute();
+            if (m_pCtx->Execute() == asEXECUTION_EXCEPTION)
+                RecordContextFailure();
             RET r = GetReturnValue();
             m_pCtx->Release();
             m_pCtx = 0;

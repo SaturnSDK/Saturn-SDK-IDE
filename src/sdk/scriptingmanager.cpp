@@ -8,6 +8,7 @@
 #include "as/bindings/scriptbindings.h"
 #include <wx/msgdlg.h>
 #include <wx/file.h>
+#include <wx/regex.h>
 #include <settings.h>
 
 static wxString s_Errors;
@@ -143,13 +144,34 @@ int ScriptingManager::LoadScript(const wxString& filename, const wxString& modul
 	int funcID = FindFunctionByDeclaration(_T("int main()"), module);
 	Executor<int> exec(funcID);
 	int ret = exec.Call();
+	if (!exec.Success())
+        wxMessageBox(exec.CreateErrorString(), _T("Script error"), wxICON_ERROR);
 
     // display errors (if any)
     if (!s_Errors.IsEmpty())
     {
-        if (wxMessageBox(s_Errors + _T("\n\nDo you want to open this script in the editor?"), _("Script error"), wxICON_ERROR | wxYES_NO) == wxYES)
+//        LOGSTREAM << s_Errors << '\n';
+        // startup.script (6, 2) : Error   : Expected ';'
+        wxRegEx re(_T("\\(([0-9]+), ([0-9]+)\\)[ \t]:[ \t][Ee]rror[ \t]+:[ \t](.*)"));
+        if (re.Matches(s_Errors))
         {
-            Manager::Get()->GetEditorManager()->Open(fname);
+            if (wxMessageBox(s_Errors + _T("\n\nDo you want to open this script in the editor?"), _("Script error"), wxICON_ERROR | wxYES_NO) == wxYES)
+            {
+                cbEditor* ed = Manager::Get()->GetEditorManager()->Open(fname);
+                if (ed)
+                {
+                    long line = 0;
+                    long column = 0;
+                    re.GetMatch(s_Errors, 1).ToLong(&line);
+                    re.GetMatch(s_Errors, 2).ToLong(&column);
+                    if (line != 0)
+                    {
+                        int pos = ed->GetControl()->PositionFromLine(line - 1);
+                        ed->GetControl()->GotoPos(pos + column - 1);
+                        ed->GetControl()->SetFocus();
+                    }
+                }
+            }
         }
     }
 
