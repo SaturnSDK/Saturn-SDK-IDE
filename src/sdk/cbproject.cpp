@@ -916,7 +916,6 @@ bool cbProject::ShowOptions()
     if (dlg.ShowModal() == wxID_OK)
     {
         // update file details
-        int count = m_Files.GetCount();
         FilesList::Node* node = m_Files.GetFirst();
         while(node)
         {
