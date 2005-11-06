@@ -46,6 +46,8 @@
 #include "xtra_classes.h" // Our custom set of wxWidgets classes
 #include "xtra_res.h" // our new ToolBarAddOn handler
 
+#include "xconfigmanager.h"
+
 
 static bool appShutingDown = false;
 
@@ -275,6 +277,11 @@ UserVariableManager* Manager::GetUserVariableManager()
 ScriptingManager* Manager::GetScriptingManager()
 {
     return appShutingDown ? 0 : ScriptingManager::Get();
+}
+
+XmlConfigManager* Manager::GetConfigManager(const wxString& name_space)
+{
+    return appShutingDown ? 0 : CfgMgrBldr::Get(name_space);
 }
 
 wxWindow* Manager::GetNotebookPage(const wxString &name, long style,bool issplit)
