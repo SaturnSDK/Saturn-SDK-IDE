@@ -26,22 +26,10 @@ void Register_ProjectManager(asIScriptEngine* engine);
 // Globals
 //------------------------------------------------------------------------------
 void gShowMessage(const wxString& msg){ wxMessageBox(msg, _("Script message")); }
+void gShowMessageWarn(const wxString& msg){ wxMessageBox(msg, _("Script message"), wxICON_WARNING); }
+void gShowMessageError(const wxString& msg){ wxMessageBox(msg, _("Script message"), wxICON_ERROR); }
+void gShowMessageInfo(const wxString& msg){ wxMessageBox(msg, _("Script message"), wxICON_INFORMATION); }
 void gDebugLog(const wxString& msg){ DBGLOG(msg); }
-void gSetAcceleratorFor(const wxString& m, const wxString& s)
-{
-    wxMenuBar* bar = Manager::Get()->GetAppWindow()->GetMenuBar();
-    if (!bar) return;
-
-    wxString sm = m.BeforeFirst(_T('|'));
-    wxString si = m.AfterFirst(_T('|'));
-    int id = bar->FindMenuItem(sm, si);
-    if (id == wxNOT_FOUND) return;
-
-    wxMenuItem* item = bar->FindItem(id);
-    if (!item) return;
-
-    item->SetText(item->GetText().BeforeFirst('\t') + _T('\t') + s);
-}
 
 //------------------------------------------------------------------------------
 // Actual registration
@@ -69,8 +57,10 @@ void RegisterBindings(asIScriptEngine* engine)
 
     // register global functions
     engine->RegisterGlobalFunction("void ShowMessage(const wxString& in)", asFUNCTION(gShowMessage), asCALL_CDECL);
+    engine->RegisterGlobalFunction("void ShowWarning(const wxString& in)", asFUNCTION(gShowMessageWarn), asCALL_CDECL);
+    engine->RegisterGlobalFunction("void ShowError(const wxString& in)", asFUNCTION(gShowMessageError), asCALL_CDECL);
+    engine->RegisterGlobalFunction("void ShowInfo(const wxString& in)", asFUNCTION(gShowMessageInfo), asCALL_CDECL);
     engine->RegisterGlobalFunction("void Log(const wxString& in)", asFUNCTION(gDebugLog), asCALL_CDECL);
-    engine->RegisterGlobalFunction("void SetAcceleratorFor(const wxString& in, const wxString& in)", asFUNCTION(gSetAcceleratorFor), asCALL_CDECL);
 }
 
 //------------------------------------------------------------------------------

@@ -112,10 +112,12 @@ int ScriptingManager::LoadScript(const wxString& filename, const wxString& modul
 //        }
 //    }
 
-    FILE* fp = fopen(_C(filename), "r");
+    wxString fname = filename;
+    FILE* fp = fopen(_C(fname), "r");
     if (!fp)
     {
-        fp = fopen(_C(ConfigManager::Get()->Read(_T("/data_path")) + _T("/scripts/") + filename), "r");
+        fname = ConfigManager::Get()->Read(_T("/data_path")) + _T("/scripts/") + filename;
+        fp = fopen(_C(fname), "r");
         if(!fp)
         {
             wxMessageBox(_("Can't open script ") + filename, _("Error"), wxICON_ERROR);
@@ -144,7 +146,12 @@ int ScriptingManager::LoadScript(const wxString& filename, const wxString& modul
 
     // display errors (if any)
     if (!s_Errors.IsEmpty())
-        wxMessageBox(s_Errors + _T("\n\nScript:\n") + _U(script), _("Script error"), wxICON_ERROR);
+    {
+        if (wxMessageBox(s_Errors + _T("\n\nDo you want to open this script in the editor?"), _("Script error"), wxICON_ERROR | wxYES_NO) == wxYES)
+        {
+            Manager::Get()->GetEditorManager()->Open(fname);
+        }
+    }
 
     delete[] script;
 	return ret;

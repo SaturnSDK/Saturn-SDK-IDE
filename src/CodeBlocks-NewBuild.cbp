@@ -87,11 +87,12 @@
 			</Target>
 			<Target title="wxDockIt">
 				<Option output="src\wxDockit\lib\libwxDockIt.a"/>
-				<Option working_dir="src\wxDockit\lib"/>
+				<Option working_dir=""/>
 				<Option object_output=".objs\2.6"/>
 				<Option deps_output=".deps"/>
-				<Option type="3"/>
+				<Option type="2"/>
 				<Option compiler="0"/>
+				<Option projectResourceIncludeDirsRelation="2"/>
 				<Compiler>
 					<Add option="-D__GNUWIN32__"/>
 					<Add option="-DWIN32"/>
@@ -107,16 +108,13 @@
 			</Target>
 			<Target title="wxKeyBinder">
 				<Option output="src\wxKeyBinder\lib\libwxkeybinder.a"/>
-				<Option working_dir="src\wxKeyBinder\lib"/>
+				<Option working_dir=""/>
 				<Option object_output=".objs\2.6"/>
 				<Option deps_output=".deps"/>
-				<Option type="3"/>
+				<Option type="2"/>
 				<Option compiler="0"/>
-				<Option createStaticLib="1"/>
+				<Option projectResourceIncludeDirsRelation="2"/>
 				<Compiler>
-					<Add option="-D__GNUWIN32__"/>
-					<Add option="-DWIN32"/>
-					<Add option="-DWXUSINGDLL"/>
 					<Add directory="src\wxKeyBinder\include"/>
 				</Compiler>
 				<ResourceCompiler>
