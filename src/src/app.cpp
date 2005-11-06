@@ -214,6 +214,11 @@ void CodeBlocksApp::InitFrame()
             Manager::Get()->GetProjectManager()->LoadWorkspace();
     }
 
+#ifdef wxUSE_BINDERAPP
+	SetGlobalHandler(frame);
+	SetGlobalBinder(frame->m_KeyProfiles.Item(0));
+#endif
+
     frame->ShowTips(); // this func checks if the user wants tips, so no need to check here
 }
 

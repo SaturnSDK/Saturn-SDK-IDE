@@ -1,11 +1,7 @@
 int main()
 {
 	Log("Running startup script");
-
-	// you could set the shortcuts used for the menus
-	// e.g.:
-	// SetAcceleratorFor("File|Open", "Ctrl-Alt-O");
-    // ShowMessage("Shortcuts set...");
+    // ShowMessage("Hello world!");
 
 	return 0;
 }

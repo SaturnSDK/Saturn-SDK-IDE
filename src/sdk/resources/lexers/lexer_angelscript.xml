@@ -83,6 +83,6 @@
 								test throw todo typedef union until
 								var verbatim verbinclude version warning weakgroup $ @ \ & < > # { }"/>
 				</Keywords>
-				<SampleCode value="lexer_script.sample"/>
+				<SampleCode value="lexer_angelscript.sample"/>
 		</Lexer>
 </CodeBlocks_lexer_properties>

@@ -7,7 +7,7 @@
 		<Option makefile="Makefile.wx2.6"/>
 		<Option makefile_is_custom="0"/>
 		<Option pch_mode="2"/>
-		<Option default_target="5"/>
+		<Option default_target="6"/>
 		<Option compiler="0"/>
 		<Build>
 			<Target title="tinyXML">
@@ -87,12 +87,11 @@
 			</Target>
 			<Target title="wxDockIt">
 				<Option output="src\wxDockit\lib\libwxDockIt.a"/>
-				<Option working_dir=""/>
+				<Option working_dir="src\wxDockit\lib"/>
 				<Option object_output=".objs\2.6"/>
 				<Option deps_output=".deps"/>
-				<Option type="2"/>
+				<Option type="3"/>
 				<Option compiler="0"/>
-				<Option projectResourceIncludeDirsRelation="2"/>
 				<Compiler>
 					<Add option="-D__GNUWIN32__"/>
 					<Add option="-DWIN32"/>
@@ -104,6 +103,24 @@
 				</Compiler>
 				<ResourceCompiler>
 					<Add directory="src\wxDockit\include"/>
+				</ResourceCompiler>
+			</Target>
+			<Target title="wxKeyBinder">
+				<Option output="src\wxKeyBinder\lib\libwxkeybinder.a"/>
+				<Option working_dir="src\wxKeyBinder\lib"/>
+				<Option object_output=".objs\2.6"/>
+				<Option deps_output=".deps"/>
+				<Option type="3"/>
+				<Option compiler="0"/>
+				<Option createStaticLib="1"/>
+				<Compiler>
+					<Add option="-D__GNUWIN32__"/>
+					<Add option="-DWIN32"/>
+					<Add option="-DWXUSINGDLL"/>
+					<Add directory="src\wxKeyBinder\include"/>
+				</Compiler>
+				<ResourceCompiler>
+					<Add directory="src\wxKeyBinder\include"/>
 				</ResourceCompiler>
 			</Target>
 			<Target title="src">
@@ -123,10 +140,12 @@
 					<Add option="-DBUILDING_PLUGIN"/>
 					<Add directory="sdk"/>
 					<Add directory="src\wxDockit\include"/>
+					<Add directory="src\wxKeyBinder\include"/>
 				</Compiler>
 				<Linker>
 					<Add library="libcodeblocks.a"/>
 					<Add library="wxDockIt"/>
+					<Add library="wxkeybinder"/>
 					<Add library="libwxscintilla.a"/>
 					<Add library="libkernel32.a"/>
 					<Add library="libuser32.a"/>
@@ -145,6 +164,7 @@
 					<Add library="libwsock32.a"/>
 					<Add directory="devel"/>
 					<Add directory="src\wxDockit\lib"/>
+					<Add directory="src\wxKeyBinder\lib"/>
 				</Linker>
 			</Target>
 			<Target title="plugin_Astyle">
@@ -4092,6 +4112,32 @@
 		<Unit filename="src\wxDockit\src\msw\toolbutton_msw.cpp">
 			<Option compilerVar="CPP"/>
 			<Option target="wxDockIt"/>
+		</Unit>
+		<Unit filename="src\wxKeyBinder\include\wx\keybinder.h">
+			<Option compilerVar=""/>
+			<Option compile="0"/>
+			<Option link="0"/>
+			<Option target="wxKeyBinder"/>
+		</Unit>
+		<Unit filename="src\wxKeyBinder\include\wx\keybinderdef.h">
+			<Option compilerVar=""/>
+			<Option compile="0"/>
+			<Option link="0"/>
+			<Option target="wxKeyBinder"/>
+		</Unit>
+		<Unit filename="src\wxKeyBinder\include\wx\menuutils.h">
+			<Option compilerVar=""/>
+			<Option compile="0"/>
+			<Option link="0"/>
+			<Option target="wxKeyBinder"/>
+		</Unit>
+		<Unit filename="src\wxKeyBinder\src\keybinder.cpp">
+			<Option compilerVar="CPP"/>
+			<Option target="wxKeyBinder"/>
+		</Unit>
+		<Unit filename="src\wxKeyBinder\src\menuutils.cpp">
+			<Option compilerVar="CPP"/>
+			<Option target="wxKeyBinder"/>
 		</Unit>
 		<Unit filename="templates\common\console-main-c.cpp">
 			<Option compilerVar="CPP"/>

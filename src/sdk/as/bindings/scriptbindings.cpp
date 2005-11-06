@@ -26,7 +26,7 @@ void Register_ProjectManager(asIScriptEngine* engine);
 // Globals
 //------------------------------------------------------------------------------
 void gShowMessage(const wxString& msg){ wxMessageBox(msg, _("Script message")); }
-void gDebugLog(const wxString& msg){ LOGSTREAM << msg << '\n'; }
+void gDebugLog(const wxString& msg){ DBGLOG(msg); }
 void gSetAcceleratorFor(const wxString& m, const wxString& s)
 {
     wxMenuBar* bar = Manager::Get()->GetAppWindow()->GetMenuBar();
