@@ -233,7 +233,7 @@ void EditorConfigurationDlg::ApplyColors()
 		if (m_AutoCompTextControl)
 		{
             m_AutoCompTextControl->StyleSetFont(wxSCI_STYLE_DEFAULT,fnt);
-            m_Theme->Apply(wxSCI_LEX_CPP, m_AutoCompTextControl);
+            m_Theme->Apply(m_Theme->GetHighlightLanguage(_T("C/C++")), m_AutoCompTextControl);
         }
 	}
 }

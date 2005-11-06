@@ -145,7 +145,20 @@ int ScriptingManager::LoadScript(const wxString& filename, const wxString& modul
 	Executor<int> exec(funcID);
 	int ret = exec.Call();
 	if (!exec.Success())
-        wxMessageBox(exec.CreateErrorString(), _T("Script error"), wxICON_ERROR);
+	{
+        if (wxMessageBox(_("An exception has been raised from the script:\n\n") +
+                        exec.CreateErrorString() +
+                        _("\n\nDo you want to open this script in the editor?"), _T("Script error"), wxICON_ERROR | wxYES_NO) == wxYES)
+        {
+            cbEditor* ed = Manager::Get()->GetEditorManager()->Open(fname);
+            if (ed && exec.GetLineNumber() != 0)
+            {
+                int pos = ed->GetControl()->PositionFromLine(exec.GetLineNumber() - 1);
+                ed->GetControl()->GotoPos(pos);
+                ed->GetControl()->SetFocus();
+            }
+        }
+	}
 
     // display errors (if any)
     if (!s_Errors.IsEmpty())

@@ -4,12 +4,12 @@
     <object class="wxMenu" name="file_menu">
       <label>&amp;File</label>
       <object class="wxMenuItem" name="idFileNew">
-        <label>New File</label>
+        <label>New file</label>
         <accel>Ctrl-N</accel>
         <help>Create a new source file</help>
       </object>
       <object class="wxMenuItem" name="idProjectNew">
-        <label>New Pro&amp;ject...</label>
+        <label>New pro&amp;ject...</label>
         <accel>Ctrl-Shift-N</accel>
         <help>Create a new project based on a template</help>
       </object>
@@ -53,11 +53,11 @@
       </object>
       <object class="separator"/>
       <object class="wxMenuItem" name="idFileSaveWorkspace">
-        <label>Save &amp;Workspace</label>
+        <label>Save &amp;workspace</label>
         <help>Save current workspace</help>
       </object>
       <object class="wxMenuItem" name="idFileSaveWorkspaceAs">
-        <label>Save Wor&amp;kspace as...</label>
+        <label>Save wor&amp;kspace as...</label>
         <help>Save current workspace under a different name</help>
       </object>
       <object class="separator"/>
@@ -80,7 +80,7 @@
         <label>Print setup...</label>
       </object>
       <object class="wxMenuItem" name="idFilePrint">
-        <label>Print...</label>
+        <label>Print</label>
       </object>
       <object class="separator"/>
       <object class="wxMenuItem" name="idFileRunScript">
@@ -211,7 +211,7 @@
         <help>Uncomments the selected block of code</help>
       </object>
       <object class="wxMenuItem" name="idEditToggleCommentSelected">
-        <label>Toggle Comme&amp;nt</label>
+        <label>Toggle comme&amp;nt</label>
         <help>Toggles the commentation of the selected block of code</help>
       </object>
       <object class="wxMenuItem" name="idEditAutoComplete">
@@ -383,20 +383,21 @@
         <label>&amp;Environment</label>
         <help>Change environment settings</help>
       </object>
-      <object class="wxMenuItem" name="idSettingsKeyBindings">
-        <label>Key &amp;bindings</label>
-        <help>Change accelerators used for menu entries</help>
-      </object>
-      <object class="wxMenuItem" name="idSettingsGlobalUserVars">
-        <label>&amp;Global Variables</label>
-        <help>Change global compiler variables</help>
-      </object>
       <object class="wxMenuItem" name="idSettingsEditor">
         <label>E&amp;ditor</label>
         <help>Change editor's settings</help>
       </object>
+      <object class="wxMenuItem" name="idSettingsGlobalUserVars">
+        <label>&amp;Global variables</label>
+        <help>Change global compiler variables</help>
+      </object>
       <object class="wxMenu" name="idSettingsConfigurePlugins">
         <label>&amp;Plugins' settings</label>
+      </object>
+      <object class="separator"/>
+      <object class="wxMenuItem" name="idSettingsKeyBindings">
+        <label>&amp;Keyboard shortcuts</label>
+        <help>Change accelerators used for menu entries</help>
       </object>
       <object class="separator"/>
       <object class="wxMenuItem" name="idSettingsImpExpConfig">

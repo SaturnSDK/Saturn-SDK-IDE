@@ -49,8 +49,9 @@ class EditorColorSet
 		EditorColorSet(const wxString& setName = COLORSET_DEFAULT);
 		EditorColorSet(const EditorColorSet& other); // copy ctor
 		~EditorColorSet();
-		
+
 		HighlightLanguage AddHighlightLanguage(int lexer, const wxString& name);
+		HighlightLanguage GetHighlightLanguage(int lexer); // from scintilla lexer (wxSCI_LEX_*)
 		HighlightLanguage GetHighlightLanguage(const wxString& name);
 		wxArrayString GetAllHighlightLanguages();
 
@@ -89,7 +90,7 @@ class EditorColorSet
 		void LoadAvailableSets();
 		void Load();
 		void ClearAllOptionColors();
-		
+
 		int m_LanguageID;
 		wxString m_Name;
 		OptionSet m_Sets[HL_LAST];

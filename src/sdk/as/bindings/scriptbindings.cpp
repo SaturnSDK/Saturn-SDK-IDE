@@ -17,6 +17,8 @@ void DummyRelease(cbProject& p){}
 //------------------------------------------------------------------------------
 // Forwards
 //------------------------------------------------------------------------------
+void Register_Editor(asIScriptEngine* engine);
+void Register_EditorManager(asIScriptEngine* engine);
 void Register_ProjectFile(asIScriptEngine* engine);
 void Register_ProjectBuildTarget(asIScriptEngine* engine);
 void Register_Project(asIScriptEngine* engine);
@@ -41,6 +43,8 @@ void RegisterBindings(asIScriptEngine* engine)
     Register_wxArrayString(engine);
 
     // register types
+    engine->RegisterObjectType("Editor", 0, asOBJ_CLASS);
+    ADD_DUMMY_REFCOUNT(engine, Editor);
     engine->RegisterObjectType("ProjectFile", 0, asOBJ_CLASS);
     ADD_DUMMY_REFCOUNT(engine, ProjectFile);
     engine->RegisterObjectType("BuildTarget", 0, asOBJ_CLASS);
@@ -48,8 +52,11 @@ void RegisterBindings(asIScriptEngine* engine)
     engine->RegisterObjectType("Project", 0, asOBJ_CLASS);
     ADD_DUMMY_REFCOUNT(engine, Project);
     engine->RegisterObjectType("ProjectManagerClass", 0, asOBJ_CLASS);
+    engine->RegisterObjectType("EditorManagerClass", 0, asOBJ_CLASS);
 
     // register member functions
+    Register_Editor(engine);
+    Register_EditorManager(engine);
     Register_ProjectFile(engine);
     Register_ProjectBuildTarget(engine);
     Register_Project(engine);
@@ -61,6 +68,82 @@ void RegisterBindings(asIScriptEngine* engine)
     engine->RegisterGlobalFunction("void ShowError(const wxString& in)", asFUNCTION(gShowMessageError), asCALL_CDECL);
     engine->RegisterGlobalFunction("void ShowInfo(const wxString& in)", asFUNCTION(gShowMessageInfo), asCALL_CDECL);
     engine->RegisterGlobalFunction("void Log(const wxString& in)", asFUNCTION(gDebugLog), asCALL_CDECL);
+}
+
+//------------------------------------------------------------------------------
+// EditorBase
+//------------------------------------------------------------------------------
+template <class T> void Register_EditorBase(asIScriptEngine* engine, const wxString& classname)
+{
+    engine->RegisterObjectMethod(_C(classname), "wxString& GetFilename()", asMETHOD(T, GetFilename), asCALL_THISCALL);
+    engine->RegisterObjectMethod(_C(classname), "void SetFilename(const wxString& in)", asMETHOD(T, SetFilename), asCALL_THISCALL);
+    engine->RegisterObjectMethod(_C(classname), "wxString& GetShortName()", asMETHOD(T, GetShortName), asCALL_THISCALL);
+    engine->RegisterObjectMethod(_C(classname), "bool GetModified()", asMETHOD(T, GetModified), asCALL_THISCALL);
+    engine->RegisterObjectMethod(_C(classname), "void SetModified(bool)", asMETHOD(T, SetModified), asCALL_THISCALL);
+    engine->RegisterObjectMethod(_C(classname), "wxString& GetTitle()", asMETHOD(T, GetTitle), asCALL_THISCALL);
+    engine->RegisterObjectMethod(_C(classname), "void SetTitle(const wxString& in)", asMETHOD(T, SetTitle), asCALL_THISCALL);
+    engine->RegisterObjectMethod(_C(classname), "void Activate()", asMETHOD(T, Activate), asCALL_THISCALL);
+    engine->RegisterObjectMethod(_C(classname), "bool Close()", asMETHOD(T, Close), asCALL_THISCALL);
+    engine->RegisterObjectMethod(_C(classname), "bool Save()", asMETHOD(T, Save), asCALL_THISCALL);
+    engine->RegisterObjectMethod(_C(classname), "bool IsBuiltinEditor()", asMETHOD(T, IsBuiltinEditor), asCALL_THISCALL);
+    engine->RegisterObjectMethod(_C(classname), "bool ThereAreOthers()", asMETHOD(T, ThereAreOthers), asCALL_THISCALL);
+    engine->RegisterObjectMethod(_C(classname), "bool Close()", asMETHOD(T, Close), asCALL_THISCALL);
+    engine->RegisterObjectMethod(_C(classname), "bool Close()", asMETHOD(T, Close), asCALL_THISCALL);
+}
+
+//------------------------------------------------------------------------------
+// cbEditor
+//------------------------------------------------------------------------------
+void Register_Editor(asIScriptEngine* engine)
+{
+    // add CompileTargetBase methods/properties
+    Register_EditorBase<cbEditor>(engine, _T("Editor"));
+
+    engine->RegisterObjectMethod("Editor", "void SetEditorTitle(const wxString& in)", asMETHOD(cbEditor, SetEditorTitle), asCALL_THISCALL);
+    engine->RegisterObjectMethod("Editor", "ProjectFile@ GetProjectFile()", asMETHOD(cbEditor, GetProjectFile), asCALL_THISCALL);
+    engine->RegisterObjectMethod("Editor", "bool Save()", asMETHOD(cbEditor, Save), asCALL_THISCALL);
+    engine->RegisterObjectMethod("Editor", "bool SaveAs()", asMETHOD(cbEditor, SaveAs), asCALL_THISCALL);
+    engine->RegisterObjectMethod("Editor", "void FoldAll()", asMETHOD(cbEditor, FoldAll), asCALL_THISCALL);
+    engine->RegisterObjectMethod("Editor", "void UnfoldAll()", asMETHOD(cbEditor, UnfoldAll), asCALL_THISCALL);
+    engine->RegisterObjectMethod("Editor", "void ToggleAllFolds()", asMETHOD(cbEditor, ToggleAllFolds), asCALL_THISCALL);
+    engine->RegisterObjectMethod("Editor", "void FoldBlockFromLine(int)", asMETHOD(cbEditor, FoldBlockFromLine), asCALL_THISCALL);
+    engine->RegisterObjectMethod("Editor", "void UnfoldBlockFromLine(int)", asMETHOD(cbEditor, UnfoldBlockFromLine), asCALL_THISCALL);
+    engine->RegisterObjectMethod("Editor", "void ToggleFoldBlockFromLine(int)", asMETHOD(cbEditor, ToggleFoldBlockFromLine), asCALL_THISCALL);
+    engine->RegisterObjectMethod("Editor", "wxString GetLineIndentString(int)", asMETHOD(cbEditor, GetLineIndentString), asCALL_THISCALL);
+    engine->RegisterObjectMethod("Editor", "void Touch()", asMETHOD(cbEditor, Touch), asCALL_THISCALL);
+    engine->RegisterObjectMethod("Editor", "bool Reload()", asMETHOD(cbEditor, Reload), asCALL_THISCALL);
+    engine->RegisterObjectMethod("Editor", "void Print(bool,int)", asMETHOD(cbEditor, Print), asCALL_THISCALL);
+}
+
+//------------------------------------------------------------------------------
+// EditorManager
+//------------------------------------------------------------------------------
+void Register_EditorManager(asIScriptEngine* engine)
+{
+    engine->RegisterObjectMethod("EditorManagerClass", "void Configure()", asMETHOD(EditorManager, Configure), asCALL_THISCALL);
+    engine->RegisterObjectMethod("EditorManagerClass", "Editor@ New()", asMETHOD(EditorManager, New), asCALL_THISCALL);
+    engine->RegisterObjectMethod("EditorManagerClass", "Editor@ Open(const wxString& in,int,ProjectFile@)", asMETHOD(EditorManager, Open), asCALL_THISCALL);
+    engine->RegisterObjectMethod("EditorManagerClass", "Editor@ IsBuiltinOpen(const wxString& in)", asMETHOD(EditorManager, IsBuiltinOpen), asCALL_THISCALL);
+    engine->RegisterObjectMethod("EditorManagerClass", "Editor@ GetBuiltinEditor(const wxString& in)", asMETHODPR(EditorManager, GetBuiltinEditor, (const wxString&), cbEditor*), asCALL_THISCALL);
+    engine->RegisterObjectMethod("EditorManagerClass", "Editor@ GetBuiltinEditor(int)", asMETHODPR(EditorManager, GetBuiltinEditor, (int), cbEditor*), asCALL_THISCALL);
+    engine->RegisterObjectMethod("EditorManagerClass", "Editor@ GetBuiltinActiveEditor()", asMETHOD(EditorManager, GetBuiltinActiveEditor), asCALL_THISCALL);
+    engine->RegisterObjectMethod("EditorManagerClass", "void ActivateNext()", asMETHOD(EditorManager, ActivateNext), asCALL_THISCALL);
+    engine->RegisterObjectMethod("EditorManagerClass", "void ActivatePrevious()", asMETHOD(EditorManager, ActivatePrevious), asCALL_THISCALL);
+    engine->RegisterObjectMethod("EditorManagerClass", "bool SwapActiveHeaderSource()", asMETHOD(EditorManager, SwapActiveHeaderSource), asCALL_THISCALL);
+    engine->RegisterObjectMethod("EditorManagerClass", "bool CloseActive()", asMETHOD(EditorManager, CloseActive), asCALL_THISCALL);
+    engine->RegisterObjectMethod("EditorManagerClass", "bool Close(const wxString& in)", asMETHODPR(EditorManager, Close, (const wxString&,bool), bool), asCALL_THISCALL);
+    engine->RegisterObjectMethod("EditorManagerClass", "bool Close(int)", asMETHODPR(EditorManager, Close, (int,bool), bool), asCALL_THISCALL);
+    engine->RegisterObjectMethod("EditorManagerClass", "bool CloseAll()", asMETHOD(EditorManager, CloseAll), asCALL_THISCALL);
+    engine->RegisterObjectMethod("EditorManagerClass", "bool Save(const wxString& in)", asMETHODPR(EditorManager, Save, (const wxString&), bool), asCALL_THISCALL);
+    engine->RegisterObjectMethod("EditorManagerClass", "bool Save(int)", asMETHODPR(EditorManager, Save, (int), bool), asCALL_THISCALL);
+    engine->RegisterObjectMethod("EditorManagerClass", "bool SaveActive()", asMETHOD(EditorManager, SaveActive), asCALL_THISCALL);
+    engine->RegisterObjectMethod("EditorManagerClass", "bool SaveAs(int)", asMETHOD(EditorManager, SaveAs), asCALL_THISCALL);
+    engine->RegisterObjectMethod("EditorManagerClass", "bool SaveActiveAs()", asMETHOD(EditorManager, SaveActiveAs), asCALL_THISCALL);
+    engine->RegisterObjectMethod("EditorManagerClass", "bool SaveAll()", asMETHOD(EditorManager, SaveAll), asCALL_THISCALL);
+    engine->RegisterObjectMethod("EditorManagerClass", "int ShowFindDialog(bool)", asMETHOD(EditorManager, ShowFindDialog), asCALL_THISCALL);
+
+    // actually bind EditorManager's instance
+    engine->RegisterGlobalProperty("EditorManagerClass EditorManager", Manager::Get()->GetEditorManager());
 }
 
 //------------------------------------------------------------------------------

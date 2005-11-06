@@ -136,7 +136,19 @@ HighlightLanguage EditorColorSet::GetHighlightLanguage(const wxString& name)
 {
 	for (int i = 0; i < HL_LAST; ++i)
 	{
-		if (m_Sets[i].m_Langs.Matches(name))
+		if (m_Sets[i].m_Langs.CmpNoCase(name) == 0)
+            return i;
+	}
+	return HL_NONE;
+}
+
+// from scintilla lexer (wxSCI_LEX_*)
+// Warning: the first one found is returned!
+HighlightLanguage EditorColorSet::GetHighlightLanguage(int lexer)
+{
+	for (int i = 0; i < HL_LAST; ++i)
+	{
+		if (m_Sets[i].m_Lexers == lexer)
             return i;
 	}
 	return HL_NONE;
