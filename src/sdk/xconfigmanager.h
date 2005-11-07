@@ -8,38 +8,37 @@
 class DLLIMPORT XmlConfigManager
 {
     friend class CfgMgrBldr;
+
+    TiXmlDocument *doc;
     TiXmlElement* root;
     TiXmlElement* pathNode;
-    wxString path;
-    XmlConfigManager();
 
     static wxString app_path;
     static wxString data_path;
     static wxString config_folder;
     static wxString home_folder;
 
-    void CheckPath(const wxString& path);
+    XmlConfigManager(TiXmlElement* r);
+    TiXmlElement* AssertPath(wxString& path);
 
 public:
 
-    wxString LocateDataFile(const wxString& filename) const;
+    static wxString LocateDataFile(const wxString& filename);
 
-    wxString GetHomeFolder() const;
-    wxString GetConfigFolder() const;
-    wxString GetPluginsFolder() const;
-    wxString GetDataFolder() const;
-    wxString GetExecutableFolder() const;
+    static wxString GetHomeFolder();
+    static wxString GetConfigFolder();
+    static wxString GetPluginsFolder();
+    static wxString GetDataFolder();
+    static wxString GetExecutableFolder();
 
 
     bool Write(const wxString& name,  const wxString& value);
     wxString Read(const wxString& key, const wxString& defaultVal = wxEmptyString);
     bool Read(const wxString& key, wxString* str);
 
-    wxString GetPath() const
-    {
-        return path;
-    };
+    wxString GetPath() const;
     void SetPath(const wxString& strPath);
+
     //
     //    bool Write(const wxString& name,  bool value);
     //    bool Write(const wxString& name,  int value);
@@ -73,19 +72,20 @@ public:
 
 
 
-WX_DECLARE_STRING_HASH_MAP(XmlConfigManager*, Map);
+WX_DECLARE_STRING_HASH_MAP(XmlConfigManager*, NamespaceMap);
 
 class DLLIMPORT CfgMgrBldr
 {
-    Map map;
-    TiXmlDocument doc;
-    bool readonly;
+    NamespaceMap namespaces;
+    TiXmlDocument *doc;
 
     CfgMgrBldr();
     ~CfgMgrBldr();
+    void Close();
     XmlConfigManager* Instantiate(const wxString& name_space);
 public:
     static XmlConfigManager* Get(const wxString& name_space);
+    void SwitchTo(const wxString& absFileName);
 };
 
 

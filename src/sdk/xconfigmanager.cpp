@@ -1,9 +1,20 @@
+/*
+* This file is part of Code::Blocks Studio, an open-source cross-platform IDE
+* Copyright (C) 2003  Yiannis An. Mandravellos
+*
+* This program is distributed under the terms of the GNU General Public License as published by
+* the Free Software Foundation; either version 2 of the License, or (at your option) any later version.
+*
+* Author: Thomas Denk
+*
+* $Id$
+* $Date$
+*/
+
 #include "sdk_precomp.h"
 #include "xconfigmanager.h"
-#include "manager.h"
-#include "personalitymanager.h"
-#include <wx/file.h>
 
+#include <wx/file.h>
 
 #include "tinyxml/tinystr.h"
 #include "tinyxml/tinyxml.h"
@@ -20,48 +31,60 @@ wxString XmlConfigManager::home_folder = wxEmptyString;
 
 namespace CfgMgrConsts
 {
-    const wxString app_path(_T("app_path"));   // compare pointers, avoid calling wxString::wxString(const char*) 1000 times
+    const wxString app_path(_T("app_path"));
     const wxString data_path(_T("data_path"));
+    const char* rootTag = _T("CodeBlocksConfig");
 }
 
 
-XmlConfigManager::XmlConfigManager()
-{}
 
-
-
+/* ------------------------------------------------------------------------------------------------------------------
+*  "Builder pattern" class for XmlConfigManager
+*  Do not use this class  -  Manager::Get()->GetConfigManager() is a lot friendlier
+*/
 
 CfgMgrBldr::CfgMgrBldr()
 {
-    wxString personality(Manager::Get()->GetPersonalityManager()->GetPersonality());
-
-    if(personality.IsEmpty())
-        personality = _T("default.conf");
-    else
-        personality << _T(".conf");
-
-    wxString filename;
-
-    if(!doc.LoadFile(filename.mb_str()))
-    {
-        // try another location
-    }
-
-    readonly = !(wxFile::Access(personality, wxFile::write));
+    SwitchTo(XmlConfigManager::GetConfigFolder() + Manager::Get()->GetPersonalityManager()->GetPersonality() + _T(".conf"));
 }
+
+void CfgMgrBldr::SwitchTo(const wxString& absFileName)
+{
+    Close();
+    doc = new TiXmlDocument(absFileName.mb_str());
+    if(!doc->LoadFile()
+            && !doc->LoadFile((XmlConfigManager::GetExecutableFolder() + _T("/default.conf")).mb_str())
+            && !doc->LoadFile((XmlConfigManager::GetConfigFolder() + _T("/default.conf")).mb_str()))
+    {
+        doc->InsertEndChild(TiXmlDeclaration ("1.0", "UTF-8", "yes"));
+        doc->InsertEndChild(TiXmlElement(CfgMgrConsts::rootTag));
+    }
+    doc->ClearError();
+}
+
 
 CfgMgrBldr::~CfgMgrBldr()
 {
-    Map::iterator it;
-    for( it = map.begin(); it != map.end(); ++it )
+    NamespaceMap::iterator it;
+    for( it = namespaces.begin(); it != namespaces.end(); ++it )
     {
         delete it->second;
     }
-    map.clear();
-
-    if(!readonly)
-        doc.SaveFile();
+    namespaces.clear();
+    Close();
 }
+
+
+void CfgMgrBldr::Close()
+{
+    if(doc)
+    {
+        doc->SaveFile();
+        delete doc;
+        doc = 0;
+    }
+}
+
 
 XmlConfigManager* CfgMgrBldr::Get(const wxString& name_space)
 {
@@ -74,53 +97,52 @@ XmlConfigManager* CfgMgrBldr::Instantiate(const wxString& name_space)
     if(name_space.IsEmpty())
         cbThrow("Manager::Get()->GetConfigManager was called without namespace.");
 
-    Map::iterator it = map.find(name_space);
-    if(it != map.end())
+    NamespaceMap::iterator it = namespaces.find(name_space);
+    if(it != namespaces.end())
         return it->second;
 
-    XmlConfigManager *c = new XmlConfigManager;
-
-    TiXmlElement* root = doc.FirstChildElement("CBConfig");
-    c->root = root->FirstChildElement(name_space);
-
-    if(c->root == 0) // must create
+    TiXmlElement* docroot = doc->FirstChildElement(CfgMgrConsts::rootTag);
+    if(!docroot)
     {
-        root->InsertEndChild(TiXmlElement(name_space));
-        c->root = root->FirstChildElement(name_space);
+        wxString err(_T("Fatal error parsing supplied configuration file.\nTiXml error message:\n"));
+        err << doc->ErrorDesc();
+        cbThrow(err);
     }
 
-    if(c->root == 0) // now what!
+    TiXmlElement* root = docroot->FirstChildElement(name_space);
+
+    if(!root) // namespace does not exist
     {
-        delete c;
-        return 0;
+        docroot->InsertEndChild(TiXmlElement(name_space));
+        root = docroot->FirstChildElement(name_space);
     }
 
-    map[name_space] = c;
+    if(!root) // now what!
+        cbThrow("Unable to create namespace in document tree (not possible..?)");
+
+    XmlConfigManager *c = new XmlConfigManager(root);
+    namespaces[name_space] = c;
     return c;
 }
 
 
 
 
+/* ------------------------------------------------------------------------------------------------------------------
+*  Functions to retrieve system paths and locate data files in a defined, consistent way.
+*  Please note that the application determines app_path and data_path at runtime and passes the results
+*  to ConfigManager. GetExecutableFolder() and GetDataFolder() are therefore under normal conditions
+*  simply more efficient shortcuts for Read("app_path") and Read("data_path").
+*/
 
-
-
-
-
-wxString XmlConfigManager::GetExecutableFolder()  const
+wxString XmlConfigManager::GetExecutableFolder()
 {
-    //  #include "../src/app.h" gives me nasty errors?
-    //  return ((CodeBlocksApp)wxTheApp)->GetAppPath();
-
     if(!XmlConfigManager::app_path.IsEmpty())
         return XmlConfigManager::app_path;
 
 #ifdef __WXMSW__
 
-    wxChar name[MAX_PATH] =
-        {
-            0
-        };
+    wxChar name[MAX_PATH];
     GetModuleFileName(0L, name, MAX_PATH);
     wxFileName fname(name);
     XmlConfigManager::app_path = fname.GetPath(wxPATH_GET_VOLUME);
@@ -135,7 +157,7 @@ wxString XmlConfigManager::GetExecutableFolder()  const
     return XmlConfigManager::app_path;
 }
 
-wxString XmlConfigManager::GetHomeFolder()  const
+wxString XmlConfigManager::GetHomeFolder()
 {
     if(XmlConfigManager::home_folder.IsEmpty())
     {
@@ -148,7 +170,7 @@ wxString XmlConfigManager::GetHomeFolder()  const
 
 #ifdef __WXMSW__
 
-wxString XmlConfigManager::GetConfigFolder()  const
+wxString XmlConfigManager::GetConfigFolder()
 {
     if(XmlConfigManager::config_folder.IsEmpty())
     {
@@ -156,22 +178,25 @@ wxString XmlConfigManager::GetConfigFolder()  const
         SHGetFolderPath(NULL, CSIDL_APPDATA, NULL, 0, szPath);
         XmlConfigManager::config_folder = wxString(szPath) + _T("/codeblocks");
     }
+    if(!wxDirExists(XmlConfigManager::config_folder))
+        wxMkdir(XmlConfigManager::config_folder);
+
     return XmlConfigManager::config_folder;
 }
 
-wxString XmlConfigManager::GetPluginsFolder()  const
+wxString XmlConfigManager::GetPluginsFolder()
 {
     return GetExecutableFolder() + _T("/share/codeblocks/plugins");
 }
 
-wxString XmlConfigManager::GetDataFolder()  const
+wxString XmlConfigManager::GetDataFolder()
 {
     if(XmlConfigManager::data_path.IsEmpty())
         XmlConfigManager::data_path = GetExecutableFolder() + _T("/share/codeblocks");
     return XmlConfigManager::data_path;
 }
 
-wxString XmlConfigManager::LocateDataFile(const wxString& filename)  const
+wxString XmlConfigManager::LocateDataFile(const wxString& filename)
 {
     wxPathList searchPaths;
     searchPaths.Add(GetDataFolder());
@@ -189,6 +214,9 @@ wxString XmlConfigManager::GetConfigFolder()  const
 {
     if(XmlConfigManager::config_folder.IsEmpty())
         XmlConfigManager::config_folder = GetHomeFolder() + _T("/.codeblocks");
+    if(!wxDir::Exists(XmlConfigManager::config_folder))
+        wxMkdir(XmlConfigManager::config_folder);
+
     return XmlConfigManager::config_folder;
 }
 
@@ -218,18 +246,90 @@ wxString XmlConfigManager::LocateDataFile(const wxString& filename)  const
 
 
 
-void XmlConfigManager::SetPath(const wxString& strPath)
+
+/* ------------------------------------------------------------------------------------------------------------------
+*  XmlConfigManager
+*/
+
+XmlConfigManager::XmlConfigManager(TiXmlElement* r) : root(r)
 {
-//    while(pathNode != root && strPath.BeginsWith("../"))
-    {
-//        pathNode = pathNode->Parent();
-//        strPath.Remove(0, 3);
-    }
+    doc = root->GetDocument();
 }
 
-void XmlConfigManager::CheckPath(const wxString& path)
-{}
 
+
+
+/* ------------------------------------------------------------------------------------------------------------------
+*  Configuration path handling
+*  Note that due to namespaces, you do no longer need to care about saving/restoring the current path in the normal case.
+*  Mostly, there will be only one module working with one namespace, and every namespace keeps track of its own path.
+*  Also, please note that GetPath() is more expensive than it seems (not a mere accessor to a member variable!), while
+*  SetPath() not only sets the current path, but also creates the respective nodes in the XML document if these don't exist.
+*/
+
+wxString XmlConfigManager::GetPath() const
+{
+    return wxEmptyString; //FIXME: implement a bottom-up tree walk here
+};
+
+void XmlConfigManager::SetPath(const wxString& path)
+{
+    wxString p(path + _T("/"));
+    pathNode = AssertPath(p);
+}
+
+TiXmlElement* XmlConfigManager::AssertPath(wxString& path)
+{
+    if(!path.Contains(_T("/")))
+        return pathNode;
+
+    TiXmlElement* e = pathNode ? pathNode : root;
+
+    path.LowerCase();
+    path.Replace(_T("//"), _T("/"));
+    Manager::Get()->GetMessageManager()->DebugLog("path=" +path);
+    wxString sub;
+    do
+    {
+        sub = path.BeforeFirst(_T('/'));
+        path = path.AfterFirst(_T('/'));
+
+        Manager::Get()->GetMessageManager()->DebugLog(" path=" +path);
+        Manager::Get()->GetMessageManager()->DebugLog(" sub =" +sub);
+        if(sub.IsEmpty())
+            e = root;
+        else if(sub.IsSameAs(_T(".")))
+            ;
+        else if(e != root && sub.IsSameAs(_T("..")))
+            e = e->Parent()->ToElement();
+        else
+        {
+            TiXmlElement* n = e->FirstChildElement(sub);
+            if(!n)
+                e = (TiXmlElement*) e->InsertEndChild(TiXmlElement(sub));
+            else
+                e = n;
+        }
+        if(doc->Error())
+        {
+            Manager::Get()->GetMessageManager()->DebugLog(wxString(_T("Error accessing config path: ")) + doc->ErrorDesc());
+            doc->ClearError();
+        }
+    }
+    while(path.Contains(_T("/")));
+
+    return e;
+}
+
+
+
+
+/* ------------------------------------------------------------------------------------------------------------------
+*  Write and read wxString values
+*  Regardless of namespaces, the keys app_path and data_path always refer to the location of the application's executable
+*  and the data path, respectively. These values are never saved to the configuration, but kept in static variables.
+*  The application makes use of this by "writing" to the configuration file after determining these values at runtime.
+*/
 bool XmlConfigManager::Write(const wxString& name,  const wxString& value)
 {
     if(name.IsSameAs(CfgMgrConsts::app_path))
@@ -243,7 +343,9 @@ bool XmlConfigManager::Write(const wxString& name,  const wxString& value)
         return true;
     }
 
-    // else... write to xml file
+    wxString key(name);
+    TiXmlElement* e = AssertPath(key);
+
     return false;
 }
 
