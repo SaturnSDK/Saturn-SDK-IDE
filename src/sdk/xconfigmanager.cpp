@@ -71,6 +71,9 @@ XmlConfigManager* CfgMgrBldr::Get(const wxString& name_space)
 
 XmlConfigManager* CfgMgrBldr::Instantiate(const wxString& name_space)
 {
+    if(name_space.IsEmpty())
+        cbThrow("Manager::Get()->GetConfigManager was called without namespace.");
+
     Map::iterator it = map.find(name_space);
     if(it != map.end())
         return it->second;
@@ -212,6 +215,20 @@ wxString XmlConfigManager::LocateDataFile(const wxString& filename)  const
 }
 
 #endif
+
+
+
+void XmlConfigManager::SetPath(const wxString& strPath)
+{
+//    while(pathNode != root && strPath.BeginsWith("../"))
+    {
+//        pathNode = pathNode->Parent();
+//        strPath.Remove(0, 3);
+    }
+}
+
+void XmlConfigManager::CheckPath(const wxString& path)
+{}
 
 bool XmlConfigManager::Write(const wxString& name,  const wxString& value)
 {

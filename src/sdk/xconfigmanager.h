@@ -9,6 +9,7 @@ class DLLIMPORT XmlConfigManager
 {
     friend class CfgMgrBldr;
     TiXmlElement* root;
+    TiXmlElement* pathNode;
     wxString path;
     XmlConfigManager();
 
@@ -16,6 +17,8 @@ class DLLIMPORT XmlConfigManager
     static wxString data_path;
     static wxString config_folder;
     static wxString home_folder;
+
+    void CheckPath(const wxString& path);
 
 public:
 
@@ -32,8 +35,11 @@ public:
     wxString Read(const wxString& key, const wxString& defaultVal = wxEmptyString);
     bool Read(const wxString& key, wxString* str);
 
-    //    wxString GetPath() const;
-    //    void SetPath(const wxString& strPath);
+    wxString GetPath() const
+    {
+        return path;
+    };
+    void SetPath(const wxString& strPath);
     //
     //    bool Write(const wxString& name,  bool value);
     //    bool Write(const wxString& name,  int value);

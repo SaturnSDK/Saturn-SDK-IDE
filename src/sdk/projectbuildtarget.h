@@ -8,6 +8,8 @@
 #include <wx/filename.h>
 #include <wx/list.h>
 
+#include "blockallocated.h"
+
 class cbProject;
 class ProjectBuildTarget;
 class pfDetails;
@@ -16,7 +18,7 @@ WX_DEFINE_ARRAY(DebuggerBreakpoint*, BreakpointsList);
 WX_DEFINE_ARRAY(ProjectBuildTarget*, BuildTargets);
 WX_DECLARE_HASH_MAP(ProjectBuildTarget*, pfDetails*, wxPointerHash, wxPointerEqual, PFDMap);
 
-class ProjectFile
+class ProjectFile  : public BlockAllocated<ProjectFile, 500>
 {
     public:
         ProjectFile(cbProject* prj);
