@@ -522,6 +522,8 @@ cbProject* ProjectManager::LoadProject(const wxString& filename)
             result = project;
             break;
         }
+        if (!wxFileExists(filename))
+            return 0;
         m_IsLoadingProject=true;
         project = new cbProject(filename);
         if(!sanity_check())

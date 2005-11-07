@@ -69,6 +69,7 @@ cbProject::cbProject(const wxString& filename)
     {
 		// existing project
 		m_Filename = filename;
+        m_BasePath = GetBasePath();
         Open();
     }
     else
@@ -89,6 +90,7 @@ cbProject::cbProject(const wxString& filename)
 		{
             wxFileName fname(m_Filename);
 			m_Title = fname.GetName();
+            m_BasePath = GetBasePath();
 			m_CommonTopLevelPath = GetBasePath() + wxFileName::GetPathSeparator();
 			NotifyPlugins(cbEVT_PROJECT_OPEN);
 		}
@@ -545,8 +547,8 @@ ProjectFile* cbProject::AddFile(int targetIndex, const wxString& filename, bool 
 	f->autoDeps = true;
     f->weight = weight;
 
-	fname = UnixFilename(filename);
-	ext = fname.GetExt().Lower();
+	fname = filename; //UnixFilename(filename);
+	ext = filename.AfterLast(_T('.')).Lower();
 	if (ext.Matches(CPP_EXT) ||
 		ext.Matches(CXX_EXT))
         f->compilerVar = _T("CPP");
@@ -586,14 +588,10 @@ ProjectFile* cbProject::AddFile(int targetIndex, const wxString& filename, bool 
 
     f->compile = localCompile;
     f->link = localLink;
-    wxString fullFilename = UnixFilename(filename);
-    fname.Assign(fullFilename);
-    if(!m_CurrentlyLoading || m_BasePath.IsEmpty())
-        m_BasePath = GetBasePath();
-    fname.Normalize(wxPATH_NORM_ALL & ~wxPATH_NORM_CASE, m_BasePath);
-    fullFilename = fname.GetFullPath();
+//    fname.Normalize(wxPATH_NORM_ALL & ~wxPATH_NORM_CASE, m_BasePath);
+    fname.Normalize(wxPATH_NORM_DOTS | wxPATH_NORM_ABSOLUTE, m_BasePath);
+    wxString fullFilename = fname.GetFullPath();
 
-    fname.Assign(fullFilename);
     f->file.Assign(fname);
 	//Manager::Get()->GetMessageManager()->Log(_T("Adding %s"), f->file.GetFullPath().c_str());
     fname.MakeRelativeTo(m_BasePath);

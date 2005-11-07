@@ -98,16 +98,29 @@ wxString UnixFilename(const wxString& filename)
 
 void QuoteStringIfNeeded(wxString& str)
 {
-    if (!str.IsEmpty() && str.Find(_T(' ')) != -1 && str.GetChar(0) != _T('"'))
+    if (!str.IsEmpty() && str.GetChar(0) != _T('"') && str.Find(_T(' ')) != -1)
         str = wxString(_T("\"")) + str + _T("\"");
 }
 
 FileType FileTypeOf(const wxString& filename)
 {
-	wxFileName fname(filename);
-	wxString ext = fname.GetExt().Lower();
+    wxString ext = filename.AfterLast(_T('.')).Lower();
 
-	if (ext.Matches(CODEBLOCKS_EXT))
+	if (ext.Matches(CPP_EXT) ||
+		ext.Matches(C_EXT) ||
+		ext.Matches(CC_EXT) ||
+		ext.Matches(CXX_EXT)
+		)
+		return ftSource;
+
+	else if (ext.Matches(HPP_EXT) ||
+		ext.Matches(H_EXT) ||
+		ext.Matches(HH_EXT) ||
+		ext.Matches(HXX_EXT)
+		)
+		return ftHeader;
+
+	else if (ext.Matches(CODEBLOCKS_EXT))
 		return ftCodeBlocksProject;
 
 	else if (ext.Matches(WORKSPACE_EXT))
@@ -127,20 +140,6 @@ FileType FileTypeOf(const wxString& filename)
 
 	else if (ext.Matches(MSVS_WORKSPACE_EXT))
 		return ftMSVSWorkspace;
-
-	else if (ext.Matches(CPP_EXT) ||
-		ext.Matches(C_EXT) ||
-		ext.Matches(CC_EXT) ||
-		ext.Matches(CXX_EXT)
-		)
-		return ftSource;
-
-	else if (ext.Matches(HPP_EXT) ||
-		ext.Matches(H_EXT) ||
-		ext.Matches(HH_EXT) ||
-		ext.Matches(HXX_EXT)
-		)
-		return ftHeader;
 
 	else if (ext.Matches(OBJECT_EXT))
 		return ftObject;
