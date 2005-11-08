@@ -1111,6 +1111,12 @@ bool MainFrame::OpenGeneric(const wxString& filename, bool addToHistory)
 bool MainFrame::DoOpenProject(const wxString& filename, bool addToHistory)
 {
 //    MSGMAN()->DebugLog(_("Opening project '%s'"), filename.c_str());
+    if (!wxFileExists(filename))
+    {
+        wxMessageBox(_("The project file does not exist..."), _("Error"), wxICON_ERROR);
+        return false;
+    }
+
     cbProject* prj = PRJMAN()->LoadProject(filename);
     if (prj)
     {
@@ -1576,10 +1582,6 @@ void MainFrame::OnApplicationClose(wxCloseEvent& event)
     SaveKeyBindings();
     TerminateRecentFilesHistory();
 
-	// detach all key profiles
-	m_KeyProfiles.DetachAll();
-	m_KeyProfiles.Cleanup();
-
 // NOTE (mandrav#1#): The following two lines, make the app crash on exit with wx2.6.1-ansi...
 //    Hide(); // Hide the window
 //    Refresh();
@@ -1591,6 +1593,10 @@ void MainFrame::OnApplicationClose(wxCloseEvent& event)
     // this stops it from crashing, when no plugins are loaded
     while (GetEventHandler() != this)
         PopEventHandler(false);
+
+	// detach all key profiles
+	m_KeyProfiles.DetachAll();
+	m_KeyProfiles.Cleanup();
 
 	Manager::Get()->Free();
 	ConfigManager::Get()->Flush();
