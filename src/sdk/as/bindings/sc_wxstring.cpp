@@ -1,3 +1,4 @@
+#include <sdk_precomp.h>
 #include <new>
 #include <angelscript.h>
 #include "sc_wxstring.h"

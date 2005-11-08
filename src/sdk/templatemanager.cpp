@@ -185,7 +185,7 @@ void TemplateManager::NewProjectFromTemplate(NewFromTemplateDlg& dlg)
 	if (wiz)
 	{
 		// wizard, too easy ;)
-		wiz->Launch();
+		wiz->Launch(dlg.GetWizardIndex());
 		return;
 	}
 

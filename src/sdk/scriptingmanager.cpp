@@ -58,6 +58,7 @@ ScriptingManager::~ScriptingManager()
 	m_pEngine->Release();
 }
 
+// static
 wxString ScriptingManager::GetErrorDescription(int error)
 {
     if (error >= 0) return _T("SUCCESS");
@@ -130,7 +131,7 @@ int ScriptingManager::LoadScript(const wxString& filename, const wxString& modul
     rewind(fp);
     char* script = new char[size + 1];
     memset(script, 0, size + 1);
-    fread(script, 1, size, fp);
+    size = fread(script, 1, size, fp);
     script[size] = 0;
     fclose(fp);
 
@@ -142,6 +143,8 @@ int ScriptingManager::LoadScript(const wxString& filename, const wxString& modul
 
     // locate and run "int main()"
 	int funcID = FindFunctionByDeclaration(_T("int main()"), module);
+	if (funcID < 0)
+        Manager::Get()->GetMessageManager()->DebugLog(_T("No 'int main()' in '%s': no autorun"), filename.c_str());
 	Executor<int> exec(funcID);
 	int ret = exec.Call();
 	if (!exec.Success())

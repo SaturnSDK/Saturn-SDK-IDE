@@ -4,6 +4,7 @@
 #include "settings.h"
 #include <wx/string.h>
 #include <wx/treectrl.h>
+#include <wx/file.h>
 #include <wx/intl.h>
 
 enum PluginType

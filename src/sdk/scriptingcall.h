@@ -34,6 +34,7 @@ template <typename OP> inline void ExecuteSetArg(asIScriptContext* ctx, int arg,
 template <> inline void ExecuteSetArg(asIScriptContext* ctx, int arg, DummyOperand op){ /* do nothing */ }
 template <> inline void ExecuteSetArg(asIScriptContext* ctx, int arg, asQWORD op){ ctx->SetArgQWord(arg, op); }
 template <> inline void ExecuteSetArg(asIScriptContext* ctx, int arg, asDWORD op){ ctx->SetArgDWord(arg, op); }
+template <> inline void ExecuteSetArg(asIScriptContext* ctx, int arg, bool op){ ctx->SetArgDWord(arg, op ? 1 : 0); }
 template <> inline void ExecuteSetArg(asIScriptContext* ctx, int arg, int op){ ctx->SetArgDWord(arg, op); }
 template <> inline void ExecuteSetArg(asIScriptContext* ctx, int arg, double op){ ctx->SetArgDouble(arg, op); }
 template <> inline void ExecuteSetArg(asIScriptContext* ctx, int arg, float op){ ctx->SetArgFloat(arg, op); }
@@ -51,6 +52,7 @@ template <typename RET> inline RET ExecuteGetRet(asIScriptContext* ctx)
 }
 template <> inline asQWORD ExecuteGetRet(asIScriptContext* ctx){ return ctx->GetReturnQWord(); }
 template <> inline asDWORD ExecuteGetRet(asIScriptContext* ctx){ return ctx->GetReturnDWord(); }
+template <> inline bool ExecuteGetRet(asIScriptContext* ctx){ return ctx->GetReturnDWord() != 0; }
 template <> inline int ExecuteGetRet(asIScriptContext* ctx){ return ctx->GetReturnDWord(); }
 template <> inline double ExecuteGetRet(asIScriptContext* ctx){ return ctx->GetReturnDouble(); }
 template <> inline float ExecuteGetRet(asIScriptContext* ctx){ return ctx->GetReturnFloat(); }

@@ -15,9 +15,10 @@ class NewFromTemplateDlg : public wxDialog
 	public:
 		NewFromTemplateDlg(const ProjectTemplateArray& templates, const wxArrayString& user_templatesz);
 		virtual ~NewFromTemplateDlg();
-		
+
 		ProjectTemplateLoader* GetTemplate(){ return m_Template; }
 		cbProjectWizardPlugin* GetWizard(){ return m_pWizard; }
+		int GetWizardIndex(){ return m_WizardIndex; }
         bool DoNotCreateFiles();
 		bool SelectedTemplate();
 		bool SelectedUserTemplate();
@@ -35,6 +36,7 @@ class NewFromTemplateDlg : public wxDialog
 	private:
 		ProjectTemplateLoader* m_Template;
 		cbProjectWizardPlugin* m_pWizard;
+		int m_WizardIndex;
 		wxImageList m_ImageList;
 		const ProjectTemplateArray m_Templates;
 		PluginsArray m_Wizards;

@@ -24,7 +24,7 @@ class DLLIMPORT ScriptingManager
         int FindFunctionByDeclaration(const wxString& decl, const wxString& module = _T(""));
         int FindFunctionByName(const wxString& name, const wxString& module = _T(""));
 
-        wxString GetErrorDescription(int error);
+        static wxString GetErrorDescription(int error);
 	protected:
         asIScriptEngine* m_pEngine;
 	private:
@@ -36,7 +36,7 @@ class DLLIMPORT ScriptingManager
     { \
         if (r < 0) \
         { \
-            LOGSTREAM << what << ": " << ScriptingManager::Get()->GetErrorDescription(r) << " (" __FILE__ << ":" << __LINE__ << ")\n"; \
+            LOGSTREAM << what << ": " << ScriptingManager::GetErrorDescription(r) << " (" __FILE__ << ":" << __LINE__ << ")\n"; \
             return ret; \
         } \
     }
@@ -45,7 +45,7 @@ class DLLIMPORT ScriptingManager
     { \
         if (r < 0) \
         { \
-            LOGSTREAM << what << ": " << ScriptingManager::Get()->GetErrorDescription(r) << " (" __FILE__ << ":" << __LINE__ << ")\n"; \
+            LOGSTREAM << what << ": " << ScriptingManager::GetErrorDescription(r) << " (" __FILE__ << ":" << __LINE__ << ")\n"; \
             return; \
         } \
 	}

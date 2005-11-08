@@ -3,6 +3,7 @@
 #include "scriptbindings.h"
 #include "sc_wxstring.h"
 #include "sc_wxarraystring.h"
+#include "sc_io.h"
 
 // In Code::Blocks nothing is refcounted.
 // In order to use objects as handles (aka pointers), we must provide
@@ -32,6 +33,10 @@ void gShowMessageWarn(const wxString& msg){ wxMessageBox(msg, _("Script message"
 void gShowMessageError(const wxString& msg){ wxMessageBox(msg, _("Script message"), wxICON_ERROR); }
 void gShowMessageInfo(const wxString& msg){ wxMessageBox(msg, _("Script message"), wxICON_INFORMATION); }
 void gDebugLog(const wxString& msg){ DBGLOG(msg); }
+wxString gReplaceMacros(const wxString& buffer, bool envVarsToo)
+{
+    return Manager::Get()->GetMacrosManager()->ReplaceMacros(buffer, envVarsToo);
+}
 
 //------------------------------------------------------------------------------
 // Actual registration
@@ -41,6 +46,7 @@ void RegisterBindings(asIScriptEngine* engine)
     // register wx types in script
     Register_wxString(engine);
     Register_wxArrayString(engine);
+    Register_IO(engine);
 
     // register types
     engine->RegisterObjectType("Editor", 0, asOBJ_CLASS);
@@ -68,6 +74,7 @@ void RegisterBindings(asIScriptEngine* engine)
     engine->RegisterGlobalFunction("void ShowError(const wxString& in)", asFUNCTION(gShowMessageError), asCALL_CDECL);
     engine->RegisterGlobalFunction("void ShowInfo(const wxString& in)", asFUNCTION(gShowMessageInfo), asCALL_CDECL);
     engine->RegisterGlobalFunction("void Log(const wxString& in)", asFUNCTION(gDebugLog), asCALL_CDECL);
+    engine->RegisterGlobalFunction("wxString ReplaceMacros(const wxString& in, bool)", asFUNCTION(gReplaceMacros), asCALL_CDECL);
 }
 
 //------------------------------------------------------------------------------
@@ -211,7 +218,7 @@ template <class T> void Register_CompileTargetBase(asIScriptEngine* engine, cons
     engine->RegisterObjectMethod(_C(classname), "wxString GetDynamicLibFilename()", asMETHOD(T, GetDynamicLibFilename), asCALL_THISCALL);
     engine->RegisterObjectMethod(_C(classname), "wxString GetStaticLibFilename()", asMETHOD(T, GetStaticLibFilename), asCALL_THISCALL);
     engine->RegisterObjectMethod(_C(classname), "wxString GetBasePath()", asMETHOD(T, GetBasePath), asCALL_THISCALL);
-    engine->RegisterObjectMethod(_C(classname), "void SetTargetType(int)", asMETHOD(T, SetTargetType), asCALL_THISCALL);
+    engine->RegisterObjectMethod(_C(classname), "void SetTargetType(const int& in)", asMETHOD(T, SetTargetType), asCALL_THISCALL);
     engine->RegisterObjectMethod(_C(classname), "int& GetTargetType()", asMETHOD(T, GetTargetType), asCALL_THISCALL);
     engine->RegisterObjectMethod(_C(classname), "wxString& GetExecutionParameters()", asMETHOD(T, GetExecutionParameters), asCALL_THISCALL);
     engine->RegisterObjectMethod(_C(classname), "void SetExecutionParameters(const wxString& in)", asMETHOD(T, SetExecutionParameters), asCALL_THISCALL);
@@ -295,6 +302,22 @@ void Register_Project(asIScriptEngine* engine)
     engine->RegisterObjectMethod("Project", "bool SaveLayout()", asMETHOD(cbProject, SaveLayout), asCALL_THISCALL);
     engine->RegisterObjectMethod("Project", "bool LoadLayout()", asMETHOD(cbProject, LoadLayout), asCALL_THISCALL);
     engine->RegisterObjectMethod("Project", "bool ShowOptions()", asMETHOD(cbProject, ShowOptions), asCALL_THISCALL);
+
+    engine->RegisterObjectMethod("Project", "ProjectFile@ GetFile(int)", asMETHOD(cbProject, GetFile), asCALL_THISCALL);
+    engine->RegisterObjectMethod("Project", "bool RemoveFile(int)", asMETHOD(cbProject, RemoveFile), asCALL_THISCALL);
+    engine->RegisterObjectMethod("Project", "ProjectFile@ AddFile(int,const wxString& in,bool,bool,uint16)", asMETHODPR(cbProject, AddFile, (int,const wxString&,bool,bool,unsigned short int), ProjectFile*), asCALL_THISCALL);
+    engine->RegisterObjectMethod("Project", "ProjectFile@ AddFile(const wxString& in,const wxString& in,bool,bool,uint16)", asMETHODPR(cbProject, AddFile, (const wxString&,const wxString&,bool,bool,unsigned short int), ProjectFile*), asCALL_THISCALL);
+
+    engine->RegisterObjectMethod("Project", "int GetBuildTargetsCount()", asMETHOD(cbProject, GetBuildTargetsCount), asCALL_THISCALL);
+    engine->RegisterObjectMethod("Project", "BuildTarget@ GetBuildTarget(int)", asMETHODPR(cbProject, GetBuildTarget, (int), ProjectBuildTarget*), asCALL_THISCALL);
+    engine->RegisterObjectMethod("Project", "BuildTarget@ GetBuildTarget(const wxString& in)", asMETHODPR(cbProject, GetBuildTarget, (const wxString&), ProjectBuildTarget*), asCALL_THISCALL);
+    engine->RegisterObjectMethod("Project", "BuildTarget@ AddBuildTarget(const wxString& in)", asMETHOD(cbProject, AddBuildTarget), asCALL_THISCALL);
+    engine->RegisterObjectMethod("Project", "bool RenameBuildTarget(int,const wxString& in)", asMETHODPR(cbProject, RenameBuildTarget, (int, const wxString&), bool), asCALL_THISCALL);
+    engine->RegisterObjectMethod("Project", "bool RenameBuildTarget(const wxString& in,const wxString& in)", asMETHODPR(cbProject, RenameBuildTarget, (const wxString&, const wxString&), bool), asCALL_THISCALL);
+    engine->RegisterObjectMethod("Project", "bool RemoveBuildTarget(int)", asMETHODPR(cbProject, RemoveBuildTarget, (int), bool), asCALL_THISCALL);
+    engine->RegisterObjectMethod("Project", "bool RemoveBuildTarget(const wxString& in)", asMETHODPR(cbProject, RemoveBuildTarget, (const wxString&), bool), asCALL_THISCALL);
+    engine->RegisterObjectMethod("Project", "bool SetActiveBuildTarget(int)", asMETHOD(cbProject, SetActiveBuildTarget), asCALL_THISCALL);
+    engine->RegisterObjectMethod("Project", "int GetActiveBuildTarget()", asMETHOD(cbProject, GetActiveBuildTarget), asCALL_THISCALL);
 }
 
 //------------------------------------------------------------------------------
@@ -317,7 +340,7 @@ void Register_ProjectManager(asIScriptEngine* engine)
     engine->RegisterObjectMethod("ProjectManagerClass", "bool CloseProject(Project@)", asMETHOD(ProjectManager, CloseProject), asCALL_THISCALL);
     engine->RegisterObjectMethod("ProjectManagerClass", "bool CloseActiveProject()", asMETHOD(ProjectManager, CloseActiveProject), asCALL_THISCALL);
     engine->RegisterObjectMethod("ProjectManagerClass", "bool CloseAllProjects()", asMETHOD(ProjectManager, CloseAllProjects), asCALL_THISCALL);
-    engine->RegisterObjectMethod("ProjectManagerClass", "Project@ NewProject()", asMETHOD(ProjectManager, NewProject), asCALL_THISCALL);
+    engine->RegisterObjectMethod("ProjectManagerClass", "Project@ NewProject(const wxString& in)", asMETHOD(ProjectManager, NewProject), asCALL_THISCALL);
     engine->RegisterObjectMethod("ProjectManagerClass", "int AddFileToProject(const wxString& in, Project@, int)", asMETHODPR(ProjectManager, AddFileToProject, (const wxString&,cbProject*,int), int), asCALL_THISCALL);
     engine->RegisterObjectMethod("ProjectManagerClass", "int AskForBuildTargetIndex(Project@)", asMETHOD(ProjectManager, AskForBuildTargetIndex), asCALL_THISCALL);
 
