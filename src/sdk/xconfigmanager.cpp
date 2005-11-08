@@ -515,10 +515,8 @@ void XmlConfigManager::UnSet(const wxString& name)
     wxString key(name);
     TiXmlElement* e = AssertPath(key);
 
-    TiXmlNode *leaf = e->FirstChild(name.mb_str());
-
-    if(leaf)
-        e->RemoveChild(leaf);
+    TiXmlNode *leaf = GetUniqElement(e, key);
+    e->RemoveChild(leaf);
 }
 
 bool XmlConfigManager::Exists(const wxString& name)
@@ -531,6 +529,64 @@ bool XmlConfigManager::Exists(const wxString& name)
 
     return leaf;
 }
+
+
+
+void XmlConfigManager::Write(const wxString& name,  const wxArrayString& arrayString)
+{
+    wxString key(name);
+    TiXmlElement* e = AssertPath(key);
+
+    TiXmlElement *leaf = GetUniqElement(e, key);
+
+    TiXmlElement *as;
+    as = GetUniqElement(leaf, _T("astr"));
+    leaf->RemoveChild(as);
+    as = GetUniqElement(leaf, _T("astr"));
+
+    for(unsigned int i = 0; i < arrayString.GetCount(); ++i)
+    {
+        TiXmlElement s("s");
+        s.InsertEndChild(TiXmlText(arrayString[i].mb_str()));
+        as->InsertEndChild(s);
+    }
+}
+
+void XmlConfigManager::WriteBinary(const wxString& name,  const wxString& source)
+{
+    wxString key(name);
+    TiXmlElement* e = AssertPath(key);
+
+    TiXmlElement *str = GetUniqElement(e, key);
+
+    TiXmlElement *s = GetUniqElement(str, _T("bin"));
+    SetNodeText(s, TiXmlText(wxBase64Encode(source).mb_str()));
+}
+
+void XmlConfigManager::WriteBinary(const wxString& name,  void* ptr, size_t len)
+{
+    wxString s((const char*)ptr, len);
+    WriteBinary(name,  s);
+}
+
+wxString XmlConfigManager::ReadBinary(const wxString& name)
+{
+    wxString str;
+    wxString key(name);
+    TiXmlElement* e = AssertPath(key);
+
+    TiXmlHandle leafHandle(e);
+    TiXmlText *t = (TiXmlText *) leafHandle.FirstChild(key).FirstChild(_T("bin")).FirstChild().Node();
+
+    if(t)
+    {
+        str.assign(t->Value());
+        return wxBase64Decode(str);
+    }
+    return wxEmptyString;
+}
+
+
 
 
 

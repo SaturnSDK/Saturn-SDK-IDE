@@ -34,16 +34,32 @@ m->DebugLog(wxString("key_exists /foo/zork=") << c->Exists("/foo/zork"));
 m->DebugLog(wxString("key_exists /foo/honk=") << c->Exists("/foo/honk"));
 
 c->Set("prz");
-m->DebugLog(wxString("exists prz=") << c->Exists("prz"));
 c->UnSet("prz");
-m->DebugLog(wxString("exists prz=") << c->Exists("prz"));
 
+m->DebugLog(wxString("exists blah=") << c->Exists("/foo/blah"));
+m->DebugLog(wxString("exists honk=") << c->Exists("/foo/honk"));
+m->DebugLog(wxString("exists invalid=") << c->Exists("/invalid"));
+
+m->DebugLog(wxString("read /foo/blah=") << c->ReadInt("/foo/blah", -1));
 m->DebugLog(wxString("read /foo/honk=") << c->ReadInt("/foo/honk", -1));
 m->DebugLog(wxString("read /foo/honk=") << c->ReadDouble("/foo/honk", -5.5));
+
 m->DebugLog(wxString("read /invalid=") << c->ReadInt("/invalid", 4242));
 
-wxString a("hello world");
-m->DebugLog(a);
-m->DebugLog(wxBase64Encode(a));
-m->DebugLog(wxBase64Decode(wxBase64Encode(a)));
+
+wxArrayString as;
+as.Add("some");
+as.Add("items");
+as.Add("in a wxArrayString");
+as.Add("saved");
+as.Add("here in config");
+
+c->Write("/trailing/slash/data", as);
+
+c->WriteBinary("/trailing/slash/window-layout", wxString("Binary data. This can be anything which fits in a wxString or a pointer plus a size_t argument."));
+m->DebugLog(c->ReadBinary("/trailing/slash/window-layout"));
+
+
+
+
 

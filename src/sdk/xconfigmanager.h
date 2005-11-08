@@ -52,27 +52,14 @@ public:
     void Set(const wxString& name);
     void UnSet(const wxString& name);
 
+    void Write(const wxString& name,  const wxArrayString& as);
+    //wxArrayString Read(const wxString& name);
 
-    //
-    //    bool Write(const wxString& name,  bool value);
+    void WriteBinary(const wxString& name,  const wxString& source);
+    void WriteBinary(const wxString& name,  void* ptr, size_t len);
+    wxString ReadBinary(const wxString& name);
 
-    //    bool Write(const wxString& name,  long int value);
-    //    bool Write(const wxString& name,  float value);
-    //    bool Write(const wxString& name,  double value);
-    //    bool Write(const wxString& name,  const wxArrayString& value);
-    //
-    //
-    //    bool Read(const wxString& key, long int* l);
-    //    bool Read(const wxString& key, long int* l, long defaultVal);
-    //    long int Read(const wxString& key, long int defaultVal);
-    //
-    //    bool Read(const wxString& key, double* d);
-    //    bool Read(const wxString& key, double* d, double defaultVal);
-    //
-    //    bool Read(const wxString& key, bool* b);
-    //
-    //    bool IsSet(const wxString& name){return KeyExists(name);};
-    //
+
     //    bool GetFirstGroup(wxString& str, long& index);
     //    bool GetNextGroup(wxString& str, long& index);
     //    bool RenameGroup(const wxString&  oldName, const wxString&  newName);
