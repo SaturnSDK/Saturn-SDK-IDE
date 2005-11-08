@@ -172,22 +172,22 @@ void ProjectLoader::DoProjectOptions(TiXmlElement* parentNode)
         if (node->Attribute("title"))
             title = _U(node->Attribute("title"));
 
-        if (node->Attribute("makefile"))
+        else if (node->Attribute("makefile")) // there is only one attribute per option, so "else" is a safe optimisation
             makefile = _U(node->Attribute("makefile"));
 
-        if (node->Attribute("makefile_is_custom"))
+        else if (node->Attribute("makefile_is_custom"))
             makefile_custom = strncmp(node->Attribute("makefile_is_custom"), "1", 1) == 0;
 
-        if (node->Attribute("default_target"))
+        else if (node->Attribute("default_target"))
             defaultTarget = atoi(node->Attribute("default_target"));
 
-        if (node->Attribute("active_target"))
+        else if (node->Attribute("active_target"))
             activeTarget = atoi(node->Attribute("active_target"));
 
-        if (node->Attribute("compiler"))
+        else if (node->Attribute("compiler"))
             compilerIdx = GetValidCompilerIndex(atoi(node->Attribute("compiler")), _("project"));
 
-        if (node->Attribute("pch_mode"))
+        else if (node->Attribute("pch_mode"))
             pch_mode = (PCHMode)atoi(node->Attribute("pch_mode"));
 
         node = node->NextSiblingElement("Option");
@@ -273,55 +273,55 @@ void ProjectLoader::DoBuildTargetOptions(TiXmlElement* parentNode, ProjectBuildT
         if (node->Attribute("use_console_runner"))
             use_console_runner = strncmp(node->Attribute("use_console_runner"), "0", 1) != 0;
 
-        if (node->Attribute("output"))
+        else if (node->Attribute("output"))
             output = _U(node->Attribute("output"));
 
-        if (node->Attribute("working_dir"))
+        else if (node->Attribute("working_dir"))
             working_dir = _U(node->Attribute("working_dir"));
 
-        if (node->Attribute("object_output"))
+        else if (node->Attribute("object_output"))
             obj_output = _U(node->Attribute("object_output"));
 
-        if (node->Attribute("deps_output"))
+        else if (node->Attribute("deps_output"))
             deps_output = _U(node->Attribute("deps_output"));
 
-        if (node->Attribute("external_deps"))
+        else if (node->Attribute("external_deps"))
             deps = _U(node->Attribute("external_deps"));
 
-        if (node->Attribute("additional_output"))
+        else if (node->Attribute("additional_output"))
             added = _U(node->Attribute("additional_output"));
 
-        if (node->Attribute("type"))
+        else if (node->Attribute("type"))
             type = atoi(node->Attribute("type"));
 
-        if (node->Attribute("compiler"))
+        else if (node->Attribute("compiler"))
             compilerIdx = GetValidCompilerIndex(atoi(node->Attribute("compiler")), _("build target"));
 
-        if (node->Attribute("parameters"))
+        else if (node->Attribute("parameters"))
             parameters = _U(node->Attribute("parameters"));
 
-        if (node->Attribute("host_application"))
+        else if (node->Attribute("host_application"))
             hostApplication = _U(node->Attribute("host_application"));
 
-        if (node->Attribute("includeInTargetAll"))
+        else if (node->Attribute("includeInTargetAll"))
             includeInTargetAll = atoi(node->Attribute("includeInTargetAll")) != 0;
 
-        if (node->Attribute("createDefFile"))
+        else if (node->Attribute("createDefFile"))
             createDefFile = atoi(node->Attribute("createDefFile")) != 0;
 
-        if (node->Attribute("createStaticLib"))
+        else if (node->Attribute("createStaticLib"))
             createStaticLib = atoi(node->Attribute("createStaticLib")) != 0;
 
-        if (node->Attribute("projectCompilerOptionsRelation"))
+        else if (node->Attribute("projectCompilerOptionsRelation"))
             projectCompilerOptionsRelation = atoi(node->Attribute("projectCompilerOptionsRelation"));
 
-        if (node->Attribute("projectLinkerOptionsRelation"))
+        else if (node->Attribute("projectLinkerOptionsRelation"))
             projectLinkerOptionsRelation = atoi(node->Attribute("projectLinkerOptionsRelation"));
 
-        if (node->Attribute("projectIncludeDirsRelation"))
+        else if (node->Attribute("projectIncludeDirsRelation"))
             projectIncludeDirsRelation = atoi(node->Attribute("projectIncludeDirsRelation"));
 
-        if (node->Attribute("projectLibDirsRelation"))
+        else if (node->Attribute("projectLibDirsRelation"))
             projectLibDirsRelation = atoi(node->Attribute("projectLibDirsRelation"));
 
         node = node->NextSiblingElement("Option");
