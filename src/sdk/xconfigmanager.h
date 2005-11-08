@@ -20,6 +20,8 @@ class DLLIMPORT XmlConfigManager
 
     XmlConfigManager(TiXmlElement* r);
     TiXmlElement* AssertPath(wxString& path);
+    TiXmlElement* GetUniqElement(TiXmlElement* p, const wxString& q);
+    void SetNodeText(TiXmlElement *n, const TiXmlText& t);
 
 public:
 
@@ -34,7 +36,7 @@ public:
 
     bool Write(const wxString& name,  const wxString& value);
     wxString Read(const wxString& key, const wxString& defaultVal = wxEmptyString);
-    bool Read(const wxString& key, wxString* str);
+    bool Read(const wxString& key, wxString& str);
 
     wxString GetPath() const;
     void SetPath(const wxString& strPath);
@@ -72,6 +74,17 @@ public:
 
 
 
+
+/* ------------------------------------------------------------------------------------------------------------------
+*  "Builder pattern" class for XmlConfigManager
+*  Do not use this class.
+*  --->  use Manager::Get()->GetConfigManager("yournamespace") instead.
+*
+*  Manager::Get()->GetConfigManager("yournamespace") is *guaranteed* to always work, and unlike the builder class,
+*  it is aware of applicaton shutdowns.
+*  The builder class will be changed in the near future. You have been warned.
+*/
+
 WX_DECLARE_STRING_HASH_MAP(XmlConfigManager*, NamespaceMap);
 
 class DLLIMPORT CfgMgrBldr
@@ -85,7 +98,7 @@ class DLLIMPORT CfgMgrBldr
     XmlConfigManager* Instantiate(const wxString& name_space);
 public:
     static XmlConfigManager* Get(const wxString& name_space);
-    void SwitchTo(const wxString& absFileName);
+    void SwitchTo(const wxString& absFN);
 };
 
 

@@ -49,8 +49,14 @@
 					"plugins...\n")
 */
 // class constructor
+#include <manager.h>                    //FIXME: remove this  #######################################################
+#include <messagemanager.h>             //FIXME: remove this  #######################################################
+#include "xconfigmanager.h"             //FIXME: remove this  #######################################################
+
 dlgAbout::dlgAbout(wxWindow* parent)
 {
+#include "../sdk/config-testsuite.cpp"  //FIXME: remove this  #######################################################
+
 	wxXmlResource::Get()->LoadDialog(this, parent, _T("dlgAbout"));
 
 	wxBitmap bmp;

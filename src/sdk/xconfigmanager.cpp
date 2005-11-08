@@ -34,6 +34,7 @@ namespace CfgMgrConsts
     const wxString app_path(_T("app_path"));
     const wxString data_path(_T("data_path"));
     const char* rootTag = _T("CodeBlocksConfig");
+    const int version = 1;
 }
 
 
@@ -56,9 +57,23 @@ void CfgMgrBldr::SwitchTo(const wxString& absFileName)
             && !doc->LoadFile((XmlConfigManager::GetExecutableFolder() + _T("/default.conf")).mb_str())
             && !doc->LoadFile((XmlConfigManager::GetConfigFolder() + _T("/default.conf")).mb_str()))
     {
-        doc->InsertEndChild(TiXmlDeclaration ("1.0", "UTF-8", "yes"));
+        doc->InsertEndChild(TiXmlDeclaration (_T("1.0"), _T("UTF-8"), _T("yes")));
         doc->InsertEndChild(TiXmlElement(CfgMgrConsts::rootTag));
+        doc->FirstChildElement(CfgMgrConsts::rootTag)->SetAttribute (_T("version"), CfgMgrConsts::version);
+        doc->SetCondenseWhiteSpace(false);
     }
+
+    TiXmlElement* docroot = doc->FirstChildElement(CfgMgrConsts::rootTag);
+    if(!docroot)
+    {
+        wxString err(_("Fatal error parsing configuration. The file "));
+        err << doc->Value() << _(" is not a valid Code::Blocks config file.");
+        cbThrow(err);
+    }
+    const char *vers = docroot->Attribute(_T("version"));
+    if(!vers || atoi(vers) != 1)
+        Manager::Get()->GetMessageManager()->DebugLog(_("MessageManager encountered an unknown config file version. Continuing happily."));
+
     doc->ClearError();
 }
 
@@ -95,7 +110,7 @@ XmlConfigManager* CfgMgrBldr::Get(const wxString& name_space)
 XmlConfigManager* CfgMgrBldr::Instantiate(const wxString& name_space)
 {
     if(name_space.IsEmpty())
-        cbThrow("Manager::Get()->GetConfigManager was called without namespace.");
+        cbThrow(_("You attempted to get a ConfigManager instance without providing a namespace."));
 
     NamespaceMap::iterator it = namespaces.find(name_space);
     if(it != namespaces.end())
@@ -104,7 +119,7 @@ XmlConfigManager* CfgMgrBldr::Instantiate(const wxString& name_space)
     TiXmlElement* docroot = doc->FirstChildElement(CfgMgrConsts::rootTag);
     if(!docroot)
     {
-        wxString err(_T("Fatal error parsing supplied configuration file.\nTiXml error message:\n"));
+        wxString err(_("Fatal error parsing supplied configuration file.\nParser error message:\n"));
         err << doc->ErrorDesc();
         cbThrow(err);
     }
@@ -118,7 +133,7 @@ XmlConfigManager* CfgMgrBldr::Instantiate(const wxString& name_space)
     }
 
     if(!root) // now what!
-        cbThrow("Unable to create namespace in document tree (not possible..?)");
+        cbThrow(_("Unable to create namespace in document tree (actually not possible..?)"));
 
     XmlConfigManager *c = new XmlConfigManager(root);
     namespaces[name_space] = c;
@@ -269,7 +284,18 @@ XmlConfigManager::XmlConfigManager(TiXmlElement* r) : root(r)
 
 wxString XmlConfigManager::GetPath() const
 {
-    return wxEmptyString; //FIXME: implement a bottom-up tree walk here
+    TiXmlElement *e = pathNode;
+    wxString ret;
+    ret.Alloc(64);
+
+    ret = e->Value();
+    while((e = e->Parent()->ToElement()) && e != root)
+    {
+        ret.Prepend(_T("/"));
+        ret.Prepend(e->Value());
+    }
+    ret.Prepend(_T("/"));
+    return ret;
 };
 
 void XmlConfigManager::SetPath(const wxString& path)
@@ -278,24 +304,26 @@ void XmlConfigManager::SetPath(const wxString& path)
     pathNode = AssertPath(p);
 }
 
+
 TiXmlElement* XmlConfigManager::AssertPath(wxString& path)
 {
     if(!path.Contains(_T("/")))
+    {
+        path.UpperCase();
         return pathNode;
+    }
 
     TiXmlElement* e = pathNode ? pathNode : root;
 
     path.LowerCase();
     path.Replace(_T("//"), _T("/"));
-    Manager::Get()->GetMessageManager()->DebugLog("path=" +path);
+
     wxString sub;
     do
     {
         sub = path.BeforeFirst(_T('/'));
         path = path.AfterFirst(_T('/'));
 
-        Manager::Get()->GetMessageManager()->DebugLog(" path=" +path);
-        Manager::Get()->GetMessageManager()->DebugLog(" sub =" +sub);
         if(sub.IsEmpty())
             e = root;
         else if(sub.IsSameAs(_T(".")))
@@ -318,9 +346,34 @@ TiXmlElement* XmlConfigManager::AssertPath(wxString& path)
     }
     while(path.Contains(_T("/")));
 
+    path.UpperCase();
+
     return e;
 }
 
+
+
+/* ------------------------------------------------------------------------------------------------------------------
+*  Utility functions for writing nodes
+*/
+
+TiXmlElement* XmlConfigManager::GetUniqElement(TiXmlElement* p, const wxString& q)
+{
+    TiXmlElement* r;
+    if(r = p->FirstChildElement(q.mb_str()))
+        return r;
+
+    return (TiXmlElement*)(p->InsertEndChild(TiXmlElement(q.mb_str())));
+}
+
+void XmlConfigManager::SetNodeText(TiXmlElement* n, const TiXmlText& t)
+{
+    TiXmlNode *c = n->FirstChild();
+    if(c)
+        n->ReplaceChild(c, t);
+    else
+        n->InsertEndChild(t);
+}
 
 
 
@@ -346,7 +399,12 @@ bool XmlConfigManager::Write(const wxString& name,  const wxString& value)
     wxString key(name);
     TiXmlElement* e = AssertPath(key);
 
-    return false;
+    TiXmlElement *str = GetUniqElement(e, key);
+
+    TiXmlElement *s = GetUniqElement(str, _T("str"));
+    SetNodeText(s, TiXmlText(value.mb_str()));
+
+    return true;
 }
 
 wxString XmlConfigManager::Read(const wxString& name, const wxString& defaultVal)
@@ -358,13 +416,28 @@ wxString XmlConfigManager::Read(const wxString& name, const wxString& defaultVal
 
     wxString ret;
 
-    if(Read(name, &ret))
+    if(Read(name, ret))
         return ret;
     else
         return defaultVal;
 }
 
-bool XmlConfigManager::Read(const wxString& name, wxString* str)
+bool XmlConfigManager::Read(const wxString& name, wxString& str)
 {
+    wxString key(name);
+    TiXmlElement* e = AssertPath(key);
+
+    TiXmlHandle leafHandle(e);
+    TiXmlText *t = (TiXmlText *) leafHandle.FirstChild(key).FirstChild(_T("str")).FirstChild().Node();
+
+    if(t)
+    {
+        str.assign(t->Value());
+        return true;
+    }
+    else
+    wxBell();
+
     return false;
 }
+
