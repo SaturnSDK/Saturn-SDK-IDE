@@ -33,23 +33,33 @@ public:
     static wxString GetDataFolder();
     static wxString GetExecutableFolder();
 
-
-    bool Write(const wxString& name,  const wxString& value);
-    wxString Read(const wxString& key, const wxString& defaultVal = wxEmptyString);
-    bool Read(const wxString& key, wxString& str);
-
     wxString GetPath() const;
     void SetPath(const wxString& strPath);
 
+    void Write(const wxString& name,  const wxString& value);
+    wxString Read(const wxString& key, const wxString& defaultVal = wxEmptyString);
+    bool Read(const wxString& key, wxString* str);
+
+    void Write(const wxString& name,  int value);
+    bool Read(const wxString& name,  int* value);
+    int  ReadInt(const wxString& name,  int defaultVal = 0);
+
+    void Write(const wxString& name,  double value);
+    bool Read(const wxString& name,  double* value);
+    double ReadDouble(const wxString& name,  double defaultVal = 0.0f);
+
+    bool Exists(const wxString& name);
+    void Set(const wxString& name);
+    void UnSet(const wxString& name);
+
+
     //
     //    bool Write(const wxString& name,  bool value);
-    //    bool Write(const wxString& name,  int value);
+
     //    bool Write(const wxString& name,  long int value);
     //    bool Write(const wxString& name,  float value);
     //    bool Write(const wxString& name,  double value);
     //    bool Write(const wxString& name,  const wxArrayString& value);
-    //    bool Set(const wxString& name);
-    //    bool UnSet(const wxString& name);
     //
     //
     //    bool Read(const wxString& key, long int* l);

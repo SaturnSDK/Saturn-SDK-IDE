@@ -57,9 +57,9 @@ void CfgMgrBldr::SwitchTo(const wxString& absFileName)
             && !doc->LoadFile((XmlConfigManager::GetExecutableFolder() + _T("/default.conf")).mb_str())
             && !doc->LoadFile((XmlConfigManager::GetConfigFolder() + _T("/default.conf")).mb_str()))
     {
-        doc->InsertEndChild(TiXmlDeclaration (_T("1.0"), _T("UTF-8"), _T("yes")));
+        doc->InsertEndChild(TiXmlDeclaration(_T("1.0"), _T("UTF-8"), _T("yes")));
         doc->InsertEndChild(TiXmlElement(CfgMgrConsts::rootTag));
-        doc->FirstChildElement(CfgMgrConsts::rootTag)->SetAttribute (_T("version"), CfgMgrConsts::version);
+        doc->FirstChildElement(CfgMgrConsts::rootTag)->SetAttribute(_T("version"), CfgMgrConsts::version);
         doc->SetCondenseWhiteSpace(false);
     }
 
@@ -333,10 +333,10 @@ TiXmlElement* XmlConfigManager::AssertPath(wxString& path)
         else
         {
             TiXmlElement* n = e->FirstChildElement(sub);
-            if(!n)
-                e = (TiXmlElement*) e->InsertEndChild(TiXmlElement(sub));
-            else
+            if(n)
                 e = n;
+            else
+                e = (TiXmlElement*) e->InsertEndChild(TiXmlElement(sub));
         }
         if(doc->Error())
         {
@@ -378,22 +378,22 @@ void XmlConfigManager::SetNodeText(TiXmlElement* n, const TiXmlText& t)
 
 
 /* ------------------------------------------------------------------------------------------------------------------
-*  Write and read wxString values
-*  Regardless of namespaces, the keys app_path and data_path always refer to the location of the application's executable
+*  Write and read values
+*  Regardless of namespaces, the string keys app_path and data_path always refer to the location of the application's executable
 *  and the data path, respectively. These values are never saved to the configuration, but kept in static variables.
 *  The application makes use of this by "writing" to the configuration file after determining these values at runtime.
 */
-bool XmlConfigManager::Write(const wxString& name,  const wxString& value)
+void XmlConfigManager::Write(const wxString& name,  const wxString& value)
 {
     if(name.IsSameAs(CfgMgrConsts::app_path))
     {
         XmlConfigManager::app_path = value;
-        return true;
+        return;
     }
     else if(name.IsSameAs(CfgMgrConsts::data_path))
     {
         XmlConfigManager::data_path = value;
-        return true;
+        return;
     }
 
     wxString key(name);
@@ -403,8 +403,6 @@ bool XmlConfigManager::Write(const wxString& name,  const wxString& value)
 
     TiXmlElement *s = GetUniqElement(str, _T("str"));
     SetNodeText(s, TiXmlText(value.mb_str()));
-
-    return true;
 }
 
 wxString XmlConfigManager::Read(const wxString& name, const wxString& defaultVal)
@@ -416,13 +414,13 @@ wxString XmlConfigManager::Read(const wxString& name, const wxString& defaultVal
 
     wxString ret;
 
-    if(Read(name, ret))
+    if(Read(name, &ret))
         return ret;
     else
         return defaultVal;
 }
 
-bool XmlConfigManager::Read(const wxString& name, wxString& str)
+bool XmlConfigManager::Read(const wxString& name, wxString* str)
 {
     wxString key(name);
     TiXmlElement* e = AssertPath(key);
@@ -432,12 +430,107 @@ bool XmlConfigManager::Read(const wxString& name, wxString& str)
 
     if(t)
     {
-        str.assign(t->Value());
+        str->assign(t->Value());
         return true;
     }
-    else
-    wxBell();
-
     return false;
 }
+
+
+void XmlConfigManager::Write(const wxString& name,  int value)
+{
+    wxString key(name);
+    TiXmlElement* e = AssertPath(key);
+    TiXmlElement *leaf = GetUniqElement(e, key);
+
+    leaf->SetAttribute(_T("int"), value);
+}
+
+int  XmlConfigManager::ReadInt(const wxString& name,  int defaultVal)
+{
+    int ret;
+
+    if(Read(name, &ret))
+        return ret;
+    else
+        return defaultVal;
+}
+
+bool XmlConfigManager::Read(const wxString& name,  int* value)
+{
+    wxString key(name);
+    TiXmlElement* e = AssertPath(key);
+
+    TiXmlHandle leafHandle(e);
+    TiXmlElement *leaf = leafHandle.FirstChild(key).Element();
+
+    if(leaf)
+        return leaf->QueryIntAttribute(_T("int"), value);
+    return false;
+}
+
+void XmlConfigManager::Write(const wxString& name,  double value)
+{
+    wxString key(name);
+    TiXmlElement* e = AssertPath(key);
+    TiXmlElement *leaf = GetUniqElement(e, key);
+
+    leaf->SetDoubleAttribute(_T("double"), value);
+}
+
+double  XmlConfigManager::ReadDouble(const wxString& name,  double defaultVal)
+{
+    double ret;
+
+    if(Read(name, &ret))
+        return ret;
+    else
+        return defaultVal;
+}
+
+bool XmlConfigManager::Read(const wxString& name,  double* value)
+{
+    wxString key(name);
+    TiXmlElement* e = AssertPath(key);
+
+    TiXmlHandle leafHandle(e);
+    TiXmlElement *leaf = leafHandle.FirstChild(key).Element();
+
+    if(leaf)
+        return leaf->QueryDoubleAttribute(_T("double"), value);
+    return false;
+}
+
+
+
+void XmlConfigManager::Set(const wxString& name)
+{
+    wxString key(name);
+    TiXmlElement* e = AssertPath(key);
+    GetUniqElement(e, key);
+}
+
+void XmlConfigManager::UnSet(const wxString& name)
+{
+    wxString key(name);
+    TiXmlElement* e = AssertPath(key);
+
+    TiXmlNode *leaf = e->FirstChild(name.mb_str());
+
+    if(leaf)
+        e->RemoveChild(leaf);
+}
+
+bool XmlConfigManager::Exists(const wxString& name)
+{
+    wxString key(name);
+    TiXmlElement* e = AssertPath(key);
+
+    TiXmlHandle leafHandle(e);
+    TiXmlElement *leaf = leafHandle.FirstChild(key).Element();
+
+    return leaf;
+}
+
+
 

@@ -33,7 +33,7 @@ enum TokenKind
 	tkUndefined     = 0xFFFF,
 };
 
-class Token  : public BlockAllocated<Token, 500>
+class Token  : public BlockAllocated<Token, 5000>
 {
 	public:
 		Token();
