@@ -2,7 +2,7 @@
 #define EDITWATCHESDLG_H
 
 #include <wx/dialog.h>
-#include "debuggertree.h"
+#include "debugger_defs.h"
 
 class EditWatchesDlg : public wxDialog
 {

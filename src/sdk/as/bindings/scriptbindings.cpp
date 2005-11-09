@@ -255,10 +255,6 @@ void Register_ProjectFile(asIScriptEngine* engine)
     engine->RegisterObjectMethod("ProjectFile", "void AddBuildTarget(const wxString& in)", asMETHOD(ProjectFile, AddBuildTarget), asCALL_THISCALL);
     engine->RegisterObjectMethod("ProjectFile", "void RenameBuildTarget(const wxString& in, const wxString& in)", asMETHOD(ProjectFile, RenameBuildTarget), asCALL_THISCALL);
     engine->RegisterObjectMethod("ProjectFile", "void RemoveBuildTarget(const wxString& in)", asMETHOD(ProjectFile, RemoveBuildTarget), asCALL_THISCALL);
-    engine->RegisterObjectMethod("ProjectFile", "void ClearBreakpoints()", asMETHOD(ProjectFile, ClearBreakpoints), asCALL_THISCALL);
-    engine->RegisterObjectMethod("ProjectFile", "void SetBreakpoint(int)", asMETHOD(ProjectFile, SetBreakpoint), asCALL_THISCALL);
-    engine->RegisterObjectMethod("ProjectFile", "void RemoveBreakpoint(int)", asMETHOD(ProjectFile, RemoveBreakpoint), asCALL_THISCALL);
-    engine->RegisterObjectMethod("ProjectFile", "void ToggleBreakpoint(int)", asMETHOD(ProjectFile, ToggleBreakpoint), asCALL_THISCALL);
     engine->RegisterObjectMethod("ProjectFile", "wxString GetBaseName()", asMETHOD(ProjectFile, GetBaseName), asCALL_THISCALL);
     engine->RegisterObjectMethod("ProjectFile", "wxString& GetObjName()", asMETHOD(ProjectFile, GetObjName), asCALL_THISCALL);
     engine->RegisterObjectMethod("ProjectFile", "void SetObjName(const wxString& in)", asMETHOD(ProjectFile, SetObjName), asCALL_THISCALL);

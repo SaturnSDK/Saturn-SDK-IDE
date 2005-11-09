@@ -374,7 +374,6 @@ void cbEditor::SetProjectFile(ProjectFile* project_file,bool preserve_modified)
 		m_pControl->ScrollToColumn(0);
 
 		m_pProjectFile->editorOpen = true;
-		SetBreakpoints();
 
 		if (ConfigManager::Get()->Read(_T("/editor/tab_text_relative"), 1) == 1)
             m_Shortname = m_pProjectFile->relativeToCommonTopLevelPath;
@@ -888,52 +887,26 @@ void cbEditor::MarkerToggle(int marker, int line)
 {
 	if (line == -1)
 		line = m_pControl->GetCurrentLine();
-	if (LineHasMarker(marker, line))
+    bool cleared = LineHasMarker(marker, line);
+	if (cleared)
 		m_pControl->MarkerDelete(line, marker);
 	else
 		m_pControl->MarkerAdd(line, marker);
 
 	if (marker == BREAKPOINT_MARKER) // more to do with breakpoints
 	{
-		ProjectFile* pf = GetProjectFile();
-		if (!pf)
-			return;
-		pf->ToggleBreakpoint(line);
-		DebuggerBreakpoint* bp = pf->HasBreakpoint(line);
-		if (bp)
-		{
-			//Manager::Get()->GetMessageManager()->Log(mltDevDebug, "ToggleBreakpoint add");
-			m_pControl->MarkerAdd(line, BREAKPOINT_MARKER);
-			m_pControl->MarkerAdd(line, BREAKPOINT_LINE);
-			NotifyPlugins(cbEVT_EDITOR_BREAKPOINT_ADDED, line);
-
-            //Workaround for GDB to break on C++ constructor/destructor
-			wxString lb = m_pControl->GetLine(line);
-			wxString cppClassName;
-            wxString cppDestructor = _T("~");
-			char bufBase[255], bufMethod[255];
-// NOTE (rickg22#1#): Had to do some changes to convert to unicode
-			int i = sscanf(lb.mb_str(), "%[0-9A-Za-z_~]::%[0-9A-Za-z_~](", bufBase, bufMethod);
-			if (i == 2)
-            {
-				wxString strBase = _U(bufBase);
-				wxString strMethod = _U(bufMethod);
-                cppClassName << strBase;
-				cppDestructor << cppClassName;
-				if (cppClassName.Matches(strMethod) || cppDestructor.Matches(strMethod))
-					bp->func << cppClassName << _T("::") << strMethod;
-				else
-                    bp->func.Empty();
-			}
-            //end GDB workaround
-		}
-		else
-		{
-			//Manager::Get()->GetMessageManager()->Log(mltDevDebug, "ToggleBreakpoint delete");
-			m_pControl->MarkerDelete(line, BREAKPOINT_MARKER);
-			m_pControl->MarkerDelete(line, BREAKPOINT_LINE);
-			NotifyPlugins(cbEVT_EDITOR_BREAKPOINT_DELETED, line);
-		}
+        if (cleared)
+        {
+            m_pControl->MarkerDelete(line, BREAKPOINT_MARKER);
+            m_pControl->MarkerDelete(line, BREAKPOINT_LINE);
+            NotifyPlugins(cbEVT_EDITOR_BREAKPOINT_DELETE, line, m_Filename);
+        }
+        else
+        {
+            m_pControl->MarkerAdd(line, BREAKPOINT_MARKER);
+            m_pControl->MarkerAdd(line, BREAKPOINT_LINE);
+            NotifyPlugins(cbEVT_EDITOR_BREAKPOINT_ADD, line, m_Filename);
+        }
 	}
 }
 
@@ -953,23 +926,23 @@ void cbEditor::MarkerPrevious(int marker)
 		m_pControl->GotoLine(newLine);
 }
 
-void cbEditor::SetBreakpoints()
-{
-	ProjectFile* pf = GetProjectFile();
-	if (!pf)
-		return;
-
-	m_pControl->MarkerDeleteAll(BREAKPOINT_MARKER);
-	m_pControl->MarkerDeleteAll(BREAKPOINT_LINE);
-	for (unsigned int i = 0; i < pf->breakpoints.GetCount(); ++i)
-	{
-		DebuggerBreakpoint* bp = pf->breakpoints[i];
-		pf->SetBreakpoint(bp->line);
-		m_pControl->MarkerAdd(bp->line, BREAKPOINT_MARKER);
-		m_pControl->MarkerAdd(bp->line, BREAKPOINT_LINE);
-		//Manager::Get()->GetMessageManager()->Log(mltDevDebug, "SetBreakpoint line %d", bp->line);
-	}
-}
+//void cbEditor::SetBreakpoints()
+//{
+//	ProjectFile* pf = GetProjectFile();
+//	if (!pf)
+//		return;
+//
+//	m_pControl->MarkerDeleteAll(BREAKPOINT_MARKER);
+//	m_pControl->MarkerDeleteAll(BREAKPOINT_LINE);
+//	for (unsigned int i = 0; i < pf->breakpoints.GetCount(); ++i)
+//	{
+//		DebuggerBreakpoint* bp = pf->breakpoints[i];
+//		pf->SetBreakpoint(bp->line);
+//		m_pControl->MarkerAdd(bp->line, BREAKPOINT_MARKER);
+//		m_pControl->MarkerAdd(bp->line, BREAKPOINT_LINE);
+//		//Manager::Get()->GetMessageManager()->Log(mltDevDebug, "SetBreakpoint line %d", bp->line);
+//	}
+//}
 
 void cbEditor::MarkLine(int marker, int line)
 {

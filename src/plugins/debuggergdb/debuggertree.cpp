@@ -12,9 +12,6 @@
 
 #include "editwatchdlg.h"
 
-#include <wx/arrimpl.cpp>
-WX_DEFINE_OBJARRAY(WatchesArray);
-
 int cbCustom_WATCHES_CHANGED = wxNewId();
 int idTree = wxNewId();
 int idAddWatch = wxNewId();
@@ -181,7 +178,7 @@ void DebuggerTree::ParseEntry(const wxTreeItemId& parent, wxString& text)
 #define MIN(a,b) (a < b ? a : b)
     if (text.IsEmpty())
         return;
-    Manager::Get()->GetMessageManager()->DebugLog("DebuggerTree::ParseEntry(): Parsing '%s' (itemId=%p)", text.c_str(), &parent);
+//    Manager::Get()->GetMessageManager()->DebugLog("DebuggerTree::ParseEntry(): Parsing '%s' (itemId=%p)", text.c_str(), &parent);
 	while (1)
 	{
 		// trim the string from left and right
@@ -310,7 +307,9 @@ void DebuggerTree::ShowMenu(wxTreeItemId id, const wxPoint& pt)
 	menu.Append(idAddWatch, _("&Add watch"));
 
 	// we have to have a valid id for the following to be enabled
-    if (id.IsOk()  && m_pTree->GetItemParent(id) == m_pTree->GetRootItem())
+    if (id.IsOk() && // valid item
+        (m_pTree->GetItemParent(id) == m_pTree->GetRootItem()) || // child of root
+        m_pTree->GetItemText(id).Contains(_T(" = "))) // or contains ' = '
     {
         menu.Append(idEditWatch, _("&Edit watch"));
         menu.Append(idDeleteWatch, _("&Delete watch"));

@@ -20,8 +20,9 @@ BEGIN_EVENT_TABLE(BreakpointsDlg, wxDialog)
     EVT_UPDATE_UI(-1, BreakpointsDlg::OnUpdateUI)
 END_EVENT_TABLE()
 
-BreakpointsDlg::BreakpointsDlg(wxWindow* parent)
-    : m_LastSel(-1)
+BreakpointsDlg::BreakpointsDlg(BreakpointsList& list, wxWindow* parent)
+    : m_LastSel(-1),
+    m_List(list)
 {
     //ctor
 	wxXmlResource::Get()->LoadDialog(this, parent, _T("dlgBreakpoints"));
@@ -41,22 +42,13 @@ void BreakpointsDlg::FillBreakpoints()
     wxListBox* lst = XRCCTRL(*this, "lstBreakpoints", wxListBox);
     lst->Clear();
 
-	cbProject* prj = Manager::Get()->GetProjectManager()->GetActiveProject();
-	if (prj)
-	{
-		for (int i = 0; i < prj->GetFilesCount(); ++i)
-		{
-			ProjectFile* pf = prj->GetFile(i);
-
-			for (unsigned int x = 0; x < pf->breakpoints.GetCount(); ++x)
-			{
-				DebuggerBreakpoint* bp = pf->breakpoints[x];
-				wxString filename = pf->file.GetFullName();
-				filename << _T(" : ") << bp->line;
-				lst->Append(filename, bp);
-			}
-		}
-	}
+    for (unsigned int i = 0; i < m_List.GetCount(); ++i)
+    {
+        DebuggerBreakpoint* bp = m_List[i];
+        wxString filename = bp->filename;
+        filename << _T(" : ") << bp->line;
+        lst->Append(filename, bp);
+    }
 }
 
 void BreakpointsDlg::FillRecord(int sel)
@@ -122,10 +114,10 @@ void BreakpointsDlg::OnUpdateUI(wxUpdateUIEvent& event)
 {
     bool en = XRCCTRL(*this, "chkEnabled", wxCheckBox)->IsChecked();
     bool sel = XRCCTRL(*this, "lstBreakpoints", wxListBox)->GetSelection() != -1;
-    bool cnt = XRCCTRL(*this, "lstBreakpoints", wxListBox)->GetCount() != 0;
+//    bool cnt = XRCCTRL(*this, "lstBreakpoints", wxListBox)->GetCount() != 0;
     XRCCTRL(*this, "chkEnabled", wxCheckBox)->Enable(sel);
-    XRCCTRL(*this, "btnRemove", wxButton)->Enable(sel);
-    XRCCTRL(*this, "btnRemoveAll", wxButton)->Enable(cnt);
+    XRCCTRL(*this, "btnRemove", wxButton)->Enable(false);//sel);
+    XRCCTRL(*this, "btnRemoveAll", wxButton)->Enable(false);//cnt);
     XRCCTRL(*this, "chkIgnore", wxCheckBox)->Enable(sel && en);
     XRCCTRL(*this, "spnIgnoreCount", wxSpinCtrl)->Enable(sel && en && XRCCTRL(*this, "chkIgnore", wxCheckBox)->IsChecked());
     XRCCTRL(*this, "chkExpr", wxCheckBox)->Enable(sel && en);

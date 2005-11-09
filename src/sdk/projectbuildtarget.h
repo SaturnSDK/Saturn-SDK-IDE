@@ -14,7 +14,6 @@ class cbProject;
 class ProjectBuildTarget;
 class pfDetails;
 
-WX_DEFINE_ARRAY(DebuggerBreakpoint*, BreakpointsList);
 WX_DEFINE_ARRAY(ProjectBuildTarget*, BuildTargets);
 WX_DECLARE_HASH_MAP(ProjectBuildTarget*, pfDetails*, wxPointerHash, wxPointerEqual, PFDMap);
 
@@ -28,11 +27,6 @@ class ProjectFile  : public BlockAllocated<ProjectFile, 500>
         void RenameBuildTarget(const wxString& oldTargetName, const wxString& newTargetName);
         void RemoveBuildTarget(const wxString& targetName);
         bool ShowOptions(wxWindow* parent);
-        void ClearBreakpoints();
-        DebuggerBreakpoint* HasBreakpoint(int line);
-        void SetBreakpoint(int line);
-        void RemoveBreakpoint(int line);
-        void ToggleBreakpoint(int line);
 
         // take as example the relative file sdk/cbProject.cpp
         wxString GetBaseName(); // returns sdk/cbProject
@@ -64,7 +58,6 @@ class ProjectFile  : public BlockAllocated<ProjectFile, 500>
         bool autoDeps;
         wxString customDeps;
         wxString compilerVar;
-        BreakpointsList breakpoints;
         wxArrayString buildTargets;
     private:
         void DoUpdateFileDetails(ProjectBuildTarget* target);

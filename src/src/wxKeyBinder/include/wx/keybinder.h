@@ -477,7 +477,7 @@ public:
 	//! Removes this event handler from the window you specified
 	//! during construction (the target window).
 	virtual ~wxBinderEvtHandler()
-		{ if (m_pTarget) m_pTarget->RemoveEventHandler(this); }
+		{ m_pTarget->RemoveEventHandler(this); }
 
 
 	//! Returns TRUE if this event handler is attached to the given window.

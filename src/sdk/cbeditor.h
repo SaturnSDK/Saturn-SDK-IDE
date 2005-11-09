@@ -143,8 +143,6 @@ class DLLIMPORT cbEditor : public EditorBase
 		  * @see MarkLine() for information on markers.
 		  */
 		void MarkerPrevious(int marker);
-		/** Sets the breakpoint markers of the editor, by asking the associated ProjectFile (which reads them from the project layout). */
-		void SetBreakpoints();
 		/** Set the color set to use. */
 		void SetColorSet(EditorColorSet* theme);
 		/** Get the color set in use. */

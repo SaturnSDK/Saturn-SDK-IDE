@@ -117,8 +117,9 @@ BEGIN_EVENT_TABLE(DebuggerGDB, cbDebuggerPlugin)
 	EVT_MENU(idMenuEditWatches, DebuggerGDB::OnEditWatches)
     EVT_MENU(idMenuDebuggerAddWatch, DebuggerGDB::OnAddWatch)
 
-	EVT_EDITOR_BREAKPOINT_ADDED(DebuggerGDB::OnBreakpointAdded)
-	EVT_EDITOR_BREAKPOINT_DELETED(DebuggerGDB::OnBreakpointDeleted)
+	EVT_EDITOR_BREAKPOINT_ADD(DebuggerGDB::OnBreakpointAdd)
+	EVT_EDITOR_BREAKPOINT_EDIT(DebuggerGDB::OnBreakpointEdit)
+	EVT_EDITOR_BREAKPOINT_DELETE(DebuggerGDB::OnBreakpointDelete)
 	EVT_EDITOR_TOOLTIP(DebuggerGDB::OnValueTooltip)
 
 	EVT_PIPEDPROCESS_STDOUT(idGDBProcess, DebuggerGDB::OnGDBOutput)
@@ -340,43 +341,58 @@ void DebuggerGDB::DoWatches()
 	m_pTree->BuildTree(info);
 }
 
+void DebuggerGDB::ClearBreakpointsArray()
+{
+	SendCommand(_T("delete")); // clear all breakpoints
+    for (unsigned int i = 0; i < m_Breakpoints.GetCount(); ++i)
+    {
+        DebuggerBreakpoint* bp = m_Breakpoints[i];
+        delete bp;
+    }
+    m_Breakpoints.Clear();
+}
+
+int DebuggerGDB::HasBreakpoint(const wxString& file, int line)
+{
+    for (unsigned int i = 0; i < m_Breakpoints.GetCount(); ++i)
+    {
+        DebuggerBreakpoint* bp = m_Breakpoints[i];
+        if (bp->filename == file && bp->line == line)
+            return i;
+    }
+    return -1;
+}
+
 void DebuggerGDB::SetBreakpoints()
 {
 	SendCommand(_T("delete")); // clear all breakpoints
 
-	cbProject* prj = Manager::Get()->GetProjectManager()->GetActiveProject();
-	if (prj)
-	{
-		for (int i = 0; i < prj->GetFilesCount(); ++i)
-		{
-			ProjectFile* pf = prj->GetFile(i);
-
-			for (unsigned int x = 0; x < pf->breakpoints.GetCount(); ++x)
-			{
-				DebuggerBreakpoint* bp = pf->breakpoints[x];
-				wxString filename = pf->file.GetFullName();
-				wxString cmd;
-				if (bp->enabled)
-                {
-					if (bp->func.IsEmpty())
-					{
-					    wxString out = filename;
-					    ConvertToGDBDirectory(out);
-                        cmd << _T("break ") << out << _T(":") << bp->line + 1;
-                        SendCommand(cmd);
-                    }
-                    //GDB workaround
-                    //Use function name if this is C++ constructor/destructor
-					else
-					{
-						cmd << _T("break ") << bp->func;
-						GetInfoFor(cmd);
-					}
-                    //end GDB workaround
-				}
-				//SendCommand(cmd);
-			}
-		}
+    for (unsigned int i = 0; i < m_Breakpoints.GetCount(); ++i)
+    {
+        DebuggerBreakpoint* bp = m_Breakpoints[i];
+        wxString filename = bp->filename;
+        wxString cmd;
+        if (bp->enabled)
+        {
+            if (bp->func.IsEmpty())
+            {
+                wxString out = filename;
+                ConvertToGDBDirectory(out);
+                // we add one to line,  because scintilla uses 0-based line numbers, while gdb uses 1-based
+                cmd << _T("break ") << out << _T(":") << bp->line + 1;
+                if (bp->useCondition && !bp->condition.IsEmpty())
+                    cmd << _(" if ") << bp->condition;
+                SendCommand(cmd);
+            }
+            //GDB workaround
+            //Use function name if this is C++ constructor/destructor
+            else
+            {
+                cmd << _T("break ") << bp->func;
+                GetInfoFor(cmd);
+            }
+            //end GDB workaround
+        }
 	}
 }
 
@@ -1509,7 +1525,7 @@ void DebuggerGDB::OnDisassemble(wxCommandEvent& event)
 
 void DebuggerGDB::OnBreakpoints(wxCommandEvent& event)
 {
-    BreakpointsDlg dlg;
+    BreakpointsDlg dlg(m_Breakpoints);
 	if (dlg.ShowModal() == wxID_OK)
 	{
 		SetBreakpoints();
@@ -1565,54 +1581,61 @@ void DebuggerGDB::OnGDBTerminated(wxCommandEvent& event)
 	}
 }
 
-void DebuggerGDB::OnBreakpointAdded(CodeBlocksEvent& event)
+void DebuggerGDB::OnBreakpointAdd(CodeBlocksEvent& event)
 {
-    if (!m_pProcess)
+    // do we have a bp there?
+    if (HasBreakpoint(event.GetString(), event.GetInt()) != -1)
         return;
 
-	cbEditor* ed = event.GetEditor();
-	if (ed)
-	{
-		Manager::Get()->GetMessageManager()->Log(m_PageIndex, _("Breakpoint added: file %s, line %d"), ed->GetFilename().c_str(), event.GetInt() + 1);
-/*
-		ProjectFile* pf = ed->GetProjectFile();
-		if (!pf)
-			return;
-        wxString filename = pf->relativeFilename;
-        ConvertToGDBFriendly(filename);
-//		Manager::Get()->GetMessageManager()->Log(m_PageIndex, _("file %s"), filename.c_str());
-		wxString cmd;
-		cmd << "break " << filename << ":" << event.GetInt() + 1;
-		SendCommand(cmd);
-*/
-	}
-	else
-		Manager::Get()->GetMessageManager()->Log(m_PageIndex, _("OnBreakpointAdded(): No editor defined!"));
+    DebuggerBreakpoint* bp = new DebuggerBreakpoint;
+    bp->filename = event.GetString();
+    bp->line = event.GetInt();
+
+    //Workaround for GDB to break on C++ constructor/destructor
+    cbEditor* ed = event.GetEditor();
+    if (ed)
+    {
+        wxString lb = ed->GetControl()->GetLine(bp->line);
+        wxString cppClassName;
+        wxString cppDestructor = _T("~");
+        char bufBase[255], bufMethod[255];
+        // NOTE (rickg22#1#): Had to do some changes to convert to unicode
+        int i = sscanf(lb.mb_str(), "%[0-9A-Za-z_~]::%[0-9A-Za-z_~](", bufBase, bufMethod);
+        if (i == 2)
+        {
+            wxString strBase = _U(bufBase);
+            wxString strMethod = _U(bufMethod);
+            cppClassName << strBase;
+            cppDestructor << cppClassName;
+            if (cppClassName.Matches(strMethod) || cppDestructor.Matches(strMethod))
+                bp->func << cppClassName << _T("::") << strMethod;
+            else
+                bp->func.Clear();
+        }
+    }
+    //end GDB workaround
+
+    m_Breakpoints.Add(bp);
+	Manager::Get()->GetMessageManager()->Log(m_PageIndex, _("Breakpoint added: file %s, line %d"), bp->filename.c_str(), bp->line);
+	if (!bp->func.IsEmpty())
+        Manager::Get()->GetMessageManager()->Log(m_PageIndex, _("(work-around for constructors activated)"));
 }
 
-void DebuggerGDB::OnBreakpointDeleted(CodeBlocksEvent& event)
+void DebuggerGDB::OnBreakpointEdit(CodeBlocksEvent& event)
 {
-    if (!m_pProcess)
+}
+
+void DebuggerGDB::OnBreakpointDelete(CodeBlocksEvent& event)
+{
+    int idx = HasBreakpoint(event.GetString(), event.GetInt());
+    if (idx == -1)
         return;
 
-	cbEditor* ed = event.GetEditor();
-	if (ed)
-	{
-		Manager::Get()->GetMessageManager()->Log(m_PageIndex, _("Breakpoint deleted: file %s, line %d"), ed->GetFilename().c_str(), event.GetInt() + 1);
-/*
-		ProjectFile* pf = ed->GetProjectFile();
-		if (!pf)
-			return;
-        wxString filename = pf->relativeFilename;
-        ConvertToGDBFriendly(filename);
-//		Manager::Get()->GetMessageManager()->Log(m_PageIndex, _("file %s"), filename.c_str());
-		wxString cmd;
-		cmd << "clear " << filename << ":" << event.GetInt() + 1;
-		SendCommand(cmd);
-*/
-	}
-	else
-		Manager::Get()->GetMessageManager()->Log(m_PageIndex, _("OnBreakpointDeleted(): No editor defined!"));
+    DebuggerBreakpoint* bp = m_Breakpoints[idx];
+    m_Breakpoints.RemoveAt(idx);
+
+	Manager::Get()->GetMessageManager()->Log(m_PageIndex, _("Breakpoint deleted: file %s, line %d"), bp->filename.c_str(), bp->line);
+    delete bp;
 }
 
 void DebuggerGDB::OnValueTooltip(CodeBlocksEvent& event)

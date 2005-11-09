@@ -184,8 +184,6 @@ ProjectFile::~ProjectFile()
         delete it->second;
     }
     m_PFDMap.clear();
-
-    ClearBreakpoints();
 }
 
 void ProjectFile::AddBuildTarget(const wxString& targetName)
@@ -210,57 +208,6 @@ bool ProjectFile::ShowOptions(wxWindow* parent)
 {
     ProjectFileOptionsDlg dlg(parent, this);
     return dlg.ShowModal() == wxID_OK;
-}
-
-void ProjectFile::ClearBreakpoints()
-{
-    for (unsigned int i = 0; i < breakpoints.GetCount(); ++i)
-    {
-        DebuggerBreakpoint* bp = breakpoints[i];
-        delete bp;
-    }
-    breakpoints.Clear();
-}
-
-DebuggerBreakpoint* ProjectFile::HasBreakpoint(int line)
-{
-    for (unsigned int i = 0; i < breakpoints.GetCount(); ++i)
-    {
-        DebuggerBreakpoint* bp = breakpoints[i];
-        if (bp->line == line)
-            return bp;
-    }
-    return 0L;
-}
-
-void ProjectFile::SetBreakpoint(int line)
-{
-    if (HasBreakpoint(line))
-        return;
-    DebuggerBreakpoint* bp = new DebuggerBreakpoint;
-    bp->line = line;
-    bp->ignoreCount = 0;
-    bp->enabled = true;
-    breakpoints.Add(bp);
-}
-
-void ProjectFile::RemoveBreakpoint(int line)
-{
-    DebuggerBreakpoint* bp = HasBreakpoint(line);
-    if (bp)
-    {
-        breakpoints.Remove(bp);
-        delete bp;
-    }
-}
-
-void ProjectFile::ToggleBreakpoint(int line)
-{
-    DebuggerBreakpoint* bp = HasBreakpoint(line);
-    if (bp)
-        RemoveBreakpoint(line);
-    else
-        SetBreakpoint(line);
 }
 
 wxString ProjectFile::GetBaseName()

@@ -777,15 +777,6 @@ bool ProjectLoader::Save(const wxString& filename)
         }
         for (unsigned int x = 0; x < f->buildTargets.GetCount(); ++x)
             buffer << _T('\t') << _T('\t') << _T('\t') << _T("<Option target=\"") << FixEntities(f->buildTargets[x]) << _T("\"/>") << _T('\n');
-        for (unsigned int x = 0; x < f->breakpoints.GetCount(); ++x)
-		{
-			DebuggerBreakpoint* bp = f->breakpoints[x];
-            buffer << _T('\t') << _T('\t') << _T('\t') << _T("<Breakpoint ");
-			buffer << _T("line=\"") << bp->line << _T("\" ");
-			buffer << _T("enabled=\"") << bp->enabled << _T("\" ");
-			buffer << _T("pass=\"") << bp->ignoreCount << _T("\" ");
-			buffer << _T("/>") << _T('\n');
-		}
 		buffer << _T('\t') << _T('\t') << _T("</Unit>") << _T('\n');
     }
 

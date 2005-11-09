@@ -9,29 +9,10 @@
 #include <wx/regex.h>
 #include <wx/tipwin.h>
 
+#include "debugger_defs.h"
 #include "debuggertree.h"
 #include "backtracedlg.h"
 #include "disassemblydlg.h"
-
-struct StackFrame
-{
-    StackFrame() : valid(false), number(0), address(0) {}
-    void Clear()
-    {
-        valid = false;
-        number = 0;
-        address = 0;
-        function.Clear();
-        file.Clear();
-        line.Clear();
-    }
-    bool valid;
-    int number;
-    int address;
-    wxString function;
-    wxString file;
-    wxString line;
-};
 
 class DebuggerGDB : public cbDebuggerPlugin
 {
@@ -79,6 +60,9 @@ class DebuggerGDB : public cbDebuggerPlugin
         wxString GetEditorWordAtCaret();
         long int ReadRegisterValue(int idx);
 
+        void ClearBreakpointsArray();
+        int HasBreakpoint(const wxString& file, int line); // returns -1 if not found
+
 		void SendCommand(const wxString& cmd);
 		void OnUpdateUI(wxUpdateUIEvent& event);
 		void OnDebug(wxCommandEvent& event);
@@ -95,8 +79,9 @@ class DebuggerGDB : public cbDebuggerPlugin
 		void OnStepOut(wxCommandEvent& event);
 		void OnToggleBreakpoint(wxCommandEvent& event);
 		void OnRunToCursor(wxCommandEvent& event);
-		void OnBreakpointAdded(CodeBlocksEvent& event);
-		void OnBreakpointDeleted(CodeBlocksEvent& event);
+		void OnBreakpointAdd(CodeBlocksEvent& event);
+		void OnBreakpointEdit(CodeBlocksEvent& event);
+		void OnBreakpointDelete(CodeBlocksEvent& event);
 		void OnValueTooltip(CodeBlocksEvent& event);
         void OnGDBOutput(wxCommandEvent& event);
         void OnGDBError(wxCommandEvent& event);
@@ -132,8 +117,12 @@ class DebuggerGDB : public cbDebuggerPlugin
 		int m_HaltAtLine;
 		bool m_HasDebugLog;
 		bool m_StoppedOnSignal;
+
 		// current frame info
 		StackFrame m_CurrentFrame;
+
+        // breakpoints list
+        BreakpointsList m_Breakpoints;
 
 		// extra dialogs
 		DisassemblyDlg* m_pDisassembly;

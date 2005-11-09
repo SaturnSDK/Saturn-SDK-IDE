@@ -7,42 +7,9 @@
 #include <wx/notebook.h>
 #include <wx/dynarray.h>
 
+#include "debugger_defs.h"
+
 extern int cbCustom_WATCHES_CHANGED;
-
-enum WatchFormat
-{
-    Undefined = 0,
-    Decimal,
-    Unsigned,
-    Hex,
-    Binary,
-    Char,
-
-    // do not remove this
-    Last,
-    Any
-};
-
-struct Watch
-{
-    Watch(const wxString& k, WatchFormat f = Undefined) : keyword(k), format(f) {}
-    Watch(const Watch& rhs) : keyword(rhs.keyword), format(rhs.format) {}
-    static wxString FormatCommand(WatchFormat format)
-    {
-        switch (format)
-        {
-            case Decimal:       return _T("/d");
-            case Unsigned:      return _T("/u");
-            case Hex:           return _T("/x");
-            case Binary:        return _T("/t");
-            case Char:          return _T("/c");
-            default:            return wxEmptyString;
-        }
-    }
-    wxString keyword;
-    WatchFormat format;
-};
-WX_DECLARE_OBJARRAY(Watch, WatchesArray);
 
 class DebuggerTree : public wxPanel
 {

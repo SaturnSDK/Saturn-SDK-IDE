@@ -2,11 +2,12 @@
 #define BREAKPOINTS_H
 
 #include <wx/dialog.h>
+#include "debugger_defs.h"
 
 class BreakpointsDlg : public wxDialog
 {
     public:
-        BreakpointsDlg(wxWindow* parent = 0);
+        BreakpointsDlg(BreakpointsList& list, wxWindow* parent = 0);
         virtual ~BreakpointsDlg();
     protected:
         void FillBreakpoints();
@@ -19,6 +20,7 @@ class BreakpointsDlg : public wxDialog
         void OnUpdateUI(wxUpdateUIEvent& event);
 
         int m_LastSel;
+        BreakpointsList& m_List;
     private:
         DECLARE_EVENT_TABLE()
 };
