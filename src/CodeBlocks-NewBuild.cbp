@@ -115,7 +115,11 @@
 				<Option compiler="0"/>
 				<Option projectResourceIncludeDirsRelation="2"/>
 				<Compiler>
+					<Add option="-Winvalid-pch"/>
+					<Add option="-include &quot;sdk.h&quot;"/>
+					<Add option="-DBUILDING_PLUGIN"/>
 					<Add directory="src\wxKeyBinder\include"/>
+					<Add directory="sdk"/>
 				</Compiler>
 				<ResourceCompiler>
 					<Add directory="src\wxKeyBinder\include"/>
@@ -1248,6 +1252,26 @@
 			<Option link="0"/>
 			<Option target="plugin_DebuggerGDB"/>
 		</Unit>
+		<Unit filename="plugins\debuggergdb\editwatchdlg.cpp">
+			<Option compilerVar="CPP"/>
+			<Option target="plugin_DebuggerGDB"/>
+		</Unit>
+		<Unit filename="plugins\debuggergdb\editwatchdlg.h">
+			<Option compilerVar=""/>
+			<Option compile="0"/>
+			<Option link="0"/>
+			<Option target="plugin_DebuggerGDB"/>
+		</Unit>
+		<Unit filename="plugins\debuggergdb\editwatchesdlg.cpp">
+			<Option compilerVar="CPP"/>
+			<Option target="plugin_DebuggerGDB"/>
+		</Unit>
+		<Unit filename="plugins\debuggergdb\editwatchesdlg.h">
+			<Option compilerVar=""/>
+			<Option compile="0"/>
+			<Option link="0"/>
+			<Option target="plugin_DebuggerGDB"/>
+		</Unit>
 		<Unit filename="plugins\debuggergdb\resources\backtrace.xrc">
 			<Option compilerVar=""/>
 			<Option compile="0"/>
@@ -1279,6 +1303,12 @@
 			<Option target="plugin_DebuggerGDB"/>
 		</Unit>
 		<Unit filename="plugins\debuggergdb\resources\disassembly.xrc">
+			<Option compilerVar=""/>
+			<Option compile="0"/>
+			<Option link="0"/>
+			<Option target="plugin_DebuggerGDB"/>
+		</Unit>
+		<Unit filename="plugins\debuggergdb\resources\edit_watches_dlg.xrc">
 			<Option compilerVar=""/>
 			<Option compile="0"/>
 			<Option link="0"/>

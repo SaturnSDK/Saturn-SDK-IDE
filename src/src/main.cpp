@@ -1582,6 +1582,12 @@ void MainFrame::OnApplicationClose(wxCloseEvent& event)
     SaveKeyBindings();
     TerminateRecentFilesHistory();
 
+#if wxUSE_KEYBINDER
+	// detach all key profiles
+//	m_KeyProfiles.Cleanup();
+//	m_KeyProfiles.DetachAll();
+#endif
+
 // NOTE (mandrav#1#): The following two lines, make the app crash on exit with wx2.6.1-ansi...
 //    Hide(); // Hide the window
 //    Refresh();
@@ -1593,10 +1599,6 @@ void MainFrame::OnApplicationClose(wxCloseEvent& event)
     // this stops it from crashing, when no plugins are loaded
     while (GetEventHandler() != this)
         PopEventHandler(false);
-
-	// detach all key profiles
-	m_KeyProfiles.DetachAll();
-	m_KeyProfiles.Cleanup();
 
 	Manager::Get()->Free();
 	ConfigManager::Get()->Flush();

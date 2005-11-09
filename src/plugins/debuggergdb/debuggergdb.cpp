@@ -48,6 +48,8 @@
 
 #include "debuggergdb.h"
 #include "debuggeroptionsdlg.h"
+#include "editwatchesdlg.h"
+#include "editwatchdlg.h"
 
 #ifdef __WXMSW__
     #include <winbase.h> //For GetShortPathName()...only for windows systems
@@ -318,8 +320,8 @@ void DebuggerGDB::DoWatches()
     		info << _T("Local variables = {") << GetInfoFor(_T("info locals")) << _T("}") << _T('\n');
 		for (unsigned int i = 0; i < m_pTree->GetWatches().GetCount(); ++i)
 		{
-			wxString watch = m_pTree->GetWatches()[i];
-			info << watch << _T("{") << GetInfoFor(_T("output ") + watch) << _T("}") << _T('\n');
+		    Watch& w = m_pTree->GetWatches()[i];
+			info << w.keyword << _T(" = ") << GetInfoFor(_T("output "), &w) << _T(",") << _T('\n');
 		}
 	}
 	else
@@ -328,7 +330,7 @@ void DebuggerGDB::DoWatches()
 		// the not-evaluated user-watches, just for feedback ;)
 		for (unsigned int i = 0; i < m_pTree->GetWatches().GetCount(); ++i)
 		{
-			info << m_pTree->GetWatches()[i] << _T(',');
+			info << m_pTree->GetWatches()[i].keyword << _T(',');
 		}
 	}
 	//m_pLog->AddLog(info);
@@ -355,7 +357,9 @@ void DebuggerGDB::SetBreakpoints()
                 {
 					if (bp->func.IsEmpty())
 					{
-                        cmd << _T("break ") << filename << _T(":") << bp->line + 1;
+					    wxString out = filename;
+					    ConvertToGDBDirectory(out);
+                        cmd << _T("break ") << out << _T(":") << bp->line + 1;
                         SendCommand(cmd);
                     }
                     //GDB workaround
@@ -601,15 +605,9 @@ int DebuggerGDB::Debug()
         }
     }
 
-	SetBreakpoints();
-	if (!m_Tbreak.IsEmpty())
-	{
-		SendCommand(m_Tbreak);
-		m_Tbreak.Clear();
-	}
-
     // send built-in init commands
 	SendCommand(_T("set confirm off"));
+    SendCommand(_T("set breakpoint pending on"));
 #ifndef __WXMSW__
     SendCommand(_T("set disassembly-flavor att"));
 #else
@@ -625,6 +623,14 @@ int DebuggerGDB::Debug()
     {
         SendCommand(initCmds[i]);
     }
+
+    // set breakpoints
+	SetBreakpoints();
+	if (!m_Tbreak.IsEmpty())
+	{
+		SendCommand(m_Tbreak);
+		m_Tbreak.Clear();
+	}
 
     // finally, run the process
     if (m_BreakOnEntry)
@@ -952,8 +958,11 @@ void DebuggerGDB::CmdStepOut()
 	}
 	if (line == stc->GetCurrentLine())
 		CmdNext();
-	else {
-		cmd << _T("tbreak ") << filename << _T(":") << line+1;
+	else
+	{
+        wxString out = filename;
+        ConvertToGDBDirectory(out);
+		cmd << _T("tbreak ") << out << _T(":") << line+1;
 		m_Tbreak = cmd;
 		CmdContinue();
 	}
@@ -969,7 +978,9 @@ void DebuggerGDB::CmdRunToCursor()
 	if (!pf)
 		return;
 	wxString cmd, filename = pf->file.GetFullName();
-	cmd << _T("tbreak ") << filename << _T(":") << ed->GetControl()->GetCurrentLine()+1;
+    wxString out = filename;
+    ConvertToGDBDirectory(out);
+	cmd << _T("tbreak ") << out << _T(":") << ed->GetControl()->GetCurrentLine()+1;
 	m_Tbreak = cmd;
 	if (m_pProcess)
 	{
@@ -1055,7 +1066,7 @@ void DebuggerGDB::ParseOutput(const wxString& output)
 		// error
 		else if (buffer.Matches(_T("error")))
 		{
-			Manager::Get()->GetMessageManager()->Log(m_PageIndex, buffer);
+//			Manager::Get()->GetMessageManager()->Log(m_PageIndex, buffer);
 			//CmdStop();
 		}
 		else if (buffer.StartsWith(_T("error-begin")))
@@ -1064,6 +1075,15 @@ void DebuggerGDB::ParseOutput(const wxString& output)
 			Manager::Get()->GetMessageManager()->Log(m_PageIndex, error);
 			if (error.StartsWith(_T("No symbol table is loaded.")))
                 m_NoDebugInfo = true;
+			//CmdStop();
+		}
+
+        // pending breakpoints
+		else if (buffer.Matches(_T("breakpoints-invalid")))
+		{
+            wxString msg = GetNextOutputLineClean();
+			if (msg.Contains(_T(") pending.")))
+                Manager::Get()->GetMessageManager()->Log(m_PageIndex, msg);
 			//CmdStop();
 		}
 
@@ -1362,13 +1382,18 @@ void DebuggerGDB::OnSendCommandToGDB(wxCommandEvent& event)
 //	SendCommand("set annotate 2");
 }
 
-wxString DebuggerGDB::GetInfoFor(const wxString& dbgCmd)
+wxString DebuggerGDB::GetInfoFor(const wxString& dbgCmd, Watch* watch)
 {
 	if (!m_pProcess)
 		return wxEmptyString;
 	m_TimerPollDebugger.Stop();
 	wxSafeYield();
-	SendCommand(dbgCmd);
+
+	wxString cmd = dbgCmd;
+	if (watch)
+        cmd << Watch::FormatCommand(watch->format) << _T(" ") << watch->keyword;
+	SendCommand(cmd);
+
 	wxString buf = GetNextOutputLine();
 	wxString output;
 
@@ -1481,8 +1506,8 @@ void DebuggerGDB::OnDisassemble(wxCommandEvent& event)
 
 void DebuggerGDB::OnEditWatches(wxCommandEvent& event)
 {
-	wxArrayString watches = m_pTree->GetWatches();
-	EditArrayStringDlg dlg(Manager::Get()->GetAppWindow(), watches);
+	WatchesArray watches = m_pTree->GetWatches();
+    EditWatchesDlg dlg(watches);
 	if (dlg.ShowModal() == wxID_OK)
 	{
 		m_pTree->SetWatches(watches);
@@ -1494,6 +1519,7 @@ void DebuggerGDB::OnGDBOutput(wxCommandEvent& event)
 	wxString msg = event.GetString();
 	if (!msg.IsEmpty())
 	{
+//        Manager::Get()->GetMessageManager()->Log(m_PageIndex, _T("O>>> %s"), msg.c_str());
 		ParseOutput(msg);
 	}
 }
@@ -1503,6 +1529,7 @@ void DebuggerGDB::OnGDBError(wxCommandEvent& event)
 	wxString msg = event.GetString();
 	if (!msg.IsEmpty())
 	{
+//        Manager::Get()->GetMessageManager()->Log(m_PageIndex, _T("E>>> %s"), msg.c_str());
 		ParseOutput(msg);
 	}
 }
@@ -1651,5 +1678,8 @@ void DebuggerGDB::OnWatchesChanged(wxCommandEvent& event)
 
 void DebuggerGDB::OnAddWatch(wxCommandEvent& event)
 {
-    m_pTree->AddWatch(GetEditorWordAtCaret());
+    Watch w(GetEditorWordAtCaret());
+    EditWatchDlg dlg(&w);
+    if (dlg.ShowModal() == wxID_OK && !dlg.GetWatch().keyword.IsEmpty())
+        m_pTree->AddWatch(dlg.GetWatch().keyword, dlg.GetWatch().format);
 }

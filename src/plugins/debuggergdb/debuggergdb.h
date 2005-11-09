@@ -72,7 +72,7 @@ class DebuggerGDB : public cbDebuggerPlugin
 		void BringAppToFront();
 		void ClearActiveMarkFromAllEditors();
 		void SetBreakpoints();
-		wxString GetInfoFor(const wxString& dbgCmd);
+		wxString GetInfoFor(const wxString& dbgCmd, Watch* watch = 0);
 		wxString GetNextOutputLine(bool useStdErr = false);
 		wxString GetNextOutputLineClean(bool useStdErr = false);
 		void DoWatches();

@@ -10,11 +10,17 @@
 #include <manager.h>
 #include <messagemanager.h>
 
+#include "editwatchdlg.h"
+
+#include <wx/arrimpl.cpp>
+WX_DEFINE_OBJARRAY(WatchesArray);
+
 int cbCustom_WATCHES_CHANGED = wxNewId();
 int idTree = wxNewId();
 int idAddWatch = wxNewId();
 int idEditWatch = wxNewId();
 int idDeleteWatch = wxNewId();
+int idDeleteAllWatches = wxNewId();
 
 #ifndef __WXMSW__
 /*
@@ -55,6 +61,7 @@ BEGIN_EVENT_TABLE(DebuggerTree, wxPanel)
 	EVT_MENU(idAddWatch, DebuggerTree::OnAddWatch)
 	EVT_MENU(idEditWatch, DebuggerTree::OnEditWatch)
 	EVT_MENU(idDeleteWatch, DebuggerTree::OnDeleteWatch)
+	EVT_MENU(idDeleteAllWatches, DebuggerTree::OnDeleteAllWatches)
 END_EVENT_TABLE()
 
 DebuggerTree::DebuggerTree(wxEvtHandler* debugger, wxNotebook* parent)
@@ -174,7 +181,7 @@ void DebuggerTree::ParseEntry(const wxTreeItemId& parent, wxString& text)
 #define MIN(a,b) (a < b ? a : b)
     if (text.IsEmpty())
         return;
-//    Manager::Get()->GetMessageManager()->DebugLog("DebuggerTree::ParseEntry(): Parsing '%s' (itemId=%p)", text.c_str(), &parent);
+    Manager::Get()->GetMessageManager()->DebugLog("DebuggerTree::ParseEntry(): Parsing '%s' (itemId=%p)", text.c_str(), &parent);
 	while (1)
 	{
 		// trim the string from left and right
@@ -229,31 +236,69 @@ void DebuggerTree::ClearWatches()
 	wxPostEvent(m_pDebugger, event);
 }
 
-void DebuggerTree::AddWatch(const wxString& watch)
+int SortWatchesByName(Watch** first, Watch** second)
 {
-	m_Watches.Add(watch);
-	m_Watches.Sort();
+    return (*first)->keyword.Cmp((*second)->keyword);
+}
+
+void DebuggerTree::AddWatch(const wxString& watch, WatchFormat format)
+{
+    if (FindWatchIndex(watch, format) != wxNOT_FOUND)
+        return; // already there
+	m_Watches.Add(Watch(watch, format));
+	m_Watches.Sort(SortWatchesByName);
 	wxCommandEvent event(cbCustom_WATCHES_CHANGED);
 	wxPostEvent(m_pDebugger, event);
 }
 
-void DebuggerTree::SetWatches(const wxArrayString& watches)
+void DebuggerTree::SetWatches(const WatchesArray& watches)
 {
 	m_Watches = watches;
 	wxCommandEvent event(cbCustom_WATCHES_CHANGED);
 	wxPostEvent(m_pDebugger, event);
 }
 
-const wxArrayString& DebuggerTree::GetWatches()
+const WatchesArray& DebuggerTree::GetWatches()
 {
 	return m_Watches;
 }
 
-void DebuggerTree::DeleteWatch(const wxString& watch)
+void DebuggerTree::DeleteWatch(const wxString& watch, WatchFormat format)
 {
-	m_Watches.Remove(watch);
+    int idx = FindWatchIndex(watch, format);
+    if (idx != wxNOT_FOUND)
+        m_Watches.RemoveAt(idx);
 	wxCommandEvent event(cbCustom_WATCHES_CHANGED);
 	wxPostEvent(m_pDebugger, event);
+}
+
+void DebuggerTree::DeleteAllWatches()
+{
+    m_Watches.Clear();
+	wxCommandEvent event(cbCustom_WATCHES_CHANGED);
+	wxPostEvent(m_pDebugger, event);
+}
+
+Watch* DebuggerTree::FindWatch(const wxString& watch, WatchFormat format)
+{
+    int idx = FindWatchIndex(watch, format);
+    if (idx != wxNOT_FOUND)
+        return &m_Watches[idx];
+    return 0;
+}
+
+int DebuggerTree::FindWatchIndex(const wxString& watch, WatchFormat format)
+{
+    size_t wc = m_Watches.GetCount();
+    for (size_t i = 0; i < wc; ++i)
+    {
+        Watch& w = m_Watches[i];
+        if (w.keyword.Matches(watch) && (format == Any || w.format == format))
+        {
+            return i;
+        }
+    }
+    return wxNOT_FOUND;
 }
 
 void DebuggerTree::ShowMenu(wxTreeItemId id, const wxPoint& pt)
@@ -270,6 +315,8 @@ void DebuggerTree::ShowMenu(wxTreeItemId id, const wxPoint& pt)
         menu.Append(idEditWatch, _("&Edit watch"));
         menu.Append(idDeleteWatch, _("&Delete watch"));
 	}
+    menu.AppendSeparator();
+    menu.Append(idDeleteAllWatches, _("Delete all watches"));
 
 	PopupMenu(&menu, pt);
 }
@@ -294,29 +341,41 @@ void DebuggerTree::OnRightClick(wxCommandEvent& event)
 
 void DebuggerTree::OnAddWatch(wxCommandEvent& event)
 {
-	wxString w = wxGetTextFromUser(_("Add watch"), _("Enter the variable name to watch:"));
-	if (!w.IsEmpty())
-	{
-		AddWatch(w);
-	}
+    EditWatchDlg dlg;
+    if (dlg.ShowModal() == wxID_OK && !dlg.GetWatch().keyword.IsEmpty())
+        AddWatch(dlg.GetWatch().keyword, dlg.GetWatch().format);
 }
 
 void DebuggerTree::OnEditWatch(wxCommandEvent& event)
 {
 	wxString item = m_pTree->GetItemText(m_pTree->GetSelection());
-	wxString w = wxGetTextFromUser(_("Edit watch"), _("Edit the variable name:"), item);
-	if (!w.IsEmpty())
-	{
-		DeleteWatch(item);
-		AddWatch(w);
-	}
+	int pos = item.First(_T(" = "));
+	if (pos != wxNOT_FOUND)
+        item.Truncate(pos);
+    Watch* w = FindWatch(item, Any);
+    if (w)
+    {
+        EditWatchDlg dlg(w);
+        if (dlg.ShowModal() == wxID_OK && !dlg.GetWatch().keyword.IsEmpty())
+        {
+            DeleteWatch(item);
+            AddWatch(dlg.GetWatch().keyword, dlg.GetWatch().format);
+        }
+    }
 }
 
 void DebuggerTree::OnDeleteWatch(wxCommandEvent& event)
 {
 	wxString item = m_pTree->GetItemText(m_pTree->GetSelection());
-	if (wxMessageBox(_("Delete this watched variable?"), _("Confirm"), wxYES_NO) == wxYES)
-	{
-		DeleteWatch(item);
-	}
+	int pos = item.First(_T(" = "));
+	if (pos != wxNOT_FOUND)
+        item.Truncate(pos);
+    if (!item.IsEmpty())
+        DeleteWatch(item);
+}
+
+void DebuggerTree::OnDeleteAllWatches(wxCommandEvent& event)
+{
+    if (wxMessageBox(_("Are you sure you want to delete all watches?"), _("Question"), wxICON_QUESTION | wxYES_NO) == wxYES)
+        DeleteAllWatches();
 }

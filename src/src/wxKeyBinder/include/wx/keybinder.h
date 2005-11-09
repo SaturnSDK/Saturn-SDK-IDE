@@ -56,7 +56,7 @@ class wxConfigBase;
 //! An array of wxKeyBind is contained in each wxCmd... see wxCmd
 //! for more info.
 //!
-//! \note This class implements a lot of static utilities which 
+//! \note This class implements a lot of static utilities which
 //!       are used by the following classes.
 //!
 class WXDLLIMPEXP_KEYBINDER wxKeyBind
@@ -139,7 +139,7 @@ public:
 
 	// Returns the string which describes this key combination.
 	wxString GetStr() const {
-		return KeyModifierToString(m_nFlags) + 
+		return KeyModifierToString(m_nFlags) +
 			KeyCodeToString(m_nKeyCode);
 	}
 
@@ -235,7 +235,7 @@ public:		// static
 
 public:
 
-	wxCmd(const wxKeyBind &first, int id, 
+	wxCmd(const wxKeyBind &first, int id,
 		const wxString &name = wxEmptyString,
 		const wxString &desc = wxEmptyString) {
 		m_strName = name;
@@ -245,7 +245,7 @@ public:
 		m_nId = id;
 	}
 
-	wxCmd(int id = wxID_INVALID, 
+	wxCmd(int id = wxID_INVALID,
 		const wxString &name = wxEmptyString,
 		const wxString &desc = wxEmptyString) {
 		m_strName = name;
@@ -306,7 +306,7 @@ public:
 		m_nShortcuts--;
 		Update();
 	}
-	
+
 	//! Removes all the shortcuts associates to this command.
 	void RemoveAllShortcuts() {
 	    m_nShortcuts=0;
@@ -465,19 +465,19 @@ class WXDLLIMPEXP_KEYBINDER wxBinderEvtHandler : public wxEvtHandler
 protected:
 
 	//! The event handler for wxKeyEvents.
-	void OnChar(wxKeyEvent &event);	
+	void OnChar(wxKeyEvent &event);
 
 public:
 
 	//! Attaches this event handler to the given window.
 	//! The given keybinder will be called on each keyevent.
-	wxBinderEvtHandler(wxKeyBinder *p, wxWindow *tg) 
+	wxBinderEvtHandler(wxKeyBinder *p, wxWindow *tg)
 		: m_pBinder(p), m_pTarget(tg) { m_pTarget->PushEventHandler(this); }
 
 	//! Removes this event handler from the window you specified
 	//! during construction (the target window).
 	virtual ~wxBinderEvtHandler()
-		{ m_pTarget->RemoveEventHandler(this); }
+		{ if (m_pTarget) m_pTarget->RemoveEventHandler(this); }
 
 
 	//! Returns TRUE if this event handler is attached to the given window.
@@ -572,11 +572,11 @@ public:		// accessors
 //!
 //! This class contains an array of wxCmd and exposes some utilities
 //! to add/remove/edit them and their wxKeyBind.
-//! 
+//!
 //! VERY IMPORTANT: to allow the wxKeyBinder class to intercept *all*
-//!                 the keypresses which are sent to the #Attach()ed 
-//!                 window, also hotkeys, you must use the 
-//!                 wxADD_KEYBINDER_SUPPORT macro inside the declaration 
+//!                 the keypresses which are sent to the #Attach()ed
+//!                 window, also hotkeys, you must use the
+//!                 wxADD_KEYBINDER_SUPPORT macro inside the declaration
 //!                 of that window.
 //!
 class WXDLLIMPEXP_KEYBINDER wxKeyBinder : public wxObject
@@ -640,12 +640,12 @@ public:
 public:		// miscellaneous
 
 	//! The event handler for wxKeyEvents.
-	void OnChar(wxKeyEvent &event, wxEvtHandler *next);	
+	void OnChar(wxKeyEvent &event, wxEvtHandler *next);
 
 	//! Deep copies the given object.
 	void DeepCopy(const wxKeyBinder &p) {
 		m_arrCmd.DeepCopy(p.m_arrCmd);
-		
+
 		// NEVER COPY THE ARRAY OF THE ATTACHED WINDOWs:
 		// WE ARE NOT ATTACHED TO THE WINDOWS OF THE GIVEN BINDER !!
 		// m_arrAttachedWnd = p->m_arrAttachedWnd;
@@ -743,7 +743,7 @@ public:		// miscellaneous
 
 	int GetAttachedWndCount() const {
 		return m_arrHandlers.GetCount();
-	}	
+	}
 
 	wxWindow *GetWindow(int n) const {
 		return ((wxBinderEvtHandler*)m_arrHandlers.Item(n))->GetTargetWnd();
@@ -788,14 +788,14 @@ public:		// miscellaneous
 		return wxArrayString();
 	}
 
-	wxArrayPtrVoid *GetHandlersArr()		{ return &m_arrHandlers; }	
+	wxArrayPtrVoid *GetHandlersArr()		{ return &m_arrHandlers; }
 
 	wxCmdArray *GetArray()					{ return &m_arrCmd;	}
 	const wxCmdArray *GetArray() const		{ return &m_arrCmd; }
 
 
 private:
-	DECLARE_CLASS(wxKeyBinder)	
+	DECLARE_CLASS(wxKeyBinder)
 };
 
 
@@ -808,7 +808,7 @@ private:
 class WXDLLIMPEXP_KEYBINDER wxKeyProfile : public wxKeyBinder
 {
 protected:
-	
+
 	//! The name of this profile.
 	wxString m_strName;
 
@@ -816,13 +816,13 @@ protected:
 	wxString m_strDescription;
 
 public:
-	wxKeyProfile(const wxString &name = wxEmptyString, 
-				const wxString &desc = wxEmptyString) 
+	wxKeyProfile(const wxString &name = wxEmptyString,
+				const wxString &desc = wxEmptyString)
 		: m_strName(name), m_strDescription(desc) {}
-		
+
 	wxKeyProfile(const wxKeyProfile &tocopy)
 		{ DeepCopy(tocopy); }
-	
+
 	virtual ~wxKeyProfile() {}
 
 
@@ -838,7 +838,7 @@ public:
 	}
 
 public:		// miscellaneous
-	
+
 	void SetName(const wxString &name) { m_strName=name; }
 	void SetDesc(const wxString &str)  { m_strDescription=str; }
 
@@ -850,7 +850,7 @@ public:		// miscellaneous
 
 
 private:
-	DECLARE_CLASS(wxKeyProfile)	
+	DECLARE_CLASS(wxKeyProfile)
 };
 
 
@@ -889,13 +889,13 @@ public:
 	wxKeyProfileArray() { m_nSelected=-1; }
 	wxKeyProfileArray(const wxKeyProfileArray &tocopy) { DeepCopy(tocopy); }
 	virtual ~wxKeyProfileArray() { Cleanup(); }
-	
-	
+
+
 	//! \name wxArray-like functions.
 	//! We cannot use wxArrayPtrVoid as base class (it does not have
 	//! a virtual destructor) and so we are forced to re-implement the
 	//! wxArray functions... @{
-	
+
 	int GetCount() const			{ return m_arr.GetCount(); }
 	int GetSelProfileIdx() const	{ return m_nSelected; }
 	wxKeyProfile *Item(int n)		{ return (wxKeyProfile*)m_arr.Item(n); }
@@ -910,9 +910,9 @@ public:
  	const wxKeyProfile *GetSelProfile() const		{ return Item(m_nSelected); }
 	void RemoveAt(size_t i, size_t count = 1)		{ m_arr.RemoveAt(i, count); }
 	void Insert(wxKeyProfile *p, int n) 			{ m_arr.Insert(p, n); }
-	
+
 	//@}
-	
+
 
 	//! Copies the given array.
 	void DeepCopy(const wxKeyProfileArray &p) {
@@ -926,7 +926,7 @@ public:
 		DeepCopy(tocopy);
 		return *this;
 	}
-	
+
 	//! Deletes all the objects of the array.
 	//! Unlike #Clear() this function also deletes the objects and
 	//! does not only detach them from this array.
@@ -939,7 +939,7 @@ public:
 	//! Attaches all the wxKeyProfiles to the given window.
 	//! \note This function should be used very carefully !
 	//!       If all the keybinders are attached to the same window
-	//! 
+	//!
 	void AttachAllTo(wxWindow *w) {
 		for (int i=0; i<GetCount(); i++)
 			Item(i)->Attach(w);
@@ -962,7 +962,7 @@ public:
 		for (int i=0; i<GetCount(); i++)
 			Item(i)->DetachAll();
 	}
-	
+
 	//! Updates all the wxCmds contained.
 	void UpdateAllCmd() {
 		for (int i=0; i<GetCount(); i++)
@@ -974,7 +974,7 @@ public:
 	//!        it contains and then will delete any other group which starts with
 	//!        the mgSTYLES_CONFIG_PREFIX string.
 	bool Save(wxConfigBase *p, const wxString &key = wxEmptyString, bool bCleanOld = FALSE) const;
-	
+
 	//! Loads from the given wxConfig object all the wxKeyProfiles found.
 	//! The keyprofiles entries are detected using the wxKEYPROFILE_CONFIG_PREFIX
 	//! prefix string.
@@ -1074,7 +1074,7 @@ private:
 //! key profiles combobox.
 #define wxKEYBINDER_SHOW_ADDREMOVE_PROFILE		16
 
-//! If specified, the user will be able to edit the name of the currently 
+//! If specified, the user will be able to edit the name of the currently
 //! selected profile.
 #define wxKEYBINDER_ENABLE_PROFILE_EDITING		32
 
@@ -1090,7 +1090,7 @@ private:
 //! A powerful keybinding editing panel.
 //! This is a flexible panel since it can be configured through the
 //! "build flags" and thus can be built in various different ways and
-//! because it is conceived to be eventually used as a base class of 
+//! because it is conceived to be eventually used as a base class of
 //! another panel which can modify its behaviour just overloading one of
 //! its various functions.
 //! The panel contains 4 main controls:
@@ -1098,7 +1098,7 @@ private:
 //! - The tree control with all the commands whose shortcut keys can be
 //!   changed by the given keybinder. The items in the tree control
 //!   can be added through the #ImportXXXXXX() functions.
-//!   If the wxKEYBINDER_USE_TREECTRL build flag is not used 
+//!   If the wxKEYBINDER_USE_TREECTRL build flag is not used
 //!   (and wxKEYBINDER_USE_LISTBOX must be set in this case), a
 //!   combobox and a list box will be used instead of a wxTreeCtrl.
 //!   The command hierarchy is still retained also using
@@ -1140,7 +1140,7 @@ private:
 //!    You can then retrieve the new array of wxKeyProfile (the user could
 //!    have added/removed profiles) using #GetProfiles(). The last selected
 //!    profile can be obtained using #GetSelProfile().
-//!    
+//!
 class WXDLLIMPEXP_KEYBINDER wxKeyConfigPanel : public wxPanel
 {
 public:
@@ -1148,9 +1148,9 @@ public:
 	//! Constructs this panel and links it with the given key binder.
 	wxKeyConfigPanel(wxWindow* parent,
 		int buildMode = wxKEYBINDER_DEFAULT_BUILDMODE,
-		wxWindowID id = -1, 
+		wxWindowID id = -1,
 		const wxPoint& pos = wxDefaultPosition,
-		const wxSize& size = wxDefaultSize, 
+		const wxSize& size = wxDefaultSize,
 		long style = wxTAB_TRAVERSAL,
 		const wxString& name = wxT("wxKeyConfigPanel"));
 
@@ -1160,22 +1160,22 @@ public:
 public:		// import commands (to call BEFORE ShowModal):
 			// they affect the tree control only
 
-	//! Adds to the tree of user-editable commands, the menuitems 
+	//! Adds to the tree of user-editable commands, the menuitems
 	//! contained in the given menubar.
 	//!
 	//! If the root of the tree control doesn't exist (because none
 	//! of the ImportXXXX functions have been called yet), this
 	//! function creates it with the "rootname" label.
-	virtual void ImportMenuBarCmd(wxMenuBar *menuitems, 
+	virtual void ImportMenuBarCmd(wxMenuBar *menuitems,
 								const wxString &rootname = wxT("Menu bar"));
 
 	//! Adds to the tree of user-editable commands, the raw list of
 	//! the commmands contained in the n-th key profile.
 	//! Instead of a tree structure (like the one generated by
 	//! #ImportMenuBarCmd), this function creates a raw list of the
-	//! commands contained in the key binder since a wxKeyBinder does 
+	//! commands contained in the key binder since a wxKeyBinder does
 	//! not contain hierarchical info about the keybindings.
-	virtual void ImportKeyProfileCmd(const wxKeyProfile &toimport, 
+	virtual void ImportKeyProfileCmd(const wxKeyProfile &toimport,
 								const wxString &rootname = wxT("Commands"));
 
 
@@ -1188,7 +1188,7 @@ public:		// keyprofile utilities (to call BEFORE ShowModal):
 	//!       To force the selection of a profile, you should use the
 	//!       SetSelProfile() function.
 	virtual void AddProfile(const wxKeyProfile &p);
-							
+
 	//! Adds all the profiles stored in the given array to the keyprofile
 	//! combo box copying them into the panel for user modifications.
 	//! \note The profile which is marked as selected into the given
@@ -1196,7 +1196,7 @@ public:		// keyprofile utilities (to call BEFORE ShowModal):
 	virtual void AddProfiles(const wxKeyProfileArray &arr);
 
 	//! Forces the panel to select the n-th profile in the keyprofile combo box.
-	virtual void SetSelProfile(int n);		
+	virtual void SetSelProfile(int n);
 
 
 public:		// output-access utilities (to call AFTER ShowModal)
@@ -1219,10 +1219,10 @@ public:		// output-access utilities (to call AFTER ShowModal)
 	//!       returns always -1... we will use the #m_nCurrentProf variable.
 	int GetSelProfileIdx() const
 		{ wxASSERT(m_pKeyProfiles); return m_nCurrentProf; }
-		
+
 	//! Returns an array containing the pointers to the keyprofiles edited
 	//! by this dialog. This function is typically used after the ShowModal()
-	//! function has been called to retrieve the user-edited keyprofiles 
+	//! function has been called to retrieve the user-edited keyprofiles
 	//! in case the user chose OK (and not cancel).
 	//! \note The returned array has a valid profile selected which coincide
 	//!       with the last keyprofile selected in the combobox; i.e. you can
@@ -1256,16 +1256,16 @@ protected:		// event handlers
 
 	void OnTreeCommandSelected(wxTreeEvent &event);
 	void OnListCommandSelected(wxCommandEvent &event);
-	
+
 	void OnBindingSelected(wxCommandEvent &event);
 	void OnProfileSelected(wxCommandEvent &event);
 	void OnCategorySelected(wxCommandEvent &event);
 
-	void OnProfileEditing(wxCommandEvent &event);	
+	void OnProfileEditing(wxCommandEvent &event);
 	void OnApplyChanges(wxCommandEvent &event);
 	void OnAssignKey(wxCommandEvent &event);
 	void OnRemoveKey(wxCommandEvent &event);
-	void OnRemoveAllKey(wxCommandEvent &event);	
+	void OnRemoveAllKey(wxCommandEvent &event);
 	void OnAddProfile(wxCommandEvent &event);
 	void OnRemoveProfile(wxCommandEvent &event);
 
@@ -1278,14 +1278,14 @@ protected:		// build functions; these ones can be overridden to
 
 	virtual void BuildCtrls();
 	virtual wxSizer *BuildColumn1();
-	virtual wxSizer *BuildColumn2();	
-	virtual wxSizer *BuildMain(wxSizer *, wxSizer *, bool);	
+	virtual wxSizer *BuildColumn2();
+	virtual wxSizer *BuildMain(wxSizer *, wxSizer *, bool);
 
 
 protected:		// utilities
 
 	virtual void UpdateButtons();
-	virtual void UpdateDesc();	
+	virtual void UpdateDesc();
 	virtual void FillInBindings();
 	virtual void Reset();
 	virtual void AddRootIfMissing(const wxString &rootname);
@@ -1293,15 +1293,15 @@ protected:		// utilities
 
 	//! Returns the tree item ID of the currently selected command.
 	wxTreeItemId GetSelCmdId() const;
-	
+
 	//! Returns the control with the list of the customizable commands.
 	wxControl *GetMainCtrl() const;
-	
+
 	//! Returns TRUE if the #m_pCommandsTree control is being used.
 	//! Returns FALSE if the #m_pCommandsList and #m_pCategories are being used.
 	bool IsUsingTreeCtrl() const
 		{ return (m_nBuildMode & wxKEYBINDER_USE_TREECTRL) != 0; }
-		
+
 	//! Returns TRUE if the currently selected command is valid.
 	bool IsSelectedValidCmd() const;
 
@@ -1328,10 +1328,10 @@ protected:		// members
 	//! The currently selected command.
 	wxCmd *m_pCurrCmd;
 
-	//! The temporary keybinder used while interactively editing shortcuts 
+	//! The temporary keybinder used while interactively editing shortcuts
 	//! to allow to eventually discard the changes. See #m_bProfileHasBeenModified.
 	wxKeyProfile m_kBinder;
-	
+
 	//! The index of the currently selected profile.
 	int m_nCurrentProf;
 
