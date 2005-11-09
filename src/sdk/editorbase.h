@@ -73,7 +73,7 @@ class DLLIMPORT EditorBase : public wxPanel
           * @param noeditor If true, this is an "OpenFilesList" popup menu.
           * @return If the editor returns false, the context menu creation is aborted.
           */
-        virtual bool OnBeforeBuildContextMenu(bool noeditor){ return true; }
+        virtual bool OnBeforeBuildContextMenu(const wxPoint& position, bool noeditor){ return true; }
         /** Informs the editor we 're done creating the context menu (just about to display it).
           * Default implementation does nothing.
           * @param noeditor If true, this is an "OpenFilesList" popup menu.

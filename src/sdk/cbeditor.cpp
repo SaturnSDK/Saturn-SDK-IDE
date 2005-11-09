@@ -93,7 +93,8 @@ struct cbEditorInternalData
         lastPosForCodeCompletion(0),
         m_strip_trailing_spaces(true),
         m_ensure_final_line_end(false),
-        m_ensure_consistent_line_ends(true)
+        m_ensure_consistent_line_ends(true),
+        m_LastMarginMenuLine(-1)
     {}
     cbEditor* m_pOwner;
 
@@ -215,6 +216,8 @@ struct cbEditorInternalData
     bool m_ensure_final_line_end;
     bool m_ensure_consistent_line_ends;
 
+    int m_LastMarginMenuLine;
+
 };
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -243,6 +246,13 @@ const int idInsert = wxNewId();
 const int idConfigureEditor = wxNewId();
 const int idProperties = wxNewId();
 
+const int idBookmarkAdd = wxNewId();
+const int idBookmarkRemove = wxNewId();
+
+const int idBreakpointAdd = wxNewId();
+const int idBreakpointEdit = wxNewId();
+const int idBreakpointRemove = wxNewId();
+
 BEGIN_EVENT_TABLE(cbEditor, EditorBase)
     EVT_CLOSE(cbEditor::OnClose)
     EVT_TIMER(-1, cbEditor::OnTimer)
@@ -267,6 +277,11 @@ BEGIN_EVENT_TABLE(cbEditor, EditorBase)
 	EVT_MENU(idFoldingToggleCurrent, cbEditor::OnContextMenuEntry)
 	EVT_MENU(idConfigureEditor, cbEditor::OnContextMenuEntry)
 	EVT_MENU(idProperties, cbEditor::OnContextMenuEntry)
+	EVT_MENU(idBookmarkAdd, cbEditor::OnContextMenuEntry)
+	EVT_MENU(idBookmarkRemove, cbEditor::OnContextMenuEntry)
+	EVT_MENU(idBreakpointAdd, cbEditor::OnContextMenuEntry)
+	EVT_MENU(idBreakpointEdit, cbEditor::OnContextMenuEntry)
+	EVT_MENU(idBreakpointRemove, cbEditor::OnContextMenuEntry)
 END_EVENT_TABLE()
 
 // class constructor
@@ -1127,21 +1142,54 @@ void cbEditor::AddToContextMenu(wxMenu* popup,bool noeditor,bool pluginsdone)
     }
 }
 
-bool cbEditor::OnBeforeBuildContextMenu(bool noeditor)
+bool cbEditor::OnBeforeBuildContextMenu(const wxPoint& position, bool noeditor)
 {
     if (!noeditor)
     {
+        wxPoint clientpos = ScreenToClient(position);
+        if (clientpos.x < (48 + 16)) // 48, 16 are the margins widths (line 498)
+        {
+            // margin right-click
+
+            // keep the line
+            int pos = m_pControl->PositionFromPoint(clientpos);
+            m_pData->m_LastMarginMenuLine = m_pControl->LineFromPosition(pos);
+
+            // create special menu
+            wxMenu* popup = new wxMenu;
+
+            if (LineHasMarker(BREAKPOINT_MARKER, m_pData->m_LastMarginMenuLine))
+            {
+                popup->Append(idBreakpointEdit, _("Edit breakpoint"));
+                popup->Append(idBreakpointRemove, _("Remove breakpoint"));
+            }
+            else
+                popup->Append(idBreakpointAdd, _("Add breakpoint"));
+
+            popup->AppendSeparator();
+
+            if (LineHasMarker(BOOKMARK_MARKER, m_pData->m_LastMarginMenuLine))
+                popup->Append(idBookmarkRemove, _("Remove bookmark"));
+            else
+                popup->Append(idBookmarkAdd, _("Add bookmark"));
+
+            // display menu
+            PopupMenu(popup, clientpos.x, clientpos.y);
+
+            delete popup;
+            return false;
+        }
+
         // before the context menu creation, move the caret to where mouse is
 
         // get caret position and line from mouse cursor
-        cbStyledTextCtrl* control = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor()->GetControl();
-        int pos = control->PositionFromPoint(control->ScreenToClient(wxGetMousePosition()));
-        if(control->GetSelectionStart() > pos || control->GetSelectionEnd() < pos) // this re-enables 1-click "Find declaration of..."
-			control->GotoPos(pos);                                              // but avoids losing selection for cut/copy
+        int pos = m_pControl->PositionFromPoint(m_pControl->ScreenToClient(wxGetMousePosition()));
+        if(m_pControl->GetSelectionStart() > pos || m_pControl->GetSelectionEnd() < pos) // this re-enables 1-click "Find declaration of..."
+			m_pControl->GotoPos(pos);                                              // but avoids losing selection for cut/copy
     }
 
     // follow default strategy
-    return EditorBase::OnBeforeBuildContextMenu(noeditor);
+    return EditorBase::OnBeforeBuildContextMenu(position, noeditor);
 }
 
 void cbEditor::OnAfterBuildContextMenu(bool noeditor)
@@ -1205,6 +1253,10 @@ void cbEditor::OnContextMenuEntry(wxCommandEvent& event)
 		m_pControl->SelectAll();
 	else if (id == idSwapHeaderSource)
 		Manager::Get()->GetEditorManager()->SwapActiveHeaderSource();
+	else if (id == idBookmarkAdd)
+		m_pControl->MarkerAdd(m_pData->m_LastMarginMenuLine, BOOKMARK_MARKER);
+	else if (id == idBookmarkRemove)
+		m_pControl->MarkerDelete(m_pData->m_LastMarginMenuLine, BOOKMARK_MARKER);
 	else if (id == idBookmarksToggle)
 		MarkerToggle(BOOKMARK_MARKER);
 	else if (id == idBookmarksNext)
@@ -1229,6 +1281,25 @@ void cbEditor::OnContextMenuEntry(wxCommandEvent& event)
 	{
         if (m_pProjectFile)
             m_pProjectFile->ShowOptions(this);
+    }
+    else if (id == idBreakpointAdd)
+    {
+        LOGSTREAM << "idBreakpointAdd\n";
+        m_pControl->MarkerAdd(m_pData->m_LastMarginMenuLine, BREAKPOINT_MARKER);
+        m_pControl->MarkerAdd(m_pData->m_LastMarginMenuLine, BREAKPOINT_LINE);
+        NotifyPlugins(cbEVT_EDITOR_BREAKPOINT_ADD, m_pData->m_LastMarginMenuLine, m_Filename);
+    }
+    else if (id == idBreakpointEdit)
+    {
+        LOGSTREAM << "idBreakpointEdit\n";
+        NotifyPlugins(cbEVT_EDITOR_BREAKPOINT_EDIT, m_pData->m_LastMarginMenuLine, m_Filename);
+    }
+    else if (id == idBreakpointRemove)
+    {
+        LOGSTREAM << "idBreakpointRemove\n";
+        m_pControl->MarkerDelete(m_pData->m_LastMarginMenuLine, BREAKPOINT_MARKER);
+        m_pControl->MarkerDelete(m_pData->m_LastMarginMenuLine, BREAKPOINT_LINE);
+        NotifyPlugins(cbEVT_EDITOR_BREAKPOINT_DELETE, m_pData->m_LastMarginMenuLine, m_Filename);
     }
     else
         event.Skip();

@@ -191,7 +191,7 @@ void EditorBase::DisplayContextMenu(const wxPoint& position,bool noeditor)
   // False if belongs to cbEditor
 
   // inform the editors we 're just about to create a context menu
-  if (!OnBeforeBuildContextMenu(noeditor))
+  if (!OnBeforeBuildContextMenu(position, noeditor))
     return;
 
   wxMenu* popup = new wxMenu;

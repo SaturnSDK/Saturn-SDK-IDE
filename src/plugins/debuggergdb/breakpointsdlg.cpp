@@ -1,10 +1,5 @@
 #include <sdk.h>
 #include "breakpointsdlg.h"
-#include <manager.h>
-#include <projectmanager.h>
-#include <editormanager.h>
-#include <cbeditor.h>
-#include <cbproject.h>
 #include <wx/intl.h>
 #include <wx/xrc/xmlres.h>
 #include <wx/textctrl.h>

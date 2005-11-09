@@ -49,6 +49,7 @@
 #include "debuggergdb.h"
 #include "debuggeroptionsdlg.h"
 #include "breakpointsdlg.h"
+#include "editbreakpointdlg.h"
 #include "editwatchesdlg.h"
 #include "editwatchdlg.h"
 
@@ -1623,6 +1624,14 @@ void DebuggerGDB::OnBreakpointAdd(CodeBlocksEvent& event)
 
 void DebuggerGDB::OnBreakpointEdit(CodeBlocksEvent& event)
 {
+    int idx = HasBreakpoint(event.GetString(), event.GetInt());
+    if (idx == -1)
+        return;
+
+    DebuggerBreakpoint* bp = m_Breakpoints[idx];
+    EditBreakpointDlg dlg(bp);
+    if (dlg.ShowModal() == wxID_OK)
+        SetBreakpoints();
 }
 
 void DebuggerGDB::OnBreakpointDelete(CodeBlocksEvent& event)
@@ -1713,8 +1722,5 @@ void DebuggerGDB::OnWatchesChanged(wxCommandEvent& event)
 
 void DebuggerGDB::OnAddWatch(wxCommandEvent& event)
 {
-    Watch w(GetEditorWordAtCaret());
-    EditWatchDlg dlg(&w);
-    if (dlg.ShowModal() == wxID_OK && !dlg.GetWatch().keyword.IsEmpty())
-        m_pTree->AddWatch(dlg.GetWatch().keyword, dlg.GetWatch().format);
+    m_pTree->AddWatch(GetEditorWordAtCaret());
 }

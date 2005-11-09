@@ -212,7 +212,7 @@ class DLLIMPORT cbEditor : public EditorBase
 
 		// one event handler for all popup menu entries
 		void OnContextMenuEntry(wxCommandEvent& event);
-        bool OnBeforeBuildContextMenu(bool noeditor);
+        bool OnBeforeBuildContextMenu(const wxPoint& position, bool noeditor);
         void OnAfterBuildContextMenu(bool noeditor);
 
         // variables

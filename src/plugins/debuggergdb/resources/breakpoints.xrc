@@ -13,18 +13,14 @@
               <orient>wxVERTICAL</orient>
               <object class="sizeritem">
                 <object class="wxStaticText">
-                  
                   <label>Breakpoints:</label>
                 </object>
               </object>
               <object class="sizeritem">
                 <object class="wxListBox" name="lstBreakpoints">
-                  
                   <content/>
                 </object>
-                
                 <option>1</option>
-                
                 <flag>wxGROW</flag>
               </object>
               <object class="sizeritem">
@@ -32,30 +28,22 @@
                   <orient>wxHORIZONTAL</orient>
                   <object class="sizeritem">
                     <object class="wxButton" name="btnRemove">
-                      
                       <label>Remove</label>
                     </object>
                   </object>
                   <object class="sizeritem">
                     <object class="wxButton" name="btnRemoveAll">
-                      
                       <label>Remove all</label>
                     </object>
-                    
                     <flag>wxLEFT</flag>
-                    
                     <border>8</border>
                   </object>
                 </object>
-                
                 <flag>wxTOP|wxALIGN_CENTRE_HORIZONTAL</flag>
-                
                 <border>8</border>
               </object>
             </object>
-            
             <option>1</option>
-            
             <flag>wxGROW</flag>
           </object>
           <object class="sizeritem">
@@ -67,26 +55,17 @@
                   <orient>wxVERTICAL</orient>
                   <object class="sizeritem">
                     <object class="wxCheckBox" name="chkEnabled">
-                      
                       <label>Enabled</label>
-                      
                       <checked>1</checked>
                     </object>
-                    
                     <flag>wxALL|wxGROW</flag>
-                    
                     <border>8</border>
                   </object>
                   <object class="sizeritem">
                     <object class="wxCheckBox" name="chkIgnore">
-                      
                       <label>Ignore count before break:</label>
-                      
-                      <checked>1</checked>
                     </object>
-                    
                     <flag>wxTOP|wxLEFT|wxRIGHT|wxGROW</flag>
-                    
                     <border>8</border>
                   </object>
                   <object class="sizeritem">
@@ -94,35 +73,22 @@
                       <orient>wxHORIZONTAL</orient>
                       <object class="sizeritem">
                         <object class="wxSpinCtrl" name="spnIgnoreCount">
-                          
                           <value>0</value>
-                          
                           <min>0</min>
-                          
                         </object>
-                        
                         <option>1</option>
-                        
                         <flag>wxTOP|wxGROW</flag>
-                        
                         <border>4</border>
                       </object>
                     </object>
-                    
                     <flag>wxBOTTOM|wxLEFT|wxRIGHT|wxGROW</flag>
-                    
                     <border>8</border>
                   </object>
                   <object class="sizeritem">
                     <object class="wxCheckBox" name="chkExpr">
-                      
                       <label>Break when expression is true:</label>
-                      
-                      <checked>1</checked>
                     </object>
-                    
                     <flag>wxTOP|wxLEFT|wxRIGHT|wxGROW</flag>
-                    
                     <border>8</border>
                   </object>
                   <object class="sizeritem">
@@ -130,44 +96,30 @@
                       <orient>wxHORIZONTAL</orient>
                       <object class="sizeritem">
                         <object class="wxTextCtrl" name="txtExpr"/>
-                        
                         <option>1</option>
-                        
                         <flag>wxTOP|wxGROW</flag>
-                        
                         <border>4</border>
                       </object>
                     </object>
-                    
                     <flag>wxBOTTOM|wxLEFT|wxRIGHT|wxGROW</flag>
-                    
                     <border>8</border>
                   </object>
                 </object>
-                
                 <flag>wxGROW</flag>
               </object>
             </object>
-            
             <option>1</option>
-            
             <flag>wxLEFT|wxGROW</flag>
-            
             <border>8</border>
           </object>
         </object>
-        
         <option>1</option>
-        
         <flag>wxALL|wxGROW</flag>
-        
         <border>8</border>
       </object>
       <object class="sizeritem">
         <object class="wxStaticLine"/>
-        
         <flag>wxLEFT|wxRIGHT|wxGROW</flag>
-        
         <border>8</border>
       </object>
       <object class="sizeritem">
@@ -175,29 +127,105 @@
           <orient>wxHORIZONTAL</orient>
           <object class="sizeritem">
             <object class="wxButton" name="wxID_OK">
-              
               <label>&amp;OK</label>
-              
               <default>1</default>
             </object>
           </object>
           <object class="sizeritem">
             <object class="wxButton" name="wxID_CANCEL">
-              
               <label>&amp;Cancel</label>
             </object>
-            
             <flag>wxLEFT</flag>
-            
             <border>8</border>
           </object>
         </object>
-        
         <flag>wxALL|wxALIGN_CENTRE_HORIZONTAL</flag>
-        
         <border>8</border>
       </object>
     </object>
     <style>wxDEFAULT_DIALOG_STYLE|wxRESIZE_BOX|wxRESIZE_BORDER</style>
+  </object>
+  <object class="wxDialog" name="dlgEditBreakpoint">
+    <title>Edit breakpoint</title>
+    <centered>1</centered>
+    <object class="wxBoxSizer">
+      <orient>wxVERTICAL</orient>
+      <object class="sizeritem">
+        <object class="wxCheckBox" name="chkEnabled">
+          <label>Enabled</label>
+          <checked>1</checked>
+        </object>
+        <flag>wxALL|wxGROW</flag>
+        <border>8</border>
+      </object>
+      <object class="sizeritem">
+        <object class="wxCheckBox" name="chkIgnore">
+          <label>Ignore count before break:</label>
+        </object>
+        <flag>wxTOP|wxLEFT|wxRIGHT|wxGROW</flag>
+        <border>8</border>
+      </object>
+      <object class="sizeritem">
+        <object class="wxBoxSizer">
+          <orient>wxHORIZONTAL</orient>
+          <object class="sizeritem">
+            <object class="wxSpinCtrl" name="spnIgnoreCount">
+              <value>0</value>
+              <min>0</min>
+            </object>
+            <option>1</option>
+            <flag>wxTOP|wxGROW</flag>
+            <border>4</border>
+          </object>
+        </object>
+        <flag>wxBOTTOM|wxLEFT|wxRIGHT|wxGROW</flag>
+        <border>8</border>
+      </object>
+      <object class="sizeritem">
+        <object class="wxCheckBox" name="chkExpr">
+          <label>Break when expression is true:</label>
+        </object>
+        <flag>wxTOP|wxLEFT|wxRIGHT|wxGROW</flag>
+        <border>8</border>
+      </object>
+      <object class="sizeritem">
+        <object class="wxBoxSizer">
+          <orient>wxHORIZONTAL</orient>
+          <object class="sizeritem">
+            <object class="wxTextCtrl" name="txtExpr"/>
+            <option>1</option>
+            <flag>wxTOP|wxGROW</flag>
+            <border>4</border>
+          </object>
+        </object>
+        <flag>wxBOTTOM|wxLEFT|wxRIGHT|wxGROW</flag>
+        <border>8</border>
+      </object>
+      <object class="sizeritem">
+        <object class="wxStaticLine"/>
+        <flag>wxLEFT|wxRIGHT|wxGROW</flag>
+        <border>8</border>
+      </object>
+      <object class="sizeritem">
+        <object class="wxBoxSizer">
+          <orient>wxHORIZONTAL</orient>
+          <object class="sizeritem">
+            <object class="wxButton" name="wxID_OK">
+              <label>&amp;OK</label>
+              <default>1</default>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxButton" name="wxID_CANCEL">
+              <label>&amp;Cancel</label>
+            </object>
+            <flag>wxLEFT</flag>
+            <border>8</border>
+          </object>
+        </object>
+        <flag>wxALL|wxALIGN_CENTRE_HORIZONTAL</flag>
+        <border>8</border>
+      </object>
+    </object>
   </object>
 </resource>

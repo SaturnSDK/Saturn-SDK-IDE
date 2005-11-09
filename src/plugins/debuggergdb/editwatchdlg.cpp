@@ -24,7 +24,10 @@ EditWatchDlg::~EditWatchDlg()
 
 void EditWatchDlg::EndModal(int retCode)
 {
-    m_Watch.keyword = XRCCTRL(*this, "txtKeyword", wxTextCtrl)->GetValue();
-    m_Watch.format = (WatchFormat)XRCCTRL(*this, "rbFormat", wxRadioBox)->GetSelection();
+    if (retCode == wxID_OK)
+    {
+        m_Watch.keyword = XRCCTRL(*this, "txtKeyword", wxTextCtrl)->GetValue();
+        m_Watch.format = (WatchFormat)XRCCTRL(*this, "rbFormat", wxRadioBox)->GetSelection();
+    }
     wxDialog::EndModal(retCode);
 }
