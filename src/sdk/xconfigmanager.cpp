@@ -661,6 +661,33 @@ wxArrayString XmlConfigManager::EnumerateKeys(const wxString& path)
     return ret;
 }
 
+void XmlConfigManager::Write(const wxString& name, const ISerializable& object)
+{
+    wxString key(name);
+    TiXmlElement* e = AssertPath(key);
+
+    TiXmlElement *obj = GetUniqElement(e, key);
+
+    TiXmlElement *s = GetUniqElement(obj, _T("obj"));
+    SetNodeText(s, TiXmlText(wxBase64Encode(object.SerializeOut()).mb_str()));
+}
+
+bool XmlConfigManager::ReadObject(const wxString& name, ISerializable* object)
+{
+    wxString str;
+    wxString key(name);
+    TiXmlElement* e = AssertPath(key);
+
+    TiXmlHandle parentHandle(e);
+    TiXmlText *t = (TiXmlText *) parentHandle.FirstChild(key).FirstChild(_T("obj")).FirstChild().Node();
+
+    if(t)
+    {
+        str.assign(t->Value());
+        object->SerializeIn(wxBase64Decode(str));
+    }
+    return wxEmptyString;
+}
 
 
 

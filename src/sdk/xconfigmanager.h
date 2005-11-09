@@ -17,7 +17,7 @@
 *   class MySerializableLongIntClass : public ISerializable
 *   {
 *   //...
-*   wxString SerializeOut(){wxString tmp; tmp << m_int; return tmp;};
+*   wxString SerializeOut() const {wxString tmp; tmp << m_int; return tmp;};
 *   void SerializeIn(const wxString& s){s.ToLong(&m_int);};
 *   //...
 *   long int m_int;
@@ -25,7 +25,7 @@
 */
 class ISerializable
 {
-    friend class XmlConfigManager;
+    public:
     virtual ~ISerializable(){};
     virtual wxString SerializeOut() const = 0;
     virtual void SerializeIn(const wxString& s) = 0;
@@ -38,9 +38,9 @@ class ISerializable
 */
 namespace ConfigManagerContainer
 {
-    WX_DECLARE_STRING_HASH_MAP( int, StringToIntMap);
+    WX_DECLARE_STRING_HASH_MAP( long int, StringToIntMap);
     WX_DECLARE_STRING_HASH_MAP( wxString, StringToStringMap);
-    WX_DECLARE_HASH_MAP(int, wxString, wxIntegerHash, wxIntegerEqual, IntToStringMap);
+    WX_DECLARE_HASH_MAP(long int, wxString, wxIntegerHash, wxIntegerEqual, IntToStringMap);
 
     WX_DECLARE_STRING_HASH_MAP( ISerializable *, SerializableObjectMap);
     WX_DECLARE_HASH_MAP(int, ISerializable *, wxIntegerHash, wxIntegerEqual, IntSerializableObjectMap);
@@ -110,6 +110,16 @@ public:
 
     wxArrayString EnumerateSubPaths(const wxString& path);
     wxArrayString EnumerateKeys(const wxString& path);
+
+
+    void Write(const wxString& name, const ISerializable& object);
+    bool ReadObject(const wxString& name, ISerializable* object);
+
+//    void Write(const wxString& name, const StringToIntMap& map);
+//    void Write(const wxString& name, const StringToStringMap& map);
+//    void Write(const wxString& name, const IntToStringMap& map);
+
+
 };
 
 
@@ -140,6 +150,42 @@ public:
     void SwitchTo(const wxString& absFN);
 };
 
+
+
+
+
+
+
+
+
+
+//############################# REMOVE THIS ########################################
+class MySerializableLongIntClass : public ISerializable
+{
+public:
+    wxString SerializeOut() const
+    {
+        wxString tmp;
+        tmp << m_int;
+        return tmp;
+    };
+    void SerializeIn(const wxString& s)
+    {
+        s.ToLong(&m_int);
+    };
+
+    MySerializableLongIntClass(long int x)
+    {
+        m_int = x;
+    };
+
+    void Print()
+    {
+        Manager::Get()->GetMessageManager()->DebugLog(wxString("my value is ") << m_int);
+    };
+    long int m_int;
+};
+//############################# END OF "REMOVE THIS" ########################################
 
 #endif
 

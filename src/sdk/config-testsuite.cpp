@@ -87,3 +87,18 @@ enumerated = c->EnumerateKeys("/foo");
 for(unsigned int i = 0; i < enumerated.GetCount(); ++i)
     m->DebugLog(wxString("keys in /foo : ") << enumerated[i]);
 
+
+//******* declaration in configmanager.h (remove before release!)
+MySerializableLongIntClass serialLong(5);
+MySerializableLongIntClass otherSerialLong(0);
+
+serialLong.Print();
+otherSerialLong.Print();
+c->Write("nonsense", serialLong);
+c->ReadObject("nonsense", &otherSerialLong);
+serialLong.Print();
+otherSerialLong.Print();
+
+
+
+
