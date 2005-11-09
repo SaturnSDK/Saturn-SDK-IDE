@@ -60,9 +60,6 @@ enum FileType
 
 #define DEFAULT_ARRAY_SEP _T(";")
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 // global helper funcs
 /// Reads a wxString from a non-unicode file. File must be open. File is closed automatically.
 extern DLLIMPORT bool cbRead(wxFile& file, wxString& st);
@@ -90,9 +87,6 @@ extern DLLIMPORT wxString ChooseDirectory(wxWindow* parent,
                                           const wxString& basePath = _T(""),
                                           bool askToMakeRelative = false, // relative to basePath
                                           bool showCreateDirButton = false); // where supported
-#ifdef __cplusplus
-};
-#endif
 
 wxString wxBase64Encode(const wxString &str);
 wxString wxBase64Decode(const wxString &str);

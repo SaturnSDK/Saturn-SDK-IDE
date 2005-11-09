@@ -465,7 +465,7 @@ bool XmlConfigManager::Read(const wxString& name,  int* value)
     TiXmlElement *leaf = leafHandle.FirstChild(key).Element();
 
     if(leaf)
-        return leaf->QueryIntAttribute(_T("int"), value);
+        return leaf->QueryIntAttribute(_T("int"), value) == TIXML_SUCCESS;
     return false;
 }
 
@@ -497,7 +497,7 @@ bool XmlConfigManager::Read(const wxString& name,  double* value)
     TiXmlElement *leaf = leafHandle.FirstChild(key).Element();
 
     if(leaf)
-        return leaf->QueryDoubleAttribute(_T("double"), value);
+        return leaf->QueryDoubleAttribute(_T("double"), value) == TIXML_SUCCESS;
     return false;
 }
 

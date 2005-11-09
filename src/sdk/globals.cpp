@@ -365,8 +365,6 @@ bool cbWrite(wxFile& file, const wxString& buff)
     return result;
 }
 
-
-
 // Base64 encode/decode functions stolen from wxCode / wxhttpengine,
 // removed Turadg Aleahmad's POST modifications.
 // Origin:
