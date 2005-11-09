@@ -2,9 +2,57 @@
 #define X_CONFIGMANAGER_H
 
 #include <wx/wx.h>
+#include <wx/hashmap.h>
+#include <wx/hashset.h>
+
 #include "settings.h"
 
 
+
+/* ------------------------------------------------------------------------------------------------------------------
+*  Interface Serializable
+*  ConfigManager can save arbitrary objects and even sets/maps of objects, provided they implement Serializable.
+*
+*  Example usage:
+*   class MySerializableLongIntClass : public ISerializable
+*   {
+*   //...
+*   wxString SerializeOut(){wxString tmp; tmp << m_int; return tmp;};
+*   void SerializeIn(const wxString& s){s.ToLong(&m_int);};
+*   //...
+*   long int m_int;
+*   };
+*/
+class ISerializable
+{
+    friend class XmlConfigManager;
+    virtual ~ISerializable(){};
+    virtual wxString SerializeOut() const = 0;
+    virtual void SerializeIn(const wxString& s) = 0;
+};
+
+
+
+/* ------------------------------------------------------------------------------------------------------------------
+*  Containers supported by ConfigManager
+*/
+namespace ConfigManagerContainer
+{
+    WX_DECLARE_STRING_HASH_MAP( int, StringToIntMap);
+    WX_DECLARE_STRING_HASH_MAP( wxString, StringToStringMap);
+    WX_DECLARE_HASH_MAP(int, wxString, wxIntegerHash, wxIntegerEqual, IntToStringMap);
+
+    WX_DECLARE_STRING_HASH_MAP( ISerializable *, SerializableObjectMap);
+    WX_DECLARE_HASH_MAP(int, ISerializable *, wxIntegerHash, wxIntegerEqual, IntSerializableObjectMap);
+
+    WX_DECLARE_HASH_SET(wxString, wxStringHash, wxStringEqual, StringSet);
+};
+
+
+
+/* ------------------------------------------------------------------------------------------------------------------
+*  ConfigManager class
+*/
 class DLLIMPORT XmlConfigManager
 {
     friend class CfgMgrBldr;
@@ -53,22 +101,16 @@ public:
     void UnSet(const wxString& name);
 
     void Write(const wxString& name,  const wxArrayString& as);
-    //wxArrayString Read(const wxString& name);
+    void Read(const wxString& name,  wxArrayString* as);
+    wxArrayString ReadArrayString(const wxString& name);
 
     void WriteBinary(const wxString& name,  const wxString& source);
     void WriteBinary(const wxString& name,  void* ptr, size_t len);
     wxString ReadBinary(const wxString& name);
 
-
-    //    bool GetFirstGroup(wxString& str, long& index);
-    //    bool GetNextGroup(wxString& str, long& index);
-    //    bool RenameGroup(const wxString&  oldName, const wxString&  newName);
-    //    bool GetFirstEntry(wxString& str, long& index);
-    //    bool GetNextEntry(wxString& str, long& index);
-    //    unsigned int GetNumberOfGroups(bool bRecursive = FALSE);
-    //    bool KeyExists(const wxString& name);
+    wxArrayString EnumerateSubPaths(const wxString& path);
+    wxArrayString EnumerateKeys(const wxString& path);
 };
-
 
 
 

@@ -10,6 +10,8 @@ m->DebugLog("APP_PATH=" +  c->Read("app_path"));
 
 c->SetPath("/foo");
 c->SetPath("/bar/some/path");
+c->SetPath("/bar/another");
+c->SetPath("/bar/yetanother");
 c->SetPath("/trailing/slash/");
 
 m->DebugLog("PATH=" +  c->GetPath());
@@ -46,20 +48,42 @@ m->DebugLog(wxString("read /foo/honk=") << c->ReadDouble("/foo/honk", -5.5));
 
 m->DebugLog(wxString("read /invalid=") << c->ReadInt("/invalid", 4242));
 
+{
+    wxArrayString as;
+    as.Add("some");
+    as.Add("items");
+    as.Add("in a wxArrayString");
+    as.Add("saved");
+    as.Add("here in config");
 
-wxArrayString as;
-as.Add("some");
-as.Add("items");
-as.Add("in a wxArrayString");
-as.Add("saved");
-as.Add("here in config");
+    c->Write("/trailing/slash/data", as);
+}
+wxArrayString as = c->ReadArrayString("/trailing/slash/data");
+for(unsigned int i = 0; i < as.GetCount(); ++i)
+    m->DebugLog(wxString("arraystring element: ") << as[i]);
 
-c->Write("/trailing/slash/data", as);
 
 c->WriteBinary("/trailing/slash/window-layout", wxString("Binary data. This can be anything which fits in a wxString or a pointer plus a size_t argument."));
 m->DebugLog(c->ReadBinary("/trailing/slash/window-layout"));
 
+wxArrayString enumerated;
+enumerated = c->EnumerateSubPaths("/");
+for(unsigned int i = 0; i < enumerated.GetCount(); ++i)
+    m->DebugLog(wxString("subpaths of / : ") << enumerated[i]);
+
+enumerated.Clear();
+enumerated = c->EnumerateSubPaths("/bar/");
+for(unsigned int i = 0; i < enumerated.GetCount(); ++i)
+    m->DebugLog(wxString("subpaths of /bar : ") << enumerated[i]);
 
 
+enumerated.Clear();
+enumerated = c->EnumerateKeys("/bar"); // will be empty - bar does not contain keys
+for(unsigned int i = 0; i < enumerated.GetCount(); ++i)
+    m->DebugLog(wxString("keys in /bar : ") << enumerated[i]);
 
+enumerated.Clear();
+enumerated = c->EnumerateKeys("/foo");
+for(unsigned int i = 0; i < enumerated.GetCount(); ++i)
+    m->DebugLog(wxString("keys in /foo : ") << enumerated[i]);
 

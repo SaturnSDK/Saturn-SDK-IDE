@@ -66,10 +66,11 @@ void CfgMgrBldr::SwitchTo(const wxString& absFileName)
     TiXmlElement* docroot = doc->FirstChildElement(CfgMgrConsts::rootTag);
     if(!docroot)
     {
-        wxString err(_("Fatal error parsing configuration. The file "));
-        err << doc->Value() << _(" is not a valid Code::Blocks config file.");
-        cbThrow(err);
+        wxString s;
+        s.sprintf(_("Fatal error parsing configuration. The file  %s is not a valid Code::Blocks config file."), doc->Value());
+        cbThrow(s);
     }
+
     const char *vers = docroot->Attribute(_T("version"));
     if(!vers || atoi(vers) != 1)
         Manager::Get()->GetMessageManager()->DebugLog(_("MessageManager encountered an unknown config file version. Continuing happily."));
@@ -217,8 +218,8 @@ wxString XmlConfigManager::LocateDataFile(const wxString& filename)
     searchPaths.Add(GetDataFolder());
     searchPaths.Add(GetExecutableFolder());
     searchPaths.Add(GetHomeFolder());
-    searchPaths.AddEnvList("PATH");
-    searchPaths.Add("C:/");
+    searchPaths.AddEnvList(_T("PATH"));
+    searchPaths.Add(_T("C:/"));
     return searchPaths.FindValidPath(filename);
 }
 
@@ -252,8 +253,8 @@ wxString XmlConfigManager::LocateDataFile(const wxString& filename)  const
     wxPathList searchPaths;
     searchPaths.Add(GetDataFolder());
     searchPaths.Add(GetHomeFolder());
-    searchPaths.AddEnvList("PATH");
-    searchPaths.Add("/usr/share/");
+    searchPaths.AddEnvList(_T("PATH"));
+    searchPaths.Add(_T("/usr/share/"));
     return searchPaths.FindValidPath(filename);
 }
 
@@ -310,6 +311,12 @@ TiXmlElement* XmlConfigManager::AssertPath(wxString& path)
     if(!path.Contains(_T("/")))
     {
         path.UpperCase();
+        if(path[0] < _T('A') || path[0] > _T('Z'))
+        {
+            wxString s;
+            s.sprintf(_("Warning: The Configuration key %s does not meet the standard for variable naming. Variables names are required to start with a letter."), path.mb_str());
+            Manager::Get()->GetMessageManager()->DebugLog(s);
+        }
         return pathNode;
     }
 
@@ -347,7 +354,13 @@ TiXmlElement* XmlConfigManager::AssertPath(wxString& path)
     while(path.Contains(_T("/")));
 
     path.UpperCase();
+    if(!path.IsEmpty() && (path[0] < _T('A') || path[0] > _T('Z')))
 
+    {
+        wxString s;
+        s.sprintf(_("Warning: The Configuration key %s does not meet the standard for variable naming. Variables names are required to start with a letter."), path.mb_str());
+        Manager::Get()->GetMessageManager()->DebugLog(s);
+    }
     return e;
 }
 
@@ -425,8 +438,8 @@ bool XmlConfigManager::Read(const wxString& name, wxString* str)
     wxString key(name);
     TiXmlElement* e = AssertPath(key);
 
-    TiXmlHandle leafHandle(e);
-    TiXmlText *t = (TiXmlText *) leafHandle.FirstChild(key).FirstChild(_T("str")).FirstChild().Node();
+    TiXmlHandle parentHandle(e);
+    TiXmlText *t = (TiXmlText *) parentHandle.FirstChild(key).FirstChild(_T("str")).FirstChild().Node();
 
     if(t)
     {
@@ -461,8 +474,8 @@ bool XmlConfigManager::Read(const wxString& name,  int* value)
     wxString key(name);
     TiXmlElement* e = AssertPath(key);
 
-    TiXmlHandle leafHandle(e);
-    TiXmlElement *leaf = leafHandle.FirstChild(key).Element();
+    TiXmlHandle parentHandle(e);
+    TiXmlElement *leaf = parentHandle.FirstChild(key).Element();
 
     if(leaf)
         return leaf->QueryIntAttribute(_T("int"), value) == TIXML_SUCCESS;
@@ -493,14 +506,13 @@ bool XmlConfigManager::Read(const wxString& name,  double* value)
     wxString key(name);
     TiXmlElement* e = AssertPath(key);
 
-    TiXmlHandle leafHandle(e);
-    TiXmlElement *leaf = leafHandle.FirstChild(key).Element();
+    TiXmlHandle parentHandle(e);
+    TiXmlElement *leaf = parentHandle.FirstChild(key).Element();
 
     if(leaf)
         return leaf->QueryDoubleAttribute(_T("double"), value) == TIXML_SUCCESS;
     return false;
 }
-
 
 
 void XmlConfigManager::Set(const wxString& name)
@@ -524,8 +536,8 @@ bool XmlConfigManager::Exists(const wxString& name)
     wxString key(name);
     TiXmlElement* e = AssertPath(key);
 
-    TiXmlHandle leafHandle(e);
-    TiXmlElement *leaf = leafHandle.FirstChild(key).Element();
+    TiXmlHandle parentHandle(e);
+    TiXmlElement *leaf = parentHandle.FirstChild(key).Element();
 
     return leaf;
 }
@@ -552,6 +564,30 @@ void XmlConfigManager::Write(const wxString& name,  const wxArrayString& arraySt
     }
 }
 
+void XmlConfigManager::Read(const wxString& name, wxArrayString *arrayString)
+{
+    wxString key(name);
+    TiXmlElement* e = AssertPath(key);
+
+    TiXmlHandle parentHandle(e);
+    TiXmlNode *asNode = parentHandle.FirstChild(key).FirstChild(_T("astr")).Node();
+
+    TiXmlNode *curr = 0;
+    if(asNode)
+    {
+        while(curr = asNode->IterateChildren(_T("s"), curr)->ToElement())
+            arrayString->Add(curr->FirstChild()->ToText()->Value());
+    }
+}
+
+wxArrayString XmlConfigManager::ReadArrayString(const wxString& name)
+{
+    wxArrayString as;
+    Read(name, &as);
+    return as;
+}
+
+
 void XmlConfigManager::WriteBinary(const wxString& name,  const wxString& source)
 {
     wxString key(name);
@@ -575,8 +611,8 @@ wxString XmlConfigManager::ReadBinary(const wxString& name)
     wxString key(name);
     TiXmlElement* e = AssertPath(key);
 
-    TiXmlHandle leafHandle(e);
-    TiXmlText *t = (TiXmlText *) leafHandle.FirstChild(key).FirstChild(_T("bin")).FirstChild().Node();
+    TiXmlHandle parentHandle(e);
+    TiXmlText *t = (TiXmlText *) parentHandle.FirstChild(key).FirstChild(_T("bin")).FirstChild().Node();
 
     if(t)
     {
@@ -586,6 +622,44 @@ wxString XmlConfigManager::ReadBinary(const wxString& name)
     return wxEmptyString;
 }
 
+
+wxArrayString XmlConfigManager::EnumerateSubPaths(const wxString& path)
+{
+    wxString key(path + _T("/")); // the trailing slash hack is required because AssertPath expects a key name
+    TiXmlNode* e = AssertPath(key);
+    wxArrayString ret;
+
+    TiXmlElement *curr = 0;
+    if(e)
+    {
+        while(curr = e->IterateChildren(curr)->ToElement())
+        {
+            wxChar c = *(curr->Value());
+            if(c < _T('A') || c > _T('Z')) // first char must be a letter, uppercase letters are key names
+                ret.Add(curr->Value());
+        }
+    }
+    return ret;
+}
+
+wxArrayString XmlConfigManager::EnumerateKeys(const wxString& path)
+{
+    wxString key(path + _T("/")); // the trailing slash hack is required because AssertPath expects a key name
+    TiXmlNode* e = AssertPath(key);
+    wxArrayString ret;
+
+    TiXmlElement *curr = 0;
+    if(e)
+    {
+        while(curr = e->IterateChildren(curr)->ToElement())
+        {
+            wxChar c = *(curr->Value());
+            if(c >= _T('A') && c <= _T('Z')) // opposite of the above
+                ret.Add(curr->Value());
+        }
+    }
+    return ret;
+}
 
 
 
