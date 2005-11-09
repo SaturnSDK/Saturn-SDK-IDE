@@ -95,9 +95,30 @@ MySerializableLongIntClass otherSerialLong(0);
 serialLong.Print();
 otherSerialLong.Print();
 c->Write("nonsense", serialLong);
-c->ReadObject("nonsense", &otherSerialLong);
+c->Read("nonsense", &otherSerialLong);
 serialLong.Print();
 otherSerialLong.Print();
+
+
+ConfigManagerContainer::StringToStringMap map;
+map["a"] = "the letter A";
+map["b"] = "the letter B";
+map["c"] = "the letter C";
+c->Write("/foo/thismapsletters", map);
+
+ConfigManagerContainer::StringToStringMap pam = c->ReadSSMap("/foo/thismapsletters");
+m->DebugLog(pam["a"]);
+m->DebugLog(pam["b"]);
+m->DebugLog(pam["c"]);
+
+
+MyThingieMap objMap1; // WX_DECLARE_STRING_HASH_MAP(MySerializableLongIntClass *, MyThingieMap);
+MyThingieMap objMap2;
+objMap1["a"] = new MySerializableLongIntClass(1234);
+c->Write("boo", (ConfigManagerContainer::SerializableObjectMap*) &objMap1);
+c->Read<MySerializableLongIntClass>("boo", (ConfigManagerContainer::SerializableObjectMap*) &objMap2);
+objMap2["a"]->Print();
+
 
 
 

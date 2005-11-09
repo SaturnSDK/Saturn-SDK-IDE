@@ -13,7 +13,8 @@
 *  Interface Serializable
 *  ConfigManager can save arbitrary objects and even sets/maps of objects, provided they implement Serializable.
 *
-*  Example usage:
+*  Usage:
+*  ------
 *   class MySerializableLongIntClass : public ISerializable
 *   {
 *   //...
@@ -25,8 +26,9 @@
 */
 class ISerializable
 {
-    public:
-    virtual ~ISerializable(){};
+public:
+    ISerializable();
+    virtual ~ISerializable();
     virtual wxString SerializeOut() const = 0;
     virtual void SerializeIn(const wxString& s) = 0;
 };
@@ -42,8 +44,7 @@ namespace ConfigManagerContainer
     WX_DECLARE_STRING_HASH_MAP( wxString, StringToStringMap);
     WX_DECLARE_HASH_MAP(long int, wxString, wxIntegerHash, wxIntegerEqual, IntToStringMap);
 
-    WX_DECLARE_STRING_HASH_MAP( ISerializable *, SerializableObjectMap);
-    WX_DECLARE_HASH_MAP(int, ISerializable *, wxIntegerHash, wxIntegerEqual, IntSerializableObjectMap);
+    WX_DECLARE_STRING_HASH_MAP(ISerializable *, SerializableObjectMap);
 
     WX_DECLARE_HASH_SET(wxString, wxStringHash, wxStringEqual, StringSet);
 };
@@ -113,11 +114,40 @@ public:
 
 
     void Write(const wxString& name, const ISerializable& object);
-    bool ReadObject(const wxString& name, ISerializable* object);
+    bool Read(const wxString& name, ISerializable* object);
+    // Since ConfigManager has no knowledge of the real class, there is no such thing as
+    // ISerializable ReadObject(const wxString& name)
 
-//    void Write(const wxString& name, const StringToIntMap& map);
-//    void Write(const wxString& name, const StringToStringMap& map);
-//    void Write(const wxString& name, const IntToStringMap& map);
+    void Write(const wxString& name, const ConfigManagerContainer::StringToStringMap& map);
+    void Read(const wxString& name, ConfigManagerContainer::StringToStringMap* map);
+    ConfigManagerContainer::StringToStringMap ReadSSMap(const wxString& name);
+
+
+    /* -----------------------------------------------------------------------------------------------------
+    *  Maps and sets of serialized objects. You are responsible for deleting the objects in the map/set.
+    *
+    *
+    *  Usage:
+    *  ------
+    *  WX_DECLARE_STRING_HASH_MAP(MySerializableClass *, MyMap);
+    *  MyMap objMap;
+    *  cfg->Read<MySerializableClass>("name", (ConfigManagerContainer::SerializableObjectMap*) &objMap);
+    *  map["somekey"]->DoSomething();
+    */
+    void XmlConfigManager::Write(const wxString& name, const ConfigManagerContainer::SerializableObjectMap* map);
+    template <class T> void Read(const wxString& name, ConfigManagerContainer::SerializableObjectMap *map)
+    {
+        wxString key(name);
+        TiXmlHandle ph(AssertPath(key));
+        TiXmlElement* e = 0;
+        if(TiXmlNode *n = ph.FirstChild(key).FirstChild(_T("objmap")).Node())
+            while(e = n->IterateChildren(e)->ToElement())
+            {
+                T *obj = new T;
+                obj->SerializeIn(wxBase64Decode(e->FirstChild()->ToText()->Value()));
+                (*map)[e->Value()] = obj;
+            }
+    };
 
 
 };
@@ -174,6 +204,10 @@ public:
         s.ToLong(&m_int);
     };
 
+    MySerializableLongIntClass() : m_int(0)
+    {}
+    ;
+
     MySerializableLongIntClass(long int x)
     {
         m_int = x;
@@ -185,6 +219,9 @@ public:
     };
     long int m_int;
 };
+
+WX_DECLARE_STRING_HASH_MAP(MySerializableLongIntClass *, MyThingieMap);
+
 //############################# END OF "REMOVE THIS" ########################################
 
 #endif

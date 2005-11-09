@@ -38,6 +38,14 @@ namespace CfgMgrConsts
 }
 
 
+ISerializable::ISerializable()
+{}
+
+ISerializable::~ISerializable()
+{}
+
+
+
 
 /* ------------------------------------------------------------------------------------------------------------------
 *  "Builder pattern" class for XmlConfigManager
@@ -672,7 +680,7 @@ void XmlConfigManager::Write(const wxString& name, const ISerializable& object)
     SetNodeText(s, TiXmlText(wxBase64Encode(object.SerializeOut()).mb_str()));
 }
 
-bool XmlConfigManager::ReadObject(const wxString& name, ISerializable* object)
+bool XmlConfigManager::Read(const wxString& name, ISerializable* object)
 {
     wxString str;
     wxString key(name);
@@ -688,6 +696,71 @@ bool XmlConfigManager::ReadObject(const wxString& name, ISerializable* object)
     }
     return wxEmptyString;
 }
+
+void XmlConfigManager::Write(const wxString& name, const ConfigManagerContainer::StringToStringMap& map)
+{
+    wxString key(name);
+    TiXmlElement* e = AssertPath(key);
+
+    TiXmlElement *leaf = GetUniqElement(e, key);
+
+    TiXmlElement *mNode;
+    mNode = GetUniqElement(leaf, _T("ssmap"));
+    leaf->RemoveChild(mNode);
+    mNode = GetUniqElement(leaf, _T("ssmap"));
+
+    for(ConfigManagerContainer::StringToStringMap::const_iterator it = map.begin(); it != map.end(); ++it)
+    {
+        TiXmlElement s(it->first);
+        s.InsertEndChild(TiXmlText(it->second));
+        mNode->InsertEndChild(s);
+    }
+}
+
+void XmlConfigManager::Read(const wxString& name, ConfigManagerContainer::StringToStringMap* map)
+{
+    wxString key(name);
+    TiXmlElement* e = AssertPath(key);
+
+    TiXmlHandle parentHandle(e);
+    TiXmlNode *mNode = parentHandle.FirstChild(key).FirstChild(_T("ssmap")).Node();
+
+    TiXmlNode *curr = 0;
+    if(mNode)
+    {
+        while(curr = mNode->IterateChildren(curr)->ToElement())
+            (*map)[curr->Value()] = curr->FirstChild()->ToText()->Value();
+    }
+}
+
+ConfigManagerContainer::StringToStringMap XmlConfigManager::ReadSSMap(const wxString& name)
+{
+    ConfigManagerContainer::StringToStringMap ret;
+    Read(name, &ret);
+    return ret;
+}
+
+void XmlConfigManager::Write(const wxString& name, const ConfigManagerContainer::SerializableObjectMap* map)
+{
+    wxString key(name);
+    TiXmlElement* e = AssertPath(key);
+
+    TiXmlElement *leaf = GetUniqElement(e, key);
+
+    TiXmlElement *mNode;
+    mNode = GetUniqElement(leaf, _T("objmap"));
+    leaf->RemoveChild(mNode);
+    mNode = GetUniqElement(leaf, _T("objmap"));
+
+    for(ConfigManagerContainer::SerializableObjectMap::const_iterator it = map->begin(); it != map->end(); ++it)
+    {
+        TiXmlElement s(it->first);
+        s.InsertEndChild(TiXmlText(wxBase64Encode(it->second->SerializeOut())));
+        mNode->InsertEndChild(s);
+    }
+}
+
+
 
 
 
