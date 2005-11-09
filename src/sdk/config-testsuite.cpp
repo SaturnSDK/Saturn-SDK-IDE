@@ -121,5 +121,9 @@ objMap2["a"]->Print();
 
 
 
+c->Write("/foo/one_or_zero", true);
+m->DebugLog(wxString("read /foo/one_or_zero=") << c->ReadBool("/foo/one_or_zero"));
+c->Write("/foo/one_or_zero", false);
+m->DebugLog(wxString("read /foo/one_or_zero=") << c->ReadBool("/foo/one_or_zero"));
 
 

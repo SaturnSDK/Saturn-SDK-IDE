@@ -93,6 +93,10 @@ public:
     bool Read(const wxString& name,  int* value);
     int  ReadInt(const wxString& name,  int defaultVal = 0);
 
+    void Write(const wxString& name,  bool value);
+    bool Read(const wxString& name,  bool* value);
+    bool  ReadBool(const wxString& name,  bool defaultVal = false);
+
     void Write(const wxString& name,  double value);
     bool Read(const wxString& name,  double* value);
     double ReadDouble(const wxString& name,  double defaultVal = 0.0f);

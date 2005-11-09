@@ -490,6 +490,43 @@ bool XmlConfigManager::Read(const wxString& name,  int* value)
     return false;
 }
 
+
+void XmlConfigManager::Write(const wxString& name,  bool value)
+{
+    wxString key(name);
+    TiXmlElement* e = AssertPath(key);
+    TiXmlElement *leaf = GetUniqElement(e, key);
+
+    leaf->SetAttribute(_T("bool"), value ? _T("1") : _T("0"));
+}
+
+bool  XmlConfigManager::ReadBool(const wxString& name,  bool defaultVal)
+{
+    bool ret;
+
+    if(Read(name, &ret))
+        return ret;
+    else
+        return defaultVal;
+}
+
+bool XmlConfigManager::Read(const wxString& name,  bool* value)
+{
+    wxString key(name);
+    TiXmlElement* e = AssertPath(key);
+
+    TiXmlHandle parentHandle(e);
+    TiXmlElement *leaf = parentHandle.FirstChild(key).Element();
+
+    if(leaf && leaf->Attribute("bool"))
+    {
+        *value = leaf->Attribute("bool")[0] == _T('1');
+        return true;
+    }
+    return false;
+}
+
+
 void XmlConfigManager::Write(const wxString& name,  double value)
 {
     wxString key(name);
