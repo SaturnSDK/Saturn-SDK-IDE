@@ -31,10 +31,23 @@ enum ModuleType
 
 struct DebuggerBreakpoint
 {
+    DebuggerBreakpoint()
+        : line(0),
+        enabled(true),
+        useIgnoreCount(false),
+        ignoreCount(0),
+        useCondition(false),
+        bpNum(-1)
+    {}
 	int line;
-	int ignoreCount;
 	bool enabled;
+	bool useIgnoreCount;
+	int ignoreCount;
+	bool useCondition;
+	wxString condition;
 	wxString func;
+
+	int bpNum;
 };
 
 enum FileType

@@ -122,7 +122,7 @@ int ScriptingManager::LoadScript(const wxString& filename, const wxString& modul
         fp = fopen(_C(fname), "r");
         if(!fp)
         {
-            wxMessageBox(_("Can't open script ") + filename, _("Error"), wxICON_ERROR);
+            Manager::Get()->GetMessageManager()->DebugLog(_("Can't open script %s"), filename.c_str());
             return -1;
         }
     }

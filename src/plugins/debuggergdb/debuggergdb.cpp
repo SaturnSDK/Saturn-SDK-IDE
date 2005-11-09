@@ -48,6 +48,7 @@
 
 #include "debuggergdb.h"
 #include "debuggeroptionsdlg.h"
+#include "breakpointsdlg.h"
 #include "editwatchesdlg.h"
 #include "editwatchdlg.h"
 
@@ -81,6 +82,7 @@ int idMenuSendCommandToGDB = XRCID("idDebuggerMenuSendCommandToGDB");
 int idMenuAddSymbolFile = XRCID("idDebuggerMenuAddSymbolFile");
 int idMenuCPU = XRCID("idDebuggerMenuCPU");
 int idMenuBacktrace = XRCID("idDebuggerMenuBacktrace");
+int idMenuBreakpoints = XRCID("idDebuggerMenuBreakpoints");
 int idMenuEditWatches = XRCID("idDebuggerMenuEditWatches");
 
 int idGDBProcess = wxNewId();
@@ -111,6 +113,7 @@ BEGIN_EVENT_TABLE(DebuggerGDB, cbDebuggerPlugin)
 	EVT_MENU(idMenuAddSymbolFile, DebuggerGDB::OnAddSymbolFile)
 	EVT_MENU(idMenuBacktrace, DebuggerGDB::OnBacktrace)
 	EVT_MENU(idMenuCPU, DebuggerGDB::OnDisassemble)
+	EVT_MENU(idMenuBreakpoints, DebuggerGDB::OnBreakpoints)
 	EVT_MENU(idMenuEditWatches, DebuggerGDB::OnEditWatches)
     EVT_MENU(idMenuDebuggerAddWatch, DebuggerGDB::OnAddWatch)
 
@@ -1502,6 +1505,15 @@ void DebuggerGDB::OnBacktrace(wxCommandEvent& event)
 void DebuggerGDB::OnDisassemble(wxCommandEvent& event)
 {
     CmdDisassemble();
+}
+
+void DebuggerGDB::OnBreakpoints(wxCommandEvent& event)
+{
+    BreakpointsDlg dlg;
+	if (dlg.ShowModal() == wxID_OK)
+	{
+		SetBreakpoints();
+	}
 }
 
 void DebuggerGDB::OnEditWatches(wxCommandEvent& event)

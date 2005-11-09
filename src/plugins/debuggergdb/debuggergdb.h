@@ -87,6 +87,7 @@ class DebuggerGDB : public cbDebuggerPlugin
 		void OnAddSymbolFile(wxCommandEvent& event);
 		void OnBacktrace(wxCommandEvent& event);
 		void OnDisassemble(wxCommandEvent& event);
+		void OnBreakpoints(wxCommandEvent& event);
 		void OnEditWatches(wxCommandEvent& event);
 		void OnContinue(wxCommandEvent& event);
 		void OnNext(wxCommandEvent& event);
