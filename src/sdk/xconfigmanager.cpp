@@ -15,7 +15,8 @@
 #include "xconfigmanager.h"
 
 #include <wx/file.h>
-
+#include <wx/url.h>
+#include <wx/stream.h>
 #include "tinyxml/tinystr.h"
 #include "tinyxml/tinyxml.h"
 
@@ -52,9 +53,13 @@ ISerializable::~ISerializable()
 *  Do not use this class  -  Manager::Get()->GetConfigManager() is a lot friendlier
 */
 
-CfgMgrBldr::CfgMgrBldr() : doc(0), volatile_doc(0)
+CfgMgrBldr::CfgMgrBldr() : doc(0), volatile_doc(0), r(false)
 {
-    SwitchTo(XmlConfigManager::GetConfigFolder() + Manager::Get()->GetPersonalityManager()->GetPersonality() + _T(".conf"));
+    wxString personality(Manager::Get()->GetPersonalityManager()->GetPersonality());
+    if(personality.StartsWith("http://"))
+        SwitchToR(personality);
+    else
+        SwitchTo(XmlConfigManager::GetConfigFolder() + personality + _T(".conf"));
 }
 
 void CfgMgrBldr::SwitchTo(const wxString& absFileName)
@@ -86,6 +91,37 @@ void CfgMgrBldr::SwitchTo(const wxString& absFileName)
     doc->ClearError();
 }
 
+void CfgMgrBldr::SwitchToR(const wxString& absFileName)
+{
+    Close();
+
+    wxURL url(absFileName);
+    if (url.GetError() == wxURL_NOERR)
+    {
+        wxInputStream *is = url.GetInputStream();
+        if (is && is->IsOk())
+        {
+            size_t size = is->GetSize();
+            wxString str;
+            wxChar* c = str.GetWriteBuf(size);
+            is->Read(c, size);
+            str.UngetWriteBuf(size);
+
+            doc = new TiXmlDocument();
+
+            if(doc->Parse(str.c_str()))
+            {
+                doc->ClearError();
+                delete is;
+                return;
+            }
+            Manager::Get()->GetMessageManager()->DebugLog(_("### Error parsing remote config file"));
+            Manager::Get()->GetMessageManager()->DebugLog(doc->ErrorDesc());
+        }
+        delete is;
+    }
+    SwitchTo(wxEmptyString); // fall back
+}
 
 CfgMgrBldr::~CfgMgrBldr()
 {
@@ -101,12 +137,13 @@ CfgMgrBldr::~CfgMgrBldr()
 
 void CfgMgrBldr::Close()
 {
-    if(doc)
+    if(doc && r == false)
     {
         doc->SaveFile();
         delete doc;
         doc = 0;
     }
+    r = false;
 }
 
 
@@ -834,7 +871,7 @@ void XmlConfigManager::Write(const wxString& name, const ConfigManagerContainer:
     wxString tmp;
     for(ConfigManagerContainer::IntToStringMap::const_iterator it = map.begin(); it != map.end(); ++it)
     {
-        tmp.sprintf("%d", (int) it->first);
+        tmp.sprintf("x%d", (int) it->first);
         TiXmlElement s(tmp);
         s.InsertEndChild(TiXmlText(it->second));
         mNode->InsertEndChild(s);
@@ -855,7 +892,7 @@ void XmlConfigManager::Read(const wxString& name, ConfigManagerContainer::IntToS
     {
         while(curr = mNode->IterateChildren(curr)->ToElement())
         {
-            wxString(curr->Value()).ToLong(&tmp);
+            wxString(curr->Value()).Mid(1).ToLong(&tmp);
             (*map)[tmp] = curr->FirstChild()->ToText()->Value();
         }
     }

@@ -207,6 +207,7 @@ class DLLIMPORT CfgMgrBldr
     TiXmlDocument *doc;
     TiXmlDocument *volatile_doc;
     wxCriticalSection cs;
+    bool r;
 
     CfgMgrBldr();
     ~CfgMgrBldr();
@@ -215,6 +216,7 @@ class DLLIMPORT CfgMgrBldr
 public:
     static XmlConfigManager* Get(const wxString& name_space);
     void SwitchTo(const wxString& absFN);
+    void SwitchToR(const wxString& absFN);
 };
 
 
