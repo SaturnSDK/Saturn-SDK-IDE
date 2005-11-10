@@ -30,11 +30,14 @@
 #include <wx/checkbox.h>
 #include <wx/button.h>
 #include <wx/listbox.h>
+#include <wx/textctrl.h>
 #include <wx/notebook.h>
 
 #include "newfromtemplatedlg.h"
 #include "manager.h"
 #include "configmanager.h"
+
+#define COMPILER_WARN_MSG(b) ((b)?_T("WARNING: This template/option pair will NOT use the default compiler."):_(""))
 
 struct ListItemData
 {
@@ -48,6 +51,9 @@ struct ListItemData
 BEGIN_EVENT_TABLE(NewFromTemplateDlg, wxDialog)
     EVT_UPDATE_UI(-1, NewFromTemplateDlg::OnUpdateUI)
 	EVT_LIST_ITEM_SELECTED(XRCID("listTemplates"), NewFromTemplateDlg::OnListSelection)
+	EVT_BUTTON(XRCID("btnPrjPathBrowse"), NewFromTemplateDlg::OnBrowsePath)
+	EVT_COMBOBOX(XRCID("cmbOptions"), NewFromTemplateDlg::OnOptionChanged)
+	EVT_COMBOBOX(XRCID("cmbFileSets"), NewFromTemplateDlg::OnFilesetChanged)
 	EVT_COMBOBOX(XRCID("cmbCategories"), NewFromTemplateDlg::OnCategoryChanged)
 END_EVENT_TABLE()
 
@@ -70,6 +76,8 @@ NewFromTemplateDlg::NewFromTemplateDlg(const ProjectTemplateArray& templates, co
     {
         XRCCTRL(*this, "lstUser", wxListBox)->Append(user_templates[i]);
     }
+	XRCCTRL(*this, "txtPrjPath", wxTextCtrl)->SetValue(ConfigManager::Get()->Read(_T("/projects_path")));
+	XRCCTRL(*this, "lblWarnCompiler", wxStaticText)->SetLabel(wxEmptyString);
 }
 
 NewFromTemplateDlg::~NewFromTemplateDlg()
@@ -196,6 +204,12 @@ void NewFromTemplateDlg::FillTemplate(ProjectTemplateLoader* pt)
 	XRCCTRL(*this, "cmbOptions", wxComboBox)->SetSelection(0);
 	XRCCTRL(*this, "cmbFileSets", wxComboBox)->Enable(pt->m_FileSets.GetCount());
 	XRCCTRL(*this, "cmbFileSets", wxComboBox)->SetSelection(0);
+
+	if (pt->m_TemplateOptions.GetCount())
+	{
+        TemplateOption& opt = pt->m_TemplateOptions[0];
+        XRCCTRL(*this, "lblWarnCompiler", wxStaticText)->SetLabel(COMPILER_WARN_MSG(!opt.useDefaultCompiler));
+	}
 }
 
 bool NewFromTemplateDlg::DoNotCreateFiles()
@@ -221,6 +235,28 @@ wxString NewFromTemplateDlg::GetSelectedUserTemplate()
     return sel != -1 ? XRCCTRL(*this, "lstUser", wxListBox)->GetString(sel) : _T("");
 }
 
+wxString NewFromTemplateDlg::GetProjectPath()
+{
+    return XRCCTRL(*this, "txtPrjPath", wxTextCtrl)->GetValue();
+}
+
+wxString NewFromTemplateDlg::GetProjectName()
+{
+    return XRCCTRL(*this, "txtPrjName", wxTextCtrl)->GetValue();
+}
+
+void NewFromTemplateDlg::OnBrowsePath(wxCommandEvent& event)
+{
+    wxString path = ChooseDirectory(this,
+                            _("Select directory under which to create the project directory"),
+                            ConfigManager::Get()->Read(_T("/projects_path")),
+                            _T(""),
+                            false,
+                            true);
+    if (!path.IsEmpty())
+        XRCCTRL(*this, "txtPrjPath", wxTextCtrl)->SetValue(path);
+}
+
 void NewFromTemplateDlg::OnListSelection(wxListEvent& event)
 {
 	ListItemData* data = (ListItemData*)event.GetData();
@@ -237,7 +273,23 @@ void NewFromTemplateDlg::OnCategoryChanged(wxCommandEvent& event)
 	BuildList();
 }
 
+void NewFromTemplateDlg::OnOptionChanged(wxCommandEvent& event)
+{
+	if (m_Template && !m_Template->m_TemplateOptions.GetCount())
+        return;
+	TemplateOption& opt = m_Template->m_TemplateOptions[XRCCTRL(*this, "cmbOptions", wxComboBox)->GetSelection()];
+    XRCCTRL(*this, "lblWarnCompiler", wxStaticText)->SetLabel(COMPILER_WARN_MSG(!opt.useDefaultCompiler));
+}
+
+void NewFromTemplateDlg::OnFilesetChanged(wxCommandEvent& event)
+{
+}
+
 void NewFromTemplateDlg::OnUpdateUI(wxUpdateUIEvent& event)
 {
-	XRCCTRL(*this, "wxID_OK", wxButton)->Enable(SelectedTemplate() || SelectedUserTemplate());
+    XRCCTRL(*this, "txtPrjPath", wxTextCtrl)->Enable(!m_pWizard);
+    XRCCTRL(*this, "btnPrjPathBrowse", wxButton)->Enable(!m_pWizard);
+    XRCCTRL(*this, "txtPrjName", wxTextCtrl)->Enable(!m_pWizard);
+	XRCCTRL(*this, "wxID_OK", wxButton)->Enable((SelectedTemplate() && (m_pWizard || (!GetProjectName().IsEmpty() && !GetProjectPath().IsEmpty())))||
+                                                SelectedUserTemplate());
 }

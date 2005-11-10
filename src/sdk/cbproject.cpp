@@ -527,11 +527,14 @@ ProjectFile* cbProject::AddFile(int targetIndex, const wxString& filename, bool 
 //  NP though, I added a hashmap for fast searches in GetFileByFilename()
 
     f = GetFileByFilename(filename, true, true);
+    if (!f)
+        f = GetFileByFilename(filename, false, true);
     if (f)
+    {
+        if (targetIndex >= 0 && targetIndex < (int)m_Targets.GetCount())
+            f->AddBuildTarget(m_Targets[targetIndex]->GetTitle());
         return f;
-    f = GetFileByFilename(filename, false, true);
-    if (f)
-        return f;
+    }
 
     // OK, add file
     f = new ProjectFile(this);

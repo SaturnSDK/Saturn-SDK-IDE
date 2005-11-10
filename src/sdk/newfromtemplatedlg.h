@@ -25,13 +25,18 @@ class NewFromTemplateDlg : public wxDialog
 		wxString GetSelectedUserTemplate();
 		int GetOptionIndex();
 		int GetFileSetIndex();
+		wxString GetProjectPath();
+		wxString GetProjectName();
 	protected:
 		void BuildCategories();
 		void BuildList();
 		void FillTemplate(ProjectTemplateLoader* pt);
 		void ClearList();
 		void OnListSelection(wxListEvent& event);
+		void OnBrowsePath(wxCommandEvent& event);
 		void OnCategoryChanged(wxCommandEvent& event);
+		void OnOptionChanged(wxCommandEvent& event);
+		void OnFilesetChanged(wxCommandEvent& event);
 		void OnUpdateUI(wxUpdateUIEvent& event);
 	private:
 		ProjectTemplateLoader* m_Template;

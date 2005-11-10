@@ -201,38 +201,58 @@ void TemplateManager::NewProjectFromTemplate(NewFromTemplateDlg& dlg)
     TemplateOption& option = pt->m_TemplateOptions[optidx];
     FileSet& fileset = pt->m_FileSets[filesetidx];
 
-    wxString baseDir = ConfigManager::Get()->Read(_T("/data_path"));
-    wxFileDialog fdlg(0L,
-                        _("Save project"),
-                        wxEmptyString,
-                        pt->m_Name,
-                        CODEBLOCKS_FILES_FILTER,
-                        wxSAVE | wxOVERWRITE_PROMPT);
-
-    if (fdlg.ShowModal() != wxID_OK)
-        return;
+    if (!wxDirExists(dlg.GetProjectPath() + wxFILE_SEP_PATH))
+    {
+        if (wxMessageBox(wxString::Format(_("The directory %s does not exist. Are you sure you want to create it?"), dlg.GetProjectPath().c_str()), _("Confirmation"), wxICON_QUESTION | wxYES_NO) != wxYES)
+            return;
+    }
+    if (wxDirExists(dlg.GetProjectPath() + wxFILE_SEP_PATH + dlg.GetProjectName() + wxFILE_SEP_PATH))
+    {
+        if (wxMessageBox(wxString::Format(_("The directory %s already exists. Are you sure you want to create the new project there?"), wxString(dlg.GetProjectPath() + wxFILE_SEP_PATH + dlg.GetProjectName()).c_str()), _("Confirmation"), wxICON_QUESTION | wxYES_NO) != wxYES)
+            return;
+    }
 
     wxFileName fname;
-    fname.Assign(fdlg.GetPath());
+    fname.Assign(dlg.GetProjectPath() + wxFILE_SEP_PATH +
+                dlg.GetProjectName() + wxFILE_SEP_PATH +
+                dlg.GetProjectName() + _T(".") + CODEBLOCKS_EXT);
+    LOGSTREAM << _T("Creating ") << fname.GetPath() << _T('\n');
+    if (!CreateDirRecursively(fname.GetPath() + wxFILE_SEP_PATH))
+    {
+        wxMessageBox(_("Failed to create directory ") + fname.GetPath(), _("Error"), wxICON_ERROR);
+        return;
+    }
 
-    // make sure the project file uses the correct extension
-    // we don't use wxFileName::SetExt() because if the user has added a dot
-    // in the filename, the part after it would be interpeted as extension
-    // (and it might not be)
-    // so we just append the correct extension
-    if (!fname.GetExt().Matches(CODEBLOCKS_EXT))
-        fname.Assign(fdlg.GetPath() + _T('.') + CODEBLOCKS_EXT);
+    if (dlg.GetProjectPath() != ConfigManager::Get()->Read(_T("/projects_path")))
+    {
+        if (wxMessageBox(wxString::Format(_("Do you want to set %s as the default directory for new projects?"), dlg.GetProjectPath().c_str()), _("Question"), wxICON_QUESTION | wxYES_NO) == wxYES)
+            ConfigManager::Get()->Write(_T("/projects_path"), dlg.GetProjectPath());
+    }
 
     wxString path = fname.GetPath(wxPATH_GET_VOLUME);
     wxString filename = fname.GetFullPath();
-    wxString sep = wxFileName::GetPathSeparator();
+    wxString sep = wxFILE_SEP_PATH;
 
+    wxString baseDir = ConfigManager::Get()->Read(_T("/data_path"));
     baseDir << sep << _T("templates");
     wxCopyFile(baseDir + sep + option.file, filename);
 
     cbProject* prj = Manager::Get()->GetProjectManager()->LoadProject(filename);
     if (prj)
     {
+        prj->SetTitle(dlg.GetProjectName());
+        if (option.useDefaultCompiler)
+        {
+            // we must update the project (and the targets) to use the default compiler
+            int compilerIdx = CompilerFactory::GetDefaultCompilerIndex();
+            prj->SetCompilerIndex(compilerIdx);
+            for (int i = 0; i < prj->GetBuildTargetsCount(); ++i)
+            {
+                ProjectBuildTarget* bt = prj->GetBuildTarget(i);
+                bt->SetCompilerIndex(compilerIdx);
+            }
+        }
+
         if (!dlg.DoNotCreateFiles())
         {
             for (unsigned int i = 0; i < fileset.files.GetCount(); ++i)
@@ -264,7 +284,8 @@ void TemplateManager::NewProjectFromTemplate(NewFromTemplateDlg& dlg)
                 if (skipped)
                     continue;
                 wxCopyFile(baseDir + sep + fsf.source, dst);
-                prj->AddFile(0, dst);
+                for (int i = 0; i < prj->GetBuildTargetsCount(); ++i)
+                    prj->AddFile(i, dst);
             }
         }
 
