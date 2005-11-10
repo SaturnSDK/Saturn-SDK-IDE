@@ -150,7 +150,8 @@ void Compiler::LoadSettings(const wxString& baseKey)
 
     wxString sep = wxFileName::GetPathSeparator();
 
-	m_Name = ConfigManager::Get()->Read(tmp + _T("/_name"), m_Name);
+    if (m_ID > 255) // name changes are allowed only for user compilers
+        m_Name = ConfigManager::Get()->Read(tmp + _T("/_name"), m_Name);
 
     m_MasterPath = ConfigManager::Get()->Read(tmp + _T("/master_path"), m_MasterPath);
     m_ExtraPaths = GetArrayFromString(ConfigManager::Get()->Read(tmp + _T("/extra_paths"), _T("")), _T(";"));

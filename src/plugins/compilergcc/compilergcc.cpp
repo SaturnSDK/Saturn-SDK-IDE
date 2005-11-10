@@ -47,6 +47,7 @@
     #include "compilerDMC.h"
     #include "compilerOW.h"
 #endif
+#include "compilerICC.h"
 #include "compilerSDCC.h"
 
 #define COLOUR_MAROON wxColour(0xa0, 0x00, 0x00)
@@ -216,6 +217,7 @@ CompilerGCC::CompilerGCC()
 	CompilerFactory::RegisterCompiler(new CompilerDMC);
 	CompilerFactory::RegisterCompiler(new CompilerOW);
 #endif
+	CompilerFactory::RegisterCompiler(new CompilerICC);
 	CompilerFactory::RegisterCompiler(new CompilerSDCC);
 
 	// register (if any) user-copies of built-in compilers
