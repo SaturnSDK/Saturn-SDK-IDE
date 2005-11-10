@@ -34,19 +34,16 @@ public:
 };
 
 
-
 /* ------------------------------------------------------------------------------------------------------------------
 *  Containers supported by ConfigManager
 */
 namespace ConfigManagerContainer
 {
-    WX_DECLARE_STRING_HASH_MAP( long int, StringToIntMap);
     WX_DECLARE_STRING_HASH_MAP( wxString, StringToStringMap);
     WX_DECLARE_HASH_MAP(long int, wxString, wxIntegerHash, wxIntegerEqual, IntToStringMap);
+    WX_DECLARE_HASH_SET(wxString, wxStringHash, wxStringEqual, StringSet);
 
     WX_DECLARE_STRING_HASH_MAP(ISerializable *, SerializableObjectMap);
-
-    WX_DECLARE_HASH_SET(wxString, wxStringHash, wxStringEqual, StringSet);
 };
 
 
@@ -138,22 +135,32 @@ public:
     void WriteBinary(const wxString& name,  void* ptr, size_t len);
     wxString ReadBinary(const wxString& name);
 
+
     /* -----------------------------------------------------------------------------------------------------
     *  Single serializable objects
     */
     void Write(const wxString& name, const ISerializable& object);
     bool Read(const wxString& name, ISerializable* object);
 
+
     /* -----------------------------------------------------------------------------------------------------
-    *  Maps of primitive types
+    *  Maps and sets of primitive types
     */
     void Write(const wxString& name, const ConfigManagerContainer::StringToStringMap& map);
     void Read(const wxString& name, ConfigManagerContainer::StringToStringMap* map);
     ConfigManagerContainer::StringToStringMap ReadSSMap(const wxString& name);
 
+    void Write(const wxString& name, const ConfigManagerContainer::IntToStringMap& map);
+    void Read(const wxString& name, ConfigManagerContainer::IntToStringMap* map);
+    ConfigManagerContainer::IntToStringMap ReadISMap(const wxString& name);
+
+    void Write(const wxString& name, const ConfigManagerContainer::StringSet& set);
+    void Read(const wxString& name, ConfigManagerContainer::StringSet* map);
+    ConfigManagerContainer::StringSet ReadSSet(const wxString& name);
+
 
     /* -----------------------------------------------------------------------------------------------------
-    *  Maps and sets of serialized objects. You are responsible for deleting the objects in the map/set.
+    *  Maps of serialized objects. You are responsible for deleting the objects in the map/set.
     *
     *
     *  Usage:

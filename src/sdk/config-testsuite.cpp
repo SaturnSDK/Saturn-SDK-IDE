@@ -133,3 +133,37 @@ m->DebugLog(wxString("volatile word:") << cv->Read("word"));
 m->DebugLog(wxString("volatile top:") << cv->Read("/top"));
 
 
+ConfigManagerContainer::StringSet sset;
+sset.insert("zac");
+sset.insert("boing");
+sset.insert("boom");
+sset.insert("Was würde der Fürst von Thurn & Taxis zu Umlauten sagen?"); // test how good tinyXML is at quoting special chars :)
+
+c->Write("unique_strings", sset);
+sset.clear();
+
+sset = c->ReadSSet("unique_strings");
+for(ConfigManagerContainer::StringSet::iterator it = sset.begin(); it != sset.end(); ++it)
+    m->DebugLog(*it);
+
+ConfigManagerContainer::IntToStringMap imap;
+imap[17] = "poof";
+imap[3] = "bang";
+imap[2914] = "ring";
+
+
+c->Write("ints2strings", imap);
+imap.clear();
+
+imap = c->ReadISMap("ints2strings");
+for(ConfigManagerContainer::IntToStringMap::iterator it = imap.begin(); it != imap.end(); ++it)
+    {
+    long x = it->first;
+    wxString y(it->second);
+    wxString z;
+    z.sprintf("key %d maps to %s", (int) x, y.c_str());
+    m->DebugLog(z);
+    }
+
+
+

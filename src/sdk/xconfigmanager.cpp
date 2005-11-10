@@ -135,8 +135,6 @@ XmlConfigManager* CfgMgrBldr::Instantiate(const wxString& name_space)
             volatile_doc = new TiXmlDocument();
             volatile_doc->InsertEndChild(TiXmlElement(CfgMgrConsts::rootTag));
             volatile_doc->SetCondenseWhiteSpace(false);
-            if(doc)
-                volatile_doc->LoadFile(doc->Value());
         }
         docroot = volatile_doc->FirstChildElement(CfgMgrConsts::rootTag);
     }
@@ -820,6 +818,106 @@ ConfigManagerContainer::StringToStringMap XmlConfigManager::ReadSSMap(const wxSt
     Read(name, &ret);
     return ret;
 }
+
+void XmlConfigManager::Write(const wxString& name, const ConfigManagerContainer::IntToStringMap& map)
+{
+    wxString key(name);
+    TiXmlElement* e = AssertPath(key);
+
+    TiXmlElement *leaf = GetUniqElement(e, key);
+
+    TiXmlElement *mNode;
+    mNode = GetUniqElement(leaf, _T("ismap"));
+    leaf->RemoveChild(mNode);
+    mNode = GetUniqElement(leaf, _T("ismap"));
+
+    wxString tmp;
+    for(ConfigManagerContainer::IntToStringMap::const_iterator it = map.begin(); it != map.end(); ++it)
+    {
+        tmp.sprintf("%d", (int) it->first);
+        TiXmlElement s(tmp);
+        s.InsertEndChild(TiXmlText(it->second));
+        mNode->InsertEndChild(s);
+    }
+}
+
+void XmlConfigManager::Read(const wxString& name, ConfigManagerContainer::IntToStringMap* map)
+{
+    wxString key(name);
+    TiXmlElement* e = AssertPath(key);
+
+    TiXmlHandle parentHandle(e);
+    TiXmlNode *mNode = parentHandle.FirstChild(key).FirstChild(_T("ismap")).Node();
+
+    TiXmlNode *curr = 0;
+    long tmp;
+    if(mNode)
+    {
+        while(curr = mNode->IterateChildren(curr)->ToElement())
+        {
+            wxString(curr->Value()).ToLong(&tmp);
+            (*map)[tmp] = curr->FirstChild()->ToText()->Value();
+        }
+    }
+}
+
+ConfigManagerContainer::IntToStringMap XmlConfigManager::ReadISMap(const wxString& name)
+{
+    ConfigManagerContainer::IntToStringMap ret;
+    Read(name, &ret);
+    return ret;
+}
+
+
+
+
+
+
+void XmlConfigManager::Write(const wxString& name, const ConfigManagerContainer::StringSet& set)
+{
+    wxString key(name);
+    TiXmlElement* e = AssertPath(key);
+
+    TiXmlElement *leaf = GetUniqElement(e, key);
+
+    TiXmlElement *mNode;
+    mNode = GetUniqElement(leaf, _T("sset"));
+    leaf->RemoveChild(mNode);
+    mNode = GetUniqElement(leaf, _T("sset"));
+
+    for(ConfigManagerContainer::StringSet::const_iterator it = set.begin(); it != set.end(); ++it)
+    {
+        TiXmlElement s(_T("s"));
+        s.InsertEndChild(TiXmlText(*it));
+        mNode->InsertEndChild(s);
+    }
+}
+
+
+void XmlConfigManager::Read(const wxString& name, ConfigManagerContainer::StringSet* set)
+{
+    wxString key(name);
+    TiXmlElement* e = AssertPath(key);
+
+    TiXmlHandle parentHandle(e);
+    TiXmlNode *mNode = parentHandle.FirstChild(key).FirstChild(_T("sset")).Node();
+
+    TiXmlNode *curr = 0;
+    if(mNode)
+    {
+        while(curr = mNode->IterateChildren(curr)->ToElement())
+            set->insert(curr->FirstChild()->ToText()->Value())
+            ;
+    }
+}
+
+ConfigManagerContainer::StringSet XmlConfigManager::ReadSSet(const wxString& name)
+{
+    ConfigManagerContainer::StringSet ret;
+    Read(name, &ret);
+    return ret;
+}
+
 
 void XmlConfigManager::Write(const wxString& name, const ConfigManagerContainer::SerializableObjectMap* map)
 {
