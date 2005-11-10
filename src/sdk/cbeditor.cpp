@@ -693,14 +693,8 @@ bool cbEditor::Save()
         return SaveAs();
     }
 
-    wxFile file(m_Filename, wxFile::write);
-
-    if(!cbWrite(file,m_pControl->GetText()))
-    {
+    if(!cbSaveToFile(m_Filename, m_pControl->GetText()))
         return false; // failed; file is read-only?
-    }
-    file.Flush();
-    file.Close();
 
     wxFileName fname(m_Filename);
     m_LastModified = fname.GetModificationTime();

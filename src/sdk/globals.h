@@ -59,6 +59,9 @@ extern DLLIMPORT bool cbRead(wxFile& file, wxString& st);
 extern DLLIMPORT wxString cbReadFileContents(wxFile& file);
 /// Writes a wxString to a non-unicode file. File must be open. File is closed automatically.
 extern DLLIMPORT bool cbWrite(wxFile& file, const wxString& buff);
+/// Writes a wxString to a file. Takes care of unicode and uses a temporary file
+/// to save first and then it copies it over the original.
+extern DLLIMPORT bool cbSaveToFile(const wxString& filename, const wxString& contents);
 
 extern DLLIMPORT wxString GetStringFromArray(const wxArrayString& array, const wxString& separator = DEFAULT_ARRAY_SEP);
 extern DLLIMPORT wxArrayString GetArrayFromString(const wxString& text, const wxString& separator = DEFAULT_ARRAY_SEP, bool trimSpaces = true);

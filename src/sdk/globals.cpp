@@ -365,6 +365,23 @@ bool cbWrite(wxFile& file, const wxString& buff)
     return result;
 }
 
+/// Writes a wxString to a file. Takes care of unicode and uses a temporary file
+/// to save first and then it copies it over the original.
+bool cbSaveToFile(const wxString& filename, const wxString& contents)
+{
+    wxTempFile file(filename);
+    if (file.IsOpened())
+    {
+        if (!file.Write(contents, wxConvUTF8))
+            return false;
+        if (!file.Commit())
+            return false;
+    }
+    else
+        return false;
+    return true;
+}
+
 // Base64 encode/decode functions stolen from wxCode / wxhttpengine,
 // removed Turadg Aleahmad's POST modifications.
 // Origin:
