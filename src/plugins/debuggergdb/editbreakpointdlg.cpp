@@ -8,6 +8,10 @@
 #include <wx/checkbox.h>
 #include <wx/spinctrl.h>
 
+BEGIN_EVENT_TABLE(EditBreakpointDlg, wxDialog)
+    EVT_UPDATE_UI(-1, EditBreakpointDlg::OnUpdateUI)
+END_EVENT_TABLE()
+
 EditBreakpointDlg::EditBreakpointDlg(DebuggerBreakpoint* bp, wxWindow* parent)
     : m_Bp(bp)
 {
@@ -37,4 +41,11 @@ void EditBreakpointDlg::EndModal(int retCode)
         m_Bp->condition = XRCCTRL(*this, "txtExpr", wxTextCtrl)->GetValue();
     }
     wxDialog::EndModal(retCode);
+}
+
+void EditBreakpointDlg::OnUpdateUI(wxUpdateUIEvent& event)
+{
+    bool en = XRCCTRL(*this, "chkEnabled", wxCheckBox)->IsChecked();
+    XRCCTRL(*this, "spnIgnoreCount", wxSpinCtrl)->Enable(en && XRCCTRL(*this, "chkIgnore", wxCheckBox)->IsChecked());
+    XRCCTRL(*this, "txtExpr", wxTextCtrl)->Enable(en && XRCCTRL(*this, "chkExpr", wxCheckBox)->IsChecked());
 }

@@ -177,6 +177,94 @@ void EditorManager::Free()
 	}
 }
 
+const int idNBTabClose = wxNewId();
+const int idNBTabCloseAll = wxNewId();
+const int idNBTabCloseAllOthers = wxNewId();
+const int idNBTabSave = wxNewId();
+const int idNBTabSaveAll = wxNewId();
+
+class EditorNotebook : public wxNotebook
+{
+    public:
+        EditorNotebook(wxWindow* parent, wxWindowID id, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize, long style = 0, const wxString& name = wxNotebookNameStr)
+            : wxNotebook(parent, id, pos, size, style, name),
+            m_RightClickSelected(-1)
+        {}
+    private:
+        void OnMiddleDown(wxMouseEvent& event)
+        {
+            // according to the wx docs, HitTest only works on MSW and Univ
+            // will have to check...
+            #ifdef __WXMSW__
+            m_RightClickSelected = HitTest(event.GetPosition());
+            if (m_RightClickSelected != -1)
+                Manager::Get()->GetEditorManager()->Close(m_RightClickSelected);
+            #endif
+        }
+        void OnRightDown(wxMouseEvent& event)
+        {
+            // according to the wx docs, HitTest only works on MSW and Univ
+            // will have to check...
+            #ifdef __WXMSW__
+            m_RightClickSelected = HitTest(event.GetPosition());
+            if (m_RightClickSelected == -1)
+                return;
+            wxMenu* pop = new wxMenu;
+            pop->Append(idNBTabClose, _("Close"));
+            if (GetPageCount() > 1)
+            {
+                pop->Append(idNBTabCloseAll, _("Close all"));
+                pop->Append(idNBTabCloseAllOthers, _("Close all others"));
+            }
+            pop->AppendSeparator();
+            pop->Append(idNBTabSave, _("Save"));
+            if (GetPageCount() > 1)
+                pop->Append(idNBTabSaveAll, _("Save all"));
+            EditorBase* ed = Manager::Get()->GetEditorManager()->GetEditor(m_RightClickSelected);
+            if (ed)
+                pop->Enable(idNBTabSave, ed->GetModified());
+            PopupMenu(pop, event.GetPosition().x, event.GetPosition().y);
+            delete pop;
+            #endif
+        }
+        void OnClose(wxCommandEvent& event)
+        {
+            if (m_RightClickSelected != -1)
+                Manager::Get()->GetEditorManager()->Close(m_RightClickSelected);
+        }
+        void OnCloseAll(wxCommandEvent& event)
+        {
+            Manager::Get()->GetEditorManager()->CloseAll();
+        }
+        void OnCloseAllOthers(wxCommandEvent& event)
+        {
+            if (m_RightClickSelected != -1)
+            {
+                EditorBase* ed = Manager::Get()->GetEditorManager()->GetEditor(m_RightClickSelected);
+                if (ed)
+                    Manager::Get()->GetEditorManager()->CloseAllExcept(ed);
+            }
+        }
+        void OnSave(wxCommandEvent& event)
+        {
+            if (m_RightClickSelected != -1)
+                Manager::Get()->GetEditorManager()->Save(m_RightClickSelected);
+        }
+        void OnSaveAll(wxCommandEvent& event)
+        {
+            Manager::Get()->GetEditorManager()->SaveAll();
+        }
+        int m_RightClickSelected;
+        DECLARE_EVENT_TABLE()
+};
+BEGIN_EVENT_TABLE(EditorNotebook, wxNotebook)
+    EVT_MENU(idNBTabClose, EditorNotebook::OnClose)
+    EVT_MENU(idNBTabCloseAll, EditorNotebook::OnCloseAll)
+    EVT_MENU(idNBTabCloseAllOthers, EditorNotebook::OnCloseAllOthers)
+    EVT_MIDDLE_DOWN(EditorNotebook::OnMiddleDown)
+    EVT_RIGHT_DOWN(EditorNotebook::OnRightDown)
+END_EVENT_TABLE()
+
 // class constructor
 EditorManager::EditorManager(wxWindow* parent)
     :
@@ -197,7 +285,7 @@ EditorManager::EditorManager(wxWindow* parent)
 	m_pPanel = wxXmlResource::Get()->LoadPanel(parent,_T("ID_EditorManagerPanel"));
 	wxBitmapButton* myclosebutton = XRCCTRL(*m_pPanel,"ID_EditorManagerCloseButton",wxBitmapButton);
 	edman_closebutton = (wxButton*)myclosebutton;
-	m_pNotebook = new wxNotebook(m_pPanel, ID_NBEditorManager, wxDefaultPosition, wxDefaultSize,  wxNO_FULL_REPAINT_ON_RESIZE | wxCLIP_CHILDREN);
+	m_pNotebook = new EditorNotebook(m_pPanel, ID_NBEditorManager, wxDefaultPosition, wxDefaultSize,  wxNO_FULL_REPAINT_ON_RESIZE | wxCLIP_CHILDREN);
 	m_pPanel->GetSizer()->Add(m_pNotebook,1,wxGROW);
 
     // remove the ugly close-button, if not enabled in configuration

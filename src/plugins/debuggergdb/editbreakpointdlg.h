@@ -10,9 +10,12 @@ class EditBreakpointDlg : public wxDialog
         EditBreakpointDlg(DebuggerBreakpoint* bp, wxWindow* parent = 0);
         virtual ~EditBreakpointDlg();
     protected:
+        void OnUpdateUI(wxUpdateUIEvent& event);
         void EndModal(int retCode);
 
         DebuggerBreakpoint* m_Bp;
+    private:
+        DECLARE_EVENT_TABLE()
 };
 
 #endif // EDITBREAKPOINT_H
