@@ -158,9 +158,11 @@ void CodeCompletion::BuildModuleMenu(const ModuleType type, wxMenu* menu, const 
 
 	if (type == mtEditorManager)
 	{
-	    cbStyledTextCtrl* control = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor()->GetControl();
-	    if (control)
+	    cbEditor* ed = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
+	    if (ed)
 	    {
+	        m_LastIncludeFileFrom = ed->GetFilename();
+            cbStyledTextCtrl* control = ed->GetControl();
             int pos = control->GetCurrentPos();
             wxString line = control->GetLine(control->LineFromPosition(pos));
 
@@ -667,11 +669,23 @@ void CodeCompletion::OnOpenIncludeFile(wxCommandEvent& event)
     if (!parser)
         return;
     wxString inc = m_LastIncludeFile;
+
+    // first, look in the same dir as the source file
+    wxFileName tmp = inc;
+    tmp.Normalize(wxPATH_NORM_ALL & ~wxPATH_NORM_CASE, wxFileName(m_LastIncludeFileFrom).GetPath());
+    if (wxFileExists(tmp.GetFullPath()))
+    {
+        EditorManager* edMan = Manager::Get()->GetEditorManager();
+        edMan->Open(tmp.GetFullPath());
+        return;
+    }
+
+    // now search in all parser's include dirs
 //    Manager::Get()->GetMessageManager()->DebugLog(_("Looking for #include '%s' (%d dirs)"), inc.c_str(), parser->IncludeDirs().GetCount());
     for (unsigned int i = 0; i < parser->IncludeDirs().GetCount(); ++i)
     {
         wxString base = parser->IncludeDirs()[i];
-        wxFileName tmp = inc;
+        tmp.Assign(inc);
         tmp.Normalize(wxPATH_NORM_ALL & ~wxPATH_NORM_CASE, base);
 //        Manager::Get()->GetMessageManager()->DebugLog(_("Searching '%s'"), tmp.GetFullPath().c_str());
         if (wxFileExists(tmp.GetFullPath()))
