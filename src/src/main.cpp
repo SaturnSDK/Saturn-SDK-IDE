@@ -880,8 +880,8 @@ void MainFrame::LoadWindowState()
     }
 
     // toolbar visibility
-	if (m_pToolbar)
-        m_pToolbar->Show(CFG_READ(personalityKey + _T("/main_frame/layout/toolbar_show"), 1));
+	if (pSlideBar)
+        pSlideBar->Show(CFG_READ(personalityKey + _T("/main_frame/layout/toolbar_show"), 1));
 
 	// load manager and messages selected page
 	Manager::Get()->GetNotebook()->SetSelection(CFG_READ(personalityKey + _T("/main_frame/layout/left_block_selection"), 0L));
@@ -916,6 +916,10 @@ void MainFrame::SaveWindowState()
     wxUtil::WriteWindowLayout( fo, this );
     pLayoutManager->SaveToStream( fo );
     pSlideBar->SaveToStream( fo );
+
+    // toolbar visibility
+	if (pSlideBar)
+        CFG_WRITE(personalityKey + _T("/main_frame/layout/toolbar_show"), pSlideBar->IsShown());
 
 	// save manager and messages selected page
 	CFG_WRITE(personalityKey + _T("/main_frame/layout/left_block_selection"), Manager::Get()->GetNotebook()->GetSelection());
