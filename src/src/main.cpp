@@ -2329,7 +2329,7 @@ void MainFrame::OnFocusEditor(wxCommandEvent& event)
 
 void MainFrame::OnToggleFullScreen(wxCommandEvent& event)
 {
-    ShowFullScreen( !IsFullScreen(), wxFULLSCREEN_NOTOOLBAR | wxFULLSCREEN_NOSTATUSBAR
+    ShowFullScreen( !IsFullScreen(), wxFULLSCREEN_NOTOOLBAR// | wxFULLSCREEN_NOSTATUSBAR
                     | wxFULLSCREEN_NOBORDER | wxFULLSCREEN_NOCAPTION );
 
     // Create fullscreen-close button if we're in fullscreen
