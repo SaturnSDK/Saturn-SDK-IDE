@@ -126,9 +126,17 @@ struct cbEditorInternalData
 
         int count = 0; // Used to count the number of blank lines
         bool foundlf = false; // For the rare case of CR's without LF's
+        cbStyledTextCtrl* control = m_pOwner->GetControl();
         while (position)
         {
             wxChar c = control->GetCharAt(--position);
+            int style = control->GetStyleAt(position);
+            bool inComment = style == wxSCI_C_COMMENT ||
+                            style == wxSCI_C_COMMENTDOC ||
+                            style == wxSCI_C_COMMENTDOCKEYWORD ||
+                            style == wxSCI_C_COMMENTDOCKEYWORDERROR ||
+                            style == wxSCI_C_COMMENTLINE ||
+                            style == wxSCI_C_COMMENTLINEDOC;
             if (c == _T('\n'))
             {
             	count++;
@@ -139,7 +147,7 @@ struct cbEditorInternalData
             else
                 foundlf = false;
             if (count > 1) return 0; // Don't over-indent
-            if (c != _T(' ') && c != _T('\t') && c != _T('\n') && c != _T('\r'))
+            if (!inComment && c != _T(' ') && c != _T('\t') && c != _T('\n') && c != _T('\r'))
                 return c;
         }
         return 0;
