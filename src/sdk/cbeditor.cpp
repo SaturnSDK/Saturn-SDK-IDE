@@ -659,7 +659,7 @@ bool cbEditor::Open()
             m_pControl->StyleSetBackground(i, wxSystemSettings::GetColour(wxSYS_COLOUR_BTNFACE));
     }
 
-	if (ConfigManager::Get()->Read(_T("/editor/fold_all_on_open"), 0L))
+	if (ConfigManager::Get()->Read(_T("/editor/folding/fold_all_on_open"), 0L))
 		FoldAll();
 
     wxFileName fname(m_Filename);
