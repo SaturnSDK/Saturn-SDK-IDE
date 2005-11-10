@@ -52,7 +52,7 @@ ISerializable::~ISerializable()
 *  Do not use this class  -  Manager::Get()->GetConfigManager() is a lot friendlier
 */
 
-CfgMgrBldr::CfgMgrBldr()
+CfgMgrBldr::CfgMgrBldr() : doc(0), volatile_doc(0)
 {
     SwitchTo(XmlConfigManager::GetConfigFolder() + Manager::Get()->GetPersonalityManager()->GetPersonality() + _T(".conf"));
 }
@@ -121,16 +121,34 @@ XmlConfigManager* CfgMgrBldr::Instantiate(const wxString& name_space)
     if(name_space.IsEmpty())
         cbThrow(_("You attempted to get a ConfigManager instance without providing a namespace."));
 
+    wxCriticalSectionLocker locker(cs);
     NamespaceMap::iterator it = namespaces.find(name_space);
     if(it != namespaces.end())
         return it->second;
 
-    TiXmlElement* docroot = doc->FirstChildElement(CfgMgrConsts::rootTag);
-    if(!docroot)
+    TiXmlElement* docroot;
+
+    if(name_space.StartsWith(_T("volatile:")))
     {
-        wxString err(_("Fatal error parsing supplied configuration file.\nParser error message:\n"));
-        err << doc->ErrorDesc();
-        cbThrow(err);
+        if(!volatile_doc)
+        {
+            volatile_doc = new TiXmlDocument();
+            volatile_doc->InsertEndChild(TiXmlElement(CfgMgrConsts::rootTag));
+            volatile_doc->SetCondenseWhiteSpace(false);
+            if(doc)
+                volatile_doc->LoadFile(doc->Value());
+        }
+        docroot = volatile_doc->FirstChildElement(CfgMgrConsts::rootTag);
+    }
+    else
+    {
+        docroot = doc->FirstChildElement(CfgMgrConsts::rootTag);
+        if(!docroot)
+        {
+            wxString err(_("Fatal error parsing supplied configuration file.\nParser error message:\n"));
+            err << doc->ErrorDesc();
+            cbThrow(err);
+        }
     }
 
     TiXmlElement* root = docroot->FirstChildElement(name_space);
@@ -146,6 +164,7 @@ XmlConfigManager* CfgMgrBldr::Instantiate(const wxString& name_space)
 
     XmlConfigManager *c = new XmlConfigManager(root);
     namespaces[name_space] = c;
+
     return c;
 }
 
@@ -275,7 +294,7 @@ wxString XmlConfigManager::LocateDataFile(const wxString& filename)  const
 *  XmlConfigManager
 */
 
-XmlConfigManager::XmlConfigManager(TiXmlElement* r) : root(r)
+XmlConfigManager::XmlConfigManager(TiXmlElement* r) : root(r), pathNode(r)
 {
     doc = root->GetDocument();
 }
@@ -373,6 +392,23 @@ TiXmlElement* XmlConfigManager::AssertPath(wxString& path)
 }
 
 
+/* -----------------------------------------------------------------------------------------------------
+*  Clear all nodes from your namespace or delete the namespace alltogether (removing it from the config file).
+*  After Delete() returns, the pointer to your instance is invalid.
+*/
+
+void XmlConfigManager::Clear()
+{
+    TiXmlNode *n = 0;
+    while(n = root->IterateChildren(n))
+        root->RemoveChild(n);
+}
+
+void XmlConfigManager::Delete()
+{
+    doc->RemoveChild(root);
+    delete this;
+}
 
 /* ------------------------------------------------------------------------------------------------------------------
 *  Utility functions for writing nodes
@@ -425,6 +461,14 @@ void XmlConfigManager::Write(const wxString& name,  const wxString& value)
     TiXmlElement *s = GetUniqElement(str, _T("str"));
     SetNodeText(s, TiXmlText(value.mb_str()));
 }
+
+void XmlConfigManager::Write(const wxString& key, const char* str)
+{
+    Write(key, wxString(str));
+};
+
+//    void Write(const char* key, const wxString& value)
+//    void Write(const char* key, const char* str)
 
 wxString XmlConfigManager::Read(const wxString& name, const wxString& defaultVal)
 {

@@ -74,6 +74,9 @@ class DLLIMPORT XmlConfigManager
 
 public:
 
+    /* -----------------------------------------------------------------------------------------------------
+    *  Utility functions for accessing files/folders in a system-wide, consistent way
+    */
     static wxString LocateDataFile(const wxString& filename);
 
     static wxString GetHomeFolder();
@@ -82,12 +85,31 @@ public:
     static wxString GetDataFolder();
     static wxString GetExecutableFolder();
 
+    /* -----------------------------------------------------------------------------------------------------
+    *  Path functions for navigation within your configuration namespace
+    */
     wxString GetPath() const;
     void SetPath(const wxString& strPath);
+    wxArrayString EnumerateSubPaths(const wxString& path);
+    wxArrayString EnumerateKeys(const wxString& path);
 
+    /* -----------------------------------------------------------------------------------------------------
+    *  Clear all nodes from your namespace or delete the namespace alltogether (removing it from the config file).
+    *  WARNING: After Delete() returns, the pointer to your instance is invalid. Before you can call ANY member
+    *  function of this class, you have to call Manager::Get()->GetConfigManager() for a valid reference again.
+    *  Note that Delete() is inherently thread-unsafe. You delete an entire namespace of data as well as the object
+    *  responsible of handling that data! Make sure you know what you do.
+    */
+    void Clear();
+    void Delete();
+
+    /* -----------------------------------------------------------------------------------------------------
+    *  Standard primitives
+    */
     void Write(const wxString& name,  const wxString& value);
     wxString Read(const wxString& key, const wxString& defaultVal = wxEmptyString);
     bool Read(const wxString& key, wxString* str);
+    void Write(const wxString& key, const char* str);
 
     void Write(const wxString& name,  int value);
     bool Read(const wxString& name,  int* value);
@@ -95,7 +117,7 @@ public:
 
     void Write(const wxString& name,  bool value);
     bool Read(const wxString& name,  bool* value);
-    bool  ReadBool(const wxString& name,  bool defaultVal = false);
+    bool ReadBool(const wxString& name,  bool defaultVal = false);
 
     void Write(const wxString& name,  double value);
     bool Read(const wxString& name,  double* value);
@@ -105,6 +127,9 @@ public:
     void Set(const wxString& name);
     void UnSet(const wxString& name);
 
+    /* -----------------------------------------------------------------------------------------------------
+    *  Compound objects
+    */
     void Write(const wxString& name,  const wxArrayString& as);
     void Read(const wxString& name,  wxArrayString* as);
     wxArrayString ReadArrayString(const wxString& name);
@@ -113,15 +138,15 @@ public:
     void WriteBinary(const wxString& name,  void* ptr, size_t len);
     wxString ReadBinary(const wxString& name);
 
-    wxArrayString EnumerateSubPaths(const wxString& path);
-    wxArrayString EnumerateKeys(const wxString& path);
-
-
+    /* -----------------------------------------------------------------------------------------------------
+    *  Single serializable objects
+    */
     void Write(const wxString& name, const ISerializable& object);
     bool Read(const wxString& name, ISerializable* object);
-    // Since ConfigManager has no knowledge of the real class, there is no such thing as
-    // ISerializable ReadObject(const wxString& name)
 
+    /* -----------------------------------------------------------------------------------------------------
+    *  Maps of primitive types
+    */
     void Write(const wxString& name, const ConfigManagerContainer::StringToStringMap& map);
     void Read(const wxString& name, ConfigManagerContainer::StringToStringMap* map);
     ConfigManagerContainer::StringToStringMap ReadSSMap(const wxString& name);
@@ -153,14 +178,13 @@ public:
             }
     };
 
-
 };
 
 
 
 /* ------------------------------------------------------------------------------------------------------------------
 *  "Builder pattern" class for XmlConfigManager
-*  Do not use this class.
+*  ### Do not use this class. ###
 *  --->  use Manager::Get()->GetConfigManager("yournamespace") instead.
 *
 *  Manager::Get()->GetConfigManager("yournamespace") is *guaranteed* to always work, and unlike the builder class,
@@ -174,6 +198,8 @@ class DLLIMPORT CfgMgrBldr
 {
     NamespaceMap namespaces;
     TiXmlDocument *doc;
+    TiXmlDocument *volatile_doc;
+    wxCriticalSection cs;
 
     CfgMgrBldr();
     ~CfgMgrBldr();

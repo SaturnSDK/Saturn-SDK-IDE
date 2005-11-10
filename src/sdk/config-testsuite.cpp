@@ -126,4 +126,10 @@ m->DebugLog(wxString("read /foo/one_or_zero=") << c->ReadBool("/foo/one_or_zero"
 c->Write("/foo/one_or_zero", false);
 m->DebugLog(wxString("read /foo/one_or_zero=") << c->ReadBool("/foo/one_or_zero"));
 
+XmlConfigManager *cv = Manager::Get()->GetConfigManager("volatile:main");  // volatile offers DOM to store temporary data
+cv->Write("word", "table");                                                // the volatile DOM is not saved to disk
+m->DebugLog(wxString("main word:") << c->Read("word"));
+m->DebugLog(wxString("volatile word:") << cv->Read("word"));
+m->DebugLog(wxString("volatile top:") << cv->Read("/top"));
+
 
