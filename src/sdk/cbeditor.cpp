@@ -126,7 +126,6 @@ struct cbEditorInternalData
 
         int count = 0; // Used to count the number of blank lines
         bool foundlf = false; // For the rare case of CR's without LF's
-        cbStyledTextCtrl* control = m_pOwner->GetControl();
         while (position)
         {
             wxChar c = control->GetCharAt(--position);
