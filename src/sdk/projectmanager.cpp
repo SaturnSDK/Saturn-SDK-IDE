@@ -444,7 +444,7 @@ it differs from the block currently in CreateMenu() by the following two IDs */
         else
             menu.Append(idMenuTreeFileProperties, _("Properties"));
     }
-    else if (id == m_TreeRoot)
+    else if (id == m_TreeRoot && m_pWorkspace)
     {
         menu.Append(idMenuTreeRenameWorkspace, _("Rename workspace"));
     }
