@@ -902,12 +902,17 @@ void MainFrame::LoadWindowState()
     // close message manager (if auto-hiding)
     MSGMAN()->Close();
 }
-
+#include <wx/mstream.h>
 void MainFrame::SaveWindowState()
 {
 	wxLogNull ln; // no logging needed
 
     const wxString& personalityKey = Manager::Get()->GetPersonalityManager()->GetPersonalityKey();
+
+//  wxMemoryOutputStream os;
+//  wxUtil::WriteWindowLayout(os, this);
+//  wxString buf(os.GetOutputStreamBuffer().GetBufferStart(), os.GetSize());
+//  Manager::Get()->GetConfigManager("application")->WriteBinary("window_layout", buf);
 
     wxString path = wxGetUserHome();
     path << _T("/") << personalityKey;
