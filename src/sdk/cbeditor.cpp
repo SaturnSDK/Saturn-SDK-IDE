@@ -42,6 +42,17 @@
 #include "cbplugin.h"
 #include "cbeditorprintout.h"
 
+#define BOOKMARK_MARKER		0
+#define BOOKMARK_STYLE 		wxSCI_MARK_ARROW
+
+#define BREAKPOINT_MARKER	1
+#define BREAKPOINT_STYLE 	wxSCI_MARK_CIRCLE
+
+#define DEBUG_MARKER		5
+#define DEBUG_STYLE 		wxSCI_MARK_ARROW
+
+#define ERROR_LINE			4
+
 BEGIN_EVENT_TABLE(cbStyledTextCtrl, wxScintilla)
 	EVT_CONTEXT_MENU(cbStyledTextCtrl::OnContextMenu)
 END_EVENT_TABLE()
@@ -94,7 +105,8 @@ struct cbEditorInternalData
         m_strip_trailing_spaces(true),
         m_ensure_final_line_end(false),
         m_ensure_consistent_line_ends(true),
-        m_LastMarginMenuLine(-1)
+        m_LastMarginMenuLine(-1),
+        m_LastDebugLine(-1)
     {}
     cbEditor* m_pOwner;
 
@@ -224,6 +236,7 @@ struct cbEditorInternalData
     bool m_ensure_consistent_line_ends;
 
     int m_LastMarginMenuLine;
+    int m_LastDebugLine;
 
 };
 ////////////////////////////////////////////////////////////////////////////////
@@ -325,9 +338,6 @@ cbEditor::cbEditor(wxWindow* parent, const wxString& filename, EditorColorSet* t
 // class destructor
 cbEditor::~cbEditor()
 {
-//    if (!Manager::Get())
-//        return;
-//    Manager::Get()->GetMessageManager()->DebugLog(_("~cbEditor(): ") + m_Filename);
 	NotifyPlugins(cbEVT_EDITOR_CLOSE, 0, m_Filename);
 	UpdateProjectFile();
 	if (m_pControl)
@@ -527,11 +537,15 @@ void cbEditor::SetEditorStyle()
 	m_pControl->SetMarginWidth(1, 16);
     m_pControl->SetMarginType(1, wxSCI_MARGIN_SYMBOL);
     m_pControl->SetMarginSensitive(1, 1);
-    m_pControl->SetMarginMask(1, (1 << BOOKMARK_MARKER) | (1 << BREAKPOINT_MARKER));
+    m_pControl->SetMarginMask(1, (1 << BOOKMARK_MARKER) |
+                                 (1 << BREAKPOINT_MARKER) |
+                                 (1 << DEBUG_MARKER));
 	m_pControl->MarkerDefine(BOOKMARK_MARKER, BOOKMARK_STYLE);
 	m_pControl->MarkerSetBackground(BOOKMARK_MARKER, wxColour(0xA0, 0xA0, 0xFF));
 	m_pControl->MarkerDefine(BREAKPOINT_MARKER, BREAKPOINT_STYLE);
 	m_pControl->MarkerSetBackground(BREAKPOINT_MARKER, wxColour(0xFF, 0x00, 0x00));
+	m_pControl->MarkerDefine(DEBUG_MARKER, DEBUG_STYLE);
+	m_pControl->MarkerSetBackground(DEBUG_MARKER, wxColour(0xFF, 0xFF, 0x00));
 
     // EOL properties
     m_pData->m_strip_trailing_spaces = ConfigManager::Get()->Read(_T("/editor/eol/strip_trailing_spaces"), 1) ? true : false;
@@ -892,6 +906,74 @@ void cbEditor::ToggleFoldBlockFromLine(int line)
 	DoFoldBlockFromLine(line, 2);
 }
 
+void cbEditor::GotoLine(int line)
+{
+    int onScreen = m_pControl->LinesOnScreen() >> 1;
+    m_pControl->GotoLine(line - onScreen);
+    m_pControl->GotoLine(line + onScreen);
+    m_pControl->GotoLine(line);
+}
+
+void cbEditor::ToggleBreakpoint(int line, bool notifyDebugger)
+{
+	if (line == -1)
+		line = m_pControl->GetCurrentLine();
+    MarkerToggle(BREAKPOINT_MARKER, line);
+    if (notifyDebugger)
+    {
+        NotifyPlugins(LineHasMarker(BREAKPOINT_MARKER, line)
+                            ? cbEVT_EDITOR_BREAKPOINT_ADD
+                            : cbEVT_EDITOR_BREAKPOINT_DELETE,
+                        line, m_Filename);
+    }
+}
+
+bool cbEditor::HasBreakpoint(int line)
+{
+    return LineHasMarker(BREAKPOINT_MARKER, line);
+}
+
+void cbEditor::GotoNextBreakpoint()
+{
+    MarkerNext(BREAKPOINT_MARKER);
+}
+
+void cbEditor::GotoPreviousBreakpoint()
+{
+    MarkerPrevious(BREAKPOINT_MARKER);
+}
+
+void cbEditor::ToggleBookmark(int line)
+{
+    MarkerToggle(BOOKMARK_MARKER, line);
+}
+
+bool cbEditor::HasBookmark(int line)
+{
+    return LineHasMarker(BOOKMARK_MARKER, line);
+}
+
+void cbEditor::GotoNextBookmark()
+{
+    MarkerNext(BOOKMARK_MARKER);
+}
+
+void cbEditor::GotoPreviousBookmark()
+{
+    MarkerPrevious(BOOKMARK_MARKER);
+}
+
+void cbEditor::SetDebugLine(int line)
+{
+    MarkLine(DEBUG_MARKER, line);
+    m_pData->m_LastDebugLine = line;
+}
+
+void cbEditor::SetErrorLine(int line)
+{
+    MarkLine(ERROR_LINE, line);
+}
+
 bool cbEditor::LineHasMarker(int marker, int line)
 {
 	if (line == -1)
@@ -903,27 +985,10 @@ void cbEditor::MarkerToggle(int marker, int line)
 {
 	if (line == -1)
 		line = m_pControl->GetCurrentLine();
-    bool cleared = LineHasMarker(marker, line);
-	if (cleared)
+    if (LineHasMarker(marker, line))
 		m_pControl->MarkerDelete(line, marker);
 	else
 		m_pControl->MarkerAdd(line, marker);
-
-	if (marker == BREAKPOINT_MARKER) // more to do with breakpoints
-	{
-        if (cleared)
-        {
-            m_pControl->MarkerDelete(line, BREAKPOINT_MARKER);
-            m_pControl->MarkerDelete(line, BREAKPOINT_LINE);
-            NotifyPlugins(cbEVT_EDITOR_BREAKPOINT_DELETE, line, m_Filename);
-        }
-        else
-        {
-            m_pControl->MarkerAdd(line, BREAKPOINT_MARKER);
-            m_pControl->MarkerAdd(line, BREAKPOINT_LINE);
-            NotifyPlugins(cbEVT_EDITOR_BREAKPOINT_ADD, line, m_Filename);
-        }
-	}
 }
 
 void cbEditor::MarkerNext(int marker)
@@ -931,7 +996,7 @@ void cbEditor::MarkerNext(int marker)
 	int line = m_pControl->GetCurrentLine() + 1;
 	int newLine = m_pControl->MarkerNext(line, 1 << marker);
 	if (newLine != -1)
-		m_pControl->GotoLine(newLine);
+		GotoLine(newLine);
 }
 
 void cbEditor::MarkerPrevious(int marker)
@@ -939,26 +1004,8 @@ void cbEditor::MarkerPrevious(int marker)
 	int line = m_pControl->GetCurrentLine() - 1;
 	int newLine = m_pControl->MarkerPrevious(line, 1 << marker);
 	if (newLine != -1)
-		m_pControl->GotoLine(newLine);
+		GotoLine(newLine);
 }
-
-//void cbEditor::SetBreakpoints()
-//{
-//	ProjectFile* pf = GetProjectFile();
-//	if (!pf)
-//		return;
-//
-//	m_pControl->MarkerDeleteAll(BREAKPOINT_MARKER);
-//	m_pControl->MarkerDeleteAll(BREAKPOINT_LINE);
-//	for (unsigned int i = 0; i < pf->breakpoints.GetCount(); ++i)
-//	{
-//		DebuggerBreakpoint* bp = pf->breakpoints[i];
-//		pf->SetBreakpoint(bp->line);
-//		m_pControl->MarkerAdd(bp->line, BREAKPOINT_MARKER);
-//		m_pControl->MarkerAdd(bp->line, BREAKPOINT_LINE);
-//		//Manager::Get()->GetMessageManager()->Log(mltDevDebug, "SetBreakpoint line %d", bp->line);
-//	}
-//}
 
 void cbEditor::MarkLine(int marker, int line)
 {
@@ -1287,7 +1334,6 @@ void cbEditor::OnContextMenuEntry(wxCommandEvent& event)
     {
         LOGSTREAM << "idBreakpointAdd\n";
         m_pControl->MarkerAdd(m_pData->m_LastMarginMenuLine, BREAKPOINT_MARKER);
-        m_pControl->MarkerAdd(m_pData->m_LastMarginMenuLine, BREAKPOINT_LINE);
         NotifyPlugins(cbEVT_EDITOR_BREAKPOINT_ADD, m_pData->m_LastMarginMenuLine, m_Filename);
     }
     else if (id == idBreakpointEdit)
@@ -1299,7 +1345,6 @@ void cbEditor::OnContextMenuEntry(wxCommandEvent& event)
     {
         LOGSTREAM << "idBreakpointRemove\n";
         m_pControl->MarkerDelete(m_pData->m_LastMarginMenuLine, BREAKPOINT_MARKER);
-        m_pControl->MarkerDelete(m_pData->m_LastMarginMenuLine, BREAKPOINT_LINE);
         NotifyPlugins(cbEVT_EDITOR_BREAKPOINT_DELETE, m_pData->m_LastMarginMenuLine, m_Filename);
     }
     else

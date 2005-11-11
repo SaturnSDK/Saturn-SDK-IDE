@@ -35,12 +35,12 @@ class MainFrame : public wxFrame
     protected:
         wxADD_KEYBINDER_SUPPORT();
         void InitKeyBinder();
-        void UpdateKeyBinder(wxKeyProfileArray &r);
+        void UpdateKeyBinder(wxKeyProfileArray* r);
         void LoadKeyBindings();
         void SaveKeyBindings();
     public:
         // the array of key profiles used by this app
-        wxKeyProfileArray m_KeyProfiles;
+        wxKeyProfileArray* m_KeyProfiles;
 #endif // wxUSE_KEYBINDER
     private:
         wxLayoutManager* pLayoutManager;

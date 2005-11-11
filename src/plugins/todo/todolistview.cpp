@@ -372,8 +372,8 @@ void ToDoListView::OnListItemSelected(wxListEvent& event)
 	cbEditor* ed = Manager::Get()->GetEditorManager()->Open(file);
 	if (ed)
 	{
-		ed->GetControl()->GotoLine(line);
 		ed->Activate();
+		ed->GotoLine(line);
     }
 }
 

@@ -58,6 +58,33 @@ class DLLIMPORT EditorBase : public wxPanel
         /** Should this kind of editor be visible from the open files tree? */
         virtual bool VisibleToTree() { return true; }
 
+        /** Move the caret at the specified line. */
+        virtual void GotoLine(int line){}
+
+        /** Toggle breakpoint at specified line. If @c line is -1, use current line. */
+        virtual void ToggleBreakpoint(int line = -1, bool notifyDebugger = true){}
+        /** Does @c line has breakpoint? */
+        virtual bool HasBreakpoint(int line){ return false; }
+        /** Go to next breakpoint. */
+        virtual void GotoNextBreakpoint(){}
+        /** Go to previous breakpoint. */
+        virtual void GotoPreviousBreakpoint(){}
+
+        /** Toggle bookmark at specified line. If @c line is -1, use current line. */
+        virtual void ToggleBookmark(int line = -1){}
+        /** Does @c line has bookmark? */
+        virtual bool HasBookmark(int line){ return false; }
+        /** Go to next bookmark. */
+        virtual void GotoNextBookmark(){}
+        /** Go to previous bookmark. */
+        virtual void GotoPreviousBookmark(){}
+
+        /** Highlight the line the debugger will execute next. */
+        virtual void SetDebugLine(int line){}
+
+        /** Highlight the specified line as error. */
+        virtual void SetErrorLine(int line){}
+
     protected:
         /** Initializes filename data */
         virtual void InitFilename(const wxString& filename);

@@ -622,7 +622,7 @@ void CodeCompletion::OnGotoFunction(wxCommandEvent& event)
             if (token && token->m_DisplayName.Matches(sel))
             {
                 Manager::Get()->GetMessageManager()->DebugLog(_("Token found at line %d"), token->m_Line);
-                ed->GetControl()->GotoLine(token->m_Line - 1);
+                ed->GotoLine(token->m_Line - 1);
             }
         }
 	}
@@ -654,7 +654,7 @@ void CodeCompletion::OnGotoDeclaration(wxCommandEvent& event)
         cbEditor* ed = edMan->Open(token->m_Filename);
         if (ed)
         {
-            ed->GetControl()->GotoLine(token->m_Line - 1);
+            ed->GotoLine(token->m_Line - 1);
             return;
         }
     }

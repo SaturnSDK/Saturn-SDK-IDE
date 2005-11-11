@@ -83,6 +83,7 @@ class DebuggerGDB : public cbDebuggerPlugin
 		void OnBreakpointEdit(CodeBlocksEvent& event);
 		void OnBreakpointDelete(CodeBlocksEvent& event);
 		void OnValueTooltip(CodeBlocksEvent& event);
+		void OnEditorOpened(CodeBlocksEvent& event);
         void OnGDBOutput(wxCommandEvent& event);
         void OnGDBError(wxCommandEvent& event);
         void OnGDBTerminated(wxCommandEvent& event);

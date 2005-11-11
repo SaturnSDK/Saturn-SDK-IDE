@@ -458,15 +458,15 @@ MainFrame::MainFrame(wxLocale& lang, wxWindow* parent)
     ScanForPlugins();
     LoadWindowState();
 
-    InitPrinting();
+#if wxUSE_KEYBINDER
+    m_KeyProfiles = new wxKeyProfileArray;
+    LoadKeyBindings();
+#endif
     ShowHideStartPage();
+    InitPrinting();
 
     ConfigManager::AddConfiguration(_("Application"), _T("/main_frame"));
     ConfigManager::AddConfiguration(_("Environment"), _T("/environment"));
-
-#if wxUSE_KEYBINDER
-    LoadKeyBindings();
-#endif
 }
 
 MainFrame::~MainFrame()
@@ -478,12 +478,6 @@ MainFrame::~MainFrame()
 
     DeInitPrinting();
 	//Manager::Get()->Free();
-
-#if wxUSE_KEYBINDER
-	// detach all key profiles
-	m_KeyProfiles.Cleanup();
-	m_KeyProfiles.DetachAll();
-#endif
 }
 
 #if wxUSE_KEYBINDER
@@ -493,26 +487,26 @@ void MainFrame::InitKeyBinder()
 	wxKeyProfile *pPrimary = new wxKeyProfile(wxT("Default"), wxT("Code::Blocks default keyprofile"));
 	pPrimary->ImportMenuBarCmd(GetMenuBar());
 
-	m_KeyProfiles.Add(pPrimary);
+	m_KeyProfiles->Add(pPrimary);
 
 	// by now, attach to this window the primary keybinder
-	m_KeyProfiles.SetSelProfile(0);
+	m_KeyProfiles->SetSelProfile(0);
 	UpdateKeyBinder(m_KeyProfiles);
 }
 
-void MainFrame::UpdateKeyBinder(wxKeyProfileArray &r)
+void MainFrame::UpdateKeyBinder(wxKeyProfileArray* r)
 {
 	// detach all
-	r.DetachAll();
+	r->DetachAll();
 
 	// enable & attach to this window only one
-	r.GetSelProfile()->Enable(true);
+	r->GetSelProfile()->Enable(true);
 
 	// VERY IMPORTANT: we should not use this function when we
 	//                 have temporary children... they would
 	//                 added to the binder and when they will be
 	//                 deleted, the binder will reference invalid memory...
-	r.GetSelProfile()->AttachRecursively(this);
+	r->GetSelProfile()->AttachRecursively(this);
 	//r.UpdateAllCmd();		// not necessary
 }
 #endif // wxUSE_KEYBINDER
@@ -902,7 +896,8 @@ void MainFrame::LoadWindowState()
     // close message manager (if auto-hiding)
     MSGMAN()->Close();
 }
-#include <wx/mstream.h>
+
+//#include <wx/mstream.h>
 void MainFrame::SaveWindowState()
 {
 	wxLogNull ln; // no logging needed
@@ -950,23 +945,23 @@ void MainFrame::LoadKeyBindings()
 	wxMenuCmd::Register(GetMenuBar());
 
 	// clear our old array
-	m_KeyProfiles.Cleanup();
+	m_KeyProfiles->Cleanup();
 
 	wxConfigBase* cfg = ConfigManager::Get();
-	if (m_KeyProfiles.Load(cfg, _T("/keybindings")))
+	if (cfg->HasGroup(_T("/keybindings")) && m_KeyProfiles->Load(cfg, _T("/keybindings")))
 	{
 
 		// get the cmd count
 		int total = 0;
-		for (int i=0; i<m_KeyProfiles.GetCount(); i++)
-			total += m_KeyProfiles.Item(i)->GetCmdCount();
+		for (int i=0; i<m_KeyProfiles->GetCount(); i++)
+			total += m_KeyProfiles->Item(i)->GetCmdCount();
 
 		if (total == 0)
 		{
             m_pMsgMan->Log(wxT("No keyprofiles have been found.\nA default keyprofile will be set.\n"));
 			wxKeyProfile *p = new wxKeyProfile(wxT("Default"));
 			p->ImportMenuBarCmd(GetMenuBar());
-			m_KeyProfiles.Add(p);
+			m_KeyProfiles->Add(p);
 		}
 		else
 		{
@@ -974,8 +969,8 @@ void MainFrame::LoadKeyBindings()
 					wxT("%d key binding profiles have been loaded ")
 					wxT("(%d commands in total).\n")
 					wxT("Profile '%s' applied."),
-					m_KeyProfiles.GetCount(), total,
-					m_KeyProfiles.GetSelProfile()->GetName().c_str());
+					m_KeyProfiles->GetCount(), total,
+					m_KeyProfiles->GetSelProfile()->GetName().c_str());
             m_pMsgMan->Log(msg);
 		}
 
@@ -986,7 +981,7 @@ void MainFrame::LoadKeyBindings()
 	{
 	    // load defaults
         InitKeyBinder();
-		m_pMsgMan->Log(_T("Using default key bindings\n"));
+		m_pMsgMan->Log(_T("Using default key bindings"));
 	}
 	cfg->SetPath(_T("/"));
 }
@@ -994,7 +989,7 @@ void MainFrame::LoadKeyBindings()
 void MainFrame::SaveKeyBindings()
 {
 	wxConfigBase* cfg = ConfigManager::Get();
-	m_KeyProfiles.Save(cfg, _T("/keybindings"), true);
+	m_KeyProfiles->Save(cfg, _T("/keybindings"), true);
 	cfg->SetPath(_T("/"));
 }
 #endif // wxUSE_KEYBINDER
@@ -1593,8 +1588,11 @@ void MainFrame::OnApplicationClose(wxCloseEvent& event)
         return;
     }
 
+#if wxUSE_KEYBINDER
+	delete m_KeyProfiles;
+#endif
+
     SaveWindowState();
-    SaveKeyBindings();
     TerminateRecentFilesHistory();
 
 // NOTE (mandrav#1#): The following two lines, make the app crash on exit with wx2.6.1-ansi...
@@ -1624,21 +1622,21 @@ void MainFrame::OnEditBookmarksToggle(wxCommandEvent& event)
 {
     cbEditor* ed = EDMAN()->GetBuiltinActiveEditor();
     if (ed)
-		ed->MarkerToggle(BOOKMARK_MARKER);
+		ed->ToggleBookmark();
 }
 
 void MainFrame::OnEditBookmarksNext(wxCommandEvent& event)
 {
     cbEditor* ed = EDMAN()->GetBuiltinActiveEditor();
     if (ed)
-		ed->MarkerNext(BOOKMARK_MARKER);
+		ed->GotoNextBookmark();
 }
 
 void MainFrame::OnEditBookmarksPrevious(wxCommandEvent& event)
 {
     cbEditor* ed = EDMAN()->GetBuiltinActiveEditor();
     if (ed)
-		ed->MarkerPrevious(BOOKMARK_MARKER);
+		ed->GotoPreviousBookmark();
 }
 
 void MainFrame::OnEditUndo(wxCommandEvent& event)
@@ -1950,15 +1948,15 @@ void MainFrame::OnSearchGotoLine(wxCommandEvent& event)
 	that suitable either.
 	*/
     wxString strLine = wxGetTextFromUser( _("Line: "),
-								_("Goto line"),
-								_T( "" ),
-								this );
+                                        _("Goto line"),
+                                        _T( "" ),
+                                        this );
 	long int line = 0;
 	strLine.ToLong(&line);
 	if ( line > 1 && line <= max )
 	{
-		ed->GetControl()->GotoPos(ed->GetControl()->PositionFromLine(line - 1));
-		ed->UnfoldBlockFromLine(-1);
+		ed->UnfoldBlockFromLine(line - 1);
+		ed->GotoLine(line - 1);
 	}
 }
 
@@ -2470,7 +2468,7 @@ void MainFrame::OnSettingsKeyBindings(wxCommandEvent& event)
 		// then, when the dialog is destroyed, wxKeyBinder holds
 		// invalid pointers which will provoke a crash !!
 
-		KeyBinderDialog dlg(m_KeyProfiles, this, wxT("Edit key bindings"), mode | wxKEYBINDER_SHOW_APPLYBUTTON);
+		KeyBinderDialog dlg(*m_KeyProfiles, this, wxT("Edit key bindings"), mode | wxKEYBINDER_SHOW_APPLYBUTTON);
 
 		// does the user wants to enable key profiles ?
 		dlg.m_p->EnableKeyProfiles(bprofiles);
@@ -2479,7 +2477,7 @@ void MainFrame::OnSettingsKeyBindings(wxCommandEvent& event)
 		{
 
 			// update our array (we gave a copy of it to MyDialog)
-			m_KeyProfiles = dlg.m_p->GetProfiles();
+			*m_KeyProfiles = dlg.m_p->GetProfiles();
 		}
 	}
 
@@ -2487,8 +2485,9 @@ void MainFrame::OnSettingsKeyBindings(wxCommandEvent& event)
 	{
 		// select the right keyprofile
 		UpdateKeyBinder(m_KeyProfiles);
-		int sel = m_KeyProfiles.GetSelProfileIdx();
-		m_pMsgMan->Log(_T("Profile '%s' selected"), m_KeyProfiles.Item(sel)->GetName().c_str());
+		SaveKeyBindings();
+		int sel = m_KeyProfiles->GetSelProfileIdx();
+		m_pMsgMan->Log(_T("Profile '%s' selected"), m_KeyProfiles->Item(sel)->GetName().c_str());
 	}
 }
 #endif
@@ -2515,12 +2514,14 @@ void MainFrame::OnProjectOpened(CodeBlocksEvent& event)
 
 void MainFrame::OnEditorOpened(CodeBlocksEvent& event)
 {
+    UpdateKeyBinder(m_KeyProfiles);
     DoUpdateAppTitle();
     event.Skip();
 }
 
 void MainFrame::OnEditorClosed(CodeBlocksEvent& event)
 {
+    UpdateKeyBinder(m_KeyProfiles);
     DoUpdateAppTitle();
     event.Skip();
 }

@@ -122,6 +122,7 @@ BEGIN_EVENT_TABLE(DebuggerGDB, cbDebuggerPlugin)
 	EVT_EDITOR_BREAKPOINT_EDIT(DebuggerGDB::OnBreakpointEdit)
 	EVT_EDITOR_BREAKPOINT_DELETE(DebuggerGDB::OnBreakpointDelete)
 	EVT_EDITOR_TOOLTIP(DebuggerGDB::OnValueTooltip)
+	EVT_EDITOR_OPEN(DebuggerGDB::OnEditorOpened)
 
 	EVT_PIPEDPROCESS_STDOUT(idGDBProcess, DebuggerGDB::OnGDBOutput)
 	EVT_PIPEDPROCESS_STDERR(idGDBProcess, DebuggerGDB::OnGDBError)
@@ -1018,7 +1019,7 @@ void DebuggerGDB::CmdToggleBreakpoint()
     cbEditor* ed = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
 	if (!ed)
 		return;
-	ed->MarkerToggle(BREAKPOINT_MARKER);
+	ed->ToggleBreakpoint();
 //	SetBreakpoints();
 }
 
@@ -1251,7 +1252,7 @@ void DebuggerGDB::ClearActiveMarkFromAllEditors()
 	{
         cbEditor* ed = edMan->GetBuiltinEditor(i);
         if (ed)
-            ed->MarkLine(ACTIVE_LINE, -1);
+            ed->SetDebugLine(-1);
 	}
 }
 
@@ -1270,9 +1271,8 @@ void DebuggerGDB::SyncEditor(const wxString& filename, int line)
 			{
 				ed->SetProjectFile(f);
             	ed->Show(true);
-				ed->GetControl()->GotoLine(line - 10); // make sure we can see some context...
-				ed->GetControl()->GotoLine(line - 1);
-				ed->MarkLine(ACTIVE_LINE, line - 1);
+				ed->GotoLine(line - 1);
+				ed->SetDebugLine(line - 1);
 			}
         }
         else
@@ -1282,9 +1282,8 @@ void DebuggerGDB::SyncEditor(const wxString& filename, int line)
             if (ed)
 			{
             	ed->Show(true);
-				ed->GetControl()->GotoLine(line - 10); // make sure we can see some context...
-				ed->GetControl()->GotoLine(line - 1);
-				ed->MarkLine(ACTIVE_LINE, line - 1);
+				ed->GotoLine(line - 1);
+				ed->SetDebugLine(line - 1);
 			}
         }
 	}
@@ -1645,6 +1644,8 @@ void DebuggerGDB::OnBreakpointDelete(CodeBlocksEvent& event)
 
 	Manager::Get()->GetMessageManager()->Log(m_PageIndex, _("Breakpoint deleted: file %s, line %d"), bp->filename.c_str(), bp->line);
     delete bp;
+
+    SetBreakpoints();
 }
 
 void DebuggerGDB::OnValueTooltip(CodeBlocksEvent& event)
@@ -1700,6 +1701,23 @@ void DebuggerGDB::OnValueTooltip(CodeBlocksEvent& event)
             m_EvalWin->Destroy();
 		m_EvalWin = new wxTipWindow(Manager::Get()->GetAppWindow(), tip, 640, &m_EvalWin, &m_EvalRect);
 	}
+}
+
+void DebuggerGDB::OnEditorOpened(CodeBlocksEvent& event)
+{
+    // when an editor opens, look if we have breakpoints for it
+    // and notify it...
+    cbEditor* ed = event.GetEditor();
+    if (ed)
+    {
+        for (unsigned int i = 0; i < m_Breakpoints.GetCount(); ++i)
+        {
+            DebuggerBreakpoint* bp = m_Breakpoints[i];
+            if (bp->filename.Matches(ed->GetFilename()))
+                ed->ToggleBreakpoint(bp->line, false);
+        }
+    }
+    event.Skip(); // must do
 }
 
 void DebuggerGDB::OnIdle(wxIdleEvent& event)
