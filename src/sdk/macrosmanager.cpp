@@ -35,6 +35,8 @@
 #include "cbproject.h"
 #include "cbeditor.h"
 #include "managerproxy.h"
+#include "uservarmanager.h"
+#include "configmanager.h"
 
 MacrosManager* MacrosManager::Get()
 {

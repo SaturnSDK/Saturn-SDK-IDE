@@ -218,7 +218,7 @@ bool Parser::ReadFromCache(wxFile* f)
     // EOF
 
     // keep a backup of include dirs
-    wxArrayString dirs = m_IncludeDirs;
+    wxPathList dirs = m_IncludeDirs;
     Manager::Get()->GetMessageManager()->DebugLog(_("Clearing Cache"));
     Clear();
     // restore backup
@@ -828,6 +828,17 @@ void Parser::ResumeAllThreads()
 //		m_Threads[i]->Resume();
 }
 
+void Parser::AddIncludeDir(const wxString& file)
+{
+    if (!m_IncludeDirs.Member(file))
+        m_IncludeDirs.Add(file);
+}
+
+wxString Parser::FindFileInIncludeDirs(const wxString& file)
+{
+    return m_IncludeDirs.FindAbsoluteValidPath(file);
+}
+
 void Parser::OnStartThread(CodeBlocksEvent& event)
 {
     event.Skip();
@@ -872,41 +883,31 @@ void Parser::OnParseFile(wxCommandEvent& event)
 
 	if (idx == -1)
 		return;
-	fname.Assign(filename.Mid(idx + 1));
-	source.Assign(filename.Left(idx - 1));
+	wxString tgt = filename.AfterFirst(_T('+'));
+	if (tgt.IsEmpty())
+        return;
+	wxString src = filename.BeforeFirst(_T('+'));
+	fname.Assign(tgt);
+	source.Assign(src);
 
-	if (event.GetInt() == 0)
-		base = source.GetPath(wxPATH_GET_VOLUME | wxPATH_GET_SEPARATOR);
-	else
+    // search
+	if (m_Options.followGlobalIncludes)
 	{
-		// loop through all known include dirs
-		// and locate the file...
-		for (unsigned int i = 0; i < m_IncludeDirs.GetCount(); ++i)
-		{
-			base = m_IncludeDirs[i];
-			wxFileName tmp = fname;
-			tmp.Normalize(wxPATH_NORM_ALL & ~wxPATH_NORM_CASE, base);
-			if (wxFileExists(tmp.GetFullPath()))
-				break;
-		}
+	    wxString g = UnixFilename(m_IncludeDirs.FindAbsoluteValidPath(tgt));
+	    if (g.IsEmpty())
+	    {
+//            Manager::Get()->GetMessageManager()->DebugLog(_T("? No include looking for %s, ? %s"), tgt.c_str(), filename.c_str());
+            return;
+	    }
+	    filename = g;
 	}
-
-	fname.Normalize(wxPATH_NORM_ALL & ~wxPATH_NORM_CASE, base);
-	filename = fname.GetFullPath();
-
-	/*wxMutexLocker* lock = new wxMutexLocker(s_mutexListProtection);
-	bool abort = m_ReparsedFiles.Index(filename) != wxNOT_FOUND;
-	delete lock;
-	if (abort)
-		return; // the file is being re-parsed; don't follow includes
-	*/
 
 	if (m_ParsedFiles.Index(filename) != wxNOT_FOUND) // parsed file
         return;
 //	Manager::Get()->GetMessageManager()->DebugLog("Adding in parse queue: %s", filename.c_str());
 
 	bool res = false;
-	if (m_ReparsedFiles.Index(source.GetFullPath()) != wxNOT_FOUND) // reparsing file
+	if (m_ReparsedFiles.Index(src) != wxNOT_FOUND) // reparsing file
 		res = Reparse(filename, event.GetInt() == 0);
 	else
 		res = Parse(filename, event.GetInt() == 0);

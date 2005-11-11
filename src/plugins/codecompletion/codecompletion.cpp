@@ -262,10 +262,10 @@ int CodeCompletion::CodeComplete()
 		return -3;
 
 	FileType ft = FileTypeOf(ed->GetShortName());
-	if ( ft != ftHeader && ft != ftSource) // only parse source/header files
+	if (ft != ftHeader && ft != ftSource) // only parse source/header files
 		return -4;
 
-	Parser* parser = m_NativeParsers.FindParserFromActiveEditor();
+	Parser* parser = m_NativeParsers.FindParserFromEditor(ed);
 	if (!parser)
 	{
 		Manager::Get()->GetMessageManager()->DebugLog(_("Active editor has no associated parser ?!?"));
@@ -668,32 +668,25 @@ void CodeCompletion::OnOpenIncludeFile(wxCommandEvent& event)
 		parser = m_NativeParsers.FindParserFromActiveProject(); // get parser of active project, then
     if (!parser)
         return;
-    wxString inc = m_LastIncludeFile;
 
-    // first, look in the same dir as the source file
-    wxFileName tmp = inc;
-    tmp.Normalize(wxPATH_NORM_ALL & ~wxPATH_NORM_CASE, wxFileName(m_LastIncludeFileFrom).GetPath());
-    if (wxFileExists(tmp.GetFullPath()))
+    // search in all parser's include dirs
+    wxString tmp = parser->FindFileInIncludeDirs(m_LastIncludeFile);
+    if (!tmp.IsEmpty())
     {
         EditorManager* edMan = Manager::Get()->GetEditorManager();
-        edMan->Open(tmp.GetFullPath());
+        edMan->Open(tmp);
         return;
     }
 
-    // now search in all parser's include dirs
-//    Manager::Get()->GetMessageManager()->DebugLog(_("Looking for #include '%s' (%d dirs)"), inc.c_str(), parser->IncludeDirs().GetCount());
-    for (unsigned int i = 0; i < parser->IncludeDirs().GetCount(); ++i)
+    // look in the same dir as the source file
+    wxFileName fname = m_LastIncludeFile;
+    fname.Assign(wxFileName(m_LastIncludeFileFrom).GetPath(wxPATH_GET_SEPARATOR) + m_LastIncludeFile);
+    if (wxFileExists(fname.GetFullPath()))
     {
-        wxString base = parser->IncludeDirs()[i];
-        tmp.Assign(inc);
-        tmp.Normalize(wxPATH_NORM_ALL & ~wxPATH_NORM_CASE, base);
-//        Manager::Get()->GetMessageManager()->DebugLog(_("Searching '%s'"), tmp.GetFullPath().c_str());
-        if (wxFileExists(tmp.GetFullPath()))
-        {
-            EditorManager* edMan = Manager::Get()->GetEditorManager();
-            edMan->Open(tmp.GetFullPath());
-            return;
-        }
+        EditorManager* edMan = Manager::Get()->GetEditorManager();
+        edMan->Open(fname.GetFullPath());
+        return;
     }
-    wxMessageBox(wxString::Format(_("Not found: %s"), inc.c_str()), _("Warning"), wxICON_WARNING);
+
+    wxMessageBox(wxString::Format(_("Not found: %s"), m_LastIncludeFile.c_str()), _("Warning"), wxICON_WARNING);
 }

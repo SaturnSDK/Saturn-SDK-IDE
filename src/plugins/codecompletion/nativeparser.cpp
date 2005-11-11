@@ -157,9 +157,9 @@ void NativeParser::AddCompilerDirs(Parser* parser, cbProject* project)
 	if (!parser)
 		return;
 
-    parser->IncludeDirs().Clear();
+    parser->ClearIncludeDirs();
     wxString base = project->GetBasePath();
-    parser->IncludeDirs().Add(base); // add project's base path
+    parser->AddIncludeDir(base); // add project's base path
 
     Compiler* compiler = 0;
     // apply compiler global vars
@@ -180,9 +180,9 @@ void NativeParser::AddCompilerDirs(Parser* parser, cbProject* project)
         wxLogNull ln; // hide the error log about "too many ..", if the relative path is invalid
         if (!dir.IsAbsolute())
             dir.Normalize(wxPATH_NORM_ALL & ~wxPATH_NORM_CASE, base);
-        if (dir.IsOk() && parser->IncludeDirs().Index(dir.GetFullPath()) == wxNOT_FOUND)
+        if (dir.IsOk())
         {
-            parser->IncludeDirs().Add(dir.GetFullPath());
+            parser->AddIncludeDir(dir.GetFullPath());
 //            Manager::Get()->GetMessageManager()->DebugLog("Parser prj dir: " + dir.GetFullPath());
         }
     }
@@ -203,9 +203,9 @@ void NativeParser::AddCompilerDirs(Parser* parser, cbProject* project)
                 wxLogNull ln; // hide the error log about "too many ..", if the relative path is invalid
                 if (!dir.IsAbsolute())
                     dir.Normalize(wxPATH_NORM_ALL & ~wxPATH_NORM_CASE, base);
-                if (dir.IsOk() && parser->IncludeDirs().Index(dir.GetFullPath()) == wxNOT_FOUND)
+                if (dir.IsOk())
                 {
-                    parser->IncludeDirs().Add(dir.GetFullPath());
+                    parser->AddIncludeDir(dir.GetFullPath());
 //                    Manager::Get()->GetMessageManager()->DebugLog("Parser tgt dir: " + dir.GetFullPath());
                 }
             }
@@ -225,9 +225,9 @@ void NativeParser::AddCompilerDirs(Parser* parser, cbProject* project)
             wxLogNull ln; // hide the error log about "too many ..", if the relative path is invalid
             if (!dir.IsAbsolute())
                 dir.Normalize(wxPATH_NORM_ALL & ~wxPATH_NORM_CASE, base);
-            if (dir.IsOk() && parser->IncludeDirs().Index(dir.GetFullPath()) == wxNOT_FOUND)
+            if (dir.IsOk())
             {
-                parser->IncludeDirs().Add(dir.GetFullPath());
+                parser->AddIncludeDir(dir.GetFullPath());
 //                Manager::Get()->GetMessageManager()->DebugLog("Parser cmp dir: " + dir.GetFullPath());
             }
 		}
