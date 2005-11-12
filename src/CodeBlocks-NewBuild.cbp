@@ -30,6 +30,9 @@
 				<Option type="2"/>
 				<Option compiler="0"/>
 				<Option projectResourceIncludeDirsRelation="2"/>
+				<Compiler>
+					<Add option="-fno-inline"/>
+				</Compiler>
 			</Target>
 			<Target title="scintilla">
 				<Option output="devel\wxscintilla.dll"/>
