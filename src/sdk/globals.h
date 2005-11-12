@@ -85,5 +85,6 @@ extern DLLIMPORT wxString ChooseDirectory(wxWindow* parent,
 
 wxString wxBase64Encode(const wxString &str);
 wxString wxBase64Decode(const wxString &str);
+wxString URLEncode(const wxString &str);
 
 #endif // SDK_GLOBALS_H

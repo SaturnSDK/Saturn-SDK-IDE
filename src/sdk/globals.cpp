@@ -83,16 +83,19 @@ wxString UnixFilename(const wxString& filename)
 {
     wxString result = filename;
 #ifdef __WXMSW__
+
     while (result.Replace(_T("/"), _T("\\")))
         ;
     while (result.Replace(_T("\\\\"), _T("\\")))
         ;
 #else
+
     while (result.Replace(_T("\\"), _T("/")))
         ;
     while (result.Replace(_T("//"), _T("/")))
         ;
 #endif
+
     return result;
 }
 
@@ -106,63 +109,63 @@ FileType FileTypeOf(const wxString& filename)
 {
     wxString ext = filename.AfterLast(_T('.')).Lower();
 
-	if (ext.Matches(CPP_EXT) ||
-		ext.Matches(C_EXT) ||
-		ext.Matches(CC_EXT) ||
-		ext.Matches(CXX_EXT)
-		)
-		return ftSource;
+    if (ext.Matches(CPP_EXT) ||
+            ext.Matches(C_EXT) ||
+            ext.Matches(CC_EXT) ||
+            ext.Matches(CXX_EXT)
+       )
+        return ftSource;
 
-	else if (ext.Matches(HPP_EXT) ||
-		ext.Matches(H_EXT) ||
-		ext.Matches(HH_EXT) ||
-		ext.Matches(HXX_EXT)
-		)
-		return ftHeader;
+    else if (ext.Matches(HPP_EXT) ||
+             ext.Matches(H_EXT) ||
+             ext.Matches(HH_EXT) ||
+             ext.Matches(HXX_EXT)
+            )
+        return ftHeader;
 
-	else if (ext.Matches(CODEBLOCKS_EXT))
-		return ftCodeBlocksProject;
+    else if (ext.Matches(CODEBLOCKS_EXT))
+        return ftCodeBlocksProject;
 
-	else if (ext.Matches(WORKSPACE_EXT))
-		return ftCodeBlocksWorkspace;
+    else if (ext.Matches(WORKSPACE_EXT))
+        return ftCodeBlocksWorkspace;
 
-	else if (ext.Matches(DEVCPP_EXT))
-		return ftDevCppProject;
+    else if (ext.Matches(DEVCPP_EXT))
+        return ftDevCppProject;
 
-	else if (ext.Matches(MSVC_EXT))
-		return ftMSVCProject;
+    else if (ext.Matches(MSVC_EXT))
+        return ftMSVCProject;
 
-	else if (ext.Matches(MSVS_EXT))
-		return ftMSVSProject;
+    else if (ext.Matches(MSVS_EXT))
+        return ftMSVSProject;
 
-	else if (ext.Matches(MSVC_WORKSPACE_EXT))
-		return ftMSVCWorkspace;
+    else if (ext.Matches(MSVC_WORKSPACE_EXT))
+        return ftMSVCWorkspace;
 
-	else if (ext.Matches(MSVS_WORKSPACE_EXT))
-		return ftMSVSWorkspace;
+    else if (ext.Matches(MSVS_WORKSPACE_EXT))
+        return ftMSVSWorkspace;
 
-	else if (ext.Matches(OBJECT_EXT))
-		return ftObject;
+    else if (ext.Matches(OBJECT_EXT))
+        return ftObject;
 
-	else if (ext.Matches(XRCRESOURCE_EXT))
-		return ftXRCResource;
+    else if (ext.Matches(XRCRESOURCE_EXT))
+        return ftXRCResource;
 
-	else if (ext.Matches(RESOURCE_EXT))
-		return ftResource;
+    else if (ext.Matches(RESOURCE_EXT))
+        return ftResource;
 
-	else if (ext.Matches(RESOURCEBIN_EXT))
-		return ftResourceBin;
+    else if (ext.Matches(RESOURCEBIN_EXT))
+        return ftResourceBin;
 
-	else if (ext.Matches(STATICLIB_EXT))
-		return ftStaticLib;
+    else if (ext.Matches(STATICLIB_EXT))
+        return ftStaticLib;
 
-	else if (ext.Matches(DYNAMICLIB_EXT))
-		return ftDynamicLib;
+    else if (ext.Matches(DYNAMICLIB_EXT))
+        return ftDynamicLib;
 
-	else if (ext.Matches(EXECUTABLE_EXT))
-		return ftExecutable;
+    else if (ext.Matches(EXECUTABLE_EXT))
+        return ftExecutable;
 
-	return ftOther;
+    return ftOther;
 }
 
 bool DoRememberExpandedNodes(wxTreeCtrl* tree, const wxTreeItemId& parent, wxArrayString& nodePaths, wxString& path)
@@ -174,10 +177,13 @@ bool DoRememberExpandedNodes(wxTreeCtrl* tree, const wxTreeItemId& parent, wxArr
     wxString originalPath = path;
     bool found = false;
 #if (wxMAJOR_VERSION == 2) && (wxMINOR_VERSION < 5)
+
     long int cookie = 0;
 #else
+
     wxTreeItemIdValue cookie; //2.6.0
 #endif
+
     wxTreeItemId child = tree->GetFirstChild(parent, cookie);
     while (child.IsOk())
     {
@@ -223,10 +229,12 @@ void DoExpandRememberedNode(wxTreeCtrl* tree, const wxTreeItemId& parent, const 
         //Manager::Get()->GetMessageManager()->Log(mltDevDebug, "%s, %s", folder.c_str(), tmpPath.c_str());
 
 #if (wxMAJOR_VERSION == 2) && (wxMINOR_VERSION < 5)
-	    long int cookie = 0;
+        long int cookie = 0;
 #else
-	    wxTreeItemIdValue cookie; //2.6.0
+
+        wxTreeItemIdValue cookie; //2.6.0
 #endif
+
         wxTreeItemId child = tree->GetFirstChild(parent, cookie);
         while (child.IsOk())
         {
@@ -302,8 +310,8 @@ wxString ChooseDirectory(wxWindow* parent,
     {
         // ask the user if he wants it to be kept as relative
         if (wxMessageBox(_("Keep this as a relative path?"),
-                        _("Question"),
-                        wxICON_QUESTION | wxYES_NO) == wxYES)
+                         _("Question"),
+                         wxICON_QUESTION | wxYES_NO) == wxYES)
         {
             path.MakeRelativeTo(basePath);
         }
@@ -336,11 +344,13 @@ bool cbRead(wxFile& file, wxString& st)
     st = wxString((const char *)buff, wxConvUTF8);
     delete[] buff;
 #else
+
     char* buff = st.GetWriteBuf(len); // GetWriteBuf already handles the extra '\0'.
     file.Read((void*)buff, len);
     file.Close();
     st.UngetWriteBuf();
 #endif
+
     return true;
 }
 
@@ -382,6 +392,33 @@ bool cbSaveToFile(const wxString& filename, const wxString& contents)
     return true;
 }
 
+
+wxString URLEncode(const wxString &str) // not sure this is 100% standards compliant, but I hope so
+{
+    wxString ret;
+    wxString t;
+    for(unsigned int i = 0; i < str.length(); ++i)
+    {
+        wxChar c = str[i];
+        if( (c >= _T('A') && c <= _T('Z'))
+                || (c >= _T('a') && c <= _T('z'))
+                || (c >= _T('0') && c <= _T('9'))
+                || c == _T('.') || c == _T('-')|| c == _T('_') )
+
+            ret.Append(c);
+        else if(c == _T(' '))
+            ret.Append(_T('+'));
+        else
+        {
+            t.sprintf(_T("%%%02X"), (unsigned int) c);
+            ret.Append(t);
+        }
+    }
+    return ret;
+}
+
+
+
 // Base64 encode/decode functions stolen from wxCode / wxhttpengine,
 // removed Turadg Aleahmad's POST modifications.
 // Origin:
@@ -389,126 +426,129 @@ bool cbSaveToFile(const wxString& filename, const wxString& contents)
 //   Author: Angelo Mandato (http://www.spaceblue.com)
 
 const char base64_table[] =
-	{ 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
-	  'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
-	  'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
-	  'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
-	  '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '+', '/', '\0'
-	};
+    { 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
+      'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
+      'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
+      'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
+      '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '+', '/', '\0'
+    };
 
 const char base64_pad = '=';
 
-const short base64_reverse_table[256] = {
-	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 62, -1, -1, -1, 63,
-	52, 53, 54, 55, 56, 57, 58, 59, 60, 61, -1, -1, -1, -1, -1, -1,
-	-1,  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14,
-	15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, -1, -1, -1, -1, -1,
-	-1, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40,
-	41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, -1, -1, -1, -1, -1,
-	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1
-};
+const short base64_reverse_table[256] =
+    {
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 62, -1, -1, -1, 63,
+        52, 53, 54, 55, 56, 57, 58, 59, 60, 61, -1, -1, -1, -1, -1, -1,
+        -1,  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14,
+        15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, -1, -1, -1, -1, -1,
+        -1, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40,
+        41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, -1, -1, -1, -1, -1,
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1
+    };
 
 wxString wxBase64Encode(const wxString &str )
 {
-  wxString szToReturn;
-  int length = str.Length();
-  int current = 0;
+    wxString szToReturn;
+    int length = str.Length();
+    int current = 0;
 
-  while (length > 2) // keep going until we have less than 24 bits (each item is 8 bits)
-  {
-    szToReturn.Append( base64_table[str.GetChar(current) >> 2] );
-    szToReturn.Append( base64_table[((str.GetChar(current) & 0x03) << 4) + (str.GetChar(current+1) >> 4)] );
-    szToReturn.Append( base64_table[((str.GetChar(current+1) & 0x0f) << 2) + (str.GetChar(current+2) >> 6)] );
-    szToReturn.Append( base64_table[str.GetChar(current+2) & 0x3f] );
-
-		current += 3;
-		length -= 3; // we just handle 3 octets of data
-	}
-
-	if (length != 0)
-  {
-    szToReturn.Append( base64_table[str.GetChar(current) >> 2] );
-
-		//*p++ = base64_table[current[0] >> 2];
-		if (length > 1)
+    while (length > 2) // keep going until we have less than 24 bits (each item is 8 bits)
     {
-      szToReturn.Append( base64_table[((str.GetChar(current) & 0x03) << 4) + (str.GetChar(current+1) >> 4)] );
-      szToReturn.Append( base64_table[(str.GetChar(current+1) & 0x0f) << 2] );
-      szToReturn.Append( base64_pad );
-		}
-    else
-    {
-      szToReturn.Append( base64_table[(str.GetChar(current) & 0x03) << 4] );
-      szToReturn.Append( base64_pad );
-      szToReturn.Append( base64_pad );
-		}
-	}
+        szToReturn.Append( base64_table[str.GetChar(current) >> 2] );
+        szToReturn.Append( base64_table[((str.GetChar(current) & 0x03) << 4) + (str.GetChar(current+1) >> 4)] );
+        szToReturn.Append( base64_table[((str.GetChar(current+1) & 0x0f) << 2) + (str.GetChar(current+2) >> 6)] );
+        szToReturn.Append( base64_table[str.GetChar(current+2) & 0x3f] );
 
-  return szToReturn;
+        current += 3;
+        length -= 3; // we just handle 3 octets of data
+    }
+
+    if (length != 0)
+    {
+        szToReturn.Append( base64_table[str.GetChar(current) >> 2] );
+
+        //*p++ = base64_table[current[0] >> 2];
+        if (length > 1)
+        {
+            szToReturn.Append( base64_table[((str.GetChar(current) & 0x03) << 4) + (str.GetChar(current+1) >> 4)] );
+            szToReturn.Append( base64_table[(str.GetChar(current+1) & 0x0f) << 2] );
+            szToReturn.Append( base64_pad );
+        }
+        else
+        {
+            szToReturn.Append( base64_table[(str.GetChar(current) & 0x03) << 4] );
+            szToReturn.Append( base64_pad );
+            szToReturn.Append( base64_pad );
+        }
+    }
+
+    return szToReturn;
 }
 
 wxString wxBase64Decode(const wxString &str)
 {
-  wxString szToReturn;
+    wxString szToReturn;
 
-  int length = str.Length();
-  unsigned int current = 0;
-  int i = 0, j = 0, k;
-  wxChar ch = ' ';
+    int length = str.Length();
+    unsigned int current = 0;
+    int i = 0, j = 0, k;
+    wxChar ch = ' ';
 
-  while( current != str.Length() && length-- > 0 )
-  {
-    ch = str.GetChar(current++);
-
-    if (ch == base64_pad) break;
-
-		ch = base64_reverse_table[ (int)ch]; //CHECK
-		if (ch < 0) continue;
-
-		switch(i % 4)
+    while( current != str.Length() && length-- > 0 )
     {
-		  case 0:
+        ch = str.GetChar(current++);
 
-			  szToReturn.Append( ch << 2 );
-			  break;
-		  case 1:
-        szToReturn.SetChar(j, szToReturn.GetChar(j) | ch >> 4 );
-        j++;
-        szToReturn.Append( (ch & 0x0f) << 4 );
-			  break;
-		  case 2:
-        szToReturn.SetChar(j, szToReturn.GetChar(j) | ch >> 2 );
-        j++;
-        szToReturn.Append( (ch & 0x03) << 6 );
-			  break;
-		  case 3:
-        szToReturn.SetChar(j, szToReturn.GetChar(j) | ch );
-        j++;
-			  break;
-		}
-		i++;
-  }
+        if (ch == base64_pad)
+            break;
 
-  k = j;
-	// mop things up if we ended on a boundary
-	if (ch == base64_pad)
-  {
-		switch(i % 4)
+        ch = base64_reverse_table[ (int)ch]; //CHECK
+        if (ch < 0)
+            continue;
+
+        switch(i % 4)
+        {
+            case 0:
+
+            szToReturn.Append( ch << 2 );
+            break;
+            case 1:
+            szToReturn.SetChar(j, szToReturn.GetChar(j) | ch >> 4 );
+            j++;
+            szToReturn.Append( (ch & 0x0f) << 4 );
+            break;
+            case 2:
+            szToReturn.SetChar(j, szToReturn.GetChar(j) | ch >> 2 );
+            j++;
+            szToReturn.Append( (ch & 0x03) << 6 );
+            break;
+            case 3:
+            szToReturn.SetChar(j, szToReturn.GetChar(j) | ch );
+            j++;
+            break;
+        }
+        i++;
+    }
+
+    k = j;
+    // mop things up if we ended on a boundary
+    if (ch == base64_pad)
     {
-		  case 0:
-		  case 1:
-			  return wxEmptyString;
-		}
-	}
+        switch(i % 4)
+        {
+            case 0:
+            case 1:
+            return wxEmptyString;
+        }
+    }
 
-  return szToReturn;
+    return szToReturn;
 }
