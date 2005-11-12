@@ -123,7 +123,7 @@ EVT_BUTTON(XRCID("fs_lib"), UsrGlblMgrEditDialog::OnFS)
 EVT_BUTTON(XRCID("fs_obj"), UsrGlblMgrEditDialog::OnFS)
 EVT_BUTTON(XRCID("fs_cflags"), UsrGlblMgrEditDialog::OnFS)
 EVT_BUTTON(XRCID("fs_lflags"), UsrGlblMgrEditDialog::OnFS)
-EVT_COMBOBOX(XRCID("variable"), UsrGlblMgrEditDialog::OnCB)
+EVT_CHOICE(XRCID("variable"), UsrGlblMgrEditDialog::OnCB)
 END_EVENT_TABLE()
 
 UsrGlblMgrEditDialog::UsrGlblMgrEditDialog(wxWindow* parent, const wxString& base)
@@ -216,7 +216,7 @@ void UsrGlblMgrEditDialog::Save()
 void UsrGlblMgrEditDialog::OnCB(wxCommandEvent& event)
 {
     Save();
-    Load(XRCCTRL(*this, "variable", wxChoice)->GetStringSelection());
+    Load(event.GetString());
 }
 
 void UsrGlblMgrEditDialog::OnFS(wxCommandEvent& event)
