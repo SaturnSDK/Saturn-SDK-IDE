@@ -34,6 +34,7 @@ bool ProjectLoader::Open(const wxString& filename)
     if (!pMsg)
         return false;
 
+    wxStopWatch sw;
     pMsg->DebugLog(_("Loading project file..."));
     TiXmlDocument doc(filename.mb_str());
     if (!doc.LoadFile())
@@ -89,6 +90,7 @@ bool ProjectLoader::Open(const wxString& filename)
 //        wxString minor = version->Attribute("minor");
     }
 
+    pMsg->DebugLog(wxString("Done loading project in ") << sw.Time() << "ms");
     return true;
 }
 
