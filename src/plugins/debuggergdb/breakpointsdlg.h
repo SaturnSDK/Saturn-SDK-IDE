@@ -13,6 +13,7 @@ class BreakpointsDlg : public wxDialog
         void FillBreakpoints();
         void FillRecord(int sel);
         void EndModal(int retCode);
+        void RemoveBreakpoint(int sel);
 
         void OnRemove(wxCommandEvent& event);
         void OnRemoveAll(wxCommandEvent& event);

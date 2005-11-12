@@ -1332,18 +1332,15 @@ void cbEditor::OnContextMenuEntry(wxCommandEvent& event)
     }
     else if (id == idBreakpointAdd)
     {
-        LOGSTREAM << "idBreakpointAdd\n";
         m_pControl->MarkerAdd(m_pData->m_LastMarginMenuLine, BREAKPOINT_MARKER);
         NotifyPlugins(cbEVT_EDITOR_BREAKPOINT_ADD, m_pData->m_LastMarginMenuLine, m_Filename);
     }
     else if (id == idBreakpointEdit)
     {
-        LOGSTREAM << "idBreakpointEdit\n";
         NotifyPlugins(cbEVT_EDITOR_BREAKPOINT_EDIT, m_pData->m_LastMarginMenuLine, m_Filename);
     }
     else if (id == idBreakpointRemove)
     {
-        LOGSTREAM << "idBreakpointRemove\n";
         m_pControl->MarkerDelete(m_pData->m_LastMarginMenuLine, BREAKPOINT_MARKER);
         NotifyPlugins(cbEVT_EDITOR_BREAKPOINT_DELETE, m_pData->m_LastMarginMenuLine, m_Filename);
     }
@@ -1361,7 +1358,7 @@ void cbEditor::OnMarginClick(wxScintillaEvent& event)
 				int lineYpix = event.GetPosition();
 				int line = m_pControl->LineFromPosition(lineYpix);
 
-				MarkerToggle(BREAKPOINT_MARKER, line);
+				ToggleBreakpoint(line);
 				break;
 			}
 		case 2: // folding margin

@@ -9,19 +9,17 @@
         <object class="wxBoxSizer">
           <orient>wxHORIZONTAL</orient>
           <object class="sizeritem">
-            <object class="wxBoxSizer">
+            <object class="wxStaticBoxSizer">
               <orient>wxVERTICAL</orient>
-              <object class="sizeritem">
-                <object class="wxStaticText">
-                  <label>Breakpoints:</label>
-                </object>
-              </object>
               <object class="sizeritem">
                 <object class="wxListBox" name="lstBreakpoints">
                   <content/>
+                  <style>wxLB_HSCROLL</style>
                 </object>
                 <option>1</option>
-                <flag>wxGROW</flag>
+                <flag>wxALL|wxGROW</flag>
+                <border>4</border>
+                <minsize>280,96</minsize>
               </object>
               <object class="sizeritem">
                 <object class="wxBoxSizer">
@@ -39,9 +37,10 @@
                     <border>8</border>
                   </object>
                 </object>
-                <flag>wxTOP|wxALIGN_CENTRE_HORIZONTAL</flag>
-                <border>8</border>
+                <flag>wxTOP|wxBOTTOM|wxALIGN_CENTRE_HORIZONTAL</flag>
+                <border>4</border>
               </object>
+              <label>Breakpoints</label>
             </object>
             <option>1</option>
             <flag>wxGROW</flag>
@@ -108,7 +107,6 @@
                 <flag>wxGROW</flag>
               </object>
             </object>
-            <option>1</option>
             <flag>wxLEFT|wxGROW</flag>
             <border>8</border>
           </object>

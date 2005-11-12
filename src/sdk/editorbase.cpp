@@ -20,24 +20,24 @@ const int EditorMaxSwitchTo = 255;
 const int idSwitchFile1 = wxNewId();
 const int idSwitchFileMax = editorbase_RegisterId(idSwitchFile1 + EditorMaxSwitchTo -1);
 
-const int idCloseMe = wxNewId();
-const int idCloseAll = wxNewId();
-const int idCloseAllOthers = wxNewId();
-const int idSaveMe = wxNewId();
-const int idSaveAll = wxNewId();
+//const int idCloseMe = wxNewId();
+//const int idCloseAll = wxNewId();
+//const int idCloseAllOthers = wxNewId();
+//const int idSaveMe = wxNewId();
+//const int idSaveAll = wxNewId();
 const int idSwitchTo = wxNewId();
 const int idGoogle = wxNewId();
 const int idMsdn = wxNewId();
 
 BEGIN_EVENT_TABLE(EditorBase, wxPanel)
-EVT_MENU_RANGE(idSwitchFile1, idSwitchFileMax,EditorBase::OnContextMenuEntry)
-EVT_MENU(idCloseMe, EditorBase::OnContextMenuEntry)
-EVT_MENU(idCloseAll, EditorBase::OnContextMenuEntry)
-EVT_MENU(idCloseAllOthers, EditorBase::OnContextMenuEntry)
-EVT_MENU(idSaveMe, EditorBase::OnContextMenuEntry)
-EVT_MENU(idSaveAll, EditorBase::OnContextMenuEntry)
-EVT_MENU(idGoogle, EditorBase::OnContextMenuEntry)
-EVT_MENU(idMsdn, EditorBase::OnContextMenuEntry)
+    EVT_MENU_RANGE(idSwitchFile1, idSwitchFileMax,EditorBase::OnContextMenuEntry)
+//    EVT_MENU(idCloseMe, EditorBase::OnContextMenuEntry)
+//    EVT_MENU(idCloseAll, EditorBase::OnContextMenuEntry)
+//    EVT_MENU(idCloseAllOthers, EditorBase::OnContextMenuEntry)
+//    EVT_MENU(idSaveMe, EditorBase::OnContextMenuEntry)
+//    EVT_MENU(idSaveAll, EditorBase::OnContextMenuEntry)
+    EVT_MENU(idGoogle, EditorBase::OnContextMenuEntry)
+    EVT_MENU(idMsdn, EditorBase::OnContextMenuEntry)
 END_EVENT_TABLE()
 
 void EditorBase::InitFilename(const wxString& filename)
@@ -162,19 +162,21 @@ wxMenu* EditorBase::CreateContextSubMenu(int id) // For context menus
 
 void EditorBase::BasicAddToContextMenu(wxMenu* popup,bool noeditor)
 {
-    popup->Append(idCloseMe, _("Close"));
-    popup->Append(idCloseAll, _("Close all"));
-    popup->Append(idCloseAllOthers, _("Close all others"));
-    popup->AppendSeparator();
-    popup->Append(idSaveMe, _("Save"));
-    popup->Append(idSaveAll, _("Save all"));
-    popup->AppendSeparator();
-    // enable/disable some items, based on state
-    popup->Enable(idSaveMe, GetModified());
+    //NOTE: removed these, since they 've been added in eidtor tabs context menu
 
-    bool hasOthers = ThereAreOthers();
-    popup->Enable(idCloseAll, hasOthers);
-    popup->Enable(idCloseAllOthers, hasOthers);
+//  popup->Append(idCloseMe, _("Close"));
+//  popup->Append(idCloseAll, _("Close all"));
+//  popup->Append(idCloseAllOthers, _("Close all others"));
+//  popup->AppendSeparator();
+//  popup->Append(idSaveMe, _("Save"));
+//  popup->Append(idSaveAll, _("Save all"));
+//  popup->AppendSeparator();
+  // enable/disable some items, based on state
+//  popup->Enable(idSaveMe, GetModified());
+//
+//  bool hasOthers = ThereAreOthers();
+//  popup->Enable(idCloseAll, hasOthers);
+//  popup->Enable(idCloseAllOthers, hasOthers);
 
     if(!noeditor)
     {
@@ -246,23 +248,23 @@ void EditorBase::DisplayContextMenu(const wxPoint& position,bool noeditor)
 
 void EditorBase::OnContextMenuEntry(wxCommandEvent& event)
 {
-    // we have a single event handler for all popup menu entries
-    // This was ported from cbEditor and used for the basic operations:
-    // Switch to, close, save, etc.
+  // we have a single event handler for all popup menu entries
+  // This was ported from cbEditor and used for the basic operations:
+  // Switch to, close, save, etc.
 
-    const int id = event.GetId();
+  const int id = event.GetId();
 
-    if (id == idCloseMe)
-        Manager::Get()->GetEditorManager()->Close(this);
-    else if (id == idCloseAll)
-        Manager::Get()->GetEditorManager()->CloseAll();
-    else if (id == idCloseAllOthers)
-        Manager::Get()->GetEditorManager()->CloseAllExcept(this);
-    else if (id == idSaveMe)
-        Save();
-    else if (id == idSaveAll)
-        Manager::Get()->GetEditorManager()->SaveAll();
-    else if (id >= idSwitchFile1 && id <= idSwitchFileMax)
+//  if (id == idCloseMe)
+//    Manager::Get()->GetEditorManager()->Close(this);
+//  else if (id == idCloseAll)
+//    Manager::Get()->GetEditorManager()->CloseAll();
+//  else if (id == idCloseAllOthers)
+//    Manager::Get()->GetEditorManager()->CloseAllExcept(this);
+//  else if (id == idSaveMe)
+//    Save();
+//  else if (id == idSaveAll)
+//    Manager::Get()->GetEditorManager()->SaveAll();
+  if (id >= idSwitchFile1 && id <= idSwitchFileMax)
     {
         // "Switch to..." item
         EditorBase* ed = m_SwitchTo[id];

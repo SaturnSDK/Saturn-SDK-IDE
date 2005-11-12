@@ -154,6 +154,7 @@ DebuggerGDB::DebuggerGDB()
 	m_HaltAtLine(0),
 	m_HasDebugLog(false),
 	m_StoppedOnSignal(false),
+	m_LastBreakpointNum(1),
 	m_pDisassembly(0),
 	m_pBacktrace(0)
 {
@@ -356,6 +357,7 @@ void DebuggerGDB::ClearBreakpointsArray()
 
 int DebuggerGDB::HasBreakpoint(const wxString& file, int line)
 {
+//    Manager::Get()->GetMessageManager()->Log(m_PageIndex, _T("Looking for breakpoint at %s, line %d"), file.c_str(), line);
     for (unsigned int i = 0; i < m_Breakpoints.GetCount(); ++i)
     {
         DebuggerBreakpoint* bp = m_Breakpoints[i];
@@ -382,8 +384,6 @@ void DebuggerGDB::SetBreakpoints()
                 ConvertToGDBDirectory(out);
                 // we add one to line,  because scintilla uses 0-based line numbers, while gdb uses 1-based
                 cmd << _T("break ") << out << _T(":") << bp->line + 1;
-                if (bp->useCondition && !bp->condition.IsEmpty())
-                    cmd << _(" if ") << bp->condition;
                 SendCommand(cmd);
             }
             //GDB workaround
@@ -394,6 +394,24 @@ void DebuggerGDB::SetBreakpoints()
                 GetInfoFor(cmd);
             }
             //end GDB workaround
+
+            // conditional breakpoint
+            if (bp->useCondition && !bp->condition.IsEmpty())
+            {
+                cmd.Clear();
+                cmd << _("condition ") << m_LastBreakpointNum << _T(" ") << bp->condition;
+                SendCommand(cmd);
+            }
+
+            // ignore count
+            if (bp->useIgnoreCount && bp->ignoreCount > 0)
+            {
+                cmd.Clear();
+                cmd << _T("ignore ") << m_LastBreakpointNum << _T(" ") << bp->ignoreCount;
+                SendCommand(cmd);
+            }
+
+            ++m_LastBreakpointNum;
         }
 	}
 }
@@ -403,6 +421,7 @@ int DebuggerGDB::Debug()
 	if (m_pProcess)
 		return 1;
     m_NoDebugInfo = false;
+    m_LastBreakpointNum = 1;
 
 	ProjectManager* prjMan = Manager::Get()->GetProjectManager();
 	cbProject* project = prjMan->GetActiveProject();

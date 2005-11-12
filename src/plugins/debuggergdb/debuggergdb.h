@@ -124,6 +124,7 @@ class DebuggerGDB : public cbDebuggerPlugin
 
         // breakpoints list
         BreakpointsList m_Breakpoints;
+        int m_LastBreakpointNum;
 
 		// extra dialogs
 		DisassemblyDlg* m_pDisassembly;

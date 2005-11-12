@@ -2514,14 +2514,14 @@ void MainFrame::OnProjectOpened(CodeBlocksEvent& event)
 
 void MainFrame::OnEditorOpened(CodeBlocksEvent& event)
 {
-    UpdateKeyBinder(m_KeyProfiles);
+//    UpdateKeyBinder(m_KeyProfiles);
     DoUpdateAppTitle();
     event.Skip();
 }
 
 void MainFrame::OnEditorClosed(CodeBlocksEvent& event)
 {
-    UpdateKeyBinder(m_KeyProfiles);
+//    UpdateKeyBinder(m_KeyProfiles);
     DoUpdateAppTitle();
     event.Skip();
 }

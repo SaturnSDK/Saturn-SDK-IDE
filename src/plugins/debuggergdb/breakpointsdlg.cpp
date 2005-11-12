@@ -1,5 +1,8 @@
 #include <sdk.h>
 #include "breakpointsdlg.h"
+#include <manager.h>
+#include <editormanager.h>
+#include <cbeditor.h>
 #include <wx/intl.h>
 #include <wx/xrc/xmlres.h>
 #include <wx/textctrl.h>
@@ -41,8 +44,8 @@ void BreakpointsDlg::FillBreakpoints()
     {
         DebuggerBreakpoint* bp = m_List[i];
         wxString filename = bp->filename;
-        filename << _T(" : ") << bp->line;
-        lst->Append(filename, bp);
+        filename << _T(" : ") << bp->line + 1;
+        lst->Append(filename);
     }
 }
 
@@ -52,7 +55,7 @@ void BreakpointsDlg::FillRecord(int sel)
     if (m_LastSel != -1)
     {
         // save old record
-        DebuggerBreakpoint* bp = static_cast<DebuggerBreakpoint*>(lst->GetClientData(m_LastSel));
+        DebuggerBreakpoint* bp = m_List[m_LastSel];
         if (bp)
         {
             bp->enabled = XRCCTRL(*this, "chkEnabled", wxCheckBox)->GetValue();
@@ -66,7 +69,7 @@ void BreakpointsDlg::FillRecord(int sel)
     if (sel >= 0 && sel < (int)lst->GetCount())
     {
         m_LastSel = sel;
-        DebuggerBreakpoint* bp = static_cast<DebuggerBreakpoint*>(lst->GetClientData(sel));
+        DebuggerBreakpoint* bp = m_List[sel];
         if (bp)
         {
             XRCCTRL(*this, "chkEnabled", wxCheckBox)->SetValue(bp->enabled);
@@ -77,6 +80,14 @@ void BreakpointsDlg::FillRecord(int sel)
         }
         lst->SetSelection(sel);
     }
+    else
+    {
+        XRCCTRL(*this, "chkEnabled", wxCheckBox)->SetValue(false);
+        XRCCTRL(*this, "chkIgnore", wxCheckBox)->SetValue(false);
+        XRCCTRL(*this, "spnIgnoreCount", wxSpinCtrl)->SetValue(0);
+        XRCCTRL(*this, "chkExpr", wxCheckBox)->SetValue(false);
+        XRCCTRL(*this, "txtExpr", wxTextCtrl)->SetValue(_T(""));
+    }
 }
 
 void BreakpointsDlg::EndModal(int retCode)
@@ -85,19 +96,36 @@ void BreakpointsDlg::EndModal(int retCode)
     wxDialog::EndModal(retCode);
 }
 
+void BreakpointsDlg::RemoveBreakpoint(int sel)
+{
+    wxListBox* lst = XRCCTRL(*this, "lstBreakpoints", wxListBox);
+    if (sel >= 0 && sel < (int)lst->GetCount())
+    {
+        DebuggerBreakpoint* bp = m_List[sel];
+        cbEditor* ed = Manager::Get()->GetEditorManager()->GetBuiltinEditor(bp->filename);
+        if (ed)
+        {
+            ed->ToggleBreakpoint(bp->line);
+        }
+    }
+}
+
 void BreakpointsDlg::OnRemove(wxCommandEvent& event)
 {
+    RemoveBreakpoint(XRCCTRL(*this, "lstBreakpoints", wxListBox)->GetSelection());
+    m_LastSel = -1;
+    FillBreakpoints();
+    FillRecord(0);
 }
 
 void BreakpointsDlg::OnRemoveAll(wxCommandEvent& event)
 {
-//    int sel = XRCCTRL(*this, "lstBreakpoints", wxListBox)->GetSelection();
-//    m_Watches.RemoveAt(sel);
-//    XRCCTRL(*this, "lstBreakpoints", wxListBox)->Delete(sel);
-//    m_LastSel = -1;
-//    FillWatches();
-//    sel = sel == XRCCTRL(*this, "lstBreakpoints", wxListBox)->GetCount() - 1 ? sel - 1 : sel;
-//    FillRecord(sel);
+    wxListBox* lst = XRCCTRL(*this, "lstBreakpoints", wxListBox);
+    for (int i = 0; i < lst->GetCount(); ++i)
+        RemoveBreakpoint(i);
+    m_LastSel = -1;
+    FillBreakpoints();
+    FillRecord(0);
 }
 
 void BreakpointsDlg::OnListboxClick(wxCommandEvent& event)
@@ -109,12 +137,12 @@ void BreakpointsDlg::OnUpdateUI(wxUpdateUIEvent& event)
 {
     bool en = XRCCTRL(*this, "chkEnabled", wxCheckBox)->IsChecked();
     bool sel = XRCCTRL(*this, "lstBreakpoints", wxListBox)->GetSelection() != -1;
-//    bool cnt = XRCCTRL(*this, "lstBreakpoints", wxListBox)->GetCount() != 0;
+    bool cnt = XRCCTRL(*this, "lstBreakpoints", wxListBox)->GetCount() != 0;
     XRCCTRL(*this, "chkEnabled", wxCheckBox)->Enable(sel);
-    XRCCTRL(*this, "btnRemove", wxButton)->Enable(false);//sel);
-    XRCCTRL(*this, "btnRemoveAll", wxButton)->Enable(false);//cnt);
-    XRCCTRL(*this, "chkIgnore", wxCheckBox)->Enable(sel && en);
+    XRCCTRL(*this, "btnRemove", wxButton)->Enable(sel);
+    XRCCTRL(*this, "btnRemoveAll", wxButton)->Enable(cnt);
+    XRCCTRL(*this, "chkIgnore", wxCheckBox)->Enable(sel && en && !XRCCTRL(*this, "chkExpr", wxCheckBox)->IsChecked());
     XRCCTRL(*this, "spnIgnoreCount", wxSpinCtrl)->Enable(sel && en && XRCCTRL(*this, "chkIgnore", wxCheckBox)->IsChecked());
-    XRCCTRL(*this, "chkExpr", wxCheckBox)->Enable(sel && en);
+    XRCCTRL(*this, "chkExpr", wxCheckBox)->Enable(sel && en && !XRCCTRL(*this, "chkIgnore", wxCheckBox)->IsChecked());
     XRCCTRL(*this, "txtExpr", wxTextCtrl)->Enable(sel && en && XRCCTRL(*this, "chkExpr", wxCheckBox)->IsChecked());
 }
