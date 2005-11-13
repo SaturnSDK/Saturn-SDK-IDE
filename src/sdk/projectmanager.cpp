@@ -225,6 +225,21 @@ void ProjectManager::InitPane()
     mypanel->RefreshSplitter(ID_EditorManager,ID_ProjectManager);
 }
 
+int ProjectManager::WorkspaceIconIndex()
+{
+    return (int)fvsLast + 0;
+}
+
+int ProjectManager::ProjectIconIndex()
+{
+    return (int)fvsLast + 1;
+}
+
+int ProjectManager::FolderIconIndex()
+{
+    return (int)fvsLast + 2;
+}
+
 void ProjectManager::BuildTree(wxWindow* parent)
 {
     #ifndef __WXMSW__
@@ -233,17 +248,32 @@ void ProjectManager::BuildTree(wxWindow* parent)
         m_pTree = new wxTreeCtrl(parent, ID_ProjectManager);
     #endif
 
+    static const wxString imgs[] = {
+        _T("file.png"),
+        _T("file-missing.png"),
+        _T("file-modified.png"),
+        _T("file-readonly.png"),
+        _T("rc-file-added.png"),
+        _T("rc-file-conflict.png"),
+        _T("rc-file-missing.png"),
+        _T("rc-file-modified.png"),
+        _T("rc-file-outofdate.png"),
+        _T("rc-file-uptodate.png"),
+        _T("rc-file-requireslock.png"),
+        _T("gohome.png"),
+        _T("codeblocks.png"),
+        _T("folder_open.png"),
+    };
     wxBitmap bmp;
     m_pImages = new wxImageList(16, 16);
     wxString prefix = ConfigManager::Get()->Read(_T("data_path")) + _T("/images/");
-    bmp.LoadFile(prefix + _T("gohome.png"), wxBITMAP_TYPE_PNG); // workspace
-    m_pImages->Add(bmp);
-    bmp.LoadFile(prefix + _T("codeblocks.png"), wxBITMAP_TYPE_PNG); // project
-    m_pImages->Add(bmp);
-    bmp.LoadFile(prefix + _T("ascii.png"), wxBITMAP_TYPE_PNG); // file
-    m_pImages->Add(bmp);
-    bmp.LoadFile(prefix + _T("folder_open.png"), wxBITMAP_TYPE_PNG); // folder
-    m_pImages->Add(bmp);
+
+    for (int i = 0; i < 14; ++i)
+    {
+//        wxMessageBox(wxString::Format(_T("%d: %s"), i, wxString(prefix + imgs[i]).c_str()));
+        bmp.LoadFile(prefix + imgs[i], wxBITMAP_TYPE_PNG); // workspace
+        m_pImages->Add(bmp);
+    }
     m_pTree->SetImageList(m_pImages);
 
     // make sure tree is not "frozen"
@@ -968,7 +998,7 @@ void ProjectManager::RebuildTree()
         title=m_pWorkspace->GetTitle();
      if(title==_T(""))
          title=_("Workspace");
-    m_TreeRoot = m_pTree->AddRoot(title, 0, 0);
+    m_TreeRoot = m_pTree->AddRoot(title, WorkspaceIconIndex(), WorkspaceIconIndex());
     for (int i = 0; i < count; ++i)
     {
         cbProject* project = m_pProjects->Item(i);

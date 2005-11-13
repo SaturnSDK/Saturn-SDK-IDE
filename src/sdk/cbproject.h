@@ -115,7 +115,7 @@ class DLLIMPORT cbProject : public CompileTargetBase
         void SetCurrentlyCompilingTarget(ProjectBuildTarget* bt);
     private:
         void Open();
-        void AddTreeNode(wxTreeCtrl* tree, const wxString& text, const wxTreeItemId& parent, bool useFolders, bool compiles, FileTreeData* data = 0L);
+        wxTreeItemId AddTreeNode(wxTreeCtrl* tree, const wxString& text, const wxTreeItemId& parent, bool useFolders, bool compiles, int image, FileTreeData* data = 0L);
         ProjectBuildTarget* AddDefaultBuildTarget();
         int IndexOfBuildTargetName(const wxString& targetName);
         wxString CreateUniqueFilename();

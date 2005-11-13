@@ -640,11 +640,14 @@ void cbProject::BuildTree(wxTreeCtrl* tree, const wxTreeItemId& root, bool categ
     if (!tree)
         return;
 
+    int fldIdx = Manager::Get()->GetProjectManager()->FolderIconIndex();
+    int prjIdx = Manager::Get()->GetProjectManager()->ProjectIconIndex();
+
     //sort list of files
     m_Files.Sort(filesSort);
 
     FileTreeData* ftd = new FileTreeData(this);
-    m_ProjectNode = tree->AppendItem(root, GetTitle(), 1, 1, ftd);
+    m_ProjectNode = tree->AppendItem(root, GetTitle(), prjIdx, prjIdx, ftd);
     wxTreeItemId others = m_ProjectNode;
 
     // create file-type categories nodes (if enabled)
@@ -654,10 +657,10 @@ void cbProject::BuildTree(wxTreeCtrl* tree, const wxTreeItemId& root, bool categ
         pGroupNodes = new wxTreeItemId[fgam->GetGroupsCount()];
         for (unsigned int i = 0; i < fgam->GetGroupsCount(); ++i)
         {
-            pGroupNodes[i] = tree->AppendItem(m_ProjectNode, fgam->GetGroupName(i), 3, 3);
+            pGroupNodes[i] = tree->AppendItem(m_ProjectNode, fgam->GetGroupName(i), fldIdx, fldIdx);
         }
         // add a default category "Others" for all non-matching file-types
-        others = tree->AppendItem(m_ProjectNode, _("Others"), 3, 3);
+        others = tree->AppendItem(m_ProjectNode, _("Others"), fldIdx, fldIdx);
     }
 
     // iterate all project files and add them to the tree
@@ -687,7 +690,7 @@ void cbProject::BuildTree(wxTreeCtrl* tree, const wxTreeItemId& root, bool categ
                 parentNode = others;
         }
         // add file in the tree
-        AddTreeNode(tree, f->relativeToCommonTopLevelPath, parentNode, useFolders, f->compile, ftd);
+        f->m_TreeItemId = AddTreeNode(tree, f->relativeToCommonTopLevelPath, parentNode, useFolders, f->compile, (int)f->m_VisualState, ftd);
     }
 
 	// remove empty tree nodes (like empty groups)
@@ -706,11 +709,13 @@ void cbProject::BuildTree(wxTreeCtrl* tree, const wxTreeItemId& root, bool categ
     tree->Expand(m_ProjectNode);
 }
 
-void cbProject::AddTreeNode(wxTreeCtrl* tree, const wxString& text, const wxTreeItemId& parent, bool useFolders, bool compiles, FileTreeData* data)
+wxTreeItemId cbProject::AddTreeNode(wxTreeCtrl* tree, const wxString& text, const wxTreeItemId& parent, bool useFolders, bool compiles, int image, FileTreeData* data)
 {
     // see if the text contains any path info, e.g. plugins/compilergcc/compilergcc.cpp
     // in that case, take the first element (plugins in this example), create a sub-folder
     // with the same name and recurse with the result...
+
+    wxTreeItemId ret;
 
     wxString path = text;
     int pos = path.Find(_T('/'));
@@ -741,6 +746,7 @@ void cbProject::AddTreeNode(wxTreeCtrl* tree, const wxString& text, const wxTree
 		{
 			// in order not to override wxTreeCtrl to sort alphabetically but the
 			// folders be always on top, we just search here where to put the new folder...
+            int fldIdx = Manager::Get()->GetProjectManager()->FolderIconIndex();
 #if (wxMAJOR_VERSION == 2) && (wxMINOR_VERSION < 5)
             long int cookie2 = 0;
 #else
@@ -750,35 +756,36 @@ void cbProject::AddTreeNode(wxTreeCtrl* tree, const wxString& text, const wxTree
 			wxTreeItemId lastChild;
 			while (child)
 			{
-				if (tree->GetItemImage(child) == 3)
+				if (tree->GetItemImage(child) == fldIdx)
 				{
 					if (folder.CompareTo(tree->GetItemText(child)) < 0)
 					{
-						newparent = tree->InsertItem(parent, lastChild, folder, 3, 3);
+						newparent = tree->InsertItem(parent, lastChild, folder, fldIdx, fldIdx);
 						break;
 					}
 				}
 				else
 				{
-					newparent = tree->PrependItem(parent, folder, 3, 3);
+					newparent = tree->PrependItem(parent, folder, fldIdx, fldIdx);
 					break;
 				}
 				lastChild = child;
 				child = tree->GetNextChild(parent, cookie2);
 			}
 			if (!newparent)
-				newparent = tree->AppendItem(parent, folder, 3, 3);
+				newparent = tree->AppendItem(parent, folder, fldIdx, fldIdx);
 		}
 		//tree->SortChildren(parent);
-        AddTreeNode(tree, path, newparent, true, compiles, data);
+        ret = AddTreeNode(tree, path, newparent, true, compiles, image, data);
     }
     else
 	{
-        wxTreeItemId newnode = tree->AppendItem(parent, text, 2, 2, data);
+        ret = tree->AppendItem(parent, text, image, image, data);
 		// the following doesn't seem to work under wxMSW...
 		if (!compiles)
-			tree->SetItemTextColour(newnode, wxColour(0x80, 0x80, 0x80));
+			tree->SetItemTextColour(ret, wxColour(0x80, 0x80, 0x80));
 	}
+	return ret;
 }
 
 void cbProject::RenameInTree(const wxString &newname)

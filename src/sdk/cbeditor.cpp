@@ -378,6 +378,30 @@ void cbEditor::SetModified(bool modified)
             SetEditorTitle(EDITOR_MODIFIED + m_Shortname);
         else
             SetEditorTitle(m_Shortname);
+
+        // visual state
+        if (m_pProjectFile)
+        {
+            FileVisualState fvs = m_pProjectFile->GetFileState();
+            if (fvs < fvsVcAdded) // not under version control
+            {
+                if (m_Modified)
+                    m_pProjectFile->SetFileState(fvsModified);
+                else
+                    m_pProjectFile->SetFileState(fvsNormal);
+//                {
+//                    // for non-modified state, we must check for read-only or missing file
+//                    if (!wxFileExists(m_Filename))
+//                        m_pProjectFile->SetFileState(fvsMissing);
+//                    else
+//                    {
+//                        bool read_only = !wxFile::Access(m_Filename.c_str(), wxFile::write);
+//                        m_pProjectFile->SetFileState(read_only ? fvsReadOnly : fvsNormal);
+//                    }
+//                }
+            }
+            // all other cases are not handled by cbEditor
+        }
     }
 }
 

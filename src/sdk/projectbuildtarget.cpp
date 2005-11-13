@@ -174,6 +174,7 @@ ProjectFile::ProjectFile(cbProject* prj)
     editorTopLine = 0;
     useCustomBuildCommand = false;
     autoDeps = true;
+    m_VisualState = fvsNormal;
 }
 
 ProjectFile::~ProjectFile()
@@ -289,6 +290,25 @@ const pfDetails& ProjectFile::GetFileDetails(ProjectBuildTarget* target)
         pfd = m_PFDMap[target];
     }
     return *pfd;
+}
+
+FileVisualState ProjectFile::GetFileState()
+{
+    return m_VisualState;
+}
+
+void ProjectFile::SetFileState(FileVisualState state)
+{
+    if (state != m_VisualState)
+    {
+        m_VisualState = state;
+        wxTreeCtrl* tree = Manager::Get()->GetProjectManager()->GetTree();
+        if (tree && m_TreeItemId.IsOk())
+        {
+            tree->SetItemImage(m_TreeItemId, (int)state, wxTreeItemIcon_Normal);
+            tree->SetItemImage(m_TreeItemId, (int)state, wxTreeItemIcon_Selected);
+        }
+    }
 }
 
 pfDetails::pfDetails(ProjectBuildTarget* target, ProjectFile* pf)

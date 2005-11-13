@@ -50,6 +50,28 @@ enum FileType
 	ftOther
 };
 
+/** These are valid values for the state of each project file.
+    If a value is casted to integer, it corresponds to the tree's imagelist index for the state.
+*/
+enum FileVisualState
+{
+    fvsNormal = 0,
+    fvsMissing,
+    fvsModified,
+    fvsReadOnly,
+    // The following are related to version control systems (vc)
+    fvsVcAdded,
+    fvsVcConflict,
+    fvsVcMissing,
+    fvsVcModified,
+    fvsVcOutOfDate,
+    fvsVcUpToDate,
+    fvsVcRequiresLock,
+
+    /// do *not* use this, it exists just to know the number of items...
+    fvsLast
+};
+
 #define DEFAULT_ARRAY_SEP _T(";")
 
 // global helper funcs

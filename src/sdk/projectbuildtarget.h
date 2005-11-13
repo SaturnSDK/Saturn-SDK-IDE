@@ -7,6 +7,7 @@
 #include <wx/dynarray.h>
 #include <wx/filename.h>
 #include <wx/list.h>
+#include <wx/treectrl.h>
 
 #include "blockallocated.h"
 
@@ -44,6 +45,11 @@ class ProjectFile  : public BlockAllocated<ProjectFile, 500>
         /// Retrieve the details for this project file for the specified build target
         const pfDetails& GetFileDetails(ProjectBuildTarget* target);
 
+        /// Set the visual state (modified, read-only, etc)
+		void SetFileState(FileVisualState state);
+        /// Get the visual state (modified, read-only, etc)
+		FileVisualState GetFileState();
+
         wxString relativeToCommonTopLevelPath; // used for the tree, .objs and .deps (has no "..")
         bool compile;
         bool link;
@@ -60,7 +66,10 @@ class ProjectFile  : public BlockAllocated<ProjectFile, 500>
         wxString compilerVar;
         wxArrayString buildTargets;
     private:
+        friend class cbProject;
         void DoUpdateFileDetails(ProjectBuildTarget* target);
+        FileVisualState m_VisualState;
+        wxTreeItemId m_TreeItemId; // set by the project when building the tree
         wxString m_ObjName;
         PFDMap m_PFDMap;
 };
