@@ -453,4 +453,133 @@ class DbgCmd_DisassemblyInit : public DebuggerCmd
                 }
                 else
                 {
-                    // 
+                    // C:/Devel/tmp/console/main.cpp:11:113:beg:0x4013cf
+                    lines[i].Remove(0, 2); // remove ->->
+                    wxRegEx reSource;
+                    #ifdef __WXMSW__
+                    reSource.Compile(_T("([A-Za-z]:)([ A-Za-z0-9_/\\.~-]*):([0-9]*):[0-9]*:[begmidl]+:(0x[0-9A-Za-z]*)"));
+                    #else
+                    reSource.Compile(_T("([ A-Za-z0-9_/\\.~-]*):([0-9]*):[0-9]*:[begmidl]+:(0x[0-9A-Za-z]*)"));
+                    #endif
+                    if ( reSource.Matches(lines[i]) )
+                    {
+                        sf.valid = true;
+                        #ifdef __WXMSW__
+                        sf.file = reSource.GetMatch(lines[i], 1) + reSource.GetMatch(lines[i], 2); // drive + path
+                        sf.line = reSource.GetMatch(lines[i], 3);
+                        reSource.GetMatch(lines[i], 4).ToULong(&sf.address, 16);
+                        #else
+                        sf.file = reSource.GetMatch(lines[i], 1);
+                        sf.line = reSource.GetMatch(lines[i], 2);
+                        reSource.GetMatch(lines[i], 3).ToULong(&sf.address, 16);
+                        #endif
+                        break; // we 're only interested for the top-level stack frame
+                    }
+                }
+    		}
+            m_pDlg->Clear(sf);
+//            m_pGDB->DebugLog(output);
+        }
+};
+
+/**
+  * Command to run a disassembly. Use this instead of DbgCmd_DisassemblyInit, which is chained-called.
+  */
+class DbgCmd_InfoRegisters : public DebuggerCmd
+{
+        DisassemblyDlg* m_pDlg;
+    public:
+        /** @param dlg The disassembly dialog. */
+        DbgCmd_InfoRegisters(DebuggerGDB* gdb, DisassemblyDlg* dlg)
+            : DebuggerCmd(gdb),
+            m_pDlg(dlg)
+        {
+            m_Cmd << _T("info registers");
+        }
+        void ParseOutput(const wxString& output)
+        {
+            // output is a series of:
+            //
+            // eax            0x40e66666       1088841318
+            // ecx            0x40cbf0 4246512
+            // edx            0x77c61ae8       2009471720
+            // ebx            0x4000   16384
+            // esp            0x22ff50 0x22ff50
+            // ebp            0x22ff78 0x22ff78
+            // esi            0x22ef80 2289536
+            // edi            0x5dd3f4 6149108
+            // eip            0x4013c9 0x4013c9
+            // eflags         0x247    583
+            // cs             0x1b     27
+            // ss             0x23     35
+            // ds             0x23     35
+            // es             0x23     35
+            // fs             0x3b     59
+            // gs             0x0      0
+
+            if (!m_pDlg)
+                return;
+
+            wxArrayString lines = GetArrayFromString(output, _T('\n'));
+    		for (unsigned int i = 0; i < lines.GetCount(); ++i)
+    		{
+                // eax            0x40e66666       1088841318
+                wxRegEx re(_T("([A-Za-z0-9]+)[ \t]+(0x[0-9A-Za-z]+)"));
+                if (re.Matches(lines[i]))
+                {
+                    long int addr;
+                    re.GetMatch(lines[i], 2).ToLong(&addr, 16);
+                    m_pDlg->SetRegisterValue(DisassemblyDlg::RegisterIndexFromName(re.GetMatch(lines[i], 1)), addr);
+                }
+    		}
+//            m_pDlg->Show(true);
+//            m_pGDB->DebugLog(output);
+        }
+};
+
+/**
+  * Command to run a disassembly. Use this instead of DbgCmd_DisassemblyInit, which is chained-called.
+  */
+class DbgCmd_Disassembly : public DebuggerCmd
+{
+        DisassemblyDlg* m_pDlg;
+    public:
+        /** @param dlg The disassembly dialog. */
+        DbgCmd_Disassembly(DebuggerGDB* gdb, DisassemblyDlg* dlg)
+            : DebuggerCmd(gdb),
+            m_pDlg(dlg)
+        {
+            m_Cmd << _T("disassemble");
+            m_pGDB->QueueCommand(new DbgCmd_DisassemblyInit(gdb, dlg)); // chain call
+            m_pGDB->QueueCommand(new DbgCmd_InfoRegisters(gdb, dlg)); // chain call
+        }
+        void ParseOutput(const wxString& output)
+        {
+            // output is a series of:
+            //
+            // Dump of assembler code for function main:
+            // 0x00401390 <main+0>:	push   ebp
+            // ...
+            // End of assembler dump.
+
+            if (!m_pDlg)
+                return;
+
+            wxArrayString lines = GetArrayFromString(output, _T('\n'));
+    		for (unsigned int i = 0; i < lines.GetCount(); ++i)
+    		{
+                // 0x00401390 <main+0>:	push   ebp
+                wxRegEx re(_T("(0x[0-9A-Za-z]+)[ \t]+<.*>:[ \t]+(.*)"));
+                if (re.Matches(lines[i]))
+                {
+                    long int addr;
+                    re.GetMatch(lines[i], 1).ToLong(&addr, 16);
+                    m_pDlg->AddAssemblerLine(addr, re.GetMatch(lines[i], 2));
+                }
+    		}
+            m_pDlg->Show(true);
+//            m_pGDB->DebugLog(output);
+        }
+};
+
+#endif // DEBUGGER_COMMANDS_H
