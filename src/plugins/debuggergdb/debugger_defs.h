@@ -15,6 +15,7 @@ struct DebuggerBreakpoint
         useIgnoreCount(false),
         ignoreCount(0),
         useCondition(false),
+        address(0),
         bpNum(-1)
     {}
     wxString filename;
@@ -25,8 +26,9 @@ struct DebuggerBreakpoint
 	bool useCondition;
 	wxString condition;
 	wxString func;
+	unsigned long int address; ///< actual break address
 
-	int bpNum;
+	long int bpNum;
 };
 WX_DEFINE_ARRAY(DebuggerBreakpoint*, BreakpointsList);
 
@@ -84,8 +86,8 @@ struct StackFrame
         line.Clear();
     }
     bool valid;
-    int number;
-    int address;
+    long int number;
+    unsigned long int address;
     wxString function;
     wxString file;
     wxString line;

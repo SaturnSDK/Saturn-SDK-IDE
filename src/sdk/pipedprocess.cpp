@@ -80,6 +80,21 @@ bool PipedProcess::HasInput()
 {
     bool hasInput = false;
 
+    if (IsErrorAvailable())
+    {
+        wxTextInputStream serr(*GetErrorStream());
+
+        wxString msg;
+        msg << serr.ReadLine();
+
+		CodeBlocksEvent event(cbEVT_PIPEDPROCESS_STDERR, m_Id);
+        event.SetString(msg);
+		wxPostEvent(m_Parent, event);
+// 		m_Parent->ProcessEvent(event);
+
+        hasInput = true;
+    }
+
     if (IsInputAvailable())
     {
         wxTextInputStream sout(*GetInputStream());
@@ -88,21 +103,6 @@ bool PipedProcess::HasInput()
         msg << sout.ReadLine();
 
 		CodeBlocksEvent event(cbEVT_PIPEDPROCESS_STDOUT, m_Id);
-        event.SetString(msg);
-		wxPostEvent(m_Parent, event);
-// 		m_Parent->ProcessEvent(event);
-
-        hasInput = true;
-    }
-
-	    if (IsErrorAvailable())
-    {
-        wxTextInputStream serr(*GetErrorStream());
-
-        wxString msg;
-        msg << serr.ReadLine();
-
-		CodeBlocksEvent event(cbEVT_PIPEDPROCESS_STDERR, m_Id);
         event.SetString(msg);
 		wxPostEvent(m_Parent, event);
 // 		m_Parent->ProcessEvent(event);

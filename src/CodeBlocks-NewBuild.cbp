@@ -1235,6 +1235,12 @@
 			<Option link="0"/>
 			<Option target="plugin_DebuggerGDB"/>
 		</Unit>
+		<Unit filename="plugins\debuggergdb\debugger_cmds.h">
+			<Option compilerVar=""/>
+			<Option compile="0"/>
+			<Option link="0"/>
+			<Option target="plugin_DebuggerGDB"/>
+		</Unit>
 		<Unit filename="plugins\debuggergdb\debugger_defs.cpp">
 			<Option compilerVar="CPP"/>
 			<Option target="plugin_DebuggerGDB"/>

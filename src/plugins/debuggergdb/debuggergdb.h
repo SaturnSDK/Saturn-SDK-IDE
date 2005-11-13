@@ -14,6 +14,11 @@
 #include "backtracedlg.h"
 #include "disassemblydlg.h"
 
+extern const wxString g_EscapeChars;
+
+class DebuggerCmd;
+WX_DEFINE_ARRAY(DebuggerCmd*, DebuggerCommands);
+
 class DebuggerGDB : public cbDebuggerPlugin
 {
 	public:
@@ -43,22 +48,31 @@ class DebuggerGDB : public cbDebuggerPlugin
 		int GetExitCode() const { return m_LastExitCode; }
 
 		void SyncEditor(const wxString& filename, int line);
+
+		void Log(const wxString& msg);
+		void DebugLog(const wxString& msg);
+
+		// commands
+		DebuggerCommands m_DCmds;
+		bool m_QueueBusy;
+		void QueueCommand(DebuggerCmd* dcmd); ///< add a command in the queue. The DebuggerCmd will be deleted automatically when finished.
+		DebuggerCmd* CurrentCommand(); ///< returns the currently executing command
+		void RunQueue(); ///< runs the next command in the queue, if it is idle
+		void RemoveTopCommand(bool deleteIt = true); ///< removes the top command (it has finished)
+		void ClearQueue(); ///< clears the queue
+
+        static void ConvertToGDBFriendly(wxString& str);
+        static void ConvertToGDBDirectory(wxString& str, wxString base = _T(""), bool relative = true);
+        static void StripQuotes(wxString& str);
 	protected:
-        void ConvertToGDBFriendly(wxString& str);
-        void ConvertToGDBDirectory(wxString& str, wxString base = _T(""), bool relative = true);
-        void StripQuotes(wxString& str);
         void AddSourceDir(const wxString& dir);
 	private:
 		void ParseOutput(const wxString& output);
 		void BringAppToFront();
 		void ClearActiveMarkFromAllEditors();
 		void SetBreakpoints();
-		wxString GetInfoFor(const wxString& dbgCmd, Watch* watch = 0);
-		wxString GetNextOutputLine(bool useStdErr = false);
-		wxString GetNextOutputLineClean(bool useStdErr = false);
 		void DoWatches();
         wxString GetEditorWordAtCaret();
-        long int ReadRegisterValue(int idx);
 
         void ClearBreakpointsArray();
         int HasBreakpoint(const wxString& file, int line); // returns -1 if not found

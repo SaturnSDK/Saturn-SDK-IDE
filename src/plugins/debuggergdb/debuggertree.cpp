@@ -64,7 +64,9 @@ END_EVENT_TABLE()
 DebuggerTree::DebuggerTree(wxEvtHandler* debugger, wxNotebook* parent)
     : wxPanel(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL | wxCLIP_CHILDREN),
     m_pParent(parent),
-	m_pDebugger(debugger)
+	m_pDebugger(debugger),
+	m_NumUpdates(0),
+	m_CurrNumUpdates(0)
 {
     wxBoxSizer* bs = new wxBoxSizer(wxVERTICAL);
 #ifndef __WXMSW__
@@ -88,18 +90,20 @@ DebuggerTree::~DebuggerTree()
 	m_pParent->RemovePage(m_PageIndex);
 }
 
-void DebuggerTree::BuildTree(const wxString& infoText)
+void DebuggerTree::ResetTree()
 {
-	wxArrayString treeState;
-	::SaveTreeState(m_pTree, m_pTree->GetRootItem(), treeState);
+    if (m_pTree->IsExpanded(m_pTree->GetRootItem()))
+        ::SaveTreeState(m_pTree, m_pTree->GetRootItem(), m_TreeState);
 	m_pTree->Freeze();
 
 	m_pTree->DeleteAllItems();
 	wxTreeItemId root = m_pTree->AddRoot(_("Watches"));
+}
 
+void DebuggerTree::BuildTree(const wxString& infoText)
+{
 //    Manager::Get()->GetMessageManager()->DebugLog("DebuggerTree::BuildTree(): Parsing '%s'", infoText.c_str());
 	wxString buffer = infoText;
-	wxTreeItemId parent = root;
 	// remove CRLFs (except if inside quotes)
 	int len = buffer.Length();
 	bool inQuotes = false;
@@ -115,11 +119,16 @@ void DebuggerTree::BuildTree(const wxString& infoText)
                 buffer.SetChar(i, _T(','));
         }
 	}
-	ParseEntry(parent, buffer);
+	ParseEntry(m_pTree->GetRootItem(), buffer);
 
-	m_pTree->Expand(root);
-	::RestoreTreeState(m_pTree, root, treeState);
-	m_pTree->Thaw();
+    ++m_CurrNumUpdates;
+    if (m_CurrNumUpdates >= m_NumUpdates)
+    {
+        ::RestoreTreeState(m_pTree, m_pTree->GetRootItem(), m_TreeState);
+        m_pTree->Expand(m_pTree->GetRootItem());
+    	m_pTree->Thaw();
+    	m_CurrNumUpdates = 0;
+    }
 }
 
 int DebuggerTree::FindCharOutsideQuotes(const wxString& str, wxChar ch)
@@ -357,8 +366,10 @@ void DebuggerTree::OnEditWatch(wxCommandEvent& event)
         EditWatchDlg dlg(w);
         if (dlg.ShowModal() == wxID_OK && !dlg.GetWatch().keyword.IsEmpty())
         {
-            DeleteWatch(item);
-            AddWatch(dlg.GetWatch().keyword, dlg.GetWatch().format);
+            *w = dlg.GetWatch();
+            // send *one* event
+            wxCommandEvent event(cbCustom_WATCHES_CHANGED);
+            wxPostEvent(m_pDebugger, event);
         }
     }
 }
