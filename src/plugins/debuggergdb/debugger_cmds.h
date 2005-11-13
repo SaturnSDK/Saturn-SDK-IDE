@@ -11,7 +11,7 @@
 #include "debugger_defs.h"
 #include "backtracedlg.h"
 
-/** Interface for debugger commands.
+/** Basic interface for debugger commands.
   *
   * Each command sent to the debugger, is an DebuggerCmd.
   * It encapsulates the call and parsing of return values.
