@@ -1235,7 +1235,7 @@
 			<Option link="0"/>
 			<Option target="plugin_DebuggerGDB"/>
 		</Unit>
-		<Unit filename="plugins\debuggergdb\debugger_cmds.h">
+		<Unit filename="plugins\debuggergdb\debugger_commands.h">
 			<Option compilerVar=""/>
 			<Option compile="0"/>
 			<Option link="0"/>

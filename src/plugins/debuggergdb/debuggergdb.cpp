@@ -47,7 +47,7 @@
 #include <wx/fs_zip.h>
 
 #include "debuggergdb.h"
-#include "debugger_cmds.h"
+#include "debugger_commands.h"
 #include "debuggeroptionsdlg.h"
 #include "breakpointsdlg.h"
 #include "editbreakpointdlg.h"
