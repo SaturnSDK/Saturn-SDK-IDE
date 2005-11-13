@@ -165,5 +165,15 @@ for(ConfigManagerContainer::IntToStringMap::iterator it = imap.begin(); it != im
     m->DebugLog(z);
     }
 
+wxString cstr;
+wxColour red(255,0,0);
+wxColour col;
+c->Write("red", red);
+c->Read("not_red", &col);
+cstr.sprintf("not red : %d %d %d", (int)col.Red(), (int)col.Green(), (int)col.Blue() );
+m->DebugLog(cstr);
+c->Read("red", &col);
+cstr.sprintf("    red : %d %d %d", (int)col.Red(), (int)col.Green(), (int)col.Blue() );
+m->DebugLog(cstr);
 
 

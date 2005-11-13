@@ -508,9 +508,6 @@ void XmlConfigManager::Write(const wxString& key, const char* str)
     Write(key, wxString(str));
 };
 
-//    void Write(const char* key, const wxString& value)
-//    void Write(const char* key, const char* str)
-
 wxString XmlConfigManager::Read(const wxString& name, const wxString& defaultVal)
 {
     if(name.IsSameAs(CfgMgrConsts::app_path))
@@ -542,6 +539,48 @@ bool XmlConfigManager::Read(const wxString& name, wxString* str)
     return false;
 }
 
+void XmlConfigManager::Write(const wxString& name,  const wxColour& c)
+{
+    wxString key(name);
+    TiXmlElement* e = AssertPath(key);
+
+    TiXmlElement *leaf = GetUniqElement(e, key);
+
+    TiXmlElement *s = GetUniqElement(leaf, _T("colour"));
+    s->SetAttribute("r", c.Red());
+    s->SetAttribute("g", c.Green());
+    s->SetAttribute("b", c.Blue());
+}
+
+wxColour XmlConfigManager::ReadColour(const wxString& name, const wxColour& defaultVal)
+{
+    wxColour ret;
+
+    if(Read(name, &ret))
+        return ret;
+    else
+        return defaultVal;
+}
+
+bool XmlConfigManager::Read(const wxString& name, wxColour* ret)
+{
+    wxString key(name);
+    TiXmlElement* e = AssertPath(key);
+
+    TiXmlHandle parentHandle(e);
+    TiXmlElement *c = (TiXmlElement *) parentHandle.FirstChild(key).FirstChild(_T("colour")).Element();
+
+    if(c)
+    {
+    int r, g, b;
+        if(c->QueryIntAttribute(_T("r"), &r) == TIXML_SUCCESS
+        && c->QueryIntAttribute(_T("g"), &g) == TIXML_SUCCESS
+        && c->QueryIntAttribute(_T("b"), &b) == TIXML_SUCCESS)
+        ret->Set(r, b, g);
+        return true;
+    }
+    return false;
+}
 
 void XmlConfigManager::Write(const wxString& name,  int value)
 {

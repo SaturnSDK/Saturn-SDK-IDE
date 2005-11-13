@@ -136,6 +136,10 @@ public:
     void WriteBinary(const wxString& name,  void* ptr, size_t len);
     wxString ReadBinary(const wxString& name);
 
+    void Write(const wxString& name,  const wxColour& c);
+    bool Read(const wxString& name, wxColour* value);
+    wxColour ReadColour(const wxString& name, const wxColour& defaultVal = *wxBLACK);
+
 
     /* -----------------------------------------------------------------------------------------------------
     *  Single serializable objects
