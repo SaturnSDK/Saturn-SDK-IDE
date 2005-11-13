@@ -67,7 +67,7 @@ void cbNetwork::Disconnect()
     if (m_pStream)
         delete m_pStream;
     m_pStream = 0;
-    
+
     if (m_pURL)
         delete m_pURL;
     m_pURL = 0;
@@ -81,9 +81,10 @@ bool cbNetwork::Connect(const wxString& remote)
     if (m_ServerURL.Last() == sep.GetChar(0) || remote.StartsWith(sep))
         sep.Clear();
     m_pURL = new wxURL(m_ServerURL + sep + remote);
+    m_pURL->SetProxy(XMLConfigManager::GetProxy());  /* FIXME (thomas#1#): Change XmlConfigManager to ConfigManager. */
     if (m_pURL->GetError() != wxURL_NOERR)
         return false;
-    
+
     m_pStream = m_pURL->GetInputStream();
     if (m_pStream && m_pStream->IsOk())
     {
@@ -145,7 +146,7 @@ bool cbNetwork::DownloadFile(const wxString& remote, const wxString& local)
         return false;
     m_Busy = true;
     wxString name = wxFileName(remote).GetFullName();
-    
+
     // block to limit scope of "fos"
     {
         wxFileOutputStream fos(local);
@@ -155,10 +156,10 @@ bool cbNetwork::DownloadFile(const wxString& remote, const wxString& local)
             Disconnect();
             return false;
         }
-    
+
         FileInfo* info = PrivateGetFileInfo(remote);
         Notify(cbEVT_CBNET_START_DOWNLOAD, name, info ? info->size : 0);
-    
+
         static char buffer[4096];
         memset(buffer, 0, 4096);
         int counter = 0;

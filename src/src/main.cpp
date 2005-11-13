@@ -41,6 +41,7 @@
 #include <wx/dnd.h>
 
 #include <configmanager.h>
+#include <xconfigmanager.h> /* FIXME (thomas#1#): REMOVE THIS */
 #include <cbproject.h>
 #include <cbplugin.h>
 #include <sdk_events.h>
@@ -210,6 +211,7 @@ int idSettingsEditor = XRCID("idSettingsEditor");
 int idPluginsManagePlugins = XRCID("idPluginsManagePlugins");
 int idSettingsConfigurePlugins = XRCID("idSettingsConfigurePlugins");
 int idSettingsImpExpConfig = XRCID("idSettingsImpExpConfig");
+int idSettingsNetworkProxy = XRCID("idSettingsNetworkProxy");
 
 int idHelpTips = XRCID("idHelpTips");
 int idHelpPlugins = XRCID("idHelpPlugins");
@@ -365,6 +367,7 @@ BEGIN_EVENT_TABLE(MainFrame, wxFrame)
 	EVT_MENU(idSettingsEditor, MainFrame::OnSettingsEditor)
     EVT_MENU(idPluginsManagePlugins, MainFrame::OnSettingsPlugins)
     EVT_MENU(idSettingsImpExpConfig, MainFrame::OnSettingsImpExpConfig)
+    EVT_MENU(idSettingsNetworkProxy, MainFrame::OnSettingsNetworkProxy)
 
     EVT_MENU(wxID_ABOUT, MainFrame::OnHelpAbout)
     EVT_MENU(idHelpTips, MainFrame::OnHelpTips)
@@ -2565,4 +2568,11 @@ void MainFrame::OnRequestUndockWindow(CodeBlocksEvent& event)
 void MainFrame::OnRequestShowDockWindow(CodeBlocksEvent& event)
 {
     // stub
+}
+
+void MainFrame::OnSettingsNetworkProxy(wxCommandEvent& event)
+{
+Manager::Get()->GetConfigManager("app")->Write("network_proxy", wxGetTextFromUser(_T("Please enter"
+"your network proxy for all internet connections made by Code::Blocks.\n"
+"Format: hostname:port"), _T("Network proxy")));
 }

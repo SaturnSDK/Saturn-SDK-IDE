@@ -96,6 +96,7 @@ void CfgMgrBldr::SwitchToR(const wxString& absFileName)
     Close();
 
     wxURL url(absFileName);
+    url.SetProxy(XmlConfigManager::GetProxy());
     if (url.GetError() == wxURL_NOERR)
     {
         wxInputStream *is = url.GetInputStream();
@@ -212,6 +213,11 @@ XmlConfigManager* CfgMgrBldr::Instantiate(const wxString& name_space)
 *  to ConfigManager. GetExecutableFolder() and GetDataFolder() are therefore under normal conditions
 *  simply more efficient shortcuts for Read("app_path") and Read("data_path").
 */
+
+wxString XmlConfigManager::GetProxy()
+{
+return Manager::Get()->GetConfigManager("app")->Read("network_proxy");
+}
 
 wxString XmlConfigManager::GetExecutableFolder()
 {

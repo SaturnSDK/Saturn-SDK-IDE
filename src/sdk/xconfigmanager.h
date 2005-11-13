@@ -81,6 +81,7 @@ public:
     static wxString GetPluginsFolder();
     static wxString GetDataFolder();
     static wxString GetExecutableFolder();
+    static wxString GetProxy();
 
     /* -----------------------------------------------------------------------------------------------------
     *  Path functions for navigation within your configuration namespace
