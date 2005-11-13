@@ -1084,4 +1084,439 @@ void DebuggerGDB::ParseOutput(const wxString& output)
         // cursor change
         else if (lines[i].StartsWith(g_EscapeChars)) // ->->
         {
-            // 
+            //  breakpoint
+            wxRegEx reSource;
+			if (!reSource.IsValid())
+			#ifdef __WXMSW__
+				reSource.Compile(_T("([A-Za-z]:)([ A-Za-z0-9_/\\.~-]*):([0-9]*):[0-9]*:[begmidl]+:(0x[0-9A-Za-z]*)"));
+			#else
+				reSource.Compile(_T("([ A-Za-z0-9_/\\.~-]*):([0-9]*):[0-9]*:[begmidl]:(0x[0-9A-Za-z]*)"));
+			#endif
+			if ( reSource.Matches(buffer) )
+			{
+                m_ProgramIsStopped = true;
+			#ifdef __WXMSW__
+				wxString file = reSource.GetMatch(buffer, 1) + reSource.GetMatch(buffer, 2);
+				wxString lineStr = reSource.GetMatch(buffer, 3);
+				wxString addr = reSource.GetMatch(buffer, 4);
+            #else
+				wxString file = reSource.GetMatch(buffer, 1);
+				wxString lineStr = reSource.GetMatch(buffer, 2);
+				wxString addr = reSource.GetMatch(buffer, 3);
+            #endif
+                if (m_pDisassembly)
+                {
+                    long int addrL;
+                    addr.ToLong(&addrL, 16);
+                    m_pDisassembly->SetActiveAddress(addrL);
+                    QueueCommand(new DbgCmd_InfoRegisters(this, m_pDisassembly));
+                }
+				long int line;
+				lineStr.ToLong(&line);
+//				Manager::Get()->GetMessageManager()->DebugLog("file %s, line %ld", file.c_str(), line);
+				SyncEditor(file, line);
+				m_HaltAtLine = line - 1;
+				BringAppToFront();
+				DoWatches();
+			}
+        }
+    }
+    buffer.Clear();
+}
+
+void DebuggerGDB::BringAppToFront()
+{
+	wxWindow* app = Manager::Get()->GetAppWindow();
+	if (app)
+		app->Raise();
+}
+
+void DebuggerGDB::ClearActiveMarkFromAllEditors()
+{
+	EditorManager* edMan = Manager::Get()->GetEditorManager();
+	if (!edMan)
+        return;
+	for (int i = 0; i < edMan->GetEditorsCount(); ++i)
+	{
+        cbEditor* ed = edMan->GetBuiltinEditor(i);
+        if (ed)
+            ed->SetDebugLine(-1);
+	}
+}
+
+void DebuggerGDB::SyncEditor(const wxString& filename, int line)
+{
+	ClearActiveMarkFromAllEditors();
+	cbProject* project = Manager::Get()->GetProjectManager()->GetActiveProject();
+	if (project)
+	{
+        wxFileName fname(filename);
+	    ProjectFile* f = project->GetFileByFilename(fname.GetFullPath(), false, true);
+    	if (f)
+        {
+        	cbEditor* ed = Manager::Get()->GetEditorManager()->Open(f->file.GetFullPath());
+            if (ed)
+			{
+				ed->SetProjectFile(f);
+            	ed->Show(true);
+				ed->GotoLine(line - 1);
+				ed->SetDebugLine(line - 1);
+			}
+        }
+        else
+        {
+            // no such file in project; maybe in another open project?
+        	cbEditor* ed = Manager::Get()->GetEditorManager()->Open(fname.GetFullPath());
+            if (ed)
+			{
+            	ed->Show(true);
+				ed->GotoLine(line - 1);
+				ed->SetDebugLine(line - 1);
+			}
+        }
+	}
+}
+
+wxString DebuggerGDB::GetEditorWordAtCaret()
+{
+    cbEditor* ed = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
+    if (!ed)
+        return _T("");
+    int start = ed->GetControl()->WordStartPosition(ed->GetControl()->GetCurrentPos(), true);
+    int end = ed->GetControl()->WordEndPosition(ed->GetControl()->GetCurrentPos(), true);
+    return ed->GetControl()->GetTextRange(start, end);
+}
+
+// events
+
+void DebuggerGDB::OnUpdateUI(wxUpdateUIEvent& event)
+{
+	cbProject* prj = Manager::Get()->GetProjectManager()->GetActiveProject();
+    cbEditor* ed = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
+    wxMenuBar* mbar = Manager::Get()->GetAppWindow()->GetMenuBar();
+    if (mbar)
+    {
+        mbar->Enable(idMenuDebug, !m_pProcess && prj);
+        mbar->Enable(idMenuContinue, m_pProcess && prj && m_ProgramIsStopped);
+        mbar->Enable(idMenuNext, m_pProcess && prj && m_ProgramIsStopped);
+        mbar->Enable(idMenuStep, prj && m_ProgramIsStopped);
+        mbar->Enable(idMenuStepOut, m_pProcess && prj && m_ProgramIsStopped);
+ 		mbar->Enable(idMenuRunToCursor, prj && ed && m_ProgramIsStopped);
+		mbar->Enable(idMenuToggleBreakpoint, prj && ed && m_ProgramIsStopped);
+		mbar->Enable(idMenuSendCommandToGDB, m_pProcess && m_ProgramIsStopped);
+ 		mbar->Enable(idMenuAddSymbolFile, m_pProcess && m_ProgramIsStopped);
+ 		mbar->Enable(idMenuBacktrace, m_pProcess && m_ProgramIsStopped);
+ 		mbar->Enable(idMenuCPU, m_pProcess && m_ProgramIsStopped);
+ 		mbar->Enable(idMenuEditWatches, prj && m_ProgramIsStopped);
+        mbar->Enable(idMenuStop, m_pProcess && prj);
+	}
+
+    #ifdef implement_debugger_toolbar
+	wxToolBar* tbar = m_pTbar;//Manager::Get()->GetAppWindow()->GetToolBar();
+    tbar->EnableTool(idMenuDebug, (!m_pProcess || m_ProgramIsStopped) && prj);
+    tbar->EnableTool(idMenuRunToCursor, prj && ed && m_ProgramIsStopped);
+    tbar->EnableTool(idMenuNext, m_pProcess && prj && m_ProgramIsStopped);
+    tbar->EnableTool(idMenuStep, prj && m_ProgramIsStopped);
+    tbar->EnableTool(idMenuStepOut, m_pProcess && prj && m_ProgramIsStopped);
+    tbar->EnableTool(idMenuStop, m_pProcess && prj);
+	#endif
+
+    // allow other UpdateUI handlers to process this event
+    // *very* important! don't forget it...
+    event.Skip();
+}
+
+void DebuggerGDB::OnDebug(wxCommandEvent& event)
+{
+    if (!m_pProcess)
+        Debug();
+    else
+    {
+        if (m_ProgramIsStopped)
+            CmdContinue();
+    }
+}
+
+void DebuggerGDB::OnContinue(wxCommandEvent& event)
+{
+	CmdContinue();
+}
+
+void DebuggerGDB::OnNext(wxCommandEvent& event)
+{
+	CmdNext();
+}
+
+void DebuggerGDB::OnStep(wxCommandEvent& event)
+{
+	if (!m_pProcess)
+	{
+		m_BreakOnEntry = true;
+		Debug();
+	}
+	else CmdStep();
+}
+
+void DebuggerGDB::OnStepOut(wxCommandEvent& event)
+{
+	CmdStepOut();
+}
+
+void DebuggerGDB::OnRunToCursor(wxCommandEvent& event)
+{
+	CmdRunToCursor();
+}
+
+void DebuggerGDB::OnToggleBreakpoint(wxCommandEvent& event)
+{
+	CmdToggleBreakpoint();
+}
+
+void DebuggerGDB::OnStop(wxCommandEvent& event)
+{
+	CmdStop();
+}
+
+void DebuggerGDB::OnSendCommandToGDB(wxCommandEvent& event)
+{
+	wxString cmd = wxGetTextFromUser(_("Enter command for GDB:"), _("Send command to GDB:"), m_LastCmd);
+	if (cmd.IsEmpty())
+		return;
+	m_LastCmd = cmd;
+	QueueCommand(new DebuggerCmd(this, cmd, true));
+}
+
+void DebuggerGDB::OnAddSymbolFile(wxCommandEvent& event)
+{
+	wxString file = wxFileSelector(_("Choose file to read symbols from"),
+									_T(""),
+									_T(""),
+									_T(""),
+									_("Executables and libraries|*.exe;*.dll"),
+									wxOPEN | wxFILE_MUST_EXIST);
+	if (file.IsEmpty())
+		return;
+//    Manager::Get()->GetMessageManager()->Log(m_PageIndex, _("Adding symbol file: %s"), file.c_str());
+    ConvertToGDBDirectory(file);
+    QueueCommand(new DbgCmd_AddSymbolFile(this, file));
+}
+
+void DebuggerGDB::OnBacktrace(wxCommandEvent& event)
+{
+    CmdBacktrace();
+}
+
+void DebuggerGDB::OnDisassemble(wxCommandEvent& event)
+{
+    CmdDisassemble();
+}
+
+void DebuggerGDB::OnBreakpoints(wxCommandEvent& event)
+{
+    BreakpointsDlg dlg(m_Breakpoints);
+	if (dlg.ShowModal() == wxID_OK)
+	{
+		SetBreakpoints();
+	}
+}
+
+void DebuggerGDB::OnEditWatches(wxCommandEvent& event)
+{
+	WatchesArray watches = m_pTree->GetWatches();
+    EditWatchesDlg dlg(watches);
+	if (dlg.ShowModal() == wxID_OK)
+	{
+		m_pTree->SetWatches(watches);
+	}
+}
+
+void DebuggerGDB::OnGDBOutput(wxCommandEvent& event)
+{
+	wxString msg = event.GetString();
+	if (!msg.IsEmpty())
+	{
+//        Manager::Get()->GetMessageManager()->Log(m_PageIndex, _T("O>>> %s"), msg.c_str());
+		ParseOutput(msg);
+	}
+}
+
+void DebuggerGDB::OnGDBError(wxCommandEvent& event)
+{
+	wxString msg = event.GetString();
+	if (!msg.IsEmpty())
+	{
+//        Manager::Get()->GetMessageManager()->Log(m_PageIndex, _T("E>>> %s"), msg.c_str());
+		ParseOutput(msg);
+	}
+}
+
+void DebuggerGDB::OnGDBTerminated(wxCommandEvent& event)
+{
+	m_TimerPollDebugger.Stop();
+	m_LastExitCode = event.GetInt();
+	//the process deletes itself
+//	m_pProcess = 0L;
+
+	ClearActiveMarkFromAllEditors();
+	Manager::Get()->GetMessageManager()->Log(m_PageIndex, _("Debugger finished with status %d"), m_LastExitCode);
+
+	if (m_NoDebugInfo)
+	{
+        wxMessageBox(_("This project/target has no debugging info."
+                        "Please change this in the project's build options and retry..."),
+                        _("Error"),
+                        wxICON_STOP);
+	}
+}
+
+void DebuggerGDB::OnBreakpointAdd(CodeBlocksEvent& event)
+{
+    // do we have a bp there?
+    if (HasBreakpoint(event.GetString(), event.GetInt()) != -1)
+        return;
+
+    DebuggerBreakpoint* bp = new DebuggerBreakpoint;
+    bp->filename = event.GetString();
+    bp->line = event.GetInt();
+
+    //Workaround for GDB to break on C++ constructor/destructor
+    cbEditor* ed = event.GetEditor();
+    if (ed)
+    {
+        wxString lb = ed->GetControl()->GetLine(bp->line);
+        wxString cppClassName;
+        wxString cppDestructor = _T("~");
+        char bufBase[255], bufMethod[255];
+        // NOTE (rickg22#1#): Had to do some changes to convert to unicode
+        int i = sscanf(lb.mb_str(), "%[0-9A-Za-z_~]::%[0-9A-Za-z_~](", bufBase, bufMethod);
+        if (i == 2)
+        {
+            wxString strBase = _U(bufBase);
+            wxString strMethod = _U(bufMethod);
+            cppClassName << strBase;
+            cppDestructor << cppClassName;
+            if (cppClassName.Matches(strMethod) || cppDestructor.Matches(strMethod))
+                bp->func << cppClassName << _T("::") << strMethod;
+            else
+                bp->func.Clear();
+        }
+    }
+    //end GDB workaround
+
+    m_Breakpoints.Add(bp);
+    QueueCommand(new DbgCmd_AddBreakpoint(this, bp));
+}
+
+void DebuggerGDB::OnBreakpointEdit(CodeBlocksEvent& event)
+{
+    int idx = HasBreakpoint(event.GetString(), event.GetInt());
+    if (idx == -1)
+        return;
+
+    DebuggerBreakpoint* bp = m_Breakpoints[idx];
+    EditBreakpointDlg dlg(bp);
+    if (dlg.ShowModal() == wxID_OK)
+    {
+        QueueCommand(new DbgCmd_RemoveBreakpoint(this, bp));
+        QueueCommand(new DbgCmd_AddBreakpoint(this, bp));
+    }
+}
+
+void DebuggerGDB::OnBreakpointDelete(CodeBlocksEvent& event)
+{
+    int idx = HasBreakpoint(event.GetString(), event.GetInt());
+    if (idx == -1)
+        return;
+
+    DebuggerBreakpoint* bp = m_Breakpoints[idx];
+    m_Breakpoints.RemoveAt(idx);
+
+//    delete bp;
+    QueueCommand(new DbgCmd_RemoveBreakpoint(this, bp, true)); // deletes the breakpoint when done running
+}
+
+void DebuggerGDB::OnValueTooltip(CodeBlocksEvent& event)
+{
+	if (!m_pProcess || !m_ProgramIsStopped)
+		return;
+    if (!ConfigManager::Get()->Read(_T("debugger_gdb/eval_tooltip"), 0L))
+        return;
+
+	cbEditor* ed = event.GetEditor();
+	if (!ed)
+		return;
+
+    int style = event.GetInt();
+    if (style != wxSCI_C_DEFAULT && style != wxSCI_C_OPERATOR && style != wxSCI_C_IDENTIFIER)
+        return;
+
+	wxPoint pt;
+	pt.x = event.GetX();
+	pt.y = event.GetY();
+	int pos = ed->GetControl()->PositionFromPoint(pt);
+	int start = ed->GetControl()->WordStartPosition(pos, true);
+	int end = ed->GetControl()->WordEndPosition(pos, true);
+	wxString token;
+	if (start >= ed->GetControl()->GetSelectionStart() &&
+		end <= ed->GetControl()->GetSelectionEnd())
+	{
+		token = ed->GetControl()->GetSelectedText();
+	}
+	else
+		token = ed->GetControl()->GetTextRange(start,end);
+
+	if (!token.IsEmpty())
+	{
+		Manager::Get()->GetMessageManager()->AppendLog(m_PageIndex, _("Value of %s: "), token.c_str());
+		pt = ed->GetControl()->PointFromPosition(start);
+		pt = ed->GetControl()->ClientToScreen(pt);
+		m_EvalRect.x = pt.x;
+		m_EvalRect.y = pt.y;
+		pt = ed->GetControl()->PointFromPosition(end);
+		pt = ed->GetControl()->ClientToScreen(pt);
+		m_EvalRect.width = pt.x - m_EvalRect.x;
+		m_EvalRect.height = (pt.y + ed->GetControl()->GetCharHeight()) - m_EvalRect.y;
+		m_LastEval = token;
+		QueueCommand(new DbgCmd_TooltipEvaluation(this, m_LastEval, &m_EvalWin, m_EvalRect));
+	}
+}
+
+void DebuggerGDB::OnEditorOpened(CodeBlocksEvent& event)
+{
+    // when an editor opens, look if we have breakpoints for it
+    // and notify it...
+    cbEditor* ed = event.GetEditor();
+    if (ed)
+    {
+        for (unsigned int i = 0; i < m_Breakpoints.GetCount(); ++i)
+        {
+            DebuggerBreakpoint* bp = m_Breakpoints[i];
+            if (bp->filename.Matches(ed->GetFilename()))
+                ed->ToggleBreakpoint(bp->line, false);
+        }
+    }
+    event.Skip(); // must do
+}
+
+void DebuggerGDB::OnIdle(wxIdleEvent& event)
+{
+    if (m_pProcess && ((PipedProcess*)m_pProcess)->HasInput())
+		event.RequestMore();
+	else
+		event.Skip();
+}
+
+void DebuggerGDB::OnTimer(wxTimerEvent& event)
+{
+    wxWakeUpIdle();
+}
+
+void DebuggerGDB::OnWatchesChanged(wxCommandEvent& event)
+{
+	DoWatches();
+}
+
+void DebuggerGDB::OnAddWatch(wxCommandEvent& event)
+{
+    m_pTree->AddWatch(GetEditorWordAtCaret());
+}
