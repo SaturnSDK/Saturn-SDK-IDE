@@ -1042,7 +1042,12 @@ void EditorManager::CheckForExternallyModifiedFiles()
         	if (wxMessageBox(msg, _("File changed!"), wxYES_NO) == wxYES)
 				ed->SetModified(true);
 			else
+			{
                 ed->Close();
+                ProjectFile* pf = ed->GetProjectFile();
+                if (pf)
+                    pf->SetFileState(fvsMissing);
+			}
             continue;
         }
 

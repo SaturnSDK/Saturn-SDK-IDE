@@ -614,6 +614,12 @@ ProjectFile* cbProject::AddFile(int targetIndex, const wxString& filename, bool 
     }
     SetModified(true);
     m_ProjectFilesMap[UnixFilename(f->relativeFilename)] = f; // add to hashmap
+
+    if (!wxFileExists(fullFilename))
+        f->SetFileState(fvsMissing);
+    else if (!wxFile::Access(fullFilename.c_str(), wxFile::write)) // readonly
+        f->SetFileState(fvsReadOnly);
+
 	return f;
 }
 

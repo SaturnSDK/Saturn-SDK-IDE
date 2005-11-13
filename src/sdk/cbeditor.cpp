@@ -379,30 +379,10 @@ void cbEditor::SetModified(bool modified)
         else
             SetEditorTitle(m_Shortname);
 
-        // visual state
-        if (m_pProjectFile)
-        {
-            FileVisualState fvs = m_pProjectFile->GetFileState();
-            if (fvs < fvsVcAdded) // not under version control
-            {
-                if (m_Modified)
-                    m_pProjectFile->SetFileState(fvsModified);
-                else
-                    m_pProjectFile->SetFileState(fvsNormal);
-//                {
-//                    // for non-modified state, we must check for read-only or missing file
-//                    if (!wxFileExists(m_Filename))
-//                        m_pProjectFile->SetFileState(fvsMissing);
-//                    else
-//                    {
-//                        bool read_only = !wxFile::Access(m_Filename.c_str(), wxFile::write);
-//                        m_pProjectFile->SetFileState(read_only ? fvsReadOnly : fvsNormal);
-//                    }
-//                }
-            }
-            // all other cases are not handled by cbEditor
-        }
     }
+    // visual state
+    if (m_pProjectFile)
+        m_pProjectFile->SetFileState(m_pControl->GetReadOnly() ? fvsReadOnly : (m_Modified ? fvsModified : fvsNormal));
 }
 
 void cbEditor::SetEditorTitle(const wxString& title)
@@ -410,7 +390,7 @@ void cbEditor::SetEditorTitle(const wxString& title)
     SetTitle(title);
 }
 
-void cbEditor::SetProjectFile(ProjectFile* project_file,bool preserve_modified)
+void cbEditor::SetProjectFile(ProjectFile* project_file, bool preserve_modified)
 {
 	if (m_pProjectFile == project_file)
 		return; // we 've been here before ;)
@@ -437,6 +417,12 @@ void cbEditor::SetProjectFile(ProjectFile* project_file,bool preserve_modified)
             m_Shortname = m_pProjectFile->file.GetFullName();
 		SetEditorTitle(m_Shortname);
 	}
+
+    if (!wxFileExists(m_Filename))
+        m_pProjectFile->SetFileState(fvsMissing);
+    else if (!wxFile::Access(m_Filename.c_str(), wxFile::write)) // readonly
+        m_pProjectFile->SetFileState(fvsReadOnly);
+
 #if 0
 	wxString dbg;
 	dbg << _T("[ed] Filename: ") << GetFilename() << _T('\n');
@@ -669,6 +655,14 @@ void cbEditor::Touch()
 
 bool cbEditor::Open()
 {
+    if (m_pProjectFile)
+    {
+        if (!wxFileExists(m_Filename))
+            m_pProjectFile->SetFileState(fvsMissing);
+        else if (!wxFile::Access(m_Filename.c_str(), wxFile::write)) // readonly
+            m_pProjectFile->SetFileState(fvsReadOnly);
+    }
+
     if (!wxFileExists(m_Filename))
         return false;
 
