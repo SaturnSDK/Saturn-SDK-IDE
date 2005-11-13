@@ -432,4 +432,25 @@ class DbgCmd_DisassemblyInit : public DebuggerCmd
             // output is two lines describing the current frame:
             //
             // #0  main () at main.cpp:8
-            // 
+            // C:/Devel/tmp/console/main.cpp:8:63:beg:0x4013ba
+
+            if (!m_pDlg)
+                return;
+
+            StackFrame sf;
+            wxArrayString lines = GetArrayFromString(output, _T('\n'));
+    		for (unsigned int i = 0; i < lines.GetCount(); ++i)
+    		{
+                if (!lines[i].StartsWith(g_EscapeChars)) // ->->
+                {
+                    // #0  main () at main.cpp:8
+                    wxRegEx re(_T("#([0-9]+)[ \t]+([A-Za-z0-9_:]+) \\(\\) at"));
+                    if (re.Matches(lines[i]))
+                    {
+                        re.GetMatch(lines[i], 1).ToLong(&sf.number);
+                        sf.function = re.GetMatch(lines[i], 2);
+                    }
+                }
+                else
+                {
+                    // 
