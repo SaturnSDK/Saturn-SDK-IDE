@@ -33,7 +33,7 @@
 #include <wx/mimetype.h>
 #include <wx/filename.h>
 #include <manager.h>
-#include <configmanager.h>
+#include <old_configmanager.h>
 #include <editormanager.h>
 #include <messagemanager.h>
 #include <projectmanager.h>
@@ -68,7 +68,7 @@ HelpPlugin::HelpPlugin()
 : m_pMenuBar(0), m_LastId(0)
 {
   //ctor
-  wxString resPath = ConfigManager::Get()->Read(_T("data_path"), wxEmptyString);
+  wxString resPath = OldConfigManager::Get()->Read(_T("data_path"), wxEmptyString);
   wxXmlResource::Get()->Load(resPath + _T("/help_plugin.zip#zip:*.xrc"));
 
   m_PluginInfo.name = _T("HelpPlugin");
@@ -82,7 +82,7 @@ HelpPlugin::HelpPlugin()
   m_PluginInfo.license = LICENSE_GPL;
   m_PluginInfo.hasConfigure = true;
 
-  ConfigManager::AddConfiguration(m_PluginInfo.title, _T("/help_plugin"));
+  OldConfigManager::AddConfiguration(m_PluginInfo.title, _T("/help_plugin"));
 
   // initialize IDs for Help and popup menu
   for (int i = 0; i < MAX_HELP_ITEMS; ++i)

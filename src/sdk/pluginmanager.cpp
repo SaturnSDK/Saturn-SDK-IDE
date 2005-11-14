@@ -37,7 +37,7 @@
 #include "manager.h"
 #include "editormanager.h"
 #include "pluginsconfigurationdlg.h"
-#include "configmanager.h"
+#include "old_configmanager.h"
 #include "managerproxy.h"
 #include "personalitymanager.h"
 
@@ -70,9 +70,9 @@ PluginManager::PluginManager()
 
     const wxString& personalityKey = Manager::Get()->GetPersonalityManager()->GetPersonalityKey();
 
-	ConfigManager::AddConfiguration(_("Plugin Manager"), _T("/plugins"));
+	OldConfigManager::AddConfiguration(_("Plugin Manager"), _T("/plugins"));
 	if (!personalityKey.IsEmpty())
-        ConfigManager::AddConfiguration(_("Plugin Manager"), personalityKey + _T("/plugins"));
+        OldConfigManager::AddConfiguration(_("Plugin Manager"), personalityKey + _T("/plugins"));
 }
 
 // class destructor
@@ -224,7 +224,7 @@ void PluginManager::LoadAllPlugins()
     const wxString& personalityKey = Manager::Get()->GetPersonalityManager()->GetPersonalityKey();
 
     // check if a plugin crashed the app last time
-    wxString probPlugin = ConfigManager::Get()->Read(personalityKey + _T("/plugins/try_to_activate"), wxEmptyString);
+    wxString probPlugin = OldConfigManager::Get()->Read(personalityKey + _T("/plugins/try_to_activate"), wxEmptyString);
     if (!probPlugin.IsEmpty())
     {
         wxString msg;
@@ -241,7 +241,7 @@ void PluginManager::LoadAllPlugins()
         // do not load it if the user has explicitly asked not to...
         wxString baseKey;
         baseKey << personalityKey << _T("/plugins/") << m_Plugins[i]->name;
-        bool loadIt = ConfigManager::Get()->Read(baseKey, true);
+        bool loadIt = OldConfigManager::Get()->Read(baseKey, true);
 
         // if we have a problematic plugin, check if this is it
         if (loadIt && !probPlugin.IsEmpty())
@@ -249,17 +249,17 @@ void PluginManager::LoadAllPlugins()
             loadIt = plug->GetInfo()->title != probPlugin;
             // if this is the problematic plugin, don't load it
             if (!loadIt)
-                ConfigManager::Get()->Write(baseKey, false);
+                OldConfigManager::Get()->Write(baseKey, false);
         }
 
         if (loadIt && !plug->IsAttached())
 		{
-            ConfigManager::Get()->Write(personalityKey + _T("/plugins/try_to_activate"), plug->GetInfo()->title);
+            OldConfigManager::Get()->Write(personalityKey + _T("/plugins/try_to_activate"), plug->GetInfo()->title);
 			Manager::Get()->GetMessageManager()->AppendLog(_("%s "), m_Plugins[i]->name.c_str());
             try
             {
                 plug->Attach();
-                ConfigManager::Get()->DeleteEntry(personalityKey + _T("/plugins/try_to_activate"));
+                OldConfigManager::Get()->DeleteEntry(personalityKey + _T("/plugins/try_to_activate"));
             }
             catch (cbException& exception)
             {
@@ -270,14 +270,14 @@ void PluginManager::LoadAllPlugins()
                 msg.Printf(_("Plugin \"%s\" failed to load...\n"
                             "Do you want to disable this plugin from loading next time?"), plug->GetInfo()->title.c_str());
                 if (wxMessageBox(msg, _("Warning"), wxICON_WARNING | wxYES_NO) == wxYES)
-                    ConfigManager::Get()->Write(baseKey, false);
+                    OldConfigManager::Get()->Write(baseKey, false);
             }
 		}
     }
 	Manager::Get()->GetMessageManager()->Log(_T(""));
 
     wxLogNull ln;
-    ConfigManager::Get()->DeleteEntry(personalityKey + _T("/plugins/try_to_activate"));
+    OldConfigManager::Get()->DeleteEntry(personalityKey + _T("/plugins/try_to_activate"));
 }
 
 void PluginManager::UnloadAllPlugins()
@@ -514,18 +514,18 @@ int PluginManager::Configure()
         // do not load it if the user has explicitely asked not to...
         wxString baseKey;
         baseKey << _T("/plugins/") << m_Plugins[i]->name;
-        bool loadIt = ConfigManager::Get()->Read(baseKey, true);
+        bool loadIt = OldConfigManager::Get()->Read(baseKey, true);
 
         if (!loadIt && plug->IsAttached())
             plug->Release(false);
         else if (loadIt && !plug->IsAttached())
         {
-            ConfigManager::Get()->Write(_("/plugins/try_to_activate"), plug->GetInfo()->title);
+            OldConfigManager::Get()->Write(_("/plugins/try_to_activate"), plug->GetInfo()->title);
             plug->Attach();
         }
     }
     wxLogNull ln;
-    ConfigManager::Get()->DeleteEntry(_T("/plugins/try_to_activate"));
+    OldConfigManager::Get()->DeleteEntry(_T("/plugins/try_to_activate"));
 */
     return wxID_OK;
 }

@@ -13,7 +13,7 @@
 #include "devpakinstaller.h"
 #include "crc32.h"
 
-#include <configmanager.h>
+#include <old_configmanager.h>
 #include <manager.h>
 #include <messagemanager.h>
 #include <globals.h>

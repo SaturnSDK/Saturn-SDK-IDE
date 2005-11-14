@@ -5,7 +5,7 @@
 #include <wx/combobox.h>
 #include <wx/spinctrl.h>
 #include <wx/utils.h>
-#include <configmanager.h>
+#include <old_configmanager.h>
 #include "addtododlg.h"
 
 #define CONF_GROUP _T("/todo/users")
@@ -30,7 +30,7 @@ AddTodoDlg::AddTodoDlg(wxWindow* parent, wxArrayString& types)
     if (m_Types.Index(_T("NOTE")) == wxNOT_FOUND)
         cmb->Append(_T("NOTE"));
 
-    wxString sels = ConfigManager::Get()->Read(_T("/todo/last_used_type"), _T(""));
+    wxString sels = OldConfigManager::Get()->Read(_T("/todo/last_used_type"), _T(""));
     if (!sels.IsEmpty())
     {
         int sel = cmb->FindString(sels);
@@ -52,7 +52,7 @@ void AddTodoDlg::LoadUsers()
 	cmb->Clear();
 	long cookie;
 	wxString entry;
-	wxConfigBase* conf = ConfigManager::Get();
+	wxConfigBase* conf = OldConfigManager::Get();
 	wxString oldPath = conf->GetPath();
 	conf->SetPath(CONF_GROUP);
 	bool cont = conf->GetFirstEntry(entry, cookie);
@@ -71,7 +71,7 @@ void AddTodoDlg::LoadUsers()
 void AddTodoDlg::SaveUsers()
 {
 	wxComboBox* cmb = XRCCTRL(*this, "cmbUser", wxComboBox);
-	wxConfigBase* conf = ConfigManager::Get();
+	wxConfigBase* conf = OldConfigManager::Get();
 	conf->DeleteGroup(CONF_GROUP);
 	wxString oldPath = conf->GetPath();
 	conf->SetPath(CONF_GROUP);
@@ -135,7 +135,7 @@ void AddTodoDlg::EndModal(int retVal)
             m_Types.Add(cmb->GetString(i));
         }
 
-        ConfigManager::Get()->Write(_T("/todo/last_used_type"), cmb->GetValue());
+        OldConfigManager::Get()->Write(_T("/todo/last_used_type"), cmb->GetValue());
 	}
 
 	wxDialog::EndModal(retVal);

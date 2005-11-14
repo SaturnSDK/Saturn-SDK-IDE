@@ -30,7 +30,7 @@
 #include <wx/checklst.h>
 #include <wx/button.h>
 #include "manager.h"
-#include "configmanager.h"
+#include "old_configmanager.h"
 #include "pluginmanager.h"
 #include "personalitymanager.h"
 
@@ -57,7 +57,7 @@ PluginsConfigurationDlg::PluginsConfigurationDlg(wxWindow* parent)
 
         wxString baseKey;
         baseKey << personalityKey << _T("/plugins/") << elem->name;
-        list->Check(list->GetCount()-1, ConfigManager::Get()->Read(baseKey, true));
+        list->Check(list->GetCount()-1, OldConfigManager::Get()->Read(baseKey, true));
     }
 }
 
@@ -81,7 +81,7 @@ void PluginsConfigurationDlg::OnOK(wxCommandEvent& event)
         wxString baseKey;
         baseKey << personalityKey << _T("/plugins/") << elem->name;
         bool checked = list->IsChecked(i);
-        ConfigManager::Get()->Write(baseKey, checked);
+        OldConfigManager::Get()->Write(baseKey, checked);
     }
 
     EndModal(wxID_OK);

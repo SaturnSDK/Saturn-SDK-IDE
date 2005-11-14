@@ -11,7 +11,7 @@
 #endif
 
 #include "exporter.h"
-#include <configmanager.h>
+#include <old_configmanager.h>
 #include <manager.h>
 #include <cbeditor.h>
 #include <editormanager.h>
@@ -54,7 +54,7 @@ Exporter::Exporter()
   m_PluginInfo.license = LICENSE_GPL;
   m_PluginInfo.hasConfigure = false;
 
-  ConfigManager::AddConfiguration(m_PluginInfo.title, _T("/exporter"));
+  OldConfigManager::AddConfiguration(m_PluginInfo.title, _T("/exporter"));
 }
 
 Exporter::~Exporter()

@@ -3,7 +3,7 @@
 #include "cbexception.h"
 #include "manager.h"
 #include "messagemanager.h"
-#include "configmanager.h"
+#include "old_configmanager.h"
 #include "scriptingcall.h"
 #include "as/bindings/scriptbindings.h"
 #include <wx/msgdlg.h>
@@ -107,7 +107,7 @@ int ScriptingManager::LoadScript(const wxString& filename, const wxString& modul
 //    if (!DoLoadScript(filename, script))
 //    {
 //        // try in <data_path>/scripts/
-//        if (!DoLoadScript(ConfigManager::Get()->Read(_T("/data_path")) + _T("/scripts/") + filename, script))
+//        if (!DoLoadScript(OldConfigManager::Get()->Read(_T("/data_path")) + _T("/scripts/") + filename, script))
 //        {
 ////            wxMessageBox(_("Can't open script ") + filename, _("Error"), wxICON_ERROR);
 //            return -1;
@@ -118,7 +118,7 @@ int ScriptingManager::LoadScript(const wxString& filename, const wxString& modul
     FILE* fp = fopen(_C(fname), "r");
     if (!fp)
     {
-        fname = ConfigManager::Get()->Read(_T("/data_path")) + _T("/scripts/") + filename;
+        fname = OldConfigManager::Get()->Read(_T("/data_path")) + _T("/scripts/") + filename;
         fp = fopen(_C(fname), "r");
         if(!fp)
         {

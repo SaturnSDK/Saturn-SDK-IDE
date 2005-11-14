@@ -28,7 +28,7 @@
 #include "manager.h"
 #include "managerproxy.h"
 #include "messagemanager.h"
-#include "configmanager.h"
+#include "old_configmanager.h"
 
 #include <wx/intl.h>
 
@@ -70,14 +70,14 @@ void PersonalityManager::ReadPersonalities()
 	wxString str;
 	long cookie;
 
-	ConfigManager::Get()->SetPath(GetPersonalitiesRoot());
-	bool cont = ConfigManager::Get()->GetFirstGroup(str, cookie);
+	OldConfigManager::Get()->SetPath(GetPersonalitiesRoot());
+	bool cont = OldConfigManager::Get()->GetFirstGroup(str, cookie);
 	while (cont)
 	{
         m_Personalities.Add(str);
-		cont = ConfigManager::Get()->GetNextGroup(str, cookie);
+		cont = OldConfigManager::Get()->GetNextGroup(str, cookie);
 	}
-	ConfigManager::Get()->SetPath(_T("/"));
+	OldConfigManager::Get()->SetPath(_T("/"));
 }
 
 void PersonalityManager::SetPersonality(const wxString& personality, bool createIfNotExist)

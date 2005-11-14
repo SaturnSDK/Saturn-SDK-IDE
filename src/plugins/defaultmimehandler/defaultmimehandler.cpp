@@ -16,7 +16,7 @@
 #include "defaultmimehandler.h"
 #include <manager.h>
 #include <editormanager.h>
-#include <configmanager.h>
+#include <old_configmanager.h>
 #include <cbeditor.h>
 #include <licenses.h> // defines some common licenses (like the GPL)
 
@@ -49,10 +49,10 @@ DefaultMimeHandler::DefaultMimeHandler()
 
     wxFileSystem::AddHandler(new wxZipFSHandler);
     wxXmlResource::Get()->InitAllHandlers();
-    wxString resPath = ConfigManager::Get()->Read(_T("data_path"), wxEmptyString);
+    wxString resPath = OldConfigManager::Get()->Read(_T("data_path"), wxEmptyString);
     wxXmlResource::Get()->Load(resPath + _T("/defaultmimehandler.zip#zip:*.xrc"));
 
-	ConfigManager::AddConfiguration(_("MIME types handling"), CONF_GROUP);
+	OldConfigManager::AddConfiguration(_("MIME types handling"), CONF_GROUP);
 }
 
 DefaultMimeHandler::~DefaultMimeHandler()
@@ -66,7 +66,7 @@ void DefaultMimeHandler::OnAttach()
     WX_CLEAR_ARRAY(m_MimeTypes);
 	long cookie;
 	wxString entry;
-	wxConfigBase* conf = ConfigManager::Get();
+	wxConfigBase* conf = OldConfigManager::Get();
 	wxString oldPath = conf->GetPath();
 	conf->SetPath(CONF_GROUP);
 	bool cont = conf->GetFirstEntry(entry, cookie);
@@ -95,7 +95,7 @@ void DefaultMimeHandler::OnAttach()
 void DefaultMimeHandler::OnRelease(bool appShutDown)
 {
     // save configuration
-	wxConfigBase* conf = ConfigManager::Get();
+	wxConfigBase* conf = OldConfigManager::Get();
 	conf->DeleteGroup(CONF_GROUP);
 	wxString oldPath = conf->GetPath();
 	conf->SetPath(CONF_GROUP);

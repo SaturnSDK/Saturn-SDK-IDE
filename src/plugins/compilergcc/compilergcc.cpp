@@ -28,7 +28,7 @@
 #include <manager.h>
 #include <sdk_events.h>
 #include <pipedprocess.h>
-#include <configmanager.h>
+#include <old_configmanager.h>
 #include <messagemanager.h>
 #include <macrosmanager.h>
 #include <projectmanager.h>
@@ -200,8 +200,8 @@ CompilerGCC::CompilerGCC()
 	for (int i = 0; i < MAX_TARGETS; ++i)
 		idMenuSelectTargetOther[i] = wxNewId();
 #ifndef __WXMSW__
-	m_ConsoleTerm = ConfigManager::Get()->Read(_T("/compiler_gcc/console_terminal"), DEFAULT_CONSOLE_TERM);
-	m_ConsoleShell = ConfigManager::Get()->Read(_T("/compiler_gcc/console_shell"), DEFAULT_CONSOLE_SHELL);
+	m_ConsoleTerm = OldConfigManager::Get()->Read(_T("/compiler_gcc/console_terminal"), DEFAULT_CONSOLE_TERM);
+	m_ConsoleShell = OldConfigManager::Get()->Read(_T("/compiler_gcc/console_shell"), DEFAULT_CONSOLE_SHELL);
     // because in previous versions the value for terminal
     // used to be "console_shell" (incorrectly), double-check that
     // the word "term" or "onsol" doesn't appear in "shell"
@@ -223,7 +223,7 @@ CompilerGCC::CompilerGCC()
 	// register (if any) user-copies of built-in compilers
 	CompilerFactory::RegisterUserCompilers();
 
-	ConfigManager::AddConfiguration(m_PluginInfo.title, _T("/compiler_gcc"));
+	OldConfigManager::AddConfiguration(m_PluginInfo.title, _T("/compiler_gcc"));
 }
 
 CompilerGCC::~CompilerGCC()
@@ -246,7 +246,7 @@ void CompilerGCC::OnAttach()
 
     // set log image
 	wxBitmap bmp;
-	wxString prefix = ConfigManager::Get()->Read(_T("data_path")) + _T("/images/");
+	wxString prefix = OldConfigManager::Get()->Read(_T("data_path")) + _T("/images/");
     bmp.LoadFile(prefix + _T("misc_16x16.png"), wxBITMAP_TYPE_PNG);
     Manager::Get()->GetMessageManager()->SetLogImage(m_Log, bmp);
 
@@ -267,7 +267,7 @@ void CompilerGCC::OnAttach()
     Manager::Get()->GetMessageManager()->SetLogImage(m_pListLog, bmp);
 
     // set default compiler for new projects
-    CompilerFactory::SetDefaultCompilerIndex(ConfigManager::Get()->Read(_T("/compiler_gcc/default_compiler"), (long int)0));
+    CompilerFactory::SetDefaultCompilerIndex(OldConfigManager::Get()->Read(_T("/compiler_gcc/default_compiler"), (long int)0));
 	LoadOptions();
 	SetupEnvironment();
 }
@@ -276,7 +276,7 @@ void CompilerGCC::OnRelease(bool appShutDown)
 {
     DoDeleteTempMakefile();
 	SaveOptions();
-    ConfigManager::Get()->Write(_T("/compiler_gcc/default_compiler"), CompilerFactory::GetDefaultCompilerIndex());
+    OldConfigManager::Get()->Write(_T("/compiler_gcc/default_compiler"), CompilerFactory::GetDefaultCompilerIndex());
 	if (Manager::Get()->GetMessageManager())
 	{
         Manager::Get()->GetMessageManager()->DeletePage(m_ListPageIndex);
@@ -320,8 +320,8 @@ int CompilerGCC::Configure(cbProject* project, ProjectBuildTarget* target)
     CompilerOptionsDlg dlg(Manager::Get()->GetAppWindow(), this, project, target);
     if(dlg.ShowModal()==wxID_OK)
     {
-      m_ConsoleTerm = ConfigManager::Get()->Read(_T("/compiler_gcc/console_terminal"), DEFAULT_CONSOLE_TERM);
-      m_ConsoleShell = ConfigManager::Get()->Read(_T("/compiler_gcc/console_shell"), DEFAULT_CONSOLE_SHELL);
+      m_ConsoleTerm = OldConfigManager::Get()->Read(_T("/compiler_gcc/console_terminal"), DEFAULT_CONSOLE_TERM);
+      m_ConsoleShell = OldConfigManager::Get()->Read(_T("/compiler_gcc/console_shell"), DEFAULT_CONSOLE_SHELL);
       SaveOptions();
       SetupEnvironment();
     }
@@ -1120,7 +1120,7 @@ int CompilerGCC::Run(ProjectBuildTarget* target)
         // should console runner be used?
         if (target->GetUseConsoleRunner())
         {
-            wxString baseDir = ConfigManager::Get()->Read(_T("/app_path"));
+            wxString baseDir = OldConfigManager::Get()->Read(_T("/app_path"));
 #ifdef __WXMSW__
 	#define CONSOLE_RUNNER "console_runner.exe"
 #else
@@ -1962,7 +1962,7 @@ void CompilerGCC::OnGCCError(CodeBlocksEvent& event)
 
 void CompilerGCC::AddOutputLine(const wxString& output, bool forceErrorColor)
 {
-    size_t maxErrors = ConfigManager::Get()->Read(_T("/compiler_gcc/max_reported_errors"), 50);
+    size_t maxErrors = OldConfigManager::Get()->Read(_T("/compiler_gcc/max_reported_errors"), 50);
     if (maxErrors > 0)
     {
         if (m_Errors.GetErrorsCount() > maxErrors)

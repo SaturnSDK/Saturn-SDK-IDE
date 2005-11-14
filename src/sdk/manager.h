@@ -20,7 +20,7 @@ class wxMenuBar;
 class wxToolBar;
 class UserVariableManager;
 class ScriptingManager;
-class XmlConfigManager;
+class ConfigManager;
 
 /*
  * No description
@@ -43,7 +43,7 @@ class DLLIMPORT Manager
 		PersonalityManager* GetPersonalityManager();
 		UserVariableManager* GetUserVariableManager();
 		ScriptingManager* GetScriptingManager();
-		XmlConfigManager* Manager::GetConfigManager(const wxString& name_space);
+		ConfigManager* Manager::GetConfigManager(const wxString& name_space);
 
 		static bool isappShutingDown();
 		// stupid typo ;-P

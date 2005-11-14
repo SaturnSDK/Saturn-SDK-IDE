@@ -7,7 +7,7 @@
 #include <wx/filedlg.h>
 #include <wx/msgdlg.h>
 #include <wx/utils.h>
-#include <configmanager.h>
+#include <old_configmanager.h>
 
 BEGIN_EVENT_TABLE(ImpExpConfig, wxDialog)
     EVT_BUTTON(XRCID("btnImport"), ImpExpConfig::OnImport)
@@ -23,7 +23,7 @@ ImpExpConfig::ImpExpConfig(wxWindow* parent)
 	// fill list
 	wxCheckListBox* list = XRCCTRL(*this, "lstConf", wxCheckListBox);
 	list->Clear();
-	const Configurations& confs = ConfigManager::GetConfigurations();
+	const Configurations& confs = OldConfigManager::GetConfigurations();
 	for (size_t i = 0; i < confs.Count(); ++i)
 	{
         list->Append(confs[i].desc);
@@ -81,7 +81,7 @@ void ImpExpConfig::OnExport(wxCommandEvent& event)
         {
             if (list->IsChecked(i))
             {
-                if (ConfigManager::ExportToFile(filename, i))
+                if (OldConfigManager::ExportToFile(filename, i))
                     ++success_count;
                 ++count;
             }

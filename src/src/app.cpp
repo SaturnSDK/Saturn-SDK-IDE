@@ -37,7 +37,7 @@
 #if wxCHECK_VERSION(2,6,0)
     #include <wx/debugrpt.h>
 #endif
-#include <configmanager.h>
+#include <old_configmanager.h>
 #include <editormanager.h>
 #include <projectmanager.h>
 #include <personalitymanager.h>
@@ -92,11 +92,13 @@ END_EVENT_TABLE()
 bool CodeBlocksApp::LoadConfig()
 {
     if (ParseCmdLine(0L) != 0)
+
         return false;
+
     SetVendorName(APP_VENDOR);
     SetAppName(APP_NAME" v"APP_VERSION);
-    ConfigManager::Init(wxConfigBase::Get());
-    ConfigManager::Get()->Write(_T("app_path"), GetAppPath());
+    OldConfigManager::Init(wxConfigBase::Get());
+    OldConfigManager::Get()->Write(_T("app_path"), GetAppPath());
 
     // find out about data path
 #ifdef __WXMSW__
@@ -117,19 +119,20 @@ bool CodeBlocksApp::LoadConfig()
         if (!env.IsEmpty())
             data = env + actualData;
     }
-    ConfigManager::Get()->Write(_T("data_path"), data);
-    m_HasDebugLog = ConfigManager::Get()->Read(_T("/message_manager/has_debug_log"), (long int)0) || m_HasDebugLog;
-    ConfigManager::Get()->Write(_T("/message_manager/has_debug_log"), m_HasDebugLog);
+
+    OldConfigManager::Get()->Write(_T("data_path"), data);
+    m_HasDebugLog = OldConfigManager::Get()->Read(_T("/message_manager/has_debug_log"), (long int)0) || m_HasDebugLog;
+    OldConfigManager::Get()->Write(_T("/message_manager/has_debug_log"), m_HasDebugLog);
     return true;
 }
 
 void CodeBlocksApp::InitAssociations()
 {
 #ifdef __WXMSW__
-	if (!m_NoAssocs && ConfigManager::Get()->Read(_T("/environment/check_associations"), 1) == 1)
+	if (!m_NoAssocs && OldConfigManager::Get()->Read(_T("/environment/check_associations"), 1) == 1)
 		CheckAssociations();
 
-	if (!m_NoDDE && ConfigManager::Get()->Read(_T("/environment/use_dde"), 1) == 1)
+	if (!m_NoDDE && OldConfigManager::Get()->Read(_T("/environment/use_dde"), 1) == 1)
 	{
 		g_DDEServer = new DDEServer(0);
 		g_DDEServer->Create(DDE_SERVICE);
@@ -174,7 +177,7 @@ void CodeBlocksApp::ClearConf()
         ret = wxMessageBox(_("Are you *really* sure you want to clear all Code::Blocks configuration settings?"), _("Clear configuration settings"), wxICON_QUESTION | wxYES_NO | wxNO_DEFAULT);
         if (ret == wxYES)
         {
-            ConfigManager::Get()->DeleteAll();
+            OldConfigManager::Get()->DeleteAll();
             ret = wxMessageBox(_("Code::Blocks configuration settings cleared"), _("Information"), wxICON_INFORMATION);
         }
     }
@@ -189,7 +192,7 @@ bool CodeBlocksApp::InitXRCStuff()
     wxFileSystem::AddHandler(new wxZipFSHandler);
     wxXmlResource::Get()->InitAllHandlers();
 
-    wxString resPath = ConfigManager::Get()->Read(_T("data_path"), wxEmptyString);
+    wxString resPath = OldConfigManager::Get()->Read(_T("data_path"), wxEmptyString);
     wxString res = resPath + _T("/resources.zip");
     if (!CheckResource(res))
     	return false;
@@ -210,7 +213,7 @@ void CodeBlocksApp::InitFrame()
     SetTopWindow(frame);
     if (ParseCmdLine(frame) == 0)
     {
-        if (ConfigManager::Get()->Read(_T("/environment/blank_workspace"), 0L) == 0)
+        if (OldConfigManager::Get()->Read(_T("/environment/blank_workspace"), 0L) == 0)
             Manager::Get()->GetProjectManager()->LoadWorkspace();
     }
 
@@ -226,7 +229,7 @@ void CodeBlocksApp::CheckVersion()
 {
 #ifdef __WXMSW__
     // for windows users only, display a message that no compiler is provided
-    if (ConfigManager::Get()->Read(_T("version"), _T("")) != APP_ACTUAL_VERSION)
+    if (OldConfigManager::Get()->Read(_T("version"), _T("")) != APP_ACTUAL_VERSION)
     {
         // this is a (probably) newer version; show a message box with
         // important notes
@@ -236,7 +239,7 @@ void CodeBlocksApp::CheckVersion()
         // setup files including a compiler...
 
         // update the version
-        ConfigManager::Get()->Write(_T("version"), APP_ACTUAL_VERSION);
+        OldConfigManager::Get()->Write(_T("version"), APP_ACTUAL_VERSION);
     }
 #endif
 }
@@ -301,12 +304,13 @@ bool CodeBlocksApp::OnInit()
     wxHandleFatalExceptions(true);
 #endif
 
+
     if(!LoadConfig())
         return false;
 
     InitLocale();
 	m_pSingleInstance = 0;
-    if (ConfigManager::Get()->Read(_T("/environment/single_instance"), 1))
+    if (OldConfigManager::Get()->Read(_T("/environment/single_instance"), 1))
     {
         const wxString name = wxString::Format(_T("Code::Blocks-%s"), wxGetUserId().c_str());
         m_pSingleInstance = new wxSingleInstanceChecker(name);
@@ -403,7 +407,7 @@ void CodeBlocksApp::ShowSplashScreen()
 {
     HideSplashScreen();
 
-	if (!m_NoSplash && ConfigManager::Get()->Read(_T("/environment/show_splash"), 1) == 1)
+	if (!m_NoSplash && OldConfigManager::Get()->Read(_T("/environment/show_splash"), 1) == 1)
 	{
 		wxBitmap bitmap;
 		#ifdef __WXMSW__
@@ -442,7 +446,7 @@ bool CodeBlocksApp::CheckResource(const wxString& res)
     		"to point where "APP_NAME" is installed,\n"
     		"or try re-installing the application...",
     		res.c_str(),
-    		ConfigManager::Get()->Read(_T("data_path"), wxEmptyString).c_str());
+    		OldConfigManager::Get()->Read(_T("data_path"), wxEmptyString).c_str());
     	wxMessageBox(msg);
     	return false;
     }
@@ -637,7 +641,7 @@ void CodeBlocksApp::CheckAssociations()
                            "If you want to enable the check, go to \"Settings/Environment\" and check \"Check & set file associations\"..."),
                          _("Information"),
                          wxICON_INFORMATION);
-            ConfigManager::Get()->Write(_T("/environment/check_associations"), 0L);
+            OldConfigManager::Get()->Write(_T("/environment/check_associations"), 0L);
         }
     }
 }
@@ -716,7 +720,7 @@ void CodeBlocksApp::OnAppActivate(wxActivateEvent& event)
     if (!Manager::Get())
         return;
 
-    if (Manager::Get()->GetEditorManager() && ConfigManager::Get()->Read(_T("/environment/check_modified_files"), 1))
+    if (Manager::Get()->GetEditorManager() && OldConfigManager::Get()->Read(_T("/environment/check_modified_files"), 1))
     {
         wxCommandEvent evt(wxEVT_COMMAND_MENU_SELECTED, idEditorManagerCheckFiles);
         wxPostEvent(Manager::Get()->GetEditorManager(), evt);

@@ -108,7 +108,7 @@ compilerfactory.h \
 compiler.h \
 compileroptions.h \
 compiletargetbase.h \
-configmanager.h \
+old_configmanager.h \
 configuretoolsdlg.h \
 confirmreplacedlg.h \
 customvars.h \

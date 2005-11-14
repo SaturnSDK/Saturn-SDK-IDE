@@ -15,7 +15,7 @@
 #include "manager.h"
 #include "messagemanager.h"
 
-#include <configmanager.h>
+#include <old_configmanager.h>
 
 CompilerICC::CompilerICC()
     : Compiler(_("Intel C/C++ Compiler"))

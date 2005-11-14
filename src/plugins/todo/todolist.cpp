@@ -18,7 +18,7 @@
 #include <wx/xrc/xmlres.h>
 #include <wx/fs_zip.h>
 #include <manager.h>
-#include <configmanager.h>
+#include <old_configmanager.h>
 #include <editormanager.h>
 #include <messagemanager.h>
 #include <projectmanager.h>
@@ -51,7 +51,7 @@ ToDoList::ToDoList()
 	//ctor
     wxFileSystem::AddHandler(new wxZipFSHandler);
     wxXmlResource::Get()->InitAllHandlers();
-    wxString resPath = ConfigManager::Get()->Read(_T("data_path"), wxEmptyString);
+    wxString resPath = OldConfigManager::Get()->Read(_T("data_path"), wxEmptyString);
     wxXmlResource::Get()->Load(resPath + _T("/todo.zip#zip:*.xrc"));
 
 	m_PluginInfo.name = _T("ToDoList");
@@ -65,7 +65,7 @@ ToDoList::ToDoList()
 	m_PluginInfo.license = LICENSE_GPL;
 	m_PluginInfo.hasConfigure = true;
 
-	ConfigManager::AddConfiguration(m_PluginInfo.title, _T("/todo_list"));
+	OldConfigManager::AddConfiguration(m_PluginInfo.title, _T("/todo_list"));
 }
 
 ToDoList::~ToDoList()
@@ -89,7 +89,7 @@ void ToDoList::OnAttach()
 	m_pListLog = new ToDoListView(msgMan, m_PluginInfo.title, 6, widths, titles, m_Types);
 	m_ListPageIndex = msgMan->AddLog(m_pListLog);
 
-    m_AutoRefresh = ConfigManager::Get()->Read(_T("todo_list/auto_refresh"), true);
+    m_AutoRefresh = OldConfigManager::Get()->Read(_T("todo_list/auto_refresh"), true);
     LoadTypes();
 }
 
@@ -125,7 +125,7 @@ int ToDoList::Configure()
 {
     ToDoSettingsDlg dlg;
     if (dlg.ShowModal() == wxID_OK)
-        m_AutoRefresh = ConfigManager::Get()->Read(_T("todo_list/auto_refresh"), true);
+        m_AutoRefresh = OldConfigManager::Get()->Read(_T("todo_list/auto_refresh"), true);
 	return 0;
 }
 
@@ -134,7 +134,7 @@ void ToDoList::LoadTypes()
     m_Types.Clear();
 	long cookie;
 	wxString entry;
-	wxConfigBase* conf = ConfigManager::Get();
+	wxConfigBase* conf = OldConfigManager::Get();
 	wxString oldPath = conf->GetPath();
 	conf->SetPath(_T("/todo/types"));
 	bool cont = conf->GetFirstEntry(entry, cookie);
@@ -155,7 +155,7 @@ void ToDoList::LoadTypes()
 
 void ToDoList::SaveTypes()
 {
-	wxConfigBase* conf = ConfigManager::Get();
+	wxConfigBase* conf = OldConfigManager::Get();
 	conf->DeleteGroup(_T("/todo/types"));
 	wxString oldPath = conf->GetPath();
 	conf->SetPath(_T("/todo/types"));

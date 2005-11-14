@@ -3,7 +3,7 @@
 // #include this from dlgabout.cpp
 
 
-XmlConfigManager *c = Manager::Get()->GetConfigManager("main");
+ConfigManager *c = Manager::Get()->GetConfigManager("main");
 MessageManager *m = Manager::Get()->GetMessageManager();
 
 m->DebugLog("APP_PATH=" +  c->Read("app_path"));
@@ -88,7 +88,7 @@ for(unsigned int i = 0; i < enumerated.GetCount(); ++i)
     m->DebugLog(wxString("keys in /foo : ") << enumerated[i]);
 
 
-//******* declaration in configmanager.h (remove before release!)
+//******* declaration in old_configmanager.h (remove before release!)
 MySerializableLongIntClass serialLong(5);
 MySerializableLongIntClass otherSerialLong(0);
 
@@ -100,13 +100,13 @@ serialLong.Print();
 otherSerialLong.Print();
 
 
-ConfigManagerContainer::StringToStringMap map;
+OldConfigManagerContainer::StringToStringMap map;
 map["a"] = "the letter A";
 map["b"] = "the letter B";
 map["c"] = "the letter C";
 c->Write("/foo/thismapsletters", map);
 
-ConfigManagerContainer::StringToStringMap pam = c->ReadSSMap("/foo/thismapsletters");
+OldConfigManagerContainer::StringToStringMap pam = c->ReadSSMap("/foo/thismapsletters");
 m->DebugLog(pam["a"]);
 m->DebugLog(pam["b"]);
 m->DebugLog(pam["c"]);
@@ -115,8 +115,8 @@ m->DebugLog(pam["c"]);
 MyThingieMap objMap1; // WX_DECLARE_STRING_HASH_MAP(MySerializableLongIntClass *, MyThingieMap);
 MyThingieMap objMap2;
 objMap1["a"] = new MySerializableLongIntClass(1234);
-c->Write("boo", (ConfigManagerContainer::SerializableObjectMap*) &objMap1);
-c->Read<MySerializableLongIntClass>("boo", (ConfigManagerContainer::SerializableObjectMap*) &objMap2);
+c->Write("boo", (OldConfigManagerContainer::SerializableObjectMap*) &objMap1);
+c->Read<MySerializableLongIntClass>("boo", (OldConfigManagerContainer::SerializableObjectMap*) &objMap2);
 objMap2["a"]->Print();
 
 
@@ -126,14 +126,14 @@ m->DebugLog(wxString("read /foo/one_or_zero=") << c->ReadBool("/foo/one_or_zero"
 c->Write("/foo/one_or_zero", false);
 m->DebugLog(wxString("read /foo/one_or_zero=") << c->ReadBool("/foo/one_or_zero"));
 
-XmlConfigManager *cv = Manager::Get()->GetConfigManager("volatile:main");  // volatile offers DOM to store temporary data
+ConfigManager *cv = Manager::Get()->GetConfigManager("volatile:main");  // volatile offers DOM to store temporary data
 cv->Write("word", "table");                                                // the volatile DOM is not saved to disk
 m->DebugLog(wxString("main word:") << c->Read("word"));
 m->DebugLog(wxString("volatile word:") << cv->Read("word"));
 m->DebugLog(wxString("volatile top:") << cv->Read("/top"));
 
 
-ConfigManagerContainer::StringSet sset;
+OldConfigManagerContainer::StringSet sset;
 sset.insert("zac");
 sset.insert("boing");
 sset.insert("boom");
@@ -143,10 +143,10 @@ c->Write("unique_strings", sset);
 sset.clear();
 
 sset = c->ReadSSet("unique_strings");
-for(ConfigManagerContainer::StringSet::iterator it = sset.begin(); it != sset.end(); ++it)
+for(OldConfigManagerContainer::StringSet::iterator it = sset.begin(); it != sset.end(); ++it)
     m->DebugLog(*it);
 
-ConfigManagerContainer::IntToStringMap imap;
+OldConfigManagerContainer::IntToStringMap imap;
 imap[17] = "poof";
 imap[3] = "bang";
 imap[2914] = "ring";
@@ -156,7 +156,7 @@ c->Write("ints2strings", imap);
 imap.clear();
 
 imap = c->ReadISMap("ints2strings");
-for(ConfigManagerContainer::IntToStringMap::iterator it = imap.begin(); it != imap.end(); ++it)
+for(OldConfigManagerContainer::IntToStringMap::iterator it = imap.begin(); it != imap.end(); ++it)
     {
     long x = it->first;
     wxString y(it->second);

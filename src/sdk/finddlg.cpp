@@ -26,7 +26,7 @@
 #include "sdk_precomp.h"
 #include "finddlg.h"
 #include "globals.h"
-#include "configmanager.h"
+#include "old_configmanager.h"
 #include "manager.h"
 #include "projectmanager.h"
 #include "cbproject.h"
@@ -56,7 +56,7 @@ FindDlg::FindDlg(wxWindow* parent, const wxString& initial, bool hasSelection, b
 	wxXmlResource::Get()->LoadDialog(this, parent, _T("dlgFind"));
 
 	// load last searches
-	wxArrayString previous = GetArrayFromString(ConfigManager::Get()->Read(CONF_GROUP _T("/last"), wxEmptyString), DEFAULT_ARRAY_SEP, false);
+	wxArrayString previous = GetArrayFromString(OldConfigManager::Get()->Read(CONF_GROUP _T("/last"), wxEmptyString), DEFAULT_ARRAY_SEP, false);
 	for (unsigned int i = 0; i < previous.GetCount(); ++i)
 	{
 		if (!previous[i].IsEmpty())
@@ -68,33 +68,33 @@ FindDlg::FindDlg(wxWindow* parent, const wxString& initial, bool hasSelection, b
 
 	// find options
 	XRCCTRL(*this, "cmbFind1", wxComboBox)->SetValue(initial);
-	XRCCTRL(*this, "chkWholeWord1", wxCheckBox)->SetValue(ConfigManager::Get()->Read(CONF_GROUP _T("/match_word1"), 0L));
-	XRCCTRL(*this, "chkStartWord1", wxCheckBox)->SetValue(ConfigManager::Get()->Read(CONF_GROUP _T("/start_word1"), 0L));
-	XRCCTRL(*this, "chkMatchCase1", wxCheckBox)->SetValue(ConfigManager::Get()->Read(CONF_GROUP _T("/match_case1"), 0L));
-	XRCCTRL(*this, "chkRegEx1", wxCheckBox)->SetValue(ConfigManager::Get()->Read(CONF_GROUP _T("/regex1"), 0L));
-	XRCCTRL(*this, "rbDirection", wxRadioBox)->SetSelection(ConfigManager::Get()->Read(CONF_GROUP _T("/direction"), 1));
+	XRCCTRL(*this, "chkWholeWord1", wxCheckBox)->SetValue(OldConfigManager::Get()->Read(CONF_GROUP _T("/match_word1"), 0L));
+	XRCCTRL(*this, "chkStartWord1", wxCheckBox)->SetValue(OldConfigManager::Get()->Read(CONF_GROUP _T("/start_word1"), 0L));
+	XRCCTRL(*this, "chkMatchCase1", wxCheckBox)->SetValue(OldConfigManager::Get()->Read(CONF_GROUP _T("/match_case1"), 0L));
+	XRCCTRL(*this, "chkRegEx1", wxCheckBox)->SetValue(OldConfigManager::Get()->Read(CONF_GROUP _T("/regex1"), 0L));
+	XRCCTRL(*this, "rbDirection", wxRadioBox)->SetSelection(OldConfigManager::Get()->Read(CONF_GROUP _T("/direction"), 1));
 	XRCCTRL(*this, "rbDirection", wxRadioBox)->Enable(!XRCCTRL(*this, "chkRegEx1", wxCheckBox)->GetValue()); // if regex, only forward searches
-	XRCCTRL(*this, "rbOrigin", wxRadioBox)->SetSelection(ConfigManager::Get()->Read(CONF_GROUP _T("/origin"), 0L));
+	XRCCTRL(*this, "rbOrigin", wxRadioBox)->SetSelection(OldConfigManager::Get()->Read(CONF_GROUP _T("/origin"), 0L));
 	XRCCTRL(*this, "rbScope1", wxRadioBox)->SetSelection(hasSelection);
 	XRCCTRL(*this, "rbScope1", wxRadioBox)->Enable(hasSelection);
 
 	// find in files options
 	XRCCTRL(*this, "cmbFind2", wxComboBox)->SetValue(initial);
-	XRCCTRL(*this, "chkWholeWord2", wxCheckBox)->SetValue(ConfigManager::Get()->Read(CONF_GROUP _T("/match_word2"), 0L));
-	XRCCTRL(*this, "chkStartWord2", wxCheckBox)->SetValue(ConfigManager::Get()->Read(CONF_GROUP _T("/start_word2"), 0L));
-	XRCCTRL(*this, "chkMatchCase2", wxCheckBox)->SetValue(ConfigManager::Get()->Read(CONF_GROUP _T("/match_case2"), 0L));
-	XRCCTRL(*this, "chkRegEx2", wxCheckBox)->SetValue(ConfigManager::Get()->Read(CONF_GROUP _T("/regex2"), 0L));
-	XRCCTRL(*this, "rbScope2", wxRadioBox)->SetSelection(ConfigManager::Get()->Read(CONF_GROUP _T("/scope2"), 0L));
+	XRCCTRL(*this, "chkWholeWord2", wxCheckBox)->SetValue(OldConfigManager::Get()->Read(CONF_GROUP _T("/match_word2"), 0L));
+	XRCCTRL(*this, "chkStartWord2", wxCheckBox)->SetValue(OldConfigManager::Get()->Read(CONF_GROUP _T("/start_word2"), 0L));
+	XRCCTRL(*this, "chkMatchCase2", wxCheckBox)->SetValue(OldConfigManager::Get()->Read(CONF_GROUP _T("/match_case2"), 0L));
+	XRCCTRL(*this, "chkRegEx2", wxCheckBox)->SetValue(OldConfigManager::Get()->Read(CONF_GROUP _T("/regex2"), 0L));
+	XRCCTRL(*this, "rbScope2", wxRadioBox)->SetSelection(OldConfigManager::Get()->Read(CONF_GROUP _T("/scope2"), 0L));
 
 	// find in files search path options
     cbProject* prj = Manager::Get()->GetProjectManager()->GetActiveProject();
     if (prj)
         XRCCTRL(*this, "txtSearchPath", wxTextCtrl)->SetValue(prj->GetBasePath());
     else
-        XRCCTRL(*this, "txtSearchPath", wxTextCtrl)->SetValue(ConfigManager::Get()->Read(CONF_GROUP _T("/search_path")));
-    XRCCTRL(*this, "txtSearchMask", wxTextCtrl)->SetValue(ConfigManager::Get()->Read(CONF_GROUP _T("/search_mask")));
-    XRCCTRL(*this, "chkSearchRecursively", wxCheckBox)->SetValue(ConfigManager::Get()->Read(CONF_GROUP _T("/search_recursive"), 0L));
-    XRCCTRL(*this, "chkSearchHidden", wxCheckBox)->SetValue(ConfigManager::Get()->Read(CONF_GROUP _T("/search_hidden"), 0L));
+        XRCCTRL(*this, "txtSearchPath", wxTextCtrl)->SetValue(OldConfigManager::Get()->Read(CONF_GROUP _T("/search_path")));
+    XRCCTRL(*this, "txtSearchMask", wxTextCtrl)->SetValue(OldConfigManager::Get()->Read(CONF_GROUP _T("/search_mask")));
+    XRCCTRL(*this, "chkSearchRecursively", wxCheckBox)->SetValue(OldConfigManager::Get()->Read(CONF_GROUP _T("/search_recursive"), 0L));
+    XRCCTRL(*this, "chkSearchHidden", wxCheckBox)->SetValue(OldConfigManager::Get()->Read(CONF_GROUP _T("/search_hidden"), 0L));
 
 	if (!m_Complete)
     {
@@ -107,10 +107,10 @@ FindDlg::FindDlg(wxWindow* parent, const wxString& initial, bool hasSelection, b
 
 FindDlg::~FindDlg()
 {
-    ConfigManager::Get()->Write(CONF_GROUP _T("/search_path"), XRCCTRL(*this, "txtSearchPath", wxTextCtrl)->GetValue());
-    ConfigManager::Get()->Write(CONF_GROUP _T("/search_mask"), XRCCTRL(*this, "txtSearchMask", wxTextCtrl)->GetValue());
-    ConfigManager::Get()->Write(CONF_GROUP _T("/search_recursive"), XRCCTRL(*this, "chkSearchRecursively", wxCheckBox)->GetValue());
-    ConfigManager::Get()->Write(CONF_GROUP _T("/search_hidden"), XRCCTRL(*this, "chkSearchHidden", wxCheckBox)->GetValue());
+    OldConfigManager::Get()->Write(CONF_GROUP _T("/search_path"), XRCCTRL(*this, "txtSearchPath", wxTextCtrl)->GetValue());
+    OldConfigManager::Get()->Write(CONF_GROUP _T("/search_mask"), XRCCTRL(*this, "txtSearchMask", wxTextCtrl)->GetValue());
+    OldConfigManager::Get()->Write(CONF_GROUP _T("/search_recursive"), XRCCTRL(*this, "chkSearchRecursively", wxCheckBox)->GetValue());
+    OldConfigManager::Get()->Write(CONF_GROUP _T("/search_hidden"), XRCCTRL(*this, "chkSearchHidden", wxCheckBox)->GetValue());
 
 	// save last searches (up to 10)
     wxComboBox* combo = XRCCTRL(*this, "cmbFind1", wxComboBox);
@@ -126,25 +126,25 @@ FindDlg::~FindDlg()
     if (combo->FindString(find) == -1)
         previous.Insert(find, 0);
     wxString last = GetStringFromArray(previous);
-    ConfigManager::Get()->Write(CONF_GROUP _T("/last"), last);
+    OldConfigManager::Get()->Write(CONF_GROUP _T("/last"), last);
 
 	if (m_Complete)
 	{
         // find options
-        ConfigManager::Get()->Write(CONF_GROUP _T("/match_word1"), XRCCTRL(*this, "chkWholeWord1", wxCheckBox)->GetValue());
-        ConfigManager::Get()->Write(CONF_GROUP _T("/start_word1"), XRCCTRL(*this, "chkStartWord1", wxCheckBox)->GetValue());
-        ConfigManager::Get()->Write(CONF_GROUP _T("/match_case1"), XRCCTRL(*this, "chkMatchCase1", wxCheckBox)->GetValue());
-        ConfigManager::Get()->Write(CONF_GROUP _T("/regex1"), XRCCTRL(*this, "chkRegEx1", wxCheckBox)->GetValue());
-        ConfigManager::Get()->Write(CONF_GROUP _T("/direction"), XRCCTRL(*this, "rbDirection", wxRadioBox)->GetSelection());
-        ConfigManager::Get()->Write(CONF_GROUP _T("/origin"), XRCCTRL(*this, "rbOrigin", wxRadioBox)->GetSelection());
+        OldConfigManager::Get()->Write(CONF_GROUP _T("/match_word1"), XRCCTRL(*this, "chkWholeWord1", wxCheckBox)->GetValue());
+        OldConfigManager::Get()->Write(CONF_GROUP _T("/start_word1"), XRCCTRL(*this, "chkStartWord1", wxCheckBox)->GetValue());
+        OldConfigManager::Get()->Write(CONF_GROUP _T("/match_case1"), XRCCTRL(*this, "chkMatchCase1", wxCheckBox)->GetValue());
+        OldConfigManager::Get()->Write(CONF_GROUP _T("/regex1"), XRCCTRL(*this, "chkRegEx1", wxCheckBox)->GetValue());
+        OldConfigManager::Get()->Write(CONF_GROUP _T("/direction"), XRCCTRL(*this, "rbDirection", wxRadioBox)->GetSelection());
+        OldConfigManager::Get()->Write(CONF_GROUP _T("/origin"), XRCCTRL(*this, "rbOrigin", wxRadioBox)->GetSelection());
 	}
 
 	// find in files options
-	ConfigManager::Get()->Write(CONF_GROUP _T("/match_word2"), XRCCTRL(*this, "chkWholeWord2", wxCheckBox)->GetValue());
-	ConfigManager::Get()->Write(CONF_GROUP _T("/start_word2"), XRCCTRL(*this, "chkStartWord2", wxCheckBox)->GetValue());
-	ConfigManager::Get()->Write(CONF_GROUP _T("/match_case2"), XRCCTRL(*this, "chkMatchCase2", wxCheckBox)->GetValue());
-	ConfigManager::Get()->Write(CONF_GROUP _T("/regex2"), XRCCTRL(*this, "chkRegEx2", wxCheckBox)->GetValue());
-	ConfigManager::Get()->Write(CONF_GROUP _T("/scope2"), XRCCTRL(*this, "rbScope2", wxRadioBox)->GetSelection());
+	OldConfigManager::Get()->Write(CONF_GROUP _T("/match_word2"), XRCCTRL(*this, "chkWholeWord2", wxCheckBox)->GetValue());
+	OldConfigManager::Get()->Write(CONF_GROUP _T("/start_word2"), XRCCTRL(*this, "chkStartWord2", wxCheckBox)->GetValue());
+	OldConfigManager::Get()->Write(CONF_GROUP _T("/match_case2"), XRCCTRL(*this, "chkMatchCase2", wxCheckBox)->GetValue());
+	OldConfigManager::Get()->Write(CONF_GROUP _T("/regex2"), XRCCTRL(*this, "chkRegEx2", wxCheckBox)->GetValue());
+	OldConfigManager::Get()->Write(CONF_GROUP _T("/scope2"), XRCCTRL(*this, "rbScope2", wxRadioBox)->GetSelection());
 }
 
 wxString FindDlg::GetFindString()

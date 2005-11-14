@@ -31,7 +31,7 @@
 
 
 #include <wx/xrc/xmlres.h>
-#include <configmanager.h>
+#include <old_configmanager.h>
 #include <wx/fs_zip.h>
 
 /******************************************************************************/
@@ -207,7 +207,7 @@ wxsStdManagerT::~wxsStdManagerT()
 
 bool wxsStdManagerT::Initialize()
 {
-    wxString resPath = ConfigManager::Get()->Read(_T("data_path"), wxEmptyString);
+    wxString resPath = OldConfigManager::Get()->Read(_T("data_path"), wxEmptyString);
     for ( int i=1; i<StdInfosCnt; i++ )
     {
         wxString FileName = resPath + _T("/images/wxsmith/") + StdInfos[i].Name + _T(".png");

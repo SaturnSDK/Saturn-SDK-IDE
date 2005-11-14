@@ -39,7 +39,7 @@
 #include "editorconfigurationdlg.h"
 #include "editkeywordsdlg.h"
 #include "manager.h"
-#include "configmanager.h"
+#include "old_configmanager.h"
 #include "editormanager.h"
 #include "cbeditor.h"
 #include "globals.h"
@@ -86,42 +86,42 @@ EditorConfigurationDlg::EditorConfigurationDlg(wxWindow* parent)
 	XRCCTRL(*this, "lblEditorFont", wxStaticText)->SetLabel(_("This is sample text"));
 	UpdateSampleFont(false);
 
-   	XRCCTRL(*this, "chkAutoIndent", wxCheckBox)->SetValue(ConfigManager::Get()->Read(_T("/editor/auto_indent"), true));
-   	XRCCTRL(*this, "chkSmartIndent", wxCheckBox)->SetValue(ConfigManager::Get()->Read(_T("/editor/smart_indent"), true));
-   	XRCCTRL(*this, "chkUseTab", wxCheckBox)->SetValue(ConfigManager::Get()->Read(_T("/editor/use_tab"), 0l));
-   	XRCCTRL(*this, "chkShowIndentGuides", wxCheckBox)->SetValue(ConfigManager::Get()->Read(_T("/editor/show_indent_guides"), 0l));
-   	XRCCTRL(*this, "chkTabIndents", wxCheckBox)->SetValue(ConfigManager::Get()->Read(_T("/editor/tab_indents"), 1));
-   	XRCCTRL(*this, "chkBackspaceUnindents", wxCheckBox)->SetValue(ConfigManager::Get()->Read(_T("/editor/backspace_unindents"), 1));
-   	XRCCTRL(*this, "chkWordWrap", wxCheckBox)->SetValue(ConfigManager::Get()->Read(_T("/editor/word_wrap"), 0l));
-   	XRCCTRL(*this, "chkShowLineNumbers", wxCheckBox)->SetValue(ConfigManager::Get()->Read(_T("/editor/show_line_numbers"), 0l));
-   	XRCCTRL(*this, "chkHighlightCaretLine", wxCheckBox)->SetValue(ConfigManager::Get()->Read(_T("/editor/highlight_caret_line"), 1));
-   	XRCCTRL(*this, "spnTabSize", wxSpinCtrl)->SetValue(ConfigManager::Get()->Read(_T("/editor/tab_size"), 4));
-   	XRCCTRL(*this, "cmbViewWS", wxComboBox)->SetSelection(ConfigManager::Get()->Read(_T("/editor/view_whitespace"), 0l));
-   	XRCCTRL(*this, "rbTabText", wxRadioBox)->SetSelection(ConfigManager::Get()->Read(_T("/editor/tab_text_relative"), 1));
-   	XRCCTRL(*this, "chkAutoWrapSearch", wxCheckBox)->SetValue(ConfigManager::Get()->Read(_T("/editor/auto_wrap_search"), 1));
+   	XRCCTRL(*this, "chkAutoIndent", wxCheckBox)->SetValue(OldConfigManager::Get()->Read(_T("/editor/auto_indent"), true));
+   	XRCCTRL(*this, "chkSmartIndent", wxCheckBox)->SetValue(OldConfigManager::Get()->Read(_T("/editor/smart_indent"), true));
+   	XRCCTRL(*this, "chkUseTab", wxCheckBox)->SetValue(OldConfigManager::Get()->Read(_T("/editor/use_tab"), 0l));
+   	XRCCTRL(*this, "chkShowIndentGuides", wxCheckBox)->SetValue(OldConfigManager::Get()->Read(_T("/editor/show_indent_guides"), 0l));
+   	XRCCTRL(*this, "chkTabIndents", wxCheckBox)->SetValue(OldConfigManager::Get()->Read(_T("/editor/tab_indents"), 1));
+   	XRCCTRL(*this, "chkBackspaceUnindents", wxCheckBox)->SetValue(OldConfigManager::Get()->Read(_T("/editor/backspace_unindents"), 1));
+   	XRCCTRL(*this, "chkWordWrap", wxCheckBox)->SetValue(OldConfigManager::Get()->Read(_T("/editor/word_wrap"), 0l));
+   	XRCCTRL(*this, "chkShowLineNumbers", wxCheckBox)->SetValue(OldConfigManager::Get()->Read(_T("/editor/show_line_numbers"), 0l));
+   	XRCCTRL(*this, "chkHighlightCaretLine", wxCheckBox)->SetValue(OldConfigManager::Get()->Read(_T("/editor/highlight_caret_line"), 1));
+   	XRCCTRL(*this, "spnTabSize", wxSpinCtrl)->SetValue(OldConfigManager::Get()->Read(_T("/editor/tab_size"), 4));
+   	XRCCTRL(*this, "cmbViewWS", wxComboBox)->SetSelection(OldConfigManager::Get()->Read(_T("/editor/view_whitespace"), 0l));
+   	XRCCTRL(*this, "rbTabText", wxRadioBox)->SetSelection(OldConfigManager::Get()->Read(_T("/editor/tab_text_relative"), 1));
+   	XRCCTRL(*this, "chkAutoWrapSearch", wxCheckBox)->SetValue(OldConfigManager::Get()->Read(_T("/editor/auto_wrap_search"), 1));
 
    	// end-of-line
-   	XRCCTRL(*this, "chkShowEOL", wxCheckBox)->SetValue(ConfigManager::Get()->Read(_T("/editor/show_eol"), 0l));
-   	XRCCTRL(*this, "chkStripTrailings", wxCheckBox)->SetValue(ConfigManager::Get()->Read(_T("/editor/eol/strip_trailing_spaces"), 1));
-   	XRCCTRL(*this, "chkEnsureFinalEOL", wxCheckBox)->SetValue(ConfigManager::Get()->Read(_T("/editor/eol/ensure_final_line_end"), 0l));
-   	XRCCTRL(*this, "chkEnsureConsistentEOL", wxCheckBox)->SetValue(ConfigManager::Get()->Read(_T("/editor/eol/ensure_consistent_line_ends"), 0l));
-    XRCCTRL(*this, "cmbEOLMode", wxComboBox)->SetSelection(ConfigManager::Get()->Read(_T("/editor/eol/eolmode"),0L));
+   	XRCCTRL(*this, "chkShowEOL", wxCheckBox)->SetValue(OldConfigManager::Get()->Read(_T("/editor/show_eol"), 0l));
+   	XRCCTRL(*this, "chkStripTrailings", wxCheckBox)->SetValue(OldConfigManager::Get()->Read(_T("/editor/eol/strip_trailing_spaces"), 1));
+   	XRCCTRL(*this, "chkEnsureFinalEOL", wxCheckBox)->SetValue(OldConfigManager::Get()->Read(_T("/editor/eol/ensure_final_line_end"), 0l));
+   	XRCCTRL(*this, "chkEnsureConsistentEOL", wxCheckBox)->SetValue(OldConfigManager::Get()->Read(_T("/editor/eol/ensure_consistent_line_ends"), 0l));
+    XRCCTRL(*this, "cmbEOLMode", wxComboBox)->SetSelection(OldConfigManager::Get()->Read(_T("/editor/eol/eolmode"),0L));
 
 	//folding
-   	XRCCTRL(*this, "chkEnableFolding", wxCheckBox)->SetValue(ConfigManager::Get()->Read(_T("/editor/folding/show_folds"), 1));
-   	XRCCTRL(*this, "chkFoldOnOpen", wxCheckBox)->SetValue(ConfigManager::Get()->Read(_T("/editor/folding/fold_all_on_open"), 0L));
-   	XRCCTRL(*this, "chkFoldPreprocessor", wxCheckBox)->SetValue(ConfigManager::Get()->Read(_T("/editor/folding/fold_preprocessor"), 0L));
-   	XRCCTRL(*this, "chkFoldComments", wxCheckBox)->SetValue(ConfigManager::Get()->Read(_T("/editor/folding/fold_comments"), 1));
-   	XRCCTRL(*this, "chkFoldXml", wxCheckBox)->SetValue(ConfigManager::Get()->Read(_T("/editor/folding/fold_xml"), 1));
+   	XRCCTRL(*this, "chkEnableFolding", wxCheckBox)->SetValue(OldConfigManager::Get()->Read(_T("/editor/folding/show_folds"), 1));
+   	XRCCTRL(*this, "chkFoldOnOpen", wxCheckBox)->SetValue(OldConfigManager::Get()->Read(_T("/editor/folding/fold_all_on_open"), 0L));
+   	XRCCTRL(*this, "chkFoldPreprocessor", wxCheckBox)->SetValue(OldConfigManager::Get()->Read(_T("/editor/folding/fold_preprocessor"), 0L));
+   	XRCCTRL(*this, "chkFoldComments", wxCheckBox)->SetValue(OldConfigManager::Get()->Read(_T("/editor/folding/fold_comments"), 1));
+   	XRCCTRL(*this, "chkFoldXml", wxCheckBox)->SetValue(OldConfigManager::Get()->Read(_T("/editor/folding/fold_xml"), 1));
 
 	//gutter
-    wxColour color(ConfigManager::Get()->Read(_T("/editor/gutter/color/red"), 0l),
-    				ConfigManager::Get()->Read(_T("/editor/gutter/color/green"), 0l),
-    				ConfigManager::Get()->Read(_T("/editor/gutter/color/blue"), 0l)
+    wxColour color(OldConfigManager::Get()->Read(_T("/editor/gutter/color/red"), 0l),
+    				OldConfigManager::Get()->Read(_T("/editor/gutter/color/green"), 0l),
+    				OldConfigManager::Get()->Read(_T("/editor/gutter/color/blue"), 0l)
     );
-    XRCCTRL(*this, "lstGutterMode", wxChoice)->SetSelection(ConfigManager::Get()->Read(_T("/editor/gutter/mode"), 1));
+    XRCCTRL(*this, "lstGutterMode", wxChoice)->SetSelection(OldConfigManager::Get()->Read(_T("/editor/gutter/mode"), 1));
     XRCCTRL(*this, "btnGutterColor", wxButton)->SetBackgroundColour(color);
-    XRCCTRL(*this, "spnGutterColumn", wxSpinCtrl)->SetValue(ConfigManager::Get()->Read(_T("/editor/gutter/column"), 80));
+    XRCCTRL(*this, "spnGutterColumn", wxSpinCtrl)->SetValue(OldConfigManager::Get()->Read(_T("/editor/gutter/column"), 80));
 
 	// color set
 	LoadThemes();
@@ -147,7 +147,7 @@ EditorConfigurationDlg::EditorConfigurationDlg(wxWindow* parent)
 	// default code
     wxString key;
     key.Printf(_T("/editor/default_code/%d"), IdxToFileType[m_DefCodeFileType]);
-    XRCCTRL(*this, "txtDefCode", wxTextCtrl)->SetValue(ConfigManager::Get()->Read(key, wxEmptyString));
+    XRCCTRL(*this, "txtDefCode", wxTextCtrl)->SetValue(OldConfigManager::Get()->Read(key, wxEmptyString));
     wxFont tmpFont(8, wxMODERN, wxNORMAL, wxNORMAL);
     XRCCTRL(*this, "txtDefCode", wxTextCtrl)->SetFont(tmpFont);
 }
@@ -311,7 +311,7 @@ void EditorConfigurationDlg::WriteColors()
 void EditorConfigurationDlg::UpdateSampleFont(bool askForNewFont)
 {
     wxFont tmpFont(8, wxMODERN, wxNORMAL, wxNORMAL);
-    wxString fontstring = ConfigManager::Get()->Read(_T("/editor/font"), wxEmptyString);
+    wxString fontstring = OldConfigManager::Get()->Read(_T("/editor/font"), wxEmptyString);
 
     if (!fontstring.IsEmpty())
     {
@@ -342,7 +342,7 @@ void EditorConfigurationDlg::LoadThemes()
 	cmbThemes->Clear();
 	wxString group;
 	long cookie;
-	wxConfigBase* conf = ConfigManager::Get();
+	wxConfigBase* conf = OldConfigManager::Get();
 	wxString oldPath = conf->GetPath();
 	conf->SetPath(_T("/editor/color_sets"));
 	bool cont = conf->GetFirstGroup(group, cookie);
@@ -354,7 +354,7 @@ void EditorConfigurationDlg::LoadThemes()
 	conf->SetPath(oldPath);
     if (cmbThemes->GetCount() == 0)
         cmbThemes->Append(COLORSET_DEFAULT);
-    group = ConfigManager::Get()->Read(_T("/editor/color_sets/active_color_set"), COLORSET_DEFAULT);
+    group = OldConfigManager::Get()->Read(_T("/editor/color_sets/active_color_set"), COLORSET_DEFAULT);
     cookie = cmbThemes->FindString(group);
     if (cookie == wxNOT_FOUND)
         cookie = 0;
@@ -450,7 +450,7 @@ void EditorConfigurationDlg::OnDeleteColorTheme(wxCommandEvent& event)
 {
     if (wxMessageBox(_("Are you sure you want to delete this theme?"), _("Confirmation"), wxYES_NO) == wxYES)
     {
-        ConfigManager::Get()->DeleteGroup(_T("/editor/color_sets/") + m_Theme->GetName());
+        OldConfigManager::Get()->DeleteGroup(_T("/editor/color_sets/") + m_Theme->GetName());
         wxComboBox* cmbThemes = XRCCTRL(*this, "cmbThemes", wxComboBox);
         int idx = cmbThemes->FindString(m_Theme->GetName());
         if (idx != wxNOT_FOUND)
@@ -472,7 +472,7 @@ void EditorConfigurationDlg::OnRenameColorTheme(wxCommandEvent& event)
     int idx = cmbThemes->FindString(m_Theme->GetName());
     if (idx != wxNOT_FOUND)
         cmbThemes->SetString(idx, name);
-    ConfigManager::Get()->RenameGroup(_T("/editor/color_sets/") + m_Theme->GetName(), _T("/editor/color_sets/") + name);
+    OldConfigManager::Get()->RenameGroup(_T("/editor/color_sets/") + m_Theme->GetName(), _T("/editor/color_sets/") + name);
     m_Theme->SetName(name);
 #else
 	#warning "wxComboBox::SetString() doesn't work under non-win32 platforms"
@@ -539,11 +539,11 @@ void EditorConfigurationDlg::OnChangeDefCodeFileType(wxCommandEvent& event)
 	if (sel != m_DefCodeFileType)
 	{
         key.Printf(_T("/editor/default_code/%d"), IdxToFileType[m_DefCodeFileType]);
-        ConfigManager::Get()->Write(key, XRCCTRL(*this, "txtDefCode", wxTextCtrl)->GetValue());
+        OldConfigManager::Get()->Write(key, XRCCTRL(*this, "txtDefCode", wxTextCtrl)->GetValue());
 	}
 	m_DefCodeFileType = sel;
     key.Printf(_T("/editor/default_code/%d"), IdxToFileType[m_DefCodeFileType]);
-    XRCCTRL(*this, "txtDefCode", wxTextCtrl)->SetValue(ConfigManager::Get()->Read(key, wxEmptyString));
+    XRCCTRL(*this, "txtDefCode", wxTextCtrl)->SetValue(OldConfigManager::Get()->Read(key, wxEmptyString));
 }
 
 void EditorConfigurationDlg::OnChooseColor(wxCommandEvent& event)
@@ -653,52 +653,52 @@ void EditorConfigurationDlg::OnAutoCompKeyword(wxCommandEvent& event)
 
 void EditorConfigurationDlg::OnOK(wxCommandEvent& event)
 {
-    ConfigManager::Get()->Write(_T("/editor/font"), XRCCTRL(*this, "lblEditorFont", wxStaticText)->GetFont().GetNativeFontInfoDesc());
+    OldConfigManager::Get()->Write(_T("/editor/font"), XRCCTRL(*this, "lblEditorFont", wxStaticText)->GetFont().GetNativeFontInfoDesc());
 
-    ConfigManager::Get()->Write(_T("/editor/auto_indent"),			XRCCTRL(*this, "chkAutoIndent", wxCheckBox)->GetValue());
-    ConfigManager::Get()->Write(_T("/editor/smart_indent"),			XRCCTRL(*this, "chkSmartIndent", wxCheckBox)->GetValue());
-    ConfigManager::Get()->Write(_T("/editor/use_tab"), 				XRCCTRL(*this, "chkUseTab", wxCheckBox)->GetValue());
-    ConfigManager::Get()->Write(_T("/editor/show_indent_guides"), 	XRCCTRL(*this, "chkShowIndentGuides", wxCheckBox)->GetValue());
-   	ConfigManager::Get()->Write(_T("/editor/tab_indents"), 			XRCCTRL(*this, "chkTabIndents", wxCheckBox)->GetValue());
-   	ConfigManager::Get()->Write(_T("/editor/backspace_unindents"), 	XRCCTRL(*this, "chkBackspaceUnindents", wxCheckBox)->GetValue());
-   	ConfigManager::Get()->Write(_T("/editor/word_wrap"), 			XRCCTRL(*this, "chkWordWrap", wxCheckBox)->GetValue());
-   	ConfigManager::Get()->Write(_T("/editor/show_line_numbers"), 	XRCCTRL(*this, "chkShowLineNumbers", wxCheckBox)->GetValue());
-   	ConfigManager::Get()->Write(_T("/editor/highlight_caret_line"), XRCCTRL(*this, "chkHighlightCaretLine", wxCheckBox)->GetValue());
-   	ConfigManager::Get()->Write(_T("/editor/tab_size"),             XRCCTRL(*this, "spnTabSize", wxSpinCtrl)->GetValue());
-   	ConfigManager::Get()->Write(_T("/editor/view_whitespace"),      XRCCTRL(*this, "cmbViewWS", wxComboBox)->GetSelection());
-   	ConfigManager::Get()->Write(_T("/editor/tab_text_relative"),    XRCCTRL(*this, "rbTabText", wxRadioBox)->GetSelection());
-   	ConfigManager::Get()->Write(_T("/editor/auto_wrap_search"),     XRCCTRL(*this, "chkAutoWrapSearch", wxCheckBox)->GetValue());
+    OldConfigManager::Get()->Write(_T("/editor/auto_indent"),			XRCCTRL(*this, "chkAutoIndent", wxCheckBox)->GetValue());
+    OldConfigManager::Get()->Write(_T("/editor/smart_indent"),			XRCCTRL(*this, "chkSmartIndent", wxCheckBox)->GetValue());
+    OldConfigManager::Get()->Write(_T("/editor/use_tab"), 				XRCCTRL(*this, "chkUseTab", wxCheckBox)->GetValue());
+    OldConfigManager::Get()->Write(_T("/editor/show_indent_guides"), 	XRCCTRL(*this, "chkShowIndentGuides", wxCheckBox)->GetValue());
+   	OldConfigManager::Get()->Write(_T("/editor/tab_indents"), 			XRCCTRL(*this, "chkTabIndents", wxCheckBox)->GetValue());
+   	OldConfigManager::Get()->Write(_T("/editor/backspace_unindents"), 	XRCCTRL(*this, "chkBackspaceUnindents", wxCheckBox)->GetValue());
+   	OldConfigManager::Get()->Write(_T("/editor/word_wrap"), 			XRCCTRL(*this, "chkWordWrap", wxCheckBox)->GetValue());
+   	OldConfigManager::Get()->Write(_T("/editor/show_line_numbers"), 	XRCCTRL(*this, "chkShowLineNumbers", wxCheckBox)->GetValue());
+   	OldConfigManager::Get()->Write(_T("/editor/highlight_caret_line"), XRCCTRL(*this, "chkHighlightCaretLine", wxCheckBox)->GetValue());
+   	OldConfigManager::Get()->Write(_T("/editor/tab_size"),             XRCCTRL(*this, "spnTabSize", wxSpinCtrl)->GetValue());
+   	OldConfigManager::Get()->Write(_T("/editor/view_whitespace"),      XRCCTRL(*this, "cmbViewWS", wxComboBox)->GetSelection());
+   	OldConfigManager::Get()->Write(_T("/editor/tab_text_relative"),    XRCCTRL(*this, "rbTabText", wxRadioBox)->GetSelection());
+   	OldConfigManager::Get()->Write(_T("/editor/auto_wrap_search"),     XRCCTRL(*this, "chkAutoWrapSearch", wxCheckBox)->GetValue());
 	//folding
-   	ConfigManager::Get()->Write(_T("/editor/folding/show_folds"), 			XRCCTRL(*this, "chkEnableFolding", wxCheckBox)->GetValue());
-   	ConfigManager::Get()->Write(_T("/editor/folding/fold_all_on_open"), 	XRCCTRL(*this, "chkFoldOnOpen", wxCheckBox)->GetValue());
-   	ConfigManager::Get()->Write(_T("/editor/folding/fold_preprocessor"), 	XRCCTRL(*this, "chkFoldPreprocessor", wxCheckBox)->GetValue());
-   	ConfigManager::Get()->Write(_T("/editor/folding/fold_comments"), 		XRCCTRL(*this, "chkFoldComments", wxCheckBox)->GetValue());
-   	ConfigManager::Get()->Write(_T("/editor/folding/fold_xml"), 		    XRCCTRL(*this, "chkFoldXml", wxCheckBox)->GetValue());
+   	OldConfigManager::Get()->Write(_T("/editor/folding/show_folds"), 			XRCCTRL(*this, "chkEnableFolding", wxCheckBox)->GetValue());
+   	OldConfigManager::Get()->Write(_T("/editor/folding/fold_all_on_open"), 	XRCCTRL(*this, "chkFoldOnOpen", wxCheckBox)->GetValue());
+   	OldConfigManager::Get()->Write(_T("/editor/folding/fold_preprocessor"), 	XRCCTRL(*this, "chkFoldPreprocessor", wxCheckBox)->GetValue());
+   	OldConfigManager::Get()->Write(_T("/editor/folding/fold_comments"), 		XRCCTRL(*this, "chkFoldComments", wxCheckBox)->GetValue());
+   	OldConfigManager::Get()->Write(_T("/editor/folding/fold_xml"), 		    XRCCTRL(*this, "chkFoldXml", wxCheckBox)->GetValue());
 
 	//eol
-   	ConfigManager::Get()->Write(_T("/editor/show_eol"), 			        XRCCTRL(*this, "chkShowEOL", wxCheckBox)->GetValue());
-   	ConfigManager::Get()->Write(_T("/editor/eol/strip_trailing_spaces"),    XRCCTRL(*this, "chkStripTrailings", wxCheckBox)->GetValue());
-   	ConfigManager::Get()->Write(_T("/editor/eol/ensure_final_line_end"),    XRCCTRL(*this, "chkEnsureFinalEOL", wxCheckBox)->GetValue());
-   	ConfigManager::Get()->Write(_T("/editor/eol/ensure_consistent_line_ends"), XRCCTRL(*this, "chkEnsureConsistentEOL", wxCheckBox)->GetValue());
-    ConfigManager::Get()->Write(_T("/editor/eol/eolmode"),                  XRCCTRL(*this, "cmbEOLMode", wxComboBox)->GetSelection());
+   	OldConfigManager::Get()->Write(_T("/editor/show_eol"), 			        XRCCTRL(*this, "chkShowEOL", wxCheckBox)->GetValue());
+   	OldConfigManager::Get()->Write(_T("/editor/eol/strip_trailing_spaces"),    XRCCTRL(*this, "chkStripTrailings", wxCheckBox)->GetValue());
+   	OldConfigManager::Get()->Write(_T("/editor/eol/ensure_final_line_end"),    XRCCTRL(*this, "chkEnsureFinalEOL", wxCheckBox)->GetValue());
+   	OldConfigManager::Get()->Write(_T("/editor/eol/ensure_consistent_line_ends"), XRCCTRL(*this, "chkEnsureConsistentEOL", wxCheckBox)->GetValue());
+    OldConfigManager::Get()->Write(_T("/editor/eol/eolmode"),                  XRCCTRL(*this, "cmbEOLMode", wxComboBox)->GetSelection());
 
 	//gutter
-    ConfigManager::Get()->Write(_T("/editor/gutter/mode"), 			XRCCTRL(*this, "lstGutterMode", wxChoice)->GetSelection());
-    ConfigManager::Get()->Write(_T("/editor/gutter/color/red"),		XRCCTRL(*this, "btnGutterColor", wxButton)->GetBackgroundColour().Red());
-    ConfigManager::Get()->Write(_T("/editor/gutter/color/green"),	XRCCTRL(*this, "btnGutterColor", wxButton)->GetBackgroundColour().Green());
-    ConfigManager::Get()->Write(_T("/editor/gutter/color/blue"),	XRCCTRL(*this, "btnGutterColor", wxButton)->GetBackgroundColour().Blue());
-    ConfigManager::Get()->Write(_T("/editor/gutter/column"), 		XRCCTRL(*this, "spnGutterColumn", wxSpinCtrl)->GetValue());
+    OldConfigManager::Get()->Write(_T("/editor/gutter/mode"), 			XRCCTRL(*this, "lstGutterMode", wxChoice)->GetSelection());
+    OldConfigManager::Get()->Write(_T("/editor/gutter/color/red"),		XRCCTRL(*this, "btnGutterColor", wxButton)->GetBackgroundColour().Red());
+    OldConfigManager::Get()->Write(_T("/editor/gutter/color/green"),	XRCCTRL(*this, "btnGutterColor", wxButton)->GetBackgroundColour().Green());
+    OldConfigManager::Get()->Write(_T("/editor/gutter/color/blue"),	XRCCTRL(*this, "btnGutterColor", wxButton)->GetBackgroundColour().Blue());
+    OldConfigManager::Get()->Write(_T("/editor/gutter/column"), 		XRCCTRL(*this, "spnGutterColumn", wxSpinCtrl)->GetValue());
 
 	int sel = XRCCTRL(*this, "cmbDefCodeFileType", wxComboBox)->GetSelection();
     wxString key;
     key.Printf(_T("/editor/default_code/%d"), IdxToFileType[sel]);
-    ConfigManager::Get()->Write(key, XRCCTRL(*this, "txtDefCode", wxTextCtrl)->GetValue());
+    OldConfigManager::Get()->Write(key, XRCCTRL(*this, "txtDefCode", wxTextCtrl)->GetValue());
 
 	if (m_Theme)
 	{
 		m_Theme->Save();
 		Manager::Get()->GetEditorManager()->SetColorSet(m_Theme);
-        ConfigManager::Get()->Write(_T("/editor/color_sets/active_color_set"), m_Theme->GetName());
+        OldConfigManager::Get()->Write(_T("/editor/color_sets/active_color_set"), m_Theme->GetName());
 	}
 
     // save any changes in auto-completion

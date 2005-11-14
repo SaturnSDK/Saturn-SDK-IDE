@@ -40,8 +40,8 @@
 #include <wx/tipdlg.h>
 #include <wx/dnd.h>
 
-#include <configmanager.h>
-#include <xconfigmanager.h> /* FIXME (thomas#1#): REMOVE THIS */
+#include <old_configmanager.h>
+#include <configmanager.h> /* FIXME (thomas#1#): REMOVE THIS */
 #include <cbproject.h>
 #include <cbplugin.h>
 #include <sdk_events.h>
@@ -468,8 +468,8 @@ MainFrame::MainFrame(wxLocale& lang, wxWindow* parent)
     ShowHideStartPage();
     InitPrinting();
 
-    ConfigManager::AddConfiguration(_("Application"), _T("/main_frame"));
-    ConfigManager::AddConfiguration(_("Environment"), _T("/environment"));
+    OldConfigManager::AddConfiguration(_("Application"), _T("/main_frame"));
+    OldConfigManager::AddConfiguration(_("Environment"), _T("/environment"));
 }
 
 MainFrame::~MainFrame()
@@ -910,7 +910,7 @@ void MainFrame::SaveWindowState()
 //  wxMemoryOutputStream os;
 //  wxUtil::WriteWindowLayout(os, this);
 //  wxString buf(os.GetOutputStreamBuffer().GetBufferStart(), os.GetSize());
-//  Manager::Get()->GetConfigManager("application")->WriteBinary("window_layout", buf);
+//  Manager::Get()->GetOldConfigManager("application")->WriteBinary("window_layout", buf);
 
     wxString path = wxGetUserHome();
     path << _T("/") << personalityKey;
@@ -950,7 +950,7 @@ void MainFrame::LoadKeyBindings()
 	// clear our old array
 	m_KeyProfiles->Cleanup();
 
-	wxConfigBase* cfg = ConfigManager::Get();
+	wxConfigBase* cfg = OldConfigManager::Get();
 	if (cfg->HasGroup(_T("/keybindings")) && m_KeyProfiles->Load(cfg, _T("/keybindings")))
 	{
 
@@ -991,7 +991,7 @@ void MainFrame::LoadKeyBindings()
 
 void MainFrame::SaveKeyBindings()
 {
-	wxConfigBase* cfg = ConfigManager::Get();
+	wxConfigBase* cfg = OldConfigManager::Get();
 	m_KeyProfiles->Save(cfg, _T("/keybindings"), true);
 	cfg->SetPath(_T("/"));
 }
@@ -1323,18 +1323,18 @@ void MainFrame::InitializeRecentFilesHistory()
         if (recentFiles)
         {
             m_FilesHistory.UseMenu(recentFiles);
-            ConfigManager::Get()->SetPath(_T("/recent_files"));
-            m_FilesHistory.Load(*ConfigManager::Get());
-            ConfigManager::Get()->SetPath(_T("/"));
+            OldConfigManager::Get()->SetPath(_T("/recent_files"));
+            m_FilesHistory.Load(*OldConfigManager::Get());
+            OldConfigManager::Get()->SetPath(_T("/"));
         }
     }
 }
 
 void MainFrame::TerminateRecentFilesHistory()
 {
-    ConfigManager::Get()->SetPath(_T("/recent_files"));
-    m_FilesHistory.Save(*ConfigManager::Get());
-    ConfigManager::Get()->SetPath(_T("/"));
+    OldConfigManager::Get()->SetPath(_T("/recent_files"));
+    m_FilesHistory.Save(*OldConfigManager::Get());
+    OldConfigManager::Get()->SetPath(_T("/"));
 
     wxMenuBar* mbar = GetMenuBar();
     if (!mbar)
@@ -1475,7 +1475,7 @@ void MainFrame::OnFileOpenRecentClearHistory(wxCommandEvent& event)
     while (m_FilesHistory.GetCount())
 	{
         m_FilesHistory.RemoveFileFromHistory(0);
-		ConfigManager::Get()->DeleteGroup(_T("/recent_files"));
+		OldConfigManager::Get()->DeleteGroup(_T("/recent_files"));
 	}
 }
 
@@ -1611,7 +1611,7 @@ void MainFrame::OnApplicationClose(wxCloseEvent& event)
         PopEventHandler(false);
 
 	Manager::Get()->Free();
-	ConfigManager::Get()->Flush();
+	OldConfigManager::Get()->Flush();
     Destroy();
 }
 

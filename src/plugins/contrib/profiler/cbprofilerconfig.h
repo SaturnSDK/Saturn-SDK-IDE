@@ -19,7 +19,7 @@
 #include <wx/textctrl.h>
 #include <wx/dialog.h>
 
-#include <configmanager.h>
+#include <old_configmanager.h>
 
 class CBProfilerConfigDlg : public wxDialog
 {

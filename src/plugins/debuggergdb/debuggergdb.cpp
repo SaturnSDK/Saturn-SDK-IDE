@@ -31,7 +31,7 @@
 #include <wx/tokenzr.h>
 
 #include <manager.h>
-#include <configmanager.h>
+#include <old_configmanager.h>
 #include <messagemanager.h>
 #include <projectmanager.h>
 #include <pluginmanager.h>
@@ -180,7 +180,7 @@ DebuggerGDB::DebuggerGDB()
 
 	m_TimerPollDebugger.SetOwner(this, idTimerPollDebugger);
 
-	ConfigManager::AddConfiguration(m_PluginInfo.title, _T("/debugger_gdb"));
+	OldConfigManager::AddConfiguration(m_PluginInfo.title, _T("/debugger_gdb"));
 }
 
 void DebuggerGDB::OnAttach()
@@ -192,11 +192,11 @@ void DebuggerGDB::OnAttach()
     m_PageIndex = msgMan->AddLog(m_pLog);
     // set log image
 	wxBitmap bmp;
-	wxString prefix = ConfigManager::Get()->Read(_T("data_path")) + _T("/images/");
+	wxString prefix = OldConfigManager::Get()->Read(_T("data_path")) + _T("/images/");
     bmp.LoadFile(prefix + _T("misc_16x16.png"), wxBITMAP_TYPE_PNG);
     Manager::Get()->GetMessageManager()->SetLogImage(m_pLog, bmp);
 
-    m_HasDebugLog = ConfigManager::Get()->Read(_T("debugger_gdb/debug_log"), (long int)0L);
+    m_HasDebugLog = OldConfigManager::Get()->Read(_T("debugger_gdb/debug_log"), (long int)0L);
     if (m_HasDebugLog)
     {
         m_pDbgLog = new SimpleTextLog(msgMan, m_PluginInfo.title + _(" (debug)"));
@@ -248,7 +248,7 @@ int DebuggerGDB::Configure()
 	DebuggerOptionsDlg dlg(Manager::Get()->GetAppWindow());
 	int ret = dlg.ShowModal();
 
-	bool needsRestart = ConfigManager::Get()->Read(_T("debugger_gdb/debug_log"), (long int)0L) != m_HasDebugLog;
+	bool needsRestart = OldConfigManager::Get()->Read(_T("debugger_gdb/debug_log"), (long int)0L) != m_HasDebugLog;
 	if (needsRestart)
         wxMessageBox(_("Code::Blocks needs to be restarted for the changes to take effect."), _("Information"), wxICON_INFORMATION);
 
@@ -391,9 +391,9 @@ void DebuggerGDB::DoWatches()
 	if (m_pProcess)
 	{
 	    // locals before args because of precedence
-        if (ConfigManager::Get()->Read(_T("debugger_gdb/watch_locals"), 1))
+        if (OldConfigManager::Get()->Read(_T("debugger_gdb/watch_locals"), 1))
             QueueCommand(new DbgCmd_InfoLocals(this, m_pTree));
-        if (ConfigManager::Get()->Read(_T("debugger_gdb/watch_args"), 1))
+        if (OldConfigManager::Get()->Read(_T("debugger_gdb/watch_args"), 1))
             QueueCommand(new DbgCmd_InfoArguments(this, m_pTree));
 		for (unsigned int i = 0; i < m_pTree->GetWatches().GetCount(); ++i)
 		{
@@ -687,7 +687,7 @@ int DebuggerGDB::Debug()
 #endif
 
     // pass user init-commands
-    wxString init = ConfigManager::Get()->Read(_T("debugger_gdb/init_commands"), _T(""));
+    wxString init = OldConfigManager::Get()->Read(_T("debugger_gdb/init_commands"), _T(""));
     wxArrayString initCmds = GetArrayFromString(init, _T('\n'));
     for (unsigned int i = 0; i < initCmds.GetCount(); ++i)
     {
@@ -697,7 +697,7 @@ int DebuggerGDB::Debug()
     if (m_PidToAttach == 0)
     {
         // add other open projects dirs as search dirs (only if option is enabled)
-        if (ConfigManager::Get()->Read(_T("debugger_gdb/add_other_search_dirs"), 0L))
+        if (OldConfigManager::Get()->Read(_T("debugger_gdb/add_other_search_dirs"), 0L))
         {
             // add as include dirs all open project base dirs
             ProjectsArray* projects = prjMan->GetProjects();
@@ -1547,7 +1547,7 @@ void DebuggerGDB::OnValueTooltip(CodeBlocksEvent& event)
 {
 	if (!m_pProcess || !m_ProgramIsStopped)
 		return;
-    if (!ConfigManager::Get()->Read(_T("debugger_gdb/eval_tooltip"), 0L))
+    if (!OldConfigManager::Get()->Read(_T("debugger_gdb/eval_tooltip"), 0L))
         return;
 
 	cbEditor* ed = event.GetEditor();

@@ -45,7 +45,7 @@
 #include "projectmanager.h"
 #include "messagemanager.h"
 #include "editormanager.h"
-#include "configmanager.h"
+#include "old_configmanager.h"
 #include "filegroupsandmasks.h"
 #include "compilerfactory.h"
 #include "importers_globals.h"
@@ -442,7 +442,7 @@ bool cbProject::LoadLayout()
 {
    if (m_Filename.IsEmpty())
         return false;
-    int openmode = ConfigManager::Get()->Read(_T("/project_manager/open_files"), (long int)1);
+    int openmode = OldConfigManager::Get()->Read(_T("/project_manager/open_files"), (long int)1);
     bool result = false;
 
     if(openmode==2)

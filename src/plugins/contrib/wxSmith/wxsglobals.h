@@ -79,15 +79,15 @@ enum wxsDragAssistTypes
 };
 
 /** Getting current drag assist mode from configuration */
-#define wxsDWAssistType ConfigManager::Get()->Read(_T("/wxsmith/dragassisttype"),(long)wxsDTColourMix)
+#define wxsDWAssistType OldConfigManager::Get()->Read(_T("/wxsmith/dragassisttype"),(long)wxsDTColourMix)
 
 /** Reading Drag target colour from configuration */
-#define wxsDWTargetCol ConfigManager::Get()->Read(_T("/wxsmith/dragtargetcol"),0x608CDFL)
+#define wxsDWTargetCol OldConfigManager::Get()->Read(_T("/wxsmith/dragtargetcol"),0x608CDFL)
 
 /** Reading Drag paretn colour from configuration */
-#define wxsDWParentCol ConfigManager::Get()->Read(_T("/wxsmith/dragparentcol"),0x0D177BL)
+#define wxsDWParentCol OldConfigManager::Get()->Read(_T("/wxsmith/dragparentcol"),0x0D177BL)
 
 /** Reading fetch deelay from configuration */
-#define wxsDWFetchDelay ConfigManager::Get()->Read(_T("/wxsmith/backfetchdelay"),50L)
+#define wxsDWFetchDelay OldConfigManager::Get()->Read(_T("/wxsmith/backfetchdelay"),50L)
 
 #endif

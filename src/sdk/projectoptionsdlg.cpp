@@ -26,7 +26,7 @@
 #include "sdk_precomp.h"
 #include "projectoptionsdlg.h" // class's header file
 #include "manager.h"
-#include "configmanager.h"
+#include "old_configmanager.h"
 #include "editarrayorderdlg.h"
 #include "editarrayfiledlg.h"
 #include "pluginmanager.h"

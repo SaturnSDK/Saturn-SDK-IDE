@@ -36,7 +36,7 @@
 #include "projectmanager.h" // class's header file
 #include "sdk_events.h"
 #include "manager.h"
-#include "configmanager.h"
+#include "old_configmanager.h"
 #include "cbproject.h"
 #include "incrementalselectlistdlg.h"
 #include "messagemanager.h"
@@ -196,12 +196,12 @@ ProjectManager::ProjectManager(wxNotebook* parent)
     InitPane();
 
 	m_pFileGroups = new FilesGroupsAndMasks;
-	m_TreeCategorize = ConfigManager::Get()->Read(_T("/project_manager/categorize_tree"), 1);
-	m_TreeUseFolders = ConfigManager::Get()->Read(_T("/project_manager/use_folders"), 1);
+	m_TreeCategorize = OldConfigManager::Get()->Read(_T("/project_manager/categorize_tree"), 1);
+	m_TreeUseFolders = OldConfigManager::Get()->Read(_T("/project_manager/use_folders"), 1);
 
     RebuildTree();
 
-	ConfigManager::AddConfiguration(_("Project Manager"), _T("/project_manager"));
+	OldConfigManager::AddConfiguration(_("Project Manager"), _T("/project_manager"));
 
 	// Event handling. This must be THE LAST THING activated on startup.
 	// Constructors and destructors must always follow the LIFO rule:
@@ -266,7 +266,7 @@ void ProjectManager::BuildTree(wxWindow* parent)
     };
     wxBitmap bmp;
     m_pImages = new wxImageList(16, 16);
-    wxString prefix = ConfigManager::Get()->Read(_T("data_path")) + _T("/images/");
+    wxString prefix = OldConfigManager::Get()->Read(_T("data_path")) + _T("/images/");
 
     for (int i = 0; i < 14; ++i)
     {
@@ -348,8 +348,8 @@ It is duplicated in ShowMenu() */
             treeprops->AppendSeparator();
             treeprops->AppendCheckItem(idMenuViewCategorize, _("Categorize by file types"));
             treeprops->AppendCheckItem(idMenuViewUseFolders, _("Display folders as on disk"));
-            treeprops->Check(idMenuViewCategorize, ConfigManager::Get()->Read(_T("/project_manager/categorize_tree"), 1));
-            treeprops->Check(idMenuViewUseFolders, ConfigManager::Get()->Read(_T("/project_manager/use_folders"), 1));
+            treeprops->Check(idMenuViewCategorize, OldConfigManager::Get()->Read(_T("/project_manager/categorize_tree"), 1));
+            treeprops->Check(idMenuViewUseFolders, OldConfigManager::Get()->Read(_T("/project_manager/use_folders"), 1));
             treeprops->Append(idMenuViewFileMasks, _("Edit file types && categories..."));
             menu->AppendSeparator();
             menu->Append(idMenuProjectTreeProps, _("Project tree"), treeprops);
@@ -464,8 +464,8 @@ It is duplicated in CreateMenu() */
 it differs from the block currently in CreateMenu() by the following two IDs */
             treeprops->AppendCheckItem(idMenuViewCategorizePopup, _("Categorize by file types"));
             treeprops->AppendCheckItem(idMenuViewUseFoldersPopup, _("Display folders as on disk"));
-            treeprops->Check(idMenuViewCategorizePopup, ConfigManager::Get()->Read(_T("/project_manager/categorize_tree"), 1));
-            treeprops->Check(idMenuViewUseFoldersPopup, ConfigManager::Get()->Read(_T("/project_manager/use_folders"), 1));
+            treeprops->Check(idMenuViewCategorizePopup, OldConfigManager::Get()->Read(_T("/project_manager/categorize_tree"), 1));
+            treeprops->Check(idMenuViewUseFoldersPopup, OldConfigManager::Get()->Read(_T("/project_manager/use_folders"), 1));
             treeprops->Append(idMenuViewFileMasks, _("Edit file types && categories..."));
 
             menu.Append(idMenuProjectTreeProps, _("Project tree"), treeprops);
@@ -905,7 +905,7 @@ bool ProjectManager::QueryCloseWorkspace()
         return true;
 
     // don't ask to save the default workspace, if blank workspace is used on app startup
-    if (m_pWorkspace->IsDefault() && ConfigManager::Get()->Read(_T("/environment/blank_workspace"), 0L) == 1)
+    if (m_pWorkspace->IsDefault() && OldConfigManager::Get()->Read(_T("/environment/blank_workspace"), 0L) == 1)
         return true;
 
     if (m_pWorkspace->GetModified())
@@ -1663,7 +1663,7 @@ void ProjectManager::OnViewCategorize(wxCommandEvent& event)
     SANITY_CHECK();
     m_TreeCategorize = event.IsChecked();
     Manager::Get()->GetAppWindow()->GetMenuBar()->Check(idMenuViewCategorize, m_TreeCategorize);
-	ConfigManager::Get()->Write(_T("/project_manager/categorize_tree"), m_TreeCategorize);
+	OldConfigManager::Get()->Write(_T("/project_manager/categorize_tree"), m_TreeCategorize);
     RebuildTree();
 }
 
@@ -1672,7 +1672,7 @@ void ProjectManager::OnViewUseFolders(wxCommandEvent& event)
     SANITY_CHECK();
     m_TreeUseFolders = event.IsChecked();
     Manager::Get()->GetAppWindow()->GetMenuBar()->Check(idMenuViewUseFolders, m_TreeUseFolders);
-	ConfigManager::Get()->Write(_T("/project_manager/use_folders"), m_TreeUseFolders);
+	OldConfigManager::Get()->Write(_T("/project_manager/use_folders"), m_TreeUseFolders);
     RebuildTree();
 }
 

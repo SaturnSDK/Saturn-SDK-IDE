@@ -1,7 +1,7 @@
 #include "sdk_precomp.h"
 #include <wx/intl.h>
 #include "globals.h"
-#include "configmanager.h"
+#include "old_configmanager.h"
 #include "filegroupsandmasks.h"
 #include "manager.h"
 #include "messagemanager.h"
@@ -57,7 +57,7 @@ void FilesGroupsAndMasks::Load()
 	Clear();
 	long cookie;
 	wxString entry;
-	wxConfigBase* conf = ConfigManager::Get();
+	wxConfigBase* conf = OldConfigManager::Get();
 	wxString oldPath = conf->GetPath();
 	conf->SetPath(CONF_GROUP);
 	if (conf->GetNumberOfGroups(false) == 0)
@@ -87,7 +87,7 @@ void FilesGroupsAndMasks::Load()
 
 void FilesGroupsAndMasks::Save()
 {
-	wxConfigBase* conf = ConfigManager::Get();
+	wxConfigBase* conf = OldConfigManager::Get();
 	conf->DeleteGroup(CONF_GROUP);
 	wxString oldPath = conf->GetPath();
 	conf->SetPath(CONF_GROUP);

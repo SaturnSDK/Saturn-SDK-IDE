@@ -81,7 +81,7 @@ bool cbNetwork::Connect(const wxString& remote)
     if (m_ServerURL.Last() == sep.GetChar(0) || remote.StartsWith(sep))
         sep.Clear();
     m_pURL = new wxURL(m_ServerURL + sep + remote);
-    m_pURL->SetProxy(XMLConfigManager::GetProxy());  /* FIXME (thomas#1#): Change XmlConfigManager to ConfigManager. */
+    m_pURL->SetProxy(XMLOldConfigManager::GetProxy());  /* FIXME (thomas#1#): Change ConfigManager to OldConfigManager. */
     if (m_pURL->GetError() != wxURL_NOERR)
         return false;
 

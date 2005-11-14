@@ -1,7 +1,7 @@
 #include "HelpConfigDialog.h"
 #include <wx/xrc/xmlres.h>
 #include <manager.h>
-#include <configmanager.h>
+#include <old_configmanager.h>
 #include <editormanager.h>
 #include <messagemanager.h>
 #include <projectmanager.h>

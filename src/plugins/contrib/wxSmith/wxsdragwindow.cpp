@@ -3,7 +3,7 @@
 
 #include <wx/dcclient.h>
 #include <wx/dcbuffer.h>
-#include <configmanager.h>
+#include <old_configmanager.h>
 
 #include "widget.h"
 #include "wxsevent.h"
@@ -1065,6 +1065,7 @@ void wxsDragWindow::BlackDragPoints(wxsWidget* Widget)
 
 bool wxsDragWindow::IsInside(wxsWidget* What,wxsWidget* Where )
 {
+
     if ( !Where ) return false;
 	return Where->FindChild(What,0) >= 0;
 }

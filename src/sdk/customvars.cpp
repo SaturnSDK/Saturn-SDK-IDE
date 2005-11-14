@@ -25,7 +25,7 @@
 
 #include "sdk_precomp.h"
 #include "customvars.h"
-#include "configmanager.h"
+#include "old_configmanager.h"
 #include "manager.h"
 #include "messagemanager.h"
 #include <wx/log.h>
@@ -49,7 +49,7 @@ void CustomVars::Load(const wxString& configpath)
 	m_Vars.Clear();
 	long cookie;
 	wxString entry;
-	wxConfigBase* conf = ConfigManager::Get();
+	wxConfigBase* conf = OldConfigManager::Get();
 	wxString oldPath = conf->GetPath();
 	conf->SetPath(configpath);
 	bool cont = conf->GetFirstEntry(entry, cookie);
@@ -64,7 +64,7 @@ void CustomVars::Load(const wxString& configpath)
 
 void CustomVars::Save(const wxString& configpath)
 {
-	wxConfigBase* conf = ConfigManager::Get();
+	wxConfigBase* conf = OldConfigManager::Get();
 	conf->DeleteGroup(configpath);
 	wxString oldPath = conf->GetPath();
 	conf->SetPath(configpath);

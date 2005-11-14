@@ -1,5 +1,5 @@
 #include "help_common.h"
-#include <configmanager.h>
+#include <old_configmanager.h>
 #include <wx/intl.h>
 
 using std::make_pair;
@@ -11,7 +11,7 @@ void HelpCommon::LoadHelpFilesVector(HelpCommon::HelpFilesVector &vect)
   vect.clear();
   long cookie;
   wxString entry;
-  wxConfigBase *conf = ConfigManager::Get();
+  wxConfigBase *conf = OldConfigManager::Get();
   wxString oldPath = conf->GetPath();
   conf->SetPath(_T("/help_plugin"));
   bool cont = conf->GetFirstEntry(entry, cookie);
@@ -40,7 +40,7 @@ void HelpCommon::LoadHelpFilesVector(HelpCommon::HelpFilesVector &vect)
 
 void HelpCommon::SaveHelpFilesVector(HelpCommon::HelpFilesVector &vect)
 {
-  wxConfigBase *conf = ConfigManager::Get();
+  wxConfigBase *conf = OldConfigManager::Get();
   conf->DeleteGroup(_T("/help_plugin"));
   wxString oldPath = conf->GetPath();
   conf->SetPath(_T("/help_plugin"));

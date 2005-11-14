@@ -1,6 +1,6 @@
 #include <sdk.h>
 #include "astyleconfigdlg.h"
-#include <configmanager.h>
+#include <old_configmanager.h>
 #include <wx/xrc/xmlres.h>
 #include <wx/intl.h>
 #include <wx/font.h>
@@ -109,27 +109,27 @@ void AstyleConfigDlg::OnStyleChange(wxCommandEvent& event)
 
 void AstyleConfigDlg::LoadSettings()
 {
-    int style = ConfigManager::Get()->Read(_T("/astyle/style"), 0L);
-    XRCCTRL(*this, "spnIndentation", wxSpinCtrl)->SetValue(ConfigManager::Get()->Read(_T("/astyle/indentation"), 4));
-    XRCCTRL(*this, "chkUseTab", wxCheckBox)->SetValue(ConfigManager::Get()->Read(_T("/astyle/use_tabs"), 0L));
-    XRCCTRL(*this, "chkForceUseTabs", wxCheckBox)->SetValue(ConfigManager::Get()->Read(_T("/astyle/force_tabs"), 0L));
-    XRCCTRL(*this, "chkConvertTabs", wxCheckBox)->SetValue(ConfigManager::Get()->Read(_T("/astyle/convert_tabs"), 0L));
-    XRCCTRL(*this, "chkFillEmptyLines", wxCheckBox)->SetValue(ConfigManager::Get()->Read(_T("/astyle/fill_empty_lines"), 0L));
-    XRCCTRL(*this, "chkIndentClasses", wxCheckBox)->SetValue(ConfigManager::Get()->Read(_T("/astyle/indent_classes"), 0L));
-    XRCCTRL(*this, "chkIndentSwitches", wxCheckBox)->SetValue(ConfigManager::Get()->Read(_T("/astyle/indent_switches"), 0L));
-    XRCCTRL(*this, "chkIndentCase", wxCheckBox)->SetValue(ConfigManager::Get()->Read(_T("/astyle/indent_case"), 0L));
-    XRCCTRL(*this, "chkIndentBrackets", wxCheckBox)->SetValue(ConfigManager::Get()->Read(_T("/astyle/indent_brackets"), 0L));
-    XRCCTRL(*this, "chkIndentBlocks", wxCheckBox)->SetValue(ConfigManager::Get()->Read(_T("/astyle/indent_blocks"), 0L));
-    XRCCTRL(*this, "chkIndentNamespaces", wxCheckBox)->SetValue(ConfigManager::Get()->Read(_T("/astyle/indent_namespaces"), 0L));
-    XRCCTRL(*this, "chkIndentLabels", wxCheckBox)->SetValue(ConfigManager::Get()->Read(_T("/astyle/indent_labels"), 0L));
-    XRCCTRL(*this, "chkIndentPreprocessor", wxCheckBox)->SetValue(ConfigManager::Get()->Read(_T("/astyle/indent_preprocessor"), 0L));
-    XRCCTRL(*this, "cmbBreakType", wxComboBox)->SetValue(ConfigManager::Get()->Read(_T("/astyle/break_type"), _T("None")));
-    XRCCTRL(*this, "chkBreakBlocks", wxCheckBox)->SetValue(ConfigManager::Get()->Read(_T("/astyle/break_blocks"), 0L));
-    XRCCTRL(*this, "chkBreakElseIfs", wxCheckBox)->SetValue(ConfigManager::Get()->Read(_T("/astyle/break_elseifs"), 0L));
-    XRCCTRL(*this, "chkPadOperators", wxCheckBox)->SetValue(ConfigManager::Get()->Read(_T("/astyle/pad_operators"), 0L));
-    XRCCTRL(*this, "chkPadParens", wxCheckBox)->SetValue(ConfigManager::Get()->Read(_T("/astyle/pad_parentheses"), 0L));
-    XRCCTRL(*this, "chkKeepComplex", wxCheckBox)->SetValue(ConfigManager::Get()->Read(_T("/astyle/keep_complex"), 0L));
-    XRCCTRL(*this, "chkKeepBlocks", wxCheckBox)->SetValue(ConfigManager::Get()->Read(_T("/astyle/keep_blocks"), 0L));
+    int style = OldConfigManager::Get()->Read(_T("/astyle/style"), 0L);
+    XRCCTRL(*this, "spnIndentation", wxSpinCtrl)->SetValue(OldConfigManager::Get()->Read(_T("/astyle/indentation"), 4));
+    XRCCTRL(*this, "chkUseTab", wxCheckBox)->SetValue(OldConfigManager::Get()->Read(_T("/astyle/use_tabs"), 0L));
+    XRCCTRL(*this, "chkForceUseTabs", wxCheckBox)->SetValue(OldConfigManager::Get()->Read(_T("/astyle/force_tabs"), 0L));
+    XRCCTRL(*this, "chkConvertTabs", wxCheckBox)->SetValue(OldConfigManager::Get()->Read(_T("/astyle/convert_tabs"), 0L));
+    XRCCTRL(*this, "chkFillEmptyLines", wxCheckBox)->SetValue(OldConfigManager::Get()->Read(_T("/astyle/fill_empty_lines"), 0L));
+    XRCCTRL(*this, "chkIndentClasses", wxCheckBox)->SetValue(OldConfigManager::Get()->Read(_T("/astyle/indent_classes"), 0L));
+    XRCCTRL(*this, "chkIndentSwitches", wxCheckBox)->SetValue(OldConfigManager::Get()->Read(_T("/astyle/indent_switches"), 0L));
+    XRCCTRL(*this, "chkIndentCase", wxCheckBox)->SetValue(OldConfigManager::Get()->Read(_T("/astyle/indent_case"), 0L));
+    XRCCTRL(*this, "chkIndentBrackets", wxCheckBox)->SetValue(OldConfigManager::Get()->Read(_T("/astyle/indent_brackets"), 0L));
+    XRCCTRL(*this, "chkIndentBlocks", wxCheckBox)->SetValue(OldConfigManager::Get()->Read(_T("/astyle/indent_blocks"), 0L));
+    XRCCTRL(*this, "chkIndentNamespaces", wxCheckBox)->SetValue(OldConfigManager::Get()->Read(_T("/astyle/indent_namespaces"), 0L));
+    XRCCTRL(*this, "chkIndentLabels", wxCheckBox)->SetValue(OldConfigManager::Get()->Read(_T("/astyle/indent_labels"), 0L));
+    XRCCTRL(*this, "chkIndentPreprocessor", wxCheckBox)->SetValue(OldConfigManager::Get()->Read(_T("/astyle/indent_preprocessor"), 0L));
+    XRCCTRL(*this, "cmbBreakType", wxComboBox)->SetValue(OldConfigManager::Get()->Read(_T("/astyle/break_type"), _T("None")));
+    XRCCTRL(*this, "chkBreakBlocks", wxCheckBox)->SetValue(OldConfigManager::Get()->Read(_T("/astyle/break_blocks"), 0L));
+    XRCCTRL(*this, "chkBreakElseIfs", wxCheckBox)->SetValue(OldConfigManager::Get()->Read(_T("/astyle/break_elseifs"), 0L));
+    XRCCTRL(*this, "chkPadOperators", wxCheckBox)->SetValue(OldConfigManager::Get()->Read(_T("/astyle/pad_operators"), 0L));
+    XRCCTRL(*this, "chkPadParens", wxCheckBox)->SetValue(OldConfigManager::Get()->Read(_T("/astyle/pad_parentheses"), 0L));
+    XRCCTRL(*this, "chkKeepComplex", wxCheckBox)->SetValue(OldConfigManager::Get()->Read(_T("/astyle/keep_complex"), 0L));
+    XRCCTRL(*this, "chkKeepBlocks", wxCheckBox)->SetValue(OldConfigManager::Get()->Read(_T("/astyle/keep_blocks"), 0L));
 
     SetStyle((AStylePredefinedStyle)style);
 }
@@ -149,27 +149,27 @@ void AstyleConfigDlg::SaveSettings()
         style = 4;
     else if (XRCCTRL(*this, "rbCustom", wxRadioButton)->GetValue())
         style = 5;
-    ConfigManager::Get()->Write(_T("/astyle/style"), style);
-    ConfigManager::Get()->Write(_T("/astyle/indentation"), XRCCTRL(*this, "spnIndentation", wxSpinCtrl)->GetValue());
-    ConfigManager::Get()->Write(_T("/astyle/use_tabs"), XRCCTRL(*this, "chkUseTab", wxCheckBox)->GetValue());
-    ConfigManager::Get()->Write(_T("/astyle/force_tabs"), XRCCTRL(*this, "chkForceUseTabs", wxCheckBox)->GetValue());
-    ConfigManager::Get()->Write(_T("/astyle/convert_tabs"), XRCCTRL(*this, "chkConvertTabs", wxCheckBox)->GetValue());
-    ConfigManager::Get()->Write(_T("/astyle/fill_empty_lines"), XRCCTRL(*this, "chkFillEmptyLines", wxCheckBox)->GetValue());
-    ConfigManager::Get()->Write(_T("/astyle/indent_classes"), XRCCTRL(*this, "chkIndentClasses", wxCheckBox)->GetValue());
-    ConfigManager::Get()->Write(_T("/astyle/indent_switches"), XRCCTRL(*this, "chkIndentSwitches", wxCheckBox)->GetValue());
-    ConfigManager::Get()->Write(_T("/astyle/indent_case"), XRCCTRL(*this, "chkIndentCase", wxCheckBox)->GetValue());
-    ConfigManager::Get()->Write(_T("/astyle/indent_brackets"), XRCCTRL(*this, "chkIndentBrackets", wxCheckBox)->GetValue());
-    ConfigManager::Get()->Write(_T("/astyle/indent_blocks"), XRCCTRL(*this, "chkIndentBlocks", wxCheckBox)->GetValue());
-    ConfigManager::Get()->Write(_T("/astyle/indent_namespaces"), XRCCTRL(*this, "chkIndentNamespaces", wxCheckBox)->GetValue());
-    ConfigManager::Get()->Write(_T("/astyle/indent_labels"), XRCCTRL(*this, "chkIndentLabels", wxCheckBox)->GetValue());
-    ConfigManager::Get()->Write(_T("/astyle/indent_preprocessor"), XRCCTRL(*this, "chkIndentPreprocessor", wxCheckBox)->GetValue());
-    ConfigManager::Get()->Write(_T("/astyle/break_type"), XRCCTRL(*this, "cmbBreakType", wxComboBox)->GetValue());
-    ConfigManager::Get()->Write(_T("/astyle/break_blocks"), XRCCTRL(*this, "chkBreakBlocks", wxCheckBox)->GetValue());
-    ConfigManager::Get()->Write(_T("/astyle/break_elseifs"), XRCCTRL(*this, "chkBreakElseIfs", wxCheckBox)->GetValue());
-    ConfigManager::Get()->Write(_T("/astyle/pad_operators"), XRCCTRL(*this, "chkPadOperators", wxCheckBox)->GetValue());
-    ConfigManager::Get()->Write(_T("/astyle/pad_parentheses"), XRCCTRL(*this, "chkPadParens", wxCheckBox)->GetValue());
-    ConfigManager::Get()->Write(_T("/astyle/keep_complex"), XRCCTRL(*this, "chkKeepComplex", wxCheckBox)->GetValue());
-    ConfigManager::Get()->Write(_T("/astyle/keep_blocks"), XRCCTRL(*this, "chkKeepBlocks", wxCheckBox)->GetValue());
+    OldConfigManager::Get()->Write(_T("/astyle/style"), style);
+    OldConfigManager::Get()->Write(_T("/astyle/indentation"), XRCCTRL(*this, "spnIndentation", wxSpinCtrl)->GetValue());
+    OldConfigManager::Get()->Write(_T("/astyle/use_tabs"), XRCCTRL(*this, "chkUseTab", wxCheckBox)->GetValue());
+    OldConfigManager::Get()->Write(_T("/astyle/force_tabs"), XRCCTRL(*this, "chkForceUseTabs", wxCheckBox)->GetValue());
+    OldConfigManager::Get()->Write(_T("/astyle/convert_tabs"), XRCCTRL(*this, "chkConvertTabs", wxCheckBox)->GetValue());
+    OldConfigManager::Get()->Write(_T("/astyle/fill_empty_lines"), XRCCTRL(*this, "chkFillEmptyLines", wxCheckBox)->GetValue());
+    OldConfigManager::Get()->Write(_T("/astyle/indent_classes"), XRCCTRL(*this, "chkIndentClasses", wxCheckBox)->GetValue());
+    OldConfigManager::Get()->Write(_T("/astyle/indent_switches"), XRCCTRL(*this, "chkIndentSwitches", wxCheckBox)->GetValue());
+    OldConfigManager::Get()->Write(_T("/astyle/indent_case"), XRCCTRL(*this, "chkIndentCase", wxCheckBox)->GetValue());
+    OldConfigManager::Get()->Write(_T("/astyle/indent_brackets"), XRCCTRL(*this, "chkIndentBrackets", wxCheckBox)->GetValue());
+    OldConfigManager::Get()->Write(_T("/astyle/indent_blocks"), XRCCTRL(*this, "chkIndentBlocks", wxCheckBox)->GetValue());
+    OldConfigManager::Get()->Write(_T("/astyle/indent_namespaces"), XRCCTRL(*this, "chkIndentNamespaces", wxCheckBox)->GetValue());
+    OldConfigManager::Get()->Write(_T("/astyle/indent_labels"), XRCCTRL(*this, "chkIndentLabels", wxCheckBox)->GetValue());
+    OldConfigManager::Get()->Write(_T("/astyle/indent_preprocessor"), XRCCTRL(*this, "chkIndentPreprocessor", wxCheckBox)->GetValue());
+    OldConfigManager::Get()->Write(_T("/astyle/break_type"), XRCCTRL(*this, "cmbBreakType", wxComboBox)->GetValue());
+    OldConfigManager::Get()->Write(_T("/astyle/break_blocks"), XRCCTRL(*this, "chkBreakBlocks", wxCheckBox)->GetValue());
+    OldConfigManager::Get()->Write(_T("/astyle/break_elseifs"), XRCCTRL(*this, "chkBreakElseIfs", wxCheckBox)->GetValue());
+    OldConfigManager::Get()->Write(_T("/astyle/pad_operators"), XRCCTRL(*this, "chkPadOperators", wxCheckBox)->GetValue());
+    OldConfigManager::Get()->Write(_T("/astyle/pad_parentheses"), XRCCTRL(*this, "chkPadParens", wxCheckBox)->GetValue());
+    OldConfigManager::Get()->Write(_T("/astyle/keep_complex"), XRCCTRL(*this, "chkKeepComplex", wxCheckBox)->GetValue());
+    OldConfigManager::Get()->Write(_T("/astyle/keep_blocks"), XRCCTRL(*this, "chkKeepBlocks", wxCheckBox)->GetValue());
 }
 
 void AstyleConfigDlg::EndModal(int retCode)

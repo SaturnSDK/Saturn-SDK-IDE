@@ -5,7 +5,7 @@
 
 #include "sdk_precomp.h"
 #include "xtra_classes.h"
-#include "configmanager.h"
+#include "old_configmanager.h"
 
 /** A simple panel with included wxSplitterWindow and sizer. Nothing more
   *
@@ -110,7 +110,7 @@ void wxSplitPanel::OnUpdateUI(wxUpdateUIEvent& event)
 wxSplitPanel::~wxSplitPanel()
 {
 	if (!m_SplitterConfig.IsEmpty())
-        ConfigManager::Get()->Write(m_SplitterConfig, m_lastsashposition);
+        OldConfigManager::Get()->Write(m_SplitterConfig, m_lastsashposition);
     m_splitter=0;
     SetSizer(0L);
 }

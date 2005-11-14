@@ -17,7 +17,7 @@ CBProfiler::CBProfiler()
     //ctor
     wxFileSystem::AddHandler(new wxZipFSHandler);
     wxXmlResource::Get()->InitAllHandlers();
-    wxString resPath = ConfigManager::Get()->Read(_T("data_path"), wxEmptyString);
+    wxString resPath = OldConfigManager::Get()->Read(_T("data_path"), wxEmptyString);
     wxXmlResource::Get()->Load(resPath + _T("/profiler.zip#zip:*.xrc"));
 
     m_PluginInfo.name = _T("CBProfiler");
@@ -31,7 +31,7 @@ CBProfiler::CBProfiler()
     m_PluginInfo.license = LICENSE_GPL;
     m_PluginInfo.hasConfigure = true;
 
-    ConfigManager::AddConfiguration(m_PluginInfo.title, _T("/cbprofiler"));
+    OldConfigManager::AddConfiguration(m_PluginInfo.title, _T("/cbprofiler"));
 }
 CBProfiler::~CBProfiler()
 {
@@ -175,17 +175,17 @@ int CBProfiler::Execute()
 
 	// Loading configuration
 	struct_config config;
-	config.chkAnnSource = ConfigManager::Get()->Read(_T("/cbprofiler/ann_source_chk"), 0L);
-	config.txtAnnSource = ConfigManager::Get()->Read(_T("/cbprofiler/ann_source_txt"), _T(""));
-	config.chkMinCount = ConfigManager::Get()->Read(_T("/cbprofiler/min_count_chk"), 0L);
-	config.spnMinCount = ConfigManager::Get()->Read(_T("/cbprofiler/min_count_spn"), 0L);
-	config.chkBrief = ConfigManager::Get()->Read(_T("/cbprofiler/brief"), 0L);
-	config.chkFileInfo = ConfigManager::Get()->Read(_T("/cbprofiler/file_info"), 0L);
-	config.chkNoStatic = ConfigManager::Get()->Read(_T("/cbprofiler/no_static"), 0L);
-	config.chkMinCount = ConfigManager::Get()->Read(_T("/cbprofiler/min_count_chk"), 0L);
-	config.spnMinCount = ConfigManager::Get()->Read(_T("/cbprofiler/min_count_spn"), 0L);
-	config.chkSum = ConfigManager::Get()->Read(_T("/cbprofiler/sum"), 0L);
-	config.txtExtra = ConfigManager::Get()->Read(_T("/cbprofiler/extra_txt"), _T(""));
+	config.chkAnnSource = OldConfigManager::Get()->Read(_T("/cbprofiler/ann_source_chk"), 0L);
+	config.txtAnnSource = OldConfigManager::Get()->Read(_T("/cbprofiler/ann_source_txt"), _T(""));
+	config.chkMinCount = OldConfigManager::Get()->Read(_T("/cbprofiler/min_count_chk"), 0L);
+	config.spnMinCount = OldConfigManager::Get()->Read(_T("/cbprofiler/min_count_spn"), 0L);
+	config.chkBrief = OldConfigManager::Get()->Read(_T("/cbprofiler/brief"), 0L);
+	config.chkFileInfo = OldConfigManager::Get()->Read(_T("/cbprofiler/file_info"), 0L);
+	config.chkNoStatic = OldConfigManager::Get()->Read(_T("/cbprofiler/no_static"), 0L);
+	config.chkMinCount = OldConfigManager::Get()->Read(_T("/cbprofiler/min_count_chk"), 0L);
+	config.spnMinCount = OldConfigManager::Get()->Read(_T("/cbprofiler/min_count_spn"), 0L);
+	config.chkSum = OldConfigManager::Get()->Read(_T("/cbprofiler/sum"), 0L);
+	config.txtExtra = OldConfigManager::Get()->Read(_T("/cbprofiler/extra_txt"), _T(""));
 
     // If we got this far, all is left is to call gprof!!!
     dlg = new CBProfilerExecDlg(Manager::Get()->GetAppWindow());

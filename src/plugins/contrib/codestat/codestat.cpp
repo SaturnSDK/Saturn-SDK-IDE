@@ -15,7 +15,7 @@ CodeStat::CodeStat()
 {
 	 wxFileSystem::AddHandler(new wxZipFSHandler);
     wxXmlResource::Get()->InitAllHandlers();
-    wxString resPath = ConfigManager::Get()->Read(_T("data_path"), wxEmptyString);
+    wxString resPath = OldConfigManager::Get()->Read(_T("data_path"), wxEmptyString);
     wxXmlResource::Get()->Load(resPath + _T("/codestat.zip#zip:*.xrc"));
 
     m_PluginInfo.name = _T("CodeStatistics");
@@ -29,7 +29,7 @@ CodeStat::CodeStat()
     m_PluginInfo.license = LICENSE_GPL;
     m_PluginInfo.hasConfigure = true;
 
-    ConfigManager::AddConfiguration(m_PluginInfo.title, _T("/codestat"));
+    OldConfigManager::AddConfiguration(m_PluginInfo.title, _T("/codestat"));
 }
 
 CodeStat::~CodeStat()

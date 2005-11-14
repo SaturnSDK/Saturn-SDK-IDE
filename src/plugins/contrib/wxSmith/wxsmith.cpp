@@ -16,7 +16,7 @@
 #include <projectmanager.h>
 #include <wx/notebook.h>
 #include <wx/sashwin.h>
-#include <configmanager.h>
+#include <old_configmanager.h>
 
 #include "wxsmith.h"
 #include "wxswindoweditor.h"
@@ -79,7 +79,7 @@ wxSmith::~wxSmith()
 
 void wxSmith::OnAttach()
 {
-    ConfigManager::AddConfiguration(m_PluginInfo.title, _T("/wxsmith"));     wxNotebook* Notebook = Manager::Get()->GetNotebook();
+    OldConfigManager::AddConfiguration(m_PluginInfo.title, _T("/wxsmith"));     wxNotebook* Notebook = Manager::Get()->GetNotebook();
 	if ( Notebook )
 	{
         // Creating main splitting objects
@@ -130,7 +130,7 @@ void wxSmith::OnAttach()
 
         if ( Messages )
         {
-            wxString resPath = ConfigManager::Get()->Read(_T("data_path"), wxEmptyString);
+            wxString resPath = OldConfigManager::Get()->Read(_T("data_path"), wxEmptyString);
             wxString FileName = resPath + _T("/images/wxsmith/wxSmith16x16.png");
 
             wxBitmap SmithBitmap;

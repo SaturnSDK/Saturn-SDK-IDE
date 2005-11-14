@@ -23,7 +23,7 @@
 
 #include <licenses.h> // defines some common licenses (like the GPL)
 #include <manager.h>
-#include <configmanager.h>
+#include <old_configmanager.h>
 #include <cbproject.h>
 #include <cbplugin.h> // the base class we 're inheriting
 #include <settings.h> // needed to use the Code::Blocks SDK
@@ -34,6 +34,7 @@
 #include "codestatexec.h"
 #include "codestatconfig.h"
 #include "language_def.h"
+
 class CodeStat : public cbToolPlugin
 {
 	public:

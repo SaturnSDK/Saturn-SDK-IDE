@@ -1,7 +1,7 @@
 #include "wxsheaders.h"
 #include "wxssettingsdlg.h"
 
-#include <configmanager.h>
+#include <old_configmanager.h>
 #include <wx/colordlg.h>
 #include "wxsglobals.h"
 
@@ -45,10 +45,10 @@ void wxsSettingsDlg::OnBtnOkClick(wxCommandEvent& event)
     wxColour ColTarget = DragTargetCol->GetBackgroundColour();
     wxColour ColParent = DragParentCol->GetBackgroundColour();
 
-    ConfigManager::Get()->Write(_T("/wxsmith/dragtargetcol"),(((long)ColTarget.Red())<<16) + (((long)ColTarget.Green())<<8) + (long)ColTarget.Blue());
-    ConfigManager::Get()->Write(_T("/wxsmith/dragparentcol"),(((long)ColParent.Red())<<16) + (((long)ColParent.Green())<<8) + (long)ColParent.Blue());
-    ConfigManager::Get()->Write(_T("/wxsmith/dragassisttype"),(long)DragAssistType->GetSelection());
-    ConfigManager::Get()->Write(_T("/wxsmith/backfetchdelay"),(long)PrevFetchDelay->GetValue());
+    OldConfigManager::Get()->Write(_T("/wxsmith/dragtargetcol"),(((long)ColTarget.Red())<<16) + (((long)ColTarget.Green())<<8) + (long)ColTarget.Blue());
+    OldConfigManager::Get()->Write(_T("/wxsmith/dragparentcol"),(((long)ColParent.Red())<<16) + (((long)ColParent.Green())<<8) + (long)ColParent.Blue());
+    OldConfigManager::Get()->Write(_T("/wxsmith/dragassisttype"),(long)DragAssistType->GetSelection());
+    OldConfigManager::Get()->Write(_T("/wxsmith/backfetchdelay"),(long)PrevFetchDelay->GetValue());
     EndModal(wxID_OK);
 }
 

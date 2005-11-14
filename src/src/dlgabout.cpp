@@ -27,7 +27,7 @@
 #include "dlgabout.h" // class's header file
 #include "globals.h"
 #include "../sdk/licenses.h"
-#include "../sdk/configmanager.h"
+#include "../sdk/old_configmanager.h"
 
 #define DESCR		(_("Welcome to ")+wxString(APP_NAME)+wxString(_T(" v"))+wxString(APP_VERSION)+wxString(_T("!\n")) +\
 					wxString(APP_NAME)+_(" is a full-featured IDE (Integrated Development Environment) " \
@@ -51,7 +51,7 @@
 // class constructor
 #include <manager.h>                    //FIXME: remove this  #######################################################
 #include <messagemanager.h>             //FIXME: remove this  #######################################################
-#include "xconfigmanager.h"             //FIXME: remove this  #######################################################
+#include "configmanager.h"             //FIXME: remove this  #######################################################
 
 dlgAbout::dlgAbout(wxWindow* parent)
 {
@@ -60,7 +60,7 @@ dlgAbout::dlgAbout(wxWindow* parent)
 	wxXmlResource::Get()->LoadDialog(this, parent, _T("dlgAbout"));
 
 	wxBitmap bmp;
-	wxString file = ConfigManager::Get()->Read(_T("data_path")) + _T("/images/splash.png");
+	wxString file = OldConfigManager::Get()->Read(_T("data_path")) + _T("/images/splash.png");
 	bmp.LoadFile(file, wxBITMAP_TYPE_PNG);
 	XRCCTRL(*this, "lblTitle", wxStaticBitmap)->SetBitmap(bmp);
 	XRCCTRL(*this, "lblBuildTimestamp", wxStaticText)->SetLabel(wxString(_T("Build: ")) + APP_BUILD_TIMESTAMP);

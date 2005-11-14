@@ -13,7 +13,7 @@
 
 #include "sdk_precomp.h"
 #include "uservarmanager.h"
-#include "configmanager.h"
+#include "old_configmanager.h"
 #include "messagemanager.h"
 #include "manager.h"
 #include <wx/dialog.h>
@@ -74,7 +74,7 @@ void UserVariableManager::Configure()
 
 wxString UserVariableManager::Replace(const wxString& variable)
 {
-    wxConfigBase * cfg = ConfigManager::Get();
+    wxConfigBase * cfg = OldConfigManager::Get();
 
     wxString package = variable.AfterLast(wxT('#')).BeforeFirst(wxT('.')).MakeLower();
     wxString member = variable.AfterFirst(wxT('.')).MakeLower();
@@ -156,7 +156,7 @@ void UsrGlblMgrEditDialog::Load(const wxString& base)
 
     XRCCTRL(*this, "variable", wxChoice)->SetStringSelection(base);
 
-    wxConfigBase * cfg = ConfigManager::Get();
+    wxConfigBase * cfg = OldConfigManager::Get();
     wxString s;
 
     s = cfg->Read(_T("/UserGlobalVars/") + base + _T("/base"), wxEmptyString);
@@ -178,7 +178,7 @@ void UsrGlblMgrEditDialog::List()
     wxChoice * c = XRCCTRL(*this, "variable", wxChoice);
     c->Clear();
 
-    wxConfigBase * cfg = ConfigManager::Get();
+    wxConfigBase * cfg = OldConfigManager::Get();
 
     wxString path = cfg->GetPath();
     cfg->SetPath(_T("/UserGlobalVars/"));
@@ -203,7 +203,7 @@ void UsrGlblMgrEditDialog::Add(const wxString& base)
 
 void UsrGlblMgrEditDialog::Save()
 {
-    wxConfigBase * cfg = ConfigManager::Get();
+    wxConfigBase * cfg = OldConfigManager::Get();
 
     cfg->Write(_T("/UserGlobalVars/") + curr + _T("/base"),    XRCCTRL(*this, "value", wxTextCtrl)->GetValue());
     cfg->Write(_T("/UserGlobalVars/") + curr + _T("/include"), XRCCTRL(*this, "include", wxTextCtrl)->GetValue());
@@ -248,7 +248,7 @@ void UsrGlblMgrEditDialog::OnDelete(wxCommandEvent& event)
 {
     wxString g(XRCCTRL(*this, "variable", wxChoice)->GetStringSelection());
     if(wxMessageDialog(Manager::Get()->GetAppWindow(), wxString::Format(_("Delete the global variable %s?"), g.c_str()), _("Delete"), wxYES_NO).ShowModal() == wxID_YES)
-        ConfigManager::Get()->DeleteGroup(_T("/UserGlobalVars/") + g);
+        OldConfigManager::Get()->DeleteGroup(_T("/UserGlobalVars/") + g);
     List();
 }
 

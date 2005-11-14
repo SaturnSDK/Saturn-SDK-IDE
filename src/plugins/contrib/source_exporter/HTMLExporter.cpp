@@ -3,7 +3,7 @@
  */
 
 #include "HTMLExporter.h"
-#include <configmanager.h>
+#include <old_configmanager.h>
 #include <wx/fontutil.h>
 #include <cstdlib>
 #include <sstream>
@@ -144,7 +144,7 @@ string HTMLExporter::HTMLBody(const wxMemoryBuffer &styled_text)
   const char *buffer = reinterpret_cast<char *>(styled_text.GetData());
   const size_t buffer_size = styled_text.GetDataLen();
 
-  wxString fontstring = ConfigManager::Get()->Read(_T("/editor/font"), wxEmptyString);
+  wxString fontstring = OldConfigManager::Get()->Read(_T("/editor/font"), wxEmptyString);
 
   if (!fontstring.IsEmpty())
   {

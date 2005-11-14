@@ -37,7 +37,7 @@
 #include "pluginmanager.h"
 #include "toolsmanager.h"
 #include "macrosmanager.h"
-#include "configmanager.h"
+#include "old_configmanager.h"
 #include "scriptingmanager.h"
 #include "templatemanager.h"
 #include "personalitymanager.h"
@@ -46,7 +46,7 @@
 #include "xtra_classes.h" // Our custom set of wxWidgets classes
 #include "xtra_res.h" // our new ToolBarAddOn handler
 
-#include "xconfigmanager.h"
+#include "configmanager.h"
 
 
 static bool appShutingDown = false;
@@ -163,7 +163,7 @@ void Manager::Initxrc(bool force)
 void Manager::Loadxrc(wxString relpath)
 {
     Manager::Initxrc();
-    wxString resPath = ConfigManager::Get()->Read(_T("data_path"), wxEmptyString);
+    wxString resPath = OldConfigManager::Get()->Read(_T("data_path"), wxEmptyString);
     wxXmlResource::Get()->Load(resPath + relpath);
 }
 
@@ -279,7 +279,7 @@ ScriptingManager* Manager::GetScriptingManager()
     return appShutingDown ? 0 : ScriptingManager::Get();
 }
 
-XmlConfigManager* Manager::GetConfigManager(const wxString& name_space)
+ConfigManager* Manager::GetConfigManager(const wxString& name_space)
 {
     return appShutingDown ? 0 : CfgMgrBldr::Get(name_space);
 }

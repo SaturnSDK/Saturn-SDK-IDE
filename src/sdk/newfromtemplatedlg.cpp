@@ -35,7 +35,7 @@
 
 #include "newfromtemplatedlg.h"
 #include "manager.h"
-#include "configmanager.h"
+#include "old_configmanager.h"
 
 #define COMPILER_WARN_MSG(b) ((b)?_T("WARNING: This template/option pair will NOT use the default compiler."):_(""))
 
@@ -76,7 +76,7 @@ NewFromTemplateDlg::NewFromTemplateDlg(const ProjectTemplateArray& templates, co
     {
         XRCCTRL(*this, "lstUser", wxListBox)->Append(user_templates[i]);
     }
-	XRCCTRL(*this, "txtPrjPath", wxTextCtrl)->SetValue(ConfigManager::Get()->Read(_T("/projects_path")));
+	XRCCTRL(*this, "txtPrjPath", wxTextCtrl)->SetValue(OldConfigManager::Get()->Read(_T("/projects_path")));
 	XRCCTRL(*this, "lblWarnCompiler", wxStaticText)->SetLabel(wxEmptyString);
 }
 
@@ -141,7 +141,7 @@ void NewFromTemplateDlg::BuildList()
 	// file-based templates
 	wxBitmap bmp;
 	bool all = cat->GetSelection() == 0;
-	wxString baseDir = ConfigManager::Get()->Read(_T("/data_path"));
+	wxString baseDir = OldConfigManager::Get()->Read(_T("/data_path"));
 	baseDir << _T("/templates/");
 	for (unsigned int x = 0; x < m_Templates.GetCount(); ++x)
 	{
@@ -249,7 +249,7 @@ void NewFromTemplateDlg::OnBrowsePath(wxCommandEvent& event)
 {
     wxString path = ChooseDirectory(this,
                             _("Select directory under which to create the project directory"),
-                            ConfigManager::Get()->Read(_T("/projects_path")),
+                            OldConfigManager::Get()->Read(_T("/projects_path")),
                             _T(""),
                             false,
                             true);

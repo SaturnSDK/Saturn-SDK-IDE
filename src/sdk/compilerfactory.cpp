@@ -2,7 +2,7 @@
 #include "compilerfactory.h"
 #include "manager.h"
 #include "messagemanager.h"
-#include "configmanager.h"
+#include "old_configmanager.h"
 #include "autodetectcompilers.h"
 
 // statics
@@ -19,22 +19,22 @@ void CompilerFactory::RegisterUserCompilers()
 	wxString str;
 	long cookie;
 
-	ConfigManager::Get()->SetPath(_T("/compiler_gcc/compiler_sets"));
-	bool cont = ConfigManager::Get()->GetFirstGroup(str, cookie);
+	OldConfigManager::Get()->SetPath(_T("/compiler_gcc/compiler_sets"));
+	bool cont = OldConfigManager::Get()->GetFirstGroup(str, cookie);
 	while (cont)
 	{
 		int parent = -1;
-		parent = ConfigManager::Get()->Read(_T("/compiler_gcc/compiler_sets/") + str + _T("/_parent"), -1);
+		parent = OldConfigManager::Get()->Read(_T("/compiler_gcc/compiler_sets/") + str + _T("/_parent"), -1);
 
         if (CompilerIndexOK(parent - 1))
         {
             CreateCompilerCopy(Compilers[parent - 1]);
         }
 
-        ConfigManager::Get()->SetPath(_T("/compiler_gcc/compiler_sets"));
-		cont = ConfigManager::Get()->GetNextGroup(str, cookie);
+        OldConfigManager::Get()->SetPath(_T("/compiler_gcc/compiler_sets"));
+		cont = OldConfigManager::Get()->GetNextGroup(str, cookie);
 	}
-	ConfigManager::Get()->SetPath(_T("/"));
+	OldConfigManager::Get()->SetPath(_T("/"));
 }
 
 int CompilerFactory::CreateCompilerCopy(Compiler* compiler)
@@ -118,7 +118,7 @@ void CompilerFactory::SetDefaultCompiler(Compiler* compiler)
 void CompilerFactory::SaveSettings()
 {
     wxString baseKey = _T("/compiler_gcc/compiler_sets");
-    ConfigManager::Get()->DeleteGroup(baseKey);
+    OldConfigManager::Get()->DeleteGroup(baseKey);
     for (unsigned int i = 0; i < Compilers.GetCount(); ++i)
     {
         Compilers[i]->SaveSettings(baseKey);
