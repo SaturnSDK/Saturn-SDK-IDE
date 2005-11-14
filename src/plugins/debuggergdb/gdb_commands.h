@@ -4,11 +4,10 @@
 #include <wx/string.h>
 #include <wx/regex.h>
 #include <wx/tipwin.h>
-#include <wx/regex.h>
 #include <globals.h>
+#include "debugger_defs.h"
 #include "debuggergdb.h"
 #include "debuggertree.h"
-#include "debugger_defs.h"
 #include "backtracedlg.h"
 
 /** Basic interface for debugger commands.

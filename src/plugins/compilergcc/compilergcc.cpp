@@ -682,10 +682,6 @@ int CompilerGCC::DoRunQueue()
 	// leave if no active project
     AskForActiveProject();
 
-    // make sure all project files are saved
-    if (m_Project && !m_Project->SaveAllFiles())
-        msgMan->Log(_("Could not save all files..."));
-
     if (m_Queue.GetCount() == 0)
 	{
         m_Log->GetTextControl()->SetDefaultStyle(wxTextAttr(*wxBLUE, wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW)));
@@ -1194,6 +1190,10 @@ int CompilerGCC::Run(ProjectBuildTarget* target)
 
 int CompilerGCC::Clean(ProjectBuildTarget* target)
 {
+    // make sure all project files are saved
+    if (m_Project && !m_Project->SaveAllFiles())
+        Manager::Get()->GetMessageManager()->Log(_("Could not save all files..."));
+
 	DoPrepareQueue();
 	if (!CompilerValid(target))
 		return -1;
@@ -1231,6 +1231,10 @@ int CompilerGCC::Clean(ProjectBuildTarget* target)
 
 int CompilerGCC::DistClean(ProjectBuildTarget* target)
 {
+    // make sure all project files are saved
+    if (m_Project && !m_Project->SaveAllFiles())
+        Manager::Get()->GetMessageManager()->Log(_("Could not save all files..."));
+
 	DoPrepareQueue();
 	if (!CompilerValid(target))
 		return -1;
@@ -1268,6 +1272,10 @@ int CompilerGCC::DistClean(ProjectBuildTarget* target)
 
 int CompilerGCC::CreateDist()
 {
+    // make sure all project files are saved
+    if (m_Project && !m_Project->SaveAllFiles())
+        Manager::Get()->GetMessageManager()->Log(_("Could not save all files..."));
+
 	DoPrepareQueue();
 	if (!CompilerValid())
 		return -1;
@@ -1311,6 +1319,10 @@ void CompilerGCC::OnExportMakefile(wxCommandEvent& event)
 
 int CompilerGCC::Compile(ProjectBuildTarget* target)
 {
+    // make sure all project files are saved
+    if (m_Project && !m_Project->SaveAllFiles())
+        Manager::Get()->GetMessageManager()->Log(_("Could not save all files..."));
+
     DoClearErrors();
 	DoPrepareQueue();
 	if (!m_Project || !CompilerValid(target))
@@ -1345,6 +1357,10 @@ int CompilerGCC::Compile(ProjectBuildTarget* target)
 
 int CompilerGCC::Rebuild(ProjectBuildTarget* target)
 {
+    // make sure all project files are saved
+    if (m_Project && !m_Project->SaveAllFiles())
+        Manager::Get()->GetMessageManager()->Log(_("Could not save all files..."));
+
 	DoPrepareQueue();
 	if (!CompilerValid(target))
 		return -1;

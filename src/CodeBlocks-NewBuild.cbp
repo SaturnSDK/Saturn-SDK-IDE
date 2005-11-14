@@ -1235,17 +1235,21 @@
 			<Option link="0"/>
 			<Option target="plugin_DebuggerGDB"/>
 		</Unit>
-		<Unit filename="plugins\debuggergdb\debugger_commands.h">
-			<Option compilerVar=""/>
-			<Option compile="0"/>
-			<Option link="0"/>
-			<Option target="plugin_DebuggerGDB"/>
-		</Unit>
 		<Unit filename="plugins\debuggergdb\debugger_defs.cpp">
 			<Option compilerVar="CPP"/>
 			<Option target="plugin_DebuggerGDB"/>
 		</Unit>
 		<Unit filename="plugins\debuggergdb\debugger_defs.h">
+			<Option compilerVar=""/>
+			<Option compile="0"/>
+			<Option link="0"/>
+			<Option target="plugin_DebuggerGDB"/>
+		</Unit>
+		<Unit filename="plugins\debuggergdb\debuggerdriver.cpp">
+			<Option compilerVar="CPP"/>
+			<Option target="plugin_DebuggerGDB"/>
+		</Unit>
+		<Unit filename="plugins\debuggergdb\debuggerdriver.h">
 			<Option compilerVar=""/>
 			<Option compile="0"/>
 			<Option link="0"/>
@@ -1316,6 +1320,22 @@
 			<Option target="plugin_DebuggerGDB"/>
 		</Unit>
 		<Unit filename="plugins\debuggergdb\editwatchesdlg.h">
+			<Option compilerVar=""/>
+			<Option compile="0"/>
+			<Option link="0"/>
+			<Option target="plugin_DebuggerGDB"/>
+		</Unit>
+		<Unit filename="plugins\debuggergdb\gdb_commands.h">
+			<Option compilerVar=""/>
+			<Option compile="0"/>
+			<Option link="0"/>
+			<Option target="plugin_DebuggerGDB"/>
+		</Unit>
+		<Unit filename="plugins\debuggergdb\gdb_driver.cpp">
+			<Option compilerVar="CPP"/>
+			<Option target="plugin_DebuggerGDB"/>
+		</Unit>
+		<Unit filename="plugins\debuggergdb\gdb_driver.h">
 			<Option compilerVar=""/>
 			<Option compile="0"/>
 			<Option link="0"/>

@@ -4,10 +4,19 @@
     <object class="wxMenuItem" name="idDebuggerMenuDebug">
       
       
+      
+      
+      
       <label>&amp;Debug</label>
       
       
+      
+      
+      
       <accel>F8</accel>
+      
+      
+      
       
       
       <help>Run current project in debugger</help>
@@ -16,10 +25,19 @@
     <object class="wxMenuItem" name="idDebuggerMenuContinue">
       
       
+      
+      
+      
       <label>Continue</label>
       
       
+      
+      
+      
       <accel>Ctrl-F7</accel>
+      
+      
+      
       
       
       <help>Continue execution</help>
@@ -27,10 +45,19 @@
     <object class="wxMenuItem" name="idDebuggerMenuNext">
       
       
+      
+      
+      
       <label>Step over</label>
       
       
+      
+      
+      
       <accel>F7</accel>
+      
+      
+      
       
       
       <help>Execute the next line of code</help>
@@ -38,10 +65,19 @@
     <object class="wxMenuItem" name="idDebuggerMenuStep">
       
       
+      
+      
+      
       <label>Step into</label>
       
       
+      
+      
+      
       <accel>Shift-F7</accel>
+      
+      
+      
       
       
       <help>Execute the next instruction, stepping into functions</help>
@@ -49,10 +85,19 @@
     <object class="wxMenuItem" name="idDebuggerMenuStepOut">
       
       
+      
+      
+      
       <label>Step out</label>
 	  
       
+      
+      
+      
       <accel>Shift-Ctrl-F7</accel>
+      
+      
+      
       
       
       <help>Execute until the current block exit</help>
@@ -61,10 +106,19 @@
     <object class="wxMenuItem" name="idDebuggerMenuToggleBreakpoint">
       
       
+      
+      
+      
       <label>Toggle breakpoint</label>
       
       
+      
+      
+      
       <accel>F5</accel>
+      
+      
+      
       
       
       <help>Toggle breakpoint in current line</help>
@@ -72,10 +126,19 @@
     <object class="wxMenuItem" name="idDebuggerMenuRunToCursor">
       
       
+      
+      
+      
       <label>Run to cursor</label>
       
       
+      
+      
+      
       <accel>F4</accel>
+      
+      
+      
       
       
       <help>Run program until it reaches the current line</help>
@@ -84,7 +147,13 @@
     <object class="wxMenuItem" name="idDebuggerMenuSendCommandToGDB">
       
       
+      
+      
+      
       <label>Send command to GDB</label>
+      
+      
+      
       
       
       <help>Sends a user-defined command to the GDB debugger</help>
@@ -92,7 +161,13 @@
     <object class="wxMenuItem" name="idDebuggerMenuAddSymbolFile">
       
       
+      
+      
+      
       <label>Add symbol file</label>
+      
+      
+      
       
       
       <help>Adds symbols from another file</help>
@@ -102,7 +177,13 @@
       <object class="wxMenuItem" name="idDebuggerMenuBacktrace">
         
         
+        
+        
+        
         <label>Back-trace</label>
+        
+        
+        
         
         
         <help>Displays a back-trace of the stack</help>
@@ -110,7 +191,13 @@
       <object class="wxMenuItem" name="idDebuggerMenuCPU">
         
         
+        
+        
+        
         <label>CPU</label>
+        
+        
+        
         
         
         <help>Disassembles the current stack frame</help>
@@ -119,7 +206,13 @@
     <object class="wxMenuItem" name="idDebuggerMenuBreakpoints">
       
       
+      
+      
+      
       <label>&amp;Breakpoints</label>
+      
+      
+      
       
       
       <help>Edit breakpoints</help>
@@ -127,16 +220,57 @@
     <object class="wxMenuItem" name="idDebuggerMenuEditWatches">
       
       
+      
+      
+      
       <label>&amp;Watches...</label>
+      
+      
+      
       
       
       <help>Edit watches</help>
     </object>
     <object class="separator"/>
+    <object class="wxMenuItem" name="idDebuggerMenuAttachToProcess">
+      
+      
+      
+      
+      
+      <label>Attach to process...</label>
+      
+      
+      
+      
+      
+      <help>Attach to an external running process</help>
+    </object>
+    <object class="wxMenuItem" name="idDebuggerMenuDetach">
+      
+      
+      
+      
+      
+      <label>Detach</label>
+      
+      
+      
+      
+      
+      <help>Detach from running process</help>
+    </object>
+    <object class="separator"/>
     <object class="wxMenuItem" name="idDebuggerMenuStop">
       
       
+      
+      
+      
       <label>Stop debugger</label>
+      
+      
+      
       
       
       <help>Stop current debugging session</help>

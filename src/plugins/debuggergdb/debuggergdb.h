@@ -17,6 +17,8 @@
 extern const wxString g_EscapeChars;
 
 class DebuggerCmd;
+class Compiler;
+
 WX_DEFINE_ARRAY(DebuggerCmd*, DebuggerCommands);
 
 class DebuggerGDB : public cbDebuggerPlugin
@@ -73,6 +75,7 @@ class DebuggerGDB : public cbDebuggerPlugin
 		void SetBreakpoints();
 		void DoWatches();
         wxString GetEditorWordAtCaret();
+        wxString FindDebuggerExecutable(Compiler* compiler);
 
         void ClearBreakpointsArray();
         int HasBreakpoint(const wxString& file, int line); // returns -1 if not found
@@ -105,6 +108,8 @@ class DebuggerGDB : public cbDebuggerPlugin
 		void OnTimer(wxTimerEvent& event);
 		void OnWatchesChanged(wxCommandEvent& event);
         void OnAddWatch(wxCommandEvent& event);
+        void OnAttachToProcess(wxCommandEvent& event);
+        void OnDetach(wxCommandEvent& event);
 
 		wxMenu* m_pMenu;
         SimpleTextLog* m_pLog;
@@ -121,6 +126,7 @@ class DebuggerGDB : public cbDebuggerPlugin
 		bool m_LastExitCode;
 		int m_TargetIndex;
 		int m_Pid;
+		int m_PidToAttach; // for "attach to process"
 		wxString m_Tbreak;
 		wxTipWindow* m_EvalWin;
 		wxString m_LastEval;
