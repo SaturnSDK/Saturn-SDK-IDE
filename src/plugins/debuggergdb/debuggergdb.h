@@ -16,13 +16,19 @@
 
 extern const wxString g_EscapeChars;
 
+class DebuggerDriver;
 class DebuggerCmd;
+<<<<<<< debuggergdb.h
+class Compiler;
+=======
 class Compiler;
 
 WX_DEFINE_ARRAY(DebuggerCmd*, DebuggerCommands);
+>>>>>>> 1.20.4.7
 
 class DebuggerGDB : public cbDebuggerPlugin
 {
+        DebuggerDriver* m_pDriver;
 	public:
 		DebuggerGDB();
 		~DebuggerGDB();
@@ -53,17 +59,10 @@ class DebuggerGDB : public cbDebuggerPlugin
 
 		void Log(const wxString& msg);
 		void DebugLog(const wxString& msg);
-
-		// commands
-		DebuggerCommands m_DCmds;
-		bool m_QueueBusy;
-		void QueueCommand(DebuggerCmd* dcmd); ///< add a command in the queue. The DebuggerCmd will be deleted automatically when finished.
-		DebuggerCmd* CurrentCommand(); ///< returns the currently executing command
-		void RunQueue(); ///< runs the next command in the queue, if it is idle
-		void RemoveTopCommand(bool deleteIt = true); ///< removes the top command (it has finished)
-		void ClearQueue(); ///< clears the queue
+		void SendCommand(const wxString& cmd);
 
         static void ConvertToGDBFriendly(wxString& str);
+        static void ConvertToGDBFile(wxString& str);
         static void ConvertToGDBDirectory(wxString& str, wxString base = _T(""), bool relative = true);
         static void StripQuotes(wxString& str);
 	protected:
@@ -75,12 +74,18 @@ class DebuggerGDB : public cbDebuggerPlugin
 		void SetBreakpoints();
 		void DoWatches();
         wxString GetEditorWordAtCaret();
+<<<<<<< debuggergdb.h
         wxString FindDebuggerExecutable(Compiler* compiler);
+        int LaunchProcess(const wxString& cmd, const wxString& cwd);
+        wxString GetDebuggee(ProjectBuildTarget* target);
+        bool IsStopped();
+=======
+        wxString FindDebuggerExecutable(Compiler* compiler);
+>>>>>>> 1.20.4.7
 
         void ClearBreakpointsArray();
         int HasBreakpoint(const wxString& file, int line); // returns -1 if not found
 
-		void SendCommand(const wxString& cmd);
 		void OnUpdateUI(wxUpdateUIEvent& event);
 		void OnDebug(wxCommandEvent& event);
 		void OnStop(wxCommandEvent& event);
@@ -119,7 +124,6 @@ class DebuggerGDB : public cbDebuggerPlugin
         int m_PageIndex;
         int m_DbgPageIndex;
 		wxRegEx reSource;
-		bool m_ProgramIsStopped;
 		wxString m_LastCmd;
 		wxString m_Variable;
 		cbCompilerPlugin* m_pCompiler;

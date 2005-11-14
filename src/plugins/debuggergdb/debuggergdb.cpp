@@ -19,8 +19,13 @@
 * Contact e-mail: Yiannis An. Mandravellos <mandrav@codeblocks.org>
 * Program URL   : http://www.codeblocks.org
 *
+<<<<<<< debuggergdb.cpp
 * $Id$
 * $Date$
+=======
+* $Id$
+* $Date$
+>>>>>>> 1.64.2.11
 */
 
 #include <sdk.h>
@@ -47,7 +52,11 @@
 #include <wx/fs_zip.h>
 
 #include "debuggergdb.h"
+<<<<<<< debuggergdb.cpp
+#include "gdb_driver.h"
+=======
 #include "gdb_commands.h"
+>>>>>>> 1.64.2.11
 #include "debuggeroptionsdlg.h"
 #include "breakpointsdlg.h"
 #include "editbreakpointdlg.h"
@@ -67,8 +76,6 @@
 #define CMD_STOP        4
 #define CMD_BACKTRACE   5
 #define CMD_DISASSEMBLE 6
-
-#define GDB_PROMPT _T("(gdb)")
 
 const wxString g_EscapeChars = wxChar(26);
 
@@ -140,7 +147,7 @@ BEGIN_EVENT_TABLE(DebuggerGDB, cbDebuggerPlugin)
 END_EVENT_TABLE()
 
 DebuggerGDB::DebuggerGDB()
-	: m_QueueBusy(true),
+	: m_pDriver(0),
 	m_pMenu(0L),
 	m_pLog(0L),
 	m_pDbgLog(0L),
@@ -148,7 +155,6 @@ DebuggerGDB::DebuggerGDB()
 	m_pTbar(0L),
 	m_PageIndex(-1),
 	m_DbgPageIndex(-1),
-	m_ProgramIsStopped(true),
 	m_pCompiler(0L),
 	m_LastExitCode(0),
 	m_TargetIndex(-1),
@@ -209,11 +215,25 @@ void DebuggerGDB::OnAttach()
 
 	if (!m_pTree)
 		m_pTree = new DebuggerTree(this, Manager::Get()->GetNotebook());
+
+    m_pDisassembly = new DisassemblyDlg(Manager::Get()->GetAppWindow(), this);
+    m_pDisassembly->Hide();
+
+    m_pBacktrace = new BacktraceDlg(Manager::Get()->GetAppWindow(), this);
+    m_pBacktrace->Hide();
 }
 
 void DebuggerGDB::OnRelease(bool appShutDown)
 {
+<<<<<<< debuggergdb.cpp
+    if (m_pDriver)
+        delete m_pDriver;
+    m_pDriver = 0;
+
     ClearBreakpointsArray();
+=======
+    ClearBreakpointsArray();
+>>>>>>> 1.64.2.11
     if (m_pDisassembly)
         m_pDisassembly->Destroy();
     m_pDisassembly = 0;
@@ -324,52 +344,6 @@ bool DebuggerGDB::BuildToolBar(wxToolBar* toolBar)
 #endif
 }
 
-void DebuggerGDB::QueueCommand(DebuggerCmd* dcmd)
-{
-//    Log(_T("Queueing command: ") + dcmd->m_Cmd);
-    m_DCmds.Add(dcmd);
-    RunQueue();
-}
-
-DebuggerCmd* DebuggerGDB::CurrentCommand()
-{
-    return m_DCmds.GetCount() ? m_DCmds[0] : 0;
-}
-
-void DebuggerGDB::RunQueue()
-{
-    if (m_QueueBusy || !m_DCmds.GetCount())
-        return;
-
-//    Log(_T("Running command: ") + CurrentCommand()->m_Cmd);
-    SendCommand(CurrentCommand()->m_Cmd);
-}
-
-void DebuggerGDB::RemoveTopCommand(bool deleteIt)
-{
-    if (m_QueueBusy || !m_DCmds.GetCount())
-        return;
-
-//    Log(_T("Removing command: ") + CurrentCommand()->m_Cmd);
-    if (deleteIt)
-        delete m_DCmds[0];
-    m_DCmds.RemoveAt(0);
-}
-
-void DebuggerGDB::ClearQueue()
-{
-    int idx = 0;
-    // if the first command in the queue is running, delete all others
-    // (this will be deleted when done)
-    if (m_QueueBusy && !m_DCmds.GetCount())
-        idx = 1;
-    for (int i = idx; i < (int)m_DCmds.GetCount(); ++i)
-    {
-        delete m_DCmds[i];
-        m_DCmds.RemoveAt(i);
-    }
-}
-
 void DebuggerGDB::Log(const wxString& msg)
 {
     Manager::Get()->GetMessageManager()->Log(m_PageIndex, msg);
@@ -384,6 +358,13 @@ void DebuggerGDB::DebugLog(const wxString& msg)
 
 void DebuggerGDB::DoWatches()
 {
+<<<<<<< debuggergdb.cpp
+	if (!m_pProcess)
+        return;
+    m_pDriver->UpdateWatches(ConfigManager::Get()->Read(_T("debugger_gdb/watch_locals"), 1),
+                            ConfigManager::Get()->Read(_T("debugger_gdb/watch_args"), 1),
+                            m_pTree);
+=======
     // clear watches tree
     m_pTree->ResetTree();
     m_pTree->SetNumberOfUpdates(2 + m_pTree->GetWatches().GetCount()); // watches + locals + args
@@ -401,12 +382,18 @@ void DebuggerGDB::DoWatches()
             QueueCommand(new DbgCmd_Watch(this, m_pTree, &w));
 		}
 	}
+>>>>>>> 1.64.2.11
 }
 
 void DebuggerGDB::ClearBreakpointsArray()
 {
+<<<<<<< debuggergdb.cpp
+//    if (m_pProcess)
+//        QueueCommand(new DbgCmd_RemoveBreakpoint(this, 0)); // clear all breakpoints
+=======
     if (m_pProcess)
         QueueCommand(new DbgCmd_RemoveBreakpoint(this, 0)); // clear all breakpoints
+>>>>>>> 1.64.2.11
     for (unsigned int i = 0; i < m_Breakpoints.GetCount(); ++i)
     {
         DebuggerBreakpoint* bp = m_Breakpoints[i];
@@ -429,16 +416,26 @@ int DebuggerGDB::HasBreakpoint(const wxString& file, int line)
 
 void DebuggerGDB::SetBreakpoints()
 {
-	QueueCommand(new DbgCmd_RemoveBreakpoint(this, 0)); // clear all breakpoints
+    if (!m_pDriver)
+        return;
+	m_pDriver->RemoveBreakpoint(0); // clear all breakpoints
 
-    for (unsigned int i = 0; i < m_Breakpoints.GetCount(); ++i)
+    unsigned int i = 0;
+    while (i < m_Breakpoints.GetCount())
     {
         DebuggerBreakpoint* bp = m_Breakpoints[i];
         bp->bpNum = -1;
-        QueueCommand(new DbgCmd_AddBreakpoint(this, bp));
+        m_pDriver->AddBreakpoint(bp);
+        if (bp->temporary)
+            m_Breakpoints.RemoveAt(i);
+        else
+            ++i;
 	}
 }
 
+<<<<<<< debuggergdb.cpp
+wxString DebuggerGDB::FindDebuggerExecutable(Compiler* compiler)
+=======
 wxString DebuggerGDB::FindDebuggerExecutable(Compiler* compiler)
 {
 	if (compiler->GetPrograms().DBG.IsEmpty())
@@ -495,7 +492,14 @@ Log("binPath=" + binPath);
 }
 
 int DebuggerGDB::Debug()
+>>>>>>> 1.64.2.11
 {
+<<<<<<< debuggergdb.cpp
+	if (compiler->GetPrograms().DBG.IsEmpty())
+        return wxEmptyString;
+//    if (!wxFileExists(compiler->GetMasterPath() + wxFILE_SEP_PATH + _T("bin") + wxFILE_SEP_PATH + compiler->GetPrograms().DBG))
+//        return wxEmptyString;
+=======
     // if already running, return
 	if (m_pProcess)
 		return 1;
@@ -511,13 +515,27 @@ int DebuggerGDB::Debug()
     MessageManager* msgMan = Manager::Get()->GetMessageManager();
     msgMan->SwitchTo(m_PageIndex);
 	m_pLog->GetTextControl()->Clear();
+>>>>>>> 1.64.2.11
 
+<<<<<<< debuggergdb.cpp
+    wxString masterPath = compiler->GetMasterPath();
+    while (masterPath.Last() == '\\' || masterPath.Last() == '/')
+        masterPath.RemoveLast();
+    wxString gdb = compiler->GetPrograms().DBG;
+    const wxArrayString& extraPaths = compiler->GetExtraPaths();
+=======
     // can only debug projects or attach to processes
 	ProjectManager* prjMan = Manager::Get()->GetProjectManager();
 	cbProject* project = prjMan->GetActiveProject();
 	if (!project && m_PidToAttach == 0)
 		return 2;
+>>>>>>> 1.64.2.11
 
+<<<<<<< debuggergdb.cpp
+    wxPathList pathList;
+    pathList.Add(masterPath + wxFILE_SEP_PATH + _T("bin"));
+    for (unsigned int i = 0; i < extraPaths.GetCount(); ++i)
+=======
     // select the build target to debug
     ProjectBuildTarget* target = 0;
     Compiler* actualCompiler = 0;
@@ -554,13 +572,55 @@ int DebuggerGDB::Debug()
         actualCompiler = CompilerFactory::GetDefaultCompiler();
 
     if (!actualCompiler)
+>>>>>>> 1.64.2.11
     {
+<<<<<<< debuggergdb.cpp
+        if (!extraPaths[i].IsEmpty())
+            pathList.Add(extraPaths[i]);
+=======
         wxString msg;
         msg.Printf(_("This %s is configured to use an invalid debugger.\nThe operation failed..."), target ? _("target") : _("project"));
         wxMessageBox(msg, _("Error"), wxICON_ERROR);
         return 9;
+>>>>>>> 1.64.2.11
+    }
+<<<<<<< debuggergdb.cpp
+    pathList.AddEnvList(_T("PATH"));
+    wxString binPath = pathList.FindAbsoluteValidPath(gdb);
+    // it seems, under Win32, the above command doesn't search in paths with spaces...
+    // look directly for the file in question in masterPath
+    if (binPath.IsEmpty() || !pathList.Member(wxPathOnly(binPath)))
+    {
+        if (wxFileExists(masterPath + wxFILE_SEP_PATH + _T("bin") + wxFILE_SEP_PATH + gdb))
+            binPath = masterPath + wxFILE_SEP_PATH + _T("bin");
+        else if (wxFileExists(masterPath + wxFILE_SEP_PATH + gdb))
+            binPath = masterPath;
+        else
+        {
+            for (unsigned int i = 0; i < extraPaths.GetCount(); ++i)
+            {
+                if (!extraPaths[i].IsEmpty())
+                {
+                    if (wxFileExists(extraPaths[i] + wxFILE_SEP_PATH + gdb))
+                    {
+                        binPath = extraPaths[i];
+                        break;
+                    }
+                }
+            }
+        }
     }
 
+    return binPath;
+}
+=======
+>>>>>>> 1.64.2.11
+
+<<<<<<< debuggergdb.cpp
+int DebuggerGDB::LaunchProcess(const wxString& cmd, const wxString& cwd)
+{
+    if (m_pProcess)
+=======
     // is gdb accessible, i.e. can we find it?
 	wxString cmdexe;
 	cmdexe = actualCompiler->GetPrograms().DBG;
@@ -574,7 +634,10 @@ int DebuggerGDB::Debug()
         #else
         msgMan->Log(m_PageIndex,_("\n(For GCC compilers, it's 'gdb' (without the quotes))"));
         #endif
+>>>>>>> 1.64.2.11
         return -1;
+<<<<<<< debuggergdb.cpp
+=======
     }
 
     // access the gdb executable name
@@ -624,52 +687,100 @@ int DebuggerGDB::Debug()
     // --fullname: report full-path filenames when breaking
 	wxString cmd;
 	cmd << cmdexe << _T(" --fullname -nx");
+>>>>>>> 1.64.2.11
 
     // start the gdb process
 	wxLogNull ln; // we perform our own error handling and logging
+<<<<<<< debuggergdb.cpp
+    m_pProcess = new PipedProcess((void**)&m_pProcess, this, idGDBProcess, true, cwd);
+	Manager::Get()->GetMessageManager()->AppendLog(m_PageIndex, _("Starting debugger: "));
+=======
     m_pProcess = new PipedProcess((void**)&m_pProcess, this, idGDBProcess, true, project ? project->GetBasePath() : _T(""));
 	msgMan->AppendLog(m_PageIndex, _("Starting debugger: "));
 //    msgMan->AppendLog(m_PageIndex, _(cmd));
+>>>>>>> 1.64.2.11
     m_Pid = wxExecute(cmd, wxEXEC_ASYNC, m_pProcess);
-//    m_Pid = m_pProcess->Launch(cmd);
 
     if (!m_Pid)
     {
 		delete m_pProcess;
 		m_pProcess = 0;
-		msgMan->Log(m_PageIndex, _("failed"));
+		Manager::Get()->GetMessageManager()->Log(m_PageIndex, _("failed"));
         return -1;
     }
     else if (!m_pProcess->GetOutputStream())
     {
 		delete m_pProcess;
 		m_pProcess = 0;
-		msgMan->Log(m_PageIndex, _("failed (to get debugger's stdin)"));
+		Manager::Get()->GetMessageManager()->Log(m_PageIndex, _("failed (to get debugger's stdin)"));
         return -2;
     }
     else if (!m_pProcess->GetInputStream())
     {
 		delete m_pProcess;
 		m_pProcess = 0;
-		msgMan->Log(m_PageIndex, _("failed (to get debugger's stdout)"));
+		Manager::Get()->GetMessageManager()->Log(m_PageIndex, _("failed (to get debugger's stdout)"));
         return -2;
     }
     else if (!m_pProcess->GetErrorStream())
     {
 		delete m_pProcess;
 		m_pProcess = 0;
-		msgMan->Log(m_PageIndex, _("failed (to get debugger's stderr)"));
+		Manager::Get()->GetMessageManager()->Log(m_PageIndex, _("failed (to get debugger's stderr)"));
         return -2;
     }
-	else
-		msgMan->Log(m_PageIndex, _("done"));
+    Manager::Get()->GetMessageManager()->Log(m_PageIndex, _("done"));
+    return 0;
+}
 
+<<<<<<< debuggergdb.cpp
+wxString DebuggerGDB::GetDebuggee(ProjectBuildTarget* target)
+{
+    if (!target)
+        return wxEmptyString;
+=======
 	wxString out;
 	// start polling gdb's output
 	m_TimerPollDebugger.Start(100);
+>>>>>>> 1.64.2.11
 
-    // send built-in init commands
+    wxString out;
+    switch (target->GetTargetType())
+    {
+        case ttExecutable:
+        case ttConsoleOnly:
+            out = UnixFilename(target->GetOutputFilename());
+            Manager::Get()->GetMacrosManager()->ReplaceEnvVars(out); // apply env vars
+            Manager::Get()->GetMessageManager()->Log(m_PageIndex, _("Adding file: %s"), out.c_str());
+            ConvertToGDBDirectory(out);
+            break;
 
+<<<<<<< debuggergdb.cpp
+        case ttStaticLib:
+        case ttDynamicLib:
+            // check for hostapp
+            if (target->GetHostApplication().IsEmpty())
+            {
+                wxMessageBox(_("You must select a host application to \"run\" a library..."));
+                return wxEmptyString;
+            }
+            out = UnixFilename(target->GetHostApplication());
+            Manager::Get()->GetMacrosManager()->ReplaceEnvVars(out); // apply env vars
+            Manager::Get()->GetMessageManager()->Log(m_PageIndex, _("Adding file: %s"), out.c_str());
+            ConvertToGDBDirectory(out);
+            break;
+//            // for DLLs, add the DLL's symbols
+//            if (target->GetTargetType() == ttDynamicLib)
+//            {
+//                wxString symbols;
+//                out = UnixFilename(target->GetOutputFilename());
+//                Manager::Get()->GetMacrosManager()->ReplaceEnvVars(out); // apply env vars
+//                msgMan->Log(m_PageIndex, _("Adding symbol file: %s"), out.c_str());
+//                ConvertToGDBDirectory(out);
+//                QueueCommand(new DbgCmd_AddSymbolFile(this, out));
+//            }
+//            break;
+=======
 // NOTE: we add an extra linefeed to the prompt because the process pipe
 // reads whole lines. Without it, it 'd block...
 // And we must send this immediately, hence SendCommand()...
@@ -685,20 +796,91 @@ int DebuggerGDB::Debug()
         QueueCommand(new DebuggerCmd(this, _T("set new-console on")));
     QueueCommand(new DebuggerCmd(this, _T("set disassembly-flavor intel")));
 #endif
+>>>>>>> 1.64.2.11
 
+<<<<<<< debuggergdb.cpp
+        default: break;
+=======
     // pass user init-commands
     wxString init = OldConfigManager::Get()->Read(_T("debugger_gdb/init_commands"), _T(""));
     wxArrayString initCmds = GetArrayFromString(init, _T('\n'));
     for (unsigned int i = 0; i < initCmds.GetCount(); ++i)
     {
         QueueCommand(new DebuggerCmd(this, initCmds[i]));
+>>>>>>> 1.64.2.11
     }
 
+<<<<<<< debuggergdb.cpp
+    if (!out.IsEmpty() && !target->GetExecutionParameters().IsEmpty())
+        out << _T(' ') << target->GetExecutionParameters();
+    return out;
+}
+
+bool DebuggerGDB::IsStopped()
+{
+    return !m_pDriver || m_pDriver->IsStopped();
+}
+
+int DebuggerGDB::Debug()
+{
+    // if already running, return
+	if (m_pProcess)
+		return 1;
+
+    m_NoDebugInfo = false;
+    m_LastBreakpointNum = 1;
+
+    // clear the debug log
+    if (m_HasDebugLog)
+        m_pDbgLog->GetTextControl()->Clear();
+
+    // switch to the debugging log and clear it
+    MessageManager* msgMan = Manager::Get()->GetMessageManager();
+    msgMan->SwitchTo(m_PageIndex);
+	m_pLog->GetTextControl()->Clear();
+
+    // can only debug projects or attach to processes
+	ProjectManager* prjMan = Manager::Get()->GetProjectManager();
+	cbProject* project = prjMan->GetActiveProject();
+	if (!project && m_PidToAttach == 0)
+		return 2;
+
+    // select the build target to debug
+    ProjectBuildTarget* target = 0;
+    Compiler* actualCompiler = 0;
     if (m_PidToAttach == 0)
+=======
+    if (m_PidToAttach == 0)
+>>>>>>> 1.64.2.11
     {
+<<<<<<< debuggergdb.cpp
+        m_TargetIndex = project->GetActiveBuildTarget();
+        msgMan->SwitchTo(m_PageIndex);
+        msgMan->AppendLog(m_PageIndex, _("Selecting target: "));
+        if (m_TargetIndex == -1)
+        {
+            m_TargetIndex = project->SelectTarget(m_TargetIndex);
+            if (m_TargetIndex == -1)
+            {
+                msgMan->Log(m_PageIndex, _("canceled"));
+                return 3;
+            }
+        }
+
+        // make sure it's not a commands-only target
+        target = project->GetBuildTarget(m_TargetIndex);
+        if (target->GetTargetType() == ttCommandsOnly)
+=======
         // add other open projects dirs as search dirs (only if option is enabled)
         if (OldConfigManager::Get()->Read(_T("debugger_gdb/add_other_search_dirs"), 0L))
+>>>>>>> 1.64.2.11
         {
+<<<<<<< debuggergdb.cpp
+            wxMessageBox(_("The selected target is only running pre/post build step commands\n"
+                        "Can't debug such a target..."), _("Information"), wxICON_INFORMATION);
+            msgMan->Log(m_PageIndex, _("aborted"));
+            return 3;
+=======
             // add as include dirs all open project base dirs
             ProjectsArray* projects = prjMan->GetProjects();
             for (unsigned int i = 0; i < projects->GetCount(); ++i)
@@ -709,10 +891,88 @@ int DebuggerGDB::Debug()
                     continue;
                 AddSourceDir(it->GetBasePath());
             }
+>>>>>>> 1.64.2.11
         }
+<<<<<<< debuggergdb.cpp
+        msgMan->Log(m_PageIndex, target->GetTitle());
+
+        // find the target's compiler (to get gdb path and make sure the target is compiled already)
+        actualCompiler = CompilerFactory::Compilers[target ? target->GetCompilerIndex() : project->GetCompilerIndex()];
+    }
+    else
+        actualCompiler = CompilerFactory::GetDefaultCompiler();
+
+    if (!actualCompiler)
+    {
+        wxString msg;
+        msg.Printf(_("This %s is configured to use an invalid debugger.\nThe operation failed..."), target ? _("target") : _("project"));
+        wxMessageBox(msg, _("Error"), wxICON_ERROR);
+        return 9;
+    }
+
+    // is gdb accessible, i.e. can we find it?
+	wxString cmdexe;
+	cmdexe = actualCompiler->GetPrograms().DBG;
+	cmdexe.Trim();
+	cmdexe.Trim(true);
+	if(cmdexe.IsEmpty())
+    {
+        msgMan->AppendLog(m_PageIndex,_("ERROR: You need to specify a debugger program in the compiler's settings."));
+        #ifdef __WXMSW__
+        msgMan->Log(m_PageIndex,_("\n(For MINGW compilers, it's 'gdb.exe' (without the quotes))"));
+        #else
+        msgMan->Log(m_PageIndex,_("\n(For GCC compilers, it's 'gdb' (without the quotes))"));
+        #endif
+        return -1;
+    }
+=======
         // lastly, add THE project as source dir
         AddSourceDir(project->GetBasePath());
+>>>>>>> 1.64.2.11
 
+<<<<<<< debuggergdb.cpp
+    // access the gdb executable name
+    cmdexe = FindDebuggerExecutable(actualCompiler);
+    if (cmdexe.IsEmpty())
+	{
+        wxMessageBox(_("The debugger executable is not set.\n"
+                    "To set it, go to \"Settings/Configure plugins/Compiler\", switch to the \"Programs\" tab\n"
+                    "and select the debugger program."), _("Error"), wxICON_ERROR);
+        msgMan->Log(m_PageIndex, _("Aborted"));
+        return 4;
+	}
+
+    if (m_PidToAttach == 0)
+    {
+        // make sure the target is compiled
+        PluginsArray plugins = Manager::Get()->GetPluginManager()->GetCompilerOffers();
+        if (plugins.GetCount())
+            m_pCompiler = (cbCompilerPlugin*)plugins[0];
+        if (m_pCompiler)
+        {
+            msgMan->AppendLog(m_PageIndex, _("Compiling: "));
+            // is the compiler already running?
+            if (m_pCompiler->IsRunning())
+            {
+                msgMan->Log(m_PageIndex, _("compiler in use..."));
+                msgMan->Log(m_PageIndex, _("Aborting debugging session"));
+                return -1;
+            }
+
+            m_pCompiler->Compile(target);
+            while (m_pCompiler->IsRunning())
+                wxYield();
+            msgMan->SwitchTo(m_PageIndex);
+            if (m_pCompiler->GetExitCode() != 0)
+            {
+                msgMan->Log(m_PageIndex, _("failed"));
+                msgMan->Log(m_PageIndex, _("Aborting debugging session"));
+                return -1;
+            }
+            msgMan->Log(m_PageIndex, _("done"));
+        }
+    }
+=======
         // set the file to debug
         // (depends on the target type)
         cmd.Clear();
@@ -726,7 +986,14 @@ int DebuggerGDB::Debug()
                 ConvertToGDBDirectory(out);
                 QueueCommand(new DbgCmd_SetDebuggee(this, out));
                 break;
+>>>>>>> 1.64.2.11
 
+<<<<<<< debuggergdb.cpp
+    if (m_pDriver)
+        delete m_pDriver;
+    m_pDriver = new GDB_driver(this);
+    m_pDriver->SetDebugWindows(m_pBacktrace, m_pDisassembly);
+=======
             case ttStaticLib:
             case ttDynamicLib:
                 // check for hostapp
@@ -752,13 +1019,66 @@ int DebuggerGDB::Debug()
                     QueueCommand(new DbgCmd_AddSymbolFile(this, out));
                 }
                 break;
+>>>>>>> 1.64.2.11
 
+<<<<<<< debuggergdb.cpp
+    // create gdb launch command
+	wxString cmd;
+=======
             default: break;
         }
+>>>>>>> 1.64.2.11
 
+<<<<<<< debuggergdb.cpp
+    // prepare the driver
+    wxString cmdline;
+    if (m_PidToAttach == 0)
+    {
+        // set the file to debug
+        // (depends on the target type)
+        wxString debuggee = GetDebuggee(target);
+        if (debuggee.IsEmpty())
+            return -3;
+        cmdline = m_pDriver->GetCommandLine(cmdexe, debuggee);
+
+        m_pDriver->ClearDirectories();
+        // add other open projects dirs as search dirs (only if option is enabled)
+        if (ConfigManager::Get()->Read(_T("debugger_gdb/add_other_search_dirs"), 0L))
+=======
         // set the program's arguments (if any)
         if (!target->GetExecutionParameters().IsEmpty())
             QueueCommand(new DbgCmd_SetArguments(this, target->GetExecutionParameters()));
+
+        // switch to output dir
+        wxString path = UnixFilename(target->GetWorkingDir());
+        if (!path.IsEmpty())
+>>>>>>> 1.64.2.11
+        {
+<<<<<<< debuggergdb.cpp
+            // add as include dirs all open project base dirs
+            ProjectsArray* projects = prjMan->GetProjects();
+            for (unsigned int i = 0; i < projects->GetCount(); ++i)
+            {
+                cbProject* it = projects->Item(i);
+                // skip if it's THE project (added last)
+                if (it == project)
+                    continue;
+                AddSourceDir(it->GetBasePath());
+            }
+=======
+            Manager::Get()->GetMacrosManager()->ReplaceEnvVars(path); // apply env vars
+            cmd.Clear();
+            ConvertToGDBDirectory(path);
+            if (path != _T(".")) // avoid silly message "changing to ."
+            {
+                msgMan->Log(m_PageIndex, _("Changing directory to: %s"), path.c_str());
+                QueueCommand(new DebuggerCmd(this, _T("cd ") + path));
+            }
+>>>>>>> 1.64.2.11
+        }
+<<<<<<< debuggergdb.cpp
+        // lastly, add THE project as source dir
+        AddSourceDir(project->GetBasePath());
 
         // switch to output dir
         wxString path = UnixFilename(target->GetWorkingDir());
@@ -770,10 +1090,37 @@ int DebuggerGDB::Debug()
             if (path != _T(".")) // avoid silly message "changing to ."
             {
                 msgMan->Log(m_PageIndex, _("Changing directory to: %s"), path.c_str());
-                QueueCommand(new DebuggerCmd(this, _T("cd ") + path));
+                m_pDriver->SetWorkingDirectory(path);
             }
         }
 
+//        // set breakpoints
+//        SetBreakpoints();
+//        // also set a temporary breakpoint (if any), for run-to-cursor
+//        if (!m_Tbreak.IsEmpty())
+//        {
+//            QueueCommand(new DebuggerCmd(this, m_Tbreak));
+//            m_Tbreak.Clear();
+//        }
+    }
+    else // m_PidToAttach != 0
+        cmdline = m_pDriver->GetCommandLine(cmdexe, m_PidToAttach);
+
+    // start the gdb process
+    wxString wdir = project ? project->GetBasePath() : _T(".");
+    DebugLog(_T("Command-line: ") + cmdline);
+    DebugLog(_T("Working dir : ") + wdir);
+    int ret = LaunchProcess(cmdline, wdir);
+    if (ret != 0)
+        return ret;
+=======
+>>>>>>> 1.64.2.11
+
+<<<<<<< debuggergdb.cpp
+	wxString out;
+	// start polling gdb's output
+	m_TimerPollDebugger.Start(100);
+=======
         // set breakpoints
         SetBreakpoints();
         // also set a temporary breakpoint (if any), for run-to-cursor
@@ -782,7 +1129,13 @@ int DebuggerGDB::Debug()
             QueueCommand(new DebuggerCmd(this, m_Tbreak));
             m_Tbreak.Clear();
         }
+>>>>>>> 1.64.2.11
 
+<<<<<<< debuggergdb.cpp
+    m_pDriver->Prepare(target && target->GetTargetType() == ttConsoleOnly);
+    SetBreakpoints();
+    m_pDriver->Start(false);
+=======
         // finally, start debugging :)
         if (m_BreakOnEntry)
         {
@@ -796,19 +1149,20 @@ int DebuggerGDB::Debug()
     {
         QueueCommand(new DbgCmd_AttachToProcess(this, m_PidToAttach));
     }
+>>>>>>> 1.64.2.11
 
 	return 0;
 }
 
 void DebuggerGDB::AddSourceDir(const wxString& dir)
 {
-    if (dir.IsEmpty())
+    if (!m_pDriver || dir.IsEmpty())
         return;
     wxString filename = dir;
     Manager::Get()->GetMacrosManager()->ReplaceEnvVars(filename); // apply env vars
     Manager::Get()->GetMessageManager()->Log(m_PageIndex, _("Adding source dir: %s"), filename.c_str());
     ConvertToGDBDirectory(filename, _T(""), false);
-    QueueCommand(new DbgCmd_AddSourceDir(this, filename));
+    m_pDriver->AddDirectory(filename);
 }
 
 // static
@@ -832,6 +1186,15 @@ void DebuggerGDB::ConvertToGDBFriendly(wxString& str)
 //    str.Replace("/", "//");
     if (str.Find(_T(' ')) != -1 && str.GetChar(0) != _T('"'))
         str = _T("\"") + str + _T("\"");
+}
+
+// static
+void DebuggerGDB::ConvertToGDBFile(wxString& str)
+{
+    wxFileName fname = str;
+    str = fname.GetPath(wxPATH_GET_VOLUME | wxPATH_GET_SEPARATOR);
+    DebuggerGDB::ConvertToGDBDirectory(str);
+    str << fname.GetFullName();
 }
 
 // static
@@ -912,17 +1275,17 @@ void DebuggerGDB::ConvertToGDBDirectory(wxString& str, wxString base, bool relat
 void DebuggerGDB::SendCommand(const wxString& cmd)
 {
 //    Log(cmd);
-    if (!m_pProcess || !m_ProgramIsStopped)
+    if (!m_pProcess || !IsStopped())
         return;
     if (m_HasDebugLog)
         Manager::Get()->GetMessageManager()->Log(m_DbgPageIndex, _T("> ") + cmd);
-    m_QueueBusy = true;
+//    m_QueueBusy = true;
 	m_pProcess->SendString(cmd);
 }
 
 void DebuggerGDB::RunCommand(int cmd)
 {
-    if (!m_pProcess || !m_ProgramIsStopped)
+    if (!m_pProcess || !IsStopped())
         return;
 
     switch (cmd)
@@ -930,33 +1293,37 @@ void DebuggerGDB::RunCommand(int cmd)
         case CMD_CONTINUE:
             ClearActiveMarkFromAllEditors();
             Manager::Get()->GetMessageManager()->Log(m_PageIndex, _("Continuing..."));
-            QueueCommand(new DebuggerCmd(this, _T("cont")));
+            m_pDriver->Continue();
+//            QueueCommand(new DebuggerCmd(this, _T("cont")));
             break;
 
         case CMD_STEP:
             ClearActiveMarkFromAllEditors();
-            QueueCommand(new DebuggerCmd(this, _T("next")));
+            m_pDriver->Step();
+//            QueueCommand(new DebuggerCmd(this, _T("next")));
             break;
 
         case CMD_STEPIN:
             ClearActiveMarkFromAllEditors();
-            QueueCommand(new DebuggerCmd(this, _T("step")));
+            m_pDriver->StepIn();
+//            QueueCommand(new DebuggerCmd(this, _T("step")));
             break;
 
         case CMD_STOP:
             ClearActiveMarkFromAllEditors();
-            QueueCommand(new DebuggerCmd(this, _T("quit")));
+            m_pDriver->Stop();
+//            QueueCommand(new DebuggerCmd(this, _T("quit")));
             break;
 
         case CMD_BACKTRACE:
 //            Manager::Get()->GetMessageManager()->Log(m_PageIndex, "Running back-trace...");
-            QueueCommand(new DbgCmd_Backtrace(this, m_pBacktrace));
+            m_pDriver->Backtrace();
             break;
 
         case CMD_DISASSEMBLE:
         {
 //            Manager::Get()->GetMessageManager()->Log(m_PageIndex, "Disassemblying...");
-            QueueCommand(new DbgCmd_Disassembly(this, m_pDisassembly));
+            m_pDriver->Disassemble();
             break;
         }
 
@@ -966,16 +1333,12 @@ void DebuggerGDB::RunCommand(int cmd)
 
 void DebuggerGDB::CmdDisassemble()
 {
-    if (!m_pDisassembly)
-        m_pDisassembly = new DisassemblyDlg(Manager::Get()->GetAppWindow(), this);
     m_pDisassembly->Show();
     RunCommand(CMD_DISASSEMBLE);
 }
 
 void DebuggerGDB::CmdBacktrace()
 {
-    if (!m_pBacktrace)
-        m_pBacktrace = new BacktraceDlg(Manager::Get()->GetAppWindow(), this);
     m_pBacktrace->Clear();
     m_pBacktrace->Show();
     RunCommand(CMD_BACKTRACE);
@@ -985,7 +1348,7 @@ void DebuggerGDB::CmdContinue()
 {
 	if (!m_Tbreak.IsEmpty())
 	{
-		QueueCommand(new DebuggerCmd(this, m_Tbreak));
+//		QueueCommand(new DebuggerCmd(this, m_Tbreak));
 		m_Tbreak.Clear();
 	}
     RunCommand(CMD_CONTINUE);
@@ -1064,8 +1427,16 @@ void DebuggerGDB::CmdRunToCursor()
 	wxString cmd, filename = pf->file.GetFullName();
     wxString out = filename;
     ConvertToGDBDirectory(out);
-	cmd << _T("tbreak ") << out << _T(":") << ed->GetControl()->GetCurrentLine()+1;
-	m_Tbreak = cmd;
+
+    DebuggerBreakpoint* bp = new DebuggerBreakpoint;
+    bp->temporary = true;
+    bp->filename = out;
+    bp->line = ed->GetControl()->GetCurrentLine();
+    if (m_pDriver)
+        m_pDriver->AddBreakpoint(bp);
+    else
+        m_Breakpoints.Add(bp);
+
 	if (m_pProcess)
 	{
 		CmdContinue();
@@ -1089,7 +1460,7 @@ void DebuggerGDB::CmdStop()
 {
 	if (m_pProcess && m_Pid)
 	{
-		if (m_ProgramIsStopped)
+		if (IsStopped())
 		{
             RunCommand(CMD_STOP);
             m_pProcess->CloseOutput();
@@ -1104,13 +1475,15 @@ void DebuggerGDB::CmdStop()
 					_("Debug"), wxOK | wxICON_EXCLAMATION);
 */
 			}
-			m_ProgramIsStopped = true;
 		}
 	}
 }
 
 void DebuggerGDB::ParseOutput(const wxString& output)
 {
+<<<<<<< debuggergdb.cpp
+    if (m_pDriver)
+=======
     static wxString buffer;
 	buffer << output << _T('\n');
 
@@ -1118,113 +1491,18 @@ void DebuggerGDB::ParseOutput(const wxString& output)
 
     int idx = buffer.First(GDB_PROMPT);
     if (idx != wxNOT_FOUND)
+>>>>>>> 1.64.2.11
     {
-        m_QueueBusy = false;
-//        Log(_T("Parsing output: ") + buffer);
-        DebuggerCmd* cmd = CurrentCommand();
-        if (!cmd)
-            DebugLog(buffer);
-        else
+        m_pDriver->ParseOutput(output);
+
+        if (m_pDriver->IsStopped() && m_pDriver->HasCursorChanged())
         {
-//            Log(_T("Command parsing output: ") + buffer.Left(idx));
-            RemoveTopCommand(false);
-            buffer.Remove(idx);
-            if (buffer[buffer.Length() - 1] == _T('\n'))
-                buffer.Remove(buffer.Length() - 1);
-            cmd->ParseOutput(buffer.Left(idx));
-            delete cmd;
-            RunQueue();
-        }
-    }
-    else
-        return; // come back later
-
-    // non-command messages (e.g. breakpoint hits)
-    // break them up in lines
-    wxArrayString lines = GetArrayFromString(buffer, _T('\n'));
-    for (unsigned int i = 0; i < lines.GetCount(); ++i)
-    {
-//            Log(_T("DEBUG: ") + lines[i]); // write it in the full debugger log
-
-        // log GDB's version
-        if (lines[i].StartsWith(_T("GNU gdb")))
-        {
-            // it's the gdb banner. Just display the version and "eat" the rest
-            Log(_("Debugger name and version: ") + lines[i]);
-            break;
-        }
-
-        // Is the program running?
-        else if (lines[i].StartsWith(_T("Starting program:")))
-            m_ProgramIsStopped = false;
-
-        // Is the program exited?
-        else if (lines[i].StartsWith(_T("Program exited")))
-        {
-            m_ProgramIsStopped = true;
-            Manager::Get()->GetMessageManager()->Log(m_PageIndex, lines[i]);
-            CmdStop();
-        }
-
-        // no debug symbols?
-        else if (lines[i].Contains(_T("(no debugging symbols found)")))
-        {
-            m_NoDebugInfo = true;
-        }
-
-        // signal
-        else if (lines[i].StartsWith(_T("Program received signal")))
-        {
+            SyncEditor(m_pDriver->GetStopFile(), m_pDriver->GetStopLine());
+//				m_HaltAtLine = line - 1;
             BringAppToFront();
-            m_StoppedOnSignal = true;
-            Log(lines[i]);
-            if (wxMessageBox(wxString::Format(_("%s\nDo you want to view the backtrace?"), lines[i].c_str()), _("Question"), wxICON_QUESTION | wxYES_NO) == wxYES)
-            {
-                // TODO: queue backtrace command
-            }
-        }
-
-        // cursor change
-        else if (lines[i].StartsWith(g_EscapeChars)) // ->->
-        {
-            //  breakpoint
-            wxRegEx reSource;
-			if (!reSource.IsValid())
-			#ifdef __WXMSW__
-				reSource.Compile(_T("([A-Za-z]:)([ A-Za-z0-9_/\\.~-]*):([0-9]*):[0-9]*:[begmidl]+:(0x[0-9A-Za-z]*)"));
-			#else
-				reSource.Compile(_T("([ A-Za-z0-9_/\\.~-]*):([0-9]*):[0-9]*:[begmidl]:(0x[0-9A-Za-z]*)"));
-			#endif
-			if ( reSource.Matches(buffer) )
-			{
-                m_ProgramIsStopped = true;
-			#ifdef __WXMSW__
-				wxString file = reSource.GetMatch(buffer, 1) + reSource.GetMatch(buffer, 2);
-				wxString lineStr = reSource.GetMatch(buffer, 3);
-				wxString addr = reSource.GetMatch(buffer, 4);
-            #else
-				wxString file = reSource.GetMatch(buffer, 1);
-				wxString lineStr = reSource.GetMatch(buffer, 2);
-				wxString addr = reSource.GetMatch(buffer, 3);
-            #endif
-                if (m_pDisassembly)
-                {
-                    long int addrL;
-                    addr.ToLong(&addrL, 16);
-                    m_pDisassembly->SetActiveAddress(addrL);
-                    QueueCommand(new DbgCmd_InfoRegisters(this, m_pDisassembly));
-                }
-				long int line;
-				lineStr.ToLong(&line);
-//				Manager::Get()->GetMessageManager()->DebugLog("file %s, line %ld", file.c_str(), line);
-				SyncEditor(file, line);
-				m_HaltAtLine = line - 1;
-				BringAppToFront();
-				DoWatches();
-			}
+            DoWatches();
         }
     }
-    buffer.Clear();
 }
 
 void DebuggerGDB::BringAppToFront()
@@ -1298,8 +1576,26 @@ void DebuggerGDB::OnUpdateUI(wxUpdateUIEvent& event)
 	bool en = prj || m_PidToAttach != 0;
     cbEditor* ed = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
     wxMenuBar* mbar = Manager::Get()->GetAppWindow()->GetMenuBar();
+    bool stopped = IsStopped();
     if (mbar)
     {
+<<<<<<< debuggergdb.cpp
+        mbar->Enable(idMenuDebug, !m_pProcess && en);
+        mbar->Enable(idMenuContinue, m_pProcess && en && stopped);
+        mbar->Enable(idMenuNext, m_pProcess && en && stopped);
+        mbar->Enable(idMenuStep, en && stopped);
+        mbar->Enable(idMenuStepOut, m_pProcess && en && stopped);
+ 		mbar->Enable(idMenuRunToCursor, en && ed && stopped);
+		mbar->Enable(idMenuToggleBreakpoint, en && ed && stopped);
+		mbar->Enable(idMenuSendCommandToGDB, m_pProcess && stopped);
+ 		mbar->Enable(idMenuAddSymbolFile, m_pProcess && stopped);
+ 		mbar->Enable(idMenuBacktrace, m_pProcess && stopped);
+ 		mbar->Enable(idMenuCPU, m_pProcess && stopped);
+ 		mbar->Enable(idMenuEditWatches, en && stopped);
+        mbar->Enable(idMenuStop, m_pProcess && en);
+        mbar->Enable(idMenuAttachToProcess, !m_pProcess);
+        mbar->Enable(idMenuDetach, m_pProcess && m_PidToAttach != 0);
+=======
         mbar->Enable(idMenuDebug, !m_pProcess && en);
         mbar->Enable(idMenuContinue, m_pProcess && en && m_ProgramIsStopped);
         mbar->Enable(idMenuNext, m_pProcess && en && m_ProgramIsStopped);
@@ -1315,16 +1611,26 @@ void DebuggerGDB::OnUpdateUI(wxUpdateUIEvent& event)
         mbar->Enable(idMenuStop, m_pProcess && en);
         mbar->Enable(idMenuAttachToProcess, !m_pProcess);
         mbar->Enable(idMenuDetach, m_pProcess && m_PidToAttach != 0);
+>>>>>>> 1.64.2.11
 	}
 
     #ifdef implement_debugger_toolbar
 	wxToolBar* tbar = m_pTbar;//Manager::Get()->GetAppWindow()->GetToolBar();
+<<<<<<< debuggergdb.cpp
+    tbar->EnableTool(idMenuDebug, (!m_pProcess || stopped) && en);
+    tbar->EnableTool(idMenuRunToCursor, en && ed && stopped);
+    tbar->EnableTool(idMenuNext, m_pProcess && en && stopped);
+    tbar->EnableTool(idMenuStep, en && stopped);
+    tbar->EnableTool(idMenuStepOut, m_pProcess && en && stopped);
+    tbar->EnableTool(idMenuStop, m_pProcess && en);
+=======
     tbar->EnableTool(idMenuDebug, (!m_pProcess || m_ProgramIsStopped) && en);
     tbar->EnableTool(idMenuRunToCursor, en && ed && m_ProgramIsStopped);
     tbar->EnableTool(idMenuNext, m_pProcess && en && m_ProgramIsStopped);
     tbar->EnableTool(idMenuStep, en && m_ProgramIsStopped);
     tbar->EnableTool(idMenuStepOut, m_pProcess && en && m_ProgramIsStopped);
     tbar->EnableTool(idMenuStop, m_pProcess && en);
+>>>>>>> 1.64.2.11
 	#endif
 
     // allow other UpdateUI handlers to process this event
@@ -1338,7 +1644,7 @@ void DebuggerGDB::OnDebug(wxCommandEvent& event)
         Debug();
     else
     {
-        if (m_ProgramIsStopped)
+        if (IsStopped())
             CmdContinue();
     }
 }
@@ -1389,7 +1695,7 @@ void DebuggerGDB::OnSendCommandToGDB(wxCommandEvent& event)
 	if (cmd.IsEmpty())
 		return;
 	m_LastCmd = cmd;
-	QueueCommand(new DebuggerCmd(this, cmd, true));
+//	QueueCommand(new DebuggerCmd(this, cmd, true));
 }
 
 void DebuggerGDB::OnAddSymbolFile(wxCommandEvent& event)
@@ -1404,7 +1710,7 @@ void DebuggerGDB::OnAddSymbolFile(wxCommandEvent& event)
 		return;
 //    Manager::Get()->GetMessageManager()->Log(m_PageIndex, _("Adding symbol file: %s"), file.c_str());
     ConvertToGDBDirectory(file);
-    QueueCommand(new DbgCmd_AddSymbolFile(this, file));
+//    QueueCommand(new DbgCmd_AddSymbolFile(this, file));
 }
 
 void DebuggerGDB::OnBacktrace(wxCommandEvent& event)
@@ -1512,7 +1818,8 @@ void DebuggerGDB::OnBreakpointAdd(CodeBlocksEvent& event)
     //end GDB workaround
 
     m_Breakpoints.Add(bp);
-    QueueCommand(new DbgCmd_AddBreakpoint(this, bp));
+    if (m_pDriver)
+        m_pDriver->AddBreakpoint(bp);
 }
 
 void DebuggerGDB::OnBreakpointEdit(CodeBlocksEvent& event)
@@ -1523,10 +1830,10 @@ void DebuggerGDB::OnBreakpointEdit(CodeBlocksEvent& event)
 
     DebuggerBreakpoint* bp = m_Breakpoints[idx];
     EditBreakpointDlg dlg(bp);
-    if (dlg.ShowModal() == wxID_OK)
+    if (dlg.ShowModal() == wxID_OK && m_pDriver)
     {
-        QueueCommand(new DbgCmd_RemoveBreakpoint(this, bp));
-        QueueCommand(new DbgCmd_AddBreakpoint(this, bp));
+        m_pDriver->RemoveBreakpoint(bp);
+        m_pDriver->AddBreakpoint(bp);
     }
 }
 
@@ -1539,13 +1846,15 @@ void DebuggerGDB::OnBreakpointDelete(CodeBlocksEvent& event)
     DebuggerBreakpoint* bp = m_Breakpoints[idx];
     m_Breakpoints.RemoveAt(idx);
 
-//    delete bp;
-    QueueCommand(new DbgCmd_RemoveBreakpoint(this, bp, true)); // deletes the breakpoint when done running
+    if (m_pDriver)
+        m_pDriver->RemoveBreakpoint(bp, true); // deletes the breakpoint when done running
+    else
+        delete bp;
 }
 
 void DebuggerGDB::OnValueTooltip(CodeBlocksEvent& event)
 {
-	if (!m_pProcess || !m_ProgramIsStopped)
+	if (!m_pProcess || !IsStopped())
 		return;
     if (!OldConfigManager::Get()->Read(_T("debugger_gdb/eval_tooltip"), 0L))
         return;
@@ -1585,7 +1894,7 @@ void DebuggerGDB::OnValueTooltip(CodeBlocksEvent& event)
 		m_EvalRect.width = pt.x - m_EvalRect.x;
 		m_EvalRect.height = (pt.y + ed->GetControl()->GetCharHeight()) - m_EvalRect.y;
 		m_LastEval = token;
-		QueueCommand(new DbgCmd_TooltipEvaluation(this, m_LastEval, &m_EvalWin, m_EvalRect));
+        m_pDriver->EvaluateSymbol(token, &m_EvalWin, m_EvalRect);
 	}
 }
 
@@ -1628,6 +1937,24 @@ void DebuggerGDB::OnAddWatch(wxCommandEvent& event)
 {
     m_pTree->AddWatch(GetEditorWordAtCaret());
 }
+<<<<<<< debuggergdb.cpp
+
+void DebuggerGDB::OnAttachToProcess(wxCommandEvent& event)
+{
+    wxString pidStr = wxGetTextFromUser(_("PID to attach to:"));
+    if (!pidStr.IsEmpty())
+    {
+        pidStr.ToLong((long*)&m_PidToAttach);
+        Debug();
+    }
+}
+
+void DebuggerGDB::OnDetach(wxCommandEvent& event)
+{
+    m_pDriver->Detach();
+    m_pDriver->Stop();
+}
+=======
 
 void DebuggerGDB::OnAttachToProcess(wxCommandEvent& event)
 {
@@ -1645,3 +1972,4 @@ void DebuggerGDB::OnDetach(wxCommandEvent& event)
     // stop the debugger process
     QueueCommand(new DebuggerCmd(this, _T("quit")));
 }
+>>>>>>> 1.64.2.11

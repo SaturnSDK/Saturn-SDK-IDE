@@ -9,9 +9,19 @@ class GDB_driver : public DebuggerDriver
         GDB_driver(DebuggerGDB* plugin);
         virtual ~GDB_driver();
 
-        virtual void Start(const wxString& filename, bool isConsole);
-        virtual void Start(int pid);
+        virtual wxString GetCommandLine(const wxString& debugger, const wxString& debuggee);
+        virtual wxString GetCommandLine(const wxString& debugger, int pid);
+        virtual void Prepare(bool isConsole);
+        virtual void Start(bool breakOnEntry);
         virtual void Stop();
+
+        virtual void Continue();
+        virtual void Step();
+        virtual void StepIn();
+        virtual void StepOut();
+        virtual void Backtrace();
+        virtual void Disassemble();
+        virtual void Detach();
 
         virtual void AddBreakpoint(DebuggerBreakpoint* bp);
         virtual void RemoveBreakpoint(DebuggerBreakpoint* bp, bool deleteAlso = false);
