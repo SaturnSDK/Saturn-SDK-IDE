@@ -55,7 +55,7 @@ void GDB_driver::Prepare(bool isConsole)
 #endif
 
     // pass user init-commands
-    wxString init = ConfigManager::Get()->Read(_T("debugger_gdb/init_commands"), _T(""));
+    wxString init = Manager::Get()->GetConfigManager(_T("debugger"))->Read(_T("init_commands"), wxEmptyString);
     wxArrayString initCmds = GetArrayFromString(init, _T('\n'));
     for (unsigned int i = 0; i < initCmds.GetCount(); ++i)
     {

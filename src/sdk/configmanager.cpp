@@ -13,12 +13,12 @@
 
 #include "sdk_precomp.h"
 #include "configmanager.h"
+#include "personalitymanager.h"
+#include "cbexception.h"
 
 #include <wx/file.h>
 #include <wx/url.h>
 #include <wx/stream.h>
-#include "tinyxml/tinystr.h"
-#include "tinyxml/tinyxml.h"
 
 #ifdef __WXMSW__
 #include <shlobj.h>

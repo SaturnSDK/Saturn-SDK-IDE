@@ -76,6 +76,9 @@ void PipedProcess::SendString(const wxString& text)
 	}
 }
 
+// forward decl
+wxString gReadLine(wxInputStream& s);
+
 bool PipedProcess::HasInput()
 {
     bool hasInput = false;
@@ -85,7 +88,7 @@ bool PipedProcess::HasInput()
         wxTextInputStream serr(*GetErrorStream());
 
         wxString msg;
-        msg << serr.ReadLine();
+        msg << gReadLine(*GetErrorStream());//serr.ReadLine();
 
 		CodeBlocksEvent event(cbEVT_PIPEDPROCESS_STDERR, m_Id);
         event.SetString(msg);
@@ -100,7 +103,7 @@ bool PipedProcess::HasInput()
         wxTextInputStream sout(*GetInputStream());
 
         wxString msg;
-        msg << sout.ReadLine();
+        msg << gReadLine(*GetInputStream());//sout.ReadLine();
 
 		CodeBlocksEvent event(cbEVT_PIPEDPROCESS_STDOUT, m_Id);
         event.SetString(msg);
@@ -138,4 +141,77 @@ void PipedProcess::OnIdle(wxIdleEvent& event)
 {
     while (HasInput())
 		;
+}
+
+// TODO (mandrav#1#): Better create a class, like cbTextInputStream...
+
+// The folowing function was copied verbatim from wxTextStream::NextChar()
+// TODO: fix the unicode path
+wxChar gNextChar(wxInputStream& s)
+{
+#if wxUSE_UNICODE
+//    wxChar wbuf[2];
+//    memset((void*)m_lastBytes, 0, 10);
+//    for(size_t inlen = 0; inlen < 9; inlen++)
+//    {
+//        // actually read the next character
+//        m_lastBytes[inlen] = s.GetC();
+//
+//        if(s.LastRead() <= 0)
+//            return wxEOT;
+//
+//        int retlen = (int) m_conv.MB2WC(wbuf, m_lastBytes, 2); // returns -1 for failure
+//        if(retlen >= 0) // res == 0 could happen for '\0' char
+//            return wbuf[0];
+//    }
+//    // there should be no encoding which requires more than nine bytes for one character...
+//    return wxEOT;
+#else
+    wxChar c = s.GetC();
+
+    if(s.LastRead() <= 0)
+        return wxEOT;
+
+    return c;
+#endif
+}
+
+// The folowing function was copied verbatim from wxTextInputStream::EatEOL()
+bool gEatEOL(wxInputStream& s, const wxChar &c)
+{
+    if (c == wxT('\n')) return true; // eat on UNIX
+
+    if (c == wxT('\r')) // eat on both Mac and DOS
+    {
+        wxChar c2 = gNextChar(s);
+        if(c2 == wxEOT) return true; // end of stream reached, had enough :-)
+
+//        if (c2 != wxT('\n')) s.UngetLast(); // Don't eat on Mac
+        return true;
+    }
+
+    return false;
+}
+
+// The folowing function was copied verbatim from wxTextStream::ReadLine()
+// The only change, is the addition of s.CanRead() in the while()
+wxString gReadLine(wxInputStream& s)
+{
+    wxString line;
+
+    while ( s.CanRead() && !s.Eof() )
+    {
+        wxChar c = gNextChar(s);
+        if(s.LastRead() <= 0)
+            break;
+
+        if ( !s )
+            break;
+
+        if (gEatEOL(s, c))
+            break;
+
+        line += c;
+    }
+    return line;
 }

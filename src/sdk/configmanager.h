@@ -7,6 +7,10 @@
 
 #include "settings.h"
 
+#include "tinyxml/tinystr.h"
+#include "tinyxml/tinyxml.h"
+#include "manager.h"
+#include "messagemanager.h"
 
 
 /* ------------------------------------------------------------------------------------------------------------------

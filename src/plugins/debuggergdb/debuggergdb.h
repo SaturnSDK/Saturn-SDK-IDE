@@ -18,13 +18,7 @@ extern const wxString g_EscapeChars;
 
 class DebuggerDriver;
 class DebuggerCmd;
-<<<<<<< debuggergdb.h
 class Compiler;
-=======
-class Compiler;
-
-WX_DEFINE_ARRAY(DebuggerCmd*, DebuggerCommands);
->>>>>>> 1.20.4.7
 
 class DebuggerGDB : public cbDebuggerPlugin
 {
@@ -74,14 +68,10 @@ class DebuggerGDB : public cbDebuggerPlugin
 		void SetBreakpoints();
 		void DoWatches();
         wxString GetEditorWordAtCaret();
-<<<<<<< debuggergdb.h
         wxString FindDebuggerExecutable(Compiler* compiler);
         int LaunchProcess(const wxString& cmd, const wxString& cwd);
         wxString GetDebuggee(ProjectBuildTarget* target);
         bool IsStopped();
-=======
-        wxString FindDebuggerExecutable(Compiler* compiler);
->>>>>>> 1.20.4.7
 
         void ClearBreakpointsArray();
         int HasBreakpoint(const wxString& file, int line); // returns -1 if not found
