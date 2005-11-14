@@ -83,6 +83,8 @@ public:
     static wxString GetExecutableFolder();
     static wxString GetProxy();
 
+    static inline wxString ReadDataPath(){return GetDataFolder();};      // use instead of cfg->Read("data_path");
+    static inline wxString ReadAppPath(){return GetExecutableFolder();}; // use instead of cfg->Read("app_path");
     /* -----------------------------------------------------------------------------------------------------
     *  Path functions for navigation within your configuration namespace
     */
