@@ -42,8 +42,8 @@ class DebuggerCmd
             {
                 if (m_LogToNormalLog)
                     m_pGDB->Log(output);
-                else
-                    m_pGDB->DebugLog(output);
+//                else
+//                    m_pGDB->DebugLog(output);
             }
         }
 
@@ -146,6 +146,66 @@ class DbgCmd_SetArguments : public DebuggerCmd
 };
 
 /**
+  * Command to the attach to a process.
+  */
+class DbgCmd_AttachToProcess : public DebuggerCmd
+{
+    public:
+        /** @param file The file to debug. */
+        DbgCmd_AttachToProcess(DebuggerGDB* gdb, int pid)
+            : DebuggerCmd(gdb)
+        {
+            m_Cmd << _T("attach ") << pid;
+        }
+        void ParseOutput(const wxString& output)
+        {
+            // Output:
+            // Attaching to process <pid>
+            // or,
+            // Can't attach to process.
+            wxArrayString lines = GetArrayFromString(output, _T('\n'));
+    		for (unsigned int i = 0; i < lines.GetCount(); ++i)
+    		{
+                if (lines[i].StartsWith(_T("Attaching")))
+                    m_pGDB->Log(lines[i]);
+                else if (lines[i].StartsWith(_T("Can't ")))
+                {
+                    // log this and quit debugging
+                    m_pGDB->Log(lines[i]);
+                    m_pGDB->QueueCommand(new DebuggerCmd(m_pGDB, _T("quit")));
+                }
+//                m_pGDB->DebugLog(lines[i]);
+    		}
+        }
+};
+
+/**
+  * Command to the detach from the process.
+  */
+class DbgCmd_Detach : public DebuggerCmd
+{
+    public:
+        /** @param file The file to debug. */
+        DbgCmd_Detach(DebuggerGDB* gdb)
+            : DebuggerCmd(gdb)
+        {
+            m_Cmd << _T("detach");
+        }
+        void ParseOutput(const wxString& output)
+        {
+            // Output:
+            // Attaching to process <pid>
+            wxArrayString lines = GetArrayFromString(output, _T('\n'));
+    		for (unsigned int i = 0; i < lines.GetCount(); ++i)
+    		{
+                if (lines[i].StartsWith(_T("Detaching")))
+                    m_pGDB->Log(lines[i]);
+//                m_pGDB->DebugLog(lines[i]);
+    		}
+        }
+};
+
+/**
   * Command to add a breakpoint.
   */
 class DbgCmd_AddBreakpoint : public DebuggerCmd
@@ -186,7 +246,7 @@ class DbgCmd_AddBreakpoint : public DebuggerCmd
             wxRegEx re(_T("Breakpoint ([0-9]+) at (0x[0-9A-Fa-f]+)"));
             if (re.Matches(output))
             {
-                m_pGDB->DebugLog(wxString::Format(_("Breakpoint added: file %s, line %d"), m_BP->filename.c_str(), m_BP->line + 1));
+//                m_pGDB->DebugLog(wxString::Format(_("Breakpoint added: file %s, line %d"), m_BP->filename.c_str(), m_BP->line + 1));
                 if (!m_BP->func.IsEmpty())
                     m_pGDB->DebugLog(_("(work-around for constructors activated)"));
 
@@ -250,7 +310,7 @@ class DbgCmd_RemoveBreakpoint : public DebuggerCmd
 
             if (!output.IsEmpty())
                 m_pGDB->Log(output);
-            m_pGDB->DebugLog(wxString::Format(_("Breakpoint removed: file %s, line %d"), m_BP->filename.c_str(), m_BP->line + 1));
+//            m_pGDB->DebugLog(wxString::Format(_("Breakpoint removed: file %s, line %d"), m_BP->filename.c_str(), m_BP->line + 1));
             if (m_DeleteBPwhenDone)
                 delete m_BP;
         }
