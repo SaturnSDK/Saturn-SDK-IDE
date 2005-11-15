@@ -1,5 +1,5 @@
-#ifndef GDB_DEBUGGER_COMMANDS_H
-#define GDB_DEBUGGER_COMMANDS_H
+#ifndef CDB_DEBUGGER_COMMANDS_H
+#define CDB_DEBUGGER_COMMANDS_H
 
 #include <wx/string.h>
 #include <wx/regex.h>
@@ -14,11 +14,11 @@
 /**
   * Command to add a search directory for source files in debugger's paths.
   */
-class GdbCmd_AddSourceDir : public DebuggerCmd
+class CdbCmd_AddSourceDir : public DebuggerCmd
 {
     public:
         /** If @c dir is empty, resets all search dirs to $cdir:$cwd, the default. */
-        GdbCmd_AddSourceDir(DebuggerDriver* driver, const wxString& dir)
+        CdbCmd_AddSourceDir(DebuggerDriver* driver, const wxString& dir)
             : DebuggerCmd(driver)
         {
             m_Cmd << _T("directory ") << dir;
@@ -36,11 +36,11 @@ class GdbCmd_AddSourceDir : public DebuggerCmd
 /**
   * Command to the set the file to be debugged.
   */
-class GdbCmd_SetDebuggee : public DebuggerCmd
+class CdbCmd_SetDebuggee : public DebuggerCmd
 {
     public:
         /** @param file The file to debug. */
-        GdbCmd_SetDebuggee(DebuggerDriver* driver, const wxString& file)
+        CdbCmd_SetDebuggee(DebuggerDriver* driver, const wxString& file)
             : DebuggerCmd(driver)
         {
             m_Cmd << _T("file ") << file;
@@ -60,11 +60,11 @@ class GdbCmd_SetDebuggee : public DebuggerCmd
 /**
   * Command to the add symbol files.
   */
-class GdbCmd_AddSymbolFile : public DebuggerCmd
+class CdbCmd_AddSymbolFile : public DebuggerCmd
 {
     public:
         /** @param file The file which contains the symbols. */
-        GdbCmd_AddSymbolFile(DebuggerDriver* driver, const wxString& file)
+        CdbCmd_AddSymbolFile(DebuggerDriver* driver, const wxString& file)
             : DebuggerCmd(driver)
         {
             m_Cmd << _T("add-symbol-file ") << file;
@@ -88,11 +88,11 @@ class GdbCmd_AddSymbolFile : public DebuggerCmd
 /**
   * Command to set the arguments to the debuggee.
   */
-class GdbCmd_SetArguments : public DebuggerCmd
+class CdbCmd_SetArguments : public DebuggerCmd
 {
     public:
         /** @param file The file which contains the symbols. */
-        GdbCmd_SetArguments(DebuggerDriver* driver, const wxString& args)
+        CdbCmd_SetArguments(DebuggerDriver* driver, const wxString& args)
             : DebuggerCmd(driver)
         {
             m_Cmd << _T("set args ") << args;
@@ -106,11 +106,11 @@ class GdbCmd_SetArguments : public DebuggerCmd
 /**
   * Command to the attach to a process.
   */
-class GdbCmd_AttachToProcess : public DebuggerCmd
+class CdbCmd_AttachToProcess : public DebuggerCmd
 {
     public:
         /** @param file The file to debug. */
-        GdbCmd_AttachToProcess(DebuggerDriver* driver, int pid)
+        CdbCmd_AttachToProcess(DebuggerDriver* driver, int pid)
             : DebuggerCmd(driver)
         {
             m_Cmd << _T("attach ") << pid;
@@ -140,37 +140,30 @@ class GdbCmd_AttachToProcess : public DebuggerCmd
 /**
   * Command to the detach from the process.
   */
-class GdbCmd_Detach : public DebuggerCmd
+class CdbCmd_Detach : public DebuggerCmd
 {
     public:
         /** @param file The file to debug. */
-        GdbCmd_Detach(DebuggerDriver* driver)
+        CdbCmd_Detach(DebuggerDriver* driver)
             : DebuggerCmd(driver)
         {
-            m_Cmd << _T("detach");
+            m_Cmd << _T(".detach");
         }
         void ParseOutput(const wxString& output)
         {
-            // Output:
-            // Attaching to process <pid>
-            wxArrayString lines = GetArrayFromString(output, _T('\n'));
-    		for (unsigned int i = 0; i < lines.GetCount(); ++i)
-    		{
-                if (lines[i].StartsWith(_T("Detaching")))
-                    m_pDriver->Log(lines[i]);
-//                m_pDriver->DebugLog(lines[i]);
-    		}
+            // output any return, usually "Detached"
+            m_pDriver->Log(output);
         }
 };
 
 /**
   * Command to add a breakpoint.
   */
-class GdbCmd_AddBreakpoint : public DebuggerCmd
+class CdbCmd_AddBreakpoint : public DebuggerCmd
 {
     public:
         /** @param bp The breakpoint to set. */
-        GdbCmd_AddBreakpoint(DebuggerDriver* driver, DebuggerBreakpoint* bp)
+        CdbCmd_AddBreakpoint(DebuggerDriver* driver, DebuggerBreakpoint* bp)
             : DebuggerCmd(driver),
             m_BP(bp)
         {
@@ -183,10 +176,10 @@ class GdbCmd_AddBreakpoint : public DebuggerCmd
                     QuoteStringIfNeeded(out);
                     // we add one to line,  because scintilla uses 0-based line numbers, while gdb uses 1-based
                     if (!m_BP->temporary)
-                        m_Cmd << _T("break ");
+                        m_Cmd << _T("bp") << m_BP->bpNum << _T(' ');
                     else
                         m_Cmd << _T("tbreak ");
-                    m_Cmd << out << _T(":") << bp->line + 1;
+                    m_Cmd << _T('`') << out << _T(":") << bp->line + 1 << _T('`');
                 }
                 //GDB workaround
                 //Use function name if this is C++ constructor/destructor
@@ -205,42 +198,19 @@ class GdbCmd_AddBreakpoint : public DebuggerCmd
         }
         void ParseOutput(const wxString& output)
         {
-            // possible outputs (we 're only interested in 1st sample):
+            // possible outputs (only output lines starting with ***):
             //
-            // Breakpoint 1 at 0x4013d6: file main.cpp, line 8.
-            // No line 100 in file "main.cpp".
-            // No source file named main2.cpp.
-            wxRegEx re(_T("Breakpoint ([0-9]+) at (0x[0-9A-Fa-f]+)"));
-            if (re.Matches(output))
+            // *** WARNING: Unable to verify checksum for Win32GUI.exe
+            // *** ERROR: Symbol file could not be found.  Defaulted to export symbols for C:\WINDOWS\system32\USER32.dll -
+            // *** ERROR: Symbol file could not be found.  Defaulted to export symbols for C:\WINDOWS\system32\GDI32.dll -
+            wxArrayString lines = GetArrayFromString(output, _T('\n'));
+    		for (unsigned int i = 0; i < lines.GetCount(); ++i)
             {
-//                m_pDriver->DebugLog(wxString::Format(_("Breakpoint added: file %s, line %d"), m_BP->filename.c_str(), m_BP->line + 1));
-                if (!m_BP->func.IsEmpty())
-                    m_pDriver->DebugLog(_("(work-around for constructors activated)"));
-
-                re.GetMatch(output, 1).ToLong(&m_BP->bpNum);
-                re.GetMatch(output, 2).ToULong(&m_BP->address, 16);
-
-                // conditional breakpoint
-                if (m_BP->useCondition && !m_BP->condition.IsEmpty())
-                {
-                    wxString cmd;
-                    cmd << _T("condition ") << m_BP->bpNum << _T(" ") << m_BP->condition;
-                    m_pDriver->QueueCommand(new DebuggerCmd(m_pDriver, cmd), DebuggerDriver::High);
-                }
-
-                // ignore count
-                if (m_BP->useIgnoreCount && m_BP->ignoreCount > 0)
-                {
-                    wxString cmd;
-                    cmd << _T("ignore ") << m_BP->bpNum << _T(" ") << m_BP->ignoreCount;
-                    m_pDriver->QueueCommand(new DebuggerCmd(m_pDriver, cmd), DebuggerDriver::High);
-                }
-
-                if (m_BP->temporary)
-                    delete m_BP;
+                if (lines[i].StartsWith(_T("*** ")))
+                    m_pDriver->Log(lines[i]);
             }
-            else
-                m_pDriver->Log(output); // one of the error responses
+            if (m_BP->temporary)
+                delete m_BP;
         }
 
         DebuggerBreakpoint* m_BP;
@@ -249,40 +219,26 @@ class GdbCmd_AddBreakpoint : public DebuggerCmd
 /**
   * Command to remove a breakpoint.
   */
-class GdbCmd_RemoveBreakpoint : public DebuggerCmd
+class CdbCmd_RemoveBreakpoint : public DebuggerCmd
 {
     public:
         /** @param bp The breakpoint to remove. If NULL, all breakpoints are removed.
             @param deleteBPwhenDone If bp is not NULL and this is true the breakpoint will be deleted after removal. */
-        GdbCmd_RemoveBreakpoint(DebuggerDriver* driver, DebuggerBreakpoint* bp, bool deleteBPwhenDone = false)
+        CdbCmd_RemoveBreakpoint(DebuggerDriver* driver, DebuggerBreakpoint* bp, bool deleteBPwhenDone = false)
             : DebuggerCmd(driver),
             m_BP(bp),
             m_DeleteBPwhenDone(deleteBPwhenDone)
         {
             if (!bp)
-            {
-                m_Cmd << _T("delete");
-                return;
-            }
-
-            if (bp->enabled && bp->bpNum > 0)
-            {
-                m_Cmd << _T("delete ") << bp->bpNum;
-            }
+                m_Cmd << _T("bc *");
+            else
+                m_Cmd << _T("bc ") << bp->bpNum;
         }
         void ParseOutput(const wxString& output)
         {
-            if (!m_BP)
-                return;
-
-            // invalidate bp number
-            m_BP->bpNum = -1;
-
+            // usually no output, so display whatever comes in
             if (!output.IsEmpty())
                 m_pDriver->Log(output);
-//            m_pDriver->DebugLog(wxString::Format(_("Breakpoint removed: file %s, line %d"), m_BP->filename.c_str(), m_BP->line + 1));
-            if (m_DeleteBPwhenDone)
-                delete m_BP;
         }
 
         DebuggerBreakpoint* m_BP;
@@ -292,12 +248,12 @@ class GdbCmd_RemoveBreakpoint : public DebuggerCmd
 /**
   * Command to get info about local frame variables.
   */
-class GdbCmd_InfoLocals : public DebuggerCmd
+class CdbCmd_InfoLocals : public DebuggerCmd
 {
         DebuggerTree* m_pDTree;
     public:
         /** @param tree The tree to display the locals. */
-        GdbCmd_InfoLocals(DebuggerDriver* driver, DebuggerTree* dtree)
+        CdbCmd_InfoLocals(DebuggerDriver* driver, DebuggerTree* dtree)
             : DebuggerCmd(driver),
             m_pDTree(dtree)
         {
@@ -318,12 +274,12 @@ class GdbCmd_InfoLocals : public DebuggerCmd
 /**
   * Command to get info about current function arguments.
   */
-class GdbCmd_InfoArguments : public DebuggerCmd
+class CdbCmd_InfoArguments : public DebuggerCmd
 {
         DebuggerTree* m_pDTree;
     public:
         /** @param tree The tree to display the args. */
-        GdbCmd_InfoArguments(DebuggerDriver* driver, DebuggerTree* dtree)
+        CdbCmd_InfoArguments(DebuggerDriver* driver, DebuggerTree* dtree)
             : DebuggerCmd(driver),
             m_pDTree(dtree)
         {
@@ -344,13 +300,13 @@ class GdbCmd_InfoArguments : public DebuggerCmd
 /**
   * Command to get info about a watched variable.
   */
-class GdbCmd_Watch : public DebuggerCmd
+class CdbCmd_Watch : public DebuggerCmd
 {
         DebuggerTree* m_pDTree;
         Watch* m_pWatch;
     public:
         /** @param tree The tree to display the watch. */
-        GdbCmd_Watch(DebuggerDriver* driver, DebuggerTree* dtree, Watch* watch)
+        CdbCmd_Watch(DebuggerDriver* driver, DebuggerTree* dtree, Watch* watch)
             : DebuggerCmd(driver),
             m_pDTree(dtree),
             m_pWatch(watch)
@@ -372,7 +328,7 @@ class GdbCmd_Watch : public DebuggerCmd
 /**
   * Command to display a tooltip about a variables value.
   */
-class GdbCmd_TooltipEvaluation : public DebuggerCmd
+class CdbCmd_TooltipEvaluation : public DebuggerCmd
 {
         DebuggerTree* m_pDTree;
         wxTipWindow** m_pWin;
@@ -383,7 +339,7 @@ class GdbCmd_TooltipEvaluation : public DebuggerCmd
             @param win A pointer to the tip window pointer.
             @param tiprect The tip window's rect.
         */
-        GdbCmd_TooltipEvaluation(DebuggerDriver* driver, const wxString& what, wxTipWindow** win, const wxRect& tiprect)
+        CdbCmd_TooltipEvaluation(DebuggerDriver* driver, const wxString& what, wxTipWindow** win, const wxRect& tiprect)
             : DebuggerCmd(driver),
             m_pWin(win),
             m_WinRect(tiprect),
@@ -409,12 +365,12 @@ class GdbCmd_TooltipEvaluation : public DebuggerCmd
 /**
   * Command to run a backtrace.
   */
-class GdbCmd_Backtrace : public DebuggerCmd
+class CdbCmd_Backtrace : public DebuggerCmd
 {
         BacktraceDlg* m_pDlg;
     public:
         /** @param dlg The backtrace dialog. */
-        GdbCmd_Backtrace(DebuggerDriver* driver, BacktraceDlg* dlg)
+        CdbCmd_Backtrace(DebuggerDriver* driver, BacktraceDlg* dlg)
             : DebuggerCmd(driver),
             m_pDlg(dlg)
         {
@@ -451,12 +407,12 @@ class GdbCmd_Backtrace : public DebuggerCmd
 /**
   * Command to initialize a disassembly.
   */
-class GdbCmd_DisassemblyInit : public DebuggerCmd
+class CdbCmd_DisassemblyInit : public DebuggerCmd
 {
         DisassemblyDlg* m_pDlg;
     public:
         /** @param dlg The disassembly dialog. */
-        GdbCmd_DisassemblyInit(DebuggerDriver* driver, DisassemblyDlg* dlg)
+        CdbCmd_DisassemblyInit(DebuggerDriver* driver, DisassemblyDlg* dlg)
             : DebuggerCmd(driver),
             m_pDlg(dlg)
         {
@@ -518,14 +474,14 @@ class GdbCmd_DisassemblyInit : public DebuggerCmd
 };
 
 /**
-  * Command to run a disassembly. Use this instead of GdbCmd_DisassemblyInit, which is chained-called.
+  * Command to run a disassembly. Use this instead of CdbCmd_DisassemblyInit, which is chained-called.
   */
-class GdbCmd_InfoRegisters : public DebuggerCmd
+class CdbCmd_InfoRegisters : public DebuggerCmd
 {
         DisassemblyDlg* m_pDlg;
     public:
         /** @param dlg The disassembly dialog. */
-        GdbCmd_InfoRegisters(DebuggerDriver* driver, DisassemblyDlg* dlg)
+        CdbCmd_InfoRegisters(DebuggerDriver* driver, DisassemblyDlg* dlg)
             : DebuggerCmd(driver),
             m_pDlg(dlg)
         {
@@ -573,20 +529,20 @@ class GdbCmd_InfoRegisters : public DebuggerCmd
 };
 
 /**
-  * Command to run a disassembly. Use this instead of GdbCmd_DisassemblyInit, which is chained-called.
+  * Command to run a disassembly. Use this instead of CdbCmd_DisassemblyInit, which is chained-called.
   */
-class GdbCmd_Disassembly : public DebuggerCmd
+class CdbCmd_Disassembly : public DebuggerCmd
 {
         DisassemblyDlg* m_pDlg;
     public:
         /** @param dlg The disassembly dialog. */
-        GdbCmd_Disassembly(DebuggerDriver* driver, DisassemblyDlg* dlg)
+        CdbCmd_Disassembly(DebuggerDriver* driver, DisassemblyDlg* dlg)
             : DebuggerCmd(driver),
             m_pDlg(dlg)
         {
             m_Cmd << _T("disassemble");
-            m_pDriver->QueueCommand(new GdbCmd_DisassemblyInit(driver, dlg)); // chain call
-            m_pDriver->QueueCommand(new GdbCmd_InfoRegisters(driver, dlg)); // chain call
+            m_pDriver->QueueCommand(new CdbCmd_DisassemblyInit(driver, dlg)); // chain call
+            m_pDriver->QueueCommand(new CdbCmd_InfoRegisters(driver, dlg)); // chain call
         }
         void ParseOutput(const wxString& output)
         {

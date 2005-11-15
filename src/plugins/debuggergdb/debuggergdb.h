@@ -54,6 +54,7 @@ class DebuggerGDB : public cbDebuggerPlugin
 		void Log(const wxString& msg);
 		void DebugLog(const wxString& msg);
 		void SendCommand(const wxString& cmd);
+		DebuggerBreakpoint* GetBreakpoint(int num);
 
         static void ConvertToGDBFriendly(wxString& str);
         static void ConvertToGDBFile(wxString& str);

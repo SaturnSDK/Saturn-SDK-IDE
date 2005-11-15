@@ -41,7 +41,8 @@ class DebuggerCmd
 struct DebuggerBreakpoint
 {
     DebuggerBreakpoint()
-        : line(0),
+        : index(-1),
+        line(0),
         temporary(false),
         enabled(true),
         active(true),
@@ -52,6 +53,7 @@ struct DebuggerBreakpoint
         bpNum(-1)
     {}
     wxString filename;
+	int index; // index in list of breakpoints
 	int line;
 	bool temporary;
 	bool enabled;

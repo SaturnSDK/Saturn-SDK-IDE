@@ -399,7 +399,7 @@ typedef int(*GetSDKVersionMinorProc)(void);
 // this is the plugins SDK version number
 // it will change when the plugins interface breaks
 #define PLUGIN_SDK_VERSION_MAJOR 1
-#define PLUGIN_SDK_VERSION_MINOR 3
+#define PLUGIN_SDK_VERSION_MINOR 4
 
 /** This is used to declare the plugin's hooks.
   */

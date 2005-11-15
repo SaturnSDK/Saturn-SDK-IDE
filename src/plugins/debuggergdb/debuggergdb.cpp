@@ -47,6 +47,7 @@
 #include <wx/fs_zip.h>
 
 #include "debuggergdb.h"
+#include "cdb_driver.h"
 #include "gdb_driver.h"
 #include "debuggeroptionsdlg.h"
 #include "breakpointsdlg.h"
@@ -377,6 +378,13 @@ int DebuggerGDB::HasBreakpoint(const wxString& file, int line)
     return -1;
 }
 
+DebuggerBreakpoint* DebuggerGDB::GetBreakpoint(int num)
+{
+    if (num < 0 || num >= (int)m_Breakpoints.GetCount())
+        return 0;
+    return m_Breakpoints[num];
+}
+
 void DebuggerGDB::SetBreakpoints()
 {
     if (!m_pDriver)
@@ -390,7 +398,12 @@ void DebuggerGDB::SetBreakpoints()
         bp->bpNum = -1;
         m_pDriver->AddBreakpoint(bp);
         if (bp->temporary)
+        {
             m_Breakpoints.RemoveAt(i);
+            // reset bp->index for following breakpoints
+            for (unsigned int x = i; x < m_Breakpoints.GetCount(); ++x)
+                m_Breakpoints[x]->index = x;
+        }
         else
             ++i;
 	}
@@ -679,13 +692,6 @@ int DebuggerGDB::Debug()
     wxString cmdline;
     if (m_PidToAttach == 0)
     {
-        // set the file to debug
-        // (depends on the target type)
-        wxString debuggee = GetDebuggee(target);
-        if (debuggee.IsEmpty())
-            return -3;
-        cmdline = m_pDriver->GetCommandLine(cmdexe, debuggee);
-
         m_pDriver->ClearDirectories();
         // add other open projects dirs as search dirs (only if option is enabled)
         if (Manager::Get()->GetConfigManager(_T("debugger"))->ReadBool(_T("add_other_search_dirs"), false))
@@ -718,14 +724,12 @@ int DebuggerGDB::Debug()
             }
         }
 
-//        // set breakpoints
-//        SetBreakpoints();
-//        // also set a temporary breakpoint (if any), for run-to-cursor
-//        if (!m_Tbreak.IsEmpty())
-//        {
-//            QueueCommand(new DebuggerCmd(this, m_Tbreak));
-//            m_Tbreak.Clear();
-//        }
+        // set the file to debug
+        // (depends on the target type)
+        wxString debuggee = GetDebuggee(target);
+        if (debuggee.IsEmpty())
+            return -3;
+        cmdline = m_pDriver->GetCommandLine(cmdexe, debuggee);
     }
     else // m_PidToAttach != 0
         cmdline = m_pDriver->GetCommandLine(cmdexe, m_PidToAttach);
@@ -1016,21 +1020,20 @@ void DebuggerGDB::CmdRunToCursor()
 	if (!ed)
 		return;
 
-	ProjectFile* pf = ed->GetProjectFile();
-	if (!pf)
-		return;
-	wxString cmd, filename = pf->file.GetFullName();
-    wxString out = filename;
-    ConvertToGDBDirectory(out);
+	wxString filename = UnixFilename(ed->GetFilename());
+    ConvertToGDBFile(filename);
 
     DebuggerBreakpoint* bp = new DebuggerBreakpoint;
     bp->temporary = true;
-    bp->filename = out;
+    bp->filename = filename;
     bp->line = ed->GetControl()->GetCurrentLine();
     if (m_pDriver)
         m_pDriver->AddBreakpoint(bp);
     else
+    {
         m_Breakpoints.Add(bp);
+        bp->index = m_Breakpoints.GetCount() - 1;
+    }
 
 	if (m_pProcess)
 	{
@@ -1376,6 +1379,7 @@ void DebuggerGDB::OnBreakpointAdd(CodeBlocksEvent& event)
     //end GDB workaround
 
     m_Breakpoints.Add(bp);
+    bp->index = m_Breakpoints.GetCount() - 1;
     if (m_pDriver)
         m_pDriver->AddBreakpoint(bp);
 }
@@ -1403,6 +1407,9 @@ void DebuggerGDB::OnBreakpointDelete(CodeBlocksEvent& event)
 
     DebuggerBreakpoint* bp = m_Breakpoints[idx];
     m_Breakpoints.RemoveAt(idx);
+    // reset bp->index for following breakpoints
+    for (unsigned int x = idx; x < m_Breakpoints.GetCount(); ++x)
+        m_Breakpoints[x]->index = x;
 
     if (m_pDriver)
         m_pDriver->RemoveBreakpoint(bp, true); // deletes the breakpoint when done running

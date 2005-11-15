@@ -71,8 +71,12 @@ void DebuggerDriver::RunQueue()
         return;
 
 //    Log(_T("Running command: ") + CurrentCommand()->m_Cmd);
-    m_QueueBusy = true;
-    m_pDBG->SendCommand(CurrentCommand()->m_Cmd);
+    // don't send a command if empty; most debuggers repeat the last command this way...
+    if (!CurrentCommand()->m_Cmd.IsEmpty())
+    {
+        m_QueueBusy = true;
+        m_pDBG->SendCommand(CurrentCommand()->m_Cmd);
+    }
 }
 
 void DebuggerDriver::RemoveTopCommand(bool deleteIt)

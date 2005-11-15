@@ -65,7 +65,7 @@ void GDB_driver::Prepare(bool isConsole)
     // add search dirs
     for (unsigned int i = 0; i < m_Dirs.GetCount(); ++i)
     {
-        QueueCommand(new DbgCmd_AddSourceDir(this, m_Dirs[i]));
+        QueueCommand(new GdbCmd_AddSourceDir(this, m_Dirs[i]));
     }
 
     // set working directory
@@ -108,7 +108,7 @@ void GDB_driver::Backtrace()
 {
     if (!m_pBacktrace)
         return;
-    QueueCommand(new DbgCmd_Backtrace(this, m_pBacktrace));
+    QueueCommand(new GdbCmd_Backtrace(this, m_pBacktrace));
     m_pBacktrace->Show();
 }
 
@@ -116,23 +116,23 @@ void GDB_driver::Disassemble()
 {
     if (!m_pDisassembly)
         return;
-    QueueCommand(new DbgCmd_Disassembly(this, m_pDisassembly));
+    QueueCommand(new GdbCmd_Disassembly(this, m_pDisassembly));
     m_pDisassembly->Show();
 }
 
 void GDB_driver::AddBreakpoint(DebuggerBreakpoint* bp)
 {
-	QueueCommand(new DbgCmd_AddBreakpoint(this, bp));
+	QueueCommand(new GdbCmd_AddBreakpoint(this, bp));
 }
 
 void GDB_driver::RemoveBreakpoint(DebuggerBreakpoint* bp, bool deleteAlso)
 {
-	QueueCommand(new DbgCmd_RemoveBreakpoint(this, bp, deleteAlso));
+	QueueCommand(new GdbCmd_RemoveBreakpoint(this, bp, deleteAlso));
 }
 
 void GDB_driver::EvaluateSymbol(const wxString& symbol, wxTipWindow** tipWin, const wxRect& tipRect)
 {
-    QueueCommand(new DbgCmd_TooltipEvaluation(this, symbol, tipWin, tipRect));
+    QueueCommand(new GdbCmd_TooltipEvaluation(this, symbol, tipWin, tipRect));
 }
 
 void GDB_driver::UpdateWatches(bool doLocals, bool doArgs, DebuggerTree* tree)
@@ -143,19 +143,19 @@ void GDB_driver::UpdateWatches(bool doLocals, bool doArgs, DebuggerTree* tree)
 
     // locals before args because of precedence
     if (doLocals)
-        QueueCommand(new DbgCmd_InfoLocals(this, tree));
+        QueueCommand(new GdbCmd_InfoLocals(this, tree));
     if (doArgs)
-        QueueCommand(new DbgCmd_InfoArguments(this, tree));
+        QueueCommand(new GdbCmd_InfoArguments(this, tree));
     for (unsigned int i = 0; i < tree->GetWatches().GetCount(); ++i)
     {
         Watch& w = tree->GetWatches()[i];
-        QueueCommand(new DbgCmd_Watch(this, tree, &w));
+        QueueCommand(new GdbCmd_Watch(this, tree, &w));
     }
 }
 
 void GDB_driver::Detach()
 {
-    QueueCommand(new DbgCmd_Detach(this));
+    QueueCommand(new GdbCmd_Detach(this));
 }
 
 void GDB_driver::ParseOutput(const wxString& output)
@@ -257,7 +257,7 @@ void GDB_driver::ParseOutput(const wxString& output)
                     long int addrL;
                     addr.ToLong(&addrL, 16);
                     m_pDisassembly->SetActiveAddress(addrL);
-                    QueueCommand(new DbgCmd_InfoRegisters(this, m_pDisassembly));
+                    QueueCommand(new GdbCmd_InfoRegisters(this, m_pDisassembly));
                 }
 				lineStr.ToLong(&m_StopLine);
 				m_StopFile = file;
