@@ -393,7 +393,9 @@ TiXmlElement* ConfigManager::AssertPath(wxString& path)
     TiXmlElement* e = pathNode ? pathNode : root;
 
     path.LowerCase();
-    path.Replace(_T("//"), _T("/"));
+    path.Replace(_T("\\"),  _T("/"));
+    path.Replace(_T("///"), _T("/"));
+    path.Replace(_T("//"),  _T("/"));
 
     wxString sub;
     do
@@ -547,6 +549,17 @@ wxString ConfigManager::Read(const wxString& name, const wxString& defaultVal)
 
 bool ConfigManager::Read(const wxString& name, wxString* str)
 {
+    if(name.IsSameAs(CfgMgrConsts::app_path))
+    {
+        str->assign(ConfigManager::app_path);
+        return true;
+    }
+    else if(name.IsSameAs(CfgMgrConsts::data_path))
+    {
+        str->assign(ConfigManager::data_path);
+        return true;
+    }
+
     wxString key(name);
     TiXmlElement* e = AssertPath(key);
 
@@ -842,6 +855,59 @@ wxArrayString ConfigManager::EnumerateSubPaths(const wxString& path)
     }
     return ret;
 }
+
+
+void ConfigManager::DeleteSubPath(const wxString& thePath)
+{
+    if(thePath.IsSameAs(_T("/"))) // does not remove root!
+        return;
+
+    wxString path(thePath);
+
+    path.LowerCase();
+
+    TiXmlElement* parent = pathNode ? pathNode : root;
+
+    if(path.Contains(_T("/")))
+    {
+        path.Replace(_T("\\"),  _T("/"));
+        path.Replace(_T("///"), _T("/"));
+        path.Replace(_T("//"),  _T("/"));
+
+        wxString sub;
+        do
+        {
+            sub = path.BeforeFirst(_T('/'));
+            path = path.AfterFirst(_T('/'));
+
+            if(sub.IsEmpty())
+                parent = root;
+            else if(sub.IsSameAs(_T(".")))
+                ;
+            else if(parent != root && sub.IsSameAs(_T("..")))
+                parent = parent->Parent()->ToElement();
+            else
+            {
+                TiXmlElement* n = parent->FirstChildElement(sub);
+                if(n)
+                    parent = n;
+                else
+                    return;
+            }
+        }
+        while(path.Contains(_T("/")));
+    }
+
+    if(!path.IsEmpty())
+    {
+        if(TiXmlNode *toRemove = parent->FirstChild(path))
+        {
+            toRemove->Clear();
+            parent->RemoveChild(toRemove);
+        }
+    }
+}
+
 
 wxArrayString ConfigManager::EnumerateKeys(const wxString& path)
 {

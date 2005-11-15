@@ -96,6 +96,7 @@ public:
     void SetPath(const wxString& strPath);
     wxArrayString EnumerateSubPaths(const wxString& path);
     wxArrayString EnumerateKeys(const wxString& path);
+    void DeleteSubPath(const wxString& strPath);
 
     /* -----------------------------------------------------------------------------------------------------
     *  Clear all nodes from your namespace or delete the namespace alltogether (removing it from the config file).
