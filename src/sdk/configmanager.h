@@ -99,14 +99,16 @@ public:
     void DeleteSubPath(const wxString& strPath);
 
     /* -----------------------------------------------------------------------------------------------------
-    *  Clear all nodes from your namespace or delete the namespace alltogether (removing it from the config file).
+    *  Clear all nodes from your namespace or delete the namespace (removing it from the config file).
     *  WARNING: After Delete() returns, the pointer to your instance is invalid. Before you can call ANY member
-    *  function of this class, you have to call Manager::Get()->GetOldConfigManager() for a valid reference again.
+    *  function of this class, you have to call Manager::Get()->GetConfigManager() for a valid reference again.
     *  Note that Delete() is inherently thread-unsafe. You delete an entire namespace of data as well as the object
     *  responsible of handling that data! Make sure you know what you do.
+    *  This is even more true for DeleteAll() which you should really NEVER use.
     */
     void Clear();
     void Delete();
+    void DeleteAll();
 
     /* -----------------------------------------------------------------------------------------------------
     *  Standard primitives
@@ -128,6 +130,10 @@ public:
     bool Read(const wxString& name,  double* value);
     double ReadDouble(const wxString& name,  double defaultVal = 0.0f);
 
+    /* -----------------------------------------------------------------------------------------------------
+    *  Set and unset keys, or test for existence. Note that these functions cannot be used to remove paths
+    *  or test existence of paths (it may be used to implicitely create paths, though).
+    */
     bool Exists(const wxString& name);
     void Set(const wxString& name);
     void UnSet(const wxString& name);
@@ -201,20 +207,29 @@ public:
 
 
 
+
+
+
+
+
 /* ------------------------------------------------------------------------------------------------------------------
 *  "Builder pattern" class for ConfigManager
-*  ### Do not use this class. ###
-*  --->  use Manager::Get()->GetOldConfigManager("yournamespace") instead.
 *
-*  Manager::Get()->GetOldConfigManager("yournamespace") is *guaranteed* to always work, and unlike the builder class,
-*  it is aware of applicaton shutdowns.
-*  The builder class will be changed in the near future. You have been warned.
+*  ################################################################
+*  ###### Do not use this class. Do not even think about it. ######
+*  ################################################################
+*
+*  --->  use Manager::Get()->GetConfigManager("yournamespace") instead.
+*
+*  Manager::Get()->GetConfigManager("yournamespace") is guaranteed to always work while
+*  the builder class and its interfaces may be changed any time without prior notice.
 */
 
 WX_DECLARE_STRING_HASH_MAP(ConfigManager*, NamespaceMap);
 
 class DLLIMPORT CfgMgrBldr
 {
+    friend class ConfigManager;
     NamespaceMap namespaces;
     TiXmlDocument *doc;
     TiXmlDocument *volatile_doc;
@@ -224,6 +239,7 @@ class DLLIMPORT CfgMgrBldr
     CfgMgrBldr();
     ~CfgMgrBldr();
     void Close();
+    static inline CfgMgrBldr* Instance();
     ConfigManager* Instantiate(const wxString& name_space);
 public:
     static ConfigManager* Get(const wxString& name_space);
@@ -231,49 +247,6 @@ public:
     void SwitchToR(const wxString& absFN);
 };
 
-
-
-
-
-
-
-
-
-
-//############################# REMOVE THIS ########################################
-class MySerializableLongIntClass : public ISerializable
-{
-public:
-    wxString SerializeOut() const
-    {
-        wxString tmp;
-        tmp << m_int;
-        return tmp;
-    };
-    void SerializeIn(const wxString& s)
-    {
-        s.ToLong(&m_int);
-    };
-
-    MySerializableLongIntClass() : m_int(0)
-    {}
-    ;
-
-    MySerializableLongIntClass(long int x)
-    {
-        m_int = x;
-    };
-
-    void Print()
-    {
-        Manager::Get()->GetMessageManager()->DebugLog(wxString("my value is ") << m_int);
-    };
-    long int m_int;
-};
-
-WX_DECLARE_STRING_HASH_MAP(MySerializableLongIntClass *, MyThingieMap);
-
-//############################# END OF "REMOVE THIS" ########################################
 
 #endif
 

@@ -153,8 +153,15 @@ void CfgMgrBldr::Close()
 ConfigManager* CfgMgrBldr::Get(const wxString& name_space)
 {
     static CfgMgrBldr instance;
-    return (&instance)->Instantiate(name_space);
+    return Instance()->Instantiate(name_space);
 }
+
+CfgMgrBldr* CfgMgrBldr::Instance()
+{
+    static CfgMgrBldr instance;
+    return &instance;
+}
+
 
 ConfigManager* CfgMgrBldr::Instantiate(const wxString& name_space)
 {
@@ -393,7 +400,6 @@ TiXmlElement* ConfigManager::AssertPath(wxString& path)
     TiXmlElement* e = pathNode ? pathNode : root;
 
     path.LowerCase();
-    path.Replace(_T("\\"),  _T("/"));
     path.Replace(_T("///"), _T("/"));
     path.Replace(_T("//"),  _T("/"));
 
@@ -444,36 +450,42 @@ TiXmlElement* ConfigManager::AssertPath(wxString& path)
 
 void ConfigManager::Clear()
 {
-    TiXmlNode *n = 0;
-    while(n = root->IterateChildren(n))
-        root->RemoveChild(n);
+    root->Clear();
 }
 
 void ConfigManager::Delete()
 {
-    doc->RootElement()->RemoveChild(root);
-    delete this;
-    // TODO: remove object from namespace map (requires builder class redesign)
+    CfgMgrBldr * bld = CfgMgrBldr::Instance();
+    wxString ns(root->Value());
 
+    root->Clear();
+    doc->RootElement()->RemoveChild(root);
+
+    wxCriticalSectionLocker(bld->cs);
+    NamespaceMap::iterator it = bld->namespaces.find(ns);
+    if(it != bld->namespaces.end())
+        bld->namespaces.erase(it);
+
+    delete this;
 }
 
-//void ConfigManager::DeleteAll()
-//{
-//    wxString ns(root->Value());
-//    if(!ns.IsSameAs(_T("app")))
-//        cbThrow(_T("Illegal attempt to invoke DeleteAll()."));
-//
-//    Manager::Get()->GetMessageManager()->DebugLog("Unimplemented: ConfigManager::DeleteAll");
-//    return;
-//
-//    // TODO: remove object from namespace map (requires builder class redesign)
-//    root = 0;
-//    TiXmlNode *n = 0;
-//    TiXmlNode *r = doc->RootElement();
-//    while(n = r->IterateChildren(n))
-//        r->RemoveChild(n);
-//    delete this;
-//}
+void ConfigManager::DeleteAll()
+{
+    CfgMgrBldr * bld = CfgMgrBldr::Instance();
+    wxString ns(root->Value());
+
+    if(!ns.IsSameAs(_T("app")))
+        cbThrow(_T("Illegal attempt to invoke DeleteAll()."));
+
+    wxCriticalSectionLocker(bld->cs);
+    doc->RootElement()->Clear();
+    for(NamespaceMap::iterator it = bld->namespaces.begin(); it != bld->namespaces.end(); ++it)
+    {
+        delete it->second;
+        bld->namespaces.erase(it);
+    }
+}
+
 
 /* ------------------------------------------------------------------------------------------------------------------
 *  Utility functions for writing nodes
@@ -862,15 +874,15 @@ void ConfigManager::DeleteSubPath(const wxString& thePath)
     if(thePath.IsSameAs(_T("/"))) // does not remove root!
         return;
 
-    wxString path(thePath);
+    wxString path(thePath.Lower());
 
-    path.LowerCase();
+    if(path.Last() == _T('/'))
+        path.RemoveLast();
 
     TiXmlElement* parent = pathNode ? pathNode : root;
 
     if(path.Contains(_T("/")))
     {
-        path.Replace(_T("\\"),  _T("/"));
         path.Replace(_T("///"), _T("/"));
         path.Replace(_T("//"),  _T("/"));
 
