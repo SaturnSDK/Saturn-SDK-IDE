@@ -35,7 +35,7 @@
 #include "projectbuildtarget.h" // for ProjectFile*
 #include "editorcolorset.h"
 #include "manager.h"
-#include "old_configmanager.h"
+#include "configmanager.h"
 #include "pluginmanager.h"
 #include "editormanager.h"
 #include "messagemanager.h"
@@ -411,7 +411,7 @@ void cbEditor::SetProjectFile(ProjectFile* project_file, bool preserve_modified)
 
 		m_pProjectFile->editorOpen = true;
 
-		if (OldConfigManager::Get()->Read(_T("/editor/tab_text_relative"), 1) == 1)
+		if (Manager::Get()->GetConfigManager(_T("editor"))->ReadBool(_T("/tab_text_relative"), true))
             m_Shortname = m_pProjectFile->relativeToCommonTopLevelPath;
         else
             m_Shortname = m_pProjectFile->file.GetFullName();
@@ -483,16 +483,18 @@ void cbEditor::CreateEditor()
 
 wxColour cbEditor::GetOptionColour(const wxString& option, const wxColour _default)
 {
-    return wxColour (OldConfigManager::Get()->Read(option + _T("/red"), _default.Red()),
-    				OldConfigManager::Get()->Read(option + _T("/green"), _default.Green()),
-    				OldConfigManager::Get()->Read(option + _T("/blue"), _default.Blue())
+    return wxColour (Manager::Get()->GetConfigManager(_T("editor"))->ReadInt(option + _T("/red"), _default.Red()),
+    				Manager::Get()->GetConfigManager(_T("editor"))->ReadInt(option + _T("/green"), _default.Green()),
+    				Manager::Get()->GetConfigManager(_T("editor"))->ReadInt(option + _T("/blue"), _default.Blue())
 	);
 }
 
 void cbEditor::SetEditorStyle()
 {
+    ConfigManager* mgr = Manager::Get()->GetConfigManager(_T("editor"));
+
     wxFont font(8, wxMODERN, wxNORMAL, wxNORMAL);
-    wxString fontstring = OldConfigManager::Get()->Read(_T("/editor/font"), wxEmptyString);
+    wxString fontstring = mgr->Read(_T("/font"), wxEmptyString);
     int eolmode = wxSCI_EOL_CRLF;
     if (!fontstring.IsEmpty())
     {
@@ -504,7 +506,7 @@ void cbEditor::SetEditorStyle()
     // update the tab text based on preferences
     if (m_pProjectFile)
     {
-		if (OldConfigManager::Get()->Read(_T("/editor/tab_text_relative"), 1) == 1)
+		if (mgr->ReadBool(_T("/tab_text_relative"), true))
             m_Shortname = m_pProjectFile->relativeToCommonTopLevelPath;
         else
             m_Shortname = m_pProjectFile->file.GetFullName();
@@ -513,28 +515,28 @@ void cbEditor::SetEditorStyle()
 
 	m_pControl->SetMouseDwellTime(1000);
 
-	m_pControl->SetCaretLineVisible(OldConfigManager::Get()->Read(_T("/editor/highlight_caret_line"), 1));
-	m_pControl->SetCaretLineBackground(GetOptionColour(_T("/editor/highlight_caret_line_color"), wxColour(0xFF, 0xFF, 0x00)));
+	m_pControl->SetCaretLineVisible(mgr->ReadBool(_T("/highlight_caret_line"), true));
+	m_pControl->SetCaretLineBackground(GetOptionColour(_T("/highlight_caret_line_color"), wxColour(0xFF, 0xFF, 0x00)));
 
-    m_pControl->SetUseTabs(OldConfigManager::Get()->Read(_T("/editor/use_tab"), 0L));
-	m_pControl->SetIndentationGuides(OldConfigManager::Get()->Read(_T("/editor/show_indent_guides"), 0L));
-    m_pControl->SetTabIndents(OldConfigManager::Get()->Read(_T("/editor/tab_indents"), 1));
-    m_pControl->SetBackSpaceUnIndents(OldConfigManager::Get()->Read(_T("/editor/backspace_unindents"), 1));
-    m_pControl->SetWrapMode(OldConfigManager::Get()->Read(_T("/editor/word_wrap"), 0L));
-    m_pControl->SetViewEOL(OldConfigManager::Get()->Read(_T("/editor/show_eol"), 0L));
-    m_pControl->SetViewWhiteSpace(OldConfigManager::Get()->Read(_T("/editor/view_whitespace"), 0L));
+    m_pControl->SetUseTabs(mgr->ReadBool(_T("/use_tab"), false));
+	m_pControl->SetIndentationGuides(mgr->ReadBool(_T("/show_indent_guides"), false));
+    m_pControl->SetTabIndents(mgr->ReadBool(_T("/tab_indents"), true));
+    m_pControl->SetBackSpaceUnIndents(mgr->ReadBool(_T("/backspace_unindents"), true));
+    m_pControl->SetWrapMode(mgr->ReadBool(_T("/word_wrap"), false));
+    m_pControl->SetViewEOL(mgr->ReadBool(_T("/show_eol"), false));
+    m_pControl->SetViewWhiteSpace(mgr->ReadBool(_T("/view_whitespace"), false));
 	//gutter
-    m_pControl->SetEdgeMode(OldConfigManager::Get()->Read(_T("/editor/gutter/mode"), 1));
-    m_pControl->SetEdgeColour(GetOptionColour(_T("/editor/gutter/color"), wxColour(0xC0, 0xC0, 0xC0)));
-    m_pControl->SetEdgeColumn(OldConfigManager::Get()->Read(_T("/editor/gutter/column"), 80));
+    m_pControl->SetEdgeMode(mgr->ReadInt(_T("/gutter/mode"), 1));
+    m_pControl->SetEdgeColour(GetOptionColour(_T("/gutter/color"), wxColour(0xC0, 0xC0, 0xC0)));
+    m_pControl->SetEdgeColumn(mgr->ReadInt(_T("/gutter/column"), 80));
 
     m_pControl->StyleSetFont(wxSCI_STYLE_DEFAULT, font);
     m_pControl->StyleClearAll();
 
-    m_pControl->SetTabWidth(OldConfigManager::Get()->Read(_T("/editor/tab_size"), 4));
+    m_pControl->SetTabWidth(mgr->ReadInt(_T("/tab_size"), 4));
 
     // line numbering
-   	if (OldConfigManager::Get()->Read(_T("/editor/show_line_numbers"), 0L))
+   	if (mgr->ReadBool(_T("/show_line_numbers"), false))
     {
 	    m_pControl->SetMarginType(0, wxSCI_MARGIN_NUMBER);
     	m_pControl->SetMarginWidth(0, 48);
@@ -558,9 +560,9 @@ void cbEditor::SetEditorStyle()
 	m_pControl->MarkerSetBackground(DEBUG_MARKER, wxColour(0xFF, 0xFF, 0x00));
 
     // EOL properties
-    m_pData->m_strip_trailing_spaces = OldConfigManager::Get()->Read(_T("/editor/eol/strip_trailing_spaces"), 1) ? true : false;
-    m_pData->m_ensure_final_line_end = OldConfigManager::Get()->Read(_T("/editor/eol/ensure_final_line_end"), 0L) ? true : false;
-    m_pData->m_ensure_consistent_line_ends = OldConfigManager::Get()->Read(_T("/editor/eol/ensure_consistent_line_ends"), 0L) ? true : false;
+    m_pData->m_strip_trailing_spaces = mgr->ReadBool(_T("/eol/strip_trailing_spaces"), true);
+    m_pData->m_ensure_final_line_end = mgr->ReadBool(_T("/eol/ensure_final_line_end"), false);
+    m_pData->m_ensure_consistent_line_ends = mgr->ReadBool(_T("/eol/ensure_consistent_line_ends"), false);
 
 #ifdef __WXMSW__
 	#define DEFAULT_EOL 0 //CR&LF
@@ -568,7 +570,7 @@ void cbEditor::SetEditorStyle()
 	#define DEFAULT_EOL 2 //LF
 	// TODO: find out the macro to discover if it is a MAC and change it to CR (I think)
 #endif
-    switch(OldConfigManager::Get()->Read(_T("/editor/eol/eolmode"), (long int)DEFAULT_EOL))
+    switch (mgr->ReadInt(_T("/eol/eolmode"), (int)DEFAULT_EOL))
     {
     	case 0:
         default:
@@ -583,12 +585,12 @@ void cbEditor::SetEditorStyle()
     m_pControl->SetEOLMode(eolmode);
 
     // folding margin
-    m_pControl->SetProperty(_T("fold"), OldConfigManager::Get()->Read(_T("/editor/folding/show_folds"), 1) ? _T("1") : _T("0"));
-    m_pControl->SetProperty(_T("fold.html"), OldConfigManager::Get()->Read(_T("/editor/folding/fold_xml"), 1) ? _T("1") : _T("0"));
-    m_pControl->SetProperty(_T("fold.comment"), OldConfigManager::Get()->Read(_T("/editor/folding/fold_comments"), 0L) ? _T("1") : _T("0"));
+    m_pControl->SetProperty(_T("fold"), mgr->ReadBool(_T("/folding/show_folds"), true) ? _T("1") : _T("0"));
+    m_pControl->SetProperty(_T("fold.html"), mgr->ReadBool(_T("/folding/fold_xml"), true) ? _T("1") : _T("0"));
+    m_pControl->SetProperty(_T("fold.comment"), mgr->ReadBool(_T("/folding/fold_comments"), false) ? _T("1") : _T("0"));
     m_pControl->SetProperty(_T("fold.compact"), _T("0"));
-    m_pControl->SetProperty(_T("fold.preprocessor"), OldConfigManager::Get()->Read(_T("/editor/folding/fold_preprocessor"), 0L) ? _T("1") : _T("0"));
-   	if (OldConfigManager::Get()->Read(_T("/editor/folding/show_folds"), 1))
+    m_pControl->SetProperty(_T("fold.preprocessor"), mgr->ReadBool(_T("/folding/fold_preprocessor"), false) ? _T("1") : _T("0"));
+   	if (mgr->ReadBool(_T("/folding/show_folds"), true))
     {
         m_pControl->SetFoldFlags(16);
         m_pControl->SetMarginType(2, wxSCI_MARGIN_SYMBOL);
@@ -691,7 +693,7 @@ bool cbEditor::Open()
             m_pControl->StyleSetBackground(i, wxSystemSettings::GetColour(wxSYS_COLOUR_BTNFACE));
     }
 
-	if (OldConfigManager::Get()->Read(_T("/editor/folding/fold_all_on_open"), 0L))
+	if (Manager::Get()->GetConfigManager(_T("editor"))->ReadBool(_T("/folding/fold_all_on_open"), false))
 		FoldAll();
 
     wxFileName fname(m_Filename);
@@ -1034,7 +1036,7 @@ void cbEditor::MarkLine(int marker, int line)
 		m_pControl->SetCaretLineVisible(false);
 	}
 	else
-		m_pControl->SetCaretLineVisible(OldConfigManager::Get()->Read(_T("/editor/highlight_caret_line"), 1));
+		m_pControl->SetCaretLineVisible(Manager::Get()->GetConfigManager(_T("editor"))->ReadBool(_T("/highlight_caret_line"), true));
 }
 
 void cbEditor::HighlightBraces()
@@ -1432,8 +1434,8 @@ void cbEditor::OnEditorCharAdded(wxScintillaEvent& event)
 	{
         m_pControl->BeginUndoAction();
 		// new-line: adjust indentation
-		bool autoIndent = OldConfigManager::Get()->Read(_T("/editor/auto_indent"), true);
-		bool smartIndent = OldConfigManager::Get()->Read(_T("/editor/smart_indent"), true);
+		bool autoIndent = Manager::Get()->GetConfigManager(_T("editor"))->ReadBool(_T("/auto_indent"), true);
+		bool smartIndent = Manager::Get()->GetConfigManager(_T("editor"))->ReadBool(_T("/smart_indent"), true);
 		int currLine = m_pControl->LineFromPosition(pos);
 		if (autoIndent && currLine > 0)
 		{
@@ -1458,7 +1460,7 @@ void cbEditor::OnEditorCharAdded(wxScintillaEvent& event)
 	}
 	else if (ch == _T('}'))
 	{
-		bool smartIndent = OldConfigManager::Get()->Read(_T("/editor/smart_indent"), true);
+		bool smartIndent = Manager::Get()->GetConfigManager(_T("editor"))->ReadBool(_T("/smart_indent"), true);
 		if (smartIndent)
 		{
             m_pControl->BeginUndoAction();
@@ -1506,7 +1508,7 @@ void cbEditor::OnEditorCharAdded(wxScintillaEvent& event)
                 return;
         }
 
-		int timerDelay = OldConfigManager::Get()->Read(_T("/editor/cc_delay"), 500);
+		int timerDelay = Manager::Get()->GetConfigManager(_T("editor"))->ReadInt(_T("/cc_delay"), 500);
 		if (timerDelay == 0)
 			DoAskForCodeCompletion();
 		else

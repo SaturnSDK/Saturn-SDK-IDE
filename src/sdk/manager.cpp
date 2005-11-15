@@ -281,7 +281,10 @@ ScriptingManager* Manager::GetScriptingManager()
 
 ConfigManager* Manager::GetConfigManager(const wxString& name_space)
 {
-    return appShutingDown ? 0 : CfgMgrBldr::Get(name_space);
+    // do *not* check for appShutingDown here.
+    // ConfigManager is deleted at program exit automatically
+    // and it exists throught the whole lifetime of the application...
+    return CfgMgrBldr::Get(name_space);
 }
 
 wxWindow* Manager::GetNotebookPage(const wxString &name, long style,bool issplit)

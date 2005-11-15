@@ -274,7 +274,7 @@ void CodeBlocksApp::InitLocale()
         wxLANGUAGE_RUSSIAN
     };
 
-    long int lng = CFG_READ(_T("/locale/language"),(long int)-2);
+    long int lng = Manager::Get()->GetConfigManager(_T("app"))->ReadInt(_T("/locale/language"),(long int)-2);
 
     if(lng==-2) // -2 = Undefined / ask
     {
@@ -293,14 +293,14 @@ void CodeBlocksApp::InitLocale()
     if(lng>=0)
     {
         m_locale.Init(lng);
-        wxLocale::AddCatalogLookupPathPrefix(CFG_READ(_T("/data_path")) + _T("/locale"));
+        wxLocale::AddCatalogLookupPathPrefix(ConfigManager::GetDataFolder() + _T("/locale"));
         wxLocale::AddCatalogLookupPathPrefix(wxT("."));
         wxLocale::AddCatalogLookupPathPrefix(wxT(".."));
         m_locale.AddCatalog(wxT("codeblocks"));
-        CFG_WRITE(_T("/locale/language"),lng);
+        Manager::Get()->GetConfigManager(_T("app"))->Write(_T("/locale/language"), (int)lng);
     }
     else
-        CFG_WRITE(_T("/locale/language"),(long int)-1);
+        Manager::Get()->GetConfigManager(_T("app"))->Write(_T("/locale/language"),(int)-1);
 }
 
 bool CodeBlocksApp::OnInit()

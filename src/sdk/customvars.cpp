@@ -25,7 +25,7 @@
 
 #include "sdk_precomp.h"
 #include "customvars.h"
-#include "old_configmanager.h"
+#include "configmanager.h"
 #include "manager.h"
 #include "messagemanager.h"
 #include <wx/log.h>
@@ -47,32 +47,19 @@ CustomVars::~CustomVars()
 void CustomVars::Load(const wxString& configpath)
 {
 	m_Vars.Clear();
-	long cookie;
 	wxString entry;
-	wxConfigBase* conf = OldConfigManager::Get();
-	wxString oldPath = conf->GetPath();
-	conf->SetPath(configpath);
-	bool cont = conf->GetFirstEntry(entry, cookie);
-	while (cont)
-	{
-		DoAdd(entry, conf->Read(entry), false);
-		cont = conf->GetNextEntry(entry, cookie);
-	}
-	conf->SetPath(oldPath);
+	ConfigManager* conf = Manager::Get()->GetConfigManager(_T("compiler"));
+	wxArrayString list = conf->EnumerateKeys(configpath);
+	for (unsigned int i = 0; i < list.GetCount(); ++i)
+		DoAdd(list[i], conf->Read(configpath + _T('/') + list[i]), false);
 	SetModified(false);
 }
 
 void CustomVars::Save(const wxString& configpath)
 {
-	wxConfigBase* conf = OldConfigManager::Get();
-	conf->DeleteGroup(configpath);
-	wxString oldPath = conf->GetPath();
-	conf->SetPath(configpath);
+	ConfigManager* conf = Manager::Get()->GetConfigManager(_T("compiler"));
 	for (unsigned int i = 0; i < m_Vars.GetCount(); ++i)
-	{
-		conf->Write(m_Vars[i].name, m_Vars[i].value);
-	}
-	conf->SetPath(oldPath);
+		conf->Write(configpath + _T('/') + m_Vars[i].name, m_Vars[i].value);
 	SetModified(false);
 }
 

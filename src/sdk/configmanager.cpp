@@ -52,7 +52,7 @@ ISerializable::~ISerializable()
 
 /* ------------------------------------------------------------------------------------------------------------------
 *  "Builder pattern" class for ConfigManager
-*  Do not use this class  -  Manager::Get()->GetOldConfigManager() is a lot friendlier
+*  Do not use this class  -  Manager::Get()->GetConfigManager() is a lot friendlier
 */
 
 CfgMgrBldr::CfgMgrBldr() : doc(0), volatile_doc(0), r(false)
@@ -159,7 +159,7 @@ ConfigManager* CfgMgrBldr::Get(const wxString& name_space)
 ConfigManager* CfgMgrBldr::Instantiate(const wxString& name_space)
 {
     if(name_space.IsEmpty())
-        cbThrow(_("You attempted to get a OldConfigManager instance without providing a namespace."));
+        cbThrow(_("You attempted to get a ConfigManager instance without providing a namespace."));
 
     wxCriticalSectionLocker locker(cs);
     NamespaceMap::iterator it = namespaces.find(name_space);
@@ -212,7 +212,7 @@ ConfigManager* CfgMgrBldr::Instantiate(const wxString& name_space)
 /* ------------------------------------------------------------------------------------------------------------------
 *  Functions to retrieve system paths and locate data files in a defined, consistent way.
 *  Please note that the application determines app_path and data_path at runtime and passes the results
-*  to OldConfigManager. GetExecutableFolder() and GetDataFolder() are therefore under normal conditions
+*  to ConfigManager. GetExecutableFolder() and GetDataFolder() are therefore under normal conditions
 *  simply more efficient shortcuts for Read("app_path") and Read("data_path").
 */
 
