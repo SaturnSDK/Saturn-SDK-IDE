@@ -39,9 +39,9 @@
 
 #include <wx/tipdlg.h>
 #include <wx/dnd.h>
+#include <wx/mstream.h>
 
-#include <old_configmanager.h>
-#include <configmanager.h> /* FIXME (thomas#1#): REMOVE THIS */
+#include <configmanager.h>
 #include <cbproject.h>
 #include <cbplugin.h>
 #include <sdk_events.h>
@@ -442,7 +442,7 @@ MainFrame::MainFrame(wxLocale& lang, wxWindow* parent)
 
     this->SetAcceleratorTable(*m_pAccel);
 
-    m_SmallToolBar = CFG_READ(_T("/environment/toolbar_size"), 1L) == 1;
+    m_SmallToolBar = Manager::Get()->GetConfigManager(_T("app"))->ReadBool(_T("/environment/toolbar_size"), true);
 	CreateIDE();
 
 #ifdef __WXMSW__
@@ -516,24 +516,24 @@ void MainFrame::UpdateKeyBinder(wxKeyProfileArray* r)
 
 void MainFrame::ShowTips(bool forceShow)
 {
-    bool showAtStartup = CFG_READ(_T("/show_tips"), 1) != 0;
+    bool showAtStartup = Manager::Get()->GetConfigManager(_T("app"))->ReadBool(_T("/show_tips"), true);
     if (forceShow || showAtStartup)
     {
         wxLogNull null; // disable error message if tips file does not exist
-        wxString tipsFile = CFG_READ(_T("/data_path")) + _T("/tips.txt");
-        long tipsIndex = CFG_READ(_T("/next_tip"), (long)0);
+        wxString tipsFile = ConfigManager::GetDataFolder() + _T("/tips.txt");
+        long tipsIndex = Manager::Get()->GetConfigManager(_T("app"))->ReadInt(_T("/next_tip"), 0);
         wxTipProvider* tipProvider = wxCreateFileTipProvider(tipsFile, tipsIndex);
         showAtStartup = wxShowTip(this, tipProvider, showAtStartup);
         delete tipProvider;
-        CFG_WRITE(_T("/show_tips"), showAtStartup);
-        CFG_WRITE(_T("/next_tip"), (long)tipProvider->GetCurrentTip());
+        Manager::Get()->GetConfigManager(_T("app"))->Write(_T("/show_tips"), showAtStartup);
+        Manager::Get()->GetConfigManager(_T("app"))->Write(_T("/next_tip"), (int)tipProvider->GetCurrentTip());
     }
 }
 
 void MainFrame::CreateIDE()
 {
-	int leftW = CFG_READ(_T("/main_frame/layout/left_block_width"), 200);
-	int bottomH = CFG_READ(_T("/main_frame/layout/bottom_block_height"), 150);
+	int leftW = Manager::Get()->GetConfigManager(_T("app"))->ReadInt(_T("/main_frame/layout/left_block_width"), 200);
+	int bottomH = Manager::Get()->GetConfigManager(_T("app"))->ReadInt(_T("/main_frame/layout/bottom_block_height"), 150);
 	SetSize(800,600);
 	wxSize clientsize = GetClientSize();
 
@@ -619,7 +619,7 @@ void MainFrame::CreateMenubar()
 	wxMenu *tools=0L, *plugs=0L, *pluginsM=0L, *settingsPlugins=0L;
 	wxMenuItem *tmpitem=0L;
 
-    wxString resPath = CFG_READ(_T("data_path"), wxEmptyString);
+    wxString resPath = ConfigManager::GetDataFolder();
     wxXmlResource *myres = wxXmlResource::Get();
     myres->Load(resPath + _T("/resources.zip#zip:main_menu.xrc"));
     mbar = myres->LoadMenuBar(_T("main_menu_bar"));
@@ -698,7 +698,7 @@ void MainFrame::CreateToolbars()
 	}
 
     // *** Begin new Toolbar routine ***
-    wxString resPath = CFG_READ(_T("data_path"), wxEmptyString);
+    wxString resPath = ConfigManager::GetDataFolder();
     wxString xrcToolbarName = _T("main_toolbar");
     if(m_SmallToolBar) // Insert logic here
         xrcToolbarName += _T("_16x16");
@@ -757,7 +757,7 @@ void MainFrame::ScanForPlugins()
 
     PluginManager* m_PluginManager = Manager::Get()->GetPluginManager();
 
-    wxString path = CFG_READ(_T("data_path")) + _T("/plugins");
+    wxString path = ConfigManager::GetDataFolder() + _T("/plugins");
     MSGMAN()->Log(_("Scanning for plugins in %s..."), path.c_str());
     int count = m_PluginManager->ScanForPlugins(path);
     MSGMAN()->AppendLog(_("Found %d plugins: "), count);
@@ -863,36 +863,30 @@ void MainFrame::LoadWindowState()
 {
 	wxLogNull ln; // no logging needed
 
-    const wxString& personalityKey = Manager::Get()->GetPersonalityManager()->GetPersonalityKey();
-
-    wxString path = wxGetUserHome();
-    path << _T("/") << personalityKey;
-    path << _T(".cb_layout.bin");
-    wxFileInputStream fi( path );
-    if (fi.Ok())
-    {
-        wxUtil::ReadWindowLayout( fi, this );
-        pLayoutManager->LoadFromStream( fi );
-        pSlideBar->LoadFromStream( fi );
-    }
+wxString buf;
+    buf = Manager::Get()->GetConfigManager(_T("app"))->ReadBinary(_T("/main_frame/layout"));
+    wxMemoryInputStream ms(buf.c_str(), buf.Length());
+    wxUtil::ReadWindowLayout(ms, this);
+    pLayoutManager->LoadFromStream( ms );
+    pSlideBar->LoadFromStream( ms );
 
     // toolbar visibility
 	if (pSlideBar)
-        pSlideBar->Show(CFG_READ(personalityKey + _T("/main_frame/layout/toolbar_show"), 1));
+        pSlideBar->Show(Manager::Get()->GetConfigManager(_T("app"))->ReadBool(_T("/main_frame/layout/toolbar_show"), true));
 
 	// load manager and messages selected page
-	Manager::Get()->GetNotebook()->SetSelection(CFG_READ(personalityKey + _T("/main_frame/layout/left_block_selection"), 0L));
-	MSGMAN()->SetSelection(CFG_READ(personalityKey + _T("/main_frame/layout/bottom_block_selection"), 0L));
+	Manager::Get()->GetNotebook()->SetSelection(Manager::Get()->GetConfigManager(_T("app"))->ReadInt(_T("/main_frame/layout/left_block_selection"), 0));
+	MSGMAN()->SetSelection(Manager::Get()->GetConfigManager(_T("app"))->ReadInt(_T("/main_frame/layout/bottom_block_selection"), 0));
 
     if (!IsMaximized() && !IsIconized())
     {
         // load window size and position
-        SetSize(CFG_READ(personalityKey + _T("/main_frame/left"), 0L),
-                CFG_READ(personalityKey + _T("/main_frame/top"), 0L),
-                CFG_READ(personalityKey + _T("/main_frame/width"), 640),
-                CFG_READ(personalityKey + _T("/main_frame/height"), 480));
+        SetSize(Manager::Get()->GetConfigManager(_T("app"))->ReadInt(_T("/main_frame/layout/left"), 0),
+                Manager::Get()->GetConfigManager(_T("app"))->ReadInt(_T("/main_frame/layout/top"), 0),
+                Manager::Get()->GetConfigManager(_T("app"))->ReadInt(_T("/main_frame/layout/width"), 640),
+                Manager::Get()->GetConfigManager(_T("app"))->ReadInt(_T("/main_frame/layout/height"), 480));
         // maximized?
-        if (CFG_READ(personalityKey + _T("/main_frame/maximized"), 0L))
+        if (Manager::Get()->GetConfigManager(_T("app"))->ReadBool(_T("/main_frame/layout/maximized"), false))
             Maximize();
     }
 
@@ -900,42 +894,33 @@ void MainFrame::LoadWindowState()
     MSGMAN()->Close();
 }
 
-//#include <wx/mstream.h>
 void MainFrame::SaveWindowState()
 {
 	wxLogNull ln; // no logging needed
 
-    const wxString& personalityKey = Manager::Get()->GetPersonalityManager()->GetPersonalityKey();
-
-//  wxMemoryOutputStream os;
-//  wxUtil::WriteWindowLayout(os, this);
-//  wxString buf(os.GetOutputStreamBuffer().GetBufferStart(), os.GetSize());
-//  Manager::Get()->GetOldConfigManager("application")->WriteBinary("window_layout", buf);
-
-    wxString path = wxGetUserHome();
-    path << _T("/") << personalityKey;
-    path << _T(".cb_layout.bin");
-    wxFileOutputStream fo( path );
-    wxUtil::WriteWindowLayout( fo, this );
-    pLayoutManager->SaveToStream( fo );
-    pSlideBar->SaveToStream( fo );
+    wxMemoryOutputStream os;
+    wxUtil::WriteWindowLayout(os, this);
+    pLayoutManager->SaveToStream( os );
+    pSlideBar->SaveToStream( os );
+    wxString buf(static_cast<const wxChar*>(os.GetOutputStreamBuffer()->GetBufferStart()), os.GetSize());
+    Manager::Get()->GetConfigManager(_T("app"))->WriteBinary(_T("/main_frame/layout"), buf);
 
     // toolbar visibility
 	if (pSlideBar)
-        CFG_WRITE(personalityKey + _T("/main_frame/layout/toolbar_show"), pSlideBar->IsShown());
+        Manager::Get()->GetConfigManager(_T("app"))->Write(_T("/main_frame/layout/toolbar_show"), pSlideBar->IsShown());
 
 	// save manager and messages selected page
-	CFG_WRITE(personalityKey + _T("/main_frame/layout/left_block_selection"), Manager::Get()->GetNotebook()->GetSelection());
-	CFG_WRITE(personalityKey + _T("/main_frame/layout/bottom_block_selection"), MSGMAN()->GetSelection());
+	Manager::Get()->GetConfigManager(_T("app"))->Write(_T("/main_frame/layout/left_block_selection"), Manager::Get()->GetNotebook()->GetSelection());
+	Manager::Get()->GetConfigManager(_T("app"))->Write(_T("/main_frame/layout/bottom_block_selection"), MSGMAN()->GetSelection());
 
     // save window size and position
-    CFG_WRITE(personalityKey + _T("/main_frame/maximized"), IsMaximized());
+    Manager::Get()->GetConfigManager(_T("app"))->Write(_T("/main_frame/layout/maximized"), IsMaximized());
     if (!IsMaximized() && !IsIconized())
     {
-        CFG_WRITE(personalityKey + _T("/main_frame/left"), GetPosition().x);
-        CFG_WRITE(personalityKey + _T("/main_frame/top"), GetPosition().y);
-        CFG_WRITE(personalityKey + _T("/main_frame/width"), GetSize().x);
-        CFG_WRITE(personalityKey + _T("/main_frame/height"), GetSize().y);
+        Manager::Get()->GetConfigManager(_T("app"))->Write(_T("/main_frame/layout/left"), GetPosition().x);
+        Manager::Get()->GetConfigManager(_T("app"))->Write(_T("/main_frame/layout/top"), GetPosition().y);
+        Manager::Get()->GetConfigManager(_T("app"))->Write(_T("/main_frame/layout/width"), GetSize().x);
+        Manager::Get()->GetConfigManager(_T("app"))->Write(_T("/main_frame/layout/height"), GetSize().y);
     }
 
 }
@@ -1240,7 +1225,7 @@ void MainFrame::ShowHideStartPage(bool forceHasProject)
         return;
     bool show = !forceHasProject &&
                 PRJMAN()->GetProjects()->GetCount() == 0 &&
-                CFG_READ(_T("/environment/start_here_page"), 1);
+                Manager::Get()->GetConfigManager(_T("app"))->ReadBool(_T("/environment/start_here_page"), true);
 
     EditorBase* sh = EDMAN()->GetEditor(g_StartHereTitle);
     if (show && !sh)
@@ -2394,20 +2379,20 @@ void MainFrame::OnSettingsEnvironment(wxCommandEvent& event)
 {
     bool tbarsmall = m_SmallToolBar;
     bool needRestart = false;
-    bool edmanCloseBtn = CFG_READ(_T("/editor/show_close_button"), (long int)0);
+    bool edmanCloseBtn = Manager::Get()->GetConfigManager(_T("editor"))->ReadBool(_T("/show_close_button"), false);
 
 	EnvironmentSettingsDlg dlg(this);
 	if (dlg.ShowModal() == wxID_OK)
 	{
-        m_SmallToolBar = CFG_READ(_T("/environment/toolbar_size"), (long int)1) == 1;
+        m_SmallToolBar = Manager::Get()->GetConfigManager(_T("app"))->ReadBool(_T("/environment/toolbar_size"), true);
         needRestart = m_SmallToolBar != tbarsmall;
-        bool autoHide = CFG_READ(_T("/message_manager/auto_hide"), 0L);
+        bool autoHide = Manager::Get()->GetConfigManager(_T("message_manager"))->ReadBool(_T("/auto_hide"), false);
         MSGMAN()->EnableAutoHide(autoHide);
         if (!autoHide)
             pDockWindow2->Show(true); // make sure it's shown
         ShowHideStartPage();
 
-        if (CFG_READ(_T("/editor/show_close_button"), (long int)0) != edmanCloseBtn)
+        if (Manager::Get()->GetConfigManager(_T("editor"))->ReadBool(_T("/show_close_button"), false) != edmanCloseBtn)
         {
         	wxMessageBox(_("Some of the changes you made will be applied after you restart Code::Blocks."),
                             _("Information"),
@@ -2572,7 +2557,7 @@ void MainFrame::OnRequestShowDockWindow(CodeBlocksEvent& event)
 
 void MainFrame::OnSettingsNetworkProxy(wxCommandEvent& event)
 {
-Manager::Get()->GetConfigManager("app")->Write("network_proxy", wxGetTextFromUser(_T("Please enter"
+Manager::Get()->GetConfigManager(_T("app"))->Write("network_proxy", wxGetTextFromUser(_T("Please enter"
 "your network proxy for all internet connections made by Code::Blocks.\n"
 "Format: hostname:port"), _T("Network proxy")));
 }

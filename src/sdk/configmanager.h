@@ -15,7 +15,7 @@
 
 /* ------------------------------------------------------------------------------------------------------------------
 *  Interface Serializable
-*  OldConfigManager can save arbitrary objects and even sets/maps of objects, provided they implement Serializable.
+*  ConfigManager can save arbitrary objects and even sets/maps of objects, provided they implement Serializable.
 *
 *  Usage:
 *  ------
@@ -39,9 +39,9 @@ public:
 
 
 /* ------------------------------------------------------------------------------------------------------------------
-*  Containers supported by OldConfigManager
+*  Containers supported by ConfigManager
 */
-namespace OldConfigManagerContainer
+namespace ConfigManagerContainer
 {
     WX_DECLARE_STRING_HASH_MAP( wxString, StringToStringMap);
     WX_DECLARE_HASH_MAP(long int, wxString, wxIntegerHash, wxIntegerEqual, IntToStringMap);
@@ -53,7 +53,7 @@ namespace OldConfigManagerContainer
 
 
 /* ------------------------------------------------------------------------------------------------------------------
-*  OldConfigManager class
+*  ConfigManager class
 */
 class DLLIMPORT ConfigManager
 {
@@ -157,17 +157,17 @@ public:
     /* -----------------------------------------------------------------------------------------------------
     *  Maps and sets of primitive types
     */
-    void Write(const wxString& name, const OldConfigManagerContainer::StringToStringMap& map);
-    void Read(const wxString& name, OldConfigManagerContainer::StringToStringMap* map);
-    OldConfigManagerContainer::StringToStringMap ReadSSMap(const wxString& name);
+    void Write(const wxString& name, const ConfigManagerContainer::StringToStringMap& map);
+    void Read(const wxString& name, ConfigManagerContainer::StringToStringMap* map);
+    ConfigManagerContainer::StringToStringMap ReadSSMap(const wxString& name);
 
-    void Write(const wxString& name, const OldConfigManagerContainer::IntToStringMap& map);
-    void Read(const wxString& name, OldConfigManagerContainer::IntToStringMap* map);
-    OldConfigManagerContainer::IntToStringMap ReadISMap(const wxString& name);
+    void Write(const wxString& name, const ConfigManagerContainer::IntToStringMap& map);
+    void Read(const wxString& name, ConfigManagerContainer::IntToStringMap* map);
+    ConfigManagerContainer::IntToStringMap ReadISMap(const wxString& name);
 
-    void Write(const wxString& name, const OldConfigManagerContainer::StringSet& set);
-    void Read(const wxString& name, OldConfigManagerContainer::StringSet* map);
-    OldConfigManagerContainer::StringSet ReadSSet(const wxString& name);
+    void Write(const wxString& name, const ConfigManagerContainer::StringSet& set);
+    void Read(const wxString& name, ConfigManagerContainer::StringSet* map);
+    ConfigManagerContainer::StringSet ReadSSet(const wxString& name);
 
 
     /* -----------------------------------------------------------------------------------------------------
@@ -178,11 +178,11 @@ public:
     *  ------
     *  WX_DECLARE_STRING_HASH_MAP(MySerializableClass *, MyMap);
     *  MyMap objMap;
-    *  cfg->Read<MySerializableClass>("name", (OldConfigManagerContainer::SerializableObjectMap*) &objMap);
+    *  cfg->Read<MySerializableClass>("name", (ConfigManagerContainer::SerializableObjectMap*) &objMap);
     *  map["somekey"]->DoSomething();
     */
-    void ConfigManager::Write(const wxString& name, const OldConfigManagerContainer::SerializableObjectMap* map);
-    template <class T> void Read(const wxString& name, OldConfigManagerContainer::SerializableObjectMap *map)
+    void ConfigManager::Write(const wxString& name, const ConfigManagerContainer::SerializableObjectMap* map);
+    template <class T> void Read(const wxString& name, ConfigManagerContainer::SerializableObjectMap *map)
     {
         wxString key(name);
         TiXmlHandle ph(AssertPath(key));

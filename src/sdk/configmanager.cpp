@@ -15,6 +15,8 @@
 #include "configmanager.h"
 #include "personalitymanager.h"
 #include "cbexception.h"
+#include "base64.h"
+#include "crc32.h"
 
 #include <wx/file.h>
 #include <wx/url.h>
@@ -216,7 +218,7 @@ ConfigManager* CfgMgrBldr::Instantiate(const wxString& name_space)
 
 wxString ConfigManager::GetProxy()
 {
-return Manager::Get()->GetConfigManager("app")->Read("network_proxy");
+    return Manager::Get()->GetConfigManager(_T("app"))->Read(_T("network_proxy"));
 }
 
 wxString ConfigManager::GetExecutableFolder()
@@ -447,9 +449,29 @@ void ConfigManager::Clear()
 
 void ConfigManager::Delete()
 {
-    doc->RemoveChild(root);
+    doc->RootElement()->RemoveChild(root);
     delete this;
+    // TODO: remove object from namespace map (requires builder class redesign)
+
 }
+
+//void ConfigManager::DeleteAll()
+//{
+//    wxString ns(root->Value());
+//    if(!ns.IsSameAs(_T("app")))
+//        cbThrow(_T("Illegal attempt to invoke DeleteAll()."));
+//
+//    Manager::Get()->GetMessageManager()->DebugLog("Unimplemented: ConfigManager::DeleteAll");
+//    return;
+//
+//    // TODO: remove object from namespace map (requires builder class redesign)
+//    root = 0;
+//    TiXmlNode *n = 0;
+//    TiXmlNode *r = doc->RootElement();
+//    while(n = r->IterateChildren(n))
+//        r->RemoveChild(n);
+//    delete this;
+//}
 
 /* ------------------------------------------------------------------------------------------------------------------
 *  Utility functions for writing nodes
@@ -572,11 +594,11 @@ bool ConfigManager::Read(const wxString& name, wxColour* ret)
 
     if(c)
     {
-    int r, g, b;
+        int r, g, b;
         if(c->QueryIntAttribute(_T("r"), &r) == TIXML_SUCCESS
-        && c->QueryIntAttribute(_T("g"), &g) == TIXML_SUCCESS
-        && c->QueryIntAttribute(_T("b"), &b) == TIXML_SUCCESS)
-        ret->Set(r, b, g);
+                && c->QueryIntAttribute(_T("g"), &g) == TIXML_SUCCESS
+                && c->QueryIntAttribute(_T("b"), &b) == TIXML_SUCCESS)
+            ret->Set(r, b, g);
         return true;
     }
     return false;
@@ -756,7 +778,6 @@ wxArrayString ConfigManager::ReadArrayString(const wxString& name)
     return as;
 }
 
-
 void ConfigManager::WriteBinary(const wxString& name,  const wxString& source)
 {
     wxString key(name);
@@ -765,7 +786,8 @@ void ConfigManager::WriteBinary(const wxString& name,  const wxString& source)
     TiXmlElement *str = GetUniqElement(e, key);
 
     TiXmlElement *s = GetUniqElement(str, _T("bin"));
-    SetNodeText(s, TiXmlText(wxBase64Encode(source).mb_str()));
+    s->SetAttribute(_T("crc"), wxCrc32::FromString(source));
+    SetNodeText(s, TiXmlText(wxBase64::Encode(source).mb_str()));
 }
 
 void ConfigManager::WriteBinary(const wxString& name,  void* ptr, size_t len)
@@ -779,14 +801,24 @@ wxString ConfigManager::ReadBinary(const wxString& name)
     wxString str;
     wxString key(name);
     TiXmlElement* e = AssertPath(key);
+    unsigned int crc;
 
     TiXmlHandle parentHandle(e);
-    TiXmlText *t = (TiXmlText *) parentHandle.FirstChild(key).FirstChild(_T("bin")).FirstChild().Node();
+    TiXmlElement* bin = parentHandle.FirstChild(key).FirstChild(_T("bin")).Element();
 
-    if(t)
+    if(!bin)
+        return wxEmptyString;
+
+    if(bin->QueryIntAttribute(_T("crc"), (int*)&crc) != TIXML_SUCCESS)
+        return wxEmptyString;
+
+    TiXmlText *t = bin->FirstChild()->ToText();
+    if (t)
     {
         str.assign(t->Value());
-        return wxBase64Decode(str);
+        str = wxBase64::Decode(str);
+        if(crc ==  wxCrc32::FromString(str))
+            return str;
     }
     return wxEmptyString;
 }
@@ -858,7 +890,7 @@ bool ConfigManager::Read(const wxString& name, ISerializable* object)
     return wxEmptyString;
 }
 
-void ConfigManager::Write(const wxString& name, const OldConfigManagerContainer::StringToStringMap& map)
+void ConfigManager::Write(const wxString& name, const ConfigManagerContainer::StringToStringMap& map)
 {
     wxString key(name);
     TiXmlElement* e = AssertPath(key);
@@ -870,7 +902,7 @@ void ConfigManager::Write(const wxString& name, const OldConfigManagerContainer:
     leaf->RemoveChild(mNode);
     mNode = GetUniqElement(leaf, _T("ssmap"));
 
-    for(OldConfigManagerContainer::StringToStringMap::const_iterator it = map.begin(); it != map.end(); ++it)
+    for(ConfigManagerContainer::StringToStringMap::const_iterator it = map.begin(); it != map.end(); ++it)
     {
         TiXmlElement s(it->first);
         s.InsertEndChild(TiXmlText(it->second));
@@ -878,7 +910,7 @@ void ConfigManager::Write(const wxString& name, const OldConfigManagerContainer:
     }
 }
 
-void ConfigManager::Read(const wxString& name, OldConfigManagerContainer::StringToStringMap* map)
+void ConfigManager::Read(const wxString& name, ConfigManagerContainer::StringToStringMap* map)
 {
     wxString key(name);
     TiXmlElement* e = AssertPath(key);
@@ -894,14 +926,14 @@ void ConfigManager::Read(const wxString& name, OldConfigManagerContainer::String
     }
 }
 
-OldConfigManagerContainer::StringToStringMap ConfigManager::ReadSSMap(const wxString& name)
+ConfigManagerContainer::StringToStringMap ConfigManager::ReadSSMap(const wxString& name)
 {
-    OldConfigManagerContainer::StringToStringMap ret;
+    ConfigManagerContainer::StringToStringMap ret;
     Read(name, &ret);
     return ret;
 }
 
-void ConfigManager::Write(const wxString& name, const OldConfigManagerContainer::IntToStringMap& map)
+void ConfigManager::Write(const wxString& name, const ConfigManagerContainer::IntToStringMap& map)
 {
     wxString key(name);
     TiXmlElement* e = AssertPath(key);
@@ -914,7 +946,7 @@ void ConfigManager::Write(const wxString& name, const OldConfigManagerContainer:
     mNode = GetUniqElement(leaf, _T("ismap"));
 
     wxString tmp;
-    for(OldConfigManagerContainer::IntToStringMap::const_iterator it = map.begin(); it != map.end(); ++it)
+    for(ConfigManagerContainer::IntToStringMap::const_iterator it = map.begin(); it != map.end(); ++it)
     {
         tmp.sprintf("x%d", (int) it->first);
         TiXmlElement s(tmp);
@@ -923,7 +955,7 @@ void ConfigManager::Write(const wxString& name, const OldConfigManagerContainer:
     }
 }
 
-void ConfigManager::Read(const wxString& name, OldConfigManagerContainer::IntToStringMap* map)
+void ConfigManager::Read(const wxString& name, ConfigManagerContainer::IntToStringMap* map)
 {
     wxString key(name);
     TiXmlElement* e = AssertPath(key);
@@ -943,9 +975,9 @@ void ConfigManager::Read(const wxString& name, OldConfigManagerContainer::IntToS
     }
 }
 
-OldConfigManagerContainer::IntToStringMap ConfigManager::ReadISMap(const wxString& name)
+ConfigManagerContainer::IntToStringMap ConfigManager::ReadISMap(const wxString& name)
 {
-    OldConfigManagerContainer::IntToStringMap ret;
+    ConfigManagerContainer::IntToStringMap ret;
     Read(name, &ret);
     return ret;
 }
@@ -955,7 +987,7 @@ OldConfigManagerContainer::IntToStringMap ConfigManager::ReadISMap(const wxStrin
 
 
 
-void ConfigManager::Write(const wxString& name, const OldConfigManagerContainer::StringSet& set)
+void ConfigManager::Write(const wxString& name, const ConfigManagerContainer::StringSet& set)
 {
     wxString key(name);
     TiXmlElement* e = AssertPath(key);
@@ -967,7 +999,7 @@ void ConfigManager::Write(const wxString& name, const OldConfigManagerContainer:
     leaf->RemoveChild(mNode);
     mNode = GetUniqElement(leaf, _T("sset"));
 
-    for(OldConfigManagerContainer::StringSet::const_iterator it = set.begin(); it != set.end(); ++it)
+    for(ConfigManagerContainer::StringSet::const_iterator it = set.begin(); it != set.end(); ++it)
     {
         TiXmlElement s(_T("s"));
         s.InsertEndChild(TiXmlText(*it));
@@ -976,7 +1008,7 @@ void ConfigManager::Write(const wxString& name, const OldConfigManagerContainer:
 }
 
 
-void ConfigManager::Read(const wxString& name, OldConfigManagerContainer::StringSet* set)
+void ConfigManager::Read(const wxString& name, ConfigManagerContainer::StringSet* set)
 {
     wxString key(name);
     TiXmlElement* e = AssertPath(key);
@@ -993,15 +1025,15 @@ void ConfigManager::Read(const wxString& name, OldConfigManagerContainer::String
     }
 }
 
-OldConfigManagerContainer::StringSet ConfigManager::ReadSSet(const wxString& name)
+ConfigManagerContainer::StringSet ConfigManager::ReadSSet(const wxString& name)
 {
-    OldConfigManagerContainer::StringSet ret;
+    ConfigManagerContainer::StringSet ret;
     Read(name, &ret);
     return ret;
 }
 
 
-void ConfigManager::Write(const wxString& name, const OldConfigManagerContainer::SerializableObjectMap* map)
+void ConfigManager::Write(const wxString& name, const ConfigManagerContainer::SerializableObjectMap* map)
 {
     wxString key(name);
     TiXmlElement* e = AssertPath(key);
@@ -1013,7 +1045,7 @@ void ConfigManager::Write(const wxString& name, const OldConfigManagerContainer:
     leaf->RemoveChild(mNode);
     mNode = GetUniqElement(leaf, _T("objmap"));
 
-    for(OldConfigManagerContainer::SerializableObjectMap::const_iterator it = map->begin(); it != map->end(); ++it)
+    for(ConfigManagerContainer::SerializableObjectMap::const_iterator it = map->begin(); it != map->end(); ++it)
     {
         TiXmlElement s(it->first);
         s.InsertEndChild(TiXmlText(wxBase64Encode(it->second->SerializeOut())));

@@ -22,7 +22,7 @@ wxString GDB_driver::GetCommandLine(const wxString& debugger, const wxString& de
     cmd << debugger;
     cmd << _T(" -nx");          // don't run .gdbinit
     cmd << _T(" -fullname ");   // report full-path filenames when breaking
-    cmd << debuggee;
+    cmd << _T(" -args ") << debuggee;
     return cmd;
 }
 

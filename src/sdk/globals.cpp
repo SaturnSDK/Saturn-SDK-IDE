@@ -457,16 +457,18 @@ const short base64_reverse_table[256] =
 
 wxString wxBase64Encode(const wxString &str )
 {
-    wxString szToReturn;
     int length = str.Length();
     int current = 0;
+    int counter = 0;
+
+    char* out = new char[length * 4];
 
     while (length > 2) // keep going until we have less than 24 bits (each item is 8 bits)
     {
-        szToReturn.Append( base64_table[str.GetChar(current) >> 2] );
-        szToReturn.Append( base64_table[((str.GetChar(current) & 0x03) << 4) + (str.GetChar(current+1) >> 4)] );
-        szToReturn.Append( base64_table[((str.GetChar(current+1) & 0x0f) << 2) + (str.GetChar(current+2) >> 6)] );
-        szToReturn.Append( base64_table[str.GetChar(current+2) & 0x3f] );
+        out[counter++] = base64_table[str.GetChar(current) >> 2];
+        out[counter++] = base64_table[((str.GetChar(current) & 0x03) << 4) + (str.GetChar(current+1) >> 4)];
+        out[counter++] = base64_table[((str.GetChar(current+1) & 0x0f) << 2) + (str.GetChar(current+2) >> 6)];
+        out[counter++] = base64_table[str.GetChar(current+2) & 0x3f];
 
         current += 3;
         length -= 3; // we just handle 3 octets of data
@@ -474,23 +476,25 @@ wxString wxBase64Encode(const wxString &str )
 
     if (length != 0)
     {
-        szToReturn.Append( base64_table[str.GetChar(current) >> 2] );
+        out[counter++] = base64_table[str.GetChar(current) >> 2];
 
         //*p++ = base64_table[current[0] >> 2];
         if (length > 1)
         {
-            szToReturn.Append( base64_table[((str.GetChar(current) & 0x03) << 4) + (str.GetChar(current+1) >> 4)] );
-            szToReturn.Append( base64_table[(str.GetChar(current+1) & 0x0f) << 2] );
-            szToReturn.Append( base64_pad );
+            out[counter++] = base64_table[((str.GetChar(current) & 0x03) << 4) + (str.GetChar(current+1) >> 4)];
+            out[counter++] = base64_table[(str.GetChar(current+1) & 0x0f) << 2];
+            out[counter++] = base64_pad;
         }
         else
         {
-            szToReturn.Append( base64_table[(str.GetChar(current) & 0x03) << 4] );
-            szToReturn.Append( base64_pad );
-            szToReturn.Append( base64_pad );
+            out[counter++] = base64_table[(str.GetChar(current) & 0x03) << 4];
+            out[counter++] = base64_pad;
+            out[counter++] = base64_pad;
         }
     }
 
+    wxString szToReturn(out, counter);
+    delete[] out;
     return szToReturn;
 }
 
@@ -501,7 +505,7 @@ wxString wxBase64Decode(const wxString &str)
     int length = str.Length();
     unsigned int current = 0;
     int i = 0, j = 0, k;
-    wxChar ch = ' ';
+    wxChar ch = _T(' ');
 
     while( current != str.Length() && length-- > 0 )
     {

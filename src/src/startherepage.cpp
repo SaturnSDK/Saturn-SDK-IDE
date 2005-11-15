@@ -9,7 +9,7 @@
 #include <templatemanager.h>
 #include <pluginmanager.h>
 #include <editormanager.h>
-#include <old_configmanager.h>
+#include <configmanager.h>
 #include "startherepage.h"
 #include "globals.h"
 
@@ -55,7 +55,7 @@ StartHerePage::StartHerePage(wxEvtHandler* owner, wxWindow* parent)
 	//ctor
     wxBoxSizer* bs = new wxBoxSizer(wxVERTICAL);
 
-    wxString resPath = OldConfigManager::Get()->Read(_T("/data_path"));
+    wxString resPath = ConfigManager::ReadDataPath();
 	m_pWin = new MyHtmlWin(this, idWin, wxPoint(0,0), GetSize());
 
 	// set default font sizes based on system default font size
