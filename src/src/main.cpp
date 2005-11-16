@@ -39,6 +39,7 @@
 #include <wx/tipdlg.h>
 #include <wx/dnd.h>
 #include <wx/mstream.h>
+#include <wx/fileconf.h>
 
 #include <configmanager.h>
 #include <cbproject.h>
@@ -939,58 +940,62 @@ void MainFrame::SaveWindowState()
 #if wxUSE_KEYBINDER
 void MainFrame::LoadKeyBindings()
 {
+    wxFileConfig cfg(wxEmptyString, // appname
+                    wxEmptyString, // vendor
+                    ConfigManager::GetConfigFolder() + _T("/keys.conf"), // local file
+                    wxEmptyString, // global file
+                    wxCONFIG_USE_LOCAL_FILE);
 	// before loading we must register in wxCmd arrays the various types
 	// of commands we want wxCmd::Load to be able to recognize...
 	wxMenuCmd::Register(GetMenuBar());
-// TODO (mandrav#1#): Make wxKeyBinder load/save with ConfigManager
-return;
-//	// clear our old array
-//	m_KeyProfiles->Cleanup();
-//
-//	wxConfigBase* cfg = OldConfigManager::Get();
-//	if (cfg->HasGroup(_T("/keybindings")) && m_KeyProfiles->Load(cfg, _T("/keybindings")))
-//	{
-//
-//		// get the cmd count
-//		int total = 0;
-//		for (int i=0; i<m_KeyProfiles->GetCount(); i++)
-//			total += m_KeyProfiles->Item(i)->GetCmdCount();
-//
-//		if (total == 0)
-//		{
-//            m_pMsgMan->Log(wxT("No keyprofiles have been found.\nA default keyprofile will be set.\n"));
-//			wxKeyProfile *p = new wxKeyProfile(wxT("Default"));
-//			p->ImportMenuBarCmd(GetMenuBar());
-//			m_KeyProfiles->Add(p);
-//		}
-//		else
-//		{
-//			wxString msg = wxString::Format(
-//					wxT("%d key binding profiles have been loaded ")
-//					wxT("(%d commands in total).\n")
-//					wxT("Profile '%s' applied."),
-//					m_KeyProfiles->GetCount(), total,
-//					m_KeyProfiles->GetSelProfile()->GetName().c_str());
-//            m_pMsgMan->Log(msg);
-//		}
-//
-//		// reattach this frame to the loaded keybinder
-//		UpdateKeyBinder(m_KeyProfiles);
-//	}
-//	else
-//	{
-//	    // load defaults
-//        InitKeyBinder();
-//		m_pMsgMan->Log(_T("Using default key bindings"));
-//	}
-//	cfg->SetPath(_T("/"));
+	// clear our old array
+	m_KeyProfiles->Cleanup();
+
+	if (cfg.HasGroup(_T("/keybindings")) && m_KeyProfiles->Load(&cfg, _T("/keybindings")))
+	{
+
+		// get the cmd count
+		int total = 0;
+		for (int i=0; i<m_KeyProfiles->GetCount(); i++)
+			total += m_KeyProfiles->Item(i)->GetCmdCount();
+
+		if (total == 0)
+		{
+            m_pMsgMan->Log(wxT("No keyprofiles have been found.\nA default keyprofile will be set.\n"));
+			wxKeyProfile *p = new wxKeyProfile(wxT("Default"));
+			p->ImportMenuBarCmd(GetMenuBar());
+			m_KeyProfiles->Add(p);
+		}
+		else
+		{
+			wxString msg = wxString::Format(
+					wxT("%d key binding profiles have been loaded ")
+					wxT("(%d commands in total).\n")
+					wxT("Profile '%s' applied."),
+					m_KeyProfiles->GetCount(), total,
+					m_KeyProfiles->GetSelProfile()->GetName().c_str());
+            m_pMsgMan->Log(msg);
+		}
+
+		// reattach this frame to the loaded keybinder
+		UpdateKeyBinder(m_KeyProfiles);
+	}
+	else
+	{
+	    // load defaults
+        InitKeyBinder();
+		m_pMsgMan->Log(_T("Using default key bindings"));
+	}
 }
 
 void MainFrame::SaveKeyBindings()
 {
-//	wxConfigBase* cfg = OldConfigManager::Get();
-//	m_KeyProfiles->Save(cfg, _T("/keybindings"), true);
-//	cfg->SetPath(_T("/"));
+    wxFileConfig cfg(wxEmptyString, // appname
+                    wxEmptyString, // vendor
+                    ConfigManager::GetConfigFolder() + _T("/keys.conf"), // local file
+                    wxEmptyString, // global file
+                    wxCONFIG_USE_LOCAL_FILE);
+	m_KeyProfiles->Save(&cfg, _T("/keybindings"), true);
 }
 #endif // wxUSE_KEYBINDER
 
