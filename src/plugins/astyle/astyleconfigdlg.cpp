@@ -109,7 +109,7 @@ void AstyleConfigDlg::OnStyleChange(wxCommandEvent& event)
 
 void AstyleConfigDlg::LoadSettings()
 {
-    ConfigManager* cfg = Manager::Get()->GetConfigManager(_T("/astyle"));
+    ConfigManager* cfg = Manager::Get()->GetConfigManager(_T("astyle"));
 
     int style = cfg->ReadInt(_T("/style"), 0);
     XRCCTRL(*this, "spnIndentation", wxSpinCtrl)->SetValue(cfg->ReadInt(_T("/indentation"), 4));
@@ -138,7 +138,7 @@ void AstyleConfigDlg::LoadSettings()
 
 void AstyleConfigDlg::SaveSettings()
 {
-    ConfigManager* cfg = Manager::Get()->GetConfigManager(_T("/astyle"));
+    ConfigManager* cfg = Manager::Get()->GetConfigManager(_T("astyle"));
     int style = 0;
     if (XRCCTRL(*this, "rbAnsi", wxRadioButton)->GetValue())
         style = 0;

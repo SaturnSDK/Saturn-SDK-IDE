@@ -37,7 +37,7 @@
 #include <wx/log.h>
 #include <globals.h>
 #include "../../sdk/manager.h"
-#include "../../sdk/old_configmanager.h"
+#include "../../sdk/configmanager.h"
 
 BEGIN_EVENT_TABLE(ClassWizardDlg, wxDialog)
 	EVT_UPDATE_UI(-1, ClassWizardDlg::OnUpdateUI)
@@ -106,9 +106,9 @@ void ClassWizardDlg::OnOKClick(wxCommandEvent& event)
 		DoGuardBlock();
 	wxFileName headerFname(UnixFilename(m_Header));
 
-	bool usestabs = (OldConfigManager::Get()->Read(_T("/editor/use_tab"), 0l) != 0);
-	int tabsize = OldConfigManager::Get()->Read(_T("/editor/tab_size"), 4);
-	int eolmode = OldConfigManager::Get()->Read(_T("/editor/eol/eolmode"),0L);
+	bool usestabs = Manager::Get()->GetConfigManager(_T("editor"))->ReadBool(_T("/use_tab"), false);
+	int tabsize = Manager::Get()->GetConfigManager(_T("editor"))->ReadInt(_T("/tab_size"), 4);
+	int eolmode = Manager::Get()->GetConfigManager(_T("editor"))->ReadInt(_T("/eol/eolmode"), 0);
 
 	wxString buffer;
 	wxString tabstr = usestabs ? wxString(_T("\t")) : wxString(_T(' '),tabsize);

@@ -14,7 +14,7 @@ FormatterSettings::~FormatterSettings()
 
 void FormatterSettings::ApplyTo(astyle::ASFormatter& formatter)
 {
-    ConfigManager* cfg = Manager::Get()->GetConfigManager(_T("/astyle"));
+    ConfigManager* cfg = Manager::Get()->GetConfigManager(_T("astyle"));
 
     int style = cfg->ReadInt(_T("/style"), 0);
     switch(style)

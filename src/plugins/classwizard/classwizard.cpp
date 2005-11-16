@@ -32,7 +32,7 @@
 #include <wx/mdi.h>
 #include <wx/msgdlg.h>
 #include <manager.h>
-#include <old_configmanager.h>
+#include <configmanager.h>
 #include <projectmanager.h>
 #include "classwizarddlg.h"
 #include <cbproject.h>
@@ -44,7 +44,7 @@ ClassWizard::ClassWizard()
 {
     wxFileSystem::AddHandler(new wxZipFSHandler);
     wxXmlResource::Get()->InitAllHandlers();
-    wxString resPath = OldConfigManager::Get()->Read(_T("data_path"), wxEmptyString);
+    wxString resPath = ConfigManager::GetDataFolder();
     wxXmlResource::Get()->Load(resPath + _T("/class_wizard.zip#zip:*.xrc"));
 
     m_PluginInfo.name = _T("ClassWizard");
