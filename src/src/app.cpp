@@ -305,52 +305,69 @@ void CodeBlocksApp::InitLocale()
 
 bool CodeBlocksApp::OnInit()
 {
-    m_pSplash = 0;
-
-#if (wxUSE_ON_FATAL_EXCEPTION == 1)
-    wxHandleFatalExceptions(true);
-#endif
-
-
-    if(!LoadConfig())
-        return false;
-
-    InitLocale();
-	m_pSingleInstance = 0;
-    if (Manager::Get()->GetConfigManager(_T("app"))->ReadBool(_T("/environment/single_instance"), true))
+    try
     {
-        const wxString name = wxString::Format(_T("Code::Blocks-%s"), wxGetUserId().c_str());
-        m_pSingleInstance = new wxSingleInstanceChecker(name);
-        if (m_pSingleInstance->IsAnotherRunning())
+        m_pSplash = 0;
+
+    #if (wxUSE_ON_FATAL_EXCEPTION == 1)
+        wxHandleFatalExceptions(true);
+    #endif
+        InitExceptionHandler();
+
+
+        if(!LoadConfig())
+            return false;
+
+        InitLocale();
+        m_pSingleInstance = 0;
+        if (Manager::Get()->GetConfigManager(_T("app"))->ReadBool(_T("/environment/single_instance"), true))
         {
-            wxLogError(_("Another program instance is already running, aborting."));
+            const wxString name = wxString::Format(_T("Code::Blocks-%s"), wxGetUserId().c_str());
+            m_pSingleInstance = new wxSingleInstanceChecker(name);
+            if (m_pSingleInstance->IsAnotherRunning())
+            {
+                wxLogError(_("Another program instance is already running, aborting."));
+                return false;
+            }
+        }
+
+        InitAssociations();
+        InitDebugConsole();
+        InitImageHandlers();
+        if(m_ClearConf)
+        {
+            ClearConf();
             return false;
         }
-    }
+        ShowSplashScreen();
+        if(!InitXRCStuff())
+            return false;
+        InitFrame();
+        CheckVersion();
 
-    InitAssociations();
-    InitDebugConsole();
-    InitExceptionHandler();
-    InitImageHandlers();
-    if(m_ClearConf)
+        CodeBlocksEvent event(cbEVT_APP_STARTUP_DONE);
+        Manager::Get()->ProcessEvent(event);
+        wxYield();
+
+        // run startup script
+        Manager::Get()->GetScriptingManager()->LoadScript(_T("startup.script"));
+
+        return true;
+    }
+    catch (cbException& exception)
     {
-        ClearConf();
-        return false;
+        exception.ShowErrorMessage();
     }
-    ShowSplashScreen();
-    if(!InitXRCStuff())
-        return false;
-    InitFrame();
-    CheckVersion();
-
-    CodeBlocksEvent event(cbEVT_APP_STARTUP_DONE);
-    Manager::Get()->ProcessEvent(event);
-    wxYield();
-
-    // run startup script
-    Manager::Get()->GetScriptingManager()->LoadScript(_T("startup.script"));
-
-	return TRUE;
+    catch (const char* message)
+    {
+        wxSafeShowMessage(_("Exception"), _U(message));
+    }
+    catch (...)
+    {
+        wxSafeShowMessage(_("Exception"), _("Unknown exception was raised. The application will terminate immediately..."));
+    }
+    // if we reached here, return error
+    return false;
 }
 
 int CodeBlocksApp::OnExit()
