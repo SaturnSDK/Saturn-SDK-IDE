@@ -27,6 +27,8 @@ struct OptionColor
 	bool italics;
 	bool underlined;
 	bool isStyle;
+	wxColour originalfore;
+	wxColour originalback;
 };
 WX_DEFINE_ARRAY(OptionColor*, OptionColors);
 

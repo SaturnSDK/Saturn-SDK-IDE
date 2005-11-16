@@ -206,6 +206,9 @@ bool EditorColorSet::AddOption(HighlightLanguage lang, OptionColor* option, bool
 	if (checkIfExists && GetOptionByValue(lang, option->value))
         return false;
 
+    option->originalfore = option->fore;
+    option->originalback = option->back;
+
 	OptionColors& colors =  m_Sets[lang].m_Colors;
 	colors.Add(new OptionColor(*option));
 	return true;
@@ -406,22 +409,39 @@ void EditorColorSet::Save()
 			OptionColor* opt = m_Sets[x].m_Colors.Item(i);
 			wxString tmpKey;
 			tmpKey << key << _T("/style") << i;
+			bool wrote = false;
 
-			cfg->Write(tmpKey + _T("/name"), opt->name, true);
-
-			if (opt->fore != wxNullColour)
+			if (opt->fore != opt->originalfore && opt->fore != wxNullColour)
+			{
                 cfg->Write(tmpKey + _T("/fore"), opt->fore);
-			if (opt->back != wxNullColour)
+                wrote = true;
+			}
+			if (opt->back != opt->originalback && opt->back != wxNullColour)
+			{
                 cfg->Write(tmpKey + _T("/back"), opt->back);
+                wrote = true;
+			}
 
             if (opt->bold)
+			{
                 cfg->Write(tmpKey + _T("/bold"),       opt->bold);
+                wrote = true;
+			}
             if (opt->italics)
+			{
                 cfg->Write(tmpKey + _T("/italics"),    opt->italics);
+                wrote = true;
+			}
             if (opt->underlined)
+			{
                 cfg->Write(tmpKey + _T("/underlined"), opt->underlined);
-            if (opt->isStyle)
-                cfg->Write(tmpKey + _T("/isStyle"), opt->isStyle);
+                wrote = true;
+			}
+//            if (opt->isStyle)
+//                cfg->Write(tmpKey + _T("/isStyle"), opt->isStyle);
+
+            if (wrote)
+                cfg->Write(tmpKey + _T("/name"), opt->name, true);
 		}
         wxString tmpkey;
 		for (int i = 0; i < 3; ++i)
@@ -472,7 +492,7 @@ void EditorColorSet::Load()
 			opt->italics = cfg->ReadBool(tmpKey + _T("/italics"), opt->italics);
 			opt->underlined = cfg->ReadBool(tmpKey + _T("/underlined"), opt->underlined);
 
-			opt->isStyle = cfg->ReadBool(tmpKey + _T("/isStyle"), opt->underlined);
+//			opt->isStyle = cfg->ReadBool(tmpKey + _T("/isStyle"), opt->underlined);
 		}
         wxString tmpkey;
         for (int i = 0; i < 3; ++i)

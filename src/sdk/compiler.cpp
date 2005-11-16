@@ -131,13 +131,19 @@ void Compiler::SaveSettings(const wxString& baseKey)
         group.Printf(_T("%s/regex/re%3.3d"), tmp.c_str(), i + 1);
         RegExStruct& rs = m_RegExes[i];
         cfg->Write(group + _T("/description"), rs.desc, true);
-        cfg->Write(group + _T("/type"), rs.lt);
-        cfg->Write(group + _T("/regex"), rs.regex, true);
-        cfg->Write(group + _T("/msg1"), rs.msg[0]);
-        cfg->Write(group + _T("/msg2"), rs.msg[1]);
-        cfg->Write(group + _T("/msg3"), rs.msg[2]);
-        cfg->Write(group + _T("/filename"), rs.filename);
-        cfg->Write(group + _T("/line"), rs.line);
+        if (rs.lt != 0)
+            cfg->Write(group + _T("/type"), rs.lt);
+            cfg->Write(group + _T("/regex"), rs.regex, true);
+        if (rs.msg[0] != 0)
+            cfg->Write(group + _T("/msg1"), rs.msg[0]);
+        if (rs.msg[1] != 0)
+            cfg->Write(group + _T("/msg2"), rs.msg[1]);
+        if (rs.msg[2] != 0)
+            cfg->Write(group + _T("/msg3"), rs.msg[2]);
+        if (rs.filename != 0)
+            cfg->Write(group + _T("/filename"), rs.filename);
+        if (rs.line != 0)
+            cfg->Write(group + _T("/line"), rs.line);
     }
 
     // custom vars
