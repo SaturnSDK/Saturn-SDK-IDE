@@ -12,6 +12,7 @@
 #define SCRIPTINGCALL_H
 
 #include <as/include/angelscript.h>
+#include <settings.h>
 #include <manager.h>
 #include <scriptingmanager.h>
 
@@ -109,11 +110,11 @@ class ScriptingCall
             m_Success = false;
             asIScriptEngine* engine = Manager::Get()->GetScriptingManager()->GetEngine();
             int funcID = m_pCtx->GetExceptionFunction();
-            m_Function = engine->GetFunctionDeclaration(funcID);
-            m_Module = engine->GetModuleNameFromIndex(asMODULEIDX(funcID));
-            m_Section = engine->GetFunctionSection(funcID);
+            m_Function = _U(engine->GetFunctionDeclaration(funcID));
+            m_Module = _U(engine->GetModuleNameFromIndex(asMODULEIDX(funcID)));
+            m_Section = _U(engine->GetFunctionSection(funcID));
             m_Line = m_pCtx->GetExceptionLineNumber();
-            m_Error = m_pCtx->GetExceptionString();
+            m_Error = _U(m_pCtx->GetExceptionString());
         }
         asIScriptContext* m_pCtx;
         bool m_Success;

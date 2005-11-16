@@ -58,7 +58,7 @@ unsigned long wxCrc32::FromFile(const wxString& file)
         if ( crc_table )
         {
             // Open the file for reading
-            FILE *fp = fopen(file.fn_str(), _T("r"));
+            FILE *fp = fopen(file.mb_str(wxConvUTF8), "r");
 
             // Was the file open succesfull?
             if (fp)
@@ -93,7 +93,7 @@ unsigned long wxCrc32::FromString(const wxString& text)
 {
     static unsigned long *crc_table = NULL;
     unsigned long crc = 0;
-    const char* p = text.c_str();
+    const char* p = text.mb_str(wxConvUTF8);
 
     if (text)
     {

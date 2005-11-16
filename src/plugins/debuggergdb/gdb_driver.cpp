@@ -238,7 +238,7 @@ void GDB_driver::ParseOutput(const wxString& output)
 			#ifdef __WXMSW__
 				reSource.Compile(_T("([A-Za-z]:)([ A-Za-z0-9_/\\.~-]*):([0-9]*):[0-9]*:[begmidl]+:(0x[0-9A-Za-z]*)"));
 			#else
-				reSource.Compile(_T("([ A-Za-z0-9_/\\.~-]*):([0-9]*):[0-9]*:[begmidl]:(0x[0-9A-Za-z]*)"));
+				reSource.Compile(_T("([ A-Za-z0-9_/\\.~-]*):([0-9]*):[0-9]*:[begmidl]+:(0x[0-9A-Za-z]*)"));
 			#endif
 			if ( reSource.Matches(buffer) )
 			{

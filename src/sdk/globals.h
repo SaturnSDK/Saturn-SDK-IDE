@@ -105,8 +105,6 @@ extern DLLIMPORT wxString ChooseDirectory(wxWindow* parent,
                                           bool askToMakeRelative = false, // relative to basePath
                                           bool showCreateDirButton = false); // where supported
 
-wxString wxBase64Encode(const wxString &str);
-wxString wxBase64Decode(const wxString &str);
 wxString URLEncode(const wxString &str);
 
 #endif // SDK_GLOBALS_H

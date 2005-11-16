@@ -11,8 +11,6 @@
 #include <wx/msgdlg.h>
 #include <wx/log.h>
 
-#include <old_configmanager.h>
-
 #ifdef __WXMSW__
     #include <wx/msw/registry.h>
 #endif

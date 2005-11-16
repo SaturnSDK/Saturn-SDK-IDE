@@ -44,7 +44,7 @@ class cbException
 };
 
 #ifdef wxUSE_UNICODE
-    #define cbThrow(message) throw cbException(message, _T(__FILE__), __LINE__)
+    #define cbThrow(message) throw cbException(message, _U(__FILE__), __LINE__)
 #else
     #define cbThrow(message) throw cbException(message, __FILE__, __LINE__)
 #endif
@@ -66,7 +66,7 @@ class cbException
         if (!(expr)) \
         { \
             wxString err; \
-            err.Printf(_("Assertion %s failed (%s:%d)"), #expr, __FILE__, __LINE__); \
+            err.Printf(_("Assertion %s failed (%s:%d)"), #expr, _U(__FILE__).c_str(), __LINE__); \
             wxSafeShowMessage(_("Assertion error"), err); \
             DIE(); \
         }

@@ -20,7 +20,7 @@
 #include "../pluginmanager.h"
 #include "../toolsmanager.h"
 #include "../macrosmanager.h"
-#include "../old_configmanager.h"
+#include "../configmanager.h"
 #include "../templatemanager.h"
 
 

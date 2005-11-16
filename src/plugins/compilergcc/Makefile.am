@@ -19,10 +19,10 @@ libcompiler_la_LIBADD = ../../sdk/libcodeblocks.la \
 
 libcompiler_la_SOURCES = advancedcompileroptionsdlg.cpp \
 			compilerBCC.cpp \
-			compilerICC.cpp \
 			compilerDMC.cpp \
 			compilererrors.cpp \
 			compilergcc.cpp \
+			compilerICC.cpp \
 			compilermessages.cpp \
 			compilerMINGW.cpp \
 			compilerMSVC.cpp \
@@ -34,10 +34,10 @@ libcompiler_la_SOURCES = advancedcompileroptionsdlg.cpp \
 
 noinst_HEADERS = advancedcompileroptionsdlg.h \
 			compilerBCC.h \
-			compilerICC.h \
 			compilerDMC.h \
 			compilererrors.h \
 			compilergcc.h \
+			compilerICC.h \
 			compilermessages.h \
 			compilerMINGW.h \
 			compilerMSVC.h \

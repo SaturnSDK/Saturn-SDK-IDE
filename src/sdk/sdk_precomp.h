@@ -89,7 +89,7 @@
 
     // managers
     #include <manager.h>
-    #include <old_configmanager.h>
+    #include <configmanager.h>
     #include <editormanager.h>
     #include <messagelog.h>
     #include <messagemanager.h>

@@ -90,7 +90,7 @@ bool ProjectLoader::Open(const wxString& filename)
 //        wxString minor = version->Attribute("minor");
     }
 
-    pMsg->DebugLog(wxString("Done loading project in ") << sw.Time() << "ms");
+    pMsg->DebugLog(wxString(_T("Done loading project in ")) << sw.Time() << _T("ms"));
     return true;
 }
 

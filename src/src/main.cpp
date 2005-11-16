@@ -2606,7 +2606,7 @@ void MainFrame::OnRequestShowDockWindow(CodeBlocksEvent& event)
 
 void MainFrame::OnSettingsNetworkProxy(wxCommandEvent& event)
 {
-Manager::Get()->GetConfigManager(_T("app"))->Write("network_proxy", wxGetTextFromUser(_T("Please enter"
-"your network proxy for all internet connections made by Code::Blocks.\n"
-"Format: hostname:port"), _T("Network proxy")));
+	Manager::Get()->GetConfigManager(_T("app"))->Write(_T("network_proxy"), wxGetTextFromUser(_T("Please enter")
+		_T("your network proxy for all internet connections made by Code::Blocks.\n")
+		_T("Format: hostname:port"), _T("Network proxy")));
 }

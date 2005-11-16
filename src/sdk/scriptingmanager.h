@@ -36,7 +36,7 @@ class DLLIMPORT ScriptingManager
     { \
         if (r < 0) \
         { \
-            LOGSTREAM << what << ": " << ScriptingManager::GetErrorDescription(r) << " (" __FILE__ << ":" << __LINE__ << ")\n"; \
+            LOGSTREAM << what << _T(": ") << ScriptingManager::GetErrorDescription(r) << _T(" (") _U(__FILE__) << _T(":") << __LINE__ << _T(")\n"); \
             return ret; \
         } \
     }
@@ -45,7 +45,7 @@ class DLLIMPORT ScriptingManager
     { \
         if (r < 0) \
         { \
-            LOGSTREAM << what << ": " << ScriptingManager::GetErrorDescription(r) << " (" __FILE__ << ":" << __LINE__ << ")\n"; \
+            LOGSTREAM << what << _T(": ") << ScriptingManager::GetErrorDescription(r) << _T(" (") _U(__FILE__) << _T(":") << __LINE__ << _T(")\n"); \
             return; \
         } \
 	}
