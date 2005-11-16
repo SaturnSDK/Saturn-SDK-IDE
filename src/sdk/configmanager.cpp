@@ -86,6 +86,9 @@ void CfgMgrBldr::SwitchTo(const wxString& absFileName)
         cbThrow(s);
     }
 
+    if(doc->ErrorId())
+        Manager::Get()->GetMessageManager()->DebugLogError(wxString(_T("TinyXML error:\n")) << doc->ErrorDesc());
+
     const char *vers = docroot->Attribute(_T("version"));
     if(!vers || atoi(vers) != 1)
         Manager::Get()->GetMessageManager()->DebugLog(_("MessageManager encountered an unknown config file version. Continuing happily."));
@@ -394,6 +397,15 @@ void ConfigManager::SetPath(const wxString& path)
 
 TiXmlElement* ConfigManager::AssertPath(wxString& path)
 {
+    if(doc->ErrorId())
+    {
+        Manager::Get()->GetMessageManager()->DebugLogError(wxString(_T("TinyXML error:\n")) << doc->ErrorDesc());
+        doc->ClearError();
+    }
+    path.Replace(_T(" "), _T("_"));
+    path.Replace(_T("///"), _T("/"));
+    path.Replace(_T("//"),  _T("/"));
+
     if(!path.Contains(_T("/")))
     {
         path.UpperCase();
@@ -401,7 +413,7 @@ TiXmlElement* ConfigManager::AssertPath(wxString& path)
         {
             wxString s;
             s.sprintf(_("Warning: The Configuration key %s does not meet the standard for variable naming. Variables names are required to start with a letter."), path.mb_str());
-            Manager::Get()->GetMessageManager()->DebugLog(s);
+            Manager::Get()->GetMessageManager()->DebugLogError(s);
         }
         return pathNode;
     }
@@ -409,8 +421,6 @@ TiXmlElement* ConfigManager::AssertPath(wxString& path)
     TiXmlElement* e = pathNode ? pathNode : root;
 
     path.LowerCase();
-    path.Replace(_T("///"), _T("/"));
-    path.Replace(_T("//"),  _T("/"));
 
     wxString sub;
     do
@@ -424,6 +434,12 @@ TiXmlElement* ConfigManager::AssertPath(wxString& path)
             ;
         else if(e != root && sub.IsSameAs(_T("..")))
             e = e->Parent()->ToElement();
+        else if(sub[0] < _T('a') || sub[0] > _T('z'))
+        {
+        wxString s;
+        s.sprintf(_("Warning: The subpath %s does not meet the standard for path naming. Paths and subpaths are required to start with a letter."), sub.mb_str());
+        Manager::Get()->GetMessageManager()->DebugLogError(s);
+        }
         else
         {
             TiXmlElement* n = e->FirstChildElement(sub);
@@ -442,11 +458,10 @@ TiXmlElement* ConfigManager::AssertPath(wxString& path)
 
     path.UpperCase();
     if(!path.IsEmpty() && (path[0] < _T('A') || path[0] > _T('Z')))
-
     {
         wxString s;
         s.sprintf(_("Warning: The Configuration key %s does not meet the standard for variable naming. Variables names are required to start with a letter."), path.mb_str());
-        Manager::Get()->GetMessageManager()->DebugLog(s);
+        Manager::Get()->GetMessageManager()->DebugLogError(s);
     }
     return e;
 }
