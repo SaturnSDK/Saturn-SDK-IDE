@@ -22,7 +22,7 @@
 #include "formattersettings.h"
 #include <manager.h>
 #include <editormanager.h>
-#include <old_configmanager.h>
+#include <configmanager.h>
 #include <cbeditor.h>
 #include <wx/msgdlg.h>
 #include <wx/xrc/xmlres.h>
@@ -39,7 +39,7 @@ AStylePlugin::AStylePlugin()
 	//ctor
     wxFileSystem::AddHandler(new wxZipFSHandler);
     wxXmlResource::Get()->InitAllHandlers();
-    wxString resPath = OldConfigManager::Get()->Read(_T("data_path"), wxEmptyString);
+    wxString resPath = ConfigManager::GetDataFolder();
     wxXmlResource::Get()->Load(resPath + _T("/astyle.zip#zip:*.xrc"));
 
 	m_PluginInfo.name = _T("AStylePlugin");
@@ -52,8 +52,6 @@ AStylePlugin::AStylePlugin()
 	m_PluginInfo.thanksTo = _T("AStyle team for the useful library.\nSee http://astyle.sourceforge.net");
 	m_PluginInfo.license = LICENSE_GPL;
 	m_PluginInfo.hasConfigure = true;
-
-	OldConfigManager::AddConfiguration(m_PluginInfo.title, _T("/astyle"));
 }
 
 AStylePlugin::~AStylePlugin()
