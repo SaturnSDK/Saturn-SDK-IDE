@@ -36,7 +36,7 @@
 
 #include "templatemanager.h"
 #include "manager.h"
-#include "old_configmanager.h"
+#include "configmanager.h"
 #include "messagemanager.h"
 #include "projectmanager.h"
 #include "cbproject.h"
@@ -103,7 +103,7 @@ void TemplateManager::LoadTemplates()
 {
     wxLogNull zero; // disable error logging
 
-    wxString baseDir = OldConfigManager::Get()->Read(_T("/data_path"));
+    wxString baseDir = ConfigManager::GetDataFolder();
 	baseDir << _T("/templates");
 
     wxDir dir(baseDir);
@@ -154,7 +154,7 @@ void TemplateManager::LoadUserTemplates()
 void TemplateManager::NewProject()
 {
 	// one-time warning message
-    if (OldConfigManager::Get()->Read(_T("/template_manager/notification"), 1L) == 1)
+    if (Manager::Get()->GetConfigManager(_T("template_manager"))->ReadBool(_T("/notification"), true))
     {
     	wxMessageBox(_("These templates are only provided for your convenience.\n"
                         "Many of the available templates need extra libraries "
@@ -163,7 +163,7 @@ void TemplateManager::NewProject()
                     _("One-time information"),
                     wxICON_INFORMATION);
     	// don't warn the user again
-        OldConfigManager::Get()->Write(_T("/template_manager/notification"), 0L);
+        Manager::Get()->GetConfigManager(_T("template_manager"))->Write(_T("/notification"), false);
     }
 
 	LoadTemplates();
@@ -223,17 +223,17 @@ void TemplateManager::NewProjectFromTemplate(NewFromTemplateDlg& dlg)
         return;
     }
 
-    if (dlg.GetProjectPath() != OldConfigManager::Get()->Read(_T("/projects_path")))
+    if (dlg.GetProjectPath() != Manager::Get()->GetConfigManager(_T("template_manager"))->Read(_T("/projects_path")))
     {
         if (wxMessageBox(wxString::Format(_("Do you want to set %s as the default directory for new projects?"), dlg.GetProjectPath().c_str()), _("Question"), wxICON_QUESTION | wxYES_NO) == wxYES)
-            OldConfigManager::Get()->Write(_T("/projects_path"), dlg.GetProjectPath());
+            Manager::Get()->GetConfigManager(_T("template_manager"))->Write(_T("/projects_path"), dlg.GetProjectPath());
     }
 
     wxString path = fname.GetPath(wxPATH_GET_VOLUME);
     wxString filename = fname.GetFullPath();
     wxString sep = wxFILE_SEP_PATH;
 
-    wxString baseDir = OldConfigManager::Get()->Read(_T("/data_path"));
+    wxString baseDir = ConfigManager::GetDataFolder();
     baseDir << sep << _T("templates");
     wxCopyFile(baseDir + sep + option.file, filename);
 

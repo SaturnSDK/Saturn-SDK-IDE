@@ -1,12 +1,10 @@
 #include "sdk_precomp.h"
 #include <wx/intl.h>
 #include "globals.h"
-#include "old_configmanager.h"
+#include "configmanager.h"
 #include "filegroupsandmasks.h"
 #include "manager.h"
 #include "messagemanager.h"
-
-#define CONF_GROUP _T("/project_manager/file_groups/")
 
 FilesGroupsAndMasks::FilesGroupsAndMasks()
 {
@@ -55,42 +53,21 @@ void FilesGroupsAndMasks::CopyFrom(FilesGroupsAndMasks& copy)
 void FilesGroupsAndMasks::Load()
 {
 	Clear();
-	long cookie;
-	wxString entry;
-	wxConfigBase* conf = OldConfigManager::Get();
-	wxString oldPath = conf->GetPath();
-	conf->SetPath(CONF_GROUP);
-	if (conf->GetNumberOfGroups(false) == 0)
-	{
-		// old way (reading keys)
-        bool cont = conf->GetFirstEntry(entry, cookie);
-        while (cont)
-        {
-            unsigned int group = AddGroup(entry);
-            SetFileMasks(group, conf->Read(entry));
-            cont = conf->GetNextEntry(entry, cookie);
-        }
-	}
-	else
+	ConfigManager* conf = Manager::Get()->GetConfigManager(_T("project_manager"));
+	wxArrayString list = conf->EnumerateSubPaths(_T("/file_groups"));
+	for (unsigned int i = 0; i < list.GetCount(); ++i)
 	{
 		// new way (reading groups)
-        bool cont = conf->GetFirstGroup(entry, cookie);
-        while (cont)
-        {
-            unsigned int group = AddGroup(conf->Read(entry + _T("/Name")));
-            SetFileMasks(group, conf->Read(entry + _T("/Mask")));
-            cont = conf->GetNextGroup(entry, cookie);
-        }
+		wxString key = _T("/file_groups/") + list[i];
+        unsigned int group = AddGroup(conf->Read(key + _T("/Name")));
+        SetFileMasks(group, conf->Read(key + _T("/Mask")));
 	}
-	conf->SetPath(oldPath);
 }
 
 void FilesGroupsAndMasks::Save()
 {
-	wxConfigBase* conf = OldConfigManager::Get();
-	conf->DeleteGroup(CONF_GROUP);
-	wxString oldPath = conf->GetPath();
-	conf->SetPath(CONF_GROUP);
+	ConfigManager* conf = Manager::Get()->GetConfigManager(_T("project_manager"));
+	conf->DeleteSubPath(_T("/file_groups"));
 	for (unsigned int i = 0; i < m_Groups.GetCount(); ++i)
 	{
         FileGroups* fg = m_Groups[i];
@@ -101,7 +78,6 @@ void FilesGroupsAndMasks::Save()
         key << i << _T("/") << _T("Mask");
 		conf->Write(key, GetStringFromArray(fg->fileMasks, _T(";")));
 	}
-	conf->SetPath(oldPath);
 }
 
 void FilesGroupsAndMasks::Clear()

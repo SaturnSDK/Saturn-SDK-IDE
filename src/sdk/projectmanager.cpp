@@ -36,7 +36,6 @@
 #include "projectmanager.h" // class's header file
 #include "sdk_events.h"
 #include "manager.h"
-#include "old_configmanager.h"
 #include "configmanager.h"
 #include "cbproject.h"
 #include "incrementalselectlistdlg.h"

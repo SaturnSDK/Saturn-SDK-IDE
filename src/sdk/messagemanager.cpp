@@ -35,7 +35,7 @@
 #include "manager.h"
 #include "messagemanager.h" // class's header file
 #include "editormanager.h"
-#include "old_configmanager.h"
+#include "configmanager.h"
 #include "simpletextlog.h"
 #include "managerproxy.h"
 
@@ -89,11 +89,12 @@ MessageManager::MessageManager(wxWindow* parent)
     SC_CONSTRUCTOR_BEGIN
 
     wxImageList* images = new wxImageList(16, 16);
+    ConfigManager* cfg = Manager::Get()->GetConfigManager(_T("message_manager"));
 
     // add default log and debug images (index 0 and 1)
 	wxBitmap bmp;
 	wxString prefix;
-    prefix = OldConfigManager::Get()->Read(_T("data_path")) + _T("/images/");
+    prefix = ConfigManager::GetDataFolder() + _T("/images/");
     bmp.LoadFile(prefix + _T("edit_16x16.png"), wxBITMAP_TYPE_PNG);
     images->Add(bmp);
     bmp.LoadFile(prefix + _T("contents_16x16.png"), wxBITMAP_TYPE_PNG);
@@ -103,8 +104,8 @@ MessageManager::MessageManager(wxWindow* parent)
     m_Logs.clear();
     m_LogIDs.clear();
     DoAddLog(mltLog, new SimpleTextLog(this, _("Code::Blocks")));
-	m_HasDebugLog = OldConfigManager::Get()->Read(_T("/message_manager/has_debug_log"), 0L);
-	m_SafebutSlow = OldConfigManager::Get()->Read(_T("/message_manager/safe_but_slow"), 0L);
+	m_HasDebugLog = cfg->ReadBool(_T("/has_debug_log"), false);
+	m_SafebutSlow = cfg->ReadBool(_T("/safe_but_slow"), false);
 
 	if (m_HasDebugLog)
 	{
@@ -112,11 +113,10 @@ MessageManager::MessageManager(wxWindow* parent)
 		SetPageImage(m_Logs[mltDebug]->GetPageIndex(), 1); // set debug log image
     }
 
-    OldConfigManager::AddConfiguration(_("Message Manager"), _T("/message_manager"));
-	OldConfigManager::Get()->Write(_T("/message_manager/safe_but_slow"), m_SafebutSlow);
+	cfg->Write(_T("/safe_but_slow"), m_SafebutSlow);
 
-    m_OpenSize = OldConfigManager::Get()->Read(_T("/main_frame/layout/bottom_block_height"), 150);
-    m_AutoHide = OldConfigManager::Get()->Read(_T("/message_manager/auto_hide"), 0L);
+    m_OpenSize = Manager::Get()->GetConfigManager(_T("app"))->ReadInt(_T("/main_frame/layout/bottom_block_height"), 150);
+    m_AutoHide = cfg->ReadBool(_T("/auto_hide"), false);
 //    Open();
     LogPage(mltDebug); // default logging page for stream operator
 }

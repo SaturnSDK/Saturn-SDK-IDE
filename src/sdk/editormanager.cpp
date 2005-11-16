@@ -34,7 +34,7 @@
 #include <wx/dir.h>
 
 #include "editormanager.h" // class's header file
-#include "old_configmanager.h"
+#include "configmanager.h"
 #include <wx/xrc/xmlres.h>
 #include "messagemanager.h"
 #include "projectmanager.h"
@@ -125,7 +125,7 @@ struct EditorManagerInternalData
     {
         wxBitmap bmp;
         m_pImages = new wxImageList(16, 16);
-        wxString prefix = OldConfigManager::Get()->Read(_T("data_path")) + _T("/images/");
+        wxString prefix = ConfigManager::GetDataFolder() + _T("/images/");
         bmp.LoadFile(prefix + _T("folder_open.png"), wxBITMAP_TYPE_PNG); // folder
         m_pImages->Add(bmp);
         bmp.LoadFile(prefix + _T("ascii.png"), wxBITMAP_TYPE_PNG); // file
@@ -289,7 +289,7 @@ EditorManager::EditorManager(wxWindow* parent)
 	m_pPanel->GetSizer()->Add(m_pNotebook,1,wxGROW);
 
     // remove the ugly close-button, if not enabled in configuration
-    if (OldConfigManager::Get()->Read(_T("/editor/show_close_button"), 0L) == 0)
+    if (!Manager::Get()->GetConfigManager(_T("editor"))->ReadBool(_T("/show_close_button"), false))
     {
         m_pPanel->GetSizer()->Remove(edman_closebutton);
         delete edman_closebutton;
@@ -300,10 +300,9 @@ EditorManager::EditorManager(wxWindow* parent)
 	m_EditorsList.Clear();
     #ifdef USE_OPENFILES_TREE
     m_pData->m_TreeNeedsRefresh = false;
-	ShowOpenFilesTree(OldConfigManager::Get()->Read(_T("/editor/show_opened_files_tree"), true));
+	ShowOpenFilesTree(Manager::Get()->GetConfigManager(_T("editor"))->ReadBool(_T("/show_opened_files_tree"), true));
 	#endif
-	m_Theme = new EditorColorSet(OldConfigManager::Get()->Read(_T("/editor/color_sets/active_color_set"), COLORSET_DEFAULT));
-	OldConfigManager::AddConfiguration(_("Editor"), _T("/editor"));
+	m_Theme = new EditorColorSet(Manager::Get()->GetConfigManager(_T("editor"))->Read(_T("/color_sets/active_color_set"), COLORSET_DEFAULT));
 	parent->PushEventHandler(this);
 
     CreateSearchLog();
@@ -407,7 +406,7 @@ void EditorManager::CreateSearchLog()
 
     // set log image
     wxBitmap bmp;
-	wxString prefix = OldConfigManager::Get()->Read(_T("data_path")) + _T("/images/");
+	wxString prefix = ConfigManager::GetDataFolder() + _T("/images/");
     bmp.LoadFile(prefix + _T("filefind.png"), wxBITMAP_TYPE_PNG);
     Manager::Get()->GetMessageManager()->SetLogImage(m_pSearchLog, bmp);
 }
@@ -436,23 +435,16 @@ void EditorManager::LogSearch(const wxString& file, int line, const wxString& li
 void EditorManager::LoadAutoComplete()
 {
 	m_AutoCompleteMap.clear();
-	long cookie;
-	wxString entry;
-	wxConfigBase* conf = OldConfigManager::Get();
-	wxString oldPath = conf->GetPath();
-	conf->SetPath(_T("/editor/auto_complete"));
-	bool cont = conf->GetFirstEntry(entry, cookie);
-	while (cont)
+	wxArrayString list = Manager::Get()->GetConfigManager(_T("editor"))->EnumerateKeys(_T("/auto_complete"));
+	for (unsigned int i = 0; i < list.GetCount(); ++i)
 	{
-        wxString code = conf->Read(entry, _T(""));
+        wxString code = Manager::Get()->GetConfigManager(_T("editor"))->Read(_T("/auto_complete/") + list[i], wxEmptyString);
         // convert non-printable chars to printable
         code.Replace(_T("\\n"), _T("\n"));
         code.Replace(_T("\\r"), _T("\r"));
         code.Replace(_T("\\t"), _T("\t"));
-        m_AutoCompleteMap[entry] = code;
-		cont = conf->GetNextEntry(entry, cookie);
+        m_AutoCompleteMap[list[i]] = code;
 	}
-	conf->SetPath(oldPath);
 
     if (m_AutoCompleteMap.size() == 0)
     {
@@ -472,10 +464,7 @@ void EditorManager::LoadAutoComplete()
 
 void EditorManager::SaveAutoComplete()
 {
-	wxConfigBase* conf = OldConfigManager::Get();
-	conf->DeleteGroup(_T("/editor/auto_complete"));
-	wxString oldPath = conf->GetPath();
-	conf->SetPath(_T("/editor/auto_complete"));
+    Manager::Get()->GetConfigManager(_T("editor"))->DeleteSubPath(_T("/auto_complete"));
 	AutoCompleteMap::iterator it;
 	for (it = m_AutoCompleteMap.begin(); it != m_AutoCompleteMap.end(); ++it)
 	{
@@ -484,9 +473,8 @@ void EditorManager::SaveAutoComplete()
         code.Replace(_T("\n"), _T("\\n"));
         code.Replace(_T("\r"), _T("\\r"));
         code.Replace(_T("\t"), _T("\\t"));
-		conf->Write(it->first, code);
+        Manager::Get()->GetConfigManager(_T("editor"))->Write(_T("/auto_complete/") + it->first, code);
 	}
-	conf->SetPath(oldPath);
 }
 
 cbEditor* EditorManager::InternalGetBuiltinEditor(EditorsList::Node* node)
@@ -689,8 +677,8 @@ cbEditor* EditorManager::New()
 
     // add default text
     wxString key;
-    key.Printf(_T("/editor/default_code/%d"), (int)FileTypeOf(ed->GetFilename()));
-    wxString code = OldConfigManager::Get()->Read(key, wxEmptyString);
+    key.Printf(_T("/default_code/%d"), (int)FileTypeOf(ed->GetFilename()));
+    wxString code = Manager::Get()->GetConfigManager(_T("editor"))->Read(key, wxEmptyString);
     ed->GetControl()->SetText(code);
 
 	ed->SetColorSet(m_Theme);
@@ -1478,7 +1466,7 @@ int EditorManager::Find(cbStyledTextCtrl* control, cbFindReplaceData* data)
                     msg = _("Text not found.\nSearch from the end of the document?");
 
                 // we can make a user-definable                 // tiwag 050902
-                bool DONTASK = OldConfigManager::Get()->Read(_T("/editor/auto_wrap_search"), 1);
+                bool DONTASK = Manager::Get()->GetConfigManager(_T("editor"))->ReadBool(_T("/auto_wrap_search"), true);
                 if (DONTASK) wxBell();                          // tiwag 050902
                 if (DONTASK || wxMessageBox(msg, _("Result"), wxOK | wxCANCEL | wxICON_QUESTION) == wxOK)
                 {
@@ -1761,7 +1749,7 @@ void EditorManager::ShowOpenFilesTree(bool show)
         m_pTree->Show(false);
     RefreshOpenFilesTree();
     // update user prefs
-    OldConfigManager::Get()->Write(_T("/editor/show_opened_files_tree"), show);
+    Manager::Get()->GetConfigManager(_T("editor"))->Write(_T("/show_opened_files_tree"), show);
 }
 
 bool EditorManager::IsOpenFilesTreeVisible()

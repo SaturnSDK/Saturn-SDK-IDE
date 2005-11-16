@@ -33,7 +33,7 @@
 #include "toolsmanager.h"
 #include "manager.h"
 #include "macrosmanager.h"
-#include "old_configmanager.h"
+#include "configmanager.h"
 #include "messagemanager.h"
 #include "configuretoolsdlg.h"
 #include "managerproxy.h"
@@ -73,7 +73,6 @@ ToolsManager::ToolsManager()
 {
     SC_CONSTRUCTOR_BEGIN
 	LoadTools();
-	OldConfigManager::AddConfiguration(_("Tools"), _T("/tools"));
 	Manager::Get()->GetAppWindow()->PushEventHandler(this);
 }
 
@@ -225,35 +224,39 @@ Tool* ToolsManager::GetToolByIndex(int index)
 void ToolsManager::LoadTools()
 {
     SANITY_CHECK();
-	wxString str;
-	long cookie;
 
-	OldConfigManager::Get()->SetPath(_T("/tools"));
-	bool cont = OldConfigManager::Get()->GetFirstGroup(str, cookie);
-	while (cont)
+    ConfigManager* cfg = Manager::Get()->GetConfigManager(_T("tools"));
+    wxArrayString list = cfg->EnumerateSubPaths(_("/"));
+    for (unsigned int i = 0; i < list.GetCount(); ++i)
 	{
 		Tool tool;
-		OldConfigManager::Get()->Read(_T("/tools/") + str + _T("/command"), &tool.command);
-		OldConfigManager::Get()->Read(_T("/tools/") + str + _T("/params"), &tool.params);
-		OldConfigManager::Get()->Read(_T("/tools/") + str + _T("/workingDir"), &tool.workingDir);
+		tool.command = cfg->Read(_T("/") + list[i] + _T("/command"));
+		if (tool.command.IsEmpty())
+            continue;
+		tool.params = cfg->Read(_T("/") + list[i] + _T("/params"));
+		tool.workingDir = cfg->Read(_T("/") + list[i] + _T("/workingDir"));
 
 		// remove ordering number
-		if (str.GetChar(2) == ' ' && str.Left(2).IsNumber())
-			str.Remove(0, 3);
-		tool.name = str;
+		if (list[i].GetChar(2) == ' ' && list[i].Left(2).IsNumber())
+			list[i].Remove(0, 3);
+		tool.name = list[i];
 
 		AddTool(&tool, false);
-		cont = OldConfigManager::Get()->GetNextGroup(str, cookie);
 	}
-	OldConfigManager::Get()->SetPath(_T("/"));
 	Manager::Get()->GetMessageManager()->Log(_("Configured %d tools"), m_Tools.GetCount());
 }
 
 void ToolsManager::SaveTools()
 {
     SANITY_CHECK();
+    ConfigManager* cfg = Manager::Get()->GetConfigManager(_T("tools"));
+    wxArrayString list = cfg->EnumerateSubPaths(_("/"));
+    for (unsigned int i = 0; i < list.GetCount(); ++i)
+	{
+	    cfg->DeleteSubPath(list[i]);
+	}
+
 	int count = 0;
-	OldConfigManager::Get()->DeleteGroup(_T("/tools"));
 	for (ToolsList::Node* node = m_Tools.GetFirst(); node; node = node->GetNext())
 	{
 		Tool* tool = node->GetData();
@@ -263,10 +266,10 @@ void ToolsManager::SaveTools()
 		wxString tmp;
 		tmp.Printf(_("%2.2d"), count++);
 
-		elem << _T("/tools/") << tmp << _T(" ") << tool->name << _T("/");
-		OldConfigManager::Get()->Write(elem + _T("command"), tool->command);
-		OldConfigManager::Get()->Write(elem + _T("params"), tool->params);
-		OldConfigManager::Get()->Write(elem + _T("workingDir"), tool->workingDir);
+		elem << _T("/") << tmp << _T(" ") << tool->name << _T("/");
+		cfg->Write(elem + _T("command"), tool->command);
+		cfg->Write(elem + _T("params"), tool->params);
+		cfg->Write(elem + _T("workingDir"), tool->workingDir);
 	}
 }
 

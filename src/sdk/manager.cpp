@@ -37,7 +37,7 @@
 #include "pluginmanager.h"
 #include "toolsmanager.h"
 #include "macrosmanager.h"
-#include "old_configmanager.h"
+#include "configmanager.h"
 #include "scriptingmanager.h"
 #include "templatemanager.h"
 #include "personalitymanager.h"
@@ -163,7 +163,7 @@ void Manager::Initxrc(bool force)
 void Manager::Loadxrc(wxString relpath)
 {
     Manager::Initxrc();
-    wxString resPath = OldConfigManager::Get()->Read(_T("data_path"), wxEmptyString);
+    wxString resPath = ConfigManager::GetDataFolder();
     wxXmlResource::Get()->Load(resPath + relpath);
 }
 

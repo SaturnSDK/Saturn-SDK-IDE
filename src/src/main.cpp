@@ -863,7 +863,7 @@ void MainFrame::LoadWindowState()
 {
 	wxLogNull ln; // no logging needed
 
-wxString buf;
+    wxString buf;
     buf = Manager::Get()->GetConfigManager(_T("app"))->ReadBinary(_T("/main_frame/layout"));
     wxMemoryInputStream ms(buf.c_str(), buf.Length());
     wxUtil::ReadWindowLayout(ms, this);
