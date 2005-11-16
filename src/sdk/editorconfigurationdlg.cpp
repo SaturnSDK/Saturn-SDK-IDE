@@ -98,8 +98,8 @@ EditorConfigurationDlg::EditorConfigurationDlg(wxWindow* parent)
    	XRCCTRL(*this, "chkShowLineNumbers", wxCheckBox)->SetValue(cfg->ReadBool(_T("/show_line_numbers"), false));
    	XRCCTRL(*this, "chkHighlightCaretLine", wxCheckBox)->SetValue(cfg->ReadBool(_T("/highlight_caret_line"), true));
    	XRCCTRL(*this, "spnTabSize", wxSpinCtrl)->SetValue(cfg->ReadInt(_T("/tab_size"), 4));
-   	XRCCTRL(*this, "cmbViewWS", wxComboBox)->SetSelection(cfg->ReadBool(_T("/view_whitespace"), false));
-   	XRCCTRL(*this, "rbTabText", wxRadioBox)->SetSelection(cfg->ReadBool(_T("/tab_text_relative"), true));
+   	XRCCTRL(*this, "cmbViewWS", wxComboBox)->SetSelection(cfg->ReadInt(_T("/view_whitespace"), false));
+   	XRCCTRL(*this, "rbTabText", wxRadioBox)->SetSelection(cfg->ReadBool(_T("/tab_text_relative"), true) ? 1 : 0);
    	XRCCTRL(*this, "chkAutoWrapSearch", wxCheckBox)->SetValue(cfg->ReadBool(_T("/auto_wrap_search"), true));
 
    	// end-of-line
@@ -659,7 +659,7 @@ void EditorConfigurationDlg::OnOK(wxCommandEvent& event)
    	cfg->Write(_T("/highlight_caret_line"), XRCCTRL(*this, "chkHighlightCaretLine", wxCheckBox)->GetValue());
    	cfg->Write(_T("/tab_size"),             XRCCTRL(*this, "spnTabSize", wxSpinCtrl)->GetValue());
    	cfg->Write(_T("/view_whitespace"),      XRCCTRL(*this, "cmbViewWS", wxComboBox)->GetSelection());
-   	cfg->Write(_T("/tab_text_relative"),    XRCCTRL(*this, "rbTabText", wxRadioBox)->GetSelection());
+   	cfg->Write(_T("/tab_text_relative"),    XRCCTRL(*this, "rbTabText", wxRadioBox)->GetSelection() ? true : false);
    	cfg->Write(_T("/auto_wrap_search"),     XRCCTRL(*this, "chkAutoWrapSearch", wxCheckBox)->GetValue());
 	//folding
    	cfg->Write(_T("/folding/show_folds"), 			XRCCTRL(*this, "chkEnableFolding", wxCheckBox)->GetValue());
@@ -677,7 +677,7 @@ void EditorConfigurationDlg::OnOK(wxCommandEvent& event)
 
 	//gutter
     cfg->Write(_T("/gutter/mode"), 			XRCCTRL(*this, "lstGutterMode", wxChoice)->GetSelection());
-    cfg->Write(_T("/gutter/color"),		XRCCTRL(*this, "btnGutterColor", wxButton)->GetBackgroundColour());
+    cfg->Write(_T("/gutter/color"),		    XRCCTRL(*this, "btnGutterColor", wxButton)->GetBackgroundColour());
     cfg->Write(_T("/gutter/column"), 		XRCCTRL(*this, "spnGutterColumn", wxSpinCtrl)->GetValue());
 
 	int sel = XRCCTRL(*this, "cmbDefCodeFileType", wxComboBox)->GetSelection();

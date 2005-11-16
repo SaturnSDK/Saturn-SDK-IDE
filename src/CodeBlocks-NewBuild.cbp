@@ -4008,13 +4008,43 @@
 			<Option objectName="src\resources\resources.res"/>
 			<Option target="src"/>
 		</Unit>
-		<Unit filename="src\resources\start_here\cb_logo.jpg">
+		<Unit filename="src\resources\start_here\cb.png">
+			<Option compilerVar=""/>
+			<Option compile="0"/>
+			<Option link="0"/>
+			<Option target="src"/>
+		</Unit>
+		<Unit filename="src\resources\start_here\new.png">
+			<Option compilerVar=""/>
+			<Option compile="0"/>
+			<Option link="0"/>
+			<Option target="src"/>
+		</Unit>
+		<Unit filename="src\resources\start_here\open.png">
+			<Option compilerVar=""/>
+			<Option compile="0"/>
+			<Option link="0"/>
+			<Option target="src"/>
+		</Unit>
+		<Unit filename="src\resources\start_here\reopen.png">
 			<Option compilerVar=""/>
 			<Option compile="0"/>
 			<Option link="0"/>
 			<Option target="src"/>
 		</Unit>
 		<Unit filename="src\resources\start_here\start_here.html">
+			<Option compilerVar=""/>
+			<Option compile="0"/>
+			<Option link="0"/>
+			<Option target="src"/>
+		</Unit>
+		<Unit filename="src\resources\start_here\title.png">
+			<Option compilerVar=""/>
+			<Option compile="0"/>
+			<Option link="0"/>
+			<Option target="src"/>
+		</Unit>
+		<Unit filename="src\resources\start_here\www.png">
 			<Option compilerVar=""/>
 			<Option compile="0"/>
 			<Option link="0"/>

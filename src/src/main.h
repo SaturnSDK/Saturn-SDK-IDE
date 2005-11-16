@@ -71,6 +71,8 @@ class MainFrame : public wxFrame
 
         void OnFileNewEmpty(wxCommandEvent& event);
         void OnFileOpen(wxCommandEvent& event);
+        void OnFileReopenProject(wxCommandEvent& event);
+        void OnFileOpenRecentProjectClearHistory(wxCommandEvent& event);
         void OnFileReopen(wxCommandEvent& event);
         void OnFileOpenRecentClearHistory(wxCommandEvent& event);
         void OnFileSave(wxCommandEvent& event);
@@ -219,6 +221,7 @@ class MainFrame : public wxFrame
         void TerminateRecentFilesHistory();
 
         wxFileHistory m_FilesHistory;
+        wxFileHistory m_ProjectsHistory;
 
         /// "Close FullScreen" button. Only shown when in FullScreen view
         wxButton* m_pCloseFullScreenBtn;

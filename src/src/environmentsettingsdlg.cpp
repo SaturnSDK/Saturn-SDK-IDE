@@ -24,7 +24,7 @@ EnvironmentSettingsDlg::EnvironmentSettingsDlg(wxWindow* parent)
     XRCCTRL(*this, "chkAssociations", wxCheckBox)->SetValue(cfg->ReadBool(_T("/environment/check_associations"), true));
     XRCCTRL(*this, "chkModifiedFiles", wxCheckBox)->SetValue(cfg->ReadBool(_T("/environment/check_modified_files"), true));
     XRCCTRL(*this, "chkDebugLog", wxCheckBox)->SetValue(mcfg->ReadBool(_T("/has_debug_log"), false));
-    XRCCTRL(*this, "rbAppStart", wxRadioBox)->SetSelection(cfg->ReadInt(_T("/environment/blank_workspace"), 0));
+    XRCCTRL(*this, "rbAppStart", wxRadioBox)->SetSelection(cfg->ReadBool(_T("/environment/blank_workspace"), true) ? 1 : 0);
 
     XRCCTRL(*this, "rbProjectOpen", wxRadioBox)->SetSelection(pcfg->ReadInt(_T("/open_files"), 1));
 
@@ -58,7 +58,7 @@ void EnvironmentSettingsDlg::EndModal(int retCode)
         cfg->Write(_T("/environment/check_associations"),    (bool) XRCCTRL(*this, "chkAssociations", wxCheckBox)->GetValue());
         cfg->Write(_T("/environment/check_modified_files"),  (bool) XRCCTRL(*this, "chkModifiedFiles", wxCheckBox)->GetValue());
         mcfg->Write(_T("/has_debug_log"),                    (bool) XRCCTRL(*this, "chkDebugLog", wxCheckBox)->GetValue());
-        cfg->Write(_T("/environment/blank_workspace"),       (int)  XRCCTRL(*this, "rbAppStart", wxRadioBox)->GetSelection());
+        cfg->Write(_T("/environment/blank_workspace"),       (bool) XRCCTRL(*this, "rbAppStart", wxRadioBox)->GetSelection() ? true : false);
 
         pcfg->Write(_T("/open_files"),                       (int) XRCCTRL(*this, "rbProjectOpen", wxRadioBox)->GetSelection());
 

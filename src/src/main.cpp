@@ -124,10 +124,22 @@ private:
     MainFrame* m_frame;
 };
 
+int wxID_FILE10 = wxNewId();
+int wxID_FILE11 = wxNewId();
+int wxID_FILE12 = wxNewId();
+int wxID_FILE13 = wxNewId();
+int wxID_FILE14 = wxNewId();
+int wxID_FILE15 = wxNewId();
+int wxID_FILE16 = wxNewId();
+int wxID_FILE17 = wxNewId();
+int wxID_FILE18 = wxNewId();
+int wxID_FILE19 = wxNewId();
+
 int idFileNew = XRCID("idFileNew");
 int idFileOpen = XRCID("idFileOpen");
 int idFileReopen = XRCID("idFileReopen");
-int idFileOpenRecentClearHistory = XRCID("idFileOpenRecentClearHistory");
+int idFileOpenRecentFileClearHistory = XRCID("idFileOpenRecentFileClearHistory");
+int idFileOpenRecentProjectClearHistory = XRCID("idFileOpenRecentProjectClearHistory");
 int idFileSave = XRCID("idFileSave");
 int idFileSaveAs = XRCID("idFileSaveAs");
 int idFileSaveAllFiles = XRCID("idFileSaveAllFiles");
@@ -223,7 +235,8 @@ DLLIMPORT extern int ID_EditorManagerCloseButton;
 BEGIN_EVENT_TABLE(MainFrame, wxFrame)
     EVT_CLOSE(MainFrame::OnApplicationClose)
 
-    EVT_UPDATE_UI(idFileOpenRecentClearHistory, MainFrame::OnFileMenuUpdateUI)
+    EVT_UPDATE_UI(idFileOpenRecentFileClearHistory, MainFrame::OnFileMenuUpdateUI)
+    EVT_UPDATE_UI(idFileOpenRecentProjectClearHistory, MainFrame::OnFileMenuUpdateUI)
     EVT_UPDATE_UI(idFileSave, MainFrame::OnFileMenuUpdateUI)
     EVT_UPDATE_UI(idFileSaveAs, MainFrame::OnFileMenuUpdateUI)
     EVT_UPDATE_UI(idFileSaveAllFiles, MainFrame::OnFileMenuUpdateUI)
@@ -285,8 +298,10 @@ BEGIN_EVENT_TABLE(MainFrame, wxFrame)
 
     EVT_MENU(idFileNew, MainFrame::OnFileNewEmpty)
     EVT_MENU(idFileOpen,  MainFrame::OnFileOpen)
-    EVT_MENU(idFileOpenRecentClearHistory, MainFrame::OnFileOpenRecentClearHistory)
+    EVT_MENU(idFileOpenRecentProjectClearHistory, MainFrame::OnFileOpenRecentProjectClearHistory)
+    EVT_MENU(idFileOpenRecentFileClearHistory, MainFrame::OnFileOpenRecentClearHistory)
     EVT_MENU_RANGE(wxID_FILE1, wxID_FILE9, MainFrame::OnFileReopen)
+    EVT_MENU_RANGE(wxID_FILE10, wxID_FILE19, MainFrame::OnFileReopenProject)
     EVT_MENU(idFileSave,  MainFrame::OnFileSave)
     EVT_MENU(idFileSaveAs,  MainFrame::OnFileSaveAs)
     EVT_MENU(idFileSaveAllFiles,  MainFrame::OnFileSaveAllFiles)
@@ -405,6 +420,8 @@ MainFrame::MainFrame(wxLocale& lang, wxWindow* parent)
 	   pDockWindow2(0),
 	   m_pAccel(0L),
 	   m_locale(lang),
+	   m_FilesHistory(9, wxID_FILE1), // default ctor
+	   m_ProjectsHistory(9, wxID_FILE10),
 	   m_pCloseFullScreenBtn(0L),
        m_pNotebook(0L),
 	   m_pEdMan(0L),
@@ -1061,7 +1078,7 @@ bool MainFrame::OpenGeneric(const wxString& filename, bool addToHistory)
                 DoCloseCurrentWorkspace())
             {
                 PRJMAN()->LoadWorkspace(filename);
-                m_FilesHistory.AddFileToHistory(filename);
+                m_ProjectsHistory.AddFileToHistory(filename);
             }
             else
                 return false;
@@ -1114,7 +1131,7 @@ bool MainFrame::DoOpenProject(const wxString& filename, bool addToHistory)
     if (prj)
     {
 		if (addToHistory)
-			m_FilesHistory.AddFileToHistory(prj->GetFilename());
+			m_ProjectsHistory.AddFileToHistory(prj->GetFilename());
         return true;
     }
     return false;
@@ -1255,11 +1272,11 @@ void MainFrame::OnStartHereLink(wxCommandEvent& event)
 //                    displays only 5.
 //                    Things could be done better though...
     	wxChar num = link.Last();
-        for (int i = 0; i < (int)m_FilesHistory.GetCount(); ++i)
+        for (int i = 0; i < (int)m_ProjectsHistory.GetCount(); ++i)
         {
         	if (num - _T('1') == i)
         	{
-        		OpenGeneric(m_FilesHistory.GetHistoryFile(i), true);
+        		OpenGeneric(m_ProjectsHistory.GetHistoryFile(i), true);
         		break;
         	}
         }
@@ -1275,8 +1292,8 @@ void MainFrame::OnStartHereVarSubst(wxCommandEvent& event)
 	{
 		wxString base;
 		base.Printf(_T("CB_VAR_HISTORY_FILE_%d"), i + 1);
-		if (i < (int)m_FilesHistory.GetCount())
-            buf.Replace(base, m_FilesHistory.GetHistoryFile(i));
+		if (i < (int)m_ProjectsHistory.GetCount())
+            buf.Replace(base, m_ProjectsHistory.GetHistoryFile(i));
         else
             buf.Replace(base, _T(""));
 	}
@@ -1299,23 +1316,42 @@ void MainFrame::InitializeRecentFilesHistory()
         if (!menu)
             return;
         wxMenu* recentFiles = 0;
-        menu->FindItem(idFileOpenRecentClearHistory, &recentFiles);
+        menu->FindItem(idFileOpenRecentFileClearHistory, &recentFiles);
         if (recentFiles)
         {
             m_FilesHistory.UseMenu(recentFiles);
-// TODO (mandrav#1#): Make m_FilesHistory load/save with ConfigManager
-//            OldConfigManager::Get()->SetPath(_T("/recent_files"));
-//            m_FilesHistory.Load(*OldConfigManager::Get());
-//            OldConfigManager::Get()->SetPath(_T("/"));
+
+            wxArrayString files = Manager::Get()->GetConfigManager(_T("app"))->ReadArrayString(_T("/recent_files"));
+            for (unsigned int i = 0; i < files.GetCount(); ++i)
+            {
+                m_FilesHistory.AddFileToHistory(files[i]);
+            }
+        }
+        wxMenu* recentProjects = 0;
+        menu->FindItem(idFileOpenRecentProjectClearHistory, &recentProjects);
+        if (recentProjects)
+        {
+            m_ProjectsHistory.UseMenu(recentProjects);
+
+            wxArrayString files = Manager::Get()->GetConfigManager(_T("app"))->ReadArrayString(_T("/recent_projects"));
+            for (unsigned int i = 0; i < files.GetCount(); ++i)
+            {
+                m_ProjectsHistory.AddFileToHistory(files[i]);
+            }
         }
     }
 }
 
 void MainFrame::TerminateRecentFilesHistory()
 {
-//    OldConfigManager::Get()->SetPath(_T("/recent_files"));
-//    m_FilesHistory.Save(*OldConfigManager::Get());
-//    OldConfigManager::Get()->SetPath(_T("/"));
+    wxArrayString files;
+    for (unsigned int i = 0; i < m_FilesHistory.GetCount(); ++i)
+        files.Add(m_FilesHistory.GetHistoryFile(i));
+    Manager::Get()->GetConfigManager(_T("app"))->Write(_T("/recent_files"), files);
+    files.Clear();
+    for (unsigned int i = 0; i < m_ProjectsHistory.GetCount(); ++i)
+        files.Add(m_ProjectsHistory.GetHistoryFile(i));
+    Manager::Get()->GetConfigManager(_T("app"))->Write(_T("/recent_projects"), files);
 
     wxMenuBar* mbar = GetMenuBar();
     if (!mbar)
@@ -1327,9 +1363,13 @@ void MainFrame::TerminateRecentFilesHistory()
         if (!menu)
             return;
         wxMenu* recentFiles = 0;
-        menu->FindItem(idFileOpenRecentClearHistory, &recentFiles);
+        menu->FindItem(idFileOpenRecentFileClearHistory, &recentFiles);
         if (recentFiles)
             m_FilesHistory.RemoveMenu(recentFiles);
+        wxMenu* recentProjects = 0;
+        menu->FindItem(idFileOpenRecentProjectClearHistory, &recentProjects);
+        if (recentProjects)
+            m_ProjectsHistory.RemoveMenu(recentProjects);
     }
 }
 
@@ -1445,6 +1485,21 @@ void MainFrame::OnFileOpen(wxCommandEvent& event)
     delete dlg;
 }
 
+void MainFrame::OnFileReopenProject(wxCommandEvent& event)
+{
+    wxString fname = m_ProjectsHistory.GetHistoryFile(event.GetId() - wxID_FILE10);
+    DoOpenProject(fname, false);
+}
+
+void MainFrame::OnFileOpenRecentProjectClearHistory(wxCommandEvent& event)
+{
+    while (m_ProjectsHistory.GetCount())
+	{
+        m_ProjectsHistory.RemoveFileFromHistory(0);
+		Manager::Get()->GetConfigManager(_T("app"))->DeleteSubPath(_T("/recent_projects"));
+	}
+}
+
 void MainFrame::OnFileReopen(wxCommandEvent& event)
 {
     wxString fname = m_FilesHistory.GetHistoryFile(event.GetId() - wxID_FILE1);
@@ -1491,13 +1546,13 @@ void MainFrame::OnFileSaveAllFiles(wxCommandEvent& event)
 void MainFrame::OnFileSaveWorkspace(wxCommandEvent& event)
 {
     if (PRJMAN()->SaveWorkspace())
-        m_FilesHistory.AddFileToHistory(PRJMAN()->GetWorkspace()->GetFilename());
+        m_ProjectsHistory.AddFileToHistory(PRJMAN()->GetWorkspace()->GetFilename());
 }
 
 void MainFrame::OnFileSaveWorkspaceAs(wxCommandEvent& event)
 {
     if (PRJMAN()->SaveWorkspaceAs(_T("")))
-        m_FilesHistory.AddFileToHistory(PRJMAN()->GetWorkspace()->GetFilename());
+        m_ProjectsHistory.AddFileToHistory(PRJMAN()->GetWorkspace()->GetFilename());
 }
 
 void MainFrame::OnFileClose(wxCommandEvent& WXUNUSED(event))
@@ -1982,14 +2037,14 @@ void MainFrame::OnProjectSaveProject(wxCommandEvent& event)
 {
     if (PRJMAN()->SaveActiveProject() ||
         PRJMAN()->SaveActiveProjectAs())
-        m_FilesHistory.AddFileToHistory(PRJMAN()->GetActiveProject()->GetFilename());
+        m_ProjectsHistory.AddFileToHistory(PRJMAN()->GetActiveProject()->GetFilename());
     DoUpdateStatusBar();
 }
 
 void MainFrame::OnProjectSaveProjectAs(wxCommandEvent& event)
 {
     if (PRJMAN()->SaveActiveProjectAs())
-        m_FilesHistory.AddFileToHistory(PRJMAN()->GetActiveProject()->GetFilename());
+        m_ProjectsHistory.AddFileToHistory(PRJMAN()->GetActiveProject()->GetFilename());
     DoUpdateStatusBar();
 }
 
@@ -2078,8 +2133,8 @@ void MainFrame::OnFileMenuUpdateUI(wxUpdateUIEvent& event)
 
     bool canCloseProject = (ProjectManager::CanShutdown() && EditorManager::CanShutdown());
     mbar->Enable(idProjectCloseProject,canCloseProject);
-    mbar->Enable(idFileOpenRecentClearHistory, m_FilesHistory.GetCount());
-    mbar->Enable(idFileOpenRecentClearHistory, m_FilesHistory.GetCount());
+    mbar->Enable(idFileOpenRecentFileClearHistory, m_FilesHistory.GetCount());
+    mbar->Enable(idFileOpenRecentProjectClearHistory, m_ProjectsHistory.GetCount());
     mbar->Enable(idFileClose, ed);
     mbar->Enable(idFileCloseAll, ed);
     mbar->Enable(idFileSave, ed && ed->GetModified());
