@@ -152,7 +152,6 @@ void CfgMgrBldr::Close()
 
 ConfigManager* CfgMgrBldr::Get(const wxString& name_space)
 {
-    static CfgMgrBldr instance;
     return Instance()->Instantiate(name_space);
 }
 
