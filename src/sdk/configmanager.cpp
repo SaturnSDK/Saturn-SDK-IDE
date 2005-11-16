@@ -76,6 +76,7 @@ void CfgMgrBldr::SwitchTo(const wxString& absFileName)
         doc->InsertEndChild(TiXmlElement(CfgMgrConsts::rootTag));
         doc->FirstChildElement(CfgMgrConsts::rootTag)->SetAttribute(_T("version"), CfgMgrConsts::version);
         doc->SetCondenseWhiteSpace(false);
+        doc->ClearError();
     }
 
     TiXmlElement* docroot = doc->FirstChildElement(CfgMgrConsts::rootTag);
@@ -87,11 +88,11 @@ void CfgMgrBldr::SwitchTo(const wxString& absFileName)
     }
 
     if(doc->ErrorId())
-        Manager::Get()->GetMessageManager()->DebugLogError(wxString(_T("TinyXML error:\n")) << doc->ErrorDesc());
+        wxMessageBox(wxString(_T("TinyXML error:\n")) << doc->ErrorDesc(), _("Warning"), wxICON_WARNING);
 
     const char *vers = docroot->Attribute(_T("version"));
     if(!vers || atoi(vers) != 1)
-        Manager::Get()->GetMessageManager()->DebugLog(_("MessageManager encountered an unknown config file version. Continuing happily."));
+        wxMessageBox(_("ConfigManager encountered an unknown config file version. Continuing happily."), _("Warning"), wxICON_WARNING);
 
     doc->ClearError();
 }
@@ -121,8 +122,12 @@ void CfgMgrBldr::SwitchToR(const wxString& absFileName)
                 delete is;
                 return;
             }
-            Manager::Get()->GetMessageManager()->DebugLog(_("### Error parsing remote config file"));
+            if(Manager::Get() && Manager::Get()->GetMessageManager())
+            {
+            Manager::Get()->GetMessageManager()->DebugLog(_("##### Error loading or parsing remote config file"));
             Manager::Get()->GetMessageManager()->DebugLog(doc->ErrorDesc());
+            doc->ClearError();
+            }
         }
         delete is;
     }
@@ -399,12 +404,17 @@ TiXmlElement* ConfigManager::AssertPath(wxString& path)
 {
     if(doc->ErrorId())
     {
-        Manager::Get()->GetMessageManager()->DebugLogError(wxString(_T("TinyXML error:\n")) << doc->ErrorDesc());
+        wxMessageBox(wxString(_T("TinyXML error:\n")) << doc->ErrorDesc(), _("Warning"), wxICON_WARNING);
         doc->ClearError();
     }
-    path.Replace(_T(" "), _T("_"));
+
+    path.Replace(_T("\\"), _T("/"));
     path.Replace(_T("///"), _T("/"));
     path.Replace(_T("//"),  _T("/"));
+
+    wxString illegal(" :.,;!\"§$%&()[]<>{}?*+-|#");
+    while(size_t i = path.find_first_of(illegal))
+        path[i] = _T('_');
 
     if(!path.Contains(_T("/")))
     {
@@ -412,8 +422,8 @@ TiXmlElement* ConfigManager::AssertPath(wxString& path)
         if(path[0] < _T('A') || path[0] > _T('Z'))
         {
             wxString s;
-            s.sprintf(_("Warning: The Configuration key %s does not meet the standard for variable naming. Variables names are required to start with a letter."), path.mb_str());
-            Manager::Get()->GetMessageManager()->DebugLogError(s);
+            s.sprintf(_("The Configuration key %s does not meet the standard for variable naming. Variables names are required to start with a letter."), path.mb_str());
+            cbThrow(s);
         }
         return pathNode;
     }
@@ -437,8 +447,8 @@ TiXmlElement* ConfigManager::AssertPath(wxString& path)
         else if(sub[0] < _T('a') || sub[0] > _T('z'))
         {
         wxString s;
-        s.sprintf(_("Warning: The subpath %s does not meet the standard for path naming. Paths and subpaths are required to start with a letter."), sub.mb_str());
-        Manager::Get()->GetMessageManager()->DebugLogError(s);
+        s.sprintf(_("The subpath %s does not meet the standard for path naming. Paths and subpaths are required to start with a letter."), sub.mb_str());
+        cbThrow(s);
         }
         else
         {
@@ -450,7 +460,7 @@ TiXmlElement* ConfigManager::AssertPath(wxString& path)
         }
         if(doc->Error())
         {
-            Manager::Get()->GetMessageManager()->DebugLog(wxString(_T("Error accessing config path: ")) + doc->ErrorDesc());
+            wxMessageBox(wxString(_T("TinyXML error:\n")) << doc->ErrorDesc(), _("Warning"), wxICON_WARNING);
             doc->ClearError();
         }
     }
@@ -460,8 +470,8 @@ TiXmlElement* ConfigManager::AssertPath(wxString& path)
     if(!path.IsEmpty() && (path[0] < _T('A') || path[0] > _T('Z')))
     {
         wxString s;
-        s.sprintf(_("Warning: The Configuration key %s does not meet the standard for variable naming. Variables names are required to start with a letter."), path.mb_str());
-        Manager::Get()->GetMessageManager()->DebugLogError(s);
+        s.sprintf(_("The Configuration key %s does not meet the standard for variable naming. Variables names are required to start with a letter."), path.mb_str());
+        cbThrow(s);
     }
     return e;
 }
@@ -894,24 +904,35 @@ wxArrayString ConfigManager::EnumerateSubPaths(const wxString& path)
     return ret;
 }
 
-
 void ConfigManager::DeleteSubPath(const wxString& thePath)
 {
-    if(thePath.IsSameAs(_T("/"))) // does not remove root!
-        return;
+    if(doc->ErrorId())
+    {
+        wxMessageBox(wxString(_T("### TinyXML error:\n")) << doc->ErrorDesc());
+        doc->ClearError();
+    }
 
     wxString path(thePath.Lower());
 
+
+    path.Replace(_T("\\"), _T("/"));
+    path.Replace(_T("///"), _T("/"));
+    path.Replace(_T("//"),  _T("/"));
+
+    wxString illegal(" :.,;!\"§$%&()[]<>{}?*+-|#");
+    while(size_t i = path.find_first_of(illegal))
+        path[i] = _T('_');
+
     if(path.Last() == _T('/'))
         path.RemoveLast();
+
+    if(path.IsSameAs(_T("/"))) // this function will refuse to remove root!
+        return;
 
     TiXmlElement* parent = pathNode ? pathNode : root;
 
     if(path.Contains(_T("/")))
     {
-        path.Replace(_T("///"), _T("/"));
-        path.Replace(_T("//"),  _T("/"));
-
         wxString sub;
         do
         {
