@@ -141,7 +141,7 @@ void MessageManager::SetSafebutSlow(bool flag, bool dosave)
     {
         m_SafebutSlow = flag;
         if(dosave)
-            CFG_WRITE(_T("/message_manager/safe_but_slow"), m_SafebutSlow);
+            Manager::Get()->GetConfigManager(_T("message_manager"))->Write(_T("/safe_but_slow"), m_SafebutSlow);
     }
 
 }

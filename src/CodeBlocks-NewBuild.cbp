@@ -2547,16 +2547,6 @@
 			<Option link="0"/>
 			<Option target="sdk"/>
 		</Unit>
-		<Unit filename="sdk\old_configmanager.cpp">
-			<Option compilerVar="CPP"/>
-			<Option target="sdk"/>
-		</Unit>
-		<Unit filename="sdk\old_configmanager.h">
-			<Option compilerVar=""/>
-			<Option compile="0"/>
-			<Option link="0"/>
-			<Option target="sdk"/>
-		</Unit>
 		<Unit filename="sdk\openfilestree.h">
 			<Option compilerVar=""/>
 			<Option compile="0"/>
@@ -3621,16 +3611,6 @@
 			<Option link="0"/>
 			<Option target="src"/>
 		</Unit>
-		<Unit filename="src\impexpconfig.cpp">
-			<Option compilerVar="CPP"/>
-			<Option target="src"/>
-		</Unit>
-		<Unit filename="src\impexpconfig.h">
-			<Option compilerVar=""/>
-			<Option compile="0"/>
-			<Option link="0"/>
-			<Option target="src"/>
-		</Unit>
 		<Unit filename="src\main.cpp">
 			<Option compilerVar="CPP"/>
 			<Option target="src"/>
@@ -3994,12 +3974,6 @@
 			<Option target="src"/>
 		</Unit>
 		<Unit filename="src\resources\imp_exp_config.xrc">
-			<Option compilerVar=""/>
-			<Option compile="0"/>
-			<Option link="0"/>
-			<Option target="src"/>
-		</Unit>
-		<Unit filename="src\resources\main_frame.xrc">
 			<Option compilerVar=""/>
 			<Option compile="0"/>
 			<Option link="0"/>

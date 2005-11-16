@@ -138,7 +138,6 @@ class MainFrame : public wxFrame
         void OnSettingsEditor(wxCommandEvent& event);
         void OnSettingsPlugins(wxCommandEvent& event);
         void OnPluginSettingsMenu(wxCommandEvent& event);
-        void OnSettingsImpExpConfig(wxCommandEvent& event);
         void OnSettingsNetworkProxy(wxCommandEvent& event);
 
         void OnHelpAbout(wxCommandEvent& event);

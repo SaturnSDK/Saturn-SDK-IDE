@@ -18,7 +18,7 @@ void DummyRelease(cbProject& p){}
 //------------------------------------------------------------------------------
 // Forwards
 //------------------------------------------------------------------------------
-void Register_OldConfigManager(asIScriptEngine* engine);
+void Register_ConfigManager(asIScriptEngine* engine);
 void Register_Editor(asIScriptEngine* engine);
 void Register_EditorManager(asIScriptEngine* engine);
 void Register_ProjectFile(asIScriptEngine* engine);
@@ -60,10 +60,10 @@ void RegisterBindings(asIScriptEngine* engine)
     ADD_DUMMY_REFCOUNT(engine, Project);
     engine->RegisterObjectType("ProjectManagerClass", 0, asOBJ_CLASS);
     engine->RegisterObjectType("EditorManagerClass", 0, asOBJ_CLASS);
-    engine->RegisterObjectType("OldConfigManagerClass", 0, asOBJ_CLASS);
+    engine->RegisterObjectType("ConfigManagerClass", 0, asOBJ_CLASS);
 
     // register member functions
-    Register_OldConfigManager(engine);
+    Register_ConfigManager(engine);
     Register_Editor(engine);
     Register_EditorManager(engine);
     Register_ProjectFile(engine);
@@ -81,19 +81,19 @@ void RegisterBindings(asIScriptEngine* engine)
 }
 
 //------------------------------------------------------------------------------
-// OldConfigManager
+// ConfigManager
 //------------------------------------------------------------------------------
-void Register_OldConfigManager(asIScriptEngine* engine)
+void Register_ConfigManager(asIScriptEngine* engine)
 {
-    engine->RegisterObjectMethod("OldConfigManagerClass", "wxString Read(const wxString& in,const wxString& in) const", asMETHODPR(wxConfigBase, Read, (const wxString&,const wxString&)const, wxString), asCALL_THISCALL);
-    engine->RegisterObjectMethod("OldConfigManagerClass", "int Read(const wxString& in,int) const", asMETHODPR(wxConfigBase, Read, (const wxString&,long)const, long), asCALL_THISCALL);
-    engine->RegisterObjectMethod("OldConfigManagerClass", "bool Write(const wxString& in,int)", asMETHODPR(wxConfigBase, Write, (const wxString&,long), bool), asCALL_THISCALL);
-    engine->RegisterObjectMethod("OldConfigManagerClass", "bool Write(const wxString& in,double)", asMETHODPR(wxConfigBase, Write, (const wxString&,long), bool), asCALL_THISCALL);
-    engine->RegisterObjectMethod("OldConfigManagerClass", "bool Write(const wxString& in,bool)", asMETHODPR(wxConfigBase, Write, (const wxString&,long), bool), asCALL_THISCALL);
-    engine->RegisterObjectMethod("OldConfigManagerClass", "bool Write(const wxString& in,const wxString& in)", asMETHODPR(wxConfigBase, Write, (const wxString&,const wxString&), bool), asCALL_THISCALL);
+    engine->RegisterObjectMethod("ConfigManagerClass", "wxString Read(const wxString& in,const wxString& in) const", asMETHODPR(wxConfigBase, Read, (const wxString&,const wxString&)const, wxString), asCALL_THISCALL);
+    engine->RegisterObjectMethod("ConfigManagerClass", "int Read(const wxString& in,int) const", asMETHODPR(wxConfigBase, Read, (const wxString&,long)const, long), asCALL_THISCALL);
+    engine->RegisterObjectMethod("ConfigManagerClass", "bool Write(const wxString& in,int)", asMETHODPR(wxConfigBase, Write, (const wxString&,long), bool), asCALL_THISCALL);
+    engine->RegisterObjectMethod("ConfigManagerClass", "bool Write(const wxString& in,double)", asMETHODPR(wxConfigBase, Write, (const wxString&,long), bool), asCALL_THISCALL);
+    engine->RegisterObjectMethod("ConfigManagerClass", "bool Write(const wxString& in,bool)", asMETHODPR(wxConfigBase, Write, (const wxString&,long), bool), asCALL_THISCALL);
+    engine->RegisterObjectMethod("ConfigManagerClass", "bool Write(const wxString& in,const wxString& in)", asMETHODPR(wxConfigBase, Write, (const wxString&,const wxString&), bool), asCALL_THISCALL);
 
     // actually bind EditorManager's instance
-    engine->RegisterGlobalProperty("OldConfigManagerClass OldConfigManager", OldConfigManager::Get());
+    engine->RegisterGlobalProperty("ConfigManagerClass ConfigManager", Manager::Get()->GetConfigManager(_T("volatile:scripting")));
 }
 
 //------------------------------------------------------------------------------

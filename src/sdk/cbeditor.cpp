@@ -527,7 +527,7 @@ void cbEditor::SetEditorStyle()
     m_pControl->SetViewWhiteSpace(mgr->ReadBool(_T("/view_whitespace"), false));
 	//gutter
     m_pControl->SetEdgeMode(mgr->ReadInt(_T("/gutter/mode"), 1));
-    m_pControl->SetEdgeColour(GetOptionColour(_T("/gutter/color"), wxColour(0xC0, 0xC0, 0xC0)));
+    m_pControl->SetEdgeColour(GetOptionColour(_T("/gutter/color"), *wxLIGHT_GREY));
     m_pControl->SetEdgeColumn(mgr->ReadInt(_T("/gutter/column"), 80));
 
     m_pControl->StyleSetFont(wxSCI_STYLE_DEFAULT, font);

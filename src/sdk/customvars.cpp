@@ -58,6 +58,7 @@ void CustomVars::Load(const wxString& configpath)
 void CustomVars::Save(const wxString& configpath)
 {
 	ConfigManager* conf = Manager::Get()->GetConfigManager(_T("compiler"));
+	conf->DeleteSubPath(configpath);
 	for (unsigned int i = 0; i < m_Vars.GetCount(); ++i)
 		conf->Write(configpath + _T('/') + m_Vars[i].name, m_Vars[i].value);
 	SetModified(false);

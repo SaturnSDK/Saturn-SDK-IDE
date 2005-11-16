@@ -393,6 +393,7 @@ void EditorColorSet::Save()
 {
 	wxString key;
 	ConfigManager* cfg = Manager::Get()->GetConfigManager(_T("editor"));
+	cfg->DeleteSubPath(_T("/color_sets"));
 
 	for (int x = 0; x < HL_LAST; ++x)
 	{
@@ -557,7 +558,7 @@ wxString EditorColorSet::GetSampleCode(HighlightLanguage lang, int* breakLine, i
         *debugLine = m_Sets[lang].m_DebugLine;
     if (errorLine)
         *errorLine = m_Sets[lang].m_ErrorLine;
-	wxString path = OldConfigManager::Get()->Read(_T("data_path")) + _T("/lexers/");
+	wxString path = ConfigManager::GetDataFolder() + _T("/lexers/");
     if (!m_Sets[lang].m_SampleCode.IsEmpty())
         return path + m_Sets[lang].m_SampleCode;
     return wxEmptyString;

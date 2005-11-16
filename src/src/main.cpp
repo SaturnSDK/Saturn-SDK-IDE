@@ -28,7 +28,6 @@
 #include "main.h"
 #include "globals.h"
 #include "environmentsettingsdlg.h"
-#include "impexpconfig.h"
 #include <cbworkspace.h>
 
 #if defined(_MSC_VER) && defined( _DEBUG )
@@ -210,7 +209,6 @@ int idSettingsGlobalUserVars = XRCID("idSettingsGlobalUserVars");
 int idSettingsEditor = XRCID("idSettingsEditor");
 int idPluginsManagePlugins = XRCID("idPluginsManagePlugins");
 int idSettingsConfigurePlugins = XRCID("idSettingsConfigurePlugins");
-int idSettingsImpExpConfig = XRCID("idSettingsImpExpConfig");
 int idSettingsNetworkProxy = XRCID("idSettingsNetworkProxy");
 
 int idHelpTips = XRCID("idHelpTips");
@@ -366,7 +364,6 @@ BEGIN_EVENT_TABLE(MainFrame, wxFrame)
 	EVT_MENU(idSettingsGlobalUserVars, MainFrame::OnGlobalUserVars)
 	EVT_MENU(idSettingsEditor, MainFrame::OnSettingsEditor)
     EVT_MENU(idPluginsManagePlugins, MainFrame::OnSettingsPlugins)
-    EVT_MENU(idSettingsImpExpConfig, MainFrame::OnSettingsImpExpConfig)
     EVT_MENU(idSettingsNetworkProxy, MainFrame::OnSettingsNetworkProxy)
 
     EVT_MENU(wxID_ABOUT, MainFrame::OnHelpAbout)
@@ -467,9 +464,6 @@ MainFrame::MainFrame(wxLocale& lang, wxWindow* parent)
 #endif
     ShowHideStartPage();
     InitPrinting();
-
-    OldConfigManager::AddConfiguration(_("Application"), _T("/main_frame"));
-    OldConfigManager::AddConfiguration(_("Environment"), _T("/environment"));
 }
 
 MainFrame::~MainFrame()
@@ -931,54 +925,55 @@ void MainFrame::LoadKeyBindings()
 	// before loading we must register in wxCmd arrays the various types
 	// of commands we want wxCmd::Load to be able to recognize...
 	wxMenuCmd::Register(GetMenuBar());
-
-	// clear our old array
-	m_KeyProfiles->Cleanup();
-
-	wxConfigBase* cfg = OldConfigManager::Get();
-	if (cfg->HasGroup(_T("/keybindings")) && m_KeyProfiles->Load(cfg, _T("/keybindings")))
-	{
-
-		// get the cmd count
-		int total = 0;
-		for (int i=0; i<m_KeyProfiles->GetCount(); i++)
-			total += m_KeyProfiles->Item(i)->GetCmdCount();
-
-		if (total == 0)
-		{
-            m_pMsgMan->Log(wxT("No keyprofiles have been found.\nA default keyprofile will be set.\n"));
-			wxKeyProfile *p = new wxKeyProfile(wxT("Default"));
-			p->ImportMenuBarCmd(GetMenuBar());
-			m_KeyProfiles->Add(p);
-		}
-		else
-		{
-			wxString msg = wxString::Format(
-					wxT("%d key binding profiles have been loaded ")
-					wxT("(%d commands in total).\n")
-					wxT("Profile '%s' applied."),
-					m_KeyProfiles->GetCount(), total,
-					m_KeyProfiles->GetSelProfile()->GetName().c_str());
-            m_pMsgMan->Log(msg);
-		}
-
-		// reattach this frame to the loaded keybinder
-		UpdateKeyBinder(m_KeyProfiles);
-	}
-	else
-	{
-	    // load defaults
-        InitKeyBinder();
-		m_pMsgMan->Log(_T("Using default key bindings"));
-	}
-	cfg->SetPath(_T("/"));
+// TODO (mandrav#1#): Make wxKeyBinder load/save with ConfigManager
+return;
+//	// clear our old array
+//	m_KeyProfiles->Cleanup();
+//
+//	wxConfigBase* cfg = OldConfigManager::Get();
+//	if (cfg->HasGroup(_T("/keybindings")) && m_KeyProfiles->Load(cfg, _T("/keybindings")))
+//	{
+//
+//		// get the cmd count
+//		int total = 0;
+//		for (int i=0; i<m_KeyProfiles->GetCount(); i++)
+//			total += m_KeyProfiles->Item(i)->GetCmdCount();
+//
+//		if (total == 0)
+//		{
+//            m_pMsgMan->Log(wxT("No keyprofiles have been found.\nA default keyprofile will be set.\n"));
+//			wxKeyProfile *p = new wxKeyProfile(wxT("Default"));
+//			p->ImportMenuBarCmd(GetMenuBar());
+//			m_KeyProfiles->Add(p);
+//		}
+//		else
+//		{
+//			wxString msg = wxString::Format(
+//					wxT("%d key binding profiles have been loaded ")
+//					wxT("(%d commands in total).\n")
+//					wxT("Profile '%s' applied."),
+//					m_KeyProfiles->GetCount(), total,
+//					m_KeyProfiles->GetSelProfile()->GetName().c_str());
+//            m_pMsgMan->Log(msg);
+//		}
+//
+//		// reattach this frame to the loaded keybinder
+//		UpdateKeyBinder(m_KeyProfiles);
+//	}
+//	else
+//	{
+//	    // load defaults
+//        InitKeyBinder();
+//		m_pMsgMan->Log(_T("Using default key bindings"));
+//	}
+//	cfg->SetPath(_T("/"));
 }
 
 void MainFrame::SaveKeyBindings()
 {
-	wxConfigBase* cfg = OldConfigManager::Get();
-	m_KeyProfiles->Save(cfg, _T("/keybindings"), true);
-	cfg->SetPath(_T("/"));
+//	wxConfigBase* cfg = OldConfigManager::Get();
+//	m_KeyProfiles->Save(cfg, _T("/keybindings"), true);
+//	cfg->SetPath(_T("/"));
 }
 #endif // wxUSE_KEYBINDER
 
@@ -1308,18 +1303,19 @@ void MainFrame::InitializeRecentFilesHistory()
         if (recentFiles)
         {
             m_FilesHistory.UseMenu(recentFiles);
-            OldConfigManager::Get()->SetPath(_T("/recent_files"));
-            m_FilesHistory.Load(*OldConfigManager::Get());
-            OldConfigManager::Get()->SetPath(_T("/"));
+// TODO (mandrav#1#): Make m_FilesHistory load/save with ConfigManager
+//            OldConfigManager::Get()->SetPath(_T("/recent_files"));
+//            m_FilesHistory.Load(*OldConfigManager::Get());
+//            OldConfigManager::Get()->SetPath(_T("/"));
         }
     }
 }
 
 void MainFrame::TerminateRecentFilesHistory()
 {
-    OldConfigManager::Get()->SetPath(_T("/recent_files"));
-    m_FilesHistory.Save(*OldConfigManager::Get());
-    OldConfigManager::Get()->SetPath(_T("/"));
+//    OldConfigManager::Get()->SetPath(_T("/recent_files"));
+//    m_FilesHistory.Save(*OldConfigManager::Get());
+//    OldConfigManager::Get()->SetPath(_T("/"));
 
     wxMenuBar* mbar = GetMenuBar();
     if (!mbar)
@@ -1460,7 +1456,7 @@ void MainFrame::OnFileOpenRecentClearHistory(wxCommandEvent& event)
     while (m_FilesHistory.GetCount())
 	{
         m_FilesHistory.RemoveFileFromHistory(0);
-		OldConfigManager::Get()->DeleteGroup(_T("/recent_files"));
+		Manager::Get()->GetConfigManager(_T("app"))->DeleteSubPath(_T("/recent_files"));
 	}
 }
 
@@ -1596,7 +1592,6 @@ void MainFrame::OnApplicationClose(wxCloseEvent& event)
         PopEventHandler(false);
 
 	Manager::Get()->Free();
-	OldConfigManager::Get()->Flush();
     Destroy();
 }
 
@@ -2427,12 +2422,6 @@ void MainFrame::OnSettingsPlugins(wxCommandEvent& event)
 //        CreateToolbars();
 	}
     m_ReconfiguringPlugins = false;
-}
-
-void MainFrame::OnSettingsImpExpConfig(wxCommandEvent& event)
-{
-    ImpExpConfig dlg(this);
-    dlg.ShowModal();
 }
 
 #if wxUSE_KEYBINDER

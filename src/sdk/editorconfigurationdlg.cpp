@@ -117,7 +117,7 @@ EditorConfigurationDlg::EditorConfigurationDlg(wxWindow* parent)
    	XRCCTRL(*this, "chkFoldXml", wxCheckBox)->SetValue(cfg->ReadBool(_T("/folding/fold_xml"), true));
 
 	//gutter
-    wxColour color = cfg->ReadColour(_T("/gutter/color/red"));
+    wxColour color = cfg->ReadColour(_T("/gutter/color"), *wxLIGHT_GREY);
     XRCCTRL(*this, "lstGutterMode", wxChoice)->SetSelection(cfg->ReadInt(_T("/gutter/mode"), 1));
     XRCCTRL(*this, "btnGutterColor", wxButton)->SetBackgroundColour(color);
     XRCCTRL(*this, "spnGutterColumn", wxSpinCtrl)->SetValue(cfg->ReadInt(_T("/gutter/column"), 80));

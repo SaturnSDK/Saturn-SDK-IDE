@@ -32,7 +32,7 @@
 #include <wx/progdlg.h>
 #include "parser.h"
 #ifndef STANDALONE
-	#include <old_configmanager.h>
+	#include <configmanager.h>
 	#include <messagemanager.h>
 	#include <manager.h>
 	#include <globals.h>
@@ -69,7 +69,7 @@ Parser::Parser(wxEvtHandler* parent)
 	m_pImageList = new wxImageList(16, 16);
 	wxBitmap bmp;
 	wxString prefix;
-    prefix = OldConfigManager::Get()->Read(_T("data_path")) + _T("/images/codecompletion/");
+    prefix = ConfigManager::GetDataFolder() + _T("/images/codecompletion/");
     // bitmaps must be added by order of PARSER_IMG_* consts
     bmp.LoadFile(prefix + _T("class_folder.png"), wxBITMAP_TYPE_PNG);
     m_pImageList->Add(bmp); // PARSER_IMG_CLASS_FOLDER
@@ -163,28 +163,30 @@ void Parser::ReadOptions()
 	m_BrowserOptions.showInheritance = false;
 	m_BrowserOptions.viewFlat = false;
 #else // !STANDALONE
-	m_MaxThreadsCount = OldConfigManager::Get()->Read(_T("/code_completion/max_threads"), 8);
-	m_Options.followLocalIncludes = OldConfigManager::Get()->Read(_T("/code_completion/parser_follow_local_includes"), 1L);
-	m_Options.followGlobalIncludes = OldConfigManager::Get()->Read(_T("/code_completion/parser_follow_global_includes"), 0L);
-	m_Options.caseSensitive = OldConfigManager::Get()->Read(_T("/code_completion/case_sensitive"), 0L);
-	m_Options.useSmartSense = OldConfigManager::Get()->Read(_T("/code_completion/use_SmartSense"), 1);
-	m_Options.wantPreprocessor = OldConfigManager::Get()->Read(_T("/code_completion/want_preprocessor"), 0L);
-	m_BrowserOptions.showInheritance = OldConfigManager::Get()->Read(_T("/code_completion/browser_show_inheritance"), 0L);
-	m_BrowserOptions.viewFlat = OldConfigManager::Get()->Read(_T("/code_completion/browser_view_flat"), 0L);
+    ConfigManager* cfg = Manager::Get()->GetConfigManager(_T("code_completion"));
+	m_MaxThreadsCount = cfg->ReadInt(_T("/max_threads"), wxThread::GetCPUCount());
+	m_Options.followLocalIncludes = cfg->ReadBool(_T("/parser_follow_local_includes"), false);
+	m_Options.followGlobalIncludes = cfg->ReadBool(_T("/parser_follow_global_includes"), false);
+	m_Options.caseSensitive = cfg->ReadBool(_T("/case_sensitive"), false);
+	m_Options.useSmartSense = cfg->ReadBool(_T("/use_SmartSense"), true);
+	m_Options.wantPreprocessor = cfg->ReadBool(_T("/want_preprocessor"), false);
+	m_BrowserOptions.showInheritance = cfg->ReadBool(_T("/browser_show_inheritance"), false);
+	m_BrowserOptions.viewFlat = cfg->ReadBool(_T("/browser_view_flat"), false);
 #endif // STANDALONE
 }
 
 void Parser::WriteOptions()
 {
 #ifndef STANDALONE
-	OldConfigManager::Get()->Write(_T("/code_completion/max_threads"), (int)m_MaxThreadsCount);
-	OldConfigManager::Get()->Write(_T("/code_completion/parser_follow_local_includes"), m_Options.followLocalIncludes);
-	OldConfigManager::Get()->Write(_T("/code_completion/parser_follow_global_includes"), m_Options.followGlobalIncludes);
-	OldConfigManager::Get()->Write(_T("/code_completion/case_sensitive"), m_Options.caseSensitive);
-	OldConfigManager::Get()->Write(_T("/code_completion/use_SmartSense"), m_Options.useSmartSense);
-	OldConfigManager::Get()->Write(_T("/code_completion/want_preprocessor"), m_Options.wantPreprocessor);
-	OldConfigManager::Get()->Write(_T("/code_completion/browser_show_inheritance"), m_BrowserOptions.showInheritance);
-	OldConfigManager::Get()->Write(_T("/code_completion/browser_view_flat"), m_BrowserOptions.viewFlat);
+    ConfigManager* cfg = Manager::Get()->GetConfigManager(_T("code_completion"));
+	cfg->Write(_T("/max_threads"), (int)m_MaxThreadsCount);
+	cfg->Write(_T("/parser_follow_local_includes"), m_Options.followLocalIncludes);
+	cfg->Write(_T("/parser_follow_global_includes"), m_Options.followGlobalIncludes);
+	cfg->Write(_T("/case_sensitive"), m_Options.caseSensitive);
+	cfg->Write(_T("/use_SmartSense"), m_Options.useSmartSense);
+	cfg->Write(_T("/want_preprocessor"), m_Options.wantPreprocessor);
+	cfg->Write(_T("/browser_show_inheritance"), m_BrowserOptions.showInheritance);
+	cfg->Write(_T("/browser_view_flat"), m_BrowserOptions.viewFlat);
 #endif // STANDALONE
 }
 
@@ -241,7 +243,7 @@ bool Parser::ReadFromCache(wxFile* f)
     unsigned int counter = 0;
 
     // display cache progress?
-    if (OldConfigManager::Get()->Read(_T("/code_completion/show_cache_progress"), 1L))
+    if (Manager::Get()->GetConfigManager(_T("code_completion"))->ReadBool(_T("/show_cache_progress"), true))
     {
         Manager::Get()->GetMessageManager()->DebugLog(_("Creating progress dialog..."));
         progress = new wxProgressDialog(_("Code-completion plugin"),
@@ -351,7 +353,7 @@ bool Parser::WriteToCache(wxFile* f)
     wxProgressDialog* progress = 0;
 
     // display cache progress?
-    if (OldConfigManager::Get()->Read(_T("/code_completion/show_cache_progress"), 1L))
+    if (Manager::Get()->GetConfigManager(_T("code_completion"))->ReadBool(_T("/show_cache_progress"), true))
     {
         progress = new wxProgressDialog(_("Code-completion plugin"),
                                         _("Please wait while saving code-completion cache..."),

@@ -37,7 +37,6 @@
 #if wxCHECK_VERSION(2,6,0)
     #include <wx/debugrpt.h>
 #endif
-#include <old_configmanager.h>
 #include <configmanager.h>
 #include <editormanager.h>
 #include <projectmanager.h>
@@ -95,10 +94,6 @@ bool CodeBlocksApp::LoadConfig()
     if (ParseCmdLine(0L) != 0)
 
         return false;
-
-    SetVendorName(APP_VENDOR);
-    SetAppName(APP_NAME" v"APP_VERSION);
-    OldConfigManager::Init(wxConfigBase::Get());
 
     ConfigManager *cfg = Manager::Get()->GetConfigManager(_T("app"));
     cfg->Write(_T("app_path"), GetAppPath());
@@ -181,7 +176,7 @@ void CodeBlocksApp::ClearConf()
         ret = wxMessageBox(_("Are you *really* sure you want to clear all Code::Blocks configuration settings?"), _("Clear configuration settings"), wxICON_QUESTION | wxYES_NO | wxNO_DEFAULT);
         if (ret == wxYES)
         {
-            OldConfigManager::Get()->DeleteAll(); // leave this for now
+//            OldConfigManager::Get()->DeleteAll(); // leave this for now
             //Manager::Get()->GetConfigManager(_T("app"))->DeleteAll();
             ret = wxMessageBox(_("Code::Blocks configuration settings cleared"), _("Information"), wxICON_INFORMATION);
         }
