@@ -69,70 +69,70 @@ void Compiler::SaveSettings(const wxString& baseKey)
     ConfigManager* cfg = Manager::Get()->GetConfigManager(_T("compiler"));
 
     wxString tmp;
-    tmp.Printf(_T("/%s/set%3.3d"), baseKey.c_str(), (int)m_ID);
+    tmp.Printf(_T("%s/set%3.3d"), baseKey.c_str(), (int)m_ID);
 
 	cfg->Write(tmp + _T("/name"), m_Name);
 	cfg->Write(tmp + _T("/parent"), (int)m_ParentID);
 
 	wxString key = GetStringFromArray(m_CompilerOptions);
-	cfg->Write(tmp + _T("/compiler_options"), key);
+	cfg->Write(tmp + _T("/compiler_options"), key, true);
 	key = GetStringFromArray(m_LinkerOptions);
-	cfg->Write(tmp + _T("/linker_options"), key);
+	cfg->Write(tmp + _T("/linker_options"), key, true);
 	key = GetStringFromArray(m_IncludeDirs);
-	cfg->Write(tmp + _T("/include_dirs"), key);
+	cfg->Write(tmp + _T("/include_dirs"), key, true);
 	key = GetStringFromArray(m_ResIncludeDirs);
-	cfg->Write(tmp + _T("/res_include_dirs"), key);
+	cfg->Write(tmp + _T("/res_include_dirs"), key, true);
 	key = GetStringFromArray(m_LibDirs);
-	cfg->Write(tmp + _T("/library_dirs"), key);
+	cfg->Write(tmp + _T("/library_dirs"), key, true);
 	key = GetStringFromArray(m_LinkLibs);
-	cfg->Write(tmp + _T("/libraries"), key);
+	cfg->Write(tmp + _T("/libraries"), key, true);
 	key = GetStringFromArray(m_CmdsBefore);
-	cfg->Write(tmp + _T("/commands_before"), key);
+	cfg->Write(tmp + _T("/commands_before"), key, true);
 	key = GetStringFromArray(m_CmdsAfter);
-	cfg->Write(tmp + _T("/commands_after"), key);
+	cfg->Write(tmp + _T("/commands_after"), key, true);
 
-    cfg->Write(tmp + _T("/master_path"), m_MasterPath);
-    cfg->Write(tmp + _T("/extra_paths"), GetStringFromArray(m_ExtraPaths, _T(";")));
-    cfg->Write(tmp + _T("/c_compiler"), m_Programs.C);
-    cfg->Write(tmp + _T("/cpp_compiler"), m_Programs.CPP);
-    cfg->Write(tmp + _T("/linker"), m_Programs.LD);
-    cfg->Write(tmp + _T("/lib_linker"), m_Programs.LIB);
-    cfg->Write(tmp + _T("/res_compiler"), m_Programs.WINDRES);
-    cfg->Write(tmp + _T("/make"), m_Programs.MAKE);
-    cfg->Write(tmp + _T("/debugger"), m_Programs.DBG);
+    cfg->Write(tmp + _T("/master_path"), m_MasterPath, true);
+    cfg->Write(tmp + _T("/extra_paths"), GetStringFromArray(m_ExtraPaths, _T(";")), true);
+    cfg->Write(tmp + _T("/c_compiler"), m_Programs.C, true);
+    cfg->Write(tmp + _T("/cpp_compiler"), m_Programs.CPP, true);
+    cfg->Write(tmp + _T("/linker"), m_Programs.LD, true);
+    cfg->Write(tmp + _T("/lib_linker"), m_Programs.LIB, true);
+    cfg->Write(tmp + _T("/res_compiler"), m_Programs.WINDRES, true);
+    cfg->Write(tmp + _T("/make"), m_Programs.MAKE, true);
+    cfg->Write(tmp + _T("/debugger"), m_Programs.DBG, true);
 
     for (int i = 0; i < COMPILER_COMMAND_TYPES_COUNT; ++i)
     {
-        cfg->Write(tmp + _T("/macros/") + CommandTypeDescriptions[i], m_Commands[i]);
+        cfg->Write(tmp + _T("/macros/") + CommandTypeDescriptions[i], m_Commands[i], true);
     }
 
     // switches
-    cfg->Write(tmp + _T("/switches/includes"), m_Switches.includeDirs);
-    cfg->Write(tmp + _T("/switches/libs"), m_Switches.libDirs);
-    cfg->Write(tmp + _T("/switches/link"), m_Switches.linkLibs);
-    cfg->Write(tmp + _T("/switches/define"), m_Switches.defines);
-    cfg->Write(tmp + _T("/switches/generic"), m_Switches.genericSwitch);
-    cfg->Write(tmp + _T("/switches/objectext"), m_Switches.objectExtension);
+    cfg->Write(tmp + _T("/switches/includes"), m_Switches.includeDirs, true);
+    cfg->Write(tmp + _T("/switches/libs"), m_Switches.libDirs, true);
+    cfg->Write(tmp + _T("/switches/link"), m_Switches.linkLibs, true);
+    cfg->Write(tmp + _T("/switches/define"), m_Switches.defines, true);
+    cfg->Write(tmp + _T("/switches/generic"), m_Switches.genericSwitch, true);
+    cfg->Write(tmp + _T("/switches/objectext"), m_Switches.objectExtension, true);
     cfg->Write(tmp + _T("/switches/deps"), m_Switches.needDependencies);
     cfg->Write(tmp + _T("/switches/forceCompilerQuotes"), m_Switches.forceCompilerUseQuotes);
     cfg->Write(tmp + _T("/switches/forceLinkerQuotes"), m_Switches.forceLinkerUseQuotes);
     cfg->Write(tmp + _T("/switches/logging"), m_Switches.logging);
     cfg->Write(tmp + _T("/switches/buildMethod"), m_Switches.buildMethod);
-    cfg->Write(tmp + _T("/switches/libPrefix"), m_Switches.libPrefix);
-    cfg->Write(tmp + _T("/switches/libExtension"), m_Switches.libExtension);
+    cfg->Write(tmp + _T("/switches/libPrefix"), m_Switches.libPrefix, true);
+    cfg->Write(tmp + _T("/switches/libExtension"), m_Switches.libExtension, true);
     cfg->Write(tmp + _T("/switches/linkerNeedsLibPrefix"), m_Switches.linkerNeedsLibPrefix);
     cfg->Write(tmp + _T("/switches/linkerNeedsLibExtension"), m_Switches.linkerNeedsLibExtension);
 
     // regexes
-//    cfg->UnSet(tmp + _T("/regex"));
+    cfg->DeleteSubPath(tmp + _T("/regex"));
     wxString group;
     for (size_t i = 0; i < m_RegExes.Count(); ++i)
     {
         group.Printf(_T("%s/regex/re%3.3d"), tmp.c_str(), i + 1);
         RegExStruct& rs = m_RegExes[i];
-        cfg->Write(group + _T("/description"), rs.desc);
+        cfg->Write(group + _T("/description"), rs.desc, true);
         cfg->Write(group + _T("/type"), rs.lt);
-        cfg->Write(group + _T("/regex"), rs.regex);
+        cfg->Write(group + _T("/regex"), rs.regex, true);
         cfg->Write(group + _T("/msg1"), rs.msg[0]);
         cfg->Write(group + _T("/msg2"), rs.msg[1]);
         cfg->Write(group + _T("/msg3"), rs.msg[2]);
@@ -149,8 +149,8 @@ void Compiler::LoadSettings(const wxString& baseKey)
     ConfigManager* cfg = Manager::Get()->GetConfigManager(_T("compiler"));
 
     wxString tmp;
-    tmp.Printf(_T("/%s/set%3.3d"), baseKey.c_str(), (int)m_ID);
-    if (!cfg->Exists(tmp))
+    tmp.Printf(_T("%s/set%3.3d"), baseKey.c_str(), (int)m_ID);
+    if (!cfg->Exists(tmp + _T("/name")))
         return;
 
     wxString sep = wxFileName::GetPathSeparator();

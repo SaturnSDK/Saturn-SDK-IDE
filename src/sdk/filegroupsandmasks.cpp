@@ -59,8 +59,8 @@ void FilesGroupsAndMasks::Load()
 	{
 		// new way (reading groups)
 		wxString key = _T("/file_groups/") + list[i];
-        unsigned int group = AddGroup(conf->Read(key + _T("/Name")));
-        SetFileMasks(group, conf->Read(key + _T("/Mask")));
+        unsigned int group = AddGroup(conf->Read(key + _T("/name")));
+        SetFileMasks(group, conf->Read(key + _T("/mask")));
 	}
 }
 
@@ -72,10 +72,10 @@ void FilesGroupsAndMasks::Save()
 	{
         FileGroups* fg = m_Groups[i];
         wxString key;
-        key << i << _T("/") << _T("Name");
+        key << _("group") << i << _T("/") << _T("name");
 		conf->Write(key, fg->groupName);
         key.Clear();
-        key << i << _T("/") << _T("Mask");
+        key << _("group") << i << _T("/") << _T("mask");
 		conf->Write(key, GetStringFromArray(fg->fileMasks, _T(";")));
 	}
 }

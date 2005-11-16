@@ -145,7 +145,7 @@ EditorConfigurationDlg::EditorConfigurationDlg(wxWindow* parent)
 
 	// default code
     wxString key;
-    key.Printf(_T("/default_code/%d"), IdxToFileType[m_DefCodeFileType]);
+    key.Printf(_T("/default_code/set%d"), IdxToFileType[m_DefCodeFileType]);
     XRCCTRL(*this, "txtDefCode", wxTextCtrl)->SetValue(cfg->Read(key, wxEmptyString));
     wxFont tmpFont(8, wxMODERN, wxNORMAL, wxNORMAL);
     XRCCTRL(*this, "txtDefCode", wxTextCtrl)->SetFont(tmpFont);
@@ -682,7 +682,7 @@ void EditorConfigurationDlg::OnOK(wxCommandEvent& event)
 
 	int sel = XRCCTRL(*this, "cmbDefCodeFileType", wxComboBox)->GetSelection();
     wxString key;
-    key.Printf(_T("/default_code/%d"), IdxToFileType[sel]);
+    key.Printf(_T("/default_code/set%d"), IdxToFileType[sel]);
     cfg->Write(key, XRCCTRL(*this, "txtDefCode", wxTextCtrl)->GetValue());
 
 	if (m_Theme)

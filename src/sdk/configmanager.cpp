@@ -413,7 +413,8 @@ TiXmlElement* ConfigManager::AssertPath(wxString& path)
     path.Replace(_T("//"),  _T("/"));
 
     wxString illegal(" :.,;!\"§$%&()[]<>{}?*+-|#");
-    while(size_t i = path.find_first_of(illegal))
+    size_t i;
+    while((i = path.find_first_of(illegal)) != wxString::npos)
         path[i] = _T('_');
 
     if(!path.Contains(_T("/")))
@@ -920,7 +921,8 @@ void ConfigManager::DeleteSubPath(const wxString& thePath)
     path.Replace(_T("//"),  _T("/"));
 
     wxString illegal(" :.,;!\"§$%&()[]<>{}?*+-|#");
-    while(size_t i = path.find_first_of(illegal))
+    size_t i;
+    while((i = path.find_first_of(illegal)) != wxString::npos)
         path[i] = _T('_');
 
     if(path.Last() == _T('/'))

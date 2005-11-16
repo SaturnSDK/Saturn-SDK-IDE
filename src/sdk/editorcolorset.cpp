@@ -399,32 +399,43 @@ void EditorColorSet::Save()
 		if (lang.IsEmpty())
             continue;
         key.Clear();
-		key << _T("/color_sets/") << m_Name << _T("/") << lang;
+		key << _T("/color_sets/") << m_Name << _T("/set") << x;
+        cfg->Write(key + _T("/name"), lang);
 		for (unsigned int i = 0; i < m_Sets[x].m_Colors.GetCount(); ++i)
 		{
 			OptionColor* opt = m_Sets[x].m_Colors.Item(i);
 			wxString tmpKey;
-			tmpKey << key << _T("/") << opt->name;
+			tmpKey << key << _T("/style") << i;
+
+			cfg->Write(tmpKey + _T("/name"), opt->name, true);
 
 			if (opt->fore != wxNullColour)
                 cfg->Write(tmpKey + _T("/fore"), opt->fore);
 			if (opt->back != wxNullColour)
                 cfg->Write(tmpKey + _T("/back"), opt->back);
 
-			cfg->Write(tmpKey + _T("/bold"),       opt->bold);
-			cfg->Write(tmpKey + _T("/italics"),    opt->italics);
-			cfg->Write(tmpKey + _T("/underlined"), opt->underlined);
-
-			cfg->Write(tmpKey + _T("/isStyle"), opt->isStyle);
+            if (opt->bold)
+                cfg->Write(tmpKey + _T("/bold"),       opt->bold);
+            if (opt->italics)
+                cfg->Write(tmpKey + _T("/italics"),    opt->italics);
+            if (opt->underlined)
+                cfg->Write(tmpKey + _T("/underlined"), opt->underlined);
+            if (opt->isStyle)
+                cfg->Write(tmpKey + _T("/isStyle"), opt->isStyle);
 		}
         wxString tmpkey;
 		for (int i = 0; i < 3; ++i)
 		{
-			tmpkey.Printf(_T("%s/editor/keywords/%d"), key.c_str(), i);
-            cfg->Write(tmpkey, m_Sets[x].m_Keywords[i]);
+		    if (!m_Sets[x].m_Keywords[i].IsEmpty())
+		    {
+                tmpkey.Printf(_T("%s/editor/keywords/set%d"), key.c_str(), i);
+                cfg->Write(tmpkey, m_Sets[x].m_Keywords[i]);
+		    }
 		}
         tmpkey.Printf(_T("%s/editor/filemasks"), key.c_str());
-        cfg->Write(tmpkey, GetStringFromArray(m_Sets[x].m_FileMasks, _T(",")));
+        wxString tmparr = GetStringFromArray(m_Sets[x].m_FileMasks, _T(","));
+        if (!tmparr.IsEmpty())
+            cfg->Write(tmpkey, tmparr);
 	}
 }
 
@@ -441,14 +452,17 @@ void EditorColorSet::Load()
 		if (lang.IsEmpty())
             continue;
 		key.Clear();
-		key << _T("/color_sets/") << m_Name << _T("/") << lang;
+		key << _T("/color_sets/") << m_Name << _T("/set") << x;
 		if (cfg->EnumerateSubPaths(key).GetCount() == 0)
 			continue;
 		for (unsigned int i = 0; i < m_Sets[x].m_Colors.GetCount(); ++i)
 		{
 			OptionColor* opt = m_Sets[x].m_Colors.Item(i);
 			wxString tmpKey;
-			tmpKey << key << _T("/") << opt->name;
+			tmpKey << key << _T("/style") << i;
+
+			if (cfg->Exists(tmpKey + _T("/name")))
+                opt->name = cfg->Read(tmpKey + _T("/name"));
 
 			if (cfg->Exists(tmpKey + _T("/fore")))
                 opt->fore = cfg->ReadColour(tmpKey + _T("/fore"), opt->fore);
@@ -463,7 +477,7 @@ void EditorColorSet::Load()
         wxString tmpkey;
         for (int i = 0; i < 3; ++i)
         {
-            tmpkey.Printf(_T("%s/editor/keywords/%d"), key.c_str(), i);
+            tmpkey.Printf(_T("%s/editor/keywords/set%d"), key.c_str(), i);
             m_Sets[x].m_Keywords[i] = cfg->Read(tmpkey, wxEmptyString);
         }
         tmpkey.Printf(_T("%s/editor/filemasks"), key.c_str());
