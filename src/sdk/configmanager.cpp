@@ -423,7 +423,7 @@ TiXmlElement* ConfigManager::AssertPath(wxString& path)
         if(path[0] < _T('A') || path[0] > _T('Z'))
         {
             wxString s;
-            s.sprintf(_("The Configuration key %s does not meet the standard for variable naming. Variables names are required to start with a letter."), path.mb_str());
+            s.sprintf(_("The Configuration key %s (child of node \"%s\" in namespace \"%s\") does not meet the standard for variable naming.\nVariables names are required to start with a letter."), path.mb_str(), pathNode->Value(), root->Value());
             cbThrow(s);
         }
         return pathNode;
@@ -448,7 +448,7 @@ TiXmlElement* ConfigManager::AssertPath(wxString& path)
         else if(sub[0] < _T('a') || sub[0] > _T('z'))
         {
         wxString s;
-        s.sprintf(_("The subpath %s does not meet the standard for path naming. Paths and subpaths are required to start with a letter."), sub.mb_str());
+        s.sprintf(_("The subpath %s (child of node \"%s\" in namespace \"%s\") does not meet the standard for path naming.\nPaths and subpaths are required to start with a letter."), sub.mb_str(), e->Value(), root->Value());
         cbThrow(s);
         }
         else
@@ -471,7 +471,7 @@ TiXmlElement* ConfigManager::AssertPath(wxString& path)
     if(!path.IsEmpty() && (path[0] < _T('A') || path[0] > _T('Z')))
     {
         wxString s;
-        s.sprintf(_("The Configuration key %s does not meet the standard for variable naming. Variables names are required to start with a letter."), path.mb_str());
+        s.sprintf(_("The Configuration key %s (child of node \"%s\" in namespace \"%s\") does not meet the standard for variable naming.\nVariables names are required to start with a letter."), path.mb_str(), pathNode->Value(), root->Value());
         cbThrow(s);
     }
     return e;
