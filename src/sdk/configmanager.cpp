@@ -516,7 +516,7 @@ void ConfigManager::SetNodeText(TiXmlElement* n, const TiXmlText& t)
 *  and the data path, respectively. These values are never saved to the configuration, but kept in static variables.
 *  The application makes use of this by "writing" to the configuration file after determining these values at runtime.
 */
-void ConfigManager::Write(const wxString& name,  const wxString& value)
+void ConfigManager::Write(const wxString& name,  const wxString& value, bool ignoreEmpty)
 {
     if(name.IsSameAs(CfgMgrConsts::app_path))
     {
@@ -528,6 +528,8 @@ void ConfigManager::Write(const wxString& name,  const wxString& value)
         ConfigManager::data_path = value;
         return;
     }
+    if(ignoreEmpty && value.IsEmpty())
+        return;
 
     wxString key(name);
     TiXmlElement* e = AssertPath(key);

@@ -113,7 +113,7 @@ public:
     /* -----------------------------------------------------------------------------------------------------
     *  Standard primitives
     */
-    void Write(const wxString& name,  const wxString& value);
+    void Write(const wxString& name,  const wxString& value, bool ignoreEmpty = false);
     wxString Read(const wxString& key, const wxString& defaultVal = wxEmptyString);
     bool Read(const wxString& key, wxString* str);
     void Write(const wxString& key, const char* str);
