@@ -32,7 +32,7 @@
 #include <wx/fs_zip.h>
 #include <wx/msgdlg.h>
 #include <manager.h>
-#include <old_configmanager.h>
+#include <configmanager.h>
 #include <messagemanager.h>
 #include <projectmanager.h>
 #include <editormanager.h>
@@ -85,7 +85,7 @@ CodeCompletion::CodeCompletion()
 {
     wxFileSystem::AddHandler(new wxZipFSHandler);
     wxXmlResource::Get()->InitAllHandlers();
-    wxString resPath = OldConfigManager::Get()->Read(_T("data_path"), wxEmptyString);
+    wxString resPath = ConfigManager::GetDataFolder();
     wxXmlResource::Get()->Load(resPath + _T("/code_completion.zip#zip:*.xrc"));
 
     m_PluginInfo.name = _T("CodeCompletion");
@@ -103,8 +103,6 @@ CodeCompletion::CodeCompletion()
     m_PageIndex = -1;
     m_EditMenu = 0L;
 	m_SearchMenu = 0L;
-
-	OldConfigManager::AddConfiguration(m_PluginInfo.title, _T("/code_completion"));
 }
 
 CodeCompletion::~CodeCompletion()
@@ -575,7 +573,7 @@ void CodeCompletion::OnUpdateUI(wxUpdateUIEvent& event)
 
 void CodeCompletion::OnCodeComplete(wxCommandEvent& event)
 {
-    if (OldConfigManager::Get()->Read(_T("/code_completion/use_code_completion"), 1L) == 0)
+    if (!Manager::Get()->GetConfigManager(_T("code_completion"))->ReadBool(_T("/use_code_completion"), true))
         return;
     if (m_IsAttached)
 		DoCodeComplete();

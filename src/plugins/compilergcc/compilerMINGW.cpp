@@ -13,7 +13,7 @@
 #include "manager.h"
 #include "messagemanager.h"
 
-#include <old_configmanager.h>
+#include <configmanager.h>
 
 #ifdef __WXMSW__
     #include <wx/msw/registry.h>
@@ -175,7 +175,7 @@ AutoDetectResult CompilerMINGW::AutoDetectInstallationDir()
     wxString sep = wxFileName::GetPathSeparator();
 #ifdef __WXMSW__
     // look first if MinGW was installed with Code::Blocks (new in beta6)
-    m_MasterPath = OldConfigManager::Get()->Read(_T("app_path"), wxEmptyString);
+    m_MasterPath = ConfigManager::GetExecutableFolder();
 	if (!wxFileExists(m_MasterPath + sep + _T("bin") + sep + m_Programs.C))
     {
         // no... search for MinGW installation dir

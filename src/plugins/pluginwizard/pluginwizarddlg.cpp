@@ -322,7 +322,7 @@ void PluginWizardDlg::DoAddSourceWizard(const wxString& classname, wxString& buf
 	buffer << _T('\t') << _T("if (!IconBitmap.Ok())") << _T('\n');
 	buffer << _T('\t') << _T("{") << _T('\n');
 	buffer << _T('\t') << _T('\t') << _T("//make sure you change the values below (xyz_wizard and xyz.png)") << _T('\n');
-    buffer << _T('\t') << _T('\t') << _T("wxString resPath = OldConfigManager::Get()->Read(_T(\"data_path\"), wxEmptyString) + _T(\"/templates/xyz_wizard\");") << _T('\n');
+    buffer << _T('\t') << _T('\t') << _T("wxString resPath = ConfigManager::GetDataFolder() + _T(\"/templates/xyz_wizard\");") << _T('\n');
     buffer << _T('\t') << _T('\t') << _T("IconBitmap.LoadFile(resPath + _T(\"/xyz.png\"), wxBITMAP_TYPE_PNG);") << _T('\n');
 	buffer << _T('\t') << _T("}") << _T('\n');
 	buffer << _T('\t') << _T("return IconBitmap;") << _T('\n');

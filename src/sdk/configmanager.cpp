@@ -278,7 +278,12 @@ wxString ConfigManager::GetConfigFolder()
 
 wxString ConfigManager::GetPluginsFolder()
 {
-    return GetExecutableFolder() + _T("/share/codeblocks/plugins");
+    return GetDataFolder() + _T("/plugins");
+}
+
+wxString ConfigManager::GetScriptsFolder()
+{
+    return GetDataFolder() + _T("/scripts");
 }
 
 wxString ConfigManager::GetDataFolder()
@@ -314,7 +319,12 @@ wxString ConfigManager::GetConfigFolder()  const
 
 wxString ConfigManager::GetPluginsFolder()  const
 {
-    return wxString(_T("/usr/share/codeblocks/plugins"));
+    return GetDataFolder() + _T("/plugins");
+}
+
+wxString ConfigManager::GetScriptsFolder()
+{
+    return GetDataFolder() + _T("/scripts");
 }
 
 wxString ConfigManager::GetDataFolder()  const

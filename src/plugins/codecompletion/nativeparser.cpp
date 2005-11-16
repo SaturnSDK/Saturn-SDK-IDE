@@ -26,7 +26,7 @@
 #include <sdk.h>
 #include "nativeparser.h"
 #include <manager.h>
-#include <old_configmanager.h>
+#include <configmanager.h>
 #include <projectmanager.h>
 #include <pluginmanager.h>
 #include <messagemanager.h>
@@ -252,7 +252,7 @@ void NativeParser::AddParser(cbProject* project, bool useCache)
 	AddCompilerDirs(parser, project);
 	parser->StartTimer();
 
-    if (useCache && OldConfigManager::Get()->Read(_T("/code_completion/use_cache"), 0L) != 0)
+    if (useCache && Manager::Get()->GetConfigManager(_T("code_completion"))->ReadBool(_T("/use_cache"), false))
     {
         if (LoadCachedData(parser, project))
             return;
@@ -295,9 +295,9 @@ void NativeParser::RemoveParser(cbProject* project, bool useCache)
 	if (!parser)
 		return;
 
-    if (useCache && OldConfigManager::Get()->Read(_T("/code_completion/use_cache"), 0L) != 0)
+    if (useCache && Manager::Get()->GetConfigManager(_T("code_completion"))->ReadBool(_T("/use_cache"), false))
     {
-        if (OldConfigManager::Get()->Read(_T("/code_completion/update_cache_always"), 0L) != 0 ||
+        if (Manager::Get()->GetConfigManager(_T("code_completion"))->ReadBool(_T("/update_cache_always"), false) ||
             parser->CacheNeedsUpdate())
         {
             SaveCachedData(parser, m_ParsersFilenames[project]);

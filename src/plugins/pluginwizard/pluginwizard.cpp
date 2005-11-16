@@ -32,7 +32,7 @@
 #include <wx/mdi.h>
 #include <wx/msgdlg.h>
 #include <manager.h>
-#include <old_configmanager.h>
+#include <configmanager.h>
 #include <projectmanager.h>
 #include <cbproject.h>
 #include <customvars.h>
@@ -45,7 +45,7 @@ PluginWizard::PluginWizard()
 {
     wxFileSystem::AddHandler(new wxZipFSHandler);
     wxXmlResource::Get()->InitAllHandlers();
-    wxString resPath = OldConfigManager::Get()->Read(_T("data_path"), wxEmptyString);
+    wxString resPath = ConfigManager::GetDataFolder();
     wxXmlResource::Get()->Load(resPath + _T("/plugin_wizard.zip#zip:*.xrc"));
 
     m_PluginInfo.name = _T("PluginWizard");

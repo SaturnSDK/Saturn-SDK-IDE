@@ -26,7 +26,7 @@
 #include <sdk.h>
 #include "cclist.h"
 #include <wx/sizer.h>
-#include <old_configmanager.h>
+#include <configmanager.h>
 #include <manager.h>
 
 const wxEventType csdEVT_CCLIST_CODECOMPLETE = wxNewEventType();
@@ -81,8 +81,8 @@ CCList::CCList(wxEvtHandler* parent, cbStyledTextCtrl* editor, Parser* parser)
 
 CCList::~CCList()
 {
-	OldConfigManager::Get()->Write(_T("/code_completion/size/width"), GetSize().GetWidth());
-	OldConfigManager::Get()->Write(_T("/code_completion/size/height"), GetSize().GetHeight());
+	Manager::Get()->GetConfigManager(_T("code_completion"))->Write(_T("/size/width"), GetSize().GetWidth());
+	Manager::Get()->GetConfigManager(_T("code_completion"))->Write(_T("/size/height"), GetSize().GetHeight());
 	m_pEditor->SetFocus();
 	delete m_pList;
 	g_CCList = 0L;
@@ -95,8 +95,8 @@ void CCList::PositionMe()
 	int lineHeight = m_pEditor->TextHeight(m_pEditor->GetCurrentLine());
 	pt.y += lineHeight;
 
-	int w = OldConfigManager::Get()->Read(_T("/code_completion/size/width"), 320);
-	int h = OldConfigManager::Get()->Read(_T("/code_completion/size/height"), 160);
+	int w = Manager::Get()->GetConfigManager(_T("code_completion"))->ReadInt(_T("/size/width"), 320);
+	int h = Manager::Get()->GetConfigManager(_T("code_completion"))->ReadInt(_T("/size/height"), 160);
 	int screenW = wxSystemSettings::GetMetric(wxSYS_SCREEN_X);
 	int screenH = wxSystemSettings::GetMetric(wxSYS_SCREEN_Y);
 	// sanity check

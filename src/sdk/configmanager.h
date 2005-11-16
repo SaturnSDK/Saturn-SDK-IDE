@@ -83,6 +83,7 @@ public:
     static wxString GetHomeFolder();
     static wxString GetConfigFolder();
     static wxString GetPluginsFolder();
+    static wxString GetScriptsFolder();
     static wxString GetDataFolder();
     static wxString GetExecutableFolder();
     static wxString GetProxy();

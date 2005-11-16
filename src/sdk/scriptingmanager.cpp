@@ -107,7 +107,7 @@ int ScriptingManager::LoadScript(const wxString& filename, const wxString& modul
 //    if (!DoLoadScript(filename, script))
 //    {
 //        // try in <data_path>/scripts/
-//        if (!DoLoadScript(ConfigManager::GetDataFolder() + _T("/scripts/") + filename, script))
+//        if (!DoLoadScript(ConfigManager::GetScriptsFolder() + _T("/") + filename, script))
 //        {
 ////            wxMessageBox(_("Can't open script ") + filename, _("Error"), wxICON_ERROR);
 //            return -1;
@@ -118,7 +118,7 @@ int ScriptingManager::LoadScript(const wxString& filename, const wxString& modul
     FILE* fp = fopen(_C(fname), "r");
     if (!fp)
     {
-        fname = ConfigManager::GetDataFolder() + _T("/scripts/") + filename;
+        fname = ConfigManager::GetScriptsFolder() + _T("/") + filename;
         fp = fopen(_C(fname), "r");
         if(!fp)
         {

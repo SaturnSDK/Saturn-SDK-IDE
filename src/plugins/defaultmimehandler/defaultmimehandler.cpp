@@ -16,7 +16,7 @@
 #include "defaultmimehandler.h"
 #include <manager.h>
 #include <editormanager.h>
-#include <old_configmanager.h>
+#include <configmanager.h>
 #include <cbeditor.h>
 #include <licenses.h> // defines some common licenses (like the GPL)
 
@@ -28,8 +28,6 @@
 #include <wx/filedlg.h>
 #include <wx/filename.h>
 #include "editmimetypesdlg.h"
-
-#define CONF_GROUP _T("/mime_types")
 
 CB_IMPLEMENT_PLUGIN(DefaultMimeHandler);
 
@@ -49,10 +47,8 @@ DefaultMimeHandler::DefaultMimeHandler()
 
     wxFileSystem::AddHandler(new wxZipFSHandler);
     wxXmlResource::Get()->InitAllHandlers();
-    wxString resPath = OldConfigManager::Get()->Read(_T("data_path"), wxEmptyString);
+    wxString resPath = ConfigManager::GetDataFolder();
     wxXmlResource::Get()->Load(resPath + _T("/defaultmimehandler.zip#zip:*.xrc"));
-
-	OldConfigManager::AddConfiguration(_("MIME types handling"), CONF_GROUP);
 }
 
 DefaultMimeHandler::~DefaultMimeHandler()
@@ -64,15 +60,12 @@ void DefaultMimeHandler::OnAttach()
 {
     // load configuration
     WX_CLEAR_ARRAY(m_MimeTypes);
-	long cookie;
-	wxString entry;
-	wxConfigBase* conf = OldConfigManager::Get();
-	wxString oldPath = conf->GetPath();
-	conf->SetPath(CONF_GROUP);
-	bool cont = conf->GetFirstEntry(entry, cookie);
-	while (cont)
-	{
-        wxArrayString array = GetArrayFromString(conf->Read(entry));
+
+    ConfigManager* conf = Manager::Get()->GetConfigManager(_T("mime_types"));
+    wxArrayString list = conf->EnumerateKeys(_T("/"));
+    for (unsigned int i = 0; i < list.GetCount(); ++i)
+    {
+        wxArrayString array = GetArrayFromString(conf->Read(list[i]));
         if (array.GetCount() == 3 || array.GetCount() == 4)
         {
             cbMimeType* mt = new cbMimeType;
@@ -86,19 +79,19 @@ void DefaultMimeHandler::OnAttach()
             else
                 m_MimeTypes.Add(mt);
         }
-		cont = conf->GetNextEntry(entry, cookie);
 	}
-	conf->SetPath(oldPath);
 }
 
 
 void DefaultMimeHandler::OnRelease(bool appShutDown)
 {
     // save configuration
-	wxConfigBase* conf = OldConfigManager::Get();
-	conf->DeleteGroup(CONF_GROUP);
-	wxString oldPath = conf->GetPath();
-	conf->SetPath(CONF_GROUP);
+    ConfigManager* conf = Manager::Get()->GetConfigManager(_T("mime_types"));
+    wxArrayString list = conf->EnumerateKeys(_T("/"));
+    for (unsigned int i = 0; i < list.GetCount(); ++i)
+    {
+        conf->UnSet(list[i]);
+    }
 	for (unsigned int i = 0; i < m_MimeTypes.GetCount(); ++i)
 	{
         cbMimeType* mt = m_MimeTypes[i];
@@ -111,7 +104,6 @@ void DefaultMimeHandler::OnRelease(bool appShutDown)
         key.Printf(_T("MimeType%d"), i);
 		conf->Write(key, txt);
 	}
-	conf->SetPath(oldPath);
     WX_CLEAR_ARRAY(m_MimeTypes);
 }
 
