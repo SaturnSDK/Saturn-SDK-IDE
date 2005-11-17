@@ -19,7 +19,7 @@ struct wxsNotebookExtraParams
     {}
 };
 
-class wxsNotebook : public wxsContainer
+class WXSCLASS wxsNotebook : public wxsContainer
 {
 	public:
 
@@ -37,6 +37,7 @@ class wxsNotebook : public wxsContainer
         virtual void PreviewMouseEvent(wxMouseEvent& event);
         virtual void EnsurePreviewVisible(wxsWidget* Child);
         inline wxsNotebookExtraParams* GetExtraParams(int Index) { return (wxsNotebookExtraParams*)GetExtra(Index); }
+        virtual wxWindow* BuildChildQuickPanel(wxWindow* Parent,int ChildPos);
 
    protected:
 

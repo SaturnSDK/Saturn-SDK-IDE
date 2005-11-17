@@ -150,6 +150,12 @@ void HelpConfigDialog::Add(wxCommandEvent &event)
     	return;
     }
 
+    if (text.Find(_T('/')) != -1 || text.Find(_T('\\')) != -1)
+    {
+      wxMessageBox(_("Slashes and backslashes cannot be used to name a help file"), _("Warning"), wxICON_WARNING);
+      return;
+    }
+
     lst->Append(text);
     lst->SetSelection(lst->GetCount() - 1);
     XRCCTRL(*this, "chkDefault", wxCheckBox)->SetValue(false);
@@ -180,6 +186,12 @@ void HelpConfigDialog::Rename(wxCommandEvent &event)
     {
     	wxMessageBox(_("This is a key for internal use of the plugin and cannot be assigned to a help file"), _("Warning"), wxICON_WARNING);
     	return;
+    }
+
+    if (text.Find(_T('/')) != -1 || text.Find(_T('\\')) != -1)
+    {
+      wxMessageBox(_("Slashes and backslashes cannot be used to name a help file"), _("Warning"), wxICON_WARNING);
+      return;
     }
 
     m_Vector[lst->GetSelection()].first = text;

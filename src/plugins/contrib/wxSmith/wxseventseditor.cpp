@@ -218,7 +218,7 @@ wxString wxsEventsEditor::GetFunctionProposition(wxsEventDesc* Event)
     // Creating proposition of new function name
 
     wxString NewNameBase;
-    NewNameBase.Printf(_T("On%s%s"),Widget->GetBaseParams().VarName.c_str(),Event->NewFuncNameBase.c_str());
+    NewNameBase.Printf(_T("On%s%s"),Widget->GetBaseProperties().VarName.c_str(),Event->NewFuncNameBase.c_str());
 
     int Suffix = 0;
     wxArrayString Functions;
@@ -280,7 +280,6 @@ bool wxsEventsEditor::CreateNewFunction(wxsEventDesc* Event,const wxString& NewF
 	if ( Declarations.Length() == 0 ) return false;
 	Declarations << _T("void ") << NewFunctionName << _T('(');
 	Declarations << Event->EventTypeName << _T("& event);\n");
-    Declarations.Append(_T(' '),2*4);
 	wxsCoder::Get()->AddCode(HeaderFile,DeclarationsHeader,Declarations,true);
 	Res->UpdateEventTable();
 	cbEditor* Editor = Manager::Get()->GetEditorManager()->Open(SourceFile);

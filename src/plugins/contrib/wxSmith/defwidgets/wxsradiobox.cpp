@@ -7,9 +7,14 @@ WXS_ST_BEGIN(wxsRadioBoxStyles)
     WXS_ST_CATEGORY("wxRadioBox")
     WXS_ST(wxRA_SPECIFY_ROWS)
     WXS_ST(wxRA_SPECIFY_COLS)
-#ifdef __PALMOS__
-    WXS_ST(wxRA_USE_CHECKBOX)
-#endif
+// NOTE (cyberkoa##): wxRA_HORIZONTAL & wxRA_VERTICAL is not in HELP file but in wxMSW's XRC
+    WXS_ST(wxRA_HORIZONTAL)
+    WXS_ST(wxRA_VERTICAL)
+
+// FIXME (cyberkoa##): wxRA_USE_CHECKBOX currently only support on PalmOS,to confirm the PALMOS #ifdef statement
+//#ifdef __PALMOS__
+//    WXS_ST(wxRA_USE_CHECKBOX)
+//#endif
     WXS_ST_DEFAULTS()
 WXS_ST_END(wxsRadioBoxStyles)
 
@@ -53,9 +58,9 @@ wxString wxsRadioBox::GetProducingCode(wxsCodeParams& Params)
 	if ( arrayChoices.Count() == 0 )
 	{
 		return wxString::Format(_T("%s = new wxRadioBox(%s,%s,%s,%s,%s,0,NULL,%d,%s);"),
-            GetBaseParams().VarName.c_str(),
+            GetBaseProperties().VarName.c_str(),
             Params.ParentName.c_str(),
-            GetBaseParams().IdName.c_str(),
+            GetBaseProperties().IdName.c_str(),
             GetWxString(label).c_str(),
             CDefs.Pos.c_str(),
             CDefs.Size.c_str(),
@@ -71,9 +76,9 @@ wxString wxsRadioBox::GetProducingCode(wxsCodeParams& Params)
 	}
 
     Code.Append ( wxString::Format(_T("%s = new wxRadioBox(%s,%s,%s,%s,%s,%d,wxRadioBoxChoices%d,%d,%s);"),
-        GetBaseParams().VarName.c_str(),
+        GetBaseProperties().VarName.c_str(),
         Params.ParentName.c_str(),
-        GetBaseParams().IdName.c_str(),
+        GetBaseProperties().IdName.c_str(),
         GetWxString(label).c_str(),
         CDefs.Pos.c_str(),
         CDefs.Size.c_str(),
@@ -84,7 +89,7 @@ wxString wxsRadioBox::GetProducingCode(wxsCodeParams& Params)
 
     if ( defaultChoice >= 0 )
     {
-    	Code.Append( wxString::Format(_T("%s->SetSelection(%d);"),GetBaseParams().VarName.c_str(),defaultChoice) );
+    	Code.Append( wxString::Format(_T("%s->SetSelection(%d);"),GetBaseProperties().VarName.c_str(),defaultChoice) );
     }
 
     Code << CDefs.InitCode;

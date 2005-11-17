@@ -1,7 +1,6 @@
 #ifndef __WIDGET_H
 #define __WIDGET_H
 
-
 #include <wx/window.h>
 #include <wx/image.h>
 #include <wx/panel.h>
@@ -15,100 +14,13 @@
 #include "wxsproperties.h"
 #include "wxswindoweditor.h"
 #include "wxsstyle.h"
+#include "wxsbaseproperties.h"
+#include "wxswidgetmanager.h"
 
-#define DebLog Manager::Get()->GetMessageManager()->DebugLog
-
-class wxsWidgetManager;
-class wxsWidget;
-class wxsWidgetEvents;
-class wxsEventDesc;
-
-/** Structure containing info aboul widget */
-struct wxsWidgetInfo
-{
-    wxString Name;                  ///< Widget's name
-    wxString License;               ///< Widget's license
-    wxString Author;                ///< Widget's author
-    wxString AuthorEmail;           ///< Widget's authos's email
-    wxString AuthorSite;            ///< Widget's author's site
-    wxString WidgetsSite;           ///< Site about this widget
-    wxString Category;              ///< Widget's category
-    wxString DefaultVarName;        ///< Prefix for default variable name
-    bool Container;                 ///< True if this widget can have other widgets inside
-    bool Sizer;                     ///< True if this widget is a sizer (Container must also be true)
-    bool Spacer;                    ///< True if this is a spacer
-    unsigned short VerHi;           ///< Lower number of version
-    unsigned short VerLo;           ///< Higher number of version
-    wxBitmap* Icon;                 ///< Icon used in pallette
-    wxsWidgetManager* Manager;      ///< Manager handling this widget
-    int Id;                         ///< Identifier used inside manager to handle this widget, must be same as 'Number' in GetWidgetInfo call
-    int TreeIconId;
-    wxsStyle* Styles;               ///< Set of available styles, ending with NULL-named style
-    wxsEventDesc *Events;           ///< Set of events supported by this widget, enging with NULL-named entry
-    wxString HeaderFile;            ///< Header file (including '<' and '>' or '"') for this file
-    wxString ExtHeaderFile;         ///< Additional header file
-
-    /** Types of extended widgets */
-    enum ExTypeT
-    {
-        exNone = 0,                 ///< This is widget from standard set (no new coded nor additional library needed)
-        exCode,                     ///< This widget provides it's source code, currently not supported
-        exLibrary                   ///< This widget is provided in additional library, currently not supported
-    };
-
-    ExTypeT ExType;                 ///< Type of extended widget
-    wxString WidgetCodeDefinition;  ///< Code with definition of class for this widget
-    wxString WidgetCodeDeclaration; ///< Code with declaration of class for this widget
-    wxString WidgetLibrary;         ///< Library including this widget (empty for no library)
-};
-
-/** Structure describing default widget's options */
-struct wxsWidgetBaseParams
-{
-    wxString IdName;                ///< Widget's identifier
-    wxString VarName;               ///< Widget's variable used inside main window
-    bool IsMember;                  ///< True if widget's variable won't be stored inside main window
-    int PosX, PosY;                 ///< Widget's position
-    bool DefaultPosition;           ///< Widget has default position
-    int SizeX, SizeY;               ///< Widget's size
-    bool DefaultSize;               ///< Widget has default size
-    int Style;                      ///< Current style
-
-    bool Enabled;                   ///< If false, widget is disabled (true by deefault)
-    bool Focused;                   ///< If true, widget is focused (false by default)
-    bool Hidden;                    ///< If true, widget is hidden (false by default)
-
-    wxUint32 FgType;                ///< Type of Fg colour (wxSYS_COLOUR_XXX or wxsCUSTOM_COLOUR or wxsNO_COLOUR)
-    wxColour Fg;                    ///< Foreground colour when using custom colour
-    wxUint32 BgType;                ///< Type of Bg colour (wxSYS_COLOUR_XXX or wxsCUSTOM_COLOUR or wxsNO_COLOUR)
-    wxColour Bg;                    ///< Background colour when using custom colour
-
-    bool UseFont;                   ///< Must be true to allow using font
-    wxFont Font;                    ///< Font
-
-    wxString ToolTip;               ///< Tooltip
-
-    wxsWidgetBaseParams():
-        IdName(_T("")),
-        VarName(_T("")),
-        IsMember(true),
-        PosX(-1), PosY(-1),
-        DefaultPosition(true),
-        SizeX(-1), SizeY(-1),
-        DefaultSize(true),
-        Style(0),
-        Enabled(true),
-        Focused(false),
-        Hidden(false),
-        FgType(wxsNO_COLOUR),
-        Fg(0,0,0),
-        BgType(wxsNO_COLOUR),
-        Bg(0,0,0),
-        UseFont(false),
-        Font(wxNullFont),
-        ToolTip(_T(""))
-        {}
-};
+class WXSCLASS wxsWidgetManager;
+class WXSCLASS wxsWidget;
+class WXSCLASS wxsWidgetEvents;
+class WXSCLASS wxsEventDesc;
 
 /** Structure containing all data needed while generating code */
 struct wxsCodeParams
@@ -119,42 +31,12 @@ struct wxsCodeParams
 };
 
 /** Class representing one widget */
-class wxsWidget
+class WXSCLASS wxsWidget
 {
     public:
 
-        /** Type representing base properties set while creating widget */
-        typedef unsigned long BasePropertiesType;
-
-        static const BasePropertiesType bptPosition  = 0x0001;  ///< this widget is using position
-        static const BasePropertiesType bptSize      = 0x0002;  ///< this widget is using size
-        static const BasePropertiesType bptId        = 0x0004;  ///< this widget is using identifier
-        static const BasePropertiesType bptVariable  = 0x0008;  ///< this widget is using variable
-        static const BasePropertiesType bptStyle     = 0x0010;  ///< this widget is using style
-        static const BasePropertiesType bptEnabled   = 0x0020;  ///< this widget uses Enabled property
-        static const BasePropertiesType bptFocused   = 0x0040;  ///< this widget uses Focused property
-        static const BasePropertiesType bptHidden    = 0x0080;  ///< this widget uses Hidden property
-        static const BasePropertiesType bptColours   = 0x0100;  ///< this widget uses colour properties (Fg and Bg)
-        static const BasePropertiesType bptToolTip   = 0x0200;  ///< this widget uses tooltips
-        static const BasePropertiesType bptFont      = 0x0400;  ///< this widget uses font
-
-        /** BasePropertiesType with no default properties */
-        static const BasePropertiesType propNone     = 0;
-
-        /** VasePropertiesTyue usede by common windows */
-        static const BasePropertiesType propWindow   = bptStyle | bptColours | bptToolTip | bptFont;
-
-        /** BasePropertiesType used by common widgets */
-        static const BasePropertiesType propWidget   = bptPosition | bptSize | bptId | bptVariable | bptStyle | bptEnabled | bptFocused | bptHidden | bptColours | bptToolTip | bptFont;
-
-        /** BasePropertiesType used by common sizers */
-        static const BasePropertiesType propSizer    = bptVariable;
-
-        /** BasePropertiesType used by spacer */
-        static const BasePropertiesType propSpacer   = bptSize;
-
         /** Default constructor */
-        wxsWidget(wxsWidgetManager* Man,wxsWindowRes* Res,BasePropertiesType pType = propNone);
+        wxsWidget(wxsWidgetManager* Man,wxsWindowRes* Res,wxsBasePropertiesType pType = propNone);
 
         /** Constructor used by containers
          *
@@ -163,7 +45,7 @@ class wxsWidget
          *                      false otherwise (usually for wxSizer objects
          *  \param MaxChildren - maximal number of children which can be handled by this container
          */
-        wxsWidget(wxsWidgetManager* Man, wxsWindowRes* Res, bool ISwxWindow, int MaxChild,BasePropertiesType pType = propNone);
+        wxsWidget(wxsWidgetManager* Man, wxsWindowRes* Res, bool ISwxWindow, int MaxChild,wxsBasePropertiesType pType = propNone);
 
         /** Destructor */
         virtual ~wxsWidget();
@@ -180,8 +62,8 @@ class wxsWidget
         /** Getting resource tree of this widget */
         inline wxTreeItemId GetTreeId() { return TreeId; }
 
-        /** Getting BasePropertiesType for this widget */
-        inline BasePropertiesType GetBPType() { return BPType; }
+        /** Getting wxsBasePropertiesType for this widget */
+        wxsBasePropertiesType GetBPType();
 
         /** Getting resource owning this widget */
         inline wxsWindowRes* GetResource() { return Resource; }
@@ -200,6 +82,11 @@ class wxsWidget
 
         /** Deleting tree for this widget and for all it's children */
         void KillTree(wxTreeCtrl* Tree);
+
+    protected:
+
+        /** Changing base properties used in given edit mode */
+        void ChangeBPT(int ResourceEditMode,wxsBasePropertiesType bpType);
 
 /******************************************************************************/
 /* Preview                                                                    */
@@ -258,7 +145,7 @@ class wxsWidget
     public:
 
         /** Function returning base configuration params for this widget */
-        inline wxsWidgetBaseParams& GetBaseParams() { return BaseParams; }
+        inline wxsBaseProperties& GetBaseProperties() { return BaseProperties; }
 
         /** Getting properties window for this widget */
         inline wxWindow* CreatePropertiesWindow(wxWindow* Parent)
@@ -273,7 +160,7 @@ class wxsWidget
             return Properties;
         }
 
-        /** getting properties which are currently used */
+        /** This function returns current properties window */
         inline wxWindow* GetProperties() { return Properties; }
 
         /** This should kill properties window */
@@ -303,6 +190,16 @@ class wxsWidget
          */
         virtual bool PropertiesUpdated(bool Validate,bool Correct);
 
+        /** Function building quick properties panel inside editor area
+         *
+         * If this function returns value != NULL, window returned will be
+         * added to parent's sizer automatically. Parent window can handle
+         * more elements added. In such case, this function should fetch
+         * parent's sizer, add all items into this sizer and return NULL.
+         * Default implementation returns panel from base properties.
+         */
+        virtual wxWindow* BuildQuickPanel(wxWindow* Parent);
+
     protected:
 
         /** This function should create properties view for widget. It is granted
@@ -310,7 +207,7 @@ class wxsWidget
          */
         virtual wxWindow* MyCreatePropertiesWindow(wxWindow* Parent)
         {
-            return GenBaseParamsConfig(Parent);
+            return GenBasePropertiesConfig(Parent);
         }
 
         /** This function should delete properties window. Usually should be
@@ -332,26 +229,26 @@ class wxsWidget
          */
         virtual void CreateObjectProperties()
         {
-            AddDefaultProperties(BPType);
+            AddDefaultProperties(GetBPType());
         }
 
         /** Getting wingow's style */
-        inline int GetStyle() { return BaseParams.Style; }
+        inline int GetStyle() { return BaseProperties.Style; }
 
         /** Getting window's position */
         inline wxPoint GetPosition()
         {
-            return BaseParams.DefaultPosition ?
+            return BaseProperties.DefaultPosition ?
                 wxDefaultPosition :
-                wxPoint(BaseParams.PosX,BaseParams.PosY);
+                wxPoint(BaseProperties.PosX,BaseProperties.PosY);
         }
 
         /** Getting window's size */
         inline wxSize GetSize()
         {
-            return BaseParams.DefaultSize ?
+            return BaseProperties.DefaultSize ?
                 wxDefaultSize :
-                wxSize(BaseParams.SizeX,BaseParams.SizeY);
+                wxSize(BaseProperties.SizeX,BaseProperties.SizeY);
         }
 
     private:
@@ -372,7 +269,7 @@ class wxsWidget
 
         /** Function generating code which should produce widget
          *  It's called BEFORE widget's children are created and
-         *  must set up BaseParams.VarName variable inside code.
+         *  must set up BaseProperties.VarName variable inside code.
          */
         virtual wxString GetProducingCode(wxsCodeParams& Params) { return _T(""); }
 
@@ -464,13 +361,12 @@ class wxsWidget
         /** Changing position of widget in child list */
         virtual bool ChangeChildPos(int PrevPos, int NewPos) { return false; }
 
-        /** Function returning quick configure panel for child at given position.
+        /** Function building quick configure panel for child at given position.
          *
-         * This panel is placed at palette window and should be used to quickly
-         * configure base widget params. The window should automatically update
-         * everything because no notification will be sent wnen destroying window
+         * This funtion should build wxPanel window with widgets for quick
+         * configuration. It will be placed inside quick configure area in editor.
          */
-        virtual wxWindow* GetChildPaletteHeader(wxWindow* Parent,int ChildPos) { return NULL; }
+        virtual wxWindow* BuildChildQuickPanel(wxWindow* Parent,int ChildPos) { return NULL; }
 
     protected:
 
@@ -501,7 +397,7 @@ class wxsWidget
         /** Function creating wxPanel object which contains panel with
          * configuration of base widget's properties
          */
-        inline wxWindow* GenBaseParamsConfig(wxWindow* Parent)
+        inline wxWindow* GenBasePropertiesConfig(wxWindow* Parent)
         {
             return PropertiesObject.GenerateWindow(Parent);
         }
@@ -510,17 +406,16 @@ class wxsWidget
          *  should be called when any operation on preview changes any of
          *  base properties.
          */
-        inline void UpdateBaseParamsConfig()
+        inline void UpdateBasePropertiesConfig()
         {
             PropertiesObject.UpdateProperties();
         }
 
         /** Base parameters describing this widget */
-        wxsWidgetBaseParams BaseParams;
+        wxsBaseProperties BaseProperties;
 
         /** Base object used to handle properties */
         wxsProperties PropertiesObject;
-
 
 /******************************************************************************/
 /* XML Operations                                                             */
@@ -628,16 +523,16 @@ class wxsWidget
         //End Add
 
         /** Reading all default values for widget */
-        inline bool XmlLoadDefaults() { return XmlLoadDefaultsT(BPType); }
+        inline bool XmlLoadDefaults() { return XmlLoadDefaultsT(GetBPType()); }
 
         /** Reading default values for widget using given set of base properties */
-        virtual bool XmlLoadDefaultsT(BasePropertiesType pType);
+        virtual bool XmlLoadDefaultsT(wxsBasePropertiesType pType);
 
         /** Saving all default values for widget */
-        inline bool XmlSaveDefaults() { return XmlSaveDefaultsT(BPType); }
+        inline bool XmlSaveDefaults() { return XmlSaveDefaultsT(GetBPType()); }
 
         /** Saving default values for widget using given set of base properties */
-        virtual bool XmlSaveDefaultsT(BasePropertiesType pType);
+        virtual bool XmlSaveDefaultsT(wxsBasePropertiesType pType);
 
         /** Loading all children
          *
@@ -655,7 +550,7 @@ class wxsWidget
     private:
 
         /** Adding default properties to properties manager */
-        virtual void AddDefaultProperties(BasePropertiesType Props);
+        virtual void AddDefaultProperties(wxsBasePropertiesType Props);
 
         /** Invalidating tree item id for this widget and all of it's children */
         void InvalidateTreeIds();
@@ -676,7 +571,7 @@ class wxsWidget
 
         bool PropertiesCreated;
 
-        BasePropertiesType BPType;  ///< Set of base properties used inside constructor
+        wxsBasePropertiesType BPTypes[wxsREMCount];  ///< Set of base properties used for each edit mode
 
         CodeDefines CDefines;       ///< Will be filled and returned inside GetCodedeDefines
 
@@ -685,39 +580,7 @@ class wxsWidget
 
         wxsWidgetEvents* Events;    ///< Events used for this widget
 
-        friend class wxBaseParamsPanel;
-        friend class wxsWindowEditor;
         friend class wxsContainer;
-        friend class wxsProject;
-        friend class wxsPalette;
-        friend class wxsWidgetFactory;
-        friend class wxsWindowResDataObject;
-};
-
-/** Class managing widget */
-class wxsWidgetManager
-{
-    public:
-        wxsWidgetManager() {}
-        virtual ~wxsWidgetManager() {}
-
-        /** Funcntion initializing manager */
-        virtual bool Initialize() { return true; }
-
-        /** Returns number of handled widgets */
-        virtual int GetCount() = 0;
-
-        /** Getting widget's info */
-        virtual const wxsWidgetInfo* GetWidgetInfo(int Number) = 0;
-
-        /** Getting new widget */
-        virtual wxsWidget* ProduceWidget(int Id,wxsWindowRes* Res) = 0;
-
-        /** Killing widget */
-        virtual void KillWidget(wxsWidget* Widget) = 0;
-
-        /** Fuunction registering this manager into main widget's factory */
-        virtual bool RegisterInFactory();
 };
 
 #endif

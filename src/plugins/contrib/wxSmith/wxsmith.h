@@ -37,9 +37,9 @@
 #include "wxsevent.h"
 #include "wxssplitterwindow.h"
 
-class wxsProject;
+class WXSCLASS wxsProject;
 
-class wxSmith : public cbPlugin
+class WXSCLASS wxSmith : public cbPlugin
 {
 	public:
 		wxSmith();
@@ -90,6 +90,7 @@ class wxSmith : public cbPlugin
 
         /* Internal event-processing functions */
         void OnSpreadEvent(wxsEvent& event);
+        void OnSelectRes(wxsEvent& event);
 
         /** Function checking and adding wxSmith support for current project */
         bool CheckIntegration();

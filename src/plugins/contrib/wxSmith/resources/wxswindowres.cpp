@@ -13,12 +13,10 @@ const wxChar* EmptySource =
 _T("#include \"$(Include)\"\n")
 _T("\n")
 _T("BEGIN_EVENT_TABLE($(ClassName),$(BaseClassName))\n")
-wxsBHeader("EventTable","$(ClassName)") _T("\n")
-wxsBEnd() _T("\n")
+_T("\t") wxsBHeader("EventTable","$(ClassName)") _T("\n")
+_T("\t") wxsBEnd() _T("\n")
 _T("END_EVENT_TABLE()\n")
 _T("\n")
-//_T("$(ClassName)::$(ClassName)(wxWindow* parent,wxWindowID id):\n")
-//_T("    $(BaseClassCtor)\n")
 _T("$(ClassName)::$(ClassName)(wxWindow* parent,wxWindowID id)\n")
 _T("{\n")
 _T("\t") wxsBHeader("Initialize","$(ClassName)") _T("\n")
@@ -34,9 +32,17 @@ const wxChar* EmptyHeader =
 _T("#ifndef $(Guard)\n")
 _T("#define $(Guard)\n")
 _T("\n")
-wxsBHeader("Headers","$(ClassName)") _T("\n")
-_T("#include <wx/wx.h>\n")
-wxsBEnd() _T("\n")
+_T("#include <wx/wxprec.h>\n")
+_T("\n")
+_T("#ifdef __BORLANDC__\n")
+_T("    #pragma hdrstop\n")
+_T("#endif\n")
+_T("\n")
+_T("#ifndef WX_PRECOMP\n")
+_T("\t") wxsBHeader("Headers","$(ClassName)") _T("\n")
+_T("\t#include <wx/wx.h>\n")
+_T("\t") wxsBEnd() _T("\n")
+_T("#endif\n")
 _T("\n")
 _T("class $(ClassName): public $(BaseClassName)\n")
 _T("{\n")
@@ -73,6 +79,7 @@ wxsWindowRes::wxsWindowRes(
     const wxString& Head,
     const wxString& Xrc):
         wxsResource(Project,EditMode),
+        Preview(NULL),
         ClassName(Class),
         WxsFile(Wxs),
         SrcFile(Src),
@@ -200,12 +207,25 @@ TiXmlDocument* wxsWindowRes::GenerateXml()
 
 void wxsWindowRes::ShowPreview()
 {
+    if ( Preview ) return;
 // TODO (SpOoN#1#): Save in temporary file
     Save();
 
     wxXmlResource Res(WxsFile);
     Res.InitAllHandlers();
     ShowResource(Res);
+}
+
+void wxsWindowRes::HidePreview()
+{
+    if ( !Preview ) return;
+    delete Preview;
+    Preview = NULL;
+}
+
+bool wxsWindowRes::IsPreview()
+{
+    return Preview != NULL;
 }
 
 const wxString& wxsWindowRes::GetResourceName()
@@ -259,7 +279,7 @@ bool wxsWindowRes::GenerateEmptySources()
 void wxsWindowRes::NotifyChange()
 {
 	// Nothing to be done when edit xrc file only
-	if ( GetEditMode() == wxsResFile ) return;
+	if ( GetEditMode() == wxsREMFile ) return;
 
     // Regenerating source code
 
@@ -290,10 +310,6 @@ void wxsWindowRes::NotifyChange()
 
 void wxsWindowRes::RebuildCode()
 {
-    // TODO (SpOoN#1#): find tab size in settings
-	int TabSize = 4;
-	int GlobalTabSize = 2 * TabSize;
-
 //------------------------------
 // Generating initializing code
 //------------------------------
@@ -304,7 +320,7 @@ void wxsWindowRes::RebuildCode()
 	// Creating local and global declarations
 	wxString GlobalCode;
 	bool WasDeclaration = false;
-	AddDeclarationsReq(RootWidget,Code,GlobalCode,TabSize,GlobalTabSize,WasDeclaration);
+	AddDeclarationsReq(RootWidget,Code,GlobalCode,WasDeclaration);
 	if ( WasDeclaration )
 	{
 		Code.Append(_T('\n'));
@@ -312,14 +328,13 @@ void wxsWindowRes::RebuildCode()
 
 	// Creating window-generating code
 
-    if ( GetEditMode() == wxsResSource )
+    if ( GetEditMode() == wxsREMSource )
     {
         // Generating producing code
-        wxsCodeGen Gen(RootWidget,TabSize,TabSize,false);
+        wxsCodeGen Gen(RootWidget,false);
         Code.Append(Gen.GetCode());
-        Code.Append(_T(' '),TabSize);
     }
-    else if ( GetEditMode() == wxsResFile | wxsResSource )
+    else if ( GetEditMode() == wxsREMMixed )
     {
     	// Writing new Xrc file
         TiXmlDocument* Doc = GenerateXrc();
@@ -332,14 +347,12 @@ void wxsWindowRes::RebuildCode()
         // No local variables - clearing the code
         Code = CodeHeader;
         Code.Append(_T('\n'));
-        Code.Append(GetXrcLoadingCode(TabSize));
+        Code.Append(GetXrcLoadingCode());
         Code.Append(_T('\n'));
-        Code.Append(_T(' '),TabSize);
 
     	// Loading all controls
-    	GenXrcFetchingCode(Code,RootWidget,TabSize);
+    	GenXrcFetchingCode(Code,RootWidget);
     }
-
 
 	wxsCoder::Get()->AddCode(GetProject()->GetProjectFileName(SrcFile),CodeHeader,Code);
 
@@ -349,7 +362,6 @@ void wxsWindowRes::RebuildCode()
 
 	CodeHeader.Printf(wxsBHeaderF("Declarations"),GetClassName().c_str());
 	Code = CodeHeader + _T("\n") + GlobalCode;
-	Code.Append(' ',GlobalTabSize);
 	wxsCoder::Get()->AddCode(GetProject()->GetProjectFileName(HFile),CodeHeader,Code);
 
 //---------------------------------
@@ -359,14 +371,11 @@ void wxsWindowRes::RebuildCode()
     CodeHeader.Printf(wxsBHeaderF("Identifiers"),GetClassName().c_str());
     Code = CodeHeader;
     Code.Append(_T('\n'));
-    Code.Append(_T(' '),GlobalTabSize);
-    if ( GetEditMode() == wxsResSource )
+    if ( GetEditMode() == wxsREMSource )
     {
         wxArrayString IdsArray;
         BuildIdsArray(RootWidget,IdsArray);
-        Code.Append(_T("enum Identifiers\n"));
-        Code.Append(_T(' '),GlobalTabSize);
-        Code.Append(_T('{'));
+        Code.Append(_T("enum Identifiers\n{"));
         IdsArray.Sort();
         wxString Previous = _T("");
         bool First = true;
@@ -375,8 +384,7 @@ void wxsWindowRes::RebuildCode()
             if ( IdsArray[i] != Previous )
             {
                 Previous = IdsArray[i];
-                Code.Append( _T('\n') );
-                Code.Append( _T(' '), GlobalTabSize + TabSize );
+                Code.Append( _T("\n\t") );
                 Code.Append( Previous );
                 if ( First )
                 {
@@ -389,10 +397,7 @@ void wxsWindowRes::RebuildCode()
                 }
             }
         }
-        Code.Append( _T('\n') );
-        Code.Append( _T(' '), GlobalTabSize );
-        Code.Append( _T("};\n") );
-        Code.Append( _T(' '), GlobalTabSize );
+        Code.Append( _T("\n};\n") );
     }
     wxsCoder::Get()->AddCode(GetProject()->GetProjectFileName(HFile),CodeHeader,Code);
 
@@ -403,7 +408,7 @@ void wxsWindowRes::RebuildCode()
 	wxArrayString HeadersArray;
 	BuildHeadersArray(RootWidget,HeadersArray);
 	HeadersArray.Add(_T("<wx/intl.h>"));
-	if ( GetEditMode() == (wxsResSource | wxsResFile) )
+	if ( GetEditMode() == wxsREMMixed )
 	{
 		HeadersArray.Add(_T("<wx/xrc/xmlres.h>"));
 	}
@@ -425,7 +430,7 @@ void wxsWindowRes::RebuildCode()
 	UpdateEventTable();
 }
 
-void wxsWindowRes::AddDeclarationsReq(wxsWidget* Widget,wxString& LocalCode,wxString& GlobalCode,int LocalTabSize,int GlobalTabSize,bool& WasLocal)
+void wxsWindowRes::AddDeclarationsReq(wxsWidget* Widget,wxString& LocalCode,wxString& GlobalCode,bool& WasLocal)
 {
 	static wxsCodeParams EmptyParams;
 
@@ -434,17 +439,19 @@ void wxsWindowRes::AddDeclarationsReq(wxsWidget* Widget,wxString& LocalCode,wxSt
 	for ( int i=0; i<Count; i++ )
 	{
 		wxsWidget* Child = Widget->GetChild(i);
-		wxString Decl = Child->GetDeclarationCode(EmptyParams);
-		if ( Decl.Length() )
+		if ( Child->GetBPType() & bptVariable )
 		{
-            bool Member = Child->GetBaseParams().IsMember;
-            wxString& Code = Member ? GlobalCode : LocalCode;
-            Code.Append(' ',Member ? GlobalTabSize : LocalTabSize);
-            Code.Append(Decl);
-            Code.Append('\n');
-            WasLocal |= !Member;
+            wxString Decl = Child->GetDeclarationCode(EmptyParams);
+            if ( Decl.Length() )
+            {
+                bool Member = Child->GetBaseProperties().IsMember;
+                wxString& Code = Member ? GlobalCode : LocalCode;
+                Code.Append(Decl);
+                Code.Append('\n');
+                WasLocal |= !Member;
+            }
 		}
-		AddDeclarationsReq(Child,LocalCode,GlobalCode,LocalTabSize,GlobalTabSize,WasLocal);
+		AddDeclarationsReq(Child,LocalCode,GlobalCode,WasLocal);
 	}
 }
 
@@ -464,11 +471,11 @@ void wxsWindowRes::UpdateWidgetsVarNameIdReq(StrMap& NamesMap, StrMap& IdsMap, w
 	{
 		wxsWidget* Child = Widget->GetChild(i);
 
-        wxsWidgetBaseParams& Params = Child->GetBaseParams();
+        wxsBaseProperties& Params = Child->GetBaseProperties();
 
-        bool UpdateVar = ( Child->GetBPType() & wxsWidget::bptVariable ) &&
+        bool UpdateVar = ( Child->GetBPType() & bptVariable ) &&
                          ( Params.VarName.Length() == 0 );
-        bool UpdateId  = ( Child->GetBPType() & wxsWidget::bptId ) &&
+        bool UpdateId  = ( Child->GetBPType() & bptId ) &&
                          ( Params.IdName.Length() == 0 );
         if ( UpdateVar || UpdateId )
         {
@@ -515,14 +522,14 @@ void wxsWindowRes::CreateSetsReq(StrMap& NamesMap, StrMap& IdsMap, wxsWidget* Wi
 
 		if ( Child != Without )
 		{
-            if ( Child->GetBaseParams().VarName.Length() )
+            if ( Child->GetBaseProperties().VarName.Length() )
             {
-                NamesMap[Child->GetBaseParams().VarName.c_str()] = Child;
+                NamesMap[Child->GetBaseProperties().VarName.c_str()] = Child;
             }
 
-            if ( Child->GetBaseParams().IdName.Length() )
+            if ( Child->GetBaseProperties().IdName.Length() )
             {
-                IdsMap[Child->GetBaseParams().IdName.c_str()] = Child;
+                IdsMap[Child->GetBaseProperties().IdName.c_str()] = Child;
             }
 		}
 
@@ -562,8 +569,8 @@ bool wxsWindowRes::CheckBasePropertiesReq(wxsWidget* Widget,bool Correct,StrMap&
 			Result = false;
 		}
 
-		NamesMap[Child->GetBaseParams().VarName] = Child;
-		IdsMap[Child->GetBaseParams().IdName] = Child;
+		NamesMap[Child->GetBaseProperties().VarName] = Child;
+		IdsMap[Child->GetBaseProperties().IdName] = Child;
 
 		if ( ! CheckBasePropertiesReq(Child,Correct,NamesMap,IdsMap) )
 		{
@@ -581,9 +588,9 @@ bool wxsWindowRes::CorrectOneWidget(StrMap& NamesMap,StrMap& IdsMap,wxsWidget* C
 
     // Validating variable name
 
-    if ( Changed->GetBPType() & wxsWidget::bptVariable )
+    if ( Changed->GetBPType() & bptVariable )
     {
-    	wxString& VarName = Changed->GetBaseParams().VarName;
+    	wxString& VarName = Changed->GetBaseProperties().VarName;
     	wxString Corrected;
     	VarName.Trim(true);
     	VarName.Trim(false);
@@ -676,9 +683,9 @@ bool wxsWindowRes::CorrectOneWidget(StrMap& NamesMap,StrMap& IdsMap,wxsWidget* C
         }
     }
 
-    if ( Changed->GetBPType() & wxsWidget::bptId )
+    if ( Changed->GetBPType() & bptId )
     {
-    	wxString& IdName = Changed->GetBaseParams().IdName;
+    	wxString& IdName = Changed->GetBaseProperties().IdName;
     	wxString Corrected;
     	IdName.Trim(true);
     	IdName.Trim(false);
@@ -785,9 +792,9 @@ void wxsWindowRes::BuildIdsArray(wxsWidget* Widget,wxArrayString& Array)
 	for ( int i=0; i<Cnt; i++ )
 	{
 		wxsWidget* Child = Widget->GetChild(i);
-		if ( Child->GetBPType() & wxsWidget::bptId )
+		if ( Child->GetBPType() & bptId )
 		{
-			Array.Add(Child->GetBaseParams().IdName);
+			Array.Add(Child->GetBaseProperties().IdName);
 		}
 		BuildIdsArray(Child,Array);
 	}
@@ -810,12 +817,11 @@ void wxsWindowRes::BuildHeadersArray(wxsWidget* Widget,wxArrayString& Array)
 
 void wxsWindowRes::UpdateEventTable()
 {
-	int TabSize = 4;
 	wxString CodeHeader;
 	CodeHeader.Printf(wxsBHeaderF("EventTable"),ClassName.c_str());
 	wxString Code = CodeHeader;
 	Code.Append(_T('\n'));
-	CollectEventTableEnteries(Code,RootWidget,TabSize);
+	CollectEventTableEnteries(Code,RootWidget);
 	wxsCoder::Get()->AddCode(GetProject()->GetProjectFileName(GetSourceFile()),CodeHeader,Code);
     // Applying modified state
     if ( GetEditor() )
@@ -835,41 +841,41 @@ void wxsWindowRes::UpdateEventTable()
     }
 }
 
-void wxsWindowRes::CollectEventTableEnteries(wxString& Code,wxsWidget* Widget,int TabSize)
+void wxsWindowRes::CollectEventTableEnteries(wxString& Code,wxsWidget* Widget)
 {
 	int Cnt = Widget->GetChildCount();
-    Code += Widget->GetEvents()->GetArrayEnteries(TabSize);
+    Code += Widget->GetEvents()->GetArrayEnteries();
 	for ( int i=0; i<Cnt; i++ )
 	{
 		wxsWidget* Child = Widget->GetChild(i);
-		CollectEventTableEnteries(Code,Child,TabSize);
+		CollectEventTableEnteries(Code,Child);
 	}
 }
 
-void wxsWindowRes::GenXrcFetchingCode(wxString& Code,wxsWidget* Widget,int TabSize)
+void wxsWindowRes::GenXrcFetchingCode(wxString& Code,wxsWidget* Widget)
 {
 	int Cnt = Widget->GetChildCount();
 	for ( int i=0; i<Cnt; i++ )
 	{
 		wxsWidget* Child = Widget->GetChild(i);
-		if ( Child->GetBaseParams().IsMember )
+		if ( ( Child->GetBPType() & bptVariable ) &&
+		     ( Child->GetBaseProperties().IsMember ) )
 		{
-			Code.Append(Child->GetBaseParams().VarName);
+			Code.Append(Child->GetBaseProperties().VarName);
 			Code.Append(_T(" = XRCCTRL(*this,\""));
-			Code.Append(Child->GetBaseParams().IdName);
+			Code.Append(Child->GetBaseProperties().IdName);
 			Code.Append(_T("\","));
 			Code.Append(Child->GetInfo().Name);
 			Code.Append(_T(");\n"));
-			Code.Append(_T(' '),TabSize);
 		}
-		GenXrcFetchingCode(Code,Child,TabSize);
+		GenXrcFetchingCode(Code,Child);
 	}
 }
 
 TiXmlDocument* wxsWindowRes::GenerateXrc()
 {
 	int EMStore = GetEditMode();
-	SetEditMode(wxsResFile);
+	SetEditMode(wxsREMFile);
 	TiXmlDocument* Generated = GenerateXml();
 	SetEditMode(EMStore);
 	return Generated;

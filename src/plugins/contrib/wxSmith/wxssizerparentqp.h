@@ -1,27 +1,30 @@
-#ifndef WXSSIZERPALETTEHEADER_H
-#define WXSSIZERPALETTEHEADER_H
+#ifndef WXSSIZERPARENTQP_H
+#define WXSSIZERPARENTQP_H
 
-//(*Headers(wxsSizerPaletteHeader)
+#include "wxsglobals.h"
+
+//(*Headers(wxsSizerParentQP)
 #include <wx/checkbox.h>
 #include <wx/intl.h>
 #include <wx/panel.h>
 #include <wx/radiobut.h>
 #include <wx/sizer.h>
 #include <wx/spinctrl.h>
+#include <wx/stattext.h>
 //*)
 #include <wx/timer.h>
 
-class wxsWidget;
-class wxsSizerExtraParams;
+class WXSCLASS wxsWidget;
+class WXSCLASS wxsSizerExtraParams;
 
-class wxsSizerPaletteHeader: public wxPanel
+class wxsSizerParentQP: public wxPanel
 {
 	public:
 
-		wxsSizerPaletteHeader(wxWindow* parent,wxsWidget* Modified,wxsSizerExtraParams* Params,wxWindowID Id=-1);
-		virtual ~wxsSizerPaletteHeader();
+		wxsSizerParentQP(wxWindow* parent,wxsWidget* Modified,wxsSizerExtraParams* Params,wxWindowID id = -1);
+		virtual ~wxsSizerParentQP();
 
-		//(*Identifiers(wxsSizerPaletteHeader)
+		//(*Identifiers(wxsSizerParentQP)
         enum Identifiers
         {
             ID_CHECKBOX1 = 0x1000,
@@ -39,30 +42,30 @@ class wxsSizerPaletteHeader: public wxPanel
             ID_RADIOBUTTON7,
             ID_RADIOBUTTON8,
             ID_RADIOBUTTON9,
-            ID_SPINCTRL1
+            ID_SPINCTRL1,
+            ID_SPINCTRL2,
+            ID_STATICTEXT1
         };
         //*)
 
 	protected:
 
-		//(*Handlers(wxsSizerPaletteHeader)
+		//(*Handlers(wxsSizerParentQP)
 		void OnBrdChange(wxCommandEvent& event);
         void OnBrdSizeChange(wxSpinEvent& event);
         void OnPlaceChange(wxCommandEvent& event);
         void OnTimer(wxTimerEvent& event);
+        void OnProportionChange(wxSpinEvent& event);
         //*)
 
-		//(*Declarations(wxsSizerPaletteHeader)
+		//(*Declarations(wxsSizerParentQP)
         wxFlexGridSizer* FlexGridSizer1;
-        wxStaticBoxSizer* StaticBoxSizer1;
-        wxFlexGridSizer* FlexGridSizer2;
-        wxGridSizer* GridSizer1;
+        wxStaticText* StaticText1;
         wxCheckBox* BrdTop;
         wxCheckBox* BrdLeft;
         wxCheckBox* BrdRight;
         wxCheckBox* BrdBottom;
         wxSpinCtrl* BrdSize;
-        wxStaticBoxSizer* StaticBoxSizer2;
         wxFlexGridSizer* FlexGridSizer3;
         wxGridSizer* GridSizer2;
         wxRadioButton* PlaceLT;
@@ -77,12 +80,20 @@ class wxsSizerPaletteHeader: public wxPanel
         wxBoxSizer* BoxSizer1;
         wxCheckBox* PlaceShp;
         wxCheckBox* PlaceExp;
+        wxStaticBoxSizer* StaticBoxSizer3;
+        wxSpinCtrl* Proportion;
         //*)
 
 	private:
 
         void ReadData();
         void SaveData();
+        inline int GetBorderFlags();
+        inline int GetBorderSize();
+        inline int GetPlacement();
+        inline bool GetExpand();
+        inline bool GetShaped();
+        inline int GetProportion();
 
         wxsWidget* Widget;
         wxsSizerExtraParams* Params;
