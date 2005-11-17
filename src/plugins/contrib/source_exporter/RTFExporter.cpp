@@ -78,7 +78,7 @@ bool RTFExporter::Style::operator == (int aValue)
 string RTFExporter::RTFFontTable(int &pt)
 {
   string fonttbl("{\\rtf1\\ansi\\deff0\\deftab720{\\fonttbl{\\f0\\fmodern ");
-  wxString fontstring = ConfigManager::Get()->Read(_T("/editor/font"), wxEmptyString);
+  wxString fontstring = Manager::Get()->GetConfigManager(_T("editor"))->Read(_T("/font"), wxEmptyString);
   pt = 8;
 
   if (!fontstring.IsEmpty())
@@ -93,7 +93,7 @@ string RTFExporter::RTFFontTable(int &pt)
 
     if (!faceName.IsEmpty())
     {
-      fonttbl += string(faceName.c_str());
+      fonttbl += string(faceName.mb_str());
     }
     else
     {
@@ -376,6 +376,6 @@ void RTFExporter::Export(const wxString &filename, const wxString &title, const 
   rtf_code += RTFBody(styled_text, pt);
   rtf_code += RTFEnd;
 
-  ofstream file(filename.c_str());
+  ofstream file(filename.mb_str());
   file << rtf_code;
 }

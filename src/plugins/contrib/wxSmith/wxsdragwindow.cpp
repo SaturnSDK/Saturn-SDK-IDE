@@ -3,7 +3,6 @@
 
 #include <wx/dcclient.h>
 #include <wx/dcbuffer.h>
-#include <configmanager.h>
 
 #include "widget.h"
 #include "wxsevent.h"
@@ -234,7 +233,7 @@ void wxsDragWindow::DragInit(wxsDragWindow::DragPointData* NewDragPoint,wxsWidge
         DragMouseBegX = MouseX;
         DragMouseBegY = MouseY;
         DragDistanceSmall = true;
-        //CaptureMouse();
+        CaptureMouse();
 
         if ( NewDragWidget )
         {
@@ -429,7 +428,7 @@ void wxsDragWindow::DragFinish(wxsWidget* UnderCursor)
         }
 
         // Applying changes
-        wxsWidgetBaseParams& Params = Widget->GetBaseParams();
+        wxsBaseProperties& Params = Widget->GetBaseProperties();
         if ( LeftTopPoint->PosX != LeftTopPoint->DragInitPosX ||
              LeftTopPoint->PosY != LeftTopPoint->DragInitPosY )
         {
@@ -500,7 +499,7 @@ void wxsDragWindow::DragFinish(wxsWidget* UnderCursor)
                  (Moved->FindChild(NewParent,0) < 0) &&
                   NewParent->CanAddChild(Moved) )
             {
-                wxsWidgetBaseParams& Params = Moved->GetBaseParams();
+                wxsBaseProperties& Params = Moved->GetBaseProperties();
                 DragPointData* LeftTopPoint = FindLeftTop(Moved);
                 if ( LeftTopPoint )
                 {
@@ -554,7 +553,7 @@ void wxsDragWindow::DragFinish(wxsWidget* UnderCursor)
                 Moved->BuildTree(wxsTREE(),NewParent->GetTreeId(),NewInSizerPos);
             }
 
-            wxsWidgetBaseParams& Params = Moved->GetBaseParams();
+            wxsBaseProperties& Params = Moved->GetBaseProperties();
             Params.DefaultPosition = NewParentIsSizer;
             if ( NewInSizerPos >= 0 )
             {
@@ -1014,6 +1013,10 @@ void wxsDragWindow::OnFetchBackground(wxTimerEvent& event)
     int X = 0, Y = 0;
     ClientToScreen(&X,&Y);
     DestDC.SelectObject(*Background);
+
+    DestDC.Blit(0,0,GetSize().GetWidth(),GetSize().GetHeight(),&DC,X,Y);
+
+    /*
     wxRegionIterator upd(FetchArea);
     while ( upd )
     {
@@ -1024,6 +1027,8 @@ void wxsDragWindow::OnFetchBackground(wxTimerEvent& event)
         DestDC.Blit(x,y,W,H,&DC,X+x,Y+y);
         upd++;
     }
+    */
+
     FetchArea.Clear();
 
     ProcessPendingEvents();

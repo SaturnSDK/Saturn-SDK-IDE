@@ -6,6 +6,16 @@
 #include <wx/scrolwin.h>
 #include <wx/propgrid/propgrid.h>
 #include <wx/propgrid/advprops.h>
+#include <cbplugin.h>
+
+
+////////////////////////////////////////////////////////////////////////////////
+//
+//  Misc fuunctions
+// =================
+//
+//
+
 
 /** Changing given string to it's representation in C++.
  *
@@ -20,6 +30,53 @@ wxString GetWxString(const wxString& Source);
 bool ValidateIdentifier(const wxString& Name);
 
 
+////////////////////////////////////////////////////////////////////////////////
+//
+//  Enums
+// =======
+//
+
+
+/** Flags defining type of resource edit mode */
+enum wxsResEditMode
+{
+	wxsREMFile = 0, ///< In this edit mode resource is threated as resource from outside, not binded automatically into code
+	wxsREMSource,   ///< In this edit mode resource is fully generated inside source file, no additional resource files needed at run-time
+	wxsREMMixed,    ///< In this edit mode resource is integrated with source code but additional resource file is needed at run-time
+	/*-----------------*/
+	wxsREMCount     ///< Number of available edit modes
+};
+
+/** Enum for drag assist types */
+enum wxsDragAssistTypes
+{
+    wxsDTNone = 0,  ///< Nothing will be done to ease dragging
+    wxsDTSimple,    ///< Only border aruond widgets will be drawn to help dragging
+    wxsDTColourMix  ///< Sme widgets will change colour while dragging
+};
+
+
+////////////////////////////////////////////////////////////////////////////////
+//
+//  Constants
+// ===========
+//
+
+
+/** Constant used to notify that there's no colour used */
+const wxUint32 wxsNO_COLOUR = wxSYS_COLOUR_MAX + 1;
+
+/** Constant used to notify that custom colour (not system) is used */
+const wxUint32 wxsCUSTOM_COLOUR = wxPG_COLOUR_CUSTOM;
+
+
+////////////////////////////////////////////////////////////////////////////////
+//
+//  Macros
+// ========
+//
+
+
 /** Macro used to produce headers for block of code */
 #define wxsBHeader(HName,CName) \
     _T("//(*") _T(HName) _T("(") _T(CName) _T(")")
@@ -32,22 +89,6 @@ bool ValidateIdentifier(const wxString& Name);
 #define wxsBEnd()   \
     _T("//*)")
 
-
-/** Flags defining type of resource edit mode */
-enum wxsResEditMode
-{
-	wxsResFile   = 0x0001,  ///< Setting this flag tells that resource will be loaded from external file (f.ex xrc)
-	wxsResSource = 0x0002,  ///< Setting this flag tells that this resource is integrated with source code
-	/*-----------------*/
-	wxsResBroken = 0x8000   ///< Setting this flag tells that resource was broken (f.ex. errors in code integration)
-};
-
-/** Constant used to notify that there's no colour used */
-const wxUint32 wxsNO_COLOUR = wxSYS_COLOUR_MAX + 1;
-
-/** Constant used to notify that custom colour (not system) is used */
-const wxUint32 wxsCUSTOM_COLOUR = wxPG_COLOUR_CUSTOM;
-
 /** Macro returning pointer to wxSmith plugin class */
 #define wxsPLUGIN()    wxSmith::Get()
 
@@ -55,7 +96,7 @@ const wxUint32 wxsCUSTOM_COLOUR = wxPG_COLOUR_CUSTOM;
 #define wxsTREE()  wxsPLUGIN()->GetResourceTree()
 
 /** Macro returning current palette */
-#define wxsPALETTE() wxsPalette::Get()
+//#define wxsPALETTE() wxsPalette::Get()
 
 /** Macro returing current properties window */
 #define wxsPROPERTIES() wxsPropertiesMan::Get()
@@ -70,24 +111,34 @@ const wxUint32 wxsCUSTOM_COLOUR = wxPG_COLOUR_CUSTOM;
 #define wxsKILL(Widget) wxsFACTORY()->Kill(Widget)
 
 
-/** Enum for drag assist types */
-enum wxsDragAssistTypes
-{
-    wxsDTNone = 0,
-    wxsDTSimple,
-    wxsDTColourMix
-};
-
 /** Getting current drag assist mode from configuration */
-#define wxsDWAssistType ConfigManager::Get()->Read(_T("/wxsmith/dragassisttype"),(long)wxsDTColourMix)
+#define wxsDWAssistType Manager::Get()->GetConfigManager(_T("wxsmith"))->ReadInt(_T("/dragassisttype"),(long)wxsDTColourMix)
 
 /** Reading Drag target colour from configuration */
-#define wxsDWTargetCol ConfigManager::Get()->Read(_T("/wxsmith/dragtargetcol"),0x608CDFL)
+#define wxsDWTargetCol Manager::Get()->GetConfigManager(_T("wxsmith"))->ReadInt(_T("/dragtargetcol"),0x608CDFL)
 
 /** Reading Drag paretn colour from configuration */
-#define wxsDWParentCol ConfigManager::Get()->Read(_T("/wxsmith/dragparentcol"),0x0D177BL)
+#define wxsDWParentCol Manager::Get()->GetConfigManager(_T("wxsmith"))->ReadInt(_T("/dragparentcol"),0x0D177BL)
 
 /** Reading fetch deelay from configuration */
-#define wxsDWFetchDelay ConfigManager::Get()->Read(_T("/wxsmith/backfetchdelay"),50L)
+#define wxsDWFetchDelay Manager::Get()->GetConfigManager(_T("wxsmith"))->ReadInt(_T("/backfetchdelay"),50L)
+
+/** Reading icon size inside palette */
+#define wxsDWPalIconSize Manager::Get()->GetConfigManager(_T("wxsmith"))->ReadInt(_T("/paletteiconsize"),16L)
+
+/** Reading icon size inside palette */
+#define wxsDWToolIconSize Manager::Get()->GetConfigManager(_T("wxsmith"))->ReadInt(_T("/tooliconsize"),32L)
+
+
+/** Shortcut to applications debug log */
+#define DebLog Manager::Get()->GetMessageManager()->DebugLog
+
+/** Default class declaration specifier */
+#if defined(wxsDEBUG)
+    #define WXSCLASS PLUGIN_EXPORT
+#else
+    #define WXSCLASS
+#endif
+
 
 #endif

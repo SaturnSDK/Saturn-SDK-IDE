@@ -66,7 +66,7 @@ wxsEventDesc * wxsWidgetEvents::GetEventByEntry(const wxString& Entry)
     return NULL;
 }
 
-wxString wxsWidgetEvents::GetArrayEnteries(int TabSize)
+wxString wxsWidgetEvents::GetArrayEnteries()
 {
     wxString Code;
     wxsResource* Res = GetWidget()->GetResource();
@@ -75,17 +75,16 @@ wxString wxsWidgetEvents::GetArrayEnteries(int TabSize)
     	wxsEventDesc* Event = *i;
     	if ( Event->FunctionName.Length() )
     	{
-    		Code.Append(_T(' '),TabSize);
     		Code.Append(Event->EventEntry);
     		Code.Append(_T('('));
     		if ( Event->WithId )
     		{
-    			if ( Res->GetEditMode() == (wxsResSource | wxsResFile) )
+    			if ( Res->GetEditMode() == wxsREMMixed )
     			{
     				Code.Append(_T("XRCID(\""));
     			}
-    			Code.Append(Widget->GetBaseParams().IdName);
-    			if ( Res->GetEditMode() == (wxsResSource | wxsResFile) )
+    			Code.Append(Widget->GetBaseProperties().IdName);
+    			if ( Res->GetEditMode() == wxsREMMixed )
     			{
     				Code.Append(_T("\")"));
     			}

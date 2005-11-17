@@ -4,6 +4,7 @@
 #include <configmanager.h>
 #include <wx/colordlg.h>
 #include "wxsglobals.h"
+#include "wxswindoweditor.h"
 
 BEGIN_EVENT_TABLE(wxsSettingsDlg,wxDialog)
 //(*EventTable(wxsSettingsDlg)
@@ -22,6 +23,11 @@ wxsSettingsDlg::wxsSettingsDlg(wxWindow* parent,wxWindowID id)
     DragAssistType = XRCCTRL(*this,"ID_COMBOBOX1",wxComboBox);
     DragTargetCol = XRCCTRL(*this,"ID_BUTTON1",wxButton);
     DragParentCol = XRCCTRL(*this,"ID_BUTTON2",wxButton);
+    Icons16 = XRCCTRL(*this,"ID_RADIOBUTTON1",wxRadioButton);
+    Icons32 = XRCCTRL(*this,"ID_RADIOBUTTON2",wxRadioButton);
+    StaticText6 = XRCCTRL(*this,"ID_STATICTEXT6",wxStaticText);
+    TIcons16 = XRCCTRL(*this,"ID_RADIOBUTTON3",wxRadioButton);
+    TIcons32 = XRCCTRL(*this,"ID_RADIOBUTTON4",wxRadioButton);
     PrevFetchDelay = XRCCTRL(*this,"ID_SPINCTRL1",wxSpinCtrl);
     BtnCancel = XRCCTRL(*this,"ID_BUTTON4",wxButton);
     //*)
@@ -32,23 +38,31 @@ wxsSettingsDlg::wxsSettingsDlg(wxWindow* parent,wxWindowID id)
     DragTargetCol->SetBackgroundColour(wxColour((ColTarget>>16)&0xFF,(ColTarget>>8)&0xFF,ColTarget&0xFF));
     DragParentCol->SetBackgroundColour(wxColour((ColParent>>16)&0xFF,(ColParent>>8)&0xFF,ColParent&0xFF));
     PrevFetchDelay->SetValue(wxsDWFetchDelay);
+
+    if ( wxsDWPalIconSize == 16 ) Icons16->SetValue(true);
+    else                          Icons32->SetValue(true);
+    if ( wxsDWToolIconSize == 16 ) TIcons16->SetValue(true);
+    else                           TIcons32->SetValue(true);
 }
 
 wxsSettingsDlg::~wxsSettingsDlg()
 {
 }
 
-
-
 void wxsSettingsDlg::OnBtnOkClick(wxCommandEvent& event)
 {
     wxColour ColTarget = DragTargetCol->GetBackgroundColour();
     wxColour ColParent = DragParentCol->GetBackgroundColour();
 
-    ConfigManager::Get()->Write(_T("/wxsmith/dragtargetcol"),(((long)ColTarget.Red())<<16) + (((long)ColTarget.Green())<<8) + (long)ColTarget.Blue());
-    ConfigManager::Get()->Write(_T("/wxsmith/dragparentcol"),(((long)ColParent.Red())<<16) + (((long)ColParent.Green())<<8) + (long)ColParent.Blue());
-    ConfigManager::Get()->Write(_T("/wxsmith/dragassisttype"),(long)DragAssistType->GetSelection());
-    ConfigManager::Get()->Write(_T("/wxsmith/backfetchdelay"),(long)PrevFetchDelay->GetValue());
+    ConfigManager* cfg = Manager::Get()->GetConfigManager(_T("wxsmith"));
+
+    cfg->Write(_T("/dragtargetcol"),(int)((((int)ColTarget.Red())<<16) + (((long)ColTarget.Green())<<8) + (long)ColTarget.Blue()));
+    cfg->Write(_T("/dragparentcol"),(int)((((int)ColParent.Red())<<16) + (((long)ColParent.Green())<<8) + (long)ColParent.Blue()));
+    cfg->Write(_T("/dragassisttype"),(int)DragAssistType->GetSelection());
+    cfg->Write(_T("/backfetchdelay"),(int)PrevFetchDelay->GetValue());
+    cfg->Write(_T("/paletteiconsize"),(int)(Icons16->GetValue()?16:32));
+    cfg->Write(_T("/tooliconsize"),(int)(TIcons16->GetValue()?16:32));
+    wxsWindowEditor::ReloadImages();
     EndModal(wxID_OK);
 }
 

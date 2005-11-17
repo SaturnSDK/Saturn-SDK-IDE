@@ -6,11 +6,15 @@
 #include "../properties/wxsenumproperty.h"
 #include "../wxswidgetfactory.h"
 #include "../resources/wxswindowres.h"
+#include "wxslistbookparentqp.h"
 
 WXS_ST_BEGIN(wxsListbookStyles)
     WXS_ST_CATEGORY("wxListbook")
-    WXS_ST(wxLI_HORIZONTAL)
-    WXS_ST(wxLI_VERTICAL)
+    WXS_ST(wxLB_DEFAULT)
+    WXS_ST(wxLB_TOP)
+    WXS_ST(wxLB_LEFT)
+    WXS_ST(wxLB_RIGHT)
+    WXS_ST(wxLB_BOTTOM)
 WXS_ST_END(wxsListbookStyles)
 
 WXS_EV_BEGIN(wxsListbookEvents)
@@ -18,7 +22,7 @@ WXS_EV_BEGIN(wxsListbookEvents)
     WXS_EVI(EVT_LISTBOOK_PAGE_CHANGING,wxListbookEvent,PageChanging)
 WXS_EV_END(wxsListbookEvents)
 
-class wxsListbookPreview: public wxListbook
+class WXSCLASS wxsListbookPreview: public wxListbook
 {
 	public:
         wxsListbookPreview(wxWindow* parent, wxWindowID id, const wxPoint& pos, const wxSize& size, long style, wxsListbook* NB):
@@ -43,9 +47,12 @@ class wxsListbookPreview: public wxListbook
 };
 
 wxsListbook::wxsListbook(wxsWidgetManager* Man,wxsWindowRes* Res):
-    wxsContainer(Man,Res,true,0,propWidget),
+    wxsContainer(Man,Res,true,0),
     CurrentSelection(0)
 {
+    ChangeBPT(wxsREMSource,propWidgetS);
+    ChangeBPT(wxsREMFile,propWidgetF);
+    ChangeBPT(wxsREMMixed,propWidgetM);
 }
 
 wxsListbook::~wxsListbook()
@@ -97,9 +104,9 @@ wxString wxsListbook::GetProducingCode(wxsCodeParams& Params)
 	const CodeDefines& CD = GetCodeDefines();
 	return wxString::Format(
         _T("%s = new wxListbook(%s,%s,%s,%s,%s);"),
-        BaseParams.VarName.c_str(),
+        GetBaseProperties().VarName.c_str(),
         Params.ParentName.c_str(),
-        BaseParams.IdName.c_str(),
+        GetBaseProperties().IdName.c_str(),
         CD.Pos.c_str(),
         CD.Size.c_str(),
         CD.Style.c_str());
@@ -114,8 +121,8 @@ wxString wxsListbook::GetFinalizingCode(wxsCodeParams& Params)
 		wxsListbookExtraParams* Params = GetExtraParams(i);
 		Code += wxString::Format(
             _T("%s->AddPage(%s,%s,%s);\n"),
-                BaseParams.VarName.c_str(),
-                Child->GetBaseParams().VarName.c_str(),
+                GetBaseProperties().VarName.c_str(),
+                Child->GetBaseProperties().VarName.c_str(),
                 GetWxString(Params->Label).c_str(),
                 Params->Selected ? _T("true") : _T("false"));
 	}
@@ -124,7 +131,7 @@ wxString wxsListbook::GetFinalizingCode(wxsCodeParams& Params)
 
 wxString wxsListbook::GetDeclarationCode(wxsCodeParams& Params)
 {
-	return wxString::Format(_T("wxListbook* %s;"),BaseParams.VarName.c_str());
+	return wxString::Format(_T("wxListbook* %s;"),GetBaseProperties().VarName.c_str());
 }
 
 bool wxsListbook::XmlLoadChild(TiXmlElement* Element)
@@ -225,4 +232,12 @@ void wxsListbook::EnsurePreviewVisible(wxsWidget* Child)
 	}
 
 	wxsWidget::EnsurePreviewVisible(Child);
+}
+
+wxWindow* wxsListbook::BuildChildQuickPanel(wxWindow* Parent,int ChildPos)
+{
+    wxsWidget* Widget = GetChild(ChildPos);
+    wxsListbookExtraParams* Params = GetExtraParams(ChildPos);
+    if ( !Widget || !Params ) return NULL;
+    return new wxsListbookParentQP(Parent,Widget,Params);
 }
