@@ -22,7 +22,7 @@
 #include <wx/stattext.h>
 #include <cbproject.h>
 #include <manager.h>
-#include <old_configmanager.h>
+#include <configmanager.h>
 #include <projectmanager.h>
 #include <messagemanager.h>
 #include "language_def.h"

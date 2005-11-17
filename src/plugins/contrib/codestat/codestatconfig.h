@@ -10,7 +10,6 @@
 #ifndef CODESTATCONFIG_H
 #define CODESTATCONFIG_H
 
-#include <old_configmanager.h>
 #include <wx/dialog.h>
 #include <wx/xrc/xmlres.h>
 #include <wx/intl.h>

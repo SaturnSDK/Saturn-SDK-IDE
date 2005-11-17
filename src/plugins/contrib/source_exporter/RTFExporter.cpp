@@ -5,7 +5,7 @@
  */
 
 #include "RTFExporter.h"
-#include <old_configmanager.h>
+#include <configmanager.h>
 #include <wx/fontutil.h>
 #include <cstdlib>
 #include <sstream>
@@ -78,7 +78,7 @@ bool RTFExporter::Style::operator == (int aValue)
 string RTFExporter::RTFFontTable(int &pt)
 {
   string fonttbl("{\\rtf1\\ansi\\deff0\\deftab720{\\fonttbl{\\f0\\fmodern ");
-  wxString fontstring = OldConfigManager::Get()->Read(_T("/editor/font"), wxEmptyString);
+  wxString fontstring = Manager::Get()->GetConfigManager(_T("editor"))->Read(_T("/font"), wxEmptyString);
   pt = 8;
 
   if (!fontstring.IsEmpty())

@@ -4,7 +4,7 @@
  */
 
 #include "ODTExporter.h"
-#include <old_configmanager.h>
+#include <configmanager.h>
 #include <wx/fontutil.h>
 #include <cstring>
 #include <cstdlib>
@@ -138,7 +138,7 @@ string ODTExporter::ODTStylesFileMID(wxZipOutputStream &zout)
   string theFont("Courier New");
   string thePt("8");
 
-  wxString fontstring = OldConfigManager::Get()->Read(_T("/editor/font"), wxEmptyString);
+  wxString fontstring = Manager::Get()->GetConfigManager(_T("editor"))->Read(_T("/font"), wxEmptyString);
 
   if (!fontstring.IsEmpty())
   {

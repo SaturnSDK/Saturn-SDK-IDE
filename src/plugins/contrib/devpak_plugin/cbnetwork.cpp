@@ -1,4 +1,5 @@
 #include "cbnetwork.h"
+#include <configmanager.h>
 #include <wx/txtstrm.h>
 #include <wx/wfstream.h>
 #include <wx/app.h> // wxPostEvent
@@ -81,7 +82,7 @@ bool cbNetwork::Connect(const wxString& remote)
     if (m_ServerURL.Last() == sep.GetChar(0) || remote.StartsWith(sep))
         sep.Clear();
     m_pURL = new wxURL(m_ServerURL + sep + remote);
-    m_pURL->SetProxy(XMLOldConfigManager::GetProxy());  /* FIXME (thomas#1#): Change ConfigManager to OldConfigManager. */
+    m_pURL->SetProxy(ConfigManager::GetProxy());
     if (m_pURL->GetError() != wxURL_NOERR)
         return false;
 
