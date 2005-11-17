@@ -13,7 +13,6 @@
     #include <wx/msw/registry.h>
 #endif
 
-#include <old_configmanager.h>
 #include <messagemanager.h>
 #include <manager.h>
 

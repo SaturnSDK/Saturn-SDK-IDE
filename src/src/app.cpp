@@ -213,7 +213,7 @@ void CodeBlocksApp::InitFrame()
     SetTopWindow(frame);
     if (ParseCmdLine(frame) == 0)
     {
-        if (Manager::Get()->GetConfigManager(_T("app"))->ReadBool(_T("/environment/blank_workspace"), false) == false)
+        if (Manager::Get()->GetConfigManager(_T("app"))->ReadBool(_T("/environment/blank_workspace"), true) == false)
             Manager::Get()->GetProjectManager()->LoadWorkspace();
     }
 

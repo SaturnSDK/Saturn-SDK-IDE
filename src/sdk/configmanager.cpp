@@ -84,7 +84,12 @@ void CfgMgrBldr::SwitchTo(const wxString& absFileName)
     if(!docroot)
     {
         wxString s;
-        s.sprintf(_("Fatal error parsing configuration. The file  %s is not a valid Code::Blocks config file."), _U(doc->Value()).c_str());
+        s.Printf(_("Fatal error parsing configuration. The file %s is not a valid Code::Blocks config file."),
+                    #if wxUSE_UNICODE
+                    _U(doc->Value()).c_str());
+                    #else
+                    doc->Value());
+                    #endif
         cbThrow(s);
     }
 
@@ -424,7 +429,15 @@ TiXmlElement* ConfigManager::AssertPath(wxString& path)
         if(path[0] < _T('A') || path[0] > _T('Z'))
         {
             wxString s;
-            s.Printf(_("The Configuration key %s (child of node \"%s\" in namespace \"%s\") does not meet the standard for variable naming.\nVariables names are required to start with a letter."), path.c_str(), _U(pathNode->Value()).c_str(), _U(root->Value()).c_str());
+            s.Printf(_("The Configuration key %s (child of node \"%s\" in namespace \"%s\") does not meet the standard for variable naming.\nVariables names are required to start with a letter."),
+                        path.c_str(),
+                        #if wxUSE_UNICODE
+                        _U(pathNode->Value()).c_str(),
+                        _U(root->Value()).c_str());
+                        #else
+                        pathNode->Value(),
+                        root->Value());
+                        #endif
             cbThrow(s);
         }
         return pathNode;
@@ -449,7 +462,14 @@ TiXmlElement* ConfigManager::AssertPath(wxString& path)
         else if(sub[0] < _T('a') || sub[0] > _T('z'))
         {
         wxString s;
-        s.sprintf(_("The subpath %s (child of node \"%s\" in namespace \"%s\") does not meet the standard for path naming.\nPaths and subpaths are required to start with a letter."), sub.c_str(), _U(e->Value()).c_str(), _U(root->Value()).c_str());
+        s.Printf(_("The subpath %s (child of node \"%s\" in namespace \"%s\") does not meet the standard for path naming.\nPaths and subpaths are required to start with a letter."), sub.c_str(),
+                    #if wxUSE_UNICODE
+                    _U(e->Value()).c_str(),
+                    _U(root->Value()).c_str());
+                    #else
+                    e->Value(),
+                    root->Value());
+                    #endif
         cbThrow(s);
         }
         else
@@ -472,7 +492,15 @@ TiXmlElement* ConfigManager::AssertPath(wxString& path)
     if(!path.IsEmpty() && (path[0] < _T('A') || path[0] > _T('Z')))
     {
         wxString s;
-        s.sprintf(_("The Configuration key %s (child of node \"%s\" in namespace \"%s\") does not meet the standard for variable naming.\nVariables names are required to start with a letter."), path.c_str(), _U(pathNode->Value()).c_str(), _U(root->Value()).c_str());
+        s.Printf(_("The Configuration key %s (child of node \"%s\" in namespace \"%s\") does not meet the standard for variable naming.\nVariables names are required to start with a letter."),
+                    path.c_str(),
+                    #if wxUSE_UNICODE
+                    _U(pathNode->Value()).c_str(),
+                    _U(root->Value()).c_str());
+                    #else
+                    pathNode->Value(),
+                    root->Value());
+                    #endif
         cbThrow(s);
     }
     return e;
@@ -579,7 +607,9 @@ void ConfigManager::Write(const wxString& name,  const wxString& value, bool ign
 
 void ConfigManager::Write(const wxString& key, const char* str)
 {
-    Write(key, _U(str));
+/* NOTE (mandrav#1#): Do *not* remove 'false' from the call because in ANSI builds,
+it matches this very function and overflows the stack... */
+    Write(key, _U(str), false);
 };
 
 wxString ConfigManager::Read(const wxString& name, const wxString& defaultVal)
