@@ -351,8 +351,8 @@ BEGIN_EVENT_TABLE(MainFrame, wxFrame)
 	EVT_EDITOR_SAVE(MainFrame::OnEditorSaved)
 
 	// dock a window
-	EVT_DOCK_WINDOW(MainFrame::OnRequestDockWindow)
-	EVT_UNDOCK_WINDOW(MainFrame::OnRequestUndockWindow)
+	EVT_ADD_DOCK_WINDOW(MainFrame::OnRequestDockWindow)
+	EVT_REMOVE_DOCK_WINDOW(MainFrame::OnRequestUndockWindow)
 	EVT_SHOW_DOCK_WINDOW(MainFrame::OnRequestShowDockWindow)
 
     EVT_NOTEBOOK_PAGE_CHANGED(ID_NBEditorManager, MainFrame::OnPageChanged)
@@ -821,6 +821,8 @@ void MainFrame::SaveWindowState()
     int count = 0;
     for (LayoutViewsMap::iterator it = m_LayoutViews.begin(); it != m_LayoutViews.end(); ++it)
     {
+        if (it->first.IsEmpty())
+            continue;
         ++count;
         wxString key = wxString::Format(_T("/main_frame/layout/view%d/"), count);
         Manager::Get()->GetConfigManager(_T("app"))->Write(key + _T("name"), it->first);
@@ -845,6 +847,8 @@ void MainFrame::SaveWindowState()
 
 void MainFrame::SaveViewLayout(const wxString& name, const wxString& layout)
 {
+    if (name.IsEmpty())
+        return;
     m_LayoutViews[name] = layout;
     wxMenu* viewLayouts = 0;
     GetMenuBar()->FindItem(idViewLayoutSave, &viewLayouts);
@@ -1610,12 +1614,8 @@ void MainFrame::OnApplicationClose(wxCloseEvent& event)
     SaveWindowState();
     TerminateRecentFilesHistory();
 
-// NOTE (mandrav#1#): The following two lines, make the app crash on exit with wx2.6.1-ansi...
-//    Hide(); // Hide the window
-//    Refresh();
-
-    // unhook editor manager's notebook from the layout, or else bad things happen ;)
-//    pPane->SetClient(0);
+    Hide(); // Hide the window
+	m_LayoutManager.UnInit();
 
     // remove all other event handlers from this window
     // this stops it from crashing, when no plugins are loaded
@@ -2574,17 +2574,48 @@ void MainFrame::OnShiftTab(wxCommandEvent& event)
         ed->DoUnIndent();
 }
 
-void MainFrame::OnRequestDockWindow(CodeBlocksEvent& event)
+void MainFrame::OnRequestDockWindow(CodeBlocksDockEvent& event)
 {
-    // stub
+    wxPaneInfo info;
+    wxString name = event.name;
+    if (name.IsEmpty())
+    {
+        static int idx = 1;
+        name = wxString::Format(_T("UntitledPane%d"), idx++);
+    }
+    LOGSTREAM << _T("Adding dock: ") << event.title << _T('\n');
+// TODO (mandrav##): Check for existing pane with the same name
+    info.Name(name);
+    info.Caption(event.title.IsEmpty() ? name : event.title);
+    info.BestSize(event.desiredSize);
+    info.FloatingSize(event.desiredSize);
+    info.MinSize(event.minimumSize);
+    info.Layer(event.stretch ? 1 : 0);
+    info.CloseButton(event.hideable ? true : false);
+    switch (event.dockSide)
+    {
+        case CodeBlocksDockEvent::dsLeft: info.Left(); break;
+        case CodeBlocksDockEvent::dsRight: info.Right(); break;
+        case CodeBlocksDockEvent::dsTop: info.Top(); break;
+        case CodeBlocksDockEvent::dsBottom: info.Bottom(); break;
+        case CodeBlocksDockEvent::dsFloating: info.Float(); break;
+
+        default: break;
+    }
+    info.Hide();
+    m_LayoutManager.AddPane(event.pWindow, info);
+    m_LayoutManager.Update();
 }
 
-void MainFrame::OnRequestUndockWindow(CodeBlocksEvent& event)
+void MainFrame::OnRequestUndockWindow(CodeBlocksDockEvent& event)
 {
-    // stub
+    m_LayoutManager.DetachPane(event.pWindow);
+    m_LayoutManager.Update();
 }
 
-void MainFrame::OnRequestShowDockWindow(CodeBlocksEvent& event)
+void MainFrame::OnRequestShowDockWindow(CodeBlocksDockEvent& event)
 {
     // stub
+    m_LayoutManager.GetPane(event.pWindow).Show();
+    m_LayoutManager.Update();
 }

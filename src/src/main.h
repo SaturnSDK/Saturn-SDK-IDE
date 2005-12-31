@@ -150,9 +150,9 @@ class MainFrame : public wxFrame
 		void OnProjectClosed(CodeBlocksEvent& event);
 
 		// dock/undock window requests
-		void OnRequestDockWindow(CodeBlocksEvent& event);
-		void OnRequestUndockWindow(CodeBlocksEvent& event);
-		void OnRequestShowDockWindow(CodeBlocksEvent& event);
+		void OnRequestDockWindow(CodeBlocksDockEvent& event);
+		void OnRequestUndockWindow(CodeBlocksDockEvent& event);
+		void OnRequestShowDockWindow(CodeBlocksDockEvent& event);
 
 		// editor changed events
 		void OnEditorOpened(CodeBlocksEvent& event);
