@@ -473,13 +473,13 @@ void MainFrame::CreateIDE()
 	Manager::Get(this, m_pNotebook, 0);
     m_LayoutManager.AddPane(m_pNotebook, wxPaneInfo().
                               Name(wxT("ManagementPane")).Caption(wxT("Management")).
-                              BestSize(wxSize(leftW, clientsize.GetHeight())).MinSize(wxSize(100,400)).
+                              BestSize(wxSize(leftW, clientsize.GetHeight())).MinSize(wxSize(100,100)).
                               Left().Layer(1));
 
     // message manager
     m_LayoutManager.AddPane(Manager::Get()->GetMessageManager(), wxPaneInfo().
                               Name(wxT("MessagesPane")).Caption(wxT("Messages")).
-                              BestSize(wxSize(clientsize.GetWidth(), bottomH)).MinSize(wxSize(600,100)).
+                              BestSize(wxSize(clientsize.GetWidth(), bottomH)).//MinSize(wxSize(50,50)).
                               Bottom());
 
 	CreateMenubar();
@@ -607,42 +607,24 @@ void MainFrame::CreateToolbars()
 		m_pToolbar = 0L;
 	}
 
-    // *** Begin new Toolbar routine ***
     wxString resPath = ConfigManager::GetDataFolder();
     wxString xrcToolbarName = _T("main_toolbar");
     if(m_SmallToolBar) // Insert logic here
         xrcToolbarName += _T("_16x16");
     myres->Load(resPath + _T("/resources.zip#zip:*.xrc"));
     MSGMAN()->DebugLog(_("Loading toolbar..."));
-    wxToolBar *mytoolbar = myres->LoadToolBar(this,xrcToolbarName);
 
-    if(mytoolbar==0L)
-    {
-        MSGMAN()->DebugLog(_("failed!"));
-        int flags = wxTB_HORIZONTAL;
-        int major;
-        int minor;
-        // version==wxWINDOWS_NT && major==5 && minor==1 => windowsXP
-        bool isXP = wxGetOsVersion(&major, &minor) == wxWINDOWS_NT && major == 5 && minor == 1;
-        if (!isXP)
-            flags |= wxTB_FLAT;
-        mytoolbar = CreateToolBar(flags, wxID_ANY);
-        if(m_SmallToolBar)
-            mytoolbar->SetToolBitmapSize(wxSize(16, 16));
-        else
-            mytoolbar->SetToolBitmapSize(wxSize(22, 22));
-    }
-
-    m_pToolbar=mytoolbar;
+    m_pToolbar = new wxToolBar(this, 0);
+    m_pToolbar->SetToolBitmapSize(m_SmallToolBar ? wxSize(16, 16) : wxSize(32, 32));
+    Manager::Get()->AddonToolBar(m_pToolbar,xrcToolbarName);
 	m_pToolbar->Realize();
-    SetToolBar(0);
-    // *** End new Toolbar routine ***
 
     // add toolbars in docking system
     m_LayoutManager.AddPane(m_pToolbar, wxPaneInfo().
                           Name(wxT("MainToolbar")).Caption(wxT("Main Toolbar")).
                           ToolbarPane().Top().
                           LeftDockable(false).RightDockable(false));
+    m_LayoutManager.Update();
 
 	// ask all plugins to rebuild their toolbars
 	PluginElementsArray plugins = Manager::Get()->GetPluginManager()->GetPlugins();
@@ -865,7 +847,7 @@ void MainFrame::SaveViewLayout(const wxString& name, const wxString& layout)
 void MainFrame::DoAddPluginToolbar(cbPlugin* plugin)
 {
     wxToolBar* tb = new wxToolBar(this, 0);
-    tb->SetToolBitmapSize(m_SmallToolBar ? wxSize(16, 16) : wxSize(22, 22));
+    tb->SetToolBitmapSize(m_SmallToolBar ? wxSize(16, 16) : wxSize(32, 32));
     if (plugin->BuildToolBar(tb))
     {
         SetToolBar(0);

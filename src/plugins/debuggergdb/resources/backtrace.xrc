@@ -9,12 +9,15 @@
           
           
           
+          
           <style>wxLC_REPORT</style>
         </object>
         
         
         
+        
         <option>1</option>
+        
         
         
         
@@ -24,13 +27,14 @@
         
         
         
-        <minsize>384,240</minsize>
+        
       </object>
       <object class="sizeritem">
         <object class="wxBoxSizer">
           <orient>wxHORIZONTAL</orient>
           <object class="sizeritem">
             <object class="wxButton" name="btnSave">
+              
               
               
               
@@ -45,17 +49,22 @@
               
               
               
+              
               <label>&amp;Refresh</label>
             </object>
           
+            
             <flag>wxLEFT</flag>
+            
             <border>2</border>
           </object>
         </object>
         
         
         
+        
         <flag>wxALL|wxALIGN_RIGHT</flag>
+        
         
         
         

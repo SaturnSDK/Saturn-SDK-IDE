@@ -16,11 +16,13 @@
               
               
               
+              
               <label>Function:</label>
             </object>
           </object>
           <object class="sizeritem">
             <object class="wxStaticText" name="lblFunction">
+              
               
               
               
@@ -35,10 +37,12 @@
             
             
             
+            
             <flag>wxGROW</flag>
           </object>
           <object class="sizeritem">
             <object class="wxStaticText">
+              
               
               
               
@@ -56,8 +60,10 @@
               
               
               
+              
               <label>addr</label>
             </object>
+            
             
             
             
@@ -74,6 +80,7 @@
         
         
         
+        
         <flag>wxLEFT|wxRIGHT|wxGROW</flag>
         
         
@@ -81,6 +88,7 @@
         
         
       
+        
         
         <border>2</border>
       </object>
@@ -91,6 +99,7 @@
               
               
           
+          
           <style>wxLC_REPORT|wxLC_SINGLE_SEL</style>
             </object>
             
@@ -99,9 +108,11 @@
             
             
         
+        
         <option>1</option>
             
             
+        
         
         <flag>wxGROW</flag>
             
@@ -109,13 +120,14 @@
             
             
         
-        <minsize>320,100</minsize>
+        
           </object>
       <object class="sizeritem">
         <object class="wxBoxSizer">
           <orient>wxHORIZONTAL</orient>
           <object class="sizeritem">
             <object class="wxButton" name="btnSave">
+              
               
               
               
@@ -139,10 +151,13 @@
               
               
               
+              
               <label>&amp;Refresh</label>
             </object>
           
+            
             <flag>wxLEFT</flag>
+            
             <border>2</border>
           </object>
         </object>
@@ -152,7 +167,9 @@
         
         
         
+        
         <flag>wxALL|wxALIGN_RIGHT</flag>
+        
         
         
         
