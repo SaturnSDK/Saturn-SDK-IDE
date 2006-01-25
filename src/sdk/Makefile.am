@@ -42,7 +42,6 @@ libcodeblocks_la_SOURCES = annoyingdialog.cpp \
 						configuretoolsdlg.cpp \
 						confirmreplacedlg.cpp \
 						crc32.cpp \
-						customvars.cpp \
 						devcpploader.cpp \
 						editarrayfiledlg.cpp \
 						editarrayorderdlg.cpp \
@@ -124,7 +123,6 @@ noinst_HEADERS = annoyingdialog.h \
 				configuretoolsdlg.h \
 				confirmreplacedlg.h \
 				crc32.h \
-				customvars.h \
 				devcpploader.h \
 				editarrayfiledlg.h \
 				editarrayorderdlg.h \

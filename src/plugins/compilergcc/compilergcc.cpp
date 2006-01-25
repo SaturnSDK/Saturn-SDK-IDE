@@ -33,9 +33,9 @@
 #include <macrosmanager.h>
 #include <projectmanager.h>
 #include <editormanager.h>
+#include <scriptingmanager.h>
 
 #include <cbeditor.h>
-#include <customvars.h>
 #include <annoyingdialog.h>
 #include <wx/xrc/xmlres.h>
 #include <wx/sizer.h>
@@ -148,7 +148,22 @@ int idMenuSettings = XRCID("idCompilerMenuSettings");
 int idToolTarget = XRCID("idToolTarget");
 int idToolTargetLabel = XRCID("idToolTargetLabel");
 
-int idGCCProcess = wxNewId();
+int idGCCProcess1 = wxNewId();
+int idGCCProcess2 = wxNewId();
+int idGCCProcess3 = wxNewId();
+int idGCCProcess4 = wxNewId();
+int idGCCProcess5 = wxNewId();
+int idGCCProcess6 = wxNewId();
+int idGCCProcess7 = wxNewId();
+int idGCCProcess8 = wxNewId();
+int idGCCProcess9 = wxNewId();
+int idGCCProcess10 = wxNewId();
+int idGCCProcess11 = wxNewId();
+int idGCCProcess12 = wxNewId();
+int idGCCProcess13 = wxNewId();
+int idGCCProcess14 = wxNewId();
+int idGCCProcess15 = wxNewId();
+int idGCCProcess16 = wxNewId();
 
 BEGIN_EVENT_TABLE(CompilerGCC, cbCompilerPlugin)
     EVT_UPDATE_UI_RANGE(idMenuCompile, idToolTargetLabel, CompilerGCC::OnUpdateUI)
@@ -194,9 +209,9 @@ BEGIN_EVENT_TABLE(CompilerGCC, cbCompilerPlugin)
 	EVT_PROJECT_OPEN(CompilerGCC::OnProjectLoaded)
 	//EVT_PROJECT_POPUP_MENU(CompilerGCC::OnProjectPopupMenu)
 
-	EVT_PIPEDPROCESS_STDOUT(idGCCProcess, CompilerGCC::OnGCCOutput)
-	EVT_PIPEDPROCESS_STDERR(idGCCProcess, CompilerGCC::OnGCCError)
-	EVT_PIPEDPROCESS_TERMINATED(idGCCProcess, CompilerGCC::OnGCCTerminated)
+	EVT_PIPEDPROCESS_STDOUT_RANGE(idGCCProcess1, idGCCProcess16, CompilerGCC::OnGCCOutput)
+	EVT_PIPEDPROCESS_STDERR_RANGE(idGCCProcess1, idGCCProcess16, CompilerGCC::OnGCCError)
+	EVT_PIPEDPROCESS_TERMINATED_RANGE(idGCCProcess1, idGCCProcess16, CompilerGCC::OnGCCTerminated)
 END_EVENT_TABLE()
 
 CompilerGCC::CompilerGCC()
@@ -210,7 +225,8 @@ CompilerGCC::CompilerGCC()
 	m_TargetIndex(-1),
 	m_ErrorsMenu(0L),
     m_Project(0L),
-    m_Process(0L),
+    m_Processes(0),
+    m_ParallelProcessCount(1),
     m_pTbar(0L),
     m_Pid(0),
     m_Log(0L),
@@ -275,14 +291,47 @@ CompilerGCC::CompilerGCC()
 
 	// register (if any) user-copies of built-in compilers
 	CompilerFactory::RegisterUserCompilers();
+
+    AllocProcesses();
 }
 
 CompilerGCC::~CompilerGCC()
 {
+    FreeProcesses();
+
     DoDeleteTempMakefile();
 	if (m_ToolTarget)
 		delete m_ToolTarget;
 	CompilerFactory::UnregisterCompilers();
+}
+
+void CompilerGCC::AllocProcesses()
+{
+	// create the parallel processes array
+	m_ParallelProcessCount = Manager::Get()->GetConfigManager(_T("compiler"))->ReadInt(_T("/parallel_processes"), 1);
+	m_Processes = (wxProcess**)malloc(m_ParallelProcessCount * sizeof(wxProcess*));
+	m_Pid = new long int[m_ParallelProcessCount];
+	for (size_t i = 0; i < m_ParallelProcessCount; ++i)
+	{
+	    m_Processes[i] = 0;
+	    m_Pid[i] = 0;
+	}
+}
+
+void CompilerGCC::FreeProcesses()
+{
+    // free the parallel processes array
+    free(m_Processes);
+    m_Processes = 0;
+    delete[] m_Pid;
+    m_Pid = 0;
+}
+
+bool CompilerGCC::ReAllocProcesses()
+{
+    FreeProcesses();
+    AllocProcesses();
+    return true;
 }
 
 void CompilerGCC::OnAttach()
@@ -715,8 +764,11 @@ void CompilerGCC::AddToCommandQueue(const wxArrayString& commands)
     // loop added for compiler log when not working with Makefiles
     wxString mySimpleLog = wxString(COMPILER_SIMPLE_LOG);
     wxString myTargetChange = wxString(COMPILER_TARGET_CHANGE);
+    wxString myWait = wxString(COMPILER_WAIT);
+//    wxString myWaitEnd = wxString(COMPILER_WAIT_END);
 //    ProjectBuildTarget* lastTarget = 0;
     ProjectBuildTarget* bt = m_pBuildingProject ? m_pBuildingProject->GetBuildTarget(m_BuildingTargetIdx) : 0;
+    bool isLink = false;
     size_t count = commands.GetCount();
     for (size_t i = 0; i < count; ++i)
     {
@@ -731,7 +783,7 @@ void CompilerGCC::AddToCommandQueue(const wxArrayString& commands)
         // compiler change
         else if (cmd.StartsWith(myTargetChange))
         {
-            cmd.Remove(0, myTargetChange.Length());
+//            cmd.Remove(0, myTargetChange.Length());
             // using other compiler now: find it and set it
 //            lastTarget = m_Project->GetBuildTarget(cmd);
 
@@ -749,28 +801,100 @@ void CompilerGCC::AddToCommandQueue(const wxArrayString& commands)
 //            else
 //                msgMan->Log(m_PageIndex, _("Can't locate target '%s'!"), cmd.c_str());
         }
+        else if (cmd.StartsWith(myWait))
+        {
+//            cmd.Remove(0, myLinkStep.Length());
+            isLink = true;
+        }
+//        else if (cmd.StartsWith(myWaitEnd))
+//        {
+////            cmd.Remove(0, myLinkStep.Length());
+//            isLink = false;
+//        }
         else
         {
             // compiler command
-            m_CommandQueue.Add(new CompilerCommand(cmd, wxEmptyString, m_pBuildingProject, bt));
+            CompilerCommand* p = new CompilerCommand(cmd, wxEmptyString, m_pBuildingProject, bt);
+            p->mustWait = isLink;
+            m_CommandQueue.Add(p);
+//            Manager::Get()->GetMessageManager()->Log(m_PageIndex, _T("ADD: %s %s"), cmd.c_str(), isLink ? _T("(wait)") : _T(""));
+            isLink = false;
         }
     }
+}
+
+bool CompilerGCC::IsProcessRunning(int idx) const
+{
+    // invalid process index
+    if (idx >= (int)m_ParallelProcessCount)
+        return false;
+    // specific process
+    if (idx >= 0)
+        return m_Processes[idx] != 0;
+    // any process (-1)
+    for (size_t i = 0; i < m_ParallelProcessCount; ++i)
+    {
+        if (m_Processes[i] != 0)
+            return true;
+    }
+    return false;
+}
+
+int CompilerGCC::GetNextAvailableProcessIndex() const
+{
+    for (size_t i = 0; i < m_ParallelProcessCount; ++i)
+    {
+        if (m_Processes[i] == 0 && m_Pid[i] == 0)
+            return i;
+    }
+    return -1;
+}
+
+int CompilerGCC::GetActiveProcessCount() const
+{
+    size_t count = 0;
+    for (size_t i = 0; i < m_ParallelProcessCount; ++i)
+    {
+        if (m_Processes[i] != 0)
+            ++count;
+    }
+    return count;
 }
 
 int CompilerGCC::DoRunQueue()
 {
     wxLogNull ln;
 
-	// leave if already running
-	if (m_Process)
-		return -2;
-
     MessageManager* msgMan = Manager::Get()->GetMessageManager();
 //    msgMan->SwitchTo(m_PageIndex);
+
+	// leave if already running
+	int procIndex = GetNextAvailableProcessIndex();
+	if (procIndex == -1)
+	{
+//        msgMan->Log(m_PageIndex, _("(all processes running)"));
+		return -2;
+	}
+
+    // if next command is linking and compilation is still in progress, abort
+    if (IsProcessRunning())
+    {
+        CompilerCommand* cmd = m_CommandQueue.Peek();
+        if (cmd && cmd->mustWait)
+        {
+//            msgMan->Log(m_PageIndex, _("Waiting for compile to finish before linking..."));
+            return -3;
+        }
+    }
 
     CompilerCommand* cmd = m_CommandQueue.Next();
     if (!cmd)
 	{
+        if (IsProcessRunning())
+        {
+            return 0;
+        }
+
 	    while (1)
 	    {
 	        // keep switching build states until we have commands to run or reach end of states
@@ -805,6 +929,7 @@ int CompilerGCC::DoRunQueue()
 
     if (!cmd->message.IsEmpty())
     {
+//        msgMan->Log(m_PageIndex, _T("[%u] %s"), procIndex, cmd->message.c_str());
         msgMan->Log(m_PageIndex, cmd->message);
         msgMan->LogToStdOut(cmd->message + _T('\n'));
     }
@@ -841,17 +966,18 @@ int CompilerGCC::DoRunQueue()
     #endif
     }
 
-    m_Process = new PipedProcess((void**)&m_Process, this, idGCCProcess, pipe, dir);
-    m_Pid = wxExecute(cmd->command, flags, m_Process);
-    if ( !m_Pid )
+    // create a new process
+    m_Processes[procIndex] = new PipedProcess((void**)&m_Processes[procIndex], this, idGCCProcess1 + procIndex, pipe, dir);
+    m_Pid[procIndex] = wxExecute(cmd->command, flags, m_Processes[procIndex]);
+    if ( !m_Pid[procIndex] )
     {
         m_Log->GetTextControl()->SetDefaultStyle(wxTextAttr(*wxRED, *wxWHITE));
         wxString err = wxString::Format(_("Execution of '%s' in '%s' failed."), cmd->command.c_str(), wxGetCwd().c_str());
         msgMan->Log(m_PageIndex, err);
         msgMan->LogToStdOut(err + _T('\n'));
 		m_Log->GetTextControl()->SetDefaultStyle(wxTextAttr(wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOWTEXT), wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW)));
-        delete m_Process;
-        m_Process = NULL;
+        delete m_Processes[procIndex];
+        m_Processes[procIndex] = 0;
         m_CommandQueue.Clear();
         ResetBuildState();
     }
@@ -859,7 +985,7 @@ int CompilerGCC::DoRunQueue()
         m_timerIdleWakeUp.Start(100);
 
     delete cmd;
-    return 0;
+    return DoRunQueue();
 }
 
 void CompilerGCC::DoClearTargetMenu()
@@ -1168,6 +1294,13 @@ void CompilerGCC::DoClearErrors()
 int CompilerGCC::RunSingleFile(const wxString& filename)
 {
     wxFileName fname(filename);
+
+    if (fname.GetExt() == _T("script"))
+    {
+        Manager::Get()->GetScriptingManager()->LoadScript(filename);
+        return 0;
+    }
+
     m_CdRun = fname.GetPath();
     fname.SetExt(EXECUTABLE_EXT);
     wxString exe_filename = fname.GetFullPath();
@@ -1564,7 +1697,6 @@ BuildState CompilerGCC::GetNextStateBasedOnJob()
                         m_NextBuildState = bsProjectPreBuild;
                         DoBuild(m_pBuildingProject);
                         return bsProjectPreBuild;
-        //                    BuildStateManagement();
                     }
                 }
             }
@@ -1579,6 +1711,12 @@ BuildState CompilerGCC::GetNextStateBasedOnJob()
 
 void CompilerGCC::BuildStateManagement()
 {
+//    Manager::Get()->GetMessageManager()->Log(m_PageIndex, _T("BuildStateManagement"));
+    if (IsProcessRunning())
+    {
+        return;
+    }
+
     Manager::Yield();
     if (!m_pBuildingProject)
     {
@@ -1600,7 +1738,7 @@ void CompilerGCC::BuildStateManagement()
             SwitchCompiler(bt->GetCompilerIndex());
 
         bool hasLogged = m_Log->GetTextControl()->GetInsertionPoint() != 0;
-//        Manager::Get()->GetMessageManager()->Log(m_PageIndex, _T("*****> m_BuildState=%s, m_NextBuildState=%s, m_pBuildingProject=%p, bt=%p (%p)"), StateToString(m_BuildState).c_str(), StateToString(m_NextBuildState).c_str(), m_pBuildingProject, bt, m_pLastBuildingTarget);
+//        Manager::Get()->GetMessageManager()->Log(m_PageIndex, _T("CHANGE *****> m_BuildState=%s, m_NextBuildState=%s, m_pBuildingProject=%p, bt=%p (%p)"), StateToString(m_BuildState).c_str(), StateToString(m_NextBuildState).c_str(), m_pBuildingProject, bt, m_pLastBuildingTarget);
         if (!hasLogged || (m_pBuildingProject == m_pLastBuildingProject && m_NextBuildState == bsTargetPreBuild) || m_NextBuildState == bsProjectPreBuild)
         {
             if (hasLogged)
@@ -1622,7 +1760,8 @@ void CompilerGCC::BuildStateManagement()
     DirectCommands dc(this, &m_Generator, CompilerFactory::Compilers[m_CompilerIdx], m_pBuildingProject, m_PageIndex);
     dc.m_doYield = true;
 
-//    Manager::Get()->GetMessageManager()->Log(m_PageIndex, _T("*****> m_BuildState=%s, m_NextBuildState=%s, m_pBuildingProject=%p, bt=%p"), StateToString(m_BuildState).c_str(), StateToString(m_NextBuildState).c_str(), m_pBuildingProject, bt);
+//    Manager::Get()->GetMessageManager()->Log(m_PageIndex, _T("NOCHANGE *****> m_BuildState=%s, m_NextBuildState=%s, m_pBuildingProject=%p, bt=%p"), StateToString(m_BuildState).c_str(), StateToString(m_NextBuildState).c_str(), m_pBuildingProject, bt);
+
     m_BuildState = m_NextBuildState;
     wxArrayString cmds;
     switch (m_NextBuildState)
@@ -1931,37 +2070,40 @@ int CompilerGCC::KillProcess()
 {
     ResetBuildState();
     m_RunAfterCompile = false;
-    if (!m_Process || !m_Pid)
+    if (!IsProcessRunning())
         return -1;
     wxKillError ret;
     bool isdirect=(!UseMake());
 
     m_CommandQueue.Clear();
 
-    // Close input pipe
-    m_Process->CloseOutput();
-    ret = wxProcess::Kill(m_Pid, wxSIGTERM);
-    if(isdirect && ret!=wxKILL_OK)
+    for (size_t i = 0; i < m_ParallelProcessCount; ++i)
     {
-        // No need to tell the user about the errors - just keep him waiting.
-        Manager::Get()->GetMessageManager()->Log(m_PageIndex, _("Aborting..."));
-    }
-    else switch (ret)
-    {
-        case wxKILL_ACCESS_DENIED: wxMessageBox(_("Access denied")); break;
-        case wxKILL_NO_PROCESS: wxMessageBox(_("No process")); break;
-        case wxKILL_BAD_SIGNAL: wxMessageBox(_("Bad signal")); break;
-        case wxKILL_ERROR: wxMessageBox(_("Unspecified error")); break;
+        // Close input pipe
+        m_Processes[i]->CloseOutput();
+        ret = wxProcess::Kill(m_Pid[i], wxSIGTERM);
+        if(isdirect && ret!=wxKILL_OK)
+        {
+            // No need to tell the user about the errors - just keep him waiting.
+            Manager::Get()->GetMessageManager()->Log(m_PageIndex, _("Aborting process %d..."), i);
+        }
+        else switch (ret)
+        {
+//            case wxKILL_ACCESS_DENIED: wxMessageBox(_("Access denied")); break;
+//            case wxKILL_NO_PROCESS: wxMessageBox(_("No process")); break;
+//            case wxKILL_BAD_SIGNAL: wxMessageBox(_("Bad signal")); break;
+//            case wxKILL_ERROR: wxMessageBox(_("Unspecified error")); break;
 
-        case wxKILL_OK:
-        default: Manager::Get()->GetMessageManager()->Log(m_PageIndex, _("Process killed..."));
+            case wxKILL_OK:
+            default: break;//Manager::Get()->GetMessageManager()->Log(m_PageIndex, _("Process killed..."));
+        }
     }
     return ret;
 }
 
 bool CompilerGCC::IsRunning() const
 {
-    return m_BuildJob != bjIdle || m_Process || m_CommandQueue.GetCount();
+    return m_BuildJob != bjIdle || IsProcessRunning() || m_CommandQueue.GetCount();
 }
 
 ProjectBuildTarget* CompilerGCC::GetBuildTargetForFile(ProjectFile* pf)
@@ -2074,8 +2216,17 @@ int CompilerGCC::CompileFile(const wxString& file)
 
 void CompilerGCC::OnIdle(wxIdleEvent& event)
 {
-    if (m_Process && ((PipedProcess*)m_Process)->HasInput())
-		event.RequestMore();
+    if (IsProcessRunning())
+    {
+        for (size_t i = 0; i < m_ParallelProcessCount; ++i)
+        {
+            if (m_Processes[i] != 0 && ((PipedProcess*)m_Processes[i])->HasInput())
+            {
+                event.RequestMore();
+                break;
+            }
+        }
+    }
 	else
 		event.Skip();
 }
@@ -2533,24 +2684,32 @@ void CompilerGCC::AddOutputLine(const wxString& output, bool forceErrorColor)
 
 void CompilerGCC::OnGCCTerminated(CodeBlocksEvent& event)
 {
-	m_LastExitCode = event.GetInt();
-	OnJobEnd();
+	OnJobEnd(event.GetId() - idGCCProcess1, event.GetInt());
 }
 
-void CompilerGCC::OnJobEnd()
+void CompilerGCC::OnJobEnd(size_t procIndex, int exitCode)
 {
+//    Manager::Get()->GetMessageManager()->Log(m_PageIndex, _T("JobDone: index=%u, exitCode=%d"), procIndex, exitCode);
     m_timerIdleWakeUp.Stop();
-    m_Pid = 0;
+    m_Pid[procIndex] = 0;
+    m_Processes[procIndex] = 0;
+    m_LastExitCode = exitCode;
 
-    if (m_CommandQueue.GetCount() != 0 && m_LastExitCode == 0)
+    if (m_CommandQueue.GetCount() != 0 && exitCode == 0)
     {
         // continue running commands while last exit code was 0.
         DoRunQueue();
     }
     else
     {
-        if (m_LastExitCode == 0)
+        if (exitCode == 0)
         {
+            if (IsProcessRunning())
+            {
+                DoRunQueue();
+                return;
+            }
+
             while (1)
             {
                 BuildStateManagement();
@@ -2569,8 +2728,8 @@ void CompilerGCC::OnJobEnd()
         long int elapsed = wxGetElapsedTime() / 1000;
         int mins = elapsed / 60;
         int secs = (elapsed % 60);
-        m_Log->GetTextControl()->SetDefaultStyle(m_LastExitCode == 0 ? wxTextAttr(*wxBLUE) : wxTextAttr(*wxRED));
-        wxString msg = wxString::Format(_("Process terminated with status %d (%d minutes, %d seconds)"), m_LastExitCode, mins, secs);
+        m_Log->GetTextControl()->SetDefaultStyle(exitCode == 0 ? wxTextAttr(*wxBLUE) : wxTextAttr(*wxRED));
+        wxString msg = wxString::Format(_("Process terminated with status %d (%d minutes, %d seconds)"), exitCode, mins, secs);
         Manager::Get()->GetMessageManager()->Log(m_PageIndex, msg);
         Manager::Get()->GetMessageManager()->LogToStdOut(_T('\n') + msg + _T('\n'));
         if (!m_CommandQueue.LastCommandWasRun())

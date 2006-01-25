@@ -280,6 +280,7 @@
 				<Compiler>
 					<Add option="-DBUILDING_PLUGIN" />
 					<Add directory="sdk" />
+					<Add directory="sdk\as\include" />
 				</Compiler>
 				<Linker>
 					<Add option="-Wl,--enable-auto-image-base" />
@@ -287,7 +288,9 @@
 					<Add library="libcodeblocks.a" />
 					<Add library="libwxscintilla.a" />
 					<Add library="wxmsw26$(WX_SUFFIX)" />
+					<Add library="libangelscript.a" />
 					<Add directory="devel" />
+					<Add directory="sdk\as" />
 				</Linker>
 			</Target>
 			<Target title="Code-completion">
@@ -1974,16 +1977,6 @@
 			<Option target="sdk" />
 		</Unit>
 		<Unit filename="sdk\crc32.h">
-			<Option compilerVar="" />
-			<Option compile="0" />
-			<Option link="0" />
-			<Option target="sdk" />
-		</Unit>
-		<Unit filename="sdk\customvars.cpp">
-			<Option compilerVar="CPP" />
-			<Option target="sdk" />
-		</Unit>
-		<Unit filename="sdk\customvars.h">
 			<Option compilerVar="" />
 			<Option compile="0" />
 			<Option link="0" />

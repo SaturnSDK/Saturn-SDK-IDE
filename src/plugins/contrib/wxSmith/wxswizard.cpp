@@ -7,7 +7,6 @@
 #include <configmanager.h>
 #include <manager.h>
 #include <messagemanager.h>
-#include <customvars.h>
 #include "wxsmith.h"
 
 /* ************************************************************************** */

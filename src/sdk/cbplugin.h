@@ -297,16 +297,43 @@ class PLUGIN_EXPORT cbDebuggerPlugin: public cbPlugin
 {
 	public:
 		cbDebuggerPlugin();
+		/** @brief Request to add a breakpoint.
+		  * @param file The file to add the breakpoint based on a file/line pair.
+		  * @param line The line number to put the breakpoint in @c file.
+		  * @return True if succeeded, false if not.
+		  */
+		virtual bool AddBreakpoint(const wxString& file, int line) = 0;
+		/** @brief Request to add a breakpoint based on a function signature.
+		  * @param functionSignature The function signature to add the breakpoint.
+		  * @return True if succeeded, false if not.
+		  */
+		virtual bool AddBreakpoint(const wxString& functionSignature) = 0;
+		/** @brief Request to remove a breakpoint based on a file/line pair.
+		  * @param file The file to remove the breakpoint.
+		  * @param line The line number the breakpoint is in @c file.
+		  * @return True if succeeded, false if not.
+		  */
+		virtual bool RemoveBreakpoint(const wxString& file, int line) = 0;
+		/** @brief Request to remove a breakpoint based on a function signature.
+		  * @param functionSignature The function signature to remove the breakpoint.
+		  * @return True if succeeded, false if not.
+		  */
+		virtual bool RemoveBreakpoint(const wxString& functionSignature) = 0;
+		/** @brief Request to remove all breakpoints from a file.
+		  * @param file The file to remove all breakpoints in. If the argument is empty, all breakpoints are removed from all files.
+		  * @return True if succeeded, false if not.
+		  */
+		virtual bool RemoveAllBreakpoints(const wxString& file = wxEmptyString) = 0;
 		/** @brief Start a new debugging process. */
 		virtual int Debug() = 0;
 		/** @brief Continue running the debugged program. */
-		virtual void CmdContinue() = 0;
+		virtual void Continue() = 0;
 		/** @brief Execute the next instruction and return control to the debugger. */
-		virtual void CmdNext() = 0;
+		virtual void Next() = 0;
 		/** @brief Execute the next instruction, stepping into function calls if needed, and return control to the debugger. */
-		virtual void CmdStep() = 0;
+		virtual void Step() = 0;
 		/** @brief Stop the debugging process. */
-		virtual void CmdStop() = 0;
+		virtual void Stop() = 0;
         /** @brief Is the plugin currently debugging? */
 		virtual bool IsRunning() const = 0;
         /** @brief Get the exit code of the last debug process. */
