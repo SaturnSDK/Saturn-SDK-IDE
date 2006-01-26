@@ -457,8 +457,8 @@ cbProject* NativeParser::FindProjectFromEditor(cbEditor* editor)
 cbProject* NativeParser::FindProjectFromActiveEditor()
 {
 	EditorManager* edMan = Manager::Get()->GetEditorManager();
-    if (!edMan)
-    	return 0L;
+//    if (!edMan)
+//    	return 0L;
     cbEditor* ed = edMan->GetBuiltinActiveEditor();
 	return FindProjectFromEditor(ed);
 }
@@ -482,8 +482,8 @@ Parser* NativeParser::FindParserFromEditor(cbEditor* editor)
 Parser* NativeParser::FindParserFromActiveEditor()
 {
 	EditorManager* edMan = Manager::Get()->GetEditorManager();
-    if (!edMan)
-    	return 0L;
+//    if (!edMan)
+//    	return 0L;
     cbEditor* ed = edMan->GetBuiltinActiveEditor();
 	return FindParserFromEditor(ed);
 }

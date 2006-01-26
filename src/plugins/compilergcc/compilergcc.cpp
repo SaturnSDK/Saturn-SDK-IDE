@@ -34,6 +34,7 @@
 #include <projectmanager.h>
 #include <editormanager.h>
 #include <scriptingmanager.h>
+#include <configurationpanel.h>
 
 #include <cbeditor.h>
 #include <annoyingdialog.h>
@@ -61,52 +62,6 @@
 #define COLOUR_NAVY   wxColour(0x00, 0x00, 0xa0)
 
 CB_IMPLEMENT_PLUGIN(CompilerGCC);
-
-// A simple dialog that wraps compiler's cbConfigurationPanel*
-// Used for project build options...
-class ProjectConfigureDlg : public wxDialog
-{
-	public:
-		ProjectConfigureDlg(CompilerGCC* compiler, wxWindow* parent, cbProject* project, ProjectBuildTarget* target)
-            : wxDialog(parent, wxID_ANY, _("Project build options"), wxDefaultPosition, wxDefaultSize)
-		{
-		    wxBoxSizer* bs = new wxBoxSizer(wxVERTICAL);
-            m_pPanel = new CompilerOptionsDlg(this, compiler, project, target);
-            bs->Add(m_pPanel, 1, wxGROW | wxRIGHT | wxTOP | wxBOTTOM, 8);
-
-            wxStaticLine* line = new wxStaticLine(this);
-            bs->Add(line, 0, wxGROW | wxLEFT | wxRIGHT, 8);
-
-            m_pOK = new wxButton(this, wxID_OK, _("&OK"));
-            m_pOK->SetDefault();
-            m_pCancel = new wxButton(this, wxID_CANCEL, _("&Cancel"));
-            wxStdDialogButtonSizer* but = new wxStdDialogButtonSizer;
-            but->AddButton(m_pOK);
-            but->AddButton(m_pCancel);
-            but->Realize();
-            bs->Add(but, 0, wxALIGN_CENTER_HORIZONTAL | wxALL, 8);
-
-            SetSizer(bs);
-            bs->SetSizeHints(this);
-            CenterOnParent();
-		}
-		~ProjectConfigureDlg(){}
-
-		void EndModal(int retCode)
-		{
-		    if (retCode == wxID_OK)
-                m_pPanel->OnApply();
-            else
-                m_pPanel->OnCancel();
-            wxDialog::EndModal(retCode);
-		}
-	protected:
-        cbConfigurationPanel* m_pPanel;
-        wxButton* m_pOK;
-        wxButton* m_pCancel;
-	private:
-
-};
 
 // menu IDS
 // just because we don't know other plugins' used identifiers,
@@ -417,7 +372,8 @@ void CompilerGCC::OnRelease(bool appShutDown)
 
 int CompilerGCC::Configure(cbProject* project, ProjectBuildTarget* target)
 {
-    ProjectConfigureDlg dlg(this, Manager::Get()->GetAppWindow(), project, target);
+    cbConfigurationPanel* panel = new CompilerOptionsDlg(0, this, project, target);
+    cbConfigurationDialog dlg(Manager::Get()->GetAppWindow(), wxID_ANY, _("Project build options"), panel);
     if(dlg.ShowModal() == wxID_OK)
     {
         m_ConsoleTerm = Manager::Get()->GetConfigManager(_T("compiler"))->Read(_T("/console_terminal"), DEFAULT_CONSOLE_TERM);
@@ -426,6 +382,7 @@ int CompilerGCC::Configure(cbProject* project, ProjectBuildTarget* target)
         SetupEnvironment();
         Manager::Get()->GetMacrosManager()->Reset();
     }
+    delete panel;
     return 0;
 }
 

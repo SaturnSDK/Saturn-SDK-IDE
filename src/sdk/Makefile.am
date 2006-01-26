@@ -120,6 +120,7 @@ noinst_HEADERS = annoyingdialog.h \
 				compileroptions.h \
 				compiletargetbase.h \
 				configmanager.h \
+				configurationpanel.h \
 				configuretoolsdlg.h \
 				confirmreplacedlg.h \
 				crc32.h \

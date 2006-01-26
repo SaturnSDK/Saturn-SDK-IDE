@@ -82,6 +82,8 @@ class CompilerGCC : public cbCompilerPlugin
 		virtual bool IsRunning() const;
 		virtual int GetExitCode() const { return m_LastExitCode; }
 		virtual int Configure(cbProject* project, ProjectBuildTarget* target = 0L);
+
+		int GetConfigurationGroup(){ return cgCompiler; }
         cbConfigurationPanel* GetConfigurationPanel(wxWindow* parent);
 
 		void SwitchCompiler(int compilerIdx);

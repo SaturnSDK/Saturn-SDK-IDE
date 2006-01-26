@@ -2,6 +2,7 @@
 #include <wx/xrc/xmlres.h>
 #include <manager.h>
 #include <configmanager.h>
+#include <pluginmanager.h>
 #include <wx/intl.h>
 #include <wx/listbook.h>
 #include <wx/combobox.h>
@@ -12,6 +13,7 @@
 #include <wx/colordlg.h>
 #include <wx/msgdlg.h>
 #include "wxAUI/manager.h"
+#include "appglobals.h"
 
 #include "environmentsettingsdlg.h"
 #ifdef __WXMSW__
@@ -22,7 +24,7 @@
 const wxString base_imgs[] =
 {
     _T("general-prefs"),
-    _T("view"),
+    _T("notebook-appearance"),
     _T("colours"),
     _T("dialogs"),
     _T("batch"),
@@ -113,7 +115,7 @@ EnvironmentSettingsDlg::EnvironmentSettingsDlg(wxWindow* parent, wxDockArt* art)
 
     // tab "Batch builds"
 #ifdef __WXMSW__
-    XRCCTRL(*this, "txtBatchBuildsCmdLine", wxTextCtrl)->SetValue(cfg->Read(_T("/batch_build_args"), DEFAULT_BATCH_BUILD_ARGS));
+    XRCCTRL(*this, "txtBatchBuildsCmdLine", wxTextCtrl)->SetValue(cfg->Read(_T("/batch_build_args"), g_DefaultBatchBuildArgs));
 #endif
 
     // tab "Network"
@@ -142,20 +144,18 @@ EnvironmentSettingsDlg::~EnvironmentSettingsDlg()
 void EnvironmentSettingsDlg::AddPluginPanels()
 {
     const wxString base = ConfigManager::GetDataFolder() + _T("/images/settings/");
-    wxBitmap bmp;
 
     wxListbook* lb = XRCCTRL(*this, "nbMain", wxListbook);
-    Manager::Get()->GetPluginManager()->GetAllConfigurationPanels(lb, m_PluginPanels);
+    // get all configuration panels which are *not* about compiler, debugger and editor.
+    Manager::Get()->GetPluginManager()->GetConfigurationPanels(~(cgCompiler | cgDebugger | cgEditor), lb, m_PluginPanels);
 
     for (size_t i = 0; i < m_PluginPanels.GetCount(); ++i)
     {
         cbConfigurationPanel* panel = m_PluginPanels[i];
         lb->AddPage(panel, panel->GetTitle());
 
-        bmp.LoadFile(base + panel->GetBitmapBaseName() + _T(".png"), wxBITMAP_TYPE_PNG);
-        lb->GetImageList()->Add(bmp);
-        bmp.LoadFile(base + panel->GetBitmapBaseName() + _T("-off.png"), wxBITMAP_TYPE_PNG);
-        lb->GetImageList()->Add(bmp);
+        lb->GetImageList()->Add(LoadPNGWindows2000Hack(base + panel->GetBitmapBaseName() + _T(".png")));
+        lb->GetImageList()->Add(LoadPNGWindows2000Hack(base + panel->GetBitmapBaseName() + _T("-off.png")));
         lb->SetPageImage(lb->GetPageCount() - 1, lb->GetImageList()->GetImageCount() - 2);
     }
 
@@ -310,7 +310,7 @@ void EnvironmentSettingsDlg::EndModal(int retCode)
         // tab "Batch builds"
 #ifdef __WXMSW__
         wxString bbargs = XRCCTRL(*this, "txtBatchBuildsCmdLine", wxTextCtrl)->GetValue();
-        if (bbargs != cfg->Read(_T("/batch_build_args"), DEFAULT_BATCH_BUILD_ARGS))
+        if (bbargs != cfg->Read(_T("/batch_build_args"), g_DefaultBatchBuildArgs))
         {
             cfg->Write(_T("/batch_build_args"), bbargs);
             Associations::SetBatchBuildOnly();

@@ -7,6 +7,7 @@
 
 #include "settings.h" // build settings
 #include "globals.h"
+#include "configurationpanel.h"
 
 #ifdef __WXMSW__
 	#ifndef PLUGIN_EXPORT
@@ -28,7 +29,7 @@
 // it will change when the SDK interface breaks
 #define PLUGIN_SDK_VERSION_MAJOR 1
 #define PLUGIN_SDK_VERSION_MINOR 6
-#define PLUGIN_SDK_VERSION_RELEASE 6
+#define PLUGIN_SDK_VERSION_RELEASE 7
 
 // class decls
 class ProjectBuildTarget;
@@ -38,6 +39,14 @@ class wxToolBar;
 class wxPanel;
 class cbProject;
 class FileTreeData;
+
+// Define basic groups for plugins' configuration.
+static const int cgCompiler         = 0x01; ///< Compiler related.
+static const int cgDebugger         = 0x02; ///< Debugger related.
+static const int cgEditor           = 0x04; ///< Editor related.
+static const int cgCorePlugin       = 0x08; ///< One of the core plugins.
+static const int cgContribPlugin    = 0x10; ///< One of the contrib plugins (or any third-party plugin for that matter).
+static const int cgUnknown          = 0x20; ///< Unknown. This will be probably grouped with cgContribPlugin.
 
 /** Information about the plugin */
 struct PluginInfo
@@ -51,23 +60,6 @@ struct PluginInfo
     wxString authorWebsite;
     wxString thanksTo;
     wxString license;
-};
-
-/** @brief Base class for plugin configuration panels. */
-class PLUGIN_EXPORT cbConfigurationPanel : public wxPanel
-{
-    public:
-        cbConfigurationPanel(){}
-        virtual ~cbConfigurationPanel(){}
-
-        /// @return the panel's title.
-        virtual wxString GetTitle() = 0;
-        /// @return the panel's bitmap base name. You must supply two bitmaps: <basename>.png and <basename>-off.png...
-        virtual wxString GetBitmapBaseName() = 0;
-        /// Called when the user chooses to apply the configuration.
-        virtual void OnApply() = 0;
-        /// Called when the user chooses to cancel the configuration.
-        virtual void OnCancel() = 0;
 };
 
 /** @brief Base class for plugins
@@ -113,6 +105,15 @@ class PLUGIN_EXPORT cbPlugin : public wxEvtHandler
 
 		/** The plugin must return its info on request. */
         virtual PluginInfo const* GetInfo() const { return &m_PluginInfo; }
+		/** If a plugin provides some sort of configuration dialog,
+		  * this is the place to invoke it.
+		  */
+        virtual int Configure(){ return 0; }
+        /** Return the configuration group for this plugin. Default is cgUnknown.
+          * Notice that you can logically AND more than one configuration groups,
+          * so you could set it, for example, as "cgCompiler | cgContribPlugin".
+          */
+        virtual int GetConfigurationGroup(){ return cgUnknown; }
 		/** Return plugin's configuration panel.
 		  * @param parent The parent window.
 		  * @return A pointer to the plugin's cbConfigurationPanel. It is deleted by the caller.
