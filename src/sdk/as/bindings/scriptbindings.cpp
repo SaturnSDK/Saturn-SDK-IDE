@@ -296,6 +296,10 @@ template <class T> void Register_CompileOptionsBase(asIScriptEngine* engine, con
     engine->RegisterObjectMethod(_C(classname), "void RemoveCommandsAfterBuild(const wxString& in)", asMETHOD(T, RemoveCommandsAfterBuild), asCALL_THISCALL);
     engine->RegisterObjectMethod(_C(classname), "bool GetAlwaysRunPostBuildSteps()", asMETHOD(T, GetAlwaysRunPostBuildSteps), asCALL_THISCALL);
     engine->RegisterObjectMethod(_C(classname), "void SetAlwaysRunPostBuildSteps(bool)", asMETHOD(T, SetAlwaysRunPostBuildSteps), asCALL_THISCALL);
+    engine->RegisterObjectMethod(_C(classname), "bool SetVar(const wxString& in, const wxString& in, bool)", asMETHOD(T, SetVar), asCALL_THISCALL);
+    engine->RegisterObjectMethod(_C(classname), "bool UnsetVar(const wxString& in)", asMETHOD(T, UnsetVar), asCALL_THISCALL);
+    engine->RegisterObjectMethod(_C(classname), "void UnsetAllVars()", asMETHOD(T, UnsetAllVars), asCALL_THISCALL);
+    engine->RegisterObjectMethod(_C(classname), "const wxString& GetVar(const wxString& in) const", asMETHOD(T, GetVar), asCALL_THISCALL);
 }
 
 //------------------------------------------------------------------------------
