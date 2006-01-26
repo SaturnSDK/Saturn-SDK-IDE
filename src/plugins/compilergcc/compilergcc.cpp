@@ -2029,6 +2029,18 @@ int CompilerGCC::BuildWorkspace(const wxString& target)
     DoPrepareQueue();
     ClearLog();
 
+    // save files from all projects as they might require each other...
+    ProjectsArray* arr = Manager::Get()->GetProjectManager()->GetProjects();
+    if (arr)
+    {
+        for (size_t i = 0; i < arr->GetCount(); ++i)
+        {
+            cbProject* prj = arr->Item(i);
+            if (prj && !prj->SaveAllFiles())
+                Manager::Get()->GetMessageManager()->Log(m_PageIndex, _("Could not save all files of %s..."), prj->GetTitle().c_str());
+        }
+    }
+
     InitBuildState(bjWorkspace, target);
     CalculateWorkspaceDependencies();
     m_BuildingProjectIdx = m_BuildDeps[m_BuildDepsIndex];
