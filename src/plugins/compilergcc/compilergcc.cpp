@@ -163,6 +163,7 @@ BEGIN_EVENT_TABLE(CompilerGCC, cbCompilerPlugin)
 	EVT_PROJECT_ACTIVATE(CompilerGCC::OnProjectActivated)
 	EVT_PROJECT_OPEN(CompilerGCC::OnProjectLoaded)
 	//EVT_PROJECT_POPUP_MENU(CompilerGCC::OnProjectPopupMenu)
+	EVT_PROJECT_TARGETS_MODIFIED(CompilerGCC::OnProjectActivated)
 
 	EVT_PIPEDPROCESS_STDOUT_RANGE(idGCCProcess1, idGCCProcess16, CompilerGCC::OnGCCOutput)
 	EVT_PIPEDPROCESS_STDERR_RANGE(idGCCProcess1, idGCCProcess16, CompilerGCC::OnGCCError)
@@ -2556,7 +2557,7 @@ void CompilerGCC::OnUpdateUI(wxUpdateUIEvent& event)
 }
 
 void CompilerGCC::OnProjectActivated(CodeBlocksEvent& event)
-{
+{   //NOTE: this function is also called on PROJECT_TARGETS_MODIFIED events to keep the combobox in sync
 	DoRecreateTargetMenu();
 	event.Skip(); // *very* important! don't forget it...
 }
