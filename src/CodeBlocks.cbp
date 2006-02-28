@@ -106,6 +106,17 @@
 					<Add directory="sdk\wxFlatNotebook" />
 				</Compiler>
 			</Target>
+			<Target title="wxMultiTreeControl">
+				<Option output="sdk\as\libmultitree.a" />
+				<Option working_dir="" />
+				<Option type="2" />
+				<Option compiler="gcc" />
+				<Option projectResourceIncludeDirsRelation="0" />
+				<Compiler>
+					<Add directory="sdk\treemultictrl\images" />
+					<Add directory="sdk\treemultictrl" />
+				</Compiler>
+			</Target>
 			<Target title="sdk">
 				<Option output="devel\codeblocks.dll" />
 				<Option working_dir="devel" />
@@ -136,6 +147,7 @@
 					<Add library="libwxscintilla.a" />
 					<Add library="propgrid" />
 					<Add library="wxflatnotebook" />
+					<Add library="multitree" />
 					<Add directory="devel" />
 					<Add directory="sdk\as" />
 					<Add directory="sdk\propgrid" />
@@ -456,6 +468,7 @@
 			<Add directory="$(#WX)\contrib\include" />
 			<Add directory="sdk\wxscintilla\include" />
 			<Add directory="sdk\propgrid\include" />
+			<Add directory="sdk\treemultictrl\include" />
 		</Compiler>
 		<ResourceCompiler>
 			<Add directory="$(#WX.include)" />
@@ -3064,6 +3077,62 @@
 			<Option compile="0" />
 			<Option link="0" />
 			<Option target="sdk" />
+		</Unit>
+		<Unit filename="sdk\treemultictrl\TreeMultiItemBase.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="wxMultiTreeControl" />
+		</Unit>
+		<Unit filename="sdk\treemultictrl\TreeMultiItemNode.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="wxMultiTreeControl" />
+		</Unit>
+		<Unit filename="sdk\treemultictrl\TreeMultiItemRoot.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="wxMultiTreeControl" />
+		</Unit>
+		<Unit filename="sdk\treemultictrl\TreeMultiItemWindow.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="wxMultiTreeControl" />
+		</Unit>
+		<Unit filename="sdk\treemultictrl\include\TreeMultiItemBase.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="wxMultiTreeControl" />
+		</Unit>
+		<Unit filename="sdk\treemultictrl\include\TreeMultiItemNode.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="wxMultiTreeControl" />
+		</Unit>
+		<Unit filename="sdk\treemultictrl\include\TreeMultiItemRoot.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="wxMultiTreeControl" />
+		</Unit>
+		<Unit filename="sdk\treemultictrl\include\TreeMultiItemWindow.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="wxMultiTreeControl" />
+		</Unit>
+		<Unit filename="sdk\treemultictrl\include\tmcimages.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="wxMultiTreeControl" />
+		</Unit>
+		<Unit filename="sdk\treemultictrl\include\wxTreeMultiCtrl.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="wxMultiTreeControl" />
+		</Unit>
+		<Unit filename="sdk\treemultictrl\wxTreeMultiCtrl.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="wxMultiTreeControl" />
 		</Unit>
 		<Unit filename="sdk\uservarmanager.cpp">
 			<Option compilerVar="CPP" />
