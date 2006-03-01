@@ -1,0 +1,19 @@
+<buildsystem>
+<!-- $Revision$ -->
+<!-- $Id$ -->
+<!-- $HeadURL$ -->
+
+	<family id="cpp" title="C++">
+		<filetype stages="precompile">hpp;hh;h;hxx;h++</filetype>
+		<filetype stages="compile;link">cpp;cc;cxx;c++</filetype>
+	</family>
+	
+	<family id="xrc" title="XRC (wxWidgets resource files)">
+		<filetype stages="link">xrc</filetype>
+	</family>
+
+</buildsystem>
+
+
+
+

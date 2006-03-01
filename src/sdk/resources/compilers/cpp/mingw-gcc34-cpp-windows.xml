@@ -1,0 +1,107 @@
+<buildsystem title="MinGW (gcc 3.4.x)" family="C++" id="mingw-gcc34-cpp">
+<!-- $Revision$ -->
+<!-- $Id$ -->
+<!-- $HeadURL$ -->
+
+	<filemapping name="object_file" before=""    after=".o" />
+	<filemapping name="shared_lib"  before="lib" after=".a" />
+	<filemapping name="static_lib"  before=""    after=".dll" />
+	<filemapping name="import_lib"  before=""    after=".def" />
+	<filemapping name="executable"  before=""    after=".exe" />
+	<!-- filemapping name="preprocess"  before=""    after="" -->
+
+	<tool id="compiler">
+		<executable>mingw32-gcc.exe</executable>
+		<search registry="HKEY_CURRENT_USER\Software\Mingw\InstallPath" />
+		<search location="C:\MinGW\bin" />
+		<search location="$(BIN)" recursive="true" />
+		<challenge>--version</challenge>
+		<response>gcc version 3\.4\.[0-9]</response>
+	</tool>
+
+	<tool id="linker">
+		<executable>ld.exe</executable>
+		<location>alias:compile</location>
+	</tool>
+
+	<tool id="libtool">
+		<executable>collect.exe</executable>
+		<location>alias:compile</location>
+	</tool>
+
+
+	<precompile>
+		<command mode="alongside">$(compiler) $(OPTIONS) $(INFILE)</command>
+		<command mode="folder">$(compiler) $(OPTIONS) precomp/$(INFILE)</command>
+	</precompile>
+	
+	
+	<preprocess />
+	
+	<compile>
+		<command>$(compiler) $(OPTIONS) -c $(INFILE) -o $(OUTFILE)</command>
+		
+		<behaviours>
+			<choice id="::optimize">
+				<implement value="off">-O0</implement>
+				<implement value="size">-Os</implement>
+				<implement value="1">-O</implement>
+				<implement value="2">-O2</implement>
+				<implement value="3">-O3</implement>   
+				<implement value="4">-O3</implement> 
+				<implement value="5">-O3 -fexpensive-optimizations -fforce-mem -fforce-addr</implement>
+				<implement value="xxx">-O3 -fexpensive-optimizations  -fforce-mem -fforce-addr -ffast-math -frename-registers -mrtd -mregparm=3 </implement>
+			</choice>
+
+			<check id="::debug">
+				<implement>-g</implement>
+				<explicit>-g</>
+			</check>
+		</behaviours>
+
+		<properties>
+			<check title="Strip output executable" id="strip">-s</check>
+		</properties>
+
+		<definitions>
+			<define>-D$(CONST)</define>
+			<define_value>-D$(CONST)=$(VALUE)</define>
+			<add_path>-I$(PATH)</add_path>
+			<sys_query>-v -E -x c++<sys_query>
+		</definitions>
+
+		<error type="Compiler error" regex="^([a-zA-Z0-9._\-]+:([0-9]+): error: (.*)+$">
+			<v id="file" index="1" />
+			<v id="line" index="2" />
+			<v id="err_level" index="0" />
+			<v id="message" index="4" />
+		</error>
+		
+		<warning type="Compiler warning" regex="^([a-zA-Z0-9._\-]+:([0-9]+): error: (.*)+$">
+			<v id="file" index="1" />
+			<v id="line" index="2" />
+			<v id="err_level" index="0" />
+			<v id="message" index="4" />
+		</warning>
+	</compile>
+
+
+	<link  run="pertarget">
+		<command mode="gui">-mwindows $(linker) $(OPTIONS) $(ALL_TARGET_FILES) -o $(EXECUTABLE)</command>
+		<command mode="console">$(linker) $(LPATHS) $(OPTIONS) $(ALL_TARGET_FILES) -o $(EXECUTABLE)</command>
+		<command mode="dynamic-lib">$(linker) --dll $(OPTIONS) $(ALL_TARGET_FILES) -o $(EXECUTABLE)</command>
+		<command mode="static-lib">$(libtool) $(OPTIONS)  $(ALL_TARGET_FILES) -o $(EXECUTABLE)</command>
+		<properties>
+			<filelist id="libs" />
+		</properties>
+
+		<definitions>
+			<add_path>-L$(PATH)</add_path>
+		</definitions>
+	</link>
+
+</buildsystem>
+
+
+
+

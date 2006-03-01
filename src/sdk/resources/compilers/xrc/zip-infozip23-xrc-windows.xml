@@ -1,0 +1,48 @@
+<buildsystem title="MinGW (gcc 3.4.x)" family="C++" id="mingw-gcc34-cpp">
+<!-- $Revision$ -->
+<!-- $Id$ -->
+<!-- $HeadURL$ -->
+
+	<tool id="zip">
+		<executable>zip.exe</executable>
+		<search location="C:\MinGW\bin" />
+		<search location="$(CB)/bin" />
+		<search location="$(BIN)" recursive="true" />
+		<challenge>-v</challenge>
+		<response>This is Zip (2\.[2-9]|3\.[0-9])</response>
+		<response>ftp\.cdrom\.com/pub/infozip</response>
+	</tool>
+
+	<preprocess />
+	<precompile />
+	<compile />
+
+	<link run="pertarget">
+		<command>$(zip) $(OPTIONS) $(TARGET_OUTPUT_FILE) $(ALL_TARGET_FILES)</command>
+		
+		<behaviours />
+
+		<properties>
+			<check title="Only handle updated or new files" id="update" default="1">-u</check>
+			<check title="Don't record directory names" id="junk" default="1">-j</check>
+			<choice title="Compression" id="compress">
+				<item title="none" value="off">-0</item>
+				<item title="fast" value="fast">-1</item>
+				<item title="normal" value="normal">-5</item>
+				<item title="best" value="best">-9</item>
+			</choice>
+		</properties>
+
+		<error type="Zip error" regex="^zip error:(.*)$">
+			<v id="file" index="0" />
+			<v id="line" index="0" />
+			<v id="err_level" index="0" />
+			<v id="message" index="1" />
+		</error>
+	</link>
+
+</buildsystem>
+
+
+
+

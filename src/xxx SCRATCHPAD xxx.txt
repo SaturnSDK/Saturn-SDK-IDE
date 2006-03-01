@@ -1,0 +1,63 @@
+Layout file
+----------
+1. Describes what subdirectory refers to which human-readable family name
+2. Describes what file types go through which stages in each family (if a particular compiler does not implement a stage,
+   - for example 'precompile' - then that stage shall be silently ignored).
+
+
+
+Behaviours
+-----------
+Behaviours can only be either boolean values (on, off, explicitely off) or choices.
+
+Booleans: The value "off" refers more correctly to "not on in this context", but may still result being "on" due to inheritance. Contrarily, "explicitely off" does not honour any ancestors.
+Choices: Choices are declared in behaviours.xml (user visible text and identifiers), and must either be not implemented at all, or implemented
+exactly like they were declared in the compiler file (map identifiers to commandline options).
+
+
+Properties
+----------
+Properties can be booleans, choices, integers, strings, and string arrays. As a special case of strings, filenames and pathnames are allowed,
+these are implemented as strings but can be declared as being absolute or relative (and are normalized accordingly),
+also they may offer a more sophisticated GUI.
+
+
+
+Compiler file format
+------------------
+
+Tools:
+- define the tool 
+   - search locations
+       The special form 'alias:name' means "same as tool 'name'".
+   - file name
+       The special form 'alias:name' means "same as tool 'name'". If an alias for the *executable* is given, no path is needed.
+   - challenge and response (there may be several responses, all must match
+Only names that have been declared earlier in the document can be referenced as alias (no, I am not going to implement recursive aliasing...).
+
+
+Stages:
+- preprocess
+- precompile
+- compile
+- link
+
+<stage run="perfile|pertarget">
+The link stage usually runs per target, all others usually run per file.
+Default: per file.
+
+
+For each stage:
+- command: the complete commandline needed to run a stage
+  A command may be assigned a mode. This is to honour the different modes of invokation, for example
+  to build a static or dynamic library, or to generate precompiled headers alongside the header or in another folder.
+  If the application provides a mode when querying the commandline, only a matching commandline is returned.
+  If no mode is provided, the first command found is returned (which should be the only one anyway).
+- implement behaviours: A compiler may either not implement a behaviour (in that case, no configuration is available
+  for that compiler, and the behaviour is completely ignored) or it must implement it exactly as declared in behaviours.xml
+- implement properties:
+- definitions: Commandline flags which the build system needs apart from options, for example to add a path to a tool or to define
+  a constant for the tool used in this stage
+- <error> and <warning> provide a regex to parse output for one specific error condition or warning
+- There may be several of each, referring to different conditions
+- Each regex only operates inside the stage defined by the context attribute (different from the current implementation!)

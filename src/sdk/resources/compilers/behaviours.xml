@@ -1,0 +1,26 @@
+<behaviours>
+<!-- $Revision$ -->
+<!-- $Id$ -->
+<!-- $HeadURL$ -->
+
+	<choice title="Optimize" id="::optimize" default="off">
+		<declare value="off">Do not optimize</declare>
+		<declare value="size">Optimize for size</declare>
+		<declare value="1">Optimize for speed (quick)</declare>
+		<declare value="2">Optimize for speed (standard)</declare>
+		<declare value="3">Optimize for speed (better)</declare>      <-- Intel C++ = -O3,  gcc = -O3 -->
+		<declare value="4">Optimize for speed (maximum)</declare>   <-- Intel C++ = -O6,  gcc = -O3 -->
+		<declare value="5">Optimize for speed (expensive)</declare>
+		<declare value="xxx">Optimize for speed (unsafe)</declare>
+		<script on="size,1,2,3,4,5,xxx">SetOption("::debug", "0");</script>
+	</choice>
+
+	<check title="Generate debug symbols" id="::debug" default="1">
+		<script on="1">SetOption("::optimize", "off");</script>
+	</check>
+
+</behaviours>
+
+
+
+

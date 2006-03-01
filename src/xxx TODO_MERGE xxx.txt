@@ -1,0 +1,5 @@
+Things to do before merging
+---------------------------
+
+- update Makefile.am for multitreecontrol
+- update Linux "update"
