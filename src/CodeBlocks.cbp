@@ -107,7 +107,7 @@
 				</Compiler>
 			</Target>
 			<Target title="wxMultiTreeControl">
-				<Option output="sdk\as\libmultitree.a" />
+				<Option output="sdk\treemultictrl\libtreemultictrl.a" />
 				<Option working_dir="" />
 				<Option type="2" />
 				<Option compiler="gcc" />
@@ -147,11 +147,12 @@
 					<Add library="libwxscintilla.a" />
 					<Add library="propgrid" />
 					<Add library="wxflatnotebook" />
-					<Add library="multitree" />
+					<Add library="treemultictrl" />
 					<Add directory="devel" />
 					<Add directory="sdk\as" />
 					<Add directory="sdk\propgrid" />
 					<Add directory="sdk\wxFlatNotebook" />
+					<Add directory="sdk\treemultictrl" />
 				</Linker>
 				<ExtraCommands>
 					<Add before="tools/autorevision/autorevision +wx +int +t . sdk/autorevision.h" />
