@@ -83,6 +83,14 @@ copy /y tools\ConsoleRunner\console_runner*.exe devel > nul
 copy /y devel\*.exe output > nul
 copy /y devel\*.dll output > nul
 copy /y %RESDIR%\plugins\*.dll output\share\codeblocks\plugins > nul
+
+echo copying build configurations
+echo linux > xcopy-sucks.txt
+echo mac >> xcopy-sucks.txt
+mkdir devel\share\CodeBlocks\compilers > nul
+xcopy sdk\resources\compilers devel\share\CodeBlocks\compilers /s /y /exclude:xcopy-sucks.txt > nul
+del xcopy-sucks.txt
+
 echo Stripping debug info from output tree
 strip output\*.exe
 strip output\*.dll
