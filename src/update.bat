@@ -88,7 +88,7 @@ echo copying build configurations
 echo linux > xcopy-sucks.txt
 echo mac >> xcopy-sucks.txt
 if not exist devel\share\CodeBlocks\compilers md devel\share\CodeBlocks\compilers > nul
-if not exist ouput\share\CodeBlocks\compilers md ouput\share\CodeBlocks\compilers > nul
+if not exist output\share\CodeBlocks\compilers md output\share\CodeBlocks\compilers > nul
 xcopy sdk\resources\compilers devel\share\CodeBlocks\compilers /s /y /exclude:xcopy-sucks.txt > nul
 xcopy devel\share\CodeBlocks\compilers output\share\CodeBlocks\compilers /s /y > nul
 del xcopy-sucks.txt
