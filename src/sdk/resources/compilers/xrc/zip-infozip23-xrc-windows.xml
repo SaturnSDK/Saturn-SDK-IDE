@@ -13,12 +13,8 @@
 		<response>ftp\.cdrom\.com/pub/infozip</response>
 	</tool>
 
-	<preprocess />
-	<precompile />
-	<compile />
-
-	<link run="pertarget">
-		<command>$(zip) $(OPTIONS) $(TARGET_OUTPUT_FILE) $(ALL_TARGET_FILES)</command>
+	<stage id="pack" title="packing" run="pertarget">
+		<command tool="zip">$(TOOL) $(OPTIONS) $(TARGET_OUTPUT_FILE) $(ALL_TARGET_FILES)</command>
 		
 		<behaviours />
 
@@ -39,7 +35,7 @@
 			<v id="err_level" index="0" />
 			<v id="message" index="1" />
 		</error>
-	</link>
+	</stage>
 
 </buildsystem>
 

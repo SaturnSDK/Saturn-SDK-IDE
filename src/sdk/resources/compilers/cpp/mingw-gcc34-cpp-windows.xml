@@ -30,16 +30,14 @@
 	</tool>
 
 
-	<precompile>
+	<stage title="precompiling" id="precompile">
 		<command mode="alongside">$(compiler) $(OPTIONS) $(INFILE)</command>
 		<command mode="folder">$(compiler) $(OPTIONS) precomp/$(INFILE)</command>
-	</precompile>
+	</stage>
 	
-	
-	<preprocess />
-	
-	<compile>
-		<command>$(compiler) $(OPTIONS) -c $(INFILE) -o $(OUTFILE)</command>
+		
+	<stage title="compiling" id="compile">
+		<command tool="compiler">$(TOOL) $(OPTIONS) -c $(INFILE) -o $(OUTFILE)</command>
 		
 		<behaviours>
 			<choice id="::optimize">
@@ -83,14 +81,14 @@
 			<v id="err_level" index="0" />
 			<v id="message" index="4" />
 		</warning>
-	</compile>
+	</stage>
 
 
-	<link  run="pertarget">
-		<command mode="gui">-mwindows $(linker) $(OPTIONS) $(ALL_TARGET_FILES) -o $(EXECUTABLE)</command>
-		<command mode="console">$(linker) $(LPATHS) $(OPTIONS) $(ALL_TARGET_FILES) -o $(EXECUTABLE)</command>
-		<command mode="dynamic-lib">$(linker) --dll $(OPTIONS) $(ALL_TARGET_FILES) -o $(EXECUTABLE)</command>
-		<command mode="static-lib">$(libtool) $(OPTIONS)  $(ALL_TARGET_FILES) -o $(EXECUTABLE)</command>
+	<stage target="linking" id="link"  run="pertarget">
+		<command mode="gui" tool="compiler">-mwindows $(TOOL) $(OPTIONS) $(ALL_TARGET_FILES) -o $(EXECUTABLE)</command>
+		<command mode="console" tool="compiler">$(TOOL) $(LPATHS) $(OPTIONS) $(ALL_TARGET_FILES) -o $(EXECUTABLE)</command>
+		<command mode="dynamic-lib" tool="linker">$(TOOL) --dll $(OPTIONS) $(ALL_TARGET_FILES) -o $(EXECUTABLE)</command>
+		<command mode="static-lib" tool="libtool">$(TOOL) $(OPTIONS)  $(ALL_TARGET_FILES) -o $(EXECUTABLE)</command>
 		<properties>
 			<filelist id="libs" />
 		</properties>
@@ -98,7 +96,7 @@
 		<definitions>
 			<add_path>-L$(PATH)</add_path>
 		</definitions>
-	</link>
+	</stage>
 
 </buildsystem>
 

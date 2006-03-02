@@ -4,12 +4,13 @@
 <!-- $HeadURL$ -->
 
 	<family id="cpp" title="C++">
-		<filetype stages="precompile">hpp;hh;h;hxx;h++</filetype>
-		<filetype stages="compile;link">cpp;cc;cxx;c++</filetype>
+		<stage id="precompile">hpp;hh;h;hxx;h++</stage>
+		<stage id="compile">cpp;cc;cxx;c++</stage>
+		<stage id="link">cpp;cc;cxx;c++</stage>
 	</family>
 	
 	<family id="xrc" title="XRC (wxWidgets resource files)">
-		<filetype stages="link">xrc</filetype>
+		<stage id="pack">xrc</stage>
 	</family>
 
 </buildsystem>
