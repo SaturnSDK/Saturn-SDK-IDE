@@ -119,7 +119,7 @@ UsrGlblMgrEditDialog::UsrGlblMgrEditDialog(wxWindow* parent, const wxString& bas
 
     wxScrolledWindow* p = XRCCTRL(*this, "panel", wxScrolledWindow);
 
-    wxTreeMultiCtrl *tree = new wxTreeMultiCtrl(p, -1, wxDefaultPosition, wxDefaultSize, wxTMC_DEFAULT_STYLE);
+    wxTreeMultiCtrl *tree = new wxTreeMultiCtrl(p, -1, wxDefaultPosition, wxDefaultSize, wxTMC_DEFAULT_STYLE | wxTMC_SPAN_WIDTH);
 
 
 
@@ -129,7 +129,8 @@ UsrGlblMgrEditDialog::UsrGlblMgrEditDialog(wxWindow* parent, const wxString& bas
     tree->AppendWindow(builtin, new wxButton(tree, -1, _T("and this too")));
     tree->AppendWindow(builtin, new wxButton(tree, -1, _T("and this too")));
     tree->AppendWindow(builtin, new wxButton(tree, -1, _T("and this too")));
-    tree->AppendWindow(builtin, new wxButton(tree, -1, _T("and this too")));
+    tree->AppendWindow(builtin, new wxButton(tree, -1, _T("and this very very long button too")));
+    tree->AppendWindow(builtin, new wxButton(tree, -1, _T("if you do not pay attention, buttons can grow in size beyond any reason - look at this one")));
 
     wxTreeMultiItem custom = tree->AddRoot(_T("Custom"));
     tree->AppendWindow(custom, new wxButton(tree, -1, _T("Press this")));
@@ -137,16 +138,34 @@ UsrGlblMgrEditDialog::UsrGlblMgrEditDialog(wxWindow* parent, const wxString& bas
     tree->AppendWindow(custom, new wxButton(tree, -1, _T("and this too")));
     tree->AppendWindow(custom, new wxButton(tree, -1, _T("and this too")));
     tree->AppendWindow(custom, new wxButton(tree, -1, _T("and this too")));
-
-
+    tree->AppendWindow(custom, new wxButton(tree, -1, _T("more...")));
+    tree->AppendWindow(custom, new wxButton(tree, -1, _T("more...")));
+    tree->AppendWindow(custom, new wxButton(tree, -1, _T("more...")));
+    tree->AppendWindow(custom, new wxButton(tree, -1, _T("yet more...")));
 
     wxBoxSizer *s = new wxBoxSizer( wxVERTICAL );
     s->Add( tree, 0, wxALIGN_LEFT|wxALL, 5 );
 
     p->SetSizer(s);
-p->Layout();
-Layout();
 
+    p->SetBackgroundColour(*wxWHITE);
+    tree->SetBackgroundColour(*wxGREEN);
+
+
+    wxFont f = tree->GetCaptionFont();
+    f.SetWeight(wxFONTWEIGHT_BOLD);
+    tree->SetCaptionFont(f);
+
+//    tree->Layout();
+    tree->FitInside();
+
+//    p->FitInside();
+//    p->Fit();
+      p->Layout();
+//    p->SetVirtualSize(tree->GetSize());
+//    p->EnableScrolling(true, true);
+//    Layout();
+//Fit();
 //    List();
 //    if(!base.IsEmpty())
 //    {
