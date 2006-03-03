@@ -51,7 +51,7 @@ class cbException
         if (!(expr)) \
         { \
             wxString err; \
-            err.Printf(_T("Assertion %s failed (%s:%d)"), #expr, cbC2U(__FILE__).c_str(), __LINE__); \
+            err.Printf(_T("Assertion  (( %s ))  failed in %s, line %d"), cbC2U( #expr ).c_str(), cbC2U(__FILE__).c_str(), __LINE__); \
             wxSafeShowMessage(_T("Assertion error"), err); \
             DIE(); \
         }
