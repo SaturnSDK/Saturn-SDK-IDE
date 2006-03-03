@@ -29,6 +29,7 @@
 #endif
 
 #include <wx/choice.h>
+#include "wxTreeMultiCtrl.h"
 
 class UsrGlblMgrEditDialog : public wxDialog
 {
@@ -114,19 +115,49 @@ END_EVENT_TABLE()
 
 UsrGlblMgrEditDialog::UsrGlblMgrEditDialog(wxWindow* parent, const wxString& base)
 {
-    wxXmlResource::Get()->LoadDialog(this, parent, _T("dlgUserGlobalVar"));
+    wxXmlResource::Get()->LoadDialog(this, parent, _T("globalUservars"));
 
-    List();
-    if(!base.IsEmpty())
-    {
-        Add(base);
-        Load(base);
-    }
-    else
-    {
-        XRCCTRL(*this, "variable", wxChoice)->SetSelection(0);
-        Load(XRCCTRL(*this, "variable", wxChoice)->GetStringSelection());
-    }
+    wxScrolledWindow* p = XRCCTRL(*this, "panel", wxScrolledWindow);
+
+    wxTreeMultiCtrl *tree = new wxTreeMultiCtrl(p, -1, wxDefaultPosition, wxDefaultSize, wxTMC_DEFAULT_STYLE);
+
+
+
+    wxTreeMultiItem builtin = tree->AddRoot(_T("Builtin"));
+    tree->AppendWindow(builtin, new wxButton(tree, -1, _T("Press this")));
+    tree->AppendWindow(builtin, new wxButton(tree, -1, _T("and this")));
+    tree->AppendWindow(builtin, new wxButton(tree, -1, _T("and this too")));
+    tree->AppendWindow(builtin, new wxButton(tree, -1, _T("and this too")));
+    tree->AppendWindow(builtin, new wxButton(tree, -1, _T("and this too")));
+    tree->AppendWindow(builtin, new wxButton(tree, -1, _T("and this too")));
+
+    wxTreeMultiItem custom = tree->AddRoot(_T("Custom"));
+    tree->AppendWindow(custom, new wxButton(tree, -1, _T("Press this")));
+    tree->AppendWindow(custom, new wxButton(tree, -1, _T("and this")));
+    tree->AppendWindow(custom, new wxButton(tree, -1, _T("and this too")));
+    tree->AppendWindow(custom, new wxButton(tree, -1, _T("and this too")));
+    tree->AppendWindow(custom, new wxButton(tree, -1, _T("and this too")));
+
+
+
+    wxBoxSizer *s = new wxBoxSizer( wxVERTICAL );
+    s->Add( tree, 0, wxALIGN_LEFT|wxALL, 5 );
+
+    p->SetSizer(s);
+p->Layout();
+Layout();
+
+//    List();
+//    if(!base.IsEmpty())
+//    {
+//        Add(base);
+//        Load(base);
+//    }
+//    else
+//    {
+//        XRCCTRL(*this, "variable", wxChoice)->SetSelection(0);
+//        Load(XRCCTRL(*this, "variable", wxChoice)->GetStringSelection());
+//    }
 }
 
 void UsrGlblMgrEditDialog::OnOKClick(wxCommandEvent& event)
