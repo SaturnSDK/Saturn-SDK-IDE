@@ -144,7 +144,7 @@ UsrGlblMgrEditDialog::UsrGlblMgrEditDialog(wxWindow* parent, const wxString& bas
     tree->AppendWindow(custom, new wxButton(tree, -1, _T("yet more...")));
 
     wxBoxSizer *s = new wxBoxSizer( wxVERTICAL );
-    s->Add( tree, 0, wxALIGN_LEFT|wxALL, 5 );
+    s->Add( tree, 1, wxALIGN_LEFT|wxALL|wxGROW, 5 );
 
     p->SetSizer(s);
 
@@ -157,7 +157,9 @@ UsrGlblMgrEditDialog::UsrGlblMgrEditDialog(wxWindow* parent, const wxString& bas
     tree->SetCaptionFont(f);
 
 //    tree->Layout();
-    tree->FitInside();
+//    tree->FitInside();
+    p->Layout();
+    p->SetVirtualSize(s->GetSize());
 
 //    p->FitInside();
 //    p->Fit();

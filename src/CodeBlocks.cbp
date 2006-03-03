@@ -111,6 +111,7 @@
 				<Option working_dir="" />
 				<Option type="2" />
 				<Option compiler="gcc" />
+				<Option includeInTargetAll="1" />
 				<Option projectResourceIncludeDirsRelation="0" />
 				<Compiler>
 					<Add directory="sdk\treemultictrl\images" />
