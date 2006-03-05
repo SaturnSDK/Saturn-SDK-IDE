@@ -1,7 +1,7 @@
 <resource>
     <object class="wxDialog" name="globalUservars">
         <title>Global Variable Editor</title>
-        <style>wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER|wxRESIZE_BOX</style>
+        <style>wxDEFAULT_DIALOG_STYLE</style>
         <exstyle>wxDIALOG_EX_CONTEXTHELP</exstyle>
         <object class="wxFlexGridSizer">
             <rows>1</rows>
@@ -135,6 +135,7 @@
                         <option>1</option>
                         <flag>wxALL|wxALIGN_LEFT|wxALIGN_TOP|wxEXPAND</flag>
                         <object class="wxScrolledWindow" name="panel">
+                            <size>400,-1</size>
                             <style>wxHSCROLL|wxVSCROLL</style>
                         </object>
                     </object>

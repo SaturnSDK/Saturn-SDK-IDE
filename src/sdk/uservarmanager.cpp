@@ -30,6 +30,7 @@
 
 #include <wx/choice.h>
 #include "wxTreeMultiCtrl.h"
+#include "paircontrol.h"
 
 class UsrGlblMgrEditDialog : public wxDialog
 {
@@ -37,6 +38,7 @@ class UsrGlblMgrEditDialog : public wxDialog
 public:
     UsrGlblMgrEditDialog(wxWindow* parent, const wxString& base);
 private:
+    wxTreeMultiCtrl *tree;
     void OnOKClick(wxCommandEvent& event);
     void OnCancelClick(wxCommandEvent& event);
     void OnDelete(wxCommandEvent& event);
@@ -116,58 +118,51 @@ END_EVENT_TABLE()
 UsrGlblMgrEditDialog::UsrGlblMgrEditDialog(wxWindow* parent, const wxString& base)
 {
     wxXmlResource::Get()->LoadDialog(this, parent, _T("globalUservars"));
-
-    wxScrolledWindow* p = XRCCTRL(*this, "panel", wxScrolledWindow);
-
-    wxTreeMultiCtrl *tree = new wxTreeMultiCtrl(p, -1, wxDefaultPosition, wxDefaultSize, wxTMC_DEFAULT_STYLE | wxTMC_SPAN_WIDTH);
-
-
-
-    wxTreeMultiItem builtin = tree->AddRoot(_T("Builtin"));
-    tree->AppendWindow(builtin, new wxButton(tree, -1, _T("Press this")));
-    tree->AppendWindow(builtin, new wxButton(tree, -1, _T("and this")));
-    tree->AppendWindow(builtin, new wxButton(tree, -1, _T("and this too")));
-    tree->AppendWindow(builtin, new wxButton(tree, -1, _T("and this too")));
-    tree->AppendWindow(builtin, new wxButton(tree, -1, _T("and this too")));
-    tree->AppendWindow(builtin, new wxButton(tree, -1, _T("and this very very long button too")));
-    tree->AppendWindow(builtin, new wxButton(tree, -1, _T("if you do not pay attention, buttons can grow in size beyond any reason - look at this one")));
-
-    wxTreeMultiItem custom = tree->AddRoot(_T("Custom"));
-    tree->AppendWindow(custom, new wxButton(tree, -1, _T("Press this")));
-    tree->AppendWindow(custom, new wxButton(tree, -1, _T("and this")));
-    tree->AppendWindow(custom, new wxButton(tree, -1, _T("and this too")));
-    tree->AppendWindow(custom, new wxButton(tree, -1, _T("and this too")));
-    tree->AppendWindow(custom, new wxButton(tree, -1, _T("and this too")));
-    tree->AppendWindow(custom, new wxButton(tree, -1, _T("more...")));
-    tree->AppendWindow(custom, new wxButton(tree, -1, _T("more...")));
-    tree->AppendWindow(custom, new wxButton(tree, -1, _T("more...")));
-    tree->AppendWindow(custom, new wxButton(tree, -1, _T("yet more...")));
-
-    wxBoxSizer *s = new wxBoxSizer( wxVERTICAL );
-    s->Add( tree, 1, wxALIGN_LEFT|wxALL|wxGROW, 5 );
-
-    p->SetSizer(s);
-
-    p->SetBackgroundColour(*wxWHITE);
-    tree->SetBackgroundColour(*wxGREEN);
-
+    wxScrolledWindow* scrollpane = XRCCTRL(*this, "panel", wxScrolledWindow);
+    cbAssert(scrollpane);
+    tree = new wxTreeMultiCtrl(scrollpane, -1, wxDefaultPosition, wxDefaultSize, wxTMC_DEFAULT_STYLE | wxTMC_SPAN_WIDTH);
+    tree->SetSpacingY(2);
 
     wxFont f = tree->GetCaptionFont();
     f.SetWeight(wxFONTWEIGHT_BOLD);
     tree->SetCaptionFont(f);
 
-//    tree->Layout();
-//    tree->FitInside();
-    p->Layout();
-    p->SetVirtualSize(s->GetSize());
+    wxBoxSizer *s = new wxBoxSizer( wxVERTICAL );
+    s->Add( tree, -1, wxALIGN_LEFT|wxALL|wxGROW, 0 );
 
-//    p->FitInside();
-//    p->Fit();
-      p->Layout();
-//    p->SetVirtualSize(tree->GetSize());
-//    p->EnableScrolling(true, true);
-//    Layout();
-//Fit();
+    scrollpane->SetSizer(s);
+    scrollpane->Layout();
+    scrollpane->SetVirtualSize(s->GetSize());
+    scrollpane->Layout();
+
+
+    wxPanel *p;
+    wxBoxSizer *ps;
+    wxTreeMultiItem root;
+
+    root = tree->AddRoot(_T("Builtin"));
+
+    p = new wxPanel(tree);
+    ps = new wxBoxSizer( wxVERTICAL );
+    ps->Add( new PairControl(p, _T("BASE (required)"), wxEmptyString, PairControl::FILESELECT | PairControl::DEL), wxALL|wxGROW, 0 );
+    ps->Add( new PairControl(p, _T("include"), wxEmptyString, PairControl::FILESELECT | PairControl::DEL), wxALL|wxGROW, 0 );
+    ps->Add( new PairControl(p, _T("lib"), wxEmptyString, PairControl::FILESELECT | PairControl::DEL), wxALL|wxGROW, 0 );
+    ps->Add( new PairControl(p, _T("obj"), wxEmptyString, PairControl::FILESELECT | PairControl::DEL), wxALL|wxGROW, 0 );
+    ps->Add( new PairControl(p, _T("cflags"), wxEmptyString, PairControl::FILESELECT | PairControl::DEL), wxALL|wxGROW, 0 );
+    ps->Add( new PairControl(p, _T("lflags"), wxEmptyString, PairControl::FILESELECT | PairControl::DEL), wxALL|wxGROW, 0 );
+    p->SetSizer(ps);
+
+    tree->AppendWindow(root, p);
+
+    root = tree->AddRoot(_T("Custom"));
+
+    p = new wxPanel(tree);
+    ps = new wxBoxSizer( wxVERTICAL );
+    ps->Add( new PairControl(p, _T("custom"), wxEmptyString, PairControl::ALL), wxALL|wxGROW, 0 );
+    p->SetSizer(ps);
+
+    tree->AppendWindow(root, p);
+
 //    List();
 //    if(!base.IsEmpty())
 //    {

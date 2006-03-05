@@ -148,7 +148,7 @@
 					<Add library="libwxscintilla.a" />
 					<Add library="propgrid" />
 					<Add library="wxflatnotebook" />
-					<Add library="treemultictrl" />
+					<Add library="libtreemultictrl.a" />
 					<Add directory="devel" />
 					<Add directory="sdk\as" />
 					<Add directory="sdk\propgrid" />
@@ -2442,6 +2442,16 @@
 		</Unit>
 		<Unit filename="sdk\openfilestree.h">
 			<Option compilerVar="" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="sdk\paircontrol.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="sdk\paircontrol.h">
+			<Option compilerVar="CPP" />
 			<Option compile="0" />
 			<Option link="0" />
 			<Option target="sdk" />
