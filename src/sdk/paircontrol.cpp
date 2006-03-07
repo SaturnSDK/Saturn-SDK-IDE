@@ -27,9 +27,13 @@ wxBitmap XButtonBitmap2();
 const int ID_FS = wxNewId();
 const int ID_DESTROY = wxNewId();
 
+BEGIN_EVENT_TABLE(PairControl, wxPanel)
+    EVT_COMMAND_ENTER(-1, PairControl::Enter)
+    EVT_BUTTON(ID_FS, PairControl::FS)
+END_EVENT_TABLE()
 
-PairControl::PairControl(wxWindow* parent, const wxString& caption, const wxString& value, int flags)
-            : wxPanel(parent, -1, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL)
+PairControl::PairControl(wxWindow* parent, const wxString& caption, const wxString& value, int fflags)
+            : wxPanel(parent, -1, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL), flags(fflags)
 {
     cbAssert(parent > 0);
 
@@ -50,7 +54,8 @@ PairControl::PairControl(wxWindow* parent, const wxString& caption, const wxStri
         s->Add(t, 0, wxALL, 2);
     }
 
-    s->Add(new wxTextCtrl( this, -1, value, wxDefaultPosition, wxSize(180,-1), 0 ), 0, wxALL, 2);
+    m_value = new wxTextCtrl( this, -1, value, wxDefaultPosition, wxSize(180,-1), wxTE_PROCESS_ENTER);
+    s->Add(m_value, 0, wxALL, 2);
 
     if(flags & FILESELECT)
         s->Add(new wxButton(this, ID_FS, _T("..."), wxDefaultPosition, wxSize(20,20), 0 ), 0, wxALIGN_CENTER|wxLEFT|wxRIGHT, 10 );
@@ -66,12 +71,27 @@ PairControl::PairControl(wxWindow* parent, const wxString& caption, const wxStri
     else
         s->Add( 12, 12, 0, wxALIGN_CENTER, 10 );
 
-    if(flags & ADD)
-        ;
 
     SetSizer(s);
 }
 
+void PairControl::Enter(wxCommandEvent& event)
+{
+//  Manager::Get()->GetMessageManager()->DebugLog(_T("enter"));
+//
+//if(flags & ADD)
+//    wxBell();
+//else
+//  Manager::Get()->GetMessageManager()->DebugLog(_T("ff"));
+
+}
+
+void PairControl::FS(wxCommandEvent& event)
+{
+wxFileDialog dlg(this, _T("Choose a file"), wxEmptyString, m_value->GetValue());
+dlg.ShowModal();
+m_value->SetValue(dlg.GetFilename());
+}
 
 
 wxBitmap XButtonBitmap()
@@ -164,5 +184,24 @@ wxBitmap XButtonBitmap2()
     };
     wxBitmap bmp(xpm);
     return bmp;
+}
+
+BEGIN_EVENT_TABLE(PairControlPanel, wxPanel)
+    EVT_BUTTON(ID_DESTROY, PairControlPanel::DeletePair)
+    EVT_COMMAND_ENTER(-1, PairControlPanel::Enter)
+END_EVENT_TABLE()
+
+void PairControlPanel::DeletePair(wxCommandEvent& event)
+{
+    wxButton *b = (wxButton *) event.GetEventObject();
+    if(b)
+    {
+    wxWindow *panel = b->GetParent();
+    wxWindow *tree = panel->GetParent();
+    tree->RemoveChild(paneld);
+    }
+}
+void PairControlPanel::Enter(wxCommandEvent& event)
+{
 }
 

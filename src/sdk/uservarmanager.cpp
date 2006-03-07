@@ -142,7 +142,7 @@ UsrGlblMgrEditDialog::UsrGlblMgrEditDialog(wxWindow* parent, const wxString& bas
 
     root = tree->AddRoot(_T("Builtin"));
 
-    p = new wxPanel(tree);
+    p = new PairControlPanel(tree);
     ps = new wxBoxSizer( wxVERTICAL );
     ps->Add( new PairControl(p, _T("BASE (required)"), wxEmptyString, PairControl::FILESELECT | PairControl::DEL), wxALL|wxGROW, 0 );
     ps->Add( new PairControl(p, _T("include"), wxEmptyString, PairControl::FILESELECT | PairControl::DEL), wxALL|wxGROW, 0 );
@@ -156,7 +156,7 @@ UsrGlblMgrEditDialog::UsrGlblMgrEditDialog(wxWindow* parent, const wxString& bas
 
     root = tree->AddRoot(_T("Custom"));
 
-    p = new wxPanel(tree);
+    p = new PairControlPanel(tree);
     ps = new wxBoxSizer( wxVERTICAL );
     ps->Add( new PairControl(p, _T("custom"), wxEmptyString, PairControl::ALL), wxALL|wxGROW, 0 );
     p->SetSizer(ps);

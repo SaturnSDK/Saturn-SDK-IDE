@@ -6,6 +6,10 @@ class wxString;
 
 class PairControl : public wxPanel
 {
+int flags;
+
+wxTextCtrl *m_value;
+
 public:
 
     typedef enum
@@ -18,8 +22,27 @@ public:
     } Flags;
 
 
-    PairControl::PairControl(wxWindow* parent, const wxString& caption, const wxString& value, int flags = 0);
+    PairControl(wxWindow* parent, const wxString& caption, const wxString& value, int flags = 0);
+    void Enter(wxCommandEvent& event);
+    void FS(wxCommandEvent& event);
+private:
+    DECLARE_EVENT_TABLE()
+};
 
+
+
+class PairControlPanel : public wxPanel
+{
+    std::vector<PairControl*> controls;
+public:
+
+    PairControlPanel(wxWindow* parent) : wxPanel(parent){};
+    void AddPair(PairControl *pc);
+    void DeletePair(wxCommandEvent& event);
+    void Enter(wxCommandEvent& event);
+
+private:
+    DECLARE_EVENT_TABLE()
 };
 
 #endif
