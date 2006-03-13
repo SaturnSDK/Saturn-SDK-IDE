@@ -36,6 +36,7 @@
 #include <string>
 #endif
 
+#include <tinyxml/tinywxuni.h>
 
 wxString ConfigManager::app_path = wxEmptyString;
 wxString ConfigManager::data_path = wxEmptyString;
@@ -89,22 +90,13 @@ void CfgMgrBldr::SwitchTo(const wxString& absFileName)
     if (absFileName.IsEmpty())
         loc = ConfigManager::LocateDataFile(_T("default.conf"), true);
 
-    if(!wxFile::Access(loc, wxFile::read)) // no config file found
+    if(!TinyXML::LoadDocument(loc, doc)) // no config file found
     {
-        cfg = absFileName;
         doc->InsertEndChild(TiXmlDeclaration("1.0", "UTF-8", "yes"));
         doc->InsertEndChild(TiXmlElement(cbU2C(CfgMgrConsts::rootTag)));
         doc->FirstChildElement(cbU2C(CfgMgrConsts::rootTag))->SetAttribute("version", CfgMgrConsts::version);
     }
-    else
-    {
-        cfg = loc;
-        wxFile file(loc);
-        char *input = new char[file.Length()];
-        file.Read(input, file.Length());
-        doc->Parse(input);
-        delete[] input;
-    }
+    cfg = loc;
 
     if(doc->ErrorId())
         cbMessageBox(wxString(_T("TinyXML error:\n")) << cbC2U(doc->ErrorDesc()), _("Warning"), wxICON_WARNING);
@@ -195,7 +187,7 @@ void CfgMgrBldr::Close()
     {
         if(!cfg.StartsWith(_T("http://")))
         {
-            if (!cbSaveTinyXMLDocument(doc, cfg))
+            if (!TinyXML::SaveDocument(cfg, doc))
             {
                 wxSafeShowMessage(_T("Could not save config file..."), _("Warning"));
                 // TODO (thomas#1#): add "retry" option

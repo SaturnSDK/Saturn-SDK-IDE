@@ -470,7 +470,7 @@
 			<Add directory="$(#WX)\contrib\include" />
 			<Add directory="sdk\wxscintilla\include" />
 			<Add directory="sdk\propgrid\include" />
-			<Add directory="sdk\treemultictrl\include" />
+			<Add directory="sdk\propertypanel" />
 		</Compiler>
 		<ResourceCompiler>
 			<Add directory="$(#WX.include)" />
@@ -1912,6 +1912,22 @@
 			<Option link="0" />
 			<Option target="sdk" />
 		</Unit>
+		<Unit filename="sdk\buildsystem.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="sdk\buildsystemmanager.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="sdk\buildsystemmanager.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="sdk" />
+		</Unit>
 		<Unit filename="sdk\cbeditor.cpp">
 			<Option compilerVar="CPP" />
 			<Option target="sdk" />
@@ -2446,16 +2462,6 @@
 			<Option link="0" />
 			<Option target="sdk" />
 		</Unit>
-		<Unit filename="sdk\paircontrol.cpp">
-			<Option compilerVar="CPP" />
-			<Option target="sdk" />
-		</Unit>
-		<Unit filename="sdk\paircontrol.h">
-			<Option compilerVar="CPP" />
-			<Option compile="0" />
-			<Option link="0" />
-			<Option target="sdk" />
-		</Unit>
 		<Unit filename="sdk\personalitymanager.cpp">
 			<Option compilerVar="CPP" />
 			<Option target="sdk" />
@@ -2612,6 +2618,44 @@
 		</Unit>
 		<Unit filename="sdk\projecttemplateloader.h">
 			<Option compilerVar="" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="sdk\propertypanel\bool.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="sdk\propertypanel\paircontrol.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="sdk\propertypanel\paircontrol.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="sdk\propertypanel\property.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="sdk\propertypanel\propertypanel.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="sdk\propertypanel\propertypanel.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="sdk\propertypanel\propertyset.h">
+			<Option compilerVar="CPP" />
 			<Option compile="0" />
 			<Option link="0" />
 			<Option target="sdk" />
@@ -3061,6 +3105,16 @@
 			<Option compile="0" />
 			<Option link="0" />
 			<Option target="tinyXML" />
+		</Unit>
+		<Unit filename="sdk\tinyxml\tinywxuni.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="sdk\tinyxml\tinywxuni.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="sdk" />
 		</Unit>
 		<Unit filename="sdk\tinyxml\tinyxml.cpp">
 			<Option compilerVar="CPP" />
