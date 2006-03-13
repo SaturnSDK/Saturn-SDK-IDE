@@ -76,23 +76,60 @@ class DLLIMPORT ConfigManager
 
 public:
 
+
     /* -----------------------------------------------------------------------------------------------------
     *  Utility functions for accessing files/folders in a system-wide, consistent way
+    *
+    *
+    * Locate a file in an installation- and platform-independent way. You should always use this function
+    * if you are looking for "some arbitrary file that belongs to Code::Blocks", as it works across platforms
+    * without any additional effort from your side, and it has some builtin redundancy.
+    *
+    *    If search_path is true, the directories in the PATH variable will be added to the search list.
+    *    If search_conf_folder is true, the location where Code::Blocks keeps its config files is added (normally not needed).
+    *
+    * Under Windows, the following locations are searched in the listed order:
+    *    1. [if specified] config folder
+    *    2. Code::Blocks data folder (usually located inside Code::Blocks executable folder)
+    *    3. Code::Blocks executable folder
+    *    4. User's home folder
+    *    5. [if specified, as by default] PATH, C:
+    *
+    * Under Linux (resp. all other platforms), the following locations are searched in the listed order:
+    *    1. [if specified] config folder
+    *    2. Code::Blocks data folder
+    *    3. User's home folder
+    *    4. [if specified, as by default] PATH, /usr/share/
     */
-    static wxString LocateDataFile(const wxString& filename);
+    static wxString LocateDataFile(const wxString& filename, bool search_path = true, bool search_conf_folder = false);
 
+    /*
+    * Query "standard" paths that work across platforms.
+    * NEVER harcode a path like "C:\CodeBlocks\share\data". Always use one of the following functions to compose a path.
+    */
     static wxString GetHomeFolder();
     static wxString GetConfigFolder();
     static wxString GetPluginsFolder();
     static wxString GetScriptsFolder();
     static wxString GetDataFolder();
     static wxString GetExecutableFolder();
+
+    /*
+    *  Network proxy for HTTP/FTP transfers
+    */
     static wxString GetProxy();
+
+    /*
+    *  Builtin revision information
+    */
     static wxString GetRevisionString();
     static unsigned int GetRevisionNumber();
 
     static inline wxString ReadDataPath(){return GetDataFolder();};      // use instead of cfg->Read("data_path");
     static inline wxString ReadAppPath(){return GetExecutableFolder();}; // use instead of cfg->Read("app_path");
+
+
+
     /* -----------------------------------------------------------------------------------------------------
     *  Path functions for navigation within your configuration namespace
     */

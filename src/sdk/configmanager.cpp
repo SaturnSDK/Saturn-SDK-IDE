@@ -87,7 +87,7 @@ void CfgMgrBldr::SwitchTo(const wxString& absFileName)
 
     wxString loc = absFileName;
     if (absFileName.IsEmpty())
-        loc = ConfigManager::LocateDataFile(_T("default.conf"));
+        loc = ConfigManager::LocateDataFile(_T("default.conf"), true);
 
     if(!wxFile::Access(loc, wxFile::read)) // no config file found
     {
@@ -348,23 +348,27 @@ wxString ConfigManager::GetDataFolder()
     return ConfigManager::data_path;
 }
 
-wxString ConfigManager::LocateDataFile(const wxString& filename)
+wxString ConfigManager::LocateDataFile(const wxString& filename, bool search_path, bool search_conf)
 {
     wxPathList searchPaths;
-    searchPaths.Add(GetConfigFolder());
+
+    if(search_conf)
+        searchPaths.Add(GetConfigFolder());
+
     searchPaths.Add(GetDataFolder());
     searchPaths.Add(GetExecutableFolder());
     searchPaths.Add(GetHomeFolder());
-    searchPaths.AddEnvList(_T("PATH"));
-#ifdef __WXMSW__
 
-    searchPaths.Add(_T("C:\\"));
-#endif
+    if(search_path)
+        {
+        searchPaths.AddEnvList(_T("PATH"));
+        searchPaths.Add(_T("C:\\"));
+        }
 
     return searchPaths.FindValidPath(filename);
 }
 
-#else
+#else // __WXMSW__
 
 
 wxString ConfigManager::GetConfigFolder()
@@ -394,13 +398,22 @@ wxString ConfigManager::GetDataFolder()
     return ConfigManager::data_path;
 }
 
-wxString ConfigManager::LocateDataFile(const wxString& filename)
+wxString ConfigManager::LocateDataFile(const wxString& filename, bool search_path, bool search_conf)
 {
     wxPathList searchPaths;
+
+    if(search_conf)
+        searchPaths.Add(GetConfigFolder());
+
     searchPaths.Add(GetDataFolder());
     searchPaths.Add(GetHomeFolder());
-    searchPaths.AddEnvList(_T("PATH"));
-    searchPaths.Add(_T("/usr/share/"));
+
+    if(search_path)
+        {
+        searchPaths.AddEnvList(_T("PATH"));
+        searchPaths.Add(_T("/usr/share/"));
+        }
+
     return searchPaths.FindValidPath(filename);
 }
 
