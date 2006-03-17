@@ -1,11 +1,3 @@
-Layout file
-----------
-1. Describes what subdirectory refers to which human-readable family name
-2. Describes what file types go through which stages in each family (if a particular compiler does not implement a stage,
-   - for example 'precompile' - then that stage shall be silently ignored).
-
-
-
 Behaviours
 -----------
 Behaviours are compiler-agnostic. They must be understood by all compilers, even if not supported (in which case they 're simply not used).
