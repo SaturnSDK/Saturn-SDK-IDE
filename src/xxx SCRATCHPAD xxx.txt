@@ -32,10 +32,10 @@ Naming scheme of compiler files
 vendor-family/majorminorversion-os.xml
 
 Examples:
-dm-dm84-windows.xml
+dm-dm84-cpp-windows.xml
 mingw-gcc34-cpp-windows.xml
-gcc-gcc34-cpp-linux.xml
-gcc-gcc41-cpp-linux.xml
+gnu-gcc34-cpp-linux.xml
+gnu-gcc41-cpp-linux.xml
 
 The idea behind this is to
 a) have an unique identifier for every compiler
