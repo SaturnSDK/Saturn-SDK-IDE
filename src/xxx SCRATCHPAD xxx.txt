@@ -8,8 +8,7 @@ Layout file
 
 Behaviours
 -----------
-Behaviours are abstract or compiler-agnostic. They must be understood by all compilers, even if not supported (in which case they 're simply not used).
-The behaviours.xml file serves like a C++ interface (e.g. IBehaviours). They *must* be implemented by all compilers (like ineriting in C++), no matter if they do something or not.
+Behaviours are compiler-agnostic. They must be understood by all compilers, even if not supported (in which case they 're simply not used).
 
 Behaviours can only be either boolean values (on, off, explicitely off) or choices.
 
