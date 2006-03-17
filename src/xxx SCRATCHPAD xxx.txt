@@ -58,7 +58,7 @@ Only names that have been declared earlier in the document can be referenced as 
 
 
 Stages:
-Stages are defined via the <stage> tag. The number of stages is _not_ defined beforehand. 
+Stages are defined via the <stage> tag. The number of stages is _not_ defined beforehand. Stages are run in the order they 're specified in the xml file.
 An id and a human-readable title may be provided as attributes as well as the run attribute, which determines whether this stage
 runs on individual files (compiler) or on the collection of target files (linker).
 The id tag is used to include/exclude certain stages for a file type set from inside a <family> section in the layout.xml file.
