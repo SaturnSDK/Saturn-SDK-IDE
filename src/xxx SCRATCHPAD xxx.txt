@@ -58,8 +58,12 @@ All defined stages run sequentially in their order of appearance, omitting file 
 The title tag is a human readable description (such as "Compiling") which may be used for the build log.
 The following "standard" stage ids shall be used for "normal" compiler operation: precompile, compile, link.
 
-Example:
-<stage id="link" title="Linking target %s" run="pertarget">
+The stage with the special ID "END" (capital) causes all following stages to be ignored during build.
+This allows stages to be defined which will never be executed during build but which may be called by their ID.
+For example, the code completion plugin might call the special stage "includedirs" with an empty dummy file, which might execute
+"gcc -v -E -x c++ dummyfile.cpp" and parse the compiler's output to find out the system include dirs.
+
+
 
 
 For each stage:
