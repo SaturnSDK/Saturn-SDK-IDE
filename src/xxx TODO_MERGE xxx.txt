@@ -3,3 +3,5 @@ Things to do before merging
 
 - update Makefile.am for multitreecontrol
 - update Linux "update"
+- optionally, make ProjectLoader and WorkspaceLoader use
+  the TinyXML::LoadDocument and Tinyxml::SaveDocument functions
