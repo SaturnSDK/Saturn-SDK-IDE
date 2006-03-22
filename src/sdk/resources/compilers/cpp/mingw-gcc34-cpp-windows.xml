@@ -3,8 +3,7 @@
     <!-- $Id$ -->
     <!-- $HeadURL$ -->
 
-	<tool id="compiler">
-		<executable>mingw32-gcc.exe</executable>
+	<tool id="compiler" executable="mingw32-gcc.exe">
 		<search registry="HKEY_CURRENT_USER\Software\Mingw\InstallPath" />
 		<search location="C:\MinGW\bin" />
 		<search location="$(BIN)" recursive="true" />
@@ -12,13 +11,11 @@
 		<response>gcc version 3\.4\.[0-9]</response>
 	</tool>
 
-	<tool id="linker">
-		<executable>ld.exe</executable>
+	<tool id="linker" executable="ld.exe">
 		<location>compiler</location>
 	</tool>
 
-	<tool id="libtool">
-		<executable>collect.exe</executable>
+	<tool id="libtool" executable="collect.exe">
 		<location>compiler</location>
 	</tool>
 
@@ -77,12 +74,14 @@
 			<check title="Strip output executable" id="strip">-s</check>
 		</properties>
 
-		<definitions>
-			<define>-D$(CONST)</define>
-			<define_value>-D$(CONST)=$(VALUE)</define>
-			<add_path>-I$(PATH)</add_path>
-			<sys_query>-v -E -x c++<sys_query>
-		</definitions>
+            <definitions>
+                <define>-D$(CONST)</define>
+                <define_value>-D$(CONST)=$(VALUE)</define>
+                <add_path>-I$(PATH)</add_path>
+                <undefine>-U$(CONST)</undefine>
+                <path_split>-I-</path_split>
+                <no_std_paths>-nostdinc<no_std_paths>
+            </definitions>
 
 		<error type="Compiler error" regex="^([a-zA-Z0-9._\-]+:([0-9]+): error: (.*)+$">
 			<v id="file" index="1" />
@@ -100,29 +99,28 @@
 	</stage>
 
 
-	<stage title="linking the gui application  %s" id="link"  run="pertarget" variant="gui">
-                <forall />
-		<exec mode="gui" tool="linker">-mwindows $(TOOL) $(OPTIONS) $(ALL_TARGET_FILES) -o $(EXECUTABLE)</exec>
+	<stage title="linking %s" id="link">
+            <forall />
+    
+            <variant="console">
+                <exec tool="linker">$(OPTIONS) $(ALL_OBJECT_FILES) $(LIBRARIES) -o $(OUT)</exec>
+            </variant>
+            <variant="gui">
+                <exec tool="linker">$(OPTIONS) -mwindows $(ALL_OBJECT_FILES) $(LIBRARIES) -o $(OUT)</exec>
+            </variant>
+    
+            <properties>
+                <filelist id="libs" />
+            </properties>
+    
+            <definitions>
+                <add_path>-L$(PATH)</add_path>
+            </definitions>
+        </stage>
 
-		<properties>
-			<filelist id="libs" />
-		</properties>
-
-		<definitions>
-			<add_path>-L$(PATH)</add_path>
-		</definitions>
-	</stage>
-
-	<stage title="linking %s (console application)" id="link"  run="pertarget" variant="gui">
-		<exec mode="console" tool="linker">$(TOOL) $(LPATHS) $(OPTIONS) $(ALL_TARGET_FILES) -o $(EXECUTABLE)</exec>
-
-        <properties>
-			<filelist id="libs" />
-		</properties>
-
-		<definitions>
-			<add_path>-L$(PATH)</add_path>
-		</definitions>
+        <definitions>
+            <add_path>-L$(PATH)</add_path>
+        </definitions>
 	</stage>
 
 </toolchain>
