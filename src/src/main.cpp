@@ -31,7 +31,8 @@
 #include "environmentsettingsdlg.h"
 #include "compilersettingsdlg.h"
 #include <cbworkspace.h>
-#include "../sdk/globals.h"
+#include <globals.h>
+#include <filefilters.h>
 
 #if defined(_MSC_VER) && defined( _DEBUG )
 	#define _CRTDBG_MAP_ALLOC
@@ -449,6 +450,9 @@ MainFrame::MainFrame(wxWindow* parent)
     m_pAccel = new wxAcceleratorTable(7, entries);
 
     this->SetAcceleratorTable(*m_pAccel);
+
+    // add file filters for supported projects/workspaces
+    FileFilters::AddDefaultFileFilters();
 
     m_SmallToolBar = Manager::Get()->GetConfigManager(_T("app"))->ReadBool(_T("/environment/toolbar_size"), true);
 	CreateIDE();
@@ -1080,7 +1084,7 @@ wxString MainFrame::ShowOpenFileDialog(const wxString& caption, const wxString& 
     PlaceWindow(dlg);
     if (dlg->ShowModal() == wxID_OK)
 		sel = dlg->GetPath();
-    delete dlg;
+    dlg->Destroy();
     return sel;
 }
 
@@ -1716,9 +1720,9 @@ void MainFrame::OnFileOpen(wxCommandEvent& event)
                             _("Open file"),
                             wxEmptyString,
                             wxEmptyString,
-                            SOURCE_FILES_DIALOG_FILTER,
+                            FileFilters::GetFilterString(),
                             wxOPEN | wxMULTIPLE);
-    dlg->SetFilterIndex(SOURCE_FILES_FILTER_INDEX);
+    dlg->SetFilterIndex(FileFilters::GetIndexForFilterAll());
 
     PlaceWindow(dlg);
     if (dlg->ShowModal() == wxID_OK)
@@ -1728,7 +1732,7 @@ void MainFrame::OnFileOpen(wxCommandEvent& event)
         OnDropFiles(0,0,files);
     }
 
-    delete dlg;
+    dlg->Destroy();
 }
 
 void MainFrame::OnFileReopenProject(wxCommandEvent& event)
@@ -1854,7 +1858,7 @@ void MainFrame::OnFilePrint(wxCommandEvent& event)
     PrintDialog dlg(this);
     PlaceWindow(&dlg);
     if (dlg.ShowModal() == wxID_OK)
-        Manager::Get()->GetEditorManager()->Print(dlg.GetPrintScope(), dlg.GetPrintColorMode());
+        Manager::Get()->GetEditorManager()->Print(dlg.GetPrintScope(), dlg.GetPrintColorMode(), dlg.GetPrintLineNumbers());
 }
 
 void MainFrame::OnFileRunScript(wxCommandEvent& WXUNUSED(event))
@@ -1868,7 +1872,7 @@ void MainFrame::OnFileRunScript(wxCommandEvent& WXUNUSED(event))
     PlaceWindow(dlg);
     if (dlg->ShowModal() == wxID_OK)
         Manager::Get()->GetScriptingManager()->LoadScript(dlg->GetPath());
-    delete dlg;
+    dlg->Destroy();
 }
 
 void MainFrame::OnFileQuit(wxCommandEvent& WXUNUSED(event))
@@ -2457,7 +2461,7 @@ void MainFrame::OnProjectOpen(wxCommandEvent& event)
                             _("Open project"),
                             wxEmptyString,
                             wxEmptyString,
-                            CODEBLOCKS_FILES_FILTER,
+                            FileFilters::GetFilterString(_T('.') + FileFilters::CODEBLOCKS_EXT),
                             wxOPEN | wxMULTIPLE);
 
     PlaceWindow(dlg);
@@ -2468,7 +2472,7 @@ void MainFrame::OnProjectOpen(wxCommandEvent& event)
         OnDropFiles(0,0,files);
     }
 
-    delete dlg;
+    dlg->Destroy();
 }
 
 void MainFrame::OnProjectSaveProject(wxCommandEvent& event)
@@ -2526,27 +2530,27 @@ void MainFrame::OnProjectCloseAllProjects(wxCommandEvent& event)
 
 void MainFrame::OnProjectImportDevCpp(wxCommandEvent& event)
 {
-    OpenGeneric(ShowOpenFileDialog(_("Import Dev-C++ project"), DEVCPP_FILES_FILTER), false);
+    OpenGeneric(ShowOpenFileDialog(_("Import Dev-C++ project"), FileFilters::GetFilterString(_T('.') + FileFilters::DEVCPP_EXT)), false);
 }
 
 void MainFrame::OnProjectImportMSVC(wxCommandEvent& event)
 {
-    OpenGeneric(ShowOpenFileDialog(_("Import MS Visual C++ 6.0 project"), MSVC6_FILES_FILTER), false);
+    OpenGeneric(ShowOpenFileDialog(_("Import MS Visual C++ 6.0 project"), FileFilters::GetFilterString(_T('.') + FileFilters::MSVC6_EXT)), false);
 }
 
 void MainFrame::OnProjectImportMSVCWksp(wxCommandEvent& event)
 {
-    OpenGeneric(ShowOpenFileDialog(_("Import MS Visual C++ 6.0 workspace"), MSVC6_WORKSPACE_FILES_FILTER), false);
+    OpenGeneric(ShowOpenFileDialog(_("Import MS Visual C++ 6.0 workspace"), FileFilters::GetFilterString(_T('.') + FileFilters::MSVC6_WORKSPACE_EXT)), false);
 }
 
 void MainFrame::OnProjectImportMSVS(wxCommandEvent& event)
 {
-    OpenGeneric(ShowOpenFileDialog(_("Import MS Visual Studio 7.0+ project"), MSVC7_FILES_FILTER), false);
+    OpenGeneric(ShowOpenFileDialog(_("Import MS Visual Studio 7.0+ project"), FileFilters::GetFilterString(_T('.') + FileFilters::MSVC7_EXT)), false);
 }
 
 void MainFrame::OnProjectImportMSVSWksp(wxCommandEvent& event)
 {
-    OpenGeneric(ShowOpenFileDialog(_("Import MS Visual Studio 7.0+ solution"), MSVC7_WORKSPACE_FILES_FILTER), false);
+    OpenGeneric(ShowOpenFileDialog(_("Import MS Visual Studio 7.0+ solution"), FileFilters::GetFilterString(_T('.') + FileFilters::MSVC7_WORKSPACE_EXT)), false);
 }
 
 void MainFrame::OnHelpAbout(wxCommandEvent& WXUNUSED(event))
@@ -2554,7 +2558,7 @@ void MainFrame::OnHelpAbout(wxCommandEvent& WXUNUSED(event))
     dlgAbout* dlg = new dlgAbout(this);
     PlaceWindow(dlg, pdlHead);
     dlg->ShowModal();
-    delete dlg;
+    dlg->Destroy();
 }
 
 void MainFrame::OnHelpTips(wxCommandEvent& event)
@@ -2633,12 +2637,16 @@ void MainFrame::OnEditMenuUpdateUI(wxUpdateUIEvent& event)
         hasSel = eb->HasSelection();
         canPaste = eb->CanPaste();
     }
-
-    mbar->Enable(idEditUndo, eb && canUndo);
-    mbar->Enable(idEditRedo, eb && canRedo);
-    mbar->Enable(idEditCut, eb && hasSel);
-    mbar->Enable(idEditCopy, eb && hasSel);
-    mbar->Enable(idEditPaste, eb && canPaste);
+    // Dont block other routines from using copy/paste menu                 //pecan 2006/3/3
+    wxWindow* pFocused = wxWindow::FindFocus();                             //pecan 2006/3/3
+    if (pFocused && ed && (pFocused == ed->GetControl()) )                  //pecan 2006/3/3
+    {
+        mbar->Enable(idEditUndo, eb && canUndo);
+        mbar->Enable(idEditRedo, eb && canRedo);
+        mbar->Enable(idEditCut, eb && hasSel);
+        mbar->Enable(idEditCopy, eb && hasSel);
+        mbar->Enable(idEditPaste, eb && canPaste);
+    }                                                                       //pecan 2006/3/3
     mbar->Enable(idEditSwapHeaderSource, ed);
     mbar->Enable(idEditGotoMatchingBrace, ed);
     mbar->Enable(idEditHighlightMode, ed);
@@ -2679,14 +2687,18 @@ void MainFrame::OnEditMenuUpdateUI(wxUpdateUIEvent& event)
         mbar->Check(idEditEncodingUnicode32LE, ed && ed->GetEncoding() == wxFONTENCODING_UTF32LE);
     }
 
-	if (m_pToolbar)
-	{
-		m_pToolbar->EnableTool(idEditUndo, eb && canUndo);
-		m_pToolbar->EnableTool(idEditRedo, eb && canRedo);
-		m_pToolbar->EnableTool(idEditCut, eb && hasSel);
-		m_pToolbar->EnableTool(idEditCopy, eb && hasSel);
-		m_pToolbar->EnableTool(idEditPaste, eb && canPaste);
-	}
+    // Dont block other routines from using copy/paste tools                //pecan 2006/3/3
+    if (pFocused && ed && (pFocused == ed->GetControl()) )                  //pecan 2006/3/3
+    {
+        if (m_pToolbar)
+        {
+            m_pToolbar->EnableTool(idEditUndo, eb && canUndo);
+            m_pToolbar->EnableTool(idEditRedo, eb && canRedo);
+            m_pToolbar->EnableTool(idEditCut, eb && hasSel);
+            m_pToolbar->EnableTool(idEditCopy, eb && hasSel);
+            m_pToolbar->EnableTool(idEditPaste, eb && canPaste);
+        }
+    }                                                                       //pecan 2006/03/3
 
 	event.Skip();
 }

@@ -38,7 +38,7 @@ namespace ProjectLoaderHooks
     template<class T> class DLLIMPORT HookFunctor : public HookFunctorBase
     {
         public:
-            typedef void (T::*Func)(TiXmlElement*, bool);
+            typedef void (T::*Func)(cbProject*, TiXmlElement*, bool);
             HookFunctor(T* obj, Func func)
                 : m_pObj(obj),
                 m_pFunc(func)

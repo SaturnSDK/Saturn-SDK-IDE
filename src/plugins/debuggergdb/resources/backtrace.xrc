@@ -1,53 +1,14 @@
-<?xml version="1.0" encoding="utf-8"?>
 <resource>
-  <object class="wxPanel" name="dlgBacktrace">
-    <title>Back-trace</title>
-    <object class="wxBoxSizer">
-      <orient>wxVERTICAL</orient>
-      <object class="sizeritem">
-        <object class="wxListCtrl" name="lstTrace">
-          
-          
-          
-          
-          
-          <style>wxLC_REPORT</style>
-        </object>
-        
-        
-        
-        
-        
-        <option>1</option>
-        
-        
-        
-        
-        
-        <flag>wxGROW</flag>
-        
-        
-        
-        
-        
-        
-      </object>
-      <object class="sizeritem">
-        <object class="wxButton" name="btnSave">
-              
-              
-              
-              
-              
-          <label>&amp;Save to file</label>
-              
-              
-              
+    <object class="wxPanel" name="dlgBacktrace">
+        <object class="wxBoxSizer">
+            <orient>wxVERTICAL</orient>
+            <object class="sizeritem">
+                <option>1</option>
+                <flag>wxALIGN_LEFT|wxALIGN_TOP|wxEXPAND</flag>
+                <object class="wxListCtrl" name="lstTrace">
+                    <style>wxLC_REPORT</style>
+                </object>
             </object>
-          
-        <flag>wxALL|wxALIGN_RIGHT</flag>
-        <border>2</border>
-      </object>
+        </object>
     </object>
-  </object>
 </resource>

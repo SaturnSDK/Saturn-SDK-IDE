@@ -13,6 +13,8 @@ class DebuggerTree;
 class BacktraceDlg;
 class DisassemblyDlg;
 class CPURegistersDlg;
+class ExamineMemoryDlg;
+class ThreadsDlg;
 class Compiler;
 
 WX_DEFINE_ARRAY(DebuggerCmd*, DebuggerCommands);
@@ -41,7 +43,11 @@ class DebuggerDriver
         ////////////////////////////////
 
         /** Inform the driver about the plugin's available (not necessarily visible) debugging windows. */
-        virtual void SetDebugWindows(BacktraceDlg* b, DisassemblyDlg* d, CPURegistersDlg* r);
+        virtual void SetDebugWindows(BacktraceDlg* b,
+                                    DisassemblyDlg* d,
+                                    CPURegistersDlg* r,
+                                    ExamineMemoryDlg* m,
+                                    ThreadsDlg* t);
 
         /** Add a directory in search list. */
         virtual void AddDirectory(const wxString& dir);
@@ -75,11 +81,22 @@ class DebuggerDriver
 
         virtual void Continue() = 0;
         virtual void Step() = 0;
+        virtual void StepInstruction() = 0;
         virtual void StepIn() = 0;
         virtual void StepOut() = 0;
         virtual void Backtrace() = 0;
         virtual void Disassemble() = 0;
         virtual void CPURegisters() = 0;
+        virtual void SwitchToFrame(size_t number) = 0;
+        virtual void SetVarValue(const wxString& var, const wxString& value) = 0;
+        virtual void MemoryDump() = 0;
+        virtual void RunningThreads() = 0;
+
+        virtual void InfoFrame() = 0;
+        virtual void InfoDLL() = 0;
+        virtual void InfoFiles() = 0;
+        virtual void InfoFPU() = 0;
+        virtual void InfoSignals() = 0;
 
         /** Add a breakpoint.
             @param bp The breakpoint to add.
@@ -116,6 +133,12 @@ class DebuggerDriver
         virtual bool IsStopped(){ return m_ProgramIsStopped; }
         /** Get debugger cursor. */
         virtual const Cursor& GetCursor() const { return m_Cursor; }
+        /** Set child PID (debuggee's). Usually set by debugger commands. */
+        virtual void SetChildPID(unsigned long pid) { m_ChildPID = pid; }
+        /** Get the child's (debuggee's) PID. */
+        virtual unsigned long GetChildPID() const { return m_ChildPID; }
+        /** Request to switch to another thread. */
+        virtual void SwitchThread(size_t threadIndex) = 0;
 
 		void QueueCommand(DebuggerCmd* dcmd, QueuePriority prio = Low); ///< add a command in the queue. The DebuggerCmd will be deleted automatically when finished.
 		DebuggerCmd* CurrentCommand(); ///< returns the currently executing command
@@ -140,10 +163,14 @@ class DebuggerDriver
         wxString m_LastCursorAddress;
         Cursor m_Cursor;
 
+        unsigned long m_ChildPID;
+
         // debugging windows pointers
         BacktraceDlg* m_pBacktrace;
         DisassemblyDlg* m_pDisassembly;
         CPURegistersDlg* m_pCPURegisters;
+        ExamineMemoryDlg* m_pExamineMemory;
+        ThreadsDlg* m_pThreads;
 
 		// commands
 		DebuggerCommands m_DCmds;

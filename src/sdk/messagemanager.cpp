@@ -57,15 +57,20 @@ class BatchLogWindow : public wxDialog
         BatchLogWindow(wxWindow *parent, const wxChar *title)
             : wxDialog(parent, -1, title, wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER | wxMAXIMIZE_BOX | wxMINIMIZE_BOX)
         {
+            wxSizer* sizer = new wxBoxSizer(wxVERTICAL);
             wxFont font(8, wxMODERN, wxNORMAL, wxNORMAL);
             m_pText = new wxTextCtrl(this, -1, _T(""), wxDefaultPosition, wxDefaultSize, wxTE_READONLY | wxTE_MULTILINE | wxTE_RICH2 | wxHSCROLL);
             m_pText->SetFont(font);
+
+            sizer->Add(m_pText, 1, wxGROW);
 
             wxSize size;
             size.SetWidth(Manager::Get()->GetConfigManager(_T("message_manager"))->ReadInt(_T("/batch_build_log/width"), wxDefaultSize.GetWidth()));
             size.SetHeight(Manager::Get()->GetConfigManager(_T("message_manager"))->ReadInt(_T("/batch_build_log/height"), wxDefaultSize.GetHeight()));
             SetSize(size);
-            Layout();
+
+            SetSizer(sizer);
+            sizer->Layout();
         }
         void EndModal(int retCode)
         {
@@ -209,6 +214,17 @@ void MessageManager::LogToStdOut(const wxChar* msg, ...)
     fprintf(stdout, tmp.mb_str());
 }
 
+void MessageManager::LogToStdOut(const wxString& msg)
+{
+    fputs(msg.mb_str(), stdout);
+}
+
+void MessageManager::Log(const wxString& msg)
+{
+    SANITY_CHECK();
+    m_Logs[m_AppLog]->log->AddLog(msg);
+}
+
 void MessageManager::Log(const wxChar* msg, ...)
 {
     SANITY_CHECK();
@@ -256,9 +272,9 @@ void MessageManager::DebugLogWarning(const wxChar* msg, ...)
     wxSafeShowMessage(typ, typ + _T(":\n\n") + tmp);
     if (!CheckLogId(m_DebugLog))
         return;
-    ((SimpleTextLog*)m_Logs[m_DebugLog])->GetTextControl()->SetDefaultStyle(wxTextAttr(*wxBLUE));
+    ((SimpleTextLog*)m_Logs[m_DebugLog]->log)->GetTextControl()->SetDefaultStyle(wxTextAttr(*wxBLUE));
     DebugLog(typ + _T(": ") + tmp);
-    ((SimpleTextLog*)m_Logs[m_DebugLog])->GetTextControl()->SetDefaultStyle(wxTextAttr(wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOWTEXT), wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW)));
+    ((SimpleTextLog*)m_Logs[m_DebugLog]->log)->GetTextControl()->SetDefaultStyle(wxTextAttr(wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOWTEXT), wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW)));
 }
 
 void MessageManager::DebugLogError(const wxChar* msg, ...)
@@ -276,9 +292,9 @@ void MessageManager::DebugLogError(const wxChar* msg, ...)
     wxSafeShowMessage(typ, typ + _T(":\n\n") + tmp);
     if (!CheckLogId(m_DebugLog))
         return;
-    ((SimpleTextLog*)m_Logs[m_DebugLog])->GetTextControl()->SetDefaultStyle(wxTextAttr(*wxRED));
+    ((SimpleTextLog*)m_Logs[m_DebugLog]->log)->GetTextControl()->SetDefaultStyle(wxTextAttr(*wxRED));
     DebugLog(typ + _T(": ") + tmp);
-    ((SimpleTextLog*)m_Logs[m_DebugLog])->GetTextControl()->SetDefaultStyle(wxTextAttr(wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOWTEXT), wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW)));
+    ((SimpleTextLog*)m_Logs[m_DebugLog]->log)->GetTextControl()->SetDefaultStyle(wxTextAttr(wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOWTEXT), wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW)));
 }
 
 // add a new log page
@@ -326,11 +342,12 @@ void MessageManager::ShowLog(MessageLog* log, bool show)
     if (show && !ls->visible)
     {
         // show
-        // InsertPage() suffers from the same bug Remove() suffered (split-window-like bug)
-//        m_pNotebook->InsertPage(id, log, ls->title, false);
-        m_pNotebook->AddPage(log, ls->title, false);
+        m_pNotebook->InsertPage(id, log, ls->title, false);
+
         SetLogImage(id, ls->bitmap);
         ls->visible = true;
+
+        log->Show(false);
 
         if (id == m_DebugLog)
             cfg->Write(_T("/has_debug_log"), (bool)true);
@@ -342,6 +359,8 @@ void MessageManager::ShowLog(MessageLog* log, bool show)
         if (id != -1)
             m_pNotebook->RemovePage(id);
         ls->visible = false;
+
+        log->Show(false);
 
         if (id == m_DebugLog)
             cfg->Write(_T("/has_debug_log"), (bool)false);
@@ -387,6 +406,29 @@ int MessageManager::DoAddLog(MessageLog* log, const wxString& title, const wxBit
     m_pNotebook->AddPage(log, title, false);
     SetLogImage(id, bitmap);
     return id;
+}
+
+void MessageManager::Log(int id, const wxString& msg)
+{
+    SANITY_CHECK();
+    if (!CheckLogId(id))
+        return;
+
+    m_Logs[id]->log->AddLog(msg);
+
+    if (Manager::IsBatchBuild() && id == m_BatchBuildLog)
+    {
+        // this log is the batch build log
+        if (!m_BatchBuildLogDialog)
+            GetBatchBuildDialog();
+        BatchLogWindow* dlg = static_cast<BatchLogWindow*>(m_BatchBuildLogDialog);
+        if (dlg->m_pText)
+        {
+            dlg->m_pText->AppendText(msg + _T('\n')); // log to build log window
+            dlg->m_pText->ScrollLines(-1);
+            Manager::ProcessPendingEvents();
+        }
+    }
 }
 
 void MessageManager::Log(int id, const wxChar* msg, ...)
@@ -472,6 +514,7 @@ void MessageManager::SetLogImage(int id, const wxBitmap& bitmap)
     {
         m_pNotebook->GetImageList()->push_back(bitmap);
         m_pNotebook->SetPageImageIndex(index, m_pNotebook->GetImageList()->size() - 1);
+        m_Logs[id]->bitmap = bitmap;
     }
 }
 

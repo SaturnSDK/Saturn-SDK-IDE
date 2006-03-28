@@ -80,6 +80,7 @@ static const wxString g_SampleClasses =
 	"#define SOME_DEFINITION_2\n\n");
 
 BEGIN_EVENT_TABLE(CCOptionsDlg, wxPanel)
+    EVT_UPDATE_UI(-1, CCOptionsDlg::OnUpdateUI)
 	EVT_BUTTON(XRCID("btnColor"), CCOptionsDlg::OnChooseColor)
 	EVT_CHECKBOX(XRCID("chkInheritance"), CCOptionsDlg::OnInheritanceToggle)
 	EVT_COMBOBOX(XRCID("cmbCBView"), CCOptionsDlg::OnInheritanceToggle)
@@ -100,17 +101,25 @@ CCOptionsDlg::CCOptionsDlg(wxWindow* parent, NativeParser* np)
 	XRCCTRL(*this, "chkNoCC", wxCheckBox)->SetValue(!cfg->ReadBool(_T("/use_code_completion"), true));
 	XRCCTRL(*this, "chkSimpleMode", wxCheckBox)->SetValue(!m_Parser.Options().useSmartSense);
 	XRCCTRL(*this, "chkCaseSensitive", wxCheckBox)->SetValue(m_Parser.Options().caseSensitive);
+	XRCCTRL(*this, "chkAutoSelectOne", wxCheckBox)->SetValue(cfg->ReadBool(_T("/auto_select_one"), false));
+	XRCCTRL(*this, "chkAutoLaunch", wxCheckBox)->SetValue(cfg->ReadBool(_T("/auto_launch"), true));
+	XRCCTRL(*this, "spnAutoLaunchChars", wxSpinCtrl)->SetValue(cfg->ReadInt(_T("/auto_launch"), 4));
 	XRCCTRL(*this, "chkCustomList", wxCheckBox)->SetValue(cfg->ReadBool(_T("/use_custom_control"), USE_CUST_CTRL));
 	XRCCTRL(*this, "chkInheritance", wxCheckBox)->SetValue(m_Parser.ClassBrowserOptions().showInheritance);
+	XRCCTRL(*this, "spnThreadsNum", wxSpinCtrl)->SetValue(cfg->ReadInt(_T("/max_threads"), 1));
+	XRCCTRL(*this, "spnThreadsNum", wxSpinCtrl)->Enable(false);
 	XRCCTRL(*this, "cmbCBView", wxComboBox)->SetSelection(m_Parser.ClassBrowserOptions().viewFlat ? 0 : 1);
-	XRCCTRL(*this, "chkUseCache", wxCheckBox)->SetValue(cfg->ReadBool(_T("/use_cache"), false));
-	XRCCTRL(*this, "chkAlwaysUpdateCache", wxCheckBox)->SetValue(cfg->ReadBool(_T("/update_cache_always"), false));
-	XRCCTRL(*this, "chkShowCacheProgress", wxCheckBox)->SetValue(cfg->ReadBool(_T("/show_cache_progress"), true));
+//	XRCCTRL(*this, "chkUseCache", wxCheckBox)->SetValue(cfg->ReadBool(_T("/use_cache"), false));
+//	XRCCTRL(*this, "chkAlwaysUpdateCache", wxCheckBox)->SetValue(cfg->ReadBool(_T("/update_cache_always"), false));
+//	XRCCTRL(*this, "chkShowCacheProgress", wxCheckBox)->SetValue(cfg->ReadBool(_T("/show_cache_progress"), true));
+	XRCCTRL(*this, "chkUseCache", wxCheckBox)->Enable(false);
+	XRCCTRL(*this, "chkAlwaysUpdateCache", wxCheckBox)->Enable(false);
+	XRCCTRL(*this, "chkShowCacheProgress", wxCheckBox)->Enable(false);
 
     wxColour color = cfg->ReadColour(_T("/color"), *wxWHITE);
     XRCCTRL(*this, "btnColor", wxButton)->SetBackgroundColour(color);
 
-	int timerDelay = Manager::Get()->GetConfigManager(_T("editor"))->ReadInt(_T("/cc_delay"), 500);
+	int timerDelay = cfg->ReadInt(_T("/cc_delay"), 500);
 	XRCCTRL(*this, "sliderDelay", wxSlider)->SetValue(timerDelay / 100);
 	UpdateSliderLabel();
 
@@ -161,21 +170,26 @@ void CCOptionsDlg::OnSliderScroll(wxScrollEvent& event)
 	UpdateSliderLabel();
 }
 
+void CCOptionsDlg::OnUpdateUI(wxUpdateUIEvent& event)
+{
+    bool en = !XRCCTRL(*this, "chkNoCC", wxCheckBox)->GetValue();
+    bool auto_launch = XRCCTRL(*this, "chkAutoLaunch", wxCheckBox)->GetValue();
+
+    XRCCTRL(*this, "chkCaseSensitive", wxCheckBox)->Enable(en);
+    XRCCTRL(*this, "chkAutoSelectOne", wxCheckBox)->Enable(en);
+    XRCCTRL(*this, "chkAutoLaunch", wxCheckBox)->Enable(en);
+    XRCCTRL(*this, "spnAutoLaunchChars", wxSpinCtrl)->Enable(en && auto_launch);
+    XRCCTRL(*this, "sliderDelay", wxSlider)->Enable(en);
+}
+
 void CCOptionsDlg::OnApply()
 {
     ConfigManager* cfg = Manager::Get()->GetConfigManager(_T("code_completion"));
 
-	m_Parser.Options().followLocalIncludes = XRCCTRL(*this, "chkLocals", wxCheckBox)->GetValue();
-	m_Parser.Options().followGlobalIncludes = XRCCTRL(*this, "chkGlobals", wxCheckBox)->GetValue();
-	m_Parser.Options().wantPreprocessor = XRCCTRL(*this, "chkPreprocessor", wxCheckBox)->GetValue();
-	m_Parser.Options().caseSensitive = XRCCTRL(*this, "chkCaseSensitive", wxCheckBox)->GetValue();
+    // force parser to read its options that we write in the config
 	cfg->Write(_T("/use_custom_control"), (bool)XRCCTRL(*this, "chkCustomList", wxCheckBox)->GetValue());
 	cfg->Write(_T("/use_code_completion"), (bool)!XRCCTRL(*this, "chkNoCC", wxCheckBox)->GetValue());
-	m_Parser.Options().useSmartSense = !XRCCTRL(*this, "chkSimpleMode", wxCheckBox)->GetValue();
-	m_Parser.ClassBrowserOptions().showInheritance = XRCCTRL(*this, "chkInheritance", wxCheckBox)->GetValue();
-	m_Parser.ClassBrowserOptions().viewFlat = XRCCTRL(*this, "cmbCBView", wxComboBox)->GetSelection() == 0;
-	m_Parser.WriteOptions();
-
+	cfg->Write(_T("/max_threads"), (int)XRCCTRL(*this, "spnThreadsNum", wxSpinCtrl)->GetValue());
 	cfg->Write(_T("/use_cache"), (bool)XRCCTRL(*this, "chkUseCache", wxCheckBox)->GetValue());
 	cfg->Write(_T("/update_cache_always"), (bool)XRCCTRL(*this, "chkAlwaysUpdateCache", wxCheckBox)->GetValue());
 	cfg->Write(_T("/show_cache_progress"), (bool)XRCCTRL(*this, "chkShowCacheProgress", wxCheckBox)->GetValue());
@@ -183,7 +197,21 @@ void CCOptionsDlg::OnApply()
     cfg->Write(_T("/color"), XRCCTRL(*this, "btnColor", wxButton)->GetBackgroundColour());
 
 	int timerDelay = XRCCTRL(*this, "sliderDelay", wxSlider)->GetValue() * 100;
-	Manager::Get()->GetConfigManager(_T("editor"))->Write(_T("/cc_delay"), (int)timerDelay);
+	cfg->Write(_T("/cc_delay"), (int)timerDelay);
+	m_Parser.ReadOptions();
+
+    // set all other member options
+	m_Parser.Options().followLocalIncludes = XRCCTRL(*this, "chkLocals", wxCheckBox)->GetValue();
+	m_Parser.Options().followGlobalIncludes = XRCCTRL(*this, "chkGlobals", wxCheckBox)->GetValue();
+	m_Parser.Options().wantPreprocessor = XRCCTRL(*this, "chkPreprocessor", wxCheckBox)->GetValue();
+	cfg->Write(_T("/auto_select_one"), (bool)XRCCTRL(*this, "chkAutoSelectOne", wxCheckBox)->GetValue());
+	cfg->Write(_T("/auto_launch"), (bool)XRCCTRL(*this, "chkAutoLaunch", wxCheckBox)->GetValue());
+	cfg->Write(_T("/auto_launch"), (int)XRCCTRL(*this, "spnAutoLaunchChars", wxSpinCtrl)->GetValue());
+	m_Parser.Options().caseSensitive = XRCCTRL(*this, "chkCaseSensitive", wxCheckBox)->GetValue();
+	m_Parser.Options().useSmartSense = !XRCCTRL(*this, "chkSimpleMode", wxCheckBox)->GetValue();
+	m_Parser.ClassBrowserOptions().showInheritance = XRCCTRL(*this, "chkInheritance", wxCheckBox)->GetValue();
+	m_Parser.ClassBrowserOptions().viewFlat = XRCCTRL(*this, "cmbCBView", wxComboBox)->GetSelection() == 0;
+	m_Parser.WriteOptions();
 
     m_pNativeParsers->RereadParserOptions();
 }

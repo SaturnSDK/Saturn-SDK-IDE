@@ -46,6 +46,8 @@
 
 #include "editorcolorset.h"
 #include "cbeditorprintout.h"
+#include "editor_hooks.h"
+#include "filefilters.h"
 
 const wxString g_EditorModified = _T("*");
 
@@ -87,7 +89,7 @@ void cbStyledTextCtrl::OnContextMenu(wxContextMenuEvent& event)
 	     */
 	    const bool is_right_click = event.GetPosition()!=wxDefaultPosition;
 	    const wxPoint mp(is_right_click ? event.GetPosition() : wxDefaultPosition);
-		reinterpret_cast<cbEditor*>(m_pParent)->DisplayContextMenu(mp);
+		reinterpret_cast<cbEditor*>(m_pParent)->DisplayContextMenu(mp,mtEditorManager); //pecan 2006/03/22
 	}
 }
 
@@ -115,7 +117,6 @@ struct cbEditorInternalData
 {
     cbEditorInternalData(cbEditor* owner)
         : m_pOwner(owner),
-        lastPosForCodeCompletion(0),
         m_strip_trailing_spaces(true),
         m_ensure_final_line_end(false),
         m_ensure_consistent_line_ends(true),
@@ -247,7 +248,6 @@ struct cbEditorInternalData
     }
 
     //vars
-    int lastPosForCodeCompletion;
     bool m_strip_trailing_spaces;
     bool m_ensure_final_line_end;
     bool m_ensure_consistent_line_ends;
@@ -295,7 +295,6 @@ const int idBreakpointRemove = wxNewId();
 
 BEGIN_EVENT_TABLE(cbEditor, EditorBase)
     EVT_CLOSE(cbEditor::OnClose)
-    EVT_TIMER(-1, cbEditor::OnTimer)
     // we got dynamic events; look in CreateEditor()
 
 	EVT_MENU(idUndo, cbEditor::OnContextMenuEntry)
@@ -332,15 +331,12 @@ cbEditor::cbEditor(wxWindow* parent, const wxString& filename, EditorColorSet* t
 	m_Index(-1),
 	m_pProjectFile(0L),
 	m_pTheme(theme),
-	m_lang(HL_AUTO),
-	m_ActiveCalltipsNest(0)
+	m_lang(HL_AUTO)
 {
     // first thing to do!
     // if we add more constructors in the future, don't forget to set this!
     m_pData = new cbEditorInternalData(this);
     m_IsBuiltinEditor = true;
-
-    m_timerWait.SetOwner(this);
 
     InitFilename(filename);
     wxFileName fname(m_Filename);
@@ -490,6 +486,9 @@ void cbEditor::CreateEditor()
     SetSizer(bs);
     SetAutoLayout(true);
 
+    wxString enc_name = Manager::Get()->GetConfigManager(_T("editor"))->Read(_T("/default_encoding"), wxEmptyString);
+    m_pData->m_encoding = wxFontMapper::GetEncodingFromName(enc_name);
+
     // dynamic events
     Connect( m_ID,  -1, wxEVT_SCI_MARGINCLICK,
                   (wxObjectEventFunction) (wxEventFunction) (wxScintillaEventFunction)
@@ -569,11 +568,9 @@ void cbEditor::SetEditorStyle()
     m_pControl->SetTabWidth(mgr->ReadInt(_T("/tab_size"), 4));
 
     // line numbering
+    m_pControl->SetMarginType(0, wxSCI_MARGIN_NUMBER);
    	if (mgr->ReadBool(_T("/show_line_numbers"), true))
-    {
-	    m_pControl->SetMarginType(0, wxSCI_MARGIN_NUMBER);
     	m_pControl->SetMarginWidth(0, 48);
-    }
 	else
 		m_pControl->SetMarginWidth(0, 0);
 
@@ -905,9 +902,8 @@ bool cbEditor::SaveAs()
                             _("Save file"),
                             fname.GetPath(),
                             fname.GetFullName(),
-                            SOURCE_FILES_DIALOG_FILTER,
+                            FileFilters::GetFilterString(),
                             wxSAVE | wxOVERWRITE_PROMPT);
-    dlg->SetFilterIndex(7);// all files;
 
     PlaceWindow(dlg);
     if (dlg->ShowModal() != wxID_OK)
@@ -929,12 +925,6 @@ bool cbEditor::RenameTo(const wxString& filename, bool deleteOldFromDisk)
     wxLogWarning(_("Not implemented..."));
 	//NotifyPlugins(cbEVT_EDITOR_RENAME);
 	return false;
-}
-
-void cbEditor::DoAskForCodeCompletion()
-{
-    m_timerWait.Stop();
-	NotifyPlugins(cbEVT_EDITOR_AUTOCOMPLETE);
 }
 
 void cbEditor::AutoComplete()
@@ -1449,8 +1439,9 @@ wxMenu* cbEditor::CreateContextSubMenu(long id)
 }
 
 // Adds menu items to context menu (both before and after loading plugins' items)
-void cbEditor::AddToContextMenu(wxMenu* popup,bool noeditor,bool pluginsdone)
+void cbEditor::AddToContextMenu(wxMenu* popup,ModuleType type,bool pluginsdone) //pecan 2006/03/22
 {
+    bool noeditor = (type != mtEditorManager);                              //pecan 2006/03/22
     if(!pluginsdone)
     {
         wxMenu *bookmarks = 0, *folding = 0, *editsubmenu = 0, *insert = 0;
@@ -1496,8 +1487,9 @@ void cbEditor::AddToContextMenu(wxMenu* popup,bool noeditor,bool pluginsdone)
     }
 }
 
-bool cbEditor::OnBeforeBuildContextMenu(const wxPoint& position, bool noeditor)
+bool cbEditor::OnBeforeBuildContextMenu(const wxPoint& position, ModuleType type)   //pecan 2006/03/22
 {
+    bool noeditor = (type != mtEditorManager);                              //pecan 2006/03/22
     if (!noeditor && position!=wxDefaultPosition)
     {
         // right mouse click inside the editor
@@ -1558,16 +1550,25 @@ bool cbEditor::OnBeforeBuildContextMenu(const wxPoint& position, bool noeditor)
     }
 
     // follow default strategy
-    return EditorBase::OnBeforeBuildContextMenu(position, noeditor);
+    return EditorBase::OnBeforeBuildContextMenu(position, type);        //pecan 2006/03/22
 }
 
-void cbEditor::OnAfterBuildContextMenu(bool noeditor)
+void cbEditor::OnAfterBuildContextMenu(ModuleType type)                //pecan 2006/03/22
 {
     // we don't care
 }
 
-void cbEditor::Print(bool selectionOnly, PrintColorMode pcm)
+void cbEditor::Print(bool selectionOnly, PrintColorMode pcm, bool line_numbers)
 {
+    // print line numbers?
+    m_pControl->SetMarginType(0, wxSCI_MARGIN_NUMBER);
+    if (!line_numbers)
+        m_pControl->SetMarginWidth(0, 0);
+    else
+        m_pControl->SetMarginWidth(0, 48);
+    // never print the gutter line
+    m_pControl->SetEdgeMode(wxSCI_EDGE_NONE);
+
     switch (pcm)
     {
         case pcmAsIs:
@@ -1600,6 +1601,14 @@ void cbEditor::Print(bool selectionOnly, PrintColorMode pcm)
     else
         *g_printData = printer.GetPrintDialogData().GetPrintData();
     delete printout;
+
+    // revert line numbers and gutter settings
+    ConfigManager* mgr = Manager::Get()->GetConfigManager(_T("editor"));
+    if (mgr->ReadBool(_T("/show_line_numbers"), true))
+        m_pControl->SetMarginWidth(0, 48);
+    else
+        m_pControl->SetMarginWidth(0, 0);
+    m_pControl->SetEdgeMode(mgr->ReadInt(_T("/gutter/mode"), 0));
 }
 
 // events
@@ -1710,26 +1719,11 @@ void cbEditor::OnEditorCharAdded(wxScintillaEvent& event)
     // if message manager is auto-hiding, this will close it if not needed open
     Manager::Get()->GetMessageManager()->Close();
 
-    m_timerWait.Stop();
 	int pos = m_pControl->GetCurrentPos();
 	wxChar ch = event.GetKey();
-	if (ch == _T('('))
-	{
-		if (m_pControl->CallTipActive())
-			++m_ActiveCalltipsNest;
-		NotifyPlugins(cbEVT_EDITOR_CALLTIP);
-	}
-	if (ch == _T(')'))
-	{
-		// cancel any active calltip
-		m_pControl->CallTipCancel();
-		if (m_ActiveCalltipsNest > 0)
-		{
-			--m_ActiveCalltipsNest;
-			NotifyPlugins(cbEVT_EDITOR_CALLTIP);
-		}
-	}
-	else if (ch == _T('\n'))
+
+	// indent
+	if (ch == _T('\n'))
 	{
         m_pControl->BeginUndoAction();
 		// new-line: adjust indentation
@@ -1758,6 +1752,8 @@ void cbEditor::OnEditorCharAdded(wxScintillaEvent& event)
 		}
 		m_pControl->EndUndoAction();
 	}
+
+	// unindent
 	else if (ch == _T('}'))
 	{
 		bool smartIndent = Manager::Get()->GetConfigManager(_T("editor"))->ReadBool(_T("/smart_indent"), true);
@@ -1789,33 +1785,12 @@ void cbEditor::OnEditorCharAdded(wxScintillaEvent& event)
             m_pControl->EndUndoAction();
         }
 	}
-	// we use -2 because the char has already been added and Pos is ahead of it...
-	else if ((ch == _T('"')) || // this and the next one are for #include's completion
-             (ch == _T('<')) ||
-             (ch == _T('.')) ||
-			((ch == _T('>')) && (m_pControl->GetCharAt(pos - 2) == _T('-'))) ||
-			((ch == _T(':')) && (m_pControl->GetCharAt(pos - 2) == _T(':'))))
-	{
-        int style = m_pControl->GetStyleAt(pos);
-		//Manager::Get()->GetMessageManager()->DebugLog(_T("Style at %d is %d (char '%c')"), pos, style, ch);
-        if (ch == _T('"') || ch == _T('<'))
+    else
+    {
+        // call any hooked functors
+        if (EditorHooks::HasRegisteredHooks())
         {
-             if (style != wxSCI_C_PREPROCESSOR)
-                return;
-        }
-        else
-        {
-            if (style != wxSCI_C_DEFAULT && style != wxSCI_C_OPERATOR && style != wxSCI_C_IDENTIFIER)
-                return;
-        }
-
-		int timerDelay = Manager::Get()->GetConfigManager(_T("editor"))->ReadInt(_T("/cc_delay"), 500);
-		if (timerDelay == 0)
-			DoAskForCodeCompletion();
-		else
-		{
-            m_pData->lastPosForCodeCompletion = pos;
-			m_timerWait.Start(timerDelay);
+            EditorHooks::CallHooks(this, event);
         }
     }
 }
@@ -1873,14 +1848,6 @@ void cbEditor::OnEditorModified(wxScintillaEvent& event)
 
 void cbEditor::OnUserListSelection(wxScintillaEvent& event)
 {
-	NotifyPlugins(cbEVT_EDITOR_USERLIST_SELECTION, 0, event.GetText());
-}
-
-void cbEditor::OnTimer(wxTimerEvent& event)
-{
-    // ask for code-completion *only* if the editor is still after the "." or "->" operator
-    if (m_pControl->GetCurrentPos() == m_pData->lastPosForCodeCompletion)
-        DoAskForCodeCompletion();
 }
 
 void cbEditor::OnClose(wxCloseEvent& event)

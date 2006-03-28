@@ -29,7 +29,7 @@
 // it will change when the SDK interface breaks
 #define PLUGIN_SDK_VERSION_MAJOR 1
 #define PLUGIN_SDK_VERSION_MINOR 6
-#define PLUGIN_SDK_VERSION_RELEASE 10
+#define PLUGIN_SDK_VERSION_RELEASE 12
 
 // class decls
 class ProjectBuildTarget;
@@ -114,12 +114,12 @@ class PLUGIN_EXPORT cbPlugin : public wxEvtHandler
           * in configuration dialogs. Lower numbers mean the plugin's
           * configuration is put higher in the list.
           */
-        virtual int GetConfigurationPriority(){ return 50; }
+        virtual int GetConfigurationPriority() const { return 50; }
         /** Return the configuration group for this plugin. Default is cgUnknown.
           * Notice that you can logically AND more than one configuration groups,
           * so you could set it, for example, as "cgCompiler | cgContribPlugin".
           */
-        virtual int GetConfigurationGroup(){ return cgUnknown; }
+        virtual int GetConfigurationGroup() const { return cgUnknown; }
 		/** Return plugin's configuration panel.
 		  * @param parent The parent window.
 		  * @return A pointer to the plugin's cbConfigurationPanel. It is deleted by the caller.
@@ -233,6 +233,19 @@ class PLUGIN_EXPORT cbCompilerPlugin: public cbPlugin
         virtual int Clean(ProjectBuildTarget* target = 0L) = 0;
         /** Same as Clean(ProjectBuildTarget*) but with a wxString argument. */
         virtual int Clean(const wxString& target) = 0;
+
+		/** @brief DistClean the project/target.
+		  *
+		  * DistClean will typically remove any config files
+		  * and anything else that got created as part of
+		  * building a software package.
+		  *
+		  * @param target The specific build target to "distclean". If NULL, it
+		  * cleans all the build targets of the current project.
+		  */
+        virtual int DistClean(ProjectBuildTarget* target = 0L) = 0;
+        /** Same as DistClean(ProjectBuildTarget*) but with a wxString argument. */
+        virtual int DistClean(const wxString& target) = 0;
 
 		/** @brief Build the project/target.
 		  *

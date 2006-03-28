@@ -55,7 +55,9 @@
 #include "projectlayoutloader.h"
 #include "selecttargetdlg.h"
 #include "filegroupsandmasks.h"
+#include "filefilters.h"
 #include "importers_globals.h"
+#include "annoyingdialog.h"
 
 // class constructor
 cbProject::cbProject(const wxString& filename)
@@ -236,7 +238,7 @@ wxString cbProject::CreateUniqueFilename()
 			break;
         ++iter;
     }
-    return tmp << _T(".") << CODEBLOCKS_EXT;
+    return tmp << _T(".") << FileFilters::CODEBLOCKS_EXT;
 }
 
 void cbProject::ClearAllProperties()
@@ -319,7 +321,7 @@ void cbProject::Open()
             // actually import project file
             m_CurrentlyLoading = true;
             m_Loaded = loader->Open(m_Filename);
-            fname.SetExt(CODEBLOCKS_EXT);
+            fname.SetExt(FileFilters::CODEBLOCKS_EXT);
             m_Filename = fname.GetFullPath();
             SetModified(true);
             m_CurrentlyLoading = false;
@@ -346,7 +348,12 @@ void cbProject::Open()
             wxString msg;
             msg.Printf(_("The project file of \"%s\" needs to be updated to the latest format.\n"
                         "This will happen automatically when you save the project."), m_Title.c_str());
-            cbMessageBox(msg, _("Information"), wxICON_INFORMATION);
+            AnnoyingDialog dlg(_("Project file format will be updated on save"),
+                                msg,
+                                wxART_INFORMATION,
+                                AnnoyingDialog::OK,
+                                wxID_OK);
+            dlg.ShowModal();
         }
 	}
 	else
@@ -407,7 +414,7 @@ bool cbProject::SaveAs()
                     _("Save file"),
                     fname.GetPath(),
                     fname.GetFullName(),
-                    CODEBLOCKS_FILES_FILTER,
+                    FileFilters::GetFilterString(_T('.') + FileFilters::CODEBLOCKS_EXT),
                     wxSAVE | wxOVERWRITE_PROMPT);
 
     PlaceWindow(&dlg);
@@ -421,8 +428,8 @@ bool cbProject::SaveAs()
     // in the filename, the part after it would be interpeted as extension
     // (and it might not be)
     // so we just append the correct extension
-    if (!fname.GetExt().Matches(CODEBLOCKS_EXT))
-        fname.Assign(m_Filename + _T('.') + CODEBLOCKS_EXT);
+    if (!fname.GetExt().Matches(FileFilters::CODEBLOCKS_EXT))
+        fname.Assign(m_Filename + _T('.') + FileFilters::CODEBLOCKS_EXT);
 
 //    Manager::Get()->GetProjectManager()->GetTree()->SetItemText(m_ProjectNode, fname.GetFullName());
     if (!m_Loaded)
@@ -586,17 +593,15 @@ ProjectFile* cbProject::AddFile(int targetIndex, const wxString& filename, bool 
 	f->editorOpen = false;
 	f->editorPos = 0;
 	f->editorTopLine = 0;
-	f->useCustomBuildCommand = false;
-	f->autoDeps = true;
     f->weight = weight;
 
 	FileType ft = FileTypeOf(filename);
 	fname = filename; //UnixFilename(filename);
 	ext = filename.AfterLast(_T('.')).Lower();
-	if (ext.Matches(C_EXT) || ext.Matches(CC_EXT))
+	if (ext.Matches(FileFilters::C_EXT) || ext.Matches(FileFilters::CC_EXT))
         f->compilerVar = _T("CC");
 #ifdef __WXMSW__
-	else if (ext.Matches(RESOURCE_EXT))
+	else if (ext.Matches(FileFilters::RESOURCE_EXT))
         f->compilerVar = _T("WINDRES");
 #endif
     else
@@ -879,7 +884,7 @@ wxTreeItemId cbProject::AddTreeNode(wxTreeCtrl* tree, const wxString& text, cons
 					{
 					    FileTreeData* ftd = new FileTreeData(*data);
 					    ftd->SetKind(FileTreeData::ftdkFolder);
-					    ftd->SetFolder(m_BasePath + GetRelativeFolderPath(tree, parent) + folder + wxFILE_SEP_PATH);
+					    ftd->SetFolder(m_CommonTopLevelPath + GetRelativeFolderPath(tree, parent) + folder + wxFILE_SEP_PATH);
 					    ftd->SetProjectFile(0);
 						newparent = tree->InsertItem(parent, lastChild, folder, fldIdx, fldIdx, ftd);
 						break;
@@ -889,7 +894,7 @@ wxTreeItemId cbProject::AddTreeNode(wxTreeCtrl* tree, const wxString& text, cons
 				{
                     FileTreeData* ftd = new FileTreeData(*data);
                     ftd->SetKind(FileTreeData::ftdkFolder);
-                    ftd->SetFolder(m_BasePath + GetRelativeFolderPath(tree, parent) + folder + wxFILE_SEP_PATH);
+                    ftd->SetFolder(m_CommonTopLevelPath + GetRelativeFolderPath(tree, parent) + folder + wxFILE_SEP_PATH);
                     ftd->SetProjectFile(0);
 					newparent = tree->PrependItem(parent, folder, fldIdx, fldIdx, ftd);
 					break;
@@ -901,7 +906,7 @@ wxTreeItemId cbProject::AddTreeNode(wxTreeCtrl* tree, const wxString& text, cons
 			{
                 FileTreeData* ftd = new FileTreeData(*data);
                 ftd->SetKind(FileTreeData::ftdkFolder);
-                ftd->SetFolder(m_BasePath + GetRelativeFolderPath(tree, parent) + folder + wxFILE_SEP_PATH);
+                ftd->SetFolder(m_CommonTopLevelPath + GetRelativeFolderPath(tree, parent) + folder + wxFILE_SEP_PATH);
                 ftd->SetProjectFile(0);
 				newparent = tree->AppendItem(parent, folder, fldIdx, fldIdx, ftd);
 			}

@@ -20,6 +20,8 @@
 #include "gdb_driver.h"
 #include "debuggertree.h"
 #include "backtracedlg.h"
+#include "examinememorydlg.h"
+#include "threadsdlg.h"
 
 static int GetScriptParserFuncID(const wxString& parseFunc)
 {
@@ -62,6 +64,13 @@ static wxRegEx reDisassembly(_T("(0x[0-9A-Za-z]+)[ \t]+<.*>:[ \t]+(.*)"));
 //  ebx at 0x22ff6c, ebp at 0x22ff78, esi at 0x22ff70, edi at 0x22ff74, eip at 0x22ff7c
 static wxRegEx reDisassemblyInit(_T("^Stack level [0-9]+, frame at (0x[A-Fa-f0-9]+):"));
 static wxRegEx reDisassemblyInitFunc(_T("eip = (0x[A-Fa-f0-9]+) in ([^;]*)"));
+//	Using the running image of child Thread 46912568064384 (LWP 7051).
+static wxRegEx reInfoProgramThread(_T("\\(LWP[ \t]([0-9]+)\\)"));
+//	Using the running image of child process 10011.
+static wxRegEx reInfoProgramProcess(_T("child process ([0-9]+)"));
+//  2 Thread 1082132832 (LWP 8017)  0x00002aaaac5a2aca in pthread_cond_wait@@GLIBC_2.3.2 () from /lib/libpthread.so.0
+//* 1 Thread 46912568064384 (LWP 7926)  0x00002aaaac76e612 in poll () from /lib/libc.so.6
+static wxRegEx reInfoThreads(_T("(\\**)[ \t]*([0-9]+)[ \t](.*)[ \t]in"));
 
 /**
   * Command to add a search directory for source files in debugger's paths.
@@ -388,6 +397,67 @@ class GdbCmd_InfoArguments : public DebuggerCmd
 };
 
 /**
+  * Command to get info about current program and state.
+  */
+class GdbCmd_InfoProgram : public DebuggerCmd
+{
+    public:
+        GdbCmd_InfoProgram(DebuggerDriver* driver)
+            : DebuggerCmd(driver)
+        {
+            m_Cmd << _T("info program");
+        }
+        void ParseOutput(const wxString& output)
+        {
+            wxString pid_str;
+            if (reInfoProgramThread.Matches(output))
+                pid_str = reInfoProgramThread.GetMatch(output, 1);
+            else if (reInfoProgramProcess.Matches(output))
+                pid_str = reInfoProgramProcess.GetMatch(output, 1);
+
+            if (!pid_str.IsEmpty())
+            {
+                unsigned long pid;
+                if (pid_str.ToULong(&pid, 10) && pid != 0)
+                    m_pDriver->SetChildPID(pid);
+            }
+        }
+};
+
+/**
+  * Command to get info about running threads.
+  */
+class GdbCmd_Threads : public DebuggerCmd
+{
+        ThreadsDlg* m_pList;
+    public:
+        /** @param tree The tree to display the args. */
+        GdbCmd_Threads(DebuggerDriver* driver, ThreadsDlg* list)
+            : DebuggerCmd(driver),
+            m_pList(list)
+        {
+            m_Cmd << _T("info threads");
+        }
+        void ParseOutput(const wxString& output)
+        {
+            m_pList->Clear();
+            wxArrayString lines = GetArrayFromString(output, _T('\n'));
+    		for (unsigned int i = 0; i < lines.GetCount(); ++i)
+    		{
+//    		    m_pDriver->Log(lines[i]);
+    		    if (reInfoThreads.Matches(lines[i]))
+    		    {
+//    		        m_pDriver->Log(_T("MATCH!"));
+    		        wxString active = reInfoThreads.GetMatch(lines[i], 1);
+    		        wxString num = reInfoThreads.GetMatch(lines[i], 2);
+    		        wxString info = reInfoThreads.GetMatch(lines[i], 3);
+                    m_pList->AddThread(active, num, info);
+    		    }
+    		}
+        }
+};
+
+/**
   * Command to get info about a watched variable.
   */
 class GdbCmd_Watch : public DebuggerCmd
@@ -693,7 +763,7 @@ class GdbCmd_InfoRegisters : public DebuggerCmd
                 {
                     long int addr;
                     reRegisters.GetMatch(lines[i], 2).ToLong(&addr, 16);
-                    m_pDlg->SetRegisterValue(CPURegistersDlg::RegisterIndexFromName(reRegisters.GetMatch(lines[i], 1)), addr);
+                    m_pDlg->SetRegisterValue(reRegisters.GetMatch(lines[i], 1), addr);
                 }
     		}
 //            m_pDlg->Show(true);
@@ -786,6 +856,56 @@ class GdbCmd_DisassemblyInit : public DebuggerCmd
 //            m_pDriver->DebugLog(output);
         }
 };
+// static
 wxString GdbCmd_DisassemblyInit::LastAddr;
+
+/**
+  * Command to examine a memory region.
+  */
+class GdbCmd_ExamineMemory : public DebuggerCmd
+{
+        ExamineMemoryDlg* m_pDlg;
+    public:
+        /** @param dlg The memory dialog. */
+        GdbCmd_ExamineMemory(DebuggerDriver* driver, ExamineMemoryDlg* dlg)
+            : DebuggerCmd(driver),
+            m_pDlg(dlg)
+        {
+            m_Cmd.Printf(_T("x/%dxb %s"), dlg->GetBytes(), dlg->GetBaseAddress().c_str());
+        }
+        void ParseOutput(const wxString& output)
+        {
+            // output is a series of:
+            //
+            // 0x22ffc0:       0xf0    0xff    0x22    0x00    0x4f    0x6d    0x81    0x7c
+
+            if (!m_pDlg)
+                return;
+            m_pDlg->Begin();
+            m_pDlg->Clear();
+
+            wxArrayString lines = GetArrayFromString(output, _T('\n'));
+    		for (unsigned int i = 0; i < lines.GetCount(); ++i)
+    		{
+    		    if (lines[i].First(_T(':')) == -1)
+    		    {
+    		        m_pDlg->AddError(lines[i]);
+    		        continue;
+    		    }
+    		    wxString addr = lines[i].BeforeFirst(_T(':'));
+    		    size_t pos = lines[i].find(_T('x'), 3); // skip 'x' of address
+    		    while (pos != wxString::npos)
+    		    {
+    		        wxString hexbyte;
+    		        hexbyte << lines[i][pos + 1];
+    		        hexbyte << lines[i][pos + 2];
+    		        m_pDlg->AddHexByte(addr, hexbyte);
+                    pos = lines[i].find(_T('x'), pos + 1); // skip current 'x'
+    		    }
+    		}
+            m_pDlg->End();
+//            m_pDriver->DebugLog(output);
+        }
+};
 
 #endif // DEBUGGER_COMMANDS_H

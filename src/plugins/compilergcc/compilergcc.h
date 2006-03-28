@@ -15,8 +15,6 @@
 #include <compilerfactory.h>
 
 #define MAX_TARGETS 64
-#define DEFAULT_CONSOLE_TERM _T("xterm -T $TITLE -e")
-#define DEFAULT_CONSOLE_SHELL _T("/bin/sh -c")
 
 enum CompilerOptionsType
 {
@@ -69,6 +67,8 @@ class CompilerGCC : public cbCompilerPlugin
         virtual int RunSingleFile(const wxString& filename);
         virtual int Clean(ProjectBuildTarget* target = 0L);
         virtual int Clean(const wxString& target);
+        virtual int DistClean(ProjectBuildTarget* target = 0L);
+        virtual int DistClean(const wxString& target);
         virtual int Build(ProjectBuildTarget* target = 0L);
         virtual int Build(const wxString& target);
         virtual int Rebuild(ProjectBuildTarget* target = 0L);
@@ -82,14 +82,12 @@ class CompilerGCC : public cbCompilerPlugin
 		virtual int GetExitCode() const { return m_LastExitCode; }
 		virtual int Configure(cbProject* project, ProjectBuildTarget* target = 0L);
 
-        int GetConfigurationPriority(){ return 0; }
-		int GetConfigurationGroup(){ return cgCompiler; }
+        int GetConfigurationPriority() const { return 0; }
+		int GetConfigurationGroup() const { return cgCompiler; }
         cbConfigurationPanel* GetConfigurationPanel(wxWindow* parent);
 
 		void SwitchCompiler(const wxString& id);
 		const wxString& GetCurrentCompilerID();
-		const wxString& GetConsoleShell(){ return m_ConsoleShell; }
-		const wxString& GetConsoleTerminal(){ return m_ConsoleTerm; }
 
 		// used to read from the external process
 		void OnIdle(wxIdleEvent& event);
@@ -118,6 +116,8 @@ class CompilerGCC : public cbCompilerPlugin
         void OnConfig(wxCommandEvent& event);
     private:
         friend class CompilerOptionsDlg;
+
+        void Dispatcher(wxCommandEvent& event);
 
         bool ReAllocProcesses();
         void AllocProcesses();
@@ -227,9 +227,6 @@ class CompilerGCC : public cbCompilerPlugin
 		wxString m_OriginalPath;
 		wxString m_LastTempMakefile;
         bool m_DeleteTempMakefile;
-
-		wxString m_ConsoleTerm;
-		wxString m_ConsoleShell;
 
         DECLARE_EVENT_TABLE()
 };

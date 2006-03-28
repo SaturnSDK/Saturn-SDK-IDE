@@ -69,11 +69,14 @@ class DLLIMPORT MessageManager : public Mgr<MessageManager>, public wxEvtHandler
         void SetBatchBuildLog(int log);
         wxDialog* GetBatchBuildDialog();
 
+		void LogToStdOut(const wxString& msg);
 		void LogToStdOut(const wxChar* msg, ...);
+		void Log(const wxString& msg);
 		void Log(const wxChar* msg, ...);
 		void DebugLog(const wxChar* msg, ...);
 		void DebugLogWarning(const wxChar* msg, ...);
 		void DebugLogError(const wxChar* msg, ...);
+		void Log(int id, const wxString& msg);
 		void Log(int id, const wxChar* msg, ...);
 		void AppendLog(const wxChar* msg, ...);
 		void AppendLog(int id, const wxChar* msg, ...);

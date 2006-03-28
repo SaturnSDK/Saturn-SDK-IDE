@@ -15,6 +15,7 @@
 #include "disassemblydlg.h"
 #include "cpuregistersdlg.h"
 #include "breakpointsdlg.h"
+#include "threadsdlg.h"
 
 extern const wxString g_EscapeChars;
 
@@ -27,6 +28,8 @@ class DisassemblyDlg;
 class CPURegistersDlg;
 class BacktraceDlg;
 class BreakpointsDlg;
+class ExamineMemoryDlg;
+class ThreadsDlg;
 
 class DebuggerGDB : public cbDebuggerPlugin
 {
@@ -35,8 +38,8 @@ class DebuggerGDB : public cbDebuggerPlugin
 		DebuggerGDB();
 		~DebuggerGDB();
 		int Configure();
-		int GetConfigurationPriority(){ return 0; }
-		int GetConfigurationGroup(){ return cgDebugger; }
+		int GetConfigurationPriority() const { return 0; }
+		int GetConfigurationGroup() const { return cgDebugger; }
         cbConfigurationPanel* GetConfigurationPanel(wxWindow* parent);
 		void BuildMenu(wxMenuBar* menuBar);
 		void BuildModuleMenu(const ModuleType type, wxMenu* menu, const FileTreeData* data = 0);
@@ -48,6 +51,8 @@ class DebuggerGDB : public cbDebuggerPlugin
 		void Disassemble();
 		void Registers();
 		void Backtrace();
+		void MemoryDump();
+		void RunningThreads();
 
 		bool AddBreakpoint(const wxString& file, int line);
 		bool AddBreakpoint(const wxString& functionSignature);
@@ -58,6 +63,7 @@ class DebuggerGDB : public cbDebuggerPlugin
 		int Debug();
 		void Continue();
 		void Next();
+		void NextInstr();
 		void Step();
 		void StepOut();
 		void RunToCursor();
@@ -108,6 +114,7 @@ class DebuggerGDB : public cbDebuggerPlugin
 		void OnEditWatches(wxCommandEvent& event);
 		void OnContinue(wxCommandEvent& event);
 		void OnNext(wxCommandEvent& event);
+		void OnNextInstr(wxCommandEvent& event);
 		void OnStep(wxCommandEvent& event);
 		void OnStepOut(wxCommandEvent& event);
 		void OnToggleBreakpoint(wxCommandEvent& event);
@@ -128,6 +135,17 @@ class DebuggerGDB : public cbDebuggerPlugin
         void OnAttachToProcess(wxCommandEvent& event);
         void OnDetach(wxCommandEvent& event);
         void OnSettings(wxCommandEvent& event);
+        void OnExamineMemory(wxCommandEvent& event);
+        void OnRunningThreads(wxCommandEvent& event);
+
+        void OnDebugWindows(wxCommandEvent& event);
+        void OnToolInfo(wxCommandEvent& event);
+
+        void OnInfoFrame(wxCommandEvent& event);
+        void OnInfoDLL(wxCommandEvent& event);
+        void OnInfoFiles(wxCommandEvent& event);
+        void OnInfoFPU(wxCommandEvent& event);
+        void OnInfoSignals(wxCommandEvent& event);
 
 		wxMenu* m_pMenu;
         SimpleTextLog* m_pLog;
@@ -163,6 +181,8 @@ class DebuggerGDB : public cbDebuggerPlugin
 		CPURegistersDlg* m_pCPURegisters;
 		BacktraceDlg* m_pBacktrace;
         BreakpointsDlg* m_pBreakpointsWindow;
+        ExamineMemoryDlg* m_pExamineMemoryDlg;
+        ThreadsDlg* m_pThreadsDlg;
 
 		DECLARE_EVENT_TABLE()
 };

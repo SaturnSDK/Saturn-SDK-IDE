@@ -49,7 +49,9 @@
 #include <manager.h>
 #include <scriptingmanager.h>
 #include <wxFlatNotebook.h>
-#include "globals.h"
+#include <globals.h>
+#include "splashscreen.h"
+#include <wx/arrstr.h>
 
 #ifndef __WXMSW__
     #include "prefix.h" // binreloc
@@ -85,6 +87,10 @@ static const wxCmdLineEntryDesc cmdLineDesc[] =
 #ifdef __WXMSW__
 DDEServer* g_DDEServer = 0L;
 #endif
+
+// this list will be filled with DDE files to load after the app has started up
+wxArrayString s_DdeFilesToOpen;
+bool s_Loading = false;
 
 IMPLEMENT_APP(CodeBlocksApp)
 
@@ -160,12 +166,6 @@ void CodeBlocksApp::InitAssociations(MainFrame* frame)
 
         }
     }
-
-	if (!m_NoDDE && cfg->ReadBool(_T("/environment/use_dde"), true))
-	{
-		g_DDEServer = new DDEServer(frame);
-		g_DDEServer->Create(DDE_SERVICE);
-	}
 #endif
 }
 
@@ -231,12 +231,16 @@ bool CodeBlocksApp::InitXRCStuff()
 
 MainFrame* CodeBlocksApp::InitFrame()
 {
-    MainFrame *frame = new MainFrame((wxFrame*)0L);
+    MainFrame *frame = new MainFrame();
     SetTopWindow(0);
-    frame->Hide(); // frame is shown by the caller
+    //frame->Hide(); // shouldn't need this explicitely
 #ifdef __WXMSW__
-    if(g_DDEServer)
+    if (!m_NoDDE)
+    {
+        g_DDEServer = new DDEServer(frame);
+        g_DDEServer->Create(DDE_SERVICE);
         g_DDEServer->SetFrame(frame);
+    }
 #endif
     if (ParseCmdLine(frame) == 0)
     {
@@ -320,6 +324,7 @@ void CodeBlocksApp::InitLocale()
 
 bool CodeBlocksApp::OnInit()
 {
+    s_Loading = true;
     m_Batch = false;
     m_BatchNotify = false;
     m_Build = false;
@@ -411,8 +416,13 @@ bool CodeBlocksApp::OnInit()
         HideSplashScreen();
         SetTopWindow(frame);
         frame->Show();
+
         frame->ShowTips(); // this func checks if the user wants tips, so no need to check here
         InitAssociations(frame);
+
+        s_Loading = false;
+        DelayLoadDdeFiles(frame);
+
         return true;
     }
     catch (cbException& exception)
@@ -560,25 +570,20 @@ void CodeBlocksApp::ShowSplashScreen()
 
 	if (!m_NoSplash && Manager::Get()->GetConfigManager(_T("app"))->ReadBool(_T("/environment/show_splash"), true) == true)
 	{
-		wxBitmap bitmap;
-		#ifdef __WXMSW__
-			const wxString splashImage = _T("/images/splash_new.png");
-		#else
-			const wxString splashImage = _T("/images/splash.png");
-		#endif
-		m_pSplash = new wxSplashScreen(LoadPNGWindows2000Hack(ConfigManager::ReadDataPath() + splashImage),
-                                        wxSPLASH_CENTRE_ON_SCREEN| wxSPLASH_NO_TIMEOUT,
-										6000, NULL, -1, wxDefaultPosition, wxDefaultSize,
-										wxBORDER_NONE | wxFRAME_NO_TASKBAR);
-		Manager::ProcessPendingEvents();
+        const wxString splashImage = _T("/images/splash_new.png");
+        wxBitmap bmp = LoadPNGWindows2000Hack(ConfigManager::ReadDataPath() + splashImage);
+		m_pSplash = new cbSplashScreen(bmp, -1l, 0, -1, wxNO_BORDER | wxFRAME_NO_TASKBAR);
+		Manager::Yield();
 	}
 }
 
 void CodeBlocksApp::HideSplashScreen()
 {
     if (m_pSplash)
-        delete m_pSplash;
-    m_pSplash = 0;
+    {
+        m_pSplash->Destroy();
+        m_pSplash = 0;
+    }
 }
 
 bool CodeBlocksApp::CheckResource(const wxString& res)
@@ -650,20 +655,29 @@ int CodeBlocksApp::ParseCmdLine(MainFrame* handlerFrame)
                 {
                     int count = parser.GetParamCount();
 					filesInCmdLine = count != 0;
-					bool hasProjOrWksp = false;
+					bool hasProj = false;
+					bool hasWksp = false;
                     for ( int param = 0; param < count; ++param )
                     {
-                        if (handlerFrame->Open(parser.GetParam(param)) && !hasProjOrWksp)
+                        // is it a project/workspace?
+                        FileType ft = FileTypeOf(parser.GetParam(param));
+                        if (ft == ftCodeBlocksProject)
                         {
-                            // is it a project/workspace?
-                            FileType ft = FileTypeOf(parser.GetParam(param));
-                            if (ft == ftCodeBlocksProject || ft == ftCodeBlocksWorkspace)
-                                hasProjOrWksp = true;
+                            hasProj = true;
+                            s_DdeFilesToOpen.Add(parser.GetParam(param));
+                        }
+                        else if (ft == ftCodeBlocksWorkspace)
+                        {
+                            // only one workspace can be opened
+                            hasWksp = true;
+                            s_DdeFilesToOpen.Clear(); // remove all other files
+                            s_DdeFilesToOpen.Add(parser.GetParam(param)); // and add only the workspace
+                            break; // and stop processing any more files
                         }
                     }
 
                     // batch jobs
-                    m_Batch = hasProjOrWksp;
+                    m_Batch = hasProj || hasWksp;
                     m_Batch = m_Batch && (m_Build || m_ReBuild);
                 }
                 else
@@ -736,6 +750,15 @@ void CodeBlocksApp::SetupPersonality(const wxString& personality)
         Manager::Get()->GetPersonalityManager()->SetPersonality(personality, true);
 }
 
+void CodeBlocksApp::DelayLoadDdeFiles(MainFrame* frame)
+{
+    for (size_t i = 0; i < s_DdeFilesToOpen.GetCount(); ++i)
+    {
+        frame->Open(s_DdeFilesToOpen[i], true);
+    }
+    s_DdeFilesToOpen.Clear();
+}
+
 #ifdef __WXMSW__
 //// DDE
 
@@ -758,8 +781,13 @@ bool DDEConnection::OnExecute(const wxString& topic, wxChar *data, int size, wxI
 	if (reCmd.Matches(strData))
 	{
 		wxString file = reCmd.GetMatch(strData, 1);
-		if(m_Frame)
-            m_Frame->Open(file, true); // add to history, files that open through DDE
+		if (s_Loading)
+            s_DdeFilesToOpen.Add(file);
+        else
+        {
+            if(m_Frame)
+                m_Frame->Open(file, true); // add to history, files that open through DDE
+        }
 	}
     return true;
 }

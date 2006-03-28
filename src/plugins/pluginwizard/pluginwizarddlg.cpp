@@ -24,19 +24,20 @@
 * $HeadURL$
 */
 
-#include <sdk.h>
-#include "pluginwizarddlg.h"
-#include "enterinfodlg.h"
-#include <wx/intl.h>
-#include <wx/mdi.h>
-#include <wx/filename.h>
-#include <wx/xrc/xmlres.h>
-#include <manager.h>
-#include <wx/file.h>
-#include <wx/combobox.h>
+#ifdef CB_PRECOMP
+#include "sdk.h"
+#else
 #include <wx/checkbox.h>
+#include <wx/combobox.h>
+#include <wx/file.h>
+#include <wx/filename.h>
 #include <wx/textctrl.h>
-#include <globals.h>
+#include <wx/xrc/xmlres.h>
+#include "globals.h"
+#include "manager.h"
+#endif
+#include "enterinfodlg.h"
+#include "pluginwizarddlg.h"
 
 BEGIN_EVENT_TABLE(PluginWizardDlg, wxDialog)
 	EVT_UPDATE_UI(-1, PluginWizardDlg::OnUpdateUI)
@@ -542,9 +543,9 @@ void PluginWizardDlg::CreateFiles()
 
     buffer << _T('\t') << _T('\t') << _T("int Configure()");
     DoAddHeaderOption(buffer, hasConfigure, _T(" 0"));
-    buffer << _T('\t') << _T('\t') << _T("int GetConfigurationPriority()");
+    buffer << _T('\t') << _T('\t') << _T("int GetConfigurationPriority() const");
     DoAddHeaderOption(buffer, false, _T(" 50"));
-    buffer << _T('\t') << _T('\t') << _T("int GetConfigurationGroup()");
+    buffer << _T('\t') << _T('\t') << _T("int GetConfigurationGroup() const");
     DoAddHeaderOption(buffer, false, _T(" cgUnknown"));
     buffer << _T('\t') << _T('\t') << _T("cbConfigurationPanel* GetConfigurationPanel(wxWindow* parent)");
     DoAddHeaderOption(buffer, hasConfigure, _T(" 0"));

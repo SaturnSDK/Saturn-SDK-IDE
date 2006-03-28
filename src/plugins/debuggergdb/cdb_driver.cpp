@@ -126,6 +126,12 @@ void CDB_driver::Step()
     QueueCommand(new DebuggerCmd(this, _T("k n 1")));
 }
 
+void CDB_driver::StepInstruction()
+{
+    ResetCursor();
+    NOT_IMPLEMENTED();
+}
+
 void CDB_driver::StepIn()
 {
     ResetCursor();
@@ -158,6 +164,51 @@ void CDB_driver::CPURegisters()
     if (!m_pCPURegisters)
         return;
     QueueCommand(new CdbCmd_InfoRegisters(this, m_pCPURegisters));
+}
+
+void CDB_driver::SwitchToFrame(size_t number)
+{
+    NOT_IMPLEMENTED();
+}
+
+void CDB_driver::SetVarValue(const wxString& var, const wxString& value)
+{
+    NOT_IMPLEMENTED();
+}
+
+void CDB_driver::MemoryDump()
+{
+    NOT_IMPLEMENTED();
+}
+
+void CDB_driver::RunningThreads()
+{
+    NOT_IMPLEMENTED();
+}
+
+void CDB_driver::InfoFrame()
+{
+    NOT_IMPLEMENTED();
+}
+
+void CDB_driver::InfoDLL()
+{
+    NOT_IMPLEMENTED();
+}
+
+void CDB_driver::InfoFiles()
+{
+    NOT_IMPLEMENTED();
+}
+
+void CDB_driver::InfoFPU()
+{
+    NOT_IMPLEMENTED();
+}
+
+void CDB_driver::InfoSignals()
+{
+    NOT_IMPLEMENTED();
 }
 
 void CDB_driver::AddBreakpoint(DebuggerBreakpoint* bp)

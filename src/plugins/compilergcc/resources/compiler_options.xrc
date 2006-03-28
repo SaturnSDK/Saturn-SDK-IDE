@@ -158,6 +158,7 @@
                                     <border>8</border>
                                     <object class="wxCheckList" name="lstCompilerOptions">
                                       <content/>
+                                      <style>wxLB_HSCROLL</style>
                                     </object>
                                   </object>
                                 </object>
@@ -174,7 +175,7 @@
                                     <flag>wxALL|wxEXPAND</flag>
                                     <border>8</border>
                                     <object class="wxTextCtrl" name="txtCompilerOptions">
-                                      <style>wxTE_MULTILINE|wxHSCROLL|wxTE_RICH2</style>
+                                      <style>wxTE_MULTILINE|wxHSCROLL</style>
                                     </object>
                                   </object>
                                 </object>
@@ -191,7 +192,7 @@
                                     <flag>wxALL|wxEXPAND</flag>
                                     <border>8</border>
                                     <object class="wxTextCtrl" name="txtCompilerDefines">
-                                      <style>wxTE_MULTILINE|wxHSCROLL|wxTE_RICH2</style>
+                                      <style>wxTE_MULTILINE|wxHSCROLL</style>
                                     </object>
                                   </object>
                                 </object>
@@ -319,7 +320,7 @@
                                 <orient>wxVERTICAL</orient>
                                 <object class="sizeritem">
                                   <object class="wxTextCtrl" name="txtLinkerOptions">
-                                    <style>wxTE_MULTILINE|wxHSCROLL|wxTE_RICH2</style>
+                                    <style>wxTE_MULTILINE|wxHSCROLL</style>
                                   </object>
                                   <option>1</option>
                                   <flag>wxALL|wxGROW</flag>
@@ -1128,30 +1129,6 @@ or in any of the &quot;Additional paths&quot;...</label>
                                     <value>50</value>
                                     <min>0</min>
                                   </object>
-                                </object>
-                                <object class="sizeritem">
-                                  <object class="wxStaticText">
-                                    <label>Shell to run compiler:</label>
-                                  </object>
-                                  <flag>wxTOP|wxRIGHT</flag>
-                                  <border>4</border>
-                                </object>
-                                <object class="sizeritem">
-                                  <object class="wxTextCtrl" name="txtConsoleShell"/>
-                                  <option>1</option>
-                                  <flag>wxGROW</flag>
-                                </object>
-                                <object class="sizeritem">
-                                  <object class="wxStaticText">
-                                    <label>Terminal to run console programs:</label>
-                                  </object>
-                                  <flag>wxTOP|wxRIGHT</flag>
-                                  <border>4</border>
-                                </object>
-                                <object class="sizeritem">
-                                  <object class="wxTextCtrl" name="txtConsoleTerm"/>
-                                  <option>1</option>
-                                  <flag>wxGROW</flag>
                                 </object>
                                 <vgap>8</vgap>
                                 <hgap>8</hgap>

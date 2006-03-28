@@ -46,6 +46,7 @@
     #include "xtra_classes.h"
     #include <wx/dir.h>
     #include "globals.h"
+	#include "cbexception.h"  // for cbassert
 #endif
 
 #include <wx/utils.h>
@@ -58,7 +59,7 @@
 #include "projectsfilemasksdlg.h"
 #include "projectdepsdlg.h"
 #include "multiselectdlg.h"
-
+#include "filefilters.h"
 
 // maximum number of items in "Open with" context menu
 static const unsigned int MAX_OPEN_WITH_ITEMS = 20; // keep it in sync with below array!
@@ -427,8 +428,11 @@ void ProjectManager::SetProject(cbProject* project, bool refresh)
     if (m_pActiveProject)
         m_pTree->SetItemBold(m_pActiveProject->GetProjectNode(), false);
     m_pActiveProject = project;
-    if (m_pActiveProject)
+    if (m_pActiveProject){
+        wxTreeItemId tid = m_pActiveProject->GetProjectNode();      //pecan 2006/2/28
+        if (tid)                                                    //pecan 2006/2/28
         m_pTree->SetItemBold(m_pActiveProject->GetProjectNode(), true);
+    }
 	if (refresh)
 		RebuildTree();
 
@@ -627,6 +631,8 @@ wxMenu* ProjectManager::GetProjectMenu()
 cbProject* ProjectManager::LoadProject(const wxString& filename, bool activateIt)
 {
     SANITY_CHECK(0L);
+    if (m_IsLoadingProject)
+		return 0L;
     cbProject* result = 0;
 
     // disallow application shutdown while opening files
@@ -925,6 +931,11 @@ void ProjectManager::MoveProjectUp(cbProject* project, bool warpAround)
     RebuildTree();
     if (m_pWorkspace)
         m_pWorkspace->SetModified(true);
+
+    // re-select the project
+    wxTreeItemId node = project->GetProjectNode();
+    cbAssert(node.IsOk());
+    m_pTree->SelectItem(node, true);
 }
 
 void ProjectManager::MoveProjectDown(cbProject* project, bool warpAround)
@@ -949,6 +960,11 @@ void ProjectManager::MoveProjectDown(cbProject* project, bool warpAround)
     RebuildTree();
     if (m_pWorkspace)
         m_pWorkspace->SetModified(true);
+
+    // re-select the project
+    wxTreeItemId node = project->GetProjectNode();
+    cbAssert(node.IsOk());
+    m_pTree->SelectItem(node, true);
 }
 
 cbWorkspace* ProjectManager::GetWorkspace()
@@ -1075,9 +1091,9 @@ void ProjectManager::FreezeTree()
     if (!m_pTree)
         return;
 // wx 2.5.x implement nested Freeze()/Thaw() calls correctly
-#if !wxCHECK_VERSION(2,5,0)
+//#if !wxCHECK_VERSION(2,5,0)   //pecan 2006/2/28
     ++m_TreeFreezeCounter;
-#endif
+//#endif                        //pecan 2006/2/28
     m_pTree->Freeze();
 }
 
@@ -1095,7 +1111,10 @@ void ProjectManager::UnfreezeTree(bool force)
         m_TreeFreezeCounter = 0;
     }
 #else
-    m_pTree->Thaw();
+    if (m_TreeFreezeCounter){           //pecan 2006/2/28
+            --m_TreeFreezeCounter;      //pecan 2006/2/28
+            m_pTree->Thaw();
+    }
 #endif
 }
 
@@ -1654,11 +1673,17 @@ void ProjectManager::OnSetActiveProject(wxCommandEvent& event)
     }
     else if (event.GetId() == idMenuProjectUp)
     {
-        MoveProjectUp(m_pActiveProject);
+        wxTreeItemId sel = m_pTree->GetSelection();
+        FileTreeData* ftd = (FileTreeData*)m_pTree->GetItemData(sel);
+        if (ftd)
+            MoveProjectUp(ftd->GetProject());
     }
     else if (event.GetId() == idMenuProjectDown)
     {
-        MoveProjectDown(m_pActiveProject);
+        wxTreeItemId sel = m_pTree->GetSelection();
+        FileTreeData* ftd = (FileTreeData*)m_pTree->GetItemData(sel);
+        if (ftd)
+            MoveProjectDown(ftd->GetProject());
     }
 }
 
@@ -1747,13 +1772,13 @@ void ProjectManager::OnAddFileToProject(wxCommandEvent& event)
     if (!prj)
         return;
 
-    wxFileDialog dlg(m_pTree,
+    wxFileDialog dlg(Manager::Get()->GetAppWindow(),
                     _("Add files to project..."),
                     prj->GetBasePath(),
                     wxEmptyString,
-                    KNOWN_SOURCES_DIALOG_FILTER,
+                    FileFilters::GetFilterString(),
                     wxOPEN | wxMULTIPLE | wxFILE_MUST_EXIST);
-    dlg.SetFilterIndex(KNOWN_SOURCES_FILTER_INDEX);
+    dlg.SetFilterIndex(FileFilters::GetIndexForFilterAll());
 
     PlaceWindow(&dlg);
     if (dlg.ShowModal() == wxID_OK)
@@ -2083,38 +2108,34 @@ void ProjectManager::OnRenameFile(wxCommandEvent& event)
     if (!prj)
         return;
 
-    wxString filename = ftd->GetProjectFile()->file.GetFullPath();
-    wxString newFilename;
+    wxString path = ftd->GetProjectFile()->file.GetPath(wxPATH_GET_VOLUME | wxPATH_GET_SEPARATOR);
+    wxString name = ftd->GetProjectFile()->file.GetFullName();
 
-    wxFileDialog dlg(Manager::Get()->GetAppWindow(), _T("Rename to..."), filename, filename, _T("*.*"), wxSAVE | wxOVERWRITE_PROMPT);
+    wxTextEntryDialog dlg(Manager::Get()->GetAppWindow(), _T("Please enter the new name:"), _T("Rename file"), name, wxOK | wxCANCEL | wxCENTRE);
     PlaceWindow(&dlg);
     if(dlg.ShowModal() == wxID_OK)
     {
-        newFilename = dlg.GetPath();
+        wxFileName fn(dlg.GetValue());
+        wxString new_name = fn.GetFullName();
 
-        if(filename != newFilename)
+        if(name != new_name)
         {
-            if(!wxRenameFile(filename, newFilename))
+            if(!wxRenameFile(path + name, path + new_name))
             {
                 wxBell();
                 return;
             }
+            ProjectFile *pf = ftd->GetProjectFile();
 
-            ftd->GetProjectFile()->file.Assign(newFilename);
-            ftd->GetProjectFile()->UpdateFileDetails();
+            pf->file.Assign(path + new_name);
+            pf->relativeFilename = pf->relativeFilename.BeforeLast(wxFILE_SEP_PATH);
+            pf->relativeFilename.IsEmpty() || pf->relativeFilename.Append(wxFILE_SEP_PATH);
+            pf->relativeFilename.Append(new_name);
 
+            pf->UpdateFileDetails();
             prj->CalculateCommonTopLevelPath();
             RebuildTree();
-
-            CodeBlocksEvent evt(cbEVT_PROJECT_FILE_REMOVED);
-            evt.SetProject(prj);
-            evt.SetString(filename);
-            Manager::Get()->GetPluginManager()->NotifyPlugins(evt);
-
-            CodeBlocksEvent evt2(cbEVT_PROJECT_FILE_ADDED);
-            evt2.SetProject(prj);
-            evt2.SetString(newFilename);
-            Manager::Get()->GetPluginManager()->NotifyPlugins(evt2);
+            prj->SetModified(true);
         }
     }
 }

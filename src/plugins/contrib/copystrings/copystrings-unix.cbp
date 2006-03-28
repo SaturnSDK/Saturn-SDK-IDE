@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <CodeBlocks_project_file>
-	<FileVersion major="1" minor="3" />
+	<FileVersion major="1" minor="4" />
 	<Project>
 		<Option title="copystrings (Unix)" />
 		<Option pch_mode="0" />
@@ -18,7 +18,6 @@
 			<Add option="-g" />
 			<Add option="`wx-config --cflags`" />
 			<Add option="-Winvalid-pch" />
-			<Add option='-include &quot;sdk.h&quot;' />
 			<Add option="-fexceptions" />
 			<Add option="-fPIC" />
 			<Add option="-DcbDEBUG" />

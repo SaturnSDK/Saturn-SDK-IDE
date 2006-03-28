@@ -43,14 +43,6 @@
                 <object class="sizeritem">
                   <border>8</border>
                   <flag>wxLEFT|wxTOP|wxALIGN_LEFT|wxALIGN_TOP|wxEXPAND</flag>
-                  <object class="wxCheckBox" name="chkDDE">
-                    <label>Run DDE server (Windows only)</label>
-                    <checked>1</checked>
-                  </object>
-                </object>
-                <object class="sizeritem">
-                  <border>8</border>
-                  <flag>wxLEFT|wxTOP|wxALIGN_LEFT|wxALIGN_TOP|wxEXPAND</flag>
                   <object class="wxCheckBox" name="chkSingleInstance">
                     <label>Allow only one running instance (needs application restart to take effect)</label>
                     <checked>1</checked>
@@ -134,6 +126,39 @@
                 <object class="spacer">
                   <size>0,16</size>
                   <flag>wxALIGN_LEFT|wxALIGN_TOP</flag>
+                </object>
+                <object class="sizeritem">
+                  <object class="wxFlexGridSizer">
+                    <cols>2</cols>
+                    <rows>2</rows>
+                    <vgap>8</vgap>
+                    <hgap>8</hgap>
+                    <growablecols>1</growablecols>
+                    <object class="sizeritem">
+                      <object class="wxStaticText">
+                        <label>Shell to run commands in:</label>
+                      </object>
+                      <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                    </object>
+                    <object class="sizeritem">
+                      <object class="wxTextCtrl" name="txtConsoleShell"/>
+                      <option>1</option>
+                      <flag>wxGROW</flag>
+                    </object>
+                    <object class="sizeritem">
+                      <object class="wxStaticText">
+                        <label>Terminal to launch console programs:</label>
+                      </object>
+                      <flag>wxALIGN_CENTRE_VERTICAL</flag>
+                    </object>
+                    <object class="sizeritem">
+                      <object class="wxTextCtrl" name="txtConsoleTerm"/>
+                      <option>1</option>
+                      <flag>wxGROW</flag>
+                    </object>
+                  </object>
+                  <flag>wxLEFT|wxTOP|wxGROW</flag>
+                  <border>8</border>
                 </object>
               </object>
             </object>

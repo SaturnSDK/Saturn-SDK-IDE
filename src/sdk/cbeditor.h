@@ -134,7 +134,7 @@ class DLLIMPORT cbEditor : public EditorBase
           * @param selectionOnly Should the selected text be printed only?
           * @param pcm The color mode to use when printing
           */
-        void Print(bool selectionOnly, PrintColorMode pcm);
+        void Print(bool selectionOnly, PrintColorMode pcm, bool line_numbers);
         /** Try to auto-complete the current word.
           *
           * This has nothing to do with code-completion plugins. Editor auto-completion
@@ -194,7 +194,7 @@ class DLLIMPORT cbEditor : public EditorBase
 
         // misc. functions
         virtual wxMenu* CreateContextSubMenu(long id);
-        virtual void AddToContextMenu(wxMenu* popup,bool noeditor,bool pluginsdone);
+        virtual void AddToContextMenu(wxMenu* popup,ModuleType type,bool pluginsdone);  //pecan 2006/03/22
 
         HighlightLanguage GetLanguage( ) { return m_lang; }
         void SetLanguage( HighlightLanguage lang = HL_AUTO );
@@ -233,13 +233,12 @@ class DLLIMPORT cbEditor : public EditorBase
 		void OnEditorDwellEnd(wxScintillaEvent& event);
 		void OnEditorModified(wxScintillaEvent& event);
 		void OnUserListSelection(wxScintillaEvent& event);
-        void OnTimer(wxTimerEvent& event);
 		void OnClose(wxCloseEvent& event);
 
 		// one event handler for all popup menu entries
 		void OnContextMenuEntry(wxCommandEvent& event);
-        bool OnBeforeBuildContextMenu(const wxPoint& position, bool noeditor);
-        void OnAfterBuildContextMenu(bool noeditor);
+        bool OnBeforeBuildContextMenu(const wxPoint& position, ModuleType type);    //pecan 2006/03/22
+        void OnAfterBuildContextMenu(ModuleType type);                              //pecan 2006/03/22
 
         // variables
         bool m_IsOK;
@@ -251,7 +250,6 @@ class DLLIMPORT cbEditor : public EditorBase
 		ProjectFile* m_pProjectFile;
 		EditorColorSet* m_pTheme;
 		HighlightLanguage m_lang;
-		short int m_ActiveCalltipsNest;
         wxDateTime m_LastModified; // to check if the file was modified outside the editor
 
         // DO NOT ADD ANY MORE VARIABLES HERE!

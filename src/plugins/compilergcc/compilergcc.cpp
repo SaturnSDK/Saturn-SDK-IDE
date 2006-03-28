@@ -39,6 +39,7 @@
 #include <pluginmanager.h>
 #include <cbeditor.h>
 #include <annoyingdialog.h>
+#include <filefilters.h>
 #include <wx/xrc/xmlres.h>
 #include <wx/sizer.h>
 #include <wx/button.h>
@@ -137,31 +138,31 @@ BEGIN_EVENT_TABLE(CompilerGCC, cbCompilerPlugin)
     EVT_IDLE(										CompilerGCC::OnIdle)
 	EVT_TIMER(idTimerPollCompiler,                  CompilerGCC::OnTimer)
 
-    EVT_MENU(idMenuRun,                             CompilerGCC::OnRun)
-    EVT_MENU(idMenuCompileAndRun,                   CompilerGCC::OnCompileAndRun)
-    EVT_MENU(idMenuCompile,                         CompilerGCC::OnCompile)
-    EVT_MENU(idMenuCompileFromProjectManager,       CompilerGCC::OnCompile)
-    EVT_MENU(idMenuCompileTargetFromProjectManager, CompilerGCC::OnCompile)
-    EVT_MENU(idMenuCompileFile,                     CompilerGCC::OnCompileFile)
-    EVT_MENU(idMenuCompileFileFromProjectManager,   CompilerGCC::OnCompileFile)
-    EVT_MENU(idMenuRebuild,                         CompilerGCC::OnRebuild)
-    EVT_MENU(idMenuRebuildFromProjectManager,       CompilerGCC::OnRebuild)
-    EVT_MENU(idMenuRebuildTargetFromProjectManager, CompilerGCC::OnRebuild)
-    EVT_MENU(idMenuCompileAll,                      CompilerGCC::OnCompileAll)
-    EVT_MENU(idMenuRebuildAll,                      CompilerGCC::OnRebuildAll)
-	EVT_MENU(idMenuProjectCompilerOptions,			CompilerGCC::OnProjectCompilerOptions)
-	EVT_MENU(idMenuTargetCompilerOptions,			CompilerGCC::OnTargetCompilerOptions)
-    EVT_MENU(idMenuClean,                           CompilerGCC::OnClean)
-    EVT_MENU(idMenuCleanAll,                        CompilerGCC::OnCleanAll)
-    EVT_MENU(idMenuCleanFromProjectManager,         CompilerGCC::OnClean)
-    EVT_MENU(idMenuCleanTargetFromProjectManager,   CompilerGCC::OnClean)
-    EVT_MENU(idMenuKillProcess,                     CompilerGCC::OnKillProcess)
-	EVT_MENU(idMenuSelectTargetAll,					CompilerGCC::OnSelectTarget)
-	EVT_MENU(idMenuNextError,						CompilerGCC::OnNextError)
-	EVT_MENU(idMenuPreviousError,					CompilerGCC::OnPreviousError)
-	EVT_MENU(idMenuClearErrors,						CompilerGCC::OnClearErrors)
-    EVT_MENU(idMenuExportMakefile,                  CompilerGCC::OnExportMakefile)
-    EVT_MENU(idMenuSettings,                        CompilerGCC::OnConfig)
+    EVT_MENU(idMenuRun,                             CompilerGCC::Dispatcher)
+    EVT_MENU(idMenuCompileAndRun,                   CompilerGCC::Dispatcher)
+    EVT_MENU(idMenuCompile,                         CompilerGCC::Dispatcher)
+    EVT_MENU(idMenuCompileFromProjectManager,       CompilerGCC::Dispatcher)
+    EVT_MENU(idMenuCompileTargetFromProjectManager, CompilerGCC::Dispatcher)
+    EVT_MENU(idMenuCompileFile,                     CompilerGCC::Dispatcher)
+    EVT_MENU(idMenuCompileFileFromProjectManager,   CompilerGCC::Dispatcher)
+    EVT_MENU(idMenuRebuild,                         CompilerGCC::Dispatcher)
+    EVT_MENU(idMenuRebuildFromProjectManager,       CompilerGCC::Dispatcher)
+    EVT_MENU(idMenuRebuildTargetFromProjectManager, CompilerGCC::Dispatcher)
+    EVT_MENU(idMenuCompileAll,                      CompilerGCC::Dispatcher)
+    EVT_MENU(idMenuRebuildAll,                      CompilerGCC::Dispatcher)
+    EVT_MENU(idMenuProjectCompilerOptions,          CompilerGCC::Dispatcher)
+    EVT_MENU(idMenuTargetCompilerOptions,           CompilerGCC::Dispatcher)
+    EVT_MENU(idMenuClean,                           CompilerGCC::Dispatcher)
+    EVT_MENU(idMenuCleanAll,                        CompilerGCC::Dispatcher)
+    EVT_MENU(idMenuCleanFromProjectManager,         CompilerGCC::Dispatcher)
+    EVT_MENU(idMenuCleanTargetFromProjectManager,   CompilerGCC::Dispatcher)
+    EVT_MENU(idMenuKillProcess,                     CompilerGCC::Dispatcher)
+    EVT_MENU(idMenuSelectTargetAll,                 CompilerGCC::Dispatcher)
+    EVT_MENU(idMenuNextError,                       CompilerGCC::Dispatcher)
+    EVT_MENU(idMenuPreviousError,                   CompilerGCC::Dispatcher)
+    EVT_MENU(idMenuClearErrors,                     CompilerGCC::Dispatcher)
+    EVT_MENU(idMenuExportMakefile,                  CompilerGCC::Dispatcher)
+    EVT_MENU(idMenuSettings,                        CompilerGCC::Dispatcher)
 
 	EVT_COMBOBOX(idToolTarget,						CompilerGCC::OnSelectTarget)
 
@@ -228,16 +229,6 @@ CompilerGCC::CompilerGCC()
 
 	for (int i = 0; i < MAX_TARGETS; ++i)
 		idMenuSelectTargetOther[i] = wxNewId();
-#ifndef __WXMSW__
-	m_ConsoleTerm = Manager::Get()->GetConfigManager(_T("compiler"))->Read(_T("/console_terminal"), DEFAULT_CONSOLE_TERM);
-	m_ConsoleShell = Manager::Get()->GetConfigManager(_T("compiler"))->Read(_T("/console_shell"), DEFAULT_CONSOLE_SHELL);
-    // because in previous versions the value for terminal
-    // used to be "console_shell" (incorrectly), double-check that
-    // the word "term" or "onsol" doesn't appear in "shell"
-    if (m_ConsoleShell.Contains(_T("term")) || m_ConsoleShell.Contains(_T("onsol")))
-        m_ConsoleShell = DEFAULT_CONSOLE_SHELL;
-#endif
-
 	// register built-in compilers
 	CompilerFactory::RegisterCompiler(new CompilerMINGW);
 #ifdef __WXMSW__
@@ -268,6 +259,97 @@ CompilerGCC::~CompilerGCC()
 	if (m_ToolTarget)
 		delete m_ToolTarget;
 	CompilerFactory::UnregisterCompilers();
+}
+
+void CompilerGCC::Dispatcher(wxCommandEvent& event)
+{
+    // Memorize the currently focused window
+
+    wxWindow* focused = wxWindow::FindFocus();
+
+    int eventId = event.GetId();
+
+//    Manager::Get()->GetMessageManager()->Log(wxT("Dispatcher"));
+
+    if (eventId == idMenuRun)
+        OnRun(event);
+
+    if (eventId == idMenuCompileAndRun)
+        OnCompileAndRun(event);
+
+    if (eventId == idMenuCompile)
+        OnCompile(event);
+
+    if (eventId == idMenuCompileFromProjectManager)
+        OnCompile(event);
+
+    if (eventId == idMenuCompileTargetFromProjectManager)
+        OnCompile(event);
+
+    if (eventId == idMenuCompileFile)
+        OnCompileFile(event);
+
+    if (eventId == idMenuCompileFileFromProjectManager)
+        OnCompileFile(event);
+
+    if (eventId == idMenuRebuild)
+        OnRebuild(event);
+
+    if (eventId == idMenuRebuildFromProjectManager)
+        OnRebuild(event);
+
+    if (eventId == idMenuRebuildTargetFromProjectManager)
+        OnRebuild(event);
+
+    if (eventId == idMenuCompileAll)
+        OnCompileAll(event);
+
+    if (eventId == idMenuRebuildAll)
+        OnRebuildAll(event);
+
+    if (eventId == idMenuProjectCompilerOptions)
+        OnProjectCompilerOptions(event);
+
+    if (eventId == idMenuTargetCompilerOptions)
+        OnTargetCompilerOptions(event);
+
+    if (eventId == idMenuClean)
+        OnClean(event);
+
+    if (eventId == idMenuCleanAll)
+        OnCleanAll(event);
+
+    if (eventId == idMenuCleanFromProjectManager)
+        OnClean(event);
+
+    if (eventId == idMenuCleanTargetFromProjectManager)
+        OnClean(event);
+
+    if (eventId == idMenuKillProcess)
+        OnKillProcess(event);
+
+    if (eventId == idMenuSelectTargetAll)
+        OnSelectTarget(event);
+
+    if (eventId == idMenuNextError)
+        OnNextError(event);
+
+    if (eventId == idMenuPreviousError)
+        OnPreviousError(event);
+
+    if (eventId == idMenuClearErrors)
+        OnClearErrors(event);
+
+    if (eventId == idMenuExportMakefile)
+        OnExportMakefile(event);
+
+    if (eventId == idMenuSettings)
+        OnConfig(event);
+
+    // Return focus to previously focused window
+
+    if (focused)
+        focused->SetFocus();
 }
 
 void CompilerGCC::AllocProcesses()
@@ -386,8 +468,6 @@ int CompilerGCC::Configure(cbProject* project, ProjectBuildTarget* target)
     PlaceWindow(&dlg);
     if(dlg.ShowModal() == wxID_OK)
     {
-        m_ConsoleTerm = Manager::Get()->GetConfigManager(_T("compiler"))->Read(_T("/console_terminal"), DEFAULT_CONSOLE_TERM);
-        m_ConsoleShell = Manager::Get()->GetConfigManager(_T("compiler"))->Read(_T("/console_shell"), DEFAULT_CONSOLE_SHELL);
         SaveOptions();
 //        SetupEnvironment();
         Manager::Get()->GetMacrosManager()->Reset();
@@ -899,7 +979,7 @@ int CompilerGCC::DoRunQueue()
 		dir = m_CdRun;
     #ifndef __WXMSW__
         // setup dynamic linker path
-		wxSetEnv(_T("LD_LIBRARY_PATH"), dir + _T(":$LD_LIBRARY_PATH"));
+		wxSetEnv(_T("LD_LIBRARY_PATH"), _T(".:$LD_LIBRARY_PATH"));
     #endif
 	}
 
@@ -908,7 +988,8 @@ int CompilerGCC::DoRunQueue()
     {
     #ifndef __WXMSW__
         // run the command in a shell, so backtick'd expressions can be evaluated
-        cmd->command = GetConsoleShell() + _T(" '") + cmd->command + _T("'");
+        wxString shell = Manager::Get()->GetConfigManager(_T("app"))->Read(_T("/console_shell"), DEFAULT_CONSOLE_SHELL);
+        cmd->command = shell + _T(" '") + cmd->command + _T("'");
 //    #else
 //    // TODO (mandrav#1#): Check windows version and substitute cmd.exe with command.com if needed.
 //        cmd->command = _T("cmd /c ") + cmd->command;
@@ -1251,15 +1332,15 @@ int CompilerGCC::RunSingleFile(const wxString& filename)
     }
 
     m_CdRun = fname.GetPath();
-    fname.SetExt(EXECUTABLE_EXT);
+    fname.SetExt(FileFilters::EXECUTABLE_EXT);
     wxString exe_filename = fname.GetFullPath();
     wxString cmd;
 
 #ifndef __WXMSW__
     // for non-win platforms, use m_ConsoleTerm to run the console app
-    wxString shell = m_ConsoleTerm;
-    shell.Replace(_T("$TITLE"), _T("'") + exe_filename + _T("'"));
-    cmd << shell << _T(" ");
+	wxString term = Manager::Get()->GetConfigManager(_T("app"))->Read(_T("/console_terminal"), DEFAULT_CONSOLE_TERM);
+    term.Replace(_T("$TITLE"), _T("'") + exe_filename + _T("'"));
+    cmd << term << _T(" ");
 #endif
     wxString baseDir = ConfigManager::GetExecutableFolder();
 #ifdef __WXMSW__
@@ -1351,8 +1432,10 @@ int CompilerGCC::Run(ProjectBuildTarget* target)
     wxString cmd;
     wxFileName f(out);
     f.MakeAbsolute(m_Project->GetBasePath());
-//    m_CdRun = f.GetPath(wxPATH_GET_VOLUME);
-    wxFileName cd(target->GetWorkingDir());
+
+    m_CdRun = target->GetWorkingDir();
+    Manager::Get()->GetMacrosManager()->ReplaceEnvVars(m_CdRun);
+    wxFileName cd(m_CdRun);
     if (cd.IsRelative())
         cd.MakeAbsolute(m_Project->GetBasePath());
     m_CdRun = cd.GetFullPath();
@@ -1363,9 +1446,9 @@ int CompilerGCC::Run(ProjectBuildTarget* target)
 	{
 #ifndef __WXMSW__
         // for non-win platforms, use m_ConsoleTerm to run the console app
-        wxString shell = m_ConsoleTerm;
-        shell.Replace(_T("$TITLE"), _T("'") + m_Project->GetTitle() + _T("'"));
-        cmd << shell << _T(" ");
+        wxString term = Manager::Get()->GetConfigManager(_T("app"))->Read(_T("/console_terminal"), DEFAULT_CONSOLE_TERM);
+        term.Replace(_T("$TITLE"), _T("'") + m_Project->GetTitle() + _T("'"));
+        cmd << term << _T(" 'LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH ");
 #endif
         // should console runner be used?
         if (target->GetUseConsoleRunner())
@@ -1401,6 +1484,11 @@ int CompilerGCC::Run(ProjectBuildTarget* target)
 		cmd << f.GetFullPath();
 		cmd << _T("\" ");
 		cmd << target->GetExecutionParameters();
+#ifndef __WXMSW__
+        // closing single-quote for xterm command line
+        if (target->GetTargetType() == ttConsoleOnly)
+            cmd << _T("'");
+#endif
     }
     else
     {
@@ -1434,7 +1522,6 @@ int CompilerGCC::Run(ProjectBuildTarget* target)
         }
     }
 
-    Manager::Get()->GetMacrosManager()->ReplaceEnvVars(m_CdRun);
     Manager::Get()->GetMessageManager()->Log(m_PageIndex, _("Executing: %s (in %s)"), cmd.c_str(), m_CdRun.c_str());
     m_CommandQueue.Add(new CompilerCommand(cmd, wxEmptyString, m_Project, target, true));
 
@@ -1508,6 +1595,43 @@ int CompilerGCC::Clean(ProjectBuildTarget* target)
     return 0;
 }
 
+int CompilerGCC::DistClean(const wxString& target)
+{
+    if (!CheckProject())
+        return -1;
+    return DistClean(m_Project->GetBuildTarget(target.IsEmpty() ? m_LastTargetName : target));
+}
+
+int CompilerGCC::DistClean(ProjectBuildTarget* target)
+{
+    // make sure all project files are saved
+    if (m_Project && !m_Project->SaveAllFiles())
+        Manager::Get()->GetMessageManager()->Log(_("Could not save all files..."));
+
+	DoPrepareQueue();
+	if (!CompilerValid(target))
+		return -1;
+
+//	Manager::Get()->GetMacrosManager()->Reset();
+
+    if (m_Project)
+        wxSetWorkingDirectory(m_Project->GetBasePath());
+    CompilerFactory::GetCompiler(m_CompilerId)->Init(m_Project);
+
+    if (UseMake(target))
+    {
+        wxString cmd = GetMakeCommandFor(mcDistClean, target);
+        m_CommandQueue.Add(new CompilerCommand(cmd, wxEmptyString, m_Project, target));
+        return DoRunQueue();
+    }
+    else
+    {
+        NotImplemented(_T("CompilerGCC::Distclean() without a custom Makefile"));
+        return -1;
+    }
+    return 0;
+}
+
 void CompilerGCC::OnExportMakefile(wxCommandEvent& event)
 {
     cbMessageBox(_("This functionality has been temporarily removed from Code::Blocks.\n"
@@ -1545,7 +1669,7 @@ void CompilerGCC::InitBuildState(BuildJob job, const wxString& target)
     m_BuildJob = job;
     m_BuildStateTargetIsAll = ftgt.IsEmpty() || ftgt.Lower() == _("all");
     m_BuildState = bsNone;
-    m_NextBuildState = !m_BuildStateTargetIsAll ? bsTargetPreBuild : bsProjectPreBuild;
+    m_NextBuildState = bsProjectPreBuild;
     m_pBuildingProject = Manager::Get()->GetProjectManager()->GetActiveProject();
     m_pLastBuildingProject = 0;
     m_pLastBuildingTarget = 0;
@@ -1708,7 +1832,15 @@ void CompilerGCC::BuildStateManagement()
             CompilerFactory::GetCompiler(m_CompilerId)->Init(m_pBuildingProject);
         }
         if (bt != m_pLastBuildingTarget)
+        {
+            // check if we 're switching compilers, now that we 're switching targets
+            // if so, we must Init() the target's compiler...
+            Compiler* last = m_pLastBuildingTarget ? CompilerFactory::GetCompiler(m_pLastBuildingTarget->GetCompilerID()) : 0;
+            Compiler* curr = bt ? CompilerFactory::GetCompiler(bt->GetCompilerID()) : 0;
+            if (curr && last != curr)
+                curr->Init(m_pBuildingProject);
             m_pLastBuildingTarget = bt;
+        }
     }
 
     m_pBuildingProject->SetCurrentlyCompilingTarget(bt);

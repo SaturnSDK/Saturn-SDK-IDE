@@ -23,18 +23,24 @@
 * $Id$
 * $HeadURL$
 */
-
+#ifdef CB_PRECOMP
 #include <sdk.h>
-#include <wx/intl.h>
+#else
+#include <wx/arrstr.h>
 #include <wx/file.h>
+#include <wx/filename.h>
+#include <wx/intl.h>
 #include <wx/msgdlg.h>
-#include <manager.h>
-#include <cbproject.h>
-#include <projectmanager.h>
-#include <messagemanager.h>
-#include <licenses.h>
+#include <wx/string.h>
+#include "cbproject.h"
+#include "globals.h"
+#include "licenses.h"
+#include "manager.h"
+#include "messagemanager.h"
+#include "projectbuildtarget.h"
+#include "projectmanager.h"
+#endif
 #include "windowsxplooknfeel.h"
-#include <globals.h>
 
 CB_IMPLEMENT_PLUGIN(WindowsXPLookNFeel, "Windows XP Look'n'Feel");
 
@@ -82,10 +88,6 @@ int WindowsXPLookNFeel::Execute()
 {
 	if (!m_IsAttached)
 		return -1;
-
-#ifndef __WXMSW__
-	#error This plugin is for use under Win32 only!
-#endif // __WXMSW__
 
 	cbProject* project = Manager::Get()->GetProjectManager()->GetActiveProject();
 	if (!project)
@@ -172,7 +174,7 @@ int WindowsXPLookNFeel::Execute()
 		wxFile file(filename, wxFile::write);
 		cbWrite(file,buffer);
 
-		cbMessageBox(_("Manifest file created"));
+		cbMessageBox(_("Manifest file created"), _("Information"), wxICON_INFORMATION | wxOK);
 	}
 
 	return 0;

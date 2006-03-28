@@ -103,7 +103,7 @@ class DLLIMPORT EditorManager : public Mgr<EditorManager>, public wxEvtHandler
         int Replace(cbStyledTextCtrl* control, cbFindReplaceData* data);
         int FindNext(bool goingDown, cbStyledTextCtrl* control = 0, cbFindReplaceData* data = 0);
 
-        void Print(PrintScope ps, PrintColorMode pcm);
+        void Print(PrintScope ps, PrintColorMode pcm, bool line_numbers);
 
         /** Hides the editor notebook for layout purposes */
         void HideNotebook();
@@ -140,6 +140,7 @@ class DLLIMPORT EditorManager : public Mgr<EditorManager>, public wxEvtHandler
         void OnCloseAllOthers(wxCommandEvent& event);
         void OnSave(wxCommandEvent& event);
         void OnSaveAll(wxCommandEvent& event);
+        void OnSwapHeaderSource(wxCommandEvent& event);
         void OnTabPosition(wxCommandEvent& event);
         void OnAppDoneStartup(wxCommandEvent& event);
         void OnAppStartShutdown(wxCommandEvent& event);

@@ -41,12 +41,25 @@ class GDB_driver : public DebuggerDriver
 
         virtual void Continue();
         virtual void Step();
+        virtual void StepInstruction();
         virtual void StepIn();
         virtual void StepOut();
         virtual void Backtrace();
         virtual void Disassemble();
         virtual void CPURegisters();
+        virtual void SwitchToFrame(size_t number);
+        virtual void SetVarValue(const wxString& var, const wxString& value);
+        virtual void MemoryDump();
         virtual void Detach();
+        virtual void RunningThreads();
+
+        void InfoFrame();
+        void InfoDLL();
+        void InfoFiles();
+        void InfoFPU();
+        void InfoSignals();
+
+        virtual void SwitchThread(size_t threadIndex);
 
         virtual void AddBreakpoint(DebuggerBreakpoint* bp);
         virtual void RemoveBreakpoint(DebuggerBreakpoint* bp);
@@ -61,6 +74,8 @@ class GDB_driver : public DebuggerDriver
         void RegisterType(const wxString& name, const wxString& regex, const wxString& eval_func, const wxString& parse_func);
 
         TypesArray m_Types;
+        bool m_BreakOnEntry;
+        bool m_ManualBreakOnEntry;
 };
 
 #endif // GDB_DRIVER_H

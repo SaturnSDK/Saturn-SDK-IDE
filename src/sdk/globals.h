@@ -30,6 +30,7 @@ enum ModuleType
 	mtProjectManager = 1,
 	mtEditorManager,
 	mtMessageManager,
+	mtOpenFilesList,                //pecan 2006/03/22
 	mtUnknown
 };
 
@@ -77,8 +78,10 @@ enum FileVisualState
     fvsLast
 };
 
-
-#define DEFAULT_ARRAY_SEP _T(";")
+extern DLLIMPORT const wxString DEFAULT_WORKSPACE;
+extern DLLIMPORT const wxString DEFAULT_ARRAY_SEP;
+extern DLLIMPORT const wxString DEFAULT_CONSOLE_TERM;
+extern DLLIMPORT const wxString DEFAULT_CONSOLE_SHELL;
 
 // global helper funcs
 /// Reads a wxString from a non-unicode file. File must be open. File is closed automatically.

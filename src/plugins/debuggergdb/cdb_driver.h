@@ -17,12 +17,25 @@ class CDB_driver : public DebuggerDriver
 
         virtual void Continue();
         virtual void Step();
+        virtual void StepInstruction();
         virtual void StepIn();
         virtual void StepOut();
         virtual void Backtrace();
         virtual void Disassemble();
         virtual void CPURegisters();
+        virtual void SwitchToFrame(size_t number);
+        virtual void SetVarValue(const wxString& var, const wxString& value);
+        virtual void MemoryDump();
         virtual void Detach();
+        virtual void RunningThreads();
+
+        void InfoFrame();
+        void InfoDLL();
+        void InfoFiles();
+        void InfoFPU();
+        void InfoSignals();
+
+        virtual void SwitchThread(size_t threadIndex){} // not implemented
 
         virtual void AddBreakpoint(DebuggerBreakpoint* bp);
         virtual void RemoveBreakpoint(DebuggerBreakpoint* bp);

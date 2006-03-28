@@ -125,8 +125,8 @@ class Parser : public wxEvtHandler
 
 		bool Done();
 
-		unsigned int GetMaxThreads()const { return m_MaxThreadsCount; }
-		void SetMaxThreads(unsigned int max){ m_MaxThreadsCount = max; }
+		unsigned int GetMaxThreads()const { return m_Pool.GetConcurrentThreads(); }
+		void SetMaxThreads(unsigned int max){ m_Pool.SetConcurrentThreads(max); }
 
 		void BuildTree(wxTreeCtrl& tree);
 		wxTreeItemId GetRootNode(){ return m_RootNode; }
@@ -142,17 +142,9 @@ class Parser : public wxEvtHandler
         void ConnectEvents();
         void DisconnectEvents();
 
-        /** Makes a tree of the namespaces in the project */
-        void BuildTreeNamespace(wxTreeCtrl& tree, const wxTreeItemId& parentNode, Token* parent, const TokenFilesSet& currset);
-
-        /** Adds the tokens to the corresponding namespace */
-        void AddTreeNamespace(wxTreeCtrl& tree, const wxTreeItemId& parentNode, Token* parent, const TokenFilesSet& currset);
-
-		void AddTreeNode(wxTreeCtrl& tree, const wxTreeItemId& parentNode, Token* token, bool childrenOnly = false);
 		void LinkInheritance(bool tempsOnly = false);
 		ParserOptions m_Options;
 		BrowserOptions m_BrowserOptions;
-		unsigned int m_MaxThreadsCount;
 		SearchTree<wxString> m_GlobalIncludes;
 		wxArrayString m_IncludeDirs;
 		wxEvtHandler* m_pParent;

@@ -8,6 +8,9 @@
 #include <sdk_events.h>
 #include "nativeparser.h"
 
+class cbEditor;
+class wxScintillaEvent;
+
 class CodeCompletion : public cbCodeCompletionPlugin
 {
     public:
@@ -16,7 +19,7 @@ class CodeCompletion : public cbCodeCompletionPlugin
 
         virtual void OnAttach();
         virtual void OnRelease(bool appShutDown);
-        int GetConfigurationGroup(){ return cgEditor; }
+        int GetConfigurationGroup() const { return cgEditor; }
         cbConfigurationPanel* GetConfigurationPanel(wxWindow* parent);
         virtual int Configure();
         virtual void BuildMenu(wxMenuBar* menuBar); // offer for menu space by host
@@ -27,6 +30,8 @@ class CodeCompletion : public cbCodeCompletionPlugin
 		virtual void ShowCallTip();
 
         virtual void CodeCompleteIncludes();
+
+        void EditorEventHook(cbEditor* editor, wxScintillaEvent& event);
 	private:
     	void OnUpdateUI(wxUpdateUIEvent& event);
 		void OnCodeComplete(wxCommandEvent& event);
@@ -37,6 +42,7 @@ class CodeCompletion : public cbCodeCompletionPlugin
 		void OnOpenIncludeFile(wxCommandEvent& event);
 		void OnAppDoneStartup(CodeBlocksEvent& event);
 		void OnStartParsingProjects(wxTimerEvent& event);
+		void OnCodeCompleteTimer(wxTimerEvent& event);
 		void OnProjectOpened(CodeBlocksEvent& event);
 		void OnProjectActivated(CodeBlocksEvent& event);
 		void OnProjectClosed(CodeBlocksEvent& event);
@@ -60,6 +66,15 @@ class CodeCompletion : public cbCodeCompletionPlugin
 		NativeParser m_NativeParsers;
 		ProjectBuildTarget* m_Target;
 		wxTimer m_timer;
+
+		int m_EditorHookId;
+		int m_LastPosForCodeCompletion;
+		wxTimer m_timerCodeCompletion;
+		cbEditor* m_pCodeCompletionLastEditor;
+		int m_ActiveCalltipsNest;
+
+		bool m_IsAutoPopup;
+
         DECLARE_EVENT_TABLE()
 };
 

@@ -198,7 +198,7 @@ void PairControlPanel::DeletePair(wxCommandEvent& event)
     {
     wxWindow *panel = b->GetParent();
     wxWindow *tree = panel->GetParent();
-    tree->RemoveChild(paneld);
+    tree->RemoveChild(panel);
     }
 }
 void PairControlPanel::Enter(wxCommandEvent& event)

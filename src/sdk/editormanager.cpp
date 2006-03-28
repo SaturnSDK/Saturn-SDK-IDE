@@ -58,6 +58,7 @@
 #include "finddlg.h"
 #include "replacedlg.h"
 #include "confirmreplacedlg.h"
+#include "filefilters.h"
 #include "searchresultslog.h"
 
 #include <wxFlatNotebook.h>
@@ -99,6 +100,7 @@ static const int idNBTabCloseAll = wxNewId();
 static const int idNBTabCloseAllOthers = wxNewId();
 static const int idNBTabSave = wxNewId();
 static const int idNBTabSaveAll = wxNewId();
+static const int idNBSwapHeaderSource = wxNewId();
 static const int idNBTabTop = wxNewId();
 static const int idNBTabBottom = wxNewId();
 static const int idNB = wxNewId();
@@ -172,6 +174,7 @@ BEGIN_EVENT_TABLE(EditorManager, wxEvtHandler)
     EVT_MENU(idNBTabCloseAllOthers, EditorManager::OnCloseAllOthers)
     EVT_MENU(idNBTabSave, EditorManager::OnSave)
     EVT_MENU(idNBTabSaveAll, EditorManager::OnSaveAll)
+    EVT_MENU(idNBSwapHeaderSource, EditorManager::OnSwapHeaderSource)
     EVT_MENU(idEditorManagerCheckFiles, EditorManager::OnCheckForModifiedFiles)
 #ifdef USE_OPENFILES_TREE
     EVT_UPDATE_UI(ID_EditorManager, EditorManager::OnUpdateUI)
@@ -208,11 +211,6 @@ EditorManager::EditorManager()
 
     CreateSearchLog();
     LoadAutoComplete();
-
-#if !wxCHECK_VERSION(2, 5, 0)
-    /*wxNotebookSizer* nbs =*/
-    new wxNotebookSizer(m_pNotebook);
-#endif
 }
 
 // class destructor
@@ -264,8 +262,16 @@ void EditorManager::ReleaseMenu(wxMenuBar* menuBar)
 void EditorManager::Configure()
 {
     SANITY_CHECK();
+
+    // editor lexers loading takes some time; better reflect this with a hourglass
+    wxBeginBusyCursor();
+
     EditorConfigurationDlg dlg(Manager::Get()->GetAppWindow());
     PlaceWindow(&dlg);
+
+    // done, restore pointer
+    wxEndBusyCursor();
+
     if (dlg.ShowModal() == wxID_OK)
     {
         // tell all open editors to re-create their styles
@@ -879,8 +885,7 @@ bool EditorManager::SaveAll()
     return true;
 }
 
-
-void EditorManager::Print(PrintScope ps, PrintColorMode pcm)
+void EditorManager::Print(PrintScope ps, PrintColorMode pcm, bool line_numbers)
 {
     switch (ps)
     {
@@ -890,7 +895,7 @@ void EditorManager::Print(PrintScope ps, PrintColorMode pcm)
             {
                 cbEditor* ed = InternalGetBuiltinEditor(i);
                 if (ed)
-                    ed->Print(false, pcm);
+                    ed->Print(false, pcm, line_numbers);
             }
             break;
         }
@@ -898,7 +903,7 @@ void EditorManager::Print(PrintScope ps, PrintColorMode pcm)
         {
             cbEditor* ed = GetBuiltinEditor(GetActiveEditor());
             if (ed)
-                ed->Print(ps == psSelection, pcm);
+                ed->Print(ps == psSelection, pcm, line_numbers);
             break;
         }
     }
@@ -1061,31 +1066,31 @@ bool EditorManager::SwapActiveHeaderSource()
         //Manager::Get()->GetMessageManager()->DebugLog("Looking for '%s'", fname.GetFullPath().c_str());
         if (ft == ftHeader)
         {
-            fname.SetExt(CPP_EXT);
+            fname.SetExt(FileFilters::CPP_EXT);
             if (fname.FileExists())
                 break;
-            fname.SetExt(C_EXT);
+            fname.SetExt(FileFilters::C_EXT);
             if (fname.FileExists())
                 break;
-            fname.SetExt(CC_EXT);
+            fname.SetExt(FileFilters::CC_EXT);
             if (fname.FileExists())
                 break;
-            fname.SetExt(CXX_EXT);
+            fname.SetExt(FileFilters::CXX_EXT);
             if (fname.FileExists())
                 break;
         }
         else if (ft == ftSource)
         {
-            fname.SetExt(HPP_EXT);
+            fname.SetExt(FileFilters::HPP_EXT);
             if (fname.FileExists())
                 break;
-            fname.SetExt(H_EXT);
+            fname.SetExt(FileFilters::H_EXT);
             if (fname.FileExists())
                 break;
-            fname.SetExt(HH_EXT);
+            fname.SetExt(FileFilters::HH_EXT);
             if (fname.FileExists())
                 break;
-            fname.SetExt(HXX_EXT);
+            fname.SetExt(FileFilters::HXX_EXT);
             if (fname.FileExists())
                 break;
         }
@@ -1150,7 +1155,15 @@ int EditorManager::ShowFindDialog(bool replace, bool explicitly_find_in_files)
     PlaceWindow(dlg);
     if (dlg->ShowModal() == wxID_CANCEL)
     {
-        delete dlg;
+        dlg->Destroy();
+        return -2;
+    }
+
+    // Don't look for empty strings:
+    if (dlg->GetFindString().empty())
+    {
+        dlg->Destroy();
+        cbMessageBox(_("Can't look for an empty search criterion!"), _("Error"), wxOK | wxICON_EXCLAMATION, Manager::Get()->GetAppWindow());
         return -2;
     }
 
@@ -1176,7 +1189,7 @@ int EditorManager::ShowFindDialog(bool replace, bool explicitly_find_in_files)
     m_LastFindReplaceData->hiddenSearch = dlg->GetHidden();
     m_LastFindReplaceData->initialreplacing = false;
 
-    delete dlg;
+    dlg->Destroy();
 
     if (!replace)
     {
@@ -1748,6 +1761,8 @@ void EditorManager::OnPageContextMenu(wxFlatNotebookEvent& event)
     pop->Append(idNBTabSave, _("Save"));
     pop->Append(idNBTabSaveAll, _("Save all"));
     pop->AppendSeparator();
+    pop->Append(idNBSwapHeaderSource, _("Swap header/source"));
+    pop->AppendSeparator();
     pop->Append(idNBTabTop, _("Tabs at top"));
     pop->Append(idNBTabBottom, _("Tabs at bottom"));
 
@@ -1793,6 +1808,11 @@ void EditorManager::OnSave(wxCommandEvent& event)
 void EditorManager::OnSaveAll(wxCommandEvent& event)
 {
     Manager::Get()->GetEditorManager()->SaveAll();
+}
+
+void EditorManager::OnSwapHeaderSource(wxCommandEvent& event)
+{
+    Manager::Get()->GetEditorManager()->SwapActiveHeaderSource();
 }
 
 void EditorManager::OnTabPosition(wxCommandEvent& event)
@@ -2214,7 +2234,7 @@ void EditorManager::OnTreeItemRightClick(wxTreeEvent &event)
     if(ed)
     {
         wxPoint pt = m_pTree->ClientToScreen(event.GetPoint());
-        ed->DisplayContextMenu(pt,true);
+        ed->DisplayContextMenu(pt,mtOpenFilesList); //pecan 2006/03/22
     }
 }
 

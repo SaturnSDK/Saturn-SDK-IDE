@@ -23,21 +23,25 @@
 * $Id$
 * $HeadURL$
 */
-
-#include <sdk.h>
-#include "pluginwizard.h"
+#ifdef CB_PRECOMP
+#include "sdk.h"
+#else
 #include <wx/intl.h>
-#include <wx/filename.h>
-#include <wx/xrc/xmlres.h>
 #include <wx/fs_zip.h>
-#include <wx/mdi.h>
-#include <wx/msgdlg.h>
-#include <manager.h>
-#include <configmanager.h>
-#include <projectmanager.h>
-#include <cbproject.h>
+#include <wx/string.h>
+#include <wx/xrc/xmlres.h>
+#include "cbproject.h"
+#include "configmanager.h"
+#include "globals.h"
+#include "manager.h"
+#include "projectbuildtarget.h"
+#include "projectmanager.h"
+#endif
+#include <wx/filefn.h>
+#include <wx/filesys.h>
+#include "filefilters.h"
+#include "pluginwizard.h"
 #include "pluginwizarddlg.h"
-#include <globals.h>
 
 CB_IMPLEMENT_PLUGIN(PluginWizard, "Plugin wizard");
 
@@ -151,19 +155,17 @@ int PluginWizard::Execute()
     target->SetTargetType(ttDynamicLib);
     target->SetCreateDefFile(false);
     target->SetCreateStaticLib(false);
-    target->SetOutputFilename(name + _T(".") + DYNAMICLIB_EXT);
+    target->SetOutputFilename(name + _T(".") + FileFilters::DYNAMICLIB_EXT);
 
     Manager::Get()->GetProjectManager()->RebuildTree();
 
 #ifdef __WXMSW__
-    wxMessageDialog msg(Manager::Get()->GetAppWindow(),
-                    _("The new plugin project has been created.\n"
+    cbMessageBox ( _("The new plugin project has been created.\n"
                     "You should now update the project's custom variables, to adjust "
                     "for your environment..."),
                     _("Information"),
-                    wxOK | wxICON_INFORMATION);
-    PlaceWindow(&msg);
-    msg.ShowModal();
+                    wxOK | wxICON_INFORMATION,
+                    Manager::Get()->GetAppWindow());
 #endif
     return 0;
 }

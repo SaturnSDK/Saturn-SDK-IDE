@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <CodeBlocks_project_file>
-	<FileVersion major="1" minor="3" />
+	<FileVersion major="1" minor="4" />
 	<Project>
 		<Option title="Code::Blocks - Unix" />
 		<Option pch_mode="2" />
@@ -536,6 +536,16 @@
 		</Unit>
 		<Unit filename="plugins/codecompletion/classbrowser.h">
 			<Option compilerVar="" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="Code-completion" />
+		</Unit>
+		<Unit filename="plugins/codecompletion/classbrowserbuilderthread.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="Code-completion" />
+		</Unit>
+		<Unit filename="plugins/codecompletion/classbrowserbuilderthread.h">
+			<Option compilerVar="CPP" />
 			<Option compile="0" />
 			<Option link="0" />
 			<Option target="Code-completion" />
@@ -1312,6 +1322,16 @@
 			<Option link="0" />
 			<Option target="Debugger" />
 		</Unit>
+		<Unit filename="plugins/debuggergdb/examinememorydlg.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="Debugger" />
+		</Unit>
+		<Unit filename="plugins/debuggergdb/examinememorydlg.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="Debugger" />
+		</Unit>
 		<Unit filename="plugins/debuggergdb/gdb_commands.h">
 			<Option compilerVar="" />
 			<Option compile="0" />
@@ -1438,6 +1458,28 @@
 		</Unit>
 		<Unit filename="plugins/debuggergdb/resources/images/stop.png">
 			<Option compilerVar="" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="Debugger" />
+		</Unit>
+		<Unit filename="plugins/debuggergdb/resources/memdump.xrc">
+			<Option compilerVar="" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="Debugger" />
+		</Unit>
+		<Unit filename="plugins/debuggergdb/resources/threads.xrc">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="Debugger" />
+		</Unit>
+		<Unit filename="plugins/debuggergdb/threadsdlg.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="Debugger" />
+		</Unit>
+		<Unit filename="plugins/debuggergdb/threadsdlg.h">
+			<Option compilerVar="CPP" />
 			<Option compile="0" />
 			<Option link="0" />
 			<Option target="Debugger" />
@@ -2269,6 +2311,16 @@
 			<Option link="0" />
 			<Option target="sdk" />
 		</Unit>
+		<Unit filename="sdk/editor_hooks.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="sdk/editor_hooks.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="sdk" />
+		</Unit>
 		<Unit filename="sdk/editorbase.cpp">
 			<Option compilerVar="CPP" />
 			<Option target="sdk" />
@@ -2355,6 +2407,16 @@
 		</Unit>
 		<Unit filename="sdk/externaldepsdlg.h">
 			<Option compilerVar="" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="sdk/filefilters.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="sdk/filefilters.h">
+			<Option compilerVar="CPP" />
 			<Option compile="0" />
 			<Option link="0" />
 			<Option target="sdk" />
@@ -2694,7 +2756,8 @@
 			<Option compile="0" />
 			<Option link="0" />
 			<Option target="sdk" />
-		</Unit>		<Unit filename="sdk/projectmanager.cpp">
+		</Unit>
+		<Unit filename="sdk/projectmanager.cpp">
 			<Option compilerVar="CPP" />
 			<Option target="sdk" />
 		</Unit>
@@ -3032,6 +3095,12 @@
 			<Option weight="0" />
 			<Option target="sdk" />
 		</Unit>
+		<Unit filename="sdk/sdk_common.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="sdk" />
+		</Unit>
 		<Unit filename="sdk/sdk_events.cpp">
 			<Option compilerVar="CPP" />
 			<Option target="sdk" />
@@ -3067,10 +3136,6 @@
 			<Option compilerVar="" />
 			<Option compile="0" />
 			<Option link="0" />
-			<Option target="sdk" />
-		</Unit>
-		<Unit filename="sdk/settings.cpp">
-			<Option compilerVar="CPP" />
 			<Option target="sdk" />
 		</Unit>
 		<Unit filename="sdk/settings.h">
@@ -4137,12 +4202,6 @@
 			<Option link="0" />
 			<Option target="src" />
 		</Unit>
-		<Unit filename="src/resources/imp_exp_config.xrc">
-			<Option compilerVar="" />
-			<Option compile="0" />
-			<Option link="0" />
-			<Option target="src" />
-		</Unit>
 		<Unit filename="src/resources/main_menu.xrc">
 			<Option compilerVar="" />
 			<Option compile="0" />
@@ -4160,6 +4219,11 @@
 			<Option compile="0" />
 			<Option link="0" />
 			<Option target="src" />
+		</Unit>
+		<Unit filename="src/resources/manage_assocs.xrc">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
 		</Unit>
 		<Unit filename="src/resources/print_dialog.xrc">
 			<Option compilerVar="" />
@@ -4205,6 +4269,16 @@
 		</Unit>
 		<Unit filename="src/resources/start_here/www.png">
 			<Option compilerVar="" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="src" />
+		</Unit>
+		<Unit filename="src/splashscreen.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="src" />
+		</Unit>
+		<Unit filename="src/splashscreen.h">
+			<Option compilerVar="CPP" />
 			<Option compile="0" />
 			<Option link="0" />
 			<Option target="src" />

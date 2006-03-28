@@ -13,15 +13,20 @@ WX_DEFINE_OBJARRAY(TypesArray);
 
 #define GDB_PROMPT _T("(gdb)")
 
-static wxRegEx reBreak2(_T("^(0x[A-z0-9]+) in (.*) from (.*)"));
+//[Switching to thread 2 (Thread 1082132832 (LWP 12298))]#0  0x00002aaaac5a2aca in pthread_cond_wait@@GLIBC_2.3.2 () from /lib/libpthread.so.0
+static wxRegEx reThreadSwitch(_T("^\\[Switching to thread .*\\]#0[ \t]+(0x[A-z0-9]+) in (.*) from (.*)"));
+static wxRegEx reThreadSwitch2(_T("^\\[Switching to thread .*\\]#0[ \t]+(0x[A-z0-9]+) in (.*) from (.*):([0-9]+)"));
 #ifdef __WXMSW__
     static wxRegEx reBreak(_T("([A-z]:)([^:]+):([0-9]+):[0-9]+:[begmidl]+:(0x[0-9A-z]+)"));
 #else
     static wxRegEx reBreak(_T("\032\032([^:]+):([0-9]+):[0-9]+:[begmidl]+:(0x[0-9A-z]+)"));
 #endif
+static wxRegEx reBreak2(_T("^(0x[A-z0-9]+) in (.*) from (.*)"));
 
 GDB_driver::GDB_driver(DebuggerGDB* plugin)
-    : DebuggerDriver(plugin)
+    : DebuggerDriver(plugin),
+    m_BreakOnEntry(false),
+    m_ManualBreakOnEntry(false)
 {
     //ctor
 }
@@ -179,9 +184,20 @@ void GDB_driver::Prepare(bool isConsole)
 
 void GDB_driver::Start(bool breakOnEntry)
 {
-    // start the process
     ResetCursor();
-    QueueCommand(new DebuggerCmd(this, breakOnEntry ? _T("start") : _T("run")));
+
+    // under windows, 'start' segfaults with wx projects...
+#ifdef __WXMSW__
+    m_BreakOnEntry = false;
+    m_ManualBreakOnEntry = false;
+    // start the process
+    QueueCommand(new DebuggerCmd(this, _T("run")));
+#else
+    m_BreakOnEntry = breakOnEntry;
+    m_ManualBreakOnEntry = true;
+    // start the process
+    QueueCommand(new DebuggerCmd(this, _T("start")));
+#endif
 }
 
 void GDB_driver::Stop()
@@ -202,6 +218,12 @@ void GDB_driver::Step()
     QueueCommand(new DebuggerCmd(this, _T("next")));
 }
 
+void GDB_driver::StepInstruction()
+{
+    ResetCursor();
+    QueueCommand(new DebuggerCmd(this, _T("nexti")));
+}
+
 void GDB_driver::StepIn()
 {
     ResetCursor();
@@ -211,7 +233,7 @@ void GDB_driver::StepIn()
 void GDB_driver::StepOut()
 {
     ResetCursor();
-    NOT_IMPLEMENTED();
+    QueueCommand(new DebuggerCmd(this, _T("finish")));
 }
 
 void GDB_driver::Backtrace()
@@ -233,6 +255,60 @@ void GDB_driver::CPURegisters()
     if (!m_pCPURegisters)
         return;
     QueueCommand(new GdbCmd_InfoRegisters(this, m_pCPURegisters));
+}
+
+void GDB_driver::SwitchToFrame(size_t number)
+{
+    ResetCursor();
+    QueueCommand(new DebuggerCmd(this, wxString::Format(_T("frame %d"), number)));
+}
+
+void GDB_driver::SetVarValue(const wxString& var, const wxString& value)
+{
+    QueueCommand(new DebuggerCmd(this, wxString::Format(_T("set variable %s=%s"), var.c_str(), value.c_str())));
+}
+
+void GDB_driver::MemoryDump()
+{
+    if (!m_pExamineMemory)
+        return;
+    QueueCommand(new GdbCmd_ExamineMemory(this, m_pExamineMemory));
+}
+
+void GDB_driver::RunningThreads()
+{
+    QueueCommand(new GdbCmd_Threads(this, m_pThreads));
+}
+
+void GDB_driver::InfoFrame()
+{
+    QueueCommand(new DebuggerInfoCmd(this, _T("info frame"), _("Selected frame")));
+}
+
+void GDB_driver::InfoDLL()
+{
+    QueueCommand(new DebuggerInfoCmd(this, _T("info dll"), _("Loaded libraries")));
+}
+
+void GDB_driver::InfoFiles()
+{
+    QueueCommand(new DebuggerInfoCmd(this, _T("info files"), _("Files and targets")));
+}
+
+void GDB_driver::InfoFPU()
+{
+    QueueCommand(new DebuggerInfoCmd(this, _T("info float"), _("Floating point unit")));
+}
+
+void GDB_driver::InfoSignals()
+{
+    QueueCommand(new DebuggerInfoCmd(this, _T("info signals"), _("Signals handling")));
+}
+
+void GDB_driver::SwitchThread(size_t threadIndex)
+{
+    ResetCursor();
+    QueueCommand(new DebuggerCmd(this, wxString::Format(_T("thread %d"), threadIndex)));
 }
 
 void GDB_driver::AddBreakpoint(DebuggerBreakpoint* bp)
@@ -338,6 +414,8 @@ void GDB_driver::ParseOutput(const wxString& output)
         return; // come back later
     }
 
+    bool needsUpdate = false;
+
     // non-command messages (e.g. breakpoint hits)
     // break them up in lines
     wxArrayString lines = GetArrayFromString(buffer, _T('\n'));
@@ -367,7 +445,7 @@ void GDB_driver::ParseOutput(const wxString& output)
         }
 
         // signal
-        else if (lines[i].StartsWith(_T("Program received signal")))
+        else if (lines[i].StartsWith(_T("Program received signal SIGSEGV")))
         {
             Log(lines[i]);
             m_pDBG->BringAppToFront();
@@ -384,6 +462,7 @@ void GDB_driver::ParseOutput(const wxString& output)
                 evt.pWindow = m_pBacktrace;
                 Manager::Get()->GetAppWindow()->ProcessEvent(evt);
             }
+            needsUpdate = true;
             // the backtrace will be generated when NotifyPlugins() is called
             // and only if the backtrace window is shown
         }
@@ -403,35 +482,68 @@ void GDB_driver::ParseOutput(const wxString& output)
             // C:/Devel/tmp/test_console_dbg/tmp/main.cpp:14:171:beg:0x401428
 			if ( reBreak.Matches(lines[i]) )
 			{
-			#ifdef __WXMSW__
-				m_Cursor.file = reBreak.GetMatch(lines[i], 1) + reBreak.GetMatch(lines[i], 2);
-				wxString lineStr = reBreak.GetMatch(lines[i], 3);
-				m_Cursor.address = reBreak.GetMatch(lines[i], 4);
-            #else
-				m_Cursor.file = reBreak.GetMatch(lines[i], 1);
-				wxString lineStr = reBreak.GetMatch(lines[i], 2);
-				m_Cursor.address = reBreak.GetMatch(lines[i], 3);
-            #endif
-				lineStr.ToLong(&m_Cursor.line);
-                m_Cursor.changed = true;
-                NotifyCursorChanged();
+			    if (m_ManualBreakOnEntry)
+			    {
+			        m_ManualBreakOnEntry = false;
+			        QueueCommand(new GdbCmd_InfoProgram(this), DebuggerDriver::High);
+			        if (!m_BreakOnEntry)
+                        Continue();
+			    }
+			    else
+			    {
+                #ifdef __WXMSW__
+                    m_Cursor.file = reBreak.GetMatch(lines[i], 1) + reBreak.GetMatch(lines[i], 2);
+                    wxString lineStr = reBreak.GetMatch(lines[i], 3);
+                    m_Cursor.address = reBreak.GetMatch(lines[i], 4);
+                #else
+                    m_Cursor.file = reBreak.GetMatch(lines[i], 1);
+                    wxString lineStr = reBreak.GetMatch(lines[i], 2);
+                    m_Cursor.address = reBreak.GetMatch(lines[i], 3);
+                #endif
+                    lineStr.ToLong(&m_Cursor.line);
+                    m_Cursor.changed = true;
+                    needsUpdate = true;
+			    }
 			}
         }
         else
         {
             // other break info, e.g.
             // 0x7c9507a8 in ntdll!KiIntSystemCall () from C:\WINDOWS\system32\ntdll.dll
+            wxRegEx* re = 0;
 			if ( reBreak2.Matches(lines[i]) )
+                re = &reBreak2;
+            else if (reThreadSwitch.Matches(lines[i]))
+                re = &reThreadSwitch;
+
+			if ( re )
 			{
-				m_Cursor.file = reBreak2.GetMatch(lines[i], 3);
-				m_Cursor.function = reBreak2.GetMatch(lines[i], 2);
+				m_Cursor.file = re->GetMatch(lines[i], 3);
+				m_Cursor.function = re->GetMatch(lines[i], 2);
 				wxString lineStr = _T("");
-				m_Cursor.address = reBreak2.GetMatch(lines[i], 1);
+				m_Cursor.address = re->GetMatch(lines[i], 1);
 				m_Cursor.line = -1;
                 m_Cursor.changed = true;
-                NotifyCursorChanged();
+                needsUpdate = true;
+			}
+			else if ( reThreadSwitch2.Matches(lines[i]) )
+			{
+				m_Cursor.file = reThreadSwitch2.GetMatch(lines[i], 3);
+				m_Cursor.function = reThreadSwitch2.GetMatch(lines[i], 2);
+				wxString lineStr = reThreadSwitch2.GetMatch(lines[i], 4);
+				m_Cursor.address = reThreadSwitch2.GetMatch(lines[i], 1);
+				m_Cursor.line = -1;
+                m_Cursor.changed = true;
+                needsUpdate = true;
 			}
         }
     }
     buffer.Clear();
+
+    // if program is stopped, update various states
+    if (needsUpdate)
+    {
+        if (m_Cursor.changed)
+            NotifyCursorChanged();
+    }
 }

@@ -96,11 +96,22 @@ EnvironmentSettingsDlg::EnvironmentSettingsDlg(wxWindow* parent, wxDockArt* art)
 
     // tab "General"
     XRCCTRL(*this, "chkShowSplash", wxCheckBox)->SetValue(cfg->ReadBool(_T("/environment/show_splash"), true));
-    XRCCTRL(*this, "chkDDE", wxCheckBox)->SetValue(cfg->ReadBool(_T("/environment/use_dde"), true));
     XRCCTRL(*this, "chkSingleInstance", wxCheckBox)->SetValue(cfg->ReadBool(_T("/environment/single_instance"), true));
     XRCCTRL(*this, "chkAssociations", wxCheckBox)->SetValue(cfg->ReadBool(_T("/environment/check_associations"), true));
     XRCCTRL(*this, "chkModifiedFiles", wxCheckBox)->SetValue(cfg->ReadBool(_T("/environment/check_modified_files"), true));
     XRCCTRL(*this, "rbAppStart", wxRadioBox)->SetSelection(cfg->ReadBool(_T("/environment/blank_workspace"), true) ? 1 : 0);
+    wxTextCtrl* txt = XRCCTRL(*this, "txtConsoleTerm", wxTextCtrl);
+    txt->SetValue(cfg->Read(_T("/console_terminal"), DEFAULT_CONSOLE_TERM));
+#ifdef __WXMSW__
+    // under win32, this option is not needed, so disable it
+    txt->Enable(false);
+#endif
+    txt = XRCCTRL(*this, "txtConsoleShell", wxTextCtrl);
+    txt->SetValue(cfg->Read(_T("/console_shell"), DEFAULT_CONSOLE_SHELL));
+#ifdef __WXMSW__
+    // under win32, this option is not needed, so disable it
+    txt->Enable(false);
+#endif
 
     bool do_place = cfg->ReadBool(_T("/dialog_placement/do_place"), false);
     XRCCTRL(*this, "chkDoPlace", wxCheckBox)->SetValue(do_place);
@@ -330,12 +341,13 @@ void EnvironmentSettingsDlg::EndModal(int retCode)
 
         // tab "General"
         cfg->Write(_T("/environment/show_splash"),           (bool) XRCCTRL(*this, "chkShowSplash", wxCheckBox)->GetValue());
-        cfg->Write(_T("/environment/use_dde"),               (bool) XRCCTRL(*this, "chkDDE", wxCheckBox)->GetValue());
         cfg->Write(_T("/environment/single_instance"),       (bool) XRCCTRL(*this, "chkSingleInstance", wxCheckBox)->GetValue());
         cfg->Write(_T("/environment/check_associations"),    (bool) XRCCTRL(*this, "chkAssociations", wxCheckBox)->GetValue());
         cfg->Write(_T("/environment/check_modified_files"),  (bool) XRCCTRL(*this, "chkModifiedFiles", wxCheckBox)->GetValue());
         cfg->Write(_T("/dialog_placement/do_place"),         (bool) XRCCTRL(*this, "chkDoPlace", wxCheckBox)->GetValue());
-        cfg->Write(_T("/dialog_placement/dialog_position"),  (int)  (XRCCTRL(*this, "chkPlaceHead", wxCheckBox)->GetValue()) ? pdlHead : pdlCentre);
+        cfg->Write(_T("/dialog_placement/dialog_position"),  (int)  XRCCTRL(*this, "chkPlaceHead", wxCheckBox)->GetValue() ? pdlHead : pdlCentre);
+        cfg->Write(_T("/console_shell"),                            XRCCTRL(*this, "txtConsoleShell", wxTextCtrl)->GetValue());
+        cfg->Write(_T("/console_terminal"),                         XRCCTRL(*this, "txtConsoleTerm", wxTextCtrl)->GetValue());
 
         // tab "View"
         cfg->Write(_T("/environment/blank_workspace"),       (bool) XRCCTRL(*this, "rbAppStart", wxRadioBox)->GetSelection() ? true : false);
@@ -344,9 +356,9 @@ void EnvironmentSettingsDlg::EndModal(int retCode)
         cfg->Write(_T("/environment/settings_size"),         (int)  XRCCTRL(*this, "rbSettingsIconsSize", wxRadioBox)->GetSelection());
         mcfg->Write(_T("/auto_hide"),                        (bool) XRCCTRL(*this, "chkAutoHideMessages", wxCheckBox)->GetValue());
         cfg->Write(_T("/environment/start_here_page"),       (bool) XRCCTRL(*this, "chkShowStartPage", wxCheckBox)->GetValue());
-        cfg->Write(_T("/environment/I18N"),                       (bool) XRCCTRL(*this, "chkI18N", wxCheckBox)->GetValue());
-        cfg->Write(_T("/locale/language"),                   (int) XRCCTRL(*this, "cbxLanguage", wxComboBox)->GetSelection()-1);
-        mcfg->Write(_T("/log_font_size"),                    (int) XRCCTRL(*this, "spnLogFontSize", wxSpinCtrl)->GetValue());
+        cfg->Write(_T("/environment/I18N"),                  (bool) XRCCTRL(*this, "chkI18N", wxCheckBox)->GetValue());
+        cfg->Write(_T("/locale/language"),                   (int)  XRCCTRL(*this, "cbxLanguage", wxComboBox)->GetSelection()-1);
+        mcfg->Write(_T("/log_font_size"),                    (int)  XRCCTRL(*this, "spnLogFontSize", wxSpinCtrl)->GetValue());
 
         // tab "Appearence"
         cfg->Write(_T("/environment/tabs_style"),           (int)XRCCTRL(*this, "cmbEditorTabs", wxComboBox)->GetSelection());
@@ -416,8 +428,3 @@ void EnvironmentSettingsDlg::EndModal(int retCode)
 
     wxDialog::EndModal(retCode);
 }
-
-
-
-
-

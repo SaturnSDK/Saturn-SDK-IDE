@@ -18,6 +18,7 @@
 #include "compilercommandgenerator.h"
 #include "compilergcc.h"
 #include "cbexception.h"
+#include "filefilters.h"
 #include <depslib.h>
 
 DirectCommands::DirectCommands(CompilerGCC* compilerPlugin,
@@ -171,8 +172,9 @@ wxArrayString DirectCommands::GetCompileFileCommand(ProjectBuildTarget* target, 
     wxString compilerCmd;
     if (!isHeader || compiler->GetSwitches().supportsPCH)
     {
-        compilerCmd = pf->useCustomBuildCommand
-                        ? pf->buildCommand
+        pfCustomBuild& pcfb = pf->customBuild[compiler->GetID()];
+        compilerCmd = pcfb.useCustomBuildCommand
+                        ? pcfb.buildCommand
                         : compiler->GetCommand(isResource ? ctCompileResourceCmd : ctCompileObjectCmd);
         compiler->GenerateCommandLine(compilerCmd,
                                          target,
@@ -230,7 +232,7 @@ wxArrayString DirectCommands::GetCompileSingleFileCommand(const wxString& filena
     wxFileName fname(filename);
     fname.SetExt(m_pCompiler->GetSwitches().objectExtension);
     wxString o_filename = fname.GetFullPath();
-    fname.SetExt(EXECUTABLE_EXT);
+    fname.SetExt(FileFilters::EXECUTABLE_EXT);
     wxString exe_filename = fname.GetFullPath();
 
     wxString s_filename = filename;
@@ -304,7 +306,7 @@ wxArrayString DirectCommands::GetCleanSingleFileCommand(const wxString& filename
     wxFileName fname(filename);
     fname.SetExt(m_pCompiler->GetSwitches().objectExtension);
     wxString o_filename = fname.GetFullPath();
-    fname.SetExt(EXECUTABLE_EXT);
+    fname.SetExt(FileFilters::EXECUTABLE_EXT);
     wxString exe_filename = fname.GetFullPath();
 
     ret.Add(o_filename);
@@ -364,19 +366,8 @@ wxArrayString DirectCommands::GetTargetCompileCommands(ProjectBuildTarget* targe
     {
         ProjectFile* pf = files[i];
         const pfDetails& pfd = pf->GetFileDetails(target);
-        bool doBuild = false;
 
-        if (pf->autoDeps)
-            doBuild = force || IsObjectOutdated(pfd);
-        else
-        {
-            wxString msg;
-            msg.Printf(_("File %s has custom dependencies set."
-                        "This feature only works when using GNU \"make\""
-                        "for the build process..."), pfd.source_file_native.c_str());
-            ret.Add(wxString(COMPILER_SIMPLE_LOG) + msg);
-        }
-        if (doBuild)
+        if (force || IsObjectOutdated(pfd))
         {
             // compile file
             wxArrayString filecmd = GetCompileFileCommand(target, pf);

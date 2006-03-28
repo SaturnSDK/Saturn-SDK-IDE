@@ -28,7 +28,9 @@ libdebuggergdb_la_SOURCES = backtracedlg.cpp \
 			editbreakpointdlg.cpp \
 			editwatchdlg.cpp \
 			editwatchesdlg.cpp \
-			gdb_driver.cpp
+			examinememorydlg.cpp \
+			gdb_driver.cpp \
+			threadsdlg.cpp
 
 noinst_HEADERS = backtracedlg.h \
 			breakpointsdlg.h \
@@ -45,5 +47,7 @@ noinst_HEADERS = backtracedlg.h \
 			editbreakpointdlg.h \
 			editwatchdlg.h \
 			editwatchesdlg.h \
+			examinememorydlg.h \
 			gdb_commands.h \
-			gdb_driver.h
+			gdb_driver.h \
+			threadsdlg.h

@@ -743,7 +743,7 @@ int wxBinderApp::FilterEvent(wxEvent &ev)
 
 		// pass this event to our keybinder
 		m_pGlobalBinder->OnChar((wxKeyEvent &)ev, client);
-		return ev.m_skipped;
+		return ev.GetSkipped();
 	}
 
 	return -1;
@@ -1061,7 +1061,7 @@ void wxKeyBinder::OnChar(wxKeyEvent &event, wxEvtHandler *next)
 
 		wxLogDebug(wxT("wxKeyBinder::OnChar - calling the Exec() function of the [%s] ")
 				wxT("wxCmd on the keycode [%d] (event timestamp: %ld)"),
-				p->GetName().c_str(), event.GetKeyCode(), event.m_timeStamp);
+				p->GetName().c_str(), event.GetKeyCode(), event.GetTimestamp());
 		wxLogDebug(wxT("wxKeyBinder::OnChar - window[%s][%p]"),
                 ((wxWindow*)event.GetEventObject())->GetName().GetData(),
                  event.GetEventObject() );
@@ -2233,12 +2233,14 @@ void wxKeyConfigPanel::OnAssignKey(wxCommandEvent &)
 		wxKeyBind tmp(m_pKeyField->GetValue());
 		int n;
 
+		bool bind = m_pCurrCmd->IsBindTo(tmp, &n);     //pecan 2006/03/25
 #ifdef __WXDEBUG__
-		bool bind = m_pCurrCmd->IsBindTo(tmp, &n);
+		//-bool bind = m_pCurrCmd->IsBindTo(tmp, &n);  //pecan 2006/03/25
 		wxASSERT_MSG(bind, wxT("the m_pCurrCmd variable should be NULL then..."));
 #endif		// to avoid warnings in release mode
 
-		m_pCurrCmd->RemoveShortcut(n);
+		//m_pCurrCmd->RemoveShortcut(n);
+		if (bind) m_pCurrCmd->RemoveShortcut(n);        //pecan 2006/03/25
 	}
 
 	// and update the list of the key bindings

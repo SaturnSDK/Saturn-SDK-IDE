@@ -27,8 +27,8 @@ libcodeblocks_la_LIBADD =  $(WX_LIBS) \
 libcodeblocks_la_SOURCES = annoyingdialog.cpp \
 						autodetectcompilers.cpp \
 						base64.cpp \
-						cbexception.cpp \
 						blockallocated.cpp \
+						cbexception.cpp \
 						cbeditor.cpp \
 						cbeditorprintout.cpp \
 						cbplugin.cpp \
@@ -57,10 +57,12 @@ libcodeblocks_la_SOURCES = annoyingdialog.cpp \
 						editorconfigurationdlg.cpp \
 						editorlexerloader.cpp \
 						editormanager.cpp \
+						editor_hooks.cpp \
 						editpairdlg.cpp \
 						editpathdlg.cpp \
 						edittooldlg.cpp \
 						externaldepsdlg.cpp \
+						filefilters.cpp \
 						filegroupsandmasks.cpp \
 						finddlg.cpp \
 						globals.cpp \
@@ -100,7 +102,6 @@ libcodeblocks_la_SOURCES = annoyingdialog.cpp \
 						sdk_events.cpp \
 						searchresultslog.cpp \
 						selecttargetdlg.cpp \
-						settings.cpp \
 						simplelistlog.cpp \
 						simpletextlog.cpp \
 						templatemanager.cpp \
@@ -113,6 +114,7 @@ libcodeblocks_la_SOURCES = annoyingdialog.cpp \
 noinst_HEADERS = annoyingdialog.h \
 				autodetectcompilers.h \
 				base64.h \
+				blockallocated.h \
 				cbeditor.h \
 				cbeditorprintout.h \
 				cbexception.h \
@@ -141,10 +143,12 @@ noinst_HEADERS = annoyingdialog.h \
 				editorconfigurationdlg.h \
 				editorlexerloader.h \
 				editormanager.h \
+				editor_hooks.h \
 				editpairdlg.h \
 				editpathdlg.h \
 				edittooldlg.h \
 				externaldepsdlg.h \
+				filefilters.h \
 				filegroupsandmasks.h \
 				finddlg.h \
 				findreplacebase.h \
@@ -186,7 +190,11 @@ noinst_HEADERS = annoyingdialog.h \
 				projecttemplateloader.h \
 				replacedlg.h \
 				sanitycheck.h \
+				scriptingcall.h \
 				scriptingmanager.h \
+				sdk.h \
+				sdk_common.h \
+				sdk_precomp.h \
 				sdk_events.h \
 				searchresultslog.h \
 				selecttargetdlg.h \
