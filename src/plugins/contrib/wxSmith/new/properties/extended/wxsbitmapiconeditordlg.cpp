@@ -237,7 +237,7 @@ void wxsBitmapIconEditorDlg::ReadData(wxsBitmapIconData& Data)
 void wxsBitmapIconEditorDlg::OnButton1Click(wxCommandEvent& event)
 {
     WriteData(Data);
-    EndDialog(wxID_OK);
+    EndModal(wxID_OK);
 }
 
 void wxsBitmapIconEditorDlg::OnFileNameText(wxCommandEvent& event)

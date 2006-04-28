@@ -4,18 +4,18 @@
 #include <settings.h> // SDK
 #include <cbplugin.h>
 #include <manager.h>
-#include <xtra_classes.h>
+#include <wx/panel.h>
 #include "parser/parser.h"
 #include "parser/token.h"
 
 class NativeParser;
-class wxListCtrl;
+class wxTreeCtrl;
 class wxTextCtrl;
 
 /*
  * No description
  */
-class ClassBrowser : public wxSplitPanel
+class ClassBrowser : public wxPanel
 {
 	public:
 		// class constructor
@@ -30,21 +30,22 @@ class ClassBrowser : public wxSplitPanel
 		void Update();
     private:
         friend class myTextCtrl;
-		void OnTreeItemClick(wxTreeEvent& event);
 		void OnTreeItemDoubleClick(wxTreeEvent& event);
     	void OnTreeItemRightClick(wxTreeEvent& event);
-    	void OnListItemRightClick(wxTreeEvent& event);
         void OnJumpTo(wxCommandEvent& event);
         void OnRefreshTree(wxCommandEvent& event);
         void OnForceReparse(wxCommandEvent& event);
 		void OnCBViewMode(wxCommandEvent& event);
 		void OnViewScope(wxCommandEvent& event);
+
 		void OnSearch(wxCommandEvent& event);
+        bool FoundMatch(const wxString& search, wxTreeCtrl* tree, const wxTreeItemId& item);
+        wxTreeItemId FindNext(const wxString& search, wxTreeCtrl* tree, const wxTreeItemId& start);
 		bool RecursiveSearch(const wxString& search, wxTreeCtrl* tree, const wxTreeItemId& parent, wxTreeItemId& result);
+
         void ShowMenu(wxTreeCtrl* tree, wxTreeItemId id, const wxPoint& pt);
         NativeParser* m_NativeParser;
         wxTreeCtrl* m_Tree;
-        wxTreeCtrl* m_List;
         wxTextCtrl* m_Search;
         wxTreeCtrl* m_TreeForPopupMenu;
 		Parser* m_pParser;

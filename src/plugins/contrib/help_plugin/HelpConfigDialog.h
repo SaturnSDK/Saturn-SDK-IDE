@@ -1,7 +1,8 @@
 #ifndef HELPCONFIGDIALOG_H
 #define HELPCONFIGDIALOG_H
 
-#include <cbplugin.h>
+#include <wx/intl.h>
+#include "configurationpanel.h"
 #include "help_common.h"
 
 class HelpPlugin;
@@ -16,8 +17,8 @@ class HelpConfigDialog : public cbConfigurationPanel
     HelpConfigDialog(wxWindow* parent, HelpPlugin* plugin);
     virtual ~HelpConfigDialog();
 
-    virtual wxString GetTitle(){ return _("Help files"); }
-    virtual wxString GetBitmapBaseName(){ return _T("help-plugin"); }
+    virtual wxString GetTitle() const { return _("Help files"); }
+    virtual wxString GetBitmapBaseName() const { return _T("help-plugin"); }
     virtual void OnApply();
     virtual void OnCancel(){}
   protected:

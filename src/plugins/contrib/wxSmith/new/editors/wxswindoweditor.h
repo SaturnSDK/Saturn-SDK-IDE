@@ -4,6 +4,7 @@
 #include "../wxseditor.h"
 #include "../resources/wxswindowres.h"
 #include "wxswinundobuffer.h"
+#include "wxscorrector.h"
 #include <wx/hashset.h>
 #include <wx/scrolwin.h>
 #include <wx/notebook.h>
@@ -62,7 +63,7 @@ class wxsWindowEditor : public wxsEditor
 		 *
 		 * This function notifies editor that resource is going to change.
 		 * During the change, resource is considered as unstable, and won't
-		 * be processed by editor. After the change You MUST call UnlockResource().
+		 * be processed by editor. After the change you MUST call UnlockResource().
 		 */
 		virtual void ResourceLock();
 
@@ -76,28 +77,31 @@ class wxsWindowEditor : public wxsEditor
 		/** \brief Reloading images in all editors */
 		static void ReloadImages();
 
-		/** \brief Selecting sepcified item inside editors
-		 *
-		 * This function selects given item in editors. It's spreaded
-		 * to all opened window editors.
-		 *
-		 * \param Item seleced item
-		 * \param AddToSelection if true, previous selection is not cleared
-		 */
-		static void SelectItem(wxsItem* Item,bool AddToSelection=false);
+        /** \brief Function notifying that selection has changed
+         *
+         * This function is called from wxsWindowRes class after each
+         * selection change.
+         */
+        void SelectionChanged();
+
+        /** \brief Function notifying that properties of given item has changed */
+        void NotifyChange(wxsItem* Changed);
 
     protected:
 
         /** \brief Getting wxsWindowRes pointer to currently edited resource */
         inline wxsWindowRes* GetWinRes() { return (wxsWindowRes*)GetResource(); }
 
+        /** \brief Getting project class of current resource file */
+        inline wxsProject* GetProject() { return GetResource()->GetProject(); }
+
+        /** \brief Getting current selection (main selected item) */
+        inline wxsItem* GetCurrentSelection() { return GetWinRes()->GetRootSelection(); }
+
 	private:
 
         WX_DECLARE_HASH_SET(wxsWindowEditor*,wxPointerHash,wxPointerEqual,WindowSet);
         WX_DEFINE_ARRAY(wxsItem*,ItemArray);
-
-        /** \brief Internal function for selecting items */
-        void SelectItemInternal(wxsItem* Item,bool AddToSelection);
 
         /** \brief Helper function for fetching root item */
         inline wxsItem* RootItem() { return GetWinRes()->GetRootItem(); }
@@ -122,8 +126,6 @@ class wxsWindowEditor : public wxsEditor
         int InsTypeMask;                ///< \brief Current insertion type mask
         bool QuickPropsOpen;            ///< \brief Set to true if quick properties panel is opened
         int  ResourceLockCnt;           ///< \brief Number of resource locks
-        wxsItem* CurrentSelection;      ///< \brief Current selection (the one which was lately selected)
-
 
         static wxImage InsIntoImg;
         static wxImage InsBeforeImg;
@@ -140,7 +142,8 @@ class wxsWindowEditor : public wxsEditor
         static const int itAfter  = 0x02;
         static const int itInto   = 0x04;
 
-        wxsWinUndoBuffer* UndoBuff;    ///< \brief Undo buffer
+        wxsWinUndoBuffer* UndoBuff;     ///< \brief Undo buffer
+        wxsCorrector* Corrector;        ///< \brief Data corrector
 
 		/* Event handlers */
         void OnMouseClick(wxMouseEvent& event);

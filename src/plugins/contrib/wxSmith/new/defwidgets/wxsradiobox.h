@@ -24,8 +24,6 @@ class wxsRadioBox: public wxsWidget
         /** \brief Function building creating code */
         virtual void BuildCreatingCode(wxString& Code,const wxString& WindowParent,wxsCodingLang Language);
 
-
-
     protected:
 
         /** \brief Function building preview */
@@ -35,6 +33,9 @@ class wxsRadioBox: public wxsWidget
          *         only. Other properties are added automatically.
          */
         virtual void EnumWidgetProperties(long Flags);
+
+        /** \brief Enumerating header files */
+        virtual void EnumDeclFiles(wxArrayString& Decl,wxArrayString& Def,wxsCodingLang Language);
 
     private:
         wxString Label;

@@ -48,6 +48,7 @@
 #include "cbeditorprintout.h"
 #include "editor_hooks.h"
 #include "filefilters.h"
+#include "encodingdetector.h"
 
 const wxString g_EditorModified = _T("*");
 
@@ -321,6 +322,10 @@ BEGIN_EVENT_TABLE(cbEditor, EditorBase)
 	EVT_MENU(idBreakpointAdd, cbEditor::OnContextMenuEntry)
 	EVT_MENU(idBreakpointEdit, cbEditor::OnContextMenuEntry)
 	EVT_MENU(idBreakpointRemove, cbEditor::OnContextMenuEntry)
+
+    EVT_SCI_ZOOM(-1, cbEditor::OnZoom)
+    EVT_SCI_ZOOM(-1, cbEditor::OnZoom)
+
 END_EVENT_TABLE()
 
 // class constructor
@@ -514,6 +519,7 @@ void cbEditor::CreateEditor()
     Connect( m_ID,  -1, wxEVT_SCI_MODIFIED,
                   (wxObjectEventFunction) (wxEventFunction) (wxScintillaEventFunction)
                   &cbEditor::OnEditorModified );
+    m_pControl->SetZoom(Manager::Get()->GetEditorManager()->GetZoom());
 }
 
 wxColour cbEditor::GetOptionColour(const wxString& option, const wxColour _default)
@@ -547,6 +553,8 @@ void cbEditor::SetEditorStyle()
 
 	m_pControl->SetMouseDwellTime(1000);
 
+    m_pControl->SetCaretWidth(mgr->ReadInt(_T("/caret/width"), 1));
+    m_pControl->SetCaretForeground(GetOptionColour(_T("/caret/color"), *wxBLACK));
 	m_pControl->SetCaretLineVisible(mgr->ReadBool(_T("/highlight_caret_line"), false));
 	m_pControl->SetCaretLineBackground(GetOptionColour(_T("/highlight_caret_line_color"), wxColour(0xFF, 0xFF, 0x00)));
 
@@ -749,46 +757,20 @@ void cbEditor::DetectEncoding( )
     if (!m_pData)
         return;
 
-    m_pData->m_useByteOrderMark = false;
-    // FIXME: Should this default to local encoding or latin-1? (IOW, implement proper encoding detection)
-    wxString enc_name = Manager::Get()->GetConfigManager(_T("editor"))->Read(_T("/default_encoding"), wxLocale::GetSystemEncodingName());
-    m_pData->m_encoding = wxFontMapper::GetEncodingFromName(enc_name);
-//    m_pData->m_encoding = wxFONTENCODING_ISO8859_1;
-
-    // Simple BOM detection
-    wxFile file(m_Filename);
-    if (!file.IsOpened())
+    EncodingDetector detector(m_Filename);
+    if (!detector.IsOK())
         return;
 
-    // BOM is max 4 bytes
-    char buff[4] = {};
-    file.Read((void*)buff, 4);
-    file.Close();
+    m_pData->m_useByteOrderMark = detector.UsesBOM();
+    m_pData->m_encoding = detector.GetFontEncoding();
 
-    if (memcmp(buff, "\xEF\xBB\xBF", 3) == 0)
+    // FIXME: Should this default to local encoding or latin-1? (IOW, implement proper encoding detection)
+    if (m_pData->m_encoding == wxFONTENCODING_ISO8859_1)
     {
-        m_pData->m_useByteOrderMark = true;
-        m_pData->m_encoding = wxFONTENCODING_UTF8;
-    }
-    else if (memcmp(buff, "\xFE\xFF", 2) == 0)
-    {
-        m_pData->m_useByteOrderMark = true;
-        m_pData->m_encoding = wxFONTENCODING_UTF16BE;
-    }
-    else if (memcmp(buff, "\xFF\xFE", 2) == 0)
-    {
-        m_pData->m_useByteOrderMark = true;
-        m_pData->m_encoding = wxFONTENCODING_UTF16LE;
-    }
-    else if (memcmp(buff, "\x00\x00\xFE\xFF", 4) == 0)
-    {
-        m_pData->m_useByteOrderMark = true;
-        m_pData->m_encoding = wxFONTENCODING_UTF32BE;
-    }
-    else if (memcmp(buff, "\xFF\xFE\x00\x00", 4) == 0)
-    {
-        m_pData->m_useByteOrderMark = true;
-        m_pData->m_encoding = wxFONTENCODING_UTF32LE;
+        // if the encoding detector returned the default value,
+        // use the user's preference then
+        wxString enc_name = Manager::Get()->GetConfigManager(_T("editor"))->Read(_T("/default_encoding"), wxLocale::GetSystemEncodingName());
+        m_pData->m_encoding = wxFontMapper::GetEncodingFromName(enc_name);
     }
 }
 
@@ -853,6 +835,8 @@ bool cbEditor::Open(bool detectEncoding)
 
     SetModified(false);
 	NotifyPlugins(cbEVT_EDITOR_OPEN);
+
+    m_pControl->SetZoom(Manager::Get()->GetEditorManager()->GetZoom());
     return true;
 }
 
@@ -898,12 +882,12 @@ bool cbEditor::SaveAs()
 {
     wxFileName fname;
     fname.Assign(m_Filename);
-    wxFileDialog* dlg = new wxFileDialog(this,
-                            _("Save file"),
-                            fname.GetPath(),
-                            fname.GetFullName(),
-                            FileFilters::GetFilterString(),
-                            wxSAVE | wxOVERWRITE_PROMPT);
+    wxFileDialog* dlg = new wxFileDialog(Manager::Get()->GetAppWindow(),
+                                         _("Save file"),
+                                         fname.GetPath(),
+                                         fname.GetFullName(),
+                                         FileFilters::GetFilterString(),
+                                         wxSAVE | wxOVERWRITE_PROMPT);
 
     PlaceWindow(dlg);
     if (dlg->ShowModal() != wxID_OK)
@@ -917,6 +901,9 @@ bool cbEditor::SaveAs()
     m_IsOK = true;
     SetModified(true);
     SetLanguage( HL_AUTO );
+
+    dlg->Destroy();
+
     return Save();
 }
 
@@ -1832,15 +1819,31 @@ void cbEditor::OnEditorModified(wxScintillaEvent& event)
     if (event.GetModificationType() & (wxSCI_MOD_INSERTTEXT | wxSCI_MOD_DELETETEXT)
         && linesAdded != 0)
     {
+        // get hold of debugger plugin
+        static cbDebuggerPlugin* debugger = 0;
+        // because the debugger plugin will *not* change throughout the
+        // program's lifetime, we can speed things up by keeping it in a static
+        // local variable...
+        if (!debugger)
+        {
+            PluginsArray arr = Manager::Get()->GetPluginManager()->GetOffersFor(ptDebugger);
+            if (!arr.GetCount())
+                return;
+            debugger = (cbDebuggerPlugin*)arr[0];
+            if (!debugger)
+                return;
+        }
+
         // just added/removed lines
         int startline = m_pControl->LineFromPosition(event.GetPosition());
         int line = m_pControl->MarkerPrevious(m_pControl->GetLineCount(), 1 << BREAKPOINT_MARKER);
         while (line > startline)
         {
-            // add breakpoint
-            NotifyPlugins(cbEVT_EDITOR_BREAKPOINT_ADD, line, m_Filename);
-            // remove old breakpoint
-            NotifyPlugins(cbEVT_EDITOR_BREAKPOINT_DELETE, line - linesAdded, m_Filename);
+            // add breakpoint at new line
+            debugger->AddBreakpoint(m_Filename, line);
+            // remove breakpoint from old line
+            debugger->RemoveBreakpoint(m_Filename, line - linesAdded);
+
             line = m_pControl->MarkerPrevious(line - 1, 1 << BREAKPOINT_MARKER);
         }
     }
@@ -1866,3 +1869,9 @@ void cbEditor::DoUnIndent()
     if(m_pControl)
         m_pControl->SendMsg(2328); // wxSCI_CMD_BACKTAB
 }
+
+void cbEditor::OnZoom(wxScintillaEvent& event)
+{
+    Manager::Get()->GetEditorManager()->SetZoom(GetControl()->GetZoom());
+}
+

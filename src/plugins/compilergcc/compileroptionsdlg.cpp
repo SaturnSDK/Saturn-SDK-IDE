@@ -307,6 +307,10 @@ void CompilerOptionsDlg::DoFillOthers()
     if (chk)
         chk->SetValue(Manager::Get()->GetConfigManager(_T("compiler"))->ReadBool(_T("/include_file_cwd"), false));
 
+    chk = XRCCTRL(*this, "chkIncludePrjCwd", wxCheckBox);
+    if (chk)
+        chk->SetValue(Manager::Get()->GetConfigManager(_T("compiler"))->ReadBool(_T("/include_prj_cwd"), false));
+
     wxSpinCtrl* spn = XRCCTRL(*this, "spnParallelProcesses", wxSpinCtrl);
     if (spn)
     {
@@ -1207,6 +1211,13 @@ void CompilerOptionsDlg::OnAddCompilerClick(wxCommandEvent& event)
             return;
         }
 
+        if (!newC)
+        {
+            cbMessageBox(_("The new compiler could not be created.\n(maybe a compiler with the same name already exists?)"),
+                        _("Error"), wxICON_ERROR);
+            return;
+        }
+
         int newIdx = CompilerFactory::GetCompilerIndex(newC);
 
         cmb->Append(value);
@@ -1702,6 +1713,9 @@ void CompilerOptionsDlg::OnApply()
     wxCheckBox* chk = XRCCTRL(*this, "chkIncludeFileCwd", wxCheckBox);
     if (chk)
         Manager::Get()->GetConfigManager(_T("compiler"))->Write(_T("/include_file_cwd"), (bool)chk->IsChecked());
+    chk = XRCCTRL(*this, "chkIncludePrjCwd", wxCheckBox);
+    if (chk)
+        Manager::Get()->GetConfigManager(_T("compiler"))->Write(_T("/include_prj_cwd"), (bool)chk->IsChecked());
     wxSpinCtrl* spn = XRCCTRL(*this, "spnParallelProcesses", wxSpinCtrl);
     if (spn)
     {

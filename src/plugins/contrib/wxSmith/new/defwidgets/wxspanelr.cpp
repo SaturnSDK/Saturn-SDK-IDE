@@ -58,7 +58,7 @@ void wxsPanelr::BuildCreatingCode(wxString& Code,const wxString& WindowParent,wx
         }
     }
 
-    DBGLOG(_T("wxSmith: Unknown coding language when generating button (id: %d)"),Language);
+    wxsLANGMSG(wxsPanelr::BuildCreatingCode,Language);
 }
 
 wxObject* wxsPanelr::DoBuildPreview(wxWindow* Parent,bool Exact)
@@ -66,9 +66,17 @@ wxObject* wxsPanelr::DoBuildPreview(wxWindow* Parent,bool Exact)
     wxWindow* NewItem = new wxPanel(
         Parent,GetId(),wxDefaultPosition,wxDefaultSize,
         Exact ? Style() : wxRAISED_BORDER);
+    SetupWindow(NewItem,Exact);
     AddChildrenPreview(NewItem,Exact);
     return NewItem;
 }
 
 void wxsPanelr::EnumContainerProperties(long Flags)
-{}
+{
+}
+
+long wxsPanelr::GetPropertiesFlags()
+{
+    // No identifier nor variable for root items
+    return wxsItem::GetPropertiesFlags() & ~(wxsFLVariable|wxsFLId);
+}

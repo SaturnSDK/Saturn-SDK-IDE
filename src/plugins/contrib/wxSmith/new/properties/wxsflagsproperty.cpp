@@ -37,15 +37,15 @@ bool wxsFlagsProperty::PGWrite(wxsPropertyContainer* Object,wxPropertyGridManage
 
 bool wxsFlagsProperty::XmlRead(wxsPropertyContainer* Object,TiXmlElement* Element)
 {
-    if ( !Element ) 
+    if ( !Element )
     {
-        VALUE = Default; 
+        VALUE = Default;
         return false;
     }
     TiXmlText* Text = Element->FirstChild()->ToText();
-    if ( !Text ) 
+    if ( !Text )
     {
-        VALUE = Default; 
+        VALUE = Default;
         return false;
     }
     VALUE = atol(Text->Value());

@@ -30,6 +30,7 @@
     #include "manager.h"
     #include "pluginmanager.h"
     #include "projectmanager.h"
+    #include "pluginmanager.h"
     #include "scriptingmanager.h"
     #include "compilerfactory.h"
     #include "globals.h"
@@ -41,7 +42,9 @@
 #endif
 
 #include <wx/radiobox.h>
+#include <wx/notebook.h>
 
+#include "configurationpanel.h"
 #include "projectoptionsdlg.h" // class's header file
 #include "editarrayorderdlg.h"
 #include "editarrayfiledlg.h"
@@ -115,6 +118,13 @@ ProjectOptionsDlg::ProjectOptionsDlg(wxWindow* parent, cbProject* project)
 
     // scripts
     BuildScriptsTree();
+
+    // other plugins configuration
+    AddPluginPanels();
+
+    // make sure everything is laid out properly
+    GetSizer()->SetSizeHints(this);
+    CenterOnParent();
 }
 
 // class destructor
@@ -137,6 +147,20 @@ void ProjectOptionsDlg::BuildScriptsTree()
     tc->Expand(root);
     tc->SelectItem(root);
     FillScripts();
+}
+
+void ProjectOptionsDlg::AddPluginPanels()
+{
+    wxNotebook* nb = XRCCTRL(*this, "nbMain", wxNotebook);
+
+    ConfigurationPanelsArray panels;
+    Manager::Get()->GetPluginManager()->GetProjectConfigurationPanels(nb, m_Project, panels);
+
+    for (size_t i = 0; i < panels.GetCount(); ++i)
+    {
+        cbConfigurationPanel* panel = panels[i];
+        nb->AddPage(panel, panel->GetTitle());
+    }
 }
 
 void ProjectOptionsDlg::FillScripts()
@@ -684,7 +708,7 @@ void ProjectOptionsDlg::OnScriptsOverviewSelChanged(wxTreeEvent& event)
 
 bool ProjectOptionsDlg::IsScriptValid(const wxString& script)
 {
-    int r = Manager::Get()->GetScriptingManager()->LoadScript(m_Project->GetBasePath() + wxFILE_SEP_PATH + script, _T("test_module"), false);
+    int r = Manager::Get()->GetScriptingManager()->LoadAndRunScript(m_Project->GetBasePath() + wxFILE_SEP_PATH + script, _T("test_module"), false);
     Manager::Get()->GetScriptingManager()->GetEngine()->Discard("test_module");
     return r == 0;
 }

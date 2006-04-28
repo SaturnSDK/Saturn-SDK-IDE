@@ -89,6 +89,11 @@ EditorColorSet::~EditorColorSet()
 
 void EditorColorSet::ClearAllOptionColors()
 {
+       for (OptionSetsMap::iterator map_it = m_Sets.begin();
+                                                       map_it != m_Sets.end(); ++map_it)
+        for (OptionColors::iterator vec_it = (*map_it).second.m_Colors.begin();
+                            vec_it != (*map_it).second.m_Colors.end(); ++vec_it)
+                       delete (*vec_it);
     m_Sets.clear();
 }
 
@@ -410,8 +415,6 @@ void EditorColorSet::Apply(HighlightLanguage lang, cbStyledTextCtrl* control)
             if (i < 33 || i > 39)
                 DoApplyStyle(control, i, defaults);
         }
-        // also set the caret color, same as the default foreground
-        control->SetCaretForeground(defaults->fore);
     }
 	// for some strange reason, when switching styles, the line numbering changes color
 	// too, though we didn't ask it to...
@@ -463,7 +466,9 @@ void EditorColorSet::Save()
 {
 	wxString key;
 	ConfigManager* cfg = Manager::Get()->GetConfigManager(_T("editor"));
-	cfg->DeleteSubPath(_T("/color_sets/") + m_Name);
+
+    //FIXME: Commenting out the following line is no definite cure, but it hides the annoying disappearing colorset for now
+	//cfg->DeleteSubPath(_T("/color_sets/") + m_Name);
 
 	// write the theme name
 	cfg->Write(_T("/color_sets/") + m_Name + _T("/name"), m_Name);

@@ -50,6 +50,7 @@
 #include <wx/listbook.h>
 #include <wx/listctrl.h>
 
+#include "configurationpanel.h"
 #include "editorcolorset.h"
 #include "editorconfigurationdlg.h"
 #include "editkeywordsdlg.h"
@@ -75,6 +76,7 @@ BEGIN_EVENT_TABLE(EditorConfigurationDlg, wxDialog)
 	EVT_BUTTON(XRCID("btnKeywords"), 			EditorConfigurationDlg::OnEditKeywords)
 	EVT_BUTTON(XRCID("btnFilemasks"), 			EditorConfigurationDlg::OnEditFilemasks)
 	EVT_BUTTON(XRCID("btnColorsReset"), 		EditorConfigurationDlg::OnColorsReset)
+	EVT_BUTTON(XRCID("btnCaretColor"), 		    EditorConfigurationDlg::OnChooseColor)
 	EVT_BUTTON(XRCID("btnGutterColor"), 		EditorConfigurationDlg::OnChooseColor)
 	EVT_BUTTON(XRCID("btnColorsFore"), 			EditorConfigurationDlg::OnChooseColor)
 	EVT_BUTTON(XRCID("btnColorsBack"), 			EditorConfigurationDlg::OnChooseColor)
@@ -140,6 +142,11 @@ EditorConfigurationDlg::EditorConfigurationDlg(wxWindow* parent)
    	XRCCTRL(*this, "chkEnsureConsistentEOL", wxCheckBox)->SetValue(cfg->ReadBool(_T("/eol/ensure_consistent_line_ends"), false));
     XRCCTRL(*this, "cmbEOLMode", wxComboBox)->SetSelection(cfg->ReadInt(_T("/eol/eolmode"), default_eol));
 
+    //caret
+    wxColour caretColor = cfg->ReadColour(_T("/caret/color"), *wxBLACK);
+    XRCCTRL(*this, "spnCaretWidth", wxSpinCtrl)->SetValue(cfg->ReadInt(_T("/caret/width"), 1));
+    XRCCTRL(*this, "btnCaretColor", wxButton)->SetBackgroundColour(caretColor);
+
 	//folding
    	XRCCTRL(*this, "chkEnableFolding", wxCheckBox)->SetValue(cfg->ReadBool(_T("/folding/show_folds"), true));
    	XRCCTRL(*this, "chkFoldOnOpen", wxCheckBox)->SetValue(cfg->ReadBool(_T("/folding/fold_all_on_open"), false));
@@ -148,9 +155,9 @@ EditorConfigurationDlg::EditorConfigurationDlg(wxWindow* parent)
    	XRCCTRL(*this, "chkFoldXml", wxCheckBox)->SetValue(cfg->ReadBool(_T("/folding/fold_xml"), true));
 
 	//gutter
-    wxColour color = cfg->ReadColour(_T("/gutter/color"), *wxLIGHT_GREY);
+    wxColour gutterColor = cfg->ReadColour(_T("/gutter/color"), *wxLIGHT_GREY);
     XRCCTRL(*this, "lstGutterMode", wxChoice)->SetSelection(cfg->ReadInt(_T("/gutter/mode"), 0));
-    XRCCTRL(*this, "btnGutterColor", wxButton)->SetBackgroundColour(color);
+    XRCCTRL(*this, "btnGutterColor", wxButton)->SetBackgroundColour(gutterColor);
     XRCCTRL(*this, "spnGutterColumn", wxSpinCtrl)->SetValue(cfg->ReadInt(_T("/gutter/column"), 80));
 
 	// color set
@@ -523,7 +530,15 @@ void EditorConfigurationDlg::ChangeTheme()
 
     if (m_Theme)
         delete m_Theme;
-    m_Theme = new EditorColorSet(key);
+
+    // If the theme is the same one used by EditorManager,
+    // skip the creation of new EditorColorSet class to avoid lengthy loading times.
+    // Instead, use the copy constructor...
+    EditorColorSet* manSet = Manager::Get()->GetEditorManager()->GetColorSet();
+    if (manSet && key == manSet->GetName())
+        m_Theme = new EditorColorSet(*manSet);
+    else
+        m_Theme = new EditorColorSet(key);
 
    	XRCCTRL(*this, "btnKeywords", wxButton)->Enable(m_Theme);
    	XRCCTRL(*this, "btnFilemasks", wxButton)->Enable(m_Theme);
@@ -620,6 +635,8 @@ void EditorConfigurationDlg::OnEditKeywords(wxCommandEvent& event)
 	    EditKeywordsDlg dlg(0, m_Theme, m_Lang);
         PlaceWindow(&dlg);
 	    dlg.ShowModal();
+
+        dlg.m_pTheme->SetKeywords(dlg.m_Lang, dlg.m_LastSet, dlg.txtKeywords->GetValue());
 	}
 }
 
@@ -800,6 +817,11 @@ void EditorConfigurationDlg::EndModal(int retCode)
         cfg->Write(_T("/view_whitespace"),      XRCCTRL(*this, "cmbViewWS", wxComboBox)->GetSelection());
         cfg->Write(_T("/tab_text_relative"),    XRCCTRL(*this, "rbTabText", wxRadioBox)->GetSelection() ? true : false);
         cfg->Write(_T("/auto_wrap_search"),     XRCCTRL(*this, "chkAutoWrapSearch", wxCheckBox)->GetValue());
+
+        //caret
+        cfg->Write(_T("/caret/width"), XRCCTRL(*this, "spnCaretWidth", wxSpinCtrl)->GetValue());
+        cfg->Write(_T("/caret/color"), XRCCTRL(*this, "btnCaretColor", wxButton)->GetBackgroundColour());
+
         //folding
         cfg->Write(_T("/folding/show_folds"), 			XRCCTRL(*this, "chkEnableFolding", wxCheckBox)->GetValue());
         cfg->Write(_T("/folding/fold_all_on_open"), 	XRCCTRL(*this, "chkFoldOnOpen", wxCheckBox)->GetValue());

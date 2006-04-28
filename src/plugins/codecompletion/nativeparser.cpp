@@ -53,7 +53,8 @@ BEGIN_EVENT_TABLE(NativeParser, wxEvtHandler)
 END_EVENT_TABLE()
 
 NativeParser::NativeParser()
-	: m_Parser(this)//m_Parsers(1)
+	: m_Parser(this),
+	m_ClassBrowserIsFloating(true)
 {
 	//ctor
     m_pClassBrowser = 0L;
@@ -69,29 +70,91 @@ void NativeParser::CreateClassBrowser()
 {
 	if (!m_pClassBrowser)
 	{
-		m_pClassBrowser = new ClassBrowser(Manager::Get()->GetProjectManager()->GetNotebook(), this);
-        Manager::Get()->GetProjectManager()->GetNotebook()->AddPage(m_pClassBrowser, _("Symbols"));
+        ConfigManager* cfg = Manager::Get()->GetConfigManager(_T("code_completion"));
+        bool isFloating = cfg->ReadBool(_T("/as_floating_window"), false);
+
+        if (!isFloating)
+        {
+            // make this a tab in projectmanager notebook
+            m_pClassBrowser = new ClassBrowser(Manager::Get()->GetProjectManager()->GetNotebook(), this);
+            Manager::Get()->GetProjectManager()->GetNotebook()->AddPage(m_pClassBrowser, _("Symbols"));
+        }
+        else
+        {
+            m_pClassBrowser = new ClassBrowser(Manager::Get()->GetAppWindow(), this);
+
+            // make this a free floating/docking window
+            CodeBlocksDockEvent evt(cbEVT_ADD_DOCK_WINDOW);
+
+            evt.name = _T("SymbolsBrowser");
+            evt.title = _("Symbols browser");
+            evt.pWindow = m_pClassBrowser;
+            evt.dockSide = CodeBlocksDockEvent::dsRight;
+            evt.desiredSize.Set(200, 250);
+            evt.floatingSize.Set(200, 250);
+            evt.minimumSize.Set(150, 150);
+            evt.shown = true;
+            evt.hideable = true;
+            Manager::Get()->GetAppWindow()->ProcessEvent(evt);
+        }
+        m_ClassBrowserIsFloating = isFloating;
 	}
 }
 
 void NativeParser::RemoveClassBrowser(bool appShutDown)
 {
-    if (!appShutDown && m_pClassBrowser)
+    if (m_pClassBrowser)
     {
-        int idx = Manager::Get()->GetProjectManager()->GetNotebook()->GetPageIndex(m_pClassBrowser);
-        if (idx != -1)
-            Manager::Get()->GetProjectManager()->GetNotebook()->RemovePage(idx);
-        delete m_pClassBrowser;
+        if (!m_ClassBrowserIsFloating)
+        {
+            int idx = Manager::Get()->GetProjectManager()->GetNotebook()->GetPageIndex(m_pClassBrowser);
+            if (idx != -1)
+                Manager::Get()->GetProjectManager()->GetNotebook()->RemovePage(idx);
+            m_pClassBrowser->Destroy();
+        }
+        else if (m_ClassBrowserIsFloating)
+        {
+            CodeBlocksDockEvent evt(cbEVT_REMOVE_DOCK_WINDOW);
+            evt.pWindow = m_pClassBrowser;
+            Manager::Get()->GetAppWindow()->ProcessEvent(evt);
+            m_pClassBrowser->Destroy();
+        }
     }
     m_pClassBrowser = 0L;
 }
 
+void NativeParser::UpdateClassBrowser()
+{
+    if (m_Parser.Done() && !Manager::isappShuttingDown())
+    {
+        Manager::Get()->GetMessageManager()->DebugLog(_T("Updating class browser..."));
+        if (m_pClassBrowser)
+        {
+            m_pClassBrowser->SetParser(&m_Parser);
+            m_pClassBrowser->Update();
+        }
+        Manager::Get()->GetMessageManager()->DebugLog(_T("Class browser updated."));
+    }
+}
+
 void NativeParser::RereadParserOptions()
 {
+    ConfigManager* cfg = Manager::Get()->GetConfigManager(_T("code_completion"));
 	bool needsReparsing = false;
 
     ParserOptions opts = m_Parser.Options();
     m_Parser.ReadOptions();
+
+    // change class-browser docking settings
+    if (m_ClassBrowserIsFloating != cfg->ReadBool(_T("/as_floating_window"), false))
+    {
+        RemoveClassBrowser();
+        CreateClassBrowser();
+        // force re-update
+        UpdateClassBrowser();
+    }
+
+    // reparse if settings changed
     if (opts.followLocalIncludes != m_Parser.Options().followLocalIncludes ||
         opts.followGlobalIncludes != m_Parser.Options().followGlobalIncludes ||
         opts.wantPreprocessor != m_Parser.Options().wantPreprocessor)
@@ -130,14 +193,16 @@ void NativeParser::SetClassBrowserProject(cbProject* project)
 void NativeParser::SetCBViewMode(const BrowserViewMode& mode)
 {
     m_Parser.ClassBrowserOptions().showInheritance = mode == bvmInheritance;
-	if (m_pClassBrowser)
-		m_pClassBrowser->Update();
+	UpdateClassBrowser();
 }
 
 void NativeParser::ClearParsers()
 {
 	if (m_pClassBrowser)
+	{
 		m_pClassBrowser->SetParser(0L);
+		m_pClassBrowser->Update();
+	}
 //    ProjectsArray* projects = Manager::Get()->GetProjectManager()->GetProjects();
 //    for (size_t i = 0; i < projects->GetCount(); ++i)
 //    {
@@ -352,11 +417,13 @@ void NativeParser::RemoveParser(cbProject* project, bool useCache)
 {
     if (!project)
         return;
+	Manager::Get()->GetMessageManager()->DebugLog(_T("Removing project %s from parsed projects"), project->GetTitle().c_str());
     for (int i = 0; i < project->GetFilesCount(); ++i)
     {
         ProjectFile* pf = project->GetFile(i);
         m_Parser.RemoveFile(pf->file.GetFullPath());
     }
+    UpdateClassBrowser();
 }
 
 void NativeParser::AddFileToParser(cbProject* project, const wxString& filename)
@@ -1243,23 +1310,13 @@ void NativeParser::OnThreadEnd(wxCommandEvent& event)
 //	 nothing for now
 }
 
-
 void NativeParser::OnParserEnd(wxCommandEvent& event)
 {
 	Parser* parser = (Parser*)event.GetClientData();
 	if (parser)// && parser->Done())
 	{
         DisplayStatus(parser);
-		if (parser->Done())
-        {
-            Manager::Get()->GetMessageManager()->DebugLog(_T("Updating class browser..."));
-			if (m_pClassBrowser)
-			{
-				m_pClassBrowser->SetParser(parser);
-				m_pClassBrowser->Update();
-			}
-            Manager::Get()->GetMessageManager()->DebugLog(_T("Class browser updated."));
-		}
+        UpdateClassBrowser();
 	}
 }
 

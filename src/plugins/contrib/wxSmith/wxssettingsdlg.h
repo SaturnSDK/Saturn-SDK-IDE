@@ -18,6 +18,8 @@
 #include <wx/xrc/xmlres.h>
 //*)
 
+#include "configurationpanel.h"
+
 class wxsSettingsDlg: public cbConfigurationPanel
 {
     public:
@@ -28,8 +30,8 @@ class wxsSettingsDlg: public cbConfigurationPanel
         //(*Identifiers(wxsSettingsDlg)
         //*)
 
-        wxString GetTitle(){ return _("wxSmith settings"); }
-        wxString GetBitmapBaseName(){ return _T("wxsmith"); }
+        wxString GetTitle() const { return _("wxSmith settings"); }
+        wxString GetBitmapBaseName() const { return _T("wxsmith"); }
         void OnApply();
         void OnCancel(){}
     protected:

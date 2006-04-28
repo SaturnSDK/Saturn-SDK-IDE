@@ -4,15 +4,9 @@
 // Author:      Aleksandras Gluchovas
 // Modified by: Francesco Montorsi (6/1/2004)
 // Created:     2000/02/10
-// RCS-ID:      $Id$
 // Copyright:   (c) Aleksandras Gluchovas and (c) Francesco Montorsi
 // Licence:     wxWidgets licence
 /////////////////////////////////////////////////////////////////////////////
-//commit 12/14/2005 9:15 AM
-//commit 12/16/2005 8:54 PM
-//commit 1/7/2006 9:04 PM v0.4.4
-//commit 1/10/2006 5PM v0.4.8
-//commit 1/23/2006 v0.4.13
 
 #define NOT !
 
@@ -440,7 +434,7 @@ protected:
 
 	//! Called after that an Add/Remove function is called.
 	//! Default implementation does nothing.
-	virtual void Update() {}
+	virtual void Update(wxMenuItem* pMnuItem = 0) {}
 
 	//! Executes the command.
 	//! - obj ("origin") is the object which generated the event that
@@ -752,13 +746,7 @@ public:		// miscellaneous
 	}
 
 	//! Updates all the commands contained.
-	void UpdateAllCmd() {
-		if (m_arrHandlers.GetCount() == 0)
-			return;		// we are not attached to any window... we can skip
-						// this update...
-		for (int i=0; i < (int)m_arrCmd.GetCount(); i++)
-			m_arrCmd.Item(i)->Update();
-	}
+	void UpdateAllCmd(wxMenuBar* pMnuBar);      //v0.4.17
 
 	//! Enables/disables all the wxBinderEvtHandler associated with
 	//! the windows we've been attached to.
@@ -1092,9 +1080,9 @@ public:
 	}
 
 	//! Updates all the wxCmds contained.
-	void UpdateAllCmd() {
+	void UpdateAllCmd(wxMenuBar* pMnuBar) {
 		for (int i=0; i<GetCount(); i++)
-			Item(i)->UpdateAllCmd();
+			Item(i)->UpdateAllCmd(pMnuBar);
 	}
 
 	//! Stores the wxKeyProfiles into the given wxConfig object.

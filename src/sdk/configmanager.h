@@ -124,6 +124,7 @@ public:
     */
     static wxString GetRevisionString();
     static unsigned int GetRevisionNumber();
+    static wxString GetSvnDate();
 
     static inline wxString ReadDataPath(){return GetDataFolder();};      // use instead of cfg->Read("data_path");
     static inline wxString ReadAppPath(){return GetExecutableFolder();}; // use instead of cfg->Read("app_path");

@@ -8,6 +8,7 @@ mkdir -p output/share/codeblocks/images/codecompletion
 mkdir -p output/share/codeblocks/images/16x16
 mkdir -p output/share/codeblocks/plugins
 mkdir -p output/share/codeblocks/templates
+mkdir -p output/share/codeblocks/templates/wizard
 mkdir -p output/share/codeblocks/scripts
 mkdir -p devel/share/codeblocks/lexers
 mkdir -p devel/share/codeblocks/images/settings
@@ -15,6 +16,7 @@ mkdir -p devel/share/codeblocks/images/codecompletion
 mkdir -p devel/share/codeblocks/images/16x16
 mkdir -p devel/share/codeblocks/plugins
 mkdir -p devel/share/codeblocks/templates
+mkdir -p devel/share/codeblocks/templates/wizard
 mkdir -p devel/share/codeblocks/scripts
 
 ZIPCMD="zip"
@@ -32,6 +34,7 @@ ${ZIPCMD} -j9 ${RESDIR}/compiler_gcc.zip plugins/compilergcc/resources/*.xrc > /
 ${ZIPCMD} -j9 ${RESDIR}/defaultmimehandler.zip plugins/defaultmimehandler/resources/*.xrc > /dev/null
 ${ZIPCMD} -j9 ${RESDIR}/debugger_gdb.zip plugins/debuggergdb/resources/*.xrc > /dev/null
 ${ZIPCMD} -j9 ${RESDIR}/todo.zip plugins/todo/resources/*.xrc > /dev/null
+${ZIPCMD} -j9 ${RESDIR}/autosave.zip plugins/autosave/*.xrc > /dev/null
 echo Packing core UI bitmaps
 cd src/resources
 ${ZIPCMD} -0 ../../${RESDIR}/resources.zip images/*.png images/16x16/*.png > /dev/null
@@ -56,6 +59,8 @@ cp -f src/resources/images/16x16/*.png ${RESDIR}/images/16x16 > /dev/null
 cp -f src/resources/images/16x16/*.png output/share/codeblocks/images/16x16 > /dev/null
 cp -f plugins/codecompletion/resources/images/*.png ${RESDIR}/images/codecompletion > /dev/null
 cp -f plugins/codecompletion/resources/images/*.png output/share/codeblocks/images/codecompletion > /dev/null
+cp -rf plugins/projectwizard/resources/* ${RESDIR}/templates/wizard > /dev/null
+cp -rf plugins/projectwizard/resources/* output/share/codeblocks/templates/wizard > /dev/null
 cp -f templates/common/* output/share/codeblocks/templates > /dev/null
 cp -f templates/unix/* output/share/codeblocks/templates > /dev/null
 cp -f templates/common/* ${RESDIR}/templates > /dev/null

@@ -601,6 +601,7 @@ bool CompilerGCC::BuildToolBar(wxToolBar* toolBar)
     m_ToolTarget = XRCCTRL(*toolBar, "idToolTarget", wxComboBox);
     #endif
     toolBar->Realize();
+    toolBar->SetBestFittingSize();
     DoRecreateTargetMenu(); // make sure the tool target combo is up-to-date
     return true;
 }
@@ -1327,7 +1328,7 @@ int CompilerGCC::RunSingleFile(const wxString& filename)
 
     if (fname.GetExt() == _T("script"))
     {
-        Manager::Get()->GetScriptingManager()->LoadScript(filename);
+        Manager::Get()->GetScriptingManager()->LoadAndRunScript(filename);
         return 0;
     }
 
@@ -2191,7 +2192,7 @@ int CompilerGCC::KillProcess()
     m_RunAfterCompile = false;
     if (!IsProcessRunning())
         return 0;
-    wxKillError ret;
+    wxKillError ret = wxKILL_OK;
 
     m_CommandQueue.Clear();
 
@@ -2914,6 +2915,7 @@ void CompilerGCC::NotifyJobDone(bool showNothingToBeDone)
     if (!IsProcessRunning())
     {
         CodeBlocksEvent evt(cbEVT_COMPILER_FINISHED, 0, 0, 0, this);
+        evt.SetInt(m_LastExitCode);
         Manager::Get()->GetPluginManager()->NotifyPlugins(evt);
     }
 }

@@ -699,6 +699,7 @@ void MainFrame::CreateToolbars()
     Manager::Get()->AddonToolBar(m_pToolbar,xrcToolbarName);
 
 	m_pToolbar->Realize();
+    m_pToolbar->SetBestFittingSize();
 
     // add toolbars in docking system
     m_LayoutManager.AddPane(m_pToolbar, wxPaneInfo().
@@ -1010,6 +1011,7 @@ void MainFrame::DoAddPluginToolbar(cbPlugin* plugin)
     if (plugin->BuildToolBar(tb))
     {
         SetToolBar(0);
+        tb->SetBestFittingSize();
 
         // add View->Toolbars menu item for toolbar
         wxMenu* viewToolbars = 0;
@@ -1192,10 +1194,28 @@ bool MainFrame::DoCloseCurrentWorkspace()
 void MainFrame::DoCreateStatusBar()
 {
 #if wxUSE_STATUSBAR
-    const int count = 6;
-    CreateStatusBar(count);
-    int statusWidths[count] = {-1, 96, 148, 64, 64, 96};
-    SetStatusWidths(count, statusWidths);
+    const int num = 6;
+    wxCoord width[num];
+    CreateStatusBar(num);
+
+    wxClientDC dc(this);
+    wxFont font = dc.GetFont();
+    int h;
+
+    width[0] = -1;
+    dc.GetTextExtent(_(" WINDOWS-1252 "), &width[1], &h);
+    dc.GetTextExtent(_(" Line 12345, Column 123 "), &width[2], &h);
+    // GTK needs an addition space more than MSW    //pecan 2006/03/31
+  #ifdef __WXGTK__
+    dc.GetTextExtent(_(" Overwrite "),  &width[3], &h);
+    dc.GetTextExtent(_(" Modified "),   &width[4], &h);
+  #else
+    dc.GetTextExtent(_(" Overwrite"),  &width[3], &h);
+    dc.GetTextExtent(_(" Modified"),   &width[4], &h);
+  #endif
+    dc.GetTextExtent(_(" Read/Write....."), &width[5], &h);
+
+    SetStatusWidths(num, width);
 #endif // wxUSE_STATUSBAR
 }
 
@@ -1871,7 +1891,7 @@ void MainFrame::OnFileRunScript(wxCommandEvent& WXUNUSED(event))
                             wxOPEN);
     PlaceWindow(dlg);
     if (dlg->ShowModal() == wxID_OK)
-        Manager::Get()->GetScriptingManager()->LoadScript(dlg->GetPath());
+        Manager::Get()->GetScriptingManager()->LoadAndRunScript(dlg->GetPath());
     dlg->Destroy();
 }
 

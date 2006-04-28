@@ -28,7 +28,7 @@ wxsItem::~wxsItem()
 
 void wxsItem::EnumProperties(long Flags)
 {
-    if ( (Flags & flPropGrid) || (Parent != NULL) )
+    if ( (Flags & flPropGrid) && (Parent != NULL) )
     {
         // Parent item does take care of enumerating properties if we are
         // ceating property grid
@@ -84,7 +84,7 @@ void wxsItem::BuildDeclarationCode(wxString& Code,wxsCodingLang Language)
             return;
     }
 
-    DBGLOG(_T("wxSmith: Unknown coding language (id: %d)"),Language);
+    wxsLANGMSG(wxsItem::BuildDeclarationCode,Language);
 }
 
 bool wxsItem::XmlRead(TiXmlElement* Element,bool IsXRC,bool IsExtra)
@@ -190,4 +190,9 @@ void wxsItem::ClearSelection()
             Parent->GetChild(i)->ClearSelection();
         }
     }
+}
+
+void wxsItem::PropertyChangedHandler()
+{
+    GetResource()->NotifyChange(this);
 }

@@ -46,17 +46,17 @@ wxsItemInfo wxsFrame::Info =
 {
     _T("wxFrame"),
     wxsTContainer,
-    _("wxWidgets license"),     // License, any type
-    _("wxWidgets team"),        // Author
-    _T(""),                     // No default e-mail for standard widgets
-    _T("www.wxwidgets.org"),    // Site
-    _T(""),                     // Empty groupd - won't be added into palette
-    0,                          // Not important now
-    _T("Dialog"),               // Standard prefix for variable names and identifiers
-    2, 6,                       // Widget version
-    NULL,                       // Bitmaps will be loaded later in manager
-    NULL,                       // --------------------''-------------------
-    0                           // --------------------''-------------------
+    _("wxWidgets license"),
+    _("wxWidgets team"),
+    _T(""),
+    _T("www.wxwidgets.org"),
+    _T(""),
+    0,
+    _T("Dialog"),
+    2, 6,
+    NULL,
+    NULL,
+    0
 };
 
 wxsFrame::wxsFrame(wxsWindowRes* Resource):
@@ -97,7 +97,7 @@ void wxsFrame::BuildCreatingCode(wxString& Code,const wxString& WindowParent,wxs
         }
     }
 
-    DBGLOG(_T("wxSmith: Unknown coding language when generating frame (id: %d)"),Language);
+    wxsLANGMSG(wxsFrame::BuildCreatingCode,Language);
 }
 
 wxObject* wxsFrame::DoBuildPreview(wxWindow* Parent,bool Exact)
@@ -122,6 +122,7 @@ wxObject* wxsFrame::DoBuildPreview(wxWindow* Parent,bool Exact)
         NewItem = new wxPanel(Parent,GetId(),wxDefaultPosition,wxDefaultSize,wxRAISED_BORDER);
     }
 
+    SetupWindow(NewItem,Exact);
     AddChildrenPreview(NewItem,Exact);
 
     if ( Frm && Centered )
@@ -137,4 +138,10 @@ void wxsFrame::EnumContainerProperties(long Flags)
     WXS_STRING(wxsFrame,Title,0,_("Title"),_T("title"),_T(""),false,false)
     WXS_BOOL  (wxsFrame,Centered,0,_("Centered"),_T("centered"),false);
     WXS_ICON  (wxsFrame,Icon,0,_T("Icon"),_T("icon"),_T("wxART_FRAME_ICON"));
+}
+
+long wxsFrame::GetPropertiesFlags()
+{
+    // No identifier nor variable for root items
+    return wxsItem::GetPropertiesFlags() & ~(wxsFLVariable|wxsFLId);
 }

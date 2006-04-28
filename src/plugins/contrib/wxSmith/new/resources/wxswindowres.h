@@ -58,18 +58,18 @@ class wxsWindowRes : public wxsResource
 
         /** \brief Function binfing external resource for this class
          * \param FileName name of xrc file, MUST be absolute path
+         * \param ClassName name of resource class
          */
         void BindExternalResource(const wxString& FileName,const wxString& ClassName);
 
         /** \brief Function checking if this resource uses xrc files */
         virtual bool UsingXRC();
 
-        /** \brief Function returning name of header file for this resource.
-         *
-         * This header file should be added into list of includes to allow
-         * using resource
-         */
-        virtual wxString GetHeaderFile() { return HFile; }
+        /** \brief Function returning name of declaration file - same as header file */
+        virtual wxString GetDeclarationFile() { return HFile; }
+
+        /** \brief Function returning name of header file for this resource. */
+        inline wxString GetHeaderFile() { return HFile; }
 
 		/** \brief Getting name of class implementing this dialog */
 		inline const wxString& GetClassName() { return ClassName; }
@@ -159,6 +159,32 @@ class wxsWindowRes : public wxsResource
 		/** \brief Checking if file is used by this resource */
 		virtual bool UsingFile(const wxString& FileName);
 
+		/** \brief Notifying about selection change
+		 *
+		 * This function must be called when selection does change in any
+		 * way. It notifies editor/resource browser about changed selection.
+		 *
+		 * \param ChangedItem item that has changed it's selection state (or one of
+		 *        items when changing selection in more than one items). When using
+		 *        NULL, one of currently selected items will be used as root selection.
+		 */
+		void SelectionChanged(wxsItem* ChangedItem);
+
+		/** \brief Getting root selection item */
+		inline wxsItem* GetRootSelection() { return RootSelection; }
+
+		/** \brief Notifying about content change
+		 *
+		 * This function validates content, recreates preview and
+		 * updates source code.
+		 */
+		void NotifyChange(wxsItem* Chaged);
+
+        /** \brief Funnction regenerating all source code
+         *  \note Only content really changed will mark files as modified
+         */
+        void RebuildCode();
+
     protected:
 
         /** \brief Function building root item */
@@ -173,6 +199,13 @@ class wxsWindowRes : public wxsResource
          * preview used to show how resource will directly look like
          */
         virtual wxWindow* BuildPreview() = 0;
+
+        /** \brief Function generating code which will load this resource
+         *         from xrc.
+         *
+         * It is used when generating source code.
+         */
+        virtual wxString BuildXrcLoadingCode() = 0;
 
     private:
 
@@ -193,111 +226,41 @@ class wxsWindowRes : public wxsResource
         /** \brief Function collecting enteries of map id_name -> wxsItem* */
         void CollectIdMap(IdToItemMapT& Map,wxsItem* Item,bool WithRoot=true);
 
-//        /** \brief This will be used to notify about change of resource data.
-//         *
-//         * This function performs check of identifiers/variable names and
-//         * rebuilds source code.
-//         */
-//        void NotifyChange();
-//
-//
-//
-//        /** \brief Funnction regenerating all source code */
-//        void RebuildCode();
-//
-//
-//        /** \brief Setting default variable names and identifiers for widgets with empty ones */
-//        void UpdateWidgetsVarNameId();
-//
-//		/** \brief Function refreshing tree node associated with this resource */
-//		void RefreshResourceTree();
-//
-//		/** Building resource tree */
-//		void BuildTree(wxTreeCtrl* Tree,wxTreeItemId WhereToAdd,bool NoWidgets = false);
-//
-//		/** Changing root widget */
-//		bool ChangeRootWidget(wxsWidget* NewRoot,bool DeletePrevious=true);
-//
-//        /** Action when selecting this resource */
-//        virtual void OnSelect();
-//
-//    protected:
-//
-//        /** Creating editor object */
-//        virtual wxsEditor* CreateEditor();
-//
-//        /** Notifying that editor has just closed
-//         *
-//         * In this case, resource is reloaded from wxs file (all changes
-//         * should be now saved when closing editor)
-//         */
-//        virtual void EditorClosed();
-//
-//        /** Function initializing this class - it must be called in constructor
-//         *  of derived class since virtual functinos can be used from top
-//         *  constrructor only */
-//        void Initialize();
-//
-//        /** Function showing preview for this resource */
-//        virtual void ShowResource(wxXmlResource& Res) = 0;
-//
-//        /** Getting string added as constructor code for base widget */
-//        virtual wxString GetConstructor() = 0;
-//
-//        /** Helper function giving name of resource from current window type */
-//        virtual const wxChar* GetWidgetClass(bool UseRes = false) = 0;
-//
-//        /** Function generating code loading this resource from xrc file */
-//        virtual wxString GetXrcLoadingCode() = 0;
-//
-//        /** Pointer to window with current preview */
-//        wxWindow* Preview;
-//
-//	private:
-//
-//        /** Structure used for comparing strings */
-//        struct ltstr {  bool operator()(const wxChar* s1, const wxChar* s2) const { return wxStrcmp(s1, s2) < 0; } };
-//
-//        /** Map string->widget used when validating variable names and identifiers */
-//        typedef std::map<const wxChar*,wxsWidget*,ltstr> StrMap;
-//        typedef StrMap::iterator StrMapI;
-//
-//        /** Creating xml tree for current widget */
-//        TiXmlDocument* GenerateXml();
-//
-//        /** Adding declaration codes for locally stored widgets */
-//        void AddDeclarationsReq(wxsWidget* Widget,wxString& LocalCode,wxString& GlobalCode,bool& WasLocal);
-//
-//        /** Function used internally by SetNewWidgetsIdVarName */
-//        void UpdateWidgetsVarNameIdReq(StrMap& NamesMap,StrMap& IdsMap,wxsWidget* Widget);
-//
-//        /** Function craeting set of used names and ids for this resource */
-//        void CreateSetsReq(StrMap& NamesMap, StrMap& IdsMap, wxsWidget* Widget, wxsWidget* Without = NULL);
-//
-//        /** Function checking and correcting base params for one widget */
-//        bool CorrectOneWidget(StrMap& NamesMap,StrMap& IdsMap,wxsWidget* Changed,bool Correct);
-//
-//        /** Helper function used inside CkeckBaseProperties function */
-//        bool CheckBasePropertiesReq(wxsWidget* Widget,bool Correct,StrMap& NamesMap,StrMap& IdsMap);
-//
-//        /** Function building array of identifiers */
-//        void BuildIdsArray(wxsWidget* Widget,wxArrayString& Array);
-//
-//        /** Function building array of header files */
-//        void BuildHeadersArray(wxsWidget* Widget,wxArrayString& Array);
-//
-//        /** Fuunction collecting code for event table for given widget */
-//        static void CollectEventTableEnteries(wxString& Code,wxsWidget* Widget);
-//
-//        /** Function generating code fetching controls from xrc structure */
-//        static void GenXrcFetchingCode(wxString& Code,wxsWidget* Widget);
-//
+        /** \brief Function searching for first selected item */
+        void FindFirstSelection(wxsItem* Item);
+
+        /** \brief Function generating code with declarations
+         *
+         * \param RootItem root item (it's declaration will be skipped)
+         * \param Code string where declarations of local variables will be added
+         * \param GlobalCode string where declarations of global variables will be added
+         * \return true when there's at least one local declaration, false if there's none
+         *         (no matter what's number of global declarations)
+         */
+        bool BuildDeclarations(wxsItem* RootItem,wxString& Code,wxString& GlobalCode);
+
+        /** \brief Function collecting code connecting event handlers */
+        void AddEventHandlers(wxsItem* RootItem,wxString& Code);
+
+        /** \brief Function building array of identifiers used inside this resource */
+        void BuildIdsArray(wxsItem* RootItem,wxArrayString& Array);
+
+        /** \brief Function building array of declaration files used in this resource */
+        void BuildDeclArrays(wxsItem* RootItem,wxArrayString& DeclHeaders,wxArrayString& DefHeaders);
+
+        /** \brief Fetching pointers to items loaded from xrc file */
+        void FetchXmlBuiltItems(wxsItem* RootItem,wxString& Code);
+
+        /** \brief Misc function used to reparse file names into unix format (cross-platform) */
+        inline wxString FixFileName(wxString FileName);
+
         wxString    ClassName;
         wxString    WxsFile;
         wxString    SrcFile;
         wxString    HFile;
         wxString    XrcFile;
         wxsItem*    RootItem;
+        wxsItem*    RootSelection;
         wxWindow*   Preview;
         bool        Modified;
         long        BasePropsFilter;

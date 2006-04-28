@@ -1,4 +1,4 @@
-#include "wxsContainer.h"
+#include "wxscontainer.h"
 #include <messagemanager.h>
 
 wxsContainer::wxsContainer(
@@ -119,25 +119,20 @@ void wxsContainer::SetupWindowCode(wxString& Code,wxsCodingLang Language)
         }
     }
 
-    DBGLOG(_T("wxSmith: Unknown coding language when generating container (id: %d)"),Language);
+    wxsLANGMSG(wxsContainer::SetupWindowCode,Language);
 }
 
 void wxsContainer::AddChildrenPreview(wxWindow* This,bool Exact)
 {
     for ( int i=0; i<GetChildCount(); i++ )
     {
-        wxObject* Obj = GetChild(i)->BuildPreview(This,Exact);
-        wxSizer* Szr = wxDynamicCast(Obj,wxSizer);
-        if ( Szr != NULL )
-        {
-            This->SetSizer(Szr);
-            if ( BaseProps.Size.IsDefault )
-            {
-                Szr->Fit(This);
-            }
-            // TODO: Find out if we should check flags like in xh_sizer.cpp
-            Szr->SetSizeHints(This);
-        }
+        GetChild(i)->BuildPreview(This,Exact);
+    }
+
+    // TODO: Move this into child classes since it's not what this function should do
+    if ( BaseProps.Size.IsDefault )
+    {
+        This->Fit();
     }
 }
 
@@ -173,5 +168,5 @@ void wxsContainer::AddChildrenCode(wxString& Code,wxsCodingLang Language)
         }
     }
 
-    DBGLOG(_T("wxSmith: Unknown coding language when generating container's children (id: %d)"),Language);
+    wxsLANGMSG(wxsContainer::AddChildrenCode,Language);
 }

@@ -23,17 +23,19 @@
 * $Id$
 * $HeadURL$
 */
-
-#include <sdk.h>
+#ifdef CB_PRECOMP
+#include "sdk.h"
+#else
+#include "cbeditor.h"
+#include "cbproject.h"
+#include "editormanager.h"
+#include "manager.h"
+#include "projectfile.h"
+#include "projectmanager.h"
+#endif
 #include "compilererrors.h"
-#include <cbeditor.h>
-#include <cbproject.h>
-#include <projectmanager.h>
-#include <editormanager.h>
-#include <manager.h>
-#include <wx/regex.h>
-#include <wx/tipwin.h>
 #include <wx/arrimpl.cpp>
+
 WX_DEFINE_OBJARRAY(ErrorsArray);
 
 CompilerErrors::CompilerErrors()
@@ -135,7 +137,7 @@ void CompilerErrors::DoAddError(const CompileError& error)
 		m_Errors.Add(error);
 }
 
-int CompilerErrors::ErrorLineHasMore(const wxString& filename, long int line)
+int CompilerErrors::ErrorLineHasMore(const wxString& filename, long int line) const
 {
 	for (unsigned int i = 0; i < m_Errors.GetCount(); ++i)
 	{
@@ -151,6 +153,7 @@ void CompilerErrors::DoGotoError(const CompileError& error)
     if (error.line <= 0)
         return;
 	DoClearErrorMarkFromAllEditors();
+	cbEditor* ed = 0;
 	cbProject* project = error.project ? error.project : Manager::Get()->GetProjectManager()->GetActiveProject();
 	if (project && Manager::Get()->GetProjectManager()->IsProjectStillOpen(project))
 	{
@@ -161,14 +164,10 @@ void CompilerErrors::DoGotoError(const CompileError& error)
 	    ProjectFile* f = project->GetFileByFilename(error.filename, !isAbsolute, true);
     	if (f)
         {
-        	cbEditor* ed = Manager::Get()->GetEditorManager()->Open(f->file.GetFullPath());
+        	ed = Manager::Get()->GetEditorManager()->Open(f->file.GetFullPath());
             if (ed)
 			{
 				ed->SetProjectFile(f);
-				ed->Activate();
-				ed->GotoLine(error.line - 1);
-				ed->SetErrorLine(error.line - 1);
-				ed->UnfoldBlockFromLine(error.line - 1);
 			}
         }
 		else
@@ -176,16 +175,23 @@ void CompilerErrors::DoGotoError(const CompileError& error)
 			if(!isAbsolute) // this is always the case, except for system headers
 				filename.Prepend(project->GetCommonTopLevelPath());
 
-			cbEditor* ed = Manager::Get()->GetEditorManager()->Open(filename);
-			if (ed)
-			{
-				ed->Activate();
-				ed->GotoLine(error.line - 1);
-				ed->SetErrorLine(error.line - 1);
-				ed->UnfoldBlockFromLine(error.line - 1);
-			}
+			ed = Manager::Get()->GetEditorManager()->Open(filename);
 		}
 	}
+
+	// if we reached here and ed is NULL, either the error file doesn't belong to a project,
+	// or can't be found for any other reason.
+	// check if we can open it directly...
+    if (!ed)
+        ed = Manager::Get()->GetEditorManager()->Open(error.filename);
+
+    if (ed)
+    {
+        ed->Activate();
+        ed->GotoLine(error.line - 1);
+        ed->SetErrorLine(error.line - 1);
+        ed->UnfoldBlockFromLine(error.line - 1);
+    }
 }
 
 void CompilerErrors::DoClearErrorMarkFromAllEditors()
@@ -199,12 +205,12 @@ void CompilerErrors::DoClearErrorMarkFromAllEditors()
 	}
 }
 
-bool CompilerErrors::HasNextError()
+bool CompilerErrors::HasNextError() const
 {
 	return m_ErrorIndex < (int)m_Errors.GetCount();
 }
 
-bool CompilerErrors::HasPreviousError()
+bool CompilerErrors::HasPreviousError() const
 {
 	return m_ErrorIndex > 0;
 }
@@ -220,7 +226,7 @@ wxString CompilerErrors::GetErrorString(int index)
     return error;
 }
 
-unsigned int CompilerErrors::GetErrorsCount()
+unsigned int CompilerErrors::GetErrorsCount() const
 {
     unsigned int count = 0;
 	for (unsigned int i = 0; i < m_Errors.GetCount(); ++i)
@@ -231,7 +237,7 @@ unsigned int CompilerErrors::GetErrorsCount()
 	return count;
 }
 
-unsigned int CompilerErrors::GetWarningsCount()
+unsigned int CompilerErrors::GetWarningsCount() const
 {
     unsigned int count = 0;
 	for (unsigned int i = 0; i < m_Errors.GetCount(); ++i)

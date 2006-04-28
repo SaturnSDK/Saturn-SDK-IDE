@@ -77,11 +77,20 @@ class wxsItem: public wxsPropertyContainer
          */
         inline wxString GetVarName() { return VarName; }
 
+        /** \brief Setting variabne name */
+        inline void SetVarName(const wxString& NewName) { VarName = NewName; }
+
         /** \brief Getting identifier */
         inline wxString GetIdName() { return IdName; }
 
+        /** \brief Setting identifier */
+        inline void SetIdName(const wxString& NewIdName) { IdName = NewIdName; }
+
         /** \brief Checking if variable is member of class */
-        virtual bool GetIsMember() { return IsMember; }
+        inline bool GetIsMember() { return IsMember; }
+
+        /** \brief Setting IsMember flag */
+        inline void SetIsMember(bool NewIsMember) { IsMember = NewIsMember; }
 
         /** \brief Getting parent item */
         inline wxsParent* GetParent() { return Parent; }
@@ -117,7 +126,7 @@ class wxsItem: public wxsPropertyContainer
          *
          * \param QPP wxsAdvQPP class, root Quick properties panel
          */
-        virtual void AddItemQPP(wxsAdvQPP* QPP) = 0;
+        virtual void AddItemQPP(wxsAdvQPP* QPP) {}
 
         /** \brief Function generating code creating item in resource
          *
@@ -134,6 +143,7 @@ class wxsItem: public wxsPropertyContainer
          * \param WindowParent name of parent of class wxWindow* (this argument
          *        may be passed as parent in wxWidgets constructors. It will be
          *        empty string for root items.
+         * \param Language language of generated code
          */
         virtual void BuildCreatingCode(wxString& Code,const wxString& WindowParent,wxsCodingLang Language) = 0;
 
@@ -149,6 +159,18 @@ class wxsItem: public wxsPropertyContainer
          * place in case of spacer whch doesn't have variable at all.
          */
         virtual void BuildDeclarationCode(wxString& Code,wxsCodingLang Language);
+
+        /** \brief Function enumerating required declaration files
+         *
+         * This function is called when generating source code. It must add
+         * required declaration files (f.ex. header files in case of c++) into
+         * given lists.
+         * There are two lists of files - one is list used for class declaration
+         * and one for class definition. The first one must contain header files required
+         * when creating class (f.ex. <wx/button.h>, second one when creating content
+         * of resource (f.ex. <wx/bitmap.h>). If You're unsure of type, use the first one.
+         */
+        virtual void EnumDeclFiles(wxArrayString& Decl,wxArrayString& Def,wxsCodingLang Language) = 0;
 
         /** \brief Function building preview for this item
          *
@@ -171,6 +193,7 @@ class wxsItem: public wxsPropertyContainer
          * wxsPropertyContainer::XmlRead() function and loads extra data from
          * node passed as argument using defautl scheme.
          *
+         * \param Element element containing configuration for this item
          * \param IsXRC if true, this function should load XRC structure from
          *        this node and if it's parent, it should load all children.
          * \param IsExtra if true, this function should load Extra informations
@@ -185,6 +208,7 @@ class wxsItem: public wxsPropertyContainer
         /** \brief Function which should write this item and child items
          *         from xrc / wxs structure
          *
+         * \param Element here all item configuration should be stored
          * \param IsXRC if true, this function should write XRC structure to
          *        this node and if it's parent, it should write all children.
          * \param IsExtra if true, this function should write Extra informations
@@ -289,6 +313,9 @@ class wxsItem: public wxsPropertyContainer
          * case of properties.
          */
         virtual wxsQuickPropsPanel* CreateQuickProperties(wxWindow* Parent);
+
+        /** \brief Handler for change notifications */
+        virtual void PropertyChangedHandler();
 
         wxsEvents Events;           ///< \brief Object managing events
         wxsParent* Parent;          ///< \brief Parent class of this one

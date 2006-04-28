@@ -6,6 +6,7 @@
 #include <editormanager.h>
 #include <projectmanager.h>
 #include <macrosmanager.h>
+#include <compilerfactory.h>
 #include <cbproject.h>
 #include <cbeditor.h>
 #include "scriptbindings.h"
@@ -40,6 +41,7 @@ void Register_ProjectFile(asIScriptEngine* engine);
 void Register_ProjectBuildTarget(asIScriptEngine* engine);
 void Register_Project(asIScriptEngine* engine);
 void Register_ProjectManager(asIScriptEngine* engine);
+void Register_CompilerFactory(asIScriptEngine* engine);
 
 template <class T> void Register_CompileOptionsBase(asIScriptEngine* engine, const wxString& classname);
 
@@ -53,10 +55,17 @@ void gShowMessageWarn(const wxString& msg){ cbMessageBox(msg, _("Script message 
 void gShowMessageError(const wxString& msg){ cbMessageBox(msg, _("Script message (error)"), wxICON_ERROR); }
 void gShowMessageInfo(const wxString& msg){ cbMessageBox(msg, _("Script message (information)"), wxICON_INFORMATION); }
 void gDebugLog(const wxString& msg){ DBGLOG(msg); }
+
+// macros
 wxString gReplaceMacros(const wxString& buffer, bool envVarsToo)
 {
     return Manager::Get()->GetMacrosManager()->ReplaceMacros(buffer, envVarsToo);
 }
+
+// casts
+// (help scripts to cast to base types)
+CompileOptionsBase* gCastToCompileOptionsBase(cbProject* p){ return reinterpret_cast<CompileOptionsBase*>(p); }
+CompileOptionsBase* gCastToCompileOptionsBase(ProjectBuildTarget* p){ return reinterpret_cast<CompileOptionsBase*>(p); }
 
 //------------------------------------------------------------------------------
 // Actual registration
@@ -84,6 +93,7 @@ void RegisterBindings(asIScriptEngine* engine)
     engine->RegisterObjectType("ProjectManagerClass", 0, asOBJ_CLASS);
     engine->RegisterObjectType("EditorManagerClass", 0, asOBJ_CLASS);
     engine->RegisterObjectType("ConfigManagerClass", 0, asOBJ_CLASS);
+    engine->RegisterObjectType("CompilerFactoryClass", 0, asOBJ_CLASS);
 
     // register member functions
     Register_ConfigManager(engine);
@@ -94,6 +104,7 @@ void RegisterBindings(asIScriptEngine* engine)
     Register_ProjectBuildTarget(engine);
     Register_Project(engine);
     Register_ProjectManager(engine);
+    Register_CompilerFactory(engine);
 
     // register global functions
     engine->RegisterGlobalFunction("int Message(const wxString& in, const wxString& in, int)", asFUNCTION(gMessage), asCALL_CDECL);
@@ -103,6 +114,8 @@ void RegisterBindings(asIScriptEngine* engine)
     engine->RegisterGlobalFunction("void ShowInfo(const wxString& in)", asFUNCTION(gShowMessageInfo), asCALL_CDECL);
     engine->RegisterGlobalFunction("void Log(const wxString& in)", asFUNCTION(gDebugLog), asCALL_CDECL);
     engine->RegisterGlobalFunction("wxString ReplaceMacros(const wxString& in, bool)", asFUNCTION(gReplaceMacros), asCALL_CDECL);
+    engine->RegisterGlobalFunction("CompileOptionsBase@ Cast_CompileOptionsBase(Project@)", asFUNCTIONPR(gCastToCompileOptionsBase, (cbProject*), CompileOptionsBase*), asCALL_CDECL);
+    engine->RegisterGlobalFunction("CompileOptionsBase@ Cast_CompileOptionsBase(BuildTarget@)", asFUNCTIONPR(gCastToCompileOptionsBase, (ProjectBuildTarget*), CompileOptionsBase*), asCALL_CDECL);
 
     // Register constants
     RegisterConstBindings(engine);
@@ -435,4 +448,19 @@ void Register_ProjectManager(asIScriptEngine* engine)
 
     // actually bind ProjectManager's instance
     engine->RegisterGlobalProperty("ProjectManagerClass ProjectManager", Manager::Get()->GetProjectManager());
+}
+
+//------------------------------------------------------------------------------
+// CompilerFactory
+//------------------------------------------------------------------------------
+void Register_CompilerFactory(asIScriptEngine* engine)
+{
+    engine->RegisterObjectMethod("CompilerFactoryClass", "bool IsValidCompilerID(const wxString& in)", asFUNCTIONPR(CompilerFactory::IsValidCompilerID, (const wxString&), bool), asCALL_THISCALL);
+    engine->RegisterObjectMethod("CompilerFactoryClass", "int GetCompilerIndex(const wxString& in)", asFUNCTIONPR(CompilerFactory::GetCompilerIndex, (const wxString&), int), asCALL_THISCALL);
+    engine->RegisterObjectMethod("CompilerFactoryClass", "wxString& GetDefaultCompilerID()", asFUNCTION(CompilerFactory::GetDefaultCompilerID), asCALL_THISCALL);
+
+    // bind CompilerFactory's pseudo-instance (all its members are static anyway)
+    // this is a trick to present a normal object to the scripts
+    static CompilerFactory cf;
+    engine->RegisterGlobalProperty("CompilerFactoryClass CompilerFactory", &cf);
 }

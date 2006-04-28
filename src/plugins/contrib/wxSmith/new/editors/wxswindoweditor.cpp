@@ -102,7 +102,7 @@ static const long wxsPreviewId    = wxNewId();
 static const long wxsQuickPropsId = wxNewId();
 
 wxsWindowEditor::wxsWindowEditor(wxWindow* parent,wxsResource* Resource):
-    wxsEditor(parent,_T("x"),Resource),
+    wxsEditor(parent,wxEmptyString,Resource),
     TopPreview(NULL),
     QuickPropsOpen(false),
     ResourceLockCnt(0)
@@ -156,18 +156,21 @@ wxsWindowEditor::wxsWindowEditor(wxWindow* parent,wxsResource* Resource):
     }
     else
     {
-        // TODO: Do not access project directly, add members inside wxsWindowRes class
-        wxString FileName = GetWinRes()->GetProject()->GetProjectFileName(GetWinRes()->GetWxsFile());
+        wxASSERT_MSG( GetProject() != NULL, _T("Only wxsFLFile mode may not have project associated") );
+        wxString FileName = GetProject()->GetProjectFileName(GetWinRes()->GetWxsFile());
         InitFilename(FileName);
         SetTitle(m_Shortname);
     }
 
     UndoBuff = new wxsWinUndoBuffer(GetWinRes());
+    Corrector = new wxsCorrector(GetWinRes());
     ToggleQuickPropsPanel(false);
     AllEditors.insert(this);
     BuildPreview();
 
-    SelectItemInternal(RootItem(),true);
+    // Changing selection to root item
+    RootItem()->ClearSelection();
+    GetWinRes()->SelectionChanged(NULL);
 }
 
 wxsWindowEditor::~wxsWindowEditor()
@@ -184,13 +187,14 @@ wxsWindowEditor::~wxsWindowEditor()
     // in source files
     if ( GetModified() )
     {
-        // Loading resource from disk - this will recreate sources
+        // Loading resource from disk - this will recreate source code
         GetWinRes()->LoadResource();
-        // TODO: Recreate source code
+        GetWinRes()->RebuildCode();
     }
 
     // Now doing the rest
 	delete UndoBuff;
+	delete Corrector;
 	GetWinRes()->HidePreview();
 
 	AllEditors.erase(this);
@@ -248,7 +252,6 @@ void wxsWindowEditor::KillPreview()
         GetWinRes()->GetRootItem()->InvalidatePreview();
         delete TopPreview;
         TopPreview = NULL;
-        Content->RefreshSelection();
     }
 }
 
@@ -291,16 +294,24 @@ void wxsWindowEditor::Undo()
 {
     ResourceLock();
     UndoBuff->Undo();
+    Corrector->ClearCache();
     ResourceUnlock();
 	SetModified(UndoBuff->IsModified());
+	// TODO: Restore selection
+	RootItem()->ClearSelection();
+	GetWinRes()->SelectionChanged(NULL);
 }
 
 void wxsWindowEditor::Redo()
 {
     ResourceLock();
     UndoBuff->Redo();
+    Corrector->ClearCache();
     ResourceUnlock();
 	SetModified(UndoBuff->IsModified());
+	// TODO: Restore selection
+	RootItem()->ClearSelection();
+	GetWinRes()->SelectionChanged(NULL);
 }
 
 bool wxsWindowEditor::HasSelection()
@@ -336,7 +347,11 @@ void wxsWindowEditor::Cut()
     // Removing items copied into clipboard
     ResourceLock();
     KillSelection(RootItem());
+    Corrector->ClearCache();
     BuildPreview();
+
+    // TODO: Select previous item / parent item etc
+	GetWinRes()->SelectionChanged(NULL);
 }
 
 void wxsWindowEditor::KillSelection(wxsItem* Item)
@@ -359,7 +374,6 @@ void wxsWindowEditor::KillSelection(wxsItem* Item)
             }
         }
     }
-    CurrentSelection = NULL;
 }
 
 void wxsWindowEditor::Copy()
@@ -390,7 +404,7 @@ void wxsWindowEditor::Paste()
     wxsWindowResDataObject Data;
     if ( wxTheClipboard->GetData(Data) )
     {
-        wxsItem* RelativeTo = CurrentSelection;
+        wxsItem* RelativeTo = GetCurrentSelection();
         int InsertionType = InsType;
         if ( !RelativeTo )
         {
@@ -432,15 +446,19 @@ void wxsWindowEditor::Paste()
                 }
             }
             ResourceUnlock();
-            // TODO: Update item variables and identifiers, recreate source code
+            GetWinRes()->RebuildCode();
         }
     }
     wxTheClipboard->Close();
+
+	// TODO: Select added items
+	RootItem()->ClearSelection();
+	GetWinRes()->SelectionChanged(NULL);
 }
 
 bool wxsWindowEditor::InsertBefore(wxsItem* New,wxsItem* Ref)
 {
-	if ( !Ref ) Ref = CurrentSelection;
+	if ( !Ref ) Ref = GetCurrentSelection();
 
 	if ( !Ref )
 	{
@@ -455,21 +473,26 @@ bool wxsWindowEditor::InsertBefore(wxsItem* New,wxsItem* Ref)
         return false;
     }
 
+    Corrector->BeforePaste(New);
     int Index = Parent->GetChildIndex(Ref);
     if ( Index<0 || !Parent->AddChild(New,Index) )
     {
         wxsKILL(New);
         return false;
     }
+    Corrector->AfterPaste(New);
 
     // Adding this new item into resource tree
     New->BuildItemTree(wxsTREE(),Parent->GetLastTreeItemId(),Index);
+
+	// TODO: Set selection properly
+	GetWinRes()->SelectionChanged(NULL);
     return true;
 }
 
 bool wxsWindowEditor::InsertAfter(wxsItem* New,wxsItem* Ref)
 {
-	if ( !Ref ) Ref = CurrentSelection;
+	if ( !Ref ) Ref = GetCurrentSelection();
 
 	if ( !Ref )
 	{
@@ -484,36 +507,46 @@ bool wxsWindowEditor::InsertAfter(wxsItem* New,wxsItem* Ref)
         return false;
     }
 
+    Corrector->BeforePaste(New);
     int Index = Parent->GetChildIndex(Ref);
     if ( Index<0 || !Parent->AddChild(New,Index+1))
     {
         wxsKILL(New);
         return false;
     }
+    Corrector->AfterPaste(New);
 
     // Adding this new item into resource tree
     New->BuildItemTree(wxsTREE(),Parent->GetLastTreeItemId(),Index+1);
+
+	// TODO: Set selection properly
+	GetWinRes()->SelectionChanged(NULL);
     return true;
 }
 
 bool wxsWindowEditor::InsertInto(wxsItem* New,wxsItem* Ref)
 {
-	if ( !Ref ) Ref = CurrentSelection;
+	if ( !Ref ) Ref = GetCurrentSelection();
 	if ( !Ref || !Ref->ToParent() )
 	{
 		wxsKILL(New);
 		return false;
 	}
 
+    Corrector->BeforePaste(New);
     wxsParent* P = Ref->ToParent();
     if ( !P->AddChild(New) )
     {
         wxsKILL(New);
         return false;
     }
+    Corrector->AfterPaste(New);
 
     // Adding this new item into resource tree
     New->BuildItemTree(wxsTREE(),P->GetLastTreeItemId());
+
+	// TODO: Set selection properly
+	GetWinRes()->SelectionChanged(NULL);
     return true;
 }
 
@@ -637,6 +670,7 @@ void wxsWindowEditor::BuildPalette(wxNotebook* Palette)
 
 void wxsWindowEditor::InsertRequest(const wxString& Name)
 {
+    wxsItem* CurrentSelection = GetCurrentSelection();
     if ( !CurrentSelection )
     {
         DBGLOG(_("wxSmith: No item selected - couldn't create new item"));
@@ -673,7 +707,7 @@ void wxsWindowEditor::InsertRequest(const wxString& Name)
             break;
     }
     ResourceUnlock();
-    // TODO: Recreate source code
+    GetWinRes()->RebuildCode();
 }
 
 void wxsWindowEditor::OnButton(wxCommandEvent& event)
@@ -681,7 +715,7 @@ void wxsWindowEditor::OnButton(wxCommandEvent& event)
     wxWindow* Btn = (wxWindow*)event.GetEventObject();
     if ( Btn )
     {
-//        InsertRequest(Btn->GetName());
+        InsertRequest(Btn->GetName());
     }
 }
 
@@ -775,10 +809,12 @@ void wxsWindowEditor::OnInsBefore(wxCommandEvent& event)
 
 void wxsWindowEditor::OnDelete(wxCommandEvent& event)
 {
-    if ( !CurrentSelection ) return;
     ResourceLock();
     KillSelection(RootItem());
     ResourceUnlock();
+
+	// TODO: Select previous item / parent etc.
+	GetWinRes()->SelectionChanged(NULL);
 }
 
 void wxsWindowEditor::OnPreview(wxCommandEvent& event)
@@ -845,12 +881,14 @@ void wxsWindowEditor::ResourceUnlock()
 {
     if ( ! --ResourceLockCnt )
     {
+        UndoBuff->StoreChange();
         Freeze();
         KillPreview();
         BuildPreview();
         Thaw();
         Content->ContentChanged();
         Content->RefreshSelection();
+        SetModified(true);
     }
 
     wxASSERT_MSG(ResourceLockCnt>=0,
@@ -858,46 +896,29 @@ void wxsWindowEditor::ResourceUnlock()
         _T("corresponding wxsWindowEditor::ResourceLock()"));
 }
 
-void wxsWindowEditor::SelectItem(wxsItem* Item,bool AddToSelection)
+void wxsWindowEditor::SelectionChanged()
 {
-    // Spreading this notification to all editors
-    for ( WindowSet::iterator i=AllEditors.begin(); i!=AllEditors.end(); ++i )
-    {
-        (*i)->SelectItemInternal(Item,AddToSelection);
-    }
-}
-
-void wxsWindowEditor::SelectItemInternal(wxsItem* Item,bool AddToSelection)
-{
-    // Checking if this item is in this editor
-    if ( Item->GetResource() != GetWinRes() ) return;
-
-    // Unselecting all other items
-    if ( !AddToSelection )
-    {
-        RootItem()->ClearSelection();
-    }
-
-    CurrentSelection = Item;
-    CurrentSelection->SetIsSelected(true);
-
+    wxsItem* Item = GetCurrentSelection();
     // Updating insertion type mask
 
     int itMask = 0;
-    if ( Item->GetParent() )
+    if ( Item )
     {
-        // When sizer is added into non-sizer parent, no other items can be added to
-        // this parent
-        if ( Item->GetType() != wxsTSizer ||
-             Item->GetParent()->GetType() == wxsTSizer )
+        if ( Item->GetParent() )
         {
-            itMask |= itBefore | itAfter;
+            // When sizer is added into non-sizer parent, no other items can be added to
+            // this parent
+            if ( Item->GetType() != wxsTSizer ||
+                 Item->GetParent()->GetType() == wxsTSizer )
+            {
+                itMask |= itBefore | itAfter;
+            }
         }
-    }
 
-    if ( Item->ToParent() )
-    {
-        itMask |= itInto;
+        if ( Item->ToParent() )
+        {
+            itMask |= itInto;
+        }
     }
 
     SetInsertionTypeMask(itMask);
@@ -905,6 +926,15 @@ void wxsWindowEditor::SelectItemInternal(wxsItem* Item,bool AddToSelection)
 
     // Refreshing selection items inside content window
     Content->RefreshSelection();
+
+    // TODO: Refresh set of available items inside palette
+}
+
+void wxsWindowEditor::NotifyChange(wxsItem* Changed)
+{
+    ResourceLock();
+    Corrector->AfterChange(Changed);
+    ResourceUnlock();
 }
 
 void wxsWindowEditor::GetSelectionNoChildren(wxsWindowEditor::ItemArray& Array,wxsItem* Item)

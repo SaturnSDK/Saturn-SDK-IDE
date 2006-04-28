@@ -343,7 +343,7 @@ void wxsProject::Configure()
               "In this project, wxSmith does not manage source code for\n"
               "wxApp-derived class, there are no project options.\n"
               "\n"
-              "If You want wxSmith to manage Your application class,\n"
+              "If you want wxSmith to manage Your application class,\n"
               "it must be declared in following form:\n"
               "\n"
               "\t//(*AppHeaders\n"
@@ -366,11 +366,11 @@ void wxsProject::Configure()
               "\t\treturn wxsOK;\n"
               "\t}\n"
               "\n"
-              "If You have already changed Your application to this form,\n"
+              "If you have already changed Your application to this form,\n"
               "click Yes and choose source file with application class.\n"
               "\n"
-              "If You don't want wxSmith to manage Your application\n"
-              "(f.ex. You have Your own initialization system), click No.\n"),
+              "If you don't want wxSmith to manage Your application\n"
+              "(f.ex. you have your own initialization system), click No.\n"),
             _("Application not manager in wxSmith"),
             wxYES_NO | wxICON_INFORMATION );
 
@@ -383,7 +383,7 @@ void wxsProject::Configure()
         for(;;)
         {
             NewFileName = ::wxFileSelector(
-                _("Choose source file with Your application"),
+                _("Choose source file with your application"),
                 _T(""), _T("main.cpp"), _T("cpp"),
                 _("C++ source files (*.cpp)|*.cpp|"
                   "All files (*)|*"),
@@ -440,7 +440,10 @@ void wxsProject::RebuildAppCode()
         size_t Count = Resources.Count();
         for ( size_t i=0; i<Count; i++ )
         {
-            if ( CheckMainRes && (Config.MainResource==Resources[i]->GetResourceName()) )
+            // TODO: Support for other languages
+            if ( CheckMainRes &&
+                 (Config.MainResource==Resources[i]->GetResourceName()) &&
+                 Resources[i]->GetLanguage()==wxsCPP )
             {
                 MainResPtr = Resources[i];
             }
@@ -492,8 +495,16 @@ void wxsProject::RebuildAppCode()
 
     if ( MainResPtr )
     {
-        // FIXME (SpOoN##): Use path relative to main file, not to cbp file
-        NewCode << _T("#include \"") << MainResPtr->GetHeaderFile() << _T("\"\n");
+        wxString IncludeFile = MainResPtr->GetDeclarationFile();
+        wxFileName IncludeFileName(GetProjectFileName(IncludeFile));
+        if ( IncludeFileName.MakeRelativeTo(GetProjectFileName(GetConfig().AppFile)) )
+        {
+            // We will use unix path format since it's relative path
+            // Using this format will make sources more cross-platform
+            IncludeFile = IncludeFileName.GetFullPath(wxPATH_UNIX);
+        }
+
+        NewCode << _T("#include \"") << IncludeFile << _T("\"\n");
     }
     if ( IsAnyXRC || Config.LoadedResources.Count() )
     {

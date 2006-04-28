@@ -148,11 +148,15 @@ void wxsParent::EnumChildProperties(wxsItem* Child,long Flags)
     Child->EnumItemProperties(Flags);
 
     // Adding properties from extra data container when there's extra data
-    // associated
-    int Index = GetChildIndex(Child);
-    if ( (Index >= 0) && (Index < (int)Extra.Count()) && Extra[Index] )
+    // associated. It will be disabled in xml opearations since
+    // it's done on parent's level
+    if ( !(Flags&flXml) )
     {
-        SubContainer(Extra[Index],Flags);
+        int Index = GetChildIndex(Child);
+        if ( (Index >= 0) && (Index < (int)Extra.Count()) && Extra[Index] )
+        {
+            SubContainer(Extra[Index],Flags);
+        }
     }
 }
 
@@ -245,6 +249,7 @@ bool wxsParent::XmlWriteChild(int Index,TiXmlElement* Elem,bool IsXRC,bool IsExt
     if ( !ExtraName.empty() )
     {
         RealElem = Elem->InsertEndChild(TiXmlElement("object"))->ToElement();
+        Elem->SetAttribute("class",cbU2C(ExtraName));
         StoreExtraData(Index,Elem);
     }
 

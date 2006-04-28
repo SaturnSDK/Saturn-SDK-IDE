@@ -8,6 +8,8 @@
 #include "../wxsitemfactory.h"
 #include "../wxsextresmanager.h"
 #include "../wxseditor.h"
+#include "../wxscoder.h"
+#include "../wxspredefinedids.h"
 #include "../editors/wxswindoweditor.h"
 #include <manager.h>
 #include <editormanager.h>
@@ -73,6 +75,7 @@ namespace
 wxsWindowRes::wxsWindowRes(wxsProject* Project):
     wxsResource(Project),
     RootItem(NULL),
+    RootSelection(NULL),
     Preview(NULL)
 {
 }
@@ -101,11 +104,11 @@ bool wxsWindowRes::LoadConfiguration(TiXmlElement* Element)
     wxASSERT_MSG( GetProject() != NULL,
         _T("Can not call wxsWindowRes::LoadConfiguration when there's no project") );
 
-    ClassName = cbC2U(Element->Attribute("class"));
-    WxsFile   = cbC2U(Element->Attribute("wxs_file"));
-    SrcFile   = cbC2U(Element->Attribute("src_file"));
-    HFile     = cbC2U(Element->Attribute("header_file"));
-    XrcFile   = cbC2U(Element->Attribute("xrc_file"));
+    ClassName = FixFileName(cbC2U(Element->Attribute("class")));
+    WxsFile   = FixFileName(cbC2U(Element->Attribute("wxs_file")));
+    SrcFile   = FixFileName(cbC2U(Element->Attribute("src_file")));
+    HFile     = FixFileName(cbC2U(Element->Attribute("header_file")));
+    XrcFile   = FixFileName(cbC2U(Element->Attribute("xrc_file")));
 
     BasePropsFilter = !strcmp(Element->Attribute("edit_mode"),"Source") ?
             wxsFLSource : wxsFLMixed;
@@ -146,6 +149,7 @@ void wxsWindowRes::BindExternalResource(const wxString& FileName,const wxString&
     WxsFile = _T("");
     SrcFile = _T("");
     HFile = _T("");
+    // We do not fix file name since it's global path
     XrcFile = FileName;
     BasePropsFilter = wxsFLFile;
 }
@@ -353,6 +357,7 @@ bool wxsWindowRes::LoadResource()
     }
 
     // Clearing undo buffer and adding new position from current entry
+    // TODO: Check if undo things are really done
 
     if ( RequireUpdate )
     {
@@ -521,7 +526,7 @@ void wxsWindowRes::ShowPreview()
     {
         Preview = BuildPreview();
     }
-    if ( Preview )
+    if ( !Preview )
     {
         return;
     }
@@ -575,7 +580,7 @@ bool wxsWindowRes::CreateNewResource(TiXmlElement* Element)
     wxFileName IncludeFN(GetProject()->GetProjectFileName(HFile));
     IncludeFN.MakeRelativeTo(
         wxFileName(GetProject()->GetProjectFileName(SrcFile)).GetPath() );
-    wxString Include = IncludeFN.GetFullPath();
+    wxString Include = IncludeFN.GetFullPath(wxPATH_UNIX);
 
     wxString Content = EmptyHeader;
     Content.Replace(_T("$(Guard)"),Guard,true);
@@ -603,735 +608,288 @@ bool wxsWindowRes::CreateNewResource(TiXmlElement* Element)
     return true;
 }
 
-//void wxsWindowRes::NotifyChange()
-//{
-//    // Regenerating source code
-//	UpdateWidgetsVarNameId();
-//	RebuildCode();
-//
-//    // Applying modified state
-//    if ( GetEditor() )
-//    {
-//    	// Must process inside editor (updating titile)
-//    	GetEditor()->SetModified();
-//    }
-//    else
-//    {
-//        SetModified();
-//    }
-//
-//    // Storing change inside undo buffer
-//
-//    if ( GetEditor() )
-//    {
-//    	((wxsWindowEditor*)GetEditor())->GetUndoBuff()->StoreChange();
-//    }
-//}
-//
-//void wxsWindowRes::RebuildCode()
-//{
-//    if ( !GetProject() ) return;
-//
-////------------------------------
-//// Generating initializing code
-////------------------------------
-//
-//	wxString CodeHeader = wxString::Format(wxsBHeaderF("Initialize"),GetClassName().c_str());
-//	wxString Code = CodeHeader + _T("\n");
-//
-//	// Creating local and global declarations
-//	wxString GlobalCode;
-//	bool WasDeclaration = false;
-//	AddDeclarationsReq(RootWidget,Code,GlobalCode,WasDeclaration);
-//	if ( WasDeclaration )
-//	{
-//		Code.Append(_T('\n'));
-//	}
-//
-//	// Creating window-generating code
-//
-//    if ( GetEditMode() == wxsREMSource )
-//    {
-//        // Generating producing code
-//        wxsCodeGen Gen(RootWidget,false);
-//        Code.Append(Gen.GetCode());
-//    }
-//    else if ( GetEditMode() == wxsREMMixed )
-//    {
-//    	// Writing new Xrc file
-//        TiXmlDocument* Doc = GenerateXrc();
-//        if ( Doc )
-//        {
-//            Doc->SaveFile(_C(GetProject()->GetProjectFileName(XrcFile)));
-//            delete Doc;
-//        }
-//
-//        // No local variables - clearing the code
-//        Code = CodeHeader;
-//        Code.Append(_T('\n'));
-//        Code.Append(GetXrcLoadingCode());
-//        Code.Append(_T('\n'));
-//
-//    	// Loading all controls
-//    	GenXrcFetchingCode(Code,RootWidget);
-//    }
-//
-//	wxsCoder::Get()->AddCode(GetProject()->GetProjectFileName(SrcFile),CodeHeader,Code);
-//
-////---------------------------------
-//// Generating variable declarations
-////---------------------------------
-//
-//	CodeHeader.Printf(wxsBHeaderF("Declarations"),GetClassName().c_str());
-//	Code = CodeHeader + _T("\n") + GlobalCode;
-//	wxsCoder::Get()->AddCode(GetProject()->GetProjectFileName(HFile),CodeHeader,Code);
-//
-////---------------------------------
-//// Generating Identifiers
-////---------------------------------
-//
-//    CodeHeader.Printf(wxsBHeaderF("Identifiers"),GetClassName().c_str());
-//    Code = CodeHeader;
-//    Code.Append(_T('\n'));
-//    if ( GetEditMode() == wxsREMSource )
-//    {
-//        wxArrayString IdsArray;
-//        BuildIdsArray(RootWidget,IdsArray);
-//        if ( IdsArray.Count() )
-//        {
-//            Code.Append(_T("enum Identifiers\n{"));
-//            IdsArray.Sort();
-//            wxString Previous = _T("");
-//            bool First = true;
-//            for ( size_t i = 0; i<IdsArray.Count(); ++i )
-//            {
-//                if ( IdsArray[i] != Previous )
-//                {
-//                    Previous = IdsArray[i];
-//                    Code.Append( _T("\n\t") );
-//                    Code.Append( Previous );
-//                    if ( First )
-//                    {
-//                        Code.Append( _T(" = 0x1000") );
-//                        First = false;
-//                    }
-//                    if ( i < IdsArray.Count() - 1 )
-//                    {
-//                        Code.Append( _T(',') );
-//                    }
-//                }
-//            }
-//            Code.Append( _T("\n};\n") );
-//        }
-//    }
-//    wxsCoder::Get()->AddCode(GetProject()->GetProjectFileName(HFile),CodeHeader,Code);
-//
-////---------------------------------
-//// Generating Includes
-////---------------------------------
-//
-//	wxArrayString HeadersArray;
-//	BuildHeadersArray(RootWidget,HeadersArray);
-//	HeadersArray.Add(_T("<wx/intl.h>"));
-//	if ( GetEditMode() == wxsREMMixed )
-//	{
-//		HeadersArray.Add(_T("<wx/xrc/xmlres.h>"));
-//	}
-//	HeadersArray.Sort();
-//	CodeHeader.Printf(wxsBHeaderF("Headers"),GetClassName().c_str());
-//	Code = CodeHeader;
-//	wxString Previous = _T("");
-//	for ( size_t i = 0; i<HeadersArray.Count(); i++ )
-//	{
-//		if ( HeadersArray[i] != Previous )
-//        {
-//        	Previous = HeadersArray[i];
-//            Code.Append(_T("\n#include "));
-//            Code.Append(Previous);
-//        }
-//	}
-//	Code.Append(_T('\n'));
-//	wxsCoder::Get()->AddCode(GetProject()->GetProjectFileName(HFile),CodeHeader,Code);
-//	UpdateEventTable();
-//}
-//
-//void wxsWindowRes::AddDeclarationsReq(wxsWidget* Widget,wxString& LocalCode,wxString& GlobalCode,bool& WasLocal)
-//{
-//	if ( !Widget ) return;
-//
-//	static wxsCodeParams Params;
-//
-//	int Count = Widget->GetChildCount();
-//	for ( int i=0; i<Count; i++ )
-//	{
-//		wxsWidget* Child = Widget->GetChild(i);
-//		if ( Child->GetBPType() & bptVariable )
-//        {
-//		    // Only VarName should be used when fetching declaration code
-//            Params.VarName = Child->BaseProperties.VarName;
-//            wxString Decl = Child->GetDeclarationCode(Params);
-//            if ( Decl.Length() )
-//            {
-//                bool Member = Child->BaseProperties.IsMember;
-//                wxString& Code = Member ? GlobalCode : LocalCode;
-//                Code.Append(Decl);
-//                Code.Append('\n');
-//                WasLocal |= !Member;
-//            }
-//		}
-//		AddDeclarationsReq(Child,LocalCode,GlobalCode,WasLocal);
-//	}
-//}
-//
-//void wxsWindowRes::UpdateWidgetsVarNameId()
-//{
-//    StrMap NamesMap;
-//    StrMap IdsMap;
-//
-//    CreateSetsReq(NamesMap,IdsMap,RootWidget);
-//   	UpdateWidgetsVarNameIdReq(NamesMap,IdsMap,RootWidget);
-//}
-//
-//void wxsWindowRes::UpdateWidgetsVarNameIdReq(StrMap& NamesMap, StrMap& IdsMap, wxsWidget* Widget)
-//{
-//	int Cnt = Widget->GetChildCount();
-//	for ( int i=0; i<Cnt; i++ )
-//	{
-//		wxsWidget* Child = Widget->GetChild(i);
-//
-//        wxsBaseProperties& Params = Child->BaseProperties;
-//
-//        bool UpdateVar = ( Child->GetBPType() & bptVariable ) &&
-//                         ( Params.VarName.Length() == 0 );
-//        bool UpdateId  = ( Child->GetBPType() & bptId ) &&
-//                         ( Params.IdName.Length() == 0 );
-//        if ( UpdateVar || UpdateId )
-//        {
-//            wxString NameBase = Child->GetInfo().DefaultVarName;
-//            wxString Name;
-//            wxString IdBase = Child->GetInfo().DefaultVarName;
-//            IdBase.MakeUpper();
-//            wxString Id;
-//            int Index = 1;
-//            do
-//            {
-//                Name.Printf(_T("%s%d"),NameBase.c_str(),Index);
-//                Id.Printf(_T("ID_%s%d"),IdBase.c_str(),Index++);
-//            }
-//            while ( ( UpdateVar && NamesMap.find(Name) != NamesMap.end() ) ||
-//                    ( UpdateId  && IdsMap.find(Id)     != IdsMap.end() ) );
-//
-//            if ( UpdateVar )
-//            {
-//                Params.VarName = Name;
-//                NamesMap[Name] = Child;
-//            }
-//            if ( UpdateId )
-//            {
-//                Params.IdName = Id;
-//                IdsMap[Id] = Child;
-//            }
-//            if ( UpdateVar || UpdateId )
-//            {
-//            	SetModified();
-//            }
-//        }
-//
-//		UpdateWidgetsVarNameIdReq(NamesMap,IdsMap,Child);
-//	}
-//}
-//
-//void wxsWindowRes::CreateSetsReq(StrMap& NamesMap, StrMap& IdsMap, wxsWidget* Widget, wxsWidget* Without)
-//{
-//	int Cnt = Widget->GetChildCount();
-//	for ( int i=0; i<Cnt; i++ )
-//	{
-//		wxsWidget* Child = Widget->GetChild(i);
-//
-//		if ( Child != Without )
-//		{
-//            if ( Child->BaseProperties.VarName.Length() )
-//            {
-//                NamesMap[Child->BaseProperties.VarName.c_str()] = Child;
-//            }
-//
-//            if ( Child->BaseProperties.IdName.Length() )
-//            {
-//                IdsMap[Child->BaseProperties.IdName.c_str()] = Child;
-//            }
-//		}
-//
-//		CreateSetsReq(NamesMap,IdsMap,Child,Without);
-//	}
-//}
-//
-//bool wxsWindowRes::CheckBaseProperties(bool Correct,wxsWidget* Changed)
-//{
-//    StrMap NamesMap;
-//    StrMap IdsMap;
-//
-//    if ( Changed == NULL )
-//    {
-//    	// Will check all widgets
-//    	return CheckBasePropertiesReq(RootWidget,Correct,NamesMap,IdsMap);
-//    }
-//
-//    // Creating sets of names and ids
-//   	CreateSetsReq(NamesMap,IdsMap,RootWidget,Changed);
-//
-//   	// Checkign and correcting changed widget
-//   	return CorrectOneWidget(NamesMap,IdsMap,Changed,Correct);
-//}
-//
-//bool wxsWindowRes::CheckBasePropertiesReq(wxsWidget* Widget,bool Correct,StrMap& NamesMap,StrMap& IdsMap)
-//{
-//	bool Result = true;
-//	int Cnt = Widget->GetChildCount();
-//	for ( int i=0; i<Cnt; ++i )
-//	{
-//		wxsWidget* Child = Widget->GetChild(i);
-//
-//		if ( !CorrectOneWidget(NamesMap,IdsMap,Child,Correct) )
-//		{
-//			if ( !Correct ) return false;
-//			Result = false;
-//		}
-//
-//		NamesMap[Child->BaseProperties.VarName] = Child;
-//		IdsMap[Child->BaseProperties.IdName] = Child;
-//
-//		if ( ! CheckBasePropertiesReq(Child,Correct,NamesMap,IdsMap) )
-//		{
-//			if ( !Correct ) return false;
-//			Result = false;
-//		}
-//	}
-//
-//	return Result;
-//}
-//
-//bool wxsWindowRes::CorrectOneWidget(StrMap& NamesMap,StrMap& IdsMap,wxsWidget* Changed,bool Correct)
-//{
-//	bool Valid = true;
-//
-//    // Validating variable name
-//
-//    if ( Changed->GetBPType() & bptVariable )
-//    {
-//    	wxString& VarName = Changed->BaseProperties.VarName;
-//    	wxString Corrected;
-//    	VarName.Trim(true);
-//    	VarName.Trim(false);
-//
-//    	// first validating produced name
-//
-//    	if ( VarName.Length() == 0 )
-//    	{
-//    		if ( !Correct )
-//    		{
-//    			wxMessageBox(_("Item must have variable name"));
-//    			return false;
-//    		}
-//    		else
-//    		{
-//    		    DBGLOG(_T("wxSmith: Widget has empty variable name"));
-//    		}
-//
-//   			// Creating new unique name
-//
-//   			const wxString& Prefix = Changed->GetInfo().DefaultVarName;
-//   			for ( int i=1;; ++i )
-//   			{
-//   				Corrected.Printf(_T("%s%d"),Prefix.c_str(),i);
-//   				if ( NamesMap.find(Corrected) == NamesMap.end() ) break;
-//   			}
-//
-//    		Valid = false;
-//    	}
-//    	else
-//    	{
-//    		// Validating name as C++ ideentifier
-//            if ( wxString(_T("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
-//                          _T("abcdefghijklmnopqrstuvwxyz")
-//                          _T("_") ).Find(VarName.GetChar(0)) == -1 )
-//            {
-//            	if ( !Correct )
-//            	{
-//            		wxMessageBox(wxString::Format(_("Invalid character: '%c' in variable name"),VarName.GetChar(0)));
-//            		return false;
-//            	}
-//            	else
-//            	{
-//            	    DBGLOG(_T("wxSmith: Variable name : \"%s\" is not a valid c++ identifier (invalid character \"%c\" at position %d)"),VarName.c_str(),VarName.GetChar(0),0);
-//            	}
-//                Valid = false;
-//            }
-//            else
-//            {
-//            	Corrected.Append(VarName.GetChar(0));
-//            }
-//
-//            for ( size_t i=1; i<VarName.Length(); ++i )
-//            {
-//                if ( wxString(_T("0123456789")
-//                              _T("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
-//                              _T("abcdefghijklmnopqrstuvwxyz")
-//                              _T("_") ).Find(VarName.GetChar(i)) == -1 )
-//                {
-//                    if ( !Correct )
-//                    {
-//                        wxMessageBox(wxString::Format(_("Invalid character: '%c' in variable name"),VarName.GetChar(i)));
-//                        return false;
-//                    }
-//                    else
-//                    {
-//                        DBGLOG(_T("wxSmith: Variable name : \"%s\" is not a valid c++ identifier (invalid character \"%c\" at position %d)"),VarName.c_str(),VarName.GetChar(i),i);
-//                    }
-//                    Valid = false;
-//                }
-//                else
-//                {
-//                    Corrected.Append(VarName.GetChar(i));
-//                }
-//            }
-//
-//            // Searching for another widget with same name
-//            if ( NamesMap.find(Corrected) != NamesMap.end() )
-//            {
-//            	if ( !Correct )
-//            	{
-//            		wxMessageBox(wxString::Format(_("Item with variable name '%s' already exists"),Corrected.c_str()));
-//            		return false;
-//            	}
-//            	else
-//            	{
-//            	    DBGLOG(_T("wxSmith: Duplicated variable name: \"%s\""),VarName.c_str());
-//            	}
-//
-//            	// Generating new unique name
-//
-//                const wxString& Prefix = Changed->GetInfo().DefaultVarName;
-//                for ( int i=1;; ++i )
-//                {
-//                    Corrected.Printf(_T("%s%d"),Prefix.c_str(),i);
-//                    if ( NamesMap.find(Corrected) == NamesMap.end() ) break;
-//                }
-//
-//            	Valid = false;
-//            }
-//    	}
-//
-//        if ( Correct )
-//        {
-//        	VarName = Corrected;
-//        }
-//    }
-//
-//    if ( Changed->GetBPType() & bptId )
-//    {
-//    	wxString& IdName = Changed->BaseProperties.IdName;
-//    	wxString Corrected;
-//    	IdName.Trim(true);
-//    	IdName.Trim(false);
-//
-//    	// first validating produced name
-//
-//    	if ( IdName.Length() == 0 )
-//    	{
-//    		if ( !Correct )
-//    		{
-//    			wxMessageBox(_("Item must have identifier"));
-//    			return false;
-//    		}
-//    		else
-//    		{
-//    		    DBGLOG(_T("wxSmith: Empty identifier"));
-//    		}
-//
-//   			// Creating new unique name
-//
-//   			wxString Prefix = Changed->GetInfo().DefaultVarName;
-//   			Prefix.UpperCase();
-//   			for ( int i=1;; ++i )
-//   			{
-//   				Corrected.Printf(_T("ID_%s%d"),Prefix.c_str(),i);
-//   				if ( IdsMap.find(Corrected) == IdsMap.end() ) break;
-//   			}
-//
-//    		Valid = false;
-//    	}
-//    	else
-//    	{
-//    	    long IdValue;
-//    	    if ( !IdName.ToLong(&IdValue,0) )
-//    	    {
-//                // Validating id as C++ identifier
-//                if ( wxString(_T("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
-//                              _T("abcdefghijklmnopqrstuvwxyz")
-//                              _T("_") ).Find(IdName.GetChar(0)) == -1 )
-//                {
-//                    if ( !Correct )
-//                    {
-//                        wxMessageBox(wxString::Format(_("Invalid character: '%c' in id name"),IdName.GetChar(0)));
-//                        return false;
-//                    }
-//                    else
-//                    {
-//                        DBGLOG(_T("wxSmith: Identifier name : \"%s\" is not a valid c++ name (invalid character \"%c\" at position %d)"),IdName.c_str(),IdName.GetChar(0),0);
-//                    }
-//                    Valid = false;
-//                }
-//                else
-//                {
-//                    Corrected.Append(IdName.GetChar(0));
-//                }
-//
-//                for ( size_t i=1; i<IdName.Length(); ++i )
-//                {
-//                    if ( wxString(_T("0123456789")
-//                                  _T("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
-//                                  _T("abcdefghijklmnopqrstuvwxyz")
-//                                  _T("_") ).Find(IdName.GetChar(i)) == -1 )
-//                    {
-//                        if ( !Correct )
-//                        {
-//                            wxMessageBox(wxString::Format(_("Invalid character: '%c' in id name"),IdName.GetChar(i)));
-//                            return false;
-//                        }
-//                        else
-//                        {
-//                            DBGLOG(_T("wxSmith: Identifier name : \"%s\" is not a valid c++ name (invalid character \"%c\" at position %d)"),IdName.c_str(),IdName.GetChar(i),i);
-//                        }
-//                        Valid = false;
-//                    }
-//                    else
-//                    {
-//                        Corrected.Append(IdName.GetChar(i));
-//                    }
-//                }
-//
-//                // Searching for another widget with same name
-//
-//                bool Predefined = false;
-//                for ( int i=0; i<wxsPredefinedIdsCount; i++ )
-//                {
-//                    if ( wxsPredefinedIds[i] == Corrected )
-//                    {
-//                        Predefined = true;
-//                        break;
-//                    }
-//                }
-//
-//                if ( (!Predefined) &&
-//                     ( IdsMap.find(Corrected) != IdsMap.end() ) )
-//                {
-//                    if ( !Correct )
-//                    {
-//                        wxMessageBox(wxString::Format(_("Item with identifier '%s' already exists"),Corrected.c_str()));
-//                        return false;
-//                    }
-//                    else
-//                    {
-//                        DBGLOG(_T("wxSmith: Duplicated identifier name: \"%s\""),IdName.c_str());
-//                    }
-//
-//                    // Generating new unique name
-//
-//                    wxString Prefix = Changed->GetInfo().DefaultVarName;
-//                    Prefix.UpperCase();
-//                    for ( int i=1;; ++i )
-//                    {
-//                        Corrected.Printf(_T("ID_%s%d"),Prefix.c_str(),i);
-//                        if ( IdsMap.find(Corrected) == IdsMap.end() ) break;
-//                    }
-//
-//                    Valid = false;
-//                }
-//    	    }
-//    	    else
-//    	    {
-//    	        if ( GetEditMode() != wxsREMSource )
-//    	        {
-//    	            if ( IdName != _T("-1") )
-//    	            {
-//                        if ( !Correct )
-//                        {
-//                            wxMessageBox(wxString::Format(_("XRC allow only -1 value instead of identifier name."),Corrected.c_str()));
-//                            return false;
-//                        }
-//                        else
-//                        {
-//                            DBGLOG(_T("wxSmith: Invalid numeric id value: \"%s\""),IdName.c_str());
-//                        }
-//
-//                        IdName = _T("-1");
-//                        Valid = false;
-//    	            }
-//    	        }
-//    	    }
-//
-//    	}
-//
-//    	if ( Correct )
-//    	{
-//    		IdName = Corrected;
-//    	}
-//    }
-//
-//    if ( !Valid && Correct ) SetModified();
-//
-//	return Valid;
-//}
-//
-//void wxsWindowRes::BuildIdsArray(wxsWidget* Widget,wxArrayString& Array)
-//{
-//	int Cnt = Widget->GetChildCount();
-//	for ( int i=0; i<Cnt; i++ )
-//	{
-//		wxsWidget* Child = Widget->GetChild(i);
-//		if ( Child->GetBPType() & bptId )
-//		{
-//		    const wxString& Name = Child->BaseProperties.IdName;
-//		    long Value;
-//		    bool Predefined = Name.ToLong(&Value,0);
-//		    if ( !Predefined )
-//		    {
-//		        for ( int i=0; i<wxsPredefinedIdsCount; i++ )
-//                {
-//                    if ( Name == wxsPredefinedIds[i] )
-//                    {
-//                        Predefined = true;
-//                        break;
-//                    }
-//                }
-//		    }
-//		    if ( !Predefined )
-//		    {
-//                Array.Add(Child->BaseProperties.IdName);
-//		    }
-//		}
-//		BuildIdsArray(Child,Array);
-//	}
-//}
-//
-//void wxsWindowRes::BuildHeadersArray(wxsWidget* Widget,wxArrayString& Array)
-//{
-//	Array.Add(Widget->GetInfo().HeaderFile);
-//	if ( Widget->GetInfo().ExtHeaderFile.Length() )
-//	{
-//        Array.Add(Widget->GetInfo().ExtHeaderFile);
-//	}
-//	int Cnt = Widget->GetChildCount();
-//	for ( int i=0; i<Cnt; i++ )
-//	{
-//		wxsWidget* Child = Widget->GetChild(i);
-//		BuildHeadersArray(Child,Array);
-//	}
-//}
-//
-//void wxsWindowRes::UpdateEventTable()
-//{
-//    if ( !GetProject() ) return;
-//
-//	wxString CodeHeader;
-//	CodeHeader.Printf(wxsBHeaderF("EventTable"),ClassName.c_str());
-//	wxString Code = CodeHeader;
-//	Code.Append(_T('\n'));
-//	CollectEventTableEnteries(Code,RootWidget);
-//	wxsCoder::Get()->AddCode(GetProject()->GetProjectFileName(GetSourceFile()),CodeHeader,Code);
-//    // Applying modified state
-//    if ( GetEditor() )
-//    {
-//    	// Must process inside editor (updating titile)
-//    	GetEditor()->SetModified();
-//    }
-//    else
-//    {
-//        SetModified();
-//    }
-//
-//    // Storing change inside undo buffer
-//    if ( GetEditor() )
-//    {
-//    	((wxsWindowEditor*)GetEditor())->GetUndoBuff()->StoreChange();
-//    }
-//}
-//
-//void wxsWindowRes::CollectEventTableEnteries(wxString& Code,wxsWidget* Widget)
-//{
-//	int Cnt = Widget->GetChildCount();
-//    Code += Widget->GetEvents()->GetArrayEnteries();
-//	for ( int i=0; i<Cnt; i++ )
-//	{
-//		wxsWidget* Child = Widget->GetChild(i);
-//		CollectEventTableEnteries(Code,Child);
-//	}
-//}
-//
-//void wxsWindowRes::GenXrcFetchingCode(wxString& Code,wxsWidget* Widget)
-//{
-//	int Cnt = Widget->GetChildCount();
-//	for ( int i=0; i<Cnt; i++ )
-//	{
-//		wxsWidget* Child = Widget->GetChild(i);
-//		if ( ( Child->GetBPType() & bptVariable ) &&
-//		     ( Child->BaseProperties.IsMember ) )
-//		{
-//			Code.Append(Child->BaseProperties.VarName);
-//			Code.Append(_T(" = XRCCTRL(*this,\""));
-//			Code.Append(Child->BaseProperties.IdName);
-//			Code.Append(_T("\","));
-//			Code.Append(Child->GetInfo().Name);
-//			Code.Append(_T(");\n"));
-//		}
-//		GenXrcFetchingCode(Code,Child);
-//	}
-//}
-//
-//TiXmlDocument* wxsWindowRes::GenerateXrc()
-//{
-//	int EMStore = GetEditMode();
-//	SetEditMode(wxsREMFile);
-//	TiXmlDocument* Generated = GenerateXml();
-//	SetEditMode(EMStore);
-//	return Generated;
-//}
-//
+void wxsWindowRes::NotifyChange(wxsItem* Changed)
+{
+    // Regenerating source code
+    RebuildCode();
+
+    // Applying modified state
+    if ( GetEditor() )
+    {
+        ((wxsWindowEditor*)GetEditor())->NotifyChange(Changed);
+    }
+    else
+    {
+        SetModified();
+    }
+}
+
+void wxsWindowRes::RebuildCode()
+{
+    if ( !GetProject() ) return;
+
+    switch ( GetLanguage() )
+    {
+        case wxsCPP:
+        {
+
+        //------------------------------------------------------
+        // Generating initializing code and global declarations
+        //------------------------------------------------------
+
+            wxString CodeHeader = wxString::Format(wxsBHeaderF("Initialize"),GetClassName().c_str());
+            wxString Code = _T("\n");
+            wxString GlobalVarsCode = _T("\n");
+
+            // Creating local and global declarations
+            if ( BuildDeclarations(RootItem,Code,GlobalVarsCode) )
+            {
+                Code.Append(_T('\n'));
+            }
+
+            // Creating window-generating code
+            if ( GetBasePropsFilter() == wxsFLSource )
+            {
+                // Adding code building the structure
+                RootItem->BuildCreatingCode(Code,_T("parent"),wxsCPP);
+            }
+            else if ( GetBasePropsFilter() == wxsFLMixed )
+            {
+                // Removing all local declarations
+                Code = _T("\n");
+                Code << BuildXrcLoadingCode();
+
+                // Fetching items from built resource
+                FetchXmlBuiltItems(RootItem,Code);
+            }
+
+            // Adding code for event handlers
+            AddEventHandlers(RootItem,Code);
+
+            wxsADDCODE(
+                GetProject()->GetProjectFileName(SrcFile),
+                CodeHeader,
+                wxsBEnd(),
+                Code);
+
+            CodeHeader.Printf(wxsBHeaderF("Declarations"),GetClassName().c_str());
+            wxsADDCODE(
+                GetProject()->GetProjectFileName(HFile),
+                CodeHeader,
+                wxsBEnd(),
+                GlobalVarsCode);
+
+        //---------------------------------
+        // Generating Identifiers
+        //---------------------------------
+
+            CodeHeader.Printf(wxsBHeaderF("Identifiers"),GetClassName().c_str());
+            Code = _T('\n');
+            if ( GetBasePropsFilter() == wxsFLSource )
+            {
+                wxArrayString IdsArray;
+                BuildIdsArray(RootItem,IdsArray);
+                if ( IdsArray.Count() )
+                {
+                    Code.Append(_T("enum Identifiers\n{"));
+                    IdsArray.Sort();
+                    wxString Previous = _T("");
+                    bool First = true;
+                    for ( size_t i = 0; i<IdsArray.Count(); ++i )
+                    {
+                        if ( IdsArray[i] != Previous )
+                        {
+                            Previous = IdsArray[i];
+                            Code.Append( _T("\n\t") );
+                            Code.Append( Previous );
+                            if ( First )
+                            {
+                                Code.Append( _T(" = 0x1000") );
+                                First = false;
+                            }
+                            if ( i < IdsArray.Count() - 1 )
+                            {
+                                Code.Append( _T(',') );
+                            }
+                        }
+                    }
+                    Code.Append( _T("\n};\n") );
+                }
+            }
+
+            wxsADDCODE(
+                GetProject()->GetProjectFileName(HFile),
+                CodeHeader,
+                wxsBEnd(),
+                Code);
+
+        //---------------------------------
+        // Generating Includes
+        //---------------------------------
+
+            wxArrayString DeclHeaders;
+            wxArrayString DefHeaders;
+            BuildDeclArrays(RootItem,DeclHeaders,DefHeaders);
+            DefHeaders.Add(_T("<wx/intl.h>"));
+            if ( GetBasePropsFilter() == wxsFLMixed )
+            {
+                DefHeaders.Add(_T("<wx/xrc/xmlres.h>"));
+            }
+
+            // TODO: Split these and put into files separately
+            for ( size_t i = DefHeaders.Count(); i-->0; )
+            {
+                DeclHeaders.Add(DefHeaders[i]);
+            }
+
+            DeclHeaders.Sort();
+            CodeHeader.Printf(wxsBHeaderF("Headers"),GetClassName().c_str());
+            Code = _T("\n");
+            wxString Previous = _T("");
+            for ( size_t i = 0; i<DeclHeaders.Count(); i++ )
+            {
+                if ( DeclHeaders[i] != Previous )
+                {
+                    Previous = DeclHeaders[i];
+                    Code << _T("#include ") << Previous << _T("\n");
+                }
+            }
+
+            wxsADDCODE(
+                GetProject()->GetProjectFileName(HFile),
+                CodeHeader,
+                wxsBEnd(),
+                Code);
+
+
+        //---------------------------------
+        // Clearing outdated event array
+        //---------------------------------
+
+            CodeHeader.Printf(wxsBHeaderF("EventTable"),ClassName.c_str());
+            wxsADDCODE(
+                GetProject()->GetProjectFileName(SrcFile),
+                CodeHeader,
+                wxsBEnd(),
+                _T("\n"));
+
+            return;
+        }
+    }
+
+    wxsLANGMSG(wxsWindowRes::RebuildCode,GetLanguage());
+
+}
+
+bool wxsWindowRes::BuildDeclarations(wxsItem* Item,wxString& Code,wxString& GlobalCode)
+{
+    wxsParent* Parent = Item->ToParent();
+    if ( !Parent ) return false;
+    bool Result = false;
+
+	int ChildCnt = Parent->GetChildCount();
+	for ( int i=0; i<ChildCnt; i++ )
+	{
+		wxsItem* Child = Parent->GetChild(i);
+
+		if ( Child->GetPropertiesFlags() & wxsFLVariable )
+        {
+            if ( Child->GetIsMember() )
+            {
+                Child->BuildDeclarationCode(GlobalCode,GetLanguage());
+            }
+            else
+            {
+                Result = true;
+                Child->BuildDeclarationCode(Code,GetLanguage());
+            }
+		}
+
+		if ( BuildDeclarations(Child,Code,GlobalCode) )
+		{
+		    Result = true;
+		}
+	}
+	return Result;
+}
+
+void wxsWindowRes::AddEventHandlers(wxsItem* Item,wxString& Code)
+{
+    wxsEvents& Events = Item->GetEvents();
+    Events.GenerateBindingCode(Code,UsingXRC(),GetLanguage());
+
+    wxsParent* Parent = Item->ToParent();
+    if ( Parent )
+    {
+        int Cnt = Parent->GetChildCount();
+        for ( int i=0; i<Cnt; i++ )
+        {
+            AddEventHandlers(Parent->GetChild(i),Code);
+        }
+    }
+}
+
+void wxsWindowRes::BuildIdsArray(wxsItem* Item,wxArrayString& Array)
+{
+    wxsParent* Parent = Item->ToParent();
+    if ( !Parent ) return;
+
+	int Cnt = Parent->GetChildCount();
+	for ( int i=0; i<Cnt; i++ )
+	{
+		wxsItem* Child = Parent->GetChild(i);
+		if ( Child->GetPropertiesFlags() & wxsFLId )
+		{
+		    const wxString& Name = Child->GetIdName();
+
+		    if ( !wxsPredefinedIDs::Check(Name) )
+		    {
+                Array.Add(Name);
+		    }
+		}
+		BuildIdsArray(Child,Array);
+	}
+}
+
+void wxsWindowRes::BuildDeclArrays(wxsItem* Item,wxArrayString& DeclHeaders,wxArrayString& DefHeaders)
+{
+    Item->EnumDeclFiles(DeclHeaders,DefHeaders,GetLanguage());
+
+    wxsParent* Parent = Item->ToParent();
+    if ( !Parent ) return;
+
+	int Cnt = Parent->GetChildCount();
+	for ( int i=0; i<Cnt; i++ )
+	{
+	    BuildDeclArrays(Parent->GetChild(i),DeclHeaders,DefHeaders);
+	}
+}
+
+void wxsWindowRes::FetchXmlBuiltItems(wxsItem* Item,wxString& Code)
+{
+    wxsParent* Parent = Item->ToParent();
+    if ( !Parent ) return;
+
+	int Cnt = Parent->GetChildCount();
+	for ( int i=0; i<Cnt; i++ )
+	{
+		wxsItem* Child = Parent->GetChild(i);
+		if ( (Child->GetPropertiesFlags() & (wxsFLVariable|wxsFLId)) == (wxsFLVariable|wxsFLId) && Child->GetIsMember() )
+		{
+		    const wxString& VarName = Child->GetVarName();
+		    const wxString& IdName = Child->GetIdName();
+
+            Code << VarName << _T(" = (") << Child->GetInfo().Name <<
+                    _T("*)FindWindow(XRCID(") + IdName + _T("));\n");
+		}
+		FetchXmlBuiltItems(Child,Code);
+	}
+}
 
 void wxsWindowRes::SetModified(bool modified)
 {
     Modified = modified;
 }
-
-//bool wxsWindowRes::ChangeRootWidget(wxsWidget* NewRoot,bool DeletePrevious)
-//{
-//	if ( !NewRoot ) return false;
-//	// New root must be of the same type as current
-//	if ( RootWidget->GetInfo().Name != NewRoot->GetInfo().Name ) return false;
-//    wxsBlockSelectEvents();
-//	RootWidget->KillTree(wxsTREE());
-//	if ( GetEditor() )
-//	{
-//		((wxsWindowEditor*)GetEditor())->KillPreview();
-//	}
-//	if ( DeletePrevious ) wxsFACTORY()->Kill(RootWidget);
-//	RootWidget = NewRoot;
-//    wxTreeCtrl* Tree = wxsTREE();
-//    Tree->SelectItem(GetTreeItemId());
-//    if ( GetEditor() )
-//    {
-//        GetRootWidget()->BuildTree(Tree,GetTreeItemId());
-//        ((wxsWindowEditor*)GetEditor())->BuildPreview();
-//    }
-//    RebuildCode();
-//    wxsBlockSelectEvents(false);
-//	return true;
-//}
-//
-//void wxsWindowRes::OnSelect()
-//{
-//    wxsSelectWidget(GetRootWidget());
-//}
 
 wxString wxsWindowRes::GetType()
 {
@@ -1350,15 +908,75 @@ bool wxsWindowRes::UsingFile(const wxString& FileName)
         wxFileName FN(FileName);
         if ( FN.MakeRelativeTo(GetProject()->GetProjectPath()) )
         {
-            if ( FN.GetFullPath() == XrcFile ) return true;
+            if ( FN.GetFullPath(wxPATH_UNIX) == XrcFile ) return true;
         }
     }
 
     wxFileName FN(FileName);
     if ( FN.MakeRelativeTo(GetProject()->GetInternalPath()) )
     {
-        if ( FN.GetFullPath() == WxsFile ) return true;
+        if ( FN.GetFullPath(wxPATH_UNIX) == WxsFile ) return true;
     }
 
     return false;
+}
+
+void wxsWindowRes::SelectionChanged(wxsItem* ChangedItem)
+{
+    RootSelection = ChangedItem;
+
+    if ( !RootSelection || !RootSelection->GetIsSelected() )
+    {
+        RootSelection = NULL;
+
+        // Need to find other selection
+        FindFirstSelection(GetRootItem());
+
+        if ( !RootSelection )
+        {
+            // There's no selection at all, we just select root item
+            RootSelection = GetRootItem();
+            GetRootItem()->SetIsSelected(true);
+        }
+    }
+
+    // Notifying editor if there's one
+    if ( GetEditor() )
+    {
+        ((wxsWindowEditor*)GetEditor())->SelectionChanged();
+    }
+
+    // Notifying resource browser
+    wxsTREE()->SelectionChanged(RootSelection);
+
+    // Showing new selection in property browser
+    RootSelection->ShowInPropertyGrid();
+
+}
+
+void wxsWindowRes::FindFirstSelection(wxsItem* Item)
+{
+    if ( Item->GetIsSelected() )
+    {
+        RootSelection = Item;
+        return;
+    }
+
+    wxsParent* Parent = Item->ToParent();
+    if ( Parent )
+    {
+        for( int i=0; i<Parent->GetChildCount(); i++ )
+        {
+            FindFirstSelection(Parent->GetChild(i));
+            if ( RootSelection!=NULL ) return;
+        }
+    }
+}
+
+inline wxString wxsWindowRes::FixFileName(wxString FileName)
+{
+    if ( FileName.empty() ) return FileName;
+    wxFileName FN(FileName);
+    if ( FN.IsAbsolute() ) return FileName;
+    return FN.GetFullPath(wxPATH_UNIX);
 }

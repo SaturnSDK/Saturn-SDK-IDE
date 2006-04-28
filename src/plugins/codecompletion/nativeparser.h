@@ -48,16 +48,18 @@ class NativeParser : public wxEvtHandler
 		const wxString& GetCodeCompletionItems();
 		const wxArrayString& GetCallTips();
 
-		int GetEditorStartWord(){ return m_EditorStartWord; }
-		int GetEditorEndWord(){ return m_EditorEndWord; }
+		int GetEditorStartWord() const { return m_EditorStartWord; }
+		int GetEditorEndWord() const { return m_EditorEndWord; }
 
 		Parser* FindParserFromActiveEditor();
 		Parser* FindParserFromEditor(cbEditor* editor);
 		Parser* FindParserFromActiveProject();
 		Parser* FindParserFromProject(cbProject* project);
 
+        ClassBrowser* GetClassBrowser() const { return m_pClassBrowser; }
 		void CreateClassBrowser();
 		void RemoveClassBrowser(bool appShutDown = false);
+		void UpdateClassBrowser();
 		void SetClassBrowserProject(cbProject* project);
 		void SetCBViewMode(const BrowserViewMode& mode);
 	protected:
@@ -88,6 +90,7 @@ class NativeParser : public wxEvtHandler
 		wxString m_CCItems;
 		wxArrayString m_CallTips;
     	ClassBrowser* m_pClassBrowser;
+    	bool m_ClassBrowserIsFloating; // docked to project manager notebook, or free floating?
 
         DECLARE_EVENT_TABLE()
 };

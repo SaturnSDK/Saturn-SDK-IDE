@@ -33,6 +33,11 @@ class wxsCalendarCtrl: public wxsWidget
          *         only. Other properties are added automatically.
          */
         virtual void EnumWidgetProperties(long Flags);
+
+        /** \brief Enumerating header files */
+        virtual void EnumDeclFiles(wxArrayString& Decl,wxArrayString& Def,wxsCodingLang Language);
+
+
 };
 
 #endif

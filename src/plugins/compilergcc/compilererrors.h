@@ -1,7 +1,9 @@
 #ifndef COMPILERERRORS_H
 #define COMPILERERRORS_H
 
-#include <settings.h>
+#include <wx/arrstr.h>
+#include <wx/dynarray.h>
+#include <wx/string.h>
 
 class cbProject;
 
@@ -27,23 +29,22 @@ class CompilerErrors
 		void Next();
 		void Previous();
 		void Clear();
-		bool HasNextError();
-		bool HasPreviousError();
-		int GetCount(){ return m_Errors.GetCount(); }
+		bool HasNextError() const;
+		bool HasPreviousError() const;
+		int GetCount() const { return m_Errors.GetCount(); }
 		wxString GetErrorString(int index);
 
-		unsigned int GetErrorsCount();
-		unsigned int GetWarningsCount();
+		unsigned int GetErrorsCount() const;
+		unsigned int GetWarningsCount() const;
 
-        int GetFocusedError(){ return m_ErrorIndex; }
-	protected:
+        int GetFocusedError() const { return m_ErrorIndex; }
+	private:
 		void DoAddError(const CompileError& error);
 		void DoGotoError(const CompileError& error);
 		void DoClearErrorMarkFromAllEditors();
-		int ErrorLineHasMore(const wxString& filename, long int line); // returns the index in the array
+		int ErrorLineHasMore(const wxString& filename, long int line) const; // returns the index in the array
 		ErrorsArray m_Errors;
 		int m_ErrorIndex;
-	private:
 };
 
 #endif // COMPILERERRORS_H

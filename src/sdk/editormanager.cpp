@@ -195,7 +195,6 @@ EditorManager::EditorManager()
         m_SashPosition(150), // no longer used
         m_isCheckingForExternallyModifiedFiles(false)
 {
-    SC_CONSTRUCTOR_BEGIN
     m_pData = new EditorManagerInternalData(this);
 
     m_pNotebook = new wxFlatNotebook(Manager::Get()->GetAppWindow(), ID_NBEditorManager, wxDefaultPosition, wxDefaultSize, wxNO_FULL_REPAINT_ON_RESIZE | wxCLIP_CHILDREN);
@@ -206,17 +205,20 @@ EditorManager::EditorManager()
     ShowOpenFilesTree(Manager::Get()->GetConfigManager(_T("editor"))->ReadBool(_T("/show_opened_files_tree"), true));
 #endif
 
+Manager::Get()->GetMessageManager()->DebugLog(_T("Initialize EditColorSet ....."));
     m_Theme = new EditorColorSet(Manager::Get()->GetConfigManager(_T("editor"))->Read(_T("/color_sets/active_color_set"), COLORSET_DEFAULT));
+Manager::Get()->GetMessageManager()->DebugLog(_T("Initialize EditColorSet: done."));
+
     Manager::Get()->GetAppWindow()->PushEventHandler(this);
 
     CreateSearchLog();
     LoadAutoComplete();
+    m_zoom = Manager::Get()->GetConfigManager(_T("editor"))->ReadInt(_T("zoom"));
 }
 
 // class destructor
 EditorManager::~EditorManager()
 {
-    SC_DESTRUCTOR_BEGIN
     SaveAutoComplete();
 
     if (m_pTree)
@@ -244,25 +246,20 @@ EditorManager::~EditorManager()
         delete m_pData;
         m_pData = NULL;
     }
+    Manager::Get()->GetConfigManager(_T("editor"))->Write(_T("zoom"), m_zoom);
     m_pNotebook->Destroy();
-
-    SC_DESTRUCTOR_END
 }
 
 void EditorManager::CreateMenu(wxMenuBar* menuBar)
 {
-    SANITY_CHECK();
 }
 
 void EditorManager::ReleaseMenu(wxMenuBar* menuBar)
 {
-    SANITY_CHECK();
 }
 
 void EditorManager::Configure()
 {
-    SANITY_CHECK();
-
     // editor lexers loading takes some time; better reflect this with a hourglass
     wxBeginBusyCursor();
 
@@ -423,7 +420,6 @@ cbEditor* EditorManager::GetBuiltinEditor(EditorBase* eb)
 
 EditorBase* EditorManager::IsOpen(const wxString& filename)
 {
-    SANITY_CHECK(NULL);
     wxString uFilename = UnixFilename(filename);
     for (int i = 0; i < m_pNotebook->GetPageCount(); ++i)
     {
@@ -447,13 +443,11 @@ EditorBase* EditorManager::IsOpen(const wxString& filename)
 
 EditorBase* EditorManager::GetEditor(int index)
 {
-    SANITY_CHECK(0L);
     return InternalGetEditorBase(index);
 }
 
 void EditorManager::SetColorSet(EditorColorSet* theme)
 {
-    SANITY_CHECK();
     if (m_Theme)
         delete m_Theme;
 
@@ -470,7 +464,6 @@ void EditorManager::SetColorSet(EditorColorSet* theme)
 
 cbEditor* EditorManager::Open(const wxString& filename, int pos,ProjectFile* data)
 {
-    SANITY_CHECK(0L);
     bool can_updateui = !GetActiveEditor() || !Manager::Get()->GetProjectManager()->IsLoading();
     wxFileName fn(filename);
     NormalizePath(fn, wxEmptyString);
@@ -555,7 +548,6 @@ cbEditor* EditorManager::Open(const wxString& filename, int pos,ProjectFile* dat
 
 EditorBase* EditorManager::GetActiveEditor()
 {
-    SANITY_CHECK(0L);
     return InternalGetEditorBase(m_pNotebook->GetSelection());
 }
 
@@ -571,7 +563,6 @@ void EditorManager::ActivatePrevious()
 
 void EditorManager::SetActiveEditor(EditorBase* ed)
 {
-    SANITY_CHECK();
     if (ed->IsBuiltinEditor())
         static_cast<cbEditor*>(ed)->GetControl()->SetFocus();
     int page = FindPageFromEditor(ed);
@@ -587,8 +578,6 @@ void EditorManager::SetActiveEditor(EditorBase* ed)
 
 cbEditor* EditorManager::New()
 {
-    SANITY_CHECK(0L);
-
     wxString old_title = Manager::Get()->GetAppWindow()->GetTitle(); // Fix for Bug #1389450
     cbEditor* ed = new cbEditor(m_pNotebook, wxEmptyString);
     if (!ed->SaveAs())
@@ -621,19 +610,16 @@ cbEditor* EditorManager::New()
 
 void EditorManager::AddCustomEditor(EditorBase* eb)
 {
-    SANITY_CHECK();
     AddEditorBase(eb);
 }
 
 void EditorManager::RemoveCustomEditor(EditorBase* eb)
 {
-    SANITY_CHECK();
     RemoveEditorBase(eb, false);
 }
 
 void EditorManager::AddEditorBase(EditorBase* eb)
 {
-    SANITY_CHECK();
     int page = FindPageFromEditor(eb);
     if (page == -1)
     {
@@ -644,10 +630,9 @@ void EditorManager::AddEditorBase(EditorBase* eb)
 
 void EditorManager::RemoveEditorBase(EditorBase* eb, bool deleteObject)
 {
-    SANITY_CHECK();
     //    LOGSTREAM << wxString::Format(_T("RemoveEditorBase(): ed=%p, title=%s\n"), eb, eb ? eb->GetFilename().c_str() : _T(""));
     int page = FindPageFromEditor(eb);
-    if (page != -1)
+   if (page != -1 && !Manager::isappShuttingDown())
         m_pNotebook->RemovePage(page, false);
 
 #ifdef USE_OPENFILES_TREE
@@ -666,7 +651,6 @@ void EditorManager::RemoveEditorBase(EditorBase* eb, bool deleteObject)
 
 bool EditorManager::UpdateProjectFiles(cbProject* project)
 {
-    SANITY_CHECK(false);
     for (int i = 0; i < m_pNotebook->GetPageCount(); ++i)
     {
         cbEditor* ed = InternalGetBuiltinEditor(i);
@@ -687,13 +671,11 @@ bool EditorManager::UpdateProjectFiles(cbProject* project)
 
 bool EditorManager::CloseAll(bool dontsave)
 {
-    SANITY_CHECK(true);
     return CloseAllExcept(0L,dontsave);
 }
 
 bool EditorManager::QueryCloseAll()
 {
-    SANITY_CHECK(true);
     for (int i = m_pNotebook->GetPageCount() - 1; i >= 0; --i)
     {
         EditorBase* eb = InternalGetEditorBase(i);
@@ -705,10 +687,6 @@ bool EditorManager::QueryCloseAll()
 
 bool EditorManager::CloseAllExcept(EditorBase* editor,bool dontsave)
 {
-    if(!editor)
-        SANITY_CHECK(true);
-    SANITY_CHECK(false);
-
     if(!dontsave)
     {
         for (int i = 0; i < m_pNotebook->GetPageCount(); ++i)
@@ -733,7 +711,6 @@ bool EditorManager::CloseAllExcept(EditorBase* editor,bool dontsave)
 
 bool EditorManager::CloseActive(bool dontsave)
 {
-    SANITY_CHECK(false);
     return Close(GetActiveEditor(),dontsave);
 }
 
@@ -778,13 +755,11 @@ int EditorManager::FindPageFromEditor(EditorBase* eb)
 
 bool EditorManager::Close(const wxString& filename,bool dontsave)
 {
-    SANITY_CHECK(false);
     return Close(IsOpen(filename),dontsave);
 }
 
 bool EditorManager::Close(EditorBase* editor,bool dontsave)
 {
-    SANITY_CHECK(false);
     if (editor)
     {
         int idx = FindPageFromEditor(editor);
@@ -804,7 +779,6 @@ bool EditorManager::Close(EditorBase* editor,bool dontsave)
 
 bool EditorManager::Close(int index,bool dontsave)
 {
-    SANITY_CHECK(false);
     EditorBase* ed = InternalGetEditorBase(index);
     if (ed)
         return Close(ed,dontsave);
@@ -813,7 +787,6 @@ bool EditorManager::Close(int index,bool dontsave)
 
 bool EditorManager::Save(const wxString& filename)
 {
-    SANITY_CHECK(false);
     //    cbEditor* ed = GetBuiltinEditor(IsOpen(filename));
     EditorBase* ed = IsOpen(filename);
     if (ed)
@@ -823,7 +796,6 @@ bool EditorManager::Save(const wxString& filename)
 
 bool EditorManager::Save(int index)
 {
-    SANITY_CHECK(false);
     EditorBase* ed = InternalGetEditorBase(index);
     if (ed)
         return ed->Save();
@@ -832,7 +804,6 @@ bool EditorManager::Save(int index)
 
 bool EditorManager::SaveActive()
 {
-    SANITY_CHECK(false);
     EditorBase* ed = GetActiveEditor();
     if (ed)
         return ed->Save();
@@ -841,7 +812,6 @@ bool EditorManager::SaveActive()
 
 bool EditorManager::SaveAs(int index)
 {
-    SANITY_CHECK(false);
     cbEditor* ed = GetBuiltinEditor(GetEditor(index));
     if(!ed)
         return false;
@@ -854,7 +824,6 @@ bool EditorManager::SaveAs(int index)
 
 bool EditorManager::SaveActiveAs()
 {
-    SANITY_CHECK(false);
     cbEditor* ed = GetBuiltinEditor(GetActiveEditor());
     if (ed)
     {
@@ -867,7 +836,6 @@ bool EditorManager::SaveActiveAs()
 
 bool EditorManager::SaveAll()
 {
-    SANITY_CHECK(false);
     for (int i = 0; i < m_pNotebook->GetPageCount(); ++i)
     {
         EditorBase* ed = InternalGetEditorBase(i);
@@ -911,8 +879,6 @@ void EditorManager::Print(PrintScope ps, PrintColorMode pcm, bool line_numbers)
 
 void EditorManager::CheckForExternallyModifiedFiles()
 {
-    SANITY_CHECK();
-
     if(m_isCheckingForExternallyModifiedFiles) // for some reason, a mutex locker does not work???
         return;
     m_isCheckingForExternallyModifiedFiles = true;
@@ -1006,7 +972,6 @@ void EditorManager::CheckForExternallyModifiedFiles()
 
 bool EditorManager::SwapActiveHeaderSource()
 {
-    SANITY_CHECK(false);
     cbEditor* ed = GetBuiltinEditor(GetActiveEditor());
     if (!ed)
         return false;
@@ -1109,8 +1074,6 @@ bool EditorManager::SwapActiveHeaderSource()
 
 int EditorManager::ShowFindDialog(bool replace, bool explicitly_find_in_files)
 {
-    SANITY_CHECK(-1);
-
     wxString wordAtCursor;
     wxString phraseAtCursor;
     bool hasSelection = false;
@@ -1148,7 +1111,7 @@ int EditorManager::ShowFindDialog(bool replace, bool explicitly_find_in_files)
 
     FindReplaceBase* dlg;
     if (!replace)
-        dlg = new FindDlg(Manager::Get()->GetAppWindow(), phraseAtCursor, hasSelection, explicitly_find_in_files || !ed);
+        dlg = new FindDlg(Manager::Get()->GetAppWindow(), phraseAtCursor, hasSelection, !ed, explicitly_find_in_files);
     else
         dlg = new ReplaceDlg(Manager::Get()->GetAppWindow(), phraseAtCursor, hasSelection);
 
@@ -1212,7 +1175,6 @@ int EditorManager::ShowFindDialog(bool replace, bool explicitly_find_in_files)
 
 void EditorManager::CalculateFindReplaceStartEnd(cbStyledTextCtrl* control, cbFindReplaceData* data)
 {
-    SANITY_CHECK();
     if (!control || !data)
         return;
 
@@ -1267,7 +1229,6 @@ void EditorManager::CalculateFindReplaceStartEnd(cbStyledTextCtrl* control, cbFi
 
 int EditorManager::Replace(cbStyledTextCtrl* control, cbFindReplaceData* data)
 {
-    SANITY_CHECK(-1);
     if (!control || !data)
         return -1;
 
@@ -1417,7 +1378,6 @@ int EditorManager::Replace(cbStyledTextCtrl* control, cbFindReplaceData* data)
 
 int EditorManager::Find(cbStyledTextCtrl* control, cbFindReplaceData* data)
 {
-    SANITY_CHECK(-1);
     if (!control || !data)
         return -1;
 
@@ -1550,7 +1510,7 @@ int EditorManager::FindInFiles(cbFindReplaceData* data)
                 filesList.Add(ed->GetFilename());
         }
     }
-    if (data->scope == 2) // find in custom search path and mask
+    else if (data->scope == 2) // find in custom search path and mask
     {
         // fill the search list with the files found under the search path
         int flags = wxDIR_FILES |
@@ -1566,6 +1526,36 @@ int EditorManager::FindInFiles(cbFindReplaceData* data)
             // wxDir::GetAllFiles() does *not* clear the array, so it suits us just fine ;)
             wxDir::GetAllFiles(data->searchPath, &filesList, masks[i], flags);
         }
+    }
+    else if (data->scope == 3) // find in workspace
+    {
+		// loop over all the projects in the workspace (they are contained in the ProjectManager)
+		const ProjectsArray* pProjects = Manager::Get()->GetProjectManager()->GetProjects();
+		if(pProjects)
+		{
+			int count = pProjects->GetCount();
+			for (int idxProject = 0; idxProject < count; ++idxProject)
+			{
+				cbProject* pProject = pProjects->Item(idxProject);
+				if(pProject)
+				{
+					wxString fullpath = _T("");
+					for (int idxFile = 0; idxFile < pProject->GetFilesCount(); ++idxFile)
+					{
+						ProjectFile* pf = pProject->GetFile(idxFile);
+						if (pf)
+						{
+							fullpath = pf->file.GetFullPath();
+							if (filesList.Index(fullpath) == -1) // avoid adding duplicates
+							{
+								if(wxFileExists(fullpath))  // Does the file exist?
+									filesList.Add(fullpath);
+							}
+						}
+					} // end for : idx : idxFile
+				}
+			} // end for : idx : idxProject
+		}
     }
 
     // if the list is empty, leave
@@ -1680,7 +1670,6 @@ int EditorManager::FindInFiles(cbFindReplaceData* data)
 
 int EditorManager::FindNext(bool goingDown, cbStyledTextCtrl* control, cbFindReplaceData* data)
 {
-    SANITY_CHECK(-1);
     if (!control)
     {
         cbEditor* ed = GetBuiltinEditor(GetActiveEditor());
@@ -1894,7 +1883,6 @@ bool EditorManager::IsOpenFilesTreeVisible()
 
 wxTreeCtrl* EditorManager::GetTree()
 {
-    SANITY_CHECK(0L);
     return m_pTree;
     // Manager::Get()->GetProjectManager()->GetTree();
 }
@@ -1902,7 +1890,6 @@ wxTreeCtrl* EditorManager::GetTree()
 wxTreeItemId EditorManager::FindTreeFile(const wxString& filename)
 {
     wxTreeItemId item = wxTreeItemId();
-    SANITY_CHECK(item);
     do
     {
         if(Manager::isappShuttingDown())
@@ -1934,7 +1921,6 @@ wxTreeItemId EditorManager::FindTreeFile(const wxString& filename)
 
 wxString EditorManager::GetTreeItemFilename(wxTreeItemId item)
 {
-    SANITY_CHECK(_T(""));
     if(Manager::isappShuttingDown())
         return _T("");
     wxTreeCtrl *tree=GetTree();
@@ -1950,7 +1936,6 @@ wxString EditorManager::GetTreeItemFilename(wxTreeItemId item)
 
 void EditorManager::DeleteItemfromTree(wxTreeItemId item)
 {
-    SANITY_CHECK();
     if(Manager::isappShuttingDown())
         return;
     wxTreeCtrl *tree=GetTree();
@@ -1964,7 +1949,6 @@ void EditorManager::DeleteItemfromTree(wxTreeItemId item)
 
 void EditorManager::DeleteFilefromTree(const wxString& filename)
 {
-    SANITY_CHECK();
     if(Manager::isappShuttingDown())
         return;
     DeleteItemfromTree(FindTreeFile(filename));
@@ -1973,7 +1957,6 @@ void EditorManager::DeleteFilefromTree(const wxString& filename)
 
 void EditorManager::AddFiletoTree(EditorBase* ed)
 {
-    SANITY_CHECK();
     if(Manager::isappShuttingDown())
         return;
     if(!ed)
@@ -2020,7 +2003,6 @@ void EditorManager::ShowNotebook()
 
 bool EditorManager::RenameTreeFile(const wxString& oldname, const wxString& newname)
 {
-    SANITY_CHECK(false);
     if(Manager::isappShuttingDown())
         return false;
     wxTreeCtrl *tree = GetTree();
@@ -2073,7 +2055,6 @@ void EditorManager::InitPane()
     return;
 #endif
 
-    SANITY_CHECK();
     BuildOpenedFilesTree(Manager::Get()->GetAppWindow());
     if (!m_pTree)
         return;
@@ -2095,7 +2076,6 @@ void EditorManager::BuildOpenedFilesTree(wxWindow* parent)
     return;
 #endif
 
-    SANITY_CHECK();
     if(m_pTree)
         return;
     m_pTree = new wxTreeCtrl(parent, ID_EditorManager,wxDefaultPosition,wxSize(150, 100),wxTR_HAS_BUTTONS | wxNO_BORDER);
@@ -2108,8 +2088,6 @@ void EditorManager::RebuildOpenedFilesTree(wxTreeCtrl *tree)
 #if defined(DONT_USE_OPENFILES_TREE)
     return;
 #endif
-
-    SANITY_CHECK();
 
     if(Manager::isappShuttingDown())
         return;
@@ -2149,7 +2127,6 @@ void EditorManager::RefreshOpenedFilesTree(bool force)
     return;
 #endif
 
-    SANITY_CHECK();
     if(Manager::isappShuttingDown())
         return;
     if(!m_pTree)
@@ -2209,7 +2186,6 @@ void EditorManager::RefreshOpenedFilesTree(bool force)
 
 void EditorManager::OnTreeItemActivated(wxTreeEvent &event)
 {
-    SANITY_CHECK();
     if(Manager::isappShuttingDown())
         return;
     if(!MiscTreeItemData::OwnerCheck(event,GetTree(),this,true))
@@ -2222,7 +2198,6 @@ void EditorManager::OnTreeItemActivated(wxTreeEvent &event)
 
 void EditorManager::OnTreeItemRightClick(wxTreeEvent &event)
 {
-    SANITY_CHECK();
     if(Manager::isappShuttingDown())
         return;
     if(!MiscTreeItemData::OwnerCheck(event,GetTree(),this,true))
@@ -2253,3 +2228,12 @@ void EditorManager::OnUpdateUI(wxUpdateUIEvent& event)
     event.Skip();
 }
 
+void EditorManager::SetZoom(int zoom)
+{
+    m_zoom = zoom;
+}
+
+int EditorManager::GetZoom() const
+{
+    return m_zoom;
+}

@@ -9,7 +9,8 @@
 #ifndef DEBUGGEROPTIONSDLG_H
 #define DEBUGGEROPTIONSDLG_H
 
-#include <cbplugin.h>
+#include <wx/intl.h>
+#include "configurationpanel.h"
 
 class DebuggerGDB;
 
@@ -19,8 +20,8 @@ class DebuggerOptionsDlg : public cbConfigurationPanel
 		DebuggerOptionsDlg(wxWindow* parent, DebuggerGDB* plugin);
 		virtual ~DebuggerOptionsDlg();
 
-        virtual wxString GetTitle(){ return _("Debugger settings"); }
-        virtual wxString GetBitmapBaseName(){ return _T("debugger"); }
+        virtual wxString GetTitle() const { return _("Debugger settings"); }
+        virtual wxString GetBitmapBaseName() const { return _T("debugger"); }
         virtual void OnApply();
         virtual void OnCancel(){}
 	protected:

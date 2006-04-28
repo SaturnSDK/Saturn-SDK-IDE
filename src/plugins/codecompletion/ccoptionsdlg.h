@@ -1,7 +1,8 @@
 #ifndef CCOPTIONSDLG_H
 #define CCOPTIONSDLG_H
 
-#include <cbplugin.h>
+#include <wx/intl.h>
+#include "configurationpanel.h"
 #include <settings.h>
 #include "nativeparser.h"
 #include "parser/parser.h"
@@ -18,8 +19,8 @@ class CCOptionsDlg : public cbConfigurationPanel
 		CCOptionsDlg(wxWindow* parent, NativeParser* np);
 		virtual ~CCOptionsDlg();
 
-        virtual wxString GetTitle(){ return _("Code-completion and class-browser"); }
-        virtual wxString GetBitmapBaseName(){ return _T("generic-plugin"); }
+        virtual wxString GetTitle() const { return _("Code-completion and symbols browser"); }
+        virtual wxString GetBitmapBaseName() const { return _T("generic-plugin"); }
         virtual void OnApply();
         virtual void OnCancel(){}
 	protected:

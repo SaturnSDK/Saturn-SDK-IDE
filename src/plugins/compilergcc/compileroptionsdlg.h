@@ -1,8 +1,9 @@
 #ifndef COMPILEROPTIONSDLG_H
 #define COMPILEROPTIONSDLG_H
 
+#include <wx/intl.h>
 #include <settings.h>
-#include <cbplugin.h>
+#include "configurationpanel.h"
 #include <wx/spinbutt.h>
 #include "compilergcc.h"
 #include <compileroptions.h>
@@ -30,8 +31,8 @@ class CompilerOptionsDlg : public cbConfigurationPanel
 		CompilerOptionsDlg(wxWindow* parent, CompilerGCC* compiler, cbProject* project = 0L, ProjectBuildTarget* target = 0L);
 		~CompilerOptionsDlg();
 
-        virtual wxString GetTitle(){ return _("Global compiler settings"); }
-        virtual wxString GetBitmapBaseName(){ return _T("compiler"); }
+        virtual wxString GetTitle() const { return _("Global compiler settings"); }
+        virtual wxString GetBitmapBaseName() const { return _T("compiler"); }
         virtual void OnApply();
         virtual void OnCancel(){}
 	protected:

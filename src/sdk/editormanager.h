@@ -7,7 +7,6 @@
 
 #include "settings.h"
 #include "manager.h"
-#include "sanitycheck.h"
 
 #include "openfilestree.h"
 
@@ -148,6 +147,8 @@ class DLLIMPORT EditorManager : public Mgr<EditorManager>, public wxEvtHandler
         void OnTreeItemSelected(wxTreeEvent &event);
         void OnTreeItemActivated(wxTreeEvent &event);
         void OnTreeItemRightClick(wxTreeEvent &event);
+        void SetZoom(int zoom);
+        int GetZoom()const;
 
     protected:
         // m_EditorsList access
@@ -184,13 +185,12 @@ class DLLIMPORT EditorManager : public Mgr<EditorManager>, public wxEvtHandler
         SimpleListLog* m_pSearchLog;
         int m_SearchLogIndex;
         int m_SashPosition;
+        int m_zoom;
 		bool m_isCheckingForExternallyModifiedFiles;
         friend struct EditorManagerInternalData;
         EditorManagerInternalData* m_pData;
 
         DECLARE_EVENT_TABLE()
-        DECLARE_SANITY_CHECK
-
 };
 
 #endif // EDITORMANAGER_H

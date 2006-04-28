@@ -50,6 +50,18 @@ Compiler* CompilerFactory::GetCompiler(const wxString& id)
     return 0;
 }
 
+Compiler* CompilerFactory::GetCompilerByName(const wxString& title)
+{
+    for (size_t i = 0; i < Compilers.GetCount(); ++i)
+    {
+        if (Compilers[i]->GetName().IsSameAs(title))
+        {
+            return Compilers[i];
+        }
+    }
+    return 0;
+}
+
 int CompilerFactory::GetCompilerIndex(const wxString& id)
 {
     const wxString lid = id.Lower();
@@ -104,6 +116,18 @@ Compiler* CompilerFactory::CreateCompilerCopy(Compiler* compiler, const wxString
 {
     if (!compiler)
         return 0;
+
+    // abort if an existing compiler with the same name exists
+    // this also avoids the possibility of throwing an exception
+    // in the compiler->CreateCopy() call below...
+    for (size_t i = 0; i < Compilers.GetCount(); ++i)
+    {
+        if (Compilers[i]->GetName() == newName)
+        {
+            return 0;
+        }
+    }
+
     Compiler* newC = compiler->CreateCopy();
     if (!newName.IsEmpty())
     {

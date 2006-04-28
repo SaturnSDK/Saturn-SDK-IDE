@@ -10,7 +10,8 @@
 #ifndef EDITMIMETYPESDLG_H
 #define EDITMIMETYPESDLG_H
 
-#include <cbplugin.h>
+#include <wx/intl.h>
+#include "configurationpanel.h"
 #include "mimetypesarray.h"
 
 class EditMimeTypesDlg : public cbConfigurationPanel
@@ -19,8 +20,8 @@ class EditMimeTypesDlg : public cbConfigurationPanel
 		EditMimeTypesDlg(wxWindow* parent, MimeTypesArray& array);
 		virtual ~EditMimeTypesDlg();
 
-        virtual wxString GetTitle(){ return _("Files extension handling"); }
-        virtual wxString GetBitmapBaseName(){ return _T("extensions"); }
+        virtual wxString GetTitle() const { return _("Files extension handling"); }
+        virtual wxString GetBitmapBaseName() const { return _T("extensions"); }
         virtual void OnApply();
         virtual void OnCancel(){}
 	protected:
