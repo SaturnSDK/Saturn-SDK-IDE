@@ -1,0 +1,416 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<resource>
+
+<object class="wxPanel" name="blocksConfig">
+    <object class="wxFlexGridSizer">
+        <cols>1</cols>
+        <rows>0</rows>
+        <growablecols>0</growablecols>
+        <growablerows>0</growablerows>
+        <object class="sizeritem">
+            <flag>wxGROW|wxALIGN_CENTER_VERTICAL|wxALL</flag>
+            <border>5</border>
+            <object class="wxNotebook">
+                <usenotebooksizer>1</usenotebooksizer>
+                <size>200,160</size>
+                <object class="notebookpage">
+                    <label>News and Updates</label>
+                    <object class="wxPanel" name="newsandupdates">
+                        <object class="wxFlexGridSizer">
+                            <cols>1</cols>
+                            <rows>0</rows>
+                            <growablecols>0</growablecols>
+                            <growablerows>7</growablerows>
+                            <object class="sizeritem">
+                                <flag>wxALIGN_CENTER_VERTICAL|wxALL</flag>
+                                <border>5</border>
+                                <object class="wxCheckBox" name="do_check">
+                                    <label>Check for updates regularly</label>
+                                    <checked>1</checked>
+                                </object>
+                            </object>
+                            <object class="sizeritem">
+                                <flag>wxALIGN_CENTER_VERTICAL|wxALL</flag>
+                                <border>5</border>
+                                <object class="wxCheckBox" name="do_critical_core">
+                                    <label>Automatically run critical application updates</label>
+                                    <checked>1</checked>
+                                </object>
+                            </object>
+                            <object class="sizeritem">
+                                <flag>wxALIGN_CENTER_VERTICAL|wxALL</flag>
+                                <border>5</border>
+                                <object class="wxCheckBox" name="do_critical_other">
+                                    <label>Prompt for other (not Code::Blocks) critical updates</label>
+                                    <checked>1</checked>
+                                </object>
+                            </object>
+                            <object class="spacer">
+                                <flag>wxALIGN_CENTER</flag>
+                                <border>5</border>
+                                    <size>10,10</size>
+                            </object>
+                            <object class="sizeritem">
+                                <flag>wxALIGN_CENTER_VERTICAL|wxALL</flag>
+                                <border>5</border>
+                                <object class="wxCheckBox" name="do_show_news">
+                                    <label>Show news at startup</label>
+                                    <checked>1</checked>
+                                </object>
+                            </object>
+                            <object class="sizeritem">
+                                <flag>wxALIGN_CENTER_VERTICAL|wxALL</flag>
+                                <border>5</border>
+                                <object class="wxCheckBox" name="do_notify">
+                                    <label>Display notifications</label>
+                                    <checked>1</checked>
+                                </object>
+                            </object>
+                            <object class="sizeritem">
+                                <flag>wxALIGN_CENTER_VERTICAL|wxLEFT|wxRIGHT|wxTOP</flag>
+                                <border>5</border>
+                                <object class="wxStaticText">
+                                    <label>Watch the following channels:</label>
+                                </object>
+                            </object>
+                            <object class="sizeritem">
+                                <flag>wxGROW|wxALIGN_CENTER_VERTICAL|wxALL</flag>
+                                <border>5</border>
+                                <object class="wxCheckList" name="channels">
+                                    <style>wxSUNKEN_BORDER</style>
+                                </object>
+                            </object>
+                        </object>
+                    </object>
+                </object>
+                <object class="notebookpage">
+                    <label>Package installation</label>
+                    <object class="wxPanel" name="installation">
+                        <object class="wxBoxSizer">
+                            <orient>wxVERTICAL</orient>
+                            <object class="sizeritem">
+                                <flag>wxGROW|wxALIGN_CENTER_VERTICAL|wxBOTTOM</flag>
+                                <border>10</border>
+                                <object class="wxFlexGridSizer">
+                                    <cols>2</cols>
+                                    <rows>0</rows>
+                                    <growablecols>1</growablecols>
+                                    <object class="sizeritem">
+                                        <flag>wxALIGN_CENTER_VERTICAL|wxALL</flag>
+                                        <border>5</border>
+                                        <object class="wxStaticText">
+                                            <label>Download packages to:</label>
+                                        </object>
+                                    </object>
+                                    <object class="sizeritem">
+                                        <flag>wxGROW|wxALIGN_CENTER_VERTICAL|wxALL</flag>
+                                        <border>5</border>
+                                        <object class="wxTextCtrl" name="downloadto">
+                                            <size>80,-1</size>
+                                            <value>[[temp folder]]</value>
+                                        </object>
+                                    </object>
+                                    <object class="sizeritem">
+                                        <flag>wxALIGN_CENTER_VERTICAL|wxALL</flag>
+                                        <border>5</border>
+                                        <object class="wxStaticText">
+                                            <label>Package installation path:</label>
+                                        </object>
+                                    </object>
+                                    <object class="sizeritem">
+                                        <flag>wxGROW|wxALIGN_CENTER_VERTICAL|wxALL</flag>
+                                        <border>5</border>
+                                        <object class="wxTextCtrl" name="sandbox">
+                                            <size>80,-1</size>
+                                            <value>[[none specified]]</value>
+                                        </object>
+                                    </object>
+                                </object>
+                            </object>
+                            <object class="sizeritem">
+                                <flag>wxGROW|wxALIGN_CENTER_VERTICAL|wxALL</flag>
+                                <border>5</border>
+                                <object class="wxCheckBox" name="do_install">
+                                    <label>Install packages after downloading</label>
+                                    <checked>1</checked>
+                                </object>
+                            </object>
+                            <object class="sizeritem">
+                                <flag>wxGROW|wxALIGN_CENTER_VERTICAL|wxALL</flag>
+                                <border>5</border>
+                                <object class="wxCheckBox" name="do_delete">
+                                    <label>Delete packages after installing</label>
+                                    <checked>1</checked>
+                                </object>
+                            </object>
+                            <object class="sizeritem">
+                                <flag>wxGROW|wxALIGN_CENTER_VERTICAL|wxALL</flag>
+                                <border>5</border>
+                                <object class="wxCheckBox" name="do_restart">
+                                    <label>Automatically terminate and restart Code::Blocks if required</label>
+                                    <checked>1</checked>
+                                </object>
+                            </object>
+                            <object class="spacer">
+                                <flag>wxALIGN_CENTER</flag>
+                                <border>5</border>
+                                    <size>10,10</size>
+                            </object>
+                            <object class="sizeritem">
+                                <flag>wxALIGN_CENTER_VERTICAL|wxALL</flag>
+                                <border>5</border>
+                                <object class="wxStaticText">
+                                    <label>Locate gpg executable:</label>
+                                </object>
+                            </object>
+                            <object class="sizeritem">
+                                <flag>wxGROW|wxALIGN_CENTER_VERTICAL|wxLEFT|wxBOTTOM</flag>
+                                <border>5</border>
+                                <object class="wxFlexGridSizer">
+                                    <cols>2</cols>
+                                    <rows>0</rows>
+                                    <growablecols>0</growablecols>
+                                    <object class="sizeritem">
+                                        <flag>wxGROW|wxALIGN_CENTER_VERTICAL</flag>
+                                        <object class="wxTextCtrl" name="gpg">
+                                            <value></value>
+                                        </object>
+                                    </object>
+                                    <object class="sizeritem">
+                                        <flag>wxALIGN_CENTER|wxLEFT|wxRIGHT</flag>
+                                        <border>5</border>
+                                        <object class="wxButton" name="fs">
+                                            <size>20,-1</size>
+                                            <label>...</label>
+                                        </object>
+                                    </object>
+                                </object>
+                            </object>
+                        </object>
+                    </object>
+                </object>
+                <object class="notebookpage">
+                    <label>Security</label>
+                    <object class="wxPanel" name="security">
+                        <object class="wxFlexGridSizer">
+                            <cols>1</cols>
+                            <rows>0</rows>
+                            <growablecols>0</growablecols>
+                            <growablerows>0</growablerows>
+                            <object class="sizeritem">
+                                <flag>wxALIGN_CENTER_VERTICAL|wxALL</flag>
+                                <border>5</border>
+                                <object class="wxStaticText">
+                                    <font>
+                                        <size>10</size>
+                                        <weight>bold</weight>
+                                        <family>swiss</family>
+                                    </font>
+                                    <label>Allow packages to:</label>
+                                </object>
+                            </object>
+                            <object class="sizeritem">
+                                <flag>wxALIGN_CENTER_VERTICAL</flag>
+                                <border>5</border>
+                                <object class="wxFlexGridSizer">
+                                    <cols>2</cols>
+                                    <rows>0</rows>
+                                    <growablecols>0,1</growablecols>
+                                    <object class="sizeritem">
+                                        <flag>wxALIGN_CENTER_VERTICAL|wxALL</flag>
+                                        <border>5</border>
+                                        <object class="wxStaticText">
+                                            <label>Access compiler variables</label>
+                                        </object>
+                                    </object>
+                                    <object class="sizeritem">
+                                        <flag>wxALIGN_CENTER_VERTICAL|wxALL</flag>
+                                        <border>5</border>
+                                        <object class="wxChoice" name="acc_variables">
+                                            <content>
+                                                <item>Disabled</item>
+                                                <item>Require full validation</item>
+                                                <item>Require validation by signature</item>
+                                                <item>Require validation by MD5</item>
+                                                <item>Allow any validation</item>
+                                                <item>I don't know, who cares anyway</item>
+                                            </content>
+                                        </object>
+                                    </object>
+                                    <object class="sizeritem">
+                                        <flag>wxALIGN_CENTER_VERTICAL|wxALL</flag>
+                                        <border>5</border>
+                                        <object class="wxStaticText">
+                                            <label>Access other configuration</label>
+                                        </object>
+                                    </object>
+                                    <object class="sizeritem">
+                                        <flag>wxALIGN_CENTER_VERTICAL|wxALL</flag>
+                                        <border>5</border>
+                                        <object class="wxChoice" name="acc_config">
+                                            <content>
+                                                <item>Disabled</item>
+                                                <item>Require full validation</item>
+                                                <item>Require validation by signature</item>
+                                                <item>Require validation by MD5</item>
+                                                <item>Allow any validation</item>
+                                                <item>I don't know, who cares anyway</item>
+                                            </content>
+                                        </object>
+                                    </object>
+                                    <object class="sizeritem">
+                                        <flag>wxALIGN_CENTER_VERTICAL|wxALL</flag>
+                                        <border>5</border>
+                                        <object class="wxStaticText">
+                                            <label>Execute scripts</label>
+                                        </object>
+                                    </object>
+                                    <object class="sizeritem">
+                                        <flag>wxALIGN_CENTER_VERTICAL|wxALL</flag>
+                                        <border>5</border>
+                                        <object class="wxChoice" name="acc_scripts">
+                                            <content>
+                                                <item>Disabled</item>
+                                                <item>Require full validation</item>
+                                                <item>Require validation by signature</item>
+                                                <item>Require validation by MD5</item>
+                                                <item>Allow any validation</item>
+                                                <item>I don't know, who cares anyway</item>
+                                            </content>
+                                        </object>
+                                    </object>
+                                    <object class="sizeritem">
+                                        <flag>wxALIGN_CENTER_VERTICAL|wxALL</flag>
+                                        <border>5</border>
+                                        <object class="wxStaticText">
+                                            <label>Execute external programs</label>
+                                        </object>
+                                    </object>
+                                    <object class="sizeritem">
+                                        <flag>wxALIGN_CENTER_VERTICAL|wxALL</flag>
+                                        <border>5</border>
+                                        <object class="wxChoice" name="acc_execute">
+                                            <content>
+                                                <item>Disabled</item>
+                                                <item>Require full validation</item>
+                                                <item>Require validation by signature</item>
+                                                <item>Require validation by MD5</item>
+                                                <item>Allow any validation</item>
+                                                <item>I don't know, who cares anyway</item>
+                                            </content>
+                                        </object>
+                                    </object>
+                                    <object class="sizeritem">
+                                        <flag>wxALIGN_CENTER_VERTICAL|wxALL</flag>
+                                        <border>5</border>
+                                        <object class="wxStaticText">
+                                            <label>Access root filesystem</label>
+                                        </object>
+                                    </object>
+                                    <object class="sizeritem">
+                                        <flag>wxALIGN_CENTER_VERTICAL|wxALL</flag>
+                                        <border>5</border>
+                                        <object class="wxChoice" name="acc_filesystem">
+                                            <content>
+                                                <item>Disabled</item>
+                                                <item>Require full validation</item>
+                                                <item>Require validation by signature</item>
+                                                <item>Require validation by MD5</item>
+                                                <item>Allow any validation</item>
+                                                <item>I don't know, who cares anyway</item>
+                                            </content>
+                                        </object>
+                                    </object>
+                                    <object class="sizeritem">
+                                        <flag>wxALIGN_CENTER_VERTICAL|wxALL</flag>
+                                        <border>5</border>
+                                        <object class="wxStaticText">
+                                            <label>Overwrite existing files</label>
+                                        </object>
+                                    </object>
+                                    <object class="sizeritem">
+                                        <flag>wxALIGN_CENTER_VERTICAL|wxALL</flag>
+                                        <border>5</border>
+                                        <object class="wxChoice" name="acc_overwrite">
+                                            <content>
+                                                <item>Disabled</item>
+                                                <item>Require full validation</item>
+                                                <item>Require validation by signature</item>
+                                                <item>Require validation by MD5</item>
+                                                <item>Allow any validation</item>
+                                                <item>I don't know, who cares anyway</item>
+                                            </content>
+                                        </object>
+                                    </object>
+                                    <object class="sizeritem">
+                                        <flag>wxALIGN_CENTER_VERTICAL|wxALL</flag>
+                                        <border>5</border>
+                                        <object class="wxStaticText">
+                                            <label>Change system configuration</label>
+                                        </object>
+                                    </object>
+                                    <object class="sizeritem">
+                                        <flag>wxALIGN_CENTER_VERTICAL|wxALL</flag>
+                                        <border>5</border>
+                                        <object class="wxChoice" name="acc_sysconfig">
+                                            <content>
+                                                <item>Disabled</item>
+                                                <item>Require full validation</item>
+                                                <item>Require validation by signature</item>
+                                                <item>Require validation by MD5</item>
+                                                <item>Allow any validation</item>
+                                                <item>I don't know, who cares anyway</item>
+                                            </content>
+                                        </object>
+                                    </object>
+                                </object>
+                            </object>
+                            <object class="spacer">
+                                <flag>wxALIGN_CENTER</flag>
+                                <border>5</border>
+                                    <size>10,10</size>
+                            </object>
+                            <object class="sizeritem">
+                                <flag>wxALIGN_CENTER_VERTICAL|wxALL</flag>
+                                <border>5</border>
+                                <object class="wxStaticText">
+                                    <font>
+                                        <size>10</size>
+                                        <weight>bold</weight>
+                                        <family>swiss</family>
+                                    </font>
+                                    <label>Regardless of permissions:</label>
+                                </object>
+                            </object>
+                            <object class="sizeritem">
+                                <flag>wxALIGN_CENTER_VERTICAL|wxLEFT|wxRIGHT|wxBOTTOM</flag>
+                                <border>10</border>
+                                <object class="wxCheckBox" name="no_unsafe_stuff">
+                                    <label>Don't allow things that are outright evil (eg. overwrite system files)</label>
+                                    <checked>1</checked>
+                                </object>
+                            </object>
+                            <object class="sizeritem">
+                                <flag>wxALIGN_CENTER_VERTICAL|wxLEFT|wxRIGHT|wxBOTTOM</flag>
+                                <border>10</border>
+                                <object class="wxCheckBox" name="always_confirm">
+                                    <label>Even if policy grants permission, still ask me every time</label>
+                                </object>
+                            </object>
+                            <object class="sizeritem">
+                                <flag>wxALIGN_CENTER_VERTICAL|wxLEFT|wxRIGHT|wxBOTTOM</flag>
+                                <border>10</border>
+                                <object class="wxCheckBox" name="always_confirm">
+                                    <label>If policy denies permission, don't bother telling me, just ignore it</label>
+                                </object>
+                            </object>
+                        </object>
+                    </object>
+                </object>
+            </object>
+        </object>
+    </object>
+</object>
+
+</resource>
