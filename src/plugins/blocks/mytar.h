@@ -2,14 +2,8 @@
 #define MYTAR_H
 
 #include <wx/string.h>
-#include <wx/dynarray.h>
+#include <sdk.h>
 
-struct Replacers
-{
-    wxString from;
-    wxString to;
-};
-WX_DECLARE_OBJARRAY(Replacers, ReplacersArray);
 
 class TAR
 {
@@ -63,27 +57,20 @@ class TAR
         };
 
         TAR(const wxString& filename = 0);
-        ~TAR();
-        
-        bool Open(const wxString& filename);
-        void Close();
         void Reset();
-        
+
         bool Next(Record* rec);
-        bool ExtractAll(const wxString& dirname, wxString& status, wxArrayString* files = 0);
-        bool ExtractFile(Record* rec, const wxString& dirname, wxString& status, wxString* convertedFile = 0);
-        Record* FindFile(const wxString& filename);
-        
-        void ClearReplacers();
-        void AddReplacer(const wxString& from, const wxString& to);
+        bool ExtractFile(Record* rec, const wxString& destination);
+        Record* FindFile(const wxString& filename, bool reset = false);
+
+        wxString LastError() const {return error;};
     protected:
         int OctToInt(const char* oct);
         size_t OffsetRecords(size_t bytes);
-        void ReplaceThings(wxString& path);
-        FILE* m_pFile;
-        size_t m_SkipBytes;
-        size_t m_Size;
-        ReplacersArray m_Replacers;
+        wxFile file;
+        size_t skipBytes;
+        size_t fileSize;
+        wxString error;
 };
 
 #endif // MYTAR_H

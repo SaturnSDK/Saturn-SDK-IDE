@@ -1,0 +1,66 @@
+<package name="wxWidgets"  version="2.6.2" arch="x86" os="windows" ansi="1" critical="1" uid="44570e107e33a">
+    
+    <os version="95/98/ME" />
+    <os version="NT/2000" />
+    <os version="XP" />
+    
+    <group name="GUI" />
+    <group name="Cross-platform" />
+    
+    <info>
+        <title>wxWidgets Toolkit (MSW)</title>
+        <description>blah blah blah</description>
+        <home url="http://www.wxwidgets.org">
+        <documentation url="http://www.wxwidgets.org/doc/">
+        
+        <date release="2004-11-05" packaged="2005-05-30" />
+        <license type="GPL" />
+        <comment>foo bar</comment>
+    </info>
+    
+    <requires>
+        <package name="png" version="1.5;1.6;1.6.1" />
+        <package name="core" uid="44570e1034669" />
+        <package name="compilers" revision="2398:2401" />
+        <feature name="MSYS" />
+    </requires>
+    
+    <provides >
+        <feature name="make" version="3.8">
+    </provides>
+    
+    <conflicts>
+        <package name="dev-cpp">
+    </conflicts>
+
+    <pre_install>
+        <exec command="prelink" />
+        <env set="wx" value="[[base]]" />
+    </pre_install>
+
+    <post_install>
+        <script option="Make gcc the default compiler"></script>
+        <env unset="wx" />
+    </post_install>
+
+    <update version="2.6.0" url="http://foo.bar/wx260_262.dlz" />
+    <update uid="44570e107e339" url="http://foo.bar/update44570e107e339_44570e107e33a.dlz" />
+
+    <install>
+        <create dir="[[base]]/foo" />
+        <remove dir="[[base]]/foo" />
+        <unit title="The Blah component">
+            <location url="http://foo.bar/blah.blz"" />
+        </unit>
+        <unit title="Debugger" option="0">
+            <location url="http://foo.bar/optional.blz"" />
+            <location url="http://foo2.bar/optional.blz"" />
+            <md5 size="53345" hash="543095849548540358" />
+            <subset mask="lib/*" destination="[[lib]]" />
+            <subset mask="*.h" destination="[[include]]" />
+            <default destination="[[base]]"/>
+        </unit>
+        <system key="HKEY_LOCAL_MACHINE\Software\foo" value="foo" />
+    </install>
+
+</package>
