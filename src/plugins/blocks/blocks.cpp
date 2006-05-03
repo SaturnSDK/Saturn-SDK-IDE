@@ -20,6 +20,7 @@
 #include <wx/html/htmlwin.h>
 
 #include "bzlib.h"
+#include "md5.h"
 
 #include <wx/filesys.h>
 #include <wx/fs_inet.h>
@@ -60,6 +61,12 @@ cbConfigurationPanel* Blocks::GetConfigurationPanel(wxWindow* parent)
 
 int Blocks::Execute()
 {
+const char *c = "foobarbaz";
+MD5 md5(c, strlen(c));
+wxString foo = md5;
+
+
+
 wxFileSystem::AddHandler(new wxInternetFSHandler);
 wxFileSystem fs;
 
@@ -83,10 +90,9 @@ d->ShowModal();
 }
 
 
-bool Blocks::InstallTGZ(const wxString& filename)
-{
-    wxString m_Status;
 
+bool Blocks::InstallBlock(const wxString& filename)
+{
     wxFileInputStream in(filename);
     wxZlibInputStream gz(in);
 
@@ -99,14 +105,26 @@ bool Blocks::InstallTGZ(const wxString& filename)
 }
 
 
+bool Blocks::InstallTGZ(const wxString& filename)
+{
+    wxFileInputStream in(filename);
+    wxZlibInputStream gz(in);
+
+    TempFile temp;
+    wxFileOutputStream out(temp);
+
+    gz.Read(out);
+
+    return UnTar(temp);
+}
+
 
 bool Blocks::InstallTBZ(const wxString& filename)
 {
-wxString m_Status;
     wxFFile f(filename.fn_str(), _T("rb"));
     if (!f.IsOpened())
     {
-        m_Status = _("Error opening input file!");
+        lastError = _("Error opening file.");
         return false;
     }
 
@@ -115,14 +133,14 @@ wxString m_Status;
     BZFILE* bz = BZ2_bzReadOpen(&bzerror, f.fp(), 0, 0, 0L, 0);
     if (!bz || bzerror != BZ_OK)
     {
-        m_Status = _("Can't read compressed stream!");
+        lastError = _("Error reading compressed stream.");
         return false;
     }
 
     TempFile temp;
     if (!temp.IsOpened())
     {
-        m_Status = _("Error opening output file!");
+        lastError = _("Error opening output file.");
         return false;
     }
 
@@ -134,7 +152,7 @@ wxString m_Status;
         numBytes = BZ2_bzRead(&bzerror, bz, buffer, sizeof(buffer));
         if (bzerror != BZ_OK && bzerror != BZ_STREAM_END)
         {
-            m_Status = _("Error reading from stream!");
+            lastError = _("Error reading from stream.");
             BZ2_bzReadClose(&bzerror, bz);
             return false;
         }
@@ -159,9 +177,10 @@ BlocksConfigDlg::BlocksConfigDlg(wxWindow* parent, Blocks* plug) : plugin(plug)
 
 void BlocksConfigDlg::LoadSettings()
 {
-    ConfigManager *cfg = Manager::Get()->GetConfigManager(_T("blocks"));
+//    ConfigManager *cfg = Manager::Get()->GetConfigManager(_T("blocks"));
 
     wxCheckListBox* c = XRCCTRL(*this, "channels", wxCheckListBox);
+
     if(c)
         {
         c->Append(_T("foo"));

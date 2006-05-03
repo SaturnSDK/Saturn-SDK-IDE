@@ -181,7 +181,7 @@
 				<Option external_deps="src\wxAUI\libwxaui.a;" />
 				<Option type="0" />
 				<Option compiler="gcc" />
-				<Option parameters="--debug-log --no-check-associations -ns" />
+				<Option parameters="--debug-log --no-check-associations -ns --profile=foo" />
 				<Option includeInTargetAll="1" />
 				<Option projectLinkerOptionsRelation="2" />
 				<Option projectIncludeDirsRelation="2" />
@@ -484,6 +484,27 @@
 					<Add directory="devel" />
 				</Linker>
 			</Target>
+			<Target title="Blocks">
+				<Option output="devel\share\CodeBlocks\plugins\blocks.dll" />
+				<Option working_dir="devel\share\CodeBlocks\plugins" />
+				<Option object_output=".objs\2.6" />
+				<Option type="3" />
+				<Option compiler="gcc" />
+				<Option includeInTargetAll="1" />
+				<Option projectResourceIncludeDirsRelation="0" />
+				<Compiler>
+					<Add option="-DBUILDING_PLUGIN" />
+					<Add option="-D_LZMA_IN_CB" />
+					<Add option="-D_LZMA_OUT_READ" />
+					<Add directory="sdk" />
+				</Compiler>
+				<Linker>
+					<Add option="-Wl,--enable-auto-image-base" />
+					<Add option="-Wl,--add-stdcall-alias" />
+					<Add library="libcodeblocks.a" />
+					<Add directory="devel" />
+				</Linker>
+			</Target>
 			<Environment>
 				<Variable name="WX_SUFFIX" value="u" />
 				<Variable name="WX_CFG" value="" />
@@ -604,6 +625,97 @@
 			<Option compile="0" />
 			<Option link="0" />
 			<Option target="Autosave plugin" />
+		</Unit>
+		<Unit filename="plugins\blocks\LzmaDecode.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="plugins\blocks\LzmaDecode.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+		</Unit>
+		<Unit filename="plugins\blocks\LzmaUtilsCommon.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+		</Unit>
+		<Unit filename="plugins\blocks\blocks.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="Blocks" />
+		</Unit>
+		<Unit filename="plugins\blocks\blocks.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="Blocks" />
+		</Unit>
+		<Unit filename="plugins\blocks\blocksort.c">
+			<Option compilerVar="CC" />
+			<Option target="Blocks" />
+		</Unit>
+		<Unit filename="plugins\blocks\bzlib.c">
+			<Option compilerVar="CC" />
+			<Option target="Blocks" />
+		</Unit>
+		<Unit filename="plugins\blocks\bzlib.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="Blocks" />
+		</Unit>
+		<Unit filename="plugins\blocks\bzlib_private.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="Blocks" />
+		</Unit>
+		<Unit filename="plugins\blocks\compress.c">
+			<Option compilerVar="CC" />
+			<Option target="Blocks" />
+		</Unit>
+		<Unit filename="plugins\blocks\crctable.c">
+			<Option compilerVar="CC" />
+			<Option target="Blocks" />
+		</Unit>
+		<Unit filename="plugins\blocks\decompress.c">
+			<Option compilerVar="CC" />
+			<Option target="Blocks" />
+		</Unit>
+		<Unit filename="plugins\blocks\huffman.c">
+			<Option compilerVar="CC" />
+			<Option target="Blocks" />
+		</Unit>
+		<Unit filename="plugins\blocks\lzmadec.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="plugins\blocks\md5.c">
+			<Option compilerVar="CC" />
+			<Option target="Blocks" />
+		</Unit>
+		<Unit filename="plugins\blocks\md5.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="Blocks" />
+		</Unit>
+		<Unit filename="plugins\blocks\mytar.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="Blocks" />
+		</Unit>
+		<Unit filename="plugins\blocks\mytar.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="Blocks" />
+		</Unit>
+		<Unit filename="plugins\blocks\randtable.c">
+			<Option compilerVar="CC" />
+			<Option target="Blocks" />
+		</Unit>
+		<Unit filename="plugins\blocks\version.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
 		</Unit>
 		<Unit filename="plugins\classwizard\classwizard.cpp">
 			<Option compilerVar="CPP" />
@@ -2156,6 +2268,46 @@
 			<Option link="0" />
 			<Option target="sdk" />
 		</Unit>
+		<Unit filename="sdk\buildsystem\buildstage.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="sdk\buildsystem\buildstage.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="sdk\buildsystem\buildsystemmanager.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="sdk\buildsystem\buildsystemmanager.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="sdk\buildsystem\buildtool.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="sdk\buildsystem\buildtool.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="sdk\buildsystem\toolchain.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="sdk\buildsystem\toolchain.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="sdk" />
+		</Unit>
 		<Unit filename="sdk\cbeditor.cpp">
 			<Option compilerVar="CPP" />
 			<Option target="sdk" />
@@ -2554,6 +2706,12 @@
 		</Unit>
 		<Unit filename="sdk\ibaseworkspaceloader.h">
 			<Option compilerVar="" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="sdk\id.h">
+			<Option compilerVar="CPP" />
 			<Option compile="0" />
 			<Option link="0" />
 			<Option target="sdk" />

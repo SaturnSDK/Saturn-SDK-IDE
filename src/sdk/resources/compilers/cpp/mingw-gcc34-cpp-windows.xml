@@ -6,17 +6,22 @@
 	<tool id="compiler" executable="mingw32-gcc.exe">
 		<search registry="HKEY_CURRENT_USER\Software\Mingw\InstallPath" />
 		<search location="C:\MinGW\bin" />
-		<search location="$(BIN)" recursive="true" />
+		<search location="$(BIN)" />
+		<location>C:\MinGW\include\ctype.h</location>
+		<location>C:\mingw\bin</location>
 		<challenge>--version</challenge>
-		<response>gcc version 3\.4\.[0-9]</response>
+		<response>gcc.*(3\.4\.[0-9])</response>
 	</tool>
 
 	<tool id="linker" executable="ld.exe">
-		<location>compiler</location>
+		<location>[compiler]</location>
+		<challenge>--version</challenge>
+		<response>ld.*(2\.1[456789]\.[0-9]+)</response>
+         ld version 2.15.91
 	</tool>
 
 	<tool id="libtool" executable="collect.exe">
-		<location>compiler</location>
+		<location>[linker]</location>
 	</tool>
 
 
