@@ -13,6 +13,10 @@
 #include "messagemanager.h"
 #include "base64.h"
 
+#undef new
+#include <map>
+#include <set>
+
 
 /* ------------------------------------------------------------------------------------------------------------------
 *  Interface Serializable
@@ -44,11 +48,11 @@ public:
 */
 namespace ConfigManagerContainer
 {
-    WX_DECLARE_STRING_HASH_MAP( wxString, StringToStringMap);
-    WX_DECLARE_HASH_MAP(long int, wxString, wxIntegerHash, wxIntegerEqual, IntToStringMap);
-    WX_DECLARE_HASH_SET(wxString, wxStringHash, wxStringEqual, StringSet);
+    typedef std::map<wxString, wxString> StringToStringMap;
+    typedef std::map<int, wxString> IntToStringMap;
+    typedef std::set<wxString> StringSet;;
 
-    WX_DECLARE_STRING_HASH_MAP(ISerializable *, SerializableObjectMap);
+    typedef std::map<wxString, ISerializable*> SerializableObjectMap;
 };
 
 
@@ -225,13 +229,14 @@ public:
     *
     *  Usage:
     *  ------
-    *  WX_DECLARE_STRING_HASH_MAP(MySerializableClass *, MyMap);
+    *  typedef std::map<wxString, MySerializableClass *> MyMap;
     *  MyMap objMap;
-    *  cfg->Read<MySerializableClass>("name", (ConfigManagerContainer::SerializableObjectMap*) &objMap);
+    *  cfg->Read("name", &objMap);
     *  map["somekey"]->DoSomething();
     */
     void Write(const wxString& name, const ConfigManagerContainer::SerializableObjectMap* map);
-    template <class T> void Read(const wxString& name, ConfigManagerContainer::SerializableObjectMap *map)
+
+    template <typename T> void Read(const wxString& name, std::map<wxString, T*> *map)
     {
         wxString key(name);
         TiXmlHandle ph(AssertPath(key));
@@ -248,6 +253,7 @@ public:
 	static inline bool Windows();
 	static inline bool Unix();
 	static inline bool Linux();
+	static inline bool MacOS();
 	static inline bool Unicode();
 };
 

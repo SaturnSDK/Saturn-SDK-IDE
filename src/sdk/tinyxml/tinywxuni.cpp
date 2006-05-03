@@ -7,15 +7,21 @@
 
 bool TinyXML::LoadDocument(const wxString& filename, TiXmlDocument *doc)
 {
-    if(!wxFile::Access(filename, wxFile::read))
+
+    if(!doc || !wxFile::Access(filename, wxFile::read))
         return false;
 
     wxFile file(filename);
-    char *input = new char[file.Length()];
-    file.Read(input, file.Length());
+    size_t len = file.Length();
+
+    char *input = new char[len+1];
+    input[len] = '\0';
+    file.Read(input, len);
+
     doc->Parse(input);
+
     delete[] input;
-    return true;
+    return doc->Error();
 }
 
 TiXmlDocument* TinyXML::LoadDocument(const wxString& filename)
@@ -23,12 +29,14 @@ TiXmlDocument* TinyXML::LoadDocument(const wxString& filename)
     TiXmlDocument* doc = new TiXmlDocument();
 
     if(TinyXML::LoadDocument(filename, doc))
+    {
         return doc;
+    }
     else
-        {
+    {
         delete doc;
         return 0;
-        }
+    }
 }
 
 bool TinyXML::SaveDocument(const wxString& filename, TiXmlDocument* doc)
@@ -36,31 +44,26 @@ bool TinyXML::SaveDocument(const wxString& filename, TiXmlDocument* doc)
     if (!doc)
         return false;
 
-    const char *buffer; // UTF-8 encoded data
-  	size_t len;
+    const char *buffer;
+    size_t len;
 
-  	#ifdef TIXML_USE_STL
-        std::string outSt;
-        outSt << *doc;
-        buffer = outSt.c_str();
-        len = outSt.length();
-  	#else
-        TiXmlOutStream outSt;
-        outSt << *doc;
-        buffer = outSt.c_str();
-        len = outSt.length();
-  	#endif
+#ifdef TIXML_USE_STL
+    std::string outSt;
+    outSt << *doc;
+    buffer = outSt.c_str();
+    len = outSt.length();
+#else
+    TiXmlOutStream outSt;
+    outSt << *doc;
+    buffer = outSt.c_str();
+    len = outSt.length();
+#endif
 
     wxTempFile file(filename);
-    if (file.IsOpened())
-    {
-        if (!file.Write(buffer, strlen(buffer)))
-            return false;
-        if (!file.Commit())
-            return false;
-    }
-    else
-        return false;
-  	return true;
+    if(file.IsOpened())
+        if(file.Write(buffer, strlen(buffer)) && file.Commit())
+            return true;
+
+    return false;
 }
 
