@@ -117,6 +117,7 @@ public:
     static wxString GetScriptsFolder();
     static wxString GetDataFolder();
     static wxString GetExecutableFolder();
+    static wxString GetTempFolder();
 
     /*
     *  Network proxy for HTTP/FTP transfers

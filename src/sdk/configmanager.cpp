@@ -342,6 +342,24 @@ wxString ConfigManager::GetProxy()
     return Manager::Get()->GetConfigManager(_T("app"))->Read(_T("network_proxy"));
 }
 
+
+wxString ConfigManager::GetTempFolder()
+{
+    static bool once = true;
+    static wxString tempFolder;
+
+    if(once)
+    {
+        once = false;
+
+        wxString tempFile = wxFileName::CreateTempFileName(wxEmptyString);
+        tempFolder = wxFileName(tempFile).GetPath(wxPATH_GET_VOLUME | wxPATH_GET_SEPARATOR);
+
+        ::wxRemoveFile(tempFile);
+    }
+    return tempFolder;
+}
+
 wxString ConfigManager::GetExecutableFolder()
 {
     if(!ConfigManager::app_path.IsEmpty())
