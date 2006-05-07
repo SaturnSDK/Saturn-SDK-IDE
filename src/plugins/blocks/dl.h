@@ -65,7 +65,7 @@ public:
         DL_MEMORY
     }Type;
 
-    virtual Type GetType() = 0;
+    virtual Type GetType() const = 0;
     virtual StatusCode operator()() = 0;
     virtual int Progress() const {return -1;};
     virtual ~DownloadJob(){};
