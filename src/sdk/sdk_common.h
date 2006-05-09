@@ -135,6 +135,8 @@
     #include <xtra_classes.h>
     #include <xtra_res.h>
 
+    #include "safedelete.h"
+
 #endif // CB_PRECOMP
 
 #endif // SDK_COMMON_H
