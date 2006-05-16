@@ -29,7 +29,7 @@
 #endif
 
 #include <wx/choice.h>
-#include "wxTreeMultiCtrl.h"
+//#include "wxTreeMultiCtrl.h"
 #include "paircontrol.h"
 
 class UsrGlblMgrEditDialog : public wxDialog
@@ -38,7 +38,7 @@ class UsrGlblMgrEditDialog : public wxDialog
 public:
     UsrGlblMgrEditDialog(wxWindow* parent, const wxString& base);
 private:
-    wxTreeMultiCtrl *tree;
+//    wxTreeMultiCtrl *tree;
     void OnOKClick(wxCommandEvent& event);
     void OnCancelClick(wxCommandEvent& event);
     void OnDelete(wxCommandEvent& event);
@@ -120,60 +120,47 @@ UsrGlblMgrEditDialog::UsrGlblMgrEditDialog(wxWindow* parent, const wxString& bas
     wxXmlResource::Get()->LoadDialog(this, parent, _T("globalUservars"));
     wxScrolledWindow* scrollpane = XRCCTRL(*this, "panel", wxScrolledWindow);
     cbAssert(scrollpane);
-    tree = new wxTreeMultiCtrl(scrollpane, -1, wxDefaultPosition, wxDefaultSize, wxTMC_DEFAULT_STYLE | wxTMC_SPAN_WIDTH);
-    tree->SetSpacingY(2);
-
-    wxFont f = tree->GetCaptionFont();
-    f.SetWeight(wxFONTWEIGHT_BOLD);
-    tree->SetCaptionFont(f);
-
-    wxBoxSizer *s = new wxBoxSizer( wxVERTICAL );
-    s->Add( tree, -1, wxALIGN_LEFT|wxALL|wxGROW, 0 );
-
-    scrollpane->SetSizer(s);
-    scrollpane->Layout();
-    scrollpane->SetVirtualSize(s->GetSize());
-    scrollpane->Layout();
 
 
-    wxPanel *p;
-    wxBoxSizer *ps;
-    wxTreeMultiItem root;
+    XRCCTRL(*this, "variablesList", wxListCtrl)->SetItemBackgroundColour(0, *wxRED);
 
-    root = tree->AddRoot(_T("Builtin"));
 
-    p = new PairControlPanel(tree);
-    ps = new wxBoxSizer( wxVERTICAL );
-    ps->Add( new PairControl(p, _T("BASE (required)"), wxEmptyString, PairControl::FILESELECT | PairControl::DEL), wxALL|wxGROW, 0 );
-    ps->Add( new PairControl(p, _T("include"), wxEmptyString, PairControl::FILESELECT | PairControl::DEL), wxALL|wxGROW, 0 );
-    ps->Add( new PairControl(p, _T("lib"), wxEmptyString, PairControl::FILESELECT | PairControl::DEL), wxALL|wxGROW, 0 );
-    ps->Add( new PairControl(p, _T("obj"), wxEmptyString, PairControl::FILESELECT | PairControl::DEL), wxALL|wxGROW, 0 );
-    ps->Add( new PairControl(p, _T("cflags"), wxEmptyString, PairControl::FILESELECT | PairControl::DEL), wxALL|wxGROW, 0 );
-    ps->Add( new PairControl(p, _T("lflags"), wxEmptyString, PairControl::FILESELECT | PairControl::DEL), wxALL|wxGROW, 0 );
-    p->SetSizer(ps);
+//    props = new PropertyPanel(scrollpane);
 
-    tree->AppendWindow(root, p);
+//    wxBoxSizer *s = new wxBoxSizer( wxVERTICAL );
+//    s->Add( props, -1, wxALIGN_LEFT|wxALL|wxGROW, 0 );
+//
+//    scrollpane->SetSizer(s);
+//    scrollpane->Layout();
+//    scrollpane->SetVirtualSize(s->GetSize());
+//    scrollpane->Layout();
 
-    root = tree->AddRoot(_T("Custom"));
 
-    p = new PairControlPanel(tree);
-    ps = new wxBoxSizer( wxVERTICAL );
-    ps->Add( new PairControl(p, _T("custom"), wxEmptyString, PairControl::ALL), wxALL|wxGROW, 0 );
-    p->SetSizer(ps);
+//    wxPanel *p;
+//    wxBoxSizer *ps;
+//    wxTreeMultiItem root;
+//
+//    root = tree->AddRoot(_T("Builtin"));
+//
+//    p = new PairControlPanel(tree);
+//    ps = new wxBoxSizer( wxVERTICAL );
+//    ps->Add( new PairControl(p, _T("BASE (required)"), wxEmptyString, PairControl::FILESELECT | PairControl::DEL), wxALL|wxGROW, 0 );
+//    ps->Add( new PairControl(p, _T("include"), wxEmptyString, PairControl::FILESELECT | PairControl::DEL), wxALL|wxGROW, 0 );
+//    ps->Add( new PairControl(p, _T("lib"), wxEmptyString, PairControl::FILESELECT | PairControl::DEL), wxALL|wxGROW, 0 );
+//    ps->Add( new PairControl(p, _T("obj"), wxEmptyString, PairControl::FILESELECT | PairControl::DEL), wxALL|wxGROW, 0 );
+//    ps->Add( new PairControl(p, _T("cflags"), wxEmptyString, PairControl::FILESELECT | PairControl::DEL), wxALL|wxGROW, 0 );
+//    ps->Add( new PairControl(p, _T("lflags"), wxEmptyString, PairControl::FILESELECT | PairControl::DEL), wxALL|wxGROW, 0 );
+//    p->SetSizer(ps);
+//
+//    tree->AppendWindow(root, p);
 
-    tree->AppendWindow(root, p);
+//    root = tree->AddRoot(_T("Custom"));
+//
+//    p = new PairControlPanel(tree);
+//    ps = new wxBoxSizer( wxVERTICAL );
+//    ps->Add( new PairControl(p, _T("custom"), wxEmptyString, PairControl::ALL), wxALL|wxGROW, 0 );
+//    p->SetSizer(ps);
 
-//    List();
-//    if(!base.IsEmpty())
-//    {
-//        Add(base);
-//        Load(base);
-//    }
-//    else
-//    {
-//        XRCCTRL(*this, "variable", wxChoice)->SetSelection(0);
-//        Load(XRCCTRL(*this, "variable", wxChoice)->GetStringSelection());
-//    }
 }
 
 void UsrGlblMgrEditDialog::OnOKClick(wxCommandEvent& event)

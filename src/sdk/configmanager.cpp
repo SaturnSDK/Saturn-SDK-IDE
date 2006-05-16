@@ -48,7 +48,6 @@ namespace CfgMgrConsts
 {
     const wxString app_path(_T("app_path"));
     const wxString data_path(_T("data_path"));
-    const wxString rootTag(_T("CodeBlocksConfig"));
     const wxString dotDot(_T(".."));
     const int version = 1;
 }
@@ -71,51 +70,47 @@ CfgMgrBldr::CfgMgrBldr() : doc(0), volatile_doc(0), r(false)
 {
     TiXmlBase::SetCondenseWhiteSpace(false);
     wxString personality(Manager::Get()->GetPersonalityManager()->GetPersonality());
+
     if(personality.StartsWith(_T("http://")))
+    {
         SwitchToR(personality);
-    else
-        SwitchTo(ConfigManager::GetConfigFolder() + wxFILE_SEP_PATH + personality + _T(".conf"));
+        return;
+    }
+
+    cfg = ConfigManager::GetConfigFolder() + wxFILE_SEP_PATH + personality + _T(".conf");
+
+    if(::wxFileExists(cfg) == false)
+    {
+    cfg = ConfigManager::LocateDataFile(wxFileName(cfg).GetFullName(), false, true);
+    if(cfg.IsEmpty())
+        {
+            cfg = ConfigManager::GetConfigFolder() + wxFILE_SEP_PATH + personality + _T(".conf");
+            doc = new TiXmlDocument();
+            doc->InsertEndChild(TiXmlDeclaration("1.0", "UTF-8", "yes"));
+            doc->InsertEndChild(TiXmlElement("CodeBlocksConfig"));
+            doc->FirstChildElement("CodeBlocksConfig")->SetAttribute("version", CfgMgrConsts::version);
+            return;
+        }
+    }
+    SwitchTo(cfg);
 }
 
-void CfgMgrBldr::SwitchTo(const wxString& absFileName)
+void CfgMgrBldr::SwitchTo(const wxString& fileName)
 {
     Close();
 
-    if(doc)
-        delete doc;
     doc = new TiXmlDocument();
-    doc->ClearError();
 
-    cfg = ::wxFileExists(absFileName) ? absFileName : ConfigManager::LocateDataFile(wxFileName(absFileName).GetFullName(), false, true);
-    if(cfg.IsEmpty())
-        cfg = ConfigManager::GetConfigFolder() + wxFILE_SEP_PATH + wxFileName(absFileName).GetFullName();
-
-    if(TinyXML::LoadDocument(cfg, doc) == false)
-    {
-        doc->InsertEndChild(TiXmlDeclaration("1.0", "UTF-8", "yes"));
-        doc->InsertEndChild(TiXmlElement(cbU2C(CfgMgrConsts::rootTag)));
-        doc->FirstChildElement(cbU2C(CfgMgrConsts::rootTag))->SetAttribute("version", CfgMgrConsts::version);
-    }
+    if(!TinyXML::LoadDocument(fileName, doc))
+            cbThrow(wxString(_T("Error accessing file.")));
 
     if(doc->ErrorId())
-        cbMessageBox(wxString(_T("TinyXML error:\n")) << cbC2U(doc->ErrorDesc()), _("Warning"), wxICON_WARNING);
+        cbThrow(wxString(_T("TinyXML error:\n")) << cbC2U(doc->ErrorDesc()));
 
-    TiXmlElement* docroot = doc->FirstChildElement(cbU2C(CfgMgrConsts::rootTag));
-    if(!docroot)
-    {
-        wxString s;
-        s.Printf(_("Fatal error parsing configuration. The file %s is not a valid Code::Blocks config file."),
-#if wxUSE_UNICODE
-                 cbC2U(doc->Value()).c_str());
-#else
-
-                 doc->Value());
-#endif
-        cbThrow(s);
-    }
+    TiXmlElement* docroot = doc->FirstChildElement("CodeBlocksConfig");
 
     if(doc->ErrorId())
-        cbMessageBox(wxString(_T("TinyXML error:\n")) << cbC2U(doc->ErrorDesc()), _("Warning"), wxICON_WARNING);
+        cbThrow(wxString(_T("TinyXML error:\n")) << cbC2U(doc->ErrorDesc()));
 
     const char *vers = docroot->Attribute("version");
     if(!vers || atoi(vers) != 1)
@@ -267,14 +262,14 @@ ConfigManager* CfgMgrBldr::Build(const wxString& name_space)
         if(!volatile_doc)
         {
             volatile_doc = new TiXmlDocument();
-            volatile_doc->InsertEndChild(TiXmlElement(cbU2C(CfgMgrConsts::rootTag)));
+            volatile_doc->InsertEndChild(TiXmlElement("CodeBlocksConfig"));
             volatile_doc->SetCondenseWhiteSpace(false);
         }
-        docroot = volatile_doc->FirstChildElement(cbU2C(CfgMgrConsts::rootTag));
+        docroot = volatile_doc->FirstChildElement("CodeBlocksConfig");
     }
     else
     {
-        docroot = doc->FirstChildElement(cbU2C(CfgMgrConsts::rootTag));
+        docroot = doc->FirstChildElement("CodeBlocksConfig");
         if(!docroot)
         {
             wxString err(_("Fatal error parsing supplied configuration file.\nParser error message:\n"));

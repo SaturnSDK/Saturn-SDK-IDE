@@ -5,12 +5,15 @@
 #include "manager.h"
 #include "macrosmanager.h"
 
+class PropertyPanel;
+
 class DLLIMPORT UserVariableManager : public Mgr<UserVariableManager>
 {
         friend class Manager;
         friend class Mgr<UserVariableManager>;
         friend class MacrosManager;
         static UserVariableManager* instance;
+        PropertyPanel *props;
 
     public:
         wxString Replace(const wxString& variable);
