@@ -5,7 +5,6 @@
 #undef new
 #include <deque>
 
-
 class LoaderBase : public AbstractJob
 {
     wxSemaphore sem;
@@ -109,7 +108,7 @@ public:
     LoaderBase* Load(const wxString& file, bool reuseEditors = false);
 
     bool Save(const wxString& file, const wxString& contents)          { assert(0 /* not implemented */); };
-    bool Save(const wxString& file, const char* contents, size_t len); { assert(0 /* not implemented */); };
+    bool Save(const wxString& file, const char* contents, size_t len)  { assert(0 /* not implemented */); };
 };
 
 
