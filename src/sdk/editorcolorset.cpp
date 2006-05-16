@@ -103,7 +103,7 @@ void EditorColorSet::ClearAllOptionColors()
 
 void EditorColorSet::LoadAvailableSets()
 {
-	wxString path = ConfigManager::GetDataFolder() + _T("/lexers");
+	wxString path = ConfigManager::GetDataFolder() + _T("/lexers/");
     wxDir dir(path);
 
     if (!dir.IsOpened())
@@ -111,12 +111,22 @@ void EditorColorSet::LoadAvailableSets()
 
 	EditorLexerLoader lex(this);
     wxString filename;
+
+    FileManager *fm = FileManager::Get();
+    std::list<LoaderBase*> loaders;
+
     bool ok = dir.GetFirst(&filename, _T("lexer_*.xml"), wxDIR_FILES);
-    while (ok)
+    while(ok)
     {
-        lex.Load(path + _T("/") + filename);
+        loaders.push_back(fm->Load(path + filename));
         ok = dir.GetNext(&filename);
     }
+
+    for(std::list<LoaderBase*>::iterator it = loaders.begin(); it != loaders.end(); ++it)
+        lex.Load(*it);
+
+    ::Delete(loaders);
+
 
 	for (OptionSetsMap::iterator it = m_Sets.begin(); it != m_Sets.end(); ++it)
 	{
