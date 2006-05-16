@@ -56,6 +56,7 @@ wxsDrawingWindow::wxsDrawingWindow(wxWindow* Parent,wxWindowID id):
     Bitmap(NULL)
 {
     ContentChanged();
+    SetScrollbars(5,5,1,1,0,0,true);
 }
 
 wxsDrawingWindow::~wxsDrawingWindow()
@@ -122,6 +123,7 @@ void wxsDrawingWindow::StartFetchingSequence()
 
     // Hiding panel to show content under it
     Panel->Hide();
+    // TODO (SpOoN#1#): Show underlaying items because they could be hidden ealier (after fetching background)
 
     // Processing all pending events, it MUST be done
     // to repaint the content of window
@@ -132,6 +134,7 @@ void wxsDrawingWindow::StartFetchingSequence()
     Panel->Raise();
     Manager::Yield();
     Panel->Show();
+    // TODO (SpOoN#1#): Hide underlaying items to prevent random repainting on windows
     Manager::Yield();
     FullRepaint();
 
@@ -152,7 +155,7 @@ void wxsDrawingWindow::FetchScreen()
 void wxsDrawingWindow::FullRepaint()
 {
     wxClientDC ClientDC(Panel);
-    wxBitmap BmpCopy(*Bitmap);
+    wxBitmap BmpCopy = Bitmap->GetSubBitmap(wxRect(0,0,Bitmap->GetWidth(),Bitmap->GetHeight()));
     wxBufferedDC DC(&ClientDC,BmpCopy);
     PaintExtra(&DC);
 }

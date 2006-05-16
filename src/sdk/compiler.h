@@ -28,13 +28,14 @@ class ProjectFile;
     Source file: $file
     Object file: $object
     Dependency result: $dep_object
-    All object files: $objects
     All *linkable* object files: $link_objects
+    All *linkable* flat object files: $link_flat_objects
     Exe output file: $exe_output
     Static lib output file: $static_output
     Dynamic lib output file: $dynamic_output
     Dynamic lib DEF output file: $def_output
     Resources output file: $resource_output
+    Objects output dir: $output_dir_objects
 
     Usual special chars apply: \t, \n, etc.
     The command output should be ready for inclusion
@@ -224,6 +225,7 @@ class DLLIMPORT Compiler : public CompileOptionsBase
                                         ProjectFile* pf,
                                         const wxString& file,
                                         const wxString& object,
+                                        const wxString& FlatObject,
                                         const wxString& deps);
 
         /** @brief Save settings */

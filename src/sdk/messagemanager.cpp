@@ -332,12 +332,12 @@ void MessageManager::ShowLog(MessageLog* log, bool show)
     if (show && !ls->visible)
     {
         // show
-        m_pNotebook->InsertPage(id, log, ls->title, false);
+        m_pNotebook->InsertPage(id, log, ls->title, true);
 
         SetLogImage(id, ls->bitmap);
         ls->visible = true;
 
-        log->Show(false);
+        log->Show(true);
 
         if (id == m_DebugLog)
             cfg->Write(_T("/has_debug_log"), (bool)true);

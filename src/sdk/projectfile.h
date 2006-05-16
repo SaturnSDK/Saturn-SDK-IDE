@@ -56,7 +56,7 @@ class ProjectFile  : public BlockAllocated<ProjectFile, 1000>
 
         // take as example the relative file sdk/cbProject.cpp
         /** @return The relative (to the project) filename without extension. */
-        wxString GetBaseName(); // returns sdk/cbProject
+        wxString GetBaseName() const; // returns sdk/cbProject
 
         /** @return The generated object filename. */
         const wxString& GetObjName(); // returns sdk/cbProject.o
@@ -82,7 +82,7 @@ class ProjectFile  : public BlockAllocated<ProjectFile, 1000>
 		void SetFileState(FileVisualState state);
 
         /** @return The visual state (modified, read-only, etc). */
-		FileVisualState GetFileState();
+		FileVisualState GetFileState() const;
 
         /** The full filename of this file. Usually you need to read from it and never write to it.
           * @note If you set this anywhere in code,
@@ -157,6 +157,7 @@ class pfDetails : public BlockAllocated<pfDetails, 1000>
         wxString dep_file;
         wxString object_dir;
         wxString dep_dir;
+        wxString object_file_flat;
         // those below, have no UnixFilename() applied, nor QuoteStringIfNeeded()
         wxString source_file_native;
         wxString object_file_native;
@@ -166,6 +167,7 @@ class pfDetails : public BlockAllocated<pfDetails, 1000>
         wxString source_file_absolute_native;
         wxString object_file_absolute_native;
         wxString dep_file_absolute_native;
+        wxString object_file_flat_native;
 };
 
 #endif // PROJECTFILE_H

@@ -1,88 +1,792 @@
---- wxFlatNotebook-old.cpp	Wed Jan 11 21:39:06 2006
-+++ wxFlatNotebook.cpp	Thu Jan 12 13:30:32 2006
-@@ -10,7 +10,7 @@
+--- wxFlatNotebook_org.cpp	2006-05-06 16:46:33.640625000 +0200
++++ wxFlatNotebook.cpp	2006-05-08 23:08:13.031250000 +0200
+@@ -9,6 +9,442 @@
  // Licence:     wxWindows license <http://www.wxwidgets.org/licence3.txt>
  ///////////////////////////////////////////////////////////////////////////////
  
--#include <wx/wxFlatNotebook/wxFlatNotebook.h>
-+#include "wxFlatNotebook.h"
- #include <algorithm>
- #include <wx/tooltip.h>
- #include <wx/tipwin.h>
-@@ -30,9 +30,9 @@
- END_EVENT_TABLE()
++namespace FNB
++{
++	////////////////////////////////////////////////////////////
++	// Images used by the control
++	////////////////////////////////////////////////////////////
++	/* XPM */
++	const char *left_arrow_disabled_xpm[] = {
++		/* width height num_colors chars_per_pixel */
++		"    16    16        8            1",
++			/* colors */
++			"` c #008080",
++			". c #555555",
++			"# c #000000",
++			"a c #000000",
++			"b c #000000",
++			"c c #000000",
++			"d c #000000",
++			"e c #000000",
++			/* pixels */
++			"````````````````",
++			"````````````````",
++			"````````````````",
++			"````````.```````",
++			"```````..```````",
++			"``````.`.```````",
++			"`````.``.```````",
++			"````.```.```````",
++			"`````.``.```````",
++			"``````.`.```````",
++			"```````..```````",
++			"````````.```````",
++			"````````````````",
++			"````````````````",
++			"````````````````",
++			"````````````````"
++	};
++
++	/* XPM */
++	const char *x_button_pressed_xpm[] = {
++		/* width height num_colors chars_per_pixel */
++		"    16    16        8            1",
++			/* colors */
++			"` c #008080",
++			". c #4766e0",
++			"# c #9e9ede",
++			"a c #000000",
++			"b c #000000",
++			"c c #000000",
++			"d c #000000",
++			"e c #000000",
++			/* pixels */
++			"````````````````",
++			"`..............`",
++			"`.############.`",
++			"`.############.`",
++			"`.############.`",
++			"`.###aa####aa#.`",
++			"`.####aa##aa##.`",
++			"`.#####aaaa###.`",
++			"`.######aa####.`",
++			"`.#####aaaa###.`",
++			"`.####aa##aa##.`",
++			"`.###aa####aa#.`",
++			"`.############.`",
++			"`..............`",
++			"````````````````",
++			"````````````````"
++	};
++
++
++	/* XPM */
++	const char *left_arrow_xpm[] = {
++		/* width height num_colors chars_per_pixel */
++		"    16    16        8            1",
++			/* colors */
++			"` c #008080",
++			". c #555555",
++			"# c #000000",
++			"a c #000000",
++			"b c #000000",
++			"c c #000000",
++			"d c #000000",
++			"e c #000000",
++			/* pixels */
++			"````````````````",
++			"````````````````",
++			"````````````````",
++			"````````.```````",
++			"```````..```````",
++			"``````...```````",
++			"`````....```````",
++			"````.....```````",
++			"`````....```````",
++			"``````...```````",
++			"```````..```````",
++			"````````.```````",
++			"````````````````",
++			"````````````````",
++			"````````````````",
++			"````````````````"
++	};
++
++	/* XPM */
++	const char *x_button_hilite_xpm[] = {
++		/* width height num_colors chars_per_pixel */
++		"    16    16        8            1",
++			/* colors */
++			"` c #008080",
++			". c #4766e0",
++			"# c #c9dafb",
++			"a c #000000",
++			"b c #000000",
++			"c c #000000",
++			"d c #000000",
++			"e c #000000",
++			/* pixels */
++			"````````````````",
++			"`..............`",
++			"`.############.`",
++			"`.############.`",
++			"`.##aa####aa##.`",
++			"`.###aa##aa###.`",
++			"`.####aaaa####.`",
++			"`.#####aa#####.`",
++			"`.####aaaa####.`",
++			"`.###aa##aa###.`",
++			"`.##aa####aa##.`",
++			"`.############.`",
++			"`.############.`",
++			"`..............`",
++			"````````````````",
++			"````````````````"
++	};
++
++	/* XPM */
++	const char *x_button_xpm[] = {
++		/* width height num_colors chars_per_pixel */
++		"    16    16        8            1",
++			/* colors */
++			"` c #008080",
++			". c #555555",
++			"# c #000000",
++			"a c #000000",
++			"b c #000000",
++			"c c #000000",
++			"d c #000000",
++			"e c #000000",
++			/* pixels */
++			"````````````````",
++			"````````````````",
++			"````````````````",
++			"````````````````",
++			"````..````..````",
++			"`````..``..`````",
++			"``````....``````",
++			"```````..```````",
++			"``````....``````",
++			"`````..``..`````",
++			"````..````..````",
++			"````````````````",
++			"````````````````",
++			"````````````````",
++			"````````````````",
++			"````````````````"
++	};
++
++	/* XPM */
++	const char *left_arrow_pressed_xpm[] = {
++		/* width height num_colors chars_per_pixel */
++		"    16    16        8            1",
++			/* colors */
++			"` c #008080",
++			". c #4766e0",
++			"# c #9e9ede",
++			"a c #000000",
++			"b c #000000",
++			"c c #000000",
++			"d c #000000",
++			"e c #000000",
++			/* pixels */
++			"````````````````",
++			"`..............`",
++			"`.############.`",
++			"`.############.`",
++			"`.#######a####.`",
++			"`.######aa####.`",
++			"`.#####aaa####.`",
++			"`.####aaaa####.`",
++			"`.###aaaaa####.`",
++			"`.####aaaa####.`",
++			"`.#####aaa####.`",
++			"`.######aa####.`",
++			"`.#######a####.`",
++			"`..............`",
++			"````````````````",
++			"````````````````"
++	};
++
++	/* XPM */
++	const char *left_arrow_hilite_xpm[] = {
++		/* width height num_colors chars_per_pixel */
++		"    16    16        8            1",
++			/* colors */
++			"` c #008080",
++			". c #4766e0",
++			"# c #c9dafb",
++			"a c #000000",
++			"b c #000000",
++			"c c #000000",
++			"d c #000000",
++			"e c #000000",
++			/* pixels */
++			"````````````````",
++			"`..............`",
++			"`.############.`",
++			"`.######a#####.`",
++			"`.#####aa#####.`",
++			"`.####aaa#####.`",
++			"`.###aaaa#####.`",
++			"`.##aaaaa#####.`",
++			"`.###aaaa#####.`",
++			"`.####aaa#####.`",
++			"`.#####aa#####.`",
++			"`.######a#####.`",
++			"`.############.`",
++			"`..............`",
++			"````````````````",
++			"````````````````"
++	};
++
++	/* XPM */
++	const char *right_arrow_disabled_xpm[] = {
++		/* width height num_colors chars_per_pixel */
++		"    16    16        8            1",
++			/* colors */
++			"` c #008080",
++			". c #555555",
++			"# c #000000",
++			"a c #000000",
++			"b c #000000",
++			"c c #000000",
++			"d c #000000",
++			"e c #000000",
++			/* pixels */
++			"````````````````",
++			"````````````````",
++			"````````````````",
++			"```````.````````",
++			"```````..```````",
++			"```````.`.``````",
++			"```````.``.`````",
++			"```````.```.````",
++			"```````.``.`````",
++			"```````.`.``````",
++			"```````..```````",
++			"```````.````````",
++			"````````````````",
++			"````````````````",
++			"````````````````",
++			"````````````````"
++	};
++
++	/* XPM */
++	const char *right_arrow_hilite_xpm[] = {
++		/* width height num_colors chars_per_pixel */
++		"    16    16        8            1",
++			/* colors */
++			"` c #008080",
++			". c #4766e0",
++			"# c #c9dafb",
++			"a c #000000",
++			"b c #000000",
++			"c c #000000",
++			"d c #000000",
++			"e c #000000",
++			/* pixels */
++			"````````````````",
++			"`..............`",
++			"`.############.`",
++			"`.####a#######.`",
++			"`.####aa######.`",
++			"`.####aaa#####.`",
++			"`.####aaaa####.`",
++			"`.####aaaaa###.`",
++			"`.####aaaa####.`",
++			"`.####aaa#####.`",
++			"`.####aa######.`",
++			"`.####a#######.`",
++			"`.############.`",
++			"`..............`",
++			"````````````````",
++			"````````````````"
++	};
++
++	/* XPM */
++	const char *right_arrow_pressed_xpm[] = {
++		/* width height num_colors chars_per_pixel */
++		"    16    16        8            1",
++			/* colors */
++			"` c #008080",
++			". c #4766e0",
++			"# c #9e9ede",
++			"a c #000000",
++			"b c #000000",
++			"c c #000000",
++			"d c #000000",
++			"e c #000000",
++			/* pixels */
++			"````````````````",
++			"`..............`",
++			"`.############.`",
++			"`.############.`",
++			"`.#####a######.`",
++			"`.#####aa#####.`",
++			"`.#####aaa####.`",
++			"`.#####aaaa###.`",
++			"`.#####aaaaa##.`",
++			"`.#####aaaa###.`",
++			"`.#####aaa####.`",
++			"`.#####aa#####.`",
++			"`.#####a######.`",
++			"`..............`",
++			"````````````````",
++			"````````````````"
++	};
++
++
++	/* XPM */
++	const char *right_arrow_xpm[] = {
++		/* width height num_colors chars_per_pixel */
++		"    16    16        8            1",
++			/* colors */
++			"` c #008080",
++			". c #555555",
++			"# c #000000",
++			"a c #000000",
++			"b c #000000",
++			"c c #000000",
++			"d c #000000",
++			"e c #000000",
++			/* pixels */
++			"````````````````",
++			"````````````````",
++			"````````````````",
++			"```````.````````",
++			"```````..```````",
++			"```````...``````",
++			"```````....`````",
++			"```````.....````",
++			"```````....`````",
++			"```````...``````",
++			"```````..```````",
++			"```````.````````",
++			"````````````````",
++			"````````````````",
++			"````````````````",
++			"````````````````"
++	};
++
++	const int tab_x_size = 9;
++
++	/* XPM */
++	const char *tab_x_button_pressed_xpm[] = {
++		/* width height num_colors chars_per_pixel */
++		"     9     9        8            1",
++			/* colors */
++			"` c #4766e0",
++			". c #9e9ede",
++			"# c #555555",
++			"a c #000000",
++			"b c #000000",
++			"c c #000000",
++			"d c #000000",
++			"e c #000000",
++			/* pixels */
++			"`````````",
++			"`.......`",
++			"`.......`",
++			"`..#...#`",
++			"`...#.#.`",
++			"`....#..`",
++			"`...#.#.`",
++			"`..#...#`",
++			"`````````"
++	};
++
++	/* XPM */
++	const char *tab_x_button_xpm[] = {
++		/* width height num_colors chars_per_pixel */
++		"     9     9        8            1",
++			/* colors */
++			"` c #555555",
++			". c #FFFFFF",
++			"# c #000000",
++			"a c #000000",
++			"b c #000000",
++			"c c #000000",
++			"d c #000000",
++			"e c #000000",
++			/* pixels */
++			"`````````",
++			"`.......`",
++			"`.`...`.`",
++			"`..`.`..`",
++			"`...`...`",
++			"`..`.`..`",
++			"`.`...`.`",
++			"`.......`",
++			"`````````"
++	};
++
++	/* XPM */
++	const char *tab_x_button_hilite_xpm[] = {
++		/* width height num_colors chars_per_pixel */
++		"     9     9        8            1",
++			/* colors */
++			"` c #4766e0",
++			". c #c9dafb",
++			"# c #000000",
++			"a c #000000",
++			"b c #000000",
++			"c c #000000",
++			"d c #000000",
++			"e c #000000",
++			/* pixels */
++			"`````````",
++			"`.......`",
++			"`.#...#.`",
++			"`..#.#..`",
++			"`...#...`",
++			"`..#.#..`",
++			"`.#...#.`",
++			"`.......`",
++			"`````````"
++	};
++}
  
- wxFlatNotebook::wxFlatNotebook(wxWindow* parent, wxWindowID id, const wxPoint& pos, const wxSize& size, long style, const wxString& name)
--: m_nFrom(0)
-+: m_bForceSelection(false)
-+, m_nFrom(0)
- , m_nPadding(4)
--, m_bForceSelection(false)
+ #include "wxFlatNotebook.h"
+ #include <algorithm>
+@@ -18,7 +454,7 @@
+ IMPLEMENT_DYNAMIC_CLASS(wxFlatNotebookEvent, wxNotifyEvent)
+ DEFINE_EVENT_TYPE(wxEVT_COMMAND_FLATNOTEBOOK_PAGE_CHANGED)
+ DEFINE_EVENT_TYPE(wxEVT_COMMAND_FLATNOTEBOOK_PAGE_CHANGING)
+-DEFINE_EVENT_TYPE(wxEVT_COMMAND_FLATNOTEBOOK_PAGE_CLOSING) 
++DEFINE_EVENT_TYPE(wxEVT_COMMAND_FLATNOTEBOOK_PAGE_CLOSING)
+ DEFINE_EVENT_TYPE(wxEVT_COMMAND_FLATNOTEBOOK_CONTEXT_MENU)
+ DEFINE_EVENT_TYPE(wxEVT_COMMAND_FLATNOTEBOOK_PAGE_CLOSED)
+ 
+@@ -32,7 +468,7 @@
  {
- 	long panelStyle = wxTAB_TRAVERSAL;
- 	if(style & wxFNB_BORDER)
-@@ -250,11 +250,13 @@
+ 	m_bForceSelection = false;
+ 	m_nPadding = 6;
+-	m_nFrom = 0;	
++	m_nFrom = 0;
+ 	style |= wxTAB_TRAVERSAL;
+ 	m_pages = NULL;
+ 	wxPanel::Create(parent, id, pos, size, style, name);
+@@ -137,12 +573,12 @@
+ 
+ }
+ 
+-void wxFlatNotebookBase::SetImageList(wxFlatNotebookImageList * imglist) 
++void wxFlatNotebookBase::SetImageList(wxFlatNotebookImageList * imglist)
+ {
+ 	m_pages->SetImageList(imglist);
+ }
+ 
+-wxFlatNotebookImageList * wxFlatNotebookBase::GetImageList() 
++wxFlatNotebookImageList * wxFlatNotebookBase::GetImageList()
+ {
+ 	return m_pages->GetImageList();
+ }
+@@ -173,7 +609,7 @@
+ 		wxLogTrace(wxTraceMask(), _("New page inserted. Index = %i"), index);
+ 	}
+ 	else
+-	{		
++	{
+ 		m_windows.push_back(page);
+ 		wxLogTrace(wxTraceMask(), _("New page appended. Index = %i"), index);
+ 	}
+@@ -243,20 +679,23 @@
  	m_pages->DoSetSelection(page);
  }
  
--void wxFlatNotebook::DeletePage(size_t page)
-+void wxFlatNotebook::DeletePage(size_t page, bool notify)
+-void wxFlatNotebookBase::DeletePage(size_t page)
++void wxFlatNotebookBase::DeletePage(size_t page, bool notify)
  {
  	if(page >= m_windows.size())
  		return;
  
-+    if (notify)
-+    {
- 	// Fire a closing event
- 	wxFlatNotebookEvent event(wxEVT_COMMAND_FLATNOTEBOOK_PAGE_CLOSING, GetId());
- 	event.SetSelection((int)page);
-@@ -264,6 +266,7 @@
- 	// The event handler allows it?
- 	if (!event.IsAllowed())
- 		return;
-+    }
+-	// Fire a closing event
+-	wxFlatNotebookEvent event(wxEVT_COMMAND_FLATNOTEBOOK_PAGE_CLOSING, GetId());
+-	event.SetSelection((int)page);
+-	event.SetEventObject(this);
+-	GetEventHandler()->ProcessEvent(event);
+-
+-	// The event handler allows it?
+-	if (!event.IsAllowed())
+-		return;
++	if (notify)
++	{
++		// Fire a closing event
++		wxFlatNotebookEvent event(wxEVT_COMMAND_FLATNOTEBOOK_PAGE_CLOSING, GetId());
++		event.SetSelection((int)page);
++		event.SetEventObject(this);
++		GetEventHandler()->ProcessEvent(event);
++
++		// The event handler allows it?
++		if (!event.IsAllowed())
++			return;
++	}
  
  	Freeze();
  
-@@ -426,11 +429,13 @@
- 	return m_pages->m_nStyle;
+@@ -338,9 +777,9 @@
+ 	return -1;
  }
  
--bool wxFlatNotebook::RemovePage(size_t page)
-+bool wxFlatNotebook::RemovePage(size_t page, bool notify)
+-int wxFlatNotebookBase::GetSelection() const 
+-{ 
+-	return m_pages->GetSelection(); 
++int wxFlatNotebookBase::GetSelection() const
++{
++	return m_pages->GetSelection();
+ }
+ 
+ void wxFlatNotebookBase::AdvanceSelection(bool bForward)
+@@ -355,15 +794,15 @@
+ 
+ void wxFlatNotebookBase::OnNavigationKey(wxNavigationKeyEvent& event)
+ {
+-	if ( event.IsWindowChange() ) 
++	if ( event.IsWindowChange() )
+ 	{
+ 		// change pages
+ 		AdvanceSelection(event.GetDirection());
+ 	}
+-	else 
++	else
+ 	{
+ 		// pass to the parent
+-		if ( GetParent() ) 
++		if ( GetParent() )
+ 		{
+ 			event.SetCurrentFocus(this);
+ 			GetParent()->ProcessEvent(event);
+@@ -417,7 +856,7 @@
+ {
+ 	wxPanel::SetWindowStyleFlag(style);
+ 
+-	if(m_pages) 
++	if(m_pages)
+ 	{
+ 		// For changing the tab position (i.e. placing them top/bottom)
+ 		// refreshing the tab container is not enough
+@@ -426,20 +865,23 @@
+ 	}
+ }
+ 
+-bool wxFlatNotebookBase::RemovePage(size_t page)
++bool wxFlatNotebookBase::RemovePage(size_t page, bool notify)
  {
  	if(page >= m_windows.size())
  		return false;
  
-+    if (notify)
-+    {
- 	// Fire a closing event
- 	wxFlatNotebookEvent event(wxEVT_COMMAND_FLATNOTEBOOK_PAGE_CLOSING, GetId());
- 	event.SetSelection((int)page);
-@@ -440,6 +445,7 @@
- 	// The event handler allows it?
- 	if (!event.IsAllowed())
- 		return false;
-+    }
+-	// Fire a closing event
+-	wxFlatNotebookEvent event(wxEVT_COMMAND_FLATNOTEBOOK_PAGE_CLOSING, GetId());
+-	event.SetSelection((int)page);
+-	event.SetEventObject(this);
+-	GetEventHandler()->ProcessEvent(event);
+-
+-	// The event handler allows it?
+-	if (!event.IsAllowed())
+-		return false;
++	if (notify)
++	{
++		// Fire a closing event
++		wxFlatNotebookEvent event(wxEVT_COMMAND_FLATNOTEBOOK_PAGE_CLOSING, GetId());
++		event.SetSelection((int)page);
++		event.SetEventObject(this);
++		GetEventHandler()->ProcessEvent(event);
++
++		// The event handler allows it?
++		if (!event.IsAllowed())
++			return false;
++	}
  
  	Freeze();
  
-@@ -543,12 +549,12 @@
- wxPageContainer::wxPageContainer(wxWindow* parent, wxWindowID id, const wxPoint& pos, const wxSize& size, long style)
- : m_ImageList(NULL) 
+@@ -576,7 +1018,7 @@
+ }
+ 
+ ///////////////////////////////////////////////////////////////////////////////////////////
+-// 
++//
+ //	wxPageContainerBase
+ //
+ ///////////////////////////////////////////////////////////////////////////////////////////
+@@ -595,7 +1037,7 @@
+ END_EVENT_TABLE()
+ 
+ wxPageContainerBase::wxPageContainerBase(wxWindow* parent, wxWindowID id, const wxPoint& pos, const wxSize& size, long style)
+-: m_ImageList(NULL) 
++: m_ImageList(NULL)
  , m_iActivePage(-1)
-+, m_bHoverX(false)
- , m_bHoverLeftArrow(false)
- , m_bHoverRightArrow(false)
--, m_bHoverX(false)
-+, m_pDropTarget(NULL)
- , m_pParent(parent)
- , m_pRightClickMenu(NULL)
--, m_pDropTarget(NULL)
+ , m_pDropTarget(NULL)
+ , m_nLeftClickZone(wxFNB_NOWHERE)
+@@ -679,7 +1121,7 @@
+ 	wxBrush backBrush;
+ 	if(style & wxFNB_VC71)
+ 		backBrush = wxBrush(wxColour(247, 243, 233));
+-	else 
++	else
+ 		backBrush = wxBrush(m_tabAreaColor);
+ 
+ 	wxBrush noselBrush = wxBrush(wxSystemSettings::GetColour(wxSYS_COLOUR_BTNFACE));
+@@ -739,7 +1181,7 @@
+ 		tabHeight = (style & wxFNB_BOTTOM) ? tabHeight - 2 :  tabHeight;
+ 
+ 	// Draw the visible tabs
+-	for(i=m_nFrom; i<(int)m_pagesInfoVec.size(); i++) 
++	for(i=m_nFrom; i<(int)m_pagesInfoVec.size(); i++)
+ 	{
+ 		if(style != wxFNB_VC71)
+ 			shapePoints = (int)(tabHeight*tan((double)m_pagesInfoVec[i].GetTabAngle()/180.0*M_PI));
+@@ -769,7 +1211,7 @@
+ 
+ 		int tabWidth = ((wxFlatNotebookBase *)m_pParent)->m_nPadding * 2 + width;
+ 		int imageYCoord = style & wxFNB_BOTTOM ? 3 : 6;
+-		
++
+ 		/// Style to add a small 'x' button on the top right
+ 		/// of the tab
+ 		if(style & wxFNB_X_ON_TAB && i == GetSelection())
+@@ -800,8 +1242,8 @@
+ 
+ 		// By default we clean the tab region
+ 		m_pagesInfoVec[i].GetRegion().Clear();
+-		
+-		// Clean the 'x' buttn on the tab 
++
++		// Clean the 'x' buttn on the tab
+ 		// 'Clean' rectanlge is a rectangle with width or height
+ 		// with values lower than or equal to 0
+ 		m_pagesInfoVec[i].GetXRect().SetSize(wxSize(-1, -1));
+@@ -815,13 +1257,13 @@
+ 			DrawStandardTab(dc, posx, i, hasImage, tabWidth, tabHeight);
+ 
+ 
+-		// Text drawing offset from the left border of the 
++		// Text drawing offset from the left border of the
+ 		// rectangle
+ 		int textOffset;
+ 
+ 		// The width of the images are 16 pixels
+ 		if(hasImage)
+-			textOffset = ((wxFlatNotebookBase *)m_pParent)->m_nPadding * 2 + 16 + shapePoints / 2 ; 
++			textOffset = ((wxFlatNotebookBase *)m_pParent)->m_nPadding * 2 + 16 + shapePoints / 2 ;
+ 		else
+ 			textOffset = ((wxFlatNotebookBase *)m_pParent)->m_nPadding + shapePoints / 2 ;
+ 
+@@ -841,12 +1283,12 @@
+ 		if(hasImage)
+ 		{
+ 			int imageXOffset = textOffset - 16 - ((wxFlatNotebookBase *)m_pParent)->m_nPadding;
+-			dc.DrawBitmap((*m_ImageList)[m_pagesInfoVec[i].GetImageIndex()], 
++			dc.DrawBitmap((*m_ImageList)[m_pagesInfoVec[i].GetImageIndex()],
+ 				posx + imageXOffset, imageYCoord, true);
+ 		}
+ 
+ 		dc.DrawText(GetPageText(i), posx + textOffset, imageYCoord);
+-		
++
+ 		int textWidth, textHeight;
+ 		dc.GetTextExtent(GetPageText(i), &textWidth, &textHeight);
+ 
+@@ -857,7 +1299,7 @@
+ 		{
+ 			int tabCloseButtonYCoord = imageYCoord + 3;
+ 			wxRect x_rect(tabCloseButtonXCoord, tabCloseButtonYCoord, FNB::tab_x_size, FNB::tab_x_size);
+-			DrawTabX(dc, x_rect, i);	
++			DrawTabX(dc, x_rect, i);
+ 		}
+ 
+ 		// Restore the text forground
+@@ -877,7 +1319,7 @@
+ 		m_pagesInfoVec[i].GetRegion().Clear();
+ 	}
+ 
+-	// Draw the left/right/close buttons 
++	// Draw the left/right/close buttons
+ 	// Left arrow
+ 	DrawLeftArrow(dc);
+ 	DrawRightArrow(dc);
+@@ -886,10 +1328,10 @@
+ 
+ // Tabs drawings
+ void wxPageContainerBase::DrawFancyTab(wxBufferedPaintDC& dc,
+-								   const int& posx, 
+-								   const int &tabIdx, 
+-								   const bool &hasImage, 
+-								   const int &tabWidth, 
++								   const int& posx,
++								   const int &tabIdx,
++								   const bool &hasImage,
++								   const int &tabWidth,
+ 								   const int &tabHeight)
  {
- 	m_colorTo = wxColor(255, 255, 255);
- 	m_colorFrom   = wxColour(wxSystemSettings::GetColour(wxSYS_COLOUR_3DFACE));
-@@ -890,7 +896,9 @@
+ 	// Fancy tabs - like with VC71 but with the following differences:
+@@ -915,18 +1357,18 @@
+ 	}
+ 	else
+ 	{
+-		// We dont draw a rectangle for non selected tabs, but only 
++		// We dont draw a rectangle for non selected tabs, but only
+ 		// vertical line on the left
+ 		dc.SetPen(borderPen);
+ 		dc.DrawLine(posx + tabWidth, VERTICAL_BORDER_PADDING + 3, posx + tabWidth, tabHeight - 4);
+ 	}
+ }
+ 
+-void wxPageContainerBase::DrawVC71Tab(wxBufferedPaintDC& dc, 
+-								  const int& posx, 
+-								  const int &tabIdx, 
+-								  const bool &hasImage, 
+-								  const int &tabWidth, 
++void wxPageContainerBase::DrawVC71Tab(wxBufferedPaintDC& dc,
++								  const int& posx,
++								  const int &tabIdx,
++								  const bool &hasImage,
++								  const int &tabWidth,
+ 								  const int &tabHeight)
+ {
+ 	// Visual studio 7.1 style
+@@ -941,17 +1383,17 @@
+ 		int posy = (style & wxFNB_BOTTOM) ? 0 : VERTICAL_BORDER_PADDING;
+ 		dc.DrawRectangle(posx, posy, tabWidth, tabHeight);
+ 
+-		// Draw a black line on the left side of the 
++		// Draw a black line on the left side of the
+ 		// rectangle
+ 		wxPen pen = wxPen(*wxBLACK);
+ 		dc.SetPen(pen);
+ 
+ 		int blackLineHeight = (style & wxFNB_BOTTOM) ? VERTICAL_BORDER_PADDING + tabHeight - 3 : VERTICAL_BORDER_PADDING + tabHeight - 5;
+-		dc.DrawLine(posx + tabWidth, (style & wxFNB_BOTTOM) ? 0 : VERTICAL_BORDER_PADDING, 
++		dc.DrawLine(posx + tabWidth, (style & wxFNB_BOTTOM) ? 0 : VERTICAL_BORDER_PADDING,
+ 			posx + tabWidth, blackLineHeight - 1);
+ 
+ 		// To give the tab more 3D look we do the following
+-		// Incase the tab is on top, 
++		// Incase the tab is on top,
+ 		// Draw a thik white line on topof the rectangle
+ 		// Otherwise, draw a thin (1 pixel) black line at the bottom
+ 
+@@ -963,7 +1405,7 @@
+ 	}
+ 	else
+ 	{
+-		// We dont draw a rectangle for non selected tabs, but only 
++		// We dont draw a rectangle for non selected tabs, but only
+ 		// vertical line on the left
+ 		int blackLineHeight = (style & wxFNB_BOTTOM) ? tabHeight - 5 : VERTICAL_BORDER_PADDING + tabHeight - 8;
+ 		dc.DrawLine(posx + tabWidth, (style & wxFNB_BOTTOM) ? 3 : VERTICAL_BORDER_PADDING + 1, posx + tabWidth, blackLineHeight + 1);
+@@ -971,11 +1413,11 @@
+ }
+ 
+ 
+-void wxPageContainerBase::DrawStandardTab(wxBufferedPaintDC& dc, 
+-									  const int& posx, 
+-									  const int &tabIdx, 
+-									  const bool &hasImage, 
+-									  const int &tabWidth, 
++void wxPageContainerBase::DrawStandardTab(wxBufferedPaintDC& dc,
++									  const int& posx,
++									  const int &tabIdx,
++									  const bool &hasImage,
++									  const int &tabWidth,
+ 									  const int &tabHeight)
+ {
+ 	// Default style
+@@ -1043,7 +1485,9 @@
  	{
  		m_iActivePage = (int)m_pagesInfoVec.size();
  	}
@@ -93,7 +797,7 @@
  	Refresh();
  }
  
-@@ -900,8 +908,10 @@
+@@ -1053,8 +1497,10 @@
  	{
  		m_iActivePage = (int)m_pagesInfoVec.size();
  	}
@@ -105,96 +809,369 @@
  	Refresh();
  	return true;
  }
-@@ -924,9 +934,16 @@
+@@ -1078,7 +1524,16 @@
  	{
  	case wxFNB_TAB:
  		{
+-			DeletePage((size_t)tabIdx);
 +			wxFlatNotebookEvent event(wxEVT_COMMAND_FLATNOTEBOOK_PAGE_CLOSING, GetParent()->GetId());
 +			event.SetSelection(tabIdx);
 +			event.SetEventObject(GetParent());
 +			GetParent()->GetEventHandler()->ProcessEvent(event);
 +			if (event.IsAllowed())
 +			{
- 			// Set the current tab to be active
- 			SetSelection((size_t)tabIdx);
--			DeletePage((size_t)tabIdx);
-+                DeletePage((size_t)tabIdx, false);
++				// Set the current tab to be active
++				SetSelection((size_t)tabIdx);
++				DeletePage((size_t)tabIdx, false);
 +			}
  			break;
  		}
  	default:
-@@ -937,8 +954,6 @@
+@@ -1089,40 +1544,37 @@
  
- void wxPageContainer::OnRightDown(wxMouseEvent& event)
+ void wxPageContainerBase::OnRightDown(wxMouseEvent& event)
  {
 -	if(m_pRightClickMenu)
--	{
- 		wxPageInfo pgInfo;
- 		int tabIdx;
- 		int where = HitTest(event.GetPosition(), pgInfo, tabIdx);
-@@ -970,7 +985,6 @@
- 		default:
- 			break;
++	wxPageInfo pgInfo;
++	int tabIdx;
++	int where = HitTest(event.GetPosition(), pgInfo, tabIdx);
++	switch(where)
+ 	{
+-		wxPageInfo pgInfo;
+-		int tabIdx;
+-		int where = HitTest(event.GetPosition(), pgInfo, tabIdx);
+-		switch(where)
++	case wxFNB_TAB:
++	case wxFNB_TAB_X:
+ 		{
+-		case wxFNB_TAB:
+-		case wxFNB_TAB_X:
+-			{
+-				if(!m_pagesInfoVec[tabIdx].GetEnabled())
+-					break;
++			if(!m_pagesInfoVec[tabIdx].GetEnabled())
++				break;
+ 
+-				// Set the current tab to be active
+-				SetSelection((size_t)tabIdx);
++			// Set the current tab to be active
++			SetSelection((size_t)tabIdx);
+ 
+-				// If the owner has defined a context menu for the tabs,
+-				// popup the right click menu
+-				if (m_pRightClickMenu)
+-					PopupMenu(m_pRightClickMenu);
+-				else
+-				{
+-					// send a message to popup a custom menu
+-					wxFlatNotebookEvent event(wxEVT_COMMAND_FLATNOTEBOOK_CONTEXT_MENU, GetParent()->GetId());
+-					event.SetSelection((int)tabIdx);
+-					event.SetOldSelection((int)m_iActivePage);
+-					event.SetEventObject(GetParent());
+-					GetParent()->GetEventHandler()->ProcessEvent(event);
+-				}
++			// If the owner has defined a context menu for the tabs,
++			// popup the right click menu
++			if (m_pRightClickMenu)
++				PopupMenu(m_pRightClickMenu);
++			else
++			{
++				// send a message to popup a custom menu
++				wxFlatNotebookEvent event(wxEVT_COMMAND_FLATNOTEBOOK_CONTEXT_MENU, GetParent()->GetId());
++				event.SetSelection((int)tabIdx);
++				event.SetOldSelection((int)m_iActivePage);
++				event.SetEventObject(GetParent());
++				GetParent()->GetEventHandler()->ProcessEvent(event);
+ 			}
+-			break;
+-		default:
+-			break;
  		}
--	}
++		break;
++	default:
++		break;
+ 	}
  	event.Skip();
  }
+@@ -1135,7 +1587,7 @@
+ 	// Reset buttons status
+ 	m_nXButtonStatus     = wxFNB_BTN_NONE;
+ 	m_nLeftButtonStatus  = wxFNB_BTN_NONE;
+-	m_nRightButtonStatus = wxFNB_BTN_NONE;	
++	m_nRightButtonStatus = wxFNB_BTN_NONE;
+ 	m_nTabXButtonStatus  = wxFNB_BTN_NONE;
  
-@@ -1048,7 +1062,8 @@
- 			event.SetSelection(m_iActivePage);
- 			event.SetEventObject(GetParent());
- 			GetParent()->GetEventHandler()->ProcessEvent(event);
--			DeletePage((size_t)m_iActivePage);
-+			if (event.IsAllowed())
-+                DeletePage((size_t)m_iActivePage, false);
- 			break;
+ 	m_nLeftClickZone = HitTest(event.GetPosition(), pgInfo, tabIdx);
+@@ -1202,7 +1654,7 @@
+ 			if(m_nFrom == 0)
+ 				break;
+ 
+-			// Make sure that the button was pressed before 
++			// Make sure that the button was pressed before
+ 			if(m_nLeftButtonStatus != wxFNB_BTN_PRESSED)
+ 				break;
+ 
+@@ -1223,7 +1675,7 @@
+ 			if(m_nFrom >= (int)m_pagesInfoVec.size() - 1)
+ 				break;
+ 
+-			// Make sure that the button was pressed before 
++			// Make sure that the button was pressed before
+ 			if(m_nRightButtonStatus != wxFNB_BTN_PRESSED)
+ 				break;
+ 
+@@ -1237,7 +1689,7 @@
+ 			int lastVisibleTab = GetLastVisibleTab();
+ 			if(lastVisibleTab < 0)
+ 			{
+-				// Probably the screen is too small for displaying even a single 
++				// Probably the screen is too small for displaying even a single
+ 				// tab, in this case we do nothing
+ 				break;
+ 			}
+@@ -1248,7 +1700,7 @@
  		}
- 	}
-@@ -1150,10 +1165,10 @@
+ 	case wxFNB_X:
+ 		{
+-			// Make sure that the button was pressed before 
++			// Make sure that the button was pressed before
+ 			if(m_nXButtonStatus != wxFNB_BTN_PRESSED)
+ 				break;
+ 
+@@ -1259,7 +1711,7 @@
+ 		}
+ 	case wxFNB_TAB_X:
+ 		{
+-			// Make sure that the button was pressed before 
++			// Make sure that the button was pressed before
+ 			if(m_nTabXButtonStatus != wxFNB_BTN_PRESSED)
+ 				break;
+ 
+@@ -1320,7 +1772,7 @@
+ 			}
+ 		}
+ 
+-		wxRect tabRect = wxRect(pgInfo.GetPosition().x, pgInfo.GetPosition().y, 
++		wxRect tabRect = wxRect(pgInfo.GetPosition().x, pgInfo.GetPosition().y,
+ 			pgInfo.GetSize().x, pgInfo.GetSize().y);
+ 		if(tabRect.Inside(pt))
+ 		{
+@@ -1352,7 +1804,7 @@
+ 	long style = GetParent()->GetWindowStyleFlag();
+ 	if(style & wxFNB_NO_NAV_BUTTONS)
+ 	{
+-		// Incase that we dont have navigation buttons, 
++		// Incase that we dont have navigation buttons,
+ 		// there is no point of checking if the tab is visible
+ 		// Just do the refresh
+ 		Refresh();
+@@ -1371,10 +1823,10 @@
+ 	{
+ 		if(page == m_pagesInfoVec.size() - 1)
+ 		{
+-			// Incase the added tab is last, 
++			// Incase the added tab is last,
+ 			// the function IsTabVisible() will always return false
+ 			// and thus will cause an evil behaviour that the new
+-			// tab will hide all other tabs, we need to check if the 
++			// tab will hide all other tabs, we need to check if the
+ 			// new selected tab can fit to the current screen
+ 			if(!CanFitToScreen(page))
+ 			{
+@@ -1391,10 +1843,10 @@
  	}
  }
  
--void wxPageContainer::DeletePage(size_t page)
-+void wxPageContainer::DeletePage(size_t page, bool notify)
+-void wxPageContainerBase::DeletePage(size_t page)
++void wxPageContainerBase::DeletePage(size_t page, bool notify)
  {
- 	wxFlatNotebook* book = (wxFlatNotebook*)GetParent();
+ 	wxFlatNotebookBase* book = (wxFlatNotebookBase*)GetParent();
 -	book->DeletePage(page);
 +	book->DeletePage(page, notify);
  	book->Refresh();
  }
  
-@@ -1667,7 +1682,7 @@
+@@ -1414,13 +1866,13 @@
+ 	std::vector<wxPageInfo>::iterator endIter = m_pagesInfoVec.end();
+ 
+ 	m_pagesInfoVec.erase(iter + page);
+-	
+-	// Thanks to Yiaanis AKA Mandrav
++
++	// Thanks to Yiannis AKA Mandrav
+ 	if (m_iActivePage >= (int)page)
+-		m_iActivePage--; 
++		m_iActivePage--;
+ 
+-	// The delete page was the last first on the array, 
+-	// but the book still has more pages, so we set the 
++	// The delete page was the last first on the array,
++	// but the book still has more pages, so we set the
+ 	// active page to be the first one (0)
+ 	if(m_iActivePage < 0 && !m_pagesInfoVec.empty())
+ 		m_iActivePage = 0;
+@@ -1434,7 +1886,7 @@
+ 	}
+ 
+ 	if(m_pagesInfoVec.empty())
+-	{	
++	{
+ 		// Erase the page container drawings
+ 		wxClientDC dc(this);
+ 		dc.Clear();
+@@ -1590,7 +2042,7 @@
+ 
+ 	// Draw the new bitmap
+ 	dc.DrawBitmap(arrowBmp, btnLeftPos, 5, true);
+-} 
++}
+ 
+ void wxPageContainerBase::DrawX(wxDC& dc)
+ {
+@@ -1882,7 +2334,7 @@
+ }
+ 
+ void wxPageContainerBase::FillGradientColor(wxBufferedDC& dc, const wxRect& rect)
+-{    
++{
+ 	// gradient fill from colour 1 to colour 2 with top to bottom
+ 
+ 	if(rect.height < 1 || rect.width < 1)
+@@ -1945,13 +2397,13 @@
+ 	int where = HitTest(wxPoint(x, y), pgInfo, nIndex);
+ 	wxLogTrace(wxTraceMask(), _("OnDropTarget: index by HitTest = %i"), nIndex);
+ 	wxFlatNotebookBase * oldNotebook = (wxFlatNotebookBase *)oldContainer->GetParent();
+-	wxFlatNotebookBase * newNotebook = (wxFlatNotebookBase *)GetParent();	
++	wxFlatNotebookBase * newNotebook = (wxFlatNotebookBase *)GetParent();
+ 
+ 	if(oldNotebook == newNotebook)
+ 	{
+ 		if(nTabPage >= 0)
+ 		{
+-			switch(where) 
++			switch(where)
+ 			{
+ 			case wxFNB_TAB:
+ 				MoveTabPage(nTabPage, nIndex);
+@@ -1964,11 +2416,11 @@
  			}
  		}
  	}
 -	else
-+	else if (m_nStyle & wxFNB_ALLOW_FOREIGN_DND)
++	else if (GetParent()->GetWindowStyleFlag() & wxFNB_ALLOW_FOREIGN_DND)
  	{
  #if defined(__WXMSW__) || defined(__WXGTK__)
  		if(nTabPage >= 0)
---- wxFlatNotebook-old.h	Wed Jan 11 21:39:06 2006
-+++ wxFlatNotebook.h	Thu Jan 12 13:28:41 2006
-@@ -33,7 +33,7 @@
- #include <wx/dnd.h>
+-		{				
++		{
+ 			wxWindow * window = oldNotebook->GetPage(nTabPage);
+ 			if(window)
+ 			{
+@@ -2156,7 +2608,7 @@
+ {
+ 	long style = GetParent()->GetWindowStyleFlag();
+ 	if(style & wxFNB_NO_NAV_BUTTONS && style & wxFNB_NO_X_BUTTON)
+-		return 0;	
++		return 0;
+ 	else if((style & wxFNB_NO_NAV_BUTTONS) && !(style & wxFNB_NO_X_BUTTON))
+ 		return 53 - 16;
+ 	else if(!(style & wxFNB_NO_NAV_BUTTONS) && (style & wxFNB_NO_X_BUTTON))
+--- wxFlatNotebook_org.h	2006-05-06 16:46:41.890625000 +0200
++++ wxFlatNotebook.h	2006-05-08 22:36:09.196000000 +0200
+@@ -62,26 +62,28 @@
+ /// Use the mouse middle button for cloing tabs
+ #define wxFNB_MOUSE_MIDDLE_CLOSES_TABS	32
  
- //#include "textdroptarget.h"
--#include <wx/wxFlatNotebook/wxFNBDropTarget.h>
-+#include "wxFNBDropTarget.h"
- class wxPageContainer;
- 
- #ifndef M_PI
-@@ -69,6 +69,9 @@
+-/// Place tabs at bottom - the default is to place them 
++/// Place tabs at bottom - the default is to place them
  /// at top
  #define wxFNB_BOTTOM					64
  
-+/// Allow drag'n'drop between different wxFlatNotebooks
-+#define wxFNB_ALLOW_FOREIGN_DND			128
-+
- class wxMenu;
+ /// Disable dragging of tabs
+-#define wxFNB_NODRAG					128 
++#define wxFNB_NODRAG					128
  
- /**
-@@ -129,7 +132,7 @@
- 	/** 	
+ /// Disable dragging of tabs - Only available on the commercial version
+-#define wxFNB_VC8						256 
++#define wxFNB_VC8						256
+ 
+ /// Place 'X' on a tab
+ /// Note: This style is not supported on VC8 style
+-#define wxFNB_X_ON_TAB					512 
++#define wxFNB_X_ON_TAB					512
++
++#define wxFNB_ALLOW_FOREIGN_DND			128
+ 
+ #define VERTICAL_BORDER_PADDING  4
+ 
+ // Button size is a 16x16 xpm bitmap
+-#define BUTTON_SPACE			16		
++#define BUTTON_SPACE			16
+ 
+-#define VC8_SHAPE_LEN			16		
++#define VC8_SHAPE_LEN			16
+ 
+ #define MASK_COLOR wxColor(0, 128, 128)
+ 
+@@ -97,10 +99,10 @@
+ 
+ public:
+ 
+-	///Default constructor	
++	///Default constructor
+ 	wxFlatNotebookBase(){}
+ 	/// Parametrized constructor
+-	/**	
++	/**
+ 	\param parent - parent window
+ 	\param id - window ID
+ 	\param pos - window position
+@@ -110,20 +112,20 @@
+ 	*/
+ 	wxFlatNotebookBase(wxWindow* parent, wxWindowID id = wxID_ANY, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize, long style = 0, const wxString& name = wxT("Flat Notebook"));
+ 
+-	/// Destructor	
++	/// Destructor
+ 	~wxFlatNotebookBase(void);
+ 
+ 	/// Derived class should override this function to provide the
+-	/// appropriate PageManager 
++	/// appropriate PageManager
+ 	virtual wxPageContainerBase* CreatePageContainer();
+ 
+ 	/// Advances the selection
+-	/**	
++	/**
+ 	\param bForward - if set to true then selection should be advanced forward otherwise - backward
+ 	*/
+ 	void AdvanceSelection(bool bForward);
+ 	/// Apends new notebook page
+-	/**	
++	/**
+ 	\param windows - window to be appended
+ 	\param caption - tab caption
+ 	\param selected - determines if new page should be selected automatically
+@@ -131,7 +133,7 @@
+ 	*/
+ 	void AddPage(wxWindow* windows, const wxString& caption, const bool selected = false, const int imgindex = -1);
+ 	/// Inserts new notebook page
+-	/**	
++	/**
+ 	\param index - page index
+ 	\param page - window to be appended
+ 	\param text - tab caption
+@@ -140,15 +142,15 @@
+ 	*/
+ 	bool InsertPage(size_t index, wxWindow* page, const wxString& text, bool select = false, const int imgindex = -1);
+ 	/// Changes the selection from currently visible/selected page to the page given by index.
+-	/** 	
++	/**
+ 	\param page - index of page to be selected
+ 	*/
+ 	void SetSelection(size_t page);
+ 	/// Removes the window from the notebook, and destroys the window associated with that notebook page.
+-	/** 	
++	/**
  	\param page - index of page to be deleted
  	*/
 -	void DeletePage(size_t page);
@@ -202,21 +1179,992 @@
  
  	/// Deletes all notebook pages and destroys all windows associated with pages
  	bool DeleteAllPages();
-@@ -185,7 +188,7 @@
- 	/** 	
+@@ -173,19 +175,19 @@
+ 	/// Returns the currently visible/selected notebook page 0 based index.
+ 	int GetSelection() const;
+ 	/// Returns tab header inclination angle of specified page
+-	/**	
++	/**
+ 	\param page_index - page index
+ 	\param result - pointer to the variable that receives the result
+ 	*/
+ 	bool GetPageShapeAngle(int page_index, unsigned int * result);
+ 	/// Sets tab header inclination angle of specified page
+-	/**	
++	/**
+ 	\param page_index - page index
+ 	\param angle - new value of tab header inclination angle
+-	*/	
++	*/
+ 	void SetPageShapeAngle(int page_index, unsigned int angle);
+ 	/// Sets tab header inclination angle for all pages
+-	/**	
++	/**
+ 	\param angle - new value of tab header inclination angle
+ 	*/
+ 	void SetAllPagesShapeAngle(unsigned int angle);
+@@ -194,82 +196,82 @@
+ 	wxSize GetPageBestSize();
+ 
+ 	/// Sets the caption/text of the notebook page
+-	/** 	
++	/**
+ 	\param page - page index
+ 	\param text - new value of tab caption
+ 	*/
+ 	bool SetPageText(size_t page, const wxString& text);
+ 
+ 	/// Removes the window from the notebook, but does not delete the associated window with that notebook page.
+-	/** 	
++	/**
  	\param page - page index to be removed
  	*/
 -	bool RemovePage(size_t page);
 +	bool RemovePage(size_t page, bool notify = true);
  
  	/// Sets the amount of space around each page's icon and label, in pixels.
- 	/** 	
-@@ -526,7 +529,7 @@
+-	/** 	
++	/**
+ 	NB: The vertical padding cannot be changed in for wxFlatNotebookBase.
+ 	\param padding - new amount of space around each page's icon and label
+ 	*/
+ 	void SetPadding(const wxSize& padding);
+-	/// Alters the notebook style 
+-	/** 	
++	/// Alters the notebook style
++	/**
+ 	\param style - new value of notebook style
+ 	*/
+ 	virtual void SetWindowStyleFlag(long style);
+ 
+ 	/// Sets a right click menu to the notebook
+-	/** 	
++	/**
+ 	\param menu - right click menu object
+ 	*/
+ 	void SetRightClickMenu(wxMenu* menu);
+ 	/// Returns the page text
+-	/** 	
++	/**
+ 	\param page - page index
+ 	*/
+ 	wxString GetPageText(size_t page);
+ 	/// Sets an image index of specified page
+-	/**	
++	/**
+ 	\param page - page index
+ 	\param imgindex - new image index
+ 	*/
+ 	void SetPageImageIndex(size_t page, int imgindex);
+ 	/// Returns an image index of specified page
+-	/**	
++	/**
+ 	\param page - page index
+ 	*/
+ 	int GetPageImageIndex(size_t page);
+ 	/// Sets gradient colors (only applicable when using the wxFNB_FANCY_TABS)
+-	/** 	
++	/**
+ 	\param from - first gradient colour
+ 	\param to - second gradient colour
+ 	\param border - page border colour
+ 	*/
+ 	void SetGradientColors(const wxColour& from, const wxColour& to, const wxColour& border);
+ 	/// Sets first gradient colour
+-	/**	
++	/**
+ 	\param from - new value of first gradient colour
+ 	*/
+ 	void SetGradientColorFrom(const wxColour& from);
+ 
+ 	/// Sets second gradient colour
+-	/**	
++	/**
+ 	\param to - new value of second gradient colour
+ 	*/
+ 	void SetGradientColorTo(const wxColour& to);
+ 	/// Sets the colour of page border
+-	/**	
++	/**
+ 	\param border - new value of the colour of page border
+ 	*/
+ 	void SetGradientColorBorder(const wxColour& border);
+ 	/// Sets an image list associated with notebook pages
+-	/**	
+-	\param imglist - image list object. 
++	/**
++	\param imglist - image list object.
+ 	Image list assigned with this method will not be deleted by wxFlatNotebookBase's destructor, you must delete it yourself.
+ 	*/
+ 	void SetImageList(wxFlatNotebookImageList * imglist);
+ 
+-	/// Returns an image list object associated with wxFlatNotebookBase	
++	/// Returns an image list object associated with wxFlatNotebookBase
+ 	wxFlatNotebookImageList * GetImageList();
+ 
+ 	/**
+@@ -279,24 +281,24 @@
+ 	* \param nTabPage page index
+ 	* \param wnd_oldContainer pointer to wxPageContainerBase object that contained dragged page
+ 	* \return Drag operation identifier
+-	*/ 
++	*/
+ 	wxDragResult OnDropTarget(wxCoord x, wxCoord y, int nTabPage, wxWindow * wnd_oldContainer);
+ 
+ 	/// Enable / Disable page
+-	/**	
++	/**
+ 	\param page - page to enable/diable
+ 	\param enabled - set to true to enable the tab, false otherwise
+ 	*/
+ 	void Enable(size_t page, bool enabled);
+ 
+ 	/// Return Returns true if if the page is enabled
+-	/**	
++	/**
+ 	\param page - page index
+ 	*/
+ 	bool GetEnabled(size_t page);
+ 
+ 	/// Set the active tab text
+-	/**	
++	/**
+ 	\param textColour - the active tab text colour
+ 	*/
+ 	void SetActiveTabTextColour(const wxColour& textColour);
+@@ -341,14 +343,14 @@
+ 	wxPageContainerBase *m_pages;
+ 
+ private:
+-	/// Internal flag to force selection of page, 
++	/// Internal flag to force selection of page,
+ 	/// even if this page is disabled.
+ 	/// used incase such that the book itself need to update its selection.
+ 	/// e.g. after DeletePage()
+ 	bool m_bForceSelection;
+ 
+ 	wxBoxSizer* m_mainSizer;
+-	
++
+ 	/// vector of all the windows associated with the notebook pages.
+ 	std::vector<wxWindow*> m_windows;
+ 	wxFNBDropTarget<wxFlatNotebookBase> *m_pDropTarget;
+@@ -369,13 +371,13 @@
+ 	// Members
+ 	/// Page caption
+ 	wxString m_strCaption;
+-	
++
+ 	/// Page position
+ 	wxPoint m_pos;
+-	
++
+ 	/// Page size
+ 	wxSize  m_size;
+-	
++
+ 	/// Page region
+ 	wxRegion m_region;
+ 
+@@ -383,7 +385,7 @@
+ 	unsigned int m_TabAngle;
+ 
+ 	/// Page image index
+-	int m_ImageIndex;		
++	int m_ImageIndex;
+ 
+ 	/// Page enable/disabled flag
+ 	bool m_bEnabled;
+@@ -393,47 +395,47 @@
+ 
+ public:
+ 
+-	/// Default constructor	
++	/// Default constructor
+ 	wxPageInfo(): m_strCaption(wxEmptyString), m_TabAngle(0), m_ImageIndex(-1), m_bEnabled(true){};
+ 	/// Parametrized constructor
+ 	/**
+ 	\param caption - page caption
+ 	\param imgindex - image index
+ 	*/
+-	wxPageInfo(const wxString& caption, int imgindex) : 
++	wxPageInfo(const wxString& caption, int imgindex) :
+ 	m_strCaption(caption), m_pos(-1, -1), m_size(-1, -1), m_TabAngle(0), m_ImageIndex(imgindex), m_bEnabled(true){}
+ 	/// Destructor
+ 	~wxPageInfo(){};
+ 
+ 	/// Sets page caption
+-	/**	
++	/**
+ 	\param value - new page caption
+ 	*/
+ 	void SetCaption(wxString value) {m_strCaption = value;}
+ 
+-	///Returns page caption	
++	///Returns page caption
+ 	wxString GetCaption() {return m_strCaption;}
+ 
+ 	/// Sets page position
+-	/**	
++	/**
+ 	\param value - new page position
+ 	*/
+ 	void SetPosition(wxPoint value) {m_pos = value;}
+ 
+-	///Returns page position	
++	///Returns page position
+ 	const wxPoint & GetPosition() {return m_pos;}
+ 
+ 	/// Sets page size
+-	/**	
++	/**
+ 	\param value - new page size
+ 	*/
+ 	void SetSize(wxSize value) {m_size = value;}
+ 
+-	///Returns page size	
++	///Returns page size
+ 	const wxSize & GetSize() {return m_size;}
+ 
+ 	/// Sets the tab header inclination angle
+-	/**	
++	/**
+ 	\param value - new tab header inclination angle
+ 	*/
+ 	void SetTabAngle(unsigned int value) {m_TabAngle = std::min((unsigned int)(45), (unsigned int)(value));}
+@@ -441,25 +443,25 @@
+ 	/// Returns an inclination of tab header borders
+ 	unsigned int GetTabAngle() {return m_TabAngle;}
+ 	/// Sets page image index
+-	/**	
++	/**
+ 	\param value - new image index
+ 	*/
+ 	void SetImageIndex(int value) {m_ImageIndex = value;}
+ 
+-	/// Returns an image index	
++	/// Returns an image index
+ 	int GetImageIndex() {return m_ImageIndex;}
+ 
+ 	/// Return true if the page is enabled
+ 	bool GetEnabled() { return m_bEnabled; }
+ 
+ 	/// Set the page enable/disable flag
+-	/**	
++	/**
+ 	\param enabled - new page enable status
+ 	*/
+ 	void Enable(bool enabled) { m_bEnabled = enabled; }
+ 
+-	/// Set the page region 
+-	/**	
++	/// Set the page region
++	/**
+ 	\param n - number of points
+ 	\param points - array of points that construct the region
+ 	*/
+@@ -467,9 +469,9 @@
+ 
+ 	/// Get the page region
+ 	wxRegion& GetRegion() { return m_region ; }
+-	
++
+ 	/// Set the 'x' button rectangle area
+-	/**	
++	/**
+ 	\param xrect - the 'x' button rectangle
+ 	*/
+ 	void SetXRect(const wxRect& xrect) { m_xRect = xrect; }
+@@ -487,7 +489,7 @@
+ };
+ 
+ /// Hit Test results
+-enum 
++enum
+ {
+ 	wxFNB_TAB,			/// On a tab
+ 	wxFNB_X,			/// On the X button
+@@ -509,29 +511,29 @@
+ 
+ public:
+ 	/// Parametrized constructor
+-	/**	
++	/**
+ 	\param parent - parent window
+ 	\param id - window ID
+ 	\param pos - window position
+ 	\param size - window size
+-	\param style - window style	
++	\param style - window style
+ 	*/
+ 	wxPageContainerBase(wxWindow* parent, wxWindowID id = wxID_ANY, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize, long style = 0);
+ 	/// Destructor
+ 	virtual ~wxPageContainerBase(void);
+ 
+ 	/// Sets an image list associated with notebook pages
+-	/**	
+-	\param imglist - image list object. 
++	/**
++	\param imglist - image list object.
+ 	Image list assigned with this method will not be deleted by wxFlatNotebookBase's destructor, you must delete it yourself.
+ 	*/
+ 	virtual void SetImageList(wxFlatNotebookImageList * imglist) {m_ImageList = imglist;}
+ 
+-	/// Returns an image list object associated with wxFlatNotebookBase	
++	/// Returns an image list object associated with wxFlatNotebookBase
+ 	virtual wxFlatNotebookImageList * GetImageList() {return m_ImageList;}
+ 
+ 	/// Apends new notebook page
+-	/**		
++	/**
+ 	\param caption - tab caption
+ 	\param selected - determines if new page should be selected automatically
+ 	\param imgindex - page image index
+@@ -539,7 +541,7 @@
+ 	virtual void AddPage(const wxString& caption, const bool selected = false, const int imgindex = -1);
+ 
+ 	/// Inserts new notebook page
+-	/**	
++	/**
+ 	\param index - page index
+ 	\param page - window to be appended
+ 	\param text - tab caption
+@@ -549,7 +551,7 @@
+ 	virtual bool InsertPage(size_t index, wxWindow* page, const wxString& text, bool select = false, const int imgindex = -1);
+ 
+ 	/// Changes the selection from currently visible/selected page to the page given by index.
+-	/** 	
++	/**
+ 	\param page - index of page to be selected
+ 	*/
+ 	virtual void SetSelection(size_t page);
+@@ -558,12 +560,12 @@
+ 	virtual int GetSelection() { return m_iActivePage; }
+ 
+ 	/// Advances the selection
+-	/**	
++	/**
+ 	\param bForward - if set to true then selection should be advanced forward otherwise - backward
+ 	*/
+ 	virtual void AdvanceSelection(bool bForward);
+ 
+-	/// Return the number of pages 
++	/// Return the number of pages
+ 	virtual size_t GetPageCount() { return m_pagesInfoVec.size(); }
+ 
+ 	/// Returns the page caption
+@@ -580,26 +582,26 @@
+ 	virtual bool SetPageText(size_t page, const wxString& text) { m_pagesInfoVec[page].SetCaption(text); return true; }
+ 
+ 	/// Sets an image index of specified page
+-	/**	
++	/**
+ 	\param page - page index
+ 	\param imgindex - new image index
+ 	*/
+ 	virtual void SetPageImageIndex(size_t page, int imgindex);
+ 	/// Returns an image index of specified page
+-	/**	
++	/**
+ 	\param page - page index
+ 	*/
+ 	virtual int GetPageImageIndex(size_t page);
+ 
+ 	/// Enable / Disable page
+-	/**	
++	/**
+ 	\param page - page to enable/diable
+ 	\param enabled - set to true to enable the tab, false otherwise
+ 	*/
+ 	virtual void Enable(size_t page, bool enabled);
+ 
+ 	/// Return Returns true if if the page is enabled
+-	/**	
++	/**
+ 	\param page - page index
+ 	*/
+ 	virtual bool GetEnabled(size_t page);
+@@ -641,7 +643,7 @@
  	virtual void ShowTabTooltip(int tabIdx);
  
  	/// A wrapper from calling the DoDeletePage()
--	void DeletePage(size_t page);
-+	void DeletePage(size_t page, bool notify = true);
+-	virtual void DeletePage(size_t page);
++	virtual void DeletePage(size_t page, bool notify = true);
  
  	/// Remove all pages from the container (it also deletes them)
- 	void DeleteAllPages();
+ 	virtual void DeleteAllPages();
+@@ -682,20 +684,20 @@
+ 	* \param nTabPage page index
+ 	* \param wnd_oldContainer pointer to wxPageContainerBase object that contained dragged page
+ 	* \return Drag operation identifier
+-	*/ 
++	*/
+ 	virtual wxDragResult OnDropTarget(wxCoord x, wxCoord y, int nTabPage, wxWindow * wnd_oldContainer);
+ 
+ 	/**
+ 	* \brief Moves the tab page from one location to another
+ 	* \param nMove The index of the tab page to be moved.
+ 	* \param nMoveTo The index for the tab page, where it has to be moved
+-	*/ 
++	*/
+ 	virtual void MoveTabPage(int nMove, int nMoveTo);
+ 
+ 	/// Check whether page can fit to the current
+ 	/// screen or a scrolling is  required
+-	/**	
+-	\param page - page index 
++	/**
++	\param page - page index
+ 	*/
+ 	virtual bool CanFitToScreen(size_t page);
+ 
+@@ -718,7 +720,7 @@
+ 	std::vector<wxPageInfo> m_pagesInfoVec;
+ 	int m_iActivePage;
+ 	int m_nFrom;
+-	
++
+ 	/// Drop target for enabling drag'n'drop of tabs
+ 	wxFNBDropTarget<wxPageContainerBase> *m_pDropTarget;
+ 
+@@ -731,7 +733,7 @@
+ 	/// Gradient colors
+ 	wxColour m_colorFrom, m_colorTo, m_colorBorder, m_activeTextColor, m_nonActiveTextColor, m_tabAreaColor, m_activeTabColor;
+ 
+-	/// X,>,< buttons status, can be one of 
++	/// X,>,< buttons status, can be one of
+ 	/// - Pressed
+ 	/// - Hover
+ 	/// - None
+@@ -744,14 +746,14 @@
+ /**
+ * \brief Holds information about events associated with wxFlatNotebookBase objects
+ */
+-class wxFlatNotebookEvent : public wxNotifyEvent 
++class wxFlatNotebookEvent : public wxNotifyEvent
+ {
+ 	DECLARE_DYNAMIC_CLASS(wxFlatNotebookEvent)
+ 	size_t sel, oldsel;
+ 
+ public:
+ 	/// Constructor
+-	/**	
++	/**
+ 	\param commandType - event type
+ 	\param winid - window ID
+ 	\param nSel - current selection
+@@ -774,7 +776,7 @@
+ 	int  GetSelection() { return (int)sel; }
+ 	/// Returns the index of previously selected page
+ 	int  GetOldSelection() { return (int)oldsel; }
+-}; 
++};
+ 
+ //////////////////////////////////////////////////////////////////////////////////////////////////////////
+ //
+@@ -782,7 +784,7 @@
+ //
+ //////////////////////////////////////////////////////////////////////////////////////////////////////////
+ 
+-class wxFlatNotebook : public wxFlatNotebookBase 
++class wxFlatNotebook : public wxFlatNotebookBase
+ {
+ public:
+ 	/**
+@@ -793,16 +795,16 @@
+ 	 * \param size window size
+ 	 * \param style window style
+ 	 * \param name window class name
+-	 * \return 
++	 * \return
+ 	 */
+-	wxFlatNotebook(wxWindow* parent, wxWindowID id = wxID_ANY, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize, long style = 0, const wxString& name = wxT("FlatNotebook")) : 
++	wxFlatNotebook(wxWindow* parent, wxWindowID id = wxID_ANY, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize, long style = 0, const wxString& name = wxT("FlatNotebook")) :
+ 	  wxFlatNotebookBase(parent, id, pos, size, style, name)
+ 	  {
+ 		  m_pages = CreatePageContainer();
+ 		  Init();
+ 	  }
+ 
+-	/// Destructor	
++	/// Destructor
+ 	 ~wxFlatNotebook(void)
+ 	  {}
+ };
+@@ -840,7 +842,7 @@
+ 
+ 
+ ///////////////////////////////////////////////////////////////////////////////
+-// 
++//
+ // XPM Images required by this control
+ //
+ ///////////////////////////////////////////////////////////////////////////////
+@@ -850,437 +852,36 @@
+ 	////////////////////////////////////////////////////////////
+ 	// Images used by the control
+ 	////////////////////////////////////////////////////////////
+-	/* XPM */
+-	static char *left_arrow_disabled_xpm[] = {
+-		/* width height num_colors chars_per_pixel */
+-		"    16    16        8            1",
+-			/* colors */
+-			"` c #008080",
+-			". c #555555",
+-			"# c #000000",
+-			"a c #000000",
+-			"b c #000000",
+-			"c c #000000",
+-			"d c #000000",
+-			"e c #000000",
+-			/* pixels */
+-			"````````````````",
+-			"````````````````",
+-			"````````````````",
+-			"````````.```````",
+-			"```````..```````",
+-			"``````.`.```````",
+-			"`````.``.```````",
+-			"````.```.```````",
+-			"`````.``.```````",
+-			"``````.`.```````",
+-			"```````..```````",
+-			"````````.```````",
+-			"````````````````",
+-			"````````````````",
+-			"````````````````",
+-			"````````````````"
+-	};
+-
+-	/* XPM */
+-	static char *x_button_pressed_xpm[] = {
+-		/* width height num_colors chars_per_pixel */
+-		"    16    16        8            1",
+-			/* colors */
+-			"` c #008080",
+-			". c #4766e0",
+-			"# c #9e9ede",
+-			"a c #000000",
+-			"b c #000000",
+-			"c c #000000",
+-			"d c #000000",
+-			"e c #000000",
+-			/* pixels */
+-			"````````````````",
+-			"`..............`",
+-			"`.############.`",
+-			"`.############.`",
+-			"`.############.`",
+-			"`.###aa####aa#.`",
+-			"`.####aa##aa##.`",
+-			"`.#####aaaa###.`",
+-			"`.######aa####.`",
+-			"`.#####aaaa###.`",
+-			"`.####aa##aa##.`",
+-			"`.###aa####aa#.`",
+-			"`.############.`",
+-			"`..............`",
+-			"````````````````",
+-			"````````````````"
+-	};
+-
+-
+-	/* XPM */
+-	static char *left_arrow_xpm[] = {
+-		/* width height num_colors chars_per_pixel */
+-		"    16    16        8            1",
+-			/* colors */
+-			"` c #008080",
+-			". c #555555",
+-			"# c #000000",
+-			"a c #000000",
+-			"b c #000000",
+-			"c c #000000",
+-			"d c #000000",
+-			"e c #000000",
+-			/* pixels */
+-			"````````````````",
+-			"````````````````",
+-			"````````````````",
+-			"````````.```````",
+-			"```````..```````",
+-			"``````...```````",
+-			"`````....```````",
+-			"````.....```````",
+-			"`````....```````",
+-			"``````...```````",
+-			"```````..```````",
+-			"````````.```````",
+-			"````````````````",
+-			"````````````````",
+-			"````````````````",
+-			"````````````````"
+-	};
+-
+-	/* XPM */
+-	static char *x_button_hilite_xpm[] = {
+-		/* width height num_colors chars_per_pixel */
+-		"    16    16        8            1",
+-			/* colors */
+-			"` c #008080",
+-			". c #4766e0",
+-			"# c #c9dafb",
+-			"a c #000000",
+-			"b c #000000",
+-			"c c #000000",
+-			"d c #000000",
+-			"e c #000000",
+-			/* pixels */
+-			"````````````````",
+-			"`..............`",
+-			"`.############.`",
+-			"`.############.`",
+-			"`.##aa####aa##.`",
+-			"`.###aa##aa###.`",
+-			"`.####aaaa####.`",
+-			"`.#####aa#####.`",
+-			"`.####aaaa####.`",
+-			"`.###aa##aa###.`",
+-			"`.##aa####aa##.`",
+-			"`.############.`",
+-			"`.############.`",
+-			"`..............`",
+-			"````````````````",
+-			"````````````````"
+-	};
+-
+-	/* XPM */
+-	static char *x_button_xpm[] = {
+-		/* width height num_colors chars_per_pixel */
+-		"    16    16        8            1",
+-			/* colors */
+-			"` c #008080",
+-			". c #555555",
+-			"# c #000000",
+-			"a c #000000",
+-			"b c #000000",
+-			"c c #000000",
+-			"d c #000000",
+-			"e c #000000",
+-			/* pixels */
+-			"````````````````",
+-			"````````````````",
+-			"````````````````",
+-			"````````````````",
+-			"````..````..````",
+-			"`````..``..`````",
+-			"``````....``````",
+-			"```````..```````",
+-			"``````....``````",
+-			"`````..``..`````",
+-			"````..````..````",
+-			"````````````````",
+-			"````````````````",
+-			"````````````````",
+-			"````````````````",
+-			"````````````````"
+-	};
+-
+-	/* XPM */
+-	static char *left_arrow_pressed_xpm[] = {
+-		/* width height num_colors chars_per_pixel */
+-		"    16    16        8            1",
+-			/* colors */
+-			"` c #008080",
+-			". c #4766e0",
+-			"# c #9e9ede",
+-			"a c #000000",
+-			"b c #000000",
+-			"c c #000000",
+-			"d c #000000",
+-			"e c #000000",
+-			/* pixels */
+-			"````````````````",
+-			"`..............`",
+-			"`.############.`",
+-			"`.############.`",
+-			"`.#######a####.`",
+-			"`.######aa####.`",
+-			"`.#####aaa####.`",
+-			"`.####aaaa####.`",
+-			"`.###aaaaa####.`",
+-			"`.####aaaa####.`",
+-			"`.#####aaa####.`",
+-			"`.######aa####.`",
+-			"`.#######a####.`",
+-			"`..............`",
+-			"````````````````",
+-			"````````````````"
+-	};
+-
+-	/* XPM */
+-	static char *left_arrow_hilite_xpm[] = {
+-		/* width height num_colors chars_per_pixel */
+-		"    16    16        8            1",
+-			/* colors */
+-			"` c #008080",
+-			". c #4766e0",
+-			"# c #c9dafb",
+-			"a c #000000",
+-			"b c #000000",
+-			"c c #000000",
+-			"d c #000000",
+-			"e c #000000",
+-			/* pixels */
+-			"````````````````",
+-			"`..............`",
+-			"`.############.`",
+-			"`.######a#####.`",
+-			"`.#####aa#####.`",
+-			"`.####aaa#####.`",
+-			"`.###aaaa#####.`",
+-			"`.##aaaaa#####.`",
+-			"`.###aaaa#####.`",
+-			"`.####aaa#####.`",
+-			"`.#####aa#####.`",
+-			"`.######a#####.`",
+-			"`.############.`",
+-			"`..............`",
+-			"````````````````",
+-			"````````````````"
+-	};
+-
+-	/* XPM */
+-	static char *right_arrow_disabled_xpm[] = {
+-		/* width height num_colors chars_per_pixel */
+-		"    16    16        8            1",
+-			/* colors */
+-			"` c #008080",
+-			". c #555555",
+-			"# c #000000",
+-			"a c #000000",
+-			"b c #000000",
+-			"c c #000000",
+-			"d c #000000",
+-			"e c #000000",
+-			/* pixels */
+-			"````````````````",
+-			"````````````````",
+-			"````````````````",
+-			"```````.````````",
+-			"```````..```````",
+-			"```````.`.``````",
+-			"```````.``.`````",
+-			"```````.```.````",
+-			"```````.``.`````",
+-			"```````.`.``````",
+-			"```````..```````",
+-			"```````.````````",
+-			"````````````````",
+-			"````````````````",
+-			"````````````````",
+-			"````````````````"
+-	};
+-
+-	/* XPM */
+-	static char *right_arrow_hilite_xpm[] = {
+-		/* width height num_colors chars_per_pixel */
+-		"    16    16        8            1",
+-			/* colors */
+-			"` c #008080",
+-			". c #4766e0",
+-			"# c #c9dafb",
+-			"a c #000000",
+-			"b c #000000",
+-			"c c #000000",
+-			"d c #000000",
+-			"e c #000000",
+-			/* pixels */
+-			"````````````````",
+-			"`..............`",
+-			"`.############.`",
+-			"`.####a#######.`",
+-			"`.####aa######.`",
+-			"`.####aaa#####.`",
+-			"`.####aaaa####.`",
+-			"`.####aaaaa###.`",
+-			"`.####aaaa####.`",
+-			"`.####aaa#####.`",
+-			"`.####aa######.`",
+-			"`.####a#######.`",
+-			"`.############.`",
+-			"`..............`",
+-			"````````````````",
+-			"````````````````"
+-	};
+-
+-	/* XPM */
+-	static char *right_arrow_pressed_xpm[] = {
+-		/* width height num_colors chars_per_pixel */
+-		"    16    16        8            1",
+-			/* colors */
+-			"` c #008080",
+-			". c #4766e0",
+-			"# c #9e9ede",
+-			"a c #000000",
+-			"b c #000000",
+-			"c c #000000",
+-			"d c #000000",
+-			"e c #000000",
+-			/* pixels */
+-			"````````````````",
+-			"`..............`",
+-			"`.############.`",
+-			"`.############.`",
+-			"`.#####a######.`",
+-			"`.#####aa#####.`",
+-			"`.#####aaa####.`",
+-			"`.#####aaaa###.`",
+-			"`.#####aaaaa##.`",
+-			"`.#####aaaa###.`",
+-			"`.#####aaa####.`",
+-			"`.#####aa#####.`",
+-			"`.#####a######.`",
+-			"`..............`",
+-			"````````````````",
+-			"````````````````"
+-	};
+-
+-
+-	/* XPM */
+-	static char *right_arrow_xpm[] = {
+-		/* width height num_colors chars_per_pixel */
+-		"    16    16        8            1",
+-			/* colors */
+-			"` c #008080",
+-			". c #555555",
+-			"# c #000000",
+-			"a c #000000",
+-			"b c #000000",
+-			"c c #000000",
+-			"d c #000000",
+-			"e c #000000",
+-			/* pixels */
+-			"````````````````",
+-			"````````````````",
+-			"````````````````",
+-			"```````.````````",
+-			"```````..```````",
+-			"```````...``````",
+-			"```````....`````",
+-			"```````.....````",
+-			"```````....`````",
+-			"```````...``````",
+-			"```````..```````",
+-			"```````.````````",
+-			"````````````````",
+-			"````````````````",
+-			"````````````````",
+-			"````````````````"
+-	};
+-
+-	const int tab_x_size = 9;
+-
+-	/* XPM */
+-	static char *tab_x_button_pressed_xpm[] = {
+-		/* width height num_colors chars_per_pixel */
+-		"     9     9        8            1",
+-			/* colors */
+-			"` c #4766e0",
+-			". c #9e9ede",
+-			"# c #555555",
+-			"a c #000000",
+-			"b c #000000",
+-			"c c #000000",
+-			"d c #000000",
+-			"e c #000000",
+-			/* pixels */
+-			"`````````",
+-			"`.......`",
+-			"`.......`",
+-			"`..#...#`",
+-			"`...#.#.`",
+-			"`....#..`",
+-			"`...#.#.`",
+-			"`..#...#`",
+-			"`````````"
+-	};
+-
+-	/* XPM */
+-	static char *tab_x_button_xpm[] = {
+-		/* width height num_colors chars_per_pixel */
+-		"     9     9        8            1",
+-			/* colors */
+-			"` c #555555",
+-			". c #FFFFFF",
+-			"# c #000000",
+-			"a c #000000",
+-			"b c #000000",
+-			"c c #000000",
+-			"d c #000000",
+-			"e c #000000",
+-			/* pixels */
+-			"`````````",
+-			"`.......`",
+-			"`.`...`.`",
+-			"`..`.`..`",
+-			"`...`...`",
+-			"`..`.`..`",
+-			"`.`...`.`",
+-			"`.......`",
+-			"`````````"
+-	};
+-
+-	/* XPM */
+-	static char *tab_x_button_hilite_xpm[] = {
+-		/* width height num_colors chars_per_pixel */
+-		"     9     9        8            1",
+-			/* colors */
+-			"` c #4766e0",
+-			". c #c9dafb",
+-			"# c #000000",
+-			"a c #000000",
+-			"b c #000000",
+-			"c c #000000",
+-			"d c #000000",
+-			"e c #000000",
+-			/* pixels */
+-			"`````````",
+-			"`.......`",
+-			"`.#...#.`",
+-			"`..#.#..`",
+-			"`...#...`",
+-			"`..#.#..`",
+-			"`.#...#.`",
+-			"`.......`",
+-			"`````````"
+-	};
+-}
++	extern const char *left_arrow_disabled_xpm[];
++
++	extern const char *x_button_pressed_xpm[];
++
++	extern const char *left_arrow_xpm[];
++
++	extern const char *x_button_hilite_xpm[];
++
++	extern const char *x_button_xpm[];
++
++	extern const char *left_arrow_pressed_xpm[];
++
++	extern const char *left_arrow_hilite_xpm[];
++
++	extern const char *right_arrow_disabled_xpm[];
++
++	extern const char *right_arrow_hilite_xpm[];
++
++	extern const char *right_arrow_pressed_xpm[];
++
++	extern const char *right_arrow_xpm[];
++
++	extern const int tab_x_size;
++
++	extern const char *tab_x_button_pressed_xpm[];
++
++	extern const char *tab_x_button_xpm[];
++
++	extern const char *tab_x_button_hilite_xpm[];
++};
+ 
+ //////////////////////////////////////////////////////////////////////////////////////////////////
+ //

@@ -240,8 +240,7 @@ ProjectManager::~ProjectManager()
     // in this case, the app has already un-hooked us, so no need to do it ourselves...
 //	Manager::Get()->GetAppWindow()->RemoveEventHandler(this);
 
-    if (m_pWorkspace)
-        delete m_pWorkspace;
+    delete m_pWorkspace;
     m_pWorkspace = 0;
 
     int count = m_pProjects->GetCount();
@@ -620,6 +619,12 @@ cbProject* ProjectManager::LoadProject(const wxString& filename, bool activateIt
 {
     if (m_IsLoadingProject)
 		return 0L;
+
+    if(!Manager::Get()->GetPluginManager()->FindPluginByName(_T("Compiler")))
+    {
+        cbMessageBox(_("Deactivating the compiler plugin is most unwise.\n\nIf you intend to open a project, you have to re-activate the compiler plugin first."), _("Error"));
+        return 0;
+    }
     cbProject* result = 0;
 
     // disallow application shutdown while opening files
@@ -1036,7 +1041,8 @@ bool ProjectManager::CloseWorkspace()
 
         delete m_pWorkspace;
         m_pWorkspace = 0;
-        m_pTree->SetItemText(m_TreeRoot, _("Workspace"));
+        if(m_pTree)
+            m_pTree->SetItemText(m_TreeRoot, _("Workspace"));
     }
     else
         return CloseAllProjects(false);

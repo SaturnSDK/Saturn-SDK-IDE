@@ -1017,6 +1017,16 @@
 			<Option link="0" />
 			<Option target="Compiler" />
 		</Unit>
+		<Unit filename="plugins\compilergcc\compilerMSVC8.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="Compiler" />
+		</Unit>
+		<Unit filename="plugins\compilergcc\compilerMSVC8.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="Compiler" />
+		</Unit>
 		<Unit filename="plugins\compilergcc\compilerOW.cpp">
 			<Option compilerVar="CPP" />
 			<Option target="Compiler" />
@@ -3034,16 +3044,6 @@
 		</Unit>
 		<Unit filename="sdk\projecttemplateloader.h">
 			<Option compilerVar="" />
-			<Option compile="0" />
-			<Option link="0" />
-			<Option target="sdk" />
-		</Unit>
-		<Unit filename="sdk\propertypanel\paircontrol.cpp">
-			<Option compilerVar="CPP" />
-			<Option target="sdk" />
-		</Unit>
-		<Unit filename="sdk\propertypanel\paircontrol.h">
-			<Option compilerVar="CPP" />
 			<Option compile="0" />
 			<Option link="0" />
 			<Option target="sdk" />

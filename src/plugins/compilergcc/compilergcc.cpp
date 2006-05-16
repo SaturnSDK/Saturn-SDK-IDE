@@ -54,12 +54,16 @@
 // TODO (mandrav#1#): Find out which compilers exist for linux and adapt this
 #ifdef __WXMSW__
     #include "compilerMSVC.h"
+    #include "compilerMSVC8.h"
     #include "compilerBCC.h"
     #include "compilerDMC.h"
     #include "compilerOW.h"
     #include "compilerGDC.h"
     #include "compilerDMD.h"
 	#include "compilerGNUARM.h"
+#endif
+#ifdef __WXMAC__
+    #include "compilerGDC.h"
 #endif
 #include "compilerICC.h"
 #include "compilerSDCC.h"
@@ -233,6 +237,7 @@ CompilerGCC::CompilerGCC()
 	CompilerFactory::RegisterCompiler(new CompilerMINGW);
 #ifdef __WXMSW__
 	CompilerFactory::RegisterCompiler(new CompilerMSVC);
+	CompilerFactory::RegisterCompiler(new CompilerMSVC8);
 	CompilerFactory::RegisterCompiler(new CompilerBCC);
 	CompilerFactory::RegisterCompiler(new CompilerDMC);
 	CompilerFactory::RegisterCompiler(new CompilerOW);
@@ -243,6 +248,9 @@ CompilerGCC::CompilerGCC()
 	CompilerFactory::RegisterCompiler(new CompilerGDC);
 	CompilerFactory::RegisterCompiler(new CompilerDMD);
 	CompilerFactory::RegisterCompiler(new CompilerGNUARM);
+#endif
+#ifdef __WXMAC__
+	CompilerFactory::RegisterCompiler(new CompilerGDC);
 #endif
 
 	// register (if any) user-copies of built-in compilers

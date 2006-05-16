@@ -120,6 +120,7 @@ void CompilerCommandGenerator::GenerateCommandLine(wxString& macro,
                                                     ProjectFile* pf,
                                                     const wxString& file,
                                                     const wxString& object,
+                                                    const wxString& FlatObject,
                                                     const wxString& deps)
 {
     Compiler* compiler = target
@@ -174,6 +175,11 @@ void CompilerCommandGenerator::GenerateCommandLine(wxString& macro,
         fileInc << _T(' ') << m_PrjIncPath;
     }
 
+    if (target)
+    {  // this one has to come first, since wxString::Replace, otherwise $object would go first
+    	// leaving nothing to replace for this $objects_output_dir
+        macro.Replace(_T("$objects_output_dir"), target->GetObjectOutput());
+    }
     macro.Replace(_T("$compiler"), compilerStr);
     macro.Replace(_T("$linker"), compiler->GetPrograms().LD);
     macro.Replace(_T("$lib_linker"), compiler->GetPrograms().LIB);
@@ -201,9 +207,12 @@ void CompilerCommandGenerator::GenerateCommandLine(wxString& macro,
         macro.Replace(_T("$exe_output"), output);
     }
     else
+    {
         macro.Replace(_T("$exe_output"), m_Output[target]);
+    }
     macro.Replace(_T("$link_resobjects"), deps);
     macro.Replace(_T("$link_objects"), object);
+    macro.Replace(_T("$link_flat_objects"), FlatObject);
     // the following were added to support the QUICK HACK in compiler plugin:
     // DirectCommands::GetTargetLinkCommands()
     macro.Replace(_T("$+link_objects"), object);

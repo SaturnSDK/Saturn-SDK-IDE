@@ -1,11 +1,13 @@
 #include "wxswindoweditor.h"
 #include "wxsdrawingwindow.h"
 #include "wxswindowresdataobject.h"
+#include "wxswindoweditorcontent.h"
 #include "../wxsitem.h"
 #include "../wxsparent.h"
 #include "../wxsproject.h"
 #include "../wxsresourcetree.h"
 #include "../wxsitemfactory.h"
+#include "../wxsbaseproperties.h"
 
 #include <wx/settings.h>
 #include <wx/intl.h>
@@ -13,86 +15,6 @@
 #include <wx/clipbrd.h>
 #include <manager.h>
 #include <configmanager.h>
-
-
-class wxsWindowEditor::ContentManager: public wxsDrawingWindow
-{
-    public:
-
-        /** \brief Ctor */
-        ContentManager(wxsWindowEditor* _Parent): wxsDrawingWindow(_Parent,-1), Parent(_Parent) {}
-
-        /** \brief Dctor */
-        virtual ~ContentManager() {}
-
-        /** \brief Function refreshing current selection */
-        void RefreshSelection();
-
-    protected:
-
-        /** \brief painting additional stuff */
-        virtual void PaintExtra(wxDC* DC);
-
-    private:
-
-        /** \brief Size of boxes used to drag borders of widgets */
-        static const int DragBoxSize = 6;
-
-        /** \brief Minimal distace which must be done to apply dragging */
-        static const int MinDragDistance = 8;
-
-        /** \brief Enum type describing placement of drag box */
-        enum DragBoxType
-        {
-            LeftTop = 0,
-            Top,
-            RightTop,
-            Left,
-            Right,
-            LeftBtm,
-            Btm,
-            RightBtm,
-            /*************/
-            DragBoxTypeCnt
-        };
-
-        /** \brief Structure describing one dragging point */
-        struct DragPointData
-        {
-        	wxsItem* Item;                                  ///< \brief Associated item
-        	DragBoxType Type;                               ///< \brief Type of this drag box
-        	bool Inactive;                                  ///< \brief If true, this drag point will be drawn gray
-        	int PosX;                                       ///< \brief X position of this drag point
-        	int PosY;                                       ///< \brief Y position of this drag point
-        	int DragInitPosX;                               ///< \brief X position before dragging
-        	int DragInitPosY;                               ///< \brief Y position before dragging
-        	DragPointData* WidgetPoints[DragBoxTypeCnt];    ///< \brief Pointers to all drag points for this item
-        };
-
-        /** \brief Declaration of vector containing all drag points */
-        WX_DEFINE_ARRAY(DragPointData*,DragPointsT);
-
-        wxsWindowEditor* Parent;        ///< \brief Current window editor
-        DragPointsT DragPoints;         ///< \brief Array of visible drag points
-
-        /** \brief Initializing drag sequence */
-        void DragInit(DragPointData* NewDragPoint,wxsItem* NewDragItem,bool MultipleSel,int MouseX,int MouseY);
-
-        /** \brief Processing mouse while dragging */
-        void DragProcess(int MouseX,int MouseY,wxsItem* UnderCursor);
-
-        /** \brief Finalizing dragging sequence */
-        void DragFinish(wxsItem* UnderCursor);
-};
-
-void wxsWindowEditor::ContentManager::PaintExtra(wxDC* DC)
-{
-}
-
-void wxsWindowEditor::ContentManager::RefreshSelection()
-{
-
-}
 
 static const long wxsInsIntoId    = wxNewId();
 static const long wxsInsBeforeId  = wxNewId();
@@ -118,7 +40,7 @@ wxsWindowEditor::wxsWindowEditor(wxWindow* parent,wxsResource* Resource):
     VertSizer->Add(HorizSizer,1,wxEXPAND);
     VertSizer->Add(WidgetsSet,0,wxEXPAND);
 
-    Content = new ContentManager(this);
+    Content = new wxsWindowEditorContent(this);
     HorizSizer->Add(Content,1,wxEXPAND);
 
     QPArea = new wxScrolledWindow(this,-1,wxDefaultPosition,wxDefaultSize,wxVSCROLL|wxSUNKEN_BORDER|wxALWAYS_SHOW_SB);
@@ -592,7 +514,6 @@ void wxsWindowEditor::InitializeImages()
 
     ImagesLoaded = true;
 }
-
 
 namespace
 {

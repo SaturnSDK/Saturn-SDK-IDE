@@ -89,11 +89,15 @@ EditorColorSet::~EditorColorSet()
 
 void EditorColorSet::ClearAllOptionColors()
 {
-       for (OptionSetsMap::iterator map_it = m_Sets.begin();
-                                                       map_it != m_Sets.end(); ++map_it)
+   for (OptionSetsMap::iterator map_it = m_Sets.begin();
+                                                   map_it != m_Sets.end(); ++map_it)
+    {
         for (OptionColors::iterator vec_it = (*map_it).second.m_Colors.begin();
                             vec_it != (*map_it).second.m_Colors.end(); ++vec_it)
-                       delete (*vec_it);
+        {
+            delete (*vec_it);
+        }
+    }
     m_Sets.clear();
 }
 
@@ -442,10 +446,18 @@ void EditorColorSet::Apply(HighlightLanguage lang, cbStyledTextCtrl* control)
                 if (opt->back != wxNullColour)
                 {
                     control->SetSelBackground(true, opt->back);
-                    Manager::Get()->GetConfigManager(_T("editor"))->Write(_T("/selection_color"), opt->back);
+//                    Manager::Get()->GetConfigManager(_T("editor"))->Write(_T("/selection_color"), opt->back);
                 }
                 else
                     control->SetSelBackground(false, wxColour(0xC0, 0xC0, 0xC0));
+
+                if (opt->fore != wxNullColour)
+                {
+                    control->SetSelForeground(true, opt->fore);
+//                    Manager::Get()->GetConfigManager(_T("editor"))->Write(_T("/selection_fgcolor"), opt->fore);
+                }
+                else
+                    control->SetSelForeground(false, *wxBLACK);
             }
 //            else
 //            {
@@ -668,13 +680,35 @@ void EditorColorSet::SetKeywords(HighlightLanguage lang, int idx, const wxString
 {
     if (lang != HL_NONE && idx >=0 && idx <= wxSCI_KEYWORDSET_MAX)
     {
+        wxString tmp(_T(' '), keywords.length()); // faster than using Alloc()
+
+        const wxChar *src = keywords.c_str();
+        wxChar *dst = (wxChar *) tmp.c_str();
+        wxChar c;
+        size_t len = 0;
+
+        while(c = *src)
+        {
+            ++src;
+            if(c > _T(' '))
+            {
+                *dst = c;
+            }
+            else // white space
+            {
+                *dst = _T(' ');
+                while(*src && *src < _T(' '))
+                    ++src;
+            }
+
+            ++dst;
+            ++len;
+        }
+
+        tmp.Truncate(len);
+
         OptionSet& mset = m_Sets[lang];
-        mset.m_Keywords[idx] = keywords;
-        mset.m_Keywords[idx].Replace(_T("\r"), _T(" "));
-        mset.m_Keywords[idx].Replace(_T("\n"), _T(" "));
-        mset.m_Keywords[idx].Replace(_T("\t"), _T(" "));
-        while (mset.m_Keywords[idx].Replace(_T("  "), _T(" ")))
-            ;
+        mset.m_Keywords[idx] = tmp;
     }
 }
 
