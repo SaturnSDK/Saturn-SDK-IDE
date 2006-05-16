@@ -4,6 +4,9 @@
 
 #include <wx/string.h>
 
+/*
+* Base class for providing a string ID
+*/
 class ID
 {
     wxString p__id;
@@ -11,6 +14,7 @@ class ID
 public:
     ID(){};
     ID(const wxString& id) : p__id(id){};
+    explicit ID(const ID& cpy) : p__id(cpy.id()){};
 
     wxString id() const
     {
@@ -30,7 +34,7 @@ public:
     bool operator==(const wxString& other) const
     {
         return id().IsSameAs(other);
-    };    
+    };
 };
 
 #endif

@@ -136,6 +136,8 @@
     #include "xtra_res.h"
 
     #include "safedelete.h"
+    #include "backgroundthread.h"
+    #include "filemanager.h"
 
 #endif // CB_PRECOMP
 

@@ -490,7 +490,6 @@
 				<Option object_output=".objs\2.6" />
 				<Option type="3" />
 				<Option compiler="gcc" />
-				<Option includeInTargetAll="1" />
 				<Option projectResourceIncludeDirsRelation="0" />
 				<Compiler>
 					<Add option="-DBUILDING_PLUGIN" />
@@ -679,6 +678,16 @@
 		</Unit>
 		<Unit filename="plugins\blocks\decompress.c">
 			<Option compilerVar="CC" />
+			<Option target="Blocks" />
+		</Unit>
+		<Unit filename="plugins\blocks\dl.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="Blocks" />
+		</Unit>
+		<Unit filename="plugins\blocks\dl.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
 			<Option target="Blocks" />
 		</Unit>
 		<Unit filename="plugins\blocks\huffman.c">
@@ -2258,6 +2267,12 @@
 			<Option link="0" />
 			<Option target="sdk" />
 		</Unit>
+		<Unit filename="sdk\backgroundthread.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="sdk" />
+		</Unit>
 		<Unit filename="sdk\base64.cpp">
 			<Option compilerVar="CPP" />
 			<Option target="sdk" />
@@ -2678,6 +2693,16 @@
 		</Unit>
 		<Unit filename="sdk\filegroupsandmasks.h">
 			<Option compilerVar="" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="sdk\filemanager.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="sdk\filemanager.h">
+			<Option compilerVar="CPP" />
 			<Option compile="0" />
 			<Option link="0" />
 			<Option target="sdk" />
@@ -3406,6 +3431,12 @@
 			<Option compilerVar="" />
 			<Option compile="0" />
 			<Option link="0" />
+		</Unit>
+		<Unit filename="sdk\safedelete.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="sdk" />
 		</Unit>
 		<Unit filename="sdk\scriptingcall.h">
 			<Option compilerVar="" />

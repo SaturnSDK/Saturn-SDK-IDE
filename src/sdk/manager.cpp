@@ -44,12 +44,14 @@
     #include "templatemanager.h"
     #include "personalitymanager.h"
     #include "uservarmanager.h"
+    #include "filemanager.h"
     #include "xtra_classes.h" // Our custom set of wxWidgets classes
     #include "xtra_res.h" // our new ToolBarAddOn handler
 #endif
 
 #include <wx/toolbar.h>
 
+    #include "buildsystem/buildsystemmanager.h"
 
 
 
@@ -233,6 +235,10 @@ wxFrame* Manager::GetAppWindow() const
 
 ProjectManager* Manager::GetProjectManager() const
 {
+//#############################################################################################################
+BuildSystemManager::Get(); // FIXME: Remove this ##############################################################
+//#############################################################################################################
+
     return ProjectManager::Get();
 }
 
@@ -281,6 +287,10 @@ ConfigManager* Manager::GetConfigManager(const wxString& name_space) const
     return CfgMgrBldr::GetConfigManager(name_space);
 }
 
+FileManager* Manager::GetFileManager() const
+{
+    return FileManager::Get();
+}
 
 bool Manager::appShuttingDown = false;
 bool Manager::blockYields = false;

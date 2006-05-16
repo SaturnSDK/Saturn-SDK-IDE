@@ -28,6 +28,7 @@ class wxToolBar;
 class UserVariableManager;
 class ScriptingManager;
 class ConfigManager;
+class FileManager;
 
 
 
@@ -94,6 +95,7 @@ public:
     UserVariableManager* GetUserVariableManager() const;
     ScriptingManager* GetScriptingManager() const;
     ConfigManager* GetConfigManager(const wxString& name_space) const;
+    FileManager* GetFileManager() const;
 
 
 
