@@ -127,3 +127,129 @@ LoaderBase* FileManager::Load(const wxString& file, bool reuseEditors)
     fileLoaderThread.Queue(fl);
     return fl;
 }
+
+
+
+inline bool WriteWxStringToFile(wxFile& f, const wxString& data, wxFontEncoding encoding, bool bom)
+{
+    char* mark = NULL;
+    size_t mark_length = 0;
+    if (bom)
+    {
+        switch (encoding)
+        {
+        case wxFONTENCODING_UTF8:
+            mark = "\xEF\xBB\xBF";
+            mark_length = 3;
+            break;
+        case wxFONTENCODING_UTF16BE:
+            mark = "\xFE\xFF";
+            mark_length = 2;
+            break;
+        case wxFONTENCODING_UTF16LE:
+            mark = "\xFF\xFE";
+            mark_length = 2;
+            break;
+        case wxFONTENCODING_UTF32BE:
+            mark = "\x00\x00\xFE\xFF";
+            mark_length = 4;
+            break;
+        case wxFONTENCODING_UTF32LE:
+            mark = "\xFF\xFE\x00\x00";
+            mark_length = 4;
+            break;
+        case wxFONTENCODING_SYSTEM:
+        default:
+            break;
+        }
+    }
+    return(f.Write(mark, mark_length) == mark_length && f.Write(data, encoding));
+};
+
+bool FileManager::Save(const wxString& name, const char* data, size_t len)
+{
+    if(wxFileExists(name) == false) // why bother if we don't need to
+    {
+        wxFile f(name, wxFile::write);
+        if(!f.IsOpened())
+            return false;
+        return f.Write(data, len);
+    }
+
+    wxString tempName(name + _T(".cbTemp"));
+    wxString backupName(name + _T(".cbBack"));
+
+    wxFile f(tempName, wxFile::write);
+    if(!f.IsOpened())
+        return false;
+
+    if(f.Write(data, len) != len)
+        {
+        f.Close();
+        wxRemoveFile(tempName);
+        return false;
+        }
+
+    if(wxRenameFile(name, backupName))
+    {
+        if(wxRenameFile(tempName, name))
+        {
+            delayedDeleteThread.Queue(new DelayedDelete(backupName));
+            return true;
+        }
+        else
+        {
+            wxRenameFile(backupName, name); // restore previous state
+            return false;
+        }
+    }
+    else
+    {
+        return false;
+    }
+}
+
+bool FileManager::Save(const wxString& name, const wxString& data, wxFontEncoding encoding, bool bom)
+{
+    if(wxFileExists(name) == false) // why bother if we don't need to
+    {
+        wxFile f(name, wxFile::write);
+        if(!f.IsOpened())
+            return false;
+        return WriteWxStringToFile(f, data, encoding, bom);
+    }
+
+    wxString tempName(name + _T(".cbTemp"));
+    wxString backupName(name + _T(".cbBack"));
+
+    wxFile f(tempName, wxFile::write);
+    if(!f.IsOpened())
+        return false;
+
+    if(WriteWxStringToFile(f, data, encoding, bom) == false)
+        {
+        f.Close();
+        wxRemoveFile(tempName);
+        return false;
+        }
+
+    if(wxRenameFile(name, backupName))
+    {
+        if(wxRenameFile(tempName, name))
+        {
+            delayedDeleteThread.Queue(new DelayedDelete(backupName));
+            return true;
+        }
+        else
+        {
+            wxRenameFile(backupName, name); // restore previous state
+            return false;
+        }
+    }
+    else
+    {
+        return false;
+    }
+}
+
+

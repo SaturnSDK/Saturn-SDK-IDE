@@ -4,6 +4,7 @@
 #include <sdk_precomp.h>
 #undef new
 #include <deque>
+#include <memory>
 
 class LoaderBase : public AbstractJob
 {
@@ -48,6 +49,38 @@ public:
     void operator()();
 };
 
+
+/*
+* Delete a file after a grace period. This is useful since we do not know when the filesystem will sync its data to disk.
+* In fact, the filesystem might be on a physically separate machine.
+* Thus, whenever replacing an existing file with a new one, you would want to be sure the changes you made are really on disk
+* before deleting any backup files (in case the user pulls the plug).
+* The job does nothing but sleep (giving the OS an opportunity to flush caches), the actual work is done in the destructor.
+* This enables you to feed the job to a BackgroundThread that owns its jobs (and gradually deletes them one by one).
+* As the actual work is done in the destructor, no stale files will be left at application exit.
+*/
+class DelayedDelete : public AbstractJob
+{
+wxString target;
+public:
+    DelayedDelete(const wxString& name) : target(name){};
+    void operator()()
+    {
+        unsigned int i = 20;
+        while(--i)
+        {
+            if(Manager::IsAppShuttingDown()) // make sure we don't hang up the application for seconds
+                break;
+            wxMilliSleep(75);
+        }
+    };
+    ~DelayedDelete()
+    {
+        wxLogNull nullLog;
+        if(wxFile::Exists(target))
+            wxRemove(target);
+    };
+};
 
 
 
@@ -102,13 +135,14 @@ class FileManager : public Mgr<FileManager>
     BackgroundThread fileLoaderThread;
     BackgroundThread uncLoaderThread;
     BackgroundThread urlLoaderThread;
+    BackgroundThread delayedDeleteThread;
 public:
     FileManager() : fileLoaderThread(false), uncLoaderThread(false), urlLoaderThread(false){};
 
     LoaderBase* Load(const wxString& file, bool reuseEditors = false);
 
-    bool Save(const wxString& file, const wxString& contents)          { assert(0 /* not implemented */); };
-    bool Save(const wxString& file, const char* contents, size_t len)  { assert(0 /* not implemented */); };
+    bool Save(const wxString& file, const wxString& data, wxFontEncoding encoding, bool bom);
+    bool Save(const wxString& file, const char* data, size_t len);
 };
 
 
