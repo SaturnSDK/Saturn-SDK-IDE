@@ -111,7 +111,6 @@
 				<Option working_dir="" />
 				<Option type="2" />
 				<Option compiler="gcc" />
-				<Option includeInTargetAll="1" />
 				<Option projectResourceIncludeDirsRelation="0" />
 				<Compiler>
 					<Add directory="sdk\treemultictrl\images" />
@@ -148,7 +147,6 @@
 					<Add library="libwxscintilla.a" />
 					<Add library="propgrid" />
 					<Add library="wxflatnotebook" />
-					<Add library="libtreemultictrl.a" />
 					<Add directory="devel" />
 					<Add directory="sdk\as" />
 					<Add directory="sdk\propgrid" />
@@ -490,6 +488,8 @@
 				<Option object_output=".objs\2.6" />
 				<Option type="3" />
 				<Option compiler="gcc" />
+				<Option includeInTargetAll="1" />
+				<Option projectIncludeDirsRelation="2" />
 				<Option projectResourceIncludeDirsRelation="0" />
 				<Compiler>
 					<Add option="-DBUILDING_PLUGIN" />
@@ -532,7 +532,6 @@
 			<Add directory="sdk\wxscintilla\include" />
 			<Add directory="sdk\propgrid\include" />
 			<Add directory="sdk\propertypanel" />
-			<Add directory="sdk\treemultictrl\include" />
 		</Compiler>
 		<ResourceCompiler>
 			<Add directory="$(#WX.include)" />
@@ -2771,6 +2770,16 @@
 			<Option link="0" />
 			<Option target="sdk" />
 		</Unit>
+		<Unit filename="sdk\infowindow.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="sdk\infowindow.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="sdk" />
+		</Unit>
 		<Unit filename="sdk\licenses.h">
 			<Option compilerVar="" />
 			<Option compile="0" />
@@ -4389,5 +4398,6 @@
 			<Option compilerVar="CPP" />
 			<Option target="AutoRevision" />
 		</Unit>
+		<Extensions />
 	</Project>
 </CodeBlocks_project_file>

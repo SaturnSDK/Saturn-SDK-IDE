@@ -138,6 +138,7 @@
     #include "safedelete.h"
     #include "backgroundthread.h"
     #include "filemanager.h"
+    #include "infowindow.h"
 
 #endif // CB_PRECOMP
 
