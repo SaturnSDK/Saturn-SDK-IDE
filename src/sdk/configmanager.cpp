@@ -52,6 +52,27 @@ namespace CfgMgrConsts
     const int version = 1;
 }
 
+inline void ConfigManager::Collapse(wxString& str) const
+{
+    const wxChar *src = str.c_str();
+    wxChar *dst = (wxChar*) src;
+    wxChar c;
+    size_t len = 0;
+
+    while(c = *src)
+    {
+        ++src;
+
+        *dst = c;
+        ++dst;
+        ++len;
+
+        if(c == _T('/'))
+        while(*src == _T('/'))
+            ++src;
+    }
+    str.Truncate(len);
+};
 
 ISerializable::ISerializable()
 {}
@@ -524,37 +545,26 @@ wxString ConfigManager::GetPath() const
     ret = cbC2U(e->Value());
     while((e = e->Parent()->ToElement()) && e != root)
     {
-        ret.Prepend(_T("/"));
+        ret.Prepend(_T('/'));
         ret.Prepend(cbC2U(e->Value()));
     }
-    ret.Prepend(_T("/"));
+    ret.Prepend(_T('/'));
     return ret;
 };
 
 void ConfigManager::SetPath(const wxString& path)
 {
-    wxString p(path + _T("/"));
+    wxString p(path + _T('/'));
     pathNode = AssertPath(p);
 }
 
 
 TiXmlElement* ConfigManager::AssertPath(wxString& path)
 {
-    if(doc->ErrorId())
-    {
-        cbMessageBox(wxString(_T("TinyXML error:\n")) << cbC2U(doc->ErrorDesc()), _("Warning"), wxICON_WARNING);
-        doc->ClearError();
-    }
-
-    size_t i = 0;
-    while((i = path.find('\\', i)) != wxString::npos) // in-place
-        path[i] = _T('/');
-
-    path.Replace(_T("///"), _T("/"));
-    path.Replace(_T("//"),  _T("/"));
+    Collapse(path);
 
     wxString illegal(_T(" -:.\"$&()[]<>+#"));
-    i = 0;
+    size_t i = 0;
     while((i = path.find_first_of(illegal, i)) != wxString::npos)
         path[i] = _T('_');
 
@@ -566,13 +576,12 @@ TiXmlElement* ConfigManager::AssertPath(wxString& path)
         path = path.Mid(1);
     }
 
-
-    if(path.Contains(_T("/"))) // need for path walking
+    if(path.find(_T('/')) != wxString::npos) // need for path walking
         to_lower(path);
 
     wxString sub;
 
-    while(path.Contains(_T("/")))
+    while(path.find(_T('/')) != wxString::npos)
     {
         sub = path.BeforeFirst(_T('/'));
         path = path.AfterFirst(_T('/'));
@@ -1046,7 +1055,7 @@ wxString ConfigManager::ReadBinary(const wxString& name)
 
 wxArrayString ConfigManager::EnumerateSubPaths(const wxString& path)
 {
-    wxString key(path + _T("/")); // the trailing slash hack is required because AssertPath expects a key name
+    wxString key(path + _T('/')); // the trailing slash hack is required because AssertPath expects a key name
     TiXmlNode* e = AssertPath(key);
     wxArrayString ret;
 
@@ -1075,9 +1084,7 @@ void ConfigManager::DeleteSubPath(const wxString& thePath)
     to_lower(path);
 
 
-    path.Replace(_T("\\"), _T("/"));
-    path.Replace(_T("///"), _T("/"));
-    path.Replace(_T("//"),  _T("/"));
+    Collapse(path);
 
     wxString illegal(_T(" :.,;!\"$%&()[]<>{}?*+-|#"));
     size_t i;
@@ -1092,7 +1099,7 @@ void ConfigManager::DeleteSubPath(const wxString& thePath)
 
     TiXmlElement* parent = pathNode ? pathNode : root;
 
-    if(path.Contains(_T("/")))
+    if(path.find(_T('/')) != wxString::npos)
     {
         wxString sub;
         do
@@ -1115,7 +1122,7 @@ void ConfigManager::DeleteSubPath(const wxString& thePath)
                     return;
             }
         }
-        while(path.Contains(_T("/")));
+        while(path.find(_T('/')) != wxString::npos);
     }
 
     if(!path.IsEmpty())
@@ -1131,7 +1138,7 @@ void ConfigManager::DeleteSubPath(const wxString& thePath)
 
 wxArrayString ConfigManager::EnumerateKeys(const wxString& path)
 {
-    wxString key(path + _T("/")); // the trailing slash hack is required because AssertPath expects a key name
+    wxString key(path + _T('/')); // the trailing slash hack is required because AssertPath expects a key name
     TiXmlNode* e = AssertPath(key);
     wxArrayString ret;
 
@@ -1306,8 +1313,7 @@ void ConfigManager::Read(const wxString& name, ConfigManagerContainer::StringSet
     if(mNode)
     {
         while((curr = mNode->IterateChildren(curr)->ToElement()))
-            set->insert(cbC2U(curr->FirstChild()->ToText()->Value()))
-            ;
+            set->insert(cbC2U(curr->FirstChild()->ToText()->Value()));
     }
 }
 

@@ -77,6 +77,7 @@ class DLLIMPORT ConfigManager
     TiXmlElement* AssertPath(wxString& path);
     TiXmlElement* GetUniqElement(TiXmlElement* p, const wxString& q);
     void SetNodeText(TiXmlElement *n, const TiXmlText& t);
+    inline void Collapse(wxString& str) const;
 
 public:
 
