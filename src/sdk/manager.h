@@ -63,7 +63,8 @@ public:
 
     wxFrame* GetAppWindow() const;
 
-    static bool isappShuttingDown();
+    static bool IsAppShuttingDown();
+    static bool isappShuttingDown(){return Manager::IsAppShuttingDown();};
 
     /** Functions returning pointers to the respective sub-manager instances.
      * During application startup as well as during runtime, these functions will always return a valid pointer.

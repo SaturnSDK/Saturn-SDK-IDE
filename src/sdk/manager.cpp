@@ -153,7 +153,7 @@ bool Manager::ProcessEvent(CodeBlocksEvent& event)
 }
 
 
-bool Manager::isappShuttingDown()
+bool Manager::IsAppShuttingDown()
 {
     return appShuttingDown;
 }
