@@ -5,19 +5,24 @@
 #include "manager.h"
 #include "macrosmanager.h"
 
-class PropertyPanel;
-
 class DLLIMPORT UserVariableManager : public Mgr<UserVariableManager>
 {
         friend class Manager;
         friend class Mgr<UserVariableManager>;
         friend class MacrosManager;
-        static UserVariableManager* instance;
-        PropertyPanel *props;
+        ConfigManager * cfg;
+        wxString activeSet;
+        wxArrayString preempted;
 
     public:
+        UserVariableManager();
         wxString Replace(const wxString& variable);
+
+        void Preempt(const wxString& variable);
+        void Arrogate();
+
         void Configure();
+        void Migrate();
 };
 
 #endif // USER_VARIABLE_MANAGER_H

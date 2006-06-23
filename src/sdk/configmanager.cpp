@@ -610,8 +610,8 @@ TiXmlElement* ConfigManager::AssertPath(wxString& path)
             else
                 pathNode = (TiXmlElement*) pathNode->InsertEndChild(TiXmlElement(cbU2C(sub)));
         }
-#ifdef CB_DEBUG
-        if(doc->Error())
+#ifdef cbDEBUG_EXTRA
+        if(doc->Error()) // this can actually never happen, as we're not parsing any moreF
         {
             cbMessageBox(wxString(_T("TinyXML error:\n")) << cbC2U(doc->ErrorDesc()), _T("Warning"), wxICON_WARNING);
             doc->ClearError();
