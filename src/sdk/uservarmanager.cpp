@@ -298,7 +298,7 @@ UsrGlblMgrEditDialog::UsrGlblMgrEditDialog(const wxString& var) : currentSet(Man
     }
 
     cfg = Manager::Get()->GetConfigManager(_T("gcv"));
-
+    cfg->Exists(_T("/sets/default/foo"));
 #ifdef cbDEBUG_EXTRA
     assert(selSet);
     assert(selVar);
@@ -356,7 +356,9 @@ void UsrGlblMgrEditDialog::CloneVar(wxCommandEvent& event)
         for(unsigned j = 0; j < members.GetCount(); ++j)
             cfg->Write(dstPath + members[j], cfg->Read(srcPath + members[j]));
 
+        currentVar = clone;
         UpdateChoices();
+        Load();
     }
 }
 
@@ -397,7 +399,9 @@ void UsrGlblMgrEditDialog::CloneSet(wxCommandEvent& event)
                     cfg->Write(dstPath + item, cfg->Read(srcPath + item));
                 }
             }
+        currentSet = clone;
         UpdateChoices();
+        Load();
     }
 }
 
@@ -439,6 +443,7 @@ void UsrGlblMgrEditDialog::AddVar(const wxString& name)
     currentVar = name;
     cfg->Exists(_T("/sets/") + currentSet + _T('/') + name + _T('/'));
 
+    currentVar = name;
     UpdateChoices();
     Load();
 }
@@ -469,6 +474,7 @@ void UsrGlblMgrEditDialog::NewSet(wxCommandEvent& event)
         currentSet = name;
         cfg->Exists(_T("/sets/") + name + _T('/'));
 
+        currentSet = name;
         UpdateChoices();
         Load();
     }
@@ -486,6 +492,7 @@ void UsrGlblMgrEditDialog::SelectSet(wxCommandEvent& event)
     Save();
     currentSet = selSet->GetStringSelection();
     cfg->Write(_T("/active"), currentSet);
+    UpdateChoices();
     Load();
 }
 
@@ -494,7 +501,7 @@ void UsrGlblMgrEditDialog::Load()
 {
     deleteSet->Enable(!currentSet.IsSameAs(_T("default")));
 
-    wxString path(_T("/sets/") + currentSet + _T('/') + currentVar + _T('/'));
+    wxString path(cSets + currentSet + _T('/') + currentVar + _T('/'));
 
     wxArrayString knownMembers = cfg->EnumerateKeys(path);
 
@@ -519,7 +526,7 @@ void UsrGlblMgrEditDialog::Load()
 
 void UsrGlblMgrEditDialog::Save()
 {
-    wxString path(_T("/sets/") + currentSet + _T('/') + currentVar + _T('/'));
+    wxString path(cSets + currentSet + _T('/') + currentVar + _T('/'));
 
     cfg->DeleteSubPath(path);
 
@@ -544,16 +551,18 @@ void UsrGlblMgrEditDialog::Save()
 
 void UsrGlblMgrEditDialog::UpdateChoices()
 {
-    wxArrayString sets = cfg->EnumerateSubPaths(_T("/sets/"));
-    wxArrayString vars = cfg->EnumerateSubPaths(_T("/sets/") + currentSet + _T("/"));
+    if(currentSet.IsEmpty())
+        currentSet = _T("default");
+
+    wxArrayString sets = cfg->EnumerateSubPaths(cSets);
+    wxArrayString vars = cfg->EnumerateSubPaths(cSets + currentSet + _T("/"));
 
     selSet->Clear();
     selSet->Append(sets);
     selVar->Clear();
     selVar->Append(vars);
 
-    if(currentSet.IsEmpty())
-        currentSet = _T("default");
+
     if(currentVar.IsEmpty())
         currentVar = selVar->GetString(0);
 
