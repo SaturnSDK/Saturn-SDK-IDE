@@ -133,10 +133,6 @@ wxString UserVariableManager::Replace(const wxString& variable)
 
     wxString path(cSets + activeSet + _T('/') + package + _T('/'));
 
-    Manager::Get()->GetMessageManager()->DebugLog(_T("---------------------------------------"));
-    Manager::Get()->GetMessageManager()->DebugLog(path);
-
-
     wxString base = cfg->Read(path + cBase);
 
     if(base.IsEmpty())
