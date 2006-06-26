@@ -1,13 +1,16 @@
-#include "wizpage.h"
-#include <manager.h>
-#include <messagemanager.h>
-#include <configmanager.h>
-#include <projectmanager.h>
-#include <scriptingmanager.h>
-#include <scriptingcall.h>
-#include <compilerfactory.h>
-#include <compiler.h>
+#include <sdk.h>
+#ifndef CB_PRECOMP
+    #include <manager.h>
+    #include <messagemanager.h>
+    #include <configmanager.h>
+    #include <projectmanager.h>
+    #include <scriptingmanager.h>
+    #include <compilerfactory.h>
+    #include <compiler.h>
+#endif
+#include <sqplus.h>
 
+#include "wizpage.h"
 #include "intropanel.h"
 #include "projectpathpanel.h"
 #include "compilerpanel.h"
@@ -53,35 +56,44 @@ void WizPage::OnButton(wxCommandEvent& event)
         LOGSTREAM << _T("Can't locate window with id ") << event.GetId() << _T("!\n");
         return;
     }
-    int funcID = Manager::Get()->GetScriptingManager()->FindFunctionByDeclaration(_T("void OnClick_") + win->GetName() + _T("()"), _T("WizardModule"));
-    if (funcID >= 0)
+    try
     {
-        VoidExecutor<> vexec(funcID);
-        vexec.Call();
+        wxString sig = _T("OnClick_") + win->GetName();
+        SqPlus::SquirrelFunction<void>(cbU2C(sig))();
+    }
+    catch (SquirrelError& e)
+    {
+        cbMessageBox(cbC2U(e.desc), _("Script error"), wxICON_ERROR);
     }
 }
 
 //------------------------------------------------------------------------------
 void WizPage::OnPageChanging(wxWizardEvent& event)
 {
-    int funcID = Manager::Get()->GetScriptingManager()->FindFunctionByDeclaration(_T("bool OnLeave_") + m_PanelName + _T("(bool)"), _T("WizardModule"));
-    if (funcID >= 0)
+    try
     {
-        Executor<bool,bool> exec(funcID);
-        bool allow = exec.Call(event.GetDirection()); // !=0 forward, ==0 backward
-        if (exec.Success() && !allow)
+        wxString sig = _T("OnLeave_") + m_PanelName;
+        bool allow = SqPlus::SquirrelFunction<bool>(cbU2C(sig))(event.GetDirection() != 0); // !=0 forward, ==0 backward
+        if (!allow)
             event.Veto();
+    }
+    catch (SquirrelError& e)
+    {
+        cbMessageBox(cbC2U(e.desc), _("Script error"), wxICON_ERROR);
     }
 }
 
 //------------------------------------------------------------------------------
 void WizPage::OnPageChanged(wxWizardEvent& event)
 {
-    int funcID = Manager::Get()->GetScriptingManager()->FindFunctionByDeclaration(_T("void OnEnter_") + m_PanelName + _T("(bool)"), _T("WizardModule"));
-    if (funcID >= 0)
+    try
     {
-        VoidExecutor<bool> vexec(funcID);
-        vexec.Call(event.GetDirection()); // !=0 forward, ==0 backward
+        wxString sig = _T("OnEnter_") + m_PanelName;
+        SqPlus::SquirrelFunction<void>(cbU2C(sig))(event.GetDirection() != 0); // !=0 forward, ==0 backward
+    }
+    catch (SquirrelError& e)
+    {
+        cbMessageBox(cbC2U(e.desc), _("Script error"), wxICON_ERROR);
     }
 }
 
@@ -123,13 +135,13 @@ WizProjectPathPanel::~WizProjectPathPanel()
 }
 
 //------------------------------------------------------------------------------
-wxString WizProjectPathPanel::GetPath() const
+wxString WizProjectPathPanel::GetPath()
 {
     return AppendPathSepIfNeeded(m_pProjectPathPanel->GetPath());
 }
 
 //------------------------------------------------------------------------------
-wxString WizProjectPathPanel::GetName() const
+wxString WizProjectPathPanel::GetName()
 {
     return m_pProjectPathPanel->GetName();
 }
@@ -246,7 +258,7 @@ WizCompilerPanel::~WizCompilerPanel()
 }
 
 //------------------------------------------------------------------------------
-wxString WizCompilerPanel::GetCompilerID() const
+wxString WizCompilerPanel::GetCompilerID()
 {
     Compiler* compiler = CompilerFactory::GetCompilerByName(m_pCompilerPanel->GetCompilerCombo()->GetStringSelection());
     if (compiler)
@@ -255,49 +267,49 @@ wxString WizCompilerPanel::GetCompilerID() const
 }
 
 //------------------------------------------------------------------------------
-bool WizCompilerPanel::GetWantDebug() const
+bool WizCompilerPanel::GetWantDebug()
 {
     return m_pCompilerPanel->GetWantDebug();
 }
 
 //------------------------------------------------------------------------------
-wxString WizCompilerPanel::GetDebugName() const
+wxString WizCompilerPanel::GetDebugName()
 {
     return m_pCompilerPanel->GetDebugName();
 }
 
 //------------------------------------------------------------------------------
-wxString WizCompilerPanel::GetDebugOutputDir() const
+wxString WizCompilerPanel::GetDebugOutputDir()
 {
     return AppendPathSepIfNeeded(m_pCompilerPanel->GetDebugOutputDir());
 }
 
 //------------------------------------------------------------------------------
-wxString WizCompilerPanel::GetDebugObjectOutputDir() const
+wxString WizCompilerPanel::GetDebugObjectOutputDir()
 {
     return AppendPathSepIfNeeded(m_pCompilerPanel->GetDebugObjectOutputDir());
 }
 
 //------------------------------------------------------------------------------
-bool WizCompilerPanel::GetWantRelease() const
+bool WizCompilerPanel::GetWantRelease()
 {
     return m_pCompilerPanel->GetWantRelease();
 }
 
 //------------------------------------------------------------------------------
-wxString WizCompilerPanel::GetReleaseName() const
+wxString WizCompilerPanel::GetReleaseName()
 {
     return m_pCompilerPanel->GetReleaseName();
 }
 
 //------------------------------------------------------------------------------
-wxString WizCompilerPanel::GetReleaseOutputDir() const
+wxString WizCompilerPanel::GetReleaseOutputDir()
 {
     return AppendPathSepIfNeeded(m_pCompilerPanel->GetReleaseOutputDir());
 }
 
 //------------------------------------------------------------------------------
-wxString WizCompilerPanel::GetReleaseObjectOutputDir() const
+wxString WizCompilerPanel::GetReleaseObjectOutputDir()
 {
     return AppendPathSepIfNeeded(m_pCompilerPanel->GetReleaseObjectOutputDir());
 }
@@ -350,7 +362,7 @@ WizLanguagePanel::~WizLanguagePanel()
 {
 }
 
-int WizLanguagePanel::GetLanguage() const
+int WizLanguagePanel::GetLanguage()
 {
     return m_pLanguagePanel->GetLanguage();
 }

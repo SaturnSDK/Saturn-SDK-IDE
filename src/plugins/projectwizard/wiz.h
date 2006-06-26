@@ -25,6 +25,7 @@
 
 #include <cbplugin.h> // the base class we 're inheriting
 #include <settings.h> // needed to use the Code::Blocks SDK
+#include <cbexception.h>
 #include <wx/bitmap.h>
 
 class wxWizard;
@@ -51,6 +52,10 @@ class Wiz : public cbProjectWizardPlugin
 	public:
 		Wiz();
 		~Wiz();
+
+        Wiz(const Wiz& rhs) { cbThrow(_T("Can't call Wiz's copy ctor!!!")); }
+        virtual void operator=(const Wiz& rhs){ cbThrow(_T("Can't assign an Wiz* !!!")); }
+
 		int Configure(){ return 0; }
 		int GetCount() const;
 		wxString GetTitle(int index) const;
@@ -83,21 +88,21 @@ class Wiz : public cbProjectWizardPlugin
         void SetTextControlValue(const wxString& name, const wxString& value);
         wxString GetTextControlValue(const wxString& name);
 
-        wxString GetProjectPath() const;
-        wxString GetProjectName() const;
-        wxString GetCompilerID() const;
+        wxString GetProjectPath();
+        wxString GetProjectName();
+        wxString GetCompilerID();
 
-        bool GetWantDebug() const;
-        wxString GetDebugName() const;
-        wxString GetDebugOutputDir() const;
-        wxString GetDebugObjectOutputDir() const;
+        bool GetWantDebug();
+        wxString GetDebugName();
+        wxString GetDebugOutputDir();
+        wxString GetDebugObjectOutputDir();
 
-        bool GetWantRelease() const;
-        wxString GetReleaseName() const;
-        wxString GetReleaseOutputDir() const;
-        wxString GetReleaseObjectOutputDir() const;
+        bool GetWantRelease();
+        wxString GetReleaseName();
+        wxString GetReleaseOutputDir();
+        wxString GetReleaseObjectOutputDir();
 
-        int GetLanguageIndex() const;
+        int GetLanguageIndex();
 
         // pre-defined pages
         void AddIntroPage(const wxString& intro_msg);

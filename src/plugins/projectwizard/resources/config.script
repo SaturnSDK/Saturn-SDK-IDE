@@ -1,32 +1,28 @@
 //
 // Main wizards configuration script.
-// Here, we register all the available wizardsodule".
+// Here, we register all the available wizards".
 //
 
-int main()
+function main()
 {
     // add existing wizards
 
-    RegisterWizard("console",       "Console application wizard",       "Console");
-    RegisterWizard("glfw",          "GLFW project wizard",              "2D/3D Graphics");
-    RegisterWizard("glut",          "GLUT project wizard",              "2D/3D Graphics");
-    RegisterWizard("irrlicht",      "Irrlicht project wizard",          "2D/3D Graphics");
-    RegisterWizard("ogre",          "Ogre project wizard",              "2D/3D Graphics");
-    RegisterWizard("wxwidgets",     "wxWidgets application wizard",     "GUI");
-    RegisterWizard("d",             "D application wizard",             "D language");
-
-    return 0;
+    RegisterWizard(_T("console"),       _T("Console application wizard"),       _T("Console"));
+    RegisterWizard(_T("irrlicht"),      _T("Irrlicht project wizard"),          _T("2D/3D Graphics"));
+    RegisterWizard(_T("ogre"),          _T("Ogre project wizard"),              _T("2D/3D Graphics"));
+    RegisterWizard(_T("wxwidgets"),     _T("wxWidgets application wizard"),     _T("GUI"));
+    RegisterWizard(_T("d"),             _T("D application wizard"),             _T("D language"));
 }
 
-void RegisterWizard(const wxString& in folder, const wxString& in title, const wxString& in category)
+function RegisterWizard(folder, title, category)
 {
     // syntax:
     // AddWizard(title, category, script, template_png, wizard_png, xrc)
 
     Wizard.AddWizard(title,
                     category,
-                    folder + "/wizard.script",
-                    folder + "/logo.png",
-                    folder + "/wizard.png",
-                    folder + "/wizard.xrc");
+                    folder + _T("/wizard.script"),
+                    folder + _T("/logo.png"),
+                    folder + _T("/wizard.png"),
+                    folder + _T("/wizard.xrc"));
 }
