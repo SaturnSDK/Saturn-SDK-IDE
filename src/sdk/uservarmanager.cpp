@@ -317,6 +317,7 @@ UsrGlblMgrEditDialog::UsrGlblMgrEditDialog(const wxString& var) : currentSet(Man
 #endif
     UpdateChoices();
     Load();
+    PlaceWindow(this);
 }
 
 void UsrGlblMgrEditDialog::DoClose()
@@ -333,10 +334,11 @@ void UsrGlblMgrEditDialog::CloneVar(wxCommandEvent& event)
     if(d.ShowModal() == wxID_OK)
     {
         wxString clone = d.GetValue();
-        Sanitise(clone);
 
         if(clone.IsEmpty())
             return;
+
+        Sanitise(clone);
 
         wxString srcPath(_T("/sets/") + currentSet + _T('/') + currentVar + _T('/'));
         wxString dstPath(_T("/sets/") + currentSet + _T('/') + clone + _T('/'));
@@ -383,8 +385,8 @@ void UsrGlblMgrEditDialog::CloneSet(wxCommandEvent& event)
             return;
             }
 
-        wxString srcPath(_T("/sets/") + currentSet + _T("/"));
-        wxString dstPath(_T("/sets/") + clone + _T("/"));
+        wxString srcPath(cSets + currentSet + _T("/"));
+        wxString dstPath(cSets + clone + _T("/"));
         wxString oldpath, newpath;
 
         wxArrayString vars = cfg->EnumerateSubPaths(srcPath);
@@ -413,7 +415,7 @@ void UsrGlblMgrEditDialog::DeleteVar(wxCommandEvent& event)
     PlaceWindow(&d);
     if(d.ShowModal() == wxID_YES)
     {
-        cfg->DeleteSubPath(_T("/sets/") + currentSet + _T('/') + currentVar + _T('/'));
+        cfg->DeleteSubPath(cSets + currentSet + _T('/') + currentVar + _T('/'));
         currentVar = wxEmptyString;
         UpdateChoices();
         Load();
@@ -428,7 +430,7 @@ void UsrGlblMgrEditDialog::DeleteSet(wxCommandEvent& event)
     PlaceWindow(&d);
     if(d.ShowModal() == wxID_YES)
     {
-        cfg->DeleteSubPath(_T("/sets/") + currentSet + _T('/'));
+        cfg->DeleteSubPath(cSets + currentSet + _T('/'));
         currentSet = wxEmptyString;
         currentVar = wxEmptyString;
         UpdateChoices();

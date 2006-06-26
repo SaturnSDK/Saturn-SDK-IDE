@@ -57,6 +57,7 @@ class InfoWindow : public wxPopupWindow
     int pos;
     unsigned int status;
     unsigned int m_delay;
+    unsigned int ks;
     static Stacker stacker;
     static int screenWidth;
     static int screenHeight;
@@ -64,6 +65,8 @@ class InfoWindow : public wxPopupWindow
     InfoWindow(const wxString& title, const wxString& message, unsigned int delay, unsigned int hysteresis);
     virtual ~InfoWindow();
     void OnTimer(wxTimerEvent& e);
+    void OnMove(wxMouseEvent& e);
+    void OnClick(wxMouseEvent& e);
     DECLARE_EVENT_TABLE()
 
     public:
