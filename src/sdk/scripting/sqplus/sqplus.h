@@ -43,7 +43,7 @@
 #include "squirrel.h"
 
 #ifndef _WINDEF_
-  typedef bool BOOL;
+  typedef int BOOL;
   typedef SQInteger INT;
   typedef SQFloat FLOAT;
   #define TRUE 1
@@ -165,10 +165,10 @@ struct TypeInfo {
 // === Common Variable Types ===
 
 template<>
-struct TypeInfo<SQInteger> {
+struct TypeInfo<long> {
   const SQChar * typeName;
   TypeInfo() : typeName(sqT("int")) {}
-  enum {TypeID=VAR_TYPE_INT,Size=sizeof(SQInteger)};
+  enum {TypeID=VAR_TYPE_INT,Size=sizeof(long)};
   operator ScriptVarType() { return ScriptVarType(TypeID); }
 };
 

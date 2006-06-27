@@ -442,6 +442,10 @@ bool CodeBlocksApp::OnInit()
     {
         exception.ShowErrorMessage();
     }
+    catch (SquirrelError& exception)
+    {
+        wxSafeShowMessage(_("Script exception"), cbC2U(exception.desc));
+    }
     catch (const char* message)
     {
         wxSafeShowMessage(_T("Exception"), cbC2U(message));

@@ -103,7 +103,7 @@ struct SQDelegable;
 
 //#pragma message("*** VS7.1 Compiler")
 
-typedef unsigned short wchar_t;
+//typedef unsigned short wchar_t;
 
 #endif
 
