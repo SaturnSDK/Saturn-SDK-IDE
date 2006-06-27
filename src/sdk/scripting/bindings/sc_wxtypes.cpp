@@ -33,6 +33,31 @@ namespace ScriptBindings
         return SqPlus::ReturnCopy(v, result);
     }
 
+    SQInteger wxString_AfterFirst(HSQUIRRELVM v)
+    {
+        StackHandler sa(v);
+        wxString self = *SqPlus::GetInstance<wxString>(v, 1);
+        return SqPlus::ReturnCopy(v, self.AfterFirst((wxChar)sa.GetInt(2)));
+    }
+    SQInteger wxString_AfterLast(HSQUIRRELVM v)
+    {
+        StackHandler sa(v);
+        wxString self = *SqPlus::GetInstance<wxString>(v, 1);
+        return SqPlus::ReturnCopy(v, self.AfterLast((wxChar)sa.GetInt(2)));
+    }
+    SQInteger wxString_BeforeFirst(HSQUIRRELVM v)
+    {
+        StackHandler sa(v);
+        wxString self = *SqPlus::GetInstance<wxString>(v, 1);
+        return SqPlus::ReturnCopy(v, self.BeforeFirst((wxChar)sa.GetInt(2)));
+    }
+    SQInteger wxString_BeforeLast(HSQUIRRELVM v)
+    {
+        StackHandler sa(v);
+        wxString self = *SqPlus::GetInstance<wxString>(v, 1);
+        return SqPlus::ReturnCopy(v, self.BeforeLast((wxChar)sa.GetInt(2)));
+    }
+
     void Register_wxTypes()
     {
         SqPlus::RegisterGlobal(&static_T, "_T");
@@ -47,7 +72,11 @@ namespace ScriptBindings
                 func(&wxString::Length, "Length").
                 func(&wxString::Length, "length").
                 func(&wxString::Length, "len").
-                func(&wxString::Length, "size");
+                func(&wxString::Length, "size").
+                staticFuncVarArgs(&wxString_AfterFirst, "AfterFirst", "*").
+                staticFuncVarArgs(&wxString_AfterLast, "AfterLast", "*").
+                staticFuncVarArgs(&wxString_BeforeFirst, "BeforeFirst", "*").
+                staticFuncVarArgs(&wxString_BeforeLast, "BeforeLast", "*");
 
         SqPlus::SQClassDef<wxArrayString>("wxArrayString").
                 emptyCtor().

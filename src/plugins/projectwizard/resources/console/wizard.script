@@ -180,7 +180,7 @@ function SetupProject(project)
     {
         target.SetTargetType(ttConsoleOnly);
         //local s = Wizard.GetDebugOutputDir() + Wizard.GetProjectName() + DOT_EXT_EXECUTABLE;
-        target.SetOutputFilename(Wizard.GetDebugOutputDir() + Wizard.GetProjectName() + _T(".exe"));
+        target.SetOutputFilename(Wizard.GetDebugOutputDir() + Wizard.GetProjectName() + DOT_EXT_EXECUTABLE);
         // enable debugging symbols for this target
         DebugSymbolsOn(target, Wizard.GetCompilerID());
     }
@@ -190,7 +190,7 @@ function SetupProject(project)
     if (!IsNull(target))
     {
         target.SetTargetType(ttConsoleOnly);
-        target.SetOutputFilename(Wizard.GetReleaseOutputDir() + Wizard.GetProjectName() + _T(".exe"));//DOT_EXT_EXECUTABLE);
+        target.SetOutputFilename(Wizard.GetReleaseOutputDir() + Wizard.GetProjectName() + DOT_EXT_EXECUTABLE);
         // enable optimizations for this target
         OptimizationsOn(target, Wizard.GetCompilerID());
     }
