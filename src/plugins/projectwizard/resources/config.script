@@ -12,6 +12,8 @@ function main()
     RegisterWizard(_T("ogre"),          _T("Ogre project wizard"),              _T("2D/3D Graphics"));
     RegisterWizard(_T("wxwidgets"),     _T("wxWidgets application wizard"),     _T("GUI"));
     RegisterWizard(_T("d"),             _T("D application wizard"),             _T("D language"));
+    RegisterWizard(_T("glfw"),          _T("GLFW application wizard"),          _T("2D/3D Graphics"));
+    RegisterWizard(_T("glut"),          _T("GLUT application wizard"),          _T("2D/3D Graphics"));
 }
 
 function RegisterWizard(folder, title, category)
