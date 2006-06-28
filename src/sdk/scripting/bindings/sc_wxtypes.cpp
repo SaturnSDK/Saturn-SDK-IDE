@@ -33,6 +33,22 @@ namespace ScriptBindings
         return SqPlus::ReturnCopy(v, result);
     }
 
+    SQInteger wxString_OpCmp(HSQUIRRELVM v)
+    {
+        StackHandler sa(v);
+        wxString str1 = *SqPlus::GetInstance<wxString>(v, 1);
+        if (sa.GetType(2) == OT_STRING)
+            return sa.Return(str1.Cmp(cbC2U(sa.GetString(2))));
+        return sa.Return(str1.Cmp(*SqPlus::GetInstance<wxString>(v, 2)));
+    }
+    
+    SQInteger wxString_Matches(HSQUIRRELVM v)
+    {
+        StackHandler sa(v);
+        wxString self = *SqPlus::GetInstance<wxString>(v, 1);
+        wxString other = *SqPlus::GetInstance<wxString>(v, 2);
+        return sa.Return(self.Matches(other));
+    }
     SQInteger wxString_AfterFirst(HSQUIRRELVM v)
     {
         StackHandler sa(v);
@@ -57,22 +73,47 @@ namespace ScriptBindings
         wxString self = *SqPlus::GetInstance<wxString>(v, 1);
         return SqPlus::ReturnCopy(v, self.BeforeLast((wxChar)sa.GetInt(2)));
     }
+    SQInteger wxString_Replace(HSQUIRRELVM v)
+    {
+        StackHandler sa(v);
+        wxString self = *SqPlus::GetInstance<wxString>(v, 1);
+        wxString from = *SqPlus::GetInstance<wxString>(v, 2);
+        wxString to = *SqPlus::GetInstance<wxString>(v, 3);
+        bool all = true;
+        if (sa.GetParamCount() == 4)
+            all = sa.GetBool(4);
+        return sa.Return((SQInteger)self.Replace(from, to, all));
+    }
 
     void Register_wxTypes()
     {
         SqPlus::RegisterGlobal(&static_T, "_T");
 
         typedef int(wxString::*WXSTR_FIRST_STR)(const wxString&)const;
+        typedef wxString&(wxString::*WXSTR_REMOVE_2)(size_t pos, size_t len);
 
         SqPlus::SQClassDef<wxString>("wxString").
                 emptyCtor().
-                staticFuncVarArgs(&wxString_OpAdd, "_add").
+                staticFuncVarArgs(&wxString_OpAdd, "_add", "*").
+                staticFuncVarArgs(&wxString_OpCmp, "_cmp", "*").
                 func<WXSTR_FIRST_STR>(&wxString::First, "Find").
+                staticFuncVarArgs(&wxString_Matches, "Matches", "*").
                 func(&wxString::IsEmpty, "IsEmpty").
                 func(&wxString::Length, "Length").
                 func(&wxString::Length, "length").
                 func(&wxString::Length, "len").
                 func(&wxString::Length, "size").
+                func(&wxString::Lower, "Lower").
+                func(&wxString::LowerCase, "LowerCase").
+                func(&wxString::MakeLower, "MakeLower").
+                func(&wxString::Upper, "Upper").
+                func(&wxString::UpperCase, "UpperCase").
+                func(&wxString::MakeUpper, "MakeUpper").
+                func(&wxString::Mid, "Mid").
+                func<WXSTR_REMOVE_2>(&wxString::Remove, "Remove").
+                func(&wxString::RemoveLast, "RemoveLast").
+                staticFuncVarArgs(&wxString_Replace, "Replace", "*").
+                func(&wxString::Right, "Right").
                 staticFuncVarArgs(&wxString_AfterFirst, "AfterFirst", "*").
                 staticFuncVarArgs(&wxString_AfterLast, "AfterLast", "*").
                 staticFuncVarArgs(&wxString_BeforeFirst, "BeforeFirst", "*").

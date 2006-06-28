@@ -21,6 +21,7 @@ namespace ScriptBindings
     void gShowMessageWarn(const wxString& msg){ cbMessageBox(msg, _("Script warning"), wxICON_WARNING); }
     void gShowMessageError(const wxString& msg){ cbMessageBox(msg, _("Script error"), wxICON_ERROR); }
     void gShowMessageInfo(const wxString& msg){ cbMessageBox(msg, _("Script information"), wxICON_INFORMATION); }
+    wxString gReplaceMacros(const wxString& buffer, bool envVarsToo){ return Manager::Get()->GetMacrosManager()->ReplaceMacros(buffer, envVarsToo); }
 
     SQInteger IsNull(HSQUIRRELVM v)
     {
@@ -57,6 +58,7 @@ namespace ScriptBindings
         SqPlus::RegisterGlobal(gShowMessageWarn, "ShowWarning");
         SqPlus::RegisterGlobal(gShowMessageError, "ShowError");
         SqPlus::RegisterGlobal(gShowMessageInfo, "ShowInfo");
+        SqPlus::RegisterGlobal(gReplaceMacros, "ReplaceMacros");
 
         SqPlus::RegisterGlobal(getPM, "GetProjectManager");
         SqPlus::RegisterGlobal(getEM, "GetEditorManager");

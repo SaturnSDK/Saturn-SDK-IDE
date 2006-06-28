@@ -5,18 +5,15 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 // globals
-local WxPath = _T("");
-// targets
-local WantPCH = false;
-// wx settings
-local IsDLL = false;
-local IsMonolithic = false;
-local IsUnicode = false;
-local IsDebug = false;
-local Configuration = _T("");
-
-local LibPath = _T("");
-local LibName = _T("");
+WxPath <- _T("");
+WantPCH <- false;
+IsDLL <- false;
+IsMonolithic <- false;
+IsUnicode <- false;
+IsDebug <- false;
+Configuration <- _T("");
+LibPath <- _T("");
+LibName <- _T("");
 
 function BeginWizard()
 {
@@ -52,8 +49,8 @@ function OnEnter_WxPath(fwd)
             if (PLATFORM == PLATFORM_MSW)
             {
                 // windows only
-//                if (dir.IsEmpty()) // try global var
-//                    dir = ReplaceMacros(_T("$(#wx)"), true);
+                if (dir.IsEmpty()) // try global var
+                    dir = ReplaceMacros(_T("$(#wx)"), true);
             }
             Wizard.SetTextControlValue(_T("txtWxPath"), dir);
         }
@@ -79,7 +76,7 @@ function OnLeave_WxPath(fwd)
 
         // see if it matches the global var. if it does, use the var instead...
         local gvar = ReplaceMacros(_T("$(#wx)"), true);
-        if (gvar == dir)
+        if (gvar.Matches(dir))
             dir = gvar;
         WxPath = dir;
         ConfigManager.Write(_T("/wx_project_wizard/path"), dir, true);
@@ -129,13 +126,13 @@ function OnLeave_WxConf(fwd)
 	    local lib_prefix;
 	    local lib_suffix;
 	    local lib = WxPath + _T("/lib/");
-	    if (Wizard.GetCompilerID() == _T("gcc"))
+	    if (Wizard.GetCompilerID().Matches(_T("gcc")))
 	    {
             lib = lib + _T("gcc_");
             lib_prefix = _T("lib");
             lib_suffix = _T(".a");
 	    }
-	    else if (Wizard.GetCompilerID() == _T("msvctk"))
+	    else if (Wizard.GetCompilerID().Matches(_T("msvctk")))
 	    {
             lib = lib + _T("vc_");
             lib_prefix = _T("");
@@ -184,7 +181,7 @@ function OnLeave_WxConf(fwd)
         }
 	}
 
-    if (Wizard.GetCompilerID() != _T("gcc") && WantPCH)
+    if (!Wizard.GetCompilerID().Matches(_T("gcc")) && WantPCH)
     {
         ShowWarning(_T("Precompiled headers currently only work for GNU GCC.\n"
                     "They are disabled for all other compilers."));
@@ -225,7 +222,7 @@ function SetupProject(project)
         project.AddLibDir(LibPath);
         project.AddLinkLib(LibName);
         project.AddLinkLib(_T("gdi32"));
-        if (Wizard.GetCompilerID() == _T("msvctk"))
+        if (Wizard.GetCompilerID().Matches(_T("msvctk")))
         {
             project.AddCompilerOption(_T("/D__WXMSW__"));
             if (IsDLL)
@@ -248,7 +245,7 @@ function SetupProject(project)
             if (WantPCH)
             {
                 local pchfile = project.GetFileByFilename(_T("wx_pch.h"), true, true);
-                if (pchfile != null)
+                if (!IsNull(pchfile))
                 {
                     pchfile.compile = true;
                     pchfile.link = false;
