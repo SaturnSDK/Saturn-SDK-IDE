@@ -41,6 +41,8 @@ class WizProjectPathPanel : public wxWizardPageSimple
 
 		wxString GetPath();
 		wxString GetName();
+		wxString GetFullFileName();
+		wxString GetTitle();
 
 	    void OnButton(wxCommandEvent& event);
 	    void OnPageChanging(wxWizardEvent& event);

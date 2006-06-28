@@ -350,6 +350,7 @@
 				<Option projectIncludeDirsRelation="2" />
 				<Option projectLibDirsRelation="2" />
 				<Compiler>
+					<Add option='-include &quot;sdk.h&quot;' />
 					<Add directory="sdk" />
 					<Add directory="sdk/scripting/include" />
 					<Add directory="sdk/scripting/sqplus" />
@@ -4524,6 +4525,5 @@
 			<Option compilerVar="CPP" />
 			<Option target="AutoRevision" />
 		</Unit>
-		<Extensions />
 	</Project>
 </CodeBlocks_project_file>

@@ -90,6 +90,8 @@ class Wiz : public cbProjectWizardPlugin
 
         wxString GetProjectPath();
         wxString GetProjectName();
+        wxString GetProjectFullFilename();
+        wxString GetProjectTitle();
         wxString GetCompilerID();
 
         bool GetWantDebug();

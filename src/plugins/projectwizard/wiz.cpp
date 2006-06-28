@@ -74,13 +74,13 @@ void Wiz::OnAttach()
 {
     // make sure the VM is initialized
     Manager::Get()->GetScriptingManager();
-    
+
     if (!SquirrelVM::GetVMPtr())
     {
         cbMessageBox(_("Project wizard disabled: scripting not initialized"), _("Error"), wxICON_ERROR);
         return;
     }
-    
+
     // read configuration
     RegisterWizard();
 
@@ -217,10 +217,8 @@ int Wiz::Launch(int index)
     {
         // ok, wizard done
 
-        // first construct the project filename
-        wxString prjname = GetProjectPath() + wxFILE_SEP_PATH +
-                            GetProjectName() + wxFILE_SEP_PATH +
-                            GetProjectName() + _T('.') + FileFilters::CODEBLOCKS_EXT;
+        // first get the project filename
+        wxString prjname = GetProjectFullFilename();
 
         // create the dir for the project
         wxFileName fname(prjname);
@@ -242,7 +240,7 @@ int Wiz::Launch(int index)
         }
 
         // set the project title and project-wide compiler
-        theproject->SetTitle(GetProjectName());
+        theproject->SetTitle(GetProjectTitle());
         theproject->SetCompilerID(GetCompilerID());
 
         // create the targets
@@ -581,6 +579,20 @@ wxString Wiz::GetProjectName()
     return wxEmptyString;
 }
 
+wxString Wiz::GetProjectFullFilename()
+{
+    if (m_pWizProjectPathPanel)
+        return m_pWizProjectPathPanel->GetFullFileName();
+    return wxEmptyString;
+}
+
+wxString Wiz::GetProjectTitle()
+{
+    if (m_pWizProjectPathPanel)
+        return m_pWizProjectPathPanel->GetTitle();
+    return wxEmptyString;
+}
+
 wxString Wiz::GetCompilerID()
 {
     if (m_pWizCompilerPanel)
@@ -678,6 +690,8 @@ void Wiz::RegisterWizard()
             func(&Wiz::GetTemplatePath, "GetTemplatePath").
             func(&Wiz::GetProjectPath, "GetProjectPath").
             func(&Wiz::GetProjectName, "GetProjectName").
+            func(&Wiz::GetProjectFullFilename, "GetProjectFullFilename").
+            func(&Wiz::GetProjectTitle, "GetProjectTitle").
             func(&Wiz::GetCompilerID, "GetCompilerID").
             func(&Wiz::GetLanguageIndex, "GetLanguageIndex").
             // debug target
@@ -690,52 +704,8 @@ void Wiz::RegisterWizard()
             func(&Wiz::GetReleaseName, "GetReleaseName").
             func(&Wiz::GetReleaseOutputDir, "GetReleaseOutputDir").
             func(&Wiz::GetReleaseObjectOutputDir, "GetReleaseObjectOutputDir");
-    
+
     SqPlus::BindVariable(this, "Wizard", SqPlus::VAR_ACCESS_READ_ONLY);
-//            
-//    asIScriptEngine* engine = Manager::Get()->GetScriptingManager()->GetEngine();
-//    engine->RegisterObjectType("Wiz", 0, asOBJ_CLASS);
-//
-//    engine->RegisterObjectMethod("Wiz", "void AddWizard(const wxString& in,const wxString& in,const wxString& in,const wxString& in,const wxString& in,const wxString& in)", asMETHOD(Wiz, AddWizard), asCALL_THISCALL);
-//
-//    engine->RegisterObjectMethod("Wiz", "void AddIntroPage(const wxString& in)", asMETHOD(Wiz, AddIntroPage), asCALL_THISCALL);
-//    engine->RegisterObjectMethod("Wiz", "void AddProjectPathPage()", asMETHOD(Wiz, AddProjectPathPage), asCALL_THISCALL);
-//    engine->RegisterObjectMethod("Wiz", "void AddCompilerPage(const wxString& in, const wxString& in, bool, bool)", asMETHOD(Wiz, AddCompilerPage), asCALL_THISCALL);
-//    engine->RegisterObjectMethod("Wiz", "void AddLanguagePage(const wxString& in, int)", asMETHOD(Wiz, AddLanguagePage), asCALL_THISCALL);
-//    engine->RegisterObjectMethod("Wiz", "void AddPage(const wxString& in)", asMETHOD(Wiz, AddPage), asCALL_THISCALL);
-//
-//    engine->RegisterObjectMethod("Wiz", "void SetTextControlValue(const wxString& in, const wxString& in)", asMETHOD(Wiz, SetTextControlValue), asCALL_THISCALL);
-//    engine->RegisterObjectMethod("Wiz", "wxString GetTextControlValue(const wxString& in)", asMETHOD(Wiz, GetTextControlValue), asCALL_THISCALL);
-//
-//    engine->RegisterObjectMethod("Wiz", "void CheckCheckbox(const wxString& in, bool)", asMETHOD(Wiz, CheckCheckbox), asCALL_THISCALL);
-//    engine->RegisterObjectMethod("Wiz", "bool IsCheckboxChecked(const wxString& in)", asMETHOD(Wiz, IsCheckboxChecked), asCALL_THISCALL);
-//    engine->RegisterObjectMethod("Wiz", "void FillComboboxWithCompilers(const wxString& in)", asMETHOD(Wiz, FillComboboxWithCompilers), asCALL_THISCALL);
-//    engine->RegisterObjectMethod("Wiz", "wxString GetCompilerFromCombobox(const wxString& in)", asMETHOD(Wiz, GetCompilerFromCombobox), asCALL_THISCALL);
-//    engine->RegisterObjectMethod("Wiz", "wxString GetComboboxStringSelection(const wxString& in)", asMETHOD(Wiz, GetComboboxStringSelection), asCALL_THISCALL);
-//    engine->RegisterObjectMethod("Wiz", "int GetComboboxSelection(const wxString& in)", asMETHOD(Wiz, GetComboboxSelection), asCALL_THISCALL);
-//    engine->RegisterObjectMethod("Wiz", "void SetComboboxSelection(const wxString& in,int)", asMETHOD(Wiz, SetComboboxSelection), asCALL_THISCALL);
-//
-//    engine->RegisterObjectMethod("Wiz", "int GetRadioboxSelection(const wxString& in)", asMETHOD(Wiz, GetRadioboxSelection), asCALL_THISCALL);
-//    engine->RegisterObjectMethod("Wiz", "void SetRadioboxSelection(const wxString& in,int)", asMETHOD(Wiz, SetRadioboxSelection), asCALL_THISCALL);
-//
-//    engine->RegisterObjectMethod("Wiz", "wxString& GetTemplatePath()", asMETHOD(Wiz, GetTemplatePath), asCALL_THISCALL);
-//    engine->RegisterObjectMethod("Wiz", "wxString GetProjectPath()", asMETHOD(Wiz, GetProjectPath), asCALL_THISCALL);
-//    engine->RegisterObjectMethod("Wiz", "wxString GetProjectName()", asMETHOD(Wiz, GetProjectName), asCALL_THISCALL);
-//    engine->RegisterObjectMethod("Wiz", "wxString GetCompilerID()", asMETHOD(Wiz, GetCompilerID), asCALL_THISCALL);
-//
-//    engine->RegisterObjectMethod("Wiz", "bool GetWantDebug()", asMETHOD(Wiz, GetWantDebug), asCALL_THISCALL);
-//    engine->RegisterObjectMethod("Wiz", "wxString GetDebugName()", asMETHOD(Wiz, GetDebugName), asCALL_THISCALL);
-//    engine->RegisterObjectMethod("Wiz", "wxString GetDebugOutputDir()", asMETHOD(Wiz, GetDebugOutputDir), asCALL_THISCALL);
-//    engine->RegisterObjectMethod("Wiz", "wxString GetDebugObjectOutputDir()", asMETHOD(Wiz, GetDebugObjectOutputDir), asCALL_THISCALL);
-//
-//    engine->RegisterObjectMethod("Wiz", "bool GetWantRelease()", asMETHOD(Wiz, GetWantRelease), asCALL_THISCALL);
-//    engine->RegisterObjectMethod("Wiz", "wxString GetReleaseName()", asMETHOD(Wiz, GetReleaseName), asCALL_THISCALL);
-//    engine->RegisterObjectMethod("Wiz", "wxString GetReleaseOutputDir()", asMETHOD(Wiz, GetReleaseOutputDir), asCALL_THISCALL);
-//    engine->RegisterObjectMethod("Wiz", "wxString GetReleaseObjectOutputDir()", asMETHOD(Wiz, GetReleaseObjectOutputDir), asCALL_THISCALL);
-//
-//    engine->RegisterObjectMethod("Wiz", "int GetLanguageIndex()", asMETHOD(Wiz, GetLanguageIndex), asCALL_THISCALL);
-//
-//    engine->RegisterGlobalProperty("Wiz Wizard", this);
 }
 
 ////////////////////////

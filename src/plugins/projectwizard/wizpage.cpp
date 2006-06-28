@@ -147,6 +147,18 @@ wxString WizProjectPathPanel::GetName()
 }
 
 //------------------------------------------------------------------------------
+wxString WizProjectPathPanel::GetFullFileName()
+{
+    return m_pProjectPathPanel->GetFullFileName();
+}
+
+//------------------------------------------------------------------------------
+wxString WizProjectPathPanel::GetTitle()
+{
+    return m_pProjectPathPanel->GetTitle();
+}
+
+//------------------------------------------------------------------------------
 void WizProjectPathPanel::OnButton(wxCommandEvent& event)
 {
     wxString dir = m_pProjectPathPanel->GetPath();
@@ -162,9 +174,17 @@ void WizProjectPathPanel::OnPageChanging(wxWizardEvent& event)
 	{
 	    wxString dir = m_pProjectPathPanel->GetPath();
 	    wxString name = m_pProjectPathPanel->GetName();
-		if (!wxDirExists(dir))
+	    wxString fullname = m_pProjectPathPanel->GetFullFileName();
+	    wxString title = m_pProjectPathPanel->GetTitle();
+//		if (!wxDirExists(dir))
+//		{
+//            cbMessageBox(_("Please select a valid path to create your project..."), _("Error"), wxICON_ERROR);
+//            event.Veto();
+//            return;
+//		}
+		if (title.IsEmpty())
 		{
-            cbMessageBox(_("Please select a valid path to create your project..."), _("Error"), wxICON_ERROR);
+            cbMessageBox(_("Please select a title for your project..."), _("Error"), wxICON_ERROR);
             event.Veto();
             return;
 		}
@@ -174,7 +194,7 @@ void WizProjectPathPanel::OnPageChanging(wxWizardEvent& event)
             event.Veto();
             return;
 		}
-		if (wxDirExists(dir + wxFILE_SEP_PATH + name))
+		if (wxFileExists(fullname))
 		{
             if (cbMessageBox(_("A project with the same name already exists in the project folder.\n"
                         "Are you sure you want to use this directory (files may be OVERWRITTEN)?"),
