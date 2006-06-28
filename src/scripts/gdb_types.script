@@ -57,23 +57,23 @@ function Parse_wxString(a_str, start)
     local c = 0;
     while (c < len)
     {
-        switch (a_str[c])
+        switch (a_str.GetChar(c))
         {
             case '\'':
                 ++c;
                 while (c < len)
                 {
-                    switch (a_str[c])
+                    switch (a_str.GetChar(c))
                     {
                         case '\\':
-                            result = result + a_str[c++];
-                            result = result + a_str[c++];
+                            result.AddChar(a_str.GetChar(c++));
+                            result.AddChar(a_str.GetChar(c++));
                             break;
                         default:
-                            result = result + a_str[c++];
+                            result.AddChar(a_str.GetChar(c++));
                             break;
                     }
-                    if (a_str[c] == '\'')
+                    if (a_str.GetChar(c) == '\'')
                         break;
                 }
                 break;
@@ -128,11 +128,12 @@ function Parse_StlVector(a_str, start)
     local len = a_str.length();
     local c = 0;
     local index = start;
-    local result;
+    local result = _T("");
     while (c < len)
     {
-        result = result + a_str[c];
-        switch (a_str[c])
+        local char = a_str.GetChar(c);
+        result.AddChar(char);
+        switch (char)
         {
             case '{':
             case ',':

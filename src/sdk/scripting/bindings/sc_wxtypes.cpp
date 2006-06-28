@@ -42,6 +42,23 @@ namespace ScriptBindings
         return sa.Return(str1.Cmp(*SqPlus::GetInstance<wxString>(v, 2)));
     }
     
+    SQInteger wxString_AddChar(HSQUIRRELVM v)
+    {
+        StackHandler sa(v);
+        wxString& self = *SqPlus::GetInstance<wxString>(v, 1);
+        int idx = sa.GetInt(2);
+        char tmp[8] = {};
+        sprintf(tmp, "%c", idx);
+        self += cbC2U(tmp);
+        return sa.Return();
+    }
+    SQInteger wxString_GetChar(HSQUIRRELVM v)
+    {
+        StackHandler sa(v);
+        wxString self = *SqPlus::GetInstance<wxString>(v, 1);
+        int idx = sa.GetInt(2);
+        return sa.Return((SQInteger)(((const char*)cbU2C(self))[idx]));
+    }
     SQInteger wxString_Matches(HSQUIRRELVM v)
     {
         StackHandler sa(v);
@@ -98,6 +115,8 @@ namespace ScriptBindings
                 staticFuncVarArgs(&wxString_OpCmp, "_cmp", "*").
                 func<WXSTR_FIRST_STR>(&wxString::First, "Find").
                 staticFuncVarArgs(&wxString_Matches, "Matches", "*").
+                staticFuncVarArgs(&wxString_AddChar, "AddChar", "n").
+                staticFuncVarArgs(&wxString_GetChar, "GetChar", "n").
                 func(&wxString::IsEmpty, "IsEmpty").
                 func(&wxString::Length, "Length").
                 func(&wxString::Length, "length").
