@@ -84,12 +84,9 @@ void Wiz::OnAttach()
     // read configuration
     RegisterWizard();
 
-    Manager::Get()->GetScriptingManager()->LoadScript(m_TemplatePath + _T("config.script"));
 //    // run main wizard script
 //    // this registers all available wizard scripts with us
-//    Manager::Get()->GetScriptingManager()->LoadScript(m_TemplatePath + _T("config.script"), _T("WizardMainModule"));
-//    Manager::Get()->GetScriptingManager()->Compile(_T("WizardMainModule"), true);
-//    Manager::Get()->GetScriptingManager()->GetEngine()->Discard("WizardModule");
+    Manager::Get()->GetScriptingManager()->LoadScript(m_TemplatePath + _T("config.script"));
 }
 
 int Wiz::GetCount() const
@@ -188,9 +185,9 @@ int Wiz::Launch(int index)
     catch (SquirrelError& e)
     {
         cbMessageBox(cbC2U(e.desc), _("Script error"), wxICON_ERROR);
+        Clear();
+        return -1;
     }
-//    VoidExecutor<> vexec(funcBeginWizard);
-//    vexec.Call();
 
     // check if *any* pages were added
     if (m_Pages.GetCount() == 0)
@@ -273,28 +270,6 @@ int Wiz::Launch(int index)
             }
         }
 
-        // ask the script to setup the new project (edit targets, setup options, etc)
-        // call SetupProject()
-        bool success = false;
-        try
-        {
-            success = SqPlus::SquirrelFunction<bool>("SetupProject")(theproject);
-        }
-        catch (SquirrelError& e)
-        {
-            cbMessageBox(cbC2U(e.desc), _("Script error"), wxICON_ERROR);
-        }
-//        Executor<bool, cbProject*> execSetupPrj(funcSetupPrj);
-//        success = execSetupPrj.Call(theproject);
-        if (!success)
-        {
-            cbMessageBox(wxString::Format(_("Couldn't setup project options:\n%s"),
-                                        prjdir.c_str()),
-                        _("Error"), wxICON_ERROR);
-            Clear();
-            return -1;
-        }
-
         // add all the template files
         // first get the dirs with the files by calling GetFilesDir()
         wxString srcdir;
@@ -313,19 +288,34 @@ int Wiz::Launch(int index)
         catch (SquirrelError& e)
         {
             cbMessageBox(cbC2U(e.desc), _("Script error"), wxICON_ERROR);
+            Clear();
+            return -1;
         }
-//        Executor<bool, wxString&> execFiles(funcGetFiles);
-//        if (execFiles.Call(srcdir))
-//        {
-//            // now break them up (remember: semicolon-separated list of dirs)
-//            wxArrayString tmpsrcdirs = GetArrayFromString(srcdir, _T(";"), true);
-//            // and copy files from each source dir we got
-//            for (size_t i = 0; i < tmpsrcdirs.GetCount(); ++i)
-//                CopyFiles(theproject, prjdir, tmpsrcdirs[i]);
-//        }
 
         if (srcdir.IsEmpty())
             cbMessageBox(_("The wizard didn't provide any files to copy!"), _("Warning"), wxICON_WARNING);
+
+        // ask the script to setup the new project (edit targets, setup options, etc)
+        // call SetupProject()
+        bool success = false;
+        try
+        {
+            success = SqPlus::SquirrelFunction<bool>("SetupProject")(theproject);
+        }
+        catch (SquirrelError& e)
+        {
+            cbMessageBox(cbC2U(e.desc), _("Script error"), wxICON_ERROR);
+            Clear();
+            return -1;
+        }
+        if (!success)
+        {
+            cbMessageBox(wxString::Format(_("Couldn't setup project options:\n%s"),
+                                        prjdir.c_str()),
+                        _("Error"), wxICON_ERROR);
+            Clear();
+            return -1;
+        }
 
         // save the project and...
         theproject->Save();
