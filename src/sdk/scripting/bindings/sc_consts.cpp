@@ -88,6 +88,12 @@ namespace ScriptBindings
         BIND_INT_CONSTANT(pcmInvertColours);
         BIND_INT_CONSTANT(pcmAsIs);
 
+        // cbWizardPlugin::OutputType
+        BIND_INT_CONSTANT_NAMED(cbWizardPlugin::otProject, "otProject");
+        BIND_INT_CONSTANT_NAMED(cbWizardPlugin::otTarget, "otTarget");
+        BIND_INT_CONSTANT_NAMED(cbWizardPlugin::otFiles, "otFiles");
+        BIND_INT_CONSTANT_NAMED(cbWizardPlugin::otWorkspace, "otWorkspace");
+
         // file extensions
         BIND_WXSTR_CONSTANT_NAMED(FileFilters::WORKSPACE_EXT, "EXT_WORKSPACE");
         BIND_WXSTR_CONSTANT_NAMED(FileFilters::CODEBLOCKS_EXT, "EXT_CODEBLOCKS");

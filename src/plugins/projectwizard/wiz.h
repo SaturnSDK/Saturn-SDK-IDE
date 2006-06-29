@@ -36,6 +36,7 @@ class WizLanguagePanel;
 
 struct WizardInfo
 {
+    cbWizardPlugin::OutputType output_type;
     wxString title;
     wxString cat;
     wxString script;
@@ -47,7 +48,7 @@ struct WizardInfo
 WX_DECLARE_OBJARRAY(WizardInfo, Wizards);
 WX_DEFINE_ARRAY(wxWizardPageSimple*, WizPages);
 
-class Wiz : public cbProjectWizardPlugin
+class Wiz : public cbWizardPlugin
 {
 	public:
 		Wiz();
@@ -58,14 +59,17 @@ class Wiz : public cbProjectWizardPlugin
 
 		int Configure(){ return 0; }
 		int GetCount() const;
+        cbWizardPlugin::OutputType GetOutputType(int index) const;
 		wxString GetTitle(int index) const;
 		wxString GetDescription(int index) const;
 		wxString GetCategory(int index) const;
 		const wxBitmap& GetBitmap(int index) const;
-		int Launch(int index);
+        wxString GetScriptFilename(int index) const;
+		CompileTargetBase* Launch(int index);
 
         // Scripting support
-        void AddWizard(const wxString& title,
+        void AddWizard(cbWizardPlugin::OutputType otype,
+                        const wxString& title,
                         const wxString& cat,
                         const wxString& script,
                         const wxString& templatePNG,

@@ -444,7 +444,7 @@ bool CodeBlocksApp::OnInit()
     }
     catch (SquirrelError& exception)
     {
-        wxSafeShowMessage(_("Script exception"), cbC2U(exception.desc));
+        Manager::Get()->GetScriptingManager()->DisplayErrors(&exception);
     }
     catch (const char* message)
     {
@@ -487,7 +487,7 @@ int CodeBlocksApp::OnRun()
     }
     catch (SquirrelError& exception)
     {
-        wxSafeShowMessage(_("Script exception"), cbC2U(exception.desc));
+        Manager::Get()->GetScriptingManager()->DisplayErrors(&exception);
     }
     catch (const char* message)
     {

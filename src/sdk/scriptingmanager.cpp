@@ -115,3 +115,23 @@ bool ScriptingManager::LoadScript(const wxString& filename, bool autorunMain)
     }
     return true;
 }
+
+wxString ScriptingManager::GetErrorString(SquirrelError* exception, bool clearErrors)
+{
+    wxString msg;
+    if (exception)
+        msg << cbC2U(exception->desc);
+    msg << s_ScriptErrors;
+
+    if (clearErrors)
+        s_ScriptErrors.Clear();
+
+    return msg;
+}
+
+void ScriptingManager::DisplayErrors(SquirrelError* exception, bool clearErrors)
+{
+    wxString msg = GetErrorString(exception, clearErrors);
+    if (!msg.IsEmpty())
+        cbMessageBox(msg, _("Script errors"), wxICON_ERROR);
+}

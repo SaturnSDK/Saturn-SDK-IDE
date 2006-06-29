@@ -63,7 +63,7 @@ void WizPage::OnButton(wxCommandEvent& event)
     }
     catch (SquirrelError& e)
     {
-        cbMessageBox(cbC2U(e.desc), _("Script error"), wxICON_ERROR);
+        Manager::Get()->GetScriptingManager()->DisplayErrors(&e);
     }
 }
 
@@ -79,7 +79,7 @@ void WizPage::OnPageChanging(wxWizardEvent& event)
     }
     catch (SquirrelError& e)
     {
-        cbMessageBox(cbC2U(e.desc), _("Script error"), wxICON_ERROR);
+        Manager::Get()->GetScriptingManager()->DisplayErrors(&e);
     }
 }
 
@@ -93,7 +93,7 @@ void WizPage::OnPageChanged(wxWizardEvent& event)
     }
     catch (SquirrelError& e)
     {
-        cbMessageBox(cbC2U(e.desc), _("Script error"), wxICON_ERROR);
+        Manager::Get()->GetScriptingManager()->DisplayErrors(&e);
     }
 }
 

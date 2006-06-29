@@ -13,6 +13,7 @@
 #include <compilerfactory.h>
 #include <cbproject.h>
 #include <cbeditor.h>
+#include <cbplugin.h>
 #include <sqplus.h>
 
 DECLARE_INSTANCE_TYPE(wxString);
@@ -43,6 +44,7 @@ DECLARE_ENUM_TYPE(OptionsRelation);
 DECLARE_ENUM_TYPE(OptionsRelationType);
 DECLARE_ENUM_TYPE(TargetType);
 DECLARE_ENUM_TYPE(PCHMode);
+DECLARE_ENUM_TYPE(cbWizardPlugin::OutputType);
 
 namespace SqPlus
 {

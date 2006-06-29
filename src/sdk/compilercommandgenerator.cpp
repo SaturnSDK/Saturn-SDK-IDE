@@ -257,7 +257,7 @@ void CompilerCommandGenerator::DoBuildScripts(CompileOptionsBase* base, const wx
         }
         catch (SquirrelError& e)
         {
-            cbMessageBox(cbC2U(e.desc), _("Script error"), wxICON_ERROR);
+            Manager::Get()->GetScriptingManager()->DisplayErrors(&e);
         }
     }
 }

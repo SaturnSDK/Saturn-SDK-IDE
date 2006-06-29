@@ -559,14 +559,6 @@ class GdbCmd_Watch : public DebuggerCmd
                 {
                     m_Cmd = cbC2U(e.desc);
                 }
-//                int funcID = GetScriptParserFuncID(m_Cmd);
-//                if (funcID >= 0)
-//                {
-//                    wxString r;
-//                    VoidExecutor<const wxString&, const wxString&, unsigned int, unsigned int, wxString&> exec(funcID);
-//                    exec.Call(w_type, m_pWatch->keyword, watch->array_start, watch->array_count, r);
-//                    m_Cmd = r;
-//                }
             }
         }
         void ParseOutput(const wxString& output)
@@ -583,14 +575,6 @@ class GdbCmd_Watch : public DebuggerCmd
                 {
                     w << cbC2U(e.desc);
                 }
-//                int funcID = GetScriptParserFuncID(m_ParseFunc);
-//                if (funcID >= 0)
-//                {
-//                    wxString r;
-//                    VoidExecutor<const wxString&, unsigned int, wxString&> exec(funcID);
-//                    exec.Call(output, m_pWatch->array_start, r);
-//                    w << r;
-//                }
             }
             else
             {
@@ -673,14 +657,6 @@ class GdbCmd_TooltipEvaluation : public DebuggerCmd
                     m_Cmd = cbC2U(e.desc);
                     m_pDriver->DebugLog(_T("Script exception: ") + m_Cmd);
                 }
-//                int funcID = GetScriptParserFuncID(m_Cmd);
-//                if (funcID >= 0)
-//                {
-//                    wxString r;
-//                    VoidExecutor<const wxString&, const wxString&, unsigned int, unsigned int, wxString&> exec(funcID);
-//                    exec.Call(w_type, what, 0, 0, r);
-//                    m_Cmd = r;
-//                }
             }
         }
         void ParseOutput(const wxString& output)
@@ -703,14 +679,6 @@ class GdbCmd_TooltipEvaluation : public DebuggerCmd
                         tip << cbC2U(e.desc);
                         m_pDriver->DebugLog(_T("Script exception: ") + tip);
                     }
-//    		        int funcID = GetScriptParserFuncID(m_ParseFunc);
-//                    if (funcID >= 0)
-//                    {
-//                        wxString r;
-//                        VoidExecutor<const wxString&, unsigned int, wxString&> exec(funcID);
-//                        exec.Call(output, 0, r);
-//                        tip << r;
-//                    }
     		    }
                 else
                     tip << output;

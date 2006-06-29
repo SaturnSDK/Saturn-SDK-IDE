@@ -13,38 +13,33 @@ WX_DEFINE_ARRAY(ProjectTemplateLoader*, ProjectTemplateArray);
 class NewFromTemplateDlg : public wxDialog
 {
 	public:
-		NewFromTemplateDlg(const ProjectTemplateArray& templates, const wxArrayString& user_templatesz);
+		NewFromTemplateDlg(const wxArrayString& user_templates);
 		virtual ~NewFromTemplateDlg();
 
 		ProjectTemplateLoader* GetTemplate(){ return m_Template; }
-		cbProjectWizardPlugin* GetWizard(){ return m_pWizard; }
+		cbWizardPlugin* GetWizard(){ return m_pWizard; }
 		int GetWizardIndex(){ return m_WizardIndex; }
-        bool DoNotCreateFiles();
-		bool SelectedTemplate();
+		cbWizardPlugin* NewFromTemplateDlg::GetSelectedTemplate();
 		bool SelectedUserTemplate();
 		wxString GetSelectedUserTemplate();
-		int GetOptionIndex();
-		int GetFileSetIndex();
-		wxString GetProjectPath();
-		wxString GetProjectName();
 	protected:
 		void BuildCategories();
 		void BuildList();
 		void FillTemplate(ProjectTemplateLoader* pt);
 		void ClearList();
 		void OnListSelection(wxListEvent& event);
-		void OnBrowsePath(wxCommandEvent& event);
+		void OnListRightClick(wxListEvent& event);
 		void OnCategoryChanged(wxCommandEvent& event);
-		void OnOptionChanged(wxCommandEvent& event);
-		void OnFilesetChanged(wxCommandEvent& event);
-		void OnFilterChanged(wxCommandEvent& event);
+		void OnEditScript(wxCommandEvent& event);
+		void OnEditGlobalScript(wxCommandEvent& event);
 		void OnUpdateUI(wxUpdateUIEvent& event);
+
+		void EditScript(const wxString& relativeFilename);
 	private:
 		ProjectTemplateLoader* m_Template;
-		cbProjectWizardPlugin* m_pWizard;
+		cbWizardPlugin* m_pWizard;
 		int m_WizardIndex;
 		wxImageList m_ImageList;
-		const ProjectTemplateArray m_Templates;
 		PluginsArray m_Wizards;
 		DECLARE_EVENT_TABLE()
 };

@@ -70,6 +70,8 @@ void GDB_driver::InitializeScripting()
     {
         m_pDBG->Log(wxString::Format(_T("Invalid debugger script: '%s'"), script.c_str()));
         m_pDBG->Log(cbC2U(e.desc));
+
+        Manager::Get()->GetScriptingManager()->DisplayErrors(&e);
     }
 }
 

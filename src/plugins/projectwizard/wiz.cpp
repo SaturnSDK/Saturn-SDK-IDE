@@ -95,6 +95,14 @@ int Wiz::GetCount() const
     return m_Wizards.GetCount();
 }
 
+cbWizardPlugin::OutputType Wiz::GetOutputType(int index) const
+{
+	//return this wizard's output type
+	//make sure you set this!
+	cbAssert(index >= 0 && index < GetCount());
+	return m_Wizards[index].output_type;
+}
+
 wxString Wiz::GetTitle(int index) const
 {
 	//return this wizard's title
@@ -129,6 +137,13 @@ const wxBitmap& Wiz::GetBitmap(int index) const
 	return m_Wizards[index].templatePNG;
 }
 
+wxString Wiz::GetScriptFilename(int index) const
+{
+	//return this wizard's script filename
+	cbAssert(index >= 0 && index < GetCount());
+	return m_Wizards[index].script;
+}
+
 void Wiz::Clear()
 {
     if (m_pWizard)
@@ -147,7 +162,7 @@ void Wiz::Clear()
 	m_pWizLanguagePanel = 0;
 }
 
-int Wiz::Launch(int index)
+CompileTargetBase* Wiz::Launch(int index)
 {
 	cbAssert(index >= 0 && index < GetCount());
 	m_LaunchIndex = index;
@@ -174,7 +189,7 @@ int Wiz::Launch(int index)
     {
         // any errors have been displayed by ScriptingManager
         Clear();
-        return -1;
+        return 0;
     }
 
     // call BeginWizard()
@@ -184,9 +199,9 @@ int Wiz::Launch(int index)
     }
     catch (SquirrelError& e)
     {
-        cbMessageBox(cbC2U(e.desc), _("Script error"), wxICON_ERROR);
+        Manager::Get()->GetScriptingManager()->DisplayErrors(&e);
         Clear();
-        return -1;
+        return 0;
     }
 
     // check if *any* pages were added
@@ -194,7 +209,7 @@ int Wiz::Launch(int index)
     {
         cbMessageBox(m_Wizards[index].title + _(" has failed to run..."), _("Error"), wxICON_ERROR);
         Clear();
-        return -1;
+        return 0;
     }
 
     // check if *mandatory* pages (i.e. used by the following code) were added
@@ -205,7 +220,7 @@ int Wiz::Launch(int index)
                         "Project path selection\n"
                         "Execution aborted..."), _("Error"), wxICON_ERROR);
         Clear();
-        return -1;
+        return 0;
     }
 
     // build the wizard pages
@@ -213,6 +228,7 @@ int Wiz::Launch(int index)
 
     // run wizard
     bool success = false;
+    cbProject* theproject = 0;
     if (m_pWizard->RunWizard(m_Pages[0]))
     {
         // ok, wizard done
@@ -227,16 +243,16 @@ int Wiz::Launch(int index)
         {
             cbMessageBox(_("Couldn't create the project directory:\n") + prjdir, _("Error"), wxICON_ERROR);
             Clear();
-            return -1;
+            return 0;
         }
 
         // now create the project
-        cbProject* theproject = Manager::Get()->GetProjectManager()->NewProject(prjname);
+        theproject = Manager::Get()->GetProjectManager()->NewProject(prjname);
         if (!theproject)
         {
             cbMessageBox(_("Couldn't create the new project:\n") + prjdir, _("Error"), wxICON_ERROR);
             Clear();
-            return -1;
+            return 0;
         }
 
         // set the project title and project-wide compiler
@@ -285,9 +301,9 @@ int Wiz::Launch(int index)
         }
         catch (SquirrelError& e)
         {
-            cbMessageBox(cbC2U(e.desc), _("Script error"), wxICON_ERROR);
+            Manager::Get()->GetScriptingManager()->DisplayErrors(&e);
             Clear();
-            return -1;
+            return 0;
         }
 
         if (srcdir.IsEmpty())
@@ -302,9 +318,9 @@ int Wiz::Launch(int index)
         }
         catch (SquirrelError& e)
         {
-            cbMessageBox(cbC2U(e.desc), _("Script error"), wxICON_ERROR);
+            Manager::Get()->GetScriptingManager()->DisplayErrors(&e);
             Clear();
-            return -1;
+            return 0;
         }
         if (!success)
         {
@@ -312,7 +328,7 @@ int Wiz::Launch(int index)
                                         prjdir.c_str()),
                         _("Error"), wxICON_ERROR);
             Clear();
-            return -1;
+            return 0;
         }
 
         // save the project and...
@@ -324,7 +340,7 @@ int Wiz::Launch(int index)
         success = true;
     }
     Clear();
-    return success ? 0 : -1;
+    return success ? theproject : 0;
 }
 
 void Wiz::CopyFiles(cbProject* theproject, const wxString&  prjdir, const wxString& srcdir)
@@ -547,7 +563,8 @@ void Wiz::Finalize()
         m_pWizard->GetPageAreaSizer()->Add(m_Pages[i]);
 }
 
-void Wiz::AddWizard(const wxString& title,
+void Wiz::AddWizard(cbWizardPlugin::OutputType otype,
+                    const wxString& title,
                     const wxString& cat,
                     const wxString& script,
                     const wxString& templatePNG,
@@ -555,6 +572,7 @@ void Wiz::AddWizard(const wxString& title,
                     const wxString& xrc)
 {
     WizardInfo info;
+    info.output_type = otype;
     info.title = title;
     info.cat = cat;
     info.script = script;
@@ -562,7 +580,17 @@ void Wiz::AddWizard(const wxString& title,
     info.wizardPNG.LoadFile(m_TemplatePath + wizardPNG, wxBITMAP_TYPE_PNG);
     info.xrc = xrc;
     m_Wizards.Add(info);
-    Manager::Get()->GetMessageManager()->DebugLog(_T("Project wizard added for '%s'"), title.c_str());
+
+    wxString typS;
+    switch (otype)
+    {
+        case cbWizardPlugin::otProject: typS = _T("Project"); break;
+        case cbWizardPlugin::otTarget: typS = _T("Build-target"); break;
+        case cbWizardPlugin::otFiles: typS = _T("File(s)"); break;
+        case cbWizardPlugin::otWorkspace: typS = _T("Workspace"); break;
+    }
+
+    Manager::Get()->GetMessageManager()->DebugLog(typS + _T(" wizard added for '%s'"), title.c_str());
 }
 
 wxString Wiz::GetProjectPath()
