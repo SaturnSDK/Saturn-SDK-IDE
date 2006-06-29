@@ -83,7 +83,7 @@ function GetFilesDir()
 function SetupProject(project)
 {
     // set project options
-    
+
     project.AddIncludeDir(OgrePath + _T("/include"));
     project.AddIncludeDir(OgrePath + _T("/samples/include"));
     project.AddIncludeDir(OgrePath + _T("/samples/refapp/include"));
@@ -91,6 +91,8 @@ function SetupProject(project)
 
     if (PLATFORM == PLATFORM_MSW)
     {
+        project.AddCompilerOption(_T("-DWIN32"));
+        project.AddCompilerOption(_T("-D_WINDOWS"));
         project.AddLinkLib(_T("opengl32"));
         project.AddLinkLib(_T("gdi32"));
         project.AddLinkLib(_T("user32"));
@@ -113,8 +115,16 @@ function SetupProject(project)
         target.SetTargetType(ttConsoleOnly); // ttConsoleOnly: console for debugging
         target.SetOutputFilename(Wizard.GetDebugOutputDir() + Wizard.GetProjectName() + DOT_EXT_EXECUTABLE);
         target.SetWorkingDir(OgrePath + _T("/bin/Debug"));
-        target.AddLibDir(OgrePath + _T("/bin/debug"));
+
+        if (PLATFORM == PLATFORM_MSW)
+        {
+            target.AddCompilerOption(_T("-D_DEBUG"));
+            target.AddCompilerOption(_T("-D_STLP_DEBUG"));
+            target.AddLinkLib(_T("stlportstlg.5.0.dll"));
+        }
+        target.AddLibDir(OgrePath + _T("/bin/Debug"));
         target.AddLinkLib(_T("OgreMain_d"));
+
         // enable generation of debugging symbols for target
         DebugSymbolsOn(target, Wizard.GetCompilerID());
     }
@@ -126,8 +136,15 @@ function SetupProject(project)
         target.SetTargetType(ttExecutable); // ttExecutable: no console
         target.SetOutputFilename(Wizard.GetReleaseOutputDir() + Wizard.GetProjectName() + DOT_EXT_EXECUTABLE);
         target.SetWorkingDir(OgrePath + _T("/bin/Release"));
-        target.AddLibDir(OgrePath + _T("/bin/release"));
+
+        if (PLATFORM == PLATFORM_MSW)
+        {
+            target.AddCompilerOption(_T("-DNDEBUG"));
+            target.AddLinkLib(_T("stlport.5.0.dll"));
+        }
+        target.AddLibDir(OgrePath + _T("/bin/Release"));
         target.AddLinkLib(_T("OgreMain"));
+
         // enable optimizations for target
         OptimizationsOn(target, Wizard.GetCompilerID());
     }

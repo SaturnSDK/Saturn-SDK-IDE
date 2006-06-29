@@ -7,13 +7,13 @@ function main()
 {
     // add existing wizards
 
-    RegisterWizard(otProject, _T("console"),   _T("Console application wizard"),   _T("Console"));
-    RegisterWizard(otProject, _T("d"),         _T("D application wizard"),         _T("D language"));
-    RegisterWizard(otProject, _T("glfw"),      _T("GLFW application wizard"),      _T("2D/3D Graphics"));
-    RegisterWizard(otProject, _T("glut"),      _T("GLUT application wizard"),      _T("2D/3D Graphics"));
-    RegisterWizard(otProject, _T("irrlicht"),  _T("Irrlicht project wizard"),      _T("2D/3D Graphics"));
-    RegisterWizard(otProject, _T("ogre"),      _T("Ogre project wizard"),          _T("2D/3D Graphics"));
-    RegisterWizard(otProject, _T("wxwidgets"), _T("wxWidgets application wizard"), _T("GUI"));
+    RegisterWizard(otProject, _T("console"),   _T("Console application"),   _T("Console"));
+    RegisterWizard(otProject, _T("d"),         _T("D application"),         _T("D language"));
+    RegisterWizard(otProject, _T("glfw"),      _T("GLFW project"),          _T("2D/3D Graphics"));
+    RegisterWizard(otProject, _T("glut"),      _T("GLUT project"),          _T("2D/3D Graphics"));
+    RegisterWizard(otProject, _T("irrlicht"),  _T("Irrlicht project"),      _T("2D/3D Graphics"));
+    RegisterWizard(otProject, _T("ogre"),      _T("Ogre project"),          _T("2D/3D Graphics"));
+    RegisterWizard(otProject, _T("wxwidgets"), _T("wxWidgets application"), _T("GUI"));
 }
 
 function RegisterWizard(type, folder, title, category)
