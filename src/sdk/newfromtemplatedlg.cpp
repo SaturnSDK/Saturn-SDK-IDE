@@ -56,9 +56,24 @@ static int idEditGlobalWizardScript = wxNewId();
 
 BEGIN_EVENT_TABLE(NewFromTemplateDlg, wxDialog)
     EVT_UPDATE_UI(-1, NewFromTemplateDlg::OnUpdateUI)
-	EVT_LIST_ITEM_SELECTED(XRCID("listProjects"), NewFromTemplateDlg::OnListSelection)
+
+    // projects
 	EVT_LIST_ITEM_RIGHT_CLICK(XRCID("listProjects"), NewFromTemplateDlg::OnListRightClick)
 	EVT_COMBOBOX(XRCID("cmbProjectCategories"), NewFromTemplateDlg::OnCategoryChanged)
+
+    // targets
+	EVT_LIST_ITEM_RIGHT_CLICK(XRCID("listTargets"), NewFromTemplateDlg::OnListRightClick)
+	EVT_COMBOBOX(XRCID("cmbTargetCategories"), NewFromTemplateDlg::OnCategoryChanged)
+
+    // files
+	EVT_LIST_ITEM_RIGHT_CLICK(XRCID("listFiles"), NewFromTemplateDlg::OnListRightClick)
+	EVT_COMBOBOX(XRCID("cmbFileCategories"), NewFromTemplateDlg::OnCategoryChanged)
+
+    // workspaces
+	EVT_LIST_ITEM_RIGHT_CLICK(XRCID("listWorkspaces"), NewFromTemplateDlg::OnListRightClick)
+	EVT_COMBOBOX(XRCID("cmbWorkspaceCategories"), NewFromTemplateDlg::OnCategoryChanged)
+
+    // context menu for wizard scripts
 	EVT_MENU(idEditWizardScript, NewFromTemplateDlg::OnEditScript)
 	EVT_MENU(idEditGlobalWizardScript, NewFromTemplateDlg::OnEditGlobalScript)
 END_EVENT_TABLE()
@@ -66,8 +81,7 @@ END_EVENT_TABLE()
 NewFromTemplateDlg::NewFromTemplateDlg(const wxArrayString& user_templates)
 	: m_Template(0L),
 	m_pWizard(0L),
-	m_WizardIndex(0),
-	m_ImageList(32, 32)
+	m_WizardIndex(-1)
 {
 	//ctor
 	wxXmlResource::Get()->LoadDialog(this, 0L, _T("dlgNewFromTemplate"));
@@ -75,6 +89,12 @@ NewFromTemplateDlg::NewFromTemplateDlg(const wxArrayString& user_templates)
 
     wxListbook* lb = XRCCTRL(*this, "nbMain", wxListbook);
     SetSettingsIconsStyle(lb->GetListView(), sisNoIcons);
+
+    // create image lists
+    XRCCTRL(*this, "listProjects", wxListCtrl)->SetImageList(new wxImageList(32, 32), wxIMAGE_LIST_NORMAL);
+    XRCCTRL(*this, "listTargets", wxListCtrl)->SetImageList(new wxImageList(32, 32), wxIMAGE_LIST_NORMAL);
+    XRCCTRL(*this, "listFiles", wxListCtrl)->SetImageList(new wxImageList(32, 32), wxIMAGE_LIST_NORMAL);
+    XRCCTRL(*this, "listWorkspaces", wxListCtrl)->SetImageList(new wxImageList(32, 32), wxIMAGE_LIST_NORMAL);
 
 	BuildCategories();
 	BuildList();
@@ -90,12 +110,31 @@ NewFromTemplateDlg::NewFromTemplateDlg(const wxArrayString& user_templates)
 NewFromTemplateDlg::~NewFromTemplateDlg()
 {
 	//dtor
+    delete XRCCTRL(*this, "listProjects", wxListCtrl)->GetImageList(wxIMAGE_LIST_NORMAL);
+    delete XRCCTRL(*this, "listTargets", wxListCtrl)->GetImageList(wxIMAGE_LIST_NORMAL);
+    delete XRCCTRL(*this, "listFiles", wxListCtrl)->GetImageList(wxIMAGE_LIST_NORMAL);
+    delete XRCCTRL(*this, "listWorkspaces", wxListCtrl)->GetImageList(wxIMAGE_LIST_NORMAL);
+
+    XRCCTRL(*this, "listProjects", wxListCtrl)->SetImageList(0, wxIMAGE_LIST_NORMAL);
+    XRCCTRL(*this, "listTargets", wxListCtrl)->SetImageList(0, wxIMAGE_LIST_NORMAL);
+    XRCCTRL(*this, "listFiles", wxListCtrl)->SetImageList(0, wxIMAGE_LIST_NORMAL);
+    XRCCTRL(*this, "listWorkspaces", wxListCtrl)->SetImageList(0, wxIMAGE_LIST_NORMAL);
+
 	ClearList();
 }
 
 void NewFromTemplateDlg::ClearList()
 {
-	wxListCtrl* list = XRCCTRL(*this, "listProjects", wxListCtrl);
+	ClearListFor(XRCCTRL(*this, "listProjects", wxListCtrl));
+	ClearListFor(XRCCTRL(*this, "listTargets", wxListCtrl));
+	ClearListFor(XRCCTRL(*this, "listFiles", wxListCtrl));
+	ClearListFor(XRCCTRL(*this, "listWorkspaces", wxListCtrl));
+}
+
+void NewFromTemplateDlg::ClearListFor(wxListCtrl* list)
+{
+    if (!list)
+        return;
 	for (int i = 0; i < list->GetItemCount(); ++i)
 	{
 		ListItemData* data = (ListItemData*)list->GetItemData(i);
@@ -106,7 +145,16 @@ void NewFromTemplateDlg::ClearList()
 
 void NewFromTemplateDlg::BuildCategories()
 {
-	wxComboBox* cat = XRCCTRL(*this, "cmbProjectCategories", wxComboBox);
+	BuildCategoriesFor(cbWizardPlugin::otProject, XRCCTRL(*this, "cmbProjectCategories", wxComboBox));
+	BuildCategoriesFor(cbWizardPlugin::otTarget, XRCCTRL(*this, "cmbTargetCategories", wxComboBox));
+	BuildCategoriesFor(cbWizardPlugin::otFiles, XRCCTRL(*this, "cmbFileCategories", wxComboBox));
+	BuildCategoriesFor(cbWizardPlugin::otWorkspace, XRCCTRL(*this, "cmbWorkspaceCategories", wxComboBox));
+}
+
+void NewFromTemplateDlg::BuildCategoriesFor(cbWizardPlugin::OutputType otype, wxComboBox* cat)
+{
+    if (!cat)
+        return;
 	cat->Clear();
 	cat->Append(_("<All categories>"));
 
@@ -116,6 +164,9 @@ void NewFromTemplateDlg::BuildCategories()
         cbWizardPlugin* plugin = (cbWizardPlugin*)m_Wizards[i];
         for (int w = 0; w < plugin->GetCount(); ++w)
         {
+            if (plugin->GetOutputType(w) != otype)
+                continue;
+
             if (cat->FindString(plugin->GetCategory(w)) == wxNOT_FOUND)
                 cat->Append(plugin->GetCategory(w));
         }
@@ -144,11 +195,18 @@ int wxCALLBACK SortTemplates(long item1, long item2, long sortData)
 
 void NewFromTemplateDlg::BuildList()
 {
-	wxComboBox* cat = XRCCTRL(*this, "cmbProjectCategories", wxComboBox);
-	wxListCtrl* list = XRCCTRL(*this, "listProjects", wxListCtrl);
-	ClearList();
-	m_ImageList.RemoveAll();
-	list->SetImageList(&m_ImageList, wxIMAGE_LIST_NORMAL);
+	BuildListFor(cbWizardPlugin::otProject, XRCCTRL(*this, "listProjects", wxListCtrl), XRCCTRL(*this, "cmbProjectCategories", wxComboBox));
+	BuildListFor(cbWizardPlugin::otTarget, XRCCTRL(*this, "listTargets", wxListCtrl), XRCCTRL(*this, "cmbTargetCategories", wxComboBox));
+	BuildListFor(cbWizardPlugin::otFiles, XRCCTRL(*this, "listFiles", wxListCtrl), XRCCTRL(*this, "cmbFileCategories", wxComboBox));
+	BuildListFor(cbWizardPlugin::otWorkspace, XRCCTRL(*this, "listWorkspaces", wxListCtrl), XRCCTRL(*this, "cmbWorkspaceCategories", wxComboBox));
+}
+
+void NewFromTemplateDlg::BuildListFor(cbWizardPlugin::OutputType otype, wxListCtrl* list, wxComboBox* cat)
+{
+    if (!list || !cat)
+        return;
+	ClearListFor(list);
+	list->GetImageList(wxIMAGE_LIST_NORMAL)->RemoveAll();
 
     wxBitmap bmp;
     bool all = cat->GetSelection() == 0;
@@ -159,9 +217,12 @@ void NewFromTemplateDlg::BuildList()
         cbWizardPlugin* plugin = (cbWizardPlugin*)m_Wizards[i];
         for (int w = 0; w < plugin->GetCount(); ++w)
         {
+            if (plugin->GetOutputType(w) != otype)
+                continue;
+
             if (all || plugin->GetCategory(w).Matches(cat->GetStringSelection()))
             {
-                int idx = plugin->GetBitmap(w).Ok() ? m_ImageList.Add(plugin->GetBitmap(w)) : -2;
+                int idx = plugin->GetBitmap(w).Ok() ? list->GetImageList(wxIMAGE_LIST_NORMAL)->Add(plugin->GetBitmap(w)) : -2;
                 int index = list->InsertItem(0, plugin->GetTitle(w), idx);
                 if (index != -1)
                     list->SetItemData(index, (long)(new ListItemData(0, plugin, w)));
@@ -172,8 +233,64 @@ void NewFromTemplateDlg::BuildList()
     list->SortItems(SortTemplates, 0);
 }
 
+wxListCtrl* NewFromTemplateDlg::GetVisibleListCtrl()
+{
+    wxListbook* lb = XRCCTRL(*this, "nbMain", wxListbook);
+    size_t page = lb->GetSelection();
+
+    switch (page)
+    {
+        case 0: return XRCCTRL(*this, "listProjects", wxListCtrl); // projects
+        case 1: return XRCCTRL(*this, "listTargets", wxListCtrl); // targets
+        case 2: return XRCCTRL(*this, "listFiles", wxListCtrl); // files
+        case 3: return XRCCTRL(*this, "listWorkspaces", wxListCtrl); // workspaces
+        default: return 0;
+    }
+}
+
+wxComboBox* NewFromTemplateDlg::GetVisibleCategory()
+{
+    wxListbook* lb = XRCCTRL(*this, "nbMain", wxListbook);
+    size_t page = lb->GetSelection();
+
+    switch (page)
+    {
+        case 0: return XRCCTRL(*this, "cmbProjectCategories", wxComboBox); // projects
+        case 1: return XRCCTRL(*this, "cmbTargetCategories", wxComboBox); // targets
+        case 2: return XRCCTRL(*this, "cmbFileCategories", wxComboBox); // files
+        case 3: return XRCCTRL(*this, "cmbWorkspaceCategories", wxComboBox); // workspaces
+        default: return 0;
+    }
+}
+
+cbWizardPlugin::OutputType NewFromTemplateDlg::GetVisibleOutputType()
+{
+    wxListbook* lb = XRCCTRL(*this, "nbMain", wxListbook);
+    size_t page = lb->GetSelection();
+
+    switch (page)
+    {
+        case 0: return cbWizardPlugin::otProject;
+        case 1: return cbWizardPlugin::otTarget;
+        case 2: return cbWizardPlugin::otFiles;
+        case 3: return cbWizardPlugin::otWorkspace;
+        default: return cbWizardPlugin::otProject;
+    }
+}
+
 cbWizardPlugin* NewFromTemplateDlg::GetSelectedTemplate()
 {
+    m_pWizard = 0;
+    m_WizardIndex = -1;
+    wxListCtrl* list = GetVisibleListCtrl();
+    if (!list)
+        return 0;
+    long index = list->GetNextItem(-1, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED);
+    if (index == -1)
+        return 0;
+	ListItemData* data = (ListItemData*)list->GetItemData(index);
+    m_pWizard = data->plugin;
+    m_WizardIndex = data->wizPluginIndex;
     return m_pWizard;
 }
 
@@ -207,16 +324,11 @@ void NewFromTemplateDlg::EditScript(const wxString& relativeFilename)
     cbMessageBox(_("Couldn't open script:\n") + script, _("Error"), wxICON_ERROR);
 }
 
-void NewFromTemplateDlg::OnListSelection(wxListEvent& event)
-{
-	ListItemData* data = (ListItemData*)event.GetData();
-
-	m_pWizard = data->plugin;
-	m_WizardIndex = data->wizPluginIndex;
-}
-
 void NewFromTemplateDlg::OnListRightClick(wxListEvent& event)
 {
+    wxListCtrl* list = GetVisibleListCtrl();
+    if (!list)
+        return;
     wxMenu* menu = new wxMenu;
 	ListItemData* data = (ListItemData*)event.GetData();
 
@@ -225,18 +337,20 @@ void NewFromTemplateDlg::OnListRightClick(wxListEvent& event)
 	    menu->Append(idEditWizardScript, _("Edit this wizard's script"));
 	}
     menu->Append(idEditGlobalWizardScript, _("Edit global registration script"));
-	XRCCTRL(*this, "listProjects", wxListCtrl)->PopupMenu(menu);
+	list->PopupMenu(menu);
 	delete menu;
 }
 
 void NewFromTemplateDlg::OnCategoryChanged(wxCommandEvent& event)
 {
-	BuildList();
+    BuildListFor(GetVisibleOutputType(), GetVisibleListCtrl(), GetVisibleCategory());
 }
 
 void NewFromTemplateDlg::OnEditScript(wxCommandEvent& event)
 {
-    wxListCtrl* list = XRCCTRL(*this, "listProjects", wxListCtrl);
+    wxListCtrl* list = GetVisibleListCtrl();
+    if (!list)
+        return;
     long index = list->GetNextItem(-1, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED);
     if (index == -1)
         return;
@@ -259,4 +373,10 @@ void NewFromTemplateDlg::OnUpdateUI(wxUpdateUIEvent& event)
     size_t page = lb->GetSelection();
 
 	XRCCTRL(*this, "wxID_OK", wxButton)->Enable((page != lb->GetPageCount() - 1 && GetSelectedTemplate()) || SelectedUserTemplate());
+}
+
+void NewFromTemplateDlg::EndModal(int retCode)
+{
+    GetSelectedTemplate();
+    wxDialog::EndModal(retCode);
 }
