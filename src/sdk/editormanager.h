@@ -7,6 +7,7 @@
 
 #include "settings.h"
 #include "manager.h"
+#include "cbexception.h" // cbThrow
 
 #include "openfilestree.h"
 
