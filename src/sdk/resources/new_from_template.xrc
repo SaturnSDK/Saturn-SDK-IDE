@@ -3,8 +3,7 @@
   <object class="wxDialog" name="dlgNewFromTemplate">
     <title>New from template</title>
     <centered>1</centered>
-    <object class="wxBoxSizer">
-      <orient>wxVERTICAL</orient>
+    <object class="wxFlexGridSizer">
       <object class="sizeritem">
         <object class="wxListbook" name="nbMain">
           <object class="listbookpage">
@@ -201,17 +200,17 @@
                 </object>
                 <object class="sizeritem">
                   <object class="wxStaticText">
-                    <label>* To create a user template, create a project the way you want it and click &quot;Project-&gt;
-   Save project as user-template&quot; in main menu bar.</label>
+                    <label>* To create a user template, create a project the way you want it
+   and click &quot;Project-&gt;Save project as user-template&quot; in main menu bar.</label>
                   </object>
                   <flag>wxBOTTOM</flag>
                   <border>8</border>
                 </object>
                 <object class="sizeritem">
                   <object class="wxStaticText">
-                    <label>* To delete a user template, delete the similarly named folder created in
-   %APPDATA%\codeblocks\UserTemplates (for Windows) or ~/.codeblocks (for other
-   platforms).</label>
+                    <label>* To delete a user template, delete the similarly named folder created
+   in %APPDATA%\codeblocks\UserTemplates (for Windows) or 
+   ~/.codeblocks (for other platforms).</label>
                   </object>
                 </object>
                 <object class="sizeritem">
@@ -226,24 +225,19 @@
           </object>
         </object>
         <option>1</option>
-        <flag>wxALL|wxGROW</flag>
+        <flag>wxTOP|wxLEFT|wxGROW</flag>
         <border>8</border>
         <minsize>480,320</minsize>
       </object>
       <object class="sizeritem">
-        <object class="wxStaticLine"/>
-        <flag>wxLEFT|wxRIGHT|wxGROW</flag>
-        <border>8</border>
-      </object>
-      <object class="sizeritem">
         <object class="wxBoxSizer">
-          <orient>wxHORIZONTAL</orient>
+          <orient>wxVERTICAL</orient>
           <object class="sizeritem">
             <object class="wxButton" name="wxID_OK">
               <label>&amp;Go</label>
               <default>1</default>
             </object>
-            <flag>wxRIGHT</flag>
+            <flag>wxBOTTOM</flag>
             <border>8</border>
           </object>
           <object class="sizeritem">
@@ -252,7 +246,43 @@
             </object>
           </object>
         </object>
-        <flag>wxTOP|wxBOTTOM|wxALIGN_CENTRE_HORIZONTAL</flag>
+        <flag>wxTOP|wxRIGHT|wxALIGN_CENTRE_HORIZONTAL</flag>
+        <border>8</border>
+      </object>
+      <cols>2</cols>
+      <rows>2</rows>
+      <vgap>8</vgap>
+      <hgap>8</hgap>
+      <growablerows>0</growablerows>
+      <growablecols>0</growablecols>
+      <object class="sizeritem">
+        <object class="wxBoxSizer">
+          <orient>wxVERTICAL</orient>
+          <object class="sizeritem">
+            <object class="wxStaticLine"/>
+            <flag>wxBOTTOM|wxGROW</flag>
+            <border>8</border>
+          </object>
+          <object class="sizeritem">
+            <object class="wxStaticText">
+              <label>1. Select a wizard type first on the left</label>
+            </object>
+            <flag>wxGROW</flag>
+          </object>
+          <object class="sizeritem">
+            <object class="wxStaticText">
+              <label>2. Select a specific wizard from the main window (filter by categories if needed)</label>
+            </object>
+            <flag>wxGROW</flag>
+          </object>
+          <object class="sizeritem">
+            <object class="wxStaticText">
+              <label>3. Press Go</label>
+            </object>
+            <flag>wxGROW</flag>
+          </object>
+        </object>
+        <flag>wxBOTTOM|wxLEFT|wxGROW</flag>
         <border>8</border>
       </object>
     </object>

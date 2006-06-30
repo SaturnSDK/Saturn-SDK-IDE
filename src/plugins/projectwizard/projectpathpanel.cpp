@@ -84,7 +84,8 @@ void ProjectPathPanel::Update()
     {
         if (final.Last() != _T('/') && final.Last() != _T('\\'))
             final << wxFILE_SEP_PATH;
-        final << txtPrjName->GetValue() << FileFilters::CODEBLOCKS_DOT_EXT;
+        if (txtPrjName->GetValue())
+            final << txtPrjName->GetValue() << wxFILE_SEP_PATH << txtPrjName->GetValue() << FileFilters::CODEBLOCKS_DOT_EXT;
     }
     if (final.IsEmpty() || txtPrjName->GetValue().IsEmpty())
         final = _("<invalid path>");
