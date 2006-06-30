@@ -31,6 +31,7 @@
 class wxWizard;
 class wxWizardPageSimple;
 class WizProjectPathPanel;
+class WizFilePathPanel;
 class WizCompilerPanel;
 class WizLanguagePanel;
 
@@ -67,6 +68,11 @@ class Wiz : public cbWizardPlugin
         wxString GetScriptFilename(int index) const;
 		CompileTargetBase* Launch(int index);
 
+		CompileTargetBase* RunProjectWizard(); // called by Launch() for otProject wizards
+		CompileTargetBase* RunTargetWizard(); // called by Launch() for otTarget wizards (always returns NULL)
+		CompileTargetBase* RunFilesWizard(); // called by Launch() for otFiles wizards (always returns NULL)
+		CompileTargetBase* RunWorkspaceWizard(); // called by Launch() for otWorkspace wizards (always returns NULL)
+
         // Scripting support
         void AddWizard(cbWizardPlugin::OutputType otype,
                         const wxString& title,
@@ -92,26 +98,36 @@ class Wiz : public cbWizardPlugin
         void SetTextControlValue(const wxString& name, const wxString& value);
         wxString GetTextControlValue(const wxString& name);
 
+        // project path page
         wxString GetProjectPath();
         wxString GetProjectName();
         wxString GetProjectFullFilename();
         wxString GetProjectTitle();
-        wxString GetCompilerID();
 
+        // compiler page
+        wxString GetCompilerID();
         bool GetWantDebug();
         wxString GetDebugName();
         wxString GetDebugOutputDir();
         wxString GetDebugObjectOutputDir();
-
         bool GetWantRelease();
         wxString GetReleaseName();
         wxString GetReleaseOutputDir();
         wxString GetReleaseObjectOutputDir();
 
+        // language page
         int GetLanguageIndex();
+
+        // file path page
+        wxString GetFileName();
+        wxString GetFileHeaderGuard();
+        bool GetFileAddToProject();
+        int GetFileTargetIndex();
+        void SetFilePathSelectionFilter(const wxString& filter);
 
         // pre-defined pages
         void AddIntroPage(const wxString& intro_msg);
+        void AddFilePathPage(bool showHeaderGuard);
         void AddProjectPathPage();
         void AddCompilerPage(const wxString& compilerID, const wxString& validCompilerIDs, bool allowCompilerChange = true, bool allowConfigChange = true);
         void AddLanguagePage(const wxString& langs, int defLang);
@@ -130,6 +146,7 @@ class Wiz : public cbWizardPlugin
         wxWizard* m_pWizard;
         WizPages m_Pages;
         WizProjectPathPanel* m_pWizProjectPathPanel;
+        WizFilePathPanel* m_pWizFilePathPanel;
         WizCompilerPanel* m_pWizCompilerPanel;
         WizLanguagePanel* m_pWizLanguagePanel;
         int m_LaunchIndex;

@@ -15,6 +15,7 @@
 #include "projectpathpanel.h"
 #include "compilerpanel.h"
 #include "languagepanel.h"
+#include "filepathpanel.h"
 
 // utility function to append a path separator to the
 // string parameter, if needed.
@@ -29,17 +30,70 @@ wxString AppendPathSepIfNeeded(const wxString& path)
 // WizPage
 ////////////////////////////////////////////////////////////////////////////////
 
-BEGIN_EVENT_TABLE(WizPage, wxWizardPageSimple)
+BEGIN_EVENT_TABLE(WizPageBase, wxWizardPageSimple)
+    EVT_WIZARD_PAGE_CHANGING(-1, WizPageBase::OnPageChanging)
+    EVT_WIZARD_PAGE_CHANGED(-1, WizPageBase::OnPageChanged)
+END_EVENT_TABLE()
+
+WizPageBase::WizPageBase(const wxString& pageName, wxWizard* parent, const wxBitmap& bitmap)
+    : wxWizardPageSimple(parent, 0, 0, bitmap),
+    m_PageName(pageName)
+{
+}
+
+//------------------------------------------------------------------------------
+WizPageBase::~WizPageBase()
+{
+}
+
+//------------------------------------------------------------------------------
+void WizPageBase::OnPageChanging(wxWizardEvent& event)
+{
+    try
+    {
+        wxString sig = _T("OnLeave_") + m_PageName;
+        SqPlus::SquirrelFunction<bool> cb(cbU2C(sig));
+        if (cb.func.IsNull())
+            return;
+        bool allow = cb(event.GetDirection() != 0); // !=0 forward, ==0 backward
+        if (!allow)
+            event.Veto();
+    }
+    catch (SquirrelError& e)
+    {
+        Manager::Get()->GetScriptingManager()->DisplayErrors(&e);
+    }
+}
+
+//------------------------------------------------------------------------------
+void WizPageBase::OnPageChanged(wxWizardEvent& event)
+{
+    try
+    {
+        wxString sig = _T("OnEnter_") + m_PageName;
+        SqPlus::SquirrelFunction<void> cb(cbU2C(sig));
+        if (cb.func.IsNull())
+            return;
+        cb(event.GetDirection() != 0); // !=0 forward, ==0 backward
+    }
+    catch (SquirrelError& e)
+    {
+        Manager::Get()->GetScriptingManager()->DisplayErrors(&e);
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// WizPage
+////////////////////////////////////////////////////////////////////////////////
+
+BEGIN_EVENT_TABLE(WizPage, WizPageBase)
     EVT_BUTTON(-1, WizPage::OnButton)
-    EVT_WIZARD_PAGE_CHANGING(-1, WizPage::OnPageChanging)
-    EVT_WIZARD_PAGE_CHANGED(-1, WizPage::OnPageChanged)
 END_EVENT_TABLE()
 
 WizPage::WizPage(const wxString& panelName, wxWizard* parent, const wxBitmap& bitmap)
-    : wxWizardPageSimple(parent, 0, 0, bitmap),
-    m_PanelName(panelName)
+    : WizPageBase(panelName, parent, bitmap)
 {
-    wxXmlResource::Get()->LoadPanel(this, m_PanelName);
+    wxXmlResource::Get()->LoadPanel(this, panelName);
 }
 
 //------------------------------------------------------------------------------
@@ -59,37 +113,10 @@ void WizPage::OnButton(wxCommandEvent& event)
     try
     {
         wxString sig = _T("OnClick_") + win->GetName();
-        SqPlus::SquirrelFunction<void>(cbU2C(sig))();
-    }
-    catch (SquirrelError& e)
-    {
-        Manager::Get()->GetScriptingManager()->DisplayErrors(&e);
-    }
-}
-
-//------------------------------------------------------------------------------
-void WizPage::OnPageChanging(wxWizardEvent& event)
-{
-    try
-    {
-        wxString sig = _T("OnLeave_") + m_PanelName;
-        bool allow = SqPlus::SquirrelFunction<bool>(cbU2C(sig))(event.GetDirection() != 0); // !=0 forward, ==0 backward
-        if (!allow)
-            event.Veto();
-    }
-    catch (SquirrelError& e)
-    {
-        Manager::Get()->GetScriptingManager()->DisplayErrors(&e);
-    }
-}
-
-//------------------------------------------------------------------------------
-void WizPage::OnPageChanged(wxWizardEvent& event)
-{
-    try
-    {
-        wxString sig = _T("OnEnter_") + m_PanelName;
-        SqPlus::SquirrelFunction<void>(cbU2C(sig))(event.GetDirection() != 0); // !=0 forward, ==0 backward
+        SqPlus::SquirrelFunction<void> cb(cbU2C(sig));
+        if (cb.func.IsNull())
+            return;
+        cb();
     }
     catch (SquirrelError& e)
     {
@@ -102,7 +129,7 @@ void WizPage::OnPageChanged(wxWizardEvent& event)
 ////////////////////////////////////////////////////////////////////////////////
 
 WizIntroPanel::WizIntroPanel(const wxString& intro_msg, wxWizard* parent, const wxBitmap& bitmap)
-    : wxWizardPageSimple(parent, 0, 0, bitmap)
+    : WizPageBase(_T("IntroPage"), parent, bitmap)
 {
     IntroPanel* pnl = new IntroPanel(this);
     pnl->SetIntroText(intro_msg);
@@ -114,17 +141,63 @@ WizIntroPanel::~WizIntroPanel()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+// WizFilePathPanel
+////////////////////////////////////////////////////////////////////////////////
+
+WizFilePathPanel::WizFilePathPanel(bool showHeaderGuard, wxWizard* parent, const wxBitmap& bitmap)
+    : WizPageBase(_T("FilePathPage"), parent, bitmap),
+    m_AddToProject(false),
+    m_TargetIndex(0)
+{
+    ConfigManager* cfg = Manager::Get()->GetConfigManager(_T("scripts"));
+    m_pFilePathPanel = new FilePathPanel(this);
+
+    m_pFilePathPanel->ShowHeaderGuard(showHeaderGuard);
+    m_pFilePathPanel->SetAddToProject(cfg->ReadBool(_T("/generic_wizard/add_file_to_project"), true));
+}
+
+//------------------------------------------------------------------------------
+WizFilePathPanel::~WizFilePathPanel()
+{
+}
+
+void WizFilePathPanel::SetFilePathSelectionFilter(const wxString& filter)
+{
+    m_pFilePathPanel->SetFilePathSelectionFilter(filter);
+}
+
+void WizFilePathPanel::OnPageChanging(wxWizardEvent& event)
+{
+    if (event.GetDirection() != 0) // !=0 forward, ==0 backward
+    {
+        m_Filename = m_pFilePathPanel->GetFilename();
+        m_HeaderGuard = m_pFilePathPanel->GetHeaderGuard();
+        m_AddToProject = m_pFilePathPanel->GetAddToProject();
+        m_TargetIndex = m_pFilePathPanel->GetTargetIndex();
+
+        if (m_Filename.IsEmpty() || !wxDirExists(wxPathOnly(m_Filename)))
+        {
+            cbMessageBox(_("Please select a filename for your new file..."), _("Error"), wxICON_ERROR);
+            event.Veto();
+            return;
+        }
+
+        ConfigManager* cfg = Manager::Get()->GetConfigManager(_T("scripts"));
+        cfg->Write(_T("/generic_wizard/add_file_to_project"), (bool)m_pFilePathPanel->GetAddToProject());
+    }
+    WizPageBase::OnPageChanging(event); // let the base class handle it too
+}
+
+////////////////////////////////////////////////////////////////////////////////
 // WizProjectPathPanel
 ////////////////////////////////////////////////////////////////////////////////
 
-BEGIN_EVENT_TABLE(WizProjectPathPanel, wxWizardPageSimple)
+BEGIN_EVENT_TABLE(WizProjectPathPanel, WizPageBase)
     EVT_BUTTON(-1, WizProjectPathPanel::OnButton)
-    EVT_WIZARD_PAGE_CHANGING(-1, WizProjectPathPanel::OnPageChanging)
-    EVT_WIZARD_PAGE_CHANGED(-1, WizProjectPathPanel::OnPageChanged)
 END_EVENT_TABLE()
 
 WizProjectPathPanel::WizProjectPathPanel(wxWizard* parent, const wxBitmap& bitmap)
-    : wxWizardPageSimple(parent, 0, 0, bitmap)
+    : WizPageBase(_T("ProjectPathPage"), parent, bitmap)
 {
     m_pProjectPathPanel = new ProjectPathPanel(this);
 }
@@ -209,6 +282,7 @@ void WizProjectPathPanel::OnPageChanging(wxWizardEvent& event)
 		}
         Manager::Get()->GetProjectManager()->SetDefaultPath(dir);
 	}
+    WizPageBase::OnPageChanging(event); // let the base class handle it too
 }
 
 //------------------------------------------------------------------------------
@@ -219,19 +293,16 @@ void WizProjectPathPanel::OnPageChanged(wxWizardEvent& event)
         wxString dir = Manager::Get()->GetProjectManager()->GetDefaultPath();
         m_pProjectPathPanel->SetPath(dir);
     }
+    WizPageBase::OnPageChanged(event); // let the base class handle it too
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // WizCompilerPanel
 ////////////////////////////////////////////////////////////////////////////////
 
-BEGIN_EVENT_TABLE(WizCompilerPanel, wxWizardPageSimple)
-    EVT_WIZARD_PAGE_CHANGING(-1, WizCompilerPanel::OnPageChanging)
-END_EVENT_TABLE()
-
 WizCompilerPanel::WizCompilerPanel(const wxString& compilerID, const wxString& validCompilerIDs, wxWizard* parent, const wxBitmap& bitmap,
                                     bool allowCompilerChange, bool allowConfigChange)
-    : wxWizardPageSimple(parent, 0, 0, bitmap)
+    : WizPageBase(_T("CompilerPage"), parent, bitmap)
 {
     m_pCompilerPanel = new CompilerPanel(this);
 
@@ -364,6 +435,7 @@ void WizCompilerPanel::OnPageChanging(wxWizardEvent& event)
         cfg->Write(_T("/generic_wizard/release_output"), GetReleaseOutputDir());
         cfg->Write(_T("/generic_wizard/release_objects_output"), GetReleaseObjectOutputDir());
 	}
+    WizPageBase::OnPageChanging(event); // let the base class handle it too
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -371,7 +443,7 @@ void WizCompilerPanel::OnPageChanging(wxWizardEvent& event)
 ////////////////////////////////////////////////////////////////////////////////
 
 WizLanguagePanel::WizLanguagePanel(const wxArrayString& langs, int defLang, wxWizard* parent, const wxBitmap& bitmap)
-    : wxWizardPageSimple(parent, 0, 0, bitmap)
+    : WizPageBase(_T("LanguagePage"), parent, bitmap)
 {
     m_pLanguagePanel = new LanguagePanel(this);
     m_pLanguagePanel->SetChoices(langs, defLang);

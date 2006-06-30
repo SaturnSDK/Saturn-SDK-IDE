@@ -1396,7 +1396,7 @@ void MainFrame::OnStartHereLink(wxCommandEvent& event)
     wxCommandEvent evt;
     wxString link = event.GetString();
     if(link.IsSameAs(_T("CB_CMD_NEW_PROJECT")))
-        TemplateManager::Get()->NewProject();
+        OnProjectNew(evt);
     else if(link.IsSameAs(_T("CB_CMD_OPEN_PROJECT")))
         OnProjectOpen(evt);
 //    else if (link.IsSameAs(_T("CB_CMD_CONF_ENVIRONMENT")))
@@ -1461,7 +1461,7 @@ void MainFrame::OnStartHereVarSubst(wxCommandEvent& event)
     }
     else
         links << _T("&nbsp;&nbsp;&nbsp;&nbsp;No recent projects<br>\n");
-    
+
     links << _T("<br><b>Recent files</b><br>\n");
     if (m_FilesHistory.GetCount())
     {

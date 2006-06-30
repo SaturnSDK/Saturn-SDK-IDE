@@ -146,14 +146,13 @@ namespace ScriptBindings
     {
         StackHandler sa(v);
         int paramCount = sa.GetParamCount();
-        if (paramCount == 6)
+        if (paramCount >= 3)
         {
-            // TODO: how to return ProjectFile* ???
             cbProject* prj = SqPlus::GetInstance<cbProject>(v, 1);
             wxString str = *SqPlus::GetInstance<wxString>(v, 3);
-            bool b1 = sa.GetBool(4);
-            bool b2 = sa.GetBool(5);
-            int i = sa.GetInt(6);
+            bool b1 = paramCount >= 4 ? sa.GetBool(4) : true;
+            bool b2 = paramCount >= 5 ? sa.GetBool(5) : true;
+            int i = paramCount == 6 ? sa.GetInt(6) : 50;
             ProjectFile* pf = 0;
             if (sa.GetType(2) == OT_INTEGER)
                 pf = prj->AddFile(sa.GetInt(2), str, b1, b2, i);
@@ -170,7 +169,6 @@ namespace ScriptBindings
         int paramCount = sa.GetParamCount();
         if (paramCount == 2)
         {
-            // TODO: how to return ProjectFile* ???
             cbProject* prj = SqPlus::GetInstance<cbProject>(v, 1);
             ProjectBuildTarget* bt = 0;
             if (sa.GetType(2) == OT_INTEGER)
@@ -264,6 +262,38 @@ namespace ScriptBindings
         if (paramCount == 2)
             return sa.Return((SQInteger)CompilerFactory::GetCompilerIndex(*SqPlus::GetInstance<wxString>(v, 2)));
         return sa.ThrowError("Invalid arguments to \"CompilerFactory::GetCompilerIndex\"");
+    }
+    SQInteger cbEditor_SetText(HSQUIRRELVM v)
+    {
+        StackHandler sa(v);
+        int paramCount = sa.GetParamCount();
+        if (paramCount == 2)
+        {
+            cbEditor* self = SqPlus::GetInstance<cbEditor>(v, 1);
+            if (self)
+            {
+                self->GetControl()->SetText(*SqPlus::GetInstance<wxString>(v, 2));
+                return sa.Return();
+            }
+            return sa.ThrowError("'this' is NULL!?! (type of cbEditor*)");
+        }
+        return sa.ThrowError("Invalid arguments to \"cbEditor::SetText\"");
+    }
+    SQInteger cbEditor_GetText(HSQUIRRELVM v)
+    {
+        StackHandler sa(v);
+        int paramCount = sa.GetParamCount();
+        if (paramCount == 1)
+        {
+            cbEditor* self = SqPlus::GetInstance<cbEditor>(v, 1);
+            if (self)
+            {
+                wxString str = self->GetControl()->GetText();
+                return SqPlus::ReturnCopy(v, str);
+            }
+            return sa.ThrowError("'this' is NULL!?! (type of cbEditor*)");
+        }
+        return sa.ThrowError("Invalid arguments to \"cbEditor::GetText\"");
     }
 
     void RegisterBindings()
@@ -438,7 +468,8 @@ namespace ScriptBindings
                 func(&ProjectManager::CloseAllProjects, "CloseAllProjects").
                 func(&ProjectManager::NewProject, "NewProject").
                 staticFuncVarArgs(&ProjectManager_AddFileToProject, "AddFileToProject", "*").
-                func(&ProjectManager::AskForBuildTargetIndex, "AskForBuildTargetIndex");
+                func(&ProjectManager::AskForBuildTargetIndex, "AskForBuildTargetIndex").
+                func(&ProjectManager::RebuildTree, "RebuildTree");
 
         SqPlus::SQClassDef<CompilerFactory>("CompilerFactory").
                 staticFunc(&CompilerFactory::IsValidCompilerID, "IsValidCompilerID").
@@ -496,7 +527,10 @@ namespace ScriptBindings
                 func(&cbEditor::Print, "Print").
                 func(&cbEditor::AutoComplete, "AutoComplete").
                 func(&cbEditor::AddBreakpoint, "AddBreakpoint").
-                func(&cbEditor::RemoveBreakpoint, "RemoveBreakpoint");
+                func(&cbEditor::RemoveBreakpoint, "RemoveBreakpoint").
+                // these are not present in cbEditor; included to help scripts edit text
+                staticFuncVarArgs(&cbEditor_SetText, "SetText", "*").
+                staticFuncVarArgs(&cbEditor_GetText, "GetText", "*");
 
         SqPlus::SQClassDef<EditorManager>("EditorManager").
                 func(&EditorManager::Configure, "Configure").

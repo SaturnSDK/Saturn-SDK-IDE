@@ -48,6 +48,7 @@ DECLARE_INSTANCE_TYPE(Wiz);
 Wiz::Wiz()
     : m_pWizard(0),
     m_pWizProjectPathPanel(0),
+    m_pWizFilePathPanel(0),
     m_pWizCompilerPanel(0),
     m_pWizLanguagePanel(0)
 {
@@ -160,6 +161,7 @@ void Wiz::Clear()
 	m_pWizProjectPathPanel = 0;
 	m_pWizCompilerPanel = 0;
 	m_pWizLanguagePanel = 0;
+	m_pWizFilePathPanel = 0;
 }
 
 CompileTargetBase* Wiz::Launch(int index)
@@ -213,8 +215,8 @@ CompileTargetBase* Wiz::Launch(int index)
     }
 
     // check if *mandatory* pages (i.e. used by the following code) were added
-    // currently, project path is a mandatory page...
-    if (!m_pWizProjectPathPanel)
+    // currently, project path is a mandatory page for new projects...
+    if (m_Wizards[index].output_type == cbWizardPlugin::otProject && !m_pWizProjectPathPanel)
     {
         cbMessageBox(_("This wizard is missing the following mandatory wizard page:\n\n"
                         "Project path selection\n"
@@ -227,102 +229,108 @@ CompileTargetBase* Wiz::Launch(int index)
     Finalize();
 
     // run wizard
-    bool success = false;
-    cbProject* theproject = 0;
+    CompileTargetBase* base = 0; // ret value
     if (m_pWizard->RunWizard(m_Pages[0]))
     {
         // ok, wizard done
-
-        // first get the project filename
-        wxString prjname = GetProjectFullFilename();
-
-        // create the dir for the project
-        wxFileName fname(prjname);
-        wxString prjdir = fname.GetPath(wxPATH_GET_VOLUME | wxPATH_GET_SEPARATOR);
-        if (!CreateDirRecursively(prjdir))
+        switch (m_Wizards[index].output_type)
         {
-            cbMessageBox(_("Couldn't create the project directory:\n") + prjdir, _("Error"), wxICON_ERROR);
-            Clear();
-            return 0;
+            case cbWizardPlugin::otProject:     base = RunProjectWizard(); break;
+            case cbWizardPlugin::otTarget:      base = RunTargetWizard(); break;
+            case cbWizardPlugin::otFiles:       base = RunFilesWizard(); break;
+            case cbWizardPlugin::otWorkspace:   base = RunWorkspaceWizard(); break;
+            default: break;
         }
+    }
+    Clear();
+    return base;
+}
 
-        // now create the project
-        theproject = Manager::Get()->GetProjectManager()->NewProject(prjname);
-        if (!theproject)
+CompileTargetBase* Wiz::RunProjectWizard()
+{
+    cbProject* theproject = 0;
+
+    // first get the project filename
+    wxString prjname = GetProjectFullFilename();
+
+    // create the dir for the project
+    wxFileName fname(prjname);
+    wxString prjdir = fname.GetPath(wxPATH_GET_VOLUME | wxPATH_GET_SEPARATOR);
+    if (!CreateDirRecursively(prjdir))
+    {
+        cbMessageBox(_("Couldn't create the project directory:\n") + prjdir, _("Error"), wxICON_ERROR);
+        Clear();
+        return 0;
+    }
+
+    // now create the project
+    theproject = Manager::Get()->GetProjectManager()->NewProject(prjname);
+    if (!theproject)
+    {
+        cbMessageBox(_("Couldn't create the new project:\n") + prjdir, _("Error"), wxICON_ERROR);
+        Clear();
+        return 0;
+    }
+
+    // set the project title and project-wide compiler
+    theproject->SetTitle(GetProjectTitle());
+    theproject->SetCompilerID(GetCompilerID());
+
+    // create the targets
+    if (GetWantDebug())
+    {
+        ProjectBuildTarget* target = theproject->AddBuildTarget(GetDebugName());
+        if (target)
         {
-            cbMessageBox(_("Couldn't create the new project:\n") + prjdir, _("Error"), wxICON_ERROR);
-            Clear();
-            return 0;
-        }
-
-        // set the project title and project-wide compiler
-        theproject->SetTitle(GetProjectTitle());
-        theproject->SetCompilerID(GetCompilerID());
-
-        // create the targets
-        if (GetWantDebug())
-        {
-            ProjectBuildTarget* target = theproject->AddBuildTarget(GetDebugName());
-            if (target)
-            {
-                target->SetCompilerID(GetCompilerID());
-                target->SetIncludeInTargetAll(false);
+            target->SetCompilerID(GetCompilerID());
+            target->SetIncludeInTargetAll(false);
 //                target->SetOutputFilename(GetDebugOutputDir() + wxFILE_SEP_PATH + GetProjectName() + ext);
-                target->SetObjectOutput(GetDebugObjectOutputDir());
-            }
+            target->SetObjectOutput(GetDebugObjectOutputDir());
         }
+    }
 
-        if (GetWantRelease())
+    if (GetWantRelease())
+    {
+        ProjectBuildTarget* target = theproject->AddBuildTarget(GetReleaseName());
+        if (target)
         {
-            ProjectBuildTarget* target = theproject->AddBuildTarget(GetReleaseName());
-            if (target)
-            {
-                target->SetCompilerID(GetCompilerID());
-                target->SetIncludeInTargetAll(false);
+            target->SetCompilerID(GetCompilerID());
+            target->SetIncludeInTargetAll(false);
 //                target->SetOutputFilename(GetReleaseOutputDir() + wxFILE_SEP_PATH + GetProjectName() + ext);
-                target->SetObjectOutput(GetReleaseObjectOutputDir());
-            }
+            target->SetObjectOutput(GetReleaseObjectOutputDir());
         }
+    }
 
-        // add all the template files
-        // first get the dirs with the files by calling GetFilesDir()
-        wxString srcdir;
-        try
+    // add all the template files
+    // first get the dirs with the files by calling GetFilesDir()
+    wxString srcdir;
+    try
+    {
+        srcdir = SqPlus::SquirrelFunction<wxString&>("GetFilesDir")();
+        if (!srcdir.IsEmpty())
         {
-            srcdir = SqPlus::SquirrelFunction<wxString&>("GetFilesDir")();
-            if (!srcdir.IsEmpty())
-            {
-                // now break them up (remember: semicolon-separated list of dirs)
-                wxArrayString tmpsrcdirs = GetArrayFromString(srcdir, _T(";"), true);
-                // and copy files from each source dir we got
-                for (size_t i = 0; i < tmpsrcdirs.GetCount(); ++i)
-                    CopyFiles(theproject, prjdir, tmpsrcdirs[i]);
-            }
+            // now break them up (remember: semicolon-separated list of dirs)
+            wxArrayString tmpsrcdirs = GetArrayFromString(srcdir, _T(";"), true);
+            // and copy files from each source dir we got
+            for (size_t i = 0; i < tmpsrcdirs.GetCount(); ++i)
+                CopyFiles(theproject, prjdir, tmpsrcdirs[i]);
         }
-        catch (SquirrelError& e)
-        {
-            Manager::Get()->GetScriptingManager()->DisplayErrors(&e);
-            Clear();
-            return 0;
-        }
+    }
+    catch (SquirrelError& e)
+    {
+        Manager::Get()->GetScriptingManager()->DisplayErrors(&e);
+        Clear();
+        return 0;
+    }
 
-        if (srcdir.IsEmpty())
-            cbMessageBox(_("The wizard didn't provide any files to copy!"), _("Warning"), wxICON_WARNING);
+//    if (srcdir.IsEmpty())
+//        cbMessageBox(_("The wizard didn't provide any files to copy!"), _("Warning"), wxICON_WARNING);
 
-        // ask the script to setup the new project (edit targets, setup options, etc)
-        // call SetupProject()
-        bool success = false;
-        try
-        {
-            success = SqPlus::SquirrelFunction<bool>("SetupProject")(theproject);
-        }
-        catch (SquirrelError& e)
-        {
-            Manager::Get()->GetScriptingManager()->DisplayErrors(&e);
-            Clear();
-            return 0;
-        }
-        if (!success)
+    // ask the script to setup the new project (edit targets, setup options, etc)
+    // call SetupProject()
+    try
+    {
+        if (!SqPlus::SquirrelFunction<bool>("SetupProject")(theproject))
         {
             cbMessageBox(wxString::Format(_("Couldn't setup project options:\n%s"),
                                         prjdir.c_str()),
@@ -330,17 +338,46 @@ CompileTargetBase* Wiz::Launch(int index)
             Clear();
             return 0;
         }
-
-        // save the project and...
-        theproject->Save();
-
-        // finally, make sure everything looks ok
-        Manager::Get()->GetProjectManager()->RebuildTree();
-        Manager::Get()->GetProjectManager()->GetTree()->Expand(theproject->GetProjectNode());
-        success = true;
     }
-    Clear();
-    return success ? theproject : 0;
+    catch (SquirrelError& e)
+    {
+        Manager::Get()->GetScriptingManager()->DisplayErrors(&e);
+        Clear();
+        return 0;
+    }
+
+    // save the project and...
+    theproject->Save();
+
+    // finally, make sure everything looks ok
+    Manager::Get()->GetProjectManager()->RebuildTree();
+    Manager::Get()->GetProjectManager()->GetTree()->Expand(theproject->GetProjectNode());
+    return theproject;
+}
+
+CompileTargetBase* Wiz::RunTargetWizard()
+{
+    return 0;
+}
+
+CompileTargetBase* Wiz::RunFilesWizard()
+{
+    try
+    {
+        SqPlus::SquirrelFunction<void>("CreateFiles")();
+    }
+    catch (SquirrelError& e)
+    {
+        Manager::Get()->GetScriptingManager()->DisplayErrors(&e);
+        Clear();
+        return 0;
+    }
+    return 0;
+}
+
+CompileTargetBase* Wiz::RunWorkspaceWizard()
+{
+    return 0;
 }
 
 void Wiz::CopyFiles(cbProject* theproject, const wxString&  prjdir, const wxString& srcdir)
@@ -522,6 +559,14 @@ void Wiz::AddIntroPage(const wxString& intro_msg)
     m_Pages.Add(page);
 }
 
+void Wiz::AddFilePathPage(bool showHeaderGuard)
+{
+    if (m_pWizFilePathPanel)
+        return; // already added
+    m_pWizFilePathPanel = new WizFilePathPanel(showHeaderGuard, m_pWizard, m_Wizards[m_LaunchIndex].wizardPNG);
+    m_Pages.Add(m_pWizFilePathPanel);
+}
+
 void Wiz::AddProjectPathPage()
 {
     if (m_pWizProjectPathPanel)
@@ -691,6 +736,40 @@ int Wiz::GetLanguageIndex()
     return -1;
 }
 
+wxString Wiz::GetFileName()
+{
+    if (m_pWizFilePathPanel)
+        return m_pWizFilePathPanel->GetFilename();
+    return wxEmptyString;
+}
+
+wxString Wiz::GetFileHeaderGuard()
+{
+    if (m_pWizFilePathPanel)
+        return m_pWizFilePathPanel->GetHeaderGuard();
+    return wxEmptyString;
+}
+
+bool Wiz::GetFileAddToProject()
+{
+    if (m_pWizFilePathPanel)
+        return m_pWizFilePathPanel->GetAddToProject();
+    return false;
+}
+
+int Wiz::GetFileTargetIndex()
+{
+    if (m_pWizFilePathPanel)
+        return m_pWizFilePathPanel->GetTargetIndex();
+    return -1;
+}
+
+void Wiz::SetFilePathSelectionFilter(const wxString& filter)
+{
+    if (m_pWizFilePathPanel)
+        m_pWizFilePathPanel->SetFilePathSelectionFilter(filter);
+}
+
 void Wiz::RegisterWizard()
 {
     SqPlus::SQClassDef<Wiz>("Wiz").
@@ -699,6 +778,7 @@ void Wiz::RegisterWizard()
             // add wizard pages
             func(&Wiz::AddIntroPage, "AddIntroPage").
             func(&Wiz::AddProjectPathPage, "AddProjectPathPage").
+            func(&Wiz::AddFilePathPage, "AddFilePathPage").
             func(&Wiz::AddCompilerPage, "AddCompilerPage").
             func(&Wiz::AddLanguagePage, "AddLanguagePage").
             func(&Wiz::AddPage, "AddPage").
@@ -716,22 +796,31 @@ void Wiz::RegisterWizard()
             func(&Wiz::SetRadioboxSelection, "SetRadioboxSelection").
             // get various common info
             func(&Wiz::GetTemplatePath, "GetTemplatePath").
+            // project path page
             func(&Wiz::GetProjectPath, "GetProjectPath").
             func(&Wiz::GetProjectName, "GetProjectName").
             func(&Wiz::GetProjectFullFilename, "GetProjectFullFilename").
             func(&Wiz::GetProjectTitle, "GetProjectTitle").
+            // compiler page
             func(&Wiz::GetCompilerID, "GetCompilerID").
-            func(&Wiz::GetLanguageIndex, "GetLanguageIndex").
-            // debug target
+            // + debug target
             func(&Wiz::GetWantDebug, "GetWantDebug").
             func(&Wiz::GetDebugName, "GetDebugName").
             func(&Wiz::GetDebugOutputDir, "GetDebugOutputDir").
             func(&Wiz::GetDebugObjectOutputDir, "GetDebugObjectOutputDir").
-            // release target
+            // + release target
             func(&Wiz::GetWantRelease, "GetWantRelease").
             func(&Wiz::GetReleaseName, "GetReleaseName").
             func(&Wiz::GetReleaseOutputDir, "GetReleaseOutputDir").
-            func(&Wiz::GetReleaseObjectOutputDir, "GetReleaseObjectOutputDir");
+            func(&Wiz::GetReleaseObjectOutputDir, "GetReleaseObjectOutputDir").
+            // language page
+            func(&Wiz::GetLanguageIndex, "GetLanguageIndex").
+            // file path page
+            func(&Wiz::GetFileName, "GetFileName").
+            func(&Wiz::GetFileHeaderGuard, "GetFileHeaderGuard").
+            func(&Wiz::GetFileAddToProject, "GetFileAddToProject").
+            func(&Wiz::GetFileTargetIndex, "GetFileTargetIndex").
+            func(&Wiz::SetFilePathSelectionFilter, "SetFilePathSelectionFilter");
 
     SqPlus::BindVariable(this, "Wizard", SqPlus::VAR_ACCESS_READ_ONLY);
 }

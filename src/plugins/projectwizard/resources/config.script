@@ -5,8 +5,10 @@
 
 function main()
 {
-    // add existing wizards
-
+	//
+    // project wizards
+    //
+    RegisterWizard(otProject, _T("empty"),     _T("Empty project"),   		_T("Console"));
     RegisterWizard(otProject, _T("console"),   _T("Console application"),   _T("Console"));
     RegisterWizard(otProject, _T("d"),         _T("D application"),         _T("D language"));
     RegisterWizard(otProject, _T("glfw"),      _T("GLFW project"),          _T("2D/3D Graphics"));
@@ -14,6 +16,12 @@ function main()
     RegisterWizard(otProject, _T("irrlicht"),  _T("Irrlicht project"),      _T("2D/3D Graphics"));
     RegisterWizard(otProject, _T("ogre"),      _T("Ogre project"),          _T("2D/3D Graphics"));
     RegisterWizard(otProject, _T("wxwidgets"), _T("wxWidgets application"), _T("GUI"));
+
+	//
+	// file wizards
+	//
+    RegisterWizard(otFiles, _T("c_file"), _T("C/C++ source"), _T("C/C++"));
+    RegisterWizard(otFiles, _T("h_file"), _T("C/C++ header"), _T("C/C++"));
 }
 
 function RegisterWizard(type, folder, title, category)
