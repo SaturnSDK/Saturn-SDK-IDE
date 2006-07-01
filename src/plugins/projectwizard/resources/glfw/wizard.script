@@ -53,7 +53,7 @@ function OnLeave_GlfwPath(fwd)
         if (!IO.FileExists(dir + _T("/include/GL/glfw.h")))
         {
             ShowError(_T("The path you entered seems valid, but this wizard " +
-                    "can't locate GLFW's files in it..."));
+                         "can't locate GLFW's files in it..."));
             return false;
         }
 
