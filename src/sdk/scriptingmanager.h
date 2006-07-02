@@ -30,12 +30,11 @@ class DLLIMPORT ScriptingManager : public Mgr<ScriptingManager>
 {
         friend class Mgr<ScriptingManager>;
     public:
-        /** Loads a script and runs the function "main()" (if needed/exists).
+        /** Loads a script.
           * @param script The script to run.
-          * @param autorunMain If true, runs the "main()" function (if it exists).
           * @return True if the script loaded and compiled, false if not.
           */
-        bool LoadScript(const wxString& filename, bool autorunMain = true);
+        bool LoadScript(const wxString& filename);
 
         /** Returns an error string for the passed exception (if any) plus
           * any accumulated script engine errors (e.g. from failed function calls).

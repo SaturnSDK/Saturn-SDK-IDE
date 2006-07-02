@@ -142,8 +142,8 @@
             </object>
           </object>
           <object class="listbookpage">
-            <label>Workspaces</label>
-            <object class="wxPanel" name="pnlWorkspaces">
+            <label>Custom</label>
+            <object class="wxPanel" name="pnlCustoms">
               <object class="wxBoxSizer">
                 <orient>wxVERTICAL</orient>
                 <object class="sizeritem">
@@ -160,7 +160,7 @@
                       <object class="wxBoxSizer">
                         <orient>wxVERTICAL</orient>
                         <object class="sizeritem">
-                          <object class="wxComboBox" name="cmbWorkspaceCategories">
+                          <object class="wxComboBox" name="cmbCustomCategories">
                             <content/>
                             <style>wxCB_SORT|wxCB_READONLY|wxCB_DROPDOWN</style>
                           </object>
@@ -176,7 +176,7 @@
                   <flag>wxGROW</flag>
                 </object>
                 <object class="sizeritem">
-                  <object class="wxListCtrl" name="listWorkspaces">
+                  <object class="wxListCtrl" name="listCustoms">
                     <style>wxLC_ICON|wxLC_AUTOARRANGE|wxLC_SINGLE_SEL</style>
                   </object>
                   <option>1</option>
@@ -209,7 +209,7 @@
                 <object class="sizeritem">
                   <object class="wxStaticText">
                     <label>* To delete a user template, delete the similarly named folder created
-   in %APPDATA%\codeblocks\UserTemplates (for Windows) or 
+   in %APPDATA%\codeblocks\UserTemplates (for Windows) or
    ~/.codeblocks (for other platforms).</label>
                   </object>
                 </object>

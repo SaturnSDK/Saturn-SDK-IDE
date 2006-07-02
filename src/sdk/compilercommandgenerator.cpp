@@ -250,7 +250,7 @@ void CompilerCommandGenerator::DoBuildScripts(CompileOptionsBase* base, const wx
     const wxArrayString& scripts = base->GetBuildScripts();
     for (size_t i = 0; i < scripts.GetCount(); ++i)
     {
-        Manager::Get()->GetScriptingManager()->LoadScript(scripts[i], false);
+        Manager::Get()->GetScriptingManager()->LoadScript(scripts[i]);
         try
         {
             SqPlus::SquirrelFunction<void>(cbU2C(funcName))(base);

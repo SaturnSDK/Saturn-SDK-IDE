@@ -472,7 +472,7 @@ class PLUGIN_EXPORT cbWizardPlugin : public cbPlugin
             otProject = 0, ///< outputs a new project
             otTarget, ///< outputs a new target in a project
             otFiles, ///< outputs a new file (or files)
-            otWorkspace ///< outputs a new workspace
+            otCustom ///< custom output (entirely up to the wizard)
         };
 
         cbWizardPlugin();

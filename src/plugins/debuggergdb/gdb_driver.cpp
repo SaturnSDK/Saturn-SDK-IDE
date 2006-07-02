@@ -61,7 +61,7 @@ void GDB_driver::InitializeScripting()
 
     // run all scripts
     wxString script = _T("gdb_types.script");
-    Manager::Get()->GetScriptingManager()->LoadScript(script, false);
+    Manager::Get()->GetScriptingManager()->LoadScript(script);
     try
     {
         SqPlus::SquirrelFunction<void>("RegisterTypes")(this);

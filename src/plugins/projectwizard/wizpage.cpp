@@ -14,8 +14,10 @@
 #include "intropanel.h"
 #include "projectpathpanel.h"
 #include "compilerpanel.h"
+#include "buildtargetpanel.h"
 #include "languagepanel.h"
 #include "filepathpanel.h"
+#include "genericselectpath.h"
 
 // utility function to append a path separator to the
 // string parameter, if needed.
@@ -297,6 +299,59 @@ void WizProjectPathPanel::OnPageChanged(wxWizardEvent& event)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+// WizGenericSelectPathPanel
+////////////////////////////////////////////////////////////////////////////////
+
+BEGIN_EVENT_TABLE(WizGenericSelectPathPanel, WizPageBase)
+    EVT_BUTTON(-1, WizGenericSelectPathPanel::OnButton)
+END_EVENT_TABLE()
+
+WizGenericSelectPathPanel::WizGenericSelectPathPanel(const wxString& pageId, const wxString& descr, const wxString& label,
+                                            wxWizard* parent, const wxBitmap& bitmap)
+    : WizPageBase(pageId, parent, bitmap)
+{
+    m_pGenericSelectPath = new GenericSelectPath(this);
+    m_pGenericSelectPath->txtFolder->SetValue(Manager::Get()->GetConfigManager(_T("project_wizard"))->Read(_T("/generic_paths/") + pageId));
+    m_pGenericSelectPath->SetDescription(descr);
+    m_pGenericSelectPath->lblLabel->SetLabel(label);
+}
+
+//------------------------------------------------------------------------------
+WizGenericSelectPathPanel::~WizGenericSelectPathPanel()
+{
+}
+
+//------------------------------------------------------------------------------
+void WizGenericSelectPathPanel::OnButton(wxCommandEvent& event)
+{
+    wxString dir = m_pGenericSelectPath->txtFolder->GetValue();
+    dir = ChooseDirectory(0, _("Please select location"), dir, wxEmptyString, false, true);
+    if (!dir.IsEmpty() && wxDirExists(dir))
+        m_pGenericSelectPath->txtFolder->SetValue(dir);
+}
+
+//------------------------------------------------------------------------------
+void WizGenericSelectPathPanel::OnPageChanging(wxWizardEvent& event)
+{
+    if (event.GetDirection() != 0) // !=0 forward, ==0 backward
+	{
+	    wxString dir = m_pGenericSelectPath->txtFolder->GetValue();
+		if (!wxDirExists(dir))
+		{
+            cbMessageBox(_("Please select a valid location..."), _("Error"), wxICON_ERROR);
+            event.Veto();
+            return;
+		}
+	}
+    WizPageBase::OnPageChanging(event); // let the base class handle it too
+
+    if (event.GetDirection() != 0 && event.IsAllowed())
+    {
+        Manager::Get()->GetConfigManager(_T("project_wizard"))->Write(_T("/generic_paths/") + m_PageName, m_pGenericSelectPath->txtFolder->GetValue());
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 // WizCompilerPanel
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -434,6 +489,113 @@ void WizCompilerPanel::OnPageChanging(wxWizardEvent& event)
         cfg->Write(_T("/generic_wizard/release_name"), GetReleaseName());
         cfg->Write(_T("/generic_wizard/release_output"), GetReleaseOutputDir());
         cfg->Write(_T("/generic_wizard/release_objects_output"), GetReleaseObjectOutputDir());
+	}
+    WizPageBase::OnPageChanging(event); // let the base class handle it too
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// WizBuildTargetPanel
+////////////////////////////////////////////////////////////////////////////////
+
+WizBuildTargetPanel::WizBuildTargetPanel(const wxString& targetName, bool isDebug,
+                                    wxWizard* parent, const wxBitmap& bitmap,
+                                    bool showCompiler,
+                                    const wxString& compilerID, const wxString& validCompilerIDs,
+                                    bool allowCompilerChange)
+    : WizPageBase(_T("BuildTargetPage"), parent, bitmap)
+{
+    m_pBuildTargetPanel = new BuildTargetPanel(this);
+    m_pBuildTargetPanel->SetTargetName(targetName);
+    m_pBuildTargetPanel->SetEnableDebug(isDebug);
+    m_pBuildTargetPanel->ShowCompiler(showCompiler);
+
+    if (showCompiler)
+    {
+        wxArrayString valids = GetArrayFromString(validCompilerIDs, _T(";"), true);
+        wxString def = compilerID;
+        if (def.IsEmpty())
+            def = CompilerFactory::GetDefaultCompiler()->GetName();
+        int id = 0;
+        wxComboBox* cmb = m_pBuildTargetPanel->GetCompilerCombo();
+        cmb->Clear();
+        for (size_t i = 0; i < CompilerFactory::GetCompilersCount(); ++i)
+        {
+            for (size_t n = 0; n < valids.GetCount(); ++n)
+            {
+                if (CompilerFactory::GetCompiler(i)->GetID().Matches(valids[n]))
+                {
+                    cmb->Append(CompilerFactory::GetCompiler(i)->GetName());
+                    if (CompilerFactory::GetCompiler(i)->GetID().IsSameAs(def))
+                        id = cmb->GetCount();
+                    break;
+                }
+            }
+        }
+        cmb->SetSelection(id);
+        cmb->Enable(allowCompilerChange);
+    }
+}
+
+//------------------------------------------------------------------------------
+WizBuildTargetPanel::~WizBuildTargetPanel()
+{
+}
+
+//------------------------------------------------------------------------------
+wxString WizBuildTargetPanel::GetCompilerID()
+{
+    if (!m_pBuildTargetPanel->GetCompilerCombo()->IsShown())
+        return wxEmptyString;
+
+    Compiler* compiler = CompilerFactory::GetCompilerByName(m_pBuildTargetPanel->GetCompilerCombo()->GetStringSelection());
+    if (compiler)
+        return compiler->GetID();
+    return wxEmptyString;
+}
+
+//------------------------------------------------------------------------------
+bool WizBuildTargetPanel::GetEnableDebug()
+{
+    return m_pBuildTargetPanel->GetEnableDebug();
+}
+
+//------------------------------------------------------------------------------
+wxString WizBuildTargetPanel::GetTargetName()
+{
+    return m_pBuildTargetPanel->GetTargetName();
+}
+
+//------------------------------------------------------------------------------
+wxString WizBuildTargetPanel::GetTargetOutputDir()
+{
+    return AppendPathSepIfNeeded(m_pBuildTargetPanel->GetOutputDir());
+}
+
+//------------------------------------------------------------------------------
+wxString WizBuildTargetPanel::GetTargetObjectOutputDir()
+{
+    return AppendPathSepIfNeeded(m_pBuildTargetPanel->GetObjectOutputDir());
+}
+
+//------------------------------------------------------------------------------
+void WizBuildTargetPanel::OnPageChanging(wxWizardEvent& event)
+{
+    if (event.GetDirection() != 0) // !=0 forward, ==0 backward
+	{
+        if (m_pBuildTargetPanel->GetCompilerCombo()->IsShown() && GetCompilerID().IsEmpty())
+        {
+            wxMessageBox(_("You must select a compiler for your build target..."), _("Error"), wxICON_ERROR);
+            event.Veto();
+            return;
+        }
+
+        cbProject* theproject = Manager::Get()->GetProjectManager()->GetActiveProject(); // can't fail; if no project, the wizard didn't even run
+        if (theproject->GetBuildTarget(m_pBuildTargetPanel->GetTargetName()))
+        {
+            wxMessageBox(_("A build target with that name already exists in the active project..."), _("Error"), wxICON_ERROR);
+            event.Veto();
+            return;
+        }
 	}
     WizPageBase::OnPageChanging(event); // let the base class handle it too
 }

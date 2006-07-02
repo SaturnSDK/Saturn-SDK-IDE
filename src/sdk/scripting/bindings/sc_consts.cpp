@@ -9,8 +9,8 @@
 #include "sc_base_types.h"
 
 // helper macros to bind constants
-#define BIND_INT_CONSTANT(a) SqPlus::BindConstant<int>(a, #a);
-#define BIND_INT_CONSTANT_NAMED(a,n) SqPlus::BindConstant<int>(a, n);
+#define BIND_INT_CONSTANT(a) SqPlus::BindConstant<SQInteger>(a, #a);
+#define BIND_INT_CONSTANT_NAMED(a,n) SqPlus::BindConstant<SQInteger>(a, n);
 #define BIND_WXSTR_CONSTANT_NAMED(a,n) BindVariable(const_cast<wxString*>(&a), n, SqPlus::VAR_ACCESS_CONSTANT);
 
 namespace ScriptBindings
@@ -89,10 +89,10 @@ namespace ScriptBindings
         BIND_INT_CONSTANT(pcmAsIs);
 
         // cbWizardPlugin::OutputType
-        BIND_INT_CONSTANT_NAMED(cbWizardPlugin::otProject, "otProject");
-        BIND_INT_CONSTANT_NAMED(cbWizardPlugin::otTarget, "otTarget");
-        BIND_INT_CONSTANT_NAMED(cbWizardPlugin::otFiles, "otFiles");
-        BIND_INT_CONSTANT_NAMED(cbWizardPlugin::otWorkspace, "otWorkspace");
+        BIND_INT_CONSTANT_NAMED(cbWizardPlugin::otProject, "wizProject");
+        BIND_INT_CONSTANT_NAMED(cbWizardPlugin::otTarget, "wizTarget");
+        BIND_INT_CONSTANT_NAMED(cbWizardPlugin::otFiles, "wizFiles");
+        BIND_INT_CONSTANT_NAMED(cbWizardPlugin::otCustom, "wizCustom");
 
         // file extensions
         BIND_WXSTR_CONSTANT_NAMED(FileFilters::WORKSPACE_EXT, "EXT_WORKSPACE");

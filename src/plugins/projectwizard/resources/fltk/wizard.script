@@ -9,14 +9,19 @@ FltkPath <- _T("");
 
 function BeginWizard()
 {
-    local intro_msg = _T("Welcome to the new FLTK project wizard!\n\n"
-                         "This wizard will guide you to create a new project\n"
-                         "using the FLTK GUI C++ library.\n\n"
+    local intro_msg = _T("Welcome to the new FLTK project wizard!\n\n" +
+                         "This wizard will guide you to create a new project\n" +
+                         "using the FLTK GUI C++ library.\n\n" +
                          "When you 're ready to proceed, please click \"Next\"...");
+
+    local fltkpath_descr = _T("Please select the location of FLTK on your computer.\n" +
+                                "This is the top-level folder where FLTK was installed (unpacked).\n" +
+                                "To help you, this folder must contain the subfolders\n" +
+                                "\"include\" and \"lib\".");
 
     Wizard.AddIntroPage(intro_msg);
     Wizard.AddProjectPathPage();
-    Wizard.AddPage(_T("FltkPath"));
+    Wizard.AddGenericSelectPathPage(_T("FltkPath"), fltkpath_descr, _T("Please select FLTK's location:"));
     Wizard.AddCompilerPage(_T(""), _T("*"), true, true);
 }
 
@@ -24,35 +29,15 @@ function BeginWizard()
 // FLTK's path page
 ////////////////////////////////////////////////////////////////////////////////
 
-function OnEnter_FltkPath(fwd)
-{
-    if (fwd)
-    {
-        local dir = Wizard.GetTextControlValue(_T("txtFltkPath"));
-        if (dir.length() == 0)
-        {
-            // first time here, set default value
-            dir = ConfigManager.Read(_T("/fltk_project_wizard/path"), _T(""));
-            if (dir.IsEmpty()) // try global var
-                dir = ReplaceMacros(_T("$(#fltk)"), true);
-            Wizard.SetTextControlValue(_T("txtFltkPath"), dir);
-        }
-    }
-}
 
 function OnLeave_FltkPath(fwd)
 {
     if (fwd)
     {
-        local dir = Wizard.GetTextControlValue(_T("txtFltkPath"));
-        if (!IO.DirectoryExists(dir))
-        {
-            ShowError(_T("Please select a valid path to FLTK..."));
-            return false;
-        }
+        local dir = Wizard.GetTextControlValue(_T("txtFolder")); // txtFolder is the text control in GenericSelectPathPage
         if (!IO.FileExists(dir + _T("/include/FL/Fl.H")))
         {
-            ShowError(_T("The path you entered seems valid, but this wizard "
+            ShowError(_T("The path you entered seems valid, but this wizard " +
                          "can't locate FLTK's files in it..."));
             return false;
         }
@@ -62,18 +47,8 @@ function OnLeave_FltkPath(fwd)
         if (gvar.Matches(dir))
             dir = gvar;
         FltkPath = dir;
-        ConfigManager.Write(_T("/fltk_project_wizard/path"), dir, true);
     }
     return true;
-}
-
-function OnClick_btnFltkPathBrowse()
-{
-    local dir = Wizard.GetTextControlValue(_T("txtFltkPath"));
-    dir = IO.SelectDirectory(_T("Please select FLTK's top-level folder"), dir, false);
-
-    if (IO.DirectoryExists(dir))
-        Wizard.SetTextControlValue(_T("txtFltkPath"), dir);
 }
 
 // return the files this project contains

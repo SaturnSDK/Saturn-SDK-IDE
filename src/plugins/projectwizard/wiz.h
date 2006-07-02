@@ -33,7 +33,9 @@ class wxWizardPageSimple;
 class WizProjectPathPanel;
 class WizFilePathPanel;
 class WizCompilerPanel;
+class WizBuildTargetPanel;
 class WizLanguagePanel;
+class WizGenericSelectPathPanel;
 
 struct WizardInfo
 {
@@ -71,7 +73,7 @@ class Wiz : public cbWizardPlugin
 		CompileTargetBase* RunProjectWizard(); // called by Launch() for otProject wizards
 		CompileTargetBase* RunTargetWizard(); // called by Launch() for otTarget wizards (always returns NULL)
 		CompileTargetBase* RunFilesWizard(); // called by Launch() for otFiles wizards (always returns NULL)
-		CompileTargetBase* RunWorkspaceWizard(); // called by Launch() for otWorkspace wizards (always returns NULL)
+		CompileTargetBase* RunCustomWizard(); // called by Launch() for otCustom wizards (always returns NULL)
 
         // Scripting support
         void AddWizard(cbWizardPlugin::OutputType otype,
@@ -81,6 +83,8 @@ class Wiz : public cbWizardPlugin
                         const wxString& templatePNG,
                         const wxString& wizardPNG,
                         const wxString& xrc);
+
+        cbWizardPlugin::OutputType GetWizardType();
 
         void CheckCheckbox(const wxString& name, bool check);
         bool IsCheckboxChecked(const wxString& name);
@@ -115,6 +119,13 @@ class Wiz : public cbWizardPlugin
         wxString GetReleaseOutputDir();
         wxString GetReleaseObjectOutputDir();
 
+        // build target page
+        wxString GetTargetCompilerID();
+        bool GetTargetEnableDebug();
+        wxString GetTargetName();
+        wxString GetTargetOutputDir();
+        wxString GetTargetObjectOutputDir();
+
         // language page
         int GetLanguageIndex();
 
@@ -130,7 +141,9 @@ class Wiz : public cbWizardPlugin
         void AddFilePathPage(bool showHeaderGuard);
         void AddProjectPathPage();
         void AddCompilerPage(const wxString& compilerID, const wxString& validCompilerIDs, bool allowCompilerChange = true, bool allowConfigChange = true);
+        void AddBuildTargetPage(const wxString& targetName, bool isDebug, bool showCompiler = false, const wxString& compilerID = wxEmptyString, const wxString& validCompilerIDs = _T("*"), bool allowCompilerChange = true);
         void AddLanguagePage(const wxString& langs, int defLang);
+        void AddGenericSelectPathPage(const wxString& pageId, const wxString& descr, const wxString& label);
         // XRC pages
         void AddPage(const wxString& panelName);
 
@@ -148,6 +161,7 @@ class Wiz : public cbWizardPlugin
         WizProjectPathPanel* m_pWizProjectPathPanel;
         WizFilePathPanel* m_pWizFilePathPanel;
         WizCompilerPanel* m_pWizCompilerPanel;
+        WizBuildTargetPanel* m_pWizBuildTargetPanel;
         WizLanguagePanel* m_pWizLanguagePanel;
         int m_LaunchIndex;
         wxString m_TemplatePath;

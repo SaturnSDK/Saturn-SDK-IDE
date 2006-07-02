@@ -9,14 +9,20 @@ SmartwinPath <- _T("");
 
 function BeginWizard()
 {
-    local intro_msg = _T("Welcome to the new Smartwin project wizard!\n\n"
-                         "This wizard will guide you to create a new project\n"
-                         "using the Smartwin GUI C++ library.\n\n"
+    local intro_msg = _T("Welcome to the new Smartwin project wizard!\n\n" +
+                         "This wizard will guide you to create a new project\n" +
+                         "using the Smartwin GUI C++ library.\n\n" +
                          "When you 're ready to proceed, please click \"Next\"...");
+
+
+    local swpath_descr = _T("Please select the location of SmartWin on your computer.\n" +
+                                "This is the top-level folder where SmartWin was installed (unpacked).\n" +
+                                "To help you, this folder must contain the subfolders\n" +
+                                "\"include\" and \"lib\".");
 
     Wizard.AddIntroPage(intro_msg);
     Wizard.AddProjectPathPage();
-    Wizard.AddPage(_T("SmartwinPath"));
+    Wizard.AddGenericSelectPathPage(_T("SmartwinPath"), swpath_descr, _T("Please select SmartWin's location:"));
     Wizard.AddCompilerPage(_T(""), _T("*"), true, true);
 }
 
@@ -24,35 +30,14 @@ function BeginWizard()
 // Smartwin's path page
 ////////////////////////////////////////////////////////////////////////////////
 
-function OnEnter_SmartwinPath(fwd)
-{
-    if (fwd)
-    {
-        local dir = Wizard.GetTextControlValue(_T("txtSmartwinPath"));
-        if (dir.length() == 0)
-        {
-            // first time here, set default value
-            dir = ConfigManager.Read(_T("/smartwin_project_wizard/path"), _T(""));
-            if (dir.IsEmpty()) // try global var
-                dir = ReplaceMacros(_T("$(#sw)"), true);
-            Wizard.SetTextControlValue(_T("txtSmartwinPath"), dir);
-        }
-    }
-}
-
 function OnLeave_SmartwinPath(fwd)
 {
     if (fwd)
     {
-        local dir = Wizard.GetTextControlValue(_T("txtSmartwinPath"));
-        if (!IO.DirectoryExists(dir))
-        {
-            ShowError(_T("Please select a valid path to Smartwin..."));
-            return false;
-        }
+        local dir = Wizard.GetTextControlValue(_T("txtFolder"));
         if (!IO.FileExists(dir + _T("/include/SmartWin.h")))
         {
-            ShowError(_T("The path you entered seems valid, but this wizard "
+            ShowError(_T("The path you entered seems valid, but this wizard " +
                          "can't locate Smartwin's files in it..."));
             return false;
         }
@@ -62,18 +47,8 @@ function OnLeave_SmartwinPath(fwd)
         if (gvar.Matches(dir))
             dir = gvar;
         SmartwinPath = dir;
-        ConfigManager.Write(_T("/smartwin_project_wizard/path"), dir, true);
     }
     return true;
-}
-
-function OnClick_btnSmartwinPathBrowse()
-{
-    local dir = Wizard.GetTextControlValue(_T("txtSmartwinPath"));
-    dir = IO.SelectDirectory(_T("Please select Smartwin's top-level folder"), dir, false);
-
-    if (IO.DirectoryExists(dir))
-        Wizard.SetTextControlValue(_T("txtSmartwinPath"), dir);
 }
 
 // return the files this project contains

@@ -70,8 +70,8 @@ BEGIN_EVENT_TABLE(NewFromTemplateDlg, wxDialog)
 	EVT_COMBOBOX(XRCID("cmbFileCategories"), NewFromTemplateDlg::OnCategoryChanged)
 
     // workspaces
-	EVT_LIST_ITEM_RIGHT_CLICK(XRCID("listWorkspaces"), NewFromTemplateDlg::OnListRightClick)
-	EVT_COMBOBOX(XRCID("cmbWorkspaceCategories"), NewFromTemplateDlg::OnCategoryChanged)
+	EVT_LIST_ITEM_RIGHT_CLICK(XRCID("listCustoms"), NewFromTemplateDlg::OnListRightClick)
+	EVT_COMBOBOX(XRCID("cmbCustomCategories"), NewFromTemplateDlg::OnCategoryChanged)
 
     // context menu for wizard scripts
 	EVT_MENU(idEditWizardScript, NewFromTemplateDlg::OnEditScript)
@@ -94,7 +94,7 @@ NewFromTemplateDlg::NewFromTemplateDlg(const wxArrayString& user_templates)
     XRCCTRL(*this, "listProjects", wxListCtrl)->SetImageList(new wxImageList(32, 32), wxIMAGE_LIST_NORMAL);
     XRCCTRL(*this, "listTargets", wxListCtrl)->SetImageList(new wxImageList(32, 32), wxIMAGE_LIST_NORMAL);
     XRCCTRL(*this, "listFiles", wxListCtrl)->SetImageList(new wxImageList(32, 32), wxIMAGE_LIST_NORMAL);
-    XRCCTRL(*this, "listWorkspaces", wxListCtrl)->SetImageList(new wxImageList(32, 32), wxIMAGE_LIST_NORMAL);
+    XRCCTRL(*this, "listCustoms", wxListCtrl)->SetImageList(new wxImageList(32, 32), wxIMAGE_LIST_NORMAL);
 
 	BuildCategories();
 	BuildList();
@@ -113,12 +113,12 @@ NewFromTemplateDlg::~NewFromTemplateDlg()
     delete XRCCTRL(*this, "listProjects", wxListCtrl)->GetImageList(wxIMAGE_LIST_NORMAL);
     delete XRCCTRL(*this, "listTargets", wxListCtrl)->GetImageList(wxIMAGE_LIST_NORMAL);
     delete XRCCTRL(*this, "listFiles", wxListCtrl)->GetImageList(wxIMAGE_LIST_NORMAL);
-    delete XRCCTRL(*this, "listWorkspaces", wxListCtrl)->GetImageList(wxIMAGE_LIST_NORMAL);
+    delete XRCCTRL(*this, "listCustoms", wxListCtrl)->GetImageList(wxIMAGE_LIST_NORMAL);
 
     XRCCTRL(*this, "listProjects", wxListCtrl)->SetImageList(0, wxIMAGE_LIST_NORMAL);
     XRCCTRL(*this, "listTargets", wxListCtrl)->SetImageList(0, wxIMAGE_LIST_NORMAL);
     XRCCTRL(*this, "listFiles", wxListCtrl)->SetImageList(0, wxIMAGE_LIST_NORMAL);
-    XRCCTRL(*this, "listWorkspaces", wxListCtrl)->SetImageList(0, wxIMAGE_LIST_NORMAL);
+    XRCCTRL(*this, "listCustoms", wxListCtrl)->SetImageList(0, wxIMAGE_LIST_NORMAL);
 
 	ClearList();
 }
@@ -128,7 +128,7 @@ void NewFromTemplateDlg::ClearList()
 	ClearListFor(XRCCTRL(*this, "listProjects", wxListCtrl));
 	ClearListFor(XRCCTRL(*this, "listTargets", wxListCtrl));
 	ClearListFor(XRCCTRL(*this, "listFiles", wxListCtrl));
-	ClearListFor(XRCCTRL(*this, "listWorkspaces", wxListCtrl));
+	ClearListFor(XRCCTRL(*this, "listCustoms", wxListCtrl));
 }
 
 void NewFromTemplateDlg::ClearListFor(wxListCtrl* list)
@@ -148,7 +148,7 @@ void NewFromTemplateDlg::BuildCategories()
 	BuildCategoriesFor(cbWizardPlugin::otProject, XRCCTRL(*this, "cmbProjectCategories", wxComboBox));
 	BuildCategoriesFor(cbWizardPlugin::otTarget, XRCCTRL(*this, "cmbTargetCategories", wxComboBox));
 	BuildCategoriesFor(cbWizardPlugin::otFiles, XRCCTRL(*this, "cmbFileCategories", wxComboBox));
-	BuildCategoriesFor(cbWizardPlugin::otWorkspace, XRCCTRL(*this, "cmbWorkspaceCategories", wxComboBox));
+	BuildCategoriesFor(cbWizardPlugin::otCustom, XRCCTRL(*this, "cmbCustomCategories", wxComboBox));
 }
 
 void NewFromTemplateDlg::BuildCategoriesFor(cbWizardPlugin::OutputType otype, wxComboBox* cat)
@@ -198,7 +198,7 @@ void NewFromTemplateDlg::BuildList()
 	BuildListFor(cbWizardPlugin::otProject, XRCCTRL(*this, "listProjects", wxListCtrl), XRCCTRL(*this, "cmbProjectCategories", wxComboBox));
 	BuildListFor(cbWizardPlugin::otTarget, XRCCTRL(*this, "listTargets", wxListCtrl), XRCCTRL(*this, "cmbTargetCategories", wxComboBox));
 	BuildListFor(cbWizardPlugin::otFiles, XRCCTRL(*this, "listFiles", wxListCtrl), XRCCTRL(*this, "cmbFileCategories", wxComboBox));
-	BuildListFor(cbWizardPlugin::otWorkspace, XRCCTRL(*this, "listWorkspaces", wxListCtrl), XRCCTRL(*this, "cmbWorkspaceCategories", wxComboBox));
+	BuildListFor(cbWizardPlugin::otCustom, XRCCTRL(*this, "listCustoms", wxListCtrl), XRCCTRL(*this, "cmbCustomCategories", wxComboBox));
 }
 
 void NewFromTemplateDlg::BuildListFor(cbWizardPlugin::OutputType otype, wxListCtrl* list, wxComboBox* cat)
@@ -243,7 +243,7 @@ wxListCtrl* NewFromTemplateDlg::GetVisibleListCtrl()
         case 0: return XRCCTRL(*this, "listProjects", wxListCtrl); // projects
         case 1: return XRCCTRL(*this, "listTargets", wxListCtrl); // targets
         case 2: return XRCCTRL(*this, "listFiles", wxListCtrl); // files
-        case 3: return XRCCTRL(*this, "listWorkspaces", wxListCtrl); // workspaces
+        case 3: return XRCCTRL(*this, "listCustoms", wxListCtrl); // workspaces
         default: return 0;
     }
 }
@@ -258,7 +258,7 @@ wxComboBox* NewFromTemplateDlg::GetVisibleCategory()
         case 0: return XRCCTRL(*this, "cmbProjectCategories", wxComboBox); // projects
         case 1: return XRCCTRL(*this, "cmbTargetCategories", wxComboBox); // targets
         case 2: return XRCCTRL(*this, "cmbFileCategories", wxComboBox); // files
-        case 3: return XRCCTRL(*this, "cmbWorkspaceCategories", wxComboBox); // workspaces
+        case 3: return XRCCTRL(*this, "cmbCustomCategories", wxComboBox); // workspaces
         default: return 0;
     }
 }
@@ -273,7 +273,7 @@ cbWizardPlugin::OutputType NewFromTemplateDlg::GetVisibleOutputType()
         case 0: return cbWizardPlugin::otProject;
         case 1: return cbWizardPlugin::otTarget;
         case 2: return cbWizardPlugin::otFiles;
-        case 3: return cbWizardPlugin::otWorkspace;
+        case 3: return cbWizardPlugin::otCustom;
         default: return cbWizardPlugin::otProject;
     }
 }

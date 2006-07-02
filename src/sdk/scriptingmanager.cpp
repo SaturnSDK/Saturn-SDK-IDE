@@ -57,7 +57,7 @@ ScriptingManager::~ScriptingManager()
 	SquirrelVM::Shutdown();
 }
 
-bool ScriptingManager::LoadScript(const wxString& filename, bool autorunMain)
+bool ScriptingManager::LoadScript(const wxString& filename)
 {
     wxLogNull ln;
 
@@ -95,18 +95,6 @@ bool ScriptingManager::LoadScript(const wxString& filename, bool autorunMain)
     try
     {
         SquirrelVM::RunScript(script);
-        if (autorunMain)
-        {
-            // run main()
-            try
-            {
-                SqPlus::SquirrelFunction<void>("main")();
-            }
-            catch (SquirrelError e)
-            {
-                cbMessageBox(wxString::Format(_T("Filename: %s\nError: %s\nDetails: %s"), filename.c_str(), cbC2U(e.desc).c_str(), s_ScriptErrors.c_str()), _("Script error"), wxICON_ERROR);
-            }
-        }
     }
     catch (SquirrelError e)
     {

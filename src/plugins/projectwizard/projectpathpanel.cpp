@@ -26,7 +26,7 @@ ProjectPathPanel::ProjectPathPanel(wxWindow* parent,wxWindowID id)
 
 	Create(parent,id,wxDefaultPosition,wxDefaultSize,wxTAB_TRAVERSAL);
 	BoxSizer1 = new wxBoxSizer(wxVERTICAL);
-	StaticText1 = new wxStaticText(this,ID_STATICTEXT1,_("Please select the folder where you want the new project\nto be created as well as its title."),wxDefaultPosition,wxDefaultSize,0);
+	StaticText1 = new wxStaticText(this,ID_STATICTEXT1,_("Please select the folder where you want the new project\nto be created as well as its title."),wxDefaultPosition,wxDefaultSize,wxST_NO_AUTORESIZE);
 	StaticText4 = new wxStaticText(this,ID_STATICTEXT4,_("Project title:"),wxDefaultPosition,wxDefaultSize,0);
 	txtPrjTitle = new wxTextCtrl(this,ID_TEXTCTRL3,_T(""),wxDefaultPosition,wxDefaultSize,0);
 	if ( 0 ) txtPrjTitle->SetMaxLength(0);

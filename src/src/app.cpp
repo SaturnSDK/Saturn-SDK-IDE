@@ -422,7 +422,15 @@ bool CodeBlocksApp::OnInit()
         Manager::Get()->ProcessEvent(event);
 
         // run startup script
-        Manager::Get()->GetScriptingManager()->LoadScript(_T("startup.script"));
+        try
+        {
+            Manager::Get()->GetScriptingManager()->LoadScript(_T("startup.script"));
+            SqPlus::SquirrelFunction<void>("main")();
+        }
+        catch (SquirrelError& exception)
+        {
+            Manager::Get()->GetScriptingManager()->DisplayErrors(&exception);
+        }
         Manager::ProcessPendingEvents();
 
         // finally, show the app
