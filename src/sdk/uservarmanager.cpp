@@ -275,6 +275,7 @@ END_EVENT_TABLE()
 
 
 
+
 UsrGlblMgrEditDialog::UsrGlblMgrEditDialog(const wxString& var) : currentSet(Manager::Get()->GetConfigManager(_T("gcv"))->Read(_T("/active"))), currentVar(var)
 {
     wxXmlResource::Get()->LoadDialog(this, Manager::Get()->GetAppWindow(), _T("dlgGloabalUservars"));
@@ -530,20 +531,33 @@ void UsrGlblMgrEditDialog::Save()
 {
     wxString path(cSets + currentSet + _T('/') + currentVar + _T('/'));
 
+    wxString mbr(_T('#') + currentVar + _T('.'));
+
     cfg->DeleteSubPath(path);
 
     wxString s, t;
     for(unsigned int i = 0; i < builtinMembers.GetCount(); ++i)
     {
-        s = ((wxTextCtrl*) FindWindow(builtinMembers[i]))->GetValue();
-        if(!s.IsEmpty())
-            cfg->Write(path + builtinMembers[i], s);
+        t = ((wxTextCtrl*) FindWindow(builtinMembers[i]))->GetValue();
+
+        if(i == 0 && t.Contains(_T('#') + currentVar))
+            t.assign(_T("(invalid)"));
+
+        if(t.Contains(mbr + builtinMembers[i]))
+            t.assign(_T("(invalid)"));
+
+        if(!t.IsEmpty())
+            cfg->Write(path + builtinMembers[i], t);
     }
 
     for(unsigned int i = 0; i < 7; ++i)
     {
         s = name[i]->GetValue();
         t = value[i]->GetValue();
+
+        if(t.Contains(mbr + s))
+            t.assign(_T("(invalid)"));
+
         if(!s.IsEmpty() && !t.IsEmpty())
         {
             cfg->Write(path + s, t);
