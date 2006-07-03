@@ -1528,6 +1528,16 @@
 			<Option link="0" />
 			<Option target="Plugin wizard" />
 		</Unit>
+		<Unit filename="plugins\projectwizard\buildtargetpanel.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="Project wizard" />
+		</Unit>
+		<Unit filename="plugins\projectwizard\buildtargetpanel.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="Project wizard" />
+		</Unit>
 		<Unit filename="plugins\projectwizard\compilerpanel.cpp">
 			<Option compilerVar="CPP" />
 			<Option target="Project wizard" />
@@ -1543,6 +1553,16 @@
 			<Option target="Project wizard" />
 		</Unit>
 		<Unit filename="plugins\projectwizard\filepathpanel.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="Project wizard" />
+		</Unit>
+		<Unit filename="plugins\projectwizard\genericselectpath.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="Project wizard" />
+		</Unit>
+		<Unit filename="plugins\projectwizard\genericselectpath.h">
 			<Option compilerVar="CPP" />
 			<Option compile="0" />
 			<Option link="0" />
@@ -1614,6 +1634,12 @@
 			<Option link="0" />
 			<Option target="Project wizard" />
 		</Unit>
+		<Unit filename="plugins\projectwizard\resources\fltk\wizard.script">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="Project wizard" />
+		</Unit>
 		<Unit filename="plugins\projectwizard\resources\glfw\wizard.script">
 			<Option compilerVar="CPP" />
 			<Option compile="0" />
@@ -1668,6 +1694,12 @@
 			<Option link="0" />
 			<Option target="Project wizard" />
 		</Unit>
+		<Unit filename="plugins\projectwizard\resources\smartwin\wizard.script">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="Project wizard" />
+		</Unit>
 		<Unit filename="plugins\projectwizard\resources\wxwidgets\wizard.script">
 			<Option compilerVar="CPP" />
 			<Option compile="0" />
@@ -1700,6 +1732,12 @@
 			<Option link="0" />
 			<Option target="Project wizard" />
 		</Unit>
+		<Unit filename="plugins\projectwizard\wxsmith\BuildTargetPanel.wxs">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="Project wizard" />
+		</Unit>
 		<Unit filename="plugins\projectwizard\wxsmith\CompilerPanel.wxs">
 			<Option compilerVar="CPP" />
 			<Option compile="0" />
@@ -1707,6 +1745,12 @@
 			<Option target="Project wizard" />
 		</Unit>
 		<Unit filename="plugins\projectwizard\wxsmith\FilePathPanel.wxs">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="Project wizard" />
+		</Unit>
+		<Unit filename="plugins\projectwizard\wxsmith\GenericSelectPath.wxs">
 			<Option compilerVar="CPP" />
 			<Option compile="0" />
 			<Option link="0" />
