@@ -11,6 +11,9 @@
 */
 
 #include <sdk.h>
+#ifndef CB_PRECOMP
+#include <wx/xrc/xmlres.h>
+#endif
 #include "associations.h"
 #include "appglobals.h"
 #include <manager.h>
@@ -312,7 +315,7 @@ ManageAssocsDialog::ManageAssocsDialog(wxWindow* parent)
         list->Check(i, Associations::DoCheckAssociation(knownTypes[i].ext, knownTypes[i].descr, exe, knownTypes[i].index));
     }
 
-    CenterOnParent();
+    CentreOnParent();
 }
 
 void ManageAssocsDialog::OnApply(wxCommandEvent& event)

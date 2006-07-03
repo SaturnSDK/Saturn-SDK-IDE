@@ -191,11 +191,11 @@ bool wxsWindowRes::Load()
 
 void wxsWindowRes::Save()
 {
-    if ( !GetEditor() )
-    {
-        DBGLOG(_("wxSmith ERROR !!! Resource can be saved only when editor is opened"));
-    }
-
+//    if ( !GetEditor() )
+//    {
+//        DBGLOG(_("wxSmith ERROR !!! Resource can be saved only when editor is opened"));
+//    }
+//
     TiXmlDocument* Doc = GenerateXml();
 
     if ( Doc )
@@ -251,47 +251,52 @@ const wxString& wxsWindowRes::GetResourceName()
     return GetClassName();
 }
 
-bool wxsWindowRes::GenerateEmptySources()
+bool wxsWindowRes::GenerateEmptySources(bool Header,bool Source)
 {
     if ( !GetProject() ) return false;
 
     // Generating file variables
 
-    wxString FName = wxFileName(HFile).GetFullName();
-    FName.MakeUpper();
-    wxString Guard;
-
-    for ( int i=0; i<(int)FName.Length(); i++ )
+    if ( Header )
     {
-        wxChar ch = FName.GetChar(i);
-        if ( ( ch < _T('A') || ch > _T('Z') ) &&
-             ( ch < _T('0') || ch > _T('9') ) ) Guard.Append(_T('_'));
-        else Guard.Append(ch);
+        wxString FName = wxFileName(HFile).GetFullName();
+        FName.MakeUpper();
+        wxString Guard;
+
+        for ( int i=0; i<(int)FName.Length(); i++ )
+        {
+            wxChar ch = FName.GetChar(i);
+            if ( ( ch < _T('A') || ch > _T('Z') ) &&
+                 ( ch < _T('0') || ch > _T('9') ) ) Guard.Append(_T('_'));
+            else Guard.Append(ch);
+        }
+
+        FILE* Fl = fopen(cbU2C(GetProject()->GetProjectFileName(HFile)),"wt");
+        if ( !Fl ) return false;
+        wxString Content = EmptyHeader;
+        Content.Replace(_T("$(Guard)"),Guard,true);
+        Content.Replace(_T("$(ClassName)"),ClassName,true);
+        Content.Replace(_T("$(BaseClassName)"),GetWidgetClass(),true);
+        fprintf(Fl,"%s",(const char*)cbU2C(Content));
+        fclose(Fl);
     }
 
-    wxFileName IncludeFN(GetProject()->GetProjectFileName(HFile));
-    IncludeFN.MakeRelativeTo(
-        wxFileName(GetProject()->GetProjectFileName(SrcFile)).GetPath() );
-    wxString Include = IncludeFN.GetFullPath();
+    if ( Source )
+    {
+        wxFileName IncludeFN(GetProject()->GetProjectFileName(HFile));
+        IncludeFN.MakeRelativeTo(
+            wxFileName(GetProject()->GetProjectFileName(SrcFile)).GetPath() );
+        wxString Include = IncludeFN.GetFullPath();
 
-
-    FILE* Fl = fopen(cbU2C(GetProject()->GetProjectFileName(HFile)),"wt");
-    if ( !Fl ) return false;
-    wxString Content = EmptyHeader;
-    Content.Replace(_T("$(Guard)"),Guard,true);
-    Content.Replace(_T("$(ClassName)"),ClassName,true);
-    Content.Replace(_T("$(BaseClassName)"),GetWidgetClass(),true);
-    fprintf(Fl,"%s",(const char*)cbU2C(Content));
-    fclose(Fl);
-
-    Fl = fopen(cbU2C(GetProject()->GetProjectFileName(SrcFile)),"wt");
-    if ( !Fl ) return false;
-    Content = EmptySource;
-    Content.Replace(_T("$(Include)"),Include,true);
-    Content.Replace(_T("$(ClassName)"),ClassName,true);
-    Content.Replace(_T("$(BaseClassName)"),GetWidgetClass(),true);
-    fprintf(Fl,"%s",(const char*)cbU2C(Content));
-    fclose(Fl);
+        FILE* Fl = fopen(cbU2C(GetProject()->GetProjectFileName(SrcFile)),"wt");
+        if ( !Fl ) return false;
+        wxString Content = EmptySource;
+        Content.Replace(_T("$(Include)"),Include,true);
+        Content.Replace(_T("$(ClassName)"),ClassName,true);
+        Content.Replace(_T("$(BaseClassName)"),GetWidgetClass(),true);
+        fprintf(Fl,"%s",(const char*)cbU2C(Content));
+        fclose(Fl);
+    }
     return true;
 }
 
@@ -429,6 +434,7 @@ void wxsWindowRes::RebuildCode()
 	{
 		HeadersArray.Add(_T("<wx/xrc/xmlres.h>"));
 	}
+	HeadersArray.Add(_T("<wx/settings.h>"));
 	HeadersArray.Sort();
 	CodeHeader.Printf(wxsBHeaderF("Headers"),GetClassName().c_str());
 	Code = CodeHeader;
@@ -444,7 +450,7 @@ void wxsWindowRes::RebuildCode()
 	}
 	Code.Append(_T('\n'));
 	wxsCoder::Get()->AddCode(GetProject()->GetProjectFileName(HFile),CodeHeader,Code);
-	UpdateEventTable();
+	UpdateEventTable(false);
 }
 
 void wxsWindowRes::AddDeclarationsReq(wxsWidget* Widget,wxString& LocalCode,wxString& GlobalCode,bool& WasLocal)
@@ -921,7 +927,7 @@ void wxsWindowRes::BuildHeadersArray(wxsWidget* Widget,wxArrayString& Array)
 	}
 }
 
-void wxsWindowRes::UpdateEventTable()
+void wxsWindowRes::UpdateEventTable(bool NotifyChange)
 {
     if ( !GetProject() ) return;
 
@@ -931,6 +937,9 @@ void wxsWindowRes::UpdateEventTable()
 	Code.Append(_T('\n'));
 	CollectEventTableEnteries(Code,RootWidget);
 	wxsCoder::Get()->AddCode(GetProject()->GetProjectFileName(GetSourceFile()),CodeHeader,Code);
+
+	if ( !NotifyChange ) return;
+
     // Applying modified state
     if ( GetEditor() )
     {
@@ -1004,6 +1013,7 @@ void wxsWindowRes::SetModified(bool modified)
 
 void wxsWindowRes::EditorClosed()
 {
+    bool Old = wxsTREE()->SkipSelectionChange(true);
 	wxsBlockSelectEvents();
 	GetRootWidget()->KillTree(wxsTREE());
 	Clear();
@@ -1012,7 +1022,9 @@ void wxsWindowRes::EditorClosed()
 	    wxsEXTRES()->ResClosed(this);
 	}
 	Modified = false;
+	Manager::Get()->Yield();
 	wxsBlockSelectEvents(false);
+	wxsTREE()->SkipSelectionChange(Old);
 }
 
 void wxsWindowRes::BuildTree(wxTreeCtrl* Tree,wxTreeItemId WhereToAdd,bool NoWidgets)
@@ -1023,6 +1035,15 @@ void wxsWindowRes::BuildTree(wxTreeCtrl* Tree,wxTreeItemId WhereToAdd,bool NoWid
             GetClassName(),
             -1,-1,
             new wxsResourceTreeData(this) ) );
+    if ( !NoWidgets )
+    {
+        GetRootWidget()->BuildTree(Tree,GetTreeItemId());
+    }
+}
+
+void wxsWindowRes::RebuildTree(wxTreeCtrl* Tree,bool NoWidgets)
+{
+    Tree->DeleteChildren(GetTreeItemId());
     if ( !NoWidgets )
     {
         GetRootWidget()->BuildTree(Tree,GetTreeItemId());

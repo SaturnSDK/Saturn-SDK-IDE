@@ -13,6 +13,7 @@
 #include "compilererrors.h"
 #include "compiler_defs.h"
 #include <compilerfactory.h>
+#include <wx/timer.h>
 
 #define MAX_TARGETS 64
 
@@ -50,6 +51,10 @@ enum BuildState
     bsProjectDone
 };
 
+class wxTimerEvent;
+class wxComboBox;
+class wxStaticText;
+
 class CompilerGCC : public cbCompilerPlugin
 {
     public:
@@ -65,8 +70,8 @@ class CompilerGCC : public cbCompilerPlugin
         virtual int Run(ProjectBuildTarget* target = 0L);
         virtual int Run(const wxString& target);
         virtual int RunSingleFile(const wxString& filename);
-        virtual int Clean(ProjectBuildTarget* target = 0L);
         virtual int Clean(const wxString& target);
+        virtual int Clean(ProjectBuildTarget* target = 0L);
         virtual int DistClean(ProjectBuildTarget* target = 0L);
         virtual int DistClean(const wxString& target);
         virtual int Build(ProjectBuildTarget* target = 0L);
@@ -119,6 +124,8 @@ class CompilerGCC : public cbCompilerPlugin
 
         void Dispatcher(wxCommandEvent& event);
 
+        bool CheckDebuggerIsRunning();
+
         bool ReAllocProcesses();
         void AllocProcesses();
         void FreeProcesses();
@@ -155,7 +162,8 @@ class CompilerGCC : public cbCompilerPlugin
 		void DoGotoPreviousError();
 		void DoClearErrors();
         wxString ProjectMakefile();
-        void AddOutputLine(const wxString& output, bool forceErrorColor = false);
+        void AddOutputLine(const wxString& output, bool forceErrorColour = false);
+        void LogWarningOrError(CompilerLineType lt, cbProject* prj, const wxString& filename, const wxString& line, const wxString& msg);
         void PrintBanner(cbProject* prj = 0, ProjectBuildTarget* target = 0);
         bool UseMake(ProjectBuildTarget* target = 0);
 		bool CompilerValid(ProjectBuildTarget* target = 0);
@@ -206,6 +214,7 @@ class CompilerGCC : public cbCompilerPlugin
 		CompilerErrors m_Errors;
 		bool m_HasTargetAll;
 		wxString m_LastTargetName;
+        bool m_NotifiedMaxErrors;
 
         // state management
 		cbProject* m_pBuildingProject;

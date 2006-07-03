@@ -27,6 +27,7 @@
 #include "sdk_precomp.h"
 
 #ifndef CB_PRECOMP
+    #include <wx/app.h>         // wxWakeUpIdle
     #include "pipedprocess.h" // class' header file
     #include "sdk_events.h"
 #endif
@@ -40,7 +41,7 @@ class cbTextInputStream : public wxTextInputStream
         bool m_allowMBconversion;
     public:
 #if wxUSE_UNICODE
-        cbTextInputStream(wxInputStream& s, const wxString &sep=wxT(" \t"), wxMBConv& conv = wxConvUTF8 )
+        cbTextInputStream(wxInputStream& s, const wxString &sep=wxT(" \t"), wxMBConv& conv = wxConvLocal )
             : wxTextInputStream(s, sep, conv),
             m_allowMBconversion(true)
         {

@@ -54,6 +54,7 @@ class MainFrame : public wxFrame
         void OnFileSave(wxCommandEvent& event);
         void OnFileSaveAs(wxCommandEvent& event);
         void OnFileSaveAllFiles(wxCommandEvent& event);
+        void OnFileOpenDefWorkspace(wxCommandEvent& event);
         void OnFileSaveWorkspace(wxCommandEvent& event);
         void OnFileSaveWorkspaceAs(wxCommandEvent& event);
         void OnFileCloseWorkspace(wxCommandEvent& event);
@@ -207,7 +208,7 @@ class MainFrame : public wxFrame
         void DoUpdateStatusBar();
 		void DoUpdateAppTitle();
 		void DoUpdateLayout();
-        void DoUpdateLayoutColors();
+        void DoUpdateLayoutColours();
 		void DoUpdateEditorStyle();
 		void DoUpdateEditorStyle(wxFlatNotebook* target, const wxString& prefix, long defaultStyle);
 

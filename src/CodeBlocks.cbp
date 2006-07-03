@@ -20,7 +20,7 @@
 				</Linker>
 			</Target>
 			<Target title="ConsoleRunner">
-				<Option output="tools\ConsoleRunner\console_runner.exe" />
+				<Option output="tools\ConsoleRunner\cb_console_runner.exe" />
 				<Option working_dir="tools\ConsoleRunner" />
 				<Option object_output=".objs\2.6" />
 				<Option type="1" />
@@ -488,7 +488,6 @@
 				<Option object_output=".objs\2.6" />
 				<Option type="3" />
 				<Option compiler="gcc" />
-				<Option includeInTargetAll="1" />
 				<Option projectIncludeDirsRelation="2" />
 				<Option projectResourceIncludeDirsRelation="0" />
 				<Compiler>
@@ -521,7 +520,6 @@
 			<Add option="-D__WXMSW__" />
 			<Add option="-DWXUSINGDLL" />
 			<Add option="-DcbDEBUG" />
-			<Add option="-DcbDEBUG_EXTRA" />
 			<Add option="-DTIXML_USE_STL" />
 			<Add option="-DCB_PRECOMP" />
 			<Add option="-DWX_PRECOMP" />
@@ -543,11 +541,29 @@
 			<Add directory="$(#WX.lib)\gcc_dll" />
 			<Add directory="$(#WX.lib)\gcc_dll$(WX_CFG)" />
 		</Linker>
+		<Unit filename="plugins\astyle\asstreamiterator.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="AStyle" />
+		</Unit>
+		<Unit filename="plugins\astyle\asstreamiterator.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="AStyle" />
+		</Unit>
 		<Unit filename="plugins\astyle\astyle\ASBeautifier.cpp">
 			<Option compilerVar="CPP" />
 			<Option target="AStyle" />
 		</Unit>
+		<Unit filename="plugins\astyle\astyle\ASEnhancer.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="AStyle" />
+		</Unit>
 		<Unit filename="plugins\astyle\astyle\ASFormatter.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="AStyle" />
+		</Unit>
+		<Unit filename="plugins\astyle\astyle\ASResource.cpp">
 			<Option compilerVar="CPP" />
 			<Option target="AStyle" />
 		</Unit>
@@ -559,12 +575,6 @@
 		</Unit>
 		<Unit filename="plugins\astyle\astyle\astyle_main.cpp">
 			<Option compilerVar="CPP" />
-			<Option compile="0" />
-			<Option link="0" />
-			<Option target="AStyle" />
-		</Unit>
-		<Unit filename="plugins\astyle\astyle\compiler_defines.h">
-			<Option compilerVar="" />
 			<Option compile="0" />
 			<Option link="0" />
 			<Option target="AStyle" />
@@ -1680,6 +1690,30 @@
 			<Option link="0" />
 			<Option target="Project wizard" />
 		</Unit>
+		<Unit filename="plugins\projectwizard\resources\glfw\wizard.script">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="Project wizard" />
+		</Unit>
+		<Unit filename="plugins\projectwizard\resources\glfw\wizard.xrc">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="Project wizard" />
+		</Unit>
+		<Unit filename="plugins\projectwizard\resources\glut\wizard.script">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="Project wizard" />
+		</Unit>
+		<Unit filename="plugins\projectwizard\resources\glut\wizard.xrc">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="Project wizard" />
+		</Unit>
 		<Unit filename="plugins\projectwizard\resources\irrlicht\wizard.script">
 			<Option compilerVar="CPP" />
 			<Option compile="0" />
@@ -2383,12 +2417,24 @@
 			<Option link="0" />
 			<Option target="sdk" />
 		</Unit>
+		<Unit filename="sdk\cbthreadedtask.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="sdk" />
+		</Unit>
 		<Unit filename="sdk\cbthreadpool.cpp">
 			<Option compilerVar="CPP" />
 			<Option target="sdk" />
 		</Unit>
 		<Unit filename="sdk\cbthreadpool.h">
-			<Option compilerVar="" />
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="sdk\cbthreadpool_extras.h">
+			<Option compilerVar="CPP" />
 			<Option compile="0" />
 			<Option link="0" />
 			<Option target="sdk" />
@@ -2587,11 +2633,11 @@
 			<Option link="0" />
 			<Option target="sdk" />
 		</Unit>
-		<Unit filename="sdk\editorcolorset.cpp">
+		<Unit filename="sdk\editorcolourset.cpp">
 			<Option compilerVar="CPP" />
 			<Option target="sdk" />
 		</Unit>
-		<Unit filename="sdk\editorcolorset.h">
+		<Unit filename="sdk\editorcolourset.h">
 			<Option compilerVar="" />
 			<Option compile="0" />
 			<Option link="0" />
@@ -3169,6 +3215,12 @@
 			<Option compilerVar="" />
 			<Option compile="0" />
 			<Option link="0" />
+		</Unit>
+		<Unit filename="sdk\resources\confirm_replace_multiple.xrc">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="sdk" />
 		</Unit>
 		<Unit filename="sdk\resources\edit_array_order.xrc">
 			<Option compilerVar="" />

@@ -10,14 +10,22 @@
 
 class Tool
 {
-    public:
-	Tool(){ menuId = -1; }
-	wxString name;
-	wxString command;
-	wxString params;
-	wxString workingDir;
-	bool createConsole;
-	int menuId;
+  public:
+    enum eLaunchOption
+    {
+        LAUNCH_NEW_CONSOLE_WINDOW,
+        LAUNCH_HIDDEN,
+        LAUNCH_VISIBLE,
+        LAUNCH_VISIBLE_DETACHED
+    };
+
+    Tool() { menuId = -1; }
+    wxString name;
+    wxString command;
+    wxString params;
+    wxString workingDir;
+    eLaunchOption launchOption;
+    int menuId;
 };
 
 WX_DECLARE_LIST(Tool, ToolsList);
@@ -31,8 +39,8 @@ class PipedProcess;
 class DLLIMPORT ToolsManager : public Mgr<ToolsManager>, public wxEvtHandler
 {
 	public:
-        friend class Mgr<ToolsManager>;
-        friend class Manager; // give Manager access to our private members
+		friend class Mgr<ToolsManager>;
+		friend class Manager; // give Manager access to our private members
 		void CreateMenu(wxMenuBar* menuBar);
 		void ReleaseMenu(wxMenuBar* menuBar);
 		void AddTool(const wxString& name, const wxString& command, const wxString& params, const wxString& workingDir, bool save = true);
@@ -49,7 +57,6 @@ class DLLIMPORT ToolsManager : public Mgr<ToolsManager>, public wxEvtHandler
 		void LoadTools();
 		void SaveTools();
 		void OnToolClick(wxCommandEvent& event);
-		void OnProcessTimer(wxTimerEvent& event);
 		void OnIdle(wxIdleEvent& event);
 		void OnToolStdOutput(CodeBlocksEvent& event);
 		void OnToolErrOutput(CodeBlocksEvent& event);
@@ -61,15 +68,13 @@ class DLLIMPORT ToolsManager : public Mgr<ToolsManager>, public wxEvtHandler
 		ToolsManager();
 		~ToolsManager();
 
-		ToolsList m_Tools;
+		ToolsList        m_Tools;
 		MenuItemsManager m_ItemsManager;
-		wxMenu* m_Menu;
-		PipedProcess* m_pProcess;
-		int m_Pid;
-		wxTimer m_Timer;
+		wxMenu*          m_Menu;
+		PipedProcess*    m_pProcess;
+		int              m_Pid;
 
 		DECLARE_EVENT_TABLE()
-
 };
 
 #endif // TOOLSMANAGER_H

@@ -170,6 +170,8 @@ void CompilerGNUARM::LoadDefaultRegExArray()
 {
 	m_RegExes.Clear();
 	m_RegExes.Add(RegExStruct(_("Fatal error"), cltError, _T("FATAL:[ \t]*(.*)"), 1));
+	m_RegExes.Add(RegExStruct(_("Resource compiler error"), cltError, _T("windres.exe:[ \t]([ \tA-Za-z0-9_:+/\\.-]+):([0-9]+):[ \t](.*)"), 3, 1, 2));
+    m_RegExes.Add(RegExStruct(_("Resource compiler error (2)"), cltError, _T("windres.exe:[ \t](.*)"), 1));
 	m_RegExes.Add(RegExStruct(_("Preprocessor warning"), cltWarning, _T("([ \tA-Za-z0-9_:+/\\.-]+):([0-9]+):([0-9]+):[ \t]([Ww]arning:[ \t].*)"), 4, 1, 2));
 	m_RegExes.Add(RegExStruct(_("Preprocessor error"), cltError, _T("([ \tA-Za-z0-9_:+/\\.-]+):([0-9]+):[0-9]+:[ \t](.*)"), 3, 1, 2));
 	m_RegExes.Add(RegExStruct(_("Compiler warning"), cltWarning, _T("([ \tA-Za-z0-9_:+/\\.-]+):([0-9]+):[ \t]([Ww]arning:[ \t].*)"), 3, 1, 2));
@@ -178,7 +180,6 @@ void CompilerGNUARM::LoadDefaultRegExArray()
 	m_RegExes.Add(RegExStruct(_("Linker error (2)"), cltError, _T("[ \tA-Za-z0-9_:+/\\.-]+\\(.text\\+[0-9A-Za-z]+\\):([ \tA-Za-z0-9_:+/\\.-]+):[ \t](.*)"), 2, 1));
 	m_RegExes.Add(RegExStruct(_("Linker error (lib not found)"), cltError, _T(".*(ld.exe):[ \t](cannot find.*)"), 2, 1));
 	m_RegExes.Add(RegExStruct(_("Undefined reference"), cltError, _T("([ \tA-Za-z0-9_:+/\\.-]+):[ \t](undefined reference.*)"), 2, 1));
-	m_RegExes.Add(RegExStruct(_("Resource compiler error"), cltError, _T("windres.exe:[ \t](.*)"), 1));
 	m_RegExes.Add(RegExStruct(_("General warning"), cltWarning, _T("([Ww]arning:[ \t].*)"), 1));
 }
 
@@ -189,10 +190,20 @@ AutoDetectResult CompilerGNUARM::AutoDetectInstallationDir()
 	// Search for GNUARM installation dir
 	wxString windir = wxGetOSDirectory();
 	wxFileConfig ini(_T(""), _T(""), windir + _T("/GnuARM.ini"), _T(""), wxCONFIG_USE_LOCAL_FILE | wxCONFIG_USE_NO_ESCAPE_CHARACTERS);
-	m_MasterPath = ini.Read(_T("/InstallSettings/InstallPath"), _T("C:\\Program Files\\GNUARM"));
+	// need it as const , so correct overloaded method will be selected
+	wxString Programs = _T("C:\\Program Files");
+	// what's the "Program Files" location
+	// TO DO : support 64 bit ->    32 bit apps are in "ProgramFiles(x86)"
+	//                              64 bit apps are in "ProgramFiles"
+	wxGetEnv(_T("ProgramFiles"), &Programs);
+	// need it as const , so correct overloaded method will be selected
+	const wxString ProgramsConst = Programs + _T("\\GNUARM");
+	m_MasterPath = ini.Read(_T("/InstallSettings/InstallPath"), ProgramsConst);
 
 	if (wxFileExists(m_MasterPath + sep + _T("bin") + sep + m_Programs.C))
+	{
 		m_Programs.MAKE = _T("make.exe"); // we distribute "make" not "mingw32-make"
+	}
 #else
 	m_MasterPath = _T("/usr");
 #endif

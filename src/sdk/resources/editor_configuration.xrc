@@ -415,13 +415,13 @@
             </object>
           </object>
           <object class="listbookpage">
-            <label>Gutter, margins and caret</label>
+            <label>Margins and caret</label>
             <object class="wxPanel" name="tabGutter">
               <object class="wxBoxSizer">
                 <orient>wxVERTICAL</orient>
                 <object class="sizeritem">
                   <object class="wxStaticBoxSizer">
-                    <label>Gutter &amp;&amp; margins</label>
+                    <label>Left margin</label>
                     <orient>wxVERTICAL</orient>
                     <object class="sizeritem">
                       <border>8</border>
@@ -433,9 +433,60 @@
                         <hgap>8</hgap>
                         <growablecols>1</growablecols>
                         <object class="sizeritem">
+                          <flag>wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL</flag>
+                          <object class="wxStaticText">
+                            <label>Width for line numbers (in chars):</label>
+                          </object>
+                        </object>
+                        <object class="sizeritem">
                           <flag>wxALIGN_LEFT|wxALIGN_TOP</flag>
+                          <object class="wxBoxSizer">
+                            <orient>wxHORIZONTAL</orient>
+                            <object class="sizeritem">
+                              <flag>wxALIGN_LEFT|wxALIGN_TOP</flag>
+                              <object class="wxSpinCtrl" name="spnMarginWidth">
+                                <value>48</value>
+                              </object>
+                            </object>
+                            <object class="sizeritem">
+                              <border>10</border>
+                              <flag>wxLEFT|wxALIGN_RIGHT|wxALIGN_CENTER_VERTICAL</flag>
+                              <object class="wxCheckBox" name="chkDynamicWidth">
+                                <label>Dynamic setting</label>
+                              </object>
+                            </object>
+                          </object>
+                        </object>
+                      </object>
+                    </object>
+                    <object class="sizeritem">
+                      <object class="wxCheckBox" name="chkAddBPByLeftClick">
+                        <label>Add/remove breakpoints by left-clicking</label>
+                      </object>
+                      <flag>wxBOTTOM|wxLEFT|wxEXPAND</flag>
+                      <border>8</border>
+                    </object>
+                  </object>
+                  <flag>wxLEFT|wxEXPAND|wxALIGN_LEFT|wxALIGN_TOP</flag>
+                  <border>8</border>
+                </object>
+                <object class="sizeritem">
+                  <object class="wxStaticBoxSizer">
+                    <label>Right margin</label>
+                    <orient>wxVERTICAL</orient>
+                    <object class="sizeritem">
+                      <border>8</border>
+                      <flag>wxALL|wxEXPAND|wxALIGN_LEFT|wxALIGN_TOP</flag>
+                      <object class="wxFlexGridSizer">
+                        <rows>0</rows>
+                        <cols>2</cols>
+                        <vgap>4</vgap>
+                        <hgap>8</hgap>
+                        <growablecols>1</growablecols>
+                        <object class="sizeritem">
+                          <flag>wxALIGN_LEFT|wxALIGN_CENTRE_VERTICAL</flag>
                           <object class="wxStaticText" name="ID_STATICTEXT4">
-                            <label>Mode:</label>
+                            <label>Right margin hint:</label>
                           </object>
                         </object>
                         <object class="sizeritem">
@@ -445,26 +496,26 @@
                             <content>
                               <item>None</item>
                               <item>Visible line</item>
-                              <item>Highlight text beyond gutter</item>
+                              <item>Highlight text beyond margin</item>
                             </content>
                           </object>
                         </object>
                         <object class="sizeritem">
                           <flag>wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL</flag>
                           <object class="wxStaticText" name="ID_STATICTEXT5">
-                            <label>Color:</label>
+                            <label>Colour:</label>
                           </object>
                         </object>
                         <object class="sizeritem">
                           <flag>wxALIGN_LEFT|wxALIGN_TOP</flag>
-                          <object class="wxButton" name="btnGutterColor">
+                          <object class="wxButton" name="btnGutterColour">
                             <label></label>
                           </object>
                         </object>
                         <object class="sizeritem">
                           <flag>wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL</flag>
                           <object class="wxStaticText" name="ID_STATICTEXT6">
-                            <label>Column:</label>
+                            <label>Hint column:</label>
                           </object>
                         </object>
                         <object class="sizeritem">
@@ -508,12 +559,12 @@
                         <object class="sizeritem">
                           <flag>wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL</flag>
                           <object class="wxStaticText">
-                            <label>Color:</label>
+                            <label>Colour:</label>
                           </object>
                         </object>
                         <object class="sizeritem">
                           <flag>wxALIGN_LEFT|wxALIGN_TOP</flag>
-                          <object class="wxButton" name="btnCaretColor">
+                          <object class="wxButton" name="btnCaretColour">
                             <label></label>
                           </object>
                         </object>
@@ -542,7 +593,7 @@
           </object>
           <object class="listbookpage">
             <label>Syntax highlighting</label>
-            <object class="wxPanel" name="tabColors">
+            <object class="wxPanel" name="tabColours">
               <object class="wxBoxSizer">
                 <orient>wxVERTICAL</orient>
                 <object class="sizeritem">
@@ -558,7 +609,7 @@
                       <border>4</border>
                       <flag>wxTOP|wxALIGN_LEFT|wxALIGN_TOP</flag>
                       <object class="wxStaticText" name="ID_STATICTEXT7">
-                        <label>Color theme:</label>
+                        <label>Colour theme:</label>
                       </object>
                     </object>
                     <object class="sizeritem">
@@ -577,21 +628,21 @@
                         <object class="sizeritem">
                           <border>4</border>
                           <flag>wxLEFT|wxALIGN_LEFT|wxALIGN_TOP</flag>
-                          <object class="wxButton" name="btnColorsAddTheme">
+                          <object class="wxButton" name="btnColoursAddTheme">
                             <label>Add</label>
                           </object>
                         </object>
                         <object class="sizeritem">
                           <border>4</border>
                           <flag>wxLEFT|wxALIGN_LEFT|wxALIGN_TOP</flag>
-                          <object class="wxButton" name="btnColorsDeleteTheme">
+                          <object class="wxButton" name="btnColoursDeleteTheme">
                             <label>Delete</label>
                           </object>
                         </object>
                         <object class="sizeritem">
                           <border>4</border>
                           <flag>wxLEFT|wxALIGN_LEFT|wxALIGN_TOP</flag>
-                          <object class="wxButton" name="btnColorsRenameTheme">
+                          <object class="wxButton" name="btnColoursRenameTheme">
                             <label>Rename</label>
                           </object>
                         </object>
@@ -673,7 +724,7 @@
                                 </object>
                                 <object class="sizeritem">
                                   <flag>wxALIGN_LEFT|wxALIGN_TOP|wxEXPAND</flag>
-                                  <object class="wxButton" name="btnColorsFore">
+                                  <object class="wxButton" name="btnColoursFore">
                                     <label></label>
                                   </object>
                                 </object>
@@ -686,7 +737,7 @@
                                 </object>
                                 <object class="sizeritem">
                                   <flag>wxALIGN_LEFT|wxALIGN_TOP|wxEXPAND</flag>
-                                  <object class="wxButton" name="btnColorsBack">
+                                  <object class="wxButton" name="btnColoursBack">
                                     <label></label>
                                   </object>
                                 </object>
@@ -700,21 +751,21 @@
                                 <object class="sizeritem">
                                   <border>8</border>
                                   <flag>wxALL|wxALIGN_LEFT|wxALIGN_TOP|wxEXPAND</flag>
-                                  <object class="wxCheckBox" name="chkColorsBold">
+                                  <object class="wxCheckBox" name="chkColoursBold">
                                     <label>Bold</label>
                                   </object>
                                 </object>
                                 <object class="sizeritem">
                                   <border>8</border>
                                   <flag>wxLEFT|wxRIGHT|wxBOTTOM|wxALIGN_LEFT|wxALIGN_TOP|wxEXPAND</flag>
-                                  <object class="wxCheckBox" name="chkColorsItalics">
+                                  <object class="wxCheckBox" name="chkColoursItalics">
                                     <label>Italics</label>
                                   </object>
                                 </object>
                                 <object class="sizeritem">
                                   <border>8</border>
                                   <flag>wxLEFT|wxRIGHT|wxBOTTOM|wxALIGN_LEFT|wxALIGN_TOP|wxEXPAND</flag>
-                                  <object class="wxCheckBox" name="chkColorsUnderlined">
+                                  <object class="wxCheckBox" name="chkColoursUnderlined">
                                     <label>Underlined</label>
                                   </object>
                                 </object>
@@ -728,7 +779,7 @@
                         </object>
                         <object class="sizeritem">
                           <flag>wxALIGN_LEFT|wxALIGN_TOP</flag>
-                          <object class="wxButton" name="btnColorsReset">
+                          <object class="wxButton" name="btnColoursReset">
                             <label>Reset defaults</label>
                           </object>
                         </object>
@@ -740,7 +791,7 @@
                   <option>1</option>
                   <border>8</border>
                   <flag>wxLEFT|wxTOP|wxALIGN_LEFT|wxALIGN_TOP|wxEXPAND</flag>
-                  <object class="unknown" name="txtColorsSample">
+                  <object class="unknown" name="txtColoursSample">
                     <style></style>
                   </object>
                 </object>

@@ -7,7 +7,10 @@
 #include <configmanager.h>
 #include <manager.h>
 #include <messagemanager.h>
+#include <annoyingdialog.h>
 #include "wxsmith.h"
+#include "resources/wxswindowres.h"
+#include "defwidgets/wxsframe.h"
 
 /* ************************************************************************** */
 /*  Flags for source file parts                                               */
@@ -381,6 +384,7 @@ static const wxsFilePart wxsMainFrameCpp[] =
 /*  Configuration file "wxsmith.cfg"                                          */
 /* ************************************************************************** */
 
+/*
 static const wxChar wxsWxSmithCfg_1_src[] =
 _T("<wxsmith>\n")
 _T("\t<frame wxs_file=\"MainFrame.wxs\" class=\"MainFrame\" src_file=\"mainframe.cpp\" header_file=\"mainframe.h\" xrc_file=\"\" edit_mode=\"Source\" />\n")
@@ -402,6 +406,7 @@ static wxsFilePart wxsWxSmithCfg[] =
     { wxsWxSmithCfg_1_xrc, wxsSrcXrc },
     { NULL }
 };
+*/
 
 /* ************************************************************************** */
 /*  Content of resource file "MainFrame.wxs"                                  */
@@ -487,9 +492,9 @@ BEGIN_EVENT_TABLE(wxsWizard,wxDialog)
 	EVT_BUTTON(ID_BUTTON3,wxsWizard::OnDirChooseClick)
 	EVT_COMBOBOX(ID_COMBOBOX2,wxsWizard::OnConfModeSelect)
 	EVT_BUTTON(ID_BUTTON4,wxsWizard::OnwxDirChooseClick)
-	EVT_BUTTON(ID_BUTTON1,wxsWizard::OnButton1Click)
-	EVT_BUTTON(ID_BUTTON2,wxsWizard::OnButton2Click)
 	//*)
+	EVT_BUTTON(wxID_OK,wxsWizard::OnButton2Click)
+	EVT_BUTTON(wxID_CANCEL,wxsWizard::OnButton1Click)
 END_EVENT_TABLE()
 
 wxsWizard::wxsWizard(wxWindow* parent,wxWindowID id):
@@ -509,11 +514,8 @@ wxsWizard::wxsWizard(wxWindow* parent,wxWindowID id):
 	wxStaticText* StaticText6;
 	wxBoxSizer* BoxSizer4;
 	wxStaticText* StaticText7;
-	wxBoxSizer* BoxSizer1;
-	wxButton* Button1;
-	wxButton* Button2;
 
-	Create(parent,id,_("wxSmith project wizzard"),wxDefaultPosition,wxDefaultSize,wxDEFAULT_DIALOG_STYLE);
+	Create(parent,id,_("wxSmith project wizard"),wxDefaultPosition,wxDefaultSize,wxDEFAULT_DIALOG_STYLE);
 	MainSizer = new wxFlexGridSizer(0,1,0,0);
 	FlexGridSizer2 = new wxFlexGridSizer(0,1,0,0);
 	FlexGridSizer2->AddGrowableCol(0);
@@ -556,14 +558,14 @@ wxsWizard::wxsWizard(wxWindow* parent,wxWindowID id):
 	FlexGridSizer3->Add(UseCustomPrjDir,1,wxALL|wxALIGN_CENTER,5);
 	FlexGridSizer3->Add(BoxSizer2,1,wxALIGN_CENTER|wxEXPAND,0);
 	BoxSizer3 = new wxBoxSizer(wxVERTICAL);
-	AddMenu = new wxCheckBox(this,ID_CHECKBOX1,_("Add simple menu"),wxDefaultPosition,wxDefaultSize,0);
+	AddMenu = new wxCheckBox(this,ID_CHECKBOX1,_("Add a simple menu"),wxDefaultPosition,wxDefaultSize,0);
 	AddMenu->SetValue(true);
-	AddStatus = new wxCheckBox(this,ID_CHECKBOX2,_("Add status bar"),wxDefaultPosition,wxDefaultSize,0);
+	AddStatus = new wxCheckBox(this,ID_CHECKBOX2,_("Add a status bar"),wxDefaultPosition,wxDefaultSize,0);
 	AddStatus->SetValue(true);
 	AddAbout = new wxCheckBox(this,ID_CHECKBOX3,_("Create About dialog"),wxDefaultPosition,wxDefaultSize,0);
 	AddAbout->SetValue(false);
 	AddAbout->Hide();
-	UseXrc = new wxCheckBox(this,ID_CHECKBOX4,_("Use XRC files"),wxDefaultPosition,wxDefaultSize,0);
+	UseXrc = new wxCheckBox(this,ID_CHECKBOX4,_("Create XRC resources"),wxDefaultPosition,wxDefaultSize,0);
 	UseXrc->SetValue(false);
 	AddDesc = new wxCheckBox(this,ID_CHECKBOX5,_("Insert additional comments describing wxSmith\'s code"),wxDefaultPosition,wxDefaultSize,0);
 	AddDesc->SetValue(false);
@@ -574,7 +576,7 @@ wxsWizard::wxsWizard(wxWindow* parent,wxWindowID id):
 	BoxSizer3->Add(AddDesc,1,wxLEFT|wxRIGHT|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL,5);
 	StaticBoxSizer1->Add(FlexGridSizer3,1,wxALIGN_CENTER|wxEXPAND,5);
 	StaticBoxSizer1->Add(BoxSizer3,0,wxTOP|wxBOTTOM|wxALIGN_CENTER|wxEXPAND,5);
-	wxWidgetsConfig = new wxStaticBoxSizer(wxVERTICAL,this,_("wxWigets library options"));
+	wxWidgetsConfig = new wxStaticBoxSizer(wxVERTICAL,this,_("wxWidgets library options"));
 	FlexGridSizer4 = new wxFlexGridSizer(0,2,0,0);
 	FlexGridSizer4->AddGrowableCol(1);
 	StaticText5 = new wxStaticText(this,ID_STATICTEXT5,_("Configuration mode:"),wxDefaultPosition,wxDefaultSize,0);
@@ -588,7 +590,7 @@ wxsWizard::wxsWizard(wxWindow* parent,wxWindowID id):
 	LibType->Append(_("DLL"));
 	LibType->Append(_("Static"));
 	LibType->SetSelection(0);
-	StaticText6 = new wxStaticText(this,ID_STATICTEXT6,_("wxWidgest dir:"),wxDefaultPosition,wxDefaultSize,0);
+	StaticText6 = new wxStaticText(this,ID_STATICTEXT6,_("wxWidgets dir:"),wxDefaultPosition,wxDefaultSize,0);
 	BoxSizer4 = new wxBoxSizer(wxHORIZONTAL);
 	WxDir = new wxTextCtrl(this,ID_TEXTCTRL4,_T(""),wxDefaultPosition,wxDefaultSize,0);
 	if ( 0 ) WxDir->SetMaxLength(0);
@@ -602,27 +604,29 @@ wxsWizard::wxsWizard(wxWindow* parent,wxWindowID id):
 	WxConf = new wxTextCtrl(this,ID_TEXTCTRL5,_T(""),wxDefaultPosition,wxDefaultSize,0);
 	if ( 0 ) WxConf->SetMaxLength(0);
 	WxConf->Disable();
+	UseUnicodeLabel = new wxStaticText(this,ID_STATICTEXT3,_("Use unicode:"),wxDefaultPosition,wxDefaultSize,0);
+	UseUnicode = new wxCheckBox(this,ID_CHECKBOX7,_T(""),wxDefaultPosition,wxDefaultSize,0);
+	UseUnicode->SetValue(false);
 	FlexGridSizer4->Add(StaticText5,1,wxLEFT|wxRIGHT|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL,5);
 	FlexGridSizer4->Add(ConfMode,1,wxLEFT|wxRIGHT|wxALIGN_CENTER|wxEXPAND,5);
 	FlexGridSizer4->Add(StaticText4,1,wxLEFT|wxRIGHT|wxTOP|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL,5);
 	FlexGridSizer4->Add(LibType,1,wxLEFT|wxRIGHT|wxTOP|wxALIGN_CENTER|wxEXPAND,5);
 	FlexGridSizer4->Add(StaticText6,1,wxLEFT|wxRIGHT|wxTOP|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL,5);
 	FlexGridSizer4->Add(BoxSizer4,1,wxLEFT|wxRIGHT|wxALIGN_CENTER|wxEXPAND,5);
-	FlexGridSizer4->Add(StaticText7,1,wxALL|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL,5);
+	FlexGridSizer4->Add(StaticText7,1,wxLEFT|wxRIGHT|wxTOP|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL,5);
 	FlexGridSizer4->Add(WxConf,1,wxALL|wxALIGN_CENTER|wxEXPAND,5);
+	FlexGridSizer4->Add(UseUnicodeLabel,1,wxALL|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL,5);
+	FlexGridSizer4->Add(UseUnicode,1,wxLEFT|wxRIGHT|wxBOTTOM|wxALIGN_CENTER|wxEXPAND,4);
 	wxWidgetsConfig->Add(FlexGridSizer4,1,wxALIGN_CENTER|wxEXPAND,0);
 	FlexGridSizer2->Add(StaticBoxSizer1,1,wxALL|wxALIGN_CENTER|wxEXPAND,5);
 	FlexGridSizer2->Add(335,0,1);
 	FlexGridSizer2->Add(wxWidgetsConfig,1,wxLEFT|wxRIGHT|wxBOTTOM|wxALIGN_CENTER|wxEXPAND,5);
-	BoxSizer1 = new wxBoxSizer(wxHORIZONTAL);
-	Button1 = new wxButton(this,ID_BUTTON1,_("Cancel"),wxDefaultPosition,wxDefaultSize,0);
-	if (false) Button1->SetDefault();
-	Button2 = new wxButton(this,ID_BUTTON2,_("Create"),wxDefaultPosition,wxDefaultSize,0);
-	if (false) Button2->SetDefault();
-	BoxSizer1->Add(Button1,1,wxALL|wxALIGN_CENTER,5);
-	BoxSizer1->Add(Button2,1,wxALL|wxALIGN_CENTER,5);
-	MainSizer->Add(FlexGridSizer2,1,wxALIGN_CENTER|wxEXPAND,0);
-	MainSizer->Add(BoxSizer1,1,wxALIGN_CENTER,0);
+	StdDialogButtonSizer1 = new wxStdDialogButtonSizer();
+	StdDialogButtonSizer1->AddButton(new wxButton(this,wxID_OK,_T("")));
+	StdDialogButtonSizer1->AddButton(new wxButton(this,wxID_CANCEL,_T("")));
+	StdDialogButtonSizer1->Realize();
+	MainSizer->Add(FlexGridSizer2,1,wxBOTTOM|wxALIGN_CENTER|wxEXPAND,4);
+	MainSizer->Add(StdDialogButtonSizer1,1,wxLEFT|wxRIGHT|wxBOTTOM|wxALIGN_CENTER,8);
 	this->SetSizer(MainSizer);
 	MainSizer->Fit(this);
 	MainSizer->SetSizeHints(this);
@@ -653,6 +657,9 @@ void wxsWizard::OnButton1Click(wxCommandEvent& event)
 
 void wxsWizard::OnButton2Click(wxCommandEvent& event)
 {
+    static bool Block = false;
+    if ( Block ) return;
+    Block = true;
     wxString Dir = PrjDir->GetValue();
     wxString Name = PrjName->GetValue();
 
@@ -674,7 +681,7 @@ void wxsWizard::OnButton2Click(wxCommandEvent& event)
         return;
     }
 
-    if ( !wxFileName::Mkdir(Dir,0777,wxPATH_MKDIR_FULL ) )
+    if ( !wxFileName::Mkdir(Dir,0755,wxPATH_MKDIR_FULL ) )
     {
         wxMessageBox(_("Couldn't create main project directory"));
         return;
@@ -698,28 +705,28 @@ void wxsWizard::OnButton2Click(wxCommandEvent& event)
         {
             case 0: // Global variables
                 project->AddIncludeDir(_T("$(#WX.include)"));
-                project->AddIncludeDir(_T("$(#WX.lib)\\gcc_dll\\msw"));
+                project->AddIncludeDir(_T("$(#WX.lib)\\gcc_dll\\msw$(WX_CFG)"));
                 project->AddIncludeDir(_T("$(#WX.lib)\\gcc_dll$(WX_CFG)\\msw"));
                 project->AddIncludeDir(_T("$(#WX)\\contrib\\include"));
                 project->AddLibDir(_T("$(#WX.lib)\\gcc_dll"));
-                project->AddLibDir(_T("$(#WX.lib)\\gcc_dll\\msw"));
+                project->AddLibDir(_T("$(#WX.lib)\\gcc_dll\\msw$(WX_CFG)"));
                 project->AddLibDir(_T("$(#WX.lib)\\gcc_dll$(WX_CFG)"));
                 project->AddResourceIncludeDir(_T("$(#WX.include)"));
-                project->SetVar(_T("WX_CFG"),_T(""));
+                project->SetVar(_T("WX_CFG"),UseUnicode->GetValue()?_T("u"):_T(""));
                 addedVars = true;
                 break;
 
             case 1: // Custom variables
                 project->AddIncludeDir(_T("$(WX_DIR)\\include"));
-                project->AddIncludeDir(_T("$(WX_DIR)\\lib\\gcc_dll\\msw"));
+                project->AddIncludeDir(_T("$(WX_DIR)\\lib\\gcc_dll\\msw$(WX_CFG)"));
                 project->AddIncludeDir(_T("$(WX_DIR)\\lib\\gcc_dll$(WX_CFG)\\msw"));
                 project->AddIncludeDir(_T("$(WX_DIR)\\contrib\\include"));
                 project->AddLibDir(_T("$(WX_DIR)\\lib\\gcc_dll"));
-                project->AddLibDir(_T("$(WX_DIR)\\lib\\gcc_dll\\msw"));
+                project->AddLibDir(_T("$(WX_DIR)\\lib\\gcc_dll\\msw$(WX_CFG)"));
                 project->AddLibDir(_T("$(WX_DIR)\\lib\\gcc_dll$(WX_CFG)"));
                 project->AddResourceIncludeDir(_T("$(WX_DIR)\\include"));
                 project->SetVar(_T("WX_DIR"),_T("C:\\wxWidgets-2.6.2"));
-                project->SetVar(_T("WX_CFG"),_T(""));
+                project->SetVar(_T("WX_CFG"),UseUnicode->GetValue()?_T("u"):_T(""));
                 addedVars = true;
                 break;
 
@@ -745,8 +752,12 @@ void wxsWizard::OnButton2Click(wxCommandEvent& event)
                 project->AddCompilerOption(_T("-D__GNUWIN32__"));
                 project->AddCompilerOption(_T("-D__WXMSW__"));
                 project->AddCompilerOption(_T("-DHAVE_W32API_H"));
+                if ( UseUnicode->GetValue() )
+                {
+                    project->AddCompilerOption(_T("-DwxUSE_UNICODE"));
+                }
 
-                project->AddLinkLib(_T("wxmsw26"));
+                project->AddLinkLib(_T("wxmsw26$(WX_CFG)"));
 
                 switch ( LibType->GetSelection() )
                 {
@@ -796,7 +807,7 @@ void wxsWizard::OnButton2Click(wxCommandEvent& event)
         !BuildFile(project,Dir,_T("wx_pch.h"),wxsWxPchH,flags,true,true,false,0) ||
         !BuildFile(project,Dir,_T("mainframe.h"),wxsMainFrameH,flags,true,false,false,50) ||
         !BuildFile(project,Dir,_T("mainframe.cpp"),wxsMainFrameCpp,flags,true,true,true,50) ||
-        !BuildFile(project,Dir,_T("wxsmith/wxsmith.cfg"),wxsWxSmithCfg,flags,false,false,false,50) ||
+//        !BuildFile(project,Dir,_T("wxsmith/wxsmith.cfg"),wxsWxSmithCfg,flags,false,false,false,50) ||
         !BuildFile(project,Dir,_T("wxsmith/MainFrame.wxs"),wxsMainFrameWxs,flags,true,false,false,50) ||
         !BuildFile(project,Dir,_T("mainframe.xrc"),wxsMainFrameXrc,flags,false,false,false,50)
         )
@@ -811,15 +822,46 @@ void wxsWizard::OnButton2Click(wxCommandEvent& event)
         // Rebinding to load new resource configuration
         if ( wxsProj )
         {
-            wxsProj->BindProject(project);
+            wxsProj->AddSmithConfig(true);
+            wxsProj->AddFrameResource(_T("MainFrame.wxs"),_T("MainFrame"),_T("mainframe.cpp"),_T("mainframe.h"),
+                (flags&wxsSrcXrc)?_T("mainframe.xrc"):_T(""));
+            wxsProj->SetAppSourceFile(_T("app.cpp"));
+            wxsProj->SetMainResource(_T("MainFrame"));
+            wxsProj->SetCallInitAll(true,true);
+            if ( flags & wxsSrcXrc )
+            {
+                wxArrayString Resources;
+                Resources.Add(_T("mainframe.xrc"));
+                wxsProj->SetAutoLoadedResources(Resources);
+            }
+            wxsFrameRes* frameRes = (wxsFrameRes*)wxsProj->FindResource(_T("MainFrame"));
+            if ( frameRes )
+            {
+                frameRes->Load();
+                wxsFrame* frame = (wxsFrame*)frameRes->GetRootWidget();
+                if ( frame )
+                {
+                    frame->SetTitle(FrmTitle->GetValue());
+                }
+                frameRes->RebuildCode();
+                frameRes->Save();
+            }
+            wxsProj->SetModified(true);
+            wxsProj->RebuildTree();
         }
     }
     project->Save();
     Manager::Get()->GetConfigManager(_T("wxsmith"))->Write(_T("wizardbasepath"),BaseDir->GetValue());
     if ( addedVars )
     {
-        wxMessageBox(_("New project created. But You may need\nto adjust some custom vars in project options"));
+        AnnoyingDialog dlg(
+            _("New wxSmith project created"),
+            _("New project created. But you may need\nto adjust some custom vars in project options"),
+            wxART_INFORMATION,
+            AnnoyingDialog::OK);
+        dlg.ShowModal();
     }
+    Block = false;
     EndModal(0);
 }
 

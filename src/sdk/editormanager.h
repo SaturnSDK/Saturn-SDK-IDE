@@ -21,7 +21,7 @@ class EditorBase;
 class wxFlatNotebook;
 class wxFlatNotebookEvent;
 class wxMenuBar;
-class EditorColorSet;
+class EditorColourSet;
 class cbProject;
 class ProjectFile;
 class cbEditor;
@@ -69,8 +69,8 @@ class DLLIMPORT EditorManager : public Mgr<EditorManager>, public wxEvtHandler
         void ActivateNext();
         void ActivatePrevious();
         void SetActiveEditor(EditorBase* ed);
-        EditorColorSet* GetColorSet(){ return (this==NULL) ? 0 : m_Theme; }
-        void SetColorSet(EditorColorSet* theme);
+        EditorColourSet* GetColourSet(){ return (this==NULL) ? 0 : m_Theme; }
+        void SetColourSet(EditorColourSet* theme);
         cbEditor* New(const wxString& newFileName = wxEmptyString);
 
         // these are used *only* for custom editors
@@ -97,12 +97,9 @@ class DLLIMPORT EditorManager : public Mgr<EditorManager>, public wxEvtHandler
         bool SaveActiveAs();
         bool SaveAll();
         int ShowFindDialog(bool replace,  bool explicitly_find_in_files = false);
-        int Find(cbStyledTextCtrl* control, cbFindReplaceData* data);
-        int FindInFiles(cbFindReplaceData* data);
-        int Replace(cbStyledTextCtrl* control, cbFindReplaceData* data);
         int FindNext(bool goingDown, cbStyledTextCtrl* control = 0, cbFindReplaceData* data = 0);
 
-        void Print(PrintScope ps, PrintColorMode pcm, bool line_numbers);
+        void Print(PrintScope ps, PrintColourMode pcm, bool line_numbers);
 
         /** Hides the editor notebook for layout purposes */
         void HideNotebook();
@@ -119,7 +116,7 @@ class DLLIMPORT EditorManager : public Mgr<EditorManager>, public wxEvtHandler
         /// Refresh the open files tree
         void RefreshOpenFilesTree();
         /// Return true if opened files tree is visible, false if not
-        bool IsOpenFilesTreeVisible();
+        bool IsOpenFilesTreeVisible() const;
 
         /** Builds Opened Files tree in the Projects tab
           */
@@ -130,6 +127,7 @@ class DLLIMPORT EditorManager : public Mgr<EditorManager>, public wxEvtHandler
         void RebuildOpenedFilesTree(wxTreeCtrl *tree = 0L);
         void RefreshOpenedFilesTree(bool force = false);
 
+        void OnGenericContextMenuHandler(wxCommandEvent& event);
         void OnPageChanged(wxFlatNotebookEvent& event);
         void OnPageChanging(wxFlatNotebookEvent& event);
         void OnPageClosing(wxFlatNotebookEvent& event);
@@ -173,12 +171,16 @@ class DLLIMPORT EditorManager : public Mgr<EditorManager>, public wxEvtHandler
     private:
         EditorManager();
         ~EditorManager();
-        void CalculateFindReplaceStartEnd(cbStyledTextCtrl* control, cbFindReplaceData* data);
+        void CalculateFindReplaceStartEnd(cbStyledTextCtrl* control, cbFindReplaceData* data, bool replace = false);
         void OnCheckForModifiedFiles(wxCommandEvent& event);
+        int Find(cbStyledTextCtrl* control, cbFindReplaceData* data);
+        int FindInFiles(cbFindReplaceData* data);
+        int Replace(cbStyledTextCtrl* control, cbFindReplaceData* data);
+        int ReplaceInFiles(cbFindReplaceData* data);
 
         wxFlatNotebook* m_pNotebook;
         cbFindReplaceData* m_LastFindReplaceData;
-        EditorColorSet* m_Theme;
+        EditorColourSet* m_Theme;
         wxTreeCtrl* m_pTree;
         wxString m_LastActiveFile;
         bool m_LastModifiedflag;

@@ -59,7 +59,7 @@ CODEBLOCKS_GET_PLATFORM
 CODEBLOCKS_ENABLE_SETTINGS
 
 AM_OPTIONS_WXCONFIG
-AM_PATH_WXCONFIG(2.4.2, wxWin=1)
+AM_PATH_WXCONFIG(2.6.0, wxWin=1)
         if test "$wxWin" != 1; then
         AC_MSG_ERROR([
                 wxWidgets must be installed on your system.
@@ -68,7 +68,7 @@ AM_PATH_WXCONFIG(2.4.2, wxWin=1)
                 where wxWidgets libraries are installed (returned by
                 'wx-config --libs' or 'wx-config --static --libs' command)
                 is in LD_LIBRARY_PATH or equivalent variable and
-                wxWindows version is 2.4.2 or above.
+                wxWindows version is 2.6.0 or above.
                 ])
         fi
 
@@ -145,6 +145,10 @@ AC_CONFIG_FILES([Makefile
 	src/plugins/projectwizard/resources/console/cpp/Makefile
 	src/plugins/projectwizard/resources/d/Makefile
 	src/plugins/projectwizard/resources/d/console/Makefile
+	src/plugins/projectwizard/resources/glfw/Makefile
+	src/plugins/projectwizard/resources/glfw/files/Makefile
+	src/plugins/projectwizard/resources/glut/Makefile
+	src/plugins/projectwizard/resources/glut/files/Makefile
 	src/plugins/projectwizard/resources/irrlicht/Makefile
 	src/plugins/projectwizard/resources/irrlicht/files/Makefile
 	src/plugins/projectwizard/resources/ogre/Makefile
@@ -156,6 +160,7 @@ AC_CONFIG_FILES([Makefile
 	src/plugins/todo/resources/Makefile
 	src/plugins/xpmanifest/Makefile
 	src/plugins/contrib/Makefile
+	src/plugins/contrib/byogames/Makefile
 	src/plugins/contrib/codestat/Makefile
 	src/plugins/contrib/codestat/resources/Makefile
 	src/plugins/contrib/dragscroll/Makefile
@@ -171,6 +176,7 @@ AC_CONFIG_FILES([Makefile
 	src/plugins/contrib/wxSmith/properties/Makefile
 	src/plugins/contrib/wxSmith/resources/Makefile
 	src/plugins/contrib/wxSmith/smithicons/Makefile
+	src/scripts/Makefile
 	src/tools/Makefile
 	src/tools/autorevision/Makefile
 	src/tools/ConsoleRunner/Makefile

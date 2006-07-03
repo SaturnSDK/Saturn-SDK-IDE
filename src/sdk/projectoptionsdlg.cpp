@@ -39,6 +39,13 @@
     #include <wx/treectrl.h>
     #include <wx/spinctrl.h>
     #include <wx/button.h>
+    #include <wx/checklst.h>
+    #include <wx/stattext.h>
+    #include <wx/checkbox.h>
+    #include <wx/combobox.h>
+    #include <wx/sizer.h>
+    #include <wx/textdlg.h>
+    #include <wx/filedlg.h>
 #endif
 
 #include <wx/radiobox.h>
@@ -124,7 +131,7 @@ ProjectOptionsDlg::ProjectOptionsDlg(wxWindow* parent, cbProject* project)
 
     // make sure everything is laid out properly
     GetSizer()->SetSizeHints(this);
-    CenterOnParent();
+    CentreOnParent();
 }
 
 // class destructor

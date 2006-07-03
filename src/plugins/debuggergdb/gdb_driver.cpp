@@ -11,7 +11,13 @@
 #include <wx/arrimpl.cpp> // this is a magic incantation which must be done!
 WX_DEFINE_OBJARRAY(TypesArray);
 
-#define GDB_PROMPT _T("(gdb)")
+// the ">>>>>>" is a hack: sometimes, especially when watching uninitialized char*
+// some random control codes in the stream (like 'delete') will mess-up our prompt and the debugger
+// will seem like frozen (only "stop" button available). Using this dummy prefix,
+// we allow for a few characters to be "eaten" this way and still get our
+// expected prompt back.
+#define GDB_PROMPT _T("cb_gdb:")
+#define FULL_GDB_PROMPT _T(">>>>>>") + GDB_PROMPT
 
 //[Switching to thread 2 (Thread 1082132832 (LWP 12298))]#0  0x00002aaaac5a2aca in pthread_cond_wait@@GLIBC_2.3.2 () from /lib/libpthread.so.0
 static wxRegEx reThreadSwitch(_T("^\\[Switching to thread .*\\]#0[ \t]+(0x[A-z0-9]+) in (.*) from (.*)"));
@@ -22,11 +28,14 @@ static wxRegEx reThreadSwitch2(_T("^\\[Switching to thread .*\\]#0[ \t]+(0x[A-z0
     static wxRegEx reBreak(_T("\032\032([^:]+):([0-9]+):[0-9]+:[begmidl]+:(0x[0-9A-z]+)"));
 #endif
 static wxRegEx reBreak2(_T("^(0x[A-z0-9]+) in (.*) from (.*)"));
+static wxRegEx reBreak3(_T("^(0x[A-z0-9]+) in (.*)"));
 
 GDB_driver::GDB_driver(DebuggerGDB* plugin)
     : DebuggerDriver(plugin),
     m_BreakOnEntry(false),
-    m_ManualBreakOnEntry(false)
+    m_ManualBreakOnEntry(false),
+    m_GDBVersionMajor(0),
+    m_GDBVersionMinor(0)
 {
     //ctor
 }
@@ -117,6 +126,7 @@ wxString GDB_driver::GetCommandLine(const wxString& debugger, const wxString& de
     cmd << debugger;
     cmd << _T(" -nx");          // don't run .gdbinit
     cmd << _T(" -fullname ");   // report full-path filenames when breaking
+    cmd << _T(" -quiet");       // don't display version on startup
     cmd << _T(" -args ") << debuggee;
     return cmd;
 }
@@ -127,7 +137,8 @@ wxString GDB_driver::GetCommandLine(const wxString& debugger, int pid)
     cmd << debugger;
     cmd << _T(" -nx");          // don't run .gdbinit
     cmd << _T(" -fullname ");   // report full-path filenames when breaking
-    cmd << _T("-pid=") << wxString::Format(_T("%d"), pid);
+    cmd << _T(" -quiet");       // don't display version on startup
+    cmd << _T(" -pid=") << wxString::Format(_T("%d"), pid);
     return cmd;
 }
 
@@ -136,9 +147,11 @@ void GDB_driver::Prepare(bool isConsole)
     // default initialization
 
     // make sure we 're using the prompt that we know and trust ;)
-	QueueCommand(new DebuggerCmd(this, wxString(_T("set prompt ")) + GDB_PROMPT));
+	QueueCommand(new DebuggerCmd(this, wxString(_T("set prompt ")) + FULL_GDB_PROMPT));
 
-    // send built-in init commands
+    // debugger version
+	QueueCommand(new DebuggerCmd(this, _T("show version")));
+    // no confirmation
 	QueueCommand(new DebuggerCmd(this, _T("set confirm off")));
 	// no wrapping lines
     QueueCommand(new DebuggerCmd(this, _T("set width 0")));
@@ -180,6 +193,10 @@ void GDB_driver::Prepare(bool isConsole)
     {
         QueueCommand(new GdbCmd_AddSourceDir(this, m_Dirs[i]));
     }
+
+    // set arguments
+    if (!m_Args.IsEmpty())
+        QueueCommand(new DebuggerCmd(this, _T("set args ") + m_Args));
 }
 
 void GDB_driver::Start(bool breakOnEntry)
@@ -401,6 +418,10 @@ void GDB_driver::ParseOutput(const wxString& output)
 //            Log(_T("Command parsing output: ") + buffer.Left(idx));
             RemoveTopCommand(false);
             buffer.Remove(idx);
+            // remove the '>>>>>>' part of the prompt (or what's left of it)
+            int cnt = 6; // max 6 '>'
+            while (buffer.Last() == _T('>') && cnt--)
+                buffer.RemoveLast();
             if (buffer.Last() == _T('\n'))
                 buffer.RemoveLast();
             cmd->ParseOutput(buffer.Left(idx));
@@ -428,6 +449,22 @@ void GDB_driver::ParseOutput(const wxString& output)
         {
             // it's the gdb banner. Just display the version and "eat" the rest
             m_pDBG->Log(_("Debugger name and version: ") + lines[i]);
+            // keep major and minor version numbers handy
+            wxString major = lines[i].Right(lines[i].Length() - 8);
+            wxString minor = major;
+            major = major.BeforeFirst(_T('.')); // 6.3.2 -> 6
+            minor = minor.AfterFirst(_T('.')); // 6.3.2 -> 3.2
+            minor = minor.BeforeFirst(_T('.')); // 3.2 -> 3
+            major.ToLong(&m_GDBVersionMajor);
+            minor.ToLong(&m_GDBVersionMinor);
+//            wxString log;
+//            log.Printf(_T("Line: %s\nMajor: %s (%d)\nMinor: %s (%d)"),
+//                        lines[i].c_str(),
+//                        major.c_str(),
+//                        m_GDBVersionMajor,
+//                        minor.c_str(),
+//                        m_GDBVersionMinor);
+//            m_pDBG->Log(log);
             break;
         }
 
@@ -445,7 +482,8 @@ void GDB_driver::ParseOutput(const wxString& output)
         }
 
         // signal
-        else if (lines[i].StartsWith(_T("Program received signal SIGSEGV")))
+        else if (lines[i].StartsWith(_T("Program received signal SIG")) &&
+        !( lines[i].StartsWith(_T("Program received signal SIGINT")) || lines[i].StartsWith(_T("Program received signal SIGTRAP"))) )
         {
             Log(lines[i]);
             m_pDBG->BringAppToFront();
@@ -535,6 +573,15 @@ void GDB_driver::ParseOutput(const wxString& output)
 				m_Cursor.line = -1;
                 m_Cursor.changed = true;
                 needsUpdate = true;
+			}
+			else if (reBreak3.Matches(lines[i]) )
+			{
+			    m_Cursor.file=_T("");
+			    m_Cursor.function= reBreak3.GetMatch(lines[i], 2);
+                           m_Cursor.address = reBreak3.GetMatch(lines[i], 1);
+                           m_Cursor.line = -1;
+                           m_Cursor.changed = true;
+                           needsUpdate = true;
 			}
         }
     }

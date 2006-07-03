@@ -7,11 +7,7 @@
 #include "nativeparser.h"
 #include "parser/parser.h"
 
-#ifdef __WXMSW__
-    #define USE_CUST_CTRL true
-#else
-    #define USE_CUST_CTRL false
-#endif
+#define USE_CUST_CTRL false
 
 class CCOptionsDlg : public cbConfigurationPanel
 {
@@ -25,7 +21,7 @@ class CCOptionsDlg : public cbConfigurationPanel
         virtual void OnCancel(){}
 	protected:
 		void OnOK(wxCommandEvent& event);
-		void OnChooseColor(wxCommandEvent& event);
+		void OnChooseColour(wxCommandEvent& event);
 		void OnInheritanceToggle(wxCommandEvent& event);
 		void OnSliderScroll(wxScrollEvent& event);
 		void OnUpdateUI(wxUpdateUIEvent& event);

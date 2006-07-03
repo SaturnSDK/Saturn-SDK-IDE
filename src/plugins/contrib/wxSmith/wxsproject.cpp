@@ -9,6 +9,7 @@
 #include "wxsmith.h"
 #include "wxsprojectconfigurationdlg.h"
 #include <wx/string.h>
+#include <annoyingdialog.h>
 
 #define XML_DIALOG_STR   "dialog"
 #define XML_FRAME_STR    "frame"
@@ -25,7 +26,6 @@
 #define XML_INITALL_STR  "init_all_handlers"
 #define XML_AUTOLOAD_STR "load_resource"
 
-
 wxsProject::wxsProject():  Integration(NotBinded), Project(NULL), CallInitAll(true), CallInitAllNecessary(true), DuringClear(false)
 {}
 
@@ -34,9 +34,8 @@ wxsProject::~wxsProject()
     Clear();
 }
 
-wxsProject::IntegrationState wxsProject::BindProject(cbProject* Proj)
+wxsProject::IntegrationState wxsProject::BindProject(cbProject* Proj,TiXmlElement* Config)
 {
-
     Clear();
 
     /* creating new node in resource tree */
@@ -48,10 +47,6 @@ wxsProject::IntegrationState wxsProject::BindProject(cbProject* Proj)
         new wxsResourceTreeData(this));
 
     /* Binding project object */
-    if ( Proj && !Proj->IsLoaded() )
-    {
-        Proj = NULL;
-    }
     Project = Proj;
     if ( !Proj )
     {
@@ -67,25 +62,55 @@ wxsProject::IntegrationState wxsProject::BindProject(cbProject* Proj)
     WorkingPath.SetExt(_T(""));
     WorkingPath.Assign(WorkingPath.GetFullPath());  // Reparsing path
 
-    if ( ! WorkingPath.FileExists() )
+    // Trying to find configuration in given node first.
+    // If not found, searching for it in previously used external config file
+
+    TiXmlElement* SmithConf = Config ? Config->FirstChildElement("wxsmith") : NULL;
+
+    if ( SmithConf!=NULL )
     {
-        return Integration = NotWxsProject;
+        if ( !LoadFromXml(SmithConf) )
+        {
+            return Integration = NotWxsProject;
+        }
     }
-
-    /* Trying to read configuration data */
-
-    TiXmlDocument Doc(cbU2C(WorkingPath.GetFullPath()));
-
-    if ( !Doc.LoadFile() )
+    else
     {
-        return Integration = NotWxsProject;
-    }
+        if ( ! WorkingPath.FileExists() )
+        {
+            return Integration = NotWxsProject;
+        }
 
-    TiXmlNode* MainNode = Doc.FirstChild("wxsmith");
+        /* Trying to read configuration data */
+        TiXmlDocument Doc(cbU2C(WorkingPath.GetFullPath()));
 
-    if ( MainNode == NULL || ! LoadFromXml(MainNode) )
-    {
-        return Integration = NotWxsProject;
+        if ( !Doc.LoadFile() )
+        {
+            return Integration = NotWxsProject;
+        }
+
+        TiXmlNode* MainNode = Doc.FirstChild("wxsmith");
+        if ( MainNode == NULL || ! LoadFromXml(MainNode) )
+        {
+            return Integration = NotWxsProject;
+        }
+
+        AnnoyingDialog dlg(
+            _("Old wxSmith configuration detected"),
+            _("Previous version of wxSmith used external file to\n"
+              "keep it's configuration. In new version, it is stored\n"
+              "inside .cbp file. Should I automatically delete\n"
+              "previous configuration file ?"),
+            wxART_QUESTION);
+        if ( dlg.ShowModal() == wxID_YES )
+        {
+            if ( !::wxRemoveFile(WorkingPath.GetFullPath()) )
+            {
+                ::wxMessageBox(_("Unable to delete old wxSmith configuration file."),_("Couldn't delete file"));
+            }
+        }
+
+        SetModified(true);
     }
 
     BuildTree(ResTree,TreeItem);
@@ -364,7 +389,15 @@ TiXmlDocument* wxsProject::GenerateXml()
     if ( Integration != Integrated ) return NULL;
 
     TiXmlDocument* Doc = new TiXmlDocument();
-    TiXmlNode* Elem = Doc->InsertEndChild(TiXmlElement("wxsmith"));
+    XmlStore(Doc);
+    return Doc;
+}
+
+void wxsProject::XmlStore(TiXmlNode* Node)
+{
+    if ( Integration != Integrated ) return;
+
+    TiXmlElement* Elem = Node->InsertEndChild(TiXmlElement("wxsmith"))->ToElement();
 
     for ( DialogListI i = Dialogs.begin(); i!=Dialogs.end(); ++i )
     {
@@ -391,7 +424,7 @@ TiXmlDocument* wxsProject::GenerateXml()
         Frm.SetAttribute(XML_CNAME_STR,cbU2C(Sett->GetClassName()));
         Frm.SetAttribute(XML_SFILE_STR,cbU2C(Sett->GetSourceFile()));
         Frm.SetAttribute(XML_HFILE_STR,cbU2C(Sett->GetHeaderFile()));
-        Frm.SetAttribute(XML_XRCFILE_STR,cbU2C(Sett->GetWxsFile()));
+        Frm.SetAttribute(XML_XRCFILE_STR,cbU2C(Sett->GetXrcFile()));
         Frm.SetAttribute(XML_EDITMODE_STR,Sett->GetEditMode()==wxsREMSource?"Source":"Xrc");
         Elem->InsertEndChild(Frm);
     }
@@ -406,7 +439,7 @@ TiXmlDocument* wxsProject::GenerateXml()
         Pan.SetAttribute(XML_CNAME_STR,cbU2C(Sett->GetClassName()));
         Pan.SetAttribute(XML_SFILE_STR,cbU2C(Sett->GetSourceFile()));
         Pan.SetAttribute(XML_HFILE_STR,cbU2C(Sett->GetHeaderFile()));
-        Pan.SetAttribute(XML_XRCFILE_STR,cbU2C(Sett->GetWxsFile()));
+        Pan.SetAttribute(XML_XRCFILE_STR,cbU2C(Sett->GetXrcFile()));
         Pan.SetAttribute(XML_EDITMODE_STR,Sett->GetEditMode()==wxsREMSource?"Source":"Xrc");
         Elem->InsertEndChild(Pan);
     }
@@ -437,30 +470,29 @@ TiXmlDocument* wxsProject::GenerateXml()
         if ( Node ) Node->InsertEndChild(TiXmlText(cbU2C(LoadedResources[i])));
     }
 
-    return Doc;
 }
 
-void wxsProject::SaveProject()
-{
-
-    if ( Integration != Integrated ) return;
-    if ( !GetModified() ) return;
-
-    WorkingPath.SetName(wxSmithMainConfigFile);
-    WorkingPath.SetExt(_T(""));
-    WorkingPath.Assign(WorkingPath.GetFullPath());  // Reparsing path
-
-    TiXmlDocument* Doc = GenerateXml();
-
-    if ( Doc )
-    {
-        Doc->SaveFile(cbU2C(WorkingPath.GetFullPath()));
-        delete Doc;
-    }
-
-    SetModified(false);
-}
-
+//void wxsProject::SaveProject()
+//{
+//
+//    if ( Integration != Integrated ) return;
+//    if ( !GetModified() ) return;
+//
+//    WorkingPath.SetName(wxSmithMainConfigFile);
+//    WorkingPath.SetExt(_T(""));
+//    WorkingPath.Assign(WorkingPath.GetFullPath());  // Reparsing path
+//
+//    TiXmlDocument* Doc = GenerateXml();
+//
+//    if ( Doc )
+//    {
+//        Doc->SaveFile(cbU2C(WorkingPath.GetFullPath()));
+//        delete Doc;
+//    }
+//
+//    SetModified(false);
+//}
+//
 void wxsProject::DeleteDialog(wxsDialogRes* Resource)
 {
     if ( DuringClear ) return;
@@ -509,20 +541,39 @@ wxString wxsProject::GetProjectFileName(const wxString& FileName)
     return Path.GetFullPath();
 }
 
-bool wxsProject::AddSmithConfig()
+bool wxsProject::AddSmithConfig(bool Silent)
 {
     if ( GetIntegration() != NotWxsProject ) return false;
 
     if ( ! wxFileName::Mkdir(WorkingPath.GetPath(wxPATH_GET_VOLUME),0744,wxPATH_MKDIR_FULL) )
     {
-        wxMessageBox(_("Couldn't create wxsmith directory in main projet's path"),_("Error"),wxOK|wxICON_ERROR);
+        if ( !Silent )
+        {
+            wxMessageBox(_("Couldn't create wxsmith directory in main projet's path"),_("Error"),wxOK|wxICON_ERROR);
+        }
         return false;
     }
 
     Integration = Integrated;
 
     SetModified(true);
-    SaveProject();
+
+    if ( !Silent )
+    {
+        AnnoyingDialog dlg(_("wxSmith extensions added"),
+            _("wxSmith extensions were added to this project.\n"
+              "\n"
+              "Because main application code is not managed by\n"
+              "wxSmith, remember about proper wxWidgets initialization:\n"
+              " * call wxXmlResource::Get()->InitAllHandlers() before using any XRC files\n"
+              " * call wxInitAllImageHandlers() before using graphic files other than .bmp\n"),
+            wxART_INFORMATION,
+            AnnoyingDialog::OK,
+            wxID_OK);
+        dlg.ShowModal();
+    }
+
+    //SaveProject();
 
     BuildTree(wxsTREE(),TreeItem);
 
@@ -735,6 +786,7 @@ void wxsProject::RebuildAppCode()
     wxString NewCode = CodeHeader;
 
     NewCode.Append(_T("\nbool wxsOK = true;\n"));
+    NewCode.Append(_T("::wxInitAllImageHandlers();\n"));
 
     if ( InitAllHandlers )
     {
@@ -780,6 +832,8 @@ void wxsProject::RebuildAppCode()
         NewCode.Append(_T("#include <wx/xrc/xmlres.h>\n"));
     }
 
+    NewCode.Append(_T("#include <wx/image.h>\n"));
+
     wxsCoder::Get()->AddCode(GetProjectFileName(AppFile),CodeHeader,NewCode);
 }
 
@@ -817,4 +871,16 @@ bool wxsProject::SetAppSourceFile(const wxString& NewAppFile)
 {
     AppFile = NewAppFile;
     return true;
+}
+
+void wxsProject::SetModified(bool Modified)
+{
+    if ( Modified )
+        Project->SetModified(true);
+}
+
+void wxsProject::RebuildTree()
+{
+    wxsTREE()->DeleteChildren(TreeItem);
+    BuildTree(wxsTREE(),TreeItem);
 }

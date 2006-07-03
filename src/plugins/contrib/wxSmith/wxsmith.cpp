@@ -18,6 +18,7 @@
 #include <wx/sashwin.h>
 #include <configmanager.h>
 #include <cbexception.h>
+#include <projectloader_hooks.h>
 
 #include "wxsmith.h"
 #include "wxswindoweditor.h"
@@ -147,10 +148,13 @@ void wxSmith::OnAttach()
         ResourceBrowser = NULL;
 	}
 
+    ProjectLoaderHooks::HookFunctorBase* myhook = new ProjectLoaderHooks::HookFunctor<wxSmith>(this, &wxSmith::OnProjectHook);
+    HookId = ProjectLoaderHooks::RegisterHook(myhook);
 }
 
 void wxSmith::OnRelease(bool appShutDown)
 {
+    ProjectLoaderHooks::UnregisterHook(HookId,true);
     for ( ProjectMapI i = ProjectMap.begin(); i!=ProjectMap.end(); ++i )
     {
         if ( (*i).second )
@@ -206,23 +210,23 @@ void wxSmith::OnProjectClose(CodeBlocksEvent& event)
     cbProject* Proj = event.GetProject();
     ProjectMapI i = ProjectMap.find(Proj);
     if ( i == ProjectMap.end() ) return;
-
     wxsProject* SmithProj = (*i).second;
     ProjectMap.erase(i);
-    if ( SmithProj )
-    {
-        SmithProj->SaveProject();
-        delete SmithProj;
-    }
-
+    delete SmithProj;
     event.Skip();
 }
 
 void wxSmith::OnProjectOpen(CodeBlocksEvent& event)
 {
-    wxsProject* NewProj = new wxsProject;
-    NewProj->BindProject(event.GetProject());
-    ProjectMap[event.GetProject()] = NewProj;
+    // Project should be loaded before using project loader hooks
+    if ( !GetSmithProject(event.GetProject()) )
+    {
+        DBGLOG(_T("wxSmith: There's something wrong with C::B project extensions support, no \"Extensions\" node ?"));
+        // Strange situation, cbp file doesn't contain "Extensions" node
+        wxsProject* NewProj = new wxsProject;
+        NewProj->BindProject(event.GetProject(),NULL);
+        ProjectMap[event.GetProject()] = NewProj;
+    }
     event.Skip();
 }
 
@@ -266,9 +270,7 @@ cbProject* wxSmith::GetCBProject(wxsProject* Proj)
 wxsProject* wxSmith::GetSmithProject(cbProject* Proj)
 {
     ProjectMapI i = ProjectMap.find(Proj);
-
     if ( i == ProjectMap.end() ) return NULL;
-
     return (*i).second;
 }
 
@@ -442,4 +444,29 @@ void wxSmith::OnConfigure(wxCommandEvent& event)
     wxsProject* SP = GetSmithProject(CP);
     if ( !SP ) return;
     SP->Configure();
+}
+
+void wxSmith::OnProjectHook(cbProject* project,TiXmlElement* elem,bool loading)
+{
+    if ( loading )
+    {
+        // Hook called when loading project file.
+        // It should be right before sending open event
+
+        wxsProject* Proj = GetSmithProject(project);
+        if ( !Proj )
+        {
+            Proj = new wxsProject();
+            ProjectMap[project] = Proj;
+        }
+        Proj->BindProject(project,elem);
+    }
+    else
+    {
+        wxsProject* Proj = GetSmithProject(project);
+        if ( Proj )
+        {
+            Proj->XmlStore(elem);
+        }
+    }
 }

@@ -53,7 +53,7 @@ libcodeblocks_la_SOURCES = annoyingdialog.cpp \
 						editarraystringdlg.cpp \
 						editkeywordsdlg.cpp \
 						editorbase.cpp \
-						editorcolorset.cpp \
+						editorcolourset.cpp \
 						editorconfigurationdlg.cpp \
 						editorlexerloader.cpp \
 						editormanager.cpp \
@@ -121,6 +121,7 @@ noinst_HEADERS = annoyingdialog.h \
 				cbexception.h \
 				cbplugin.h \
 				cbproject.h \
+				cbthreadedtask.h \
 				cbthreadpool.h \
 				cbworkspace.h \
 				compileoptionsbase.h \
@@ -140,7 +141,7 @@ noinst_HEADERS = annoyingdialog.h \
 				editarraystringdlg.h \
 				editkeywordsdlg.h \
 				editorbase.h \
-				editorcolorset.h \
+				editorcolourset.h \
 				editorconfigurationdlg.h \
 				editorlexerloader.h \
 				editormanager.h \

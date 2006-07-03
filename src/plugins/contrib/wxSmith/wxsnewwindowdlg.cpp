@@ -14,9 +14,9 @@ BEGIN_EVENT_TABLE(wxsNewWindowDlg,wxDialog)
     EVT_TEXT(XRCID("ID_TEXTCTRL3"),wxsNewWindowDlg::OnSourceChanged)
     EVT_CHECKBOX(XRCID("ID_CHECKBOX1"),wxsNewWindowDlg::OnUseXrcChange)
     EVT_TEXT(XRCID("ID_TEXTCTRL4"),wxsNewWindowDlg::OnXrcChanged)
-    EVT_BUTTON(XRCID("ID_BUTTON1"),wxsNewWindowDlg::OnCancel)
-    EVT_BUTTON(XRCID("ID_BUTTON2"),wxsNewWindowDlg::OnCreate)
     //*)
+    EVT_BUTTON(wxID_CANCEL,wxsNewWindowDlg::OnCancel)
+    EVT_BUTTON(wxID_OK,wxsNewWindowDlg::OnCreate)
 END_EVENT_TABLE()
 
 wxsNewWindowDlg::wxsNewWindowDlg(wxWindow* parent,const wxString& ResType):
@@ -59,7 +59,7 @@ wxsNewWindowDlg::~wxsNewWindowDlg()
 
 void wxsNewWindowDlg::OnCancel(wxCommandEvent& event)
 {
-    Close();
+    EndModal(wxID_CANCEL);
 }
 
 void wxsNewWindowDlg::OnCreate(wxCommandEvent& event)
@@ -88,33 +88,39 @@ void wxsNewWindowDlg::OnCreate(wxCommandEvent& event)
 
     // Third - checking if files already exist
 
+    bool genHeader = true;
     if ( wxFileName::FileExists(Proj->GetProjectFileName(Header->GetValue())) )
     {
-        if ( wxMessageBox(
-              wxString::Format(_("File '%s' already exists. It will be overwritten.\nContinue ?"),Header->GetValue().c_str()),
-              _("File exists"),wxYES_NO|wxICON_ERROR) != wxYES )
+        switch ( wxMessageBox(wxString::Format(
+            _("File '%s' already exists. Overwrite it ?"),Header->GetValue().c_str()),
+            _("File exists"),wxYES_NO|wxCANCEL|wxICON_ERROR) )
         {
-            return;
+            case wxCANCEL: return;
+            case wxNO: genHeader = false; break;
         }
     }
 
+    bool genSource = true;
     if ( wxFileName::FileExists(Proj->GetProjectFileName(Source->GetValue())) )
     {
-        if ( wxMessageBox(
-              wxString::Format(_("File '%s' already exists. It will be overwritten.\nContinue ?"),Source->GetValue().c_str()),
-              _("File exists"),wxYES_NO|wxICON_ERROR) != wxYES )
+        switch ( wxMessageBox(wxString::Format(
+            _("File '%s' already exists. Overwrite it ?"),Source->GetValue().c_str()),
+            _("File exists"),wxYES_NO|wxCANCEL|wxICON_ERROR) )
         {
-            return;
+            case wxCANCEL: return;
+            case wxNO: genSource = false; break;
         }
     }
 
+    bool genXRC = CreateXrc;
     if ( CreateXrc && wxFileName::FileExists(Proj->GetProjectFileName(Xrc->GetValue())) )
     {
-        if ( wxMessageBox(
-              wxString::Format(_("File '%s' already exists. It will be overwritten.\nContinue ?"),Source->GetValue().c_str()),
-              _("File exists"),wxYES_NO|wxICON_ERROR) != wxYES )
+        switch ( wxMessageBox(wxString::Format(
+            _("File '%s' already exists. Overwrite it ?"),Source->GetValue().c_str()),
+            _("File exists"),wxYES_NO|wxCANCEL|wxICON_ERROR) )
         {
-            return;
+            case wxCANCEL: return;
+            case wxNO: genXRC = false; break;
         }
     }
 
@@ -160,7 +166,7 @@ void wxsNewWindowDlg::OnCreate(wxCommandEvent& event)
             XrcFile);
     }
 
-    if ( !NewWindow->GenerateEmptySources() )
+    if ( !NewWindow->GenerateEmptySources(genHeader,genSource) )
     {
         wxMessageBox(_("Couldn't generate sources"),_("Error"),wxOK|wxICON_ERROR);
         delete NewWindow;
@@ -200,7 +206,7 @@ void wxsNewWindowDlg::OnCreate(wxCommandEvent& event)
     }
 
     wxsSelectRes(NewWindow);
-    Close();
+    EndModal(wxID_OK);
 }
 
 void wxsNewWindowDlg::OnClassChanged(wxCommandEvent& event)

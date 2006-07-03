@@ -180,17 +180,13 @@ void wxsWindowEditorContent::UpdateDragPoints(DragPointData* anyPoint)
 bool wxsWindowEditorContent::FindAbsoluteRect(wxsItem* Item,int& PosX,int& PosY,int& SizeX,int& SizeY)
 {
     if ( !Item ) return false;
-    if ( !Item->GetPreview() ) return false;
-    wxWindow* win = wxDynamicCast(Item->GetPreview(),wxWindow);
-    if ( !win ) return false;
-// TODO (SpOoN#1#): Add additional visibility check (query item's parent)
-    if ( !win->IsShown() ) return false;
-    PosX = 0;
-    PosY = 0;
-    win->GetPosition(&PosX,&PosY);
-    win->GetParent()->ClientToScreen(&PosX,&PosY);
-    ScreenToClient(&PosX,&PosY);
-    win->GetSize(&SizeX,&SizeY);
+    ItemToRectT::iterator i = ItemToRect.find(Item);
+    if ( i==ItemToRect.end() ) return false;
+    wxRect& Rect = (*i).second;
+    PosX = Rect.GetX();
+    PosY = Rect.GetY();
+    SizeX = Rect.GetWidth();
+    SizeY = Rect.GetHeight();
     return true;
 }
 
@@ -376,6 +372,7 @@ void wxsWindowEditorContent::OnMouseDraggingPointInit(wxMouseEvent& event)
 
     if ( DeltaX + DeltaY > MinDragDistance )
     {
+        ResourceLock();
         MouseState = msDraggingPoint;
     }
 }
@@ -390,7 +387,7 @@ void wxsWindowEditorContent::OnMouseDraggingPoint(wxMouseEvent& event)
             DragPoints[i]->PosX = DragPoints[i]->DragInitPosX;
             DragPoints[i]->PosY = DragPoints[i]->DragInitPosY;
         }
-        FullRepaint();
+        ResourceUnlock();
         MouseState = msIdle;
         return;
     }
@@ -423,7 +420,7 @@ void wxsWindowEditorContent::OnMouseDraggingPoint(wxMouseEvent& event)
                 NewSizeY = -NewSizeY;
             }
 
-            wxWindow* Preview = wxDynamicCast(CurDragPoint->Item->GetPreview(),wxWindow);
+            wxWindow* Preview = GetPreviewWindow(CurDragPoint->Item);
 
             if ( Preview )
             {
@@ -449,6 +446,7 @@ void wxsWindowEditorContent::OnMouseDraggingPoint(wxMouseEvent& event)
         UpdateDragPoints(CurDragPoint);
         MouseState = msIdle;
         CurDragItem->NotifyPropertyChange(true);
+        ResourceUnlock();
         return;
     }
 
@@ -539,6 +537,7 @@ void wxsWindowEditorContent::OnMouseDraggingItemInit(wxMouseEvent& event)
     if ( DeltaX + DeltaY > MinDragDistance )
     {
         MouseState = msDraggingItem;
+        ResourceLock();
         Assist->NewDragging();
     }
 }
@@ -558,7 +557,7 @@ void wxsWindowEditorContent::OnMouseDraggingItem(wxMouseEvent& event)
         AssistTarget = NULL;
         AssistAddAfter = false;
         Assist->NewDragging();
-        FullRepaint();
+        ResourceUnlock();
         return;
     }
 
@@ -630,7 +629,7 @@ void wxsWindowEditorContent::OnMouseDraggingItem(wxMouseEvent& event)
                                     PosX += CurDragPoint->PosX - CurDragPoint->DragInitPosX;
                                     PosY += CurDragPoint->PosY - CurDragPoint->DragInitPosY;
                                     ClientToScreen(&PosX,&PosY);
-                                    wxWindow* PreviewParent = wxDynamicCast(CurDragItem->GetPreview(),wxWindow)->GetParent();
+                                    wxWindow* PreviewParent = GetPreviewWindow(CurDragItem)->GetParent();
                                     if ( PreviewParent )
                                     {
                                         PreviewParent->ScreenToClient(&PosX,&PosY);
@@ -646,6 +645,7 @@ void wxsWindowEditorContent::OnMouseDraggingItem(wxMouseEvent& event)
         UpdateDragPoints(CurDragPoint);
         MouseState = msIdle;
         CurDragItem->NotifyPropertyChange(true);
+        ResourceUnlock();
         AssistTarget = NULL;
         AssistParent = NULL;
         AssistAddAfter = false;
@@ -727,3 +727,59 @@ bool wxsWindowEditorContent::FindDraggingItemTarget(int PosX,int PosY,wxsItem* D
     return true;
 }
 
+void wxsWindowEditorContent::NewPreview()
+{
+    RecalculateMaps();
+    RebuildDragPoints();
+    ContentChanged();
+}
+
+wxWindow* wxsWindowEditorContent::GetPreviewWindow(wxsItem* Item)
+{
+    if ( !Item ) return NULL;
+    ItemToWindowT::iterator i = ItemToWindow.find(Item);
+    if ( i==ItemToWindow.end() ) return NULL;
+    return (*i).second;
+}
+
+void wxsWindowEditorContent::RecalculateMaps()
+{
+    ItemToRect.clear();
+    ItemToWindow.clear();
+    RecalculateMapsReq(RootItem());
+}
+
+void wxsWindowEditorContent::RecalculateMapsReq(wxsItem* Item)
+{
+    if ( Item->GetPreview() )
+    {
+        wxWindow* win = wxDynamicCast(Item->GetPreview(),wxWindow);
+        ItemToWindow[Item] = win;
+        if ( win )
+        {
+            // TODO (SpOoN#1#): Add additional visibility check (query item's parent)
+            if ( win->IsShown() )
+            {
+                int PosX = 0;
+                int PosY = 0;
+                int SizeX = 0;
+                int SizeY = 0;
+                win->GetPosition(&PosX,&PosY);
+                win->GetParent()->ClientToScreen(&PosX,&PosY);
+                ScreenToClient(&PosX,&PosY);
+                CalcUnscrolledPosition(PosX,PosY,&PosX,&PosY);
+                win->GetSize(&SizeX,&SizeY);
+                ItemToRect[Item] = wxRect(PosX,PosY,SizeX,SizeY);
+
+                wxsParent* Parent = Item->ToParent();
+                if ( Parent )
+                {
+                    for ( int i=0; i<Parent->GetChildCount(); i++ )
+                    {
+                        RecalculateMapsReq(Parent->GetChild(i));
+                    }
+                }
+            }
+        }
+    }
+}

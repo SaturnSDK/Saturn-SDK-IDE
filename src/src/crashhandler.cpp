@@ -1,12 +1,24 @@
+#if (__WXMSW__)
+#include "sdk.h"
+#ifndef CB_PRECOMP
+#include <wx/filefn.h>
+#include <wx/filename.h>
+#include <wx/log.h>
+#include <wx/string.h>
+#include "cbeditor.h"
+#include "configmanager.h"
+#include "editormanager.h"
+#include "globals.h"
+#endif
 #include "crashhandler.h"
-
-
-#if (__WXMSW__) && WINVER >= 0x0501
-#include <sdk_precomp.h>
-
 
 LONG WINAPI CrashHandlerFunc(struct _EXCEPTION_POINTERS *ExceptionInfo)
 {
+    DWORD code = ExceptionInfo->ExceptionRecord->ExceptionCode;
+
+    if(code != EXCEPTION_ACCESS_VIOLATION && code != EXCEPTION_ILLEGAL_INSTRUCTION)
+        return EXCEPTION_CONTINUE_SEARCH;
+
     wxLogNull nl;
     wxString path(ConfigManager::GetHomeFolder() + _T("cb-crash-recover"));
     wxMkdir(ConfigManager::GetHomeFolder() + _T("cb-crash-recover"));
@@ -29,7 +41,7 @@ LONG WINAPI CrashHandlerFunc(struct _EXCEPTION_POINTERS *ExceptionInfo)
     }
 
     wxString buf;
-    buf.Printf(_T("The application caused an access violation from address %u.\n\n"
+    buf.Printf(_T("The application encountered a crash at address %u.\n\n"
                   "A snapshot of the present state of Code::Blocks has been saved to the directory cb-crash-recover inside your 'My Files' folder. Hopefully, this will prevent you from losing recent modifications.\n\n"
                   "You now have three options:\n"
                   "1. Press 'Abort' to pass control back to the system. This will normally display the standard 'application error' message and kill the program.\n"
@@ -57,19 +69,23 @@ LONG WINAPI CrashHandlerFunc(struct _EXCEPTION_POINTERS *ExceptionInfo)
 };
 
 
-CrashHandler::CrashHandler()
+CrashHandler::CrashHandler() : handler(0)
 {
-    h = AddVectoredExceptionHandler(1, CrashHandlerFunc);
+        AddHandler_t AddHandler = (AddHandler_t) GetProcAddress(GetModuleHandle(_T("kernel32")), "AddVectoredExceptionHandler");
+
+        if (AddHandler)
+            handler = AddHandler(1, CrashHandlerFunc);
 }
+
 CrashHandler::~CrashHandler()
 {
-    RemoveVectoredExceptionHandler(h);
+    if(handler)
+    {
+        RemoveHandler_t RemoveHandler = (RemoveHandler_t) GetProcAddress(GetModuleHandle(_T("kernel32")), "RemoveVectoredExceptionHandler");
+        RemoveHandler(handler);
+    }
 }
 
-#else
-
-CrashHandler::CrashHandler(){}
-CrashHandler::~CrashHandler(){}
 
 #endif
 

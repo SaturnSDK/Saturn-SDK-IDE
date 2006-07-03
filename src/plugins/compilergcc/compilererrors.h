@@ -4,13 +4,14 @@
 #include <wx/arrstr.h>
 #include <wx/dynarray.h>
 #include <wx/string.h>
+#include "compiler.h" // CompilerLineType
 
 class cbProject;
 
 struct CompileError
 {
+    CompilerLineType lineType;
     cbProject* project;
-    bool isWarning;
 	wxString filename;
 	long int line;
 	wxArrayString errors;
@@ -23,7 +24,7 @@ class CompilerErrors
 		CompilerErrors();
 		virtual ~CompilerErrors();
 
-		void AddError(cbProject* project, const wxString& filename, long int line, const wxString& error, bool isWarning);
+		void AddError(CompilerLineType lt, cbProject* project, const wxString& filename, long int line, const wxString& error);
 
         void GotoError(int nr);
 		void Next();
@@ -34,9 +35,9 @@ class CompilerErrors
 		int GetCount() const { return m_Errors.GetCount(); }
 		wxString GetErrorString(int index);
 
-		unsigned int GetErrorsCount() const;
-		unsigned int GetWarningsCount() const;
+		unsigned int GetCount(CompilerLineType lt) const;
 
+        int GetFirstError() const;
         int GetFocusedError() const { return m_ErrorIndex; }
 	private:
 		void DoAddError(const CompileError& error);

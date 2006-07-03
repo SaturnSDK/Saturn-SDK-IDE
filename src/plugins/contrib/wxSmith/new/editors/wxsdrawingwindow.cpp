@@ -41,17 +41,14 @@ class wxsDrawingWindow::DrawingPanel: public wxPanel
 
 };
 
-DECLARE_EVENT_TYPE(wxEVT_FETCH_BACKGROUND_DELAY, -1)
-DEFINE_EVENT_TYPE(wxEVT_FETCH_BACKGROUND_DELAY)
-
 BEGIN_EVENT_TABLE(wxsDrawingWindow,wxScrolledWindow)
-    EVT_SIZE(wxsDrawingWindow::OnSize)
 END_EVENT_TABLE()
 
 wxsDrawingWindow::wxsDrawingWindow(wxWindow* Parent,wxWindowID id):
     wxScrolledWindow(Parent,id),
     Panel(NULL),
     PaintAfterFetch(false),
+    WaitTillHideChildren(false),
     IsBlockFetch(false),
     Bitmap(NULL)
 {
@@ -66,7 +63,7 @@ wxsDrawingWindow::~wxsDrawingWindow()
 
 void wxsDrawingWindow::ContentChanged()
 {
-    wxSize Size = GetClientSize();
+    wxSize Size = GetVirtualSize();
 
     // Generating new bitmap
     if ( Bitmap ) delete Bitmap;
@@ -78,18 +75,25 @@ void wxsDrawingWindow::ContentChanged()
     Panel->Raise();
 
     // Resizing panel to cover whole window
-    Panel->SetSize(0,0,Size.GetWidth(),Size.GetHeight());
+    int X, Y;
+    CalcScrolledPosition(0,0,&X,&Y);
+    Panel->SetSize(X,Y,Size.GetWidth(),Size.GetHeight());
 
     // Background will be fetched inside panel's internal routines when showing this window
 }
 
 void wxsDrawingWindow::PanelPaint(wxPaintEvent& event)
 {
-    if ( PaintAfterFetch || IsBlockFetch )
+    if ( PaintAfterFetch || WaitTillHideChildren ||  IsBlockFetch )
     {
-        wxPaintDC DC(Panel);
-        PaintAfterFetch = false;
+        wxPaintDC PaintDC(Panel);
+        wxBitmap BmpCopy = Bitmap->GetSubBitmap(wxRect(0,0,Bitmap->GetWidth(),Bitmap->GetHeight()));
+        wxBufferedDC DC(&PaintDC,BmpCopy);
         PaintExtra(&DC);
+        if ( !IsBlockFetch && !WaitTillHideChildren )
+        {
+            PaintAfterFetch = false;
+        }
     }
     else
     {
@@ -115,28 +119,31 @@ void wxsDrawingWindow::StartFetchingSequence()
 {
     // This function will be blocking
     // If it has been executed and not yet finished,
-    // another calls (possibly called from Manager::ProcessPendingEvents())
+    // another calls (possibly called from Manager::Yield())
     // will not be executed
     static bool Block = false;
     if ( Block ) return;
     Block = true;
 
     // Hiding panel to show content under it
+    ShowChildren();
     Panel->Hide();
-    // TODO (SpOoN#1#): Show underlaying items because they could be hidden ealier (after fetching background)
 
     // Processing all pending events, it MUST be done
     // to repaint the content of window
     Manager::Yield();
     FetchScreen();
+    Manager::Yield();
+    WaitTillHideChildren = true;
+    HideChildren();
+    Manager::Yield();
+    WaitTillHideChildren = false;
     PaintAfterFetch = true;
     Manager::Yield();
     Panel->Raise();
     Manager::Yield();
     Panel->Show();
-    // TODO (SpOoN#1#): Hide underlaying items to prevent random repainting on windows
     Manager::Yield();
-    FullRepaint();
 
     Block = false;
 }
@@ -147,9 +154,11 @@ void wxsDrawingWindow::FetchScreen()
 	wxScreenDC DC;
 	wxMemoryDC DestDC;
     int X = 0, Y = 0;
+    int DX = 0, DY = 0;
     ClientToScreen(&X,&Y);
+    CalcUnscrolledPosition(0,0,&DX,&DY);
     DestDC.SelectObject(*Bitmap);
-    DestDC.Blit(0,0,GetSize().GetWidth(),GetSize().GetHeight(),&DC,X,Y);
+    DestDC.Blit(DX,DY,GetSize().GetWidth(),GetSize().GetHeight(),&DC,X,Y);
 }
 
 void wxsDrawingWindow::FullRepaint()
@@ -160,8 +169,26 @@ void wxsDrawingWindow::FullRepaint()
     PaintExtra(&DC);
 }
 
-void wxsDrawingWindow::OnSize(wxSizeEvent& event)
+void wxsDrawingWindow::ShowChildren()
 {
-    // After resizing we need to invalidate content
-    ContentChanged();
+    wxWindowList& Children = GetChildren();
+    for ( size_t i=0; i<Children.GetCount(); i++ )
+    {
+        if ( Children[i] != Panel )
+        {
+            Children[i]->Show();
+        }
+    }
+}
+
+void wxsDrawingWindow::HideChildren()
+{
+    wxWindowList& Children = GetChildren();
+    for ( size_t i=0; i<Children.GetCount(); i++ )
+    {
+        if ( Children[i] != Panel )
+        {
+            Children[i]->Hide();
+        }
+    }
 }

@@ -23,6 +23,83 @@
 #include "examinememorydlg.h"
 #include "threadsdlg.h"
 
+namespace
+{
+  template <typename T>
+  T wxStrHexTo(const wxString &str)
+  {
+    T ret = 0; // return
+    std::size_t count = 0; // how many characters we've converted
+    std::size_t pos = 0; // string position
+
+    // if it begins with 0x or 0X, just ignore it
+    if (str[pos] == _T('0'))
+    {
+      ++pos;
+
+      if (str[pos] == _T('x') || str[pos] == _T('X'))
+      {
+        ++pos; // start after the x or X
+      }
+
+      while (str[pos] == _T('0')) // skip all zeros
+      {
+        ++pos;
+      }
+    }
+
+    while (count < sizeof(T) * 2) // be sure we don't keep adding more to ret
+    {
+      switch (str[pos])
+      {
+        case _T('0'):
+        case _T('1'):
+        case _T('2'):
+        case _T('3'):
+        case _T('4'):
+        case _T('5'):
+        case _T('6'):
+        case _T('7'):
+        case _T('8'):
+        case _T('9'):
+          ret <<= 4;
+          ret |= str[pos] - _T('0');
+          ++count;
+          break;
+
+        case _T('a'):
+        case _T('b'):
+        case _T('c'):
+        case _T('d'):
+        case _T('e'):
+        case _T('f'):
+          ret <<= 4;
+          ret |= str[pos] - _T('a') + 10;
+          ++count;
+          break;
+
+        case _T('A'):
+        case _T('B'):
+        case _T('C'):
+        case _T('D'):
+        case _T('E'):
+        case _T('F'):
+          ret <<= 4;
+          ret |= str[pos] - _T('A') + 10;
+          ++count;
+          break;
+
+        default: // whatever we find that doesn't match ends the conversion
+          return ret;
+      }
+
+      ++pos;
+    }
+
+    return ret;
+  }
+}
+
 static int GetScriptParserFuncID(const wxString& parseFunc)
 {
     static std::map<wxString, int> scriptParserFuncs;
@@ -52,7 +129,7 @@ static wxRegEx reBT3(_T("\\)[ \t]+[atfrom]+[ \t]+(.*)"));
 // Breakpoint 1 at 0x4013d6: file main.cpp, line 8.
 static wxRegEx reBreakpoint(_T("Breakpoint ([0-9]+) at (0x[0-9A-Fa-f]+)"));
 // eax            0x40e66666       1088841318
-static wxRegEx reRegisters(_T("([A-z0-9]+)[ \t]+(0x[0-9A-z]+)"));
+static wxRegEx reRegisters(_T("([A-z0-9]+)[ \t]+(0x[0-9A-Fa-f]+)[ \t]+(.*)"));
 // 0x00401390 <main+0>:	push   ebp
 static wxRegEx reDisassembly(_T("(0x[0-9A-Za-z]+)[ \t]+<.*>:[ \t]+(.*)"));
 //Stack level 0, frame at 0x22ff80:
@@ -761,8 +838,7 @@ class GdbCmd_InfoRegisters : public DebuggerCmd
     		{
                 if (reRegisters.Matches(lines[i]))
                 {
-                    long int addr;
-                    reRegisters.GetMatch(lines[i], 2).ToLong(&addr, 16);
+                    long int addr = wxStrHexTo<long int>(reRegisters.GetMatch(lines[i], 2));
                     m_pDlg->SetRegisterValue(reRegisters.GetMatch(lines[i], 1), addr);
                 }
     		}

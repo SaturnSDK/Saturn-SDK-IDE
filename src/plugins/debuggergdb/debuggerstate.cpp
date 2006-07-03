@@ -89,7 +89,7 @@ wxString DebuggerState::ConvertToValidFilename(const wxString& filename)
     if (isAbsolute)
     {
         ProjectFile* pf = prj->GetFileByFilename(UnixFilename(filename), false, true);
-        if (pf)
+        if (pf && pf->relativeFilename.StartsWith(_T("..")))
             return pf->relativeFilename;
     }
     return filename;
@@ -105,8 +105,10 @@ int DebuggerState::AddBreakpoint(const wxString& file, int line, bool temp, cons
     if (idx != -1)
         RemoveBreakpoint(idx, true);
     // create new bp
+//    Manager::Get()->GetMessageManager()->DebugLog(_T("add bp: file=%s, bpfile=%s"), file.c_str(), bpfile.c_str());
     DebuggerBreakpoint* bp = new DebuggerBreakpoint;
     bp->filename = bpfile;
+    bp->filenameAsPassed = file;
     bp->line = line;
     bp->temporary = temp;
     bp->lineText = lineText;
@@ -166,7 +168,7 @@ void DebuggerState::RemoveAllBreakpoints(const wxString& file, bool deleteit)
         if (fileonly)
         {
             DebuggerBreakpoint* bp = m_Breakpoints[i];
-            if (bp->filename != bpfile)
+            if (bp->filename != bpfile  && bp->filenameAsPassed != file)
                 continue;
         }
         RemoveBreakpoint(i, deleteit);
@@ -179,7 +181,7 @@ int DebuggerState::HasBreakpoint(const wxString& file, int line)
     for (unsigned int i = 0; i < m_Breakpoints.GetCount(); ++i)
     {
         DebuggerBreakpoint* bp = m_Breakpoints[i];
-        if (bp->filename == bpfile && bp->line == line)
+        if ((bp->filename == bpfile || bp->filenameAsPassed == file) && bp->line == line)
             return i;
     }
     return -1;

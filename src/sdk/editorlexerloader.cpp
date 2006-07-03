@@ -20,11 +20,11 @@
     #include <wx/wxscintilla.h>
 #endif
 
-#include "editorcolorset.h"
+#include "editorcolourset.h"
 #include "editorlexerloader.h"
 #include "filemanager.h"
 
-EditorLexerLoader::EditorLexerLoader(EditorColorSet* target)
+EditorLexerLoader::EditorLexerLoader(EditorColourSet* target)
     : m_pTarget(target)
 {
 	//ctor
@@ -115,23 +115,23 @@ void EditorLexerLoader::DoStyles(HighlightLanguage language, TiXmlElement* node)
             wxArrayString fgarray = GetArrayFromString(fg, _T(","));
             wxArrayString bgarray = GetArrayFromString(bg, _T(","));
 
-            wxColour fgcolor = wxNullColour;
+            wxColour fgcolour = wxNullColour;
             if (fgarray.GetCount() == 3)
             {
                 long R=0, G=0, B=0;
                 fgarray[0].ToLong(&R);
                 fgarray[1].ToLong(&G);
                 fgarray[2].ToLong(&B);
-                fgcolor.Set((unsigned char)R,(unsigned char)G,(unsigned char)B);
+                fgcolour.Set((unsigned char)R,(unsigned char)G,(unsigned char)B);
             }
-            wxColour bgcolor = wxNullColour;
+            wxColour bgcolour = wxNullColour;
             if (bgarray.GetCount() == 3)
             {
                 long R=0, G=0, B=0;
                 bgarray[0].ToLong(&R);
                 bgarray[1].ToLong(&G);
                 bgarray[2].ToLong(&B);
-                bgcolor.Set((unsigned char)R,(unsigned char)G,(unsigned char)B);
+                bgcolour.Set((unsigned char)R,(unsigned char)G,(unsigned char)B);
             }
 
             for (size_t i = 0; i < indices.GetCount(); ++i)
@@ -142,8 +142,8 @@ void EditorLexerLoader::DoStyles(HighlightLanguage language, TiXmlElement* node)
                 indices[i].ToLong(&value);
 //                LOGSTREAM << _("Adding style: ") << name << _T("(") << value << _T(")\n");
                 m_pTarget->AddOption(language, name, value,
-                                    fgcolor,
-                                    bgcolor,
+                                    fgcolour,
+                                    bgcolour,
                                     bold,
                                     italics,
                                     underlined,

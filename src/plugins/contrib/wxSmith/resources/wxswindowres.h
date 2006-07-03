@@ -92,7 +92,7 @@ class wxsWindowRes : public wxsResource
           *
           * WARNING: Not checking if files exist
           */
-        bool GenerateEmptySources();
+        bool GenerateEmptySources(bool Header,bool Source);
 
         /** Function which should check and (if necessary) correct widget's base properties */
         bool CheckBaseProperties(bool Correct,wxsWidget* Changed=NULL);
@@ -110,14 +110,14 @@ class wxsWindowRes : public wxsResource
         void UpdateWidgetsVarNameId();
 
         /** Function rebuilding definition of event table */
-        void UpdateEventTable();
+        void UpdateEventTable(bool NotifyChange);
 
         /** Generating Xml document compatible with XRC structure (without additional
          *  parameters */
         TiXmlDocument* GenerateXrc();
 
 		/** Returns true if resource is modified, false otherwise */
-		virtual bool GetModified() { return Modified; }
+		virtual bool GetModified() const { return Modified; }
 
 		/** Set the resources's modification state to \c modified.
 		 *
@@ -131,6 +131,9 @@ class wxsWindowRes : public wxsResource
 
 		/** Building resource tree */
 		void BuildTree(wxTreeCtrl* Tree,wxTreeItemId WhereToAdd,bool NoWidgets = false);
+
+		/** Rebuilding resource tree */
+		void RebuildTree(wxTreeCtrl* Tree,bool NoWidgets = false);
 
 		/** Changing root widget */
 		bool ChangeRootWidget(wxsWidget* NewRoot,bool DeletePrevious=true);

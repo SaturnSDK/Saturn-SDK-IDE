@@ -23,6 +23,7 @@
 	#include <wx/wx.h>
 #endif
 
+#include <sdk.h>      // world headers
 #include <cbplugin.h> // the base class we 're inheriting
 #include <settings.h> // needed to use the Code::Blocks SDK
 
@@ -38,18 +39,22 @@
 #include <wx/listctrl.h>
 #include <wx/event.h>
 #include <wx/fileconf.h>
+#include <wx/splitter.h>
 
 // ---------------------------------------------------------------------------
 //  Define RC2 for codeblocks V1.0RC2 or RC3 for HEAD
 // ---------------------------------------------------------------------------
-#define RC2 0
-#define RC3 1
+//#define RC2 0
+//#define RC3 1
 
 // ---------------------------------------------------------------------------
 //  Logging / debugging
 // ---------------------------------------------------------------------------
 #define eq ==
-#define LOGGING 0
+
+#if defined(dsLOGGING)
+    #define LOGGING 1
+#endif
 //debugging control
 #define LOGIT wxLogDebug
 #if LOGGING
@@ -60,6 +65,7 @@
 
 
 // anchor to one and only DragScroll object
+class MyMouseEvents;
 class cbDragScrollCfg;
 
 // ----------------------------------------------------------------------------
@@ -81,6 +87,7 @@ class cbDragScroll : public cbPlugin
     static cbDragScroll* pDragScroll;
 	protected:
         cbConfigurationPanel* CreatecbCfgPanel(wxWindow* parent);
+
     public:
         void OnDialogDone(cbDragScrollCfg* pdlg);
 
@@ -104,11 +111,17 @@ class cbDragScroll : public cbPlugin
         void OnDoConfigRequests(wxUpdateUIEvent& event);
 
         bool IsAttachedTo(wxWindow* p);
-        void Attach(wxWindow *p);
+        //void Attach(wxWindow *p);
         void AttachRecursively(wxWindow *p);
+        void Detach(wxWindow* thisEditor);
         void DetachAll();
+        void Attach(wxWindow *p);
+        void DisconnectEvtHandler(MyMouseEvents* thisEvtHandler);
+
         wxWindow* winExists(wxWindow *parent);
         wxWindow* FindWindowRecursively(const wxWindow* parent, const wxWindow* handle);
+        void OnWindowOpen(wxEvent& event);
+        void OnWindowClose(wxEvent& event);
 
         wxString        m_CfgFilenameStr;
         wxArrayString   m_UsableWindows;
@@ -292,5 +305,38 @@ CB_DECLARE_PLUGIN();
 // ----------------------------------------------------------------------------
 //  commit  v0.23 2006/04/25
 // ----------------------------------------------------------------------------
+//  closed  opened    2006/06/11
+//          split windows are unrecognized because no event is issued
+//          that a split has taken place
+//          Had to add wxEVT_CREATE and wxEVT_DESTROY event sinks to catch
+//          split window open/close. wxWindows nor CodeBlocks has events
+//          usable for the purpose.
+// ----------------------------------------------------------------------------
+//  commit  v0.24   2006/06/14
+// ----------------------------------------------------------------------------
+//  closed  2006/06/16 open    2006/06/15
+//          MyMouseEvents are being leaked because of split windows. When the
+//          windows close, no event is sent to allow cleanup before Destroy()
+//          Deleting an eventHandler during Destroy() causes wxWidgets to crash.
+//
+//          Switched to runtime Connect/Disconnect/EVT_CREATE/EVT_DESTROY
+//          in order to stop leaks on split windows & pushed event handlers.
+// ----------------------------------------------------------------------------
+//  fixed   v 0.26 2006/06/29
+//          Broken by change in plugin interface 1.80
+//          Had to add the following to the project file
+//          Compile Options         #defines
+//          -Winvalid-pch           BUILDING_PLUGIN
+//          -pipe                   CB_PRECOMP
+//          -mthreads               WX_PRECOMP
+//          -fmessage-length=0      HAVE_W32API_H
+//          -fexceptions            __WXMSW__
+//          -include "sdk.h"        WXUSINGDLL
+//                                  cbDEBUG
+//                                  TIXML_USE_STL
+//                                  wxUSE_UNICODE
+// ----------------------------------------------------------------------------
+
+
 #endif // DRAGSCROLL_H
 

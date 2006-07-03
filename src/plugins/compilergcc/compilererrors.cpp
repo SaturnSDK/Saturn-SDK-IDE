@@ -49,11 +49,11 @@ CompilerErrors::~CompilerErrors()
 	//dtor
 }
 
-void CompilerErrors::AddError(cbProject* project, const wxString& filename, long int line, const wxString& error, bool isWarning)
+void CompilerErrors::AddError(CompilerLineType lt, cbProject* project, const wxString& filename, long int line, const wxString& error)
 {
 	CompileError err;
+	err.lineType = lt;
 	err.project = project;
-	err.isWarning = isWarning;
 	err.filename = filename;
 	err.line = line;
 	err.errors.Add(error);
@@ -77,7 +77,7 @@ void CompilerErrors::Next()
     int bkp = ++m_ErrorIndex;
     while (bkp < (int)m_Errors.GetCount())
     {
-        if (!m_Errors[bkp].isWarning)
+        if (m_Errors[bkp].lineType == cltError)
         {
             bool isNote =
             	((m_Errors[bkp].errors.GetCount()>0) && m_Errors[bkp].errors[0].StartsWith(_T("note:")));
@@ -102,7 +102,7 @@ void CompilerErrors::Previous()
     int bkp = --m_ErrorIndex;
     while (bkp >= 0)
     {
-        if (!m_Errors[bkp].isWarning)
+        if (m_Errors[bkp].lineType == cltError)
         {
             bool isNote =
             	((m_Errors[bkp].errors.GetCount()>0) && m_Errors[bkp].errors[0].StartsWith(_T("note:")));
@@ -188,9 +188,9 @@ void CompilerErrors::DoGotoError(const CompileError& error)
     if (ed)
     {
         ed->Activate();
+        ed->UnfoldBlockFromLine(error.line - 1);
         ed->GotoLine(error.line - 1);
         ed->SetErrorLine(error.line - 1);
-        ed->UnfoldBlockFromLine(error.line - 1);
     }
 }
 
@@ -226,23 +226,22 @@ wxString CompilerErrors::GetErrorString(int index)
     return error;
 }
 
-unsigned int CompilerErrors::GetErrorsCount() const
+int CompilerErrors::GetFirstError() const
 {
-    unsigned int count = 0;
 	for (unsigned int i = 0; i < m_Errors.GetCount(); ++i)
 	{
-        if (!m_Errors[i].isWarning)
-            ++count;
+        if (m_Errors[i].lineType == cltError)
+            return i;
 	}
-	return count;
+	return -1;
 }
 
-unsigned int CompilerErrors::GetWarningsCount() const
+unsigned int CompilerErrors::GetCount(CompilerLineType lt) const
 {
     unsigned int count = 0;
 	for (unsigned int i = 0; i < m_Errors.GetCount(); ++i)
 	{
-        if (m_Errors[i].isWarning)
+        if (m_Errors[i].lineType == lt)
             ++count;
 	}
 	return count;

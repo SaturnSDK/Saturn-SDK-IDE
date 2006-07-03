@@ -30,7 +30,7 @@ struct DummyOperand {};
 template <typename OP> inline void ExecuteSetArg(asIScriptContext* ctx, int arg, OP op)
 {
     // default template treats it as 'void*'
-    ctx->SetArgObject(arg, op);
+    ctx->SetArgObject(arg, reinterpret_cast<void*>(op));
 }
 template <> inline void ExecuteSetArg(asIScriptContext* ctx, int arg, DummyOperand op){ /* do nothing */ }
 template <> inline void ExecuteSetArg(asIScriptContext* ctx, int arg, asQWORD op){ ctx->SetArgQWord(arg, op); }
@@ -176,8 +176,6 @@ class VoidExecutor : public ScriptingCall
           * GetContext()->Release()...
           *
           * @param functionID The function's ID to call. You can get this by a call to GetFunctionIDByDecl().
-          * @param releaseContextWhenDone If this is true (default), the context will be released when
-          * done with it. If false, it is up to you to release it.
           */
         VoidExecutor(int functionID)
             : ScriptingCall(functionID)
@@ -273,7 +271,6 @@ class Executor : public ScriptingCall
           * If you don't use Call(), you should release the context yourself by calling
           * GetContext()->Release()...
           *
-          * @param The engine.
           * @param functionID The function's ID to call. You can get this by a call to GetFunctionIDByDecl().
           */
         Executor(int functionID)

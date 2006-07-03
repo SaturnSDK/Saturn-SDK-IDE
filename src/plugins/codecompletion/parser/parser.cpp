@@ -60,7 +60,7 @@ Parser::Parser(wxEvtHandler* parent)
 	,m_pImageList(0L),
 #endif
     m_UsingCache(false),
-    m_Pool(this, idPool, 1),
+    m_Pool(this, idPool, 1), // in the meanwhile it'll have to be forced to 1
     m_pTokens(0),
     m_pTempTokens(0),
     m_NeedsReparse(false),
@@ -186,7 +186,7 @@ void Parser::ReadOptions()
 	m_BrowserOptions.showAllSymbols = false;
 #else // !STANDALONE
     ConfigManager* cfg = Manager::Get()->GetConfigManager(_T("code_completion"));
-	m_Pool.SetConcurrentThreads(cfg->ReadInt(_T("/max_threads"), 1));
+	//m_Pool.SetConcurrentThreads(cfg->ReadInt(_T("/max_threads"), 1)); // Ignore it in the meanwhile
 	m_Options.followLocalIncludes = cfg->ReadBool(_T("/parser_follow_local_includes"), false);
 	m_Options.followGlobalIncludes = cfg->ReadBool(_T("/parser_follow_global_includes"), false);
 	m_Options.caseSensitive = cfg->ReadBool(_T("/case_sensitive"), false);
@@ -246,11 +246,11 @@ void Parser::SetTokenKindImage(int kind, const wxBitmap& bitmap, const wxBitmap&
 #endif
 }
 
-void Parser::SetTokenKindImage(int kind, const wxBitmap& bitmap, const wxColour& maskColor)
+void Parser::SetTokenKindImage(int kind, const wxBitmap& bitmap, const wxColour& maskColour)
 {
 	if (kind < PARSER_IMG_MIN || kind > PARSER_IMG_MAX)
 		return;
-	m_pImageList->Replace(kind, bitmap);//, maskColor);
+	m_pImageList->Replace(kind, bitmap);//, maskColour);
 }
 
 void Parser::SetTokenKindImage(int kind, const wxIcon& icon)

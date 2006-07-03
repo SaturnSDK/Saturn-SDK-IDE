@@ -745,7 +745,7 @@ bool ProjectManager::QueryCloseProject(cbProject *proj,bool dontsavefiles)
     if(!dontsavefiles)
         if(!proj->QueryCloseAllFiles())
             return false;
-    if (proj->GetModified())
+    if (proj->GetModified() && !Manager::IsBatchBuild())
     {
         wxString msg;
         msg.Printf(_("Project '%s' is modified...\nDo you want to save the changes?"), proj->GetTitle().c_str());
@@ -757,7 +757,7 @@ bool ProjectManager::QueryCloseProject(cbProject *proj,bool dontsavefiles)
         }
     }
     return true;
-}
+} // end of QueryCloseProject
 
 bool ProjectManager::CloseAllProjects(bool dontsave)
 {
@@ -975,7 +975,8 @@ bool ProjectManager::LoadWorkspace(const wxString& filename)
     m_pTree->Expand(m_pTree->GetRootItem());
     UnfreezeTree();
     m_pWorkspace = new cbWorkspace(filename);
-    if (m_pWorkspace->IsOK())
+    bool success = m_pWorkspace->IsOK();
+    if (success)
     {
         RebuildTree();
         if (m_pActiveProject)
@@ -989,7 +990,12 @@ bool ProjectManager::LoadWorkspace(const wxString& filename)
         Manager::Get()->GetEditorManager()->RefreshOpenedFilesTree(true);
         UnfreezeTree(true);
     }
-    return m_pWorkspace->IsOK();
+    else
+    {
+        m_IsLoadingWorkspace=false;
+        CloseWorkspace();
+    }
+    return success;
 }
 
 bool ProjectManager::SaveWorkspace()
@@ -1434,13 +1440,22 @@ void ProjectManager::RemoveProjectFromAllDependencies(cbProject* base)
 {
     if (!base)
         return;
-    DepsMap::iterator it = m_ProjectDeps.find(base);
+    DepsMap::iterator it = m_ProjectDeps.begin();
     while (it != m_ProjectDeps.end())
     {
+        if (it->first == base)
+        {
+            ++it;
+            continue;
+        }
+
         ProjectsArray* arr = it->second;
         // only check projects that do have a dependencies array
         if (!arr)
+        {
+            ++it;
             continue;
+        }
 
         arr->Remove(base);
         if (m_pWorkspace)

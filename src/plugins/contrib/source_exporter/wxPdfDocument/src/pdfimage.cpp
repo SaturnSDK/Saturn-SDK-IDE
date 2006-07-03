@@ -58,6 +58,8 @@ wxPdfImage::wxPdfImage(wxPdfDocument* document, int index, const wxString& filen
   m_name     = filename;
   m_type     = type.Lower();
   m_isFormObj = false;
+  m_fromWxImage = false;
+  m_validWxImage = false;
 
   m_width    = 0;
   m_height   = 0;
@@ -74,6 +76,31 @@ wxPdfImage::wxPdfImage(wxPdfDocument* document, int index, const wxString& filen
   m_data     = NULL;
 }
 
+wxPdfImage::wxPdfImage(wxPdfDocument* document, int index, const wxString& name, const wxImage& image)
+{
+  m_document = document;
+  m_index    = index;
+  m_name     = name;
+  m_isFormObj = false;
+  m_fromWxImage = true;
+
+  m_width    = 0;
+  m_height   = 0;
+  m_cs       = _T("");
+  m_bpc      = '\0';
+  m_f        = _T("");
+  m_parms    = _T("");
+
+  m_palSize  = 0;
+  m_pal      = NULL;
+  m_trnsSize = 0;
+  m_trns     = NULL;
+  m_dataSize = 0;
+  m_data     = NULL;
+
+  m_validWxImage = ConvertWxImage(image);
+}
+
 wxPdfImage::~wxPdfImage()
 {
   if (m_pal  != NULL) delete [] m_pal;
@@ -81,10 +108,32 @@ wxPdfImage::~wxPdfImage()
   if (m_data != NULL) delete [] m_data;
 }
 
+bool
+wxPdfImage::ConvertWxImage(const wxImage& image)
+{
+  bool isValid = false;
+  if (wxImage::FindHandler(wxBITMAP_TYPE_PNG) == NULL)
+  {
+    wxImage::AddHandler(new wxPNGHandler());
+  }
+  wxMemoryOutputStream os;
+  isValid = image.SaveFile(os, wxBITMAP_TYPE_PNG);
+  image.SaveFile(_T("c:\\temp\\test123.png"), wxBITMAP_TYPE_PNG);
+  if (isValid)
+  {
+    wxMemoryInputStream is(os);
+    m_type = _T("png");
+    isValid = ParsePNG(&is);
+  }
+  return isValid;
+}
 
 bool
 wxPdfImage::Parse()
 {
+  // Check whether this image originated from an wxImage and is valid
+  if (m_fromWxImage) return m_validWxImage;
+
   bool isValid = false;
   wxString type = m_type.Lower();
 
@@ -114,7 +163,7 @@ wxPdfImage::Parse()
     }
     else
     {
-      if (type == _T("wmf") || m_name.Right(2) == _T(".wmf"))
+      if (type == _T("wmf") || m_name.Right(4) == _T(".wmf"))
       {
         m_isFormObj = true;
         isValid = ParseWMF(imageStream);
@@ -283,7 +332,7 @@ wxPdfImage::ParsePNG(wxInputStream* imageStream)
     else
     {
       char* temp = new char[n];
-      imageStream->Read(buffer,n);
+      imageStream->Read(temp,n);
       delete [] temp;
       imageStream->Read(buffer,4);
     }
@@ -710,7 +759,7 @@ wxPdfImage::ParseWMF(wxInputStream* imageStream)
           GdiObject* pen = new GdiObject();
           pen->style = ReadShortLE(imageStream);
           short width = ReadShortLE(imageStream);
-          /*short dummy = */ReadShortLE(imageStream); // WARNING: UNUSED VARIABLE 'dummy'
+          /* short dummy = */ ReadShortLE(imageStream);
           imageStream->Read(&pen->r, 1);
           imageStream->Read(&pen->g, 1);
           imageStream->Read(&pen->b, 1);

@@ -14,23 +14,25 @@
 #include "dragscrollcfg.h"
 #include <licenses.h> // defines some common licenses (like the GPL)
 #include <wx/utils.h>
+#include <wx/event.h>
+#include <wx/generic/splitter.h>
 
 // Implement the plugin's hooks
 CB_IMPLEMENT_PLUGIN(cbDragScroll, "DragScroll" );
 
 int ID_DLG_DONE = wxNewId();
+int ID_SPLITTER_CLOSE = wxNewId();
 
 // ----------------------------------------------------------------------------
 BEGIN_EVENT_TABLE(cbDragScroll, cbPlugin)
 	// add events here...
-	EVT_EDITOR_OPEN     (cbDragScroll::OnEditorOpen)
-	EVT_EDITOR_CLOSE    (cbDragScroll::OnEditorClose)
+	//EVT_EDITOR_OPEN     (cbDragScroll::OnEditorOpen)
+	//EVT_EDITOR_CLOSE    (cbDragScroll::OnEditorClose)
 	// Project close/open events work but dont seem to be necessary
 	//EVT_PROJECT_OPEN    (cbDragScroll::OnProjectOpened)
 	//EVT_PROJECT_CLOSE   (cbDragScroll::OnProjectClosed)
     EVT_APP_STARTUP_DONE(cbDragScroll::OnAppStartupDone)
     EVT_UPDATE_UI(ID_DLG_DONE, cbDragScroll::OnDoConfigRequests)
-
 END_EVENT_TABLE()
 // ----------------------------------------------------------------------------
 //  Statics
@@ -45,12 +47,12 @@ cbDragScroll::cbDragScroll()
 	//ctor
 	m_PluginInfo.name = _T("DragScroll");
 	m_PluginInfo.title = _("DragScroll");
-	m_PluginInfo.version = _T("0.23 (2006/04/25)");
+	m_PluginInfo.version = _T("0.26 (2006/06/29 test)");
 	m_PluginInfo.description = _("Mouse Drag and Scroll\nUsing Right or Middle Mouse Key");
 	m_PluginInfo.author = _T("Pecan");
 	m_PluginInfo.authorEmail = _T("");
 	m_PluginInfo.authorWebsite = _T("");
-	m_PluginInfo.thanksTo = _("Code::Blocks\nMispent Intent");
+	m_PluginInfo.thanksTo = _("wxWidgets & Code::Blocks Team");
 	m_PluginInfo.license = LICENSE_GPL;
 	//m_PluginInfo.hasConfigure = true;
 
@@ -140,8 +142,18 @@ void cbDragScroll::OnAttach()
         LOGIT(_T("MouseRightKeyCtrl:%d"),       MouseRightKeyCtrl ) ;
     #endif //LOGGING
 
-    // Pointer to search Results Window (first listCtrl window)
+    // Pointer to "Search Results" Window (first listCtrl window)
     m_pSearchResultsWindow = 0;
+
+    // Catch creation of windows
+    Connect( wxEVT_CREATE,
+	(wxObjectEventFunction) (wxEventFunction)
+	(wxCommandEventFunction) &cbDragScroll::OnWindowOpen);
+
+    // Catch Destroyed windows
+    Connect( wxEVT_DESTROY,
+	(wxObjectEventFunction) (wxEventFunction)
+	(wxCommandEventFunction) &cbDragScroll::OnWindowClose);
 
 	return ;
 }
@@ -235,7 +247,7 @@ void cbDragScroll::OnDoConfigRequests(wxUpdateUIEvent& event)
         m_bNotebooksAttached = false;
     }//esle
 
-    // read configuaton file
+    // update/write configuaton file
     wxFileConfig cfgFile(wxEmptyString,     // appname
                         wxEmptyString,      // vendor
                         m_CfgFilenameStr,   // local filename
@@ -278,7 +290,7 @@ void cbDragScroll::Attach(wxWindow *p)
     if ( (not m_pSearchResultsWindow) && (windowName eq wxT("listctrl")) )
     {   m_pSearchResultsWindow = p;
         #ifdef LOGGING
-        LOGIT(wxT("SearchResultsWindow: %p"),p );
+         LOGIT(wxT("SearchResultsWindow: %p"),p );
         #endif
     }
 
@@ -288,18 +300,41 @@ void cbDragScroll::Attach(wxWindow *p)
         return;
      }
 
-    	LOGIT(wxT("cbDS::Attach - attaching to [%s] %p"), p->GetName().c_str(),p);
+    LOGIT(wxT("cbDS::Attach - attaching to [%s] %p"), p->GetName().c_str(),p);
 
-    //add window to our array and push a mouse event handler
+    //add window to our array, create a mouse event handler
+    // and memorize event handler instance
     m_EditorPtrs.Add(p);
-    p->PushEventHandler( new MyMouseEvents(p) );
-    //tag eventhandler so it can be identified in ::OnEditorClose
-    wxEvtHandler* thisEvtHndlr = p->GetEventHandler();
-    thisEvtHndlr->SetClientData(&m_EditorPtrs);
-    // memorize event handler instance
+    MyMouseEvents* thisEvtHndlr = new MyMouseEvents(p);
     m_EventHandlerArray.Add(thisEvtHndlr);
+
+    p->Connect(wxEVT_MIDDLE_DOWN,
+                    (wxObjectEventFunction)(wxEventFunction)
+                    (wxMouseEventFunction)&MyMouseEvents::OnMouseEvent,
+                     NULL, thisEvtHndlr);
+    p->Connect(wxEVT_MIDDLE_UP,
+                    (wxObjectEventFunction)(wxEventFunction)
+                    (wxMouseEventFunction)&MyMouseEvents::OnMouseEvent,
+                     NULL, thisEvtHndlr);
+    p->Connect(wxEVT_RIGHT_DOWN,
+                    (wxObjectEventFunction)(wxEventFunction)
+                    (wxMouseEventFunction)&MyMouseEvents::OnMouseEvent,
+                     NULL, thisEvtHndlr);
+    p->Connect(wxEVT_RIGHT_UP,
+                    (wxObjectEventFunction)(wxEventFunction)
+                    (wxMouseEventFunction)&MyMouseEvents::OnMouseEvent,
+                     NULL, thisEvtHndlr);
+    p->Connect(wxEVT_MOTION,
+                    (wxObjectEventFunction)(wxEventFunction)
+                    (wxMouseEventFunction)&MyMouseEvents::OnMouseEvent,
+                     NULL, thisEvtHndlr);
+    p->Connect(wxEVT_ENTER_WINDOW,
+                    (wxObjectEventFunction)(wxEventFunction)
+                    (wxMouseEventFunction)&MyMouseEvents::OnMouseEvent,
+                     NULL, thisEvtHndlr);
+
     #if LOGGING
-     LOGIT(_T("cbDS:Push_EventHandler Window:%p Handler:%p"), p,thisEvtHndlr);
+     LOGIT(_T("cbDS:Attach Window:%p Handler:%p"), p,thisEvtHndlr);
     #endif
 }
 
@@ -373,44 +408,87 @@ wxWindow* cbDragScroll::winExists(wxWindow *parent)
     }
 
     return NULL;
-}
+}//winExists
+// ----------------------------------------------------------------------------
+void cbDragScroll::Detach(wxWindow* thisEditor)
+// ----------------------------------------------------------------------------
+{
+    if ( (thisEditor) && (m_EditorPtrs.Index(thisEditor) != wxNOT_FOUND))
+    {
+         #if LOGGING
+          LOGIT(_T("cbDS:Detaching %p"), thisEditor);
+         #endif
+
+        int edIndex = m_EditorPtrs.Index(thisEditor);
+        MyMouseEvents* thisEvtHandler = (MyMouseEvents*)m_EventHandlerArray.Item(edIndex);
+        m_EditorPtrs.Remove(thisEditor);
+        m_EventHandlerArray.Remove(thisEvtHandler);
+
+        // If win already deleted, dont worry about receiving events
+	    if ( not winExists(thisEditor) )
+	    {
+	        LOGIT(_T("cbDS:DetachAll window NOT found %p Handlr: %p"),
+                    thisEditor, thisEvtHandler);
+	    } else {
+            thisEditor->Disconnect(wxEVT_MIDDLE_DOWN,
+                            (wxObjectEventFunction)(wxEventFunction)
+                            (wxMouseEventFunction)&MyMouseEvents::OnMouseEvent,
+                             NULL, thisEvtHandler);
+            thisEditor->Disconnect(wxEVT_MIDDLE_UP,
+                            (wxObjectEventFunction)(wxEventFunction)
+                            (wxMouseEventFunction)&MyMouseEvents::OnMouseEvent,
+                             NULL, thisEvtHandler);
+            thisEditor->Disconnect(wxEVT_RIGHT_DOWN,
+                            (wxObjectEventFunction)(wxEventFunction)
+                            (wxMouseEventFunction)&MyMouseEvents::OnMouseEvent,
+                             NULL, thisEvtHandler);
+            thisEditor->Disconnect(wxEVT_RIGHT_UP,
+                            (wxObjectEventFunction)(wxEventFunction)
+                            (wxMouseEventFunction)&MyMouseEvents::OnMouseEvent,
+                             NULL, thisEvtHandler);
+            thisEditor->Disconnect(wxEVT_MOTION,
+                            (wxObjectEventFunction)(wxEventFunction)
+                            (wxMouseEventFunction)&MyMouseEvents::OnMouseEvent,
+                             NULL, thisEvtHandler);
+            thisEditor->Disconnect(wxEVT_ENTER_WINDOW,
+                            (wxObjectEventFunction)(wxEventFunction)
+                            (wxMouseEventFunction)&MyMouseEvents::OnMouseEvent,
+                             NULL, thisEvtHandler);
+        }//fi (not winExists
+
+        delete(thisEvtHandler);
+
+        #if LOGGING
+         LOGIT(_T("Detach: Editor:%p EvtHndlr: %p"),thisEditor,thisEvtHandler);
+        #endif
+    }//if (thisEditor..
+}//Detach
 // ----------------------------------------------------------------------------
 void cbDragScroll::DetachAll()
 // ----------------------------------------------------------------------------
 {
 	// delete all handlers
-	LOGIT(wxT("cbDragScroll::DetachAll - detaching from all [%d] targets"),m_EditorPtrs.GetCount() );
+	LOGIT(wxT("cbDS:DetachAll - detaching all [%d] targets"),m_EditorPtrs.GetCount() );
 
-    // Run down eventHandler chain matching Client data to our Window ptrs
-	for (int i=0; i < (int)m_EditorPtrs.GetCount(); i++)
+    // Detach from memorized windows and remove event handlers
+    while( m_EditorPtrs.GetCount() )
     {
-	    wxWindow* pw = (wxWindow*)m_EditorPtrs.Item(i);
-	    if ( not winExists(pw) )
-	    {   LOGIT(_T("cbDS:DetachAll window NOT found %p"), pw); //leak
-	        continue;
-	    }
-        wxEvtHandler* pHdlr = pw->GetEventHandler();
-        while (pHdlr)
-        {   wxEvtHandler* pnxt = pHdlr->GetNextHandler();
-            if (pHdlr->GetClientData() == &m_EditorPtrs)
-            {
-                pw->RemoveEventHandler(pHdlr);
-                m_EventHandlerArray.Remove(pHdlr);
-                LOGIT(_T("cbDS:DetachAll - Removing EventHdl:[%p] for win:[%p]"), pHdlr, pw);
-                delete pHdlr;
-                break;
-            }
-            pHdlr = pnxt;
-        }//while
-    }
+	    wxWindow* pw = (wxWindow*)m_EditorPtrs.Item(0);
+        Detach(pw);
+    }//elihw
+
     m_EditorPtrs.Empty();
-    // free any leaked event handlers caused by disappearing windows
+
+    // Free any leaked event handlers caused by disappearing windows
+    // *Danger* There are dynamic events connected to these Event Handlers
+    // Could cause segfaults. This shouldnt happen. Fix the bug if it does.
 	for (int i=0; i < (int)m_EventHandlerArray.GetCount(); i++)
 	{
-	    wxEvtHandler* pHdlr = (wxEvtHandler*)m_EventHandlerArray.Item(i);
+	    MyMouseEvents* pHdlr = (MyMouseEvents*)m_EventHandlerArray.Item(i);
 	    delete pHdlr;
         LOGIT(_T("cbDS:DetachAll - Removing Leaked EventHdl:[%p]"), pHdlr );
 	}//rof
+
     m_EventHandlerArray.Empty();
     // say no windows attached
     m_bNotebooksAttached = false;
@@ -424,12 +502,19 @@ void cbDragScroll::DetachAll()
 void cbDragScroll::OnEditorOpen(CodeBlocksEvent& event)
 // ----------------------------------------------------------------------------
 {
+        event.Skip(); return;
+    // DEPRECATED DEPRECATED DEPRECATED DEPRECATED
+    // event no longer used. using EVT_DESTROY event instead in order
+    // to catch split windows and avoid event handler leaks
+
+
     if (m_IsAttached)
      {
         //attach NoteBook windows //+v0.6
         if (not GetMouseDragScrollEnabled() )    //v04.14
             return;
 
+        //verify we're initialized
         if (! m_bNotebooksAttached)
         {
             AttachRecursively(Manager::Get()->GetAppWindow());
@@ -437,11 +522,6 @@ void cbDragScroll::OnEditorOpen(CodeBlocksEvent& event)
         }
 
         //skip editors that we already have
-        #if (RC2)
-         wxFrame* thisEditor = (wxFrame*)event.GetEditor()->GetControl();
-        #endif
-
-        #if (RC3)
          wxWindow* thisWindow = event.GetEditor();
          wxWindow* thisEditor = thisWindow->FindWindowByName(_T("SCIwindow"),thisWindow);
 
@@ -453,45 +533,54 @@ void cbDragScroll::OnEditorOpen(CodeBlocksEvent& event)
           {  ed = static_cast<cbEditor*>(eb);
              thisEditor = ed->GetControl();
           }
-        #endif //RC3
 
-        //LOGIT(_T("cbDS:OnEditorOpen  %s %p"), thisEditor->GetName().c_str(), thisEditor);
+        LOGIT(_T("cbDS:OnEditorOpen  %s %p"), thisEditor->GetName().c_str(), thisEditor);
 
-        //wxWindow* thisEditor
-        //  = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor()->GetControl();
-        //LOGIT(_T("cbDS:OnEditorOpen()GetControl() %s %p"),thisEditor->GetName().c_str(), thisEditor);
+        // Following unnecessary since EVT_DESTROY event is invoked
+        //- Remove any hanging EventHandler for this Editor
+        //- caused by split windows w/o event notification
+        //-if ( m_EditorPtrs.Index(thisEditor) != wxNOT_FOUND)
+        //-    Detach(thisEditor);
 
+        // Attach this editor for Drag Scrolling
         if ( wxNOT_FOUND == m_EditorPtrs.Index(thisEditor))
          {
-            //add editor to our array and push a mouse event handler
-            m_EditorPtrs.Add(thisEditor);
-            thisEditor->PushEventHandler( new MyMouseEvents(thisEditor) );
-            //tag eventhandler so it can be identified in ::OnEditorClose
-            wxEvtHandler* thisEvtHndlr = thisEditor->GetEventHandler();
-            thisEvtHndlr->SetClientData(&m_EditorPtrs);
-            // memorize event handler
-            m_EventHandlerArray.Add(thisEvtHndlr);
+//            //add editor to our array and push a mouse event handler
+//            m_EditorPtrs.Add(thisEditor);
+//            thisEditor->PushEventHandler( new MyMouseEvents(thisEditor) );
+//            //tag eventhandler so it can be identified in ::OnEditorClose
+//            wxEvtHandler* thisEvtHndlr = thisEditor->GetEventHandler();
+//            thisEvtHndlr->SetClientData(&m_EditorPtrs);
+//            // memorize event handler
+//            m_EventHandlerArray.Add(thisEvtHndlr);
+            Attach(thisEditor);
             #if LOGGING
-                LOGIT(_T("cbDS:Push_EventHandler Editor:%p Handler:%p"), thisEditor,thisEvtHndlr);
+                //-old LOGIT(_T("cbDS:Push_EventHandler Editor:%p Handler:%p"), thisEditor,thisEvtHndlr);
+                LOGIT(_T("cbDS:Push_EventHandler Editor:%p"), thisEditor);
             #endif
          }
      }
 
     event.Skip();
-}
+}//OnEditorOpen
 // ----------------------------------------------------------------------------
 void cbDragScroll::OnEditorClose(CodeBlocksEvent& event)
 // ----------------------------------------------------------------------------
 {
+    event.Skip(); return;
+    // DEPRECATED DEPRECATED DEPRECATED DEPRECATED
+    // event no longer used. using EVT_CREATE instead in order
+    // to catch split windows and avoid event handler leaks
+
     if (m_IsAttached)
      {
         // Get rid of our event handler
-        #if (RC2)
-         wxFrame* thisEditor = (wxFrame*)event.GetEditor()->GetControl();
-        #endif
+//        #if (RC2)
+//         wxFrame* thisEditor = (wxFrame*)event.GetEditor()->GetControl();
+//        #endif
 
 
-       #if (RC3)
+//       #if (RC3)
         // Cannot use GetBuiltinActiveEditor() because the active Editor is NOT the
         // one being closed!!
         // wxWindow* thisEditor
@@ -509,7 +598,7 @@ void cbDragScroll::OnEditorClose(CodeBlocksEvent& event)
          {  ed = static_cast<cbEditor*>(eb);
             thisEditor = ed->GetControl();
          }
-       #endif //RC3
+//       #endif //RC3
 
         if ( (thisEditor) && (m_EditorPtrs.Index(thisEditor) != wxNOT_FOUND))
         {
@@ -517,28 +606,29 @@ void cbDragScroll::OnEditorClose(CodeBlocksEvent& event)
               LOGIT(_T("cbDS:Close_Editor %p"), thisEditor);
              #endif
 
-             wxEvtHandler* thisEvtHandler;
-            for ( thisEvtHandler = thisEditor->GetEventHandler();
-                    thisEvtHandler != NULL;
-                    thisEvtHandler=thisEvtHandler->GetNextHandler() )
-            {
-                if (thisEvtHandler->GetClientData() == &m_EditorPtrs)
-                {
-                    if (winExists(thisEditor))
-                        thisEditor->RemoveEventHandler(thisEvtHandler);   //v0.8
-                    delete thisEvtHandler;                                //v0.8
-                    m_EventHandlerArray.Remove(thisEvtHandler);
-                    m_EditorPtrs.Remove(thisEditor);
-                    #if LOGGING
-                     LOGIT(_T("cbDS:RemoveEventHandler Editor:%p Handler:%p"),thisEditor,thisEvtHandler);
-                    #endif
-                    break;
-                }//if (thisEvt..
-            }//for..
+//             wxEvtHandler* thisEvtHandler;
+//            for ( thisEvtHandler = thisEditor->GetEventHandler();
+//                    thisEvtHandler != NULL;
+//                    thisEvtHandler=thisEvtHandler->GetNextHandler() )
+//            {
+//                if (thisEvtHandler->GetClientData() == &m_EditorPtrs)
+//                {
+//                    if (winExists(thisEditor))
+//                        thisEditor->RemoveEventHandler(thisEvtHandler);   //v0.8
+//                    delete thisEvtHandler;                                //v0.8
+//                    m_EventHandlerArray.Remove(thisEvtHandler);
+//                    m_EditorPtrs.Remove(thisEditor);
+//                    #if LOGGING
+//                     LOGIT(_T("cbDS:RemoveEventHandler Editor:%p Handler:%p"),thisEditor,thisEvtHandler);
+//                    #endif
+//                    break;
+//                }//if (thisEvt..
+//            }//for..
+            Detach(thisEditor);
         }//if (thisEditor..
     }
     event.Skip();
-}
+}//OnEditorClose
 // ----------------------------------------------------------------------------
 void cbDragScroll::OnProjectOpened(CodeBlocksEvent& event)
 // ----------------------------------------------------------------------------{
@@ -596,10 +686,66 @@ void cbDragScroll::OnAppStartupDone(CodeBlocksEvent& event)
     return;
 }//OnAppStartupDone
 // ----------------------------------------------------------------------------
+void cbDragScroll::OnWindowOpen(wxEvent& event)
+// ----------------------------------------------------------------------------
+{
+    // wxEVT_CREATE entry
+    // Have to do this for split windows since CodeBlocks does not have
+    // events when opening/closing split windows
+
+    // Attach a split window (or any other window)
+    if ( m_bNotebooksAttached )
+    {
+        wxWindow* pWindow = (wxWindow*)(event.GetEventObject());
+        cbEditor* ed = 0;
+//        cbStyledTextCtrl* p_cbStyledTextCtrl = 0;
+//        cbStyledTextCtrl* pLeftSplitWin = 0;
+//        cbStyledTextCtrl* pRightSplitWin = 0;
+        ed  = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
+        if (ed)
+        {
+//            p_cbStyledTextCtrl = ed->GetControl();
+//            pLeftSplitWin = ed->GetLeftSplitViewControl();
+//            pRightSplitWin = ed->GetRightSplitViewControl();
+//            //Has this window been split?
+//            //**This is a temporary hack until some cbEvents are defined**
+//            if ( pWindow && (pRightSplitWin eq 0) )
+//            {
+//                //-if (pRightSplitWin eq pWindow)
+//                //-{    Attach(pRightSplitWin);
+                if (pWindow->GetParent() eq ed)
+                {   Attach(pWindow);
+                    LOGIT( _T("OnWindowOpen Attached:%p name: %s"),
+                                pWindow, pWindow->GetName().GetData() );
+                }
+//            }
+        }//fi (ed)
+    }//if m_bNote...
+
+    event.Skip();
+}//OnWindowOpen
+// ----------------------------------------------------------------------------
+void cbDragScroll::OnWindowClose(wxEvent& event)
+// ----------------------------------------------------------------------------
+{
+    // wxEVT_DESTROY entry
+
+    wxWindow* pWindow = (wxWindow*)(event.GetEventObject());
+
+    if ( (pWindow) && (m_EditorPtrs.Index(pWindow) != wxNOT_FOUND))
+    {   // window is one of ours
+        Detach(pWindow);
+        #ifdef LOGGING
+         LOGIT( _T("OnWindowClose Detached %p"), pWindow);
+        #endif //LOGGING
+    }
+    event.Skip();
+}//OnWindowClose
+// ----------------------------------------------------------------------------
 //      MOUSE DRAG and SCROLL Routines
 // ----------------------------------------------------------------------------
 BEGIN_EVENT_TABLE(MyMouseEvents, wxEvtHandler)
-     EVT_MOUSE_EVENTS( MyMouseEvents::OnMouseEvent)     //+v0.2
+    //-oldway- EVT_MOUSE_EVENTS( MyMouseEvents::OnMouseEvent)     //+v0.2
 END_EVENT_TABLE()
 // ----------------------------------------------------------------------------
 MyMouseEvents::~MyMouseEvents()
@@ -616,6 +762,7 @@ MyMouseEvents::~MyMouseEvents()
 #ifdef __WXMSW__
 void MyMouseEvents::OnMouseEvent(wxMouseEvent& event)    //MSW
 {
+
     //remember event window pointer
     m_pEvtObject = event.GetEventObject();
     cbDragScroll* pDS = cbDragScroll::pDragScroll;
@@ -627,21 +774,38 @@ void MyMouseEvents::OnMouseEvent(wxMouseEvent& event)    //MSW
     if ( event.GetEventType() eq wxEVT_MOUSEWHEEL)
         { event.Skip(); return; }
 
-     cbEditor* ed = 0;
-     cbStyledTextCtrl* p_cbStyledTextCtrl = 0;
-     ed  = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
-     if (ed) p_cbStyledTextCtrl = ed->GetControl();
-     //cbEditor* ed = Manager::Get()->GetEditorManager() ? Manager::Get()->GetEditorManager()->GetBuiltinEditor(Manager::Get()->GetEditorManager()->GetActiveEditor()) : 0;
+    cbEditor* ed = 0;
+    cbStyledTextCtrl* p_cbStyledTextCtrl = 0;
+    cbStyledTextCtrl* pLeftSplitWin = 0;
+    cbStyledTextCtrl* pRightSplitWin = 0;
+    ed  = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
+    if (ed)
+    {   p_cbStyledTextCtrl = ed->GetControl();
+        pLeftSplitWin = ed->GetLeftSplitViewControl();
+        pRightSplitWin = ed->GetRightSplitViewControl();
+    }
+    // set focus to any window with mouse
+    // if (m_pEvtObject) ((wxWindow*)m_pEvtObject)->SetFocus();
 
-     // set focus to any window with mouse
-     //if (m_pEvtObject) ((wxWindow*)m_pEvtObject)->SetFocus();
-
-     // set focus to editor window if mouse is in it
+    // set focus to editor window if mouse is in it
     if (event.GetEventType() eq wxEVT_ENTER_WINDOW)
+    {
+         //LOGIT( _T("EVT_ENTER_WINDOW:%p Styled:%p LeftSplit:%p RightSplit:%p"), m_pEvtObject, p_cbStyledTextCtrl, pLeftSplitWin, pRightSplitWin );
         if (pDS->GetMouseEditorFocusEnabled() )
-           if (p_cbStyledTextCtrl && (m_pEvtObject == p_cbStyledTextCtrl))
-                p_cbStyledTextCtrl->SetFocus();
-
+        {  if (p_cbStyledTextCtrl && (m_pEvtObject eq pLeftSplitWin))
+           {    pLeftSplitWin->SetFocus();
+                #ifdef LOGGING
+                 //LOGIT( _T("OnMouseEvent:SetFocus %p"), pLeftSplitWin );
+                #endif //LOGGING
+           }
+           if (pRightSplitWin && (m_pEvtObject eq pRightSplitWin))
+           {    pRightSplitWin->SetFocus();
+                #ifdef LOGGING
+                 //LOGIT( _T("OnMouseEvent:SetFocus %p"), pRightSplitWin );
+                #endif //LOGGING
+           }
+        }
+    }
 
     int scrollx;
     int scrolly;
@@ -669,7 +833,7 @@ void MyMouseEvents::OnMouseEvent(wxMouseEvent& event)    //MSW
             m_DragMode = DRAG_START;
             m_DragStartPos = event.GetPosition();
             #if LOGGING
-             LOGIT(_T("Down X:%d Y:%d"), m_InitY, m_InitX);
+             //LOGIT(_T("Down X:%d Y:%d"), m_InitY, m_InitX);
             #endif
             // If hiding Right mouse keydown from ListCtrls, return v0.22
             if (pDS->GetMouseRightKeyCtrl()) return;
@@ -687,7 +851,7 @@ void MyMouseEvents::OnMouseEvent(wxMouseEvent& event)    //MSW
         m_DragMode = DRAG_NONE;
         // if our trapped drag, hide event from others, ie. don't event.skip()
         #if LOGGING
-        LOGIT(_T("Up"));
+         //LOGIT(_T("Up"));
         #endif
         if (lastmode ==  DRAG_DRAGGING) return;
         // allow context menu processing
@@ -756,10 +920,10 @@ void MyMouseEvents::OnMouseEvent(wxMouseEvent& event)    //MSW
         if ((scrollx==0) && (scrolly==0)) return;
         scrollx *= m_Direction; scrolly *= m_Direction;
 
-        #if (RC2)
-         ((cbStyledTextCtrl*)m_pEvtObject)->LineScroll (scrollx,scrolly);
-        #endif
-        #if (RC3)
+//        #if (RC2)
+//         ((cbStyledTextCtrl*)m_pEvtObject)->LineScroll (scrollx,scrolly);
+//        #endif
+//        #if (RC3)
         // if editor window, use scintilla scroll
         if (p_cbStyledTextCtrl && (m_pEvtObject == p_cbStyledTextCtrl))
         {
@@ -773,7 +937,7 @@ void MyMouseEvents::OnMouseEvent(wxMouseEvent& event)    //MSW
             else  // use listCtrl for x scrolling
                 ((wxListCtrl*)m_pEvtObject)->ScrollList(scrollx,scrolly);
         }//esle
-        #endif //(RC3)
+//        #endif //(RC3)
     }//else if (event.Dragging() && m_dragMode != DRAG_NONE)
 
     // pass on the event
@@ -801,7 +965,7 @@ void MyMouseEvents::OnMouseEvent(wxMouseEvent& event)    //GTK
      //LOGIT( _T("m_MouseMoveToLineMoveRatio %f"),m_MouseMoveToLineMoveRatio );
     #endif //LOGGING
 
-    #if (RC3)
+//    #if (RC3)
      cbEditor* ed = 0;
      cbStyledTextCtrl* p_cbStyledTextCtrl = 0;
      ed  = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
@@ -813,7 +977,7 @@ void MyMouseEvents::OnMouseEvent(wxMouseEvent& event)    //GTK
            if (p_cbStyledTextCtrl && (m_pEvtObject == p_cbStyledTextCtrl))
                 p_cbStyledTextCtrl->SetFocus();
 
-    #endif
+//    #endif
 
     int scrollx;
     int scrolly;
@@ -960,11 +1124,11 @@ void MyMouseEvents::OnMouseEvent(wxMouseEvent& event)    //GTK
         if ((scrollx==0) && (scrolly==0)) return;
         scrollx *= m_Direction; scrolly *= m_Direction;
 
-        #if (RC2)
-         ((cbStyledTextCtrl*)m_pEvtObject)->LineScroll (scrollx,scrolly);
-        #endif
+//        #if (RC2)
+//         ((cbStyledTextCtrl*)m_pEvtObject)->LineScroll (scrollx,scrolly);
+//        #endif
 
-        #if (RC3)
+//        #if (RC3)
         // if editor window, use scintilla scroll
         if (p_cbStyledTextCtrl && (m_pEvtObject == p_cbStyledTextCtrl))
         {
@@ -980,7 +1144,7 @@ void MyMouseEvents::OnMouseEvent(wxMouseEvent& event)    //GTK
                 //LOGIT(wxT("ScrollList x:%d y:%d"),scrollx, scrolly );
                 ((wxListCtrl*)m_pEvtObject)->ScrollList(scrollx,scrolly);
         }//esle
-        #endif //(RC3)
+//        #endif //(RC3)
     }//esle fi (event.Dragging() && m_dragMode != DRAG_NONE)
 
     // pass on the event

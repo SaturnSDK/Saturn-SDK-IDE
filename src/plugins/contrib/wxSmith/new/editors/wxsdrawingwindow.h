@@ -64,7 +64,6 @@ class wxsDrawingWindow: public wxScrolledWindow
         void PanelPaint(wxPaintEvent& event);
         void PanelMouse(wxMouseEvent& event);
         void PanelKeyboard(wxKeyEvent& event);
-        void OnSize(wxSizeEvent& event);
 
         /** \brief Function stating sequence fetching editor's background
          *
@@ -77,9 +76,16 @@ class wxsDrawingWindow: public wxScrolledWindow
         /** \brief Function copying screen data into bitmap */
         void FetchScreen();
 
+        /** \brief Hiding all children except Panel to avoid some random repaints */
+        void HideChildren();
+
+        /** \brief Showing all children except Panel just before fetching preview */
+        void ShowChildren();
+
         class DrawingPanel;
         DrawingPanel* Panel;
         bool PaintAfterFetch;
+        bool WaitTillHideChildren;
         bool IsBlockFetch;
         wxBitmap* Bitmap;
 

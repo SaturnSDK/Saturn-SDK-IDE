@@ -20,16 +20,16 @@ class DLLIMPORT EditorBase : public wxPanel
         EditorBase(wxWindow* parent, const wxString& filename);
         virtual ~EditorBase();
 
-		virtual const wxString& GetFilename(){ return m_Filename; }
+		virtual const wxString& GetFilename() const { return m_Filename; }
 		/** Sets the editor's filename */
 		virtual void SetFilename(const wxString& x){ m_Filename = x; }
 
 		/** Returns the editor's short name. It is the name displayed on the
 		  * editor's tab...
 		  */
-		virtual const wxString& GetShortName(){ return m_Shortname; }
+		virtual const wxString& GetShortName() const { return m_Shortname; }
 		/** Returns true if editor is modified, false otherwise */
-		virtual bool GetModified() { return false; }
+		virtual bool GetModified() const { return false; }
 		/** Set the editor's modification state to \c modified. */
 		virtual void SetModified(bool modified = true) {}
 
@@ -58,15 +58,15 @@ class DLLIMPORT EditorBase : public wxPanel
 		virtual void DisplayContextMenu(const wxPoint& position,ModuleType type = mtUnknown);
 
         /** Should this kind of editor be visible from the open files tree? */
-        virtual bool VisibleToTree() { return true; }
+        virtual bool VisibleToTree() const { return true; }
 
         /** Move the caret at the specified line. */
-        virtual void GotoLine(int line, bool centerOnScreen = true){}
+        virtual void GotoLine(int line, bool centreOnScreen = true){}
 
         /** Toggle breakpoint at specified line. If @c line is -1, use current line. */
         virtual void ToggleBreakpoint(int line = -1, bool notifyDebugger = true){}
         /** Does @c line has breakpoint? */
-        virtual bool HasBreakpoint(int line){ return false; }
+        virtual bool HasBreakpoint(int line) const { return false; }
         /** Go to next breakpoint. */
         virtual void GotoNextBreakpoint(){}
         /** Go to previous breakpoint. */
@@ -75,7 +75,7 @@ class DLLIMPORT EditorBase : public wxPanel
         /** Toggle bookmark at specified line. If @c line is -1, use current line. */
         virtual void ToggleBookmark(int line = -1){}
         /** Does @c line has bookmark? */
-        virtual bool HasBookmark(int line){ return false; }
+        virtual bool HasBookmark(int line) const { return false; }
         /** Go to next bookmark. */
         virtual void GotoNextBookmark(){}
         /** Go to previous bookmark. */
@@ -103,16 +103,16 @@ class DLLIMPORT EditorBase : public wxPanel
         virtual void Paste(){}
 
         /** @return True if there is something to undo, false if not. */
-        virtual bool CanUndo(){ return false; }
+        virtual bool CanUndo() const { return false; }
 
         /** @return True if there is something to redo, false if not. */
-        virtual bool CanRedo(){ return false; }
+        virtual bool CanRedo() const { return false; }
 
         /** @return True if there is text/object selected, false if not. */
-        virtual bool HasSelection(){ return false; }
+        virtual bool HasSelection() const { return false; }
 
         /** @return True if there is something to paste, false if not. */
-        virtual bool CanPaste(){ return false; }
+        virtual bool CanPaste() const { return false; }
     protected:
         /** Initializes filename data */
         virtual void InitFilename(const wxString& filename);
@@ -125,6 +125,7 @@ class DLLIMPORT EditorBase : public wxPanel
         virtual wxString CreateUniqueFilename();
         /** Informs the editor we 're just about to create a context menu.
           * Default implementation, just returns true.
+          * @param position specifies the position of the popup menu.
           * @param type specifies the "ModuleType" popup menu.
           * @return If the editor returns false, the context menu creation is aborted.
           */

@@ -90,6 +90,9 @@ wxsWindowEditor::wxsWindowEditor(wxWindow* parent,wxsResource* Resource):
     AllEditors.insert(this);
     BuildPreview();
 
+    // Correcting data after loading it
+    Corrector->GlobalCheck();
+
     // Changing selection to root item
     RootItem()->ClearSelection();
     GetWinRes()->SelectionChanged(NULL);
@@ -145,7 +148,6 @@ void wxsWindowEditor::BuildPreview()
     if ( !TopPreview )
     {
         delete TopPreviewObject;
-        Content->RefreshSelection();
     }
     else
     {
@@ -154,16 +156,16 @@ void wxsWindowEditor::BuildPreview()
         Content->SetVirtualSizeHints(1,1);
         Content->SetSizer(NewSizer);
         NewSizer->SetVirtualSizeHints(Content);
+        NewSizer->FitInside(Content);
         HorizSizer->Layout();
         VertSizer->Layout();
-        Content->ContentChanged();
-        Content->RefreshSelection();
     }
 
-    // TODO: Check if these are needed
     Layout();
     Thaw();
-    Refresh();
+    Content->NewPreview();
+    // Preview bindings are no longer needed
+    TopItem->InvalidatePreview();
 }
 
 void wxsWindowEditor::KillPreview()
@@ -171,7 +173,6 @@ void wxsWindowEditor::KillPreview()
     if ( TopPreview )
     {
         Content->SetSizer(NULL);
-        GetWinRes()->GetRootItem()->InvalidatePreview();
         delete TopPreview;
         TopPreview = NULL;
     }
@@ -217,6 +218,7 @@ void wxsWindowEditor::Undo()
     ResourceLock();
     UndoBuff->Undo();
     Corrector->ClearCache();
+    // FIXME (SpOoN#1#): ResourceUnlock will create new undo entry, need to avoid that
     ResourceUnlock();
 	SetModified(UndoBuff->IsModified());
 	// TODO: Restore selection
@@ -229,6 +231,7 @@ void wxsWindowEditor::Redo()
     ResourceLock();
     UndoBuff->Redo();
     Corrector->ClearCache();
+    // FIXME (SpOoN#1#): ResourceUnlock will create new undo entry, need to avoid that
     ResourceUnlock();
 	SetModified(UndoBuff->IsModified());
 	// TODO: Restore selection
@@ -270,7 +273,7 @@ void wxsWindowEditor::Cut()
     ResourceLock();
     KillSelection(RootItem());
     Corrector->ClearCache();
-    BuildPreview();
+    ResourceUnlock();
 
     // TODO: Select previous item / parent item etc
 	GetWinRes()->SelectionChanged(NULL);
@@ -792,10 +795,7 @@ void wxsWindowEditor::RebuildQuickProps(wxsItem* Selection)
 
 void wxsWindowEditor::ResourceLock()
 {
-    if ( !ResourceLockCnt++ )
-    {
-        GetWinRes()->GetRootItem()->InvalidatePreview();
-    }
+    ResourceLockCnt++;
 }
 
 void wxsWindowEditor::ResourceUnlock()
@@ -807,8 +807,6 @@ void wxsWindowEditor::ResourceUnlock()
         KillPreview();
         BuildPreview();
         Thaw();
-        Content->ContentChanged();
-        Content->RefreshSelection();
         SetModified(true);
     }
 
