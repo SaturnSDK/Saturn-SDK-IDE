@@ -11,7 +11,6 @@
 
 #include <wx/event.h>
 #include "settings.h"
-#include "sdk_events.h"
 
 // forward decls
 class wxFrame;
@@ -29,6 +28,7 @@ class UserVariableManager;
 class ScriptingManager;
 class ConfigManager;
 class FileManager;
+class CodeBlocksEvent;
 
 
 
