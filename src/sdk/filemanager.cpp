@@ -36,6 +36,7 @@ void FileLoader::operator()()
 {
     if(!wxFile::Access(fileName, wxFile::read))
         {
+        status = LoaderBase::status_failed_noaccess;
         Ready();
         return;
         }
@@ -51,7 +52,10 @@ void FileLoader::operator()()
         delete[] data;
         data = 0;
         len = 0;
+        status = LoaderBase::status_failed_unknown;
     }
+    else
+        status = LoaderBase::status_ready;
     Ready();
 }
 
@@ -62,6 +66,7 @@ void URLLoader::operator()()
 
     if (url.GetError() != wxURL_NOERR)
         {
+        status = LoaderBase::status_failed_badrequest;
         Ready();
         return;
         }
@@ -70,6 +75,7 @@ void URLLoader::operator()()
 
     if (stream.get() == 0 || stream->IsOk() == false)
         {
+        status = LoaderBase::status_failed_network;
         Ready();
         return;
         }
@@ -82,6 +88,7 @@ void URLLoader::operator()()
 
     data = buffer.Data();
     len = buffer.Length();
+    status = LoaderBase::status_ready;
     Ready();
 }
 

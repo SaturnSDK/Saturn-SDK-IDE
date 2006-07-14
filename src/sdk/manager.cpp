@@ -288,6 +288,11 @@ ConfigManager* Manager::GetConfigManager(const wxString& name_space) const
     return CfgMgrBldr::GetConfigManager(name_space);
 }
 
+ConfigManager* Manager::GetConfigManagerDu(TiXmlElement* name_space) const
+{
+    return CfgMgrBldr::GetConfigManager(name_space);
+}
+
 FileManager* Manager::GetFileManager() const
 {
     return FileManager::Get();

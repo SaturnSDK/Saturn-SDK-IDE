@@ -1080,7 +1080,7 @@ bool cbEditor::Save()
         return SaveAs();
     }
 
-    if(!cbSaveToFile(m_Filename, m_pControl->GetText(),GetEncoding(),GetUseBom()))
+    if(!Manager::Get()->GetFileManager()->Save(m_Filename, m_pControl->GetText(),GetEncoding(),GetUseBom()))
         return false; // failed; file is read-only?
 
     wxFileName fname(m_Filename);

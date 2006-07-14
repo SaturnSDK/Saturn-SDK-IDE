@@ -20,10 +20,24 @@ class LoaderBase : public AbstractJob
         }
     };
 
+public:
+
+    typedef enum
+    {
+    status_queued,
+    status_inprogress,
+    status_ready,
+    status_failed_badrequest,
+    status_failed_noaccess,
+    status_failed_network,
+    status_failed_unknown
+    }lb_status_t;
+
 protected:
     wxString fileName;
     char *data;
     size_t len;
+    lb_status_t status;
 
     void Ready()
     {
@@ -31,14 +45,16 @@ protected:
     };
 
 public:
-    LoaderBase() : wait(true), data(0), len(0) {};
+    LoaderBase() : wait(true), data(0), len(0), status(status_queued) {};
     ~LoaderBase();
     void operator()() {};
     wxString FileName() const { return fileName; };
+    virtual bool Writable() const {return false;};
 
     bool Sync();
     char* GetData();
     size_t GetLength();
+    lb_status_t GetStatus(){return status;};
 };
 
 
@@ -46,6 +62,7 @@ class FileLoader : public LoaderBase
 {
 public:
     FileLoader(const wxString& name) { fileName = name; };
+    bool Writable() const {return wxFile::Access(fileName, wxFile::write);};
     void operator()();
 };
 
@@ -125,7 +142,7 @@ public:
 class NullLoader : public LoaderBase
 {
 public:
-    NullLoader(const wxString& name, char* buffer, size_t size) { fileName = name; data = buffer; len = size; Ready(); };
+    NullLoader(const wxString& name, char* buffer, size_t size) { fileName = name; data = buffer; len = size; status = LoaderBase::status_ready; Ready(); };
     void operator()(){};
 };
 

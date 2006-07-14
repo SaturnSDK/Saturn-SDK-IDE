@@ -2426,23 +2426,14 @@ void EditorManager::AddFiletoTree(EditorBase* ed)
 
 void EditorManager::HideNotebook()
 {
-    //    if(!this)
-    //        return;
-    //    if(m_pNotebook)
-    //        m_pNotebook->Hide();
-    //    m_pData->m_NeedsRefresh = false;
-    //    return;
+    if(m_pNotebook)
+        m_pNotebook->Hide();
 }
 
 void EditorManager::ShowNotebook()
 {
-    //    if(!this)
-    //        return;
-    //    if(m_pNotebook)
-    //        m_pNotebook->Show();
-    //    m_pData->m_NeedsRefresh = true;
-    //    m_pData->InvalidateTree();
-    //    return;
+    if(m_pNotebook)
+        m_pNotebook->Show();
 }
 
 bool EditorManager::RenameTreeFile(const wxString& oldname, const wxString& newname)

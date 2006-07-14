@@ -303,6 +303,7 @@ protected:
 
 public:
     static ConfigManager* GetConfigManager(const wxString& name_space);
+    static ConfigManager* GetConfigManager(TiXmlElement* name_space);
 };
 
 

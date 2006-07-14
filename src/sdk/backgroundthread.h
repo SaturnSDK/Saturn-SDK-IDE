@@ -50,6 +50,11 @@ public:
         pop_front();
         return j;
     };
+    void Remove(AbstractJob *j)
+    {
+        wxCriticalSectionLocker l(c);
+        erase(std::find(begin(), end(), j));
+    };
 };
 
 
@@ -194,6 +199,12 @@ public:
         queue.Push(j);
         semaphore.Post();
     };
+
+    void UnQueue(AbstractJob* j)
+    {
+        queue.Remove(j);
+    };
+
 };
 
 

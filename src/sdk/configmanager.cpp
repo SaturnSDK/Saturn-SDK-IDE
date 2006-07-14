@@ -265,6 +265,10 @@ ConfigManager* CfgMgrBldr::GetConfigManager(const wxString& name_space)
     return Get()->Build(name_space);
 }
 
+ConfigManager* CfgMgrBldr::GetConfigManager(TiXmlElement* name_space)
+{
+    return new ConfigManager(name_space);
+}
 
 ConfigManager* CfgMgrBldr::Build(const wxString& name_space)
 {

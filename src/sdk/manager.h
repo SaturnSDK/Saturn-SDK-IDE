@@ -29,6 +29,7 @@ class ScriptingManager;
 class ConfigManager;
 class FileManager;
 class CodeBlocksEvent;
+class TiXmlElement;
 
 
 
@@ -96,6 +97,7 @@ public:
     UserVariableManager* GetUserVariableManager() const;
     ScriptingManager* GetScriptingManager() const;
     ConfigManager* GetConfigManager(const wxString& name_space) const;
+    ConfigManager* GetConfigManagerDu(TiXmlElement* name_space) const;
     FileManager* GetFileManager() const;
 
 
