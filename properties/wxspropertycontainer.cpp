@@ -44,7 +44,8 @@ void wxsPropertyContainer::ShowInPropertyGrid()
     wxsPGRID()->SetTargetPage(0);
     wxsPGRID()->Freeze();
     wxsPGRID()->UnbindAll();
-    EnumProperties(Flags);
+    OnEnumProperties(Flags);
+    OnAddExtraProperties(wxsPGRID());
     wxsPGRID()->Thaw();
     Flags = 0;
     wxsPGRID()->SetNewMainContainer(this);
@@ -58,7 +59,7 @@ void wxsPropertyContainer::XmlRead(TiXmlElement* Element)
     Flags = (GetPropertiesFlags() & ~(flPropGrid|flPropStream)) | flXml;
     IsRead = true;
     CurrentElement = Element;
-    EnumProperties(Flags);
+    OnEnumProperties(Flags);
     NotifyPropertyChange(true);
     Flags = 0;
 }
@@ -71,7 +72,7 @@ void wxsPropertyContainer::XmlWrite(TiXmlElement* Element)
     Flags = (GetPropertiesFlags() & ~(flPropGrid|flPropStream)) | flXml;
     IsRead = false;
     CurrentElement = Element;
-    EnumProperties(Flags);
+    OnEnumProperties(Flags);
     Flags = 0;
 }
 
@@ -81,7 +82,7 @@ void wxsPropertyContainer::PropStreamRead(wxsPropertyStream* Stream)
     Flags = (GetPropertiesFlags() & ~(flPropGrid|flXml)) | flPropStream;
     IsRead = true;
     CurrentStream = Stream;
-    EnumProperties(Flags);
+    OnEnumProperties(Flags);
     NotifyPropertyChange(true);
     Flags = 0;
 }
@@ -92,7 +93,7 @@ void wxsPropertyContainer::PropStreamWrite(wxsPropertyStream* Stream)
     Flags = (GetPropertiesFlags() & ~(flPropGrid|flXml)) | flPropStream;
     IsRead = false;
     CurrentStream = Stream;
-    EnumProperties(Flags);
+    OnEnumProperties(Flags);
 
     // Notifying about change since this method could correct some values
     NotifyPropertyChange(true);
@@ -109,7 +110,7 @@ void wxsPropertyContainer::NotifyPropertyChangeFromPropertyGrid()
         CurrentQP->Update();
     }
 
-    PropertyChangedHandler();
+    OnPropertyChanged();
 
     BlockChangeCallback = false;
 }
@@ -124,7 +125,7 @@ void wxsPropertyContainer::NotifyPropertyChangeFromQuickProps()
         wxsPGRID()->Update(this);
     }
 
-    PropertyChangedHandler();
+    OnPropertyChanged();
 
     BlockChangeCallback = false;
 }
@@ -146,7 +147,7 @@ void wxsPropertyContainer::NotifyPropertyChange(bool CallPropertyChangeHandler)
 
     if ( CallPropertyChangeHandler )
     {
-        PropertyChangedHandler();
+        OnPropertyChanged();
     }
     BlockChangeCallback = false;
 }
@@ -158,7 +159,7 @@ wxsQuickPropsPanel* wxsPropertyContainer::BuildQuickPropertiesPanel(wxWindow* Pa
         CurrentQP->Container = NULL;
     }
 
-    CurrentQP = CreateQuickProperties(Parent);
+    CurrentQP = OnCreateQuickProperties(Parent);
 
     // CurrentQP MUST be currently associated to this container
 
@@ -231,6 +232,6 @@ void wxsPropertyContainer::SubContainer(wxsPropertyContainer* Container,long New
     // Flags will be replaced using NewFlags but bits used internally by wxsPropertyContainer will be left untouched
     Flags = ( Flags    &  (flPropGrid|flXml|flPropStream) ) |   // Leaving old part of data processing type
             ( NewFlags & ~(flPropGrid|flXml|flPropStream) );    // Rest taken from new properties
-    Container->EnumProperties(NewFlags);
+    Container->OnEnumProperties(NewFlags);
     Flags = FlagsStore;
 }

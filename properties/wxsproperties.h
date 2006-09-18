@@ -4,7 +4,7 @@
  * all standard properties and all extended ones
  */
 
-// Main files 
+// Main files
 #include "wxsproperty.h"
 #include "wxspropertycontainer.h"
 #include "wxspropertygridmanager.h"
@@ -20,6 +20,3 @@
 #include "wxsflagsproperty.h"
 #include "wxslongproperty.h"
 #include "wxsstringproperty.h"
-
-// Extended properties - will be included through file in extended directory
-#include "extended/wxsexproperties.h"

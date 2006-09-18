@@ -24,20 +24,20 @@ long wxsProperty::GetPropertiesFlags(wxsPropertyContainer* Object)
 bool wxsProperty::XmlGetString(TiXmlElement* Element,wxString& Value,const wxString& SubChild)
 {
     Value.Clear();
-    
-    if ( !Element ) 
+
+    if ( !Element )
     {
         return false;
     }
-    
+
     if ( !SubChild.empty() )
     {
         Element = Element->FirstChildElement(cbU2C(SubChild));
         if ( !Element ) return false;
     }
-    
+
     TiXmlText * Text = Element->FirstChild()->ToText();
-    if ( !Text ) 
+    if ( !Text )
     {
         // Element does exist but doesn't contain text - in this
         // case we return true, because it's case of empty string
@@ -49,16 +49,16 @@ bool wxsProperty::XmlGetString(TiXmlElement* Element,wxString& Value,const wxStr
 
 void wxsProperty::XmlSetString(TiXmlElement* Element,const wxString& Value,const wxString& SubChild)
 {
-    if ( !Element ) 
+    if ( !Element )
     {
         return;
     }
-    
+
     if ( !SubChild.empty() )
     {
         Element = Element->InsertEndChild(TiXmlElement(cbU2C(SubChild)))->ToElement();
         if ( !Element ) return;
     }
-    
+
     Element->InsertEndChild(TiXmlText(cbU2C(Value)));
 }

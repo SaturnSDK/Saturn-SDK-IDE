@@ -192,6 +192,13 @@ void wxsProject::Configure()
 
     if ( m_GUI )
     {
+        if ( !m_GUI->OnCheckIfApplicationManaged() )
+        {
+            // TODO: Prepare better communicate, consider chancing to cbAnnoyingDiaog
+            if ( wxMessageBox(_("wxSmith does not manage this application's source.\n"
+                                "Should I create proper bindings?"),_("wxSmith"),wxYES_NO) == wxNO ) return;
+            if ( !m_GUI->OnCreateApplicationBinding() ) return;
+        }
         cbConfigurationDialog Dlg(NULL,-1,_("Configuring wxSmith"));
         Dlg.AttachConfigurationPanel(m_GUI->OnBuildConfigurationPanel(&Dlg));
         Dlg.ShowModal();

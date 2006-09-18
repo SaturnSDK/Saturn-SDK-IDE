@@ -1,4 +1,9 @@
-#include "wxspropertybrowser.h"
+/*
+
+WARNING: This file will be removed soon
+
+*/
+/*#include "wxspropertybrowser.h"
 
 #include "wxsevents.h"
 #include "wxsitem.h"
@@ -323,3 +328,4 @@ bool wxsPropertyBrowser::CreateNewFunction(const wxsEventDesc* Event,const wxStr
 BEGIN_EVENT_TABLE(wxsPropertyBrowser,wxsPropertyGridManager)
     EVT_PG_CHANGED(-1,wxsPropertyBrowser::OnPropertyChanged)
 END_EVENT_TABLE()
+*/

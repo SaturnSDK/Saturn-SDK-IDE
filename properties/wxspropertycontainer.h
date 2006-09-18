@@ -4,6 +4,8 @@
 #include "wxsproperty.h"
 #include "wxsquickpropspanel.h"
 
+class wxsPropertyGridManager;
+
 /** \brief Base class for objects using properties
  *
  * This class is responsible for operating on properties.
@@ -79,7 +81,7 @@ class wxsPropertyContainer
 
         /** \brief Function returning flags of availability for this object
          *
-         * These flags are passed to EnumProperties function and are used for
+         * These flags are passed to OnEnumProperties function and are used for
          * filtering flags inside Property function.
          * Using flags one can easily filter used properties.
          *
@@ -88,12 +90,15 @@ class wxsPropertyContainer
          *  \li flPropGrid - this flag is set when operating on property grid
          *  \li flXml - this flag is set when current operation is XmlRead or XmlWrite
          *  \li flPropStream - this flag is set when operating on property stream
-         * These flags are available only from EnumProperties or Property
+         * These flags are available only from OnEnumProperties or Property
          * functions, there's no way to check them outside.
          */
-        virtual long GetPropertiesFlags() { return -1; }
+        inline long GetPropertiesFlags() { return OnGetPropertiesFlags(); }
 
     protected:
+
+        /** \copydoc wxsPropertyContainer::GetPropertiesFlags() */
+        virtual long OnGetPropertiesFlags() { return -1; }
 
         /** \brief Function enumerating properties
          *
@@ -105,7 +110,7 @@ class wxsPropertyContainer
          *
          * Example of registering function:
          *  \code
-         *  void SomeClass::EnumProperties(long Flags)
+         *  void SomeClass::OnEnumProperties(long Flags)
          *  {
          *      static wxsLongProperty Prop1(_("Long value"),_T("value"),wxsOFFSET(SomeClass,VariableName));
          *      if ( Flags & flXrc )
@@ -117,21 +122,21 @@ class wxsPropertyContainer
          *  }
          *  \endcode
          */
-        virtual void EnumProperties(long Flags) {}
+        virtual void OnEnumProperties(long Flags) {}
 
         /** \brief Function registering property
          *
-         * \note This function may be called only inside EnumProperties function
+         * \note This function may be called only inside OnEnumProperties function
          *
          * \param Prop - reference to property object which will be used
          * \param PropertyFlags - flags of availability, when 0, flag is always used,
          *                        otherwise, all bits set in PropertyFlags must also
-         *                        be set in flags passed to EnumProperties
+         *                        be set in flags passed to OnEnumProperties
          */
         void Property(wxsProperty& Prop,long PropertyFlags=0);
 
         /** \brief Function enumerating properties of other container
-         * \note This function may be called only inside EnumProperties function
+         * \note This function may be called only inside OnEnumProperties function
          */
         inline void SubContainer(wxsPropertyContainer* Container)
         {
@@ -139,7 +144,7 @@ class wxsPropertyContainer
         }
 
         /** \brief Function enumerating properties of other container from it's reference
-         * \note This function may be called only inside EnumProperties function
+         * \note This function may be called only inside OnEnumProperties function
          */
         inline void SubContainer(wxsPropertyContainer& Container)
         {
@@ -147,12 +152,12 @@ class wxsPropertyContainer
         }
 
         /** \brief Function enumerating properties of other container overriding it's flags
-         * \note This function may be called only inside EnumProperties function
+         * \note This function may be called only inside OnEnumProperties function
          */
         void SubContainer(wxsPropertyContainer* Container,long NewFlags);
 
         /** \brief Function enumerating properties of other container overriding it's flags
-         * \note This function may be called only inside EnumProperties function
+         * \note This function may be called only inside OnEnumProperties function
          */
         inline void SubContainer(wxsPropertyContainer& Container,long NewFlags)
         {
@@ -160,23 +165,23 @@ class wxsPropertyContainer
         }
 
         /** \brief Function building quick properties window */
-        virtual wxsQuickPropsPanel* CreateQuickProperties(wxWindow* Parent) { return NULL; }
+        virtual wxsQuickPropsPanel* OnCreateQuickProperties(wxWindow* Parent) { return NULL; }
 
         /** \brief Function notifying that one of properties has changed
          *
          * This function may be redefined in derived classes to get notified
          * about change of it's properties.
          */
-        virtual void PropertyChangedHandler() {}
+        virtual void OnPropertyChanged() {}
 
         /** \brief Function notifying that one of properties in sub-containers has changed
          *
          * This function may be redefined in derived classes to get notified
          * about change of sub-container property change.
-         * Sub-container is other container called in EnumProperties using
+         * Sub-container is other container called in OnEnumProperties using
          * SubContainer method.
          */
-        virtual void SubPropertyChangedHandler(wxsPropertyContainer* SubContainer) {}
+        virtual void OnSubPropertyChanged(wxsPropertyContainer* SubContainer) {}
 
         /** \brief Flag set when operating on property grid */
         static const unsigned long flPropGrid   = 0x80000000;
@@ -186,6 +191,17 @@ class wxsPropertyContainer
 
         /** \brief Flag set when operating on property stream */
         static const unsigned long flPropStream = 0x20000000;
+
+        /** \brief In this function derived classes may add extra tabs to property grid
+         *
+         * \warning This function is not called for sub-containers.
+         */
+        virtual void OnAddExtraProperties(wxsPropertyGridManager* Grid) {}
+
+        /** \brief Function notifying that some extra property (which could be added
+         *         inside OnUpdatePropertyGrid call) has chaged.
+         */
+        virtual void OnExtraPropertyChanged(wxsPropertyGridManager* Grid,wxPGId Id) {}
 
     private:
 
@@ -348,7 +364,7 @@ class wxsPropertyContainer
 
     Each property container may have one quick properties editor at one time.
  Panel may be taken using wxsPropertyContainer::BuildQuickPropsPanel function.
- To create panel inside class, CreateQuickProperties member function must be
+ To create panel inside class, OnCreateQuickProperties member function must be
  redeclared and must return pointer to newly created quick properties panel.
  Valid wxsPropertyContainer pointer must be passed to wxsQuickPropsPanel
  constructor.
@@ -356,7 +372,7 @@ class wxsPropertyContainer
     Note that Quick Properties Panel must be managed outside property container.
  Container won't delete it. Only bindings are deleted.
 
- \warning Do not use CreateQuickProperties function for getting panel since it
+ \warning Do not use OnCreateQuickProperties function for getting panel since it
  does not unbind previous quick properties panel and does not bind new one with
  container correctly.
 

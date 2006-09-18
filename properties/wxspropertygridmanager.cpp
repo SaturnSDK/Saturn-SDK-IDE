@@ -49,13 +49,15 @@ void wxsPropertyGridManager::OnChange(wxPropertyGridEvent& event)
             // Notifying about sub property change
             if ( Container!=MainContainer && MainContainer!=NULL )
             {
-                MainContainer->SubPropertyChangedHandler(Container);
+                MainContainer->OnSubPropertyChanged(Container);
             }
-            break;
+            Update(NULL);
+            return;
         }
     }
 
-    Update(NULL);
+    // Did not found changed id, it's time to say to container
+    MainContainer->OnExtraPropertyChanged(this,ID);
 }
 
 void wxsPropertyGridManager::Update(wxsPropertyContainer* PC)
@@ -74,6 +76,7 @@ void wxsPropertyGridManager::Update(wxsPropertyContainer* PC)
 
 void wxsPropertyGridManager::UnbindAll()
 {
+    // TODO: Remove all extra pages, leave only first one
     PGIDs.Clear();
     PGEnteries.Clear();
     PGIndexes.Clear();

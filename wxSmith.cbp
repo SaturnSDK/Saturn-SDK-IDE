@@ -9,10 +9,10 @@
 		<Option virtualFolders="" />
 		<Build>
 			<Target title="wxSmith">
-				<Option output="..\..\..\..\devel\share\CodeBlocks\plugins\wxsmith.dll" />
+				<Option output="..\..\..\devel\share\CodeBlocks\plugins\wxsmith.dll" />
 				<Option type="3" />
 				<Option compiler="gcc" />
-				<Option host_application="..\..\..\..\devel\codeblocks.exe" />
+				<Option host_application="..\..\..\devel\codeblocks.exe" />
 				<Linker>
 					<Add library="txml" />
 					<Add library="codeblocks" />
@@ -462,8 +462,8 @@
 		</Unit>
 		<Unit filename="wxsheaders.h">
 			<Option compilerVar="CPP" />
-			<Option compile="0" />
 			<Option link="0" />
+			<Option weight="0" />
 			<Option target="wxSmith" />
 		</Unit>
 		<Unit filename="wxsmith.cpp">
@@ -507,18 +507,6 @@
 			<Option target="wxSmith" />
 		</Unit>
 		<Unit filename="wxsprojectconfig.h">
-			<Option compilerVar="CPP" />
-			<Option compile="0" />
-			<Option link="0" />
-			<Option target="wxSmith" />
-		</Unit>
-		<Unit filename="wxspropertybrowser.cpp">
-			<Option compilerVar="CPP" />
-			<Option compile="0" />
-			<Option link="0" />
-			<Option target="wxSmith" />
-		</Unit>
-		<Unit filename="wxspropertybrowser.h">
 			<Option compilerVar="CPP" />
 			<Option compile="0" />
 			<Option link="0" />

@@ -10,9 +10,8 @@
 #include "wxsmith.h"
 #include "wxsproject.h"
 #include "wxsmithmime.h"
-#include "wxssettingsdlg.h"
-#include "wxspropertybrowser.h"
 #include "wxsresourcefactory.h"
+#include "properties/wxsproperties.h"
 
 #include <licenses.h>
 #include <wxFlatNotebook/wxFlatNotebook.h>
@@ -83,8 +82,7 @@ void wxSmith::OnAttach()
 
     // Adding properties / events browser
     Sizer = new wxGridSizer(1);
-    // TODO: Uncomment when wxPropertyBrowser will be usable
-//    Sizer->Add(new wxsPropertyBrowser(PropertiesContainer),1,wxGROW);
+    Sizer->Add(new wxsPropertyGridManager(PropertiesContainer),1,wxGROW);
     PropertiesContainer->SetSizer(Sizer);
     m_Splitter->Split(ResourcesContainer,PropertiesContainer);
 
