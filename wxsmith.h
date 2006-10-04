@@ -101,7 +101,5 @@ inline wxSmith* wxsPlugin() { return wxSmith::Get(); }
 /** \brief Helper function to access project converter (wxSmith project <-> C::B project) */
 inline wxSmith* wxsProjectConv() { return wxSmith::Get(); }
 
-CB_DECLARE_PLUGIN();
-
 #endif
 

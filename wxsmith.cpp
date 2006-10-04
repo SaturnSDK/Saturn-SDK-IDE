@@ -17,10 +17,11 @@
 #include <wxFlatNotebook/wxFlatNotebook.h>
 #include <projectloader_hooks.h>
 
-CB_IMPLEMENT_PLUGINS_2( wxSmith,     "wxSmith",
-                        wxSmithMime, "wxSmith - MIME extension");
-
-static int ConfigureId = wxNewId();
+namespace
+{
+    PluginRegistrant<wxSmith> reg(_T("wxSmith"));
+    int ConfigureId = wxNewId();
+}
 
 wxSmith* wxSmith::m_Singleton = NULL;
 
@@ -31,21 +32,6 @@ END_EVENT_TABLE()
 
 wxSmith::wxSmith()
 {
-	m_PluginInfo.name = _("wxSmith");
-	m_PluginInfo.title = _("wxSmith");
-	m_PluginInfo.version = _("1.0");
-	m_PluginInfo.description = _("RAD tool used to create wxWidgets forms");
-	m_PluginInfo.author = _("BYO");
-	m_PluginInfo.authorEmail = _("byo.spoon@gmail.com");
-	m_PluginInfo.authorWebsite = _T("");
-	m_PluginInfo.thanksTo =
-        _("Ann for Being\n"
-          "Anha for Smile\n"
-          "Gigi for Faworki\n"
-          "Jaakko Salli for wxPropertyGrid"
-          "\n"
-          "God for Love\n");
-	m_PluginInfo.license = LICENSE_GPL;
 }
 
 wxSmith::~wxSmith()
@@ -85,9 +71,6 @@ void wxSmith::OnAttach()
     Sizer->Add(new wxsPropertyGridManager(PropertiesContainer),1,wxGROW);
     PropertiesContainer->SetSizer(Sizer);
     m_Splitter->Split(ResourcesContainer,PropertiesContainer);
-
-    // Loading resources
-    Manager::Get()->Loadxrc(_T("/wxsmith.zip#zip:*"));
 
     // Registering function for loading / saving extra XML configuration inside CBP files
     ProjectLoaderHooks::HookFunctorBase* wxSmithHook = new ProjectLoaderHooks::HookFunctor<wxSmith>(this, &wxSmith::OnProjectHook);
