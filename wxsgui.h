@@ -3,8 +3,8 @@
 
 #include <configurationpanel.h>
 #include <tinyxml/tinyxml.h>
-
-class wxsProject;
+#include "wxsguifactory.h"
+#include "wxsproject.h"
 
 /** \brief This class is interface for GUI types.
  *
@@ -60,6 +60,12 @@ class wxsGUI
 
         /** \brief Storing configuration of this GUI module */
         virtual void OnWriteConfig(TiXmlElement* element) = 0;
+
+        /** \brief Helper function for fetching project path */
+        inline wxString GetProjectPath() { return m_Project->GetProjectPath(); }
+
+        /** \brief Helper function for fetching internal wxSmith directory */
+        inline wxString GetInternalPath() { return m_Project->GetInternalPath(); }
 
     private:
 

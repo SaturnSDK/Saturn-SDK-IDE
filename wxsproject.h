@@ -3,11 +3,11 @@
 
 #include <cbproject.h>
 #include <tinyxml/tinyxml.h>
-#include "wxsgui.h"
 #include "wxsresourcetree.h"
 
 class wxSmith;
 class wxsResource;
+class wxsGUI;
 
 /** \brief This class integrates current project with wxsmith. */
 class wxsProject

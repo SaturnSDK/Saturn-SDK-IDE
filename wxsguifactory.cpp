@@ -1,13 +1,10 @@
 #include "wxsguifactory.h"
 #include "wxsgui.h"
 
-wxsGUIFactory* wxsGUIFactory::m_UpdateQueue = NULL;
-wxsGUIFactory::GUIItemHashT wxsGUIFactory::m_Hash;
-
-wxsGUIFactory::wxsGUIFactory()
+wxsGUIFactory::wxsGUIFactory(const wxString& Name): m_Name(Name)
 {
-    m_Next = m_UpdateQueue;
-    m_UpdateQueue = this;
+    // Registering this gui in new hash
+    GetHash()[m_Name] = this;
 }
 
 wxsGUIFactory::~wxsGUIFactory()
@@ -17,33 +14,11 @@ wxsGUIFactory::~wxsGUIFactory()
     // necessarry to remove any bindings
 }
 
-inline void wxsGUIFactory::InitializeFromQueue()
-{
-    while ( m_UpdateQueue )
-    {
-        wxsGUIFactory* NextFactory = m_UpdateQueue->m_Next;
-        m_UpdateQueue->Initialize();
-        m_UpdateQueue = NextFactory;
-    }
-}
-
-inline void wxsGUIFactory::Initialize()
-{
-    // Reading all items and adding into hash list
-    for ( int i = OnGetCount(); i-->0; )
-    {
-        GUIItem& Item = m_Hash[OnGetName(i)];
-        Item.m_Factory = this;
-        Item.m_Number = i;
-    }
-}
-
 wxsGUI* wxsGUIFactory::Build(const wxString& Name,wxsProject* Project)
 {
-    InitializeFromQueue();
-    GUIItem& Item = m_Hash[Name];
-    if ( Item.m_Factory == NULL ) return NULL;
-    wxsGUI* NewGUI = Item.m_Factory->OnCreate(Item.m_Number,Project);
+    if ( GetHash().find(Name) == GetHash().end() ) return NULL;
+    wxsGUIFactory* Factory = GetHash()[Name];
+    wxsGUI* NewGUI = Factory->OnCreate(Project);
     if ( NewGUI->GetName() != Name )
     {
         // Some hack? Bug in factory?
@@ -58,18 +33,17 @@ wxsGUI* wxsGUIFactory::Build(const wxString& Name,wxsProject* Project)
 
 wxsGUI* wxsGUIFactory::SelectNew(const wxString& Message,wxsProject* Project)
 {
-    InitializeFromQueue();
-    if ( m_Hash.empty() )
+    if ( GetHash().empty() )
     {
         return NULL;
     }
-    if ( m_Hash.size() == 1 )
+    if ( GetHash().size() == 1 )
     {
-        return Build(m_Hash.begin()->first,Project);
+        return Build(GetHash().begin()->first,Project);
     }
 
     wxArrayString GUIList;
-    for ( GUIItemHashT::iterator i = m_Hash.begin(); i!=m_Hash.end(); ++i )
+    for ( GUIItemHashT::iterator i = GetHash().begin(); i!=GetHash().end(); ++i )
     {
         GUIList.Add(i->first);
     }
@@ -81,4 +55,10 @@ wxsGUI* wxsGUIFactory::SelectNew(const wxString& Message,wxsProject* Project)
     }
 
     return Build(SelectedGUI,Project);
+}
+
+inline wxsGUIFactory::GUIItemHashT& wxsGUIFactory::GetHash()
+{
+    static GUIItemHashT Hash;
+    return Hash;
 }

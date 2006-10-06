@@ -3,6 +3,7 @@
 #include "wxsresource.h"
 #include "wxsresourcefactory.h"
 #include "wxsguifactory.h"
+#include "wxsgui.h"
 
 #include <wx/string.h>
 #include <messagemanager.h>
@@ -268,11 +269,6 @@ bool wxsProject::AddSmithConfig()
 */
 
 
-//bool wxsProject::IsAppManaged()
-//{
-//    return IsAppSourceManaged(m_Config.AppFile);
-//}
-//
 //bool wxsProject::IsAppSourceManaged(const wxString& FileName)
 //{
 //    // TODO: Add support for other coding languages

@@ -251,6 +251,46 @@ wxString wxsCoder::GetCode(const wxString& FileName,const wxString& Header,const
     }
 }
 
+wxString wxsCoder::GetFullCode(const wxString& FileName)
+{
+    // Checking if editor is opened
+	EditorManager* EM = Manager::Get()->GetEditorManager();
+	assert ( EM != NULL );
+    cbEditor* Editor = EM->GetBuiltinEditor(FileName);
+
+    if ( Editor )
+    {
+        cbStyledTextCtrl* Ctrl = Editor->GetControl();
+        return Ctrl->GetText();
+    }
+    else
+    {
+        wxFFile File(FileName,_T("r"));
+        wxString Content;
+        if ( !File.IsOpened() ) return _T("");
+        if ( !File.ReadAll(&Content) ) return _T("");
+        return Content;
+    }
+}
+
+void wxsCoder::PutFullCode(const wxString& FileName,const wxString& Code)
+{
+    // Searching for file in opened file list
+	EditorManager* EM = Manager::Get()->GetEditorManager();
+	assert ( EM != NULL );
+    cbEditor* Editor = EM->GetBuiltinEditor(FileName);
+
+    if ( Editor )
+    {
+        Editor->GetControl()->SetText(Code);
+    }
+    else
+    {
+        wxFile Fl(FileName,wxFile::write);
+        Fl.Write(Code);
+    }
+}
+
 void wxsCoder::RebuildCode(wxString& BaseIndentation,wxString& Code)
 {
     bool UseTab = Manager::Get()->GetConfigManager(_T("editor"))->ReadBool(_T("/use_tab"), false);

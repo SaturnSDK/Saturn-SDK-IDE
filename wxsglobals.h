@@ -67,44 +67,6 @@ enum wxsDragAssistTypes
 };
 
 
-////////////////////////////////////////////////////////////////////////////////
-//
-//  Macros
-// ========
-//
-
-/** \brief Macro declaring beginning of any block of code */
-#define wxsBBegin() \
-    _T("//(*")
-
-/** \brief Macro used to produce headers for block of code */
-#define wxsBHeader(HName,CName) \
-    wxsBBegin() _T(HName) _T("(") _T(CName) _T(")")
-
-/** \brief Macro producing header for block of code where class is specified as argument fo Printf */
-#define wxsBHeaderF(HName) \
-    wxsBHeader(HName,"%s")
-
-/** \brief Macro containing end of code block */
-#define wxsBEnd()   \
-    _T("//*)")
-
-
-/** \brief Macro generating widget with given name */
-#define wxsGEN(Name,Resource) wxsItemFactory::Get()->Generate(Name,Resource)
-
-/** \brief Macro destroying widget
- * \warning Item must be manually unbinded from it's parent using wxsParent::UnbindChild,
- *          otherwise parent will keep pointer to invalid Item,
- */
-#define wxsKILL(Widget) wxsItemFactory::Get()->Kill(Widget)
-
-/** \brief Macro adding new code to coder */
-#define wxsADDCODE(FileName,Header,End,Code) wxsCoder::Get()->AddCode(FileName,Header,End,Code,true,false,false)
-
-/** \brief Macro fetching code from file */
-#define wxsGETCODE(FileName,Header,End) wxsCoder::Get()->GetCode(FileName,Header,End,false,false)
-
 /** \brief Getting current drag assist mode from configuration */
 #define wxsDWAssistType Manager::Get()->GetConfigManager(_T("wxsmith"))->ReadInt(_T("/dragassisttype"),(long)wxsDTColourMix)
 

@@ -52,6 +52,12 @@ class wxsCoder
             bool IncludeHeader=false,
             bool IncludeEnd=false);
 
+        /** \brief Getting full file code */
+        wxString GetFullCode(const wxString& FileName);
+
+        /** \brief Writing code for whole file */
+        void PutFullCode(const wxString& FileName,const wxString& Code);
+
 		/** \brief Function getting singleton object from system */
 		static wxsCoder* Get() { return Singleton; }
 
