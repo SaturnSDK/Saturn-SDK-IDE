@@ -262,20 +262,26 @@ bool wxWidgetsGUI::AddSmithToApp(const wxString& RelativeFileName)
             MemberPos += 6;
             while ( IsWhite(SourceCpy,MemberPos) ) MemberPos++;
             if ( !Match(SourceCpy,MemberPos,_T('(')) ) continue;
+            MemberPos++;
             while ( IsWhite(SourceCpy,MemberPos) ) MemberPos++;
             if ( !Match(SourceCpy,MemberPos,_T(')')) ) continue;
+            MemberPos++;
             while ( IsWhite(SourceCpy,MemberPos) ) MemberPos++;
             if ( !Match(SourceCpy,MemberPos,_T('{')) ) continue;
+            MemberPos++;
             // Ok, we're at function beginning, calculating indentation of {
             Pos += MemberPos;
             break;
         }
 
+        if ( SourceCpy.empty() ) return false;
+
         // Calculating indentation of source
         int IndentPos = Pos;
-        while ( IndentPos>0 && Source[IndentPos-1]!=_T('\n') ) IndentPos--;
+        while ( IndentPos>0 && Source[IndentPos-1]!=_T('\n') && Source[IndentPos-1]!='\r' ) IndentPos--;
         wxString Indent;
         while ( IndentPos<Pos && (Source[IndentPos]==_T(' ') || Source[IndentPos]==_T('\t')) ) Indent += Source[IndentPos++];
+        Indent.Append(_T("\t"));
 
         // Inserting AppInitializeBlock
         Source = Source(0,Pos) +
@@ -310,7 +316,7 @@ wxString wxWidgetsGUI::GetAppClassName(const wxString& Source)
     // by '(' and class name - here we can fetch name of application class
     int Pos = Source.Find(_T("IMPLEMENT_APP"));
     if ( Pos<0 ) return wxEmptyString;
-    Pos += 13;
+    Pos += 13;// strlen("IMPLEMENT_APP")
     while ( IsWhite(Source,Pos) ) Pos++;
     if ( Pos >= (int)Source.Length() ) return wxEmptyString;
     if ( Source[Pos++] != _T('(') ) return wxEmptyString;
@@ -408,7 +414,7 @@ bool wxWidgetsGUI::AskForNewApp()
 
 inline bool wxWidgetsGUI::IsWhite(wxChar Ch)
 {
-    return (Ch==_T(' ')) || (Ch==_T('\n')) || (Ch==_T('\t'));
+    return (Ch==_T(' ')) || (Ch==_T('\n')) || (Ch==_T('\r')) || (Ch==_T('\t'));
 }
 
 inline bool wxWidgetsGUI::IsWhite(const wxString& Str,int Pos)
