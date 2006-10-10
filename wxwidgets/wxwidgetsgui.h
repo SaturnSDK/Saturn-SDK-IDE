@@ -23,9 +23,10 @@ class wxWidgetsGUI : public wxsGUI
         virtual void OnReadConfig(TiXmlElement* element);
         virtual void OnWriteConfig(TiXmlElement* element);
         bool IsAppSourceManaged(const wxString& FileName);
+
         bool ScanForApp(ProjectFile* File);
         bool AddSmithToApp(const wxString& RelativeFileName);
-        bool AskForNewApp();
+        bool CreateNewApp(const wxString& FileName);
         wxString GetAppClassName(const wxString& Source);
         inline bool IsWhite(wxChar Ch);
         inline bool IsWhite(const wxString& Str,int Pos);
@@ -39,6 +40,7 @@ class wxWidgetsGUI : public wxsGUI
         wxsCodingLang m_AppLanguage;      ///< \brief Coding language for main app file
 
         friend class wxWidgetsGUIConfigPanel;
+        friend class wxWidgetsGUIAppAdoptingDlg;
 };
 
 #endif

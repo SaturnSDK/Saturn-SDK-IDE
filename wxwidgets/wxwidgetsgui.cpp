@@ -1,5 +1,6 @@
 #include "wxwidgetsgui.h"
 #include "wxwidgetsguiconfigpanel.h"
+#include "wxwidgetsguiappadoptingdlg.h"
 #include "../wxscoder.h"
 #include "../wxsproject.h"
 
@@ -34,88 +35,9 @@ bool wxWidgetsGUI::OnCheckIfApplicationManaged()
 
 bool wxWidgetsGUI::OnCreateApplicationBinding()
 {
-    if ( wxMessageBox(_("wxSmith does not manage application class for this project.\n"
-                        "Would you like me to scan files to search for wxWidgets application class ?\n"),
-                      _("Detecting app class"),wxYES_NO) != wxYES ) return false;
-
-    if ( wxMessageBox(_("wxSmith can try to find application class automatically by doing some\n"
-                        "code analysis, but this may take some time.\n"
-                        "Should I scan for application class automatically ?\n"),
-                      _("Detecting app class"),wxYES_NO) != wxYES )
-    {
-        wxString FileName = ::wxFileSelector(
-            _("Select file with implementation of application class"),
-            _T(""),
-            _T(""),
-            _T(""),
-            _("C++ sources (*.cpp)|*.cpp|All files|*.*"),
-            wxOPEN | wxFILE_MUST_EXIST );
-        if ( FileName.empty() ) return false;
-        cbProject* cbProj = GetProject()->GetCBProject();
-        ProjectFile* PF = cbProj->GetFileByFilename(FileName,false,false);
-        if ( !PF )
-        {
-            wxMessageBox(_("This file is not included in project.\n"
-                           "Please add this file to project first."),
-                         _("File outside project"));
-            return false;
-        }
-
-        if ( !ScanForApp(PF) )
-        {
-            return AskForNewApp();
-        }
-
-        AddSmithToApp(PF->relativeFilename);
-        return true;
-    }
-
-    // TODO: Show some notification dialog
-    cbProject* cbProj = GetProject()->GetCBProject();
-    wxArrayString FilesFound;
-    wxArrayString DescFound;
-    int Cnt = cbProj->GetFilesCount();
-    for ( int i=0; i<Cnt; i++ )
-    {
-        ProjectFile* PF = cbProj->GetFile(i);
-        if ( ScanForApp(PF) )
-        {
-            FilesFound.Add(PF->relativeFilename);
-            DescFound.Add(PF->relativeFilename);
-        }
-    }
-
-    if ( FilesFound.Count() == 0 )
-    {
-        return AskForNewApp();
-    }
-
-    if ( FilesFound.Count() == 1 )
-    {
-        if ( wxMessageBox(wxString::Format(
-               _("Found application class in file: \"%s\"\n"
-                 "Would you like to convert this class to wxSmith-managed?"),
-               FilesFound[0].c_str()),
-               _("Found application class"),
-               wxYES_NO) == wxYES )
-        {
-            AddSmithToApp(FilesFound[0]);
-            return true;
-        }
-        return AskForNewApp();
-    }
-
-    int Index = ::wxGetSingleChoiceIndex(
-        _("Found application classes in following files.\n"
-          "Please select file which should be used by wxSmith.\n"),
-        _("Found application classes"),
-        DescFound);
-
-    if ( Index < 0 ) return AskForNewApp();
-
-    AddSmithToApp(FilesFound[Index]);
-
-    return true;
+    wxWidgetsGUIAppAdoptingDlg Dlg(NULL,this);
+    Dlg.ShowModal();
+    return OnCheckIfApplicationManaged();
 }
 
 void wxWidgetsGUI::OnReadConfig(TiXmlElement* element)
@@ -304,9 +226,6 @@ bool wxWidgetsGUI::AddSmithToApp(const wxString& RelativeFileName)
     m_CallInitAllNecessary = true;
     m_AppLanguage = wxsCPP;
     OnRebuildApplicationCode();
-    wxMessageBox(_("Application class has been adopted. Please check if it\n"
-                   "works fine (some application initializing code could\n"
-                   "be skipped)."));
     return true;
 }
 
@@ -334,30 +253,8 @@ wxString wxWidgetsGUI::GetAppClassName(const wxString& Source)
     return ClassName;
 }
 
-bool wxWidgetsGUI::AskForNewApp()
+bool wxWidgetsGUI::CreateNewApp(const wxString& FileName)
 {
-    if ( wxMessageBox(_("Coudln't find existing application class.\n"
-                        "Would you like me to create new one ?\n"),
-                      _("New application class"),
-                      wxYES_NO) == wxNO ) return false;
-    wxString FileName = ::wxFileSelector(
-        _("Please select cpp file where application class should be created"),
-        GetProjectPath(),
-        _T("myapp.cpp"),
-        _T("cpp"),
-        _T("C++ source files|*.cpp|All files|*"),
-        wxOPEN|wxOVERWRITE_PROMPT);
-
-    if ( FileName.empty() ) return false;
-
-    if ( GetProject()->GetCBProject()->GetFileByFilename(FileName,false) == NULL )
-    {
-        // Adding new file to project
-        wxArrayInt targets;
-        Manager::Get()->GetProjectManager()->AddFileToProject(FileName,GetProject()->GetCBProject(), targets);
-        Manager::Get()->GetProjectManager()->RebuildTree();
-    }
-
     wxFile Fl(FileName,wxFile::write);
     if ( !Fl.IsOpened() )
     {
@@ -406,8 +303,6 @@ bool wxWidgetsGUI::AskForNewApp()
     m_CallInitAllNecessary = true;
     m_AppLanguage = wxsCPP;
     OnRebuildApplicationCode();
-
-    wxMessageBox(_("New application class created"));
     return true;
 
 }
