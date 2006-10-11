@@ -8,3 +8,5 @@ wxsGUI::wxsGUI(const wxString& GUIName,wxsProject* Project):
 wxsGUI::~wxsGUI()
 {
 }
+
+IMPLEMENT_CLASS(wxsGUI,wxObject)

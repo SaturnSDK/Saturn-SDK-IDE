@@ -452,12 +452,22 @@
 			<Option link="0" />
 			<Option target="wxSmith" />
 		</Unit>
+		<Unit filename="wxwidgets\wxwidgetsres.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\wxwidgetsres.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="wxSmith" />
+		</Unit>
 		<Extensions>
-<wxsmith>
-	<dialog wxs_file="wxWidgetsGUIAppAdoptingDlg.wxs" class="wxWidgetsGUIAppAdoptingDlg" src_file="wxwidgets\wxwidgetsguiappadoptingdlg.cpp" header_file="wxwidgets/wxwidgetsguiappadoptingdlg.h" xrc_file="" edit_mode="Source" />
-	<panel wxs_file="wxWidgetsGUIConfigPanel.wxs" class="wxWidgetsGUIConfigPanel" src_file="wxwidgets/wxwidgetsguiconfigpanel.cpp" header_file="wxwidgets/wxwidgetsguiconfigpanel.h" xrc_file="" edit_mode="Source" />
-	<configuration app_src_file="" main_resource="" init_all_handlers="necessary" />
-</wxsmith>
+			<wxsmith>
+				<dialog wxs_file="wxWidgetsGUIAppAdoptingDlg.wxs" class="wxWidgetsGUIAppAdoptingDlg" src_file="wxwidgets\wxwidgetsguiappadoptingdlg.cpp" header_file="wxwidgets/wxwidgetsguiappadoptingdlg.h" xrc_file="" edit_mode="Source" />
+				<panel wxs_file="wxWidgetsGUIConfigPanel.wxs" class="wxWidgetsGUIConfigPanel" src_file="wxwidgets/wxwidgetsguiconfigpanel.cpp" header_file="wxwidgets/wxwidgetsguiconfigpanel.h" xrc_file="" edit_mode="Source" />
+				<configuration app_src_file="" main_resource="" init_all_handlers="necessary" />
+			</wxsmith>
 		</Extensions>
 	</Project>
 </CodeBlocks_project_file>

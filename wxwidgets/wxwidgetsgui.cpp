@@ -1,8 +1,14 @@
 #include "wxwidgetsgui.h"
 #include "wxwidgetsguiconfigpanel.h"
 #include "wxwidgetsguiappadoptingdlg.h"
+#include "wxwidgetsres.h"
 #include "../wxscoder.h"
 #include "../wxsproject.h"
+
+// TODO: Reading/Storing app language in config
+// TODO: Prepare for other languages in wxApp-adopting sources
+
+IMPLEMENT_CLASS(wxWidgetsGUI,wxsGUI)
 
 wxWidgetsGUI::wxWidgetsGUI(wxsProject* Project):
     wxsGUI(_T("wxWidgets"),Project),
@@ -26,6 +32,115 @@ cbConfigurationPanel* wxWidgetsGUI::OnBuildConfigurationPanel(wxWindow* Parent)
 
 void wxWidgetsGUI::OnRebuildApplicationCode()
 {
+    bool IsAnyXRC = false;
+    wxWidgetsRes* MainResPtr = NULL;
+
+    size_t Count = GetProject()->GetResourcesCount();
+    for ( size_t i=0; i<Count; i++ )
+    {
+        wxWidgetsRes* Res = wxDynamicCast(GetProject()->GetResource(i),wxWidgetsRes);
+        if ( !Res ) continue;
+        if ( Res->GetGUI() != GetName() ) continue;
+
+        if ( m_MainResource==Res->GetResourceName() && Res->GetLanguage()==m_AppLanguage )
+        {
+            MainResPtr = Res;
+        }
+
+        if ( Res->OnGetUsingXRC() )
+        {
+            IsAnyXRC = true;
+        }
+    }
+
+    wxString NewCode;
+    switch ( m_AppLanguage )
+    {
+        case wxsCPP: NewCode = _T("\nbool wxsOK = true;\n"); break;
+        default:;
+    }
+
+    bool InitAllXRCHandlers = m_CallInitAll && ( IsAnyXRC || !m_CallInitAllNecessary );
+    if ( InitAllXRCHandlers )
+    {
+        switch ( m_AppLanguage )
+        {
+            case wxsCPP: NewCode.Append(_T("wxXmlResource::Get()->InitAllHandlers();\n")); break;
+            default:;
+        }
+    }
+
+    for ( size_t i = 0; i<m_LoadedResources.Count(); ++i )
+    {
+        switch ( m_AppLanguage )
+        {
+            case wxsCPP:
+                NewCode.Append(_T("wxsOK = wxsOK && wxXmlResource::Get()->Load(_T(\""));
+                NewCode.Append(m_LoadedResources[i]);
+                NewCode.Append(_T("\"));\n"));
+                break;
+            default:;
+        }
+    }
+
+    if ( MainResPtr )
+    {
+        switch ( m_AppLanguage )
+        {
+            case wxsCPP:
+                NewCode << _T("if ( wxsOK )\n{\n");
+                NewCode << MainResPtr->GetAppBuildingCode();
+                NewCode << _T("}\n");
+                break;
+            default:;
+        }
+    }
+
+    wxsCoder::Get()->AddCode(
+        GetProjectPath() + m_AppFile,
+        wxsCodeMarks::Beg(m_AppLanguage,_("AppInitialize")),
+        wxsCodeMarks::End(m_AppLanguage),
+        NewCode);
+
+    NewCode = _T("\n");
+
+    if ( MainResPtr )
+    {
+        switch ( m_AppLanguage )
+        {
+            case wxsCPP:
+            {
+                wxString IncludeFile = MainResPtr->GetDeclarationFile();
+                wxFileName IncludeFileName(GetProjectPath()+IncludeFile);
+                if ( IncludeFileName.MakeRelativeTo(GetProjectPath()+m_AppFile) )
+                {
+                    // We will use unix path format. Because include is relative path
+                    // we can to it in Win environment. Using Unix format will make
+                    // sources more cross-platform
+                    IncludeFile = IncludeFileName.GetFullPath(wxPATH_UNIX);
+                }
+
+                NewCode << _T("#include \"") << IncludeFile << _T("\"\n");
+                break;
+            }
+            default:;
+        }
+    }
+    if ( InitAllXRCHandlers || m_LoadedResources.Count() )
+    {
+        switch ( m_AppLanguage )
+        {
+            case wxsCPP: NewCode.Append(_T("#include <wx/xrc/xmlres.h>\n")); break;
+            default:;
+        }
+    }
+
+    wxsCoder::Get()->AddCode(
+        GetProjectPath() + m_AppFile,
+        wxsCodeMarks::Beg(m_AppLanguage,_T("AppHeaders")),
+        wxsCodeMarks::End(m_AppLanguage),
+        NewCode);
+
 }
 
 bool wxWidgetsGUI::OnCheckIfApplicationManaged()
@@ -306,6 +421,20 @@ bool wxWidgetsGUI::CreateNewApp(const wxString& FileName)
     OnRebuildApplicationCode();
     return true;
 
+}
+
+void wxWidgetsGUI::EnumerateMainResources(wxArrayString& Names)
+{
+    int Count = GetProject()->GetResourcesCount();
+    for ( int i=0; i<Count; i++ )
+    {
+        wxWidgetsRes* Res = wxDynamicCast(GetProject()->GetResource(i),wxWidgetsRes);
+        if ( Res == NULL ) continue;
+        if ( Res->GetGUI() != GetName() ) continue;
+        if ( !Res->OnGetCanBeMain() ) continue;
+        if ( Res->GetLanguage() != m_AppLanguage ) continue;
+        Names.Add(Res->GetResourceName());
+    }
 }
 
 inline bool wxWidgetsGUI::IsWhite(wxChar Ch)

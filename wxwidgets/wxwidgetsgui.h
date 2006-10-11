@@ -7,6 +7,7 @@
 /** \brief Class responsible for operations on wxWidgets-based projects */
 class wxWidgetsGUI : public wxsGUI
 {
+    DECLARE_CLASS(wxWidgetsGUI)
     public:
         /** \brief Ctor */
         wxWidgetsGUI(wxsProject* Project);
@@ -22,15 +23,29 @@ class wxWidgetsGUI : public wxsGUI
         virtual bool OnCreateApplicationBinding();
         virtual void OnReadConfig(TiXmlElement* element);
         virtual void OnWriteConfig(TiXmlElement* element);
+
+        /** \brief Checking if file with given name has source code prepared to be managed by wxSmith */
         bool IsAppSourceManaged(const wxString& FileName);
 
+        /** \brief Checking if given project file can be adopted to wxSmith */
         bool ScanForApp(ProjectFile* File);
+
+        /** \brief Adding smith bindings to given file */
         bool AddSmithToApp(const wxString& RelativeFileName);
+
+        /** \brief Creating new file with application class */
         bool CreateNewApp(const wxString& FileName);
+
+        /** \brief Getting name of class used inside IMPLEMENT_APP() macro call */
         wxString GetAppClassName(const wxString& Source);
-        inline bool IsWhite(wxChar Ch);
-        inline bool IsWhite(const wxString& Str,int Pos);
-        inline bool Match(const wxString& Str,int Pos,wxChar Ch);
+
+        /** \brief Enumerating all resources in project which could be set as main resource in wxWidgets */
+        void EnumerateMainResources(wxArrayString& Names);
+
+        /* Some helper functions used while scanning source files */
+        static inline bool IsWhite(wxChar Ch);
+        static inline bool IsWhite(const wxString& Str,int Pos);
+        static inline bool Match(const wxString& Str,int Pos,wxChar Ch);
 
         wxString m_AppFile;               ///< \brief Source file defining application
         wxArrayString m_LoadedResources;  ///< \brief List of automatically loaded resource files

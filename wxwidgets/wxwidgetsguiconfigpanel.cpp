@@ -68,7 +68,7 @@ wxWidgetsGUIConfigPanel::wxWidgetsGUIConfigPanel(wxWindow* parent,wxWidgetsGUI* 
 
     MainRes->Append(_("-- None --"));
     wxArrayString Resources;
-//    m_GUI->GetProject()->EnumerateResources(Resources,true);
+    m_GUI->EnumerateMainResources(Resources);
     MainRes->Append(Resources);
     if ( m_GUI->m_MainResource.empty() )
     {
@@ -151,6 +151,7 @@ void wxWidgetsGUIConfigPanel::OnApply()
     m_GUI->m_CallInitAll = InitAll->GetValue();
     m_GUI->m_CallInitAllNecessary = m_GUI->m_CallInitAll && InitAllNecessary->GetValue();
     m_GUI->NotifyChange();
+    m_GUI->OnRebuildApplicationCode();
 }
 
 void wxWidgetsGUIConfigPanel::OnCancel()

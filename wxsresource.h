@@ -13,22 +13,28 @@ class wxsProject;
  * It should keep only basic resource information but not resource data.
  * It's stored inside internal wxsEditor's structures.
  */
-class wxsResource
+class wxsResource: public wxObject
 {
+    DECLARE_CLASS(wxsResource)
     public:
 
         /** \brief Ctor
+         *  \param Owher project owning resource
          *  \param ResourceName name of resource (f.ex. class name)
-         *  \param ResourceType name of resource type
-         *  \param CanBeMain set to true when this resource can be main application's resource
+         *  \param ResourceType name of resource type (f.ex. wxDialog)
+         *  \param GUI anme of gui using this resource, put empty string if this is universal resource like bitmap file
+         *  \param Language coding language used for this resource
          */
-        wxsResource(wxsProject* Owner,const wxString& ResourceName,const wxString& ResourceType,wxsCodingLang Language=wxsCPP,bool UsingXRC=false);
+        wxsResource(wxsProject* Owner,const wxString& ResourceName,const wxString& ResourceType,const wxString& GUI,wxsCodingLang Language=wxsCPP);
 
         /** \brief dctor */
         virtual ~wxsResource();
 
         /** \brief Getting resource type */
         inline const wxString& GetResourceType() { return m_ResourceType; }
+
+        /** \brief Getting GUI */
+        inline const wxString& GetGUI() { return m_GUI; }
 
         /** \brief Getting coding language used inside this resource */
         inline wxsCodingLang GetLanguage() { return m_Language; }
@@ -57,10 +63,15 @@ class wxsResource
         /** \brief Creating entry in resoruce browser */
         void BuildTreeEntry(const wxsResourceItemId& Parent);
 
-        /** \brief Function checking if this resource uses XRC files
-         * \warning This function is surely to be removed in future wxSmith versions
+        /** \brief Getting name of declaration file
+          * \note this function is only a wrapper to OnGetDeclarationFile (to hold ocnsistency of functions to override)
+          */
+        inline wxString GetDeclarationFile() { return OnGetDeclarationFile(); }
+
+        /** \brief Getting code creating this resource
+         *  \note this function is only a wrapper to OnGetAppBuildingCode (to hold ocnsistency of functions to override)
          */
-        inline bool UsingXRC() { return m_UsingXRC; }
+        inline wxString GetAppBuildingCode() { return OnGetAppBuildingCode(); }
 
     protected:
 
@@ -108,7 +119,7 @@ class wxsResource
          */
         virtual wxString OnGetDeclarationFile() { return wxEmptyString; }
 
-        /** \brief Function which should build this resource in wxApp code */
+        /** \brief Function which should build this resource in application initializing code */
         virtual wxString OnGetAppBuildingCode() { return wxEmptyString; }
 
     private:
@@ -118,11 +129,11 @@ class wxsResource
 
         const wxString& m_ResourceType;
         wxString m_ResourceName;
+        const wxString& m_GUI;
         wxsProject* m_Owner;
         wxsEditor* m_Editor;
         wxsResourceItemId m_TreeItemId;
         const wxsCodingLang m_Language;
-        const bool m_UsingXRC;
 
         friend wxsEditor::~wxsEditor();
         friend class wxsProject;

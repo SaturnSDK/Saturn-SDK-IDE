@@ -1,12 +1,12 @@
 #include "wxsresource.h"
 #include "wxsextresmanager.h"
 
-wxsResource::wxsResource(wxsProject* Owner,const wxString& ResourceName,const wxString& ResourceType,wxsCodingLang Language,bool UsingXRC):
+wxsResource::wxsResource(wxsProject* Owner,const wxString& ResourceName,const wxString& ResourceType,const wxString& GUI,wxsCodingLang Language):
     m_ResourceType(ResourceType),
     m_ResourceName(ResourceName),
+    m_GUI(GUI),
     m_Owner(Owner),
-    m_Language(Language),
-    m_UsingXRC(UsingXRC)
+    m_Language(Language)
 {}
 
 wxsResource::~wxsResource()
@@ -46,3 +46,5 @@ void wxsResource::BuildTreeEntry(const wxsResourceItemId& Parent)
 {
     m_TreeItemId = wxsTree()->AppendItem(Parent,GetResourceName());
 }
+
+IMPLEMENT_CLASS(wxsResource,wxObject)

@@ -13,8 +13,9 @@
  * creating / setting up main application class. Each project may have
  * only one GUI managed.
  */
-class wxsGUI
+class wxsGUI: public wxObject
 {
+    DECLARE_CLASS(wxsGUI)
     public:
 
         /** \brief Ctor

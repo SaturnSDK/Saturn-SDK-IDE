@@ -21,6 +21,13 @@
 
 class wxWidgetsGUI;
 
+/** \brief Dialog used when adopting wxApp class
+ * \note most of work while scanning sources and
+ *       adding wxApp support is done in wxGUI class
+ *       actually, this dialog is only to represent
+ *       results and get user choice what to do after
+ *       scanning
+ */
 class wxWidgetsGUIAppAdoptingDlg: public wxDialog
 {
 	public:
@@ -80,14 +87,24 @@ class wxWidgetsGUIAppAdoptingDlg: public wxDialog
 
 	private:
 
+        /** \brief Starting scanning of files
+         *  \note This function creates it's own
+         *        event-dispatching loop while searching inside files
+         */
         void Run();
+
+        /** \brief Scanning one file
+         *  \return true when file can be used as wxApp container, false otherwise
+         */
         bool ScanFile(ProjectFile* File);
+
+        /** \brief Adding smith bindings for given file */
         void AddSmith(wxString RelativeFileName);
 
-        cbProject* m_Project;
-        wxWidgetsGUI* m_GUI;
-        wxTimer m_Timer;
-        bool m_Run;
+        cbProject* m_Project;       ///< \brief Helper pointer to C::B project
+        wxWidgetsGUI* m_GUI;        ///< \brief GUI which has requested the scan
+        wxTimer m_Timer;            ///< \brief Timer used to call Run() after dialog is shown
+        bool m_Run;                 ///< \brief Flag used to break scanning of files after closing dialog
 
 		DECLARE_EVENT_TABLE()
 };

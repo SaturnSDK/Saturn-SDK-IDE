@@ -15,6 +15,7 @@
 
 #include "wxwidgetsgui.h"
 
+/** \brief Configuration panel for wxWidgetsGUI class */
 class wxWidgetsGUIConfigPanel: public cbConfigurationPanel
 {
 	public:
