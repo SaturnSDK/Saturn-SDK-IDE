@@ -150,6 +150,7 @@ void wxWidgetsGUIConfigPanel::OnApply()
     m_GUI->m_MainResource = MainRes->GetValue();
     m_GUI->m_CallInitAll = InitAll->GetValue();
     m_GUI->m_CallInitAllNecessary = m_GUI->m_CallInitAll && InitAllNecessary->GetValue();
+    m_GUI->NotifyChange();
 }
 
 void wxWidgetsGUIConfigPanel::OnCancel()

@@ -226,6 +226,7 @@ bool wxWidgetsGUI::AddSmithToApp(const wxString& RelativeFileName)
     m_CallInitAllNecessary = true;
     m_AppLanguage = wxsCPP;
     OnRebuildApplicationCode();
+    NotifyChange();
     return true;
 }
 

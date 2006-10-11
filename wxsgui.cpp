@@ -8,4 +8,3 @@ wxsGUI::wxsGUI(const wxString& GUIName,wxsProject* Project):
 wxsGUI::~wxsGUI()
 {
 }
-
