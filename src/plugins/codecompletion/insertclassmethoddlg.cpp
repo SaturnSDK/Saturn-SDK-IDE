@@ -1,14 +1,16 @@
-#include <sdk.h>
-#include <wx/intl.h>
-#include <wx/xrc/xmlres.h>
-#include <wx/listbox.h>
+#include "sdk.h"
+#ifndef CB_PRECOMP
 #include <wx/checkbox.h>
+#include <wx/checklst.h>
+#include <wx/intl.h>
+#include <wx/listbox.h>
 #include <wx/radiobox.h>
-#include <wx/button.h>
-
+#include <wx/xrc/xmlres.h>
+#include "globals.h"
 #include "manager.h"
 #include "messagemanager.h"
-#include "globals.h"
+#endif
+#include "parser/parser.h"
 #include "insertclassmethoddlg.h"
 
 BEGIN_EVENT_TABLE(InsertClassMethodDlg, wxDialog)
@@ -35,10 +37,10 @@ InsertClassMethodDlg::~InsertClassMethodDlg()
 	//dtor
 }
 
-wxArrayString InsertClassMethodDlg::GetCode()
+wxArrayString InsertClassMethodDlg::GetCode() const
 {
     wxArrayString array;
-    wxCheckListBox* clb = XRCCTRL(*this, "chklstMethods", wxCheckListBox);
+    const wxCheckListBox* clb = XRCCTRL(*this, "chklstMethods", wxCheckListBox);
 
     for (int i = 0; i < clb->GetCount(); ++i)
     {
@@ -48,7 +50,7 @@ wxArrayString InsertClassMethodDlg::GetCode()
             if (XRCCTRL(*this, "chkAddDoc", wxCheckBox)->IsChecked())
             {
                 // add doc block
-                str << _("/** @brief (one liner)\n  *\n  * (documentation goes here)\n  */\n");
+                str << _T("/** @brief (one liner)\n  *\n  * (documentation goes here)\n  */\n");
             }
             str << clb->GetString(i);
             str.Replace(_T("&&"), _T("&"));
@@ -57,7 +59,7 @@ wxArrayString InsertClassMethodDlg::GetCode()
     }
 
     return array;
-}
+} // end of GetCode
 
 void InsertClassMethodDlg::FillClasses()
 {
@@ -72,7 +74,7 @@ void InsertClassMethodDlg::FillClasses()
     {
         Token* token = tree->at(i);
         //Manager::Get()->GetMessageManager()->DebugLog("m_Filename=%s, token=%s", m_Filename.c_str(), token->m_Filename.c_str());
-        if (token && token->m_TokenKind == tkClass) //&&
+        if (token && (token->m_TokenKind & (tkClass | tkTypedef))) //&&
             //token->m_Filename == UnixFilename(m_Filename))
             // TODO: check against file's pair too
             lb->Append(token->m_Name, token);
@@ -125,18 +127,15 @@ void InsertClassMethodDlg::DoFillMethodsFor(wxCheckListBox* clb,
 
     // loop ascending the inheritance tree
 
-    TokenIdxSet::iterator it;
-    int idx;
-    Token* token;
-    for (it = parentToken->m_Children.begin(); it != parentToken->m_Children.end(); it++)
+    for (TokenIdxSet::iterator it = parentToken->m_Children.begin(); it != parentToken->m_Children.end(); ++it)
     {
-        idx = *it;
-        token = tree->at(idx);
+        int idx = *it;
+        Token* token = tree->at(idx);
         if (!token)
             continue;
 
         //Manager::Get()->GetMessageManager()->DebugLog("Evaluating %s", token->m_DisplayName.c_str());
-        bool valid = token->m_TokenKind == tkFunction &&
+        bool valid = token->m_TokenKind & (tkFunction | tkConstructor | tkDestructor) &&
                 ((includePrivate && token->m_Scope == tsPrivate) ||
                 (includeProtected && token->m_Scope == tsProtected) ||
                 (includePublic && token->m_Scope == tsPublic));
@@ -146,7 +145,7 @@ void InsertClassMethodDlg::DoFillMethodsFor(wxCheckListBox* clb,
             // BUG IN WXWIDGETS: wxCheckListBox::Append(string, data) crashes...
             //                   wxCheckListBox::Append(string) does not...
             wxString str;
-            str << token->m_Type << _T(" ") << (!m_Decl ? ns : _T("")) << token->m_Name << token->m_Args;
+            str << token->m_Type << _T(" ") << ns << token->m_Name << token->m_Args;
             str.Replace(_T("&"), _T("&&"));
             if (clb->FindString(str) == wxNOT_FOUND)
                 clb->Append(str);
@@ -154,30 +153,29 @@ void InsertClassMethodDlg::DoFillMethodsFor(wxCheckListBox* clb,
     }
 
     // inheritance
-	for (it = parentToken->m_Ancestors.begin();it!=parentToken->m_Ancestors.end();it++)
+    for (TokenIdxSet::iterator it = parentToken->m_DirectAncestors.begin();it!=parentToken->m_DirectAncestors.end(); ++it)
     {
-        idx = *it;
-        token = tree->at(idx);
+        int idx = *it;
+        Token* token = tree->at(idx);
         if (!token)
             continue;
         DoFillMethodsFor(clb, token, ns, includePrivate, includeProtected, includePublic);
     }
-}
+} // end of DoFillMethodsFor
 
 // events
 
-void InsertClassMethodDlg::OnClassesChange(wxCommandEvent& event)
+void InsertClassMethodDlg::OnClassesChange(wxCommandEvent& /*event*/)
 {
     FillMethods();
 }
 
-void InsertClassMethodDlg::OnCodeChange(wxCommandEvent& event)
+void InsertClassMethodDlg::OnCodeChange(wxCommandEvent& /*event*/)
 {
     m_Decl = XRCCTRL(*this, "rbCode", wxRadioBox)->GetSelection() == 0;
-    FillMethods();
 }
 
-void InsertClassMethodDlg::OnFilterChange(wxCommandEvent& event)
+void InsertClassMethodDlg::OnFilterChange(wxCommandEvent& /*event*/)
 {
     FillMethods();
 }

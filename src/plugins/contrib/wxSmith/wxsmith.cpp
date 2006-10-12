@@ -8,7 +8,6 @@
  **************************************************************/
 
 #include "wxsheaders.h"
-#include <licenses.h>
 #include <manager.h>
 #include <tinyxml/tinyxml.h>
 #include <messagemanager.h>
@@ -41,9 +40,13 @@ static int NewPanelId = wxNewId();
 static int ImportXrcId = wxNewId();
 static int ConfigureId = wxNewId();
 
-CB_IMPLEMENT_PLUGINS_3( wxSmith, "wxSmith",
-                        wxSmithMime, "wxSmith - MIME plugin",
-                        wxSmithWizard, "wxSmith - Project Wizard plugin");
+// Register the 3 plugins contained herein
+namespace
+{
+    PluginRegistrant<wxSmith> reg1(_T("wxSmith"));
+    PluginRegistrant<wxSmithMime> reg2(_T("wxSmithMime"));
+    PluginRegistrant<wxSmithWizard> reg3(_T("wxSmithWizard"));
+};
 
 wxSmith* wxSmith::Singleton = NULL;
 
@@ -65,23 +68,6 @@ END_EVENT_TABLE()
 wxSmith::wxSmith()
 {
 	//ctor
-	m_PluginInfo.name = _("wxSmith");
-	m_PluginInfo.title = _("wxSmith");
-	m_PluginInfo.version = _("1.0");
-	m_PluginInfo.description = _("RAD tool used to create wxWidgets forms");
-	m_PluginInfo.author = _("BYO");
-	m_PluginInfo.authorEmail = _("byo.spoon@gmail.com");
-	m_PluginInfo.authorWebsite = _("");
-	m_PluginInfo.thanksTo =
-        _("Ann for Being\n"
-          "Anha for Smile\n"
-          "Gigi for Faworki\n"
-          "\n"
-          "God for Love\n"
-          "\n"
-          "Jaakko Salli for wxPropertyGrid");
-	m_PluginInfo.license = LICENSE_GPL;
-
 	if ( Singleton == NULL ) Singleton = this;
 }
 
@@ -128,7 +114,10 @@ void wxSmith::OnAttach()
 
         LeftSplitter->Split(ResourcesContainer,PropertiesContainer);
 
-        Manager::Get()->Loadxrc(_T("/wxsmith.zip#zip:*"));
+        if(!Manager::LoadResource(_T("wxsmith.zip")))
+        {
+            NotifyMissingFile(_T("wxsmith.zip"));
+        }
 
         // Initializing standard manager
 
@@ -237,8 +226,13 @@ void wxSmith::OnProjectActivated(CodeBlocksEvent& event)
 
 void wxSmith::OnSpreadEvent(wxsEvent& event)
 {
+    // Adding blocking flag to prevent ping-pong spreads
+    static bool Block = false;
+    if ( Block ) return;
+    Block = true;
     wxsPropertiesMan::Get()->ProcessEvent(event);
     wxsWindowEditor::SpreadEvent(event);
+    Block = false;
 }
 
 void wxSmith::OnSelectRes(wxsEvent& event)
@@ -303,7 +297,7 @@ void wxSmith::OnImportXrc(wxCommandEvent& event)
         _T(""),
         _T("xrc"),
         _("XRC files (*.xrc)|*.xrc"),
-        wxOPEN|wxFILE_MUST_EXIST);
+        wxOPEN|wxFILE_MUST_EXIST|wxHIDE_READONLY);
 
     if ( FileName.empty() ) return;
 

@@ -1,0 +1,137 @@
+////////////////////////////////////////////////////////////////////////////////
+//
+// Code::Blocks new project wizard script
+//
+// Project: Console application
+// Author:  Yiannis Mandravellos
+//
+// Wizard scripts documentation can be found at:
+// http://wiki.codeblocks.org/index.php?title=Wizard_scripts
+//
+////////////////////////////////////////////////////////////////////////////////
+
+
+ConsoleLang <- 1; // default to C++
+
+//
+//------------------------------------------------------------------------------
+//
+function BeginWizard()
+{
+    local wiz_type = Wizard.GetWizardType();
+
+    if (wiz_type == wizProject)
+    {
+        // this is the text that will appear in the start (intro) page
+        local intro_msg = _T("Welcome to the new console application wizard!\n" +
+                            "This wizard will guide you to create a new console application.\n\n" +
+                            "When you 're ready to proceed, please click \"Next\"...");
+
+        // intro
+        Wizard.AddInfoPage(_T("ConsoleIntro"), intro_msg);
+        // select project name and path
+        Wizard.AddProjectPathPage();
+        // select compiler and configurations
+        Wizard.AddCompilerPage(_T(""), _T("*"), true, true);
+        // select language
+        Wizard.AddGenericSingleChoiceListPage(_T("ConsoleLanguagePage"), _T("Please select the language you want to use."), _T("C;C++"), ConsoleLang); // select language
+    }
+    else if (wiz_type == wizTarget)
+    {
+        local intro_msg = _T("Welcome to the new console build target wizard!\n" +
+                            "This wizard will guide you to create a new console build target.\n\n" +
+                            "When you 're ready to proceed, please click \"Next\"...");
+        Wizard.AddInfoPage(_T("ConsoleIntro"), intro_msg);
+        Wizard.AddBuildTargetPage(_T(""), false, false, _T(""), _T("*"), true);
+    }
+    else
+        print(wiz_type);
+}
+//
+//------------------------------------------------------------------------------
+//
+function OnLeave_ConsoleLanguagePage(fwd)
+{
+    if (fwd)
+    {
+        ConsoleLang = Wizard.GetListboxSelection(_T("GenericChoiceList"));
+    }
+    return true;
+}
+//
+//------------------------------------------------------------------------------
+//
+function GetFilesDir()
+{
+    local result;
+
+    // depending on the source type setting, return the appropriate value.
+    if (ConsoleLang == 0) // C source file
+        result = _T("console/c");
+    else // C++ source file
+        result = _T("console/cpp");
+
+    return result;
+}
+//
+//------------------------------------------------------------------------------
+//
+function SetupProject(project)
+{
+    // NOTE: Major compiler system drawback here.
+    // Until it is redesigned to allow easier compiler settings,
+    // we have to check the compiler's ID and set options for different compilers...
+    // We make things easier for scripts, by providing a few predefined functions
+    // to setup common settings like "debug", "warnings", etc.
+    // These functions are located in <templates_path>/common_functions.script.
+    // If you add other commonly used functions or bug-fix anything in that file,
+    // please share it with us :)
+
+    // enable compiler warnings (project-wide)
+    WarningsOn(project, Wizard.GetCompilerID());
+
+    // We setup the targets using SetupTarget() which is conveniently called by Code::Blocks
+    // if we register this wizard as wizTarget type :)
+    // This means that this very wizard can be used both as wizProject *and* as wizTarget ;)
+
+    // Debug build target
+    local target = project.GetBuildTarget(Wizard.GetDebugName());
+    if (!IsNull(target))
+        SetupTarget(target, true);
+
+    // Release build target
+    target = project.GetBuildTarget(Wizard.GetReleaseName());
+    if (!IsNull(target))
+        SetupTarget(target, false);
+
+    // all done!
+    return true;
+}
+//
+//------------------------------------------------------------------------------
+//
+function SetupTarget(target,is_debug)
+{
+    if (IsNull(target))
+        return false;
+
+    target.SetTargetType(ttConsoleOnly);
+    if (target.GetWorkingDir().Matches(_T("")))
+        target.SetOutputFilename(target.SuggestOutputFilename());
+    else
+        target.SetOutputFilename(target.GetWorkingDir() + wxFILE_SEP_PATH + target.SuggestOutputFilename());
+
+    if (is_debug)
+    {
+        // enable debugging symbols for this target
+        DebugSymbolsOn(target, Wizard.GetTargetCompilerID());
+    }
+    else
+    {
+        // enable optimizations for this target
+        OptimizationsOn(target, Wizard.GetTargetCompilerID());
+    }
+
+    // all done!
+    return true;
+}

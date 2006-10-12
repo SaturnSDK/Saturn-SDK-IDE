@@ -1,1 +1,1 @@
-SUBDIRS = autorevision ConsoleRunner
+SUBDIRS = cb_share_config ConsoleRunner

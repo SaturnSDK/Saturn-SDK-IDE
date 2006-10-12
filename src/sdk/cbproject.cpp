@@ -31,9 +31,11 @@
 #endif
 
 #include <wx/choicdlg.h>
+#include <wx/settings.h>
 
 #ifndef CB_PRECOMP
     #include "cbproject.h" // class's header file
+    #include "compiler.h" // GetSwitches
     #include "sdk_events.h"
     #include "manager.h"
     #include "cbeditor.h"
@@ -44,6 +46,9 @@
     #include "editormanager.h"
     #include "configmanager.h"
     #include "compilerfactory.h"
+    #include "projectbuildtarget.h"
+    #include "projectfile.h"
+    #include "infowindow.h"
 #endif
 
 #include <map>
@@ -61,53 +66,48 @@
 
 // class constructor
 cbProject::cbProject(const wxString& filename)
-    : m_ActiveTarget(-1),
-    m_LastSavedActiveTarget(-1),
-    m_DefaultExecuteTarget(-1),
-    m_Makefile(_T("")),
-    m_CustomMakefile(false),
+    : m_CustomMakefile(false),
     m_Loaded(false),
     m_CurrentlyLoading(false),
-    m_BasePath(_T("")),
     m_PCHMode(pchSourceFile),
     m_CurrentlyCompilingTarget(0)
 {
     SetCompilerID(CompilerFactory::GetDefaultCompilerID());
     SetModified(false);
 
-	m_Files.Clear();
+    m_Files.Clear();
     if (!filename.IsEmpty() && wxFileExists(filename))
     {
-		// existing project
-		m_Filename = filename;
+        // existing project
+        m_Filename = filename;
         m_BasePath = GetBasePath();
         Open();
     }
     else
     {
-		// new project
+        // new project
         SetModified(true);
-		if (filename.IsEmpty())
-		{
-	        m_Filename = CreateUniqueFilename();
-    	    m_Loaded = SaveAs();
-		}
-		else
-		{
-	        m_Filename = filename;
-    	    m_Loaded = Save();
-		}
-		if (m_Loaded)
-		{
+        if (filename.IsEmpty())
+        {
+            m_Filename = CreateUniqueFilename();
+            m_Loaded = SaveAs();
+        }
+        else
+        {
+            m_Filename = filename;
+            m_Loaded = Save();
+        }
+        if (m_Loaded)
+        {
             wxFileName fname(m_Filename);
-			m_Title = fname.GetName();
+            m_Title = fname.GetName();
             m_BasePath = GetBasePath();
-			m_CommonTopLevelPath = GetBasePath() + wxFileName::GetPathSeparator();
+            m_CommonTopLevelPath = GetBasePath() + wxFileName::GetPathSeparator();
 
             // moved to ProjectManager::LoadProject()
             // see explanation there...
-//			NotifyPlugins(cbEVT_PROJECT_OPEN);
-		}
+//            NotifyPlugins(cbEVT_PROJECT_OPEN);
+        }
     }
 }
 
@@ -116,16 +116,16 @@ cbProject::~cbProject()
 {
     // moved to ProjectManager::CloseProject()
     // see explanation there...
-//	NotifyPlugins(cbEVT_PROJECT_CLOSE);
+//    NotifyPlugins(cbEVT_PROJECT_CLOSE);
 
-	ClearAllProperties();
+    ClearAllProperties();
 }
 
 void cbProject::NotifyPlugins(wxEventType type)
 {
-	CodeBlocksEvent event(type);
-	event.SetProject(this);
-	Manager::Get()->GetPluginManager()->NotifyPlugins(event);
+    CodeBlocksEvent event(type);
+    event.SetProject(this);
+    Manager::Get()->GetPluginManager()->NotifyPlugins(event);
 }
 
 void cbProject::SetCompilerID(const wxString& id)
@@ -169,14 +169,10 @@ void cbProject::SetCompilerID(const wxString& id)
 bool cbProject::GetModified()
 {
     // check base options
-	if (CompileOptionsBase::GetModified())
-		return true;
+    if (CompileOptionsBase::GetModified())
+        return true;
 
-    // check active target
-//    if (m_LastSavedActiveTarget != m_ActiveTarget)
-//        return true;
-
-	// check targets
+    // check targets
     for (unsigned int i = 0; i < m_Targets.GetCount(); ++i)
     {
         ProjectBuildTarget* target = m_Targets[i];
@@ -184,14 +180,14 @@ bool cbProject::GetModified()
             return true;
     }
 
-	return false;
+    return false;
 }
 
 void cbProject::SetModified(bool modified)
 {
-	CompileOptionsBase::SetModified(modified);
+    CompileOptionsBase::SetModified(modified);
 
-	// modify targets
+    // modify targets
     for (unsigned int i = 0; i < m_Targets.GetCount(); ++i)
     {
         ProjectBuildTarget* target = m_Targets[i];
@@ -218,27 +214,27 @@ wxString cbProject::CreateUniqueFilename()
     ProjectsArray* arr = Manager::Get()->GetProjectManager()->GetProjects();
     int projCount = arr->GetCount();
     int iter = 1;
-	bool ok = false;
+    bool ok = false;
     tmp << prefix << wxString::Format(_T("%d"), iter);
     while (!ok)
     {
         tmp.Clear();
         tmp << prefix << wxString::Format(_T("%d"), iter);
 
-		ok = true;
+        ok = true;
         for (int i = 0; i < projCount; ++i)
         {
             cbProject* prj = arr->Item(i);
             wxFileName fname(prj->GetFilename());
 
             if (fname.GetName().Matches(tmp))
-			{
-				ok = false;
+            {
+                ok = false;
                 break;
-			}
+            }
         }
-		if (ok)
-			break;
+        if (ok)
+            break;
         ++iter;
     }
     return tmp << _T(".") << FileFilters::CODEBLOCKS_EXT;
@@ -268,21 +264,21 @@ void cbProject::Open()
     m_Loaded = false;
     m_ProjectFilesMap.clear();
 
-	if (!wxFileName::FileExists(m_Filename))
-	{
+    if (!wxFileName::FileExists(m_Filename))
+    {
         wxString msg;
         msg.Printf(_("Project '%s' does not exist..."), m_Filename.c_str());
         cbMessageBox(msg, _("Error"), wxOK | wxCENTRE | wxICON_ERROR);
         return;
     }
 
-	bool fileUpgraded = false;
-	bool fileModified = false;
+    bool fileUpgraded = false;
+    bool fileModified = false;
     wxFileName fname(m_Filename);
-	FileType ft = FileTypeOf(m_Filename);
+    FileType ft = FileTypeOf(m_Filename);
     if (ft == ftCodeBlocksProject)
     {
-		Manager::Get()->GetMessageManager()->AppendLog(_("Opening %s: "), m_Filename.c_str());
+        Manager::Get()->GetMessageManager()->AppendLog(_("Opening %s: "), m_Filename.c_str());
         m_CurrentlyLoading = true;
         ProjectLoader loader(this);
         m_Loaded = loader.Open(m_Filename);
@@ -335,32 +331,31 @@ void cbProject::Open()
     }
 
     if (m_Loaded)
-	{
+    {
         CalculateCommonTopLevelPath();
-		Manager::Get()->GetMessageManager()->Log(_("done"));
-		if (!m_Targets.GetCount())
-			AddDefaultBuildTarget();
-		// in case of batch build discard upgrade messages
-		fileUpgraded = fileUpgraded && !Manager::IsBatchBuild();
-		SetModified(ft != ftCodeBlocksProject || fileUpgraded || fileModified);
+        Manager::Get()->GetMessageManager()->Log(_("done"));
+        if (!m_Targets.GetCount())
+            AddDefaultBuildTarget();
+        // in case of batch build discard upgrade messages
+        fileUpgraded = fileUpgraded && !Manager::IsBatchBuild();
+        SetModified(ft != ftCodeBlocksProject || fileUpgraded || fileModified);
 
-		// moved to ProjectManager::LoadProject()
-		// see explanation there...
-//		NotifyPlugins(cbEVT_PROJECT_OPEN);
+        // moved to ProjectManager::LoadProject()
+        // see explanation there...
+//        NotifyPlugins(cbEVT_PROJECT_OPEN);
 
-		if (fileUpgraded)
-		{
+        if (fileUpgraded)
+        {
             InfoWindow::Display(m_Title,
-              _("This project file was generated\n"
+              _("The loaded project file was generated\n"
                 "with an older version of Code::Blocks.\n\n"
                 "Code::Blocks can import older project files,\n"
-                "but will always save in the current format.\n\n"
-                "If you save this project, Code::Blocks will\n"
-                "upgrade it to the current version."), 12000, 2000);
+                "but will always save in the current format."), 12000, 2000);
         }
-	}
-	else
-		Manager::Get()->GetMessageManager()->Log(_("failed"));
+        m_LastModified = fname.GetModificationTime();
+    }
+    else
+        Manager::Get()->GetMessageManager()->Log(_("failed"));
 } // end of Open
 
 void cbProject::CalculateCommonTopLevelPath()
@@ -409,6 +404,11 @@ wxString cbProject::GetCommonTopLevelPath()
     return m_CommonTopLevelPath;
 }
 
+void cbProject::Touch()
+{
+    m_LastModified = wxDateTime::Now();
+}
+
 bool cbProject::SaveAs()
 {
     wxFileName fname;
@@ -439,11 +439,13 @@ bool cbProject::SaveAs()
         AddDefaultBuildTarget();
     ProjectLoader loader(this);
     if (loader.Save(m_Filename))
-	{
-		NotifyPlugins(cbEVT_PROJECT_SAVE);
-		return true;
-	}
-	return false;
+    {
+        wxFileName fname(m_Filename);
+        m_LastModified = fname.GetModificationTime();
+        NotifyPlugins(cbEVT_PROJECT_SAVE);
+        return true;
+    }
+    return false;
 }
 
 bool cbProject::Save()
@@ -452,11 +454,13 @@ bool cbProject::Save()
         return SaveAs();
     ProjectLoader loader(this);
     if (loader.Save(m_Filename))
-	{
-		NotifyPlugins(cbEVT_PROJECT_SAVE);
-		return true;
-	}
-	return false;
+    {
+        wxFileName fname(m_Filename);
+        m_LastModified = fname.GetModificationTime();
+        NotifyPlugins(cbEVT_PROJECT_SAVE);
+        return true;
+    }
+    return false;
 }
 
 bool cbProject::SaveLayout()
@@ -464,8 +468,8 @@ bool cbProject::SaveLayout()
     if (m_Filename.IsEmpty())
         return false;
 
-	wxFileName fname(m_Filename);
-	fname.SetExt(_T("layout"));
+    wxFileName fname(m_Filename);
+    fname.SetExt(_T("layout"));
     ProjectLayoutLoader loader(this);
     return loader.Save(fname.GetFullPath());
 }
@@ -503,21 +507,21 @@ bool cbProject::LoadLayout()
             ProjectLayoutLoader loader(this);
             if (loader.Open(fname.GetFullPath()))
             {
-            	typedef std::map<int, ProjectFile*> open_files_map;
-            	open_files_map open_files;
+                typedef std::map<int, ProjectFile*> open_files_map;
+                open_files_map open_files;
 
-            	// Get all files to open and sort them according to their tab-position:
+                // Get all files to open and sort them according to their tab-position:
                 FilesList::Node* node = m_Files.GetFirst();
                 while(node)
                 {
                     ProjectFile* f = node->GetData();
                     if (f->editorOpen)
-						open_files[f->editorTabPos] = f;
+                        open_files[f->editorTabPos] = f;
                     node = node->GetNext();
                 }
 
-				// Open all requested files:
-				for (open_files_map::iterator it = open_files.begin(); it != open_files.end(); ++it)
+                // Open all requested files:
+                for (open_files_map::iterator it = open_files.begin(); it != open_files.end(); ++it)
                 {
                     cbEditor* ed = Manager::Get()->GetEditorManager()->Open((*it).second->file.GetFullPath(),0,(*it).second);
                     if (ed)
@@ -530,10 +534,7 @@ bool cbProject::LoadLayout()
                     Manager::Get()->GetMessageManager()->DebugLog(_T("Top Editor: %s"),f->file.GetFullPath().c_str());
                     EditorBase* eb = Manager::Get()->GetEditorManager()->Open(f->file.GetFullPath());
                     if(eb)
-                    {
-                        Manager::Get()->GetProjectManager()->SetTopEditor(eb);
                         eb->Activate();
-                    }
                 }
 //                Manager::Get()->GetAppWindow()->Thaw();
             }
@@ -589,22 +590,16 @@ ProjectFile* cbProject::AddFile(int targetIndex, const wxString& filename, bool 
     // create file
     f = new ProjectFile(this);
     bool localCompile, localLink;
-    wxFileName fname;
+    wxFileName fname(filename);
     wxString ext;
 
-	f->project = this;
-	f->editorOpen = false;
-	f->editorPos = 0;
-	f->editorTopLine = 0;
-    f->weight = weight;
+    FileType ft = FileTypeOf(filename);
 
-	FileType ft = FileTypeOf(filename);
-	fname = filename; //UnixFilename(filename);
-	ext = filename.AfterLast(_T('.')).Lower();
-	if (ext.Matches(FileFilters::C_EXT) || ext.Matches(FileFilters::CC_EXT))
+    ext = filename.AfterLast(_T('.')).Lower();
+    if (ext.IsSameAs(FileFilters::C_EXT) || ext.IsSameAs(FileFilters::CC_EXT))
         f->compilerVar = _T("CC");
 #ifdef __WXMSW__
-	else if (ext.Matches(FileFilters::RESOURCE_EXT))
+    else if (ext.IsSameAs(FileFilters::RESOURCE_EXT))
         f->compilerVar = _T("WINDRES");
 #endif
     else
@@ -626,14 +621,14 @@ ProjectFile* cbProject::AddFile(int targetIndex, const wxString& filename, bool 
         f->AddBuildTarget(m_Targets[targetIndex]->GetTitle());
 
     localCompile = compile &&
-					(ft == ftSource ||
-					ft == ftResource);
+                    (ft == ftSource ||
+                    ft == ftResource);
     localLink = link &&
-				(ft == ftSource ||
-				ft == ftResource ||
-				ft == ftObject ||
-				ft == ftResourceBin ||
-				ft == ftStaticLib);
+                (ft == ftSource ||
+                ft == ftResource ||
+                ft == ftObject ||
+                ft == ftResourceBin ||
+                ft == ftStaticLib);
 
     f->compile = localCompile;
     f->link = localLink;
@@ -696,7 +691,7 @@ ProjectFile* cbProject::AddFile(int targetIndex, const wxString& filename, bool 
     else if (!wxFile::Access(fullFilename.c_str(), wxFile::write)) // readonly
         f->SetFileState(fvsReadOnly);
 
-	return f;
+    return f;
 }
 
 bool cbProject::RemoveFile(ProjectFile* pf)
@@ -728,7 +723,7 @@ bool cbProject::RemoveFile(ProjectFile* pf)
     delete pf;
 
     SetModified(true);
-	return true;
+    return true;
 }
 
 bool cbProject::RemoveFile(int index)
@@ -750,11 +745,13 @@ void cbProject::BuildTree(wxTreeCtrl* tree, const wxTreeItemId& root, bool categ
         return;
 
     int fldIdx = Manager::Get()->GetProjectManager()->FolderIconIndex();
+    int vfldIdx = Manager::Get()->GetProjectManager()->VirtualFolderIconIndex();
     int prjIdx = Manager::Get()->GetProjectManager()->ProjectIconIndex();
 
     //sort list of files
     m_Files.Sort(filesSort);
 
+    // add our project's root item
     FileTreeData* ftd = new FileTreeData(this, FileTreeData::ftdkProject);
     m_ProjectNode = tree->AppendItem(root, GetTitle(), prjIdx, prjIdx, ftd);
     wxTreeItemId others = m_ProjectNode;
@@ -773,6 +770,16 @@ void cbProject::BuildTree(wxTreeCtrl* tree, const wxTreeItemId& root, bool categ
         // add a default category "Others" for all non-matching file-types
         others = tree->AppendItem(m_ProjectNode, _("Others"), fldIdx, fldIdx);
     }
+    else
+    {
+        // add any virtual folders
+        for (size_t i = 0; i < m_VirtualFolders.GetCount(); ++i)
+        {
+            ftd = new FileTreeData(this, FileTreeData::ftdkVirtualFolder);
+            ftd->SetFolder(m_VirtualFolders[i]);
+            AddTreeNode(tree, m_VirtualFolders[i], m_ProjectNode, true, FileTreeData::ftdkVirtualFolder, true, vfldIdx, ftd);
+        }
+    }
 
     // iterate all project files and add them to the tree
     int count = 0;
@@ -783,6 +790,9 @@ void cbProject::BuildTree(wxTreeCtrl* tree, const wxTreeItemId& root, bool categ
         ftd->SetFileIndex(count++);
         ftd->SetProjectFile(f);
         ftd->SetFolder(f->file.GetFullPath());
+
+        wxString nodetext = f->relativeToCommonTopLevelPath;
+        FileTreeData::FileTreeDataKind folders_kind = FileTreeData::ftdkFolder;
 
         wxTreeItemId parentNode = m_ProjectNode;
         // check if files grouping is enabled and find the group parent
@@ -803,21 +813,34 @@ void cbProject::BuildTree(wxTreeCtrl* tree, const wxTreeItemId& root, bool categ
             if (!found)
                 parentNode = others;
         }
+
+        // virtual folders
+        if (!f->virtual_path.IsEmpty())
+        {
+            nodetext = f->virtual_path + wxFILE_SEP_PATH + f->file.GetFullName();
+            folders_kind = FileTreeData::ftdkVirtualFolder;
+            wxString slash = f->virtual_path.Last() == wxFILE_SEP_PATH ? _T("") : wxString(wxFILE_SEP_PATH);
+            ftd->SetFolder(f->virtual_path);
+
+            if (m_VirtualFolders.Index(f->virtual_path + slash) == wxNOT_FOUND)
+                m_VirtualFolders.Add(f->virtual_path + slash);
+        }
+
         // add file in the tree
-        f->m_TreeItemId = AddTreeNode(tree, f->relativeToCommonTopLevelPath, parentNode, useFolders, f->compile, (int)f->m_VisualState, ftd);
+        f->m_TreeItemId = AddTreeNode(tree, nodetext, parentNode, useFolders || folders_kind == FileTreeData::ftdkVirtualFolder, folders_kind, f->compile, (int)f->m_VisualState, ftd);
     }
 
-	// remove empty tree nodes (like empty groups)
+    // remove empty tree nodes (like empty groups)
     if (categorize && fgam)
     {
-		for (unsigned int i = 0; i < fgam->GetGroupsCount(); ++i)
-		{
-			if (tree->GetChildrenCount(pGroupNodes[i], false) == 0)
-				tree->Delete(pGroupNodes[i]);
-		}
-		if (tree->GetChildrenCount(others, false) == 0)
-			tree->Delete(others);
-	}
+        for (unsigned int i = 0; i < fgam->GetGroupsCount(); ++i)
+        {
+            if (tree->GetChildrenCount(pGroupNodes[i], false) == 0)
+                tree->Delete(pGroupNodes[i]);
+        }
+        if (tree->GetChildrenCount(others, false) == 0)
+            tree->Delete(others);
+    }
     delete[] pGroupNodes;
 
     tree->Expand(m_ProjectNode);
@@ -830,7 +853,7 @@ static wxString GetRelativeFolderPath(wxTreeCtrl* tree, wxTreeItemId parent)
     while (parent.IsOk())
     {
         FileTreeData* ftd = (FileTreeData*)tree->GetItemData(parent);
-        if (!ftd || ftd->GetKind() != FileTreeData::ftdkFolder)
+        if (!ftd || (ftd->GetKind() != FileTreeData::ftdkFolder && ftd->GetKind() != FileTreeData::ftdkVirtualFolder))
             break;
         fld.Prepend(tree->GetItemText(parent) + wxFILE_SEP_PATH);
         parent = tree->GetItemParent(parent);
@@ -838,13 +861,23 @@ static wxString GetRelativeFolderPath(wxTreeCtrl* tree, wxTreeItemId parent)
     return fld;
 }
 
-wxTreeItemId cbProject::AddTreeNode(wxTreeCtrl* tree, const wxString& text, const wxTreeItemId& parent, bool useFolders, bool compiles, int image, FileTreeData* data)
+wxTreeItemId cbProject::AddTreeNode(wxTreeCtrl* tree,
+                                    const wxString& text,
+                                    const wxTreeItemId& parent,
+                                    bool useFolders,
+                                    FileTreeData::FileTreeDataKind folders_kind,
+                                    bool compiles,
+                                    int image,
+                                    FileTreeData* data)
 {
     // see if the text contains any path info, e.g. plugins/compilergcc/compilergcc.cpp
     // in that case, take the first element (plugins in this example), create a sub-folder
     // with the same name and recurse with the result...
 
     wxTreeItemId ret;
+
+    if (text.IsEmpty())
+        return ret;
 
     wxString path = text;
 #ifdef __WXMSW__
@@ -859,6 +892,9 @@ wxTreeItemId cbProject::AddTreeNode(wxTreeCtrl* tree, const wxString& text, cons
     {
         // ok, we got it. now split it up and recurse
         wxString folder = path.Left(pos);
+        // avoid consecutive path separators
+        while (path.GetChar(pos + 1) == _T('/') || path.GetChar(pos + 1) == _T('\\'))
+            ++pos;
         path = path.Right(path.Length() - pos - 1);
 
         // see if we already have this path
@@ -877,62 +913,331 @@ wxTreeItemId cbProject::AddTreeNode(wxTreeCtrl* tree, const wxString& text, cons
         }
 
         if (!newparent)
-		{
-			// in order not to override wxTreeCtrl to sort alphabetically but the
-			// folders be always on top, we just search here where to put the new folder...
+        {
+            // in order not to override wxTreeCtrl to sort alphabetically but the
+            // folders be always on top, we just search here where to put the new folder...
             int fldIdx = Manager::Get()->GetProjectManager()->FolderIconIndex();
-#if (wxMAJOR_VERSION == 2) && (wxMINOR_VERSION < 5)
-            long int cookie2 = 0;
-#else
-            wxTreeItemIdValue cookie2; //2.6.0
-#endif
-			wxTreeItemId child = tree->GetFirstChild(parent, cookie2);
-			wxTreeItemId lastChild;
-			while (child)
-			{
-				if (tree->GetItemImage(child) == fldIdx)
-				{
-					if (folder.CompareTo(tree->GetItemText(child)) < 0)
-					{
-					    FileTreeData* ftd = new FileTreeData(*data);
-					    ftd->SetKind(FileTreeData::ftdkFolder);
-					    ftd->SetFolder(m_CommonTopLevelPath + GetRelativeFolderPath(tree, parent) + folder + wxFILE_SEP_PATH);
-					    ftd->SetProjectFile(0);
-						newparent = tree->InsertItem(parent, lastChild, folder, fldIdx, fldIdx, ftd);
-						break;
-					}
-				}
-				else
-				{
-                    FileTreeData* ftd = new FileTreeData(*data);
-                    ftd->SetKind(FileTreeData::ftdkFolder);
-                    ftd->SetFolder(m_CommonTopLevelPath + GetRelativeFolderPath(tree, parent) + folder + wxFILE_SEP_PATH);
-                    ftd->SetProjectFile(0);
-					newparent = tree->PrependItem(parent, folder, fldIdx, fldIdx, ftd);
-					break;
-				}
-				lastChild = child;
-				child = tree->GetNextChild(parent, cookie2);
-			}
-			if (!newparent)
-			{
-                FileTreeData* ftd = new FileTreeData(*data);
-                ftd->SetKind(FileTreeData::ftdkFolder);
+            int vfldIdx = Manager::Get()->GetProjectManager()->VirtualFolderIconIndex();
+
+            newparent = FindNodeToInsertAfter(tree, folder, parent, true);
+
+            FileTreeData* ftd = new FileTreeData(*data);
+            ftd->SetKind(folders_kind);
+            if (folders_kind != FileTreeData::ftdkVirtualFolder)
                 ftd->SetFolder(m_CommonTopLevelPath + GetRelativeFolderPath(tree, parent) + folder + wxFILE_SEP_PATH);
-                ftd->SetProjectFile(0);
-				newparent = tree->AppendItem(parent, folder, fldIdx, fldIdx, ftd);
-			}
-		}
-		//tree->SortChildren(parent);
-        ret = AddTreeNode(tree, path, newparent, true, compiles, image, data);
+            else
+                ftd->SetFolder(GetRelativeFolderPath(tree, parent) + folder + wxFILE_SEP_PATH);
+            ftd->SetProjectFile(0);
+            int idx = folders_kind != FileTreeData::ftdkVirtualFolder ? fldIdx : vfldIdx;
+            newparent = tree->InsertItem(parent, newparent, folder, idx, idx, ftd);
+        }
+        //tree->SortChildren(parent);
+        ret = AddTreeNode(tree, path, newparent, true, folders_kind, compiles, image, data);
     }
     else
-	{
+    {
         ret = tree->AppendItem(parent, text, image, image, data);
-		if (!compiles)
-			tree->SetItemTextColour(ret, wxColour(0x80, 0x80, 0x80));
-	}
-	return ret;
+        if (!compiles)
+            tree->SetItemTextColour(ret, wxSystemSettings::GetColour(wxSYS_COLOUR_GRAYTEXT));
+    }
+    return ret;
+}
+
+wxTreeItemId cbProject::FindNodeToInsertAfter(wxTreeCtrl* tree, const wxString& text, const wxTreeItemId& parent, bool in_folders)
+{
+    wxTreeItemId result;
+
+    if (tree && parent.IsOk())
+    {
+#if (wxMAJOR_VERSION == 2) && (wxMINOR_VERSION < 5)
+        long int cookie2 = 0;
+#else
+        wxTreeItemIdValue cookie2; //2.6.0
+#endif
+        int fldIdx = Manager::Get()->GetProjectManager()->FolderIconIndex();
+        int vfldIdx = Manager::Get()->GetProjectManager()->VirtualFolderIconIndex();
+        wxTreeItemId last;
+        bool last_is_folder = false;
+        wxTreeItemId child = tree->GetFirstChild(parent, cookie2);
+        while (child)
+        {
+            bool is_folder = tree->GetItemImage(child) == fldIdx || tree->GetItemImage(child) == vfldIdx;
+
+            if (in_folders)
+            {
+                if (!is_folder || text.CmpNoCase(tree->GetItemText(child)) < 0)
+                {
+                    result = last;
+                    break;
+                }
+            }
+            else
+            {
+                if (!is_folder && text.CmpNoCase(tree->GetItemText(child)) < 0)
+                {
+                    result = last;
+                    break;
+                }
+            }
+
+            last = child;
+            last_is_folder = is_folder;
+            child = tree->GetNextChild(parent, cookie2);
+        }
+        if (!result.IsOk())
+            result = last;
+    }
+
+    return result;
+}
+
+void cbProject::CopyTreeNodeRecursively(wxTreeCtrl* tree, const wxTreeItemId& item, const wxTreeItemId& new_parent)
+{
+    // first, some sanity checks
+    if (!tree || !item.IsOk() || !new_parent.IsOk())
+        return;
+
+    FileTreeData* ftd = (FileTreeData*)tree->GetItemData(item);
+    FileTreeData* ftd_moved = ftd ? new FileTreeData(*ftd) : 0;
+    int idx = tree->GetItemImage(item); // old image
+    wxColour col = tree->GetItemTextColour(item); // old colour
+
+    wxTreeItemId insert = FindNodeToInsertAfter(tree, tree->GetItemText(item), new_parent, ftd && ftd->GetKind() == FileTreeData::ftdkVirtualFolder);
+    wxTreeItemId target = tree->InsertItem(new_parent, insert, tree->GetItemText(item), idx, idx, ftd_moved);
+    tree->SetItemTextColour(target, col);
+
+    // recurse for folders
+    if (tree->ItemHasChildren(item))
+    {
+        // vfolder: recurse for files all contained files virtual path
+        wxTreeItemIdValue cookie;
+        wxTreeItemId child = tree->GetFirstChild(item, cookie);
+        while (child.IsOk())
+        {
+            CopyTreeNodeRecursively(tree, child, target);
+            child = tree->GetNextChild(item, cookie);
+        }
+    }
+
+    if (!tree->IsExpanded(new_parent))
+        tree->Expand(new_parent);
+
+    if (ftd_moved->GetProjectFile())
+        ftd_moved->GetProjectFile()->virtual_path = GetRelativeFolderPath(tree, new_parent);
+}
+
+const wxArrayString& cbProject::GetVirtualFolders() const
+{
+    return m_VirtualFolders;
+}
+
+void cbProject::SetVirtualFolders(const wxArrayString& folders)
+{
+    m_VirtualFolders = folders;
+}
+
+bool cbProject::CanDragNode(wxTreeCtrl* tree, wxTreeItemId node)
+{
+    // what item do we start dragging?
+    if (!node.IsOk())
+        return false;
+
+    // if no data associated with it, disallow
+    FileTreeData* ftd = (FileTreeData*)tree->GetItemData(node);
+    if (!ftd)
+        return false;
+
+    // if not ours, disallow
+    if (ftd->GetProject() != this)
+        return false;
+
+    // allow only if it is a file or a virtual folder
+    return ftd->GetKind() == FileTreeData::ftdkFile || ftd->GetKind() == FileTreeData::ftdkVirtualFolder;
+}
+
+bool cbProject::NodeDragged(wxTreeCtrl* tree, wxTreeItemId from, wxTreeItemId to)
+{
+    // what items did we drag?
+    if (!from.IsOk() || !to.IsOk())
+        return false;
+
+    // if no data associated with it, disallow
+    FileTreeData* ftd1 = (FileTreeData*)tree->GetItemData(from);
+    FileTreeData* ftd2 = (FileTreeData*)tree->GetItemData(to);
+    if (!ftd1 || !ftd2)
+        return false;
+
+    // if not ours, disallow
+    if (ftd1->GetProject() != this || ftd2->GetProject() != this)
+        return false;
+
+    // allow only if a file or vfolder was dragged on a file, another vfolder or the project itself
+    if ((ftd1->GetKind() != FileTreeData::ftdkFile &&
+        ftd1->GetKind() != FileTreeData::ftdkVirtualFolder) ||
+        (ftd2->GetKind() != FileTreeData::ftdkFile &&
+         ftd2->GetKind() != FileTreeData::ftdkVirtualFolder &&
+         ftd2->GetKind() != FileTreeData::ftdkProject))
+    {
+        return false;
+    }
+
+    // don't drag under the same parent
+    wxTreeItemId parent1 = ftd1->GetKind() == FileTreeData::ftdkFile ? tree->GetItemParent(from) : from;
+    wxTreeItemId parent2 = ftd2->GetKind() == FileTreeData::ftdkFile ? tree->GetItemParent(to) : to;
+    if (parent1 == parent2)
+        return false;
+
+    // finally; make the move
+    CopyTreeNodeRecursively(tree, from, parent2);
+    // remove old node
+    tree->Delete(from);
+
+    SetModified(true);
+
+    return true;
+}
+
+bool cbProject::VirtualFolderAdded(wxTreeCtrl* tree, wxTreeItemId parent_node, const wxString& virtual_folder)
+{
+    wxString foldername = GetRelativeFolderPath(tree, parent_node);
+    foldername << virtual_folder;
+    foldername.Replace(_T("/"), wxString(wxFILE_SEP_PATH), true);
+    foldername.Replace(_T("\\"), wxString(wxFILE_SEP_PATH), true);
+    if (foldername.Last() != wxFILE_SEP_PATH)
+        foldername << wxFILE_SEP_PATH;
+
+    for (size_t i = 0; i < m_VirtualFolders.GetCount(); ++i)
+    {
+        if (m_VirtualFolders[i].StartsWith(foldername))
+        {
+            cbMessageBox(_("A virtual folder with the same name already exists."),
+                        _("Error"), wxICON_WARNING);
+            return false;
+        }
+    }
+    m_VirtualFolders.Add(foldername);
+
+    FileTreeData* ftd = new FileTreeData(this, FileTreeData::ftdkVirtualFolder);
+    ftd->SetProjectFile(0);
+    ftd->SetFolder(foldername);
+
+    int vfldIdx = Manager::Get()->GetProjectManager()->VirtualFolderIconIndex();
+
+    AddTreeNode(tree, foldername, m_ProjectNode, true, FileTreeData::ftdkVirtualFolder, true, vfldIdx, ftd);
+    if (!tree->IsExpanded(parent_node))
+        tree->Expand(parent_node);
+
+    SetModified(true);
+
+//    DBGLOG(_T("VirtualFolderAdded: %s: %s"), foldername.c_str(), GetStringFromArray(m_VirtualFolders, _T(";")).c_str());
+    return true;
+}
+
+void cbProject::VirtualFolderDeleted(wxTreeCtrl* tree, wxTreeItemId node)
+{
+    // what item do we start dragging?
+    if (!node.IsOk())
+        return;
+
+    // if no data associated with it, disallow
+    FileTreeData* ftd = (FileTreeData*)tree->GetItemData(node);
+    if (!ftd)
+        return;
+
+    // if not ours, disallow
+    if (ftd->GetProject() != this)
+        return;
+
+    wxString foldername = GetRelativeFolderPath(tree, node);
+    wxString parent_foldername = GetRelativeFolderPath(tree, tree->GetItemParent(node));
+
+    // now loop all project files and remove them from this virtual folder
+    for (FilesList::Node* node = m_Files.GetFirst(); node; node = node->GetNext())
+    {
+        ProjectFile* f = node->GetData();
+        if (f && !f->virtual_path.IsEmpty())
+        {
+            if (f->virtual_path.StartsWith(foldername)) // need 2 checks because of last separator
+                f->virtual_path.Clear();
+        }
+    }
+
+    for (int i = (int)m_VirtualFolders.GetCount() - 1; i >= 0; --i)
+    {
+        if (m_VirtualFolders[i].StartsWith(foldername))
+            m_VirtualFolders.RemoveAt(i);
+    }
+    if (!parent_foldername.IsEmpty() && m_VirtualFolders.Index(parent_foldername) == wxNOT_FOUND)
+        m_VirtualFolders.Add(parent_foldername);
+
+    SetModified(true);
+//    DBGLOG(_T("VirtualFolderDeleted: %s: %s"), foldername.c_str(), GetStringFromArray(m_VirtualFolders, _T(";")).c_str());
+}
+
+bool cbProject::VirtualFolderRenamed(wxTreeCtrl* tree, wxTreeItemId node, const wxString& new_name)
+{
+    if (new_name.IsEmpty())
+        return false;
+
+    if (new_name.First(_T(';')) != wxNOT_FOUND ||
+        new_name.First(_T('/')) != wxNOT_FOUND ||
+        new_name.First(_T('\\')) != wxNOT_FOUND)
+    {
+        cbMessageBox(_("A virtual folder name cannot contain these special characters: \";\", \"\\\" or \"/\"."),
+                    _("Error"), wxICON_WARNING);
+        return false;
+    }
+
+    // what item are we renaming?
+    if (!node.IsOk())
+        return false;
+
+    // is it a different name?
+    if (tree->GetItemText(node) == new_name)
+        return false;
+
+    // if no data associated with it, disallow
+    FileTreeData* ftd = (FileTreeData*)tree->GetItemData(node);
+    if (!ftd)
+        return false;
+
+    // if not ours, disallow
+    if (ftd->GetProject() != this)
+        return false;
+
+    wxString old_foldername = GetRelativeFolderPath(tree, node);
+    wxString new_foldername = GetRelativeFolderPath(tree, tree->GetItemParent(node)) + new_name + wxFILE_SEP_PATH;
+
+    for (size_t i = 0; i < m_VirtualFolders.GetCount(); ++i)
+    {
+        if (m_VirtualFolders[i].StartsWith(new_foldername))
+        {
+            cbMessageBox(_("A virtual folder with the same name already exists."),
+                        _("Error"), wxICON_WARNING);
+            return false;
+        }
+    }
+    int idx = m_VirtualFolders.Index(old_foldername);
+    if (idx != wxNOT_FOUND)
+        m_VirtualFolders[idx] = new_foldername;
+    else
+        m_VirtualFolders.Add(new_foldername);
+
+    // now loop all project files and rename this virtual folder
+    for (FilesList::Node* node = m_Files.GetFirst(); node; node = node->GetNext())
+    {
+        ProjectFile* f = node->GetData();
+        if (f && !f->virtual_path.IsEmpty())
+        {
+            if (f->virtual_path.StartsWith(old_foldername))
+                f->virtual_path.Replace(old_foldername, new_foldername);
+        }
+    }
+
+    SetModified(true);
+
+//    DBGLOG(_T("VirtualFolderRenamed: %s to %s: %s"), old_foldername.c_str(), new_foldername.c_str(), GetStringFromArray(m_VirtualFolders, _T(";")).c_str());
+    return true;
 }
 
 void cbProject::RenameInTree(const wxString &newname)
@@ -945,20 +1250,20 @@ void cbProject::RenameInTree(const wxString &newname)
 
 void cbProject::SaveTreeState(wxTreeCtrl* tree)
 {
-	::SaveTreeState(tree, m_ProjectNode, m_ExpandedNodes);
+    ::SaveTreeState(tree, m_ProjectNode, m_ExpandedNodes);
 }
 
 void cbProject::RestoreTreeState(wxTreeCtrl* tree)
 {
-	::RestoreTreeState(tree, m_ProjectNode, m_ExpandedNodes);
+    ::RestoreTreeState(tree, m_ProjectNode, m_ExpandedNodes);
 }
 
 const wxString& cbProject::GetMakefile()
 {
-	if (!m_Makefile.IsEmpty())
-		return m_Makefile;
+    if (!m_Makefile.IsEmpty())
+        return m_Makefile;
 
-	wxFileName makefile(m_Makefile);
+    wxFileName makefile(m_Makefile);
     makefile.Assign(m_Filename);
     makefile.SetName(_T("Makefile"));
     makefile.SetExt(_T(""));
@@ -966,7 +1271,7 @@ const wxString& cbProject::GetMakefile()
 
     m_Makefile = makefile.GetFullPath();
 
-	return m_Makefile;
+    return m_Makefile;
 }
 
 ProjectFile* cbProject::GetFile(int index)
@@ -1026,13 +1331,13 @@ bool cbProject::QueryCloseAllFiles()
 
 bool cbProject::CloseAllFiles(bool dontsave)
 {
-	// first try to close modified editors
+    // first try to close modified editors
 
     if(!dontsave)
         if(!QueryCloseAllFiles())
             return false;
 
-	// now free the rest of the project files
+    // now free the rest of the project files
     Manager::Get()->GetEditorManager()->HideNotebook();
     FilesList::Node* node = m_Files.GetFirst();
     while(node)
@@ -1082,14 +1387,14 @@ bool cbProject::ShowOptions()
 
 int cbProject::SelectTarget(int initial, bool evenIfOne)
 {
-	if (!evenIfOne && GetBuildTargetsCount() == 1)
-		return 0;
+    if (!evenIfOne && GetBuildTargetsCount() == 1)
+        return 0;
 
-	SelectTargetDlg dlg(0L, this, initial);
+    SelectTargetDlg dlg(0L, this, initial);
     PlaceWindow(&dlg);
-	if (dlg.ShowModal() == wxID_OK)
-		return dlg.GetSelection();
-	return -1;
+    if (dlg.ShowModal() == wxID_OK)
+        return dlg.GetSelection();
+    return -1;
 }
 
 // Build targets
@@ -1110,6 +1415,13 @@ ProjectBuildTarget* cbProject::AddBuildTarget(const wxString& targetName)
     target->SetObjectOutput(_T(".objs"));
     target->SetDepsOutput(_T(".deps"));
     m_Targets.Add(target);
+
+    // remove any virtual targets with the same name
+    if (HasVirtualBuildTarget(targetName))
+    {
+        RemoveVirtualBuildTarget(targetName);
+        Manager::Get()->GetMessageManager()->DebugLogWarning(_T("Deleted existing virtual target '%s' because real target was added with the same name"), targetName.c_str());
+    }
 
     SetModified(true);
 
@@ -1231,7 +1543,7 @@ bool cbProject::RemoveBuildTarget(const wxString& targetName)
     return RemoveBuildTarget(IndexOfBuildTargetName(targetName));
 }
 
-int cbProject::IndexOfBuildTargetName(const wxString& targetName)
+int cbProject::IndexOfBuildTargetName(const wxString& targetName) const
 {
     for (unsigned int i = 0; i < m_Targets.GetCount(); ++i)
     {
@@ -1242,48 +1554,56 @@ int cbProject::IndexOfBuildTargetName(const wxString& targetName)
     return -1;
 }
 
-bool cbProject::SetActiveBuildTarget(int index)
+bool cbProject::BuildTargetValid(const wxString& name, bool virtuals_too) const
 {
-    if (index < -1 || index >= GetBuildTargetsCount())
-        return false;
-    if (index == m_ActiveTarget)
+    if (virtuals_too && HasVirtualBuildTarget(name))
         return true;
-    m_ActiveTarget = index;
-    return true;
+    else if (IndexOfBuildTargetName(name) != -1)
+        return true;
+    return false;
 }
 
-int cbProject::GetActiveBuildTarget()
+wxString cbProject::GetFirstValidBuildTargetName(bool virtuals_too) const
 {
-    if (m_ActiveTarget < -1 || m_ActiveTarget >= (int)m_Targets.GetCount())
-        m_ActiveTarget = -1;
+    if (virtuals_too && !m_VirtualTargets.empty())
+        return m_VirtualTargets.begin()->first;
+    else if (m_Targets.GetCount() && m_Targets[0])
+        return m_Targets[0]->GetTitle();
+
+    return wxEmptyString;
+}
+
+bool cbProject::SetActiveBuildTarget(const wxString& name)
+{
+    if (name == m_ActiveTarget)
+        return true;
+    m_ActiveTarget = name;
+
+    if (BuildTargetValid(name))
+        return true;
+
+    // no target (virtual or real) by that name
+
+    m_ActiveTarget = GetFirstValidBuildTargetName();
+    return false;
+}
+
+const wxString& cbProject::GetActiveBuildTarget() const
+{
     return m_ActiveTarget;
 }
 
-void cbProject::SetDefaultExecuteTargetIndex(int index)
+void cbProject::SetDefaultExecuteTarget(const wxString& name)
 {
-    if (m_DefaultExecuteTarget != index)
-    {
-        m_DefaultExecuteTarget = index;
-        SetModified(true);
-    }
+    if (name == m_DefaultExecuteTarget)
+        return;
+
+    m_DefaultExecuteTarget = name;
+    SetModified(true);
 }
 
-int cbProject::GetDefaultExecuteTargetIndex()
+const wxString& cbProject::GetDefaultExecuteTarget() const
 {
-    if (m_DefaultExecuteTarget == -1)
-    {
-        // first-time: find the first target that provides executable...
-        for (unsigned int i = 0; i < m_Targets.GetCount(); ++i)
-        {
-            ProjectBuildTarget* target = m_Targets[i];
-            if (target->GetTargetType() == ttExecutable ||
-                target->GetTargetType() == ttConsoleOnly)
-            {
-                m_DefaultExecuteTarget = i;
-                break;
-            }
-        }
-    }
     return m_DefaultExecuteTarget;
 }
 
@@ -1327,6 +1647,120 @@ void cbProject::ReOrderTargets(const wxArrayString& nameOrder)
 void cbProject::SetCurrentlyCompilingTarget(ProjectBuildTarget* bt)
 {
     m_CurrentlyCompilingTarget = bt;
+}
+
+bool cbProject::DefineVirtualBuildTarget(const wxString& alias, const wxArrayString& targets)
+{
+    if (targets.GetCount() == 0)
+    {
+        Manager::Get()->GetMessageManager()->DebugLogWarning(_T("Can't define virtual build target '%s': Group of build targets is empty!"), alias.c_str());
+        return false;
+    }
+
+    ProjectBuildTarget* existing = GetBuildTarget(alias);
+    if (existing)
+    {
+        Manager::Get()->GetMessageManager()->DebugLogWarning(_T("Can't define virtual build target '%s': Real build target exists with that name!"), alias.c_str());
+        return false;
+    }
+
+    m_VirtualTargets[alias] = targets;
+    SetModified(true);
+    NotifyPlugins(cbEVT_PROJECT_TARGETS_MODIFIED);
+    return true;
+}
+
+bool cbProject::HasVirtualBuildTarget(const wxString& alias) const
+{
+    return m_VirtualTargets.find(alias) != m_VirtualTargets.end();
+}
+
+bool cbProject::RemoveVirtualBuildTarget(const wxString& alias)
+{
+    VirtualBuildTargetsMap::iterator it = m_VirtualTargets.find(alias);
+    if (it == m_VirtualTargets.end())
+        return false;
+
+    m_VirtualTargets.erase(it);
+    SetModified(true);
+    NotifyPlugins(cbEVT_PROJECT_TARGETS_MODIFIED);
+    return true;
+}
+
+wxArrayString cbProject::GetVirtualBuildTargets() const
+{
+    wxArrayString result;
+    for (VirtualBuildTargetsMap::const_iterator it = m_VirtualTargets.begin(); it != m_VirtualTargets.end(); ++it)
+        result.Add(it->first);
+    return result;
+}
+
+const wxArrayString& cbProject::GetVirtualBuildTargetGroup(const wxString& alias) const
+{
+    static wxArrayString resultIfError;
+
+    VirtualBuildTargetsMap::const_iterator it = m_VirtualTargets.find(alias);
+    if (it == m_VirtualTargets.end())
+        return resultIfError;
+    return it->second;
+}
+
+wxArrayString cbProject::GetExpandedVirtualBuildTargetGroup(const wxString& alias) const
+{
+    wxArrayString result;
+
+    VirtualBuildTargetsMap::const_iterator it = m_VirtualTargets.find(alias);
+    if (it == m_VirtualTargets.end())
+        return result;
+
+    ExpandVirtualBuildTargetGroup(alias, result);
+    return result;
+}
+
+bool cbProject::CanAddToVirtualBuildTarget(const wxString& alias, const wxString& target)
+{
+    // virtual not there?
+    if (!HasVirtualBuildTarget(alias))
+        return false;
+
+    // real targets can be added safely (as long as they 're unique)
+    if (!HasVirtualBuildTarget(target))
+        return true;
+
+    // virtual targets are checked in two ways:
+    // 1) it is checked if it contains alias
+    // 2) all its virtual targets are recursively checked if they contain alias
+    const wxArrayString& group = GetVirtualBuildTargetGroup(target);
+    if (group.Index(alias) != wxNOT_FOUND)
+        return false;
+
+    for (size_t i = 0; i < group.GetCount(); ++i)
+    {
+        // only virtuals
+        if (HasVirtualBuildTarget(group[i]))
+        {
+            if (!CanAddToVirtualBuildTarget(group[i], alias))
+                return false;
+        }
+    }
+    return true;
+}
+
+void cbProject::ExpandVirtualBuildTargetGroup(const wxString& alias, wxArrayString& result) const
+{
+    const wxArrayString& group = GetVirtualBuildTargetGroup(alias);
+    for (size_t i = 0; i < group.GetCount(); ++i)
+    {
+        // real targets get added
+        if (IndexOfBuildTargetName(group[i]) != -1)
+        {
+            if (result.Index(group[i]) == wxNOT_FOUND)
+                result.Add(group[i]);
+        }
+        // virtual targets recurse
+        else
+            ExpandVirtualBuildTargetGroup(group[i], result);
+    }
 }
 
 #ifdef USE_OPENFILES_TREE

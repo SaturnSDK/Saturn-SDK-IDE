@@ -15,7 +15,10 @@
 namespace ScriptBindings
 {
     // global funcs
-    void gDebugLog(const wxString& msg){ DBGLOG(msg); }
+    void gDebugLog(const wxString& msg){ Manager::Get()->GetMessageManager()->DebugLog(msg); }
+    void gErrorLog(const wxString& msg){ Manager::Get()->GetMessageManager()->DebugLogError(msg); }
+    void gWarningLog(const wxString& msg){ Manager::Get()->GetMessageManager()->DebugLogWarning(msg); }
+    void gLog(const wxString& msg){ Manager::Get()->GetMessageManager()->Log(msg); }
     int gMessage(const wxString& msg, const wxString& caption, int buttons){ return cbMessageBox(msg, caption, buttons); }
     void gShowMessage(const wxString& msg){ cbMessageBox(msg, _("Script message")); }
     void gShowMessageWarn(const wxString& msg){ cbMessageBox(msg, _("Script warning"), wxICON_WARNING); }
@@ -48,11 +51,19 @@ namespace ScriptBindings
         static CompilerFactory cf; // all its members are static functions anyway
         return &cf;
     }
+    UserVariableManager* getUVM()
+    {
+        return Manager::Get()->GetUserVariableManager();
+    }
 
     void Register_Globals()
     {
         // global funcs
-        SqPlus::RegisterGlobal(gDebugLog, "Log");
+        SqPlus::RegisterGlobal(gLog, "Log");
+        SqPlus::RegisterGlobal(gDebugLog, "LogDebug");
+        SqPlus::RegisterGlobal(gWarningLog, "LogWarning");
+        SqPlus::RegisterGlobal(gErrorLog, "LogError");
+
         SqPlus::RegisterGlobal(gMessage, "Message");
         SqPlus::RegisterGlobal(gShowMessage, "ShowMessage");
         SqPlus::RegisterGlobal(gShowMessageWarn, "ShowWarning");
@@ -63,7 +74,11 @@ namespace ScriptBindings
         SqPlus::RegisterGlobal(getPM, "GetProjectManager");
         SqPlus::RegisterGlobal(getEM, "GetEditorManager");
         SqPlus::RegisterGlobal(getCM, "GetConfigManager");
+        SqPlus::RegisterGlobal(getUVM, "GetUserVariableManager");
         SqPlus::RegisterGlobal(getCF, "GetCompilerFactory");
+
+        SqPlus::RegisterGlobal(ConfigManager::GetFolder, "GetFolder");
+        SqPlus::RegisterGlobal(ConfigManager::LocateDataFile, "LocateDataFile");
 
         SquirrelVM::CreateFunctionGlobal(IsNull, "IsNull", "*");
     }

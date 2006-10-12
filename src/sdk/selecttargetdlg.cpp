@@ -25,23 +25,26 @@
 */
 
 #include "sdk_precomp.h"
-
-
 #ifndef CB_PRECOMP
-    #include <wx/xrc/xmlres.h>
-    #include <wx/intl.h>
-    #include <wx/checkbox.h>
     #include <wx/button.h>
-    #include <wx/textctrl.h>
+    #include <wx/checkbox.h>
+    #include <wx/filename.h>
+    #include <wx/intl.h>
     #include <wx/listbox.h>
-#endif
+    #include <wx/textctrl.h>
+    #include <wx/xrc/xmlres.h>
 
+    #include "projectbuildtarget.h"
+    #include "cbproject.h"
+#endif
+#include <wx/filedlg.h>
 #include "selecttargetdlg.h"
 
 BEGIN_EVENT_TABLE(SelectTargetDlg, wxDialog)
 	EVT_CHECKBOX(XRCID("chkSetAsDefaultExec"), SelectTargetDlg::OnCheckboxSelection)
 	EVT_LISTBOX(XRCID("lstItems"), SelectTargetDlg::OnListboxSelection)
 	EVT_LISTBOX_DCLICK(XRCID("lstItems"), SelectTargetDlg::OnOK)
+	EVT_BUTTON(XRCID("btnHostApplication"),	SelectTargetDlg::OnHostApplicationButtonClick)
 END_EVENT_TABLE()
 
 SelectTargetDlg::SelectTargetDlg(wxWindow* parent, cbProject* project, int selected)
@@ -58,7 +61,7 @@ SelectTargetDlg::SelectTargetDlg(wxWindow* parent, cbProject* project, int selec
 		ProjectBuildTarget* target = m_pProject->GetBuildTarget(i);
 		list->Append(target->GetTitle());
 	}
-	list->SetSelection(m_pProject->GetDefaultExecuteTargetIndex());
+	list->SetSelection(list->FindString(m_pProject->GetDefaultExecuteTarget()));
 
 	UpdateSelected();
 	XRCCTRL(*this, "wxID_OK", wxButton)->MoveBeforeInTabOrder (XRCCTRL(*this, "lstItems", wxListBox));
@@ -71,43 +74,60 @@ SelectTargetDlg::~SelectTargetDlg()
 
 void SelectTargetDlg::UpdateSelected()
 {
-    int idx = XRCCTRL(*this, "lstItems", wxListBox)->GetSelection();
-	ProjectBuildTarget* target = m_pProject->GetBuildTarget(idx);
+    wxString name = XRCCTRL(*this, "lstItems", wxListBox)->GetStringSelection();
+	ProjectBuildTarget* target = m_pProject->GetBuildTarget(name);
 	if (target)
 	{
-        XRCCTRL(*this, "chkSetAsDefaultExec", wxCheckBox)->SetValue(idx == m_pProject->GetDefaultExecuteTargetIndex());
+        XRCCTRL(*this, "chkSetAsDefaultExec", wxCheckBox)->SetValue(name == m_pProject->GetDefaultExecuteTarget());
 		XRCCTRL(*this, "txtParams", wxTextCtrl)->SetValue(target->GetExecutionParameters());
 		XRCCTRL(*this, "txtHostApp", wxTextCtrl)->SetValue(target->GetHostApplication());
-#if 0
-		bool en = target->GetTargetType() == ttExecutable ||
-				target->GetTargetType() == ttConsoleOnly ||
-				((target->GetTargetType() == ttDynamicLib ||
-					target->GetTargetType() == ttStaticLib) &&
-					!target->GetHostApplication().IsEmpty());
-		XRCCTRL(*this, "btnOK", wxButton)->Enable(en);
-#endif
 	}
-#if 0
-	else
-		XRCCTRL(*this, "btnOK", wxButton)->Enable(false);
-#endif
+	XRCCTRL(*this, "wxID_OK", wxButton)->Enable(target);
+} // end of UpdateSelected
+
+ProjectBuildTarget* SelectTargetDlg::GetSelectionTarget()
+{
+    return m_pProject->GetBuildTarget(m_Selected);
 }
 
 // events
 
-void SelectTargetDlg::OnListboxSelection(wxCommandEvent& event)
+void SelectTargetDlg::OnListboxSelection(wxCommandEvent& /*event*/)
 {
 	UpdateSelected();
-}
+} // end of OnListboxSelection
 
-void SelectTargetDlg::OnCheckboxSelection(wxCommandEvent& event)
+void SelectTargetDlg::OnCheckboxSelection(wxCommandEvent& /*event*/)
 {
     if (XRCCTRL(*this, "chkSetAsDefaultExec", wxCheckBox)->GetValue())
     {
-        int idx = XRCCTRL(*this, "lstItems", wxListBox)->GetSelection();
-        m_pProject->SetDefaultExecuteTargetIndex(idx);
+        wxString name = XRCCTRL(*this, "lstItems", wxListBox)->GetStringSelection();
+        m_pProject->SetDefaultExecuteTarget(name);
     }
-}
+} // end of OnCheckboxSelection
+
+void SelectTargetDlg::OnHostApplicationButtonClick(wxCommandEvent& /*event*/)
+{
+    if(wxTextCtrl* obj = XRCCTRL(*this, "txtHostApp", wxTextCtrl))
+    {
+        wxFileDialog* dlg = new wxFileDialog(this,
+                            _("Select host application"),
+                            _T(""),
+                            obj->GetValue(),
+                            #ifdef __WXMSW__
+                            _("Executable files (*.exe)|*.exe"),
+                            #else
+                            _("All files (*)|*"),
+                            #endif
+                            wxOPEN | wxFILE_MUST_EXIST | wxHIDE_READONLY);
+        dlg->SetFilterIndex(0);
+        PlaceWindow(dlg);
+        if (dlg->ShowModal() != wxID_OK)
+            return;
+        wxFileName fname(dlg->GetPath());
+        obj->SetValue(fname.GetFullName());
+    }
+} // end of OnHostApplicationButtonClick
 
 void SelectTargetDlg::EndModal(int retCode)
 {

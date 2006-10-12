@@ -38,6 +38,8 @@
 
 
 
+
+
 // class definition for wxKeyProfile
 IMPLEMENT_CLASS(wxKeyProfile, wxKeyBinder)
 
@@ -137,7 +139,7 @@ wxCmd::wxCmdType wxCmd::m_arrCmdType[];
 wxArrayString wxKeyBinder::usableWindows;                    //+v0.4.4
 //window used by AttachRecursively, App.TopWindow
 wxWindow* mainAppWindow = 0;
-
+extern wxString* pKeyFilename;
 
 
 // ----------------------------------------------------------------------------
@@ -453,11 +455,14 @@ wxString wxKeyBind::KeyModifierToString(int keyModifier)
     wxString result;
 
     if (keyModifier & wxACCEL_CTRL)
-        result += wxT("Ctrl+");
+        //result += wxT("Ctrl+");   //CB uses dashes
+        result += wxT("Ctrl-");
     if (keyModifier & wxACCEL_ALT)
-        result += wxT("Alt+");
+        //result += wxT("Alt+");   //CB uses dashes
+        result += wxT("Alt-");
     if (keyModifier & wxACCEL_SHIFT)
-        result += wxT("Shift+");
+        //result += wxT("Shift+");   //CB uses dashes
+        result += wxT("Shift-");
 
     return result;
 }
@@ -575,7 +580,7 @@ wxCmd::wxCmdType *wxCmd::FindCmdType(int type)
 //	return ret;
 //}
 // --+v0.3---------------------------------------------------------------------
-wxCmd *wxCmd::CreateNew(wxString cmdName, int type, int id)
+wxCmd *wxCmd::CreateNew(wxString cmdName, int type, int id, bool updateMnu)
 // ----------------------------------------------------------------------------
 {//+v0.3
 	wxCmdType *found = FindCmdType(type);
@@ -590,7 +595,7 @@ wxCmd *wxCmd::CreateNew(wxString cmdName, int type, int id)
 	wxCmd *ret = fnc(cmdName, id);
 	wxASSERT(ret);			// for debug builds
 	if (!ret) return NULL;	// for release builds
-	ret->Update();
+	if (updateMnu) ret->Update();
 
 	return ret;
 }
@@ -781,7 +786,204 @@ bool wxBinderApp::IsChildOf(wxWindow *parent, wxWindow *child)
 // ----------------------------------------------------------------------------
 //  wxKeyBinder
 // ----------------------------------------------------------------------------
-void wxKeyBinder::UpdateAllCmd(wxMenuBar* pMnuBar) {     //v0.4.17
+void wxKeyBinder::GetMenuItemAccStr(wxMenuItem* pMenuItem, wxString& MenuItemKeyStr)
+// ----------------------------------------------------------------------------
+{
+    MenuItemKeyStr = wxEmptyString;
+    wxAcceleratorEntry* pAcc = pMenuItem->GetAccel();
+    if (pAcc)
+    {   MenuItemKeyStr = wxKeyBind::KeyModifierToString(pAcc->GetFlags())
+            + wxKeyBind::KeyCodeToString(pAcc->GetKeyCode()) ;
+    }
+
+    if (pAcc) delete pAcc;
+
+}//GetMenuItemAccStr
+// ----------------------------------------------------------------------------
+int wxKeyBinder::MergeSubMenu(wxMenu* pMenu, int& modified)           //+v0.4.25
+// ----------------------------------------------------------------------------
+{
+    // Recursively scan & record dynamically changed submenu items
+
+    int changed = 0;
+    size_t itemKnt = pMenu->GetMenuItemCount();
+    for (size_t j=0; j<itemKnt; j++ )
+    {
+        // check each item on this subMenu
+        wxMenuItem* pMenuItem = pMenu->FindItemByPosition(j);
+        // recursively walk down to deepest submenu
+        if ( pMenuItem->GetSubMenu() )
+            MergeSubMenu( pMenuItem->GetSubMenu(), modified );
+        //---------------------------
+        // Now at deepest menu items
+        //---------------------------
+        // skip separater menu items
+        if (pMenuItem->GetKind() == wxITEM_SEPARATOR) continue;
+
+        int nMenuItemID = pMenuItem->GetId();
+
+        // Skip any menu items beginning with numerics
+        //if (menuItemText.Left(1).IsNumber()) continue;
+        //if ( (menuItemText[0] == '&') && (menuItemText.Mid(1,1).IsNumber()) )
+        //    continue;
+        if (wxMenuCmd::IsNumericMenuItem(pMenuItem)) continue;
+
+        //-wxString menuItemText = pMenuItem->GetText();
+        // Find matching menu item in keybinder array of commands
+        wxCmd*  pCmd = 0;
+        changed = 0;
+        wxString menuItemLabel = pMenuItem->GetLabel();
+        //-wxString menuItemKeyStr = pMenuItem->GetText().AfterFirst('\t');
+        //^^ This will not work on wxGTK. GTK GetText() doesn't contain the shortcut
+        wxString menuItemKeyStr;
+        GetMenuItemAccStr(pMenuItem, menuItemKeyStr);
+
+        // Find app menu item in our command array
+        if ( (pCmd = GetCmd(nMenuItemID)) )
+        {   // menu id found in KeyProfile Array
+            // Has the menuitem Label changed?
+            if ( pCmd->GetName().Trim() != menuItemLabel.Trim() )
+               changed = 1;
+            // Has the menuitem key or cmdArray key or both changed?
+            if (menuItemKeyStr.IsEmpty() != (pCmd->GetShortcutCount()==0) )
+                changed = 2;
+            if (pCmd->GetShortcutCount()
+                && (GetShortcutStr(nMenuItemID,0) != menuItemKeyStr)  )
+               changed = 3;
+            if (changed)
+            {
+                #ifdef LOGGING
+                 LOGIT( _T("MnmLabel[%s] MnuKey[%s]"), menuItemLabel.GetData(), menuItemKeyStr.GetData() );
+                 int n = pCmd->GetShortcutCount();
+                 LOGIT( _T("arrLabel[%s] arrKey[%s]"), pCmd->GetName().GetData(),
+                        n?GetShortcutStr(nMenuItemID,0).GetData():wxEmptyString );
+                #endif //LOGGING
+            }
+        }//fi
+        else{// menu item not found in KeyProfileArray
+            changed = 4;
+        }//esle
+
+        if ( changed )
+        {   // menu item has been changed dynamically by core or plugins
+            // remove old dynamic menu item from wxKeyProfileArray
+            // update wxKeyProfileArray with dynamically changed menu item
+
+            // if the key bind was owned by other commands, remove the binding
+            wxCmd *p = 0;
+            while ((p = GetCmdBindTo(menuItemKeyStr) ))
+            {
+                // another command already owns this key bind...
+                wxKeyBind tmp(menuItemKeyStr);
+                int n;
+                if (p->IsBindTo(tmp, &n))
+                {   // remove array entry, but not actual menuitem key
+                    //p->RemoveShortcut(n, false);
+                    // ^^Have to update anyway else app menu items and array
+                    //   menu items will never match causing constant update overhead
+                    p->RemoveShortcut(n, true);
+                }
+            }//endwhile
+            // if changed < 4, remove the existing mis-matching wxCmd entry
+            if (changed<4)
+            {   // remove pre-existing mis-matching wxCmd
+                RemoveCmd(pCmd);
+            }
+            // add the missing menu item as a wxCmd and update app menu items
+            pCmd = wxCmd::CreateNew(menuItemLabel, wxMENUCMD_TYPE, nMenuItemID, false);            if (not pCmd) { //CreateNew command did not allocate                LOGIT(wxT("Merge:CreateNew refused to allocate the new wxCmd"));                LOGIT(wxT("Label[%s],ID[%d]"), menuItemLabel.GetData(), nMenuItemID);                return modified;            }
+            pCmd->m_strName = menuItemLabel;
+            pCmd->m_strDescription = pMenuItem->GetHelp();
+            AddCmd (pCmd);
+            //*error* add shortcut without updateing menu item
+            //*error* AddShortcut(nMenuItemID, menuItemKeyStr, false );
+            // ^^Have to update anyway else app menu items and array
+            //   menu items will never match causing constant update overhead
+            AddShortcut(nMenuItemID, menuItemKeyStr, true );
+            #ifdef LOGGING
+             LOGIT(wxT("Merge changed[%d]:%d:%d:%p:[%s]"), changed, j, nMenuItemID, pMenuItem, pMenuItem->GetText().GetData() );
+            #endif
+        }//if
+        else
+        {   // menu item has not changed
+            #ifdef LOGGING
+             //LOGIT(wxT("Merge:NoChange:%d:%d:%p:%s"),j,nMenuItemID,pMenuItem,pMenuItem->GetText().GetData() );
+            #endif
+        }
+        // count changed array wxCmd items
+        modified += (changed NOT_EQUAL 0) ;
+    }//rof
+    return modified;
+}//mergeSubmenu
+// ----------------------------------------------------------------------------
+int wxKeyBinder::MergeDynamicMenuItems(wxMenuBar* pMenuBar)     //v0.4.25
+// ----------------------------------------------------------------------------
+{
+	// Merge any new/dynamic CB Menu/Key items into the current wxKeyProfileArray
+	// CB's plugins etc can add/change menu items and key assignments
+	// cf: Help plugin which dynamically switches F1 assignment
+    int changed = 0;
+    if (m_arrHandlers.GetCount() == 0)
+        return false;	// we are not attached to any window... we can skip
+                        // this update...
+
+
+   //menu bar item count (level 1)
+    size_t nLevel1Knt = pMenuBar->GetMenuCount();
+    for (size_t i=0; i < nLevel1Knt ;i++ )
+    {
+        wxMenu* pMenu = pMenuBar->GetMenu(i);
+        MergeSubMenu(pMenu, changed);
+    }//rof
+    #ifdef LOGGING
+     //LOGIT( _T("MergeDynamicMenuItems() modified %d items"), changed );
+    #endif //LOGGING
+    // return true any menu items changed
+    return (changed);
+
+}//MergeDynamicMenuItems
+// ----------------------------------------------------------------------------
+void wxKeyBinder::UpdateSubMenu(wxMenu* pMenu)                  //+v0.4.24
+// ----------------------------------------------------------------------------
+{
+    // Recursively update shortcut keys for sub menu items
+
+    size_t itemKnt = pMenu->GetMenuItemCount();
+    for (size_t j=0; j<itemKnt; j++ )
+    {
+        // check each item on this subMenu
+        wxMenuItem* pMenuItem = pMenu->FindItemByPosition(j);
+        // recursively walk down to deepest submenu
+        if ( pMenuItem->GetSubMenu() )
+            UpdateSubMenu( pMenuItem->GetSubMenu() );
+        // Now at deepest menu items
+        int nMenuItemID = pMenuItem->GetId();
+        // Find item in array of keybinder commands
+        int k=0;
+        if ( -1 != ( k = FindCmd(nMenuItemID) ) )
+        {
+            wxString menuItemKeyStr;
+            GetMenuItemAccStr(pMenuItem, menuItemKeyStr);
+            #ifdef LOGGING
+             LOGIT(wxT("UpdateAllCmd:on:%d:%d:%p:[%s] key[%s]"),
+                    j,k,pMenuItem,pMenuItem->GetLabel().GetData(), menuItemKeyStr.GetData() );
+            #endif
+            m_arrCmd.Item(k)->Update(pMenuItem);
+            // ** pMenuItem will be invalid now if item was destroyed/created/updated **
+            //^^Above applies only to update() code used with wxWidgets 2.6.2,now deprecated
+        }
+        else{
+            if (not (pMenuItem->GetKind() == wxITEM_SEPARATOR)
+                && (not wxMenuCmd::IsNumericMenuItem(pMenuItem)) )
+            {
+                #ifdef LOGGING
+                 LOGIT(wxT("UpdateAllCmd:Failed on:%d:%d:%p:%s"),j,k,pMenuItem,pMenuItem->GetText().GetData() );
+                #endif
+            }
+        }
+    }//rof
+}//updateSubmenu
+// ----------------------------------------------------------------------------
+void wxKeyBinder::UpdateAllCmd(wxMenuBar* pMenuBar) {     //v0.4.17
 // ----------------------------------------------------------------------------
 	//! Updates all the commands on the menu
     if (m_arrHandlers.GetCount() == 0)
@@ -801,32 +1003,14 @@ void wxKeyBinder::UpdateAllCmd(wxMenuBar* pMnuBar) {     //v0.4.17
     // But this missed duplicate menu items, updating only the first duplicate.
     // So.. search, referencing the menu items as source, and update.;
 
-    size_t nMnuKnt = pMnuBar->GetMenuCount();
-    for (size_t i=0; i<nMnuKnt ;i++ )
-    {   wxMenu* pMnu = pMnuBar->GetMenu(i);
-           size_t nItemKnt = pMnu->GetMenuItemCount();
-           for (size_t j=0; j<nItemKnt; j++ )
-           {    wxMenuItem* pMnuItem = pMnu->FindItemByPosition(j);
-                int nMnuItemID = pMnuItem->GetId();
-                //Find item in array of keybinder commands
-                int k=0;
-                if ( -1 != (k=FindCmd(nMnuItemID)))
-                {
-                    #ifdef LOGGING
-                     LOGIT(wxT("UpdateAll:on:%d:%d:%p:%s"),j,k,pMnuItem,pMnuItem->GetText().GetData() );
-                    #endif
-                    m_arrCmd.Item(k)->Update(pMnuItem);
-                    // **pMnuItem will be invalid now if item was updated**
-                }
-                else{
-                    #ifdef LOGGING
-                     LOGIT(wxT("UpdateAll:Failed on:%d:%d:%p:%s"),j,k,pMnuItem,pMnuItem->GetText().GetData() );
-                    #endif
-                }
-           }//rof
+   //menu bar item count (level 1)
+    size_t nLevel1Knt = pMenuBar->GetMenuCount();
+    for (size_t i=0; i < nLevel1Knt ;i++ )
+    {
+        wxMenu* pMenu = pMenuBar->GetMenu(i);
+        UpdateSubMenu(pMenu);
     }//rof
 }
-
 // ----------------------------------------------------------------------------
 // wxKeyBinder FindHandlerFor
 // ----------------------------------------------------------------------------
@@ -1027,7 +1211,7 @@ void wxKeyBinder::DetachAll()
 	// and clear the array
 	m_arrHandlers.Clear();
 
-}
+}//DetachAll
 // ----------------------------------------------------------------------------
 //  wxKeyBinder ImportMenuBarCmd
 // ----------------------------------------------------------------------------
@@ -1057,6 +1241,14 @@ void wxKeyBinder::OnChar(wxKeyEvent &event, wxEvtHandler *next)
 	if (p && p->IsBindTo(wxKeyBind(wxT("Alt+F4")))) {
 
 		wxLogDebug(wxT("wxKeyBinder::OnChar - ignoring an Alt+F4 event [%d]"),
+					event.GetKeyCode());
+        //-wxLogDebug("\n");
+		event.Skip();
+		return;
+	}
+	if (p && p->IsBindTo(wxKeyBind(wxT("Alt-F4")))) {
+
+		wxLogDebug(wxT("wxKeyBinder::OnChar - ignoring an Alt-F4 event [%d]"),
 					event.GetKeyCode());
         //-wxLogDebug("\n");
 		event.Skip();
@@ -1195,8 +1387,8 @@ bool wxKeyBinder::Load(wxConfigBase *p, const wxString &key)
 				// create & load this command
 				//-v0.3 wxCmd *cmd = wxCmd::CreateNew(ntype, nid);
 				//+v0.3get command name and descriptions string
-
-				wxString cmdName; wxString cmdDesc;
+				wxString cmdName;
+                wxString cmdDesc;
 				if (! GetNameandDescription(p, str, cmdName, cmdDesc))
 				 {  //-v0.3 cont = FALSE; continue to load next command
                     //-break;
@@ -2075,8 +2267,8 @@ void wxKeyConfigPanel::OnProfileEditing(wxCommandEvent &)
 // ----------------------------------------------------------------------------
 {
 	wxASSERT(m_nCurrentProf != -1);
-
-	wxString oldname = m_kBinder.GetName();
+    // This routine is screwing up unix, and its never called on MSW    // so.. forget it //(pecan 2006/9/23)    return ;
+	wxString oldname = m_kBinder.GetName();        // on unix, this routine is being entered with oldname == ""        // We're not going to save the blank temp profile anyway        // so ignore this situation //(pecan 2006.09.22)    if ( oldname == wxEmptyString )     //(pecan 2006.09.23)        return;
 	wxString newname = m_pKeyProfiles->GetValue();//ev.GetString();
 	if (newname == oldname)
 		return;
@@ -2172,32 +2364,32 @@ void wxKeyConfigPanel::OnProfileSelected(wxCommandEvent &)
 
 	if (selidx != -1) {
 
-		// did the user modiy the old profile ?
-		if (m_bProfileHasBeenModified) {
-
-			// NB: m_nCurrentProf now retains the old profile index
-			int choice = wxMessageBox(
-				wxString::Format(wxT("The previous profile (named \"%s\") has been modified.\n")
-						wxT("Do you want to save the changes to that profile ?"),
-						GetProfile(m_nCurrentProf)->GetName().c_str()),
-				wxT("Warning"), wxYES_NO | wxICON_QUESTION);
-
-			if (choice == wxYES) {
-
-				ApplyChanges();
-
-			} else if (choice == wxCANCEL) {
-
-				// WARNING: the wxCANCEL flag has been removed from the wxMessageBox
-				// above because the call to m_pKeyProfiles->SetSelection below
-				// provokes (even if wx docs says no) with wxMSW 2.5.4 another event
-
-				// re select the old profile... without generating another event
-				m_pKeyProfiles->SetSelection(m_nCurrentProf);
-				return;		// and abort this call
-
-			} else if (choice == wxNO) {
-
+		// did the user modify the old profile ?
+		if (m_bProfileHasBeenModified)        {
+            //(pecan 2006/9/23)            //////////////////////////////////////////////////////////////////////////////            // This routine keeps saving an empty profile. Disabled until I find out why.            //////////////////////////////////////////////////////////////////////////////
+////			// NB: m_nCurrentProf now retains the old profile index
+////			int choice = wxMessageBox(
+////				wxString::Format(wxT("The previous profile (named \"%s\") has been modified.\n")
+////						wxT("Do you want to save the changes to that profile ?"),
+////						GetProfile(m_nCurrentProf)->GetName().c_str()),
+////				wxT("Warning"), wxYES_NO | wxICON_QUESTION);
+////
+////			if (choice == wxYES) {
+////
+////				ApplyChanges();
+////
+////			} else if (choice == wxCANCEL) {
+////
+////				// WARNING: the wxCANCEL flag has been removed from the wxMessageBox
+////				// above because the call to m_pKeyProfiles->SetSelection below
+////				// provokes (even if wx docs says no) with wxMSW 2.5.4 another event
+////
+////				// re select the old profile... without generating another event
+////				m_pKeyProfiles->SetSelection(m_nCurrentProf);
+////				return;		// and abort this call
+////
+////			} else if (choice == wxNO) {
+////
 				// just restore the original label of the old profile
 				// into the wxcombobox...
 				// NB: the original label is stored in the client data associated
@@ -2205,7 +2397,7 @@ void wxKeyConfigPanel::OnProfileSelected(wxCommandEvent &)
 				// label has been set only in the m_kBinder profile.
 				m_pKeyProfiles->SetString(m_nCurrentProf,
 							GetProfile(m_nCurrentProf)->GetName());
-			}
+////			}
 		}
 
 		// update the current selected profile index
@@ -2250,11 +2442,13 @@ void wxKeyConfigPanel::OnAssignKey(wxCommandEvent &)
 
 	wxCmd *sel = GetSelCmd();
     if (!sel)
-     {  //got null sel
+    {  //got null sel
         wxLogDebug(wxT("GetSelCmd() error in OnAssignKey()"));
-        wxMessageBox(wxT("KeyBinding file corrupted. Please delete it.")); //+v0.4
+        //wxMessageBox(wxT("KeyBinding file corrupted. Please delete it.")); //+v0.4
+        wxMessageBox(wxT("KeyBinding file corrupted. Please delete\n")
+            + *pKeyFilename); //v0.4.24
         return;
-     }
+    }
 
     if (sel->GetShortcutCount() >= wxCMD_MAX_SHORTCUTS) {
 
@@ -2303,7 +2497,8 @@ void wxKeyConfigPanel::OnAssignKey(wxCommandEvent &)
 	// and update the list of the key bindings
 	FillInBindings();
 	m_pKeyField->Clear();
-}
+
+}//OnAssignKey
 
 // ----------------------------------------------------------------------------
 void wxKeyConfigPanel::OnRemoveKey(wxCommandEvent &)

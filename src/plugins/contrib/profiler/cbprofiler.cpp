@@ -8,9 +8,8 @@
  * License:   GPL
  **************************************************************/
 
-#ifdef CB_PRECOMP
     #include "sdk.h"
-#else
+#ifndef CB_PRECOMP
     #include <wx/datetime.h>
     #include <wx/filename.h>
     #include <wx/fs_zip.h>
@@ -20,7 +19,6 @@
     #include "cbproject.h"
     #include "configmanager.h"
     #include "globals.h"
-    #include "licenses.h" // defines some common licenses (like the GPL)
     #include "macrosmanager.h"
     #include "manager.h"
     #include "messagemanager.h"
@@ -34,25 +32,19 @@
 #include "cbprofilerexec.h"
 
 
-CB_IMPLEMENT_PLUGIN(CBProfiler, "Code profiler");
+// Register the plugin
+namespace
+{
+    PluginRegistrant<CBProfiler> reg(_T("CBProfiler"));
+};
 
 CBProfiler::CBProfiler()
 {
     //ctor
-    wxFileSystem::AddHandler(new wxZipFSHandler);
-    wxXmlResource::Get()->InitAllHandlers();
-    wxString resPath = ConfigManager::GetDataFolder();
-    wxXmlResource::Get()->Load(resPath + _T("/profiler.zip#zip:*.xrc"));
-
-    m_PluginInfo.name          = _T("CBProfiler");
-    m_PluginInfo.title         = _("Code profiler");
-    m_PluginInfo.version       = _("1.0RC2");
-    m_PluginInfo.description   = _("A simple graphical interface to the GNU GProf Profiler\n\nGNU GProf Online Reference:\nhttp://www.gnu.org/software/binutils/manual/gprof-2.9.1/html_mono/gprof.html");
-    m_PluginInfo.author        = _("Dark Lord & Zlika");
-    m_PluginInfo.authorEmail   = _("");
-    m_PluginInfo.authorWebsite = _("");
-    m_PluginInfo.thanksTo      = _("Mandrav, for the n00b intro to profiling\nand the sources of his Source code\nformatter (AStyle) Plugin, whose clean\ncode structure served as a basis for this\nplugin\n:)");
-    m_PluginInfo.license       = LICENSE_GPL;
+    if(!Manager::LoadResource(_T("CBProfiler.zip")))
+    {
+        NotifyMissingFile(_T("CBProfiler.zip"));
+    }
 }
 CBProfiler::~CBProfiler()
 {
@@ -62,7 +54,7 @@ void CBProfiler::OnAttach()
 {
     // do whatever initialization you need for your plugin
     // NOTE: after this function, the inherited member variable
-    // m_IsAttached will be TRUE...
+    // IsAttached() will be TRUE...
     // You should check for it in other functions, because if it
     // is FALSE, it means that the application did *not* "load"
     // (see: does not need) this plugin...
@@ -73,12 +65,12 @@ void CBProfiler::OnRelease(bool appShutDown)
     // if appShutDown is false, the plugin is unloaded because Code::Blocks is being shut down,
     // which means you must not use any of the SDK Managers
     // NOTE: after this function, the inherited member variable
-    // m_IsAttached will be FALSE...
+    // IsAttached() will be FALSE...
 }
 cbConfigurationPanel* CBProfiler::GetConfigurationPanel(wxWindow* parent)
 {
     // if not attached, exit
-    if (!m_IsAttached)
+    if (!IsAttached())
         return 0;
 
     CBProfilerConfigDlg* dlg = new CBProfilerConfigDlg(parent);
@@ -87,7 +79,7 @@ cbConfigurationPanel* CBProfiler::GetConfigurationPanel(wxWindow* parent)
 int CBProfiler::Execute()
 {
     // if not attached, exit
-    if (!m_IsAttached)
+    if (!IsAttached())
         return -1;
 
     cbProject* project = Manager::Get()->GetProjectManager()->GetActiveProject();
@@ -197,7 +189,7 @@ int CBProfiler::Execute()
                 else
                 {
                     wxFileDialog filedialog(Manager::Get()->GetAppWindow(), _("Locate profile information"),
-                                            _T(""),_T("gmon.out"),_T("*.*"),wxOPEN|wxFILE_MUST_EXIST);
+                                            _T(""),_T("gmon.out"),_T("*.*"),wxOPEN|wxFILE_MUST_EXIST|wxHIDE_READONLY);
                     if (filedialog.ShowModal() == wxID_OK)
                     {
                         dataname = filedialog.GetPath();

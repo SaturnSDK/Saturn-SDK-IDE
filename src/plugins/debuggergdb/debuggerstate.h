@@ -1,10 +1,12 @@
 #ifndef DEBUGGERSTATE_H
 #define DEBUGGERSTATE_H
 
+#include <wx/string.h>
 #include "debugger_defs.h"
 
 class DebuggerGDB;
 class ProjectBuildTarget;
+class cbProject;
 
 class DebuggerState
 {
@@ -25,6 +27,12 @@ class DebuggerState
         DebuggerBreakpoint* RemoveBreakpoint(const wxString& file, int line, bool deleteit = true);
         DebuggerBreakpoint* RemoveBreakpoint(int idx, bool deleteit = true);
         void RemoveAllBreakpoints(const wxString& file, bool deleteit = true);
+        void RemoveAllProjectBreakpoints(cbProject* prj);
+
+        // helpers to keep in sync with the editors
+        int RemoveBreakpointsRange(const wxString& file, int startline, int endline);
+        void ShiftBreakpoints(const wxString& file, int startline, int nroflines);
+
         int HasBreakpoint(const wxString& file, int line); // returns -1 if not found
         DebuggerBreakpoint* GetBreakpoint(int idx);
         DebuggerBreakpoint* GetBreakpointByNumber(int num);
@@ -33,6 +41,7 @@ class DebuggerState
     protected:
         void SetupBreakpointIndices();
         wxString ConvertToValidFilename(const wxString& filename);
+        cbProject* FindProjectForFile(const wxString& file);
 
         DebuggerGDB* m_pPlugin;
         DebuggerDriver* m_pDriver;

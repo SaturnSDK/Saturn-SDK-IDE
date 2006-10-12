@@ -24,9 +24,8 @@
 * $HeadURL$
 */
 
-#ifdef CB_PRECOMP
 #include <sdk.h>
-#else
+#ifndef CB_PRECOMP
 #include <wx/fs_zip.h>
 #include <wx/intl.h>
 #include <wx/string.h>
@@ -42,25 +41,18 @@
 #include "classwizard.h"
 #include "classwizarddlg.h"
 
-CB_IMPLEMENT_PLUGIN(ClassWizard, "Class wizard");
+// this auto-registers the plugin
+namespace
+{
+    PluginRegistrant<ClassWizard> reg(_T("ClassWizard"));
+}
 
 ClassWizard::ClassWizard()
 {
-    wxFileSystem::AddHandler(new wxZipFSHandler);
-    wxXmlResource::Get()->InitAllHandlers();
-    wxString resPath = ConfigManager::GetDataFolder();
-    wxXmlResource::Get()->Load(resPath + _T("/class_wizard.zip#zip:*.xrc"));
-
-    m_PluginInfo.name = _T("ClassWizard");
-    m_PluginInfo.title = _("Class wizard");
-    m_PluginInfo.version = _T("0.2");
-    m_PluginInfo.description = _("This plugin provides an easy way to create a " \
-                               "new C++ class file pair. It's by no means " \
-                               "complete yet but it's here nevertheless;)");
-    m_PluginInfo.author = _T("Yiannis An. Mandravellos");
-    m_PluginInfo.authorEmail = _T("info@codeblocks.org");
-    m_PluginInfo.authorWebsite = _T("www.codeblocks.org");
-    m_PluginInfo.thanksTo = _T("");
+    if(!Manager::LoadResource(_T("classwizard.zip")))
+    {
+        NotifyMissingFile(_T("classwizard.zip"));
+    }
 }
 
 ClassWizard::~ClassWizard()

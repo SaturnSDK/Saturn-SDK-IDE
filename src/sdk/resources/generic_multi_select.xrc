@@ -16,7 +16,8 @@
         <object class="wxBoxSizer">
           <orient>wxHORIZONTAL</orient>
           <object class="sizeritem">
-            <object class="wxCheckList" name="lstItems">
+            <object class="wxCheckListBox" name="lstItems">
+              <style>wxLB_HSCROLL</style>
               <content/>
             </object>
             <option>1</option>
@@ -35,6 +36,18 @@
               <object class="sizeritem">
                 <object class="wxButton" name="btnToggle">
                   <label>Toggle selection</label>
+                </object>
+                <flag>wxGROW</flag>
+              </object>
+              <object class="sizeritem">
+                <object class="wxButton" name="btnSelectAll">
+                  <label>Select All</label>
+                </object>
+                <flag>wxGROW</flag>
+              </object>
+              <object class="sizeritem">
+                <object class="wxButton" name="btnDeselectAll">
+                  <label>Deselect All</label>
                 </object>
                 <flag>wxGROW</flag>
               </object>

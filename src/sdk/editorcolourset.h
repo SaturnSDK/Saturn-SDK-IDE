@@ -4,7 +4,12 @@
 #include <wx/dynarray.h>
 #include <wx/hashmap.h>
 #include <wx/intl.h>
+#include <wx/wxscintilla.h> // wxSCI_KEYWORDSET_MAX
 #include "settings.h"
+
+#ifndef CB_PRECOMP
+    #include "globals.h" // HighlightLanguage
+#endif
 
 // forward decls
 class cbEditor;
@@ -48,10 +53,6 @@ struct OptionSet
     wxArrayString m_originalFileMasks;
 };
 WX_DECLARE_STRING_HASH_MAP(OptionSet, OptionSetsMap);
-
-typedef wxString HighlightLanguage;
-#define HL_AUTO _T(" ")
-#define HL_NONE _T("  ")
 
 class EditorColourSet
 {

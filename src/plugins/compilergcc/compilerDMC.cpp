@@ -25,7 +25,9 @@ CompilerDMC::~CompilerDMC()
 
 Compiler * CompilerDMC::CreateCopy()
 {
-    return new CompilerDMC(*this);
+    Compiler* c = new CompilerDMC(*this);
+    c->SetExtraPaths(m_ExtraPaths); // wxArrayString doesn't seem to be copied with the default copy ctor...
+    return c;
 }
 
 void CompilerDMC::Reset()
@@ -153,9 +155,9 @@ void CompilerDMC::Reset()
     // FIXME (hd#1#): should be work on: we need $res_options
     m_Commands[(int)ctCompileObjectCmd] = _T("$compiler -mn -c $options $includes -o$object $file");
     m_Commands[(int)ctCompileResourceCmd] = _T("$rescomp -32 -I$res_includes -o$resource_output $file");
-    m_Commands[(int)ctLinkExeCmd] = _T("$linker /NOLOGO /subsystem:windows $link_options $link_objects, $exe_output, , $libs, , $link_resobjects");
-    m_Commands[(int)ctLinkConsoleExeCmd] = _T("$linker /NOLOGO $link_options $link_objects, $exe_output, , $libs");
-    m_Commands[(int)ctLinkDynamicCmd] = _T("$linker /NOLOGO /subsystem:windows $link_options $link_objects, $exe_output, , $libs, , $link_resobjects");
+    m_Commands[(int)ctLinkExeCmd] = _T("$linker /NOLOGO /subsystem:windows $link_objects, $exe_output, , $libs $link_options, , $link_resobjects");
+    m_Commands[(int)ctLinkConsoleExeCmd] = _T("$linker /NOLOGO $link_objects, $exe_output, , $libs $link_options");
+    m_Commands[(int)ctLinkDynamicCmd] = _T("$linker /NOLOGO /subsystem:windows $link_objects, $exe_output, , $libs $link_options, , $link_resobjects");
     m_Commands[(int)ctLinkStaticCmd] = _T("$lib_linker -c $link_options $static_output $link_objects");
 
     LoadDefaultRegExArray();

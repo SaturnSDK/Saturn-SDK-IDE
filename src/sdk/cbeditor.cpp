@@ -28,24 +28,29 @@
 
 #ifndef CB_PRECOMP
     #include <wx/filename.h>
+    #include <wx/notebook.h>
+    #include <wx/wfstream.h>
+
     #include "cbeditor.h" // class's header file
     #include "globals.h"
     #include "sdk_events.h"
-    #include "projectbuildtarget.h" // for ProjectFile*
+    #include "cbproject.h"
+    #include "projectfile.h"
+    #include "projectbuildtarget.h"
+    #include "editorcolourset.h"
     #include "manager.h"
     #include "configmanager.h"
+    #include "projectmanager.h"
     #include "pluginmanager.h"
     #include "editormanager.h"
     #include "messagemanager.h"
+    #include "macrosmanager.h" // ReplaceMacros
     #include "cbplugin.h"
-    #include <wx/notebook.h>
-    #include <wx/wfstream.h>
 #endif
 
 #include <wx/fontutil.h>
 #include <wx/splitter.h>
 
-#include "editorcolourset.h"
 #include "cbeditorprintout.h"
 #include "editor_hooks.h"
 #include "filefilters.h"
@@ -67,6 +72,8 @@ const wxString g_EditorModified = _T("*");
 
 BEGIN_EVENT_TABLE(cbStyledTextCtrl, wxScintilla)
     EVT_CONTEXT_MENU(cbStyledTextCtrl::OnContextMenu)
+    EVT_KILL_FOCUS(cbStyledTextCtrl::OnKillFocus)
+    EVT_MIDDLE_DOWN(cbStyledTextCtrl::OnGPM)
 END_EVENT_TABLE()
 
 cbStyledTextCtrl::cbStyledTextCtrl(wxWindow* pParent, int id, const wxPoint& pos, const wxSize& size, long style)
@@ -83,6 +90,16 @@ cbStyledTextCtrl::~cbStyledTextCtrl()
 
 // events
 
+void cbStyledTextCtrl::OnKillFocus(wxFocusEvent& event)
+{
+    // cancel auto-completion list when losing focus
+    if (AutoCompActive())
+        AutoCompCancel();
+    if (CallTipActive())
+        CallTipCancel();
+    event.Skip();
+}
+
 void cbStyledTextCtrl::OnContextMenu(wxContextMenuEvent& event)
 {
     if (m_pParent)
@@ -94,6 +111,30 @@ void cbStyledTextCtrl::OnContextMenu(wxContextMenuEvent& event)
         reinterpret_cast<cbEditor*>(m_pParent)->DisplayContextMenu(mp,mtEditorManager); //pecan 2006/03/22
     }
 }
+
+void cbStyledTextCtrl::OnGPM(wxMouseEvent& event)
+{
+    int pos = PositionFromPoint(wxPoint(event.GetX(), event.GetY()));
+
+    if(pos == wxSCI_INVALID_POSITION)
+        return;
+
+    int start = GetSelectionStart();
+    int end = GetSelectionEnd();
+
+    wxString s = GetSelectedText();
+
+    if(pos < GetCurrentPos())
+    {
+        start += s.length();
+        end += s.length();
+    }
+
+    InsertText(pos, s);
+    SetSelection(start, end);
+}
+
+
 
 /* This struct holds private data for the cbEditor class.
  * It's a paradigm to avoid rebuilding the entire project (as cbEditor is a basic dependency)
@@ -127,6 +168,7 @@ struct cbEditorInternalData
         m_LastMarginMenuLine(-1),
         m_LastDebugLine(-1),
         m_useByteOrderMark(false),
+        m_byteOrderMarkLength(0),
         m_lineNumbersWidth(0)
     {
         m_encoding = wxLocale::GetSystemEncoding();
@@ -301,6 +343,7 @@ struct cbEditorInternalData
 
     wxFontEncoding m_encoding;
     bool m_useByteOrderMark;
+    int m_byteOrderMarkLength;
 
     int m_lineNumbersWidth;
 
@@ -399,10 +442,25 @@ cbEditor::cbEditor(wxWindow* parent, const wxString& filename, EditorColourSet* 
     m_pData = new cbEditorInternalData(this);
     m_IsBuiltinEditor = true;
 
-    InitFilename(filename);
-    wxFileName fname(m_Filename);
-    NormalizePath(fname, wxEmptyString);
-    m_Filename = fname.GetFullPath();
+    if (!filename.IsEmpty())
+    {
+        InitFilename(filename);
+        wxFileName fname(m_Filename);
+        NormalizePath(fname, wxEmptyString);
+        m_Filename = fname.GetFullPath();
+    }
+    else
+    {
+        static int untitledCounter = 1;
+        wxString f;
+        cbProject* prj = Manager::Get()->GetProjectManager()->GetActiveProject();
+        if (prj)
+            f.Printf(_("%sUntitled%d"), prj->GetBasePath().c_str(), untitledCounter++);
+        else
+            f.Printf(_("Untitled%d"), untitledCounter++);
+
+        InitFilename(f);
+    }
 //    Manager::Get()->GetMessageManager()->DebugLog(_T("ctor: Filename=%s\nShort=%s"), m_Filename.c_str(), m_Shortname.c_str());
 
     // initialize left control (unsplit state)
@@ -422,9 +480,10 @@ cbEditor::cbEditor(wxWindow* parent, const wxString& filename, EditorColourSet* 
     SetEditorStyleAfterFileOpen();
 
     // if !m_IsOK then it's a new file, so set the modified flag ON
-    if (!m_IsOK && filename.IsEmpty())
+    if (!m_IsOK || filename.IsEmpty())
     {
         SetModified(true);
+        m_IsOK = false;
     }
 }
 
@@ -442,6 +501,7 @@ cbEditor::~cbEditor()
         m_pControl = 0;
     }
     DestroySplitView();
+
     delete m_pData;
 }
 
@@ -502,10 +562,10 @@ void cbEditor::SetModified(bool modified)
         SetEditorTitle(m_Shortname);
         NotifyPlugins(cbEVT_EDITOR_MODIFIED);
         Manager::Get()->GetEditorManager()->RefreshOpenedFilesTree();
+        // visual state
+        if (m_pProjectFile)
+            m_pProjectFile->SetFileState(m_pControl->GetReadOnly() ? fvsReadOnly : (m_Modified ? fvsModified : fvsNormal));
     }
-    // visual state
-    if (m_pProjectFile)
-        m_pProjectFile->SetFileState(m_pControl->GetReadOnly() ? fvsReadOnly : (m_Modified ? fvsModified : fvsNormal));
 }
 
 void cbEditor::SetEditorTitle(const wxString& title)
@@ -611,6 +671,53 @@ cbStyledTextCtrl* cbEditor::CreateEditor()
     Connect( m_ID,  -1, wxEVT_SCI_MODIFIED,
                   (wxObjectEventFunction) (wxEventFunction) (wxScintillaEventFunction)
                   &cbEditor::OnEditorModified );
+
+    // Now bind all *other* scintilla events to a common function so that editor hooks
+    // can be informed for them too.
+    // If you implement one of these events using a different function, do the following:
+    //  * comment it out here,
+    //  * "connect" it in the above block
+    //  * and make sure you call OnScintillaEvent() from your new handler function
+    // This will make sure that all editor hooks will be called when needed.
+    int scintilla_events[] =
+    {
+//        wxEVT_SCI_CHANGE,
+        wxEVT_SCI_STYLENEEDED,
+//        wxEVT_SCI_CHARADDED,
+        wxEVT_SCI_SAVEPOINTREACHED,
+        wxEVT_SCI_SAVEPOINTLEFT,
+        wxEVT_SCI_ROMODIFYATTEMPT,
+        wxEVT_SCI_KEY,
+        wxEVT_SCI_DOUBLECLICK,
+//        wxEVT_SCI_UPDATEUI,
+//        wxEVT_SCI_MODIFIED,
+        wxEVT_SCI_MACRORECORD,
+//        wxEVT_SCI_MARGINCLICK,
+        wxEVT_SCI_NEEDSHOWN,
+        wxEVT_SCI_PAINTED,
+//        wxEVT_SCI_USERLISTSELECTION,
+        wxEVT_SCI_URIDROPPED,
+//        wxEVT_SCI_DWELLSTART,
+//        wxEVT_SCI_DWELLEND,
+        wxEVT_SCI_START_DRAG,
+        wxEVT_SCI_DRAG_OVER,
+        wxEVT_SCI_DO_DROP,
+        wxEVT_SCI_ZOOM,
+        wxEVT_SCI_HOTSPOT_CLICK,
+        wxEVT_SCI_HOTSPOT_DCLICK,
+        wxEVT_SCI_CALLTIP_CLICK,
+
+        -1 // to help enumeration of this array
+    };
+    int i = 0;
+    while (scintilla_events[i] != -1)
+    {
+        Connect( m_ID,  -1, scintilla_events[i],
+                      (wxObjectEventFunction) (wxEventFunction) (wxScintillaEventFunction)
+                      &cbEditor::OnScintillaEvent );
+        ++i;
+    }
+
     return control;
 }
 
@@ -740,7 +847,12 @@ void cbEditor::InternalSetEditorStyleBeforeFileOpen(cbStyledTextCtrl* control)
 
     ConfigManager* mgr = Manager::Get()->GetConfigManager(_T("editor"));
 
+#ifdef __WXMAC__
+    // 8 point is not readable on Mac OS X, increase font size:
+    wxFont font(10, wxMODERN, wxNORMAL, wxNORMAL);
+#else
     wxFont font(8, wxMODERN, wxNORMAL, wxNORMAL);
+#endif
     wxString fontstring = mgr->Read(_T("/font"), wxEmptyString);
     int eolmode = wxSCI_EOL_CRLF;
     if (!fontstring.IsEmpty())
@@ -983,6 +1095,7 @@ void cbEditor::DetectEncoding( )
         return;
 
     m_pData->m_useByteOrderMark = detector.UsesBOM();
+    m_pData->m_byteOrderMarkLength = detector.GetBOMSizeInBytes();
     m_pData->m_encoding = detector.GetFontEncoding();
 
     // FIXME: Should this default to local encoding or latin-1? (IOW, implement proper encoding detection)
@@ -1033,7 +1146,9 @@ bool cbEditor::Open(bool detectEncoding)
     m_pControl->SetModEventMask(0);
     if (detectEncoding)
         DetectEncoding();
-    m_pControl->InsertText(0, cbReadFileContents(file, GetEncoding()));
+    st = cbReadFileContents(file, GetEncoding());
+    st.Remove(0, m_pData->m_byteOrderMarkLength / sizeof(wxChar)); // remove BOM (if there)
+    m_pControl->InsertText(0, st);
     m_pControl->EmptyUndoBuffer();
     m_pControl->SetModEventMask(wxSCI_MODEVENTMASKALL);
 
@@ -1105,12 +1220,13 @@ bool cbEditor::SaveAs()
     wxString Path = fname.GetPath();
     if(mgr)
     {
-        wxString Filter = mgr->Read(_T("/file_dialogs/file_new_open/filter"), _T("C/C++ files"));
+        wxString Filter = mgr->Read(_T("/file_dialogs/save_file_as/filter"), _T("C/C++ files"));
         if(!Filter.IsEmpty())
         {
             FileFilters::GetFilterIndexFromName(Filters, Filter, StoredIndex);
         }
-        Path = mgr->Read(_T("/file_dialogs/file_new_open/directory"), Path);
+        if (Path.IsEmpty())
+            Path = mgr->Read(_T("/file_dialogs/save_file_as/directory"), Path);
     }
     wxFileDialog* dlg = new wxFileDialog(Manager::Get()->GetAppWindow(),
                                          _("Save file"),
@@ -1202,6 +1318,8 @@ void cbEditor::AutoComplete()
             control->ReplaceSelection(_T(""));
             curPos = wordStartPos;
 
+            // replace any other macros in the generated code
+            Manager::Get()->GetMacrosManager()->ReplaceMacros(code);
             // add the text
             control->InsertText(curPos, code);
 
@@ -1301,10 +1419,10 @@ void cbEditor::ToggleFoldBlockFromLine(int line)
     DoFoldBlockFromLine(line, 2);
 }
 
-void cbEditor::GotoLine(int line, bool centreOnScreen)
+void cbEditor::GotoLine(int line, bool centerOnScreen)
 {
     cbStyledTextCtrl* control = GetControl();
-    if (centreOnScreen)
+    if (centerOnScreen)
     {
         int onScreen = control->LinesOnScreen() >> 1;
         control->GotoLine(line - onScreen);
@@ -1327,10 +1445,18 @@ bool cbEditor::AddBreakpoint(int line, bool notifyDebugger)
         return false;
     }
 
-    PluginsArray arr = Manager::Get()->GetPluginManager()->GetOffersFor(ptDebugger);
-    if (!arr.GetCount())
-        return false;
-    cbDebuggerPlugin* debugger = (cbDebuggerPlugin*)arr[0];
+    // set this once; the debugger won't change without a restart
+    static cbDebuggerPlugin* debugger = 0;
+    if (!debugger)
+    {
+        PluginsArray arr = Manager::Get()->GetPluginManager()->GetOffersFor(ptDebugger);
+        if (!arr.GetCount())
+            return false;
+        debugger = (cbDebuggerPlugin*)arr[0];
+        if (!debugger)
+            return false;
+    }
+
     if (debugger->AddBreakpoint(m_Filename, line))
         MarkerToggle(BREAKPOINT_MARKER, line);
     return true;
@@ -1349,10 +1475,18 @@ bool cbEditor::RemoveBreakpoint(int line, bool notifyDebugger)
         return false;
     }
 
-    PluginsArray arr = Manager::Get()->GetPluginManager()->GetOffersFor(ptDebugger);
-    if (!arr.GetCount())
-        return false;
-    cbDebuggerPlugin* debugger = (cbDebuggerPlugin*)arr[0];
+    // set this once; the debugger won't change without a restart
+    static cbDebuggerPlugin* debugger = 0;
+    if (!debugger)
+    {
+        PluginsArray arr = Manager::Get()->GetPluginManager()->GetOffersFor(ptDebugger);
+        if (!arr.GetCount())
+            return false;
+        debugger = (cbDebuggerPlugin*)arr[0];
+        if (!debugger)
+            return false;
+    }
+
     if (debugger->RemoveBreakpoint(m_Filename, line))
         MarkerToggle(BREAKPOINT_MARKER, line);
     return true;
@@ -1966,6 +2100,7 @@ void cbEditor::OnMarginClick(wxScintillaEvent& event)
             break;
         }
     }
+    OnScintillaEvent(event);
 }
 
 void cbEditor::OnEditorUpdateUI(wxScintillaEvent& event)
@@ -1975,11 +2110,13 @@ void cbEditor::OnEditorUpdateUI(wxScintillaEvent& event)
         NotifyPlugins(cbEVT_EDITOR_UPDATE_UI);
         HighlightBraces(); // brace highlighting
     }
+    OnScintillaEvent(event);
 }
 
 void cbEditor::OnEditorChange(wxScintillaEvent& event)
 {
     SetModified(m_pControl->GetModify());
+    OnScintillaEvent(event);
 }
 
 void cbEditor::OnEditorCharAdded(wxScintillaEvent& event)
@@ -2054,14 +2191,8 @@ void cbEditor::OnEditorCharAdded(wxScintillaEvent& event)
             control->EndUndoAction();
         }
     }
-    else
-    {
-        // call any hooked functors
-        if (EditorHooks::HasRegisteredHooks())
-        {
-            EditorHooks::CallHooks(this, event);
-        }
-    }
+
+    OnScintillaEvent(event);
 }
 
 void cbEditor::OnEditorDwellStart(wxScintillaEvent& event)
@@ -2070,11 +2201,13 @@ void cbEditor::OnEditorDwellStart(wxScintillaEvent& event)
     int pos = control->PositionFromPoint(wxPoint(event.GetX(), event.GetY()));
     int style = control->GetStyleAt(pos);
     NotifyPlugins(cbEVT_EDITOR_TOOLTIP, style, wxEmptyString, event.GetX(), event.GetY());
+    OnScintillaEvent(event);
 }
 
 void cbEditor::OnEditorDwellEnd(wxScintillaEvent& event)
 {
     NotifyPlugins(cbEVT_EDITOR_TOOLTIP_CANCEL);
+    OnScintillaEvent(event);
 }
 
 void cbEditor::OnEditorModified(wxScintillaEvent& event)
@@ -2103,105 +2236,6 @@ void cbEditor::OnEditorModified(wxScintillaEvent& event)
     bool isDel = event.GetModificationType() & wxSCI_MOD_DELETETEXT;
     if ((isAdd || isDel) && linesAdded != 0)
     {
-        // get hold of debugger plugin
-        static cbDebuggerPlugin* debugger = 0;
-        // because the debugger plugin will *not* change throughout the
-        // program's lifetime, we can speed things up by keeping it in a static
-        // local variable...
-        if (!debugger)
-        {
-            PluginsArray arr = Manager::Get()->GetPluginManager()->GetOffersFor(ptDebugger);
-            if (!arr.GetCount())
-                return;
-            debugger = (cbDebuggerPlugin*)arr[0];
-            if (!debugger)
-                return;
-        }
-
-        // just added/removed lines
-        // this is the line that was added/removed
-        int origstartline = m_pControl->LineFromPosition(event.GetPosition());
-        int startline = origstartline;
-
-        // first remove any breakpoints that belong in deleted lines
-        if (isDel)
-        {
-            for (int line = startline; line < startline - linesAdded; ++line) // linesAdded is negative
-                debugger->RemoveBreakpoint(m_Filename, line);
-            // scintilla keeps one marker on the line that's left; remove this too
-            RemoveBreakpoint(startline, false);
-        }
-
-        // HACK, part1:
-        // ok, here's a hack for scintilla's bad behaviour with markers:
-        // if you press Enter on a line with a marker, scintilla doesn't move
-        // the marker at all. It starts moving markers from the next line downwards.
-        // If the cursor is at the start of the line though (or before the first char
-        // on that line for that matter), we want the breakpoint marker
-        // to "follow" the line that we pushed down. Here's where we do it...
-        // (look out for HACK part 2 below)
-        bool startLineHasBP = HasBreakpoint(startline);
-        int offset = 0;
-        wxString origlinetext = m_pControl->GetLine(startline);
-        bool isStartOfLine = startLineHasBP && origlinetext.Trim().IsEmpty(); // we know it's the start of the line, because it's now empty :)
-        if (isAdd)
-            offset = 1;
-
-        // find the first breakpoint after the start line
-        startline = m_pControl->MarkerNext(startline + offset, 1 << BREAKPOINT_MARKER);
-
-//        Manager::Get()->GetMessageManager()->DebugLog(_T("Starting at line %d (from %d)"), startline+1, (origstartline + offset + 1));
-
-        // we 'll build an array containing all line numbers with breakpoints
-        // from startLine to the end of the document.
-        // at the same time we 'll be removing those breakpoints
-        wxArrayInt bps;
-        int line = startline;
-        while (line >= 0)// && line >= startline)
-        {
-            int oldline = line - linesAdded;
-            int newline = line;
-//            Manager::Get()->GetMessageManager()->DebugLog(_T("Removing bp at line %d (new=%d)"), oldline+1, newline+1);
-            // remove breakpoint from old line
-            debugger->RemoveBreakpoint(m_Filename, oldline);
-            // add in array the line that this breakpoint will now go to
-            bps.Add(newline);
-
-            line = m_pControl->MarkerNext(line + 1, 1 << BREAKPOINT_MARKER);
-//            Manager::Get()->GetMessageManager()->DebugLog(_T("Next bp at line %d"), line+1);
-        }
-
-        // now just loop through the array we created and set breakpoints
-        for (size_t i = 0; i < bps.GetCount(); ++i)
-        {
-//            Manager::Get()->GetMessageManager()->DebugLog(_T("Setting bp at line %d"), bps[i]+1);
-            // add breakpoint at new line
-            debugger->AddBreakpoint(m_Filename, bps[i]);
-        }
-
-        // HACK, part 2: adjust the breakpoint on the start line
-        if (startLineHasBP && isStartOfLine && linesAdded > 0)
-        {
-//            Manager::Get()->GetMessageManager()->DebugLog(_T("HACK: Removing bp at line %d"), origstartline+1);
-            RemoveBreakpoint(origstartline, true);
-//            Manager::Get()->GetMessageManager()->DebugLog(_T("HACK: Setting bp at line %d"), origstartline + linesAdded+1);
-            AddBreakpoint(origstartline + linesAdded, true);
-        }
-
-        // if lines have been removed make sure BP's after the new EOF are removed, too
-        // the markers are already lost so we can't use them to find additional BP's.
-        // TODO (Morten#): It's a better solution to provide a method like RemoveBreakpointsAfter(file, line)
-        //              because the debugger knows what other BP's are left and have to be removed.
-        if (isDel)
-        {
-          int lastline = m_pControl->GetLineCount();
-//          Manager::Get()->GetMessageManager()->DebugLog(_T("Removing possible breakpoints from %d to %d"), lastline+1, (lastline - linesAdded)+1);
-          for (int i=lastline; i<(lastline - linesAdded); i++) // linesAdded is negative
-          {
-              debugger->RemoveBreakpoint(m_Filename, i);
-          }
-        }
-
         // in case of no line numbers to be shown no need to set
         // NOTE : on every modification of the Editor we consult ConfigManager
         //        hopefully not to time consuming, otherwise we make a member out of it
@@ -2210,11 +2244,32 @@ void cbEditor::OnEditorModified(wxScintillaEvent& event)
         {
             m_pData->SetLineNumberColWidth();
         }
+
+        // get hold of debugger plugin
+        static cbDebuggerPlugin* debugger = 0;
+        // because the debugger plugin will *not* change throughout the
+        // program's lifetime, we can speed things up by keeping it in a static
+        // local variable...
+        if (!debugger)
+        {
+            PluginsArray arr = Manager::Get()->GetPluginManager()->GetOffersFor(ptDebugger);
+            if (arr.GetCount())
+                debugger = (cbDebuggerPlugin*)arr[0];
+        }
+
+        if (debugger)
+        {
+            int startline = m_pControl->LineFromPosition(event.GetPosition());
+            debugger->EditorLinesAddedOrRemoved(this, startline, linesAdded);
+        }
     }
+
+    OnScintillaEvent(event);
 } // end of OnEditorModified
 
 void cbEditor::OnUserListSelection(wxScintillaEvent& event)
 {
+    OnScintillaEvent(event);
 }
 
 void cbEditor::OnClose(wxCloseEvent& event)
@@ -2239,5 +2294,15 @@ void cbEditor::DoUnIndent()
 void cbEditor::OnZoom(wxScintillaEvent& event)
 {
     Manager::Get()->GetEditorManager()->SetZoom(GetControl()->GetZoom());
+    OnScintillaEvent(event);
 }
 
+// generic scintilla event handler
+void cbEditor::OnScintillaEvent(wxScintillaEvent& event)
+{
+    // call any hooked functors
+    if (EditorHooks::HasRegisteredHooks())
+    {
+        EditorHooks::CallHooks(this, event);
+    }
+}

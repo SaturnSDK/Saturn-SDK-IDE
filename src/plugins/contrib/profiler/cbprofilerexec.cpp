@@ -8,9 +8,8 @@
  * License:   GPL
  **************************************************************/
 
-#ifdef CB_PRECOMP
     #include "sdk.h"
-#else
+#ifndef CB_PRECOMP
     #include <wx/event.h>
     #include <wx/font.h>
     #include <wx/intl.h>
@@ -62,7 +61,7 @@ int CBProfilerExecDlg::Execute(wxString exename, wxString dataname, struct_confi
     if (pid == -1)
     {
         wxString msg = _("Unable to execute Gprof\nBe sure it is in the OS global path\nC::B Profiler could not complete the operation");
-        cbMessageBox(msg, _("Error"), wxICON_ERROR | wxOK, Manager::Get()->GetAppWindow());
+        cbMessageBox(msg, _("Error"), wxICON_ERROR | wxOK, (wxWindow*)Manager::Get()->GetAppWindow());
         Manager::Get()->GetMessageManager()->DebugLog(msg);
 
         return -1;

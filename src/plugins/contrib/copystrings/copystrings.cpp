@@ -6,40 +6,33 @@
  * License:   wxWindows License
  **************************************************************/
 
-#ifdef CB_PRECOMP
 #include "sdk.h"
-#else
+#ifndef CB_PRECOMP
 #include <wx/intl.h>
 #include <wx/string.h>
 #include "cbeditor.h"
 #include "editormanager.h"
+#include "pluginmanager.h"
 #include "globals.h"
-#include "licenses.h" // defines some common licenses (like the GPL)
 #include "manager.h"
 #endif
 #include <wx/clipbrd.h>
 #include <wx/dataobj.h>
 #include "copystrings.h"
 #include <map>
+#include <iterator>
 
 using namespace std;
 
-// Implement the plugin's hooks
-CB_IMPLEMENT_PLUGIN(copystrings, "Copy Strings to clipboard");
+// Register the plugin
+namespace
+{
+    PluginRegistrant<copystrings> reg(_T("copystrings"));
+};
 
 copystrings::copystrings()
 {
 	//ctor
-	m_PluginInfo.name = _T("copystrings");
-	m_PluginInfo.title = _("Copy Strings to clipboard");
-	m_PluginInfo.version = _T("1.00");
-	m_PluginInfo.description = _("This plugin copies all the strings in the current editor, into the clipboard.\n" \
-	 "Duplicated strings are removed.");
-	m_PluginInfo.author = _T("Ricardo Garcia");
-	m_PluginInfo.authorEmail = _T("rick_g22 <at> yahoo <dot> com");
-	m_PluginInfo.authorWebsite = _T("http://www.codeblocks.org/");
-	m_PluginInfo.thanksTo = _("The Code::Blocks team");
-	m_PluginInfo.license = LICENSE_WXWINDOWS;
 }
 
 copystrings::~copystrings()
@@ -67,15 +60,13 @@ void copystrings::OnRelease(bool appShutDown)
 }
 
 void GetStrings(const wxString& buffer,wxString& result)
-	{
+{
     typedef map<wxString, bool, less<wxString> > mymaptype;
-    size_t i = 0;
-    i = 0;
     int mode = 0;
     mymaptype mymap;
     wxString curstr;
     curstr.Clear();
-    for(i = 0; i < buffer.Length(); ++i)
+    for(size_t i = 0; i < buffer.Length(); ++i)
     {
         wxChar ch = buffer[i];
         switch(mode)
@@ -146,10 +137,9 @@ void GetStrings(const wxString& buffer,wxString& result)
                     mode = 8;
             break;
         }
-    }
+    } // end for : idx : i
     result.Clear();
-    mymaptype::iterator it;
-    for(it = mymap.begin();it != mymap.end(); ++it)
+    for(mymaptype::iterator it = mymap.begin();it != mymap.end(); ++it)
     {
         result << it->first;
 #ifdef __WXMSW__
@@ -159,7 +149,7 @@ void GetStrings(const wxString& buffer,wxString& result)
 #endif
     }
     return;
-}
+} // end of GetStrings
 
 int copystrings::Execute()
 {
@@ -171,8 +161,7 @@ int copystrings::Execute()
 	cbEditor* myeditor = man->GetBuiltinActiveEditor();
 	if(!myeditor)
         return -1;
-	cbStyledTextCtrl* ctrl = myeditor->GetControl();
-	if(ctrl)
+	if(cbStyledTextCtrl* ctrl = myeditor->GetControl())
 	{
 	    wxString result(_T(""));
 	    wxString input(_T(""));

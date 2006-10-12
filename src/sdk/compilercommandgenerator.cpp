@@ -12,7 +12,8 @@
 #include "scriptingmanager.h"
 #include "filefilters.h"
 
-#include <sqplus.h>
+#include "scripting/bindings/sc_base_types.h"
+#include "scripting/sqplus/sqplus.h"
 
 CompilerCommandGenerator::CompilerCommandGenerator()
 {
@@ -247,13 +248,16 @@ void CompilerCommandGenerator::GenerateCommandLine(wxString& macro,
 /// Apply pre-build scripts for @c base.
 void CompilerCommandGenerator::DoBuildScripts(CompileOptionsBase* base, const wxString& funcName)
 {
+    static const wxString clearout_buildscripts = _T("function SetBuildOptions(base){}; function UnsetBuildOptions(base){};");
     const wxArrayString& scripts = base->GetBuildScripts();
     for (size_t i = 0; i < scripts.GetCount(); ++i)
     {
+        Manager::Get()->GetScriptingManager()->LoadScript(clearout_buildscripts); // clear previous script's context
         Manager::Get()->GetScriptingManager()->LoadScript(scripts[i]);
         try
         {
-            SqPlus::SquirrelFunction<void>(cbU2C(funcName))(base);
+            SqPlus::SquirrelFunction<void> f(cbU2C(funcName));
+            f(base);
         }
         catch (SquirrelError& e)
         {
@@ -278,7 +282,7 @@ wxString CompilerCommandGenerator::SetupOutputFilenames(Compiler* compiler, Proj
 	// not a fully qualified path, so we will prepend lib to /bar/libfoo.a incorrectly
 	// NOTE (thomas#1#): A better solution might be to use a regex, but finding an universal regex might not be easy...
     wxString fnameString(target->GetOutputFilename());
-    Manager::Get()->GetMacrosManager()->ReplaceMacros(fnameString, true);
+    Manager::Get()->GetMacrosManager()->ReplaceMacros(fnameString, true, target);
     wxFileName fname(fnameString);
 
     if (!fname.GetName().StartsWith(compiler->GetSwitches().libPrefix))
@@ -308,6 +312,7 @@ wxString CompilerCommandGenerator::SetupIncludeDirs(Compiler* compiler, ProjectB
         for (unsigned int x = 0; x < arr.GetCount(); ++x)
         {
             wxString tmp = arr[x];
+            Manager::Get()->GetMacrosManager()->ReplaceMacros(tmp, true, target);
             QuoteStringIfNeeded(tmp);
             tstr << compiler->GetSwitches().includeDirs << tmp << _T(' ');
         }
@@ -318,6 +323,7 @@ wxString CompilerCommandGenerator::SetupIncludeDirs(Compiler* compiler, ProjectB
         for (unsigned int x = 0; x < parr.GetCount(); ++x)
         {
             wxString tmp = parr[x];
+            Manager::Get()->GetMacrosManager()->ReplaceMacros(tmp, true, target);
             QuoteStringIfNeeded(tmp);
             pstr << compiler->GetSwitches().includeDirs << tmp << _T(' ');
         }
@@ -331,6 +337,7 @@ wxString CompilerCommandGenerator::SetupIncludeDirs(Compiler* compiler, ProjectB
     for (unsigned int x = 0; x < carr.GetCount(); ++x)
     {
         wxString tmp = carr[x];
+        Manager::Get()->GetMacrosManager()->ReplaceMacros(tmp, true, target);
         QuoteStringIfNeeded(tmp);
         result << compiler->GetSwitches().includeDirs << tmp << _T(' ');
     }
@@ -352,6 +359,7 @@ wxString CompilerCommandGenerator::SetupLibrariesDirs(Compiler* compiler, Projec
         for (unsigned int x = 0; x < arr.GetCount(); ++x)
         {
             wxString tmp = arr[x];
+            Manager::Get()->GetMacrosManager()->ReplaceMacros(tmp, true, target);
             QuoteStringIfNeeded(tmp);
             tstr << compiler->GetSwitches().libDirs << tmp << _T(' ');
         }
@@ -362,6 +370,7 @@ wxString CompilerCommandGenerator::SetupLibrariesDirs(Compiler* compiler, Projec
         for (unsigned int x = 0; x < parr.GetCount(); ++x)
         {
             wxString tmp = parr[x];
+            Manager::Get()->GetMacrosManager()->ReplaceMacros(tmp, true, target);
             QuoteStringIfNeeded(tmp);
             pstr << compiler->GetSwitches().libDirs << tmp << _T(' ');
         }
@@ -375,6 +384,7 @@ wxString CompilerCommandGenerator::SetupLibrariesDirs(Compiler* compiler, Projec
     for (unsigned int x = 0; x < carr.GetCount(); ++x)
     {
         wxString cstr = carr[x];
+        Manager::Get()->GetMacrosManager()->ReplaceMacros(cstr, true, target);
         QuoteStringIfNeeded(cstr);
         result << compiler->GetSwitches().libDirs << cstr << _T(' ');
     }
@@ -396,6 +406,7 @@ wxString CompilerCommandGenerator::SetupResourceIncludeDirs(Compiler* compiler, 
         for (unsigned int x = 0; x < arr.GetCount(); ++x)
         {
             wxString tmp = arr[x];
+            Manager::Get()->GetMacrosManager()->ReplaceMacros(tmp, true, target);
             QuoteStringIfNeeded(tmp);
             tstr << compiler->GetSwitches().includeDirs << tmp << _T(' ');
         }
@@ -406,6 +417,7 @@ wxString CompilerCommandGenerator::SetupResourceIncludeDirs(Compiler* compiler, 
         for (unsigned int x = 0; x < parr.GetCount(); ++x)
         {
             wxString tmp = parr[x];
+            Manager::Get()->GetMacrosManager()->ReplaceMacros(tmp, true, target);
             QuoteStringIfNeeded(tmp);
             pstr << compiler->GetSwitches().includeDirs << tmp << _T(' ');
         }
@@ -419,6 +431,7 @@ wxString CompilerCommandGenerator::SetupResourceIncludeDirs(Compiler* compiler, 
     for (unsigned int x = 0; x < carr.GetCount(); ++x)
     {
         wxString cstr = carr[x];
+        Manager::Get()->GetMacrosManager()->ReplaceMacros(cstr, true, target);
         QuoteStringIfNeeded(cstr);
         result << compiler->GetSwitches().includeDirs << cstr << _T(' ');
     }
@@ -550,11 +563,17 @@ wxString CompilerCommandGenerator::SetupLinkLibraries(Compiler* compiler, Projec
     }
 
     // compiler link libraries
-    result << GetStringFromArray(compiler->GetLinkLibs(), _T(' '));
+    wxString cstr;
+    const wxArrayString& carr = compiler->GetLinkLibs();
+    for (unsigned int x = 0; x < carr.GetCount(); ++x)
+    {
+    	cstr << FixupLinkLibraries(compiler, carr[x]) << _T(' ');
+    }
+    result << cstr;
 
     // add in array
     return result;
-}
+} // end of SetupLinkLibraries
 
 /// Setup resource compiler flags for build target.
 wxString CompilerCommandGenerator::SetupResourceCompilerOptions(Compiler* compiler, ProjectBuildTarget* target)
@@ -567,7 +586,7 @@ wxString CompilerCommandGenerator::SetupResourceCompilerOptions(Compiler* compil
   * Depending on the order defined for the build target, it concatenates
   * @c project_options with @c target_options and returns the result.
   */
-wxString CompilerCommandGenerator::GetOrderedOptions(ProjectBuildTarget* target, OptionsRelationType rel, const wxString& project_options, const wxString& target_options)
+wxString CompilerCommandGenerator::GetOrderedOptions(const ProjectBuildTarget* target, OptionsRelationType rel, const wxString& project_options, const wxString& target_options)
 {
     wxString result;
     OptionsRelation relation = target->GetOptionRelation(rel);

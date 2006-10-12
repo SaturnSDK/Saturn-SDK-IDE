@@ -2,8 +2,9 @@
 #define SELECTTARGETDLG_H
 
 #include <wx/dialog.h>
-#include "projectbuildtarget.h"
-#include "cbproject.h"
+
+class cbProject;
+class ProjectBuildTarget;
 
 class SelectTargetDlg : public wxDialog
 {
@@ -12,12 +13,12 @@ class SelectTargetDlg : public wxDialog
 		~SelectTargetDlg();
 
 		void EndModal(int retCode);
-		int GetSelection(){ return m_Selected; }
-		ProjectBuildTarget* GetSelectionTarget(){ return m_pProject->GetBuildTarget(m_Selected); }
-	protected:
+		int GetSelection() const { return m_Selected; }
+		ProjectBuildTarget* GetSelectionTarget();
 	private:
 		void OnListboxSelection(wxCommandEvent& event);
         void OnCheckboxSelection(wxCommandEvent& event);
+        void OnHostApplicationButtonClick(wxCommandEvent& event);
 		void UpdateSelected();
 		cbProject* m_pProject;
 		int m_Selected;

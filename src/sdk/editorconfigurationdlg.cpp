@@ -36,6 +36,7 @@
     #include "pluginmanager.h"
     #include "editormanager.h"
     #include "cbeditor.h"
+    #include "cbplugin.h" // cgEditor
     #include "globals.h"
     #include <wx/listbook.h>
     #include <wx/listbox.h>
@@ -161,6 +162,7 @@ EditorConfigurationDlg::EditorConfigurationDlg(wxWindow* parent)
     XRCCTRL(*this, "lstGutterMode", wxChoice)->SetSelection(cfg->ReadInt(_T("/gutter/mode"), 0));
     XRCCTRL(*this, "btnGutterColour", wxButton)->SetBackgroundColour(gutterColour);
     XRCCTRL(*this, "spnGutterColumn", wxSpinCtrl)->SetValue(cfg->ReadInt(_T("/gutter/column"), 80));
+    XRCCTRL(*this, "spnGutterColumn", wxSpinCtrl)->SetRange(1, 500);
 
     //margin
     XRCCTRL(*this, "spnMarginWidth", wxSpinCtrl)->SetValue(cfg->ReadInt(_T("/margin/width_chars"), 6));
@@ -212,7 +214,12 @@ EditorConfigurationDlg::EditorConfigurationDlg(wxWindow* parent)
     wxString key;
     key.Printf(_T("/default_code/set%d"), IdxToFileType[m_DefCodeFileType]);
     XRCCTRL(*this, "txtDefCode", wxTextCtrl)->SetValue(cfg->Read(key, wxEmptyString));
+#ifdef __WXMAC__
+    // 8 point is not readable on Mac OS X, increase font size:
+    wxFont tmpFont(10, wxMODERN, wxNORMAL, wxNORMAL);
+#else
     wxFont tmpFont(8, wxMODERN, wxNORMAL, wxNORMAL);
+#endif
     XRCCTRL(*this, "txtDefCode", wxTextCtrl)->SetFont(tmpFont);
 	// read them all in the array
 	for(size_t idx = 0; idx < sizeof(IdxToFileType)/sizeof(*IdxToFileType); ++ idx)
@@ -229,9 +236,9 @@ EditorConfigurationDlg::EditorConfigurationDlg(wxWindow* parent)
     wxBitmap bmp;
     for (int i = 0; i < IMAGES_COUNT; ++i)
     {
-        bmp.LoadFile(base + base_imgs[i] + _T(".png"), wxBITMAP_TYPE_PNG);
+        bmp = cbLoadBitmap(base + base_imgs[i] + _T(".png"), wxBITMAP_TYPE_PNG);
         images->Add(bmp);
-        bmp.LoadFile(base + base_imgs[i] + _T("-off.png"), wxBITMAP_TYPE_PNG);
+        bmp = cbLoadBitmap(base + base_imgs[i] + _T("-off.png"), wxBITMAP_TYPE_PNG);
         images->Add(bmp);
     }
     wxListbook* lb = XRCCTRL(*this, "nbMain", wxListbook);
@@ -271,8 +278,8 @@ void EditorConfigurationDlg::AddPluginPanels()
         cbConfigurationPanel* panel = m_PluginPanels[i];
         lb->AddPage(panel, panel->GetTitle());
 
-        lb->GetImageList()->Add(LoadPNGWindows2000Hack(base + panel->GetBitmapBaseName() + _T(".png")));
-        lb->GetImageList()->Add(LoadPNGWindows2000Hack(base + panel->GetBitmapBaseName() + _T("-off.png")));
+        lb->GetImageList()->Add(cbLoadBitmap(base + panel->GetBitmapBaseName() + _T(".png")));
+        lb->GetImageList()->Add(cbLoadBitmap(base + panel->GetBitmapBaseName() + _T("-off.png")));
         lb->SetPageImage(lb->GetPageCount() - 1, lb->GetImageList()->GetImageCount() - 2);
     }
 
@@ -456,7 +463,12 @@ void EditorConfigurationDlg::WriteColours()
 
 void EditorConfigurationDlg::UpdateSampleFont(bool askForNewFont)
 {
+#ifdef __WXMAC__
+    // 8 point is not readable on Mac OS X, increase font size:
+    wxFont tmpFont(10, wxMODERN, wxNORMAL, wxNORMAL);
+#else
     wxFont tmpFont(8, wxMODERN, wxNORMAL, wxNORMAL);
+#endif
     wxString fontstring = Manager::Get()->GetConfigManager(_T("editor"))->Read(_T("/font"), wxEmptyString);
 
     if (!fontstring.IsEmpty())
@@ -840,13 +852,14 @@ void EditorConfigurationDlg::EndModal(int retCode)
         bool enableFolding = XRCCTRL(*this, "chkEnableFolding", wxCheckBox)->GetValue();
         if (!enableFolding)
         {
-            //if the folding has been disabled, first unfold 
+            //if the folding has been disabled, first unfold
             //all blocks in all editors
             EditorManager *em = Manager::Get()->GetEditorManager();
             for (int idx = 0; idx<em->GetEditorsCount(); ++idx)
             {
                 cbEditor *ed = em->GetBuiltinEditor(em->GetEditor(idx));
-                ed->UnfoldAll();
+                if(ed)
+                    ed->UnfoldAll();
             }
         }
 

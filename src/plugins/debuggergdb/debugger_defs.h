@@ -115,23 +115,25 @@ struct DebuggerBreakpoint
         ignoreCount(0),
         useCondition(false),
         address(0),
-        alreadySet(false)
+        alreadySet(false),
+        userData(0)
     {}
     wxString filename; ///< The filename for the breakpoint (kept as relative).
     wxString filenameAsPassed; ///< The filename for the breakpoint as passed to the debugger (i.e. full filename).
-	int line; ///< The line for the breakpoint.
-	long int index; ///< The breakpoint number. Set automatically. *Don't* write to it.
-	bool temporary; ///< Is this a temporary (one-shot) breakpoint?
-	bool enabled; ///< Is the breakpoint enabled?
-	bool active; ///< Is the breakpoint active? (currently unused)
-	bool useIgnoreCount; ///< Should this breakpoint be ignored for the first X passes? (@c x == @c ignoreCount)
-	int ignoreCount; ///< The number of passes before this breakpoint should hit. @c useIgnoreCount must be true.
-	bool useCondition; ///< Should this breakpoint hit only if a specific condition is met?
-	wxString condition; ///< The condition that must be met for the breakpoint to hit. @c useCondition must be true.
-	wxString func; ///< The function to set the breakpoint. If this is set, it is preferred over the filename/line combination.
-	unsigned long int address; ///< The actual breakpoint address. This is read back from the debugger. *Don't* write to it.
-	bool alreadySet; ///< Is this already set? Used to mark temporary breakpoints for removal.
-	wxString lineText; ///< Optionally, the breakpoint line's text (used by GDB for setting breapoints on ctors/dtors).
+    int line; ///< The line for the breakpoint.
+    long int index; ///< The breakpoint number. Set automatically. *Don't* write to it.
+    bool temporary; ///< Is this a temporary (one-shot) breakpoint?
+    bool enabled; ///< Is the breakpoint enabled?
+    bool active; ///< Is the breakpoint active? (currently unused)
+    bool useIgnoreCount; ///< Should this breakpoint be ignored for the first X passes? (@c x == @c ignoreCount)
+    int ignoreCount; ///< The number of passes before this breakpoint should hit. @c useIgnoreCount must be true.
+    bool useCondition; ///< Should this breakpoint hit only if a specific condition is met?
+    wxString condition; ///< The condition that must be met for the breakpoint to hit. @c useCondition must be true.
+    wxString func; ///< The function to set the breakpoint. If this is set, it is preferred over the filename/line combination.
+    unsigned long int address; ///< The actual breakpoint address. This is read back from the debugger. *Don't* write to it.
+    bool alreadySet; ///< Is this already set? Used to mark temporary breakpoints for removal.
+    wxString lineText; ///< Optionally, the breakpoint line's text (used by GDB for setting breapoints on ctors/dtors).
+    void* userData; ///< Custom user data.
 };
 WX_DEFINE_ARRAY(DebuggerBreakpoint*, BreakpointsList);
 
@@ -147,6 +149,7 @@ enum WatchFormat
     Hex, ///< Variable should be displayed as hexadecimal (e.g. 0xFFFFFFFF).
     Binary, ///< Variable should be displayed as binary (e.g. 00011001).
     Char, ///< Variable should be displayed as a single character (e.g. 'x').
+    Float, ///< Variable should be displayed as floating point number (e.g. 14.35)
 
     // do not remove these
     Last, ///< used for iterations
@@ -166,10 +169,11 @@ enum WatchStringFormat
   */
 struct Watch
 {
-    Watch(const wxString& k, WatchFormat f = Undefined) : keyword(k), format(f), array_start(0), array_count(0) {}
-    Watch(const Watch& rhs) : keyword(rhs.keyword), format(rhs.format), array_start(rhs.array_start), array_count(rhs.array_count) {}
+    Watch(const wxString& k, WatchFormat f = Undefined) : keyword(k), format(f), is_array(false), array_start(0), array_count(0) {}
+    Watch(const Watch& rhs) : keyword(rhs.keyword), format(rhs.format), is_array(rhs.is_array), array_start(rhs.array_start), array_count(rhs.array_count) {}
     wxString keyword; ///< The symbol to watch.
     WatchFormat format; ///< The format to use for display.
+    bool is_array; ///< True if it is an array, false if not.
     size_t array_start; ///< The array start (valid for array types only).
     size_t array_count; ///< The array count (valid for array types only).
 };

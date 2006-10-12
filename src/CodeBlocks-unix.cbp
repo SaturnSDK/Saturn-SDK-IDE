@@ -1,17 +1,17 @@
-<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+﻿<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <CodeBlocks_project_file>
-	<FileVersion major="1" minor="4" />
+	<FileVersion major="1" minor="5" />
 	<Project>
 		<Option title="Code::Blocks - Unix" />
 		<Option pch_mode="2" />
-		<Option default_target="11" />
+		<Option default_target="src" />
 		<Option compiler="gcc" />
+		<Option virtualFolders="" />
 		<Build>
 			<Target title="AutoRevision">
-				<Option output="tools/autorevision/auto_revision" />
+				<Option output="build_tools/autorevision/auto_revision" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Option includeInTargetAll="1" />
 				<Option projectCompilerOptionsRelation="1" />
 				<Option projectLinkerOptionsRelation="1" />
 				<Option projectIncludeDirsRelation="1" />
@@ -26,7 +26,6 @@
 				<Option working_dir="tools/ConsoleRunner" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Option includeInTargetAll="1" />
 				<Option projectCompilerOptionsRelation="1" />
 				<Option projectLinkerOptionsRelation="1" />
 				<Option projectIncludeDirsRelation="1" />
@@ -41,7 +40,6 @@
 				<Option working_dir="" />
 				<Option type="2" />
 				<Option compiler="gcc" />
-				<Option includeInTargetAll="1" />
 				<Option projectResourceIncludeDirsRelation="2" />
 			</Target>
 			<Target title="Squirrel">
@@ -49,7 +47,6 @@
 				<Option working_dir="" />
 				<Option type="2" />
 				<Option compiler="gcc" />
-				<Option includeInTargetAll="1" />
 				<Option projectResourceIncludeDirsRelation="2" />
 				<Compiler>
 					<Add option="-fno-inline" />
@@ -62,7 +59,6 @@
 				<Option working_dir="" />
 				<Option type="2" />
 				<Option compiler="gcc" />
-				<Option includeInTargetAll="1" />
 				<Option projectResourceIncludeDirsRelation="2" />
 				<Compiler>
 					<Add option="-fno-inline" />
@@ -75,7 +71,6 @@
 				<Option working_dir="" />
 				<Option type="2" />
 				<Option compiler="gcc" />
-				<Option includeInTargetAll="1" />
 				<Option projectResourceIncludeDirsRelation="2" />
 				<Compiler>
 					<Add option="-fno-inline" />
@@ -88,7 +83,6 @@
 				<Option working_dir="devel" />
 				<Option type="3" />
 				<Option compiler="gcc" />
-				<Option includeInTargetAll="1" />
 				<Compiler>
 					<Add option="-DSCI_LEXER" />
 					<Add option="-DLINK_LEXERS" />
@@ -106,7 +100,6 @@
 				<Option working_dir="" />
 				<Option type="2" />
 				<Option compiler="gcc" />
-				<Option includeInTargetAll="1" />
 				<Option projectResourceIncludeDirsRelation="2" />
 			</Target>
 			<Target title="wxPropertyGrid">
@@ -114,7 +107,6 @@
 				<Option working_dir="" />
 				<Option type="2" />
 				<Option compiler="gcc" />
-				<Option includeInTargetAll="1" />
 				<Option projectResourceIncludeDirsRelation="2" />
 				<Compiler>
 					<Add directory="sdk/propgrid/include" />
@@ -123,11 +115,10 @@
 			<Target title="sdk">
 				<Option output="devel/libcodeblocks.so" />
 				<Option working_dir="devel" />
-				<Option external_deps="sdk/tinyxml/libtxml.a;sdk/propgrid/libpropgrid.a;sdk/wxFlatNotebook/libwxflatnotebook.a;sdk/as/libangelscript.a;" />
+				<Option external_deps="sdk/tinyxml/libtxml.a;sdk/propgrid/libpropgrid.a;sdk/wxFlatNotebook/libwxflatnotebook.a;" />
 				<Option type="3" />
 				<Option compiler="gcc" />
 				<Option parameters="--debug-log --no-check-associations" />
-				<Option includeInTargetAll="1" />
 				<Option projectLinkerOptionsRelation="2" />
 				<Compiler>
 					<Add directory="sdk" />
@@ -150,7 +141,7 @@
 					<Add directory="sdk/wxFlatNotebook" />
 				</Linker>
 				<ExtraCommands>
-					<Add before="tools/autorevision/auto_revision +wx +int +t . sdk/autorevision.h" />
+					<Add before="build_tools/autorevision/auto_revision +wx +int +t . sdk/autorevision.h" />
 				</ExtraCommands>
 			</Target>
 			<Target title="wxAUI">
@@ -158,7 +149,6 @@
 				<Option working_dir="" />
 				<Option type="2" />
 				<Option compiler="gcc" />
-				<Option includeInTargetAll="1" />
 				<Option projectResourceIncludeDirsRelation="2" />
 				<Compiler>
 					<Add directory="src/wxAUI" />
@@ -171,7 +161,6 @@
 				<Option type="0" />
 				<Option compiler="gcc" />
 				<Option parameters="--debug-log -ns" />
-				<Option includeInTargetAll="1" />
 				<Option projectLinkerOptionsRelation="2" />
 				<Option projectIncludeDirsRelation="2" />
 				<Option projectResourceIncludeDirsRelation="0" />
@@ -197,7 +186,6 @@
 				<Option working_dir="devel/share/codeblocks/plugins" />
 				<Option type="3" />
 				<Option compiler="gcc" />
-				<Option includeInTargetAll="1" />
 				<Option projectLinkerOptionsRelation="1" />
 				<Compiler>
 					<Add directory="sdk" />
@@ -215,7 +203,6 @@
 				<Option working_dir="" />
 				<Option type="2" />
 				<Option compiler="gcc" />
-				<Option includeInTargetAll="1" />
 				<Option projectResourceIncludeDirsRelation="2" />
 				<Compiler>
 					<Add option="-DDEPSLIB_UNIX" />
@@ -226,13 +213,14 @@
 				<Option working_dir="devel/share/codeblocks/plugins" />
 				<Option type="3" />
 				<Option compiler="gcc" />
-				<Option includeInTargetAll="1" />
 				<Option projectLinkerOptionsRelation="1" />
 				<Option projectIncludeDirsRelation="2" />
 				<Option projectLibDirsRelation="2" />
 				<Compiler>
 					<Add directory="sdk" />
 					<Add directory="plugins/compilergcc/depslib/src" />
+					<Add directory="sdk/scripting/include" />
+					<Add directory="sdk/scripting/sqplus" />
 				</Compiler>
 				<Linker>
 					<Add option="`wx-config --libs`" />
@@ -248,21 +236,21 @@
 				<Option working_dir="devel/share/codeblocks/plugins" />
 				<Option type="3" />
 				<Option compiler="gcc" />
-				<Option includeInTargetAll="1" />
 				<Option projectLinkerOptionsRelation="1" />
 				<Option projectIncludeDirsRelation="2" />
 				<Option projectLibDirsRelation="2" />
 				<Compiler>
+					<Add option="`pkg-config --cflags gtk+-2.0`" />
 					<Add directory="sdk" />
 					<Add directory="sdk/scripting/include" />
 					<Add directory="sdk/scripting/sqplus" />
 				</Compiler>
 				<Linker>
 					<Add option="`wx-config --libs`" />
+					<Add option="`pkg-config --libs gtk+-2.0`" />
 					<Add library="codeblocks" />
 					<Add library="wxscintilla" />
 					<Add directory="devel" />
-					<Add directory="sdk/as" />
 				</Linker>
 			</Target>
 			<Target title="Code-completion">
@@ -270,7 +258,6 @@
 				<Option working_dir="devel/share/codeblocks/plugins" />
 				<Option type="3" />
 				<Option compiler="gcc" />
-				<Option includeInTargetAll="1" />
 				<Option projectLinkerOptionsRelation="1" />
 				<Option projectIncludeDirsRelation="2" />
 				<Option projectLibDirsRelation="2" />
@@ -289,7 +276,6 @@
 				<Option working_dir="devel/share/codeblocks/plugins" />
 				<Option type="3" />
 				<Option compiler="gcc" />
-				<Option includeInTargetAll="1" />
 				<Option projectLinkerOptionsRelation="1" />
 				<Option projectIncludeDirsRelation="2" />
 				<Option projectLibDirsRelation="2" />
@@ -308,7 +294,6 @@
 				<Option working_dir="devel/share/codeblocks/plugins" />
 				<Option type="3" />
 				<Option compiler="gcc" />
-				<Option includeInTargetAll="1" />
 				<Option projectLinkerOptionsRelation="1" />
 				<Option projectIncludeDirsRelation="2" />
 				<Option projectLibDirsRelation="2" />
@@ -321,31 +306,11 @@
 					<Add directory="devel" />
 				</Linker>
 			</Target>
-			<Target title="Plugin wizard">
-				<Option output="devel/share/codeblocks/plugins/libpluginwizard.so" />
+			<Target title="Scripted wizard">
+				<Option output="devel/share/codeblocks/plugins/libscriptedwizard.so" />
 				<Option working_dir="devel/share/codeblocks/plugins" />
 				<Option type="3" />
 				<Option compiler="gcc" />
-				<Option includeInTargetAll="1" />
-				<Option projectLinkerOptionsRelation="1" />
-				<Option projectIncludeDirsRelation="2" />
-				<Option projectLibDirsRelation="2" />
-				<Compiler>
-					<Add directory="sdk" />
-				</Compiler>
-				<Linker>
-					<Add option="`wx-config --libs`" />
-					<Add library="codeblocks" />
-					<Add library="wxscintilla" />
-					<Add directory="devel" />
-				</Linker>
-			</Target>
-			<Target title="Project wizard">
-				<Option output="devel/share/codeblocks/plugins/libprojectwizard.so" />
-				<Option working_dir="devel/share/codeblocks/plugins" />
-				<Option type="3" />
-				<Option compiler="gcc" />
-				<Option includeInTargetAll="1" />
 				<Option projectLinkerOptionsRelation="1" />
 				<Option projectIncludeDirsRelation="2" />
 				<Option projectLibDirsRelation="2" />
@@ -367,7 +332,6 @@
 				<Option working_dir="devel/share/codeblocks/plugins" />
 				<Option type="3" />
 				<Option compiler="gcc" />
-				<Option includeInTargetAll="1" />
 				<Compiler>
 					<Add directory="sdk" />
 				</Compiler>
@@ -383,7 +347,6 @@
 				<Option working_dir="devel/share/codeblocks/plugins" />
 				<Option type="3" />
 				<Option compiler="gcc" />
-				<Option includeInTargetAll="1" />
 				<Compiler>
 					<Add directory="sdk" />
 				</Compiler>
@@ -398,6 +361,11 @@
 				<Variable name="WX_CFG" value="NonUnicode" />
 			</Environment>
 		</Build>
+		<VirtualTargets>
+			<Add alias="All" targets="AutoRevision;ConsoleRunner;tinyXML;Squirrel;Squirrel std library;SqPlus;scintilla;wxFlatNotebook;wxPropertyGrid;sdk;wxAUI;src;AStyle;Compiler depslib;Compiler;Debugger;Code-completion;Class wizard;Default MIME handler;Scripted wizard;To-do;Autosave;" />
+			<Add alias="Core app &amp; plugins" targets="sdk;src;AStyle;Compiler;Debugger;Code-completion;Class wizard;Default MIME handler;Scripted wizard;To-do;Autosave;" />
+			<Add alias="Third-party libs" targets="AutoRevision;ConsoleRunner;tinyXML;Squirrel;Squirrel std library;SqPlus;scintilla;wxFlatNotebook;wxPropertyGrid;wxAUI;Compiler depslib;" />
+		</VirtualTargets>
 		<Compiler>
 			<Add option="-Wall" />
 			<Add option="-g" />
@@ -564,22 +532,12 @@
 			<Option link="0" />
 			<Option target="Class wizard" />
 		</Unit>
-		<Unit filename="plugins/codecompletion/cclist.cpp">
+		<Unit filename="plugins/codecompletion/ccdebuginfo.cpp">
 			<Option compilerVar="CPP" />
 			<Option target="Code-completion" />
 		</Unit>
-		<Unit filename="plugins/codecompletion/cclist.h">
-			<Option compilerVar="" />
-			<Option compile="0" />
-			<Option link="0" />
-			<Option target="Code-completion" />
-		</Unit>
-		<Unit filename="plugins/codecompletion/cclistctrl.cpp">
+		<Unit filename="plugins/codecompletion/ccdebuginfo.h">
 			<Option compilerVar="CPP" />
-			<Option target="Code-completion" />
-		</Unit>
-		<Unit filename="plugins/codecompletion/cclistctrl.h">
-			<Option compilerVar="" />
 			<Option compile="0" />
 			<Option link="0" />
 			<Option target="Code-completion" />
@@ -589,16 +547,6 @@
 			<Option target="Code-completion" />
 		</Unit>
 		<Unit filename="plugins/codecompletion/ccoptionsdlg.h">
-			<Option compilerVar="" />
-			<Option compile="0" />
-			<Option link="0" />
-			<Option target="Code-completion" />
-		</Unit>
-		<Unit filename="plugins/codecompletion/ccrenderer.cpp">
-			<Option compilerVar="CPP" />
-			<Option target="Code-completion" />
-		</Unit>
-		<Unit filename="plugins/codecompletion/ccrenderer.h">
 			<Option compilerVar="" />
 			<Option compile="0" />
 			<Option link="0" />
@@ -1428,6 +1376,16 @@
 			<Option link="0" />
 			<Option target="Debugger" />
 		</Unit>
+		<Unit filename="plugins/debuggergdb/gdb_tipwindow.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="Debugger" />
+		</Unit>
+		<Unit filename="plugins/debuggergdb/gdb_tipwindow.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="Debugger" />
+		</Unit>
 		<Unit filename="plugins/debuggergdb/resources/backtrace.xrc">
 			<Option compilerVar="" />
 			<Option compile="0" />
@@ -1596,305 +1554,251 @@
 			<Option link="0" />
 			<Option target="Default MIME handler" />
 		</Unit>
-		<Unit filename="plugins/pluginwizard/enterinfodlg.cpp">
+		<Unit filename="plugins/scriptedwizard/buildtargetpanel.cpp">
 			<Option compilerVar="CPP" />
-			<Option target="Plugin wizard" />
+			<Option target="Scripted wizard" />
 		</Unit>
-		<Unit filename="plugins/pluginwizard/enterinfodlg.h">
-			<Option compilerVar="" />
-			<Option compile="0" />
-			<Option link="0" />
-			<Option target="Plugin wizard" />
-		</Unit>
-		<Unit filename="plugins/pluginwizard/pluginwizard.cpp">
-			<Option compilerVar="CPP" />
-			<Option target="Plugin wizard" />
-		</Unit>
-		<Unit filename="plugins/pluginwizard/pluginwizard.h">
-			<Option compilerVar="" />
-			<Option compile="0" />
-			<Option link="0" />
-			<Option target="Plugin wizard" />
-		</Unit>
-		<Unit filename="plugins/pluginwizard/pluginwizarddlg.cpp">
-			<Option compilerVar="CPP" />
-			<Option target="Plugin wizard" />
-		</Unit>
-		<Unit filename="plugins/pluginwizard/pluginwizarddlg.h">
-			<Option compilerVar="" />
-			<Option compile="0" />
-			<Option link="0" />
-			<Option target="Plugin wizard" />
-		</Unit>
-		<Unit filename="plugins/pluginwizard/resources/new_plugin.xrc">
-			<Option compilerVar="" />
-			<Option compile="0" />
-			<Option link="0" />
-			<Option target="Plugin wizard" />
-		</Unit>
-		<Unit filename="plugins/pluginwizard/resources/plugin_info.xrc">
-			<Option compilerVar="" />
-			<Option compile="0" />
-			<Option link="0" />
-			<Option target="Plugin wizard" />
-		</Unit>
-		<Unit filename="plugins/projectwizard/buildtargetpanel.cpp">
-			<Option compilerVar="CPP" />
-			<Option target="Project wizard" />
-		</Unit>
-		<Unit filename="plugins/projectwizard/buildtargetpanel.h">
+		<Unit filename="plugins/scriptedwizard/buildtargetpanel.h">
 			<Option compilerVar="CPP" />
 			<Option compile="0" />
 			<Option link="0" />
-			<Option target="Project wizard" />
+			<Option target="Scripted wizard" />
 		</Unit>
-		<Unit filename="plugins/projectwizard/compilerpanel.cpp">
+		<Unit filename="plugins/scriptedwizard/compilerpanel.cpp">
 			<Option compilerVar="CPP" />
-			<Option target="Project wizard" />
+			<Option target="Scripted wizard" />
 		</Unit>
-		<Unit filename="plugins/projectwizard/compilerpanel.h">
-			<Option compilerVar="CPP" />
-			<Option compile="0" />
-			<Option link="0" />
-			<Option target="Project wizard" />
-		</Unit>
-		<Unit filename="plugins/projectwizard/filepathpanel.cpp">
-			<Option compilerVar="CPP" />
-			<Option target="Project wizard" />
-		</Unit>
-		<Unit filename="plugins/projectwizard/filepathpanel.h">
+		<Unit filename="plugins/scriptedwizard/compilerpanel.h">
 			<Option compilerVar="CPP" />
 			<Option compile="0" />
 			<Option link="0" />
-			<Option target="Project wizard" />
+			<Option target="Scripted wizard" />
 		</Unit>
-		<Unit filename="plugins/projectwizard/genericselectpath.cpp">
+		<Unit filename="plugins/scriptedwizard/filepathpanel.cpp">
 			<Option compilerVar="CPP" />
-			<Option target="Project wizard" />
+			<Option target="Scripted wizard" />
 		</Unit>
-		<Unit filename="plugins/projectwizard/genericselectpath.h">
-			<Option compilerVar="CPP" />
-			<Option compile="0" />
-			<Option link="0" />
-			<Option target="Project wizard" />
-		</Unit>
-		<Unit filename="plugins/projectwizard/intropanel.cpp">
-			<Option compilerVar="CPP" />
-			<Option target="Project wizard" />
-		</Unit>
-		<Unit filename="plugins/projectwizard/intropanel.h">
+		<Unit filename="plugins/scriptedwizard/filepathpanel.h">
 			<Option compilerVar="CPP" />
 			<Option compile="0" />
 			<Option link="0" />
-			<Option target="Project wizard" />
+			<Option target="Scripted wizard" />
 		</Unit>
-		<Unit filename="plugins/projectwizard/languagepanel.cpp">
+		<Unit filename="plugins/scriptedwizard/genericselectpath.cpp">
 			<Option compilerVar="CPP" />
-			<Option target="Project wizard" />
+			<Option target="Scripted wizard" />
 		</Unit>
-		<Unit filename="plugins/projectwizard/languagepanel.h">
-			<Option compilerVar="CPP" />
-			<Option compile="0" />
-			<Option link="0" />
-			<Option target="Project wizard" />
-		</Unit>
-		<Unit filename="plugins/projectwizard/projectpathpanel.cpp">
-			<Option compilerVar="CPP" />
-			<Option target="Project wizard" />
-		</Unit>
-		<Unit filename="plugins/projectwizard/projectpathpanel.h">
+		<Unit filename="plugins/scriptedwizard/genericselectpath.h">
 			<Option compilerVar="CPP" />
 			<Option compile="0" />
 			<Option link="0" />
-			<Option target="Project wizard" />
+			<Option target="Scripted wizard" />
 		</Unit>
-		<Unit filename="plugins/projectwizard/resources/c_file/wizard.script">
+		<Unit filename="plugins/scriptedwizard/genericsinglechoicelist.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="Scripted wizard" />
+		</Unit>
+		<Unit filename="plugins/scriptedwizard/genericsinglechoicelist.h">
 			<Option compilerVar="CPP" />
 			<Option compile="0" />
 			<Option link="0" />
-			<Option target="Project wizard" />
+			<Option target="Scripted wizard" />
 		</Unit>
-		<Unit filename="plugins/projectwizard/resources/common_functions.script">
+		<Unit filename="plugins/scriptedwizard/infopanel.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="Scripted wizard" />
+		</Unit>
+		<Unit filename="plugins/scriptedwizard/infopanel.h">
 			<Option compilerVar="CPP" />
 			<Option compile="0" />
 			<Option link="0" />
-			<Option target="Project wizard" />
+			<Option target="Scripted wizard" />
 		</Unit>
-		<Unit filename="plugins/projectwizard/resources/config.script">
+		<Unit filename="plugins/scriptedwizard/projectpathpanel.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="Scripted wizard" />
+		</Unit>
+		<Unit filename="plugins/scriptedwizard/projectpathpanel.h">
 			<Option compilerVar="CPP" />
 			<Option compile="0" />
 			<Option link="0" />
-			<Option target="Project wizard" />
+			<Option target="Scripted wizard" />
 		</Unit>
-		<Unit filename="plugins/projectwizard/resources/console/wizard.script">
+		<Unit filename="plugins/scriptedwizard/resources/c_file/wizard.script">
 			<Option compilerVar="CPP" />
 			<Option compile="0" />
 			<Option link="0" />
-			<Option target="Project wizard" />
+			<Option target="Scripted wizard" />
 		</Unit>
-		<Unit filename="plugins/projectwizard/resources/d/wizard.script">
+		<Unit filename="plugins/scriptedwizard/resources/common_functions.script">
 			<Option compilerVar="CPP" />
 			<Option compile="0" />
 			<Option link="0" />
-			<Option target="Project wizard" />
+			<Option target="Scripted wizard" />
 		</Unit>
-		<Unit filename="plugins/projectwizard/resources/empty/wizard.script">
+		<Unit filename="plugins/scriptedwizard/resources/config.script">
 			<Option compilerVar="CPP" />
 			<Option compile="0" />
 			<Option link="0" />
-			<Option target="Project wizard" />
+			<Option target="Scripted wizard" />
 		</Unit>
-		<Unit filename="plugins/projectwizard/resources/fltk/wizard.script">
+		<Unit filename="plugins/scriptedwizard/resources/console/wizard.script">
 			<Option compilerVar="CPP" />
 			<Option compile="0" />
 			<Option link="0" />
-			<Option target="Project wizard" />
+			<Option target="Scripted wizard" />
 		</Unit>
-		<Unit filename="plugins/projectwizard/resources/fltk/wizard.xrc">
+		<Unit filename="plugins/scriptedwizard/resources/d/wizard.script">
 			<Option compilerVar="CPP" />
 			<Option compile="0" />
 			<Option link="0" />
-			<Option target="Project wizard" />
+			<Option target="Scripted wizard" />
 		</Unit>
-		<Unit filename="plugins/projectwizard/resources/glfw/wizard.script">
+		<Unit filename="plugins/scriptedwizard/resources/empty/wizard.script">
 			<Option compilerVar="CPP" />
 			<Option compile="0" />
 			<Option link="0" />
-			<Option target="Project wizard" />
+			<Option target="Scripted wizard" />
 		</Unit>
-		<Unit filename="plugins/projectwizard/resources/glfw/wizard.xrc">
+		<Unit filename="plugins/scriptedwizard/resources/fltk/wizard.script">
 			<Option compilerVar="CPP" />
 			<Option compile="0" />
 			<Option link="0" />
-			<Option target="Project wizard" />
+			<Option target="Scripted wizard" />
 		</Unit>
-		<Unit filename="plugins/projectwizard/resources/glut/wizard.script">
+		<Unit filename="plugins/scriptedwizard/resources/glfw/wizard.script">
 			<Option compilerVar="CPP" />
 			<Option compile="0" />
 			<Option link="0" />
-			<Option target="Project wizard" />
+			<Option target="Scripted wizard" />
 		</Unit>
-		<Unit filename="plugins/projectwizard/resources/glut/wizard.xrc">
+		<Unit filename="plugins/scriptedwizard/resources/glut/wizard.script">
 			<Option compilerVar="CPP" />
 			<Option compile="0" />
 			<Option link="0" />
-			<Option target="Project wizard" />
+			<Option target="Scripted wizard" />
 		</Unit>
-		<Unit filename="plugins/projectwizard/resources/h_file/wizard.script">
+		<Unit filename="plugins/scriptedwizard/resources/h_file/wizard.script">
 			<Option compilerVar="CPP" />
 			<Option compile="0" />
 			<Option link="0" />
-			<Option target="Project wizard" />
+			<Option target="Scripted wizard" />
 		</Unit>
-		<Unit filename="plugins/projectwizard/resources/irrlicht/wizard.script">
+		<Unit filename="plugins/scriptedwizard/resources/irrlicht/wizard.script">
 			<Option compilerVar="CPP" />
 			<Option compile="0" />
 			<Option link="0" />
-			<Option target="Project wizard" />
+			<Option target="Scripted wizard" />
 		</Unit>
-		<Unit filename="plugins/projectwizard/resources/irrlicht/wizard.xrc">
+		<Unit filename="plugins/scriptedwizard/resources/ogre/wizard.script">
 			<Option compilerVar="CPP" />
 			<Option compile="0" />
 			<Option link="0" />
-			<Option target="Project wizard" />
+			<Option target="Scripted wizard" />
 		</Unit>
-		<Unit filename="plugins/projectwizard/resources/ogre/wizard.script">
+		<Unit filename="plugins/scriptedwizard/resources/plugins/wizard.script">
 			<Option compilerVar="CPP" />
 			<Option compile="0" />
 			<Option link="0" />
-			<Option target="Project wizard" />
+			<Option target="Scripted wizard" />
 		</Unit>
-		<Unit filename="plugins/projectwizard/resources/ogre/wizard.xrc">
+		<Unit filename="plugins/scriptedwizard/resources/plugins/wizard.xrc">
 			<Option compilerVar="CPP" />
 			<Option compile="0" />
 			<Option link="0" />
-			<Option target="Project wizard" />
+			<Option target="Scripted wizard" />
 		</Unit>
-		<Unit filename="plugins/projectwizard/resources/smartwin/wizard.script">
+		<Unit filename="plugins/scriptedwizard/resources/sdl/wizard.script">
 			<Option compilerVar="CPP" />
 			<Option compile="0" />
 			<Option link="0" />
-			<Option target="Project wizard" />
+			<Option target="Scripted wizard" />
 		</Unit>
-		<Unit filename="plugins/projectwizard/resources/smartwin/wizard.xrc">
+		<Unit filename="plugins/scriptedwizard/resources/smartwin/wizard.script">
 			<Option compilerVar="CPP" />
 			<Option compile="0" />
 			<Option link="0" />
-			<Option target="Project wizard" />
+			<Option target="Scripted wizard" />
 		</Unit>
-		<Unit filename="plugins/projectwizard/resources/wxwidgets/wizard.script">
+		<Unit filename="plugins/scriptedwizard/resources/staticlib/wizard.script">
 			<Option compilerVar="CPP" />
 			<Option compile="0" />
 			<Option link="0" />
-			<Option target="Project wizard" />
+			<Option target="Scripted wizard" />
 		</Unit>
-		<Unit filename="plugins/projectwizard/resources/wxwidgets/wizard.xrc">
+		<Unit filename="plugins/scriptedwizard/resources/wxwidgets/wizard.script">
 			<Option compilerVar="CPP" />
 			<Option compile="0" />
 			<Option link="0" />
-			<Option target="Project wizard" />
+			<Option target="Scripted wizard" />
 		</Unit>
-		<Unit filename="plugins/projectwizard/wiz.cpp">
-			<Option compilerVar="CPP" />
-			<Option target="Project wizard" />
-		</Unit>
-		<Unit filename="plugins/projectwizard/wiz.h">
+		<Unit filename="plugins/scriptedwizard/resources/wxwidgets/wizard.xrc">
 			<Option compilerVar="CPP" />
 			<Option compile="0" />
 			<Option link="0" />
-			<Option target="Project wizard" />
+			<Option target="Scripted wizard" />
 		</Unit>
-		<Unit filename="plugins/projectwizard/wizpage.cpp">
+		<Unit filename="plugins/scriptedwizard/wiz.cpp">
 			<Option compilerVar="CPP" />
-			<Option target="Project wizard" />
+			<Option target="Scripted wizard" />
 		</Unit>
-		<Unit filename="plugins/projectwizard/wizpage.h">
-			<Option compilerVar="CPP" />
-			<Option compile="0" />
-			<Option link="0" />
-			<Option target="Project wizard" />
-		</Unit>
-		<Unit filename="plugins/projectwizard/wxsmith/BuildTargetPanel.wxs">
+		<Unit filename="plugins/scriptedwizard/wiz.h">
 			<Option compilerVar="CPP" />
 			<Option compile="0" />
 			<Option link="0" />
-			<Option target="Project wizard" />
+			<Option target="Scripted wizard" />
 		</Unit>
-		<Unit filename="plugins/projectwizard/wxsmith/CompilerPanel.wxs">
+		<Unit filename="plugins/scriptedwizard/wizpage.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="Scripted wizard" />
+		</Unit>
+		<Unit filename="plugins/scriptedwizard/wizpage.h">
 			<Option compilerVar="CPP" />
 			<Option compile="0" />
 			<Option link="0" />
-			<Option target="Project wizard" />
+			<Option target="Scripted wizard" />
 		</Unit>
-		<Unit filename="plugins/projectwizard/wxsmith/FilePathPanel.wxs">
+		<Unit filename="plugins/scriptedwizard/wxsmith/BuildTargetPanel.wxs">
 			<Option compilerVar="CPP" />
 			<Option compile="0" />
 			<Option link="0" />
-			<Option target="Project wizard" />
+			<Option target="Scripted wizard" />
 		</Unit>
-		<Unit filename="plugins/projectwizard/wxsmith/GenericSelectPath.wxs">
+		<Unit filename="plugins/scriptedwizard/wxsmith/CompilerPanel.wxs">
 			<Option compilerVar="CPP" />
 			<Option compile="0" />
 			<Option link="0" />
-			<Option target="Project wizard" />
+			<Option target="Scripted wizard" />
 		</Unit>
-		<Unit filename="plugins/projectwizard/wxsmith/IntroPanel.wxs">
+		<Unit filename="plugins/scriptedwizard/wxsmith/FilePathPanel.wxs">
 			<Option compilerVar="CPP" />
 			<Option compile="0" />
 			<Option link="0" />
-			<Option target="Project wizard" />
+			<Option target="Scripted wizard" />
 		</Unit>
-		<Unit filename="plugins/projectwizard/wxsmith/LanguagePanel.wxs">
+		<Unit filename="plugins/scriptedwizard/wxsmith/GenericSelectPath.wxs">
 			<Option compilerVar="CPP" />
 			<Option compile="0" />
 			<Option link="0" />
-			<Option target="Project wizard" />
+			<Option target="Scripted wizard" />
 		</Unit>
-		<Unit filename="plugins/projectwizard/wxsmith/ProjectPathPanel.wxs">
+		<Unit filename="plugins/scriptedwizard/wxsmith/GenericSingleChoiceList.wxs">
 			<Option compilerVar="CPP" />
 			<Option compile="0" />
 			<Option link="0" />
-			<Option target="Project wizard" />
+			<Option target="Scripted wizard" />
+		</Unit>
+		<Unit filename="plugins/scriptedwizard/wxsmith/InfoPanel.wxs">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="Scripted wizard" />
+		</Unit>
+		<Unit filename="plugins/scriptedwizard/wxsmith/ProjectPathPanel.wxs">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="Scripted wizard" />
 		</Unit>
 		<Unit filename="plugins/todo/addtododlg.cpp">
 			<Option compilerVar="CPP" />
@@ -1993,6 +1897,12 @@
 		</Unit>
 		<Unit filename="sdk/autodetectcompilers.h">
 			<Option compilerVar="" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="sdk/backgroundthread.h">
+			<Option compilerVar="CPP" />
 			<Option compile="0" />
 			<Option link="0" />
 			<Option target="sdk" />
@@ -2387,6 +2297,16 @@
 			<Option link="0" />
 			<Option target="sdk" />
 		</Unit>
+		<Unit filename="sdk/filemanager.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="sdk/filemanager.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="sdk" />
+		</Unit>
 		<Unit filename="sdk/finddlg.cpp">
 			<Option compilerVar="CPP" />
 			<Option target="sdk" />
@@ -2425,6 +2345,12 @@
 			<Option link="0" />
 			<Option target="sdk" />
 		</Unit>
+		<Unit filename="sdk/id.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="sdk" />
+		</Unit>
 		<Unit filename="sdk/importers_globals.cpp">
 			<Option compilerVar="CPP" />
 			<Option target="sdk" />
@@ -2441,6 +2367,16 @@
 		</Unit>
 		<Unit filename="sdk/incrementalselectlistdlg.h">
 			<Option compilerVar="" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="sdk/infowindow.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="sdk/infowindow.h">
+			<Option compilerVar="CPP" />
 			<Option compile="0" />
 			<Option link="0" />
 			<Option target="sdk" />
@@ -2897,8 +2833,8 @@
 			<Option link="0" />
 			<Option target="sdk" />
 		</Unit>
-		<Unit filename="sdk/resources/global_user_vars.xrc">
-			<Option compilerVar="" />
+		<Unit filename="sdk/resources/global_uservars.xrc">
+			<Option compilerVar="CPP" />
 			<Option compile="0" />
 			<Option link="0" />
 			<Option target="sdk" />
@@ -3019,6 +2955,12 @@
 		</Unit>
 		<Unit filename="sdk/resources/select_target.xrc">
 			<Option compilerVar="" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="sdk/safedelete.h">
+			<Option compilerVar="CPP" />
 			<Option compile="0" />
 			<Option link="0" />
 			<Option target="sdk" />
@@ -3454,6 +3396,16 @@
 			<Option link="0" />
 			<Option target="tinyXML" />
 		</Unit>
+		<Unit filename="sdk/tinyxml/tinywxuni.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="sdk/tinyxml/tinywxuni.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="sdk" />
+		</Unit>
 		<Unit filename="sdk/tinyxml/tinyxml.cpp">
 			<Option compilerVar="CPP" />
 			<Option target="tinyXML" />
@@ -3492,6 +3444,16 @@
 			<Option link="0" />
 			<Option target="sdk" />
 		</Unit>
+		<Unit filename="sdk/virtualbuildtargetsdlg.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="sdk/virtualbuildtargetsdlg.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="sdk" />
+		</Unit>
 		<Unit filename="sdk/workspaceloader.cpp">
 			<Option compilerVar="CPP" />
 			<Option target="sdk" />
@@ -3502,7 +3464,43 @@
 			<Option link="0" />
 			<Option target="sdk" />
 		</Unit>
-		<Unit filename="sdk/wxFlatNotebook/TextDropTarget.h">
+		<Unit filename="sdk\wxFlatNotebook\fnb_resources.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="wxFlatNotebook" />
+		</Unit>
+		<Unit filename="sdk\wxFlatNotebook\popup_dlg.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="wxFlatNotebook" />
+		</Unit>
+		<Unit filename="sdk\wxFlatNotebook\popup_dlg.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="wxFlatNotebook" />
+		</Unit>
+		<Unit filename="sdk\wxFlatNotebook\renderer.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="wxFlatNotebook" />
+		</Unit>
+		<Unit filename="sdk\wxFlatNotebook\renderer.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="wxFlatNotebook" />
+		</Unit>
+		<Unit filename="sdk\wxFlatNotebook\singleton.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="wxFlatNotebook" />
+		</Unit>
+		<Unit filename="sdk\wxFlatNotebook\smart_ptr.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="wxFlatNotebook" />
+		</Unit>
+		<Unit filename="sdk/wxFlatNotebook/wxFNBDropTarget.h">
 			<Option compilerVar="CPP" />
 			<Option compile="0" />
 			<Option link="0" />
@@ -4571,6 +4569,16 @@
 			<Option link="0" />
 			<Option target="src" />
 		</Unit>
+		<Unit filename="src/scriptconsole.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="src" />
+		</Unit>
+		<Unit filename="src/scriptconsole.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="src" />
+		</Unit>
 		<Unit filename="src/splashscreen.cpp">
 			<Option compilerVar="CPP" />
 			<Option target="src" />
@@ -4611,10 +4619,9 @@
 			<Option compilerVar="CPP" />
 			<Option target="ConsoleRunner" />
 		</Unit>
-		<Unit filename="tools/autorevision/autorevision.cpp">
+		<Unit filename="build_tools/autorevision/autorevision.cpp">
 			<Option compilerVar="CPP" />
 			<Option target="AutoRevision" />
 		</Unit>
-		<Extensions />
 	</Project>
 </CodeBlocks_project_file>

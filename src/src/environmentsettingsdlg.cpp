@@ -36,6 +36,10 @@
     #include "associations.h"
 #endif
 
+#ifndef CB_PRECOMP
+    #include "cbplugin.h" // cgCompiler, cgDebugger...
+#endif
+
 // images by order of pages
 const wxString base_imgs[] =
 {
@@ -136,25 +140,26 @@ EnvironmentSettingsDlg::EnvironmentSettingsDlg(wxWindow* parent, wxDockArt* art)
     XRCCTRL(*this, "chkAutoShowMessagesOnWarn", wxCheckBox)->Enable(en);
     XRCCTRL(*this, "chkAutoShowMessagesOnErr", wxCheckBox)->Enable(en);
 
-	bool i18n=cfg->ReadBool(_T("/environment/I18N"), false);
-		XRCCTRL(*this, "chkI18N", wxCheckBox)->SetValue(i18n);
-	for(size_t i=0; i < LANGUAGES_SIZE; i++)
-	{
-		XRCCTRL(*this, "cbxLanguage", wxComboBox)->Append(langs[i]);
-	}
-	XRCCTRL(*this, "cbxLanguage", wxComboBox)->Enable(i18n);
-	if(i18n)
-	{
-		int lng = cfg->ReadInt(_T("/locale/language"),-1);
+    bool i18n=cfg->ReadBool(_T("/environment/I18N"), false);
+        XRCCTRL(*this, "chkI18N", wxCheckBox)->SetValue(i18n);
+    for(size_t i=0; i < LANGUAGES_SIZE; i++)
+    {
+        XRCCTRL(*this, "cbxLanguage", wxComboBox)->Append(langs[i]);
+    }
+    XRCCTRL(*this, "cbxLanguage", wxComboBox)->Enable(i18n);
+    if(i18n)
+    {
+        int lng = cfg->ReadInt(_T("/locale/language"),-1);
 
-		if (lng >= 0 && static_cast<unsigned int>(lng) < LANGUAGES_SIZE)
-		{
-			XRCCTRL(*this, "cbxLanguage", wxComboBox)->SetSelection(lng+1);
-		}
-	}
+        if (lng >= 0 && static_cast<unsigned int>(lng) < LANGUAGES_SIZE)
+        {
+            XRCCTRL(*this, "cbxLanguage", wxComboBox)->SetSelection(lng+1);
+        }
+    }
 
     // tab "Notebook"
     XRCCTRL(*this, "cmbEditorTabs", wxComboBox)->SetSelection(cfg->ReadInt(_T("/environment/tabs_style"), 0));
+    XRCCTRL(*this, "chkSmartTabs", wxCheckBox)->SetValue(cfg->ReadBool(_T("/environment/tabs_smart"), 0));
     XRCCTRL(*this, "btnFNBorder", wxButton)->SetBackgroundColour(cfg->ReadColour(_T("/environment/gradient_border"), wxColour(wxSystemSettings::GetColour(wxSYS_COLOUR_BTNSHADOW))));
     XRCCTRL(*this, "btnFNFrom", wxButton)->SetBackgroundColour(cfg->ReadColour(_T("/environment/gradient_from"), wxColour(wxSystemSettings::GetColour(wxSYS_COLOUR_3DFACE))));
     XRCCTRL(*this, "btnFNTo", wxButton)->SetBackgroundColour(cfg->ReadColour(_T("/environment/gradient_to"), *wxWHITE));
@@ -218,8 +223,8 @@ void EnvironmentSettingsDlg::AddPluginPanels()
         cbConfigurationPanel* panel = m_PluginPanels[i];
         lb->AddPage(panel, panel->GetTitle());
 
-        lb->GetImageList()->Add(LoadPNGWindows2000Hack(base + panel->GetBitmapBaseName() + _T(".png")));
-        lb->GetImageList()->Add(LoadPNGWindows2000Hack(base + panel->GetBitmapBaseName() + _T("-off.png")));
+        lb->GetImageList()->Add(cbLoadBitmap(base + panel->GetBitmapBaseName() + _T(".png")));
+        lb->GetImageList()->Add(cbLoadBitmap(base + panel->GetBitmapBaseName() + _T("-off.png")));
         lb->SetPageImage(lb->GetPageCount() - 1, lb->GetImageList()->GetImageCount() - 2);
     }
 
@@ -234,9 +239,9 @@ void EnvironmentSettingsDlg::LoadListbookImages()
     wxBitmap bmp;
     for (int i = 0; i < IMAGES_COUNT; ++i)
     {
-        bmp.LoadFile(base + base_imgs[i] + _T(".png"), wxBITMAP_TYPE_PNG);
+        bmp = cbLoadBitmap(base + base_imgs[i] + _T(".png"));
         images->Add(bmp);
-        bmp.LoadFile(base + base_imgs[i] + _T("-off.png"), wxBITMAP_TYPE_PNG);
+        bmp = cbLoadBitmap(base + base_imgs[i] + _T("-off.png"));
         images->Add(bmp);
     }
     wxListbook* lb = XRCCTRL(*this, "nbMain", wxListbook);
@@ -297,16 +302,16 @@ void EnvironmentSettingsDlg::OnManageAssocs(wxCommandEvent& event)
 
 void EnvironmentSettingsDlg::OnChooseColour(wxCommandEvent& event)
 {
-	wxColourData data;
-	wxWindow* sender = FindWindowById(event.GetId());
+    wxColourData data;
+    wxWindow* sender = FindWindowById(event.GetId());
     data.SetColour(sender->GetBackgroundColour());
 
-	wxColourDialog dlg(this, &data);
+    wxColourDialog dlg(this, &data);
     PlaceWindow(&dlg);
     if (dlg.ShowModal() == wxID_OK)
     {
-    	wxColour colour = dlg.GetColourData().GetColour();
-	    sender->SetBackgroundColour(colour);
+        wxColour colour = dlg.GetColourData().GetColour();
+        sender->SetBackgroundColour(colour);
     }
 }
 
@@ -382,6 +387,7 @@ void EnvironmentSettingsDlg::EndModal(int retCode)
 
         // tab "Appearence"
         cfg->Write(_T("/environment/tabs_style"),           (int)XRCCTRL(*this, "cmbEditorTabs", wxComboBox)->GetSelection());
+        cfg->Write(_T("/environment/tabs_smart"),           (bool)XRCCTRL(*this, "chkSmartTabs", wxCheckBox)->GetValue());
         cfg->Write(_T("/environment/gradient_border"),      XRCCTRL(*this, "btnFNBorder", wxButton)->GetBackgroundColour());
         cfg->Write(_T("/environment/gradient_from"),        XRCCTRL(*this, "btnFNFrom", wxButton)->GetBackgroundColour());
         cfg->Write(_T("/environment/gradient_to"),          XRCCTRL(*this, "btnFNTo", wxButton)->GetBackgroundColour());

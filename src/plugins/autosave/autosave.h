@@ -37,6 +37,7 @@ class Autosave : public cbPlugin
 		void BuildModuleMenu(const ModuleType type, wxMenu* menu, const FileTreeData* data = 0){ return ; }
 		bool BuildToolBar(wxToolBar* toolBar){ return false; }
 		void OnAttach(); // fires when the plugin is attached to the application
+		void Start();
 		void OnRelease(bool appShutDown); // fires when the plugin is released from the application
 		virtual cbConfigurationPanel* GetConfigurationPanel(wxWindow* parent);
         void OnTimer(wxTimerEvent& event);
@@ -60,10 +61,6 @@ class AutosaveConfigDlg : public cbConfigurationPanel
         void LoadSettings();
         void SaveSettings();
 };
-
-
-// Declare the plugin's hooks
-CB_DECLARE_PLUGIN();
 
 #endif // AUTOSAVE_H
 

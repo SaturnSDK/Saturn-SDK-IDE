@@ -2,6 +2,8 @@
 <CodeBlocks_workspace_file>
 	<Workspace title="All contrib plugins">
 		<Project filename="plugins\contrib\byogames\byogames.cbp" active="1" />
+		<Project filename="plugins\contrib\cb_koders\cb_koders.cbp" />
+		<Project filename="plugins\contrib\codesnippets\codesnippets.cbp" />
 		<Project filename="plugins\contrib\codestat\codestat.cbp" />
 		<Project filename="plugins\contrib\copystrings\copystrings.cbp" />
 		<Project filename="plugins\contrib\devpak_plugin\DevPakPlugin.cbp" />
@@ -9,8 +11,10 @@
 		<Project filename="plugins\contrib\envvars\envvars.cbp" />
 		<Project filename="plugins\contrib\help_plugin\help-plugin.cbp" />
 		<Project filename="plugins\contrib\keybinder\keybinder.cbp" />
+		<Project filename="plugins\contrib\lib_finder\lib_finder.cbp" />
 		<Project filename="plugins\contrib\profiler\cbprofiler.cbp" />
 		<Project filename="plugins\contrib\source_exporter\Exporter.cbp" />
 		<Project filename="plugins\contrib\wxSmith\wxSmith.cbp" />
+		<Project filename="tools\cb_share_config\cb_share_config.cbp" />
 	</Workspace>
 </CodeBlocks_workspace_file>

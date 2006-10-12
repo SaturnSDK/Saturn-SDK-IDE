@@ -26,12 +26,8 @@ if BUILD_MIMEHANDLER
 MAYBE_MIMEHANDLER=defaultmimehandler
 endif
 
-if BUILD_PLUGINWIZARD
-MAYBE_PLUGINWIZARD=pluginwizard
-endif
-
-if BUILD_PROJECTWIZARD
-MAYBE_PROJECTWIZARD=projectwizard
+if BUILD_SCRIPTEDWIZARD
+MAYBE_SCRIPTEDWIZARD=scriptedwizard
 endif
 
 if BUILD_TODO
@@ -53,20 +49,19 @@ SUBDIRS=$(MAYBE_ASTYLE) \
 		$(MAYBE_COMPILER) \
 		$(MAYBE_DEBUGGER) \
 		$(MAYBE_MIMEHANDLER) \
-		$(MAYBE_PLUGINWIZARD) \
-		$(MAYBE_PROJECTWIZARD) \
+		$(MAYBE_SCRIPTEDWIZARD) \
 		$(MAYBE_TODO) \
 		$(MAYBE_MANIFEST) \
 		$(MAYBE_CONSTRIB)
 
 DIST_SUBDIRS = astyle \
+		autosave \
 		classwizard \
 		codecompletion \
 		compilergcc \
 		debuggergdb \
 		defaultmimehandler \
-		pluginwizard \
-		projectwizard \
+		scriptedwizard \
 		todo \
 		xpmanifest \
 		contrib

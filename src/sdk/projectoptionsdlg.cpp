@@ -34,6 +34,9 @@
     #include "scriptingmanager.h"
     #include "compilerfactory.h"
     #include "globals.h"
+    #include "cbproject.h"
+    #include "cbplugin.h"
+    #include "sdk_events.h"
 
     #include <wx/xrc/xmlres.h>
     #include <wx/treectrl.h>
@@ -51,6 +54,8 @@
 #include <wx/radiobox.h>
 #include <wx/notebook.h>
 
+#include "scripting/sqplus/sqplus.h"
+
 #include "configurationpanel.h"
 #include "projectoptionsdlg.h" // class's header file
 #include "editarrayorderdlg.h"
@@ -58,6 +63,7 @@
 #include "externaldepsdlg.h"
 #include "annoyingdialog.h"
 #include "filefilters.h"
+#include "virtualbuildtargetsdlg.h"
 
 BEGIN_EVENT_TABLE(ProjectOptionsDlg, wxDialog)
     EVT_UPDATE_UI( -1,                                 ProjectOptionsDlg::OnUpdateUI)
@@ -73,6 +79,7 @@ BEGIN_EVENT_TABLE(ProjectOptionsDlg, wxDialog)
 	EVT_BUTTON(    XRCID("btnBrowseOutputFilename"),   ProjectOptionsDlg::OnBrowseOutputFilenameClick)
 	EVT_BUTTON(    XRCID("btnBrowseWorkingDir"),       ProjectOptionsDlg::OnBrowseDirClick)
 	EVT_BUTTON(    XRCID("btnBrowseObjectDir"),        ProjectOptionsDlg::OnBrowseDirClick)
+	EVT_BUTTON(    XRCID("btnVirtualBuildTargets"),    ProjectOptionsDlg::OnVirtualTargets)
 	EVT_BUTTON(    XRCID("btnExternalDeps"),           ProjectOptionsDlg::OnEditDepsClick)
 	EVT_BUTTON(    XRCID("btnExportTarget"),           ProjectOptionsDlg::OnExportTargetClick)
 	EVT_LISTBOX_DCLICK(XRCID("lstFiles"),              ProjectOptionsDlg::OnFileOptionsClick)
@@ -194,9 +201,10 @@ void ProjectOptionsDlg::FillBuildTargets()
     DoTargetChange();
 }
 
-void ProjectOptionsDlg::DoTargetChange()
+void ProjectOptionsDlg::DoTargetChange(bool saveOld)
 {
-    DoBeforeTargetChange();
+    if (saveOld)
+        DoBeforeTargetChange();
 
     wxListBox* lstTargets = XRCCTRL(*this, "lstBuildTarget", wxListBox);
 
@@ -206,23 +214,31 @@ void ProjectOptionsDlg::DoTargetChange()
 	if (!target)
 		return;
 
-	XRCCTRL(*this, "chkBuildThisTarget", wxCheckBox)->SetValue(target->GetIncludeInTargetAll());
-	XRCCTRL(*this, "chkCreateDefFile", wxCheckBox)->SetValue(target->GetCreateDefFile());
-	XRCCTRL(*this, "chkCreateStaticLib", wxCheckBox)->SetValue(target->GetCreateStaticLib());
-
 	// global project options
 	wxComboBox* cmb = XRCCTRL(*this, "cmbProjectType", wxComboBox);
 	wxCheckBox* chkCR = XRCCTRL(*this, "chkUseConsoleRunner", wxCheckBox);
+	wxCheckBox* chkSL = XRCCTRL(*this, "chkCreateStaticLib", wxCheckBox);
+	wxCheckBox* chkCD = XRCCTRL(*this, "chkCreateDefFile", wxCheckBox);
     wxTextCtrl* txt = XRCCTRL(*this, "txtOutputFilename", wxTextCtrl);
     wxTextCtrl* txtW = XRCCTRL(*this, "txtWorkingDir", wxTextCtrl);
     wxTextCtrl* txtO = XRCCTRL(*this, "txtObjectDir", wxTextCtrl);
     wxButton* browse = XRCCTRL(*this, "btnBrowseOutputFilename", wxButton);
     wxButton* browseW = XRCCTRL(*this, "btnBrowseWorkingDir", wxButton);
     wxButton* browseO = XRCCTRL(*this, "btnBrowseObjectDir", wxButton);
-    XRCCTRL(*this, "chkCreateDefFile", wxCheckBox)->Enable(target->GetTargetType() == ttStaticLib ||
-                                                            target->GetTargetType() == ttDynamicLib);
+
+    chkCR->SetValue(false);
+	chkCD->SetValue(target->GetCreateDefFile());
+	chkSL->SetValue(target->GetCreateStaticLib());
+
+    TargetFilenameGenerationPolicy prefixPolicy;
+    TargetFilenameGenerationPolicy extensionPolicy;
+    target->GetTargetFilenameGenerationPolicy(&prefixPolicy, &extensionPolicy);
+    XRCCTRL(*this, "chkAutoGenPrefix", wxCheckBox)->SetValue(prefixPolicy == tgfpPlatformDefault);
+    XRCCTRL(*this, "chkAutoGenExt", wxCheckBox)->SetValue(extensionPolicy == tgfpPlatformDefault);
+
     chkCR->Enable(false);
-    XRCCTRL(*this, "chkCreateStaticLib", wxCheckBox)->Enable(target->GetTargetType() == ttDynamicLib);
+    chkSL->Enable(target->GetTargetType() == ttDynamicLib);
+    chkCD->Enable(target->GetTargetType() == ttDynamicLib);
     if (cmb && chkCR && txt && browse)
     {
         cmb->SetSelection(target->GetTargetType());
@@ -301,9 +317,12 @@ void ProjectOptionsDlg::DoBeforeTargetChange(bool force)
 			return;
 
         target->SetUseConsoleRunner(XRCCTRL(*this, "chkUseConsoleRunner", wxCheckBox)->GetValue());
-		target->SetIncludeInTargetAll(XRCCTRL(*this, "chkBuildThisTarget", wxCheckBox)->GetValue());
         target->SetCreateDefFile(XRCCTRL(*this, "chkCreateDefFile", wxCheckBox)->GetValue());
         target->SetCreateStaticLib(XRCCTRL(*this, "chkCreateStaticLib", wxCheckBox)->GetValue());
+
+        target->SetTargetFilenameGenerationPolicy(
+            XRCCTRL(*this, "chkAutoGenPrefix", wxCheckBox)->GetValue() ? tgfpPlatformDefault : tgfpNone,
+            XRCCTRL(*this, "chkAutoGenExt", wxCheckBox)->GetValue() ? tgfpPlatformDefault : tgfpNone);
 
 		// global project options
 		target->SetTargetType(TargetType(XRCCTRL(*this, "cmbProjectType", wxComboBox)->GetSelection()));
@@ -356,8 +375,8 @@ void ProjectOptionsDlg::OnProjectTypeChanged(wxCommandEvent& event)
     if (!cmb || !txt || !browse)
         return;
 
-    XRCCTRL(*this, "chkCreateDefFile", wxCheckBox)->Enable(cmb->GetSelection() == ttStaticLib ||
-                                                            cmb->GetSelection() == ttDynamicLib);
+    XRCCTRL(*this, "chkUseConsoleRunner", wxCheckBox)->Enable(cmb->GetSelection() == ttConsoleOnly);
+    XRCCTRL(*this, "chkCreateDefFile", wxCheckBox)->Enable(cmb->GetSelection() == ttDynamicLib);
     XRCCTRL(*this, "chkCreateStaticLib", wxCheckBox)->Enable(cmb->GetSelection() == ttDynamicLib);
 
     txt->Enable(true);
@@ -380,6 +399,7 @@ void ProjectOptionsDlg::OnProjectTypeChanged(wxCommandEvent& event)
     wxString ext = fname.GetExt();
     wxString libext = compiler->GetSwitches().libExtension;
     wxString libpre = compiler->GetSwitches().libPrefix;
+
     switch ((TargetType)cmb->GetSelection())
     {
         case ttConsoleOnly:
@@ -481,15 +501,8 @@ void ProjectOptionsDlg::OnAddBuildTargetClick(wxCommandEvent& event)
 {
     wxString targetName = wxGetTextFromUser(_("Enter the new build target name:"),
                                             _("New build target"));
-    if (targetName.IsEmpty())
+    if (!ValidateTargetName(targetName))
         return;
-    if (m_Project->GetBuildTarget(targetName))
-    {
-        wxMessageDialog(this, _("A target with this name already exists in this project!"),
-                                _("Error"),
-                                wxOK | wxCENTRE | wxICON_ERROR);
-        return;
-    }
 
     ProjectBuildTarget* target = m_Project->AddBuildTarget(targetName);
     if (!target)
@@ -528,8 +541,9 @@ void ProjectOptionsDlg::OnEditBuildTargetClick(wxCommandEvent& event)
     wxString newTargetName = wxGetTextFromUser(_("Change the build target name:"),
                                                _("Rename build target"),
                                               oldTargetName);
-    if (newTargetName.IsEmpty())
+    if (newTargetName == oldTargetName || !ValidateTargetName(newTargetName))
         return;
+
     m_Project->RenameBuildTarget(targetIdx, newTargetName);
     lstTargets->SetString(targetIdx, newTargetName);
     lstTargets->SetSelection(targetIdx);
@@ -555,7 +569,7 @@ void ProjectOptionsDlg::OnCopyBuildTargetClick(wxCommandEvent& event)
     wxString newTargetName = wxGetTextFromUser(_("Enter the duplicated build target's name:"),
                                                _("Duplicate build target"),
                                               _("Copy of ") + target->GetTitle());
-    if (newTargetName.IsEmpty())
+    if (!ValidateTargetName(newTargetName))
         return;
     if (!m_Project->DuplicateBuildTarget(targetIdx, newTargetName))
     {
@@ -596,6 +610,12 @@ void ProjectOptionsDlg::OnRemoveBuildTargetClick(wxCommandEvent& event)
     BuildScriptsTree();
     CodeBlocksEvent e(cbEVT_PROJECT_TARGETS_MODIFIED);
     Manager::Get()->GetPluginManager()->NotifyPlugins(e);
+}
+
+void ProjectOptionsDlg::OnVirtualTargets(wxCommandEvent& event)
+{
+    VirtualBuildTargetsDlg dlg(this, -1, m_Project);
+    dlg.ShowModal();
 }
 
 void ProjectOptionsDlg::OnEditDepsClick(wxCommandEvent& event)
@@ -714,8 +734,53 @@ void ProjectOptionsDlg::OnScriptsOverviewSelChanged(wxTreeEvent& event)
 
 bool ProjectOptionsDlg::IsScriptValid(const wxString& script)
 {
-//    int r = Manager::Get()->GetScriptingManager()->LoadAndRunScript(m_Project->GetBasePath() + wxFILE_SEP_PATH + script, false);
-//    Manager::Get()->GetScriptingManager()->GetEngine()->Discard("test_module");
+    try
+    {
+        Manager::Get()->GetScriptingManager()->LoadScript(m_Project->GetBasePath() + wxFILE_SEP_PATH + script);
+        SqPlus::SquirrelFunction<void> setopts("SetBuildOptions");
+        SqPlus::SquirrelFunction<void> unsetopts("UnsetBuildOptions");
+        // scripts must provide both functions
+        if (setopts.func.IsNull() || unsetopts.func.IsNull())
+            return false;
+        return true;
+    }
+    catch (SquirrelError& e)
+    {
+        Manager::Get()->GetScriptingManager()->DisplayErrors(&e);
+        return false;
+    }
+}
+
+bool ProjectOptionsDlg::ValidateTargetName(const wxString& name)
+{
+    if (name.IsEmpty())
+        return false;
+
+    if (m_Project->GetBuildTarget(name))
+    {
+        cbMessageBox(_("A target with this name already exists in this project!"),
+                        _("Error"),
+                        wxOK | wxCENTRE | wxICON_ERROR);
+        return false;
+    }
+
+    if (m_Project->HasVirtualBuildTarget(name))
+    {
+        cbMessageBox(_("A virtual target with this name already exists in this project!"),
+                        _("Error"),
+                        wxOK | wxCENTRE | wxICON_ERROR);
+        return false;
+    }
+
+    const wxString forbidden = _T(";,!@#$%^&*\"':`~=?\\><");
+    if (name.find_first_of(forbidden, 0) != wxString::npos)
+    {
+        cbMessageBox(_("The name contains at least one invalid character:\n\n") + forbidden,
+                        _("Error"),
+                        wxOK | wxCENTRE | wxICON_ERROR);
+        return false;
+    }
+
     return true;
 }
 
@@ -764,7 +829,7 @@ void ProjectOptionsDlg::OnAddScript(wxCommandEvent& event)
                     fname.GetPath(),
                     fname.GetFullName(),
                     _("Script files (*.script)|*.script"),
-                    wxOPEN);
+                    wxOPEN | wxHIDE_READONLY);
 
     PlaceWindow(&dlg);
     if (dlg.ShowModal() != wxID_OK)

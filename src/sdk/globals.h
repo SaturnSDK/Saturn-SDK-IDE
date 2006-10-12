@@ -8,6 +8,7 @@
 #include <wx/filename.h>
 #include <wx/intl.h>
 #include <wx/msgdlg.h>
+#include <wx/bitmap.h>
 
 class TiXmlDocument;
 
@@ -53,6 +54,7 @@ enum FileType
 	ftStaticLib,
 	ftDynamicLib,
 	ftExecutable,
+	ftXMLDocument,
 	ftOther
 };
 
@@ -73,10 +75,29 @@ enum FileVisualState
     fvsVcOutOfDate,
     fvsVcUpToDate,
     fvsVcRequiresLock,
+    fvsVcExternal,
+    fvsVcGotLock,
+    fvsVcLockStolen,
+    fvsVcMismatch,
+    fvsVcNonControlled,
 
     /// do *not* use this, it exists just to know the number of items...
     fvsLast
 };
+
+/** Template output types. */
+enum TemplateOutputType
+{
+    totProject = 0, ///< template outputs a new project
+    totTarget, ///< template adds a new target in a project
+    totFiles, ///< template outputs a new file (or files)
+    totCustom, ///< template produces custom output (entirely up to the wizard used)
+    totUser ///< template is a user-saved project template
+};
+
+typedef wxString HighlightLanguage;
+#define HL_AUTO _T(" ")
+#define HL_NONE _T("  ")
 
 extern DLLIMPORT const wxString DEFAULT_WORKSPACE;
 extern DLLIMPORT const wxString DEFAULT_ARRAY_SEP;
@@ -124,7 +145,19 @@ extern DLLIMPORT bool NormalizePath(wxFileName& f,const wxString& base);
 
 extern DLLIMPORT wxString URLEncode(const wxString &str);
 
-extern DLLIMPORT wxBitmap LoadPNGWindows2000Hack(const wxString& filename);
+#ifdef __WXMSW__
+/// Check if CommonControls version is at least 6 (XP and up)
+extern DLLIMPORT bool UsesCommonControls6();
+#endif
+
+/** This function loads a bitmap from disk.
+  * Always use this to load bitmaps because it takes care of various
+  * issues with pre-XP windows (actually common controls < 6.00).
+  */
+extern DLLIMPORT wxBitmap cbLoadBitmap(const wxString& filename, int bitmapType = wxBITMAP_TYPE_PNG);
+
+// compatibility function
+inline wxBitmap LoadPNGWindows2000Hack(const wxString& filename){ return cbLoadBitmap(filename); }
 
 /** Finds out if a window is really shown.
   *
@@ -183,6 +216,13 @@ inline int cbMessageBox(const wxString& message, const wxString& caption = wxEmp
     wxMessageDialog dlg(parent, message, caption, style, wxPoint(x,y));
     PlaceWindow(&dlg);
     return dlg.ShowModal();
+};
+
+inline void NotifyMissingFile(const wxString &name)
+{
+    wxString msg;
+    msg.Printf(_T("The file %s could not be found.\nPlease check your installation."), name.c_str());
+    cbMessageBox(msg);
 };
 
 #endif // SDK_GLOBALS_H

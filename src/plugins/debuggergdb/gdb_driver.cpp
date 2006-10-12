@@ -1,6 +1,7 @@
 #include <sdk.h>
 #include "gdb_driver.h"
 #include "gdb_commands.h"
+#include "debuggerstate.h"
 #include <manager.h>
 #include <configmanager.h>
 #include <scriptingmanager.h>
@@ -27,6 +28,15 @@ static wxRegEx reThreadSwitch2(_T("^\\[Switching to thread .*\\]#0[ \t]+(0x[A-z0
 #endif
 static wxRegEx reBreak2(_T("^(0x[A-z0-9]+) in (.*) from (.*)"));
 static wxRegEx reBreak3(_T("^(0x[A-z0-9]+) in (.*)"));
+
+// Pending breakpoint "C:/Devel/libs/irr_svn/source/Irrlicht/CSceneManager.cpp:1077" resolved
+#ifdef __WXMSW__
+static wxRegEx rePendingFound(_T("^Pending[ \t]+breakpoint[ \t]+\"([A-z]:)([^:]+):([0-9]+)\".*"));
+#else
+static wxRegEx rePendingFound(_T("^Pending[ \t]+breakpoint[ \t]+\"([^:]+):([0-9]+)\".*"));
+#endif
+// Breakpoint 2, irr::scene::CSceneManager::getSceneNodeFromName (this=0x3fa878, name=0x3fbed8 "MainLevel", start=0x3fa87c) at CSceneManager.cpp:1077
+static wxRegEx rePendingFound1(_T("^Breakpoint[ \t]+([0-9]+),.*"));
 
 // scripting support
 DECLARE_INSTANCE_TYPE(GDB_driver);
@@ -59,19 +69,23 @@ void GDB_driver::InitializeScripting()
     SqPlus::SQClassDef<GDB_driver>("GDB_driver").
             func(&GDB_driver::RegisterType, "RegisterType");
 
-    // run all scripts
-    wxString script = _T("gdb_types.script");
-    Manager::Get()->GetScriptingManager()->LoadScript(script);
-    try
+    // run extensions script
+    wxString script = ConfigManager::LocateDataFile(_T("gdb_types.script"), sdScriptsUser | sdScriptsGlobal);
+    if (!script.IsEmpty())
     {
-        SqPlus::SquirrelFunction<void>("RegisterTypes")(this);
-    }
-    catch (SquirrelError e)
-    {
-        m_pDBG->Log(wxString::Format(_T("Invalid debugger script: '%s'"), script.c_str()));
-        m_pDBG->Log(cbC2U(e.desc));
+        Manager::Get()->GetScriptingManager()->LoadScript(script);
+        try
+        {
+            SqPlus::SquirrelFunction<void> f("RegisterTypes");
+            f(this);
+        }
+        catch (SquirrelError e)
+        {
+            m_pDBG->Log(wxString::Format(_T("Invalid debugger script: '%s'"), script.c_str()));
+            m_pDBG->Log(cbC2U(e.desc));
 
-        Manager::Get()->GetScriptingManager()->DisplayErrors(&e);
+            Manager::Get()->GetScriptingManager()->DisplayErrors(&e);
+        }
     }
 }
 
@@ -138,13 +152,13 @@ void GDB_driver::Prepare(bool isConsole)
     // default initialization
 
     // make sure we 're using the prompt that we know and trust ;)
-	QueueCommand(new DebuggerCmd(this, wxString(_T("set prompt ")) + FULL_GDB_PROMPT));
+    QueueCommand(new DebuggerCmd(this, wxString(_T("set prompt ")) + FULL_GDB_PROMPT));
 
     // debugger version
-	QueueCommand(new DebuggerCmd(this, _T("show version")));
+    QueueCommand(new DebuggerCmd(this, _T("show version")));
     // no confirmation
-	QueueCommand(new DebuggerCmd(this, _T("set confirm off")));
-	// no wrapping lines
+    QueueCommand(new DebuggerCmd(this, _T("set confirm off")));
+    // no wrapping lines
     QueueCommand(new DebuggerCmd(this, _T("set width 0")));
     // no pagination
     QueueCommand(new DebuggerCmd(this, _T("set height 0")));
@@ -152,13 +166,47 @@ void GDB_driver::Prepare(bool isConsole)
     QueueCommand(new DebuggerCmd(this, _T("set breakpoint pending on")));
     // show pretty function names in disassembly
     QueueCommand(new DebuggerCmd(this, _T("set print asm-demangle on")));
+    // unwind stack on signal
+    QueueCommand(new DebuggerCmd(this, _T("set unwindonsignal on")));
+
+    int disassembly_flavour = Manager::Get()->GetConfigManager(_T("debugger"))
+                              ->ReadInt(_T("disassembly_flavor"), 0);
+
+//    Manager::Get()->GetMessageManager()->Log(_("Flavor is: %d"), disassembly_flavour);
+
+    wxString flavour = _T("set disassembly-flavor ");
+    switch (disassembly_flavour)
+    {
+        case 1: // AT & T
+        {
+            flavour << _T("att");
+            break;
+        }
+        case 2: // Intel
+        {
+            flavour << _T("intel");
+            break;
+        }
+        case 3: // Custom
+        {
+            wxString instruction_set = Manager::Get()->GetConfigManager(_T("debugger"))
+                                       ->Read(_T("instruction_set"), wxEmptyString);
+            flavour << instruction_set;
+            break;
+        }
+        default: // including case 0: // System default
 #ifndef __WXMSW__
-    QueueCommand(new DebuggerCmd(this, _T("set disassembly-flavor att")));
+            flavour << _T("att");
 #else
-	if (isConsole)
-        QueueCommand(new DebuggerCmd(this, _T("set new-console on")));
-    QueueCommand(new DebuggerCmd(this, _T("set disassembly-flavor intel")));
+            flavour << _T("intel");
 #endif
+    }// switch
+
+#ifdef __WXMSW__
+    if (isConsole)
+        QueueCommand(new DebuggerCmd(this, _T("set new-console on")));
+#endif
+    QueueCommand(new DebuggerCmd(this, flavour));
 
     // define all scripted types
     m_Types.Clear();
@@ -194,17 +242,29 @@ void GDB_driver::Start(bool breakOnEntry)
 {
     ResetCursor();
 
+    // reset other states
+    GdbCmd_DisassemblyInit::LastAddr.Clear();
+    if (m_pDisassembly)
+    {
+        StackFrame sf;
+        m_pDisassembly->Clear(sf);
+    }
+
     // under windows, 'start' segfaults with wx projects...
-#ifdef __WXMSW__
+#if (defined( __WXMSW__) || defined(__WXMAC__))
     m_BreakOnEntry = false;
     m_ManualBreakOnEntry = false;
-    // start the process
-    QueueCommand(new DebuggerCmd(this, _T("run")));
+
+    if (!Manager::Get()->GetConfigManager(_T("debugger"))->ReadBool(_T("do_not_run"), false))
+        // start the process
+        QueueCommand(new DebuggerCmd(this, _T("run")));
 #else
     m_BreakOnEntry = breakOnEntry;
     m_ManualBreakOnEntry = true;
-    // start the process
-    QueueCommand(new DebuggerCmd(this, _T("start")));
+
+    if (!Manager::Get()->GetConfigManager(_T("debugger"))->ReadBool(_T("do_not_run"), false))
+        // start the process
+        QueueCommand(new DebuggerCmd(this, _T("start")));
 #endif
 }
 
@@ -344,17 +404,17 @@ void GDB_driver::AddBreakpoint(DebuggerBreakpoint* bp)
     }
     //end GDB workaround
 
-	QueueCommand(new GdbCmd_AddBreakpoint(this, bp));
+    QueueCommand(new GdbCmd_AddBreakpoint(this, bp));
 }
 
 void GDB_driver::RemoveBreakpoint(DebuggerBreakpoint* bp)
 {
-	QueueCommand(new GdbCmd_RemoveBreakpoint(this, bp));
+    QueueCommand(new GdbCmd_RemoveBreakpoint(this, bp));
 }
 
-void GDB_driver::EvaluateSymbol(const wxString& symbol, wxTipWindow** tipWin, const wxRect& tipRect)
+void GDB_driver::EvaluateSymbol(const wxString& symbol, const wxRect& tipRect)
 {
-    QueueCommand(new GdbCmd_FindTooltipType(this, symbol, tipWin, tipRect));
+    QueueCommand(new GdbCmd_FindTooltipType(this, symbol, tipRect));
 }
 
 void GDB_driver::UpdateWatches(bool doLocals, bool doArgs, DebuggerTree* tree)
@@ -394,9 +454,9 @@ void GDB_driver::ParseOutput(const wxString& output)
         return;
     }
     static wxString buffer;
-	buffer << output << _T('\n');
+    buffer << output << _T('\n');
 
-	m_pDBG->DebugLog(output);
+    m_pDBG->DebugLog(output);
 
     int idx = buffer.First(GDB_PROMPT);
     if (idx != wxNOT_FOUND)
@@ -427,6 +487,7 @@ void GDB_driver::ParseOutput(const wxString& output)
     }
 
     bool needsUpdate = false;
+    bool forceUpdate = false;
 
     // non-command messages (e.g. breakpoint hits)
     // break them up in lines
@@ -490,18 +551,68 @@ void GDB_driver::ParseOutput(const wxString& output)
                 CodeBlocksDockEvent evt(cbEVT_SHOW_DOCK_WINDOW);
                 evt.pWindow = m_pBacktrace;
                 Manager::Get()->GetAppWindow()->ProcessEvent(evt);
+                forceUpdate = true;
             }
             needsUpdate = true;
             // the backtrace will be generated when NotifyPlugins() is called
             // and only if the backtrace window is shown
         }
 
+        // general errors
+        // we don't deal with them, just relay them back to the user
+        else if (lines[i].StartsWith(_T("Error ")) ||
+                lines[i].StartsWith(_T("Cannot evaluate")))
+        {
+            m_pDBG->Log(lines[i]);
+        }
+
         // pending breakpoint resolved?
         // e.g.
-        // Pending breakpoint "C:/Devel/codeblocks/trunk/src/sdk/cbproject.cpp:332" resolved
+        // Pending breakpoint "C:/Devel/libs/irr_svn/source/Irrlicht/CSceneManager.cpp:1077" resolved
+        // Breakpoint 2, irr::scene::CSceneManager::getSceneNodeFromName (this=0x3fa878, name=0x3fbed8 "MainLevel", start=0x3fa87c) at CSceneManager.cpp:1077
         else if (lines[i].StartsWith(_T("Pending breakpoint ")))
         {
             m_pDBG->Log(lines[i]);
+
+            // we face a problem here:
+            // gdb sets a *new* breakpoint when the pending address is resolved.
+            // this means we must update the breakpoint index we have stored
+            // or else we can never remove this (because the breakpoint index doesn't match)...
+
+            // Pending breakpoint "C:/Devel/libs/irr_svn/source/Irrlicht/CSceneManager.cpp:1077" resolved
+            wxString bpstr = lines[i];
+            // Breakpoint 2, irr::scene::CSceneManager::getSceneNodeFromName (this=0x3fa878, name=0x3fbed8 "MainLevel", start=0x3fa87c) at CSceneManager.cpp:1077
+            wxString newbpstr = lines[i+1];
+
+            if (rePendingFound.Matches(bpstr) &&
+                rePendingFound1.Matches(newbpstr))
+            {
+//                m_pDBG->Log(_T("MATCH"));
+            #ifdef __WXMSW__
+                wxString file = rePendingFound.GetMatch(bpstr, 1) + rePendingFound.GetMatch(bpstr, 2);
+                wxString lineStr = rePendingFound.GetMatch(bpstr, 3);
+            #else
+                wxString file = rePendingFound.GetMatch(bpstr, 1);
+                wxString lineStr = rePendingFound.GetMatch(bpstr, 2);
+            #endif
+                file = UnixFilename(file);
+//                m_pDBG->Log(wxString::Format(_T("file: %s, line: %s"), file.c_str(), lineStr.c_str()));
+                long line;
+                lineStr.ToLong(&line);
+                DebuggerState& state = m_pDBG->GetState();
+                int bpindex = state.HasBreakpoint(file, line - 1);
+                DebuggerBreakpoint* bp = state.GetBreakpoint(bpindex);
+                if (bp)
+                {
+//                    m_pDBG->Log(_T("Found BP!!! Updating index..."));
+                    long index;
+                    wxString indexStr = rePendingFound1.GetMatch(newbpstr, 1);
+                    indexStr.ToLong(&index);
+                    // finally! update the breakpoint index
+                    bp->index = index;
+                }
+            }
+            i += 1;
         }
 
         // cursor change
@@ -509,17 +620,17 @@ void GDB_driver::ParseOutput(const wxString& output)
         {
             // breakpoint, e.g.
             // C:/Devel/tmp/test_console_dbg/tmp/main.cpp:14:171:beg:0x401428
-			if ( reBreak.Matches(lines[i]) )
-			{
-			    if (m_ManualBreakOnEntry)
-			    {
-			        m_ManualBreakOnEntry = false;
-			        QueueCommand(new GdbCmd_InfoProgram(this), DebuggerDriver::High);
-			        if (!m_BreakOnEntry)
+            if ( reBreak.Matches(lines[i]) )
+            {
+                if (m_ManualBreakOnEntry)
+                {
+                    m_ManualBreakOnEntry = false;
+                    QueueCommand(new GdbCmd_InfoProgram(this), DebuggerDriver::High);
+                    if (!m_BreakOnEntry)
                         Continue();
-			    }
-			    else
-			    {
+                }
+                else
+                {
                 #ifdef __WXMSW__
                     m_Cursor.file = reBreak.GetMatch(lines[i], 1) + reBreak.GetMatch(lines[i], 2);
                     wxString lineStr = reBreak.GetMatch(lines[i], 3);
@@ -532,48 +643,48 @@ void GDB_driver::ParseOutput(const wxString& output)
                     lineStr.ToLong(&m_Cursor.line);
                     m_Cursor.changed = true;
                     needsUpdate = true;
-			    }
-			}
+                }
+            }
         }
         else
         {
             // other break info, e.g.
             // 0x7c9507a8 in ntdll!KiIntSystemCall () from C:\WINDOWS\system32\ntdll.dll
             wxRegEx* re = 0;
-			if ( reBreak2.Matches(lines[i]) )
+            if ( reBreak2.Matches(lines[i]) )
                 re = &reBreak2;
             else if (reThreadSwitch.Matches(lines[i]))
                 re = &reThreadSwitch;
 
-			if ( re )
-			{
-				m_Cursor.file = re->GetMatch(lines[i], 3);
-				m_Cursor.function = re->GetMatch(lines[i], 2);
-				wxString lineStr = _T("");
-				m_Cursor.address = re->GetMatch(lines[i], 1);
-				m_Cursor.line = -1;
+            if ( re )
+            {
+                m_Cursor.file = re->GetMatch(lines[i], 3);
+                m_Cursor.function = re->GetMatch(lines[i], 2);
+                wxString lineStr = _T("");
+                m_Cursor.address = re->GetMatch(lines[i], 1);
+                m_Cursor.line = -1;
                 m_Cursor.changed = true;
                 needsUpdate = true;
-			}
-			else if ( reThreadSwitch2.Matches(lines[i]) )
-			{
-				m_Cursor.file = reThreadSwitch2.GetMatch(lines[i], 3);
-				m_Cursor.function = reThreadSwitch2.GetMatch(lines[i], 2);
-				wxString lineStr = reThreadSwitch2.GetMatch(lines[i], 4);
-				m_Cursor.address = reThreadSwitch2.GetMatch(lines[i], 1);
-				m_Cursor.line = -1;
+            }
+            else if ( reThreadSwitch2.Matches(lines[i]) )
+            {
+                m_Cursor.file = reThreadSwitch2.GetMatch(lines[i], 3);
+                m_Cursor.function = reThreadSwitch2.GetMatch(lines[i], 2);
+                wxString lineStr = reThreadSwitch2.GetMatch(lines[i], 4);
+                m_Cursor.address = reThreadSwitch2.GetMatch(lines[i], 1);
+                m_Cursor.line = -1;
                 m_Cursor.changed = true;
                 needsUpdate = true;
-			}
-			else if (reBreak3.Matches(lines[i]) )
-			{
-			    m_Cursor.file=_T("");
-			    m_Cursor.function= reBreak3.GetMatch(lines[i], 2);
-                           m_Cursor.address = reBreak3.GetMatch(lines[i], 1);
-                           m_Cursor.line = -1;
-                           m_Cursor.changed = true;
-                           needsUpdate = true;
-			}
+            }
+            else if (reBreak3.Matches(lines[i]) )
+            {
+                m_Cursor.file=_T("");
+                m_Cursor.function= reBreak3.GetMatch(lines[i], 2);
+                m_Cursor.address = reBreak3.GetMatch(lines[i], 1);
+                m_Cursor.line = -1;
+                m_Cursor.changed = true;
+                needsUpdate = true;
+            }
         }
     }
     buffer.Clear();
@@ -581,7 +692,7 @@ void GDB_driver::ParseOutput(const wxString& output)
     // if program is stopped, update various states
     if (needsUpdate)
     {
-        if (m_Cursor.changed)
+        if (m_Cursor.changed || forceUpdate)
             NotifyCursorChanged();
     }
 }

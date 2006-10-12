@@ -18,7 +18,6 @@ lib_LTLIBRARIES = libwxsmith.la
 libwxsmith_la_LDFLAGS = -module -version-info 0:1:0 -shared -no-undefined -avoid-version
 
 libwxsmith_la_LIBADD = ../../../sdk/libcodeblocks.la \
-				../../../sdk/wxscintilla/libwxscintilla.la \
 				defwidgets/libwxsmith_defwidgets.la \
 				properties/libwxsmith_properties.la \
 				resources/libwxsmith_resources.la
@@ -31,6 +30,7 @@ libwxsmith_la_SOURCES = ./widget.cpp \
 ./wxsdefsizer.cpp \
 ./wxsdefwidget.cpp \
 ./wxsdragwindow.cpp \
+./wxsdrawingwindow.cpp \
 ./wxseditor.cpp \
 ./wxsevent.cpp \
 ./wxseventseditor.cpp \
@@ -69,6 +69,7 @@ noinst_HEADERS = ./widget.h \
 ./wxsdefsizer.h \
 ./wxsdefwidget.h \
 ./wxsdragwindow.h \
+./wxsdrawingwindow.h \
 ./wxseditor.h \
 ./wxsevent.h \
 ./wxseventseditor.h \
@@ -106,15 +107,16 @@ noinst_HEADERS = ./widget.h \
 EXTRA_DIST = *.cbp \
 			*.xrc \
 			*.bat \
-			*.unix
+			*.unix \
+			manifest.xml
 
 pkgdata_DATA = wxsmith.zip
 CLEANFILES = $(pkgdata_DATA)
 
 wxsmith.zip:
-	PWD=`pwd` cd $(srcdir) && zip $(PWD)/wxsmith.zip *.xrc > /dev/null
+	PWD=`pwd` cd $(srcdir) && zip $(PWD)/wxsmith.zip manifest.xml *.xrc > /dev/null
 
-$(srcdir)/wxsheaders.h.gch: $(srcdir)/wxsheaders.h
+$(srcdir)/wxsheaders.h.gch: $(srcdir)/wxsheaders.h $(srcdir)/../../../sdk/sdk.h.gch
 	-rm -rf $(srcdir)/wxsheaders.h.gch
 	$(CXXCOMPILE) -o $(srcdir)/wxsheaders.h.gch -xc++-header $(srcdir)/wxsheaders.h
 

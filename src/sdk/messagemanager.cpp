@@ -37,8 +37,10 @@
     #include "configmanager.h"
     #include "pluginmanager.h"
     #include "cbplugin.h"
+    #include "messagelog.h"
     #include "simpletextlog.h"
     #include "globals.h"
+    #include "sdk_events.h"
 #endif
 
 #include <wx/laywin.h>
@@ -47,7 +49,7 @@
 #include <wx/utils.h>
 #include <wx/filedlg.h>
 
-#include <wxFlatNotebook.h>
+#include "wxFlatNotebook/wxFlatNotebook.h"
 
 // Custom window to shutdown the app when closed.
 // used for batch builds only.
@@ -153,9 +155,9 @@ MessageManager::MessageManager()
 	wxBitmap bmp;
 	wxString prefix;
     prefix = ConfigManager::GetDataFolder() + _T("/images/");
-    bmp.LoadFile(prefix + _T("edit_16x16.png"), wxBITMAP_TYPE_PNG);
+    bmp = cbLoadBitmap(prefix + _T("edit_16x16.png"), wxBITMAP_TYPE_PNG);
     m_pNotebook->GetImageList()->push_back(bmp);
-    bmp.LoadFile(prefix + _T("contents_16x16.png"), wxBITMAP_TYPE_PNG);
+    bmp = cbLoadBitmap(prefix + _T("contents_16x16.png"), wxBITMAP_TYPE_PNG);
     m_pNotebook->GetImageList()->push_back(bmp);
 
     m_AppLog = DoAddLog(new SimpleTextLog(), _("Code::Blocks"));
@@ -195,7 +197,7 @@ void MessageManager::ReleaseMenu(wxMenuBar* menuBar)
 
 bool MessageManager::CheckLogId(int id)
 {
-    return id >= 0 && id < (int)m_Logs.size() && (m_Logs[id] != 0L);
+    return m_Logs[id] != 0L;
 }
 
 void MessageManager::LogToStdOut(const wxChar* msg, ...)
@@ -253,6 +255,8 @@ void MessageManager::DebugLog(const wxChar* msg, ...)
 
 void MessageManager::DebugLogWarning(const wxChar* msg, ...)
 {
+    if (!CheckLogId(m_DebugLog))
+        return;
     wxString tmp;
     va_list arg_list;
 
@@ -261,9 +265,7 @@ void MessageManager::DebugLogWarning(const wxChar* msg, ...)
     va_end(arg_list);
 
     wxString typ = _("WARNING");
-    wxSafeShowMessage(typ, typ + _T(":\n\n") + tmp);
-    if (!CheckLogId(m_DebugLog))
-        return;
+//    wxSafeShowMessage(typ, typ + _T(":\n\n") + tmp);
     ((SimpleTextLog*)m_Logs[m_DebugLog]->log)->GetTextControl()->SetDefaultStyle(wxTextAttr(*wxBLUE));
     DebugLog(typ + _T(": ") + tmp);
     ((SimpleTextLog*)m_Logs[m_DebugLog]->log)->GetTextControl()->SetDefaultStyle(wxTextAttr(wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOWTEXT), wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW)));
@@ -271,6 +273,8 @@ void MessageManager::DebugLogWarning(const wxChar* msg, ...)
 
 void MessageManager::DebugLogError(const wxChar* msg, ...)
 {
+    if (!CheckLogId(m_DebugLog))
+        return;
     wxString tmp;
     va_list arg_list;
 
@@ -279,9 +283,7 @@ void MessageManager::DebugLogError(const wxChar* msg, ...)
     va_end(arg_list);
 
     wxString typ = _("ERROR");
-    wxSafeShowMessage(typ, typ + _T(":\n\n") + tmp);
-    if (!CheckLogId(m_DebugLog))
-        return;
+//    wxSafeShowMessage(typ, typ + _T(":\n\n") + tmp);
     ((SimpleTextLog*)m_Logs[m_DebugLog]->log)->GetTextControl()->SetDefaultStyle(wxTextAttr(*wxRED));
     DebugLog(typ + _T(": ") + tmp);
     ((SimpleTextLog*)m_Logs[m_DebugLog]->log)->GetTextControl()->SetDefaultStyle(wxTextAttr(wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOWTEXT), wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW)));
@@ -295,19 +297,29 @@ int MessageManager::AddLog(MessageLog* log, const wxString& title, const wxBitma
 
 void MessageManager::RemoveLog(MessageLog* log)
 {
-    int id = m_pNotebook->GetPageIndex(log);
-//    cbMessageBox(wxString::Format(_T("Removing %d"), id));
-    if (id != -1)
-        m_pNotebook->RemovePage(id);
+    int idx = m_pNotebook->GetPageIndex(log);
+    m_pNotebook->RemovePage(idx);
+
+    log->Hide();
+    log->Reparent(Manager::Get()->GetAppWindow());
+
+    // find it and remove it from the map
     for (LogsMap::iterator it = m_Logs.begin(); it != m_Logs.end(); ++it)
     {
         if (it->second->log == log)
         {
-               delete (*it).second;
+            delete (*it).second;
             m_Logs.erase(it);
             break;
         }
     }
+}
+
+void MessageManager::RemoveLog(int id)
+{
+    if (!CheckLogId(id))
+        return;
+    RemoveLog(m_Logs[id]->log);
 }
 
 void MessageManager::ShowLog(MessageLog* log, bool show)

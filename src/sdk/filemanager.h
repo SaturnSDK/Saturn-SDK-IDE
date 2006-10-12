@@ -6,6 +6,18 @@
 #include <deque>
 #include <memory>
 
+#ifndef CB_PRECOMP
+    #include <wx/file.h>
+    #include <wx/filename.h>
+    #include "configmanager.h"
+	#include <wx/thread.h>
+	#include <wx/string.h>
+	#include <wx/log.h>
+#endif
+
+#include <backgroundthread.h>
+
+
 class LoaderBase : public AbstractJob
 {
     wxSemaphore sem;

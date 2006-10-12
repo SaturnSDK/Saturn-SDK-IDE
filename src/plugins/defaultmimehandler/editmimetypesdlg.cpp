@@ -6,9 +6,8 @@
  * Copyright: (c) Yiannis An. Mandravellos
  * License:   GPL
  **************************************************************/
-#ifdef CB_PRECOMP
 #include "sdk.h"
-#else
+#ifndef CB_PRECOMP
 #include <wx/button.h>
 #include <wx/checkbox.h>
 #include <wx/listbox.h>
@@ -35,15 +34,15 @@ EditMimeTypesDlg::EditMimeTypesDlg(wxWindow* parent, MimeTypesArray& array)
     m_Selection(-1),
     m_LastSelection(-1)
 {
-	//ctor
-	wxXmlResource::Get()->LoadPanel(this, parent, _T("dlgEditFilesHandling"));
-	FillList();
-	UpdateDisplay();
+    //ctor
+    wxXmlResource::Get()->LoadPanel(this, parent, _T("dlgEditFilesHandling"));
+    FillList();
+    UpdateDisplay();
 }
 
 EditMimeTypesDlg::~EditMimeTypesDlg()
 {
-	//dtor
+    //dtor
 }
 
 void EditMimeTypesDlg::FillList()
@@ -66,7 +65,8 @@ void EditMimeTypesDlg::Save(int index)
         return;
     cbMimeType* mt = m_Array[index];
     mt->wildcard = XRCCTRL(*this, "txtWild", wxTextCtrl)->GetValue().Lower();
-    mt->useEditor = XRCCTRL(*this, "rbOpen", wxRadioBox)->GetSelection() == 1;
+    mt->useEditor = XRCCTRL(*this, "rbOpen", wxRadioBox)->GetSelection() == 2;
+    mt->useAssoc = XRCCTRL(*this, "rbOpen", wxRadioBox)->GetSelection() == 1;
     mt->program = XRCCTRL(*this, "txtProgram", wxTextCtrl)->GetValue();
     mt->programIsModal = XRCCTRL(*this, "chkModal", wxCheckBox)->GetValue();
     // update list, in case the wildcard has changed
@@ -94,15 +94,15 @@ void EditMimeTypesDlg::UpdateDisplay()
 
     cbMimeType* mt = m_Array[m_Selection];
     XRCCTRL(*this, "txtWild", wxTextCtrl)->SetValue(mt->wildcard);
-    XRCCTRL(*this, "rbOpen", wxRadioBox)->SetSelection(mt->useEditor ? 1 : 0);
+    XRCCTRL(*this, "rbOpen", wxRadioBox)->SetSelection(mt->useEditor ? 2 : (mt->useAssoc ? 1 : 0));
     XRCCTRL(*this, "txtProgram", wxTextCtrl)->SetValue(mt->program);
     XRCCTRL(*this, "chkModal", wxCheckBox)->SetValue(mt->programIsModal);
 
     XRCCTRL(*this, "txtWild", wxTextCtrl)->Enable(true);
     XRCCTRL(*this, "rbOpen", wxRadioBox)->Enable(true);
-    XRCCTRL(*this, "txtProgram", wxTextCtrl)->Enable(!mt->useEditor);
-    XRCCTRL(*this, "btnBrowse", wxButton)->Enable(!mt->useEditor);
-    XRCCTRL(*this, "chkModal", wxCheckBox)->Enable(!mt->useEditor);
+    XRCCTRL(*this, "txtProgram", wxTextCtrl)->Enable(!mt->useEditor && !mt->useAssoc);
+    XRCCTRL(*this, "btnBrowse", wxButton)->Enable(!mt->useEditor && !mt->useAssoc);
+    XRCCTRL(*this, "chkModal", wxCheckBox)->Enable(!mt->useEditor && !mt->useAssoc);
 
     m_LastSelection = m_Selection;
 }
@@ -115,10 +115,11 @@ void EditMimeTypesDlg::OnSelectionChanged(wxCommandEvent& event)
 
 void EditMimeTypesDlg::OnActionChanged(wxCommandEvent& event)
 {
-    bool useEd = XRCCTRL(*this, "rbOpen", wxRadioBox)->GetSelection();
-    XRCCTRL(*this, "txtProgram", wxTextCtrl)->Enable(!useEd);
-    XRCCTRL(*this, "btnBrowse", wxButton)->Enable(!useEd);
-    XRCCTRL(*this, "chkModal", wxCheckBox)->Enable(!useEd);
+    bool useEd = XRCCTRL(*this, "rbOpen", wxRadioBox)->GetSelection() == 2;
+    bool useAssoc = XRCCTRL(*this, "rbOpen", wxRadioBox)->GetSelection() == 1;
+    XRCCTRL(*this, "txtProgram", wxTextCtrl)->Enable(!useEd && !useAssoc);
+    XRCCTRL(*this, "btnBrowse", wxButton)->Enable(!useEd && !useAssoc);
+    XRCCTRL(*this, "chkModal", wxCheckBox)->Enable(!useEd && !useAssoc);
 }
 
 void EditMimeTypesDlg::OnNew(wxCommandEvent& event)
@@ -132,6 +133,7 @@ void EditMimeTypesDlg::OnNew(wxCommandEvent& event)
     cbMimeType* mt = new cbMimeType;
     mt->wildcard = wild;
     mt->useEditor = true;
+    mt->useAssoc = false;
     mt->program = _T("");
     mt->programIsModal = false;
     m_Array.Add(mt);
@@ -163,7 +165,7 @@ void EditMimeTypesDlg::OnBrowseProgram(wxCommandEvent& event)
                             wxEmptyString,
                             XRCCTRL(*this, "txtProgram", wxTextCtrl)->GetValue(),
                             FileFilters::GetFilterAll(),
-                            wxOPEN);
+                            wxOPEN | wxHIDE_READONLY);
     PlaceWindow(dlg);
     if (dlg->ShowModal() == wxID_OK)
         XRCCTRL(*this, "txtProgram", wxTextCtrl)->SetValue(dlg->GetPath());

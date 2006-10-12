@@ -1,22 +1,26 @@
-<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+﻿<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <CodeBlocks_project_file>
-	<FileVersion major="1" minor="4" />
+	<FileVersion major="1" minor="5" />
 	<Project>
 		<Option title="C::B Games" />
+		<Option default_target="" />
 		<Option compiler="gcc" />
+		<Option virtualFolders="" />
 		<Build>
 			<Target title="default">
 				<Option output="..\..\..\devel\share\CodeBlocks\plugins\byogames.dll" />
 				<Option type="3" />
 				<Option compiler="gcc" />
 				<Option host_application="..\..\..\devel\codeblocks.exe" />
-				<Option includeInTargetAll="1" />
-				<Option projectResourceIncludeDirsRelation="0" />
 			</Target>
 			<Environment>
 				<Variable name="WX_SUFFIX" value="u" />
+				<Variable name="WX_CFG" value="" />
 			</Environment>
 		</Build>
+		<VirtualTargets>
+			<Add alias="All" targets="default;" />
+		</VirtualTargets>
 		<Compiler>
 			<Add option="-Wall" />
 			<Add option="-g" />
@@ -35,7 +39,7 @@
 			<Add option="-DwxUSE_UNICODE" />
 			<Add option="-DBUILDING_PLUGIN" />
 			<Add directory="$(#WX.include)" />
-			<Add directory="$(#WX.lib)\gcc_dll\msw$(WX_SUFFIX)" />
+			<Add directory="$(#WX.lib)\gcc_dll$(WX_CFG)\msw$(WX_SUFFIX)" />
 			<Add directory="$(#WX)\contrib\include" />
 			<Add directory="$(#CB.include)" />
 			<Add directory="$(#CB.include)\tinyxml" />
@@ -51,11 +55,15 @@
 		<Linker>
 			<Add library="wxmsw26$(WX_SUFFIX)" />
 			<Add library="codeblocks" />
-			<Add directory="$(#WX.lib)\gcc_dll" />
+			<Add directory="$(#WX.lib)\gcc_dll$(WX_CFG)" />
 			<Add directory="$(#CB.lib)" />
 			<Add directory="$(#CB)\devel" />
 			<Add directory="$(#CB)\sdk\tinyxml" />
 		</Linker>
+		<ExtraCommands>
+			<Add after="zip -j9 ..\..\..\devel\share\CodeBlocks\byogames.zip manifest.xml" />
+			<Mode after="always" />
+		</ExtraCommands>
 		<Unit filename="byocbtris.cpp">
 			<Option compilerVar="CPP" />
 			<Option target="default" />
@@ -126,10 +134,16 @@
 			<Option link="0" />
 			<Option target="default" />
 		</Unit>
+		<Unit filename="manifest.xml">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="default" />
+		</Unit>
 		<Extensions>
 <wxsmith>
 	<dialog wxs_file="byoGameSelect.wxs" class="byoGameSelect" src_file="byogameselect.cpp" header_file="byogameselect.h" xrc_file="" edit_mode="Source" />
-	<panel wxs_file="byoConf.wxs" class="byoConf" src_file="byoconf.cpp" header_file="byoconf.h" xrc_file="E:\codeblocks\src\plugins\contrib\byogames\wxsmith\byoConf.wxs" edit_mode="Source" />
+	<panel wxs_file="byoConf.wxs" class="byoConf" src_file="byoconf.cpp" header_file="byoconf.h" xrc_file="" edit_mode="Source" />
 	<configuration app_src_file="" main_resource="" init_all_handlers="necessary" />
 </wxsmith>
 		</Extensions>

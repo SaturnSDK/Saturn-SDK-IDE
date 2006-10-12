@@ -16,7 +16,9 @@
 #include <wx/event.h>
 #include <wx/timer.h>
 #include <wx/string.h>
+#if wxUSE_POPUPWIN
 #include <wx/popupwin.h>
+#endif
 
 #undef new
 #include <list>
@@ -48,7 +50,13 @@ class Stacker
     };
 };
 
-class InfoWindow : public wxPopupWindow
+#if wxUSE_POPUPWIN
+# define wxInfoWindowBase wxPopupWindow
+#else
+# define wxInfoWindowBase wxDialog
+#endif
+
+class InfoWindow : public wxInfoWindowBase
 {
     wxTimer *m_timer;
     int left;
@@ -58,9 +66,11 @@ class InfoWindow : public wxPopupWindow
     unsigned int status;
     unsigned int m_delay;
     unsigned int ks;
+    std::list<wxString>::iterator my_message_iterator;
     static Stacker stacker;
     static int screenWidth;
     static int screenHeight;
+    static std::list<wxString> active_messages; // if a new message is in this, don't display it (already is displayed). Check Display()
 
     InfoWindow(const wxString& title, const wxString& message, unsigned int delay, unsigned int hysteresis);
     virtual ~InfoWindow();
@@ -71,7 +81,7 @@ class InfoWindow : public wxPopupWindow
 
     public:
 
-    static void Display(const wxString& title, const wxString& message, unsigned int delay = 5000, unsigned int hysteresis = 1){new InfoWindow(title, message, delay, hysteresis);};
+    static void Display(const wxString& title, const wxString& message, unsigned int delay = 5000, unsigned int hysteresis = 1);
 };
 
 #endif

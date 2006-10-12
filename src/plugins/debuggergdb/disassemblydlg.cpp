@@ -14,10 +14,12 @@
 #include <manager.h>
 #include <editormanager.h>
 #include <configmanager.h>
+#include <projectmanager.h>
+#include <cbproject.h>
 #include <filefilters.h>
 
-#define DEBUG_MARKER		4
-#define DEBUG_STYLE 		wxSCI_MARK_ARROW
+#define DEBUG_MARKER        4
+#define DEBUG_STYLE         wxSCI_MARK_ARROW
 
 BEGIN_EVENT_TABLE(DisassemblyDlg, wxPanel)
     EVT_BUTTON(XRCID("btnSave"), DisassemblyDlg::OnSave)
@@ -29,19 +31,19 @@ DisassemblyDlg::DisassemblyDlg(wxWindow* parent, DebuggerGDB* debugger)
     m_LastActiveAddr(0),
     m_ClearFlag(false)
 {
-	//ctor
-	wxXmlResource::Get()->LoadPanel(this, parent, _T("dlgDisassembly"));
-//	SetWindowStyle(GetWindowStyle() | wxFRAME_FLOAT_ON_PARENT);
+    //ctor
+    wxXmlResource::Get()->LoadPanel(this, parent, _T("dlgDisassembly"));
+//    SetWindowStyle(GetWindowStyle() | wxFRAME_FLOAT_ON_PARENT);
 
     m_pCode = new wxScintilla(this, wxID_ANY);
-	m_pCode->SetReadOnly(true);
-	m_pCode->SetCaretWidth(0);
+    m_pCode->SetReadOnly(true);
+    m_pCode->SetCaretWidth(0);
     m_pCode->SetMarginWidth(0, 0);
     m_pCode->SetMarginType(1, wxSCI_MARGIN_SYMBOL);
     m_pCode->SetMarginSensitive(1, 0);
     m_pCode->SetMarginMask(1, (1 << DEBUG_MARKER));
-	m_pCode->MarkerDefine(DEBUG_MARKER, DEBUG_STYLE);
-	m_pCode->MarkerSetBackground(DEBUG_MARKER, wxColour(0xFF, 0xFF, 0x00));
+    m_pCode->MarkerDefine(DEBUG_MARKER, DEBUG_STYLE);
+    m_pCode->MarkerSetBackground(DEBUG_MARKER, wxColour(0xFF, 0xFF, 0x00));
     wxXmlResource::Get()->AttachUnknownControl(_T("lcCode"), m_pCode);
 
     // use the same font as editor's
@@ -68,49 +70,51 @@ DisassemblyDlg::DisassemblyDlg(wxWindow* parent, DebuggerGDB* debugger)
 
 DisassemblyDlg::~DisassemblyDlg()
 {
-	//dtor
+    //dtor
 }
 
 void DisassemblyDlg::Clear(const StackFrame& frame)
 {
-    XRCCTRL(*this, "lblFunction", wxStaticText)->SetLabel(frame.valid ? frame.function : _T("??"));
-    wxString addr = _T("??");
+    m_FrameFunction = frame.valid ? frame.function : _T("??");
+    m_FrameAddress = _T("??");
     if (frame.valid)
-        addr.Printf(_T("%p"), (void*)frame.address);
-    XRCCTRL(*this, "lblAddress", wxStaticText)->SetLabel(addr);
+        m_FrameAddress.Printf(_T("0x%p"), (void*)frame.address);
+
+    XRCCTRL(*this, "lblFunction", wxStaticText)->SetLabel(m_FrameFunction);
+    XRCCTRL(*this, "lblAddress", wxStaticText)->SetLabel(m_FrameAddress);
 
     m_HasActiveAddr = false;
 
-	m_pCode->SetReadOnly(false);
-	if (m_pDbg->IsRunning())
-	{
-	    // if debugger is running, show a message
+    m_pCode->SetReadOnly(false);
+    if (m_pDbg->IsRunning())
+    {
+        // if debugger is running, show a message
         m_pCode->SetText(_("\"Please wait while disassemblying...\""));
         m_ClearFlag = true; // clear the above message when adding the first line
-	}
-	else
-	{
-	    // if debugger isn't running, just clear the window
+    }
+    else
+    {
+        // if debugger isn't running, just clear the window
         m_pCode->ClearAll();
         m_ClearFlag = false;
-	}
-	m_pCode->SetReadOnly(true);
+    }
+    m_pCode->SetReadOnly(true);
     m_pCode->MarkerDeleteAll(DEBUG_MARKER);
 }
 
 void DisassemblyDlg::AddAssemblerLine(unsigned long int addr, const wxString& line)
 {
-	m_pCode->SetReadOnly(false);
+    m_pCode->SetReadOnly(false);
     if (m_ClearFlag)
     {
         m_ClearFlag = false;
         m_pCode->ClearAll();
     }
-	wxString fmt;
-	fmt.Printf(_T("0x%x\t%s\n"), (size_t)addr, line.c_str());
-	m_pCode->AppendText(fmt);
-	SetActiveAddress(m_LastActiveAddr);
-	m_pCode->SetReadOnly(true);
+    wxString fmt;
+    fmt.Printf(_T("0x%x\t%s\n"), (size_t)addr, line.c_str());
+    m_pCode->AppendText(fmt);
+    SetActiveAddress(m_LastActiveAddr);
+    m_pCode->SetReadOnly(true);
 }
 
 void DisassemblyDlg::SetActiveAddress(unsigned long int addr)
@@ -138,35 +142,30 @@ void DisassemblyDlg::SetActiveAddress(unsigned long int addr)
 void DisassemblyDlg::OnSave(wxCommandEvent& event)
 {
     wxFileDialog dlg(this,
-                        _("Save as text file"),
-                        wxEmptyString,
-                        wxEmptyString,
-                        FileFilters::GetFilterAll(),
-                        wxSAVE | wxOVERWRITE_PROMPT);
+                     _("Save as text file"),
+                     _T("assembly_dump.txt"),
+                     wxEmptyString,
+                     FileFilters::GetFilterAll(),
+                     wxSAVE | wxOVERWRITE_PROMPT);
     PlaceWindow(&dlg);
     if (dlg.ShowModal() != wxID_OK)
         return;
-
-    wxFFileOutputStream output(dlg.GetPath());
-    if (!output.Ok())
+        
+    wxString output;
+    cbProject* prj = Manager::Get()->GetProjectManager()->GetActiveProject();
+    if (prj)
     {
-        cbMessageBox(_("Could not open file for saving..."), _("Result"), wxICON_ERROR);
-        return;
+        output << _("Project title : ") << prj->GetTitle() << _T('\n');
+        output << _("Project path  : ") << prj->GetBasePath() << _T('\n') << _T('\n');
     }
-    wxTextOutputStream text(output);
+    
+    output << _("Frame function: ") << m_FrameFunction << _T('\n');
+    output << _("Frame address : ") << m_FrameAddress << _T('\n');
+    output << wxString(_T('-'), 80) << _T('\n');
+    output << m_pCode->GetText();
 
-//    wxListCtrl* lc = XRCCTRL(*this, "lcCode", wxListCtrl);
-//    for (int i = 0; i < lc->GetItemCount(); ++i)
-//    {
-//        wxListItem info;
-//        info.m_itemId = i;
-//        info.m_col = 1;
-//        info.m_mask = wxLIST_MASK_TEXT;
-//        wxString instr = lc->GetItem(info) && !info.m_text.IsEmpty() ? info.m_text : _T("??");
-//
-//        text << lc->GetItemText(i) << _T(": ") << instr << _T('\n');
-//    }
-    cbMessageBox(_("File saved"), _("Result"), wxICON_INFORMATION);
+    if (!cbSaveToFile(dlg.GetPath(), output))
+        cbMessageBox(_("Could not save file..."), _("Error"), wxICON_ERROR);
 }
 
 void DisassemblyDlg::OnRefresh(wxCommandEvent& event)

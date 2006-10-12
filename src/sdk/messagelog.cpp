@@ -27,13 +27,13 @@
 #include "sdk_precomp.h"
 
 #ifndef CB_PRECOMP
-    #include "messagelog.h" // class's header file
+    #include <wx/intl.h>
+    #include <wx/string.h>
+    #include "configmanager.h"
     #include "manager.h"
     #include "messagemanager.h"
-	#include "configmanager.h"
-
-    #include <wx/intl.h>
 #endif
+#include "messagelog.h" // class's header file
 
 // class constructor
 MessageLog::MessageLog()
@@ -47,9 +47,14 @@ MessageLog::~MessageLog()
 {
 }
 
-wxFont MessageLog::GetDefaultLogFont(bool fixedPitchFont)
+wxFont MessageLog::GetDefaultLogFont(bool fixedPitchFont) const
 {
+#ifdef __WXMAC__
+    // 8 point is not readable on Mac OS X, increase font size:
+    int size = Manager::Get()->GetConfigManager(_T("message_manager"))->ReadInt(_T("/log_font_size"), 10);
+#else
     int size = Manager::Get()->GetConfigManager(_T("message_manager"))->ReadInt(_T("/log_font_size"), 8);
+#endif
     wxFont font(size,
                 fixedPitchFont ? wxFONTFAMILY_MODERN : wxFONTFAMILY_DEFAULT,
                 wxFONTSTYLE_NORMAL,

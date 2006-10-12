@@ -103,23 +103,43 @@ void EditorColourSet::ClearAllOptionColours()
 
 void EditorColourSet::LoadAvailableSets()
 {
-	wxString path = ConfigManager::GetDataFolder() + _T("/lexers/");
-    wxDir dir(path);
-
-    if (!dir.IsOpened())
-        return;
-
+    wxLogNull ln;
 	EditorLexerLoader lex(this);
+    wxDir dir;
     wxString filename;
-
     FileManager *fm = FileManager::Get();
     std::list<LoaderBase*> loaders;
+    int count = 0;
 
-    bool ok = dir.GetFirst(&filename, _T("lexer_*.xml"), wxDIR_FILES);
-    while(ok)
+    // user paths first
+	wxString path = ConfigManager::GetFolder(sdDataUser) + _T("/lexers/");
+    if (dir.Open(path))
     {
-        loaders.push_back(fm->Load(path + filename));
-        ok = dir.GetNext(&filename);
+        Manager::Get()->GetMessageManager()->Log(_("Scanning for lexers in %s..."), path.c_str());
+        bool ok = dir.GetFirst(&filename, _T("lexer_*.xml"), wxDIR_FILES);
+        while(ok)
+        {
+            loaders.push_back(fm->Load(path + filename));
+            ok = dir.GetNext(&filename);
+            ++count;
+        }
+        Manager::Get()->GetMessageManager()->Log(_("Found %d lexers"), count);
+        count = 0;
+    }
+
+    // global paths next
+	path = ConfigManager::GetFolder(sdDataGlobal) + _T("/lexers/");
+    if (dir.Open(path))
+    {
+        Manager::Get()->GetMessageManager()->Log(_("Scanning for lexers in %s..."), path.c_str());
+        bool ok = dir.GetFirst(&filename, _T("lexer_*.xml"), wxDIR_FILES);
+        while(ok)
+        {
+            loaders.push_back(fm->Load(path + filename));
+            ok = dir.GetNext(&filename);
+            ++count;
+        }
+        Manager::Get()->GetMessageManager()->Log(_("Found %d lexers"), count);
     }
 
     for(std::list<LoaderBase*>::iterator it = loaders.begin(); it != loaders.end(); ++it)
@@ -405,7 +425,8 @@ HighlightLanguage EditorColourSet::Apply(cbEditor* editor, HighlightLanguage lan
     if (lang == HL_AUTO)
         lang = GetLanguageForFilename(editor->GetFilename());
 
-	Apply(lang, editor->GetControl());
+	Apply(lang, editor->GetLeftSplitViewControl());
+	Apply(lang, editor->GetRightSplitViewControl());
 
 	return lang;
 }
@@ -697,7 +718,7 @@ void EditorColourSet::SetKeywords(HighlightLanguage lang, int idx, const wxStrin
         wxChar c;
         size_t len = 0;
 
-        while(c = *src)
+        while((c = *src))
         {
             ++src;
             if(c > _T(' '))

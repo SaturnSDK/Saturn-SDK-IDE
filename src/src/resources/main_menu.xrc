@@ -3,17 +3,35 @@
   <object class="wxMenuBar" name="main_menu_bar">
     <object class="wxMenu" name="file_menu">
       <label>&amp;File</label>
-      <object class="wxMenuItem" name="idFileNew">
-        <label>New file</label>
-        <bitmap>images\16x16\filenew.png</bitmap>
-        <accel>Ctrl-N</accel>
-        <help>Create a new source file</help>
-      </object>
-      <object class="wxMenuItem" name="idProjectNew">
-        <label>New pro&amp;ject...</label>
-        <bitmap>images\16x16\newproject.png</bitmap>
-        <accel>Ctrl-Shift-N</accel>
-        <help>Create a new project based on a template</help>
+      <object class="wxMenu" name="idFileNew">
+        <label>New</label>
+        <help>Create a new project/file/target/other (wizard)</help>
+        <object class="wxMenuItem" name="idFileNewEmpty">
+          <label>Empty file</label>
+          <accel>Ctrl-Shift-N</accel>
+          <help>Quickly create a new empty file</help>
+        </object>
+        <object class="separator"/>
+        <object class="wxMenuItem" name="idFileNewProject">
+          <label>Project</label>
+          <help>Create a new project</help>
+        </object>
+        <object class="wxMenuItem" name="idFileNewTarget">
+          <label>Build target</label>
+          <help>Create a new build target for the active project</help>
+        </object>
+        <object class="wxMenuItem" name="idFileNewFile">
+          <label>File</label>
+          <help>Create a new file</help>
+        </object>
+        <object class="wxMenuItem" name="idFileNewCustom">
+          <label>Custom</label>
+          <help>Create a new custom something :-)</help>
+        </object>
+        <object class="wxMenuItem" name="idFileNewUser">
+          <label>From user template</label>
+          <help>Create a new project based on a previously saved user template</help>
+        </object>
       </object>
       <object class="separator"/>
       <object class="wxMenuItem" name="idFileOpen">
@@ -21,6 +39,10 @@
         <bitmap>images\16x16\fileopen.png</bitmap>
         <accel>Ctrl-O</accel>
         <help>Open a file or project</help>
+      </object>
+      <object class="wxMenuItem" name="idFileOpenDefWorkspace">
+        <label>Open default workspace</label>
+        <help>Open the default workspace</help>
       </object>
       <object class="wxMenu" name="idFileReopenProject">
         <label>&amp;Recent projects</label>
@@ -38,6 +60,32 @@
           <label>&amp;Clear history</label>
           <bitmap>images\16x16\history_clear.png</bitmap>
           <help>Clear the recent files list</help>
+        </object>
+      </object>
+      <object class="separator"/>
+      <object class="wxMenu" name="idFileImportProject">
+        <label>&amp;Import project</label>
+        <object class="wxMenuItem" name="idFileImportProjectDevCpp">
+          <label>Dev-C++ project</label>
+          <help>Import an existing Dev-C++ project</help>
+        </object>
+        <object class="separator"/>
+        <object class="wxMenuItem" name="idFileImportProjectMSVC">
+          <label>MS Visual C++ project</label>
+          <help>Import an existing MS Visual C++ project</help>
+        </object>
+        <object class="wxMenuItem" name="idFileImportProjectMSVCWksp">
+          <label>MS Visual C++ workspace</label>
+          <help>Import an existing MS Visual C++ workspace</help>
+        </object>
+        <object class="separator"/>
+        <object class="wxMenuItem" name="idFileImportProjectMSVS">
+          <label>MS Visual Studio project</label>
+          <help>Import an existing MS Visual Studio project</help>
+        </object>
+        <object class="wxMenuItem" name="idFileImportProjectMSVSWksp">
+          <label>MS Visual Studio solution</label>
+          <help>Import an existing MS Visual Studio solution</help>
         </object>
       </object>
       <object class="separator"/>
@@ -66,11 +114,15 @@
         <label>Sa&amp;ve project as...</label>
         <help>Save active project under a different name</help>
       </object>
-      <object class="separator"/>
-      <object class="wxMenuItem" name="idFileOpenDefWorkspace">
-        <label>Open default workspace</label>
-        <help>Open the default workspace</help>
+      <object class="wxMenuItem" name="idFileSaveProjectTemplate">
+        <label>&amp;Save project as user-template</label>
+        <help>Keep this project as a user-template to base new projects on</help>
       </object>
+      <object class="wxMenuItem" name="idFileSaveProjectAllProjects">
+        <label>Save a&amp;ll projects</label>
+        <help>Save all modified projects</help>
+      </object>
+      <object class="separator"/>
       <object class="wxMenuItem" name="idFileSaveWorkspace">
         <label>Save &amp;workspace</label>
         <help>Save current workspace</help>
@@ -85,29 +137,28 @@
       </object>
       <object class="separator"/>
       <object class="wxMenuItem" name="idFileClose">
-        <label>&amp;Close</label>
+        <label>&amp;Close file</label>
         <bitmap>images\16x16\fileclose.png</bitmap>
         <accel>Ctrl-W</accel>
         <help>Close the active file</help>
       </object>
       <object class="wxMenuItem" name="idFileCloseAll">
-        <label>Close all</label>
+        <label>Close all files</label>
         <accel>Ctrl-Shift-W</accel>
         <help>Close all open files</help>
       </object>
-      <object class="wxMenuItem" name="idProjectCloseProject">
+      <object class="wxMenuItem" name="idFileCloseProject">
         <label>Close project</label>
         <help>Close active project</help>
+      </object>
+      <object class="wxMenuItem" name="idFileCloseAllProjects">
+        <label>Close all projects</label>
+        <help>Close all opened projects</help>
       </object>
       <object class="separator"/>
       <object class="wxMenuItem" name="idFilePrint">
         <label>Print</label>
         <bitmap>images\16x16\fileprint.png</bitmap>
-      </object>
-      <object class="separator"/>
-      <object class="wxMenuItem" name="idFileRunScript">
-        <label>Run script...</label>
-        <bitmap>images\16x16\run.png</bitmap>
       </object>
       <object class="separator"/>
       <object class="wxMenuItem" name="idFileExit">
@@ -235,139 +286,160 @@
       <object class="wxMenu" name="idEditEncoding">
         <label>File encoding</label>
         <object class="wxMenuItem" name="idEditEncodingDefault">
-
-
           <label>System default</label>
-
-
           <help>Use the system default encoding</help>
-
-
           <checkable>1</checkable>
         </object>
         <object class="wxMenuItem" name="idEditEncodingUseBom">
-
-
           <label>Save byte-order-mark (BOM)</label>
-
-
           <help>Save the Unicode encoding in a BOM</help>
-
-
           <checkable>1</checkable>
         </object>
         <object class="separator"/>
         <object class="wxMenuItem" name="idEditEncodingAscii">
-
-
           <label>ASCII (ISO-8859-1)</label>
-
-
           <help>Use the ISO-8859-1 character encoding</help>
-
-
           <checkable>1</checkable>
         </object>
         <object class="wxMenuItem" name="idEditEncodingUtf7">
-
-
           <label>UTF-7</label>
-
-
           <help>Use the UTF-7 character encoding</help>
-
-
           <checkable>1</checkable>
         </object>
         <object class="wxMenuItem" name="idEditEncodingUtf8">
-
-
           <label>UTF-8</label>
-
-
           <help>Use the UTF-8 character encoding</help>
-
-
           <checkable>1</checkable>
         </object>
         <object class="separator"/>
         <object class="wxMenuItem" name="idEditEncodingUnicode">
-
-
           <label>Unicode default</label>
-
-
           <help>Use the system default Unicode character encoding</help>
-
-
           <checkable>1</checkable>
         </object>
         <object class="wxMenuItem" name="idEditEncodingUtf16">
-
-
           <label>Native UTF-16</label>
-
-
           <help>Use the native UTF-16 character encoding</help>
-
-
           <checkable>1</checkable>
         </object>
         <object class="wxMenuItem" name="idEditEncodingUtf32">
-
-
           <label>Native UTF-32</label>
-
-
           <help>Use the native UTF-32 character encoding</help>
-
-
           <checkable>1</checkable>
         </object>
         <object class="separator"/>
         <object class="wxMenuItem" name="idEditEncodingUnicode16BE">
-
-
           <label>Unicode 16-bit big-endian</label>
-
-
           <help>Use the Unicode 16-bit big-endian multi-byte encoding</help>
-
-
           <checkable>1</checkable>
         </object>
         <object class="wxMenuItem" name="idEditEncodingUnicode16LE">
-
-
           <label>Unicode 16-bit little-endian</label>
-
-
           <help>Use the Unicode 16-bit little-endian multi-byte encoding</help>
-
-
           <checkable>1</checkable>
         </object>
         <object class="wxMenuItem" name="idEditEncodingUnicode32BE">
-
-
           <label>Unicode 32-bit big-endian</label>
-
-
           <help>Use the Unicode 32-bit big-endian multi-byte encoding</help>
-
-
           <checkable>1</checkable>
         </object>
         <object class="wxMenuItem" name="idEditEncodingUnicode32LE">
-
-
           <label>Unicode 32-bit little-endian</label>
-
-
           <help>Use the Unicode 32-bit little-endian multi-byte encoding</help>
-
-
           <checkable>1</checkable>
+        </object>
+      </object>
+      <object class="wxMenu" name="idEditSpecialCommands">
+        <label>Special commands</label>
+        <help>Commands to edit more efficiently, should be bound to hotkeys</help>
+        <object class="wxMenu" name="idEditSpecialCommandsMovement">
+          <label>Movement</label>
+          <object class="wxMenuItem" name="idEditParaUp">
+            <label>Paragraph up</label>
+            <help>Move caret one paragraph up</help>
+          </object>
+          <object class="wxMenuItem" name="idEditParaUpExtend">
+            <label>Paragraph up, extending selection</label>
+            <help>Move caret one paragraph up and extend the selection</help>
+          </object>
+          <object class="wxMenuItem" name="idEditParaDown">
+            <label>Paragraph down</label>
+            <help>Move caret one paragraph down</help>
+          </object>
+          <object class="wxMenuItem" name="idEditParaDownExtend">
+            <label>Paragraph down, extending selection</label>
+            <help>Move caret one paragraph down while extend the selection</help>
+          </object>
+          <object class="separator"/>
+          <object class="wxMenuItem" name="idEditWordPartLeft">
+            <label>Wordpart left</label>
+            <help>Move caret one wordpart to the left</help>
+          </object>
+          <object class="wxMenuItem" name="idEditWordPartLeftExtend">
+            <label>Wordpart left, extending selection</label>
+            <help>Move caret one wordpart to the left and extend the selection</help>
+          </object>
+          <object class="wxMenuItem" name="idEditWordPartRight">
+            <label>Wordpart right</label>
+            <help>Move caret one wordpart to the right</help>
+          </object>
+          <object class="wxMenuItem" name="idEditWordPartRightExtend">
+            <label>Wordpart right, extending selection</label>
+            <help>Move caret one wordpart to the right and extend the selection</help>
+          </object>
+        </object>
+        <object class="wxMenu" name="idEditSpecialCommandsZoom">
+          <label>Zoom</label>
+          <object class="wxMenuItem" name="idEditZoomIn">
+            <label>In</label>
+            <help>Increase font size</help>
+          </object>
+          <object class="wxMenuItem" name="idEditZoomOut">
+            <label>Out</label>
+            <help>Decrease font size</help>
+          </object>
+          <object class="wxMenuItem" name="idEditZoomReset">
+            <label>Reset</label>
+            <help>Set default font size</help>
+          </object>
+        </object>
+        <object class="wxMenu" name="idEditSpecialCommandsLine">
+          <label>Line</label>
+          <object class="wxMenuItem" name="idEditLineDuplicate">
+            <label>Duplicate</label>
+            <help>Duplicate current line</help>
+          </object>
+          <object class="wxMenuItem" name="idEditLineCut">
+            <label>Cut</label>
+            <help>Cut current line</help>
+          </object>
+          <object class="wxMenuItem" name="idEditLineDelete">
+            <label>Delete</label>
+            <help>Delete current line</help>
+          </object>
+          <object class="wxMenuItem" name="idEditLineTranspose">
+            <label>Transpose</label>
+            <help>Transpose current line with previous line</help>
+          </object>
+          <object class="wxMenuItem" name="idEditLineCopy">
+            <label>Copy</label>
+            <help>Copy current line</help>
+          </object>
+          <object class="wxMenuItem" name="idEditLinePaste">
+            <label>Paste</label>
+            <help>Paste before current line</help>
+          </object>
+        </object>
+        <object class="wxMenu" name="idEditSpecialCommandsCase">
+          <label>Case</label>
+          <object class="wxMenuItem" name="idEditUpperCase">
+            <label>Uppercase</label>
+            <help>Make selection uppercase</help>
+          </object>
+          <object class="wxMenuItem" name="idEditLowerCase">
+            <label>Lowercase</label>
+            <help>Make selection lowercase</help>
+          </object>
         </object>
       </object>
       <object class="separator"/>
@@ -376,6 +448,7 @@
         <accel>Ctrl-A</accel>
         <help>Selects the entire text range</help>
       </object>
+      <object class="separator"/>
       <object class="wxMenuItem" name="idEditCommentSelected">
         <label>Comme&amp;nt</label>
         <accel>Shift-Ctrl-C</accel>
@@ -390,6 +463,7 @@
         <label>Toggle comme&amp;nt</label>
         <help>Toggles the commentation of the selected block of code</help>
       </object>
+      <object class="separator"/>
       <object class="wxMenuItem" name="idEditAutoComplete">
         <label>Auto-complete</label>
         <accel>Ctrl-J</accel>
@@ -441,6 +515,12 @@
         <label>Messa&amp;ges</label>
         <accel>F2</accel>
         <help>Show/hide messages</help>
+        <checkable>1</checkable>
+        <enabled>1</enabled>
+      </object>
+      <object class="wxMenuItem" name="idViewScriptConsole">
+        <label>S&amp;cript console</label>
+        <help>Show/hide the script console</help>
         <checkable>1</checkable>
         <enabled>1</enabled>
       </object>
@@ -513,77 +593,6 @@
     </object>
     <object class="wxMenu" name="menu_project">
       <label>&amp;Project</label>
-      <object class="wxMenuItem" name="idProjectNew">
-        <label>&amp;New project...</label>
-        <bitmap>images\16x16\newproject.png</bitmap>
-        <accel>Ctrl-Shift-N</accel>
-        <help>Create a new project based on a template</help>
-      </object>
-      <object class="wxMenuItem" name="idProjectNewEmptyProject">
-        <label>New &amp;empty project</label>
-        <help>Create a new empty project</help>
-      </object>
-      <object class="separator"/>
-      <object class="wxMenuItem" name="idProjectOpen">
-        <label>&amp;Open project</label>
-        <bitmap>images\16x16\folder_open.png</bitmap>
-        <help>Open an existing project</help>
-      </object>
-      <object class="wxMenu" name="idProjectImport">
-        <label>&amp;Import</label>
-        <object class="wxMenuItem" name="idProjectImportDevCpp">
-          <label>Dev-C++ project</label>
-          <help>Import an existing Dev-C++ project</help>
-        </object>
-        <object class="separator"/>
-        <object class="wxMenuItem" name="idProjectImportMSVC">
-          <label>MS Visual C++ project</label>
-          <help>Import an existing MS Visual C++ project</help>
-        </object>
-        <object class="wxMenuItem" name="idProjectImportMSVCWksp">
-          <label>MS Visual C++ workspace</label>
-          <help>Import an existing MS Visual C++ workspace</help>
-        </object>
-        <object class="separator"/>
-        <object class="wxMenuItem" name="idProjectImportMSVS">
-          <label>MS Visual Studio project</label>
-          <help>Import an existing MS Visual Studio project</help>
-        </object>
-        <object class="wxMenuItem" name="idProjectImportMSVSWksp">
-          <label>MS Visual Studio solution</label>
-          <help>Import an existing MS Visual Studio solution</help>
-        </object>
-      </object>
-      <object class="separator"/>
-      <object class="wxMenuItem" name="idProjectSaveProject">
-        <label>&amp;Save project</label>
-        <bitmap>images\16x16\filesave.png</bitmap>
-        <help>Save active project</help>
-      </object>
-      <object class="wxMenuItem" name="idProjectSaveProjectAs">
-        <label>Save project &amp;as...</label>
-        <bitmap>images\16x16\filesaveas.png</bitmap>
-        <help>Save active project under a different name</help>
-      </object>
-      <object class="wxMenuItem" name="idProjectSaveAllProjects">
-        <label>Save a&amp;ll projects</label>
-        <help>Save all modified projects</help>
-      </object>
-      <object class="separator"/>
-      <object class="wxMenuItem" name="idProjectSaveTemplate">
-        <label>&amp;Save project as user-template</label>
-        <help>Keep this project as a user-template to base new projects on</help>
-      </object>
-      <object class="separator"/>
-      <object class="wxMenuItem" name="idProjectCloseProject">
-        <label>&amp;Close project</label>
-        <bitmap>images\16x16\fileclose.png</bitmap>
-        <help>Close active project</help>
-      </object>
-      <object class="wxMenuItem" name="idProjectCloseAllProjects">
-        <label>Close all projects</label>
-        <help>Close all opened projects</help>
-      </object>
     </object>
     <object class="wxMenu" name="menu_tools">
       <label>&amp;Tools</label>

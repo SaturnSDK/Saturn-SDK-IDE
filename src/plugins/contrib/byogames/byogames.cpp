@@ -13,7 +13,6 @@
 #ifndef CB_PRECOMP
 #include <wx/intl.h>
 #include <wx/string.h>
-#include "licenses.h"
 #endif
 #include "byogames.h"
 #include "byogame.h"
@@ -25,21 +24,14 @@ BEGIN_EVENT_TABLE(BYOGames,cbToolPlugin)
     EVT_TIMER(1,BYOGames::OnTimer)
 END_EVENT_TABLE()
 
-// Implement the plugin's hooks
-CB_IMPLEMENT_PLUGIN(BYOGames, "BYO Games");
+// Register the plugin
+namespace
+{
+    PluginRegistrant<BYOGames> reg(_T("BYOGames"));
+};
 
 BYOGames::BYOGames(): SecondTick(this,1)
 {
-	m_PluginInfo.name = _T("BYOGames");
-	m_PluginInfo.title = _("BYO Games");
-	m_PluginInfo.version = _T("1.0");
-	m_PluginInfo.description = _("Collection of games for C::B IDE");
-	m_PluginInfo.author = _T("BYO");
-	m_PluginInfo.authorEmail = _T("byo.spoon@gmail.com");
-	m_PluginInfo.authorWebsite = _T("");
-	m_PluginInfo.thanksTo = _("");
-	m_PluginInfo.license = LICENSE_GPL;
-
 	SecondTick.Start(1000,true);
 }
 

@@ -1,26 +1,32 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <CodeBlocks_project_file>
-	<FileVersion major="1" minor="4" />
+	<FileVersion major="1" minor="5" />
 	<Project>
 		<Option title="C::B Profiler (Unix)" />
 		<Option pch_mode="0" />
+		<Option default_target="" />
 		<Option compiler="gcc" />
+		<Option virtualFolders="" />
 		<Build>
 			<Target title="default">
 				<Option output="../../../devel/share/codeblocks/plugins/libcbprofiler.so" />
 				<Option type="3" />
 				<Option compiler="gcc" />
-				<Option includeInTargetAll="1" />
 			</Target>
 			<Environment>
 				<Variable name="CBDIR" value="../../.." />
 			</Environment>
 		</Build>
+		<VirtualTargets>
+			<Add alias="All" targets="default;" />
+		</VirtualTargets>
 		<Compiler>
 			<Add option="-Wall" />
 			<Add option="`wx-config --cflags`" />
 			<Add option="-fPIC" />
-			<Add option="-DBUILDING_PLUGIN" />
+			<Add option='-include &quot;sdk.h&quot;' />
+			<Add option="-DcbDEBUG" />
+			<Add option="-DCB_PRECOMP" />
 			<Add directory="$(CBDIR)/sdk" />
 			<Add directory="$(CBDIR)/sdk/wxscintilla/include" />
 		</Compiler>
@@ -30,7 +36,8 @@
 			<Add directory="$(CBDIR)/devel" />
 		</Linker>
 		<ExtraCommands>
-			<Add after="zip -j9 ../../../devel/share/codeblocks/profiler.zip resources/*.xrc" />
+			<Add after="zip -j9 ../../../devel/share/codeblocks/CBProfiler.zip resources/manifest.xml resources/*.xrc" />
+			<Mode after="always" />
 		</ExtraCommands>
 		<Unit filename="cbprofiler.cpp">
 			<Option compilerVar="CPP" />
@@ -62,5 +69,6 @@
 			<Option link="0" />
 			<Option target="default" />
 		</Unit>
+		<Extensions />
 	</Project>
 </CodeBlocks_project_file>

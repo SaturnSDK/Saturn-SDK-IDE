@@ -36,7 +36,8 @@
 ProjectLoader::ProjectLoader(cbProject* project)
     : m_pProject(project),
     m_Upgraded(false),
-    m_OpenDirty(false)
+    m_OpenDirty(false),
+    m_1_4_to_1_5_deftarget(-1)
 {
 	//ctor
 }
@@ -113,6 +114,12 @@ bool ProjectLoader::Open(const wxString& filename)
             wxString msg;
 
             // 1.3 -> 1.4: updated custom build command per-project file
+            if (major == 1 && minor == 4)
+            {
+                msg << _("1.4 to 1.5: added virtual build targets.\n");
+            }
+
+            // 1.3 -> 1.4: updated custom build command per-project file
             if (major == 1 && minor == 3)
             {
                 msg << _("1.3 to 1.4: changed the way custom file build commands are stored (no auto-conversion).\n");
@@ -151,6 +158,32 @@ bool ProjectLoader::Open(const wxString& filename)
     DoLibsOptions(proj);
     DoExtraCommands(proj);
     DoUnits(proj);
+
+    // if targets still use the "build with all" flag,
+    // it's time for conversion
+    if (!m_pProject->HasVirtualBuildTarget(_T("All")))
+    {
+        wxArrayString all;
+        for (int i = 0; i < m_pProject->GetBuildTargetsCount(); ++i)
+        {
+            ProjectBuildTarget* bt = m_pProject->GetBuildTarget(i);
+            if (bt && bt->GetIncludeInTargetAll())
+                all.Add(bt->GetTitle());
+        }
+        if (all.GetCount())
+        {
+            m_pProject->DefineVirtualBuildTarget(_T("All"), all);
+            m_Upgraded = true;
+        }
+    }
+
+    // convert old deftarget int to string
+    if (m_1_4_to_1_5_deftarget != -1)
+    {
+        ProjectBuildTarget* bt = m_pProject->GetBuildTarget(m_1_4_to_1_5_deftarget);
+        if (bt)
+            m_pProject->SetDefaultExecuteTarget(bt->GetTitle());
+    }
 
     // as a last step, run all hooked callbacks
     TiXmlElement* node = proj->FirstChildElement("Extensions");
@@ -264,6 +297,30 @@ void ProjectLoader::DoMakeCommands(TiXmlElement* parentNode, CompileTargetBase* 
         target->SetMakeCommandFor(mcDistClean, cbC2U(node->Attribute("command")));
 }
 
+void ProjectLoader::DoVirtualTargets(TiXmlElement* parentNode)
+{
+    if (!parentNode)
+        return;
+
+    TiXmlElement* node = parentNode->FirstChildElement("Add");
+    if (!node)
+        return; // no virtual targets
+
+    while (node)
+    {
+        if (node->Attribute("alias") && node->Attribute("targets"))
+        {
+            wxString alias = cbC2U(node->Attribute("alias"));
+            wxString targets = cbC2U(node->Attribute("targets"));
+            wxArrayString arr = GetArrayFromString(targets, _T(";"), true);
+
+            m_pProject->DefineVirtualBuildTarget(alias, arr);
+        }
+
+        node = node->NextSiblingElement("Add");
+    }
+}
+
 void ProjectLoader::DoProjectOptions(TiXmlElement* parentNode)
 {
     TiXmlElement* node = parentNode->FirstChildElement("Option");
@@ -273,9 +330,9 @@ void ProjectLoader::DoProjectOptions(TiXmlElement* parentNode)
     wxString title;
     wxString makefile;
     bool makefile_custom = false;
-    int defaultTarget = 0;
-    int activeTarget = -1;
+    wxString defaultTarget;
     wxString compilerId = _T("gcc");
+    wxArrayString vfolders;
     PCHMode pch_mode = m_IsPre_1_2 ? pchSourceDir : pchObjectDir;
 
     // loop through all options
@@ -290,8 +347,14 @@ void ProjectLoader::DoProjectOptions(TiXmlElement* parentNode)
         else if (node->Attribute("makefile_is_custom"))
             makefile_custom = strncmp(node->Attribute("makefile_is_custom"), "1", 1) == 0;
 
+        // old default_target (int) node
+        else if (node->QueryIntAttribute("default_target", &m_1_4_to_1_5_deftarget) == TIXML_SUCCESS)
+        {
+            // we read the value
+        }
+
         else if (node->Attribute("default_target"))
-            defaultTarget = atoi(node->Attribute("default_target"));
+            defaultTarget = cbC2U(node->Attribute("default_target"));
 
         else if (node->Attribute("compiler"))
             compilerId = GetValidCompilerID(cbC2U(node->Attribute("compiler")), _T("the project"));
@@ -299,18 +362,22 @@ void ProjectLoader::DoProjectOptions(TiXmlElement* parentNode)
         else if (node->Attribute("pch_mode"))
             pch_mode = (PCHMode)atoi(node->Attribute("pch_mode"));
 
+        else if (node->Attribute("virtualFolders"))
+            vfolders = GetArrayFromString(cbC2U(node->Attribute("virtualFolders")), _T(";"));
+
         node = node->NextSiblingElement("Option");
     }
 
     m_pProject->SetTitle(title);
     m_pProject->SetMakefile(makefile);
     m_pProject->SetMakefileCustom(makefile_custom);
-    m_pProject->SetDefaultExecuteTargetIndex(defaultTarget);
-    m_pProject->SetActiveBuildTarget(activeTarget);
+    m_pProject->SetDefaultExecuteTarget(defaultTarget);
     m_pProject->SetCompilerID(compilerId);
     m_pProject->SetModeForPCH(pch_mode);
+    m_pProject->SetVirtualFolders(vfolders);
 
     DoMakeCommands(parentNode->FirstChildElement("MakeCommands"), m_pProject);
+    DoVirtualTargets(parentNode->FirstChildElement("VirtualTargets"));
 }
 
 void ProjectLoader::DoBuild(TiXmlElement* parentNode)
@@ -388,64 +455,73 @@ void ProjectLoader::DoBuildTargetOptions(TiXmlElement* parentNode, ProjectBuildT
     int projectIncludeDirsRelation = 3;
     int projectLibDirsRelation = 3;
     int projectResIncludeDirsRelation = 3;
+    TargetFilenameGenerationPolicy prefixPolicy = tgfpNone; // tgfpNone for compat. with older projects
+    TargetFilenameGenerationPolicy extensionPolicy = tgfpNone;
 
     while (node)
     {
         if (node->Attribute("use_console_runner"))
             use_console_runner = strncmp(node->Attribute("use_console_runner"), "0", 1) != 0;
 
-        else if (node->Attribute("output"))
+        if (node->Attribute("output"))
             output = UnixFilename(cbC2U(node->Attribute("output")));
 
-        else if (node->Attribute("working_dir"))
+        if (node->Attribute("prefix_auto"))
+            prefixPolicy = atoi(node->Attribute("prefix_auto")) == 1 ? tgfpPlatformDefault : tgfpNone;
+
+        if (node->Attribute("extension_auto"))
+            extensionPolicy = atoi(node->Attribute("extension_auto")) == 1 ? tgfpPlatformDefault : tgfpNone;
+
+        if (node->Attribute("working_dir"))
             working_dir = UnixFilename(cbC2U(node->Attribute("working_dir")));
 
-        else if (node->Attribute("object_output"))
+        if (node->Attribute("object_output"))
             obj_output = UnixFilename(cbC2U(node->Attribute("object_output")));
 
-        else if (node->Attribute("deps_output"))
+        if (node->Attribute("deps_output"))
             deps_output = UnixFilename(cbC2U(node->Attribute("deps_output")));
 
-        else if (node->Attribute("external_deps"))
+        if (node->Attribute("external_deps"))
             deps = UnixFilename(cbC2U(node->Attribute("external_deps")));
 
-        else if (node->Attribute("additional_output"))
+        if (node->Attribute("additional_output"))
             added = UnixFilename(cbC2U(node->Attribute("additional_output")));
 
-        else if (node->Attribute("type"))
+        if (node->Attribute("type"))
             type = atoi(node->Attribute("type"));
 
-        else if (node->Attribute("compiler"))
+        if (node->Attribute("compiler"))
             compilerId = GetValidCompilerID(cbC2U(node->Attribute("compiler")), target->GetTitle());
 
-        else if (node->Attribute("parameters"))
+        if (node->Attribute("parameters"))
             parameters = cbC2U(node->Attribute("parameters"));
 
-        else if (node->Attribute("host_application"))
+        if (node->Attribute("host_application"))
             hostApplication = UnixFilename(cbC2U(node->Attribute("host_application")));
 
-        else if (node->Attribute("includeInTargetAll"))
+        // used in versions prior to 1.5
+        if (node->Attribute("includeInTargetAll"))
             includeInTargetAll = atoi(node->Attribute("includeInTargetAll")) != 0;
 
-        else if (node->Attribute("createDefFile"))
+        if (node->Attribute("createDefFile"))
             createDefFile = atoi(node->Attribute("createDefFile")) != 0;
 
-        else if (node->Attribute("createStaticLib"))
+        if (node->Attribute("createStaticLib"))
             createStaticLib = atoi(node->Attribute("createStaticLib")) != 0;
 
-        else if (node->Attribute("projectCompilerOptionsRelation"))
+        if (node->Attribute("projectCompilerOptionsRelation"))
             projectCompilerOptionsRelation = atoi(node->Attribute("projectCompilerOptionsRelation"));
 
-        else if (node->Attribute("projectLinkerOptionsRelation"))
+        if (node->Attribute("projectLinkerOptionsRelation"))
             projectLinkerOptionsRelation = atoi(node->Attribute("projectLinkerOptionsRelation"));
 
-        else if (node->Attribute("projectIncludeDirsRelation"))
+        if (node->Attribute("projectIncludeDirsRelation"))
             projectIncludeDirsRelation = atoi(node->Attribute("projectIncludeDirsRelation"));
 
-        else if (node->Attribute("projectLibDirsRelation"))
+        if (node->Attribute("projectLibDirsRelation"))
             projectLibDirsRelation = atoi(node->Attribute("projectLibDirsRelation"));
 
-        else if (node->Attribute("projectResourceIncludeDirsRelation"))
+        if (node->Attribute("projectResourceIncludeDirsRelation"))
         {
             projectResIncludeDirsRelation = atoi(node->Attribute("projectResourceIncludeDirsRelation"));
             // there used to be a bug in this setting and it might have a negative or very big number
@@ -468,6 +544,8 @@ void ProjectLoader::DoBuildTargetOptions(TiXmlElement* parentNode, ProjectBuildT
 
     if (type != -1)
     {
+        target->SetCompilerID(compilerId);
+        target->SetTargetFilenameGenerationPolicy(prefixPolicy, extensionPolicy);
         target->SetTargetType((TargetType)type); // type *must* come before output filename!
         target->SetOutputFilename(output); // because if no filename defined, one will be suggested based on target type...
         target->SetUseConsoleRunner(use_console_runner);
@@ -479,10 +557,9 @@ void ProjectLoader::DoBuildTargetOptions(TiXmlElement* parentNode, ProjectBuildT
             target->SetDepsOutput(deps_output);
         target->SetExternalDeps(deps);
         target->SetAdditionalOutputFiles(added);
-        target->SetCompilerID(compilerId);
         target->SetExecutionParameters(parameters);
         target->SetHostApplication(hostApplication);
-        target->SetIncludeInTargetAll(includeInTargetAll);
+        target->SetIncludeInTargetAll(includeInTargetAll); // used in versions prior to 1.5
         target->SetCreateDefFile(createDefFile);
         target->SetCreateStaticLib(createStaticLib);
         target->SetOptionRelation(ortCompilerOptions, (OptionsRelation)projectCompilerOptionsRelation);
@@ -746,6 +823,11 @@ void ProjectLoader::DoUnitOptions(TiXmlElement* parentNode, ProjectFile* file)
         if (node->QueryIntAttribute("weight", &tempval) == TIXML_SUCCESS)
             file->weight = tempval;
         //
+        if (node->Attribute("virtualFolder"))
+        {
+            file->virtual_path = cbC2U(node->Attribute("virtualFolder"));
+        }
+        //
         if (node->Attribute("buildCommand") && node->Attribute("compiler"))
         {
             wxString cmp = cbC2U(node->Attribute("compiler"));
@@ -871,9 +953,10 @@ bool ProjectLoader::ExportTargetAsProject(const wxString& filename, const wxStri
         AddElement(prjnode, "Option", "makefile_is_custom", 1);
     if (m_pProject->GetModeForPCH() != pchObjectDir)
         AddElement(prjnode, "Option", "pch_mode", (int)m_pProject->GetModeForPCH());
-    if (m_pProject->GetDefaultExecuteTargetIndex() != 0)
-        AddElement(prjnode, "Option", "default_target", m_pProject->GetDefaultExecuteTargetIndex());
+    if (m_pProject->GetDefaultExecuteTarget() != m_pProject->GetFirstValidBuildTargetName())
+        AddElement(prjnode, "Option", "default_target", m_pProject->GetDefaultExecuteTarget());
     AddElement(prjnode, "Option", "compiler", m_pProject->GetCompilerID());
+    AddElement(prjnode, "Option", "virtualFolders", GetStringFromArray(m_pProject->GetVirtualFolders(), _T(";")));
 
     if (m_pProject->MakeCommandsModified())
     {
@@ -909,7 +992,13 @@ bool ProjectLoader::ExportTargetAsProject(const wxString& filename, const wxStri
         TiXmlElement* tgtnode = AddElement(buildnode, "Target", "title", target->GetTitle());
         if (target->GetTargetType() != ttCommandsOnly)
         {
-            AddElement(tgtnode, "Option", "output", target->GetOutputFilename());
+            TiXmlElement* outnode = AddElement(tgtnode, "Option", "output", target->GetOutputFilename());
+            TargetFilenameGenerationPolicy prefixPolicy;
+            TargetFilenameGenerationPolicy extensionPolicy;
+            target->GetTargetFilenameGenerationPolicy(&prefixPolicy, &extensionPolicy);
+            outnode->SetAttribute("prefix_auto", prefixPolicy == tgfpPlatformDefault ? "1" : "0");
+            outnode->SetAttribute("extension_auto", extensionPolicy == tgfpPlatformDefault ? "1" : "0");
+
             if (target->GetWorkingDir() != _T("."))
                 AddElement(tgtnode, "Option", "working_dir", target->GetWorkingDir());
             if (target->GetObjectOutput() != _T(".objs"))
@@ -929,8 +1018,9 @@ bool ProjectLoader::ExportTargetAsProject(const wxString& filename, const wxStri
             AddElement(tgtnode, "Option", "parameters", target->GetExecutionParameters());
         if (!target->GetHostApplication().IsEmpty())
             AddElement(tgtnode, "Option", "host_application", target->GetHostApplication());
-        if (target->GetIncludeInTargetAll())
-            AddElement(tgtnode, "Option", "includeInTargetAll", 1);
+        // used in versions prior to 1.5
+//        if (target->GetIncludeInTargetAll())
+//            AddElement(tgtnode, "Option", "includeInTargetAll", 1);
         if ((target->GetTargetType() == ttStaticLib || target->GetTargetType() == ttDynamicLib) && target->GetCreateDefFile())
             AddElement(tgtnode, "Option", "createDefFile", 1);
         if (target->GetTargetType() == ttDynamicLib && target->GetCreateStaticLib())
@@ -992,6 +1082,25 @@ bool ProjectLoader::ExportTargetAsProject(const wxString& filename, const wxStri
         }
     }
 
+    // virtuals only for whole project
+    if (onlyTarget.IsEmpty())
+    {
+        TiXmlElement* virtnode = AddElement(prjnode, "VirtualTargets", 0, 0);
+        wxArrayString virtuals = m_pProject->GetVirtualBuildTargets();
+        for (size_t i = 0; i < virtuals.GetCount(); ++i)
+        {
+            const wxArrayString& group = m_pProject->GetVirtualBuildTargetGroup(virtuals[i]);
+            wxString groupStr = GetStringFromArray(group, _T(";"));
+            if (!groupStr.IsEmpty())
+            {
+                TiXmlElement* elem = AddElement(virtnode, "Add", "alias", virtuals[i]);
+                elem->SetAttribute("targets", cbU2C(groupStr));
+            }
+        }
+        if (virtnode->NoChildren())
+            prjnode->RemoveChild(virtnode);
+    }
+
     SaveEnvironment(buildnode, m_pProject);
 
     TiXmlElement* node = AddElement(prjnode, "Compiler", 0, 0);
@@ -1040,6 +1149,8 @@ bool ProjectLoader::ExportTargetAsProject(const wxString& filename, const wxStri
             AddElement(unitnode, "Option", "link", 0);
         if (f->weight != 50)
             AddElement(unitnode, "Option", "weight", f->weight);
+        if (!f->virtual_path.IsEmpty())
+            AddElement(unitnode, "Option", "virtualFolder", f->virtual_path);
 
         // loop and save custom build commands
         for (pfCustomBuildMap::iterator it = f->customBuild.begin(); it != f->customBuild.end(); ++it)

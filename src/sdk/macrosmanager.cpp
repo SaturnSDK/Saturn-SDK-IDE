@@ -39,9 +39,13 @@
     #include "uservarmanager.h"
     #include "configmanager.h"
     #include "globals.h"
+    #include "compilerfactory.h"
+    #include "compiler.h"
 #endif
 
-#include <stdlib.h>
+#include <cstdlib>
+
+using namespace std;
 
 /*
     standard macros are:
@@ -215,6 +219,19 @@ void MacrosManager::RecalcVars(cbProject* project,EditorBase* editor,ProjectBuil
         m_lastProject = project;
     }
 
+    if(target)
+    {
+        const Compiler* compiler = CompilerFactory::GetCompiler(target->GetCompilerID());
+        if(compiler)
+        {
+            const StringHash& v = compiler->GetAllVars();
+            for (StringHash::const_iterator it = v.begin(); it != v.end(); ++it)
+            {
+                macros[it->first.Upper()] = it->second;
+            }
+        }
+    }
+
 	if(project)
 	{
         const StringHash& v = project->GetAllVars();
@@ -309,7 +326,7 @@ void MacrosManager::ReplaceMacros(wxString& buffer, bool envVarsToo, ProjectBuil
         if (var.GetChar(0) == _T('#'))
         {
             replace = UnixFilename(m_uVarMan->Replace(var));
-			QuoteStringIfNeeded(replace);
+//			QuoteStringIfNeeded(replace);
         }
         else
         {
@@ -352,7 +369,7 @@ void MacrosManager::ReplaceMacros(wxString& buffer, bool envVarsToo, ProjectBuil
             break; // avoid infinite loop when macro is invalid
         }
     }
-	QuoteStringIfNeeded(replace);
+//	QuoteStringIfNeeded(replace);
 
 //	Manager::Get()->GetMessageManager()->DebugLog(wxString("ReplaceMacros() ---> return: ") << buffer);
 }

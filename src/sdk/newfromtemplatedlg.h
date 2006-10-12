@@ -2,47 +2,50 @@
 #define NEWFROMTEMPLATEDLG_H
 
 #include <wx/dialog.h>
-#include <wx/listctrl.h>
-#include <wx/combobox.h>
-#include <wx/imaglist.h>
-#include "projecttemplateloader.h"
-#include "settings.h"
+#include "globals.h"
 #include "pluginmanager.h"
+#include "cbplugin.h"
 
-WX_DEFINE_ARRAY(ProjectTemplateLoader*, ProjectTemplateArray);
+class wxChoice;
+class wxListCtrl;
+class ProjectTemplateLoader;
 
 class NewFromTemplateDlg : public wxDialog
 {
 	public:
-		NewFromTemplateDlg(const wxArrayString& user_templates);
+		NewFromTemplateDlg(TemplateOutputType initial, const wxArrayString& user_templates);
 		virtual ~NewFromTemplateDlg();
 
 		ProjectTemplateLoader* GetTemplate(){ return m_Template; }
 		cbWizardPlugin* GetWizard(){ return m_pWizard; }
-		int GetWizardIndex(){ return m_WizardIndex; }
-		cbWizardPlugin* NewFromTemplateDlg::GetSelectedTemplate();
-		bool SelectedUserTemplate();
-		wxString GetSelectedUserTemplate();
+		int GetWizardIndex() const { return m_WizardIndex; }
+		cbWizardPlugin* GetSelectedTemplate();
+		bool SelectedUserTemplate() const;
+		wxString GetSelectedUserTemplate() const;
 
 		void EndModal(int retCode);
 	protected:
 		void FillTemplate(ProjectTemplateLoader* pt);
 		void BuildCategories();
-		void BuildCategoriesFor(cbWizardPlugin::OutputType otype, wxComboBox* cat);
+		void BuildCategoriesFor(TemplateOutputType otype, wxChoice* cat);
 		void BuildList();
-		void BuildListFor(cbWizardPlugin::OutputType otype, wxListCtrl* list, wxComboBox* cat);
+		void BuildListFor(TemplateOutputType otype, wxListCtrl* list, const wxChoice* cat);
 		void ClearList();
 		void ClearListFor(wxListCtrl* list);
 		void OnListRightClick(wxListEvent& event);
+		void OnListActivate(wxListEvent& event);
 		void OnCategoryChanged(wxCommandEvent& event);
 		void OnEditScript(wxCommandEvent& event);
 		void OnEditGlobalScript(wxCommandEvent& event);
+		void OnViewChange(wxCommandEvent& event);
+		void OnHelp(wxCommandEvent& event);
 		void OnUpdateUI(wxUpdateUIEvent& event);
 
-		void EditScript(const wxString& relativeFilename);
+		void ChangeView();
+		void EditScript(const wxString& filename);
 		wxListCtrl* GetVisibleListCtrl();
-		wxComboBox* GetVisibleCategory();
-		cbWizardPlugin::OutputType GetVisibleOutputType();
+		wxChoice* GetVisibleCategory();
+		TemplateOutputType GetVisibleOutputType() const;
 	private:
 		ProjectTemplateLoader* m_Template;
 		cbWizardPlugin* m_pWizard;
@@ -52,4 +55,3 @@ class NewFromTemplateDlg : public wxDialog
 };
 
 #endif // NEWFROMTEMPLATEDLG_H
-

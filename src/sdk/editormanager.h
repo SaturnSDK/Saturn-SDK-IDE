@@ -10,13 +10,17 @@
 #include "cbexception.h" // cbThrow
 
 #include "openfilestree.h"
-
 #include "printing_types.h"
+
+#ifndef CB_PRECOMP
+    #include "globals.h" // cbC2U
+#endif
 
 DLLIMPORT extern int ID_NBEditorManager;
 DLLIMPORT extern int ID_EditorManager;
 DLLIMPORT extern int idEditorManagerCheckFiles;
 DLLIMPORT extern int ID_EditorManagerCloseButton;
+
 // forward decls
 class EditorBase;
 class wxFlatNotebook;
@@ -152,6 +156,7 @@ class DLLIMPORT EditorManager : public Mgr<EditorManager>, public wxEvtHandler
         void OnTreeItemRightClick(wxTreeEvent &event);
         void SetZoom(int zoom);
         int GetZoom()const;
+        bool RenameTreeFile(const wxString& oldname, const wxString& newname);
 
     protected:
         // m_EditorsList access
@@ -169,7 +174,6 @@ class DLLIMPORT EditorManager : public Mgr<EditorManager>, public wxEvtHandler
         void DeleteItemfromTree(wxTreeItemId item);
         void DeleteFilefromTree(const wxString& filename);
         void AddFiletoTree(EditorBase* ed);
-        bool RenameTreeFile(const wxString& oldname, const wxString& newname);
         void InitPane();
 
         AutoCompleteMap m_AutoCompleteMap;

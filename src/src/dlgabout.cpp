@@ -23,9 +23,8 @@
 * $Id$
 * $HeadURL$
 */
-#ifdef CB_PRECOMP
 #include "sdk.h"
-#else
+#ifndef CB_PRECOMP
 #ifdef __WXMAC__
 #include <wx/font.h>
 #endif //__WXMAC__
@@ -60,7 +59,7 @@ dlgAbout::dlgAbout(wxWindow* parent)
 
 	wxBitmap bmp;
 	wxString file = ConfigManager::ReadDataPath() + _T("/images/splash.png");
-	bmp.LoadFile(file, wxBITMAP_TYPE_PNG);
+	bmp = cbLoadBitmap(file, wxBITMAP_TYPE_PNG);
 	XRCCTRL(*this, "lblTitle", wxStaticBitmap)->SetBitmap(bmp);
 	XRCCTRL(*this, "lblBuildTimestamp", wxStaticText)->SetLabel(wxString(_("Build: ")) + g_AppBuildTimestamp);
 	XRCCTRL(*this, "txtDescription", wxTextCtrl)->SetValue(description);

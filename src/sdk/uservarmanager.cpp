@@ -15,12 +15,14 @@
 #include "sdk_precomp.h"
 
 #ifndef CB_PRECOMP
-#include "uservarmanager.h"
-#include "configmanager.h"
-#include "messagemanager.h"
-#include "manager.h"
-#include "cbexception.h"
-#include "globals.h"
+    #include "uservarmanager.h"
+    #include "configmanager.h"
+    #include "messagemanager.h"
+    #include "projectmanager.h"
+    #include "macrosmanager.h"
+    #include "manager.h"
+    #include "cbexception.h"
+    #include "infowindow.h"
 
 #include <wx/dialog.h>
 #include <wx/intl.h>
@@ -137,13 +139,24 @@ wxString UserVariableManager::Replace(const wxString& variable)
 
     if(base.IsEmpty())
     {
-        wxString msg;
-        msg.Printf(_("In the currently active Set, Code::Blocks does not know\nthe global compiler variable \"%s\".\n\nPlease define it."), package.c_str());
-        InfoWindow::Display(_("Global Compiler Variables"), msg , 8000, 1000);
-        UsrGlblMgrEditDialog d;
-        d.AddVar(package);
-        PlaceWindow(&d);
-        d.ShowModal();
+        if (Manager::Get()->GetProjectManager()->IsLoading())
+        {
+            // a project/workspace is being loaded.
+            // no need to bug the user now about global vars.
+            // just preempt it; ProjectManager will call Arrogate() when it's done.
+            Preempt(variable);
+            return variable;
+        }
+        else
+        {
+            wxString msg;
+            msg.Printf(_("In the currently active Set, Code::Blocks does not know\nthe global compiler variable \"%s\".\n\nPlease define it."), package.c_str());
+            InfoWindow::Display(_("Global Compiler Variables"), msg , 8000, 1000);
+            UsrGlblMgrEditDialog d;
+            d.AddVar(package);
+            PlaceWindow(&d);
+            d.ShowModal();
+        }
     }
 
     if(member.IsEmpty() || member.IsSameAs(cBase))
@@ -165,10 +178,25 @@ wxString UserVariableManager::Replace(const wxString& variable)
 
 void UserVariableManager::Preempt(const wxString& variable)
 {
-    wxString member(variable.AfterLast(wxT('#')).BeforeFirst(wxT('.')).MakeLower());
+    if(variable.find(_T('#')) == wxString::npos)
+        return;
 
-    if(!cfg->Exists(cSets + activeSet + _T('/') + member + _T("/base")))
+    wxString member(variable.AfterLast(wxT('#')).BeforeFirst(wxT('.')).BeforeFirst(wxT(')')).MakeLower());
+
+    if(!cfg->Exists(cSets + activeSet + _T('/') + member + _T("/base")) &&
+        preempted.Index(member) == wxNOT_FOUND)
+    {
         preempted.Add(member);
+    }
+}
+
+bool UserVariableManager::Exists(const wxString& variable) const
+{
+    if(variable.find(_T('#')) == wxString::npos)
+        return false;
+
+    wxString member(variable.AfterLast(wxT('#')).BeforeFirst(wxT('.')).BeforeFirst(wxT(')')).MakeLower());
+    return !cfg->Exists(cSets + activeSet + _T('/') + member + _T("/base"));
 }
 
 void UserVariableManager::Arrogate()

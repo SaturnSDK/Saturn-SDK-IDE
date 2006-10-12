@@ -13,7 +13,6 @@ void HelpCommon::LoadHelpFilesVector(HelpCommon::HelpFilesVector &vect)
   ConfigManager* conf = Manager::Get()->GetConfigManager(_T("help_plugin"));
   m_DefaultHelpIndex = conf->ReadInt(_T("/default"), -1);
   wxArrayString list = conf->EnumerateSubPaths(_T("/"));
-
   for (unsigned int i = 0; i < list.GetCount(); ++i)
   {
       wxString name = conf->Read(list[i] + _T("/name"), wxEmptyString);

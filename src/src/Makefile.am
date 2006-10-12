@@ -3,6 +3,8 @@ SUBDIRS = wxAUI resources
 INCLUDES = $(WX_CXXFLAGS) \
 			-I$(top_srcdir)/src/sdk/wxscintilla/include \
 			-I$(top_srcdir)/src/sdk \
+			-I$(top_srcdir)/src/sdk/scripting/include \
+			-I$(top_srcdir)/src/sdk/scripting/sqplus \
 			-I$(top_srcdir)/src/sdk/wxFlatNotebook \
 			-I$(top_srcdir)/src/src/wxAUI
 
@@ -16,8 +18,7 @@ codeblocks_LDFLAGS =
 
 codeblocks_LDADD =  -LwxAUI -lwxaui \
 			-L../sdk -lcodeblocks \
-			$(WX_LIBS) \
-			$(WX_XRC)
+			$(WX_LIBS)
 
 codeblocks_SOURCES = app.cpp \
 			appglobals.cpp \
@@ -29,6 +30,7 @@ codeblocks_SOURCES = app.cpp \
 			main.cpp \
 			prefix.cpp \
 			printdlg.cpp \
+			scriptconsole.cpp \
 			splashscreen.cpp \
 			startherepage.cpp
 
@@ -42,8 +44,12 @@ noinst_HEADERS = app.h \
 			main.h \
 			prefix.h \
 			printdlg.h \
+			scriptconsole.h \
 			splashscreen.h \
 			startherepage.h
 
-EXTRADIST = associations.cpp \
-            associations.h
+man_MANS = codeblocks.1
+
+EXTRA_DIST = associations.cpp \
+            associations.h \
+            $(man_MANS)

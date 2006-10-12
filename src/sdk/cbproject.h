@@ -1,6 +1,7 @@
 #ifndef CBPROJECT_H
 #define CBPROJECT_H
 
+#include <wx/datetime.h>
 #include <wx/dynarray.h>
 #include <wx/hashmap.h>
 #include <wx/treectrl.h>
@@ -10,14 +11,19 @@
 #include "compiletargetbase.h"
 #include "cbplugin.h"
 #include "projectbuildtarget.h"
-#include "projectfile.h"
+
+#include <map>
 
 // forward decl
 class cbProject;
+class ProjectBuildTarget;
+class ProjectFile;
 class FilesGroupsAndMasks;
 
 // hashmap for fast searches in cbProject::GetFileByFilename()
 WX_DECLARE_STRING_HASH_MAP(ProjectFile*, ProjectFiles);
+
+typedef std::map<wxString, wxArrayString> VirtualBuildTargetsMap;
 
 class DLLIMPORT FileTreeData : public MiscTreeItemData
 {
@@ -29,7 +35,8 @@ class DLLIMPORT FileTreeData : public MiscTreeItemData
             ftdkProject,
             ftdkFolder,
             ftdkFile,
-            ftdkVirtualGroup
+            ftdkVirtualGroup, // wilcard matching
+            ftdkVirtualFolder
         };
 
         FileTreeData(cbProject* project, FileTreeDataKind kind = ftdkUndefined)
@@ -71,7 +78,7 @@ enum PCHMode
     pchSourceFile,      /// In a file alongside the source header (with .gch appended).
 };
 
-/** Represents a Code::Blocks project.
+/** @brief Represents a Code::Blocks project.
   *
   * A project is a collection of build targets and files.
   * Each project can contain any number of build targets and files.
@@ -79,11 +86,11 @@ enum PCHMode
   */
 class DLLIMPORT cbProject : public CompileTargetBase
 {
- 	public:
-		/// Constructor
-		cbProject(const wxString& filename = wxEmptyString);
-		/// Destructor
-		~cbProject();
+     public:
+        /// Constructor
+        cbProject(const wxString& filename = wxEmptyString);
+        /// Destructor
+        ~cbProject();
 
         /** @return True if the project fully loaded, false if not. */
         bool IsLoaded(){ return m_Loaded; }
@@ -110,12 +117,12 @@ class DLLIMPORT cbProject : public CompileTargetBase
         wxString GetCommonTopLevelPath();
 
         /** @return True if the project is modified in any way. */
-		bool GetModified();
+        bool GetModified();
 
-		/** Mark the project as modified or not.
-		  * @param modified If true, the project is marked as modified. If false, as not-modified.
-		  */
-		void SetModified(bool modified = true);
+        /** Mark the project as modified or not.
+          * @param modified If true, the project is marked as modified. If false, as not-modified.
+          */
+        void SetModified(bool modified = true);
 
         /** Access a file of the project.
           * @param index The index of the file. Must be greater or equal than zero and less than GetFilesCount().
@@ -151,15 +158,25 @@ class DLLIMPORT cbProject : public CompileTargetBase
         /** @return True if the project is using a custom Makefile for compilation, false if not. */
         bool IsMakefileCustom(){ return m_CustomMakefile; }
 
+        /** Is there a build target (virtual or real) by @c name?
+          * @param name The build target's name.
+          * @param virtuals_too Include virtual build targets in query.
+          * @return True if exists a build target (virtual or real) by that name, false if not.
+          */
+        bool BuildTargetValid(const wxString& name, bool virtuals_too = true) const;
+
+        /** @return The first valid (virtual or real) build target. */
+        wxString GetFirstValidBuildTargetName(bool virtuals_too = true) const;
+
         /** @return The build target index which will be pre-selected when the "Select target"
           * dialog appears when running the project. Valid only for multi-target projects. */
-        int GetDefaultExecuteTargetIndex();
+        const wxString& GetDefaultExecuteTarget() const;
 
         /** Set the build target index which will be pre-selected when the "Select target"
           * dialog appears when running the project.
-          * @param index The build target index. Must be equal or greater than zero and less than GetBuildTargetsCount().
+          * @param name The build target's name.
           */
-        void SetDefaultExecuteTargetIndex(int index);
+        void SetDefaultExecuteTarget(const wxString& name);
 
         /** @return The number of build targets this project contains. */
         int GetBuildTargetsCount(){ return m_Targets.GetCount(); }
@@ -252,16 +269,18 @@ class DLLIMPORT cbProject : public CompileTargetBase
         void ReOrderTargets(const wxArrayString& nameOrder);
 
         /** Set the active build target. Mainly used by the compiler.
-          * @param index The build target index to set as active.
-          * @return True if @c index was valid, false if not.
+          * @param name The build target name to set as active. If @c name does
+          *             not exist, then the first virtual target is set
+          *             or the first real target, depending which is valid.
+          * @return True if @c name was valid, false if not.
           */
-		bool SetActiveBuildTarget(int index);
+        bool SetActiveBuildTarget(const wxString& name);
 
-		/** @return The active build target index. */
-		int GetActiveBuildTarget();
+        /** @return The active build target name. Note that this might be a virtual target. */
+        const wxString& GetActiveBuildTarget() const;
 
         /** @return The mode precompiled headers are handled. */
-        PCHMode GetModeForPCH(){ return m_PCHMode; }
+        PCHMode GetModeForPCH() const { return m_PCHMode; }
 
         /** Set the mode to handle precompiled headers.
           * @param mode The desired PCH mode.
@@ -307,13 +326,13 @@ class DLLIMPORT cbProject : public CompileTargetBase
           * where the cursor is located on each one of those, etc.
           * @return True if succesfull, false otherwise.
           */
-		bool SaveLayout();
+        bool SaveLayout();
 
         /** Load the project's layout.
           * @see SaveLayout() for info.
           * @return True if succesfull, false otherwise.
           */
-		bool LoadLayout();
+        bool LoadLayout();
 
         /** Add a file to the project.
           * This variation, takes a target name as first parameter.
@@ -357,13 +376,13 @@ class DLLIMPORT cbProject : public CompileTargetBase
         /** Convenience function for remembering the project's tree state when refreshing it.
           * @return An array of strings containing the tree-path names of expanded nodes.
           */
-		const wxArrayString& ExpandedNodes(){ return m_ExpandedNodes; }
+        const wxArrayString& ExpandedNodes(){ return m_ExpandedNodes; }
 
         /** Convenience function for remembering the project's tree state when refreshing it.
           * Adds an expanded node in this internal list.
           * @param path The tree-path to add.
           */
-		void AddExpandedNode(const wxString& path){ m_ExpandedNodes.Add(path); }
+        void AddExpandedNode(const wxString& path){ m_ExpandedNodes.Add(path); }
 
         /** Convenience function for remembering the project's tree state when refreshing it.
           * @param tree The tree control to save its expanded state.
@@ -384,12 +403,12 @@ class DLLIMPORT cbProject : public CompileTargetBase
           * The default behaviour is to not show the dialog if the project has only one target.
           * @return The target's index that the user selected or -1 if the dialog was cancelled.
           */
-		int SelectTarget(int initial = -1, bool evenIfOne = false);
+        int SelectTarget(int initial = -1, bool evenIfOne = false);
 
-		/** Rename the project's title in the tree.
-		  * @param newname The new title for the project.
-		  * @note This does *not* actually alter the project's title. It just changes it on the tree.
-		  */
+        /** Rename the project's title in the tree.
+          * @param newname The new title for the project.
+          * @note This does *not* actually alter the project's title. It just changes it on the tree.
+          */
         void RenameInTree(const wxString &newname);
 
         /** Get a pointer to the currently compiling target.
@@ -404,19 +423,124 @@ class DLLIMPORT cbProject : public CompileTargetBase
           * @param bt The build target that is currently building.
           */
         void SetCurrentlyCompilingTarget(ProjectBuildTarget* bt);
+
+        /** Define a new virtual build target.
+          *
+          * A virtual build target is not really a build target itself but it is an alias
+          * for a group of other build targets, real or virtual.
+          * An example is the "All" virtual build target which means "all build targets".
+          *
+          * @param alias The virtual build target's name.
+          * @param targets A list of build target names to include in this virtual build target.
+          *                They can be real or other virtual build targets.
+          * @return True for success, false for failure. The only reason for this function
+          *         to return false is if a *real* build target exists with the same name as @c alias
+          *         (or if you pass an empty @c targets array).
+          * @note Every time you call this function with the same @c alias parameter, the virtual
+          *       build target is re-defined. In other words, it's not an error if @c alias is already
+          *       defined.
+          */
+        bool DefineVirtualBuildTarget(const wxString& alias, const wxArrayString& targets);
+
+        /** Does a virtual build target exist?
+          *
+          * @param alias The virtual build target's name.
+          * @return True if the virtual build target exists, false if not.
+          */
+        bool HasVirtualBuildTarget(const wxString& alias) const;
+
+        /** Remove a virtual build target.
+          *
+          * @param alias The virtual build target's name.
+          * @return True if the virtual build target was removed, false if not.
+          */
+        bool RemoveVirtualBuildTarget(const wxString& alias);
+
+        /** Get a list of all defined virtual build targets.
+          *
+          * @return A list of all defined virtual build targets.
+          */
+        wxArrayString GetVirtualBuildTargets() const;
+
+        /** Access a virtual build target's group of build targets.
+          *
+          * @param alias The virtual build target's name.
+          * @return The list of all build targets under the alias @c alias.
+          */
+        const wxArrayString& GetVirtualBuildTargetGroup(const wxString& alias) const;
+
+        /** Access a virtual build target's expanded group of build targets.
+          *
+          * The difference from GetVirtualBuildTargetGroup() lies in that this function
+          * returns the full list of real build targets in this group (by recursively
+          * expanding virtual build targets in the group).
+          * @param alias The virtual build target's name.
+          * @return The expanded list of all real build targets under the alias @c alias.
+          */
+        wxArrayString GetExpandedVirtualBuildTargetGroup(const wxString& alias) const;
+
+        /** Checks if a build target (virtual or real) can be added to a virtual build target,
+          * without causing a circular-reference.
+          *
+          * @param alias The "parent" virtual build target to add the build target in.
+          * @param target The build target to add in the @c alias virtual build target.
+          * @return True if a circular reference is not detected, false if it is.
+          */
+        bool CanAddToVirtualBuildTarget(const wxString& alias, const wxString& target);
+
+        /** Request if a specific tree node can be dragged.
+          *
+          * @note Called by ProjectManager.
+          * @return True if it is allowed to drag this node, false not.
+          */
+        bool CanDragNode(wxTreeCtrl* tree, wxTreeItemId node);
+
+        /** Notify that a specific tree node has been dragged.
+          *
+          * @note Called by ProjectManager.
+          * @return True if succeeded, false if not.
+          */
+        bool NodeDragged(wxTreeCtrl* tree, wxTreeItemId from, wxTreeItemId to);
+
+        /** Notify that a virtual folder has been added.
+          * @return True if it is allowed, false if not. */
+        bool VirtualFolderAdded(wxTreeCtrl* tree, wxTreeItemId parent_node, const wxString& virtual_folder);
+
+        /** Notify that a virtual folder has been deleted. */
+        void VirtualFolderDeleted(wxTreeCtrl* tree, wxTreeItemId node);
+
+        /** Notify that a virtual folder has been renamed.
+          * @return True if the renaming is allowed, false if not. */
+        bool VirtualFolderRenamed(wxTreeCtrl* tree, wxTreeItemId node, const wxString& new_name);
+
+        /** Get a list of the virtual folders. Normally used by the project loader only.*/
+        const wxArrayString& GetVirtualFolders() const;
+
+        /** Set the virtual folders list. Normally used by the project loader only. */
+        void SetVirtualFolders(const wxArrayString& folders);
+
+        /** Returns the last modification time for the file. Used to detect modifications outside the Program. */
+        wxDateTime GetLastModificationTime() const { return m_LastModified; }
+
+        /** Sets the last modification time for the project to 'now'. Used to detect modifications outside the Program. */
+        void Touch();
     private:
         void Open();
-        wxTreeItemId AddTreeNode(wxTreeCtrl* tree, const wxString& text, const wxTreeItemId& parent, bool useFolders, bool compiles, int image, FileTreeData* data = 0L);
+        void ExpandVirtualBuildTargetGroup(const wxString& alias, wxArrayString& result) const;
+        wxTreeItemId AddTreeNode(wxTreeCtrl* tree, const wxString& text, const wxTreeItemId& parent, bool useFolders, FileTreeData::FileTreeDataKind folders_kind, bool compiles, int image, FileTreeData* data = 0L);
+        wxTreeItemId FindNodeToInsertAfter(wxTreeCtrl* tree, const wxString& text, const wxTreeItemId& parent, bool in_folders); // alphabetical sorting
         ProjectBuildTarget* AddDefaultBuildTarget();
-        int IndexOfBuildTargetName(const wxString& targetName);
+        int IndexOfBuildTargetName(const wxString& targetName) const;
         wxString CreateUniqueFilename();
         void NotifyPlugins(wxEventType type);
+        void CopyTreeNodeRecursively(wxTreeCtrl* tree, const wxTreeItemId& item, const wxTreeItemId& new_parent);
 
         // properties
+        VirtualBuildTargetsMap m_VirtualTargets;
         BuildTargets m_Targets;
-        int m_ActiveTarget;
-        int m_LastSavedActiveTarget;
-        int m_DefaultExecuteTarget;
+        wxString m_ActiveTarget;
+        wxString  m_LastSavedActiveTarget;
+        wxString m_DefaultExecuteTarget;
         wxString m_Makefile;
         bool m_CustomMakefile;
 
@@ -424,6 +548,8 @@ class DLLIMPORT cbProject : public CompileTargetBase
         wxArrayString m_ExpandedNodes;
         bool m_Loaded;
         wxTreeItemId m_ProjectNode;
+
+        wxArrayString m_VirtualFolders; // not saved, just used throughout cbProject's lifetime
 
         bool m_CurrentlyLoading;
         wxString m_CommonTopLevelPath;
@@ -434,6 +560,8 @@ class DLLIMPORT cbProject : public CompileTargetBase
         // hashmap for fast searches in cbProject::GetFileByFilename()
         ProjectFiles m_ProjectFilesMap; // keeps UnixFilename(ProjectFile::relativeFilename)
         ProjectBuildTarget* m_CurrentlyCompilingTarget;
+
+        wxDateTime m_LastModified;
 };
 
 #endif // CBPROJECT_H

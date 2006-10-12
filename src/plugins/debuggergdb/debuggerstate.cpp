@@ -8,6 +8,10 @@
 #include "manager.h"
 #include "projectmanager.h"
 
+#ifndef CB_PRECOMP
+    #include "cbproject.h"
+#endif
+
 DebuggerState::DebuggerState(DebuggerGDB* plugin)
     : m_pPlugin(plugin),
     m_pDriver(0),
@@ -24,7 +28,7 @@ bool DebuggerState::StartDriver(ProjectBuildTarget* target)
     StopDriver();
     SetupBreakpointIndices();
     wxString idx = target ? target->GetCompilerID() : CompilerFactory::GetDefaultCompilerID();
-    if (idx == _T("msvctk")) // MSVC // TODO: do not hardcode these
+    if (CompilerFactory::CompilerInheritsFrom(idx, _T("msvc*"))) // MSVC
         m_pDriver = new CDB_driver(m_pPlugin);
     else
         m_pDriver = new GDB_driver(m_pPlugin);
@@ -73,9 +77,12 @@ void DebuggerState::SetupBreakpointIndices()
 // so we check this here and use the file's relative filename if possible.
 wxString DebuggerState::ConvertToValidFilename(const wxString& filename)
 {
+    wxString fname = filename;
+    fname.Replace(_T("\\"), _T("/"));
+
     cbProject* prj = Manager::Get()->GetProjectManager()->GetActiveProject();
     if (!prj)
-        return filename;
+        return fname;
 
     bool isAbsolute = false;
 #ifdef __WXMSW__
@@ -86,13 +93,34 @@ wxString DebuggerState::ConvertToValidFilename(const wxString& filename)
     isAbsolute = filename.GetChar(0) == _T('/') ||
                 filename.GetChar(0) == _T('~');
 #endif
+
     if (isAbsolute)
     {
         ProjectFile* pf = prj->GetFileByFilename(UnixFilename(filename), false, true);
-        if (pf && pf->relativeFilename.StartsWith(_T("..")))
-            return pf->relativeFilename;
+        if (pf)
+        {
+            fname = pf->relativeFilename;
+            fname.Replace(_T("\\"), _T("/"));
+        }
     }
-    return filename;
+    return fname;
+}
+
+cbProject* DebuggerState::FindProjectForFile(const wxString& file)
+{
+//    DBGLOG(_T("Searching for project containing: ") + file);
+    ProjectsArray* projects = Manager::Get()->GetProjectManager()->GetProjects();
+    for (size_t i = 0; i < projects->GetCount(); ++i)
+    {
+        cbProject* prj = projects->Item(i);
+        if (prj->GetFileByFilename(file, false, false))
+        {
+//            DBGLOG(_T("Got it: %s (%p)"), prj->GetTitle().c_str(), prj);
+            return prj;
+        }
+    }
+//    DBGLOG(_T("Not found..."));
+    return 0;
 }
 
 int DebuggerState::AddBreakpoint(const wxString& file, int line, bool temp, const wxString& lineText)
@@ -112,6 +140,7 @@ int DebuggerState::AddBreakpoint(const wxString& file, int line, bool temp, cons
     bp->line = line;
     bp->temporary = temp;
     bp->lineText = lineText;
+    bp->userData = FindProjectForFile(file);
     return AddBreakpoint(bp);
 }
 
@@ -168,10 +197,59 @@ void DebuggerState::RemoveAllBreakpoints(const wxString& file, bool deleteit)
         if (fileonly)
         {
             DebuggerBreakpoint* bp = m_Breakpoints[i];
-            if (bp->filename != bpfile  && bp->filenameAsPassed != file)
+            if (bp->filename != bpfile && bp->filenameAsPassed != file)
                 continue;
         }
         RemoveBreakpoint(i, deleteit);
+    }
+}
+
+int DebuggerState::RemoveBreakpointsRange(const wxString& file, int startline, int endline)
+{
+    int ret = 0;
+    wxString bpfile = ConvertToValidFilename(file);
+    for (int i = m_Breakpoints.GetCount() - 1; i >= 0; --i)
+    {
+        DebuggerBreakpoint* bp = m_Breakpoints[i];
+        if (bp->line >= startline && bp->line <= endline && (bp->filename == bpfile || bp->filenameAsPassed == file))
+        {
+            ++ret;
+            RemoveBreakpoint(i, true);
+        }
+    }
+    return ret;
+}
+
+void DebuggerState::RemoveAllProjectBreakpoints(cbProject* prj)
+{
+//    DBGLOG(_T("Removing all breakpoints of project: %p"), prj);
+    for (int i = m_Breakpoints.GetCount() - 1; i >= 0; --i)
+    {
+        DebuggerBreakpoint* bp = m_Breakpoints[i];
+        if (bp->userData == prj)
+        {
+//            DBGLOG(_T("Got one"));
+            RemoveBreakpoint(i, true);
+        }
+    }
+}
+
+void DebuggerState::ShiftBreakpoints(const wxString& file, int startline, int nroflines)
+{
+    wxString bpfile = ConvertToValidFilename(file);
+    for (int i = m_Breakpoints.GetCount() - 1; i >= 0; --i)
+    {
+        DebuggerBreakpoint* bp = m_Breakpoints[i];
+        if (bp->line >= startline && (bp->filename == bpfile || bp->filenameAsPassed == file))
+        {
+            // notify driver if it is active
+            if (m_pDriver)
+                m_pDriver->RemoveBreakpoint(bp);
+            bp->line += nroflines;
+            // notify driver if it is active
+            if (m_pDriver)
+                m_pDriver->AddBreakpoint(bp);
+        }
     }
 }
 
@@ -227,7 +305,7 @@ void DebuggerState::ApplyBreakpoints()
     }
 
     m_pPlugin->Log(_("Setting breakpoints"));
-	m_pDriver->RemoveBreakpoint(0); // clear all breakpoints
+    m_pDriver->RemoveBreakpoint(0); // clear all breakpoints
 
     i = (int)m_Breakpoints.GetCount() - 1;
     while (i >= 0)
@@ -235,5 +313,5 @@ void DebuggerState::ApplyBreakpoints()
         DebuggerBreakpoint* bp = m_Breakpoints[i];
         m_pDriver->AddBreakpoint(bp);
         --i;
-	}
+    }
 }

@@ -3,7 +3,6 @@
 
 #include "debugger_defs.h"
 #include <wx/regex.h>
-#include <wx/tipwin.h>
 #include <globals.h>
 
 #define NOT_IMPLEMENTED() DebugLog(wxString(cbC2U(__PRETTY_FUNCTION__)) + _T(": Not implemented in driver"))
@@ -114,10 +113,9 @@ class DebuggerDriver
 
         /** Evaluate a symbol.
             @param symbol The symbol to evaluate.
-            @param tipWin The wxTipWindow* variable's address.
             @param tipRect The rect to use for the tip window.
         */
-        virtual void EvaluateSymbol(const wxString& symbol, wxTipWindow** tipWin, const wxRect& tipRect) = 0;
+        virtual void EvaluateSymbol(const wxString& symbol, const wxRect& tipRect) = 0;
 
         /** Update watches.
             @param doLocals Display values of local variables.
@@ -143,11 +141,11 @@ class DebuggerDriver
         /** Request to switch to another thread. */
         virtual void SwitchThread(size_t threadIndex) = 0;
 
-		void QueueCommand(DebuggerCmd* dcmd, QueuePriority prio = Low); ///< add a command in the queue. The DebuggerCmd will be deleted automatically when finished.
-		DebuggerCmd* CurrentCommand(); ///< returns the currently executing command
-		void RunQueue(); ///< runs the next command in the queue, if it is idle
-		void RemoveTopCommand(bool deleteIt = true); ///< removes the top command (it has finished)
-		void ClearQueue(); ///< clears the queue
+        void QueueCommand(DebuggerCmd* dcmd, QueuePriority prio = Low); ///< add a command in the queue. The DebuggerCmd will be deleted automatically when finished.
+        DebuggerCmd* CurrentCommand(); ///< returns the currently executing command
+        void RunQueue(); ///< runs the next command in the queue, if it is idle
+        void RemoveTopCommand(bool deleteIt = true); ///< removes the top command (it has finished)
+        void ClearQueue(); ///< clears the queue
     protected:
         /** Called by implementations to reset the cursor. */
         virtual void ResetCursor();
@@ -176,9 +174,9 @@ class DebuggerDriver
         ExamineMemoryDlg* m_pExamineMemory;
         ThreadsDlg* m_pThreads;
 
-		// commands
-		DebuggerCommands m_DCmds;
-		bool m_QueueBusy;
+        // commands
+        DebuggerCommands m_DCmds;
+        bool m_QueueBusy;
     private:
 };
 

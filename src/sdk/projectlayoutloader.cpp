@@ -54,10 +54,6 @@ bool ProjectLayoutLoader::Open(const wxString& filename)
     if (!pMan || !pMsg)
         return false;
 
-    cbProject* pProject = pMan->GetActiveProject();
-    if (!pProject)
-        return false;
-
     TiXmlElement* root;
     TiXmlElement* elem;
     wxString fname;
@@ -78,9 +74,8 @@ bool ProjectLayoutLoader::Open(const wxString& filename)
     elem = root->FirstChildElement("ActiveTarget");
     if (elem)
     {
-        int val = 0;
-        if (elem->QueryIntAttribute("index", &val) == TIXML_SUCCESS)
-            m_pProject->SetActiveBuildTarget(val);
+        if (elem->Attribute("name"))
+            m_pProject->SetActiveBuildTarget(cbC2U(elem->Attribute("name")));
     }
 
     elem = root->FirstChildElement("File");
@@ -100,7 +95,7 @@ bool ProjectLayoutLoader::Open(const wxString& filename)
             pf = 0L;
         }
         else
-            pf = pProject->GetFileByFilename(fname);
+            pf = m_pProject->GetFileByFilename(fname);
 
         if (pf)
         {
@@ -150,7 +145,7 @@ bool ProjectLayoutLoader::Save(const wxString& filename)
         return false;
 
     TiXmlElement* tgtidx = static_cast<TiXmlElement*>(rootnode->InsertEndChild(TiXmlElement("ActiveTarget")));
-    tgtidx->SetAttribute("index", m_pProject->GetActiveBuildTarget());
+    tgtidx->SetAttribute("name", cbU2C(m_pProject->GetActiveBuildTarget()));
 
 	ProjectFile* active = 0L;
     cbEditor* ed = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();

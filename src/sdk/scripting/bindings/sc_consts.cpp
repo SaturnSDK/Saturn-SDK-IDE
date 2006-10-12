@@ -15,6 +15,8 @@
 
 namespace ScriptBindings
 {
+    wxString s_PathSep = wxFILE_SEP_PATH;
+
     void Register_Constants()
     {
         // platform constants
@@ -29,9 +31,12 @@ namespace ScriptBindings
             BIND_INT_CONSTANT_NAMED(99, "PLATFORM");
         #endif
 
+        BIND_INT_CONSTANT_NAMED(PLUGIN_SDK_VERSION_MAJOR, "PLUGIN_SDK_VERSION_MAJOR");
+        BIND_INT_CONSTANT_NAMED(PLUGIN_SDK_VERSION_MINOR, "PLUGIN_SDK_VERSION_MINOR");
+        BIND_INT_CONSTANT_NAMED(PLUGIN_SDK_VERSION_RELEASE, "PLUGIN_SDK_VERSION_RELEASE");
+        
         // path separator for filenames
-        wxString pathSep = wxFILE_SEP_PATH;
-        BIND_WXSTR_CONSTANT_NAMED(pathSep, "wxFILE_SEP_PATH");
+        BIND_WXSTR_CONSTANT_NAMED(s_PathSep, "wxFILE_SEP_PATH");
 
         // dialog buttons
         BIND_INT_CONSTANT(wxOK);
@@ -88,11 +93,28 @@ namespace ScriptBindings
         BIND_INT_CONSTANT(pcmInvertColours);
         BIND_INT_CONSTANT(pcmAsIs);
 
-        // cbWizardPlugin::OutputType
-        BIND_INT_CONSTANT_NAMED(cbWizardPlugin::otProject, "wizProject");
-        BIND_INT_CONSTANT_NAMED(cbWizardPlugin::otTarget, "wizTarget");
-        BIND_INT_CONSTANT_NAMED(cbWizardPlugin::otFiles, "wizFiles");
-        BIND_INT_CONSTANT_NAMED(cbWizardPlugin::otCustom, "wizCustom");
+        // TemplateOutputType
+        BIND_INT_CONSTANT_NAMED(totProject, "wizProject");
+        BIND_INT_CONSTANT_NAMED(totTarget, "wizTarget");
+        BIND_INT_CONSTANT_NAMED(totFiles, "wizFiles");
+        BIND_INT_CONSTANT_NAMED(totCustom, "wizCustom");
+
+        // SearchDirs
+        BIND_INT_CONSTANT(sdHome);
+        BIND_INT_CONSTANT(sdBase);
+        BIND_INT_CONSTANT(sdTemp);
+        BIND_INT_CONSTANT(sdPath);
+        BIND_INT_CONSTANT(sdConfig);
+        BIND_INT_CONSTANT(sdCurrent);
+        BIND_INT_CONSTANT(sdPluginsUser);
+        BIND_INT_CONSTANT(sdScriptsUser);
+        BIND_INT_CONSTANT(sdDataUser);
+        BIND_INT_CONSTANT(sdAllUser);
+        BIND_INT_CONSTANT(sdPluginsGlobal);
+        BIND_INT_CONSTANT(sdScriptsGlobal);
+        BIND_INT_CONSTANT(sdDataGlobal);
+        BIND_INT_CONSTANT(sdAllGlobal);
+        BIND_INT_CONSTANT(sdAllKnown);
 
         // file extensions
         BIND_WXSTR_CONSTANT_NAMED(FileFilters::WORKSPACE_EXT, "EXT_WORKSPACE");
@@ -121,6 +143,7 @@ namespace ScriptBindings
         BIND_WXSTR_CONSTANT_NAMED(FileFilters::EXECUTABLE_EXT, "EXT_EXECUTABLE");
         BIND_WXSTR_CONSTANT_NAMED(FileFilters::RESOURCE_EXT, "EXT_RESOURCE");
         BIND_WXSTR_CONSTANT_NAMED(FileFilters::RESOURCEBIN_EXT, "EXT_RESOURCEBIN");
+        BIND_WXSTR_CONSTANT_NAMED(FileFilters::XML_EXT, "EXT_XML");
         BIND_WXSTR_CONSTANT_NAMED(FileFilters::WORKSPACE_DOT_EXT, "DOT_EXT_WORKSPACE");
         BIND_WXSTR_CONSTANT_NAMED(FileFilters::CODEBLOCKS_DOT_EXT, "DOT_EXT_CODEBLOCKS");
         BIND_WXSTR_CONSTANT_NAMED(FileFilters::DEVCPP_DOT_EXT, "DOT_EXT_DEVCPP");
@@ -147,5 +170,6 @@ namespace ScriptBindings
         BIND_WXSTR_CONSTANT_NAMED(FileFilters::EXECUTABLE_DOT_EXT, "DOT_EXT_EXECUTABLE");
         BIND_WXSTR_CONSTANT_NAMED(FileFilters::RESOURCE_DOT_EXT, "DOT_EXT_RESOURCE");
         BIND_WXSTR_CONSTANT_NAMED(FileFilters::RESOURCEBIN_DOT_EXT, "DOT_EXT_RESOURCEBIN");
+        BIND_WXSTR_CONSTANT_NAMED(FileFilters::XML_DOT_EXT, "DOT_EXT_XML");
     }
 };

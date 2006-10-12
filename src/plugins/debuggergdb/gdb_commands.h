@@ -22,6 +22,7 @@
 #include "backtracedlg.h"
 #include "examinememorydlg.h"
 #include "threadsdlg.h"
+#include "gdb_tipwindow.h"
 
 namespace
 {
@@ -113,7 +114,7 @@ static wxRegEx reBT3(_T("\\)[ \t]+[atfrom]+[ \t]+(.*)"));
 static wxRegEx reBreakpoint(_T("Breakpoint ([0-9]+) at (0x[0-9A-Fa-f]+)"));
 // eax            0x40e66666       1088841318
 static wxRegEx reRegisters(_T("([A-z0-9]+)[ \t]+(0x[0-9A-Fa-f]+)[ \t]+(.*)"));
-// 0x00401390 <main+0>:	push   ebp
+// 0x00401390 <main+0>:    push   ebp
 static wxRegEx reDisassembly(_T("(0x[0-9A-Za-z]+)[ \t]+<.*>:[ \t]+(.*)"));
 //Stack level 0, frame at 0x22ff80:
 // eip = 0x401497 in main (main.cpp:16); saved eip 0x4011e7
@@ -124,13 +125,14 @@ static wxRegEx reDisassembly(_T("(0x[0-9A-Za-z]+)[ \t]+<.*>:[ \t]+(.*)"));
 //  ebx at 0x22ff6c, ebp at 0x22ff78, esi at 0x22ff70, edi at 0x22ff74, eip at 0x22ff7c
 static wxRegEx reDisassemblyInit(_T("^Stack level [0-9]+, frame at (0x[A-Fa-f0-9]+):"));
 static wxRegEx reDisassemblyInitFunc(_T("eip = (0x[A-Fa-f0-9]+) in ([^;]*)"));
-//	Using the running image of child Thread 46912568064384 (LWP 7051).
+//    Using the running image of child Thread 46912568064384 (LWP 7051).
 static wxRegEx reInfoProgramThread(_T("\\(LWP[ \t]([0-9]+)\\)"));
-//	Using the running image of child process 10011.
+//    Using the running image of child process 10011.
 static wxRegEx reInfoProgramProcess(_T("child process ([0-9]+)"));
 //  2 Thread 1082132832 (LWP 8017)  0x00002aaaac5a2aca in pthread_cond_wait@@GLIBC_2.3.2 () from /lib/libpthread.so.0
 //* 1 Thread 46912568064384 (LWP 7926)  0x00002aaaac76e612 in poll () from /lib/libc.so.6
 static wxRegEx reInfoThreads(_T("(\\**)[ \t]*([0-9]+)[ \t](.*)[ \t]in"));
+static wxRegEx reGenericHexAddress(_T("(0x[A-Fa-f0-9]+)"));
 
 DECLARE_INSTANCE_TYPE(wxString);
 
@@ -245,8 +247,8 @@ class GdbCmd_AttachToProcess : public DebuggerCmd
             // or,
             // Can't attach to process.
             wxArrayString lines = GetArrayFromString(output, _T('\n'));
-    		for (unsigned int i = 0; i < lines.GetCount(); ++i)
-    		{
+            for (unsigned int i = 0; i < lines.GetCount(); ++i)
+            {
                 if (lines[i].StartsWith(_T("Attaching")))
                     m_pDriver->Log(lines[i]);
                 else if (lines[i].StartsWith(_T("Can't ")))
@@ -256,7 +258,7 @@ class GdbCmd_AttachToProcess : public DebuggerCmd
                     m_pDriver->QueueCommand(new DebuggerCmd(m_pDriver, _T("quit")));
                 }
 //                m_pDriver->DebugLog(lines[i]);
-    		}
+            }
         }
 };
 
@@ -277,12 +279,54 @@ class GdbCmd_Detach : public DebuggerCmd
             // Output:
             // Attaching to process <pid>
             wxArrayString lines = GetArrayFromString(output, _T('\n'));
-    		for (unsigned int i = 0; i < lines.GetCount(); ++i)
-    		{
+            for (unsigned int i = 0; i < lines.GetCount(); ++i)
+            {
                 if (lines[i].StartsWith(_T("Detaching")))
                     m_pDriver->Log(lines[i]);
 //                m_pDriver->DebugLog(lines[i]);
-    		}
+            }
+        }
+};
+
+/**
+  * Utility command to set a breakpoint condition.
+  * Catches errors when setting an invalid condition and responds.
+  *
+  * (called by GdbCmd_AddBreakpoint)
+  */
+class GdbCmd_AddBreakpointCondition : public DebuggerCmd
+{
+        DebuggerBreakpoint* m_BP;
+    public:
+        /** @param bp The breakpoint to set its condition. */
+        GdbCmd_AddBreakpointCondition(DebuggerDriver* driver, DebuggerBreakpoint* bp)
+            : DebuggerCmd(driver),
+            m_BP(bp)
+        {
+            m_Cmd << _T("condition ") << wxString::Format(_T("%d"), (int) m_BP->index);
+            if (m_BP->useCondition)
+                m_Cmd << _T(" ") << m_BP->condition;
+        }
+        void ParseOutput(const wxString& output)
+        {
+            if (output.StartsWith(_T("No symbol ")))
+            {
+                wxString s = wxString::Format(_("While setting up custom conditions for breakpoint %d (%s, line %d),\n"
+                                                "the debugger responded with the following error:\n"
+                                                "\nError: %s\n\n"
+                                                "Do you want to make this an un-conditional breakpoint?"),
+                                                m_BP->index,
+                                                m_BP->filename.c_str(),
+                                                m_BP->line + 1,
+                                                output.c_str());
+                if (cbMessageBox(s, _("Warning"), wxICON_WARNING | wxYES_NO) == wxID_YES)
+                {
+                    // re-run this command but without a condition
+                    m_BP->useCondition = false;
+                    m_pDriver->QueueCommand(new GdbCmd_AddBreakpointCondition(m_pDriver, m_BP), DebuggerDriver::High);
+                }
+            }
+
         }
 };
 
@@ -291,6 +335,7 @@ class GdbCmd_Detach : public DebuggerCmd
   */
 class GdbCmd_AddBreakpoint : public DebuggerCmd
 {
+        DebuggerBreakpoint* m_BP;
     public:
         /** @param bp The breakpoint to set. */
         GdbCmd_AddBreakpoint(DebuggerDriver* driver, DebuggerBreakpoint* bp)
@@ -306,14 +351,12 @@ class GdbCmd_AddBreakpoint : public DebuggerCmd
                 if (m_BP->func.IsEmpty())
                 {
                     wxString out = m_BP->filename;
-                    DebuggerGDB::ConvertToGDBFile(out);
-                    QuoteStringIfNeeded(out);
                     // we add one to line,  because scintilla uses 0-based line numbers, while gdb uses 1-based
                     if (!m_BP->temporary)
                         m_Cmd << _T("break ");
                     else
                         m_Cmd << _T("tbreak ");
-                    m_Cmd << out << _T(":") << wxString::Format(_T("%d"), m_BP->line + 1);
+                    m_Cmd << _T('"') << out << _T(":") << wxString::Format(_T("%d"), m_BP->line + 1) << _T('"');
                 }
                 //GDB workaround
                 //Use function name if this is C++ constructor/destructor
@@ -348,9 +391,7 @@ class GdbCmd_AddBreakpoint : public DebuggerCmd
                 // conditional breakpoint
                 if (m_BP->useCondition && !m_BP->condition.IsEmpty())
                 {
-                    wxString cmd;
-                    cmd << _T("condition ") << wxString::Format(_T("%d"), (int) m_BP->index) << _T(" ") << m_BP->condition;
-                    m_pDriver->QueueCommand(new DebuggerCmd(m_pDriver, cmd), DebuggerDriver::High);
+                    m_pDriver->QueueCommand(new GdbCmd_AddBreakpointCondition(m_pDriver, m_BP), DebuggerDriver::High);
                 }
 
                 // ignore count
@@ -364,8 +405,6 @@ class GdbCmd_AddBreakpoint : public DebuggerCmd
             else
                 m_pDriver->Log(output); // one of the error responses
         }
-
-        DebuggerBreakpoint* m_BP;
 };
 
 /**
@@ -424,8 +463,8 @@ class GdbCmd_InfoLocals : public DebuggerCmd
         {
             wxArrayString lines = GetArrayFromString(output, _T('\n'));
             wxString locals;
-    		locals << _T("Local variables = {");
-    		for (unsigned int i = 0; i < lines.GetCount(); ++i)
+            locals << _T("Local variables = {");
+            for (unsigned int i = 0; i < lines.GetCount(); ++i)
                 locals << lines[i] << _T(',');
             locals << _T("}") << _T('\n');
             m_pDTree->BuildTree(0, locals, wsfGDB);
@@ -450,8 +489,8 @@ class GdbCmd_InfoArguments : public DebuggerCmd
         {
             wxArrayString lines = GetArrayFromString(output, _T('\n'));
             wxString args;
-    		args << _T("Function Arguments = {");
-    		for (unsigned int i = 0; i < lines.GetCount(); ++i)
+            args << _T("Function Arguments = {");
+            for (unsigned int i = 0; i < lines.GetCount(); ++i)
                 args << lines[i] << _T(',');
             args << _T("}") << _T('\n');
             m_pDTree->BuildTree(0, args, wsfGDB);
@@ -504,18 +543,18 @@ class GdbCmd_Threads : public DebuggerCmd
         {
             m_pList->Clear();
             wxArrayString lines = GetArrayFromString(output, _T('\n'));
-    		for (unsigned int i = 0; i < lines.GetCount(); ++i)
-    		{
-//    		    m_pDriver->Log(lines[i]);
-    		    if (reInfoThreads.Matches(lines[i]))
-    		    {
-//    		        m_pDriver->Log(_T("MATCH!"));
-    		        wxString active = reInfoThreads.GetMatch(lines[i], 1);
-    		        wxString num = reInfoThreads.GetMatch(lines[i], 2);
-    		        wxString info = reInfoThreads.GetMatch(lines[i], 3);
+            for (unsigned int i = 0; i < lines.GetCount(); ++i)
+            {
+//                m_pDriver->Log(lines[i]);
+                if (reInfoThreads.Matches(lines[i]))
+                {
+//                    m_pDriver->Log(_T("MATCH!"));
+                    wxString active = reInfoThreads.GetMatch(lines[i], 1);
+                    wxString num = reInfoThreads.GetMatch(lines[i], 2);
+                    wxString info = reInfoThreads.GetMatch(lines[i], 3);
                     m_pList->AddThread(active, num, info);
-    		    }
-    		}
+                }
+            }
         }
 };
 
@@ -545,15 +584,28 @@ class GdbCmd_Watch : public DebuggerCmd
                     case Hex:           m_Cmd << _T("/x "); break;
                     case Binary:        m_Cmd << _T("/t "); break;
                     case Char:          m_Cmd << _T("/c "); break;
+                    case Float:         m_Cmd << _T("/f "); break;
                     default:            break;
                 }
                 m_Cmd << m_pWatch->keyword;
+
+                // auto-set array types
+                if (!m_pWatch->is_array &&
+                    m_pWatch->format == Undefined &&
+                    w_type.Contains(_T('[')))
+                {
+                    m_pWatch->is_array = true;
+                }
+
+                if (m_pWatch->is_array && m_pWatch->array_count)
+                    m_Cmd << wxString::Format(_T("[%d]@%d"), m_pWatch->array_start, m_pWatch->array_count);
             }
             else
             {
                 try
                 {
-                    m_Cmd = SqPlus::SquirrelFunction<wxString&>(cbU2C(m_Cmd))(w_type, m_pWatch->keyword, watch->array_start, watch->array_count);
+                    SqPlus::SquirrelFunction<wxString&> f(cbU2C(m_Cmd));
+                    m_Cmd = f(w_type, m_pWatch->keyword, watch->array_start, watch->array_count);
                 }
                 catch (SquirrelError e)
                 {
@@ -564,12 +616,13 @@ class GdbCmd_Watch : public DebuggerCmd
         void ParseOutput(const wxString& output)
         {
             wxString w;
-    		w << m_pWatch->keyword << _T(" = ");
+            w << m_pWatch->keyword << _T(" = ");
             if (!m_ParseFunc.IsEmpty())
             {
                 try
                 {
-                    w << SqPlus::SquirrelFunction<wxString&>(cbU2C(m_ParseFunc))(output, m_pWatch->array_start);
+                    SqPlus::SquirrelFunction<wxString&> f(cbU2C(m_ParseFunc));
+                    w << f(output, m_pWatch->array_start);
                 }
                 catch (SquirrelError e)
                 {
@@ -625,32 +678,46 @@ class GdbCmd_FindWatchType : public DebuggerCmd
   */
 class GdbCmd_TooltipEvaluation : public DebuggerCmd
 {
-        wxTipWindow** m_pWin;
+        static GDBTipWindow* s_pWin;
         wxRect m_WinRect;
         wxString m_What;
+        wxString m_Type;
+        wxString m_Address;
         wxString m_ParseFunc;
     public:
         /** @param what The variable to evaluate.
             @param win A pointer to the tip window pointer.
             @param tiprect The tip window's rect.
         */
-        GdbCmd_TooltipEvaluation(DebuggerDriver* driver, const wxString& what, wxTipWindow** win, const wxRect& tiprect, const wxString& w_type = wxEmptyString)
+        GdbCmd_TooltipEvaluation(DebuggerDriver* driver, const wxString& what, const wxRect& tiprect, const wxString& w_type = wxEmptyString, const wxString& address = wxEmptyString)
             : DebuggerCmd(driver),
-            m_pWin(win),
             m_WinRect(tiprect),
-            m_What(what)
+            m_What(what),
+            m_Type(w_type),
+            m_Address(address)
         {
             m_Cmd = static_cast<GDB_driver*>(m_pDriver)->GetScriptedTypeCommand(w_type, m_ParseFunc);
             if (m_Cmd.IsEmpty())
             {
+                // if it's a pointer, automatically dereference it
+                wxString deref;
+                if (w_type.Length() > 2 && // at least 2 chars
+                    w_type.Last() == _T('*') && // last is *
+                    w_type.GetChar(w_type.Length() - 2) != _T('*') && // second last is not * (i.e. doesn't end with **)
+                    !w_type.Contains(_T("char "))) // not char* (special case)
+                {
+                    deref = _T("*");
+                }
+
                 m_Cmd << _T("output ");
-                m_Cmd << what;
+                m_Cmd << deref << what;
             }
             else
             {
                 try
                 {
-                    m_Cmd = SqPlus::SquirrelFunction<wxString&>(cbU2C(m_Cmd))(w_type, what, 0, 0);
+                    SqPlus::SquirrelFunction<wxString&> f(cbU2C(m_Cmd));
+                    m_Cmd = f(w_type, what, 0, 0);
                 }
                 catch (SquirrelError e)
                 {
@@ -661,33 +728,88 @@ class GdbCmd_TooltipEvaluation : public DebuggerCmd
         }
         void ParseOutput(const wxString& output)
         {
-            wxString tip;
+            wxString contents;
             if (output.StartsWith(_T("No symbol ")) || output.StartsWith(_T("Attempt to ")))
-                tip = output;
+            {
+                m_What = _("Error");
+                contents = output;
+            }
             else
             {
-                tip = m_What + _T("=");
-    		    if (!m_ParseFunc.IsEmpty())
-    		    {
-    		        try
-    		        {
-                        tip << SqPlus::SquirrelFunction<wxString&>(cbU2C(m_ParseFunc))(output, 0);
-//                        tip << SqPlus::SquirrelFunction<wxString>(cbU2C(m_ParseFunc))(output, 0);
+                if (!m_ParseFunc.IsEmpty())
+                {
+                    try
+                    {
+                        SqPlus::SquirrelFunction<wxString&> f(cbU2C(m_ParseFunc));
+                        contents << f(output, 0);
                     }
                     catch (SquirrelError e)
                     {
-                        tip << cbC2U(e.desc);
-                        m_pDriver->DebugLog(_T("Script exception: ") + tip);
+                        contents << cbC2U(e.desc);
+                        m_pDriver->DebugLog(_T("Script exception: ") + contents);
                     }
-    		    }
+                }
                 else
-                    tip << output;
+                {
+                    contents << output;
+                    // the following breaks the text when it *is* a hex number
+//                    if (reGenericHexAddress.Matches(output))
+//                    {
+//                        contents.Replace(reGenericHexAddress.GetMatch(output, 1), _T(""));
+//                        contents.Trim(false);
+//                    }
+                }
             }
 
-            if (*m_pWin)
-                (*m_pWin)->Destroy();
-            *m_pWin = new wxTipWindow(Manager::Get()->GetAppWindow(), tip, 640, m_pWin, &m_WinRect);
+            if (s_pWin)
+                (s_pWin)->Close();
+            s_pWin = new GDBTipWindow((wxWindow*)Manager::Get()->GetAppWindow(), m_What, m_Type, m_Address, contents, 640, &s_pWin, &m_WinRect);
 //            m_pDriver->DebugLog(output);
+        }
+};
+// static
+GDBTipWindow* GdbCmd_TooltipEvaluation::s_pWin = 0;
+
+/**
+  * Command to get a symbol's type and use it for tooltip evaluation.
+  */
+class GdbCmd_FindTooltipAddress : public DebuggerCmd
+{
+        wxRect m_WinRect;
+        wxString m_What;
+        wxString m_Type;
+    public:
+        /** @param tree The tree to display the watch. */
+        GdbCmd_FindTooltipAddress(DebuggerDriver* driver, const wxString& what, const wxRect& tiprect, const wxString& w_type = wxEmptyString)
+            : DebuggerCmd(driver),
+            m_WinRect(tiprect),
+            m_What(what),
+            m_Type(w_type)
+        {
+            if (m_Type.IsEmpty())
+            {
+                m_pDriver->QueueCommand(new GdbCmd_TooltipEvaluation(m_pDriver, m_What, m_WinRect, m_Type), DebuggerDriver::High);
+                return;
+            }
+            m_Cmd << _T("output ");
+            if (m_Type.Last() != _T('*'))
+                m_Cmd << _T('&');
+            m_Cmd << m_What;
+        }
+        void ParseOutput(const wxString& output)
+        {
+            // examples:
+            // type = wxString
+            // type = const wxChar
+            // type = Action *
+            // type = bool
+
+            wxString tmp;
+            if (reGenericHexAddress.Matches(output))
+                tmp = reGenericHexAddress.GetMatch(output, 1);
+
+            // add the actual evaluation command with high priority
+            m_pDriver->QueueCommand(new GdbCmd_TooltipEvaluation(m_pDriver, m_What, m_WinRect, m_Type, tmp), DebuggerDriver::High);
         }
 };
 
@@ -696,14 +818,12 @@ class GdbCmd_TooltipEvaluation : public DebuggerCmd
   */
 class GdbCmd_FindTooltipType : public DebuggerCmd
 {
-        wxTipWindow** m_pWin;
         wxRect m_WinRect;
         wxString m_What;
     public:
         /** @param tree The tree to display the watch. */
-        GdbCmd_FindTooltipType(DebuggerDriver* driver, const wxString& what, wxTipWindow** win, const wxRect& tiprect)
+        GdbCmd_FindTooltipType(DebuggerDriver* driver, const wxString& what, const wxRect& tiprect)
             : DebuggerCmd(driver),
-            m_pWin(win),
             m_WinRect(tiprect),
             m_What(what)
         {
@@ -719,8 +839,10 @@ class GdbCmd_FindTooltipType : public DebuggerCmd
             // type = bool
 
             wxString tmp = output.AfterFirst(_T('='));
-            // actually add this watch with high priority
-            m_pDriver->QueueCommand(new GdbCmd_TooltipEvaluation(m_pDriver, m_What, m_pWin, m_WinRect, tmp), DebuggerDriver::High);
+            tmp.Trim(false);
+
+            // add the actual evaluation command with high priority
+            m_pDriver->QueueCommand(new GdbCmd_FindTooltipAddress(m_pDriver, m_What, m_WinRect, tmp), DebuggerDriver::High);
         }
 };
 
@@ -742,32 +864,32 @@ class GdbCmd_Backtrace : public DebuggerCmd
         {
             m_pDlg->Clear();
             wxArrayString lines = GetArrayFromString(output, _T('\n'));
-    		for (unsigned int i = 0; i < lines.GetCount(); ++i)
-    		{
-    		    // reBT1 matches frame number, address, function and args (common to all formats)
-    		    // reBT2 matches filename and line (optional)
-    		    // reBT3 matches filename only (for DLLs) (optional)
+            for (unsigned int i = 0; i < lines.GetCount(); ++i)
+            {
+                // reBT1 matches frame number, address, function and args (common to all formats)
+                // reBT2 matches filename and line (optional)
+                // reBT3 matches filename only (for DLLs) (optional)
 
                 StackFrame sf;
                 bool matched = false;
-    		    // #0  main (argc=1, argv=0x3e2440) at my main.cpp:15
-    		    if (reBT1.Matches(lines[i]))
-    		    {
+                // #0  main (argc=1, argv=0x3e2440) at my main.cpp:15
+                if (reBT1.Matches(lines[i]))
+                {
 //                    m_pDriver->DebugLog(_T("MATCH!"));
-    		        reBT1.GetMatch(lines[i], 1).ToLong(&sf.number);
-    		        reBT1.GetMatch(lines[i], 2).ToULong(&sf.address, 16);
-    		        sf.function = reBT1.GetMatch(lines[i], 3) + reBT1.GetMatch(lines[i], 4);
-    		        matched = true;
-    		    }
-    		    else if (reBT0.Matches(lines[i]))
-    		    {
-    		        reBT0.GetMatch(lines[i], 1).ToLong(&sf.number);
-    		        sf.function = reBT0.GetMatch(lines[i], 2) + reBT0.GetMatch(lines[i], 3);
-    		        matched = true;
-    		    }
+                    reBT1.GetMatch(lines[i], 1).ToLong(&sf.number);
+                    reBT1.GetMatch(lines[i], 2).ToULong(&sf.address, 16);
+                    sf.function = reBT1.GetMatch(lines[i], 3) + reBT1.GetMatch(lines[i], 4);
+                    matched = true;
+                }
+                else if (reBT0.Matches(lines[i]))
+                {
+                    reBT0.GetMatch(lines[i], 1).ToLong(&sf.number);
+                    sf.function = reBT0.GetMatch(lines[i], 2) + reBT0.GetMatch(lines[i], 3);
+                    matched = true;
+                }
 
-    		    if (matched)
-    		    {
+                if (matched)
+                {
                     sf.valid = true;
                     if (reBT2.Matches(lines[i]))
                     {
@@ -777,8 +899,8 @@ class GdbCmd_Backtrace : public DebuggerCmd
                     else if (reBT3.Matches(lines[i]))
                         sf.file = reBT3.GetMatch(lines[i], 1);
                     m_pDlg->AddFrame(sf);
-    		    }
-    		}
+                }
+            }
 //            m_pDriver->DebugLog(output);
         }
 };
@@ -822,14 +944,14 @@ class GdbCmd_InfoRegisters : public DebuggerCmd
                 return;
 
             wxArrayString lines = GetArrayFromString(output, _T('\n'));
-    		for (unsigned int i = 0; i < lines.GetCount(); ++i)
-    		{
+            for (unsigned int i = 0; i < lines.GetCount(); ++i)
+            {
                 if (reRegisters.Matches(lines[i]))
                 {
                     long int addr = wxStrHexTo<long int>(reRegisters.GetMatch(lines[i], 2));
                     m_pDlg->SetRegisterValue(reRegisters.GetMatch(lines[i], 1), addr);
                 }
-    		}
+            }
 //            m_pDlg->Show(true);
 //            m_pDriver->DebugLog(output);
         }
@@ -854,7 +976,7 @@ class GdbCmd_Disassembly : public DebuggerCmd
             // output is a series of:
             //
             // Dump of assembler code for function main:
-            // 0x00401390 <main+0>:	push   ebp
+            // 0x00401390 <main+0>:    push   ebp
             // ...
             // End of assembler dump.
 
@@ -862,15 +984,15 @@ class GdbCmd_Disassembly : public DebuggerCmd
                 return;
 
             wxArrayString lines = GetArrayFromString(output, _T('\n'));
-    		for (unsigned int i = 0; i < lines.GetCount(); ++i)
-    		{
+            for (unsigned int i = 0; i < lines.GetCount(); ++i)
+            {
                 if (reDisassembly.Matches(lines[i]))
                 {
                     long int addr;
                     reDisassembly.GetMatch(lines[i], 1).ToLong(&addr, 16);
                     m_pDlg->AddAssemblerLine(addr, reDisassembly.GetMatch(lines[i], 2));
                 }
-    		}
+            }
 //            m_pDlg->Show(true);
 //            m_pDriver->DebugLog(output);
         }
@@ -882,8 +1004,8 @@ class GdbCmd_Disassembly : public DebuggerCmd
 class GdbCmd_DisassemblyInit : public DebuggerCmd
 {
         DisassemblyDlg* m_pDlg;
-        static wxString LastAddr;
     public:
+        static wxString LastAddr;
         /** @param dlg The disassembly dialog. */
         GdbCmd_DisassemblyInit(DebuggerDriver* driver, DisassemblyDlg* dlg)
             : DebuggerCmd(driver),
@@ -949,24 +1071,24 @@ class GdbCmd_ExamineMemory : public DebuggerCmd
             m_pDlg->Clear();
 
             wxArrayString lines = GetArrayFromString(output, _T('\n'));
-    		for (unsigned int i = 0; i < lines.GetCount(); ++i)
-    		{
-    		    if (lines[i].First(_T(':')) == -1)
-    		    {
-    		        m_pDlg->AddError(lines[i]);
-    		        continue;
-    		    }
-    		    wxString addr = lines[i].BeforeFirst(_T(':'));
-    		    size_t pos = lines[i].find(_T('x'), 3); // skip 'x' of address
-    		    while (pos != wxString::npos)
-    		    {
-    		        wxString hexbyte;
-    		        hexbyte << lines[i][pos + 1];
-    		        hexbyte << lines[i][pos + 2];
-    		        m_pDlg->AddHexByte(addr, hexbyte);
+            for (unsigned int i = 0; i < lines.GetCount(); ++i)
+            {
+                if (lines[i].First(_T(':')) == -1)
+                {
+                    m_pDlg->AddError(lines[i]);
+                    continue;
+                }
+                wxString addr = lines[i].BeforeFirst(_T(':'));
+                size_t pos = lines[i].find(_T('x'), 3); // skip 'x' of address
+                while (pos != wxString::npos)
+                {
+                    wxString hexbyte;
+                    hexbyte << lines[i][pos + 1];
+                    hexbyte << lines[i][pos + 2];
+                    m_pDlg->AddHexByte(addr, hexbyte);
                     pos = lines[i].find(_T('x'), pos + 1); // skip current 'x'
-    		    }
-    		}
+                }
+            }
             m_pDlg->End();
 //            m_pDriver->DebugLog(output);
         }

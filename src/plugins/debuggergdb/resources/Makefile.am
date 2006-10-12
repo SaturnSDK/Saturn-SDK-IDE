@@ -1,17 +1,14 @@
-pkgdata_DATA = debugger_gdb.zip
+pkgdata_DATA = debugger.zip
 CLEANFILES = $(pkgdata_DATA)
 
-debugger_gdb.zip:
-	PWD=`pwd` cd $(srcdir) && zip $(PWD)/debugger_gdb.zip *.xrc images/*.png images/16x16/*.png > /dev/null
-
-EXTRA_DIST = backtrace.xrc \
+DEBUG_RESOURCES = backtrace.xrc \
     breakpoints.xrc \
 	debugger_menu.xrc \
 	debugger_options_dlg.xrc \
 	debugger_toolbar_16x16.xrc \
 	debugger_toolbar.xrc \
 	disassembly.xrc \
-	edit_watches_dlg.xrc \
+	manifest.xml \
 	memdump.xrc \
 	threads.xrc \
 	images/dbgnext.png \
@@ -28,3 +25,8 @@ EXTRA_DIST = backtrace.xrc \
 	images/16x16/dbgstepout.png \
 	images/16x16/dbgstep.png \
 	images/16x16/stop.png
+
+EXTRA_DIST = $(DEBUG_RESOURCES)
+
+debugger.zip: $(DEBUG_RESOURCES)
+	PWD=`pwd` cd $(srcdir) && zip $(PWD)/debugger.zip manifest.xml *.xrc images/*.png images/16x16/*.png > /dev/null

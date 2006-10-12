@@ -27,14 +27,13 @@
 #include "sdk_precomp.h"
 
 #ifndef CB_PRECOMP
-    #include <wx/xrc/xmlres.h>
+    #include <wx/checklst.h>
     #include <wx/intl.h>
-    #include <wx/button.h>
+    #include <wx/string.h>
+    #include <wx/xrc/xmlres.h>
     #include "manager.h"
     #include "configmanager.h"
     #include "pluginmanager.h"
-    #include "personalitymanager.h"
-    #include <wx/checklst.h>
 #endif
 
 #include "pluginsconfigurationdlg.h" // class's header file
@@ -46,24 +45,24 @@ PluginsConfigurationDlg::PluginsConfigurationDlg(wxWindow* parent)
 
     wxCheckListBox* list = XRCCTRL(*this, "lstPlugins", wxCheckListBox);
     PluginManager* man = Manager::Get()->GetPluginManager();
-    PluginElementsArray& plugins = man->GetPlugins();
+    const PluginElementsArray& plugins = man->GetPlugins();
 
-    // populate Plugins and Help/Plugins menu
+    // populate Plugins checklist
     for (unsigned int i = 0; i < plugins.GetCount(); ++i)
     {
-        PluginElement* elem = plugins[i];
+        const PluginElement* elem = plugins[i];
         if (!elem->plugin)
         {
             // this plugin is not loaded
             // display its name
-            list->Append(elem->name);
+            list->Append(elem->info.name);
             list->Check(list->GetCount()-1, false);
             continue;
         }
-        list->Append(elem->plugin->GetInfo()->title + _(", v") + elem->plugin->GetInfo()->version);
+        list->Append(elem->info.title + _(", v") + elem->info.version);
 
         wxString baseKey;
-        baseKey << _T("/") << elem->name;
+        baseKey << _T("/") << elem->info.name;
         list->Check(list->GetCount()-1, Manager::Get()->GetConfigManager(_T("plugins"))->ReadBool(baseKey, true));
     }
 }
@@ -78,15 +77,15 @@ void PluginsConfigurationDlg::EndModal(int retCode)
 {
     if (retCode == wxID_OK)
     {
-        wxCheckListBox* list = XRCCTRL(*this, "lstPlugins", wxCheckListBox);
+        const wxCheckListBox* list = XRCCTRL(*this, "lstPlugins", wxCheckListBox);
         PluginManager* man = Manager::Get()->GetPluginManager();
-        PluginElementsArray& plugins = man->GetPlugins();
+        const PluginElementsArray& plugins = man->GetPlugins();
 
         for (int i = 0; i < list->GetCount(); ++i)
         {
-            PluginElement* elem = plugins[i];
+            const PluginElement* elem = plugins[i];
             wxString baseKey;
-            baseKey << _T("/") << elem->name;
+            baseKey << _T("/") << elem->info.name;
             bool checked = list->IsChecked(i);
             Manager::Get()->GetConfigManager(_T("plugins"))->Write(baseKey, checked);
         }

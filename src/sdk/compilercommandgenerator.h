@@ -1,10 +1,10 @@
 #ifndef COMPILERCOMMANDGENERATOR_H
 #define COMPILERCOMMANDGENERATOR_H
 
-#include "settings.h"
 #include <wx/string.h>
 #include <wx/hashmap.h>
-#include <compiletargetbase.h>
+#include "settings.h"
+#include "compiletargetbase.h"
 
 class cbProject;
 class ProjectBuildTarget;
@@ -39,7 +39,7 @@ class DLLIMPORT CompilerCommandGenerator
                                         const wxString& deps);
     protected:
         virtual void DoBuildScripts(CompileOptionsBase* base, const wxString& funcName);
-        virtual wxString GetOrderedOptions(ProjectBuildTarget* target, OptionsRelationType rel, const wxString& project_options, const wxString& target_options);
+        virtual wxString GetOrderedOptions(const ProjectBuildTarget* target, OptionsRelationType rel, const wxString& project_options, const wxString& target_options);
         virtual wxString SetupOutputFilenames(Compiler* compiler, ProjectBuildTarget* target);
         virtual wxString SetupIncludeDirs(Compiler* compiler, ProjectBuildTarget* target);
         virtual wxString SetupLibrariesDirs(Compiler* compiler, ProjectBuildTarget* target);

@@ -37,6 +37,8 @@
     #include <wx/image.h>
     #include <wx/listctrl.h>
     #include "cbexception.h"
+    #include "manager.h"
+    #include "configmanager.h" // ReadBool
 #endif
 
 #include "tinyxml/tinyxml.h"
@@ -46,6 +48,7 @@
 #include <wx/fontmap.h>
 #include <algorithm>
 #include "filefilters.h"
+#include "tinyxml/tinywxuni.h"
 
 const wxString DEFAULT_WORKSPACE		= _T("default.workspace");
 const wxString DEFAULT_ARRAY_SEP        = _T(";");
@@ -193,6 +196,9 @@ FileType FileTypeOf(const wxString& filename)
 
     else if (ext.IsSameAs(FileFilters::EXECUTABLE_EXT))
         return ftExecutable;
+
+    else if (ext.IsSameAs(FileFilters::XML_EXT))
+        return ftXMLDocument;
 
     return ftOther;
 }
@@ -365,7 +371,7 @@ wxString ChooseDirectory(wxWindow* parent,
     return path.GetFullPath();
 }
 
-// Reads a wxString from a non-unicode file. File must be open. File is closed automatically.
+// Reads a wxString from a file. File must be open. File is closed automatically.
 bool cbRead(wxFile& file, wxString& st, wxFontEncoding encoding)
 {
     st.Empty();
@@ -388,8 +394,20 @@ bool cbRead(wxFile& file, wxString& st, wxFontEncoding encoding)
     file.Close();
     buff[len]='\0';
 
-    wxCSConv conv(encoding);
-    st = wxString((const char *)buff, conv);
+    if (encoding != wxFONTENCODING_UTF16 &&
+        encoding != wxFONTENCODING_UTF16LE &&
+        encoding != wxFONTENCODING_UTF16BE &&
+        encoding != wxFONTENCODING_UTF32 &&
+        encoding != wxFONTENCODING_UTF32LE &&
+        encoding != wxFONTENCODING_UTF32BE)
+    {
+        // crashes deep in the runtime (windows, at least)
+        // if one of the above encodings, hence the guard
+        wxCSConv conv(encoding);
+        st = wxString((const char *)buff, conv);
+    }
+    else
+        st = wxString((const wxChar*)buff);
 
     delete[] buff;
 #else
@@ -410,7 +428,7 @@ wxString cbReadFileContents(wxFile& file, wxFontEncoding encoding)
     return st;
 }
 
-// Writes a wxString to a non-unicode file. File must be open. File is closed automatically.
+// Writes a wxString to a file. File must be open. File is closed automatically.
 bool cbWrite(wxFile& file, const wxString& buff, wxFontEncoding encoding)
 {
     bool result = false;
@@ -475,8 +493,23 @@ bool cbSaveToFile(const wxString& filename, const wxString& contents, wxFontEnco
                     return false;
             }
         }
-        if (!file.Write(contents, conv))
-            return false;
+
+        if (encoding != wxFONTENCODING_UTF16 &&
+            encoding != wxFONTENCODING_UTF16LE &&
+            encoding != wxFONTENCODING_UTF16BE &&
+            encoding != wxFONTENCODING_UTF32 &&
+            encoding != wxFONTENCODING_UTF32LE &&
+            encoding != wxFONTENCODING_UTF32BE)
+        {
+            file.Write(contents, conv);
+        }
+        else
+        {
+            const char* s = (const char*)contents.c_str();
+            size_t len = contents.Length() * sizeof(wxChar);
+            if (!file.Write(s, len))
+                return false;
+        }
         if (!file.Commit())
             return false;
     }
@@ -488,35 +521,7 @@ bool cbSaveToFile(const wxString& filename, const wxString& contents, wxFontEnco
 // Saves a TinyXML document correctly, even if the path contains unicode characters.
 bool cbSaveTinyXMLDocument(TiXmlDocument* doc, const wxString& filename)
 {
-    if (!doc)
-        return false;
-
-    const char *buffer; // UTF-8 encoded data
-  	size_t len;
-
-  	#ifdef TIXML_USE_STL
-        std::string outSt;
-        outSt << *doc;
-        buffer = outSt.c_str();
-        len = outSt.length();
-  	#else
-        TiXmlOutStream outSt;
-        outSt << *doc;
-        buffer = outSt.c_str();
-        len = outSt.length();
-  	#endif
-
-    wxTempFile file(filename);
-    if (file.IsOpened())
-    {
-        if (!file.Write(buffer, strlen(buffer)))
-            return false;
-        if (!file.Commit())
-            return false;
-    }
-    else
-        return false;
-  	return true;
+  	return TinyXML::SaveDocument(filename, doc);
 }
 
 // Return @c str as a proper unicode-compatible string
@@ -586,27 +591,60 @@ bool NormalizePath(wxFileName& f,const wxString& base)
     return result;
 }
 
-
-inline bool IsRunningWindows2000()
+// function to check the common controls version
+// (should it be moved in sdk globals?)
+#ifdef __WXMSW__
+#include <windows.h>
+#include <shlwapi.h>
+bool UsesCommonControls6()
 {
-    int major = 0;
-    int minor = 0;
-    if(wxGetOsVersion(&major, &minor) == wxWINDOWS_NT && major < 5)
-        return true;
-    return false;
-};
+    bool result = false;
+    HINSTANCE hinstDll;
+    DWORD dwVersion = 0;
+    hinstDll = LoadLibrary(_T("comctl32.dll"));
+    if(hinstDll)
+    {
+        DLLGETVERSIONPROC pDllGetVersion;
+        pDllGetVersion = (DLLGETVERSIONPROC)GetProcAddress(hinstDll, "DllGetVersion");
 
-wxBitmap LoadPNGWindows2000Hack(const wxString& filename)
+        if (pDllGetVersion)
+        {
+            DLLVERSIONINFO dvi;
+            HRESULT hr;
+
+            ZeroMemory(&dvi, sizeof(dvi));
+            dvi.cbSize = sizeof(dvi);
+
+            hr = (*pDllGetVersion)(&dvi);
+
+            if (SUCCEEDED(hr))
+            {
+               dwVersion = MAKELONG(dvi.dwMinorVersion, dvi.dwMajorVersion);
+               result = dvi.dwMajorVersion == 6;
+            }
+        }
+
+        FreeLibrary(hinstDll);
+    }
+    return result;
+}
+#endif
+
+wxBitmap cbLoadBitmap(const wxString& filename, int bitmapType)
 {
-    static bool isWindows2000 = IsRunningWindows2000();
-
+#ifdef __WXMSW__
+    // cache this, can't change while we 're running :)
+    static bool oldCommonControls = !UsesCommonControls6();
+#else
+    // irrelevant for this platform
+    static bool oldCommonControls = false;
+#endif
     wxImage im;
-    im.LoadFile(filename, wxBITMAP_TYPE_PNG);
-    if(isWindows2000)
+    im.LoadFile(filename, bitmapType);
+    if (oldCommonControls && im.HasAlpha())
         im.ConvertAlphaToMask();
 
-    wxBitmap bmp(im);
-    return bmp;
+    return wxBitmap(im);
 }
 
 void SetSettingsIconsStyle(wxListCtrl* lc, SettingsIconsStyle style)

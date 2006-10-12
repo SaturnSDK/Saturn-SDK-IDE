@@ -32,11 +32,21 @@ public:
     {
         return m_NestLevel;
     };
+    void SaveNestingLevel() // the parser might need to ignore the nesting level in some cases
+    {
+        m_SavedNestingLevel = m_NestLevel;
+    }
+    void RestoreNestingLevel()
+    {
+        m_NestLevel = m_SavedNestingLevel;
+    }
     bool IsOK() const
     {
         return m_IsOK;
     };
     TokenizerOptions m_Options;
+
+    bool SkipToEOL(bool nestBraces = true); // use with care outside this class!
 protected:
     void BaseInit();
     wxString DoGetToken();
@@ -44,9 +54,9 @@ protected:
     bool SkipWhiteSpace();
     bool SkipToChar(const wxChar& ch);
     bool SkipToOneOfChars(const char* chars, bool supportNesting = false);
-    bool SkipToEOL();
     bool SkipBlock(const wxChar& ch);
     bool SkipUnwanted(); // skips comments, assignments, preprocessor etc.
+    bool SkipComment();
 
     bool IsEOF() const
     {
@@ -167,6 +177,7 @@ private:
 	unsigned int m_PeekLineNumber;
 	unsigned int m_PeekNestLevel;
 
+    unsigned int m_SavedNestingLevel;
 
     bool m_IsOK;
     bool m_IsOperator;

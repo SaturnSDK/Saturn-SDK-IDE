@@ -1,6 +1,10 @@
 #ifndef PROJECTMANAGER_H
 #define PROJECTMANAGER_H
 
+#ifndef CB_PRECOMP
+    #include "globals.h" // DEFAULT_WORKSPACE
+#endif
+
 #include <wx/event.h>
 #include <wx/dynarray.h>
 #include <wx/hashmap.h>
@@ -154,15 +158,6 @@ class DLLIMPORT ProjectManager : public Mgr<ProjectManager>, public wxEvtHandler
           *  save any unmodified files in the project.
           */
         bool QueryCloseProject(cbProject *proj,bool dontsavefiles=false);
-
-        /** Asks user to save the workspace, projects and files
-          * (Yes/No/cancel). If user pressed Yes, it saves accordingly.
-          * @return False if the user pressed cancel; true otherwise.
-          * After this function is called and returns true, it
-          * is safe to close the workspace, all files and projects
-          * without asking the user later.
-          */
-        bool QueryCloseWorkspace();
 
         /** Move a project up in the project manager tree. This effectively
           * re-orders the projects build order.
@@ -356,9 +351,23 @@ class DLLIMPORT ProjectManager : public Mgr<ProjectManager>, public wxEvtHandler
 		int ProjectIconIndex();
 		/** @return The folder icon index in the image list. */
 		int FolderIconIndex();
+		/** @return The virtual folder icon index in the image list. */
+		int VirtualFolderIconIndex();
+
+        /** Check if one of the open projects has been modified outside the IDE. If so, ask to reload it. */
+        void CheckForExternallyModifiedProjects();
     private:
 		ProjectManager();
 		~ProjectManager();
+
+        /** Asks user to save the workspace, projects and files
+          * (Yes/No/cancel). If user pressed Yes, it saves accordingly.
+          * @return False if the user pressed cancel; true otherwise.
+          * After this function is called and returns true, it
+          * is safe to close the workspace, all files and projects
+          * without asking the user later.
+          */
+        bool QueryCloseWorkspace();
 
 		void InitPane();
 		void BuildTree();
@@ -367,6 +376,8 @@ class DLLIMPORT ProjectManager : public Mgr<ProjectManager>, public wxEvtHandler
         void OnProjectFileActivated(wxTreeEvent& event);
         void OnExecParameters(wxCommandEvent& event);
         void OnTreeItemRightClick(wxTreeEvent& event);
+        void OnTreeBeginDrag(wxTreeEvent& event);
+        void OnTreeEndDrag(wxTreeEvent& event);
         void OnRightClick(wxCommandEvent& event);
         void OnRenameWorkspace(wxCommandEvent& event);
         void OnSaveWorkspace(wxCommandEvent& event);
@@ -386,6 +397,11 @@ class DLLIMPORT ProjectManager : public Mgr<ProjectManager>, public wxEvtHandler
         void OnViewCategorize(wxCommandEvent& event);
         void OnViewUseFolders(wxCommandEvent& event);
         void OnViewFileMasks(wxCommandEvent& event);
+        void OnBeginEditNode(wxTreeEvent& event);
+        void OnEndEditNode(wxTreeEvent& event);
+        void OnAddVirtualFolder(wxCommandEvent& event);
+        void OnDeleteVirtualFolder(wxCommandEvent& event);
+        void OnUpdateUI(wxUpdateUIEvent& event);
         void OnIdle(wxIdleEvent& event);
         void DoOpenSelectedFile();
 		void DoOpenFile(ProjectFile* pf, const wxString& filename);
@@ -399,7 +415,6 @@ class DLLIMPORT ProjectManager : public Mgr<ProjectManager>, public wxEvtHandler
         ProjectsArray* m_pProjects;
         DepsMap m_ProjectDeps;
         cbWorkspace* m_pWorkspace;
-        EditorBase* m_pTopEditor;
         bool m_TreeCategorize;
         bool m_TreeUseFolders;
 		FilesGroupsAndMasks* m_pFileGroups;
@@ -407,6 +422,8 @@ class DLLIMPORT ProjectManager : public Mgr<ProjectManager>, public wxEvtHandler
 		bool m_IsLoadingProject;
 		bool m_IsLoadingWorkspace;
         wxString m_InitialDir;
+        wxTreeItemId m_DraggingItem;
+        bool m_isCheckingForExternallyModifiedProjects;
 
         DECLARE_EVENT_TABLE()
 };

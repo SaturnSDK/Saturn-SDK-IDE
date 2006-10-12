@@ -1,7 +1,8 @@
-#if CB_PRECOMP
 #include "sdk.h"
-#else
+#ifndef CB_PRECOMP
 #include <wx/checkbox.h>
+#include <wx/intl.h>
+#include <wx/string.h>
 #include <wx/xrc/xmlres.h>
 #include "configmanager.h"
 #include "manager.h"

@@ -1,10 +1,12 @@
 AC_PREREQ(2.50)
 
-AC_INIT([codeblocks], [1.0HEAD])
+m4_include([revision.m4])
+
+AC_INIT([codeblocks], SVN_REVISION)
 
 AC_CANONICAL_TARGET
 
-AM_INIT_AUTOMAKE([codeblocks], 1.0HEAD)
+AM_INIT_AUTOMAKE
 AC_CONFIG_HEADER([src/sdk/config.h])
 
 dnl Checks for programs.
@@ -58,6 +60,8 @@ AC_SUBST(CODEBLOCKS_VERSION_INFO)
 CODEBLOCKS_GET_PLATFORM
 CODEBLOCKS_ENABLE_SETTINGS
 
+PKG_CHECK_MODULES(GTK2, gtk+-2.0 >= 2.0.0)
+
 AM_OPTIONS_WXCONFIG
 AM_PATH_WXCONFIG(2.6.0, wxWin=1)
         if test "$wxWin" != 1; then
@@ -72,27 +76,17 @@ AM_PATH_WXCONFIG(2.6.0, wxWin=1)
                 ])
         fi
 
-		CPPFLAGS="$CPPFLAGS $WX_CPPFLAGS"
-		CXXFLAGS="$CXXFLAGS $WX_CXXFLAGS_ONLY"
-		CFLAGS="$CFLAGS $WX_CFLAGS_ONLY"
-		LIBS="$LIBS $WX_LIBS"
+dnl		CPPFLAGS="$CPPFLAGS $WX_CPPFLAGS"
+dnl		CXXFLAGS="$CXXFLAGS $WX_CXXFLAGS_ONLY"
+dnl		CFLAGS="$CFLAGS $WX_CFLAGS_ONLY"
+dnl		LIBS="$LIBS $WX_LIBS"
 
-		wx_config_minor_version=`echo $WX_VERSION | \
-           sed 's/\([[0-9]]*\).\([[0-9]]*\).\([[0-9]]*\)/\2/'`
-
-        if test "$wx_config_minor_version" -gt "4"; then
-		WX_XRC=
-	else
-		WX_XRC=-l`wx-config --basename`_xrc-`wx-config --release`
-	fi
-
-AC_SUBST(WX_XRC)
 AC_SUBST(CPPFLAGS)
 AC_SUBST(CXXFLAGS)
 AC_SUBST(CFLAGS)
 AC_SUBST(LIBS)
 
-CXXFLAGS="$CXXFLAGS $PCH_FLAGS"
+CXXFLAGS="$CXXFLAGS $PCH_FLAGS -fPIC -DPIC"
 AC_SUBST(codeblocks_PCH_FLAGS, "$PCH_FLAGS")
 
 dnl AM_PATH_GTK(1.2.7, ,
@@ -105,8 +99,15 @@ AC_MSG_NOTICE([Configuring Code::Blocks...])
 
 AC_CONFIG_FILES([Makefile
 	src/Makefile
+	src/build_tools/Makefile
+	src/build_tools/autorevision/Makefile
 	src/sdk/Makefile
-	src/sdk/as/Makefile
+	src/sdk/scripting/Makefile
+	src/sdk/scripting/bindings/Makefile
+	src/sdk/scripting/squirrel/Makefile
+	src/sdk/scripting/sqstdlib/Makefile
+	src/sdk/scripting/sqplus/Makefile
+	src/sdk/scripting/include/Makefile
 	src/sdk/tinyxml/Makefile
 	src/sdk/wxscintilla/Makefile
 	src/sdk/wxFlatNotebook/Makefile
@@ -136,37 +137,64 @@ AC_CONFIG_FILES([Makefile
 	src/plugins/debuggergdb/resources/Makefile
 	src/plugins/defaultmimehandler/Makefile
 	src/plugins/defaultmimehandler/resources/Makefile
-	src/plugins/pluginwizard/Makefile
-	src/plugins/pluginwizard/resources/Makefile
-	src/plugins/projectwizard/Makefile
-	src/plugins/projectwizard/resources/Makefile
-	src/plugins/projectwizard/resources/console/Makefile
-	src/plugins/projectwizard/resources/console/c/Makefile
-	src/plugins/projectwizard/resources/console/cpp/Makefile
-	src/plugins/projectwizard/resources/d/Makefile
-	src/plugins/projectwizard/resources/d/console/Makefile
-	src/plugins/projectwizard/resources/glfw/Makefile
-	src/plugins/projectwizard/resources/glfw/files/Makefile
-	src/plugins/projectwizard/resources/glut/Makefile
-	src/plugins/projectwizard/resources/glut/files/Makefile
-	src/plugins/projectwizard/resources/irrlicht/Makefile
-	src/plugins/projectwizard/resources/irrlicht/files/Makefile
-	src/plugins/projectwizard/resources/ogre/Makefile
-	src/plugins/projectwizard/resources/ogre/files/Makefile
-	src/plugins/projectwizard/resources/wxwidgets/Makefile
-	src/plugins/projectwizard/resources/wxwidgets/common/Makefile
-	src/plugins/projectwizard/resources/wxwidgets/pch/Makefile
+	src/plugins/scriptedwizard/Makefile
+	src/plugins/scriptedwizard/resources/Makefile
+	src/plugins/scriptedwizard/resources/c_file/Makefile
+	src/plugins/scriptedwizard/resources/console/Makefile
+	src/plugins/scriptedwizard/resources/console/c/Makefile
+	src/plugins/scriptedwizard/resources/console/cpp/Makefile
+	src/plugins/scriptedwizard/resources/d/Makefile
+	src/plugins/scriptedwizard/resources/d/console/Makefile
+	src/plugins/scriptedwizard/resources/directx/Makefile
+	src/plugins/scriptedwizard/resources/directx/files/Makefile
+	src/plugins/scriptedwizard/resources/dll/Makefile
+	src/plugins/scriptedwizard/resources/dll/files/Makefile
+	src/plugins/scriptedwizard/resources/empty/Makefile
+	src/plugins/scriptedwizard/resources/empty_file/Makefile
+	src/plugins/scriptedwizard/resources/fltk/Makefile
+	src/plugins/scriptedwizard/resources/fltk/files/Makefile
+	src/plugins/scriptedwizard/resources/glfw/Makefile
+	src/plugins/scriptedwizard/resources/glfw/files/Makefile
+	src/plugins/scriptedwizard/resources/glut/Makefile
+	src/plugins/scriptedwizard/resources/glut/files/Makefile
+	src/plugins/scriptedwizard/resources/h_file/Makefile
+	src/plugins/scriptedwizard/resources/irrlicht/Makefile
+	src/plugins/scriptedwizard/resources/irrlicht/files/Makefile
+	src/plugins/scriptedwizard/resources/ogre/Makefile
+	src/plugins/scriptedwizard/resources/ogre/files/Makefile
+	src/plugins/scriptedwizard/resources/opengl/Makefile
+	src/plugins/scriptedwizard/resources/opengl/files_unix/Makefile
+	src/plugins/scriptedwizard/resources/opengl/files_win/Makefile
+	src/plugins/scriptedwizard/resources/qt4/Makefile
+	src/plugins/scriptedwizard/resources/qt4/files/Makefile
+	src/plugins/scriptedwizard/resources/sdl/Makefile
+	src/plugins/scriptedwizard/resources/sdl/files/Makefile
+	src/plugins/scriptedwizard/resources/plugins/Makefile
+	src/plugins/scriptedwizard/resources/plugins/templates/Makefile
+	src/plugins/scriptedwizard/resources/smartwin/Makefile
+	src/plugins/scriptedwizard/resources/smartwin/files/Makefile
+	src/plugins/scriptedwizard/resources/staticlib/Makefile
+	src/plugins/scriptedwizard/resources/staticlib/files/Makefile
+	src/plugins/scriptedwizard/resources/win32gui/Makefile
+	src/plugins/scriptedwizard/resources/win32gui/files/Makefile
+	src/plugins/scriptedwizard/resources/wxwidgets/Makefile
+	src/plugins/scriptedwizard/resources/wxwidgets/common/Makefile
+	src/plugins/scriptedwizard/resources/wxwidgets/pch/Makefile
 	src/plugins/todo/Makefile
 	src/plugins/todo/resources/Makefile
 	src/plugins/xpmanifest/Makefile
 	src/plugins/contrib/Makefile
 	src/plugins/contrib/byogames/Makefile
+	src/plugins/contrib/cb_koders/Makefile
+	src/plugins/contrib/codesnippets/Makefile
+	src/plugins/contrib/codesnippets/resources/Makefile
 	src/plugins/contrib/codestat/Makefile
 	src/plugins/contrib/codestat/resources/Makefile
 	src/plugins/contrib/dragscroll/Makefile
 	src/plugins/contrib/envvars/Makefile
 	src/plugins/contrib/help_plugin/Makefile
 	src/plugins/contrib/keybinder/Makefile
+	src/plugins/contrib/lib_finder/Makefile
 	src/plugins/contrib/profiler/Makefile
 	src/plugins/contrib/profiler/resources/Makefile
 	src/plugins/contrib/source_exporter/Makefile
@@ -178,7 +206,7 @@ AC_CONFIG_FILES([Makefile
 	src/plugins/contrib/wxSmith/smithicons/Makefile
 	src/scripts/Makefile
 	src/tools/Makefile
-	src/tools/autorevision/Makefile
+	src/tools/cb_share_config/Makefile
 	src/tools/ConsoleRunner/Makefile
 	src/setup/Makefile
 	src/setup/mime/Makefile
@@ -186,7 +214,9 @@ AC_CONFIG_FILES([Makefile
 	src/templates/common/Makefile
 	src/templates/unix/Makefile
 	src/templates/win32/Makefile
+	src/wxsmith/Makefile
 	codeblocks.pc
+	codeblocks.spec
 ])
 
 AC_OUTPUT

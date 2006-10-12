@@ -39,14 +39,13 @@
 #include <projectmanager.h>
 #include <cbeditor.h>
 #include <cbproject.h>
-#include <licenses.h>
 
 #include <wx/help.h> //(wxWindows chooses the appropriate help controller class)
 #include <wx/helpbase.h> //(wxHelpControllerBase class)
 #include <wx/helpwin.h> //(Windows Help controller)
 
 #ifdef __WXMSW__
-#include <wx/msw/helpchm.h> //(MS HTML Help controller)
+#include <wx/msw/helpchm.h> // used in case we fail to load the OCX module (it could fail too)
 #include <wx/thread.h>
 #endif
 
@@ -57,9 +56,12 @@
 #define MAX_HELP_ITEMS 32
 
 int idHelpMenus[MAX_HELP_ITEMS];
-int idPopupMenus[MAX_HELP_ITEMS];
 
-CB_IMPLEMENT_PLUGIN(HelpPlugin, "Help plugin");
+// Register the plugin
+namespace
+{
+    PluginRegistrant<HelpPlugin> reg(_T("HelpPlugin"));
+};
 
 BEGIN_EVENT_TABLE(HelpPlugin, cbPlugin)
   // we hook the menus dynamically
@@ -68,12 +70,41 @@ END_EVENT_TABLE()
 #ifdef __WXMSW__
 namespace
 {
+#ifndef UNICODE
+  typedef HWND (WINAPI *HTMLHELP)(HWND, LPCSTR, UINT, DWORD);
+  #define HTMLHELP_NAME "HtmlHelpA"
+#else // ANSI
+  typedef HWND (WINAPI *HTMLHELP)(HWND, LPCWSTR, UINT, DWORD);
+  #define HTMLHELP_NAME "HtmlHelpW"
+#endif
+
+  // ocx symbol handle
+  HTMLHELP fp_htmlHelp = 0;
+  HMODULE ocx_module = 0;
+
+  // it's used to search by keyword
+  struct cbHH_AKLINK
+  {
+    int      cbStruct;
+    BOOL     fReserved;
+    LPCTSTR  pszKeywords;
+    LPCTSTR  pszUrl;
+    LPCTSTR  pszMsgText;
+    LPCTSTR  pszMsgTitle;
+    LPCTSTR  pszWindow;
+    BOOL     fIndexOnFail;
+  };
+
+  // the command to search by keyword
+  const UINT cbHH_KEYWORD_LOOKUP = 0x000D;
+
   // This little class helps to fix a problem when the help file is CHM and the
   // keyword throws many results
   class LaunchCHMThread : public wxThread
   {
     private:
       wxCHMHelpController m_helpctl;
+      wxString m_filename;
       wxString m_keyword;
 
     public:
@@ -82,14 +113,32 @@ namespace
   };
 
   LaunchCHMThread::LaunchCHMThread(const wxString &file, const wxString &keyword)
-  :m_keyword(keyword)
+  : m_filename(file), m_keyword(keyword)
   {
     m_helpctl.Initialize(file);
   }
 
   wxThread::ExitCode LaunchCHMThread::Entry()
   {
-    m_helpctl.KeywordSearch(m_keyword);
+    if (fp_htmlHelp) // do it our way if we can
+    {
+      cbHH_AKLINK link;
+
+      link.cbStruct =     sizeof(cbHH_AKLINK);
+      link.fReserved =    FALSE;
+      link.pszKeywords =  m_keyword.c_str();
+      link.pszUrl =       NULL;
+      link.pszMsgText =   NULL;
+      link.pszMsgTitle =  NULL;
+      link.pszWindow =    NULL;
+      link.fIndexOnFail = TRUE;
+
+      fp_htmlHelp(0L, (const wxChar*)m_filename, cbHH_KEYWORD_LOOKUP, (DWORD)&link);
+    }
+    else // do it the wx way then (which is the same thing, except for the 0L in the call to fp_htmlHelp)
+    {
+      m_helpctl.KeywordSearch(m_keyword);
+    }
 
     return 0;
   }
@@ -100,40 +149,42 @@ HelpPlugin::HelpPlugin()
 : m_pMenuBar(0), m_LastId(0)
 {
   //ctor
-  wxString resPath = ConfigManager::GetDataFolder();
-  wxXmlResource::Get()->Load(resPath + _T("/help_plugin.zip#zip:*.xrc"));
-
-  m_PluginInfo.name = _T("HelpPlugin");
-  m_PluginInfo.title = _T("Help plugin");
-  m_PluginInfo.version = _T("0.1");
-  m_PluginInfo.description = _T("Code::Blocks Help plugin");
-  m_PluginInfo.author = _T("Bourricot | Ceniza (maintainer)");
-  m_PluginInfo.authorEmail = _T("titi37fr@yahoo.fr | ceniza@gda.utp.edu.co");
-  m_PluginInfo.authorWebsite = _T("www.codeblocks.org");
-  m_PluginInfo.thanksTo = _T("Codeblocks dev team !\nBourricot for the initial version");
-  m_PluginInfo.license = LICENSE_GPL;
+    if(!Manager::LoadResource(_T("help_plugin.zip")))
+    {
+        NotifyMissingFile(_T("help_plugin.zip"));
+    }
 
   // initialize IDs for Help and popup menu
   for (int i = 0; i < MAX_HELP_ITEMS; ++i)
   {
     idHelpMenus[i] = wxNewId();
-    idPopupMenus[i] = wxNewId();
 
     // dynamically connect the events
     Connect(idHelpMenus[i], -1, wxEVT_COMMAND_MENU_SELECTED,
-            (wxObjectEventFunction) (wxEventFunction) (wxCommandEventFunction)
-            &HelpPlugin::OnHelp);
-    Connect(idPopupMenus[i], -1, wxEVT_COMMAND_MENU_SELECTED,
             (wxObjectEventFunction) (wxEventFunction) (wxCommandEventFunction)
             &HelpPlugin::OnFindItem);
   }
 
   m_LastId = idHelpMenus[0];
+
+#ifdef __WXMSW__
+  ocx_module = LoadLibrary(_T("HHCTRL.OCX"));
+
+  if (ocx_module)
+  {
+    fp_htmlHelp = (HTMLHELP)GetProcAddress(ocx_module, HTMLHELP_NAME);
+  }
+#endif
 }
 
 HelpPlugin::~HelpPlugin()
 {
-  //dtor
+#ifdef __WXMSW__
+  if (ocx_module)
+  {
+    FreeLibrary(ocx_module);
+  }
+#endif
 }
 
 void HelpPlugin::OnAttach()
@@ -170,7 +221,7 @@ void HelpPlugin::OnRelease(bool appShutDown)
 
 void HelpPlugin::BuildMenu(wxMenuBar *menuBar)
 {
-  if (!m_IsAttached)
+  if (!IsAttached())
   {
     return;
   }
@@ -198,7 +249,7 @@ void HelpPlugin::BuildMenu(wxMenuBar *menuBar)
 
 void HelpPlugin::BuildModuleMenu(const ModuleType type, wxMenu *menu, const FileTreeData* data)
 {
-  if (!menu || !m_IsAttached)
+  if (!menu || !IsAttached() || !m_Vector.size())
   {
     return;
   }
@@ -213,11 +264,17 @@ void HelpPlugin::BuildModuleMenu(const ModuleType type, wxMenu *menu, const File
     // add entries in popup menu
     int counter = 0;
     HelpCommon::HelpFilesVector::iterator it;
+    wxMenu *sub_menu = new wxMenu;
 
     for (it = m_Vector.begin(); it != m_Vector.end(); ++it)
     {
-      AddToPopupMenu(menu, idPopupMenus[counter++], it->first);
+      AddToPopupMenu(sub_menu, idHelpMenus[counter++], it->first);
     }
+
+    wxMenuItem *locate_in_menu = new wxMenuItem(0, wxID_ANY, _("&Locate in"), _T(""), wxITEM_NORMAL);
+    locate_in_menu->SetSubMenu(sub_menu);
+
+    menu->Append(locate_in_menu);
   }
 }
 
@@ -297,7 +354,7 @@ wxString HelpPlugin::HelpFileFromId(int id)
 
   for (it = m_Vector.begin(); it != m_Vector.end(); ++it, ++counter)
   {
-    if (idHelpMenus[counter] == id || idPopupMenus[counter] == id)
+    if (idHelpMenus[counter] == id)
     {
       return it->second;
     }
@@ -308,6 +365,18 @@ wxString HelpPlugin::HelpFileFromId(int id)
 
 void HelpPlugin::LaunchHelp(const wxString &helpfile, const wxString &keyword)
 {
+  const static wxString http_prefix(_T("http://"));
+
+  if (helpfile.Mid(0, http_prefix.size()).CmpNoCase(http_prefix) == 0)
+  {
+    wxString the_url = helpfile;
+    the_url.Replace(_T("$(keyword)"), keyword);
+    Manager::Get()->GetMessageManager()->DebugLog(_T("Launching %s"), the_url.c_str());
+
+    wxLaunchDefaultBrowser(the_url);
+    return;
+  }
+
   wxString ext = wxFileName(helpfile).GetExt();
   Manager::Get()->GetMessageManager()->DebugLog(_T("Help File is %s"), helpfile.c_str());
 
@@ -345,32 +414,23 @@ void HelpPlugin::LaunchHelp(const wxString &helpfile, const wxString &keyword)
   delete filetype;
 }
 
-// events
-void HelpPlugin::OnHelp(wxCommandEvent &event)
-{
-  int id = event.GetId();
-  wxString help = HelpFileFromId(id);
-  LaunchHelp(help);
-}
-
 void HelpPlugin::OnFindItem(wxCommandEvent &event)
 {
+  wxString text; // save here the word to lookup... if any
   cbEditor *ed = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
 
-  if (!ed)
+  if (ed)
   {
-    return;
-  }
+    cbStyledTextCtrl *control = ed->GetControl();
+    text = control->GetSelectedText();
 
-  cbStyledTextCtrl *control = ed->GetControl();
-  wxString text = control->GetSelectedText();
-
-  if (text.IsEmpty())
-  {
-    int origPos = control->GetCurrentPos();
-    int start = control->WordStartPosition(origPos, true);
-    int end = control->WordEndPosition(origPos, true);
-    text = control->GetTextRange(start, end);
+    if (text.IsEmpty())
+    {
+      int origPos = control->GetCurrentPos();
+      int start = control->WordStartPosition(origPos, true);
+      int end = control->WordEndPosition(origPos, true);
+      text = control->GetTextRange(start, end);
+    }
   }
 
   int id = event.GetId();

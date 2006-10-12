@@ -24,9 +24,9 @@
 * $HeadURL$
 */
 
-#ifdef CB_PRECOMP
-    #include "sdk_precomp.h"
-#else
+#include "sdk_precomp.h"
+
+#ifndef CB_PRECOMP
     #include "globals.h"
     #include "configmanager.h"
     #include "manager.h"
@@ -65,7 +65,8 @@ FindDlg::FindDlg(wxWindow* parent, const wxString& initial, bool hasSelection, b
     ConfigManager* cfg = Manager::Get()->GetConfigManager(_T("editor"));
 
 	// load last searches
-	wxArrayString previous = GetArrayFromString(cfg->Read(CONF_GROUP _T("/last"), wxEmptyString), DEFAULT_ARRAY_SEP, false);
+	wxArrayString previous;
+	cfg->Read(CONF_GROUP _T("/last"), &previous);
 	for (unsigned int i = 0; i < previous.GetCount(); ++i)
 	{
 		if (!previous[i].IsEmpty())
@@ -151,8 +152,8 @@ FindDlg::~FindDlg()
     }
     if (prev_pos != 0)
         previous.Insert(find, 0);
-    wxString last = GetStringFromArray(previous);
-    cfg->Write(CONF_GROUP _T("/last"), last);
+
+    cfg->Write(CONF_GROUP _T("/last"), previous);
 
 	if (m_Complete)
 	{
@@ -277,7 +278,9 @@ void FindDlg::UpdateUI()
     XRCCTRL(*this, "txtSearchPath", wxTextCtrl)->Enable(on);
     XRCCTRL(*this, "txtSearchMask", wxTextCtrl)->Enable(on);
     XRCCTRL(*this, "btnBrowsePath", wxButton)->Enable(on);
-}
+    XRCCTRL(*this, "chkSearchRecursively", wxCheckBox)->Enable(on);
+    XRCCTRL(*this, "chkSearchHidden", wxCheckBox)->Enable(on);
+} // end of UpdateUI
 
 // events
 
@@ -289,9 +292,15 @@ void FindDlg::OnFindChange(wxNotebookEvent& event)
     if (cmbFind1 && cmbFind2)
     {
         if (XRCCTRL(*this, "nbFind", wxNotebook)->GetSelection() == 1)
+        {
             cmbFind2->SetValue(cmbFind1->GetValue());
+            cmbFind2->SetFocus();
+        }
         else
+        {
             cmbFind1->SetValue(cmbFind2->GetValue());
+            cmbFind1->SetFocus();
+        }
     }
     event.Skip();
 }

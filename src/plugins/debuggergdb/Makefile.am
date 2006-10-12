@@ -1,20 +1,21 @@
 SUBDIRS = resources
 
 INCLUDES = $(WX_CXXFLAGS) \
+		`pkg-config --cflags gtk+-2.0` \
 		-I$(top_srcdir)/src/sdk \
 		-I$(top_srcdir)/src/sdk/wxscintilla/include \
-		-I$(top_srcdir)/src/sdk/as/include
+		-I$(top_srcdir)/src/sdk/scripting/include \
+    	-I$(top_srcdir)/src/sdk/scripting/sqplus
 
 libdir = $(pkgdatadir)/plugins
 
-lib_LTLIBRARIES = libdebuggergdb.la
+lib_LTLIBRARIES = libdebugger.la
 
-libdebuggergdb_la_LDFLAGS = -module -version-info 0:1:0 -shared -no-undefined -avoid-version
+libdebugger_la_LDFLAGS = `pkg-config --libs gtk+-2.0` -module -version-info 0:1:0 -shared -no-undefined -avoid-version
 
-libdebuggergdb_la_LIBADD = ../../sdk/libcodeblocks.la \
-				../../sdk/wxscintilla/libwxscintilla.la
+libdebugger_la_LIBADD = ../../sdk/libcodeblocks.la
 
-libdebuggergdb_la_SOURCES = backtracedlg.cpp \
+libdebugger_la_SOURCES = backtracedlg.cpp \
 			breakpointsdlg.cpp \
 			cdb_driver.cpp \
 			cpuregistersdlg.cpp \
@@ -30,6 +31,7 @@ libdebuggergdb_la_SOURCES = backtracedlg.cpp \
 			editwatchesdlg.cpp \
 			examinememorydlg.cpp \
 			gdb_driver.cpp \
+			gdb_tipwindow.cpp \
 			threadsdlg.cpp
 
 noinst_HEADERS = backtracedlg.h \
@@ -50,4 +52,5 @@ noinst_HEADERS = backtracedlg.h \
 			examinememorydlg.h \
 			gdb_commands.h \
 			gdb_driver.h \
+			gdb_tipwindow.h \
 			threadsdlg.h

@@ -11,7 +11,6 @@
 
 #include "astyleplugin.h"
 #include <cbexception.h>
-#include <licenses.h>
 #include "astyleconfigdlg.h"
 #include <sstream>
 #include <string>
@@ -29,25 +28,20 @@
 using std::istringstream;
 using std::string;
 
-CB_IMPLEMENT_PLUGIN(AStylePlugin, "Source code formatter (AStyle)");
+// this auto-registers the plugin
+namespace
+{
+    PluginRegistrant<AStylePlugin> reg(_T("AStylePlugin"));
+}
 
 AStylePlugin::AStylePlugin()
 {
 	//ctor
-  wxFileSystem::AddHandler(new wxZipFSHandler);
-  wxXmlResource::Get()->InitAllHandlers();
-  wxString resPath = ConfigManager::GetDataFolder();
-  wxXmlResource::Get()->Load(resPath + _T("/astyle.zip#zip:*.xrc"));
 
-	m_PluginInfo.name = _T("AStylePlugin");
-	m_PluginInfo.title = _T("Source code formatter (AStyle)");
-	m_PluginInfo.version = _T("1.2");
-	m_PluginInfo.description = _T("Uses AStyle 1.18 to reformat your sources. Useful when copying code from the net or if you just want to reformat your sources based on a specific style.");
-	m_PluginInfo.author = _T("Yiannis Mandravellos | Ceniza (maintainer)");
-	m_PluginInfo.authorEmail = _T("mandrav@codeblocks.org | ceniza@gda.utp.edu.co");
-	m_PluginInfo.authorWebsite = _T("http://www.codeblocks.org");
-	m_PluginInfo.thanksTo = _T("AStyle team for the useful library.\nSee http://astyle.sourceforge.net");
-	m_PluginInfo.license = LICENSE_GPL;
+    if(!Manager::LoadResource(_T("astyle.zip")))
+    {
+        NotifyMissingFile(_T("astyle.zip"));
+    }
 }
 
 AStylePlugin::~AStylePlugin()

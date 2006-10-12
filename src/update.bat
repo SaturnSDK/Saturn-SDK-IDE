@@ -1,4 +1,8 @@
 @echo off
+
+REM SETLOCAL assures environment variables created in a batch file are not exported to its calling environment
+setlocal
+
 echo Creating output directory tree
 
 if not exist output md output\
@@ -34,15 +38,16 @@ echo Packing core UI resources
 %ZIPCMD% -j9 %RESDIR%\manager_resources.zip sdk\resources\*.xrc sdk\resources\images\*.png > nul
 %ZIPCMD% -j9 %RESDIR%\start_here.zip src\resources\start_here\*.* > nul
 echo Packing plugins UI resources
-%ZIPCMD% -j9 %RESDIR%\astyle.zip plugins\astyle\resources\*.xrc > nul
-%ZIPCMD% -j9 %RESDIR%\plugin_wizard.zip plugins\pluginwizard\resources\*.xrc > nul
-%ZIPCMD% -j9 %RESDIR%\class_wizard.zip plugins\classwizard\resources\*.xrc > nul
-%ZIPCMD% -j9 %RESDIR%\code_completion.zip plugins\codecompletion\resources\*.xrc > nul
-%ZIPCMD% -j9 %RESDIR%\compiler_gcc.zip plugins\compilergcc\resources\*.xrc > nul
-%ZIPCMD% -j9 %RESDIR%\debugger_gdb.zip plugins\debuggergdb\resources\*.xrc > nul
-%ZIPCMD% -j9 %RESDIR%\defaultmimehandler.zip plugins\defaultmimehandler\resources\*.xrc > nul
-%ZIPCMD% -j9 %RESDIR%\todo.zip plugins\todo\resources\*.xrc > nul
-%ZIPCMD% -j9 %RESDIR%\autosave.zip plugins\autosave\*.xrc > nul
+%ZIPCMD% -j9 %RESDIR%\astyle.zip plugins\astyle\resources\manifest.xml plugins\astyle\resources\*.xrc > nul
+%ZIPCMD% -j9 %RESDIR%\autosave.zip plugins\autosave\manifest.xml plugins\autosave\*.xrc > nul
+%ZIPCMD% -j9 %RESDIR%\classwizard.zip plugins\classwizard\resources\manifest.xml plugins\classwizard\resources\*.xrc > nul
+%ZIPCMD% -j9 %RESDIR%\codecompletion.zip plugins\codecompletion\resources\manifest.xml plugins\codecompletion\resources\*.xrc > nul
+%ZIPCMD% -j9 %RESDIR%\compiler.zip plugins\compilergcc\resources\manifest.xml plugins\compilergcc\resources\*.xrc > nul
+%ZIPCMD% -j9 %RESDIR%\debugger.zip plugins\debuggergdb\resources\manifest.xml plugins\debuggergdb\resources\*.xrc > nul
+%ZIPCMD% -j9 %RESDIR%\defaultmimehandler.zip plugins\defaultmimehandler\resources\manifest.xml plugins\defaultmimehandler\resources\*.xrc > nul
+%ZIPCMD% -j9 %RESDIR%\scriptedwizard.zip plugins\scriptedwizard\resources\manifest.xml > nul
+%ZIPCMD% -j9 %RESDIR%\todo.zip plugins\todo\resources\manifest.xml plugins\todo\resources\*.xrc > nul
+%ZIPCMD% -j9 %RESDIR%\xpmanifest.zip plugins\xpmanifest\manifest.xml > nul
 %ZIPCMD% -j9 %RESDIR%\blocks.zip plugins\blocks\*.xrc > nul
 echo Packing core UI bitmaps
 cd src\resources
@@ -51,9 +56,9 @@ cd ..\..\sdk\resources
 %ZIPCMD% -0 -q ..\..\%RESDIR%\manager_resources.zip images\*.png > nul
 echo Packing plugins UI bitmaps
 cd ..\..\plugins\compilergcc\resources
-%ZIPCMD% -0 -q ..\..\..\%RESDIR%\compiler_gcc.zip images\*.png images\16x16\*.png > nul
+%ZIPCMD% -0 -q ..\..\..\%RESDIR%\compiler.zip images\*.png images\16x16\*.png > nul
 cd ..\..\..\plugins\debuggergdb\resources
-%ZIPCMD% -0 -q ..\..\..\%RESDIR%\debugger_gdb.zip images\*.png images\16x16\*.png > nul
+%ZIPCMD% -0 -q ..\..\..\%RESDIR%\debugger.zip images\*.png images\16x16\*.png > nul
 cd ..\..\..
 
 echo Copying external exception handler
@@ -72,8 +77,8 @@ copy /y src\resources\images\16x16\*.png output\share\codeblocks\images\16x16 > 
 copy /y plugins\codecompletion\resources\images\*.png %RESDIR%\images\codecompletion > nul
 copy /y plugins\codecompletion\resources\images\*.png output\share\codeblocks\images\codecompletion > nul
 echo Makefile.am > excludes.txt
-xcopy /y /s plugins\projectwizard\resources\* %RESDIR%\templates\wizard /EXCLUDE:excludes.txt >nul
-xcopy /y /s plugins\projectwizard\resources\* output\share\codeblocks\templates\wizard /EXCLUDE:excludes.txt >nul
+xcopy /y /s plugins\scriptedwizard\resources\* %RESDIR%\templates\wizard /EXCLUDE:excludes.txt >nul
+xcopy /y /s plugins\scriptedwizard\resources\* output\share\codeblocks\templates\wizard /EXCLUDE:excludes.txt >nul
 del excludes.txt
 copy /y templates\common\* output\share\codeblocks\templates > nul
 copy /y templates\win32\* output\share\codeblocks\templates > nul
@@ -102,6 +107,3 @@ echo Stripping debug info from output tree
 strip output\*.exe
 strip output\*.dll
 strip output\share\CodeBlocks\plugins\*.dll
-
-set ZIPCMD=
-set RESDIR=

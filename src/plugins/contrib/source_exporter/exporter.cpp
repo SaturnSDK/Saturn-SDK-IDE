@@ -14,7 +14,6 @@
 #include <editorcolourset.h>
 #include <messagemanager.h>
 #include <cbexception.h>
-#include <licenses.h> // defines some common licenses (like the GPL)
 #include "HTMLExporter.h"
 #include "RTFExporter.h"
 #include "ODTExporter.h"
@@ -26,8 +25,11 @@ static int idFileExportRTF = wxNewId();
 static int idFileExportODT = wxNewId();
 static int idFileExportPDF = wxNewId();
 
-// Implement the plugin's hooks
-CB_IMPLEMENT_PLUGIN(Exporter, "Source Exporter");
+// Register the plugin
+namespace
+{
+    PluginRegistrant<Exporter> reg(_T("Exporter"));
+};
 
 BEGIN_EVENT_TABLE(Exporter, cbPlugin)
   EVT_MENU(idFileExportHTML, Exporter::OnExportHTML)
@@ -42,15 +44,6 @@ END_EVENT_TABLE()
 Exporter::Exporter()
 {
   //ctor
-  m_PluginInfo.name = _T("Source Exporter");
-  m_PluginInfo.title = _("Source Exporter");
-  m_PluginInfo.version = _T("1.0");
-  m_PluginInfo.description = _("Plugin to export syntax highlighted source files to HTML, RTF, ODT or PDF.");
-  m_PluginInfo.author = _T("Ceniza");
-  m_PluginInfo.authorEmail = _T("ceniza@gda.utp.edu.co");
-  m_PluginInfo.authorWebsite = _T("");
-  m_PluginInfo.thanksTo = _("Code::Blocks Development Team\nwxPdfDocument Development Team");
-  m_PluginInfo.license = LICENSE_GPL;
 }
 
 Exporter::~Exporter()
@@ -62,7 +55,7 @@ void Exporter::OnAttach()
 {
   // do whatever initialization you need for your plugin
   // NOTE: after this function, the inherited member variable
-  // m_IsAttached will be TRUE...
+  // IsAttached() will be TRUE...
   // You should check for it in other functions, because if it
   // is FALSE, it means that the application did *not* "load"
   // (see: does not need) this plugin...
@@ -74,7 +67,7 @@ void Exporter::OnRelease(bool appShutDown)
   // if appShutDown is false, the plugin is unloaded because Code::Blocks is being shut down,
   // which means you must not use any of the SDK Managers
   // NOTE: after this function, the inherited member variable
-  // m_IsAttached will be FALSE...
+  // IsAttached() will be FALSE...
 }
 
 void Exporter::BuildMenu(wxMenuBar *menuBar)
@@ -114,7 +107,7 @@ void Exporter::BuildMenu(wxMenuBar *menuBar)
   export_submenu->Append(idFileExportODT, _("As &ODT..."), _("Exports the current file to ODT"));
   export_submenu->Append(idFileExportPDF, _("As &PDF..."), _("Exports the current file to PDF"));
 
-  wxMenuItem *export_menu = new wxMenuItem(0, idFileExport, _("&Export"), _(""), wxITEM_NORMAL);
+  wxMenuItem *export_menu = new wxMenuItem(0, idFileExport, _("&Export"), _T(""), wxITEM_NORMAL);
   export_menu->SetSubMenu(export_submenu);
 
   file->Insert(printPos, export_menu);
@@ -183,7 +176,7 @@ void Exporter::OnExportPDF(wxCommandEvent &event)
 
 void Exporter::ExportFile(BaseExporter *exp, const wxString &default_extension, const wxString &wildcard)
 {
-  if (!m_IsAttached)
+  if (!IsAttached())
   {
     return;
   }

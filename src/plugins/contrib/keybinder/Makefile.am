@@ -8,8 +8,7 @@ lib_LTLIBRARIES = libkeybinder.la
 
 libkeybinder_la_LDFLAGS = -module -version-info 0:1:0 -shared -no-undefined -avoid-version
 
-libkeybinder_la_LIBADD = ../../../sdk/libcodeblocks.la \
-				../../../sdk/wxscintilla/libwxscintilla.la
+libkeybinder_la_LIBADD = ../../../sdk/libcodeblocks.la
 
 libkeybinder_la_SOURCES = cbkeybinder.cpp \
 			keybinder.cpp \
@@ -21,4 +20,11 @@ noinst_HEADERS = cbkeybinder.h \
 			keybinderdef.h \
 			menuutils.h
 
-EXTRA_DIST = keybinder.cbp
+EXTRA_DIST = keybinder.cbp manifest.xml
+
+
+pkgdata_DATA = keybinder.zip
+CLEANFILES = $(pkgdata_DATA)
+
+keybinder.zip:
+	PWD=`pwd` cd $(srcdir) && zip $(PWD)/keybinder.zip manifest.xml > /dev/null

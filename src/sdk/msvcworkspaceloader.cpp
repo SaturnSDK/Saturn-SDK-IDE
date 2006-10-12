@@ -13,17 +13,20 @@
 #include "sdk_precomp.h"
 
 #ifndef CB_PRECOMP
+    #include <wx/string.h>
+    #include <wx/intl.h>
     #include <wx/txtstrm.h>
     #include <wx/dynarray.h>
     #include <wx/filename.h>
     #include <wx/msgdlg.h>
+    #include <wx/wfstream.h>
     #include "globals.h"
     #include "manager.h"
     #include "messagemanager.h"
     #include "projectmanager.h"
     #include "compilerfactory.h"
     #include "compiler.h"
-    #include <wx/wfstream.h>
+    #include "cbproject.h"
 #endif
 
 #include <wx/stream.h>
@@ -41,7 +44,7 @@ MSVCWorkspaceLoader::~MSVCWorkspaceLoader()
 	//dtor
 }
 
-bool MSVCWorkspaceLoader::Open(const wxString& filename)
+bool MSVCWorkspaceLoader::Open(const wxString& filename, wxString& Title)
 {
     bool askForCompiler = false;
     bool askForTargets = false;
@@ -174,11 +177,11 @@ bool MSVCWorkspaceLoader::Open(const wxString& filename)
     updateProjects();
     ImportersGlobals::ResetDefaults();
 
-    m_Title = wxFileName(filename).GetName() + _(" workspace");
+    Title = wxFileName(filename).GetName() + _(" workspace");
     return count != 0;
 }
 
-bool MSVCWorkspaceLoader::Save(const wxString& title, const wxString& filename)
+bool MSVCWorkspaceLoader::Save(const wxString& /*title*/, const wxString& /*filename*/)
 {
     // no support for saving workspace files (.dsw)
     return false;

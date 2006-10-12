@@ -68,10 +68,27 @@
 #include "compilerICC.h"
 #include "compilerSDCC.h"
 
+#include <scripting/bindings/sc_base_types.h>
+
+namespace ScriptBindings
+{
+    static int gBuildLogId = -1;
+
+    // global funcs
+    void gBuildLog(const wxString& msg)
+    {
+        Manager::Get()->GetMessageManager()->Log(gBuildLogId, msg);
+    }
+};
+
 #define COLOUR_MAROON wxColour(0xa0, 0x00, 0x00)
 #define COLOUR_NAVY   wxColour(0x00, 0x00, 0xa0)
 
-CB_IMPLEMENT_PLUGIN(CompilerGCC, "Compiler");
+// this auto-registers the plugin
+namespace
+{
+    PluginRegistrant<CompilerGCC> reg(_T("Compiler"));
+}
 
 // menu IDS
 // just because we don't know other plugins' used identifiers,
@@ -84,25 +101,21 @@ int idMenuCompileFromProjectManager = XRCID("idCompilerMenuCompileFromProjectMan
 int idMenuProjectCompilerOptions = XRCID("idCompilerMenuProjectCompilerOptions");
 int idMenuTargetCompilerOptions = XRCID("idCompilerMenuTargetCompilerOptions");
 int idMenuTargetCompilerOptionsSub = XRCID("idCompilerMenuTargetCompilerOptionsSub");
-int idMenuCompileTargetFromProjectManager = XRCID("idCompilerMenuCompileTargetFromProjectManager");
 int idMenuCompileFile = XRCID("idCompilerMenuCompileFile");
 int idMenuCompileFileFromProjectManager = XRCID("idCompilerMenuCompileFileFromProjectManager");
 int idMenuRebuild = XRCID("idCompilerMenuRebuild");
 int idMenuRebuildTarget = XRCID("idCompilerMenuRebuildTarget");
 int idMenuRebuildFromProjectManager = XRCID("idCompilerMenuRebuildFromProjectManager");
-int idMenuRebuildTargetFromProjectManager = XRCID("idCompilerMenuRebuildTargetFromProjectManager");
 int idMenuCompileAll = XRCID("idCompilerMenuCompileAll");
 int idMenuRebuildAll = XRCID("idCompilerMenuRebuildAll");
 int idMenuClean = XRCID("idCompilerMenuClean");
 int idMenuCleanAll = XRCID("idCompilerMenuCleanAll");
 int idMenuCleanTarget = XRCID("idCompilerMenuCleanTarget");
 int idMenuCleanFromProjectManager = XRCID("idCompilerMenuCleanFromProjectManager");
-int idMenuCleanTargetFromProjectManager = XRCID("idCompilerMenuCleanTargetFromProjectManager");
 int idMenuCompileAndRun = XRCID("idCompilerMenuCompileAndRun");
 int idMenuRun = XRCID("idCompilerMenuRun");
 int idMenuKillProcess = XRCID("idCompilerMenuKillProcess");
 int idMenuSelectTarget = XRCID("idCompilerMenuSelectTarget");
-int idMenuSelectTargetAll = XRCID("idCompilerMenuSelectTargetAll");
 int idMenuSelectTargetOther[MAX_TARGETS]; // initialized in ctor
 int idMenuNextError = XRCID("idCompilerMenuNextError");
 int idMenuPreviousError = XRCID("idCompilerMenuPreviousError");
@@ -146,12 +159,10 @@ BEGIN_EVENT_TABLE(CompilerGCC, cbCompilerPlugin)
     EVT_MENU(idMenuCompileAndRun,                   CompilerGCC::Dispatcher)
     EVT_MENU(idMenuCompile,                         CompilerGCC::Dispatcher)
     EVT_MENU(idMenuCompileFromProjectManager,       CompilerGCC::Dispatcher)
-    EVT_MENU(idMenuCompileTargetFromProjectManager, CompilerGCC::Dispatcher)
     EVT_MENU(idMenuCompileFile,                     CompilerGCC::Dispatcher)
     EVT_MENU(idMenuCompileFileFromProjectManager,   CompilerGCC::Dispatcher)
     EVT_MENU(idMenuRebuild,                         CompilerGCC::Dispatcher)
     EVT_MENU(idMenuRebuildFromProjectManager,       CompilerGCC::Dispatcher)
-    EVT_MENU(idMenuRebuildTargetFromProjectManager, CompilerGCC::Dispatcher)
     EVT_MENU(idMenuCompileAll,                      CompilerGCC::Dispatcher)
     EVT_MENU(idMenuRebuildAll,                      CompilerGCC::Dispatcher)
     EVT_MENU(idMenuProjectCompilerOptions,          CompilerGCC::Dispatcher)
@@ -159,9 +170,7 @@ BEGIN_EVENT_TABLE(CompilerGCC, cbCompilerPlugin)
     EVT_MENU(idMenuClean,                           CompilerGCC::Dispatcher)
     EVT_MENU(idMenuCleanAll,                        CompilerGCC::Dispatcher)
     EVT_MENU(idMenuCleanFromProjectManager,         CompilerGCC::Dispatcher)
-    EVT_MENU(idMenuCleanTargetFromProjectManager,   CompilerGCC::Dispatcher)
     EVT_MENU(idMenuKillProcess,                     CompilerGCC::Dispatcher)
-    EVT_MENU(idMenuSelectTargetAll,                 CompilerGCC::Dispatcher)
     EVT_MENU(idMenuNextError,                       CompilerGCC::Dispatcher)
     EVT_MENU(idMenuPreviousError,                   CompilerGCC::Dispatcher)
     EVT_MENU(idMenuClearErrors,                     CompilerGCC::Dispatcher)
@@ -181,12 +190,12 @@ BEGIN_EVENT_TABLE(CompilerGCC, cbCompilerPlugin)
 END_EVENT_TABLE()
 
 CompilerGCC::CompilerGCC()
-    : m_BuildingWorkspace(false),
+    : m_RealTargetsStartIndex(0),
+    m_RealTargetIndex(0),
     m_PageIndex(-1),
     m_ListPageIndex(-1),
     m_Menu(0L),
     m_TargetMenu(0L),
-    m_pToolbar(0L),
     m_TargetIndex(-1),
     m_ErrorsMenu(0L),
     m_Project(0L),
@@ -197,38 +206,23 @@ CompilerGCC::CompilerGCC()
     m_Log(0L),
     m_pListLog(0L),
     m_ToolTarget(0L),
-    m_ToolTargetLabel(0L),
     m_RunAfterCompile(false),
     m_LastExitCode(0),
-    m_HasTargetAll(false),
     m_NotifiedMaxErrors(false),
     m_pBuildingProject(0),
-    m_BuildingProjectIdx(0),
-    m_BuildingTargetIdx(0),
     m_BuildJob(bjIdle),
     m_NextBuildState(bsNone),
-    m_BuildStateTargetIsAll(false),
     m_pLastBuildingProject(0),
     m_pLastBuildingTarget(0),
-    m_BuildDepsIndex(0),
     m_RunTargetPostBuild(false),
     m_RunProjectPostBuild(false),
-    m_DeleteTempMakefile(true)
+    m_DeleteTempMakefile(true),
+    m_IsWorkspaceOperation(false)
 {
-    Manager::Get()->Loadxrc(_T("/compiler_gcc.zip#zip:*.xrc"));
-
-    m_Type = ptCompiler;
-    m_PluginInfo.name = _T("Compiler");
-    m_PluginInfo.title = _T("Compiler");
-    m_PluginInfo.version = _T("1.0");
-    m_PluginInfo.description = _("This plugin is an interface to various compilers:\n\n"
-                               "\tGNU GCC compiler\n"
-                               "\tMicrosoft Visual C++ Free Toolkit 2003\n"
-                               "\tBorland C++ Compiler 5.5");
-    m_PluginInfo.author = _T("Yiannis An. Mandravellos");
-    m_PluginInfo.authorEmail = _T("info@codeblocks.org");
-    m_PluginInfo.authorWebsite = _T("www.codeblocks.org");
-    m_PluginInfo.thanksTo = _("All the free (and not) compilers out there");
+    if(!Manager::LoadResource(_T("compiler.zip")))
+    {
+        NotifyMissingFile(_T("compiler.zip"));
+    }
 
     m_timerIdleWakeUp.SetOwner(this, idTimerPollCompiler);
 
@@ -265,8 +259,6 @@ CompilerGCC::~CompilerGCC()
     FreeProcesses();
 
     DoDeleteTempMakefile();
-    if (m_ToolTarget)
-        delete m_ToolTarget;
     CompilerFactory::UnregisterCompilers();
 }
 
@@ -292,9 +284,6 @@ void CompilerGCC::Dispatcher(wxCommandEvent& event)
     if (eventId == idMenuCompileFromProjectManager)
         OnCompile(event);
 
-    if (eventId == idMenuCompileTargetFromProjectManager)
-        OnCompile(event);
-
     if (eventId == idMenuCompileFile)
         OnCompileFile(event);
 
@@ -305,9 +294,6 @@ void CompilerGCC::Dispatcher(wxCommandEvent& event)
         OnRebuild(event);
 
     if (eventId == idMenuRebuildFromProjectManager)
-        OnRebuild(event);
-
-    if (eventId == idMenuRebuildTargetFromProjectManager)
         OnRebuild(event);
 
     if (eventId == idMenuCompileAll)
@@ -331,14 +317,8 @@ void CompilerGCC::Dispatcher(wxCommandEvent& event)
     if (eventId == idMenuCleanFromProjectManager)
         OnClean(event);
 
-    if (eventId == idMenuCleanTargetFromProjectManager)
-        OnClean(event);
-
     if (eventId == idMenuKillProcess)
         OnKillProcess(event);
-
-    if (eventId == idMenuSelectTargetAll)
-        OnSelectTarget(event);
 
     if (eventId == idMenuNextError)
         OnNextError(event);
@@ -361,35 +341,6 @@ void CompilerGCC::Dispatcher(wxCommandEvent& event)
         focused->SetFocus();
 }
 
-void CompilerGCC::AllocProcesses()
-{
-    // create the parallel processes array
-    m_ParallelProcessCount = Manager::Get()->GetConfigManager(_T("compiler"))->ReadInt(_T("/parallel_processes"), 1);
-    m_Processes = (wxProcess**)malloc(m_ParallelProcessCount * sizeof(wxProcess*));
-    m_Pid = new long int[m_ParallelProcessCount];
-    for (size_t i = 0; i < m_ParallelProcessCount; ++i)
-    {
-        m_Processes[i] = 0;
-        m_Pid[i] = 0;
-    }
-}
-
-void CompilerGCC::FreeProcesses()
-{
-    // free the parallel processes array
-    free(m_Processes);
-    m_Processes = 0;
-    delete[] m_Pid;
-    m_Pid = 0;
-}
-
-bool CompilerGCC::ReAllocProcesses()
-{
-    FreeProcesses();
-    AllocProcesses();
-    return true;
-}
-
 void CompilerGCC::OnAttach()
 {
     MessageManager* msgMan = Manager::Get()->GetMessageManager();
@@ -402,7 +353,7 @@ void CompilerGCC::OnAttach()
     // set log image
     wxBitmap bmp;
     wxString prefix = ConfigManager::GetDataFolder() + _T("/images/");
-    bmp.LoadFile(prefix + _T("misc_16x16.png"), wxBITMAP_TYPE_PNG);
+    bmp = cbLoadBitmap(prefix + _T("misc_16x16.png"), wxBITMAP_TYPE_PNG);
     Manager::Get()->GetMessageManager()->SetLogImage(m_Log, bmp);
 
     // create warnings/errors log
@@ -417,17 +368,31 @@ void CompilerGCC::OnAttach()
     m_ListPageIndex = msgMan->AddLog(m_pListLog, _("Build messages"));
 
     // set log image
-    bmp.LoadFile(prefix + _T("flag_16x16.png"), wxBITMAP_TYPE_PNG);
+    bmp = cbLoadBitmap(prefix + _T("flag_16x16.png"), wxBITMAP_TYPE_PNG);
     Manager::Get()->GetMessageManager()->SetLogImage(m_pListLog, bmp);
 
     // set default compiler for new projects
     CompilerFactory::SetDefaultCompiler(Manager::Get()->GetConfigManager(_T("compiler"))->Read(_T("/default_compiler"), _T("gcc")));
     LoadOptions();
 //    SetupEnvironment();
+
+    // register compiler's script functions
+    // make sure the VM is initialized
+    Manager::Get()->GetScriptingManager();
+    if (SquirrelVM::GetVMPtr())
+    {
+        ScriptBindings::gBuildLogId = m_PageIndex;
+        SqPlus::RegisterGlobal(ScriptBindings::gBuildLog, "LogBuild");
+    }
+    else
+        ScriptBindings::gBuildLogId = -1;
 }
 
 void CompilerGCC::OnRelease(bool appShutDown)
 {
+    // disable script functions
+    ScriptBindings::gBuildLogId = -1;
+
     DoDeleteTempMakefile();
     SaveOptions();
     Manager::Get()->GetConfigManager(_T("compiler"))->Write(_T("/default_compiler"), CompilerFactory::GetDefaultCompilerID());
@@ -451,22 +416,6 @@ void CompilerGCC::OnRelease(bool appShutDown)
 //        delete m_Menu;
 //        m_Menu = 0L;
 //    }
-
-    if (m_pToolbar)
-    {
-        m_pToolbar->DeleteTool(idMenuCompile);
-        m_pToolbar->DeleteTool(idMenuRun);
-        m_pToolbar->DeleteTool(idMenuCompileAndRun);
-        m_pToolbar->DeleteTool(idMenuRebuild);
-
-        m_pToolbar->DeleteTool(idToolTarget);
-        delete m_ToolTarget;
-        m_ToolTarget = 0L;
-
-        m_pToolbar->DeleteTool(idToolTargetLabel);
-        delete m_ToolTargetLabel;
-        m_ToolTargetLabel = 0L;
-    }
 }
 
 int CompilerGCC::Configure(cbProject* project, ProjectBuildTarget* target)
@@ -498,7 +447,7 @@ void CompilerGCC::OnConfig(wxCommandEvent& event)
 
 void CompilerGCC::BuildMenu(wxMenuBar* menuBar)
 {
-    if (!m_IsAttached)
+    if (!IsAttached())
         return;
     if (m_Menu)
         return;
@@ -553,7 +502,7 @@ void CompilerGCC::BuildMenu(wxMenuBar* menuBar)
 
 void CompilerGCC::BuildModuleMenu(const ModuleType type, wxMenu* menu, const FileTreeData* data)
 {
-    if (!m_IsAttached)
+    if (!IsAttached())
         return;
     // we 're only interested in project manager's menus
     if (type != mtProjectManager || !menu || IsRunning())
@@ -575,13 +524,6 @@ void CompilerGCC::BuildModuleMenu(const ModuleType type, wxMenu* menu, const Fil
         menu->Append(idMenuCompileFromProjectManager, _("Build\tCtrl-F9"));
         menu->Append(idMenuRebuildFromProjectManager, _("Rebuild\tCtrl-F11"));
         menu->Append(idMenuCleanFromProjectManager, _("Clean"));
-        wxMenu* subMenu = new wxMenu();
-        subMenu->Append(idMenuCompileTargetFromProjectManager, _("Build"));
-        subMenu->Append(idMenuRebuildTargetFromProjectManager, _("Rebuild"));
-        subMenu->Append(idMenuCleanTargetFromProjectManager, _("Clean"));
-        subMenu->AppendSeparator();
-        subMenu->Append(idMenuTargetCompilerOptions, _("Build options"));
-        menu->Append(idMenuTargetCompilerOptionsSub, _("Specific build target..."), subMenu);
         menu->AppendSeparator();
         menu->Append(idMenuProjectCompilerOptions, _("Build options"));
     }
@@ -599,16 +541,12 @@ void CompilerGCC::BuildModuleMenu(const ModuleType type, wxMenu* menu, const Fil
 
 bool CompilerGCC::BuildToolBar(wxToolBar* toolBar)
 {
-    if (!m_IsAttached || !toolBar)
+    if (!IsAttached() || !toolBar)
         return false;
     m_pTbar = toolBar;
     wxString my_16x16=Manager::isToolBar16x16(toolBar) ? _T("_16x16") : _T("");
     Manager::Get()->AddonToolBar(toolBar,_T("compiler_toolbar")+my_16x16);
-
-    // neither the generic nor Motif native toolbars really support this
-    #if (wxUSE_TOOLBAR_NATIVE && !USE_GENERIC_TBAR) && !defined(__WXMOTIF__) && !defined(__WXX11__) && !defined(__WXMAC__)
     m_ToolTarget = XRCCTRL(*toolBar, "idToolTarget", wxComboBox);
-    #endif
     toolBar->Realize();
     toolBar->SetBestFittingSize();
     DoRecreateTargetMenu(); // make sure the tool target combo is up-to-date
@@ -807,6 +745,8 @@ wxString CompilerGCC::ProjectMakefile()
 
 void CompilerGCC::ClearLog()
 {
+    if (m_IsWorkspaceOperation)
+        return;
     Manager::Get()->GetMessageManager()->SwitchTo(m_PageIndex);
     if (m_Log)
         m_Log->GetTextControl()->Clear();
@@ -836,7 +776,7 @@ void CompilerGCC::AddToCommandQueue(const wxArrayString& commands)
     wxString myWait = wxString(COMPILER_WAIT);
 //    wxString myWaitEnd = wxString(COMPILER_WAIT_END);
 //    ProjectBuildTarget* lastTarget = 0;
-    ProjectBuildTarget* bt = m_pBuildingProject ? m_pBuildingProject->GetBuildTarget(m_BuildingTargetIdx) : 0;
+    ProjectBuildTarget* bt = m_pBuildingProject ? m_pBuildingProject->GetBuildTarget(GetTargetIndexFromName(m_pBuildingProject, m_BuildingTargetName)) : 0;
     bool isLink = false;
     size_t count = commands.GetCount();
     for (size_t i = 0; i < count; ++i)
@@ -890,6 +830,35 @@ void CompilerGCC::AddToCommandQueue(const wxArrayString& commands)
             isLink = false;
         }
     }
+}
+
+void CompilerGCC::AllocProcesses()
+{
+    // create the parallel processes array
+    m_ParallelProcessCount = Manager::Get()->GetConfigManager(_T("compiler"))->ReadInt(_T("/parallel_processes"), 1);
+    m_Processes = (wxProcess**)malloc(m_ParallelProcessCount * sizeof(wxProcess*));
+    m_Pid = new long int[m_ParallelProcessCount];
+    for (size_t i = 0; i < m_ParallelProcessCount; ++i)
+    {
+        m_Processes[i] = 0;
+        m_Pid[i] = 0;
+    }
+}
+
+void CompilerGCC::FreeProcesses()
+{
+    // free the parallel processes array
+    free(m_Processes);
+    m_Processes = 0;
+    delete[] m_Pid;
+    m_Pid = 0;
+}
+
+bool CompilerGCC::ReAllocProcesses()
+{
+    FreeProcesses();
+    AllocProcesses();
+    return true;
 }
 
 bool CompilerGCC::IsProcessRunning(int idx) const
@@ -1072,105 +1041,153 @@ void CompilerGCC::DoClearTargetMenu()
 //        items.Clear();
 //        items.DeleteContents(olddelete);
     }
-    m_HasTargetAll = false;
 }
 
 void CompilerGCC::DoRecreateTargetMenu()
 {
-    if (!m_IsAttached)
+    if (!IsAttached())
         return;
 
-    DoClearTargetMenu();
     if (m_ToolTarget)
-        m_ToolTarget->Clear();
-    if (!CheckProject())
-        return;
+        m_ToolTarget->Freeze();
+    wxMenuBar* mbar = Manager::Get()->GetAppWindow()->GetMenuBar();
+    if (mbar)
+        mbar->Freeze();
 
-    if (m_Project->GetBuildTargetsCount() == 0)
-        return;
-
-    // find out if at least one target is included in "all"
-    // (if not, no need to add "all" in menus and target combo)
-    bool atLeastOneBuildableTarget = false;
-    for (int i = 0; i < m_Project->GetBuildTargetsCount(); ++i)
+    do
     {
-        ProjectBuildTarget* bt = m_Project->GetBuildTarget(i);
-        if (bt->GetIncludeInTargetAll())
+        // clear menu and combo
+        DoClearTargetMenu();
+        if (m_ToolTarget)
+            m_ToolTarget->Clear();
+
+        // if no project, leave
+        if (!CheckProject())
+            break;
+
+        // if no targets, leave
+        if (!m_Targets.GetCount())
+            break;
+
+        // find out the should-be-selected target
+        wxString tgtStr = m_Project->GetActiveBuildTarget();
+        if (tgtStr.IsEmpty())
+            tgtStr = m_Project->GetFirstValidBuildTargetName(); // a default value
+
+        // fill the menu and combo
+        for (size_t x = 0; x < m_Targets.GetCount(); ++x)
         {
-            atLeastOneBuildableTarget = true;
-            break;
+            if (m_TargetMenu)
+            {
+                wxString help;
+                help.Printf(_("Build target '%s' in current project"), GetTargetString(x).c_str());
+                m_TargetMenu->AppendCheckItem(idMenuSelectTargetOther[x], GetTargetString(x), help);
+            }
+            if (m_ToolTarget)
+                m_ToolTarget->Append(GetTargetString(x));
         }
-    }
 
-    m_TargetIndex = m_Project->GetActiveBuildTarget();
-    if (atLeastOneBuildableTarget)
-    {
-        if (m_TargetMenu)
-            m_TargetMenu->AppendCheckItem(idMenuSelectTargetAll, _("All"), _("Build target 'all' in current project"));
+        // connect menu events
+        Connect( idMenuSelectTargetOther[0],  idMenuSelectTargetOther[MAX_TARGETS - 1],
+                wxEVT_COMMAND_MENU_SELECTED,
+                (wxObjectEventFunction) (wxEventFunction) (wxCommandEventFunction)
+                &CompilerGCC::OnSelectTarget );
+
+        // housekeeping
+        m_TargetIndex = m_Targets.Index(tgtStr);
+        m_RealTargetIndex = m_TargetIndex - m_RealTargetsStartIndex;
+        if (m_RealTargetIndex < 0)
+            m_RealTargetIndex = -1;
+
+        DoUpdateTargetMenu(m_TargetIndex);
+
+        // update combo
         if (m_ToolTarget)
-            m_ToolTarget->Append(_("All"));
-    }
-    else
-    {
-        if (m_TargetIndex == -1)
-            m_TargetIndex = 0;
-    }
-    m_HasTargetAll = atLeastOneBuildableTarget;
+        {
+            m_ToolTarget->SetSelection(m_TargetIndex);
+        }
 
-    int targetsCount = m_Project->GetBuildTargetsCount();
-    for (int x = 0; x < targetsCount; ++x)
-    {
-        ProjectBuildTarget* target = m_Project->GetBuildTarget(x);
-        if (!target)
-            break;
+        // finally, make sure we 're using the correct compiler for the project
+        SwitchCompiler(m_Project->GetCompilerID());
+    } while (false);
 
-        wxString caption;
-        caption.Printf(_("Build target '%s' in current project"), target->GetTitle().c_str());
-        if (m_TargetMenu)
-            m_TargetMenu->AppendCheckItem(idMenuSelectTargetOther[x], target->GetTitle(), caption);
-        if (m_ToolTarget)
-            m_ToolTarget->Append(target->GetTitle());
-    }
-    Connect( idMenuSelectTargetOther[0],  idMenuSelectTargetOther[MAX_TARGETS - 1],
-            wxEVT_COMMAND_MENU_SELECTED,
-            (wxObjectEventFunction) (wxEventFunction) (wxCommandEventFunction)
-            &CompilerGCC::OnSelectTarget );
-    DoUpdateTargetMenu();
-
-    SwitchCompiler(m_Project->GetCompilerID());
+    if (mbar)
+        mbar->Thaw();
+    if (m_ToolTarget)
+        m_ToolTarget->Thaw();
 }
 
-void CompilerGCC::DoUpdateTargetMenu()
+void CompilerGCC::DoUpdateTargetMenu(int targetIndex)
 {
-    // keep the last selected target name for BuildWorkspace() and friends
-    m_LastTargetName.Clear();
-    if (m_Project && m_TargetIndex != -1)
-    {
-        ProjectBuildTarget* target = m_Project->GetBuildTarget(m_TargetIndex);
-        if (target)
-            m_LastTargetName = target->GetTitle();
-    }
+    // update indices
+    m_TargetIndex = targetIndex;
+    m_RealTargetIndex = m_TargetIndex - m_RealTargetsStartIndex;
+    if (m_RealTargetIndex < 0)
+        m_RealTargetIndex = -1;
 
-    if (!m_TargetMenu)
-        return;
-
-    if (!m_HasTargetAll && m_TargetIndex == -1)
+    if (m_TargetIndex == -1)
         m_TargetIndex = 0;
 
     if (m_Project)
-        m_Project->SetActiveBuildTarget(m_TargetIndex);
+        m_Project->SetActiveBuildTarget(GetTargetString(m_TargetIndex));
 
-    if (m_HasTargetAll)
-        m_TargetMenu->Check(idMenuSelectTargetAll, m_TargetIndex == -1);
-    for (int i = 0; i < MAX_TARGETS; ++i)
+    // update menu
+    if (m_TargetMenu)
     {
-        wxMenuItem* item = m_TargetMenu->FindItem(idMenuSelectTargetOther[i]);
-        if (!item || !item->IsCheckable())
-            continue;
-        item->Check(i == m_TargetIndex);
+        for (int i = 0; i < MAX_TARGETS; ++i)
+        {
+            wxMenuItem* item = m_TargetMenu->FindItem(idMenuSelectTargetOther[i]);
+            if (!item || !item->IsCheckable())
+                continue;
+            item->Check(i == m_TargetIndex);
+        }
     }
-    if (m_ToolTarget)
-        m_ToolTarget->SetSelection(m_TargetIndex + (m_HasTargetAll ? 1 : 0));
+
+    // the tool combo is updated in DoRecreateTargetMenu()
+    // can't set it here, because this function is called by the
+    // tool combo's event handler
+//    DBGLOG(_T("m_TargetIndex=%d, m_ToolTarget->GetCurrentSelection()=%d, m_RealTargetsStartIndex=%d"), m_TargetIndex, m_ToolTarget->GetCurrentSelection(), m_RealTargetsStartIndex);
+}
+
+void CompilerGCC::UpdateProjectTargets(cbProject* project)
+{
+    // keep a backup of old targets list so we can check for equality
+    // with the new list we 'll create below.
+    // if they 're equal, we can spare the DoRecreateTargetMenu() call
+    // which might be slow (esp. on linux)
+    wxArrayString oldTargets = m_Targets;
+    int oldRealIdx = m_RealTargetsStartIndex;
+
+    m_Targets.Clear();
+    if (!project)
+        return;
+
+    // update the list of targets (virtual + real)
+    wxArrayString virtuals = project->GetVirtualBuildTargets();
+    for (size_t i = 0; i < virtuals.GetCount(); ++i)
+    {
+        m_Targets.Add(virtuals[i]);
+    }
+    for (int i = 0; i < project->GetBuildTargetsCount(); ++i)
+    {
+        m_Targets.Add(project->GetBuildTarget(i)->GetTitle());
+    }
+
+    // keep the index for the first real target
+    m_RealTargetsStartIndex = virtuals.GetCount();
+
+    // actually rebuild menu and combo (if needed)
+    if (oldRealIdx != m_RealTargetsStartIndex || m_Targets != oldTargets)
+        DoRecreateTargetMenu();
+}
+
+wxString CompilerGCC::GetTargetString(int index)
+{
+    if (index == -1)
+        index = m_TargetIndex;
+    if (index >= 0 && index < (int)m_Targets.GetCount())
+        return m_Targets[index];
+    return wxEmptyString;
 }
 
 void CompilerGCC::DoPrepareQueue()
@@ -1189,7 +1206,7 @@ ProjectBuildTarget* CompilerGCC::DoAskForTarget()
     if (!CheckProject())
         return 0L;
 
-    return m_Project->GetBuildTarget(m_TargetIndex);
+    return m_Project->GetBuildTarget(m_RealTargetIndex);
 }
 
 int CompilerGCC::DoGUIAskForTarget()
@@ -1197,7 +1214,7 @@ int CompilerGCC::DoGUIAskForTarget()
     if (!CheckProject())
         return -1;
 
-    return m_Project->SelectTarget(m_TargetIndex);
+    return m_Project->SelectTarget(m_RealTargetIndex);
 }
 
 void CompilerGCC::DoDeleteTempMakefile()
@@ -1244,9 +1261,20 @@ bool CompilerGCC::UseMake(ProjectBuildTarget* target)
     return false;
 }
 
+wxString CompilerGCC::GetCurrentCompilerID(ProjectBuildTarget* target)
+{
+    if (target)
+        return target->GetCompilerID();
+    if (m_pBuildingProject)
+        return m_pBuildingProject->GetCompilerID();
+    if (m_Project)
+        return m_Project->GetCompilerID();
+    return wxEmptyString;
+}
+
 bool CompilerGCC::CompilerValid(ProjectBuildTarget* target)
 {
-    wxString idx = target ? target->GetCompilerID() : (m_Project ? m_Project->GetCompilerID() : CompilerFactory::GetDefaultCompilerID());
+    wxString idx = GetCurrentCompilerID(target);
     bool ret = CompilerFactory::GetCompiler(idx);
     if (!ret)
     {
@@ -1439,25 +1467,27 @@ int CompilerGCC::Run(ProjectBuildTarget* target)
     DoPrepareQueue();
     if (!CompilerValid(target))
         return -1;
+//    DBGLOG(_T("1) target=%s, m_RealTargetIndex=%d, m_TargetIndex=%d"), target ? target->GetTitle().c_str() : _T("null"), m_RealTargetIndex, m_TargetIndex);
 
     if (!target)
     {
-        if (m_TargetIndex == -1) // only ask for target if target 'all' is selected
+        if (m_RealTargetIndex == -1) // only ask for target if a virtual target is selected
         {
             int idx = -1;
-            int bak = m_TargetIndex;
+            int bak = m_RealTargetIndex;
             if (m_Project->GetBuildTargetsCount() == 1)
                 idx = 0;
             else
                 idx = DoGUIAskForTarget();
 
-            m_TargetIndex = idx;
+            m_RealTargetIndex = idx;
             target = DoAskForTarget();
-            m_TargetIndex = bak;
+            m_RealTargetIndex = bak;
         }
         else
             target = DoAskForTarget();
     }
+//    DBGLOG(_T("2) target=%s, m_RealTargetIndex=%d, m_TargetIndex=%d"), target ? target->GetTitle().c_str() : _T("null"), m_RealTargetIndex, m_TargetIndex);
 
     if (!target)
         return -1;
@@ -1567,66 +1597,86 @@ int CompilerGCC::Run(ProjectBuildTarget* target)
     return 0;
 }
 
-wxString CompilerGCC::GetMakeCommandFor(MakeCommand cmd, ProjectBuildTarget* target)
+wxString CompilerGCC::GetMakeCommandFor(MakeCommand cmd, cbProject* project, ProjectBuildTarget* target)
 {
-    if (!m_Project)
+    if (!project)
         return wxEmptyString;
-    wxString command = target ? target->GetMakeCommandFor(cmd) : m_Project->GetMakeCommandFor(cmd);
-    command.Replace(_T("$makefile"), m_Project->GetMakefile());
-    command.Replace(_T("$make"), CompilerFactory::GetCompiler(m_CompilerId)->GetPrograms().MAKE);
+
+    wxString compilerId = target ? target->GetCompilerID() : project->GetCompilerID();
+    if (!CompilerFactory::IsValidCompilerID(compilerId))
+        compilerId = CompilerFactory::GetDefaultCompilerID();
+    wxString command = target ? target->GetMakeCommandFor(cmd) : project->GetMakeCommandFor(cmd);
+
+    command.Replace(_T("$makefile"), project->GetMakefile());
+    command.Replace(_T("$make"), CompilerFactory::GetCompiler(compilerId)->GetPrograms().MAKE);
     command.Replace(_T("$target"), target ? target->GetTitle() : _T(""));
 //    Manager::Get()->GetMessageManager()->Log(m_PageIndex, _T("Make: %s"), command.c_str());
     return command;
 }
 
-int CompilerGCC::Clean(const wxString& target)
+void CompilerGCC::DoClean(const wxArrayString& commands)
 {
-    if (!CheckProject())
-        return -1;
-    return Clean(m_Project->GetBuildTarget(target.IsEmpty() ? m_LastTargetName : target));
+    for (unsigned int i = 0; i < commands.GetCount(); ++i)
+    {
+//        Manager::Get()->GetMessageManager()->Log(m_PageIndex, commands[i]);
+        wxRemoveFile(commands[i]);
+    }
 }
 
 int CompilerGCC::Clean(ProjectBuildTarget* target)
 {
-    // make sure all project files are saved
-    if (m_Project && !m_Project->SaveAllFiles())
-        Manager::Get()->GetMessageManager()->Log(_("Could not save all files..."));
+    return Clean(target ? target->GetTitle() : _T(""));
+}
 
-    DoPrepareQueue();
-    if (!CompilerValid(target))
+int CompilerGCC::Clean(const wxString& target)
+{
+    wxString realTarget = target;
+    if (realTarget.IsEmpty())
+        realTarget = GetTargetString();
+    if (realTarget.IsEmpty())
         return -1;
 
-//    Manager::Get()->GetMacrosManager()->Reset();
-
-    if (m_Project)
-        wxSetWorkingDirectory(m_Project->GetBasePath());
-    CompilerFactory::GetCompiler(m_CompilerId)->Init(m_Project);
-
-    if (UseMake(target))
+    if (!m_IsWorkspaceOperation)
     {
-        wxString cmd = GetMakeCommandFor(mcClean, target);
-        m_CommandQueue.Add(new CompilerCommand(cmd, wxEmptyString, m_Project, target));
-        return DoRunQueue();
+        DoPrepareQueue();
     }
-    else
+
+    wxArrayString clean;
+    if (!m_Project)
     {
-        wxArrayString clean;
-        if (m_Project)
+        DirectCommands dc(this, CompilerFactory::GetDefaultCompiler(), 0, m_PageIndex);
+        clean = dc.GetCleanSingleFileCommand(Manager::Get()->GetEditorManager()->GetActiveEditor()->GetFilename());
+        DoClean(clean);
+        Manager::Get()->GetMessageManager()->Log(m_PageIndex, _("Cleaned object and output files"));
+    }
+
+    // generate build jobs
+    PreprocessJob(m_Project, realTarget);
+    // loop all jobs and add them in the queue
+    while (!m_BuildJobTargetsList.empty())
+    {
+        BuildJobTarget bjt = GetNextJob();
+        wxSetWorkingDirectory(bjt.project->GetBasePath());
+        ProjectBuildTarget* bt = bjt.project->GetBuildTarget(bjt.targetName);
+        CompilerFactory::GetCompiler(bt->GetCompilerID())->Init(bjt.project);
+
+        if (UseMake())
         {
-            DirectCommands dc(this, CompilerFactory::GetCompiler(m_CompilerId), m_Project, m_PageIndex);
-            clean = dc.GetCleanCommands(target, true);
-            Manager::Get()->GetMessageManager()->Log(m_PageIndex, _("Cleaning %s..."), target ? target->GetTitle().c_str() : m_Project->GetTitle().c_str());
+            wxString cmd = GetMakeCommandFor(mcClean, bjt.project, bt);
+            m_CommandQueue.Add(new CompilerCommand(cmd, wxEmptyString, bjt.project, bt));
+            return DoRunQueue();
         }
         else
         {
-            DirectCommands dc(this, CompilerFactory::GetDefaultCompiler(), 0, m_PageIndex);
-            clean = dc.GetCleanSingleFileCommand(Manager::Get()->GetEditorManager()->GetActiveEditor()->GetFilename());
-            Manager::Get()->GetMessageManager()->Log(m_PageIndex, _("Cleaning object and output files..."));
+            DirectCommands dc(this, CompilerFactory::GetCompiler(bt->GetCompilerID()), bjt.project, m_PageIndex);
+            clean = dc.GetCleanCommands(bt, true);
+            DoClean(clean);
+            Manager::Get()->GetMessageManager()->Log(m_PageIndex, _("Cleaned \"%s - %s\""), bjt.project->GetTitle().c_str(), bt ? bt->GetTitle().c_str() : _("<all targets>"));
         }
-        for (unsigned int i = 0; i < clean.GetCount(); ++i)
-        {
-            wxRemoveFile(clean[i]);
-        }
+    }
+
+    if (!m_IsWorkspaceOperation)
+    {
         Manager::Get()->GetMessageManager()->Log(m_PageIndex, _("Done."));
         Manager::Get()->GetMessageManager()->Close();
     }
@@ -1646,7 +1696,8 @@ int CompilerGCC::DistClean(ProjectBuildTarget* target)
     if (m_Project && !m_Project->SaveAllFiles())
         Manager::Get()->GetMessageManager()->Log(_("Could not save all files..."));
 
-    DoPrepareQueue();
+    if (!m_IsWorkspaceOperation)
+        DoPrepareQueue();
     if (!CompilerValid(target))
         return -1;
 
@@ -1658,7 +1709,7 @@ int CompilerGCC::DistClean(ProjectBuildTarget* target)
 
     if (UseMake(target))
     {
-        wxString cmd = GetMakeCommandFor(mcDistClean, target);
+        wxString cmd = GetMakeCommandFor(mcDistClean, m_Project, target);
         m_CommandQueue.Add(new CompilerCommand(cmd, wxEmptyString, m_Project, target));
         return DoRunQueue();
     }
@@ -1703,17 +1754,13 @@ void CompilerGCC::OnExportMakefile(wxCommandEvent& event)
 
 void CompilerGCC::InitBuildState(BuildJob job, const wxString& target)
 {
-    wxString ftgt = target.IsEmpty() ? m_LastTargetName : target;
     m_BuildJob = job;
-    m_BuildStateTargetIsAll = ftgt.IsEmpty() || ftgt.Lower() == _("all");
     m_BuildState = bsNone;
     m_NextBuildState = bsProjectPreBuild;
-    m_pBuildingProject = Manager::Get()->GetProjectManager()->GetActiveProject();
+    m_pBuildingProject = 0;
     m_pLastBuildingProject = 0;
     m_pLastBuildingTarget = 0;
-    m_BuildingTargetName = ftgt;
-    m_BuildDepsIndex = 0;
-    m_BuildDeps.Clear();
+    m_BuildingTargetName = target;
     m_CommandQueue.Clear();
 }
 
@@ -1729,15 +1776,10 @@ void CompilerGCC::ResetBuildState()
     m_BuildState = bsNone;
     m_NextBuildState = bsNone;
     m_pBuildingProject = 0;
-    m_BuildingProjectIdx = 0;
-    m_BuildingTargetIdx = -1;
     m_BuildingTargetName.Clear();
 
     m_pLastBuildingProject = 0;
     m_pLastBuildingTarget = 0;
-
-    m_BuildDeps.Clear();
-    m_BuildDepsIndex = 0;
 
     m_CommandQueue.Clear();
 
@@ -1778,21 +1820,22 @@ BuildState CompilerGCC::GetNextStateBasedOnJob()
         // advance target in the project
         case bsTargetPostBuild:
         {
+            // get next build job
             if (m_BuildJob != bjTarget)
             {
-                // switch to next target in project
-                if (m_BuildStateTargetIsAll)
+                BuildJobTarget& bj = PeekNextJob();
+                if (bj.project && bj.project == m_pBuildingProject)
                 {
-                    if (m_BuildingTargetIdx < m_pBuildingProject->GetBuildTargetsCount() - 1)
-                    {
-                        ++m_BuildingTargetIdx;
-                        return bsTargetPreBuild;
-                    }
+                    // same project, switch target
+                    bj = GetNextJob(); // remove job from queue
+                    m_BuildingTargetName = bj.targetName;
+                    return bsTargetPreBuild; // switching targets
                 }
+                // switch project
                 return bsProjectPostBuild;
             }
             m_pBuildingProject->SetCurrentlyCompilingTarget(0);
-            break;
+            break; // all done
         }
 
         case bsProjectPostBuild: return bsProjectDone;
@@ -1802,22 +1845,8 @@ BuildState CompilerGCC::GetNextStateBasedOnJob()
             // switch to next project in workspace
             if (m_pBuildingProject)
                 m_pBuildingProject->SetCurrentlyCompilingTarget(0);
-            if (m_BuildJob == bjWorkspace)
-            {
-                ++m_BuildDepsIndex;
-                if (m_BuildDepsIndex < (int)m_BuildDeps.GetCount())
-                {
-                    m_BuildingProjectIdx = m_BuildDeps[m_BuildDepsIndex];
-                    if (m_BuildingProjectIdx < (int)Manager::Get()->GetProjectManager()->GetProjects()->GetCount())
-                    {
-                        m_pBuildingProject = Manager::Get()->GetProjectManager()->GetProjects()->Item(m_BuildingProjectIdx);
-                        m_NextBuildState = bsProjectPreBuild;
-                        DoBuild(m_pBuildingProject);
-                        return bsProjectPreBuild;
-                    }
-                }
-            }
-            break;
+            m_NextBuildState = bsProjectPreBuild;
+            return DoBuild() >= 0 ? bsProjectPreBuild : bsNone;
         }
 
         default:
@@ -1841,7 +1870,7 @@ void CompilerGCC::BuildStateManagement()
         return;
     }
 
-    ProjectBuildTarget* bt = m_pBuildingProject->GetBuildTarget(m_BuildingTargetIdx);
+    ProjectBuildTarget* bt = m_pBuildingProject->GetBuildTarget(GetTargetIndexFromName(m_pBuildingProject, m_BuildingTargetName));
     if (!bt)
     {
         ResetBuildState();
@@ -1882,10 +1911,14 @@ void CompilerGCC::BuildStateManagement()
     }
 
     m_pBuildingProject->SetCurrentlyCompilingTarget(bt);
-    DirectCommands dc(this, CompilerFactory::GetCompiler(m_CompilerId), m_pBuildingProject, m_PageIndex);
+    DirectCommands dc(this, CompilerFactory::GetCompiler(bt->GetCompilerID()), m_pBuildingProject, m_PageIndex);
     dc.m_doYield = true;
 
-//    Manager::Get()->GetMessageManager()->Log(m_PageIndex, _T("NOCHANGE *****> m_BuildState=%s, m_NextBuildState=%s, m_pBuildingProject=%p, bt=%p"), StateToString(m_BuildState).c_str(), StateToString(m_NextBuildState).c_str(), m_pBuildingProject, bt);
+//    Manager::Get()->GetMessageManager()->Log(m_PageIndex, _T("BuildState *****> m_BuildState=%s, m_NextBuildState=%s, m_pBuildingProject=%s, bt=%s"),
+//        StateToString(m_BuildState).c_str(),
+//        StateToString(m_NextBuildState).c_str(),
+//        m_pBuildingProject ? m_pBuildingProject->GetTitle().c_str() : _T("<none>"),
+//        bt ? bt->GetTitle().c_str() : _T("<none>"));
 
     m_BuildState = m_NextBuildState;
     wxArrayString cmds;
@@ -1901,8 +1934,6 @@ void CompilerGCC::BuildStateManagement()
         case bsTargetPreBuild:
         {
             // check if it should build with "All"
-            if (m_BuildStateTargetIsAll && !bt->GetIncludeInTargetAll())
-                break;
             // run target pre-build steps
             cmds = dc.GetPreBuildCommands(bt);
             break;
@@ -1910,8 +1941,6 @@ void CompilerGCC::BuildStateManagement()
 
         case bsTargetBuild:
         {
-            if (m_BuildStateTargetIsAll && !bt->GetIncludeInTargetAll())
-                break;
             // run target build
             cmds = dc.GetCompileCommands(bt);
             bool hasCommands = cmds.GetCount();
@@ -1927,13 +1956,9 @@ void CompilerGCC::BuildStateManagement()
 
         case bsTargetPostBuild:
         {
-            // check if it should build with "All"
-            if (!m_BuildStateTargetIsAll || bt->GetIncludeInTargetAll())
-            {
-                // run target post-build steps
-                if (m_RunTargetPostBuild || bt->GetAlwaysRunPostBuildSteps())
-                    cmds = dc.GetPostBuildCommands(bt);
-            }
+            // run target post-build steps
+            if (m_RunTargetPostBuild || bt->GetAlwaysRunPostBuildSteps())
+                cmds = dc.GetPostBuildCommands(bt);
             // reset
             m_RunTargetPostBuild = false;
             break;
@@ -1964,65 +1989,128 @@ void CompilerGCC::BuildStateManagement()
     Manager::Yield();
 }
 
-int CompilerGCC::DoBuild(cbProject* prj)
+int CompilerGCC::GetTargetIndexFromName(cbProject* prj, const wxString& name)
 {
-    if (!prj)
-        return -2;
-
-    // make sure all project files are saved
-    if (prj && !prj->SaveAllFiles())
-        Manager::Get()->GetMessageManager()->Log(_("Could not save all files..."));
-
-    m_pBuildingProject = prj;
-
-    // we 'll locate the target by searching, 'cause we need its index
-    m_BuildingTargetIdx = m_BuildingTargetName.IsEmpty() ? -1 : -2;
-    ProjectBuildTarget* bt = 0;
+    if (!prj || name.IsEmpty())
+        return -1;
     for (int i = 0; i < prj->GetBuildTargetsCount(); ++i)
     {
         ProjectBuildTarget* bt_search =  prj->GetBuildTarget(i);
-        if (bt_search->GetTitle() == m_BuildingTargetName)
+        if (bt_search->GetTitle() == name)
         {
-            bt = bt_search;
-            m_BuildingTargetIdx = i;
-            break;
+            return i;
         }
     }
-    if (m_BuildingTargetIdx == -2)
+    return -1;
+}
+
+void CompilerGCC::ExpandTargets(cbProject* project, const wxString& targetName, wxArrayString& result)
+{
+    result.Clear();
+    if (project)
     {
-        if (m_Log->GetTextControl()->GetInsertionPoint() != 0)
-            Manager::Get()->GetMessageManager()->Log(m_PageIndex, wxEmptyString);
-        PrintBanner(m_pBuildingProject, 0);
-        Manager::Get()->GetMessageManager()->Log(m_PageIndex, _("%s doesn't have a target named \"%s\"..."), prj->GetTitle().c_str(), m_BuildingTargetName.c_str());
-        m_Log->GetTextControl()->SetDefaultStyle(wxTextAttr(COLOUR_MAROON));
-        Manager::Get()->GetMessageManager()->Log(m_PageIndex, _("Build aborted."));
-        m_Log->GetTextControl()->SetDefaultStyle(wxTextAttr(wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOWTEXT)));
-        return -2;
+        ProjectBuildTarget* bt =  project->GetBuildTarget(targetName);
+        if (bt) // real target
+            result.Add(targetName);
+        else // virtual target
+            result = project->GetExpandedVirtualBuildTargetGroup(targetName);
     }
-    if (m_BuildingTargetIdx == -1)
+}
+
+void CompilerGCC::PreprocessJob(cbProject* project, const wxString& targetName)
+{
+    wxArrayString tlist;
+
+    // if not a workspace operation, clear any remaining (old) build jobs
+    if (!m_IsWorkspaceOperation)
     {
-        if (m_HasTargetAll)
-        {
-            m_BuildingTargetIdx = 0;
-            bt =  prj->GetBuildTarget(0);
-        }
-        else
-        {
-            m_BuildingTargetIdx = prj->SelectTarget();
-            bt = prj->GetBuildTarget(m_BuildingTargetIdx);
-        }
+        while (!m_BuildJobTargetsList.empty())
+            m_BuildJobTargetsList.pop();
     }
 
+    // calculate project/workspace dependencies
+    wxArrayInt deps;
+    if (!project)
+        CalculateWorkspaceDependencies(deps);
+    else
+        CalculateProjectDependencies(project, deps);
+
+    // loop all projects in the dependencies list
+//    Manager::Get()->GetMessageManager()->Log(m_PageIndex, _T("** Creating deps"));
+    for (size_t i = 0; i < deps.GetCount(); ++i)
+    {
+        cbProject* prj = Manager::Get()->GetProjectManager()->GetProjects()->Item(deps[i]);
+        ExpandTargets(prj, targetName, tlist);
+
+        if (tlist.GetCount() == 0)
+        {
+            m_Log->GetTextControl()->SetDefaultStyle(wxTextAttr(COLOUR_MAROON));
+            Manager::Get()->GetMessageManager()->Log(m_PageIndex, _T("Warning: No target named '%s' in project '%s'. Project will not be built..."), targetName.c_str(), prj->GetTitle().c_str());
+            m_Log->GetTextControl()->SetDefaultStyle(wxTextAttr(wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOWTEXT)));
+        }
+
+        // add all matching targets in the job list
+        for (size_t x = 0; x < tlist.GetCount(); ++x)
+        {
+            BuildJobTarget bjt;
+            bjt.project = prj;
+            bjt.targetName = tlist[x];
+
+            m_BuildJobTargetsList.push(bjt);
+
+//            Manager::Get()->GetMessageManager()->Log(m_PageIndex, _T("Job: %s - %s"), prj->GetTitle().c_str(), prj->GetBuildTarget(tlist[x])->GetTitle().c_str());
+        }
+    }
+//    Manager::Get()->GetMessageManager()->Log(m_PageIndex, _T("** Done creating deps"));
+}
+
+CompilerGCC::BuildJobTarget CompilerGCC::GetNextJob()
+{
+    BuildJobTarget ret;
+    if (m_BuildJobTargetsList.empty())
+        return ret;
+    ret = m_BuildJobTargetsList.front();
+    m_BuildJobTargetsList.pop();
+    return ret;
+}
+
+CompilerGCC::BuildJobTarget& CompilerGCC::PeekNextJob()
+{
+    static BuildJobTarget ret;
+    ret = BuildJobTarget();
+
+    if (m_BuildJobTargetsList.empty())
+        return ret;
+    return m_BuildJobTargetsList.front();
+}
+
+int CompilerGCC::DoBuild()
+{
+    BuildJobTarget bj = GetNextJob();
+
+    // no jobs list?
+    if (!bj.project)
+        return -2;
+
+    // make sure all project files are saved
+    if (bj.project &&
+        bj.project != m_pBuildingProject && // avoid saving when we only switch targets
+        !bj.project->SaveAllFiles())
+    {
+        Manager::Get()->GetMessageManager()->Log(_("Could not save all files..."));
+    }
+
+    m_pBuildingProject = bj.project;
+    m_BuildingTargetName = bj.targetName;
+    ProjectBuildTarget* bt = bj.project->GetBuildTarget(bj.targetName);
     if (!bt || !CompilerValid(bt))
         return -2;
 
-//    Manager::Get()->GetMacrosManager()->Reset();
-
     wxString cmd;
-    if (UseMake(bt))
+    if (UseMake())
     {
-        wxString cmd = GetMakeCommandFor(mcBuild, bt);
-        m_CommandQueue.Add(new CompilerCommand(cmd, wxEmptyString, prj, bt));
+        wxString cmd = GetMakeCommandFor(mcBuild, bj.project, bt);
+        m_CommandQueue.Add(new CompilerCommand(cmd, wxEmptyString, bj.project, bt));
     }
     else
     {
@@ -2031,27 +2119,27 @@ int CompilerGCC::DoBuild(cbProject* prj)
     return 0;
 }
 
-void CompilerGCC::CalculateWorkspaceDependencies()
+void CompilerGCC::CalculateWorkspaceDependencies(wxArrayInt& deps)
 {
-    m_BuildDeps.Clear();
+    deps.Clear();
     ProjectsArray* arr = Manager::Get()->GetProjectManager()->GetProjects();
     for (size_t i = 0; i < arr->GetCount(); ++i)
     {
-        CalculateProjectDependencies(arr->Item(i));
+        CalculateProjectDependencies(arr->Item(i), deps);
     }
 }
 
-void CompilerGCC::CalculateProjectDependencies(cbProject* prj)
+void CompilerGCC::CalculateProjectDependencies(cbProject* prj, wxArrayInt& deps)
 {
     int prjidx = Manager::Get()->GetProjectManager()->GetProjects()->Index(prj);
     const ProjectsArray* arr = Manager::Get()->GetProjectManager()->GetDependenciesForProject(prj);
     if (!arr || !arr->GetCount())
     {
         // no dependencies; add the project in question and exit
-        if (m_BuildDeps.Index(prjidx) == wxNOT_FOUND)
+        if (deps.Index(prjidx) == wxNOT_FOUND)
         {
 //            Manager::Get()->GetMessageManager()->Log(m_PageIndex, _T("Adding dependency: %s"), prj->GetTitle().c_str());
-            m_BuildDeps.Add(prjidx);
+            deps.Add(prjidx);
         }
         return;
     }
@@ -2062,7 +2150,7 @@ void CompilerGCC::CalculateProjectDependencies(cbProject* prj)
         if (!Manager::Get()->GetProjectManager()->CausesCircularDependency(prj, thisprj))
         {
             // recursively check dependencies
-            CalculateProjectDependencies(thisprj);
+            CalculateProjectDependencies(thisprj, deps);
 
             // find out project's index in full (open) projects array
             ProjectsArray* parr = Manager::Get()->GetProjectManager()->GetProjects();
@@ -2070,10 +2158,10 @@ void CompilerGCC::CalculateProjectDependencies(cbProject* prj)
             if (idx != wxNOT_FOUND)
             {
                 // avoid duplicates
-                if (m_BuildDeps.Index(idx) == wxNOT_FOUND)
+                if (deps.Index(idx) == wxNOT_FOUND)
                 {
 //                    Manager::Get()->GetMessageManager()->Log(m_PageIndex, _T("Adding dependency: %s"), thisprj->GetTitle().c_str());
-                    m_BuildDeps.Add(idx);
+                    deps.Add(idx);
                 }
             }
         }
@@ -2086,15 +2174,21 @@ void CompilerGCC::CalculateProjectDependencies(cbProject* prj)
     }
 
     // always add the project in question
-    if (m_BuildDeps.Index(prjidx) == wxNOT_FOUND)
+    if (deps.Index(prjidx) == wxNOT_FOUND)
     {
 //        Manager::Get()->GetMessageManager()->Log(m_PageIndex, _T("Adding dependency: %s"), prj->GetTitle().c_str());
-        m_BuildDeps.Add(prjidx);
+        deps.Add(prjidx);
     }
 }
 
 int CompilerGCC::Build(const wxString& target)
 {
+    wxString realTarget = target;
+    if (realTarget.IsEmpty())
+        realTarget = GetTargetString();
+    if (realTarget.IsEmpty())
+        return -1;
+
     if (CheckDebuggerIsRunning())
         return -1;
 
@@ -2106,26 +2200,35 @@ int CompilerGCC::Build(const wxString& target)
         return -1;
     }
     DoClearErrors();
-    DoPrepareQueue();
 
-    ProjectBuildTarget* bt = m_Project->GetBuildTarget(target);
-    if (UseMake(bt))
+    if (!m_IsWorkspaceOperation)
+        DoPrepareQueue();
+
+    if (UseMake())
     {
         // make sure all project files are saved
         if (m_Project && !m_Project->SaveAllFiles())
             Manager::Get()->GetMessageManager()->Log(_("Could not save all files..."));
-        wxString cmd = GetMakeCommandFor(mcBuild, bt);
-        m_CommandQueue.Add(new CompilerCommand(cmd, wxEmptyString, m_Project, bt));
+
+        // generate build jobs
+        PreprocessJob(m_Project, realTarget);
+        // loop all jobs and add them in the queue
+        while (!m_BuildJobTargetsList.empty())
+        {
+            BuildJobTarget bjt = GetNextJob();
+            ProjectBuildTarget* bt = bjt.project->GetBuildTarget(bjt.targetName);
+            if (bt)
+            {
+                wxString cmd = GetMakeCommandFor(mcBuild, bjt.project, bt);
+                m_CommandQueue.Add(new CompilerCommand(cmd, wxEmptyString, bjt.project, bt));
+            }
+        }
     }
     else
     {
-        InitBuildState(bjProject, target);
-        CalculateProjectDependencies(m_Project);
-        m_BuildingProjectIdx = m_BuildDeps[m_BuildDepsIndex];
-        m_pBuildingProject = Manager::Get()->GetProjectManager()->GetProjects()->Item(m_BuildingProjectIdx);
-        if (m_BuildDeps.GetCount() > 1)
-            m_BuildJob = bjWorkspace;
-        if (DoBuild(m_pBuildingProject))
+        PreprocessJob(m_Project, realTarget);
+        InitBuildState(bjProject, realTarget);
+        if (DoBuild())
             return -2;
     }
     return DoRunQueue();
@@ -2136,15 +2239,19 @@ int CompilerGCC::Build(ProjectBuildTarget* target)
     return Build(target ? target->GetTitle() : _T(""));
 }
 
-int CompilerGCC::Rebuild(const wxString& target)
-{
-    if (!CheckProject())
-        return -1;
-    return Rebuild(m_Project->GetBuildTarget(target.IsEmpty() ? m_LastTargetName : target));
-}
-
 int CompilerGCC::Rebuild(ProjectBuildTarget* target)
 {
+    return Rebuild(target ? target->GetTitle() : _T(""));
+}
+
+int CompilerGCC::Rebuild(const wxString& target)
+{
+    wxString realTarget = target;
+    if (realTarget.IsEmpty())
+        realTarget = GetTargetString();
+    if (realTarget.IsEmpty())
+        return -1;
+
     if (CheckDebuggerIsRunning())
         return -1;
 
@@ -2152,36 +2259,60 @@ int CompilerGCC::Rebuild(ProjectBuildTarget* target)
     if (m_Project && !m_Project->SaveAllFiles())
         Manager::Get()->GetMessageManager()->Log(_("Could not save all files..."));
 
-    DoPrepareQueue();
-    if (!CompilerValid(target))
-        return -1;
+    if (!m_IsWorkspaceOperation)
+        DoPrepareQueue();
 
 //    Manager::Get()->GetMacrosManager()->Reset();
 
     CompilerFactory::GetCompiler(m_CompilerId)->Init(m_Project);
 
-    if (UseMake(target))
+    if (UseMake())
     {
-        wxString cmd = GetMakeCommandFor(mcClean, target);
-        m_CommandQueue.Add(new CompilerCommand(cmd, wxEmptyString, m_Project, target));
-        cmd = GetMakeCommandFor(mcBuild, target);
-        m_CommandQueue.Add(new CompilerCommand(cmd, wxEmptyString, m_Project, target));
+        CompilerCommand* cc;
+        wxString cmd;
+
+        // generate build jobs
+        PreprocessJob(m_Project, realTarget);
+        // loop all jobs and add them in the queue
+        while (!m_BuildJobTargetsList.empty())
+        {
+            BuildJobTarget bjt = GetNextJob();
+            ProjectBuildTarget* bt = bjt.project->GetBuildTarget(bjt.targetName);
+            if (bt)
+            {
+                cmd = GetMakeCommandFor(mcClean, bjt.project, bt);
+                cc = new CompilerCommand(cmd, wxEmptyString, bjt.project, bt);
+                m_CommandQueue.Add(cc);
+
+                cmd = GetMakeCommandFor(mcBuild, bjt.project, bt);
+                cc = new CompilerCommand(cmd, wxEmptyString, bjt.project, bt);
+                cc->mustWait = true; // wait for clean commands to finish
+                m_CommandQueue.Add(cc);
+            }
+        }
     }
     else
     {
-        Clean(target);
-        Build(target);
+        Clean(realTarget);
+        Build(realTarget);
     }
     return DoRunQueue();
 }
 
 int CompilerGCC::BuildWorkspace(const wxString& target)
 {
+    wxString realTarget = target;
+    if (realTarget.IsEmpty())
+        realTarget = GetTargetString();
+    if (realTarget.IsEmpty())
+        return -1;
+
     if (CheckDebuggerIsRunning())
         return -1;
 
     DoPrepareQueue();
     ClearLog();
+    m_IsWorkspaceOperation = true;
 
     // save files from all projects as they might require each other...
     ProjectsArray* arr = Manager::Get()->GetProjectManager()->GetProjects();
@@ -2195,28 +2326,22 @@ int CompilerGCC::BuildWorkspace(const wxString& target)
         }
     }
 
-    InitBuildState(bjWorkspace, target);
-    CalculateWorkspaceDependencies();
-    if (m_BuildDepsIndex >= (int)m_BuildDeps.GetCount())
-        return -1;
-    m_BuildingProjectIdx = m_BuildDeps[m_BuildDepsIndex];
-    m_pBuildingProject = Manager::Get()->GetProjectManager()->GetProjects()->Item(m_BuildingProjectIdx);
-    if (!m_pBuildingProject)
-        return -1;
-    DoBuild(m_pBuildingProject);
+    // create list of jobs to run (project->realTarget pairs)
+    PreprocessJob(0, realTarget);
+    InitBuildState(bjWorkspace, realTarget);
+
+    DoBuild();
+    m_IsWorkspaceOperation = false;
     return DoRunQueue();
 }
 
 int CompilerGCC::RebuildWorkspace(const wxString& target)
 {
-    if (CheckDebuggerIsRunning())
-        return -1;
-
     int ret = CleanWorkspace(target);
     if (ret != 0)
         return ret;
-    ResetBuildState();
-    return BuildWorkspace(target);
+    ret = BuildWorkspace(target);
+    return ret;
 }
 
 int CompilerGCC::CleanWorkspace(const wxString& target)
@@ -2226,17 +2351,22 @@ int CompilerGCC::CleanWorkspace(const wxString& target)
 
     DoPrepareQueue();
     ClearLog();
+    m_IsWorkspaceOperation = true;
 
     ResetBuildState();
     cbProject* bak = m_Project;
     ProjectsArray* arr = Manager::Get()->GetProjectManager()->GetProjects();
     for (size_t i = 0; i < arr->GetCount(); ++i)
     {
-        m_pBuildingProject = arr->Item(i);
+        m_Project = arr->Item(i);
         Clean(target);
     }
     ResetBuildState();
     m_Project = bak;
+
+    m_IsWorkspaceOperation = false;
+    Manager::Get()->GetMessageManager()->Log(m_PageIndex, _("Done."));
+    Manager::Get()->GetMessageManager()->Close();
     return 0;
 }
 
@@ -2255,14 +2385,21 @@ int CompilerGCC::KillProcess()
         if (!m_Processes[i])
             continue;
 
+    #ifdef __WXMSW__
+        Manager::Get()->GetMessageManager()->Log(m_PageIndex, _("Aborting process %d ... Be patient!"), i);
+    #endif // __WXMSW__
+
         // Close input pipe
         m_Processes[i]->CloseOutput();
+        ((PipedProcess*) m_Processes[i])->ForfeitStreams();
 
         ret = wxProcess::Kill(m_Pid[i], wxSIGTERM);
+
+    #ifndef __WXMSW__
         if(ret != wxKILL_OK)
         {
             // No need to tell the user about the errors - just keep him waiting.
-            Manager::Get()->GetMessageManager()->Log(m_PageIndex, _("Aborting process %d..."), i);
+            Manager::Get()->GetMessageManager()->Log(m_PageIndex, _("Aborting process %d ..."), i);
         }
         else switch (ret)
         {
@@ -2270,10 +2407,10 @@ int CompilerGCC::KillProcess()
 //            case wxKILL_NO_PROCESS: cbMessageBox(_("No process")); break;
 //            case wxKILL_BAD_SIGNAL: cbMessageBox(_("Bad signal")); break;
 //            case wxKILL_ERROR: cbMessageBox(_("Unspecified error")); break;
-
             case wxKILL_OK:
             default: break;//Manager::Get()->GetMessageManager()->Log(m_PageIndex, _("Process killed..."));
         }
+    #endif // __WXMSW__
     }
     return ret;
 }
@@ -2298,8 +2435,8 @@ ProjectBuildTarget* CompilerGCC::GetBuildTargetForFile(ProjectFile* pf)
         return m_Project->GetBuildTarget(pf->buildTargets[0]);
     // belongs to two or more build targets
     ProjectBuildTarget* bt = 0;
-    // if "All" is selected, ask for build target
-    if (m_HasTargetAll && m_TargetIndex == -1)
+    // if a virtual target is selected, ask for build target
+    if (m_RealTargetIndex == -1)
     {
         int idx = DoGUIAskForTarget();
         if (idx == -1)
@@ -2307,7 +2444,7 @@ ProjectBuildTarget* CompilerGCC::GetBuildTargetForFile(ProjectFile* pf)
         bt = m_Project->GetBuildTarget(idx);
     }
     else // use the currently selected build target
-        bt = m_Project->GetBuildTarget(m_TargetIndex); // pick the selected target
+        bt = m_Project->GetBuildTarget(m_RealTargetIndex); // pick the selected target
 
     return bt;
 }
@@ -2371,7 +2508,7 @@ int CompilerGCC::CompileFile(const wxString& file)
 
         Manager::Get()->GetMacrosManager()->Reset();
 
-        wxString cmd = GetMakeCommandFor(mcCompileFile, bt);
+        wxString cmd = GetMakeCommandFor(mcCompileFile, m_Project, bt);
         cmd.Replace(_T("$file"), fname);
         m_CommandQueue.Add(new CompilerCommand(cmd, wxEmptyString, m_Project, bt));
     }
@@ -2418,7 +2555,7 @@ void CompilerGCC::OnRun(wxCommandEvent& event)
 
 void CompilerGCC::OnCompileAndRun(wxCommandEvent& event)
 {
-    ProjectBuildTarget* target = DoAskForTarget();
+    ProjectBuildTarget* target = 0;//DoAskForTarget();
     m_RunAfterCompile = true;
     Build(target);
 //    if (m_CommandQueue.GetCount()) // if we have build commands, use the flag to run
@@ -2428,28 +2565,16 @@ void CompilerGCC::OnCompileAndRun(wxCommandEvent& event)
 
 void CompilerGCC::OnCompile(wxCommandEvent& event)
 {
-    int bak = m_TargetIndex;
-    if (event.GetId() == idMenuCompileTargetFromProjectManager)
-    {
-        // we 're called from a menu in ProjectManager
-        int idx = DoGUIAskForTarget();
-        if (idx == -1)
-            return;
-        else
-            m_TargetIndex = idx;
-
-        // let's check the selected project...
-        DoSwitchProjectTemporarily();
-    }
-    else if (event.GetId() == idMenuCompileFromProjectManager)
+    int bak = m_RealTargetIndex;
+    if (event.GetId() == idMenuCompileFromProjectManager)
     {
         // we 're called from a menu in ProjectManager
         // let's check the selected project...
         DoSwitchProjectTemporarily();
     }
-    ProjectBuildTarget* target = DoAskForTarget();
+    ProjectBuildTarget* target = 0;//DoAskForTarget();
     Build(target);
-    m_TargetIndex = bak;
+    m_RealTargetIndex = bak;
 }
 
 void CompilerGCC::OnCompileFile(wxCommandEvent& event)
@@ -2513,28 +2638,16 @@ void CompilerGCC::OnRebuild(wxCommandEvent& event)
         return;
     }
 
-    int bak = m_TargetIndex;
-    if (event.GetId() == idMenuRebuildTargetFromProjectManager)
-    {
-        // we 're called from a menu in ProjectManager
-        int idx = DoGUIAskForTarget();
-        if (idx == -1)
-            return;
-        else
-            m_TargetIndex = idx;
-
-        // let's check the selected project...
-        DoSwitchProjectTemporarily();
-    }
-    else if (event.GetId() == idMenuRebuildFromProjectManager)
+    int bak = m_RealTargetIndex;
+    if (event.GetId() == idMenuRebuildFromProjectManager)
     {
         // we 're called from a menu in ProjectManager
         // let's check the selected project...
         DoSwitchProjectTemporarily();
     }
-    ProjectBuildTarget* target = DoAskForTarget();
+    ProjectBuildTarget* target = 0;//DoAskForTarget();
     Rebuild(target);
-    m_TargetIndex = bak;
+    m_RealTargetIndex = bak;
 }
 
 void CompilerGCC::OnCompileAll(wxCommandEvent& event)
@@ -2602,28 +2715,16 @@ void CompilerGCC::OnClean(wxCommandEvent& event)
         return;
     }
 
-    int bak = m_TargetIndex;
-    if (event.GetId() == idMenuCleanTargetFromProjectManager)
-    {
-        // we 're called from a menu in ProjectManager
-        int idx = DoGUIAskForTarget();
-        if (idx == -1)
-            return;
-        else
-            m_TargetIndex = idx;
-
-        // let's check the selected project...
-        DoSwitchProjectTemporarily();
-    }
-    else if (event.GetId() == idMenuCleanFromProjectManager)
+    int bak = m_RealTargetIndex;
+    if (event.GetId() == idMenuCleanFromProjectManager)
     {
         // we 're called from a menu in ProjectManager
         // let's check the selected project...
         DoSwitchProjectTemporarily();
     }
-    ProjectBuildTarget* target = DoAskForTarget();
+    ProjectBuildTarget* target = 0;//DoAskForTarget();
     Clean(target);
-    m_TargetIndex = bak;
+    m_RealTargetIndex = bak;
 }
 
 void CompilerGCC::OnProjectCompilerOptions(wxCommandEvent& event)
@@ -2637,8 +2738,8 @@ void CompilerGCC::OnProjectCompilerOptions(wxCommandEvent& event)
         ProjectBuildTarget* target = 0;
         if (ftd->GetProject() == m_Project)
         {
-            if (!m_HasTargetAll || m_TargetIndex != -1)
-                target = m_Project->GetBuildTarget(m_TargetIndex);
+            if (m_RealTargetIndex != -1)
+                target = m_Project->GetBuildTarget(m_RealTargetIndex);
         }
         Configure(ftd->GetProject(), target);
     }
@@ -2652,18 +2753,18 @@ void CompilerGCC::OnProjectCompilerOptions(wxCommandEvent& event)
 
 void CompilerGCC::OnTargetCompilerOptions(wxCommandEvent& event)
 {
-    int bak = m_TargetIndex;
+    int bak = m_RealTargetIndex;
     // we 're called from a menu in ProjectManager
     int idx = DoGUIAskForTarget();
     if (idx == -1)
         return;
     else
-        m_TargetIndex = idx;
+        m_RealTargetIndex = idx; // TODO: check
        // let's check the selected project...
        DoSwitchProjectTemporarily();
 
-    ProjectBuildTarget* target = DoAskForTarget();
-    m_TargetIndex = bak;
+    ProjectBuildTarget* target = 0;//DoAskForTarget();
+    m_RealTargetIndex = bak;
     Configure(m_Project, target);
 }
 
@@ -2674,27 +2775,12 @@ void CompilerGCC::OnKillProcess(wxCommandEvent& event)
 
 void CompilerGCC::OnSelectTarget(wxCommandEvent& event)
 {
-     if (event.GetId() == idMenuSelectTargetAll)
-        m_TargetIndex = -1;
-    else if (event.GetId() == idToolTarget)
-#if wxCHECK_VERSION(2, 6, 2)
-        m_TargetIndex = m_ToolTarget->GetCurrentSelection() - (m_HasTargetAll ? 1 : 0);
-#else
-        m_TargetIndex = m_ToolTarget->GetSelection() - (m_HasTargetAll ? 1 : 0);
-#endif
+    int sel = event.GetSelection();
+    if (event.GetId() == idToolTarget)
+        DoUpdateTargetMenu(sel);
     else
-    {
-        for (int i = 0; i < MAX_TARGETS; ++i)
-        {
-            if (event.GetId() == idMenuSelectTargetOther[i])
-            {
-                m_TargetIndex = i;
-                break;
-            }
-        }
-    }
-    DoUpdateTargetMenu();
-}
+        DoUpdateTargetMenu(event.GetId() - idMenuSelectTargetOther[0]);
+} // end of OnSelectTarget
 
 void CompilerGCC::OnNextError(wxCommandEvent& event)
 {
@@ -2722,17 +2808,14 @@ void CompilerGCC::OnUpdateUI(wxUpdateUIEvent& event)
         mbar->Enable(idMenuCompile, !running && (prj || ed));
         mbar->Enable(idMenuCompileAll, !running && prj);
 //        mbar->Enable(idMenuCompileFromProjectManager, !running && prj);
-//        mbar->Enable(idMenuCompileTargetFromProjectManager, !running && prj);
         mbar->Enable(idMenuCompileFile, !running && ed);
 //        mbar->Enable(idMenuCompileFileFromProjectManager, !running && prj);
         mbar->Enable(idMenuRebuild, !running && (prj || ed));
         mbar->Enable(idMenuRebuildAll, !running && prj);
 //        mbar->Enable(idMenuRebuildFromProjectManager, !running && prj);
-//        mbar->Enable(idMenuRebuildTargetFromProjectManager, !running && prj);
         mbar->Enable(idMenuClean, !running && (prj || ed));
         mbar->Enable(idMenuCleanAll, !running && prj);
 //        mbar->Enable(idMenuCleanFromProjectManager, !running && prj);
-//        mbar->Enable(idMenuCleanTargetFromProjectManager, !running && prj);
         mbar->Enable(idMenuCompileAndRun, !running && (prj || ed));
         mbar->Enable(idMenuRun, !running && (prj || ed));
         mbar->Enable(idMenuKillProcess, running);
@@ -2769,14 +2852,24 @@ void CompilerGCC::OnUpdateUI(wxUpdateUIEvent& event)
 }
 
 void CompilerGCC::OnProjectActivated(CodeBlocksEvent& event)
-{   //NOTE: this function is also called on PROJECT_TARGETS_MODIFIED events to keep the combobox in sync
-    DoRecreateTargetMenu();
+{
+    //NOTE: this function is also called on PROJECT_TARGETS_MODIFIED events
+    //      to keep the combobox in sync
+
+    cbProject* active = Manager::Get()->GetProjectManager()->GetActiveProject();
+//    DBGLOG(_T("Active: %s, Event: %s"),
+//            active ? active->GetTitle().c_str() : _T("<none>"),
+//            event.GetProject()->GetTitle().c_str());
+    if (event.GetProject() == active)
+        UpdateProjectTargets(event.GetProject());
     event.Skip(); // *very* important! don't forget it...
 }
 
 void CompilerGCC::OnProjectLoaded(CodeBlocksEvent& event)
 {
-    DoRecreateTargetMenu();
+    // we only care to update the active project
+//    if (event.GetProject() == Manager::Get()->GetProjectManager()->GetActiveProject())
+//        UpdateProjectTargets(event.GetProject());
     event.Skip(); // *very* important! don't forget it...
 }
 

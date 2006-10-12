@@ -28,7 +28,7 @@ enum FileParsingStatus
 
 WX_DEFINE_ARRAY(Token*, TokensArray);
 
-typedef deque<Token*> TokenList;
+typedef vector<Token*> TokenList;
 
 typedef deque<int> TokenIdxList;
 typedef set<int, less<int> > TokenIdxSet;
@@ -50,13 +50,19 @@ enum TokenKind
 {
 	tkClass         = 0x0001,
 	tkNamespace     = 0x0002,
-	tkConstructor   = 0x0004,
-	tkDestructor    = 0x0008,
-	tkFunction      = 0x0010,
-	tkVariable      = 0x0020,
-	tkEnum          = 0x0040,
-	tkEnumerator    = 0x0080,
-	tkPreprocessor  = 0x0100,
+	tkTypedef       = 0x0004, // typedefs are stored as classes inheriting from the typedef'd type (taking advantage of existing inheritance code)
+	tkConstructor   = 0x0008,
+	tkDestructor    = 0x0010,
+	tkFunction      = 0x0020,
+	tkVariable      = 0x0040,
+	tkEnum          = 0x0080,
+	tkEnumerator    = 0x0100,
+	tkPreprocessor  = 0x0200,
+
+	// convenient masks
+	tkAnyContainer  = tkClass | tkNamespace | tkTypedef,
+	tkAnyFunction   = tkFunction | tkConstructor | tkDestructor,
+
 	tkUndefined     = 0xFFFF,
 };
 
@@ -95,18 +101,22 @@ class Token  : public BlockAllocated<Token, 10000>
 		unsigned int m_File;
 		unsigned int m_Line;
 		unsigned int m_ImplFile;
-		unsigned int m_ImplLine;
+		unsigned int m_ImplLine; // where the token was met
+		unsigned int m_ImplLineStart; // if token is impl, opening brace line
+		unsigned int m_ImplLineEnd; // if token is impl, closing brace line
 		TokenScope m_Scope;
 		TokenKind m_TokenKind;
 		bool m_IsOperator;
 		bool m_IsLocal; // found in a local file?
+		bool m_IsTemp; // if true, the tree deletes it in FreeTemporaries()
 
         int m_ParentIndex;
         TokenIdxSet m_Children;
         TokenIdxSet m_Ancestors;
+        TokenIdxSet m_DirectAncestors;
         TokenIdxSet m_Descendants;
 
-		bool m_Bool; // custom bool value
+		void* m_pUserData; // custom user-data (the classbrowser expects it to be a pointer to a cbProject)
 	protected:
         TokensTree* m_pTree;
 		int m_Self; // current index in the tree
@@ -136,9 +146,11 @@ class TokensTree
         void RecalcFreeList();
         void RecalcData();
         int TokenExists(const wxString& name, int parent, short int kindMask);
-        size_t FindMatches(const wxString& s,TokenIdxSet& result,bool caseSensitive,bool is_prefix);
+        size_t FindMatches(const wxString& s,TokenIdxSet& result,bool caseSensitive,bool is_prefix, int kindMask = 0xffff);
+        size_t FindTokensInFile(const wxString& file, TokenIdxSet& result, short int kindMask);
         void RemoveFile(const wxString& filename);
         void RemoveFile(int index);
+        void FreeTemporaries();
         virtual ~TokensTree();
 
         // Parsing related functions
@@ -149,6 +161,9 @@ class TokensTree
         void FlagFileForReparsing(const wxString& filename);
         void FlagFileAsParsed(const wxString& filename);
         bool IsFileParsed(const wxString& filename);
+
+        void MarkFileTokensAsLocal(const wxString& filename, bool local = true, void* userData = 0);
+        void MarkFileTokensAsLocal(size_t file, bool local = true, void* userData = 0);
 
         TokenList m_Tokens; /// Contains the pointers to all the tokens
         TokenSearchTree m_Tree; /** Tree containing the indexes to the tokens
@@ -174,6 +189,8 @@ class TokensTree
 
         int AddTokenToList(Token* newToken,int forceidx = -1);
         void RemoveTokenFromList(int idx);
+
+        void RecalcFullInheritance(int parentIdx, TokenIdxSet& result); // called by RecalcData
 };
 
 

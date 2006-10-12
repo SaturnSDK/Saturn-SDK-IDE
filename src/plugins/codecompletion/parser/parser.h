@@ -34,10 +34,12 @@
 #define PARSER_IMG_ENUM				15
 #define PARSER_IMG_ENUMERATOR		16
 #define PARSER_IMG_NAMESPACE 		17
-#define PARSER_IMG_SYMBOLS_FOLDER	18
-#define PARSER_IMG_ENUMS_FOLDER	    19
-#define PARSER_IMG_PREPROC_FOLDER	20
-#define PARSER_IMG_OTHERS_FOLDER	21
+#define PARSER_IMG_TYPEDEF     	18
+#define PARSER_IMG_SYMBOLS_FOLDER	19
+#define PARSER_IMG_ENUMS_FOLDER	    20
+#define PARSER_IMG_PREPROC_FOLDER	21
+#define PARSER_IMG_OTHERS_FOLDER	22
+#define PARSER_IMG_TYPEDEF_FOLDER	23
 
 #define PARSER_IMG_MIN PARSER_IMG_CLASS_FOLDER
 #define PARSER_IMG_MAX PARSER_IMG_OTHERS_FOLDER
@@ -62,11 +64,17 @@ struct ParserOptions
 	bool useSmartSense;
 };
 
+enum BrowserDisplayFilter
+{
+    bdfFile = 0,
+    bdfProject,
+    bdfWorkspace,
+};
+
 struct BrowserOptions
 {
 	bool showInheritance; // default: false
-	bool viewFlat; // default: false
-	bool showAllSymbols; // default: false
+	BrowserDisplayFilter displayFilter; // default: bdfWorkspace
 };
 
 class ClassBrowser;
@@ -83,8 +91,9 @@ class Parser : public wxEvtHandler
 		void BatchParse(const wxArrayString& filenames);
 		bool Parse(const wxString& filename, bool isLocal = true);
 		bool Parse(const wxString& bufferOrFilename, bool isLocal, ParserThreadOptions& opts);
-		bool ParseBuffer(const wxString& buffer, bool isLocal = true, bool bufferSkipBlocks = false);
+		bool ParseBuffer(const wxString& buffer, bool isLocal = true, bool bufferSkipBlocks = false, bool isTemp = false);
 		bool ParseBufferForFunctions(const wxString& buffer);
+		bool ParseBufferForUsingNamespace(const wxString& buffer, wxArrayString& result);
 		bool Reparse(const wxString& filename, bool isLocal = true);
         bool ReparseModifiedFiles();
 		bool RemoveFile(const wxString& filename);
@@ -109,7 +118,7 @@ class Parser : public wxEvtHandler
 #endif // STANDALONE
 		Token* FindTokenByName(const wxString& name, bool globalsOnly = true, short int kindMask = 0xFFFF) const;
 		Token* FindChildTokenByName(Token* parent, const wxString& name, bool useInheritance = false, short int kindMask = 0xFFFF) const;
-		size_t FindMatches(const wxString& s,TokenList& result,bool caseSensitive = true,bool is_prefix = true,bool markedonly = true);
+		size_t FindMatches(const wxString& s,TokenList& result,bool caseSensitive = true,bool is_prefix = true);
 
 		ParserOptions& Options(){ return m_Options; }
 		BrowserOptions& ClassBrowserOptions(){ return m_BrowserOptions; }
@@ -125,14 +134,12 @@ class Parser : public wxEvtHandler
 		unsigned int GetFilesCount();
 
 		bool Done();
+		void LinkInheritance(bool tempsOnly = false);
+		void MarkFileTokensAsLocal(const wxString& filename, bool local, void* userData = 0);
 
 		unsigned int GetMaxThreads()const { return m_Pool.GetConcurrentThreads(); }
 		void SetMaxThreads(unsigned int max){ m_Pool.SetConcurrentThreads(max); }
 
-		void BuildTree(wxTreeCtrl& tree);
-		wxTreeItemId GetRootNode(){ return m_RootNode; }
-
-		void AbortBuildingTree(); // Reserved for future expansion
 		void TerminateAllThreads();
 	protected:
 		void OnParseFile(const wxString& filename,int flags);
@@ -143,7 +150,6 @@ class Parser : public wxEvtHandler
         void ConnectEvents();
         void DisconnectEvents();
 
-		void LinkInheritance(bool tempsOnly = false);
 		ParserOptions m_Options;
 		BrowserOptions m_BrowserOptions;
 		SearchTree<wxString> m_GlobalIncludes;

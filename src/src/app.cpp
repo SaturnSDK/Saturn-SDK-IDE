@@ -27,6 +27,7 @@
 #include <sdk.h>
 #include "app.h"
 #include <wx/fs_zip.h>
+#include <wx/fs_mem.h>
 #include <wx/xrc/xmlres.h>
 #include <wx/cmdline.h>
 #include <wx/regex.h>
@@ -64,10 +65,73 @@
 
 #include "appglobals.h"
 
+#ifndef CB_PRECOMP
+    #include "xtra_res.h"
+#endif
+
 namespace
 {
+// this list will be filled with files
+// (received through DDE or command line)
+// to be loaded after the app has started up
+wxArrayString s_DelayedFilesToOpen;
+
+#ifdef __WXMSW__
+bool s_Loading = false;
+
+class DDEServer : public wxServer
+{
+	public:
+		DDEServer(MainFrame* frame) : m_Frame(frame) {}
+		wxConnectionBase *OnAcceptConnection(const wxString& topic);
+		MainFrame* GetFrame(){ return m_Frame; }
+		void SetFrame(MainFrame* frame){ m_Frame = frame; }
+	private:
+		MainFrame* m_Frame;
+};
+
+class DDEConnection : public wxConnection
+{
+	public:
+		DDEConnection(MainFrame* frame) : m_Frame(frame) {}
+		bool OnExecute(const wxString& topic, wxChar *data, int size, wxIPCFormat format);
+	private:
+		MainFrame* m_Frame;
+};
+
+wxConnectionBase* DDEServer::OnAcceptConnection(const wxString& topic)
+{
+	return topic == DDE_TOPIC ? new DDEConnection(m_Frame) : 0L;
+}
+
+bool DDEConnection::OnExecute(const wxString& topic, wxChar *data, int size, wxIPCFormat format)
+{
+	wxString strData(data);
+
+	if (!strData.StartsWith(_T("[Open(\"")))
+		return false;
+
+	wxRegEx reCmd(_T("\"(.*)\""));
+	if (reCmd.Matches(strData))
+	{
+		const wxString file = reCmd.GetMatch(strData, 1);
+		if (s_Loading)
+		{
+			s_DelayedFilesToOpen.Add(file);
+		}
+		else if (m_Frame)
+		{
+			m_Frame->Open(file, true); // add to history, files that open through DDE
+		}
+	}
+	return true;
+}
+
+DDEServer* g_DDEServer = 0L;
+#endif
+
 #if wxUSE_CMDLINE_PARSER
-static const wxCmdLineEntryDesc cmdLineDesc[] =
+const wxCmdLineEntryDesc cmdLineDesc[] =
 {
     { wxCMD_LINE_SWITCH, _T("h"), _T("help"), _T("show this help message"), wxCMD_LINE_VAL_NONE, wxCMD_LINE_OPTION_HELP },
 #ifdef __WXMSW__
@@ -89,14 +153,6 @@ static const wxCmdLineEntryDesc cmdLineDesc[] =
 };
 #endif // wxUSE_CMDLINE_PARSER
 
-#ifdef __WXMSW__
-DDEServer* g_DDEServer = 0L;
-#endif
-
-// this list will be filled with DDE files to load after the app has started up
-wxArrayString s_DdeFilesToOpen;
-bool s_Loading = false;
-
 class Splash
 {
     public:
@@ -104,7 +160,7 @@ class Splash
         {
             if (show)
             {
-                wxBitmap bmp = LoadPNGWindows2000Hack(ConfigManager::ReadDataPath() + _T("/images/splash_new.png"));
+                wxBitmap bmp = cbLoadBitmap(ConfigManager::ReadDataPath() + _T("/images/splash_new.png"));
                 m_pSplash = new cbSplashScreen(bmp, -1, 0, -1, wxNO_BORDER | wxFRAME_NO_TASKBAR);
                 Manager::Yield();
             }
@@ -130,6 +186,26 @@ BEGIN_EVENT_TABLE(CodeBlocksApp, wxApp)
 	EVT_COMPILER_FINISHED(CodeBlocksApp::OnBatchBuildDone)
 END_EVENT_TABLE()
 
+#ifdef __WXMAC__
+#include "wx/mac/corefoundation/cfstring.h"
+#include "wx/intl.h"
+
+#include <CoreFoundation/CFBundle.h>
+#include <CoreFoundation/CFURL.h>
+
+// returns e.g. "/Applications/appname.app/Contents/Resources" if application is bundled,
+// or the directory of the binary, e.g. "/usr/local/bin/appname", if it is *not* bundled.
+static wxString GetResourcesDir()
+{
+    CFURLRef resourcesURL = CFBundleCopyResourcesDirectoryURL(CFBundleGetMainBundle());
+    CFURLRef absoluteURL = CFURLCopyAbsoluteURL(resourcesURL); // relative -> absolute
+    CFRelease(resourcesURL);
+    CFStringRef cfStrPath = CFURLCopyFileSystemPath(absoluteURL,kCFURLPOSIXPathStyle);
+    CFRelease(absoluteURL);
+    return wxMacCFStringHolder(cfStrPath).AsString(wxLocale::GetSystemEncoding());
+}
+#endif
+
 bool CodeBlocksApp::LoadConfig()
 {
     if (ParseCmdLine(0L) != 0)
@@ -142,6 +218,8 @@ bool CodeBlocksApp::LoadConfig()
     // find out about data path
 #ifdef __WXMSW__
     wxString data = GetAppPath(); // under windows it is under the exe dir
+#elif defined(__WXMAC__)
+    wxString data = GetResourcesDir(); // CodeBlocks.app/Contents/Resources
 #else
     #ifdef APP_PREFIX
         wxString data = wxT(APP_PREFIX); // under linux, get the preprocessor value
@@ -150,7 +228,12 @@ bool CodeBlocksApp::LoadConfig()
     #endif
 #endif
     wxString actualData = _T("/share/codeblocks");
+#ifdef __WXMAC__
+    if (!data.Contains(wxString(_T("/Resources"))))
+        data << _T("/..") << actualData; // not a bundle, use relative path
+#else
     data << actualData;
+#endif
     // check if the user has passed --prefix in the command line
     if (!m_Prefix.IsEmpty())
         data = m_Prefix + actualData;
@@ -169,9 +252,9 @@ bool CodeBlocksApp::LoadConfig()
     return true;
 }
 
-void CodeBlocksApp::InitAssociations(MainFrame* frame)
-{
 #ifdef __WXMSW__
+void CodeBlocksApp::InitAssociations()
+{
 	ConfigManager *cfg = Manager::Get()->GetConfigManager(_T("app"));
 	if (!m_NoAssocs && cfg->ReadBool(_T("/environment/check_associations"), true))
 	{
@@ -197,8 +280,8 @@ void CodeBlocksApp::InitAssociations(MainFrame* frame)
 
         }
     }
-#endif
 }
+#endif
 
 void CodeBlocksApp::InitDebugConsole()
 {
@@ -222,24 +305,14 @@ void CodeBlocksApp::InitExceptionHandler()
 #endif
 }
 
-void CodeBlocksApp::InitImageHandlers()
-{
-	wxInitAllImageHandlers();
-}
-
 
 bool CodeBlocksApp::InitXRCStuff()
 {
-    // load all application-resources
-    wxFileSystem::AddHandler(new wxZipFSHandler);
-    wxXmlResource::Get()->InitAllHandlers();
-
-    wxString res = ConfigManager::ReadDataPath() + _T("/resources.zip");
-
-    if (!CheckResource(res))
-    	return false;
-    /// @todo Checkout why it doesn't work with VC++ unless "#zip:*.xrc" appended
-	wxXmlResource::Get()->Load(res+_T("#zip:*.xrc"));
+    if (!Manager::LoadResource(_T("resources.zip")))
+        {
+            ComplainBadInstall();
+            return false;
+        }
 	return true;
 }
 
@@ -259,7 +332,7 @@ MainFrame* CodeBlocksApp::InitFrame()
     if (ParseCmdLine(frame) == 0)
     {
         if (Manager::Get()->GetConfigManager(_T("app"))->ReadBool(_T("/environment/blank_workspace"), true) == false)
-            Manager::Get()->GetProjectManager()->LoadWorkspace(DEFAULT_WORKSPACE);
+            Manager::Get()->GetProjectManager()->LoadWorkspace();
     }
 
     if (!m_Batch)
@@ -297,11 +370,12 @@ void CodeBlocksApp::InitLocale()
 {
     ConfigManager* cfg = Manager::Get()->GetConfigManager(_T("app"));
 
-
     bool i18n=cfg->ReadBool(_T("/environment/I18N"),LOCALIZE);
-	int lng =-1;	// -1 = Don't use locale; the default is 0 = Use locale
-	if(i18n)
-		lng = cfg->ReadInt(_T("/locale/language"),(int)0);
+
+	if(!i18n)
+        return; // Localisation turned off? Skip the rest!
+
+    int lng = cfg->ReadInt(_T("/locale/language"),(int)0);
 
 	int catalogNum = cfg->ReadInt(_T("/locale/catalogNum"), (int)0);
 	if (catalogNum == 0)
@@ -332,39 +406,48 @@ void CodeBlocksApp::InitLocale()
 
     }
 	cfg->Write(_T("/locale/catalogNum"), (int)catalogNum);
-	cfg->Write(_T("/environment/I18N"),  (bool)i18n);
-    cfg->Write(_T("/locale/language"), (int)lng);
+    //these don't ever change in this function, no need to write them out
+    //if non-existent, defaults will be used, which is just as good
+	//cfg->Write(_T("/environment/I18N"),  (bool)i18n);
+    //cfg->Write(_T("/locale/language"), (int)lng);
 }
 
 bool CodeBlocksApp::OnInit()
 {
+#ifdef __WXMSW__
     s_Loading = true;
+#endif
+    m_pBatchBuildDialog = 0;
+    m_BatchExitCode = 0;
     m_Batch = false;
     m_BatchNotify = false;
     m_Build = false;
     m_ReBuild = false;
-    m_BatchExitCode = 0;
     m_BatchWindowAutoClose = true;
-    m_pBatchBuildDialog = 0;
 
 	wxTheClipboard->Flush();
 
     static CrashHandler crash_handler;
+
+    // we'll do this once and for all at startup
+    wxFileSystem::AddHandler(new wxZipFSHandler);
+    wxFileSystem::AddHandler(new wxMemoryFSHandler);
+    wxXmlResource::Get()->InsertHandler(new wxToolBarAddOnXmlHandler);
+    wxInitAllImageHandlers();
+    wxXmlResource::Get()->InitAllHandlers();
 
     try
     {
     #if (wxUSE_ON_FATAL_EXCEPTION == 1)
         wxHandleFatalExceptions(true);
     #endif
-        InitExceptionHandler();
 
+        InitExceptionHandler();
 
         if(!LoadConfig())
             return false;
 
-        InitImageHandlers();
-
-        if(!InitXRCStuff())
+        if(!m_Batch && !InitXRCStuff())
         {
            // wsSafeShowMessage(_T("Fatal error"), _T("Initialisation of resources failed."));
             return false;
@@ -376,7 +459,7 @@ bool CodeBlocksApp::OnInit()
 
         InitLocale();
         m_pSingleInstance = 0;
-        if (Manager::Get()->GetConfigManager(_T("app"))->ReadBool(_T("/environment/single_instance"), true))
+        if(Manager::Get()->GetConfigManager(_T("app"))->ReadBool(_T("/environment/single_instance"), true))
         {
             const wxString name = wxString::Format(_T("Code::Blocks-%s"), wxGetUserId().c_str());
 
@@ -392,12 +475,16 @@ bool CodeBlocksApp::OnInit()
         InitDebugConsole();
 
         Manager::SetBatchBuild(m_Batch);
+        Manager::Get()->GetScriptingManager();
         MainFrame* frame = InitFrame();
 
         if (m_Batch)
         {
+#ifdef __WXMSW__
             s_Loading = false;
-            DelayLoadDdeFiles(frame);
+#endif
+            LoadDelayedFiles(frame);
+
             BatchJob();
             frame->Close();
             return true;
@@ -412,8 +499,13 @@ bool CodeBlocksApp::OnInit()
         // run startup script
         try
         {
-            Manager::Get()->GetScriptingManager()->LoadScript(_T("startup.script"));
-            SqPlus::SquirrelFunction<void>("main")();
+            wxString startup = ConfigManager::LocateDataFile(_T("startup.script"), sdScriptsUser | sdScriptsGlobal);
+            if (!startup.IsEmpty())
+            {
+                Manager::Get()->GetScriptingManager()->LoadScript(startup);
+                SqPlus::SquirrelFunction<void> f("main");
+                f();
+            }
         }
         catch (SquirrelError& exception)
         {
@@ -427,10 +519,13 @@ bool CodeBlocksApp::OnInit()
         frame->Show();
 
         frame->ShowTips(); // this func checks if the user wants tips, so no need to check here
-        InitAssociations(frame);
 
+#ifdef __WXMSW__
+        InitAssociations();
         s_Loading = false;
-        DelayLoadDdeFiles(frame);
+#endif
+
+        LoadDelayedFiles(frame);
 
         return true;
     }
@@ -459,8 +554,7 @@ int CodeBlocksApp::OnExit()
 	wxTheClipboard->Flush();
 
 #ifdef __WXMSW__
-	if (g_DDEServer)
-		delete g_DDEServer;
+    delete g_DDEServer;
     if (m_ExceptionHandlerLib)
         FreeLibrary(m_ExceptionHandlerLib);
 #endif
@@ -475,7 +569,9 @@ int CodeBlocksApp::OnRun()
 {
     try
     {
-        return wxApp::OnRun();
+        int retval = wxApp::OnRun();
+        // wx 2.6.3 docs says that OnRun() function's return value is used as exit code
+        return m_Batch ? m_BatchExitCode : retval;
     }
     catch (cbException& exception)
     {
@@ -590,7 +686,7 @@ void CodeBlocksApp::OnBatchBuildDone(CodeBlocksEvent& event)
     else
         wxBell();
 
-    if (m_pBatchBuildDialog && m_BatchWindowAutoClose && (m_BatchExitCode == 0))
+    if (m_pBatchBuildDialog && m_BatchWindowAutoClose)
     {
         m_pBatchBuildDialog->EndModal(wxID_OK);
         m_pBatchBuildDialog->Destroy();
@@ -598,26 +694,19 @@ void CodeBlocksApp::OnBatchBuildDone(CodeBlocksEvent& event)
     }
 }
 
-bool CodeBlocksApp::CheckResource(const wxString& res)
+void CodeBlocksApp::ComplainBadInstall()
 {
-    if (!wxFileExists(res))
-    {
-    	wxString msg;
-    	msg.Printf(_T("Cannot find %s...\n"
-    		"%s was configured to be installed in '%s'.\n"
-    		"Please use the command-line switch '--prefix' or "
-            "set the CODEBLOCKS_DATA_DIR environment variable "
-    		"to point where %s is installed,\n"
-    		"or try re-installing the application..."),
-    		res.c_str(),
-    		g_AppName.c_str(),
-    		ConfigManager::ReadDataPath().c_str(),
-    		g_AppName.c_str());
-    	cbMessageBox(msg);
-    	return false;
-    }
-
-    return true;
+    wxString msg;
+    msg.Printf(_T("Cannot find resources...\n"
+        "%s was configured to be installed in '%s'.\n"
+        "Please use the command-line switch '--prefix' or "
+        "set the CODEBLOCKS_DATA_DIR environment variable "
+        "to point where %s is installed,\n"
+        "or try re-installing the application..."),
+        g_AppName.c_str(),
+        ConfigManager::ReadDataPath().c_str(),
+        g_AppName.c_str());
+    cbMessageBox(msg);
 }
 
 wxString CodeBlocksApp::GetAppPath() const
@@ -675,14 +764,14 @@ int CodeBlocksApp::ParseCmdLine(MainFrame* handlerFrame)
                         if (ft == ftCodeBlocksProject)
                         {
                             hasProj = true;
-                            s_DdeFilesToOpen.Add(parser.GetParam(param));
+                            s_DelayedFilesToOpen.Add(parser.GetParam(param));
                         }
                         else if (ft == ftCodeBlocksWorkspace)
                         {
                             // only one workspace can be opened
                             hasWksp = true;
-                            s_DdeFilesToOpen.Clear(); // remove all other files
-                            s_DdeFilesToOpen.Add(parser.GetParam(param)); // and add only the workspace
+                            s_DelayedFilesToOpen.Clear(); // remove all other files
+                            s_DelayedFilesToOpen.Add(parser.GetParam(param)); // and add only the workspace
                             break; // and stop processing any more files
                         }
                     }
@@ -698,9 +787,6 @@ int CodeBlocksApp::ParseCmdLine(MainFrame* handlerFrame)
 #ifdef __WXMSW__
 					m_NoDDE = parser.Found(_T("no-dde"));
 					m_NoAssocs = parser.Found(_T("no-check-associations"));
-#else
-                    m_NoDDE = false;
-                    m_NoAssocs = false;
 #endif
 					m_NoSplash = parser.Found(_T("no-splash-screen"));
 					m_HasDebugLog = parser.Found(_T("debug-log"));
@@ -761,48 +847,14 @@ void CodeBlocksApp::SetupPersonality(const wxString& personality)
         Manager::Get()->GetPersonalityManager()->SetPersonality(personality, true);
 }
 
-void CodeBlocksApp::DelayLoadDdeFiles(MainFrame* frame)
+void CodeBlocksApp::LoadDelayedFiles(MainFrame *const frame)
 {
-    for (size_t i = 0; i < s_DdeFilesToOpen.GetCount(); ++i)
+    for (size_t i = 0; i < s_DelayedFilesToOpen.GetCount(); ++i)
     {
-        frame->Open(s_DdeFilesToOpen[i], true);
+        frame->Open(s_DelayedFilesToOpen[i], true);
     }
-    s_DdeFilesToOpen.Clear();
+    s_DelayedFilesToOpen.Clear();
 }
-
-#ifdef __WXMSW__
-//// DDE
-
-wxConnectionBase* DDEServer::OnAcceptConnection(const wxString& topic)
-{
-    if (topic == DDE_TOPIC)
-        return new DDEConnection(m_Frame);
-
-    // unknown topic
-    return 0L;
-}
-
-bool DDEConnection::OnExecute(const wxString& topic, wxChar *data, int size, wxIPCFormat format)
-{
-	wxString strData = data;
-	if (!strData.StartsWith(_T("[Open(\"")))
-		return false;
-
-	wxRegEx reCmd(_T("\"(.*)\""));
-	if (reCmd.Matches(strData))
-	{
-		wxString file = reCmd.GetMatch(strData, 1);
-		if (s_Loading)
-            s_DdeFilesToOpen.Add(file);
-        else
-        {
-            if(m_Frame)
-                m_Frame->Open(file, true); // add to history, files that open through DDE
-        }
-	}
-    return true;
-}
-#endif
 
 // event handlers
 
@@ -815,9 +867,17 @@ void CodeBlocksApp::OnAppActivate(wxActivateEvent& event)
 
     if (Manager::Get()->GetEditorManager() && Manager::Get()->GetConfigManager(_T("app"))->ReadBool(_T("/environment/check_modified_files"), true))
     {
+    	// for some reason a mouse up event doen's make it into scintilla (scintilla bug)
+    	// therefor the workaournd is not to directly call the editorManager, but
+    	// take a detour through an event
+    	// the bug is when the file has been offered to reload, no matter what answer you
+    	// give the mouse is in a selecting mode, adding/removing things to it's selection as you
+    	// move it around
+    	// so : idEditorManagerCheckFiles, EditorManager::OnCheckForModifiedFiles just exist for this workaround
         wxCommandEvent evt(wxEVT_COMMAND_MENU_SELECTED, idEditorManagerCheckFiles);
         wxPostEvent(Manager::Get()->GetEditorManager(), evt);
 //        Manager::Get()->GetEditorManager()->CheckForExternallyModifiedFiles();
+        Manager::Get()->GetProjectManager()->CheckForExternallyModifiedProjects();
     }
     cbEditor* ed = Manager::Get()->GetEditorManager()
                     ? Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor()

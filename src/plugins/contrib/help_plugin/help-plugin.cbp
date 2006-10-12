@@ -1,17 +1,18 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <CodeBlocks_project_file>
-	<FileVersion major="1" minor="4" />
+	<FileVersion major="1" minor="5" />
 	<Project>
 		<Option title="Help Plugin (wx2.6)" />
 		<Option pch_mode="0" />
+		<Option default_target="" />
 		<Option compiler="gcc" />
+		<Option virtualFolders="" />
 		<Build>
 			<Target title="help_plugin">
 				<Option output="..\..\..\devel\share\CodeBlocks\plugins\help_plugin.dll" />
 				<Option type="3" />
 				<Option compiler="gcc" />
 				<Option host_application="..\..\..\devel\codeblocks.exe" />
-				<Option includeInTargetAll="1" />
 				<Compiler>
 					<Add option="-Wall" />
 					<Add option="-g" />
@@ -52,7 +53,7 @@
 					<Add directory="$(#WX.lib)\gcc_dll$(WX_CFG)" />
 				</Linker>
 				<ExtraCommands>
-					<Add after="zip -j9 ..\..\..\devel\share\CodeBlocks\help_plugin.zip *.xrc" />
+					<Add after="zip -j9 ..\..\..\devel\share\CodeBlocks\help_plugin.zip manifest.xml *.xrc" />
 					<Mode after="always" />
 				</ExtraCommands>
 			</Target>
@@ -61,6 +62,9 @@
 				<Variable name="WX_CFG" value="" />
 			</Environment>
 		</Build>
+		<VirtualTargets>
+			<Add alias="All" targets="help_plugin;" />
+		</VirtualTargets>
 		<Unit filename="HelpConfigDialog.cpp">
 			<Option compilerVar="CPP" />
 			<Option target="help_plugin" />
@@ -97,5 +101,12 @@
 			<Option link="0" />
 			<Option target="help_plugin" />
 		</Unit>
+		<Unit filename="manifest.xml">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="help_plugin" />
+		</Unit>
+		<Extensions />
 	</Project>
 </CodeBlocks_project_file>

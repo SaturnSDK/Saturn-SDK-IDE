@@ -20,7 +20,6 @@
   #include <wx/xrc/xmlres.h>
   #include "configmanager.h"
   #include "globals.h"
-  #include "licenses.h"
   #include "manager.h"
 #endif
 #include "editpairdlg.h"
@@ -29,8 +28,11 @@
 // Uncomment this for tracing of method calls in C::B's DebugLog:
 //#define TRACE_ENVVARS
 
-// Implement the plugin's hooks
-CB_IMPLEMENT_PLUGIN(EnvVars, "EnvVars");
+// Register the plugin
+namespace
+{
+    PluginRegistrant<EnvVars> reg(_T("EnvVars"));
+};
 
 BEGIN_EVENT_TABLE(EnvVars, cbPlugin)
 END_EVENT_TABLE()
@@ -58,15 +60,6 @@ END_EVENT_TABLE()
 EnvVars::EnvVars()
 {
   //ctor
-  m_PluginInfo.name          = _T("EnvVars");
-  m_PluginInfo.title         = _("Environment variables");
-  m_PluginInfo.version       = _T("0.92");
-  m_PluginInfo.description   = _("Sets up environment variables within the focus of Code::Blocks.");
-  m_PluginInfo.author        = _T("Martin Halle");
-  m_PluginInfo.authorEmail   = _T("codeblocks@martin-halle.de");
-  m_PluginInfo.authorWebsite = _T("");
-  m_PluginInfo.thanksTo      = _("Yiannis Mandravellos, Thomas Denk and the whole Code::Blocks team.");
-  m_PluginInfo.license       = LICENSE_GPL;
 }// EnvVars
 
 void EnvVars::OnAttach()
@@ -76,7 +69,10 @@ void EnvVars::OnAttach()
     Manager::Get()->GetMessageManager()->DebugLog(_T("OnAttach"));
 #endif
 
-  Manager::Get()->Loadxrc(_T("/envvars.zip#zip:envvars.xrc"));
+  if(!Manager::LoadResource(_T("envvars.zip")))
+  {
+    NotifyMissingFile(_T("envvars.zip"));
+  }
 
   // load and apply configuration (to application only)
   ConfigManager *cfg = Manager::Get()->GetConfigManager(_T("envvars"));
@@ -228,8 +224,6 @@ void EnvVarsConfigDlg::SaveSettings()
     cfg_key.Printf(_T("EnvVar%d"), i);
 		cfg->Write(cfg_key, txt);
 	}// for
-
-  plugin->OnAttach();
 }// SaveSettings
 
 void EnvVarsConfigDlg::OnAddEnvVarClick(wxCommandEvent& WXUNUSED(event))
@@ -284,8 +278,8 @@ void EnvVarsConfigDlg::OnEditEnvVarClick(wxCommandEvent& WXUNUSED(event))
   if (key.IsEmpty())
     return;
 
-  wxString old_key   = key;
   wxString value     = lstEnvVars->GetStringSelection().AfterFirst(_T('=')).Trim(true).Trim(false);
+  wxString old_key   = key;
   wxString old_value = value;
 
   EditPairDlg dlg(this, key, value, _("Edit variable"),
@@ -296,14 +290,36 @@ void EnvVarsConfigDlg::OnEditEnvVarClick(wxCommandEvent& WXUNUSED(event))
     key.Trim(true).Trim(false);
     value.Trim(true).Trim(false);
 
-    if (value != old_value)
+    // filter illegal environment variables with no key
+    if (key.IsEmpty())
     {
+      cbMessageBox(_("Cannot set an empty environment variable key."),
+                   _("Error"), wxOK | wxCENTRE | wxICON_ERROR);
+      return;
+    }
+
+    // is this environment variable to be set?
+    bool bSet = (   ((key != old_key) || (value != old_value))
+                 && lstEnvVars->IsChecked(sel) );
+
+    if (bSet)
+    {
+      // unset the old environment variable if it's key name has changed
+      if (key != old_key)
+      {
+        if (!wxUnsetEnv(old_key))
+          Manager::Get()->GetMessageManager()->Log(_("Unsetting environment variable '%s' failed."),
+            old_key.c_str());
+      }
+
+      // set the new environment
       if (!wxSetEnv(key, value))
         Manager::Get()->GetMessageManager()->Log(_("Setting environment variable '%s' failed."),
           key.c_str());
-
-      lstEnvVars->SetString(sel, key + _T(" = ") + value);
     }
+
+    // update the GUI to the (new/updated/same) key/value pair anyway
+    lstEnvVars->SetString(sel, key + _T(" = ") + value);
   }
 }// OnEditEnvVarClick
 

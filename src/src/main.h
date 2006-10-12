@@ -39,30 +39,44 @@ class MainFrame : public wxFrame
         bool OpenGeneric(const wxString& filename, bool addToHistory = true);
 
         // event handlers
+
         void OnEraseBackground(wxEraseEvent& event);
         void OnSize(wxSizeEvent& event);
         void OnApplicationClose(wxCloseEvent& event);
         void OnStartHereLink(wxCommandEvent& event);
         void OnStartHereVarSubst(wxCommandEvent& event);
 
-        void OnFileNewEmpty(wxCommandEvent& event);
+        // File->New submenu entries handler
+        void OnFileNewWhat(wxCommandEvent& event);
+
+        void OnFileNew(wxCommandEvent& event);
         void OnFileOpen(wxCommandEvent& event);
         void OnFileReopenProject(wxCommandEvent& event);
         void OnFileOpenRecentProjectClearHistory(wxCommandEvent& event);
         void OnFileReopen(wxCommandEvent& event);
         void OnFileOpenRecentClearHistory(wxCommandEvent& event);
+		void OnFileImportProjectDevCpp(wxCommandEvent& event);
+		void OnFileImportProjectMSVC(wxCommandEvent& event);
+		void OnFileImportProjectMSVCWksp(wxCommandEvent& event);
+		void OnFileImportProjectMSVS(wxCommandEvent& event);
+		void OnFileImportProjectMSVSWksp(wxCommandEvent& event);
         void OnFileSave(wxCommandEvent& event);
         void OnFileSaveAs(wxCommandEvent& event);
         void OnFileSaveAllFiles(wxCommandEvent& event);
+        void OnFileSaveProject(wxCommandEvent& event);
+        void OnFileSaveProjectAs(wxCommandEvent& event);
+        void OnFileSaveProjectTemplate(wxCommandEvent& event);
+        void OnFileSaveProjectAllProjects(wxCommandEvent& event);
         void OnFileOpenDefWorkspace(wxCommandEvent& event);
         void OnFileSaveWorkspace(wxCommandEvent& event);
         void OnFileSaveWorkspaceAs(wxCommandEvent& event);
         void OnFileCloseWorkspace(wxCommandEvent& event);
         void OnFileClose(wxCommandEvent& event);
         void OnFileCloseAll(wxCommandEvent& event);
+        void OnFileCloseProject(wxCommandEvent& event);
+        void OnFileCloseAllProjects(wxCommandEvent& event);
         void OnFilePrintSetup(wxCommandEvent& event);
         void OnFilePrint(wxCommandEvent& event);
-        void OnFileRunScript(wxCommandEvent& event);
         void OnFileQuit(wxCommandEvent& event);
         void OnFileNext(wxCommandEvent& event);
         void OnFilePrev(wxCommandEvent& event);
@@ -83,6 +97,25 @@ class MainFrame : public wxFrame
         void OnEditToggleFoldBlock(wxCommandEvent& event);
         void OnEditEOLMode(wxCommandEvent& event);
         void OnEditEncoding(wxCommandEvent& event);
+        void OnEditParaUp(wxCommandEvent& event);
+        void OnEditParaUpExtend(wxCommandEvent& event);
+        void OnEditParaDown(wxCommandEvent& event);
+        void OnEditParaDownExtend(wxCommandEvent& event);
+        void OnEditWordPartLeft(wxCommandEvent& event);
+        void OnEditWordPartLeftExtend(wxCommandEvent& event);
+        void OnEditWordPartRight(wxCommandEvent& event);
+        void OnEditWordPartRightExtend(wxCommandEvent& event);
+        void OnEditZoomIn(wxCommandEvent& event);
+        void OnEditZoomOut(wxCommandEvent& event);
+        void OnEditZoomReset(wxCommandEvent& event);
+        void OnEditLineCut(wxCommandEvent& event);
+        void OnEditLineDelete(wxCommandEvent& event);
+        void OnEditLineDuplicate(wxCommandEvent& event);
+        void OnEditLineTranspose(wxCommandEvent& event);
+        void OnEditLineCopy(wxCommandEvent& event);
+        void OnEditLinePaste(wxCommandEvent& event);
+        void OnEditUpperCase(wxCommandEvent& event);
+        void OnEditLowerCase(wxCommandEvent& event);
         void OnEditSelectAll(wxCommandEvent& event);
         void OnEditCommentSelected(wxCommandEvent& event);
         void OnEditUncommentSelected(wxCommandEvent& event);
@@ -96,26 +129,12 @@ class MainFrame : public wxFrame
         void OnViewLayout(wxCommandEvent& event);
         void OnViewLayoutSave(wxCommandEvent& event);
         void OnViewLayoutDelete(wxCommandEvent& event);
+        void OnViewScriptConsole(wxCommandEvent& event);
 
         void OnSearchFind(wxCommandEvent& event);
         void OnSearchFindNext(wxCommandEvent& event);
         void OnSearchReplace(wxCommandEvent& event);
 		void OnSearchGotoLine(wxCommandEvent& event);
-
-        void OnProjectNew(wxCommandEvent& event);
-        void OnProjectNewEmpty(wxCommandEvent& event);
-        void OnProjectOpen(wxCommandEvent& event);
-        void OnProjectSaveProject(wxCommandEvent& event);
-        void OnProjectSaveProjectAs(wxCommandEvent& event);
-        void OnProjectSaveAllProjects(wxCommandEvent& event);
-        void OnProjectSaveTemplate(wxCommandEvent& event);
-        void OnProjectCloseProject(wxCommandEvent& event);
-        void OnProjectCloseAllProjects(wxCommandEvent& event);
-		void OnProjectImportDevCpp(wxCommandEvent& event);
-		void OnProjectImportMSVC(wxCommandEvent& event);
-		void OnProjectImportMSVCWksp(wxCommandEvent& event);
-		void OnProjectImportMSVS(wxCommandEvent& event);
-		void OnProjectImportMSVSWksp(wxCommandEvent& event);
 
         void OnPluginsExecuteMenu(wxCommandEvent& event);
 
@@ -213,6 +232,7 @@ class MainFrame : public wxFrame
 		void DoUpdateEditorStyle(wxFlatNotebook* target, const wxString& prefix, long defaultStyle);
 
         void ShowHideStartPage(bool forceHasProject = false);
+        void ShowHideScriptConsole();
 
         void LoadWindowState();
         void SaveWindowState();
@@ -247,6 +267,8 @@ class MainFrame : public wxFrame
 
         wxString m_LastLayoutName;
         wxString m_LastLayoutData;
+
+        int m_ScriptConsoleID;
 
         DECLARE_EVENT_TABLE()
 };

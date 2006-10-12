@@ -11,8 +11,7 @@ lib_LTLIBRARIES = libastyle.la
 
 libastyle_la_LDFLAGS = -module -version-info 0:1:0 -shared -no-undefined -avoid-version
 
-libastyle_la_LIBADD = ../../sdk/libcodeblocks.la \
-				../../sdk/wxscintilla/libwxscintilla.la
+libastyle_la_LIBADD = ../../sdk/libcodeblocks.la
 
 libastyle_la_SOURCES = asstreamiterator.cpp \
       astyleconfigdlg.cpp \
@@ -35,5 +34,5 @@ EXTRA_DIST = astyle/astyle.html \
 			astyle/astyle_main.cpp \
 			astyle/astyle_release_notes.html \
       astyle/astyleX.html \
-			astyle/INSTALL.TXT \
+			astyle/install.txt \
 			astyle/license.html

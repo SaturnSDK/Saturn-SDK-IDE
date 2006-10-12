@@ -62,7 +62,7 @@
 #include "filefilters.h"
 #include "searchresultslog.h"
 
-#include <wxFlatNotebook.h>
+#include "wxFlatNotebook/wxFlatNotebook.h"
 
 
 //#define DONT_USE_OPENFILES_TREE
@@ -135,11 +135,11 @@ struct EditorManagerInternalData
         wxBitmap bmp;
         m_pImages = new wxImageList(16, 16);
         wxString prefix = ConfigManager::GetDataFolder() + _T("/images/");
-        bmp.LoadFile(prefix + _T("folder_open.png"), wxBITMAP_TYPE_PNG); // folder
+        bmp = cbLoadBitmap(prefix + _T("folder_open.png"), wxBITMAP_TYPE_PNG); // folder
         m_pImages->Add(bmp);
-        bmp.LoadFile(prefix + _T("ascii.png"), wxBITMAP_TYPE_PNG); // file
+        bmp = cbLoadBitmap(prefix + _T("ascii.png"), wxBITMAP_TYPE_PNG); // file
         m_pImages->Add(bmp);
-        bmp.LoadFile(prefix + _T("modified_file.png"), wxBITMAP_TYPE_PNG); // modified file
+        bmp = cbLoadBitmap(prefix + _T("modified_file.png"), wxBITMAP_TYPE_PNG); // modified file
         m_pImages->Add(bmp);
         pTree->SetImageList(m_pImages);
         m_TreeOpenedFiles=pTree->AddRoot(_T("Opened Files"), 0, 0);
@@ -298,7 +298,7 @@ void EditorManager::CreateSearchLog()
     // set log image
     wxBitmap bmp;
     wxString prefix = ConfigManager::GetDataFolder() + _T("/images/16x16/");
-    bmp.LoadFile(prefix + _T("filefind.png"), wxBITMAP_TYPE_PNG);
+    bmp = cbLoadBitmap(prefix + _T("filefind.png"), wxBITMAP_TYPE_PNG);
     Manager::Get()->GetMessageManager()->SetLogImage(m_pSearchLog, bmp);
 }
 
@@ -365,6 +365,26 @@ void EditorManager::LoadAutoComplete()
         m_AutoCompleteMap[_T("forb")] = _T("for (|; ; )\n{\n\t\n}");
         m_AutoCompleteMap[_T("class")] = _T("class $(Class name)|\n{\n\tpublic:\n\t\t$(Class name)();\n\t\t~$(Class name)();\n\tprotected:\n\t\t\n\tprivate:\n\t\t\n};\n");
         m_AutoCompleteMap[_T("struct")] = _T("struct |\n{\n\t\n};\n");
+    }
+
+    // date and time macros
+    // these are auto-added if they 're found to be missing
+    const wxString timeAndDate[9][2] =
+    {
+        { _T("tday"), _T("$TDAY") },
+        { _T("tdayu"), _T("$TDAY_UTC") },
+        { _T("today"), _T("$TODAY") },
+        { _T("todayu"), _T("$TODAY_UTC") },
+        { _T("now"), _T("$NOW") },
+        { _T("nowl"), _T("$NOW_L") },
+        { _T("nowu"), _T("$NOW_UTC") },
+        { _T("nowlu"), _T("$NOW_L_UTC") },
+        { _T("wdu"), _T("$WEEKDAY_UTC") },
+    };
+    for (int i = 0; i < 9; ++i)
+    {
+        if (m_AutoCompleteMap.find(timeAndDate[i][0]) == m_AutoCompleteMap.end())
+            m_AutoCompleteMap[timeAndDate[i][0]] = timeAndDate[i][1];
     }
 }
 
@@ -533,7 +553,19 @@ cbEditor* EditorManager::Open(const wxString& filename, int pos,ProjectFile* dat
     }
 #ifdef USE_OPENFILES_TREE
     if(can_updateui)
-        AddFiletoTree(ed);
+    {
+        // If this file is already in the tree we have to call
+        // RefreshOpenedFilesTree because AddFiletoTree would not do anything
+        // and the file would not be selected.
+        if (eb)
+        {
+            RefreshOpenedFilesTree();
+        }
+        else
+        {
+            AddFiletoTree(ed);
+        }
+    }
 #endif
 
     // we 're done
@@ -576,7 +608,7 @@ void EditorManager::SetActiveEditor(EditorBase* ed)
 
 cbEditor* EditorManager::New(const wxString& newFileName)
 {
-    wxString old_title = Manager::Get()->GetAppWindow()->GetTitle(); // Fix for Bug #1389450
+//    wxString old_title = Manager::Get()->GetAppWindow()->GetTitle(); // Fix for Bug #1389450
     // create a dummy file
     if (!newFileName.IsEmpty() && !wxFileExists(newFileName) && wxDirExists(wxPathOnly(newFileName)))
     {
@@ -586,13 +618,13 @@ cbEditor* EditorManager::New(const wxString& newFileName)
             return 0;
     }
     cbEditor* ed = new cbEditor(m_pNotebook, newFileName);
-    if ((newFileName.IsEmpty() && !ed->SaveAs()) || !ed->Save())
-    {
-        //DeletePage(ed->GetPageIndex());
-        ed->Destroy();
-        Manager::Get()->GetAppWindow()->SetTitle(old_title); // Though I can't reproduce the bug, this does no harm
-        return 0L;
-    }
+//    if ((newFileName.IsEmpty() && !ed->SaveAs()) || !ed->Save())
+//    {
+//        //DeletePage(ed->GetPageIndex());
+//        ed->Destroy();
+//        Manager::Get()->GetAppWindow()->SetTitle(old_title); // Though I can't reproduce the bug, this does no harm
+//        return 0L;
+//    }
 
     // add default text
     wxString key;
@@ -677,7 +709,8 @@ bool EditorManager::UpdateProjectFiles(cbProject* project)
 
 bool EditorManager::CloseAll(bool dontsave)
 {
-    return CloseAllExcept(0L,dontsave);
+    //return CloseAllExcept(0L,dontsave);
+    return CloseAllExcept(GetEditor(_("Start here")), dontsave);
 }
 
 bool EditorManager::QueryCloseAll()
@@ -796,7 +829,15 @@ bool EditorManager::Save(const wxString& filename)
     //    cbEditor* ed = GetBuiltinEditor(IsOpen(filename));
     EditorBase* ed = IsOpen(filename);
     if (ed)
-        return ed->Save();
+    {
+        wxString oldname = ed->GetFilename();
+        if (!ed->Save())
+            return false;
+        wxString newname = ed->GetFilename();
+        if (oldname != newname)
+            RenameTreeFile(oldname, newname);
+        return true;
+    }
     return true;
 }
 
@@ -804,7 +845,15 @@ bool EditorManager::Save(int index)
 {
     EditorBase* ed = InternalGetEditorBase(index);
     if (ed)
-        return ed->Save();
+    {
+        wxString oldname = ed->GetFilename();
+        if (!ed->Save())
+            return false;
+        wxString newname = ed->GetFilename();
+        if (oldname != newname)
+            RenameTreeFile(oldname, newname);
+        return true;
+    }
     return false;
 }
 
@@ -812,7 +861,15 @@ bool EditorManager::SaveActive()
 {
     EditorBase* ed = GetActiveEditor();
     if (ed)
-        return ed->Save();
+    {
+        wxString oldname = ed->GetFilename();
+        if (!ed->Save())
+            return false;
+        wxString newname = ed->GetFilename();
+        if (oldname != newname)
+            RenameTreeFile(oldname, newname);
+        return true;
+    }
     return true;
 }
 
@@ -986,7 +1043,7 @@ void EditorManager::CheckForExternallyModifiedFiles()
         cbMessageBox(msg, _("Error"), wxICON_ERROR);
     }
     m_isCheckingForExternallyModifiedFiles = false;
-}
+} // end of CheckForExternallyModifiedFiles
 
 bool EditorManager::SwapActiveHeaderSource()
 {
@@ -1569,7 +1626,7 @@ int EditorManager::ReplaceInFiles(cbFindReplaceData* data)
     // keep a copy of the find struct
     cbFindReplaceData dataCopy = *data;
 
-    for (int i = 0; i<filesCount || stop; ++i)
+    for (int i = 0; i<filesCount && !stop; ++i)
     {
         cbEditor *ed = NULL;
         cbStyledTextCtrl *control = NULL;
@@ -2273,9 +2330,6 @@ void EditorManager::OnAppStartShutdown(wxCommandEvent& event)
 void EditorManager::OnCheckForModifiedFiles(wxCommandEvent& event)
 {
     CheckForExternallyModifiedFiles();
-    cbEditor* ed = GetBuiltinActiveEditor();
-    if (ed)
-        ed->GetControl()->SetFocus();
 }
 
 
@@ -2464,7 +2518,7 @@ bool EditorManager::RenameTreeFile(const wxString& oldname, const wxString& newn
         if(filename!=oldname)
             continue;
         data->SetFullName(newname);
-        EditorBase *ed=GetEditor(filename);
+        EditorBase *ed=GetEditor(newname);
         if(ed)
         {
             shortname=ed->GetShortName();

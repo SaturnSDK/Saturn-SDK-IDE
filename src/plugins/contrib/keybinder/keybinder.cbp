@@ -1,17 +1,18 @@
-<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+﻿<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <CodeBlocks_project_file>
-	<FileVersion major="1" minor="4" />
+	<FileVersion major="1" minor="5" />
 	<Project>
 		<Option title="C::B KeyBinder" />
 		<Option pch_mode="0" />
+		<Option default_target="" />
 		<Option compiler="gcc" />
+		<Option virtualFolders="" />
 		<Build>
 			<Target title="default">
 				<Option output="..\..\..\devel\share\CodeBlocks\plugins\keybinder.dll" />
 				<Option type="3" />
 				<Option compiler="gcc" />
 				<Option host_application="..\..\..\devel\codeblocks.exe" />
-				<Option includeInTargetAll="1" />
 				<Compiler>
 					<Add option="-Winvalid-pch" />
 					<Add option="-pipe" />
@@ -35,6 +36,9 @@
 				<Variable name="WX_CFG" value="" />
 			</Environment>
 		</Build>
+		<VirtualTargets>
+			<Add alias="All" targets="default;" />
+		</VirtualTargets>
 		<Compiler>
 			<Add option="-Wall" />
 			<Add option="-g" />
@@ -49,8 +53,12 @@
 			<Add library="wxmsw26$(WX_SUFFIX)" />
 			<Add directory="$(#CB)\devel" />
 			<Add directory="$(#CB.lib)" />
-			<Add directory="$(#WX.lib)\gcc_dll" />
+			<Add directory="$(#WX.lib)\gcc_dll$(WX_CFG)" />
 		</Linker>
+		<ExtraCommands>
+			<Add after="zip -j9 ..\..\..\devel\share\CodeBlocks\keybinder.zip manifest.xml" />
+			<Mode after="always" />
+		</ExtraCommands>
 		<Unit filename="cbkeybinder.cpp">
 			<Option compilerVar="CPP" />
 			<Option target="default" />
@@ -83,6 +91,12 @@
 			<Option link="0" />
 			<Option target="default" />
 		</Unit>
+		<Unit filename="manifest.xml">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="default" />
+		</Unit>
 		<Unit filename="menuutils.cpp">
 			<Option compilerVar="CPP" />
 			<Option target="default" />
@@ -93,5 +107,6 @@
 			<Option link="0" />
 			<Option target="default" />
 		</Unit>
+		<Extensions />
 	</Project>
 </CodeBlocks_project_file>

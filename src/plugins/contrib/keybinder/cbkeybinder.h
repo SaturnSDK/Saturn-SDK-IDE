@@ -42,6 +42,9 @@
 #include "wx/utils.h"
 #include <wx/intl.h>
 
+// --Version--------------------------
+#define VERSION "0.4.26 2006/09/23"
+// -----------------------------------
 class MyDialog;
 
 // ----------------------------------------------------------------------------
@@ -90,6 +93,9 @@ class cbKeyBinder : public cbPlugin
         // save/load key definitions
         void OnSave();
         void OnLoad();
+        // Enable/Disable Merge
+        int EnableMerge(bool allow);
+        int IsEnabledMerge(){return m_mergeActive;}
 
     protected:
         wxADD_KEYBINDER_SUPPORT();
@@ -102,15 +108,20 @@ class cbKeyBinder : public cbPlugin
         void OnProjectFileRemoved(CodeBlocksEvent& event);
         void OnEditorOpen(CodeBlocksEvent& event);
         void OnEditorClose(CodeBlocksEvent& event);
+        void OnIdle(wxIdleEvent& event);
         void OnAppStartupDone(CodeBlocksEvent& event);
         void AttachEditor(wxWindow* pEditor);
         void OnWindowCreateEvent(wxEvent& event);
         void OnWindowDestroyEvent(wxEvent& event);
         void DetachEditor(wxWindow* pWindow);
+        void MergeDynamicMenus();
 
-        wxWindow* pcbWindow;            //main app window
-        wxArrayPtrVoid m_EditorPtrs;    //attached editor windows
-        bool bKeyFileErrMsgShown;
+        wxWindow*       pcbWindow;              //main app window
+        wxArrayPtrVoid  m_EditorPtrs;           //attached editor windows
+        bool            bKeyFileErrMsgShown;
+        int             m_MenuModifiedByMerge;  //menu dynamically modified
+        wxDateTime      m_lastIdleTime;         //previous time of idle call
+        int             m_mergeActive;
 
     private:
 		DECLARE_EVENT_TABLE()
@@ -139,9 +150,6 @@ private:
     // any class wishing to process wxWindows events must use this macro
     DECLARE_EVENT_TABLE()
 };
-
-// Declare the plugin's hooks
-CB_DECLARE_PLUGIN();
 
 #endif // CBKEYBINDER_H
 // 11/9/2005
@@ -439,3 +447,107 @@ CB_DECLARE_PLUGIN();
 // -----------------------------------------------------------------------------
 //  commit  2006/06/15 v0.4.20
 // -----------------------------------------------------------------------------
+//  closed  2006/07/12 open    2006/07/11 reverted
+//          Remove dependency on CodeBlocks editor open/close events
+//          in order to avoid leaks on splitWindows.
+//          Solution: removed pushed evenHandlers and used Connect()/Disconnect()
+// -----------------------------------------------------------------------------
+//  closed  2006/07/12 open 2006/07/12 reverted
+//          Secondary profiles are not being recorded. Getting
+//          "DialogDone: NO key changes" message, the Primary is then set
+//          Resolution: cbKeyBinder::OnKeybindingsDialogDone compare function not
+//          taking into account multiple keyprofiles in the keyBinderProfileArray.
+// -----------------------------------------------------------------------------
+//  closed  2006/07/15 open    2006/07/15 reverted
+//          keybinder not clearing previous profile keys when loading other
+//          profiles.
+//          Resolution: Code not updating deep menu items. Walk down to deepest menu
+//          items in wxKeyBinder::UpdateAllCmd via new UpdateSubMenu recursion.
+// -----------------------------------------------------------------------------
+//  commit  v0.4.21 2006/07/17 reverted
+// -----------------------------------------------------------------------------
+//  closed  open    2006/07/19 v0.4.23a reverted
+//          Allowing secondary key definitions on "Quit" causes CB to crash
+//          during termination. A hack ignores these keys in wxKeyBinder::OnChar.
+//          But this needs to be fixed.
+//          Tried: Sending the quit keys to the main application window does not
+//          solve the crashes.
+//  closed  2006/08/11 open    2006/07/19
+//          I experienced again that the menus did not show key redefinitions that
+//          actually were working and showed correctly in the dialog. As if updateAll
+//          was screwed up again.
+// -----------------------------------------------------------------------------
+//  commit  2006/07/19 v0.22 reverted
+//          Temporary hack to ignore "Quit" menu redefinitions to avoid
+//          crashes during CB termination.
+// -----------------------------------------------------------------------------
+//  open    2006/07/19 reverted
+//          Secondary keys do not work from the main html window.
+//          Even hooking all windows does not allow seconary keys to work at htmlWindow.
+//          Primary keys work ok.
+//          The following does *not* solve the problem
+//          if ( pcbWindow->GetName() eq _T("frame") )
+//              pcbWindow->SetName(_T("Code::Blocks"));
+// -----------------------------------------------------------------------------
+//  commit  2006/07/29 v0.4.23
+//          reverted  2006/07/29 to v0.4.20 CB 2761
+//          crashes during CB exit
+// -----------------------------------------------------------------------------
+//  fixed   2006/08/11 v0.4.24
+//          Reapplied recursive UpdateAll() to update sub menus and catch
+//          duplicate key definitions. Had been removed by reverting to v0.4.20
+// -----------------------------------------------------------------------------
+//  fixed   2006/08/11 v0.4.24
+//          Reapplied fix for multiple key profiles to compare arrays and update
+//          key definitions. Had been removed by reverting to v0.4.20
+// -----------------------------------------------------------------------------
+//  commit  2006/08/13 v0.4.24
+// -----------------------------------------------------------------------------
+//  opened  2006/08/20
+//          Not recognizing dynamically assigned menu keys after initialization.
+//          Re-setting F1 back to first menu item when plugin had set another.
+//  fixed   2006/08/31
+//          Added MergeDynamicMenuItems() to update key profile array
+//          Added dynamic scan and save() at wxIdleEvent every 15 seconds.
+// -----------------------------------------------------------------------------
+//  opened  2006/08/22
+//          Corrupted ini file msg needs to say where file is located.
+//  fixed   2006/08/31
+//          Added global pointer pKeyFilename to get filename to include with msg.
+//          Added save to...ini.bak file before writing new .ini file.
+// -----------------------------------------------------------------------------
+//  note    2006/09/2
+//          wxWidgets 2.6.3 fixed the bitmapped menu icon being clobbered when
+//          SetText() was issued.
+//          When, in wxKeyBinder::MergeSubMenu(), a RemoveShortcut() or
+//          AddShortCut() is issued, Update() is called to update the app menu item.
+//          Update() Destroy()ed and New'ed the app menuitem. This caused MergeSubMenu
+//          to crash because the app menu chain was changed within this recursive
+//          routine.
+//          Because 2.6.3 was fixed, I removed the RebuildMenuItem() routine to
+//          avoid altering the menuitem chain and to avoid the crash.
+//          But this means that the bitmaps will be clobbered by SetText()
+//          under 2.6.2 or earlier.
+//  note    2006/09/2
+//          Was testing on wxGTK 2.6.2. wxMenuItem->GetText() did not return the shortcut
+//          key with the string. Had to use wxAcceleratorEntry routines to get the keys.
+//          This works also for wxMSW. Had to trim all Labels and Texts from wxGTK
+//          menu items. GTK resets all shortcut keys with +'s and keyBinder appends a space
+//          to the SetText() menu items to avoid a GTK optimization.
+//
+//          GTK onIdle() is entered at much longer intervals than MSW, so dynamic
+//          shortcut changes are recorded only on "idle" entries, but no shorter than
+//          15 second intervals.
+// -----------------------------------------------------------------------------
+//  commit   v0.4.25d 2006/09/20
+//          - recording dynamically changed menu items
+//          - Get menu shortcuts via wxAcceratorEntry
+//          - Add file name to corrupted file message
+//          - Non Destructive update of menu items
+//          - backup of .ini file before delete/save
+// -----------------------------------------------------------------------------
+//  Commit  v0.4.26 2006/09/23
+//          - minor #defines for WXMAC
+//          - stop OnProfileSelected() from saving blank keyProfile
+// -----------------------------------------------------------------------------
+//

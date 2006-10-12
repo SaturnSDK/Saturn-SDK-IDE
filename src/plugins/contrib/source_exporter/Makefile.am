@@ -3,7 +3,8 @@ SUBDIRS = wxPdfDocument
 INCLUDES = $(WX_CXXFLAGS) \
 		-I$(top_srcdir)/src/sdk \
 		-I$(top_srcdir)/src/sdk/wxscintilla/include \
-		-I$(top_srcdir)/src/plugins/contrib/source_exporter/wxPdfDocument/include
+		-I$(top_srcdir)/src/plugins/contrib/source_exporter/wxPdfDocument/include \
+		-include "sdk.h"
 
 libdir = $(pkgdatadir)/plugins
 
@@ -12,7 +13,6 @@ lib_LTLIBRARIES = libexporter.la
 libexporter_la_LDFLAGS = -module -version-info 0:1:0 -shared -no-undefined -avoid-version
 
 libexporter_la_LIBADD = ../../../sdk/libcodeblocks.la \
-				../../../sdk/wxscintilla/libwxscintilla.la \
 				wxPdfDocument/libwxPdfDocument.la
 
 libexporter_la_SOURCES = BaseExporter.cpp \
@@ -29,4 +29,10 @@ noinst_HEADERS = BaseExporter.h \
 				PDFExporter.h \
 				RTFExporter.h
 
-EXTRA_DIST = *.cbp
+EXTRA_DIST = *.cbp manifest.xml
+
+pkgdata_DATA = exporter.zip
+CLEANFILES = $(pkgdata_DATA)
+
+exporter.zip:
+	PWD=`pwd` cd $(srcdir) && zip $(PWD)/exporter.zip manifest.xml > /dev/null

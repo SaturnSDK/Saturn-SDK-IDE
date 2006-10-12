@@ -1,9 +1,12 @@
 #ifndef BREAKPOINTSDLG_H
 #define BREAKPOINTSDLG_H
 
-#include <simplelistlog.h>
+#include "simplelistlog.h"
 #include "debugger_defs.h"
 
+class wxCommandEvent;
+class wxListEvent;
+class BreakpointsList;
 class DebuggerState;
 
 class BreakpointsDlg : public SimpleListLog
