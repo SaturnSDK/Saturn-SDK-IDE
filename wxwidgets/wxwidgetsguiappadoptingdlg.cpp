@@ -136,7 +136,10 @@ void wxWidgetsGUIAppAdoptingDlg::Run()
 
 void wxWidgetsGUIAppAdoptingDlg::AddSmith(wxString RelativeFileName)
 {
-    if ( m_GUI->AddSmithToApp(RelativeFileName) )
+    wxsCodingLang Lang = wxsCodeMarks::IdFromExt(wxFileName(RelativeFileName).GetExt());
+    if ( Lang == wxsUnknownLanguage ) return;
+
+    if ( m_GUI->AddSmithToApp(RelativeFileName,Lang) )
     {
         wxMessageBox(_("Application class has been adopted. Please check if it\n"
                        "works fine (some application initializing code could\n"

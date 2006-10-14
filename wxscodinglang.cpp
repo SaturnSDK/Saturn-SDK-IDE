@@ -2,6 +2,32 @@
 
 namespace wxsCodeMarks
 {
+    wxString Name(wxsCodingLang Lang)
+    {
+        switch ( Lang )
+        {
+            case wxsCPP: return _T("CPP");
+            default:;
+        }
+        return wxEmptyString;
+    }
+
+    wxsCodingLang Id(const wxString& Name)
+    {
+        if ( Name == _T("CPP") ) return wxsCPP;
+        return wxsUnknownLanguage;
+    }
+
+    wxsCodingLang IdFromExt(const wxString& Extension)
+    {
+        wxString ExtLower = Extension.Lower();
+        if ( (ExtLower==_T("c")) ||
+             (ExtLower==_T("h")) ||
+             (ExtLower==_T("cpp")) ||
+             (ExtLower==_T("hpp")) ) return wxsCPP;
+        return wxsUnknownLanguage;
+    }
+
     wxString Beg(wxsCodingLang Lang,const wxString& BlockName)
     {
         switch ( Lang )

@@ -25,19 +25,19 @@ class wxWidgetsGUI : public wxsGUI
         virtual void OnWriteConfig(TiXmlElement* element);
 
         /** \brief Checking if file with given name has source code prepared to be managed by wxSmith */
-        bool IsAppSourceManaged(const wxString& FileName);
+        bool IsAppSourceManaged(const wxString& FileName,wxsCodingLang Lang);
 
         /** \brief Checking if given project file can be adopted to wxSmith */
         bool ScanForApp(ProjectFile* File);
 
         /** \brief Adding smith bindings to given file */
-        bool AddSmithToApp(const wxString& RelativeFileName);
+        bool AddSmithToApp(const wxString& RelativeFileName,wxsCodingLang Lang);
 
         /** \brief Creating new file with application class */
         bool CreateNewApp(const wxString& FileName);
 
         /** \brief Getting name of class used inside IMPLEMENT_APP() macro call */
-        wxString GetAppClassName(const wxString& Source);
+        wxString GetAppClassName(const wxString& Source,wxsCodingLang Lang);
 
         /** \brief Enumerating all resources in project which could be set as main resource in wxWidgets */
         void EnumerateMainResources(wxArrayString& Names);

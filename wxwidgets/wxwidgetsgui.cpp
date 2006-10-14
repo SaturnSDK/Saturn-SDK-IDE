@@ -5,7 +5,6 @@
 #include "../wxscoder.h"
 #include "../wxsproject.h"
 
-// TODO: Reading/Storing app language in config
 // TODO: Prepare for other languages in wxApp-adopting sources
 
 IMPLEMENT_CLASS(wxWidgetsGUI,wxsGUI)
@@ -145,7 +144,7 @@ void wxWidgetsGUI::OnRebuildApplicationCode()
 
 bool wxWidgetsGUI::OnCheckIfApplicationManaged()
 {
-    return IsAppSourceManaged(m_AppFile);
+    return IsAppSourceManaged(m_AppFile,m_AppLanguage);
 }
 
 bool wxWidgetsGUI::OnCreateApplicationBinding()
@@ -175,6 +174,9 @@ void wxWidgetsGUI::OnReadConfig(TiXmlElement* element)
         m_CallInitAll = true;
         m_CallInitAllNecessary = true;
     }
+
+    wxString Lang  = cbC2U(element->Attribute("coding_language"));
+    m_AppLanguage = wxsCodeMarks::Id(Lang);
 
     TiXmlElement* LoadRes = element->FirstChildElement("load_resource");
     while ( LoadRes )
@@ -206,6 +208,8 @@ void wxWidgetsGUI::OnWriteConfig(TiXmlElement* element)
         element->SetAttribute("init_all_handlers","never");
     }
 
+    element->SetAttribute("coding_language",cbU2C(wxsCodeMarks::Name(m_AppLanguage)));
+
     for ( size_t i=0; i<m_LoadedResources.GetCount(); ++i )
     {
         TiXmlElement* LoadRes = element->InsertEndChild(TiXmlElement("load_resource"))->ToElement();
@@ -213,14 +217,14 @@ void wxWidgetsGUI::OnWriteConfig(TiXmlElement* element)
     }
 }
 
-bool wxWidgetsGUI::IsAppSourceManaged(const wxString& FileName)
+bool wxWidgetsGUI::IsAppSourceManaged(const wxString& FileName,wxsCodingLang Lang)
 {
     if ( FileName.empty() ) return false;
 
     if ( wxsCoder::Get()->GetCode(
             GetProjectPath()+FileName,
-            wxsCodeMarks::Beg(m_AppLanguage,_T("AppInitialize")),
-            wxsCodeMarks::End(m_AppLanguage)
+            wxsCodeMarks::Beg(Lang,_T("AppInitialize")),
+            wxsCodeMarks::End(Lang)
             ).empty() )
     {
         return false;
@@ -228,8 +232,8 @@ bool wxWidgetsGUI::IsAppSourceManaged(const wxString& FileName)
 
     if ( wxsCoder::Get()->GetCode(
             GetProjectPath()+FileName,
-            wxsCodeMarks::Beg(m_AppLanguage,_T("AppHeaders")),
-            wxsCodeMarks::End(m_AppLanguage)
+            wxsCodeMarks::Beg(Lang,_T("AppHeaders")),
+            wxsCodeMarks::End(Lang)
             ).empty() )
     {
         return false;
@@ -239,98 +243,118 @@ bool wxWidgetsGUI::IsAppSourceManaged(const wxString& FileName)
 
 bool wxWidgetsGUI::ScanForApp(ProjectFile* File)
 {
+    // Detcting language of this file
+    wxsCodingLang Lang = wxsCodeMarks::IdFromExt(File->file.GetExt());
+    if ( Lang == wxsUnknownLanguage ) return false;
+
     // If this file is already managed, returning true
-    if ( IsAppSourceManaged(File->relativeFilename) ) return true;
+    if ( IsAppSourceManaged(File->relativeFilename,Lang) ) return true;
 
     // Fetching source code
     wxString Source = wxsCoder::Get()->GetFullCode(File->file.GetFullPath());
 
     // Searching for app class
-    if ( GetAppClassName(Source).empty() ) return false;
+    if ( GetAppClassName(Source,Lang).empty() ) return false;
 
-    // Searching for OnInit() function
-    int Pos = Source.Find(_T("OnInit"));
-    if ( Pos < 0 ) return false;
+    switch ( Lang )
+    {
+        case wxsCPP:
+        {
+            // Searching for OnInit() function
+            int Pos = Source.Find(_T("OnInit"));
+            if ( Pos < 0 ) return false;
 
-    // TODO: Do extra checks of this OnInit
-    return true;
+            // TODO: Do extra checks of this OnInit
+            return true;
+        }
+        default:;
+    }
+    return false;
 }
 
-bool wxWidgetsGUI::AddSmithToApp(const wxString& RelativeFileName)
+bool wxWidgetsGUI::AddSmithToApp(const wxString& RelativeFileName,wxsCodingLang Lang)
 {
-    if ( !IsAppSourceManaged(RelativeFileName) )
+    if ( !IsAppSourceManaged(RelativeFileName,Lang) )
     {
         wxString FullPath = GetProjectPath()+RelativeFileName;
         // Need to create some extra blocks of code.
         wxString Source = wxsCoder::Get()->GetFullCode(FullPath);
         if ( Source.empty() ) return false;
 
-        // First thing we need is to add new includes section
-        // It is added right before IMPLEMENT_APP() macro
-        int Pos = Source.Find(_T("IMPLEMENT_APP"));
-        while ( Pos>0 && Source[Pos]!=_T('\n') ) Pos--;
-        if ( Pos>0 ) Pos++;
-
-        // TODO: Get valid EOL mode
-        Source.insert(Pos,
-            wxsCodeMarks::Beg(wxsCPP,_T("AppHeaders")) + _T("\n") +
-            wxsCodeMarks::End(wxsCPP) + _T("\n\n"));
-
-        wxString ClassName = GetAppClassName(Source);
-        if ( ClassName.empty() ) return false;
-
-        // Searching for ::OnInit member
-        wxString SourceCpy = Source;
-        Pos = 0;
-        while ( !SourceCpy.empty() )
+        switch ( Lang )
         {
-            int ClassPos = SourceCpy.Find(ClassName);
-            if ( ClassPos<0 ) return false;
-            ClassPos += ClassName.Length();
-            Pos += ClassPos;
-            SourceCpy.Remove(0,ClassPos);
-            int MemberPos = 0;
-            while ( IsWhite(SourceCpy,MemberPos) ) MemberPos++;
-            if ( MemberPos+1>=(int)(SourceCpy.Length()) ) continue;
-            if ( SourceCpy[MemberPos]!=_T(':') && SourceCpy[MemberPos+1]!=_T(':') ) continue;
-            MemberPos+=2;
-            while ( IsWhite(SourceCpy,MemberPos) ) MemberPos++;
-            if ( SourceCpy.Mid(MemberPos,6) != _T("OnInit") ) continue;
-            MemberPos += 6;
-            while ( IsWhite(SourceCpy,MemberPos) ) MemberPos++;
-            if ( !Match(SourceCpy,MemberPos,_T('(')) ) continue;
-            MemberPos++;
-            while ( IsWhite(SourceCpy,MemberPos) ) MemberPos++;
-            if ( !Match(SourceCpy,MemberPos,_T(')')) ) continue;
-            MemberPos++;
-            while ( IsWhite(SourceCpy,MemberPos) ) MemberPos++;
-            if ( !Match(SourceCpy,MemberPos,_T('{')) ) continue;
-            MemberPos++;
-            // Ok, we're at function beginning, calculating indentation of {
-            Pos += MemberPos;
-            break;
+            case wxsCPP:
+            {
+                // First thing we need is to add new includes section
+                // It is added right before IMPLEMENT_APP() macro
+                int Pos = Source.Find(_T("IMPLEMENT_APP"));
+                while ( Pos>0 && Source[Pos]!=_T('\n') ) Pos--;
+                if ( Pos>0 ) Pos++;
+
+                // TODO: Get valid EOL mode
+                Source.insert(Pos,
+                    wxsCodeMarks::Beg(wxsCPP,_T("AppHeaders")) + _T("\n") +
+                    wxsCodeMarks::End(wxsCPP) + _T("\n\n"));
+
+                wxString ClassName = GetAppClassName(Source,wxsCPP);
+                if ( ClassName.empty() ) return false;
+
+                // Searching for ::OnInit member
+                wxString SourceCpy = Source;
+                Pos = 0;
+                while ( !SourceCpy.empty() )
+                {
+                    int ClassPos = SourceCpy.Find(ClassName);
+                    if ( ClassPos<0 ) return false;
+                    ClassPos += ClassName.Length();
+                    Pos += ClassPos;
+                    SourceCpy.Remove(0,ClassPos);
+                    int MemberPos = 0;
+                    while ( IsWhite(SourceCpy,MemberPos) ) MemberPos++;
+                    if ( MemberPos+1>=(int)(SourceCpy.Length()) ) continue;
+                    if ( SourceCpy[MemberPos]!=_T(':') && SourceCpy[MemberPos+1]!=_T(':') ) continue;
+                    MemberPos+=2;
+                    while ( IsWhite(SourceCpy,MemberPos) ) MemberPos++;
+                    if ( SourceCpy.Mid(MemberPos,6) != _T("OnInit") ) continue;
+                    MemberPos += 6;
+                    while ( IsWhite(SourceCpy,MemberPos) ) MemberPos++;
+                    if ( !Match(SourceCpy,MemberPos,_T('(')) ) continue;
+                    MemberPos++;
+                    while ( IsWhite(SourceCpy,MemberPos) ) MemberPos++;
+                    if ( !Match(SourceCpy,MemberPos,_T(')')) ) continue;
+                    MemberPos++;
+                    while ( IsWhite(SourceCpy,MemberPos) ) MemberPos++;
+                    if ( !Match(SourceCpy,MemberPos,_T('{')) ) continue;
+                    MemberPos++;
+                    // Ok, we're at function beginning, calculating indentation of {
+                    Pos += MemberPos;
+                    break;
+                }
+
+                if ( SourceCpy.empty() ) return false;
+
+                // Calculating indentation of source
+                int IndentPos = Pos;
+                while ( IndentPos>0 && Source[IndentPos-1]!=_T('\n') && Source[IndentPos-1]!='\r' ) IndentPos--;
+                wxString Indent;
+                while ( IndentPos<Pos && (Source[IndentPos]==_T(' ') || Source[IndentPos]==_T('\t')) ) Indent += Source[IndentPos++];
+                Indent.Append(_T("\t"));
+
+                // Inserting AppInitializeBlock
+                Source = Source(0,Pos) +
+                    _T("\n") +
+                    Indent + wxsCodeMarks::Beg(wxsCPP,_T("AppInitialize")) + _T("\n") +
+                    Indent + wxsCodeMarks::End(wxsCPP) + _T("\n") +
+                    Indent + _T("return wxsOK;\n") +
+                    Indent
+                    + Source.Mid(Pos);
+
+                // Writing new source back to files / editor
+                wxsCoder::Get()->PutFullCode(FullPath,Source);
+                break;
+            }
+            default:;
         }
-
-        if ( SourceCpy.empty() ) return false;
-
-        // Calculating indentation of source
-        int IndentPos = Pos;
-        while ( IndentPos>0 && Source[IndentPos-1]!=_T('\n') && Source[IndentPos-1]!='\r' ) IndentPos--;
-        wxString Indent;
-        while ( IndentPos<Pos && (Source[IndentPos]==_T(' ') || Source[IndentPos]==_T('\t')) ) Indent += Source[IndentPos++];
-        Indent.Append(_T("\t"));
-
-        // Inserting AppInitializeBlock
-        Source = Source(0,Pos) +
-            _T("\n") +
-            Indent + wxsCodeMarks::Beg(wxsCPP,_T("AppInitialize")) + _T("\n") +
-            Indent + wxsCodeMarks::End(wxsCPP) + _T("\n") +
-            Indent + _T("return wxsOK;\n") +
-            Indent
-            + Source.Mid(Pos);
-
-        // Writing new source back to files / editor
-        wxsCoder::Get()->PutFullCode(FullPath,Source);
     }
 
     // Applying default configuration
@@ -339,38 +363,49 @@ bool wxWidgetsGUI::AddSmithToApp(const wxString& RelativeFileName)
     m_MainResource.Clear();
     m_CallInitAll = true;
     m_CallInitAllNecessary = true;
-    m_AppLanguage = wxsCPP;
+    m_AppLanguage = Lang;
     OnRebuildApplicationCode();
     NotifyChange();
     return true;
 }
 
-wxString wxWidgetsGUI::GetAppClassName(const wxString& Source)
+wxString wxWidgetsGUI::GetAppClassName(const wxString& Source,wxsCodingLang Lang)
 {
-    // Doing some trick - searching for IMPLEMENT_APP macro followed
-    // by '(' and class name - here we can fetch name of application class
-    int Pos = Source.Find(_T("IMPLEMENT_APP"));
-    if ( Pos<0 ) return wxEmptyString;
-    Pos += 13;// strlen("IMPLEMENT_APP")
-    while ( IsWhite(Source,Pos) ) Pos++;
-    if ( Pos >= (int)Source.Length() ) return wxEmptyString;
-    if ( Source[Pos++] != _T('(') ) return wxEmptyString;
-    while ( IsWhite(Source,Pos) ) Pos++;
-    wxString ClassName;
-    static const wxString AllowedChars(_T("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_"));
-    while ( (Pos < (int)Source.Length()) && (AllowedChars.Find(Source[Pos])>=0) )
+    switch ( Lang )
     {
-        ClassName += Source[Pos];
-        Pos++;
+        case wxsCPP:
+        {
+            // Doing some trick - searching for IMPLEMENT_APP macro followed
+            // by '(' and class name - here we can fetch name of application class
+            int Pos = Source.Find(_T("IMPLEMENT_APP"));
+            if ( Pos<0 ) return wxEmptyString;
+            Pos += 13;// strlen("IMPLEMENT_APP")
+            while ( IsWhite(Source,Pos) ) Pos++;
+            if ( Pos >= (int)Source.Length() ) return wxEmptyString;
+            if ( Source[Pos++] != _T('(') ) return wxEmptyString;
+            while ( IsWhite(Source,Pos) ) Pos++;
+            wxString ClassName;
+            static const wxString AllowedChars(_T("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_"));
+            while ( (Pos < (int)Source.Length()) && (AllowedChars.Find(Source[Pos])>=0) )
+            {
+                ClassName += Source[Pos];
+                Pos++;
+            }
+            while ( IsWhite(Source,Pos) ) Pos++;
+            if ( Pos >= (int)Source.Length() ) return wxEmptyString;
+            if ( Source[Pos] != _T(')') ) return wxEmptyString;
+            return ClassName;
+        }
+        default:;
     }
-    while ( IsWhite(Source,Pos) ) Pos++;
-    if ( Pos >= (int)Source.Length() ) return wxEmptyString;
-    if ( Source[Pos] != _T(')') ) return wxEmptyString;
-    return ClassName;
+    return wxEmptyString;
 }
 
 bool wxWidgetsGUI::CreateNewApp(const wxString& FileName)
 {
+    wxsCodingLang Lang = wxsCodeMarks::IdFromExt(wxFileName(FileName).GetExt());
+    if ( Lang == wxsUnknownLanguage ) return false;
+
     wxFile Fl(FileName,wxFile::write);
     if ( !Fl.IsOpened() )
     {
@@ -378,36 +413,44 @@ bool wxWidgetsGUI::CreateNewApp(const wxString& FileName)
         return false;
     }
 
-    Fl.Write(
-        _T("#include <wx/wxprec.h>\n")
-        _T("\n")
-        _T("#ifdef __BORLANDC__\n")
-        _T("    #pragma hdrstop\n")
-        _T("#endif\n")
-        _T("\n")
-        _T("#ifndef WX_PRECOMP\n")
-        _T("    #include <wx/app.h>\n")
-        _T("#endif\n")
-        _T("\n")
-        _T("//(*AppHeaders\n")
-        _T("//*)\n")
-        _T("\n")
-        _T("\n")
-        _T("class MyApp : public wxApp\n")
-        _T("{\n")
-        _T("	public:\n")
-        _T("		virtual bool OnInit();\n")
-        _T("};\n")
-        _T("\n")
-        _T("IMPLEMENT_APP(MyApp);\n")
-        _T("\n")
-        _T("bool MyApp::OnInit()\n")
-        _T("{\n")
-        _T("    //(*AppInitialize\n")
-        _T("    //*)\n")
-        _T("    return wxsOK;\n")
-        _T("}\n")
-        _T("\n"));
+    switch ( Lang )
+    {
+        case wxsCPP:
+        {
+            Fl.Write(
+                _T("#include <wx/wxprec.h>\n")
+                _T("\n")
+                _T("#ifdef __BORLANDC__\n")
+                _T("    #pragma hdrstop\n")
+                _T("#endif\n")
+                _T("\n")
+                _T("#ifndef WX_PRECOMP\n")
+                _T("    #include <wx/app.h>\n")
+                _T("#endif\n")
+                _T("\n")
+                _T("//(*AppHeaders\n")
+                _T("//*)\n")
+                _T("\n")
+                _T("\n")
+                _T("class MyApp : public wxApp\n")
+                _T("{\n")
+                _T("	public:\n")
+                _T("		virtual bool OnInit();\n")
+                _T("};\n")
+                _T("\n")
+                _T("IMPLEMENT_APP(MyApp);\n")
+                _T("\n")
+                _T("bool MyApp::OnInit()\n")
+                _T("{\n")
+                _T("    //(*AppInitialize\n")
+                _T("    //*)\n")
+                _T("    return wxsOK;\n")
+                _T("}\n")
+                _T("\n"));
+            break;
+        }
+        default:;
+    }
 
     // Applying default configuration
     wxFileName FN(FileName);
@@ -417,7 +460,7 @@ bool wxWidgetsGUI::CreateNewApp(const wxString& FileName)
     m_MainResource.Clear();
     m_CallInitAll = true;
     m_CallInitAllNecessary = true;
-    m_AppLanguage = wxsCPP;
+    m_AppLanguage = Lang;
     OnRebuildApplicationCode();
     return true;
 
