@@ -13,8 +13,7 @@
 #include "wxsresourcefactory.h"
 #include "properties/wxsproperties.h"
 
-#include <licenses.h>
-#include <wxFlatNotebook/wxFlatNotebook.h>
+#include <wx/wxFlatNotebook/wxFlatNotebook.h>
 #include <projectloader_hooks.h>
 
 namespace

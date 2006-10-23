@@ -1,4 +1,3 @@
-#include "wxsheaders.h"
 #include "wxscoder.h"
 
 #include <manager.h>
