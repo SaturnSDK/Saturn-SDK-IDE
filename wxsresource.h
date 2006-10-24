@@ -141,7 +141,7 @@ class wxsResource: public wxObject
         wxsProject* m_Owner;
         wxsEditor* m_Editor;
         wxsResourceItemId m_TreeItemId;
-        const wxsCodingLang m_Language;
+        wxsCodingLang m_Language;
 
         friend wxsEditor::~wxsEditor();
         friend class wxsProject;

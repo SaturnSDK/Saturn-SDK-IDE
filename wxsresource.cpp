@@ -1,12 +1,12 @@
 #include "wxsresource.h"
 #include "wxsextresmanager.h"
 
-wxsResource::wxsResource(wxsProject* Owner,const wxString& ResourceName,const wxString& ResourceType,const wxString& GUI,wxsCodingLang Language):
+wxsResource::wxsResource(wxsProject* Owner,const wxString& ResourceType,const wxString& GUI):
     m_ResourceType(ResourceType),
-    m_ResourceName(ResourceName),
+    m_ResourceName(wxEmptyString),
     m_GUI(GUI),
     m_Owner(Owner),
-    m_Language(Language)
+    m_Language(wxsCPP)
 {}
 
 wxsResource::~wxsResource()
@@ -49,7 +49,7 @@ void wxsResource::BuildTreeEntry(const wxsResourceItemId& Parent)
 
 bool wxsResource::ReadConfig(const TiXmlElement* Node)
 {
-    m_ResourceName = cbC2U(Node->Attribute("name")));
+    m_ResourceName = cbC2U(Node->Attribute("name"));
     m_Language = wxsCodeMarks::Id(cbC2U(Node->Attribute("language")));
     if ( GetResourceName().empty() ) return false;
     return OnReadConfig(Node);
@@ -59,7 +59,7 @@ bool wxsResource::WriteConfig(TiXmlElement* Node)
 {
     bool Result = OnWriteConfig(Node);
     Node->SetAttribute("name",cbU2C(m_ResourceName));
-    Node->SetAttribute("language",cbC2U(m_Language));
+    Node->SetAttribute("language",cbU2C(wxsCodeMarks::Name(m_Language)));
     return Result;
 }
 

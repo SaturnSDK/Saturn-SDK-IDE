@@ -10,8 +10,8 @@ class wxWidgetsRes: public wxsResource
     public:
 
         /** \brief Ctor */
-        wxWidgetsRes(wxsProject* Owner,const wxString& ResourceName,const wxString& ResourceType,wxsCodingLang Language=wxsCPP):
-            wxsResource(Owner,ResourceName,ResourceType,_T("wxWidgets"),Language)
+        wxWidgetsRes(wxsProject* Owner,const wxString& ResourceType):
+            wxsResource(Owner,ResourceType,_T("wxWidgets"))
         {}
 
         /** \brief Checking if this resource does use XRC */

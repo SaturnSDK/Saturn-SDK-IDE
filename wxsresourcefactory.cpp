@@ -32,13 +32,15 @@ inline void wxsResourceFactory::Initialize()
     {
         wxString Name;
         wxString GUI;
-        bool CanBeMain=false;
-        OnGetInfo(i,Name,GUI,CanBeMain);
+        OnGetInfo(i,Name,GUI);
         ResourceInfo& Info = m_Hash[Name];
         Info.m_Factory = this;
         Info.m_Number = i;
-        Info.m_CanBeMain = CanBeMain;
         Info.m_GUI = GUI;
+        if ( Info.m_MenuId < 0 )
+        {
+            Info.m_MenuId = wxNewId();
+        }
     }
 
     m_Next = m_Initialized;
@@ -54,12 +56,6 @@ wxsResource* wxsResourceFactory::Build(const wxString& ResourceType,wxsProject* 
         return NULL;
     }
     return Info.m_Factory->OnCreate(Info.m_Number,Project);
-}
-
-bool wxsResourceFactory::CanBeMain(const wxString& ResourceType)
-{
-    InitializeFromQueue();
-    return m_Hash[ResourceType].m_CanBeMain;
 }
 
 bool wxsResourceFactory::CanHandleExternal(const wxString& FileName)
@@ -97,26 +93,23 @@ wxsResource* wxsResourceFactory::BuildExternal(const wxString& FileName)
 void wxsResourceFactory::BuildSmithMenu(wxMenu* menu)
 {
     InitializeFromQueue();
-    for ( wxsResourceFactory* Factory = m_Initialized; Factory; Factory=Factory->m_Next )
+    for ( HashT::iterator i=m_Hash.begin(); i!=m_Hash.end(); ++i )
     {
-        Factory->OnBuildSmithMenu(menu);
+        if ( i->second.m_Factory == NULL ) continue;
+        wxString MenuEntry = _T("Add ") + i->first;
+        menu->Append(i->second.m_MenuId,MenuEntry);
     }
 }
 
-void wxsResourceFactory::BuildModuleMenu(const ModuleType type, wxMenu* menu, const FileTreeData* data)
+bool wxsResourceFactory::NewResourceMenu(int Id,wxsProject* Project)
 {
-    InitializeFromQueue();
-    for ( wxsResourceFactory* Factory = m_Initialized; Factory; Factory=Factory->m_Next )
+    for ( HashT::iterator i=m_Hash.begin(); i!=m_Hash.end(); ++i )
     {
-        Factory->OnBuildModuleMenu(type,menu,data);
+        if ( i->second.m_Factory == NULL ) continue;
+        if ( i->second.m_MenuId == Id )
+        {
+            return i->second.m_Factory->OnNewWizard(i->second.m_Number,Project);
+        }
     }
-}
-
-void wxsResourceFactory::BuildToolBar(wxToolBar* toolBar)
-{
-    InitializeFromQueue();
-    for ( wxsResourceFactory* Factory = m_Initialized; Factory; Factory=Factory->m_Next )
-    {
-        Factory->OnBuildToolBar(toolBar);
-    }
+    return false;
 }

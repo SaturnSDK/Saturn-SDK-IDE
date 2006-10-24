@@ -17,9 +17,6 @@ class wxsResourceFactory
         /** \brief Function generating resource class */
         static wxsResource* Build(const wxString& ResourceType,wxsProject* Project);
 
-        /** \brief Checking if given resource type can be main resource of application */
-        static bool CanBeMain(const wxString& ResourceType);
-
         /** \brief Checking if factory can handle given file as external resource */
         static bool CanHandleExternal(const wxString& FileName);
 
@@ -29,11 +26,13 @@ class wxsResourceFactory
         /** \brief Building wxSmith menu enteries */
         static void BuildSmithMenu(wxMenu* menu);
 
-        /** \brief Building module menu enteries */
-        static void BuildModuleMenu(const ModuleType type, wxMenu* menu, const FileTreeData* data);
-
-        /** \brief Building toolbar */
-        static void BuildToolBar(wxToolBar* toolBar);
+        /** \brief Processing menu event for creating new resources
+         *
+         * This function is triggered when there's a chance that "Add ..." menu from
+         * wxSmith has been clicked. In that case, wxsResourceFactory will process it
+         * and return true. If it's not "Add ..." menu entry, it will return false
+         */
+        static bool NewResourceMenu(int Id,wxsProject* Project);
 
     protected:
 
@@ -46,11 +45,8 @@ class wxsResourceFactory
         /** \brief Getting number of resouce types inside this factory */
         virtual int OnGetCount() = 0;
 
-        /** \brief Getting name of resource */
-        virtual wxString OnGetName(int Number) = 0;
-
         /** \brief Checking if given resource can be main in application */
-        virtual void OnGetInfo(int Number,wxString& Name,wxString& GUI,bool& CanBeMain) = 0;
+        virtual void OnGetInfo(int Number,wxString& Name,wxString& GUI) = 0;
 
         /** \brief creating resource */
         virtual wxsResource* OnCreate(int Number,wxsProject* Project) = 0;
@@ -61,14 +57,14 @@ class wxsResourceFactory
         /** \brief Building external resource object */
         virtual wxsResource* OnBuildExternal(const wxString& FileName) { return NULL; }
 
-        /** \brief Function allowing factory to create extra menu enteries in wxSmith menu */
-        virtual void OnBuildSmithMenu(wxMenu* Menu) {}
-
-        /** \brief Function allowing factory to create extra module menu enteries */
-        virtual void OnBuildModuleMenu(const ModuleType type, wxMenu* menu, const FileTreeData* data) {}
-
-        /** \brief Function allowing factory to create etra toolbar items */
-        virtual void OnBuildToolBar(wxToolBar* toolBar) {}
+        /** \brief Function creating new resource object
+         *
+         * This function is responsible for creating new resource, adding it into project,
+         * additionally adding new files to project and initialize resource with proper
+         * data. Usually it will require some dialog box before creating resource
+         * to get needed params.
+         */
+        virtual bool OnNewWizard(int Number,wxsProject* Project) = 0;
 
     private:
 
@@ -76,9 +72,9 @@ class wxsResourceFactory
         {
             wxsResourceFactory* m_Factory;
             int m_Number;
-            bool m_CanBeMain;
             wxString m_GUI;
-            ResourceInfo(): m_Factory(NULL), m_Number(0), m_CanBeMain(false) {}
+            int m_MenuId;
+            ResourceInfo(): m_Factory(NULL), m_Number(0), m_MenuId(-1) {}
         };
 
         WX_DECLARE_STRING_HASH_MAP(ResourceInfo,HashT);

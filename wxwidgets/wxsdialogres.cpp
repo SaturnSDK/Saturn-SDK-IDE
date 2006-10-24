@@ -1,8 +1,8 @@
 #include "wxsdialogres.h"
 
 
-wxsDialogRes::wxsDialogRes(wxsProject* Owner,const wxString& ResourceName,wxsCodingLang Language):
-    wxsResource(Owner,ResourceName,_T("wxDialog"),_T("wxWidgets"),Language)
+wxsDialogRes::wxsDialogRes(wxsProject* Owner):
+    wxWidgetsRes(Owner,_T("wxDialog"))
 {
 }
 
@@ -37,6 +37,7 @@ bool wxsDialogRes::OnWriteConfig(TiXmlElement* Node)
     {
         Node->SetAttribute("xrc",cbU2C(m_XrcFileName));
     }
+    return true;
 }
 
 bool wxsDialogRes::OnCanHandleFile(const wxString& FileName)
