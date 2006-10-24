@@ -4,8 +4,7 @@
 #include "wxseditor.h"
 #include "wxscodinglang.h"
 #include "wxsresourcetree.h"
-
-class wxsProject;
+#include "wxsproject.h"
 
 /** \brief Class used to manage basic resource information
  *
@@ -22,10 +21,10 @@ class wxsResource: public wxObject
          *  \param Owher project owning resource
          *  \param ResourceName name of resource (f.ex. class name)
          *  \param ResourceType name of resource type (f.ex. wxDialog)
-         *  \param GUI anme of gui using this resource, put empty string if this is universal resource like bitmap file
+         *  \param GUI name of gui using this resource, put empty string if this is universal resource like bitmap file
          *  \param Language coding language used for this resource
          */
-        wxsResource(wxsProject* Owner,const wxString& ResourceName,const wxString& ResourceType,const wxString& GUI,wxsCodingLang Language=wxsCPP);
+        wxsResource(wxsProject* Owner,const wxString& ResourceType,const wxString& GUI);
 
         /** \brief dctor */
         virtual ~wxsResource();
@@ -73,6 +72,15 @@ class wxsResource: public wxObject
          */
         inline wxString GetAppBuildingCode() { return OnGetAppBuildingCode(); }
 
+        /** \brief Reading configuration of resource from Xml node */
+        bool ReadConfig(const TiXmlElement* Node);
+
+        /** \brief Writing configuration of resource to Xml node */
+        bool WriteConfig(TiXmlElement* Node);
+
+        /** \brief Helper function for fetching project path */
+        inline wxString GetProjectPath() { return m_Owner->GetProjectPath(); }
+
     protected:
 
         /** \brief Function called when there's need to create new editor
@@ -88,7 +96,7 @@ class wxsResource: public wxObject
          *
          * \param Node - Xml node in cbp file defined for this resource only.
          * It's in form:
-         *  \code <{Resource_Type} name={Resource_Name} ... /> \endcode
+         *  \code <{Resource_Type} name={Resource_Name} language={Resource_Language}... /> \endcode
          * where {Resource_Type} is type of resource returned from GetResourceType() function
          * and {Resource_Name} is name returned from GetResourceName(). Name attribute is always
          * present.
@@ -97,8 +105,8 @@ class wxsResource: public wxObject
 
         /** \brief Function called when writing resource configuration to .cbp file
          *
-         * \param Node - Xml node where all data should be written to. "name" attribute
-         *        and Element's value should not be overwritten.
+         * \param Node - Xml node where all data should be written to. "name" attribute,
+         *        "language" attribute and Element's value (node name) should not be overwritten.
          */
         virtual bool OnWriteConfig(TiXmlElement* Node) = 0;
 

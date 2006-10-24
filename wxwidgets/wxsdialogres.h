@@ -1,29 +1,36 @@
 #ifndef WXSDIALOGRES_H
 #define WXSDIALOGRES_H
 
-#include "wxswindowres.h"
+#include "wxwidgetsres.h"
 
-class wxsDialogRes : public wxsWindowRes
+/** \brief Class responsible for managing dialog resource */
+class wxsDialogRes: public wxWidgetsRes
 {
     public:
 
         /** \brief Ctor */
-        wxsDialogRes(wxsProject* Project): wxsWindowRes(Project)
-        {}
+        wxsDialogRes(wxsProject* Owner);
+
+        /** \brief Dctor */
+        virtual ~wxsDialogRes();
 
     protected:
 
-        /** \brief Function generating root item */
-        virtual wxsItem* BuildRootItem();
+        virtual wxsEditor* OnCreateEditor();
+        virtual bool OnReadConfig(const TiXmlElement* Node);
+        virtual bool OnWriteConfig(TiXmlElement* Node);
+        virtual bool OnCanHandleFile(const wxString& FileName);
+        virtual wxString OnGetDeclarationFile();
+        virtual wxString OnGetAppBuildingCode();
+        virtual bool OnGetUsingXRC();
+        virtual bool OnGetCanBeMain();
 
-        /** \brief Function returning name of root item's class */
-        virtual wxString GetRootItemClass();
+    private:
 
-        /** \brief Function generating preview for this resouce */
-        virtual wxWindow* BuildPreview();
-
-        /** \brief Generating xrc loading code */
-        virtual wxString BuildXrcLoadingCode();
+        wxString m_WxsFileName;
+        wxString m_SrcFileName;
+        wxString m_HdrFileName;
+        wxString m_XrcFileName;
 };
 
 #endif

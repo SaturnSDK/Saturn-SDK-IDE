@@ -47,4 +47,20 @@ void wxsResource::BuildTreeEntry(const wxsResourceItemId& Parent)
     m_TreeItemId = wxsTree()->AppendItem(Parent,GetResourceName());
 }
 
+bool wxsResource::ReadConfig(const TiXmlElement* Node)
+{
+    m_ResourceName = cbC2U(Node->Attribute("name")));
+    m_Language = wxsCodeMarks::Id(cbC2U(Node->Attribute("language")));
+    if ( GetResourceName().empty() ) return false;
+    return OnReadConfig(Node);
+}
+
+bool wxsResource::WriteConfig(TiXmlElement* Node)
+{
+    bool Result = OnWriteConfig(Node);
+    Node->SetAttribute("name",cbU2C(m_ResourceName));
+    Node->SetAttribute("language",cbC2U(m_Language));
+    return Result;
+}
+
 IMPLEMENT_CLASS(wxsResource,wxObject)

@@ -27,6 +27,7 @@ wxSmith* wxSmith::m_Singleton = NULL;
 BEGIN_EVENT_TABLE(wxSmith, cbPlugin)
 	EVT_PROJECT_CLOSE(wxSmith::OnProjectClose)
 	EVT_MENU(ConfigureId,wxSmith::OnConfigure)
+	EVT_MENU(-1,wxSmith::OnMenu)
 END_EVENT_TABLE()
 
 wxSmith::wxSmith()
@@ -121,12 +122,10 @@ void wxSmith::BuildMenu(wxMenuBar* menuBar)
 
 void wxSmith::BuildModuleMenu(const ModuleType type, wxMenu* menu, const FileTreeData* data)
 {
-    wxsResourceFactory::BuildModuleMenu(type,menu,data);
 }
 
 bool wxSmith::BuildToolBar(wxToolBar* toolBar)
 {
-    wxsResourceFactory::BuildToolBar(toolBar);
 	return false;
 }
 
@@ -154,6 +153,19 @@ void wxSmith::OnConfigure(wxCommandEvent& event)
     {
         GetSmithProject(Proj)->Configure();
     }
+}
+
+void wxSmith::OnMenu(wxCommandEvent& event)
+{
+    cbProject* Proj = Manager::Get()->GetProjectManager()->GetActiveProject();
+    if ( Proj )
+    {
+        if ( wxsResourceFactory::NewResourceMenu(event.GetId(),GetSmithProject(Proj)) )
+        {
+            return;
+        }
+    }
+    event.Skip();
 }
 
 cbProject* wxSmith::GetCBProject(wxsProject* Proj)

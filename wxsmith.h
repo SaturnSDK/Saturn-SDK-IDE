@@ -91,6 +91,9 @@ class wxSmith : public cbPlugin
         /** \brief Called when clicked "Configure..." from wxSmith menu */
         void OnConfigure(wxCommandEvent& event);
 
+        /** \brief Called for any menu, used to find possible "Add ...." enteries */
+        void OnMenu(wxCommandEvent& event);
+
         friend class wxSmithMime;
 		DECLARE_EVENT_TABLE()
 };

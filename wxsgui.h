@@ -36,9 +36,9 @@ class wxsGUI: public wxObject
         /** \brief Helper function for fetching project path */
         inline wxString GetProjectPath() { return m_Project->GetProjectPath(); }
 
-        /** \brief Helper function for fetching internal wxSmith directory */
-        inline wxString GetInternalPath() { return m_Project->GetInternalPath(); }
-
+//        /** \brief Helper function for fetching internal wxSmith directory */
+//        inline wxString GetInternalPath() { return m_Project->GetInternalPath(); }
+//
         /** \brief Function notifying that modification to GUI settings has been made */
         inline void NotifyChange() { m_Project->NotifyChange(); }
 

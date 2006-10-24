@@ -1,50 +1,85 @@
 #include "wxsdialogres.h"
-#include "wxsdialogpreviewdlg.h"
-#include "../wxscustomwidgetxmlhandler.h"
-#include "../wxsglobals.h"
-#include "../wxsitemfactory.h"
-#include "../wxsproject.h"
-#include "../wxsitem.h"
 
-wxsItem* wxsDialogRes::BuildRootItem()
+
+wxsDialogRes::wxsDialogRes(wxsProject* Owner,const wxString& ResourceName,wxsCodingLang Language):
+    wxsResource(Owner,ResourceName,_T("wxDialog"),_T("wxWidgets"),Language)
 {
-    return wxsGEN(_T("wxDialog"),this);
 }
 
-wxString wxsDialogRes::GetRootItemClass()
+wxsDialogRes::~wxsDialogRes()
 {
-    return _T("wxDialog");
 }
 
-wxWindow* wxsDialogRes::BuildPreview()
+wxsEditor* wxsDialogRes::OnCreateEditor()
 {
-    wxDialog* Dlg = new wxsDialogPreviewDlg(this);
+    // TODO: Code it
+    return NULL;
+}
 
-    if ( UsingXRC() )
+bool wxsDialogRes::OnReadConfig(const TiXmlElement* Node)
+{
+    m_WxsFileName = cbC2U(Node->Attribute("wxs"));
+    m_SrcFileName = cbC2U(Node->Attribute("src"));
+    m_HdrFileName = cbC2U(Node->Attribute("hdr"));
+    m_XrcFileName = cbC2U(Node->Attribute("xrc"));
+    return !m_WxsFileName.empty() &&
+           !m_SrcFileName.empty() &&
+           !m_HdrFileName.empty();
+    // m_XrcFileName may be empty because it's not used when generating full source code
+}
+
+bool wxsDialogRes::OnWriteConfig(TiXmlElement* Node)
+{
+    Node->SetAttribute("wxs",cbU2C(m_WxsFileName));
+    Node->SetAttribute("src",cbU2C(m_SrcFileName));
+    Node->SetAttribute("hdr",cbU2C(m_HdrFileName));
+    if ( !m_XrcFileName.empty() )
     {
-        SaveResource();
-        wxXmlResource Res(
-            GetProject() ?
-            GetProject()->GetProjectFileName(GetXrcFile()):
-            GetXrcFile());
-        Res.InitAllHandlers();
-        Res.AddHandler(new wxsCustomWidgetXmlHandler());
-        if ( !Res.LoadDialog(Dlg,NULL,GetClassName()) )
-        {
-            delete Dlg;
-            return NULL;
-        }
+        Node->SetAttribute("xrc",cbU2C(m_XrcFileName));
     }
-    else
-    {
-        GetRootItem()->BuildPreview(Dlg,true);
-    }
-
-    return Dlg;
 }
 
-wxString wxsDialogRes::BuildXrcLoadingCode()
+bool wxsDialogRes::OnCanHandleFile(const wxString& FileName)
 {
-    return _T("wxXmlResource::Get()->LoadDialog(this,parent,") +
-        wxsGetWxString(GetClassName()) + _T(");\n");
+    wxFileName Normalized(GetProjectPath()+m_WxsFileName);
+    Normalized.Normalize(wxPATH_NORM_DOTS);
+    if ( Normalized.GetFullPath() == FileName )
+    {
+        return true;
+    }
+    if ( m_XrcFileName.empty() )
+    {
+        return false;
+    }
+    Normalized.Assign(GetProjectPath()+m_XrcFileName);
+    Normalized.Normalize(wxPATH_NORM_DOTS);
+    if ( Normalized.GetFullPath() == FileName )
+    {
+        return true;
+    }
+    return false;
+}
+
+wxString wxsDialogRes::OnGetDeclarationFile()
+{
+    return m_HdrFileName;
+}
+
+wxString wxsDialogRes::OnGetAppBuildingCode()
+{
+    return wxString::Format(
+        _T("%s Dlg(NULL);\n")
+        _T("Dlg.ShowModal();\n")
+        _T("wxsOK = false;\n"),
+            GetResourceName().c_str());
+}
+
+bool wxsDialogRes::OnGetUsingXRC()
+{
+    return !m_XrcFileName.empty();
+}
+
+bool wxsDialogRes::OnGetCanBeMain()
+{
+    return true;
 }

@@ -8,10 +8,10 @@
 #include <wx/string.h>
 #include <messagemanager.h>
 
-namespace
-{
-    const wxString InternalDir(_T("wxsmith"));
-}
+//namespace
+//{
+//    const wxString InternalDir(_T("wxsmith"));
+//}
 
 wxsProject::wxsProject(cbProject* Project):
     m_Project(Project),
@@ -25,8 +25,8 @@ wxsProject::wxsProject(cbProject* Project):
     // Building paths
     wxFileName PathBuilder(Project->GetFilename());
     m_ProjectPath = PathBuilder.GetPath(wxPATH_GET_VOLUME|wxPATH_GET_SEPARATOR);
-    PathBuilder.AppendDir(InternalDir);
-    m_WorkingPath = PathBuilder.GetPath(wxPATH_GET_VOLUME|wxPATH_GET_SEPARATOR);
+//    PathBuilder.AppendDir(InternalDir);
+//    m_WorkingPath = PathBuilder.GetPath(wxPATH_GET_VOLUME|wxPATH_GET_SEPARATOR);
 }
 
 wxsProject::~wxsProject()
@@ -81,7 +81,7 @@ void wxsProject::ReadConfiguration(TiXmlElement* element)
                 if ( Res )
                 {
                     // Storing unknown Xml Element
-                    if ( !Res->OnReadConfig(ResNode) )
+                    if ( !Res->ReadConfig(ResNode) )
                     {
                         m_UnknownResources.InsertEndChild(*ResNode);
                         delete Res;
@@ -133,7 +133,8 @@ void wxsProject::WriteConfiguration(TiXmlElement* element)
             const wxString& Name = m_Resources[i]->GetResourceName();
             const wxString& Type = m_Resources[i]->GetResourceType();
             TiXmlElement* Element = ResElement->InsertEndChild(TiXmlElement(cbU2C(Type)))->ToElement();
-            m_Resources[i]->OnWriteConfig(Element);
+            // TODO: Check value returned from WriteConfig
+            m_Resources[i]->WriteConfig(Element);
             Element->SetAttribute("name",cbU2C(Name));
         }
 
@@ -215,11 +216,11 @@ wxString wxsProject::GetProjectPath()
     return m_ProjectPath;
 }
 
-wxString wxsProject::GetInternalPath()
-{
-    return m_WorkingPath;
-}
-
+//wxString wxsProject::GetInternalPath()
+//{
+//    return m_WorkingPath;
+//}
+//
 bool wxsProject::CanOpenEditor(const wxString& FileName)
 {
     for ( size_t i=m_Resources.Count(); i-->0; )

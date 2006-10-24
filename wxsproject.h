@@ -42,9 +42,9 @@ class wxsProject
         /** \brief Function returning main project path */
         wxString GetProjectPath();
 
-        /** \brief Function returning path of directory where all wxsmith files are stored */
-        wxString GetInternalPath();
-
+//        /** \brief Function returning path of directory where all wxsmith files are stored */
+//        wxString GetInternalPath();
+//
         /** \brief Adding new resource
          *
          * This function will modify CBP project's modify state
@@ -95,7 +95,7 @@ class wxsProject
         typedef ResBrowserIdsT::iterator ResBrowserIdsI;
 
         wxString m_ProjectPath;             ///< \brief Base Directory of C::B project (where project file is stored)
-        wxString m_WorkingPath;             ///< \brief Directory where wxSmith's private data will be stored
+//        wxString m_WorkingPath;             ///< \brief Directory where wxSmith's private data will be stored
         cbProject* m_Project;               ///< \brief Project associated with project
         wxsResourceItemId m_TreeItem;       ///< \brief Tree item where project's resources are kept
         ResourcesT m_Resources;             ///< \brief Array of resources

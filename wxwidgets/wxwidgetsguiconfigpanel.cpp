@@ -108,7 +108,7 @@ void wxWidgetsGUIConfigPanel::OnButton1Click(wxCommandEvent& event)
     if ( !FileName.empty() )
     {
         wxFileName FN(FileName);
-        FN.MakeRelativeTo(m_GUI->GetProject()->GetProjectPath());
+        FN.MakeRelativeTo(m_GUI->GetProjectPath());
         wxString Ext = FN.GetExt();
         FileName = FN.GetFullPath();
         if ( Ext == _T("zip") || Ext == _T("ZIP") )

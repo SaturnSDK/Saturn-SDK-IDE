@@ -37,7 +37,7 @@
 			<Add option="-fmessage-length=0" />
 			<Add option="-fexceptions" />
 			<Add option="-Winvalid-pch" />
-			<Add option='-include &quot;wxsheaders.h&quot;' />
+			<Add option='-include &quot;sdk.h&quot;' />
 			<Add option="-DHAVE_W32API_H" />
 			<Add option="-D__WXMSW__" />
 			<Add option="-DWXUSINGDLL" />
@@ -52,7 +52,7 @@
 			<Add directory="$(#CB)\sdk\wxscintilla\include" />
 			<Add directory="$(#CB)\sdk\as\include" />
 			<Add directory="$(#CB)\sdk\propgrid\include" />
-			<Add directory="$(#CB)\sdk\wxFlatNotebook" />
+			<Add directory="$(#CB)\sdk\wxFlatNotebook\include" />
 			<Add directory="$(#CB.include)" />
 			<Add directory="$(#CB.include)\wxscintilla\include" />
 			<Add directory="$(#CB.include)\as\include" />
@@ -314,12 +314,6 @@
 			<Option link="0" />
 			<Option target="wxSmith" />
 		</Unit>
-		<Unit filename="wxsheaders.h">
-			<Option compilerVar="CPP" />
-			<Option link="0" />
-			<Option weight="0" />
-			<Option target="wxSmith" />
-		</Unit>
 		<Unit filename="wxsmith.cpp">
 			<Option compilerVar="CPP" />
 			<Option target="wxSmith" />
@@ -340,27 +334,11 @@
 			<Option link="0" />
 			<Option target="wxSmith" />
 		</Unit>
-		<Unit filename="wxsmithwizard.cpp">
-			<Option compilerVar="CPP" />
-			<Option target="wxSmith" />
-		</Unit>
-		<Unit filename="wxsmithwizard.h">
-			<Option compilerVar="CPP" />
-			<Option compile="0" />
-			<Option link="0" />
-			<Option target="wxSmith" />
-		</Unit>
 		<Unit filename="wxsproject.cpp">
 			<Option compilerVar="CPP" />
 			<Option target="wxSmith" />
 		</Unit>
 		<Unit filename="wxsproject.h">
-			<Option compilerVar="CPP" />
-			<Option compile="0" />
-			<Option link="0" />
-			<Option target="wxSmith" />
-		</Unit>
-		<Unit filename="wxsprojectconfig.h">
 			<Option compilerVar="CPP" />
 			<Option compile="0" />
 			<Option link="0" />
@@ -406,17 +384,21 @@
 			<Option link="0" />
 			<Option target="wxSmith" />
 		</Unit>
-		<Unit filename="wxssourcemarks.h">
-			<Option compilerVar="CPP" />
-			<Option compile="0" />
-			<Option link="0" />
-			<Option target="wxSmith" />
-		</Unit>
 		<Unit filename="wxsstoringsplitterwindow.cpp">
 			<Option compilerVar="CPP" />
 			<Option target="wxSmith" />
 		</Unit>
 		<Unit filename="wxsstoringsplitterwindow.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\wxsdialogres.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\wxsdialogres.h">
 			<Option compilerVar="CPP" />
 			<Option compile="0" />
 			<Option link="0" />
