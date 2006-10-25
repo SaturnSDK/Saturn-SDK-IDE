@@ -1,15 +1,9 @@
 #include "wxsnewwindowdlg.h"
-#include "resources/wxswindowres.h"
-#include "wxsmith.h"
+#include "wxwidgetsres.h"
+#include "wxsdialogres.h"
+#include "../wxsmith.h"
+#include "../wxsproject.h"
 
-#include <wx/xrc/xmlres.h>
-#include <projectmanager.h>
-#include <messagemanager.h>
-#include "wxsglobals.h"
-#include "wxsproject.h"
-#include "resources/wxsdialogres.h"
-#include "resources/wxsframeres.h"
-#include "resources/wxspanelres.h"
 
 BEGIN_EVENT_TABLE(wxsNewWindowDlg,wxDialog)
     //(*EventTable(wxsNewWindowDlg)
@@ -18,17 +12,18 @@ BEGIN_EVENT_TABLE(wxsNewWindowDlg,wxDialog)
     EVT_TEXT(ID_TEXTCTRL3,wxsNewWindowDlg::OnSourceChanged)
     EVT_CHECKBOX(ID_CHECKBOX1,wxsNewWindowDlg::OnUseXrcChange)
     EVT_TEXT(ID_TEXTCTRL4,wxsNewWindowDlg::OnXrcChanged)
-    EVT_BUTTON(ID_BUTTON1,wxsNewWindowDlg::OnCancel)
-    EVT_BUTTON(ID_BUTTON2,wxsNewWindowDlg::OnCreate)
     //*)
+    EVT_BUTTON(wxID_OK,wxsNewWindowDlg::OnCreate)
+    EVT_BUTTON(wxID_CANCEL,wxsNewWindowDlg::OnCancel)
 END_EVENT_TABLE()
 
-wxsNewWindowDlg::wxsNewWindowDlg(wxWindow* parent,const wxString& ResType):
-    SourceNotTouched(true),
-    HeaderNotTouched(true),
-    XrcNotTouched(true),
-    BlockText(false),
-    Type(ResType)
+wxsNewWindowDlg::wxsNewWindowDlg(wxWindow* parent,const wxString& ResType,wxsProject* Project):
+    m_SourceNotTouched(true),
+    m_HeaderNotTouched(true),
+    m_XrcNotTouched(true),
+    m_BlockText(false),
+    m_Type(ResType),
+    m_Project(Project)
 {
     wxWindowID id = wxID_ANY;
 
@@ -37,68 +32,55 @@ wxsNewWindowDlg::wxsNewWindowDlg(wxWindow* parent,const wxString& ResType):
     wxStaticText* StaticText2;
     wxStaticText* StaticText3;
     wxStaticText* StaticText4;
-    wxButton* Button1;
-    wxButton* Button2;
 
-    Create(parent,id,_T(""),wxDefaultPosition,wxDefaultSize,wxDEFAULT_DIALOG_STYLE);
+    Create(parent,id,_T(""),wxDefaultPosition,wxDefaultSize,wxDEFAULT_DIALOG_STYLE,_T(""));
     BoxSizer1 = new wxBoxSizer(wxVERTICAL);
     StaticBoxSizer1 = new wxStaticBoxSizer(wxVERTICAL,this,_("Options"));
     FlexGridSizer1 = new wxFlexGridSizer(0,2,5,5);
     FlexGridSizer1->AddGrowableCol(1);
-    StaticText1 = new wxStaticText(this,ID_STATICTEXT1,_("Class Name:"),wxDefaultPosition,wxDefaultSize,0);
-    Class = new wxTextCtrl(this,ID_TEXTCTRL1,_T(""),wxDefaultPosition,wxSize(80,-1),0);
-    if ( 0 ) Class->SetMaxLength(0);
-    StaticText2 = new wxStaticText(this,ID_STATICTEXT2,_("Header file:"),wxDefaultPosition,wxDefaultSize,0);
-    Header = new wxTextCtrl(this,ID_TEXTCTRL2,_T(""),wxDefaultPosition,wxSize(80,-1),0);
-    if ( 0 ) Header->SetMaxLength(0);
-    StaticText3 = new wxStaticText(this,ID_STATICTEXT3,_("Source file:"),wxDefaultPosition,wxDefaultSize,0);
-    Source = new wxTextCtrl(this,ID_TEXTCTRL3,_T(""),wxDefaultPosition,wxSize(80,-1),0);
-    if ( 0 ) Source->SetMaxLength(0);
-    UseXrc = new wxCheckBox(this,ID_CHECKBOX1,_("Xrc File:"),wxDefaultPosition,wxDefaultSize,0);
-    UseXrc->SetValue(false);
-    Xrc = new wxTextCtrl(this,ID_TEXTCTRL4,_T(""),wxDefaultPosition,wxSize(80,-1),0);
-    if ( 0 ) Xrc->SetMaxLength(0);
+    StaticText1 = new wxStaticText(this,ID_STATICTEXT1,_("Class Name:"),wxDefaultPosition,wxDefaultSize,0,_("ID_STATICTEXT1"));
+    m_Class = new wxTextCtrl(this,ID_TEXTCTRL1,_T(""),wxDefaultPosition,wxSize(80,-1),0,wxDefaultValidator,_("ID_TEXTCTRL1"));
+    if ( 0 ) m_Class->SetMaxLength(0);
+    StaticText2 = new wxStaticText(this,ID_STATICTEXT2,_("Header file:"),wxDefaultPosition,wxDefaultSize,0,_("ID_STATICTEXT2"));
+    m_Header = new wxTextCtrl(this,ID_TEXTCTRL2,_T(""),wxDefaultPosition,wxSize(80,-1),0,wxDefaultValidator,_("ID_TEXTCTRL2"));
+    if ( 0 ) m_Header->SetMaxLength(0);
+    StaticText3 = new wxStaticText(this,ID_STATICTEXT3,_("Source file:"),wxDefaultPosition,wxDefaultSize,0,_("ID_STATICTEXT3"));
+    m_Source = new wxTextCtrl(this,ID_TEXTCTRL3,_T(""),wxDefaultPosition,wxSize(80,-1),0,wxDefaultValidator,_("ID_TEXTCTRL3"));
+    if ( 0 ) m_Source->SetMaxLength(0);
+    m_UseXrc = new wxCheckBox(this,ID_CHECKBOX1,_("Xrc File:"),wxDefaultPosition,wxDefaultSize,0,wxDefaultValidator,_("ID_CHECKBOX1"));
+    m_UseXrc->SetValue(false);
+    m_Xrc = new wxTextCtrl(this,ID_TEXTCTRL4,_T(""),wxDefaultPosition,wxSize(80,-1),0,wxDefaultValidator,_("ID_TEXTCTRL4"));
+    if ( 0 ) m_Xrc->SetMaxLength(0);
     FlexGridSizer1->Add(StaticText1,0,wxALIGN_CENTER,5);
-    FlexGridSizer1->Add(Class,0,wxALIGN_LEFT|wxALIGN_TOP|wxEXPAND,5);
+    FlexGridSizer1->Add(m_Class,0,wxALIGN_LEFT|wxALIGN_TOP|wxEXPAND,5);
     FlexGridSizer1->Add(StaticText2,0,wxALIGN_CENTER,5);
-    FlexGridSizer1->Add(Header,0,wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL|wxEXPAND,5);
+    FlexGridSizer1->Add(m_Header,0,wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL|wxEXPAND,5);
     FlexGridSizer1->Add(StaticText3,0,wxALIGN_CENTER,5);
-    FlexGridSizer1->Add(Source,0,wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL|wxEXPAND,5);
-    FlexGridSizer1->Add(UseXrc,0,wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL|wxEXPAND,5);
-    FlexGridSizer1->Add(Xrc,0,wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL|wxEXPAND,5);
-    StaticText4 = new wxStaticText(this,ID_STATICTEXT4,_("Warning:\nWhen adding resource in Xrc mode,\nthis resource must be manually loaded.\nFor details see wxXmlResource::Load()\nand wxXmlResource::Get()."),wxDefaultPosition,wxDefaultSize,wxALIGN_CENTRE);
+    FlexGridSizer1->Add(m_Source,0,wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL|wxEXPAND,5);
+    FlexGridSizer1->Add(m_UseXrc,0,wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL|wxEXPAND,5);
+    FlexGridSizer1->Add(m_Xrc,0,wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL|wxEXPAND,5);
+    StaticText4 = new wxStaticText(this,ID_STATICTEXT4,_("Warning:\nWhen adding resource in Xrc mode,\nthis resource must be manually loaded.\nFor details see wxXmlResource::Load()\nand wxXmlResource::Get()."),wxDefaultPosition,wxDefaultSize,wxALIGN_CENTRE,_("ID_STATICTEXT4"));
     StaticBoxSizer1->Add(FlexGridSizer1,0,wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL|wxEXPAND,5);
     StaticBoxSizer1->Add(StaticText4,1,wxALL|wxALIGN_CENTER,5);
-    BoxSizer2 = new wxBoxSizer(wxHORIZONTAL);
-    Button1 = new wxButton(this,ID_BUTTON1,_("Cancel"),wxDefaultPosition,wxDefaultSize,0);
-    if (false) Button1->SetDefault();
-    Button2 = new wxButton(this,ID_BUTTON2,_("Create"),wxDefaultPosition,wxDefaultSize,0);
-    if (true) Button2->SetDefault();
-    BoxSizer2->Add(Button1,0,wxALL|wxALIGN_CENTER,5);
-    BoxSizer2->Add(Button2,0,wxALL|wxALIGN_CENTER,5);
+    Custom1 = CreateStdDialogButtonSizer(wxOK|wxCANCEL);
     BoxSizer1->Add(StaticBoxSizer1,0,wxALL|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL|wxEXPAND,5);
-    BoxSizer1->Add(BoxSizer2,0,wxALL|wxALIGN_CENTER,5);
+    BoxSizer1->Add(Custom1,1,wxLEFT|wxRIGHT|wxBOTTOM|wxALIGN_CENTER|wxEXPAND,4);
     this->SetSizer(BoxSizer1);
     BoxSizer1->Fit(this);
     BoxSizer1->SetSizeHints(this);
+    Center();
     //*)
 
-    if ( !Class || !Source || !Header )
-    {
-        Close();
-    }
-    else
-    {
-    	BlockText = true;
-    	wxString ResName = wxString::Format(_("New%s"),ResType.c_str());
-        Class->SetValue(ResName);
-        Source->SetValue(ResName.Lower()+_T(".cpp"));
-        Header->SetValue(ResName.Lower()+_T(".h"));
-        Xrc->SetValue(ResName.Lower()+_T(".xrc"));
-        Xrc->Disable();
-        SetTitle(wxString::Format(_("New %s resource"),ResType.c_str()));
-        BlockText = false;
-    }
+    m_BlockText = true;
+    wxString StrippedName = ResType.Mid(2);
+    wxString ResName = wxString::Format(_("New%s"),StrippedName.c_str());
+    m_Class->SetValue(ResName);
+    m_Source->SetValue(ResName.Lower()+_T(".cpp"));
+    m_Header->SetValue(ResName.Lower()+_T(".h"));
+    m_Xrc->SetValue(ResName.Lower()+_T(".xrc"));
+    m_Xrc->Disable();
+    SetTitle(wxString::Format(_("New %s resource"),ResType.c_str()));
+    m_BlockText = false;
 }
 
 wxsNewWindowDlg::~wxsNewWindowDlg()
@@ -107,184 +89,183 @@ wxsNewWindowDlg::~wxsNewWindowDlg()
 
 void wxsNewWindowDlg::OnCancel(wxCommandEvent& event)
 {
-    Close();
+    EndModal(wxID_CANCEL);
 }
 
 void wxsNewWindowDlg::OnCreate(wxCommandEvent& event)
 {
-	bool CreateXrc = UseXrc->GetValue();
+	bool CreateXrc = m_UseXrc->GetValue();
+	wxString Class = m_Class->GetValue();
+	wxString Src   = m_Source->GetValue();
+	wxString Hdr   = m_Header->GetValue();
+	wxString Xrc   = CreateXrc ? m_Xrc->GetValue() : _T("");
+
+    cbProject* cbProj = m_Project->GetCBProject();
 
     // Need to do some checks
     // First - validating name
-    if ( !wxsValidateIdentifier(Class->GetValue()) )
+    if ( !wxsValidateIdentifier(Class) )
     {
         wxMessageBox(_("Invalid class name"));
         return;
     }
 
     // Second - checking if there's given resoure in current project
-
-    wxsProject* Proj = wxsPLUGIN()->GetSmithProject(Manager::Get()->GetProjectManager()->GetActiveProject());
-    if ( !Proj ) { return; }
-
-    if ( Proj->FindResource(Class->GetValue()) )
+    if ( m_Project->FindResource(Class) )
     {
-        wxMessageBox(wxString::Format(_("Resource '%s' already exists"),Class->GetValue().c_str()));
+        wxMessageBox(wxString::Format(_("Resource '%s' already exists"),Class.c_str()));
         return;
     }
 
     // Third - checking if files already exist
-
-    if ( wxFileName::FileExists(Proj->GetProjectFileName(Header->GetValue())) )
+    wxString ProjectPrefix = m_Project->GetProjectPath();
+    bool GenHeader = true;
+    if ( wxFileName::FileExists(ProjectPrefix+Hdr) )
     {
-        if ( wxMessageBox(
-              wxString::Format(_("File '%s' already exists. It will be overwritten.\nContinue ?"),Header->GetValue().c_str()),
-              _("File exists"),wxYES_NO|wxICON_ERROR) != wxYES )
+        switch ( wxMessageBox(wxString::Format(
+            _("File '%s' already exists. Overwrite it ?"),Hdr.c_str()),
+            _("File exists"),
+            wxYES_NO|wxCANCEL|wxICON_ERROR) )
         {
-            return;
+            case wxCANCEL: return;
+            case wxNO: GenHeader = false; break;
         }
     }
 
-    if ( wxFileName::FileExists(Proj->GetProjectFileName(Source->GetValue())) )
+    bool GenSource = true;
+    if ( wxFileName::FileExists(ProjectPrefix+Src) )
     {
-        if ( wxMessageBox(
-              wxString::Format(_("File '%s' already exists. It will be overwritten.\nContinue ?"),Source->GetValue().c_str()),
-              _("File exists"),wxYES_NO|wxICON_ERROR) != wxYES )
+        switch ( wxMessageBox(wxString::Format(
+            _("File '%s' already exists. Overwrite it ?"),Src.c_str()),
+            _("File exists"),wxYES_NO|wxCANCEL|wxICON_ERROR) )
         {
-            return;
+            case wxCANCEL: return;
+            case wxNO: GenSource = false; break;
         }
     }
 
-    if ( CreateXrc && wxFileName::FileExists(Proj->GetProjectFileName(Xrc->GetValue())) )
+    bool GenXRC = CreateXrc;
+    if ( CreateXrc && wxFileName::FileExists(ProjectPrefix+Xrc) )
     {
-        if ( wxMessageBox(
-              wxString::Format(_("File '%s' already exists. It will be overwritten.\nContinue ?"),Source->GetValue().c_str()),
-              _("File exists"),wxYES_NO|wxICON_ERROR) != wxYES )
+        switch ( wxMessageBox(wxString::Format(
+            _("File '%s' already exists. Overwrite it ?"),Xrc.c_str()),
+            _("File exists"),wxYES_NO|wxCANCEL|wxICON_ERROR) )
         {
-            return;
+            case wxCANCEL: return;
+            case wxNO: GenXRC = false; break;
         }
     }
 
     // Creating new resource
+    wxString WxsFile = Class + _T(".wxs");
+    wxWidgetsRes* NewWindow = NULL;
 
-    wxString WxsFile = Class->GetValue() + _T(".wxs");
-    wxsWindowRes* NewWindow = NULL;
-
-    // Configuration wil be passed through xml node
-    TiXmlElement Config("tmp");
-    Config.SetAttribute("class",       cbU2C(Class->GetValue()));
-    Config.SetAttribute("wxs_file",    cbU2C(WxsFile));
-    Config.SetAttribute("src_file",    cbU2C(Source->GetValue()));
-    Config.SetAttribute("header_file", cbU2C(Header->GetValue()));
-    Config.SetAttribute("xrc_file",    cbU2C(Xrc->GetValue()));
-    Config.SetAttribute("edit_mode",   UseXrc->GetValue()?"Xrc":"Source");
-
-    if ( Type == _T("Dialog") )
+    if ( m_Type == _T("wxDialog") )
     {
-        NewWindow = new wxsDialogRes(Proj);
+        NewWindow = new wxsDialogRes(m_Project);
     }
-    else if ( Type == _T("Frame") )
-    {
-        NewWindow = new wxsFrameRes(Proj);
-    }
-    else if ( Type == _T("Panel") )
-    {
-        NewWindow = new wxsPanelRes(Proj);
-    }
+//    else if ( m_Type == _T("wxFrame") )
+//    {
+//        NewWindow = new wxsFrameRes(m_Project);
+//    }
+//    else if ( m_Type == _T("wxPanel") )
+//    {
+//        NewWindow = new wxsPanelRes(m_Project);
+//    }
     else
     {
         DBGLOG(_T("wxSmith: Internal error: unknown type when creating resource"));
-        Close();
+        EndModal(wxID_CANCEL);
         return;
     }
 
-    if ( !NewWindow->CreateNewResource(&Config) )
+    // Building new data
+    if ( !NewWindow->OnCreateNewResource(Class,Src,GenSource,Hdr,GenHeader,Xrc,GenXRC) )
     {
         delete NewWindow;
         DBGLOG(_T("wxSmith: Couldn't generate new resource"));
-        Close();
+        EndModal(wxID_CANCEL);
         return;
     }
 
     // Updating content of resource
+    // This is done to allow XRC loader load proper data
     if ( !PrepareResource(NewWindow) )
     {
         delete NewWindow;
-        Close();
+        EndModal(wxID_CANCEL);
         return;
     }
-    NewWindow->SetModified(true);
-    NewWindow->SaveResource();
 
-    if ( !Proj->AddResource(NewWindow) )
+    if ( !m_Project->AddResource(NewWindow) )
     {
         DBGLOG(_T("Couldn't add new resource to project"));
         delete NewWindow;
-        Close();
+        EndModal(wxID_CANCEL);
         return;
     }
 
     // Adding new files to project
-    wxArrayInt targets;
-    Manager::Get()->GetProjectManager()->AddFileToProject(Header->GetValue(), Proj->GetCBProject(), targets);
-    if (targets.GetCount() != 0)
+    wxArrayInt Targets;
+    Manager::Get()->GetProjectManager()->AddFileToProject(Hdr,cbProj,Targets);
+    if (Targets.GetCount() != 0)
     {
-        Manager::Get()->GetProjectManager()->AddFileToProject(Source->GetValue(), Proj->GetCBProject(), targets);
+        Manager::Get()->GetProjectManager()->AddFileToProject(Src,cbProj,Targets);
     }
     Manager::Get()->GetProjectManager()->RebuildTree();
 
+    // TODO: Rebuild code for new resource
     // Opening editor for this resource
     NewWindow->EditOpen();
-
-    Close();
+    EndModal(wxID_OK);
 }
 
 void wxsNewWindowDlg::OnClassChanged(wxCommandEvent& event)
 {
-    if ( BlockText ) return;
-    BlockText = true;
-    if ( HeaderNotTouched ) Header->SetValue((Class->GetValue() + _T(".h")).MakeLower());
-    if ( SourceNotTouched ) Source->SetValue((Class->GetValue() + _T(".cpp")).MakeLower());
-    if ( XrcNotTouched ) Xrc->SetValue((Class->GetValue() + _T(".xrc")).MakeLower());
-    BlockText = false;
+    if ( m_BlockText ) return;
+    m_BlockText = true;
+    if ( m_HeaderNotTouched ) m_Header->SetValue((m_Class->GetValue() + _T(".h")).MakeLower());
+    if ( m_SourceNotTouched ) m_Source->SetValue((m_Class->GetValue() + _T(".cpp")).MakeLower());
+    if ( m_XrcNotTouched ) m_Xrc->SetValue((m_Class->GetValue() + _T(".xrc")).MakeLower());
+    m_BlockText = false;
 }
 
 void wxsNewWindowDlg::OnSourceChanged(wxCommandEvent& event)
 {
-    if ( BlockText ) return;
-    BlockText = true;
-    SourceNotTouched = false;
-    BlockText = false;
+    if ( m_BlockText ) return;
+    m_BlockText = true;
+    m_SourceNotTouched = false;
+    m_BlockText = false;
 }
 
 void wxsNewWindowDlg::OnHeaderChanged(wxCommandEvent& event)
 {
-    if ( BlockText ) return;
-    BlockText = true;
-    wxFileName FN(Header->GetValue());
+    if ( m_BlockText ) return;
+    m_BlockText = true;
+    wxFileName FN(m_Header->GetValue());
     FN.SetExt(_T("cpp"));
-    if ( SourceNotTouched )
+    if ( m_SourceNotTouched )
     {
-        Source->SetValue(FN.GetFullPath());
+        m_Source->SetValue(FN.GetFullPath());
     }
     FN.SetExt(_T("xrc"));
-    if ( XrcNotTouched )
+    if ( m_XrcNotTouched )
     {
-        Xrc->SetValue(FN.GetFullPath());
+        m_Xrc->SetValue(FN.GetFullPath());
     }
-    HeaderNotTouched = false;
-    BlockText = false;
+    m_HeaderNotTouched = false;
+    m_BlockText = false;
 }
 
 void wxsNewWindowDlg::OnUseXrcChange(wxCommandEvent& event)
 {
-    Xrc->Enable(UseXrc->GetValue());
+    m_Xrc->Enable(m_UseXrc->GetValue());
 }
 
 void wxsNewWindowDlg::OnXrcChanged(wxCommandEvent& event)
 {
-    if ( BlockText ) return;
-    BlockText = true;
-    XrcNotTouched = false;
-    BlockText = false;
+    if ( m_BlockText ) return;
+    m_BlockText = true;
+    m_XrcNotTouched = false;
+    m_BlockText = false;
 }

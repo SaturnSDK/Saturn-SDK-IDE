@@ -38,6 +38,9 @@ class wxsResource: public wxObject
         /** \brief Getting coding language used inside this resource */
         inline wxsCodingLang GetLanguage() { return m_Language; }
 
+        /** \brief Setting new language */
+        inline void SetLanguage(wxsCodingLang Lang) { m_Language = Lang; }
+
         /** \brief Getting resource name */
         inline const wxString& GetResourceName() { return m_ResourceName; }
 

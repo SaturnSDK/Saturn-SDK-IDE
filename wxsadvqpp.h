@@ -21,40 +21,40 @@ class wxsAdvQPP : public wxsQuickPropsPanel
     public:
         /** \brief Ctor
          *
-         * Number of parameters was reduced comparing to wxsQuickPropsPanel's 
-         * constructor. The reason is that this panel will be used in editor 
+         * Number of parameters was reduced comparing to wxsQuickPropsPanel's
+         * constructor. The reason is that this panel will be used in editor
          * area and some parameters must have specified values.
          */
         wxsAdvQPP(wxWindow* Parent,wxsPropertyContainer* Container);
-        
+
         /** \brief Dctor */
         virtual ~wxsAdvQPP();
-        
+
         /** \brief Function registering child panel */
         void Register(wxsAdvQPPChild* Child,const wxString& Title);
-        
+
     private:
-    
+
         /** \brief Funnction updating content of all child panels */
         void Update();
-        
+
         /** \brief Overriding NotifyChange funnction to give access from
          *         wxsAdvQPPChild
          */
         inline void NotifyChange() { wxsQuickPropsPanel::NotifyChange(); }
-        
+
         /** \brief Notification on toggling button press */
         void OnToggleButton(wxCommandEvent& event);
-        
+
         WX_DEFINE_ARRAY(wxsAdvQPPChild*,wxArrayAdvQPPChild);
         WX_DEFINE_ARRAY(wxButton*,wxArrayButton);
-        
+
         wxArrayAdvQPPChild Children;    ///< \brief Array of child panels
-        wxArrayButton Buttons;          ///< \brief Buttons used to toggle 
+        wxArrayButton Buttons;          ///< \brief Buttons used to toggle
         wxBoxSizer* Sizer;              ///< \brief Sizer layouting panels
-        
+
         DECLARE_EVENT_TABLE()
-        
+
         friend class wxsAdvQPPChild;
 };
 

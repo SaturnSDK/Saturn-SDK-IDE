@@ -11,6 +11,12 @@ class wxsDialogRes: public wxWidgetsRes
         /** \brief Ctor */
         wxsDialogRes(wxsProject* Owner);
 
+        /** \brief Ctor for external resource
+         *  \param FileName name of XRC file
+         *  \param Object Xml node with XRC resource
+         */
+        wxsDialogRes(const wxString& FileName,TiXmlElement* Object);
+
         /** \brief Dctor */
         virtual ~wxsDialogRes();
 
@@ -24,6 +30,7 @@ class wxsDialogRes: public wxWidgetsRes
         virtual wxString OnGetAppBuildingCode();
         virtual bool OnGetUsingXRC();
         virtual bool OnGetCanBeMain();
+        virtual bool OnCreateNewResource(const wxString& Class,const wxString& Src, bool GenSrc,const wxString& Hdr, bool GenHdr,const wxString& Xrc, bool GenXrc);
 
     private:
 

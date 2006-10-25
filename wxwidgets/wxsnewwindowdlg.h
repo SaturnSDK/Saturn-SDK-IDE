@@ -2,36 +2,37 @@
 #define WXSNEWWINDOWDLG_H
 
 //(*Headers(wxsNewWindowDlg)
-#include <wx/button.h>
 #include <wx/checkbox.h>
 #include <wx/dialog.h>
 #include <wx/intl.h>
+#include <wx/settings.h>
 #include <wx/sizer.h>
 #include <wx/stattext.h>
 #include <wx/textctrl.h>
 //*)
-#include "resources/wxswindowres.h"
+
+class wxWidgetsRes;
+class wxsProject;
 
 class wxsNewWindowDlg : public wxDialog
 {
 	public:
-		wxsNewWindowDlg(wxWindow* parent,const wxString& ResType);
+		wxsNewWindowDlg(wxWindow* parent,const wxString& ResType,wxsProject* Project);
 		virtual ~wxsNewWindowDlg();
 
         //(*Identifiers(wxsNewWindowDlg)
         enum Identifiers
         {
-            ID_BUTTON1 = 0x1000,
-            ID_BUTTON2,
-            ID_CHECKBOX1,
-            ID_STATICTEXT1,
-            ID_STATICTEXT2,
-            ID_STATICTEXT3,
-            ID_STATICTEXT4,
+            ID_STATICTEXT1 = 0x1000,
             ID_TEXTCTRL1,
+            ID_STATICTEXT2,
             ID_TEXTCTRL2,
+            ID_STATICTEXT3,
             ID_TEXTCTRL3,
-            ID_TEXTCTRL4
+            ID_CHECKBOX1,
+            ID_TEXTCTRL4,
+            ID_STATICTEXT4,
+            ID_CUSTOM1
         };
         //*)
 
@@ -51,23 +52,24 @@ class wxsNewWindowDlg : public wxDialog
         wxBoxSizer* BoxSizer1;
         wxStaticBoxSizer* StaticBoxSizer1;
         wxFlexGridSizer* FlexGridSizer1;
-        wxTextCtrl* Class;
-        wxTextCtrl* Header;
-        wxTextCtrl* Source;
-        wxCheckBox* UseXrc;
-        wxTextCtrl* Xrc;
-        wxBoxSizer* BoxSizer2;
+        wxTextCtrl* m_Class;
+        wxTextCtrl* m_Header;
+        wxTextCtrl* m_Source;
+        wxCheckBox* m_UseXrc;
+        wxTextCtrl* m_Xrc;
+        wxStdDialogButtonSizer* Custom1;
         //*)
 
-        virtual bool PrepareResource(wxsWindowRes* Res) { return true; }
+        virtual bool PrepareResource(wxWidgetsRes* Res) { return true; }
 
 	private:
 
-        bool SourceNotTouched;
-        bool HeaderNotTouched;
-        bool XrcNotTouched;
-        bool BlockText;
-        wxString Type;
+        bool m_SourceNotTouched;
+        bool m_HeaderNotTouched;
+        bool m_XrcNotTouched;
+        bool m_BlockText;
+        wxString m_Type;
+        wxsProject* m_Project;
 
         DECLARE_EVENT_TABLE()
 };

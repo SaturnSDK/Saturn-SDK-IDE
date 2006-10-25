@@ -179,7 +179,10 @@ wxsResource* wxsProject::FindResource(const wxString& Name)
 {
     for ( size_t i = m_Resources.Count(); i-->0; )
     {
-        if ( m_Resources[i]->GetResourceName() == Name ) return m_Resources[i];
+        if ( m_Resources[i]->GetResourceName() == Name )
+        {
+            return m_Resources[i];
+        }
     }
 
     return NULL;
@@ -221,6 +224,7 @@ wxString wxsProject::GetProjectPath()
 //    return m_WorkingPath;
 //}
 //
+
 bool wxsProject::CanOpenEditor(const wxString& FileName)
 {
     for ( size_t i=m_Resources.Count(); i-->0; )

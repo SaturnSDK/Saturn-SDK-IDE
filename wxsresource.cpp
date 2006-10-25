@@ -6,6 +6,7 @@ wxsResource::wxsResource(wxsProject* Owner,const wxString& ResourceType,const wx
     m_ResourceName(wxEmptyString),
     m_GUI(GUI),
     m_Owner(Owner),
+    m_Editor(NULL),
     m_Language(wxsCPP)
 {}
 

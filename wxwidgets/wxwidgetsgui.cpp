@@ -156,9 +156,9 @@ bool wxWidgetsGUI::OnCreateApplicationBinding()
 
 void wxWidgetsGUI::OnReadConfig(TiXmlElement* element)
 {
-    m_AppFile      = cbC2U(element->Attribute("app_src_file"));
-    m_MainResource = cbC2U(element->Attribute("main_resource"));
-    wxString InAll = cbC2U(element->Attribute("init_all_handlers"));
+    m_AppFile      = cbC2U(element->Attribute("src"));
+    m_MainResource = cbC2U(element->Attribute("main"));
+    wxString InAll = cbC2U(element->Attribute("init_handlers"));
     if ( InAll == _T("never") )
     {
         m_CallInitAll = false;
@@ -175,13 +175,13 @@ void wxWidgetsGUI::OnReadConfig(TiXmlElement* element)
         m_CallInitAllNecessary = true;
     }
 
-    wxString Lang  = cbC2U(element->Attribute("coding_language"));
+    wxString Lang  = cbC2U(element->Attribute("language"));
     m_AppLanguage = wxsCodeMarks::Id(Lang);
 
     TiXmlElement* LoadRes = element->FirstChildElement("load_resource");
     while ( LoadRes )
     {
-        wxString FileName = cbC2U(LoadRes->Attribute("file_name"));
+        wxString FileName = cbC2U(LoadRes->Attribute("file"));
         if ( !FileName.empty() )
         {
             m_LoadedResources.Add(FileName);
@@ -193,27 +193,27 @@ void wxWidgetsGUI::OnReadConfig(TiXmlElement* element)
 
 void wxWidgetsGUI::OnWriteConfig(TiXmlElement* element)
 {
-    element->SetAttribute("app_src_file",cbU2C(m_AppFile));
-    element->SetAttribute("main_resource",cbU2C(m_MainResource));
+    element->SetAttribute("src",cbU2C(m_AppFile));
+    element->SetAttribute("main",cbU2C(m_MainResource));
     if ( m_CallInitAll && m_CallInitAllNecessary )
     {
-        element->SetAttribute("init_all_handlers","necessary");
+        element->SetAttribute("init_handlers","necessary");
     }
     else if ( m_CallInitAll )
     {
-        element->SetAttribute("init_all_handlers","always");
+        element->SetAttribute("init_handlers","always");
     }
     else
     {
-        element->SetAttribute("init_all_handlers","never");
+        element->SetAttribute("init_handlers","never");
     }
 
-    element->SetAttribute("coding_language",cbU2C(wxsCodeMarks::Name(m_AppLanguage)));
+    element->SetAttribute("language",cbU2C(wxsCodeMarks::Name(m_AppLanguage)));
 
     for ( size_t i=0; i<m_LoadedResources.GetCount(); ++i )
     {
         TiXmlElement* LoadRes = element->InsertEndChild(TiXmlElement("load_resource"))->ToElement();
-        LoadRes->SetAttribute("load_resource",cbU2C(m_LoadedResources[i]));
+        LoadRes->SetAttribute("file",cbU2C(m_LoadedResources[i]));
     }
 }
 

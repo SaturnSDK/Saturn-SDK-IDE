@@ -404,6 +404,16 @@
 			<Option link="0" />
 			<Option target="wxSmith" />
 		</Unit>
+		<Unit filename="wxwidgets\wxsnewwindowdlg.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\wxsnewwindowdlg.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="wxSmith" />
+		</Unit>
 		<Unit filename="wxwidgets\wxwidgetsgui.cpp">
 			<Option compilerVar="CPP" />
 			<Option target="wxSmith" />
@@ -444,9 +454,20 @@
 			<Option link="0" />
 			<Option target="wxSmith" />
 		</Unit>
+		<Unit filename="wxwidgets\wxwidgetsresfactory.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\wxwidgetsresfactory.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="wxSmith" />
+		</Unit>
 		<Extensions>
 			<wxsmith>
 				<dialog wxs_file="wxWidgetsGUIAppAdoptingDlg.wxs" class="wxWidgetsGUIAppAdoptingDlg" src_file="wxwidgets\wxwidgetsguiappadoptingdlg.cpp" header_file="wxwidgets/wxwidgetsguiappadoptingdlg.h" xrc_file="" edit_mode="Source" />
+				<dialog wxs_file="wxsNewWindowDlg.wxs" class="wxsNewWindowDlg" src_file="wxwidgets/wxsnewwindowdlg.cpp" header_file="wxwidgets/wxsnewwindowdlg.h" xrc_file="" edit_mode="Source" />
 				<panel wxs_file="wxWidgetsGUIConfigPanel.wxs" class="wxWidgetsGUIConfigPanel" src_file="wxwidgets/wxwidgetsguiconfigpanel.cpp" header_file="wxwidgets/wxwidgetsguiconfigpanel.h" xrc_file="" edit_mode="Source" />
 				<configuration app_src_file="" main_resource="" init_all_handlers="necessary" />
 			</wxsmith>

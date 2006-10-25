@@ -1,5 +1,6 @@
 <resource>
     <object class="wxDialog" name="wxsNewWindowDlg">
+        <centered>1</centered>
         <style>wxDEFAULT_DIALOG_STYLE</style>
         <object class="wxBoxSizer" variable="BoxSizer1" member="yes">
             <orient>wxVERTICAL</orient>
@@ -28,7 +29,7 @@
                             <object class="sizeritem">
                                 <border>5</border>
                                 <flag>wxALIGN_LEFT|wxALIGN_TOP|wxEXPAND</flag>
-                                <object class="wxTextCtrl" name="ID_TEXTCTRL1" variable="Class" member="yes">
+                                <object class="wxTextCtrl" name="ID_TEXTCTRL1" variable="m_Class" member="yes">
                                     <value></value>
                                     <handler entry="EVT_TEXT" function="OnClassChanged" />
                                     <size>80,-1</size>
@@ -44,7 +45,7 @@
                             <object class="sizeritem">
                                 <border>5</border>
                                 <flag>wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL|wxEXPAND</flag>
-                                <object class="wxTextCtrl" name="ID_TEXTCTRL2" variable="Header" member="yes">
+                                <object class="wxTextCtrl" name="ID_TEXTCTRL2" variable="m_Header" member="yes">
                                     <value></value>
                                     <handler entry="EVT_TEXT" function="OnHeaderChanged" />
                                     <size>80,-1</size>
@@ -60,7 +61,7 @@
                             <object class="sizeritem">
                                 <border>5</border>
                                 <flag>wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL|wxEXPAND</flag>
-                                <object class="wxTextCtrl" name="ID_TEXTCTRL3" variable="Source" member="yes">
+                                <object class="wxTextCtrl" name="ID_TEXTCTRL3" variable="m_Source" member="yes">
                                     <value></value>
                                     <handler entry="EVT_TEXT" function="OnSourceChanged" />
                                     <size>80,-1</size>
@@ -69,7 +70,7 @@
                             <object class="sizeritem">
                                 <border>5</border>
                                 <flag>wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL|wxEXPAND</flag>
-                                <object class="wxCheckBox" name="ID_CHECKBOX1" variable="UseXrc" member="yes">
+                                <object class="wxCheckBox" name="ID_CHECKBOX1" variable="m_UseXrc" member="yes">
                                     <label>Xrc File:</label>
                                     <handler entry="EVT_CHECKBOX" function="OnUseXrcChange" />
                                 </object>
@@ -77,7 +78,7 @@
                             <object class="sizeritem">
                                 <border>5</border>
                                 <flag>wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL|wxEXPAND</flag>
-                                <object class="wxTextCtrl" name="ID_TEXTCTRL4" variable="Xrc" member="yes">
+                                <object class="wxTextCtrl" name="ID_TEXTCTRL4" variable="m_Xrc" member="yes">
                                     <value></value>
                                     <handler entry="EVT_TEXT" function="OnXrcChanged" />
                                     <size>80,-1</size>
@@ -97,27 +98,13 @@
                 </object>
             </object>
             <object class="sizeritem">
-                <border>5</border>
-                <flag>wxALL|wxALIGN_CENTER</flag>
-                <object class="wxBoxSizer" variable="BoxSizer2" member="yes">
-                    <orient>wxHORIZONTAL</orient>
-                    <object class="sizeritem">
-                        <border>5</border>
-                        <flag>wxALL|wxALIGN_CENTER</flag>
-                        <object class="wxButton" name="ID_BUTTON1" variable="Button1" member="no">
-                            <label>Cancel</label>
-                            <handler entry="EVT_BUTTON" function="OnCancel" />
-                        </object>
-                    </object>
-                    <object class="sizeritem">
-                        <border>5</border>
-                        <flag>wxALL|wxALIGN_CENTER</flag>
-                        <object class="wxButton" name="ID_BUTTON2" variable="Button2" member="no">
-                            <label>Create</label>
-                            <default>1</default>
-                            <handler entry="EVT_BUTTON" function="OnCreate" />
-                        </object>
-                    </object>
+                <option>1</option>
+                <border>4</border>
+                <flag>wxLEFT|wxRIGHT|wxBOTTOM|wxALIGN_CENTER|wxEXPAND</flag>
+                <object class="Custom" name="ID_CUSTOM1" variable="Custom1" member="yes">
+                    <class>wxStdDialogButtonSizer</class>
+                    <creating_code>$(THIS) = CreateStdDialogButtonSizer(wxOK|wxCANCEL);</creating_code>
+                    <style>0</style>
                 </object>
             </object>
         </object>
