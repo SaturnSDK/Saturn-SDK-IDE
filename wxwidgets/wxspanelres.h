@@ -1,29 +1,17 @@
 #ifndef WXSPANELRES_H
 #define WXSPANELRES_H
 
-#include "wxswindowres.h"
+#include "wxsitemres.h"
 
-class wxsPanelRes : public wxsWindowRes
+/** \brief Class responsible for managing panel resource */
+class wxsPanelRes: public wxsItemRes
 {
     public:
-
-        /** \brief Ctor */
-        wxsPanelRes(wxsProject* Project): wxsWindowRes(Project)
-        {}
-
-    protected:
-
-        /** \brief Function generating root item */
-        virtual wxsItem* BuildRootItem();
-
-        /** \brief Function returning name of root item's class */
-        virtual wxString GetRootItemClass();
-
-        /** \brief Function generating preview for this resouce */
-        virtual wxWindow* BuildPreview();
-
-        /** \brief Generating xrc loading code */
-        virtual wxString BuildXrcLoadingCode();
+        wxsPanelRes(wxsProject* Owner): wxsItemRes(Owner,ResType,false) {}
+        wxsPanelRes(const wxString& FileName,TiXmlElement* Object): wxsItemRes(FileName,Object,ResType) {}
+    private:
+        virtual wxString OnGetAppBuildingCode() { return wxEmptyString; }
+        static const wxString ResType;
 };
 
 #endif

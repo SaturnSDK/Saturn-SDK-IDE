@@ -404,11 +404,41 @@
 			<Option link="0" />
 			<Option target="wxSmith" />
 		</Unit>
+		<Unit filename="wxwidgets\wxsframeres.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\wxsframeres.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\wxsitemres.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\wxsitemres.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="wxSmith" />
+		</Unit>
 		<Unit filename="wxwidgets\wxsnewwindowdlg.cpp">
 			<Option compilerVar="CPP" />
 			<Option target="wxSmith" />
 		</Unit>
 		<Unit filename="wxwidgets\wxsnewwindowdlg.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\wxspanelres.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\wxspanelres.h">
 			<Option compilerVar="CPP" />
 			<Option compile="0" />
 			<Option link="0" />

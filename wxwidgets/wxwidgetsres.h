@@ -20,12 +20,6 @@ class wxWidgetsRes: public wxsResource
         /** \brief Checking if this resource can be main resource in app */
         virtual bool OnGetCanBeMain() = 0;
 
-        /** \brief Function creating new resource */
-        virtual bool OnCreateNewResource(
-            const wxString& Class,
-            const wxString& Src, bool GenSrc,
-            const wxString& Hdr, bool GenHdr,
-            const wxString& Xrc, bool GenXrc ) = 0;
 };
 
 #endif

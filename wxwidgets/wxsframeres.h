@@ -1,29 +1,17 @@
 #ifndef WXSFRAMERES_H
 #define WXSFRAMERES_H
 
-#include "wxswindowres.h"
+#include "wxsitemres.h"
 
-class wxsFrameRes : public wxsWindowRes
+/** \brief Class responsible for managing frame resource */
+class wxsFrameRes: public wxsItemRes
 {
     public:
-
-        /** \brief Ctor */
-        wxsFrameRes(wxsProject* Project): wxsWindowRes(Project)
-        {}
-
-    protected:
-
-        /** \brief Function generating root item */
-        virtual wxsItem* BuildRootItem();
-
-        /** \brief Function returning name of root item's class */
-        virtual wxString GetRootItemClass();
-
-        /** \brief Function generating preview for this resouce */
-        virtual wxWindow* BuildPreview();
-
-        /** \brief Generating xrc loading code */
-        virtual wxString BuildXrcLoadingCode();
+        wxsFrameRes(wxsProject* Owner): wxsItemRes(Owner,ResType,true) {}
+        wxsFrameRes(const wxString& FileName,TiXmlElement* Object): wxsItemRes(FileName,Object,ResType) {}
+    private:
+        virtual wxString OnGetAppBuildingCode();
+        static const wxString ResType;
 };
 
 #endif

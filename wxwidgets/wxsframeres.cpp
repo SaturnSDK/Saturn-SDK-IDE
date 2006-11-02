@@ -1,50 +1,13 @@
 #include "wxsframeres.h"
-#include "wxsframepreviewfrm.h"
-#include "../wxscustomwidgetxmlhandler.h"
-#include "../wxsglobals.h"
-#include "../wxsitemfactory.h"
-#include "../wxsproject.h"
-#include "../wxsitem.h"
 
-wxsItem* wxsFrameRes::BuildRootItem()
+const wxString wxsFrameRes::ResType = _T("wxFrame");
+
+wxString wxsFrameRes::OnGetAppBuildingCode()
 {
-    return wxsGEN(_T("wxFrame"),this);
-}
-
-wxString wxsFrameRes::GetRootItemClass()
-{
-    return _T("wxFrame");
-}
-
-wxWindow* wxsFrameRes::BuildPreview()
-{
-    wxFrame* Frm = new wxsFramePreviewFrm(this);
-
-    if ( UsingXRC() )
-    {
-        SaveResource();
-        wxXmlResource Res(
-            GetProject() ?
-            GetProject()->GetProjectFileName(GetXrcFile()):
-            GetXrcFile());
-        Res.InitAllHandlers();
-        Res.AddHandler(new wxsCustomWidgetXmlHandler());
-        if ( !Res.LoadFrame(Frm,NULL,GetClassName()) )
-        {
-            delete Frm;
-            return NULL;
-        }
-    }
-    else
-    {
-        GetRootItem()->BuildPreview(Frm,true);
-    }
-
-    return Frm;
-}
-
-wxString wxsFrameRes::BuildXrcLoadingCode()
-{
-    return _T("wxXmlResource::Get()->LoadFrame(this,parent,") +
-        wxsGetWxString(GetClassName()) + _T(");\n");
+    return wxString::Format(
+        _T("%s* Frame = new %s(NULL);\n")
+        _T("Frame->Show();\n")
+        _T("SetTopWindow(Frame);\n"),
+            GetResourceName().c_str(),
+            GetResourceName().c_str());
 }

@@ -1,6 +1,8 @@
 #include "wxsnewwindowdlg.h"
 #include "wxwidgetsres.h"
 #include "wxsdialogres.h"
+#include "wxsframeres.h"
+#include "wxspanelres.h"
 #include "../wxsmith.h"
 #include "../wxsproject.h"
 
@@ -158,20 +160,20 @@ void wxsNewWindowDlg::OnCreate(wxCommandEvent& event)
 
     // Creating new resource
     wxString WxsFile = Class + _T(".wxs");
-    wxWidgetsRes* NewWindow = NULL;
+    wxsItemRes* NewResource = NULL;
 
     if ( m_Type == _T("wxDialog") )
     {
-        NewWindow = new wxsDialogRes(m_Project);
+        NewResource = new wxsDialogRes(m_Project);
     }
-//    else if ( m_Type == _T("wxFrame") )
-//    {
-//        NewWindow = new wxsFrameRes(m_Project);
-//    }
-//    else if ( m_Type == _T("wxPanel") )
-//    {
-//        NewWindow = new wxsPanelRes(m_Project);
-//    }
+    else if ( m_Type == _T("wxFrame") )
+    {
+        NewResource = new wxsFrameRes(m_Project);
+    }
+    else if ( m_Type == _T("wxPanel") )
+    {
+        NewResource = new wxsPanelRes(m_Project);
+    }
     else
     {
         DBGLOG(_T("wxSmith: Internal error: unknown type when creating resource"));
@@ -180,9 +182,9 @@ void wxsNewWindowDlg::OnCreate(wxCommandEvent& event)
     }
 
     // Building new data
-    if ( !NewWindow->OnCreateNewResource(Class,Src,GenSource,Hdr,GenHeader,Xrc,GenXRC) )
+    if ( !NewResource->CreateNewResource(Class,Src,GenSource,Hdr,GenHeader,Xrc,GenXRC) )
     {
-        delete NewWindow;
+        delete NewResource;
         DBGLOG(_T("wxSmith: Couldn't generate new resource"));
         EndModal(wxID_CANCEL);
         return;
@@ -190,17 +192,17 @@ void wxsNewWindowDlg::OnCreate(wxCommandEvent& event)
 
     // Updating content of resource
     // This is done to allow XRC loader load proper data
-    if ( !PrepareResource(NewWindow) )
+    if ( !PrepareResource(NewResource) )
     {
-        delete NewWindow;
+        delete NewResource;
         EndModal(wxID_CANCEL);
         return;
     }
 
-    if ( !m_Project->AddResource(NewWindow) )
+    if ( !m_Project->AddResource(NewResource) )
     {
         DBGLOG(_T("Couldn't add new resource to project"));
-        delete NewWindow;
+        delete NewResource;
         EndModal(wxID_CANCEL);
         return;
     }
@@ -216,7 +218,7 @@ void wxsNewWindowDlg::OnCreate(wxCommandEvent& event)
 
     // TODO: Rebuild code for new resource
     // Opening editor for this resource
-    NewWindow->EditOpen();
+    NewResource->EditOpen();
     EndModal(wxID_OK);
 }
 

@@ -1,5 +1,7 @@
 #include "wxwidgetsresfactory.h"
 #include "wxsdialogres.h"
+#include "wxsframeres.h"
+#include "wxspanelres.h"
 #include "wxsnewwindowdlg.h"
 
 namespace
@@ -9,13 +11,17 @@ namespace
     enum Resources
     {
         wxDialogId = 0,
+        wxFrameId,
+        wxPanelId,
         /*=========*/
         ResourcesCount
     };
 
     const wxChar* NamesPtr[ResourcesCount] =
     {
-        _T("wxDialog")
+        _T("wxDialog"),
+        _T("wxFrame"),
+        _T("wxPanel")
     };
 
     wxArrayString Names(ResourcesCount,NamesPtr);
@@ -36,10 +42,7 @@ int wxWidgetsResFactory::OnGetCount()
 void wxWidgetsResFactory::OnGetInfo(int Number,wxString& Name,wxString& GUI)
 {
     GUI = _T("wxWidgets");
-    switch ( Number )
-    {
-        case wxDialogId: Name = _T("wxDialog"); break;
-    }
+    Name = NamesPtr[Number];
 }
 
 wxsResource* wxWidgetsResFactory::OnCreate(int Number,wxsProject* Project)
@@ -47,6 +50,8 @@ wxsResource* wxWidgetsResFactory::OnCreate(int Number,wxsProject* Project)
     switch ( Number )
     {
         case wxDialogId: return new wxsDialogRes(Project);
+        case wxFrameId:  return new wxsFrameRes(Project);
+        case wxPanelId:  return new wxsPanelRes(Project);
     }
     return NULL;
 }
@@ -107,6 +112,8 @@ wxsResource* wxWidgetsResFactory::OnBuildExternal(const wxString& FileName)
     switch ( Names.Index(Class) )
     {
         case wxDialogId: return new wxsDialogRes(FileName,Object);
+        case wxFrameId:  return new wxsFrameRes(FileName,Object);
+        case wxPanelId:  return new wxsPanelRes(FileName,Object);
     }
     return NULL;
 }
