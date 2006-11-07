@@ -1,38 +1,38 @@
 #include "wxsitem.h"
-#include "wxsadvqpp.h"
 #include "wxsparent.h"
-#include "wxsglobals.h"
-#include "wxsresourcetree.h"
-#include "wxsresource.h"
-#include "resources/wxswindowres.h"
+#include "wxsitemres.h"
 
-#include <messagemanager.h>
-
-wxsItem::wxsItem(wxsWindowRes* _Resource):
-    Parent(NULL),
-    Resource(_Resource),
-    IsMember(true),
-    Preview(NULL),
-    m_IsSelected(false)
+wxsItem::wxsItem(wxsItemRes* Resource,const wxsEventDesc* Events,unsigned long PropertiesFlags):
+    m_Events(Events,this),
+    m_Parent(NULL),
+    m_Resource(Resource),
+    m_VarName(_T("")),
+    m_IdName(_T("")),
+    m_IsMember(true),
+    m_BaseProperties(NULL),
+    m_PropertiesFlags(PropertiesFlags),
+    m_LastPreview(NULL),
+    m_IsSelected(false),
+    m_IsExpanded(false)
 {
-}
-
-void wxsItem::Create()
-{
-    Events.SetItem(this);
+    if ( m_PropertiesFlags & wxsBaseProperties::flAll )
+    {
+        m_BaseProperties = new wxsBaseProperties;
+    }
 }
 
 wxsItem::~wxsItem()
 {
+    delete m_BaseProperties;
 }
 
-void wxsItem::EnumProperties(long Flags)
+void wxsItem::OnEnumProperties(long Flags)
 {
-    if ( (Flags & flPropGrid) && (Parent != NULL) )
+    if ( (Flags & flPropGrid) && (m_Parent != NULL) )
     {
         // Parent item does take care of enumerating properties if we are
         // ceating property grid
-        Parent->EnumChildProperties(this,Flags);
+        m_Parent->OnEnumChildProperties(this,Flags);
     }
     else
     {
@@ -40,151 +40,140 @@ void wxsItem::EnumProperties(long Flags)
     }
 }
 
-wxsQuickPropsPanel* wxsItem::CreateQuickProperties(wxWindow* ParentWnd)
+wxsQuickPropsPanel* wxsItem::OnCreateQuickProperties(wxWindow* ParentWnd)
 {
     wxsAdvQPP* Panel = new wxsAdvQPP(ParentWnd,this);
 
-    if ( Parent != NULL )
+    if ( m_Parent != NULL )
     {
         // Parent item does take care of inserting QPP Children
-        Parent->AddChildQPP(this,Panel);
+        m_Parent->OnAddChildQPP(this,Panel);
     }
     else
     {
-        AddItemQPP(Panel);
+        OnAddItemQPP(Panel);
     }
 
     return Panel;
 }
 
-long wxsItem::GetPropertiesFlags()
+long wxsItem::OnGetPropertiesFlags()
 {
-    return ( Resource ? Resource->GetBasePropsFilter() : wxsFLFile )  | wxsFLVariable | wxsFLId;
+    return m_Resource->GetPropertiesFilter() | m_PropertiesFlags;
 }
 
 void wxsItem::EnumItemProperties(long Flags)
 {
     // Registering variable name / identifier
     // these values are skipped when storing into xml variable
-    // because itis stored as element attribute
+    // because itis stored as attribute of XML element
     if ( (Flags & (flPropGrid|flPropStream)) != 0 )
     {
-        WXS_STRING(wxsItem,VarName,wxsFLVariable,_("Var name"),_T("var_name"),wxEmptyString,false,false);
-        WXS_BOOL(wxsItem,IsMember,wxsFLVariable,_(" Is member"),_T("var_is_member"),true);
-        WXS_STRING(wxsItem,IdName,wxsFLId,_("Identifier"),_T("identifier"),wxEmptyString,false,false);
+        WXS_STRING(wxsItem,m_VarName,flVariable,_("Var name"),_T("var_name"),wxEmptyString,false,false);
+        WXS_BOOL(wxsItem,m_IsMember,flVariable,_(" Is member"),_T("var_is_member"),true);
+        WXS_STRING(wxsItem,m_IdName,flId,_("Identifier"),_T("identifier"),wxEmptyString,false,false);
     }
+
+    OnEnumItemProperties();
 }
 
-void wxsItem::BuildDeclarationCode(wxString& Code,wxsCodingLang Language)
+void wxsItem::OnBuildDeclarationCode(wxString& Code,wxsCodingLang Language)
 {
     switch ( Language )
     {
         case wxsCPP:
             Code << GetInfo().Name << _T("* ") << GetVarName() << _T(";\n");
             return;
-    }
 
-    wxsLANGMSG(wxsItem::BuildDeclarationCode,Language);
+        default:
+            wxsCodeMarks::Unknown(_T("wxsItem::OnBuildDeclarationCode"),Language);
+    }
 }
 
-bool wxsItem::XmlRead(TiXmlElement* Element,bool IsXRC,bool IsExtra)
+bool wxsItem::OnXmlRead(TiXmlElement* Element,bool IsXRC,bool IsExtra)
 {
     if ( IsXRC )
     {
         wxsPropertyContainer::XmlRead(Element);
-        IdName = cbC2U(Element->Attribute("name"));
+        m_IdName = cbC2U(Element->Attribute("name"));
     }
 
     if ( IsExtra )
     {
-        VarName = cbC2U(Element->Attribute("variable"));
+        m_VarName = cbC2U(Element->Attribute("variable"));
         const char* MbrText = Element->Attribute("member");
-        IsMember = !MbrText || !strcmp(MbrText,"yes");
-        Events.XmlLoadFunctions(Element);
+        m_IsMember = !MbrText || !strcmp(MbrText,"yes");
+        m_Events.XmlLoadFunctions(Element);
     }
 
     return true;
 }
 
-bool wxsItem::XmlWrite(TiXmlElement* Element,bool IsXRC,bool IsExtra)
+bool wxsItem::OnXmlWrite(TiXmlElement* Element,bool IsXRC,bool IsExtra)
 {
     if ( IsXRC )
     {
         wxsPropertyContainer::XmlWrite(Element);
-        if ( GetPropertiesFlags() & wxsFLId )
+        if ( GetPropertiesFlags() & flId )
         {
-            Element->SetAttribute("name",cbU2C(IdName));
+            Element->SetAttribute("name",cbU2C(m_IdName));
         }
     }
 
     if ( IsExtra )
     {
-        if ( GetPropertiesFlags() & wxsFLVariable )
+        if ( GetPropertiesFlags() & flVariable )
         {
-            Element->SetAttribute("variable",cbU2C(VarName));
-            Element->SetAttribute("member",IsMember ? "yes" : "no" );
+            Element->SetAttribute("variable",cbU2C(m_VarName));
+            Element->SetAttribute("member",m_IsMember ? "yes" : "no" );
         }
-        Events.XmlSaveFunctions(Element);
+        m_Events.XmlSaveFunctions(Element);
     }
 
     return true;
 }
 
-void wxsItem::BuildItemTree(wxTreeCtrl* Tree,wxTreeItemId Parent,int Position)
+void wxsItem::BuildItemTree(wxsResourceTree* Tree,wxsResourceItemId Parent,int Position)
 {
-    if ( Position<0 || Position>=(int)wxsTREE()->GetChildrenCount(Parent) )
+    /* TODO: Code wxsResourceTreeData replacement for wxsItem class */
+    if ( Position<0 || Position>=(int)Tree->GetChildrenCount(Parent) )
     {
-        LastTreeId = Tree->AppendItem(Parent,GetInfo().Name,-1,-1,new wxsResourceTreeData(this));
+        m_LastTreeId = Tree->AppendItem(Parent,GetInfo().Name,-1,-1/*,new wxsResourceTreeData(this)*/);
     }
     else
     {
-        LastTreeId = Tree->InsertItem(Parent,Position,GetInfo().Name,-1,-1,new wxsResourceTreeData(this));
+        m_LastTreeId = Tree->InsertItem(Parent,Position,GetInfo().Name,-1,-1/*,new wxsResourceTreeData(this)*/);
     }
     if ( !GetIsExpanded() )
     {
-        Tree->Collapse(LastTreeId);
+        Tree->Collapse(m_LastTreeId);
     }
 
-    wxsParent* ParentItem = ToParent();
+    wxsParent* ParentItem = ConvertToParent();
     if ( ParentItem )
     {
         int Count = ParentItem->GetChildCount();
         for ( int i=0; i<Count; i++ )
         {
-            ParentItem->GetChild(i)->BuildItemTree(Tree,LastTreeId);
+            ParentItem->GetChild(i)->BuildItemTree(Tree,m_LastTreeId);
         }
     }
 }
 
-wxObject* wxsItem::BuildPreview(wxWindow* Parent,bool Exact)
+wxObject* wxsItem::BuildPreview(wxWindow* Parent,bool Exact,bool StoreInLastPreview)
 {
-    wxObject* P = DoBuildPreview(Parent,Exact);
-    if ( !Exact )
+    wxObject* Preview = OnBuildPreview(Parent,Exact);
+    if ( StoreInLastPreview )
     {
-        // Not in exact mode, so we're building editor's content and we must
-        // associate it with internal preview pointer
-        Preview = P;
+        m_LastPreview = Preview;
     }
-    return P;
-}
-
-void wxsItem::InvalidatePreview()
-{
-    Preview = NULL;
-    wxsParent* Parent = ToParent();
-    if ( Parent )
-    {
-        for ( int i=Parent->GetChildCount(); i-->0; )
-        {
-            Parent->GetChild(i)->InvalidatePreview();
-        }
-    }
+    return Preview;
 }
 
 void wxsItem::ClearSelection()
 {
-    IsSelected = false;
-    wxsParent* Parent = ToParent();
+    m_IsSelected = false;
+    wxsParent* Parent = ConvertToParent();
     if ( Parent )
     {
         for ( int i = Parent->GetChildCount(); i-->0; )
@@ -194,12 +183,12 @@ void wxsItem::ClearSelection()
     }
 }
 
-void wxsItem::PropertyChangedHandler()
+void wxsItem::OnPropertyChanged()
 {
     GetResource()->NotifyChange(this);
 }
 
-void wxsItem::SubPropertyChangedHandler(wxsPropertyContainer*)
+void wxsItem::OnSubPropertyChanged(wxsPropertyContainer*)
 {
     GetResource()->NotifyChange(this);
 }

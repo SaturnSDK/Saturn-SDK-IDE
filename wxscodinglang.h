@@ -28,6 +28,9 @@ namespace wxsCodeMarks
 
     /** \brief Helper functino for generating block end */
     wxString End(wxsCodingLang Lang);
+
+    /** \brief Posting notification message about unknown coding language */
+    void Unknown(const wxString& Function,wxsCodingLang Lang);
 }
 
 #endif

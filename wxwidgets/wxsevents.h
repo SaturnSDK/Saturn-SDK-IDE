@@ -2,11 +2,8 @@
 #define WXSEVENTS_H
 
 #include <tinyxml/tinyxml.h>
-#include <wx/string.h>
-#include <vector>
 
-#include "wxsglobals.h"
-#include "wxscodinglang.h"
+#include "../wxscodinglang.h"
 
 // Forward declarations
 class wxsItem;
@@ -71,22 +68,19 @@ class wxsEvents
 	public:
 
         /** \brief Ctor */
-		wxsEvents();
-
-		/** \brief Setting managed item */
-		void SetItem(wxsItem* Item);
+		wxsEvents(const wxsEventDesc* Events,wxsItem* Item);
 
 		/** \brief Getting number of events */
-		inline int GetCount() { return Count; }
+		inline int GetCount() { return m_Count; }
 
 		/** \brief Getting event description */
-		inline const wxsEventDesc* GetDesc(int Index) { return &EventArray[Index]; }
+		inline const wxsEventDesc* GetDesc(int Index) { return &m_EventArray[Index]; }
 
 		/** \brief Getting event handler name */
-		inline const wxString GetHandler(int Index) { return Functions[Index]; }
+		inline const wxString GetHandler(int Index) { return m_Functions[Index]; }
 
 		/** \brief Setting event handler name */
-		inline void SetHandler(int Index,const wxString& Name) { Functions[Index] = Name; }
+		inline void SetHandler(int Index,const wxString& Name) { m_Functions[Index] = Name; }
 
 		/** \brief Function genrating code which binds events with main resource class
 		 *
@@ -115,10 +109,10 @@ class wxsEvents
 
 	private:
 
-        wxsItem* Item;                      ///< Item whose events are managed
-        const wxsEventDesc* EventArray;     ///< Array of events fetched from item
-        wxArrayString Functions;            ///< Array of function names used for each entry item
-        int Count;                          ///< Number of events
+        wxsItem* m_Item;                      ///< Item whose events are managed
+        const wxsEventDesc* m_EventArray;     ///< Array of events fetched from item
+        wxArrayString m_Functions;            ///< Array of function names used for each entry item
+        int m_Count;                          ///< Number of events
 };
 
 #endif

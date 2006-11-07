@@ -17,7 +17,7 @@ class wxsParent: public wxsItem
     public:
 
         /** \brief Ctor */
-        wxsParent(wxsWindowRes* Resource);
+        wxsParent(wxsItemRes* Resource);
 
         /** \brief Dctor */
         virtual ~wxsParent();
@@ -91,7 +91,7 @@ class wxsParent: public wxsItem
          * This function may be overridden in child classes to add extra
          * configuration for each child, f.ex. configuration of sizer enteries.
          */
-        virtual wxsPropertyContainer* BuildExtra() { return NULL; }
+        virtual wxsPropertyContainer* OnBuildExtra() { return NULL; }
 
         /** \brief Function enumerating properties for given child
          *
@@ -106,7 +106,7 @@ class wxsParent: public wxsItem
          * \note This function MUST call Child->MyEnumProperties(Flags)
          *       somewhere in the code.
          */
-        virtual void EnumChildProperties(wxsItem* Child,long Flags);
+        void OnEnumChildProperties(wxsItem* Child,long Flags);
 
         /** \brief Function adding panels for child to wxsAdvQPP class
          *
@@ -114,7 +114,7 @@ class wxsParent: public wxsItem
          * additional panels and register them inside wxsAdvQPP class and
          * should call Child->MyAddQPP(QPP) somewhere inside.
          */
-        virtual void AddChildQPP(wxsItem* Child,wxsAdvQPP* QPP);
+        virtual void OnAddChildQPP(wxsItem* Child,wxsAdvQPP* QPP);
 
         /** \brief Function loading child from given xml node
          *

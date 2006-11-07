@@ -3,6 +3,8 @@
 
 #include "wxwidgetsres.h"
 
+class wxsItem;
+
 /** \brief Base class for resources using item as root element
  *
  * This class implements most of functions in wxsResource and wxWidgetsRes,
@@ -34,6 +36,12 @@ class wxsItemRes: public wxWidgetsRes
             bool GenHdr,
             const wxString& Xrc,
             bool GenXrc);
+
+        /** \brief Building properties filter for item properties based on resource config */
+        long GetPropertiesFilter();
+
+        /** \brief Function for resource change notification */
+        void NotifyChange(wxsItem* Item);
 
     protected:
 

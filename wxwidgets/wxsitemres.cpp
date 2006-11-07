@@ -1,4 +1,5 @@
 #include "wxsitemres.h"
+#include "wxsitem.h"
 
 IMPLEMENT_CLASS(wxsItemRes,wxWidgetsRes)
 
@@ -243,3 +244,12 @@ bool wxsItemRes::CreateNewResource(const wxString& Class,const wxString& Src, bo
     SetLanguage(wxsUnknownLanguage);
     return false;
 }
+
+long wxsItemRes::GetPropertiesFilter()
+{
+    if ( m_WxsFileName.empty() ) return wxsItem::flFile;
+    if ( m_XrcFileName.empty() ) return wxsItem::flSource;
+    return wxsItem::flMixed;
+}
+
+// TODO: Code wxsItemRes::NotifyChange()

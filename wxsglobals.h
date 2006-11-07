@@ -38,20 +38,6 @@ void wxsCodeReplace(wxString& Code,const wxString& Old,const wxString& New);
 /** \brief Checkign if given word is a valid c++ Identifier */
 bool wxsValidateIdentifier(const wxString& Name);
 
-
-////////////////////////////////////////////////////////////////////////////////
-//
-//  Constants
-// ===========
-//
-
-// Availability flags used in window resource and in properties filtering
-static const long wxsFLFile     = 0x0001;       ///< \brief Edition in file mode
-static const long wxsFLSource   = 0x0002;       ///< \brief Edition in source mode
-static const long wxsFLMixed    = 0x0004;       ///< \brief Edition in mixed mode
-static const long wxsFLVariable = 0x0008;       ///< \brief Flag turning on variable
-static const long wxsFLId       = 0x0010;       ///< \brief Flag turning on identifier
-
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  Enums

@@ -1,4 +1,5 @@
 #include "wxscodinglang.h"
+#include <messagemanager.h>
 
 namespace wxsCodeMarks
 {
@@ -54,4 +55,14 @@ namespace wxsCodeMarks
             default:     return wxEmptyString;
         }
     }
+
+    void Unknown(const wxString& Function,wxsCodingLang Lang)
+    {
+        DBGLOG(
+            _T("Unknown coding language %s (%d) in function %s"),
+            Name(Lang).c_str(),
+            (int)Lang,
+            Function.c_str());
+    }
 }
+
