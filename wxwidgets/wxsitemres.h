@@ -15,6 +15,9 @@ class wxsItemRes: public wxWidgetsRes
     DECLARE_CLASS(wxsItemRes)
     public:
 
+        /** \brief Available edit modes for item resources */
+        enum EditMode { File, Source, Mixed };
+
         /** \brief Ctor */
         wxsItemRes(wxsProject* Owner,const wxString& ResourceType,bool CanBeMain);
 
@@ -38,10 +41,13 @@ class wxsItemRes: public wxWidgetsRes
             bool GenXrc);
 
         /** \brief Building properties filter for item properties based on resource config */
-        long GetPropertiesFilter();
+        unsigned long GetPropertiesFilter();
 
         /** \brief Function for resource change notification */
         void NotifyChange(wxsItem* Item);
+
+        /** \brief Getting current edit mode */
+        EditMode GetEditMode();
 
     protected:
 
@@ -54,6 +60,12 @@ class wxsItemRes: public wxWidgetsRes
         virtual bool OnGetCanBeMain();
 
     private:
+
+        /** \brief Rebuilding sources for this resource */
+        void RebuildSourceCode();
+
+        /** \brief Rebuilding XRC file managed by this resource */
+        void RebuildXrcFile();
 
         wxString m_WxsFileName;
         wxString m_SrcFileName;

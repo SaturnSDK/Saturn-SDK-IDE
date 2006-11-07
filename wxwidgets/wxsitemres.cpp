@@ -245,11 +245,47 @@ bool wxsItemRes::CreateNewResource(const wxString& Class,const wxString& Src, bo
     return false;
 }
 
-long wxsItemRes::GetPropertiesFilter()
+unsigned long wxsItemRes::GetPropertiesFilter()
 {
-    if ( m_WxsFileName.empty() ) return wxsItem::flFile;
-    if ( m_XrcFileName.empty() ) return wxsItem::flSource;
-    return wxsItem::flMixed;
+    switch ( GetEditMode() )
+    {
+        case File:   return wxsItem::flFile;
+        case Source: return wxsItem::flSource;
+        case Mixed:  return wxsItem::flMixed;
+    }
 }
 
-// TODO: Code wxsItemRes::NotifyChange()
+wxsItemRes::EditMode wxsItemRes::GetEditMode()
+{
+    if ( m_WxsFileName.empty() ) return File;
+    if ( m_XrcFileName.empty() ) return Source;
+    return wxsItem::Mixed;
+}
+
+void wxsItemRes::NotifyChange()
+{
+    switch ( EditMode() )
+    {
+        case File:
+            // If editing file (XRC not binded to application) we do nothing when resource changes
+            break;
+
+        case Source:
+            RebuildSourceCode();
+            break;
+
+        case Mixed:
+            RebuildSourceCode();
+            RebuildXrcFile();
+    }
+}
+
+void wxsItemRes::RebuildSourceCode()
+{
+    // TODO
+}
+
+void wxsItemRes::RebuildXrcFile()
+{
+    // TODO
+}

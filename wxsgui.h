@@ -36,11 +36,29 @@ class wxsGUI: public wxObject
         /** \brief Helper function for fetching project path */
         inline wxString GetProjectPath() { return m_Project->GetProjectPath(); }
 
-//        /** \brief Helper function for fetching internal wxSmith directory */
-//        inline wxString GetInternalPath() { return m_Project->GetInternalPath(); }
-//
         /** \brief Function notifying that modification to GUI settings has been made */
         inline void NotifyChange() { m_Project->NotifyChange(); }
+
+        /** \brief Reading configuration from given GUI module
+         *  \note this function is only a wrapped for OnReadConfig function
+         */
+        inline void ReadConfig(TiXmlElement* Node) { OnReadConfig(Node); }
+
+        /** \brief Storing configuration of this GUI module
+         *  \note this function is only a wrapper for OnWriteConfig function
+         */
+        inline void WriteConfig(TiXmlElement* Node) { OnWriteConfig(Node); }
+
+        /** \brief Function checking if project's main application code is managed using
+         *         this GUI.
+         *  \note This function is only a wrapper to OnCheckIfApplicationManaged function
+         */
+        inline bool CheckIfApplicationManaged() { return OnCheckIfApplicationManaged(); }
+
+        /** \brief Function called to build configuration panel
+         *  \note This function ois only a wrapper to OnBuildConfigurationPanel function
+         */
+        inline cbConfigurationPanel* BuildConfigurationPanel(wxWindow* Parent) { return OnBuildConfigurationPanel(Parent); }
 
     protected:
 
@@ -75,8 +93,6 @@ class wxsGUI: public wxObject
 
         const wxString m_Name;          ///< \brief name of this GUI module (f.ex wxWidgets)
         wxsProject* const m_Project;    ///< \brief wxsProject class using this GUI class
-
-        friend class wxsProject;
 };
 
 #endif

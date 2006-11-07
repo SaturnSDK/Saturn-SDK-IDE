@@ -8,11 +8,6 @@
 #include <wx/string.h>
 #include <messagemanager.h>
 
-//namespace
-//{
-//    const wxString InternalDir(_T("wxsmith"));
-//}
-
 wxsProject::wxsProject(cbProject* Project):
     m_Project(Project),
     m_GUI(NULL),
@@ -25,8 +20,6 @@ wxsProject::wxsProject(cbProject* Project):
     // Building paths
     wxFileName PathBuilder(Project->GetFilename());
     m_ProjectPath = PathBuilder.GetPath(wxPATH_GET_VOLUME|wxPATH_GET_SEPARATOR);
-//    PathBuilder.AppendDir(InternalDir);
-//    m_WorkingPath = PathBuilder.GetPath(wxPATH_GET_VOLUME|wxPATH_GET_SEPARATOR);
 }
 
 wxsProject::~wxsProject()
@@ -67,7 +60,7 @@ void wxsProject::ReadConfiguration(TiXmlElement* element)
                 m_GUI = NewGUI;
                 if ( NewGUI )
                 {
-                    NewGUI->OnReadConfig(Node);
+                    NewGUI->ReadConfig(Node);
                 }
             }
         }
@@ -120,7 +113,7 @@ void wxsProject::WriteConfiguration(TiXmlElement* element)
     {
         TiXmlElement* GUIElement = SmithElement->InsertEndChild(TiXmlElement("gui"))->ToElement();
         GUIElement->SetAttribute("name",cbU2C(m_GUI->GetName()));
-        m_GUI->OnWriteConfig(GUIElement);
+        m_GUI->WriteConfig(GUIElement);
     }
 
     // saving resources
@@ -201,7 +194,7 @@ void wxsProject::Configure()
 
     if ( m_GUI )
     {
-        if ( !m_GUI->OnCheckIfApplicationManaged() )
+        if ( !m_GUI->CheckIfApplicationManaged() )
         {
             // TODO: Prepare better communicate, consider chancing to cbAnnoyingDiaog
             if ( wxMessageBox(_("wxSmith does not manage this application's source.\n"
@@ -209,7 +202,7 @@ void wxsProject::Configure()
             if ( !m_GUI->OnCreateApplicationBinding() ) return;
         }
         cbConfigurationDialog Dlg(NULL,-1,_("Configuring wxSmith"));
-        Dlg.AttachConfigurationPanel(m_GUI->OnBuildConfigurationPanel(&Dlg));
+        Dlg.AttachConfigurationPanel(m_GUI->BuildConfigurationPanel(&Dlg));
         Dlg.ShowModal();
     }
 }
@@ -218,12 +211,6 @@ wxString wxsProject::GetProjectPath()
 {
     return m_ProjectPath;
 }
-
-//wxString wxsProject::GetInternalPath()
-//{
-//    return m_WorkingPath;
-//}
-//
 
 bool wxsProject::CanOpenEditor(const wxString& FileName)
 {
