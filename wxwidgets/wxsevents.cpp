@@ -88,17 +88,12 @@ void wxsEvents::XmlSaveFunctions(TiXmlElement* Element)
     }
 }
 
-void wxsEvents::GenerateBindingCode(wxString& Code,bool UsingXrc,wxsCodingLang Language)
+void wxsEvents::GenerateBindingCode(wxString& Code,const wxString& IdString,const wxString& VarNameString,wxsCodingLang Language)
 {
     switch ( Language )
     {
         case wxsCPP:
         {
-            wxString RealId = UsingXrc ?
-                ( _T("XRCID(") + m_Item->GetIdName() + _T(")") ) :
-                m_Item->GetIdName();
-
-            // First we have to check i
             for ( int i=0; i<m_Count; i++ )
             {
                 if ( !m_Functions[i].empty() )
@@ -106,13 +101,13 @@ void wxsEvents::GenerateBindingCode(wxString& Code,bool UsingXrc,wxsCodingLang L
                     switch ( m_EventArray[i].ET )
                     {
                         case wxsEventDesc::Id:
-                            Code << _T("Connect(") << RealId << _T(",")
+                            Code << _T("Connect(") << IdString << _T(",")
                                  << m_EventArray[i].Type << _T("(wxObjectEventFunction)")
                                  << m_Functions[i] << _T(");\n");
                             break;
 
                         case wxsEventDesc::NoId:
-                            Code << Item->GetVarName() << _T("->Connect(") << RealId
+                            Code << VarNameString << _T("->Connect(") << IdString
                                  << _T(",") << m_EventArray[i].Type
                                  << _T("(wxObjectEventFunction)") << m_Functions[i]
                                  << _T(",NULL,this);\n");

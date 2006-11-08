@@ -56,9 +56,15 @@ class wxsGUI: public wxObject
         inline bool CheckIfApplicationManaged() { return OnCheckIfApplicationManaged(); }
 
         /** \brief Function called to build configuration panel
-         *  \note This function ois only a wrapper to OnBuildConfigurationPanel function
+         *  \note This function is only a wrapper to OnBuildConfigurationPanel function
          */
         inline cbConfigurationPanel* BuildConfigurationPanel(wxWindow* Parent) { return OnBuildConfigurationPanel(Parent); }
+
+        /** \brief Function trying to create bindings between this GUI class and
+         *         application class.
+         * \note This functions is only a wrapper to OnCreateApplicationBinding()
+         */
+        inline bool CreateApplicationBinding() { return OnCreateApplicationBinding(); }
 
     protected:
 

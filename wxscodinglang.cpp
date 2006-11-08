@@ -33,7 +33,7 @@ namespace wxsCodeMarks
     {
         switch ( Lang )
         {
-            case wxsCPP: return _T("//(*") + BlockName;
+            case wxsCPP: return _T("//(*") + BlockName + _T("\n");
             default:     return wxEmptyString;
         }
     }
@@ -42,7 +42,7 @@ namespace wxsCodeMarks
     {
         switch ( Lang )
         {
-            case wxsCPP: return wxString::Format(_T("//(*%s(%s)"),BlockName.c_str(),Param.c_str());
+            case wxsCPP: return wxString::Format(_T("//(*%s(%s)\n"),BlockName.c_str(),Param.c_str());
             default:     return wxEmptyString;
         }
     }
@@ -51,7 +51,7 @@ namespace wxsCodeMarks
     {
         switch ( Lang )
         {
-            case wxsCPP: return _T("//*)");
+            case wxsCPP: return _T("//*)'n");
             default:     return wxEmptyString;
         }
     }

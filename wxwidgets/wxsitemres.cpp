@@ -1,5 +1,6 @@
 #include "wxsitemres.h"
 #include "wxsitem.h"
+#include "../wxscoder.h"
 
 IMPLEMENT_CLASS(wxsItemRes,wxWidgetsRes)
 
@@ -8,17 +9,21 @@ namespace
     const wxString CppEmptySource =
         _T("#include \"$(Include)\"\n")
         _T("\n")
-        + wxsCodeMarks::Beg(wxsCPP,_T("InternalHeaders"),_T("$(ClassName)")) + _T("\n")
-        + wxsCodeMarks::End(wxsCPP) + _T("\n")
+        + wxsCodeMarks::Beg(wxsCPP,_T("InternalHeaders"),_T("$(ClassName)"))
+        + wxsCodeMarks::End(wxsCPP) +
+        _T("\n")
+        + wxsCodeMarks::Beg(wxsCPP,_T("IdInit"),_T("$(ClassName)"))
+        + wxsCodeMarks::End(wxsCPP) +
+        _T("\n")
         _T("BEGIN_EVENT_TABLE($(ClassName),$(BaseClassName))\n")
-        _T("\t") + wxsCodeMarks::Beg(wxsCPP,_T("EventTable"),_T("$(ClassName)")) + _T("\n")
-        _T("\t") + wxsCodeMarks::End(wxsCPP) + _T("\n")
+        _T("\t") + wxsCodeMarks::Beg(wxsCPP,_T("EventTable"),_T("$(ClassName)")) +
+        _T("\t") + wxsCodeMarks::End(wxsCPP) +
         _T("END_EVENT_TABLE()\n")
         _T("\n")
         _T("$(ClassName)::$(ClassName)(wxWindow* parent,wxWindowID id)\n")
         _T("{\n")
-        _T("\t") + wxsCodeMarks::Beg(wxsCPP,_T("Initialize"),_T("$(ClassName)")) + _T("\n")
-        _T("\t") + wxsCodeMarks::End(wxsCPP) + _T("\n")
+        _T("\t") + wxsCodeMarks::Beg(wxsCPP,_T("Initialize"),_T("$(ClassName)")) +
+        _T("\t") + wxsCodeMarks::End(wxsCPP) +
         _T("}\n")
         _T("\n")
         _T("$(ClassName)::~$(ClassName)()\n")
@@ -253,16 +258,17 @@ unsigned long wxsItemRes::GetPropertiesFilter()
         case Source: return wxsItem::flSource;
         case Mixed:  return wxsItem::flMixed;
     }
+    return 0;
 }
 
 wxsItemRes::EditMode wxsItemRes::GetEditMode()
 {
     if ( m_WxsFileName.empty() ) return File;
     if ( m_XrcFileName.empty() ) return Source;
-    return wxsItem::Mixed;
+    return Mixed;
 }
 
-void wxsItemRes::NotifyChange()
+void wxsItemRes::NotifyChange(wxsItem*)
 {
     switch ( EditMode() )
     {
@@ -282,10 +288,350 @@ void wxsItemRes::NotifyChange()
 
 void wxsItemRes::RebuildSourceCode()
 {
-    // TODO
+    switch ( GetLanguage() )
+    {
+        case wxsCPP:
+        {
+            wxString InitializingCode;
+            wxString GlobalVarsCode;
+            wxString IdentifiersCode;
+            wxString IdInitCode;
+            wxString GlobalHeaders;
+            wxString LocalHeaders;
+
+            BuildVariablesCode(wxsCPP,InitializingCode,GlobalVarsCode);
+            BuildCreatingCode(wxsCPP,InitializingCode);
+            BuildEventHandlersCode(wxsCPP,InitializingCode);
+            BuildIdentifiersCode(wxsCPP,IdentifiersCode,IdInitCode);
+            BuildIncludesCode(wxsCPP,LocalHeaders,GlobalHeaders);
+
+            // TODO: Maybe some group update ??
+            wxsCoder::Get()->AddCode(
+                GetProjectPath() + m_HdrFileName,
+                wxsCodeMarks::Beg(wxsCPP,_T("Declarations"),GetClassName()),
+                wxsCodeMarks::End(wxsCPP),
+                GlobalVarsCode);
+
+            wxsCoder::Get()->AddCode(
+                GetProjectPath() + m_HdrFileName,
+                wxsCodeMarks::Beg(wxsCPP,_T("Identifiers"),GetClassName()),
+                wxsCodeMarks::End(wxsCPP),
+                IdentifiersCode);
+
+            wxsCoder::Get()->AddCode(
+                GetProjectPath() + m_HdrFileName,
+                wxsCodeMarks::Beg(wxsCPP,_T("Headers"),GetClassName()),
+                wxsCodeMarks::End(),
+                GlobalHeaders);
+
+            wxsCoder::Get()->AddCode(
+                GetProjectPath() + m_SrcFileName,
+                wxsCodeMarks::Beg(wxsCPP,_T("Initialize"),GetClassName()),
+                wxsCodeMarks::End(wxsCPP),
+                InitializingCode);
+
+            wxsCoder::Get()->AddCode(
+                GetProjectPath() + m_SrcFileName,
+                wxsCodeMarks::Beg(wxsCPP,_T("IdInit"),GetClassName()),
+                wxsCodeMarks::End(wxsCPP),
+                IdInitCode);
+
+            wxsCoder::Get()->AddCode(
+                GetProjectPath() + m_SrcFileName,
+                wxsCodeMarks::Beg(wxsCPP,_T("InternalHeaders"),GetClassName()),
+                wxsCodeMarks::End(),
+                LocalHeaders);
+
+            wxsCoder::Get()->AddCode(
+                GetProjectPath() + m_SrcFileName,
+                wxsCodeMarks::Beg(wxsCPP,_T("EventTable"),GetClassName()),
+                wxsCodeMarks::End(),
+                _T(""));    // This clears previously used event table for event binding
+
+            break;
+        }
+
+        default:
+        {
+            wxsCodeMarks::Unknown(_T("wxsItemRes::RebuildSourceCode"),GetLanguage());
+        }
+    }
+
+}
+
+void wxsItemRes::BuildVariablesCode(wxsCodingLang Lang,wxString& LocalCode, wxString& GlobalCode)
+{
+    switch ( Lang )
+    {
+        case wxsCPP:
+        {
+            // Creating local and global declarations
+            BuildVariablesCodeReq(wxsCPP,m_RootItem,InitializingCode,GlobalVarsCode);
+            if ( InitializingCode.Length()>1 )
+            {
+                // Adding one empty line between local declarations and
+                // the rest of initializing code
+                InitializingCode << _T("\n");
+            }
+            break;
+        }
+
+        default:
+        {
+            wxsCodeMarks::Unknown(_T("wxsItemRes::BuildVariablesCode"),Lang);
+        }
+    }
+}
+
+void wxsItemRes::BuildVariablesCodeReq(wxsCodingLang Lang,wxsItem* Item,wxString& LocalCode, wxString& GlobalCode)
+{
+    wxsParent* Parent = Item->ToParent();
+    if ( !Parent )
+    {
+        return false;
+    }
+
+    int ChildCnt = Parent->GetChildCount();
+    for ( int i=0; i<ChildCnt; i++ )
+    {
+        wxsItem* Child = Parent->GetChild(i);
+
+        if ( Child->GetPropertiesFlags() & wxsFLVariable )
+        {
+            if ( Child->GetIsMember() )
+            {
+                Child->BuildDeclarationCode(GlobalCode,Lang);
+            }
+            else if ( GetEditMode() == Source )
+            {
+                Child->BuildDeclarationCode(LocalCode,Lang);
+            }
+        }
+
+        BuildVariablesCodeReq(Lang,Child,LocalCode,GlobalCode);
+    }
+}
+
+void wxsItemRes::BuildCreatingCode(wxsCodingLang Lang,wxString& Code)
+{
+    switch ( GetEditMode() )
+    {
+        case Source:
+            m_RootItem->BuildCreatingCode(Code,_T("parent"),Lang);
+            break;
+
+        case Mixed:
+            OnBuildXrcLoadingCode(Code,Lang);
+            BuildXrcItemsFetchingCode(Code,Lang);
+            break;
+
+        default:;
+    }
+}
+
+void wxsItemRes::OnBuildXrcLoadingCode(wxsCodingLang Language,wxString& Code)
+{
+    switch ( Lang )
+    {
+        case wxsCPP:
+        {
+            Code << _T("wxXmlResource::Get()->LoadObject(this,parent,")
+                 << wxsCodeMarks::WxString(wxsCPP,GetClassName()) << _T(",")
+                 << wxsCodeMarks::WxString(wxsCPP,GetResourceType()) << _T(");\n");
+            break;
+        }
+
+        default:
+        {
+            wxsCodeMarks::Unknown(_T("wxsItemRes::OnBuildXrcLoadingCode"),Lang);
+        }
+    }
+}
+
+void wxsItemRes::BuildXrcItemsFetchingCode(wxsCodingLang Lang,wxString& Code)
+{
+    BuildXrcItemsFetchingCodeReq(Lang,m_RootItem,Code);
+}
+
+void wxsItemRes::BuildXrcItemsFetchingCodeReq(wxsCodingLang Lang,wxsItem* Item,wxString& Code)
+{
+    switch ( Lang )
+    {
+        case wxsCPP:
+        {
+            wxsParent* Parent = Item->ConvertToParent();
+            if ( !Parent )
+            {
+                return;
+            }
+
+            int Cnt = Parent->GetChildCount();
+            for ( int i=0; i<Cnt; i++ )
+            {
+                wxsItem* Child = Parent->GetChild(i);
+                unsigned long Flags = Child->GetPropertiesFlags();
+                if ( (Flags & (wxsFLVariable|wxsFLId)) == (wxsFLVariable|wxsFLId) )
+                {
+                    if ( Child->GetIsMember() )
+                    {
+                        Code << Child->GetVarName()
+                             << _T(" = (") << Child->GetType() << _T(")")
+                             << _T("FindWindow(XRCID(") + Child->GetIdName() + _T("));\n");
+                    }
+                }
+                BuildXrcItemsFetchingCodeReq(Lang,Child,Code);
+            }
+            break;
+        }
+
+        default:
+        {
+            wxsCodeMarks::Unknown(_T("wxsItemRes::BuildXrcItemsFetchingCodeReq"),Lang);
+        }
+    }
+}
+
+void wxsItemRes::BuildEventHandlersCode(wxsCodingLang Language,wxString& Code)
+{
+    BuildEventHandlersCodeReq(Language,m_RootItem,Code);
+}
+
+void wxsItemRes::BuildEventHandlersCodeReq(wxsCodingLang Language,wxsItem* Item,wxString& Code)
+{
+    switch ( Language )
+    {
+        case wxsCPP:
+        {
+            wxsEvents& Events = Item->GetEvents();
+            wxString IdString;
+            wxString VarNameString;
+            if ( GetEditMode() == Source )
+            {
+                IdString = Item->GetIdName();
+                VarNameString = Item->GetVarName();
+            }
+            else
+            {
+                IdString = _T("XRCID(") + Item->GetIdName() + _T(")");
+                if ( Item->m_IsMember )
+                {
+                    VarNameString = Item->GetVarName();
+                }
+                else
+                {
+                    VarNameString = _T("FindWindow(XRCID(") + Item->GetIdName() + _T("))");
+                }
+            }
+            Events.GenerateBindingCode(Code,IdString,VarNameString,Language);
+
+            wxsParent* Parent = Item->ConvertToParent();
+            if ( Parent )
+            {
+                int Cnt = Parent->GetChildCount();
+                for ( int i=0; i<Cnt; i++ )
+                {
+                    BuildEventHandlersCodeReq(Language,Parent->GetChild(i),Code);
+                }
+            }
+            break;
+        }
+
+        default:
+        {
+            wxsCodeMarks::Unknown(_T("wxsItemRes::BuildEventHandlersCodeReq"),Language);
+        }
+    }
+}
+
+void wxsItemRes::BuildIdentifiersCode(wxsCodingLang Lang,wxString& IdCode,wxString& IdInitCode)
+{
+    if ( GetEditMode == Source )
+    {
+        wxArrayString IdsArray;
+        BuildIdsArrayReq(m_RootItem,IdsArray);
+        switch ( Lang )
+        {
+            case wxsCPP:
+            {
+                if ( IdsArray.Count() )
+                {
+                    for ( size_t i = 0; i<IdsArray.Count(); ++i )
+                    {
+                        const wxString Id = IdsArray[i];
+                        if ( IdsArray[i].find(Id) == i )
+                        {
+                            IdCode << _T("static const long ") + IdsArray[i] + _T(";\n");
+                            IdInitCode << _T("const long ") + GetClassName() + _T("::") + IdsArray[i] + _T(" = wxNewId();\n");
+                        }
+                    }
+                }
+                break;
+            }
+
+            default:
+            {
+                wxsCodeMarks::Unknown(_T("wxsItemRes::BuildIdentifiersCode"),Lang);
+            }
+        }
+    }
+}
+
+void wxsItemRes::BuildIncludesCode(wxsCodingLang Language,wxString& LocalIncludes,wxString& GlobalIncludes)
+{
+    switch ( Language )
+    {
+        case wxsCPP:
+        {
+            wxArrayString GlobalHeaders;
+            wxArrayString LocalHeaders;
+            BuildHeadersReq(wxsCPP,m_RootItem,LocalHeaders,GlobalHeaders);
+
+            LocalHeaders.Add(_T("<wx/intl.h>"));
+            // TODO: Use these headers dynamically, not always
+            LocalHeaders.Add(_T("<wx/bitmap.h>"));
+            LocalHeaders.Add(_T("<wx/image.h>"));
+            LocalHeaders.Add(_T("<wx/font.h>"));
+
+            if ( GetEditMode() == Mixed )
+            {
+                LocalHeaders.Add(_T("<wx/xrc/xmlres.h>"));
+            }
+
+            GlobalHeaders.Sort();
+            LocalHeaders.Sort();
+
+            wxString Previous = _T("");
+            for ( size_t i=0; i<GlobalHeaders.Size(); i++ )
+            {
+                if ( GlobalHeaders[i] != Previous )
+                {
+                    Previous = GlobalHeaders[i];
+                    GlobalIncludes << _T("#include ") << Previous << _T("\n");
+                }
+            }
+
+            Previous = _T("");
+            for ( size_t i=0; i<LocalHeaders.Size(); i++ )
+            {
+                if ( LocalHeaders[i] != Previous )
+                {
+                    Previous = LocalHeaders[i];
+                    LocalIncludes << _T("#include ") << Previous << _T("\n");
+                }
+            }
+
+            break;
+        }
+
+        default:
+        {
+            wxsCodeMarks::Unknown(_T("wxsItemRes::BuildIncludesCode"),Language);
+        }
+    }
 }
 
 void wxsItemRes::RebuildXrcFile()
 {
     // TODO
 }
+

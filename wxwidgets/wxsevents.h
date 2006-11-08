@@ -91,7 +91,7 @@ class wxsEvents
 		 * \param UsingXrc if true,
 		 * \param Language language of generated code
 		 */
-        void GenerateBindingCode(wxString& Code,bool UsingXrc,wxsCodingLang Language);
+        void GenerateBindingCode(wxString& Code,const wxString& IdString,const wxString& VarNameString,wxsCodingLang Language);
 
         /** \brief Function loading associated function names from Xml node. */
         void XmlLoadFunctions(TiXmlElement* Element);

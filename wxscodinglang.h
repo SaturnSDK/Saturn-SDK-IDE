@@ -4,8 +4,8 @@
 /** \brief This enumeration contains all coding languages supported in wxSmith */
 enum wxsCodingLang
 {
-    wxsCPP,
-    wxsUnknownLanguage
+    wxsCPP             = 0x0001,
+    wxsUnknownLanguage = 0x8000
 };
 
 /** \brief Namespace with usefull common functions for supported coding languages */

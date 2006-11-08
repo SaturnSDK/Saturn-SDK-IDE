@@ -46,10 +46,19 @@ class wxsItemRes: public wxWidgetsRes
         /** \brief Function for resource change notification */
         void NotifyChange(wxsItem* Item);
 
+        /** \brief Getting name of resource class (equivalent to resource name) */
+        inline const wxString& GetClassName() { return GetResourceName(); }
+
         /** \brief Getting current edit mode */
         EditMode GetEditMode();
 
     protected:
+
+        /** \brief This function should load xrc resource from file
+         *
+         * Default implementation uses LoadObject function
+         */
+        virtual void OnBuildXrcLoadingCode(wxsCodingLang Language,wxString& Code);
 
         virtual wxsEditor* OnCreateEditor();
         virtual bool OnReadConfig(const TiXmlElement* Node);
@@ -67,11 +76,26 @@ class wxsItemRes: public wxWidgetsRes
         /** \brief Rebuilding XRC file managed by this resource */
         void RebuildXrcFile();
 
+        // Functions used by RebuildSourceCode
+        void BuildVariablesCode(wxsCodingLang Lang,wxString& LocalCode, wxString& GlobalCode);
+        void BuildVariablesCodeReq(wxsCodingLang Lang,wxsItem* Item,wxString& LocalCode, wxString& GlobalCode);
+        void BuildCreatingCode(wxsCodingLang Lang,wxString& Code);
+        void BuildXrcLoadingCode(wxsCodingLang Lang,wxString& Code);
+        void BuildXrcItemsFetchingCode(wxsCodingLang Lang,wxString& Code);
+        void BuildXrcItemsFetchingCodeReq(wxsCodingLang Lang,wxsItem* Item,wxString& Code);
+        void BuildEventHandlersCode(wxsCodingLang Lang,wxString& Code);
+        void BuildEventHandlersCodeReq(wxsCodingLang Lang,wxsItem* Item,wxString& Code);
+        void BuildIdentifiersCode(wxsCodingLang Lang,wxString& Code,wxString& IdInitCode);
+        void BuildIdsArrayReq(wxsItem* Item,wxArrayString& Array);
+        void BuildIncludesCode(wxsCodingLang Lang,wxString& LocalIncludes,wxString& GlobalIncludes);
+        void BuildHeadersReq(wxsCodingLang Lang,wxsItem* Item,wxArrayString& LocalHeaders,wxArrayString& GlobalHeaders);
+
         wxString m_WxsFileName;
         wxString m_SrcFileName;
         wxString m_HdrFileName;
         wxString m_XrcFileName;
         bool     m_CanBeMain;
+        wxsItem* m_RootItem;
 };
 
 #endif
