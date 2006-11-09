@@ -75,6 +75,12 @@ void wxsItem::EnumItemProperties(long Flags)
     }
 
     OnEnumItemProperties();
+
+    // Now enumerating all properties from wxsBaseProperties if any
+    if ( m_BaseProperties )
+    {
+        SubContainer(m_BaseProperties);
+    }
 }
 
 void wxsItem::OnBuildDeclarationCode(wxString& Code,wxsCodingLang Language)
@@ -113,6 +119,7 @@ bool wxsItem::OnXmlWrite(TiXmlElement* Element,bool IsXRC,bool IsExtra)
 {
     if ( IsXRC )
     {
+        Element->SetAttribute("class",cbU2C(GetType()));
         wxsPropertyContainer::XmlWrite(Element);
         if ( GetPropertiesFlags() & flId )
         {

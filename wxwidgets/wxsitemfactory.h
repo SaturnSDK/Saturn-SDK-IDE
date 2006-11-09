@@ -28,7 +28,7 @@ class wxsItemFactory
         const wxsItemInfo* GetInfo(const wxString& Name);
 
         /** \brief Creating item with given name */
-        wxsItem* Generate(const wxString& Name,wxsWindowRes* Res);
+        wxsItem* Build(const wxString& Name,wxsWindowRes* Res);
 
         /** \brief Destroying given item */
         void Kill(wxsItem* Widget);

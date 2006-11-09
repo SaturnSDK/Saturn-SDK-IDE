@@ -1,9 +1,10 @@
 #include "wxsparent.h"
 
-#include "wxsglobals.h"
+//#include "wxsglobals.h"
 #include "wxsitemfactory.h"
 
-wxsParent::wxsParent(wxsWindowRes* Resource): wxsItem(Resource)
+wxsParent::wxsParent(wxsItemRes* Resource,const wxsEventDesc* Events,unsigned long PropertiesFlags):
+    wxsItem(Resource,Events,PropertiesFlags)
 {
 }
 
@@ -11,7 +12,7 @@ wxsParent::~wxsParent()
 {
     for ( size_t i = Children.Count(); i-- > 0; )
     {
-        wxsKILL(Children[i]);
+        delete Children[i];
         if ( Extra[i] )
         {
             delete Extra[i];
@@ -24,7 +25,7 @@ wxsParent::~wxsParent()
 wxsItem* wxsParent::GetChild(int Index)
 {
     if ( Index < 0 ) return NULL;
-    if ( Index >= (int)Children.Count() ) return NULL;
+    if ( Index >= GetChildCount() ) return NULL;
     return Children[Index];
 }
 
@@ -32,22 +33,22 @@ bool wxsParent::AddChild(wxsItem* Child,int Position)
 {
     if ( !Child ) return false;
     if ( !CanAddChild(Child,true) ) return false;
-    if ( Child->Parent != NULL )
+    if ( Child->GetParent() != NULL )
     {
-        Child->Parent->UnbindChild(Child);
+        Child->GetParent()->UnbindChild(Child);
     }
 
-    Child->Parent = this;
+    Child->m_Parent = this;
 
     if ( Position<0 || Position>=GetChildCount() )
     {
         Children.Add(Child);
-        Extra.Add(BuildExtra());
+        Extra.Add(OnBuildExtra());
     }
     else
     {
         Children.Insert(Child,Position);
-        Extra.Insert(BuildExtra(),Position);
+        Extra.Insert(OnBuildExtra(),Position);
     }
     return true;
 }
@@ -55,7 +56,7 @@ bool wxsParent::AddChild(wxsItem* Child,int Position)
 void wxsParent::UnbindChild(int Index)
 {
     if ( Index < 0 ) return;
-    if ( Index >= (int)Children.Count() ) return;
+    if ( Index >= GetChildCount() ) return;
 
     Children.RemoveAt(Index);
     if ( Extra[Index] )
@@ -80,9 +81,9 @@ void wxsParent::UnbindChild(wxsItem* Child)
 int wxsParent::MoveChild(int OldIndex,int NewIndex )
 {
     if ( OldIndex < 0 ) return -1;
-    if ( OldIndex >= (int)Children.Count() ) return -1;
+    if ( OldIndex >= GetChildCount() ) return -1;
     if ( NewIndex < 0 ) NewIndex = 0;
-    if ( NewIndex >= (int)Children.Count() ) NewIndex = (int)Children.Count() - 1;
+    if ( NewIndex >= GetChildCount() ) NewIndex = GetChildCount() - 1;
 
     if ( OldIndex == NewIndex ) return OldIndex;
 
@@ -108,17 +109,21 @@ bool wxsParent::IsGrandChild(wxsItem* Child,bool Safe)
         while ( Child != NULL )
         {
             if ( Child == this ) return true;
-            Child = Child->Parent;
+            Child = Child->GetParent();
         }
         return false;
-    }
 
-    for ( int i=0; i<GetChildCount(); i++ )
+    }
+    else
     {
-        wxsItem* MyChild = GetChild(i);
-        if ( MyChild == Child ) return true;
-        wxsParent* MyChildParent = MyChild->ToParent();
-        if ( MyChildParent && MyChildParent->IsGrandChild(Child,true) ) return true;
+        if ( Child == this ) return true;
+        for ( int i=0; i<GetChildCount(); i++ )
+        {
+            wxsItem* MyChild = GetChild(i);
+            if ( MyChild == Child ) return true;
+            wxsParent* MyChildAsParent = MyChild->ConvertToParent();
+            if ( MyChildAsParent->IsGrandChild(Child,true) ) return true;
+        }
     }
 
     return false;
@@ -127,7 +132,7 @@ bool wxsParent::IsGrandChild(wxsItem* Child,bool Safe)
 void wxsParent::StoreExtraData(int Index,TiXmlElement* Element)
 {
     if ( Index < 0 ) return;
-    if ( Index >= (int)Children.Count() ) return;
+    if ( Index >= GetChildCount() ) return;
     if ( !Extra[Index] ) return;
 
     Extra[Index]->XmlWrite(Element);
@@ -136,13 +141,13 @@ void wxsParent::StoreExtraData(int Index,TiXmlElement* Element)
 void wxsParent::RestoreExtraData(int Index,TiXmlElement* Element)
 {
     if ( Index < 0 ) return;
-    if ( Index >= (int)Children.Count() ) return;
+    if ( Index >= GetChildCount() ) return;
     if ( !Extra[Index] ) return;
 
     Extra[Index]->XmlRead(Element);
 }
 
-void wxsParent::EnumChildProperties(wxsItem* Child,long Flags)
+void wxsParent::OnEnumChildProperties(wxsItem* Child,long Flags)
 {
     // Enumerating properties of child item
     Child->EnumItemProperties(Flags);
@@ -160,20 +165,20 @@ void wxsParent::EnumChildProperties(wxsItem* Child,long Flags)
     }
 }
 
-void wxsParent::AddChildQPP(wxsItem* Child,wxsAdvQPP* QPP)
+void wxsParent::OnAddChildQPP(wxsItem* Child,wxsAdvQPP* QPP)
 {
-    // Nothing is added by default
-    Child->AddItemQPP(QPP);
+    // Parent may block item's private QPP and force valid order of panels
+    Child->OnAddItemQPP(QPP);
 }
 
 wxsPropertyContainer* wxsParent::GetChildExtra(int Index)
 {
     if ( Index < 0 ) return NULL;
-    if ( Index >= (int)Extra.Count() ) return NULL;
+    if ( Index >= GetChildCount() ) return NULL;
     return Extra[Index];
 }
 
-bool wxsParent::XmlRead(TiXmlElement* Elem,bool IsXRC,bool IsExtra)
+bool wxsParent::OnXmlRead(TiXmlElement* Elem,bool IsXRC,bool IsExtra)
 {
     bool Ret = wxsItem::XmlRead(Elem,IsXRC,IsExtra);
     if ( IsXRC )
@@ -181,13 +186,13 @@ bool wxsParent::XmlRead(TiXmlElement* Elem,bool IsXRC,bool IsExtra)
         for ( TiXmlElement* Object = Elem->FirstChildElement(); Object; Object = Object->NextSiblingElement() )
         {
             if ( strcmp(Object->Value(),"object") ) continue;
-            if ( !XmlReadChild(Object,IsXRC,IsExtra) ) Ret = false;
+            if ( !OnXmlReadChild(Object,IsXRC,IsExtra) ) Ret = false;
         }
     }
     return Ret;
 }
 
-bool wxsParent::XmlWrite(TiXmlElement* Elem,bool IsXRC,bool IsExtra)
+bool wxsParent::OnXmlWrite(TiXmlElement* Elem,bool IsXRC,bool IsExtra)
 {
     bool Ret = wxsItem::XmlWrite(Elem,IsXRC,IsExtra);
     if ( IsXRC )
@@ -195,7 +200,7 @@ bool wxsParent::XmlWrite(TiXmlElement* Elem,bool IsXRC,bool IsExtra)
         for ( size_t i=0; i<Children.Count(); i++ )
         {
             TiXmlElement* Object = Elem->InsertEndChild(TiXmlElement("object"))->ToElement();
-            if ( !XmlWriteChild((int)i,Object,IsXRC,IsExtra) )
+            if ( !OnXmlWriteChild((int)i,Object,IsXRC,IsExtra) )
             {
                 Elem->RemoveChild(Object);
                 Ret = false;
@@ -205,9 +210,9 @@ bool wxsParent::XmlWrite(TiXmlElement* Elem,bool IsXRC,bool IsExtra)
     return Ret;
 }
 
-bool wxsParent::XmlReadChild(TiXmlElement* Elem,bool IsXRC,bool IsExtra)
+bool wxsParent::OnXmlReadChild(TiXmlElement* Elem,bool IsXRC,bool IsExtra)
 {
-    wxString ExtraName = XmlGetExtraObjectClass();
+    wxString ExtraName = OnXmlGetExtraObjectClass();
     TiXmlElement* RealElem = Elem;
 
     // Finding out what's real node for item
@@ -219,9 +224,12 @@ bool wxsParent::XmlReadChild(TiXmlElement* Elem,bool IsXRC,bool IsExtra)
     }
 
     // Creating new item from class name
-    // TODO: Add support for custom classes
-    wxsItem* NewItem = wxsGEN(cbC2U(RealElem->Attribute("class")),GetResource());
-    if ( !NewItem ) return false;
+    wxsItem* NewItem = wxsItemFactory::Get()->Build(cbC2U(RealElem->Attribute("class")),GetResource());
+    if ( !NewItem )
+    {
+        // TODO: Load this object as custom element
+        return false;
+    }
 
     // Trying to add new item to this class
     if ( !AddChild(NewItem) )
@@ -240,9 +248,9 @@ bool wxsParent::XmlReadChild(TiXmlElement* Elem,bool IsXRC,bool IsExtra)
     return NewItem->XmlRead(RealElem,IsXRC,IsExtra);
 }
 
-bool wxsParent::XmlWriteChild(int Index,TiXmlElement* Elem,bool IsXRC,bool IsExtra)
+bool wxsParent::OnXmlWriteChild(int Index,TiXmlElement* Elem,bool IsXRC,bool IsExtra)
 {
-    wxString ExtraName = XmlGetExtraObjectClass();
+    wxString ExtraName = OnXmlGetExtraObjectClass();
     TiXmlElement* RealElem = Elem;
 
     // Storing extra data
@@ -254,6 +262,5 @@ bool wxsParent::XmlWriteChild(int Index,TiXmlElement* Elem,bool IsXRC,bool IsExt
     }
 
     // Saving child item
-    RealElem->SetAttribute("class",cbU2C(Children[Index]->GetInfo().Name));
     return Children[Index]->XmlWrite(RealElem,IsXRC,IsExtra);
 }

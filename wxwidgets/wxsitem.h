@@ -373,6 +373,8 @@ class wxsItem: public wxsPropertyContainer
                                                 ///         this value may not always be correct, it's used when recreating
                                                 ///         resource tree after change
         wxsResourceItemId m_LastTreeId;         ///< \brief Last Tree item id generated from BuildItemTree
+
+        friend class wxsParent;
 };
 
 #endif

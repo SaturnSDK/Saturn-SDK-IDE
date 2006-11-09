@@ -29,7 +29,7 @@ const wxsItemInfo* wxsItemFactory::GetInfo(const wxString& Name)
     return (*i).second.Info;
 }
 
-wxsItem* wxsItemFactory::Generate(const wxString& Name,wxsWindowRes* Res)
+wxsItem* wxsItemFactory::Build(const wxString& Name,wxsWindowRes* Res)
 {
     // Searching for entry for this item name
     ItemMapI i = Items.find(Name);

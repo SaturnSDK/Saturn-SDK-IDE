@@ -3,6 +3,7 @@
 
 #include "../properties/wxsproperties.h"
 #include "../wxsadvqpp.h"
+#include "../wxscodinglang.h"
 
 // TODO: Add wxWidgets-specific properties when they;re ready
 /** \brief Structure holding most commonly used properties
