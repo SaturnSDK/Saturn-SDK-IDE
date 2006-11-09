@@ -29,6 +29,12 @@ namespace wxsCodeMarks
     /** \brief Helper functino for generating block end */
     wxString End(wxsCodingLang Lang);
 
+    /** \brief Converting given string into representation of string in source code */
+    wxString String(wxsCodingLang Lang,const wxString& Source);
+
+    /** \brief Converting given string into Wx-like representation */
+    wxString WxString(wxsCodingLang Lang,const wxString& Source,bool WithTranslation=true);
+
     /** \brief Posting notification message about unknown coding language */
     void Unknown(const wxString& Function,wxsCodingLang Lang);
 }

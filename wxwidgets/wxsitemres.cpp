@@ -284,6 +284,8 @@ void wxsItemRes::NotifyChange(wxsItem*)
             RebuildSourceCode();
             RebuildXrcFile();
     }
+
+    // TODO: Store undo data (or maye put it into editor)
 }
 
 void wxsItemRes::RebuildSourceCode()
@@ -632,6 +634,46 @@ void wxsItemRes::BuildIncludesCode(wxsCodingLang Language,wxString& LocalInclude
 
 void wxsItemRes::RebuildXrcFile()
 {
-    // TODO
-}
+    // First - opening file
+    TiXmlDocument Doc;
+    TiXmlElement* Resources;
+    TiXmlElement* Object;
 
+    if ( Doc.LoadFile(cbU2C(GetProjectPath()+m_XrcFileName)) )
+    {
+        Resources = Doc.FirstChildElement("resource");
+    }
+
+    if ( !Resources )
+    {
+        Doc.Clear();
+        Doc.InsertEndChild(TiXmlDeclaration("1.0","utf-8","");
+        Resources = Doc.InsertEndChild(TiXmlElement("resource"))->ToElement();
+        Resources->SetAttribute("xmlns","http://www.wxwidgets.org/wxxrc");
+    }
+
+    // Searching for object representing this resource
+    for ( Object = Resources->FirstChildElement("object"); Object; Object = Object->NextSiblingElement("object") )
+    {
+        if ( cbC2U(Object->Attribute("name") == GetClassName()) )
+        {
+            Object->Clear();
+            while ( Object->FirstAttribute() )
+            {
+                Object->RemoveAttribute(Object->FirstAttribute()->Name);
+            }
+            break;
+        }
+    }
+
+    if ( !Object )
+    {
+        Object = Resources->InsertEndChild(TiXmlElement("object"))->ToElement();
+    }
+
+    // The only things left are: to dump item into object ...
+    m_RootItem->XmlWrite(Object,true,false);
+
+    // ... ans save back the file
+    Doc.SaveFile(cbU2C(GetProjectPath()+m_XrcFileName));
+}
