@@ -88,7 +88,7 @@ void wxsItem::OnBuildDeclarationCode(wxString& Code,wxsCodingLang Language)
     switch ( Language )
     {
         case wxsCPP:
-            Code << GetInfo().Name << _T("* ") << GetVarName() << _T(";\n");
+            Code << GetClassName() << _T("* ") << GetVarName() << _T(";\n");
             return;
 
         default:
@@ -119,7 +119,7 @@ bool wxsItem::OnXmlWrite(TiXmlElement* Element,bool IsXRC,bool IsExtra)
 {
     if ( IsXRC )
     {
-        Element->SetAttribute("class",cbU2C(GetType()));
+        Element->SetAttribute("class",cbU2C(GetClassName()));
         wxsPropertyContainer::XmlWrite(Element);
         if ( GetPropertiesFlags() & flId )
         {
@@ -145,11 +145,11 @@ void wxsItem::BuildItemTree(wxsResourceTree* Tree,wxsResourceItemId Parent,int P
     /* TODO: Code wxsResourceTreeData replacement for wxsItem class */
     if ( Position<0 || Position>=(int)Tree->GetChildrenCount(Parent) )
     {
-        m_LastTreeId = Tree->AppendItem(Parent,GetInfo().Name,-1,-1/*,new wxsResourceTreeData(this)*/);
+        m_LastTreeId = Tree->AppendItem(Parent,GetClassName(),-1,-1/*,new wxsResourceTreeData(this)*/);
     }
     else
     {
-        m_LastTreeId = Tree->InsertItem(Parent,Position,GetInfo().Name,-1,-1/*,new wxsResourceTreeData(this)*/);
+        m_LastTreeId = Tree->InsertItem(Parent,Position,GetClassName(),-1,-1/*,new wxsResourceTreeData(this)*/);
     }
     if ( !GetIsExpanded() )
     {

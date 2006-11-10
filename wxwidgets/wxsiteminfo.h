@@ -4,31 +4,32 @@
 /** \brief Set of possible item types */
 enum wxsItemType
 {
-    wxsTInvalid = 0,     ///< Invalid item type
-    wxsTWidget,          ///< Widget (childless)
-    wxsTContainer,       ///< Widget with children
-    wxsTSizer,           ///< Sizer
-    wxsTSpacer,          ///< Spacer
-    wxsTTool             ///< Tool
+    wxsTInvalid = 0,     ///< \brief Invalid item type
+    wxsTWidget,          ///< \brief Widget (childless)
+    wxsTContainer,       ///< \brief Widget with children
+    wxsTSizer,           ///< \brief Sizer
+    wxsTSpacer,          ///< \brief Spacer
+    wxsTTool             ///< \brief Tool
 };
 
 /** \brief Structure containing all global informations about item */
 struct wxsItemInfo
 {
-    wxString        Name;           ///< Item name (equivalent to it's class)
-    wxsItemType     Type;           ///< Item type
-    wxString        License;        ///< Item's license
-    wxString        Author;         ///< Item's author
-    wxString        Email;          ///< Item's author's email
-    wxString        Site;           ///< Site about this item
-    wxString        Category;       ///< Item's category (used for grouping widgets, use _T() instead of _() because this string will be used for sorting and it will be translated manually)
-    long            Priority;       ///< Priority used for sorting widgets inside one group, should be in range 0..100, higher priority widgets will be at the beginning of palette
-    wxString        DefaultVarName; ///< Prefix for default variable name (converted to uppercase will be used as prefix for identifier)
-    unsigned short  VerHi;          ///< Lower number of version
-    unsigned short  VerLo;          ///< Higher number of version
-    wxBitmap*       Icon32;         ///< Item's icon (32x32 pixels)
-    wxBitmap*       Icon16;         ///< Item's icon (16x16 pixels)
-    int             TreeIconId;     ///< Identifier of image inside resource tree
+    wxString        ClassName;      ///< \brief Item's class name
+    wxsItemType     Type;           ///< \brief Item type
+    wxString        License;        ///< \brief Item's license
+    wxString        Author;         ///< \brief Item's author
+    wxString        Email;          ///< \brief Item's author's email
+    wxString        Site;           ///< \brief Site about this item
+    wxString        Category;       ///< \brief Item's category (used for grouping widgets, use _T() instead of _() because this string will be used for sorting and it will be translated manually)
+    long            Priority;       ///< \brief Priority used for sorting widgets inside one group, should be in range 0..100, higher priority widgets will be at the beginning of palette
+    wxString        DefaultVarName; ///< \brief Prefix for default variable name (converted to uppercase will be used as prefix for identifier)
+    long            Languages;      ///< \brief Coding languages used by this item
+    unsigned short  VerHi;          ///< \brief Lower number of version
+    unsigned short  VerLo;          ///< \brief Higher number of version
+    wxBitmap*       Icon32;         ///< \brief Item's icon (32x32 pixels)
+    wxBitmap*       Icon16;         ///< \brief Item's icon (16x16 pixels)
+    int             TreeIconId;     ///< \brief Identifier of image inside resource tree
 };
 
 #endif

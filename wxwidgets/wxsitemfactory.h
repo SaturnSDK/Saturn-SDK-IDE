@@ -6,70 +6,57 @@
 
 class wxsItem;
 class wxsItemInfo;
-class wxsItemManager;
-class wxsWindowRes;
+class wxsItemRes;
 
 /** \brief Class managing creation, destruction and enumeration of supported
  *         items
+ *
+ * All public functinos are static which means that this class is something
+ * like singleton but using static members for global operations.
+ * Each instance of this class does represent one wxsItem - provides it's info
+ * and is able to build this item.
+ * Addind new supported item to factory is done by deriving other class from
+ * this one and writing it's
  */
 class wxsItemFactory
 {
 	public:
 
-        /** \brief Function creating singleton object if there's no one */
-        static void Create();
-
-        /** \brief Getting singleton object */
-        static inline wxsItemFactory* Get() { return Singleton; }
+        /** \brief Creating item with given name */
+        static wxsItem* Build(const wxString& ClassName,wxsItemRes* Res);
 
         /** \brief Returning info for item with given name
-         * \return Pointer to info or NULL if there's no such item
+         *  \param ClassName name of item's class
+         *  \return Pointer to info or NULL if there's no such item
          */
-        const wxsItemInfo* GetInfo(const wxString& Name);
+        static const wxsItemInfo* GetInfo(const wxString& ClassName);
 
-        /** \brief Creating item with given name */
-        wxsItem* Build(const wxString& Name,wxsWindowRes* Res);
+        /** \brief Getting onfo of first item */
+        static const wxsItemInfo* GetFirstInfo();
 
-        /** \brief Destroying given item */
-        void Kill(wxsItem* Widget);
+        /** \brief Continuing getting item infos */
+        static const wxsItemInfo* GetNextInfo();
 
-        /** \brief Getting first item info */
-        const wxsItemInfo* GetFirstInfo();
+    protected:
 
-        /** \brief Getting next item info */
-        const wxsItemInfo* GetNextInfo();
+        /** \brief Ctor - can be accessed from derived classes only */
+		wxsItemFactory(const wxsItemInfo* Info);
 
-        /** \brief Registring manager inside this factory */
-        void RegisterManager(wxsItemManager* Manager);
+		/** \brief Dctor */
+		virtual ~wxsItemFactory();
+
+        /** \brief Building item */
+        virtual wxsItem* OnBuild(wxsItemRes* Resource) = 0;
 
 	private:
 
-        /** \brief Ctor - hidden because this is singleton class */
-		wxsItemFactory();
+        WX_DECLARE_STRING_HASH_MAP(wxsItemFactory*,ItemMapT);
 
-		/** \brief Dctor, not virtual since this class can not be derived from */
-		~wxsItemFactory();
+        /** \brief Function for getting global item's map */
+        static ItemMapT& ItemMap();
 
-		/** \brief Small structure used for mapping item name */
-		struct ItemData
-		{
-		    wxsItemManager* Manager;
-		    int Number;
-		    const wxsItemInfo* Info;
-		};
-
-        /** \brief Map used to handle all types of widgets */
-        WX_DECLARE_STRING_HASH_MAP(ItemData,ItemMapT);
-        typedef ItemMapT::iterator ItemMapI;
-
-        /** \brief Map for widgets */
-        ItemMapT Items;
-
-        /** \brief Internal iterator */
-        ItemMapI Iterator;
-
-        /** \brief Singleton object */
-        static wxsItemFactory* Singleton;
+        const wxsItemInfo* m_Info;          ///< \brief Info of item handled by this instance
+        static ItemMapT::iterator m_Iter;   ///< \brief Iterator used for GetFirstInfo / GetNextInfo
 };
 
 #endif

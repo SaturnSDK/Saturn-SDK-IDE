@@ -1,4 +1,3 @@
-#include "wxsheaders.h"
 #include "wxspredefinedids.h"
 
 namespace
@@ -8,9 +7,9 @@ namespace
         const wxChar* Name;
         wxWindowID Value;
     };
-    
+
     #define ID(name) { _T(#name), name },
-    
+
     IdEntry IDs[] =
     {
         ID(wxID_ANY)
@@ -112,7 +111,7 @@ namespace
         ID(wxID_ICONIZE_FRAME)
         ID(wxID_RESTORE_FRAME)
     };
-    
+
     static const int IDsCount = sizeof(IDs) / sizeof(IDs[0]);
 }
 
@@ -121,13 +120,13 @@ bool wxsPredefinedIDs::Check(const wxString& Name)
     // First checking if this is value
     long Tmp;
     if ( Name.ToLong(&Tmp) ) return true;
-    
+
     // Second - checking array of ids
     for ( int i=0; i<IDsCount; i++ )
     {
         if ( Name == IDs[i].Name ) return true;
     }
-    
+
     return false;
 }
 
@@ -136,12 +135,12 @@ wxWindowID wxsPredefinedIDs::Value(const wxString& Name)
     // First trying to convert to number
     long Tmp;
     if ( Name.ToLong(&Tmp) ) return Tmp;
-    
+
     // Second searching in array of ids
     for ( int i=0; i<IDsCount; i++ )
     {
         if ( Name == IDs[i].Name ) return IDs[i].Value;
     }
-    
+
     return wxID_ANY;
 }

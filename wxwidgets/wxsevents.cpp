@@ -120,12 +120,17 @@ void wxsEvents::GenerateBindingCode(wxString& Code,const wxString& IdString,cons
             }
             return;
         }
+
+        default:
+        {
+            wxsCodeMarks::Unknown(_T("wxsEvents::GenerateBindingCode"),Language);
+        }
     }
 }
 
 bool wxsEvents::ForceVariable()
 {
-    for ( int i=0; i<Count; i++ )
+    for ( int i=0; i<m_Count; i++ )
     {
         if ( !m_Functions[i].empty() )
         {

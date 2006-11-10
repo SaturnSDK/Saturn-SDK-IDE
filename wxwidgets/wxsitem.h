@@ -103,6 +103,9 @@ class wxsItem: public wxsPropertyContainer
          */
         inline wxsItemType GetType() { return GetInfo().Type; }
 
+        /** \brief Getting class name */
+        inline const wxString& GetClassName() { return GetInfo().ClassName; }
+
         /** \brief Function enumerating properties of this item
          *
          * This function instead of EnumProperties must be declared in
@@ -128,7 +131,7 @@ class wxsItem: public wxsPropertyContainer
         /** \brief Function enumerating required declaration files
          *  \note This is wrapped for \link OnEnumDeclFiles
          */
-        virtual void EnumDeclFiles(wxArrayString& Decl,wxArrayString& Def,wxsCodingLang Language) = 0;
+        inline void EnumDeclFiles(wxArrayString& Decl,wxArrayString& Def,wxsCodingLang Language) { OnEnumDeclFiles(Decl,Def,Language); }
 
         /** \brief Function building preview for this item
          *

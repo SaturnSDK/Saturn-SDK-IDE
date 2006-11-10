@@ -2,89 +2,53 @@
 #include "wxsitemmanager.h"
 #include "wxsitem.h"
 
-wxsItemFactory* wxsItemFactory::Singleton = NULL;
-
-wxsItemFactory::wxsItemFactory()
+wxsItem* wxsItemFactory::Build(const wxString& Name,wxsItemRes* Resource)
 {
-}
-
-wxsItemFactory::~wxsItemFactory()
-{
-}
-
-void wxsItemFactory::Create()
-{
-    // Factory will be stored as static member of Create function, so
-    // it will be created at first call to Create and deleted when
-    // plugin will be unloaded.
-    static wxsItemFactory Factory;
-
-    Singleton = &Factory;
+    ItemMapT::iterator it = ItemMap().find(Name);
+    if ( it == ItemMap().end() ) return NULL;
+    return it->second->OnBuild(Resource);
 }
 
 const wxsItemInfo* wxsItemFactory::GetInfo(const wxString& Name)
 {
-    ItemMapI i = Items.find(Name);
-    if ( i == Items.end() ) return NULL;
-    return (*i).second.Info;
-}
-
-wxsItem* wxsItemFactory::Build(const wxString& Name,wxsWindowRes* Res)
-{
-    // Searching for entry for this item name
-    ItemMapI i = Items.find(Name);
-    if ( i == Items.end() ) return NULL;
-
-    // Generating item
-    wxsItem* Item = i->second.Manager->ProduceItem(i->second.Number,Res);
-
-    // Second step of initialization
-    if ( Item ) Item->Create();
-
-    return Item;
-}
-
-void wxsItemFactory::Kill(wxsItem* Item)
-{
-    if ( Item )
-    {
-        delete Item;
-    }
+    ItemMapT::iterator it = ItemMap().find(Name);
+    if ( it == ItemMap().end() ) return NULL;
+    return it->second->m_Info;
 }
 
 const wxsItemInfo* wxsItemFactory::GetFirstInfo()
 {
-    Iterator = Items.begin();
-    return Iterator == Items.end() ? NULL : Iterator->second.Info;
+    m_Iter = ItemMap().begin();
+    return (m_Iter==ItemMap().end()) ? NULL : m_Iter->second->m_Info;
 }
 
 const wxsItemInfo* wxsItemFactory::GetNextInfo()
 {
-    if ( Iterator == Items.end() ) return NULL;
-    if ( ++Iterator == Items.end() ) return NULL;
-    return Iterator->second.Info;
+    if ( m_Iter==ItemMap().end() ) return NULL;
+    ++m_Iter;
+    return (m_Iter==ItemMap().end()) ? NULL : m_Iter->second->m_Info;
 }
 
-void wxsItemFactory::RegisterManager(wxsItemManager* Manager)
+wxsItemFactory::wxsItemFactory(const wxsItemInfo* Info):
+    m_Info(Info)
 {
-    if ( !Manager )
-    {
-        return;
-    }
-
-    int Count = Manager->GetCount();
-    for ( int i = 0; i<Count; i++ )
-    {
-        const wxsItemInfo* Info = &Manager->GetItemInfo(i);
-        if ( Info && wxsValidateIdentifier(Info->Name) )
-        {
-            // TODO: Check if item does exist and add higner version
-            //       only
-            ItemData &Data = Items[Info->Name];
-            Data.Info = Info;
-            Data.Number = i;
-            Data.Manager = Manager;
-        }
-    }
+    if ( Info==NULL ) return;
+    ItemMap()[Info->ClassName] = this;
 }
 
+wxsItemFactory::~wxsItemFactory()
+{
+    if ( !m_Info ) return;
+    ItemMapT::iterator it = ItemMap().find(m_Info->ClassName);
+    if ( it == ItemMap().end() ) return;
+    if ( it->second!=this ) return;
+    ItemMap().erase(it);
+}
+
+wxsItemFactory::ItemMapT& wxsItemFactory::ItemMap()
+{
+    static ItemMapT Map;
+    return Map;
+}
+
+wxsItemFactory::ItemMapT::iterator wxsItemFactory::m_Iter(wxsItemFactory::ItemMap().end());

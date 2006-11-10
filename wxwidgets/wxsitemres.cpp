@@ -1,5 +1,6 @@
 #include "wxsitemres.h"
 #include "wxsitem.h"
+#include "wxsparent.h"
 #include "../wxscoder.h"
 
 IMPLEMENT_CLASS(wxsItemRes,wxWidgetsRes)
@@ -323,7 +324,7 @@ void wxsItemRes::RebuildSourceCode()
             wxsCoder::Get()->AddCode(
                 GetProjectPath() + m_HdrFileName,
                 wxsCodeMarks::Beg(wxsCPP,_T("Headers"),GetClassName()),
-                wxsCodeMarks::End(),
+                wxsCodeMarks::End(wxsCPP),
                 GlobalHeaders);
 
             wxsCoder::Get()->AddCode(
@@ -341,13 +342,13 @@ void wxsItemRes::RebuildSourceCode()
             wxsCoder::Get()->AddCode(
                 GetProjectPath() + m_SrcFileName,
                 wxsCodeMarks::Beg(wxsCPP,_T("InternalHeaders"),GetClassName()),
-                wxsCodeMarks::End(),
+                wxsCodeMarks::End(wxsCPP),
                 LocalHeaders);
 
             wxsCoder::Get()->AddCode(
                 GetProjectPath() + m_SrcFileName,
                 wxsCodeMarks::Beg(wxsCPP,_T("EventTable"),GetClassName()),
-                wxsCodeMarks::End(),
+                wxsCodeMarks::End(wxsCPP),
                 _T(""));    // This clears previously used event table for event binding
 
             break;
@@ -368,12 +369,12 @@ void wxsItemRes::BuildVariablesCode(wxsCodingLang Lang,wxString& LocalCode, wxSt
         case wxsCPP:
         {
             // Creating local and global declarations
-            BuildVariablesCodeReq(wxsCPP,m_RootItem,InitializingCode,GlobalVarsCode);
-            if ( InitializingCode.Length()>1 )
+            BuildVariablesCodeReq(wxsCPP,m_RootItem,LocalCode,GlobalCode);
+            if ( LocalCode.Length()>1 )
             {
                 // Adding one empty line between local declarations and
                 // the rest of initializing code
-                InitializingCode << _T("\n");
+                LocalCode << _T("\n");
             }
             break;
         }
@@ -387,18 +388,15 @@ void wxsItemRes::BuildVariablesCode(wxsCodingLang Lang,wxString& LocalCode, wxSt
 
 void wxsItemRes::BuildVariablesCodeReq(wxsCodingLang Lang,wxsItem* Item,wxString& LocalCode, wxString& GlobalCode)
 {
-    wxsParent* Parent = Item->ToParent();
-    if ( !Parent )
-    {
-        return false;
-    }
+    wxsParent* Parent = Item->ConvertToParent();
+    if ( !Parent ) return;
 
     int ChildCnt = Parent->GetChildCount();
     for ( int i=0; i<ChildCnt; i++ )
     {
         wxsItem* Child = Parent->GetChild(i);
 
-        if ( Child->GetPropertiesFlags() & wxsFLVariable )
+        if ( Child->GetPropertiesFlags() & wxsItem::flVariable )
         {
             if ( Child->GetIsMember() )
             {
@@ -423,8 +421,8 @@ void wxsItemRes::BuildCreatingCode(wxsCodingLang Lang,wxString& Code)
             break;
 
         case Mixed:
-            OnBuildXrcLoadingCode(Code,Lang);
-            BuildXrcItemsFetchingCode(Code,Lang);
+            OnBuildXrcLoadingCode(Lang,Code);
+            BuildXrcItemsFetchingCode(Lang,Code);
             break;
 
         default:;
@@ -433,7 +431,7 @@ void wxsItemRes::BuildCreatingCode(wxsCodingLang Lang,wxString& Code)
 
 void wxsItemRes::OnBuildXrcLoadingCode(wxsCodingLang Language,wxString& Code)
 {
-    switch ( Lang )
+    switch ( Language )
     {
         case wxsCPP:
         {
@@ -445,7 +443,7 @@ void wxsItemRes::OnBuildXrcLoadingCode(wxsCodingLang Language,wxString& Code)
 
         default:
         {
-            wxsCodeMarks::Unknown(_T("wxsItemRes::OnBuildXrcLoadingCode"),Lang);
+            wxsCodeMarks::Unknown(_T("wxsItemRes::OnBuildXrcLoadingCode"),Language);
         }
     }
 }
@@ -472,12 +470,12 @@ void wxsItemRes::BuildXrcItemsFetchingCodeReq(wxsCodingLang Lang,wxsItem* Item,w
             {
                 wxsItem* Child = Parent->GetChild(i);
                 unsigned long Flags = Child->GetPropertiesFlags();
-                if ( (Flags & (wxsFLVariable|wxsFLId)) == (wxsFLVariable|wxsFLId) )
+                if ( (Flags & (wxsItem::flVariable|wxsItem::flId)) == (wxsItem::flVariable|wxsItem::flId) )
                 {
                     if ( Child->GetIsMember() )
                     {
                         Code << Child->GetVarName()
-                             << _T(" = (") << Child->GetType() << _T(")")
+                             << _T(" = (") << Child->GetClassName() << _T(")")
                              << _T("FindWindow(XRCID(") + Child->GetIdName() + _T("));\n");
                     }
                 }
@@ -515,7 +513,7 @@ void wxsItemRes::BuildEventHandlersCodeReq(wxsCodingLang Language,wxsItem* Item,
             else
             {
                 IdString = _T("XRCID(") + Item->GetIdName() + _T(")");
-                if ( Item->m_IsMember )
+                if ( Item->GetIsMember() )
                 {
                     VarNameString = Item->GetVarName();
                 }
@@ -547,7 +545,7 @@ void wxsItemRes::BuildEventHandlersCodeReq(wxsCodingLang Language,wxsItem* Item,
 
 void wxsItemRes::BuildIdentifiersCode(wxsCodingLang Lang,wxString& IdCode,wxString& IdInitCode)
 {
-    if ( GetEditMode == Source )
+    if ( GetEditMode() == Source )
     {
         wxArrayString IdsArray;
         BuildIdsArrayReq(m_RootItem,IdsArray);
@@ -578,6 +576,28 @@ void wxsItemRes::BuildIdentifiersCode(wxsCodingLang Lang,wxString& IdCode,wxStri
     }
 }
 
+void wxsItemRes::BuildIdsArrayReq(wxsItem* Item,wxArrayString& Array)
+{
+    wxsParent* Parent = Item->ConvertToParent();
+    if ( !Parent ) return;
+
+	int Cnt = Parent->GetChildCount();
+	for ( int i=0; i<Cnt; i++ )
+	{
+		wxsItem* Child = Parent->GetChild(i);
+		if ( Child->GetPropertiesFlags() & wxsItem::flId )
+		{
+		    const wxString& Name = Child->GetIdName();
+
+		    if ( !wxsPredefinedIDs::Check(Name) )
+		    {
+                Array.Add(Name);
+		    }
+		}
+		BuildIdsArrayReq(Child,Array);
+	}
+}
+
 void wxsItemRes::BuildIncludesCode(wxsCodingLang Language,wxString& LocalIncludes,wxString& GlobalIncludes)
 {
     switch ( Language )
@@ -603,7 +623,7 @@ void wxsItemRes::BuildIncludesCode(wxsCodingLang Language,wxString& LocalInclude
             LocalHeaders.Sort();
 
             wxString Previous = _T("");
-            for ( size_t i=0; i<GlobalHeaders.Size(); i++ )
+            for ( size_t i=0; i<GlobalHeaders.Count(); i++ )
             {
                 if ( GlobalHeaders[i] != Previous )
                 {
@@ -613,7 +633,7 @@ void wxsItemRes::BuildIncludesCode(wxsCodingLang Language,wxString& LocalInclude
             }
 
             Previous = _T("");
-            for ( size_t i=0; i<LocalHeaders.Size(); i++ )
+            for ( size_t i=0; i<LocalHeaders.Count(); i++ )
             {
                 if ( LocalHeaders[i] != Previous )
                 {
@@ -632,6 +652,20 @@ void wxsItemRes::BuildIncludesCode(wxsCodingLang Language,wxString& LocalInclude
     }
 }
 
+void wxsItemRes::BuildHeadersReq(wxsCodingLang Lang,wxsItem* Item,wxArrayString& LocalHeaders,wxArrayString& GlobalHeaders)
+{
+    Item->EnumDeclFiles(GlobalHeaders,LocalHeaders,Lang);
+
+    wxsParent* Parent = Item->ConvertToParent();
+    if ( !Parent ) return;
+
+	int Cnt = Parent->GetChildCount();
+	for ( int i=0; i<Cnt; i++ )
+	{
+	    BuildHeadersReq(Lang,Parent->GetChild(i),LocalHeaders,GlobalHeaders);
+	}
+}
+
 void wxsItemRes::RebuildXrcFile()
 {
     // First - opening file
@@ -647,7 +681,7 @@ void wxsItemRes::RebuildXrcFile()
     if ( !Resources )
     {
         Doc.Clear();
-        Doc.InsertEndChild(TiXmlDeclaration("1.0","utf-8","");
+        Doc.InsertEndChild(TiXmlDeclaration("1.0","utf-8",""));
         Resources = Doc.InsertEndChild(TiXmlElement("resource"))->ToElement();
         Resources->SetAttribute("xmlns","http://www.wxwidgets.org/wxxrc");
     }
@@ -655,12 +689,12 @@ void wxsItemRes::RebuildXrcFile()
     // Searching for object representing this resource
     for ( Object = Resources->FirstChildElement("object"); Object; Object = Object->NextSiblingElement("object") )
     {
-        if ( cbC2U(Object->Attribute("name") == GetClassName()) )
+        if ( cbC2U(Object->Attribute("name")) == GetClassName() )
         {
             Object->Clear();
             while ( Object->FirstAttribute() )
             {
-                Object->RemoveAttribute(Object->FirstAttribute()->Name);
+                Object->RemoveAttribute(Object->FirstAttribute()->Name());
             }
             break;
         }
@@ -674,6 +708,6 @@ void wxsItemRes::RebuildXrcFile()
     // The only things left are: to dump item into object ...
     m_RootItem->XmlWrite(Object,true,false);
 
-    // ... ans save back the file
+    // ... and save back the file
     Doc.SaveFile(cbU2C(GetProjectPath()+m_XrcFileName));
 }

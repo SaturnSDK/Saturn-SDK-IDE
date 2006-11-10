@@ -224,7 +224,7 @@ bool wxsParent::OnXmlReadChild(TiXmlElement* Elem,bool IsXRC,bool IsExtra)
     }
 
     // Creating new item from class name
-    wxsItem* NewItem = wxsItemFactory::Get()->Build(cbC2U(RealElem->Attribute("class")),GetResource());
+    wxsItem* NewItem = wxsItemFactory::Build(cbC2U(RealElem->Attribute("class")),GetResource());
     if ( !NewItem )
     {
         // TODO: Load this object as custom element
