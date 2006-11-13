@@ -17,7 +17,7 @@ class wxsParent: public wxsItem
     public:
 
         /** \brief Ctor */
-        wxsParent(wxsItemRes* Resource,const wxsEventDesc* Events,unsigned long PropertiesFlags);
+        wxsParent(wxsItemRes* Resource,const wxsItemInfo* Info,unsigned long PropertiesFlags,const wxsEventDesc* Events);
 
         /** \brief Dctor */
         virtual ~wxsParent();

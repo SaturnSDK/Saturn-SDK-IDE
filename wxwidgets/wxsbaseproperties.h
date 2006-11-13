@@ -5,7 +5,7 @@
 #include "../wxsadvqpp.h"
 #include "../wxscodinglang.h"
 
-// TODO: Add wxWidgets-specific properties when they;re ready
+// TODO: Add wxWidgets-specific properties when they're ready
 /** \brief Structure holding most commonly used properties
  *
  * This class doesn't support style since it require too many informations

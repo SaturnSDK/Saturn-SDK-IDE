@@ -404,6 +404,16 @@
 			<Option link="0" />
 			<Option target="wxSmith" />
 		</Unit>
+		<Unit filename="wxwidgets\wxscontainer.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\wxscontainer.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="wxSmith" />
+		</Unit>
 		<Unit filename="wxwidgets\wxsdialogres.cpp">
 			<Option compilerVar="CPP" />
 			<Option target="wxSmith" />
@@ -505,6 +515,12 @@
 			<Option target="wxSmith" />
 		</Unit>
 		<Unit filename="wxwidgets\wxspredefinedids.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\wxsstyle.h">
 			<Option compilerVar="CPP" />
 			<Option compile="0" />
 			<Option link="0" />

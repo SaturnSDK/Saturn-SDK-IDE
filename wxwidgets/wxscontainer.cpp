@@ -2,30 +2,26 @@
 #include <messagemanager.h>
 
 wxsContainer::wxsContainer(
-    wxsWindowRes* Resource,
-    long _BasePropertiesFlags,
-    const wxsItemInfo* _Info,
-    const wxsEventDesc* _EventArray,
-    const wxsStyle* _StyleSet,
-    const wxString& _DefaultStyle):
-        wxsParent(Resource),
-        Info(_Info),
-        EventArray(_EventArray),
-        StyleSet(_StyleSet),
-        DefaultStyle(_DefaultStyle),
-        BasePropertiesFlags(_BasePropertiesFlags)
+    wxsItemRes* Resource,
+    const wxsItemInfo* Info,
+    long PropertiesFlags,
+    const wxsEventDesc* EventArray,
+    const wxsStyle* StyleSet,
+    const wxString& DefaultStyle):
+        wxsParent(Resource,Info,PropertiesFlags,EventArray),
+        m_StyleSet(StyleSet),
+        m_DefaultStyle(DefaultStyle),
+        m_StyleBits(0),
+        m_ExStyleBits(0)
 {
-    if ( StyleSet )
+    if ( m_StyleSet )
     {
-        wxsStyleProperty::SetFromString(StyleBits,DefaultStyle,StyleSet,false);
-    }
-    else
-    {
-        StyleBits = 0;
+        // TODO: Code it when stylesa re done
+//        wxsStyleProperty::SetFromString(StyleBits,DefaultStyle,StyleSet,false);
     }
 }
 
-bool wxsContainer::CanAddChild(wxsItem* Item,bool ShowMessage)
+bool wxsContainer::OnCanAddChild(wxsItem* Item,bool ShowMessage)
 {
     if ( Item->GetType() == wxsTSpacer )
     {
@@ -75,32 +71,31 @@ bool wxsContainer::CanAddChild(wxsItem* Item,bool ShowMessage)
     return true;
 }
 
-void wxsContainer::EnumItemProperties(long Flags)
+void wxsContainer::OnEnumItemProperties(long Flags)
 {
-    EnumContainerProperties(Flags);
-    wxsItem::EnumItemProperties(Flags);
-    SubContainer(BaseProps,GetBasePropertiesFlags());
-    if ( StyleSet )
-    {
-        WXS_STYLE(wxsContainer,StyleBits,0,_("Style"),_T("style"),StyleSet,DefaultStyle);
-        WXS_EXSTYLE(wxsContainer,ExStyleBits,0,_("Extra style"),_T("exstyle"),StyleSet,wxEmptyString);
-    }
+    OnEnumContainerProperties(Flags);
+    // TODO
+//    if ( StyleSet )
+//    {
+//        WXS_STYLE(wxsContainer,StyleBits,0,_("Style"),_T("style"),StyleSet,DefaultStyle);
+//        WXS_EXSTYLE(wxsContainer,ExStyleBits,0,_("Extra style"),_T("exstyle"),StyleSet,wxEmptyString);
+//    }
 }
 
-void wxsContainer::AddItemQPP(wxsAdvQPP* QPP)
+void wxsContainer::OnAddItemQPP(wxsAdvQPP* QPP)
 {
-    AddContainerQPP(QPP);
-    BaseProps.AddQPPChild(QPP,GetBasePropertiesFlags());
+    OnAddContainerQPP(QPP);
 }
 
 wxWindow* wxsContainer::SetupWindow(wxWindow* Preview,bool IsExact)
 {
-    BaseProps.SetupWindow(Preview,IsExact);
-    long ExStyle = wxsStyleProperty::GetWxStyle(ExStyleBits,StyleSet,true);
-    if ( ExStyle != 0 )
-    {
-        Preview->SetExtraStyle(Preview->GetExtraStyle() | ExStyle);
-    }
+    GetBaseProps()->SetupWindow(Preview,IsExact);
+    // TODO
+//    long ExStyle = wxsStyleProperty::GetWxStyle(ExStyleBits,StyleSet,true);
+//    if ( ExStyle != 0 )
+//    {
+//        Preview->SetExtraStyle(Preview->GetExtraStyle() | ExStyle);
+//    }
     return Preview;
 }
 
@@ -110,38 +105,43 @@ void wxsContainer::SetupWindowCode(wxString& Code,wxsCodingLang Language)
     {
         case wxsCPP:
         {
-            BaseProps.BuildSetupWindowCode(Code,GetVarName(),wxsCPP);
-            if ( ExStyleBits )
-            {
-                wxString ExStyleStr = wxsStyleProperty::GetString(ExStyleBits,StyleSet,true,wxsCPP);
-                if ( ExStyleStr != _T("0") )
-                {
-                    wxString VarAccess = GetVarName().empty() ? _T("") : GetVarName() + _T("->");
-
-                    Code << VarAccess << _T("SetExtraStyle(") <<
-                            VarAccess << _T("GetExtraStyle() | ") <<
-                            ExStyleStr << _T(");\n");
-                }
-            }
+            GetBaseProps()->BuildSetupWindowCode(Code,GetVarName(),wxsCPP);
+            // TODO
+//            if ( ExStyleBits )
+//            {
+//                wxString ExStyleStr = wxsStyleProperty::GetString(ExStyleBits,StyleSet,true,wxsCPP);
+//                if ( ExStyleStr != _T("0") )
+//                {
+//                    wxString VarAccess = GetVarName().empty() ? _T("") : GetVarName() + _T("->");
+//
+//                    Code << VarAccess << _T("SetExtraStyle(") <<
+//                            VarAccess << _T("GetExtraStyle() | ") <<
+//                            ExStyleStr << _T(");\n");
+//                }
+//            }
             return;
+        }
+
+        default:
+        {
+            wxsCodeMarks::Unknown(_T("wxsContainer::SetupWindowCode"),Language);
         }
     }
 
-    wxsLANGMSG(wxsContainer::SetupWindowCode,Language);
 }
 
-void wxsContainer::AddChildrenPreview(wxWindow* This,bool Exact)
+void wxsContainer::AddChildrenPreview(wxWindow* This,bool Exact,bool StoreInLastPreview)
 {
     for ( int i=0; i<GetChildCount(); i++ )
     {
-        GetChild(i)->BuildPreview(This,Exact);
+        GetChild(i)->BuildPreview(This,Exact,StoreInLastPreview);
     }
 
     // TODO: Move this into child classes since it's not what this function should do
-    if ( BaseProps.Size.IsDefault )
-    {
-        This->Fit();
-    }
+//    if ( GetBaseProps()->Size.IsDefault )
+//    {
+//        This->Fit();
+//    }
 }
 
 void wxsContainer::AddChildrenCode(wxString& Code,wxsCodingLang Language)
@@ -164,17 +164,21 @@ void wxsContainer::AddChildrenCode(wxString& Code,wxsCodingLang Language)
 
                     Code << _T("SetSizer(") << SizerName << _T(");\n");
 
-                    if ( BaseProps.Size.IsDefault )
-                    {
-                        Code << SizerName << _T("->Fit(") << ThisName << _T(");\n");
-                    }
+                    // TODO
+//                    if ( BaseProps.Size.IsDefault )
+//                    {
+//                        Code << SizerName << _T("->Fit(") << ThisName << _T(");\n");
+//                    }
 
                     Code << SizerName << _T("->SetSizeHints(") << ThisName << _T(");\n");
                 }
             }
             return;
         }
-    }
 
-    wxsLANGMSG(wxsContainer::AddChildrenCode,Language);
+        default:
+        {
+            wxsCodeMarks::Unknown(_T("wxsContainer::AddChildrenCode"),Language);
+        }
+    }
 }

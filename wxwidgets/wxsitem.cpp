@@ -2,7 +2,8 @@
 #include "wxsparent.h"
 #include "wxsitemres.h"
 
-wxsItem::wxsItem(wxsItemRes* Resource,const wxsEventDesc* Events,unsigned long PropertiesFlags):
+wxsItem::wxsItem(wxsItemRes* Resource,const wxsItemInfo* Info,unsigned long PropertiesFlags,const wxsEventDesc* Events):
+    m_Info(Info),
     m_Events(Events,this),
     m_Parent(NULL),
     m_Resource(Resource),
@@ -52,6 +53,12 @@ wxsQuickPropsPanel* wxsItem::OnCreateQuickProperties(wxWindow* ParentWnd)
     else
     {
         OnAddItemQPP(Panel);
+    }
+
+    // Appending qpp's from base properties
+    if ( m_BaseProperties )
+    {
+        m_BaseProperties->AddQPPChild(Panel,GetPropertiesFlags());
     }
 
     return Panel;

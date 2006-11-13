@@ -54,7 +54,7 @@ class wxsItem: public wxsPropertyContainer
          * \param Resource resource containingthis widget, must not be NULL
          * \param Events array of events used by this object (may be NULL if item doesn't use events)
          */
-        wxsItem(wxsItemRes* Resource,const wxsEventDesc* Events,unsigned long PropertiesFlags);
+        wxsItem(wxsItemRes* Resource,const wxsItemInfo* Info,unsigned long PropertiesFlags,const wxsEventDesc* Events);
 
         /** \brief Dctor */
         virtual ~wxsItem();
@@ -63,7 +63,7 @@ class wxsItem: public wxsPropertyContainer
          *
          * \warning This function should return reference to static variable.
          */
-        inline const wxsItemInfo& GetInfo() { return OnGetInfo(); }
+        inline const wxsItemInfo& GetInfo() { return *m_Info; }
 
         /** \brief Getting event managment object used by this item
          *  \note This function is wrapper to OnGetInfo() protected function
@@ -327,14 +327,6 @@ class wxsItem: public wxsPropertyContainer
          */
         virtual bool OnXmlWrite(TiXmlElement* Element,bool IsXRC,bool IsExtra);
 
-        /** \brief Getting item info
-         *
-         * \warning This function should return reference to static variable.
-         * \note It may be memory-consuming to create wxsItemInfo for each instance of class,
-         *       it's better to crate one for all classes
-         */
-        virtual const wxsItemInfo& OnGetInfo() = 0;
-
     private:
 
         /** \brief Function enumerating proeprties
@@ -362,6 +354,7 @@ class wxsItem: public wxsPropertyContainer
         /** \brief Additional hangled for sub properties */
         virtual void OnSubPropertyChanged(wxsPropertyContainer*);
 
+        const wxsItemInfo* m_Info;              ///< \brief Pointer to item's info structure
         wxsEvents m_Events;                     ///< \brief Object managing events
         wxsParent* m_Parent;                    ///< \brief Parent class of this one
         wxsItemRes* m_Resource;                 ///< \brief Resource containing this item

@@ -5,8 +5,6 @@
 #include "../wxscoder.h"
 #include "../wxsproject.h"
 
-// TODO: Prepare for other languages in wxApp-adopting sources
-
 IMPLEMENT_CLASS(wxWidgetsGUI,wxsGUI)
 
 wxWidgetsGUI::wxWidgetsGUI(wxsProject* Project):

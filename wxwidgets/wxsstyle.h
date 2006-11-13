@@ -1,6 +1,8 @@
 #ifndef __WXSSTYLE_H
 #define __WXSSTYLE_H
 
+// TODO: Think about non-macro implementation
+
 /* ************************************************************************** */
 /*  Available style flags                                                     */
 /* ************************************************************************** */

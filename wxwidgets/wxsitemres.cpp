@@ -286,7 +286,7 @@ void wxsItemRes::NotifyChange(wxsItem*)
             RebuildXrcFile();
     }
 
-    // TODO: Store undo data (or maye put it into editor)
+    // TODO: Store undo data (or maybe put it into editor)
 }
 
 void wxsItemRes::RebuildSourceCode()
