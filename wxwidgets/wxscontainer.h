@@ -14,7 +14,7 @@ class wxsContainer: public wxsParent
 
         /** \brief Ctor
          *  \param Resource resource containing this item
-         *  \param BasePropertiesFlags flags filtering sed base properties
+         *  \param PropertiesFlags flags filtering sed base properties
          *         (see wxsBaseProperties for details)
          *  \param Info pointer to static widget info
          *  \param EventArray pointer to static set of events
@@ -36,7 +36,8 @@ class wxsContainer: public wxsParent
         /** \brief Function enumerating properties for this container only
          *
          * This function should enumerate all extra properties
-         * required by item (extra means not enumerated in base properties).
+         * required by item (extra means not enumerated in base properties,
+         * not id or variable name).
          * These properties will be placed at the beginning, right after
          * there will be Variable name and identifier and at the end, all
          * required base properties.

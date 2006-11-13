@@ -23,7 +23,7 @@ class wxsWidget: public wxsItem
 
         /** \brief Ctor
          *  \param Resource resource containing this item
-         *  \param BasePropertiesFlags flags filtering sed base properties
+         *  \param PropertiesFlags flags filtering sed base properties
          *         (see wxsBaseProperties for details)
          *  \param Info pointer to static widget info
          *  \param EventArray pointer to static set of events
@@ -33,82 +33,58 @@ class wxsWidget: public wxsItem
          *         contain one or more style names separated with '|' character
          */
         wxsWidget(
-            wxsWindowRes* Resource,
-            long BasePropertiesFlags,
+            wxsItemRes* Resource,
             const wxsItemInfo* Info,
+            long PropertiesFlags,
             const wxsEventDesc* EventArray = NULL,
             const wxsStyle* StyleSet=NULL,
             const wxString& DefaultStyle=wxEmptyString);
 
-        /** \brief Function returning wxsBaseProperties object associated with
-         *         this item.
-         */
-        virtual wxsBaseProperties* GetBaseProps() { return &BaseProps; }
-
-        /** \brief Function returning flags filtering base properties */
-        inline long GetBasePropertiesFlags() { return BasePropertiesFlags; }
-
     protected:
-
-        /** \brief container with base properties */
-        wxsBaseProperties BaseProps;
 
         /** \brief Function enumerating properties for this widget only
          *
          * This function should enumerate all extra properties
-         * required by item.
+         * required by item (extra means not enumerated in base properties
+         * not id or variable name).
          * These properties will be placed at the beginning, right after
          * there will be Variable name and identifier and at the end, all
          * required base properties.
          */
-        virtual void EnumWidgetProperties(long Flags) = 0;
+        virtual void OnEnumWidgetProperties(long Flags) = 0;
 
         /** \brief Function which adding new items to QPP
          *
          * This function may be used to add special quick properties for
-         * this item. Use this function instead of AddItemProperties
-         * because there is standard QPP added by wdget itselt.
+         * this item.
          *
          * All QPPChild panels will be added before additional panels
          * added by widget.
          */
-        virtual void AddWidgetQPP(wxsAdvQPP* QPP) { }
-
-        /** \brief Function enumerating properties
-         *
-         * Function enumerating item properties. The implementation
-         * does call EnumWidgetProperties() and adds all default ones.
-         * in usual case this should not be overridden, all properties should
-         * be added using EnumWidgetProperties funcion. In some advanced
-         * cases, this may take place.
-         */
-        virtual void EnumItemProperties(long Flags);
-
-        /** \brief Function Adding QPPChild panels for base properties of this
-         *         widget.
-         *
-         * This function calls internally AddWidgetQPP to add any additional
-         * QPPChild panels. If you want to add panel for specified widget,
-         * use AddWidgetQPP rather than AddItemQPP.
-         */
-        virtual void AddItemQPP(wxsAdvQPP* QPP);
+        virtual void OnAddWidgetQPP(wxsAdvQPP* QPP) { }
 
         /** \brief Easy access to position */
         inline wxPoint Pos(wxWindow* Parent)
         {
-            return BaseProps.Position.GetPosition(Parent);
+            // TODO: Implement properly when base properties done
+            //return BaseProps.Position.GetPosition(Parent);
+            return wxDefaultPosition;
         }
 
         /** \brief Easy access to size */
         inline wxSize Size(wxWindow* Parent)
         {
-            return BaseProps.Size.GetSize(Parent);
+            // TODO: Implement properly when base properties done
+            //return BaseProps.Size.GetSize(Parent);
+            return wxDefaultSize;
         }
 
         /** \brief Easy access to style (can be used directly in wxWidgets */
         inline long Style()
         {
-            return wxsStyleProperty::GetWxStyle(StyleBits,StyleSet,false);
+            // TODO: Implement properly when base properties done
+            //return wxsStyleProperty::GetWxStyle(StyleBits,StyleSet,false);
+            return 0;
         }
 
         /** \brief Function setting up standard widget properties after
@@ -134,19 +110,25 @@ class wxsWidget: public wxsItem
         /** \brief Easy acces to position code */
         inline wxString PosCode(const wxString& Parent,wxsCodingLang Language)
         {
-            return BaseProps.Position.GetPositionCode(Parent,Language);
+            // TODO: Implement properly when base properties done
+            //return BaseProps.Position.GetPositionCode(Parent,Language);
+            return _T("wxDefaultPosition");
         }
 
         /** \brief Easy acces to size code */
         inline wxString SizeCode(const wxString& Parent,wxsCodingLang Language)
         {
-            return BaseProps.Size.GetSizeCode(Parent,Language);
+            // TODO: Implement properly when base properties done
+            //return BaseProps.Size.GetSizeCode(Parent,Language);
+            return _T("wxDefaultSize");
         }
 
         /** \brief Easy access to style code */
         inline wxString StyleCode(wxsCodingLang Language)
         {
-            return wxsStyleProperty::GetString(StyleBits,StyleSet,false,Language);
+            // TODO: Implement properly when base properties done
+            //return wxsStyleProperty::GetString(StyleBits,StyleSet,false,Language);
+            return _T("0");
         }
 
         /** \brief Function adding code setting up properties after window
@@ -159,21 +141,25 @@ class wxsWidget: public wxsItem
 
     private:
 
-        /** \brief Widget info retrieval won't be accessed from derived classes,
-         *         info must be passed to wxsWidget's constructor
+        /** \brief Function enumerating properties with default ones
+         *
+         * Function enumerating item properties. The implementation
+         * does call EnumContainerProperties() and adds all default properties.
          */
-        virtual const wxsItemInfo& GetInfo() { return *Info; }
+        virtual void OnEnumItemProperties(long Flags);
 
-        /** \brief Event array must be passed into constructor */
-        virtual const wxsEventDesc* GetEventArray() { return EventArray; }
+        /** \brief Function Adding QPPChild panels for base properties of this
+         *         container.
+         *
+         * This function calls internally AddContainerQPP to add any additional
+         * QPPChild panels.
+         */
+        virtual void OnAddItemQPP(wxsAdvQPP* QPP);
 
-        const wxsItemInfo* Info;
-        const wxsEventDesc* EventArray;
-        const wxsStyle* StyleSet;
-        wxString DefaultStyle;
-        long StyleBits;
-        long ExStyleBits;
-        long BasePropertiesFlags;
+        const wxsStyle* m_StyleSet;
+        wxString m_DefaultStyle;
+        long m_StyleBits;
+        long m_ExStyleBits;
 
 };
 

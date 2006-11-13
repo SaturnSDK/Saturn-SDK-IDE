@@ -526,6 +526,16 @@
 			<Option link="0" />
 			<Option target="wxSmith" />
 		</Unit>
+		<Unit filename="wxwidgets\wxswidget.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\wxswidget.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="wxSmith" />
+		</Unit>
 		<Unit filename="wxwidgets\wxwidgetsgui.cpp">
 			<Option compilerVar="CPP" />
 			<Option target="wxSmith" />
