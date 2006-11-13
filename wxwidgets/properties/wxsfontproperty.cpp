@@ -1,13 +1,8 @@
 #include "wxsfontproperty.h"
 #include "wxsfonteditordlg.h"
-#include "../../wxsglobals.h"
 
 #include <wx/fontenum.h>
-#include <wx/fontmap.h>
-#include <wx/dc.h>
-#include <wx/settings.h>
 #include <wx/tokenzr.h>
-#include <messagemanager.h>
 
 wxFont wxsFontData::BuildFont()
 {
@@ -83,7 +78,7 @@ wxString wxsFontData::BuildFontCode(const wxString& FontName,wxsCodingLang Langu
 
             if ( Faces.Count() == 1 )
             {
-                FaceStr = wxsGetWxString(Faces[0]);
+                FaceStr = wxsCodeMarks::WxString(wxsCPP,Faces[0]);
             }
             else if ( Faces.Count() > 1 )
             {
@@ -105,7 +100,7 @@ wxString wxsFontData::BuildFontCode(const wxString& FontName,wxsCodingLang Langu
 
                 for ( size_t i = 0; i<Faces.Count(); i++ )
                 {
-                    wxString ThisFace = wxsGetWxString(Faces[i]);
+                    wxString ThisFace = wxsCodeMarks::WxString(wxsCPP,Faces[i]);
                     Code << _T("if ( ") << FacesStr << _T(".Index(") << ThisFace << _T(") != wxNOT_FOUND )\n");
                     Code << _T("\t") << FaceName << _T(" = ") << ThisFace << _T(";\n");
                     if ( i != Faces.Count() -1 )
@@ -120,12 +115,12 @@ wxString wxsFontData::BuildFontCode(const wxString& FontName,wxsCodingLang Langu
             wxString EncodingStr = _T("wxFONTENCODING_DEFAULT");
             if ( HasEncoding )
             {
-// TODO (cyberkoa#1#): Add declaration of <wx/fontmap.h> in the Code generated (in .cpp)
+                // TODO: Mark <wx/fontmap.h> as used
 
                 wxString EncodingVar = FontName + _T("Encoding");
                 Code << _T("wxFontEncoding ") << EncodingVar
                      << _T(" = wxFontMapper::Get()->CharsetToEncoding(")
-                     << wxsGetWxString(Encoding) << _T(",false);\n");
+                     << wxsCodeMarks::WxString(wxsCPP,Encoding) << _T(",false);\n");
                 Code << _T("if ( ") << EncodingVar << _T(" == wxFONTENCODING_SYSTEM ) ");
                 Code << EncodingVar << _T(" = wxFONTENCODING_DEFAULT;\n");
                 EncodingStr = EncodingVar;
@@ -216,9 +211,12 @@ wxString wxsFontData::BuildFontCode(const wxString& FontName,wxsCodingLang Langu
 
             return Code;
         }
-    }
 
-    wxsLANGMSG(wxsFontData::BuildFontCode,Language);
+        default:
+        {
+            wxsCodeMarks::Unknown(_T("wxsFontData::BuildFontCode"),Language);
+        }
+    }
     return wxEmptyString;
 }
 

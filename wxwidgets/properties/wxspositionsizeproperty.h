@@ -1,7 +1,7 @@
 #ifndef WXSPOSITIONSIZEPROPERTY_H
 #define WXSPOSITIONSIZEPROPERTY_H
 
-#include "../wxsproperty.h"
+#include "../../properties/wxsproperties.h"
 #include "../../wxscodinglang.h"
 
 /** \brief Structure holding informations about size or position and functions operating on them */
@@ -11,7 +11,7 @@ struct wxsPositionSizeData
     long X;
     long Y;
     bool DialogUnits;
-    
+
     inline wxsPositionSizeData(): IsDefault(true), X(0), Y(0), DialogUnits(false) {}
 
     /** \brief Function returning position from data */
@@ -21,7 +21,7 @@ struct wxsPositionSizeData
             wxDefaultPosition:
             DialogUnits ? wxDLG_UNIT(Parent,wxPoint(X,Y)) : wxPoint(X,Y);
     }
-    
+
     /** \brief Function fetching data from given position
      *
      * This function may be used to set proper values for X and Y coordinates
@@ -50,13 +50,13 @@ struct wxsPositionSizeData
             }
         }
     }
-    
+
     /** \brief Function returning string representation of position
      *
      * This representatin may be used in generated code.
      */
     wxString GetPositionCode(const wxString& ParentName,wxsCodingLang Language);
-    
+
     /** \brief Function returnign size from data */
     inline wxSize GetSize(wxWindow* Parent)
     {
@@ -93,13 +93,13 @@ struct wxsPositionSizeData
             }
         }
     }
-    
+
     /** \brief Function returning string representation of size
      *
      * This representatin may be used in generated code.
      */
     wxString GetSizeCode(const wxString& ParentName,wxsCodingLang Language);
-    
+
 };
 
 typedef wxsPositionSizeData wxsPositionData;
@@ -118,7 +118,7 @@ class wxsPositionSizeProperty: public wxsProperty
 {
 	public:
 
-        /** \brief Ctor 
+        /** \brief Ctor
          *  \param PGUseDefName name of "use default value" property
          *  \param PGXName      name of x/width property
          *  \param PGYName      name of y/height property
@@ -133,12 +133,12 @@ class wxsPositionSizeProperty: public wxsProperty
             const wxString& PGDUName,
             const wxString& DataName,
             long Offset);
-		
+
 		/** \brief Returning type name */
 		virtual const wxString GetTypeName() { return _T("wxPosition wxSize"); }
-		
+
     protected:
-    
+
         virtual void PGCreate(wxsPropertyContainer* Object,wxPropertyGridManager* Grid,wxPGId Parent);
         virtual bool PGRead(wxsPropertyContainer* Object,wxPropertyGridManager* Grid, wxPGId Id,long Index);
         virtual bool PGWrite(wxsPropertyContainer* Object,wxPropertyGridManager* Grid, wxPGId Id,long Index);
@@ -160,11 +160,11 @@ typedef wxsPositionSizeProperty wxsSizeProperty;
 
 /** \addtogroup ext_properties_macros
  *  \{ */
- 
+
 /** \brief Macro automatically declaring position property
  *  \param ClassName name of class holding this property
  *  \param VarName name of wxsPositionData structure inside container
- *  \param Flags flags of availability, see \link wxsPropertyContainer::Property 
+ *  \param Flags flags of availability, see \link wxsPropertyContainer::Property
  *         wxsPropertyContainer::Property \endlink for details, use 0 to always
  *         use this property
  *  \param PGDefName name of "default vlaue" property used in property grid
@@ -180,7 +180,7 @@ typedef wxsPositionSizeProperty wxsSizeProperty;
 /** \brief Macro automatically declaring size property
  *  \param ClassName name of class holding this property
  *  \param VarName name of wxsSizeData structure inside container
- *  \param Flags flags of availability, see \link wxsPropertyContainer::Property 
+ *  \param Flags flags of availability, see \link wxsPropertyContainer::Property
  *         wxsPropertyContainer::Property \endlink for details, use 0 to always
  *         use this property
  *  \param PGDefName name of "default vlaue" property used in property grid

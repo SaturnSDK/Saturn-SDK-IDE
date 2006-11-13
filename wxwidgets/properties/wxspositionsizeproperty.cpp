@@ -1,19 +1,22 @@
 #include "wxspositionsizeproperty.h"
 
-#include "../../wxsglobals.h"
-#include <globals.h>
-#include <messagemanager.h>
-
 // Helper macro for fetching variable
 #define DEFVALUE   wxsVARIABLE(Object,Offset,wxsPositionSizeData).IsDefault
 #define XVALUE     wxsVARIABLE(Object,Offset,wxsPositionSizeData).X
 #define YVALUE     wxsVARIABLE(Object,Offset,wxsPositionSizeData).Y
 #define DUVALUE    wxsVARIABLE(Object,Offset,wxsPositionSizeData).DialogUnits
 
-#define DEFIND  0x01
-#define XIND    0x02
-#define YIND    0x03
-#define DUIND   0x04
+namespace
+{
+    // Helper values for compound property
+    enum
+    {
+        DEFIND = 1,
+        XIND,
+        YIND,
+        DUIND
+    };
+}
 
 wxString wxsPositionSizeData::GetPositionCode(const wxString& ParentName,wxsCodingLang Language)
 {
@@ -27,9 +30,13 @@ wxString wxsPositionSizeData::GetPositionCode(const wxString& ParentName,wxsCodi
                     wxString::Format(_T("wxDLG_UNIT(%s,wxPoint(%d,%d))"),ParentName.c_str(),X,Y) :
                     wxString::Format(_T("wxPoint(%d,%d)"),X,Y);
         }
+
+        default:
+        {
+            wxsCodeMarks::Unknown(_T("wxsPositionSizeData::GetPositionCode"),Language);
+        }
     }
 
-    wxsLANGMSG(wxsPositionSizeData::GetPositionCode,Language);
     return wxEmptyString;
 }
 
@@ -45,9 +52,13 @@ wxString wxsPositionSizeData::GetSizeCode(const wxString& ParentName,wxsCodingLa
                     wxString::Format(_T("wxDLG_UNIT(%s,wxSize(%d,%d))"),ParentName.c_str(),X,Y) :
                     wxString::Format(_T("wxSize(%d,%d)"),X,Y);
         }
+
+        default:
+        {
+            wxsCodeMarks::Unknown(_T("wxsPositionSizeData::GetSizeCode"),Language);
+        }
     }
 
-    wxsLANGMSG(wxsPositionSizeData::GetSizeCode,Language);
     return wxEmptyString;
 }
 

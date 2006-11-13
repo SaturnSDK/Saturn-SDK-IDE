@@ -394,6 +394,126 @@
 			<Option link="0" />
 			<Option target="wxSmith" />
 		</Unit>
+		<Unit filename="wxwidgets\properties\wxsarraystringcheckeditordlg.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\properties\wxsarraystringcheckeditordlg.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\properties\wxsarraystringcheckproperty.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\properties\wxsarraystringcheckproperty.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\properties\wxsbitmapiconeditordlg.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\properties\wxsbitmapiconeditordlg.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\properties\wxsbitmapiconproperty.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\properties\wxsbitmapiconproperty.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\properties\wxscolourproperty.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\properties\wxscolourproperty.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\properties\wxsdimensionproperty.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\properties\wxsdimensionproperty.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\properties\wxsfonteditordlg.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\properties\wxsfonteditordlg.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\properties\wxsfontfaceeditordlg.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\properties\wxsfontfaceeditordlg.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\properties\wxsfontproperty.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\properties\wxsfontproperty.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\properties\wxspositionsizeproperty.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\properties\wxspositionsizeproperty.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\properties\wxssizerflagsproperty.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\properties\wxssizerflagsproperty.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\properties\wxsstyleproperty.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\properties\wxsstyleproperty.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="wxSmith" />
+		</Unit>
 		<Unit filename="wxwidgets\wxsbaseproperties.cpp">
 			<Option compilerVar="CPP" />
 			<Option target="wxSmith" />
@@ -590,6 +710,9 @@
 			<wxsmith>
 				<dialog wxs_file="wxWidgetsGUIAppAdoptingDlg.wxs" class="wxWidgetsGUIAppAdoptingDlg" src_file="wxwidgets\wxwidgetsguiappadoptingdlg.cpp" header_file="wxwidgets/wxwidgetsguiappadoptingdlg.h" xrc_file="" edit_mode="Source" />
 				<dialog wxs_file="wxsNewWindowDlg.wxs" class="wxsNewWindowDlg" src_file="wxwidgets/wxsnewwindowdlg.cpp" header_file="wxwidgets/wxsnewwindowdlg.h" xrc_file="" edit_mode="Source" />
+				<dialog wxs_file="wxsArrayStringCheckEditorDlg.wxs" class="wxsArrayStringCheckEditorDlg" src_file="wxwidgets/properties/wxsarraystringcheckeditordlg.cpp" header_file="wxwidgets\properties\wxsarraystringcheckeditordlg.h" xrc_file="" edit_mode="Source" />
+				<dialog wxs_file="wxsFontEditorDlg.wxs" class="wxsFontEditorDlg" src_file="wxwidgets/properties/wxsfonteditordlg.cpp" header_file="wxwidgets\properties\wxsfonteditordlg.h" xrc_file="" edit_mode="Source" />
+				<dialog wxs_file="wxsFontFaceEditorDlg.wxs" class="wxsFontFaceEditorDlg" src_file="wxwidgets/properties/wxsfontfaceeditordlg.cpp" header_file="wxwidgets\properties\wxsfontfaceeditordlg.h" xrc_file="" edit_mode="Source" />
 				<panel wxs_file="wxWidgetsGUIConfigPanel.wxs" class="wxWidgetsGUIConfigPanel" src_file="wxwidgets/wxwidgetsguiconfigpanel.cpp" header_file="wxwidgets/wxwidgetsguiconfigpanel.h" xrc_file="" edit_mode="Source" />
 				<configuration app_src_file="" main_resource="" init_all_handlers="necessary" />
 			</wxsmith>

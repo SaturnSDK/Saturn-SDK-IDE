@@ -1,7 +1,6 @@
 #include "wxsbitmapiconproperty.h"
 #include "wxsbitmapiconeditordlg.h"
 
-#include "../../wxsglobals.h"
 #include <messagemanager.h>
 #include <wx/artprov.h>
 #include <wx/image.h>
@@ -41,24 +40,24 @@ wxString wxsBitmapIconData::BuildCode(bool NoResize,const wxString& SizeCode,wxs
 
                 if ( NoResize )
                 {
-                    Code << _T("wxBitmap(") << wxsGetWxString(FileName) << _T(");\n");
+                    Code << _T("wxBitmap(") << wxsCodeMarks::WxString(wxsCPP,FileName) << _T(");\n");
                 }
                 else
                 {
-                    Code << _T("wxBitmap(wxImage(") << wxsGetWxString(FileName) << _T(").Rescale(")
+                    Code << _T("wxBitmap(wxImage(") << wxsCodeMarks::WxString(wxsCPP,FileName) << _T(").Rescale(")
                          << SizeCode << _T(".GetWidth(),") << SizeCode << _T(".GetHeight()));\n");
                 }
             }
             else
             {
-                Code << _T("wxArtProvider::GetBitmap(wxART_MAKE_ART_ID_FROM_STR(") << wxsGetWxString(Id) << _T("),");
+                Code << _T("wxArtProvider::GetBitmap(wxART_MAKE_ART_ID_FROM_STR(") << wxsCodeMarks::WxString(wxsCPP,Id) << _T("),");
                 if ( Client.empty() )
                 {
-                    Code << wxsGetWxString(DefaultClient);
+                    Code << wxsCodeMarks::WxString(wxsCPP,DefaultClient);
                 }
                 else
                 {
-                    Code << wxsGetWxString(Client);
+                    Code << wxsCodeMarks::WxString(wxsCPP,Client);
                 }
 
                 if ( !NoResize )
@@ -71,9 +70,13 @@ wxString wxsBitmapIconData::BuildCode(bool NoResize,const wxString& SizeCode,wxs
 
             return Code;
         }
+
+        default:
+        {
+            wxsCodeMarks::Unknown(_T("wxsBitmapIconData::BuildCode"),Language);
+        }
     }
 
-    wxsLANGMSG(wxsBitmapIconData::BuildCode,Language);
     return wxEmptyString;
 }
 

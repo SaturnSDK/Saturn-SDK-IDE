@@ -1,9 +1,7 @@
 #include "wxsstyleproperty.h"
+#include "../wxsitem.h"
 
 #include <wx/tokenzr.h>
-#include <globals.h>
-#include <messagemanager.h>
-#include "../../wxsglobals.h"
 
 // Helper macro for fetching variables
 #define STYLEBITS   wxsVARIABLE(Object,Offset,long)
@@ -43,7 +41,7 @@ void wxsStyleProperty::PGCreate(wxsPropertyContainer* Object,wxPropertyGridManag
 {
     if ( !StyleNames.empty() )
     {
-        bool IsXrc = ( GetPropertiesFlags(Object) & (wxsFLFile|wxsFLMixed) ) != 0;
+        bool IsXrc = ( GetPropertiesFlags(Object) & (wxsItem::flFile|wxsItem::flMixed) ) != 0;
         wxPGConstants StyleConsts;
         if ( IsXrc )
         {
@@ -229,9 +227,12 @@ wxString wxsStyleProperty::GetString(long StyleBits,const wxsStyle* S,bool IsExt
             Result.RemoveLast();
             return Result;
         }
-    }
 
-    wxsLANGMSG(wxsStyleProperty::GetString,Language);
+        default:
+        {
+            wxsCodeMarks::Unknown(_T("wxsStyleProperty::GetString"),Language);
+        }
+    }
     return wxEmptyString;
 }
 

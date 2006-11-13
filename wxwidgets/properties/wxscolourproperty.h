@@ -1,13 +1,34 @@
 #ifndef WXSCOLOURPROPERTY_H
 #define WXSCOLOURPROPERTY_H
 
-#include "../wxsproperty.h"
+#include "../../properties/wxsproperties.h"
 #include "../../wxscodinglang.h"
-#include <wx/dialog.h>
+
 #include <wx/propgrid/propdev.h>
 #include <wx/propgrid/advprops.h>
 
 #define wxsCOLOUR_DEFAULT   (wxPG_COLOUR_CUSTOM - 1)
+
+/** \brief Class handling colour data for wxSmith */
+class wxsColourData: public wxColourPropertyValue
+{
+    public:
+
+        wxsColourData(wxUint32 type, const wxColour &colour): wxColourPropertyValue(type,colour) {}
+        wxsColourData(wxUint32 type): wxColourPropertyValue(type) {}
+        wxsColourData(const wxColour &colour): wxColourPropertyValue(colour) {}
+        wxsColourData(const wxColourPropertyValue& cp): wxColourPropertyValue(cp) {}
+
+		/** \brief Getting wxColour object from wxColourPropertyValue
+		 *  \return wxColour class, if wxColour.Ok() will return false, default colour was used
+		 */
+        wxColour GetColour();
+
+        /** \brief Getting code building colour
+         *  \return code with colour or empty string if there's default colour
+         */
+        wxString BuildCode(wxsCodingLang Language);
+};
 
 /** \brief Colour property - property used for handling wxColour property
  *
@@ -29,7 +50,7 @@ class wxsColourProperty: public wxsProperty
             long ValueOffset);
 
 		/** \brief Returning type name */
-		virtual const wxString GetTypeName() { return _T("colour"); }
+		virtual const wxString GetTypeName() { return _T("wxsColour"); }
 
 		/** \brief Getting wxColour object from wxColourPropertyValue
 		 *  \return wxColour class, if wxColour.Ok() will return false, default colour was used
@@ -60,7 +81,7 @@ class wxsColourProperty: public wxsProperty
 
 /** \brief Macro automatically declaring colour property
  *  \param ClassName name of class holding this property
- *  \param VarName name of wxColourPropertyValue variable inside class
+ *  \param VarName name of wxsColourData variable inside class
  *  \param Flags flags of availability, see \link wxsPropertyContainer::Property
            wxsPropertyContainer::Property \endlink for details, use 0 to always
            use this property

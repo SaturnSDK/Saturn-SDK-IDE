@@ -1,7 +1,7 @@
 #ifndef WXSSIZERFLAGSPROPERTY_H
 #define WXSSIZERFLAGSPROPERTY_H
 
-#include "../wxsproperty.h"
+#include "../../properties/wxsproperties.h"
 
 /** \brief Property responsible for editing sizer flags;
  *
@@ -13,7 +13,7 @@
 class wxsSizerFlagsProperty: public wxsProperty
 {
     public:
-    
+
         static const long BorderTop             = 0x0001;
         static const long BorderBottom          = 0x0002;
         static const long BorderLeft            = 0x0004;
@@ -27,21 +27,21 @@ class wxsSizerFlagsProperty: public wxsProperty
         static const long AlignBottom           = 0x0400;
         static const long AlignCenterVertical   = 0x0800;
         static const long AlignCenterHorizontal = 0x1000;
-    
+
         /** \brief Ctor
          *  \param Offset   offset to long handling border flags
          */
 		wxsSizerFlagsProperty(long Offset);
-            
+
         /** \brief Returning type of this property */
         virtual const wxString GetTypeName() { return _T("SizerFlags"); }
-        
+
         /** \brief Getting string representation of flags */
         static wxString GetString(long Flags);
-        
+
         /** \brief Getting wxWidgets-ready flags */
         static long GetWxFlags(long Flags);
-        
+
     protected:
 
         virtual void PGCreate(wxsPropertyContainer* Object,wxPropertyGridManager* Grid,wxPGId Parent);
@@ -53,15 +53,15 @@ class wxsSizerFlagsProperty: public wxsProperty
         virtual bool PropStreamWrite(wxsPropertyContainer* Object,wxsPropertyStream* Stream);
 
     private:
-    
+
         static long ParseString(const wxString& String);
         static void FixFlags(long& Flags);
-    
+
         long Offset;
 
         static const long BorderAll = 0x10000;
         static const long BorderPrevAll = 0x20000;
-        
+
         static const long BorderMask = BorderTop|BorderBottom|BorderLeft|BorderRight;
         static const long AlignHMask = AlignLeft|AlignRight|AlignCenterHorizontal;
         static const long AlignVMask = AlignTop|AlignBottom|AlignCenterVertical;
@@ -69,11 +69,11 @@ class wxsSizerFlagsProperty: public wxsProperty
 
 /** \addtogroup ext_properties_macros
  *  \{ */
- 
+
 /** \brief Macro automatically declaring sizer flags property
  *  \param ClassName name of class holding this property
  *  \param VarName name of long integer variable inside class used to keep flags
- *  \param Flags flags of availability, see \link wxsPropertyContainer::Property 
+ *  \param Flags flags of availability, see \link wxsPropertyContainer::Property
  *         wxsPropertyContainer::Property \endlink for details, use 0 to always
  *         use this property
  */

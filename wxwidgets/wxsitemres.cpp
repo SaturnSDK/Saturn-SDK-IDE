@@ -613,6 +613,7 @@ void wxsItemRes::BuildIncludesCode(wxsCodingLang Language,wxString& LocalInclude
             LocalHeaders.Add(_T("<wx/bitmap.h>"));
             LocalHeaders.Add(_T("<wx/image.h>"));
             LocalHeaders.Add(_T("<wx/font.h>"));
+            LocalHeaders.Add(_T("<wx/fontmap.h>"));
 
             if ( GetEditMode() == Mixed )
             {

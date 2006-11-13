@@ -1,8 +1,6 @@
 #include "wxsarraystringcheckproperty.h"
 #include "wxsarraystringcheckeditordlg.h"
 
-#include <globals.h>
-
 // Helper macros for fetching variables
 #define VALUE   wxsVARIABLE(Object,Offset,wxArrayString)
 #define CHECK   wxsVARIABLE(Object,CheckOffset,wxArrayBool)
@@ -24,12 +22,12 @@ bool wxsArrayStringCheckProperty::XmlRead(wxsPropertyContainer* Object,TiXmlElem
 {
     VALUE.Clear();
     CHECK.Clear();
-    
-    if ( !Element ) 
+
+    if ( !Element )
     {
         return false;
     }
-    
+
     for ( TiXmlElement* Item = Element->FirstChildElement(cbU2C(DataSubName));
           Item;
           Item = Item->NextSiblingElement(cbU2C(DataSubName)) )
@@ -37,7 +35,7 @@ bool wxsArrayStringCheckProperty::XmlRead(wxsPropertyContainer* Object,TiXmlElem
         // Fetching value of "checked" flag
         const char* CheckedAttr = Item->Attribute("checked");
         CHECK.Add( CheckedAttr && CheckedAttr[0]=='1' && CheckedAttr[1]=='\0' );
-        
+
         // Fetching item text
         TiXmlText* Text = Item->FirstChild()->ToText();
         if ( Text )
@@ -79,7 +77,7 @@ bool wxsArrayStringCheckProperty::PropStreamRead(wxsPropertyContainer* Object,wx
         wxString Item;
         if ( !Stream->GetString(DataSubName,Item,wxEmptyString) ) break;
         VALUE.Add(Item);
-        
+
         bool Checked;
         Stream->GetBool(DataSubName + _T("_checked"),Checked,false);
         CHECK.Add(Checked);
@@ -105,17 +103,17 @@ wxString wxsArrayStringCheckProperty::GetStr(wxsPropertyContainer* Object)
 {
     wxString Result;
     size_t Count = VALUE.Count();
-    
+
     if ( Count == 0 )
     {
-        return _("Click to add items");        
+        return _("Click to add items");
     }
-    
+
     for ( size_t i=0; i<Count; i++ )
     {
         wxString Item = VALUE[i];
         Item.Replace(_T("\""),_T("\\\""));
-        if ( i > 0 ) 
+        if ( i > 0 )
         {
             Result.Append(_T(' '));
         }

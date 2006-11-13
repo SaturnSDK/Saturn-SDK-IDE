@@ -1,7 +1,7 @@
 #ifndef WXSFONTPROPERTY_H
 #define WXSFONTPROPERTY_H
 
-#include "../wxscustomeditorproperty.h"
+#include "../../properties/wxsproperties.h"
 #include "../../wxscodinglang.h"
 
 /** \brief Structure holding font configuration */

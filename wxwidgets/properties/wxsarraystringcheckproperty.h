@@ -1,7 +1,7 @@
 #ifndef WXSARRAYSTRINGCHECKPROPERTY_H
 #define WXSARRAYSTRINGCHECKPROPERTY_H
 
-#include "../wxscustomeditorproperty.h"
+#include "../../properties/wxsproperties.h"
 
 WX_DEFINE_ARRAY(bool,wxArrayBool);
 
@@ -13,8 +13,8 @@ WX_DEFINE_ARRAY(bool,wxArrayBool);
 class wxsArrayStringCheckProperty: public wxsCustomEditorProperty
 {
 	public:
-	
-        /** \brief Ctor 
+
+        /** \brief Ctor
          *  \param PGName       name of property in Property Grid
          *  \param DataName     name of property in data stuctures
          *  \param DataSubName  name of name applied for each array element
@@ -22,15 +22,15 @@ class wxsArrayStringCheckProperty: public wxsCustomEditorProperty
          *  \param CheckOffset  offset of wxArrayBool (returned from wxsOFFSET macro)
          */
 		wxsArrayStringCheckProperty(const wxString& PGName,const wxString& DataName,const wxString& DataSubName,long Offset,long CheckOffset);
-		
+
 		/** \brief Returning type name */
 		virtual const wxString GetTypeName() { return _T("wxArrayStringCheck"); }
 
         /** \brief Showing editor for this property */
         virtual bool ShowEditor(wxsPropertyContainer* Object);
-        
+
     protected:
-    
+
         virtual bool XmlRead(wxsPropertyContainer* Object,TiXmlElement* Element);
         virtual bool XmlWrite(wxsPropertyContainer* Object,TiXmlElement* Element);
         virtual bool PropStreamRead(wxsPropertyContainer* Object,wxsPropertyStream* Stream);
@@ -45,12 +45,12 @@ class wxsArrayStringCheckProperty: public wxsCustomEditorProperty
 
 /** \addtogroup ext_properties_macros  Macros automatically dedfining extended properties
  *  \{ */
- 
+
 /** \brief Macro automatically declaring wxArrayStrting combined with wxArrayBool properties
  *  \param ClassName name of class holding this property
  *  \param StringVarName name of wxArrayString variable inside class
  *  \param BoolVarName name of wxArrayBool variable inside class
- *  \param Flags flags of availability, see \link wxsPropertyContainer::Property 
+ *  \param Flags flags of availability, see \link wxsPropertyContainer::Property
            wxsPropertyContainer::Property \endlink for details, use 0 to always
            use this property
  *  \param PGName name used in property grid

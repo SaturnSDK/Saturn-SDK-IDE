@@ -1,9 +1,9 @@
 #ifndef WXSSTYLEPROPERTY_H
 #define WXSSTYLEPROPERTY_H
 
-#include "../wxsproperty.h"
-#include "../../wxsstyle.h"
+#include "../../properties/wxsproperties.h"
 #include "../../wxscodinglang.h"
+#include "../wxsstyle.h"
 
 /** \brief Property responsible for editing style or extra style
  *

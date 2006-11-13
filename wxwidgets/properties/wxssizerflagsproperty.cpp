@@ -1,7 +1,5 @@
 #include "wxssizerflagsproperty.h"
 
-#include <wx/intl.h>
-#include <globals.h>
 #include <wx/tokenzr.h>
 
 // Helper macro for fetching variables

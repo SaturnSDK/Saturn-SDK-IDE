@@ -1,10 +1,8 @@
 #ifndef WXSBITMAPICONPROPERTY_H
 #define WXSBITMAPICONPROPERTY_H
 
-#include "../wxscustomeditorproperty.h"
+#include "../../properties/wxsproperties.h"
 #include "../../wxscodinglang.h"
-
-#include <wx/artprov.h>
 
 /** \brief Structure holding bitmap configuration
  *

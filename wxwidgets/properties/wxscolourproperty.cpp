@@ -1,18 +1,13 @@
 #include "wxscolourproperty.h"
 
-#include "../../wxsglobals.h"
-
-#include <wx/colordlg.h>
-#include <wx/intl.h>
-#include <wx/settings.h>
-#include <wx/dc.h>
 #include <messagemanager.h>
+
 
 // Creating custom colour property.
 // This is based on wxSystemColourProperty from propgrid
 
-//namespace
-//{
+namespace
+{
     class wxsMyColourPropertyClass : public wxEnumPropertyClass
     {
             WX_PG_DECLARE_PROPERTY_CLASS()
@@ -308,11 +303,107 @@
         }
         return FALSE;
     };
-//}
+}
+
+
+wxColour wxsColourData::GetColour()
+{
+    if ( m_type == wxsCOLOUR_DEFAULT )
+    {
+        return wxColour();
+    }
+
+    if ( m_type == wxPG_COLOUR_CUSTOM )
+    {
+        return m_colour;
+    }
+
+    return wxSystemSettings::GetColour((wxSystemColour)m_type);
+}
+
+wxString wxsColourData::BuildCode(wxsCodingLang Language)
+{
+    if ( m_type == wxsCOLOUR_DEFAULT )
+    {
+        return wxEmptyString;
+    }
+
+    switch ( Language )
+    {
+        case wxsCPP:
+        {
+            if ( m_type == wxPG_COLOUR_CUSTOM )
+            {
+                return wxString::Format(_T("wxColour(%d,%d,%d)"),
+                    (unsigned int)m_colour.Red(),
+                    (unsigned int)m_colour.Green(),
+                    (unsigned int)m_colour.Blue());
+            }
+
+            wxString SysColName;
+
+            #define SYSCLR(N) if ( m_type == N ) SysColName = _T(#N); else
+            SYSCLR(wxSYS_COLOUR_SCROLLBAR)
+            SYSCLR(wxSYS_COLOUR_BACKGROUND)
+            SYSCLR(wxSYS_COLOUR_DESKTOP)
+            SYSCLR(wxSYS_COLOUR_ACTIVECAPTION)
+            SYSCLR(wxSYS_COLOUR_INACTIVECAPTION)
+            SYSCLR(wxSYS_COLOUR_MENU)
+            SYSCLR(wxSYS_COLOUR_WINDOW)
+            SYSCLR(wxSYS_COLOUR_WINDOWFRAME)
+            SYSCLR(wxSYS_COLOUR_MENUTEXT)
+            SYSCLR(wxSYS_COLOUR_WINDOWTEXT)
+            SYSCLR(wxSYS_COLOUR_CAPTIONTEXT)
+            SYSCLR(wxSYS_COLOUR_ACTIVEBORDER)
+            SYSCLR(wxSYS_COLOUR_INACTIVEBORDER)
+            SYSCLR(wxSYS_COLOUR_APPWORKSPACE)
+            SYSCLR(wxSYS_COLOUR_HIGHLIGHT)
+            SYSCLR(wxSYS_COLOUR_HIGHLIGHTTEXT)
+            SYSCLR(wxSYS_COLOUR_BTNFACE)
+            SYSCLR(wxSYS_COLOUR_3DFACE)
+            SYSCLR(wxSYS_COLOUR_BTNSHADOW)
+            SYSCLR(wxSYS_COLOUR_3DSHADOW)
+            SYSCLR(wxSYS_COLOUR_GRAYTEXT)
+            SYSCLR(wxSYS_COLOUR_BTNTEXT)
+            SYSCLR(wxSYS_COLOUR_INACTIVECAPTIONTEXT)
+            SYSCLR(wxSYS_COLOUR_BTNHIGHLIGHT)
+            SYSCLR(wxSYS_COLOUR_BTNHILIGHT)
+            SYSCLR(wxSYS_COLOUR_3DHIGHLIGHT)
+            SYSCLR(wxSYS_COLOUR_3DHILIGHT)
+            SYSCLR(wxSYS_COLOUR_3DDKSHADOW)
+            SYSCLR(wxSYS_COLOUR_3DLIGHT)
+            SYSCLR(wxSYS_COLOUR_INFOTEXT)
+            SYSCLR(wxSYS_COLOUR_INFOBK)
+            SYSCLR(wxSYS_COLOUR_LISTBOX)
+            SYSCLR(wxSYS_COLOUR_HOTLIGHT)
+            SYSCLR(wxSYS_COLOUR_GRADIENTACTIVECAPTION)
+            SYSCLR(wxSYS_COLOUR_GRADIENTINACTIVECAPTION)
+            SYSCLR(wxSYS_COLOUR_MENUHILIGHT)
+            SYSCLR(wxSYS_COLOUR_MENUBAR)
+            {}
+            #undef SYSCLR
+
+            if ( SysColName.empty() )
+            {
+                return wxEmptyString;
+            }
+
+            return _T("wxSystemSettings::GetColour(") + SysColName + _T(")");
+        }
+
+        default:
+        {
+            wxsCodeMarks::Unknown(_T("wxsColourProperty::GetColourCode"),Language);
+        }
+    }
+
+    return wxEmptyString;
+}
+
 
 
 // Helper macros for fetching variables
-#define VALUE   wxsVARIABLE(Object,ValueOffset,wxColourPropertyValue)
+#define VALUE   wxsVARIABLE(Object,ValueOffset,wxsColourData)
 
 wxsColourProperty::wxsColourProperty(
     const wxString& PGName,
@@ -541,92 +632,3 @@ bool wxsColourProperty::PropStreamWrite(wxsPropertyContainer* Object,wxsProperty
     return Ret;
 }
 
-wxColour wxsColourProperty::GetColour(const wxColourPropertyValue& value)
-{
-    if ( value.m_type == wxsCOLOUR_DEFAULT )
-    {
-        return wxColour();
-    }
-
-    if ( value.m_type == wxPG_COLOUR_CUSTOM )
-    {
-        return value.m_colour;
-    }
-
-    return wxSystemSettings::GetColour((wxSystemColour)value.m_type);
-}
-
-wxString wxsColourProperty::GetColourCode(const wxColourPropertyValue& value,wxsCodingLang Language)
-{
-    if ( value.m_type == wxsCOLOUR_DEFAULT )
-    {
-        return wxEmptyString;
-    }
-
-    switch ( Language )
-    {
-        case wxsCPP:
-        {
-            if ( value.m_type == wxPG_COLOUR_CUSTOM )
-            {
-                return wxString::Format(_T("wxColour(%d,%d,%d)"),
-                    (unsigned int)value.m_colour.Red(),
-                    (unsigned int)value.m_colour.Green(),
-                    (unsigned int)value.m_colour.Blue());
-            }
-
-            wxString SysColName;
-
-            #define SYSCLR(N) if ( value.m_type == N ) SysColName = _T(#N); else
-            SYSCLR(wxSYS_COLOUR_SCROLLBAR)
-            SYSCLR(wxSYS_COLOUR_BACKGROUND)
-            SYSCLR(wxSYS_COLOUR_DESKTOP)
-            SYSCLR(wxSYS_COLOUR_ACTIVECAPTION)
-            SYSCLR(wxSYS_COLOUR_INACTIVECAPTION)
-            SYSCLR(wxSYS_COLOUR_MENU)
-            SYSCLR(wxSYS_COLOUR_WINDOW)
-            SYSCLR(wxSYS_COLOUR_WINDOWFRAME)
-            SYSCLR(wxSYS_COLOUR_MENUTEXT)
-            SYSCLR(wxSYS_COLOUR_WINDOWTEXT)
-            SYSCLR(wxSYS_COLOUR_CAPTIONTEXT)
-            SYSCLR(wxSYS_COLOUR_ACTIVEBORDER)
-            SYSCLR(wxSYS_COLOUR_INACTIVEBORDER)
-            SYSCLR(wxSYS_COLOUR_APPWORKSPACE)
-            SYSCLR(wxSYS_COLOUR_HIGHLIGHT)
-            SYSCLR(wxSYS_COLOUR_HIGHLIGHTTEXT)
-            SYSCLR(wxSYS_COLOUR_BTNFACE)
-            SYSCLR(wxSYS_COLOUR_3DFACE)
-            SYSCLR(wxSYS_COLOUR_BTNSHADOW)
-            SYSCLR(wxSYS_COLOUR_3DSHADOW)
-            SYSCLR(wxSYS_COLOUR_GRAYTEXT)
-            SYSCLR(wxSYS_COLOUR_BTNTEXT)
-            SYSCLR(wxSYS_COLOUR_INACTIVECAPTIONTEXT)
-            SYSCLR(wxSYS_COLOUR_BTNHIGHLIGHT)
-            SYSCLR(wxSYS_COLOUR_BTNHILIGHT)
-            SYSCLR(wxSYS_COLOUR_3DHIGHLIGHT)
-            SYSCLR(wxSYS_COLOUR_3DHILIGHT)
-            SYSCLR(wxSYS_COLOUR_3DDKSHADOW)
-            SYSCLR(wxSYS_COLOUR_3DLIGHT)
-            SYSCLR(wxSYS_COLOUR_INFOTEXT)
-            SYSCLR(wxSYS_COLOUR_INFOBK)
-            SYSCLR(wxSYS_COLOUR_LISTBOX)
-            SYSCLR(wxSYS_COLOUR_HOTLIGHT)
-            SYSCLR(wxSYS_COLOUR_GRADIENTACTIVECAPTION)
-            SYSCLR(wxSYS_COLOUR_GRADIENTINACTIVECAPTION)
-            SYSCLR(wxSYS_COLOUR_MENUHILIGHT)
-            SYSCLR(wxSYS_COLOUR_MENUBAR)
-            {}
-            #undef SYSCLR
-
-            if ( SysColName.empty() )
-            {
-                return wxEmptyString;
-            }
-
-            return _T("wxSystemSettings::GetColour(") + SysColName + _T(")");
-        }
-    }
-
-    wxsLANGMSG(wxsColourProperty::GetColourCode,Language);
-    return wxEmptyString;
-}
