@@ -1,11 +1,10 @@
 #ifndef WXSBASEPROPERTIES_H
 #define WXSBASEPROPERTIES_H
 
-#include "../properties/wxsproperties.h"
+#include "wxsexproperties.h"
 #include "../wxsadvqpp.h"
 #include "../wxscodinglang.h"
 
-// TODO: Add wxWidgets-specific properties when they're ready
 /** \brief Structure holding most commonly used properties
  *
  * This class doesn't support style since it require too many informations
@@ -28,14 +27,14 @@ class wxsBaseProperties: public wxsPropertyContainer
         static const long flContainer       = flPosition | flSize | flColours | flToolTip | flHelpText;   ///< \brief Properties used by common containers
         static const long flAll             = 0x01FF00;  ///< \brief Using all base properties
 
-//        wxsPositionData m_Position;       ///< \brief Position
-//        wxsSizeData m_Size;               ///< \brief Size
+        wxsPositionData m_Position;       ///< \brief Position
+        wxsSizeData m_Size;               ///< \brief Size
         bool m_Enabled;                   ///< \brief If false, widget is disabled (true by deefault)
         bool m_Focused;                   ///< \brief If true, widget is focused (false by default)
         bool m_Hidden;                    ///< \brief If true, widget is hidden (false by default)
-//        wxColourPropertyValue m_Fg;       ///< \brief Foreground colour when using custom colour
-//        wxColourPropertyValue m_Bg;       ///< \brief Background colour when using custom colour
-//        wxsFontData m_Font;               ///< \brief Font
+        wxsColourData m_Fg;               ///< \brief Foreground colour when using custom colour
+        wxsColourData m_Bg;               ///< \brief Background colour when using custom colour
+        wxsFontData m_Font;               ///< \brief Font
         wxString m_ToolTip;               ///< \brief Tooltip
         wxString m_HelpText;              ///< \brief Help text
 
@@ -44,8 +43,8 @@ class wxsBaseProperties: public wxsPropertyContainer
             m_Enabled(true),
             m_Focused(false),
             m_Hidden(false),
-//            m_Fg(wxsCOLOUR_DEFAULT),
-//            m_Bg(wxsCOLOUR_DEFAULT),
+            m_Fg(wxsCOLOUR_DEFAULT),
+            m_Bg(wxsCOLOUR_DEFAULT),
             m_ToolTip(wxEmptyString),
             m_HelpText(wxEmptyString)
         {}
