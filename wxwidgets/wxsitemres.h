@@ -40,6 +40,9 @@ class wxsItemRes: public wxWidgetsRes
             const wxString& Xrc,
             bool GenXrc);
 
+        /** \brief Getting root item of this resource */
+        inline wxsItem* GetRootItem() { return m_RootItem; }
+
         /** \brief Building properties filter for item properties based on resource config */
         unsigned long GetPropertiesFilter();
 
