@@ -16,8 +16,7 @@ wxsContainer::wxsContainer(
 {
     if ( m_StyleSet )
     {
-        // TODO: Code it when stylesa re done
-//        wxsStyleProperty::SetFromString(StyleBits,DefaultStyle,StyleSet,false);
+        wxsStyleProperty::SetFromString(m_StyleBits,m_DefaultStyle,m_StyleSet,false);
     }
 }
 
@@ -74,12 +73,11 @@ bool wxsContainer::OnCanAddChild(wxsItem* Item,bool ShowMessage)
 void wxsContainer::OnEnumItemProperties(long Flags)
 {
     OnEnumContainerProperties(Flags);
-    // TODO
-//    if ( StyleSet )
-//    {
-//        WXS_STYLE(wxsContainer,StyleBits,0,_("Style"),_T("style"),StyleSet,DefaultStyle);
-//        WXS_EXSTYLE(wxsContainer,ExStyleBits,0,_("Extra style"),_T("exstyle"),StyleSet,wxEmptyString);
-//    }
+    if ( m_StyleSet )
+    {
+        WXS_STYLE(wxsContainer,m_StyleBits,0,_("Style"),_T("style"),m_StyleSet,m_DefaultStyle);
+        WXS_EXSTYLE(wxsContainer,m_ExStyleBits,0,_("Extra style"),_T("exstyle"),m_StyleSet,wxEmptyString);
+    }
 }
 
 void wxsContainer::OnAddItemQPP(wxsAdvQPP* QPP)
@@ -90,12 +88,11 @@ void wxsContainer::OnAddItemQPP(wxsAdvQPP* QPP)
 wxWindow* wxsContainer::SetupWindow(wxWindow* Preview,bool IsExact)
 {
     GetBaseProps()->SetupWindow(Preview,IsExact);
-    // TODO
-//    long ExStyle = wxsStyleProperty::GetWxStyle(ExStyleBits,StyleSet,true);
-//    if ( ExStyle != 0 )
-//    {
-//        Preview->SetExtraStyle(Preview->GetExtraStyle() | ExStyle);
-//    }
+    long ExStyle = wxsStyleProperty::GetWxStyle(m_ExStyleBits,m_StyleSet,true);
+    if ( ExStyle != 0 )
+    {
+        Preview->SetExtraStyle(Preview->GetExtraStyle() | ExStyle);
+    }
     return Preview;
 }
 
@@ -106,19 +103,18 @@ void wxsContainer::SetupWindowCode(wxString& Code,wxsCodingLang Language)
         case wxsCPP:
         {
             GetBaseProps()->BuildSetupWindowCode(Code,GetVarName(),wxsCPP);
-            // TODO
-//            if ( ExStyleBits )
-//            {
-//                wxString ExStyleStr = wxsStyleProperty::GetString(ExStyleBits,StyleSet,true,wxsCPP);
-//                if ( ExStyleStr != _T("0") )
-//                {
-//                    wxString VarAccess = GetVarName().empty() ? _T("") : GetVarName() + _T("->");
-//
-//                    Code << VarAccess << _T("SetExtraStyle(") <<
-//                            VarAccess << _T("GetExtraStyle() | ") <<
-//                            ExStyleStr << _T(");\n");
-//                }
-//            }
+            if ( m_ExStyleBits )
+            {
+                wxString ExStyleStr = wxsStyleProperty::GetString(m_ExStyleBits,m_StyleSet,true,wxsCPP);
+                if ( ExStyleStr != _T("0") )
+                {
+                    wxString VarAccess = GetVarName().empty() ? _T("") : GetVarName() + _T("->");
+
+                    Code << VarAccess << _T("SetExtraStyle(") <<
+                            VarAccess << _T("GetExtraStyle() | ") <<
+                            ExStyleStr << _T(");\n");
+                }
+            }
             return;
         }
 
@@ -137,11 +133,10 @@ void wxsContainer::AddChildrenPreview(wxWindow* This,bool Exact,bool StoreInLast
         GetChild(i)->BuildPreview(This,Exact,StoreInLastPreview);
     }
 
-    // TODO: Move this into child classes since it's not what this function should do
-//    if ( GetBaseProps()->Size.IsDefault )
-//    {
-//        This->Fit();
-//    }
+    if ( GetBaseProps()->m_Size.IsDefault )
+    {
+        This->Fit();
+    }
 }
 
 void wxsContainer::AddChildrenCode(wxString& Code,wxsCodingLang Language)
@@ -164,11 +159,10 @@ void wxsContainer::AddChildrenCode(wxString& Code,wxsCodingLang Language)
 
                     Code << _T("SetSizer(") << SizerName << _T(");\n");
 
-                    // TODO
-//                    if ( BaseProps.Size.IsDefault )
-//                    {
-//                        Code << SizerName << _T("->Fit(") << ThisName << _T(");\n");
-//                    }
+                    if ( GetBaseProps()->m_Size.IsDefault )
+                    {
+                        Code << SizerName << _T("->Fit(") << ThisName << _T(");\n");
+                    }
 
                     Code << SizerName << _T("->SetSizeHints(") << ThisName << _T(");\n");
                 }

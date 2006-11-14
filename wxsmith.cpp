@@ -187,26 +187,6 @@ wxsProject* wxSmith::GetSmithProject(cbProject* Proj)
 
 // TODO: Move to resources\wxwidgets
 /*
-void wxSmith::OnNewWindow(wxCommandEvent& event)
-{
-    if ( !CheckIntegration() )
-    {
-        return;
-    }
-
-    wxString ResType = _T("Dialog");
-    if ( event.GetId() == NewDialogId ) ResType = _T("Dialog"); else
-    if ( event.GetId() == NewFrameId  ) ResType = _T("Frame"); else
-    if ( event.GetId() == NewPanelId  ) ResType = _T("Panel");
-    else
-    {
-    	wxMessageBox(_T("Internal error - invalid resource type"));
-    	return;
-    }
-
-    wxsNewWindowDlg Dlg(Manager::Get()->GetAppWindow(),ResType);
-    Dlg.ShowModal();
-}
 
 void wxSmith::OnImportXrc(wxCommandEvent& event)
 {

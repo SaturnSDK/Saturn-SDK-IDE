@@ -66,25 +66,19 @@ class wxsWidget: public wxsItem
         /** \brief Easy access to position */
         inline wxPoint Pos(wxWindow* Parent)
         {
-            // TODO: Implement properly when base properties done
-            //return BaseProps.Position.GetPosition(Parent);
-            return wxDefaultPosition;
+            return GetBaseProps()->m_Position.GetPosition(Parent);
         }
 
         /** \brief Easy access to size */
         inline wxSize Size(wxWindow* Parent)
         {
-            // TODO: Implement properly when base properties done
-            //return BaseProps.Size.GetSize(Parent);
-            return wxDefaultSize;
+            return GetBaseProps()->m_Size.GetSize(Parent);
         }
 
         /** \brief Easy access to style (can be used directly in wxWidgets */
         inline long Style()
         {
-            // TODO: Implement properly when base properties done
-            //return wxsStyleProperty::GetWxStyle(StyleBits,StyleSet,false);
-            return 0;
+            return wxsStyleProperty::GetWxStyle(m_StyleBits,m_StyleSet,false);
         }
 
         /** \brief Function setting up standard widget properties after
@@ -110,25 +104,19 @@ class wxsWidget: public wxsItem
         /** \brief Easy acces to position code */
         inline wxString PosCode(const wxString& Parent,wxsCodingLang Language)
         {
-            // TODO: Implement properly when base properties done
-            //return BaseProps.Position.GetPositionCode(Parent,Language);
-            return _T("wxDefaultPosition");
+            return GetBaseProps()->m_Position.GetPositionCode(Parent,Language);
         }
 
         /** \brief Easy acces to size code */
         inline wxString SizeCode(const wxString& Parent,wxsCodingLang Language)
         {
-            // TODO: Implement properly when base properties done
-            //return BaseProps.Size.GetSizeCode(Parent,Language);
-            return _T("wxDefaultSize");
+            return GetBaseProps()->m_Size.GetSizeCode(Parent,Language);
         }
 
         /** \brief Easy access to style code */
         inline wxString StyleCode(wxsCodingLang Language)
         {
-            // TODO: Implement properly when base properties done
-            //return wxsStyleProperty::GetString(StyleBits,StyleSet,false,Language);
-            return _T("0");
+            return wxsStyleProperty::GetString(m_StyleBits,m_StyleSet,false,Language);
         }
 
         /** \brief Function adding code setting up properties after window

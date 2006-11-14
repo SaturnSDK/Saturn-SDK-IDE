@@ -17,8 +17,7 @@ wxsWidget::wxsWidget(
 {
     if ( StyleSet )
     {
-        // TODO
-        // wxsStyleProperty::SetFromString(StyleBits,DefaultStyle,StyleSet,false);
+        wxsStyleProperty::SetFromString(m_StyleBits,DefaultStyle,StyleSet,false);
     }
 
 }
@@ -26,12 +25,11 @@ wxsWidget::wxsWidget(
 void wxsWidget::OnEnumItemProperties(long Flags)
 {
     OnEnumWidgetProperties(Flags);
-    // TODO
-//    if ( StyleSet )
-//    {
-//        WXS_STYLE(wxsWidget,StyleBits,0,_("Style"),_T("style"),StyleSet,DefaultStyle);
-//        WXS_EXSTYLE(wxsWidget,ExStyleBits,0,_("Extra style"),_T("exstyle"),StyleSet,wxEmptyString);
-//    }
+    if ( m_StyleSet )
+    {
+        WXS_STYLE(wxsWidget,m_StyleBits,0,_("Style"),_T("style"),m_StyleSet,m_DefaultStyle);
+        WXS_EXSTYLE(wxsWidget,m_ExStyleBits,0,_("Extra style"),_T("exstyle"),m_StyleSet,wxEmptyString);
+    }
 }
 
 void wxsWidget::OnAddItemQPP(wxsAdvQPP* QPP)
@@ -42,12 +40,11 @@ void wxsWidget::OnAddItemQPP(wxsAdvQPP* QPP)
 wxWindow* wxsWidget::SetupWindow(wxWindow* Preview,bool IsExact)
 {
     GetBaseProps()->SetupWindow(Preview,IsExact);
-    // TODO
-//    long ExStyle = wxsStyleProperty::GetWxStyle(ExStyleBits,StyleSet,true);
-//    if ( ExStyle != 0 )
-//    {
-//        Preview->SetExtraStyle(Preview->GetExtraStyle() | ExStyle);
-//    }
+    long ExStyle = wxsStyleProperty::GetWxStyle(m_ExStyleBits,m_StyleSet,true);
+    if ( ExStyle != 0 )
+    {
+        Preview->SetExtraStyle(Preview->GetExtraStyle() | ExStyle);
+    }
     return Preview;
 }
 
@@ -58,19 +55,18 @@ void wxsWidget::SetupWindowCode(wxString& Code,wxsCodingLang Language)
         case wxsCPP:
         {
             GetBaseProps()->BuildSetupWindowCode(Code,GetVarName(),wxsCPP);
-            // TODO
-//            if ( ExStyleBits )
-//            {
-//                wxString ExStyleStr = wxsStyleProperty::GetString(ExStyleBits,StyleSet,true,wxsCPP);
-//                if ( ExStyleStr != _T("0") )
-//                {
-//                    wxString VarAccess = GetVarName().empty() ? _T("") : GetVarName() + _T("->");
-//
-//                    Code << VarAccess << _T("SetExtraStyle(") <<
-//                            VarAccess << _T("GetExtraStyle() | ") <<
-//                            ExStyleStr << _T(");\n");
-//                }
-//            }
+            if ( m_ExStyleBits )
+            {
+                wxString ExStyleStr = wxsStyleProperty::GetString(m_ExStyleBits,m_StyleSet,true,wxsCPP);
+                if ( ExStyleStr != _T("0") )
+                {
+                    wxString VarAccess = GetVarName().empty() ? _T("") : GetVarName() + _T("->");
+
+                    Code << VarAccess << _T("SetExtraStyle(") <<
+                            VarAccess << _T("GetExtraStyle() | ") <<
+                            ExStyleStr << _T(");\n");
+                }
+            }
             return;
         }
 
