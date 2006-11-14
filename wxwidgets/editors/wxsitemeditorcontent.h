@@ -1,22 +1,22 @@
-#ifndef WXSWINDOWEDITORCONTENT_H
-#define WXSWINDOWEDITORCONTENT_H
+#ifndef WXSITEMEDITORCONTENT_H
+#define WXSITEMEDITORCONTENT_H
 
 #include "wxsdrawingwindow.h"
 #include "wxswindoweditor.h"
 #include "../wxsparent.h"
 
-class wxsWindowEditorDragAssist;
+class wxsItemEditorDragAssist;
 
 /** \brief Class with window editor content (graphical area for editing resource) */
-class wxsWindowEditorContent: public wxsDrawingWindow
+class wxsItemEditorContent: public wxsDrawingWindow
 {
     public:
 
         /** \brief Ctor */
-        wxsWindowEditorContent(wxsWindowEditor* _Parent);
+        wxsItemEditorContent(wxsItemEditor* _Parent);
 
         /** \brief Dctor */
-        virtual ~wxsWindowEditorContent();
+        virtual ~wxsItemEditorContent();
 
         /** \brief Function which must be called when preview change */
         void NewPreview();
@@ -78,7 +78,7 @@ class wxsWindowEditorContent: public wxsDrawingWindow
         /** \brief Structure containing wxWindow for each item */
         WX_DECLARE_VOIDPTR_HASH_MAP(wxWindow*,ItemToWindowT);
 
-        wxsWindowEditor* Parent;                            ///< \brief Current window editor
+        wxsItemEditor* Parent;                            ///< \brief Current window editor
         DragPointsT DragPoints;                             ///< \brief Array of visible drag points
         ItemToRectT ItemToRect;                             ///< \brief Coordinates of each item stored here
         ItemToWindowT ItemToWindow;                         ///< \brief Window in editor area for each item is stored here
@@ -91,7 +91,7 @@ class wxsWindowEditorContent: public wxsDrawingWindow
         int            DragInitPosX;                        ///< \brief Initial mouse x position when dragging
         int            DragInitPosY;                        ///< \brief Initial mouse y position when dragging
 
-        wxsWindowEditorDragAssist* Assist;                  ///< \brief Assisting class
+        wxsItemEditorDragAssist* Assist;                  ///< \brief Assisting class
         wxsItem*   AssistTarget;
         wxsParent* AssistParent;
         bool       AssistAddAfter;
@@ -106,9 +106,9 @@ class wxsWindowEditorContent: public wxsDrawingWindow
         void OnMouseDraggingItem(wxMouseEvent& event);
         void OnMouseDraggingItemInit(wxMouseEvent& event);
 
-        inline wxsWindowRes* GetWinRes() { return (wxsWindowRes*)Parent->GetResource(); }
-        inline wxsItem* RootItem()       { return ((wxsWindowRes*)Parent->GetResource())->GetRootItem();      }
-        inline wxsItem* RootSelection()  { return ((wxsWindowRes*)Parent->GetResource())->GetRootSelection(); }
+        inline wxsItemRes* GetItemRes()  { return (wxsItemRes*)(Parent->GetResource()); }
+        inline wxsItem* RootItem()       { return GetItemRes()->GetRootItem(); }
+        inline wxsItem* RootSelection()  { return GetItemRes()->GetRootSelection(); }
         inline void SetCur(int Cur)      { SetCursor(wxCursor(Cur)); }
         inline void BeginChange()        { Parent->BeginChange(); }
         inline void EndChange()          { Parent->EndChange(); }
@@ -136,7 +136,7 @@ class wxsWindowEditorContent: public wxsDrawingWindow
         void RecalculateMaps();
         void RecalculateMapsReq(wxsItem* Item);
 
-        friend class wxsWindowEditorDragAssist;
+        friend class wxsItemEditorDragAssist;
 
         DECLARE_EVENT_TABLE()
 };

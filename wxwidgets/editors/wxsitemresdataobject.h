@@ -1,5 +1,5 @@
-#ifndef WXSWINDOWRESDATAOBJECT_H
-#define WXSWINDOWRESDATAOBJECT_H
+#ifndef WXSITEMRESDATAOBJECT_H
+#define WXSITEMRESDATAOBJECT_H
 
 #include <wx/dataobj.h>
 #include <tinyxml/tinyxml.h>
@@ -7,22 +7,22 @@
 #define wxsDF_WIDGET   _T("wxSmith XML")
 
 class wxsItem;
-class wxsWindowRes;
+class wxsItemRes;
 
 /** \brief Class representing one or more items with resource structure using wxDataObject class */
-class wxsWindowResDataObject : public wxDataObject
+class wxsItemResDataObject : public wxDataObject
 {
 	public:
 
         /** \brief Ctor */
-		wxsWindowResDataObject();
+		wxsItemResDataObject();
 
 		/** \brief Dctor */
-		virtual ~wxsWindowResDataObject();
+		virtual ~wxsItemResDataObject();
 
-    //=====================================
-    // Opertating on data
-    //=====================================
+        //=====================================
+        // Opertating on data
+        //=====================================
 
         /** \brief Clering all data */
         void Clear();
@@ -38,7 +38,7 @@ class wxsWindowResDataObject : public wxDataObject
 		 *  \param Index - id of item (in range 0..GetWidgetCount()-1)
 		 *  \return created item or NULL on error
 		 */
-		wxsItem* BuildItem(wxsWindowRes* Resource,int Index = 0) const;
+		wxsItem* BuildItem(wxsItemRes* Resource,int Index = 0) const;
 
 		/** \brief Setting Xml string describing widget */
 		bool SetXmlData(const wxString& Data);
@@ -46,9 +46,9 @@ class wxsWindowResDataObject : public wxDataObject
 		/** \brief Getting Xml strting desecribing widget */
 		wxString GetXmlData() const;
 
-    //=====================================
-    // Members of wxDataObject class
-    //=====================================
+        //=====================================
+        // Members of wxDataObject class
+        //=====================================
 
 		/** \brief Enumerating all data formats.
 		 *
@@ -75,9 +75,9 @@ class wxsWindowResDataObject : public wxDataObject
 
     private:
 
-        TiXmlDocument XmlDoc;
-        TiXmlElement* XmlElem;
-        int ItemCount;
+        TiXmlDocument m_XmlDoc;
+        TiXmlElement* m_XmlElem;
+        int m_ItemCount;
 };
 
 #endif

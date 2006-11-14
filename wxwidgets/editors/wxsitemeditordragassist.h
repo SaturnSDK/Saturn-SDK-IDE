@@ -1,21 +1,21 @@
-#ifndef WXSWINDOWEDITORDRAGASSIST_H
-#define WXSWINDOWEDITORDRAGASSIST_H
+#ifndef WXSITEMEDITORDRAGASSIST_H
+#define WXSITEMEDITORDRAGASSIST_H
 
-#include "wxswindoweditorcontent.h"
+#include "wxsitemeditorcontent.h"
 #include "../wxsitem.h"
 #include <wx/dc.h>
 #include <wx/bitmap.h>
 
 /** \brief Class drawing additional data to help dragging */
-class wxsWindowEditorDragAssist
+class wxsItemEditorDragAssist
 {
     public:
 
         /** \brief Ctor */
-        wxsWindowEditorDragAssist(wxsWindowEditorContent* Content);
+        wxsItemEditorDragAssist(wxsItemEditorContent* Content);
 
         /** \brief Dctor */
-        ~wxsWindowEditorDragAssist();
+        ~wxsItemEditorDragAssist();
 
         /** \brief Function starting new dragging process */
         void NewDragging();
@@ -37,7 +37,7 @@ class wxsWindowEditorDragAssist
         wxRect    ParentRect;
         bool      IsParent;
 
-        wxsWindowEditorContent* Content;
+        wxsItemEditorContent* Content;
 
         void UpdateAssist(wxsItem* NewTarget,wxsItem* NewParent,bool NewAddAfter);
         void RebuildParentAssist();

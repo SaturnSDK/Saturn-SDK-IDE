@@ -1,7 +1,7 @@
-#include "wxswindoweditor.h"
+#include "wxsitemeditor.h"
 #include "wxsdrawingwindow.h"
-#include "wxswindowresdataobject.h"
-#include "wxswindoweditorcontent.h"
+#include "wxsitemresdataobject.h"
+#include "wxsitemeditorcontent.h"
 #include "../wxsitem.h"
 #include "../wxsparent.h"
 #include "../wxsproject.h"
@@ -23,7 +23,7 @@ static const long wxsDelId        = wxNewId();
 static const long wxsPreviewId    = wxNewId();
 static const long wxsQuickPropsId = wxNewId();
 
-wxsWindowEditor::wxsWindowEditor(wxWindow* parent,wxsResource* Resource):
+wxsItemEditor::wxsItemEditor(wxWindow* parent,wxsResource* Resource):
     wxsEditor(parent,wxEmptyString,Resource),
     m_TopPreview(NULL),
     m_InsType(itBefore),
@@ -44,7 +44,7 @@ wxsWindowEditor::wxsWindowEditor(wxWindow* parent,wxsResource* Resource):
     m_VertSizer->Add(m_HorizSizer,1,wxEXPAND);
     m_VertSizer->Add(m_WidgetsSet,0,wxEXPAND);
 
-    m_Content = new wxsWindowEditorContent(this);
+    m_Content = new wxsItemEditorContent(this);
     m_HorizSizer->Add(m_Content,1,wxEXPAND);
 
     m_QPArea = new wxScrolledWindow(this,-1,wxDefaultPosition,wxDefaultSize,wxVSCROLL|wxSUNKEN_BORDER|wxALWAYS_SHOW_SB);
@@ -111,7 +111,7 @@ wxsWindowEditor::wxsWindowEditor(wxWindow* parent,wxsResource* Resource):
     GetWinRes()->RebuildCode();
 }
 
-wxsWindowEditor::~wxsWindowEditor()
+wxsItemEditor::~wxsItemEditor()
 {
     // Destroying also Quick Props panel which usually triggers it's
     // Save() method when being destroyed
@@ -135,7 +135,7 @@ wxsWindowEditor::~wxsWindowEditor()
 	m_AllEditors.erase(this);
 }
 
-void wxsWindowEditor::ReloadImages()
+void wxsItemEditor::ReloadImages()
 {
     m_ImagesLoaded = false;
     InitializeImages();
@@ -145,9 +145,9 @@ void wxsWindowEditor::ReloadImages()
     }
 }
 
-void wxsWindowEditor::RebuildPreview()
+void wxsItemEditor::RebuildPreview()
 {
-    wxASSERT_MSG(RootItem()!=NULL,_T("wxsWindowEditor::RebuildPreview() called without valid item"));
+    wxASSERT_MSG(RootItem()!=NULL,_T("wxsItemEditor::RebuildPreview() called without valid item"));
 
     Freeze();
 
@@ -189,12 +189,12 @@ void wxsWindowEditor::RebuildPreview()
     RootItem()->InvalidatePreview();
 }
 
-void wxsWindowEditor::RebuildTree()
+void wxsItemEditor::RebuildTree()
 {
     GetWinRes()->RebuildResourceTree();
 }
 
-void wxsWindowEditor::UpdateSelection()
+void wxsItemEditor::UpdateSelection()
 {
     if ( GetCurrentSelection() )
     {
@@ -203,12 +203,12 @@ void wxsWindowEditor::UpdateSelection()
     }
 }
 
-void wxsWindowEditor::StoreTreeState()
+void wxsItemEditor::StoreTreeState()
 {
     GetWinRes()->StoreTreeState();
 }
 
-bool wxsWindowEditor::Save()
+bool wxsItemEditor::Save()
 {
     // TODO: Add error checking
     GetWinRes()->SaveResource();
@@ -216,12 +216,12 @@ bool wxsWindowEditor::Save()
 	return true;
 }
 
-bool wxsWindowEditor::GetModified()
+bool wxsItemEditor::GetModified()
 {
 	return GetWinRes()->GetModified();
 }
 
-void wxsWindowEditor::SetModified(bool modified)
+void wxsItemEditor::SetModified(bool modified)
 {
     GetWinRes()->SetModified(modified);
     if ( GetWinRes()->GetModified() )
@@ -234,17 +234,17 @@ void wxsWindowEditor::SetModified(bool modified)
     }
 }
 
-bool wxsWindowEditor::CanUndo()
+bool wxsItemEditor::CanUndo()
 {
 	return m_UndoBuff->CanUndo();
 }
 
-bool wxsWindowEditor::CanRedo()
+bool wxsItemEditor::CanRedo()
 {
 	return m_UndoBuff->CanRedo();
 }
 
-void wxsWindowEditor::Undo()
+void wxsItemEditor::Undo()
 {
     BeginChange();
     m_UndoBuff->Undo();
@@ -260,7 +260,7 @@ void wxsWindowEditor::Undo()
     m_DontStoreUndo = false;
 }
 
-void wxsWindowEditor::Redo()
+void wxsItemEditor::Redo()
 {
     BeginChange();
     m_UndoBuff->Redo();
@@ -276,12 +276,12 @@ void wxsWindowEditor::Redo()
     m_DontStoreUndo = false;
 }
 
-bool wxsWindowEditor::HasSelection()
+bool wxsItemEditor::HasSelection()
 {
     return HasSelection(RootItem());
 }
 
-bool wxsWindowEditor::HasSelection(wxsItem* Item)
+bool wxsItemEditor::HasSelection(wxsItem* Item)
 {
     if ( Item->GetIsSelected() ) return true;
     wxsParent* Parent = Item->ToParent();
@@ -293,7 +293,7 @@ bool wxsWindowEditor::HasSelection(wxsItem* Item)
     return false;
 }
 
-bool wxsWindowEditor::CanPaste()
+bool wxsItemEditor::CanPaste()
 {
     if ( !wxTheClipboard->Open() ) return false;
     bool Res = wxTheClipboard->IsSupported(wxsDF_WIDGET);
@@ -302,7 +302,7 @@ bool wxsWindowEditor::CanPaste()
     return Res;
 }
 
-void wxsWindowEditor::Cut()
+void wxsItemEditor::Cut()
 {
     Copy();
 
@@ -310,7 +310,7 @@ void wxsWindowEditor::Cut()
     KillSelection();
 }
 
-void wxsWindowEditor::KillSelection()
+void wxsItemEditor::KillSelection()
 {
     BeginChange();
 
@@ -348,7 +348,7 @@ void wxsWindowEditor::KillSelection()
     EndChange();
 }
 
-void wxsWindowEditor::KillSelection(wxsItem* Item)
+void wxsItemEditor::KillSelection(wxsItem* Item)
 {
     wxsParent* P = Item->ToParent();
     if ( P )
@@ -369,7 +369,7 @@ void wxsWindowEditor::KillSelection(wxsItem* Item)
     }
 }
 
-void wxsWindowEditor::Copy()
+void wxsItemEditor::Copy()
 {
 	// Almost all selected widgets will be added into clipboard
 	// but with one exception - widget won't be added if parent of this
@@ -379,7 +379,7 @@ void wxsWindowEditor::Copy()
 	GetSelectionNoChildren(Items,RootItem());
 
     if ( !wxTheClipboard->Open() ) return;
-    wxsWindowResDataObject* Data = new wxsWindowResDataObject;
+    wxsItemResDataObject* Data = new wxsItemResDataObject;
     size_t Cnt = Items.Count();
     for ( size_t i=0; i<Cnt; i++ )
     {
@@ -390,11 +390,11 @@ void wxsWindowEditor::Copy()
 
 }
 
-void wxsWindowEditor::Paste()
+void wxsItemEditor::Paste()
 {
     if ( !wxTheClipboard->Open() ) return;
 
-    wxsWindowResDataObject Data;
+    wxsItemResDataObject Data;
     if ( wxTheClipboard->GetData(Data) )
     {
         int InsertionType = m_InsType;
@@ -457,7 +457,7 @@ void wxsWindowEditor::Paste()
     wxTheClipboard->Close();
 }
 
-bool wxsWindowEditor::InsertBefore(wxsItem* New,wxsItem* Ref)
+bool wxsItemEditor::InsertBefore(wxsItem* New,wxsItem* Ref)
 {
     wxASSERT(Ref!=NULL);
 
@@ -480,7 +480,7 @@ bool wxsWindowEditor::InsertBefore(wxsItem* New,wxsItem* Ref)
     return true;
 }
 
-bool wxsWindowEditor::InsertAfter(wxsItem* New,wxsItem* Ref)
+bool wxsItemEditor::InsertAfter(wxsItem* New,wxsItem* Ref)
 {
     wxASSERT(Ref!=NULL);
 
@@ -503,7 +503,7 @@ bool wxsWindowEditor::InsertAfter(wxsItem* New,wxsItem* Ref)
     return true;
 }
 
-bool wxsWindowEditor::InsertInto(wxsItem* New,wxsItem* Ref)
+bool wxsItemEditor::InsertInto(wxsItem* New,wxsItem* Ref)
 {
     m_Corrector->BeforePaste(New);
     wxsParent* P = Ref->ToParent();
@@ -517,7 +517,7 @@ bool wxsWindowEditor::InsertInto(wxsItem* New,wxsItem* Ref)
     return true;
 }
 
-void wxsWindowEditor::InitializeImages()
+void wxsItemEditor::InitializeImages()
 {
     if ( m_ImagesLoaded ) return;
     wxString basePath = ConfigManager::GetDataFolder() + _T("/images/wxsmith/");
@@ -560,7 +560,7 @@ void wxsWindowEditor::InitializeImages()
     m_ImagesLoaded = true;
 }
 
-void wxsWindowEditor::InsertRequest(const wxString& Name)
+void wxsItemEditor::InsertRequest(const wxString& Name)
 {
     int InsertionType = m_InsType;
     wxsItem* ReferenceItem = GetReferenceItem(InsertionType);
@@ -612,7 +612,7 @@ void wxsWindowEditor::InsertRequest(const wxString& Name)
     EndChange();
 }
 
-void wxsWindowEditor::OnButton(wxCommandEvent& event)
+void wxsItemEditor::OnButton(wxCommandEvent& event)
 {
     wxWindow* Btn = (wxWindow*)event.GetEventObject();
     if ( Btn )
@@ -621,13 +621,13 @@ void wxsWindowEditor::OnButton(wxCommandEvent& event)
     }
 }
 
-void wxsWindowEditor::SetInsertionTypeMask(int Mask)
+void wxsItemEditor::SetInsertionTypeMask(int Mask)
 {
     m_InsTypeMask = Mask;
     SetInsertionType(m_InsType);
 }
 
-void wxsWindowEditor::SetInsertionType(int Type)
+void wxsItemEditor::SetInsertionType(int Type)
 {
     Type &= m_InsTypeMask;
 
@@ -653,14 +653,14 @@ void wxsWindowEditor::SetInsertionType(int Type)
     RebuildInsTypeIcons();
 }
 
-void wxsWindowEditor::RebuildInsTypeIcons()
+void wxsItemEditor::RebuildInsTypeIcons()
 {
     BuildInsTypeIcon(m_InsIntoBtn,m_InsIntoImg,itInto);
     BuildInsTypeIcon(m_InsBeforeBtn,m_InsBeforeImg,itBefore);
     BuildInsTypeIcon(m_InsAfterBtn,m_InsAfterImg,itAfter);
 }
 
-void wxsWindowEditor::BuildInsTypeIcon(wxBitmapButton* Btn,const wxImage& Original,int ButtonType)
+void wxsItemEditor::BuildInsTypeIcon(wxBitmapButton* Btn,const wxImage& Original,int ButtonType)
 {
     bool Selected = (m_InsType & ButtonType) != 0;
     bool Enabled = (m_InsTypeMask & ButtonType) != 0;
@@ -682,12 +682,12 @@ void wxsWindowEditor::BuildInsTypeIcon(wxBitmapButton* Btn,const wxImage& Origin
     Btn->Refresh();
 }
 
-void wxsWindowEditor::RebuildQuickPropsIcon()
+void wxsItemEditor::RebuildQuickPropsIcon()
 {
     m_QuickPanelBtn->SetLabel( m_QuickPropsOpen ? m_QuickPropsImgClose : m_QuickPropsImgOpen );
 }
 
-void wxsWindowEditor::RebuildIcons()
+void wxsItemEditor::RebuildIcons()
 {
     RebuildInsTypeIcons();
     RebuildQuickPropsIcon();
@@ -708,7 +708,7 @@ namespace
     WX_DECLARE_STRING_HASH_MAP(ItemsT,MapT);
 }
 
-void wxsWindowEditor::BuildPalette(wxNotebook* Palette)
+void wxsItemEditor::BuildPalette(wxNotebook* Palette)
 {
     Palette->DeleteAllPages();
 
@@ -771,27 +771,27 @@ void wxsWindowEditor::BuildPalette(wxNotebook* Palette)
     }
 }
 
-void wxsWindowEditor::OnInsInto(wxCommandEvent& event)
+void wxsItemEditor::OnInsInto(wxCommandEvent& event)
 {
     SetInsertionType(itInto);
 }
 
-void wxsWindowEditor::OnInsAfter(wxCommandEvent& event)
+void wxsItemEditor::OnInsAfter(wxCommandEvent& event)
 {
     SetInsertionType(itAfter);
 }
 
-void wxsWindowEditor::OnInsBefore(wxCommandEvent& event)
+void wxsItemEditor::OnInsBefore(wxCommandEvent& event)
 {
     SetInsertionType(itBefore);
 }
 
-void wxsWindowEditor::OnDelete(wxCommandEvent& event)
+void wxsItemEditor::OnDelete(wxCommandEvent& event)
 {
     KillSelection();
 }
 
-void wxsWindowEditor::OnPreview(wxCommandEvent& event)
+void wxsItemEditor::OnPreview(wxCommandEvent& event)
 {
     if ( GetWinRes()->IsPreview() )
     {
@@ -803,20 +803,20 @@ void wxsWindowEditor::OnPreview(wxCommandEvent& event)
     }
 }
 
-void wxsWindowEditor::OnQuickProps(wxCommandEvent& event)
+void wxsItemEditor::OnQuickProps(wxCommandEvent& event)
 {
     m_QuickPropsOpen = !m_QuickPropsOpen;
     RebuildQuickPropsIcon();
     ToggleQuickPropsPanel(m_QuickPropsOpen);
 }
 
-void wxsWindowEditor::ToggleQuickPropsPanel(bool Open)
+void wxsItemEditor::ToggleQuickPropsPanel(bool Open)
 {
     m_HorizSizer->Show(m_QPArea,Open,true);
     Layout();
 }
 
-void wxsWindowEditor::RebuildQuickProps(wxsItem* Selection)
+void wxsItemEditor::RebuildQuickProps(wxsItem* Selection)
 {
     Freeze();
 
@@ -843,12 +843,12 @@ void wxsWindowEditor::RebuildQuickProps(wxsItem* Selection)
     Thaw();
 }
 
-void wxsWindowEditor::OnChangeInit()
+void wxsItemEditor::OnChangeInit()
 {
     StoreTreeState();
 }
 
-void wxsWindowEditor::OnChangeFinish()
+void wxsItemEditor::OnChangeFinish()
 {
     if ( !m_DontStoreUndo )
     {
@@ -860,7 +860,7 @@ void wxsWindowEditor::OnChangeFinish()
     SetModified(true);
 }
 
-void wxsWindowEditor::SelectionChanged()
+void wxsItemEditor::SelectionChanged()
 {
     wxsItem* Item = GetCurrentSelection();
     // Updating insertion type mask
@@ -894,14 +894,14 @@ void wxsWindowEditor::SelectionChanged()
     // TODO: Refresh set of available items inside palette
 }
 
-void wxsWindowEditor::NotifyChange(wxsItem* Changed)
+void wxsItemEditor::NotifyChange(wxsItem* Changed)
 {
     BeginChange();
     m_Corrector->AfterChange(Changed);
     EndChange();
 }
 
-void wxsWindowEditor::GetSelectionNoChildren(wxsWindowEditor::ItemArray& Array,wxsItem* Item)
+void wxsItemEditor::GetSelectionNoChildren(wxsItemEditor::ItemArray& Array,wxsItem* Item)
 {
     if ( Item->GetIsSelected() )
     {
@@ -920,7 +920,7 @@ void wxsWindowEditor::GetSelectionNoChildren(wxsWindowEditor::ItemArray& Array,w
     }
 }
 
-void wxsWindowEditor::SelectOneItem(wxsItem* ItemToSelect)
+void wxsItemEditor::SelectOneItem(wxsItem* ItemToSelect)
 {
     RootItem()->ClearSelection();
     if ( ItemToSelect )
@@ -934,7 +934,7 @@ void wxsWindowEditor::SelectOneItem(wxsItem* ItemToSelect)
     }
 }
 
-wxsItem* wxsWindowEditor::GetReferenceItem(int& InsertionType)
+wxsItem* wxsItemEditor::GetReferenceItem(int& InsertionType)
 {
     wxsItem* Reference = GetCurrentSelection();
     if ( !Reference )
@@ -953,23 +953,23 @@ wxsItem* wxsWindowEditor::GetReferenceItem(int& InsertionType)
     return Reference;
 }
 
-wxImage wxsWindowEditor::m_InsIntoImg;
-wxImage wxsWindowEditor::m_InsBeforeImg;
-wxImage wxsWindowEditor::m_InsAfterImg;
-wxImage wxsWindowEditor::m_DelImg;
-wxImage wxsWindowEditor::m_PreviewImg;
-wxImage wxsWindowEditor::m_QuickPropsImgOpen;
-wxImage wxsWindowEditor::m_QuickPropsImgClose;
-wxImage wxsWindowEditor::m_SelectedImg;
-wxsWindowEditor::WindowSet wxsWindowEditor::m_AllEditors;
-bool wxsWindowEditor::m_ImagesLoaded = false;
+wxImage wxsItemEditor::m_InsIntoImg;
+wxImage wxsItemEditor::m_InsBeforeImg;
+wxImage wxsItemEditor::m_InsAfterImg;
+wxImage wxsItemEditor::m_DelImg;
+wxImage wxsItemEditor::m_PreviewImg;
+wxImage wxsItemEditor::m_QuickPropsImgOpen;
+wxImage wxsItemEditor::m_QuickPropsImgClose;
+wxImage wxsItemEditor::m_SelectedImg;
+wxsItemEditor::WindowSet wxsItemEditor::m_AllEditors;
+bool wxsItemEditor::m_ImagesLoaded = false;
 
-BEGIN_EVENT_TABLE(wxsWindowEditor,wxsEditor)
-    EVT_BUTTON(wxsInsIntoId,wxsWindowEditor::OnInsInto)
-    EVT_BUTTON(wxsInsBeforeId,wxsWindowEditor::OnInsBefore)
-    EVT_BUTTON(wxsInsAfterId,wxsWindowEditor::OnInsAfter)
-    EVT_BUTTON(wxsDelId,wxsWindowEditor::OnDelete)
-    EVT_BUTTON(wxsPreviewId,wxsWindowEditor::OnPreview)
-    EVT_BUTTON(wxsQuickPropsId,wxsWindowEditor::OnQuickProps)
-    EVT_BUTTON(-1,wxsWindowEditor::OnButton)
+BEGIN_EVENT_TABLE(wxsItemEditor,wxsEditor)
+    EVT_BUTTON(wxsInsIntoId,wxsItemEditor::OnInsInto)
+    EVT_BUTTON(wxsInsBeforeId,wxsItemEditor::OnInsBefore)
+    EVT_BUTTON(wxsInsAfterId,wxsItemEditor::OnInsAfter)
+    EVT_BUTTON(wxsDelId,wxsItemEditor::OnDelete)
+    EVT_BUTTON(wxsPreviewId,wxsItemEditor::OnPreview)
+    EVT_BUTTON(wxsQuickPropsId,wxsItemEditor::OnQuickProps)
+    EVT_BUTTON(-1,wxsItemEditor::OnButton)
 END_EVENT_TABLE()

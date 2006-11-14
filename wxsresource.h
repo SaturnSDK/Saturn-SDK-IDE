@@ -8,9 +8,10 @@
 
 /** \brief Class used to manage basic resource information
  *
- * This class represents resource inside project (or external one).
+ * This class represents resource inside project (or external resource).
  * It should keep only basic resource information but not resource data.
- * It's stored inside internal wxsEditor's structures.
+ * It's stored inside internal wxsEditor's structures. Optionally it may
+ * be responsible for creating new resources.
  */
 class wxsResource: public wxObject
 {

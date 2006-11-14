@@ -1,5 +1,5 @@
-#ifndef WXSWINDOWEDITOR_H
-#define WXSWINDOWEDITOR_H
+#ifndef WXSITEMEDITOR_H
+#define WXSITEMEDITOR_H
 
 #include "../../wxseditor.h"
 #include "../wxsitem.h"
@@ -11,19 +11,19 @@
 #include <wx/sizer.h>
 #include <wx/bmpbuttn.h>
 
-class wxsWindowEditorContent;
+class wxsItemEditorContent;
 
 /** \brief This is root class for editing wxWidgets window resources
  */
-class wxsWindowEditor : public wxsEditor
+class wxsItemEditor : public wxsEditor
 {
 	public:
 
         /** \brief Ctor */
-		wxsWindowEditor(wxWindow* parent,wxsResource* Resource);
+		wxsItemEditor(wxWindow* parent,wxsResource* Resource);
 
         /** \brief Dctor */
-		virtual ~wxsWindowEditor();
+		virtual ~wxsItemEditor();
 
 		/** \brief Saving resource */
 		virtual bool Save();
@@ -61,16 +61,26 @@ class wxsWindowEditor : public wxsEditor
 		/** \brief Pasting */
 		virtual void Paste();
 
-		/** \brief Reloading images in all editors */
-		static void ReloadImages();
+		/** \brief Getting content of this resource as xml string */
+		wxString GetXmlData();
+
+		/** \brief Updating editor's content with given xml data
+		 * \param XmlData string with xml data representing new resource
+		 * \param AddUndoEntry if true, this operation will create new
+		 *        entry inside undo buffer, if false, undo buffer won't
+		 *        be touched
+		 * \return true on success, false when there's no valid xml data
+		 *         in XmlData or when this data doesn't represent
+		 *         current resource
+		 */
+		bool SetXmlData(const wxString& XmlData,bool AddUndoEntry);
 
         /** \brief Function notifying that selection has changed
          *
-         * This function is called from wxsWindowRes class after each
+         * This function is called from wxsItemRes class after each
          * selection change.
          */
         void SelectionChanged();
-
 
         /** \brief Function notifying that properties of given item has changed
          *  \note You should call wxsItem::NotifyPropertyChange rather than this
@@ -78,9 +88,13 @@ class wxsWindowEditor : public wxsEditor
          */
         void NotifyChange(wxsItem* Changed);
 
+
+		/** \brief Reloading images in all editors */
+		static void ReloadImages();
+
     protected:
 
-        /** \brief Getting wxsWindowRes pointer to currently edited resource */
+        /** \brief Getting wxsItemRes pointer to currently edited resource */
         inline wxsItemRes* GetItemRes() { return (wxsItemRes*)GetResource(); }
 
         /** \brief Getting project class of current resource file */
@@ -94,10 +108,10 @@ class wxsWindowEditor : public wxsEditor
 
 	private:
 
-        WX_DECLARE_HASH_SET(wxsWindowEditor*,wxPointerHash,wxPointerEqual,WindowSet);
+        WX_DECLARE_HASH_SET(wxsItemEditor*,wxPointerHash,wxPointerEqual,WindowSet);
         WX_DEFINE_ARRAY(wxsItem*,ItemArray);
 
-        wxsWindowEditorContent* m_Content;  ///< \brief Window with content area
+        wxsItemEditorContent* m_Content;    ///< \brief Window with content area
         wxNotebook* m_WidgetsSet;           ///< \brief Notebook with all widgets inside
         wxBoxSizer* m_VertSizer;            ///< \brief Root sizer of this editor
         wxBoxSizer* m_HorizSizer;           ///< \brief Horizontal sizer managing items below palette
@@ -158,7 +172,7 @@ class wxsWindowEditor : public wxsEditor
         void SelectOneItem(wxsItem* ItemToSelect);
 
 
-        /** \brief Function inserting new widget */
+        /** \brief Function inserting new item */
         void InsertRequest(const wxString& Name);
 
         /** \brief Function adding item before given one */
@@ -244,7 +258,7 @@ class wxsWindowEditor : public wxsEditor
          */
         wxsItem* GetReferenceItem(int& InsertionType);
 
-        friend class wxsWindowEditorContent;
+        friend class wxsItemEditorContent;
 
         DECLARE_EVENT_TABLE()
 };

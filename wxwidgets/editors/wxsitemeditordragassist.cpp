@@ -1,8 +1,8 @@
-#include "wxswindoweditordragassist.h"
+#include "wxsitemeditordragassist.h"
 
 #include <manager.h>
 
-wxsWindowEditorDragAssist::wxsWindowEditorDragAssist(wxsWindowEditorContent* _Content):
+wxsItemEditorDragAssist::wxsItemEditorDragAssist(wxsItemEditorContent* _Content):
     PreviousTarget(NULL),
     PreviousParent(NULL),
     PreviousAddAfter(false),
@@ -16,13 +16,13 @@ wxsWindowEditorDragAssist::wxsWindowEditorDragAssist(wxsWindowEditorContent* _Co
 {
 }
 
-wxsWindowEditorDragAssist::~wxsWindowEditorDragAssist()
+wxsItemEditorDragAssist::~wxsItemEditorDragAssist()
 {
     if ( TargetBitmap ) delete TargetBitmap;
     if ( ParentBitmap ) delete ParentBitmap;
 }
 
-void wxsWindowEditorDragAssist::NewDragging()
+void wxsItemEditorDragAssist::NewDragging()
 {
     PreviousTarget = NULL;
     PreviousParent = NULL;
@@ -40,7 +40,7 @@ void wxsWindowEditorDragAssist::NewDragging()
     IsParent = false;
 }
 
-void wxsWindowEditorDragAssist::DrawExtra(wxsItem* Target,wxsItem* Parent,bool AddAfter,wxDC* DC)
+void wxsItemEditorDragAssist::DrawExtra(wxsItem* Target,wxsItem* Parent,bool AddAfter,wxDC* DC)
 {
     UpdateAssist(Target,Parent,AddAfter);
 
@@ -79,7 +79,7 @@ void wxsWindowEditorDragAssist::DrawExtra(wxsItem* Target,wxsItem* Parent,bool A
     }
 }
 
-void wxsWindowEditorDragAssist::UpdateAssist(wxsItem* NewTarget,wxsItem* NewParent,bool NewAddAfter)
+void wxsItemEditorDragAssist::UpdateAssist(wxsItem* NewTarget,wxsItem* NewParent,bool NewAddAfter)
 {
     if ( NewParent != PreviousParent )
     {
@@ -95,7 +95,7 @@ void wxsWindowEditorDragAssist::UpdateAssist(wxsItem* NewTarget,wxsItem* NewPare
 
 }
 
-void wxsWindowEditorDragAssist::RebuildParentAssist()
+void wxsItemEditorDragAssist::RebuildParentAssist()
 {
     int PosX;
     int PosY;
@@ -140,7 +140,7 @@ void wxsWindowEditorDragAssist::RebuildParentAssist()
     }
 }
 
-void wxsWindowEditorDragAssist::RebuildTargetAssist()
+void wxsItemEditorDragAssist::RebuildTargetAssist()
 {
     int PosX;
     int PosY;
@@ -188,24 +188,24 @@ void wxsWindowEditorDragAssist::RebuildTargetAssist()
     }
 }
 
-inline int wxsWindowEditorDragAssist::AssistType()
+inline int wxsItemEditorDragAssist::AssistType()
 {
     return wxsDWAssistType;
 }
 
-inline wxColour wxsWindowEditorDragAssist::TargetColour()
+inline wxColour wxsItemEditorDragAssist::TargetColour()
 {
     int Col = wxsDWTargetCol;
     return wxColour((Col>>16)&0xFF,(Col>>8)&0xFF,Col&0xFF);
 }
 
-inline wxColour wxsWindowEditorDragAssist::ParentColour()
+inline wxColour wxsItemEditorDragAssist::ParentColour()
 {
     int Col = wxsDWParentCol;
     return wxColour((Col>>16)&0xFF,(Col>>8)&0xFF,Col&0xFF);
 }
 
-void wxsWindowEditorDragAssist::ColourMix(wxImage& Image,const wxColour& Col)
+void wxsItemEditorDragAssist::ColourMix(wxImage& Image,const wxColour& Col)
 {
     int R = Col.Red();
     int G = Col.Green();
@@ -220,7 +220,7 @@ void wxsWindowEditorDragAssist::ColourMix(wxImage& Image,const wxColour& Col)
         }
 }
 
-void wxsWindowEditorDragAssist::UpdateRect(wxRect& Rect,const wxBitmap& Bmp)
+void wxsItemEditorDragAssist::UpdateRect(wxRect& Rect,const wxBitmap& Bmp)
 {
     if ( Rect.x < 0 )
     {

@@ -1,10 +1,9 @@
-#ifndef WXSWINUNDOBUFFER_H
-#define WXSWINUNDOBUFFER_H
+#ifndef WXSITEMEDITORUNDOBUFFER_H
+#define WXSITEMEDITORUNDOBUFFER_H
 
 #include <wx/arrstr.h>
 
-class wxsWidget;
-class wxsWindowRes;
+class wxsItemEditor;
 
 /** \brief This class is used to handle all Undo and Redo actions.
  *
@@ -15,15 +14,15 @@ class wxsWindowRes;
  * of memory consumption problems this can be changed to hold differences
  * between two xml nodes only.
  */
-class wxsWinUndoBuffer
+class wxsItemEditorUndoBuffer
 {
 	public:
 
         /** \brief Ctor */
-		wxsWinUndoBuffer(wxsWindowRes* Resource,int MaxEnteries=100);
+		wxsItemEditorUndoBuffer(wxsItemEditor* Editor,int MaxEnteries=100);
 
 		/** \brief Dctor */
-		virtual ~wxsWinUndoBuffer();
+		virtual ~wxsItemEditorUndoBuffer();
 
         /** \brief Getting number of enteries in undo array */
         inline int GetCount() { return (int)Enteries.Count(); }
@@ -57,11 +56,11 @@ class wxsWinUndoBuffer
 
 	private:
 
-        wxArrayString Enteries;     ///< \brief Array enteries
-        wxsWindowRes* Resource;     ///< \brief Monitored resource
-        int CurrentPos;             ///< \brief Current position in undo buffer
-        int SavedPos;               ///< \brief Undo position representing not-changed resource (in form it's on disk)
-        int MaxEnteries;            ///< \brief Max enteries in undo buffer
+        wxArrayString m_Enteries;   ///< \brief Array enteries
+        wxsItemEditor* m_Editor;    ///< \brief Associated item editor
+        int m_CurrentPos;           ///< \brief Current position in undo buffer
+        int m_SavedPos;             ///< \brief Undo position representing not-changed resource (in form it's on disk)
+        int m_MaxEnteries;          ///< \brief Max enteries in undo buffer
 };
 
 #endif

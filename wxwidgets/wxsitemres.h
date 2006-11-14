@@ -43,6 +43,11 @@ class wxsItemRes: public wxWidgetsRes
         /** \brief Getting root item of this resource */
         inline wxsItem* GetRootItem() { return m_RootItem; }
 
+        /** \brief Replacing root item
+         * \return true on success, false when NULL passed or class of root item is invalid
+         */
+        bool ReplaceRootItem(wxsItem* NewItem);
+
         /** \brief Building properties filter for item properties based on resource config */
         unsigned long GetPropertiesFilter();
 
