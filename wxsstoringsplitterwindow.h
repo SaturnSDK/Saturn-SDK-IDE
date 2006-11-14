@@ -1,8 +1,6 @@
 #ifndef WXSSTORINGSPLITTERWINDOW_H
 #define WXSSTORINGSPLITTERWINDOW_H
 
-#include "wxsglobals.h"
-
 #include <wx/panel.h>
 #include <wx/splitter.h>
 #include <wx/event.h>

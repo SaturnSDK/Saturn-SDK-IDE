@@ -6,8 +6,6 @@
 #include <messagemanager.h>
 #include <wx/ffile.h>
 
-#include "wxsglobals.h"
-
 static wxsCoder SingletonObject;
 wxsCoder* wxsCoder::Singleton = &SingletonObject;
 

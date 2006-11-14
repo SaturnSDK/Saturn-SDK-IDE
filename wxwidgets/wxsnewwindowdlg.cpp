@@ -106,7 +106,8 @@ void wxsNewWindowDlg::OnCreate(wxCommandEvent& event)
 
     // Need to do some checks
     // First - validating name
-    if ( !wxsValidateIdentifier(Class) )
+    // TODO: Do not use fixed language
+    if ( !wxsCodeMarks::ValidateIdentifier(wxsCPP,Class) )
     {
         wxMessageBox(_("Invalid class name"));
         return;

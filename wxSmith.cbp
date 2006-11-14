@@ -284,16 +284,6 @@
 			<Option link="0" />
 			<Option target="wxSmith" />
 		</Unit>
-		<Unit filename="wxsglobals.cpp">
-			<Option compilerVar="CPP" />
-			<Option target="wxSmith" />
-		</Unit>
-		<Unit filename="wxsglobals.h">
-			<Option compilerVar="CPP" />
-			<Option compile="0" />
-			<Option link="0" />
-			<Option target="wxSmith" />
-		</Unit>
 		<Unit filename="wxsgui.cpp">
 			<Option compilerVar="CPP" />
 			<Option target="wxSmith" />
