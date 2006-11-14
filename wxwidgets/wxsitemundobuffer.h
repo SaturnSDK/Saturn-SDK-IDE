@@ -1,9 +1,7 @@
-#ifndef WXSITEMEDITORUNDOBUFFER_H
-#define WXSITEMEDITORUNDOBUFFER_H
+#ifndef WXSITEMUNDOBUFFER_H
+#define WXSITEMUNDOBUFFER_H
 
 #include <wx/arrstr.h>
-
-class wxsItemEditor;
 
 /** \brief This class is used to handle all Undo and Redo actions.
  *
@@ -14,50 +12,46 @@ class wxsItemEditor;
  * of memory consumption problems this can be changed to hold differences
  * between two xml nodes only.
  */
-class wxsItemEditorUndoBuffer
+class wxsItemUndoBuffer
 {
 	public:
 
         /** \brief Ctor */
-		wxsItemEditorUndoBuffer(wxsItemEditor* Editor,int MaxEnteries=100);
+		wxsItemUndoBuffer(int MaxEnteries=100);
 
 		/** \brief Dctor */
-		virtual ~wxsItemEditorUndoBuffer();
-
-        /** \brief Getting number of enteries in undo array */
-        inline int GetCount() { return (int)Enteries.Count(); }
-
-        /** \brief Getting current undo position (counting from 0) */
-        inline int GetCurrent() { return CurrentPos; }
-
-		/** \brief Clearing undo table */
-		void Clear();
+		~wxsItemUndoBuffer();
 
 		/** \brief Checkign if we can undo */
-		inline bool CanUndo() { return CurrentPos > 0; }
+		inline bool CanUndo() { return m_CurrentPos > 0; }
 
 		/** \brief Checking if we can redo */
-		bool CanRedo() { return CurrentPos < GetCount() - 1; }
+		inline bool CanRedo() { return m_CurrentPos < GetCount() - 1; }
 
 		/** \brief Checking if current undo position is modified relatively to form saved on disk */
-		bool IsModified() { return CurrentPos != SavedPos; }
+		inline bool IsModified() { return m_CurrentPos != m_SavedPos; }
 
-		/** \brief Adding new undo position */
-		void StoreChange();
+		/** \brief Adding new undo position
+		 *  \param XmlData xml form of reosurce stored inside string
+		 */
+		void StoreChange(const wxString& XmlData,bool Saved);
 
-		/** \brief Setting last store point as Saved point */
-		inline void Saved() { SavedPos = CurrentPos; }
+		/** \brief Undoing
+		 * \return Xml data previously provided in StoreChange or empty string if can not undo
+         */
+        const wxString& Undo();
 
-		/** \brief Undoing */
-        bool Undo();
-
-        /** \brief Redoing */
-        bool Redo();
+        /** \brief Redoing
+		 * \return Xml data previously provided in StoreChange or empty string if can not undo
+         */
+        const wxString& Redo();
 
 	private:
 
+        /** \brief Getting number of enteries in undo array */
+        inline int GetCount() { return (int)m_Enteries.Count(); }
+
         wxArrayString m_Enteries;   ///< \brief Array enteries
-        wxsItemEditor* m_Editor;    ///< \brief Associated item editor
         int m_CurrentPos;           ///< \brief Current position in undo buffer
         int m_SavedPos;             ///< \brief Undo position representing not-changed resource (in form it's on disk)
         int m_MaxEnteries;          ///< \brief Max enteries in undo buffer
