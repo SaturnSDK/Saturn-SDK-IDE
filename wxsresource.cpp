@@ -1,6 +1,8 @@
 #include "wxsresource.h"
 #include "wxsextresmanager.h"
 
+#include <wx/wxFlatNotebook/wxFlatNotebook.h>
+
 wxsResource::wxsResource(wxsProject* Owner,const wxString& ResourceType,const wxString& GUI):
     m_ResourceType(ResourceType),
     m_ResourceName(wxEmptyString),
@@ -21,7 +23,7 @@ void wxsResource::EditOpen()
     }
     else
     {
-        m_Editor = OnCreateEditor();
+        m_Editor = OnCreateEditor(EditorManager::Get()->GetNotebook());
     }
 }
 

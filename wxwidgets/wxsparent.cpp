@@ -3,8 +3,8 @@
 //#include "wxsglobals.h"
 #include "wxsitemfactory.h"
 
-wxsParent::wxsParent(wxsItemRes* Resource,const wxsItemInfo* Info,unsigned long PropertiesFlags,const wxsEventDesc* Events):
-    wxsItem(Resource,Info,PropertiesFlags,Events)
+wxsParent::wxsParent(wxsItemResData* Data,const wxsItemInfo* Info,unsigned long PropertiesFlags,const wxsEventDesc* Events):
+    wxsItem(Data,Info,PropertiesFlags,Events)
 {
 }
 
@@ -224,10 +224,10 @@ bool wxsParent::OnXmlReadChild(TiXmlElement* Elem,bool IsXRC,bool IsExtra)
     }
 
     // Creating new item from class name
-    wxsItem* NewItem = wxsItemFactory::Build(cbC2U(RealElem->Attribute("class")),GetResource());
+    wxsItem* NewItem = wxsItemFactory::Build(cbC2U(RealElem->Attribute("class")),GetResourceData());
     if ( !NewItem )
     {
-        NewItem = wxsItemFactory::Build(_T("Custom"),GetResource());
+        NewItem = wxsItemFactory::Build(_T("Custom"),GetResourceData());
         if ( !NewItem ) return false;
     }
 

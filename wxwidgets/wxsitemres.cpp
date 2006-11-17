@@ -1,6 +1,7 @@
 #include "wxsitemres.h"
-#include "wxsitem.h"
-#include "wxsparent.h"
+#include "wxsitemeditor.h"
+//#include "wxsitem.h"
+//#include "wxsparent.h"
 #include "../wxscoder.h"
 
 IMPLEMENT_CLASS(wxsItemRes,wxWidgetsRes)
@@ -86,6 +87,7 @@ wxsItemRes::wxsItemRes(wxsProject* Owner,const wxString& Type,bool CanBeMain):
 {
 }
 
+
 wxsItemRes::wxsItemRes(const wxString& FileName,const TiXmlElement* XrcElem,const wxString& Type):
     wxWidgetsRes(NULL,Type),
     m_WxsFileName(wxEmptyString),
@@ -93,17 +95,15 @@ wxsItemRes::wxsItemRes(const wxString& FileName,const TiXmlElement* XrcElem,cons
     m_HdrFileName(wxEmptyString),
     m_XrcFileName(FileName)
 {
-    // TODO: Load resource
 }
 
 wxsItemRes::~wxsItemRes()
 {
 }
 
-wxsEditor* wxsItemRes::OnCreateEditor()
+wxsEditor* wxsItemRes::OnCreateEditor(wxWindow* Parent)
 {
-    // TODO: Code it
-    return NULL;
+    return new wxsItemEditor(Parent,this);
 }
 
 bool wxsItemRes::OnReadConfig(const TiXmlElement* Node)
@@ -251,17 +251,17 @@ bool wxsItemRes::CreateNewResource(const wxString& Class,const wxString& Src, bo
     return false;
 }
 
-unsigned long wxsItemRes::GetPropertiesFilter()
-{
-    switch ( GetEditMode() )
-    {
-        case File:   return wxsItem::flFile;
-        case Source: return wxsItem::flSource;
-        case Mixed:  return wxsItem::flMixed;
-    }
-    return 0;
-}
-
+//unsigned long wxsItemRes::GetPropertiesFilter()
+//{
+//    switch ( GetEditMode() )
+//    {
+//        case File:   return wxsItem::flFile;
+//        case Source: return wxsItem::flSource;
+//        case Mixed:  return wxsItem::flMixed;
+//    }
+//    return 0;
+//}
+//
 wxsItemRes::EditMode wxsItemRes::GetEditMode()
 {
     if ( m_WxsFileName.empty() ) return File;
@@ -269,23 +269,23 @@ wxsItemRes::EditMode wxsItemRes::GetEditMode()
     return Mixed;
 }
 
-void wxsItemRes::NotifyChange(wxsItem*)
-{
-    switch ( EditMode() )
-    {
-        case File:
-            // If editing file (XRC not binded to application) we do nothing when resource changes
-            break;
-
-        case Source:
-            RebuildSourceCode();
-            break;
-
-        case Mixed:
-            RebuildSourceCode();
-            RebuildXrcFile();
-    }
-
-    // TODO: Store undo data (or maybe put it into editor)
-}
-
+//void wxsItemRes::NotifyChange(wxsItem*)
+//{
+//    switch ( EditMode() )
+//    {
+//        case File:
+//            // If editing file (XRC not binded to application) we do nothing when resource changes
+//            break;
+//
+//        case Source:
+//            RebuildSourceCode();
+//            break;
+//
+//        case Mixed:
+//            RebuildSourceCode();
+//            RebuildXrcFile();
+//    }
+//
+//    // TODO: Store undo data (or maybe put it into editor)
+//}
+//

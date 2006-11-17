@@ -22,7 +22,7 @@ class wxsWidget: public wxsItem
     public:
 
         /** \brief Ctor
-         *  \param Resource resource containing this item
+         *  \param Data data managment object handling this item
          *  \param PropertiesFlags flags filtering sed base properties
          *         (see wxsBaseProperties for details)
          *  \param Info pointer to static widget info
@@ -33,7 +33,7 @@ class wxsWidget: public wxsItem
          *         contain one or more style names separated with '|' character
          */
         wxsWidget(
-            wxsItemRes* Resource,
+            wxsItemResData* Data,
             const wxsItemInfo* Info,
             long PropertiesFlags,
             const wxsEventDesc* EventArray = NULL,

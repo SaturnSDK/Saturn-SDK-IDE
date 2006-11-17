@@ -1,8 +1,6 @@
 #include "wxsitemresdataobject.h"
-#include "../wxsitem.h"
-#include "../wxsitemfactory.h"
-#include <messagemanager.h>
-#include <sstream>
+#include "wxsitem.h"
+#include "wxsitemfactory.h"
 
 wxsItemResDataObject::wxsItemResDataObject(): m_ItemCount(0)
 {
@@ -83,7 +81,7 @@ int wxsItemResDataObject::GetItemCount() const
 	return m_ItemCount;
 }
 
-wxsItem* wxsItemResDataObject::BuildItem(wxsItemRes* Resource,int Index) const
+wxsItem* wxsItemResDataObject::BuildItem(wxsItemResData* Data,int Index) const
 {
 	if ( Index < 0 || Index >= m_ItemCount ) return NULL;
 
@@ -98,10 +96,10 @@ wxsItem* wxsItemResDataObject::BuildItem(wxsItemRes* Resource,int Index) const
 	const char* Class = Root->Attribute("class");
 	if ( !Class || !*Class ) return NULL;
 
-	wxsItem* Item = wxsItemFactory::Build(cbC2U(Class),Resource);
+	wxsItem* Item = wxsItemFactory::Build(cbC2U(Class),Data);
 	if ( !Item )
 	{
-        Item = wxsItemFactory::Build(_T("Custom"),Resource);
+        Item = wxsItemFactory::Build(_T("Custom"),Data);
         if ( !Item ) return false;
 	}
 

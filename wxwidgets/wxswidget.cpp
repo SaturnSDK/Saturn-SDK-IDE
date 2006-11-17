@@ -3,13 +3,13 @@
 #include <messagemanager.h>
 
 wxsWidget::wxsWidget(
-    wxsItemRes* Resource,
+    wxsItemResData* Data,
     const wxsItemInfo* Info,
     long PropertiesFlags,
     const wxsEventDesc* EventArray,
     const wxsStyle* StyleSet,
     const wxString& DefaultStyle):
-        wxsItem(Resource,Info,PropertiesFlags,EventArray),
+        wxsItem(Data,Info,PropertiesFlags,EventArray),
         m_StyleSet(StyleSet),
         m_DefaultStyle(DefaultStyle),
         m_StyleBits(0),

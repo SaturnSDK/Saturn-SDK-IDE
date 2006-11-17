@@ -2,11 +2,11 @@
 #include "wxsitemmanager.h"
 #include "wxsitem.h"
 
-wxsItem* wxsItemFactory::Build(const wxString& Name,wxsItemRes* Resource)
+wxsItem* wxsItemFactory::Build(const wxString& Name,wxsItemResData* Data)
 {
     ItemMapT::iterator it = ItemMap().find(Name);
     if ( it == ItemMap().end() ) return NULL;
-    return it->second->OnBuild(Resource);
+    return it->second->OnBuild(Data);
 }
 
 const wxsItemInfo* wxsItemFactory::GetInfo(const wxString& Name)

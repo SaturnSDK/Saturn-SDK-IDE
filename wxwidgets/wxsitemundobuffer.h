@@ -34,7 +34,11 @@ class wxsItemUndoBuffer
 		/** \brief Adding new undo position
 		 *  \param XmlData xml form of reosurce stored inside string
 		 */
-		void StoreChange(const wxString& XmlData,bool Saved);
+		void StoreChange(const wxString& XmlData);
+
+
+		/** \brief Setting lastest undo buffer to saved state (equialent to content on files) */
+		inline void Saved() { m_SavedPos = m_CurrentPos; }
 
 		/** \brief Undoing
 		 * \return Xml data previously provided in StoreChange or empty string if can not undo

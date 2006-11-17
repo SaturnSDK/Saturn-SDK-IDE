@@ -2,10 +2,11 @@
 #define WXSITEMEDITORCONTENT_H
 
 #include "wxsdrawingwindow.h"
-#include "wxswindoweditor.h"
-#include "../wxsparent.h"
 
 class wxsItemEditorDragAssist;
+class wxsItemResData;
+class wxsParent;
+class wxsItem;
 
 /** \brief Class with window editor content (graphical area for editing resource) */
 class wxsItemEditorContent: public wxsDrawingWindow
@@ -13,7 +14,7 @@ class wxsItemEditorContent: public wxsDrawingWindow
     public:
 
         /** \brief Ctor */
-        wxsItemEditorContent(wxsItemEditor* _Parent);
+        wxsItemEditorContent(wxWindow* Parent,wxsItemResData* Data);
 
         /** \brief Dctor */
         virtual ~wxsItemEditorContent();
@@ -78,23 +79,23 @@ class wxsItemEditorContent: public wxsDrawingWindow
         /** \brief Structure containing wxWindow for each item */
         WX_DECLARE_VOIDPTR_HASH_MAP(wxWindow*,ItemToWindowT);
 
-        wxsItemEditor* Parent;                            ///< \brief Current window editor
-        DragPointsT DragPoints;                             ///< \brief Array of visible drag points
-        ItemToRectT ItemToRect;                             ///< \brief Coordinates of each item stored here
-        ItemToWindowT ItemToWindow;                         ///< \brief Window in editor area for each item is stored here
-        MouseStatesT MouseState;                            ///< \brief Current mouse state
-        static const int DragBoxSize = 6;                   ///< \brief Size of boxes used to drag borders of widgets
-        static const int MinDragDistance = 8;               ///< \brief Minimal distace which must be done to apply dragging
+        wxsItemResData* m_Data;                             ///< \brief Data of handled resource
+        DragPointsT m_DragPoints;                           ///< \brief Array of visible drag points
+        ItemToRectT m_ItemToRect;                           ///< \brief Coordinates of each item stored here
+        ItemToWindowT m_ItemToWindow;                       ///< \brief Window in editor area for each item is stored here
+        MouseStatesT m_MouseState;                          ///< \brief Current mouse state
+        static const int m_DragBoxSize = 6;                 ///< \brief Size of boxes used to drag borders of widgets
+        static const int m_MinDragDistance = 8;             ///< \brief Minimal distace which must be done to apply dragging
 
-        DragPointData* CurDragPoint;                        ///< \brief Dragged drag point
-        wxsItem*       CurDragItem;                         ///< \brief Dragged item
-        int            DragInitPosX;                        ///< \brief Initial mouse x position when dragging
-        int            DragInitPosY;                        ///< \brief Initial mouse y position when dragging
+        DragPointData* m_CurDragPoint;                      ///< \brief Dragged drag point
+        wxsItem*       m_CurDragItem;                       ///< \brief Dragged item
+        int            m_DragInitPosX;                      ///< \brief Initial mouse x position when dragging
+        int            m_DragInitPosY;                      ///< \brief Initial mouse y position when dragging
 
-        wxsItemEditorDragAssist* Assist;                  ///< \brief Assisting class
-        wxsItem*   AssistTarget;
-        wxsParent* AssistParent;
-        bool       AssistAddAfter;
+        wxsItemEditorDragAssist* m_Assist;                  ///< \brief Assisting class
+        wxsItem*   m_AssistTarget;
+        wxsParent* m_AssistParent;
+        bool       m_AssistAddAfter;
 
 
         /** \brief Processing mouse events */
@@ -106,12 +107,7 @@ class wxsItemEditorContent: public wxsDrawingWindow
         void OnMouseDraggingItem(wxMouseEvent& event);
         void OnMouseDraggingItemInit(wxMouseEvent& event);
 
-        inline wxsItemRes* GetItemRes()  { return (wxsItemRes*)(Parent->GetResource()); }
-        inline wxsItem* RootItem()       { return GetItemRes()->GetRootItem(); }
-        inline wxsItem* RootSelection()  { return GetItemRes()->GetRootSelection(); }
-        inline void SetCur(int Cur)      { SetCursor(wxCursor(Cur)); }
-        inline void BeginChange()        { Parent->BeginChange(); }
-        inline void EndChange()          { Parent->EndChange(); }
+        inline void SetCur(int Cur) { SetCursor(wxCursor(Cur)); }
 
         void RebuildDragPoints();
         void ClearDragPoints();

@@ -2,7 +2,7 @@
 #define WXSITEMEDITORDRAGASSIST_H
 
 #include "wxsitemeditorcontent.h"
-#include "../wxsitem.h"
+#include "wxsitem.h"
 #include <wx/dc.h>
 #include <wx/bitmap.h>
 
@@ -10,6 +10,13 @@
 class wxsItemEditorDragAssist
 {
     public:
+
+        enum DragAssistType
+        {
+            dtNone,
+            dtOutline,
+            dtColourMix
+        };
 
         /** \brief Ctor */
         wxsItemEditorDragAssist(wxsItemEditorContent* Content);
@@ -25,24 +32,24 @@ class wxsItemEditorDragAssist
 
     private:
 
-        wxsItem* PreviousTarget;
-        wxsItem* PreviousParent;
-        bool PreviousAddAfter;
+        wxsItem* m_PreviousTarget;
+        wxsItem* m_PreviousParent;
+        bool m_PreviousAddAfter;
 
-        wxBitmap* TargetBitmap;
-        wxRect    TargetRect;
-        bool      IsTarget;
+        wxBitmap* m_TargetBitmap;
+        wxRect    m_TargetRect;
+        bool      m_IsTarget;
 
-        wxBitmap* ParentBitmap;
-        wxRect    ParentRect;
-        bool      IsParent;
+        wxBitmap* m_ParentBitmap;
+        wxRect    m_ParentRect;
+        bool      m_IsParent;
 
-        wxsItemEditorContent* Content;
+        wxsItemEditorContent* m_Content;
 
         void UpdateAssist(wxsItem* NewTarget,wxsItem* NewParent,bool NewAddAfter);
         void RebuildParentAssist();
         void RebuildTargetAssist();
-        inline int AssistType();
+        inline DragAssistType AssistType();
         inline wxColour TargetColour();
         inline wxColour ParentColour();
         void ColourMix(wxImage& Image,const wxColour& Colour);

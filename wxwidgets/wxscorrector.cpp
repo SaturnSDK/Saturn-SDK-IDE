@@ -1,10 +1,10 @@
 #include "wxscorrector.h"
-#include "../wxsitem.h"
-#include "../wxsparent.h"
-#include "../wxsitemres.h"
+#include "wxsitem.h"
+#include "wxsparent.h"
+#include "wxsitemresdata.h"
 
-wxsCorrector::wxsCorrector(wxsItemRes* Resource):
-    m_Resource(Resource),
+wxsCorrector::wxsCorrector(wxsItemResData* Data):
+    m_Data(Data),
     m_NeedRebuild(true)
 {
 }
@@ -14,7 +14,7 @@ bool wxsCorrector::GlobalCheck()
     // It will be done in two passes,
     // first will correct all invalid names, second will fill empty names
 
-    wxsItem* RootItem = m_Resource->GetRootItem();
+    wxsItem* RootItem = m_Data->GetRootItem();
     m_Vars.clear();
     m_Ids.clear();
     bool AreInvalid = FixAfterLoadCheckNames(RootItem);
@@ -119,7 +119,7 @@ bool wxsCorrector::FillEmpty(wxsItem* Item)
 void wxsCorrector::AfterChange(wxsItem* Item)
 {
     // Building new sets without given item
-    wxsItem* RootItem = m_Resource->GetRootItem();
+    wxsItem* RootItem = m_Data->GetRootItem();
     m_Vars.clear();
     m_Ids.clear();
     RebuildSetsReq(RootItem,Item);
@@ -162,7 +162,7 @@ void wxsCorrector::RebuildSets()
 //    if ( !m_NeedRebuild ) return;
     m_Vars.clear();
     m_Ids.clear();
-    RebuildSetsReq(m_Resource->GetRootItem(),NULL);
+    RebuildSetsReq(m_Data->GetRootItem(),NULL);
     m_NeedRebuild = false;
 }
 

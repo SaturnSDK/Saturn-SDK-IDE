@@ -16,7 +16,7 @@ wxsItemUndoBuffer::~wxsItemUndoBuffer()
 {
 }
 
-void wxsItemUndoBuffer::StoreChange(const wxString& XmlData,bool Saved)
+void wxsItemUndoBuffer::StoreChange(const wxString& XmlData)
 {
     // Removing all undo points after current one
     if ( m_CurrentPos < GetCount()-1 )
@@ -38,10 +38,6 @@ void wxsItemUndoBuffer::StoreChange(const wxString& XmlData,bool Saved)
 
     m_Enteries.Add(XmlData);
     m_CurrentPos = GetCount()-1;
-    if ( Saved )
-    {
-        m_SavedPos = m_CurrentPos;
-    }
 }
 
 const wxString& wxsItemUndoBuffer::Undo()

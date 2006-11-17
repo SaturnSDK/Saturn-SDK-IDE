@@ -2,13 +2,13 @@
 #include <messagemanager.h>
 
 wxsContainer::wxsContainer(
-    wxsItemRes* Resource,
+    wxsItemResData* Data,
     const wxsItemInfo* Info,
     long PropertiesFlags,
     const wxsEventDesc* EventArray,
     const wxsStyle* StyleSet,
     const wxString& DefaultStyle):
-        wxsParent(Resource,Info,PropertiesFlags,EventArray),
+        wxsParent(Data,Info,PropertiesFlags,EventArray),
         m_StyleSet(StyleSet),
         m_DefaultStyle(DefaultStyle),
         m_StyleBits(0),

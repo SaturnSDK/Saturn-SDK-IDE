@@ -10,8 +10,11 @@
  *
  * This class represents resource inside project (or external resource).
  * It should keep only basic resource information but not resource data.
- * It's stored inside internal wxsEditor's structures. Optionally it may
- * be responsible for creating new resources.
+ * Data is stored inside editor's structures.
+ *
+ * Main purpose of this class is to hold information that given resource
+ * exists inside project, create editor for it and create source code allowing
+ * to use resource as main application's resource.
  */
 class wxsResource: public wxObject
 {
@@ -83,7 +86,7 @@ class wxsResource: public wxObject
         bool WriteConfig(TiXmlElement* Node);
 
         /** \brief Helper function for fetching project path */
-        inline wxString GetProjectPath() { return m_Owner->GetProjectPath(); }
+        inline wxString GetProjectPath() { return m_Owner ? m_Owner->GetProjectPath() : _T(""); }
 
     protected:
 
@@ -92,9 +95,10 @@ class wxsResource: public wxObject
          * This function is called when there's need to open editor and when
          * editor has not been created yet (or has been closed), so there's no
          * need to check whether editor is opened or not.
+         * \param Parent pointer to parent window (notebook with editors)
          * \return Pointer to wxsEditor class
          */
-        virtual wxsEditor* OnCreateEditor() = 0;
+        virtual wxsEditor* OnCreateEditor(wxWindow* Parent) = 0;
 
         /** \brief Function called when reading resource configuration from .cbp file
          *

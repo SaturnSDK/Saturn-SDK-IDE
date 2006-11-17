@@ -1,37 +1,36 @@
-#include "wxswindoweditorcontent.h"
-#include "wxswindoweditordragassist.h"
-#include "../wxsbaseproperties.h"
+#include "wxsitemeditorcontent.h"
+#include "wxsitemeditordragassist.h"
+#include "wxsbaseproperties.h"
+#include "wxsitemresdata.h"
+#include "wxsparent.h"
 
-BEGIN_EVENT_TABLE(wxsWindowEditorContent,wxsDrawingWindow)
-    EVT_MOUSE_EVENTS(wxsWindowEditorContent::OnMouse)
+BEGIN_EVENT_TABLE(wxsItemEditorContent,wxsDrawingWindow)
+    EVT_MOUSE_EVENTS(wxsItemEditorContent::OnMouse)
 END_EVENT_TABLE()
 
-wxsWindowEditorContent::wxsWindowEditorContent(wxsWindowEditor* _Parent):
-    wxsDrawingWindow(_Parent,-1),
-    Parent(_Parent),
-    MouseState(msIdle),
-    AssistTarget(NULL),
-    AssistParent(NULL),
-    AssistAddAfter(false)
+wxsItemEditorContent::wxsItemEditorContent(wxWindow* Parent,wxsItemResData* Data):
+    wxsDrawingWindow(Parent,-1),
+    m_Data(Data),
+    m_MouseState(msIdle),
+    m_AssistTarget(NULL),
+    m_AssistParent(NULL),
+    m_AssistAddAfter(false)
 {
-    Assist = new wxsWindowEditorDragAssist(this);
+    m_Assist = new wxsItemEditorDragAssist(this);
 }
 
-wxsWindowEditorContent::~wxsWindowEditorContent()
+wxsItemEditorContent::~wxsItemEditorContent()
 {
-    if ( Assist )
-    {
-        delete Assist;
-    }
+    delete m_Assist;
 }
 
-void wxsWindowEditorContent::PaintExtra(wxDC* DC)
+void wxsItemEditorContent::PaintExtra(wxDC* DC)
 {
-    Assist->DrawExtra(AssistTarget,AssistParent,AssistAddAfter,DC);
+    m_Assist->DrawExtra(m_AssistTarget,m_AssistParent,m_AssistAddAfter,DC);
 
-    for ( size_t i = DragPoints.Count(); i-- > 0; )
+    for ( size_t i = m_DragPoints.Count(); i-- > 0; )
     {
-        DragPointData* DPD = DragPoints[i];
+        DragPointData* DPD = m_DragPoints[i];
         if ( DPD->Grey )
         {
             DC->SetPen(*wxGREY_PEN);
@@ -42,43 +41,43 @@ void wxsWindowEditorContent::PaintExtra(wxDC* DC)
             DC->SetPen(*wxBLACK_PEN);
             DC->SetBrush(*wxBLACK_BRUSH);
         }
-        int PosX = DPD->PosX - DragBoxSize/2;
-        int PosY = DPD->PosY - DragBoxSize/2;
-    	DC->DrawRectangle(PosX , PosY, DragBoxSize, DragBoxSize );
+        int PosX = DPD->PosX - m_DragBoxSize/2;
+        int PosY = DPD->PosY - m_DragBoxSize/2;
+    	DC->DrawRectangle(PosX , PosY, m_DragBoxSize, m_DragBoxSize );
     }
 
 }
 
-void wxsWindowEditorContent::RefreshSelection()
+void wxsItemEditorContent::RefreshSelection()
 {
     RebuildDragPoints();
     FullRepaint();
 }
 
-void wxsWindowEditorContent::ClearDragPoints()
+void wxsItemEditorContent::ClearDragPoints()
 {
-    for ( size_t i = DragPoints.Count(); i-- > 0; )
+    for ( size_t i = m_DragPoints.Count(); i-- > 0; )
     {
-        delete DragPoints[i];
+        delete m_DragPoints[i];
     }
-    DragPoints.Clear();
+    m_DragPoints.Clear();
 }
 
-void wxsWindowEditorContent::GreyDragPoints()
+void wxsItemEditorContent::GreyDragPoints()
 {
-    for ( size_t i = DragPoints.Count(); i-->0; )
+    for ( size_t i = m_DragPoints.Count(); i-->0; )
     {
-        DragPoints[i]->Grey = true;
+        m_DragPoints[i]->Grey = true;
     }
 }
 
-void wxsWindowEditorContent::RebuildDragPoints()
+void wxsItemEditorContent::RebuildDragPoints()
 {
     ClearDragPoints();
-    AddDragPoints(RootItem(),RootSelection());
+    AddDragPoints(m_Data->GetRootItem(),m_Data->GetLastSelection());
 }
 
-void wxsWindowEditorContent::AddDragPoints(wxsItem* Item,wxsItem* RootSelection)
+void wxsItemEditorContent::AddDragPoints(wxsItem* Item,wxsItem* RootSelection)
 {
     if ( Item->GetIsSelected() )
     {
@@ -123,22 +122,22 @@ void wxsWindowEditorContent::AddDragPoints(wxsItem* Item,wxsItem* RootSelection)
             for ( int i=0; i<DragBoxTypeCnt; ++i )
             {
                 memcpy(ItemPoints[i]->ItemPoints,ItemPoints,sizeof(ItemPoints[0]->ItemPoints));
-                DragPoints.Add(ItemPoints[i]);
+                m_DragPoints.Add(ItemPoints[i]);
             }
         }
     }
 
-    wxsParent* parent = Item->ToParent();
-    if ( parent )
+    wxsParent* Parent = Item->ConvertToParent();
+    if ( Parent )
     {
-        for ( int i = parent->GetChildCount(); i-->0; )
+        for ( int i = Parent->GetChildCount(); i-->0; )
         {
-            AddDragPoints(parent->GetChild(i),RootSelection);
+            AddDragPoints(Parent->GetChild(i),RootSelection);
         }
     }
 }
 
-void wxsWindowEditorContent::UpdateDragPoints(DragPointData* anyPoint)
+void wxsItemEditorContent::UpdateDragPoints(DragPointData* anyPoint)
 {
     DragPointData** ItemPoints = anyPoint->ItemPoints;
     wxsItem* Item = anyPoint->Item;
@@ -177,11 +176,11 @@ void wxsWindowEditorContent::UpdateDragPoints(DragPointData* anyPoint)
     }
 }
 
-bool wxsWindowEditorContent::FindAbsoluteRect(wxsItem* Item,int& PosX,int& PosY,int& SizeX,int& SizeY)
+bool wxsItemEditorContent::FindAbsoluteRect(wxsItem* Item,int& PosX,int& PosY,int& SizeX,int& SizeY)
 {
     if ( !Item ) return false;
-    ItemToRectT::iterator i = ItemToRect.find(Item);
-    if ( i==ItemToRect.end() ) return false;
+    ItemToRectT::iterator i = m_ItemToRect.find(Item);
+    if ( i==m_ItemToRect.end() ) return false;
     wxRect& Rect = (*i).second;
     PosX = Rect.GetX();
     PosY = Rect.GetY();
@@ -190,7 +189,7 @@ bool wxsWindowEditorContent::FindAbsoluteRect(wxsItem* Item,int& PosX,int& PosY,
     return true;
 }
 
-wxsItem* wxsWindowEditorContent::FindItemAtPos(int PosX,int PosY,wxsItem* SearchIn)
+wxsItem* wxsItemEditorContent::FindItemAtPos(int PosX,int PosY,wxsItem* SearchIn)
 {
     int itemPosX;
     int itemPosY;
@@ -204,7 +203,7 @@ wxsItem* wxsWindowEditorContent::FindItemAtPos(int PosX,int PosY,wxsItem* Search
     if ( PosY < itemPosY ) return NULL;
     if ( PosY >= (itemPosY+itemSizeY) ) return NULL;
 
-    wxsParent* parent = SearchIn->ToParent();
+    wxsParent* parent = SearchIn->ConvertToParent();
     if ( parent )
     {
         for ( int i = parent->GetChildCount(); i-->0; )
@@ -220,16 +219,16 @@ wxsItem* wxsWindowEditorContent::FindItemAtPos(int PosX,int PosY,wxsItem* Search
     return SearchIn;
 }
 
-wxsWindowEditorContent::DragPointData* wxsWindowEditorContent::FindDragPointAtPos(int PosX,int PosY)
+wxsItemEditorContent::DragPointData* wxsItemEditorContent::FindDragPointAtPos(int PosX,int PosY)
 {
-    for ( size_t i=DragPoints.Count(); i-->0; )
+    for ( size_t i=m_DragPoints.Count(); i-->0; )
     {
-        DragPointData* DPD = DragPoints[i];
-        int dpx = DPD->PosX - (DragBoxSize/2);
-        int dpy = DPD->PosY - (DragBoxSize/2);
+        DragPointData* DPD = m_DragPoints[i];
+        int dpx = DPD->PosX - (m_DragBoxSize/2);
+        int dpy = DPD->PosY - (m_DragBoxSize/2);
 
-        if ( (PosX >= dpx) && (PosX < dpx+DragBoxSize) &&
-             (PosY >= dpy) && (PosY < dpy+DragBoxSize) )
+        if ( (PosX >= dpx) && (PosX < dpx+m_DragBoxSize) &&
+             (PosY >= dpy) && (PosY < dpy+m_DragBoxSize) )
         {
             return DPD;
         }
@@ -240,21 +239,21 @@ wxsWindowEditorContent::DragPointData* wxsWindowEditorContent::FindDragPointAtPo
     return NULL;
 }
 
-wxsWindowEditorContent::DragPointData* wxsWindowEditorContent::FindDragPointFromItem(wxsItem* Item)
+wxsItemEditorContent::DragPointData* wxsItemEditorContent::FindDragPointFromItem(wxsItem* Item)
 {
-    for ( size_t i = 0; i<DragPoints.Count(); i+= 8 )
+    for ( size_t i = 0; i<m_DragPoints.Count(); i+= 8 )
     {
-        if ( DragPoints[i]->Item == Item )
+        if ( m_DragPoints[i]->Item == Item )
         {
-            return DragPoints[i];
+            return m_DragPoints[i];
         }
     }
     return NULL;
 }
 
-void wxsWindowEditorContent::OnMouse(wxMouseEvent& event)
+void wxsItemEditorContent::OnMouse(wxMouseEvent& event)
 {
-    switch ( MouseState )
+    switch ( m_MouseState )
     {
         case msDraggingPointInit: OnMouseDraggingPointInit (event); break;
         case msDraggingPoint:     OnMouseDraggingPoint     (event); break;
@@ -264,19 +263,19 @@ void wxsWindowEditorContent::OnMouse(wxMouseEvent& event)
     }
 }
 
-void wxsWindowEditorContent::OnMouseIdle(wxMouseEvent& event)
+void wxsItemEditorContent::OnMouseIdle(wxMouseEvent& event)
 {
     BlockFetch(false);
-    DragInitPosX = event.GetX();
-    DragInitPosY = event.GetY();
+    m_DragInitPosX = event.GetX();
+    m_DragInitPosY = event.GetY();
     if ( event.LeftDown() && !event.RightIsDown() && !event.MiddleIsDown() )
     {
         // Selecting / drag init event
         int MouseX = event.GetX();
         int MouseY = event.GetY();
 
-        wxsItem* OnCursor = FindItemAtPos(MouseX,MouseY,RootItem());
-        if ( !OnCursor ) OnCursor = RootItem();
+        wxsItem* OnCursor = FindItemAtPos(MouseX,MouseY,m_Data->GetRootItem());
+        if ( !OnCursor ) OnCursor = m_Data->GetRootItem();
 
         // TODO (SpOoN#1#): Uncomment when done
         // ForwardClickToParent(OnCursor,MouseX,MouseY)
@@ -286,25 +285,23 @@ void wxsWindowEditorContent::OnMouseIdle(wxMouseEvent& event)
         if ( DPD )
         {
             // If there's drag point, starting point-dragging sequence
-            CurDragPoint = DPD;
-            MouseState = msDraggingPointInit;
+            m_CurDragPoint = DPD;
+            m_MouseState = msDraggingPointInit;
         }
         else
         {
             if ( !OnCursor->GetIsSelected() )
             {
-                if ( !event.ControlDown() ) RootItem()->ClearSelection();
-                OnCursor->SetIsSelected(true);
-                GetWinRes()->SelectionChanged(OnCursor);
+                m_Data->SelectItem(OnCursor,!event.ControlDown());
             }
             else
             {
-                GetWinRes()->SelectionChanged(OnCursor);
+                m_Data->SelectItem(OnCursor,false);
             }
 
-            CurDragPoint = FindDragPointFromItem(OnCursor);
-            CurDragItem = OnCursor;
-            MouseState = msDraggingItemInit;
+            m_CurDragPoint = FindDragPointFromItem(OnCursor);
+            m_CurDragItem = OnCursor;
+            m_MouseState = msDraggingItemInit;
         }
     }
 
@@ -355,50 +352,50 @@ void wxsWindowEditorContent::OnMouseIdle(wxMouseEvent& event)
     }
 }
 
-void wxsWindowEditorContent::OnMouseDraggingPointInit(wxMouseEvent& event)
+void wxsItemEditorContent::OnMouseDraggingPointInit(wxMouseEvent& event)
 {
     BlockFetch(true);
 
     if ( event.RightIsDown() || event.MiddleIsDown() || !event.LeftIsDown() )
     {
-        MouseState = msIdle;
+        m_MouseState = msIdle;
         return;
     }
 
-    int DeltaX = event.GetX() - DragInitPosX;
+    int DeltaX = event.GetX() - m_DragInitPosX;
     if ( DeltaX<0 ) DeltaX = -DeltaX;
-    int DeltaY = event.GetY() - DragInitPosY;
+    int DeltaY = event.GetY() - m_DragInitPosY;
     if ( DeltaY<0 ) DeltaY = -DeltaY;
 
-    if ( DeltaX + DeltaY > MinDragDistance )
+    if ( DeltaX + DeltaY > m_MinDragDistance )
     {
-        ResourceLock();
-        MouseState = msDraggingPoint;
+        m_MouseState = msDraggingPoint;
     }
 }
 
-void wxsWindowEditorContent::OnMouseDraggingPoint(wxMouseEvent& event)
+void wxsItemEditorContent::OnMouseDraggingPoint(wxMouseEvent& event)
 {
     if ( event.RightIsDown() || event.MiddleIsDown() )
     {
         // Cancelling change
-        for ( size_t i=0; i<DragPoints.Count(); i++ )
+        for ( size_t i=0; i<m_DragPoints.Count(); i++ )
         {
-            DragPoints[i]->PosX = DragPoints[i]->DragInitPosX;
-            DragPoints[i]->PosY = DragPoints[i]->DragInitPosY;
+            m_DragPoints[i]->PosX = m_DragPoints[i]->DragInitPosX;
+            m_DragPoints[i]->PosY = m_DragPoints[i]->DragInitPosY;
         }
-        ResourceUnlock();
-        MouseState = msIdle;
+        m_MouseState = msIdle;
         return;
     }
 
     if ( !event.LeftIsDown() )
     {
-        wxsBaseProperties* Props = CurDragPoint->Item->GetBaseProps();
+        m_Data->BeginChange();
+
+        wxsBaseProperties* Props = m_CurDragPoint->Item->GetBaseProps();
         if ( Props )
         {
-            DragPointData* leftTop = CurDragPoint->ItemPoints[LeftTop];
-            DragPointData* rightBtm = CurDragPoint->ItemPoints[RightBtm];
+            DragPointData* leftTop = m_CurDragPoint->ItemPoints[LeftTop];
+            DragPointData* rightBtm = m_CurDragPoint->ItemPoints[RightBtm];
             int OldPosX = leftTop->DragInitPosX;
             int OldPosY = leftTop->DragInitPosY;
             int OldSizeX = rightBtm->DragInitPosX - OldPosX;
@@ -420,43 +417,41 @@ void wxsWindowEditorContent::OnMouseDraggingPoint(wxMouseEvent& event)
                 NewSizeY = -NewSizeY;
             }
 
-            wxWindow* Preview = GetPreviewWindow(CurDragPoint->Item);
+            wxWindow* Preview = GetPreviewWindow(m_CurDragPoint->Item);
 
             if ( Preview )
             {
                 if ( NewPosX!=OldPosX || NewPosY!=OldPosY )
                 {
-                    if ( CurDragItem->GetParent() && (CurDragItem->GetParent()->GetType() == wxsTSizer) )
+                    if ( m_CurDragItem->GetParent() && (m_CurDragItem->GetParent()->GetType() == wxsTSizer) )
                     {
-                        Props->Position.SetPosition(wxDefaultPosition,Preview->GetParent());
+                        Props->m_Position.SetPosition(wxDefaultPosition,Preview->GetParent());
                     }
                     else
                     {
-                        Props->Position.SetPosition(wxPoint(NewPosX,NewPosY),Preview->GetParent());
+                        Props->m_Position.SetPosition(wxPoint(NewPosX,NewPosY),Preview->GetParent());
                     }
                 }
 
                 if ( NewSizeX!=OldSizeX || NewSizeY!=OldSizeY )
                 {
-                    Props->Size.SetSize(wxSize(NewSizeX,NewSizeY),Preview->GetParent());
+                    Props->m_Size.SetSize(wxSize(NewSizeX,NewSizeY),Preview->GetParent());
                 }
             }
         }
 
-        UpdateDragPoints(CurDragPoint);
-        MouseState = msIdle;
-        CurDragItem->NotifyPropertyChange(true);
-        ResourceUnlock();
+        m_MouseState = msIdle;
+        m_Data->EndChange();
         return;
     }
 
-    int DeltaX = event.GetX() - DragInitPosX;
-    int DeltaY = event.GetY() - DragInitPosY;
+    int DeltaX = event.GetX() - m_DragInitPosX;
+    int DeltaY = event.GetY() - m_DragInitPosY;
 
-    DragPointData* leftTop = CurDragPoint->ItemPoints[LeftTop];
-    DragPointData* rightBtm = CurDragPoint->ItemPoints[RightBtm];
+    DragPointData* leftTop = m_CurDragPoint->ItemPoints[LeftTop];
+    DragPointData* rightBtm = m_CurDragPoint->ItemPoints[RightBtm];
 
-    switch ( CurDragPoint->Type )
+    switch ( m_CurDragPoint->Type )
     {
         case LeftTop:
             leftTop->PosX = leftTop->DragInitPosX + DeltaX;
@@ -519,80 +514,80 @@ void wxsWindowEditorContent::OnMouseDraggingPoint(wxMouseEvent& event)
     FullRepaint();
 }
 
-void wxsWindowEditorContent::OnMouseDraggingItemInit(wxMouseEvent& event)
+void wxsItemEditorContent::OnMouseDraggingItemInit(wxMouseEvent& event)
 {
     BlockFetch(true);
 
     if ( event.RightIsDown() || event.MiddleIsDown() || !event.LeftIsDown() )
     {
-        MouseState = msIdle;
+        m_MouseState = msIdle;
         return;
     }
 
-    int DeltaX = event.GetX() - DragInitPosX;
+    int DeltaX = event.GetX() - m_DragInitPosX;
     if ( DeltaX<0 ) DeltaX = -DeltaX;
-    int DeltaY = event.GetY() - DragInitPosY;
+    int DeltaY = event.GetY() - m_DragInitPosY;
     if ( DeltaY<0 ) DeltaY = -DeltaY;
 
-    if ( DeltaX + DeltaY > MinDragDistance )
+    if ( DeltaX + DeltaY > m_MinDragDistance )
     {
-        MouseState = msDraggingItem;
-        ResourceLock();
-        Assist->NewDragging();
+        m_MouseState = msDraggingItem;
+        m_Assist->NewDragging();
     }
 }
 
-void wxsWindowEditorContent::OnMouseDraggingItem(wxMouseEvent& event)
+void wxsItemEditorContent::OnMouseDraggingItem(wxMouseEvent& event)
 {
     if ( event.RightIsDown() || event.MiddleIsDown() )
     {
         // Cancelling change
-        for ( size_t i=0; i<DragPoints.Count(); i++ )
+        for ( size_t i=0; i<m_DragPoints.Count(); i++ )
         {
-            DragPoints[i]->PosX = DragPoints[i]->DragInitPosX;
-            DragPoints[i]->PosY = DragPoints[i]->DragInitPosY;
+            m_DragPoints[i]->PosX = m_DragPoints[i]->DragInitPosX;
+            m_DragPoints[i]->PosY = m_DragPoints[i]->DragInitPosY;
         }
-        MouseState = msIdle;
-        AssistParent = NULL;
-        AssistTarget = NULL;
-        AssistAddAfter = false;
-        Assist->NewDragging();
-        ResourceUnlock();
+        m_MouseState = msIdle;
+        m_AssistParent = NULL;
+        m_AssistTarget = NULL;
+        m_AssistAddAfter = false;
+        m_Assist->NewDragging();
         return;
     }
 
     if ( !event.LeftIsDown() )
     {
+        m_Data->BeginChange();
+
         // Applying change
-        wxsBaseProperties* Props = CurDragItem->GetBaseProps();
+        wxsBaseProperties* Props = m_CurDragItem->GetBaseProps();
         if ( Props )
         {
-            if ( CurDragPoint->PosX != CurDragPoint->DragInitPosX ||
-                 CurDragPoint->PosY != CurDragPoint->DragInitPosY )
+            if ( m_CurDragPoint->PosX != m_CurDragPoint->DragInitPosX ||
+                 m_CurDragPoint->PosY != m_CurDragPoint->DragInitPosY )
             {
                 wxsParent* NewParent = NULL;
                 wxsItem* AtCursor = NULL;
                 bool AddAfter = true;
-                if ( FindDraggingItemTarget(event.GetX(),event.GetY(),CurDragItem,NewParent,AtCursor,AddAfter) )
+                if ( FindDraggingItemTarget(event.GetX(),event.GetY(),m_CurDragItem,NewParent,AtCursor,AddAfter) )
                 {
-                    if ( (CurDragItem->GetParent() == NewParent) || NewParent->CanAddChild(CurDragItem,false) )
+                    if ( (m_CurDragItem->GetParent() == NewParent) || NewParent->CanAddChild(m_CurDragItem,false) )
                     {
                         // TODO (SpOoN#1#): Update resource tree after update
 
-                        wxsParent* CurParent = CurDragItem->GetParent();
+                        wxsParent* CurParent = m_CurDragItem->GetParent();
 
                         if ( CurParent != NewParent ||
                              NewParent->GetType() == wxsTSizer )
                         {
-                            if ( AtCursor != CurDragItem )
+                            if ( AtCursor != m_CurDragItem )
                             {
                                 // Storing extra data
-                                int CurIndex = CurParent->GetChildIndex(CurDragItem);
+                                int CurIndex = CurParent->GetChildIndex(m_CurDragItem);
                                 TiXmlElement ExtraData("extra");
                                 CurParent->StoreExtraData(CurIndex,&ExtraData);
 
                                 // Unbinding from old parent
-                                CurDragItem->GetParent()->UnbindChild(CurDragItem);
+                                m_CurDragItem->GetParent()->UnbindChild(m_CurDragItem);
 
                                 // Adding to new one
                                 int NewIndex = -1;
@@ -602,20 +597,20 @@ void wxsWindowEditorContent::OnMouseDraggingItem(wxMouseEvent& event)
                                     if ( AddAfter ) NewIndex++;
                                 }
 
-                                NewParent->AddChild(CurDragItem,NewIndex);
+                                NewParent->AddChild(m_CurDragItem,NewIndex);
 
                                 // Restoring extra data
-                                NewIndex = NewParent->GetChildIndex(CurDragItem);
+                                NewIndex = NewParent->GetChildIndex(m_CurDragItem);
                                 NewParent->RestoreExtraData(NewIndex,&ExtraData);
                             }
                         }
 
-                        wxsBaseProperties* Props = CurDragItem->GetBaseProps();
+                        wxsBaseProperties* Props = m_CurDragItem->GetBaseProps();
                         if ( Props )
                         {
                             if ( NewParent->GetType() == wxsTSizer )
                             {
-                                Props->Position.SetPosition(wxDefaultPosition,NULL);
+                                Props->m_Position.SetPosition(wxDefaultPosition,NULL);
                             }
                             else
                             {
@@ -624,16 +619,16 @@ void wxsWindowEditorContent::OnMouseDraggingItem(wxMouseEvent& event)
                                 int PosY;
                                 int SizeX;
                                 int SizeY;
-                                if ( FindAbsoluteRect(CurDragItem,PosX,PosY,SizeX,SizeY) )
+                                if ( FindAbsoluteRect(m_CurDragItem,PosX,PosY,SizeX,SizeY) )
                                 {
-                                    PosX += CurDragPoint->PosX - CurDragPoint->DragInitPosX;
-                                    PosY += CurDragPoint->PosY - CurDragPoint->DragInitPosY;
+                                    PosX += m_CurDragPoint->PosX - m_CurDragPoint->DragInitPosX;
+                                    PosY += m_CurDragPoint->PosY - m_CurDragPoint->DragInitPosY;
                                     ClientToScreen(&PosX,&PosY);
-                                    wxWindow* PreviewParent = GetPreviewWindow(CurDragItem)->GetParent();
+                                    wxWindow* PreviewParent = GetPreviewWindow(m_CurDragItem)->GetParent();
                                     if ( PreviewParent )
                                     {
                                         PreviewParent->ScreenToClient(&PosX,&PosY);
-                                        Props->Position.SetPosition(wxPoint(PosX,PosY),PreviewParent);
+                                        Props->m_Position.SetPosition(wxPoint(PosX,PosY),PreviewParent);
                                     }
                                 }
                             }
@@ -642,50 +637,48 @@ void wxsWindowEditorContent::OnMouseDraggingItem(wxMouseEvent& event)
                 }
             }
         }
-        UpdateDragPoints(CurDragPoint);
-        MouseState = msIdle;
-        CurDragItem->NotifyPropertyChange(true);
-        ResourceUnlock();
-        AssistTarget = NULL;
-        AssistParent = NULL;
-        AssistAddAfter = false;
-        Assist->NewDragging();
+        m_MouseState = msIdle;
+        m_AssistTarget = NULL;
+        m_AssistParent = NULL;
+        m_AssistAddAfter = false;
+        m_Assist->NewDragging();
+        m_Data->EndChange();
         return;
     }
 
-    int DeltaX = event.GetX() - DragInitPosX;
-    int DeltaY = event.GetY() - DragInitPosY;
+    int DeltaX = event.GetX() - m_DragInitPosX;
+    int DeltaY = event.GetY() - m_DragInitPosY;
 
-    for ( size_t i=0; i<DragPoints.Count(); i++ )
+    for ( size_t i=0; i<m_DragPoints.Count(); i++ )
     {
-        DragPoints[i]->PosX = DragPoints[i]->DragInitPosX + DeltaX;
-        DragPoints[i]->PosY = DragPoints[i]->DragInitPosY + DeltaY;
+        m_DragPoints[i]->PosX = m_DragPoints[i]->DragInitPosX + DeltaX;
+        m_DragPoints[i]->PosY = m_DragPoints[i]->DragInitPosY + DeltaY;
     }
 
-    if ( !FindDraggingItemTarget(event.GetX(),event.GetY(),CurDragItem,AssistParent,AssistTarget,AssistAddAfter) )
+    if ( !FindDraggingItemTarget(event.GetX(),event.GetY(),m_CurDragItem,m_AssistParent,m_AssistTarget,m_AssistAddAfter) )
     {
-        AssistTarget = NULL;
-        AssistParent = NULL;
-        AssistAddAfter = false;
+        m_AssistTarget = NULL;
+        m_AssistParent = NULL;
+        m_AssistAddAfter = false;
     }
     FullRepaint();
 }
 
-bool wxsWindowEditorContent::FindDraggingItemTarget(int PosX,int PosY,wxsItem* Dragging,wxsParent*& NewParent,wxsItem*& AtCursor,bool& AddAfter)
+bool wxsItemEditorContent::FindDraggingItemTarget(int PosX,int PosY,wxsItem* Dragging,wxsParent*& NewParent,wxsItem*& AtCursor,bool& AddAfter)
 {
     // Searching for item at cursor position
-    wxsItem* Cursor = FindItemAtPos(PosX,PosY,RootItem());
-    if ( !Cursor ) Cursor = RootItem();
+    wxsItem* Cursor = FindItemAtPos(PosX,PosY,m_Data->GetRootItem());
+    if ( !Cursor ) Cursor = m_Data->GetRootItem();
 
     // Avoiding shifting into dragged item
-    wxsParent* DraggedAsParent = Dragging->ToParent();
+    wxsParent* DraggedAsParent = Dragging->ConvertToParent();
     if ( DraggedAsParent && DraggedAsParent->IsGrandChild(Cursor) )
     {
         // Can not drag into own child
         return false;
     }
 
-    NewParent = Cursor->ToParent();
+    NewParent = Cursor->ConvertToParent();
 
     if ( NewParent && !::wxGetKeyState(WXK_ALT) )
     {
@@ -727,34 +720,34 @@ bool wxsWindowEditorContent::FindDraggingItemTarget(int PosX,int PosY,wxsItem* D
     return true;
 }
 
-void wxsWindowEditorContent::NewPreview()
+void wxsItemEditorContent::NewPreview()
 {
     RecalculateMaps();
     RebuildDragPoints();
     ContentChanged();
 }
 
-wxWindow* wxsWindowEditorContent::GetPreviewWindow(wxsItem* Item)
+wxWindow* wxsItemEditorContent::GetPreviewWindow(wxsItem* Item)
 {
     if ( !Item ) return NULL;
-    ItemToWindowT::iterator i = ItemToWindow.find(Item);
-    if ( i==ItemToWindow.end() ) return NULL;
+    ItemToWindowT::iterator i = m_ItemToWindow.find(Item);
+    if ( i==m_ItemToWindow.end() ) return NULL;
     return (*i).second;
 }
 
-void wxsWindowEditorContent::RecalculateMaps()
+void wxsItemEditorContent::RecalculateMaps()
 {
-    ItemToRect.clear();
-    ItemToWindow.clear();
-    RecalculateMapsReq(RootItem());
+    m_ItemToRect.clear();
+    m_ItemToWindow.clear();
+    RecalculateMapsReq(m_Data->GetRootItem());
 }
 
-void wxsWindowEditorContent::RecalculateMapsReq(wxsItem* Item)
+void wxsItemEditorContent::RecalculateMapsReq(wxsItem* Item)
 {
-    if ( Item->GetPreview() )
+    if ( Item->GetLastPreview() )
     {
-        wxWindow* win = wxDynamicCast(Item->GetPreview(),wxWindow);
-        ItemToWindow[Item] = win;
+        wxWindow* win = wxDynamicCast(Item->GetLastPreview(),wxWindow);
+        m_ItemToWindow[Item] = win;
         if ( win )
         {
             // TODO (SpOoN#1#): Add additional visibility check (query item's parent)
@@ -769,9 +762,9 @@ void wxsWindowEditorContent::RecalculateMapsReq(wxsItem* Item)
                 ScreenToClient(&PosX,&PosY);
                 CalcUnscrolledPosition(PosX,PosY,&PosX,&PosY);
                 win->GetSize(&SizeX,&SizeY);
-                ItemToRect[Item] = wxRect(PosX,PosY,SizeX,SizeY);
+                m_ItemToRect[Item] = wxRect(PosX,PosY,SizeX,SizeY);
 
-                wxsParent* Parent = Item->ToParent();
+                wxsParent* Parent = Item->ConvertToParent();
                 if ( Parent )
                 {
                     for ( int i=0; i<Parent->GetChildCount(); i++ )

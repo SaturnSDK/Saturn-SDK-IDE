@@ -1,7 +1,7 @@
 #ifndef WXSCORRECTOR_H
 #define WXSCORRECTOR_H
 
-class wxsItemRes;
+class wxsItemResData;
 class wxsItem;
 
 /** \brief This class is responsible for correcting data in item resource.
@@ -16,7 +16,7 @@ class wxsCorrector
     public:
 
         /** \brief Ctor */
-        wxsCorrector(wxsItemRes* Resource);
+        wxsCorrector(wxsItemResData* Data);
 
         /** \brief Correcting data right after resource load
          *
@@ -72,7 +72,7 @@ class wxsCorrector
 
         WX_DECLARE_HASH_SET(wxString,wxStringHash,wxStringEqual,wxStringSet);
 
-        wxsItemRes* m_Resource; ///< \brief Current window resource
+        wxsItemResData* m_Data; ///< \brief Data object using this corrector
         wxStringSet m_Vars;     ///< \brief set of currently used variable names
         wxStringSet m_Ids;      ///< \brief set of currently used identifiers
         bool m_NeedRebuild;     ///< \brief flag indicating when Vars and Ids contain valid data

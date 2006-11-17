@@ -7,7 +7,7 @@
 #define wxsDF_WIDGET   _T("wxSmith XML")
 
 class wxsItem;
-class wxsItemRes;
+class wxsItemResData;
 
 /** \brief Class representing one or more items with resource structure using wxDataObject class */
 class wxsItemResDataObject : public wxDataObject
@@ -38,7 +38,7 @@ class wxsItemResDataObject : public wxDataObject
 		 *  \param Index - id of item (in range 0..GetWidgetCount()-1)
 		 *  \return created item or NULL on error
 		 */
-		wxsItem* BuildItem(wxsItemRes* Resource,int Index = 0) const;
+		wxsItem* BuildItem(wxsItemResData* Data,int Index = 0) const;
 
 		/** \brief Setting Xml string describing widget */
 		bool SetXmlData(const wxString& Data);

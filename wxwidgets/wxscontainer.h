@@ -13,7 +13,7 @@ class wxsContainer: public wxsParent
     public:
 
         /** \brief Ctor
-         *  \param Resource resource containing this item
+         *  \param Data data managment object handling this item
          *  \param PropertiesFlags flags filtering sed base properties
          *         (see wxsBaseProperties for details)
          *  \param Info pointer to static widget info
@@ -24,7 +24,7 @@ class wxsContainer: public wxsParent
          *         contain one or more style names separated with '|' character
          */
         wxsContainer(
-            wxsItemRes* Resource,
+            wxsItemResData* Data,
             const wxsItemInfo* Info,
             long PropertiesFlags,
             const wxsEventDesc* EventArray = NULL,

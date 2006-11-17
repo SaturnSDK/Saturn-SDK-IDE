@@ -3,8 +3,6 @@
 
 #include "wxwidgetsres.h"
 
-class wxsItem;
-
 /** \brief Base class for resources using item as root element
  *
  * This class implements most of functions in wxsResource and wxWidgetsRes,
@@ -40,24 +38,30 @@ class wxsItemRes: public wxWidgetsRes
             const wxString& Xrc,
             bool GenXrc);
 
-        /** \brief Building properties filter for item properties based on resource config */
-        unsigned long GetPropertiesFilter();
+//        /** \brief Building properties filter for item properties based on resource config */
+//        unsigned long GetPropertiesFilter();
+//
+//        /** \brief Function for resource change notification */
+//        void NotifyChange(wxsItem* Item);
+//
 
-        /** \brief Function for resource change notification */
-        void NotifyChange(wxsItem* Item);
+        inline const wxString& GetWxsFileName() { return m_WxsFileName; }
+        inline const wxString& GetSrcFileName() { return m_SrcFileName; }
+        inline const wxString& GetHdrFileName() { return m_HdrFileName; }
+        inline const wxString& GetXrcFileName() { return m_XrcFileName; }
 
         /** \brief Getting current edit mode */
         EditMode GetEditMode();
 
     protected:
 
-        /** \brief This function should load xrc resource from file
-         *
-         * Default implementation uses LoadObject function
-         */
-        virtual void OnBuildXrcLoadingCode(wxsCodingLang Language,wxString& Code);
-
-        virtual wxsEditor* OnCreateEditor();
+//        /** \brief This function should load xrc resource from file
+//         *
+//         * Default implementation uses LoadObject function
+//         */
+//        virtual void OnBuildXrcLoadingCode(wxsCodingLang Language,wxString& Code);
+//
+        virtual wxsEditor* OnCreateEditor(wxWindow* Parent);
         virtual bool OnReadConfig(const TiXmlElement* Node);
         virtual bool OnWriteConfig(TiXmlElement* Node);
         virtual bool OnCanHandleFile(const wxString& FileName);
@@ -72,9 +76,6 @@ class wxsItemRes: public wxWidgetsRes
         wxString m_HdrFileName;
         wxString m_XrcFileName;
         bool     m_CanBeMain;
-        wxsItem* m_RootItem;
-
-        friend class wxsItemResData;
 };
 
 #endif

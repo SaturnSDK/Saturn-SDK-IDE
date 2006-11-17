@@ -1,12 +1,12 @@
 #include "wxsitem.h"
 #include "wxsparent.h"
-#include "wxsitemres.h"
+#include "wxsitemresdata.h"
 
-wxsItem::wxsItem(wxsItemRes* Resource,const wxsItemInfo* Info,unsigned long PropertiesFlags,const wxsEventDesc* Events):
+wxsItem::wxsItem(wxsItemResData* ResourceData,const wxsItemInfo* Info,unsigned long PropertiesFlags,const wxsEventDesc* Events):
     m_Info(Info),
     m_Events(Events,this),
     m_Parent(NULL),
-    m_Resource(Resource),
+    m_ResourceData(ResourceData),
     m_VarName(_T("")),
     m_IdName(_T("")),
     m_IsMember(true),
@@ -66,7 +66,7 @@ wxsQuickPropsPanel* wxsItem::OnCreateQuickProperties(wxWindow* ParentWnd)
 
 long wxsItem::OnGetPropertiesFlags()
 {
-    return m_Resource->GetPropertiesFilter() | m_PropertiesFlags;
+    return m_ResourceData->GetPropertiesFilter() | m_PropertiesFlags;
 }
 
 void wxsItem::EnumItemProperties(long Flags)
@@ -199,10 +199,10 @@ void wxsItem::ClearSelection()
 
 void wxsItem::OnPropertyChanged()
 {
-    GetResource()->NotifyChange(this);
+    GetResourceData()->NotifyChange(this);
 }
 
 void wxsItem::OnSubPropertyChanged(wxsPropertyContainer*)
 {
-    GetResource()->NotifyChange(this);
+    GetResourceData()->NotifyChange(this);
 }

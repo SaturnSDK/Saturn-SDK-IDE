@@ -10,7 +10,7 @@
 #include "../wxsresourcetree.h"
 
 
-class wxsItemRes;
+class wxsItemResData;
 class wxsParent;
 
 /** \brief Base class for all items in resource
@@ -54,7 +54,7 @@ class wxsItem: public wxsPropertyContainer
          * \param Resource resource containingthis widget, must not be NULL
          * \param Events array of events used by this object (may be NULL if item doesn't use events)
          */
-        wxsItem(wxsItemRes* Resource,const wxsItemInfo* Info,unsigned long PropertiesFlags,const wxsEventDesc* Events);
+        wxsItem(wxsItemResData* Data,const wxsItemInfo* Info,unsigned long PropertiesFlags,const wxsEventDesc* Events);
 
         /** \brief Dctor */
         virtual ~wxsItem();
@@ -94,7 +94,7 @@ class wxsItem: public wxsPropertyContainer
         inline wxsParent* GetParent() { return m_Parent; }
 
         /** \brief Getting resource containing this item */
-        inline wxsItemRes* GetResource() { return m_Resource; }
+        inline wxsItemResData* GetResourceData() { return m_ResourceData; }
 
         /** \brief Getting item type
          *
@@ -357,7 +357,7 @@ class wxsItem: public wxsPropertyContainer
         const wxsItemInfo* m_Info;              ///< \brief Pointer to item's info structure
         wxsEvents m_Events;                     ///< \brief Object managing events
         wxsParent* m_Parent;                    ///< \brief Parent class of this one
-        wxsItemRes* m_Resource;                 ///< \brief Resource containing this item
+        wxsItemResData* m_ResourceData;         ///< \brief Data managment object containing this item
         wxString m_VarName;                     ///< \brief Variable name
         wxString m_IdName;                      ///< \brief Name of identifier
         bool m_IsMember;                        ///< \brief Swith between local and global variable

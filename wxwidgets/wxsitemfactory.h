@@ -6,7 +6,7 @@
 
 class wxsItem;
 class wxsItemInfo;
-class wxsItemRes;
+class wxsItemResData;
 
 /** \brief Class managing creation, destruction and enumeration of supported
  *         items
@@ -23,7 +23,7 @@ class wxsItemFactory
 	public:
 
         /** \brief Creating item with given name */
-        static wxsItem* Build(const wxString& ClassName,wxsItemRes* Res);
+        static wxsItem* Build(const wxString& ClassName,wxsItemResData* Data);
 
         /** \brief Returning info for item with given name
          *  \param ClassName name of item's class
@@ -46,7 +46,7 @@ class wxsItemFactory
 		virtual ~wxsItemFactory();
 
         /** \brief Building item */
-        virtual wxsItem* OnBuild(wxsItemRes* Resource) = 0;
+        virtual wxsItem* OnBuild(wxsItemResData* Data) = 0;
 
 	private:
 

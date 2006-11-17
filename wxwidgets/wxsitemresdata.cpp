@@ -1,20 +1,352 @@
 #include "wxsitemresdata.h"
 #include "wxsparent.h"
+#include "wxsitemfactory.h"
+#include "wxsitemeditor.h"
 #include "../wxscoder.h"
 
-wxsItemResData::wxsItemResData(wxsItemRes* Resource):
-    m_Resource(Resource),
-    m_RootItem(NULL)
+#include <wx/clipbrd.h>
+
+wxsItemResData::wxsItemResData(
+    const wxString& WxsFileName,
+    const wxString& SrcFileName,
+    const wxString& HdrFileName,
+    const wxString& XrcFileName,
+    const wxString& ClassName,
+    const wxString& ClassType,
+    wxsCodingLang   Language,
+    wxsResourceItemId   TreeId,
+    wxsItemEditor*  Editor):
+        m_WxsFileName(WxsFileName),
+        m_SrcFileName(SrcFileName),
+        m_HdrFileName(HdrFileName),
+        m_XrcFileName(XrcFileName),
+        m_ClassName(ClassName),
+        m_ClassType(ClassType),
+        m_Language(Language),
+        m_TreeId(TreeId),
+        m_Editor(Editor),
+        m_Corrector(this),
+        m_LockCount(0)
 {
+    if (  WxsFileName.empty() &&
+          SrcFileName.empty() &&
+          HdrFileName.empty() &&
+         !XrcFileName.empty() )
+    {
+        m_PropertiesFilter = wxsItem::flFile;
+    }
+    else if ( !WxsFileName.empty() &&
+              !SrcFileName.empty() &&
+              !HdrFileName.empty() )
+    {
+        if ( XrcFileName.empty() )
+        {
+            m_PropertiesFilter = wxsItem::flSource;
+        }
+        else
+        {
+            m_PropertiesFilter = wxsItem::flMixed;
+        }
+    }
+    else
+    {
+        m_PropertiesFilter = 0;
+    }
+
+    Load();
 }
 
 wxsItemResData::~wxsItemResData()
 {
+    delete m_RootItem;
+    m_RootItem = NULL;
+    m_RootSelection = NULL;
+    m_PropertiesFilter = 0;
+}
+
+bool wxsItemResData::Load()
+{
+    bool Ret = false;
+    switch ( m_PropertiesFilter )
+    {
+        case wxsItem::flFile:
+            Ret = LoadInFileMode();
+            break;
+
+        case wxsItem::flMixed:
+            Ret = LoadInMixedMode();
+            break;
+
+        case wxsItem::flSource:
+            Ret = LoadInSourceMode();
+            break;
+    }
+
+    if ( !Ret )
+    {
+        delete m_RootItem;
+        m_RootItem = NULL;
+    }
+    else
+    {
+        RebuildTree();
+        RebuildSourceCode();
+        SelectItem(m_RootItem,true);
+        StoreUndo();
+        m_Undo.Saved();
+        if ( !m_Corrector.GlobalCheck() )
+        {
+            // TODO: Some notification here ? (May be not a good idea, maybe three-vale return should be better)
+            m_Undo.StoreChange(GetXmlData());
+        }
+    }
+
+    return Ret;
+}
+
+bool wxsItemResData::LoadInFileMode()
+{
+    TiXmlDocument Doc(cbU2C(m_XrcFileName));
+    if ( !Doc.LoadFile() ) return false;
+
+    TiXmlElement* Resource = Doc.FirstChildElement("resource");
+    if ( !Resource ) return false;
+
+    TiXmlElement* Object = Resource->FirstChildElement("object");
+    while ( Object )
+    {
+        if ( cbC2U(Object->Attribute("name")) == m_ClassName ) break;
+        Object = Object->NextSiblingElement("object");
+    }
+
+    if ( !Object ) return false;
+    if ( cbC2U(Object->Attribute("class")) != m_ClassType ) return false;
+
+    RecreateRootItem();
+    if ( !m_RootItem ) return false;
+    m_RootItem->XmlRead(Object,true,false);
+
+    return true;
+}
+
+bool wxsItemResData::LoadInMixedMode()
+{
+    // TODO: Check if source / header files have required blocks of code
+
+    TiXmlDocument DocExtra(cbU2C(m_WxsFileName));
+    if ( !DocExtra.LoadFile() ) return false;
+    TiXmlDocument DocXrc(cbU2C(m_XrcFileName));
+    if ( !DocXrc.LoadFile() ) return false;
+
+    // Loading XRC data from Xrc file
+
+    TiXmlElement* Resource = DocXrc.FirstChildElement("resource");
+    if ( !Resource ) return false;
+
+    TiXmlElement* Object = Resource->FirstChildElement("object");
+    while ( Object )
+    {
+        if ( cbC2U(Object->Attribute("name")) == m_ClassName ) break;
+        Object = Object->NextSiblingElement("object");
+    }
+
+    if ( !Object ) return false;
+    if ( cbC2U(Object->Attribute("class")) != m_ClassType ) return false;
+
+    RecreateRootItem();
+    if ( !m_RootItem ) return false;
+    m_RootItem->XmlRead(Object,true,false);
+
+    // Loading extra data from wxs file
+
+    TiXmlElement* wxSmithNode = DocExtra.FirstChildElement("wxsmith");
+    if ( wxSmithNode )
+    {
+        TiXmlElement* Extra = wxSmithNode->FirstChildElement("resource_extra");
+        if ( Extra )
+        {
+            IdToXmlMapT IdToXmlMap;
+
+            TiXmlElement* Object = Extra->FirstChildElement("object");
+            while ( Object )
+            {
+                wxString IdName = cbC2U(Object->Attribute("name"));
+                if ( !IdName.empty() ) IdToXmlMap[IdName] = Object;
+            }
+
+            UpdateExtraDataReq(m_RootItem,IdToXmlMap);
+        }
+    }
+
+    return true;
+}
+
+void wxsItemResData::UpdateExtraDataReq(wxsItem* Item,IdToXmlMapT& Map)
+{
+    if ( Item->GetPropertiesFlags() & wxsItem::flId )
+    {
+        wxString Id = Item->GetIdName();
+        if ( !Id.empty() )
+        {
+            if ( Map.find(Id) != Map.end() )
+            {
+                TiXmlElement* Object = Map[Id];
+                if ( cbC2U(Object->Attribute("class"))==Item->GetType() )
+                {
+                    Item->XmlRead(Object,false,true);
+                }
+            }
+        }
+    }
+
+    wxsParent* AsParent = Item->ConvertToParent();
+    if ( AsParent )
+    {
+        for ( int i=0; i<AsParent->GetChildCount(); i++ )
+        {
+            UpdateExtraDataReq(AsParent->GetChild(i),Map);
+        }
+    }
+}
+
+bool wxsItemResData::LoadInSourceMode()
+{
+    // TODO: Check if source / header files have required blocks of code
+
+    TiXmlDocument Doc(cbU2C(m_WxsFileName));
+    if ( !Doc.LoadFile() ) return false;
+
+    TiXmlElement* wxSmithNode = Doc.FirstChildElement("wxsmith");
+    if ( !wxSmithNode ) return false;
+
+    TiXmlElement* Object = wxSmithNode->FirstChildElement("object");
+    if ( !Object ) return false;
+
+    /*
+    if ( cbC2U(Object->Attribute("name")) != m_ClassName ) return false;
+    if ( cbC2U(Object->Attribute("class")) != m_ClassType ) return false;
+    */
+
+    TiXmlElement* Extra = wxSmithNode->FirstChildElement("resource_extra");
+    if ( !Extra ) return false;
+
+    RecreateRootItem();
+    if ( !m_RootItem ) return false;
+    m_RootItem->XmlRead(Object,true,false);
+
+    IdToXmlMapT IdToXmlMap;
+
+    Object = Extra->FirstChildElement("object");
+    while ( Object )
+    {
+        wxString IdName = cbC2U(Object->Attribute("name"));
+        if ( !IdName.empty() ) IdToXmlMap[IdName] = Object;
+    }
+
+    UpdateExtraDataReq(m_RootItem,IdToXmlMap);
+
+    return true;
+}
+
+void wxsItemResData::RecreateRootItem()
+{
+    delete m_RootItem;
+    m_RootItem = wxsItemFactory::Build(m_ClassType,this);
+}
+
+bool wxsItemResData::Save()
+{
+    if ( !IsOk() ) return false;
+    switch ( m_PropertiesFilter )
+    {
+        case wxsItem::flFile:
+            return SaveInFileMode();
+
+        case wxsItem::flMixed:
+            return SaveInMixedMode();
+
+        case wxsItem::flSource:
+            return SaveInSourceMode();
+    }
+
+    return false;
+}
+
+bool wxsItemResData::SaveInFileMode()
+{
+    // Using routine recreating XRC in mixed mode
+    if ( RebuildXrcFile() )
+    {
+        m_Undo.Saved();
+        return true;
+    }
+    return false;
+}
+
+bool wxsItemResData::SaveInMixedMode()
+{
+    // Should be currently up to date, but just for sure udpating it once again
+    if ( !RebuildXrcFile() ) return false;
+
+    // Storing extra data into Wxs file
+
+    TiXmlDocument Doc(cbU2C(m_WxsFileName));
+
+    Doc.InsertEndChild(TiXmlDeclaration("1.0","utf-8",""));
+    TiXmlElement* wxSmithNode = Doc.InsertEndChild(TiXmlElement("wxsmith"))->ToElement();
+
+    // Now storing all extra data
+    TiXmlElement* Extra = wxSmithNode->InsertEndChild(TiXmlElement("resource_extra"))->ToElement();
+    SaveExtraDataReq(m_RootItem,Extra);
+
+    return Doc.SaveFile();
+}
+
+void wxsItemResData::SaveExtraDataReq(wxsItem* Item,TiXmlElement* Node)
+{
+    if ( Item->GetPropertiesFlags() && wxsItem::flId )
+    {
+        wxString Id = Item->GetIdName();
+        if ( !Id.empty() )
+        {
+            TiXmlElement* Object = Node->InsertEndChild(TiXmlElement("object"))->ToElement();
+            Object->SetAttribute("name",cbU2C(Id));
+            Object->SetAttribute("class",cbU2C(Item->GetClassName()));
+            Item->XmlWrite(Object,false,true);
+        }
+    }
+
+    wxsParent* AsParent = Item->ConvertToParent();
+    if ( AsParent )
+    {
+        for ( int i=0; i<AsParent->GetChildCount(); i++ )
+        {
+            SaveExtraDataReq(AsParent->GetChild(i),Node);
+        }
+    }
+}
+
+bool wxsItemResData::SaveInSourceMode()
+{
+    TiXmlDocument Doc(cbU2C(m_WxsFileName));
+
+    Doc.InsertEndChild(TiXmlDeclaration("1.0","utf-8",""));
+    TiXmlElement* wxSmithNode = Doc.InsertEndChild(TiXmlElement("wxsmith"))->ToElement();
+
+    // Storing xml data
+    TiXmlElement* Object = wxSmithNode->InsertEndChild(TiXmlElement("object"))->ToElement();
+    m_RootItem->XmlWrite(Object,true,false);
+
+    // Now storing all extra data
+    TiXmlElement* Extra = wxSmithNode->InsertEndChild(TiXmlElement("resource_extra"))->ToElement();
+    SaveExtraDataReq(m_RootItem,Extra);
+
+    return Doc.SaveFile();
 }
 
 void wxsItemResData::RebuildSourceCode()
 {
-    switch ( GetLanguage() )
+    switch ( m_Language )
     {
         case wxsCPP:
         {
@@ -33,44 +365,44 @@ void wxsItemResData::RebuildSourceCode()
 
             // TODO: Maybe some group update ??
             wxsCoder::Get()->AddCode(
-                GetHdrFileName(),
-                wxsCodeMarks::Beg(wxsCPP,_T("Declarations"),GetClassName()),
+                m_HdrFileName,
+                wxsCodeMarks::Beg(wxsCPP,_T("Declarations"),m_ClassName),
                 wxsCodeMarks::End(wxsCPP),
                 GlobalVarsCode);
 
             wxsCoder::Get()->AddCode(
-                GetHdrFileName(),
-                wxsCodeMarks::Beg(wxsCPP,_T("Identifiers"),GetClassName()),
+                m_HdrFileName,
+                wxsCodeMarks::Beg(wxsCPP,_T("Identifiers"),m_ClassName),
                 wxsCodeMarks::End(wxsCPP),
                 IdentifiersCode);
 
             wxsCoder::Get()->AddCode(
-                GetHdrFileName(),
-                wxsCodeMarks::Beg(wxsCPP,_T("Headers"),GetClassName()),
+                m_HdrFileName,
+                wxsCodeMarks::Beg(wxsCPP,_T("Headers"),m_ClassName),
                 wxsCodeMarks::End(wxsCPP),
                 GlobalHeaders);
 
             wxsCoder::Get()->AddCode(
-                GetSrcFileName(),
-                wxsCodeMarks::Beg(wxsCPP,_T("Initialize"),GetClassName()),
+                m_SrcFileName,
+                wxsCodeMarks::Beg(wxsCPP,_T("Initialize"),m_ClassName),
                 wxsCodeMarks::End(wxsCPP),
                 InitializingCode);
 
             wxsCoder::Get()->AddCode(
-                GetSrcFileName(),
-                wxsCodeMarks::Beg(wxsCPP,_T("IdInit"),GetClassName()),
+                m_SrcFileName,
+                wxsCodeMarks::Beg(wxsCPP,_T("IdInit"),m_ClassName),
                 wxsCodeMarks::End(wxsCPP),
                 IdInitCode);
 
             wxsCoder::Get()->AddCode(
-                GetSrcFileName(),
-                wxsCodeMarks::Beg(wxsCPP,_T("InternalHeaders"),GetClassName()),
+                m_SrcFileName,
+                wxsCodeMarks::Beg(wxsCPP,_T("InternalHeaders"),m_ClassName),
                 wxsCodeMarks::End(wxsCPP),
                 LocalHeaders);
 
             wxsCoder::Get()->AddCode(
-                GetSrcFileName(),
-                wxsCodeMarks::Beg(wxsCPP,_T("EventTable"),GetClassName()),
+                m_SrcFileName,
+                wxsCodeMarks::Beg(wxsCPP,_T("EventTable"),m_ClassName),
                 wxsCodeMarks::End(wxsCPP),
                 _T(""));    // This clears previously used event table for event binding
 
@@ -79,7 +411,7 @@ void wxsItemResData::RebuildSourceCode()
 
         default:
         {
-            wxsCodeMarks::Unknown(_T("wxsItemResData::RebuildSourceCode"),GetLanguage());
+            wxsCodeMarks::Unknown(_T("wxsItemResData::RebuildSourceCode"),m_Language);
         }
     }
 
@@ -125,7 +457,7 @@ void wxsItemResData::BuildVariablesCodeReq(wxsCodingLang Lang,wxsItem* Item,wxSt
             {
                 Child->BuildDeclarationCode(GlobalCode,Lang);
             }
-            else if ( GetEditMode() == wxsItemRes::Source )
+            else if ( m_PropertiesFilter == wxsItem::flSource )
             {
                 Child->BuildDeclarationCode(LocalCode,Lang);
             }
@@ -137,13 +469,13 @@ void wxsItemResData::BuildVariablesCodeReq(wxsCodingLang Lang,wxsItem* Item,wxSt
 
 void wxsItemResData::BuildCreatingCode(wxsCodingLang Lang,wxString& Code)
 {
-    switch ( GetEditMode() )
+    switch ( m_PropertiesFilter )
     {
-        case wxsItemRes::Source:
+        case wxsItem::flSource:
             m_RootItem->BuildCreatingCode(Code,_T("parent"),Lang);
             break;
 
-        case wxsItemRes::Mixed:
+        case wxsItem::flMixed:
             BuildXrcLoadingCode(Lang,Code);
             BuildXrcItemsFetchingCode(Lang,Code);
             break;
@@ -159,8 +491,8 @@ void wxsItemResData::BuildXrcLoadingCode(wxsCodingLang Language,wxString& Code)
         case wxsCPP:
         {
             Code << _T("wxXmlResource::Get()->LoadObject(this,parent,")
-                 << wxsCodeMarks::WxString(wxsCPP,GetClassName()) << _T(",")
-                 << wxsCodeMarks::WxString(wxsCPP,GetResourceType()) << _T(");\n");
+                 << wxsCodeMarks::WxString(wxsCPP,m_ClassName) << _T(",")
+                 << wxsCodeMarks::WxString(wxsCPP,m_ClassType) << _T(");\n");
             break;
         }
 
@@ -228,7 +560,7 @@ void wxsItemResData::BuildEventHandlersCodeReq(wxsCodingLang Language,wxsItem* I
             wxsEvents& Events = Item->GetEvents();
             wxString IdString;
             wxString VarNameString;
-            if ( GetEditMode() == wxsItemRes::Source )
+            if ( m_PropertiesFilter == wxsItem::flSource )
             {
                 IdString = Item->GetIdName();
                 VarNameString = Item->GetVarName();
@@ -268,7 +600,7 @@ void wxsItemResData::BuildEventHandlersCodeReq(wxsCodingLang Language,wxsItem* I
 
 void wxsItemResData::BuildIdentifiersCode(wxsCodingLang Lang,wxString& IdCode,wxString& IdInitCode)
 {
-    if ( GetEditMode() == wxsItemRes::Source )
+    if ( m_PropertiesFilter == wxsItem::flSource )
     {
         wxArrayString IdsArray;
         BuildIdsArrayReq(m_RootItem,IdsArray);
@@ -284,7 +616,7 @@ void wxsItemResData::BuildIdentifiersCode(wxsCodingLang Lang,wxString& IdCode,wx
                         if ( IdsArray[i].find(Id) == i )
                         {
                             IdCode << _T("static const long ") + IdsArray[i] + _T(";\n");
-                            IdInitCode << _T("const long ") + GetClassName() + _T("::") + IdsArray[i] + _T(" = wxNewId();\n");
+                            IdInitCode << _T("const long ") + m_ClassName + _T("::") + IdsArray[i] + _T(" = wxNewId();\n");
                         }
                     }
                 }
@@ -338,7 +670,7 @@ void wxsItemResData::BuildIncludesCode(wxsCodingLang Language,wxString& LocalInc
             LocalHeaders.Add(_T("<wx/font.h>"));
             LocalHeaders.Add(_T("<wx/fontmap.h>"));
 
-            if ( GetEditMode() == wxsItemRes::Mixed )
+            if ( m_PropertiesFilter == wxsItem::flMixed )
             {
                 LocalHeaders.Add(_T("<wx/xrc/xmlres.h>"));
             }
@@ -390,14 +722,14 @@ void wxsItemResData::BuildHeadersReq(wxsCodingLang Lang,wxsItem* Item,wxArrayStr
 	}
 }
 
-void wxsItemResData::RebuildXrcFile()
+bool wxsItemResData::RebuildXrcFile()
 {
     // First - opening file
     TiXmlDocument Doc;
     TiXmlElement* Resources;
     TiXmlElement* Object;
 
-    if ( Doc.LoadFile(cbU2C(GetXrcFileName())) )
+    if ( Doc.LoadFile(cbU2C(m_XrcFileName)) )
     {
         Resources = Doc.FirstChildElement("resource");
     }
@@ -413,7 +745,7 @@ void wxsItemResData::RebuildXrcFile()
     // Searching for object representing this resource
     for ( Object = Resources->FirstChildElement("object"); Object; Object = Object->NextSiblingElement("object") )
     {
-        if ( cbC2U(Object->Attribute("name")) == GetClassName() )
+        if ( cbC2U(Object->Attribute("name")) == m_ClassName )
         {
             Object->Clear();
             while ( Object->FirstAttribute() )
@@ -433,5 +765,314 @@ void wxsItemResData::RebuildXrcFile()
     m_RootItem->XmlWrite(Object,true,false);
 
     // ... and save back the file
-    Doc.SaveFile(cbU2C(GetXrcFileName()));
+    return Doc.SaveFile(cbU2C(m_XrcFileName));
+}
+
+void wxsItemResData::BeginChange()
+{
+    if ( !IsOk() ) return;
+    if ( !m_LockCount++ )
+    {
+        StoreTreeExpandState();
+    }
+}
+
+void wxsItemResData::EndChange()
+{
+    if ( !IsOk() ) return;
+    if ( !--m_LockCount )
+    {
+        RebuildTree();
+        ValidateRootSelection();
+        m_RootSelection->ShowInPropertyGrid();
+        m_RootSelection->NotifyPropertyChange(true);
+    }
+}
+
+void wxsItemResData::ValidateRootSelection()
+{
+    wxsItem* NewSelection = NULL;
+    if ( !ValidateRootSelectionReq(m_RootItem,NewSelection) )
+    {
+        m_RootSelection = NewSelection ? NewSelection : m_RootItem;
+    }
+}
+
+bool wxsItemResData::ValidateRootSelectionReq(wxsItem* Item,wxsItem*& NewSelection)
+{
+    if ( Item == m_RootSelection ) return true;
+
+    if ( Item->GetIsSelected() && !NewSelection )
+    {
+        NewSelection = Item;
+    }
+
+    wxsParent* AsParent = Item->ConvertToParent();
+    if ( AsParent )
+    {
+        for ( int i=0; i<AsParent->GetChildCount(); i++ )
+        {
+            if ( ValidateRootSelectionReq(AsParent->GetChild(i),NewSelection) ) return true;
+        }
+    }
+    return false;
+}
+
+bool wxsItemResData::CanPaste()
+{
+    if ( !IsOk() ) return false;
+    if ( !m_RootItem->ConvertToParent() ) return false;
+    if ( !wxTheClipboard->Open() ) return false;
+    bool Res = wxTheClipboard->IsSupported(wxsDF_WIDGET);
+    // FIXME (SpOoN#1#): Add support for text (XRC) data
+    wxTheClipboard->Close();
+    return Res;
+}
+
+void wxsItemResData::Cut()
+{
+    Copy();
+    DeleteSelected();
+}
+
+void wxsItemResData::Copy()
+{
+    if ( !IsOk() ) return;
+    if ( !wxTheClipboard->Open() ) return;
+    wxsItemResDataObject* Data = new wxsItemResDataObject;
+    CopyReq(m_RootItem,Data);
+
+    wxTheClipboard->SetData(Data);
+    wxTheClipboard->Close();
+}
+
+void wxsItemResData::CopyReq(wxsItem* Item,wxsItemResDataObject* Data)
+{
+    if ( Item->GetIsSelected() )
+    {
+        Data->AddItem(Item);
+        // We do not process children - they will be included
+        // inside this item
+        return;
+    }
+
+    wxsParent* AsParent = Item->ConvertToParent();
+    if ( AsParent )
+    {
+        for ( int i=0; i<AsParent->GetChildCount(); i++ )
+        {
+            CopyReq(AsParent->GetChild(i),Data);
+        }
+    }
+}
+
+void wxsItemResData::Paste()
+{
+    if ( !IsOk() ) return;
+    if ( !m_RootItem->ConvertToParent() ) return;
+    if ( !wxTheClipboard->Open() ) return;
+
+    wxsItemResDataObject Data;
+    if ( wxTheClipboard->GetData(Data) )
+    {
+        wxsItem* Reference = m_RootSelection;
+        if ( !Reference ) Reference = m_RootItem;
+
+        // Checking where we can paste these items
+
+        wxsParent* Parent = Reference->GetParent();
+        int Index = 0;
+        if (! Parent )
+        {
+            Parent = m_RootItem->ConvertToParent();
+            Reference = Parent->GetChild(Parent->GetChildCount()-1);
+        }
+
+        while ( Reference != NULL &&
+                Reference->GetType() == wxsTSizer &&
+                Parent->GetType() != wxsTSizer )
+        {
+            Parent = Reference->ConvertToParent();
+            Reference = Parent->GetChild(Parent->GetChildCount()-1);
+        }
+        Index = Reference ? Parent->GetChildIndex(Reference) : 0;
+
+        int Cnt = Data.GetItemCount();
+        if ( Cnt )
+        {
+            BeginChange();
+            m_RootItem->ClearSelection();
+            for ( int i=0; i<Cnt; i++ )
+            {
+                wxsItem* Insert = Data.BuildItem(this,i);
+                if ( Insert )
+                {
+                    if ( InsertNew(Insert,Parent,Index++) )
+                    {
+                        Insert->SetIsSelected(true);
+                    }
+                }
+            }
+
+            EndChange();
+        }
+    }
+    wxTheClipboard->Close();
+}
+
+bool wxsItemResData::AnySelected()
+{
+    if ( !IsOk() ) return false;
+    return AnySelectedReq(m_RootItem);
+}
+
+bool wxsItemResData::AnySelectedReq(wxsItem* Item)
+{
+    if ( Item->GetIsSelected() ) return true;
+
+    wxsParent* AsParent = Item->ConvertToParent();
+    if ( AsParent )
+    {
+        for ( int i=0; i<AsParent->GetChildCount(); i++ )
+        {
+            if ( AnySelectedReq(AsParent->GetChild(i)) )
+            {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+void wxsItemResData::StoreTreeExpandState()
+{
+    StoreTreeExpandStateReq(m_RootItem);
+}
+
+void wxsItemResData::StoreTreeExpandStateReq(wxsItem* Item)
+{
+    // TODO: This may be unsafe because m_LastTreeId could be changed already
+    Item->SetIsExpanded(
+        wxsResourceTree::Get()->IsExpanded(
+            Item->GetLastTreeItemId()));
+
+    wxsParent* AsParent = Item->ConvertToParent();
+    if ( AsParent )
+    {
+        for ( int i=0; i<AsParent->GetChildCount(); i++ )
+        {
+            StoreTreeExpandStateReq(AsParent->GetChild(i));
+        }
+    }
+}
+
+bool wxsItemResData::SelectItem(wxsItem* Item,bool UnselectOther)
+{
+    if ( UnselectOther )
+    {
+        m_RootItem->ClearSelection();
+    }
+
+    if ( !Item )
+    {
+        Item = m_RootItem;
+    }
+
+    Item->SetIsSelected(true);
+    m_RootSelection = Item;
+
+    // TODO: Check if we require some selection-changed notification
+    return true;
+}
+
+void wxsItemResData::NotifyChange(wxsItem* Changed)
+{
+    // Updating editor's content
+    m_Editor->UpdateSelection();
+    m_Editor->RebuildPreview();
+
+    // Rebuilding files
+    switch ( m_PropertiesFilter )
+    {
+        case wxsItem::flSource:
+            RebuildSourceCode();
+            break;
+
+        case wxsItem::flMixed:
+            RebuildSourceCode();
+            RebuildXrcFile();
+            break;
+    }
+}
+
+wxString wxsItemResData::GetXmlData()
+{
+    wxsItemResDataObject Object;
+    Object.AddItem(m_RootItem);
+    return Object.GetXmlData();
+}
+
+bool wxsItemResData::SetXmlData(const wxString& XmlData)
+{
+    if ( m_LockCount ) return false;
+
+    wxsItemResDataObject Object;
+    Object.SetXmlData(XmlData);
+
+    wxsItem* NewRoot = Object.BuildItem(this,0);
+    if ( NewRoot->GetClassName() != m_ClassType )
+    {
+        delete NewRoot;
+        return false;
+    }
+
+    delete m_RootItem;
+    m_RootItem = NewRoot;
+
+    return true;
+}
+
+bool wxsItemResData::InsertNew(wxsItem* New,wxsParent* Parent,int Position)
+{
+    m_Corrector.BeforePaste(New);
+    if ( !Parent->AddChild(New,Position) )
+    {
+        delete New;
+        return false;
+    }
+    return true;
+}
+
+void wxsItemResData::DeleteSelected()
+{
+    DeleteSelectedReq(m_RootItem);
+    m_RootSelection = m_RootItem;
+}
+
+void wxsItemResData::DeleteSelectedReq(wxsItem* Item)
+{
+    wxsParent* AsParent = Item->ConvertToParent();
+    if ( AsParent )
+    {
+        for ( int i=0; i<AsParent->GetChildCount(); i++ )
+        {
+            wxsItem* Child = AsParent->GetChild(i);
+            if ( Child->GetIsSelected() )
+            {
+                AsParent->UnbindChild(i);
+                delete Child;
+                i--;    // Update index due to shifted child list
+            }
+            else
+            {
+                DeleteSelectedReq(Child);
+            }
+        }
+    }
+}
+
+void wxsItemResData::RebuildTree()
+{
+    wxsResourceTree::Get()->DeleteChildren(m_TreeId);
+    m_RootItem->BuildItemTree(wxsResourceTree::Get(),m_TreeId,-1);
 }
