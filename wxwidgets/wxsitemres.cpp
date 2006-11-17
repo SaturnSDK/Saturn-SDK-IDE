@@ -43,8 +43,8 @@ namespace
         _T("    #pragma hdrstop\n")
         _T("#endif\n")
         _T("\n")
-        + wxsCodeMarks::Beg(wxsCPP,_T("Headers"),_T("$(ClassName)")) + _T("\n")
-        + wxsCodeMarks::End(wxsCPP) + _T("\n")
+        + wxsCodeMarks::Beg(wxsCPP,_T("Headers"),_T("$(ClassName)")) +
+        + wxsCodeMarks::End(wxsCPP) +
         _T("\n")
         _T("class $(ClassName): public $(BaseClassName)\n")
         _T("{\n")
@@ -53,16 +53,16 @@ namespace
         _T("\t\t$(ClassName)(wxWindow* parent,wxWindowID id = -1);\n")
         _T("\t\tvirtual ~$(ClassName)();\n")
         _T("\n")
-        _T("\t\t") + wxsCodeMarks::Beg(wxsCPP,_T("Identifiers"),_T("$(ClassName)")) + _T("\n")
-        _T("\t\t") + wxsCodeMarks::End(wxsCPP) + _T("\n")
+        _T("\t\t") + wxsCodeMarks::Beg(wxsCPP,_T("Identifiers"),_T("$(ClassName)")) +
+        _T("\t\t") + wxsCodeMarks::End(wxsCPP) +
         _T("\n")
         _T("\tprotected:\n")
         _T("\n")
-        _T("\t\t") + wxsCodeMarks::Beg(wxsCPP,_T("Handlers"),_T("$(ClassName)")) + _T("\n")
-        _T("\t\t") + wxsCodeMarks::End(wxsCPP) + _T("\n")
+        _T("\t\t") + wxsCodeMarks::Beg(wxsCPP,_T("Handlers"),_T("$(ClassName)")) +
+        _T("\t\t") + wxsCodeMarks::End(wxsCPP) +
         _T("\n")
-        _T("\t\t") + wxsCodeMarks::Beg(wxsCPP,_T("Declarations"),_T("$(ClassName)")) + _T("\n")
-        _T("\t\t") + wxsCodeMarks::End(wxsCPP) + _T("\n")
+        _T("\t\t") + wxsCodeMarks::Beg(wxsCPP,_T("Declarations"),_T("$(ClassName)")) +
+        _T("\t\t") + wxsCodeMarks::End(wxsCPP) +
         _T("\n")
         _T("\tprivate:\n")
         _T("\n")

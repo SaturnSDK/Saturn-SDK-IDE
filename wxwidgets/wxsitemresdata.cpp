@@ -25,6 +25,8 @@ wxsItemResData::wxsItemResData(
         m_Language(Language),
         m_TreeId(TreeId),
         m_Editor(Editor),
+        m_RootItem(NULL),
+        m_RootSelection(NULL),
         m_Corrector(this),
         m_LockCount(0)
 {

@@ -23,7 +23,7 @@ void wxsResource::EditOpen()
     }
     else
     {
-        m_Editor = OnCreateEditor(EditorManager::Get()->GetNotebook());
+        m_Editor = OnCreateEditor(Manager::Get()->GetEditorManager()->GetNotebook());
     }
 }
 

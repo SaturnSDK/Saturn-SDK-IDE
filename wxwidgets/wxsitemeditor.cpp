@@ -47,7 +47,7 @@ void wxsItemEditor::InitializeResourceData()
         ProjectPath + GetWxsFileName(),
         ProjectPath + GetSrcFileName(),
         ProjectPath + GetHdrFileName(),
-        ProjectPath + GetXrcFileName(),
+        GetXrcFileName().empty() ? _T("") : ProjectPath + GetXrcFileName(),
         GetResource()->GetResourceName(),
         GetResource()->GetResourceType(),
         GetResource()->GetLanguage(),

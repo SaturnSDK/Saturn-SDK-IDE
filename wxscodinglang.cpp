@@ -51,7 +51,7 @@ namespace wxsCodeMarks
     {
         switch ( Lang )
         {
-            case wxsCPP: return _T("//*)'n");
+            case wxsCPP: return _T("//*)\n");
             default:     return wxEmptyString;
         }
     }
