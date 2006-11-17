@@ -1,6 +1,9 @@
 #include "wxsdialog.h"
-#include <messagemanager.h>
-#include <wx/app.h>
+
+namespace
+{
+    wxsRegisterItem<wxsDialog> Reg( _T("Dialog"), wxsTContainer, _T(""), 0 );
+}
 
 WXS_ST_BEGIN(wxsDialogStyles)
     WXS_ST_CATEGORY("wxDialog")
@@ -34,28 +37,11 @@ WXS_EV_BEGIN(wxsDialogEvents)
     WXS_EV_DEFAULTS()
 WXS_EV_END()
 
-
-wxsItemInfo wxsDialog::Info =
-{
-    _T("wxDialog"),
-    wxsTContainer,
-    _("wxWidgets license"),
-    _("wxWidgets team"),
-    _T(""),
-    _T("www.wxwidgets.org"),
-    _T(""),
-    0,
-    _T("Dialog"),
-    2, 6,
-    NULL,
-    NULL,
-    0
-};
-
-wxsDialog::wxsDialog(wxsWindowRes* Resource):
-    wxsContainer(Resource,
+wxsDialog::wxsDialog(wxsItemResData* Data):
+    wxsContainer(
+        Data,
+        &Reg.Info,
         wxsBaseProperties::flContainer,
-        &Info,
         wxsDialogEvents,
         wxsDialogStyles,
         _T("wxDEFAULT_DIALOG_STYLE")),
@@ -63,7 +49,7 @@ wxsDialog::wxsDialog(wxsWindowRes* Resource):
     Centered(false)
 {}
 
-void wxsDialog::BuildCreatingCode(wxString& Code,const wxString& WindowParent,wxsCodingLang Language)
+void wxsDialog::OnBuildCreatingCode(wxString& Code,const wxString& WindowParent,wxsCodingLang Language)
 {
     switch ( Language )
     {
@@ -72,7 +58,7 @@ void wxsDialog::BuildCreatingCode(wxString& Code,const wxString& WindowParent,wx
             Code<< _T("Create(")
                 << WindowParent << _T(",")
                 << GetIdName() << _T(",")
-                << wxsGetWxString(Title) << _T(",")
+                << wxsCodeMarks::WxString(wxsCPP,Title) << _T(",")
                 << PosCode(WindowParent,wxsCPP) << _T(",")
                 << SizeCode(WindowParent,wxsCPP) << _T(",")
                 << StyleCode(wxsCPP) << _T(");\n");
@@ -86,12 +72,15 @@ void wxsDialog::BuildCreatingCode(wxString& Code,const wxString& WindowParent,wx
 
             return;
         }
-    }
 
-    wxsLANGMSG(wxsDialog::BuildCreatingCode,Language);
+        default:
+        {
+            wxsCodeMarks::Unknown(_T("wxsDialog::OnBuildCreatingCode"),Language);
+        }
+    }
 }
 
-wxObject* wxsDialog::DoBuildPreview(wxWindow* Parent,bool Exact)
+wxObject* wxsDialog::OnBuildPreview(wxWindow* Parent,bool Exact,bool Store)
 {
     wxWindow* NewItem = NULL;
     wxDialog* Dlg = NULL;
@@ -110,11 +99,11 @@ wxObject* wxsDialog::DoBuildPreview(wxWindow* Parent,bool Exact)
     else
     {
         // In preview we simulate dialog using panel
-        NewItem = new wxPanel(Parent,GetId(),wxDefaultPosition,wxDefaultSize,wxRAISED_BORDER);
+        NewItem = new wxPanel(Parent,GetId(),wxDefaultPosition,wxDefaultSize,0/*wxRAISED_BORDER)*/);
     }
 
     SetupWindow(NewItem,Exact);
-    AddChildrenPreview(NewItem,Exact);
+    AddChildrenPreview(NewItem,Exact,Store);
 
     if ( Dlg && Centered )
     {
@@ -124,14 +113,17 @@ wxObject* wxsDialog::DoBuildPreview(wxWindow* Parent,bool Exact)
     return NewItem;
 }
 
-void wxsDialog::EnumContainerProperties(long Flags)
+void wxsDialog::OnEnumContainerProperties(long Flags)
 {
     WXS_STRING(wxsDialog,Title,0,_("Title"),_T("title"),_T(""),false,false)
     WXS_BOOL  (wxsDialog,Centered,0,_("Centered"),_T("centered"),false);
 }
 
-long wxsDialog::GetPropertiesFlags()
+void wxsDialog::OnEnumDeclFiles(wxArrayString& Decl,wxArrayString& Def,wxsCodingLang Language)
 {
-    // No identifier nor variable for root items
-    return wxsItem::GetPropertiesFlags() & ~(wxsFLVariable|wxsFLId);
+    switch ( Language )
+    {
+        case wxsCPP: Decl.Add(_T("<wx/dialog.h>")); return;
+        default: wxsCodeMarks::Unknown(_T("wxsDialog::OnEnumDeclFiles"),Language);
+    }
 }

@@ -105,6 +105,9 @@ class wxsItemResData
          */
         inline wxsItem* GetRootItem() { return m_RootItem; }
 
+        /** \brief Getting main item of selection */
+        inline wxsItem* GetRootSelection() { return m_RootSelection; }
+
         /** \brief Getting properties filter based on current edit  mode */
         inline int GetPropertiesFilter() { return m_PropertiesFilter; }
 
@@ -214,6 +217,9 @@ class wxsItemResData
         /** \brief Restoring resource data from string with xml data */
         bool SetXmlData(const wxString& XmlData);
 
+        /** \brief Rebuilding all files kept up-to-date after change in resource */
+        void RebuildFiles();
+
         /** \brief Rebuilding sources for this resource */
         void RebuildSourceCode();
 
@@ -221,6 +227,7 @@ class wxsItemResData
         bool RebuildXrcFile();
 
         // Various loading functinos
+        bool SilentLoad();
         bool LoadInFileMode();
         bool LoadInMixedMode();
         bool LoadInSourceMode();
@@ -235,7 +242,7 @@ class wxsItemResData
 
         // Some misc functions
         inline void StoreUndo() { m_Undo.StoreChange(GetXmlData()); }
-        void ValidateRootSelection();
+        bool ValidateRootSelection();
         bool ValidateRootSelectionReq(wxsItem* Item,wxsItem*& NewSelection);
         void CopyReq(wxsItem* Item,wxsItemResDataObject* Data);
         bool AnySelectedReq(wxsItem* Item);

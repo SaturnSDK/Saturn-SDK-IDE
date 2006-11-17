@@ -28,26 +28,13 @@ wxsItemEditor::wxsItemEditor(wxWindow* parent,wxsItemRes* Resource):
     m_QuickPropsOpen(false),
     m_DontStoreUndo(false)
 {
-    InitializeResourceData();
     InitializeVisualStuff();
+    InitializeResourceData();
     m_AllEditors.insert(this);
 }
 
 wxsItemEditor::~wxsItemEditor()
 {
-    // Destroying also Quick Props panel which usually triggers it's
-    // Save() method when being destroyed
-    m_QPArea->SetSizer(NULL);
-    m_QPArea->DestroyChildren();
-
-    // First we need to discard all changes,
-    // this operation will recreate unmodified code
-    // in source files
-    if ( m_Data->GetModified() )
-    {
-        m_Data->Load();
-    }
-
     delete m_Data;
 	m_AllEditors.erase(this);
 }
@@ -83,24 +70,6 @@ void wxsItemEditor::InitializeResourceData()
         SetTitle(m_Shortname);
     }
 
-    /*
-    bool DataWasCorrected = m_Corrector->GlobalCheck();
-    */
-
-    /*
-    if ( DataWasCorrected )
-    {
-        // TODO: Show some nice notification
-        m_UndoBuff->StoreChange();
-    }
-    */
-
-    // Source code is being rebuilt here. If something changed in
-    // source code generation, new code will probably be better than old
-    // one. If nothing changed, wxsCoder class will detect that changes do
-    // not affect files and won't change them.
-
-    // GetWinRes()->RebuildCode();
 }
 
 void wxsItemEditor::InitializeVisualStuff()
@@ -146,7 +115,6 @@ void wxsItemEditor::InitializeVisualStuff()
 
     SetInsertionTypeMask(0);
     ToggleQuickPropsPanel(false);       // TODO: Shouldn't store initial state of panel somewhere?
-    RebuildPreview();
 }
 
 void wxsItemEditor::ReloadImages()
@@ -174,17 +142,20 @@ void wxsItemEditor::RebuildPreview()
     }
 
     // Generating preview
-    wxObject* TopPreviewObject = m_Data->GetRootItem()->BuildPreview(m_Content,false,true);
+    wxPanel* Background = new wxPanel(m_Content,-1,wxDefaultPosition,wxDefaultSize,wxRAISED_BORDER);
+    wxObject* TopPreviewObject = m_Data->GetRootItem()->BuildPreview(Background,false,true);
     m_TopPreview = wxDynamicCast(TopPreviewObject,wxWindow);
     if ( !m_TopPreview )
     {
         DBGLOG(_T("One of root items returned class not derived from wxWindow"));
         delete TopPreviewObject;
+        delete Background;
     }
     else
     {
+        Background->Fit();
         wxSizer* NewSizer = new wxGridSizer(1);
-        NewSizer->Add(m_TopPreview,0,wxALL,10);
+        NewSizer->Add(Background,0,wxALL,10);
         m_Content->SetVirtualSizeHints(1,1);
         m_Content->SetSizer(NewSizer);
         NewSizer->SetVirtualSizeHints(m_Content);
@@ -202,8 +173,35 @@ void wxsItemEditor::RebuildPreview()
 
 void wxsItemEditor::UpdateSelection()
 {
+    // Updating drag point data
     m_Content->RefreshSelection();
-    RebuildQuickProps(m_Data->GetRootItem());
+
+    // Updating insertion type mask
+    wxsItem* Item = m_Data->GetRootSelection();
+    int itMask = 0;
+    if ( Item )
+    {
+        if ( Item->GetParent() )
+        {
+            // When sizer is added into non-sizer parent, no other items can be added to
+            // this parent
+            if ( Item->GetType() != wxsTSizer ||
+                 Item->GetParent()->GetType() == wxsTSizer )
+            {
+                itMask |= itBefore | itAfter;
+            }
+        }
+
+        if ( Item->ConvertToParent() )
+        {
+            itMask |= itInto;
+        }
+    }
+
+    SetInsertionTypeMask(itMask);
+    RebuildQuickProps(Item);
+
+    // TODO: Refresh set of available items inside palette
 }
 
 bool wxsItemEditor::Save()
@@ -220,11 +218,9 @@ bool wxsItemEditor::GetModified()
 	return m_Data->GetModified();
 }
 
-/*
-void wxsItemEditor::SetModified(bool modified)
+void wxsItemEditor::UpdateModified()
 {
-    GetWinRes()->SetModified(modified);
-    if ( GetWinRes()->GetModified() )
+    if ( m_Data->GetModified() )
     {
         SetTitle(_T("*") + GetShortName());
     }
@@ -233,7 +229,6 @@ void wxsItemEditor::SetModified(bool modified)
         SetTitle(GetShortName());
     }
 }
-*/
 
 bool wxsItemEditor::CanUndo()
 {
@@ -248,39 +243,11 @@ bool wxsItemEditor::CanRedo()
 void wxsItemEditor::Undo()
 {
     m_Data->Undo();
-    /*
-    BeginChange();
-    m_UndoBuff->Undo();
-    m_Corrector->ClearCache();
-    // TODO: Restore selection
-	SelectOneItem(RootItem());
-	SetModified(m_UndoBuff->IsModified());
-
-    // Setting m_DontStoreUndo to false to avoid
-    // creating new undo entry from current one
-    m_DontStoreUndo = true;
-    EndChange();
-    m_DontStoreUndo = false;
-    */
 }
 
 void wxsItemEditor::Redo()
 {
     m_Data->Redo();
-    /*
-    BeginChange();
-    m_UndoBuff->Redo();
-    m_Corrector->ClearCache();
-    // TODO: Restore selection
-	SelectOneItem(RootItem());
-	SetModified(m_UndoBuff->IsModified());
-
-    // Setting m_DontStoreUndo to false to avoid
-    // creating new undo entry from current one
-    m_DontStoreUndo = true;
-    EndChange();
-    m_DontStoreUndo = false;
-    */
 }
 
 bool wxsItemEditor::HasSelection()
@@ -532,20 +499,12 @@ void wxsItemEditor::BuildPalette(wxNotebook* Palette)
         for ( size_t j=Items.Count(); j-->0; )
         {
             const wxsItemInfo* Info = Items[j];
-            wxBitmap* Icon;
-            if ( PalIconSize() == 16L )
-            {
-                Icon = Info->Icon16;
-            }
-            else
-            {
-                Icon = Info->Icon32;
-            }
+            const wxBitmap& Icon = ( PalIconSize() == 16L ) ? Info->Icon16 : Info->Icon32;
 
-            if ( Icon )
+            if ( Icon.Ok() )
             {
                 wxBitmapButton* Btn =
-                    new wxBitmapButton(CurrentPanel,-1,*Icon,
+                    new wxBitmapButton(CurrentPanel,-1,Icon,
                         wxDefaultPosition,wxDefaultSize,wxBU_AUTODRAW,
                         wxDefaultValidator, Info->ClassName);
                 RowSizer->Add(Btn,0,wxALIGN_CENTER);
@@ -638,71 +597,6 @@ void wxsItemEditor::RebuildQuickProps(wxsItem* Selection)
     m_QPArea->Scroll(QPx,QPy);
     Thaw();
 }
-
-/*
-void wxsItemEditor::OnChangeInit()
-{
-    StoreTreeState();
-}
-
-void wxsItemEditor::OnChangeFinish()
-{
-    if ( !m_DontStoreUndo )
-    {
-        m_UndoBuff->StoreChange();
-    }
-    RebuildPreview();
-    RebuildTree();
-    UpdateSelection();
-    SetModified(true);
-}
-*/
-
-/*
-void wxsItemEditor::SelectionChanged()
-{
-    wxsItem* Item = GetCurrentSelection();
-    // Updating insertion type mask
-
-    int itMask = 0;
-    if ( Item )
-    {
-        if ( Item->GetParent() )
-        {
-            // When sizer is added into non-sizer parent, no other items can be added to
-            // this parent
-            if ( Item->GetType() != wxsTSizer ||
-                 Item->GetParent()->GetType() == wxsTSizer )
-            {
-                itMask |= itBefore | itAfter;
-            }
-        }
-
-        if ( Item->ToParent() )
-        {
-            itMask |= itInto;
-        }
-    }
-
-    SetInsertionTypeMask(itMask);
-    RebuildQuickProps(Item);
-
-    // Refreshing selection items inside content window
-    m_Content->RefreshSelection();
-
-    // TODO: Refresh set of available items inside palette
-}
-*/
-
-/*
-void wxsItemEditor::NotifyChange(wxsItem* Changed)
-{
-    BeginChange();
-    m_Corrector->AfterChange(Changed);
-    EndChange();
-}
-*/
-
 
 wxsItem* wxsItemEditor::GetReferenceItem(int& InsertionType)
 {

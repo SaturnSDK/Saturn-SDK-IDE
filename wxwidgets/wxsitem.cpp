@@ -66,6 +66,12 @@ wxsQuickPropsPanel* wxsItem::OnCreateQuickProperties(wxWindow* ParentWnd)
 
 long wxsItem::OnGetPropertiesFlags()
 {
+    if ( !GetParent() )
+    {
+        // Small hack - if there's no parent, this is root item
+        // of resource and thus can not have id nor variable
+        return m_ResourceData->GetPropertiesFilter() | m_PropertiesFlags & ~flVariable & ~flId;
+    }
     return m_ResourceData->GetPropertiesFilter() | m_PropertiesFlags;
 }
 
@@ -81,7 +87,7 @@ void wxsItem::EnumItemProperties(long Flags)
         WXS_STRING(wxsItem,m_IdName,flId,_("Identifier"),_T("identifier"),wxEmptyString,false,false);
     }
 
-    OnEnumItemProperties();
+    OnEnumItemProperties(Flags);
 
     // Now enumerating all properties from wxsBaseProperties if any
     if ( m_BaseProperties )
@@ -176,7 +182,7 @@ void wxsItem::BuildItemTree(wxsResourceTree* Tree,wxsResourceItemId Parent,int P
 
 wxObject* wxsItem::BuildPreview(wxWindow* Parent,bool Exact,bool StoreInLastPreview)
 {
-    wxObject* Preview = OnBuildPreview(Parent,Exact);
+    wxObject* Preview = OnBuildPreview(Parent,Exact,StoreInLastPreview);
     if ( StoreInLastPreview )
     {
         m_LastPreview = Preview;

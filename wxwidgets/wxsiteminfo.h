@@ -27,8 +27,8 @@ struct wxsItemInfo
     long            Languages;      ///< \brief Coding languages used by this item
     unsigned short  VerHi;          ///< \brief Lower number of version
     unsigned short  VerLo;          ///< \brief Higher number of version
-    wxBitmap*       Icon32;         ///< \brief Item's icon (32x32 pixels)
-    wxBitmap*       Icon16;         ///< \brief Item's icon (16x16 pixels)
+    wxBitmap        Icon32;         ///< \brief Item's icon (32x32 pixels)
+    wxBitmap        Icon16;         ///< \brief Item's icon (16x16 pixels)
     int             TreeIconId;     ///< \brief Identifier of image inside resource tree
 };
 

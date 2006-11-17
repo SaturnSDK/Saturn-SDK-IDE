@@ -3,6 +3,7 @@
 
 #include "wxsevents.h"
 #include "wxsiteminfo.h"
+#include "wxsitemfactory.h"
 #include "wxsbaseproperties.h"
 #include "wxspredefinedids.h"
 
@@ -213,7 +214,7 @@ class wxsItem: public wxsPropertyContainer
         virtual long OnGetPropertiesFlags();
 
         /** \brief Enumerating item properties */
-        virtual void OnEnumItemProperties() = 0;
+        virtual void OnEnumItemProperties(long Flags) = 0;
 
         /** \brief Function filling up quick properties panel for current item
          *
@@ -247,7 +248,7 @@ class wxsItem: public wxsPropertyContainer
          * \return Newly created object
          * \note This function is called from BuildPreview() function
          */
-        virtual wxObject* OnBuildPreview(wxWindow* Parent,bool Exact) = 0;
+        virtual wxObject* OnBuildPreview(wxWindow* Parent,bool Exact,bool Store) = 0;
 
         /** \brief Function generating code creating item in resource
          *

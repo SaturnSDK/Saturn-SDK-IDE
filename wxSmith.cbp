@@ -384,6 +384,36 @@
 			<Option link="0" />
 			<Option target="wxSmith" />
 		</Unit>
+		<Unit filename="wxwidgets\defwidgets\wxsdialog.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\defwidgets\wxsdialog.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\defwidgets\wxsframe.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\defwidgets\wxsframe.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\defwidgets\wxspanel.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\defwidgets\wxspanel.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="wxSmith" />
+		</Unit>
 		<Unit filename="wxwidgets\properties\wxsarraystringcheckeditordlg.cpp">
 			<Option compilerVar="CPP" />
 			<Option target="wxSmith" />

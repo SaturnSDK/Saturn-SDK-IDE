@@ -58,6 +58,13 @@ wxsItemResData::wxsItemResData(
 
 wxsItemResData::~wxsItemResData()
 {
+    if ( GetModified() )
+    {
+        // Restoring previous content of files
+        // kept up-to-date
+        SilentLoad();
+        RebuildFiles();
+    }
     delete m_RootItem;
     m_RootItem = NULL;
     m_RootSelection = NULL;
@@ -66,42 +73,42 @@ wxsItemResData::~wxsItemResData()
 
 bool wxsItemResData::Load()
 {
-    bool Ret = false;
-    switch ( m_PropertiesFilter )
-    {
-        case wxsItem::flFile:
-            Ret = LoadInFileMode();
-            break;
-
-        case wxsItem::flMixed:
-            Ret = LoadInMixedMode();
-            break;
-
-        case wxsItem::flSource:
-            Ret = LoadInSourceMode();
-            break;
-    }
-
-    if ( !Ret )
+    if ( !SilentLoad() )
     {
         delete m_RootItem;
         m_RootItem = NULL;
-    }
-    else
-    {
-        RebuildTree();
-        RebuildSourceCode();
-        SelectItem(m_RootItem,true);
-        StoreUndo();
-        m_Undo.Saved();
-        if ( !m_Corrector.GlobalCheck() )
-        {
-            // TODO: Some notification here ? (May be not a good idea, maybe three-vale return should be better)
-            m_Undo.StoreChange(GetXmlData());
-        }
+        return false;
     }
 
-    return Ret;
+    if ( !m_Corrector.GlobalCheck() )
+    {
+        // TODO: Some notification here ? (May be not a good idea, maybe three-vale return should be better)
+    }
+    StoreUndo();
+    m_Undo.Saved();
+    m_Editor->UpdateModified();
+    RebuildSourceCode();        // Yop, only source recreated, xrc if used not touched
+    RebuildTree();
+    m_Editor->RebuildPreview();
+    SelectItem(m_RootItem,true);
+
+    return true;
+}
+
+bool wxsItemResData::SilentLoad()
+{
+    switch ( m_PropertiesFilter )
+    {
+        case wxsItem::flFile:
+            return LoadInFileMode();
+
+        case wxsItem::flMixed:
+            return LoadInMixedMode();
+
+        case wxsItem::flSource:
+            return LoadInSourceMode();
+    }
+    return false;
 }
 
 bool wxsItemResData::LoadInFileMode()
@@ -342,6 +349,21 @@ bool wxsItemResData::SaveInSourceMode()
     SaveExtraDataReq(m_RootItem,Extra);
 
     return Doc.SaveFile();
+}
+
+void wxsItemResData::RebuildFiles()
+{
+    switch ( m_PropertiesFilter )
+    {
+        case wxsItem::flSource:
+            RebuildFiles();
+            break;
+
+        case wxsItem::flMixed:
+            RebuildSourceCode();
+            RebuildXrcFile();
+            break;
+    }
 }
 
 void wxsItemResData::RebuildSourceCode()
@@ -782,20 +804,33 @@ void wxsItemResData::EndChange()
     if ( !IsOk() ) return;
     if ( !--m_LockCount )
     {
+        m_Corrector.GlobalCheck();
+        StoreUndo();
+        m_Editor->UpdateModified();
+        RebuildSourceCode();
+        m_Editor->RebuildPreview();
         RebuildTree();
-        ValidateRootSelection();
-        m_RootSelection->ShowInPropertyGrid();
-        m_RootSelection->NotifyPropertyChange(true);
+        if ( ValidateRootSelection() )
+        {
+            m_RootSelection->NotifyPropertyChange(false);
+        }
+        else
+        {
+            m_RootSelection->ShowInPropertyGrid();
+            m_Editor->RebuildQuickProps(m_RootSelection);
+        }
     }
 }
 
-void wxsItemResData::ValidateRootSelection()
+bool wxsItemResData::ValidateRootSelection()
 {
     wxsItem* NewSelection = NULL;
     if ( !ValidateRootSelectionReq(m_RootItem,NewSelection) )
     {
         m_RootSelection = NewSelection ? NewSelection : m_RootItem;
+        return false;
     }
+    return true;
 }
 
 bool wxsItemResData::ValidateRootSelectionReq(wxsItem* Item,wxsItem*& NewSelection)
@@ -981,28 +1016,21 @@ bool wxsItemResData::SelectItem(wxsItem* Item,bool UnselectOther)
     Item->SetIsSelected(true);
     m_RootSelection = Item;
 
-    // TODO: Check if we require some selection-changed notification
+    Item->ShowInPropertyGrid();
+    m_Editor->RebuildQuickProps(Item);
+    m_Editor->UpdateSelection();
     return true;
 }
 
 void wxsItemResData::NotifyChange(wxsItem* Changed)
 {
-    // Updating editor's content
-    m_Editor->UpdateSelection();
+    m_Corrector.AfterChange(Changed);
+    Changed->NotifyPropertyChange(false);
+    StoreUndo();
+    RebuildSourceCode();
+    m_Editor->UpdateModified();
     m_Editor->RebuildPreview();
-
-    // Rebuilding files
-    switch ( m_PropertiesFilter )
-    {
-        case wxsItem::flSource:
-            RebuildSourceCode();
-            break;
-
-        case wxsItem::flMixed:
-            RebuildSourceCode();
-            RebuildXrcFile();
-            break;
-    }
+    m_Editor->UpdateSelection();
 }
 
 wxString wxsItemResData::GetXmlData()
@@ -1028,6 +1056,13 @@ bool wxsItemResData::SetXmlData(const wxString& XmlData)
 
     delete m_RootItem;
     m_RootItem = NewRoot;
+
+    RebuildFiles();
+    RebuildTree();
+    m_Editor->RebuildPreview();
+    // TODO: Fetch selection from xml data
+    SelectItem(m_RootItem,true);
+    m_Editor->UpdateModified();
 
     return true;
 }

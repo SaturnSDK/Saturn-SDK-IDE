@@ -53,55 +53,14 @@ class wxsItemEditor : public wxsEditor
 		/** \brief Pasting */
 		virtual void Paste();
 
-//		/** \brief Getting content of this resource as xml string */
-//		wxString GetXmlData();
-//
-//		/** \brief Updating editor's content with given xml data
-//		 * \param XmlData string with xml data representing new resource
-//		 * \param AddUndoEntry if true, this operation will create new
-//		 *        entry inside undo buffer, if false, undo buffer won't
-//		 *        be touched
-//		 * \return true on success, false when there's no valid xml data
-//		 *         in XmlData or when this data doesn't represent
-//		 *         current resource
-//		 */
-//		bool SetXmlData(const wxString& XmlData,bool AddUndoEntry);
-//
-//        /** \brief Function notifying that selection has changed
-//         *
-//         * This function is called from wxsItemRes class after each
-//         * selection change.
-//         */
-//        void SelectionChanged();
-//
-//        /** \brief Function notifying that properties of given item has changed
-//         *  \note You should call wxsItem::NotifyPropertyChange rather than this
-//         *        function.
-//         */
-//        void NotifyChange(wxsItem* Changed);
-//
-
 		/** \brief Reloading images in all editors */
 		static void ReloadImages();
 
     protected:
 
-//        /** \brief Getting wxsItemRes pointer to currently edited resource */
-//        inline wxsItemRes* GetItemRes() { return (wxsItemRes*)GetResource(); }
-//
-//        /** \brief Getting project class of current resource file */
-//        inline wxsProject* GetProject() { return GetResource()->GetProject(); }
-//
-//        /** \brief Getting current selection (main selected item) */
-//        inline wxsItem* GetCurrentSelection() { return GetWinRes()->GetRootSelection(); }
-//
-//        /** \brief Helper function for fetching root item */
-//        inline wxsItem* RootItem() { return GetWinRes()->GetRootItem(); }
-//
 	private:
 
         WX_DECLARE_HASH_SET(wxsItemEditor*,wxPointerHash,wxPointerEqual,WindowSet);
-//        WX_DEFINE_ARRAY(wxsItem*,ItemArray);
 
 		/* Event handlers */
         void OnMouseClick(wxMouseEvent& event);
@@ -127,17 +86,6 @@ class wxsItemEditor : public wxsEditor
         inline const wxString& GetSrcFileName() { return GetItemRes()->GetSrcFileName(); }
         inline const wxString& GetHdrFileName() { return GetItemRes()->GetHdrFileName(); }
         inline const wxString& GetXrcFileName() { return GetItemRes()->GetXrcFileName(); }
-
-//        wxsWinUndoBuffer* m_UndoBuff;       ///< \brief Undo buffer
-//        wxsCorrector* m_Corrector;          ///< \brief Data corrector
-
-//        /** \brief Selecting one item and unselecting all others
-//         *
-//         * This function does not update screen nor resource tree but
-//         * states inside wxsItem classes only.
-//         */
-//        void SelectOneItem(wxsItem* ItemToSelect);
-//
 
         /** \brief Function inserting new item */
         void InsertRequest(const wxString& Name);
@@ -169,8 +117,11 @@ class wxsItemEditor : public wxsEditor
         /** \brief Rebuilding preview (and updating selection inside preview) */
         void RebuildPreview();
 
-        /** \brief Updating things related to selected item */
+        /** \brief Updating things related to current selection */
         void UpdateSelection();
+
+        /** \brief Updating editor's title applying asterix before name of file when modified */
+        void UpdateModified();
 
         /** \brief Getting item which will be used as reference item when adding new
          *         items
