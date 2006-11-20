@@ -1,7 +1,32 @@
 #include "wxsresource.h"
 #include "wxsextresmanager.h"
+#include "wxsresourcetreeitemdata.h"
 
 #include <wx/wxFlatNotebook/wxFlatNotebook.h>
+
+namespace
+{
+    // This object will cause resource to open itself
+    // when it's clicked in resource tree
+    class wxsResourceOpening: public wxsResourceTreeItemData
+    {
+        public:
+            wxsResourceOpening(wxsResource* Resource):
+                wxsResourceTreeItemData(),
+                m_Resource(Resource)
+            {
+            }
+
+        private:
+
+            virtual void OnSelect()
+            {
+                m_Resource->EditOpen();
+            }
+
+            wxsResource* m_Resource;
+    };
+}
 
 wxsResource::wxsResource(wxsProject* Owner,const wxString& ResourceType,const wxString& GUI):
     m_ResourceType(ResourceType),
@@ -54,7 +79,11 @@ void wxsResource::EditorClosed()
 
 void wxsResource::BuildTreeEntry(const wxsResourceItemId& Parent)
 {
-    m_TreeItemId = wxsTree()->AppendItem(Parent,GetResourceName());
+    m_TreeItemId = wxsTree()->AppendItem(
+        Parent,
+        GetResourceName(),
+        -1, -1,
+        new wxsResourceOpening(this));
 }
 
 bool wxsResource::ReadConfig(const TiXmlElement* Node)

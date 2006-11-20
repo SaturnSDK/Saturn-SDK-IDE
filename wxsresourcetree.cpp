@@ -8,7 +8,7 @@ namespace
         public:
             wxsResourceTreeProjectData(wxsProject* Project): m_Project(Project) {}
             wxsProject* m_Project;
-            void OnRightClick()
+            virtual void OnRightClick()
             {
 
             }

@@ -350,7 +350,7 @@ void wxsItemResData::RebuildFiles()
     switch ( m_PropertiesFilter )
     {
         case wxsItem::flSource:
-            RebuildFiles();
+            RebuildSourceCode();
             break;
 
         case wxsItem::flMixed:

@@ -15,10 +15,10 @@ class wxsResourceTreeItemData: public wxTreeItemData
     protected:
 
         /** \brief Called when corresponding tree item has been selected */
-        void OnSelect() {}
+        virtual void OnSelect() {}
 
         /** \brief Called when right click was made on item */
-        void OnRightClick() {}
+        virtual void OnRightClick() {}
 
     private:
 
