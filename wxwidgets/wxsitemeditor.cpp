@@ -22,14 +22,27 @@ namespace
 
 wxsItemEditor::wxsItemEditor(wxWindow* parent,wxsItemRes* Resource):
     wxsEditor(parent,wxEmptyString,Resource),
+    m_Data(NULL),
+    m_Content(NULL),
+    m_WidgetsSet(NULL),
+    m_VertSizer(NULL),
+    m_HorizSizer(NULL),
+    m_QPSizer(NULL),
+    m_OpsSizer(NULL),
+    m_QPArea(NULL),
+    m_InsIntoBtn(NULL),
+    m_InsBeforeBtn(NULL),
+    m_InsAfterBtn(NULL),
+    m_DelBtn(NULL),
+    m_PreviewBtn(NULL),
+    m_QuickPanelBtn(NULL),
     m_TopPreview(NULL),
     m_InsType(itBefore),
     m_InsTypeMask(itBefore),
-    m_QuickPropsOpen(false),
-    m_DontStoreUndo(false)
+    m_QuickPropsOpen(false)
 {
-    InitializeVisualStuff();
     InitializeResourceData();
+    InitializeVisualStuff();
     m_AllEditors.insert(this);
 }
 
@@ -115,6 +128,9 @@ void wxsItemEditor::InitializeVisualStuff()
 
     SetInsertionTypeMask(0);
     ToggleQuickPropsPanel(false);       // TODO: Shouldn't store initial state of panel somewhere?
+
+    RebuildPreview();
+    UpdateSelection();
 }
 
 void wxsItemEditor::ReloadImages()
@@ -129,7 +145,8 @@ void wxsItemEditor::ReloadImages()
 
 void wxsItemEditor::RebuildPreview()
 {
-    wxASSERT_MSG(RootItem()!=NULL,_T("wxsItemEditor::RebuildPreview() called without valid item"));
+    // Checking if we've already initialized visual stuff
+    if ( !m_Content ) return;
 
     Freeze();
 
@@ -173,6 +190,9 @@ void wxsItemEditor::RebuildPreview()
 
 void wxsItemEditor::UpdateSelection()
 {
+    // Checking if we've already initialized visual stuff
+    if ( !m_Content ) return;
+
     // Updating drag point data
     m_Content->RefreshSelection();
 

@@ -72,7 +72,7 @@ class wxsItemResData
          * loaded. It may be especially usual after checking if
          * constructor has loaded all data properly.
          */
-        inline bool IsOk() { return m_RootItem!=NULL; }
+        inline bool IsOk() { return m_IsOK; }
 
         /** \brief Function starting change of resource data
          *
@@ -283,6 +283,7 @@ class wxsItemResData
         wxsItemUndoBuffer m_Undo;
         wxsCorrector m_Corrector;
 
+        bool m_IsOK;
         int m_LockCount;
 };
 

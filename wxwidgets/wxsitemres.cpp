@@ -75,6 +75,13 @@ namespace
         _T("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n")
         _T("<resource xmlns=\"http://www.wxwidgets.org/wxxrc\">\n")
         _T("</resource>\n");
+
+    const wxString EmptyWxs =
+        _T("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n")
+        _T("<wxsmith>\n")
+        _T("\t<object class=\"$(BaseClassName)\" name=\"$(ClassName)\"/>\n")
+        _T("\t<resource_extra/>\n")
+        _T("</wxsmith>\n");
 }
 
 wxsItemRes::wxsItemRes(wxsProject* Owner,const wxString& Type,bool CanBeMain):
@@ -241,6 +248,17 @@ bool wxsItemRes::CreateNewResource(const wxString& Class,const wxString& Src, bo
             }
 
             m_WxsFileName = WxsName;
+            {
+                wxString Name = GetProjectPath()+m_WxsFileName;
+                wxFile File(Name,wxFile::write);
+                wxString Content = EmptyWxs;
+                Content.Replace(_T("$(ClassName)"),Class);
+                Content.Replace(_T("$(BaseClassName)"),GetResourceType());
+                if ( !File.Write(EmptyXrc) )
+                {
+                    return false;
+                }
+            }
             return true;
         }
 

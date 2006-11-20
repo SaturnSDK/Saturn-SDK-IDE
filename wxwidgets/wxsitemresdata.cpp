@@ -28,6 +28,7 @@ wxsItemResData::wxsItemResData(
         m_RootItem(NULL),
         m_RootSelection(NULL),
         m_Corrector(this),
+        m_IsOK(false),
         m_LockCount(0)
 {
     if (  WxsFileName.empty() &&
@@ -56,6 +57,11 @@ wxsItemResData::wxsItemResData(
     }
 
     Load();
+    if ( !m_RootItem )
+    {
+        RecreateRootItem();
+        m_IsOK = false;
+    }
 }
 
 wxsItemResData::~wxsItemResData()
@@ -77,8 +83,6 @@ bool wxsItemResData::Load()
 {
     if ( !SilentLoad() )
     {
-        delete m_RootItem;
-        m_RootItem = NULL;
         return false;
     }
 
@@ -102,15 +106,21 @@ bool wxsItemResData::SilentLoad()
     switch ( m_PropertiesFilter )
     {
         case wxsItem::flFile:
-            return LoadInFileMode();
+            m_IsOK = LoadInFileMode();
+            break;
 
         case wxsItem::flMixed:
-            return LoadInMixedMode();
+            m_IsOK = LoadInMixedMode();
+            break;
 
         case wxsItem::flSource:
-            return LoadInSourceMode();
+            m_IsOK = LoadInSourceMode();
+            break;
+
+        default:
+            m_IsOK = false;
     }
-    return false;
+    return m_IsOK;
 }
 
 bool wxsItemResData::LoadInFileMode()
@@ -236,23 +246,9 @@ bool wxsItemResData::LoadInSourceMode()
     if ( cbC2U(Object->Attribute("class")) != m_ClassType ) return false;
     */
 
-    TiXmlElement* Extra = wxSmithNode->FirstChildElement("resource_extra");
-    if ( !Extra ) return false;
-
     RecreateRootItem();
     if ( !m_RootItem ) return false;
-    m_RootItem->XmlRead(Object,true,false);
-
-    IdToXmlMapT IdToXmlMap;
-
-    Object = Extra->FirstChildElement("object");
-    while ( Object )
-    {
-        wxString IdName = cbC2U(Object->Attribute("name"));
-        if ( !IdName.empty() ) IdToXmlMap[IdName] = Object;
-    }
-
-    UpdateExtraDataReq(m_RootItem,IdToXmlMap);
+    m_RootItem->XmlRead(Object,true,true);
 
     return true;
 }
@@ -265,7 +261,7 @@ void wxsItemResData::RecreateRootItem()
 
 bool wxsItemResData::Save()
 {
-    if ( !IsOk() ) return false;
+    m_IsOK = true;
     switch ( m_PropertiesFilter )
     {
         case wxsItem::flFile:
@@ -344,11 +340,7 @@ bool wxsItemResData::SaveInSourceMode()
 
     // Storing xml data
     TiXmlElement* Object = wxSmithNode->InsertEndChild(TiXmlElement("object"))->ToElement();
-    m_RootItem->XmlWrite(Object,true,false);
-
-    // Now storing all extra data
-    TiXmlElement* Extra = wxSmithNode->InsertEndChild(TiXmlElement("resource_extra"))->ToElement();
-    SaveExtraDataReq(m_RootItem,Extra);
+    m_RootItem->XmlWrite(Object,true,true);
 
     return Doc.SaveFile();
 }

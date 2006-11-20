@@ -147,7 +147,6 @@ class wxsItemEditor : public wxsEditor
         int m_InsType;                      ///< \brief Current insertion type
         int m_InsTypeMask;                  ///< \brief Current insertion type mask
         bool m_QuickPropsOpen;              ///< \brief Set to true if quick properties panel is opened
-        bool m_DontStoreUndo;               ///< \brief When set to true, FinishChange() won't create new undo entry, usefull in Undo/Redo operations
 
         static wxImage m_InsIntoImg;
         static wxImage m_InsBeforeImg;

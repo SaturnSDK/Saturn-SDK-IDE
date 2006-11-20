@@ -152,7 +152,7 @@ class wxsItem: public wxsPropertyContainer
          *         from xrc / wxs structure
          * \note This is wrapper to OnXmlWrite function only
         */
-        virtual bool XmlWrite(TiXmlElement* Element,bool IsXRC,bool IsExtra) { return XmlWrite(Element,IsXRC,IsExtra); }
+        inline bool XmlWrite(TiXmlElement* Element,bool IsXRC,bool IsExtra) { return OnXmlWrite(Element,IsXRC,IsExtra); }
 
         /** \brief Function building tree in resource browser for this item
          *

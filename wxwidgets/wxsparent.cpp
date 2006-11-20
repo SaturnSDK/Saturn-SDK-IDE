@@ -180,7 +180,7 @@ wxsPropertyContainer* wxsParent::GetChildExtra(int Index)
 
 bool wxsParent::OnXmlRead(TiXmlElement* Elem,bool IsXRC,bool IsExtra)
 {
-    bool Ret = wxsItem::XmlRead(Elem,IsXRC,IsExtra);
+    bool Ret = wxsItem::OnXmlRead(Elem,IsXRC,IsExtra);
     if ( IsXRC )
     {
         for ( TiXmlElement* Object = Elem->FirstChildElement(); Object; Object = Object->NextSiblingElement() )
@@ -194,7 +194,7 @@ bool wxsParent::OnXmlRead(TiXmlElement* Elem,bool IsXRC,bool IsExtra)
 
 bool wxsParent::OnXmlWrite(TiXmlElement* Elem,bool IsXRC,bool IsExtra)
 {
-    bool Ret = wxsItem::XmlWrite(Elem,IsXRC,IsExtra);
+    bool Ret = wxsItem::OnXmlWrite(Elem,IsXRC,IsExtra);
     if ( IsXRC )
     {
         for ( size_t i=0; i<Children.Count(); i++ )

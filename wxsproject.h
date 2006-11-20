@@ -107,7 +107,7 @@ class wxsProject
         /** \brief Getting tree item id in resource browser associated with given resource type */
         wxsResourceItemId GetResourceTypeTreeId(const wxString& Name);
 
-        friend class wxsWindowRes;
+        friend class wxsResource;
 };
 
 #endif

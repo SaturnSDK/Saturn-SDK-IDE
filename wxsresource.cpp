@@ -13,7 +13,14 @@ wxsResource::wxsResource(wxsProject* Owner,const wxString& ResourceType,const wx
 {}
 
 wxsResource::~wxsResource()
-{}
+{
+    if ( m_Editor )
+    {
+        wxsEditor* EditorStore = m_Editor;
+        m_Editor = NULL;
+        EditorStore->Close();
+    }
+}
 
 void wxsResource::EditOpen()
 {
