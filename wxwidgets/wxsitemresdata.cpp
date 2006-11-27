@@ -384,43 +384,43 @@ void wxsItemResData::RebuildSourceCode()
                 m_HdrFileName,
                 wxsCodeMarks::Beg(wxsCPP,_T("Declarations"),m_ClassName),
                 wxsCodeMarks::End(wxsCPP),
-                GlobalVarsCode);
+                _T("\n") + GlobalVarsCode);
 
             wxsCoder::Get()->AddCode(
                 m_HdrFileName,
                 wxsCodeMarks::Beg(wxsCPP,_T("Identifiers"),m_ClassName),
                 wxsCodeMarks::End(wxsCPP),
-                IdentifiersCode);
+                _T("\n") + IdentifiersCode);
 
             wxsCoder::Get()->AddCode(
                 m_HdrFileName,
                 wxsCodeMarks::Beg(wxsCPP,_T("Headers"),m_ClassName),
                 wxsCodeMarks::End(wxsCPP),
-                GlobalHeaders);
+                _T("\n") + GlobalHeaders);
 
             wxsCoder::Get()->AddCode(
                 m_SrcFileName,
                 wxsCodeMarks::Beg(wxsCPP,_T("Initialize"),m_ClassName),
                 wxsCodeMarks::End(wxsCPP),
-                InitializingCode);
+                _T("\n") + InitializingCode);
 
             wxsCoder::Get()->AddCode(
                 m_SrcFileName,
                 wxsCodeMarks::Beg(wxsCPP,_T("IdInit"),m_ClassName),
                 wxsCodeMarks::End(wxsCPP),
-                IdInitCode);
+                _T("\n") + IdInitCode);
 
             wxsCoder::Get()->AddCode(
                 m_SrcFileName,
                 wxsCodeMarks::Beg(wxsCPP,_T("InternalHeaders"),m_ClassName),
                 wxsCodeMarks::End(wxsCPP),
-                LocalHeaders);
+                _T("\n") + LocalHeaders);
 
             wxsCoder::Get()->AddCode(
                 m_SrcFileName,
                 wxsCodeMarks::Beg(wxsCPP,_T("EventTable"),m_ClassName),
                 wxsCodeMarks::End(wxsCPP),
-                _T(""));    // This clears previously used event table for event binding
+                _T("\n"));    // This clears previously used event table for event binding
 
             break;
         }
@@ -786,7 +786,6 @@ bool wxsItemResData::RebuildXrcFile()
 
 void wxsItemResData::BeginChange()
 {
-    if ( !IsOk() ) return;
     if ( !m_LockCount++ )
     {
         StoreTreeExpandState();
@@ -795,7 +794,6 @@ void wxsItemResData::BeginChange()
 
 void wxsItemResData::EndChange()
 {
-    if ( !IsOk() ) return;
     if ( !--m_LockCount )
     {
         m_Corrector.GlobalCheck();
@@ -849,7 +847,6 @@ bool wxsItemResData::ValidateRootSelectionReq(wxsItem* Item,wxsItem*& NewSelecti
 
 bool wxsItemResData::CanPaste()
 {
-    if ( !IsOk() ) return false;
     if ( !m_RootItem->ConvertToParent() ) return false;
     if ( !wxTheClipboard->Open() ) return false;
     bool Res = wxTheClipboard->IsSupported(wxsDF_WIDGET);
@@ -866,7 +863,6 @@ void wxsItemResData::Cut()
 
 void wxsItemResData::Copy()
 {
-    if ( !IsOk() ) return;
     if ( !wxTheClipboard->Open() ) return;
     wxsItemResDataObject* Data = new wxsItemResDataObject;
     CopyReq(m_RootItem,Data);
@@ -897,7 +893,6 @@ void wxsItemResData::CopyReq(wxsItem* Item,wxsItemResDataObject* Data)
 
 void wxsItemResData::Paste()
 {
-    if ( !IsOk() ) return;
     if ( !m_RootItem->ConvertToParent() ) return;
     if ( !wxTheClipboard->Open() ) return;
 
@@ -951,7 +946,6 @@ void wxsItemResData::Paste()
 
 bool wxsItemResData::AnySelected()
 {
-    if ( !IsOk() ) return false;
     return AnySelectedReq(m_RootItem);
 }
 

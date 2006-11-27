@@ -74,13 +74,13 @@ class wxsItem: public wxsPropertyContainer
         /** \brief Getting variable name
          *  \return name of variable or empty string of this item doesn't have one
          */
-        inline wxString GetVarName() { return m_VarName; }
+        inline wxString GetVarName() { return (OnGetPropertiesFlags()&flVariable)?m_VarName:_T("this"); }
 
         /** \brief Setting variabne name */
         inline void SetVarName(const wxString& NewName) { m_VarName = NewName; }
 
         /** \brief Getting identifier */
-        inline wxString GetIdName() { return m_IdName; }
+        inline wxString GetIdName() { return (OnGetPropertiesFlags()&flId)?m_IdName:_T("id"); }
 
         /** \brief Setting identifier */
         inline void SetIdName(const wxString& NewIdName) { m_IdName = NewIdName; }

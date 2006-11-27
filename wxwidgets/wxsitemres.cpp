@@ -1,7 +1,5 @@
 #include "wxsitemres.h"
 #include "wxsitemeditor.h"
-//#include "wxsitem.h"
-//#include "wxsparent.h"
 #include "../wxscoder.h"
 
 IMPLEMENT_CLASS(wxsItemRes,wxWidgetsRes)
@@ -11,21 +9,21 @@ namespace
     const wxString CppEmptySource =
         _T("#include \"$(Include)\"\n")
         _T("\n")
-        + wxsCodeMarks::Beg(wxsCPP,_T("InternalHeaders"),_T("$(ClassName)"))
-        + wxsCodeMarks::End(wxsCPP) +
+        + wxsCodeMarks::Beg(wxsCPP,_T("InternalHeaders"),_T("$(ClassName)")) + _T("\n") +
+        + wxsCodeMarks::End(wxsCPP) + _T("\n")
         _T("\n")
-        + wxsCodeMarks::Beg(wxsCPP,_T("IdInit"),_T("$(ClassName)"))
-        + wxsCodeMarks::End(wxsCPP) +
+        + wxsCodeMarks::Beg(wxsCPP,_T("IdInit"),_T("$(ClassName)")) + _T("\n") +
+        + wxsCodeMarks::End(wxsCPP) + _T("\n")
         _T("\n")
         _T("BEGIN_EVENT_TABLE($(ClassName),$(BaseClassName))\n")
-        _T("\t") + wxsCodeMarks::Beg(wxsCPP,_T("EventTable"),_T("$(ClassName)")) +
-        _T("\t") + wxsCodeMarks::End(wxsCPP) +
+        _T("\t") + wxsCodeMarks::Beg(wxsCPP,_T("EventTable"),_T("$(ClassName)")) + _T("\n")
+        _T("\t") + wxsCodeMarks::End(wxsCPP) + _T("\n")
         _T("END_EVENT_TABLE()\n")
         _T("\n")
         _T("$(ClassName)::$(ClassName)(wxWindow* parent,wxWindowID id)\n")
         _T("{\n")
-        _T("\t") + wxsCodeMarks::Beg(wxsCPP,_T("Initialize"),_T("$(ClassName)")) +
-        _T("\t") + wxsCodeMarks::End(wxsCPP) +
+        _T("\t") + wxsCodeMarks::Beg(wxsCPP,_T("Initialize"),_T("$(ClassName)")) + _T("\n")
+        _T("\t") + wxsCodeMarks::End(wxsCPP) + _T("\n")
         _T("}\n")
         _T("\n")
         _T("$(ClassName)::~$(ClassName)()\n")
@@ -43,8 +41,8 @@ namespace
         _T("    #pragma hdrstop\n")
         _T("#endif\n")
         _T("\n")
-        + wxsCodeMarks::Beg(wxsCPP,_T("Headers"),_T("$(ClassName)")) +
-        + wxsCodeMarks::End(wxsCPP) +
+        + wxsCodeMarks::Beg(wxsCPP,_T("Headers"),_T("$(ClassName)")) + _T("\n")
+        + wxsCodeMarks::End(wxsCPP) + _T("\n")
         _T("\n")
         _T("class $(ClassName): public $(BaseClassName)\n")
         _T("{\n")
@@ -53,16 +51,16 @@ namespace
         _T("\t\t$(ClassName)(wxWindow* parent,wxWindowID id = -1);\n")
         _T("\t\tvirtual ~$(ClassName)();\n")
         _T("\n")
-        _T("\t\t") + wxsCodeMarks::Beg(wxsCPP,_T("Identifiers"),_T("$(ClassName)")) +
-        _T("\t\t") + wxsCodeMarks::End(wxsCPP) +
+        _T("\t\t") + wxsCodeMarks::Beg(wxsCPP,_T("Identifiers"),_T("$(ClassName)")) + _T("\n")
+        _T("\t\t") + wxsCodeMarks::End(wxsCPP) + _T("\n")
         _T("\n")
         _T("\tprotected:\n")
         _T("\n")
-        _T("\t\t") + wxsCodeMarks::Beg(wxsCPP,_T("Handlers"),_T("$(ClassName)")) +
-        _T("\t\t") + wxsCodeMarks::End(wxsCPP) +
+        _T("\t\t") + wxsCodeMarks::Beg(wxsCPP,_T("Handlers"),_T("$(ClassName)")) + _T("\n")
+        _T("\t\t") + wxsCodeMarks::End(wxsCPP) + _T("\n")
         _T("\n")
-        _T("\t\t") + wxsCodeMarks::Beg(wxsCPP,_T("Declarations"),_T("$(ClassName)")) +
-        _T("\t\t") + wxsCodeMarks::End(wxsCPP) +
+        _T("\t\t") + wxsCodeMarks::Beg(wxsCPP,_T("Declarations"),_T("$(ClassName)")) + _T("\n")
+        _T("\t\t") + wxsCodeMarks::End(wxsCPP) + _T("\n")
         _T("\n")
         _T("\tprivate:\n")
         _T("\n")
@@ -204,7 +202,7 @@ bool wxsItemRes::CreateNewResource(const wxString& Class,const wxString& Src, bo
                 wxString Name = GetProjectPath()+Src;
                 wxFileName::Mkdir(wxFileName(Name).GetPath(),0777,wxPATH_MKDIR_FULL);
                 wxFile File(Name,wxFile::write);
-                HFN.MakeRelativeTo(Name);
+                HFN.MakeRelativeTo(wxFileName(Name).GetPath());
                 wxString Include = HFN.GetFullPath(wxPATH_UNIX);
                 wxString Source = CppEmptySource;
                 Source.Replace(_T("$(Include)"),Include);
@@ -254,7 +252,7 @@ bool wxsItemRes::CreateNewResource(const wxString& Class,const wxString& Src, bo
                 wxString Content = EmptyWxs;
                 Content.Replace(_T("$(ClassName)"),Class);
                 Content.Replace(_T("$(BaseClassName)"),GetResourceType());
-                if ( !File.Write(EmptyXrc) )
+                if ( !File.Write(Content) )
                 {
                     return false;
                 }
@@ -269,41 +267,9 @@ bool wxsItemRes::CreateNewResource(const wxString& Class,const wxString& Src, bo
     return false;
 }
 
-//unsigned long wxsItemRes::GetPropertiesFilter()
-//{
-//    switch ( GetEditMode() )
-//    {
-//        case File:   return wxsItem::flFile;
-//        case Source: return wxsItem::flSource;
-//        case Mixed:  return wxsItem::flMixed;
-//    }
-//    return 0;
-//}
-//
 wxsItemRes::EditMode wxsItemRes::GetEditMode()
 {
     if ( m_WxsFileName.empty() ) return File;
     if ( m_XrcFileName.empty() ) return Source;
     return Mixed;
 }
-
-//void wxsItemRes::NotifyChange(wxsItem*)
-//{
-//    switch ( EditMode() )
-//    {
-//        case File:
-//            // If editing file (XRC not binded to application) we do nothing when resource changes
-//            break;
-//
-//        case Source:
-//            RebuildSourceCode();
-//            break;
-//
-//        case Mixed:
-//            RebuildSourceCode();
-//            RebuildXrcFile();
-//    }
-//
-//    // TODO: Store undo data (or maybe put it into editor)
-//}
-//

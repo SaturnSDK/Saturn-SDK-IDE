@@ -235,12 +235,12 @@ bool wxsItemEditor::Save()
 
 bool wxsItemEditor::GetModified()
 {
-	return m_Data->GetModified();
+	return m_Data ? m_Data->GetModified() : false;
 }
 
 void wxsItemEditor::UpdateModified()
 {
-    if ( m_Data->GetModified() )
+    if ( m_Data && m_Data->GetModified() )
     {
         SetTitle(_T("*") + GetShortName());
     }
@@ -593,6 +593,9 @@ void wxsItemEditor::ToggleQuickPropsPanel(bool Open)
 
 void wxsItemEditor::RebuildQuickProps(wxsItem* Selection)
 {
+    // Checking if we've already initialized visual stuff
+    if ( !m_Content ) return;
+
     Freeze();
 
     int QPx, QPy;

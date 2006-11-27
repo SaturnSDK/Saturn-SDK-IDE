@@ -38,13 +38,6 @@ class wxsItemRes: public wxWidgetsRes
             const wxString& Xrc,
             bool GenXrc);
 
-//        /** \brief Building properties filter for item properties based on resource config */
-//        unsigned long GetPropertiesFilter();
-//
-//        /** \brief Function for resource change notification */
-//        void NotifyChange(wxsItem* Item);
-//
-
         inline const wxString& GetWxsFileName() { return m_WxsFileName; }
         inline const wxString& GetSrcFileName() { return m_SrcFileName; }
         inline const wxString& GetHdrFileName() { return m_HdrFileName; }
@@ -55,12 +48,6 @@ class wxsItemRes: public wxWidgetsRes
 
     protected:
 
-//        /** \brief This function should load xrc resource from file
-//         *
-//         * Default implementation uses LoadObject function
-//         */
-//        virtual void OnBuildXrcLoadingCode(wxsCodingLang Language,wxString& Code);
-//
         virtual wxsEditor* OnCreateEditor(wxWindow* Parent);
         virtual bool OnReadConfig(const TiXmlElement* Node);
         virtual bool OnWriteConfig(TiXmlElement* Node);

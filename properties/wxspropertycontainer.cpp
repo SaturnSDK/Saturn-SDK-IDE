@@ -60,7 +60,6 @@ void wxsPropertyContainer::XmlRead(TiXmlElement* Element)
     IsRead = true;
     CurrentElement = Element;
     OnEnumProperties(Flags);
-    NotifyPropertyChange(true);
     Flags = 0;
 }
 
