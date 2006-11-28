@@ -533,6 +533,7 @@ void wxsItemEditorContent::OnMouseDraggingItemInit(wxMouseEvent& event)
     {
         m_MouseState = msDraggingItem;
         m_Assist->NewDragging();
+        SetCur(wxCURSOR_SIZING);
     }
 }
 

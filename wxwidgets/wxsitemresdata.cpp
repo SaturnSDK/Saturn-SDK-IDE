@@ -304,7 +304,12 @@ bool wxsItemResData::SaveInMixedMode()
     TiXmlElement* Extra = wxSmithNode->InsertEndChild(TiXmlElement("resource_extra"))->ToElement();
     SaveExtraDataReq(m_RootItem,Extra);
 
-    return Doc.SaveFile();
+    if ( Doc.SaveFile() )
+    {
+        m_Undo.Saved();
+        return true;
+    }
+    return false;
 }
 
 void wxsItemResData::SaveExtraDataReq(wxsItem* Item,TiXmlElement* Node)
@@ -342,7 +347,12 @@ bool wxsItemResData::SaveInSourceMode()
     TiXmlElement* Object = wxSmithNode->InsertEndChild(TiXmlElement("object"))->ToElement();
     m_RootItem->XmlWrite(Object,true,true);
 
-    return Doc.SaveFile();
+    if ( Doc.SaveFile() )
+    {
+        m_Undo.Saved();
+        return true;
+    }
+    return false;
 }
 
 void wxsItemResData::RebuildFiles()

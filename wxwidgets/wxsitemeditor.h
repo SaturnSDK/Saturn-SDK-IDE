@@ -23,20 +23,25 @@ class wxsItemEditor : public wxsEditor
 		/** \brief Saving resource */
 		virtual bool Save();
 
+		/** \brief Reloading images in all editors */
+		static void ReloadImages();
+
+    protected:
+
 		/** \brief Returns true if resource is modified, false otherwise */
-		virtual bool GetModified();
+		virtual bool GetModified() const;
 
 		/** \brief Checking if can Undo */
-		virtual bool CanUndo();
+		virtual bool CanUndo() const;
 
 		/** \brief Ckecing if can Redo */
-		virtual bool CanRedo();
+		virtual bool CanRedo() const;
 
 		/** \brief Checking if we can cut */
-		virtual bool HasSelection();
+		virtual bool HasSelection() const;
 
 		/** \brief Checking if we can paste */
-		virtual bool CanPaste();
+		virtual bool CanPaste() const;
 
 		/** \brief Undoing */
 		virtual void Undo();
@@ -53,12 +58,7 @@ class wxsItemEditor : public wxsEditor
 		/** \brief Pasting */
 		virtual void Paste();
 
-		/** \brief Reloading images in all editors */
-		static void ReloadImages();
-
-    protected:
-
-	private:
+    private:
 
         WX_DECLARE_HASH_SET(wxsItemEditor*,wxPointerHash,wxPointerEqual,WindowSet);
 

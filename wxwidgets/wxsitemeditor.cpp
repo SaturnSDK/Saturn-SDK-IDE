@@ -170,7 +170,10 @@ void wxsItemEditor::RebuildPreview()
     }
     else
     {
-        Background->Fit();
+        wxSizer* BackgroundSizer = new wxBoxSizer(wxHORIZONTAL);
+        BackgroundSizer->Add(m_TopPreview,0,0,0);
+        Background->SetSizer(BackgroundSizer);
+        BackgroundSizer->Fit(Background);
         wxSizer* NewSizer = new wxGridSizer(1);
         NewSizer->Add(Background,0,wxALL,10);
         m_Content->SetVirtualSizeHints(1,1);
@@ -230,10 +233,11 @@ bool wxsItemEditor::Save()
     {
         // TODO: Some message here please
     }
+    UpdateModified();
 	return true;
 }
 
-bool wxsItemEditor::GetModified()
+bool wxsItemEditor::GetModified() const
 {
 	return m_Data ? m_Data->GetModified() : false;
 }
@@ -250,12 +254,12 @@ void wxsItemEditor::UpdateModified()
     }
 }
 
-bool wxsItemEditor::CanUndo()
+bool wxsItemEditor::CanUndo() const
 {
 	return m_Data->CanUndo();
 }
 
-bool wxsItemEditor::CanRedo()
+bool wxsItemEditor::CanRedo() const
 {
 	return m_Data->CanRedo();
 }
@@ -270,12 +274,12 @@ void wxsItemEditor::Redo()
     m_Data->Redo();
 }
 
-bool wxsItemEditor::HasSelection()
+bool wxsItemEditor::HasSelection() const
 {
     return m_Data->AnySelected();
 }
 
-bool wxsItemEditor::CanPaste()
+bool wxsItemEditor::CanPaste() const
 {
     return m_Data->CanPaste();
 }
