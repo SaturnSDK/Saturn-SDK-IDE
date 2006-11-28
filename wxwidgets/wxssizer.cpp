@@ -2,9 +2,6 @@
 
 #include <wx/dcclient.h>
 #include <messagemanager.h>
-#include "properties/wxsproperties.h"
-#include "wxssizerparentqp.h"
-#include "wxsitemfactory.h"
 
 namespace
 {
@@ -32,10 +29,10 @@ namespace
     };
 }
 
-void wxsSizerExtra::EnumProperties(long Flags)
+void wxsSizerExtra::OnEnumProperties(long Flags)
 {
     WXS_SIZERFLAGS(wxsSizerExtra,Flags,0);
-    WXS_DIMENSION(wxsSizerExtra,Border,BorderInDU,0,_("Border"),_("  Dialog Units"),_T("border"),0,false);
+    WXS_DIMENSION(wxsSizerExtra,Border,0,_("Border"),_("  Dialog Units"),_T("border"),0,false);
     WXS_LONG(wxsSizerExtra,Proportion,0,_("Proportion"),_T("option"),0);
 }
 
@@ -46,20 +43,22 @@ wxString wxsSizerExtra::AllParamsCode(const wxString& WindowParent,wxsCodingLang
         case wxsCPP:
             return wxString::Format(_T("%d,"),Proportion) +
                    wxsSizerFlagsProperty::GetString(Flags) +
-                   _T(",") << wxsDimensionProperty::GetPixelsCode(Border,BorderInDU,WindowParent,wxsCPP);
-    }
+                   _T(",") << Border.GetPixelsCode(WindowParent,wxsCPP);
 
-    wxsLANGMSG(wxsSizerExtra::AllParamsCode,Language);
+        default:
+            wxsCodeMarks::Unknown(_T("wxsSizerExtra::AllParamsCode"),Language);
+    }
     return wxEmptyString;
 }
 
-wxsSizer::wxsSizer(wxsWindowRes* Resource): wxsParent(Resource)
+wxsSizer::wxsSizer(wxsItemResData* Data,const wxsItemInfo* Info):
+    wxsParent(Data,Info,flVariable,NULL)
 {
 }
 
-void wxsSizer::BuildCreatingCode(wxString& Code,const wxString& WindowParent,wxsCodingLang Language)
+void wxsSizer::OnBuildCreatingCode(wxString& Code,const wxString& WindowParent,wxsCodingLang Language)
 {
-    BuildSizerCreatingCode(Code,WindowParent,Language);
+    OnBuildSizerCreatingCode(Code,WindowParent,Language);
 
     bool UnknownLang = false;
     int Count = GetChildCount();
@@ -104,11 +103,11 @@ void wxsSizer::BuildCreatingCode(wxString& Code,const wxString& WindowParent,wxs
 
     if ( UnknownLang )
     {
-        wxsLANGMSG(wxsSizer::BuildCreatingCode,Language);
+        wxsCodeMarks::Unknown(_T("wxsSizer::BuildCreatingCode"),Language);
     }
 }
 
-wxObject* wxsSizer::DoBuildPreview(wxWindow* Parent,bool Exact)
+wxObject* wxsSizer::OnBuildPreview(wxWindow* Parent,bool Exact,bool Store)
 {
     wxWindow* NewParent = Parent;
 
@@ -117,7 +116,7 @@ wxObject* wxsSizer::DoBuildPreview(wxWindow* Parent,bool Exact)
         NewParent = new wxsSizerPreview(Parent);
     }
 
-    wxSizer* Sizer = BuildSizerPreview(Parent);
+    wxSizer* Sizer = OnBuildSizerPreview(NewParent);
     int Count = GetChildCount();
     for ( int i=0; i<Count; i++ )
     {
@@ -126,7 +125,7 @@ wxObject* wxsSizer::DoBuildPreview(wxWindow* Parent,bool Exact)
 
         // We pass either Parent passed to current BuildPreview function
         // or pointer to additional parent currently created
-        wxObject* ChildPreview = Child->BuildPreview(NewParent,Exact);
+        wxObject* ChildPreview = Child->BuildPreview(NewParent,Exact,Store);
         if ( !ChildPreview ) continue;
 
         wxSizer* ChildAsSizer = wxDynamicCast(ChildPreview,wxSizer);
@@ -136,21 +135,19 @@ wxObject* wxsSizer::DoBuildPreview(wxWindow* Parent,bool Exact)
         {
             Sizer->Add(ChildAsSizer,Extra->Proportion,
                 wxsSizerFlagsProperty::GetWxFlags(Extra->Flags),
-                wxsDimensionProperty::GetPixels(
-                    Extra->Border,Extra->BorderInDU,Parent));
+                Extra->Border.GetPixels(Parent));
         }
         else if ( ChildAsWindow )
         {
             Sizer->Add(ChildAsWindow,Extra->Proportion,
                 wxsSizerFlagsProperty::GetWxFlags(Extra->Flags),
-                wxsDimensionProperty::GetPixels(
-                    Extra->Border,Extra->BorderInDU,Parent));
+                Extra->Border.GetPixels(Parent));
         }
         else if ( ChildAsItem )
         {
             ChildAsItem->SetProportion(Extra->Proportion);
             ChildAsItem->SetFlag(wxsSizerFlagsProperty::GetWxFlags(Extra->Flags));
-            ChildAsItem->SetBorder(wxsDimensionProperty::GetPixels(Extra->Border,Extra->BorderInDU,Parent));
+            ChildAsItem->SetBorder(Extra->Border.GetPixels(Parent));
             Sizer->Add(ChildAsItem);
         }
     }
@@ -172,26 +169,29 @@ wxObject* wxsSizer::DoBuildPreview(wxWindow* Parent,bool Exact)
     return Sizer;
 }
 
-wxsPropertyContainer* wxsSizer::BuildExtra()
+wxsPropertyContainer* wxsSizer::OnBuildExtra()
 {
     return new wxsSizerExtra();
 }
 
-void wxsSizer::AddChildQPP(wxsItem* Child,wxsAdvQPP* QPP)
+void wxsSizer::OnAddChildQPP(wxsItem* Child,wxsAdvQPP* QPP)
 {
-    Child->AddItemQPP(QPP);
+    wxsParent::OnAddChildQPP(Child,QPP);
+    // TODO: Code it
+    /*
     int Index = GetChildIndex(Child);
     if ( Index >= 0 )
     {
         QPP->Register(new wxsSizerParentQP(QPP,(wxsSizerExtra*)GetChildExtra(Index)),_("Sizer"));
     }
+    */
 }
 
-bool wxsSizer::XmlReadChild(TiXmlElement* Elem,bool IsXRC,bool IsExtra)
+bool wxsSizer::OnXmlReadChild(TiXmlElement* Elem,bool IsXRC,bool IsExtra)
 {
     if ( cbC2U(Elem->Attribute("class")) == _T("spacer") )
     {
-        wxsItem* Item = wxsGEN(_T("spacer"),GetResource());
+        wxsItem* Item = wxsItemFactory::Build(_T("spacer"),GetResourceData());
         if ( !AddChild(Item) )
         {
             delete Item;
@@ -201,10 +201,10 @@ bool wxsSizer::XmlReadChild(TiXmlElement* Elem,bool IsXRC,bool IsExtra)
         return Item->XmlRead(Elem,IsXRC,IsExtra);
     }
 
-    return wxsParent::XmlReadChild(Elem,IsXRC,IsExtra);
+    return wxsParent::OnXmlReadChild(Elem,IsXRC,IsExtra);
 }
 
-bool wxsSizer::XmlWriteChild(int Index,TiXmlElement* Elem,bool IsXRC,bool IsExtra)
+bool wxsSizer::OnXmlWriteChild(int Index,TiXmlElement* Elem,bool IsXRC,bool IsExtra)
 {
     wxsItem* Child = GetChild(Index);
     if ( Child->GetType() == wxsTSpacer )
@@ -214,10 +214,22 @@ bool wxsSizer::XmlWriteChild(int Index,TiXmlElement* Elem,bool IsXRC,bool IsExtr
         return Child->XmlWrite(Elem,IsXRC,IsExtra);
     }
 
-    return wxsParent::XmlWriteChild(Index,Elem,IsXRC,IsExtra);
+    return wxsParent::OnXmlWriteChild(Index,Elem,IsXRC,IsExtra);
 }
 
-wxString wxsSizer::XmlGetExtraObjectClass()
+wxString wxsSizer::OnXmlGetExtraObjectClass()
 {
     return _T("sizeritem");
 }
+
+void wxsSizer::OnEnumItemProperties(long Flags)
+{
+    OnEnumSizerProperties(Flags);
+}
+
+void wxsSizer::OnAddItemQPP(wxsAdvQPP* QPP)
+{
+    OnAddSizerQPP(QPP);
+}
+
+
