@@ -103,7 +103,7 @@ void wxsSizer::OnBuildCreatingCode(wxString& Code,const wxString& WindowParent,w
 
     if ( UnknownLang )
     {
-        wxsCodeMarks::Unknown(_T("wxsSizer::BuildCreatingCode"),Language);
+        wxsCodeMarks::Unknown(_T("wxsSizer::OnBuildCreatingCode"),Language);
     }
 }
 

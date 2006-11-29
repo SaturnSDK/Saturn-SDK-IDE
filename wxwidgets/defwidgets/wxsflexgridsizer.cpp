@@ -1,27 +1,62 @@
 #include "wxsflexgridsizer.h"
 
-wxsItemInfo wxsFlexGridSizer::Info =
+namespace
 {
-    _T("wxFlexGridSizer"),
-    wxsTSizer,
-    _("wxWidgets license"),
-    _("wxWidgets team"),
-    _T(""),
-    _T("www.wxwidgets.org"),
-    _T("Layout"),
-    80,
-    _T("FlexGridSizer"),
-    2, 6,
-    NULL,
-    NULL,
-    0
-};
+    wxArrayInt GetArray(const wxString& String,bool* Valid = NULL)
+    {
+        wxStringTokenizer Tokens(String,_T(","));
+        wxArrayInt Array;
+        if ( Valid )
+        {
+            *Valid = true;
+        }
 
-wxSizer* wxsFlexGridSizer::BuildSizerPreview(wxWindow* Parent)
+        while ( Tokens.HasMoreTokens() )
+        {
+            long Value;
+            wxString Token = Tokens.GetNextToken();
+            Token.Trim(true);
+            Token.Trim(false);
+            if ( !Token.ToLong(&Value) && Valid )
+            {
+                *Valid = false;
+            }
+            Array.Add((int)Value);
+        }
+
+        return Array;
+    }
+
+    bool FixupList(wxString& List)
+    {
+        bool Ret;
+        wxArrayInt Array = GetArray(List,&Ret);
+        List.Clear();
+        for ( size_t i=0; i<Array.Count(); i++ )
+        {
+            List.Append(wxString::Format(_T("%d"),Array[i]));
+            if ( i < Array.Count() - 1 )
+            {
+                List.Append(_T(','));
+            }
+        }
+        return Ret;
+    }
+
+    wxsRegisterItem<wxsFlexGridSizer> Reg(_T("FlexGridSizer"),wxsTSizer,_T("Layout"),50);
+}
+
+wxsFlexGridSizer::wxsFlexGridSizer(wxsItemResData* Data):
+    wxsSizer(Data,&Reg.Info),
+    Cols(3),
+    Rows(0)
+{
+}
+
+wxSizer* wxsFlexGridSizer::OnBuildSizerPreview(wxWindow* Parent)
 {
 	wxFlexGridSizer* Sizer = new wxFlexGridSizer(Rows,Cols,
-        wxsDimensionProperty::GetPixels(VGap,VGapDU,Parent),
-        wxsDimensionProperty::GetPixels(HGap,HGapDU,Parent));
+        VGap.GetPixels(Parent),HGap.GetPixels(Parent));
 
     wxArrayInt Cols = GetArray(GrowableCols);
     for ( size_t i=0; i<Cols.Count(); i++ )
@@ -37,15 +72,16 @@ wxSizer* wxsFlexGridSizer::BuildSizerPreview(wxWindow* Parent)
     return Sizer;
 }
 
-void wxsFlexGridSizer::BuildSizerCreatingCode(wxString& Code,const wxString& WindowParent,wxsCodingLang Language)
+void wxsFlexGridSizer::OnBuildSizerCreatingCode(wxString& Code,const wxString& WindowParent,wxsCodingLang Language)
 {
     switch ( Language )
     {
         case wxsCPP:
+        {
             Code << GetVarName() << _T(" = new wxFlexGridSizer(")
                  << wxString::Format(_T("%d,%d"),Rows,Cols) << _T(",")
-                 << wxsDimensionProperty::GetPixelsCode(VGap,VGapDU,WindowParent,wxsCPP) << _T(",")
-                 << wxsDimensionProperty::GetPixelsCode(HGap,HGapDU,WindowParent,wxsCPP) << _T(");\n");
+                 << VGap.GetPixelsCode(WindowParent,wxsCPP) << _T(",")
+                 << HGap.GetPixelsCode(WindowParent,wxsCPP) << _T(");\n");
 
             wxArrayInt Cols = GetArray(GrowableCols);
             for ( size_t i=0; i<Cols.Count(); i++ )
@@ -60,69 +96,34 @@ void wxsFlexGridSizer::BuildSizerCreatingCode(wxString& Code,const wxString& Win
             }
 
             return;
-    }
+        }
 
-    wxsLANGMSG(wxsFlexGridSizer::BuildSizerCreatingCode,Language);
+        default:
+        {
+            wxsCodeMarks::Unknown(_T("wxsFlexGridSizer::OnBuildSizerCreatingCode"),Language);
+        }
+    }
 }
 
-void wxsFlexGridSizer::EnumItemProperties(long Flags)
+void wxsFlexGridSizer::OnEnumSizerProperties(long Flags)
 {
+    FixupList(GrowableCols);
+    FixupList(GrowableRows);
     WXS_LONG(wxsFlexGridSizer,Cols,0,_("Cols"),_T("cols"),0);
     WXS_LONG(wxsFlexGridSizer,Rows,0,_("Rows"),_T("rows"),0);
-    WXS_DIMENSION(wxsFlexGridSizer,VGap,VGapDU,0,_("V-Gap"),_("V-Gap in dialog units"),_T("vgap"),0,false);
-    WXS_DIMENSION(wxsFlexGridSizer,HGap,HGapDU,0,_("H-Gap"),_("H,y-Gap in dialog units"),_T("hgap"),0,false);
+    WXS_DIMENSION(wxsFlexGridSizer,VGap,0,_("V-Gap"),_("V-Gap in dialog units"),_T("vgap"),0,false);
+    WXS_DIMENSION(wxsFlexGridSizer,HGap,0,_("H-Gap"),_("H,y-Gap in dialog units"),_T("hgap"),0,false);
     WXS_STRING(wxsFlexGridSizer,GrowableCols,0,_("Growable cols"),_T("growablecols"),wxEmptyString,false,false);
     WXS_STRING(wxsFlexGridSizer,GrowableRows,0,_("Growable rows"),_T("growablerows"),wxEmptyString,false,false);
     FixupList(GrowableCols);
     FixupList(GrowableRows);
 }
 
-wxArrayInt wxsFlexGridSizer::GetArray(const wxString& String,bool* Valid)
-{
-	wxStringTokenizer Tokens(String,_T(","));
-	wxArrayInt Array;
-	if ( Valid )
-	{
-		*Valid = true;
-	}
-
-	while ( Tokens.HasMoreTokens() )
-	{
-		long Value;
-		wxString Token = Tokens.GetNextToken();
-		Token.Trim(true);
-		Token.Trim(false);
-		if ( !Token.ToLong(&Value) && Valid )
-		{
-			*Valid = false;
-		}
-		Array.Add((int)Value);
-	}
-
-	return Array;
-}
-
-bool wxsFlexGridSizer::FixupList(wxString& List)
-{
-	bool Ret;
-	wxArrayInt Array = GetArray(List,&Ret);
-	List.Clear();
-	for ( size_t i=0; i<Array.Count(); i++ )
-	{
-		List.Append(wxString::Format(_T("%d"),Array[i]));
-		if ( i < Array.Count() - 1 )
-		{
-			List.Append(_T(','));
-		}
-	}
-	return Ret;
-}
-
-void wxsFlexGridSizer::EnumDeclFiles(wxArrayString& Decl,wxArrayString& Def,wxsCodingLang Language)
+void wxsFlexGridSizer::OnEnumDeclFiles(wxArrayString& Decl,wxArrayString& Def,wxsCodingLang Language)
 {
     switch ( Language )
     {
         case wxsCPP: Decl.Add(_T("<wx/sizer.h>")); return;
+        default: wxsCodeMarks::Unknown(_T("wxsFlexGridSizer::OnEnumDeclFiles"),Language);
     }
-    wxsLANGMSG(wxsFlexGridSizer::EnumDeclFiles,Language);
 }

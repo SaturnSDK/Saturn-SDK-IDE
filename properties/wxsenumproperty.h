@@ -19,7 +19,7 @@ class wxsEnumProperty: public wxsProperty
          *  \param Offset           offset of long integer holding enumerated value (taken from wxsOFFSET macro)
          *  \param Values           array of long integer values which can be enumerated
          *  \param Names            array of names used for items in Values array, ending with NULL
-         *  \param UpdateEnteries   posting true here notifies, that arrays may change
+         *  \param UpdateEnteries   posting true here notifies, that arrays may change while property is shown in property grid
          *  \param Default          defaut value applied on read errors
          *  \param UseNamesInXml    if true, names will be stored inside xml node instead of values
          */

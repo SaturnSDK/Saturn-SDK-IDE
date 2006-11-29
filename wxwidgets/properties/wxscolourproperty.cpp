@@ -393,7 +393,7 @@ wxString wxsColourData::BuildCode(wxsCodingLang Language)
 
         default:
         {
-            wxsCodeMarks::Unknown(_T("wxsColourProperty::GetColourCode"),Language);
+            wxsCodeMarks::Unknown(_T("wxsColourData::BuildCode"),Language);
         }
     }
 

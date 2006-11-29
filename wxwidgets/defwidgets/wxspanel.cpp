@@ -2,19 +2,19 @@
 
 namespace
 {
-    wxsRegisterItem<wxsPanel> Reg(_T("Panel"),wxsTContainer, _T("Standard"), 0);
+    wxsRegisterItem<wxsPanel> Reg(_T("Panel"),wxsTContainer, _T("Standard"), 20);
+
+    WXS_ST_BEGIN(wxsPanelStyles)
+        WXS_ST_CATEGORY("wxPanel")
+        WXS_ST(wxNO_3D)
+        WXS_ST(wxTAB_TRAVERSAL)
+        WXS_ST(wxWS_EX_VALIDATE_RECURSIVELY)
+    WXS_ST_END()
+
+    WXS_EV_BEGIN(wxsPanelEvents)
+        WXS_EV_DEFAULTS()
+    WXS_EV_END()
 }
-
-WXS_ST_BEGIN(wxsPanelStyles)
-    WXS_ST_CATEGORY("wxPanel")
-    WXS_ST(wxNO_3D)
-    WXS_ST(wxTAB_TRAVERSAL)
-    WXS_ST(wxWS_EX_VALIDATE_RECURSIVELY)
-WXS_ST_END()
-
-WXS_EV_BEGIN(wxsPanelEvents)
-    WXS_EV_DEFAULTS()
-WXS_EV_END()
 
 wxsPanel::wxsPanel(wxsItemResData* Data):
     wxsContainer(
