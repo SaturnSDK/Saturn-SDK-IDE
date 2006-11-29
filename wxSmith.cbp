@@ -404,6 +404,16 @@
 			<Option link="0" />
 			<Option target="wxSmith" />
 		</Unit>
+		<Unit filename="wxwidgets\defwidgets\wxscheckbox.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\defwidgets\wxscheckbox.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="wxSmith" />
+		</Unit>
 		<Unit filename="wxwidgets\defwidgets\wxsdialog.cpp">
 			<Option compilerVar="CPP" />
 			<Option target="wxSmith" />
@@ -434,6 +444,16 @@
 			<Option link="0" />
 			<Option target="wxSmith" />
 		</Unit>
+		<Unit filename="wxwidgets\defwidgets\wxsgauge.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\defwidgets\wxsgauge.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="wxSmith" />
+		</Unit>
 		<Unit filename="wxwidgets\defwidgets\wxsgridsizer.cpp">
 			<Option compilerVar="CPP" />
 			<Option target="wxSmith" />
@@ -454,6 +474,46 @@
 			<Option link="0" />
 			<Option target="wxSmith" />
 		</Unit>
+		<Unit filename="wxwidgets\defwidgets\wxsradiobutton.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\defwidgets\wxsradiobutton.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\defwidgets\wxsslider.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\defwidgets\wxsslider.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\defwidgets\wxsspinctrl.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\defwidgets\wxsspinctrl.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\defwidgets\wxsstaticbox.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\defwidgets\wxsstaticbox.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="wxSmith" />
+		</Unit>
 		<Unit filename="wxwidgets\defwidgets\wxsstaticboxsizer.cpp">
 			<Option compilerVar="CPP" />
 			<Option target="wxSmith" />
@@ -469,6 +529,16 @@
 			<Option target="wxSmith" />
 		</Unit>
 		<Unit filename="wxwidgets\defwidgets\wxsstatictext.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\defwidgets\wxstogglebutton.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\defwidgets\wxstogglebutton.h">
 			<Option compilerVar="CPP" />
 			<Option compile="0" />
 			<Option link="0" />

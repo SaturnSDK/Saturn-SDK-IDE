@@ -1,46 +1,29 @@
 #include "wxsgauge.h"
 
-#include <wx/gauge.h>
-#include <messagemanager.h>
-
-
-WXS_ST_BEGIN(wxsGaugeStyles)
-    WXS_ST(wxGA_HORIZONTAL)
-    WXS_ST(wxGA_VERTICAL)
-// NOTE (cyberkoa#1#): according to Help file , wxGA_SMOOTH is not support by all platform but does not mention which platform is not support.
-    WXS_ST(wxGA_SMOOTH)
-// NOTE (cyberkoa##): wxGA_PROGRESSBAR not in HELP file but in XRC code
-//    WXS_ST(wxGA_PROGRESSBAR)
-WXS_ST_END()
-
-
-WXS_EV_BEGIN(wxsGaugeEvents)
-    WXS_EV_DEFAULTS()
-WXS_EV_END()
-
-
-wxsItemInfo wxsGauge::Info =
+namespace
 {
-    _T("wxGauge"),
-    wxsTWidget,
-    _("wxWidgets license"),
-    _("wxWidgets team"),
-    _T(""),
-    _T("www.wxwidgets.org"),
-    _T("Standard"),
-    50,
-    _T("Gauge"),
-    2, 6,
-    NULL,
-    NULL,
-    0
-};
+    wxsRegisterItem<wxsGauge> Reg(_T("Gauge"),wxsTWidget,_T("Standard"),50);
 
-wxsGauge::wxsGauge(wxsWindowRes* Resource):
+    WXS_ST_BEGIN(wxsGaugeStyles)
+        WXS_ST(wxGA_HORIZONTAL)
+        WXS_ST(wxGA_VERTICAL)
+    // NOTE (cyberkoa#1#): according to Help file , wxGA_SMOOTH is not support by all platform but does not mention which platform is not support.
+        WXS_ST(wxGA_SMOOTH)
+    // NOTE (cyberkoa##): wxGA_PROGRESSBAR not in HELP file but in XRC code
+    //    WXS_ST(wxGA_PROGRESSBAR)
+    WXS_ST_END()
+
+
+    WXS_EV_BEGIN(wxsGaugeEvents)
+        WXS_EV_DEFAULTS()
+    WXS_EV_END()
+}
+
+wxsGauge::wxsGauge(wxsItemResData* Data):
     wxsWidget(
-        Resource,
+        Data,
+        &Reg.Info,
         wxsBaseProperties::flAll,
-        &Info,
         wxsGaugeEvents,
         wxsGaugeStyles,
         _T("")),
@@ -52,7 +35,7 @@ wxsGauge::wxsGauge(wxsWindowRes* Resource):
 
 
 
-void wxsGauge::BuildCreatingCode(wxString& Code,const wxString& WindowParent,wxsCodingLang Language)
+void wxsGauge::OnBuildCreatingCode(wxString& Code,const wxString& WindowParent,wxsCodingLang Language)
 {
     switch ( Language )
     {
@@ -69,17 +52,19 @@ void wxsGauge::BuildCreatingCode(wxString& Code,const wxString& WindowParent,wxs
             if ( Shadow ) Code << GetVarName() << _T("->SetShadowWidth(") << wxString::Format(_T("%d"),Shadow) << _T(");\n");
             if ( Bezel )  Code << GetVarName() << _T("->SetBezelFace(") << wxString::Format(_T("%d"),Bezel) << _T(");\n");
 
-
             SetupWindowCode(Code,Language);
             return;
         }
-    }
 
-    wxsLANGMSG(wxsGauge::BuildCreatingCode,Language);
+        default:
+        {
+            wxsCodeMarks::Unknown(_T("wxsGauge::OnBuildCreatingCode"),Language);
+        }
+    }
 }
 
 
-wxObject* wxsGauge::DoBuildPreview(wxWindow* Parent,bool Exact)
+wxObject* wxsGauge::OnBuildPreview(wxWindow* Parent,bool Exact,bool)
 {
     wxGauge* Preview = new wxGauge(Parent,GetId(),Range,Pos(Parent),Size(Parent),Style());
     if ( Value )  Preview->SetValue(Value);
@@ -89,7 +74,7 @@ wxObject* wxsGauge::DoBuildPreview(wxWindow* Parent,bool Exact)
 }
 
 
-void wxsGauge::EnumWidgetProperties(long Flags)
+void wxsGauge::OnEnumWidgetProperties(long Flags)
 {
     WXS_LONG(wxsGauge,Value,0,_("Value"),_T("value"),0)
     WXS_LONG(wxsGauge,Range,0,_("Range"),_T("range"),100)
@@ -97,12 +82,11 @@ void wxsGauge::EnumWidgetProperties(long Flags)
     WXS_LONG(wxsGauge,Bezel,0,_("Bezel Face Width"),_T("bezel"),0)
 }
 
-void wxsGauge::EnumDeclFiles(wxArrayString& Decl,wxArrayString& Def,wxsCodingLang Language)
+void wxsGauge::OnEnumDeclFiles(wxArrayString& Decl,wxArrayString& Def,wxsCodingLang Language)
 {
     switch ( Language )
     {
         case wxsCPP: Decl.Add(_T("<wx/gauge.h>")); return;
+        default: wxsCodeMarks::Unknown(_T("wxsGauge::OnEnumDeclFiles"),Language);
     }
-
-    wxsLANGMSG(wxsGauge::EnumDeclFiles,Language);
 }

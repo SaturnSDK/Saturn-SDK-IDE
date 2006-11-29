@@ -1,53 +1,38 @@
 #include "wxstogglebutton.h"
 
 #include <wx/tglbtn.h>
-#include <messagemanager.h>
 
-
-WXS_ST_BEGIN(wxsToggleButtonStyles)
-    WXS_ST_CATEGORY("wxToggleButton")
-    WXS_ST_DEFAULTS()
-WXS_ST_END()
-
-
-WXS_EV_BEGIN(wxsToggleButtonEvents)
-    WXS_EVI(EVT_TOGGLEBUTTON,wxEVT_COMMAND_TOGGLEBUTTON_CLICKED,wxCommandEvent,Toggle)
-    WXS_EV_DEFAULTS()
-WXS_EV_END()
-
-
-wxsItemInfo wxsToggleButton::Info =
+namespace
 {
-    _T("wxToggleButton"),
-    wxsTWidget,
-    _("wxWidgets license"),
-    _("wxWidgets team"),
-    _T(""),
-    _T("www.wxwidgets.org"),
-    _T("Standard"),
-    50,
-    _T("ToggleButton"),
-    2, 6,
-    NULL,
-    NULL,
-    0
-};
+    wxsRegisterItem<wxsToggleButton> Reg(_T("ToggleButton"),wxsTWidget,_T("Standard"),50);
+
+    WXS_ST_BEGIN(wxsToggleButtonStyles)
+        WXS_ST_CATEGORY("wxToggleButton")
+        WXS_ST_DEFAULTS()
+    WXS_ST_END()
 
 
-wxsToggleButton::wxsToggleButton(wxsWindowRes* Resource):
+    WXS_EV_BEGIN(wxsToggleButtonEvents)
+        WXS_EVI(EVT_TOGGLEBUTTON,wxEVT_COMMAND_TOGGLEBUTTON_CLICKED,wxCommandEvent,Toggle)
+        WXS_EV_DEFAULTS()
+
+    WXS_EV_END()
+}
+
+wxsToggleButton::wxsToggleButton(wxsItemResData* Data):
     wxsWidget(
-        Resource,
+        Data,
+        &Reg.Info,
         wxsBaseProperties::flAll,
-        &Info,
         wxsToggleButtonEvents,
         wxsToggleButtonStyles,
         _T("")),
-       Label(_("Label")),
-       IsChecked(false)
+   Label(_("Label")),
+   IsChecked(false)
 {}
 
 
-void wxsToggleButton::BuildCreatingCode(wxString& Code,const wxString& WindowParent,wxsCodingLang Language)
+void wxsToggleButton::OnBuildCreatingCode(wxString& Code,const wxString& WindowParent,wxsCodingLang Language)
 {
     switch ( Language )
     {
@@ -56,7 +41,7 @@ void wxsToggleButton::BuildCreatingCode(wxString& Code,const wxString& WindowPar
             Code<< GetVarName() << _T(" = new wxToggleButton(")
                 << WindowParent << _T(",")
                 << GetIdName() << _T(",")
-                << wxsGetWxString(Label) << _T(",")
+                << wxsCodeMarks::WxString(wxsCPP,Label) << _T(",")
                 << PosCode(WindowParent,wxsCPP) << _T(",")
                 << SizeCode(WindowParent,wxsCPP) << _T(",")
                 << StyleCode(wxsCPP) << _T(");\n");
@@ -66,34 +51,32 @@ void wxsToggleButton::BuildCreatingCode(wxString& Code,const wxString& WindowPar
             SetupWindowCode(Code,Language);
             return;
         }
-    }
 
-    wxsLANGMSG(wxsToggleButton::BuildCreatingCode,Language);
+        default:
+        {
+            wxsCodeMarks::Unknown(_T("wxsToggleButton::OnBuildCreatingCode"),Language);
+        }
+    }
 }
 
-
-wxObject* wxsToggleButton::DoBuildPreview(wxWindow* Parent,bool Exact)
+wxObject* wxsToggleButton::OnBuildPreview(wxWindow* Parent,bool Exact,bool)
 {
     wxToggleButton* Preview = new wxToggleButton(Parent,GetId(),Label,Pos(Parent),Size(Parent),Style());
-
     Preview->SetValue(IsChecked);
-
     return SetupWindow(Preview,Exact);
 }
 
-
-void wxsToggleButton::EnumWidgetProperties(long Flags)
+void wxsToggleButton::OnEnumWidgetProperties(long Flags)
 {
     WXS_STRING(wxsToggleButton,Label,0,_("Label"),_T("label"),_T(""),true,false)
     WXS_BOOL  (wxsToggleButton,IsChecked,0,_("Is checked"),_("checked"),false)
 }
 
-void wxsToggleButton::EnumDeclFiles(wxArrayString& Decl,wxArrayString& Def,wxsCodingLang Language)
+void wxsToggleButton::OnEnumDeclFiles(wxArrayString& Decl,wxArrayString& Def,wxsCodingLang Language)
 {
     switch ( Language )
     {
         case wxsCPP: Decl.Add(_T("<wx/tglbtn.h>")); return;
+        default: wxsCodeMarks::Unknown(_T("wxsToggleButton::OnEnumDeclFiles"),Language);
     }
-
-    wxsLANGMSG(wxsToggleButton::EnumDeclFiles,Language);
 }
