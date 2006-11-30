@@ -4,9 +4,16 @@
 #include "wxsresourcefactory.h"
 #include "wxsguifactory.h"
 #include "wxsgui.h"
+#include "wxsversionconverter.h"
 
 #include <wx/string.h>
 #include <messagemanager.h>
+
+namespace
+{
+    const int CurrentVersion = 1;
+    const char* CurrentVersionStr = "1";
+}
 
 wxsProject::wxsProject(cbProject* Project):
     m_Project(Project),
@@ -42,6 +49,42 @@ void wxsProject::ReadConfiguration(TiXmlElement* element)
 {
     TiXmlElement* SmithNode = element->FirstChildElement("wxsmith");
     if ( !SmithNode ) return;
+
+    TiXmlDocument TempDoc;
+
+    // Checking version
+    if ( wxsVersionConverter::Get().DetectOldConfig(SmithNode) )
+    {
+        SmithNode = wxsVersionConverter::Get().ConvertFromOldConfig(SmithNode,&TempDoc);
+        if ( !SmithNode )
+        {
+            // TODO: Some info about conversion failure
+            //       and store full node for later save
+            return;
+        }
+    }
+
+    const char* VersionStr = SmithNode->Attribute("version");
+    int Version = VersionStr ? atoi(VersionStr) : 1;
+
+    if ( Version > CurrentVersion )
+    {
+        // TODO: Show some dialog box that resources were created by newer version,
+        //       store all configuration for later save and return
+        return;
+    }
+
+    if ( Version < CurrentVersion )
+    {
+        SmithNode = wxsVersionConverter::Get().Convert(SmithNode,&TempDoc);
+        if ( !SmithNode )
+        {
+            // TODO: Show some dialog box that resources were created by newer version,
+            //       store all configuration for later save and return
+            return;
+        }
+    }
+
     // Iterating through elements
     for ( TiXmlElement* Node = SmithNode->FirstChildElement(); Node; Node=Node->NextSiblingElement() )
     {
@@ -107,6 +150,7 @@ void wxsProject::WriteConfiguration(TiXmlElement* element)
     }
 
     TiXmlElement* SmithElement = element->InsertEndChild(TiXmlElement("wxsmith"))->ToElement();
+    SmithElement->SetAttribute("version",CurrentVersionStr);
 
     // saving GUI item
     if ( m_GUI )

@@ -95,7 +95,6 @@ class wxsProject
         typedef ResBrowserIdsT::iterator ResBrowserIdsI;
 
         wxString m_ProjectPath;             ///< \brief Base Directory of C::B project (where project file is stored)
-//        wxString m_WorkingPath;             ///< \brief Directory where wxSmith's private data will be stored
         cbProject* m_Project;               ///< \brief Project associated with project
         wxsResourceItemId m_TreeItem;       ///< \brief Tree item where project's resources are kept
         ResourcesT m_Resources;             ///< \brief Array of resources

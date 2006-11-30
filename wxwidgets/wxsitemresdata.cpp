@@ -77,6 +77,10 @@ wxsItemResData::~wxsItemResData()
     m_RootItem = NULL;
     m_RootSelection = NULL;
     m_PropertiesFilter = 0;
+    wxsResourceItemId ParentId = wxsResourceTree::Get()->GetItemParent(m_TreeId);
+    // Selecting parent to prevent reopening resource on wxGTK
+    wxsResourceTree::Get()->SelectItem(ParentId);
+    wxsResourceTree::Get()->DeleteChildren(m_TreeId);
 }
 
 bool wxsItemResData::Load()
