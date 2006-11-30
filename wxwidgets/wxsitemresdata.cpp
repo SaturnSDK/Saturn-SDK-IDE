@@ -233,7 +233,11 @@ bool wxsItemResData::LoadInSourceMode()
     // TODO: Check if source / header files have required blocks of code
 
     TiXmlDocument Doc(cbU2C(m_WxsFileName));
-    if ( !Doc.LoadFile() ) return false;
+    if ( !Doc.LoadFile() )
+    {
+        DBGLOG(_T("wxSmith: Error loading wxs file (Col: %d, Row:%d): ") + cbC2U(Doc.ErrorDesc()),Doc.ErrorCol(),Doc.ErrorRow());
+        return false;
+    }
 
     TiXmlElement* wxSmithNode = Doc.FirstChildElement("wxsmith");
     if ( !wxSmithNode ) return false;

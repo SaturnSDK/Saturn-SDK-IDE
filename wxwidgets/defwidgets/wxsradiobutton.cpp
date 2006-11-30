@@ -71,7 +71,7 @@ wxObject* wxsRadioButton::OnBuildPreview(wxWindow* Parent,bool Exact,bool)
 void wxsRadioButton::OnEnumWidgetProperties(long Flags)
 {
     WXS_STRING(wxsRadioButton,Label,0,_("Label"),_T("label"),_T(""),true,false)
-    WXS_BOOL  (wxsRadioButton,IsSelected,0,_("Is Selected"),_("selected"),false)
+    WXS_BOOL  (wxsRadioButton,IsSelected,0,_("Is Selected"),_T("selected"),false)
 }
 
 void wxsRadioButton::OnEnumDeclFiles(wxArrayString& Decl,wxArrayString& Def,wxsCodingLang Language)

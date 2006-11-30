@@ -1,5 +1,7 @@
 #include "wxsslider.h"
 
+
+// TODO: Add some flag like "Using Selection range" to note when using selmin / selmax (current comparision to 0 isn't enough)
 namespace
 {
     wxsRegisterItem<wxsSlider> Reg(_T("Slider"),wxsTWidget,_T("Standard"),50);
@@ -132,16 +134,16 @@ wxObject* wxsSlider::OnBuildPreview(wxWindow* Parent,bool Exact,bool)
 
 void wxsSlider::OnEnumWidgetProperties(long Flags)
 {
-   WXS_LONG(wxsSlider,Value,0,_("Value"),_T("Value"),0)
-   WXS_LONG(wxsSlider,Min,0,_("Min"),_T("Min"),0)
-   WXS_LONG(wxsSlider,Max,0,_("Max"),_T("Max"),100)
-   WXS_LONG(wxsSlider,PageSize,0,_("Page Size"),_T("Page Size"),0)
-   WXS_LONG(wxsSlider,LineSize,0,_("Line Size"),_T("Line Size"),0)
-   WXS_LONG(wxsSlider,ThumbLength,0,_("Thumb Length"),_T("Thumb Length"),0)
-   WXS_LONG(wxsSlider,SelMin,0,_("Selection Min"),_T("Selection Min"),0)
-   WXS_LONG(wxsSlider,SelMax,0,_("Selection Max"),_T("Selection Max"),0)
-   WXS_LONG(wxsSlider,Tick,0,_("Tick"),_T("Tick"),0)
-   WXS_LONG(wxsSlider,TickFrequency,0,_("Tick Frequency"),_T("Tick Frequency"),0)
+   WXS_LONG(wxsSlider,Value,0,_("Value"),_T("value"),0)
+   WXS_LONG(wxsSlider,Min,0,_("Min"),_T("min"),0)
+   WXS_LONG(wxsSlider,Max,0,_("Max"),_T("max"),100)
+   WXS_LONG(wxsSlider,TickFrequency,0,_("Tick Frequency"),_T("tickfreq"),0)
+   WXS_LONG(wxsSlider,PageSize,0,_("Page Size"),_T("pagesize"),0)
+   WXS_LONG(wxsSlider,LineSize,0,_("Line Size"),_T("linesize"),0)
+   WXS_LONG(wxsSlider,ThumbLength,0,_("Thumb Length"),_T("thumb"),0)
+   WXS_LONG(wxsSlider,Tick,0,_("Tick"),_T("tick"),0)
+   WXS_LONG(wxsSlider,SelMin,0,_("Selection Min"),_T("selmin"),0)
+   WXS_LONG(wxsSlider,SelMax,0,_("Selection Max"),_T("selmax"),0)
 }
 
 void wxsSlider::OnEnumDeclFiles(wxArrayString& Decl,wxArrayString& Def,wxsCodingLang Language)
