@@ -1,58 +1,38 @@
 #include "wxsdatepickerctrl.h"
 
 #include <wx/datectrl.h>
-#include <messagemanager.h>
 
-
-WXS_ST_BEGIN(wxsDatePickerCtrlStyles)
-    WXS_ST_CATEGORY("wxDatePickerCtrl")
-    WXS_ST(wxDP_DEFAULT)
-    WXS_ST(wxDP_SPIN)
-    WXS_ST(wxDP_DROPDOWN)
-    WXS_ST(wxDP_ALLOWNONE)
-    WXS_ST(wxDP_SHOWCENTURY)
-WXS_ST_END()
-
-
-WXS_EV_BEGIN(wxsDatePickerCtrlEvents)
-    WXS_EVI(EVT_DATE_CHANGED,wxEVT_DATE_CHANGED,wxDataEvent,Changed)
-    WXS_EV_DEFAULTS()
-WXS_EV_END()
-
-
-wxsItemInfo wxsDatePickerCtrl::Info =
+namespace
 {
-    _T("wxDatePickerCtrl"),
-    wxsTWidget,
-    _("wxWidgets license"),
-    _("wxWidgets team"),
-    _T(""),
-    _T("www.wxwidgets.org"),
-    _T("Standard"),
-    30,
-    _T("DatePickerCtrl"),
-    2, 6,
-    NULL,
-    NULL,
-    0
-};
+    wxsRegisterItem<wxsDatePickerCtrl> Reg(_T("DatePickerCtrl"),wxsTWidget,_T("Standard"),30);
+
+    WXS_ST_BEGIN(wxsDatePickerCtrlStyles)
+        WXS_ST_CATEGORY("wxDatePickerCtrl")
+        WXS_ST(wxDP_DEFAULT)
+        WXS_ST(wxDP_SPIN)
+        WXS_ST(wxDP_DROPDOWN)
+        WXS_ST(wxDP_ALLOWNONE)
+        WXS_ST(wxDP_SHOWCENTURY)
+    WXS_ST_END()
 
 
+    WXS_EV_BEGIN(wxsDatePickerCtrlEvents)
+        WXS_EVI(EVT_DATE_CHANGED,wxEVT_DATE_CHANGED,wxDataEvent,Changed)
+        WXS_EV_DEFAULTS()
+    WXS_EV_END()
+}
 
-wxsDatePickerCtrl::wxsDatePickerCtrl(wxsWindowRes* Resource):
+wxsDatePickerCtrl::wxsDatePickerCtrl(wxsItemResData* Data):
     wxsWidget(
-        Resource,
+        Data,
+        &Reg.Info,
         wxsBaseProperties::flAll,
-        &Info,
         wxsDatePickerCtrlEvents,
         wxsDatePickerCtrlStyles,
         _T(""))
-
 {}
 
-
-
-void wxsDatePickerCtrl::BuildCreatingCode(wxString& Code,const wxString& WindowParent,wxsCodingLang Language)
+void wxsDatePickerCtrl::OnBuildCreatingCode(wxString& Code,const wxString& WindowParent,wxsCodingLang Language)
 {
     switch ( Language )
     {
@@ -69,34 +49,30 @@ void wxsDatePickerCtrl::BuildCreatingCode(wxString& Code,const wxString& WindowP
             SetupWindowCode(Code,Language);
             return;
         }
-    }
 
-    wxsLANGMSG(wxsDatePickerCtrl::BuildCreatingCode,Language);
+        default:
+        {
+            wxsCodeMarks::Unknown(_T("wxsDatePickerCtrl::OnBuildCreatingCode"),Language);
+        }
+    }
 }
 
 
-wxObject* wxsDatePickerCtrl::DoBuildPreview(wxWindow* Parent,bool Exact)
+wxObject* wxsDatePickerCtrl::OnBuildPreview(wxWindow* Parent,bool Exact,bool)
 {
     wxDatePickerCtrl* Preview = new wxDatePickerCtrl(Parent,GetId(),wxDefaultDateTime,Pos(Parent),Size(Parent),Style());
-
     return SetupWindow(Preview,Exact);
 }
 
-
-void wxsDatePickerCtrl::EnumWidgetProperties(long Flags)
+void wxsDatePickerCtrl::OnEnumWidgetProperties(long Flags)
 {
- //  TODO : find
- //   WXS_DATETIME(wxsDatePickerCtrl,DefaultDateTime,0,_("Default"),_T("default"),_T(""),true,false)
-
 }
 
-void wxsDatePickerCtrl::EnumDeclFiles(wxArrayString& Decl,wxArrayString& Def,wxsCodingLang Language)
+void wxsDatePickerCtrl::OnEnumDeclFiles(wxArrayString& Decl,wxArrayString& Def,wxsCodingLang Language)
 {
     switch ( Language )
     {
         case wxsCPP: Decl.Add(_T("<wx/datectrl.h>")); return;
+        default: wxsCodeMarks::Unknown(_T("wxsDatePickerCtrl::OnEnumDeclFiles"),Language);
     }
-
-    wxsLANGMSG(wxsDatePickerCtrl::EnumDeclFiles,Language);
 }
-

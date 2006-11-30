@@ -7,22 +7,15 @@ class wxsSpacer: public wxsItem
 {
     public:
 
-        static wxsItemInfo Info;
-
-        wxsSpacer(wxsWindowRes* Res): wxsItem(Res) {}
+        wxsSpacer(wxsItemResData* Data);
 
     private:
 
-        virtual const wxsItemInfo& GetInfo() { return Info; }
-        virtual void BuildCreatingCode(wxString& Code,const wxString& WindowParent,wxsCodingLang Language);
-        virtual void BuildDeclarationCode(wxString& Code,wxsCodingLang Language) {}
-        virtual long GetPropertiesFlags();
-        virtual void EnumDeclFiles(wxArrayString& Decl,wxArrayString& Def,wxsCodingLang Language) {}
-
-        wxObject* DoBuildPreview(wxWindow* Parent,bool Exact);
-
-        wxsSizeData Size;
-
+        virtual void OnEnumItemProperties(long Flags);
+        virtual wxObject* OnBuildPreview(wxWindow* Parent,bool Exact,bool Store);
+        virtual void OnBuildCreatingCode(wxString& Code,const wxString& WindowParent,wxsCodingLang Language);
+        virtual void OnBuildDeclarationCode(wxString& Code,wxsCodingLang Language) {}
+        virtual void OnEnumDeclFiles(wxArrayString& Decl,wxArrayString& Def,wxsCodingLang Language) {}
 };
 
 #endif

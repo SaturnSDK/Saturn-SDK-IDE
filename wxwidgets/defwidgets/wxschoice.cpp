@@ -1,44 +1,26 @@
 #include "wxschoice.h"
 
-#include <wx/choice.h>
-#include <messagemanager.h>
-
-
-WXS_ST_BEGIN(wxsChoiceStyles)
-    WXS_ST_CATEGORY("wxChoice")
-    WXS_ST(wxCB_SORT)
-WXS_ST_END()
-
-
-WXS_EV_BEGIN(wxsChoiceEvents)
-    WXS_EVI(EVT_CHOICE,wxEVT_COMMAND_CHOICE_SELECTED,wxCommandEvent,Select)
-    WXS_EV_DEFAULTS()
-WXS_EV_END()
-
-
-wxsItemInfo wxsChoice::Info =
+namespace
 {
-    _T("wxChoice"),
-    wxsTWidget,
-    _("wxWidgets license"),
-    _("wxWidgets team"),
-    _T(""),
-    _T("www.wxwidgets.org"),
-    _T("Standard"),
-    70,
-    _T("Choice"),
-    2, 6,
-    NULL,
-    NULL,
-    0
-};
+    wxsRegisterItem<wxsChoice> Reg(_T("Choice"),wxsTWidget,_T("Standard"),70);
+
+    WXS_ST_BEGIN(wxsChoiceStyles)
+        WXS_ST_CATEGORY("wxChoice")
+        WXS_ST(wxCB_SORT)
+    WXS_ST_END()
 
 
-wxsChoice::wxsChoice(wxsWindowRes* Resource):
+    WXS_EV_BEGIN(wxsChoiceEvents)
+        WXS_EVI(EVT_CHOICE,wxEVT_COMMAND_CHOICE_SELECTED,wxCommandEvent,Select)
+        WXS_EV_DEFAULTS()
+    WXS_EV_END()
+}
+
+wxsChoice::wxsChoice(wxsItemResData* Data):
     wxsWidget(
-        Resource,
+        Data,
+        &Reg.Info,
         wxsBaseProperties::flAll,
-        &Info,
         wxsChoiceEvents,
         wxsChoiceStyles,
         _T("")),
@@ -47,7 +29,7 @@ wxsChoice::wxsChoice(wxsWindowRes* Resource):
 {}
 
 
-void wxsChoice::BuildCreatingCode(wxString& Code,const wxString& WindowParent,wxsCodingLang Language)
+void wxsChoice::OnBuildCreatingCode(wxString& Code,const wxString& WindowParent,wxsCodingLang Language)
 {
     switch ( Language )
     {
@@ -66,7 +48,7 @@ void wxsChoice::BuildCreatingCode(wxString& Code,const wxString& WindowParent,wx
                 {
                     Code << GetVarName() << _T("->SetSelection( ");
                 }
-                Code << GetVarName() << _T("->Append(") << wxsGetWxString(ArrayChoices[i]) << _T(")");
+                Code << GetVarName() << _T("->Append(") << wxsCodeMarks::WxString(wxsCPP,ArrayChoices[i]) << _T(")");
                 if ( DefaultSelection == (int)i )
                 {
                     Code << _T(" )");
@@ -77,13 +59,15 @@ void wxsChoice::BuildCreatingCode(wxString& Code,const wxString& WindowParent,wx
             SetupWindowCode(Code,Language);
             return;
         }
-    }
 
-    wxsLANGMSG(wxsChoice::BuildCreatingCode,Language);
+        default:
+        {
+            wxsCodeMarks::Unknown(_T("wxsChoice::OnBuildCreatingCode"),Language);
+        }
+    }
 }
 
-
-wxObject* wxsChoice::DoBuildPreview(wxWindow* Parent,bool Exact)
+wxObject* wxsChoice::OnBuildPreview(wxWindow* Parent,bool Exact,bool)
 {
     wxChoice* Preview = new wxChoice(Parent,GetId(),Pos(Parent),Size(Parent),Style());
 
@@ -99,18 +83,17 @@ wxObject* wxsChoice::DoBuildPreview(wxWindow* Parent,bool Exact)
 }
 
 
-void wxsChoice::EnumWidgetProperties(long Flags)
+void wxsChoice::OnEnumWidgetProperties(long Flags)
 {
     WXS_ARRAYSTRING(wxsChoice,ArrayChoices,0,_("Choices"),_T("content"),_T("item"))
     WXS_LONG(wxsChoice,DefaultSelection,0,_("Default"),_T("default"),0)
 }
 
-void wxsChoice::EnumDeclFiles(wxArrayString& Decl,wxArrayString& Def,wxsCodingLang Language)
+void wxsChoice::OnEnumDeclFiles(wxArrayString& Decl,wxArrayString& Def,wxsCodingLang Language)
 {
     switch ( Language )
     {
         case wxsCPP: Decl.Add(_T("<wx/choice.h>")); return;
+        default: wxsCodeMarks::Unknown(_T("wxsChoice::OnEnumDeclFiles"),Language);
     }
-
-    wxsLANGMSG(wxsChoice::EnumDeclFiles,Language);
 }

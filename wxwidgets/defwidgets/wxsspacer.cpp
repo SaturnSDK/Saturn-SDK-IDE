@@ -2,10 +2,23 @@
 
 #include "../wxssizer.h"
 
-#include <messagemanager.h>
-
 namespace
 {
+    wxsRegisterItem<wxsSpacer> Reg(
+        _T("Spacer"),
+        wxsTSpacer,
+        _("wxWidgets license"),
+        _("wxWidgets team"),
+        _T(""),
+        _T("www.wxwidgets.org"),
+        _T("Layout"),
+        30,
+        _T(""),
+        wxsCPP,
+        2,6,
+        _T("Spacer32.png"),
+        _T("Spacer16.png"));
+
     class wxsSpacerPreview: public wxPanel
     {
         public:
@@ -32,28 +45,24 @@ namespace
 
 }
 
-wxsItemInfo wxsSpacer::Info =
-{
-    _T("spacer"),
-    wxsTSizer,
-    _("wxWidgets license"),
-    _("wxWidgets team"),
-    _T(""),
-    _T("www.wxwidgets.org"),
-    _T("Layout"),
-    30,
-    _T(""),
-    2, 6,
-    NULL,
-    NULL,
-    0
-};
+wxsSpacer::wxsSpacer(wxsItemResData* Data): wxsItem(Data,&Reg.Info,wxsBaseProperties::flSize,NULL)
+{}
 
-void wxsSpacer::BuildCreatingCode(wxString& Code,const wxString& WindowParent,wxsCodingLang Language)
-{
-    wxASSERT_MSG( GetParent()!=NULL, _T("Spacer must have parent") );
-    wxASSERT_MSG( GetParent()->GetType() == wxsTSizer, _T("Spacer's parent must be sizer") );
+void wxsSpacer::OnEnumItemProperties(long Flags)
+{}
 
+wxObject* wxsSpacer::OnBuildPreview(wxWindow* Parent,bool Exact,bool)
+{
+    if ( Exact )
+    {
+        wxSize Sz = GetBaseProps()->m_Size.GetSize(Parent);
+        return new wxSizerItem(Sz.GetWidth(),Sz.GetHeight(),0,0,0,NULL);
+    }
+    return new wxsSpacerPreview(Parent,GetBaseProps()->m_Size.GetSize(Parent));
+}
+
+void wxsSpacer::OnBuildCreatingCode(wxString& Code,const wxString& WindowParent,wxsCodingLang Language)
+{
     int Index = GetParent()->GetChildIndex(this);
     wxsSizerExtra* Extra = (wxsSizerExtra*) GetParent()->GetChildExtra(Index);
     wxString ParentName = GetParent()->GetVarName();
@@ -64,6 +73,7 @@ void wxsSpacer::BuildCreatingCode(wxString& Code,const wxString& WindowParent,wx
     {
         case wxsCPP:
         {
+            wxsSizeData& Size = GetBaseProps()->m_Size;
             if ( Size.DialogUnits )
             {
                 wxString SizeName = ParentName + wxString::Format(_T("SpacerSize%d"),Index);
@@ -81,25 +91,10 @@ void wxsSpacer::BuildCreatingCode(wxString& Code,const wxString& WindowParent,wx
 
             break;
         }
+
+        default:
+        {
+            wxsCodeMarks::Unknown(_T("wxsSpacer::OnBuildCreatingCode"),Language);
+        }
     }
-
-    wxsLANGMSG(wxsSpacer::BuildCreatingCode,Language);
-}
-
-long wxsSpacer::GetPropertiesFlags()
-{
-    return wxsItem::GetPropertiesFlags() & ~(wxsFLVariable|wxsFLId);
-}
-
-wxObject* wxsSpacer::DoBuildPreview(wxWindow* Parent,bool Exact)
-{
-    wxASSERT_MSG( GetParent()!=NULL, _T("Spacer must have parent") );
-    wxASSERT_MSG( GetParent()->GetType() == wxsTSizer, _T("Spacer's parent must be sizer") );
-
-    if ( Exact )
-    {
-        wxSize Sz = Size.GetSize(Parent);
-        return new wxSizerItem(Sz.GetWidth(),Sz.GetHeight(),0,0,0,NULL);
-    }
-    return new wxsSpacerPreview(Parent,Size.GetSize(Parent));
 }

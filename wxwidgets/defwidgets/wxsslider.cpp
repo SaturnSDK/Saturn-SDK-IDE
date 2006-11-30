@@ -65,7 +65,14 @@ wxsSlider::wxsSlider(wxsItemResData* Data):
         _T("")),
     Value(0),
     Min(0),
-    Max(100)
+    Max(100),
+    TickFrequency(0),
+    PageSize(0),
+    LineSize(0),
+    ThumbLength(0),
+    Tick(0),
+    SelMin(0),
+    SelMax(0)
 {}
 
 void wxsSlider::OnBuildCreatingCode(wxString& Code,const wxString& WindowParent,wxsCodingLang Language)

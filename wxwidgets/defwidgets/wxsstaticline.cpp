@@ -1,58 +1,41 @@
 #include "wxsstaticline.h"
 
 #include <wx/statline.h>
-#include <messagemanager.h>
 
-
-WXS_ST_BEGIN(wxsStaticLineStyles)
-    WXS_ST_CATEGORY("wxStaticLine")
-    WXS_ST(wxLI_HORIZONTAL)
-    WXS_ST(wxLI_VERTICAL)
-WXS_ST_END()
-
-
-WXS_EV_BEGIN(wxsStaticLineEvents)
-    WXS_EV_DEFAULTS()
-WXS_EV_END()
-
-
-wxsItemInfo wxsStaticLine::Info =
+namespace
 {
-    _T("wxStaticLine"),
-    wxsTWidget,
-    _("wxWidgets license"),
-    _("wxWidgets team"),
-    _T(""),
-    _T("www.wxwidgets.org"),
-    _T("Standard"),
-    60,
-    _T("StaticLine"),
-    2, 6,
-    NULL,
-    NULL,
-    0
-};
+    wxsRegisterItem<wxsStaticLine> Reg(_T("StaticLine"),wxsTWidget,_T("Standard"),60);
+
+    WXS_ST_BEGIN(wxsStaticLineStyles)
+        WXS_ST_CATEGORY("wxStaticLine")
+        WXS_ST(wxLI_HORIZONTAL)
+        WXS_ST(wxLI_VERTICAL)
+    WXS_ST_END()
 
 
-wxsStaticLine::wxsStaticLine(wxsWindowRes* Resource):
+    WXS_EV_BEGIN(wxsStaticLineEvents)
+        WXS_EV_DEFAULTS()
+    WXS_EV_END()
+}
+
+wxsStaticLine::wxsStaticLine(wxsItemResData* Data):
     wxsWidget(
-        Resource,
+        Data,
+        &Reg.Info,
         wxsBaseProperties::flAll,
-        &Info,
         wxsStaticLineEvents,
         wxsStaticLineStyles,
         _T(""))
-
 {
     // Default the size so that it can be seen in the edit mode
-    BaseProps.Size.IsDefault = false;
-    BaseProps.Size.X = 10;
-    BaseProps.Size.Y = -1;
+    GetBaseProps()->m_Size.IsDefault = false;
+    GetBaseProps()->m_Size.X = 10;
+    GetBaseProps()->m_Size.Y = -1;
 }
 
 
 
-void wxsStaticLine::BuildCreatingCode(wxString& Code,const wxString& WindowParent,wxsCodingLang Language)
+void wxsStaticLine::OnBuildCreatingCode(wxString& Code,const wxString& WindowParent,wxsCodingLang Language)
 {
     switch ( Language )
     {
@@ -68,31 +51,30 @@ void wxsStaticLine::BuildCreatingCode(wxString& Code,const wxString& WindowParen
             SetupWindowCode(Code,Language);
             return;
         }
-    }
 
-    wxsLANGMSG(wxsStaticLine::BuildCreatingCode,Language);
+        default:
+        {
+            wxsCodeMarks::Unknown(_T("wxsStaticLine::OnBuildCreatingCode"),Language);
+        }
+    }
 }
 
 
-wxObject* wxsStaticLine::DoBuildPreview(wxWindow* Parent,bool Exact)
+wxObject* wxsStaticLine::OnBuildPreview(wxWindow* Parent,bool Exact,bool)
 {
     wxStaticLine* Preview = new wxStaticLine(Parent,GetId(),Pos(Parent),Size(Parent),Style());
-
     return SetupWindow(Preview,Exact);
 }
 
-void wxsStaticLine::EnumWidgetProperties(long Flags)
+void wxsStaticLine::OnEnumWidgetProperties(long Flags)
 {
-//    WXS_STRING(wxsStaticLine,Label,0,_("Label"),_T("label"),_T(""),true,false)
-
 }
 
-void wxsStaticLine::EnumDeclFiles(wxArrayString& Decl,wxArrayString& Def,wxsCodingLang Language)
+void wxsStaticLine::OnEnumDeclFiles(wxArrayString& Decl,wxArrayString& Def,wxsCodingLang Language)
 {
     switch ( Language )
     {
         case wxsCPP: Decl.Add(_T("<wx/statline.h>")); return;
+        default: wxsCodeMarks::Unknown(_T("wxsStaticLine::OnEnumDeclFiles"),Language);
     }
-
-    wxsLANGMSG(wxsStaticLine::EnumDeclFiles,Language);
 }

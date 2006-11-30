@@ -1,53 +1,34 @@
 #include "wxslistbox.h"
 
-#include <wx/listbox.h>
-#include <messagemanager.h>
-
-
-WXS_ST_BEGIN(wxsListBoxStyles)
-    WXS_ST_CATEGORY("wxListBox")
-    WXS_ST_MASK(wxLB_HSCROLL,wxsSFWin,0,true) // Windows ONLY
-    WXS_ST(wxLB_SINGLE)
-    WXS_ST(wxLB_MULTIPLE)
-    WXS_ST(wxLB_EXTENDED)
-    WXS_ST(wxLB_ALWAYS_SB)
-    WXS_ST(wxLB_NEEDED_SB)
-    WXS_ST(wxLB_SORT)
-WXS_ST_END()
-
-
-
-WXS_EV_BEGIN(wxsListBoxEvents)
-    WXS_EVI(EVT_LISTBOX,wxEVT_COMMAND_LISTBOX_SELECTED,wxCommandEvent,Select)
-    WXS_EVI(EVT_LISTBOX_DCLICK,wxEVT_COMMAND_LISTBOX_DOUBLECLICKED,wxCommandEvent,DClick)
-    WXS_EV_DEFAULTS()
-WXS_EV_END()
-
-
-wxsItemInfo wxsListBox::Info =
+namespace
 {
-    _T("wxListBox"),
-    wxsTWidget,
-    _("wxWidgets license"),
-    _("wxWidgets team"),
-    _T(""),
-    _T("www.wxwidgets.org"),
-    _T("Standard"),
-    70,
-    _T("ListBox"),
-    2, 6,
-    NULL,
-    NULL,
-    0
-};
+    wxsRegisterItem<wxsListBox> Reg(_T("ListBox"),wxsTWidget,_T("Standard"),70);
+
+    WXS_ST_BEGIN(wxsListBoxStyles)
+        WXS_ST_CATEGORY("wxListBox")
+        WXS_ST_MASK(wxLB_HSCROLL,wxsSFWin,0,true) // Windows ONLY
+        WXS_ST(wxLB_SINGLE)
+        WXS_ST(wxLB_MULTIPLE)
+        WXS_ST(wxLB_EXTENDED)
+        WXS_ST(wxLB_ALWAYS_SB)
+        WXS_ST(wxLB_NEEDED_SB)
+        WXS_ST(wxLB_SORT)
+    WXS_ST_END()
 
 
 
-wxsListBox::wxsListBox(wxsWindowRes* Resource):
+    WXS_EV_BEGIN(wxsListBoxEvents)
+        WXS_EVI(EVT_LISTBOX,wxEVT_COMMAND_LISTBOX_SELECTED,wxCommandEvent,Select)
+        WXS_EVI(EVT_LISTBOX_DCLICK,wxEVT_COMMAND_LISTBOX_DOUBLECLICKED,wxCommandEvent,DClick)
+        WXS_EV_DEFAULTS()
+    WXS_EV_END()
+}
+
+wxsListBox::wxsListBox(wxsItemResData* Data):
     wxsWidget(
-        Resource,
+        Data,
+        &Reg.Info,
         wxsBaseProperties::flAll,
-        &Info,
         wxsListBoxEvents,
         wxsListBoxStyles,
         _T("")),
@@ -55,9 +36,7 @@ wxsListBox::wxsListBox(wxsWindowRes* Resource):
 
 {}
 
-
-
-void wxsListBox::BuildCreatingCode(wxString& Code,const wxString& WindowParent,wxsCodingLang Language)
+void wxsListBox::OnBuildCreatingCode(wxString& Code,const wxString& WindowParent,wxsCodingLang Language)
 {
     switch ( Language )
     {
@@ -78,7 +57,7 @@ void wxsListBox::BuildCreatingCode(wxString& Code,const wxString& WindowParent,w
                 {
                     Code << GetVarName() << _T("->SetSelection( ");
                 }
-                Code << GetVarName() << _T("->Append(") << wxsGetWxString(ArrayChoices[i]) << _T(")");
+                Code << GetVarName() << _T("->Append(") << wxsCodeMarks::WxString(wxsCPP,ArrayChoices[i]) << _T(")");
                 if ( DefaultSelection == (int)i )
                 {
                     Code << _T(" )");
@@ -89,17 +68,18 @@ void wxsListBox::BuildCreatingCode(wxString& Code,const wxString& WindowParent,w
             SetupWindowCode(Code,Language);
             return;
         }
-    }
 
-    wxsLANGMSG(wxsListBox::BuildCreatingCode,Language);
+        default:
+        {
+            wxsCodeMarks::Unknown(_T("wxsListBox::OnBuildCreatingCode"),Language);
+        }
+    }
 }
 
 
-wxObject* wxsListBox::DoBuildPreview(wxWindow* Parent,bool Exact)
+wxObject* wxsListBox::OnBuildPreview(wxWindow* Parent,bool Exact,bool)
 {
-
     wxListBox* Preview = new wxListBox(Parent,GetId(),Pos(Parent),Size(Parent),0,0, Style());
-
     for ( size_t i = 0; i <  ArrayChoices.GetCount(); ++i )
     {
         int Val = Preview->Append(ArrayChoices[i]);
@@ -112,20 +92,17 @@ wxObject* wxsListBox::DoBuildPreview(wxWindow* Parent,bool Exact)
     return SetupWindow(Preview,Exact);
 }
 
-
-
-void wxsListBox::EnumWidgetProperties(long Flags)
+void wxsListBox::OnEnumWidgetProperties(long Flags)
 {
       WXS_ARRAYSTRING(wxsListBox,ArrayChoices,0,_("Choices"),_T("content"),_T("item"))
-      WXS_LONG(wxsListBox,DefaultSelection,0x8,_("Default"),_T("default"),0)
+      WXS_LONG(wxsListBox,DefaultSelection,0,_("Default"),_T("default"),0)
 }
 
-void wxsListBox::EnumDeclFiles(wxArrayString& Decl,wxArrayString& Def,wxsCodingLang Language)
+void wxsListBox::OnEnumDeclFiles(wxArrayString& Decl,wxArrayString& Def,wxsCodingLang Language)
 {
     switch ( Language )
     {
         case wxsCPP: Decl.Add(_T("<wx/listbox.h>")); return;
+        default: wxsCodeMarks::Unknown(_T("wxsListBox::EnumDeclFiles"),Language);
     }
-
-    wxsLANGMSG(wxsListBox::EnumDeclFiles,Language);
 }

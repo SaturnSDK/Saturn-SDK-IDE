@@ -1,57 +1,39 @@
 #include "wxschecklistbox.h"
 
-#include <wx/checklst.h>
-#include <messagemanager.h>
-
-
-WXS_ST_BEGIN(wxsCheckListBoxStyles)
-    WXS_ST_CATEGORY("wxCheckListBox")
-    WXS_ST_MASK(wxLB_HSCROLL,wxsSFWin,0,true) // Windows ONLY
-    WXS_ST(wxLB_SINGLE)
-    WXS_ST(wxLB_MULTIPLE)
-    WXS_ST(wxLB_EXTENDED)
-    WXS_ST(wxLB_ALWAYS_SB)
-    WXS_ST(wxLB_NEEDED_SB)
-    WXS_ST(wxLB_SORT)
-WXS_ST_END()
-
-
-WXS_EV_BEGIN(wxsCheckListBoxEvents)
-    WXS_EVI(EVT_CHECKLISTBOX,wxEVT_COMMAND_CHECKLISTBOX_TOGGLED,wxCommandEvent,Toggled)
-    WXS_EV_DEFAULTS()
-WXS_EV_END()
-
-
-wxsItemInfo wxsCheckListBox::Info =
+namespace
 {
-    _T("wxCheckListBox"),
-    wxsTWidget,
-    _("wxWidgets license"),
-    _("wxWidgets team"),
-    _T(""),
-    _T("www.wxwidgets.org"),
-    _T("Standard"),
-    50,
-    _T("CheckListBox"),
-    2, 6,
-    NULL,
-    NULL,
-    0
-};
+    wxsRegisterItem<wxsCheckListBox> Reg(_T("CheckListBox"),wxsTWidget,_T("Standard"),50);
+
+    WXS_ST_BEGIN(wxsCheckListBoxStyles)
+        WXS_ST_CATEGORY("wxCheckListBox")
+        WXS_ST_MASK(wxLB_HSCROLL,wxsSFWin,0,true) // Windows ONLY
+        WXS_ST(wxLB_SINGLE)
+        WXS_ST(wxLB_MULTIPLE)
+        WXS_ST(wxLB_EXTENDED)
+        WXS_ST(wxLB_ALWAYS_SB)
+        WXS_ST(wxLB_NEEDED_SB)
+        WXS_ST(wxLB_SORT)
+    WXS_ST_END()
 
 
-wxsCheckListBox::wxsCheckListBox(wxsWindowRes* Resource):
+    WXS_EV_BEGIN(wxsCheckListBoxEvents)
+        WXS_EVI(EVT_CHECKLISTBOX,wxEVT_COMMAND_CHECKLISTBOX_TOGGLED,wxCommandEvent,Toggled)
+        WXS_EV_DEFAULTS()
+    WXS_EV_END()
+}
+
+wxsCheckListBox::wxsCheckListBox(wxsItemResData* Data):
     wxsWidget(
-        Resource,
+        Data,
+        &Reg.Info,
         wxsBaseProperties::flAll,
-        &Info,
         wxsCheckListBoxEvents,
         wxsCheckListBoxStyles,
         _T(""))
 {}
 
 
-void wxsCheckListBox::BuildCreatingCode(wxString& Code,const wxString& WindowParent,wxsCodingLang Language)
+void wxsCheckListBox::OnBuildCreatingCode(wxString& Code,const wxString& WindowParent,wxsCodingLang Language)
 {
     switch ( Language )
     {
@@ -70,7 +52,7 @@ void wxsCheckListBox::BuildCreatingCode(wxString& Code,const wxString& WindowPar
                 {
                     Code << GetVarName() << _T("->Check( ");
                 }
-                Code << GetVarName() << _T("->Append(") << wxsGetWxString(ArrayChoices[i]) << _T(")");
+                Code << GetVarName() << _T("->Append(") << wxsCodeMarks::WxString(wxsCPP,ArrayChoices[i]) << _T(")");
                 if ( ArrayChecks[i] )
                 {
                     Code << GetVarName() << _T(" )");
@@ -80,16 +62,18 @@ void wxsCheckListBox::BuildCreatingCode(wxString& Code,const wxString& WindowPar
             SetupWindowCode(Code,Language);
             return;
         }
-    }
 
-    wxsLANGMSG(wxsCheckListBox::BuildCreatingCode,Language);
+        default:
+        {
+            wxsCodeMarks::Unknown(_T("wxsCheckListBox::OnBuildCreatingCode"),Language);
+        }
+    }
 }
 
 
-wxObject* wxsCheckListBox::DoBuildPreview(wxWindow* Parent,bool Exact)
+wxObject* wxsCheckListBox::OnBuildPreview(wxWindow* Parent,bool Exact,bool)
 {
     wxCheckListBox* Preview = new wxCheckListBox(Parent,GetId(),Pos(Parent),Size(Parent),0,NULL,Style());
-
     for ( size_t i = 0; i < ArrayChoices.GetCount(); ++i )
     {
         int Val = Preview->Append(ArrayChoices[i]);
@@ -101,18 +85,16 @@ wxObject* wxsCheckListBox::DoBuildPreview(wxWindow* Parent,bool Exact)
     return SetupWindow(Preview,Exact);
 }
 
-
-void wxsCheckListBox::EnumWidgetProperties(long Flags)
+void wxsCheckListBox::OnEnumWidgetProperties(long Flags)
 {
     WXS_ARRAYSTRINGCHECK(wxsCheckListBox,ArrayChoices,ArrayChecks,0,_("Choices"),_T("content"),_T("item"));
 }
 
-void wxsCheckListBox::EnumDeclFiles(wxArrayString& Decl,wxArrayString& Def,wxsCodingLang Language)
+void wxsCheckListBox::OnEnumDeclFiles(wxArrayString& Decl,wxArrayString& Def,wxsCodingLang Language)
 {
     switch ( Language )
     {
         case wxsCPP: Decl.Add(_T("<wx/checklst.h>")); return;
+        default: wxsCodeMarks::Unknown(_T("wxsCheckListBox::OnEnumDeclFiles"),Language);
     }
-
-    wxsLANGMSG(wxsCheckListBox::EnumDeclFiles,Language);
 }
