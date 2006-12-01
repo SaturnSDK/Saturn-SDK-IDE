@@ -33,7 +33,7 @@ wxsSpinButton::wxsSpinButton(wxsItemResData* Data):
         wxsSpinButtonEvents,
         wxsSpinButtonStyles,
         _T("")),
-    Value(Value),
+    Value(0),
     Min(0),
     Max(100)
 {}
@@ -75,7 +75,7 @@ wxObject* wxsSpinButton::OnBuildPreview(wxWindow* Parent,bool Exact,bool)
 
 void wxsSpinButton::OnEnumWidgetProperties(long Flags)
 {
-    WXS_STRING(wxsSpinButton,Value,0,_("Value"),_T("value"),_T(""),true,false)
+    WXS_LONG(wxsSpinButton,Value,0,_("Value"),_T("value"),0)
     WXS_LONG(wxsSpinButton,Min,0,_("Min Value"),_T("min"),0)
     WXS_LONG(wxsSpinButton,Max,0,_("Max Value"),_T("max"),0)
 }

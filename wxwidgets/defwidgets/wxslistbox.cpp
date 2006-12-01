@@ -33,7 +33,6 @@ wxsListBox::wxsListBox(wxsItemResData* Data):
         wxsListBoxStyles,
         _T("")),
     DefaultSelection(-1)
-
 {}
 
 void wxsListBox::OnBuildCreatingCode(wxString& Code,const wxString& WindowParent,wxsCodingLang Language)

@@ -29,7 +29,7 @@ wxsRadioBox::wxsRadioBox(wxsItemResData* Data):
         wxsRadioBoxEvents,
         wxsRadioBoxStyles,
         _T("")),
-    Label(Label),
+    Label(_("Label")),
     DefaultSelection(-1),
     Dimension(1)
 {}

@@ -25,7 +25,6 @@ wxsChoice::wxsChoice(wxsItemResData* Data):
         wxsChoiceStyles,
         _T("")),
     DefaultSelection(-1)
-
 {}
 
 

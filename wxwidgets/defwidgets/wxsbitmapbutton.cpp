@@ -109,10 +109,10 @@ wxObject* wxsBitmapButton::OnBuildPreview(wxWindow* Parent,bool Exact,bool)
 void wxsBitmapButton::OnEnumWidgetProperties(long Flags)
 {
     WXS_BITMAP(wxsBitmapButton,BitmapLabel,0,_("Bitmap"),_T("bitmap"),_T("wxART_OTHER"))
-    WXS_BITMAP(wxsBitmapButton,BitmapDisabled,0,_("Bitmap"),_T("disabled"),_T("wxART_OTHER"))
-    WXS_BITMAP(wxsBitmapButton,BitmapSelected,0,_("Bitmap"),_T("selected"),_T("wxART_OTHER"))
-    WXS_BITMAP(wxsBitmapButton,BitmapFocus,0,_("Bitmap"),_T("focus"),_T("wxART_OTHER"))
-    WXS_BOOL  (wxsBitmapButton,IsDefault,0,_("Is default"),_("default"),false)
+    WXS_BITMAP(wxsBitmapButton,BitmapDisabled,0,_("Disabled bmp."),_T("disabled"),_T("wxART_OTHER"))
+    WXS_BITMAP(wxsBitmapButton,BitmapSelected,0,_("Pressed bmp."),_T("selected"),_T("wxART_OTHER"))
+    WXS_BITMAP(wxsBitmapButton,BitmapFocus,0,_("Focused bmp."),_T("focus"),_T("wxART_OTHER"))
+    WXS_BOOL  (wxsBitmapButton,IsDefault,0,_("Is default"),_T("default"),false)
 }
 
 void wxsBitmapButton::OnEnumDeclFiles(wxArrayString& Decl,wxArrayString& Def,wxsCodingLang Language)
