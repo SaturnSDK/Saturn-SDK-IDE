@@ -6,7 +6,7 @@ namespace
 {
     wxsRegisterItem<wxsStaticLine> Reg(_T("StaticLine"),wxsTWidget,_T("Standard"),60);
 
-    WXS_ST_BEGIN(wxsStaticLineStyles)
+    WXS_ST_BEGIN(wxsStaticLineStyles,_T(""))
         WXS_ST_CATEGORY("wxStaticLine")
         WXS_ST(wxLI_HORIZONTAL)
         WXS_ST(wxLI_VERTICAL)
@@ -24,8 +24,7 @@ wxsStaticLine::wxsStaticLine(wxsItemResData* Data):
         &Reg.Info,
         wxsBaseProperties::flAll,
         wxsStaticLineEvents,
-        wxsStaticLineStyles,
-        _T(""))
+        wxsStaticLineStyles)
 {
     // Default the size so that it can be seen in the edit mode
     GetBaseProps()->m_Size.IsDefault = false;

@@ -4,7 +4,7 @@ namespace
 {
     wxsRegisterItem<wxsChoice> Reg(_T("Choice"),wxsTWidget,_T("Standard"),70);
 
-    WXS_ST_BEGIN(wxsChoiceStyles)
+    WXS_ST_BEGIN(wxsChoiceStyles,_T(""))
         WXS_ST_CATEGORY("wxChoice")
         WXS_ST(wxCB_SORT)
     WXS_ST_END()
@@ -22,8 +22,7 @@ wxsChoice::wxsChoice(wxsItemResData* Data):
         &Reg.Info,
         wxsBaseProperties::flAll,
         wxsChoiceEvents,
-        wxsChoiceStyles,
-        _T("")),
+        wxsChoiceStyles),
     DefaultSelection(-1)
 {}
 

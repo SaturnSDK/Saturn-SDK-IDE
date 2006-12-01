@@ -4,7 +4,7 @@ namespace
 {
     wxsRegisterItem<wxsGauge> Reg(_T("Gauge"),wxsTWidget,_T("Standard"),50);
 
-    WXS_ST_BEGIN(wxsGaugeStyles)
+    WXS_ST_BEGIN(wxsGaugeStyles,_T(""))
         WXS_ST(wxGA_HORIZONTAL)
         WXS_ST(wxGA_VERTICAL)
     // NOTE (cyberkoa#1#): according to Help file , wxGA_SMOOTH is not support by all platform but does not mention which platform is not support.
@@ -25,8 +25,7 @@ wxsGauge::wxsGauge(wxsItemResData* Data):
         &Reg.Info,
         wxsBaseProperties::flAll,
         wxsGaugeEvents,
-        wxsGaugeStyles,
-        _T("")),
+        wxsGaugeStyles),
     Range(100),
     Value(0),
     Shadow(0),

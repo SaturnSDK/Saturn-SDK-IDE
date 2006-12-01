@@ -4,7 +4,7 @@ namespace
 {
     wxsRegisterItem<wxsRadioButton> Reg(_T("RadioButton"),wxsTWidget,_T("Standard"),60);
 
-    WXS_ST_BEGIN(wxsRadioButtonStyles)
+    WXS_ST_BEGIN(wxsRadioButtonStyles,_T(""))
         WXS_ST_CATEGORY("wxRadioButton")
         WXS_ST(wxRB_GROUP)
         WXS_ST(wxRB_SINGLE)
@@ -25,8 +25,7 @@ wxsRadioButton::wxsRadioButton(wxsItemResData* Data):
         &Reg.Info,
         wxsBaseProperties::flAll,
         wxsRadioButtonEvents,
-        wxsRadioButtonStyles,
-        _T("")),
+        wxsRadioButtonStyles),
     Label(_("Label")),
     IsSelected(false)
 {}

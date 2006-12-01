@@ -5,7 +5,7 @@ namespace
     wxsRegisterItem<wxsComboBox> Reg(_T("ComboBox"),wxsTWidget,_T("Standard"),70);
 
 
-    WXS_ST_BEGIN(wxsComboBoxStyles)
+    WXS_ST_BEGIN(wxsComboBoxStyles,_T(""))
         WXS_ST_CATEGORY("wxComboBox")
         WXS_ST_MASK(wxCB_SIMPLE,wxsSFWin,0,true)
         WXS_ST(wxCB_READONLY)
@@ -27,8 +27,7 @@ wxsComboBox::wxsComboBox(wxsItemResData* Data):
         &Reg.Info,
         wxsBaseProperties::flAll,
         wxsComboBoxEvents,
-        wxsComboBoxStyles,
-        _T("")),
+        wxsComboBoxStyles),
     DefaultSelection(-1)
 {}
 

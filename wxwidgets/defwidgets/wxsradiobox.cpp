@@ -4,7 +4,7 @@ namespace
 {
     wxsRegisterItem<wxsRadioBox> Reg(_T("RadioBox"),wxsTWidget,_T("Standard"),60);
 
-    WXS_ST_BEGIN(wxsRadioBoxStyles)
+    WXS_ST_BEGIN(wxsRadioBoxStyles,_T(""))
         WXS_ST_CATEGORY("wxRadioBox")
         WXS_ST(wxRA_SPECIFY_ROWS)
         WXS_ST(wxRA_SPECIFY_COLS)
@@ -27,8 +27,7 @@ wxsRadioBox::wxsRadioBox(wxsItemResData* Data):
         &Reg.Info,
         wxsBaseProperties::flAll,
         wxsRadioBoxEvents,
-        wxsRadioBoxStyles,
-        _T("")),
+        wxsRadioBoxStyles),
     Label(_("Label")),
     DefaultSelection(-1),
     Dimension(1)

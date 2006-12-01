@@ -4,7 +4,7 @@ namespace
 {
     wxsRegisterItem<wxsDialog> Reg( _T("Dialog"), wxsTContainer, _T(""), 0 );
 
-    WXS_ST_BEGIN(wxsDialogStyles)
+    WXS_ST_BEGIN(wxsDialogStyles,_T("wxDEFAULT_DIALOG_STYLE"))
         WXS_ST_CATEGORY("wxDialog")
         WXS_ST(wxSTAY_ON_TOP)
         WXS_ST(wxCAPTION)
@@ -43,8 +43,7 @@ wxsDialog::wxsDialog(wxsItemResData* Data):
         &Reg.Info,
         wxsBaseProperties::flContainer,
         wxsDialogEvents,
-        wxsDialogStyles,
-        _T("wxDEFAULT_DIALOG_STYLE")),
+        wxsDialogStyles),
     Title(_("Dialog")),
     Centered(false)
 {}

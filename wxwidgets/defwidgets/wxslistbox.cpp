@@ -4,7 +4,7 @@ namespace
 {
     wxsRegisterItem<wxsListBox> Reg(_T("ListBox"),wxsTWidget,_T("Standard"),70);
 
-    WXS_ST_BEGIN(wxsListBoxStyles)
+    WXS_ST_BEGIN(wxsListBoxStyles,_T(""))
         WXS_ST_CATEGORY("wxListBox")
         WXS_ST_MASK(wxLB_HSCROLL,wxsSFWin,0,true) // Windows ONLY
         WXS_ST(wxLB_SINGLE)
@@ -30,8 +30,7 @@ wxsListBox::wxsListBox(wxsItemResData* Data):
         &Reg.Info,
         wxsBaseProperties::flAll,
         wxsListBoxEvents,
-        wxsListBoxStyles,
-        _T("")),
+        wxsListBoxStyles),
     DefaultSelection(-1)
 {}
 

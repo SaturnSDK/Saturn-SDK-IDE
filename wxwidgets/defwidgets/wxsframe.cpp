@@ -4,7 +4,7 @@ namespace
 {
     wxsRegisterItem<wxsFrame> Reg( _T("Frame"), wxsTContainer, _T(""), 0 );
 
-    WXS_ST_BEGIN(wxsFrameStyles)
+    WXS_ST_BEGIN(wxsFrameStyles,_T("wxDEFAULT_FRAME_STYLE"))
         WXS_ST_CATEGORY("wxFrame")
         WXS_ST(wxSTAY_ON_TOP)
         WXS_ST(wxCAPTION)
@@ -51,8 +51,7 @@ wxsFrame::wxsFrame(wxsItemResData* Data):
         &Reg.Info,
         wxsBaseProperties::flContainer,
         wxsFrameEvents,
-        wxsFrameStyles,
-        _T("wxDEFAULT_FRAME_STYLE")),
+        wxsFrameStyles),
     Title(_("Frame")),
     Centered(false)
 {}

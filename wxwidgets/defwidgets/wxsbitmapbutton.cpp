@@ -4,7 +4,7 @@ namespace
 {
     wxsRegisterItem<wxsBitmapButton> Reg(_T("BitmapButton"),wxsTWidget,_T("Standard"),50);
 
-    WXS_ST_BEGIN(wxsBitmapButtonStyles)
+    WXS_ST_BEGIN(wxsBitmapButtonStyles,_T(""))
         WXS_ST_CATEGORY("wxBitmapButton")
         WXS_ST_MASK(wxBU_LEFT,wxsSFWin,0,true)
         WXS_ST_MASK(wxBU_TOP,wxsSFWin,0,true)
@@ -29,8 +29,7 @@ wxsBitmapButton::wxsBitmapButton(wxsItemResData* Data):
         &Reg.Info,
         wxsBaseProperties::flAll,
         wxsBitmapButtonEvents,
-        wxsBitmapButtonStyles,
-        _T(""))
+        wxsBitmapButtonStyles)
 {}
 
 void wxsBitmapButton::OnBuildCreatingCode(wxString& Code,const wxString& WindowParent,wxsCodingLang Language)

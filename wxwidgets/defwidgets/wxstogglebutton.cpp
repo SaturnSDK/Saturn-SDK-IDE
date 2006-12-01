@@ -6,7 +6,7 @@ namespace
 {
     wxsRegisterItem<wxsToggleButton> Reg(_T("ToggleButton"),wxsTWidget,_T("Standard"),50);
 
-    WXS_ST_BEGIN(wxsToggleButtonStyles)
+    WXS_ST_BEGIN(wxsToggleButtonStyles,_T(""))
         WXS_ST_CATEGORY("wxToggleButton")
         WXS_ST_DEFAULTS()
     WXS_ST_END()
@@ -25,8 +25,7 @@ wxsToggleButton::wxsToggleButton(wxsItemResData* Data):
         &Reg.Info,
         wxsBaseProperties::flAll,
         wxsToggleButtonEvents,
-        wxsToggleButtonStyles,
-        _T("")),
+        wxsToggleButtonStyles),
    Label(_("Label")),
    IsChecked(false)
 {}

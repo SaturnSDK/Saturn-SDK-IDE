@@ -6,7 +6,7 @@ namespace
 {
     wxsRegisterItem<wxsDatePickerCtrl> Reg(_T("DatePickerCtrl"),wxsTWidget,_T("Standard"),30);
 
-    WXS_ST_BEGIN(wxsDatePickerCtrlStyles)
+    WXS_ST_BEGIN(wxsDatePickerCtrlStyles,_T(""))
         WXS_ST_CATEGORY("wxDatePickerCtrl")
         WXS_ST(wxDP_DEFAULT)
         WXS_ST(wxDP_SPIN)
@@ -28,8 +28,7 @@ wxsDatePickerCtrl::wxsDatePickerCtrl(wxsItemResData* Data):
         &Reg.Info,
         wxsBaseProperties::flAll,
         wxsDatePickerCtrlEvents,
-        wxsDatePickerCtrlStyles,
-        _T(""))
+        wxsDatePickerCtrlStyles)
 {}
 
 void wxsDatePickerCtrl::OnBuildCreatingCode(wxString& Code,const wxString& WindowParent,wxsCodingLang Language)

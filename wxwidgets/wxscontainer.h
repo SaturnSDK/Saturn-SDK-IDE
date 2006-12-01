@@ -20,16 +20,13 @@ class wxsContainer: public wxsParent
          *  \param EventArray pointer to static set of events
          *  \param StyleSet set of used styles, if NULL, this widget won't
          *         provide styles by default
-         *  \param DefaultStyle default style used on read errors, string can
-         *         contain one or more style names separated with '|' character
          */
         wxsContainer(
             wxsItemResData* Data,
             const wxsItemInfo* Info,
             long PropertiesFlags,
             const wxsEventDesc* EventArray = NULL,
-            const wxsStyle* StyleSet=NULL,
-            const wxString& DefaultStyle=wxEmptyString);
+            const wxsStyleSet* StyleSet=NULL);
 
     protected:
 
@@ -86,7 +83,7 @@ class wxsContainer: public wxsParent
         /** \brief Easy access to style (can be used directly in wxWidgets */
         inline long Style()
         {
-            return wxsStyleProperty::GetWxStyle(m_StyleBits,m_StyleSet,false);
+            return m_StyleSet->GetWxStyle(m_StyleBits,false);
         }
 
         /** \brief Function setting up standard widget properties after
@@ -124,7 +121,7 @@ class wxsContainer: public wxsParent
         /** \brief Easy access to style code */
         inline wxString StyleCode(wxsCodingLang Language)
         {
-            return wxsStyleProperty::GetString(m_StyleBits,m_StyleSet,false,Language);
+            return m_StyleSet->GetString(m_StyleBits,false,Language);
         }
 
         /** \brief Function adding code setting up properties after window
@@ -158,7 +155,7 @@ class wxsContainer: public wxsParent
          */
         virtual void OnAddItemQPP(wxsAdvQPP* QPP);
 
-        const wxsStyle* m_StyleSet;
+        const wxsStyleSet* m_StyleSet;
         wxString m_DefaultStyle;
         long m_StyleBits;
         long m_ExStyleBits;

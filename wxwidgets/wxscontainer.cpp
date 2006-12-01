@@ -6,17 +6,16 @@ wxsContainer::wxsContainer(
     const wxsItemInfo* Info,
     long PropertiesFlags,
     const wxsEventDesc* EventArray,
-    const wxsStyle* StyleSet,
-    const wxString& DefaultStyle):
+    const wxsStyleSet* StyleSet):
         wxsParent(Data,Info,PropertiesFlags,EventArray),
         m_StyleSet(StyleSet),
-        m_DefaultStyle(DefaultStyle),
         m_StyleBits(0),
         m_ExStyleBits(0)
 {
     if ( m_StyleSet )
     {
-        wxsStyleProperty::SetFromString(m_StyleBits,m_DefaultStyle,m_StyleSet,false);
+        m_StyleBits = m_StyleSet->GetDefaultBits(false);
+        m_ExStyleBits = m_StyleSet->GetDefaultBits(true);
     }
 }
 
@@ -75,8 +74,8 @@ void wxsContainer::OnEnumItemProperties(long Flags)
     OnEnumContainerProperties(Flags);
     if ( m_StyleSet )
     {
-        WXS_STYLE(wxsContainer,m_StyleBits,0,_("Style"),_T("style"),m_StyleSet,m_DefaultStyle);
-        WXS_EXSTYLE(wxsContainer,m_ExStyleBits,0,_("Extra style"),_T("exstyle"),m_StyleSet,wxEmptyString);
+        WXS_STYLE(wxsContainer,m_StyleBits,0,_("Style"),_T("style"),m_StyleSet);
+        WXS_EXSTYLE(wxsContainer,m_ExStyleBits,0,_("Extra style"),_T("exstyle"),m_StyleSet);
     }
 }
 
@@ -88,7 +87,7 @@ void wxsContainer::OnAddItemQPP(wxsAdvQPP* QPP)
 wxWindow* wxsContainer::SetupWindow(wxWindow* Preview,bool IsExact)
 {
     GetBaseProps()->SetupWindow(Preview,IsExact);
-    long ExStyle = wxsStyleProperty::GetWxStyle(m_ExStyleBits,m_StyleSet,true);
+    long ExStyle = m_StyleSet->GetWxStyle(m_ExStyleBits,true);
     if ( ExStyle != 0 )
     {
         Preview->SetExtraStyle(Preview->GetExtraStyle() | ExStyle);
@@ -105,7 +104,7 @@ void wxsContainer::SetupWindowCode(wxString& Code,wxsCodingLang Language)
             GetBaseProps()->BuildSetupWindowCode(Code,GetVarName(),wxsCPP);
             if ( m_ExStyleBits )
             {
-                wxString ExStyleStr = wxsStyleProperty::GetString(m_ExStyleBits,m_StyleSet,true,wxsCPP);
+                wxString ExStyleStr = m_StyleSet->GetString(m_ExStyleBits,true,wxsCPP);
                 if ( ExStyleStr != _T("0") )
                 {
                     wxString VarAccess = GetVarName().empty() ? _T("") : GetVarName() + _T("->");

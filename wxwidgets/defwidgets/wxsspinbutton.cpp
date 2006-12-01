@@ -4,7 +4,7 @@ namespace
 {
     wxsRegisterItem<wxsSpinButton> Reg(_T("SpinButton"),wxsTWidget,_T("Standard"),50);
 
-    WXS_ST_BEGIN(wxsSpinButtonStyles)
+    WXS_ST_BEGIN(wxsSpinButtonStyles,_T(""))
         WXS_ST_CATEGORY("wxsSpinButton")
 
     // NOTE (cyberkoa##): wxSP_HORIZONTAL, wxSP_VERTICAL are not found in HELP but in wxMSW's XRC. Assume same as spinbutton
@@ -31,8 +31,7 @@ wxsSpinButton::wxsSpinButton(wxsItemResData* Data):
         &Reg.Info,
         wxsBaseProperties::flAll,
         wxsSpinButtonEvents,
-        wxsSpinButtonStyles,
-        _T("")),
+        wxsSpinButtonStyles),
     Value(0),
     Min(0),
     Max(100)

@@ -6,7 +6,7 @@ namespace
 {
     wxsRegisterItem<wxsSlider> Reg(_T("Slider"),wxsTWidget,_T("Standard"),50);
 
-    WXS_ST_BEGIN(wxsSliderStyles)
+    WXS_ST_BEGIN(wxsSliderStyles,_T(""))
         WXS_ST_CATEGORY("wxSlider")
         WXS_ST(wxSL_HORIZONTAL)
         WXS_ST(wxSL_VERTICAL)
@@ -63,8 +63,7 @@ wxsSlider::wxsSlider(wxsItemResData* Data):
         &Reg.Info,
         wxsBaseProperties::flAll,
         wxsSliderEvents,
-        wxsSliderStyles,
-        _T("")),
+        wxsSliderStyles),
     Value(0),
     Min(0),
     Max(100),

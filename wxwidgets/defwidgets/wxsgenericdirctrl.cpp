@@ -6,7 +6,7 @@ namespace
 {
     wxsRegisterItem<wxsGenericDirCtrl> Reg(_T("GenericDirCtrl"),wxsTWidget,_T("Standard"),30);
 
-    WXS_ST_BEGIN(wxsGenericDirCtrlStyles)
+    WXS_ST_BEGIN(wxsGenericDirCtrlStyles,_T(""))
         WXS_ST_CATEGORY("wxGenericDirCtrl")
         WXS_ST(wxDIRCTRL_DIR_ONLY)
         WXS_ST(wxDIRCTRL_3D_INTERNAL)
@@ -27,8 +27,7 @@ wxsGenericDirCtrl::wxsGenericDirCtrl(wxsItemResData* Data):
         &Reg.Info,
         wxsBaseProperties::flAll,
         wxsGenericDirCtrlEvents,
-        wxsGenericDirCtrlStyles,
-        _T("")),
+        wxsGenericDirCtrlStyles),
     DefaultFilter(0)
 {}
 

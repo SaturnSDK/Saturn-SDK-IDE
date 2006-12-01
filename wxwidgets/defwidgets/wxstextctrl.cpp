@@ -4,7 +4,7 @@ namespace
 {
     wxsRegisterItem<wxsTextCtrl> Reg(_T("TextCtrl"),wxsTWidget,_T("Standard"),75);
 
-    WXS_ST_BEGIN(wxsTextCtrlStyles)
+    WXS_ST_BEGIN(wxsTextCtrlStyles,_T(""))
         WXS_ST_CATEGORY("wxTextCtrl")
         WXS_ST(wxTE_NO_VSCROLL)
         WXS_ST(wxTE_AUTO_SCROLL)
@@ -54,8 +54,7 @@ wxsTextCtrl::wxsTextCtrl(wxsItemResData* Data):
         &Reg.Info,
         wxsBaseProperties::flAll,
         wxsTextCtrlEvents,
-        wxsTextCtrlStyles,
-        _T("")),
+        wxsTextCtrlStyles),
     Text(_("Text")),
     MaxLength(0)
 {}

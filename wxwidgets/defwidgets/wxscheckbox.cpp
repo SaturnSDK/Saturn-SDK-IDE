@@ -4,7 +4,7 @@ namespace
 {
     wxsRegisterItem<wxsCheckBox> Reg(_T("CheckBox"),wxsTWidget,_T("Standard"),60);
 
-    WXS_ST_BEGIN(wxsCheckBoxStyles)
+    WXS_ST_BEGIN(wxsCheckBoxStyles,_T(""))
         WXS_ST_CATEGORY("wxCheckBox")
         WXS_ST(wxCHK_2STATE)
         WXS_ST(wxALIGN_RIGHT)
@@ -24,8 +24,7 @@ wxsCheckBox::wxsCheckBox(wxsItemResData* Data):
         &Reg.Info,
         wxsBaseProperties::flAll,
         wxsCheckBoxEvents,
-        wxsCheckBoxStyles,
-        _T("")),
+        wxsCheckBoxStyles),
     Label(_("Label")),
     IsChecked(false)
 {}

@@ -4,7 +4,7 @@ namespace
 {
     wxsRegisterItem<wxsStaticBitmap> Reg(_T("StaticBitmap"),wxsTWidget,_T("Standard"),70);
 
-    WXS_ST_BEGIN(wxsStaticBitmapStyles)
+    WXS_ST_BEGIN(wxsStaticBitmapStyles,_T(""))
         WXS_ST_CATEGORY("wxStaticBitmap")
     WXS_ST_END()
 
@@ -20,8 +20,7 @@ wxsStaticBitmap::wxsStaticBitmap(wxsItemResData* Data):
         &Reg.Info,
         wxsBaseProperties::flAll,
         wxsStaticBitmapEvents,
-        wxsStaticBitmapStyles,
-        _T(""))
+        wxsStaticBitmapStyles)
 {}
 
 void wxsStaticBitmap::OnBuildCreatingCode(wxString& Code,const wxString& WindowParent,wxsCodingLang Language)

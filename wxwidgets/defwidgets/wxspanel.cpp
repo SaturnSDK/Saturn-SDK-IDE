@@ -4,7 +4,7 @@ namespace
 {
     wxsRegisterItem<wxsPanel> Reg(_T("Panel"),wxsTContainer, _T("Standard"), 20);
 
-    WXS_ST_BEGIN(wxsPanelStyles)
+    WXS_ST_BEGIN(wxsPanelStyles,_T("wxTAB_TRAVERSAL"))
         WXS_ST_CATEGORY("wxPanel")
         WXS_ST(wxNO_3D)
         WXS_ST(wxTAB_TRAVERSAL)
@@ -22,8 +22,7 @@ wxsPanel::wxsPanel(wxsItemResData* Data):
         &Reg.Info,
         wxsBaseProperties::flContainer|wxsItem::flId|wxsItem::flVariable,
         wxsPanelEvents,
-        wxsPanelStyles,
-        _T("wxTAB_TRAVERSAL"))
+        wxsPanelStyles)
 {}
 
 void wxsPanel::OnBuildCreatingCode(wxString& Code,const wxString& WindowParent,wxsCodingLang Language)

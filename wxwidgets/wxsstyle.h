@@ -1,6 +1,8 @@
 #ifndef __WXSSTYLE_H
 #define __WXSSTYLE_H
 
+#include "../wxscodinglang.h"
+
 // TODO: Think about non-macro implementation
 
 /* ************************************************************************** */
@@ -40,27 +42,94 @@ struct wxsStyle
     inline bool IsExtra() const { return ( Flags & wxsSFExt ) != 0; }
 };
 
+/** \brief Class managing giving set of styles
+ *
+ * This class is managing style sets, one per one set, NOT per instance of
+ * item. It means that item must have extra long variables to remember style
+ * settings.
+ */
+class wxsStyleSet
+{
+    public:
+
+        /** \brief Ctor, takes array of styles
+         * \param Default default style
+         */
+        wxsStyleSet(const wxChar* DefaultStyle=_T(""));
+
+        /** \brief Adding new style to array */
+        void AddStyle(const wxChar* Name,long Value,long Flags);
+
+        /** \brief Notifying the end of style declaration */
+        void EndStyle();
+
+        /** \brief Dctor */
+        ~wxsStyleSet();
+
+        /** \brief Getting names array */
+        inline const wxArrayString& GetNames(bool IsExtra) const { return IsExtra?ExStyleNames:StyleNames; }
+
+        /** \brief Getting style bits array (each style has unique bit) */
+        inline const wxArrayLong& GetBits(bool IsExtra) const { return IsExtra?ExStyleBits:StyleBits; }
+
+        /** \brief Getting values array (real values used inside wxWidgets) */
+        inline const wxArrayLong& GetValues(bool IsExtra) const { return IsExtra?ExStyleValues:StyleValues; }
+
+        /** \brief Getting style flags array */
+        inline const wxArrayLong& GetFlags(bool IsExtra) const { return IsExtra?ExStyleFlags:StyleFlags; }
+
+        /** \brief Getting default style bits */
+        inline long GetDefaultBits(bool IsExtra) const { return IsExtra?0:Default; }
+
+        /** \brief Generating Bitfield from given string (where styles are separated through '|') */
+        long GetBits(const wxString& Style,bool IsExtra) const;
+
+        /** \brief Converting given style set bitfield to wxString usning given language (note that CPP is same format like the one used in XRC files) */
+        wxString GetString(long Bits,bool IsExtra,wxsCodingLang Language) const;
+
+        /** \brief Converting style bits to value which can be used in wxWidgets */
+        long GetWxStyle(long StyleBits,bool IsExtra=false) const;
+
+    private:
+
+        const wxChar* DefaultStr;
+        long Default;
+        wxArrayString StyleNames;
+        wxArrayLong StyleBits;
+        wxArrayLong StyleValues;
+        wxArrayLong StyleFlags;
+
+        wxArrayString ExStyleNames;
+        wxArrayLong ExStyleBits;
+        wxArrayLong ExStyleValues;
+        wxArrayLong ExStyleFlags;
+};
+
 /* ************************************************************************** */
 /*  Usefull defines used while creating set of widget's styles                */
 /* ************************************************************************** */
 
 /** Beginning definition of array (source file) */
-#define WXS_ST_BEGIN(name)                      \
-    static wxsStyle name[] = {
+#define WXS_ST_BEGIN(name,DefaultStyle)                             \
+    const wxsStyleSet* Get##name##StyleSet();                       \
+    static const wxsStyleSet* name = Get##name##StyleSet();         \
+    const wxsStyleSet* Get##name##StyleSet()                        \
+    {                                                               \
+        static wxsStyleSet Set(DefaultStyle);                       \
 
 /** Adding new style into list
  *
  * This style will be set as available on all platforms
  */
-#define WXS_ST(name)                            \
-    { _T(#name), name, wxsSFAll & (~wxsSFExt) },
+#define WXS_ST(name)                                                \
+        Set.AddStyle(_T(#name), name, wxsSFAll & ~wxsSFExt);
 
 /** Adding new extended style into list
  *
  * This style will be set as available on all platforms
  */
-#define WXS_EXST(name) \
-    { _T(#name), name, wxsSFAll | wxsSFExt },
+#define WXS_EXST(name)                                              \
+        Set.AddStyle(_T(#name), name, wxsSFAll | wxsSFExt);
 
 /** Adding new style with platform masks
  *
@@ -69,10 +138,10 @@ struct wxsStyle
  * \param Exclude - flags with excluded platforms (use 0 when including only)
  * \param InXRC - true if this style can be used when resource uses XRC files
  */
-#define WXS_ST_MASK(name,Include,Exclude,InXRC)      \
-    { _T(#name), name,                               \
-        ((Include) & (~(Exclude)) & (~(wxsSFExt|wxsSFXRC))) | \
-        ((InXRC) ? wxsSFXRC : 0 ) },
+#define WXS_ST_MASK(name,Include,Exclude,InXRC)                     \
+        Set.AddStyle(_T(#name), name,                               \
+            ((Include) & (~(Exclude)) & (~(wxsSFExt|wxsSFXRC))) |   \
+            ((InXRC) ? wxsSFXRC : 0 ) );
 
 /** Adding new extended style with platform masks
  *
@@ -81,18 +150,20 @@ struct wxsStyle
  * \param Exclude - flags with excluded platforms (use 0 when including only)
  * \param InXRC - true if this style can be used when resource uses XRC files
  */
-#define WXS_EXST_MASK(name,Include,Exclude,InXRC)    \
-    { _T(#name), name,                               \
-        ((Include) & (~(Exclude)) & (~wxsSFXRC)) |   \
-        ((InXRC) ? wxsSFXRC : 0 ) | wxsSFExt },
+#define WXS_EXST_MASK(name,Include,Exclude,InXRC)                   \
+        Set.AddStyle(_T(#name), name,                               \
+            ((Include) & (~(Exclude)) & (~wxsSFXRC)) |              \
+            ((InXRC) ? wxsSFXRC : 0 ) | wxsSFExt );
 
 /** Beginning new  category */
-#define WXS_ST_CATEGORY(name)                   \
-    { _T(name), ((long)-1) },
+#define WXS_ST_CATEGORY(name)                                       \
+        Set.AddStyle(_T(#name),-1, 0);
 
 /** Ending creation of list */
-#define WXS_ST_END()                            \
-    { _T(""), 0 } };                            \
+#define WXS_ST_END()                                                \
+        Set.EndStyle();                                             \
+        return &Set;                                                \
+    }
 
 /** adding all default window's style */
 #define WXS_ST_DEFAULTS()                       \

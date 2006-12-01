@@ -4,7 +4,7 @@ namespace
 {
     wxsRegisterItem<wxsTreeCtrl> Reg(_T("TreeCtrl"),wxsTWidget,_T("Standard"),70);
 
-    WXS_ST_BEGIN(wxsTreeCtrlStyles)
+    WXS_ST_BEGIN(wxsTreeCtrlStyles,_T(""))
         WXS_ST_CATEGORY("wxTreeCtrl")
         WXS_ST(wxTR_EDIT_LABELS)
         WXS_ST(wxTR_NO_BUTTONS)
@@ -56,8 +56,7 @@ wxsTreeCtrl::wxsTreeCtrl(wxsItemResData* Data):
         &Reg.Info,
         wxsBaseProperties::flAll,
         wxsTreeCtrlEvents,
-        wxsTreeCtrlStyles,
-        _T(""))
+        wxsTreeCtrlStyles)
 {}
 
 void wxsTreeCtrl::OnBuildCreatingCode(wxString& Code,const wxString& WindowParent,wxsCodingLang Language)

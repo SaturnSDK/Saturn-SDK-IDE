@@ -4,7 +4,7 @@ namespace
 {
     wxsRegisterItem<wxsListCtrl> Reg(_T("ListCtrl"),wxsTWidget,_T("Standard"),60);
 
-    WXS_ST_BEGIN(wxsListCtrlStyles)
+    WXS_ST_BEGIN(wxsListCtrlStyles,_T(""))
         WXS_ST_CATEGORY("wxListCtrl")
         WXS_ST(wxLC_LIST)
         WXS_ST(wxLC_REPORT)
@@ -57,8 +57,7 @@ wxsListCtrl::wxsListCtrl(wxsItemResData* Data):
         &Reg.Info,
         wxsBaseProperties::flAll,
         wxsListCtrlEvents,
-        wxsListCtrlStyles,
-        _T(""))
+        wxsListCtrlStyles)
 {}
 
 void wxsListCtrl::OnBuildCreatingCode(wxString& Code,const wxString& WindowParent,wxsCodingLang Language)

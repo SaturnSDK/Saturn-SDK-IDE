@@ -4,7 +4,7 @@ namespace
 {
     wxsRegisterItem<wxsStaticBox> Reg(_T("StaticBox"),wxsTWidget,_T("Standard"),50);
 
-    WXS_ST_BEGIN(wxsStaticBoxStyles)
+    WXS_ST_BEGIN(wxsStaticBoxStyles,_T(""))
         WXS_ST_CATEGORY("wxStaticBox")
         WXS_ST(wxBU_LEFT)
         WXS_ST(wxBU_TOP)
@@ -26,8 +26,7 @@ wxsStaticBox::wxsStaticBox(wxsItemResData* Data):
         &Reg.Info,
         wxsBaseProperties::flAll,
         wxsStaticBoxEvents,
-        wxsStaticBoxStyles,
-        _T("")),
+        wxsStaticBoxStyles),
     Label(_("Label"))
 {}
 

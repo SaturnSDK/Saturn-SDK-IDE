@@ -6,7 +6,7 @@ namespace
 {
     wxsRegisterItem<wxsCalendarCtrl> Reg(_T("CalendarCtrl"),wxsTWidget,_T("Standard"),30);
 
-    WXS_ST_BEGIN(wxsCalendarCtrlStyles)
+    WXS_ST_BEGIN(wxsCalendarCtrlStyles,_T(""))
         WXS_ST_CATEGORY("wxCalendarCtrl")
         WXS_ST(wxCAL_SUNDAY_FIRST)
         WXS_ST(wxCAL_MONDAY_FIRST)
@@ -36,8 +36,7 @@ wxsCalendarCtrl::wxsCalendarCtrl(wxsItemResData* Data):
         &Reg.Info,
         wxsBaseProperties::flAll,
         wxsCalendarCtrlEvents,
-        wxsCalendarCtrlStyles,
-        _T(""))
+        wxsCalendarCtrlStyles)
 {}
 
 void wxsCalendarCtrl::OnBuildCreatingCode(wxString& Code,const wxString& WindowParent,wxsCodingLang Language)

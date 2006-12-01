@@ -4,7 +4,7 @@ namespace
 {
     wxsRegisterItem<wxsScrollBar> Reg(_T("ScrollBar"),wxsTWidget,_T("Standard"),50);
 
-    WXS_ST_BEGIN(wxsScrollBarStyles)
+    WXS_ST_BEGIN(wxsScrollBarStyles,_T(""))
         WXS_ST_CATEGORY("wxScrollBar")
         WXS_ST(wxSB_HORIZONTAL)
         WXS_ST(wxSB_VERTICAL)
@@ -40,8 +40,7 @@ wxsScrollBar::wxsScrollBar(wxsItemResData* Data):
         &Reg.Info,
         wxsBaseProperties::flAll,
         wxsScrollBarEvents,
-        wxsScrollBarStyles,
-        _T("")),
+        wxsScrollBarStyles),
     Value(0),
     ThumbSize(1),
     Range(10),

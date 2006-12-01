@@ -4,7 +4,7 @@ namespace
 {
     wxsRegisterItem<wxsStaticText> Reg(_T("StaticText"),wxsTWidget,_T("Standard"),80);
 
-    WXS_ST_BEGIN(wxsStaticTextStyles)
+    WXS_ST_BEGIN(wxsStaticTextStyles,_T(""))
         WXS_ST_CATEGORY("wxStaticText")
         WXS_ST(wxALIGN_LEFT)
         WXS_ST(wxALIGN_RIGHT)
@@ -20,7 +20,7 @@ namespace
 
 wxsStaticText::wxsStaticText(wxsItemResData* Data):
     wxsWidget(Data,&Reg.Info,wxsBaseProperties::flAll,
-        wxsStaticTextEvents,wxsStaticTextStyles,_T("")),
+        wxsStaticTextEvents,wxsStaticTextStyles),
     Label(_("Label"))
 
 {}

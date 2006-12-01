@@ -4,7 +4,7 @@ namespace
 {
     wxsRegisterItem<wxsCheckListBox> Reg(_T("CheckListBox"),wxsTWidget,_T("Standard"),50);
 
-    WXS_ST_BEGIN(wxsCheckListBoxStyles)
+    WXS_ST_BEGIN(wxsCheckListBoxStyles,_T(""))
         WXS_ST_CATEGORY("wxCheckListBox")
         WXS_ST_MASK(wxLB_HSCROLL,wxsSFWin,0,true) // Windows ONLY
         WXS_ST(wxLB_SINGLE)
@@ -28,8 +28,7 @@ wxsCheckListBox::wxsCheckListBox(wxsItemResData* Data):
         &Reg.Info,
         wxsBaseProperties::flAll,
         wxsCheckListBoxEvents,
-        wxsCheckListBoxStyles,
-        _T(""))
+        wxsCheckListBoxStyles)
 {}
 
 

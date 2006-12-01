@@ -5,58 +5,39 @@
 
 // Helper macro for fetching variables
 #define STYLEBITS   wxsVARIABLE(Object,Offset,long)
+#define STYLESETPTR wxsVARIABLE(Object,StyleSetPtrOffset,const wxsStyleSet*)
 
 wxsStyleProperty::wxsStyleProperty(
     const wxString&  StyleName,
     const wxString&  DataName,
-    const wxsStyle* _StyleSet,
     long _Offset,
-    const wxString& _Default,
+    long _StyleSetPtrOffset,
     bool _IsExtra):
         wxsProperty(StyleName,DataName),
-        StyleSet(_StyleSet),
         Offset(_Offset),
+        StyleSetPtrOffset(_StyleSetPtrOffset),
         IsExtra(_IsExtra)
 {
-    Default = ParseStringToBits(_Default);
-    int StylesCount = 0;
-    for ( const wxsStyle* St = StyleSet; !St->Name.empty(); St++ )
-    {
-        if ( !St->IsCategory() )
-        {
-            if ( St->IsExtra() == IsExtra )
-            {
-                StyleNames.Add(St->Name);
-                StyleBits.Add(1L<<StylesCount);
-                StyleFlags.Add(St->Flags);
-                StylesCount++;
-            }
-        }
-    }
-    StyleNames.Shrink();
-    StyleBits.Shrink();
 }
 
 void wxsStyleProperty::PGCreate(wxsPropertyContainer* Object,wxPropertyGridManager* Grid,wxPGId Parent)
 {
-    if ( !StyleNames.empty() )
+    if ( STYLESETPTR && !STYLESETPTR->GetNames(IsExtra).IsEmpty() )
     {
+        const wxArrayString& StyleNames = STYLESETPTR->GetNames(IsExtra);
+        const wxArrayLong&   StyleFlags = STYLESETPTR->GetFlags(IsExtra);
+        const wxArrayLong&   StyleBits  = STYLESETPTR->GetBits(IsExtra);
+
         bool IsXrc = ( GetPropertiesFlags(Object) & (wxsItem::flFile|wxsItem::flMixed) ) != 0;
         wxPGConstants StyleConsts;
-        if ( IsXrc )
+
+        size_t Count = StyleNames.Count();
+        for ( size_t i = 0; i < Count; i++ )
         {
-            size_t Count = StyleNames.Count();
-            for ( size_t i = 0; i < Count; i++ )
+            if ( !IsXrc || (StyleFlags[i] & wxsSFXRC) )
             {
-                if ( StyleFlags[i] & wxsSFXRC )
-                {
-                    StyleConsts.Add(StyleNames[i],StyleBits[i]);
-                }
+                StyleConsts.Add(StyleNames[i],StyleBits[i]);
             }
-        }
-        else
-        {
-            StyleConsts.Add(StyleNames,StyleBits);
         }
 
         if ( StyleConsts.GetCount() )
@@ -84,7 +65,7 @@ bool wxsStyleProperty::XmlRead(wxsPropertyContainer* Object,TiXmlElement* Elemen
 {
     if ( !Element )
     {
-        STYLEBITS = Default;
+        STYLEBITS = STYLESETPTR?STYLESETPTR->GetDefaultBits(IsExtra):0;
         return false;
     }
 
@@ -96,169 +77,32 @@ bool wxsStyleProperty::XmlRead(wxsPropertyContainer* Object,TiXmlElement* Elemen
     }
     if ( Str.empty() )
     {
-        STYLEBITS = Default;
+        STYLEBITS = STYLESETPTR?STYLESETPTR->GetDefaultBits(IsExtra):0;
         return false;
     }
-    STYLEBITS = ParseStringToBits(Str);
+    STYLEBITS = STYLESETPTR->GetBits(Str,IsExtra);
     return true;
 }
 
 bool wxsStyleProperty::XmlWrite(wxsPropertyContainer* Object,TiXmlElement* Element)
 {
-    if ( STYLEBITS != Default )
+    if ( STYLESETPTR )
     {
-        Element->InsertEndChild(TiXmlText(cbU2C(BitsToString(STYLEBITS))));
-        return true;
+        if ( STYLEBITS != STYLESETPTR->GetDefaultBits(IsExtra) )
+        {
+            Element->InsertEndChild(TiXmlText(cbU2C(STYLESETPTR->GetString(STYLEBITS,IsExtra,wxsCPP))));
+            return true;
+        }
     }
     return false;
 }
 
 bool wxsStyleProperty::PropStreamRead(wxsPropertyContainer* Object,wxsPropertyStream* Stream)
 {
-    return Stream->GetLong(GetDataName(),STYLEBITS,Default);
+    return Stream->GetLong(GetDataName(),STYLEBITS,STYLESETPTR?STYLESETPTR->GetDefaultBits(IsExtra):0);
 }
 
 bool wxsStyleProperty::PropStreamWrite(wxsPropertyContainer* Object,wxsPropertyStream* Stream)
 {
-    return Stream->PutLong(GetDataName(),STYLEBITS,Default);
-}
-
-long wxsStyleProperty::ParseStringToBits(const wxString& String)
-{
-    long Bits = 0;
-    wxStringTokenizer Tkn(String, wxT("| \t\n"), wxTOKEN_STRTOK);
-    while ( Tkn.HasMoreTokens() )
-    {
-        int Index = StyleNames.Index(Tkn.GetNextToken());
-        if ( Index != wxNOT_FOUND )
-        {
-            Bits |= StyleBits[Index];
-        }
-    }
-    return Bits;
-}
-
-wxString wxsStyleProperty::BitsToString(long Bits)
-{
-    wxString Result;
-    size_t Count = StyleNames.Count();
-    for ( size_t i = 0; i<Count; i++ )
-    {
-        if ( Bits & StyleBits[i] )
-        {
-            Result.Append(StyleNames[i]);
-            Result.Append(_T('|'));
-        }
-    }
-
-    if ( Result.empty() )
-    {
-        return _T("0");
-    }
-
-    Result.RemoveLast();
-    return Result;
-}
-
-void wxsStyleProperty::SetStyle(long& StyleBits,long Style,const wxsStyle* S,bool IsExtra)
-{
-    long Bit = 1L;
-
-    for ( ; !S->Name.empty(); S++ )
-    {
-        if ( !S->IsCategory() && (S->IsExtra() == IsExtra) )
-        {
-            if ( S->Value == Style )
-            {
-                StyleBits |= Bit;
-                return;
-            }
-            Bit <<= 1;
-        }
-    }
-}
-
-void wxsStyleProperty::ResetStyle(long& StyleBits,long Style,const wxsStyle* S,bool IsExtra)
-{
-    long Bit = ~1L;
-    for ( ; !S->Name.empty(); S++ )
-    {
-        if ( !S->IsCategory() && (S->IsExtra() == IsExtra) )
-        {
-            if ( S->Value == Style )
-            {
-                StyleBits &= Bit;
-                return;
-            }
-            Bit <<= 1;
-        }
-    }
-}
-
-wxString wxsStyleProperty::GetString(long StyleBits,const wxsStyle* S,bool IsExtra,wxsCodingLang Language)
-{
-    switch ( Language )
-    {
-        case wxsCPP:
-        {
-            wxString Result;
-            long Bit = 1L;
-            if ( S )
-            {
-                for ( ; !S->Name.empty(); S++ )
-                {
-                    if ( !S->IsCategory() && (S->IsExtra() == IsExtra) )
-                    {
-                        if ( StyleBits & Bit )
-                        {
-                            Result.Append(S->Name);
-                            Result.Append(_T('|'));
-                        }
-                        Bit <<= 1;
-                    }
-                }
-            }
-
-            if ( Result.empty() )
-            {
-                return _T("0");
-            }
-
-            Result.RemoveLast();
-            return Result;
-        }
-
-        default:
-        {
-            wxsCodeMarks::Unknown(_T("wxsStyleProperty::GetString"),Language);
-        }
-    }
-    return wxEmptyString;
-}
-
-long wxsStyleProperty::GetWxStyle(long StyleBits,const wxsStyle* S,bool IsExtra)
-{
-    long Bit = 1L;
-    long Result = 0L;
-    if ( S )
-    {
-        for ( ; !S->Name.empty(); S++ )
-        {
-            if ( !S->IsCategory() && (S->IsExtra() == IsExtra) )
-            {
-                if ( StyleBits & Bit )
-                {
-                    Result |= S->Value;
-                }
-                Bit <<= 1;
-            }
-        }
-    }
-
-    return Result;
-}
-
-void wxsStyleProperty::SetFromString(long& StyleBits,const wxString& String,const wxsStyle* StyleSet,bool IsExtra)
-{
-    StyleBits = wxsStyleProperty(_T(""),_T(""),StyleSet,0,String,IsExtra).Default;
+    return Stream->PutLong(GetDataName(),STYLEBITS,STYLESETPTR?STYLESETPTR->GetDefaultBits(IsExtra):0);
 }

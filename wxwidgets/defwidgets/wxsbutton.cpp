@@ -4,7 +4,7 @@ namespace
 {
     wxsRegisterItem<wxsButton> Reg(_T("Button"),wxsTWidget,_T("Standard"),90);
 
-    WXS_ST_BEGIN(wxsButtonStyles)
+    WXS_ST_BEGIN(wxsButtonStyles,_T(""))
         WXS_ST_CATEGORY("wxButton")
         WXS_ST(wxBU_LEFT)
         WXS_ST(wxBU_TOP)
@@ -26,8 +26,7 @@ wxsButton::wxsButton(wxsItemResData* Data):
         &Reg.Info,
         wxsBaseProperties::flAll,
         wxsButtonEvents,
-        wxsButtonStyles,
-        _T("")),
+        wxsButtonStyles),
     Label(_("Label")),
     IsDefault(false)
 {}
