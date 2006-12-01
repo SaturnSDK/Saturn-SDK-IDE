@@ -2,11 +2,13 @@
 #define WXSDRAWINGWINDOW_H
 
 #include <wx/scrolwin.h>
+#include <wx/timer.h>
+#include <wx/event.h>
 
 /** \brief Class allowing drawing over it's surface.
  *
  * This window is upgrade of standard wxScrolledWindow.
- * It allows paining over it's surface and over surface
+ * It allows painting over it's surface and over surface
  * of it's children. It also handles all mouse and keyboard
  * events.
  */
@@ -64,6 +66,8 @@ class wxsDrawingWindow: public wxScrolledWindow
         void PanelMouse(wxMouseEvent& event);
         void PanelKeyboard(wxKeyEvent& event);
 
+        void OnFetchSequence(wxCommandEvent& event);
+
         /** \brief Function stating sequence fetching editor's background
          *
          * This sequence may be splitted into few smaller events so it's not
@@ -82,11 +86,11 @@ class wxsDrawingWindow: public wxScrolledWindow
         void ShowChildren();
 
         class DrawingPanel;
-        DrawingPanel* Panel;
-        bool PaintAfterFetch;
-        bool WaitTillHideChildren;
-        bool IsBlockFetch;
-        wxBitmap* Bitmap;
+
+        DrawingPanel* Panel;        /// \brief Panel put over children
+        wxBitmap* Bitmap;           /// \brief Bitmap with fetched window content (may be valid partially)
+        bool IsBlockFetch;          /// \brief Flag used to block fetching background (may be set by user)
+        bool DuringFetch;           /// \brief Set to true if we're during fetching sequence
 
         DECLARE_EVENT_TABLE()
 };

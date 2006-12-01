@@ -104,7 +104,7 @@ class wxsStyleProperty: public wxsProperty
  *  \param Default default style, provided as wxString (styles separated with | character)
  */
 #define WXS_STYLE(ClassName,VarName,Flags,PGName,DataName,StyleArray,Default) \
-    static wxsStyleProperty PropertyStyle##ClassName##VarName(PGName,DataName,StyleArray,wxsOFFSET(ClassName,VarName),Default,false); \
+    wxsStyleProperty PropertyStyle##ClassName##VarName(PGName,DataName,StyleArray,wxsOFFSET(ClassName,VarName),Default,false); \
     Property(PropertyStyle##ClassName##VarName,Flags);
 
 /** \brief Macro automatically declaring extra style property
@@ -119,7 +119,7 @@ class wxsStyleProperty: public wxsProperty
  *  \param Default default style, provided as wxString (styles separated with | character)
  */
 #define WXS_EXSTYLE(ClassName,VarName,Flags,PGName,DataName,StyleArray,Default) \
-    static wxsStyleProperty PropertyStyle##ClassName##VarName(PGName,DataName,StyleArray,wxsOFFSET(ClassName,VarName),Default,true); \
+    wxsStyleProperty PropertyStyle##ClassName##VarName(PGName,DataName,StyleArray,wxsOFFSET(ClassName,VarName),Default,true); \
     Property(PropertyStyle##ClassName##VarName,Flags);
 
 /** \} */

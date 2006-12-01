@@ -7,6 +7,19 @@
 #include <wx/dcmemory.h>
 #include <wx/dcbuffer.h>
 
+#include <manager.h>
+#include <messagemanager.h>
+
+namespace
+{
+    /** \brief Event type for background-fetching system */
+    const int wxEVT_FETCH_SEQUENCE = wxNewEventType();
+
+    /** \brief Identifier used by internal DrawingPanel class inside wxsDrawingWindow */
+    const int DrawingPanelId = wxNewId();
+}
+
+
 /** \brief Drawing panel
  *
  * This panel is put over all other items in wxsDrawingWindow class. It's
@@ -17,26 +30,26 @@ class wxsDrawingWindow::DrawingPanel: public wxPanel
     public:
 
         /** \brief Ctor */
-        DrawingPanel(wxsDrawingWindow* Parent): wxPanel(Parent,-1)
+        DrawingPanel(wxsDrawingWindow* Parent): wxPanel(Parent,DrawingPanelId)
         {
             // Connecting event handlers of drawing window
-            Connect(-1,wxEVT_PAINT,(wxObjectEventFunction)&wxsDrawingWindow::PanelPaint,NULL,Parent);
-            Connect(-1,wxEVT_LEFT_DOWN,(wxObjectEventFunction)&wxsDrawingWindow::PanelMouse,NULL,Parent);
-            Connect(-1,wxEVT_LEFT_UP,(wxObjectEventFunction)&wxsDrawingWindow::PanelMouse,NULL,Parent);
-            Connect(-1,wxEVT_LEFT_DCLICK,(wxObjectEventFunction)&wxsDrawingWindow::PanelMouse,NULL,Parent);
-            Connect(-1,wxEVT_MIDDLE_DOWN,(wxObjectEventFunction)&wxsDrawingWindow::PanelMouse,NULL,Parent);
-            Connect(-1,wxEVT_MIDDLE_UP,(wxObjectEventFunction)&wxsDrawingWindow::PanelMouse,NULL,Parent);
-            Connect(-1,wxEVT_MIDDLE_DCLICK,(wxObjectEventFunction)&wxsDrawingWindow::PanelMouse,NULL,Parent);
-            Connect(-1,wxEVT_RIGHT_DOWN,(wxObjectEventFunction)&wxsDrawingWindow::PanelMouse,NULL,Parent);
-            Connect(-1,wxEVT_RIGHT_UP,(wxObjectEventFunction)&wxsDrawingWindow::PanelMouse,NULL,Parent);
-            Connect(-1,wxEVT_RIGHT_DCLICK,(wxObjectEventFunction)&wxsDrawingWindow::PanelMouse,NULL,Parent);
-            Connect(-1,wxEVT_MOTION,(wxObjectEventFunction)&wxsDrawingWindow::PanelMouse,NULL,Parent);
-            Connect(-1,wxEVT_ENTER_WINDOW,(wxObjectEventFunction)&wxsDrawingWindow::PanelMouse,NULL,Parent);
-            Connect(-1,wxEVT_LEAVE_WINDOW,(wxObjectEventFunction)&wxsDrawingWindow::PanelMouse,NULL,Parent);
-            Connect(-1,wxEVT_MOUSEWHEEL,(wxObjectEventFunction)&wxsDrawingWindow::PanelMouse,NULL,Parent);
-            Connect(-1,wxEVT_KEY_DOWN,(wxObjectEventFunction)&wxsDrawingWindow::PanelKeyboard,NULL,Parent);
-            Connect(-1,wxEVT_KEY_UP,(wxObjectEventFunction)&wxsDrawingWindow::PanelKeyboard,NULL,Parent);
-            Connect(-1,wxEVT_CHAR,(wxObjectEventFunction)&wxsDrawingWindow::PanelKeyboard,NULL,Parent);
+            Connect(DrawingPanelId,wxEVT_PAINT,(wxObjectEventFunction)&wxsDrawingWindow::PanelPaint,NULL,Parent);
+            Connect(DrawingPanelId,wxEVT_LEFT_DOWN,(wxObjectEventFunction)&wxsDrawingWindow::PanelMouse,NULL,Parent);
+            Connect(DrawingPanelId,wxEVT_LEFT_UP,(wxObjectEventFunction)&wxsDrawingWindow::PanelMouse,NULL,Parent);
+            Connect(DrawingPanelId,wxEVT_LEFT_DCLICK,(wxObjectEventFunction)&wxsDrawingWindow::PanelMouse,NULL,Parent);
+            Connect(DrawingPanelId,wxEVT_MIDDLE_DOWN,(wxObjectEventFunction)&wxsDrawingWindow::PanelMouse,NULL,Parent);
+            Connect(DrawingPanelId,wxEVT_MIDDLE_UP,(wxObjectEventFunction)&wxsDrawingWindow::PanelMouse,NULL,Parent);
+            Connect(DrawingPanelId,wxEVT_MIDDLE_DCLICK,(wxObjectEventFunction)&wxsDrawingWindow::PanelMouse,NULL,Parent);
+            Connect(DrawingPanelId,wxEVT_RIGHT_DOWN,(wxObjectEventFunction)&wxsDrawingWindow::PanelMouse,NULL,Parent);
+            Connect(DrawingPanelId,wxEVT_RIGHT_UP,(wxObjectEventFunction)&wxsDrawingWindow::PanelMouse,NULL,Parent);
+            Connect(DrawingPanelId,wxEVT_RIGHT_DCLICK,(wxObjectEventFunction)&wxsDrawingWindow::PanelMouse,NULL,Parent);
+            Connect(DrawingPanelId,wxEVT_MOTION,(wxObjectEventFunction)&wxsDrawingWindow::PanelMouse,NULL,Parent);
+            Connect(DrawingPanelId,wxEVT_ENTER_WINDOW,(wxObjectEventFunction)&wxsDrawingWindow::PanelMouse,NULL,Parent);
+            Connect(DrawingPanelId,wxEVT_LEAVE_WINDOW,(wxObjectEventFunction)&wxsDrawingWindow::PanelMouse,NULL,Parent);
+            Connect(DrawingPanelId,wxEVT_MOUSEWHEEL,(wxObjectEventFunction)&wxsDrawingWindow::PanelMouse,NULL,Parent);
+            Connect(DrawingPanelId,wxEVT_KEY_DOWN,(wxObjectEventFunction)&wxsDrawingWindow::PanelKeyboard,NULL,Parent);
+            Connect(DrawingPanelId,wxEVT_KEY_UP,(wxObjectEventFunction)&wxsDrawingWindow::PanelKeyboard,NULL,Parent);
+            Connect(DrawingPanelId,wxEVT_CHAR,(wxObjectEventFunction)&wxsDrawingWindow::PanelKeyboard,NULL,Parent);
         }
 
 };
@@ -47,11 +60,13 @@ END_EVENT_TABLE()
 wxsDrawingWindow::wxsDrawingWindow(wxWindow* Parent,wxWindowID id):
     wxScrolledWindow(Parent,id),
     Panel(NULL),
-    PaintAfterFetch(false),
-    WaitTillHideChildren(false),
+    Bitmap(NULL),
     IsBlockFetch(false),
-    Bitmap(NULL)
+    DuringFetch(false)
 {
+    // Strange - it seems that by declaring this event in event table, it's not processed
+    Connect(-1,-1,wxEVT_FETCH_SEQUENCE,(wxObjectEventFunction)&wxsDrawingWindow::OnFetchSequence);
+    Panel = new DrawingPanel(this);
     ContentChanged();
     SetScrollbars(5,5,1,1,0,0,true);
 }
@@ -69,31 +84,21 @@ void wxsDrawingWindow::ContentChanged()
     if ( Bitmap ) delete Bitmap;
     Bitmap = new wxBitmap(Size.GetWidth(),Size.GetHeight());
 
-    // Recreating drawing panel
-    if ( Panel ) delete Panel;
-    Panel = new DrawingPanel(this);
-    Panel->Raise();
-
     // Resizing panel to cover whole window
     int X, Y;
     CalcScrolledPosition(0,0,&X,&Y);
     Panel->SetSize(X,Y,Size.GetWidth(),Size.GetHeight());
-
-    // Background will be fetched inside panel's internal routines when showing this window
+    Panel->Refresh();
 }
 
 void wxsDrawingWindow::PanelPaint(wxPaintEvent& event)
 {
-    if ( PaintAfterFetch || WaitTillHideChildren ||  IsBlockFetch )
+    wxPaintDC PaintDC(Panel);
+    if ( IsBlockFetch )
     {
-        wxPaintDC PaintDC(Panel);
         wxBitmap BmpCopy = Bitmap->GetSubBitmap(wxRect(0,0,Bitmap->GetWidth(),Bitmap->GetHeight()));
         wxBufferedDC DC(&PaintDC,BmpCopy);
         PaintExtra(&DC);
-        if ( !IsBlockFetch && !WaitTillHideChildren )
-        {
-            PaintAfterFetch = false;
-        }
     }
     else
     {
@@ -117,35 +122,40 @@ void wxsDrawingWindow::PanelKeyboard(wxKeyEvent& event)
 
 void wxsDrawingWindow::StartFetchingSequence()
 {
-    // This function will be blocking
-    // If it has been executed and not yet finished,
-    // another calls (possibly called from Manager::Yield())
-    // will not be executed
-    static bool Block = false;
-    if ( Block ) return;
-    Block = true;
+    if ( DuringFetch )
+    {
+        return;
+    }
+    DuringFetch = true;
 
+    // Fetching sequence will end after quitting
+    // this event handler. This will be done
+    // by adding some pending event
+    wxCommandEvent event(wxEVT_FETCH_SEQUENCE,GetId());
+    event.SetEventObject(this);
+    GetEventHandler()->AddPendingEvent(event);
+}
+
+void wxsDrawingWindow::OnFetchSequence(wxCommandEvent& event)
+{
     // Hiding panel to show content under it
-    ShowChildren();
     Panel->Hide();
+    ShowChildren();
+    Update();
 
     // Processing all pending events, it MUST be done
     // to repaint the content of window
     Manager::Yield();
     FetchScreen();
-    Manager::Yield();
-    WaitTillHideChildren = true;
     HideChildren();
-    Manager::Yield();
-    WaitTillHideChildren = false;
-    PaintAfterFetch = true;
-    Manager::Yield();
-    Panel->Raise();
-    Manager::Yield();
     Panel->Show();
     Manager::Yield();
+    Panel->Update();
+    Manager::Yield();
 
-    Block = false;
+    FullRepaint();
+    Manager::Yield();
+    DuringFetch = false;
 }
 
 void wxsDrawingWindow::FetchScreen()
