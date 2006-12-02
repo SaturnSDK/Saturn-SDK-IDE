@@ -6,7 +6,7 @@ namespace
 {
     wxsRegisterItem<wxsStaticLine> Reg(_T("StaticLine"),wxsTWidget,_T("Standard"),60);
 
-    WXS_ST_BEGIN(wxsStaticLineStyles,_T(""))
+    WXS_ST_BEGIN(wxsStaticLineStyles,_T("wxLI_HORIZONTAL"))
         WXS_ST_CATEGORY("wxStaticLine")
         WXS_ST(wxLI_HORIZONTAL)
         WXS_ST(wxLI_VERTICAL)
@@ -22,7 +22,6 @@ wxsStaticLine::wxsStaticLine(wxsItemResData* Data):
     wxsWidget(
         Data,
         &Reg.Info,
-        wxsBaseProperties::flAll,
         wxsStaticLineEvents,
         wxsStaticLineStyles)
 {
@@ -40,12 +39,20 @@ void wxsStaticLine::OnBuildCreatingCode(wxString& Code,const wxString& WindowPar
     {
         case wxsCPP:
         {
-            Code<< GetVarName() << _T(" = new wxStaticLine(")
-                << WindowParent << _T(",")
+            if ( GetParent() )
+            {
+                Code<< GetVarName() << _T(" = new wxStaticLine(");
+            }
+            else
+            {
+                Code<< _T("Create(");
+            }
+            Code<< WindowParent << _T(",")
                 << GetIdName() << _T(",")
                 << PosCode(WindowParent,wxsCPP) << _T(",")
                 << SizeCode(WindowParent,wxsCPP) << _T(",")
-                << StyleCode(wxsCPP) << _T(");\n");
+                << StyleCode(wxsCPP) << _T(",")
+                << wxsCodeMarks::WxString(wxsCPP,GetVarName(),false) << _T(");\n");
 
             SetupWindowCode(Code,Language);
             return;

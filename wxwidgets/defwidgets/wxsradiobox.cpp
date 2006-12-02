@@ -25,7 +25,6 @@ wxsRadioBox::wxsRadioBox(wxsItemResData* Data):
     wxsWidget(
         Data,
         &Reg.Info,
-        wxsBaseProperties::flAll,
         wxsRadioBoxEvents,
         wxsRadioBoxStyles),
     Label(_("Label")),
@@ -42,27 +41,48 @@ void wxsRadioBox::OnBuildCreatingCode(wxString& Code,const wxString& WindowParen
         {
             // wxRadioBox does not have Append Function , therefore , have to build a wxString[]
             // to pass in to the ctor
-            Code<< _T("wxString wxRadioBoxChoices_") << GetVarName()
-                << _T("[") << wxString::Format(_T("%d"),ArrayChoices.GetCount()) << _T("] = \n{\n");
-            for ( size_t i = 0; i < ArrayChoices.GetCount(); ++i )
+            if ( ArrayChoices.GetCount() > 0 )
             {
-                Code << _T("\t") << wxsCodeMarks::WxString(wxsCPP,ArrayChoices[i]);
-                if ( i != ArrayChoices.GetCount()-1 ) Code << _T(",");
-                Code << _T("\n");
+                Code<< _T("wxString wxRadioBoxChoices_") << GetVarName()
+                    << _T("[") << wxString::Format(_T("%d"),ArrayChoices.GetCount()) << _T("] = \n{\n");
+                for ( size_t i = 0; i < ArrayChoices.GetCount(); ++i )
+                {
+                    Code << _T("\t") << wxsCodeMarks::WxString(wxsCPP,ArrayChoices[i]);
+                    if ( i != ArrayChoices.GetCount()-1 ) Code << _T(",");
+                    Code << _T("\n");
+                }
+                Code << _T("};\n");
             }
-            Code << _T("};\n");
 
             if ( Dimension < 1 ) Dimension = 1;
-            Code << GetVarName() << _T(" = new wxRadioBox(")
-                 << WindowParent << _T(",")
-                 << GetIdName() << _T(",")
-                 << wxsCodeMarks::WxString(wxsCPP,Label) << _T(",")
-                 << PosCode(WindowParent,wxsCPP) << _T(",")
-                 << SizeCode(WindowParent,wxsCPP) << _T(",")
-                 << wxString::Format(_T("%d"),ArrayChoices.GetCount()) << _T(",")
-                 << _T("wxRadioBoxChoices_") << GetVarName() << _T(",")
-                 << wxString::Format(_T("%d"),Dimension) << _T(",")
-                 << StyleCode(wxsCPP) << _T(");\n");
+            if ( GetParent() )
+            {
+                Code<< GetVarName() << _T(" = new wxRadioBox(");
+            }
+            else
+            {
+                Code<< _T("Create(");
+            }
+            Code<< WindowParent << _T(",")
+                << GetIdName() << _T(",")
+                << wxsCodeMarks::WxString(wxsCPP,Label) << _T(",")
+                << PosCode(WindowParent,wxsCPP) << _T(",")
+                << SizeCode(WindowParent,wxsCPP) << _T(",")
+                << wxString::Format(_T("%d"),ArrayChoices.GetCount()) << _T(",");
+
+            if ( ArrayChoices.GetCount()>0 )
+            {
+                Code<< _T("wxRadioBoxChoices_") << GetVarName();
+            }
+            else
+            {
+                Code << _T("NULL");
+            }
+            Code<< _T(",")
+                << wxString::Format(_T("%d"),Dimension) << _T(",")
+                << StyleCode(wxsCPP) << _T(",")
+                << _T("wxDefaultValidator") << _T(",")
+                << wxsCodeMarks::WxString(wxsCPP,GetVarName(),false) << _T(");\n");
 
             if ( DefaultSelection >= 0 && DefaultSelection < (int)ArrayChoices.GetCount() )
             {

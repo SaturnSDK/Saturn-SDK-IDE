@@ -20,7 +20,6 @@ wxsChoice::wxsChoice(wxsItemResData* Data):
     wxsWidget(
         Data,
         &Reg.Info,
-        wxsBaseProperties::flAll,
         wxsChoiceEvents,
         wxsChoiceStyles),
     DefaultSelection(-1)
@@ -33,12 +32,22 @@ void wxsChoice::OnBuildCreatingCode(wxString& Code,const wxString& WindowParent,
     {
         case wxsCPP:
         {
-            Code<< GetVarName() << _T(" = new wxChoice(")
-                << WindowParent << _T(",")
+            if ( GetParent() )
+            {
+                Code<< GetVarName() << _T(" = new wxChoice(");
+            }
+            else
+            {
+                Code<< _T("Create(");
+            }
+            Code<< WindowParent << _T(",")
                 << GetIdName() << _T(",")
                 << PosCode(WindowParent,wxsCPP) << _T(",")
                 << SizeCode(WindowParent,wxsCPP) << _T(",")
-                << StyleCode(wxsCPP) << _T(");\n");
+                << _T("0,NULL,")
+                << StyleCode(wxsCPP) << _T(",")
+                << _T("wxDefaultValidator") << _T(",")
+                << wxsCodeMarks::WxString(wxsCPP,GetVarName(),false) << _T(");\n");
 
             for ( size_t i = 0; i <  ArrayChoices.GetCount(); ++i )
             {

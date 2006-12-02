@@ -26,7 +26,6 @@ wxsSpinCtrl::wxsSpinCtrl(wxsItemResData* Data):
     wxsWidget(
         Data,
         &Reg.Info,
-        wxsBaseProperties::flAll,
         wxsSpinCtrlEvents,
         wxsSpinCtrlStyles),
     Value(_T("0")),
@@ -40,15 +39,26 @@ void wxsSpinCtrl::OnBuildCreatingCode(wxString& Code,const wxString& WindowParen
     {
         case wxsCPP:
         {
-            Code<< GetVarName() << _T(" = new wxSpinCtrl(")
-                << WindowParent << _T(",")
+            if ( GetParent() )
+            {
+                Code<< GetVarName() << _T(" = new wxSpinCtrl(");
+            }
+            else
+            {
+                Code<< _T("Create(");
+            }
+            long ValueLong = 0;
+            Value.ToLong(&ValueLong);
+            Code<< WindowParent << _T(",")
                 << GetIdName() << _T(",")
                 << wxsCodeMarks::WxString(wxsCPP,Value) << _T(",")
                 << PosCode(WindowParent,wxsCPP) << _T(",")
                 << SizeCode(WindowParent,wxsCPP) << _T(",")
                 << StyleCode(wxsCPP) << _T(",")
                 << wxString::Format(_T("%d"),Min) << _T(",")
-                << wxString::Format(_T("%d"),Max) << _T(");\n");
+                << wxString::Format(_T("%d"),Max) << _T(",")
+                << wxString::Format(_T("%d"),ValueLong) << _T(",")
+                << wxsCodeMarks::WxString(wxsCPP,GetVarName(),false) << _T(");\n");
 
             if ( !Value.empty() )
             {

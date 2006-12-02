@@ -12,21 +12,24 @@ class wxsContainer: public wxsParent
 {
     public:
 
+        /** \brief Default properties flags used by widgets */
+        static const long flContainer = flVariable|flId|flPosition|flSize|flEnabled|flFocused|flHidden|flColours|flToolTip|flFont|flHelpText;
+
         /** \brief Ctor
          *  \param Data data managment object handling this item
-         *  \param PropertiesFlags flags filtering sed base properties
-         *         (see wxsBaseProperties for details)
          *  \param Info pointer to static widget info
          *  \param EventArray pointer to static set of events
          *  \param StyleSet set of used styles, if NULL, this widget won't
          *         provide styles by default
+         *  \param PropertiesFlags flags filtering sed base properties
+         *         (see wxsBaseProperties for details)
          */
         wxsContainer(
             wxsItemResData* Data,
             const wxsItemInfo* Info,
-            long PropertiesFlags,
             const wxsEventDesc* EventArray = NULL,
-            const wxsStyleSet* StyleSet=NULL);
+            const wxsStyleSet* StyleSet=NULL,
+            long PropertiesFlags=flContainer);
 
     protected:
 

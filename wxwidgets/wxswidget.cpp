@@ -5,9 +5,9 @@
 wxsWidget::wxsWidget(
     wxsItemResData* Data,
     const wxsItemInfo* Info,
-    long PropertiesFlags,
     const wxsEventDesc* EventArray,
-    const wxsStyleSet* StyleSet):
+    const wxsStyleSet* StyleSet,
+    long PropertiesFlags):
         wxsItem(Data,Info,PropertiesFlags,EventArray),
         m_StyleSet(StyleSet),
         m_StyleBits(0),

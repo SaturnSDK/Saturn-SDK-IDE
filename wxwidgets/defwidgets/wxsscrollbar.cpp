@@ -38,7 +38,6 @@ wxsScrollBar::wxsScrollBar(wxsItemResData* Data):
     wxsWidget(
         Data,
         &Reg.Info,
-        wxsBaseProperties::flAll,
         wxsScrollBarEvents,
         wxsScrollBarStyles),
     Value(0),
@@ -54,12 +53,21 @@ void wxsScrollBar::OnBuildCreatingCode(wxString& Code,const wxString& WindowPare
     {
         case wxsCPP:
         {
-            Code << GetVarName() << _T(" = new wxScrollBar(")
-                 << WindowParent << _T(",")
+            if ( GetParent() )
+            {
+                Code<< GetVarName() << _T(" = new wxScrollBar(");
+            }
+            else
+            {
+                Code<< _T("Create(");
+            }
+            Code<< WindowParent << _T(",")
                  << GetIdName() << _T(",")
                  << PosCode(WindowParent,wxsCPP) << _T(",")
                  << SizeCode(WindowParent,wxsCPP) << _T(",")
-                 << StyleCode(wxsCPP) << _T(");\n");
+                 << StyleCode(wxsCPP) << _T(",")
+                << _T("wxDefaultValidator") << _T(",")
+                << wxsCodeMarks::WxString(wxsCPP,GetVarName(),false) << _T(");\n");
 
             Code << GetVarName() << _T("->SetScrollbar(")
                  << wxString::Format(_T("%d"),Value)  << _T(",")
@@ -99,7 +107,7 @@ void wxsScrollBar::OnEnumDeclFiles(wxArrayString& Decl,wxArrayString& Def,wxsCod
 {
     switch ( Language )
     {
-        case wxsCPP: Decl.Add(_T("<wx/scrollbar.h>")); return;
+        case wxsCPP: Decl.Add(_T("<wx/scrolbar.h>")); return;
         default: wxsCodeMarks::Unknown(_T("wxsScrollBar::OnEnumDeclFiles"),Language);
     }
 }

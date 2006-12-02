@@ -6,7 +6,7 @@ namespace
 {
     wxsRegisterItem<wxsDatePickerCtrl> Reg(_T("DatePickerCtrl"),wxsTWidget,_T("Standard"),30);
 
-    WXS_ST_BEGIN(wxsDatePickerCtrlStyles,_T(""))
+    WXS_ST_BEGIN(wxsDatePickerCtrlStyles,_T("wxDP_DEFAULT|wxDP_SHOWCENTURY"))
         WXS_ST_CATEGORY("wxDatePickerCtrl")
         WXS_ST(wxDP_DEFAULT)
         WXS_ST(wxDP_SPIN)
@@ -26,7 +26,6 @@ wxsDatePickerCtrl::wxsDatePickerCtrl(wxsItemResData* Data):
     wxsWidget(
         Data,
         &Reg.Info,
-        wxsBaseProperties::flAll,
         wxsDatePickerCtrlEvents,
         wxsDatePickerCtrlStyles)
 {}
@@ -37,13 +36,22 @@ void wxsDatePickerCtrl::OnBuildCreatingCode(wxString& Code,const wxString& Windo
     {
         case wxsCPP:
         {
-            Code<< GetVarName() << _T(" = new wxDatePickerCtrl(")
-                << WindowParent << _T(",")
+            if ( GetParent() )
+            {
+                Code<< GetVarName() << _T(" = new wxDatePickerCtrl(");
+            }
+            else
+            {
+                Code<< _T("Create(");
+            }
+            Code<< WindowParent << _T(",")
                 << GetIdName() << _T(",")
                 << _T("wxDefaultDateTime") << _T(",")   // TODO find a way to get the wxDateTime in code
                 << PosCode(WindowParent,wxsCPP) << _T(",")
                 << SizeCode(WindowParent,wxsCPP) << _T(",")
-                << StyleCode(wxsCPP) << _T(");\n");
+                << StyleCode(wxsCPP) << _T(",")
+                << _T("wxDefaultValidator") << _T(",")
+                << wxsCodeMarks::WxString(wxsCPP,GetVarName(),false) << _T(");\n");
 
             SetupWindowCode(Code,Language);
             return;

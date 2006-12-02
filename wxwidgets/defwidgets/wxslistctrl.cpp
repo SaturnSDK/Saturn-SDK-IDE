@@ -23,8 +23,6 @@ namespace
         WXS_ST(wxLC_VRULES)
     WXS_ST_END()
 
-
-
     WXS_EV_BEGIN(wxsListCtrlEvents)
         WXS_EVI(EVT_LIST_BEGIN_DRAG,wxEVT_COMMAND_LIST_BEGIN_DRAG,wxListEvent,BeginDrag)
         WXS_EVI(EVT_LIST_BEGIN_RDRAG,wxEVT_COMMAND_LIST_BEGIN_RDRAG,wxListEvent,BeginRDrag)
@@ -55,7 +53,6 @@ wxsListCtrl::wxsListCtrl(wxsItemResData* Data):
     wxsWidget(
         Data,
         &Reg.Info,
-        wxsBaseProperties::flAll,
         wxsListCtrlEvents,
         wxsListCtrlStyles)
 {}
@@ -66,12 +63,21 @@ void wxsListCtrl::OnBuildCreatingCode(wxString& Code,const wxString& WindowParen
     {
         case wxsCPP:
         {
-            Code<< GetVarName() << _T(" = new wxListCtrl(")
-                << WindowParent << _T(",")
+            if ( GetParent() )
+            {
+                Code<< GetVarName() << _T(" = new wxListCtrl(");
+            }
+            else
+            {
+                Code<< _T("Create(");
+            }
+            Code<< WindowParent << _T(",")
                 << GetIdName() << _T(",")
                 << PosCode(WindowParent,wxsCPP) << _T(",")
                 << SizeCode(WindowParent,wxsCPP) << _T(",")
-                << StyleCode(wxsCPP) << _T(");\n");
+                << StyleCode(wxsCPP) << _T(",")
+                << _T("wxDefaultValidator") << _T(",")
+                << wxsCodeMarks::WxString(wxsCPP,GetVarName(),false) << _T(");\n");
 
             SetupWindowCode(Code,Language);
             return;

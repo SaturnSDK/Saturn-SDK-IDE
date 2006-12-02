@@ -25,7 +25,6 @@ wxsGenericDirCtrl::wxsGenericDirCtrl(wxsItemResData* Data):
     wxsWidget(
         Data,
         &Reg.Info,
-        wxsBaseProperties::flAll,
         wxsGenericDirCtrlEvents,
         wxsGenericDirCtrlStyles),
     DefaultFilter(0)
@@ -38,15 +37,23 @@ void wxsGenericDirCtrl::OnBuildCreatingCode(wxString& Code,const wxString& Windo
     {
         case wxsCPP:
         {
-            Code<< GetVarName() << _T(" = new wxGenericDirCtrl(")
-                << WindowParent << _T(",")
+            if ( GetParent() )
+            {
+                Code<< GetVarName() << _T(" = new wxGenericDirCtrl(");
+            }
+            else
+            {
+                Code<< _T("Create(");
+            }
+            Code<< WindowParent << _T(",")
                 << GetIdName() << _T(",")
                 << wxsCodeMarks::WxString(wxsCPP,DefaultFolder) << _T(",")
                 << PosCode(WindowParent,wxsCPP) << _T(",")
                 << SizeCode(WindowParent,wxsCPP) << _T(",")
                 << StyleCode(wxsCPP) << _T(",")
                 << wxsCodeMarks::WxString(wxsCPP,Filter) << _T(",")
-                << wxString::Format(_T("%d"),DefaultFilter) << _T(");\n");
+                << wxString::Format(_T("%d"),DefaultFilter) << _T(",")
+                << wxsCodeMarks::WxString(wxsCPP,GetVarName(),false) << _T(");\n");
 
             SetupWindowCode(Code,Language);
             return;

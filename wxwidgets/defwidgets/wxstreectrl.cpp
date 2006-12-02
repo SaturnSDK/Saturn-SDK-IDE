@@ -4,7 +4,7 @@ namespace
 {
     wxsRegisterItem<wxsTreeCtrl> Reg(_T("TreeCtrl"),wxsTWidget,_T("Standard"),70);
 
-    WXS_ST_BEGIN(wxsTreeCtrlStyles,_T(""))
+    WXS_ST_BEGIN(wxsTreeCtrlStyles,_T("wxTR_DEFAULT_STYLE"))
         WXS_ST_CATEGORY("wxTreeCtrl")
         WXS_ST(wxTR_EDIT_LABELS)
         WXS_ST(wxTR_NO_BUTTONS)
@@ -54,7 +54,6 @@ wxsTreeCtrl::wxsTreeCtrl(wxsItemResData* Data):
     wxsWidget(
         Data,
         &Reg.Info,
-        wxsBaseProperties::flAll,
         wxsTreeCtrlEvents,
         wxsTreeCtrlStyles)
 {}
@@ -65,12 +64,21 @@ void wxsTreeCtrl::OnBuildCreatingCode(wxString& Code,const wxString& WindowParen
     {
         case wxsCPP:
         {
-            Code<< GetVarName() << _T(" = new wxTreeCtrl(")
-                << WindowParent << _T(",")
+            if ( GetParent() )
+            {
+                Code<< GetVarName() << _T(" = new wxTreeCtrl(");
+            }
+            else
+            {
+                Code<< _T("Create(");
+            }
+            Code<< WindowParent << _T(",")
                 << GetIdName() << _T(",")
                 << PosCode(WindowParent,wxsCPP) << _T(",")
                 << SizeCode(WindowParent,wxsCPP) << _T(",")
-                << StyleCode(wxsCPP) << _T(");\n");
+                << StyleCode(wxsCPP) << _T(",")
+                << _T("wxDefaultValidator") << _T(",")
+                << wxsCodeMarks::WxString(wxsCPP,GetVarName(),false) << _T(");\n");
 
             SetupWindowCode(Code,Language);
             return;

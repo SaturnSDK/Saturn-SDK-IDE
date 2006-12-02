@@ -84,6 +84,13 @@ class wxsSizer: public wxsParent
 
     private:
 
+        /** \brief Getting properties availability flags
+         *
+         * This function will be overridden here because
+         * sizers doesn't use variable when using XRC mode
+         */
+        virtual long OnGetPropertiesFlags();
+
         /** \brief Function building code
          *
          * Code is created using BuindSizerCreatingCode function. It

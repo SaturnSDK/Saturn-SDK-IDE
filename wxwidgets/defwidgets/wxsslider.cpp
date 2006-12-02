@@ -61,7 +61,6 @@ wxsSlider::wxsSlider(wxsItemResData* Data):
     wxsWidget(
         Data,
         &Reg.Info,
-        wxsBaseProperties::flAll,
         wxsSliderEvents,
         wxsSliderStyles),
     Value(0),
@@ -82,12 +81,22 @@ void wxsSlider::OnBuildCreatingCode(wxString& Code,const wxString& WindowParent,
     {
         case wxsCPP:
         {
-            Code<< GetVarName() << _T(" = new wxSlider(")
-                << WindowParent << _T(",")
+            if ( GetParent() )
+            {
+                Code<< GetVarName() << _T(" = new wxSlider(");
+            }
+            else
+            {
+                Code<< _T("Create(");
+            }
+            Code<< WindowParent << _T(",")
+                << wxString::Format(_T("%d,%d,%d,"),Value,Min,Max)
                 << GetIdName() << _T(",")
                 << PosCode(WindowParent,wxsCPP) << _T(",")
                 << SizeCode(WindowParent,wxsCPP) << _T(",")
-                << StyleCode(wxsCPP) << _T(");\n");
+                << StyleCode(wxsCPP) << _T(",")
+                << _T("wxDefaultValidator") << _T(",")
+                << wxsCodeMarks::WxString(wxsCPP,GetVarName(),false) << _T(");\n");
 
             if ( TickFrequency )    Code << GetVarName() << _T("->SetTickFreq(")
                                          << wxString::Format(_T("%d"),TickFrequency) << _T(",0);\n");

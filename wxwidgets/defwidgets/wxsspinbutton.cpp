@@ -4,7 +4,7 @@ namespace
 {
     wxsRegisterItem<wxsSpinButton> Reg(_T("SpinButton"),wxsTWidget,_T("Standard"),50);
 
-    WXS_ST_BEGIN(wxsSpinButtonStyles,_T(""))
+    WXS_ST_BEGIN(wxsSpinButtonStyles,_T("wxSP_VERTICAL|wxSP_ARROW_KEYS"))
         WXS_ST_CATEGORY("wxsSpinButton")
 
     // NOTE (cyberkoa##): wxSP_HORIZONTAL, wxSP_VERTICAL are not found in HELP but in wxMSW's XRC. Assume same as spinbutton
@@ -29,7 +29,6 @@ wxsSpinButton::wxsSpinButton(wxsItemResData* Data):
     wxsWidget(
         Data,
         &Reg.Info,
-        wxsBaseProperties::flAll,
         wxsSpinButtonEvents,
         wxsSpinButtonStyles),
     Value(0),
@@ -43,12 +42,20 @@ void wxsSpinButton::OnBuildCreatingCode(wxString& Code,const wxString& WindowPar
     {
         case wxsCPP:
         {
-            Code<< GetVarName() << _T(" = new wxSpinButton(")
-                << WindowParent << _T(",")
+            if ( GetParent() )
+            {
+                Code<< GetVarName() << _T(" = new wxSpinButton(");
+            }
+            else
+            {
+                Code<< _T("Create(");
+            }
+            Code<< WindowParent << _T(",")
                 << GetIdName() << _T(",")
                 << PosCode(WindowParent,wxsCPP) << _T(",")
                 << SizeCode(WindowParent,wxsCPP) << _T(",")
-                << StyleCode(wxsCPP) << _T(",");
+                << StyleCode(wxsCPP) << _T(",")
+                << wxsCodeMarks::WxString(wxsCPP,GetVarName(),false) << _T(");\n");
 
             if ( Value ) Code << GetVarName() << _T("->SetValue(") << wxString::Format(_T("%d"),Value) << _T(");\n");
             if ( Max > Min ) Code << GetVarName() << _T("->SetRange(") << wxString::Format(_T("%d"),Min) << _T(",") << wxString::Format(_T("%d"),Max) << _T(");\n");

@@ -278,7 +278,7 @@ class wxsItemResData
 
         wxsItem* m_RootItem;
         wxsItem* m_RootSelection;
-        unsigned long m_PropertiesFilter;
+        long m_PropertiesFilter;
 
         wxsItemUndoBuffer m_Undo;
         wxsCorrector m_Corrector;

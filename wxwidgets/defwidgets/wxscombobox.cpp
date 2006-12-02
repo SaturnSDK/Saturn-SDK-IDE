@@ -25,7 +25,6 @@ wxsComboBox::wxsComboBox(wxsItemResData* Data):
     wxsWidget(
         Data,
         &Reg.Info,
-        wxsBaseProperties::flAll,
         wxsComboBoxEvents,
         wxsComboBoxStyles),
     DefaultSelection(-1)
@@ -37,13 +36,23 @@ void wxsComboBox::OnBuildCreatingCode(wxString& Code,const wxString& WindowParen
     {
         case wxsCPP:
         {
-            Code<< GetVarName() << _T(" = new wxComboBox(")
-                << WindowParent << _T(",")
+            if ( GetParent() )
+            {
+                Code<< GetVarName() << _T(" = new wxComboBox(");
+            }
+            else
+            {
+                Code<< _T("Create(");
+            }
+            Code<< WindowParent << _T(",")
                 << GetIdName() << _T(",")
                 << wxsCodeMarks::WxString(wxsCPP,_T("")) << _T(",")
                 << PosCode(WindowParent,wxsCPP) << _T(",")
                 << SizeCode(WindowParent,wxsCPP) << _T(",")
-                << StyleCode(wxsCPP) << _T(");\n");
+                << _T("0,NULL,")
+                << StyleCode(wxsCPP) << _T(",")
+                << _T("wxDefaultValidator") << _T(",")
+                << wxsCodeMarks::WxString(wxsCPP,GetVarName(),false) << _T(");\n");
 
             for ( size_t i = 0; i <  ArrayChoices.GetCount(); ++i )
             {

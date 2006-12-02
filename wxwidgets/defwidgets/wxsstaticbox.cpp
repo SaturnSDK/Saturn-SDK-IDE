@@ -24,7 +24,6 @@ wxsStaticBox::wxsStaticBox(wxsItemResData* Data):
     wxsWidget(
         Data,
         &Reg.Info,
-        wxsBaseProperties::flAll,
         wxsStaticBoxEvents,
         wxsStaticBoxStyles),
     Label(_("Label"))
@@ -36,13 +35,22 @@ void wxsStaticBox::OnBuildCreatingCode(wxString& Code,const wxString& WindowPare
     {
         case wxsCPP:
         {
-            Code<< GetVarName() << _T(" = new wxStaticBox(")
-                << WindowParent << _T(",")
+            if ( GetParent() )
+            {
+                Code<< GetVarName() << _T(" = new wxStaticBox(");
+            }
+            else
+            {
+                Code<< _T("Create(");
+            }
+            Code<< WindowParent << _T(",")
                 << GetIdName() << _T(",")
                 << wxsCodeMarks::WxString(wxsCPP,Label) << _T(",")
                 << PosCode(WindowParent,wxsCPP) << _T(",")
                 << SizeCode(WindowParent,wxsCPP) << _T(",")
-                << StyleCode(wxsCPP) << _T(");\n");
+                << StyleCode(wxsCPP) << _T(",")
+                << wxsCodeMarks::WxString(wxsCPP,GetVarName(),false) << _T(");\n");
+
             SetupWindowCode(Code,Language);
             return;
         }

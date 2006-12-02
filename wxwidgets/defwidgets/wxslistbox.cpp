@@ -15,8 +15,6 @@ namespace
         WXS_ST(wxLB_SORT)
     WXS_ST_END()
 
-
-
     WXS_EV_BEGIN(wxsListBoxEvents)
         WXS_EVI(EVT_LISTBOX,wxEVT_COMMAND_LISTBOX_SELECTED,wxCommandEvent,Select)
         WXS_EVI(EVT_LISTBOX_DCLICK,wxEVT_COMMAND_LISTBOX_DOUBLECLICKED,wxCommandEvent,DClick)
@@ -28,7 +26,6 @@ wxsListBox::wxsListBox(wxsItemResData* Data):
     wxsWidget(
         Data,
         &Reg.Info,
-        wxsBaseProperties::flAll,
         wxsListBoxEvents,
         wxsListBoxStyles),
     DefaultSelection(-1)
@@ -40,14 +37,23 @@ void wxsListBox::OnBuildCreatingCode(wxString& Code,const wxString& WindowParent
     {
         case wxsCPP:
         {
-            Code<< GetVarName() << _T(" = new wxListBox(")
-                << WindowParent << _T(",")
+            if ( GetParent() )
+            {
+                Code<< GetVarName() << _T(" = new wxListBox(");
+            }
+            else
+            {
+                Code<< _T("Create(");
+            }
+            Code<< WindowParent << _T(",")
                 << GetIdName() << _T(",")
                 << PosCode(WindowParent,wxsCPP) << _T(",")
                 << SizeCode(WindowParent,wxsCPP) << _T(",")
                 << wxString::Format(_T("%d"),0)  << _T(",")
                 << wxString::Format(_T("%d"),0)  << _T(",")
-                << StyleCode(wxsCPP) << _T(");\n");
+                << StyleCode(wxsCPP) << _T(",")
+                << _T("wxDefaultValidator") << _T(",")
+                << wxsCodeMarks::WxString(wxsCPP,GetVarName(),false) << _T(");\n");
 
             for ( size_t i = 0; i <  ArrayChoices.GetCount(); ++i )
             {

@@ -34,7 +34,6 @@ wxsCalendarCtrl::wxsCalendarCtrl(wxsItemResData* Data):
     wxsWidget(
         Data,
         &Reg.Info,
-        wxsBaseProperties::flAll,
         wxsCalendarCtrlEvents,
         wxsCalendarCtrlStyles)
 {}
@@ -45,13 +44,21 @@ void wxsCalendarCtrl::OnBuildCreatingCode(wxString& Code,const wxString& WindowP
     {
         case wxsCPP:
         {
-            Code<< GetVarName() << _T(" = new wxCalendarCtrl(")
-                << WindowParent << _T(",")
+            if ( GetParent() )
+            {
+                Code<< GetVarName() << _T(" = new wxCalendarCtrl(");
+            }
+            else
+            {
+                Code<< _T("Create(");
+            }
+            Code<< WindowParent << _T(",")
                 << GetIdName() << _T(",")
                 << _T("wxDefaultDateTime") << _T(",")
                 << PosCode(WindowParent,wxsCPP) << _T(",")
                 << SizeCode(WindowParent,wxsCPP) << _T(",")
-                << StyleCode(wxsCPP) << _T(");\n");
+                << StyleCode(wxsCPP) << _T(",")
+                << wxsCodeMarks::WxString(wxsCPP,GetVarName(),false) << _T(");\n");
 
             SetupWindowCode(Code,Language);
             return;

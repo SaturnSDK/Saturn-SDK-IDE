@@ -18,7 +18,6 @@ wxsStaticBitmap::wxsStaticBitmap(wxsItemResData* Data):
     wxsWidget(
         Data,
         &Reg.Info,
-        wxsBaseProperties::flAll,
         wxsStaticBitmapEvents,
         wxsStaticBitmapStyles)
 {}
@@ -32,13 +31,21 @@ void wxsStaticBitmap::OnBuildCreatingCode(wxString& Code,const wxString& WindowP
             wxString SizeName = GetVarName() + _T("_Size");
             Code << _T("wxSize ") << SizeName << _T(" = ") << SizeCode(WindowParent,wxsCPP) << _T(";\n");
             wxString BmpCode = Bitmap.BuildCode(GetBaseProps()->m_Size.IsDefault,SizeName,wxsCPP,wxART_OTHER);
-            Code<< GetVarName() << _T(" = new wxStaticBitmap(")
-                << WindowParent << _T(",")
+            if ( GetParent() )
+            {
+                Code<< GetVarName() << _T(" = new wxStaticBitmap(");
+            }
+            else
+            {
+                Code<< _T("Create(");
+            }
+            Code<< WindowParent << _T(",")
                 << GetIdName() << _T(",")
                 << (BmpCode.empty() ? _T("wxNullBitmap") : BmpCode) << _T(",")
                 << PosCode(WindowParent,wxsCPP) << _T(",")
                 << SizeName << _T(",")
-                << StyleCode(wxsCPP) << _T(");\n");
+                << StyleCode(wxsCPP) << _T(",")
+                << wxsCodeMarks::WxString(wxsCPP,GetVarName(),false) << _T(");\n");
 
             SetupWindowCode(Code,Language);
             return;

@@ -3,7 +3,7 @@
 //#include "wxsglobals.h"
 #include "wxsitemfactory.h"
 
-wxsParent::wxsParent(wxsItemResData* Data,const wxsItemInfo* Info,unsigned long PropertiesFlags,const wxsEventDesc* Events):
+wxsParent::wxsParent(wxsItemResData* Data,const wxsItemInfo* Info,long PropertiesFlags,const wxsEventDesc* Events):
     wxsItem(Data,Info,PropertiesFlags,Events)
 {
 }

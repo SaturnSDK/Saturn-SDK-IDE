@@ -21,6 +21,9 @@ class wxsWidget: public wxsItem
 {
     public:
 
+        /** \brief Default properties flags used by widgets */
+        static const long flWidget = flVariable|flId|flPosition|flSize|flEnabled|flFocused|flHidden|flColours|flToolTip|flFont|flHelpText;
+
         /** \brief Ctor
          *  \param Data data managment object handling this item
          *  \param PropertiesFlags flags filtering sed base properties
@@ -33,9 +36,9 @@ class wxsWidget: public wxsItem
         wxsWidget(
             wxsItemResData* Data,
             const wxsItemInfo* Info,
-            long PropertiesFlags,
             const wxsEventDesc* EventArray = NULL,
-            const wxsStyleSet* StyleSet=NULL);
+            const wxsStyleSet* StyleSet=NULL,
+            long PropertiesFlags = flWidget);
 
     protected:
 

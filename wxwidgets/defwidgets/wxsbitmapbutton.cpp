@@ -4,14 +4,13 @@ namespace
 {
     wxsRegisterItem<wxsBitmapButton> Reg(_T("BitmapButton"),wxsTWidget,_T("Standard"),50);
 
-    WXS_ST_BEGIN(wxsBitmapButtonStyles,_T(""))
+    WXS_ST_BEGIN(wxsBitmapButtonStyles,_T("wxBU_AUTODRAW"))
         WXS_ST_CATEGORY("wxBitmapButton")
         WXS_ST_MASK(wxBU_LEFT,wxsSFWin,0,true)
         WXS_ST_MASK(wxBU_TOP,wxsSFWin,0,true)
         WXS_ST_MASK(wxBU_RIGHT,wxsSFWin,0,true)
         WXS_ST_MASK(wxBU_BOTTOM,wxsSFWin,0,true)
         WXS_ST_MASK(wxBU_AUTODRAW,wxsSFWin,0,true)
-
         // cyberkoa: "The help mentions that wxBU_EXACTFIX is not used but the XRC code yes
         //  WXS_ST(wxBU_EXACTFIX)
     WXS_ST_END()
@@ -27,7 +26,6 @@ wxsBitmapButton::wxsBitmapButton(wxsItemResData* Data):
     wxsWidget(
         Data,
         &Reg.Info,
-        wxsBaseProperties::flAll,
         wxsBitmapButtonEvents,
         wxsBitmapButtonStyles)
 {}
@@ -46,13 +44,23 @@ void wxsBitmapButton::OnBuildCreatingCode(wxString& Code,const wxString& WindowP
                  << wxString::Format(_T("%d"),(GetBaseProps()->m_Size.Y > 2)? (GetBaseProps()->m_Size.Y - 2):GetBaseProps()->m_Size.Y) << _T(");\n");
 
             wxString BmpCode = BitmapLabel.BuildCode(GetBaseProps()->m_Size.IsDefault,SizeName,wxsCPP,wxART_BUTTON);
-            Code<< GetVarName() << _T(" = new wxBitmapButton(")
-                << WindowParent << _T(",")
+
+            if ( GetParent() )
+            {
+                Code<< GetVarName() << _T(" = new wxBitmapButton(");
+            }
+            else
+            {
+                Code<< _T("Create(");
+            }
+            Code<< WindowParent << _T(",")
                 << GetIdName() << _T(",")
                 << (BmpCode.empty() ? _T("wxNullBitmap") : BmpCode) << _T(",")
                 << PosCode(WindowParent,wxsCPP) << _T(",")
                 << _T("wxDefaultSize,")
-                << StyleCode(wxsCPP) << _T(");\n");
+                << StyleCode(wxsCPP) << _T(",")
+                << _T("wxDefaultValidator") << _T(",")
+                << wxsCodeMarks::WxString(wxsCPP,GetVarName(),false) << _T(");\n");
 
             if ( !(BitmapDisabled.Id.empty()||BitmapDisabled.Client.empty())|| !(BitmapDisabled.FileName.empty()) )
             {
@@ -122,7 +130,7 @@ void wxsBitmapButton::OnEnumDeclFiles(wxArrayString& Decl,wxArrayString& Def,wxs
         {
             Decl.Add(_T("<wx/bmpbuttn.h>"));
             Def.Add(_T("<wx/bitmap.h>"));
-            Def.Add(_T("<wx/wximage.h>"));
+            Def.Add(_T("<wx/image.h>"));
             Def.Add(_T("<wx/artprov.h>"));
             return;
         }

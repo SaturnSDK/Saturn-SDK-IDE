@@ -26,7 +26,6 @@ wxsCheckListBox::wxsCheckListBox(wxsItemResData* Data):
     wxsWidget(
         Data,
         &Reg.Info,
-        wxsBaseProperties::flAll,
         wxsCheckListBoxEvents,
         wxsCheckListBoxStyles)
 {}
@@ -38,12 +37,22 @@ void wxsCheckListBox::OnBuildCreatingCode(wxString& Code,const wxString& WindowP
     {
         case wxsCPP:
         {
-            Code<< GetVarName() << _T(" = new wxCheckListBox(")
-                << WindowParent << _T(",")
+            if ( GetParent() )
+            {
+                Code<< GetVarName() << _T(" = new wxCheckListBox(");
+            }
+            else
+            {
+                Code<< _T("Create(");
+            }
+            Code<< WindowParent << _T(",")
                 << GetIdName() << _T(",")
                 << PosCode(WindowParent,wxsCPP) << _T(",")
                 << SizeCode(WindowParent,wxsCPP) << _T(",")
-                << StyleCode(wxsCPP) << _T(");\n");
+                << _T("0,NULL,")
+                << StyleCode(wxsCPP) << _T(",")
+                << _T("wxDefaultValidator") << _T(",")
+                << wxsCodeMarks::WxString(wxsCPP,GetVarName(),false) << _T(");\n");
 
             for ( size_t i = 0; i <  ArrayChoices.GetCount(); ++i )
             {

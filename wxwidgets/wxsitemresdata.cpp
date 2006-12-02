@@ -558,7 +558,7 @@ void wxsItemResData::BuildXrcItemsFetchingCodeReq(wxsCodingLang Lang,wxsItem* It
             for ( int i=0; i<Cnt; i++ )
             {
                 wxsItem* Child = Parent->GetChild(i);
-                unsigned long Flags = Child->GetPropertiesFlags();
+                long Flags = Child->GetPropertiesFlags();
                 if ( (Flags & (wxsItem::flVariable|wxsItem::flId)) == (wxsItem::flVariable|wxsItem::flId) )
                 {
                     if ( Child->GetIsMember() )
@@ -647,7 +647,7 @@ void wxsItemResData::BuildIdentifiersCode(wxsCodingLang Lang,wxString& IdCode,wx
                     for ( size_t i = 0; i<IdsArray.Count(); ++i )
                     {
                         const wxString Id = IdsArray[i];
-                        if ( IdsArray[i].find(Id) == i )
+                        if ( IdsArray.Index(Id) == (int)i )
                         {
                             IdCode << _T("static const long ") + IdsArray[i] + _T(";\n");
                             IdInitCode << _T("const long ") + m_ClassName + _T("::") + IdsArray[i] + _T(" = wxNewId();\n");

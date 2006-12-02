@@ -41,7 +41,6 @@ wxsDialog::wxsDialog(wxsItemResData* Data):
     wxsContainer(
         Data,
         &Reg.Info,
-        wxsBaseProperties::flContainer,
         wxsDialogEvents,
         wxsDialogStyles),
     Title(_("Dialog")),
@@ -60,7 +59,9 @@ void wxsDialog::OnBuildCreatingCode(wxString& Code,const wxString& WindowParent,
                 << wxsCodeMarks::WxString(wxsCPP,Title) << _T(",")
                 << PosCode(WindowParent,wxsCPP) << _T(",")
                 << SizeCode(WindowParent,wxsCPP) << _T(",")
-                << StyleCode(wxsCPP) << _T(");\n");
+                << StyleCode(wxsCPP) << _T(",")
+                << _T("wxDefaultValidator") << _T(",")
+                << wxsCodeMarks::WxString(wxsCPP,GetVarName(),false) << _T(");\n");
 
             SetupWindowCode(Code,Language);
             AddChildrenCode(Code,wxsCPP);

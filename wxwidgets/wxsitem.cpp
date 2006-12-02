@@ -2,7 +2,7 @@
 #include "wxsparent.h"
 #include "wxsitemresdata.h"
 
-wxsItem::wxsItem(wxsItemResData* ResourceData,const wxsItemInfo* Info,unsigned long PropertiesFlags,const wxsEventDesc* Events):
+wxsItem::wxsItem(wxsItemResData* ResourceData,const wxsItemInfo* Info,long PropertiesFlags,const wxsEventDesc* Events):
     m_Info(Info),
     m_Events(Events,this),
     m_Parent(NULL),
@@ -16,7 +16,9 @@ wxsItem::wxsItem(wxsItemResData* ResourceData,const wxsItemInfo* Info,unsigned l
     m_IsSelected(false),
     m_IsExpanded(false)
 {
-    if ( m_PropertiesFlags & wxsBaseProperties::flAll )
+    if ( m_PropertiesFlags &
+            (flPosition|flSize|flEnabled|flFocused|flHidden|
+             flColours|flToolTip|flFont|flHelpText) )
     {
         m_BaseProperties = new wxsBaseProperties;
     }
@@ -92,7 +94,7 @@ void wxsItem::EnumItemProperties(long Flags)
     // Now enumerating all properties from wxsBaseProperties if any
     if ( m_BaseProperties )
     {
-        SubContainer(m_BaseProperties);
+        SubContainer(m_BaseProperties,Flags);
     }
 }
 

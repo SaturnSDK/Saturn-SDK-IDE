@@ -1,17 +1,18 @@
 #include "wxsbaseproperties.h"
+#include "wxsitem.h"
 
-void wxsBaseProperties::EnumProperties(long Flags)
+void wxsBaseProperties::OnEnumProperties(long Flags)
 {
-    WXS_POSITION(wxsBaseProperties,m_Position,flPosition,_("Default pos"),_("X"),_("Y"),_("Pos in dialog units"),_T("pos"));
-    WXS_SIZE    (wxsBaseProperties,m_Size,flSize,_("Default size"),_("Width"),_("Height"),_("Size in dialog units"),_T("size"));
-    WXS_BOOL    (wxsBaseProperties,m_Enabled,flEnabled,_("Enabled"),_T("enabled"),true);
-    WXS_BOOL    (wxsBaseProperties,m_Focused,flFocused,_("Focused"),_T("focused"),false);
-    WXS_BOOL    (wxsBaseProperties,m_Hidden,flHidden,_("Hidden"),_T("hidden"),false);
-    WXS_COLOUR  (wxsBaseProperties,m_Fg,flColours,_("Foreground"),_T("fg"));
-    WXS_COLOUR  (wxsBaseProperties,m_Bg,flColours,_("Background"),_T("bg"));
-    WXS_FONT    (wxsBaseProperties,m_Font,flFont,_("Font"),_("font"));
-    WXS_STRING  (wxsBaseProperties,m_ToolTip,flToolTip,_("Tooltip"),_T("tooltip"),wxEmptyString,true,false);
-    WXS_STRING  (wxsBaseProperties,m_HelpText,flHelpText,_("Help text"),_T("helptext"),wxEmptyString,true,false);
+    WXS_POSITION(wxsBaseProperties,m_Position,wxsItem::flPosition,_("Default pos"),_("X"),_("Y"),_("Pos in dialog units"),_T("pos"));
+    WXS_SIZE    (wxsBaseProperties,m_Size,wxsItem::flSize,_("Default size"),_("Width"),_("Height"),_("Size in dialog units"),_T("size"));
+    WXS_BOOL    (wxsBaseProperties,m_Enabled,wxsItem::flEnabled,_("Enabled"),_T("enabled"),true);
+    WXS_BOOL    (wxsBaseProperties,m_Focused,wxsItem::flFocused,_("Focused"),_T("focused"),false);
+    WXS_BOOL    (wxsBaseProperties,m_Hidden,wxsItem::flHidden,_("Hidden"),_T("hidden"),false);
+    WXS_COLOUR  (wxsBaseProperties,m_Fg,wxsItem::flColours,_("Foreground"),_T("fg"));
+    WXS_COLOUR  (wxsBaseProperties,m_Bg,wxsItem::flColours,_("Background"),_T("bg"));
+    WXS_FONT    (wxsBaseProperties,m_Font,wxsItem::flFont,_("Font"),_("font"));
+    WXS_STRING  (wxsBaseProperties,m_ToolTip,wxsItem::flToolTip,_("Tooltip"),_T("tooltip"),wxEmptyString,true,false);
+    WXS_STRING  (wxsBaseProperties,m_HelpText,wxsItem::flHelpText,_("Help text"),_T("helptext"),wxEmptyString,true,false);
 }
 
 void wxsBaseProperties::SetupWindow(wxWindow* Window,bool IsExact)

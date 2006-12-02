@@ -50,7 +50,7 @@ void wxsSizerFlagsProperty::PGCreate(wxsPropertyContainer* Object,wxPropertyGrid
     PGC3.Add(_("Top"),AlignTop);
     PGC3.Add(_("Center"),AlignCenterVertical);
     PGC3.Add(_("Bottom"),AlignBottom);
-    PGRegister(Object,Grid,ID3 = Grid->AppendIn(Parent,wxEnumProperty(_("Vertical align"),wxPG_LABEL,PGC3,FLAGS&AlignVMask)),ALIGNHIND);
+    PGRegister(Object,Grid,ID3 = Grid->AppendIn(Parent,wxEnumProperty(_("Vertical align"),wxPG_LABEL,PGC3,FLAGS&AlignVMask)),ALIGNVIND);
 
     PGRegister(Object,Grid,ID4 = Grid->AppendIn(Parent,wxBoolProperty(_("Expand"),wxPG_LABEL,(FLAGS&Expand)!=0)),EXPANDIND);
     PGRegister(Object,Grid,ID5 = Grid->AppendIn(Parent,wxBoolProperty(_("Shaped"),wxPG_LABEL,(FLAGS&Shaped)!=0)),SHAPEDIND);
@@ -103,13 +103,13 @@ bool wxsSizerFlagsProperty::PGRead(wxsPropertyContainer* Object,wxPropertyGridMa
             break;
 
         case ALIGNHIND:
-            FLAGS &= AlignHMask;
-            FLAGS |= Grid->GetPropertyValue(Id).GetLong() & AlignHMask;
+            FLAGS &= ~AlignHMask;
+            FLAGS |= (Grid->GetPropertyValue(Id).GetLong() & AlignHMask);
             break;
 
         case ALIGNVIND:
-            FLAGS &= AlignVMask;
-            FLAGS |= Grid->GetPropertyValue(Id).GetLong() & AlignVMask;
+            FLAGS &= ~AlignVMask;
+            FLAGS |= (Grid->GetPropertyValue(Id).GetLong() & AlignVMask);
             break;
 
         case EXPANDIND:

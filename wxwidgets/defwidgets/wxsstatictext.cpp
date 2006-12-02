@@ -19,8 +19,11 @@ namespace
 }
 
 wxsStaticText::wxsStaticText(wxsItemResData* Data):
-    wxsWidget(Data,&Reg.Info,wxsBaseProperties::flAll,
-        wxsStaticTextEvents,wxsStaticTextStyles),
+    wxsWidget(
+        Data,
+        &Reg.Info,
+        wxsStaticTextEvents,
+        wxsStaticTextStyles),
     Label(_("Label"))
 
 {}
@@ -32,13 +35,21 @@ void wxsStaticText::OnBuildCreatingCode(wxString& Code,const wxString& WindowPar
     {
         case wxsCPP:
         {
-            Code<< GetVarName() << _T(" = new wxStaticText(")
-                << WindowParent << _T(",")
+            if ( GetParent() )
+            {
+                Code<< GetVarName() << _T(" = new wxStaticText(");
+            }
+            else
+            {
+                Code<< _T("Create(");
+            }
+            Code<< WindowParent << _T(",")
                 << GetIdName() << _T(",")
                 << wxsCodeMarks::WxString(wxsCPP,Label) << _T(",")
                 << PosCode(WindowParent,wxsCPP) << _T(",")
                 << SizeCode(WindowParent,wxsCPP) << _T(",")
-                << StyleCode(wxsCPP) << _T(");\n");
+                << StyleCode(wxsCPP) << _T(",")
+                << wxsCodeMarks::WxString(wxsCPP,GetVarName(),false) << _T(");\n");
 
             SetupWindowCode(Code,Language);
             return;

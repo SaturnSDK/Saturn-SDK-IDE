@@ -45,7 +45,7 @@ namespace
 
 }
 
-wxsSpacer::wxsSpacer(wxsItemResData* Data): wxsItem(Data,&Reg.Info,wxsBaseProperties::flSize,NULL)
+wxsSpacer::wxsSpacer(wxsItemResData* Data): wxsItem(Data,&Reg.Info,flSize,NULL)
 {}
 
 void wxsSpacer::OnEnumItemProperties(long Flags)

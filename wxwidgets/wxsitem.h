@@ -45,17 +45,26 @@ class wxsItem: public wxsPropertyContainer
     public:
 
         // Flags used for property filtering
-        static const unsigned long flFile     = 0x0001;       ///< \brief Edition in file mode
-        static const unsigned long flSource   = 0x0002;       ///< \brief Edition in source mode
-        static const unsigned long flMixed    = 0x0004;       ///< \brief Edition in mixed mode
-        static const unsigned long flVariable = 0x0008;       ///< \brief Flag turning on variable
-        static const unsigned long flId       = 0x0010;       ///< \brief Flag turning on identifier
+        static const long flFile      = 0x000001;  ///< \brief Edition in file mode
+        static const long flSource    = 0x000002;  ///< \brief Edition in source mode
+        static const long flMixed     = 0x000004;  ///< \brief Edition in mixed mode
+        static const long flVariable  = 0x000008;  ///< \brief Item is using variable
+        static const long flId        = 0x000010;  ///< \brief Item is using identifier
+        static const long flPosition  = 0x000020;  ///< \brief Item is using position
+        static const long flSize      = 0x000040;  ///< \brief Item is using size
+        static const long flEnabled   = 0x000080;  ///< \brief Item is using Enabled property
+        static const long flFocused   = 0x000100;  ///< \brief Item is using Focused property
+        static const long flHidden    = 0x000200;  ///< \brief Item is using Hidden property
+        static const long flColours   = 0x000400;  ///< \brief Item is using colour properties (Fg and Bg)
+        static const long flToolTip   = 0x000800;  ///< \brief Item is using tooltips
+        static const long flFont      = 0x001000;  ///< \brief Item is using font
+        static const long flHelpText  = 0x002000;  ///< \brief Item is using help text
 
         /** \brief Ctor
          * \param Resource resource containingthis widget, must not be NULL
          * \param Events array of events used by this object (may be NULL if item doesn't use events)
          */
-        wxsItem(wxsItemResData* Data,const wxsItemInfo* Info,unsigned long PropertiesFlags,const wxsEventDesc* Events);
+        wxsItem(wxsItemResData* Data,const wxsItemInfo* Info,long PropertiesFlags,const wxsEventDesc* Events);
 
         /** \brief Dctor */
         virtual ~wxsItem();
@@ -74,13 +83,13 @@ class wxsItem: public wxsPropertyContainer
         /** \brief Getting variable name
          *  \return name of variable or empty string of this item doesn't have one
          */
-        inline wxString GetVarName() { return (OnGetPropertiesFlags()&flVariable)?m_VarName:_T("this"); }
+        inline wxString GetVarName() { return GetParent()?m_VarName:_T("this"); }
 
         /** \brief Setting variabne name */
         inline void SetVarName(const wxString& NewName) { m_VarName = NewName; }
 
         /** \brief Getting identifier */
-        inline wxString GetIdName() { return (OnGetPropertiesFlags()&flId)?m_IdName:_T("id"); }
+        inline wxString GetIdName() { return GetParent()?m_IdName:_T("id"); }
 
         /** \brief Setting identifier */
         inline void SetIdName(const wxString& NewIdName) { m_IdName = NewIdName; }
@@ -363,7 +372,7 @@ class wxsItem: public wxsPropertyContainer
         wxString m_IdName;                      ///< \brief Name of identifier
         bool m_IsMember;                        ///< \brief Swith between local and global variable
         wxsBaseProperties* m_BaseProperties;    ///< \brief Pointer to base properties if item uses it
-        unsigned long m_PropertiesFlags;        ///< \brief Properties flags
+        long m_PropertiesFlags;                 ///< \brief Properties flags
         wxObject* m_LastPreview;                ///< \brief Current preview object
         bool m_IsSelected;                      ///< \brief Set to true if item is selected inside editor
         bool m_IsExpanded;                      ///< \brief Set to true if corresponding node in resource tree is expanded,

@@ -49,7 +49,6 @@ wxsFrame::wxsFrame(wxsItemResData* Data):
     wxsContainer(
         Data,
         &Reg.Info,
-        wxsBaseProperties::flContainer,
         wxsFrameEvents,
         wxsFrameStyles),
     Title(_("Frame")),
@@ -68,7 +67,9 @@ void wxsFrame::OnBuildCreatingCode(wxString& Code,const wxString& WindowParent,w
                 << wxsCodeMarks::WxString(wxsCPP,Title) << _T(",")
                 << PosCode(WindowParent,wxsCPP) << _T(",")
                 << SizeCode(WindowParent,wxsCPP) << _T(",")
-                << StyleCode(wxsCPP) << _T(");\n");
+                << StyleCode(wxsCPP) << _T(",")
+                << _T("wxDefaultValidator") << _T(",")
+                << wxsCodeMarks::WxString(wxsCPP,GetVarName(),false) << _T(");\n");
 
             SetupWindowCode(Code,Language);
             // TODO: Setup Icon

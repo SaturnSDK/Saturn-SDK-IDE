@@ -24,7 +24,6 @@ wxsButton::wxsButton(wxsItemResData* Data):
     wxsWidget(
         Data,
         &Reg.Info,
-        wxsBaseProperties::flAll,
         wxsButtonEvents,
         wxsButtonStyles),
     Label(_("Label")),
@@ -37,13 +36,22 @@ void wxsButton::OnBuildCreatingCode(wxString& Code,const wxString& WindowParent,
     {
         case wxsCPP:
         {
-            Code<< GetVarName() << _T(" = new wxButton(")
-                << WindowParent << _T(",")
+            if ( GetParent() )
+            {
+                Code<< GetVarName() << _T(" = new wxButton(");
+            }
+            else
+            {
+                Code<< _T("Create(");
+            }
+            Code<< WindowParent << _T(",")
                 << GetIdName() << _T(",")
                 << wxsCodeMarks::WxString(wxsCPP,Label) << _T(",")
                 << PosCode(WindowParent,wxsCPP) << _T(",")
                 << SizeCode(WindowParent,wxsCPP) << _T(",")
-                << StyleCode(wxsCPP) << _T(");\n");
+                << StyleCode(wxsCPP) << _T(",")
+                << _T("wxDefaultValidator") << _T(",")
+                << wxsCodeMarks::WxString(wxsCPP,GetVarName(),false) << _T(");\n");
             if ( IsDefault ) Code << GetVarName() << _T("->SetDefault();\n");
             SetupWindowCode(Code,Language);
             return;

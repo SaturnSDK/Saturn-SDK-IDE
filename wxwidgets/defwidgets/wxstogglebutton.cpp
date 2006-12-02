@@ -23,7 +23,6 @@ wxsToggleButton::wxsToggleButton(wxsItemResData* Data):
     wxsWidget(
         Data,
         &Reg.Info,
-        wxsBaseProperties::flAll,
         wxsToggleButtonEvents,
         wxsToggleButtonStyles),
    Label(_("Label")),
@@ -37,13 +36,22 @@ void wxsToggleButton::OnBuildCreatingCode(wxString& Code,const wxString& WindowP
     {
         case wxsCPP:
         {
-            Code<< GetVarName() << _T(" = new wxToggleButton(")
-                << WindowParent << _T(",")
+            if ( GetParent() )
+            {
+                Code<< GetVarName() << _T(" = new wxToggleButton(");
+            }
+            else
+            {
+                Code<< _T("Create(");
+            }
+            Code<< WindowParent << _T(",")
                 << GetIdName() << _T(",")
                 << wxsCodeMarks::WxString(wxsCPP,Label) << _T(",")
                 << PosCode(WindowParent,wxsCPP) << _T(",")
                 << SizeCode(WindowParent,wxsCPP) << _T(",")
-                << StyleCode(wxsCPP) << _T(");\n");
+                << StyleCode(wxsCPP) << _T(",")
+                << _T("wxDefaultValidator") << _T(",")
+                << wxsCodeMarks::WxString(wxsCPP,GetVarName(),false) << _T(");\n");
 
             if ( IsChecked ) Code << GetVarName() << _T("->SetValue(true);\n");
 

@@ -1,4 +1,5 @@
 #include "wxssizer.h"
+#include "wxsitemresdata.h"
 
 #include <wx/dcclient.h>
 #include <messagemanager.h>
@@ -54,6 +55,16 @@ wxString wxsSizerExtra::AllParamsCode(const wxString& WindowParent,wxsCodingLang
 wxsSizer::wxsSizer(wxsItemResData* Data,const wxsItemInfo* Info):
     wxsParent(Data,Info,flVariable,NULL)
 {
+}
+
+long wxsSizer::OnGetPropertiesFlags()
+{
+    if ( GetResourceData()->GetPropertiesFilter() != flSource )
+    {
+        return wxsItem::OnGetPropertiesFlags() & ~flVariable;
+    }
+
+    return wxsItem::OnGetPropertiesFlags();
 }
 
 void wxsSizer::OnBuildCreatingCode(wxString& Code,const wxString& WindowParent,wxsCodingLang Language)

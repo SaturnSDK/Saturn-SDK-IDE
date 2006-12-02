@@ -122,7 +122,7 @@ class wxsPropertyContainer
          *  }
          *  \endcode
          */
-        virtual void OnEnumProperties(long Flags) {}
+        virtual void OnEnumProperties(long Flags) = 0;
 
         /** \brief Function registering property
          *
@@ -184,13 +184,13 @@ class wxsPropertyContainer
         virtual void OnSubPropertyChanged(wxsPropertyContainer* SubContainer) {}
 
         /** \brief Flag set when operating on property grid */
-        static const unsigned long flPropGrid   = 0x80000000;
+        static const long flPropGrid   = 0x40000000;
 
         /** \brief Flag set when operating on xml */
-        static const unsigned long flXml        = 0x40000000;
+        static const long flXml        = 0x20000000;
 
         /** \brief Flag set when operating on property stream */
-        static const unsigned long flPropStream = 0x20000000;
+        static const long flPropStream = 0x10000000;
 
         /** \brief In this function derived classes may add extra tabs to property grid
          *

@@ -2,7 +2,7 @@
 
 namespace
 {
-    wxsRegisterItem<wxsPanel> Reg(_T("Panel"),wxsTContainer, _T("Standard"), 20);
+    wxsRegisterItem<wxsPanel> Reg(_T("Panel"),wxsTContainer, _T("Standard"), 75);
 
     WXS_ST_BEGIN(wxsPanelStyles,_T("wxTAB_TRAVERSAL"))
         WXS_ST_CATEGORY("wxPanel")
@@ -20,7 +20,6 @@ wxsPanel::wxsPanel(wxsItemResData* Data):
     wxsContainer(
         Data,
         &Reg.Info,
-        wxsBaseProperties::flContainer|wxsItem::flId|wxsItem::flVariable,
         wxsPanelEvents,
         wxsPanelStyles)
 {}
@@ -31,14 +30,21 @@ void wxsPanel::OnBuildCreatingCode(wxString& Code,const wxString& WindowParent,w
     {
         case wxsCPP:
         {
-            if ( GetParent() ) Code<< GetVarName() << _T(" = new wxPanel(");
-            else               Code<< _T("Create(");
-
+            if ( GetParent() )
+            {
+                Code<< GetVarName() << _T(" = new wxPanel(");
+            }
+            else
+            {
+                Code<< _T("Create(");
+            }
             Code<< WindowParent << _T(",")
                 << GetIdName() << _T(",")
                 << PosCode(WindowParent,wxsCPP) << _T(",")
                 << SizeCode(WindowParent,wxsCPP) << _T(",")
-                << StyleCode(wxsCPP) << _T(");\n");
+                << StyleCode(wxsCPP) << _T(",")
+                << wxsCodeMarks::WxString(wxsCPP,GetVarName(),false) << _T(");\n");
+
             SetupWindowCode(Code,Language);
             AddChildrenCode(Code,wxsCPP);
             return;
