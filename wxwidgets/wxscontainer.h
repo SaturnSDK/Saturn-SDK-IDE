@@ -136,7 +136,7 @@ class wxsContainer: public wxsParent
         void SetupWindowCode(wxString& Code,wxsCodingLang Language);
 
         /** \brief Function adding children items into preview window */
-        void AddChildrenPreview(wxWindow* This,bool Exact,bool StoreInLastPreview);
+        void AddChildrenPreview(wxWindow* This,long Flags);
 
         /** \brief Function adding code generating child items */
         void AddChildrenCode(wxString& Code,wxsCodingLang Language);

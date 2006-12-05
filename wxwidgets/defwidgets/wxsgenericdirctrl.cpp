@@ -66,10 +66,10 @@ void wxsGenericDirCtrl::OnBuildCreatingCode(wxString& Code,const wxString& Windo
     }
 }
 
-wxObject* wxsGenericDirCtrl::OnBuildPreview(wxWindow* Parent,bool Exact,bool)
+wxObject* wxsGenericDirCtrl::OnBuildPreview(wxWindow* Parent,long Flags)
 {
     wxGenericDirCtrl* Preview = new wxGenericDirCtrl(Parent,GetId(),DefaultFolder,Pos(Parent),Size(Parent),Style(),Filter,DefaultFilter);
-    return SetupWindow(Preview,Exact);
+    return SetupWindow(Preview,Flags);
 }
 
 void wxsGenericDirCtrl::OnEnumWidgetProperties(long Flags)

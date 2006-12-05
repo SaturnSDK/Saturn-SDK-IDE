@@ -87,11 +87,11 @@ void wxsScrollBar::OnBuildCreatingCode(wxString& Code,const wxString& WindowPare
 }
 
 
-wxObject* wxsScrollBar::OnBuildPreview(wxWindow* Parent,bool Exact,bool)
+wxObject* wxsScrollBar::OnBuildPreview(wxWindow* Parent,long Flags)
 {
     wxScrollBar* Preview = new wxScrollBar(Parent,GetId(),Pos(Parent),Size(Parent),Style());
     Preview->SetScrollbar(Value,ThumbSize,Range,PageSize);
-    return SetupWindow(Preview,Exact);
+    return SetupWindow(Preview,Flags);
 }
 
 

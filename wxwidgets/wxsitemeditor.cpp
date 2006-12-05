@@ -65,7 +65,8 @@ void wxsItemEditor::InitializeResourceData()
         GetResource()->GetResourceType(),
         GetResource()->GetLanguage(),
         GetResource()->GetTreeItemId(),
-        this );
+        this,
+        (wxsItemRes*)GetResource() );
 
     if ( !m_Data->IsOk() )
     {
@@ -160,7 +161,7 @@ void wxsItemEditor::RebuildPreview()
 
     // Generating preview
     wxPanel* Background = new wxPanel(m_Content,-1,wxDefaultPosition,wxDefaultSize,wxRAISED_BORDER);
-    wxObject* TopPreviewObject = m_Data->GetRootItem()->BuildPreview(Background,false,true);
+    wxObject* TopPreviewObject = m_Data->GetRootItem()->BuildPreview(Background,0);
     m_TopPreview = wxDynamicCast(TopPreviewObject,wxWindow);
     if ( !m_TopPreview )
     {

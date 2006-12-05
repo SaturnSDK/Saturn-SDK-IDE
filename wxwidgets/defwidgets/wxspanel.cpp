@@ -57,11 +57,12 @@ void wxsPanel::OnBuildCreatingCode(wxString& Code,const wxString& WindowParent,w
     }
 }
 
-wxObject* wxsPanel::OnBuildPreview(wxWindow* Parent,bool Exact,bool Store)
+wxObject* wxsPanel::OnBuildPreview(wxWindow* Parent,long Flags)
 {
+    // TODO: Use grid-viewing panel when not in exact mode
     wxWindow* NewItem = new wxPanel( Parent,GetId(),wxDefaultPosition,wxDefaultSize,Style());
-    SetupWindow(NewItem,Exact);
-    AddChildrenPreview(NewItem,Exact,Store);
+    SetupWindow(NewItem,Flags);
+    AddChildrenPreview(NewItem,Flags);
     return NewItem;
 }
 

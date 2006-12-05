@@ -64,11 +64,11 @@ void wxsButton::OnBuildCreatingCode(wxString& Code,const wxString& WindowParent,
     }
 }
 
-wxObject* wxsButton::OnBuildPreview(wxWindow* Parent,bool Exact,bool Store)
+wxObject* wxsButton::OnBuildPreview(wxWindow* Parent,long Flags)
 {
     wxButton* Preview = new wxButton(Parent,GetId(),Label,Pos(Parent),Size(Parent),Style());
     if ( IsDefault ) Preview->SetDefault();
-    return SetupWindow(Preview,Exact);
+    return SetupWindow(Preview,Flags);
 }
 
 void wxsButton::OnEnumWidgetProperties(long Flags)

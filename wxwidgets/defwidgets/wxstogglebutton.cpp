@@ -66,11 +66,11 @@ void wxsToggleButton::OnBuildCreatingCode(wxString& Code,const wxString& WindowP
     }
 }
 
-wxObject* wxsToggleButton::OnBuildPreview(wxWindow* Parent,bool Exact,bool)
+wxObject* wxsToggleButton::OnBuildPreview(wxWindow* Parent,long Flags)
 {
     wxToggleButton* Preview = new wxToggleButton(Parent,GetId(),Label,Pos(Parent),Size(Parent),Style());
     Preview->SetValue(IsChecked);
-    return SetupWindow(Preview,Exact);
+    return SetupWindow(Preview,Flags);
 }
 
 void wxsToggleButton::OnEnumWidgetProperties(long Flags)

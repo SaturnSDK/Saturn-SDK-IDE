@@ -3,12 +3,28 @@
 
 #include "wxwidgetsres.h"
 
+/** \brief Some abstract interface allowing wxsItemResData to access some resource-specific functinos easily */
+class wxsItemResData;
+class wxsItemResFunctions
+{
+    public:
+
+        /** \brief Ctor */
+        wxsItemResFunctions() {};
+
+        /** \brief Dctor */
+        virtual ~wxsItemResFunctions() {};
+
+        /** \brief Generating exact preview used in editor after pressing preview button */
+        virtual wxWindow* OnBuildExactPreview(wxWindow* Parent,wxsItemResData* Data) = 0;
+};
+
 /** \brief Base class for resources using item as root element
  *
  * This class implements most of functions in wxsResource and wxWidgetsRes,
  * only need to write this function: \code virtual wxString OnGetAppBuildingCode() \endcode
  */
-class wxsItemRes: public wxWidgetsRes
+class wxsItemRes: public wxWidgetsRes, public wxsItemResFunctions
 {
     DECLARE_CLASS(wxsItemRes)
     public:

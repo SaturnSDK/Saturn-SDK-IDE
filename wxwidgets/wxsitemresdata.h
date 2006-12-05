@@ -38,7 +38,8 @@ class wxsItemResData
             const wxString& ClassType,
             wxsCodingLang   Language,
             wxsResourceItemId TreeId,
-            wxsItemEditor*  Editor
+            wxsItemEditor*  Editor,
+            wxsItemResFunctions* Functions
             );
 
         /** \brief Dctor
@@ -183,16 +184,16 @@ class wxsItemResData
         /* ******************* */
 
         /** \brief Checking if there's preview already */
-        // TODO: Code it
-        bool IsPreview() { return false; }
+        inline bool IsPreview() { return m_Preview!=NULL; }
 
         /** \brief Showing preview of current resource content */
-        // TODO: Code it
-        bool ShowPreview() { return false; }
+        bool ShowPreview();
 
         /** \brief Closing window with current resource content */
-        // TODO: Code it
-        bool HidePreview() { return false; }
+        bool HidePreview();
+
+        /** \brief Function notifying that preview has been closed externally */
+        inline void NotifyPreviewClosed() { m_Preview = NULL; }
 
         /* *********************** */
         /*  Notification handlers  */
@@ -208,6 +209,7 @@ class wxsItemResData
     private:
 
         WX_DECLARE_STRING_HASH_MAP(TiXmlElement*,IdToXmlMapT);
+        WX_DECLARE_HASH_MAP(wxsItem*,wxsResourceItemId,wxPointerHash,wxPointerEqual,ItemToIdMapT);
 
         /** \brief Generating string with xml data for this item
          *  \note used when creating undo enteries
@@ -250,6 +252,9 @@ class wxsItemResData
         void StoreTreeExpandStateReq(wxsItem* Item);
         void DeleteSelectedReq(wxsItem* Item);
         void RebuildTree();
+        void StoreTreeIds();
+        void StoreTreeIdsReq(wxsItem* Item);
+        bool FindId(wxsResourceItemId& Id,wxsItem* Item);
 
         // Functions used by RebuildSourceCode
         void BuildVariablesCode(wxsCodingLang Lang,wxString& LocalCode, wxString& GlobalCode);
@@ -265,6 +270,8 @@ class wxsItemResData
         void BuildIncludesCode(wxsCodingLang Lang,wxString& LocalIncludes,wxString& GlobalIncludes);
         void BuildHeadersReq(wxsCodingLang Lang,wxsItem* Item,wxArrayString& LocalHeaders,wxArrayString& GlobalHeaders);
 
+        // Wrappers to m_Functions functionality
+        inline wxWindow* BuildExactPreview(wxWindow* Parent) { return m_Functions->OnBuildExactPreview(Parent,this); }
 
         wxString m_WxsFileName;
         wxString m_SrcFileName;
@@ -274,11 +281,15 @@ class wxsItemResData
         wxString m_ClassType;
         wxsCodingLang m_Language;
         wxsResourceItemId m_TreeId;
+        ItemToIdMapT m_IdMap;
         wxsItemEditor* m_Editor;
+        wxsItemResFunctions* m_Functions;
 
         wxsItem* m_RootItem;
         wxsItem* m_RootSelection;
         long m_PropertiesFilter;
+
+        wxWindow* m_Preview;
 
         wxsItemUndoBuffer m_Undo;
         wxsCorrector m_Corrector;

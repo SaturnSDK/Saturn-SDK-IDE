@@ -65,10 +65,10 @@ void wxsDatePickerCtrl::OnBuildCreatingCode(wxString& Code,const wxString& Windo
 }
 
 
-wxObject* wxsDatePickerCtrl::OnBuildPreview(wxWindow* Parent,bool Exact,bool)
+wxObject* wxsDatePickerCtrl::OnBuildPreview(wxWindow* Parent,long Flags)
 {
     wxDatePickerCtrl* Preview = new wxDatePickerCtrl(Parent,GetId(),wxDefaultDateTime,Pos(Parent),Size(Parent),Style());
-    return SetupWindow(Preview,Exact);
+    return SetupWindow(Preview,Flags);
 }
 
 void wxsDatePickerCtrl::OnEnumWidgetProperties(long Flags)

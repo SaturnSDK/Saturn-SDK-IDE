@@ -75,11 +75,11 @@ void wxsSpinCtrl::OnBuildCreatingCode(wxString& Code,const wxString& WindowParen
     }
 }
 
-wxObject* wxsSpinCtrl::OnBuildPreview(wxWindow* Parent,bool Exact,bool)
+wxObject* wxsSpinCtrl::OnBuildPreview(wxWindow* Parent,long Flags)
 {
     wxSpinCtrl* Preview = new wxSpinCtrl(Parent,GetId(),Value,Pos(Parent),Size(Parent),Style(),Min,Max);
     if ( !Value.empty() ) Preview->SetValue(Value);
-    return SetupWindow(Preview,Exact);
+    return SetupWindow(Preview,Flags);
 }
 
 void wxsSpinCtrl::OnEnumWidgetProperties(long Flags)

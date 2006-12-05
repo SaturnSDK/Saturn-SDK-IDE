@@ -51,9 +51,9 @@ wxsSpacer::wxsSpacer(wxsItemResData* Data): wxsItem(Data,&Reg.Info,flSize,NULL)
 void wxsSpacer::OnEnumItemProperties(long Flags)
 {}
 
-wxObject* wxsSpacer::OnBuildPreview(wxWindow* Parent,bool Exact,bool)
+wxObject* wxsSpacer::OnBuildPreview(wxWindow* Parent,long Flags)
 {
-    if ( Exact )
+    if ( Flags & pfExact )
     {
         wxSize Sz = GetBaseProps()->m_Size.GetSize(Parent);
         return new wxSizerItem(Sz.GetWidth(),Sz.GetHeight(),0,0,0,NULL);

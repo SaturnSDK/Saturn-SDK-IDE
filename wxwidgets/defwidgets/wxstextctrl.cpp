@@ -98,10 +98,10 @@ void wxsTextCtrl::OnBuildCreatingCode(wxString& Code,const wxString& WindowParen
 }
 
 
-wxObject* wxsTextCtrl::OnBuildPreview(wxWindow* Parent,bool Exact,bool)
+wxObject* wxsTextCtrl::OnBuildPreview(wxWindow* Parent,long Flags)
 {
     wxTextCtrl* Preview = new wxTextCtrl(Parent,GetId(),Text,Pos(Parent),Size(Parent),Style());
-    return SetupWindow(Preview,Exact);
+    return SetupWindow(Preview,Flags);
 }
 
 

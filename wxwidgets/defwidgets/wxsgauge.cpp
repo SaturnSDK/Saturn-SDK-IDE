@@ -72,13 +72,13 @@ void wxsGauge::OnBuildCreatingCode(wxString& Code,const wxString& WindowParent,w
 }
 
 
-wxObject* wxsGauge::OnBuildPreview(wxWindow* Parent,bool Exact,bool)
+wxObject* wxsGauge::OnBuildPreview(wxWindow* Parent,long Flags)
 {
     wxGauge* Preview = new wxGauge(Parent,GetId(),Range,Pos(Parent),Size(Parent),Style());
     if ( Value )  Preview->SetValue(Value);
     if ( Shadow ) Preview->SetShadowWidth(Shadow);
     if ( Bezel )  Preview->SetBezelFace(Bezel);
-    return SetupWindow(Preview,Exact);
+    return SetupWindow(Preview,Flags);
 }
 
 

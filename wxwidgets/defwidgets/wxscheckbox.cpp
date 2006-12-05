@@ -66,11 +66,11 @@ void wxsCheckBox::OnBuildCreatingCode(wxString& Code,const wxString& WindowParen
 }
 
 
-wxObject* wxsCheckBox::OnBuildPreview(wxWindow* Parent,bool Exact,bool)
+wxObject* wxsCheckBox::OnBuildPreview(wxWindow* Parent,long Flags)
 {
     wxCheckBox* Preview = new wxCheckBox(Parent,GetId(),Label,Pos(Parent),Size(Parent),Style());
     if ( IsChecked ) Preview->SetValue(IsChecked);
-    return SetupWindow(Preview,Exact);
+    return SetupWindow(Preview,Flags);
 }
 
 void wxsCheckBox::OnEnumWidgetProperties(long Flags)

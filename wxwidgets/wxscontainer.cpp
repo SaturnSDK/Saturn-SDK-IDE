@@ -125,11 +125,11 @@ void wxsContainer::SetupWindowCode(wxString& Code,wxsCodingLang Language)
 
 }
 
-void wxsContainer::AddChildrenPreview(wxWindow* This,bool Exact,bool StoreInLastPreview)
+void wxsContainer::AddChildrenPreview(wxWindow* This,long Flags)
 {
     for ( int i=0; i<GetChildCount(); i++ )
     {
-        GetChild(i)->BuildPreview(This,Exact,StoreInLastPreview);
+        GetChild(i)->BuildPreview(This,Flags);
     }
 
     if ( GetBaseProps()->m_Size.IsDefault )

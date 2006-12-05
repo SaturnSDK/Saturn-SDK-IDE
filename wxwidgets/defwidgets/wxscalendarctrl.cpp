@@ -71,10 +71,10 @@ void wxsCalendarCtrl::OnBuildCreatingCode(wxString& Code,const wxString& WindowP
     }
 }
 
-wxObject* wxsCalendarCtrl::OnBuildPreview(wxWindow* Parent,bool Exact,bool)
+wxObject* wxsCalendarCtrl::OnBuildPreview(wxWindow* Parent,long Flags)
 {
     wxCalendarCtrl* Preview = new wxCalendarCtrl(Parent,GetId(),wxDefaultDateTime,Pos(Parent),Size(Parent),Style());
-    return SetupWindow(Preview,Exact);
+    return SetupWindow(Preview,Flags);
 }
 
 void wxsCalendarCtrl::OnEnumWidgetProperties(long Flags)

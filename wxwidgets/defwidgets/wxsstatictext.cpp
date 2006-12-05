@@ -63,10 +63,10 @@ void wxsStaticText::OnBuildCreatingCode(wxString& Code,const wxString& WindowPar
 }
 
 
-wxObject* wxsStaticText::OnBuildPreview(wxWindow* Parent,bool Exact,bool)
+wxObject* wxsStaticText::OnBuildPreview(wxWindow* Parent,long Flags)
 {
     wxStaticText* Preview = new wxStaticText(Parent,GetId(),Label,Pos(Parent),Size(Parent),Style());
-    return SetupWindow(Preview,Exact);
+    return SetupWindow(Preview,Flags);
 }
 
 

@@ -70,13 +70,13 @@ void wxsSpinButton::OnBuildCreatingCode(wxString& Code,const wxString& WindowPar
     }
 }
 
-wxObject* wxsSpinButton::OnBuildPreview(wxWindow* Parent,bool Exact,bool)
+wxObject* wxsSpinButton::OnBuildPreview(wxWindow* Parent,long Flags)
 {
     wxSpinButton* Preview = new wxSpinButton(Parent,GetId(),Pos(Parent),Size(Parent),Style());
     if ( Value ) Preview->SetValue(Value);
     if ( Max > Min ) Preview->SetRange(Min,Max);
 
-    return SetupWindow(Preview,Exact);
+    return SetupWindow(Preview,Flags);
 }
 
 void wxsSpinButton::OnEnumWidgetProperties(long Flags)

@@ -128,7 +128,7 @@ void wxsSlider::OnBuildCreatingCode(wxString& Code,const wxString& WindowParent,
     }
 }
 
-wxObject* wxsSlider::OnBuildPreview(wxWindow* Parent,bool Exact,bool)
+wxObject* wxsSlider::OnBuildPreview(wxWindow* Parent,long Flags)
 {
     wxSlider* Preview = new wxSlider(Parent,GetId(),Value,Min,Max,Pos(Parent),Size(Parent),Style());
     if ( TickFrequency )    Preview->SetTickFreq(TickFrequency,0);
@@ -137,7 +137,7 @@ wxObject* wxsSlider::OnBuildPreview(wxWindow* Parent,bool Exact,bool)
     if ( ThumbLength )      Preview->SetThumbLength(ThumbLength);
     if ( Tick )             Preview->SetTick(Tick);
     if ( SelMin || SelMax ) Preview->SetSelection(SelMin,SelMax);
-    return SetupWindow(Preview,Exact);
+    return SetupWindow(Preview,Flags);
 }
 
 void wxsSlider::OnEnumWidgetProperties(long Flags)

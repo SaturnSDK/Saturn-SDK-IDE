@@ -91,7 +91,7 @@ void wxsBitmapButton::OnBuildCreatingCode(wxString& Code,const wxString& WindowP
 }
 
 
-wxObject* wxsBitmapButton::OnBuildPreview(wxWindow* Parent,bool Exact,bool)
+wxObject* wxsBitmapButton::OnBuildPreview(wxWindow* Parent,long Flags)
 {
     // TODO: What's going on with these pixels ?????
     // Reduce the size of the bitmap by 2 pixel for width and height of the bitmap button
@@ -109,7 +109,7 @@ wxObject* wxsBitmapButton::OnBuildPreview(wxWindow* Parent,bool Exact,bool)
         Preview->SetBitmapFocus(BitmapFocus.GetPreview(BitmapSize));
 
     if ( IsDefault ) Preview->SetDefault();
-    return SetupWindow(Preview,Exact);
+    return SetupWindow(Preview,Flags);
 }
 
 

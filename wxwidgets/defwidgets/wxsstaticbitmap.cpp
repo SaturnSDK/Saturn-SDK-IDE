@@ -59,10 +59,10 @@ void wxsStaticBitmap::OnBuildCreatingCode(wxString& Code,const wxString& WindowP
 }
 
 
-wxObject* wxsStaticBitmap::OnBuildPreview(wxWindow* Parent,bool Exact,bool)
+wxObject* wxsStaticBitmap::OnBuildPreview(wxWindow* Parent,long Flags)
 {
     wxStaticBitmap* Preview = new wxStaticBitmap(Parent,GetId(),Bitmap.GetPreview(Size(Parent)),Pos(Parent),Size(Parent),Style());
-    return SetupWindow(Preview,Exact);
+    return SetupWindow(Preview,Flags);
 }
 
 void wxsStaticBitmap::OnEnumWidgetProperties(long Flags)

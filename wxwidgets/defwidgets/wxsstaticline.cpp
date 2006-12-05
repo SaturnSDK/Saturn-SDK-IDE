@@ -66,10 +66,10 @@ void wxsStaticLine::OnBuildCreatingCode(wxString& Code,const wxString& WindowPar
 }
 
 
-wxObject* wxsStaticLine::OnBuildPreview(wxWindow* Parent,bool Exact,bool)
+wxObject* wxsStaticLine::OnBuildPreview(wxWindow* Parent,long Flags)
 {
     wxStaticLine* Preview = new wxStaticLine(Parent,GetId(),Pos(Parent),Size(Parent),Style());
-    return SetupWindow(Preview,Exact);
+    return SetupWindow(Preview,Flags);
 }
 
 void wxsStaticLine::OnEnumWidgetProperties(long Flags)

@@ -90,14 +90,14 @@ void wxsFrame::OnBuildCreatingCode(wxString& Code,const wxString& WindowParent,w
     }
 }
 
-wxObject* wxsFrame::OnBuildPreview(wxWindow* Parent,bool Exact,bool Store)
+wxObject* wxsFrame::OnBuildPreview(wxWindow* Parent,long Flags)
 {
     wxWindow* NewItem = NULL;
     wxFrame* Frm = NULL;
 
     // In case of frame and dialog when in "Exact" mode, we do not create
     // new object, but use Parent and call Create for it.
-    if ( Exact )
+    if ( Flags & pfExact )
     {
         Frm = wxDynamicCast(Parent,wxFrame);
         if ( Frm )
@@ -109,11 +109,12 @@ wxObject* wxsFrame::OnBuildPreview(wxWindow* Parent,bool Exact,bool Store)
     else
     {
         // In preview we simulate dialog using panel
+        // TODO: Use grid-viewing panel
         NewItem = new wxPanel(Parent,GetId(),wxDefaultPosition,wxDefaultSize,0/*wxRAISED_BORDER*/);
     }
 
-    SetupWindow(NewItem,Exact);
-    AddChildrenPreview(NewItem,Exact,Store);
+    SetupWindow(NewItem,Flags);
+    AddChildrenPreview(NewItem,Flags);
 
     if ( Frm && Centered )
     {

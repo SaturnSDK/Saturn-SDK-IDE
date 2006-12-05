@@ -92,10 +92,10 @@ void wxsTreeCtrl::OnBuildCreatingCode(wxString& Code,const wxString& WindowParen
 }
 
 
-wxObject* wxsTreeCtrl::OnBuildPreview(wxWindow* Parent,bool Exact,bool)
+wxObject* wxsTreeCtrl::OnBuildPreview(wxWindow* Parent,long Flags)
 {
     wxTreeCtrl* Preview = new wxTreeCtrl(Parent,GetId(),Pos(Parent),Size(Parent),Style());
-    return SetupWindow(Preview,Exact);
+    return SetupWindow(Preview,Flags);
 }
 
 

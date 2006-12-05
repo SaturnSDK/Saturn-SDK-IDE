@@ -106,7 +106,7 @@ class wxsSizer: public wxsParent
          * When there's no exact mode, there's additional panel on which
          * guidelines are drawn.
          */
-         wxObject* OnBuildPreview(wxWindow* Parent,bool Exact,bool Store);
+         wxObject* OnBuildPreview(wxWindow* Parent,long Flags);
 
         /** \brief Funciton creating additional data
          *

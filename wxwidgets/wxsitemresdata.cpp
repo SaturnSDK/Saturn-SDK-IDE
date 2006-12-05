@@ -13,9 +13,10 @@ wxsItemResData::wxsItemResData(
     const wxString& XrcFileName,
     const wxString& ClassName,
     const wxString& ClassType,
-    wxsCodingLang   Language,
-    wxsResourceItemId   TreeId,
-    wxsItemEditor*  Editor):
+    wxsCodingLang        Language,
+    wxsResourceItemId    TreeId,
+    wxsItemEditor*       Editor,
+    wxsItemResFunctions* Functions):
         m_WxsFileName(WxsFileName),
         m_SrcFileName(SrcFileName),
         m_HdrFileName(HdrFileName),
@@ -25,8 +26,10 @@ wxsItemResData::wxsItemResData(
         m_Language(Language),
         m_TreeId(TreeId),
         m_Editor(Editor),
+        m_Functions(Functions),
         m_RootItem(NULL),
         m_RootSelection(NULL),
+        m_Preview(NULL),
         m_Corrector(this),
         m_IsOK(false),
         m_LockCount(0)
@@ -66,6 +69,8 @@ wxsItemResData::wxsItemResData(
 
 wxsItemResData::~wxsItemResData()
 {
+    HidePreview();
+
     if ( GetModified() )
     {
         // Restoring previous content of files
@@ -81,6 +86,7 @@ wxsItemResData::~wxsItemResData()
     // Selecting parent to prevent reopening resource on wxGTK
     wxsResourceTree::Get()->SelectItem(ParentId);
     wxsResourceTree::Get()->DeleteChildren(m_TreeId);
+
 }
 
 bool wxsItemResData::Load()
@@ -1025,6 +1031,15 @@ bool wxsItemResData::SelectItem(wxsItem* Item,bool UnselectOther)
     Item->ShowInPropertyGrid();
     m_Editor->RebuildQuickProps(Item);
     m_Editor->UpdateSelection();
+
+    wxsResourceItemId Id;
+    if ( FindId(Id,Item) )
+    {
+        if ( wxsResourceTree::Get()->GetSelection() != Id )
+        {
+            wxsResourceTree::Get()->SelectItem(Id,true);
+        }
+    }
     return true;
 }
 
@@ -1112,8 +1127,65 @@ void wxsItemResData::DeleteSelectedReq(wxsItem* Item)
     }
 }
 
+bool wxsItemResData::ShowPreview()
+{
+    if ( m_Preview )
+    {
+        return false;
+    }
+
+    m_Preview = BuildExactPreview(m_Editor);
+    return m_Preview!=NULL;
+}
+
+bool wxsItemResData::HidePreview()
+{
+    if ( !m_Preview )
+    {
+        return false;
+    }
+    m_Preview->Destroy();
+    m_Preview = NULL;
+    return true;
+}
+
 void wxsItemResData::RebuildTree()
 {
     wxsResourceTree::Get()->DeleteChildren(m_TreeId);
     m_RootItem->BuildItemTree(wxsResourceTree::Get(),m_TreeId,-1);
+    StoreTreeIds();
+}
+
+void wxsItemResData::StoreTreeIds()
+{
+    m_IdMap.clear();
+    if ( m_RootItem )
+    {
+        StoreTreeIdsReq(m_RootItem);
+    }
+}
+
+void wxsItemResData::StoreTreeIdsReq(wxsItem* Item)
+{
+    m_IdMap[Item] = Item->GetLastTreeItemId();
+    wxsParent* AsParent = Item->ConvertToParent();
+    if ( AsParent )
+    {
+        for ( int i=0; i<AsParent->GetChildCount(); i++ )
+        {
+            StoreTreeIdsReq(AsParent->GetChild(i));
+        }
+    }
+}
+
+bool wxsItemResData::FindId(wxsResourceItemId& Id,wxsItem* Item)
+{
+    ItemToIdMapT::iterator it =  m_IdMap.find(Item);
+    if ( it == m_IdMap.end() )
+    {
+        return false;
+    }
+
+    Id = it->second;
+    return true;
 }

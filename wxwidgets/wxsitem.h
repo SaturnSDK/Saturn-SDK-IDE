@@ -60,6 +60,9 @@ class wxsItem: public wxsPropertyContainer
         static const long flFont      = 0x001000;  ///< \brief Item is using font
         static const long flHelpText  = 0x002000;  ///< \brief Item is using help text
 
+        // Flags used when generating preview
+        static const long pfExact     = 0x000001;   ///< \brief Notify to create exact preview (without any editor-like goodies)
+
         /** \brief Ctor
          * \param Resource resource containingthis widget, must not be NULL
          * \param Events array of events used by this object (may be NULL if item doesn't use events)
@@ -149,7 +152,7 @@ class wxsItem: public wxsPropertyContainer
          * and associates it with internal structures.
          * For more details see OnBuildPreview.
          */
-        wxObject* BuildPreview(wxWindow* Parent,bool Exact,bool StoreInLastPreview);
+        wxObject* BuildPreview(wxWindow* Parent,long PreviewFlags);
 
         /** \brief Function which should load this item and child items
          *         from xrc / wxs structure
@@ -253,11 +256,11 @@ class wxsItem: public wxsPropertyContainer
          * code generated in BuildCreatingCode function.
          *
          * \param Parent wxWidgets object for this one
-         * \param Exact true when this preview should be exact one, false otherwise
+         * \param Flags flags used when creating preview, see pfExact
          * \return Newly created object
          * \note This function is called from BuildPreview() function
          */
-        virtual wxObject* OnBuildPreview(wxWindow* Parent,bool Exact,bool Store) = 0;
+        virtual wxObject* OnBuildPreview(wxWindow* Parent,long PreviewFlags) = 0;
 
         /** \brief Function generating code creating item in resource
          *

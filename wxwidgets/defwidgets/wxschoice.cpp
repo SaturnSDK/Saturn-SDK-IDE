@@ -74,7 +74,7 @@ void wxsChoice::OnBuildCreatingCode(wxString& Code,const wxString& WindowParent,
     }
 }
 
-wxObject* wxsChoice::OnBuildPreview(wxWindow* Parent,bool Exact,bool)
+wxObject* wxsChoice::OnBuildPreview(wxWindow* Parent,long Flags)
 {
     wxChoice* Preview = new wxChoice(Parent,GetId(),Pos(Parent),Size(Parent),Style());
 
@@ -86,7 +86,7 @@ wxObject* wxsChoice::OnBuildPreview(wxWindow* Parent,bool Exact,bool)
             Preview->SetSelection(Val);
         }
     }
-    return SetupWindow(Preview,Exact);
+    return SetupWindow(Preview,Flags);
 }
 
 

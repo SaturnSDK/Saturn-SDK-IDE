@@ -79,7 +79,7 @@ void wxsCheckListBox::OnBuildCreatingCode(wxString& Code,const wxString& WindowP
 }
 
 
-wxObject* wxsCheckListBox::OnBuildPreview(wxWindow* Parent,bool Exact,bool)
+wxObject* wxsCheckListBox::OnBuildPreview(wxWindow* Parent,long Flags)
 {
     wxCheckListBox* Preview = new wxCheckListBox(Parent,GetId(),Pos(Parent),Size(Parent),0,NULL,Style());
     for ( size_t i = 0; i < ArrayChoices.GetCount(); ++i )
@@ -90,7 +90,7 @@ wxObject* wxsCheckListBox::OnBuildPreview(wxWindow* Parent,bool Exact,bool)
             Preview->Check(Val);
         }
     }
-    return SetupWindow(Preview,Exact);
+    return SetupWindow(Preview,Flags);
 }
 
 void wxsCheckListBox::OnEnumWidgetProperties(long Flags)

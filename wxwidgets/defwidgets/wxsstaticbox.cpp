@@ -62,10 +62,10 @@ void wxsStaticBox::OnBuildCreatingCode(wxString& Code,const wxString& WindowPare
     }
 }
 
-wxObject* wxsStaticBox::OnBuildPreview(wxWindow* Parent,bool Exact,bool)
+wxObject* wxsStaticBox::OnBuildPreview(wxWindow* Parent,long Flags)
 {
     wxStaticBox* Preview = new wxStaticBox(Parent,GetId(),Label,Pos(Parent),Size(Parent),Style());
-    return SetupWindow(Preview,Exact);
+    return SetupWindow(Preview,Flags);
 }
 
 void wxsStaticBox::OnEnumWidgetProperties(long Flags)

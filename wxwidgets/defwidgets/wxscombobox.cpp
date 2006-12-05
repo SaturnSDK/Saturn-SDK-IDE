@@ -79,7 +79,7 @@ void wxsComboBox::OnBuildCreatingCode(wxString& Code,const wxString& WindowParen
     }
 }
 
-wxObject* wxsComboBox::OnBuildPreview(wxWindow* Parent,bool Exact,bool Store)
+wxObject* wxsComboBox::OnBuildPreview(wxWindow* Parent,long Flags)
 {
     wxComboBox* Preview = new wxComboBox(Parent,GetId(),_T(""),Pos(Parent),Size(Parent),ArrayChoices, Style());
 
@@ -92,7 +92,7 @@ wxObject* wxsComboBox::OnBuildPreview(wxWindow* Parent,bool Exact,bool Store)
         }
     }
 
-    return SetupWindow(Preview,Exact);
+    return SetupWindow(Preview,Flags);
 }
 
 void wxsComboBox::OnEnumWidgetProperties(long Flags)

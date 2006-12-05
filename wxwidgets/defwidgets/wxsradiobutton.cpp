@@ -68,11 +68,11 @@ void wxsRadioButton::OnBuildCreatingCode(wxString& Code,const wxString& WindowPa
     }
 }
 
-wxObject* wxsRadioButton::OnBuildPreview(wxWindow* Parent,bool Exact,bool)
+wxObject* wxsRadioButton::OnBuildPreview(wxWindow* Parent,long Flags)
 {
     wxRadioButton* Preview = new wxRadioButton(Parent,GetId(),Label,Pos(Parent),Size(Parent),Style());
     Preview->SetValue(IsSelected);
-    return SetupWindow(Preview,Exact);
+    return SetupWindow(Preview,Flags);
 }
 
 void wxsRadioButton::OnEnumWidgetProperties(long Flags)

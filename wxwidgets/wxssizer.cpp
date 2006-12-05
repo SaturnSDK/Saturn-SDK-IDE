@@ -118,11 +118,11 @@ void wxsSizer::OnBuildCreatingCode(wxString& Code,const wxString& WindowParent,w
     }
 }
 
-wxObject* wxsSizer::OnBuildPreview(wxWindow* Parent,bool Exact,bool Store)
+wxObject* wxsSizer::OnBuildPreview(wxWindow* Parent,long Flags)
 {
     wxWindow* NewParent = Parent;
 
-    if ( !Exact )
+    if ( !(Flags & pfExact) )
     {
         NewParent = new wxsSizerPreview(Parent);
     }
@@ -136,7 +136,7 @@ wxObject* wxsSizer::OnBuildPreview(wxWindow* Parent,bool Exact,bool Store)
 
         // We pass either Parent passed to current BuildPreview function
         // or pointer to additional parent currently created
-        wxObject* ChildPreview = Child->BuildPreview(NewParent,Exact,Store);
+        wxObject* ChildPreview = Child->BuildPreview(NewParent,Flags);
         if ( !ChildPreview ) continue;
 
         wxSizer* ChildAsSizer = wxDynamicCast(ChildPreview,wxSizer);
@@ -163,7 +163,7 @@ wxObject* wxsSizer::OnBuildPreview(wxWindow* Parent,bool Exact,bool Store)
         }
     }
 
-    if ( !Exact )
+    if ( !(Flags & pfExact) )
     {
         NewParent->SetSizer(Sizer);
         Sizer->Fit(NewParent);
@@ -175,8 +175,11 @@ wxObject* wxsSizer::OnBuildPreview(wxWindow* Parent,bool Exact,bool Store)
         return NewParent;
     }
 
-    Parent->SetSizer(Sizer);
-    Sizer->SetSizeHints(Parent);
+    if ( GetParent() && GetParent()->GetType()!=wxsTSizer )
+    {
+        Parent->SetSizer(Sizer);
+        Sizer->SetSizeHints(Parent);
+    }
     return Sizer;
 }
 

@@ -91,10 +91,10 @@ void wxsListCtrl::OnBuildCreatingCode(wxString& Code,const wxString& WindowParen
 }
 
 
-wxObject* wxsListCtrl::OnBuildPreview(wxWindow* Parent,bool Exact,bool)
+wxObject* wxsListCtrl::OnBuildPreview(wxWindow* Parent,long Flags)
 {
     wxListCtrl* Preview = new wxListCtrl(Parent,GetId(),Pos(Parent),Size(Parent),Style());
-    return SetupWindow(Preview,Exact);
+    return SetupWindow(Preview,Flags);
 }
 
 

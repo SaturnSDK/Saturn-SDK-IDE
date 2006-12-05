@@ -1,6 +1,7 @@
 #include "wxsitem.h"
 #include "wxsparent.h"
 #include "wxsitemresdata.h"
+#include "wxsitemrestreedata.h"
 
 wxsItem::wxsItem(wxsItemResData* ResourceData,const wxsItemInfo* Info,long PropertiesFlags,const wxsEventDesc* Events):
     m_Info(Info),
@@ -157,14 +158,13 @@ bool wxsItem::OnXmlWrite(TiXmlElement* Element,bool IsXRC,bool IsExtra)
 
 void wxsItem::BuildItemTree(wxsResourceTree* Tree,wxsResourceItemId Parent,int Position)
 {
-    /* TODO: Code wxsResourceTreeData replacement for wxsItem class */
     if ( Position<0 || Position>=(int)Tree->GetChildrenCount(Parent) )
     {
-        m_LastTreeId = Tree->AppendItem(Parent,GetClassName(),-1,-1/*,new wxsResourceTreeData(this)*/);
+        m_LastTreeId = Tree->AppendItem(Parent,GetClassName(),-1,-1,new wxsItemResTreeData(this));
     }
     else
     {
-        m_LastTreeId = Tree->InsertItem(Parent,Position,GetClassName(),-1,-1/*,new wxsResourceTreeData(this)*/);
+        m_LastTreeId = Tree->InsertItem(Parent,Position,GetClassName(),-1,-1,new wxsItemResTreeData(this));
     }
     if ( !GetIsExpanded() )
     {
@@ -182,13 +182,10 @@ void wxsItem::BuildItemTree(wxsResourceTree* Tree,wxsResourceItemId Parent,int P
     }
 }
 
-wxObject* wxsItem::BuildPreview(wxWindow* Parent,bool Exact,bool StoreInLastPreview)
+wxObject* wxsItem::BuildPreview(wxWindow* Parent,long Flags)
 {
-    wxObject* Preview = OnBuildPreview(Parent,Exact,StoreInLastPreview);
-    if ( StoreInLastPreview )
-    {
-        m_LastPreview = Preview;
-    }
+    wxObject* Preview = OnBuildPreview(Parent,Flags);
+    m_LastPreview = Preview;
     return Preview;
 }
 

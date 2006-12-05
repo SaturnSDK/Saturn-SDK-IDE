@@ -81,7 +81,7 @@ void wxsListBox::OnBuildCreatingCode(wxString& Code,const wxString& WindowParent
 }
 
 
-wxObject* wxsListBox::OnBuildPreview(wxWindow* Parent,bool Exact,bool)
+wxObject* wxsListBox::OnBuildPreview(wxWindow* Parent,long Flags)
 {
     wxListBox* Preview = new wxListBox(Parent,GetId(),Pos(Parent),Size(Parent),0,0, Style());
     for ( size_t i = 0; i <  ArrayChoices.GetCount(); ++i )
@@ -93,7 +93,7 @@ wxObject* wxsListBox::OnBuildPreview(wxWindow* Parent,bool Exact,bool)
         }
     }
 
-    return SetupWindow(Preview,Exact);
+    return SetupWindow(Preview,Flags);
 }
 
 void wxsListBox::OnEnumWidgetProperties(long Flags)
