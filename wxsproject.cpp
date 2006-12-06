@@ -53,14 +53,18 @@ void wxsProject::ReadConfiguration(TiXmlElement* element)
     TiXmlDocument TempDoc;
 
     // Checking version
-    if ( wxsVersionConverter::Get().DetectOldConfig(SmithNode) )
+    if ( wxsVersionConverter::Get().DetectOldConfig(SmithNode,this) )
     {
-        SmithNode = wxsVersionConverter::Get().ConvertFromOldConfig(SmithNode,&TempDoc);
+        SmithNode = wxsVersionConverter::Get().ConvertFromOldConfig(SmithNode,&TempDoc,this);
         if ( !SmithNode )
         {
             // TODO: Some info about conversion failure
             //       and store full node for later save
             return;
+        }
+        else
+        {
+            GetCBProject()->SetModified(true);
         }
     }
 
@@ -76,12 +80,16 @@ void wxsProject::ReadConfiguration(TiXmlElement* element)
 
     if ( Version < CurrentVersion )
     {
-        SmithNode = wxsVersionConverter::Get().Convert(SmithNode,&TempDoc);
+        SmithNode = wxsVersionConverter::Get().Convert(SmithNode,&TempDoc,this);
         if ( !SmithNode )
         {
             // TODO: Show some dialog box that resources were created by newer version,
             //       store all configuration for later save and return
             return;
+        }
+        else
+        {
+            GetCBProject()->SetModified(true);
         }
     }
 
