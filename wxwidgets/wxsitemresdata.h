@@ -112,6 +112,27 @@ class wxsItemResData
         /** \brief Getting properties filter based on current edit  mode */
         inline int GetPropertiesFilter() { return m_PropertiesFilter; }
 
+        /** \brief Getting name of wxs file (global path) */
+        inline const wxString& GetWxsFileName() { return m_SrcFileName; }
+
+        /** \brief Getting name of source file (global path) */
+        inline const wxString& GetSrcFileName() { return m_SrcFileName; }
+
+        /** \brief Getting name of header file (global path) */
+        inline const wxString& GetHdsFileName() { return m_HdrFileName; }
+
+        /** \brief Getting name of XRC file (global path) */
+        inline const wxString& GetXrcFileName() { return m_XrcFileName; }
+
+        /** \brief Getting name of class of edited resource */
+        inline const wxString& GetClassName() { return m_ClassName; }
+
+        /** \brief Getting name class used as base for this resource (like wxDialog) */
+        inline const wxString& GetClassType() { return m_ClassType; }
+
+        /** \brief Getting language used in resource */
+        inline wxsCodingLang GetLanguage() { return m_Language; }
+
         /* ************************ */
         /*  Undo buffer operations  */
         /* ************************ */

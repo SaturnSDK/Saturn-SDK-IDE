@@ -2,6 +2,7 @@
 #include "wxsparent.h"
 #include "wxsitemresdata.h"
 #include "wxsitemrestreedata.h"
+#include "wxseventseditor.h"
 
 wxsItem::wxsItem(wxsItemResData* ResourceData,const wxsItemInfo* Info,long PropertiesFlags,const wxsEventDesc* Events):
     m_Info(Info),
@@ -210,4 +211,14 @@ void wxsItem::OnPropertyChanged()
 void wxsItem::OnSubPropertyChanged(wxsPropertyContainer*)
 {
     GetResourceData()->NotifyChange(this);
+}
+
+void wxsItem::OnAddExtraProperties(wxsPropertyGridManager* Grid)
+{
+    wxsEventsEditor::Get().BuildEvents(this,Grid);
+}
+
+void wxsItem::OnExtraPropertyChanged(wxsPropertyGridManager* Grid,wxPGId Id)
+{
+    wxsEventsEditor::Get().PGChanged(this,Grid,Id);
 }

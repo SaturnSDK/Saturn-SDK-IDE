@@ -68,7 +68,6 @@ void wxsFrame::OnBuildCreatingCode(wxString& Code,const wxString& WindowParent,w
                 << PosCode(WindowParent,wxsCPP) << _T(",")
                 << SizeCode(WindowParent,wxsCPP) << _T(",")
                 << StyleCode(wxsCPP) << _T(",")
-                << _T("wxDefaultValidator") << _T(",")
                 << wxsCodeMarks::WxString(wxsCPP,GetVarName(),false) << _T(");\n");
 
             SetupWindowCode(Code,Language);

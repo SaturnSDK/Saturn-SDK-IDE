@@ -199,7 +199,7 @@ class wxsPropertyContainer
         virtual void OnAddExtraProperties(wxsPropertyGridManager* Grid) {}
 
         /** \brief Function notifying that some extra property (which could be added
-         *         inside OnUpdatePropertyGrid call) has chaged.
+         *         inside OnAddExtraProperties call) has chaged.
          */
         virtual void OnExtraPropertyChanged(wxsPropertyGridManager* Grid,wxPGId Id) {}
 

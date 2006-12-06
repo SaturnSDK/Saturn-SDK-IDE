@@ -68,7 +68,11 @@ void wxSmith::OnAttach()
 
     // Adding properties / events browser
     Sizer = new wxGridSizer(1);
-    Sizer->Add(new wxsPropertyGridManager(PropertiesContainer),1,wxGROW);
+    wxsPropertyGridManager* PGManager = new wxsPropertyGridManager(PropertiesContainer,-1,wxDefaultPosition,wxDefaultSize,wxPG_TOOLBAR|wxTAB_TRAVERSAL);
+    PGManager->AddPage(_("Properties"));
+    PGManager->AddPage(_("Events"));
+    PGManager->SelectPage(0);
+    Sizer->Add(PGManager,1,wxGROW);
     PropertiesContainer->SetSizer(Sizer);
     m_Splitter->Split(ResourcesContainer,PropertiesContainer);
 

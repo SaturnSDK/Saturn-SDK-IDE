@@ -77,7 +77,7 @@ class wxsEvents
 		inline const wxsEventDesc* GetDesc(int Index) { return &m_EventArray[Index]; }
 
 		/** \brief Getting event handler name */
-		inline const wxString GetHandler(int Index) { return m_Functions[Index]; }
+		inline const wxString& GetHandler(int Index) { return m_Functions[Index]; }
 
 		/** \brief Setting event handler name */
 		inline void SetHandler(int Index,const wxString& Name) { m_Functions[Index] = Name; }

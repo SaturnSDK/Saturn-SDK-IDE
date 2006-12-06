@@ -364,8 +364,14 @@ class wxsItem: public wxsPropertyContainer
         /** \brief Handler for change notifications */
         virtual void OnPropertyChanged();
 
-        /** \brief Additional hangled for sub properties */
+        /** \brief Additional handler for sub properties */
         virtual void OnSubPropertyChanged(wxsPropertyContainer*);
+
+        /** \brief Function for adding extra properties - used to add events */
+        virtual void OnAddExtraProperties(wxsPropertyGridManager* Grid);
+
+        /** \brief Readng content of extra properties */
+        virtual void OnExtraPropertyChanged(wxsPropertyGridManager* Grid,wxPGId Id);
 
         const wxsItemInfo* m_Info;              ///< \brief Pointer to item's info structure
         wxsEvents m_Events;                     ///< \brief Object managing events

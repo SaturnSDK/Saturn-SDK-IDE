@@ -1,5 +1,6 @@
 #include "wxsevents.h"
 #include "wxsitem.h"
+#include "wxsitemresdata.h"
 
 #include <messagemanager.h>
 
@@ -90,6 +91,7 @@ void wxsEvents::XmlSaveFunctions(TiXmlElement* Element)
 
 void wxsEvents::GenerateBindingCode(wxString& Code,const wxString& IdString,const wxString& VarNameString,wxsCodingLang Language)
 {
+    wxString ClassName = m_Item->GetResourceData()->GetClassName();
     switch ( Language )
     {
         case wxsCPP:
@@ -102,14 +104,14 @@ void wxsEvents::GenerateBindingCode(wxString& Code,const wxString& IdString,cons
                     {
                         case wxsEventDesc::Id:
                             Code << _T("Connect(") << IdString << _T(",")
-                                 << m_EventArray[i].Type << _T("(wxObjectEventFunction)")
-                                 << m_Functions[i] << _T(");\n");
+                                 << m_EventArray[i].Type << _T(",(wxObjectEventFunction)&")
+                                 << ClassName << _T("::") << m_Functions[i] << _T(");\n");
                             break;
 
                         case wxsEventDesc::NoId:
                             Code << VarNameString << _T("->Connect(") << IdString
                                  << _T(",") << m_EventArray[i].Type
-                                 << _T("(wxObjectEventFunction)") << m_Functions[i]
+                                 << _T(",(wxObjectEventFunction)&") << ClassName << _T("::") << m_Functions[i]
                                  << _T(",NULL,this);\n");
                             break;
 

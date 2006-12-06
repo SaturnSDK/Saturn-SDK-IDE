@@ -58,12 +58,12 @@ void wxsCheckListBox::OnBuildCreatingCode(wxString& Code,const wxString& WindowP
             {
                 if ( ArrayChecks[i] )
                 {
-                    Code << GetVarName() << _T("->Check( ");
+                    Code << GetVarName() << _T("->Check(");
                 }
                 Code << GetVarName() << _T("->Append(") << wxsCodeMarks::WxString(wxsCPP,ArrayChoices[i]) << _T(")");
                 if ( ArrayChecks[i] )
                 {
-                    Code << GetVarName() << _T(" )");
+                    Code << _T(")");
                 }
                 Code << _T(";\n");
             }
