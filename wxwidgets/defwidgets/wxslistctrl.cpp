@@ -1,5 +1,7 @@
 #include "wxslistctrl.h"
 
+#include <wx/listctrl.h>
+
 namespace
 {
     wxsRegisterItem<wxsListCtrl> Reg(_T("ListCtrl"),wxsTWidget,_T("Standard"),60);

@@ -1,5 +1,7 @@
 #include "wxsspinctrl.h"
 
+#include <wx/spinctrl.h>
+
 namespace
 {
     wxsRegisterItem<wxsSpinCtrl> Reg(_T("SpinCtrl"),wxsTWidget,_T("Standard"),50);

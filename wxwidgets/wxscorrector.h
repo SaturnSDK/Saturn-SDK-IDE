@@ -1,6 +1,10 @@
 #ifndef WXSCORRECTOR_H
 #define WXSCORRECTOR_H
 
+#include <wx/string.h>
+#include <wx/hashmap.h>
+#include <wx/hashset.h>
+
 class wxsItemResData;
 class wxsItem;
 

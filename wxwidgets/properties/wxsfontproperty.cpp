@@ -3,6 +3,8 @@
 
 #include <wx/fontenum.h>
 #include <wx/tokenzr.h>
+#include <wx/fontmap.h>
+#include <wx/settings.h>
 
 wxFont wxsFontData::BuildFont()
 {

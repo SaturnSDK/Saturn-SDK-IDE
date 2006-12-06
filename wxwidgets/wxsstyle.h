@@ -2,6 +2,7 @@
 #define __WXSSTYLE_H
 
 #include "../wxscodinglang.h"
+#include <wx/dynarray.h>
 
 // TODO: Think about non-macro implementation
 

@@ -1,6 +1,9 @@
 #ifndef WXSGUIFACTORY_H
 #define WXSGUIFACTORY_H
 
+#include <wx/string.h>
+#include <wx/hashmap.h>
+
 class wxsGUI;
 class wxsProject;
 

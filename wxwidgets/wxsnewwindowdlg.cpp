@@ -6,6 +6,9 @@
 #include "../wxsmith.h"
 #include "../wxsproject.h"
 
+#include <messagemanager.h>
+#include <projectmanager.h>
+
 
 BEGIN_EVENT_TABLE(wxsNewWindowDlg,wxDialog)
     //(*EventTable(wxsNewWindowDlg)

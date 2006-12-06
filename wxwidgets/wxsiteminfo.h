@@ -1,6 +1,9 @@
 #ifndef WXSITEMINFO_H
 #define WXSITEMINFO_H
 
+#include <wx/string.h>
+#include <wx/bitmap.h>
+
 /** \brief Set of possible item types */
 enum wxsItemType
 {

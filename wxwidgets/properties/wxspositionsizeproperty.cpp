@@ -1,5 +1,7 @@
 #include "wxspositionsizeproperty.h"
 
+#include <globals.h>
+
 // Helper macro for fetching variable
 #define DEFVALUE   wxsVARIABLE(Object,Offset,wxsPositionSizeData).IsDefault
 #define XVALUE     wxsVARIABLE(Object,Offset,wxsPositionSizeData).X

@@ -1,5 +1,7 @@
 #include "wxsspinbutton.h"
 
+#include <wx/spinbutt.h>
+
 namespace
 {
     wxsRegisterItem<wxsSpinButton> Reg(_T("SpinButton"),wxsTWidget,_T("Standard"),50);

@@ -1,6 +1,9 @@
 #include "wxsguifactory.h"
 #include "wxsgui.h"
 
+#include <messagemanager.h>
+#include <wx/choicdlg.h>
+
 wxsGUIFactory::wxsGUIFactory(const wxString& Name): m_Name(Name)
 {
     // Registering this gui in new hash

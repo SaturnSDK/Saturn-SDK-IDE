@@ -4,6 +4,12 @@
 #include "wxsitemres.h"
 #include "../wxseditor.h"
 
+#include <wx/hashset.h>
+#include <wx/notebook.h>
+#include <wx/bmpbuttn.h>
+#include <wx/sizer.h>
+#include <wx/scrolwin.h>
+
 class wxsItemEditorContent;
 class wxsItemResData;
 class wxsItem;

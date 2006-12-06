@@ -1,6 +1,8 @@
 #include "wxsresourcetree.h"
 #include "wxsresourcetreeitemdata.h"
 
+#include <wx/intl.h>
+
 namespace
 {
     class wxsResourceTreeProjectData: public wxsResourceTreeItemData

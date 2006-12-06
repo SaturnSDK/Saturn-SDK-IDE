@@ -1,6 +1,8 @@
 #include "wxsarraystringcheckproperty.h"
 #include "wxsarraystringcheckeditordlg.h"
 
+#include <globals.h>
+
 // Helper macros for fetching variables
 #define VALUE   wxsVARIABLE(Object,Offset,wxArrayString)
 #define CHECK   wxsVARIABLE(Object,CheckOffset,wxArrayBool)

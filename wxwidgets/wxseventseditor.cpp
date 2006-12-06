@@ -3,6 +3,8 @@
 #include "wxsitemresdata.h"
 #include "../wxscoder.h"
 
+#include <editormanager.h>
+
 namespace
 {
     const wxString NoneStr   = _("-- None --");

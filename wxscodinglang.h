@@ -1,6 +1,8 @@
 #ifndef WXSCODINGLANG_H
 #define WXSCODINGLANG_H
 
+#include <wx/string.h>
+
 /** \brief This enumeration contains all coding languages supported in wxSmith */
 enum wxsCodingLang
 {

@@ -1,6 +1,9 @@
 #include "wxwidgetsguiappadoptingdlg.h"
 #include "wxwidgetsgui.h"
 
+#include <wx/filedlg.h>
+#include <projectmanager.h>
+
 BEGIN_EVENT_TABLE(wxWidgetsGUIAppAdoptingDlg,wxDialog)
 	//(*EventTable(wxWidgetsGUIAppAdoptingDlg)
 	EVT_BUTTON(ID_BUTTON5,wxWidgetsGUIAppAdoptingDlg::OnUseFileBtnClick)

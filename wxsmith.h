@@ -16,6 +16,7 @@
 #include <cbplugin.h>
 #include <settings.h>
 #include <sdk_events.h>
+#include <tinyxml/tinyxml.h>
 
 #include "wxsstoringsplitterwindow.h"
 #include "wxsresourcetree.h"

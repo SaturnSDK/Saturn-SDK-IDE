@@ -1,6 +1,8 @@
 #ifndef WXSRESOURCETREEITEMDATA_H
 #define WXSRESOURCETREEITEMDATA_H
 
+#include <wx/treectrl.h>
+
 /** \brief Data used by resource tree */
 class wxsResourceTreeItemData: public wxTreeItemData
 {

@@ -4,6 +4,7 @@
 #include "../../properties/wxsproperties.h"
 #include "../../wxscodinglang.h"
 
+#include <wx/dialog.h>
 #include <wx/propgrid/propdev.h>
 #include <wx/propgrid/advprops.h>
 

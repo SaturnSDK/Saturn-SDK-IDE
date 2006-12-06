@@ -4,6 +4,8 @@
 #include "../../properties/wxsproperties.h"
 #include "../../wxscodinglang.h"
 
+#include <wx/artprov.h>
+
 /** \brief Structure holding bitmap configuration
  *
  * Id determines whether we use art provider or not,

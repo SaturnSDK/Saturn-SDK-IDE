@@ -7,6 +7,8 @@
 #include <wx/string.h>
 #include <wx/hashmap.h>
 
+#include <configmanager.h>
+
 class wxsItem;
 class wxsItemResData;
 

@@ -1,6 +1,7 @@
 #ifndef WXSVERSIONCONVERTER_H
 #define WXSVERSIONCONVERTER_H
 
+#include <tinyxml/tinyxml.h>
 
 /** \brief This class is responsible for converting data between different
  *         wxSmith versions

@@ -3,6 +3,7 @@
 #include "wxsresourcetreeitemdata.h"
 
 #include <wx/wxFlatNotebook/wxFlatNotebook.h>
+#include <editormanager.h>
 
 namespace
 {

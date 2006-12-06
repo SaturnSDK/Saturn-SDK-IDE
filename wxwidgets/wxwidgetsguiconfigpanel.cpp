@@ -1,6 +1,8 @@
 #include "wxwidgetsguiconfigpanel.h"
 #include "../wxsproject.h"
+
 #include <wx/tokenzr.h>
+#include <wx/filedlg.h>
 
 BEGIN_EVENT_TABLE(wxWidgetsGUIConfigPanel,cbConfigurationPanel)
 	//(*EventTable(wxWidgetsGUIConfigPanel)

@@ -4,6 +4,8 @@
 #include "wxspanelres.h"
 #include "wxsnewwindowdlg.h"
 
+#include <wx/choicdlg.h>
+
 namespace
 {
     wxWidgetsResFactory Factory;

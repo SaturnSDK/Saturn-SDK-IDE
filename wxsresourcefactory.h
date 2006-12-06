@@ -2,6 +2,7 @@
 #define WXSRESOURCEFACTORY_H
 
 #include <wx/string.h>
+#include <wx/menu.h>
 
 class wxsResource;
 class wxsProject;

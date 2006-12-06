@@ -1,6 +1,7 @@
 #include "wxssizerflagsproperty.h"
 
 #include <wx/tokenzr.h>
+#include <globals.h>
 
 // Helper macro for fetching variables
 #define FLAGS   wxsVARIABLE(Object,Offset,long)

@@ -15,6 +15,7 @@
 
 #include <wx/wxFlatNotebook/wxFlatNotebook.h>
 #include <projectloader_hooks.h>
+#include <projectmanager.h>
 
 namespace
 {

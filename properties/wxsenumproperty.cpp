@@ -1,5 +1,7 @@
 #include "wxsenumproperty.h"
 
+#include <globals.h>
+
 // Helper macro for fetching variable
 #define VALUE   wxsVARIABLE(Object,Offset,long)
 

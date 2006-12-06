@@ -18,6 +18,8 @@
 #include <wx/statline.h>
 #include <wx/stattext.h>
 //*)
+#include <wx/timer.h>
+#include <projectfile.h>
 
 class wxWidgetsGUI;
 

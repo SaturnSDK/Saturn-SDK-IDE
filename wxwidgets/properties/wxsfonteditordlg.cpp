@@ -2,6 +2,7 @@
 #include "wxsfontfaceeditordlg.h"
 #include <wx/fontmap.h>
 #include <wx/fontdlg.h>
+#include <wx/settings.h>
 
 #define FT_DFAULT   0x00
 #define FT_CUSTOM   0x01
@@ -209,7 +210,7 @@ wxsFontEditorDlg::wxsFontEditorDlg(wxWindow* parent,wxsFontData& _Data,wxWindowI
 	BoxSizer1->SetSizeHints(this);
 	//*)
     Initialized = true;
-	
+
     size_t Count = wxFontMapper::Get()->GetSupportedEncodingsCount();
     for ( size_t i = 0; i<Count; i++ )
     {
@@ -219,7 +220,7 @@ wxsFontEditorDlg::wxsFontEditorDlg(wxWindow* parent,wxsFontData& _Data,wxWindowI
         Encodings.Add(Name);
         EncodVal->Append(wxFontMapper::Get()->GetEncodingDescription(Enc));
     }
-	
+
 	ReadData(Data);
 	UpdateContent();
 	UpdatePreview();
@@ -236,11 +237,11 @@ void wxsFontEditorDlg::OnButton1Click(wxCommandEvent& event)
 void wxsFontEditorDlg::UpdateContent()
 {
     int Type = FontType->GetSelection();
-    
+
     bool TypeSystem = Type == FT_SYSTEM;
     bool TypeNotDef = Type != FT_DFAULT;
     bool RelSizeEn  = !SizeUse->GetValue();
-    
+
     BaseFontUse->Show(TypeSystem);
     BaseFontTxt->Show(TypeSystem);
     BaseFontVal->Show(TypeSystem);
@@ -294,7 +295,7 @@ void wxsFontEditorDlg::ReadData(wxsFontData& Data)
         FontType->SetSelection(FT_DFAULT);
         return;
     }
-    
+
     if ( !Data.SysFont.empty() )
     {
         FontType->SetSelection(FT_SYSTEM);
@@ -306,7 +307,7 @@ void wxsFontEditorDlg::ReadData(wxsFontData& Data)
                 BaseFontVal->SetSelection(0);
             }
         }
-        
+
         if ( !Data.HasSize && Data.HasRelativeSize )
         {
             RelSizeUse->SetValue(true);
@@ -317,7 +318,7 @@ void wxsFontEditorDlg::ReadData(wxsFontData& Data)
     {
         FontType->SetSelection(FT_CUSTOM);
     }
-    
+
     if ( Data.HasFamily )
     {
         FamUse->SetValue(true);
@@ -332,7 +333,7 @@ void wxsFontEditorDlg::ReadData(wxsFontData& Data)
             default:                      FamUse->SetValue(false);
         }
     }
-    
+
     if ( Data.HasEncoding )
     {
         int Index = Encodings.Index(Data.Encoding);
@@ -342,7 +343,7 @@ void wxsFontEditorDlg::ReadData(wxsFontData& Data)
             EncodVal->SetSelection(Index);
         }
     }
-    
+
     if ( Data.HasSize )
     {
         SizeUse->SetValue(true);
@@ -351,7 +352,7 @@ void wxsFontEditorDlg::ReadData(wxsFontData& Data)
 
     FaceList->Append(Data.Faces);
     FaceList->SetSelection(0);
-    
+
     if ( Data.HasStyle )
     {
         StyleUse->SetValue(true);
@@ -359,7 +360,7 @@ void wxsFontEditorDlg::ReadData(wxsFontData& Data)
         StyleItal->SetValue(Data.Style == wxFONTSTYLE_ITALIC);
         StyleSlant->SetValue(Data.Style == wxFONTSTYLE_SLANT);
     }
-    
+
     if ( Data.HasWeight )
     {
         WeightUse->SetValue(true);
@@ -367,7 +368,7 @@ void wxsFontEditorDlg::ReadData(wxsFontData& Data)
         WeightLight->SetValue(Data.Weight == wxFONTWEIGHT_LIGHT);
         WeightBold->SetValue(Data.Weight == wxFONTWEIGHT_BOLD);
     }
-    
+
     if ( Data.HasUnderlined )
     {
         UnderUse->SetValue(true);
@@ -392,7 +393,7 @@ void wxsFontEditorDlg::StoreData(wxsFontData& Data)
         Data.Faces.Clear();
         return;
     }
-    
+
     Data.IsDefault = false;
     if ( FontType->GetSelection() == FT_CUSTOM )
     {
@@ -405,13 +406,13 @@ void wxsFontEditorDlg::StoreData(wxsFontData& Data)
         {
             Data.SysFont = BaseFontVal->GetStringSelection();
         }
-        
+
         if ( Data.HasRelativeSize = !SizeVal->GetValue() && RelSizeVal->GetValue() )
         {
             RelSizeVal->GetValue().ToDouble(&Data.RelativeSize);
         }
     }
-    
+
     if ( Data.HasFamily = FamUse->GetValue() )
     {
         switch ( FamVal->GetSelection() )
@@ -425,7 +426,7 @@ void wxsFontEditorDlg::StoreData(wxsFontData& Data)
             default:              Data.HasFamily = false;
         }
     }
-    
+
     if ( Data.HasEncoding = EncodUse->GetValue() )
     {
         int Index = EncodVal->GetSelection();
@@ -438,32 +439,32 @@ void wxsFontEditorDlg::StoreData(wxsFontData& Data)
             Data.Encoding = Encodings[Index];
         }
     }
-    
+
     if ( Data.HasSize = SizeUse->GetValue() )
     {
         Data.Size = SizeVal->GetValue();
     }
-    
+
     if ( Data.HasStyle = StyleUse->GetValue() )
     {
         if ( StyleNorm->GetValue() ) Data.Style = wxFONTSTYLE_NORMAL;
         if ( StyleItal->GetValue() ) Data.Style = wxFONTSTYLE_ITALIC;
         if ( StyleSlant->GetValue() ) Data.Style = wxFONTSTYLE_SLANT;
     }
-    
+
     if ( Data.HasWeight = WeightUse->GetValue() )
     {
         if ( WeightLight->GetValue() ) Data.Weight = wxFONTWEIGHT_LIGHT;
         if ( WeightNorm->GetValue() ) Data.Weight = wxFONTWEIGHT_NORMAL;
         if ( WeightBold->GetValue() ) Data.Weight = wxFONTWEIGHT_BOLD;
     }
-    
+
     if ( Data.HasUnderlined = UnderUse->GetValue() )
     {
         if ( UnderYes->GetValue() ) Data.Underlined = true;
         if ( UnderNo->GetValue() ) Data.Underlined = false;
     }
-    
+
     Data.Faces.Clear();
     size_t Count = FaceList->GetCount();
     for ( size_t i=0; i<Count; i++ )
@@ -488,7 +489,7 @@ void wxsFontEditorDlg::OnButton1Click1(wxCommandEvent& event)
 {
     wxFont Font  = ::wxGetFontFromUser();
     if ( !Font.Ok() ) return;
-    
+
     FontType->SetSelection(FT_CUSTOM);
     FamUse->SetValue(true);
     switch ( Font.GetFamily() )
@@ -501,30 +502,30 @@ void wxsFontEditorDlg::OnButton1Click1(wxCommandEvent& event)
         case wxFONTFAMILY_TELETYPE:   FamVal->SetSelection(FFAM_TELETYPE); break;
         default:                      FamUse->SetValue(false);
     }
-    
+
     EncodUse->SetValue(false);
     SizeUse->SetValue(true);
     SizeVal->SetValue(Font.GetPointSize());
     RelSizeUse->SetValue(false);
-    
+
     FaceList->Clear();
     FaceList->Append(Font.GetFaceName());
     FaceList->SetSelection(0);
-    
+
     StyleNorm->SetValue(Font.GetStyle()==wxFONTSTYLE_NORMAL);
     StyleItal->SetValue(Font.GetStyle()==wxFONTSTYLE_ITALIC);
     StyleSlant->SetValue(Font.GetStyle()==wxFONTSTYLE_SLANT);
     StyleUse->SetValue(Font.GetStyle()!=wxFONTSTYLE_NORMAL);
-    
+
     WeightLight->SetValue(Font.GetWeight()==wxFONTWEIGHT_LIGHT);
     WeightNorm->SetValue(Font.GetWeight()==wxFONTWEIGHT_NORMAL);
     WeightBold->SetValue(Font.GetWeight()==wxFONTWEIGHT_BOLD);
     WeightUse->SetValue(Font.GetWeight()!=wxFONTWEIGHT_NORMAL);
-    
+
     UnderYes->SetValue(Font.GetUnderlined());
     UnderNo->SetValue(!Font.GetUnderlined());
     UnderUse->SetValue(!Font.GetUnderlined());
-    
+
     UpdateContent();
     UpdatePreview();
 }
