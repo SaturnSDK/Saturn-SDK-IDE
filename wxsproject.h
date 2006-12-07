@@ -42,9 +42,6 @@ class wxsProject
         /** \brief Function returning main project path */
         wxString GetProjectPath();
 
-//        /** \brief Function returning path of directory where all wxsmith files are stored */
-//        wxString GetInternalPath();
-//
         /** \brief Adding new resource
          *
          * This function will modify CBP project's modify state
@@ -88,6 +85,9 @@ class wxsProject
         /** \brief notifying about changes in project */
         void NotifyChange();
 
+        /** \brief Checking if project has been modified during load */
+        inline bool GetWasModifiedDuringLoad() { return m_WasModifiedDuringLoad; }
+
 	private:
 
         WX_DEFINE_ARRAY(wxsResource*,ResourcesT);
@@ -102,6 +102,7 @@ class wxsProject
         wxsGUI* m_GUI;                      ///< \brief Main GUI item
         TiXmlElement m_UnknownConfig;
         TiXmlElement m_UnknownResources;
+        bool m_WasModifiedDuringLoad;       ///< \brief Set to true if project had to be converted to some newer format during load
 
         /** \brief Getting tree item id in resource browser associated with given resource type */
         wxsResourceItemId GetResourceTypeTreeId(const wxString& Name);

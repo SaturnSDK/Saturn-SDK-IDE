@@ -19,7 +19,8 @@ wxsProject::wxsProject(cbProject* Project):
     m_Project(Project),
     m_GUI(NULL),
     m_UnknownConfig("unknown_config"),
-    m_UnknownResources("unknown_resource")
+    m_UnknownResources("unknown_resource"),
+    m_WasModifiedDuringLoad(false)
 {
     // Creating resource tree entery for this project
     m_TreeItem = wxsTree()->NewProjectItem(GetCBProject()->GetTitle(),this);
@@ -64,7 +65,7 @@ void wxsProject::ReadConfiguration(TiXmlElement* element)
         }
         else
         {
-            GetCBProject()->SetModified(true);
+            m_WasModifiedDuringLoad = true;
         }
     }
 
@@ -89,7 +90,7 @@ void wxsProject::ReadConfiguration(TiXmlElement* element)
         }
         else
         {
-            GetCBProject()->SetModified(true);
+            m_WasModifiedDuringLoad = true;
         }
     }
 

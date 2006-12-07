@@ -86,6 +86,9 @@ class wxSmith : public cbPlugin
         /** \brief Procedure called when loading/saving project, used to load/save additional configuration from/to .cbp file */
         void OnProjectHook(cbProject*,TiXmlElement*,bool);
 
+        /** \brief PRocedure called when project has been loaded */
+        void OnProjectOpened(CodeBlocksEvent& event);
+
         /** \brief Procedure called when closing project, removes additional stuff associated with project */
         void OnProjectClose(CodeBlocksEvent& event);
 

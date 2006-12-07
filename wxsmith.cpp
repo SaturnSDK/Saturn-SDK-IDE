@@ -26,6 +26,7 @@ namespace
 wxSmith* wxSmith::m_Singleton = NULL;
 
 BEGIN_EVENT_TABLE(wxSmith, cbPlugin)
+    EVT_PROJECT_OPEN(wxSmith::OnProjectOpened)
 	EVT_PROJECT_CLOSE(wxSmith::OnProjectClose)
 	EVT_MENU(ConfigureId,wxSmith::OnConfigure)
 	EVT_MENU(-1,wxSmith::OnMenu)
@@ -139,6 +140,15 @@ void wxSmith::OnProjectHook(cbProject* project,TiXmlElement* elem,bool loading)
     wxsProject* Proj = GetSmithProject(project);
     if ( loading ) Proj->ReadConfiguration(elem);
     else           Proj->WriteConfiguration(elem);
+}
+
+void wxSmith::OnProjectOpened(CodeBlocksEvent& event)
+{
+    cbProject* Proj = event.GetProject();
+    ProjectMapI i = m_ProjectMap.find(Proj);
+    if ( i == m_ProjectMap.end() ) return;
+    wxsProject* wxsProj = i->second;
+    Proj->SetModified(wxsProj->GetWasModifiedDuringLoad());
 }
 
 void wxSmith::OnProjectClose(CodeBlocksEvent& event)
