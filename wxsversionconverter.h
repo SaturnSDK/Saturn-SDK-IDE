@@ -39,7 +39,8 @@ class wxsVersionConverter
 
     private:
 
-        void ConvertOldWxsFile(const wxString& FileName) const;
+        void ConvertOldWxsFile(const wxString& FileName,bool UsingXRC) const;
+        void GatherExtraFromOldResourceReq(TiXmlElement* Object,TiXmlElement* Extra,bool RootNode) const;
 
         wxsVersionConverter() {}
         ~wxsVersionConverter() {}

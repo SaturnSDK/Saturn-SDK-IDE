@@ -200,7 +200,16 @@ bool wxsItemResData::LoadInMixedMode()
             while ( Object )
             {
                 wxString IdName = cbC2U(Object->Attribute("name"));
-                if ( !IdName.empty() ) IdToXmlMap[IdName] = Object;
+                if ( !IdName.empty() )
+                {
+                    IdToXmlMap[IdName] = Object;
+                }
+                else if ( Object->Attribute("root") )
+                {
+                    // Empty id simulates root node
+                    IdToXmlMap[_T("")] = Object;
+                }
+                Object = Object->NextSiblingElement("object");
             }
 
             UpdateExtraDataReq(m_RootItem,IdToXmlMap);
@@ -217,10 +226,15 @@ void wxsItemResData::UpdateExtraDataReq(wxsItem* Item,IdToXmlMapT& Map)
         wxString Id = Item->GetIdName();
         if ( !Id.empty() )
         {
+            if ( !Item->GetParent() )
+            {
+                // Empty id simlates root node
+                Id = _T("");
+            }
             if ( Map.find(Id) != Map.end() )
             {
                 TiXmlElement* Object = Map[Id];
-                if ( cbC2U(Object->Attribute("class"))==Item->GetType() )
+                if ( cbC2U(Object->Attribute("class"))==Item->GetClassName() )
                 {
                     Item->XmlRead(Object,false,true);
                 }
@@ -334,8 +348,16 @@ void wxsItemResData::SaveExtraDataReq(wxsItem* Item,TiXmlElement* Node)
         if ( !Id.empty() )
         {
             TiXmlElement* Object = Node->InsertEndChild(TiXmlElement("object"))->ToElement();
-            Object->SetAttribute("name",cbU2C(Id));
-            Object->SetAttribute("class",cbU2C(Item->GetClassName()));
+            if ( Item->GetParent() )
+            {
+                Object->SetAttribute("name",cbU2C(Id));
+                Object->SetAttribute("class",cbU2C(Item->GetClassName()));
+            }
+            else
+            {
+                // TOP-level items have different attributes in extra node
+                Object->SetAttribute("root","1");
+            }
             Item->XmlWrite(Object,false,true);
         }
     }
@@ -531,8 +553,8 @@ void wxsItemResData::BuildXrcLoadingCode(wxsCodingLang Language,wxString& Code)
         case wxsCPP:
         {
             Code << _T("wxXmlResource::Get()->LoadObject(this,parent,")
-                 << wxsCodeMarks::WxString(wxsCPP,m_ClassName) << _T(",")
-                 << wxsCodeMarks::WxString(wxsCPP,m_ClassType) << _T(");\n");
+                 << wxsCodeMarks::WxString(wxsCPP,m_ClassName,false) << _T(",")
+                 << wxsCodeMarks::WxString(wxsCPP,m_ClassType,false) << _T(");\n");
             break;
         }
 
@@ -570,7 +592,7 @@ void wxsItemResData::BuildXrcItemsFetchingCodeReq(wxsCodingLang Lang,wxsItem* It
                     if ( Child->GetIsMember() )
                     {
                         Code << Child->GetVarName()
-                             << _T(" = (") << Child->GetClassName() << _T(")")
+                             << _T(" = (") << Child->GetClassName() << _T("*)")
                              << _T("FindWindow(XRCID(") + Child->GetIdName() + _T("));\n");
                     }
                 }

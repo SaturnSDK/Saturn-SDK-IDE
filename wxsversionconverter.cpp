@@ -86,7 +86,7 @@ TiXmlElement* wxsVersionConverter::ConvertFromOldConfig(TiXmlElement* ConfigNode
                     Res->SetAttribute("name",Class);
                     Res->SetAttribute("language","CPP");
 
-                    ConvertOldWxsFile(Project->GetProjectPath()+_T("wxsmith/")+cbC2U(Wxs));
+                    ConvertOldWxsFile(Project->GetProjectPath()+_T("wxsmith/")+cbC2U(Wxs),Xrc!=NULL);
                 }
             }
         }
@@ -94,7 +94,7 @@ TiXmlElement* wxsVersionConverter::ConvertFromOldConfig(TiXmlElement* ConfigNode
     return NewConfig;
 }
 
-void wxsVersionConverter::ConvertOldWxsFile(const wxString& FileName) const
+void wxsVersionConverter::ConvertOldWxsFile(const wxString& FileName,bool UsingXrc) const
 {
     TiXmlDocument Doc(cbU2C(FileName));
     if ( !Doc.LoadFile() ) return;
@@ -105,7 +105,67 @@ void wxsVersionConverter::ConvertOldWxsFile(const wxString& FileName) const
         Smith->SetValue("wxsmith");
     }
 
+    if ( UsingXrc && Smith )
+    {
+        // Need to extract extra data from any resource's item and put into <resource_extra> node
+        TiXmlElement* Resource = Smith->FirstChildElement("object");
+        TiXmlElement* Extra = Smith->InsertEndChild(TiXmlElement("resource_extra"))->ToElement();
+        GatherExtraFromOldResourceReq(Resource,Extra,true);
+    }
+
     Doc.SaveFile();
+}
+
+void wxsVersionConverter::GatherExtraFromOldResourceReq(TiXmlElement* Object,TiXmlElement* Extra,bool Root) const
+{
+    // The only extra information in old wxSmith was:
+    //  * variable / member attributes of <object> node
+    //  * event handlers enteries
+    // These fields are extracted and put into wxs file
+    if ( !strcmp(Object->Value(),"object") )
+    {
+        if ( Object->Attribute("class") && (Root || Object->Attribute("name")) )
+        {
+            TiXmlElement* ThisExtra = NULL;
+
+            // Checking if we got variable name
+            if ( Object->Attribute("variable") && Object->Attribute("member") )
+            {
+                ThisExtra = Extra->InsertEndChild(TiXmlElement("object"))->ToElement();
+                ThisExtra->SetAttribute("variable",Object->Attribute("variable"));
+                ThisExtra->SetAttribute("member",Object->Attribute("member"));
+            }
+
+            // Checking for event handlers
+
+            for ( TiXmlElement* Handler = Object->FirstChildElement("handler"); Handler; Handler = Handler->NextSiblingElement("handler") )
+            {
+                if ( !ThisExtra )
+                {
+                    ThisExtra = Extra->InsertEndChild(TiXmlElement("object"))->ToElement();
+                }
+                ThisExtra->InsertEndChild(*Handler);
+            }
+
+            if ( ThisExtra )
+            {
+                if ( Root )
+                {
+                    ThisExtra->SetAttribute("root","1");
+                }
+                else
+                {
+                    ThisExtra->SetAttribute("name",Object->Attribute("name"));
+                    ThisExtra->SetAttribute("class",Object->Attribute("class"));
+                }
+            }
+        }
+    }
+
+    for ( TiXmlElement* Child = Object->FirstChildElement(); Child; Child = Child->NextSiblingElement() )
+    {
+        GatherExtraFromOldResourceReq(Child,Extra,false);
+    }
 }
 
 TiXmlElement* wxsVersionConverter::Convert(TiXmlElement* ConfigNode,TiXmlDocument* Doc,wxsProject* Project) const
