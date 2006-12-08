@@ -109,7 +109,7 @@ void wxWidgetsGUI::OnRebuildApplicationCode()
             {
                 wxString IncludeFile = MainResPtr->GetDeclarationFile();
                 wxFileName IncludeFileName(GetProjectPath()+IncludeFile);
-                if ( IncludeFileName.MakeRelativeTo(GetProjectPath()+m_AppFile) )
+                if ( IncludeFileName.MakeRelativeTo(GetProjectPath()) )
                 {
                     // We will use unix path format. Because include is relative path
                     // we can to it in Win environment. Using Unix format will make

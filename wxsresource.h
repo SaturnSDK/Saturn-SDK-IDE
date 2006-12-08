@@ -143,9 +143,9 @@ class wxsResource: public wxObject
         /** \brief Function called from wxsEditor just before it's deletion */
         void EditorClosed();
 
-        const wxString& m_ResourceType;
+        wxString m_ResourceType;
         wxString m_ResourceName;
-        const wxString& m_GUI;
+        wxString m_GUI;
         wxsProject* m_Owner;
         wxsEditor* m_Editor;
         wxsResourceItemId m_TreeItemId;
