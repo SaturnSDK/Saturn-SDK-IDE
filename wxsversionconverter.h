@@ -2,6 +2,7 @@
 #define WXSVERSIONCONVERTER_H
 
 #include <tinyxml/tinyxml.h>
+#include <wx/string.h>
 
 class wxsProject;
 

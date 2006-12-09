@@ -1,4 +1,5 @@
 #include "wxslongproperty.h"
+#include <globals.h>
 
 // Helper macro for fetching variable
 #define VALUE   wxsVARIABLE(Object,Offset,long)
@@ -48,8 +49,7 @@ bool wxsLongProperty::XmlWrite(wxsPropertyContainer* Object,TiXmlElement* Elemen
 {
     if ( VALUE != Default )
     {
-        char Buffer[0x40];  // Using char instead of wxChar because TiXml uses it
-        Element->InsertEndChild(TiXmlText(ltoa(VALUE,Buffer,10)));
+        Element->InsertEndChild(TiXmlText(cbU2C(wxString::Format(_T("%d"),VALUE))));
         return true;
     }
     return false;

@@ -1,4 +1,5 @@
 #include "wxsdimensionproperty.h"
+#include <globals.h>
 
 wxString wxsDimensionData::GetPixelsCode(wxString ParentName,wxsCodingLang Language)
 {
@@ -124,15 +125,13 @@ bool wxsDimensionProperty::XmlWrite(wxsPropertyContainer* Object,TiXmlElement* E
 {
     if ( VALUE != DefaultValue || UNITS != DefaultDialogUnits )
     {
-        char Buffer[0x40];  // Using char instead of wxChar because TiXml uses it
-
-        ltoa(VALUE,Buffer,10);
+        wxString Buffer = wxString::Format(_T("%d"),VALUE);
         if ( UNITS )
         {
-            strcat(Buffer,"d");
+            Buffer.Append(_T("d"));
         }
 
-        Element->InsertEndChild(TiXmlText(Buffer));
+        Element->InsertEndChild(TiXmlText(cbU2C(Buffer)));
         return true;
     }
     return false;

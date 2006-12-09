@@ -94,8 +94,7 @@ bool wxsEnumProperty::XmlWrite(wxsPropertyContainer* Object,TiXmlElement* Elemen
             // Did not found value, storing as integer
         }
 
-        char Buffer[0x40];  // Using char instead of wxChar because TiXml uses it
-        Element->InsertEndChild(TiXmlText(ltoa(VALUE,Buffer,10)));
+        Element->InsertEndChild(TiXmlText(cbU2C(wxString::Format(_T("%d"),VALUE))));
         return true;
     }
     return false;

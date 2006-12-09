@@ -1,6 +1,7 @@
 #include "wxsitemresdataobject.h"
 #include "wxsitem.h"
 #include "wxsitemfactory.h"
+#include <sstream>
 
 wxsItemResDataObject::wxsItemResDataObject(): m_ItemCount(0)
 {
@@ -138,13 +139,7 @@ bool wxsItemResDataObject::SetXmlData(const wxString& Data)
 
 wxString wxsItemResDataObject::GetXmlData() const
 {
-    #ifdef TIXML_USE_STL
-        std::ostringstream buffer;
-        buffer << m_XmlDoc;
-        return cbC2U(buffer.str().c_str());
-    #else
-        TiXmlOutStream buffer;
-        buffer << m_XmlDoc;
-        return cbC2U(buffer.c_str());
-    #endif
+    TiXmlPrinter Printer;
+    m_XmlDoc.Accept(&Printer);
+    return cbC2U(Printer.CStr());
 }

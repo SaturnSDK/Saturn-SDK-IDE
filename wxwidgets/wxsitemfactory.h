@@ -107,8 +107,8 @@ template<class T> class wxsRegisterItem: public wxsItemFactory
             Info.Languages = Languages;
             Info.VerHi = VerHi;
             Info.VerLo = VerLo;
-            Info.Icon32 = Bmp32.GetSubBitmap(0,0,Bmp32.GetWidth(),Bmp32.GetHeight());
-            Info.Icon16 = Bmp16.GetSubBitmap(0,0,Bmp16.GetWidth(),Bmp16.GetHeight());
+            Info.Icon32 = Bmp32.GetSubBitmap(wxRect(0,0,Bmp32.GetWidth(),Bmp32.GetHeight()));
+            Info.Icon16 = Bmp16.GetSubBitmap(wxRect(0,0,Bmp16.GetWidth(),Bmp16.GetHeight()));
 
             // TODO: Build resource tree entry
         }

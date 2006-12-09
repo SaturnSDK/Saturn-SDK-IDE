@@ -1,5 +1,4 @@
 #include "wxsitemfactory.h"
-#include "wxsitemmanager.h"
 #include "wxsitem.h"
 
 wxsItem* wxsItemFactory::Build(const wxString& Name,wxsItemResData* Data)
