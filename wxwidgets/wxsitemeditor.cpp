@@ -185,6 +185,7 @@ void wxsItemEditor::RebuildPreview()
         m_VertSizer->Layout();
     }
 
+    Background->Layout();
     Layout();
     Thaw();
 

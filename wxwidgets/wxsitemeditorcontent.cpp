@@ -723,6 +723,8 @@ bool wxsItemEditorContent::FindDraggingItemTarget(int PosX,int PosY,wxsItem* Dra
 
 void wxsItemEditorContent::NewPreview()
 {
+    // Giving some time for items to recalculate positions
+    Manager::Yield();
     RecalculateMaps();
     RebuildDragPoints();
     ContentChanged();
