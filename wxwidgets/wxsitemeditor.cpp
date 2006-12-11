@@ -257,47 +257,47 @@ void wxsItemEditor::UpdateModified()
 
 bool wxsItemEditor::CanUndo() const
 {
-	return m_Data->CanUndo();
+	return m_Data ? m_Data->CanUndo() : false;
 }
 
 bool wxsItemEditor::CanRedo() const
 {
-	return m_Data->CanRedo();
+	return m_Data ? m_Data->CanRedo() : false;
 }
 
 void wxsItemEditor::Undo()
 {
-    m_Data->Undo();
+    if ( m_Data ) m_Data->Undo();
 }
 
 void wxsItemEditor::Redo()
 {
-    m_Data->Redo();
+    if ( m_Data ) m_Data->Redo();
 }
 
 bool wxsItemEditor::HasSelection() const
 {
-    return m_Data->AnySelected();
+    return m_Data ? m_Data->AnySelected() : false;
 }
 
 bool wxsItemEditor::CanPaste() const
 {
-    return m_Data->CanPaste();
+    return m_Data ? m_Data->CanPaste() : false;
 }
 
 void wxsItemEditor::Cut()
 {
-    m_Data->Cut();
+    if ( m_Data ) m_Data->Cut();
 }
 
 void wxsItemEditor::Copy()
 {
-    m_Data->Copy();
+    if ( m_Data ) m_Data->Copy();
 }
 
 void wxsItemEditor::Paste()
 {
-    m_Data->Paste();
+    if ( m_Data ) m_Data->Paste();
 }
 
 void wxsItemEditor::InsertRequest(const wxString& Name)
@@ -566,6 +566,7 @@ void wxsItemEditor::OnInsBefore(wxCommandEvent& event)
 
 void wxsItemEditor::OnDelete(wxCommandEvent& event)
 {
+    if ( !m_Data ) return;
     m_Data->BeginChange();
     m_Data->DeleteSelected();
     m_Data->EndChange();
@@ -573,6 +574,7 @@ void wxsItemEditor::OnDelete(wxCommandEvent& event)
 
 void wxsItemEditor::OnPreview(wxCommandEvent& event)
 {
+    if ( !m_Data ) return;
     if ( m_Data->IsPreview() )
     {
         m_Data->HidePreview();
