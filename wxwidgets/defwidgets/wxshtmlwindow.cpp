@@ -62,6 +62,7 @@ void wxsHtmlWindow::OnBuildCreatingCode(wxString& Code,const wxString& WindowPar
                 Code << GetVarName() << _T("->SetPage(") << wxsCodeMarks::WxString(wxsCPP,HtmlCode,false) << _T(");\n");
             }
 
+            SetupWindowCode(Code,Language);
             break;
         }
 
@@ -98,7 +99,7 @@ wxObject* wxsHtmlWindow::OnBuildPreview(wxWindow* Parent,long Flags)
         Preview->SetPage(HtmlCode);
     }
 
-    return Preview;
+    return SetupWindow(Preview,Flags);
 }
 
 void wxsHtmlWindow::OnEnumWidgetProperties(long Flags)

@@ -1,30 +1,32 @@
-#include "wxspanel.h"
+#include "wxsscrolledwindow.h"
 
 namespace
 {
-    wxsRegisterItem<wxsPanel> Reg(_T("Panel"),wxsTContainer, _T("Standard"), 75);
+    wxsRegisterItem<wxsScrolledWindow> Reg(_T("ScrolledWindow"),wxsTContainer, _T("Standard"), 75);
 
-    WXS_ST_BEGIN(wxsPanelStyles,_T("wxTAB_TRAVERSAL"))
-        WXS_ST_CATEGORY("wxPanel")
+    WXS_ST_BEGIN(wxsScrolledWindowStyles,_T("wxHSCROLL|wxVSCROLL"))
+        WXS_ST_CATEGORY("wxScrolledWindow")
+        WXS_ST(wxHSCROLL)
+        WXS_ST(wxVSCROLL)
         WXS_ST(wxNO_3D)
         WXS_ST(wxTAB_TRAVERSAL)
         WXS_EXST(wxWS_EX_VALIDATE_RECURSIVELY)
     WXS_ST_END()
 
-    WXS_EV_BEGIN(wxsPanelEvents)
+    WXS_EV_BEGIN(wxsScrolledWindowEvents)
         WXS_EV_DEFAULTS()
     WXS_EV_END()
 }
 
-wxsPanel::wxsPanel(wxsItemResData* Data):
+wxsScrolledWindow::wxsScrolledWindow(wxsItemResData* Data):
     wxsContainer(
         Data,
         &Reg.Info,
-        wxsPanelEvents,
-        wxsPanelStyles)
+        wxsScrolledWindowEvents,
+        wxsScrolledWindowStyles)
 {}
 
-void wxsPanel::OnBuildCreatingCode(wxString& Code,const wxString& WindowParent,wxsCodingLang Language)
+void wxsScrolledWindow::OnBuildCreatingCode(wxString& Code,const wxString& WindowParent,wxsCodingLang Language)
 {
     switch ( Language )
     {
@@ -32,7 +34,7 @@ void wxsPanel::OnBuildCreatingCode(wxString& Code,const wxString& WindowParent,w
         {
             if ( GetParent() )
             {
-                Code<< GetVarName() << _T(" = new wxPanel(");
+                Code<< GetVarName() << _T(" = new wxScrolledWindow(");
             }
             else
             {
@@ -52,29 +54,29 @@ void wxsPanel::OnBuildCreatingCode(wxString& Code,const wxString& WindowParent,w
 
         default:
         {
-            wxsCodeMarks::Unknown(_T("wxsPanel::OnBuildCreatingCode"),Language);
+            wxsCodeMarks::Unknown(_T("wxsScrolledWindow::OnBuildCreatingCode"),Language);
         }
     }
 }
 
-wxObject* wxsPanel::OnBuildPreview(wxWindow* Parent,long Flags)
+wxObject* wxsScrolledWindow::OnBuildPreview(wxWindow* Parent,long Flags)
 {
     // TODO: Use grid-viewing panel when not in exact mode
-    wxWindow* NewItem = new wxPanel( Parent,GetId(),wxDefaultPosition,wxDefaultSize,Style());
+    wxWindow* NewItem = new wxScrolledWindow( Parent,GetId(),wxDefaultPosition,wxDefaultSize,Style());
     SetupWindow(NewItem,Flags);
     AddChildrenPreview(NewItem,Flags);
     return NewItem;
 }
 
-void wxsPanel::OnEnumContainerProperties(long Flags)
+void wxsScrolledWindow::OnEnumContainerProperties(long Flags)
 {
 }
 
-void wxsPanel::OnEnumDeclFiles(wxArrayString& Decl,wxArrayString& Def,wxsCodingLang Language)
+void wxsScrolledWindow::OnEnumDeclFiles(wxArrayString& Decl,wxArrayString& Def,wxsCodingLang Language)
 {
     switch ( Language )
     {
         case wxsCPP: Decl.Add(_T("<wx/panel.h>")); return;
-        default: wxsCodeMarks::Unknown(_T("wxsPanel::OnEnumDeclFiles"),Language);
+        default: wxsCodeMarks::Unknown(_T("wxsScrolledWindow::OnEnumDeclFiles"),Language);
     }
 }
