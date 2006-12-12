@@ -44,7 +44,8 @@ libwxsmith_wxwidgets_defwidgets_la_SOURCES = \
 ./wxschecklistbox.cpp \
 ./wxsslider.cpp \
 ./wxstreectrl.cpp \
-./wxsframe.cpp
+./wxsframe.cpp \
+./wxshtmlwindow.cpp
 
 noinst_HEADERS = \
 ./wxsgauge.h \
@@ -79,4 +80,5 @@ noinst_HEADERS = \
 ./wxsstaticboxsizer.h \
 ./wxsboxsizer.h \
 ./wxsflexgridsizer.h \
-./wxslistbox.h
+./wxslistbox.h \
+./wxshtmlwindow.h

@@ -46,7 +46,8 @@ libwxsmith_wxwidgets_la_SOURCES = \
 ./wxsitemresdata.cpp \
 ./wxsitemeditor.cpp \
 ./wxsdialogres.cpp \
-./wxwidgetsgui.cpp
+./wxwidgetsgui.cpp \
+./wxssizerparentqp.cpp
 
 noinst_HEADERS = \
 ./wxsitemresdata.h \
@@ -81,5 +82,6 @@ noinst_HEADERS = \
 ./wxsitem.h \
 ./wxsstyle.h \
 ./wxsframeres.h \
-./wxspanelres.h
+./wxspanelres.h \
+./wxssizerparentqp.h
 
