@@ -6,6 +6,7 @@
             <cols>1</cols>
             <vgap>0</vgap>
             <hgap>0</hgap>
+            <growablecols>1</growablecols>
             <object class="sizeritem">
                 <option>1</option>
                 <border>5</border>

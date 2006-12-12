@@ -1,5 +1,6 @@
 #include "wxssizer.h"
 #include "wxsitemresdata.h"
+#include "wxssizerparentqp.h"
 
 #include <wx/dcclient.h>
 #include <messagemanager.h>
@@ -191,14 +192,12 @@ wxsPropertyContainer* wxsSizer::OnBuildExtra()
 void wxsSizer::OnAddChildQPP(wxsItem* Child,wxsAdvQPP* QPP)
 {
     wxsParent::OnAddChildQPP(Child,QPP);
-    // TODO: Code it
-    /*
+
     int Index = GetChildIndex(Child);
     if ( Index >= 0 )
     {
         QPP->Register(new wxsSizerParentQP(QPP,(wxsSizerExtra*)GetChildExtra(Index)),_("Sizer"));
     }
-    */
 }
 
 bool wxsSizer::OnXmlReadChild(TiXmlElement* Elem,bool IsXRC,bool IsExtra)

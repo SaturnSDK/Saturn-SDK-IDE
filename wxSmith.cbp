@@ -1086,6 +1086,16 @@
 			<Option link="0" />
 			<Option target="wxSmith" />
 		</Unit>
+		<Unit filename="wxwidgets\wxssizerparentqp.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\wxssizerparentqp.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="wxSmith" />
+		</Unit>
 		<Unit filename="wxwidgets\wxsstyle.cpp">
 			<Option compilerVar="CPP" />
 			<Option target="wxSmith" />
@@ -1165,6 +1175,7 @@
 				<dialog wxs_file="wxsFontEditorDlg.wxs" class="wxsFontEditorDlg" src_file="wxwidgets/properties/wxsfonteditordlg.cpp" header_file="wxwidgets\properties\wxsfonteditordlg.h" xrc_file="" edit_mode="Source" />
 				<dialog wxs_file="wxsFontFaceEditorDlg.wxs" class="wxsFontFaceEditorDlg" src_file="wxwidgets/properties/wxsfontfaceeditordlg.cpp" header_file="wxwidgets\properties\wxsfontfaceeditordlg.h" xrc_file="" edit_mode="Source" />
 				<panel wxs_file="wxWidgetsGUIConfigPanel.wxs" class="wxWidgetsGUIConfigPanel" src_file="wxwidgets/wxwidgetsguiconfigpanel.cpp" header_file="wxwidgets/wxwidgetsguiconfigpanel.h" xrc_file="" edit_mode="Source" />
+				<panel wxs_file="wxsSizerParentQP.wxs" class="wxsSizerParentQP" src_file="wxwidgets\wxssizerparentqp.cpp" header_file="wxwidgets/wxssizerparentqp.h" xrc_file="" edit_mode="Source" />
 				<configuration app_src_file="" main_resource="" init_all_handlers="necessary" />
 			</wxsmith>
 		</Extensions>
