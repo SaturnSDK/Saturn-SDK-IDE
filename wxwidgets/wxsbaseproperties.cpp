@@ -15,8 +15,9 @@ void wxsBaseProperties::OnEnumProperties(long Flags)
     WXS_STRING  (wxsBaseProperties,m_HelpText,wxsItem::flHelpText,_("Help text"),_T("helptext"),wxEmptyString,true,false);
 }
 
-void wxsBaseProperties::SetupWindow(wxWindow* Window,bool IsExact)
+void wxsBaseProperties::SetupWindow(wxWindow* Window,long Flags)
 {
+    bool IsExact = (Flags&wxsItem::pfExact) != 0;
     if ( !m_Enabled ) Window->Disable();
     if ( m_Focused  ) Window->SetFocus();
     if ( m_Hidden && IsExact ) Window->Hide();

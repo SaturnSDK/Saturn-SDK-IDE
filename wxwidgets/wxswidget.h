@@ -96,10 +96,10 @@ class wxsWidget: public wxsItem
          *  - Extra style
          *
          * \param Preview window for which properties must be applied
-         * \param IsExact value of IsExact argument passed to BuildPreview
+         * \param Flags flags passed to OnBuildPreview
          * \return window after settig up properties (value of Preview is returned)
          */
-        wxWindow* SetupWindow(wxWindow* Preview,bool IsExact);
+        wxWindow* SetupWindow(wxWindow* Preview,long Flags);
 
         /** \brief Easy acces to position code */
         inline wxString PosCode(const wxString& Parent,wxsCodingLang Language)

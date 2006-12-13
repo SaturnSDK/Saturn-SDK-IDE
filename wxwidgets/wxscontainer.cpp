@@ -84,9 +84,9 @@ void wxsContainer::OnAddItemQPP(wxsAdvQPP* QPP)
     OnAddContainerQPP(QPP);
 }
 
-wxWindow* wxsContainer::SetupWindow(wxWindow* Preview,bool IsExact)
+wxWindow* wxsContainer::SetupWindow(wxWindow* Preview,long Flags)
 {
-    GetBaseProps()->SetupWindow(Preview,IsExact);
+    GetBaseProps()->SetupWindow(Preview,Flags);
     long ExStyle = m_StyleSet->GetWxStyle(m_ExStyleBits,true);
     if ( ExStyle != 0 )
     {

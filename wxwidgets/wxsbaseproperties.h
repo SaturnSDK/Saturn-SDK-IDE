@@ -54,7 +54,7 @@ class wxsBaseProperties: public wxsPropertyContainer
          *  - ToolTip
          *  - HelpText
          */
-        void SetupWindow(wxWindow* Window,bool IsExact);
+        void SetupWindow(wxWindow* Window,long Flags);
 
         /** \brief Function generating code setting up some properties on given window
          *

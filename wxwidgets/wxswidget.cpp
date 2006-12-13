@@ -36,9 +36,9 @@ void wxsWidget::OnAddItemQPP(wxsAdvQPP* QPP)
     OnAddWidgetQPP(QPP);
 }
 
-wxWindow* wxsWidget::SetupWindow(wxWindow* Preview,bool IsExact)
+wxWindow* wxsWidget::SetupWindow(wxWindow* Preview,long Flags)
 {
-    GetBaseProps()->SetupWindow(Preview,IsExact);
+    GetBaseProps()->SetupWindow(Preview,Flags);
     long ExStyle = m_StyleSet ? m_StyleSet->GetWxStyle(m_ExStyleBits,true) : 0;
     if ( ExStyle != 0 )
     {

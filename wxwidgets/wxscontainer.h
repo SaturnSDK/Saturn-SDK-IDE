@@ -58,8 +58,8 @@ class wxsContainer: public wxsParent
          *
          * This function is by fedault implemented inside wxsContainer.
          * In case of some limitations made for children (like inside
-         * wxSplitterWindow, this functino should be overridden
-         * to avoid invalidating item).
+         * wxSplitterWindow), this functino should be overridden
+         * to avoid invalidating item.
          *
          * Default implementation matches few rules:
          *  - spacer item can be added into sizers only
@@ -104,10 +104,10 @@ class wxsContainer: public wxsParent
          *  - Extra style
          *
          * \param Preview window for which properties must be applied
-         * \param IsExact value of IsExact argument passed to BuildPreview
+         * \param Flags Flags passed to OnBuildPreview
          * \return window after settig up properties (value of Preview is returned)
          */
-        wxWindow* SetupWindow(wxWindow* Preview,bool IsExact);
+        wxWindow* SetupWindow(wxWindow* Preview,long Flags);
 
         /** \brief Easy acces to position code */
         inline wxString PosCode(const wxString& Parent,wxsCodingLang Language)

@@ -229,6 +229,7 @@ bool wxsStdDialogButtonSizer::OnXmlWrite(TiXmlElement* Element,bool IsXRC,bool I
                 Object->SetAttribute("class","button");
                 TiXmlElement* Button = Object->InsertEndChild(TiXmlElement("object"))->ToElement();
                 Button->SetAttribute("class","wxButton");
+                Button->SetAttribute("name",cbU2C(IdNames[i]));
                 Button->InsertEndChild(TiXmlElement("label"))->InsertEndChild(TiXmlText(cbU2C(m_Label[i])));
             }
         }
