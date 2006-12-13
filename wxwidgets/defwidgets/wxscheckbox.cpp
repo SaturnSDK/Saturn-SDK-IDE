@@ -50,7 +50,7 @@ void wxsCheckBox::OnBuildCreatingCode(wxString& Code,const wxString& WindowParen
                 << SizeCode(WindowParent,wxsCPP) << _T(",")
                 << StyleCode(wxsCPP) << _T(",")
                 << _T("wxDefaultValidator") << _T(",")
-                << wxsCodeMarks::WxString(wxsCPP,GetVarName(),false) << _T(");\n");
+                << wxsCodeMarks::WxString(wxsCPP,GetIdName(),false) << _T(");\n");
 
             if ( IsChecked ) Code << GetVarName() << _T("->SetValue(")
                              << wxString::Format(_T("%d"),IsChecked) << _T(";\n");

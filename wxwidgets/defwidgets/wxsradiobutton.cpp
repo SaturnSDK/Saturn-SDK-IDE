@@ -51,7 +51,7 @@ void wxsRadioButton::OnBuildCreatingCode(wxString& Code,const wxString& WindowPa
                 << SizeCode(WindowParent,wxsCPP) << _T(",")
                 << StyleCode(wxsCPP) << _T(",")
                 << _T("wxDefaultValidator") << _T(",")
-                << wxsCodeMarks::WxString(wxsCPP,GetVarName(),false) << _T(");\n");
+                << wxsCodeMarks::WxString(wxsCPP,GetIdName(),false) << _T(");\n");
 
             if ( IsSelected )
             {

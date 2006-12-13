@@ -52,7 +52,7 @@ void wxsComboBox::OnBuildCreatingCode(wxString& Code,const wxString& WindowParen
                 << _T("0,NULL,")
                 << StyleCode(wxsCPP) << _T(",")
                 << _T("wxDefaultValidator") << _T(",")
-                << wxsCodeMarks::WxString(wxsCPP,GetVarName(),false) << _T(");\n");
+                << wxsCodeMarks::WxString(wxsCPP,GetIdName(),false) << _T(");\n");
 
             for ( size_t i = 0; i <  ArrayChoices.GetCount(); ++i )
             {

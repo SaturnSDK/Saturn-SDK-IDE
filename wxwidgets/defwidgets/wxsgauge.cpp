@@ -54,7 +54,7 @@ void wxsGauge::OnBuildCreatingCode(wxString& Code,const wxString& WindowParent,w
                 << SizeCode(WindowParent,wxsCPP) << _T(",")
                 << StyleCode(wxsCPP) << _T(",")
                 << _T("wxDefaultValidator") << _T(",")
-                << wxsCodeMarks::WxString(wxsCPP,GetVarName(),false) << _T(");\n");
+                << wxsCodeMarks::WxString(wxsCPP,GetIdName(),false) << _T(");\n");
 
             if ( Value )  Code << GetVarName() << _T("->SetValue(") << wxString::Format(_T("%d"),Value) << _T(");\n");
             if ( Shadow ) Code << GetVarName() << _T("->SetShadowWidth(") << wxString::Format(_T("%d"),Shadow) << _T(");\n");

@@ -60,7 +60,7 @@ void wxsBitmapButton::OnBuildCreatingCode(wxString& Code,const wxString& WindowP
                 << _T("wxDefaultSize,")
                 << StyleCode(wxsCPP) << _T(",")
                 << _T("wxDefaultValidator") << _T(",")
-                << wxsCodeMarks::WxString(wxsCPP,GetVarName(),false) << _T(");\n");
+                << wxsCodeMarks::WxString(wxsCPP,GetIdName(),false) << _T(");\n");
 
             if ( !(BitmapDisabled.Id.empty()||BitmapDisabled.Client.empty())|| !(BitmapDisabled.FileName.empty()) )
             {

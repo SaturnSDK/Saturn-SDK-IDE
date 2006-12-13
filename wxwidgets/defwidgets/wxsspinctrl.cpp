@@ -60,7 +60,7 @@ void wxsSpinCtrl::OnBuildCreatingCode(wxString& Code,const wxString& WindowParen
                 << wxString::Format(_T("%d"),Min) << _T(",")
                 << wxString::Format(_T("%d"),Max) << _T(",")
                 << wxString::Format(_T("%d"),ValueLong) << _T(",")
-                << wxsCodeMarks::WxString(wxsCPP,GetVarName(),false) << _T(");\n");
+                << wxsCodeMarks::WxString(wxsCPP,GetIdName(),false) << _T(");\n");
 
             if ( !Value.empty() )
             {

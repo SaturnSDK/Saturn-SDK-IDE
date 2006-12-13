@@ -67,7 +67,7 @@ void wxsScrollBar::OnBuildCreatingCode(wxString& Code,const wxString& WindowPare
                  << SizeCode(WindowParent,wxsCPP) << _T(",")
                  << StyleCode(wxsCPP) << _T(",")
                 << _T("wxDefaultValidator") << _T(",")
-                << wxsCodeMarks::WxString(wxsCPP,GetVarName(),false) << _T(");\n");
+                << wxsCodeMarks::WxString(wxsCPP,GetIdName(),false) << _T(");\n");
 
             Code << GetVarName() << _T("->SetScrollbar(")
                  << wxString::Format(_T("%d"),Value)  << _T(",")

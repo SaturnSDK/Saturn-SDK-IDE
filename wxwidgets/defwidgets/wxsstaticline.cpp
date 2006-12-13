@@ -52,7 +52,7 @@ void wxsStaticLine::OnBuildCreatingCode(wxString& Code,const wxString& WindowPar
                 << PosCode(WindowParent,wxsCPP) << _T(",")
                 << SizeCode(WindowParent,wxsCPP) << _T(",")
                 << StyleCode(wxsCPP) << _T(",")
-                << wxsCodeMarks::WxString(wxsCPP,GetVarName(),false) << _T(");\n");
+                << wxsCodeMarks::WxString(wxsCPP,GetIdName(),false) << _T(");\n");
 
             SetupWindowCode(Code,Language);
             return;
