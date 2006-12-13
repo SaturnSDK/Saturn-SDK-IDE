@@ -340,6 +340,21 @@ class wxsItem: public wxsPropertyContainer
          */
         virtual bool OnXmlWrite(TiXmlElement* Element,bool IsXRC,bool IsExtra);
 
+        /** \brief Function for adding extra properties - used to add events,
+         *
+         * This funcion may be overridden to add custom extra properties
+         * but wxsItem::OnAddExtraProperties should be called from it.
+         */
+        virtual void OnAddExtraProperties(wxsPropertyGridManager* Grid);
+
+        /** \brief Reading content of extra properties
+         *
+         * This functoin may be overridden to read custom extra properties.
+         * Overridden function must call wxsItem::OnExtraPropertyChanged
+         * if Id didn't match any of added properties.
+         */
+        virtual void OnExtraPropertyChanged(wxsPropertyGridManager* Grid,wxPGId Id);
+
     private:
 
         /** \brief Function enumerating proeprties
@@ -366,12 +381,6 @@ class wxsItem: public wxsPropertyContainer
 
         /** \brief Additional handler for sub properties */
         virtual void OnSubPropertyChanged(wxsPropertyContainer*);
-
-        /** \brief Function for adding extra properties - used to add events */
-        virtual void OnAddExtraProperties(wxsPropertyGridManager* Grid);
-
-        /** \brief Readng content of extra properties */
-        virtual void OnExtraPropertyChanged(wxsPropertyGridManager* Grid,wxPGId Id);
 
         const wxsItemInfo* m_Info;              ///< \brief Pointer to item's info structure
         wxsEvents m_Events;                     ///< \brief Object managing events

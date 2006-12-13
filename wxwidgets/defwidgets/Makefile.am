@@ -46,7 +46,8 @@ libwxsmith_wxwidgets_defwidgets_la_SOURCES = \
 ./wxstreectrl.cpp \
 ./wxsframe.cpp \
 ./wxshtmlwindow.cpp \
-./wxsscrolledwindow.cpp
+./wxsscrolledwindow.cpp \
+./wxsstddialogbuttonsizer.cpp
 
 noinst_HEADERS = \
 ./wxsgauge.h \
@@ -83,4 +84,5 @@ noinst_HEADERS = \
 ./wxsflexgridsizer.h \
 ./wxslistbox.h \
 ./wxshtmlwindow.h \
-./wxsscrolledwindow.h
+./wxsscrolledwindow.h \
+./wxsstddialogbuttonsizer.h
