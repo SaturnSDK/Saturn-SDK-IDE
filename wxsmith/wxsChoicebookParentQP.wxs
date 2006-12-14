@@ -9,15 +9,6 @@
             <object class="sizeritem">
                 <option>1</option>
                 <border>5</border>
-                <flag>wxALL|wxALIGN_CENTER|wxEXPAND</flag>
-                <object class="wxStaticText" name="ID_STATICTEXT1" variable="StaticText1" member="yes">
-                    <label>Choicebook options</label>
-                    <style>wxALIGN_CENTRE</style>
-                </object>
-            </object>
-            <object class="sizeritem">
-                <option>1</option>
-                <border>5</border>
                 <flag>wxLEFT|wxRIGHT|wxALIGN_CENTER|wxEXPAND</flag>
                 <object class="wxStaticBoxSizer" variable="StaticBoxSizer1" member="yes">
                     <orient>wxVERTICAL</orient>
@@ -27,7 +18,7 @@
                         <flag>wxBOTTOM|wxALIGN_CENTER|wxEXPAND</flag>
                         <object class="wxTextCtrl" name="ID_TEXTCTRL1" variable="Label" member="yes">
                             <value></value>
-                            <handler entry="EVT_TEXT" function="OnLabelText" />
+                            <handler entry="EVT_TEXT_ENTER" function="OnLabelText" />
                         </object>
                     </object>
                 </object>
@@ -43,7 +34,7 @@
                         <option>1</option>
                         <border>5</border>
                         <flag>wxBOTTOM|wxALIGN_CENTER|wxEXPAND</flag>
-                        <object class="wxCheckBox" name="ID_CHECKBOX1" variable="Selection" member="yes">
+                        <object class="wxCheckBox" name="ID_CHECKBOX1" variable="Selected" member="yes">
                             <label>Selected</label>
                             <handler entry="EVT_CHECKBOX" function="OnSelectionChange" />
                         </object>

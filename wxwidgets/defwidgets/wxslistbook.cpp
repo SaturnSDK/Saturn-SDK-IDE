@@ -1,7 +1,8 @@
-#include "wxsnotebook.h"
+#include "wxslistbook.h"
 #include "../../wxsadvqppchild.h"
+#include <wx/listbook.h>
 
-//(*Headers(wxsNotebookParentQP)
+//(*Headers(wxsListbookParentQP)
 #include <wx/checkbox.h>
 #include <wx/intl.h>
 #include <wx/panel.h>
@@ -11,17 +12,17 @@
 //*)
 
 
-// TODO: Add notebook images
+// TODO: Add images
 namespace
 {
-    wxsRegisterItem<wxsNotebook> Reg(_T("Notebook"),wxsTContainer,_T("Standard"),61);
+    wxsRegisterItem<wxsListbook> Reg(_T("Listbook"),wxsTContainer,_T("Standard"),61);
 
     /** \brief Extra parameters for notebook's children */
-    class wxsNotebookExtra: public wxsPropertyContainer
+    class wxsListbookExtra: public wxsPropertyContainer
     {
         public:
 
-            wxsNotebookExtra():
+            wxsListbookExtra():
                 m_Label(_("Page name")),
                 m_Selected(false)
             {}
@@ -33,21 +34,21 @@ namespace
 
             virtual void OnEnumProperties(long Flags)
             {
-                WXS_STRING(wxsNotebookExtra,m_Label,0,_("Page name"),_T("label"),_T(""),false,false);
-                WXS_BOOL(wxsNotebookExtra,m_Selected,0,_("Page selected"),_T("selected"),false);
+                WXS_STRING(wxsListbookExtra,m_Label,0,_("Page name"),_T("label"),_T(""),false,false);
+                WXS_BOOL(wxsListbookExtra,m_Selected,0,_("Page selected"),_T("selected"),false);
             }
     };
 
     /** \brief Inernal Quick properties panel */
-    class wxsNotebookParentQP: public wxsAdvQPPChild
+    class wxsListbookParentQP: public wxsAdvQPPChild
     {
         public:
 
-            wxsNotebookParentQP(wxsAdvQPP* parent,wxsNotebookExtra* Extra,wxWindowID id = -1):
-                wxsAdvQPPChild(parent,_("Notebook")),
+            wxsListbookParentQP(wxsAdvQPP* parent,wxsListbookExtra* Extra,wxWindowID id = -1):
+                wxsAdvQPPChild(parent,_("Listbook")),
                 m_Extra(Extra)
             {
-                //(*Initialize(wxsNotebookParentQP)
+                //(*Initialize(wxsListbookParentQP)
                 Create(parent,id,wxDefaultPosition,wxDefaultSize,wxTAB_TRAVERSAL,_T(""));
                 FlexGridSizer1 = new wxFlexGridSizer(0,1,0,0);
                 StaticBoxSizer1 = new wxStaticBoxSizer(wxVERTICAL,this,_("Label"));
@@ -66,10 +67,10 @@ namespace
                 //*)
                 ReadData();
 
-                Label->Connect(-1,wxEVT_KILL_FOCUS,(wxObjectEventFunction)&wxsNotebookParentQP::OnLabelKillFocus,NULL,this);
+                Label->Connect(-1,wxEVT_KILL_FOCUS,(wxObjectEventFunction)&wxsListbookParentQP::OnLabelKillFocus,NULL,this);
             }
 
-            virtual ~wxsNotebookParentQP() {}
+            virtual ~wxsListbookParentQP() {}
 
         private:
 
@@ -93,7 +94,7 @@ namespace
                 NotifyChange();
             }
 
-            //(*Identifiers(wxsNotebookParentQP)
+            //(*Identifiers(wxsListbookParentQP)
             enum Identifiers
             {
                 ID_TEXTCTRL1 = 0x1000,
@@ -101,13 +102,13 @@ namespace
             };
             //*)
 
-            //(*Handlers(wxsNotebookParentQP)
+            //(*Handlers(wxsListbookParentQP)
             void OnLabelText(wxCommandEvent& event);
             void OnLabelKillFocus(wxFocusEvent& event);
             void OnSelectionChange(wxCommandEvent& event);
             //*)
 
-            //(*Declarations(wxsNotebookParentQP)
+            //(*Declarations(wxsListbookParentQP)
             wxFlexGridSizer* FlexGridSizer1;
             wxStaticBoxSizer* StaticBoxSizer1;
             wxTextCtrl* Label;
@@ -115,37 +116,32 @@ namespace
             wxCheckBox* Selected;
             //*)
 
-            wxsNotebookExtra* m_Extra;
+            wxsListbookExtra* m_Extra;
 
             DECLARE_EVENT_TABLE()
     };
 
-    BEGIN_EVENT_TABLE(wxsNotebookParentQP,wxPanel)
-        //(*EventTable(wxsNotebookParentQP)
-        EVT_TEXT_ENTER(ID_TEXTCTRL1,wxsNotebookParentQP::OnLabelText)
-        EVT_CHECKBOX(ID_CHECKBOX1,wxsNotebookParentQP::OnSelectionChange)
+    BEGIN_EVENT_TABLE(wxsListbookParentQP,wxPanel)
+        //(*EventTable(wxsListbookParentQP)
+        EVT_TEXT_ENTER(ID_TEXTCTRL1,wxsListbookParentQP::OnLabelText)
+        EVT_CHECKBOX(ID_CHECKBOX1,wxsListbookParentQP::OnSelectionChange)
         //*)
     END_EVENT_TABLE()
 
-    void wxsNotebookParentQP::OnLabelText(wxCommandEvent& event)       { SaveData(); }
-    void wxsNotebookParentQP::OnLabelKillFocus(wxFocusEvent& event)    { SaveData(); event.Skip(); }
-    void wxsNotebookParentQP::OnSelectionChange(wxCommandEvent& event) { SaveData(); }
+    void wxsListbookParentQP::OnLabelText(wxCommandEvent& event)       { SaveData(); }
+    void wxsListbookParentQP::OnLabelKillFocus(wxFocusEvent& event)    { SaveData(); event.Skip(); }
+    void wxsListbookParentQP::OnSelectionChange(wxCommandEvent& event) { SaveData(); }
 
-    WXS_ST_BEGIN(wxsNotebookStyles,_T(""))
-        WXS_ST_CATEGORY("wxNotebook")
-        WXS_ST(wxNB_DEFAULT)
-        WXS_ST(wxNB_LEFT)
-        WXS_ST(wxNB_RIGHT)
-        WXS_ST(wxNB_TOP)
-        WXS_ST(wxNB_BOTTOM)
-        WXS_ST_MASK(wxNB_FIXEDWIDTH,wxsSFWin,0,true)
-        WXS_ST_MASK(wxNB_MULTILINE,wxsSFWin,0,true)
-        WXS_ST_MASK(wxNB_NOPAGETHEME,wxsSFWin,0,true)
-        // NOTE (cyberkoa##): wxNB_FLAT is in HELP (WinCE only) file but not in wxMSW's XRC
-        WXS_ST_MASK(wxNB_FLAT,wxsSFWinCE,0,true)
+    WXS_ST_BEGIN(wxsListbookStyles,_T(""))
+        WXS_ST_CATEGORY("wxListbook")
+        WXS_ST(wxLB_DEFAULT)
+        WXS_ST(wxLB_LEFT)
+        WXS_ST(wxLB_RIGHT)
+        WXS_ST(wxLB_TOP)
+        WXS_ST(wxLB_BOTTOM)
     WXS_ST_END()
 
-    WXS_EV_BEGIN(wxsNotebookEvents)
+    WXS_EV_BEGIN(wxsListbookEvents)
         WXS_EVI(EVT_NOTEBOOK_PAGE_CHANGED,wxEVT_COMMAND_NOTEBOOK_PAGE_CHANGED,wxNotebookEvent,PageChanged)
         WXS_EVI(EVT_NOTEBOOK_PAGE_CHANGING,wxEVT_COMMAND_NOTEBOOK_PAGE_CHANGING,wxNotebookEvent,PageChanging)
     WXS_EV_END()
@@ -153,27 +149,27 @@ namespace
 }
 
 
-wxsNotebook::wxsNotebook(wxsItemResData* Data):
+wxsListbook::wxsListbook(wxsItemResData* Data):
     wxsContainer(
         Data,
         &Reg.Info,
-        wxsNotebookEvents,
-        wxsNotebookStyles),
+        wxsListbookEvents,
+        wxsListbookStyles),
     m_CurrentSelection(0)
 {
 }
 
-void wxsNotebook::OnEnumContainerProperties(long Flags)
+void wxsListbook::OnEnumContainerProperties(long Flags)
 {
 }
 
-bool wxsNotebook::OnCanAddChild(wxsItem* Item,bool ShowMessage)
+bool wxsListbook::OnCanAddChild(wxsItem* Item,bool ShowMessage)
 {
     if ( Item->GetType() == wxsTSizer )
     {
         if ( ShowMessage )
         {
-            wxMessageBox(_("Can not add sizer into Notebook.\nAdd panels first"));
+            wxMessageBox(_("Can not add sizer into Listbook.\nAdd panels first"));
         }
         return false;
     }
@@ -181,44 +177,44 @@ bool wxsNotebook::OnCanAddChild(wxsItem* Item,bool ShowMessage)
 	return wxsContainer::OnCanAddChild(Item,ShowMessage);
 }
 
-wxsPropertyContainer* wxsNotebook::OnBuildExtra()
+wxsPropertyContainer* wxsListbook::OnBuildExtra()
 {
-    return new wxsNotebookExtra();
+    return new wxsListbookExtra();
 }
 
-wxString wxsNotebook::OnXmlGetExtraObjectClass()
+wxString wxsListbook::OnXmlGetExtraObjectClass()
 {
-    return _T("notebookpage");
+    return _T("listbookpage");
 }
 
-void wxsNotebook::OnAddChildQPP(wxsItem* Child,wxsAdvQPP* QPP)
+void wxsListbook::OnAddChildQPP(wxsItem* Child,wxsAdvQPP* QPP)
 {
-    wxsNotebookExtra* Extra = (wxsNotebookExtra*)GetChildExtra(GetChildIndex(Child));
+    wxsListbookExtra* Extra = (wxsListbookExtra*)GetChildExtra(GetChildIndex(Child));
     if ( Extra )
     {
-        QPP->Register(new wxsNotebookParentQP(QPP,Extra),_("Notobook"));
+        QPP->Register(new wxsListbookParentQP(QPP,Extra),_("Listbook"));
     }
 }
 
-wxObject* wxsNotebook::OnBuildPreview(wxWindow* Parent,long PreviewFlags)
+wxObject* wxsListbook::OnBuildPreview(wxWindow* Parent,long PreviewFlags)
 {
     UpdateCurrentSelection();
-	wxNotebook* Notebook = new wxNotebook(Parent,-1,Pos(Parent),Size(Parent),Style());
+	wxListbook* Listbook = new wxListbook(Parent,-1,Pos(Parent),Size(Parent),Style());
 
 	if ( !GetChildCount() && !(PreviewFlags&pfExact) )
 	{
 	    // Adding additional empty notebook to prevent from having zero-sized notebook
-	    Notebook->AddPage(
-            new wxPanel(Notebook,-1,wxDefaultPosition,wxSize(50,50)),
+	    Listbook->AddPage(
+            new wxPanel(Listbook,-1,wxDefaultPosition,wxSize(50,50)),
             _("No pages"));
 	}
 
-	AddChildrenPreview(Notebook,PreviewFlags);
+	AddChildrenPreview(Listbook,PreviewFlags);
 
 	for ( int i=0; i<GetChildCount(); i++ )
 	{
 	    wxsItem* Child = GetChild(i);
-	    wxsNotebookExtra* Extra = (wxsNotebookExtra*)GetChildExtra(i);
+	    wxsListbookExtra* Extra = (wxsListbookExtra*)GetChildExtra(i);
 
 	    wxWindow* ChildPreview = wxDynamicCast(GetChild(i)->GetLastPreview(),wxWindow);
 	    if ( !ChildPreview ) continue;
@@ -226,13 +222,13 @@ wxObject* wxsNotebook::OnBuildPreview(wxWindow* Parent,long PreviewFlags)
 	    bool Selected = (Child == m_CurrentSelection);
 	    if ( PreviewFlags & pfExact ) Selected = Extra->m_Selected;
 
-	    Notebook->AddPage(ChildPreview,Extra->m_Label,Selected);
+	    Listbook->AddPage(ChildPreview,Extra->m_Label,Selected);
 	}
 
-	return Notebook;
+	return Listbook;
 }
 
-void wxsNotebook::OnBuildCreatingCode(wxString& Code,const wxString& WindowParent,wxsCodingLang Language)
+void wxsListbook::OnBuildCreatingCode(wxString& Code,const wxString& WindowParent,wxsCodingLang Language)
 {
     switch ( Language )
     {
@@ -240,7 +236,7 @@ void wxsNotebook::OnBuildCreatingCode(wxString& Code,const wxString& WindowParen
         {
             if ( GetParent() )
             {
-                Code << GetVarName() << _T(" = new wxNotebook(");
+                Code << GetVarName() << _T(" = new wxListbook(");
             }
             else
             {
@@ -257,7 +253,7 @@ void wxsNotebook::OnBuildCreatingCode(wxString& Code,const wxString& WindowParen
 
             for ( int i=0; i<GetChildCount(); i++ )
             {
-                wxsNotebookExtra* Extra = (wxsNotebookExtra*)GetChildExtra(i);
+                wxsListbookExtra* Extra = (wxsListbookExtra*)GetChildExtra(i);
                 Code << GetVarName() << _T("->AddPage")
                      << GetChild(i)->GetVarName() << _T(",")
                      << wxsCodeMarks::WxString(wxsCPP,Extra->m_Label) << _T(",")
@@ -269,25 +265,25 @@ void wxsNotebook::OnBuildCreatingCode(wxString& Code,const wxString& WindowParen
 
         default:
         {
-            wxsCodeMarks::Unknown(_T("wxsNotebook::OnBuildCreatingCode"),Language);
+            wxsCodeMarks::Unknown(_T("wxsListbook::OnBuildCreatingCode"),Language);
         }
     }
 }
 
-void wxsNotebook::OnEnumDeclFiles(wxArrayString& Decl,wxArrayString& Def,wxsCodingLang Language)
+void wxsListbook::OnEnumDeclFiles(wxArrayString& Decl,wxArrayString& Def,wxsCodingLang Language)
 {
     switch ( Language )
     {
-        case wxsCPP: Decl.Add(_T("<wx/notebook.h>")); break;
-        default: wxsCodeMarks::Unknown(_T("wxsNotebook::OnEnumDeclFiles"),Language);
+        case wxsCPP: Decl.Add(_T("<wx/listbook.h>")); break;
+        default: wxsCodeMarks::Unknown(_T("wxsListbook::OnEnumDeclFiles"),Language);
     }
 }
 
-bool wxsNotebook::OnMouseClick(wxWindow* Preview,int PosX,int PosY)
+bool wxsListbook::OnMouseClick(wxWindow* Preview,int PosX,int PosY)
 {
     UpdateCurrentSelection();
-    wxNotebook* Notebook = (wxNotebook*)Preview;
-    int Hit = Notebook->HitTest(wxPoint(PosX,PosY));
+    wxListbook* Listbook = (wxListbook*)Preview;
+    int Hit = Listbook->HitTest(wxPoint(PosX,PosY));
     if ( Hit != wxNOT_FOUND )
     {
         wxsItem* OldSel = m_CurrentSelection;
@@ -297,13 +293,13 @@ bool wxsNotebook::OnMouseClick(wxWindow* Preview,int PosX,int PosY)
     return false;
 }
 
-bool wxsNotebook::OnIsChildPreviewVisible(wxsItem* Child)
+bool wxsListbook::OnIsChildPreviewVisible(wxsItem* Child)
 {
     UpdateCurrentSelection();
     return Child == m_CurrentSelection;
 }
 
-bool wxsNotebook::OnEnsureChildPreviewVisible(wxsItem* Child)
+bool wxsListbook::OnEnsureChildPreviewVisible(wxsItem* Child)
 {
     if ( IsChildPreviewVisible(Child) ) return false;
     m_CurrentSelection = Child;
@@ -311,13 +307,13 @@ bool wxsNotebook::OnEnsureChildPreviewVisible(wxsItem* Child)
     return true;
 }
 
-void wxsNotebook::UpdateCurrentSelection()
+void wxsListbook::UpdateCurrentSelection()
 {
     wxsItem* NewCurrentSelection = NULL;
     for ( int i=0; i<GetChildCount(); i++ )
     {
         if ( m_CurrentSelection == GetChild(i) ) return;
-        wxsNotebookExtra* Extra = (wxsNotebookExtra*)GetChildExtra(i);
+        wxsListbookExtra* Extra = (wxsListbookExtra*)GetChildExtra(i);
         if ( (i==0) || Extra->m_Selected )
         {
             NewCurrentSelection = GetChild(i);

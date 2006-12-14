@@ -1037,6 +1037,7 @@ void wxsItemResData::StoreTreeExpandStateReq(wxsItem* Item)
 
 bool wxsItemResData::SelectItem(wxsItem* Item,bool UnselectOther)
 {
+    // TODO: Looks like this function is causing blinking-editor problems
     if ( UnselectOther )
     {
         m_RootItem->ClearSelection();
@@ -1062,6 +1063,22 @@ bool wxsItemResData::SelectItem(wxsItem* Item,bool UnselectOther)
             wxsResourceTree::Get()->SelectItem(Id,true);
         }
     }
+
+    bool Changed = false;
+    wxsItem* Child = Item;
+    for ( wxsParent* Parent = Item->GetParent(); Parent; Child = Parent, Parent = Parent->GetParent() )
+    {
+        if ( Parent->EnsureChildPreviewVisible(Child) )
+        {
+            Changed = true;
+        }
+    }
+
+    if ( Changed )
+    {
+        m_Editor->RebuildPreview();
+    }
+
     return true;
 }
 

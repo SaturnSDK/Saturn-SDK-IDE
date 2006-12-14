@@ -77,6 +77,16 @@ class wxsParent: public wxsItem
          */
         inline bool CanAddChild(wxsItem* Item,bool ShowMessage) { return OnCanAddChild(Item,ShowMessage); }
 
+        /** \brief Function checking if given child is visible in editor
+         * \note This function is only a wrapper to OnIsChildPreviewVisible
+         */
+        inline bool IsChildPreviewVisible(wxsItem* Child) { return OnIsChildPreviewVisible(Child); }
+
+        /** \brief Ensuring that child item is visible in preview
+         * \note This is only a wrapper to OnEnsureChildPreviewVisible
+         */
+        inline bool EnsureChildPreviewVisible(wxsItem* Child) { return OnEnsureChildPreviewVisible(Child); }
+
     protected:
 
         /* *********************************************************************** */
@@ -157,6 +167,27 @@ class wxsParent: public wxsItem
          * child should be stored.
          */
         virtual bool OnXmlWriteChild(int Index,TiXmlElement* Elem,bool IsXRC,bool IsExtra);
+
+        /** \brief Function checking if given child preview is visible in editor
+         *
+         * This function may be used by items like wxNotebook which show only
+         * one child item. It's used to avoid operating on invisible items
+         * inside editor
+         * \note this function does not check if parent item is visible
+         * \param Child pointer to child
+         * \return true if child visible, false if not
+         */
+        virtual bool OnIsChildPreviewVisible(wxsItem* Child) { return true; }
+
+        /** \brief Function ensuring that given child of this item is visible inside editor
+         *
+         * This function is used to automatically switch visible child for containers
+         * like wxNotebook (only one chid is show, other are hidden) when somebody
+         * clicks on it on resource browser.
+         * \note This function does not make sure that parent is visible
+         * \return false if nothing has changed, true if preview must be refreshed
+         */
+        virtual bool OnEnsureChildPreviewVisible(wxsItem* Child) { return false; }
 
     private:
 

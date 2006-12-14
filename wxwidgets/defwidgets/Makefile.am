@@ -50,7 +50,9 @@ libwxsmith_wxwidgets_defwidgets_la_SOURCES = \
 ./wxsstddialogbuttonsizer.cpp \
 ./wxssplitterwindow.cpp \
 ./wxscustomwidget.cpp \
-./wxsnotebook.cpp
+./wxsnotebook.cpp \
+./wxschoicebook.cpp \
+./wxslistbook.cpp
 
 noinst_HEADERS = \
 ./wxsgauge.h \
@@ -91,4 +93,6 @@ noinst_HEADERS = \
 ./wxsstddialogbuttonsizer.h \
 ./wxssplitterwindow.h \
 ./wxscustomwidget.h \
-./wxsnotebook.h
+./wxsnotebook.h \
+./wxschoicebook.h \
+./wxslistbook.h

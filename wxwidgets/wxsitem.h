@@ -211,10 +211,15 @@ class wxsItem: public wxsPropertyContainer
          *
          * This function may be used when building preview to properly
          * set up window identifier.
-         * It will return value of identifier given as string, number of it's
+         * It will return value of identifier given as string, number if it's
          * given as integer or wxID_ANY (-1) if it's user-defined identifier.
          */
         inline wxWindowID GetId() { return wxsPredefinedIDs::Value(m_IdName); }
+
+        /** \brief Posting mouse click event from editor
+         * \note This is only a wrapper to OnMouseClick function
+         */
+        inline bool MouseClick(wxWindow* Preview,int PosX,int PosY) { return OnMouseClick(Preview,PosX,PosY); }
 
     protected:
 
@@ -354,6 +359,19 @@ class wxsItem: public wxsPropertyContainer
          * if Id didn't match any of added properties.
          */
         virtual void OnExtraPropertyChanged(wxsPropertyGridManager* Grid,wxPGId Id);
+
+        /** \brief Function processing mouse-click event
+         *
+         * This funciton may be used by item to do some action when
+         * used clicks on preview. It may be usefull for containers
+         * like notebook when only one child is visible to change
+         * child shown in editor
+         * \param Preview preview item
+         * \param PosX X position of mouse relative to item's position
+         * \param PosY Y position of mouse relative to item's position
+         * \return false if nothing has changed, true if preview must be refreshed
+         */
+        virtual bool OnMouseClick(wxWindow* Preview,int PosX,int PosY) { return false; }
 
     private:
 

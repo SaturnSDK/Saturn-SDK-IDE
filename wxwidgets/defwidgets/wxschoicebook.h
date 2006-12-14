@@ -1,14 +1,14 @@
-#ifndef WXSNOTEBOOK_H
-#define WXSNOTEBOOK_H
+#ifndef WXSCHOICEBOOK_H
+#define WXSCHOICEBOOK_H
 
 #include "../wxscontainer.h"
 
-/** \brief Notebook container */
-class wxsNotebook : public wxsContainer
+/** \brief Choicebook container */
+class wxsChoicebook : public wxsContainer
 {
 	public:
 
-		wxsNotebook(wxsItemResData* Data);
+		wxsChoicebook(wxsItemResData* Data);
 
     private:
 

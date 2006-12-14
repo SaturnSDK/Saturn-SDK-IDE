@@ -5,6 +5,7 @@
 
 class wxsItemEditorDragAssist;
 class wxsItemResData;
+class wxsItemEditor;
 class wxsParent;
 class wxsItem;
 
@@ -14,7 +15,7 @@ class wxsItemEditorContent: public wxsDrawingWindow
     public:
 
         /** \brief Ctor */
-        wxsItemEditorContent(wxWindow* Parent,wxsItemResData* Data);
+        wxsItemEditorContent(wxWindow* Parent,wxsItemResData* Data,wxsItemEditor* Editor);
 
         /** \brief Dctor */
         virtual ~wxsItemEditorContent();
@@ -80,6 +81,7 @@ class wxsItemEditorContent: public wxsDrawingWindow
         WX_DECLARE_VOIDPTR_HASH_MAP(wxWindow*,ItemToWindowT);
 
         wxsItemResData* m_Data;                             ///< \brief Data of handled resource
+        wxsItemEditor* m_Editor;                            ///< \brief Main editor class
         DragPointsT m_DragPoints;                           ///< \brief Array of visible drag points
         ItemToRectT m_ItemToRect;                           ///< \brief Coordinates of each item stored here
         ItemToWindowT m_ItemToWindow;                       ///< \brief Window in editor area for each item is stored here

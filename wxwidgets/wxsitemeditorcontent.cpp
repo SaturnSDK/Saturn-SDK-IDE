@@ -3,14 +3,16 @@
 #include "wxsbaseproperties.h"
 #include "wxsitemresdata.h"
 #include "wxsparent.h"
+#include "wxsitemeditor.h"
 
 BEGIN_EVENT_TABLE(wxsItemEditorContent,wxsDrawingWindow)
     EVT_MOUSE_EVENTS(wxsItemEditorContent::OnMouse)
 END_EVENT_TABLE()
 
-wxsItemEditorContent::wxsItemEditorContent(wxWindow* Parent,wxsItemResData* Data):
+wxsItemEditorContent::wxsItemEditorContent(wxWindow* Parent,wxsItemResData* Data,wxsItemEditor* Editor):
     wxsDrawingWindow(Parent,-1),
     m_Data(Data),
+    m_Editor(Editor),
     m_MouseState(msIdle),
     m_AssistTarget(NULL),
     m_AssistParent(NULL),
@@ -268,7 +270,7 @@ void wxsItemEditorContent::OnMouseIdle(wxMouseEvent& event)
     BlockFetch(false);
     m_DragInitPosX = event.GetX();
     m_DragInitPosY = event.GetY();
-    if ( event.LeftDown() && !event.RightIsDown() && !event.MiddleIsDown() )
+    if ( event.LeftIsDown() && !event.RightIsDown() && !event.MiddleIsDown() )
     {
         // Selecting / drag init event
         int MouseX = event.GetX();
@@ -277,8 +279,14 @@ void wxsItemEditorContent::OnMouseIdle(wxMouseEvent& event)
         wxsItem* OnCursor = FindItemAtPos(MouseX,MouseY,m_Data->GetRootItem());
         if ( !OnCursor ) OnCursor = m_Data->GetRootItem();
 
-        // TODO (SpOoN#1#): Uncomment when done
-        // ForwardClickToParent(OnCursor,MouseX,MouseY)
+        wxWindow* Preview = GetPreviewWindow(OnCursor);
+        bool NeedRefresh = false;
+        if ( Preview )
+        {
+            int PosX, PosY, SizeX, SizeY;
+            FindAbsoluteRect(OnCursor,PosX,PosY,SizeX,SizeY);
+            NeedRefresh = OnCursor->MouseClick(Preview,MouseX-PosX,MouseY-PosY);
+        }
 
         DragPointData* DPD = FindDragPointAtPos(MouseX,MouseY);
 
@@ -302,6 +310,12 @@ void wxsItemEditorContent::OnMouseIdle(wxMouseEvent& event)
             m_CurDragPoint = FindDragPointFromItem(OnCursor);
             m_CurDragItem = OnCursor;
             m_MouseState = msDraggingItemInit;
+        }
+
+        if ( NeedRefresh )
+        {
+            m_Editor->RebuildPreview();
+            m_MouseState = msIdle;
         }
     }
 
@@ -750,10 +764,9 @@ void wxsItemEditorContent::RecalculateMapsReq(wxsItem* Item)
     if ( Item->GetLastPreview() )
     {
         wxWindow* win = wxDynamicCast(Item->GetLastPreview(),wxWindow);
-        m_ItemToWindow[Item] = win;
         if ( win )
         {
-            // TODO (SpOoN#1#): Add additional visibility check (query item's parent)
+            m_ItemToWindow[Item] = win;
             if ( win->IsShown() )
             {
                 int PosX = 0;
@@ -772,7 +785,10 @@ void wxsItemEditorContent::RecalculateMapsReq(wxsItem* Item)
                 {
                     for ( int i=0; i<Parent->GetChildCount(); i++ )
                     {
-                        RecalculateMapsReq(Parent->GetChild(i));
+                        if ( Parent->IsChildPreviewVisible(Parent->GetChild(i)) )
+                        {
+                            RecalculateMapsReq(Parent->GetChild(i));
+                        }
                     }
                 }
             }
