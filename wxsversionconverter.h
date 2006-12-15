@@ -42,6 +42,8 @@ class wxsVersionConverter
 
         void ConvertOldWxsFile(const wxString& FileName,bool UsingXRC) const;
         void GatherExtraFromOldResourceReq(TiXmlElement* Object,TiXmlElement* Extra,bool RootNode) const;
+        void AdoptOldSourceFile(const wxString& FileName,const wxString& ClassName) const;
+        bool LineContainDirectivesOnly(const wxString& Code,int& BeginPos) const;
 
         wxsVersionConverter() {}
         ~wxsVersionConverter() {}
