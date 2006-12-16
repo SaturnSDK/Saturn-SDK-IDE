@@ -756,7 +756,10 @@ void wxsItemResData::BuildIncludesCode(wxsCodingLang Language,wxString& LocalInc
                 if ( LocalHeaders[i] != Previous )
                 {
                     Previous = LocalHeaders[i];
-                    LocalIncludes << _T("#include ") << Previous << _T("\n");
+                    if ( GlobalHeaders.Index(Previous) == wxNOT_FOUND )
+                    {
+                        LocalIncludes << _T("#include ") << Previous << _T("\n");
+                    }
                 }
             }
 
@@ -1020,10 +1023,14 @@ void wxsItemResData::StoreTreeExpandState()
 
 void wxsItemResData::StoreTreeExpandStateReq(wxsItem* Item)
 {
-    // TODO: This may be unsafe because m_LastTreeId could be changed already
-    Item->SetIsExpanded(
-        wxsResourceTree::Get()->IsExpanded(
-            Item->GetLastTreeItemId()));
+    if ( m_IdMap.find(Item) != m_IdMap.end() )
+    {
+        wxTreeItemId Id = m_IdMap[Item];
+        if ( Id.IsOk() )
+        {
+            Item->SetIsExpanded(wxsResourceTree::Get()->IsExpanded(Id));
+        }
+    }
 
     wxsParent* AsParent = Item->ConvertToParent();
     if ( AsParent )

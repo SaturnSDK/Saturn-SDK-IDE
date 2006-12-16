@@ -167,10 +167,6 @@ void wxsItem::BuildItemTree(wxsResourceTree* Tree,wxsResourceItemId Parent,int P
     {
         m_LastTreeId = Tree->InsertItem(Parent,Position,GetClassName(),-1,-1,new wxsItemResTreeData(this));
     }
-    if ( !GetIsExpanded() )
-    {
-        Tree->Collapse(m_LastTreeId);
-    }
 
     wxsParent* ParentItem = ConvertToParent();
     if ( ParentItem )
@@ -180,6 +176,15 @@ void wxsItem::BuildItemTree(wxsResourceTree* Tree,wxsResourceItemId Parent,int P
         {
             ParentItem->GetChild(i)->BuildItemTree(Tree,m_LastTreeId);
         }
+    }
+
+    if ( GetIsExpanded() )
+    {
+        Tree->Expand(m_LastTreeId);
+    }
+    else
+    {
+        Tree->Collapse(m_LastTreeId);
     }
 }
 
