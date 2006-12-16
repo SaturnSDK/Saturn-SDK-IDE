@@ -85,12 +85,23 @@ class wxsDrawingWindow: public wxScrolledWindow
         /** \brief Showing all children except Panel just before fetching preview */
         void ShowChildren();
 
+        /** \brief Checking if there's need to refetch background
+         *
+         * Screen is not fetched when size of drawing window is
+         * the same, sliders were not shifted and there was no
+         * call to ContentChanged()
+         */
+        bool NoNeedToRefetch();
+
         class DrawingPanel;
 
         DrawingPanel* Panel;        /// \brief Panel put over children
         wxBitmap* Bitmap;           /// \brief Bitmap with fetched window content (may be valid partially)
         bool IsBlockFetch;          /// \brief Flag used to block fetching background (may be set by user)
         bool DuringFetch;           /// \brief Set to true if we're during fetching sequence
+        int LastSizeX, LastSizeY;   /// \brief client size during last fetch
+        int LastVirtX, LastVirtY;   /// \brief virtusl area shift relative to client area during last fetch
+        bool WasContentChanged;     /// \brief If there was a call to WasContentChanged from last fetch
 
         DECLARE_EVENT_TABLE()
 };

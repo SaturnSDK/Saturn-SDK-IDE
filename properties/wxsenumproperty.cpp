@@ -86,7 +86,7 @@ bool wxsEnumProperty::XmlWrite(wxsPropertyContainer* Object,TiXmlElement* Elemen
             {
                 if ( VALUE == Values[i] )
                 {
-                    Element->InsertEndChild(TiXmlElement(cbU2C(*Ptr)));
+                    Element->InsertEndChild(TiXmlText(cbU2C(*Ptr)));
                     return true;
                 }
             }

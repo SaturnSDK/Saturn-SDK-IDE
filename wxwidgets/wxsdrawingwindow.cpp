@@ -50,6 +50,13 @@ class wxsDrawingWindow::DrawingPanel: public wxPanel
             Connect(DrawingPanelId,wxEVT_KEY_DOWN,(wxObjectEventFunction)&wxsDrawingWindow::PanelKeyboard,NULL,Parent);
             Connect(DrawingPanelId,wxEVT_KEY_UP,(wxObjectEventFunction)&wxsDrawingWindow::PanelKeyboard,NULL,Parent);
             Connect(DrawingPanelId,wxEVT_CHAR,(wxObjectEventFunction)&wxsDrawingWindow::PanelKeyboard,NULL,Parent);
+
+            // Connecting handler for empty erase event handler
+            Connect(DrawingPanelId,wxEVT_ERASE_BACKGROUND,(wxObjectEventFunction)&wxsDrawingWindow::DrawingPanel::OnEraseBack);
+        }
+
+        void OnEraseBack(wxEraseEvent& event)
+        {
         }
 
 };
@@ -62,7 +69,12 @@ wxsDrawingWindow::wxsDrawingWindow(wxWindow* Parent,wxWindowID id):
     Panel(NULL),
     Bitmap(NULL),
     IsBlockFetch(false),
-    DuringFetch(false)
+    DuringFetch(false),
+    LastSizeX(0),
+    LastSizeY(0),
+    LastVirtX(0),
+    LastVirtY(0),
+    WasContentChanged(false)
 {
     // Strange - it seems that by declaring this event in event table, it's not processed
     Connect(-1,-1,wxEVT_FETCH_SEQUENCE,(wxObjectEventFunction)&wxsDrawingWindow::OnFetchSequence);
@@ -78,6 +90,7 @@ wxsDrawingWindow::~wxsDrawingWindow()
 
 void wxsDrawingWindow::ContentChanged()
 {
+    WasContentChanged = true;
     wxSize Size = GetVirtualSize();
 
     // Generating new bitmap
@@ -94,7 +107,7 @@ void wxsDrawingWindow::ContentChanged()
 void wxsDrawingWindow::PanelPaint(wxPaintEvent& event)
 {
     wxPaintDC PaintDC(Panel);
-    if ( IsBlockFetch )
+    if ( IsBlockFetch || NoNeedToRefetch() )
     {
         wxBitmap BmpCopy = Bitmap->GetSubBitmap(wxRect(0,0,Bitmap->GetWidth(),Bitmap->GetHeight()));
         wxBufferedDC DC(&PaintDC,BmpCopy);
@@ -124,9 +137,11 @@ void wxsDrawingWindow::StartFetchingSequence()
 {
     if ( DuringFetch )
     {
+        DBGLOG(_T("* wxsDrawingWindow::StartFetchingSequence"));
         return;
     }
     DuringFetch = true;
+    DBGLOG(_T("wxsDrawingWindow::StartFetchingSequence"));
 
     // Fetching sequence will end after quitting
     // this event handler. This will be done
@@ -201,4 +216,29 @@ void wxsDrawingWindow::HideChildren()
             Children[i]->Hide();
         }
     }
+}
+
+bool wxsDrawingWindow::NoNeedToRefetch()
+{
+    int NewSizeX=0, NewSizeY=0;
+    int NewVirtX=0, NewVirtY=0;
+
+    GetClientSize(&NewSizeX,&NewSizeY);
+    GetViewStart(&NewVirtX,&NewVirtY);
+
+    if ( WasContentChanged ||
+         NewSizeX != LastSizeX ||
+         NewSizeY != LastSizeY ||
+         NewVirtX != LastVirtX ||
+         NewVirtY != LastVirtY )
+    {
+        WasContentChanged = false;
+        LastSizeX = NewSizeX;
+        LastSizeY = NewSizeY;
+        LastVirtX = NewVirtX;
+        LastVirtY = NewVirtY;
+        return false;
+    }
+
+    return true;
 }
