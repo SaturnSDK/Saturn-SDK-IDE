@@ -258,7 +258,7 @@ void wxsNotebook::OnBuildCreatingCode(wxString& Code,const wxString& WindowParen
             for ( int i=0; i<GetChildCount(); i++ )
             {
                 wxsNotebookExtra* Extra = (wxsNotebookExtra*)GetChildExtra(i);
-                Code << GetVarName() << _T("->AddPage")
+                Code << GetVarName() << _T("->AddPage(")
                      << GetChild(i)->GetVarName() << _T(",")
                      << wxsCodeMarks::WxString(wxsCPP,Extra->m_Label) << _T(",")
                      << (Extra->m_Selected ? _T("true") : _T("false")) << _T(");\n");
