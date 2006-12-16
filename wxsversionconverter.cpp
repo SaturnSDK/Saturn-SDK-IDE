@@ -210,16 +210,13 @@ void wxsVersionConverter::AdoptOldSourceFile(const wxString& FileName,const wxSt
 
     // Switching to first character in this line
     wxString Indent;
-    --NewPos;
     while ( NewPos>0 &&
-            Content.GetChar(NewPos)!=_T('\n') &&
-            Content.GetChar(NewPos)!=_T('\r') )
+            Content.GetChar(NewPos-1)!=_T('\n') &&
+            Content.GetChar(NewPos-1)!=_T('\r') )
     {
-        wxChar Ch = Content.GetChar(NewPos);
+        wxChar Ch = Content.GetChar(NewPos--);
         Indent.Append((Ch==_T('\t'))?_T('\t'):_T(' '));
-        NewPos--;
     }
-    NewPos++;
 
     wxString AddIdInit =
         Indent + _T("//(*IdInit(") + Class + _T(")\n") +

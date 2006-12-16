@@ -1,5 +1,6 @@
 #include "wxsdialogres.h"
 #include "wxsitemresdata.h"
+#include <wx/button.h>
 
 namespace
 {
@@ -31,12 +32,24 @@ namespace
                 Destroy();
             }
 
+            void OnButton(wxCommandEvent& event)
+            {
+                wxWindowID Id = event.GetId();
+                if ( Id == wxID_OK  ||
+                     Id == wxID_APPLY ||
+                     Id == wxID_CANCEL )
+                {
+                    Close();
+                }
+            }
+
             wxsItemResData* m_Data;
 
             DECLARE_EVENT_TABLE()
     };
 
     BEGIN_EVENT_TABLE(wxsDialogResPreview,wxDialog)
+        EVT_BUTTON(wxID_ANY,wxsDialogResPreview::OnButton)
         EVT_MENU(wxID_EXIT,wxsDialogResPreview::OnEscape)
         EVT_CLOSE(wxsDialogResPreview::OnClose)
     END_EVENT_TABLE()

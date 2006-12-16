@@ -1,5 +1,6 @@
 #include "wxsframeres.h"
 #include "wxsitemresdata.h"
+#include <wx/button.h>
 
 namespace
 {
@@ -31,6 +32,17 @@ namespace
                 Destroy();
             }
 
+            void OnButton(wxCommandEvent& event)
+            {
+                wxWindowID Id = event.GetId();
+                if ( Id == wxID_OK  ||
+                     Id == wxID_APPLY ||
+                     Id == wxID_CANCEL )
+                {
+                    Close();
+                }
+            }
+
             wxsItemResData* m_Data;
 
             DECLARE_EVENT_TABLE()
@@ -39,6 +51,7 @@ namespace
     BEGIN_EVENT_TABLE(wxsFrameResPreview,wxFrame)
         EVT_MENU(wxID_EXIT,wxsFrameResPreview::OnEscape)
         EVT_CLOSE(wxsFrameResPreview::OnClose)
+        EVT_BUTTON(wxID_ANY,wxsFrameResPreview::OnButton)
     END_EVENT_TABLE()
 }
 
