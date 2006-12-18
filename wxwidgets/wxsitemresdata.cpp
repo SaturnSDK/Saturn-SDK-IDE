@@ -91,11 +91,15 @@ wxsItemResData::~wxsItemResData()
 
 bool wxsItemResData::Load()
 {
-    if ( !SilentLoad() )
+    bool Ret = SilentLoad();
+    if ( !m_RootItem )
     {
-        return false;
+        RecreateRootItem();
+        if ( !m_RootItem )
+        {
+            return false;
+        }
     }
-
     if ( !m_Corrector.GlobalCheck() )
     {
         // TODO: Some notification here ? (May be not a good idea, maybe three-vale return should be better)
@@ -108,7 +112,7 @@ bool wxsItemResData::Load()
     m_Editor->RebuildPreview();
     SelectItem(m_RootItem,true);
 
-    return true;
+    return Ret;
 }
 
 bool wxsItemResData::SilentLoad()
@@ -382,6 +386,7 @@ bool wxsItemResData::SaveInSourceMode()
     // Storing xml data
     TiXmlElement* Object = wxSmithNode->InsertEndChild(TiXmlElement("object"))->ToElement();
     m_RootItem->XmlWrite(Object,true,true);
+    Object->SetAttribute("name",cbU2C(m_ClassName));
 
     if ( Doc.SaveFile() )
     {
@@ -593,7 +598,7 @@ void wxsItemResData::BuildXrcItemsFetchingCodeReq(wxsCodingLang Lang,wxsItem* It
                     {
                         Code << Child->GetVarName()
                              << _T(" = (") << Child->GetClassName() << _T("*)")
-                             << _T("FindWindow(XRCID(") + Child->GetIdName() + _T("));\n");
+                             << _T("FindWindow(XRCID(\"") + Child->GetIdName() + _T("\"));\n");
                     }
                 }
                 BuildXrcItemsFetchingCodeReq(Lang,Child,Code);
@@ -629,14 +634,14 @@ void wxsItemResData::BuildEventHandlersCodeReq(wxsCodingLang Language,wxsItem* I
             }
             else
             {
-                IdString = _T("XRCID(") + Item->GetIdName() + _T(")");
+                IdString = _T("XRCID(\"") + Item->GetIdName() + _T("\")");
                 if ( Item->GetIsMember() )
                 {
                     VarNameString = Item->GetVarName();
                 }
                 else
                 {
-                    VarNameString = _T("FindWindow(XRCID(") + Item->GetIdName() + _T("))");
+                    VarNameString = _T("FindWindow(XRCID(\"") + Item->GetIdName() + _T("\"))");
                 }
             }
             Events.GenerateBindingCode(Code,IdString,VarNameString,Language);
@@ -828,6 +833,7 @@ bool wxsItemResData::RebuildXrcFile()
 
     // The only things left are: to dump item into object ...
     m_RootItem->XmlWrite(Object,true,false);
+    Object->SetAttribute("name",cbU2C(m_ClassName));
 
     // ... and save back the file
     return Doc.SaveFile(cbU2C(m_XrcFileName));
@@ -848,7 +854,7 @@ void wxsItemResData::EndChange()
         m_Corrector.GlobalCheck();
         StoreUndo();
         m_Editor->UpdateModified();
-        RebuildSourceCode();
+        RebuildFiles();
         m_Editor->RebuildPreview();
         RebuildTree();
         if ( ValidateRootSelection() )
@@ -1044,7 +1050,11 @@ void wxsItemResData::StoreTreeExpandStateReq(wxsItem* Item)
 
 bool wxsItemResData::SelectItem(wxsItem* Item,bool UnselectOther)
 {
-    // TODO: Looks like this function is causing blinking-editor problems
+    if ( !m_RootItem )
+    {
+        return false;
+    }
+
     if ( UnselectOther )
     {
         m_RootItem->ClearSelection();
@@ -1094,7 +1104,7 @@ void wxsItemResData::NotifyChange(wxsItem* Changed)
     m_Corrector.AfterChange(Changed);
     Changed->NotifyPropertyChange(false);
     StoreUndo();
-    RebuildSourceCode();
+    RebuildFiles();
     m_Editor->UpdateModified();
     m_Editor->RebuildPreview();
     m_Editor->UpdateSelection();

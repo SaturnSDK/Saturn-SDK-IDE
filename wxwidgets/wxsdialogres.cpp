@@ -60,10 +60,10 @@ const wxString wxsDialogRes::ResType = _T("wxDialog");
 wxString wxsDialogRes::OnGetAppBuildingCode()
 {
     return wxString::Format(
-        _T("%s Dlg(NULL);\n")
-        _T("Dlg.ShowModal();\n")
-        _T("SetTopWindow(&Dlg);\n")
-        _T("wxsOK = false;\n"),
+        _T("\t%s Dlg(NULL);\n")
+        _T("\tDlg.ShowModal();\n")
+        _T("\tSetTopWindow(&Dlg);\n")
+        _T("\twxsOK = false;\n"),
             GetResourceName().c_str());
 }
 
