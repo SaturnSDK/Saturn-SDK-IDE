@@ -84,6 +84,7 @@ wxsResource* wxWidgetsResFactory::OnBuildExternal(const wxString& FileName)
         if ( !Name.empty() && Names.Index(Class) != wxNOT_FOUND )
         {
             ResourcesFound.Add(Name + _T(" (") + Class + _T(")"));
+            XmlElements.Add(Object);
         }
     }
 

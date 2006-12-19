@@ -100,6 +100,7 @@ wxsItemRes::wxsItemRes(const wxString& FileName,const TiXmlElement* XrcElem,cons
     m_HdrFileName(wxEmptyString),
     m_XrcFileName(FileName)
 {
+    SetResourceName(cbC2U(XrcElem->Attribute("name")));
 }
 
 wxsItemRes::~wxsItemRes()

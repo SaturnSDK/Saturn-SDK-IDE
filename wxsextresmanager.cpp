@@ -2,7 +2,8 @@
 #include "wxsmith.h"
 #include "wxsresourcefactory.h"
 
-wxsExtResManager::wxsExtResManager()
+wxsExtResManager::wxsExtResManager():
+    m_ClosingAll(false)
 {
 }
 
@@ -42,6 +43,8 @@ bool wxsExtResManager::Open(const wxString& FileName)
 
 void wxsExtResManager::EditorClosed(wxsResource* Res)
 {
+    if ( m_ClosingAll ) return;
+
     for ( FilesMapI i = m_Files.begin(); i!=m_Files.end(); ++i )
     {
         if ( i->second == Res )
@@ -58,56 +61,18 @@ void wxsExtResManager::EditorClosed(wxsResource* Res)
     }
 }
 
-wxsExtResManager wxsExtResManager::m_Singleton;
-
-/*
-bool wxsExtResManager::OpenXrc(const wxString& FileName)
+void wxsExtResManager::DeleteAll()
 {
-    TiXmlDocument Doc;
-    if ( !Doc.LoadFile(cbU2C(FileName)) )
-    {
-        wxMessageBox(_("Error occured while loading XRC file"));
-        return false;
-    }
+    m_ClosingAll = true;
 
-    TiXmlHandle Hnd(&Doc);
-    TiXmlElement* Elem = Hnd.FirstChildElement("resource").FirstChildElement("object").Element();
-
-    if ( !Elem )
+    for ( FilesMapI i = m_Files.begin(); i!=m_Files.end(); ++i )
     {
-        wxMessageBox(_("Invalid XRC file structure"));
-        return false;
+        delete i->second;
     }
+    m_Files.clear();
+    wxsTree()->DeleteExternalResourcesId();
 
-    wxString Class = cbC2U(Elem->Attribute("class"));
-    wxString Name = cbC2U(Elem->Attribute("name"));
-
-    wxsWindowRes* NewRes = NULL;
-
-    if ( Class == _T("wxDialog") )
-    {
-        NewRes = new wxsDialogRes(NULL);
-    }
-    else if ( Class == _T("wxFrame") )
-    {
-        NewRes = new wxsFrameRes(NULL);
-    }
-    else if ( Class == _T("wxPanel") )
-    {
-        NewRes = new wxsPanelRes(NULL);
-    }
-    else
-    {
-        wxMessageBox(_("Unsupported resource type"));
-        return false;
-    }
-
-    NewRes->BindExternalResource(FileName,Name);
-    wxTreeItemId TreeId = wxsTREE()->ExternalResourcesId();
-    NewRes->BuildTree(wxsTREE(),TreeId);
-    NewRes->EditOpen();
-    Files[FileName] = NewRes;
-    return true;
+    m_ClosingAll = false;
 }
-*/
 
+wxsExtResManager wxsExtResManager::m_Singleton;

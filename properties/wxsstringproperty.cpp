@@ -55,14 +55,7 @@ bool wxsStringProperty::XmlRead(wxsPropertyContainer* Object,TiXmlElement* Eleme
         VALUE.Clear();
         return false;
     }
-    TiXmlText* Text = Element->FirstChild()->ToText();
-    if ( !Text ) 
-    {
-        // There was element for this property but it was empty
-        VALUE = wxEmptyString;
-        return true;
-    }
-    VALUE = cbC2U(Text->Value());
+    VALUE = cbC2U(Element->GetText());
     return true;
 }
 

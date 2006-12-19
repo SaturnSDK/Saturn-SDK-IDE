@@ -10,6 +10,7 @@
 #include "wxsmith.h"
 #include "wxsproject.h"
 #include "wxsmithmime.h"
+#include "wxsextresmanager.h"
 #include "wxsresourcefactory.h"
 #include "properties/wxsproperties.h"
 
@@ -96,6 +97,7 @@ void wxSmith::OnRelease(bool appShutDown)
             i->second = NULL;
         }
     }
+    wxsExtResManager::Get()->DeleteAll();
 
     m_ProjectMap.clear();
 }

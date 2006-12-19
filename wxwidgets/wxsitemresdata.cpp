@@ -107,7 +107,10 @@ bool wxsItemResData::Load()
     StoreUndo();
     m_Undo.Saved();
     m_Editor->UpdateModified();
-    RebuildSourceCode();        // Yop, only source recreated, xrc if used not touched
+    if ( Ret && (m_PropertiesFilter!=wxsItem::flFile) )
+    {
+        RebuildSourceCode();        // Yop, only source recreated, xrc if used not touched
+    }
     RebuildTree();
     m_Editor->RebuildPreview();
     SelectItem(m_RootItem,true);
@@ -183,7 +186,12 @@ bool wxsItemResData::LoadInMixedMode()
         Object = Object->NextSiblingElement("object");
     }
 
-    if ( !Object ) return false;
+    if ( !Object )
+    {
+        // We don't thread this as error since it may be new
+        // resource not yet being updated
+        return true;
+    }
     if ( cbC2U(Object->Attribute("class")) != m_ClassType ) return false;
 
     RecreateRootItem();

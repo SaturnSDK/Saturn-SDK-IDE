@@ -151,15 +151,10 @@ void wxsNewWindowDlg::OnCreate(wxCommandEvent& event)
     }
 
     bool GenXRC = CreateXrc;
-    if ( CreateXrc && wxFileName::FileExists(ProjectPrefix+Xrc) )
+    if ( wxFileName::FileExists(ProjectPrefix+Xrc) )
     {
-        switch ( wxMessageBox(wxString::Format(
-            _("File '%s' already exists. Overwrite it ?"),Xrc.c_str()),
-            _("File exists"),wxYES_NO|wxCANCEL|wxICON_ERROR) )
-        {
-            case wxCANCEL: return;
-            case wxNO: GenXRC = false; break;
-        }
+        // We will add new resource to existing one creating multi-resource xrc
+        GenXRC = false;
     }
 
     // Creating new resource

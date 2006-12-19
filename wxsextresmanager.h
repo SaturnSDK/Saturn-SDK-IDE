@@ -25,12 +25,16 @@ class wxsExtResManager
         /** \brief Returning singleton object */
         static wxsExtResManager* Get() { return &m_Singleton; }
 
+        /** \brief Deleting all external resources */
+        void DeleteAll();
+
     private:
 
         WX_DECLARE_STRING_HASH_MAP(wxsResource*,FilesMapT);
         typedef FilesMapT::iterator FilesMapI;
 
         FilesMapT m_Files;                        ///< \brief Map of opened files
+        bool      m_ClosingAll;                   ///< \brief Set to true when closing all resources
         static wxsExtResManager m_Singleton;      ///< \brief Singleton object
 
         /** \brief Function notifying that editor has been closed */

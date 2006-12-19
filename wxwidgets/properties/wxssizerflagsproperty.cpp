@@ -250,6 +250,7 @@ long wxsSizerFlagsProperty::ParseString(const wxString& String)
         else if ( Flag == _T("wxSHAPED")        ) Flags |= Shaped;
         else if ( Flag == _T("wxFIXED_MINSIZE") ) Flags |= FixedMinSize;
         else if ( Flag == _T("wxALIGN_CENTER")  ) Flags |= AlignCenterHorizontal | AlignCenterVertical;
+        else if ( Flag == _T("wxALIGN_CENTRE")  ) Flags |= AlignCenterHorizontal | AlignCenterVertical;
         else if ( Flag == _T("wxALIGN_LEFT")    ) Flags |= AlignLeft;
         else if ( Flag == _T("wxALIGN_RIGHT")   ) Flags |= AlignRight;
         else if ( Flag == _T("wxALIGN_TOP")     ) Flags |= AlignTop;
