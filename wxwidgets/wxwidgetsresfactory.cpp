@@ -1,3 +1,19 @@
+/*
+* This file is part of wxSmith plugin for Code::Blocks Studio
+* Copyright (C) 2006  Bartlomiej Swiecki
+*
+* wxSmith is free software; you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation; either version 2 of the License, or
+* (at your option) any later version.
+*
+* Author: Bartlomiej Swiecki
+*
+* $Revision:  $
+* $Id:  $
+* $HeadURL:  $
+*/
+
 #include "wxwidgetsresfactory.h"
 #include "wxsdialogres.h"
 #include "wxsframeres.h"

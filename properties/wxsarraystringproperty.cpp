@@ -1,3 +1,26 @@
+/*
+* This file is part of wxSmith plugin for Code::Blocks Studio
+* Copyright (C) 2006  Bartlomiej Swiecki
+*
+* wxSmith is free software; you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation; either version 2 of the License, or
+* (at your option) any later version.
+*
+* wxSmith is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with wxSmith; if not, write to the Free Software
+* Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA
+*
+* $Revision:  $
+* $Id:  $
+* $HeadURL:  $
+*/
+
 #include "wxsarraystringproperty.h"
 #include "wxsarraystringeditordlg.h"
 
@@ -21,12 +44,12 @@ bool wxsArrayStringProperty::ShowEditor(wxsPropertyContainer* Object)
 bool wxsArrayStringProperty::XmlRead(wxsPropertyContainer* Object,TiXmlElement* Element)
 {
     VALUE.Clear();
-    
+
     if ( !Element )
     {
         return false;
     }
-    
+
     for ( TiXmlElement* Item = Element->FirstChildElement(cbU2C(DataSubName));
           Item;
           Item = Item->NextSiblingElement(cbU2C(DataSubName)) )
@@ -85,17 +108,17 @@ wxString wxsArrayStringProperty::GetStr(wxsPropertyContainer* Object)
 {
     wxString Result;
     size_t Count = VALUE.Count();
-    
+
     if ( Count == 0 )
     {
-        return _("Click to add items");        
+        return _("Click to add items");
     }
-    
+
     for ( size_t i=0; i<Count; i++ )
     {
         wxString Item = VALUE[i];
         Item.Replace(_T("\""),_T("\\\""));
-        if ( i > 0 ) 
+        if ( i > 0 )
         {
             Result.Append(_T(' '));
         }

@@ -1,3 +1,26 @@
+/*
+* This file is part of wxSmith plugin for Code::Blocks Studio
+* Copyright (C) 2006  Bartlomiej Swiecki
+*
+* wxSmith is free software; you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation; either version 2 of the License, or
+* (at your option) any later version.
+*
+* wxSmith is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with wxSmith; if not, write to the Free Software
+* Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA
+*
+* $Revision:  $
+* $Id:  $
+* $HeadURL:  $
+*/
+
 #include "wxspropertystream.h"
 
 bool wxsPropertyStream::GetChar(const wxString &Name, wxChar& Value, wxChar Default)
@@ -23,7 +46,7 @@ bool wxsPropertyStream::PutChar(const wxString &Name, wxChar& Value, wxChar Defa
 bool wxsPropertyStream::GetLong(const wxString &Name, long& Value, long Default)
 {
     wxString Data;
-    if ( !GetString(Name,Data,wxEmptyString) || Data.empty() ) 
+    if ( !GetString(Name,Data,wxEmptyString) || Data.empty() )
     {
         Value = Default;
         return false;
@@ -43,7 +66,7 @@ bool wxsPropertyStream::PutLong(const wxString &Name, long& Value, long Default)
 bool wxsPropertyStream::GetDouble(const wxString &Name, double& Value, double Default)
 {
     wxString Data;
-    if ( !GetString(Name,Data,wxEmptyString) || Data.empty() ) 
+    if ( !GetString(Name,Data,wxEmptyString) || Data.empty() )
     {
         Value = Default;
         return false;
@@ -63,7 +86,7 @@ bool wxsPropertyStream::PutDouble(const wxString &Name, double& Value, double De
 bool wxsPropertyStream::GetULong(const wxString &Name, unsigned long& Value, unsigned long Default)
 {
     wxString Data;
-    if ( !GetString(Name,Data,wxEmptyString) || Data.empty() ) 
+    if ( !GetString(Name,Data,wxEmptyString) || Data.empty() )
     {
         Value = Default;
         return false;
@@ -83,7 +106,7 @@ bool wxsPropertyStream::PutULong(const wxString &Name, unsigned long& Value, uns
 bool wxsPropertyStream::GetBool(const wxString &Name, bool& Value, bool Default)
 {
     wxString Data;
-    if ( !GetString(Name,Data,wxEmptyString) || Data.empty() ) 
+    if ( !GetString(Name,Data,wxEmptyString) || Data.empty() )
     {
         Value = Default;
         return false;
