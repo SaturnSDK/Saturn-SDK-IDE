@@ -394,411 +394,411 @@
 			<Option link="0" />
 			<Option target="wxSmith" />
 		</Unit>
-		<Unit filename="wxwidgets\defwidgets\wxsbitmapbutton.cpp">
+		<Unit filename="wxwidgets\defitems\wxsbitmapbutton.cpp">
 			<Option compilerVar="CPP" />
 			<Option target="wxSmith" />
 		</Unit>
-		<Unit filename="wxwidgets\defwidgets\wxsbitmapbutton.h">
-			<Option compilerVar="CPP" />
-			<Option compile="0" />
-			<Option link="0" />
-			<Option target="wxSmith" />
-		</Unit>
-		<Unit filename="wxwidgets\defwidgets\wxsboxsizer.cpp">
-			<Option compilerVar="CPP" />
-			<Option target="wxSmith" />
-		</Unit>
-		<Unit filename="wxwidgets\defwidgets\wxsboxsizer.h">
+		<Unit filename="wxwidgets\defitems\wxsbitmapbutton.h">
 			<Option compilerVar="CPP" />
 			<Option compile="0" />
 			<Option link="0" />
 			<Option target="wxSmith" />
 		</Unit>
-		<Unit filename="wxwidgets\defwidgets\wxsbutton.cpp">
+		<Unit filename="wxwidgets\defitems\wxsboxsizer.cpp">
 			<Option compilerVar="CPP" />
 			<Option target="wxSmith" />
 		</Unit>
-		<Unit filename="wxwidgets\defwidgets\wxsbutton.h">
-			<Option compilerVar="CPP" />
-			<Option compile="0" />
-			<Option link="0" />
-			<Option target="wxSmith" />
-		</Unit>
-		<Unit filename="wxwidgets\defwidgets\wxscalendarctrl.cpp">
-			<Option compilerVar="CPP" />
-			<Option target="wxSmith" />
-		</Unit>
-		<Unit filename="wxwidgets\defwidgets\wxscalendarctrl.h">
+		<Unit filename="wxwidgets\defitems\wxsboxsizer.h">
 			<Option compilerVar="CPP" />
 			<Option compile="0" />
 			<Option link="0" />
 			<Option target="wxSmith" />
 		</Unit>
-		<Unit filename="wxwidgets\defwidgets\wxscheckbox.cpp">
+		<Unit filename="wxwidgets\defitems\wxsbutton.cpp">
 			<Option compilerVar="CPP" />
 			<Option target="wxSmith" />
 		</Unit>
-		<Unit filename="wxwidgets\defwidgets\wxscheckbox.h">
-			<Option compilerVar="CPP" />
-			<Option compile="0" />
-			<Option link="0" />
-			<Option target="wxSmith" />
-		</Unit>
-		<Unit filename="wxwidgets\defwidgets\wxschecklistbox.cpp">
-			<Option compilerVar="CPP" />
-			<Option target="wxSmith" />
-		</Unit>
-		<Unit filename="wxwidgets\defwidgets\wxschecklistbox.h">
+		<Unit filename="wxwidgets\defitems\wxsbutton.h">
 			<Option compilerVar="CPP" />
 			<Option compile="0" />
 			<Option link="0" />
 			<Option target="wxSmith" />
 		</Unit>
-		<Unit filename="wxwidgets\defwidgets\wxschoice.cpp">
+		<Unit filename="wxwidgets\defitems\wxscalendarctrl.cpp">
 			<Option compilerVar="CPP" />
 			<Option target="wxSmith" />
 		</Unit>
-		<Unit filename="wxwidgets\defwidgets\wxschoice.h">
-			<Option compilerVar="CPP" />
-			<Option compile="0" />
-			<Option link="0" />
-			<Option target="wxSmith" />
-		</Unit>
-		<Unit filename="wxwidgets\defwidgets\wxscombobox.cpp">
-			<Option compilerVar="CPP" />
-			<Option target="wxSmith" />
-		</Unit>
-		<Unit filename="wxwidgets\defwidgets\wxscombobox.h">
+		<Unit filename="wxwidgets\defitems\wxscalendarctrl.h">
 			<Option compilerVar="CPP" />
 			<Option compile="0" />
 			<Option link="0" />
 			<Option target="wxSmith" />
 		</Unit>
-		<Unit filename="wxwidgets\defwidgets\wxscustomwidget.cpp">
+		<Unit filename="wxwidgets\defitems\wxscheckbox.cpp">
 			<Option compilerVar="CPP" />
 			<Option target="wxSmith" />
 		</Unit>
-		<Unit filename="wxwidgets\defwidgets\wxscustomwidget.h">
-			<Option compilerVar="CPP" />
-			<Option compile="0" />
-			<Option link="0" />
-			<Option target="wxSmith" />
-		</Unit>
-		<Unit filename="wxwidgets\defwidgets\wxsdatepickerctrl.cpp">
-			<Option compilerVar="CPP" />
-			<Option target="wxSmith" />
-		</Unit>
-		<Unit filename="wxwidgets\defwidgets\wxsdatepickerctrl.h">
+		<Unit filename="wxwidgets\defitems\wxscheckbox.h">
 			<Option compilerVar="CPP" />
 			<Option compile="0" />
 			<Option link="0" />
 			<Option target="wxSmith" />
 		</Unit>
-		<Unit filename="wxwidgets\defwidgets\wxsdialog.cpp">
+		<Unit filename="wxwidgets\defitems\wxschecklistbox.cpp">
 			<Option compilerVar="CPP" />
 			<Option target="wxSmith" />
 		</Unit>
-		<Unit filename="wxwidgets\defwidgets\wxsdialog.h">
-			<Option compilerVar="CPP" />
-			<Option compile="0" />
-			<Option link="0" />
-			<Option target="wxSmith" />
-		</Unit>
-		<Unit filename="wxwidgets\defwidgets\wxsflexgridsizer.cpp">
-			<Option compilerVar="CPP" />
-			<Option target="wxSmith" />
-		</Unit>
-		<Unit filename="wxwidgets\defwidgets\wxsflexgridsizer.h">
+		<Unit filename="wxwidgets\defitems\wxschecklistbox.h">
 			<Option compilerVar="CPP" />
 			<Option compile="0" />
 			<Option link="0" />
 			<Option target="wxSmith" />
 		</Unit>
-		<Unit filename="wxwidgets\defwidgets\wxsframe.cpp">
+		<Unit filename="wxwidgets\defitems\wxschoice.cpp">
 			<Option compilerVar="CPP" />
 			<Option target="wxSmith" />
 		</Unit>
-		<Unit filename="wxwidgets\defwidgets\wxsframe.h">
-			<Option compilerVar="CPP" />
-			<Option compile="0" />
-			<Option link="0" />
-			<Option target="wxSmith" />
-		</Unit>
-		<Unit filename="wxwidgets\defwidgets\wxsgauge.cpp">
-			<Option compilerVar="CPP" />
-			<Option target="wxSmith" />
-		</Unit>
-		<Unit filename="wxwidgets\defwidgets\wxsgauge.h">
+		<Unit filename="wxwidgets\defitems\wxschoice.h">
 			<Option compilerVar="CPP" />
 			<Option compile="0" />
 			<Option link="0" />
 			<Option target="wxSmith" />
 		</Unit>
-		<Unit filename="wxwidgets\defwidgets\wxsgenericdirctrl.cpp">
+		<Unit filename="wxwidgets\defitems\wxscombobox.cpp">
 			<Option compilerVar="CPP" />
 			<Option target="wxSmith" />
 		</Unit>
-		<Unit filename="wxwidgets\defwidgets\wxsgenericdirctrl.h">
-			<Option compilerVar="CPP" />
-			<Option compile="0" />
-			<Option link="0" />
-			<Option target="wxSmith" />
-		</Unit>
-		<Unit filename="wxwidgets\defwidgets\wxsgridsizer.cpp">
-			<Option compilerVar="CPP" />
-			<Option target="wxSmith" />
-		</Unit>
-		<Unit filename="wxwidgets\defwidgets\wxsgridsizer.h">
+		<Unit filename="wxwidgets\defitems\wxscombobox.h">
 			<Option compilerVar="CPP" />
 			<Option compile="0" />
 			<Option link="0" />
 			<Option target="wxSmith" />
 		</Unit>
-		<Unit filename="wxwidgets\defwidgets\wxshtmlwindow.cpp">
+		<Unit filename="wxwidgets\defitems\wxscustomwidget.cpp">
 			<Option compilerVar="CPP" />
 			<Option target="wxSmith" />
 		</Unit>
-		<Unit filename="wxwidgets\defwidgets\wxshtmlwindow.h">
-			<Option compilerVar="CPP" />
-			<Option compile="0" />
-			<Option link="0" />
-			<Option target="wxSmith" />
-		</Unit>
-		<Unit filename="wxwidgets\defwidgets\wxslistbox.cpp">
-			<Option compilerVar="CPP" />
-			<Option target="wxSmith" />
-		</Unit>
-		<Unit filename="wxwidgets\defwidgets\wxslistbox.h">
+		<Unit filename="wxwidgets\defitems\wxscustomwidget.h">
 			<Option compilerVar="CPP" />
 			<Option compile="0" />
 			<Option link="0" />
 			<Option target="wxSmith" />
 		</Unit>
-		<Unit filename="wxwidgets\defwidgets\wxslistctrl.cpp">
+		<Unit filename="wxwidgets\defitems\wxsdatepickerctrl.cpp">
 			<Option compilerVar="CPP" />
 			<Option target="wxSmith" />
 		</Unit>
-		<Unit filename="wxwidgets\defwidgets\wxslistctrl.h">
-			<Option compilerVar="CPP" />
-			<Option compile="0" />
-			<Option link="0" />
-			<Option target="wxSmith" />
-		</Unit>
-		<Unit filename="wxwidgets\defwidgets\wxsnotebook.cpp">
-			<Option compilerVar="CPP" />
-			<Option target="wxSmith" />
-		</Unit>
-		<Unit filename="wxwidgets\defwidgets\wxsnotebook.h">
+		<Unit filename="wxwidgets\defitems\wxsdatepickerctrl.h">
 			<Option compilerVar="CPP" />
 			<Option compile="0" />
 			<Option link="0" />
 			<Option target="wxSmith" />
 		</Unit>
-		<Unit filename="wxwidgets\defwidgets\wxschoicebook.cpp">
+		<Unit filename="wxwidgets\defitems\wxsdialog.cpp">
 			<Option compilerVar="CPP" />
 			<Option target="wxSmith" />
 		</Unit>
-		<Unit filename="wxwidgets\defwidgets\wxschoicebook.h">
-			<Option compilerVar="CPP" />
-			<Option compile="0" />
-			<Option link="0" />
-			<Option target="wxSmith" />
-		</Unit>
-		<Unit filename="wxwidgets\defwidgets\wxslistbook.cpp">
-			<Option compilerVar="CPP" />
-			<Option target="wxSmith" />
-		</Unit>
-		<Unit filename="wxwidgets\defwidgets\wxslistbook.h">
+		<Unit filename="wxwidgets\defitems\wxsdialog.h">
 			<Option compilerVar="CPP" />
 			<Option compile="0" />
 			<Option link="0" />
 			<Option target="wxSmith" />
 		</Unit>
-		<Unit filename="wxwidgets\defwidgets\wxspanel.cpp">
+		<Unit filename="wxwidgets\defitems\wxsflexgridsizer.cpp">
 			<Option compilerVar="CPP" />
 			<Option target="wxSmith" />
 		</Unit>
-		<Unit filename="wxwidgets\defwidgets\wxspanel.h">
-			<Option compilerVar="CPP" />
-			<Option compile="0" />
-			<Option link="0" />
-			<Option target="wxSmith" />
-		</Unit>
-		<Unit filename="wxwidgets\defwidgets\wxsradiobox.cpp">
-			<Option compilerVar="CPP" />
-			<Option target="wxSmith" />
-		</Unit>
-		<Unit filename="wxwidgets\defwidgets\wxsradiobox.h">
+		<Unit filename="wxwidgets\defitems\wxsflexgridsizer.h">
 			<Option compilerVar="CPP" />
 			<Option compile="0" />
 			<Option link="0" />
 			<Option target="wxSmith" />
 		</Unit>
-		<Unit filename="wxwidgets\defwidgets\wxsradiobutton.cpp">
+		<Unit filename="wxwidgets\defitems\wxsframe.cpp">
 			<Option compilerVar="CPP" />
 			<Option target="wxSmith" />
 		</Unit>
-		<Unit filename="wxwidgets\defwidgets\wxsradiobutton.h">
-			<Option compilerVar="CPP" />
-			<Option compile="0" />
-			<Option link="0" />
-			<Option target="wxSmith" />
-		</Unit>
-		<Unit filename="wxwidgets\defwidgets\wxsscrollbar.cpp">
-			<Option compilerVar="CPP" />
-			<Option target="wxSmith" />
-		</Unit>
-		<Unit filename="wxwidgets\defwidgets\wxsscrollbar.h">
+		<Unit filename="wxwidgets\defitems\wxsframe.h">
 			<Option compilerVar="CPP" />
 			<Option compile="0" />
 			<Option link="0" />
 			<Option target="wxSmith" />
 		</Unit>
-		<Unit filename="wxwidgets\defwidgets\wxsscrolledwindow.cpp">
+		<Unit filename="wxwidgets\defitems\wxsgauge.cpp">
 			<Option compilerVar="CPP" />
 			<Option target="wxSmith" />
 		</Unit>
-		<Unit filename="wxwidgets\defwidgets\wxsscrolledwindow.h">
-			<Option compilerVar="CPP" />
-			<Option compile="0" />
-			<Option link="0" />
-			<Option target="wxSmith" />
-		</Unit>
-		<Unit filename="wxwidgets\defwidgets\wxsslider.cpp">
-			<Option compilerVar="CPP" />
-			<Option target="wxSmith" />
-		</Unit>
-		<Unit filename="wxwidgets\defwidgets\wxsslider.h">
+		<Unit filename="wxwidgets\defitems\wxsgauge.h">
 			<Option compilerVar="CPP" />
 			<Option compile="0" />
 			<Option link="0" />
 			<Option target="wxSmith" />
 		</Unit>
-		<Unit filename="wxwidgets\defwidgets\wxsspacer.cpp">
+		<Unit filename="wxwidgets\defitems\wxsgenericdirctrl.cpp">
 			<Option compilerVar="CPP" />
 			<Option target="wxSmith" />
 		</Unit>
-		<Unit filename="wxwidgets\defwidgets\wxsspacer.h">
-			<Option compilerVar="CPP" />
-			<Option compile="0" />
-			<Option link="0" />
-			<Option target="wxSmith" />
-		</Unit>
-		<Unit filename="wxwidgets\defwidgets\wxsspinbutton.cpp">
-			<Option compilerVar="CPP" />
-			<Option target="wxSmith" />
-		</Unit>
-		<Unit filename="wxwidgets\defwidgets\wxsspinbutton.h">
+		<Unit filename="wxwidgets\defitems\wxsgenericdirctrl.h">
 			<Option compilerVar="CPP" />
 			<Option compile="0" />
 			<Option link="0" />
 			<Option target="wxSmith" />
 		</Unit>
-		<Unit filename="wxwidgets\defwidgets\wxsspinctrl.cpp">
+		<Unit filename="wxwidgets\defitems\wxsgridsizer.cpp">
 			<Option compilerVar="CPP" />
 			<Option target="wxSmith" />
 		</Unit>
-		<Unit filename="wxwidgets\defwidgets\wxsspinctrl.h">
-			<Option compilerVar="CPP" />
-			<Option compile="0" />
-			<Option link="0" />
-			<Option target="wxSmith" />
-		</Unit>
-		<Unit filename="wxwidgets\defwidgets\wxssplitterwindow.cpp">
-			<Option compilerVar="CPP" />
-			<Option target="wxSmith" />
-		</Unit>
-		<Unit filename="wxwidgets\defwidgets\wxssplitterwindow.h">
+		<Unit filename="wxwidgets\defitems\wxsgridsizer.h">
 			<Option compilerVar="CPP" />
 			<Option compile="0" />
 			<Option link="0" />
 			<Option target="wxSmith" />
 		</Unit>
-		<Unit filename="wxwidgets\defwidgets\wxsstaticbitmap.cpp">
+		<Unit filename="wxwidgets\defitems\wxshtmlwindow.cpp">
 			<Option compilerVar="CPP" />
 			<Option target="wxSmith" />
 		</Unit>
-		<Unit filename="wxwidgets\defwidgets\wxsstaticbitmap.h">
-			<Option compilerVar="CPP" />
-			<Option compile="0" />
-			<Option link="0" />
-			<Option target="wxSmith" />
-		</Unit>
-		<Unit filename="wxwidgets\defwidgets\wxsstaticbox.cpp">
-			<Option compilerVar="CPP" />
-			<Option target="wxSmith" />
-		</Unit>
-		<Unit filename="wxwidgets\defwidgets\wxsstaticbox.h">
+		<Unit filename="wxwidgets\defitems\wxshtmlwindow.h">
 			<Option compilerVar="CPP" />
 			<Option compile="0" />
 			<Option link="0" />
 			<Option target="wxSmith" />
 		</Unit>
-		<Unit filename="wxwidgets\defwidgets\wxsstaticboxsizer.cpp">
+		<Unit filename="wxwidgets\defitems\wxslistbox.cpp">
 			<Option compilerVar="CPP" />
 			<Option target="wxSmith" />
 		</Unit>
-		<Unit filename="wxwidgets\defwidgets\wxsstaticboxsizer.h">
-			<Option compilerVar="CPP" />
-			<Option compile="0" />
-			<Option link="0" />
-			<Option target="wxSmith" />
-		</Unit>
-		<Unit filename="wxwidgets\defwidgets\wxsstaticline.cpp">
-			<Option compilerVar="CPP" />
-			<Option target="wxSmith" />
-		</Unit>
-		<Unit filename="wxwidgets\defwidgets\wxsstaticline.h">
+		<Unit filename="wxwidgets\defitems\wxslistbox.h">
 			<Option compilerVar="CPP" />
 			<Option compile="0" />
 			<Option link="0" />
 			<Option target="wxSmith" />
 		</Unit>
-		<Unit filename="wxwidgets\defwidgets\wxsstatictext.cpp">
+		<Unit filename="wxwidgets\defitems\wxslistctrl.cpp">
 			<Option compilerVar="CPP" />
 			<Option target="wxSmith" />
 		</Unit>
-		<Unit filename="wxwidgets\defwidgets\wxsstatictext.h">
-			<Option compilerVar="CPP" />
-			<Option compile="0" />
-			<Option link="0" />
-			<Option target="wxSmith" />
-		</Unit>
-		<Unit filename="wxwidgets\defwidgets\wxsstddialogbuttonsizer.cpp">
-			<Option compilerVar="CPP" />
-			<Option target="wxSmith" />
-		</Unit>
-		<Unit filename="wxwidgets\defwidgets\wxsstddialogbuttonsizer.h">
+		<Unit filename="wxwidgets\defitems\wxslistctrl.h">
 			<Option compilerVar="CPP" />
 			<Option compile="0" />
 			<Option link="0" />
 			<Option target="wxSmith" />
 		</Unit>
-		<Unit filename="wxwidgets\defwidgets\wxstextctrl.cpp">
+		<Unit filename="wxwidgets\defitems\wxsnotebook.cpp">
 			<Option compilerVar="CPP" />
 			<Option target="wxSmith" />
 		</Unit>
-		<Unit filename="wxwidgets\defwidgets\wxstextctrl.h">
-			<Option compilerVar="CPP" />
-			<Option compile="0" />
-			<Option link="0" />
-			<Option target="wxSmith" />
-		</Unit>
-		<Unit filename="wxwidgets\defwidgets\wxstogglebutton.cpp">
-			<Option compilerVar="CPP" />
-			<Option target="wxSmith" />
-		</Unit>
-		<Unit filename="wxwidgets\defwidgets\wxstogglebutton.h">
+		<Unit filename="wxwidgets\defitems\wxsnotebook.h">
 			<Option compilerVar="CPP" />
 			<Option compile="0" />
 			<Option link="0" />
 			<Option target="wxSmith" />
 		</Unit>
-		<Unit filename="wxwidgets\defwidgets\wxstreectrl.cpp">
+		<Unit filename="wxwidgets\defitems\wxschoicebook.cpp">
 			<Option compilerVar="CPP" />
 			<Option target="wxSmith" />
 		</Unit>
-		<Unit filename="wxwidgets\defwidgets\wxstreectrl.h">
+		<Unit filename="wxwidgets\defitems\wxschoicebook.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\defitems\wxslistbook.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\defitems\wxslistbook.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\defitems\wxspanel.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\defitems\wxspanel.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\defitems\wxsradiobox.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\defitems\wxsradiobox.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\defitems\wxsradiobutton.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\defitems\wxsradiobutton.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\defitems\wxsscrollbar.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\defitems\wxsscrollbar.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\defitems\wxsscrolledwindow.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\defitems\wxsscrolledwindow.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\defitems\wxsslider.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\defitems\wxsslider.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\defitems\wxsspacer.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\defitems\wxsspacer.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\defitems\wxsspinbutton.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\defitems\wxsspinbutton.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\defitems\wxsspinctrl.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\defitems\wxsspinctrl.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\defitems\wxssplitterwindow.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\defitems\wxssplitterwindow.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\defitems\wxsstaticbitmap.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\defitems\wxsstaticbitmap.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\defitems\wxsstaticbox.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\defitems\wxsstaticbox.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\defitems\wxsstaticboxsizer.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\defitems\wxsstaticboxsizer.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\defitems\wxsstaticline.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\defitems\wxsstaticline.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\defitems\wxsstatictext.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\defitems\wxsstatictext.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\defitems\wxsstddialogbuttonsizer.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\defitems\wxsstddialogbuttonsizer.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\defitems\wxstextctrl.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\defitems\wxstextctrl.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\defitems\wxstogglebutton.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\defitems\wxstogglebutton.h">
+			<Option compilerVar="CPP" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\defitems\wxstreectrl.cpp">
+			<Option compilerVar="CPP" />
+			<Option target="wxSmith" />
+		</Unit>
+		<Unit filename="wxwidgets\defitems\wxstreectrl.h">
 			<Option compilerVar="CPP" />
 			<Option compile="0" />
 			<Option link="0" />
@@ -1256,9 +1256,9 @@
 				<dialog wxs_file="wxsFontFaceEditorDlg.wxs" class="wxsFontFaceEditorDlg" src_file="wxwidgets/properties/wxsfontfaceeditordlg.cpp" header_file="wxwidgets\properties\wxsfontfaceeditordlg.h" xrc_file="" edit_mode="Source" />
 				<panel wxs_file="wxWidgetsGUIConfigPanel.wxs" class="wxWidgetsGUIConfigPanel" src_file="wxwidgets/wxwidgetsguiconfigpanel.cpp" header_file="wxwidgets/wxwidgetsguiconfigpanel.h" xrc_file="" edit_mode="Source" />
 				<panel wxs_file="wxsSizerParentQP.wxs" class="wxsSizerParentQP" src_file="wxwidgets/wxssizerparentqp.cpp" header_file="wxwidgets/wxssizerparentqp.h" xrc_file="" edit_mode="Source" />
-				<panel wxs_file="wxsNotebookParentQP.wxs" class="wxsNotebookParentQP" src_file="wxwidgets/defwidgets/wxsnotebook.cpp" header_file="wxwidgets/defwidgets/wxsnotebook.cpp" xrc_file="" edit_mode="Source" />
-				<panel wxs_file="wxsChoicebookParentQP.wxs" class="wxsChoicebookParentQP" src_file="wxwidgets/defwidgets/wxschoicebook.cpp" header_file="wxwidgets/defwidgets/wxschoicebook.cpp" xrc_file="" edit_mode="Source" />
-				<panel wxs_file="wxsListbookParentQP.wxs" class="wxsListbookParentQP" src_file="wxwidgets/defwidgets/wxslistbook.cpp" header_file="wxwidgets/defwidgets/wxslistbook.cpp" xrc_file="" edit_mode="Source" />
+				<panel wxs_file="wxsNotebookParentQP.wxs" class="wxsNotebookParentQP" src_file="wxwidgets/defitems/wxsnotebook.cpp" header_file="wxwidgets/defitems/wxsnotebook.cpp" xrc_file="" edit_mode="Source" />
+				<panel wxs_file="wxsChoicebookParentQP.wxs" class="wxsChoicebookParentQP" src_file="wxwidgets/defitems/wxschoicebook.cpp" header_file="wxwidgets/defitems/wxschoicebook.cpp" xrc_file="" edit_mode="Source" />
+				<panel wxs_file="wxsListbookParentQP.wxs" class="wxsListbookParentQP" src_file="wxwidgets/defitems/wxslistbook.cpp" header_file="wxwidgets/defitems/wxslistbook.cpp" xrc_file="" edit_mode="Source" />
 				<configuration app_src_file="" main_resource="" init_all_handlers="necessary" />
 			</wxsmith>
 		</Extensions>
