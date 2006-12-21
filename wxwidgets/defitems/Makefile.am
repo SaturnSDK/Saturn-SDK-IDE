@@ -5,13 +5,13 @@ INCLUDES = $(WX_CXXFLAGS) \
 		-I$(top_srcdir)/src/sdk/wxFlatNotebook \
 		-I$(top_srcdir)/src/sdk/propgrid/include
 
-noinst_LTLIBRARIES = libwxsmith_wxwidgets_defwidgets.la
+noinst_LTLIBRARIES = libwxsmith_wxwidgets_defitems.la
 
-libwxsmith_wxwidgets_defwidgets_la_LDFLAGS = -module -version-info 0:1:0 -shared -no-undefined -avoid-version
+libwxsmith_wxwidgets_defitems_la_LDFLAGS = -module -version-info 0:1:0 -shared -no-undefined -avoid-version
 
-libwxsmith_wxwidgets_defwidgets_la_LIBADD = ../../../../../sdk/libcodeblocks.la
+libwxsmith_wxwidgets_defitems_la_LIBADD = ../../../../../sdk/libcodeblocks.la
 
-libwxsmith_wxwidgets_defwidgets_la_SOURCES = \
+libwxsmith_wxwidgets_defitems_la_SOURCES = \
 ./wxsdatepickerctrl.cpp \
 ./wxsstatictext.cpp \
 ./wxslistctrl.cpp \
