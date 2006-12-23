@@ -76,7 +76,7 @@ void wxsCheckBox::OnBuildCreatingCode(wxString& Code,const wxString& WindowParen
                 << wxsCodeMarks::WxString(wxsCPP,GetIdName(),false) << _T(");\n");
 
             if ( IsChecked ) Code << GetVarName() << _T("->SetValue(")
-                             << wxString::Format(_T("%d"),IsChecked) << _T(";\n");
+                             << (IsChecked?_T("true"):_T("false")) << _T(");\n");
             SetupWindowCode(Code,Language);
             return;
         }
