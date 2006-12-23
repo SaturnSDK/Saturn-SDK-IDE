@@ -199,7 +199,7 @@ wxString wxsFontData::BuildFontCode(const wxString& FontName,wxsCodingLang Langu
                 }
                 if ( HasStyle )
                 {
-                    Code << FontName << _T(".SetSyle(") << StyleStr << _T(");\n");
+                    Code << FontName << _T(".SetStyle(") << StyleStr << _T(");\n");
                 }
                 if ( HasWeight )
                 {
