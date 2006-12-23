@@ -227,7 +227,7 @@ bool wxsSizer::OnXmlReadChild(TiXmlElement* Elem,bool IsXRC,bool IsExtra)
 {
     if ( cbC2U(Elem->Attribute("class")) == _T("spacer") )
     {
-        wxsItem* Item = wxsItemFactory::Build(_T("spacer"),GetResourceData());
+        wxsItem* Item = wxsItemFactory::Build(_T("Spacer"),GetResourceData());
         if ( !AddChild(Item) )
         {
             delete Item;
@@ -245,9 +245,10 @@ bool wxsSizer::OnXmlWriteChild(int Index,TiXmlElement* Elem,bool IsXRC,bool IsEx
     wxsItem* Child = GetChild(Index);
     if ( Child->GetType() == wxsTSpacer )
     {
-        Elem->SetAttribute("class","spacer");
         StoreExtraData(Index,Elem);
-        return Child->XmlWrite(Elem,IsXRC,IsExtra);
+        bool Ret = Child->XmlWrite(Elem,IsXRC,IsExtra);
+        Elem->SetAttribute("class","spacer");
+        return Ret;
     }
 
     return wxsParent::OnXmlWriteChild(Index,Elem,IsXRC,IsExtra);
