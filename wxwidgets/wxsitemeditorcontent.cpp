@@ -766,6 +766,7 @@ void wxsItemEditorContent::BeforePreviewChanged()
 void wxsItemEditorContent::AfterPreviewChanged()
 {
     // Giving some time for items to recalculate positions
+    // TODO: This function need to lock itself since there can be recursive yield
     Manager::Yield();
     RecalculateMaps();
     RebuildDragPoints();

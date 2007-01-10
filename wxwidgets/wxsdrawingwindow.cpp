@@ -142,15 +142,18 @@ void wxsDrawingWindow::AfterContentChanged()
 void wxsDrawingWindow::PanelPaint(wxPaintEvent& event)
 {
     wxPaintDC PaintDC(Panel);
-    if ( IsBlockFetch ||  NoNeedToRefetch() )
+    if ( !DuringFetch )
     {
-        wxBitmap BmpCopy = Bitmap->GetSubBitmap(wxRect(0,0,Bitmap->GetWidth(),Bitmap->GetHeight()));
-        wxBufferedDC DC(&PaintDC,BmpCopy);
-        PaintExtra(&DC);
-    }
-    else
-    {
-        StartFetchingSequence();
+        if ( IsBlockFetch ||  NoNeedToRefetch() )
+        {
+            wxBitmap BmpCopy = Bitmap->GetSubBitmap(wxRect(0,0,Bitmap->GetWidth(),Bitmap->GetHeight()));
+            wxBufferedDC DC(&PaintDC,BmpCopy);
+            PaintExtra(&DC);
+        }
+        else
+        {
+            StartFetchingSequence();
+        }
     }
 }
 

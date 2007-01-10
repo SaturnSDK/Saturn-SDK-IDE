@@ -150,6 +150,7 @@ class wxsItemEditor : public wxsEditor
         wxBitmapButton* m_PreviewBtn;
         wxBitmapButton* m_QuickPanelBtn;
         wxWindow* m_TopPreview;             ///< \brief Top window of preview
+        wxPanel* m_PreviewBackground;       ///< \brief Background panel used as background for peview
         int m_InsType;                      ///< \brief Current insertion type
         int m_InsTypeMask;                  ///< \brief Current insertion type mask
         bool m_QuickPropsOpen;              ///< \brief Set to true if quick properties panel is opened

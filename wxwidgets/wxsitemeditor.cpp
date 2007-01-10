@@ -60,6 +60,7 @@ wxsItemEditor::wxsItemEditor(wxWindow* parent,wxsItemRes* Resource):
     m_PreviewBtn(NULL),
     m_QuickPanelBtn(NULL),
     m_TopPreview(NULL),
+    m_PreviewBackground(NULL),
     m_InsType(itBefore),
     m_InsTypeMask(itBefore),
     m_QuickPropsOpen(false)
@@ -177,38 +178,39 @@ void wxsItemEditor::RebuildPreview()
     Freeze();
 
     // If there's previous preview, deleting it
-    if ( m_TopPreview )
+    if ( m_PreviewBackground )
     {
         m_Content->SetSizer(NULL);
-        delete m_TopPreview;
+        delete m_PreviewBackground;
         m_TopPreview = NULL;
+        m_PreviewBackground = NULL;
     }
 
     // Generating preview
-    wxPanel* Background = new wxPanel(m_Content,-1,wxDefaultPosition,wxDefaultSize,wxRAISED_BORDER);
-    wxObject* TopPreviewObject = m_Data->GetRootItem()->BuildPreview(Background,0);
+    m_PreviewBackground = new wxPanel(m_Content,-1,wxDefaultPosition,wxDefaultSize,wxRAISED_BORDER);
+    wxObject* TopPreviewObject = m_Data->GetRootItem()->BuildPreview(m_PreviewBackground,0);
     m_TopPreview = wxDynamicCast(TopPreviewObject,wxWindow);
     if ( !m_TopPreview )
     {
         DBGLOG(_T("One of root items returned class not derived from wxWindow"));
         delete TopPreviewObject;
-        delete Background;
+        delete m_PreviewBackground;
     }
     else
     {
         wxSizer* BackgroundSizer = new wxBoxSizer(wxHORIZONTAL);
         BackgroundSizer->Add(m_TopPreview,0,0,0);
-        Background->SetSizer(BackgroundSizer);
-        BackgroundSizer->Fit(Background);
+        m_PreviewBackground->SetSizer(BackgroundSizer);
+        BackgroundSizer->Fit(m_PreviewBackground);
         wxSizer* NewSizer = new wxGridSizer(1);
-        NewSizer->Add(Background,0,wxALL,10);
+        NewSizer->Add(m_PreviewBackground,0,wxALL,10);
         m_Content->SetVirtualSizeHints(1,1);
         m_Content->SetSizer(NewSizer);
         NewSizer->SetVirtualSizeHints(m_Content);
         NewSizer->FitInside(m_Content);
         m_HorizSizer->Layout();
         m_VertSizer->Layout();
-        Background->Layout();
+        m_PreviewBackground->Layout();
         Layout();
     }
 
