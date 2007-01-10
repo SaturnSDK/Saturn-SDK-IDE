@@ -76,7 +76,7 @@ void wxsItemEditorContent::PaintExtra(wxDC* DC)
 void wxsItemEditorContent::RefreshSelection()
 {
     RebuildDragPoints();
-    FullRepaint();
+    FastRepaint();
 }
 
 void wxsItemEditorContent::ClearDragPoints()
@@ -548,7 +548,7 @@ void wxsItemEditorContent::OnMouseDraggingPoint(wxMouseEvent& event)
     ItemPoints[LeftBtm]->PosY = RY;
     ItemPoints[Btm]->PosX = (LX+RX)/2;
     ItemPoints[Btm]->PosY = RY;
-    FullRepaint();
+    FastRepaint();
 }
 
 void wxsItemEditorContent::OnMouseDraggingItemInit(wxMouseEvent& event)
@@ -699,7 +699,7 @@ void wxsItemEditorContent::OnMouseDraggingItem(wxMouseEvent& event)
         m_AssistParent = NULL;
         m_AssistAddAfter = false;
     }
-    FullRepaint();
+    FastRepaint();
 }
 
 bool wxsItemEditorContent::FindDraggingItemTarget(int PosX,int PosY,wxsItem* Dragging,wxsParent*& NewParent,wxsItem*& AtCursor,bool& AddAfter)
@@ -758,13 +758,18 @@ bool wxsItemEditorContent::FindDraggingItemTarget(int PosX,int PosY,wxsItem* Dra
     return true;
 }
 
-void wxsItemEditorContent::NewPreview()
+void wxsItemEditorContent::BeforePreviewChanged()
+{
+    BeforeContentChanged();
+}
+
+void wxsItemEditorContent::AfterPreviewChanged()
 {
     // Giving some time for items to recalculate positions
     Manager::Yield();
     RecalculateMaps();
     RebuildDragPoints();
-    ContentChanged();
+    AfterContentChanged();
 }
 
 wxWindow* wxsItemEditorContent::GetPreviewWindow(wxsItem* Item)

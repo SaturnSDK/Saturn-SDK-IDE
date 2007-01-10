@@ -172,6 +172,8 @@ void wxsItemEditor::RebuildPreview()
     // Checking if we've already initialized visual stuff
     if ( !m_Content ) return;
 
+    m_Content->BeforePreviewChanged();
+
     Freeze();
 
     // If there's previous preview, deleting it
@@ -206,14 +208,15 @@ void wxsItemEditor::RebuildPreview()
         NewSizer->FitInside(m_Content);
         m_HorizSizer->Layout();
         m_VertSizer->Layout();
+        Background->Layout();
+        Layout();
     }
 
-    Background->Layout();
-    Layout();
     Thaw();
+    Update();
 
     // Updating all informations in Content
-    m_Content->NewPreview();
+    m_Content->AfterPreviewChanged();
 }
 
 void wxsItemEditor::UpdateSelection()

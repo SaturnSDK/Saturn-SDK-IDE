@@ -43,7 +43,6 @@ void wxsStyleSet::AddStyle(const wxChar* Name,long Value,long Flags)
 
     if ( Flags & wxsSFExt )
     {
-        DBGLOG(_T("Adding style: \"%s\" (Value:%d, Flags:%d)"),Name,Value,Flags);
         // Extra style
         ExStyleNames.Add(Name);
         ExStyleBits.Add(1L<<ExStyleBits.Count());
@@ -52,7 +51,6 @@ void wxsStyleSet::AddStyle(const wxChar* Name,long Value,long Flags)
     }
     else
     {
-        DBGLOG(_T("Adding extra style: \"%s\" (Value:%d, Flags:%d)"),Name,Value,Flags);
         // Normal style
         StyleNames.Add(Name);
         StyleBits.Add(1L<<StyleBits.Count());

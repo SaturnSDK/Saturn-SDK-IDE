@@ -20,8 +20,11 @@ class wxsItemEditorContent: public wxsDrawingWindow
         /** \brief Dctor */
         virtual ~wxsItemEditorContent();
 
-        /** \brief Function which must be called when preview change */
-        void NewPreview();
+        /** \brief Function shiwch must be called before changing preview */
+        void BeforePreviewChanged();
+
+        /** \brief Function which must be called after changing preview */
+        void AfterPreviewChanged();
 
         /** \brief Function refreshing current selection (calculating new positions) */
         void RefreshSelection();

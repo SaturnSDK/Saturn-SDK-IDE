@@ -29,24 +29,39 @@ class wxsDrawingWindow: public wxScrolledWindow
          */
         const wxBitmap& GetBitmap() { return *Bitmap; }
 
-        /** \brief Function notifying about change of window content
+        /** \brief Function notifying that window's content is going to change
          *
-         * This function invalidates bitmap previously fetched from
-         * window area. So it will be fetched again.
+         * This function should be called just before changing content of
+         * this window (to be more exact: it's child items). It makes
+         * wxsDrawingWindow to prepare for change.
+         *
+         * \warning Remember to call AfterContentChanged after change
          */
-        void ContentChanged();
+        void BeforeContentChanged();
+
+        /** \brief Function notifying that windo's content has been changed
+         *
+         * This function should be called right after change of window content
+         * (to be more exact: after changing window's children). It makes
+         * wxsDrawingWindow to fetch children preview and repaint itself
+         *
+         * \warning Call to this function must be preceded with call to
+         *          BeforeContentChange function.
+         *
+         */
+        void AfterContentChanged();
 
         /** \brief Function repainting window
          *
          * Repainting window content may be done in two ways.
          * First is by raising paint event (so by caling wxWindow::Refresh),
          * in current implementation this require refetching bitmap from
-         * wndow area (just like calling ContentChanged). Second way is by
+         * wndow area (just like calling AfterContentChanged). Second way is by
          * calling this function. It does not raise any events if not needed
          * and draws using wxClientDC object. It may be used when extra
          * graphics has been changed only.
          */
-        void FullRepaint();
+        void FastRepaint();
 
         /** \brief Function (un)blocking background fetching */
         inline void BlockFetch(bool Block=true) { IsBlockFetch = Block; }
@@ -99,6 +114,7 @@ class wxsDrawingWindow: public wxScrolledWindow
         wxBitmap* Bitmap;           /// \brief Bitmap with fetched window content (may be valid partially)
         bool IsBlockFetch;          /// \brief Flag used to block fetching background (may be set by user)
         bool DuringFetch;           /// \brief Set to true if we're during fetching sequence
+        int DuringChangeCnt;        /// \brief When >0, window's content is changed somewhere
         int LastSizeX, LastSizeY;   /// \brief client size during last fetch
         int LastVirtX, LastVirtY;   /// \brief virtusl area shift relative to client area during last fetch
         bool WasContentChanged;     /// \brief If there was a call to WasContentChanged from last fetch

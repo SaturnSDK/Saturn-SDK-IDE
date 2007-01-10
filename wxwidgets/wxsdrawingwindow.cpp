@@ -46,7 +46,7 @@ namespace
 /** \brief Drawing panel
  *
  * This panel is put over all other items in wxsDrawingWindow class. It's
- * responsible for fetching paing, mouse and keyboard events
+ * responsible for fetching background and handling mouse and keyboard events
  */
 class wxsDrawingWindow::DrawingPanel: public wxPanel
 {
@@ -93,6 +93,7 @@ wxsDrawingWindow::wxsDrawingWindow(wxWindow* Parent,wxWindowID id):
     Bitmap(NULL),
     IsBlockFetch(false),
     DuringFetch(false),
+    DuringChangeCnt(0),
     LastSizeX(0),
     LastSizeY(0),
     LastVirtX(0),
@@ -102,7 +103,7 @@ wxsDrawingWindow::wxsDrawingWindow(wxWindow* Parent,wxWindowID id):
     // Strange - it seems that by declaring this event in event table, it's not processed
     Connect(-1,-1,wxEVT_FETCH_SEQUENCE,(wxObjectEventFunction)&wxsDrawingWindow::OnFetchSequence);
     Panel = new DrawingPanel(this);
-    ContentChanged();
+    Panel->Hide();
     SetScrollbars(5,5,1,1,0,0,true);
 }
 
@@ -111,26 +112,37 @@ wxsDrawingWindow::~wxsDrawingWindow()
     if ( Bitmap ) delete Bitmap;
 }
 
-void wxsDrawingWindow::ContentChanged()
+void wxsDrawingWindow::BeforeContentChanged()
 {
-    WasContentChanged = true;
-    wxSize Size = GetVirtualSize();
+    if ( !DuringChangeCnt++ )
+    {
+        Panel->Hide();
+    }
+}
 
-    // Generating new bitmap
-    if ( Bitmap ) delete Bitmap;
-    Bitmap = new wxBitmap(Size.GetWidth(),Size.GetHeight());
+void wxsDrawingWindow::AfterContentChanged()
+{
+    if ( !--DuringChangeCnt )
+    {
+        WasContentChanged = true;
+        wxSize Size = GetVirtualSize();
 
-    // Resizing panel to cover whole window
-    int X, Y;
-    CalcScrolledPosition(0,0,&X,&Y);
-    Panel->SetSize(X,Y,Size.GetWidth(),Size.GetHeight());
-    Panel->Refresh();
+        // Generating new bitmap
+        if ( Bitmap ) delete Bitmap;
+        Bitmap = new wxBitmap(Size.GetWidth(),Size.GetHeight());
+
+        // Resizing panel to cover whole window
+        int X, Y;
+        CalcScrolledPosition(0,0,&X,&Y);
+        Panel->SetSize(X,Y,Size.GetWidth(),Size.GetHeight());
+        StartFetchingSequence();
+    }
 }
 
 void wxsDrawingWindow::PanelPaint(wxPaintEvent& event)
 {
     wxPaintDC PaintDC(Panel);
-    if ( IsBlockFetch || NoNeedToRefetch() )
+    if ( IsBlockFetch ||  NoNeedToRefetch() )
     {
         wxBitmap BmpCopy = Bitmap->GetSubBitmap(wxRect(0,0,Bitmap->GetWidth(),Bitmap->GetHeight()));
         wxBufferedDC DC(&PaintDC,BmpCopy);
@@ -160,11 +172,9 @@ void wxsDrawingWindow::StartFetchingSequence()
 {
     if ( DuringFetch )
     {
-        DBGLOG(_T("* wxsDrawingWindow::StartFetchingSequence"));
         return;
     }
     DuringFetch = true;
-    DBGLOG(_T("wxsDrawingWindow::StartFetchingSequence"));
 
     // Fetching sequence will end after quitting
     // this event handler. This will be done
@@ -177,8 +187,14 @@ void wxsDrawingWindow::StartFetchingSequence()
 void wxsDrawingWindow::OnFetchSequence(wxCommandEvent& event)
 {
     // Hiding panel to show content under it
-    Panel->Hide();
-    ShowChildren();
+    // If panel is hidden, there's no need to hide it and show children
+    // because fetching sequence has been raised from AfterContentChanged()
+    // and is actually correct
+    if ( Panel->IsShown() )
+    {
+        Panel->Hide();
+        ShowChildren();
+    }
     Update();
 
     // Processing all pending events, it MUST be done
@@ -191,7 +207,7 @@ void wxsDrawingWindow::OnFetchSequence(wxCommandEvent& event)
     Panel->Update();
     Manager::Yield();
 
-    FullRepaint();
+    FastRepaint();
     Manager::Yield();
     DuringFetch = false;
 }
@@ -209,7 +225,7 @@ void wxsDrawingWindow::FetchScreen()
     DestDC.Blit(DX,DY,GetSize().GetWidth(),GetSize().GetHeight(),&DC,X,Y);
 }
 
-void wxsDrawingWindow::FullRepaint()
+void wxsDrawingWindow::FastRepaint()
 {
     wxClientDC ClientDC(Panel);
     wxBitmap BmpCopy = Bitmap->GetSubBitmap(wxRect(0,0,Bitmap->GetWidth(),Bitmap->GetHeight()));
