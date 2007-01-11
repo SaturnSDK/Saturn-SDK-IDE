@@ -26,6 +26,9 @@ struct wxsBitmapIconData
      * Empty code is returned when there's no valid bitmap.
      */
     wxString BuildCode(bool NoResize,const wxString& SizeCode,wxsCodingLang Language,const wxString& DefaultClient = wxART_OTHER);
+
+    /** \brief Checking if this is empty bitmap/icon */
+    bool IsEmpty();
 };
 
 typedef wxsBitmapIconData wxsBitmapData;

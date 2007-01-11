@@ -17,7 +17,6 @@ class wxsStaticBitmap: public wxsWidget
         virtual void OnEnumWidgetProperties(long Flags);
         virtual void OnEnumDeclFiles(wxArrayString& Decl,wxArrayString& Def,wxsCodingLang Language);
 
-        wxString Label;
         wxsBitmapData Bitmap;
 };
 

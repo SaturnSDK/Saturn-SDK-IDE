@@ -59,14 +59,7 @@ void wxsBitmapButton::OnBuildCreatingCode(wxString& Code,const wxString& WindowP
     {
         case wxsCPP:
         {
-            wxString SizeName = GetVarName() + _T("_Size");
-
-            // TODO: What's going on with these 2 pixels ?????
-            Code << _T("wxSize ") << SizeName << _T(" = ") << _T("wxSize(")
-                 << wxString::Format(_T("%d"),(GetBaseProps()->m_Size.X > 2)? (GetBaseProps()->m_Size.X - 2):GetBaseProps()->m_Size.X) << _T(",")
-                 << wxString::Format(_T("%d"),(GetBaseProps()->m_Size.Y > 2)? (GetBaseProps()->m_Size.Y - 2):GetBaseProps()->m_Size.Y) << _T(");\n");
-
-            wxString BmpCode = BitmapLabel.BuildCode(GetBaseProps()->m_Size.IsDefault,SizeName,wxsCPP,wxART_BUTTON);
+            wxString BmpCode = BitmapLabel.IsEmpty() ? _T("wxNullBitmap") : BitmapLabel.BuildCode(true,_T(""),wxsCPP,wxART_BUTTON);
 
             if ( GetParent() )
             {
@@ -78,30 +71,33 @@ void wxsBitmapButton::OnBuildCreatingCode(wxString& Code,const wxString& WindowP
             }
             Code<< WindowParent << _T(",")
                 << GetIdName() << _T(",")
-                << (BmpCode.empty() ? _T("wxNullBitmap") : BmpCode) << _T(",")
+                << BmpCode << _T(",")
                 << PosCode(WindowParent,wxsCPP) << _T(",")
-                << _T("wxDefaultSize,")
+                << SizeCode(WindowParent,wxsCPP) << _T(",")
                 << StyleCode(wxsCPP) << _T(",")
                 << _T("wxDefaultValidator") << _T(",")
                 << wxsCodeMarks::WxString(wxsCPP,GetIdName(),false) << _T(");\n");
 
-            if ( !(BitmapDisabled.Id.empty()||BitmapDisabled.Client.empty())|| !(BitmapDisabled.FileName.empty()) )
+            if ( !BitmapDisabled.IsEmpty() )
             {
-                BmpCode = BitmapDisabled.BuildCode(GetBaseProps()->m_Size.IsDefault,SizeName,wxsCPP,wxART_OTHER);
+                BmpCode = BitmapDisabled.BuildCode(true,_T(""),wxsCPP,wxART_OTHER);
                 Code << GetVarName() << _T("->SetBitmapDisabled(") << BmpCode << _T(");\n");
             }
-            if ( !(BitmapSelected.Id.empty()||BitmapSelected.Client.empty())|| !(BitmapSelected.FileName.empty()) )
+            if ( !BitmapSelected.IsEmpty() )
             {
-                BmpCode = BitmapSelected.BuildCode(GetBaseProps()->m_Size.IsDefault,SizeName,wxsCPP,wxART_OTHER);
+                BmpCode = BitmapSelected.BuildCode(true,_T(""),wxsCPP,wxART_OTHER);
                 Code << GetVarName() << _T("->SetBitmapSelected(") << BmpCode << _T(");\n");
             }
-            if ( !(BitmapFocus.Id.empty()||BitmapFocus.Client.empty())|| !(BitmapFocus.FileName.empty()) )
+            if ( !BitmapSelected.IsEmpty() )
             {
-                BmpCode = BitmapFocus.BuildCode(GetBaseProps()->m_Size.IsDefault,SizeName,wxsCPP,wxART_OTHER);
+                BmpCode = BitmapFocus.BuildCode(true,_T(""),wxsCPP,wxART_OTHER);
                 Code << GetVarName() << _T("->SetBitmapFocus(") << BmpCode << _T(");\n");
             }
 
-            if ( IsDefault ) Code << GetVarName() << _T("->SetDefault();\n");
+            if ( IsDefault )
+            {
+                Code << GetVarName() << _T("->SetDefault();\n");
+            }
             SetupWindowCode(Code,Language);
             return;
         }
@@ -116,22 +112,27 @@ void wxsBitmapButton::OnBuildCreatingCode(wxString& Code,const wxString& WindowP
 
 wxObject* wxsBitmapButton::OnBuildPreview(wxWindow* Parent,long Flags)
 {
-    // TODO: What's going on with these pixels ?????
-    // Reduce the size of the bitmap by 2 pixel for width and height of the bitmap button
-    wxSize BitmapSize = wxSize((GetBaseProps()->m_Size.X > 2)? (GetBaseProps()->m_Size.X - 2):GetBaseProps()->m_Size.X,(GetBaseProps()->m_Size.Y > 2)? (GetBaseProps()->m_Size.Y - 2):GetBaseProps()->m_Size.Y);
+    wxBitmapButton* Preview = new wxBitmapButton(Parent,GetId(),BitmapLabel.GetPreview(wxDefaultSize),Pos(Parent),Size(Parent),Style());
 
-    wxBitmapButton* Preview = new wxBitmapButton(Parent,GetId(),BitmapLabel.GetPreview(BitmapSize),Pos(Parent),BitmapSize,Style());
+    if ( !BitmapDisabled.IsEmpty() )
+    {
+        Preview->SetBitmapDisabled(BitmapDisabled.GetPreview(wxDefaultSize));
+    }
 
-    if ( !(BitmapDisabled.Id.empty()||BitmapDisabled.Client.empty())|| !(BitmapDisabled.FileName.empty()) )
-        Preview->SetBitmapDisabled(BitmapDisabled.GetPreview(BitmapSize));
+    if ( !BitmapSelected.IsEmpty() )
+    {
+        Preview->SetBitmapSelected(BitmapSelected.GetPreview(wxDefaultSize));
+    }
 
-    if ( !(BitmapSelected.Id.empty()||BitmapSelected.Client.empty())|| !(BitmapSelected.FileName.empty()) )
-        Preview->SetBitmapSelected(BitmapSelected.GetPreview(BitmapSize));
+    if ( !BitmapFocus.IsEmpty() )
+    {
+        Preview->SetBitmapFocus(BitmapFocus.GetPreview(wxDefaultSize));
+    }
 
-    if ( !(BitmapFocus.Id.empty()||BitmapFocus.Client.empty())|| !(BitmapFocus.FileName.empty()) )
-        Preview->SetBitmapFocus(BitmapFocus.GetPreview(BitmapSize));
-
-    if ( IsDefault ) Preview->SetDefault();
+    if ( IsDefault )
+    {
+        Preview->SetDefault();
+    }
     return SetupWindow(Preview,Flags);
 }
 

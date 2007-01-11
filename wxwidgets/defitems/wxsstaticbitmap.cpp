@@ -51,9 +51,11 @@ void wxsStaticBitmap::OnBuildCreatingCode(wxString& Code,const wxString& WindowP
     {
         case wxsCPP:
         {
-            wxString SizeName = GetVarName() + _T("_Size");
-            Code << _T("wxSize ") << SizeName << _T(" = ") << SizeCode(WindowParent,wxsCPP) << _T(";\n");
-            wxString BmpCode = Bitmap.BuildCode(GetBaseProps()->m_Size.IsDefault,SizeName,wxsCPP,wxART_OTHER);
+            wxsSizeData& SizeData = GetBaseProps()->m_Size;
+            bool DontResize = SizeData.IsDefault;
+            wxString SizeCodeStr = SizeCode(WindowParent,wxsCPP);
+            wxString BmpCode = Bitmap.IsEmpty() ? _T("wxNullBitmap") : Bitmap.BuildCode(DontResize,SizeCodeStr,wxsCPP,wxART_OTHER);
+
             if ( GetParent() )
             {
                 Code<< GetVarName() << _T(" = new wxStaticBitmap(");
@@ -64,9 +66,9 @@ void wxsStaticBitmap::OnBuildCreatingCode(wxString& Code,const wxString& WindowP
             }
             Code<< WindowParent << _T(",")
                 << GetIdName() << _T(",")
-                << (BmpCode.empty() ? _T("wxNullBitmap") : BmpCode) << _T(",")
+                << BmpCode << _T(",")
                 << PosCode(WindowParent,wxsCPP) << _T(",")
-                << SizeName << _T(",")
+                << SizeCodeStr << _T(",")
                 << StyleCode(wxsCPP) << _T(",")
                 << wxsCodeMarks::WxString(wxsCPP,GetIdName(),false) << _T(");\n");
 

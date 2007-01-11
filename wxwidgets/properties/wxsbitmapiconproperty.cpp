@@ -63,12 +63,12 @@ wxString wxsBitmapIconData::BuildCode(bool NoResize,const wxString& SizeCode,wxs
 
                 if ( NoResize )
                 {
-                    Code << _T("wxBitmap(") << wxsCodeMarks::WxString(wxsCPP,FileName) << _T(");\n");
+                    Code << _T("wxBitmap(wxImage(") << wxsCodeMarks::WxString(wxsCPP,FileName,false) << _T("))");
                 }
                 else
                 {
-                    Code << _T("wxBitmap(wxImage(") << wxsCodeMarks::WxString(wxsCPP,FileName) << _T(").Rescale(")
-                         << SizeCode << _T(".GetWidth(),") << SizeCode << _T(".GetHeight()));\n");
+                    Code << _T("wxBitmap(wxImage(") << wxsCodeMarks::WxString(wxsCPP,FileName,false) << _T(").Rescale(")
+                         << SizeCode << _T(".GetWidth(),") << SizeCode << _T(".GetHeight()))");
                 }
             }
             else
@@ -101,6 +101,11 @@ wxString wxsBitmapIconData::BuildCode(bool NoResize,const wxString& SizeCode,wxs
     }
 
     return wxEmptyString;
+}
+
+bool wxsBitmapIconData::IsEmpty()
+{
+    return Id.IsEmpty() && FileName.IsEmpty();
 }
 
 
