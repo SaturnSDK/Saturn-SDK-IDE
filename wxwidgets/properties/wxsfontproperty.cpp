@@ -22,7 +22,7 @@
 */
 
 #include "wxsfontproperty.h"
-#include "wxsfonteditordlg.h"
+#include "wxssimplefonteditordlg.h"
 
 #include <wx/fontenum.h>
 #include <wx/tokenzr.h>
@@ -53,7 +53,7 @@ wxFont wxsFontData::BuildFont()
     if ( Enc == wxFONTENCODING_SYSTEM )
         Enc = wxFONTENCODING_DEFAULT;
 
-    if ( !SysFont.empty() )
+    if ( !SysFont.empty() && HasSysFont )
     {
         wxFont Base;
         if ( SysFont == _T("wxSYS_OEM_FIXED_FONT") ) Base = wxSystemSettings::GetFont(wxSYS_OEM_FIXED_FONT);
@@ -117,7 +117,7 @@ wxString wxsFontData::BuildFontCode(const wxString& FontName,wxsCodingLang Langu
                 Code << Enumerator << _T(".EnumerateFacenames();\n");
 
                 // Fetching array of face names
-                Code << _T("wxArrayString& ") << FacesStr << _T(" = *") << Enumerator << _T("->GetFacenames();\n");
+                Code << _T("wxArrayString& ") << FacesStr << _T(" = *") << Enumerator << _T(".GetFacenames();\n");
 
                 // Generating local variable which will hold the name of face
                 Code << _T("wxString ") << FaceName << _T(";\n");
@@ -176,7 +176,7 @@ wxString wxsFontData::BuildFontCode(const wxString& FontName,wxsCodingLang Langu
                 if ( Weight == wxLIGHT ) WeightStr = _T("wxLIGHT");
             }
 
-            if ( !SysFont.empty() )
+            if ( !SysFont.empty() && HasSysFont )
             {
                 Code << _T("wxFont ") << FontName << _T(" = wxSystemSettings::GetFont(") << SysFont << _T(");\n");
                 Code << _T("if ( !") << FontName << _T(".Ok() ) ") << FontName << _T(" = wxSystemSettings::GetFont(wxSYS_DEFAULT_GUI_FONT);\n");
@@ -255,7 +255,7 @@ wxsFontProperty::wxsFontProperty(const wxString& PGName,const wxString& DataName
 
 bool wxsFontProperty::ShowEditor(wxsPropertyContainer* Object)
 {
-    wxsFontEditorDlg Dlg(NULL,VALUE);
+    wxsSimpleFontEditorDlg Dlg(NULL,VALUE);
     return Dlg.ShowModal() == wxID_OK;
 }
 
@@ -333,6 +333,8 @@ bool wxsFontProperty::XmlRead(wxsPropertyContainer* Object,TiXmlElement* Element
     {
         Val.ToDouble(&VALUE.RelativeSize);
     }
+
+    VALUE.IsDefault = false;
 
     return true;
 }

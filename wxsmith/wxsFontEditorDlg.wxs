@@ -1,6 +1,6 @@
 <resource>
     <object class="wxDialog" name="wxsFontEditorDlg">
-        <title>Font settings</title>
+        <title>Advanced font settings</title>
         <style>wxDEFAULT_DIALOG_STYLE</style>
         <object class="wxBoxSizer" variable="BoxSizer1" member="yes">
             <orient>wxVERTICAL</orient>
@@ -394,54 +394,23 @@
                     <object class="sizeritem">
                         <option>1</option>
                         <border>5</border>
-                        <flag>wxALIGN_CENTER</flag>
+                        <flag>wxALL|wxALIGN_CENTER</flag>
                         <object class="wxTextCtrl" name="ID_TEXTCTRL2" variable="TestArea" member="yes">
                             <value>This is sample text</value>
                             <size>316,53</size>
-                            <bg>wxSYS_COLOUR_MENU</bg>
                         </object>
                     </object>
                 </object>
             </object>
             <object class="sizeritem">
                 <border>5</border>
-                <flag>wxLEFT|wxRIGHT|wxBOTTOM|wxALIGN_CENTER</flag>
-                <object class="wxFlexGridSizer" variable="FlexGridSizer1" member="yes">
-                    <rows>0</rows>
-                    <cols>0</cols>
-                    <vgap>0</vgap>
-                    <hgap>0</hgap>
-                    <growablecols>0</growablecols>
-                    <object class="sizeritem">
-                        <option>1</option>
-                        <border>5</border>
-                        <flag>wxALL|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL</flag>
-                        <object class="wxButton" name="ID_BUTTON1" variable="Button1" member="yes">
-                            <label>Quick setup</label>
-                            <handler entry="EVT_BUTTON" function="OnButton1Click1" />
-                        </object>
+                <flag>wxLEFT|wxRIGHT|wxBOTTOM|wxALIGN_CENTER|wxEXPAND</flag>
+                <object class="wxStdDialogButtonSizer" variable="StdDialogButtonSizer1" member="yes">
+                    <object class="button">
+                        <object class="wxButton" name="wxID_OK" />
                     </object>
-                    <object class="spacer">
-                        <option>1</option>
-                        <border>5</border>
-                        <flag>wxALL|wxALIGN_CENTER</flag>
-                    </object>
-                    <object class="sizeritem">
-                        <option>1</option>
-                        <border>5</border>
-                        <flag>wxLEFT|wxTOP|wxBOTTOM|wxALIGN_CENTER</flag>
-                        <object class="wxButton" name="ID_OK" variable="Button2" member="yes">
-                            <label>OK</label>
-                            <handler entry="EVT_BUTTON" function="OnButton2Click" />
-                        </object>
-                    </object>
-                    <object class="sizeritem">
-                        <option>1</option>
-                        <border>5</border>
-                        <flag>wxALL|wxALIGN_CENTER</flag>
-                        <object class="wxButton" name="wxID_CANCEL" variable="Button3" member="yes">
-                            <label>Cancel</label>
-                        </object>
+                    <object class="button">
+                        <object class="wxButton" name="wxID_CANCEL" />
                     </object>
                 </object>
             </object>

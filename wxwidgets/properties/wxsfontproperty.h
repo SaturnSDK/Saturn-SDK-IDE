@@ -52,6 +52,7 @@ struct wxsFontData
         HasSysFont(false),
         HasRelativeSize(false)
     {}
+
 };
 
 /** \brief Property for editing font properties

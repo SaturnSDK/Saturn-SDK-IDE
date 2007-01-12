@@ -767,6 +767,8 @@ void wxsItemResData::BuildIncludesCode(wxsCodingLang Language,wxString& LocalInc
             LocalHeaders.Add(_T("<wx/image.h>"));
             LocalHeaders.Add(_T("<wx/font.h>"));
             LocalHeaders.Add(_T("<wx/fontmap.h>"));
+            LocalHeaders.Add(_T("<wx/fontenum.h>"));
+            LocalHeaders.Add(_T("<wx/settings.h>"));
 
             if ( m_PropertiesFilter == wxsItem::flMixed )
             {

@@ -241,6 +241,8 @@
 		<Unit filename="wxwidgets\properties\wxsfontproperty.h" />
 		<Unit filename="wxwidgets\properties\wxspositionsizeproperty.cpp" />
 		<Unit filename="wxwidgets\properties\wxspositionsizeproperty.h" />
+		<Unit filename="wxwidgets\properties\wxssimplefonteditordlg.cpp" />
+		<Unit filename="wxwidgets\properties\wxssimplefonteditordlg.h" />
 		<Unit filename="wxwidgets\properties\wxssizerflagsproperty.cpp" />
 		<Unit filename="wxwidgets\properties\wxssizerflagsproperty.h" />
 		<Unit filename="wxwidgets\properties\wxsstyleproperty.cpp" />
@@ -317,6 +319,7 @@
 				<dialog wxs_file="wxsArrayStringCheckEditorDlg.wxs" class="wxsArrayStringCheckEditorDlg" src_file="wxwidgets/properties/wxsarraystringcheckeditordlg.cpp" header_file="wxwidgets\properties\wxsarraystringcheckeditordlg.h" xrc_file="" edit_mode="Source" />
 				<dialog wxs_file="wxsFontEditorDlg.wxs" class="wxsFontEditorDlg" src_file="wxwidgets/properties/wxsfonteditordlg.cpp" header_file="wxwidgets\properties\wxsfonteditordlg.h" xrc_file="" edit_mode="Source" />
 				<dialog wxs_file="wxsFontFaceEditorDlg.wxs" class="wxsFontFaceEditorDlg" src_file="wxwidgets/properties/wxsfontfaceeditordlg.cpp" header_file="wxwidgets\properties\wxsfontfaceeditordlg.h" xrc_file="" edit_mode="Source" />
+				<dialog wxs_file="wxsSimpleFontEditorDlg.wxs" class="wxsSimpleFontEditorDlg" src_file="wxwidgets/properties/wxssimplefonteditordlg.cpp" header_file="wxwidgets/properties/wxssimplefonteditordlg.h" xrc_file="" edit_mode="Source" />
 				<panel wxs_file="wxWidgetsGUIConfigPanel.wxs" class="wxWidgetsGUIConfigPanel" src_file="wxwidgets/wxwidgetsguiconfigpanel.cpp" header_file="wxwidgets/wxwidgetsguiconfigpanel.h" xrc_file="" edit_mode="Source" />
 				<panel wxs_file="wxsSizerParentQP.wxs" class="wxsSizerParentQP" src_file="wxwidgets/wxssizerparentqp.cpp" header_file="wxwidgets/wxssizerparentqp.h" xrc_file="" edit_mode="Source" />
 				<panel wxs_file="wxsNotebookParentQP.wxs" class="wxsNotebookParentQP" src_file="wxwidgets/defitems/wxsnotebook.cpp" header_file="wxwidgets/defitems/wxsnotebook.cpp" xrc_file="" edit_mode="Source" />
