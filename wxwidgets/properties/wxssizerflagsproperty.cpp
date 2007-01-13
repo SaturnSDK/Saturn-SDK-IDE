@@ -225,14 +225,14 @@ bool wxsSizerFlagsProperty::XmlRead(wxsPropertyContainer* Object,TiXmlElement* E
         return false;
     }
 
-    TiXmlText* Text = Element->FirstChild()->ToText();
+    const char* Text = Element->GetText();
     wxString Str;
     if ( !Text )
     {
         FLAGS = AlignLeft | AlignTop;
         return false;
     }
-    FLAGS = ParseString(cbC2U(Text->Value()));
+    FLAGS = ParseString(cbC2U(Text));
     return true;
 }
 
@@ -265,11 +265,16 @@ long wxsSizerFlagsProperty::ParseString(const wxString& String)
     {
         wxString Flag = Tkn.GetNextToken();
              if ( Flag == _T("wxTOP")           ) Flags |= BorderTop;
+        else if ( Flag == _T("wxNORTH")         ) Flags |= BorderTop;
         else if ( Flag == _T("wxBOTTOM")        ) Flags |= BorderBottom;
+        else if ( Flag == _T("wxSOUTH")         ) Flags |= BorderBottom;
         else if ( Flag == _T("wxLEFT")          ) Flags |= BorderLeft;
+        else if ( Flag == _T("wxWEST")          ) Flags |= BorderLeft;
         else if ( Flag == _T("wxRIGHT")         ) Flags |= BorderRight;
+        else if ( Flag == _T("wxEAST")          ) Flags |= BorderLeft;
         else if ( Flag == _T("wxALL")           ) Flags |= BorderMask;
         else if ( Flag == _T("wxEXPAND")        ) Flags |= Expand;
+        else if ( Flag == _T("wxGROW")          ) Flags |= Expand;
         else if ( Flag == _T("wxSHAPED")        ) Flags |= Shaped;
         else if ( Flag == _T("wxFIXED_MINSIZE") ) Flags |= FixedMinSize;
         else if ( Flag == _T("wxALIGN_CENTER")  ) Flags |= AlignCenterHorizontal | AlignCenterVertical;

@@ -59,14 +59,14 @@ bool wxsProperty::XmlGetString(TiXmlElement* Element,wxString& Value,const wxStr
         if ( !Element ) return false;
     }
 
-    TiXmlText * Text = Element->FirstChild()->ToText();
+    const char* Text = Element->GetText();
     if ( !Text )
     {
         // Element does exist but doesn't contain text - in this
         // case we return true, because it's case of empty string
         return true;
     }
-    Value = cbC2U(Text->Value());
+    Value = cbC2U(Text);
     return true;
 }
 

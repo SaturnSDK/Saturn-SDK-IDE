@@ -140,7 +140,7 @@ void wxsRadioBox::OnEnumWidgetProperties(long Flags)
     WXS_STRING(wxsRadioBox,Label,0,_("Label"),_T("label"),_T(""),true,false)
     WXS_ARRAYSTRING(wxsRadioBox,ArrayChoices,0,_("Choices"),_T("content"),_T("item"))
     WXS_LONG(wxsRadioBox,DefaultSelection,0,_("Default"),_T("default"),0)
-    WXS_LONG(wxsRadioBox,Dimension,0,_("Dimension"),_T("dimension"),0)
+    WXS_LONG(wxsRadioBox,Dimension,0,_("Dimension"),_T("dimension"),1)
 
 }
 

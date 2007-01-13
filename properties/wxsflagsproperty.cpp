@@ -66,13 +66,13 @@ bool wxsFlagsProperty::XmlRead(wxsPropertyContainer* Object,TiXmlElement* Elemen
         VALUE = Default;
         return false;
     }
-    TiXmlText* Text = Element->FirstChild()->ToText();
+    const char* Text = Element->GetText();
     if ( !Text )
     {
         VALUE = Default;
         return false;
     }
-    VALUE = atol(Text->Value());
+    VALUE = atol(Text);
     return true;
 }
 

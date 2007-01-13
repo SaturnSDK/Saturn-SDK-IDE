@@ -54,14 +54,13 @@ bool wxsArrayStringProperty::XmlRead(wxsPropertyContainer* Object,TiXmlElement* 
           Item;
           Item = Item->NextSiblingElement(cbU2C(DataSubName)) )
     {
-        TiXmlText* Text = Item->FirstChild()->ToText();
+        const char* Text = Item->GetText();
         if ( Text )
         {
-            VALUE.Add(cbC2U(Text->Value()));
+            VALUE.Add(cbC2U(Text));
         }
         else
         {
-            // There was no child text node, that's the case of empty string
             VALUE.Add(wxEmptyString);
         }
     }

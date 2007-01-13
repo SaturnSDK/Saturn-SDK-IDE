@@ -92,11 +92,11 @@ bool wxsStyleProperty::XmlRead(wxsPropertyContainer* Object,TiXmlElement* Elemen
         return false;
     }
 
-    TiXmlText* Text = Element->FirstChild()->ToText();
+    const char* Text = Element->GetText();
     wxString Str;
     if ( Text )
     {
-        Str = cbC2U(Text->Value());
+        Str = cbC2U(Text);
     }
     if ( Str.empty() )
     {

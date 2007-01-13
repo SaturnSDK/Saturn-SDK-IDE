@@ -208,10 +208,10 @@ bool wxsPositionSizeProperty::XmlRead(wxsPropertyContainer* Object,TiXmlElement*
         return false;
     }
 
-    TiXmlText* Text = Element->FirstChild()->ToText();
+    const char* Text = Element->GetText();
 
     // If no node or empty text, using default values
-    if ( !Text || !Text->Value()[0] )
+    if ( !Text || !Text[0] )
     {
         DEFVALUE = true;
         XVALUE = -1;
@@ -219,7 +219,7 @@ bool wxsPositionSizeProperty::XmlRead(wxsPropertyContainer* Object,TiXmlElement*
         DUVALUE = false;
         return false;
     }
-    wxString Str = cbC2U(Text->Value());
+    wxString Str = cbC2U(Text);
 
     if ( Str[Str.Length()-1] == _T('d') )
     {

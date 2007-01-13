@@ -58,13 +58,13 @@ bool wxsLongProperty::XmlRead(wxsPropertyContainer* Object,TiXmlElement* Element
         VALUE = Default;
         return false;
     }
-    TiXmlText* Text = Element->FirstChild()->ToText();
+    const char* Text = Element->GetText();
     if ( !Text )
     {
         VALUE = Default;
         return false;
     }
-    VALUE = atoi(Text->Value());
+    VALUE = atol(Text);
     return true;
 }
 

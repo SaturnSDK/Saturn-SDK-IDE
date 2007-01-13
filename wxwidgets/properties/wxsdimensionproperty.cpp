@@ -120,17 +120,16 @@ bool wxsDimensionProperty::XmlRead(wxsPropertyContainer* Object,TiXmlElement* El
         UNITS = DefaultDialogUnits;
         return false;
     }
-    TiXmlText* Text = Element->FirstChild()->ToText();
+    const char* Text = Element->GetText();
     if ( !Text )
     {
         VALUE = DefaultValue;
         UNITS = DefaultDialogUnits;
         return false;
     }
-    const char* Ptr = Text->Value();
 
     // 'd' character at the end of string means this value is in dialog units
-    if ( Ptr[0] && Ptr[strlen(Ptr)-1]=='d' )
+    if ( Text[0] && Text[strlen(Text)-1]=='d' )
     {
         UNITS = true;
     }
@@ -139,8 +138,8 @@ bool wxsDimensionProperty::XmlRead(wxsPropertyContainer* Object,TiXmlElement* El
         UNITS = false;
     }
 
-    // atoi should cut off 'd' at the end
-    VALUE = atol(Text->Value());
+    // atol should cut off 'd' at the end
+    VALUE = atol(Text);
     return true;
 }
 

@@ -62,10 +62,10 @@ bool wxsArrayStringCheckProperty::XmlRead(wxsPropertyContainer* Object,TiXmlElem
         CHECK.Add( CheckedAttr && CheckedAttr[0]=='1' && CheckedAttr[1]=='\0' );
 
         // Fetching item text
-        TiXmlText* Text = Item->FirstChild()->ToText();
+        const char* Text = Item->GetText();
         if ( Text )
         {
-            VALUE.Add(cbC2U(Text->Value()));
+            VALUE.Add(cbC2U(Text));
         }
         else
         {

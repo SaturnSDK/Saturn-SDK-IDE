@@ -68,7 +68,7 @@ bool wxsEnumProperty::XmlRead(wxsPropertyContainer* Object,TiXmlElement* Element
         VALUE = Default;
         return false;
     }
-    TiXmlText* Text = Element->FirstChild()->ToText();
+    const char* Text = Element->GetText();
     if ( !Text )
     {
         VALUE = Default;
@@ -77,7 +77,7 @@ bool wxsEnumProperty::XmlRead(wxsPropertyContainer* Object,TiXmlElement* Element
     if ( UseNamesInXml )
     {
         // Searching for node text in names
-        wxString TextS = cbC2U(Text->Value());
+        wxString TextS = cbC2U(Text);
         int i = 0;
         for ( const wxChar** Ptr = Names; *Ptr; Ptr++, i++ )
         {
@@ -92,7 +92,7 @@ bool wxsEnumProperty::XmlRead(wxsPropertyContainer* Object,TiXmlElement* Element
     }
     else
     {
-        VALUE = atoi(Text->Value());
+        VALUE = atoi(Text);
     }
     return true;
 }
