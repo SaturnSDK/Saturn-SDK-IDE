@@ -51,7 +51,7 @@ namespace
             }
     };
 
-    wxsRegisterItem<wxsSplitterWindow> Reg(_T("SplitterWindow"),wxsTContainer,_T("Standard"),30);
+    wxsRegisterItem<wxsSplitterWindow> Reg(_T("SplitterWindow"),wxsTContainer,_T("Layout"),30);
 
     WXS_ST_BEGIN(wxsSplitterWindowStyles,_T("wxSP_3D"))
         WXS_ST_CATEGORY("wxSplitterWindow")
@@ -114,6 +114,9 @@ wxObject* wxsSplitterWindow::OnBuildPreview(wxWindow* Parent,long Flags)
                 wxDynamicCast(GetChild(1)->GetLastPreview(),wxWindow),
                 SashPos);
         }
+
+        // Some trick to faster relayout splitter window
+        Splitter->OnInternalIdle();
     }
 
     return Splitter;

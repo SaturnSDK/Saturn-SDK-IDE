@@ -49,7 +49,7 @@ namespace
             }
     };
 
-    wxsRegisterItem<wxsBoxSizer> Reg(_T("BoxSizer"), wxsTSizer, _T("Layout"), 0);
+    wxsRegisterItem<wxsBoxSizer> Reg(_T("BoxSizer"), wxsTSizer, _T("Layout"), 70);
 }
 
 wxsBoxSizer::wxsBoxSizer(wxsItemResData* Data):

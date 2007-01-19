@@ -29,7 +29,7 @@
 
 namespace
 {
-    wxsRegisterItem<wxsStdDialogButtonSizer> Reg(_("StdDialogButtonSizer"),wxsTSizer,_T("Layout"),70);
+    wxsRegisterItem<wxsStdDialogButtonSizer> Reg(_("StdDialogButtonSizer"),wxsTSizer,_T("Layout"),50);
 
     class wxsSizerPreview: public wxPanel
     {

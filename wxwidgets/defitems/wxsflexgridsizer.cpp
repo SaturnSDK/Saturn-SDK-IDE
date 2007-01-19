@@ -66,7 +66,7 @@ namespace
         return Ret;
     }
 
-    wxsRegisterItem<wxsFlexGridSizer> Reg(_T("FlexGridSizer"),wxsTSizer,_T("Layout"),50);
+    wxsRegisterItem<wxsFlexGridSizer> Reg(_T("FlexGridSizer"),wxsTSizer,_T("Layout"),80);
 }
 
 wxsFlexGridSizer::wxsFlexGridSizer(wxsItemResData* Data):
