@@ -43,6 +43,7 @@ wxSmith* wxSmith::m_Singleton = NULL;
 BEGIN_EVENT_TABLE(wxSmith, cbPlugin)
     EVT_PROJECT_OPEN(wxSmith::OnProjectOpened)
 	EVT_PROJECT_CLOSE(wxSmith::OnProjectClose)
+	EVT_PROJECT_RENAMED(wxSmith::OnProjectRenamed)
 	EVT_MENU(ConfigureId,wxSmith::OnConfigure)
 	EVT_MENU(-1,wxSmith::OnMenu)
 END_EVENT_TABLE()
@@ -187,6 +188,14 @@ void wxSmith::OnProjectClose(CodeBlocksEvent& event)
     delete i->second;
     m_ProjectMap.erase(i);
     event.Skip();
+}
+
+void wxSmith::OnProjectRenamed(CodeBlocksEvent& event)
+{
+    cbProject* Proj = event.GetProject();
+    ProjectMapI i = m_ProjectMap.find(Proj);
+    if ( i == m_ProjectMap.end() ) return;
+    i->second->UpdateName();
 }
 
 void wxSmith::OnConfigure(wxCommandEvent& event)

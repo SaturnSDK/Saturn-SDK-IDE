@@ -326,3 +326,8 @@ wxsResourceItemId wxsProject::GetResourceTypeTreeId(const wxString& Name)
     }
     return m_ResBrowserIds[Name] = wxsTree()->AppendItem(m_TreeItem,Name);
 }
+
+void wxsProject::UpdateName()
+{
+    wxsResourceTree::Get()->SetItemText(m_TreeItem,GetCBProject()->GetTitle());
+}

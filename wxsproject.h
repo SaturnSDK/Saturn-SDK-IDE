@@ -88,6 +88,12 @@ class wxsProject
         /** \brief Checking if project has been modified during load */
         inline bool GetWasModifiedDuringLoad() { return m_WasModifiedDuringLoad; }
 
+        /** \brief Function updating project's name
+         *
+         * Curently it only updates name of project in resource browser
+         */
+        void UpdateName();
+
 	private:
 
         WX_DEFINE_ARRAY(wxsResource*,ResourcesT);

@@ -92,6 +92,9 @@ class wxSmith : public cbPlugin
         /** \brief Procedure called when closing project, removes additional stuff associated with project */
         void OnProjectClose(CodeBlocksEvent& event);
 
+        /** \brief Procedure called when some project has been renamed - it will update resource browser */
+        void OnProjectRenamed(CodeBlocksEvent& event);
+
         /** \brief Called when clicked "Configure..." from wxSmith menu */
         void OnConfigure(wxCommandEvent& event);
 
