@@ -596,78 +596,71 @@ void wxsItemEditorContent::OnMouseDraggingItem(wxMouseEvent& event)
     {
         m_Data->BeginChange();
 
-        // Applying change
-        wxsBaseProperties* Props = m_CurDragItem->GetBaseProps();
-        if ( Props )
+        if ( m_CurDragPoint->PosX != m_CurDragPoint->DragInitPosX ||
+             m_CurDragPoint->PosY != m_CurDragPoint->DragInitPosY )
         {
-            if ( m_CurDragPoint->PosX != m_CurDragPoint->DragInitPosX ||
-                 m_CurDragPoint->PosY != m_CurDragPoint->DragInitPosY )
+            wxsParent* NewParent = NULL;
+            wxsItem* AtCursor = NULL;
+            bool AddAfter = true;
+            if ( FindDraggingItemTarget(event.GetX(),event.GetY(),m_CurDragItem,NewParent,AtCursor,AddAfter) )
             {
-                wxsParent* NewParent = NULL;
-                wxsItem* AtCursor = NULL;
-                bool AddAfter = true;
-                if ( FindDraggingItemTarget(event.GetX(),event.GetY(),m_CurDragItem,NewParent,AtCursor,AddAfter) )
+                if ( (m_CurDragItem->GetParent() == NewParent) || NewParent->CanAddChild(m_CurDragItem,false) )
                 {
-                    if ( (m_CurDragItem->GetParent() == NewParent) || NewParent->CanAddChild(m_CurDragItem,false) )
+                    wxsParent* CurParent = m_CurDragItem->GetParent();
+
+                    if ( CurParent != NewParent ||
+                         NewParent->GetType() == wxsTSizer )
                     {
-                        // TODO (SpOoN#1#): Update resource tree after update
-
-                        wxsParent* CurParent = m_CurDragItem->GetParent();
-
-                        if ( CurParent != NewParent ||
-                             NewParent->GetType() == wxsTSizer )
+                        if ( AtCursor != m_CurDragItem )
                         {
-                            if ( AtCursor != m_CurDragItem )
+                            // Storing extra data
+                            int CurIndex = CurParent->GetChildIndex(m_CurDragItem);
+                            TiXmlElement ExtraData("extra");
+                            CurParent->StoreExtraData(CurIndex,&ExtraData);
+
+                            // Unbinding from old parent
+                            m_CurDragItem->GetParent()->UnbindChild(m_CurDragItem);
+
+                            // Adding to new one
+                            int NewIndex = -1;
+                            if ( AtCursor )
                             {
-                                // Storing extra data
-                                int CurIndex = CurParent->GetChildIndex(m_CurDragItem);
-                                TiXmlElement ExtraData("extra");
-                                CurParent->StoreExtraData(CurIndex,&ExtraData);
-
-                                // Unbinding from old parent
-                                m_CurDragItem->GetParent()->UnbindChild(m_CurDragItem);
-
-                                // Adding to new one
-                                int NewIndex = -1;
-                                if ( AtCursor )
-                                {
-                                    NewIndex = NewParent->GetChildIndex(AtCursor);
-                                    if ( AddAfter ) NewIndex++;
-                                }
-
-                                NewParent->AddChild(m_CurDragItem,NewIndex);
-
-                                // Restoring extra data
-                                NewIndex = NewParent->GetChildIndex(m_CurDragItem);
-                                NewParent->RestoreExtraData(NewIndex,&ExtraData);
+                                NewIndex = NewParent->GetChildIndex(AtCursor);
+                                if ( AddAfter ) NewIndex++;
                             }
+
+                            NewParent->AddChild(m_CurDragItem,NewIndex);
+
+                            // Restoring extra data
+                            NewIndex = NewParent->GetChildIndex(m_CurDragItem);
+                            NewParent->RestoreExtraData(NewIndex,&ExtraData);
                         }
+                    }
 
-                        wxsBaseProperties* Props = m_CurDragItem->GetBaseProps();
-                        if ( Props )
+                    wxsBaseProperties* Props = m_CurDragItem->GetBaseProps();
+                    if ( Props )
+                    {
+                        if ( NewParent->GetType() == wxsTSizer )
                         {
-                            if ( NewParent->GetType() == wxsTSizer )
-                            {
                                 Props->m_Position.SetPosition(wxDefaultPosition,NULL);
-                            }
-                            else
+                        }
+                        else
+                        {
+                            // Calculating new position
+                            int PosX;
+                            int PosY;
+                            int SizeX;
+                            int SizeY;
+                            if ( FindAbsoluteRect(m_CurDragItem,PosX,PosY,SizeX,SizeY) )
                             {
-                                // Calculating new position
-                                int PosX;
-                                int PosY;
-                                int SizeX;
-                                int SizeY;
-                                if ( FindAbsoluteRect(m_CurDragItem,PosX,PosY,SizeX,SizeY) )
+                                PosX += m_CurDragPoint->PosX - m_CurDragPoint->DragInitPosX;
+                                PosY += m_CurDragPoint->PosY - m_CurDragPoint->DragInitPosY;
+                                ClientToScreen(&PosX,&PosY);
+                                wxWindow* PreviewParent = GetPreviewWindow(m_CurDragItem)->GetParent();
+                                if ( PreviewParent )
                                 {
-                                    PosX += m_CurDragPoint->PosX - m_CurDragPoint->DragInitPosX;
-                                    PosY += m_CurDragPoint->PosY - m_CurDragPoint->DragInitPosY;
-                                    ClientToScreen(&PosX,&PosY);
-                                    wxWindow* PreviewParent = GetPreviewWindow(m_CurDragItem)->GetParent();
-                                    if ( PreviewParent )
-                                    {
-                                        PreviewParent->ScreenToClient(&PosX,&PosY);
-                                        Props->m_Position.SetPosition(wxPoint(PosX,PosY),PreviewParent);
-                                    }
+                                    PreviewParent->ScreenToClient(&PosX,&PosY);
+                                    Props->m_Position.SetPosition(wxPoint(PosX,PosY),PreviewParent);
                                 }
                             }
                         }
