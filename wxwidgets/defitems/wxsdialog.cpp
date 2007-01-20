@@ -123,6 +123,7 @@ wxObject* wxsDialog::OnBuildPreview(wxWindow* Parent,long Flags)
         // In preview we simulate dialog using panel
         // TODO: Use grid-viewing panel
         NewItem = new wxPanel(Parent,GetId(),wxDefaultPosition,wxDefaultSize,0/*wxRAISED_BORDER)*/);
+        NewItem->SetBackgroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_BTNFACE ));
     }
 
     SetupWindow(NewItem,Flags);
