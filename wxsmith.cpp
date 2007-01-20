@@ -24,6 +24,7 @@
 #include "wxsmith.h"
 #include "wxsproject.h"
 #include "wxsmithmime.h"
+#include "wxssettings.h"
 #include "wxsextresmanager.h"
 #include "wxsresourcefactory.h"
 #include "properties/wxsproperties.h"
@@ -54,10 +55,6 @@ wxSmith::wxSmith()
 
 wxSmith::~wxSmith()
 {
-    if ( m_Singleton == this )
-    {
-        m_Singleton = NULL;
-    }
 }
 
 void wxSmith::OnAttach()
@@ -127,12 +124,16 @@ void wxSmith::OnRelease(bool appShutDown)
     wxsExtResManager::Get()->DeleteAll();
 
     m_ProjectMap.clear();
+
+    if ( m_Singleton == this )
+    {
+        m_Singleton = NULL;
+    }
 }
 
 cbConfigurationPanel* wxSmith::GetConfigurationPanel(wxWindow* parent)
 {
-    return NULL;
-//	return new wxsSettingsDlg(parent);
+	return new wxsSettings(parent);
 }
 
 void wxSmith::BuildMenu(wxMenuBar* menuBar)

@@ -135,6 +135,8 @@
 		<Unit filename="wxsresourcetree.h" />
 		<Unit filename="wxsresourcetreeitemdata.cpp" />
 		<Unit filename="wxsresourcetreeitemdata.h" />
+		<Unit filename="wxssettings.cpp" />
+		<Unit filename="wxssettings.h" />
 		<Unit filename="wxsstoringsplitterwindow.cpp" />
 		<Unit filename="wxsstoringsplitterwindow.h" />
 		<Unit filename="wxsversionconverter.cpp" />
@@ -325,6 +327,7 @@
 				<panel wxs_file="wxsNotebookParentQP.wxs" class="wxsNotebookParentQP" src_file="wxwidgets/defitems/wxsnotebook.cpp" header_file="wxwidgets/defitems/wxsnotebook.cpp" xrc_file="" edit_mode="Source" />
 				<panel wxs_file="wxsChoicebookParentQP.wxs" class="wxsChoicebookParentQP" src_file="wxwidgets/defitems/wxschoicebook.cpp" header_file="wxwidgets/defitems/wxschoicebook.cpp" xrc_file="" edit_mode="Source" />
 				<panel wxs_file="wxsListbookParentQP.wxs" class="wxsListbookParentQP" src_file="wxwidgets/defitems/wxslistbook.cpp" header_file="wxwidgets/defitems/wxslistbook.cpp" xrc_file="" edit_mode="Source" />
+				<panel wxs_file="wxsSettings.wxs" class="wxsSettings" src_file="wxssettings.cpp" header_file="wxssettings.h" xrc_file="" edit_mode="Source" />
 				<configuration app_src_file="" main_resource="" init_all_handlers="necessary" />
 			</wxsmith>
 		</Extensions>

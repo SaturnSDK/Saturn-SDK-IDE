@@ -77,7 +77,7 @@ namespace
 wxsSplitterWindow::wxsSplitterWindow(wxsItemResData* Data):
     wxsContainer(Data,&Reg.Info,wxsSplitterWindowEvents,wxsSplitterWindowStyles),
     SashPos(0),
-    MinSize(-1),
+    MinSize(10),
     Orientation(wxHORIZONTAL)
 {
 }

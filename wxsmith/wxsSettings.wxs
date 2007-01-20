@@ -1,5 +1,5 @@
 <resource>
-    <object class="wxPanel" name="wxsSettingsDlg">
+    <object class="wxPanel" name="wxsSettings">
         <object class="wxFlexGridSizer" variable="FlexGridSizer1" member="yes">
             <rows>0</rows>
             <cols>1</cols>
@@ -51,7 +51,6 @@
                                                 <item>Simple</item>
                                                 <item>Colour Mix</item>
                                             </content>
-                                            <handler entry="EVT_COMBOBOX" function="OnDragAssistTypeSelect" />
                                             <style>wxCB_READONLY</style>
                                         </object>
                                     </object>
@@ -336,21 +335,6 @@
                                     </object>
                                 </object>
                             </object>
-                        </object>
-                    </object>
-                </object>
-            </object>
-            <object class="sizeritem">
-                <option>1</option>
-                <border>4</border>
-                <flag>wxALIGN_CENTER_HORIZONTAL|wxALIGN_TOP|wxEXPAND</flag>
-                <object class="wxBoxSizer" variable="BoxSizer1" member="yes">
-                    <orient>wxVERTICAL</orient>
-                    <object class="sizeritem">
-                        <border>5</border>
-                        <flag>wxALL|wxALIGN_LEFT|wxALIGN_TOP|wxEXPAND</flag>
-                        <object class="wxCheckBox" name="ID_CHECKBOX7" variable="chkAutoSelect" member="yes">
-                            <label>Automatically select new widgets, when created</label>
                         </object>
                     </object>
                 </object>
