@@ -93,7 +93,7 @@ copy /y devel\*.exe output > nul
 copy /y devel\*.dll output > nul
 copy /y %RESDIR%\plugins\*.dll output\share\codeblocks\plugins > nul
 
-echo Stripping debug info from output tree
-strip output\*.exe
-strip output\*.dll
-strip output\share\CodeBlocks\plugins\*.dll
+:echo Stripping debug info from output tree
+:strip output\*.exe
+:strip output\*.dll
+:strip output\share\CodeBlocks\plugins\*.dll

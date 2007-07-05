@@ -30,6 +30,12 @@
 #include <wx/intl.h>
 #include <wx/tokenzr.h>
 
+unsigned long GetTokenTicket()
+{
+    static unsigned long ticket = 0;
+    return ticket++;
+}
+
 inline void SaveTokenIdxSetToFile(wxOutputStream* f,const TokenIdxSet& data)
 {
     SaveIntToFile(f, (int)(data.size()));
@@ -107,11 +113,18 @@ Token::Token(const wxString& name, unsigned int file, unsigned int line)
     m_Self(-1)
 {
     //ctor
+    m_Ticket = GetTokenTicket();
+
 }
 
 Token::~Token()
 {
     //dtor
+}
+
+unsigned int Token::GetTicket() const
+{
+    return m_Ticket;
 }
 
 wxString Token::GetParentName()
@@ -172,6 +185,21 @@ bool Token::MatchesFiles(const TokenFilesSet& files)
         return true;
     if((m_File && files.count(m_File)) || (m_ImplFile && files.count(m_ImplFile)))
         return true;
+    return false;
+}
+
+bool Token::RecursiveMatchesFiles(const TokenFilesSet& files)
+{
+    if(files.empty() || m_IsTemp)
+        return false;
+    if(MatchesFiles(files))
+        return true;
+    for (TokenIdxSet::iterator it = m_Children.begin(); it != m_Children.end(); ++it)
+    {
+        Token* child = m_pTree->at(*it);
+        if (child && child->RecursiveMatchesFiles(files))
+            return true;
+    }
     return false;
 }
 

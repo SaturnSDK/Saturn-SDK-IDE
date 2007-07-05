@@ -79,7 +79,7 @@ struct BrowserOptions
 };
 
 class ClassBrowser;
-class ClassBrowserBuilderThread;
+class ClassBrowserBuilder;
 
 class Parser : public wxEvtHandler
 {
@@ -147,6 +147,7 @@ class Parser : public wxEvtHandler
         void OnAllThreadsDone(CodeBlocksEvent& event);
 		void OnTimer(wxTimerEvent& event);
 		void OnBatchTimer(wxTimerEvent& event);
+		void OnClassBrowserUpdated(wxCommandEvent& event);
 	private:
         void ConnectEvents();
         void DisconnectEvents();
@@ -181,7 +182,7 @@ class Parser : public wxEvtHandler
         bool m_IgnoreThreadEvents;
         bool m_ShuttingDown;
 
-        ClassBrowserBuilderThread* m_pClassBrowserBuilderThread;
+        ClassBrowserBuilder* m_pClassBrowserBuilder;
 
 #endif // STANDALONE
 

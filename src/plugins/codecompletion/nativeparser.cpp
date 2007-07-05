@@ -49,11 +49,13 @@
 #include <cctype>
 
 bool s_DebugSmartSense = false;
+extern int idClassBrowserUpdated;
 
 BEGIN_EVENT_TABLE(NativeParser, wxEvtHandler)
 //    EVT_MENU(THREAD_START, NativeParser::OnThreadStart)
 //    EVT_MENU(THREAD_END, NativeParser::OnThreadEnd)
     EVT_MENU(PARSER_END, NativeParser::OnParserEnd)
+    EVT_COMMAND(-1,idClassBrowserUpdated, NativeParser::OnClassBrowserUpdated)
 END_EVENT_TABLE()
 
 NativeParser::NativeParser()
@@ -184,9 +186,14 @@ void NativeParser::UpdateClassBrowser()
         Manager::Get()->GetMessageManager()->DebugLog(_T("Updating class browser..."));
 //            m_pClassBrowser->SetParser(&m_Parser);
             m_pClassBrowser->UpdateView();
-        Manager::Get()->GetMessageManager()->DebugLog(_T("Class browser updated."));
     }
 }
+
+void NativeParser::OnClassBrowserUpdated(wxCommandEvent& event)
+{
+    Manager::Get()->GetMessageManager()->DebugLog(_T("Class browser updated."));
+}
+
 
 void NativeParser::RereadParserOptions()
 {

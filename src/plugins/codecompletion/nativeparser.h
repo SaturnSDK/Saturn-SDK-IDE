@@ -120,6 +120,8 @@ class NativeParser : public wxEvtHandler
 		void OnThreadEnd(wxCommandEvent& event);
 		void OnParserEnd(wxCommandEvent& event);
 		void OnEditorActivated(EditorBase* editor);
+        void OnClassBrowserUpdated(wxCommandEvent& event);
+
 
 		bool SkipWhitespaceForward(cbEditor* editor, int& pos);
 		bool SkipWhitespaceBackward(cbEditor* editor, int& pos);

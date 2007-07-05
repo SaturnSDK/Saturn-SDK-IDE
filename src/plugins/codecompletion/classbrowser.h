@@ -7,7 +7,7 @@
 #include <wx/panel.h>
 #include "parser/parser.h"
 #include "parser/token.h"
-#include "classbrowserbuilderthread.h"
+#include "classbrowserbuilder.h"
 
 class NativeParser;
 class wxTreeCtrl;
@@ -66,8 +66,7 @@ class ClassBrowser : public wxPanel
         wxString m_ActiveFilename;
         cbProject* m_pActiveProject;
 
-        wxSemaphore m_Semaphore;
-        ClassBrowserBuilderThread* m_pBuilderThread;
+        ClassBrowserBuilder* m_pBuilder;
 
         DECLARE_EVENT_TABLE()
 };

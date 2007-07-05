@@ -33,7 +33,7 @@
 #include <wx/progdlg.h>
 #include "parser.h"
 #include "../classbrowser.h"
-#include "../classbrowserbuilderthread.h"
+#include "../classbrowserbuilder.h"
 #ifndef STANDALONE
     #include <configmanager.h>
     #include <messagemanager.h>
@@ -83,7 +83,7 @@ Parser::Parser(wxEvtHandler* parent)
     m_LastStopWatchTime(0),
     m_IgnoreThreadEvents(false),
     m_ShuttingDown(false),
-    m_pClassBrowserBuilderThread(0)
+    m_pClassBrowserBuilder(0)
 {
     m_pTokens = new TokensTree;
     m_pTempTokens = new TokensTree;
@@ -173,6 +173,9 @@ void Parser::ConnectEvents()
             (wxEventFunction)(wxTimerEventFunction)&Parser::OnTimer);
     Connect(BATCH_TIMER_ID,-1,wxEVT_TIMER,(wxObjectEventFunction)
             (wxEventFunction)(wxTimerEventFunction)&Parser::OnBatchTimer);
+    Connect(-1,idClassBrowserUpdated,(wxObjectEventFunction)
+            (wxEventFunction)(wxCommandEventFunction)
+            &Parser::OnClassBrowserUpdated);
 }
 
 void Parser::DisconnectEvents()
@@ -180,6 +183,9 @@ void Parser::DisconnectEvents()
     Disconnect(-1,BATCH_TIMER_ID,wxEVT_TIMER);
     Disconnect(-1,TIMER_ID, wxEVT_TIMER);
     Disconnect(-1,-1,cbEVT_THREADTASK_ALLDONE);
+    Disconnect(-1,idClassBrowserUpdated,(wxObjectEventFunction)
+            (wxEventFunction)(wxCommandEventFunction)
+            &Parser::OnClassBrowserUpdated);
 }
 
 void Parser::ReadOptions()
@@ -983,4 +989,9 @@ bool Parser::ReparseModifiedFiles()
         files_list.pop();
     }
     return true;
+}
+
+void Parser::OnClassBrowserUpdated(wxCommandEvent& event)
+{
+    wxPostEvent(m_pParent,event);
 }

@@ -127,8 +127,7 @@ ClassBrowser::ClassBrowser(wxWindow* parent, NativeParser* np)
     m_TreeForPopupMenu(0),
 	m_pParser(0L),
 	m_pActiveProject(0),
-	m_Semaphore(0, 1),
-	m_pBuilderThread(0)
+	m_pBuilder(0)
 {
     ConfigManager* cfg = Manager::Get()->GetConfigManager(_T("code_completion"));
 
@@ -158,20 +157,10 @@ ClassBrowser::~ClassBrowser()
 
     UnlinkParser();
 
-    if (m_pBuilderThread)
+    if (m_pBuilder)
     {
-    	// for some reason, windows need to "post" the semaphore first...
-        if(platform::windows)
-            m_Semaphore.Post();
-
-        // must check for NULL again because by posting the semaphore above,
-        // the thread might have terminated by now and the variable NULLed...
-        if (m_pBuilderThread)
-            m_pBuilderThread->Delete();
-
-		// ... while other platforms need it last...
-        if(!platform::windows)
-            m_Semaphore.Post();
+        delete m_pBuilder;
+        m_pBuilder = 0;
     }
 }
 
@@ -585,54 +574,72 @@ void ClassBrowser::BuildTree()
     if (Manager::IsAppShuttingDown())
         return;
 
-    bool created_builderthread = false;
-
-    // create the thread if needed
-    if (!m_pBuilderThread)
-    {
-        m_pBuilderThread = new ClassBrowserBuilderThread(m_Semaphore, &m_pBuilderThread);
-        m_pBuilderThread->Create();
-        m_pBuilderThread->Run();
-#ifdef __WXMSW__
-        // workaround only needed for windows (DDE server issue)
-        created_builderthread = true;
-#endif
-    }
+    // create the builder if needed
+    if (!m_pBuilder)
+        m_pBuilder = new ClassBrowserBuilder();
 
     // initialise it
-    m_pBuilderThread->Init(m_pParser,
+    m_pBuilder->Init(m_pParser,
                             m_Tree,
                             XRCCTRL(*this, "treeMembers", wxTreeCtrl),
                             m_ActiveFilename,
                             m_pActiveProject,
                             m_pParser->ClassBrowserOptions(),
-                            m_pParser->GetTokens(),
-                            created_builderthread);
+                            m_pParser->GetTokens());
 
     // and launch it
-    if (!created_builderthread)
-    {
-        m_Semaphore.Post();
-    }
+    m_pBuilder->Run();
 } // end of BuildTree
 
 void ClassBrowser::OnTreeItemExpanding(wxTreeEvent& event)
 {
-    if (m_pBuilderThread)
-        m_pBuilderThread->ExpandItem(event.GetItem());
+
+    if (m_pBuilder)
+    {
+        if(!m_pBuilder->IsRunning())
+        {
+            m_pBuilder->Stop(); // Stop timer to avoid a race condition
+            m_pBuilder->ExpandItem(event.GetItem());
+        }
+        else
+        {
+            if(!m_pBuilder->IsNodeExpanding(event.GetItem()))
+                event.Veto(); // Clicking on items not allowed during build
+        }
+    }
     event.Allow();
 }
 
 void ClassBrowser::OnTreeItemCollapsing(wxTreeEvent& event)
 {
-    if (m_pBuilderThread)
-        m_pBuilderThread->CollapseItem(event.GetItem());
     event.Allow();
+    if (m_pBuilder)
+    {
+        if(!m_pBuilder->IsRunning())
+        {
+            m_pBuilder->Stop();
+            m_pBuilder->CollapseItem(event.GetItem());
+        }
+        else
+        {
+            event.Veto();
+        }
+    }
 }
 
 void ClassBrowser::OnTreeItemSelected(wxTreeEvent& event)
 {
-    if (m_pBuilderThread)
-        m_pBuilderThread->SelectItem(event.GetItem());
     event.Allow();
+    if (m_pBuilder)
+    {
+        if(!m_pBuilder->IsRunning())
+        {
+            m_pBuilder->Stop();
+            m_pBuilder->SelectItem(event.GetItem());
+        }
+        else
+        {
+            event.Veto();
+        }
+    }
 }
