@@ -26,8 +26,12 @@ class ClassBrowserBuilderAuxData
         wxTreeItemId node;
         wxTreeItemId existing;
         wxTreeItemId parent;
-        wxTreeItemIdValue enumerationCookie;
+        int tokenIdx;
+        int tokenKindMask;
         bool ShowInheritance;
+        bool AllowGlobals;
+        TokenIdxSet::iterator start;
+        TokenIdxSet::iterator end;
 };
 
 // Auxiliary functions for the state machine's stack handling
@@ -36,8 +40,13 @@ void StateMachineData<ClassBrowserBuilderAuxData>::CopyFrom(const ClassBrowserBu
     node = src.node;
     existing = src.existing;
     parent = src.parent;
-    enumerationCookie = src.enumerationCookie;
     ShowInheritance = src.ShowInheritance;
+    tokenIdx = src.tokenIdx;
+    tokenKindMask = src.tokenKindMask;
+    ShowInheritance = src.ShowInheritance;
+    AllowGlobals = src.AllowGlobals;
+    start = src.start;
+    end = src.end;
 }
 
 void StateMachineData<ClassBrowserBuilderAuxData>::CopyTo(ClassBrowserBuilderAuxData& dst)
@@ -45,8 +54,13 @@ void StateMachineData<ClassBrowserBuilderAuxData>::CopyTo(ClassBrowserBuilderAux
     dst.node = node;
     dst.existing = existing;
     dst.parent = parent;
-    dst.enumerationCookie = enumerationCookie;
     dst.ShowInheritance = ShowInheritance;
+    dst.tokenIdx = tokenIdx;
+    dst.tokenKindMask = tokenKindMask;
+    dst.ShowInheritance = ShowInheritance;
+    dst.AllowGlobals = AllowGlobals;
+    dst.start = start;
+    dst.end = end;
 }
 
 // A rudimentary state machine with stacks for each function call
@@ -56,11 +70,11 @@ class ClassBrowserBuilderData : public StateMachineHelper<ClassBrowserBuilderAux
         ClassBrowserBuilderData(ClassBrowserBuilder* owner);
         void RemoveInvalidNodes(wxTreeItemId param);
         void ExpandItem(wxTreeItemId param);
+        void AddChildrenOf(wxTreeItemId param, int paramTokenIdx, int paramTokenKindMask = 0xffff);
+        void AddAncestorsOf(wxTreeItemId param, int paramTokenIdx);
+        void AddDescendantsOf(wxTreeItemId param, int paramTokenIdx, bool allowInheritance = true);
+        void AddNodes(wxTreeItemId param, TokenIdxSet::iterator paramStart, TokenIdxSet::iterator paramEnd, int paramTokenKindMask = 0xffff, bool paramAllowGlobals = false);
         void ExpandNamespaces(wxTreeItemId param);
-        void AddChildrenOf(wxTreeItemId param, int tokenIdx, int tokenKindMask = 0xffff);
-        void AddAncestorsOf(wxTreeItemId param, int tokenIdx);
-        void AddDescendantsOf(wxTreeItemId param, int tokenIdx, bool allowInheritance = true);
-        void AddNodes(wxTreeItemId param, TokenIdxSet::iterator start, TokenIdxSet::iterator end, int tokenKindMask = 0xffff, bool allowGlobals = false);
 
         wxTreeItemId root;
     private:
@@ -89,28 +103,53 @@ inline void ClassBrowserBuilderData::ExpandItem(wxTreeItemId param)
     Go_sub(200,tmp);
 }
 
+inline void ClassBrowserBuilderData::AddChildrenOf(wxTreeItemId param, int paramTokenIdx, int paramTokenKindMask)
+{
+    ClassBrowserBuilderAuxData tmp;
+    CopyTo(tmp);
+    tmp.node = param;
+    tmp.tokenIdx = paramTokenIdx;
+    tmp.tokenKindMask = paramTokenKindMask;
+    Go_sub(300,tmp);
+}
+
+inline void ClassBrowserBuilderData::AddAncestorsOf(wxTreeItemId param, int paramTokenIdx)
+{
+    ClassBrowserBuilderAuxData tmp;
+    CopyTo(tmp);
+    tmp.node = param;
+    tmp.tokenIdx = paramTokenIdx;
+    Go_sub(400,tmp);
+}
+
+inline void ClassBrowserBuilderData::AddDescendantsOf(wxTreeItemId param, int paramTokenIdx, bool allowInheritance)
+{
+    ClassBrowserBuilderAuxData tmp;
+    CopyTo(tmp);
+    tmp.node = param;
+    tmp.tokenIdx = paramTokenIdx;
+    tmp.ShowInheritance = allowInheritance;
+    Go_sub(500,tmp);
+}
+
+inline void ClassBrowserBuilderData::AddNodes(wxTreeItemId param, TokenIdxSet::iterator paramStart, TokenIdxSet::iterator paramEnd, int paramTokenKindMask, bool paramAllowGlobals)
+{
+    ClassBrowserBuilderAuxData tmp;
+    CopyTo(tmp);
+    tmp.parent = param;
+    tmp.start = paramStart;
+    tmp.end = paramEnd;
+    tmp.tokenKindMask = paramTokenKindMask;
+    tmp.AllowGlobals = paramAllowGlobals;
+    Go_sub(600,tmp);
+}
+
 inline void ClassBrowserBuilderData::ExpandNamespaces(wxTreeItemId param)
 {
     ClassBrowserBuilderAuxData tmp;
     CopyTo(tmp);
     tmp.node = param;
-    Go_sub(500,tmp);
-}
-
-inline void ClassBrowserBuilderData::AddChildrenOf(wxTreeItemId param, int tokenIdx, int tokenKindMask)
-{
-}
-
-inline void ClassBrowserBuilderData::AddAncestorsOf(wxTreeItemId param, int tokenIdx)
-{
-}
-
-inline void ClassBrowserBuilderData::AddDescendantsOf(wxTreeItemId param, int tokenIdx, bool allowInheritance)
-{
-}
-
-inline void ClassBrowserBuilderData::AddNodes(wxTreeItemId param, TokenIdxSet::iterator start, TokenIdxSet::iterator end, int tokenKindMask, bool allowGlobals)
-{
+    Go_sub(700,tmp);
 }
 
 ClassBrowserBuilder::ClassBrowserBuilder() :
@@ -123,7 +162,9 @@ ClassBrowserBuilder::ClassBrowserBuilder() :
     m_Aborted(false),
     m_IsRunning(false),
     m_Reentrant(false),
-    m_pData(0)
+    m_pData(0),
+    m_Interval(1),  // Set the timer interval to 1 millisecond
+    m_IterationsPerCycle(80)
 {
     //ctor
     m_pData = new ClassBrowserBuilderData(this);
@@ -143,7 +184,7 @@ ClassBrowserBuilder::~ClassBrowserBuilder()
 void ClassBrowserBuilder::Run()
 {
     m_IsRunning = true;
-    m_Timer.Start(5,wxTIMER_CONTINUOUS); // Set the timer interval to 5 milliseconds
+    m_Timer.Start(m_Interval, wxTIMER_CONTINUOUS);
 }
 
 void ClassBrowserBuilder::Stop()
@@ -183,6 +224,7 @@ void ClassBrowserBuilder::Init(Parser* parser,
     m_NodeAddingTime = 0;
     m_NamespacesExpandingTime = 0;
     m_CurrentFileSet.clear();
+    m_NodesWaitingForExpansion.clear();
     m_pData->clear();
     m_pData->ShowInheritance = m_Options.showInheritance;
 
@@ -214,7 +256,14 @@ void ClassBrowserBuilder::OnTimer(wxTimerEvent& evt)
         m_Timer.Stop(); // Stop the timer
         MainLoop();
         if(m_IsRunning) // Still not finished?
+        {
             Run(); // Restart the timer
+        }
+        else
+        {
+            m_NodesWaitingForExpansion.clear();
+        }
+
     }
     m_Reentrant = false;
 }
@@ -233,7 +282,8 @@ void ClassBrowserBuilder::MainLoop()
     m_pTreeTop->Freeze();
     m_pTreeBottom->Freeze();
 
-    for(size_t iteration = 0; iteration < 100 && !m_pData->m_Finished; iteration++)
+    // We run this once every millisecond, so we have to do it fast!
+    for(size_t iteration = 0; iteration < m_IterationsPerCycle && !m_pData->m_Finished; iteration++)
     {
         if(m_Aborted || Manager::IsAppShuttingDown() || m_pData->m_StackError)
             break;
@@ -275,9 +325,7 @@ void ClassBrowserBuilder::MainLoop()
             break;
             case 3: // Build nodes
             {
-                m_pTreeTop->Expand(m_pData->root);
-                ExpandItem(m_pData->root);
-                // m_pData->ExpandItem(m_pData->root);
+                m_pData->ExpandItem(m_pData->root);
             }
             break;
             case 4: // Expand Namespaces
@@ -382,68 +430,63 @@ void ClassBrowserBuilder::MainLoop()
                     m_pData->Ret();
                     break;
                 }
-                // The OnTreeItemExpanding handler works in two ways,
-                // depending on whether we're running or not.
-                // If we're running, it will veto the event unless we tell
-                // it that we're already in the process of expanding the
-                // item.
-                // Otherwise, it will call ExpandItem() and the expansion
-                // will take place immediately.
-                // Here, we're telling it that we're expanding the item
-                // ourselves.
-                if(!IsNodeExpanding(item))
-                {
-                    m_NodesWaitingForExpansion.insert(item); // Flag the item
-                    m_pTreeTop->Expand(item); // Mark the item in the tree as open
-                }
+
+                // Mark the item as expanding so the event handler won't mess up,
+                // then expand the item in the tree
+                PreExpandItem(item);
+
+//                ExpandItem(item);   // In case of bug, uncomment these 3 lines
+//                m_pData->Ret();
+//                break;
 
                 // And now, for the expansion itself.
                 CBTreeData* data = (CBTreeData*)m_pTreeTop->GetItemData(item);
-                if (data)
+                if(!data)
+                    break;
+
+                switch (data->m_SpecialFolder)
                 {
-                    switch (data->m_SpecialFolder)
+                    case sfRoot:
                     {
-                        case sfRoot:
-                        {
-                            CreateSpecialFolders(m_pTreeTop, item);
-                            m_pData->AddChildrenOf(item, -1, ~(tkFunction | tkVariable | tkPreprocessor | tkTypedef));
-                            break;
-                        }
-                        case sfBase: m_pData->AddAncestorsOf(item, data->m_pToken->GetSelf()); break;
-                        case sfDerived: m_pData->AddDescendantsOf(item, data->m_pToken->GetSelf(), false); break;
-                        case sfToken:
-                        {
-                            int kind = 0;
-                            switch (data->m_pToken->m_TokenKind)
-                            {
-                                case tkClass:
-                                {
-                                    // add base and derived classes folders
-                                    if (m_pData->ShowInheritance)
-                                    {
-                                        wxTreeItemId base = AddNodeIfNotThere(m_pTreeTop, item, _("Base classes"), PARSER_IMG_CLASS_FOLDER, new CBTreeData(sfBase, data->m_pToken, tkClass));
-                                        if (!data->m_pToken->m_DirectAncestors.empty())
-                                            m_pTreeTop->SetItemHasChildren(base);
-                                        wxTreeItemId derived = AddNodeIfNotThere(m_pTreeTop, item, _("Derived classes"), PARSER_IMG_CLASS_FOLDER, new CBTreeData(sfDerived, data->m_pToken, tkClass));
-                                        if (!data->m_pToken->m_Descendants.empty())
-                                            m_pTreeTop->SetItemHasChildren(derived);
-                                    }
-                                    kind = tkClass | tkEnum;
-                                    break;
-                                }
-                                case tkNamespace:
-                                    kind = tkNamespace | tkClass | tkEnum;
-                                    break;
-                                default:
-                                    break;
-                            }
-                            if (kind != 0)
-                                m_pData->AddChildrenOf(item, data->m_pToken->GetSelf(), kind);
-                            break;
-                        }
-                        default: break;
+                        CreateSpecialFolders(m_pTreeTop, item);
+                        m_pData->AddChildrenOf(item, -1, ~(tkFunction | tkVariable | tkPreprocessor | tkTypedef));
+                        break;
                     }
+                    case sfBase: m_pData->AddAncestorsOf(item, data->m_pToken->GetSelf()); break;
+                    case sfDerived: m_pData->AddDescendantsOf(item, data->m_pToken->GetSelf(), false); break;
+                    case sfToken:
+                    {
+                        int kind = 0;
+                        switch (data->m_pToken->m_TokenKind)
+                        {
+                            case tkClass:
+                            {
+                                // add base and derived classes folders
+                                if (m_pData->ShowInheritance)
+                                {
+                                    wxTreeItemId base = AddNodeIfNotThere(m_pTreeTop, item, _("Base classes"), PARSER_IMG_CLASS_FOLDER, new CBTreeData(sfBase, data->m_pToken, tkClass));
+                                    if (!data->m_pToken->m_DirectAncestors.empty())
+                                        m_pTreeTop->SetItemHasChildren(base);
+                                    wxTreeItemId derived = AddNodeIfNotThere(m_pTreeTop, item, _("Derived classes"), PARSER_IMG_CLASS_FOLDER, new CBTreeData(sfDerived, data->m_pToken, tkClass));
+                                    if (!data->m_pToken->m_Descendants.empty())
+                                        m_pTreeTop->SetItemHasChildren(derived);
+                                }
+                                kind = tkClass | tkEnum;
+                                break;
+                            }
+                            case tkNamespace:
+                                kind = tkNamespace | tkClass | tkEnum;
+                                break;
+                            default:
+                                break;
+                        }
+                        if (kind != 0)
+                            m_pData->AddChildrenOf(item, data->m_pToken->GetSelf(), kind);
+                        break;
+                    }
+                    default: break;
                 }
+
             }
             break;
 
@@ -451,96 +494,167 @@ void ClassBrowserBuilder::MainLoop()
             {
                 m_pData->Ret();
             }
+            break;
 
             // *** AddChildrenOf ***
-            case 210:
+            // void AddChildrenOf(wxTreeItemId param, int paramTokenIdx, int paramTokenKindMask = 0xffff);
+
+            case 300:
+            {
+                Token* parentToken = 0;
+                TokenIdxSet::iterator it;
+                TokenIdxSet::iterator it_end;
+
+                if (m_pData->tokenIdx == -1)
+                {
+                    it = m_pTokens->m_GlobalNameSpace.begin();
+                    it_end = m_pTokens->m_GlobalNameSpace.end();
+                }
+                else
+                {
+                    parentToken = m_pTokens->at(m_pData->tokenIdx);
+                    if (!parentToken)
+                    {
+                        m_pData->Ret(); // Error: Token not found!!
+                        break;
+                    }
+                    it = parentToken->m_Children.begin();
+                    it_end = parentToken->m_Children.end();
+                }
+                m_pData->AddNodes(m_pData->node,it,it_end, m_pData->tokenKindMask);
+            }
+            break;
+            case 301:
             {
                 m_pData->Ret();
-            }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-            {
-                iteration += 100; // This is a very expensive operation
-                m_pTreeTop->Expand(m_pData->root);
-                if(platform::gtk)
-                {
-                    // seems like the "expand" event comes too late in wxGTK,
-                    // so make it happen now
-                    ExpandItem(m_pData->root);
-                }
-                m_pData->Go_to(299);
             }
             break;
 
+            // *** AddAncestorsOf ***
+            // void AddAncestorsOf(wxTreeItemId param, int paramTokenIdx);
 
+            case 400:
+            {
+                Token* token = m_pTokens->at(m_pData->tokenIdx);
+                if (!token)
+                {
+                    m_pData->Ret();
+                    break;
+                }
+                m_pData->AddNodes(m_pData->node, token->m_DirectAncestors.begin(), token->m_DirectAncestors.end(), tkClass | tkTypedef, true);
+            }
+            break;
 
-            case 299:
+            case 401:
             {
                 m_pData->Ret();
             }
+            break;
 
+            // *** AddDescendantsOf ***
+            // void AddDescendantsOf(wxTreeItemId param, int paramTokenIdx, bool allowInheritance = true);
 
-
-            // *** ExpandNamespaces(node): States 500 - 504 ***
-
-            case 500: // Expand namespaces
+            case 500:
             {
-                if (!m_Options.expandNS || !(m_pData->node.IsOk()))
+                Token* token = m_pTokens->at(m_pData->tokenIdx);
+                if (!token)
                 {
                     m_pData->Ret();
+                    break;
                 }
+                m_pData->AddNodes(m_pData->node, token->m_Descendants.begin(), token->m_Descendants.end(), tkClass | tkTypedef, true);
             }
             break;
 
             case 501:
             {
-                m_pData->existing = m_pTreeTop->GetFirstChild(m_pData->node, m_pData->enumerationCookie);
+                m_pData->Ret();
             }
             break;
 
-            case 502:
+            // *** AddNodes ***
+            // void AddNodes(wxTreeItemId param, TokenIdxSet::iterator paramStart, TokenIdxSet::iterator paramEnd, int paramTokenKindMask = 0xffff, bool paramAllowGlobals = false);
+
+            case 600:
+            {
+                if(m_pData->start == m_pData->end)
+                {
+                    m_pData->Ret();
+                    break;
+                }
+                Token* token = m_pTokens->at(*(m_pData->start));
+                if (token &&
+                    (token->m_TokenKind & m_pData->tokenKindMask) &&
+                    (m_pData->AllowGlobals || token->m_IsLocal) &&
+                    TokenMatchesFilter(token))
+                {
+                    int img = m_pParser->GetTokenKindImage(token);
+
+                    wxString str = token->m_Name;
+                    if (token->m_TokenKind == tkFunction || token->m_TokenKind == tkConstructor || token->m_TokenKind == tkDestructor)
+                        str << token->m_Args;
+                    if (!token->m_ActualType.IsEmpty())
+                         str = str + _T(" : ") + token->m_ActualType;
+
+                    wxTreeItemId child = AddNodeIfNotThere(m_pTreeTop, m_pData->parent, str, img, new CBTreeData(sfToken, token, m_pData->tokenKindMask));
+                    // mark as expanding if it is a container
+                    if (token->m_TokenKind == tkClass)
+                        m_pTreeTop->SetItemHasChildren(child, m_pData->ShowInheritance || TokenContainsChildrenOfKind(token, tkClass | tkNamespace | tkEnum));
+                    else if (token->m_TokenKind & (tkNamespace | tkEnum))
+                        m_pTreeTop->SetItemHasChildren(child, TokenContainsChildrenOfKind(token, tkClass | tkNamespace | tkEnum));
+                }
+                m_pData->start++;
+                m_pData->Go_to(600); // Loop
+            }
+            break;
+
+            // *** ExpandNamespaces(node): States 700 - 702 ***
+
+            case 700:
+            {
+                if( !m_Options.expandNS || !(m_pData->node.IsOk()))
+                {
+                    m_pData->Ret();
+                    break;
+                }
+                wxTreeItemIdValue enumerationCookie;
+                m_pData->existing = m_pTreeTop->GetFirstChild(m_pData->node, enumerationCookie);
+            }
+            break;
+
+            case 701:
             {
                 // Begin of Loop
-                if(!(m_pData->existing.IsOk()))
+                wxTreeItemId item = m_pData->existing;
+                if(!item.IsOk())
                 {
                     m_pData->Ret(); // Return from subroutine
+                    break;
                 }
-            }
-            break;
 
-            case 503:
-            {
-                CBTreeData* data = (CBTreeData*)m_pTreeTop->GetItemData(m_pData->existing);
+                CBTreeData* data = (CBTreeData*)m_pTreeTop->GetItemData(item);
                 if (data && data->m_pToken && data->m_pToken->m_TokenKind == tkNamespace)
                 {
-                    m_pTreeTop->Expand(m_pData->existing);
-                    // Recurse
-                    m_pData->ExpandNamespaces(m_pData->existing);
+                    if(!IsNodeExpanding(item))
+                    {
+                        m_NodesWaitingForExpansion.insert(item); // Flag the item
+                        m_pTreeTop->Expand(item); // Mark the item in the tree as open
+                    }
+                    m_pData->ExpandNamespaces(item); // Recurse
                 }
             }
             break;
 
-            case 504:
+            case 702:
             {
+                // Conditions could have changed. We need to check.
+                if(!(m_pData->existing.IsOk()))
+                {
+                    m_pData->Ret();
+                    break;
+                }
                 m_pData->existing = m_pTreeTop->GetNextSibling(m_pData->existing);
-                m_pData->Go_to(502);
+                m_pData->Go_to(701);
                 // End of Loop
             }
             break;
@@ -564,6 +678,15 @@ void ClassBrowserBuilder::MainLoop()
         }
     }
     return;
+}
+
+void ClassBrowserBuilder::PreExpandItem(wxTreeItemId item)
+{
+    if(!IsNodeExpanding(item))
+    {
+        m_NodesWaitingForExpansion.insert(item); // Flag the item
+        m_pTreeTop->Expand(item); // Mark the item in the tree as open
+    }
 }
 
 bool ClassBrowserBuilder::IsNodeExpanding(wxTreeItemId node)

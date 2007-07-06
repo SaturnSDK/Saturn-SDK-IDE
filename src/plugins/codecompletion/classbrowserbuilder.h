@@ -75,6 +75,7 @@ class ClassBrowserBuilder : public wxEvtHandler
         bool AddAncestorsOf(wxTreeCtrl* tree, wxTreeItemId parent, int tokenIdx);
         bool AddDescendantsOf(wxTreeCtrl* tree, wxTreeItemId parent, int tokenIdx, bool allowInheritance = true);
         bool AddNodes(wxTreeCtrl* tree, wxTreeItemId parent, TokenIdxSet::iterator start, TokenIdxSet::iterator end, int tokenKindMask = 0xffff, bool allowGlobals = false);
+        void PreExpandItem(wxTreeItemId item);
         void SelectNode(wxTreeItemId node);
         bool TokenMatchesFilter(Token* token);
         bool TokenContainsChildrenOfKind(Token* token, int kind);
@@ -101,6 +102,8 @@ class ClassBrowserBuilder : public wxEvtHandler
         bool m_IsRunning;
         bool m_Reentrant;
         ClassBrowserBuilderData* m_pData;
+        unsigned int m_Period;
+        unsigned int m_IterationsPerCycle;
     private:
         DECLARE_EVENT_TABLE()
 };

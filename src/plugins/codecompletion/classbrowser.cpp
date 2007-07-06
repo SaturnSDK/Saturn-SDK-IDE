@@ -600,14 +600,25 @@ void ClassBrowser::OnTreeItemExpanding(wxTreeEvent& event)
         {
             m_pBuilder->Stop(); // Stop timer to avoid a race condition
             m_pBuilder->ExpandItem(event.GetItem());
+            event.Allow();
         }
         else
         {
             if(!m_pBuilder->IsNodeExpanding(event.GetItem()))
+            {
                 event.Veto(); // Clicking on items not allowed during build
+            }
+            else
+            {
+                event.Allow(); // Unless authorized
+            }
         }
     }
-    event.Allow();
+    else
+    {
+        event.Allow();
+    }
+
 }
 
 void ClassBrowser::OnTreeItemCollapsing(wxTreeEvent& event)
