@@ -227,6 +227,8 @@ void ClassBrowserBuilder::Init(Parser* parser,
     m_NodesWaitingForExpansion.clear();
     m_pData->clear();
     m_pData->ShowInheritance = m_Options.showInheritance;
+    m_AddNodeSearchCount = 0;
+    m_AddNodeCount = 0;
 
     // fill filter set for current-file-filter
     if (m_Options.displayFilter == bdfFile && !m_ActiveFilename.IsEmpty())
@@ -696,7 +698,9 @@ bool ClassBrowserBuilder::IsNodeExpanding(wxTreeItemId node)
 
 void ClassBrowserBuilder::OnFinished()
 {
-    Manager::Get()->GetMessageManager()->DebugLog(_("Class browser updated."));
+    wxString s;
+    s.Printf(_T("Class browser updated (%d nodes added in %d search operations)."),m_AddNodeCount,m_AddNodeSearchCount);
+    Manager::Get()->GetMessageManager()->DebugLog(s);
     if(m_pParser)
     {
         wxCommandEvent event(idClassBrowserUpdated);
@@ -746,7 +750,6 @@ wxTreeItemId ClassBrowserBuilder::AddNodeIfNotThere(wxTreeCtrl* tree, wxTreeItem
             tree->SetItemImage(existing, imgIndex, wxTreeItemIcon_Normal);
             tree->SetItemImage(existing, imgIndex, wxTreeItemIcon_Selected);
             tree->SetItemData(existing, data);
-
             return existing;
         }
 
@@ -780,8 +783,10 @@ wxTreeItemId ClassBrowserBuilder::AddNodeIfNotThere(wxTreeCtrl* tree, wxTreeItem
             }
         }
         existing = tree->GetNextChild(parent, cookie);
+        m_AddNodeSearchCount++;
     }
 
+    m_AddNodeCount++;
     if (sorted)
         existing = tree->InsertItem(parent, insert_after, name, imgIndex, imgIndex, data);
     else

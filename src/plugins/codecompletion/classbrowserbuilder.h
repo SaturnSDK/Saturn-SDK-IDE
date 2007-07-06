@@ -93,6 +93,8 @@ class ClassBrowserBuilder : public wxEvtHandler
         unsigned long m_NodeRemovingTime;
         unsigned long m_NodeAddingTime;
         unsigned long m_NamespacesExpandingTime;
+        unsigned long m_AddNodeSearchCount;
+        unsigned long m_AddNodeCount;
 
         // pair of current-file-filter
         TokenFilesSet m_CurrentFileSet;
@@ -102,7 +104,7 @@ class ClassBrowserBuilder : public wxEvtHandler
         bool m_IsRunning;
         bool m_Reentrant;
         ClassBrowserBuilderData* m_pData;
-        unsigned int m_Period;
+        unsigned int m_Interval;
         unsigned int m_IterationsPerCycle;
     private:
         DECLARE_EVENT_TABLE()
