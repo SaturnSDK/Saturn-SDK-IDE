@@ -26,8 +26,8 @@ namespace appglobals
         const wxString AppActualVersion		= _T("svn-r") +  ConfigManager::GetRevisionString();
     #else
         const wxString AppVersion				= _T(RELEASE);
-        const wxString AppActualVersionVerb	= _T("Release " RELEASE "  rev ") + ConfigManager::GetRevisionString();
-        const wxString AppActualVersion		= _T(RELEASE "-r") + ConfigManager::GetRevisionString();
+        const wxString AppActualVersionVerb	= _T("Release " RELEASE);
+        const wxString AppActualVersion		= _T(RELEASE);
     #endif
 
     const wxString AppUrl					= _T("http://www.codeblocks.org");
