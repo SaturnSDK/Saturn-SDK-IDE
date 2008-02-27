@@ -46,15 +46,22 @@ void cbSplashScreen::DoPaint(wxDC &dc)
 
   dc.SetTextForeground(*wxBLACK);
   dc.SetFont(largeFont);
+#if SVN_BUILD
   dc.DrawText(release,  92 - a, y);
+#else
+  dc.DrawText(release,  92 - a, y + (b >> 1));
+#endif
   if (PluginManager::GetSafeMode())
   {
 	dc.SetTextForeground(*wxRED);
 	dc.DrawText(_("SAFE MODE"), (dc.GetSize().GetX() - e) / 2, y + b);
 	dc.SetTextForeground(*wxBLACK);
   }
+#if SVN_BUILD
+  // only render SVN revision when not building official release
   dc.SetFont(smallFont);
   dc.DrawText(revision, 92 - c, y + b);
+#endif
 }
 
 void cbSplashScreen::OnPaint(wxPaintEvent &)

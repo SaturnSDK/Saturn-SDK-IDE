@@ -73,9 +73,14 @@ dlgAbout::dlgAbout(wxWindow* parent)
         int y = 180 - ((b + d + 8)>>1);
 
         dc.SetFont(largeFont);
+	#if SVN_BUILD
         dc.DrawText(release,  92 - a, y);
+		// only render SVN revision when not building official release
         dc.SetFont(smallFont);
         dc.DrawText(revision, 92 - c, y + b);
+	#else
+        dc.DrawText(release,  92 - a, y + (b >> 1));
+	#endif
     }
 
 	bmpControl->SetBitmap(bmp);
