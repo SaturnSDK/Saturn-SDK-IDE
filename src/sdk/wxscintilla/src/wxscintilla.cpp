@@ -145,7 +145,7 @@ wxScintilla::wxScintilla (wxWindow *parent,
                           long style,
                           const wxString& name) {
     m_swx = NULL;
-    Create(parent, id, pos, size, style, name);
+    Create (parent, id, pos, size, style, name);
 }
 
 
@@ -193,7 +193,7 @@ bool wxScintilla::Create (wxWindow *parent,
 }
 
 wxScintilla::~wxScintilla() {
-    delete m_swx; m_swx = NULL;
+    delete m_swx; m_swx = 0;
 }
 
 

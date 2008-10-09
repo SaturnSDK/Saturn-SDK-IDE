@@ -395,6 +395,16 @@
 #define wxSCI_LEX_INNOSETUP 76
 #define wxSCI_LEX_OPAL 77
 #define wxSCI_LEX_SPICE 78
+#define wxSCI_LEX_D 79
+#define wxSCI_LEX_CMAKE 80
+#define wxSCI_LEX_GAP 81
+#define wxSCI_LEX_PLM 82
+#define wxSCI_LEX_PROGRESS 83
+#define wxSCI_LEX_ABAQUS 84
+#define wxSCI_LEX_ASYMPTOTE 85
+#define wxSCI_LEX_R 86
+#define wxSCI_LEX_MAGIK 87
+#define wxSCI_LEX_POWERSHELL 88
 
 // When a lexer specifies its language as SCLEX_AUTOMATIC it receives a
 // value assigned in sequence from SCLEX_AUTOMATIC+1.
