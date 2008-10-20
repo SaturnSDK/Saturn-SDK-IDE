@@ -783,6 +783,9 @@ cbStyledTextCtrl* cbEditor::CreateEditor()
         wxEVT_SCI_HOTSPOT_CLICK,
         wxEVT_SCI_HOTSPOT_DCLICK,
         wxEVT_SCI_CALLTIP_CLICK,
+//        wxEVT_SCI_AUTOCOMP_SELECTION,
+//        wxEVT_SCI_INDICATOR_CLICK,
+//        wxEVT_SCI_INDICATOR_RELEASE,
 
         -1 // to help enumeration of this array
     };
@@ -1008,13 +1011,13 @@ void cbEditor::InternalSetEditorStyleBeforeFileOpen(cbStyledTextCtrl* control)
     // if user wants "Home" key to set cursor to the very beginning of line
     if (mgr->ReadBool(_T("/simplified_home"), false))
     {
-        control->CmdKeyAssign(wxSCI_KEY_HOME, wxSCI_SCMOD_NULL, wxSCI_CMD_HOME);
+        control->CmdKeyAssign(wxSCI_KEY_HOME, wxSCI_SCMOD_NORM, wxSCI_CMD_HOME);
         control->CmdKeyAssign(wxSCI_KEY_HOME, wxSCI_SCMOD_SHIFT, wxSCI_CMD_HOMEEXTEND);
         control->CmdKeyAssign(wxSCI_KEY_HOME, wxSCI_SCMOD_ALT | wxSCI_SCMOD_SHIFT, wxSCI_CMD_HOMERECTEXTEND);
     }
     else // else set default "Home" key behavior
     {
-        control->CmdKeyAssign(wxSCI_KEY_HOME, wxSCI_SCMOD_NULL, wxSCI_CMD_VCHOME);
+        control->CmdKeyAssign(wxSCI_KEY_HOME, wxSCI_SCMOD_NORM, wxSCI_CMD_VCHOME);
         control->CmdKeyAssign(wxSCI_KEY_HOME, wxSCI_SCMOD_SHIFT, wxSCI_CMD_VCHOMEEXTEND);
         control->CmdKeyAssign(wxSCI_KEY_HOME, wxSCI_SCMOD_ALT | wxSCI_SCMOD_SHIFT, wxSCI_CMD_VCHOMERECTEXTEND);
     }
@@ -2740,6 +2743,8 @@ void cbEditor::OnScintillaEvent(wxScintillaEvent& event)
 //  else if (type == wxEVT_SCI_HOTSPOT_CLICK) txt << _T("wxEVT_SCI_HOTSPOT_CLICK");
 //  else if (type == wxEVT_SCI_HOTSPOT_DCLICK) txt << _T("wxEVT_SCI_HOTSPOT_DCLICK");
 //  else if (type == wxEVT_SCI_CALLTIP_CLICK) txt << _T("wxEVT_SCI_CALLTIP_CLICK");
+//  else if (type == wxEVT_SCI_INDICATOR_CLICK) txt << _T("wxEVT_SCI_INDICATOR_CLICK");
+//  else if (type == wxEVT_SCI_INDICATOR_RELEASE) txt << _T("wxEVT_SCI_INDICATOR_RELEASE");
 //    Manager::Get()->GetLogManager()->DebugLog(txt);
 
     // call any hooked functors

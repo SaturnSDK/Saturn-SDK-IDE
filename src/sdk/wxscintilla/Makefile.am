@@ -72,6 +72,7 @@ libwxscintilla_la_SOURCES = src/PlatWX.cpp \
 							src/scintilla/src/LexMMIXAL.cxx \
 							src/scintilla/src/LexMPT.cxx \
 							src/scintilla/src/LexMSSQL.cxx \
+							src/scintilla/src/LexMySQL.cxx \
 							src/scintilla/src/LexNsis.cxx \
 							src/scintilla/src/LexOpal.cxx \
 							src/scintilla/src/LexOthers.cxx \
