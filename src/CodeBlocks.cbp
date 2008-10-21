@@ -3867,6 +3867,9 @@
 		<Unit filename="sdk\wxscintilla\src\scintilla\src\LexMetapost.cxx">
 			<Option target="scintilla" />
 		</Unit>
+		<Unit filename="sdk\wxscintilla\src\scintilla\src\LexMySQL.cxx">
+			<Option target="scintilla" />
+		</Unit>
 		<Unit filename="sdk\wxscintilla\src\scintilla\src\LexNsis.cxx">
 			<Option target="scintilla" />
 		</Unit>
