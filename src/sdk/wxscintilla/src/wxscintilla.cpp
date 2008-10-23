@@ -3097,110 +3097,110 @@ int wxScintilla::GetCaretLineBackAlpha () const
 // Set the style of the caret to be drawn.
 void wxScintilla::SetCaretStyle(int caretStyle)
 {
-    SendMsg(2512, caretStyle, 0);
+    SendMsg(SCI_SETCARETSTYLE, caretStyle, 0);
 }
 
 // Returns the current style of the caret.
 int wxScintilla::GetCaretStyle() const
 {
-    return SendMsg(2513, 0, 0);
+    return SendMsg(SCI_GETCARETSTYLE, 0, 0);
 }
 
 // Set the indicator used for IndicatorFillRange and IndicatorClearRange
 void wxScintilla::SetIndicatorCurrent(int indicator)
 {
-    SendMsg(2500, indicator, 0);
+    SendMsg(SCI_SETINDICATORCURRENT, indicator, 0);
 }
 
 // Get the current indicator
 int wxScintilla::GetIndicatorCurrent() const
 {
-    return SendMsg(2501, 0, 0);
+    return SendMsg(SCI_GETINDICATORCURRENT, 0, 0);
 }
 
 // Set the value used for IndicatorFillRange
 void wxScintilla::SetIndicatorValue(int value)
 {
-    SendMsg(2502, value, 0);
+    SendMsg(SCI_SETINDICATORVALUE, value, 0);
 }
 
 // Get the current indicator vaue
 int wxScintilla::GetIndicatorValue() const
 {
-    return SendMsg(2503, 0, 0);
+    return SendMsg(SCI_GETINDICATORVALUE, 0, 0);
 }
 
 // Turn a indicator on over a range.
 void wxScintilla::IndicatorFillRange(int position, int fillLength)
 {
-    SendMsg(2504, position, fillLength);
+    SendMsg(SCI_INDICATORFILLRANGE, position, fillLength);
 }
 
 // Turn a indicator off over a range.
 void wxScintilla::IndicatorClearRange(int position, int clearLength)
 {
-    SendMsg(2505, position, clearLength);
+    SendMsg(SCI_INDICATORCLEARRANGE, position, clearLength);
 }
 
 // Are any indicators present at position?
 int wxScintilla::IndicatorAllOnFor(int position)
 {
-    return SendMsg(2506, position, 0);
+    return SendMsg(SCI_INDICATORALLONFOR, position, 0);
 }
 
 // What value does a particular indicator have at at a position?
 int wxScintilla::IndicatorValueAt(int indicator, int position)
 {
-    return SendMsg(2507, indicator, position);
+    return SendMsg(SCI_INDICATORVALUEAT, indicator, position);
 }
 
 // Where does a particular indicator start?
 int wxScintilla::IndicatorStart(int indicator, int position)
 {
-    return SendMsg(2508, indicator, position);
+    return SendMsg(SCI_INDICATORSTART, indicator, position);
 }
 
 // Where does a particular indicator end?
 int wxScintilla::IndicatorEnd(int indicator, int position)
 {
-    return SendMsg(2509, indicator, position);
+    return SendMsg(SCI_INDICATOREND, indicator, position);
 }
 
 // Set number of entries in position cache
 void wxScintilla::SetPositionCacheSize(int size)
 {
-    SendMsg(2514, size, 0);
+    SendMsg(SCI_SETPOSITIONCACHE, size, 0);
 }
 
 // How many entries are allocated to the position cache?
 int wxScintilla::GetPositionCacheSize() const
 {
-    return SendMsg(2515, 0, 0);
+    return SendMsg(SCI_GETPOSITIONCACHE, 0, 0);
 }
 
 // Copy the selection, if selection empty copy the line with the caret
 void wxScintilla::CopyAllowLine()
 {
-    SendMsg(2519, 0, 0);
+    SendMsg(SCI_GETPOSITIONCACHE, 0, 0);
 }
 
 // Compact the document buffer and return a read-only pointer to the
 // characters in the document.
 int wxScintilla::GetCharacterPointer() const
 {
-    return SendMsg(2520, 0, 0);
+    return SendMsg(SCI_GETCHARACTERPOINTER, 0, 0);
 }
 
 // Always interpret keyboard input as Unicode
 void wxScintilla::SetKeysUnicode(bool keysUnicode)
 {
-    SendMsg(2521, keysUnicode, 0);
+    SendMsg(SCI_SETKEYSUNICODE, keysUnicode, 0);
 }
 
 // Are keys always interpreted as Unicode?
 bool wxScintilla::GetKeysUnicode() const
 {
-    return SendMsg(2522, 0, 0) != 0;
+    return SendMsg(SCI_GETKEYSUNICODE, 0, 0) != 0;
 }
 
 // Start notifying the container of all key presses and commands.
@@ -3242,13 +3242,13 @@ void wxScintilla::SetProperty (const wxString& key, const wxString& value)
 // Set up the key words used by the lexer.
 void wxScintilla::SetKeyWords(int keywordSet, const wxString& keyWords)
 {
-    SendMsg(4005, keywordSet, (sptr_t)(const char*)wx2sci(keyWords));
+    SendMsg(SCI_SETKEYWORDS, keywordSet, (sptr_t)(const char*)wx2sci(keyWords));
 }
 
 // Set the lexing language of the document based on string name.
 void wxScintilla::SetLexerLanguage(const wxString& language)
 {
-    SendMsg(4006, 0, (sptr_t)(const char*)wx2sci(language));
+    SendMsg(SCI_SETLEXERLANGUAGE, 0, (sptr_t)(const char*)wx2sci(language));
 }
 
 // Retrieve a 'property' value previously set with SetProperty.
