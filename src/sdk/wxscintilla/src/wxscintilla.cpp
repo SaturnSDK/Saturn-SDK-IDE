@@ -3181,7 +3181,7 @@ int wxScintilla::GetPositionCacheSize() const
 // Copy the selection, if selection empty copy the line with the caret
 void wxScintilla::CopyAllowLine()
 {
-    SendMsg(SCI_GETPOSITIONCACHE, 0, 0);
+    SendMsg(SCI_COPYALLOWLINE, 0, 0);
 }
 
 // Compact the document buffer and return a read-only pointer to the
