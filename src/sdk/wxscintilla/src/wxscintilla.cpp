@@ -244,90 +244,90 @@ void wxScintilla::SetHScrollBar (wxScrollBar* bar) {
 // Add text to the document at current position.
 void wxScintilla::AddText (const wxString& text) {
     wxWX2MBbuf buf = (wxWX2MBbuf)wx2sci(text);
-    SendMsg (SCI_ADDTEXT, strlen(buf), (sptr_t)(const char*)buf);
+    SendMsg(SCI_ADDTEXT, strlen(buf), (sptr_t)(const char*)buf);
 }
 
 // Add text to the document w/length parameter, this allows for binary data to be added.
 void wxScintilla::AddText (const int length, const wxString& text) {
     wxWX2MBbuf buf = (wxWX2MBbuf)wx2sci(text);
-    SendMsg (SCI_ADDTEXT, length, (sptr_t)(const char*)buf);
+    SendMsg(SCI_ADDTEXT, length, (sptr_t)(const char*)buf);
 }
 
 // Add array of cells to document.
 void wxScintilla::AddStyledText (const wxMemoryBuffer& data) {
-    SendMsg (SCI_ADDSTYLEDTEXT, data.GetDataLen(), (sptr_t)data.GetData());
+    SendMsg(SCI_ADDSTYLEDTEXT, data.GetDataLen(), (sptr_t)data.GetData());
 }
 
 // Insert string at a position.
 void wxScintilla::InsertText (int pos, const wxString& text)
 {
-    SendMsg (SCI_INSERTTEXT, pos, (sptr_t)(const char*)wx2sci(text));
+    SendMsg(SCI_INSERTTEXT, pos, (sptr_t)(const char*)wx2sci(text));
 }
 
 // Delete all text in the document.
 void wxScintilla::ClearAll()
 {
-    SendMsg (SCI_CLEARALL, 0, 0);
+    SendMsg(SCI_CLEARALL, 0, 0);
 }
 
 // Set all style bytes to 0, remove all folding information.
 void wxScintilla::ClearDocumentStyle()
 {
-    SendMsg (SCI_CLEARDOCUMENTSTYLE, 0, 0);
+    SendMsg(SCI_CLEARDOCUMENTSTYLE, 0, 0);
 }
 
 // Returns the number of bytes in the document.
 int wxScintilla::GetLength() const
 {
-    return SendMsg (SCI_GETLENGTH, 0, 0);
+    return SendMsg(SCI_GETLENGTH, 0, 0);
 }
 
 // Returns the character byte at the position.
 int wxScintilla::GetCharAt (int pos) const {
-    return (unsigned char)SendMsg (SCI_GETCHARAT, pos, 0);
+    return (unsigned char)SendMsg(SCI_GETCHARAT, pos, 0);
 }
 
 // Returns the position of the caret.
 int wxScintilla::GetCurrentPos() const
 {
-    return SendMsg (SCI_GETCURRENTPOS, 0, 0);
+    return SendMsg(SCI_GETCURRENTPOS, 0, 0);
 }
 
 // Returns the position of the opposite end of the selection to the caret.
 int wxScintilla::GetAnchor() const
 {
-    return SendMsg (SCI_GETANCHOR, 0, 0);
+    return SendMsg(SCI_GETANCHOR, 0, 0);
 }
 
 // Returns the style byte at the position.
 int wxScintilla::GetStyleAt (int pos) const {
-    return (unsigned char)SendMsg (SCI_GETSTYLEAT, pos, 0);
+    return (unsigned char)SendMsg(SCI_GETSTYLEAT, pos, 0);
 }
 
 // Redoes the next action on the undo history.
 void wxScintilla::Redo()
 {
-    SendMsg (SCI_REDO, 0, 0);
+    SendMsg(SCI_REDO, 0, 0);
 }
 
 // Choose between collecting actions into the undo
 // history and discarding them.
 void wxScintilla::SetUndoCollection (bool collectUndo)
 {
-    SendMsg (SCI_SETUNDOCOLLECTION, collectUndo, 0);
+    SendMsg(SCI_SETUNDOCOLLECTION, collectUndo, 0);
 }
 
 // Select all the text in the document.
 void wxScintilla::SelectAll()
 {
-    SendMsg (SCI_SELECTALL, 0, 0);
+    SendMsg(SCI_SELECTALL, 0, 0);
 }
 
 // Remember the current position in the undo history as the position
 // at which the document was saved.
 void wxScintilla::SetSavePoint()
 {
-    SendMsg (SCI_SETSAVEPOINT, 0, 0);
+    SendMsg(SCI_SETSAVEPOINT, 0, 0);
 }
 
 // Retrieve a buffer of cells.
@@ -344,7 +344,7 @@ wxMemoryBuffer wxScintilla::GetStyledText (int startPos, int endPos) {
         tr.lpstrText = (char*)buf.GetWriteBuf(len*2+1);
         tr.chrg.cpMin = startPos;
         tr.chrg.cpMax = endPos;
-        len = SendMsg (SCI_GETSTYLEDTEXT, 0, (sptr_t)&tr);
+        len = SendMsg(SCI_GETSTYLEDTEXT, 0, (sptr_t)&tr);
         buf.UngetWriteBuf(len);
         return buf;
 }
@@ -352,69 +352,69 @@ wxMemoryBuffer wxScintilla::GetStyledText (int startPos, int endPos) {
 // Are there any redoable actions in the undo history?
 bool wxScintilla::CanRedo() const
 {
-    return SendMsg (SCI_CANREDO, 0, 0) != 0;
+    return SendMsg(SCI_CANREDO, 0, 0) != 0;
 }
 
 // Retrieve the line number at which a particular marker is located.
 int wxScintilla::MarkerLineFromHandle (int handle)
 {
-    return SendMsg (SCI_MARKERLINEFROMHANDLE, handle, 0);
+    return SendMsg(SCI_MARKERLINEFROMHANDLE, handle, 0);
 }
 
 // Delete a marker.
 void wxScintilla::MarkerDeleteHandle (int handle)
 {
-    SendMsg (SCI_MARKERDELETEHANDLE, handle, 0);
+    SendMsg(SCI_MARKERDELETEHANDLE, handle, 0);
 }
 
 // Is undo history being collected?
 bool wxScintilla::GetUndoCollection() const
 {
-    return SendMsg (SCI_GETUNDOCOLLECTION, 0, 0) != 0;
+    return SendMsg(SCI_GETUNDOCOLLECTION, 0, 0) != 0;
 }
 
 // Are white space characters currently visible?
 // Returns one of SCWS_* constants.
 int wxScintilla::GetViewWhiteSpace() const
 {
-    return SendMsg (SCI_GETVIEWWS, 0, 0);
+    return SendMsg(SCI_GETVIEWWS, 0, 0);
 }
 
 // Make white space characters invisible, always visible or visible outside indentation.
 void wxScintilla::SetViewWhiteSpace (int viewWS)
 {
-    SendMsg (SCI_SETVIEWWS, viewWS, 0);
+    SendMsg(SCI_SETVIEWWS, viewWS, 0);
 }
 
 // Find the position from a point within the window.
 int wxScintilla::PositionFromPoint (wxPoint pt) const {
-        return SendMsg (SCI_POSITIONFROMPOINT, pt.x, pt.y);
+        return SendMsg(SCI_POSITIONFROMPOINT, pt.x, pt.y);
 }
 
 // Find the position from a point within the window but return
 // INVALID_POSITION if not close to text.
 int wxScintilla::PositionFromPointClose (int x, int y)
 {
-    return SendMsg (SCI_POSITIONFROMPOINTCLOSE, x, y);
+    return SendMsg(SCI_POSITIONFROMPOINTCLOSE, x, y);
 }
 
 // Set caret to start of a line and ensure it is visible.
 void wxScintilla::GotoLine (int line)
 {
-    SendMsg (SCI_GOTOLINE, line, 0);
+    SendMsg(SCI_GOTOLINE, line, 0);
 }
 
 // Set caret to a position and ensure it is visible.
 void wxScintilla::GotoPos (int pos)
 {
-    SendMsg (SCI_GOTOPOS, pos, 0);
+    SendMsg(SCI_GOTOPOS, pos, 0);
 }
 
 // Set the selection anchor to a position. The anchor is the opposite
 // end of the selection from the caret.
 void wxScintilla::SetAnchor (int posAnchor)
 {
-    SendMsg (SCI_SETANCHOR, posAnchor, 0);
+    SendMsg(SCI_SETANCHOR, posAnchor, 0);
 }
 
 // Retrieve the text of the line containing the caret.
@@ -429,7 +429,7 @@ wxString wxScintilla::GetCurLine(int* linePos) {
         wxMemoryBuffer mbuf(len+1);
         char* buf = (char*)mbuf.GetWriteBuf(len+1);
 
-        int pos = SendMsg (SCI_GETCURLINE, len+1, (sptr_t)buf);
+        int pos = SendMsg(SCI_GETCURLINE, len+1, (sptr_t)buf);
         mbuf.UngetWriteBuf(len);
         mbuf.AppendByte(0);
         if (linePos)  *linePos = pos;
@@ -439,64 +439,64 @@ wxString wxScintilla::GetCurLine(int* linePos) {
 // Retrieve the position of the last correctly styled character.
 int wxScintilla::GetEndStyled() const
 {
-    return SendMsg (SCI_GETENDSTYLED, 0, 0);
+    return SendMsg(SCI_GETENDSTYLED, 0, 0);
 }
 
 // Convert all line endings in the document to one mode.
 void wxScintilla::ConvertEOLs (int eolMode)
 {
-    SendMsg (SCI_CONVERTEOLS, eolMode, 0);
+    SendMsg(SCI_CONVERTEOLS, eolMode, 0);
 }
 
 // Retrieve the current end of line mode - one of CRLF, CR, or LF.
 int wxScintilla::GetEOLMode() const
 {
-    return SendMsg (SCI_GETEOLMODE, 0, 0);
+    return SendMsg(SCI_GETEOLMODE, 0, 0);
 }
 
 // Set the current end of line mode.
 void wxScintilla::SetEOLMode (int eolMode)
 {
-    SendMsg (SCI_SETEOLMODE, eolMode, 0);
+    SendMsg(SCI_SETEOLMODE, eolMode, 0);
 }
 
 // Set the current styling position to pos and the styling mask to mask.
 // The styling mask can be used to protect some bits in each styling byte from modification.
 void wxScintilla::StartStyling (int pos, int mask)
 {
-    SendMsg (SCI_STARTSTYLING, pos, mask);
+    SendMsg(SCI_STARTSTYLING, pos, mask);
 }
 
 // Change style from current styling position for length characters to a style
 // and move the current styling position to after this newly styled segment.
 void wxScintilla::SetStyling (int length, int style)
 {
-    SendMsg (SCI_SETSTYLING, length, style);
+    SendMsg(SCI_SETSTYLING, length, style);
 }
 
 // Is drawing done first into a buffer or direct to the screen?
 bool wxScintilla::GetBufferedDraw() const
 {
-    return SendMsg (SCI_GETBUFFEREDDRAW, 0, 0) != 0;
+    return SendMsg(SCI_GETBUFFEREDDRAW, 0, 0) != 0;
 }
 
 // If drawing is buffered then each line of text is drawn into a bitmap buffer
 // before drawing it to the screen to avoid flicker.
 void wxScintilla::SetBufferedDraw (bool buffered)
 {
-    SendMsg (SCI_SETBUFFEREDDRAW, buffered, 0);
+    SendMsg(SCI_SETBUFFEREDDRAW, buffered, 0);
 }
 
 // Change the visible size of a tab to be a multiple of the width of a space character.
 void wxScintilla::SetTabWidth (int tabWidth)
 {
-    SendMsg (SCI_SETTABWIDTH, tabWidth, 0);
+    SendMsg(SCI_SETTABWIDTH, tabWidth, 0);
 }
 
 // Retrieve the visible size of a tab.
 int wxScintilla::GetTabWidth() const
 {
-    return SendMsg (SCI_GETTABWIDTH, 0, 0);
+    return SendMsg(SCI_GETTABWIDTH, 0, 0);
 }
 
 // Set the code page used to interpret the bytes of the document as characters.
@@ -519,7 +519,7 @@ void wxScintilla::MarkerDefine (int markerNumber, int markerSymbol,
                 const wxColour& foreground,
                 const wxColour& background) {
 
-    SendMsg (SCI_MARKERDEFINE, markerNumber, markerSymbol);
+    SendMsg(SCI_MARKERDEFINE, markerNumber, markerSymbol);
     if (foreground.Ok())
         MarkerSetForeground(markerNumber, foreground);
     if (background.Ok())
@@ -529,49 +529,49 @@ void wxScintilla::MarkerDefine (int markerNumber, int markerSymbol,
 // Set the foreground colour used for a particular marker number.
 void wxScintilla::MarkerSetForeground (int markerNumber, const wxColour& fore)
 {
-    SendMsg (SCI_MARKERSETFORE, markerNumber, wxColourAsLong(fore));
+    SendMsg(SCI_MARKERSETFORE, markerNumber, wxColourAsLong(fore));
 }
 
 // Set the background colour used for a particular marker number.
 void wxScintilla::MarkerSetBackground (int markerNumber, const wxColour& back)
 {
-    SendMsg (SCI_MARKERSETBACK, markerNumber, wxColourAsLong(back));
+    SendMsg(SCI_MARKERSETBACK, markerNumber, wxColourAsLong(back));
 }
 
 // Add a marker to a line, returning an ID which can be used to find or delete the marker.
 int wxScintilla::MarkerAdd (int line, int markerNumber)
 {
-    return SendMsg (SCI_MARKERADD, line, markerNumber);
+    return SendMsg(SCI_MARKERADD, line, markerNumber);
 }
 
 // Delete a marker from a line.
 void wxScintilla::MarkerDelete (int line, int markerNumber)
 {
-    SendMsg (SCI_MARKERDELETE, line, markerNumber);
+    SendMsg(SCI_MARKERDELETE, line, markerNumber);
 }
 
 // Delete all markers with a particular number from all lines.
 void wxScintilla::MarkerDeleteAll (int markerNumber)
 {
-    SendMsg (SCI_MARKERDELETEALL, markerNumber, 0);
+    SendMsg(SCI_MARKERDELETEALL, markerNumber, 0);
 }
 
 // Get a bit mask of all the markers set on a line.
 int wxScintilla::MarkerGet (int line)
 {
-    return SendMsg (SCI_MARKERGET, line, 0);
+    return SendMsg(SCI_MARKERGET, line, 0);
 }
 
 // Find the next line after lineStart that includes a marker in mask.
 int wxScintilla::MarkerNext (int lineStart, int markerMask)
 {
-    return SendMsg (SCI_MARKERNEXT, lineStart, markerMask);
+    return SendMsg(SCI_MARKERNEXT, lineStart, markerMask);
 }
 
 // Find the previous line before lineStart that includes a marker in mask.
 int wxScintilla::MarkerPrevious (int lineStart, int markerMask)
 {
-    return SendMsg (SCI_MARKERPREVIOUS, lineStart, markerMask);
+    return SendMsg(SCI_MARKERPREVIOUS, lineStart, markerMask);
 }
 
 // Define a marker from a bitmap
@@ -586,7 +586,7 @@ void wxScintilla::MarkerDefineBitmap (int markerNumber, const wxBitmap& bmp) {
         char* buff = new char[len+1];
         strm.CopyTo(buff, len);
         buff[len] = 0;
-        SendMsg (SCI_MARKERDEFINEPIXMAP, markerNumber, (sptr_t)buff);
+        SendMsg(SCI_MARKERDEFINEPIXMAP, markerNumber, (sptr_t)buff);
         delete [] buff;
 
 }
@@ -594,158 +594,158 @@ void wxScintilla::MarkerDefineBitmap (int markerNumber, const wxBitmap& bmp) {
 // Add a set of markers to a line.
 void wxScintilla::MarkerAddSet (int line, int set)
 {
-    SendMsg (SCI_MARKERADDSET, line, set);
+    SendMsg(SCI_MARKERADDSET, line, set);
 }
 
 // Set the alpha used for a marker that is drawn in the text area, not the margin.
 void wxScintilla::MarkerSetAlpha (int markerNumber, int alpha)
 {
-    SendMsg (SCI_MARKERSETALPHA, markerNumber, alpha);
+    SendMsg(SCI_MARKERSETALPHA, markerNumber, alpha);
 }
 
 // Set a margin to be either numeric or symbolic.
 void wxScintilla::SetMarginType (int margin, int marginType)
 {
-    SendMsg (SCI_SETMARGINTYPEN, margin, marginType);
+    SendMsg(SCI_SETMARGINTYPEN, margin, marginType);
 }
 
 // Retrieve the type of a margin.
 int wxScintilla::GetMarginType (int margin) const
 {
-    return SendMsg (SCI_GETMARGINTYPEN, margin, 0);
+    return SendMsg(SCI_GETMARGINTYPEN, margin, 0);
 }
 
 // Set the width of a margin to a width expressed in pixels.
 void wxScintilla::SetMarginWidth (int margin, int pixelWidth)
 {
-    SendMsg (SCI_SETMARGINWIDTHN, margin, pixelWidth);
+    SendMsg(SCI_SETMARGINWIDTHN, margin, pixelWidth);
 }
 
 // Retrieve the width of a margin in pixels.
 int wxScintilla::GetMarginWidth (int margin) const
 {
-    return SendMsg (SCI_GETMARGINWIDTHN, margin, 0);
+    return SendMsg(SCI_GETMARGINWIDTHN, margin, 0);
 }
 
 // Set a mask that determines which markers are displayed in a margin.
 void wxScintilla::SetMarginMask (int margin, int mask)
 {
-    SendMsg (SCI_SETMARGINMASKN, margin, mask);
+    SendMsg(SCI_SETMARGINMASKN, margin, mask);
 }
 
 // Retrieve the marker mask of a margin.
 int wxScintilla::GetMarginMask (int margin) const
 {
-    return SendMsg (SCI_GETMARGINMASKN, margin, 0);
+    return SendMsg(SCI_GETMARGINMASKN, margin, 0);
 }
 
 // Make a margin sensitive or insensitive to mouse clicks.
 void wxScintilla::SetMarginSensitive (int margin, bool sensitive)
 {
-    SendMsg (SCI_SETMARGINSENSITIVEN, margin, sensitive);
+    SendMsg(SCI_SETMARGINSENSITIVEN, margin, sensitive);
 }
 
 // Retrieve the mouse click sensitivity of a margin.
 bool wxScintilla::GetMarginSensitive (int margin) const
 {
-    return SendMsg (SCI_GETMARGINSENSITIVEN, margin, 0) != 0;
+    return SendMsg(SCI_GETMARGINSENSITIVEN, margin, 0) != 0;
 }
 
 // Clear all the styles and make equivalent to the global default style.
 void wxScintilla::StyleClearAll()
 {
-    SendMsg (SCI_STYLECLEARALL, 0, 0);
+    SendMsg(SCI_STYLECLEARALL, 0, 0);
 }
 
 // Set the foreground colour of a style.
 void wxScintilla::StyleSetForeground (int style, const wxColour& fore)
 {
-    SendMsg (SCI_STYLESETFORE, style, wxColourAsLong(fore));
+    SendMsg(SCI_STYLESETFORE, style, wxColourAsLong(fore));
 }
 
 // Set the background colour of a style.
 void wxScintilla::StyleSetBackground (int style, const wxColour& back)
 {
-    SendMsg (SCI_STYLESETBACK, style, wxColourAsLong(back));
+    SendMsg(SCI_STYLESETBACK, style, wxColourAsLong(back));
 }
 
 // Set a style to be bold or not.
 void wxScintilla::StyleSetBold (int style, bool bold)
 {
-    SendMsg (SCI_STYLESETBOLD, style, bold);
+    SendMsg(SCI_STYLESETBOLD, style, bold);
 }
 
 // Set a style to be italic or not.
 void wxScintilla::StyleSetItalic (int style, bool italic)
 {
-    SendMsg (SCI_STYLESETITALIC, style, italic);
+    SendMsg(SCI_STYLESETITALIC, style, italic);
 }
 
 // Set the size of characters of a style.
 void wxScintilla::StyleSetSize (int style, int sizePoints)
 {
-    SendMsg (SCI_STYLESETSIZE, style, sizePoints);
+    SendMsg(SCI_STYLESETSIZE, style, sizePoints);
 }
 
 // Set the font of a style.
 void wxScintilla::StyleSetFaceName (int style, const wxString& fontName)
 {
-    SendMsg (SCI_STYLESETFONT, style, (sptr_t)(const char*)wx2sci(fontName));
+    SendMsg(SCI_STYLESETFONT, style, (sptr_t)(const char*)wx2sci(fontName));
 }
 
 // Set a style to have its end of line filled or not.
 void wxScintilla::StyleSetEOLFilled (int style, bool filled)
 {
-    SendMsg (SCI_STYLESETEOLFILLED, style, filled);
+    SendMsg(SCI_STYLESETEOLFILLED, style, filled);
 }
 
 // Reset the default style to its state at startup
 void wxScintilla::StyleResetDefault()
 {
-    SendMsg (SCI_STYLERESETDEFAULT, 0, 0);
+    SendMsg(SCI_STYLERESETDEFAULT, 0, 0);
 }
 
 // Set a style to be underlined or not.
 void wxScintilla::StyleSetUnderline (int style, bool underline)
 {
-    SendMsg (SCI_STYLESETUNDERLINE, style, underline);
+    SendMsg(SCI_STYLESETUNDERLINE, style, underline);
 }
 
 // Get the foreground colour of a style.
 wxColour wxScintilla::StyleGetForeground(int style) const
 {
-    long c = SendMsg(2481, style, 0);
+    long c = SendMsg(SCI_STYLEGETFORE, style, 0);
     return wxColourFromLong(c);
 }
 
 // Get the background colour of a style.
 wxColour wxScintilla::StyleGetBackground(int style) const
 {
-    long c = SendMsg(2482, style, 0);
+    long c = SendMsg(SCI_STYLEGETBACK, style, 0);
     return wxColourFromLong(c);
 }
 
 // Get is a style bold or not.
 bool wxScintilla::StyleGetBold(int style) const
 {
-    return SendMsg(2483, style, 0) != 0;
+    return SendMsg(SCI_STYLEGETBOLD, style, 0) != 0;
 }
 
 // Get is a style italic or not.
 bool wxScintilla::StyleGetItalic(int style) const
 {
-    return SendMsg(2484, style, 0) != 0;
+    return SendMsg(SCI_STYLEGETITALIC, style, 0) != 0;
 }
 
 // Get the size of characters of a style.
 int wxScintilla::StyleGetSize(int style) const
 {
-    return SendMsg(2485, style, 0);
+    return SendMsg(SCI_STYLEGETSIZE, style, 0);
 }
 
 // Get the font facename of a style
 wxString wxScintilla::StyleGetFaceName(int style) {
-         long msg = 2486;
+         long msg = SCI_STYLEGETFONT;
          long len = SendMsg(msg, style, 0);
          wxMemoryBuffer mbuf(len+1);
          char* buf = (char*)mbuf.GetWriteBuf(len+1);
@@ -758,56 +758,56 @@ wxString wxScintilla::StyleGetFaceName(int style) {
 // Get is a style to have its end of line filled or not.
 bool wxScintilla::StyleGetEOLFilled(int style) const
 {
-    return SendMsg(2487, style, 0) != 0;
+    return SendMsg(SCI_STYLEGETEOLFILLED, style, 0) != 0;
 }
 
 // Get is a style underlined or not.
 bool wxScintilla::StyleGetUnderline(int style) const
 {
-    return SendMsg(2488, style, 0) != 0;
+    return SendMsg(SCI_STYLEGETUNDERLINE, style, 0) != 0;
 }
 
 // Get is a style mixed case, or to force upper or lower case.
 int wxScintilla::StyleGetCase(int style) const
 {
-    return SendMsg(2489, style, 0);
+    return SendMsg(SCI_STYLEGETCASE, style, 0);
 }
 
 // Get the character get of the font in a style.
 int wxScintilla::StyleGetCharacterSet(int style) const
 {
-    return SendMsg(2490, style, 0);
+    return SendMsg(SCI_STYLEGETCHARACTERSET, style, 0);
 }
 
 // Get is a style visible or not.
 bool wxScintilla::StyleGetVisible(int style) const
 {
-    return SendMsg(2491, style, 0) != 0;
+    return SendMsg(SCI_STYLEGETVISIBLE, style, 0) != 0;
 }
 
 // Get is a style changeable or not (read only).
 // Experimental feature, currently buggy.
 bool wxScintilla::StyleGetChangeable(int style) const
 {
-    return SendMsg(2492, style, 0) != 0;
+    return SendMsg(SCI_STYLEGETCHANGEABLE, style, 0) != 0;
 }
 
 // Get is a style a hotspot or not.
 bool wxScintilla::StyleGetHotSpot(int style) const
 {
-    return SendMsg(2493, style, 0) != 0;
+    return SendMsg(SCI_STYLEGETHOTSPOT, style, 0) != 0;
 }
 
 // Set a style to be mixed case, or to force upper or lower case.
 void wxScintilla::StyleSetCase (int style, int caseForce)
 {
-    SendMsg (SCI_STYLESETCASE, style, caseForce);
+    SendMsg(SCI_STYLESETCASE, style, caseForce);
 }
 
 // Set a style to be a hotspot or not.
 void wxScintilla::StyleSetHotSpot (int style, bool hotspot)
 {
-    SendMsg (SCI_STYLESETHOTSPOT, style, hotspot);
+    SendMsg(SCI_STYLESETHOTSPOT, style, hotspot);
 }
 
 // Set the foreground colour of the selection and whether to use this setting.
@@ -825,139 +825,139 @@ void wxScintilla::SetSelBackground(bool useSetting, const wxColour& back)
 // Get the alpha of the selection.
 int wxScintilla::GetSelAlpha () const
 {
-    return SendMsg (SCI_GETSELALPHA, 0, 0);
+    return SendMsg(SCI_GETSELALPHA, 0, 0);
 }
 
 // Set the alpha of the selection.
 void wxScintilla::SetSelAlpha (int alpha)
 {
-    SendMsg (SCI_SETSELALPHA, alpha, 0);
+    SendMsg(SCI_SETSELALPHA, alpha, 0);
 }
 
 // Is the selection end of line filled?
 bool wxScintilla::GetSelEOLFilled() const
 {
-    return SendMsg(2479, 0, 0) != 0;
+    return SendMsg(SCI_GETSELEOLFILLED, 0, 0) != 0;
 }
 
 // Set the selection to have its end of line filled or not.
 void wxScintilla::SetSelEOLFilled(bool filled)
 {
-    SendMsg(2480, filled, 0);
+    SendMsg(SCI_SETSELEOLFILLED, filled, 0);
 }
 
 // Set the foreground colour of the caret.
 void wxScintilla::SetCaretForeground (const wxColour& fore)
 {
-    SendMsg (SCI_SETCARETFORE, wxColourAsLong(fore), 0);
+    SendMsg(SCI_SETCARETFORE, wxColourAsLong(fore), 0);
 }
 
 // When key+modifier combination km is pressed perform msg.
 void wxScintilla::CmdKeyAssign (int key, int modifiers, int cmd) {
-    SendMsg (SCI_ASSIGNCMDKEY, MAKELONG(key, modifiers), cmd);
+    SendMsg(SCI_ASSIGNCMDKEY, MAKELONG(key, modifiers), cmd);
 }
 
 // When key+modifier combination km is pressed do nothing.
 void wxScintilla::CmdKeyClear (int key, int modifiers) {
-    SendMsg (SCI_CLEARCMDKEY, MAKELONG(key, modifiers));
+    SendMsg(SCI_CLEARCMDKEY, MAKELONG(key, modifiers));
 }
 
 // Drop all key mappings.
 void wxScintilla::CmdKeyClearAll()
 {
-    SendMsg (SCI_CLEARALLCMDKEYS, 0, 0);
+    SendMsg(SCI_CLEARALLCMDKEYS, 0, 0);
 }
 
 // Set the styles for a segment of the document.
 void wxScintilla::SetStyleBytes (int length, char* styleBytes) {
-    SendMsg (SCI_SETSTYLINGEX, length, (sptr_t)styleBytes);
+    SendMsg(SCI_SETSTYLINGEX, length, (sptr_t)styleBytes);
 }
 
 // Set a style to be visible or not.
 void wxScintilla::StyleSetVisible (int style, bool visible)
 {
-    SendMsg (SCI_STYLESETVISIBLE, style, visible);
+    SendMsg(SCI_STYLESETVISIBLE, style, visible);
 }
 
 // Get the time in milliseconds that the caret is on and off.
 int wxScintilla::GetCaretPeriod() const
 {
-    return SendMsg (SCI_GETCARETPERIOD, 0, 0);
+    return SendMsg(SCI_GETCARETPERIOD, 0, 0);
 }
 
 // Get the time in milliseconds that the caret is on and off. 0 = steady on.
 void wxScintilla::SetCaretPeriod (int periodMilliseconds)
 {
-    SendMsg (SCI_SETCARETPERIOD, periodMilliseconds, 0);
+    SendMsg(SCI_SETCARETPERIOD, periodMilliseconds, 0);
 }
 
 // Set the set of characters making up words for when moving or selecting by word.
 // First sets defaults like SetCharsDefault.
 void wxScintilla::SetWordChars (const wxString& characters)
 {
-    SendMsg (SCI_SETWORDCHARS, 0, (sptr_t)(const char*)wx2sci(characters));
+    SendMsg(SCI_SETWORDCHARS, 0, (sptr_t)(const char*)wx2sci(characters));
 }
 
 // Start a sequence of actions that is undone and redone as a unit.
 // May be nested.
 void wxScintilla::BeginUndoAction()
 {
-    SendMsg (SCI_BEGINUNDOACTION, 0, 0);
+    SendMsg(SCI_BEGINUNDOACTION, 0, 0);
 }
 
 // End a sequence of actions that is undone and redone as a unit.
 void wxScintilla::EndUndoAction()
 {
-    SendMsg (SCI_ENDUNDOACTION, 0, 0);
+    SendMsg(SCI_ENDUNDOACTION, 0, 0);
 }
 
 // Set an indicator to plain, squiggle or TT.
 void wxScintilla::IndicatorSetStyle (int indic, int style)
 {
-    SendMsg (SCI_INDICSETSTYLE, indic, style);
+    SendMsg(SCI_INDICSETSTYLE, indic, style);
 }
 
 // Retrieve the style of an indicator.
 int wxScintilla::IndicatorGetStyle (int indic) const
 {
-    return SendMsg (SCI_INDICGETSTYLE, indic, 0);
+    return SendMsg(SCI_INDICGETSTYLE, indic, 0);
 }
 
 // Set the foreground colour of an indicator.
 void wxScintilla::IndicatorSetForeground (int indic, const wxColour& fore)
 {
-    SendMsg (SCI_INDICSETFORE, indic, wxColourAsLong(fore));
+    SendMsg(SCI_INDICSETFORE, indic, wxColourAsLong(fore));
 }
 
 // Retrieve the foreground colour of an indicator.
 wxColour wxScintilla::IndicatorGetForeground (int indic) const
 {
-    long c = SendMsg (SCI_INDICGETFORE, indic, 0);
+    long c = SendMsg(SCI_INDICGETFORE, indic, 0);
     return wxColourFromLong(c);
 }
 
 // Set an indicator to draw under text or over(default).
 void wxScintilla::IndicatorSetUnder(int indic, bool under)
 {
-    SendMsg(2510, indic, under);
+    SendMsg(SCI_INDICSETUNDER, indic, under);
 }
 
 // Retrieve whether indicator drawn under or over text.
 bool wxScintilla::IndicatorGetUnder(int indic) const
 {
-    return SendMsg(2511, indic, 0) != 0;
+    return SendMsg(SCI_INDICGETUNDER, indic, 0) != 0;
 }
 
 // Set the foreground colour of all whitespace and whether to use this setting.
 void wxScintilla::SetWhitespaceForeground (bool useSetting, const wxColour& fore)
 {
-    SendMsg (SCI_SETWHITESPACEFORE, useSetting, wxColourAsLong(fore));
+    SendMsg(SCI_SETWHITESPACEFORE, useSetting, wxColourAsLong(fore));
 }
 
 // Set the background colour of all whitespace and whether to use this setting.
 void wxScintilla::SetWhitespaceBackground (bool useSetting, const wxColour& back)
 {
-    SendMsg (SCI_SETWHITESPACEBACK, useSetting, wxColourAsLong(back));
+    SendMsg(SCI_SETWHITESPACEBACK, useSetting, wxColourAsLong(back));
 }
 
 // Divide each styling byte into lexical class bits (default: 5) and indicator
@@ -965,63 +965,63 @@ void wxScintilla::SetWhitespaceBackground (bool useSetting, const wxColour& back
 // is used to expand the possible states.
 void wxScintilla::SetStyleBits (int bits)
 {
-    SendMsg (SCI_SETSTYLEBITS, bits, 0);
+    SendMsg(SCI_SETSTYLEBITS, bits, 0);
 }
 
 // Retrieve number of bits in style bytes used to hold the lexical state.
 int wxScintilla::GetStyleBits() const
 {
-    return SendMsg (SCI_GETSTYLEBITS, 0, 0);
+    return SendMsg(SCI_GETSTYLEBITS, 0, 0);
 }
 
 // Used to hold extra styling information for each line.
 void wxScintilla::SetLineState (int line, int state)
 {
-    SendMsg (SCI_SETLINESTATE, line, state);
+    SendMsg(SCI_SETLINESTATE, line, state);
 }
 
 // Retrieve the extra styling information for a line.
 int wxScintilla::GetLineState (int line) const
 {
-    return SendMsg (SCI_GETLINESTATE, line, 0);
+    return SendMsg(SCI_GETLINESTATE, line, 0);
 }
 
 // Retrieve the last line number that has line state.
 int wxScintilla::GetMaxLineState() const
 {
-    return SendMsg (SCI_GETMAXLINESTATE, 0, 0);
+    return SendMsg(SCI_GETMAXLINESTATE, 0, 0);
 }
 
 // Is the background of the line containing the caret in a different colour?
 bool wxScintilla::GetCaretLineVisible() const
 {
-    return SendMsg (SCI_GETCARETLINEVISIBLE, 0, 0) != 0;
+    return SendMsg(SCI_GETCARETLINEVISIBLE, 0, 0) != 0;
 }
 
 // Display the background of the line containing the caret in a different colour.
 void wxScintilla::SetCaretLineVisible (bool show)
 {
-    SendMsg (SCI_SETCARETLINEVISIBLE, show, 0);
+    SendMsg(SCI_SETCARETLINEVISIBLE, show, 0);
 }
 
 // Get the colour of the background of the line containing the caret.
 wxColour wxScintilla::GetCaretLineBackground() const
 {
-    long c = SendMsg (SCI_GETCARETLINEBACK, 0, 0);
+    long c = SendMsg(SCI_GETCARETLINEBACK, 0, 0);
     return wxColourFromLong(c);
 }
 
 // Set the colour of the background of the line containing the caret.
 void wxScintilla::SetCaretLineBackground (const wxColour& back)
 {
-    SendMsg (SCI_SETCARETLINEBACK, wxColourAsLong(back), 0);
+    SendMsg(SCI_SETCARETLINEBACK, wxColourAsLong(back), 0);
 }
 
 // Set a style to be changeable or not (read only).
 // Experimental feature, currently buggy.
 void wxScintilla::StyleSetChangeable (int style, bool changeable)
 {
-    SendMsg (SCI_STYLESETCHANGEABLE, style, changeable);
+    SendMsg(SCI_STYLESETCHANGEABLE, style, changeable);
 }
 
 // Display a auto-completion list.
@@ -1029,132 +1029,132 @@ void wxScintilla::StyleSetChangeable (int style, bool changeable)
 // the caret should be used to provide context.
 void wxScintilla::AutoCompShow (int lenEntered, const wxString& itemList)
 {
-    SendMsg (SCI_AUTOCSHOW, lenEntered, (sptr_t)(const char*)wx2sci(itemList));
+    SendMsg(SCI_AUTOCSHOW, lenEntered, (sptr_t)(const char*)wx2sci(itemList));
 }
 
 // Remove the auto-completion list from the screen.
 void wxScintilla::AutoCompCancel()
 {
-    SendMsg (SCI_AUTOCCANCEL, 0, 0);
+    SendMsg(SCI_AUTOCCANCEL, 0, 0);
 }
 
 // Is there an auto-completion list visible?
 bool wxScintilla::AutoCompActive()
 {
-    return SendMsg (SCI_AUTOCACTIVE, 0, 0) != 0;
+    return SendMsg(SCI_AUTOCACTIVE, 0, 0) != 0;
 }
 
 // Retrieve the position of the caret when the auto-completion list was displayed.
 int wxScintilla::AutoCompPosStart()
 {
-    return SendMsg (SCI_AUTOCPOSSTART, 0, 0);
+    return SendMsg(SCI_AUTOCPOSSTART, 0, 0);
 }
 
 // User has selected an item so remove the list and insert the selection.
 void wxScintilla::AutoCompComplete()
 {
-    SendMsg (SCI_AUTOCCOMPLETE, 0, 0);
+    SendMsg(SCI_AUTOCCOMPLETE, 0, 0);
 }
 
 // Define a set of character that when typed cancel the auto-completion list.
 void wxScintilla::AutoCompStops (const wxString& characterSet)
 {
-    SendMsg (SCI_AUTOCSTOPS, 0, (long)(const char*)wx2sci(characterSet));
+    SendMsg(SCI_AUTOCSTOPS, 0, (long)(const char*)wx2sci(characterSet));
 }
 
 // Change the separator character in the string setting up an auto-completion list.
 // Default is space but can be changed if items contain space.
 void wxScintilla::AutoCompSetSeparator (int separatorCharacter)
 {
-    SendMsg (SCI_AUTOCSETSEPARATOR, separatorCharacter, 0);
+    SendMsg(SCI_AUTOCSETSEPARATOR, separatorCharacter, 0);
 }
 
 // Retrieve the auto-completion list separator character.
 int wxScintilla::AutoCompGetSeparator() const
 {
-    return SendMsg (SCI_AUTOCGETSEPARATOR, 0, 0);
+    return SendMsg(SCI_AUTOCGETSEPARATOR, 0, 0);
 }
 
 // Select the item in the auto-completion list that starts with a string.
 void wxScintilla::AutoCompSelect (const wxString& text)
 {
-    SendMsg (SCI_AUTOCSELECT, 0, (sptr_t)(const char*)wx2sci(text));
+    SendMsg(SCI_AUTOCSELECT, 0, (sptr_t)(const char*)wx2sci(text));
 }
 
 // Should the auto-completion list be cancelled if the user backspaces to a
 // position before where the box was created.
 void wxScintilla::AutoCompSetCancelAtStart (bool cancel)
 {
-    SendMsg (SCI_AUTOCSETCANCELATSTART, cancel, 0);
+    SendMsg(SCI_AUTOCSETCANCELATSTART, cancel, 0);
 }
 
 // Retrieve whether auto-completion cancelled by backspacing before start.
 bool wxScintilla::AutoCompGetCancelAtStart() const
 {
-    return SendMsg (SCI_AUTOCGETCANCELATSTART, 0, 0) != 0;
+    return SendMsg(SCI_AUTOCGETCANCELATSTART, 0, 0) != 0;
 }
 
 // Define a set of characters that when typed will cause the autocompletion to
 // choose the selected item.
 void wxScintilla::AutoCompSetFillUps (const wxString& characterSet)
 {
-    SendMsg (SCI_AUTOCSETFILLUPS, 0, (sptr_t)(const char*)wx2sci(characterSet));
+    SendMsg(SCI_AUTOCSETFILLUPS, 0, (sptr_t)(const char*)wx2sci(characterSet));
 }
 
 // Should a single item auto-completion list automatically choose the item.
 void wxScintilla::AutoCompSetChooseSingle (bool chooseSingle)
 {
-    SendMsg (SCI_AUTOCSETCHOOSESINGLE, chooseSingle, 0);
+    SendMsg(SCI_AUTOCSETCHOOSESINGLE, chooseSingle, 0);
 }
 
 // Retrieve whether a single item auto-completion list automatically choose the item.
 bool wxScintilla::AutoCompGetChooseSingle() const
 {
-    return SendMsg (SCI_AUTOCGETCHOOSESINGLE, 0, 0) != 0;
+    return SendMsg(SCI_AUTOCGETCHOOSESINGLE, 0, 0) != 0;
 }
 
 // Set whether case is significant when performing auto-completion searches.
 void wxScintilla::AutoCompSetIgnoreCase (bool ignoreCase)
 {
-    SendMsg (SCI_AUTOCSETIGNORECASE, ignoreCase, 0);
+    SendMsg(SCI_AUTOCSETIGNORECASE, ignoreCase, 0);
 }
 
 // Retrieve state of ignore case flag.
 bool wxScintilla::AutoCompGetIgnoreCase() const
 {
-    return SendMsg (SCI_AUTOCGETIGNORECASE, 0, 0) != 0;
+    return SendMsg(SCI_AUTOCGETIGNORECASE, 0, 0) != 0;
 }
 
 // Display a list of strings and send notification when user chooses one.
 void wxScintilla::UserListShow (int listType, const wxString& itemList)
 {
-    SendMsg (SCI_USERLISTSHOW, listType, (sptr_t)(const char*)wx2sci(itemList));
+    SendMsg(SCI_USERLISTSHOW, listType, (sptr_t)(const char*)wx2sci(itemList));
 }
 
 // Set whether or not autocompletion is hidden automatically when nothing matches.
 void wxScintilla::AutoCompSetAutoHide (bool autoHide)
 {
-    SendMsg (SCI_AUTOCSETAUTOHIDE, autoHide, 0);
+    SendMsg(SCI_AUTOCSETAUTOHIDE, autoHide, 0);
 }
 
 // Retrieve whether or not autocompletion is hidden automatically when nothing matches.
 bool wxScintilla::AutoCompGetAutoHide() const
 {
-    return SendMsg (SCI_AUTOCGETAUTOHIDE, 0, 0) != 0;
+    return SendMsg(SCI_AUTOCGETAUTOHIDE, 0, 0) != 0;
 }
 
 // Set whether or not autocompletion deletes any word characters
 // after the inserted text upon completion.
 void wxScintilla::AutoCompSetDropRestOfWord (bool dropRestOfWord)
 {
-    SendMsg (SCI_AUTOCSETDROPRESTOFWORD, dropRestOfWord, 0);
+    SendMsg(SCI_AUTOCSETDROPRESTOFWORD, dropRestOfWord, 0);
 }
 
 // Retrieve whether or not autocompletion deletes any word characters
 // after the inserted text upon completion.
 bool wxScintilla::AutoCompGetDropRestOfWord() const
 {
-    return SendMsg (SCI_AUTOCGETDROPRESTOFWORD, 0, 0) != 0;
+    return SendMsg(SCI_AUTOCGETDROPRESTOFWORD, 0, 0) != 0;
 }
 
 // Register an image for use in autocompletion lists.
@@ -1177,150 +1177,150 @@ void wxScintilla::RegisterImage (int type, const wxBitmap& bmp) {
 // Clear all the registered images.
 void wxScintilla::ClearRegisteredImages()
 {
-    SendMsg (SCI_CLEARREGISTEREDIMAGES, 0, 0);
+    SendMsg(SCI_CLEARREGISTEREDIMAGES, 0, 0);
 }
 
 // Retrieve the auto-completion list type-separator character.
 int wxScintilla::AutoCompGetTypeSeparator() const
 {
-    return SendMsg (SCI_AUTOCGETTYPESEPARATOR, 0, 0);
+    return SendMsg(SCI_AUTOCGETTYPESEPARATOR, 0, 0);
 }
 
 // Change the type-separator character in the string setting up an auto-completion list.
 // Default is '?' but can be changed if items contain '?'.
 void wxScintilla::AutoCompSetTypeSeparator (int separatorCharacter)
 {
-    SendMsg (SCI_AUTOCSETTYPESEPARATOR, separatorCharacter, 0);
+    SendMsg(SCI_AUTOCSETTYPESEPARATOR, separatorCharacter, 0);
 }
 
 // Set the maximum width, in characters, of auto-completion and user lists.
 // Set to 0 to autosize to fit longest item, which is the default.
 void wxScintilla::AutoCompSetMaxWidth (int characterCount)
 {
-    SendMsg (SCI_AUTOCSETMAXWIDTH, characterCount, 0);
+    SendMsg(SCI_AUTOCSETMAXWIDTH, characterCount, 0);
 }
 
 // Get the maximum width, in characters, of auto-completion and user lists.
 int wxScintilla::AutoCompGetMaxWidth() const
 {
-    return SendMsg (SCI_AUTOCGETMAXWIDTH, 0, 0);
+    return SendMsg(SCI_AUTOCGETMAXWIDTH, 0, 0);
 }
 
 // Set the maximum height, in rows, of auto-completion and user lists.
 // The default is 5 rows.
 void wxScintilla::AutoCompSetMaxHeight (int rowCount)
 {
-    SendMsg (SCI_AUTOCSETMAXHEIGHT, rowCount, 0);
+    SendMsg(SCI_AUTOCSETMAXHEIGHT, rowCount, 0);
 }
 
 // Set the maximum height, in rows, of auto-completion and user lists.
 int wxScintilla::AutoCompGetMaxHeight() const
 {
-    return SendMsg (SCI_AUTOCGETMAXHEIGHT, 0, 0);
+    return SendMsg(SCI_AUTOCGETMAXHEIGHT, 0, 0);
 }
 
 // Set the number of spaces used for one level of indentation.
 void wxScintilla::SetIndent (int indentSize)
 {
-    SendMsg (SCI_SETINDENT, indentSize, 0);
+    SendMsg(SCI_SETINDENT, indentSize, 0);
 }
 
 // Retrieve indentation size.
 int wxScintilla::GetIndent() const
 {
-    return SendMsg (SCI_GETINDENT, 0, 0);
+    return SendMsg(SCI_GETINDENT, 0, 0);
 }
 
 // Indentation will only use space characters if useTabs is false, otherwise
 // it will use a combination of tabs and spaces.
 void wxScintilla::SetUseTabs (bool useTabs)
 {
-    SendMsg (SCI_SETUSETABS, useTabs, 0);
+    SendMsg(SCI_SETUSETABS, useTabs, 0);
 }
 
 // Retrieve whether tabs will be used in indentation.
 bool wxScintilla::GetUseTabs() const
 {
-    return SendMsg (SCI_GETUSETABS, 0, 0) != 0;
+    return SendMsg(SCI_GETUSETABS, 0, 0) != 0;
 }
 
 // Change the indentation of a line to a number of columns.
 void wxScintilla::SetLineIndentation (int line, int indentSize)
 {
-    SendMsg (SCI_SETLINEINDENTATION, line, indentSize);
+    SendMsg(SCI_SETLINEINDENTATION, line, indentSize);
 }
 
 // Retrieve the number of columns that a line is indented.
 int wxScintilla::GetLineIndentation (int line) const
 {
-    return SendMsg (SCI_GETLINEINDENTATION, line, 0);
+    return SendMsg(SCI_GETLINEINDENTATION, line, 0);
 }
 
 // Retrieve the position before the first non indentation character on a line.
 int wxScintilla::GetLineIndentPosition (int line) const
 {
-    return SendMsg (SCI_GETLINEINDENTPOSITION, line, 0);
+    return SendMsg(SCI_GETLINEINDENTPOSITION, line, 0);
 }
 
 // Retrieve the column number of a position, taking tab width into account.
 int wxScintilla::GetColumn (int pos) const
 {
-    return SendMsg (SCI_GETCOLUMN, pos, 0);
+    return SendMsg(SCI_GETCOLUMN, pos, 0);
 }
 
 // Show or hide the horizontal scroll bar.
 void wxScintilla::SetUseHorizontalScrollBar (bool show)
 {
-    SendMsg (SCI_SETHSCROLLBAR, show, 0);
+    SendMsg(SCI_SETHSCROLLBAR, show, 0);
 }
 
 // Is the horizontal scroll bar visible?
 bool wxScintilla::GetUseHorizontalScrollBar() const
 {
-    return SendMsg (SCI_GETHSCROLLBAR, 0, 0) != 0;
+    return SendMsg(SCI_GETHSCROLLBAR, 0, 0) != 0;
 }
 
 // Show or hide indentation guides.
 void wxScintilla::SetIndentationGuides (int indentView)
 {
-    SendMsg (SCI_SETINDENTATIONGUIDES, indentView, 0);
+    SendMsg(SCI_SETINDENTATIONGUIDES, indentView, 0);
 }
 
 // Are the indentation guides visible?
 int wxScintilla::GetIndentationGuides() const
 {
-    return SendMsg (SCI_GETINDENTATIONGUIDES, 0, 0);
+    return SendMsg(SCI_GETINDENTATIONGUIDES, 0, 0);
 }
 
 // Set the highlighted indentation guide column.
 // 0 = no highlighted guide.
 void wxScintilla::SetHighlightGuide (int column)
 {
-    SendMsg (SCI_SETHIGHLIGHTGUIDE, column, 0);
+    SendMsg(SCI_SETHIGHLIGHTGUIDE, column, 0);
 }
 
 // Get the highlighted indentation guide column.
 int wxScintilla::GetHighlightGuide() const
 {
-    return SendMsg (SCI_GETHIGHLIGHTGUIDE, 0, 0);
+    return SendMsg(SCI_GETHIGHLIGHTGUIDE, 0, 0);
 }
 
 // Get the position after the last visible characters on a line.
 int wxScintilla::GetLineEndPosition (int line) const
 {
-    return SendMsg (SCI_GETLINEENDPOSITION, line, 0);
+    return SendMsg(SCI_GETLINEENDPOSITION, line, 0);
 }
 
 // Get the code page used to interpret the bytes of the document as characters.
 int wxScintilla::GetCodePage() const
 {
-    return SendMsg (SCI_GETCODEPAGE, 0, 0);
+    return SendMsg(SCI_GETCODEPAGE, 0, 0);
 }
 
 // Get the foreground colour of the caret.
 wxColour wxScintilla::GetCaretForeground() const
 {
-    long c = SendMsg (SCI_GETCARETFORE, 0, 0);
+    long c = SendMsg(SCI_GETCARETFORE, 0, 0);
     return wxColourFromLong(c);
 }
 
@@ -1329,61 +1329,61 @@ wxColour wxScintilla::GetCaretForeground() const
 // In read-only mode?
 bool wxScintilla::GetReadOnly() const
 {
-    return SendMsg (SCI_GETREADONLY, 0, 0) != 0;
+    return SendMsg(SCI_GETREADONLY, 0, 0) != 0;
 }
 
 // Sets the position of the caret.
 void wxScintilla::SetCurrentPos (int pos)
 {
-    SendMsg (SCI_SETCURRENTPOS, pos, 0);
+    SendMsg(SCI_SETCURRENTPOS, pos, 0);
 }
 
 // Sets the position that starts the selection - this becomes the anchor.
 void wxScintilla::SetSelectionStart (int pos)
 {
-    SendMsg (SCI_SETSELECTIONSTART, pos, 0);
+    SendMsg(SCI_SETSELECTIONSTART, pos, 0);
 }
 
 // Returns the position at the start of the selection.
 int wxScintilla::GetSelectionStart() const
 {
-    return SendMsg (SCI_GETSELECTIONSTART, 0, 0);
+    return SendMsg(SCI_GETSELECTIONSTART, 0, 0);
 }
 
 // Sets the position that ends the selection - this becomes the currentPosition.
 void wxScintilla::SetSelectionEnd (int pos)
 {
-    SendMsg (SCI_SETSELECTIONEND, pos, 0);
+    SendMsg(SCI_SETSELECTIONEND, pos, 0);
 }
 
 // Returns the position at the end of the selection.
 int wxScintilla::GetSelectionEnd() const
 {
-    return SendMsg (SCI_GETSELECTIONEND, 0, 0);
+    return SendMsg(SCI_GETSELECTIONEND, 0, 0);
 }
 
 // Sets the print magnification added to the point size of each style for printing.
 void wxScintilla::SetPrintMagnification (int magnification)
 {
-    SendMsg (SCI_SETPRINTMAGNIFICATION, magnification, 0);
+    SendMsg(SCI_SETPRINTMAGNIFICATION, magnification, 0);
 }
 
 // Returns the print magnification.
 int wxScintilla::GetPrintMagnification() const
 {
-    return SendMsg (SCI_GETPRINTMAGNIFICATION, 0, 0);
+    return SendMsg(SCI_GETPRINTMAGNIFICATION, 0, 0);
 }
 
 // Modify colours when printing for clearer printed text.
 void wxScintilla::SetPrintColourMode (int mode)
 {
-    SendMsg (SCI_SETPRINTCOLOURMODE, mode, 0);
+    SendMsg(SCI_SETPRINTCOLOURMODE, mode, 0);
 }
 
 // Returns the print colour mode.
 int wxScintilla::GetPrintColourMode() const
 {
-    return SendMsg (SCI_GETPRINTCOLOURMODE, 0, 0);
+    return SendMsg(SCI_GETPRINTCOLOURMODE, 0, 0);
 }
 
 // Find some text in the document.
@@ -1397,7 +1397,7 @@ int wxScintilla::FindText (int minPos, int maxPos,
             wxWX2MBbuf buf = (wxWX2MBbuf)wx2sci(text);
             ft.lpstrText = (char*)(const char*)buf;
 
-            int ret = SendMsg (SCI_FINDTEXT, flags, (sptr_t)&ft);
+            int ret = SendMsg(SCI_FINDTEXT, flags, (sptr_t)&ft);
             if (lengthFound)
                 *lengthFound = ft.chrgText.cpMax - ft.chrgText.cpMin;
             return ret;
@@ -1431,13 +1431,13 @@ int wxScintilla::FindText (int minPos, int maxPos,
              fr.chrg.cpMin = startPos;
              fr.chrg.cpMax = endPos;
 
-    return SendMsg (SCI_FORMATRANGE, doDraw, (sptr_t)&fr);
+    return SendMsg(SCI_FORMATRANGE, doDraw, (sptr_t)&fr);
 }
 
 // Retrieve the display line at the top of the display.
 int wxScintilla::GetFirstVisibleLine() const
 {
-    return SendMsg (SCI_GETFIRSTVISIBLELINE, 0, 0);
+    return SendMsg(SCI_GETFIRSTVISIBLELINE, 0, 0);
 }
 
 // Retrieve the contents of a line.
@@ -1447,7 +1447,7 @@ wxString wxScintilla::GetLine (int line) const {
 
          wxMemoryBuffer mbuf(len+1);
          char* buf = (char*)mbuf.GetWriteBuf(len+1);
-         SendMsg (SCI_GETLINE, line, (sptr_t)buf);
+         SendMsg(SCI_GETLINE, line, (sptr_t)buf);
          mbuf.UngetWriteBuf(len);
          mbuf.AppendByte(0);
          return sci2wx(buf);
@@ -1456,42 +1456,42 @@ wxString wxScintilla::GetLine (int line) const {
 // Returns the number of lines in the document. There is always at least one.
 int wxScintilla::GetLineCount() const
 {
-    return SendMsg (SCI_GETLINECOUNT, 0, 0);
+    return SendMsg(SCI_GETLINECOUNT, 0, 0);
 }
 
 // Sets the size in pixels of the left margin.
 void wxScintilla::SetMarginLeft (int pixelWidth)
 {
-    SendMsg (SCI_SETMARGINLEFT, 0, pixelWidth);
+    SendMsg(SCI_SETMARGINLEFT, 0, pixelWidth);
 }
 
 // Returns the size in pixels of the left margin.
 int wxScintilla::GetMarginLeft() const
 {
-    return SendMsg (SCI_GETMARGINLEFT, 0, 0);
+    return SendMsg(SCI_GETMARGINLEFT, 0, 0);
 }
 
 // Sets the size in pixels of the right margin.
 void wxScintilla::SetMarginRight (int pixelWidth)
 {
-    SendMsg (SCI_SETMARGINRIGHT, 0, pixelWidth);
+    SendMsg(SCI_SETMARGINRIGHT, 0, pixelWidth);
 }
 
 // Returns the size in pixels of the right margin.
 int wxScintilla::GetMarginRight() const
 {
-    return SendMsg (SCI_GETMARGINRIGHT, 0, 0);
+    return SendMsg(SCI_GETMARGINRIGHT, 0, 0);
 }
 
 // Is the document different from when it was last saved?
 bool wxScintilla::GetModify() const
 {
-    return SendMsg (SCI_GETMODIFY, 0, 0) != 0;
+    return SendMsg(SCI_GETMODIFY, 0, 0) != 0;
 }
 
 // Select a range of text.
 void wxScintilla::SetSelection (int startPos, int endPos) {
-    SendMsg (SCI_SETSEL, startPos, endPos);
+    SendMsg(SCI_SETSEL, startPos, endPos);
 }
 
 // Retrieve the selected text.
@@ -1505,7 +1505,7 @@ wxString wxScintilla::GetSelectedText() {
 
          wxMemoryBuffer mbuf(len+2);
          char* buf = (char*)mbuf.GetWriteBuf(len+1);
-         SendMsg (SCI_GETSELTEXT, 0, (sptr_t)buf);
+         SendMsg(SCI_GETSELTEXT, 0, (sptr_t)buf);
          mbuf.UngetWriteBuf(len);
          mbuf.AppendByte(0);
          return sci2wx(buf);
@@ -1526,7 +1526,7 @@ wxString wxScintilla::GetTextRange (int startPos, int endPos) {
          tr.lpstrText = buf;
          tr.chrg.cpMin = startPos;
          tr.chrg.cpMax = endPos;
-         SendMsg (SCI_GETTEXTRANGE, 0, (sptr_t)&tr);
+         SendMsg(SCI_GETTEXTRANGE, 0, (sptr_t)&tr);
          mbuf.UngetWriteBuf(len);
          mbuf.AppendByte(0);
          return sci2wx(buf);
@@ -1535,91 +1535,91 @@ wxString wxScintilla::GetTextRange (int startPos, int endPos) {
 // Draw the selection in normal style or with selection highlighted.
 void wxScintilla::HideSelection (bool normal)
 {
-    SendMsg (SCI_HIDESELECTION, normal, 0);
+    SendMsg(SCI_HIDESELECTION, normal, 0);
 }
 
 // Retrieve the line containing a position.
 int wxScintilla::LineFromPosition (int pos) const
 {
-    return SendMsg (SCI_LINEFROMPOSITION, pos, 0);
+    return SendMsg(SCI_LINEFROMPOSITION, pos, 0);
 }
 
 // Retrieve the position at the start of a line.
 int wxScintilla::PositionFromLine (int line) const
 {
-    return SendMsg (SCI_POSITIONFROMLINE, line, 0);
+    return SendMsg(SCI_POSITIONFROMLINE, line, 0);
 }
 
 // Scroll horizontally and vertically.
 void wxScintilla::LineScroll (int columns, int lines)
 {
-    SendMsg (SCI_LINESCROLL, columns, lines);
+    SendMsg(SCI_LINESCROLL, columns, lines);
 }
 
 // Ensure the caret is visible.
 void wxScintilla::EnsureCaretVisible()
 {
-    SendMsg (SCI_SCROLLCARET, 0, 0);
+    SendMsg(SCI_SCROLLCARET, 0, 0);
 }
 
 // Replace the selected text with the argument text.
 void wxScintilla::ReplaceSelection (const wxString& text)
 {
-    SendMsg (SCI_REPLACESEL, 0, (sptr_t)(const char*)wx2sci(text));
+    SendMsg(SCI_REPLACESEL, 0, (sptr_t)(const char*)wx2sci(text));
 }
 
 // Set to read only or read write.
 void wxScintilla::SetReadOnly (bool readOnly)
 {
-    SendMsg (SCI_SETREADONLY, readOnly, 0);
+    SendMsg(SCI_SETREADONLY, readOnly, 0);
 }
 
 // Will a paste succeed?
 bool wxScintilla::CanPaste()
 {
-    return SendMsg (SCI_CANPASTE, 0, 0) != 0;
+    return SendMsg(SCI_CANPASTE, 0, 0) != 0;
 }
 
 // Are there any undoable actions in the undo history?
 bool wxScintilla::CanUndo() const
 {
-    return SendMsg (SCI_CANUNDO, 0, 0) != 0;
+    return SendMsg(SCI_CANUNDO, 0, 0) != 0;
 }
 
 // Delete the undo history.
 void wxScintilla::EmptyUndoBuffer()
 {
-    SendMsg (SCI_EMPTYUNDOBUFFER, 0, 0);
+    SendMsg(SCI_EMPTYUNDOBUFFER, 0, 0);
 }
 
 // Undo one action in the undo history.
 void wxScintilla::Undo()
 {
-    SendMsg (SCI_UNDO, 0, 0);
+    SendMsg(SCI_UNDO, 0, 0);
 }
 
 // Cut the selection to the clipboard.
 void wxScintilla::Cut()
 {
-    SendMsg (SCI_CUT, 0, 0);
+    SendMsg(SCI_CUT, 0, 0);
 }
 
 // Copy the selection to the clipboard.
 void wxScintilla::Copy()
 {
-    SendMsg (SCI_COPY, 0, 0);
+    SendMsg(SCI_COPY, 0, 0);
 }
 
 // Paste the contents of the clipboard into the document replacing the selection.
 void wxScintilla::Paste()
 {
-    SendMsg (SCI_PASTE, 0, 0);
+    SendMsg(SCI_PASTE, 0, 0);
 }
 
 // Clear the selection.
 void wxScintilla::Clear()
 {
-    SendMsg (SCI_CLEAR, 0, 0);
+    SendMsg(SCI_CLEAR, 0, 0);
 }
 
 // Replace the contents of the document with the argument text.
@@ -1633,7 +1633,7 @@ wxString wxScintilla::GetText() const {
          int len  = GetTextLength();
          wxMemoryBuffer mbuf(len+1);   // leave room for the null...
          char* buf = (char*)mbuf.GetWriteBuf(len+1);
-         SendMsg (SCI_GETTEXT, len+1, (sptr_t)buf);
+         SendMsg(SCI_GETTEXT, len+1, (sptr_t)buf);
          mbuf.UngetWriteBuf(len);
          mbuf.AppendByte(0);
          return sci2wx(buf);
@@ -1642,57 +1642,57 @@ wxString wxScintilla::GetText() const {
 // Retrieve the number of characters in the document.
 int wxScintilla::GetTextLength() const
 {
-    return SendMsg (SCI_GETTEXTLENGTH, 0, 0);
+    return SendMsg(SCI_GETTEXTLENGTH, 0, 0);
 }
 
 // Set to overtype (true) or insert mode.
 void wxScintilla::SetOvertype (bool overtype)
 {
-    SendMsg (SCI_SETOVERTYPE, overtype, 0);
+    SendMsg(SCI_SETOVERTYPE, overtype, 0);
 }
 
 // Returns true if overtype mode is active otherwise false is returned.
 bool wxScintilla::GetOvertype() const
 {
-    return SendMsg (SCI_GETOVERTYPE, 0, 0) != 0;
+    return SendMsg(SCI_GETOVERTYPE, 0, 0) != 0;
 }
 
 // Set the width of the insert mode caret.
 void wxScintilla::SetCaretWidth (int pixelWidth)
 {
-    SendMsg (SCI_SETCARETWIDTH, pixelWidth, 0);
+    SendMsg(SCI_SETCARETWIDTH, pixelWidth, 0);
 }
 
 // Returns the width of the insert mode caret.
 int wxScintilla::GetCaretWidth() const
 {
-    return SendMsg (SCI_GETCARETWIDTH, 0, 0);
+    return SendMsg(SCI_GETCARETWIDTH, 0, 0);
 }
 
 // Sets the position that starts the target which is used for updating the
 // document without affecting the scroll position.
 void wxScintilla::SetTargetStart (int pos)
 {
-    SendMsg (SCI_SETTARGETSTART, pos, 0);
+    SendMsg(SCI_SETTARGETSTART, pos, 0);
 }
 
 // Get the position that starts the target.
 int wxScintilla::GetTargetStart() const
 {
-    return SendMsg (SCI_GETTARGETSTART, 0, 0);
+    return SendMsg(SCI_GETTARGETSTART, 0, 0);
 }
 
 // Sets the position that ends the target which is used for updating the
 // document without affecting the scroll position.
 void wxScintilla::SetTargetEnd (int pos)
 {
-    SendMsg (SCI_SETTARGETEND, pos, 0);
+    SendMsg(SCI_SETTARGETEND, pos, 0);
 }
 
 // Get the position that ends the target.
 int wxScintilla::GetTargetEnd() const
 {
-    return SendMsg (SCI_GETTARGETEND, 0, 0);
+    return SendMsg(SCI_GETTARGETEND, 0, 0);
 }
 
 // Replace the target text with the argument text.
@@ -1701,7 +1701,7 @@ int wxScintilla::GetTargetEnd() const
 
 int wxScintilla::ReplaceTarget (const wxString& text) {
     wxWX2MBbuf buf = (wxWX2MBbuf)wx2sci(text);
-    return SendMsg (SCI_REPLACETARGET, strlen(buf), (sptr_t)(const char*)buf);
+    return SendMsg(SCI_REPLACETARGET, strlen(buf), (sptr_t)(const char*)buf);
 }
 
 // Replace the target text with the argument text after \d processing.
@@ -1713,7 +1713,7 @@ int wxScintilla::ReplaceTarget (const wxString& text) {
 
 int wxScintilla::ReplaceTargetRE (const wxString& text) {
     wxWX2MBbuf buf = (wxWX2MBbuf)wx2sci(text);
-    return SendMsg (SCI_REPLACETARGETRE, strlen(buf), (sptr_t)(const char*)buf);
+    return SendMsg(SCI_REPLACETARGETRE, strlen(buf), (sptr_t)(const char*)buf);
 }
 
 // Search for a counted string in the target and set the target to the found
@@ -1722,91 +1722,91 @@ int wxScintilla::ReplaceTargetRE (const wxString& text) {
 
 int wxScintilla::SearchInTarget (const wxString& text) {
     wxWX2MBbuf buf = (wxWX2MBbuf)wx2sci(text);
-    return SendMsg (SCI_SEARCHINTARGET, strlen(buf), (sptr_t)(const char*)buf);
+    return SendMsg(SCI_SEARCHINTARGET, strlen(buf), (sptr_t)(const char*)buf);
 }
 
 // Set the search flags used by SearchInTarget.
 void wxScintilla::SetSearchFlags (int flags)
 {
-    SendMsg (SCI_SETSEARCHFLAGS, flags, 0);
+    SendMsg(SCI_SETSEARCHFLAGS, flags, 0);
 }
 
 // Get the search flags used by SearchInTarget.
 int wxScintilla::GetSearchFlags() const
 {
-    return SendMsg (SCI_GETSEARCHFLAGS, 0, 0);
+    return SendMsg(SCI_GETSEARCHFLAGS, 0, 0);
 }
 
 // Show a call tip containing a definition near position pos.
 void wxScintilla::CallTipShow (int pos, const wxString& definition)
 {
-    SendMsg (SCI_CALLTIPSHOW, pos, (long)(const char*)wx2sci(definition));
+    SendMsg(SCI_CALLTIPSHOW, pos, (long)(const char*)wx2sci(definition));
 }
 
 // Remove the call tip from the screen.
 void wxScintilla::CallTipCancel()
 {
-    SendMsg (SCI_CALLTIPCANCEL, 0, 0);
+    SendMsg(SCI_CALLTIPCANCEL, 0, 0);
 }
 
 // Is there an active call tip?
 bool wxScintilla::CallTipActive()
 {
-    return SendMsg (SCI_CALLTIPACTIVE, 0, 0) != 0;
+    return SendMsg(SCI_CALLTIPACTIVE, 0, 0) != 0;
 }
 
 // Retrieve the position where the caret was before displaying the call tip.
 int wxScintilla::CallTipPosAtStart()
 {
-    return SendMsg (SCI_CALLTIPPOSSTART, 0, 0);
+    return SendMsg(SCI_CALLTIPPOSSTART, 0, 0);
 }
 
 // Highlight a segment of the definition.
 void wxScintilla::CallTipSetHighlight (int start, int end)
 {
-    SendMsg (SCI_CALLTIPSETHLT, start, end);
+    SendMsg(SCI_CALLTIPSETHLT, start, end);
 }
 
 // Set the background colour for the call tip.
 void wxScintilla::CallTipSetBackground (const wxColour& back)
 {
-    SendMsg (SCI_CALLTIPSETBACK, wxColourAsLong(back), 0);
+    SendMsg(SCI_CALLTIPSETBACK, wxColourAsLong(back), 0);
 }
 
 // Set the foreground colour for the call tip.
 void wxScintilla::CallTipSetForeground (const wxColour& fore)
 {
-    SendMsg (SCI_CALLTIPSETFORE, wxColourAsLong(fore), 0);
+    SendMsg(SCI_CALLTIPSETFORE, wxColourAsLong(fore), 0);
 }
 
 // Set the foreground colour for the highlighted part of the call tip.
 void wxScintilla::CallTipSetForegroundHighlight (const wxColour& fore)
 {
-    SendMsg (SCI_CALLTIPSETFOREHLT, wxColourAsLong(fore), 0);
+    SendMsg(SCI_CALLTIPSETFOREHLT, wxColourAsLong(fore), 0);
 }
 
 // Enable use of STYLE_CALLTIP and set call tip tab size in pixels.
 void wxScintilla::CallTipUseStyle (int tabSize)
 {
-    SendMsg (SCI_CALLTIPUSESTYLE, tabSize, 0);
+    SendMsg(SCI_CALLTIPUSESTYLE, tabSize, 0);
 }
 
 // Find the display line of a document line taking hidden lines into account.
 int wxScintilla::VisibleFromDocLine (int line)
 {
-    return SendMsg (SCI_VISIBLEFROMDOCLINE, line, 0);
+    return SendMsg(SCI_VISIBLEFROMDOCLINE, line, 0);
 }
 
 // Find the document line of a display line taking hidden lines into account.
 int wxScintilla::DocLineFromVisible (int lineDisplay)
 {
-    return SendMsg (SCI_DOCLINEFROMVISIBLE, lineDisplay, 0);
+    return SendMsg(SCI_DOCLINEFROMVISIBLE, lineDisplay, 0);
 }
 
 // The number of display lines needed to wrap a document line
 int wxScintilla::WrapCount (int line)
 {
-    return SendMsg (SCI_WRAPCOUNT, line, 0);
+    return SendMsg(SCI_WRAPCOUNT, line, 0);
 }
 
 // Set the fold level of a line.
@@ -1814,67 +1814,67 @@ int wxScintilla::WrapCount (int line)
 // line is a header and whether it is effectively white space.
 void wxScintilla::SetFoldLevel (int line, int level)
 {
-    SendMsg (SCI_SETFOLDLEVEL, line, level);
+    SendMsg(SCI_SETFOLDLEVEL, line, level);
 }
 
 // Retrieve the fold level of a line.
 int wxScintilla::GetFoldLevel (int line) const
 {
-    return SendMsg (SCI_GETFOLDLEVEL, line, 0);
+    return SendMsg(SCI_GETFOLDLEVEL, line, 0);
 }
 
 // Find the last child line of a header line.
 int wxScintilla::GetLastChild (int line, int level) const
 {
-    return SendMsg (SCI_GETLASTCHILD, line, level);
+    return SendMsg(SCI_GETLASTCHILD, line, level);
 }
 
 // Find the parent line of a child line.
 int wxScintilla::GetFoldParent (int line) const
 {
-    return SendMsg (SCI_GETFOLDPARENT, line, 0);
+    return SendMsg(SCI_GETFOLDPARENT, line, 0);
 }
 
 // Make a range of lines visible.
 void wxScintilla::ShowLines (int lineStart, int lineEnd)
 {
-    SendMsg (SCI_SHOWLINES, lineStart, lineEnd);
+    SendMsg(SCI_SHOWLINES, lineStart, lineEnd);
 }
 
 // Make a range of lines invisible.
 void wxScintilla::HideLines (int lineStart, int lineEnd)
 {
-    SendMsg (SCI_HIDELINES, lineStart, lineEnd);
+    SendMsg(SCI_HIDELINES, lineStart, lineEnd);
 }
 
 // Is a line visible?
 bool wxScintilla::GetLineVisible (int line) const
 {
-    return SendMsg (SCI_GETLINEVISIBLE, line, 0) != 0;
+    return SendMsg(SCI_GETLINEVISIBLE, line, 0) != 0;
 }
 
 // Show the children of a header line.
 void wxScintilla::SetFoldExpanded (int line, bool expanded)
 {
-    SendMsg (SCI_SETFOLDEXPANDED, line, expanded);
+    SendMsg(SCI_SETFOLDEXPANDED, line, expanded);
 }
 
 // Is a header line expanded?
 bool wxScintilla::GetFoldExpanded (int line) const
 {
-    return SendMsg (SCI_GETFOLDEXPANDED, line, 0) != 0;
+    return SendMsg(SCI_GETFOLDEXPANDED, line, 0) != 0;
 }
 
 // Switch a header line between expanded and contracted.
 void wxScintilla::ToggleFold (int line)
 {
-    SendMsg (SCI_TOGGLEFOLD, line, 0);
+    SendMsg(SCI_TOGGLEFOLD, line, 0);
 }
 
 // Ensure a particular line is visible by expanding any header line hiding it.
 void wxScintilla::EnsureVisible (int line)
 {
-    SendMsg (SCI_ENSUREVISIBLE, line, 0);
+    SendMsg(SCI_ENSUREVISIBLE, line, 0);
 }
 
 // Set some style options for folding.
@@ -1887,139 +1887,139 @@ void wxScintilla::SetFoldFlags (int flags)
 // Use the currently set visibility policy to determine which range to display.
 void wxScintilla::EnsureVisibleEnforcePolicy (int line)
 {
-    SendMsg (SCI_ENSUREVISIBLEENFORCEPOLICY, line, 0);
+    SendMsg(SCI_ENSUREVISIBLEENFORCEPOLICY, line, 0);
 }
 
 // Sets whether a tab pressed when caret is within indentation indents.
 void wxScintilla::SetTabIndents (bool tabIndents)
 {
-    SendMsg (SCI_SETTABINDENTS, tabIndents, 0);
+    SendMsg(SCI_SETTABINDENTS, tabIndents, 0);
 }
 
 // Does a tab pressed when caret is within indentation indent?
 bool wxScintilla::GetTabIndents() const
 {
-    return SendMsg (SCI_GETTABINDENTS, 0, 0) != 0;
+    return SendMsg(SCI_GETTABINDENTS, 0, 0) != 0;
 }
 
 // Sets whether a backspace pressed when caret is within indentation unindents.
 void wxScintilla::SetBackSpaceUnIndents (bool bsUnIndents)
 {
-    SendMsg (SCI_SETBACKSPACEUNINDENTS, bsUnIndents, 0);
+    SendMsg(SCI_SETBACKSPACEUNINDENTS, bsUnIndents, 0);
 }
 
 // Does a backspace pressed when caret is within indentation unindent?
 bool wxScintilla::GetBackSpaceUnIndents() const
 {
-    return SendMsg (SCI_GETBACKSPACEUNINDENTS, 0, 0) != 0;
+    return SendMsg(SCI_GETBACKSPACEUNINDENTS, 0, 0) != 0;
 }
 
 // Sets the time the mouse must sit still to generate a mouse dwell event.
 void wxScintilla::SetMouseDwellTime (int periodMilliseconds)
 {
-    SendMsg (SCI_SETMOUSEDWELLTIME, periodMilliseconds, 0);
+    SendMsg(SCI_SETMOUSEDWELLTIME, periodMilliseconds, 0);
 }
 
 // Retrieve the time the mouse must sit still to generate a mouse dwell event.
 int wxScintilla::GetMouseDwellTime() const
 {
-    return SendMsg (SCI_GETMOUSEDWELLTIME, 0, 0);
+    return SendMsg(SCI_GETMOUSEDWELLTIME, 0, 0);
 }
 
 // Get position of start of word.
 int wxScintilla::WordStartPosition (int pos, bool onlyWordCharacters)
 {
-    return SendMsg (SCI_WORDSTARTPOSITION, pos, onlyWordCharacters);
+    return SendMsg(SCI_WORDSTARTPOSITION, pos, onlyWordCharacters);
 }
 
 // Get position of end of word.
 int wxScintilla::WordEndPosition (int pos, bool onlyWordCharacters)
 {
-    return SendMsg (SCI_WORDENDPOSITION, pos, onlyWordCharacters);
+    return SendMsg(SCI_WORDENDPOSITION, pos, onlyWordCharacters);
 }
 
 // Sets whether text is word wrapped.
 void wxScintilla::SetWrapMode (int mode)
 {
-    SendMsg (SCI_SETWRAPMODE, mode, 0);
+    SendMsg(SCI_SETWRAPMODE, mode, 0);
 }
 
 // Retrieve whether text is word wrapped.
 int wxScintilla::GetWrapMode() const
 {
-    return SendMsg (SCI_GETWRAPMODE, 0, 0);
+    return SendMsg(SCI_GETWRAPMODE, 0, 0);
 }
 
 // Set the display mode of visual flags for wrapped lines.
 void wxScintilla::SetWrapVisualFlags (int wrapVisualFlags)
 {
-    SendMsg (SCI_SETWRAPVISUALFLAGS, wrapVisualFlags, 0);
+    SendMsg(SCI_SETWRAPVISUALFLAGS, wrapVisualFlags, 0);
 }
 
 // Retrive the display mode of visual flags for wrapped lines.
 int wxScintilla::GetWrapVisualFlags() const
 {
-    return SendMsg (SCI_GETWRAPVISUALFLAGS, 0, 0);
+    return SendMsg(SCI_GETWRAPVISUALFLAGS, 0, 0);
 }
 
 // Set the location of visual flags for wrapped lines.
 void wxScintilla::SetWrapVisualFlagsLocation (int wrapVisualFlagsLocation)
 {
-    SendMsg (SCI_SETWRAPVISUALFLAGSLOCATION, wrapVisualFlagsLocation, 0);
+    SendMsg(SCI_SETWRAPVISUALFLAGSLOCATION, wrapVisualFlagsLocation, 0);
 }
 
 // Retrive the location of visual flags for wrapped lines.
 int wxScintilla::GetWrapVisualFlagsLocation() const
 {
-    return SendMsg (SCI_GETWRAPVISUALFLAGSLOCATION, 0, 0);
+    return SendMsg(SCI_GETWRAPVISUALFLAGSLOCATION, 0, 0);
 }
 
 // Set the start indent for wrapped lines.
 void wxScintilla::SetWrapStartIndent (int indent)
 {
-    SendMsg (SCI_SETWRAPSTARTINDENT, indent, 0);
+    SendMsg(SCI_SETWRAPSTARTINDENT, indent, 0);
 }
 
 // Retrive the start indent for wrapped lines.
 int wxScintilla::GetWrapStartIndent() const
 {
-    return SendMsg (SCI_GETWRAPSTARTINDENT, 0, 0);
+    return SendMsg(SCI_GETWRAPSTARTINDENT, 0, 0);
 }
 
 // Sets the degree of caching of layout information.
 void wxScintilla::SetLayoutCache (int mode)
 {
-    SendMsg (SCI_SETLAYOUTCACHE, mode, 0);
+    SendMsg(SCI_SETLAYOUTCACHE, mode, 0);
 }
 
 // Retrieve the degree of caching of layout information.
 int wxScintilla::GetLayoutCache() const
 {
-    return SendMsg (SCI_GETLAYOUTCACHE, 0, 0);
+    return SendMsg(SCI_GETLAYOUTCACHE, 0, 0);
 }
 
 // Sets the document width assumed for scrolling.
 void wxScintilla::SetScrollWidth (int pixelWidth)
 {
-    SendMsg (SCI_SETSCROLLWIDTH, pixelWidth, 0);
+    SendMsg(SCI_SETSCROLLWIDTH, pixelWidth, 0);
 }
 
 // Retrieve the document width assumed for scrolling.
 int wxScintilla::GetScrollWidth() const
 {
-    return SendMsg (SCI_GETSCROLLWIDTH, 0, 0);
+    return SendMsg(SCI_GETSCROLLWIDTH, 0, 0);
 }
 
 // Sets whether the maximum width line displayed is used to set scroll width.
 void wxScintilla::SetScrollWidthTracking(bool tracking)
 {
-    SendMsg(2516, tracking, 0);
+    SendMsg(SCI_SETSCROLLWIDTHTRACKING, tracking, 0);
 }
 
 // Retrieve whether the scroll width tracks wide lines.
 bool wxScintilla::GetScrollWidthTracking() const
 {
-    return SendMsg(2517, 0, 0) != 0;
+    return SendMsg(SCI_GETSCROLLWIDTHTRACKING, 0, 0) != 0;
 }
 
 // Measure the pixel width of some text in a particular style.
@@ -2027,7 +2027,7 @@ bool wxScintilla::GetScrollWidthTracking() const
 // Does not handle tab or control characters.
 int wxScintilla::TextWidth (int style, const wxString& text)
 {
-    return SendMsg (SCI_TEXTWIDTH, style, (sptr_t)(const char*)wx2sci(text));
+    return SendMsg(SCI_TEXTWIDTH, style, (sptr_t)(const char*)wx2sci(text));
 }
 
 // Sets the scroll range so that maximum scroll position has
@@ -2035,396 +2035,396 @@ int wxScintilla::TextWidth (int style, const wxString& text)
 // Setting this to false allows scrolling one page below the last line.
 void wxScintilla::SetEndAtLastLine (bool endAtLastLine)
 {
-    SendMsg (SCI_SETENDATLASTLINE, endAtLastLine, 0);
+    SendMsg(SCI_SETENDATLASTLINE, endAtLastLine, 0);
 }
 
 // Retrieve whether the maximum scroll position has the last
 // line at the bottom of the view.
 bool wxScintilla::GetEndAtLastLine() const
 {
-    return SendMsg (SCI_GETENDATLASTLINE, 0, 0) != 0;
+    return SendMsg(SCI_GETENDATLASTLINE, 0, 0) != 0;
 }
 
 // Retrieve the height of a particular line of text in pixels.
 int wxScintilla::TextHeight (int line)
 {
-    return SendMsg (SCI_TEXTHEIGHT, line, 0);
+    return SendMsg(SCI_TEXTHEIGHT, line, 0);
 }
 
 // Show or hide the vertical scroll bar.
 void wxScintilla::SetUseVerticalScrollBar (bool show)
 {
-    SendMsg (SCI_SETVSCROLLBAR, show, 0);
+    SendMsg(SCI_SETVSCROLLBAR, show, 0);
 }
 
 // Is the vertical scroll bar visible?
 bool wxScintilla::GetUseVerticalScrollBar() const
 {
-    return SendMsg (SCI_GETVSCROLLBAR, 0, 0) != 0;
+    return SendMsg(SCI_GETVSCROLLBAR, 0, 0) != 0;
 }
 
 // Add text to the document at current position.
 void wxScintilla::AppendText (const wxString& text) {
     wxWX2MBbuf buf = (wxWX2MBbuf)wx2sci(text);
-    SendMsg (SCI_APPENDTEXT, strlen(buf), (sptr_t)(const char*)buf);
+    SendMsg(SCI_APPENDTEXT, strlen(buf), (sptr_t)(const char*)buf);
 }
 
 // Append a string to the end of the document without changing the selection.
 void wxScintilla::AppendText (int length, const wxString& text) {
-    SendMsg (SCI_APPENDTEXT, length, (sptr_t)(const char*)wx2sci(text));
+    SendMsg(SCI_APPENDTEXT, length, (sptr_t)(const char*)wx2sci(text));
 }
 
 // Is drawing done in two phases with backgrounds drawn before foregrounds?
 bool wxScintilla::GetTwoPhaseDraw() const
 {
-    return SendMsg (SCI_GETTWOPHASEDRAW, 0, 0) != 0;
+    return SendMsg(SCI_GETTWOPHASEDRAW, 0, 0) != 0;
 }
 
 // In twoPhaseDraw mode, drawing is performed in two phases, first the background
 // and then the foreground. This avoids chopping off characters that overlap the next run.
 void wxScintilla::SetTwoPhaseDraw (bool twoPhase)
 {
-    SendMsg (SCI_SETTWOPHASEDRAW, twoPhase, 0);
+    SendMsg(SCI_SETTWOPHASEDRAW, twoPhase, 0);
 }
 
 // Make the target range start and end be the same as the selection range start and end.
 void wxScintilla::TargetFromSelection()
 {
-    SendMsg (SCI_TARGETFROMSELECTION, 0, 0);
+    SendMsg(SCI_TARGETFROMSELECTION, 0, 0);
 }
 
 // Join the lines in the target.
 void wxScintilla::LinesJoin()
 {
-    SendMsg (SCI_LINESJOIN, 0, 0);
+    SendMsg(SCI_LINESJOIN, 0, 0);
 }
 
 // Split the lines in the target into lines that are less wide than pixelWidth
 // where possible.
 void wxScintilla::LinesSplit (int pixelWidth)
 {
-    SendMsg (SCI_LINESSPLIT, pixelWidth, 0);
+    SendMsg(SCI_LINESSPLIT, pixelWidth, 0);
 }
 
 // Set the colours used as a chequerboard pattern in the fold margin
 void wxScintilla::SetFoldMarginColour (bool useSetting, const wxColour& back)
 {
-    SendMsg (SCI_SETFOLDMARGINCOLOUR, useSetting, wxColourAsLong(back));
+    SendMsg(SCI_SETFOLDMARGINCOLOUR, useSetting, wxColourAsLong(back));
 }
 void wxScintilla::SetFoldMarginHiColour (bool useSetting, const wxColour& fore)
 {
-    SendMsg (SCI_SETFOLDMARGINHICOLOUR, useSetting, wxColourAsLong(fore));
+    SendMsg(SCI_SETFOLDMARGINHICOLOUR, useSetting, wxColourAsLong(fore));
 }
 
 // Move caret down one line.
 void wxScintilla::LineDown()
 {
-    SendMsg (SCI_LINEDOWN, 0, 0);
+    SendMsg(SCI_LINEDOWN, 0, 0);
 }
 
 // Move caret down one line extending selection to new caret position.
 void wxScintilla::LineDownExtend()
 {
-    SendMsg (SCI_LINEDOWNEXTEND, 0, 0);
+    SendMsg(SCI_LINEDOWNEXTEND, 0, 0);
 }
 
 // Move caret up one line.
 void wxScintilla::LineUp()
 {
-    SendMsg (SCI_LINEUP, 0, 0);
+    SendMsg(SCI_LINEUP, 0, 0);
 }
 
 // Move caret up one line extending selection to new caret position.
 void wxScintilla::LineUpExtend()
 {
-    SendMsg (SCI_LINEUPEXTEND, 0, 0);
+    SendMsg(SCI_LINEUPEXTEND, 0, 0);
 }
 
 // Move caret left one character.
 void wxScintilla::CharLeft()
 {
-    SendMsg (SCI_CHARLEFT, 0, 0);
+    SendMsg(SCI_CHARLEFT, 0, 0);
 }
 
 // Move caret left one character extending selection to new caret position.
 void wxScintilla::CharLeftExtend()
 {
-    SendMsg (SCI_CHARLEFTEXTEND, 0, 0);
+    SendMsg(SCI_CHARLEFTEXTEND, 0, 0);
 }
 
 // Move caret right one character.
 void wxScintilla::CharRight()
 {
-    SendMsg (SCI_CHARRIGHT, 0, 0);
+    SendMsg(SCI_CHARRIGHT, 0, 0);
 }
 
 // Move caret right one character extending selection to new caret position.
 void wxScintilla::CharRightExtend()
 {
-    SendMsg (SCI_CHARRIGHTEXTEND, 0, 0);
+    SendMsg(SCI_CHARRIGHTEXTEND, 0, 0);
 }
 
 // Move caret left one word.
 void wxScintilla::WordLeft()
 {
-    SendMsg (SCI_WORDLEFT, 0, 0);
+    SendMsg(SCI_WORDLEFT, 0, 0);
 }
 
 // Move caret left one word extending selection to new caret position.
 void wxScintilla::WordLeftExtend()
 {
-    SendMsg (SCI_WORDLEFTEXTEND, 0, 0);
+    SendMsg(SCI_WORDLEFTEXTEND, 0, 0);
 }
 
 // Move caret right one word.
 void wxScintilla::WordRight()
 {
-    SendMsg (SCI_WORDRIGHT, 0, 0);
+    SendMsg(SCI_WORDRIGHT, 0, 0);
 }
 
 // Move caret right one word extending selection to new caret position.
 void wxScintilla::WordRightExtend()
 {
-    SendMsg (SCI_WORDRIGHTEXTEND, 0, 0);
+    SendMsg(SCI_WORDRIGHTEXTEND, 0, 0);
 }
 
 // Move caret to first position on line.
 void wxScintilla::Home()
 {
-    SendMsg (SCI_HOME, 0, 0);
+    SendMsg(SCI_HOME, 0, 0);
 }
 
 // Move caret to first position on line extending selection to new caret position.
 void wxScintilla::HomeExtend()
 {
-    SendMsg (SCI_HOMEEXTEND, 0, 0);
+    SendMsg(SCI_HOMEEXTEND, 0, 0);
 }
 
 // Move caret to last position on line.
 void wxScintilla::LineEnd()
 {
-    SendMsg (SCI_LINEEND, 0, 0);
+    SendMsg(SCI_LINEEND, 0, 0);
 }
 
 // Move caret to last position on line extending selection to new caret position.
 void wxScintilla::LineEndExtend()
 {
-    SendMsg (SCI_LINEENDEXTEND, 0, 0);
+    SendMsg(SCI_LINEENDEXTEND, 0, 0);
 }
 
 // Move caret to first position in document.
 void wxScintilla::DocumentStart()
 {
-    SendMsg (SCI_DOCUMENTSTART, 0, 0);
+    SendMsg(SCI_DOCUMENTSTART, 0, 0);
 }
 
 // Move caret to first position in document extending selection to new caret position.
 void wxScintilla::DocumentStartExtend()
 {
-    SendMsg (SCI_DOCUMENTSTARTEXTEND, 0, 0);
+    SendMsg(SCI_DOCUMENTSTARTEXTEND, 0, 0);
 }
 
 // Move caret to last position in document.
 void wxScintilla::DocumentEnd()
 {
-    SendMsg (SCI_DOCUMENTEND, 0, 0);
+    SendMsg(SCI_DOCUMENTEND, 0, 0);
 }
 
 // Move caret to last position in document extending selection to new caret position.
 void wxScintilla::DocumentEndExtend()
 {
-    SendMsg (SCI_DOCUMENTENDEXTEND, 0, 0);
+    SendMsg(SCI_DOCUMENTENDEXTEND, 0, 0);
 }
 
 // Move caret one page up.
 void wxScintilla::PageUp()
 {
-    SendMsg (SCI_PAGEUP, 0, 0);
+    SendMsg(SCI_PAGEUP, 0, 0);
 }
 
 // Move caret one page up extending selection to new caret position.
 void wxScintilla::PageUpExtend()
 {
-    SendMsg (SCI_PAGEUPEXTEND, 0, 0);
+    SendMsg(SCI_PAGEUPEXTEND, 0, 0);
 }
 
 // Move caret one page down.
 void wxScintilla::PageDown()
 {
-    SendMsg (SCI_PAGEDOWN, 0, 0);
+    SendMsg(SCI_PAGEDOWN, 0, 0);
 }
 
 // Move caret one page down extending selection to new caret position.
 void wxScintilla::PageDownExtend()
 {
-    SendMsg (SCI_PAGEDOWNEXTEND, 0, 0);
+    SendMsg(SCI_PAGEDOWNEXTEND, 0, 0);
 }
 
 // Switch from insert to overtype mode or the reverse.
 void wxScintilla::EditToggleOvertype()
 {
-    SendMsg (SCI_EDITTOGGLEOVERTYPE, 0, 0);
+    SendMsg(SCI_EDITTOGGLEOVERTYPE, 0, 0);
 }
 
 // Cancel any modes such as call tip or auto-completion list display.
 void wxScintilla::Cancel()
 {
-    SendMsg (SCI_CANCEL, 0, 0);
+    SendMsg(SCI_CANCEL, 0, 0);
 }
 
 // Delete the selection or if no selection, the character before the caret.
 void wxScintilla::DeleteBack()
 {
-    SendMsg (SCI_DELETEBACK, 0, 0);
+    SendMsg(SCI_DELETEBACK, 0, 0);
 }
 
 // If selection is empty or all on one line replace the selection with a tab character.
 // If more than one line selected, indent the lines.
 void wxScintilla::Tab()
 {
-    SendMsg (SCI_TAB, 0, 0);
+    SendMsg(SCI_TAB, 0, 0);
 }
 
 // Dedent the selected lines.
 void wxScintilla::BackTab()
 {
-    SendMsg (SCI_BACKTAB, 0, 0);
+    SendMsg(SCI_BACKTAB, 0, 0);
 }
 
 // Insert a new line, may use a CRLF, CR or LF depending on EOL mode.
 void wxScintilla::NewLine()
 {
-    SendMsg (SCI_NEWLINE, 0, 0);
+    SendMsg(SCI_NEWLINE, 0, 0);
 }
 
 // Insert a Form Feed character.
 void wxScintilla::FormFeed()
 {
-    SendMsg (SCI_FORMFEED, 0, 0);
+    SendMsg(SCI_FORMFEED, 0, 0);
 }
 
 // Move caret to before first visible character on line.
 // If already there move to first character on line.
 void wxScintilla::VCHome()
 {
-    SendMsg (SCI_VCHOME, 0, 0);
+    SendMsg(SCI_VCHOME, 0, 0);
 }
 
 // Like VCHome but extending selection to new caret position.
 void wxScintilla::VCHomeExtend()
 {
-    SendMsg (SCI_VCHOMEEXTEND, 0, 0);
+    SendMsg(SCI_VCHOMEEXTEND, 0, 0);
 }
 
 // Magnify the displayed text by increasing the sizes by 1 point.
 void wxScintilla::ZoomIn()
 {
-    SendMsg (SCI_ZOOMIN, 0, 0);
+    SendMsg(SCI_ZOOMIN, 0, 0);
 }
 
 // Make the displayed text smaller by decreasing the sizes by 1 point.
 void wxScintilla::ZoomOut()
 {
-    SendMsg (SCI_ZOOMOUT, 0, 0);
+    SendMsg(SCI_ZOOMOUT, 0, 0);
 }
 
 // Delete the word to the left of the caret.
 void wxScintilla::DelWordLeft()
 {
-    SendMsg (SCI_DELWORDLEFT, 0, 0);
+    SendMsg(SCI_DELWORDLEFT, 0, 0);
 }
 
 // Delete the word to the right of the caret.
 void wxScintilla::DelWordRight()
 {
-    SendMsg (SCI_DELWORDRIGHT, 0, 0);
+    SendMsg(SCI_DELWORDRIGHT, 0, 0);
 }
 
 // Delete the word to the right of the caret, but not the trailing non-word characters.
 void wxScintilla::DelWordRightEnd()
 {
-    SendMsg(2518, 0, 0);
+    SendMsg(SCI_DELWORDRIGHTEND, 0, 0);
 }
 
 // Cut the line containing the caret.
 void wxScintilla::LineCut()
 {
-    SendMsg (SCI_LINECUT, 0, 0);
+    SendMsg(SCI_LINECUT, 0, 0);
 }
 
 // Delete the line containing the caret.
 void wxScintilla::LineDelete()
 {
-    SendMsg (SCI_LINEDELETE, 0, 0);
+    SendMsg(SCI_LINEDELETE, 0, 0);
 }
 
 // Switch the current line with the previous.
 void wxScintilla::LineTranspose()
 {
-    SendMsg (SCI_LINETRANSPOSE, 0, 0);
+    SendMsg(SCI_LINETRANSPOSE, 0, 0);
 }
 
 // Duplicate the current line.
 void wxScintilla::LineDuplicate()
 {
-    SendMsg (SCI_LINEDUPLICATE, 0, 0);
+    SendMsg(SCI_LINEDUPLICATE, 0, 0);
 }
 
 // Transform the selection to lower case.
 void wxScintilla::LowerCase()
 {
-    SendMsg (SCI_LOWERCASE, 0, 0);
+    SendMsg(SCI_LOWERCASE, 0, 0);
 }
 
 // Transform the selection to upper case.
 void wxScintilla::UpperCase()
 {
-    SendMsg (SCI_UPPERCASE, 0, 0);
+    SendMsg(SCI_UPPERCASE, 0, 0);
 }
 
 // Scroll the document down, keeping the caret visible.
 void wxScintilla::LineScrollDown()
 {
-    SendMsg (SCI_LINESCROLLDOWN, 0, 0);
+    SendMsg(SCI_LINESCROLLDOWN, 0, 0);
 }
 
 // Scroll the document up, keeping the caret visible.
 void wxScintilla::LineScrollUp()
 {
-    SendMsg (SCI_LINESCROLLUP, 0, 0);
+    SendMsg(SCI_LINESCROLLUP, 0, 0);
 }
 
 // Delete the selection or if no selection, the character before the caret.
 // Will not delete the character before at the start of a line.
 void wxScintilla::DeleteBackNotLine()
 {
-    SendMsg (SCI_DELETEBACKNOTLINE, 0, 0);
+    SendMsg(SCI_DELETEBACKNOTLINE, 0, 0);
 }
 
 // Move caret to first position on display line.
 void wxScintilla::HomeDisplay()
 {
-    SendMsg (SCI_HOMEDISPLAY, 0, 0);
+    SendMsg(SCI_HOMEDISPLAY, 0, 0);
 }
 
 // Move caret to first position on display line extending selection to
 // new caret position.
 void wxScintilla::HomeDisplayExtend()
 {
-    SendMsg (SCI_HOMEDISPLAYEXTEND, 0, 0);
+    SendMsg(SCI_HOMEDISPLAYEXTEND, 0, 0);
 }
 
 // Move caret to last position on display line.
 void wxScintilla::LineEndDisplay()
 {
-    SendMsg (SCI_LINEENDDISPLAY, 0, 0);
+    SendMsg(SCI_LINEENDDISPLAY, 0, 0);
 }
 
 // Move caret to last position on display line extending selection to new
 // caret position.
 void wxScintilla::LineEndDisplayExtend()
 {
-    SendMsg (SCI_LINEENDDISPLAYEXTEND, 0, 0);
+    SendMsg(SCI_LINEENDDISPLAYEXTEND, 0, 0);
 }
 
 // These are like their namesakes Home(Extend)?, LineEnd(Extend)?, VCHome(Extend)?
@@ -2434,240 +2434,240 @@ void wxScintilla::LineEndDisplayExtend()
 // or end of the document line, as appropriate for (Home|LineEnd|VCHome)(Extend)?.
 void wxScintilla::HomeWrap()
 {
-    SendMsg (SCI_HOMEWRAP, 0, 0);
+    SendMsg(SCI_HOMEWRAP, 0, 0);
 }
 void wxScintilla::HomeWrapExtend()
 {
-    SendMsg (SCI_HOMEWRAPEXTEND, 0, 0);
+    SendMsg(SCI_HOMEWRAPEXTEND, 0, 0);
 }
 void wxScintilla::LineEndWrap()
 {
-    SendMsg (SCI_LINEENDWRAP, 0, 0);
+    SendMsg(SCI_LINEENDWRAP, 0, 0);
 }
 void wxScintilla::LineEndWrapExtend()
 {
-    SendMsg (SCI_LINEENDWRAPEXTEND, 0, 0);
+    SendMsg(SCI_LINEENDWRAPEXTEND, 0, 0);
 }
 void wxScintilla::VCHomeWrap()
 {
-    SendMsg (SCI_VCHOMEWRAP, 0, 0);
+    SendMsg(SCI_VCHOMEWRAP, 0, 0);
 }
 void wxScintilla::VCHomeWrapExtend()
 {
-    SendMsg (SCI_VCHOMEWRAPEXTEND, 0, 0);
+    SendMsg(SCI_VCHOMEWRAPEXTEND, 0, 0);
 }
 
 // Copy the line containing the caret.
 void wxScintilla::LineCopy()
 {
-    SendMsg (SCI_LINECOPY, 0, 0);
+    SendMsg(SCI_LINECOPY, 0, 0);
 }
 
 // Move the caret inside current view if it's not there already.
 void wxScintilla::MoveCaretInsideView()
 {
-    SendMsg (SCI_MOVECARETINSIDEVIEW, 0, 0);
+    SendMsg(SCI_MOVECARETINSIDEVIEW, 0, 0);
 }
 
 // How many characters are on a line, including end of line characters?
 int wxScintilla::LineLength (int line) const
 {
-    return SendMsg (SCI_LINELENGTH, line, 0);
+    return SendMsg(SCI_LINELENGTH, line, 0);
 }
 
 // Highlight the characters at two positions.
 void wxScintilla::BraceHighlight (int pos1, int pos2)
 {
-    SendMsg (SCI_BRACEHIGHLIGHT, pos1, pos2);
+    SendMsg(SCI_BRACEHIGHLIGHT, pos1, pos2);
 }
 
 // Highlight the character at a position indicating there is no matching brace.
 void wxScintilla::BraceBadLight (int pos)
 {
-    SendMsg (SCI_BRACEBADLIGHT, pos, 0);
+    SendMsg(SCI_BRACEBADLIGHT, pos, 0);
 }
 
 // Find the position of a matching brace or INVALID_POSITION if no match.
 int wxScintilla::BraceMatch (int pos)
 {
-    return SendMsg (SCI_BRACEMATCH, pos, 0);
+    return SendMsg(SCI_BRACEMATCH, pos, 0);
 }
 
 // Are the end of line characters visible?
 bool wxScintilla::GetViewEOL() const
 {
-    return SendMsg (SCI_GETVIEWEOL, 0, 0) != 0;
+    return SendMsg(SCI_GETVIEWEOL, 0, 0) != 0;
 }
 
 // Make the end of line characters visible or invisible.
 void wxScintilla::SetViewEOL (bool visible)
 {
-    SendMsg (SCI_SETVIEWEOL, visible, 0);
+    SendMsg(SCI_SETVIEWEOL, visible, 0);
 }
 
 // Retrieve a pointer to the document object.
 void* wxScintilla::GetDocPointer() {
-    return (void*)SendMsg (SCI_GETDOCPOINTER);
+    return (void*)SendMsg(SCI_GETDOCPOINTER);
 }
 
 // Change the document object used.
 void wxScintilla::SetDocPointer (void* docPointer) {
-    SendMsg (SCI_SETDOCPOINTER, 0, (sptr_t)docPointer);
+    SendMsg(SCI_SETDOCPOINTER, 0, (sptr_t)docPointer);
 }
 
 // Set which document modification events are sent to the container.
 void wxScintilla::SetModEventMask (int mask)
 {
-    SendMsg (SCI_SETMODEVENTMASK, mask, 0);
+    SendMsg(SCI_SETMODEVENTMASK, mask, 0);
 }
 
 // Retrieve the column number which text should be kept within.
 int wxScintilla::GetEdgeColumn() const
 {
-    return SendMsg (SCI_GETEDGECOLUMN, 0, 0);
+    return SendMsg(SCI_GETEDGECOLUMN, 0, 0);
 }
 
 // Set the column number of the edge.
 // If text goes past the edge then it is highlighted.
 void wxScintilla::SetEdgeColumn (int column)
 {
-    SendMsg (SCI_SETEDGECOLUMN, column, 0);
+    SendMsg(SCI_SETEDGECOLUMN, column, 0);
 }
 
 // Retrieve the edge highlight mode.
 int wxScintilla::GetEdgeMode() const
 {
-    return SendMsg (SCI_GETEDGEMODE, 0, 0);
+    return SendMsg(SCI_GETEDGEMODE, 0, 0);
 }
 
 // The edge may be displayed by a line (EDGE_LINE) or by highlighting text that
 // goes beyond it (EDGE_BACKGROUND) or not displayed at all (EDGE_NONE).
 void wxScintilla::SetEdgeMode (int mode)
 {
-    SendMsg (SCI_SETEDGEMODE, mode, 0);
+    SendMsg(SCI_SETEDGEMODE, mode, 0);
 }
 
 // Retrieve the colour used in edge indication.
 wxColour wxScintilla::GetEdgeColour() const
 {
-    long colour = SendMsg (SCI_GETEDGECOLOUR, 0, 0);
+    long colour = SendMsg(SCI_GETEDGECOLOUR, 0, 0);
     return wxColourFromLong(colour);
 }
 
 // Change the colour used in edge indication.
 void wxScintilla::SetEdgeColour (const wxColour& edgeColour)
 {
-    SendMsg (SCI_SETEDGECOLOUR, wxColourAsLong(edgeColour), 0);
+    SendMsg(SCI_SETEDGECOLOUR, wxColourAsLong(edgeColour), 0);
 }
 
 // Sets the current caret position to be the search anchor.
 void wxScintilla::SearchAnchor()
 {
-    SendMsg (SCI_SEARCHANCHOR, 0, 0);
+    SendMsg(SCI_SEARCHANCHOR, 0, 0);
 }
 
 // Find some text starting at the search anchor.
 // Does not ensure the selection is visible.
 int wxScintilla::SearchNext (int flags, const wxString& text)
 {
-    return SendMsg (SCI_SEARCHNEXT, flags, (sptr_t)(const char*)wx2sci(text));
+    return SendMsg(SCI_SEARCHNEXT, flags, (sptr_t)(const char*)wx2sci(text));
 }
 
 // Find some text starting at the search anchor and moving backwards.
 // Does not ensure the selection is visible.
 int wxScintilla::SearchPrev (int flags, const wxString& text)
 {
-    return SendMsg (SCI_SEARCHPREV, flags, (sptr_t)(const char*)wx2sci(text));
+    return SendMsg(SCI_SEARCHPREV, flags, (sptr_t)(const char*)wx2sci(text));
 }
 
 // Retrieves the number of lines completely visible.
 int wxScintilla::LinesOnScreen() const
 {
-    return SendMsg (SCI_LINESONSCREEN, 0, 0);
+    return SendMsg(SCI_LINESONSCREEN, 0, 0);
 }
 
 // Set whether a pop up menu is displayed automatically when the user presses
 // the wrong mouse button.
 void wxScintilla::UsePopUp (bool allowPopUp)
 {
-    SendMsg (SCI_USEPOPUP, allowPopUp, 0);
+    SendMsg(SCI_USEPOPUP, allowPopUp, 0);
 }
 
 // Is the selection rectangular? The alternative is the more common stream selection.
 bool wxScintilla::SelectionIsRectangle() const
 {
-    return SendMsg (SCI_SELECTIONISRECTANGLE, 0, 0) != 0;
+    return SendMsg(SCI_SELECTIONISRECTANGLE, 0, 0) != 0;
 }
 
 // Set the zoom level. This number of points is added to the size of all fonts.
 // It may be positive to magnify or negative to reduce.
 void wxScintilla::SetZoom (int zoom)
 {
-    SendMsg (SCI_SETZOOM, zoom, 0);
+    SendMsg(SCI_SETZOOM, zoom, 0);
 }
 
 // Retrieve the zoom level.
 int wxScintilla::GetZoom() const
 {
-    return SendMsg (SCI_GETZOOM, 0, 0);
+    return SendMsg(SCI_GETZOOM, 0, 0);
 }
 
 // Create a new document object.
 // Starts with reference count of 1 and not selected into editor.
 void* wxScintilla::CreateDocument() {
-    return (void*)SendMsg (SCI_CREATEDOCUMENT, 0, 0);
+    return (void*)SendMsg(SCI_CREATEDOCUMENT, 0, 0);
 }
 
 // Extend life of document.
 void wxScintilla::AddRefDocument (void* docPointer) {
-    SendMsg (SCI_ADDREFDOCUMENT, 0, (sptr_t)docPointer);
+    SendMsg(SCI_ADDREFDOCUMENT, 0, (sptr_t)docPointer);
 }
 
 // Release a reference to the document, deleting document if it fades to black.
 void wxScintilla::ReleaseDocument (void* docPointer) {
-    SendMsg (SCI_RELEASEDOCUMENT, 0, (sptr_t)docPointer);
+    SendMsg(SCI_RELEASEDOCUMENT, 0, (sptr_t)docPointer);
 }
 
 // Get which document modification events are sent to the container.
 int wxScintilla::GetModEventMask() const
 {
-    return SendMsg (SCI_GETMODEVENTMASK, 0, 0);
+    return SendMsg(SCI_GETMODEVENTMASK, 0, 0);
 }
 
 // Change internal focus flag.
 void wxScintilla::SetSCIFocus (bool focus)
 {
-    SendMsg (SCI_SETFOCUS, focus, 0);
+    SendMsg(SCI_SETFOCUS, focus, 0);
 }
 
 // Get internal focus flag.
 bool wxScintilla::GetSCIFocus() const
 {
-    return SendMsg (SCI_GETFOCUS, 0, 0) != 0;
+    return SendMsg(SCI_GETFOCUS, 0, 0) != 0;
 }
 
 // Change error status - 0 = OK.
 void wxScintilla::SetStatus (int statusCode)
 {
-    SendMsg (SCI_SETSTATUS, statusCode, 0);
+    SendMsg(SCI_SETSTATUS, statusCode, 0);
 }
 
 // Get error status.
 int wxScintilla::GetStatus() const
 {
-    return SendMsg (SCI_GETSTATUS, 0, 0);
+    return SendMsg(SCI_GETSTATUS, 0, 0);
 }
 
 // Set whether the mouse is captured when its button is pressed.
 void wxScintilla::SetMouseDownCaptures (bool captures)
 {
-    SendMsg (SCI_SETMOUSEDOWNCAPTURES, captures, 0);
+    SendMsg(SCI_SETMOUSEDOWNCAPTURES, captures, 0);
 }
 
 // Get whether mouse gets captured.
 bool wxScintilla::GetMouseDownCaptures() const
 {
-    return SendMsg (SCI_GETMOUSEDOWNCAPTURES, 0, 0) != 0;
+    return SendMsg(SCI_GETMOUSEDOWNCAPTURES, 0, 0) != 0;
 }
 
 // Sets the cursor to one of the SC_CURSOR* values.
@@ -2679,81 +2679,81 @@ void wxScintilla::SetSCICursor (int cursorType)
 // Get cursor type.
 int wxScintilla::GetSCICursor() const
 {
-    return SendMsg (SCI_GETCURSOR, 0, 0);
+    return SendMsg(SCI_GETCURSOR, 0, 0);
 }
 
 // Change the way control characters are displayed:
 // If symbol is < 32, keep the drawn way, else, use the given character.
 void wxScintilla::SetControlCharSymbol (int symbol)
 {
-    SendMsg (SCI_SETCONTROLCHARSYMBOL, symbol, 0);
+    SendMsg(SCI_SETCONTROLCHARSYMBOL, symbol, 0);
 }
 
 // Get the way control characters are displayed.
 int wxScintilla::GetControlCharSymbol() const
 {
-    return SendMsg (SCI_GETCONTROLCHARSYMBOL, 0, 0);
+    return SendMsg(SCI_GETCONTROLCHARSYMBOL, 0, 0);
 }
 
 // Move to the previous change in capitalisation.
 void wxScintilla::WordPartLeft()
 {
-    SendMsg (SCI_WORDPARTLEFT, 0, 0);
+    SendMsg(SCI_WORDPARTLEFT, 0, 0);
 }
 
 // Move to the previous change in capitalisation extending selection
 // to new caret position.
 void wxScintilla::WordPartLeftExtend()
 {
-    SendMsg (SCI_WORDPARTLEFTEXTEND, 0, 0);
+    SendMsg(SCI_WORDPARTLEFTEXTEND, 0, 0);
 }
 
 // Move to the change next in capitalisation.
 void wxScintilla::WordPartRight()
 {
-    SendMsg (SCI_WORDPARTRIGHT, 0, 0);
+    SendMsg(SCI_WORDPARTRIGHT, 0, 0);
 }
 
 // Move to the next change in capitalisation extending selection
 // to new caret position.
 void wxScintilla::WordPartRightExtend()
 {
-    SendMsg (SCI_WORDPARTRIGHTEXTEND, 0, 0);
+    SendMsg(SCI_WORDPARTRIGHTEXTEND, 0, 0);
 }
 
 // Set the way the display area is determined when a particular line
 // is to be moved to by Find, FindNext, GotoLine, etc.
 void wxScintilla::SetVisiblePolicy (int visiblePolicy, int visibleSlop)
 {
-    SendMsg (SCI_SETVISIBLEPOLICY, visiblePolicy, visibleSlop);
+    SendMsg(SCI_SETVISIBLEPOLICY, visiblePolicy, visibleSlop);
 }
 
 // Delete back from the current position to the start of the line.
 void wxScintilla::DelLineLeft()
 {
-    SendMsg (SCI_DELLINELEFT, 0, 0);
+    SendMsg(SCI_DELLINELEFT, 0, 0);
 }
 
 // Delete forwards from the current position to the end of the line.
 void wxScintilla::DelLineRight()
 {
-    SendMsg (SCI_DELLINERIGHT, 0, 0);
+    SendMsg(SCI_DELLINERIGHT, 0, 0);
 }
 
 // Get and Set the xOffset (ie, horizonal scroll position).
 void wxScintilla::SetXOffset (int newOffset)
 {
-    SendMsg (SCI_SETXOFFSET, newOffset, 0);
+    SendMsg(SCI_SETXOFFSET, newOffset, 0);
 }
 int wxScintilla::GetXOffset() const
 {
-    return SendMsg (SCI_GETXOFFSET, 0, 0);
+    return SendMsg(SCI_GETXOFFSET, 0, 0);
 }
 
 // Set the last x chosen value to be the caret x position.
 void wxScintilla::ChooseCaretX()
 {
-    SendMsg (SCI_CHOOSECARETX, 0, 0);
+    SendMsg(SCI_CHOOSECARETX, 0, 0);
 }
 
 // Set the focus to this Scintilla widget (GTK+ specific)
@@ -2763,64 +2763,64 @@ void wxScintilla::ChooseCaretX()
 // The exclusion zone is given in pixels.
 void wxScintilla::SetXCaretPolicy (int caretPolicy, int caretSlop)
 {
-    SendMsg (SCI_SETXCARETPOLICY, caretPolicy, caretSlop);
+    SendMsg(SCI_SETXCARETPOLICY, caretPolicy, caretSlop);
 }
 
 // Set the way the line the caret is on is kept visible.
 // The exclusion zone is given in lines.
 void wxScintilla::SetYCaretPolicy (int caretPolicy, int caretSlop)
 {
-    SendMsg (SCI_SETYCARETPOLICY, caretPolicy, caretSlop);
+    SendMsg(SCI_SETYCARETPOLICY, caretPolicy, caretSlop);
 }
 
 // Set printing to line wrapped (SC_WRAP_WORD) or not line wrapped (SC_WRAP_NONE).
 void wxScintilla::SetPrintWrapMode (int mode)
 {
-    SendMsg (SCI_SETPRINTWRAPMODE, mode, 0);
+    SendMsg(SCI_SETPRINTWRAPMODE, mode, 0);
 }
 
 // Is printing line wrapped?
 int wxScintilla::GetPrintWrapMode() const
 {
-    return SendMsg (SCI_GETPRINTWRAPMODE, 0, 0);
+    return SendMsg(SCI_GETPRINTWRAPMODE, 0, 0);
 }
 
 // Set a fore colour for active hotspots.
 void wxScintilla::SetHotspotActiveForeground (bool useSetting, const wxColour& fore)
 {
-    SendMsg (SCI_SETHOTSPOTACTIVEFORE, useSetting, wxColourAsLong(fore));
+    SendMsg(SCI_SETHOTSPOTACTIVEFORE, useSetting, wxColourAsLong(fore));
 }
 
 // Get the fore colour for active hotspots.
 wxColour wxScintilla::GetHotspotActiveForeground() const
 {
-    long c = SendMsg(2494, 0, 0);
+    long c = SendMsg(SCI_GETHOTSPOTACTIVEFORE, 0, 0);
     return wxColourFromLong(c);
 }
 
 // Set a back colour for active hotspots.
 void wxScintilla::SetHotspotActiveBackground (bool useSetting, const wxColour& back)
 {
-    SendMsg (SCI_SETHOTSPOTACTIVEBACK, useSetting, wxColourAsLong(back));
+    SendMsg(SCI_SETHOTSPOTACTIVEBACK, useSetting, wxColourAsLong(back));
 }
 
 // Get the back colour for active hotspots.
 wxColour wxScintilla::GetHotspotActiveBackground() const
 {
-    long c = SendMsg(2495, 0, 0);
+    long c = SendMsg(SCI_GETHOTSPOTACTIVEBACK, 0, 0);
     return wxColourFromLong(c);
 }
 
 // Enable / Disable underlining active hotspots.
 void wxScintilla::SetHotspotActiveUnderline (bool underline)
 {
-    SendMsg (SCI_SETHOTSPOTACTIVEUNDERLINE, underline, 0);
+    SendMsg(SCI_SETHOTSPOTACTIVEUNDERLINE, underline, 0);
 }
 
 // Get whether underlining for active hotspots.
 bool wxScintilla::GetHotspotActiveUnderline() const
 {
-    return SendMsg(2496, 0, 0) != 0;
+    return SendMsg(SCI_GETHOTSPOTACTIVEUNDERLINE, 0, 0) != 0;
 }
 
 // Limit hotspots to single line so hotspots on two lines don't merge.
@@ -2832,106 +2832,106 @@ void wxScintilla::SetHotspotSingleLine (bool singleLine)
 // Get the HotspotSingleLine property
 bool wxScintilla::GetHotspotSingleLine() const
 {
-    return SendMsg(2497, 0, 0) != 0;
+    return SendMsg(SCI_GETHOTSPOTSINGLELINE, 0, 0) != 0;
 }
 
 // Move caret between paragraphs (delimited by empty lines).
 void wxScintilla::ParaDown()
 {
-    SendMsg (SCI_PARADOWN, 0, 0);
+    SendMsg(SCI_PARADOWN, 0, 0);
 }
 void wxScintilla::ParaDownExtend()
 {
-    SendMsg (SCI_PARADOWNEXTEND, 0, 0);
+    SendMsg(SCI_PARADOWNEXTEND, 0, 0);
 }
 void wxScintilla::ParaUp()
 {
-    SendMsg (SCI_PARAUP, 0, 0);
+    SendMsg(SCI_PARAUP, 0, 0);
 }
 void wxScintilla::ParaUpExtend()
 {
-    SendMsg (SCI_PARAUPEXTEND, 0, 0);
+    SendMsg(SCI_PARAUPEXTEND, 0, 0);
 }
 
 // Given a valid document position, return the previous position taking code
 // page into account. Returns 0 if passed 0.
 int wxScintilla::PositionBefore (int pos)
 {
-    return SendMsg (SCI_POSITIONBEFORE, pos, 0);
+    return SendMsg(SCI_POSITIONBEFORE, pos, 0);
 }
 
 // Given a valid document position, return the next position taking code
 // page into account. Maximum value returned is the last position in the document.
 int wxScintilla::PositionAfter (int pos)
 {
-    return SendMsg (SCI_POSITIONAFTER, pos, 0);
+    return SendMsg(SCI_POSITIONAFTER, pos, 0);
 }
 
 // Copy a range of text to the clipboard. Positions are clipped into the document.
 void wxScintilla::CopyRange (int start, int end)
 {
-    SendMsg (SCI_COPYRANGE, start, end);
+    SendMsg(SCI_COPYRANGE, start, end);
 }
 
 // Copy argument text to the clipboard.
 void wxScintilla::CopyText (int length, const wxString& text)
 {
-    SendMsg (SCI_COPYTEXT, length, (sptr_t)(const char*)wx2sci(text));
+    SendMsg(SCI_COPYTEXT, length, (sptr_t)(const char*)wx2sci(text));
 }
 
 // Set the selection mode to stream (SC_SEL_STREAM) or rectangular (SC_SEL_RECTANGLE) or
 // by lines (SC_SEL_LINES).
 void wxScintilla::SetSelectionMode (int mode)
 {
-    SendMsg (SCI_SETSELECTIONMODE, mode, 0);
+    SendMsg(SCI_SETSELECTIONMODE, mode, 0);
 }
 
 // Get the mode of the current selection.
 int wxScintilla::GetSelectionMode() const
 {
-    return SendMsg (SCI_GETSELECTIONMODE, 0, 0);
+    return SendMsg(SCI_GETSELECTIONMODE, 0, 0);
 }
 
 // Retrieve the position of the start of the selection at the given line (INVALID_POSITION if no selection on this line).
 int wxScintilla::GetLineSelStartPosition (int line)
 {
-    return SendMsg (SCI_GETLINESELSTARTPOSITION, line, 0);
+    return SendMsg(SCI_GETLINESELSTARTPOSITION, line, 0);
 }
 
 // Retrieve the position of the end of the selection at the given line (INVALID_POSITION if no selection on this line).
 int wxScintilla::GetLineSelEndPosition (int line)
 {
-    return SendMsg (SCI_GETLINESELENDPOSITION, line, 0);
+    return SendMsg(SCI_GETLINESELENDPOSITION, line, 0);
 }
 
 // Move caret down one line, extending rectangular selection to new caret position.
 void wxScintilla::LineDownRectExtend()
 {
-    SendMsg (SCI_LINEDOWNRECTEXTEND, 0, 0);
+    SendMsg(SCI_LINEDOWNRECTEXTEND, 0, 0);
 }
 
 // Move caret up one line, extending rectangular selection to new caret position.
 void wxScintilla::LineUpRectExtend()
 {
-    SendMsg (SCI_LINEUPRECTEXTEND, 0, 0);
+    SendMsg(SCI_LINEUPRECTEXTEND, 0, 0);
 }
 
 // Move caret left one character, extending rectangular selection to new caret position.
 void wxScintilla::CharLeftRectExtend()
 {
-    SendMsg (SCI_CHARLEFTRECTEXTEND, 0, 0);
+    SendMsg(SCI_CHARLEFTRECTEXTEND, 0, 0);
 }
 
 // Move caret right one character, extending rectangular selection to new caret position.
 void wxScintilla::CharRightRectExtend()
 {
-    SendMsg (SCI_CHARRIGHTRECTEXTEND, 0, 0);
+    SendMsg(SCI_CHARRIGHTRECTEXTEND, 0, 0);
 }
 
 // Move caret to first position on line, extending rectangular selection to new caret position.
 void wxScintilla::HomeRectExtend()
 {
-    SendMsg (SCI_HOMERECTEXTEND, 0, 0);
+    SendMsg(SCI_HOMERECTEXTEND, 0, 0);
 }
 
 // Move caret to before first visible character on line.
@@ -2939,98 +2939,98 @@ void wxScintilla::HomeRectExtend()
 // In either case, extend rectangular selection to new caret position.
 void wxScintilla::VCHomeRectExtend()
 {
-    SendMsg (SCI_VCHOMERECTEXTEND, 0, 0);
+    SendMsg(SCI_VCHOMERECTEXTEND, 0, 0);
 }
 
 // Move caret to last position on line, extending rectangular selection to new caret position.
 void wxScintilla::LineEndRectExtend()
 {
-    SendMsg (SCI_LINEENDRECTEXTEND, 0, 0);
+    SendMsg(SCI_LINEENDRECTEXTEND, 0, 0);
 }
 
 // Move caret one page up, extending rectangular selection to new caret position.
 void wxScintilla::PageUpRectExtend()
 {
-    SendMsg (SCI_PAGEUPRECTEXTEND, 0, 0);
+    SendMsg(SCI_PAGEUPRECTEXTEND, 0, 0);
 }
 
 // Move caret one page down, extending rectangular selection to new caret position.
 void wxScintilla::PageDownRectExtend()
 {
-    SendMsg (SCI_PAGEDOWNRECTEXTEND, 0, 0);
+    SendMsg(SCI_PAGEDOWNRECTEXTEND, 0, 0);
 }
 
 // Move caret to top of page, or one page up if already at top of page.
 void wxScintilla::StutteredPageUp()
 {
-    SendMsg (SCI_STUTTEREDPAGEUP, 0, 0);
+    SendMsg(SCI_STUTTEREDPAGEUP, 0, 0);
 }
 
 // Move caret to top of page, or one page up if already at top of page, extending selection to new caret position.
 void wxScintilla::StutteredPageUpExtend()
 {
-    SendMsg (SCI_STUTTEREDPAGEUPEXTEND, 0, 0);
+    SendMsg(SCI_STUTTEREDPAGEUPEXTEND, 0, 0);
 }
 
 // Move caret to bottom of page, or one page down if already at bottom of page.
 void wxScintilla::StutteredPageDown()
 {
-    SendMsg (SCI_STUTTEREDPAGEDOWN, 0, 0);
+    SendMsg(SCI_STUTTEREDPAGEDOWN, 0, 0);
 }
 
 // Move caret to bottom of page, or one page down if already at bottom of page, extending selection to new caret position.
 void wxScintilla::StutteredPageDownExtend()
 {
-    SendMsg (SCI_STUTTEREDPAGEDOWNEXTEND, 0, 0);
+    SendMsg(SCI_STUTTEREDPAGEDOWNEXTEND, 0, 0);
 }
 
 // Move caret left one word, position cursor at end of word.
 void wxScintilla::WordLeftEnd()
 {
-    SendMsg (SCI_WORDLEFTEND, 0, 0);
+    SendMsg(SCI_WORDLEFTEND, 0, 0);
 }
 
 // Move caret left one word, position cursor at end of word, extending selection to new caret position.
 void wxScintilla::WordLeftEndExtend()
 {
-    SendMsg (SCI_WORDLEFTENDEXTEND, 0, 0);
+    SendMsg(SCI_WORDLEFTENDEXTEND, 0, 0);
 }
 
 // Move caret right one word, position cursor at end of word.
 void wxScintilla::WordRightEnd()
 {
-    SendMsg (SCI_WORDRIGHTEND, 0, 0);
+    SendMsg(SCI_WORDRIGHTEND, 0, 0);
 }
 
 // Move caret right one word, position cursor at end of word, extending selection to new caret position.
 void wxScintilla::WordRightEndExtend()
 {
-    SendMsg (SCI_WORDRIGHTENDEXTEND, 0, 0);
+    SendMsg(SCI_WORDRIGHTENDEXTEND, 0, 0);
 }
 
 // Set the set of characters making up whitespace for when moving or selecting by word.
 // Should be called after SetWordChars.
 void wxScintilla::SetWhitespaceChars (const wxString& characters)
 {
-    SendMsg (SCI_SETWHITESPACECHARS, 0, (sptr_t)(const char*)wx2sci(characters));
+    SendMsg(SCI_SETWHITESPACECHARS, 0, (sptr_t)(const char*)wx2sci(characters));
 }
 
 // Reset the set of characters for whitespace and word characters to the defaults.
 void wxScintilla::SetCharsDefault()
 {
-    SendMsg (SCI_SETCHARSDEFAULT, 0, 0);
+    SendMsg(SCI_SETCHARSDEFAULT, 0, 0);
 }
 
 // Get currently selected item position in the auto-completion list
 int wxScintilla::AutoCompGetCurrent()
 {
-    return SendMsg (SCI_AUTOCGETCURRENT, 0, 0);
+    return SendMsg(SCI_AUTOCGETCURRENT, 0, 0);
 }
 
 // Enlarge the document to a particular size of text bytes.
 void wxScintilla::Allocate (int bytes)
 {
-    SendMsg (SCI_ALLOCATE, bytes, 0);
+    SendMsg(SCI_ALLOCATE, bytes, 0);
 }
 
 // Target as UTF8 (SCI_TARGETASUTF8) not supported
@@ -3043,43 +3043,43 @@ void wxScintilla::Allocate (int bytes)
 // multi-byte characters. If beyond end of line, return line end position.
 int wxScintilla::FindColumn (int line, int column)
 {
-    return SendMsg (SCI_ENCODEDFROMUTF8, line, column);
+    return SendMsg(SCI_ENCODEDFROMUTF8, line, column);
 }
 
 // Can the caret preferred x position only be changed by explicit movement commands?
 bool wxScintilla::GetCaretSticky () const
 {
-    return SendMsg (SCI_GETCARETSTICKY, 0, 0) != 0;
+    return SendMsg(SCI_GETCARETSTICKY, 0, 0) != 0;
 }
 
 // Stop the caret preferred x position changing when the user types.
 void wxScintilla::SetCaretSticky (bool useCaretStickyBehaviour)
 {
-    SendMsg (SCI_SETCARETSTICKY, useCaretStickyBehaviour, 0);
+    SendMsg(SCI_SETCARETSTICKY, useCaretStickyBehaviour, 0);
 }
 
 // Switch between sticky and non-sticky: meant to be bound to a key.
 void wxScintilla::ToggleCaretSticky ()
 {
-    SendMsg (SCI_TOGGLECARETSTICKY, 0, 0);
+    SendMsg(SCI_TOGGLECARETSTICKY, 0, 0);
 }
 
 // Enable/Disable convert-on-paste for line endings
 void wxScintilla::SetPasteConvertEndings (bool convert)
 {
-    SendMsg (SCI_SETPASTECONVERTENDINGS, convert, 0);
+    SendMsg(SCI_SETPASTECONVERTENDINGS, convert, 0);
 }
 
 // Get convert-on-paste setting
 bool wxScintilla::GetPasteConvertEndings () const
 {
-    return SendMsg (SCI_GETPASTECONVERTENDINGS, 0, 0) != 0;
+    return SendMsg(SCI_GETPASTECONVERTENDINGS, 0, 0) != 0;
 }
 
 // Duplicate the selection. If selection empty duplicate the line containing the caret.
 void wxScintilla::SelectionDuplicate ()
 {
-    SendMsg (SCI_SELECTIONDUPLICATE, 0, 0);
+    SendMsg(SCI_SELECTIONDUPLICATE, 0, 0);
 }
 
 // Set background alpha of the caret line.
@@ -3091,7 +3091,7 @@ void wxScintilla::SetCaretLineBackAlpha(int alpha)
 // Get the background alpha of the caret line.
 int wxScintilla::GetCaretLineBackAlpha () const
 {
-    return SendMsg (SCI_GETCARETLINEBACKALPHA, 0, 0);
+    return SendMsg(SCI_GETCARETLINEBACKALPHA, 0, 0);
 }
 
 // Set the style of the caret to be drawn.
@@ -3206,37 +3206,37 @@ bool wxScintilla::GetKeysUnicode() const
 // Start notifying the container of all key presses and commands.
 void wxScintilla::StartRecord ()
 {
-    SendMsg (SCI_STARTRECORD, 0, 0);
+    SendMsg(SCI_STARTRECORD, 0, 0);
 }
 
 // Stop notifying the container of all key presses and commands.
 void wxScintilla::StopRecord ()
 {
-    SendMsg (SCI_STOPRECORD, 0, 0);
+    SendMsg(SCI_STOPRECORD, 0, 0);
 }
 
 // Set the lexing language of the document.
 void wxScintilla::SetLexer (int lexer)
 {
-    SendMsg (SCI_SETLEXER, lexer, 0);
+    SendMsg(SCI_SETLEXER, lexer, 0);
 }
 
 // Retrieve the lexing language of the document.
 int wxScintilla::GetLexer () const
 {
-    return SendMsg (SCI_GETLEXER, 0, 0);
+    return SendMsg(SCI_GETLEXER, 0, 0);
 }
 
 // Colourise a segment of the document using the current lexing language.
 void wxScintilla::Colourise (int start, int end)
 {
-    SendMsg (SCI_COLOURISE, start, end);
+    SendMsg(SCI_COLOURISE, start, end);
 }
 
 // Set up a value that may be used by a lexer for some optional feature.
 void wxScintilla::SetProperty (const wxString& key, const wxString& value)
 {
-    SendMsg (SCI_SETPROPERTY, (sptr_t)(const char*)wx2sci(key), (sptr_t)(const char*)wx2sci(value));
+    SendMsg(SCI_SETPROPERTY, (sptr_t)(const char*)wx2sci(key), (sptr_t)(const char*)wx2sci(value));
 }
 
 // Set up the key words used by the lexer.
@@ -3253,12 +3253,12 @@ void wxScintilla::SetLexerLanguage(const wxString& language)
 
 // Retrieve a 'property' value previously set with SetProperty.
 wxString wxScintilla::GetProperty (const wxString& key) {
-        int len = SendMsg (SCI_GETPROPERTY, (sptr_t)(const char*)wx2sci(key), 0);
+        int len = SendMsg(SCI_GETPROPERTY, (sptr_t)(const char*)wx2sci(key), 0);
          if (!len) return wxEmptyString;
 
          wxMemoryBuffer mbuf(len+1);
          char* buf = (char*)mbuf.GetWriteBuf(len+1);
-         SendMsg (SCI_GETPROPERTY, (sptr_t)(const char*)wx2sci(key), (sptr_t)buf);
+         SendMsg(SCI_GETPROPERTY, (sptr_t)(const char*)wx2sci(key), (sptr_t)buf);
          mbuf.UngetWriteBuf(len);
          mbuf.AppendByte(0);
          return sci2wx(buf);
@@ -3267,12 +3267,12 @@ wxString wxScintilla::GetProperty (const wxString& key) {
 // Retrieve a 'property' value previously set with SetProperty,
 // with '$()' variable replacement on returned buffer.
 wxString wxScintilla::GetPropertyExpanded (const wxString& key) {
-    int len = SendMsg (SCI_GETPROPERTYEXPANDED, (uptr_t)(const char*)wx2sci(key), 0);
+    int len = SendMsg(SCI_GETPROPERTYEXPANDED, (uptr_t)(const char*)wx2sci(key), 0);
          if (!len) return wxEmptyString;
 
          wxMemoryBuffer mbuf(len+1);
          char* buf = (char*)mbuf.GetWriteBuf(len+1);
-         SendMsg (SCI_GETPROPERTYEXPANDED, (uptr_t)(const char*)wx2sci(key), (uptr_t)buf);
+         SendMsg(SCI_GETPROPERTYEXPANDED, (uptr_t)(const char*)wx2sci(key), (uptr_t)buf);
          mbuf.UngetWriteBuf(len);
          mbuf.AppendByte(0);
          return sci2wx(buf);
@@ -3282,13 +3282,13 @@ wxString wxScintilla::GetPropertyExpanded (const wxString& key) {
 // interpreted as an int AFTER any '$()' variable replacement.
 int wxScintilla::GetPropertyInt (const wxString& key) const
 {
-    return SendMsg (SCI_GETPROPERTYINT, (sptr_t)(const char*)wx2sci(key), 0);
+    return SendMsg(SCI_GETPROPERTYINT, (sptr_t)(const char*)wx2sci(key), 0);
 }
 
 // Retrieve the number of bits the current lexer needs for styling.
 int wxScintilla::GetStyleBitsNeeded () const
 {
-    return SendMsg (SCI_GETSTYLEBITSNEEDED, 0, 0);
+    return SendMsg(SCI_GETSTYLEBITSNEEDED, 0, 0);
 }
 
 // END of generated section
@@ -3534,8 +3534,8 @@ wxPoint wxScintilla::PointFromPosition(int pos) {
 
 // Retrieve the start and end positions of the current selection.
 void wxScintilla::GetSelection (int* startPos, int* endPos) {
-    if (startPos != NULL) *startPos = SendMsg (SCI_GETSELECTIONSTART);
-    if (endPos != NULL) *endPos = SendMsg (SCI_GETSELECTIONEND);
+    if (startPos != NULL) *startPos = SendMsg(SCI_GETSELECTIONSTART);
+    if (endPos != NULL) *endPos = SendMsg(SCI_GETSELECTIONEND);
 }
 
 // Scroll enough to make the given line visible
