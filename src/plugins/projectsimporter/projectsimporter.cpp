@@ -95,19 +95,19 @@ void ProjectsImporter::BuildMenu(wxMenuBar* menuBar)
     {
         int menuId = 0, id = 0;
         wxMenuItemList menuItems = fileMenu->GetMenuItems();
-        menuId = fileMenu->FindItem(_T("Recent files"));
+        menuId = fileMenu->FindItem(_T("R&ecent files"));
         wxMenuItem* recentFileItem = fileMenu->FindItem(menuId);
         id = menuItems.IndexOf(recentFileItem);
         id = (id == wxNOT_FOUND) ? 7 : ++id;
         // The position is hard-coded to "Recent Files" menu. Please adjust it if necessary
-        fileMenu->Insert(++id, wxNewId(), _T("&Import project"), m_Menu);
+        fileMenu->Insert(++id, wxNewId(), _("&Import project"), m_Menu);
         fileMenu->InsertSeparator(++id);
     }
 }
 
 bool ProjectsImporter::CanHandleFile(const wxString& filename) const
 {
-    FileType ft = FileTypeOf(filename);
+    const FileType ft = FileTypeOf(filename);
     return ft == ftDevCppProject ||
            ft == ftMSVC6Project ||
            ft == ftMSVC6Workspace ||
@@ -117,7 +117,7 @@ bool ProjectsImporter::CanHandleFile(const wxString& filename) const
 
 int ProjectsImporter::OpenFile(const wxString& filename)
 {
-    FileType ft = FileTypeOf(filename);
+    const FileType ft = FileTypeOf(filename);
     switch (ft)
     {
         case ftDevCppProject: // fallthrough
@@ -279,10 +279,13 @@ int ProjectsImporter::LoadWorkspace(const wxString& filename)
         {
             wksp->SetTitle(Title);
         }
+        wksp->SetModified(true);
     }
-    wksp->SetModified(true);
-    delete pWsp;
+    else
+        cbMessageBox(_("Failed to import *any* projects from workspace file."), _("Error"), wxICON_ERROR);
 
+    delete pWsp;
     Manager::Get()->GetProjectManager()->EndLoadingWorkspace();
+
     return 0;
 }
