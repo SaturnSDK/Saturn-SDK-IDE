@@ -1647,6 +1647,10 @@ void MainFrame::DoUpdateEditorStyle(wxFlatNotebook* target, const wxString& pref
             nbstyle = wxFNB_VC8;
             break;
 
+        case 4: // ff2
+            nbstyle = wxFNB_FF2;
+            break;
+
         default:
             nbstyle = 0;
             break;

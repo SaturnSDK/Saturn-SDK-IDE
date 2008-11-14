@@ -869,10 +869,10 @@ int RESearch::PMatch(CharacterIndexer &ci, int lp, int endp, char *ap) {
 				return NOTFOUND;
 			break;
 		case BOT:
-			bopat[*ap++] = lp;
+			bopat[(int)(*ap++)] = lp;
 			break;
 		case EOT:
-			eopat[*ap++] = lp;
+			eopat[(int)(*ap++)] = lp;
 			break;
  		case BOW:
 			if (lp!=bol && iswordc(ci.CharAt(lp-1)) || !iswordc(ci.CharAt(lp)))

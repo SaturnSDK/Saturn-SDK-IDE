@@ -98,7 +98,15 @@ void ProjectsImporter::BuildMenu(wxMenuBar* menuBar)
         menuId = fileMenu->FindItem(_T("R&ecent files"));
         wxMenuItem* recentFileItem = fileMenu->FindItem(menuId);
         id = menuItems.IndexOf(recentFileItem);
-        id = (id == wxNOT_FOUND) ? 7 : ++id;
+//        id = (id == wxNOT_FOUND) ? 7 : ++id; leads to a warning (id might be undefined)
+        if(id==wxNOT_FOUND)
+        {
+            id = 7;
+        }
+        else
+        {
+            ++id;
+        }
         // The position is hard-coded to "Recent Files" menu. Please adjust it if necessary
         fileMenu->Insert(++id, wxNewId(), _("&Import project"), m_Menu);
         fileMenu->InsertSeparator(++id);

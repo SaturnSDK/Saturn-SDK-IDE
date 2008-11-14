@@ -59,7 +59,9 @@ IncrementalSearch::IncrementalSearch():
         m_MaxPos(-1),
         m_flags(0),
         m_Highlight(false),
-        m_SelectedOnly(false)
+        m_SelectedOnly(false),
+        m_IndicFound(20),
+        m_IndicHighlight(21)
 
 {
     // Make sure our resources are available.
@@ -124,7 +126,7 @@ void IncrementalSearch::OnRelease(bool appShutDown)
         cfg->Write(_T("/incremental_search/match_case"),m_flags & wxSCI_FIND_MATCHCASE);
     }
     // TODO : KILLERBOT : menu entries should be removed, right ?????
-}
+    // TODO : JENS : no, the menubar gets recreated after a plugin changes (install, uninstall or unload), see MainFrame::PluginsUpdated(plugin, status)}
 
 cbConfigurationPanel* IncrementalSearch::GetConfigurationPanel(wxWindow* parent)
 {
@@ -264,11 +266,11 @@ void IncrementalSearch::OnKeyDown(wxKeyEvent& event)
     else if(event.GetModifiers() == wxMOD_NONE && event.GetKeyCode() == WXK_ESCAPE)
     {
         // delete all stylings for found phrases
-        m_pControl->StartStyling(0, 0x40);
-        m_pControl->SetStyling(m_pControl->GetLength(), 0x00);
+        m_pControl->SetIndicatorCurrent(m_IndicFound);
+        m_pControl->IndicatorClearRange(0, m_pControl->GetLength());
         // then for highlighted phrases
-        m_pControl->StartStyling(0, 0x80);
-        m_pControl->SetStyling(m_pControl->GetLength(), 0x00);
+        m_pControl->SetIndicatorCurrent(m_IndicHighlight);
+        m_pControl->IndicatorClearRange(0, m_pControl->GetLength());
         m_pControl->GotoPos(m_NewPos);
         if(Manager::Get()->GetConfigManager(_T("editor"))->ReadBool(_T("/incremental_search/select_found_text_on_escape"),false))
         {
@@ -478,11 +480,11 @@ void IncrementalSearch::HighlightText()
         return;
     }
     // first delete all stylings for found phrases
-    m_pControl->StartStyling(0, 0x40);
-    m_pControl->SetStyling(m_pControl->GetLength(), 0x00);
+    m_pControl->SetIndicatorCurrent(m_IndicFound);
+    m_pControl->IndicatorClearRange(0, m_pControl->GetLength());
     // then for highlighted phrases
-    m_pControl->StartStyling(0, 0x80);
-    m_pControl->SetStyling(m_pControl->GetLength(), 0x00);
+    m_pControl->SetIndicatorCurrent(m_IndicHighlight);
+    m_pControl->IndicatorClearRange(0, m_pControl->GetLength());
     // then set the new ones (if any)
     if (m_NewPos != wxSCI_INVALID_POSITION && !m_SearchText.empty())
     {
@@ -509,19 +511,20 @@ void IncrementalSearch::HighlightText()
         m_pControl->GotoPos(m_NewPos);
         m_pControl->SearchAnchor();
         // and highlight it
-        m_pControl->IndicatorSetForeground(1, colourTextFound);
-        m_pControl->IndicatorSetStyle(1, wxSCI_INDIC_HIGHLIGHT);
-        m_pControl->StartStyling(m_NewPos,0x40);
-        m_pControl->SetStyling(m_SearchText.Len(), 0x40);
-        // make sure line is Visible, if it was folded
+        m_pControl->IndicatorSetForeground(m_IndicFound, colourTextFound);
+        m_pControl->IndicatorSetStyle(m_IndicFound, wxSCI_INDIC_HIGHLIGHT);
+        m_pControl->SetIndicatorCurrent(m_IndicFound);
+        m_pControl->IndicatorFillRange(m_NewPos, m_SearchText.Len());
+        
         if (m_Highlight)
         {
             // highlight all occurrences of the found phrase if wanted
             wxColour colourTextHighlight(   cfg->ReadInt(_T("/incremental_search/highlight_colour_red_value"),   0xff),
                                             cfg->ReadInt(_T("/incremental_search/highlight_colour_green_value"), 0xa5),
                                             cfg->ReadInt(_T("/incremental_search/highlight_colour_blue_value"),  0x00) );
-            m_pControl->IndicatorSetForeground(2, colourTextHighlight);
-            m_pControl->IndicatorSetStyle(2, wxSCI_INDIC_HIGHLIGHT);
+            m_pControl->IndicatorSetForeground(m_IndicHighlight, colourTextHighlight);
+            m_pControl->IndicatorSetStyle(m_IndicHighlight, wxSCI_INDIC_HIGHLIGHT);
+            m_pControl->SetIndicatorCurrent(m_IndicHighlight);
             for ( int pos = m_pControl->FindText(m_MinPos, m_MaxPos, m_SearchText, m_flags);
                     pos != wxSCI_INVALID_POSITION ;
                     pos = m_pControl->FindText(pos+=1, m_MaxPos, m_SearchText, m_flags) )
@@ -531,8 +534,7 @@ void IncrementalSearch::HighlightText()
                 {
                     // highlight it
                     m_pControl->EnsureVisible(m_pControl->LineFromPosition(pos)); // make sure line is Visible, if it was folded
-                    m_pControl->StartStyling(pos, 0x80);
-                    m_pControl->SetStyling(m_SearchText.Len(), 0x80);
+                    m_pControl->IndicatorFillRange(pos, m_SearchText.Len());
                 }
             }
         }
