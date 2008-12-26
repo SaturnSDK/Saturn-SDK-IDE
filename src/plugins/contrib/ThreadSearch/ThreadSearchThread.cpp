@@ -21,7 +21,7 @@
 	#include "projectbuildtarget.h"
 #endif
 
-#include <wx/aui/auibook.h>
+#include <wx/wxFlatNotebook/wxFlatNotebook.h>
 
 #include "ThreadSearchThread.h"
 #include "ThreadSearchEvent.h"
