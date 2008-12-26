@@ -317,6 +317,13 @@ void wxScintilla::SetUndoCollection (bool collectUndo)
     SendMsg(SCI_SETUNDOCOLLECTION, collectUndo, 0);
 }
 
+// Choose between collecting actions into the changes
+// history and discarding them.
+void wxScintilla::SetChangeCollection (bool collectChange)
+{
+    SendMsg(SCI_SETCHANGECOLLECTION, collectChange, 0);
+}
+
 // Select all the text in the document.
 void wxScintilla::SelectAll()
 {
@@ -1587,9 +1594,9 @@ bool wxScintilla::CanUndo() const
 }
 
 // Delete the undo history.
-void wxScintilla::EmptyUndoBuffer()
+void wxScintilla::EmptyUndoBuffer(bool collectChangeHistory)
 {
-    SendMsg(SCI_EMPTYUNDOBUFFER, 0, 0);
+    SendMsg(SCI_EMPTYUNDOBUFFER, collectChangeHistory, 0);
 }
 
 // Undo one action in the undo history.

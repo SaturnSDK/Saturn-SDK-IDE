@@ -13,9 +13,11 @@
 	// Required extra includes
 #endif
 
+#include "ThreadSearch.h"
 #include "ThreadSearchLoggerTree.h"
 #include "ThreadSearchEvent.h"
 #include "ThreadSearchView.h"
+#include "ThreadSearchControlIds.h"
 
 ThreadSearchLoggerTree::ThreadSearchLoggerTree(ThreadSearchView& threadSearchView,
 											   ThreadSearch& threadSearchPlugin,
@@ -26,9 +28,9 @@ ThreadSearchLoggerTree::ThreadSearchLoggerTree(ThreadSearchView& threadSearchVie
 					   , m_pTreeLog(NULL)
 					   , m_FirstItemProcessed(false)
 {
-    m_pTreeLog = new wxTreeCtrl(pParent, id, wxDefaultPosition, wxSize(1,1), wxTR_HAS_BUTTONS|wxTR_LINES_AT_ROOT|wxTR_FULL_ROW_HIGHLIGHT|wxTR_HIDE_ROOT|wxTR_DEFAULT_STYLE|wxSUNKEN_BORDER);
-    m_pTreeLog->SetMinSize(wxSize(100, 100));
-    m_pTreeLog->AddRoot(wxEmptyString);
+	m_pTreeLog = new wxTreeCtrl(pParent, id, wxDefaultPosition, wxSize(1,1), wxTR_HAS_BUTTONS|wxTR_LINES_AT_ROOT|wxTR_FULL_ROW_HIGHLIGHT|wxTR_HIDE_ROOT|wxTR_DEFAULT_STYLE|wxSUNKEN_BORDER);
+	m_pTreeLog->SetMinSize(wxSize(100, 100));
+	m_FilesParentId = m_pTreeLog->AddRoot(wxEmptyString);
 
 	// Events are managed dynamically to be able to stop/start management when required.
 	ConnectEvents(pParent);
@@ -71,6 +73,18 @@ void ThreadSearchLoggerTree::ConnectEvents(wxEvtHandler* pEvtHandler)
 	pEvtHandler->Connect(id, wxEVT_COMMAND_TREE_ITEM_ACTIVATED,
 			(wxObjectEventFunction)(wxEventFunction)(wxCommandEventFunction)
 			&ThreadSearchLoggerTree::OnLoggerTreeDoubleClick, NULL, this);
+
+#if wxUSE_MENUS
+	pEvtHandler->Connect(id, wxEVT_COMMAND_TREE_ITEM_MENU,
+			(wxObjectEventFunction)(wxEventFunction)(wxCommandEventFunction)
+			&ThreadSearchLoggerTree::OnLoggerTreeContextualMenu, NULL, this);
+
+	pEvtHandler->Connect(idMenuCtxDeleteItem, wxEVT_COMMAND_MENU_SELECTED,
+			wxCommandEventHandler(ThreadSearchLoggerTree::OnDeleteTreeItem), NULL, this);
+
+	pEvtHandler->Connect(idMenuCtxDeleteAllItems, wxEVT_COMMAND_MENU_SELECTED,
+			wxCommandEventHandler(ThreadSearchLoggerTree::OnDeleteAllTreeItems), NULL, this);
+#endif // wxUSE_MENUS
 }
 
 
@@ -85,21 +99,37 @@ void ThreadSearchLoggerTree::DisconnectEvents(wxEvtHandler* pEvtHandler)
 	pEvtHandler->Disconnect(id, wxEVT_COMMAND_TREE_ITEM_ACTIVATED,
 			(wxObjectEventFunction)(wxEventFunction)(wxCommandEventFunction)
 			&ThreadSearchLoggerTree::OnLoggerTreeDoubleClick, NULL, this);
+
+#if wxUSE_MENUS
+	pEvtHandler->Disconnect(id, wxEVT_COMMAND_TREE_ITEM_MENU,
+			(wxObjectEventFunction)(wxEventFunction)(wxCommandEventFunction)
+			&ThreadSearchLoggerTree::OnLoggerTreeContextualMenu, NULL, this);
+
+	pEvtHandler->Disconnect(idMenuCtxDeleteItem, wxEVT_COMMAND_MENU_SELECTED,
+			wxCommandEventHandler(ThreadSearchLoggerTree::OnDeleteTreeItem), NULL, this);
+
+	pEvtHandler->Disconnect(idMenuCtxDeleteAllItems, wxEVT_COMMAND_MENU_SELECTED,
+			wxCommandEventHandler(ThreadSearchLoggerTree::OnDeleteAllTreeItems), NULL, this);
+#endif // wxUSE_MENUS
 }
 
 
 void ThreadSearchLoggerTree::OnLoggerTreeClick(wxTreeEvent& event)
 {
-	// Manages list log left double click
-    // Gets file path and line from list control
-    wxString filepath(wxEmptyString);
-    long line;
-    if ( GetFileLineFromTreeEvent(event, filepath, line) == false )
-    {
-		cbMessageBox(wxT("Failed to retrieve file path and line number"), wxT("Error"), wxICON_ERROR);
-    	return;
-    }
-    m_ThreadSearchView.OnLoggerClick(filepath, line);
+	// Manages list log left single click
+	wxTreeItemId itemId = event.GetItem();
+	if ( itemId.IsOk() && hasResultLineForTreeItem(itemId) )
+	{
+		// Gets file path and line from list control
+		wxString filepath(wxEmptyString);
+		long line;
+		if ( GetFileLineFromTreeEvent(event, filepath, line) == false )
+		{
+			cbMessageBox(wxT("Failed to retrieve file path and line number"), wxT("Error"), wxICON_ERROR);
+			return;
+		}
+		m_ThreadSearchView.OnLoggerClick(filepath, line);
+	}
     event.Skip();
 }
 
@@ -107,17 +137,36 @@ void ThreadSearchLoggerTree::OnLoggerTreeClick(wxTreeEvent& event)
 void ThreadSearchLoggerTree::OnLoggerTreeDoubleClick(wxTreeEvent& event)
 {
 	// Manages list log left double click
-    // Gets file path and line from list control
-    wxString filepath(wxEmptyString);
-    long line;
-    if ( GetFileLineFromTreeEvent(event, filepath, line) == false )
-    {
-		cbMessageBox(wxT("Failed to retrieve file path and line number"), wxT("Error"), wxICON_ERROR);
-    	return;
-    }
-    m_ThreadSearchView.OnLoggerDoubleClick(filepath, line);
+	wxTreeItemId itemId = event.GetItem();
+	if ( itemId.IsOk() && hasResultLineForTreeItem(itemId) )
+	{
+		// Gets file path and line from list control
+		wxString filepath(wxEmptyString);
+		long line;
+		if ( GetFileLineFromTreeEvent(event, filepath, line) == false )
+		{
+			cbMessageBox(wxT("Failed to retrieve file path and line number"), wxT("Error"), wxICON_ERROR);
+			return;
+		}
+		m_ThreadSearchView.OnLoggerDoubleClick(filepath, line);
+	}
 
     event.Skip();
+}
+
+
+void ThreadSearchLoggerTree::OnLoggerTreeContextualMenu(wxTreeEvent& event)
+{
+	wxPoint clientPoint = event.GetPoint();
+	m_ToDeleteItemId = event.GetItem();
+	ShowMenu(clientPoint);
+	// No event skipping, otherwise, Message notebook contextual menu pops up
+}
+
+
+bool ThreadSearchLoggerTree::hasResultLineForTreeItem(wxTreeItemId treeItemId)
+{
+	return (m_pTreeLog->GetItemText(treeItemId).StartsWith(_("=>")) == false) || (m_pTreeLog->ItemHasChildren(treeItemId));
 }
 
 
@@ -125,7 +174,7 @@ bool ThreadSearchLoggerTree::GetFileLineFromTreeEvent(wxTreeEvent& event, wxStri
 {
 	wxTreeItemId lineItemId;
 	wxTreeItemId fileItemId;
-	wxTreeItemId rootItemId = m_pTreeLog->GetRootItem();
+	wxTreeItemId tmpItemId;
 	wxTreeItemId eventItemId = event.GetItem();
 	bool success(false);
 
@@ -134,21 +183,14 @@ bool ThreadSearchLoggerTree::GetFileLineFromTreeEvent(wxTreeEvent& event, wxStri
 
 	do
 	{
-		// We test if we are on a file item or a line item.
-		// As root is hidden, we have only file and line items on tree.
-		if ( m_pTreeLog->GetItemParent(eventItemId) == rootItemId )
-		{
-			fileItemId = eventItemId;
-			wxTreeItemIdValue cookie;
-			lineItemId = m_pTreeLog->GetFirstChild(eventItemId, cookie);
-			if ( lineItemId.IsOk() == false )
-				break;
-		}
-		else
-		{
-			lineItemId = eventItemId;
-			fileItemId = m_pTreeLog->GetItemParent(lineItemId);
-		}
+		// Looks for deepest child, which is the first interesting item (line item)
+		wxTreeItemIdValue cookie;
+		tmpItemId = eventItemId;
+		do {
+			lineItemId = tmpItemId;
+			tmpItemId = m_pTreeLog->GetFirstChild(lineItemId, cookie);
+		} while ( tmpItemId.IsOk() == true );
+		fileItemId = m_pTreeLog->GetItemParent(lineItemId);
 
 		// We extract line and file path values
 		// Look at ThreadSearchLoggerTree::OnThreadSearchEvent to have format
@@ -190,10 +232,9 @@ void ThreadSearchLoggerTree::OnThreadSearchEvent(const ThreadSearchEvent& event)
 	const wxArrayString& words  = event.GetLineTextArray();
 	const wxFileName&    filename(event.GetString());
 	bool                 setFocus(false);
-	wxTreeItemId         rootItemId(m_pTreeLog->GetRootItem());
 	wxTreeItemId         fileItemId;
 	long                 index    = m_IndexManager.GetInsertionIndex(filename.GetFullPath());
-	long                 nb_items = m_pTreeLog->GetChildrenCount(rootItemId, false);
+	long                 nb_items = m_pTreeLog->GetChildrenCount(m_FilesParentId, false);
 
 	wxASSERT(index != wxNOT_FOUND);
 	wxASSERT((words.GetCount() % 2) == 0);
@@ -204,14 +245,14 @@ void ThreadSearchLoggerTree::OnThreadSearchEvent(const ThreadSearchEvent& event)
 
 	if ( index == nb_items )
 	{
-		fileItemId = m_pTreeLog->AppendItem(rootItemId,
-													 wxString::Format(wxT("%s (%s)"),
-																	  filename.GetFullName().c_str(),
-																	  filename.GetPath().c_str()));
+		fileItemId = m_pTreeLog->AppendItem(m_FilesParentId,
+											wxString::Format(wxT("%s (%s)"),
+															filename.GetFullName().c_str(),
+															filename.GetPath().c_str()));
 	}
 	else
 	{
-		fileItemId = m_pTreeLog->InsertItem(rootItemId, index,
+		fileItemId = m_pTreeLog->InsertItem(m_FilesParentId, index,
 											wxString::Format(wxT("%s (%s)"),
 															 filename.GetFullName().c_str(),
 															 filename.GetPath().c_str()));
@@ -226,7 +267,7 @@ void ThreadSearchLoggerTree::OnThreadSearchEvent(const ThreadSearchEvent& event)
 		// We update preview log for first list item
 		if ( (m_FirstItemProcessed == false)                        &&
 			 (m_pTreeLog->GetChildrenCount(fileItemId, false) == 1) &&
-			 (m_pTreeLog->GetChildrenCount(rootItemId, false) == 1) )
+			 (m_pTreeLog->GetChildrenCount(m_FilesParentId, false) == 1) )
 		{
 			// Expand first file item
 			m_pTreeLog->Expand(fileItemId);
@@ -270,4 +311,75 @@ void ThreadSearchLoggerTree::Clear()
     m_IndexManager.Reset();
 
     ConnectEvents(pParent);
+}
+
+
+void ThreadSearchLoggerTree::OnSearchBegin(const ThreadSearchFindData& findData)
+{
+	if ( m_ThreadSearchPlugin.GetDeletePreviousResults() )
+	{
+		Clear();
+		m_FilesParentId = m_pTreeLog->GetRootItem();
+	}
+	else
+	{
+		m_IndexManager.Reset();
+		m_FirstItemProcessed = false;
+		m_FilesParentId = m_pTreeLog->AppendItem(m_pTreeLog->GetRootItem(),
+				wxString::Format(_("=> %s"), findData.GetFindText().c_str()));
+	}
+}
+
+
+void ThreadSearchLoggerTree::OnDeleteTreeItem(wxCommandEvent& event)
+{
+	if ( m_ToDeleteItemId.IsOk() )
+	{
+		wxTreeItemId rootId = m_pTreeLog->GetRootItem();
+		wxTreeItemId parentId = m_pTreeLog->GetItemParent(m_ToDeleteItemId);
+		while ( (parentId != rootId) && (m_pTreeLog->GetChildrenCount(parentId, false) == 1) )
+		{
+			m_ToDeleteItemId = parentId;
+			parentId = m_pTreeLog->GetItemParent(m_ToDeleteItemId);
+		}
+		DeleteTreeItem(m_ToDeleteItemId);
+	}
+	event.Skip();
+}
+
+
+void ThreadSearchLoggerTree::DeleteTreeItem(wxTreeItemId id)
+{
+	if ( id.IsOk() )
+	{
+		wxWindow* pParent = m_pTreeLog->GetParent();
+		if ( pParent == NULL ) return;
+
+		// Disconnect events to avoid lots of seleced events
+		DisconnectEvents(pParent);
+		m_pTreeLog->Delete(id);
+		ConnectEvents(pParent);
+
+		// Select current selected item to refresh code preview
+		wxTreeItemId selectedItemId = m_pTreeLog->GetSelection();
+		if ( selectedItemId.IsOk() )
+		{
+			m_pTreeLog->SelectItem(selectedItemId, true);
+		}
+	}
+}
+
+
+void ThreadSearchLoggerTree::OnDeleteAllTreeItems(wxCommandEvent& event)
+{
+	if ( m_ToDeleteItemId.IsOk() )
+	{
+		DeleteTreeItems();
+	}
+}
+
+
+void ThreadSearchLoggerTree::DeleteTreeItems()
+{
+	Clear();
 }

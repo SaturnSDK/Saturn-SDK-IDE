@@ -28,9 +28,8 @@ template <class T, unsigned int pool_size, const bool debug>
 class BlockAllocator
 {
     template <class U>
-    class LinkedBlock
+    union LinkedBlock
     {
-    public:
         LinkedBlock<U> *next;
         char data[sizeof(U)];
     };
@@ -94,7 +93,7 @@ public:
         if(first == 0)
             AllocBlockPushBack();
 
-        void *p = &(first->data);
+        void *p = first;
         first = first->next;
         return p;
     };
@@ -104,7 +103,7 @@ public:
         if(BlkAllc::enable_global_debug || debug)
             --ref_count;
 
-        PushFront((LinkedBlock<T> *) ((char *) ptr - sizeof(void*)));
+        PushFront((LinkedBlock<T> *) ptr);
     };
 };
 
@@ -130,7 +129,5 @@ public:
 };
 template<class T, unsigned int pool_size, const bool debug>
 BlockAllocator<T, pool_size, debug> BlockAllocated<T, pool_size, debug>::allocator;
-
-
 
 #endif

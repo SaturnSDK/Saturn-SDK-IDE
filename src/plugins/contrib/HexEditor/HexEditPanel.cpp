@@ -15,18 +15,23 @@
 * You should have received a copy of the GNU General Public License
 * along with wxSmith. If not, see <http://www.gnu.org/licenses/>.
 *
-* $Revision:$
-* $Id:$
-* $HeadURL:$
+* $Revision: 5341 $
+* $Id: HexEditPanel.cpp 5341 2008-12-20 10:37:40Z byo $
+* $HeadURL: https://mortenmacfly@svn.berlios.de/svnroot/repos/codeblocks/trunk/src/plugins/contrib/HexEditor/HexEditPanel.cpp $
 */
 
 #include "HexEditPanel.h"
 #include "ExpressionTester.h"
 #include "SelectStoredExpressionDlg.h"
+#include "ExpressionExecutor.h"
+#include "ExpressionParser.h"
+#include "CharacterView.h"
+#include "DigitView.h"
+#include "HexEditLineBuffer.h"
 
 //(*InternalHeaders(HexEditPanel)
-#include <wx/intl.h>
 #include <wx/string.h>
+#include <wx/intl.h>
 //*)
 
 #include <wx/intl.h>
@@ -38,11 +43,29 @@
 #include <editormanager.h>
 #include <logmanager.h>
 #include <wx/textdlg.h>
-#include "ExpressionExecutor.h"
-#include "ExpressionParser.h"
+#include <wx/numdlg.h>
+
+namespace
+{
+    inline int NWD( int a, int b )
+    {
+        while ( b )
+        {
+            int c = a % b;
+            a = b;
+            b = c;
+        }
+        return a;
+    }
+}
 
 //(*IdInit(HexEditPanel)
 const long HexEditPanel::ID_STATICTEXT1 = wxNewId();
+const long HexEditPanel::ID_BUTTON7 = wxNewId();
+const long HexEditPanel::ID_BUTTON4 = wxNewId();
+const long HexEditPanel::ID_BUTTON6 = wxNewId();
+const long HexEditPanel::ID_BUTTON5 = wxNewId();
+const long HexEditPanel::ID_STATICLINE1 = wxNewId();
 const long HexEditPanel::ID_BUTTON1 = wxNewId();
 const long HexEditPanel::ID_CHECKBOX1 = wxNewId();
 const long HexEditPanel::ID_PANEL1 = wxNewId();
@@ -65,6 +88,39 @@ const long HexEditPanel::ID_BUTTON3 = wxNewId();
 const long HexEditPanel::ID_BUTTON2 = wxNewId();
 const long HexEditPanel::ID_STATICTEXT15 = wxNewId();
 const long HexEditPanel::ID_TIMER1 = wxNewId();
+const long HexEditPanel::ID_MENUITEM2 = wxNewId();
+const long HexEditPanel::ID_MENUITEM1 = wxNewId();
+const long HexEditPanel::ID_MENUITEM3 = wxNewId();
+const long HexEditPanel::ID_MENUITEM4 = wxNewId();
+const long HexEditPanel::ID_MENUITEM5 = wxNewId();
+const long HexEditPanel::ID_MENUITEM6 = wxNewId();
+const long HexEditPanel::ID_MENUITEM7 = wxNewId();
+const long HexEditPanel::ID_MENUITEM8 = wxNewId();
+const long HexEditPanel::ID_MENUITEM9 = wxNewId();
+const long HexEditPanel::ID_MENUITEM11 = wxNewId();
+const long HexEditPanel::ID_MENUITEM12 = wxNewId();
+const long HexEditPanel::ID_MENUITEM13 = wxNewId();
+const long HexEditPanel::ID_MENUITEM14 = wxNewId();
+const long HexEditPanel::ID_MENUITEM15 = wxNewId();
+const long HexEditPanel::ID_MENUITEM16 = wxNewId();
+const long HexEditPanel::ID_MENUITEM17 = wxNewId();
+const long HexEditPanel::ID_MENUITEM18 = wxNewId();
+const long HexEditPanel::ID_MENUITEM32 = wxNewId();
+const long HexEditPanel::ID_MENUITEM10 = wxNewId();
+const long HexEditPanel::ID_MENUITEM20 = wxNewId();
+const long HexEditPanel::ID_MENUITEM21 = wxNewId();
+const long HexEditPanel::ID_MENUITEM22 = wxNewId();
+const long HexEditPanel::ID_MENUITEM23 = wxNewId();
+const long HexEditPanel::ID_MENUITEM24 = wxNewId();
+const long HexEditPanel::ID_MENUITEM25 = wxNewId();
+const long HexEditPanel::ID_MENUITEM26 = wxNewId();
+const long HexEditPanel::ID_MENUITEM27 = wxNewId();
+const long HexEditPanel::ID_MENUITEM19 = wxNewId();
+const long HexEditPanel::ID_MENUITEM29 = wxNewId();
+const long HexEditPanel::ID_MENUITEM30 = wxNewId();
+const long HexEditPanel::ID_MENUITEM31 = wxNewId();
+const long HexEditPanel::ID_MENUITEM33 = wxNewId();
+const long HexEditPanel::ID_MENUITEM28 = wxNewId();
 //*)
 
 BEGIN_EVENT_TABLE(HexEditPanel,EditorBase)
@@ -79,21 +135,35 @@ HexEditPanel::HexEditPanel( const wxString& fileName, const wxString& title )
     , m_FileName( fileName )
     , m_Content( 0 )
     , m_DrawFont( 0 )
-    , m_ScreenBuffer( 0 )
+    , m_Current( 0 )
+    , m_CurrentBlockStart( 0 )
+    , m_CurrentBlockEnd( 0 )
+    , m_MouseDown( false )
+    , m_ColsMode( CM_ANY )
 {
     /*
     --- Begin of comment which prevents calling Create() --
 
     //(*Initialize(HexEditPanel)
     Create(parent, wxID_ANY, wxDefaultPosition, wxSize(79,51), wxTAB_TRAVERSAL, _T("wxID_ANY"));
-    
+
     --- End of comment which prevents calling Create() --
     */
-    
+
     BoxSizer1 = new wxBoxSizer(wxVERTICAL);
     BoxSizer3 = new wxBoxSizer(wxHORIZONTAL);
     m_Status = new wxStaticText(this, ID_STATICTEXT1, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0, _T("ID_STATICTEXT1"));
     BoxSizer3->Add(m_Status, 1, wxALL|wxEXPAND|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
+    m_ColsModeBtn = new wxButton(this, ID_BUTTON7, _("Cols"), wxDefaultPosition, wxDefaultSize, wxBU_EXACTFIT, wxDefaultValidator, _T("ID_BUTTON7"));
+    BoxSizer3->Add(m_ColsModeBtn, 0, wxEXPAND|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
+    m_DigitBits = new wxButton(this, ID_BUTTON4, _("Hex"), wxDefaultPosition, wxDefaultSize, wxBU_EXACTFIT, wxDefaultValidator, _T("ID_BUTTON4"));
+    BoxSizer3->Add(m_DigitBits, 0, wxLEFT|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
+    m_BlockSize = new wxButton(this, ID_BUTTON6, _("1B"), wxDefaultPosition, wxDefaultSize, wxBU_EXACTFIT, wxDefaultValidator, _T("ID_BUTTON6"));
+    BoxSizer3->Add(m_BlockSize, 0, wxLEFT|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
+    m_Endianess = new wxButton(this, ID_BUTTON5, _("BE"), wxDefaultPosition, wxDefaultSize, wxBU_EXACTFIT, wxDefaultValidator, _T("ID_BUTTON5"));
+    BoxSizer3->Add(m_Endianess, 0, wxLEFT|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
+    StaticLine1 = new wxStaticLine(this, ID_STATICLINE1, wxDefaultPosition, wxDefaultSize, wxLI_VERTICAL, _T("ID_STATICLINE1"));
+    BoxSizer3->Add(StaticLine1, 0, wxALL|wxEXPAND|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
     Button1 = new wxButton(this, ID_BUTTON1, _("Calc"), wxDefaultPosition, wxDefaultSize, wxBU_EXACTFIT, wxDefaultValidator, _T("ID_BUTTON1"));
     BoxSizer3->Add(Button1, 0, wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
     CheckBox1 = new wxCheckBox(this, ID_CHECKBOX1, _("Value preview"), wxDefaultPosition, wxDefaultSize, 0, wxDefaultValidator, _T("ID_CHECKBOX1"));
@@ -156,8 +226,81 @@ HexEditPanel::HexEditPanel( const wxString& fileName, const wxString& title )
     BoxSizer1->Add(PreviewSizer, 0, wxEXPAND|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
     SetSizer(BoxSizer1);
     ReparseTimer.SetOwner(this, ID_TIMER1);
+    MenuItem2 = new wxMenuItem((&m_BaseMenu), ID_MENUITEM2, _("Bin"), wxEmptyString, wxITEM_NORMAL);
+    m_BaseMenu.Append(MenuItem2);
+    MenuItem1 = new wxMenuItem((&m_BaseMenu), ID_MENUITEM1, _("Hex"), wxEmptyString, wxITEM_NORMAL);
+    m_BaseMenu.Append(MenuItem1);
+    MenuItem3 = new wxMenuItem((&m_EndianessMenu), ID_MENUITEM3, _("Big Endian"), wxEmptyString, wxITEM_NORMAL);
+    m_EndianessMenu.Append(MenuItem3);
+    MenuItem4 = new wxMenuItem((&m_EndianessMenu), ID_MENUITEM4, _("Little Endian"), wxEmptyString, wxITEM_NORMAL);
+    m_EndianessMenu.Append(MenuItem4);
+    MenuItem5 = new wxMenuItem((&m_BlockSizeMenu), ID_MENUITEM5, _("1 Byte"), wxEmptyString, wxITEM_NORMAL);
+    m_BlockSizeMenu.Append(MenuItem5);
+    MenuItem6 = new wxMenuItem((&m_BlockSizeMenu), ID_MENUITEM6, _("2 Bytes"), wxEmptyString, wxITEM_NORMAL);
+    m_BlockSizeMenu.Append(MenuItem6);
+    MenuItem7 = new wxMenuItem((&m_BlockSizeMenu), ID_MENUITEM7, _("4 Bytes"), wxEmptyString, wxITEM_NORMAL);
+    m_BlockSizeMenu.Append(MenuItem7);
+    MenuItem8 = new wxMenuItem((&m_BlockSizeMenu), ID_MENUITEM8, _("8 Bytes"), wxEmptyString, wxITEM_NORMAL);
+    m_BlockSizeMenu.Append(MenuItem8);
+    MenuItem9 = new wxMenuItem((&m_ColsModeMenu), ID_MENUITEM9, _("Any"), wxEmptyString, wxITEM_NORMAL);
+    m_ColsModeMenu.Append(MenuItem9);
+    MenuItem10 = new wxMenu();
+    MenuItem11 = new wxMenuItem(MenuItem10, ID_MENUITEM11, _("1"), wxEmptyString, wxITEM_NORMAL);
+    MenuItem10->Append(MenuItem11);
+    MenuItem12 = new wxMenuItem(MenuItem10, ID_MENUITEM12, _("2"), wxEmptyString, wxITEM_NORMAL);
+    MenuItem10->Append(MenuItem12);
+    MenuItem13 = new wxMenuItem(MenuItem10, ID_MENUITEM13, _("3"), wxEmptyString, wxITEM_NORMAL);
+    MenuItem10->Append(MenuItem13);
+    MenuItem14 = new wxMenuItem(MenuItem10, ID_MENUITEM14, _("4"), wxEmptyString, wxITEM_NORMAL);
+    MenuItem10->Append(MenuItem14);
+    MenuItem15 = new wxMenuItem(MenuItem10, ID_MENUITEM15, _("5"), wxEmptyString, wxITEM_NORMAL);
+    MenuItem10->Append(MenuItem15);
+    MenuItem16 = new wxMenuItem(MenuItem10, ID_MENUITEM16, _("6"), wxEmptyString, wxITEM_NORMAL);
+    MenuItem10->Append(MenuItem16);
+    MenuItem17 = new wxMenuItem(MenuItem10, ID_MENUITEM17, _("7"), wxEmptyString, wxITEM_NORMAL);
+    MenuItem10->Append(MenuItem17);
+    MenuItem18 = new wxMenuItem(MenuItem10, ID_MENUITEM18, _("8"), wxEmptyString, wxITEM_NORMAL);
+    MenuItem10->Append(MenuItem18);
+    MenuItem10->AppendSeparator();
+    MenuItem32 = new wxMenuItem(MenuItem10, ID_MENUITEM32, _("Other"), wxEmptyString, wxITEM_NORMAL);
+    MenuItem10->Append(MenuItem32);
+    m_ColsModeMenu.Append(ID_MENUITEM10, _("Exactly"), MenuItem10, wxEmptyString);
+    MenuItem19 = new wxMenu();
+    MenuItem20 = new wxMenuItem(MenuItem19, ID_MENUITEM20, _("2"), wxEmptyString, wxITEM_NORMAL);
+    MenuItem19->Append(MenuItem20);
+    MenuItem21 = new wxMenuItem(MenuItem19, ID_MENUITEM21, _("3"), wxEmptyString, wxITEM_NORMAL);
+    MenuItem19->Append(MenuItem21);
+    MenuItem22 = new wxMenuItem(MenuItem19, ID_MENUITEM22, _("4"), wxEmptyString, wxITEM_NORMAL);
+    MenuItem19->Append(MenuItem22);
+    MenuItem23 = new wxMenuItem(MenuItem19, ID_MENUITEM23, _("5"), wxEmptyString, wxITEM_NORMAL);
+    MenuItem19->Append(MenuItem23);
+    MenuItem24 = new wxMenuItem(MenuItem19, ID_MENUITEM24, _("6"), wxEmptyString, wxITEM_NORMAL);
+    MenuItem19->Append(MenuItem24);
+    MenuItem25 = new wxMenuItem(MenuItem19, ID_MENUITEM25, _("7"), wxEmptyString, wxITEM_NORMAL);
+    MenuItem19->Append(MenuItem25);
+    MenuItem26 = new wxMenuItem(MenuItem19, ID_MENUITEM26, _("8"), wxEmptyString, wxITEM_NORMAL);
+    MenuItem19->Append(MenuItem26);
+    MenuItem19->AppendSeparator();
+    MenuItem27 = new wxMenuItem(MenuItem19, ID_MENUITEM27, _("Other"), wxEmptyString, wxITEM_NORMAL);
+    MenuItem19->Append(MenuItem27);
+    m_ColsModeMenu.Append(ID_MENUITEM19, _("Multiple of"), MenuItem19, wxEmptyString);
+    MenuItem28 = new wxMenu();
+    MenuItem29 = new wxMenuItem(MenuItem28, ID_MENUITEM29, _("2"), wxEmptyString, wxITEM_NORMAL);
+    MenuItem28->Append(MenuItem29);
+    MenuItem30 = new wxMenuItem(MenuItem28, ID_MENUITEM30, _("4"), wxEmptyString, wxITEM_NORMAL);
+    MenuItem28->Append(MenuItem30);
+    MenuItem31 = new wxMenuItem(MenuItem28, ID_MENUITEM31, _("8"), wxEmptyString, wxITEM_NORMAL);
+    MenuItem28->Append(MenuItem31);
+    MenuItem28->AppendSeparator();
+    MenuItem33 = new wxMenuItem(MenuItem28, ID_MENUITEM33, _("Other"), wxEmptyString, wxITEM_NORMAL);
+    MenuItem28->Append(MenuItem33);
+    m_ColsModeMenu.Append(ID_MENUITEM28, _("Power of"), MenuItem28, wxEmptyString);
     BoxSizer1->SetSizeHints(this);
-    
+
+    Connect(ID_BUTTON7,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&HexEditPanel::Onm_ColsModeClick);
+    Connect(ID_BUTTON4,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&HexEditPanel::OnButton4Click);
+    Connect(ID_BUTTON6,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&HexEditPanel::Onm_BlockSizeClick);
+    Connect(ID_BUTTON5,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&HexEditPanel::Onm_EndianessClick);
     Connect(ID_BUTTON1,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&HexEditPanel::OnButton1Click);
     Connect(ID_CHECKBOX1,wxEVT_COMMAND_CHECKBOX_CLICKED,(wxObjectEventFunction)&HexEditPanel::OnCheckBox1Click);
     m_DrawArea->Connect(wxEVT_PAINT,(wxObjectEventFunction)&HexEditPanel::OnContentPaint,0,this);
@@ -183,6 +326,36 @@ HexEditPanel::HexEditPanel( const wxString& fileName, const wxString& title )
     Connect(ID_BUTTON3,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&HexEditPanel::OnButton3Click1);
     Connect(ID_BUTTON2,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&HexEditPanel::OnButton2Click);
     Connect(ID_TIMER1,wxEVT_TIMER,(wxObjectEventFunction)&HexEditPanel::OnReparseTimerTrigger);
+    Connect(ID_MENUITEM2,wxEVT_COMMAND_MENU_SELECTED,(wxObjectEventFunction)&HexEditPanel::OnSetBaseBin);
+    Connect(ID_MENUITEM1,wxEVT_COMMAND_MENU_SELECTED,(wxObjectEventFunction)&HexEditPanel::OnSetBaseHex);
+    Connect(ID_MENUITEM3,wxEVT_COMMAND_MENU_SELECTED,(wxObjectEventFunction)&HexEditPanel::OnSetEndianessBig);
+    Connect(ID_MENUITEM4,wxEVT_COMMAND_MENU_SELECTED,(wxObjectEventFunction)&HexEditPanel::OnSetEndianessLittle);
+    Connect(ID_MENUITEM5,wxEVT_COMMAND_MENU_SELECTED,(wxObjectEventFunction)&HexEditPanel::OnSetBlockSize1);
+    Connect(ID_MENUITEM6,wxEVT_COMMAND_MENU_SELECTED,(wxObjectEventFunction)&HexEditPanel::OnSetBlockSize2);
+    Connect(ID_MENUITEM7,wxEVT_COMMAND_MENU_SELECTED,(wxObjectEventFunction)&HexEditPanel::OnSetBlockSize4);
+    Connect(ID_MENUITEM8,wxEVT_COMMAND_MENU_SELECTED,(wxObjectEventFunction)&HexEditPanel::OnSetBlockSize8);
+    Connect(ID_MENUITEM9,wxEVT_COMMAND_MENU_SELECTED,(wxObjectEventFunction)&HexEditPanel::OnSetColsMul1);
+    Connect(ID_MENUITEM11,wxEVT_COMMAND_MENU_SELECTED,(wxObjectEventFunction)&HexEditPanel::OnSetColsValue1);
+    Connect(ID_MENUITEM12,wxEVT_COMMAND_MENU_SELECTED,(wxObjectEventFunction)&HexEditPanel::OnSetColsValue2);
+    Connect(ID_MENUITEM13,wxEVT_COMMAND_MENU_SELECTED,(wxObjectEventFunction)&HexEditPanel::OnSetColsValue3);
+    Connect(ID_MENUITEM14,wxEVT_COMMAND_MENU_SELECTED,(wxObjectEventFunction)&HexEditPanel::OnSetColsValue4);
+    Connect(ID_MENUITEM15,wxEVT_COMMAND_MENU_SELECTED,(wxObjectEventFunction)&HexEditPanel::OnSetColsValue5);
+    Connect(ID_MENUITEM16,wxEVT_COMMAND_MENU_SELECTED,(wxObjectEventFunction)&HexEditPanel::OnSetColsValue6);
+    Connect(ID_MENUITEM17,wxEVT_COMMAND_MENU_SELECTED,(wxObjectEventFunction)&HexEditPanel::OnSetColsValue7);
+    Connect(ID_MENUITEM18,wxEVT_COMMAND_MENU_SELECTED,(wxObjectEventFunction)&HexEditPanel::OnSetColsValue8);
+    Connect(ID_MENUITEM32,wxEVT_COMMAND_MENU_SELECTED,(wxObjectEventFunction)&HexEditPanel::OnSetColsValueOther);
+    Connect(ID_MENUITEM20,wxEVT_COMMAND_MENU_SELECTED,(wxObjectEventFunction)&HexEditPanel::OnSetColsMul2);
+    Connect(ID_MENUITEM21,wxEVT_COMMAND_MENU_SELECTED,(wxObjectEventFunction)&HexEditPanel::OnSetColsMul3);
+    Connect(ID_MENUITEM22,wxEVT_COMMAND_MENU_SELECTED,(wxObjectEventFunction)&HexEditPanel::OnSetColsMul4);
+    Connect(ID_MENUITEM23,wxEVT_COMMAND_MENU_SELECTED,(wxObjectEventFunction)&HexEditPanel::OnSetColsMul5);
+    Connect(ID_MENUITEM24,wxEVT_COMMAND_MENU_SELECTED,(wxObjectEventFunction)&HexEditPanel::OnSetColsMul6);
+    Connect(ID_MENUITEM25,wxEVT_COMMAND_MENU_SELECTED,(wxObjectEventFunction)&HexEditPanel::OnSetColsMul7);
+    Connect(ID_MENUITEM26,wxEVT_COMMAND_MENU_SELECTED,(wxObjectEventFunction)&HexEditPanel::OnSetColsMul8);
+    Connect(ID_MENUITEM27,wxEVT_COMMAND_MENU_SELECTED,(wxObjectEventFunction)&HexEditPanel::OnSetColsMulOther);
+    Connect(ID_MENUITEM29,wxEVT_COMMAND_MENU_SELECTED,(wxObjectEventFunction)&HexEditPanel::OnSetColsPower2);
+    Connect(ID_MENUITEM30,wxEVT_COMMAND_MENU_SELECTED,(wxObjectEventFunction)&HexEditPanel::OnSetColsPower4);
+    Connect(ID_MENUITEM31,wxEVT_COMMAND_MENU_SELECTED,(wxObjectEventFunction)&HexEditPanel::OnSetColsPower8);
+    Connect(ID_MENUITEM33,wxEVT_COMMAND_MENU_SELECTED,(wxObjectEventFunction)&HexEditPanel::OnSetColsPowerOther);
     //*)
 
     // We connect these events manually
@@ -190,17 +363,17 @@ HexEditPanel::HexEditPanel( const wxString& fileName, const wxString& title )
     m_DrawArea->SetBackgroundStyle( wxBG_STYLE_CUSTOM );
     Connect( wxEVT_SET_FOCUS, (wxObjectEventFunction)&HexEditPanel::OnForwardFocus );
 
+    m_ActiveView = 0;
+    CreateViews();
+    RecalculateCoefs();
+
     ReparseExpression();
     SetFontSize( 8 );
     ReadContent();
-    RecalculateCoefs();
     RefreshStatus();
 
-    m_SelectionStart = 0;
-    m_SelectionEnd   = 0;
-    m_Current        = 0;
-    m_CurrentType    = curHexHi;
-    m_MouseDown      = false;
+    m_Current = 0;
+    PropagateOffsetChange();
 
     m_DrawArea->SetFocus();
 
@@ -213,9 +386,40 @@ HexEditPanel::HexEditPanel( const wxString& fileName, const wxString& title )
 
 }
 
+void HexEditPanel::CreateViews()
+{
+    for ( int i=0; i<MAX_VIEWS; ++i )
+    {
+        m_Views[ i ] = 0;
+    }
+
+    m_Views[ VIEW_DIGIT ] = m_DigitView = new DigitView( this );
+    m_Views[ VIEW_CHARS ] = new CharacterView( this );
+    ActivateView( m_Views[ 0 ] );
+}
+
+void HexEditPanel::ActivateView( HexEditViewBase* view )
+{
+    if ( view == m_ActiveView ) return;
+
+    if ( m_ActiveView )
+    {
+        m_ActiveView->SetActive( false );
+    }
+
+    m_ActiveView = view;
+    view->SetActive( true );
+}
+
 
 HexEditPanel::~HexEditPanel()
 {
+    for ( int i=0; i<MAX_VIEWS; ++i )
+    {
+        delete m_Views[ i ];
+        m_Views[ i ] = 0;
+    }
+
     m_AllEditors.erase( this );
 
     delete m_DrawFont;
@@ -223,9 +427,6 @@ HexEditPanel::~HexEditPanel()
 
     delete m_Content;
     m_Content = 0;
-
-    delete[] m_ScreenBuffer;
-    m_ScreenBuffer = 0;
 
 	//(*Destroy(HexEditPanel)
 	//*)
@@ -259,28 +460,88 @@ void HexEditPanel::ReadContent()
 
 void HexEditPanel::RecalculateCoefs()
 {
+    // Calculate size of the font
     wxClientDC dc( this );
     dc.GetTextExtent( _T("0123456789ABCDEF"), &m_FontX, &m_FontY, NULL, NULL, m_DrawFont );
     m_FontX /= 16;
 
+    // Calculate number of rows and columns in characters
     wxSize size = m_DrawArea->GetClientSize();
+    m_Cols      = size.GetWidth() / m_FontX;
+    m_Lines     = size.GetHeight() / m_FontY;
 
-    int maxCharsInLine = size.GetWidth() / m_FontX;
-    m_Cols  = ( maxCharsInLine - 15 ) / 4;
-    m_Lines = size.GetHeight() / m_FontY;
-    if ( m_Cols < 1  ) m_Cols  = 1;
-    if ( m_Lines < 1 ) m_Lines = 1;
+    // Calculate number of bytes in one line
+    double avgByteCharacters = 0.0;
+    int cumulativeBlockSize = 1;
+    for ( int i=0; i<MAX_VIEWS; ++i )
+    {
+        int blockLength;
+        int blockBytes;
+        int spacing;
+        m_Views[ i ]->GetBlockSizes( blockLength, blockBytes, spacing );
 
-    FileContentBase::OffsetT contentSize = m_Content ? m_Content->GetSize() : 0;
+        avgByteCharacters  += ( (double)( blockLength + spacing ) ) / (double)blockBytes;
+        cumulativeBlockSize = cumulativeBlockSize * blockBytes / NWD( cumulativeBlockSize, blockBytes );
+    }
+
+    int colsLeftForViews =
+        m_Cols
+          - 8               // Offset
+          - 1               // ':' after offset
+          - 2 * MAX_VIEWS   // spacing between views
+          - 2;              // right margin
+
+    int maxByteInLine = (int)( colsLeftForViews / avgByteCharacters );
+
+    // Now we need to find such number of bytes to be multiple of cumulativeBlockSize
+    // and try not to cross maxByteInLine
+
+    // Additionally we try to mach required columns count,
+    // this is a little bit naive approach but will work in generic way
+    int maxColumns = std::max( (int)(maxByteInLine / cumulativeBlockSize), 1 );
+    for ( int i=maxColumns;; i-- )
+    {
+        if ( i<1 )
+        {
+            for ( i=maxColumns+1; i<0x1000; ++i )
+            {
+                if ( MatchColumnsCount( i ) )
+                {
+                    maxColumns = i;
+                    break;
+                }
+            }
+            break;
+        }
+
+        if ( MatchColumnsCount( i ) )
+        {
+            maxColumns = i;
+            break;
+        }
+    }
+
+    m_ColsCount = maxColumns;
+    m_LineBytes = maxColumns * cumulativeBlockSize;
+
+    // Calculate column positions
+    for ( int i=0; i<MAX_VIEWS; ++i )
+    {
+        int blockLength;
+        int blockBytes;
+        int spacing;
+        m_Views[ i ]->GetBlockSizes( blockLength, blockBytes, spacing );
+        m_ViewsCols[ i ] = ( ( m_LineBytes + blockBytes - 1 ) / blockBytes ) * ( blockLength + spacing );
+    }
+
+    // Adjust scroll bar
+    OffsetT contentSize = m_Content ? m_Content->GetSize() : 0;
 
     m_ContentScroll->SetScrollbar(
         m_ContentScroll->GetThumbPosition(),
         m_Lines,
-        ( contentSize + m_Cols - 1 ) / m_Cols,
+        ( contentSize + m_LineBytes - 1 ) / m_LineBytes,
         m_Lines );
-
-    delete[] m_ScreenBuffer;
-    m_ScreenBuffer = (m_Lines && m_Cols) ? new unsigned char[ m_Lines * m_Cols ] : 0;
 }
 
 void HexEditPanel::OnContentPaint( wxPaintEvent& event )
@@ -294,29 +555,61 @@ void HexEditPanel::OnContentPaint( wxPaintEvent& event )
 
     dc.SetFont( *m_DrawFont );
 
-    FileContentBase::OffsetT startOffs = DetectStartOffset();
+    OffsetT startOffs = DetectStartOffset();
 
-    OffsetT size = m_Content->Read( m_ScreenBuffer, startOffs, m_Lines * m_Cols );
+    HexEditLineBuffer buff( m_Cols );
+    char* content = new char[ m_Cols ];
 
-    for ( OffsetT i=0; i< m_Lines; i++ )
+    wxColour backgrounds[ stCount ] =
     {
-        FileContentBase::OffsetT offs = startOffs + i * m_Cols;
-        FileContentBase::OffsetT offsMax = offs + m_Lines * m_Cols;
-        offs = wxMin( offs, m_Content->GetSize() );
+        GetBackgroundColour(),
+        wxColour( 0x70, 0x70, 0x70 ),
+        wxColour( 0xA0, 0xA0, 0xFF ),
+        wxColour( 0x80, 0x80, 0xFF ),
+    };
 
-        PutLine(
-            dc,
-            offs,
-            m_ScreenBuffer + i * m_Cols,
-            wxMax( wxMin( size, m_Cols ), 0 ),
-            0,
-            i * m_FontY,
-            (int)(wxMax( offs, wxMin( offsMax, m_SelectionStart ) ) - offs),
-            (int)(wxMax( offs, wxMin( offsMax, m_SelectionEnd   ) ) - offs)
-            );
+    wxColour foregrounds[ stCount ] =
+    {
+        *wxBLACK,
+        *wxWHITE,
+        *wxWHITE,
+        *wxBLACK,
+    };
 
-        size = ( size > m_Cols ) ? ( size - m_Cols ) : 0;
+
+    for ( OffsetT j = 0; j < m_Lines; ++j )
+    {
+        buff.Reset();
+
+        // Calculate offsets
+        OffsetT offs    = startOffs + j * m_LineBytes;
+        OffsetT offsMax = offs + m_LineBytes;
+
+        // Add offset to view buffer
+        for ( size_t i=8; i-->0; )
+        {
+            buff.PutChar( "0123456789ABCDEF"[ ( offs >> ( i << 2 ) ) & 0xF ] );
+        }
+        buff.PutChar(':');
+
+        // Clamp offsets to content size
+        offs    = wxMin( offs,    m_Content->GetSize() );
+        offsMax = wxMin( offsMax, m_Content->GetSize() );
+
+        if ( offs == offsMax ) continue;
+
+        // Invoking views
+        m_Content->Read( content, offs, offsMax - offs );
+        for ( int i=0; i<MAX_VIEWS; ++i )
+        {
+            buff.PutString("  ");
+            m_Views[ i ]->PutLine( offs, buff, content, offsMax - offs );
+        }
+
+        buff.Draw( dc, 0, j * m_FontY, m_FontX, m_FontY, foregrounds, backgrounds );
     }
+
+    delete[] content;
 }
 
 void HexEditPanel::OnContentScroll( wxScrollEvent& event )
@@ -332,186 +625,6 @@ void HexEditPanel::OnContentScroll( wxScrollEvent& event )
     m_DrawArea->SetFocus();
 }
 
-void HexEditPanel::PutLine( wxDC& dc, FileContentBase::OffsetT offs, unsigned char* buffer, unsigned int len, int x, int y, unsigned int selStart, unsigned int selEnd )
-{
-    static const char catNoChar = -1;
-    static const char catNormal = 0;
-    static const char catSelect = 1;
-    static const char catCurCar = 2;
-    static const char catCurNon = 3;
-
-    static const int catCount = 4;
-
-    if ( len <= 0 ) return;
-    if ( len >= 0x1000 ) return;
-
-    dc.SetLogicalFunction( wxCOPY );
-    dc.SetBrush( *wxWHITE );
-
-    // We need to categorize each character
-    char categoryBuffer[ 0x1000 ];
-    for ( unsigned int i=0; i<m_Cols && i < 0x1000; i++ )
-    {
-        if ( i >= len )
-        {
-            categoryBuffer[i] = catNoChar;
-        }
-        else if ( i < selStart || i >= selEnd )
-        {
-            categoryBuffer[i] = catNormal;
-        }
-        else
-        {
-            categoryBuffer[i] = catSelect;
-        }
-    }
-
-    const wxColour foregrounds[ catCount ] =
-    {
-        *wxBLACK,
-        *wxWHITE,
-        *wxWHITE,
-        *wxBLACK,
-    };
-
-    const wxColour backgrounds[ catCount ] =
-    {
-        GetBackgroundColour(),
-        wxColour( 0x70, 0x70, 0x70 ),
-        wxColour( 0xA0, 0xA0, 0xFF ),
-        wxColour( 0x80, 0x80, 0xFF ),
-    };
-
-    // First - let's draw offset
-    dc.SetTextForeground( foregrounds[0] );
-    dc.SetTextBackground( backgrounds[0] );
-    wxString offsStr = wxString::Format( _T("%08X: "), offs );
-    dc.DrawText( offsStr, x, y );
-    x += m_FontX * 10;
-
-    // Now the content
-    unsigned int pos = 0;
-    int x1 = x;
-    int x2 = x + m_Cols * 3 * m_FontX + 2 * m_FontX;
-
-    while ( pos < len )
-    {
-        // Search for continous block of data
-        unsigned int endPos = pos;
-
-        do endPos++;
-        while ( endPos < len && categoryBuffer[pos] == categoryBuffer[endPos] );
-
-        int category = categoryBuffer[pos];
-        dc.SetBrush( backgrounds[ category ] );
-        dc.SetPen  ( backgrounds[ category ] );
-        dc.SetTextForeground( foregrounds[ category ] );
-        dc.SetTextBackground( backgrounds[ category ] );
-
-        wxString text1;
-        wxString text2;
-
-        for ( unsigned int i = pos; i < endPos; ++i )
-        {
-            unsigned char ch = buffer[ i ];
-
-            wxChar Buff[4] =
-            {
-                _T("0123456789ABCDEF") [ ch / 0x10 ],
-                _T("0123456789ABCDEF") [ ch % 0x10 ],
-                _T(' '),
-                0
-            };
-
-            text1 += Buff;
-
-            if ( ch < 0x20 || ch >= 0x7F ) ch = _T('.');
-            text2 += ch;
-        }
-
-        text1.RemoveLast();
-
-        dc.DrawRectangle( x1, y, m_FontX * text1.Length(), m_FontY );
-        dc.DrawText( text1, x1, y );
-        x1 += m_FontX * text1.Length() + m_FontX;
-
-        dc.DrawRectangle( x2, y, m_FontX * text2.Length(), m_FontY );
-        dc.DrawText( text2, x2, y );
-        x2 += m_FontX * text2.Length();
-
-        pos = endPos;
-    }
-
-    // Finally we add carret mark
-    if ( m_Current >= offs && m_Current < offs + len )
-    {
-        int curOffs = m_Current - offs;
-        x1 = x + 3 * m_FontX * curOffs;
-        x2 = x + m_Cols * 3 * m_FontX + 2 * m_FontX + m_FontX * curOffs;
-
-        unsigned char ch = buffer[ curOffs ];
-
-        wxChar tmp[6] =
-        {
-            _T("0123456789ABCDEF") [ ch / 0x10 ], 0,
-            _T("0123456789ABCDEF") [ ch % 0x10 ], 0,
-            ( ch >= 0x20 && ch < 0x7F ) ? ch : ' ', 0
-        };
-
-        dc.SetBrush( backgrounds[ (int)catCurNon ] );
-        dc.SetPen  ( backgrounds[ (int)catCurNon ] );
-        dc.SetTextForeground( foregrounds[ (int)catCurNon ] );
-        dc.SetTextBackground( backgrounds[ (int)catCurNon ] );
-
-        switch ( m_CurrentType )
-        {
-            case curHexHi:
-                dc.DrawRectangle( x1 + m_FontX , y, m_FontX, m_FontY );
-                dc.DrawRectangle( x2, y, m_FontX, m_FontY );
-                dc.DrawText( tmp+2, x1 + m_FontX, y );
-                dc.DrawText( tmp+4, x2, y );
-                break;
-
-            case curHexLo:
-                dc.DrawRectangle( x1, y, m_FontX, m_FontY );
-                dc.DrawRectangle( x2, y, m_FontX, m_FontY );
-                dc.DrawText( tmp+0, x1, y );
-                dc.DrawText( tmp+4, x2, y );
-                break;
-
-            case curChar:
-                dc.DrawRectangle( x1, y, 2*m_FontX, m_FontY );
-                dc.DrawText( tmp+0, x1, y );
-                dc.DrawText( tmp+2, x1 + m_FontX, y );
-                break;
-        }
-
-        dc.SetBrush( backgrounds[ (int)catCurCar ] );
-        dc.SetPen  ( backgrounds[ (int)catCurCar ] );
-        dc.SetTextForeground( foregrounds[ (int)catCurCar ] );
-        dc.SetTextBackground( backgrounds[ (int)catCurCar ] );
-
-        switch ( m_CurrentType )
-        {
-            case curHexHi:
-                dc.DrawRectangle( x1, y, m_FontX, m_FontY );
-                dc.DrawText( tmp+0, x1, y );
-                break;
-
-            case curHexLo:
-                dc.DrawRectangle( x1 + m_FontX, y, m_FontX, m_FontY );
-                dc.DrawText( tmp+2, x1 + m_FontX, y );
-                break;
-
-            case curChar:
-                dc.DrawRectangle( x2, y, m_FontX, m_FontY );
-                dc.DrawText( tmp+4, x2, y );
-                break;
-        }
-
-    }
-}
-
 void HexEditPanel::OnContentSize( wxSizeEvent& event )
 {
     RecalculateCoefs();
@@ -522,7 +635,7 @@ void HexEditPanel::OnContentSize( wxSizeEvent& event )
 
 FileContentBase::OffsetT HexEditPanel::DetectStartOffset()
 {
-    return m_ContentScroll->GetThumbPosition() * m_Cols;
+    return m_ContentScroll->GetThumbPosition() * m_LineBytes;
 }
 
 void HexEditPanel::OnContentMouseWheel(wxMouseEvent& event)
@@ -670,250 +783,168 @@ void HexEditPanel::RefreshStatus()
         m_ExpressionVal->SetLabel( m_ExpressionError );
     }
 
+
+    if ( m_DigitView )
+    {
+        switch ( m_DigitView->GetDigitBits() )
+        {
+            case 1: m_DigitBits->SetLabel( _("Bin") ); break;
+            case 4: m_DigitBits->SetLabel( _("Hex") ); break;
+            default: m_DigitBits->SetLabel( wxString::Format( _("%d bits") , m_DigitView->GetDigitBits() ) );
+        }
+
+        switch ( m_DigitView->GetLittleEndian() )
+        {
+            case true:  m_Endianess->SetLabel( _("LE") ); break;
+            case false: m_Endianess->SetLabel( _("BE") ); break;
+        }
+
+        m_BlockSize->SetLabel( wxString::Format( _("%dB"), m_DigitView->GetBlockBytes() ) );
+
+        switch ( m_ColsMode )
+        {
+            case CM_SPECIFIED: m_ColsModeBtn->SetLabel( wxString::Format( _("Cols: %d"), m_ColsValue ) ); break;
+            case CM_MULT:      m_ColsModeBtn->SetLabel( wxString::Format( _("Cols: %d ( n * %d )"), m_ColsCount, m_ColsValue ) ); break;
+            case CM_POWER:     m_ColsModeBtn->SetLabel( wxString::Format( _("Cols: %d ( n ^ %d )"), m_ColsCount, m_ColsValue ) ); break;
+            default:           m_ColsModeBtn->SetLabel( wxString::Format( _("Cols: %d ( Any )"), m_ColsCount ) );
+        }
+    }
 }
 
 void HexEditPanel::OnDrawAreaKeyDown(wxKeyEvent& event)
 {
     if ( !m_Content || !m_Content->GetSize() ) return;
 
+    m_ViewNotifyContentChange = false;
+    m_ViewNotifyOffsetChange  = false;
+
     switch ( event.GetKeyCode() )
     {
         case WXK_LEFT:
-            switch ( m_CurrentType )
-            {
-                case curChar:
-                    if ( m_Current > 0 )
-                    {
-                        m_Current--;
-                    }
-                    break;
-
-                case curHexHi:
-                    if ( m_Current > 0 )
-                    {
-                        m_Current--;
-                        m_CurrentType = curHexLo;
-                    }
-                    break;
-
-                case curHexLo:
-                    m_CurrentType = curHexHi;
-                    break;
-
-                default:
-                    return;
-            }
+        {
+            m_ActiveView->MoveLeft();
             break;
+        }
 
         case WXK_RIGHT:
-            switch ( m_CurrentType )
-            {
-                case curChar:
-                    if ( m_Current < m_Content->GetSize() - 1 )
-                    {
-                        m_Current++;
-                    }
-                    break;
-
-                case curHexLo:
-                    if ( m_Current < m_Content->GetSize() - 1 )
-                    {
-                        m_Current++;
-                        m_CurrentType = curHexHi;
-                    }
-                    break;
-
-                case curHexHi:
-                    m_CurrentType = curHexLo;
-                    break;
-
-                default:
-                    return;
-            }
+        {
+            m_ActiveView->MoveRight();
             break;
-
-        case WXK_TAB:
-            switch ( m_CurrentType )
-            {
-                case curChar:
-                    m_CurrentType = curHexHi;
-                    break;
-
-                case curHexHi:
-                case curHexLo:
-                    m_CurrentType = curChar;
-                    break;
-
-                default:
-                    return;
-            }
-            break;
+        }
 
         case WXK_UP:
-            if ( m_Current >= (FileContentBase::OffsetT)m_Cols )
-            {
-                m_Current -= m_Cols;
-                break;
-            }
-            return;
+        {
+            m_ActiveView->MoveUp();
+            break;
+        }
 
         case WXK_DOWN:
-            if ( m_Current < m_Content->GetSize() - m_Cols )
-            {
-                m_Current += m_Cols;
-                break;
-            }
-            return;
+        {
+            m_ActiveView->MoveDown();
+            break;
+        }
 
         case WXK_PAGEDOWN:
+        {
             for ( unsigned int i=0; i<m_Lines/2; i++ )
             {
-                if ( m_Current >= m_Content->GetSize() - m_Cols ) break;
-                m_Current += m_Cols;
+                m_ActiveView->MoveDown();
             }
             break;
+        }
 
         case WXK_PAGEUP:
+        {
             for ( unsigned int i=0; i<m_Lines/2; i++ )
             {
-                if ( m_Current < (FileContentBase::OffsetT)m_Cols ) break;
-                m_Current -= m_Cols;
+                m_ActiveView->MoveUp();
             }
             break;
+        }
+
+        case WXK_TAB:
+        {
+            m_ActiveView->SetActive( false );
+            int newViewId = -1;
+            for ( int i=0; i<MAX_VIEWS; ++i )
+            {
+                if ( m_ActiveView == m_Views[ i ] )
+                {
+                    newViewId = ( i + 1 ) % MAX_VIEWS;
+                    break;
+                }
+            }
+            if ( newViewId < 0 ) newViewId = 0;
+            m_ActiveView = m_Views[ newViewId ];
+            m_ActiveView->SetActive( true );
+            m_ViewNotifyContentChange = true;
+            break;
+        }
 
         case WXK_HOME:
+        {
             m_Current = 0;
+            m_ViewNotifyOffsetChange = true;
             break;
+        }
 
         case WXK_END:
+        {
+
             m_Current = m_Content->GetSize()-1;
+            m_ViewNotifyOffsetChange = true;
             break;
+        }
 
         case WXK_INSERT:
         {
             // Insert empty byte at current position
-            FileContentBase::ExtraUndoData data( m_Current, m_CurrentType, m_Current, (m_Current==curChar) ? curChar : curHexHi );
+            FileContentBase::ExtraUndoData data(
+                m_ActiveView,
+                m_Current, m_ActiveView->GetCurrentPositionFlags(),
+                m_Current, m_ActiveView->GetCurrentPositionFlags() );
             m_Content->Add( data, m_Current, 1, 0 );
+            m_ViewNotifyContentChange = true;
             break;
         }
 
         case WXK_DELETE:
         {
-            FileContentBase::ExtraUndoData data( m_Current, m_CurrentType, m_Current, (m_Current==curChar) ? curChar : curHexHi );
+            FileContentBase::ExtraUndoData data(
+                m_ActiveView,
+                m_Current, m_ActiveView->GetCurrentPositionFlags(),
+                m_Current, m_ActiveView->GetCurrentPositionFlags() );
             m_Content->Remove( data, m_Current, 1 );
+            m_ViewNotifyContentChange = true;
             break;
         }
 
         default:
         {
-            int keyCode = event.GetKeyCode();
-
-            switch ( m_CurrentType )
-            {
-                case curHexHi:
-                {
-                    FileContentBase::ExtraUndoData data( m_Current, curHexHi, m_Current, curHexLo );
-
-                    if ( keyCode >= '0' && keyCode <= '9' )
-                    {
-                        m_Content->WriteByte(
-                            data,
-                            m_Current,
-                            ( m_Content->ReadByte( m_Current ) & 0xF ) |
-                            ( keyCode - '0' ) << 4 );
-                    }
-                    else if ( keyCode >= 'A' && keyCode <= 'F' )
-                    {
-                        m_Content->WriteByte(
-                            data,
-                            m_Current,
-                            ( m_Content->ReadByte( m_Current ) & 0xF ) |
-                            ( keyCode - 'A' + 10 ) << 4 );
-                    }
-                    else if ( keyCode >= 'a' && keyCode <= 'f' )
-                    {
-                        m_Content->WriteByte(
-                            data,
-                            m_Current,
-                            ( m_Content->ReadByte( m_Current ) & 0xF ) |
-                            ( keyCode - 'a' + 10 ) << 4 );
-                    }
-                    else
-                    {
-                        return;
-                    }
-                    m_CurrentType = curHexLo;
-                    break;
-                }
-
-                case curHexLo:
-                {
-                    FileContentBase::ExtraUndoData data( m_Current, curHexLo, m_Current, curHexHi );
-                    if ( m_Current < m_Content->GetSize() - 1 )
-                    {
-                        data.m_PosAfter++;
-                    }
-
-                    if ( keyCode >= '0' && keyCode <= '9' )
-                    {
-                        m_Content->WriteByte(
-                            data,
-                            m_Current,
-                            ( m_Content->ReadByte( m_Current ) & 0xF0 ) |
-                            ( ( keyCode - '0' ) & 0xF ) );
-                    }
-                    else if ( keyCode >= 'A' && keyCode <= 'F' )
-                    {
-                        m_Content->WriteByte(
-                            data,
-                            m_Current,
-                            ( m_Content->ReadByte( m_Current ) & 0xF0 ) |
-                            ( ( keyCode - 'A' + 10 ) & 0xF ) );
-                    }
-                    else if ( keyCode >= 'a' && keyCode <= 'f' )
-                    {
-                        m_Content->WriteByte(
-                            data,
-                            m_Current,
-                            ( m_Content->ReadByte( m_Current ) & 0xF0 ) |
-                            ( ( keyCode - 'a' + 10 ) & 0xF ) );
-                    }
-                    else
-                    {
-                        return;
-                    }
-                    m_Current = data.m_PosAfter;
-                    m_CurrentType = curHexHi;
-                    break;
-                }
-
-                case curChar:
-                {
-                    if ( !wxIsprint( keyCode ) ) return;
-
-                    FileContentBase::ExtraUndoData data( m_Current, curChar, m_Current, curChar );
-                    if ( m_Current < m_Content->GetSize() - 1 )
-                    {
-                        data.m_PosAfter++;
-                    }
-                    m_Content->WriteByte( data, m_Current, (unsigned char)keyCode );
-                    m_Current = data.m_PosAfter;
-                    break;
-                }
-            }
+            m_ActiveView->PutChar( event.GetUnicodeKey() );
+            break;
         }
     }
 
-    RefreshStatus();
-    EnsureCarretVisible();
-    m_DrawArea->Refresh();
-    UpdateModified();
+    if ( m_ViewNotifyOffsetChange )
+    {
+        EnsureCarretVisible();
+        PropagateOffsetChange();
+        RefreshStatus();
+        m_ViewNotifyContentChange = true;
+    }
+
+    if ( m_ViewNotifyContentChange )
+    {
+        m_DrawArea->Refresh();
+        UpdateModified();
+    }
 }
 
 void HexEditPanel::EnsureCarretVisible()
 {
-    FileContentBase::OffsetT line = m_Current / m_Cols;
-    FileContentBase::OffsetT startLine = DetectStartOffset() / m_Cols;
+    FileContentBase::OffsetT line      = m_Current / m_LineBytes;
+    FileContentBase::OffsetT startLine = DetectStartOffset() / m_LineBytes;
     FileContentBase::OffsetT endLine   = startLine + m_Lines;
 
     if ( line < startLine )
@@ -931,20 +962,54 @@ void HexEditPanel::EnsureCarretVisible()
 void HexEditPanel::ClampCursorToVisibleArea()
 {
     FileContentBase::OffsetT startOffs = DetectStartOffset();
-    FileContentBase::OffsetT endOffs   = startOffs + m_Cols * m_Lines;
+    FileContentBase::OffsetT endOffs   = startOffs + m_LineBytes * m_Lines;
+
+    bool changed = false;
 
     if ( m_Current < startOffs )
     {
-        m_Current = startOffs + ( m_Current % m_Cols );
+        m_Current = startOffs + ( m_Current % m_LineBytes );
+        changed = true;
     }
     else if ( m_Current >= endOffs )
     {
-        m_Current = endOffs - m_Cols + ( m_Current % m_Cols );
+        m_Current = endOffs - m_LineBytes + ( m_Current % m_LineBytes );
+        changed = true;
     }
 
     if ( m_Current >= m_Content->GetSize() )
     {
         m_Current = m_Content->GetSize() - 1;
+        changed = true;
+    }
+
+    if ( changed )
+    {
+        PropagateOffsetChange();
+    }
+}
+
+void HexEditPanel::PropagateOffsetChange( int flagsForCurrentView )
+{
+    OffsetT startOffs  = DetectStartOffset();
+
+    OffsetT blockStart = m_Current;
+    OffsetT blockEnd   = m_Current + 1;
+
+    // First let's calculate block size
+    for ( int i=0; i<MAX_VIEWS && m_Views[ i ]; ++i )
+    {
+        OffsetT thisBlockStart = blockStart;
+        OffsetT thisBlockEnd   = blockEnd;
+        m_Views[i]->CalculateBlockSize( startOffs, m_Current, thisBlockStart, thisBlockEnd );
+        blockStart = wxMin( blockStart, thisBlockStart );
+        blockEnd   = wxMax( blockEnd,   thisBlockEnd   );
+    }
+
+    // Next we can propagate the offset
+    for ( int i=0; i<MAX_VIEWS && m_Views[ i ]; ++i )
+    {
+        m_Views[i]->JumpToOffset( startOffs, m_Current, blockStart, blockEnd, ( m_Views[ i ] == m_ActiveView ) ? flagsForCurrentView : -1 );
     }
 }
 
@@ -993,49 +1058,85 @@ void HexEditPanel::OnDrawAreaLeftDown(wxMouseEvent& event)
     m_DrawArea->SetFocus();
 
     // First we need to detect what the user has clicked on
-    unsigned line = event.GetY() / m_FontY;
+    int line   = event.GetY() / m_FontY;
+    int column = event.GetX() / m_FontX;
 
     // Just to prevent some weird situation
-    if ( (int)line < 0 ) line = 0;
-    if ( line >= m_Lines ) line = m_Lines-1;
+    line   = wxMin( line,   (int)m_Lines - 1 );
+    column = wxMin( column, (int)m_Cols  - 1 );
+    line   = wxMax( line,   0 );
+    column = wxMax( column, 0 );
 
-    unsigned charpos = event.GetX() / m_FontX - 10;
-    if ( (int)charpos < 0 ) charpos = 0;
+    // Detect what has been pressed
 
-    FileContentBase::OffsetT newCurrent = m_Current;
-    CurrentType              newCurrentType = m_CurrentType;
-
-    if ( charpos < m_Cols * 3 )
+    if ( !m_MouseDown )
     {
-        newCurrent = DetectStartOffset() + m_Cols * line + charpos / 3;
-        newCurrentType = ( charpos%3 == 0 ) ? curHexHi : curHexLo;
-        m_MouseDown = true;
-    }
-    else if ( charpos >= m_Cols*3+2 )
-    {
-        charpos -= m_Cols*3 + 2;
-        if ( charpos >= m_Cols )
+        if ( column < 9 )
         {
-            charpos = m_Cols-1;
+            // Offset pressed
+            return;
         }
-        newCurrent = DetectStartOffset() + m_Cols * line + charpos;
-        newCurrentType = curChar;
+    }
+    column -= 9;
+
+    int viewId = -1;
+
+    for ( int i=0; i<MAX_VIEWS; ++i )
+    {
+        column -= 2;
+
+        if ( !m_MouseDown )
+        {
+            if ( column < 0 ) break;
+
+            if ( column < (int)m_ViewsCols[ i ] )
+            {
+                // Clicked on the area of i-th view
+                ActivateView( m_Views[ i ] );
+
+                viewId = i;
+                break;
+            }
+        }
+        else if ( m_Views[ i ] == m_ActiveView )
+        {
+            viewId = i;
+            break;
+        }
+
+        column -= m_ViewsCols[ i ];
+    }
+
+    if ( viewId >= 0  )
+    {
         m_MouseDown = true;
-    }
 
-    if ( newCurrent >= m_Content->GetSize() )
-    {
-        return;
-    }
+        column = wxMax( column, 0 );
+        column = wxMin( column, (int)m_ViewsCols[ viewId ] );
 
-    if ( newCurrent != m_Current || newCurrentType != m_CurrentType )
+        int positionFlags;
+        int lineOffset = m_Views[ viewId ]->GetOffsetFromColumn( column, positionFlags );
+        lineOffset = wxMin( lineOffset, (int)m_LineBytes - 1 );
+        lineOffset = wxMax( lineOffset, 0 );
+
+        OffsetT newCurrent = DetectStartOffset() + m_LineBytes * line + lineOffset;
+
+        if ( newCurrent < m_Content->GetSize() )
+        {
+            if ( ( newCurrent != m_Current ) || ( positionFlags != m_Views[ viewId ]->GetCurrentPositionFlags() ) )
+            {
+                m_Current = newCurrent;
+                PropagateOffsetChange( positionFlags );
+                RefreshStatus();
+                EnsureCarretVisible();
+                m_DrawArea->Refresh();
+            }
+        }
+    }
+    else
     {
-        m_Current = newCurrent;
-        m_CurrentType = newCurrentType;
-        RefreshStatus();
-        EnsureCarretVisible();
-        m_DrawArea->Refresh();
-        return;
+        m_MouseDown = false;
+        // Clicked somewhere after all views
     }
 }
 
@@ -1078,7 +1179,8 @@ void HexEditPanel::Undo()
         if ( extraData )
         {
             m_Current = extraData->m_PosBefore;
-            m_CurrentType = (CurrentType)extraData->m_PosTypeBefore;
+            ActivateView( extraData->m_View );
+            PropagateOffsetChange( extraData->m_PosBeforeF );
         }
         RefreshStatus();
         EnsureCarretVisible();
@@ -1095,7 +1197,8 @@ void HexEditPanel::Redo()
         if ( extraData )
         {
             m_Current = extraData->m_PosAfter;
-            m_CurrentType = (CurrentType)extraData->m_PosTypeAfter;
+            ActivateView( extraData->m_View );
+            PropagateOffsetChange( extraData->m_PosAfterF );
         }
         RefreshStatus();
         EnsureCarretVisible();
@@ -1242,6 +1345,7 @@ void HexEditPanel::ProcessGoto()
     }
 
     m_Current = offset;
+    PropagateOffsetChange();
     RefreshStatus();
     EnsureCarretVisible();
     m_DrawArea->Refresh();
@@ -1298,3 +1402,230 @@ void HexEditPanel::OnButton3Click1(wxCommandEvent& event)
         OnExpressionTextEnter(event);
     }
 }
+
+void HexEditPanel::OnButton4Click(wxCommandEvent& event)
+{
+    PopupMenu( &m_BaseMenu );
+}
+
+void HexEditPanel::OnSetBaseHex(wxCommandEvent& event)
+{
+    m_DigitView->SetDigitBits( 4 );
+    DisplayChanged();
+}
+
+void HexEditPanel::OnSetBaseBin(wxCommandEvent& event)
+{
+    m_DigitView->SetDigitBits( 1 );
+    DisplayChanged();
+}
+
+void HexEditPanel::DisplayChanged()
+{
+    RecalculateCoefs();
+    RefreshStatus();
+    EnsureCarretVisible();
+    m_DrawArea->Refresh();
+    m_DrawArea->SetFocus();
+}
+
+void HexEditPanel::Onm_EndianessClick(wxCommandEvent& event)
+{
+    PopupMenu( &m_EndianessMenu );
+}
+
+void HexEditPanel::OnSetEndianessBig(wxCommandEvent& event)
+{
+    m_DigitView->SetLittleEndian( false );
+    DisplayChanged();
+}
+
+void HexEditPanel::OnSetEndianessLittle(wxCommandEvent& event)
+{
+    m_DigitView->SetLittleEndian( true );
+    DisplayChanged();
+}
+
+void HexEditPanel::Onm_BlockSizeClick(wxCommandEvent& event)
+{
+    PopupMenu( &m_BlockSizeMenu );
+}
+
+void HexEditPanel::OnSetBlockSize1(wxCommandEvent& event)
+{
+    m_DigitView->SetBlockBytes( 1 );
+    DisplayChanged();
+}
+
+void HexEditPanel::OnSetBlockSize2(wxCommandEvent& event)
+{
+    m_DigitView->SetBlockBytes( 2 );
+    DisplayChanged();
+}
+
+void HexEditPanel::OnSetBlockSize4(wxCommandEvent& event)
+{
+    m_DigitView->SetBlockBytes( 4 );
+    DisplayChanged();
+}
+
+void HexEditPanel::OnSetBlockSize8(wxCommandEvent& event)
+{
+    m_DigitView->SetBlockBytes( 8 );
+    DisplayChanged();
+}
+
+void HexEditPanel::Onm_ColsModeClick(wxCommandEvent& event)
+{
+    PopupMenu( &m_ColsModeMenu );
+}
+
+void HexEditPanel::OnSetColsMul1(wxCommandEvent& event)
+{
+    ColsMode( CM_MULT, 1 );
+}
+
+void HexEditPanel::OnSetColsMul2(wxCommandEvent& event)
+{
+    ColsMode( CM_MULT, 2 );
+}
+
+void HexEditPanel::OnSetColsMul3(wxCommandEvent& event)
+{
+    ColsMode( CM_MULT, 3 );
+}
+
+void HexEditPanel::OnSetColsMul4(wxCommandEvent& event)
+{
+    ColsMode( CM_MULT, 4 );
+}
+
+void HexEditPanel::OnSetColsMul5(wxCommandEvent& event)
+{
+    ColsMode( CM_MULT, 5 );
+}
+
+void HexEditPanel::OnSetColsMul6(wxCommandEvent& event)
+{
+    ColsMode( CM_MULT, 6 );
+}
+
+void HexEditPanel::OnSetColsMul7(wxCommandEvent& event)
+{
+    ColsMode( CM_MULT, 7 );
+}
+
+void HexEditPanel::OnSetColsMul8(wxCommandEvent& event)
+{
+    ColsMode( CM_MULT, 8 );
+}
+
+void HexEditPanel::OnSetColsMulOther(wxCommandEvent& event)
+{
+    long val = ::wxGetNumberFromUser( _("Enter number"), _("Enter number"), _("Colums setting"), 2, 2, 100, this );
+    if ( val > 0 ) ColsMode( CM_MULT, val );
+}
+
+void HexEditPanel::OnSetColsValue1(wxCommandEvent& event)
+{
+    ColsMode( CM_SPECIFIED, 1 );
+}
+
+void HexEditPanel::OnSetColsValue2(wxCommandEvent& event)
+{
+    ColsMode( CM_SPECIFIED, 2 );
+}
+
+void HexEditPanel::OnSetColsValue3(wxCommandEvent& event)
+{
+    ColsMode( CM_SPECIFIED, 3 );
+}
+
+void HexEditPanel::OnSetColsValue4(wxCommandEvent& event)
+{
+    ColsMode( CM_SPECIFIED, 4 );
+}
+
+void HexEditPanel::OnSetColsValue5(wxCommandEvent& event)
+{
+    ColsMode( CM_SPECIFIED, 5 );
+}
+
+void HexEditPanel::OnSetColsValue6(wxCommandEvent& event)
+{
+    ColsMode( CM_SPECIFIED, 6 );
+}
+
+void HexEditPanel::OnSetColsValue7(wxCommandEvent& event)
+{
+    ColsMode( CM_SPECIFIED, 7 );
+}
+
+void HexEditPanel::OnSetColsValue8(wxCommandEvent& event)
+{
+    ColsMode( CM_SPECIFIED, 8 );
+}
+
+void HexEditPanel::OnSetColsValueOther(wxCommandEvent& event)
+{
+    long val = ::wxGetNumberFromUser( _("Enter number"), _("Enter number"), _("Colums setting"), 1, 1, 100, this );
+    if ( val > 0 ) ColsMode( CM_SPECIFIED, val );
+}
+
+void HexEditPanel::OnSetColsPower2(wxCommandEvent& event)
+{
+    ColsMode( CM_POWER, 2 );
+}
+
+void HexEditPanel::OnSetColsPower4(wxCommandEvent& event)
+{
+    ColsMode( CM_POWER, 4 );
+}
+
+void HexEditPanel::OnSetColsPower8(wxCommandEvent& event)
+{
+    ColsMode( CM_POWER, 8 );
+}
+
+void HexEditPanel::OnSetColsPowerOther(wxCommandEvent& event)
+{
+    long val = ::wxGetNumberFromUser( _("Enter number"), _("Enter number"), _("Colums setting"), 2, 2, 100, this );
+    if ( val > 0 ) ColsMode( CM_POWER, val );
+}
+
+void HexEditPanel::ColsMode(int mode, int value)
+{
+    m_ColsMode = mode;
+    m_ColsValue = value;
+
+    if ( m_ColsMode == CM_MULT && m_ColsValue == 1 )
+    {
+        m_ColsMode = CM_ANY;
+    }
+
+    DisplayChanged();
+}
+
+bool HexEditPanel::MatchColumnsCount(int colsCount)
+{
+    switch ( m_ColsMode )
+    {
+        case CM_MULT:
+            return ( colsCount % m_ColsValue ) == 0;
+
+        case CM_SPECIFIED:
+            return colsCount == m_ColsValue;
+
+        case CM_POWER:
+            while ( colsCount > 1 )
+            {
+                if ( colsCount % m_ColsValue ) return false;
+                colsCount /= m_ColsValue;
+            }
+            return true;
+
+        default:
+            return true;
+    }
+}
+

@@ -1611,6 +1611,12 @@ void Editor::PaintSelMargin(Surface *surfWindow, PRectangle &rc) {
 					}
 				}
 
+                int changed = pdoc->GetChanged(lineDoc); 
+                if (changed == 1)  
+                    marks |= 1 << SC_MARKNUM_CHANGEUNSAVED; 
+                if (changed == 2)  
+                    marks |= 1 << SC_MARKNUM_CHANGESAVED; 
+ 
 				marks &= vs.ms[margin].mask;
 				PRectangle rcMarker = rcSelMargin;
 				rcMarker.top = yposScreen;
@@ -6028,7 +6034,12 @@ sptr_t Editor::WndProc(unsigned int iMessage, uptr_t wParam, sptr_t lParam) {
 		return (pdoc->CanUndo() && !pdoc->IsReadOnly()) ? 1 : 0;
 
 	case SCI_EMPTYUNDOBUFFER:
-		pdoc->DeleteUndoHistory();
+        pdoc->DeleteUndoHistory(wParam != 0); 
+        Redraw();
+		return 0;
+
+	case SCI_SETCHANGECOLLECTION:
+        pdoc->SetChangeCollection(wParam != 0); 
 		return 0;
 
 	case SCI_GETFIRSTVISIBLELINE:

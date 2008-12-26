@@ -336,7 +336,6 @@
 				<Option projectIncludeDirsRelation="2" />
 				<Option projectLibDirsRelation="2" />
 				<Compiler>
-					<Add option='-include &quot;sdk.h&quot;' />
 					<Add directory="include" />
 					<Add directory="include/scripting/include" />
 					<Add directory="include/scripting/sqplus" />
@@ -357,7 +356,6 @@
 				<Option projectIncludeDirsRelation="2" />
 				<Option projectLibDirsRelation="2" />
 				<Compiler>
-					<Add option='-include &quot;sdk.h&quot;' />
 					<Add directory="include" />
 				</Compiler>
 				<Linker>

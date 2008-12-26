@@ -12,6 +12,7 @@
 #define THREAD_SEARCH_LOGGER_TREE_H
 
 #include <wx/event.h>
+#include <wx/treebase.h>
 
 #include "ThreadSearchLoggerBase.h"
 
@@ -49,6 +50,9 @@ public:
 	/** Removes all items from logger. */
 	virtual void Clear();
 
+	/** Called on search begin to prepare logger. */
+	virtual void OnSearchBegin(const ThreadSearchFindData& findData);
+
 	/** Returns the logger window. */
 	virtual wxWindow* GetWindow();
 
@@ -71,14 +75,36 @@ protected:
 	  */
 	bool GetFileLineFromTreeEvent(wxTreeEvent& event, wxString& filepath, long &line);
 
+	/** hasResultLineForTreeItem
+	  * @return Return true if a result line can be found for tree item
+	  */
+	bool hasResultLineForTreeItem(wxTreeItemId treeItemId);
+
 	/** Dynamic events connection. */
 	virtual void ConnectEvents(wxEvtHandler* pEvtHandler);
 
 	/** Dynamic events disconnection. */
 	virtual void DisconnectEvents(wxEvtHandler* pEvtHandler);
 
-	wxTreeCtrl* m_pTreeLog;
-	bool        m_FirstItemProcessed; // Used to filter wxTree events and process useful ones only.
+	/** Contextual menu event handler */
+	void OnLoggerTreeContextualMenu(wxTreeEvent& event);
+
+	/** Delete item menu event handler */
+	void OnDeleteTreeItem(wxCommandEvent& event);
+
+	/** Delete item menu event handler */
+	void OnDeleteAllTreeItems(wxCommandEvent& event);
+
+	/** Deletes an item from the tree */
+	void DeleteTreeItem(wxTreeItemId id);
+
+	/** Deletes all items from the tree */
+	void DeleteTreeItems();
+
+	wxTreeCtrl*  m_pTreeLog;
+	bool         m_FirstItemProcessed; // Used to filter wxTree events and process useful ones only.
+	wxTreeItemId m_FilesParentId;
+	wxTreeItemId m_ToDeleteItemId;
 };
 
 #endif // THREAD_SEARCH_LOGGER_TREE_H

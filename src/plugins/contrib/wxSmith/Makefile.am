@@ -43,26 +43,33 @@ libwxsmithlib_la_SOURCES = \
 ./wxssettings.cpp \
 ./wxsautoresourcetreeimage.cpp
 
-noinst_HEADERS = \
-./wxsadvqpp.h \
+sdkdir=$(includedir)/wxsmith/
+
+sdk_HEADERS = \
+./wxsadvqpp.h  \
 ./wxsadvqppchild.h \
-./wxscoder.h \
+./wxsautoresourcetreeimage.h \
 ./wxscodinglang.h \
-./wxseditor.h \
-./wxsextresmanager.h \
 ./wxsgui.h \
 ./wxsguifactory.h \
-./wxsmith.h \
-./wxsmithmime.h \
+./wxseditor.h \
 ./wxsproject.h \
 ./wxsresource.h \
 ./wxsresourcefactory.h \
 ./wxsresourcetree.h \
-./wxsresourcetreeitemdata.h \
+./wxsresourcetreeitemdata.h
+
+noinst_HEADERS = \
+./wxscoder.h \
+./wxsextresmanager.h \
+./wxsmith.h \
+./wxsmithmime.h \
 ./wxsstoringsplitterwindow.h \
 ./wxsversionconverter.h \
-./wxssettings.h \
-./wxsautoresourcetreeimage.h
+./wxssettings.h
+
+pkgconfigdir = $(libdir)/pkgconfig
+pkgconfig_DATA = wxsmith.pc
 
 EXTRA_DIST = \
 $(srcdir)/*.cbp \

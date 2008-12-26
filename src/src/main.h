@@ -114,6 +114,7 @@ class MainFrame : public wxFrame
 
         void OnEditUndo(wxCommandEvent& event);
         void OnEditRedo(wxCommandEvent& event);
+        void OnEditDeleteHistory(wxCommandEvent& event);
         void OnEditCopy(wxCommandEvent& event);
         void OnEditCut(wxCommandEvent& event);
         void OnEditPaste(wxCommandEvent& event);
@@ -321,7 +322,6 @@ class MainFrame : public wxFrame
         bool m_StartupDone;
         bool m_InitiatedShutdown;
 
-        bool m_AutoHideLogs;
         int m_AutoHideLockCounter;
 
         wxString m_LastLayoutName;

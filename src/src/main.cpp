@@ -131,6 +131,7 @@ int idFilePrev = wxNewId();
 
 int idEditUndo = XRCID("idEditUndo");
 int idEditRedo = XRCID("idEditRedo");
+int idEditDeleteHistory = XRCID("idEditDeleteHistory");
 int idEditCopy = XRCID("idEditCopy");
 int idEditCut = XRCID("idEditCut");
 int idEditPaste = XRCID("idEditPaste");
@@ -262,6 +263,7 @@ BEGIN_EVENT_TABLE(MainFrame, wxFrame)
 
     EVT_UPDATE_UI(idEditUndo, MainFrame::OnEditMenuUpdateUI)
     EVT_UPDATE_UI(idEditRedo, MainFrame::OnEditMenuUpdateUI)
+    EVT_UPDATE_UI(idEditDeleteHistory, MainFrame::OnEditMenuUpdateUI)
     EVT_UPDATE_UI(idEditCopy, MainFrame::OnEditMenuUpdateUI)
     EVT_UPDATE_UI(idEditCut, MainFrame::OnEditMenuUpdateUI)
     EVT_UPDATE_UI(idEditPaste, MainFrame::OnEditMenuUpdateUI)
@@ -345,6 +347,7 @@ BEGIN_EVENT_TABLE(MainFrame, wxFrame)
 
     EVT_MENU(idEditUndo,  MainFrame::OnEditUndo)
     EVT_MENU(idEditRedo,  MainFrame::OnEditRedo)
+    EVT_MENU(idEditDeleteHistory,  MainFrame::OnEditDeleteHistory)
     EVT_MENU(idEditCopy,  MainFrame::OnEditCopy)
     EVT_MENU(idEditCut,  MainFrame::OnEditCut)
     EVT_MENU(idEditPaste,  MainFrame::OnEditPaste)
@@ -459,7 +462,6 @@ MainFrame::MainFrame(wxWindow* parent)
        m_HelpPluginsMenu(0L),
        m_StartupDone(false), // one-time flag
        m_InitiatedShutdown(false),
-       m_AutoHideLogs(false),
        m_AutoHideLockCounter(0),
        m_LastLayoutIsTemp(false),
        m_pScriptConsole(0),
@@ -661,7 +663,8 @@ void MainFrame::CreateIDE()
 
 void MainFrame::SetupGUILogging()
 {
-    m_AutoHideLogs = Manager::Get()->GetConfigManager(_T("message_manager"))->ReadBool(_T("/auto_hide"), false);
+    // allow new docked windows to use be 3/4 of the available space, the default (0.3) is sometimes too small, especially for "Logs & others"
+    m_LayoutManager.SetDockSizeConstraint(0.75,0.75);
 
     int bottomH = Manager::Get()->GetConfigManager(_T("app"))->ReadInt(_T("/main_frame/layout/bottom_block_height"), 150);
     wxSize clientsize = GetClientSize();
@@ -1140,6 +1143,14 @@ void MainFrame::LoadWindowState()
 void MainFrame::SaveWindowState()
 {
     DoCheckCurrentLayoutForChanges(false);
+
+    // first delete all previos layouts, otherwise they might remain
+    // if the new amount of layouts is less than the previous, because only the first layouts will be overwritten
+    wxArrayString subs = Manager::Get()->GetConfigManager(_T("app"))->EnumerateSubPaths(_T("/main_frame/layout"));
+    for (size_t i = 0; i < subs.GetCount(); ++i)
+    {
+        Manager::Get()->GetConfigManager(_T("app"))->DeleteSubPath(_T("/main_frame/layout/") + subs[i]);
+    }
 
     int count = 0;
     for (LayoutViewsMap::iterator it = m_LayoutViews.begin(); it != m_LayoutViews.end(); ++it)
@@ -2719,6 +2730,13 @@ void MainFrame::OnEditRedo(wxCommandEvent& event)
         ed->Redo();
 }
 
+void MainFrame::OnEditDeleteHistory(wxCommandEvent& event)
+{
+    EditorBase* ed = Manager::Get()->GetEditorManager()->GetActiveEditor();
+    if (ed)
+        ed->DeleteHistory();
+}
+
 void MainFrame::OnEditCopy(wxCommandEvent& event)
 {
     EditorBase* ed = Manager::Get()->GetEditorManager()->GetActiveEditor();
@@ -3748,6 +3766,7 @@ void MainFrame::OnEditMenuUpdateUI(wxUpdateUIEvent& event)
 
     mbar->Enable(idEditUndo, canUndo);
     mbar->Enable(idEditRedo, canRedo);
+    mbar->Enable(idEditDeleteHistory, canUndo || canRedo);
     mbar->Enable(idEditCut, canCut);
     mbar->Enable(idEditCopy, hasSel);
     mbar->Enable(idEditPaste, canPaste);
@@ -3934,6 +3953,10 @@ void MainFrame::OnToggleBar(wxCommandEvent& event)
 
     if (win)
     {
+        // use last visible size as BestSize, Logs & others does no longer "forget" it's size
+        if (!event.IsChecked())
+             m_LayoutManager.GetPane(win).BestSize(win->GetSize());
+
         m_LayoutManager.GetPane(win).Show(event.IsChecked());
         DoUpdateLayout();
     }
@@ -4264,7 +4287,7 @@ void MainFrame::OnSwitchToLogWindow(CodeBlocksLogEvent& event)
 
 void MainFrame::OnShowLogManager(CodeBlocksLogEvent& event)
 {
-    if (!m_AutoHideLogs)
+    if (!Manager::Get()->GetConfigManager(_T("message_manager"))->ReadBool(_T("/auto_hide"), false))
         return;
 
     m_LayoutManager.GetPane(m_pInfoPane).Show(true);
@@ -4273,7 +4296,8 @@ void MainFrame::OnShowLogManager(CodeBlocksLogEvent& event)
 
 void MainFrame::OnHideLogManager(CodeBlocksLogEvent& event)
 {
-    if (!m_AutoHideLogs || m_AutoHideLockCounter > 0)
+    if (!Manager::Get()->GetConfigManager(_T("message_manager"))->ReadBool(_T("/auto_hide"), false) ||
+           m_AutoHideLockCounter > 0)
         return;
 
     m_LayoutManager.GetPane(m_pInfoPane).Show(false);
@@ -4282,14 +4306,15 @@ void MainFrame::OnHideLogManager(CodeBlocksLogEvent& event)
 
 void MainFrame::OnLockLogManager(CodeBlocksLogEvent& event)
 {
-    if (!m_AutoHideLogs)
+    if (!Manager::Get()->GetConfigManager(_T("message_manager"))->ReadBool(_T("/auto_hide"), false))
         return;
     ++m_AutoHideLockCounter;
 }
 
 void MainFrame::OnUnlockLogManager(CodeBlocksLogEvent& event)
 {
-    if (!m_AutoHideLogs && m_AutoHideLockCounter > 0)
+    if (!Manager::Get()->GetConfigManager(_T("message_manager"))->ReadBool(_T("/auto_hide"), false) &&
+           m_AutoHideLockCounter > 0)
         return;
     if (--m_AutoHideLockCounter == 0)
     {
