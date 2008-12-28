@@ -5109,7 +5109,7 @@ void Editor::DropAt(int position, const char *value, bool moving, bool rectangul
 		} else {
 			position = MovePositionOutsideChar(position, currentPos - position);
 			if (pdoc->InsertCString(position, value)) {
-				SetEmptySelection(position + istrlen(value));
+				SetSelection(position + istrlen(value), position);
 			}
 			pdoc->EndUndoAction();
 		}
