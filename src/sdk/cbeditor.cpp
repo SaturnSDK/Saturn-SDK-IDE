@@ -1169,6 +1169,8 @@ void cbEditor::InternalSetEditorStyleBeforeFileOpen(cbStyledTextCtrl* control)
         control->MarkerSetBackground(wxSCI_MARKNUM_CHANGEUNSAVED, wxColour(0xFF, 0xE6, 0x04)); 
         control->MarkerDefine(wxSCI_MARKNUM_CHANGESAVED, wxSCI_MARK_LEFTRECT); 
         control->MarkerSetBackground(wxSCI_MARKNUM_CHANGESAVED, wxColour(0x04, 0xFF, 0x50)); 
+        // initially clearing the UndoBuffer also starts changecollection on empty files
+        control->EmptyUndoBuffer(true);
     }
     else
         control->SetMarginWidth(changebarMargin, 0);
