@@ -2219,6 +2219,12 @@ void MainFrame::OnFileNewWhat(wxCommandEvent& event)
     if (project)
         wxSetWorkingDirectory(project->GetBasePath());
     cbEditor* ed = Manager::Get()->GetEditorManager()->New();
+    if(ed)
+    {
+        // initially start change-collection if configured on empty files
+        ed->GetControl()->SetChangeCollection(Manager::Get()->GetConfigManager(_T("editor"))->ReadBool(_T("/margin/use_changebar"), true));
+    }
+
     if (ed && ed->IsOK())
     {
         AddToRecentFilesHistory(ed->GetFilename());
