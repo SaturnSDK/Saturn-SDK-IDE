@@ -324,6 +324,12 @@ void wxScintilla::SetChangeCollection (bool collectChange)
     SendMsg(SCI_SETCHANGECOLLECTION, collectChange, 0);
 }
 
+    // Find a changed line, if fromLine > toLine search is performed backwards.
+int wxScintilla::FindChangedLine (const int fromLine, const int toLine) const
+{
+    return SendMsg(SCI_GETCHANGEDLINE, fromLine, toLine);
+}
+
 // Select all the text in the document.
 void wxScintilla::SelectAll()
 {

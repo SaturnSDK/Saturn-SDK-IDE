@@ -2142,9 +2142,12 @@ public:
     // history and discarding them.
     void SetUndoCollection(bool collectUndo);
 
-    // Choose between collecting actions into the changesy
+    // Choose between collecting actions into the changes
     // history and discarding them.
     void SetChangeCollection(bool collectChange);
+
+    // Find a changed line, if fromLine > toLine search is performed backwards.
+    int FindChangedLine (const int fromLine, const int toLine) const;
 
     // Select all the text in the document.
     void SelectAll();

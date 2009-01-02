@@ -169,6 +169,8 @@ class MainFrame : public wxFrame
         void OnSearchFindNext(wxCommandEvent& event);
         void OnSearchReplace(wxCommandEvent& event);
         void OnSearchGotoLine(wxCommandEvent& event);
+        void OnSearchGotoNextChanged(wxCommandEvent& event);
+        void OnSearchGotoPrevChanged(wxCommandEvent& event);
 
         void OnPluginsExecuteMenu(wxCommandEvent& event);
 
