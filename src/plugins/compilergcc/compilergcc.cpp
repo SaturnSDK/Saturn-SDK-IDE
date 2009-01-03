@@ -839,35 +839,47 @@ void CompilerGCC::SetEnvironmentForCompiler(const wxString& id, wxString& envPat
          * locate duplicate entries. */
         wxArrayString envPathArr = GetArrayFromString(envPath, path_sep);
 
-        // add extra compiler paths in PATH
+        // add extra compiler paths and masterpath to PATH
+        // and make sure they come before rest of path, because otherwise different
+        // versions of the executables might lead to problems
+        // => masterPath + extraPath + PATH
         wxString oldpath = envPath;
         envPath.Clear();
         for (unsigned int i = 0; i < extraPaths.GetCount(); ++i)
         {
-            #if wxCHECK_VERSION(2, 8, 0)
-            if (!extraPaths[i].IsEmpty() &&
-                (envPathArr.Index(extraPaths[i], caseSensitive) == wxNOT_FOUND))
-            #else
             if (!extraPaths[i].IsEmpty())
-            #endif
             {
+                int index = envPathArr.Index(extraPaths[i], caseSensitive);
+                if(index != wxNOT_FOUND)
+                {
+                    envPathArr.RemoveAt(index);
+                }
                 envPath += extraPaths[i] + path_sep;
             }
         }
-        envPath = envPath + oldpath;
 
         // add bin path to PATH env. var.
         wxString pathCheck = masterPath + sep + _T("bin");
-        if  (wxFileExists(pathCheck + sep + gcc) &&
-            (envPathArr.Index(pathCheck, caseSensitive) == wxNOT_FOUND))
+        if  (wxFileExists(pathCheck + sep + gcc))
         {
+            int index = envPathArr.Index(pathCheck, caseSensitive);
+            if(index != wxNOT_FOUND)
+            {
+                envPathArr.RemoveAt(index);
+            }
             envPath = masterPath + sep + _T("bin") + path_sep + envPath;
         }
-        else if (wxFileExists(masterPath + sep + gcc) &&
-                (envPathArr.Index(masterPath, caseSensitive) == wxNOT_FOUND))
+        else if (wxFileExists(masterPath + sep + gcc))
         {
+            int index = envPathArr.Index(masterPath, caseSensitive);
+            if(index != wxNOT_FOUND)
+            {
+                envPathArr.RemoveAt(index);
+            }
             envPath = masterPath + path_sep + envPath;
         }
+        envPath = envPath + GetStringFromArray(envPathArr, path_sep, false);
+//        Manager::Get()->GetLogManager()->Log(F(_T("Changing PATH from %s to %s"), oldpath.c_str(), envPath.c_str()));
         wxSetEnv(_T("PATH"), envPath);
     }
 }
@@ -1780,15 +1792,15 @@ int CompilerGCC::Run(ProjectBuildTarget* target)
             {
                 command << crunnStr << strSPACE;
 
-				if (!platform::windows)
-				{
-					// set LD_LIBRARY_PATH
-					command << LIBRARY_ENVVAR << _T("=$") << LIBRARY_ENVVAR << _T(':');
-					// we have to quote the string, just escape the spaces does not work
-					wxString strLinkerPath=GetDynamicLinkerPathForTarget(target);
-					QuoteStringIfNeeded(strLinkerPath);
-					command << strLinkerPath << strSPACE;
-				}
+                if (!platform::windows)
+                {
+                    // set LD_LIBRARY_PATH
+                    command << LIBRARY_ENVVAR << _T("=$") << LIBRARY_ENVVAR << _T(':');
+                    // we have to quote the string, just escape the spaces does not work
+                    wxString strLinkerPath=GetDynamicLinkerPathForTarget(target);
+                    QuoteStringIfNeeded(strLinkerPath);
+                    command << strLinkerPath << strSPACE;
+                }
             }
         }
     }
@@ -1870,10 +1882,10 @@ int CompilerGCC::Run(ProjectBuildTarget* target)
 
 wxString CompilerGCC::GetDynamicLinkerPathForTarget(ProjectBuildTarget* target)
 {
-	if (!target)
-	{
-		return wxEmptyString;
-	}
+    if (!target)
+    {
+        return wxEmptyString;
+    }
 
 	Compiler* compiler = CompilerFactory::GetCompiler(target->GetCompilerID());
 	if (compiler)
@@ -2729,9 +2741,9 @@ int CompilerGCC::KillProcess()
         if (!m_Processes[i])
             continue;
 
-		#if defined(WIN32) && defined(ENABLE_SIGTERM)
-			::GenerateConsoleCtrlEvent(0, m_Pid[i]);
-		#endif
+        #if defined(WIN32) && defined(ENABLE_SIGTERM)
+            ::GenerateConsoleCtrlEvent(0, m_Pid[i]);
+        #endif
 
 
 
@@ -3346,8 +3358,11 @@ void CompilerGCC::LogMessage(const wxString& message, CompilerLineType lt, LogTa
         {
             m_BuildLogContents << _T("<b>");
         }
-
-        m_BuildLogContents << message;
+        // replace the ´ family by "
+        wxString Quoted = message;
+        Quoted.Replace(_T("‘"), _T("\""), true);
+        Quoted.Replace(_T("’"), _T("\""), true);
+        m_BuildLogContents << Quoted;
 
         if (isTitle)
         {
@@ -3633,7 +3648,12 @@ void CompilerGCC::NotifyJobDone(bool showNothingToBeDone)
 {
     m_BuildJob = bjIdle;
     if (showNothingToBeDone)
+    {
         LogMessage(_("Nothing to be done.\n"));
+        // if message manager is auto-hiding, unlock it (i.e. close it)
+        CodeBlocksLogEvent evtShow(cbEVT_HIDE_LOG_MANAGER);
+        Manager::Get()->ProcessEvent(evtShow);
+    }
 
     if (!IsProcessRunning())
     {

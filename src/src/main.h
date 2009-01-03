@@ -114,6 +114,7 @@ class MainFrame : public wxFrame
 
         void OnEditUndo(wxCommandEvent& event);
         void OnEditRedo(wxCommandEvent& event);
+        void OnEditClearHistory(wxCommandEvent& event);
         void OnEditCopy(wxCommandEvent& event);
         void OnEditCut(wxCommandEvent& event);
         void OnEditPaste(wxCommandEvent& event);
@@ -168,6 +169,8 @@ class MainFrame : public wxFrame
         void OnSearchFindNext(wxCommandEvent& event);
         void OnSearchReplace(wxCommandEvent& event);
         void OnSearchGotoLine(wxCommandEvent& event);
+        void OnSearchGotoNextChanged(wxCommandEvent& event);
+        void OnSearchGotoPrevChanged(wxCommandEvent& event);
 
         void OnPluginsExecuteMenu(wxCommandEvent& event);
 
@@ -307,7 +310,7 @@ class MainFrame : public wxFrame
         EditorManager* m_pEdMan;
         ProjectManager* m_pPrjMan;
         LogManager* m_pMsgMan;
-        InfoPane *infoPane;
+        InfoPane *m_pInfoPane;
 
         wxToolBar* m_pToolbar;
         PluginToolbarsMap m_PluginsTools;
@@ -321,7 +324,6 @@ class MainFrame : public wxFrame
         bool m_StartupDone;
         bool m_InitiatedShutdown;
 
-        bool m_AutoHideLogs;
         int m_AutoHideLockCounter;
 
         wxString m_LastLayoutName;

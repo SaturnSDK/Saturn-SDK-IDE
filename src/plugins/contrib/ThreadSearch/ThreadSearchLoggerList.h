@@ -49,6 +49,9 @@ public:
 	/** Removes all items from logger. */
 	virtual void Clear();
 
+	/** Called on search begin to prepare logger. */
+	virtual void OnSearchBegin(const ThreadSearchFindData& findData);
+
 	/** Returns the logger window. */
 	virtual wxWindow* GetWindow();
 
@@ -77,13 +80,38 @@ protected:
 	  */
 	bool GetFileLineFromListEvent(wxListEvent& event, wxString& filepath, long &line);
 
+	/** IsLineResultLine
+	  * Return true if line is a result line. It is not the case for the
+	  * first line of a new search without deleting previous results.
+	  * @param index : item index in list control. If -1 is given (default
+	  * value), first selected line will be processed.
+	  * @return true if line is usable.
+	  */
+	bool IsLineResultLine(long index = -1);
+
 	/** Dynamic events connection. */
 	virtual void ConnectEvents(wxEvtHandler* pEvtHandler);
 
 	/** Dynamic events disconnection. */
 	virtual void DisconnectEvents(wxEvtHandler* pEvtHandler);
 
+	/** Contextual menu event handler */
+	void OnLoggerListContextualMenu(wxContextMenuEvent& event);
+
+	/** Delete item menu event handler */
+	void OnDeleteListItem(wxCommandEvent& event);
+
+	/** Delete item menu event handler */
+	void OnDeleteAllListItems(wxCommandEvent& event);
+
+	/** Deletes an item from the List */
+	void DeleteListItem(long index);
+
+	/** Deletes all items from the List */
+	void DeleteListItems();
+
 	wxListCtrl* m_pListLog;
+	long        m_IndexOffset;
 };
 
 #endif // THREAD_SEARCH_LOGGER_LIST_H

@@ -304,13 +304,11 @@ void ScintillaWX::DoStartDrag() {
     if (dragText.Length()) {
         wxDropSource source(sci);
         wxTextDataObject data(dragText);
-        wxDragResult result;
-
         source.SetData(data);
-        dropWentOutside = true;
-        result = source.DoDragDrop(wxDrag_DefaultMove);
-        if (result == wxDragMove && dropWentOutside) ClearSelection();
-        inDragDrop = false;
+
+        inDragDrop = ddDragging;
+        source.DoDragDrop(wxDrag_DefaultMove);
+        inDragDrop = ddNone;
         SetDragPosition (invalidPosition);
     }
     pdoc->EndUndoAction();

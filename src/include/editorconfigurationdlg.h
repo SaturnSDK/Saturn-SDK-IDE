@@ -44,7 +44,6 @@ class EditorConfigurationDlg : public wxDialog
         void EndModal(int retCode);
     private:
         void OnPageChanged(wxListbookEvent& event);
-        void OnHighlightColour(wxCommandEvent& event);
         void AddPluginPanels();
         void UpdateListbookImages();
         void CreateColoursSample();
@@ -68,6 +67,7 @@ class EditorConfigurationDlg : public wxDialog
         AutoCompleteMap m_AutoCompMap;
         ConfigurationPanelsArray m_PluginPanels;
         wxString m_FontString; // This is to store font data temporarily
+        bool m_EnableChangebar; // remember whether changebar was enabled or not
 
         DECLARE_EVENT_TABLE()
 };

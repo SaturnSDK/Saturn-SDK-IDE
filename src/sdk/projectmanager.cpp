@@ -696,7 +696,7 @@ cbProject* ProjectManager::IsOpen(const wxString& filename)
 {
     if (filename.IsEmpty())
         return 0L;
-	wxString realFile = realpath(filename);
+    wxString realFile = realpath(filename);
     int count = m_pProjects->GetCount();
     for (int i = 0; i < count; ++i)
     {
@@ -2031,6 +2031,12 @@ void ProjectManager::OnRemoveFileFromProject(wxCommandEvent& event)
         {
             files.Add(prj->GetFile(i)->relativeFilename);
         }
+        if (files.Count()==0)
+        {
+            cbMessageBox(_("This project does not contain any files to remove."),
+                         _("Error"), wxICON_WARNING);
+            return;
+        }
         wxString msg;
         msg.Printf(_("Select files to remove from %s:"), prj->GetTitle().c_str());
         MultiSelectDlg dlg(0, files, false, msg);
@@ -2104,14 +2110,14 @@ void ProjectManager::OnSaveProject(wxCommandEvent& WXUNUSED(event))
     {
         if(cbProject* Project = ftd->GetProject())
         {
-    		//TODO : does it make sense TO not save project file while compiling ??
+            //TODO : does it make sense TO not save project file while compiling ??
             if(m_IsLoadingProject || Project->GetCurrentlyCompilingTarget())
-    		{
-			    wxBell();
+            {
+                wxBell();
             }
             else
             {
-			    SaveProject(Project);
+                SaveProject(Project);
             }
         }
     }
@@ -2143,13 +2149,13 @@ void ProjectManager::OnSaveFile(wxCommandEvent& WXUNUSED(event))
     wxTreeItemId sel = m_pTree->GetSelection();
     if(FileTreeData* ftd = (FileTreeData*)m_pTree->GetItemData(sel))
     {
-	    if(cbProject* Project = ftd->GetProject())
-    	{
-    	    if(ProjectFile* File = Project->GetFile(ftd->GetFileIndex()))
-    	    {
-    	    	Manager::Get()->GetEditorManager()->Save(File->file.GetFullPath());
-    	    }
-    	}
+        if(cbProject* Project = ftd->GetProject())
+        {
+            if(ProjectFile* File = Project->GetFile(ftd->GetFileIndex()))
+            {
+                Manager::Get()->GetEditorManager()->Save(File->file.GetFullPath());
+            }
+        }
     }
 } // end of OnSaveFile
 
@@ -2158,13 +2164,13 @@ void ProjectManager::OnCloseFile(wxCommandEvent& WXUNUSED(event))
     wxTreeItemId sel = m_pTree->GetSelection();
     if (FileTreeData* ftd = (FileTreeData*)m_pTree->GetItemData(sel))
     {
-	    if(cbProject* Project = ftd->GetProject())
-    	{
-    	    if(ProjectFile* File = Project->GetFile(ftd->GetFileIndex()))
-    	    {
-		        Manager::Get()->GetEditorManager()->Close(File->file.GetFullPath());
-    	    }
-    	}
+        if(cbProject* Project = ftd->GetProject())
+        {
+            if(ProjectFile* File = Project->GetFile(ftd->GetFileIndex()))
+            {
+                Manager::Get()->GetEditorManager()->Close(File->file.GetFullPath());
+            }
+        }
     }
 } // end of OnCloseFile
 

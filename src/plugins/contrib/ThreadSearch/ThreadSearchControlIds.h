@@ -23,6 +23,8 @@ enum eControlIds
 	idMenuViewThreadSearch,
 	idMenuSearchThreadSearch,
 	idMenuCtxThreadSearch,
+	idMenuCtxDeleteItem,
+	idMenuCtxDeleteAllItems,
 	idCboSearchExpr,
 	idChkSearchDirRecurse,
 	idChkSearchDirHidden,
@@ -47,7 +49,8 @@ enum eControlIds
 	idTmrListCtrlUpdate,
 	idWndLogger,
 	idChkShowMissingFilesError,
-	idChkShowCantOpenFileError
+	idChkShowCantOpenFileError,
+	idChkChkDeletePreviousResults
 };
 
 #endif // THREAD_SEARCH_CONTROL_IDS_H

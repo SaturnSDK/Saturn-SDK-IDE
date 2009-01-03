@@ -15,9 +15,9 @@
 * You should have received a copy of the GNU General Public License
 * along with wxSmith. If not, see <http://www.gnu.org/licenses/>.
 *
-* $Revision:$
-* $Id:$
-* $HeadURL:$
+* $Revision: 5332 $
+* $Id: ExpressionTester.cpp 5332 2008-12-10 22:12:57Z byo $
+* $HeadURL: https://mortenmacfly@svn.berlios.de/svnroot/repos/codeblocks/trunk/src/plugins/contrib/HexEditor/ExpressionTester.cpp $
 */
 
 #include "ExpressionTester.h"

@@ -123,6 +123,7 @@ ThreadSearch::ThreadSearch()
 			  m_ShowSearchControls(true),
 			  m_ShowDirControls(false),
 			  m_ShowCodePreview(true),
+			  m_DeletePreviousResults(true),
 			  m_LoggerType(ThreadSearchLoggerBase::TypeList),
 			  m_DisplayLogHeaders(true),
 			  m_DrawLogLines(false),
@@ -215,16 +216,16 @@ void ThreadSearch::OnRelease(bool appShutDown)
 	// Removes Thread search menu item from the View menu
 	RemoveMenuItems();
 
-	m_pToolbar = NULL;
+	m_pToolbar = 0;
 
-	if ( m_pThreadSearchView != NULL )
+	if ( m_pThreadSearchView != 0 )
 	{
 		m_pViewManager->RemoveViewFromManager();
 		m_pThreadSearchView->Destroy();
 	}
 
 	delete m_pViewManager;
-	m_pViewManager = NULL;
+	m_pViewManager = 0;
 }
 
 
@@ -273,7 +274,7 @@ void ThreadSearch::BuildMenu(wxMenuBar* menuBar)
 	//Append any items you need in the menu...
 	//NOTE: Be careful in here... The application's menubar is at your disposal.
 	size_t i;
-	int idx = menuBar->FindMenu(wxT("View"));
+	int idx = menuBar->FindMenu(wxT("&View"));
 	if (idx != wxNOT_FOUND)
 	{
 		wxMenu* menu = menuBar->GetMenu(idx);
@@ -298,7 +299,7 @@ void ThreadSearch::BuildMenu(wxMenuBar* menuBar)
 		}
 	}
 
-	idx = menuBar->FindMenu(wxT("Search"));
+	idx = menuBar->FindMenu(wxT("Sea&rch"));
 	if (idx != wxNOT_FOUND)
 	{
 		wxMenu* menu = menuBar->GetMenu(idx);
@@ -330,21 +331,21 @@ void ThreadSearch::RemoveMenuItems()
 {
 	// Removes 'Thread search' item from View and Search menu
 	wxMenuBar* menuBar = Manager::Get()->GetAppFrame()->GetMenuBar();
-	int idx = menuBar->FindMenu(wxT("View"));
+	int idx = menuBar->FindMenu(wxT("&View"));
 	if (idx != wxNOT_FOUND)
 	{
 		wxMenu* viewMenu = menuBar->GetMenu(idx);
-		if ( viewMenu != NULL )
+		if ( viewMenu != 0 )
 		{
 			viewMenu->Remove(idMenuViewThreadSearch);
 		}
 	}
 
-	idx = menuBar->FindMenu(wxT("Search"));
+	idx = menuBar->FindMenu(wxT("Sea&rch"));
 	if (idx != wxNOT_FOUND)
 	{
 		wxMenu* searchMenu = menuBar->GetMenu(idx);
-		if ( searchMenu != NULL )
+		if ( searchMenu != 0 )
 		{
 			searchMenu->Remove(idMenuSearchThreadSearch);
 		}
@@ -491,44 +492,45 @@ void ThreadSearch::LoadConfig(bool& showPanel, int& sashPosition,
 
     ConfigManager* pCfg = Manager::Get()->GetConfigManager(_T("ThreadSearch"));
 
-    m_FindData.SetMatchWord       (pCfg->ReadBool(wxT("/MatchWord"),          true));
-    m_FindData.SetStartWord       (pCfg->ReadBool(wxT("/StartWord"),          false));
-    m_FindData.SetMatchCase       (pCfg->ReadBool(wxT("/MatchCase"),          true));
-    m_FindData.SetRegEx           (pCfg->ReadBool(wxT("/RegEx"),              false));
-    m_FindData.SetHiddenSearch    (pCfg->ReadBool(wxT("/HiddenSearch"),       true));
-    m_FindData.SetRecursiveSearch (pCfg->ReadBool(wxT("/RecursiveSearch"),    true));
+    m_FindData.SetMatchWord       (pCfg->ReadBool(wxT("/MatchWord"),             true));
+    m_FindData.SetStartWord       (pCfg->ReadBool(wxT("/StartWord"),             false));
+    m_FindData.SetMatchCase       (pCfg->ReadBool(wxT("/MatchCase"),             true));
+    m_FindData.SetRegEx           (pCfg->ReadBool(wxT("/RegEx"),                 false));
+    m_FindData.SetHiddenSearch    (pCfg->ReadBool(wxT("/HiddenSearch"),          true));
+    m_FindData.SetRecursiveSearch (pCfg->ReadBool(wxT("/RecursiveSearch"),       true));
 
-    m_CtxMenuIntegration         = pCfg->ReadBool(wxT("/CtxMenuIntegration"), true);
-    m_UseDefValsForThreadSearch  = pCfg->ReadBool(wxT("/UseDefaultValues"),   true);
-    m_ShowSearchControls         = pCfg->ReadBool(wxT("/ShowSearchControls"), true);
-    m_ShowDirControls            = pCfg->ReadBool(wxT("/ShowDirControls"),    false);
-    m_ShowCodePreview            = pCfg->ReadBool(wxT("/ShowCodePreview"),    true);
-    m_DisplayLogHeaders          = pCfg->ReadBool(wxT("/DisplayLogHeaders"),  true);
-    m_DrawLogLines               = pCfg->ReadBool(wxT("/DrawLogLines"),       false);
+    m_CtxMenuIntegration         = pCfg->ReadBool(wxT("/CtxMenuIntegration"),    true);
+    m_UseDefValsForThreadSearch  = pCfg->ReadBool(wxT("/UseDefaultValues"),      true);
+    m_ShowSearchControls         = pCfg->ReadBool(wxT("/ShowSearchControls"),    true);
+    m_ShowDirControls            = pCfg->ReadBool(wxT("/ShowDirControls"),       false);
+    m_ShowCodePreview            = pCfg->ReadBool(wxT("/ShowCodePreview"),       true);
+    m_DeletePreviousResults      = pCfg->ReadBool(wxT("/DeletePreviousResults"), true);
+    m_DisplayLogHeaders          = pCfg->ReadBool(wxT("/DisplayLogHeaders"),     true);
+    m_DrawLogLines               = pCfg->ReadBool(wxT("/DrawLogLines"),          false);
 
-    showPanel                    = pCfg->ReadBool(wxT("/ShowPanel"),          true);
+    showPanel                    = pCfg->ReadBool(wxT("/ShowPanel"),             true);
 
-    m_FindData.SetScope           (pCfg->ReadInt (wxT("/Scope"),              ScopeProjectFiles));
+    m_FindData.SetScope           (pCfg->ReadInt (wxT("/Scope"),                 ScopeProjectFiles));
 
-    m_FindData.SetSearchPath      (pCfg->Read    (wxT("/DirPath"),            wxEmptyString));
-    m_FindData.SetSearchMask      (pCfg->Read    (wxT("/Mask"),               wxT("*.cpp;*.c;*.h")));
+    m_FindData.SetSearchPath      (pCfg->Read    (wxT("/DirPath"),               wxEmptyString));
+    m_FindData.SetSearchMask      (pCfg->Read    (wxT("/Mask"),                  wxT("*.cpp;*.c;*.h")));
 
-    sashPosition                 = pCfg->ReadInt(wxT("/SplitterPosn"),        0);
-    int splitterMode             = pCfg->ReadInt(wxT("/SplitterMode"),        wxSPLIT_VERTICAL);
+    sashPosition                 = pCfg->ReadInt(wxT("/SplitterPosn"),           0);
+    int splitterMode             = pCfg->ReadInt(wxT("/SplitterMode"),           wxSPLIT_VERTICAL);
     m_SplitterMode               = wxSPLIT_VERTICAL;
     if ( splitterMode == wxSPLIT_HORIZONTAL )
     {
     	m_SplitterMode = wxSPLIT_HORIZONTAL;
     }
 
-	int managerType              = pCfg->ReadInt(wxT("/ViewManagerType"),     ThreadSearchViewManagerBase::TypeMessagesNotebook);
+	int managerType              = pCfg->ReadInt(wxT("/ViewManagerType"),        ThreadSearchViewManagerBase::TypeMessagesNotebook);
 	mgrType                      = ThreadSearchViewManagerBase::TypeMessagesNotebook;
     if ( managerType == ThreadSearchViewManagerBase::TypeLayout )
     {
     	mgrType = ThreadSearchViewManagerBase::TypeLayout;
     }
 
-	int loggerType               = pCfg->ReadInt(wxT("/LoggerType"),          ThreadSearchLoggerBase::TypeList);
+	int loggerType               = pCfg->ReadInt(wxT("/LoggerType"),             ThreadSearchLoggerBase::TypeList);
 	m_LoggerType                 = ThreadSearchLoggerBase::TypeList;
     if ( loggerType == ThreadSearchLoggerBase::TypeTree )
     {
@@ -545,35 +547,36 @@ void ThreadSearch::SaveConfig(bool showPanel, int sashPosition,
 {
     ConfigManager* pCfg = Manager::Get()->GetConfigManager(_T("ThreadSearch"));
 
-    pCfg->Write(wxT("/MatchWord"),          m_FindData.GetMatchWord());
-    pCfg->Write(wxT("/StartWord"),          m_FindData.GetStartWord());
-    pCfg->Write(wxT("/MatchCase"),          m_FindData.GetMatchCase());
-    pCfg->Write(wxT("/RegEx"),              m_FindData.GetRegEx());
-    pCfg->Write(wxT("/HiddenSearch"),       m_FindData.GetHiddenSearch());
-    pCfg->Write(wxT("/RecursiveSearch"),    m_FindData.GetRecursiveSearch());
+    pCfg->Write(wxT("/MatchWord"),             m_FindData.GetMatchWord());
+    pCfg->Write(wxT("/StartWord"),             m_FindData.GetStartWord());
+    pCfg->Write(wxT("/MatchCase"),             m_FindData.GetMatchCase());
+    pCfg->Write(wxT("/RegEx"),                 m_FindData.GetRegEx());
+    pCfg->Write(wxT("/HiddenSearch"),          m_FindData.GetHiddenSearch());
+    pCfg->Write(wxT("/RecursiveSearch"),       m_FindData.GetRecursiveSearch());
 
-    pCfg->Write(wxT("/CtxMenuIntegration"), m_CtxMenuIntegration);
-    pCfg->Write(wxT("/UseDefaultValues"),   m_UseDefValsForThreadSearch);
-    pCfg->Write(wxT("/ShowSearchControls"), m_ShowSearchControls);
-    pCfg->Write(wxT("/ShowDirControls"),    m_ShowDirControls);
-    pCfg->Write(wxT("/ShowCodePreview"),    m_ShowCodePreview);
-    pCfg->Write(wxT("/DisplayLogHeaders"),  m_DisplayLogHeaders);
-    pCfg->Write(wxT("/DrawLogLines"),       m_DrawLogLines);
+    pCfg->Write(wxT("/CtxMenuIntegration"),    m_CtxMenuIntegration);
+    pCfg->Write(wxT("/UseDefaultValues"),      m_UseDefValsForThreadSearch);
+    pCfg->Write(wxT("/ShowSearchControls"),    m_ShowSearchControls);
+    pCfg->Write(wxT("/ShowDirControls"),       m_ShowDirControls);
+    pCfg->Write(wxT("/ShowCodePreview"),       m_ShowCodePreview);
+    pCfg->Write(wxT("/DeletePreviousResults"), m_DeletePreviousResults);
+    pCfg->Write(wxT("/DisplayLogHeaders"),     m_DisplayLogHeaders);
+    pCfg->Write(wxT("/DrawLogLines"),          m_DrawLogLines);
 
-    pCfg->Write(wxT("/ShowPanel"),          showPanel);
+    pCfg->Write(wxT("/ShowPanel"),             showPanel);
 
-    pCfg->Write(wxT("/Scope"),              m_FindData.GetScope());
+    pCfg->Write(wxT("/Scope"),                 m_FindData.GetScope());
 
-    pCfg->Write(wxT("/DirPath"),            m_FindData.GetSearchPath());
-    pCfg->Write(wxT("/Mask"),               m_FindData.GetSearchMask());
+    pCfg->Write(wxT("/DirPath"),               m_FindData.GetSearchPath());
+    pCfg->Write(wxT("/Mask"),                  m_FindData.GetSearchMask());
 
-    pCfg->Write(wxT("/SplitterPosn"),       sashPosition);
-    pCfg->Write(wxT("/SplitterMode"),       (int)m_SplitterMode);
-    pCfg->Write(wxT("/ViewManagerType"),    m_pViewManager->GetManagerType());
-    pCfg->Write(wxT("/LoggerType"),         m_LoggerType);
-    pCfg->Write(wxT("/FileSorting"),        m_FileSorting);
+    pCfg->Write(wxT("/SplitterPosn"),          sashPosition);
+    pCfg->Write(wxT("/SplitterMode"),          (int)m_SplitterMode);
+    pCfg->Write(wxT("/ViewManagerType"),       m_pViewManager->GetManagerType());
+    pCfg->Write(wxT("/LoggerType"),            m_LoggerType);
+    pCfg->Write(wxT("/FileSorting"),           m_FileSorting);
 
-    pCfg->Write(wxT("/SearchPatterns"),     searchPatterns);
+    pCfg->Write(wxT("/SearchPatterns"),        searchPatterns);
 }
 
 

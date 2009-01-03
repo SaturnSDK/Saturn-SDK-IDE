@@ -131,6 +131,7 @@ int idFilePrev = wxNewId();
 
 int idEditUndo = XRCID("idEditUndo");
 int idEditRedo = XRCID("idEditRedo");
+int idEditClearHistory = XRCID("idEditClearHistory");
 int idEditCopy = XRCID("idEditCopy");
 int idEditCut = XRCID("idEditCut");
 int idEditPaste = XRCID("idEditPaste");
@@ -216,6 +217,8 @@ int idSearchFindPrevious = XRCID("idSearchFindPrevious");
 int idSearchReplace = XRCID("idSearchReplace");
 int idSearchReplaceInFiles = XRCID("idSearchReplaceInFiles");
 int idSearchGotoLine = XRCID("idSearchGotoLine");
+int idSearchGotoNextChanged = XRCID("idSearchGotoNextChanged");
+int idSearchGotoPreviousChanged = XRCID("idSearchGotoPreviousChanged");
 
 int idSettingsEnvironment = XRCID("idSettingsEnvironment");
 int idSettingsGlobalUserVars = XRCID("idSettingsGlobalUserVars");
@@ -262,6 +265,7 @@ BEGIN_EVENT_TABLE(MainFrame, wxFrame)
 
     EVT_UPDATE_UI(idEditUndo, MainFrame::OnEditMenuUpdateUI)
     EVT_UPDATE_UI(idEditRedo, MainFrame::OnEditMenuUpdateUI)
+    EVT_UPDATE_UI(idEditClearHistory, MainFrame::OnEditMenuUpdateUI)
     EVT_UPDATE_UI(idEditCopy, MainFrame::OnEditMenuUpdateUI)
     EVT_UPDATE_UI(idEditCut, MainFrame::OnEditMenuUpdateUI)
     EVT_UPDATE_UI(idEditPaste, MainFrame::OnEditMenuUpdateUI)
@@ -295,6 +299,8 @@ BEGIN_EVENT_TABLE(MainFrame, wxFrame)
     EVT_UPDATE_UI(idSearchReplace, MainFrame::OnSearchMenuUpdateUI)
     EVT_UPDATE_UI(idSearchReplaceInFiles, MainFrame::OnSearchMenuUpdateUI)
     EVT_UPDATE_UI(idSearchGotoLine, MainFrame::OnSearchMenuUpdateUI)
+    EVT_UPDATE_UI(idSearchGotoNextChanged, MainFrame::OnSearchMenuUpdateUI)
+    EVT_UPDATE_UI(idSearchGotoPreviousChanged, MainFrame::OnSearchMenuUpdateUI)
 
     EVT_UPDATE_UI(idViewToolMain, MainFrame::OnViewMenuUpdateUI)
     EVT_UPDATE_UI(idViewLogManager, MainFrame::OnViewMenuUpdateUI)
@@ -345,6 +351,7 @@ BEGIN_EVENT_TABLE(MainFrame, wxFrame)
 
     EVT_MENU(idEditUndo,  MainFrame::OnEditUndo)
     EVT_MENU(idEditRedo,  MainFrame::OnEditRedo)
+    EVT_MENU(idEditClearHistory,  MainFrame::OnEditClearHistory)
     EVT_MENU(idEditCopy,  MainFrame::OnEditCopy)
     EVT_MENU(idEditCut,  MainFrame::OnEditCut)
     EVT_MENU(idEditPaste,  MainFrame::OnEditPaste)
@@ -409,6 +416,8 @@ BEGIN_EVENT_TABLE(MainFrame, wxFrame)
     EVT_MENU(idSearchReplace, MainFrame::OnSearchReplace)
     EVT_MENU(idSearchReplaceInFiles, MainFrame::OnSearchReplace)
     EVT_MENU(idSearchGotoLine, MainFrame::OnSearchGotoLine)
+    EVT_MENU(idSearchGotoNextChanged, MainFrame::OnSearchGotoNextChanged)
+    EVT_MENU(idSearchGotoPreviousChanged, MainFrame::OnSearchGotoPrevChanged)
 
     EVT_MENU(idViewLayoutSave, MainFrame::OnViewLayoutSave)
     EVT_MENU(idViewLayoutDelete, MainFrame::OnViewLayoutDelete)
@@ -453,13 +462,12 @@ MainFrame::MainFrame(wxWindow* parent)
        m_pEdMan(0L),
        m_pPrjMan(0L),
        m_pMsgMan(0L),
-       infoPane(0),
+       m_pInfoPane(0L),
        m_pToolbar(0L),
        m_ToolsMenu(0L),
        m_HelpPluginsMenu(0L),
        m_StartupDone(false), // one-time flag
        m_InitiatedShutdown(false),
-       m_AutoHideLogs(false),
        m_AutoHideLockCounter(0),
        m_LastLayoutIsTemp(false),
        m_pScriptConsole(0),
@@ -661,7 +669,8 @@ void MainFrame::CreateIDE()
 
 void MainFrame::SetupGUILogging()
 {
-    m_AutoHideLogs = Manager::Get()->GetConfigManager(_T("message_manager"))->ReadBool(_T("/auto_hide"), false);
+    // allow new docked windows to use be 3/4 of the available space, the default (0.3) is sometimes too small, especially for "Logs & others"
+    m_LayoutManager.SetDockSizeConstraint(0.75,0.75);
 
     int bottomH = Manager::Get()->GetConfigManager(_T("app"))->ReadInt(_T("/main_frame/layout/bottom_block_height"), 150);
     wxSize clientsize = GetClientSize();
@@ -670,8 +679,8 @@ void MainFrame::SetupGUILogging()
 
     if(!Manager::IsBatchBuild())
     {
-        infoPane = new InfoPane(this);
-        m_LayoutManager.AddPane(infoPane, wxAuiPaneInfo().
+        m_pInfoPane = new InfoPane(this);
+        m_LayoutManager.AddPane(m_pInfoPane, wxAuiPaneInfo().
                                   Name(wxT("MessagesPane")).Caption(_("Logs & others")).
                                   BestSize(wxSize(clientsize.GetWidth(), bottomH)).//MinSize(wxSize(50,50)).
                                   Bottom());
@@ -680,16 +689,16 @@ void MainFrame::SetupGUILogging()
 
         for(size_t i = LogManager::app_log; i < ::max_logs; ++i)
         {
-            if((log = mgr->Slot(i).GetLogger()->CreateControl(infoPane)))
-                infoPane->AddLogger(mgr->Slot(i).GetLogger(), log, mgr->Slot(i).title, mgr->Slot(i).icon);
+            if((log = mgr->Slot(i).GetLogger()->CreateControl(m_pInfoPane)))
+                m_pInfoPane->AddLogger(mgr->Slot(i).GetLogger(), log, mgr->Slot(i).title, mgr->Slot(i).icon);
         }
     }
     else
     {
         m_pBatchBuildDialog = new BatchLogWindow(this, _("Batch build"));
         wxSizer* s = new wxBoxSizer(wxVERTICAL);
-        infoPane = new InfoPane(m_pBatchBuildDialog);
-        s->Add(infoPane, 1, wxEXPAND);
+        m_pInfoPane = new InfoPane(m_pBatchBuildDialog);
+        s->Add(m_pInfoPane, 1, wxEXPAND);
         m_pBatchBuildDialog->SetSizer(s);
 
         // setting &g_null_log causes the app to crash on exit for some reason...
@@ -698,7 +707,7 @@ void MainFrame::SetupGUILogging()
     }
 
     mgr->NotifyUpdate();
-    infoPane->SetDropTarget(new wxMyFileDropTarget(this));
+    m_pInfoPane->SetDropTarget(new wxMyFileDropTarget(this));
 }
 
 
@@ -1111,7 +1120,7 @@ void MainFrame::LoadWindowState()
 
     // load manager and messages selected page
     Manager::Get()->GetProjectManager()->GetNotebook()->SetSelection(Manager::Get()->GetConfigManager(_T("app"))->ReadInt(_T("/main_frame/layout/left_block_selection"), 0));
-    infoPane->SetSelection(Manager::Get()->GetConfigManager(_T("app"))->ReadInt(_T("/main_frame/layout/bottom_block_selection"), 0));
+    m_pInfoPane->SetSelection(Manager::Get()->GetConfigManager(_T("app"))->ReadInt(_T("/main_frame/layout/bottom_block_selection"), 0));
 
 #ifndef __WXMAC__
     int x = 0;
@@ -1141,6 +1150,14 @@ void MainFrame::SaveWindowState()
 {
     DoCheckCurrentLayoutForChanges(false);
 
+    // first delete all previos layouts, otherwise they might remain
+    // if the new amount of layouts is less than the previous, because only the first layouts will be overwritten
+    wxArrayString subs = Manager::Get()->GetConfigManager(_T("app"))->EnumerateSubPaths(_T("/main_frame/layout"));
+    for (size_t i = 0; i < subs.GetCount(); ++i)
+    {
+        Manager::Get()->GetConfigManager(_T("app"))->DeleteSubPath(_T("/main_frame/layout/") + subs[i]);
+    }
+
     int count = 0;
     for (LayoutViewsMap::iterator it = m_LayoutViews.begin(); it != m_LayoutViews.end(); ++it)
     {
@@ -1154,7 +1171,7 @@ void MainFrame::SaveWindowState()
 
     // save manager and messages selected page
     Manager::Get()->GetConfigManager(_T("app"))->Write(_T("/main_frame/layout/left_block_selection"), Manager::Get()->GetProjectManager()->GetNotebook()->GetSelection());
-    Manager::Get()->GetConfigManager(_T("app"))->Write(_T("/main_frame/layout/bottom_block_selection"), infoPane->GetSelection());
+    Manager::Get()->GetConfigManager(_T("app"))->Write(_T("/main_frame/layout/bottom_block_selection"), m_pInfoPane->GetSelection());
 
     // save window size and position
     Manager::Get()->GetConfigManager(_T("app"))->Write(_T("/main_frame/layout/maximized"), IsMaximized());
@@ -1334,10 +1351,12 @@ void MainFrame::DoAddPluginToolbar(cbPlugin* plugin)
     {
         SetToolBar(0);
 
-#ifdef __WXMSW__
+#if defined __WXMSW__ && !wxCHECK_VERSION(2, 8, 9)
         // HACK: for all windows versions (including XP *without* using a manifest file),
         //       the best size for a toolbar is not correctly calculated by wxWidgets/wxAUI/whatever.
         //       so we try to help the situation a little. It's not perfect, but it works.
+        // not needed for versions >= 2.8.9: fixed in upstream, toolbars with standard-controls
+        // are much too large with it (at least on w2k).
         if (!UsesCommonControls6()) // all windows versions, including XP without a manifest file
         {
             // calculate the total width of all wxWindow* in the toolbar (if any)
@@ -1647,6 +1666,10 @@ void MainFrame::DoUpdateEditorStyle(wxFlatNotebook* target, const wxString& pref
             nbstyle = wxFNB_VC8;
             break;
 
+        case 4: // ff2
+            nbstyle = wxFNB_FF2;
+            break;
+
         default:
             nbstyle = 0;
             break;
@@ -1675,7 +1698,7 @@ void MainFrame::DoUpdateEditorStyle()
     wxFlatNotebook* fn = Manager::Get()->GetEditorManager()->GetNotebook();
     DoUpdateEditorStyle(fn, _T("editor"), wxFNB_MOUSE_MIDDLE_CLOSES_TABS | wxFNB_X_ON_TAB | wxFNB_NO_X_BUTTON);
 
-    fn = infoPane;
+    fn = m_pInfoPane;
     DoUpdateEditorStyle(fn, _T("message"), wxFNB_NO_X_BUTTON);
 
     fn = Manager::Get()->GetProjectManager()->GetNotebook();
@@ -2202,6 +2225,12 @@ void MainFrame::OnFileNewWhat(wxCommandEvent& event)
     if (project)
         wxSetWorkingDirectory(project->GetBasePath());
     cbEditor* ed = Manager::Get()->GetEditorManager()->New();
+    if(ed)
+    {
+        // initially start change-collection if configured on empty files
+        ed->GetControl()->SetChangeCollection(Manager::Get()->GetConfigManager(_T("editor"))->ReadBool(_T("/margin/use_changebar"), true));
+    }
+
     if (ed && ed->IsOK())
     {
         AddToRecentFilesHistory(ed->GetFilename());
@@ -2641,7 +2670,7 @@ void MainFrame::OnApplicationClose(wxCloseEvent& event)
         SaveWindowState();
 
     m_LayoutManager.DetachPane(Manager::Get()->GetProjectManager()->GetNotebook());
-    m_LayoutManager.DetachPane(infoPane);
+    m_LayoutManager.DetachPane(m_pInfoPane);
     m_LayoutManager.DetachPane(Manager::Get()->GetEditorManager()->GetNotebook());
 
     m_LayoutManager.UnInit();
@@ -2657,8 +2686,8 @@ void MainFrame::OnApplicationClose(wxCloseEvent& event)
 
     if (!Manager::IsBatchBuild())
     {
-        infoPane->Destroy();
-        infoPane = 0;
+        m_pInfoPane->Destroy();
+        m_pInfoPane = 0L;
     }
 
     Manager::Shutdown(); // Shutdown() is not Free(), Manager is automatically destroyed at exit
@@ -2711,6 +2740,13 @@ void MainFrame::OnEditRedo(wxCommandEvent& event)
     EditorBase* ed = Manager::Get()->GetEditorManager()->GetActiveEditor();
     if (ed)
         ed->Redo();
+}
+
+void MainFrame::OnEditClearHistory(wxCommandEvent& event)
+{
+    EditorBase* ed = Manager::Get()->GetEditorManager()->GetActiveEditor();
+    if (ed)
+        ed->ClearHistory();
 }
 
 void MainFrame::OnEditCopy(wxCommandEvent& event)
@@ -3643,6 +3679,24 @@ void MainFrame::OnSearchGotoLine(wxCommandEvent& event)
     }
 }
 
+void MainFrame::OnSearchGotoNextChanged(wxCommandEvent& event)
+{
+    cbEditor* ed = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
+    if(ed)
+    {
+        ed->GotoNextChanged();
+    }
+}
+
+void MainFrame::OnSearchGotoPrevChanged(wxCommandEvent& event)
+{
+    cbEditor* ed = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
+    if(ed)
+    {
+        ed->GotoPreviousChanged();
+    }
+}
+
 void MainFrame::OnHelpAbout(wxCommandEvent& WXUNUSED(event))
 {
     dlgAbout* dlg = new dlgAbout(this);
@@ -3696,6 +3750,7 @@ void MainFrame::OnFileMenuUpdateUI(wxUpdateUIEvent& event)
     if (m_pToolbar)
     {
         m_pToolbar->EnableTool(idFileSave, ed && ed->GetModified());
+        m_pToolbar->EnableTool(idFileSaveAllFiles, canSaveFiles);
         m_pToolbar->EnableTool(idFileSaveAll, canSaveAll);
         m_pToolbar->EnableTool(idFilePrint, Manager::Get()->GetEditorManager() && Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor());
     }
@@ -3741,6 +3796,7 @@ void MainFrame::OnEditMenuUpdateUI(wxUpdateUIEvent& event)
 
     mbar->Enable(idEditUndo, canUndo);
     mbar->Enable(idEditRedo, canRedo);
+    mbar->Enable(idEditClearHistory, canUndo || canRedo);
     mbar->Enable(idEditCut, canCut);
     mbar->Enable(idEditCopy, hasSel);
     mbar->Enable(idEditPaste, canPaste);
@@ -3818,7 +3874,7 @@ void MainFrame::OnViewMenuUpdateUI(wxUpdateUIEvent& event)
     bool manVis = m_LayoutManager.GetPane(Manager::Get()->GetProjectManager()->GetNotebook()).IsShown();
 
     mbar->Check(idViewManager, manVis);
-    mbar->Check(idViewLogManager, m_LayoutManager.GetPane(infoPane).IsShown());
+    mbar->Check(idViewLogManager, m_LayoutManager.GetPane(m_pInfoPane).IsShown());
     mbar->Check(idViewStatusbar, GetStatusBar() && GetStatusBar()->IsShown());
     mbar->Check(idViewScriptConsole, m_LayoutManager.GetPane(m_pScriptConsole).IsShown());
     mbar->Check(idViewFullScreen, IsFullScreen());
@@ -3854,12 +3910,23 @@ void MainFrame::OnSearchMenuUpdateUI(wxUpdateUIEvent& event)
         return;
     }
     cbEditor* ed = Manager::Get()->GetEditorManager() ? Manager::Get()->GetEditorManager()->GetBuiltinEditor(Manager::Get()->GetEditorManager()->GetActiveEditor()) : 0;
+
+    bool enableGotoChanged = false;
+
+    if(ed)
+    {
+        enableGotoChanged = Manager::Get()->GetConfigManager(_T("editor"))->ReadBool(_T("/margin/use_changebar"), true) && (ed->CanUndo() || ed->CanRedo());
+    }
+
     wxMenuBar* mbar = GetMenuBar();
 
     // 'Find' and 'Replace' are always enabled for (find|replace)-in-files
     mbar->Enable(idSearchFindNext, ed);
     mbar->Enable(idSearchFindPrevious, ed);
     mbar->Enable(idSearchGotoLine, ed);
+    mbar->Enable(idSearchGotoNextChanged, enableGotoChanged);
+    mbar->Enable(idSearchGotoPreviousChanged, enableGotoChanged);
+
 
 //    if (m_pToolbar)
 //    {
@@ -3911,7 +3978,7 @@ void MainFrame::OnToggleBar(wxCommandEvent& event)
     if (event.GetId() == idViewManager)
         win = Manager::Get()->GetProjectManager()->GetNotebook();
     else if (event.GetId() == idViewLogManager)
-        win = infoPane;
+        win = m_pInfoPane;
     else if (event.GetId() == idViewToolMain)
         win = m_pToolbar;
     else
@@ -3927,6 +3994,10 @@ void MainFrame::OnToggleBar(wxCommandEvent& event)
 
     if (win)
     {
+        // use last visible size as BestSize, Logs & others does no longer "forget" it's size
+        if (!event.IsChecked())
+             m_LayoutManager.GetPane(win).BestSize(win->GetSize());
+
         m_LayoutManager.GetPane(win).Show(event.IsChecked());
         DoUpdateLayout();
     }
@@ -4227,12 +4298,12 @@ void MainFrame::OnAddLogWindow(CodeBlocksLogEvent& event)
         return;
     wxWindow* p = event.window;
     if (p)
-        infoPane->AddNonLogger(p, event.title, event.icon);
+        m_pInfoPane->AddNonLogger(p, event.title, event.icon);
     else
     {
-        p = event.logger->CreateControl(infoPane);
+        p = event.logger->CreateControl(m_pInfoPane);
         if(p)
-            infoPane->AddLogger(event.logger, p, event.title, event.icon);
+            m_pInfoPane->AddLogger(event.logger, p, event.title, event.icon);
     }
     Manager::Get()->GetLogManager()->NotifyUpdate();
 }
@@ -4242,51 +4313,53 @@ void MainFrame::OnRemoveLogWindow(CodeBlocksLogEvent& event)
     if (Manager::IsAppShuttingDown())
         return;
     if (event.window)
-        infoPane->RemoveNonLogger(event.window);
+        m_pInfoPane->RemoveNonLogger(event.window);
     else
-        infoPane->DeleteLogger(event.logger);
+        m_pInfoPane->DeleteLogger(event.logger);
 }
 
 void MainFrame::OnSwitchToLogWindow(CodeBlocksLogEvent& event)
 {
     if (event.window)
-        infoPane->ShowNonLogger(event.window);
+        m_pInfoPane->ShowNonLogger(event.window);
     else if (event.logger)
-        infoPane->Show(event.logger);
+        m_pInfoPane->Show(event.logger);
 }
 
 void MainFrame::OnShowLogManager(CodeBlocksLogEvent& event)
 {
-    if (!m_AutoHideLogs)
+    if (!Manager::Get()->GetConfigManager(_T("message_manager"))->ReadBool(_T("/auto_hide"), false))
         return;
 
-    m_LayoutManager.GetPane(infoPane).Show(true);
+    m_LayoutManager.GetPane(m_pInfoPane).Show(true);
     DoUpdateLayout();
 }
 
 void MainFrame::OnHideLogManager(CodeBlocksLogEvent& event)
 {
-    if (!m_AutoHideLogs || m_AutoHideLockCounter > 0)
+    if (!Manager::Get()->GetConfigManager(_T("message_manager"))->ReadBool(_T("/auto_hide"), false) ||
+           m_AutoHideLockCounter > 0)
         return;
 
-    m_LayoutManager.GetPane(infoPane).Show(false);
+    m_LayoutManager.GetPane(m_pInfoPane).Show(false);
     DoUpdateLayout();
 }
 
 void MainFrame::OnLockLogManager(CodeBlocksLogEvent& event)
 {
-    if (!m_AutoHideLogs)
+    if (!Manager::Get()->GetConfigManager(_T("message_manager"))->ReadBool(_T("/auto_hide"), false))
         return;
     ++m_AutoHideLockCounter;
 }
 
 void MainFrame::OnUnlockLogManager(CodeBlocksLogEvent& event)
 {
-    if (!m_AutoHideLogs && m_AutoHideLockCounter > 0)
+    if (!Manager::Get()->GetConfigManager(_T("message_manager"))->ReadBool(_T("/auto_hide"), false) &&
+           m_AutoHideLockCounter > 0)
         return;
     if (--m_AutoHideLockCounter == 0)
     {
-        m_LayoutManager.GetPane(infoPane).Show(false);
+        m_LayoutManager.GetPane(m_pInfoPane).Show(false);
         DoUpdateLayout();
     }
 }

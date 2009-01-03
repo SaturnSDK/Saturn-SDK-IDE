@@ -299,7 +299,7 @@ void HelpPlugin::BuildMenu(wxMenuBar *menuBar)
 
     BuildHelpMenu();
 
-    int idx = menuBar->FindMenu(_("View"));
+    int idx = menuBar->FindMenu(_("&View"));
     if (idx != wxNOT_FOUND)
     {
         wxMenu* view = menuBar->GetMenu(idx);
@@ -361,7 +361,7 @@ void HelpPlugin::AddToHelpMenu(int id, const wxString &help, bool fromIni)
     return;
   }
 
-  int pos = m_pMenuBar->FindMenu(_("Help"));
+  int pos = m_pMenuBar->FindMenu(_("&Help"));
 
   if (pos != wxNOT_FOUND)
   {
