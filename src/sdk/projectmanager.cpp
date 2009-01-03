@@ -38,7 +38,9 @@
 #include <wx/utils.h>
 #include <wx/textdlg.h>
 #include <wx/progdlg.h>
-#include "wx/wxFlatNotebook/wxFlatNotebook.h"
+#include <wx/filedlg.h>
+#include <wx/choicdlg.h>
+#include <wx/aui/auibook.h>
 
 #include "incrementalselectlistdlg.h"
 #include "filegroupsandmasks.h"
@@ -157,6 +159,8 @@ BEGIN_EVENT_TABLE(ProjectManager, wxEvtHandler)
     EVT_TREE_ITEM_RIGHT_CLICK(ID_ProjectManager, ProjectManager::OnTreeItemRightClick)
     EVT_COMMAND_RIGHT_CLICK(ID_ProjectManager, ProjectManager::OnRightClick)
 
+    EVT_AUINOTEBOOK_TAB_RIGHT_UP(idNB, ProjectManager::OnTabContextMenu)
+
     EVT_MENU_RANGE(idOpenWith[0], idOpenWith[MAX_OPEN_WITH_ITEMS - 1], ProjectManager::OnOpenWith)
     EVT_MENU(idOpenWithInternal, ProjectManager::OnOpenWith)
     EVT_MENU(idNB_TabTop, ProjectManager::OnTabPosition)
@@ -216,14 +220,9 @@ ProjectManager::ProjectManager()
     m_isCheckingForExternallyModifiedProjects(false),
     m_CanSendWorkspaceChanged(false)
 {
-    m_pNotebook = new wxFlatNotebook(Manager::Get()->GetAppWindow(), idNB);
-    m_pNotebook->SetWindowStyleFlag(Manager::Get()->GetConfigManager(_T("app"))->ReadInt(_T("/environment/project_tabs_style"), wxFNB_NO_X_BUTTON));
-    m_pNotebook->SetImageList(new wxFlatNotebookImageList);
-
-    wxMenu* NBmenu = new wxMenu(); // deleted automatically by wxFlatNotebook
-    NBmenu->Append(idNB_TabTop, _("Tabs at top"));
-    NBmenu->Append(idNB_TabBottom, _("Tabs at bottom"));
-    m_pNotebook->SetRightClickMenu(NBmenu);
+    m_pNotebook = new wxAuiNotebook(Manager::Get()->GetAppWindow(), idNB, wxDefaultPosition, wxDefaultSize, wxAUI_NB_WINDOWLIST_BUTTON);
+    if (Manager::Get()->GetConfigManager(_T("app"))->ReadBool(_T("/environment/project_tabs_bottom"), false))
+        m_pNotebook->SetWindowStyleFlag(m_pNotebook->GetWindowStyleFlag() | wxAUI_NB_BOTTOM);
 
     m_InitialDir=wxFileName::GetCwd();
     m_pActiveProject = 0L;
@@ -272,7 +271,6 @@ ProjectManager::~ProjectManager()
     delete m_pImages;m_pImages = 0;
     delete m_pFileGroups;m_pFileGroups = 0;
 
-    delete m_pNotebook->GetImageList();
     m_pNotebook->Destroy();
 }
 
@@ -1413,7 +1411,7 @@ wxArrayInt ProjectManager::AskForMultiBuildTargetIndex(cbProject* project)
     for (int i = 0; i < count; ++i)
         array.Add(prj->GetBuildTarget(i)->GetTitle());
 
-    MultiSelectDlg dlg(0, array, false, _("Select the targets this file should belong to:"));
+    MultiSelectDlg dlg(0, array, true, _("Select the targets this file should belong to:"));
     PlaceWindow(&dlg);
     if (dlg.ShowModal() == wxID_OK)
         indices = dlg.GetSelectedIndices();
@@ -1646,16 +1644,25 @@ void ProjectManager::ConfigureProjectDependencies(cbProject* base)
 
 // events
 
+void ProjectManager::OnTabContextMenu(wxAuiNotebookEvent& event)
+{
+    wxMenu* NBmenu = new wxMenu();
+    NBmenu->Append(idNB_TabTop, _("Tabs at top"));
+    NBmenu->Append(idNB_TabBottom, _("Tabs at bottom"));
+    m_pNotebook->PopupMenu(NBmenu);
+    delete NBmenu;
+}
+
 void ProjectManager::OnTabPosition(wxCommandEvent& event)
 {
     long style = m_pNotebook->GetWindowStyleFlag();
-    style &= ~wxFNB_BOTTOM;
+    style &= ~wxAUI_NB_BOTTOM;
 
     if (event.GetId() == idNB_TabBottom)
-        style |= wxFNB_BOTTOM;
+        style |= wxAUI_NB_BOTTOM;
     m_pNotebook->SetWindowStyleFlag(style);
-    // (style & wxFNB_BOTTOM) saves info only about the the tabs position
-    Manager::Get()->GetConfigManager(_T("app"))->Write(_T("/environment/project_tabs_bottom"), (bool)(style & wxFNB_BOTTOM));
+    // (style & wxAUI_NB_BOTTOM) saves info only about the the tabs position
+    Manager::Get()->GetConfigManager(_T("app"))->Write(_T("/environment/project_tabs_bottom"), (bool)(style & wxAUI_NB_BOTTOM));
 }
 
 void ProjectManager::OnTreeBeginDrag(wxTreeEvent& event)
@@ -2039,7 +2046,7 @@ void ProjectManager::OnRemoveFileFromProject(wxCommandEvent& event)
         }
         wxString msg;
         msg.Printf(_("Select files to remove from %s:"), prj->GetTitle().c_str());
-        MultiSelectDlg dlg(0, files, false, msg);
+        MultiSelectDlg dlg(0, files, true, msg);
         PlaceWindow(&dlg);
         if (dlg.ShowModal() == wxID_OK)
         {

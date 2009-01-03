@@ -4,13 +4,12 @@ INCLUDES = $(WX_CXXFLAGS) \
 		-I$(top_srcdir)/src/include/wxscintilla/include \
 		-I$(top_srcdir)/src/plugins/contrib/codesnippets \
 		-I$(top_srcdir)/src/plugins/contrib/codesnippets/Search \
-		-I$(top_srcdir)/src/plugins/contrib/codesnippets/editor \
-        -I$(top_srcdir)/src/include/wxFlatNotebook/include
+		-I$(top_srcdir)/src/plugins/contrib/codesnippets/editor
 
 
 pluginlibdir = $(pkglibdir)/plugins
 
-##pluginlib_LTLIBRARIES = codesnippets 
+##pluginlib_LTLIBRARIES = codesnippets
 bin_PROGRAMS = codesnippets
 
 codesnippets_LDFLAGS = $(WX_GTK2_LIBS)

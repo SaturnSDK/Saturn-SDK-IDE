@@ -33,7 +33,6 @@
 			<Add directory="../../../include" />
 			<Add directory="../../../include/tinyxml" />
 			<Add directory="../../../include/wxscintilla/include" />
-			<Add directory="../../../include/wxFlatNotebook/include" />
 			<Add directory="../../../include/scripting/include" />
 			<Add directory="../../../include/scripting/sqplus" />
 			<Add directory="../../../include/scripting/squirrel" />

@@ -23,7 +23,7 @@
 #include <wx/clipbrd.h>
 #include <wx/taskbar.h>
 
-#include <wx/wxFlatNotebook/wxFlatNotebook.h>
+#include <wx/aui/auibook.h>
 #include <cbexception.h>
 #include <wx/debugrpt.h>
 #include <configmanager.h>

@@ -42,6 +42,7 @@
 #include <wx/progdlg.h>
 #include <wx/fontutil.h>
 #include <wx/tokenzr.h>
+#include <wx/aui/auibook.h>
 
 #include "editorcolourset.h"
 #include "editorconfigurationdlg.h"
@@ -53,8 +54,6 @@
 #include "searchresultslog.h"
 #include "projectfileoptionsdlg.h"
 #include "filegroupsandmasks.h"
-
-#include "wx/wxFlatNotebook/wxFlatNotebook.h"
 
 template<> EditorManager* Mgr<EditorManager>::instance = 0;
 template<> bool  Mgr<EditorManager>::isShutdown = false;
@@ -105,7 +104,6 @@ static const int idNBSwapHeaderSource = wxNewId();
 static const int idNBTabTop = wxNewId();
 static const int idNBTabBottom = wxNewId();
 static const int idNBProperties = wxNewId();
-static const int idNB = wxNewId();
 
 /** *******************************************************
   * struct EditorManagerInternalData                      *
@@ -133,10 +131,10 @@ struct EditorManagerInternalData
 BEGIN_EVENT_TABLE(EditorManager, wxEvtHandler)
     EVT_APP_STARTUP_DONE(EditorManager::OnAppDoneStartup)
     EVT_APP_START_SHUTDOWN(EditorManager::OnAppStartShutdown)
-    EVT_FLATNOTEBOOK_PAGE_CHANGED(ID_NBEditorManager, EditorManager::OnPageChanged)
-    EVT_FLATNOTEBOOK_PAGE_CHANGING(ID_NBEditorManager, EditorManager::OnPageChanging)
-    EVT_FLATNOTEBOOK_PAGE_CLOSING(ID_NBEditorManager, EditorManager::OnPageClosing)
-    EVT_FLATNOTEBOOK_CONTEXT_MENU(ID_NBEditorManager, EditorManager::OnPageContextMenu)
+    EVT_AUINOTEBOOK_PAGE_CHANGED(ID_NBEditorManager, EditorManager::OnPageChanged)
+    EVT_AUINOTEBOOK_PAGE_CHANGING(ID_NBEditorManager, EditorManager::OnPageChanging)
+    EVT_AUINOTEBOOK_PAGE_CLOSE(ID_NBEditorManager, EditorManager::OnPageClose)
+    EVT_AUINOTEBOOK_TAB_RIGHT_UP(ID_NBEditorManager, EditorManager::OnPageContextMenu)
     EVT_MENU(idNBTabSplitHorz, EditorManager::OnGenericContextMenuHandler)
     EVT_MENU(idNBTabSplitVert, EditorManager::OnGenericContextMenuHandler)
     EVT_MENU(idNBTabUnsplit, EditorManager::OnGenericContextMenuHandler)
@@ -163,8 +161,9 @@ EditorManager::EditorManager()
 {
     m_pData = new EditorManagerInternalData(this);
 
-    m_pNotebook = new wxFlatNotebook(Manager::Get()->GetAppWindow(), ID_NBEditorManager, wxDefaultPosition, wxDefaultSize, wxNO_FULL_REPAINT_ON_RESIZE | wxCLIP_CHILDREN);
-    m_pNotebook->SetWindowStyleFlag(Manager::Get()->GetConfigManager(_T("app"))->ReadInt(_T("/environment/editor_tabs_style"), wxFNB_DEFAULT_STYLE | wxFNB_MOUSE_MIDDLE_CLOSES_TABS));
+    m_pNotebook = new wxAuiNotebook(Manager::Get()->GetAppWindow(), ID_NBEditorManager, wxDefaultPosition, wxDefaultSize, wxAUI_NB_DEFAULT_STYLE | wxAUI_NB_WINDOWLIST_BUTTON | wxNO_FULL_REPAINT_ON_RESIZE | wxCLIP_CHILDREN);
+    if (Manager::Get()->GetConfigManager(_T("app"))->ReadBool(_T("/environment/editor_tabs_bottom"), false))
+        m_pNotebook->SetWindowStyleFlag(m_pNotebook->GetWindowStyleFlag() | wxAUI_NB_BOTTOM);
 
     Manager::Get()->GetLogManager()->DebugLog(_T("Initialize EditColourSet ....."));
     m_Theme = new EditorColourSet(Manager::Get()->GetConfigManager(_T("editor"))->Read(_T("/colour_sets/active_colour_set"), COLORSET_DEFAULT));
@@ -533,13 +532,11 @@ void EditorManager::SetActiveEditor(EditorBase* ed)
 {
     if (!ed)
         return;
-    if (ed->IsBuiltinEditor())
-        static_cast<cbEditor*>(ed)->GetControl()->SetFocus();
     int page = FindPageFromEditor(ed);
     if (page != -1)
-    {
         m_pNotebook->SetSelection(page);
-    }
+    if (ed->IsBuiltinEditor())
+        static_cast<cbEditor*>(ed)->GetControl()->SetFocus();
 }
 
 cbEditor* EditorManager::New(const wxString& newFileName)
@@ -602,7 +599,7 @@ void EditorManager::RemoveEditorBase(EditorBase* eb, bool deleteObject)
     //    LOGSTREAM << wxString::Format(_T("RemoveEditorBase(): ed=%p, title=%s\n"), eb, eb ? eb->GetFilename().c_str() : _T(""));
     int page = FindPageFromEditor(eb);
    if (page != -1 && !Manager::isappShuttingDown())
-        m_pNotebook->RemovePage(page, false);
+        m_pNotebook->RemovePage(page);
 
     //    if (deleteObject)
     //        eb->Destroy();
@@ -730,7 +727,7 @@ bool EditorManager::Close(EditorBase* editor,bool dontsave)
                     return false;
             wxString filename = editor->GetFilename();
             //            LOGSTREAM << wxString::Format(_T("Close(): ed=%p, title=%s\n"), editor, editor ? editor->GetTitle().c_str() : _T(""));
-            m_pNotebook->DeletePage(idx, true);
+            m_pNotebook->DeletePage(idx);
         }
     }
     return true;
@@ -2441,7 +2438,7 @@ void EditorManager::OnGenericContextMenuHandler(wxCommandEvent& event)
         ed->Unsplit();
 }
 
-void EditorManager::OnPageChanged(wxFlatNotebookEvent& event)
+void EditorManager::OnPageChanged(wxAuiNotebookEvent& event)
 {
     EditorBase* eb = static_cast<EditorBase*>(m_pNotebook->GetPage(event.GetSelection()));
     //    LOGSTREAM << wxString::Format(_T("OnPageChanged(): ed=%p, title=%s\n"), eb, eb ? eb->GetTitle().c_str() : _T(""));
@@ -2454,26 +2451,33 @@ void EditorManager::OnPageChanged(wxFlatNotebookEvent& event)
     event.Skip(); // allow others to process it too
 }
 
-void EditorManager::OnPageChanging(wxFlatNotebookEvent& event)
+void EditorManager::OnPageChanging(wxAuiNotebookEvent& event)
 {
-    EditorBase* eb = static_cast<EditorBase*>(m_pNotebook->GetPage(event.GetOldSelection()));
-    //    LOGSTREAM << wxString::Format(_T("OnPageChanging(): ed=%p, title=%s\n"), eb, eb ? eb->GetTitle().c_str() : _T(""));
-    CodeBlocksEvent evt(cbEVT_EDITOR_DEACTIVATED, -1, 0, eb);
-    Manager::Get()->GetPluginManager()->NotifyPlugins(evt);
-
+    int old_sel = event.GetOldSelection();
+    if (old_sel != -1)
+    {
+        EditorBase* eb = static_cast<EditorBase*>(m_pNotebook->GetPage(old_sel));
+        //    LOGSTREAM << wxString::Format(_T("OnPageChanging(): ed=%p, title=%s\n"), eb, eb ? eb->GetTitle().c_str() : _T(""));
+        CodeBlocksEvent evt(cbEVT_EDITOR_DEACTIVATED, -1, 0, eb);
+        Manager::Get()->GetPluginManager()->NotifyPlugins(evt);
+    }
     event.Skip(); // allow others to process it too
 }
 
-void EditorManager::OnPageClosing(wxFlatNotebookEvent& event)
+void EditorManager::OnPageClose(wxAuiNotebookEvent& event)
 {
-    EditorBase* eb = static_cast<EditorBase*>(m_pNotebook->GetPage(event.GetSelection()));
-    //    LOGSTREAM << wxString::Format(_T("OnPageClosing(): ed=%p, title=%s\n"), eb, eb ? eb->GetTitle().c_str() : _T(""));
-    if (!QueryClose(eb))
-        event.Veto();
+    int sel = event.GetSelection();
+    if (sel != -1)
+    {
+        EditorBase* eb = static_cast<EditorBase*>(m_pNotebook->GetPage(sel));
+        //    LOGSTREAM << wxString::Format(_T("OnPageClosing(): ed=%p, title=%s\n"), eb, eb ? eb->GetTitle().c_str() : _T(""));
+        if (!QueryClose(eb))
+            event.Veto();
+    }
     event.Skip(); // allow others to process it too
 }
 
-void EditorManager::OnPageContextMenu(wxFlatNotebookEvent& event)
+void EditorManager::OnPageContextMenu(wxAuiNotebookEvent& event)
 {
     if (event.GetSelection() == -1)
         return;
@@ -2564,13 +2568,13 @@ void EditorManager::OnSwapHeaderSource(wxCommandEvent& event)
 void EditorManager::OnTabPosition(wxCommandEvent& event)
 {
     long style = m_pNotebook->GetWindowStyleFlag();
-    style &= ~wxFNB_BOTTOM;
+    style &= ~wxAUI_NB_BOTTOM;
 
     if (event.GetId() == idNBTabBottom)
-        style |= wxFNB_BOTTOM;
+        style |= wxAUI_NB_BOTTOM;
     m_pNotebook->SetWindowStyleFlag(style);
-    // (style & wxFNB_BOTTOM) saves info only about the the tabs position
-    Manager::Get()->GetConfigManager(_T("app"))->Write(_T("/environment/editor_tabs_bottom"), (bool)(style & wxFNB_BOTTOM));
+    // (style & wxAUI_NB_BOTTOM) saves info only about the the tabs position
+    Manager::Get()->GetConfigManager(_T("app"))->Write(_T("/environment/editor_tabs_bottom"), (bool)(style & wxAUI_NB_BOTTOM));
 }
 
 void EditorManager::OnProperties(wxCommandEvent& event)

@@ -8,6 +8,7 @@
 
 #include <map>
 
+#include <wx/aui/aui.h> // wxAuiManager
 #include <wx/toolbar.h>
 #include <wx/docview.h> // for wxFileHistory
 #include <wx/notebook.h>
@@ -18,9 +19,6 @@
 #include "cbplugin.h"
 #include "sdk_events.h"
 #include "scripting/bindings/sc_base_types.h"
-
-// wxAUI
-#include "aui_compat.h"
 
 WX_DECLARE_HASH_MAP(int, wxString, wxIntegerHash, wxIntegerEqual, PluginIDsMap);
 WX_DECLARE_HASH_MAP(cbPlugin*, wxToolBar*, wxPointerHash, wxPointerEqual, PluginToolbarsMap);
@@ -38,7 +36,7 @@ struct CommentToken {
 extern int idStartHerePageLink;
 extern int idStartHerePageVarSubst;
 
-class wxFlatNotebook;
+class wxAuiNotebook;
 class InfoPane;
 class wxGauge;
 
@@ -190,6 +188,7 @@ class MainFrame : public wxFrame
         void OnToggleBar(wxCommandEvent& event);
         void OnToggleStatusBar(wxCommandEvent& event);
         void OnFocusEditor(wxCommandEvent& event);
+        void OnSwitchTabs(wxCommandEvent& event);
         void OnToggleFullScreen(wxCommandEvent& event);
 
         // plugin events
@@ -288,7 +287,7 @@ class MainFrame : public wxFrame
         void DoUpdateLayout();
         void DoUpdateLayoutColours();
         void DoUpdateEditorStyle();
-        void DoUpdateEditorStyle(wxFlatNotebook* target, const wxString& prefix, long defaultStyle);
+        void DoUpdateEditorStyle(wxAuiNotebook* target, const wxString& prefix, long defaultStyle);
 
         void ShowHideStartPage(bool forceHasProject = false);
         void ShowHideScriptConsole();

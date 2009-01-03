@@ -2,11 +2,11 @@ AM_CPPFLAGS = -DWXMAKINGLIB_PROPGRID
 
 INCLUDES = $(WX_CXXFLAGS) \
 		-I$(top_srcdir)/src/include \
-		-I$(top_srcdir)/src/include/wxFlatNotebook/include \
 		-I$(top_srcdir)/src/include/wxscintilla/include \
 		-I$(top_srcdir)/src/plugins/contrib/wxSmith \
 		-I$(top_srcdir)/src/plugins/contrib/wxSmith/propgrid/contrib/include \
 		-I$(srcdir)/wxchart/wxchart-1.0/include \
+		-I$(srcdir)/wxflatnotebook/wxFlatNotebook/include \
 		-I$(srcdir)/wxthings/wxthings/include
 
 pluginlibdir = $(pkglibdir)/plugins
@@ -54,9 +54,9 @@ libwxsmithcontribitems_la_SOURCES = \
 ./wxchart/wxchart-1.0/src/chartctrl.cpp \
 ./wxchart/wxchart-1.0/src/yaxis.cpp \
 ./wxchart/wxschart.cpp \
+./wxflatnotebook/wxsFlatNotebook.cpp \
 ./wxthings/wxthings/src/toggle.cpp \
 ./wxthings/wxscustombutton.cpp \
-./wxflatnotebook/wxsFlatNotebook.cpp \
 ./wxSmithContribItems.cpp
 
 noinst_HEADERS = \
@@ -82,8 +82,8 @@ noinst_HEADERS = \
 ./wxchart/wxchart-1.0/include/wx/xaxis.h \
 ./wxchart/wxchart-1.0/include/wx/chart.h \
 ./wxchart/wxchart-1.0/include/wx/chartpoints.h \
+./wxflatnotebook/wxsFlatNotebook.h \
 ./wxthings/wxthings/include/wx/things/toggle.h \
 ./wxthings/wxthings/include/wx/things/thingdef.h \
 ./wxthings/wxscustombutton.h \
-./wxflatnotebook/wxsFlatNotebook.h \
 ./wxSmithContribItems.h

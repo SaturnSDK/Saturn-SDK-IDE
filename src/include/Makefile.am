@@ -1,4 +1,4 @@
-SUBDIRS = scripting tinyxml wxscintilla wxFlatNotebook
+SUBDIRS = scripting tinyxml wxscintilla
 
 if PRECOMPILE_HEADERS
 BUILT_SOURCES = $(top_srcdir)/src/include/sdk_precomp.h.gch
@@ -11,8 +11,7 @@ INCLUDES = $(WX_CXXFLAGS) \
 			-I$(top_srcdir)/src/include/wxscintilla/include \
 			-I$(top_srcdir)/src/include/tinyxml \
 			-I$(top_srcdir)/src/include/scripting/include \
-			-I$(top_srcdir)/src/include/scripting/sqplus \
-			-I$(top_srcdir)/src/include/wxFlatNotebook/include
+			-I$(top_srcdir)/src/include/scripting/sqplus
 
 # Because we are not generating any programs/libraries with this makefile,
 # $(CXXCOMPILE) is empty.
