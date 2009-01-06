@@ -76,7 +76,7 @@ Description: wxSmith shared library
 
 Package: codeblocks-contrib
 Architecture: any
-Depends: codeblocks-contrib-common (= ${source:Version}), codeblocks (= ${binary:Version}), libwxsmithlib0 (= ${binary:Version}), libc6
+Depends: codeblocks-contrib-common (= ${source:Version}), codeblocks (= ${binary:Version}), libwxsmithlib0 (= ${binary:Version}), wxsmith-contrib-dev (= ${source:Version}), libc6
 Description: contrib plugins for Code::Blocks IDE
  This package extends Code::Blocks functionality a great deal with the included
  plugins. These are:
@@ -89,6 +89,7 @@ Description: contrib plugins for Code::Blocks IDE
     * Help
     * Keyboard shortcuts configuration
     * RAD gui-builder for wxWidgets (wxSmith)
+    * wxSmith contrib items
     * Selection of small games for relaxing between coding sessions! (BYOGames)
     * Autoversioning
     * ThreadSearch
@@ -163,6 +164,26 @@ Section: devel
 Conflicts: wxsmith-dev (<< ${source:Version})
 Description: wxSmith development files
  Contains the development headers for wxSmith (Code::Blocks plugin)
+ It's a svn-download and may contain bugs.
+ .
+ http://www.codeblocks.org
+
+Package: wxsmith-contrib-dev
+Architecture: any
+Section: libdevel
+Depends: wxsmith-contrib-headers (= ${source:Version})
+Description: wxSmith-Contrib development files
+ Contains the development libraries for the wxSmith contrib items
+ It's a svn-download and may contain bugs.
+ .
+ http://www.codeblocks.org
+
+Package: wxsmith-contrib-headers
+Architecture: all
+Section: devel
+Conflicts: wxsmith-contrib-dev (<< ${source:Version})
+Description: wxSmith development files
+ Contains the development headers for the wxSmith contrib items
  It's a svn-download and may contain bugs.
  .
  http://www.codeblocks.org

@@ -417,6 +417,7 @@ AC_CONFIG_FILES([Makefile
 	src/plugins/contrib/cb_koders/Makefile
 	src/plugins/contrib/codesnippets/Makefile
 	src/plugins/contrib/codesnippets/resources/Makefile
+	src/plugins/contrib/copystrings/Makefile
 	src/plugins/contrib/codestat/Makefile
 	src/plugins/contrib/codestat/resources/Makefile
 	src/plugins/contrib/dragscroll/Makefile
@@ -426,8 +427,6 @@ AC_CONFIG_FILES([Makefile
 	src/plugins/contrib/help_plugin/bzip2/Makefile
 	src/plugins/contrib/help_plugin/zlib/Makefile
 	src/plugins/contrib/keybinder/Makefile
-	src/plugins/contrib/lib_finder/Makefile
-	src/plugins/contrib/lib_finder/lib_finder/Makefile
 	src/plugins/contrib/profiler/Makefile
 	src/plugins/contrib/profiler/resources/Makefile
 	src/plugins/contrib/source_exporter/Makefile
@@ -450,7 +449,12 @@ AC_CONFIG_FILES([Makefile
 	src/plugins/contrib/wxSmith/wxwidgets/defitems/Makefile
 	src/plugins/contrib/wxSmith/wxwidgets/icons/Makefile
 	src/plugins/contrib/wxSmithContribItems/Makefile
-	src/plugins/contrib/wxSmithContribItems/wxflatnotebook//wxFlatNotebook/Makefile
+	src/plugins/contrib/wxSmithContribItems/wxsmith-contrib.pc
+	src/plugins/contrib/wxSmithContribItems/wxchart/wxchart-1.0/Makefile
+	src/plugins/contrib/wxSmithContribItems/wxflatnotebook/wxFlatNotebook/Makefile
+	src/plugins/contrib/wxSmithContribItems/wxthings/wxthings/Makefile
+	src/plugins/contrib/lib_finder/Makefile
+	src/plugins/contrib/lib_finder/lib_finder/Makefile
 	src/plugins/contrib/HexEditor/Makefile
 	src/plugins/contrib/IncrementalSearch/Makefile
 	src/mime/Makefile
