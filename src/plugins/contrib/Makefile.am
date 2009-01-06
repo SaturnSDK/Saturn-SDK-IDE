@@ -18,6 +18,10 @@ if BUILD_CODESNIPPETS
 MAYBE_CODESNIPPETS=codesnippets
 endif
 
+if BUILD_COPYSTRINGS
+MAYBE_COPYSTRINGS=copystrings
+endif
+
 if BUILD_CODESTAT
 MAYBE_CODESTAT=codestat
 endif
@@ -43,7 +47,7 @@ MAYBE_KEYBINDER=keybinder
 endif
 
 if BUILD_LIBFINDER
-MAYBE_LIBFINDER=lib_finder
+MAYBE_LIBFINDER=wxSmith wxSmithContribItems lib_finder
 endif
 
 if BUILD_PROFILER
@@ -71,7 +75,11 @@ MAYBE_VALGRIND=Valgrind
 endif
 
 if BUILD_WXSMITH
-MAYBE_WXSMITH=wxSmith wxSmithContribItems
+MAYBE_WXSMITH=wxSmith
+endif
+
+if BUILD_WXSMITHCONTRIB
+MAYBE_WXSMITHCONTRIB=wxSmith  wxSmithContribItems
 endif
 
 if BUILD_HEXEDITOR
@@ -86,6 +94,7 @@ SUBDIRS = $(MAYBE_AUTOVERSIONING) \
 		$(MAYBE_BROWSETRACKER) \
 		$(MAYBE_BYOGAMES) \
 		$(MAYBE_CBKODERS) \
+		$(MAYBE_COPYSTRINGS) \
 		$(MAYBE_CODESNIPPETS) \
 		$(MAYBE_CODESTAT) \
 		$(MAYBE_DRAGSCROLL) \
@@ -93,7 +102,6 @@ SUBDIRS = $(MAYBE_AUTOVERSIONING) \
 		$(MAYBE_HELP) \
 		$(MAYBE_HEADERFIXUP) \
 		$(MAYBE_KEYBINDER) \
-		$(MAYBE_LIBFINDER) \
 		$(MAYBE_PROFILER) \
 		$(MAYBE_EXPORTER) \
 		$(MAYBE_SYMTAB) \
@@ -101,6 +109,8 @@ SUBDIRS = $(MAYBE_AUTOVERSIONING) \
 		$(MAYBE_THREADSEARCH) \
 		$(MAYBE_VALGRIND) \
 		$(MAYBE_WXSMITH) \
+		$(MAYBE_WXSMITHCONTRIB) \
+		$(MAYBE_LIBFINDER) \
 		$(MAYBE_HEXEDITOR) \
 		$(MAYBE_INCSEARCH)
 
@@ -108,6 +118,7 @@ DIST_SUBDIRS = AutoVersioning \
 		BrowseTracker \
 		byogames \
 		cb_koders \
+		copystrings \
 		codesnippets \
 		codestat \
 		dragscroll \
@@ -115,7 +126,6 @@ DIST_SUBDIRS = AutoVersioning \
 		help_plugin \
 		headerfixup \
 		keybinder \
-		lib_finder \
 		profiler \
 		source_exporter \
 		symtab \
@@ -124,6 +134,7 @@ DIST_SUBDIRS = AutoVersioning \
 		Valgrind \
 		wxSmith \
 		wxSmithContribItems \
+		lib_finder \
 		HexEditor \
 		IncrementalSearch
 

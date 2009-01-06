@@ -73,6 +73,7 @@ pkgconfig_DATA = wxsmith.pc
 EXTRA_DIST = \
 $(srcdir)/*.cbp \
 $(srcdir)/*.bat \
+$(srcdir)/update \
 manifest.xml
 
 pkgdata_DATA = wxsmith.zip

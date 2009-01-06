@@ -1689,6 +1689,10 @@ void MainFrame::DoUpdateEditorStyle(wxAuiNotebook* target, const wxString& prefi
             target->SetArtProvider(new NbStyleVC71());
             break;
 
+        case 3: // Firefox 2 style
+            target->SetArtProvider(new NbStyleFF2());
+            break;
+
         default: // default style
             target->SetArtProvider(new wxAuiDefaultTabArt());
             break;

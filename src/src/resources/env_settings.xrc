@@ -375,6 +375,7 @@
 													<item>Default</item>
 													<item>Simple tabs</item>
 													<item>Microsoft (tm) Visual Studio 7.1</item>
+													<item>Firefox 2</item>
 												</content>
 												<style>wxCB_READONLY</style>
 											</object>

@@ -64,7 +64,7 @@
 			<Add directory="$(#CB.lib)" />
 			<Add directory="$(#CB)\devel" />
 			<Add directory="$(#CB)\base\tinyxml" />
-			<Add directory="..\wxSmithContribItems\wxflatnotebook" />
+			<Add directory="..\..\..\devel" />
 		</Linker>
 		<ExtraCommands>
 			<Add after="update.bat" />

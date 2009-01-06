@@ -425,7 +425,7 @@ ScbEditor* SEditorManager::GetBuiltinEditor(SEditorBase* eb)
 SEditorBase* SEditorManager::IsOpen(const wxString& filename)
 {
     wxString uFilename = UnixFilename(realpath(filename));
-    for (int i = 0; i < m_pNotebook->GetPageCount(); ++i)
+    for (size_t i = 0; i < m_pNotebook->GetPageCount(); ++i)
     {
         SEditorBase* eb = InternalGetEditorBase(i);
         if (!eb)
@@ -454,7 +454,7 @@ void SEditorManager::SetColourSet(SEditorColourSet* theme)
     //-m_Theme = new EditorColourSet(*theme);
     m_Theme = new SEditorColourSet(*theme);
 
-    for (int i = 0; i < m_pNotebook->GetPageCount(); ++i)
+    for (size_t i = 0; i < m_pNotebook->GetPageCount(); ++i)
     {
         ScbEditor* ed = InternalGetBuiltinEditor(i);
         if (ed)
@@ -648,7 +648,7 @@ void SEditorManager::RemoveEditorBase(SEditorBase* eb, bool deleteObject)
 
 bool SEditorManager::UpdateSnippetFiles(cbProject* project)
 {
-    for (int i = 0; i < m_pNotebook->GetPageCount(); ++i)
+    for (size_t i = 0; i < m_pNotebook->GetPageCount(); ++i)
     {
         ScbEditor* ed = InternalGetBuiltinEditor(i);
         if (!ed)
@@ -687,7 +687,7 @@ bool SEditorManager::CloseAllExcept(SEditorBase* editor,bool dontsave)
 {
     if(!dontsave)
     {
-        for (int i = 0; i < m_pNotebook->GetPageCount(); ++i)
+        for (size_t i = 0; i < m_pNotebook->GetPageCount(); ++i)
         {
             SEditorBase* eb = InternalGetEditorBase(i);
             if(eb && eb != editor && !QueryClose(eb))
@@ -743,7 +743,7 @@ bool SEditorManager::QueryClose(SEditorBase *ed)
 
 int SEditorManager::FindPageFromEditor(SEditorBase* eb)
 {
-    for (int i = 0; i < m_pNotebook->GetPageCount(); ++i)
+    for (size_t i = 0; i < m_pNotebook->GetPageCount(); ++i)
     {
         if (m_pNotebook->GetPage(i) == eb)
             return i;
@@ -842,7 +842,7 @@ bool SEditorManager::SaveActiveAs()
 
 bool SEditorManager::SaveAll()
 {
-    for (int i = 0; i < m_pNotebook->GetPageCount(); ++i)
+    for (size_t i = 0; i < m_pNotebook->GetPageCount(); ++i)
     {
         SEditorBase* ed = InternalGetEditorBase(i);
         if (ed && ed->GetModified() && !ed->Save())
@@ -871,7 +871,7 @@ void SEditorManager::Print(PrintScope ps, PrintColourMode pcm, bool line_numbers
     {
     case psAllOpenEditors:
         {
-            for (int i = 0; i < m_pNotebook->GetPageCount(); ++i)
+            for (size_t i = 0; i < m_pNotebook->GetPageCount(); ++i)
             {
                 ScbEditor* ed = InternalGetBuiltinEditor(i);
                 if (ed)
@@ -897,7 +897,7 @@ void SEditorManager::CheckForExternallyModifiedFiles()
 
     bool reloadAll = false; // flag to stop bugging the user
     wxArrayString failedFiles; // list of files failed to reload
-    for (int i = 0; i < m_pNotebook->GetPageCount(); ++i)
+    for (size_t i = 0; i < m_pNotebook->GetPageCount(); ++i)
     {
         ScbEditor* ed = InternalGetBuiltinEditor(i);
         bool b_modified = false;
@@ -1704,7 +1704,7 @@ int SEditorManager::ReplaceInFiles(cbFindReplaceData* data)
     else if (data->scope == 1) // find in open files
     {
         // fill the search list with the open files
-        for (int i = 0; i < m_pNotebook->GetPageCount(); ++i)
+        for (size_t i = 0; i < m_pNotebook->GetPageCount(); ++i)
         {
             ScbEditor* ed = InternalGetBuiltinEditor(i);
             if (ed)
@@ -2253,7 +2253,7 @@ int SEditorManager::FindInFiles(cbFindReplaceData* data)
     else if (data->scope == 1) // find in open files
     {
         // fill the search list with the open files
-        for (int i = 0; i < m_pNotebook->GetPageCount(); ++i)
+        for (size_t i = 0; i < m_pNotebook->GetPageCount(); ++i)
         {
             ScbEditor* ed = InternalGetBuiltinEditor(i);
             if (ed)

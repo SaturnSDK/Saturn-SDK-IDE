@@ -127,16 +127,12 @@
 		<Unit filename="editor/prefs.cpp" />
 		<Unit filename="editor/prefs.h" />
 		<Unit filename="editor/scbeditor.cpp" />
-		<Unit filename="editor/scbeditor.cpp.bak" />
 		<Unit filename="editor/scbeditor.h" />
 		<Unit filename="editor/seditorbase.cpp" />
-		<Unit filename="editor/seditorbase.cpp.bak" />
 		<Unit filename="editor/seditorbase.h" />
 		<Unit filename="editor/seditorcolourset.cpp" />
-		<Unit filename="editor/seditorcolourset.cpp.bak" />
 		<Unit filename="editor/seditorcolourset.h" />
 		<Unit filename="editor/seditormanager.cpp" />
-		<Unit filename="editor/seditormanager.cpp.bak" />
 		<Unit filename="editor/seditormanager.h" />
 		<Unit filename="editor/sprintdlg.cpp" />
 		<Unit filename="editor/sprintdlg.h" />

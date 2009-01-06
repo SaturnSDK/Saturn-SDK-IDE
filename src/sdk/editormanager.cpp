@@ -212,7 +212,7 @@ void EditorManager::Configure()
     if (dlg.ShowModal() == wxID_OK)
     {
         // tell all open editors to re-create their styles
-        for (int i = 0; i < m_pNotebook->GetPageCount(); ++i)
+        for (size_t i = 0; i < m_pNotebook->GetPageCount(); ++i)
         {
             cbEditor* ed = InternalGetBuiltinEditor(i);
             if (ed)
@@ -383,7 +383,7 @@ cbEditor* EditorManager::GetBuiltinEditor(EditorBase* eb)
 EditorBase* EditorManager::IsOpen(const wxString& filename)
 {
     wxString uFilename = UnixFilename(realpath(filename));
-    for (int i = 0; i < m_pNotebook->GetPageCount(); ++i)
+    for (size_t i = 0; i < m_pNotebook->GetPageCount(); ++i)
     {
         EditorBase* eb = InternalGetEditorBase(i);
         if (!eb)
@@ -411,7 +411,7 @@ void EditorManager::SetColourSet(EditorColourSet* theme)
     // copy locally
     m_Theme = new EditorColourSet(*theme);
 
-    for (int i = 0; i < m_pNotebook->GetPageCount(); ++i)
+    for (size_t i = 0; i < m_pNotebook->GetPageCount(); ++i)
     {
         cbEditor* ed = InternalGetBuiltinEditor(i);
         if (ed)
@@ -607,7 +607,7 @@ void EditorManager::RemoveEditorBase(EditorBase* eb, bool deleteObject)
 
 bool EditorManager::UpdateProjectFiles(cbProject* project)
 {
-    for (int i = 0; i < m_pNotebook->GetPageCount(); ++i)
+    for (size_t i = 0; i < m_pNotebook->GetPageCount(); ++i)
     {
         cbEditor* ed = InternalGetBuiltinEditor(i);
         if (!ed)
@@ -646,7 +646,7 @@ bool EditorManager::CloseAllExcept(EditorBase* editor,bool dontsave)
 {
     if(!dontsave)
     {
-        for (int i = 0; i < m_pNotebook->GetPageCount(); ++i)
+        for (size_t i = 0; i < m_pNotebook->GetPageCount(); ++i)
         {
             EditorBase* eb = InternalGetEditorBase(i);
             if(eb && eb != editor && !QueryClose(eb))
@@ -702,7 +702,7 @@ bool EditorManager::QueryClose(EditorBase *ed)
 
 int EditorManager::FindPageFromEditor(EditorBase* eb)
 {
-    for (int i = 0; i < m_pNotebook->GetPageCount(); ++i)
+    for (size_t i = 0; i < m_pNotebook->GetPageCount(); ++i)
     {
         if (m_pNotebook->GetPage(i) == eb)
             return i;
@@ -801,7 +801,7 @@ bool EditorManager::SaveActiveAs()
 
 bool EditorManager::SaveAll()
 {
-    for (int i = 0; i < m_pNotebook->GetPageCount(); ++i)
+    for (size_t i = 0; i < m_pNotebook->GetPageCount(); ++i)
     {
         EditorBase* ed = InternalGetEditorBase(i);
         if (ed && ed->GetModified() && !ed->Save())
@@ -821,7 +821,7 @@ void EditorManager::Print(PrintScope ps, PrintColourMode pcm, bool line_numbers)
     {
     case psAllOpenEditors:
         {
-            for (int i = 0; i < m_pNotebook->GetPageCount(); ++i)
+            for (size_t i = 0; i < m_pNotebook->GetPageCount(); ++i)
             {
                 cbEditor* ed = InternalGetBuiltinEditor(i);
                 if (ed)
@@ -847,7 +847,7 @@ void EditorManager::CheckForExternallyModifiedFiles()
 
     bool reloadAll = false; // flag to stop bugging the user
     wxArrayString failedFiles; // list of files failed to reload
-    for (int i = 0; i < m_pNotebook->GetPageCount(); ++i)
+    for (size_t i = 0; i < m_pNotebook->GetPageCount(); ++i)
     {
         cbEditor* ed = InternalGetBuiltinEditor(i);
         bool b_modified = false;
@@ -1644,7 +1644,7 @@ int EditorManager::ReplaceInFiles(cbFindReplaceData* data)
     else if (data->scope == 1) // find in open files
     {
         // fill the search list with the open files
-        for (int i = 0; i < m_pNotebook->GetPageCount(); ++i)
+        for (size_t i = 0; i < m_pNotebook->GetPageCount(); ++i)
         {
             cbEditor* ed = InternalGetBuiltinEditor(i);
             if (ed)
@@ -2189,7 +2189,7 @@ int EditorManager::FindInFiles(cbFindReplaceData* data)
     else if (data->scope == 1) // find in open files
     {
         // fill the search list with the open files
-        for (int i = 0; i < m_pNotebook->GetPageCount(); ++i)
+        for (size_t i = 0; i < m_pNotebook->GetPageCount(); ++i)
         {
             cbEditor* ed = InternalGetBuiltinEditor(i);
             if (ed)

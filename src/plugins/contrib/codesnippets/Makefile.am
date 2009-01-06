@@ -53,6 +53,7 @@ libcodesnippets_la_SOURCES = codesnippets.cpp \
 		codesnippetswindow.cpp \
 		csutils.cpp \
 		editsnippetframe.cpp \
+		finddialogs.cpp \
 		messageBoxForm.cpp \
 		messagebox.cpp \
 		settingsdlg.cpp \
@@ -105,6 +106,7 @@ noinst_HEADERS =  	codesnippets.h \
 		codesnippetswindow.h \
 		csutils.h \
 		editsnippetframe.h \
+		finddialogs.h \
 		menuidentifiers.h \
 		messageBoxForm.h \
 		messagebox.h \
@@ -125,5 +127,6 @@ EXTRA_DIST = 	codesnippets.cbp \
 		update \
 		readme.html \
 		license.txt \
+		manifest.xml \
 		$(man_MANS)
 

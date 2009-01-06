@@ -33,6 +33,7 @@ libcompiler_la_SOURCES = advancedcompileroptionsdlg.cpp \
 			compilerMINGW.cpp \
 			compilerMINGWgenerator.cpp \
 			compilerMSVC.cpp \
+			compilerMSVC8.cpp \
 			compileroptionsdlg.cpp \
 			compilerOW.cpp \
 			compilerOWgenerator.cpp \
@@ -61,6 +62,7 @@ noinst_HEADERS = advancedcompileroptionsdlg.h \
 			compilerMINGW.h \
 			compilerMINGWgenerator.h \
 			compilerMSVC.h \
+			compilerMSVC8.h \
 			compileroptionsdlg.h \
 			compilerOW.h \
 			compilerOWgenerator.h \
