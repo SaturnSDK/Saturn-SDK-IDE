@@ -2573,6 +2573,7 @@ void EditorManager::OnTabPosition(wxCommandEvent& event)
     if (event.GetId() == idNBTabBottom)
         style |= wxAUI_NB_BOTTOM;
     m_pNotebook->SetWindowStyleFlag(style);
+    m_pNotebook->Refresh();
     // (style & wxAUI_NB_BOTTOM) saves info only about the the tabs position
     Manager::Get()->GetConfigManager(_T("app"))->Write(_T("/environment/editor_tabs_bottom"), (bool)(style & wxAUI_NB_BOTTOM));
 }

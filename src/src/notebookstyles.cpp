@@ -29,11 +29,11 @@ NbStyleVC71::NbStyleVC71() : wxAuiDefaultTabArt()
 wxAuiTabArt* NbStyleVC71::Clone()
 {
     NbStyleVC71* clone = new NbStyleVC71();
-    
+
     clone->SetNormalFont(m_normal_font);
     clone->SetSelectedFont(m_selected_font);
     clone->SetMeasuringFont(m_measuring_font);
-    
+
     return clone;
 }
 
@@ -267,7 +267,7 @@ void NbStyleFF2::DrawTab(wxDC& dc, wxWindow* wnd,
     tabPoints[6].y = tabPoints[0].y;
 
 //    dc.SetBrush((page.active) ? wxBrush(wxSystemSettings::GetColour(wxSYS_COLOUR_3DFACE)) : wxBrush(wxAuiStepColour(wxSystemSettings::GetColour(wxSYS_COLOUR_3DFACE),85)));
-    dc.SetBrush((page.active) ? wxBrush(wxSystemSettings::GetColour(wxSYS_COLOUR_3DFACE)) : wxBrush(wxSystemSettings::GetColour(wxSYS_COLOUR_3DSHADOW)));
+    dc.SetBrush((page.active) ? wxBrush(wxSystemSettings::GetColour(wxSYS_COLOUR_3DFACE)) : wxBrush(*wxTRANSPARENT_BRUSH));
 
 	dc.SetPen(wxPen(wxSystemSettings::GetColour(wxSYS_COLOUR_BTNSHADOW)));
 
@@ -279,7 +279,7 @@ void NbStyleFF2::DrawTab(wxDC& dc, wxWindow* wnd,
         dc.DrawLine(tabPoints[0].x + 1, tabPoints[0].y, tabPoints[5].x , tabPoints[0].y);
     }
 
-    int drawn_tab_yoff = tabPoints[2].y;
+    int drawn_tab_yoff = tabPoints[1].y;
     int drawn_tab_height = tabPoints[0].y - tabPoints[2].y;
 
     int text_offset = tab_x + 8;
@@ -365,6 +365,6 @@ int NbStyleFF2::GetBestTabCtrlSize(wxWindow* wnd,
     int x_ext = 0;
     wxSize s = GetTabSize(dc, wnd, wxT("ABCDEFGHIj"), wxNullBitmap, true,
                             wxAUI_BUTTON_STATE_HIDDEN, &x_ext);
-    return s.y + 4;
+    return s.y + 6;
 }
 

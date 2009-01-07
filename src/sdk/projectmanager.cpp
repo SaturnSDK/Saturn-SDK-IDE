@@ -1661,6 +1661,7 @@ void ProjectManager::OnTabPosition(wxCommandEvent& event)
     if (event.GetId() == idNB_TabBottom)
         style |= wxAUI_NB_BOTTOM;
     m_pNotebook->SetWindowStyleFlag(style);
+    m_pNotebook->Refresh();
     // (style & wxAUI_NB_BOTTOM) saves info only about the the tabs position
     Manager::Get()->GetConfigManager(_T("app"))->Write(_T("/environment/project_tabs_bottom"), (bool)(style & wxAUI_NB_BOTTOM));
 }

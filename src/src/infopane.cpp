@@ -192,7 +192,7 @@ void InfoPane::ContextMenu(wxContextMenuEvent& event)
 	}
 	else
 		view = &menu;
-	
+
     for(int i = 0; i < num_pages; ++i)
     {
         if(page[i].window)
@@ -244,6 +244,7 @@ void InfoPane::OnTabPosition(wxCommandEvent& event)
     if (event.GetId() == idNB_TabBottom)
         style |= wxAUI_NB_BOTTOM;
     SetWindowStyleFlag(style);
+    Refresh();
     // (style & wxAUI_NB_BOTTOM) saves info only about the the tabs position
     Manager::Get()->GetConfigManager(_T("app"))->Write(_T("/environment/infopane_tabs_bottom"), (bool)(style & wxAUI_NB_BOTTOM));
 }
@@ -293,7 +294,7 @@ bool InfoPane::DeleteLogger(Logger* l)
 	{
 		return false;
 	}
-	
+
     for(int i = 0; i < num_pages; ++i)
     {
         if(page[i].logger == l)
@@ -303,12 +304,12 @@ bool InfoPane::DeleteLogger(Logger* l)
         	{
 				Manager::Get()->GetLogManager()->DeleteLog(index);
         	}
-            
+
             if (page[i].indexInNB != -1)
             {
 				DeletePage(GetPageIndex(page[i].window));
             }
-            
+
             page[i] = Page();
             return true;
         }
