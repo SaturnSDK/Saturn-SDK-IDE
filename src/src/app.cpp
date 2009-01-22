@@ -21,7 +21,6 @@
 #include <wx/choicdlg.h>
 #include <wx/notebook.h>
 #include <wx/clipbrd.h>
-#include <wx/taskbar.h>
 
 #include <wx/aui/auibook.h>
 #include <cbexception.h>
@@ -253,6 +252,7 @@ IMPLEMENT_APP(CodeBlocksApp)
 
 BEGIN_EVENT_TABLE(CodeBlocksApp, wxApp)
     EVT_ACTIVATE_APP(CodeBlocksApp::OnAppActivate)
+    EVT_TASKBAR_LEFT_DOWN(CodeBlocksApp::OnTBIconLeftDown)
 END_EVENT_TABLE()
 
 #ifdef __WXMAC__
@@ -581,7 +581,7 @@ bool CodeBlocksApp::OnInit()
             } 
         } 
         // Now we can start the DDE-/IPC-Server, if we did it earlier we would connect to ourselves 
-        if (!m_NoDDE) 
+        if (!m_NoDDE && !m_Batch)
         { 
             g_DDEServer = new DDEServer(0L); 
             g_DDEServer->Create(DDE_SERVICE); 
@@ -920,6 +920,16 @@ void CodeBlocksApp::OnBatchBuildDone(CodeBlocksEvent& event)
             m_pBatchBuildDialog->Destroy();
             m_pBatchBuildDialog = 0;
         }
+    }
+}
+
+void CodeBlocksApp::OnTBIconLeftDown(wxTaskBarIconEvent& event)
+{
+    event.Skip();
+    if (m_pBatchBuildDialog)
+    {
+        m_pBatchBuildDialog->Raise();
+        m_pBatchBuildDialog->Refresh();
     }
 }
 
