@@ -749,7 +749,12 @@ cbStyledTextCtrl* cbEditor::CreateEditor()
 {
     m_ID = wxNewId();
 
-    cbStyledTextCtrl* control = new cbStyledTextCtrl(this, m_ID, wxDefaultPosition, m_pControl ? wxDefaultSize : GetSize());
+    // avoid gtk-critical because of sizes less than -1 (can happen with wxAuiNotebook)
+    wxSize size = m_pControl ? wxDefaultSize : GetSize();
+    size.x = std::max(size.x, -1);
+    size.y = std::max(size.y, -1);
+
+    cbStyledTextCtrl* control = new cbStyledTextCtrl(this, m_ID, wxDefaultPosition, size);
     control->UsePopUp(false);
 
     wxString enc_name = Manager::Get()->GetConfigManager(_T("editor"))->Read(_T("/default_encoding"), wxEmptyString);
