@@ -1,6 +1,6 @@
 /*
 * This file is part of HexEditor plugin for Code::Blocks Studio
-* Copyright (C) 2008 Bartlomiej Swiecki
+* Copyright (C) 2008-2009 Bartlomiej Swiecki
 *
 * HexEditor plugin is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -13,11 +13,11 @@
 * GNU General Public License for more details.
 *
 * You should have received a copy of the GNU General Public License
-* along with wxSmith. If not, see <http://www.gnu.org/licenses/>.
+* along with HexEditor. If not, see <http://www.gnu.org/licenses/>.
 *
-* $Revision:$
-* $Id:$
-* $HeadURL:$
+* $Revision: 5452 $
+* $Id: TestCasesDlg.cpp 5452 2009-02-12 23:21:10Z byo $
+* $HeadURL: https://mortenmacfly@svn.berlios.de/svnroot/repos/codeblocks/trunk/src/plugins/contrib/HexEditor/TestCasesDlg.cpp $
 */
 
 #include "TestCasesDlg.h"
@@ -38,8 +38,9 @@ BEGIN_EVENT_TABLE(TestCasesDlg,wxDialog)
 	//*)
 END_EVENT_TABLE()
 
-TestCasesDlg::TestCasesDlg(wxWindow* parent): m_Thread( 0 )
+TestCasesDlg::TestCasesDlg(wxWindow* parent, TestCasesBase& tests): m_Tests( tests ), m_Thread( 0 )
 {
+    m_Tests.InitOutput( *this );
 	BuildContent(parent);
 }
 
@@ -48,7 +49,7 @@ void TestCasesDlg::BuildContent(wxWindow* parent)
 	//(*Initialize(TestCasesDlg)
 	wxBoxSizer* BoxSizer1;
 	wxStaticBoxSizer* StaticBoxSizer1;
-
+	
 	Create(parent, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE, _T("wxID_ANY"));
 	BoxSizer1 = new wxBoxSizer(wxHORIZONTAL);
 	StaticBoxSizer1 = new wxStaticBoxSizer(wxVERTICAL, this, _("Test log:"));
@@ -62,7 +63,7 @@ void TestCasesDlg::BuildContent(wxWindow* parent)
 	Timer1.Start(50, false);
 	BoxSizer1->Fit(this);
 	BoxSizer1->SetSizeHints(this);
-
+	
 	Connect(ID_BUTTON1,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&TestCasesDlg::OnButton1Click);
 	Connect(ID_TIMER1,wxEVT_TIMER,(wxObjectEventFunction)&TestCasesDlg::OnTimer1Trigger);
 	Connect(wxID_ANY,wxEVT_CLOSE_WINDOW,(wxObjectEventFunction)&TestCasesDlg::OnClose);
@@ -88,7 +89,7 @@ TestCasesDlg::~TestCasesDlg()
 
 int TestCasesDlg::Entry()
 {
-    m_Result  = PerformTests();
+    m_Result  = m_Tests.PerformTests();
     m_Running = false;
     return 0;
 }

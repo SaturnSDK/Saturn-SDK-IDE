@@ -1,6 +1,6 @@
 /*
 * This file is part of HexEditor plugin for Code::Blocks Studio
-* Copyright (C) 2008 Bartlomiej Swiecki
+* Copyright (C) 2008-2009 Bartlomiej Swiecki
 *
 * HexEditor plugin is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -13,10 +13,10 @@
 * GNU General Public License for more details.
 *
 * You should have received a copy of the GNU General Public License
-* along with wxSmith. If not, see <http://www.gnu.org/licenses/>.
+* along with HexEditor. If not, see <http://www.gnu.org/licenses/>.
 *
-* $Revision: 5406 $
-* $Id: HexEditPanel.cpp 5406 2009-01-16 15:36:29Z mortenmacfly $
+* $Revision: 5450 $
+* $Id: HexEditPanel.cpp 5450 2009-02-12 00:30:52Z byo $
 * $HeadURL: https://mortenmacfly@svn.berlios.de/svnroot/repos/codeblocks/trunk/src/plugins/contrib/HexEditor/HexEditPanel.cpp $
 */
 
@@ -28,6 +28,11 @@
 #include "CharacterView.h"
 #include "DigitView.h"
 #include "HexEditLineBuffer.h"
+
+#include "ExpressionTestCases.h"
+#include "FileContentDisk.h"
+#include "TestCasesDlg.h"
+#include "SearchDialog.h"
 
 //(*InternalHeaders(HexEditPanel)
 #include <wx/string.h>
@@ -41,6 +46,7 @@
 #include <wx/numdlg.h>
 #include <wx/sizer.h>
 #include <wx/textdlg.h>
+#include <wx/choicdlg.h>
 
 #include <manager.h>
 #include <editormanager.h>
@@ -63,12 +69,16 @@ namespace
 
 //(*IdInit(HexEditPanel)
 const long HexEditPanel::ID_STATICTEXT1 = wxNewId();
+const long HexEditPanel::ID_BUTTON10 = wxNewId();
+const long HexEditPanel::ID_BUTTON9 = wxNewId();
+const long HexEditPanel::ID_STATICLINE2 = wxNewId();
 const long HexEditPanel::ID_BUTTON7 = wxNewId();
 const long HexEditPanel::ID_BUTTON4 = wxNewId();
 const long HexEditPanel::ID_BUTTON6 = wxNewId();
 const long HexEditPanel::ID_BUTTON5 = wxNewId();
 const long HexEditPanel::ID_STATICLINE1 = wxNewId();
 const long HexEditPanel::ID_BUTTON1 = wxNewId();
+const long HexEditPanel::ID_BUTTON8 = wxNewId();
 const long HexEditPanel::ID_CHECKBOX1 = wxNewId();
 const long HexEditPanel::ID_PANEL1 = wxNewId();
 const long HexEditPanel::ID_SCROLLBAR1 = wxNewId();
@@ -156,8 +166,14 @@ HexEditPanel::HexEditPanel( const wxString& fileName, const wxString& title )
     BoxSizer3 = new wxBoxSizer(wxHORIZONTAL);
     m_Status = new wxStaticText(this, ID_STATICTEXT1, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0, _T("ID_STATICTEXT1"));
     BoxSizer3->Add(m_Status, 1, wxALL|wxEXPAND|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
+    Button6 = new wxButton(this, ID_BUTTON10, _("Goto"), wxDefaultPosition, wxDefaultSize, wxBU_EXACTFIT, wxDefaultValidator, _T("ID_BUTTON10"));
+    BoxSizer3->Add(Button6, 0, wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
+    Button5 = new wxButton(this, ID_BUTTON9, _("Search"), wxDefaultPosition, wxDefaultSize, wxBU_EXACTFIT, wxDefaultValidator, _T("ID_BUTTON9"));
+    BoxSizer3->Add(Button5, 0, wxLEFT|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
+    StaticLine2 = new wxStaticLine(this, ID_STATICLINE2, wxDefaultPosition, wxDefaultSize, wxLI_VERTICAL, _T("ID_STATICLINE2"));
+    BoxSizer3->Add(StaticLine2, 0, wxALL|wxEXPAND|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
     m_ColsModeBtn = new wxButton(this, ID_BUTTON7, _("Cols"), wxDefaultPosition, wxDefaultSize, wxBU_EXACTFIT, wxDefaultValidator, _T("ID_BUTTON7"));
-    BoxSizer3->Add(m_ColsModeBtn, 0, wxEXPAND|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
+    BoxSizer3->Add(m_ColsModeBtn, 0, wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
     m_DigitBits = new wxButton(this, ID_BUTTON4, _("Hex"), wxDefaultPosition, wxDefaultSize, wxBU_EXACTFIT, wxDefaultValidator, _T("ID_BUTTON4"));
     BoxSizer3->Add(m_DigitBits, 0, wxLEFT|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
     m_BlockSize = new wxButton(this, ID_BUTTON6, _("1B"), wxDefaultPosition, wxDefaultSize, wxBU_EXACTFIT, wxDefaultValidator, _T("ID_BUTTON6"));
@@ -168,6 +184,8 @@ HexEditPanel::HexEditPanel( const wxString& fileName, const wxString& title )
     BoxSizer3->Add(StaticLine1, 0, wxALL|wxEXPAND|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
     Button1 = new wxButton(this, ID_BUTTON1, _("Calc"), wxDefaultPosition, wxDefaultSize, wxBU_EXACTFIT, wxDefaultValidator, _T("ID_BUTTON1"));
     BoxSizer3->Add(Button1, 0, wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
+    Button4 = new wxButton(this, ID_BUTTON8, _("Test"), wxDefaultPosition, wxDefaultSize, wxBU_EXACTFIT, wxDefaultValidator, _T("ID_BUTTON8"));
+    BoxSizer3->Add(Button4, 0, wxRIGHT|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
     CheckBox1 = new wxCheckBox(this, ID_CHECKBOX1, _("Value preview"), wxDefaultPosition, wxDefaultSize, 0, wxDefaultValidator, _T("ID_CHECKBOX1"));
     CheckBox1->SetValue(true);
     BoxSizer3->Add(CheckBox1, 0, wxRIGHT|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
@@ -299,11 +317,14 @@ HexEditPanel::HexEditPanel( const wxString& fileName, const wxString& title )
     m_ColsModeMenu.Append(ID_MENUITEM28, _("Power of"), MenuItem28, wxEmptyString);
     BoxSizer1->SetSizeHints(this);
 
+    Connect(ID_BUTTON10,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&HexEditPanel::OnButton6Click);
+    Connect(ID_BUTTON9,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&HexEditPanel::OnButton5Click);
     Connect(ID_BUTTON7,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&HexEditPanel::Onm_ColsModeClick);
     Connect(ID_BUTTON4,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&HexEditPanel::OnButton4Click);
     Connect(ID_BUTTON6,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&HexEditPanel::Onm_BlockSizeClick);
     Connect(ID_BUTTON5,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&HexEditPanel::Onm_EndianessClick);
     Connect(ID_BUTTON1,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&HexEditPanel::OnButton1Click);
+    Connect(ID_BUTTON8,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&HexEditPanel::OnButton4Click1);
     Connect(ID_CHECKBOX1,wxEVT_COMMAND_CHECKBOX_CLICKED,(wxObjectEventFunction)&HexEditPanel::OnCheckBox1Click);
     m_DrawArea->Connect(wxEVT_PAINT,(wxObjectEventFunction)&HexEditPanel::OnContentPaint,0,this);
     m_DrawArea->Connect(wxEVT_ERASE_BACKGROUND,(wxObjectEventFunction)&HexEditPanel::OnDrawAreaEraseBackground,0,this);
@@ -366,12 +387,23 @@ HexEditPanel::HexEditPanel( const wxString& fileName, const wxString& title )
     Connect( wxEVT_SET_FOCUS, (wxObjectEventFunction)&HexEditPanel::OnForwardFocus );
 
     m_ActiveView = 0;
+    m_LastScrollPos = 0;
+    m_LastScrollUnits = 0;
+    m_LinesPerScrollUnit = 1;
     CreateViews();
     RecalculateCoefs();
 
     ReparseExpression();
     SetFontSize( 8 );
     ReadContent();
+
+    if ( m_Content && m_Content->GetSize() > 0x40000000ULL )
+    {
+        // Because of the filesize we have to map scroll units
+        // to some number of lines
+        m_LinesPerScrollUnit = m_Content->GetSize() / 0x20000000ULL;
+    }
+
     RefreshStatus();
 
     m_Current = 0;
@@ -539,11 +571,15 @@ void HexEditPanel::RecalculateCoefs()
     // Adjust scroll bar
     OffsetT contentSize = m_Content ? m_Content->GetSize() : 0;
 
+    int totalLines = ( contentSize + m_LineBytes          - 1 ) / m_LineBytes;
+    int totalUnits = ( totalLines  + m_LinesPerScrollUnit - 1 ) / m_LinesPerScrollUnit;
+    int thumbLines = ( m_Lines     + m_LinesPerScrollUnit - 1 ) / m_LinesPerScrollUnit;
+
     m_ContentScroll->SetScrollbar(
         m_ContentScroll->GetThumbPosition(),
-        m_Lines,
-        ( contentSize + m_LineBytes - 1 ) / m_LineBytes,
-        m_Lines );
+        thumbLines,
+        totalUnits,
+        thumbLines );
 }
 
 void HexEditPanel::OnContentPaint( wxPaintEvent& event )
@@ -621,10 +657,51 @@ void HexEditPanel::OnContentScroll( wxScrollEvent& event )
         return;
     }
 
+    if ( m_ContentScroll->GetThumbPosition() == 0 )
+    {
+        DetectStartOffset();
+        m_LastScrollPos   = 0;
+    }
+    else if ( m_ContentScroll->GetThumbPosition() >= m_ContentScroll->GetRange() - m_ContentScroll->GetThumbSize() )
+    {
+        DetectStartOffset();
+        int totalLines = m_Content->GetSize() / m_LineBytes;
+        m_LastScrollPos = totalLines - m_Lines + 1;
+    }
+
     ClampCursorToVisibleArea();
     m_DrawArea->Refresh();
     RefreshStatus();
     m_DrawArea->SetFocus();
+}
+
+void HexEditPanel::OnContentScrollTop(wxScrollEvent& event)
+{
+    if ( !m_Content || !m_Content->GetSize() )
+    {
+        return;
+    }
+
+    m_LastScrollPos   = 0;
+
+    LogManager::Get()->DebugLog( _T("Top") );
+
+    OnContentScroll( event );
+}
+
+void HexEditPanel::OnContentScrollBottom(wxScrollEvent& event)
+{
+    if ( !m_Content || !m_Content->GetSize() )
+    {
+        return;
+    }
+
+    int totalLines = m_Content->GetSize() / m_LineBytes;
+    m_LastScrollPos = totalLines - m_Lines + 1;
+
+    LogManager::Get()->DebugLog( _T("Top") );
+
+    OnContentScroll( event );
 }
 
 void HexEditPanel::OnContentSize( wxSizeEvent& event )
@@ -637,7 +714,35 @@ void HexEditPanel::OnContentSize( wxSizeEvent& event )
 
 FileContentBase::OffsetT HexEditPanel::DetectStartOffset()
 {
-    return m_ContentScroll->GetThumbPosition() * m_LineBytes;
+    if ( !m_Content ) return 0;
+
+    int currentUnits = m_ContentScroll->GetThumbPosition();
+
+    if ( currentUnits < m_LastScrollUnits )
+    {
+        FileContentBase::OffsetT diff = ( m_LastScrollUnits - currentUnits ) * m_LinesPerScrollUnit;
+        if ( m_LastScrollPos < diff )
+        {
+            m_LastScrollPos = 0;
+        }
+        else
+        {
+            m_LastScrollPos -= diff;
+        }
+    }
+    else if ( currentUnits > m_LastScrollUnits )
+    {
+        m_LastScrollPos += ( currentUnits - m_LastScrollUnits ) * m_LinesPerScrollUnit;
+        FileContentBase::OffsetT maxScrollPos = ( m_Content->GetSize() + m_LineBytes - 1 ) / m_LineBytes;
+        if ( m_LastScrollPos >= maxScrollPos )
+        {
+            m_LastScrollPos = maxScrollPos-1;
+        }
+    }
+
+    m_LastScrollUnits = currentUnits;
+
+    return m_LastScrollPos * m_LineBytes;
 }
 
 void HexEditPanel::OnContentMouseWheel(wxMouseEvent& event)
@@ -757,7 +862,7 @@ void HexEditPanel::RefreshStatus()
         }
         else
         {
-            LogManager::Get()->DebugLog( F( _T("HEExpr Calculate: %d"), (int)sw.Time() ) );
+//            LogManager::Get()->DebugLog( F( _T("HEExpr Calculate: %d"), (int)sw.Time() ) );
             unsigned long long uint;
             long long          sint;
             long double        flt;
@@ -951,12 +1056,20 @@ void HexEditPanel::EnsureCarretVisible()
 
     if ( line < startLine )
     {
-        m_ContentScroll->SetThumbPosition( line );
+        m_LastScrollPos   = line;
+        m_LastScrollUnits = line / m_LinesPerScrollUnit;
+
+        m_ContentScroll->SetThumbPosition( m_LastScrollUnits );
         m_DrawArea->Refresh();
     }
     else if ( line >= endLine )
     {
-        m_ContentScroll->SetThumbPosition( line - m_Lines + 1 );
+        line = line - m_Lines + 1;
+
+        m_LastScrollPos   = line;
+        m_LastScrollUnits = line / m_LinesPerScrollUnit;
+
+        m_ContentScroll->SetThumbPosition( m_LastScrollUnits );
         m_DrawArea->Refresh();
     }
 }
@@ -993,6 +1106,8 @@ void HexEditPanel::ClampCursorToVisibleArea()
 
 void HexEditPanel::PropagateOffsetChange( int flagsForCurrentView )
 {
+    if ( !m_Content ) return;
+
     OffsetT startOffs  = DetectStartOffset();
 
     OffsetT blockStart = m_Current;
@@ -1239,20 +1354,20 @@ void HexEditPanel::Redo()
 
 void HexEditPanel::OnSpecialKeyDown(wxKeyEvent& event)
 {
-    LogManager::Get()->DebugLog(
-        F(
-            _T("HexEditPanel::OnSpecialKeyDown: %d (%c%c%c)"),
-            (int)event.GetKeyCode(),
-            event.ControlDown() ? 'C':'c',
-            event.AltDown() ? 'A':'a',
-            event.CmdDown() ? 'M':'m' ) );
+//    LogManager::Get()->DebugLog(
+//        F(
+//            _T("HexEditPanel::OnSpecialKeyDown: %d (%c%c%c)"),
+//            (int)event.GetKeyCode(),
+//            event.ControlDown() ? 'C':'c',
+//            event.AltDown() ? 'A':'a',
+//            event.CmdDown() ? 'M':'m' ) );
 
     if ( event.ControlDown() && !event.AltDown() )
     {
         switch ( event.GetKeyCode() )
         {
             case 'G': ProcessGoto(); return;
-//            case 'F': ProcessSearch(); return;
+            case 'F': ProcessSearch(); return;
         }
     }
 
@@ -1379,6 +1494,24 @@ void HexEditPanel::ProcessGoto()
     RefreshStatus();
     EnsureCarretVisible();
     m_DrawArea->Refresh();
+}
+
+void HexEditPanel::ProcessSearch()
+{
+    if ( !m_Content ) return;
+    if ( !m_Content->GetSize() ) return;
+
+    SearchDialog dlg( this, m_Content, m_Current );
+    if ( dlg.ShowModal() == wxID_OK )
+    {
+        m_Current = dlg.GetOffset();
+        PropagateOffsetChange();
+        RefreshStatus();
+        EnsureCarretVisible();
+        m_DrawArea->Refresh();
+    }
+
+    m_DrawArea->SetFocus();
 }
 
 void HexEditPanel::OnButton1Click(wxCommandEvent& event)
@@ -1659,3 +1792,35 @@ bool HexEditPanel::MatchColumnsCount(int colsCount)
     }
 }
 
+void HexEditPanel::OnButton4Click1(wxCommandEvent& event)
+{
+    wxString tests[] =
+    {
+        _("Expression parser"),
+        _("On-Disk file edition")
+    };
+
+    int index = wxGetSingleChoiceIndex( _("Select tests to perform"), _("Self tests"), sizeof( tests ) / sizeof( tests[0] ), tests, this );
+    TestCasesBase* test = 0;
+
+    switch ( index )
+    {
+        case 0: test = &Expression::GetTests(); break;
+        case 1: test = &FileContentDisk::GetTests(); break;
+    }
+
+    if ( !test ) return;
+
+    TestCasesDlg( this, *test ).ShowModal();
+}
+
+
+void HexEditPanel::OnButton6Click(wxCommandEvent& event)
+{
+    ProcessGoto();
+}
+
+void HexEditPanel::OnButton5Click(wxCommandEvent& event)
+{
+    ProcessSearch();
+}

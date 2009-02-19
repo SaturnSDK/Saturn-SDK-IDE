@@ -1,6 +1,6 @@
 /*
 * This file is part of HexEditor plugin for Code::Blocks Studio
-* Copyright (C) 2008 Bartlomiej Swiecki
+* Copyright (C) 2008-2009 Bartlomiej Swiecki
 *
 * HexEditor plugin is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -13,11 +13,11 @@
 * GNU General Public License for more details.
 *
 * You should have received a copy of the GNU General Public License
-* along with wxSmith. If not, see <http://www.gnu.org/licenses/>.
+* along with HexEditor. If not, see <http://www.gnu.org/licenses/>.
 *
-* $Revision:$
-* $Id:$
-* $HeadURL:$
+* $Revision: 5450 $
+* $Id: HexEditPanel.h 5450 2009-02-12 00:30:52Z byo $
+* $HeadURL: https://mortenmacfly@svn.berlios.de/svnroot/repos/codeblocks/trunk/src/plugins/contrib/HexEditor/HexEditPanel.h $
 */
 
 #ifndef HEXEDITPANEL_H
@@ -86,6 +86,7 @@ class HexEditPanel: public EditorBase
         wxMenuItem* MenuItem30;
         wxTextCtrl* m_Expression;
         wxBoxSizer* BoxSizer3;
+        wxStaticLine* StaticLine2;
         wxMenu m_EndianessMenu;
         wxStaticText* m_ExpressionVal;
         wxStaticText* m_LDoubleVal;
@@ -96,6 +97,7 @@ class HexEditPanel: public EditorBase
         wxScrollBar* m_ContentScroll;
         wxStaticText* m_FloatVal;
         wxMenuItem* MenuItem32;
+        wxButton* Button4;
         wxMenuItem* MenuItem20;
         wxStaticText* m_DwordVal;
         wxButton* Button1;
@@ -115,6 +117,7 @@ class HexEditPanel: public EditorBase
         wxMenu m_BlockSizeMenu;
         wxMenuItem* MenuItem3;
         wxStaticLine* StaticLine1;
+        wxButton* Button5;
         wxMenuItem* MenuItem9;
         wxStaticText* StaticText8;
         wxStaticText* m_WordVal;
@@ -140,6 +143,7 @@ class HexEditPanel: public EditorBase
         wxStaticText* m_ByteVal;
         wxStaticText* m_Status;
         wxMenuItem* MenuItem8;
+        wxButton* Button6;
         wxMenuItem* MenuItem14;
         wxButton* m_Endianess;
         wxButton* m_DigitBits;
@@ -147,12 +151,16 @@ class HexEditPanel: public EditorBase
 
         //(*Identifiers(HexEditPanel)
         static const long ID_STATICTEXT1;
+        static const long ID_BUTTON10;
+        static const long ID_BUTTON9;
+        static const long ID_STATICLINE2;
         static const long ID_BUTTON7;
         static const long ID_BUTTON4;
         static const long ID_BUTTON6;
         static const long ID_BUTTON5;
         static const long ID_STATICLINE1;
         static const long ID_BUTTON1;
+        static const long ID_BUTTON8;
         static const long ID_CHECKBOX1;
         static const long ID_PANEL1;
         static const long ID_SCROLLBAR1;
@@ -263,6 +271,11 @@ class HexEditPanel: public EditorBase
         void OnSetColsPower4(wxCommandEvent& event);
         void OnSetColsPower8(wxCommandEvent& event);
         void OnSetColsPowerOther(wxCommandEvent& event);
+        void OnButton4Click1(wxCommandEvent& event);
+        void OnContentScrollTop(wxScrollEvent& event);
+        void OnContentScrollBottom(wxScrollEvent& event);
+        void OnButton6Click(wxCommandEvent& event);
+        void OnButton5Click(wxCommandEvent& event);
         //*)
 
         typedef std::set< EditorBase* > EditorsSet;
@@ -312,6 +325,10 @@ class HexEditPanel: public EditorBase
         int                      m_ColsValue;
         int                      m_ColsCount;
 
+        OffsetT                  m_LinesPerScrollUnit;          ///< \brief Number of lines per one scroll unit
+        int                      m_LastScrollUnits;             ///< \brief Last position of the scroll (in scroll units)
+        OffsetT                  m_LastScrollPos;               ///< \brief Last position of the scroll as offset in file
+
         static EditorsSet        m_AllEditors;                  ///< \brief Set of all opened editors, used to close all editors when plugin is being unloaded
 
         /** \brief Open the file content structure and check for errors */
@@ -340,6 +357,9 @@ class HexEditPanel: public EditorBase
 
         /** \brief Process GOTO request */
         void ProcessGoto();
+
+        /** \brief Process search request */
+        void ProcessSearch();
 
         /** \brief Reparse expression entered by the user in preview bar */
         void ReparseExpression();

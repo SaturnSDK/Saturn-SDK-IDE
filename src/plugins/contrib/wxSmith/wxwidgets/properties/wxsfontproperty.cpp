@@ -34,7 +34,7 @@ using namespace wxsFlags;
 
 namespace
 {
-    wxString DoubleToString( double value )
+    wxString wxsDoubleToString( double value )
     {
         // Because GCC uses locale settings to determine
         // whether to use dot or comma as floating point separator
@@ -223,7 +223,7 @@ wxString wxsFontData::BuildFontCode(const wxString& FontName,wxsCoderContext* Co
                 {
                     Code << FontName
                          << _T(".SetPointSize(")
-                         << wxString::Format(_T("%d"),Size)
+                         << wxString::Format(_T("%ld"),Size)
                          << _T(");\n");
                 }
                 else if ( HasRelativeSize )
@@ -232,7 +232,7 @@ wxString wxsFontData::BuildFontCode(const wxString& FontName,wxsCoderContext* Co
                          << _T(".SetPointSize((int)(")
                          << FontName
                          << _T(".GetPointSize() * ")
-                         << DoubleToString(RelativeSize)
+                         << wxsDoubleToString(RelativeSize)
                          << _T("));\n");
                 }
                 if ( HasStyle )
@@ -264,7 +264,7 @@ wxString wxsFontData::BuildFontCode(const wxString& FontName,wxsCoderContext* Co
             }
 
             Code << _T("wxFont ") << FontName << _T("(")
-                 << (HasSize ? wxString::Format(_T("%d,"),Size) : _T("wxDEFAULT,"))
+                 << (HasSize ? wxString::Format(_T("%ld,"),Size) : _T("wxDEFAULT,"))
                  << FamilyStr << _T(",")
                  << StyleStr << _T(",")
                  << WeightStr << _T(",")
@@ -386,7 +386,7 @@ bool wxsFontProperty::XmlWrite(wxsPropertyContainer* Object,TiXmlElement* Elemen
 
     if ( VALUE.HasSize )
     {
-        XmlSetString(Element,wxString::Format(_T("%d"),VALUE.Size),_T("size"));
+        XmlSetString(Element,wxString::Format(_T("%ld"),VALUE.Size),_T("size"));
     }
 
     if ( VALUE.HasStyle )
@@ -447,7 +447,7 @@ bool wxsFontProperty::XmlWrite(wxsPropertyContainer* Object,TiXmlElement* Elemen
 
     if ( VALUE.HasRelativeSize )
     {
-        XmlSetString(Element,DoubleToString(VALUE.RelativeSize),_T("relativesize"));
+        XmlSetString(Element, wxsDoubleToString(VALUE.RelativeSize), _T("relativesize"));
     }
 
     return true;

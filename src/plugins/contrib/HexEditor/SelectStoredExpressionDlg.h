@@ -1,6 +1,6 @@
 /*
 * This file is part of HexEditor plugin for Code::Blocks Studio
-* Copyright (C) 2008 Bartlomiej Swiecki
+* Copyright (C) 2008-2009 Bartlomiej Swiecki
 *
 * HexEditor plugin is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -13,11 +13,11 @@
 * GNU General Public License for more details.
 *
 * You should have received a copy of the GNU General Public License
-* along with wxSmith. If not, see <http://www.gnu.org/licenses/>.
+* along with HexEditor. If not, see <http://www.gnu.org/licenses/>.
 *
-* $Revision:$
-* $Id:$
-* $HeadURL:$
+* $Revision: 5445 $
+* $Id: SelectStoredExpressionDlg.h 5445 2009-02-07 00:35:09Z byo $
+* $HeadURL: https://mortenmacfly@svn.berlios.de/svnroot/repos/codeblocks/trunk/src/plugins/contrib/HexEditor/SelectStoredExpressionDlg.h $
 */
 
 #ifndef SELECTSTOREDEXPRESSIONDLG_H
@@ -26,13 +26,13 @@
 #include <map>
 
 //(*Headers(SelectStoredExpressionDlg)
+#include <wx/dialog.h>
 #include <wx/sizer.h>
+#include <wx/button.h>
 #include <wx/stattext.h>
 #include <wx/textctrl.h>
-#include <wx/listbox.h>
-#include <wx/button.h>
-#include <wx/dialog.h>
 #include <wx/timer.h>
+#include <wx/listbox.h>
 //*)
 
 class SelectStoredExpressionDlg: public wxDialog
@@ -51,12 +51,12 @@ class SelectStoredExpressionDlg: public wxDialog
 		//(*Declarations(SelectStoredExpressionDlg)
 		wxButton* Button4;
 		wxButton* Button1;
-		wxStaticText* StaticText1;
 		wxButton* Button2;
-		wxListBox* m_Expressions;
 		wxButton* Button3;
-		wxTextCtrl* m_Filter;
+		wxStaticText* StaticText1;
 		wxTimer Timer1;
+		wxListBox* m_Expressions;
+		wxTextCtrl* m_Filter;
 		//*)
 
 		//(*Identifiers(SelectStoredExpressionDlg)

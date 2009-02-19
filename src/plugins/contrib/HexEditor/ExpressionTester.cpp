@@ -1,6 +1,6 @@
 /*
 * This file is part of HexEditor plugin for Code::Blocks Studio
-* Copyright (C) 2008 Bartlomiej Swiecki
+* Copyright (C) 2008-2009 Bartlomiej Swiecki
 *
 * HexEditor plugin is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -13,10 +13,10 @@
 * GNU General Public License for more details.
 *
 * You should have received a copy of the GNU General Public License
-* along with wxSmith. If not, see <http://www.gnu.org/licenses/>.
+* along with HexEditor. If not, see <http://www.gnu.org/licenses/>.
 *
-* $Revision: 5332 $
-* $Id: ExpressionTester.cpp 5332 2008-12-10 22:12:57Z byo $
+* $Revision: 5445 $
+* $Id: ExpressionTester.cpp 5445 2009-02-07 00:35:09Z byo $
 * $HeadURL: https://mortenmacfly@svn.berlios.de/svnroot/repos/codeblocks/trunk/src/plugins/contrib/HexEditor/ExpressionTester.cpp $
 */
 
@@ -24,6 +24,7 @@
 
 #include "ExpressionParser.h"
 #include "ExpressionExecutor.h"
+#include "ExpressionTestCases.h"
 #include "SelectStoredExpressionDlg.h"
 #include "TestCasesDlg.h"
 
@@ -198,6 +199,5 @@ void ExpressionTester::OnButton3Click(wxCommandEvent& event)
 
 void ExpressionTester::OnButton4Click(wxCommandEvent& event)
 {
-    TestCasesDlg dlg( this );
-    dlg.ShowModal();
+    TestCasesDlg( this, Expression::GetTests() ).ShowModal();
 }

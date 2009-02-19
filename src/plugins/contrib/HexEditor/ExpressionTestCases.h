@@ -1,6 +1,6 @@
 /*
 * This file is part of HexEditor plugin for Code::Blocks Studio
-* Copyright (C) 2008 Bartlomiej Swiecki
+* Copyright (C) 2008-2009 Bartlomiej Swiecki
 *
 * HexEditor plugin is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -13,11 +13,11 @@
 * GNU General Public License for more details.
 *
 * You should have received a copy of the GNU General Public License
-* along with wxSmith. If not, see <http://www.gnu.org/licenses/>.
+* along with HexEditor. If not, see <http://www.gnu.org/licenses/>.
 *
-* $Revision:$
-* $Id:$
-* $HeadURL:$
+* $Revision: 5445 $
+* $Id: ExpressionTestCases.h 5445 2009-02-07 00:35:09Z byo $
+* $HeadURL: https://mortenmacfly@svn.berlios.de/svnroot/repos/codeblocks/trunk/src/plugins/contrib/HexEditor/ExpressionTestCases.h $
 */
 
 #ifndef EXPRESSIONTESTCASES_H
@@ -25,70 +25,11 @@
 
 #include <wx/string.h>
 
-#include "ExpressionPreprocessed.h"
+#include "TestCasesBase.h"
 
 namespace Expression
 {
-
-    class TestCases
-    {
-        public:
-
-            /** \brief Execute tests */
-            bool PerformTests();
-
-        protected:
-
-            /** \brief Test condition */
-            void Ensure( bool condition, const wxString& failMsg );
-
-            /** \brief Execute some code and return calculated value */
-            Value Execute( const wxString& code );
-
-            /** \brief Test if given code compiles */
-            void TestCompile( const wxString& code );
-
-            /** \brief Test if given code does NOT compile */
-            void TestNoCompile( const wxString& code );
-
-            /** \brief Test if given expression gives required value */
-            template< typename T >
-            void TestValue( const wxString& code, T value );
-
-            /** \brief Test if given expression gives required value with some epsilon */
-            template< typename T >
-            void TestValueEps(const wxString& code, T value, double epsilon = 0.000000000001 );
-
-
-            /** \brief Add line to log */
-            virtual void AddLog( const wxString& logLine ) = 0;
-
-            /** \brief Check if we should stop testing */
-            virtual bool StopTest() = 0;
-
-        private:
-
-            /** \brief type used to send NoSuchTest exceptions */
-            struct NoSuchTest {};
-
-            /** \brief error report */
-            struct TestError { wxString m_Msg; };
-
-            /** \brief Perform given test */
-            template< int testNo >
-            void Test();
-
-            /** \brief Run all test from 0 to testNo
-             *  \return No of last available test
-             */
-            template< int testNo >
-            inline int Runner();
-
-            int m_FailCnt;
-            int m_PassCnt;
-            int m_SkipCnt;
-    };
-
+    TestCasesBase& GetTests();
 }
 
 #endif
