@@ -32,7 +32,7 @@ enum ToDoCommentType
 class AddTodoDlg : public wxDialog
 {
     public:
-        AddTodoDlg(wxWindow* parent, wxArrayString users, wxArrayString types);
+        AddTodoDlg(wxWindow* parent, wxArrayString& users, wxArrayString& types);
         ~AddTodoDlg();
 
         wxString GetText() const;

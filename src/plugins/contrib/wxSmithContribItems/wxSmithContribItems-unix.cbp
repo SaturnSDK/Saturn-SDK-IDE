@@ -49,7 +49,7 @@
 				<Compiler>
 					<Add option="-DBUILDING_PLUGIN" />
 					<Add option="-DWXMAKINGLIB_PROPGRID" />
-					<Add directory="$(#cb.include)/wxscintilla/include" />
+					<Add directory="../../../include/wxscintilla/include" />
 					<Add directory="wxthings/wxthings/include" />
 					<Add directory="wxchart/wxchart-1.0/include" />
 					<Add directory="wxflatnotebook/wxFlatNotebook/include" />
@@ -60,7 +60,7 @@
 					<Add library="wxflatnotebook" />
 					<Add library="wxchartctrl" />
 					<Add library="wxcustombutton" />
-					<Add directory="$(#cb)/devel" />
+					<Add directory="../../../devel" />
 				</Linker>
 				<ExtraCommands>
 					<Add after="zip -j9 ../../../devel/share/codeblocks/wxSmithContribItems.zip manifest.xml" />
@@ -85,7 +85,7 @@
 			<Add option="-fPIC" />
 			<Add option="-DcbDEBUG" />
 			<Add option="-DCB_PRECOMP" />
-			<Add directory="$(#cb.include)" />
+			<Add directory="../../../include" />
 			<Add directory="../wxSmith" />
 			<Add directory="../wxSmith/propgrid/contrib/include" />
 		</Compiler>
