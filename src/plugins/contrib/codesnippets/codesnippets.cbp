@@ -51,12 +51,11 @@
 			<Add option="-DCB_PRECOMP" />
 			<Add option="-DWX_PRECOMP" />
 			<Add option="-DwxUSE_UNICODE" />
-			<Add directory="$(#CB.include)" />
-			<Add directory="$(#CB.include)\wxscintilla\include" />
-			<Add directory="$(#cb)\src" />
+			<Add directory="..\..\..\include" />
+			<Add directory="..\..\..\include\wxscintilla\include" />
+			<Add directory="..\..\..\src" />
 			<Add directory="$(#WX.include)" />
 			<Add directory="$(#WX.lib)\gcc_dll$(WX_CFG)\msw$(WX_SUFFIX)" />
-			<Add directory="..\..\..\include\tinyxml" />
 			<Add directory="Search" />
 			<Add directory="editor" />
 			<Add directory="." />
@@ -67,8 +66,8 @@
 			<Add library="txml" />
 			<Add library="wxscintilla" />
 			<Add library="codeblocks" />
-			<Add directory="$(#CB)\devel" />
-			<Add directory="$(#CB)\base\tinyxml" />
+			<Add directory="..\..\..\devel" />
+			<Add directory="..\..\..\base\tinyxml" />
 			<Add directory="$(#WX.lib)\gcc_dll$(WX_CFG)" />
 		</Linker>
 		<ExtraCommands>

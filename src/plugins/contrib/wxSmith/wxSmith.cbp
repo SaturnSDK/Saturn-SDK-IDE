@@ -13,7 +13,6 @@
 				<Option object_output="..\..\..\.objs\plugins\contrib\wxSmith" />
 				<Option type="2" />
 				<Option compiler="gcc" />
-				<Option host_application="..\..\..\devel\codeblocks.exe" />
 				<Option createDefFile="1" />
 			</Target>
 			<Target title="wxSmithLib">
@@ -22,7 +21,6 @@
 				<Option object_output="..\..\..\.objs\plugins\contrib\wxSmithLib" />
 				<Option type="3" />
 				<Option compiler="gcc" />
-				<Option parameters="--debug-log -ns" />
 				<Option host_application="..\..\..\devel\codeblocks.exe" />
 				<Option createStaticLib="1" />
 			</Target>
@@ -66,12 +64,12 @@
 			<Add option="-DwxPG_USE_WXMODULE=0" />
 			<Add directory="$(#WX.lib)\gcc_dll$(WX_CFG)\msw$(WX_SUFFIX)" />
 			<Add directory="$(#WX.include)" />
-			<Add directory="$(#CB.include)" />
-			<Add directory="$(#CB.include)\wxscintilla\include" />
-			<Add directory="$(#CB.include)\scripting\include" />
-			<Add directory="$(#CB.include)\scripting\squirrel" />
-			<Add directory="$(#CB.include)\scripting\sqplus" />
-			<Add directory="$(#CB.include)\scripting\bindings" />
+			<Add directory="..\..\..\include" />
+			<Add directory="..\..\..\include\wxscintilla\include" />
+			<Add directory="..\..\..\include\scripting\include" />
+			<Add directory="..\..\..\include\scripting\squirrel" />
+			<Add directory="..\..\..\include\scripting\sqplus" />
+			<Add directory="..\..\..\include\scripting\bindings" />
 			<Add directory="propgrid\contrib\include" />
 		</Compiler>
 		<ResourceCompiler>
@@ -89,9 +87,8 @@
 			<Add library="wxscintilla" />
 			<Add directory="$(#WX.lib)\gcc_dll$(WX_CFG)" />
 			<Add directory="$(#WX.lib)\gcc_dll$(WX_CFG)\msw$(WX_SUFFIX)" />
-			<Add directory="$(#CB)\devel" />
-			<Add directory="$(#CB)\base\tinyxml" />
-			<Add directory="$(#CB.lib)" />
+			<Add directory="..\..\..\devel" />
+			<Add directory="..\..\..\base\tinyxml" />
 		</Linker>
 		<ExtraCommands>
 			<Add after="update.bat" />

@@ -1,6 +1,6 @@
 /*
 * This file is part of HexEditor plugin for Code::Blocks Studio
-* Copyright (C) 2008 Bartlomiej Swiecki
+* Copyright (C) 2008-2009 Bartlomiej Swiecki
 *
 * HexEditor plugin is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -13,10 +13,10 @@
 * GNU General Public License for more details.
 *
 * You should have received a copy of the GNU General Public License
-* along with wxSmith. If not, see <http://www.gnu.org/licenses/>.
+* along with HexEditor. If not, see <http://www.gnu.org/licenses/>.
 *
-* $Revision: 5332 $
-* $Id: CharacterView.cpp 5332 2008-12-10 22:12:57Z byo $
+* $Revision: 5444 $
+* $Id: CharacterView.cpp 5444 2009-02-07 00:34:35Z byo $
 * $HeadURL: https://mortenmacfly@svn.berlios.de/svnroot/repos/codeblocks/trunk/src/plugins/contrib/HexEditor/CharacterView.cpp $
 */
 
