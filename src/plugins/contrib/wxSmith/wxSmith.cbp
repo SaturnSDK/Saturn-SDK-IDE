@@ -71,6 +71,7 @@
 			<Add directory="..\..\..\include\scripting\sqplus" />
 			<Add directory="..\..\..\include\scripting\bindings" />
 			<Add directory="propgrid\contrib\include" />
+			<Add directory="..\..\..\include\mozilla_chardet" />
 		</Compiler>
 		<ResourceCompiler>
 			<Add directory="$(#WX.include)" />

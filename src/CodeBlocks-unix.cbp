@@ -117,6 +117,7 @@
 					<Add directory="include/scripting/bindings" />
 					<Add directory="include/scripting/include" />
 					<Add directory="include/scripting/sqplus" />
+					<Add directory="include/mozilla_chardet" />
 				</Compiler>
 				<Linker>
 					<Add library="txml" />
@@ -291,6 +292,7 @@
 				<Option projectLibDirsRelation="2" />
 				<Compiler>
 					<Add directory="include" />
+					<Add directory="include/mozilla_chardet" />
 				</Compiler>
 				<Linker>
 					<Add option="`wx-config --libs`" />
@@ -343,6 +345,7 @@
 				<Option compiler="gcc" />
 				<Compiler>
 					<Add directory="include" />
+					<Add directory="include/mozilla_chardet" />
 				</Compiler>
 				<Linker>
 					<Add option="`wx-config --libs`" />
@@ -601,6 +604,78 @@
 			<Option target="sdk" />
 		</Unit>
 		<Unit filename="include/menuitemsmanager.h">
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="include/mozilla_chardet/CharDistribution.h">
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="include/mozilla_chardet/JpCntx.h">
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="include/mozilla_chardet/nsBig5Prober.h">
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="include/mozilla_chardet/nsCharSetProber.h">
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="include/mozilla_chardet/nsCodingStateMachine.h">
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="include/mozilla_chardet/nsEUCJPProber.h">
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="include/mozilla_chardet/nsEUCKRProber.h">
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="include/mozilla_chardet/nsEUCTWProber.h">
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="include/mozilla_chardet/nsError.h">
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="include/mozilla_chardet/nsEscCharsetProber.h">
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="include/mozilla_chardet/nsGB2312Prober.h">
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="include/mozilla_chardet/nsHebrewProber.h">
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="include/mozilla_chardet/nsLatin1Prober.h">
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="include/mozilla_chardet/nsMBCSGroupProber.h">
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="include/mozilla_chardet/nsPkgInt.h">
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="include/mozilla_chardet/nsSBCSGroupProber.h">
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="include/mozilla_chardet/nsSBCharSetProber.h">
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="include/mozilla_chardet/nsSJISProber.h">
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="include/mozilla_chardet/nsUTF8Prober.h">
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="include/mozilla_chardet/nsUniversalDetector.h">
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="include/mozilla_chardet/nscore.h">
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="include/mozilla_chardet/prcpucfg.h">
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="include/mozilla_chardet/prmem.h">
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="include/mozilla_chardet/prtypes.h">
 			<Option target="sdk" />
 		</Unit>
 		<Unit filename="include/multiselectdlg.h">
@@ -2001,6 +2076,96 @@
 			<Option target="sdk" />
 		</Unit>
 		<Unit filename="sdk/menuitemsmanager.cpp">
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="sdk/mozilla_chardet/src/Big5Freq.tab">
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="sdk/mozilla_chardet/src/CharDistribution.cpp">
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="sdk/mozilla_chardet/src/EUCKRFreq.tab">
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="sdk/mozilla_chardet/src/EUCTWFreq.tab">
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="sdk/mozilla_chardet/src/GB2312Freq.tab">
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="sdk/mozilla_chardet/src/JISFreq.tab">
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="sdk/mozilla_chardet/src/JpCntx.cpp">
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="sdk/mozilla_chardet/src/LangBulgarianModel.cpp">
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="sdk/mozilla_chardet/src/LangCyrillicModel.cpp">
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="sdk/mozilla_chardet/src/LangGreekModel.cpp">
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="sdk/mozilla_chardet/src/LangHebrewModel.cpp">
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="sdk/mozilla_chardet/src/LangHungarianModel.cpp">
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="sdk/mozilla_chardet/src/LangThaiModel.cpp">
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="sdk/mozilla_chardet/src/nsBig5Prober.cpp">
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="sdk/mozilla_chardet/src/nsCharSetProber.cpp">
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="sdk/mozilla_chardet/src/nsEUCJPProber.cpp">
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="sdk/mozilla_chardet/src/nsEUCKRProber.cpp">
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="sdk/mozilla_chardet/src/nsEUCTWProber.cpp">
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="sdk/mozilla_chardet/src/nsEscCharsetProber.cpp">
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="sdk/mozilla_chardet/src/nsEscSM.cpp">
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="sdk/mozilla_chardet/src/nsGB2312Prober.cpp">
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="sdk/mozilla_chardet/src/nsHebrewProber.cpp">
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="sdk/mozilla_chardet/src/nsLatin1Prober.cpp">
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="sdk/mozilla_chardet/src/nsMBCSGroupProber.cpp">
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="sdk/mozilla_chardet/src/nsMBCSSM.cpp">
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="sdk/mozilla_chardet/src/nsSBCSGroupProber.cpp">
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="sdk/mozilla_chardet/src/nsSBCharSetProber.cpp">
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="sdk/mozilla_chardet/src/nsSJISProber.cpp">
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="sdk/mozilla_chardet/src/nsUTF8Prober.cpp">
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="sdk/mozilla_chardet/src/nsUniversalDetector.cpp">
 			<Option target="sdk" />
 		</Unit>
 		<Unit filename="sdk/multiselectdlg.cpp">

@@ -4,8 +4,8 @@ INCLUDES = $(WX_CXXFLAGS) \
 		-I$(top_srcdir)/src/include/wxscintilla/include \
 		-I$(top_srcdir)/src/plugins/contrib/codesnippets \
 		-I$(top_srcdir)/src/plugins/contrib/codesnippets/Search \
-		-I$(top_srcdir)/src/plugins/contrib/codesnippets/editor
-
+ 		-I$(top_srcdir)/src/plugins/contrib/codesnippets/editor \
+		-I$(top_srcdir)/src/include/mozilla_chardet
 
 pluginlibdir = $(pkglibdir)/plugins
 

@@ -38,6 +38,7 @@
 			<Add directory="../../../include/scripting/squirrel" />
 			<Add directory="../../../include/scripting/bindings" />
 			<Add directory="../wxSmithContribItems/wxflatnotebook/wxFlatNotebook/include" />
+			<Add directory="../../../include/mozilla_chardet" />
 		</Compiler>
 		<Linker>
 			<Add option="`wx-config --libs`" />
