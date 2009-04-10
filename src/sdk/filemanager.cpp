@@ -205,7 +205,7 @@ inline bool WriteWxStringToFile(wxFile& f, const wxString& data, wxFontEncoding 
     if(data.length() == 0)
         return true;
 
-    size_t inlen = data.Length(), outlen = 0;
+    size_t inlen = data.Len(), outlen = 0;
     wxCharBuffer mbBuff;
     if ( encoding == wxFONTENCODING_UTF7 )
     {
@@ -243,9 +243,8 @@ inline bool WriteWxStringToFile(wxFile& f, const wxString& data, wxFontEncoding 
         // wxFONTENCODING_ISO8859_1..15, wxFONTENCODING_CP1250..1257 and wxFONTENCODING_KOI8
         // but it's much, much faster than wxCSConv (at least on linux)
         wxEncodingConverter conv;
-        // should be long enough, we come from wxFONTENCODING_UNICODE (either 16- or 32-bit depending on platform)
-        // and we can only convert to it or 8-bit encoding
-        char* tmp = new char[inlen];
+        // should be long enough
+        char* tmp = new char[2*inlen];
 
         if(conv.Init(wxFONTENCODING_UNICODE, encoding) && conv.Convert(data.c_str(), tmp))
         {
@@ -258,7 +257,7 @@ inline bool WriteWxStringToFile(wxFile& f, const wxString& data, wxFontEncoding 
         wxCSConv conv(encoding);
             mbBuff = conv.cWC2MB(data.c_str(), inlen, &outlen);
         }
-        delete tmp;
+        delete[] tmp;
     }
      // if conversion to chosen encoding succeeded, we write the file to disk
     if(outlen > 0)
