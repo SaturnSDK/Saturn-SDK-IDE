@@ -1204,6 +1204,8 @@ void cbEditor::InternalSetEditorStyleBeforeFileOpen(cbStyledTextCtrl* control)
     }
     else
         control->SetMarginWidth(changebarMargin, 0);
+
+    control->SetScrollWidthTracking(mgr->ReadBool(_T("/margin/scroll_width_tracking"), false));
 }
 
 // static
@@ -1522,19 +1524,19 @@ bool cbEditor::SaveAs()
     {
         Path = mgr->Read(_T("/file_dialogs/save_file_as/directory"), Path);
     }
-    wxFileDialog* dlg = new wxFileDialog(Manager::Get()->GetAppWindow(),
+    wxFileDialog dlg(Manager::Get()->GetAppWindow(),
                                          _("Save file"),
                                          Path,
                                          fname.GetFullName(),
                                          Filters,
                                          wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
-    dlg->SetFilterIndex(StoredIndex);
-    PlaceWindow(dlg);
-    if (dlg->ShowModal() != wxID_OK)
+    dlg.SetFilterIndex(StoredIndex);
+    PlaceWindow(&dlg);
+    if (dlg.ShowModal() != wxID_OK)
     {  // cancelled out
         return false;
     }
-    m_Filename = dlg->GetPath();
+    m_Filename = dlg.GetPath();
     Manager::Get()->GetLogManager()->Log(m_Filename);
     fname.Assign(m_Filename);
     m_Shortname = fname.GetFullName();
@@ -1546,16 +1548,15 @@ bool cbEditor::SaveAs()
     // store the last used filter and directory
     if(mgr)
     {
-        int Index = dlg->GetFilterIndex();
+        int Index = dlg.GetFilterIndex();
         wxString Filter;
         if(FileFilters::GetFilterNameFromIndex(Filters, Index, Filter))
         {
             mgr->Write(_T("/file_dialogs/save_file_as/filter"), Filter);
         }
-        wxString Test = dlg->GetDirectory();
-        mgr->Write(_T("/file_dialogs/save_file_as/directory"), dlg->GetDirectory());
+        wxString Test = dlg.GetDirectory();
+        mgr->Write(_T("/file_dialogs/save_file_as/directory"), dlg.GetDirectory());
     }
-    dlg->Destroy();
     return Save();
 } // end of SaveAs
 
@@ -2129,6 +2130,12 @@ void cbEditor::SetChangeCollection(bool collectChange)
 {
     cbAssert(GetControl());
     GetControl()->SetChangeCollection(collectChange);
+}
+
+void cbEditor::SetScrollWidthTracking(bool trackWidth)
+{
+    cbAssert(GetControl());
+    GetControl()->SetScrollWidthTracking(trackWidth);
 }
 
 void cbEditor::Cut()
@@ -2727,7 +2734,7 @@ void cbEditor::OnEditorCharAdded(wxScintillaEvent& event)
         if (autoIndent && currLine > 0)
         {
             wxString indent = GetLineIndentString(currLine - 1);
-            if (smartIndent)
+            if ( smartIndent && (control->GetLexer() == wxSCI_LEX_CPP) )
             {
                 // if the last entered char before newline was an opening curly brace,
                 // increase indentation level (the closing brace is handled in another block)

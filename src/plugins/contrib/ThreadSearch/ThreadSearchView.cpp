@@ -9,6 +9,9 @@
  **************************************************************/
 
 #include "sdk.h"
+#include <wx/bitmap.h>
+#include <wx/bmpbuttn.h>
+#include <wx/statline.h>
 #ifndef CB_PRECOMP
 	#include <wx/splitter.h>
 	#include "cbeditor.h"
@@ -43,21 +46,24 @@ ThreadSearchView::ThreadSearchView(ThreadSearch& threadSearchPlugin)
 {
 	m_pFindThread = NULL;
 	m_pToolBar    = NULL;
+	wxString prefix = ConfigManager::GetDataFolder() + _T("/images/ThreadSearch/");
 
     // begin wxGlade: ThreadSearchView::ThreadSearchView
     m_pSplitter = new wxSplitterWindow(this, -1, wxDefaultPosition, wxSize(1,1), wxSP_3D|wxSP_BORDER|wxSP_PERMIT_UNSPLIT);
     m_pPnlListLog = new wxPanel(m_pSplitter, -1, wxDefaultPosition, wxSize(1,1));
     m_pPnlPreview = new wxPanel(m_pSplitter, -1, wxDefaultPosition, wxSize(1,1));
-    m_pSizerSearchDirItems_staticbox = new wxStaticBox(this, -1, wxT("Directory parameters"));
+    m_pSizerSearchDirItems_staticbox = new wxStaticBox(this, -1, _("Directory parameters"));
     const wxString m_pCboSearchExpr_choices[] = {
 
     };
     m_pCboSearchExpr = new wxComboBox(this, idCboSearchExpr, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0, m_pCboSearchExpr_choices, wxCB_DROPDOWN|wxTE_PROCESS_ENTER);
-    m_pBtnSearch = new wxButton(this, idBtnSearch, wxT("Search"));
-    m_pBtnOptions = new wxButton(this, idBtnOptions, wxT("Options"));
-    m_pStaTxtSearchIn = new wxStaticText(this, -1, wxT("Search in "));
+    m_pBtnSearch = new wxBitmapButton(this, idBtnSearch, wxBitmap(prefix + wxT("findf.png"), wxBITMAP_TYPE_PNG), wxDefaultPosition, wxDefaultSize, wxBU_AUTODRAW);
+    m_pBtnOptions = new wxBitmapButton(this, idBtnOptions, wxBitmap(prefix + wxT("options.png"), wxBITMAP_TYPE_PNG), wxDefaultPosition, wxDefaultSize, wxBU_AUTODRAW);//wxT("Options"));
+    m_pStaticLine1 = new wxStaticLine(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLI_VERTICAL);
+    m_pStaTxtSearchIn = new wxStaticText(this, -1, _("Search in files: "));
     m_pPnlSearchIn = new SearchInPanel(this, -1);
-    m_pBtnShowDirItems = new wxButton(this, idBtnShowDirItemsClick, wxT("Show dir items"));
+    m_pStaticLine2 = new wxStaticLine(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLI_VERTICAL);
+    m_pBtnShowDirItems = new wxBitmapButton(this, idBtnShowDirItemsClick, wxBitmap(prefix + wxT("showdir.png"), wxBITMAP_TYPE_PNG), wxDefaultPosition, wxDefaultSize, wxBU_AUTODRAW);
     m_pPnlDirParams = new DirectoryParamsPanel(this, -1);
     m_pSearchPreview = new cbStyledTextCtrl(m_pPnlPreview, wxID_ANY, wxDefaultPosition, wxSize(1,1));
     m_pLogger = ThreadSearchLoggerBase::BuildThreadSearchLoggerBase(*this, m_ThreadSearchPlugin,
@@ -152,7 +158,7 @@ END_EVENT_TABLE();
 
 void ThreadSearchView::OnThreadSearchErrorEvent(const ThreadSearchEvent& event)
 {
-	cbMessageBox(event.GetString(), _T("Error"), wxICON_ERROR);
+	cbMessageBox(event.GetString(), _("Error"), wxICON_ERROR);
 }
 
 void ThreadSearchView::OnCboSearchExprEnter(wxCommandEvent &event)
@@ -190,7 +196,7 @@ void ThreadSearchView::OnBtnSearchClick(wxCommandEvent &event)
 			UpdateSearchButtons(false);
 			if ( ClearThreadSearchEventsArray() == false )
 			{
-				cbMessageBox(_T("Failed to clear events array."), _T("Error"), wxICON_ERROR);
+				cbMessageBox(_("Failed to clear events array."), _("Error"), wxICON_ERROR);
 			}
 		}
 		else
@@ -210,7 +216,7 @@ void ThreadSearchView::OnBtnOptionsClick(wxCommandEvent &event)
 	// All parameters can be set on this dialog.
 	// It is the same as doing 'Settings/environment/Thread search'
 	// Settings are updated by the cbConfigurationDialog
-	cbConfigurationDialog* pDlg       = new cbConfigurationDialog(Manager::Get()->GetAppWindow(), -1, _T("Options"));
+	cbConfigurationDialog* pDlg       = new cbConfigurationDialog(Manager::Get()->GetAppWindow(), -1, _("Options"));
 	ThreadSearchConfPanel* pConfPanel = new ThreadSearchConfPanel(m_ThreadSearchPlugin, pDlg);
 
 	pDlg->AttachConfigurationPanel(pConfPanel);
@@ -231,11 +237,11 @@ void ThreadSearchView::OnBtnShowDirItemsClick(wxCommandEvent& WXUNUSED(event))
 	pTopSizer->Show(m_pSizerSearchDirItems, show, true);
 	if ( show == true )
 	{
-		m_pBtnShowDirItems->SetLabel(_T("Hide dir items"));
+		m_pBtnShowDirItems->SetToolTip(_("Hide dir items"));
 	}
 	else
 	{
-		m_pBtnShowDirItems->SetLabel(_T("Show dir items"));
+		m_pBtnShowDirItems->SetToolTip(_("Show dir items"));
 	}
 	pTopSizer->Layout();
 }
@@ -247,8 +253,8 @@ void ThreadSearchView::OnSplitterDoubleClick(wxSplitterEvent &event)
 	ApplySplitterSettings(false, m_pSplitter->GetSplitMode());
 
     // Informs user on how to show code preview later.
-    cbMessageBox(wxT("To re-enable code preview, check the \"Show code preview editor\" in ThreadSearch options panel."),
-				 wxT("ThreadSearchInfo"), wxICON_INFORMATION);
+    cbMessageBox(_("To re-enable code preview, check the \"Show code preview editor\" in ThreadSearch options panel."),
+				 _("ThreadSearchInfo"), wxICON_INFORMATION);
 }
 
 // wxGlade: add ThreadSearchView event handlers
@@ -256,9 +262,19 @@ void ThreadSearchView::OnSplitterDoubleClick(wxSplitterEvent &event)
 
 void ThreadSearchView::set_properties()
 {
+	wxString prefix = ConfigManager::GetDataFolder() + _T("/images/ThreadSearch/");
     // begin wxGlade: ThreadSearchView::set_properties
     SetBackgroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_BTNFACE));
     m_pCboSearchExpr->SetMinSize(wxSize(180, -1));
+    m_pBtnSearch->SetToolTip(_("Search in files"));
+    m_pBtnSearch->SetBitmapDisabled(wxBitmap(prefix + wxT("findfdisabled.png"), wxBITMAP_TYPE_PNG));
+    m_pBtnSearch->SetSize(m_pBtnSearch->GetBestSize());
+    m_pBtnOptions->SetToolTip(_("Options"));
+    m_pBtnOptions->SetBitmapDisabled(wxBitmap(prefix + wxT("optionsdisabled.png"), wxBITMAP_TYPE_PNG));
+    m_pBtnOptions->SetSize(m_pBtnOptions->GetBestSize());
+    m_pBtnShowDirItems->SetToolTip(_("Show dir Items"));
+    m_pBtnShowDirItems->SetBitmapDisabled(wxBitmap(prefix + wxT("showdirdisabled.png"), wxBITMAP_TYPE_PNG));
+    m_pBtnShowDirItems->SetSize(m_pBtnShowDirItems->GetBestSize());
     m_pPnlPreview->SetMinSize(wxSize(25, -1));
     // end wxGlade
 
@@ -282,6 +298,7 @@ void ThreadSearchView::set_properties()
 
 void ThreadSearchView::do_layout()
 {
+	wxString prefix = ConfigManager::GetDataFolder() + _T("/images/ThreadSearch/");
     // begin wxGlade: ThreadSearchView::do_layout
     wxBoxSizer* m_pSizerTop = new wxBoxSizer(wxVERTICAL);
     wxBoxSizer* m_pSizerSplitter = new wxBoxSizer(wxHORIZONTAL);
@@ -291,11 +308,11 @@ void ThreadSearchView::do_layout()
     m_pSizerSearchItems = new wxBoxSizer(wxHORIZONTAL);
     m_pSizerSearchItems->Add(m_pCboSearchExpr, 2, wxALL|wxALIGN_CENTER_VERTICAL|wxADJUST_MINSIZE, 4);
     m_pSizerSearchItems->Add(m_pBtnSearch, 0, wxALL|wxALIGN_CENTER_VERTICAL|wxADJUST_MINSIZE, 4);
-    m_pSizerSearchItems->Add(m_pBtnOptions, 0, wxALL|wxADJUST_MINSIZE, 4);
-    m_pSizerSearchItems->Add(30, 20, 0, wxADJUST_MINSIZE, 0);
+    m_pSizerSearchItems->Add(m_pBtnOptions, 0, wxALL|wxALIGN_CENTER_VERTICAL|wxADJUST_MINSIZE, 4);
+    m_pSizerSearchItems->Add(m_pStaticLine1, 0, wxLEFT|wxRIGHT|wxEXPAND|wxALIGN_CENTER_VERTICAL, 2);
     m_pSizerSearchItems->Add(m_pStaTxtSearchIn, 0, wxALL|wxALIGN_CENTER_VERTICAL|wxADJUST_MINSIZE, 4);
     m_pSizerSearchItems->Add(m_pPnlSearchIn, 0, wxALIGN_CENTER_VERTICAL|wxADJUST_MINSIZE, 0);
-    m_pSizerSearchItems->Add(30, 20, 0, wxADJUST_MINSIZE, 0);
+    m_pSizerSearchItems->Add(m_pStaticLine2, 0, wxLEFT|wxRIGHT|wxEXPAND|wxALIGN_CENTER_VERTICAL, 2);
     m_pSizerSearchItems->Add(m_pBtnShowDirItems, 0, wxALL|wxALIGN_CENTER_VERTICAL|wxADJUST_MINSIZE, 4);
     m_pSizerTop->Add(m_pSizerSearchItems, 0, wxEXPAND|wxALIGN_CENTER_VERTICAL, 0);
     m_pSizerSearchDirItems->Add(m_pPnlDirParams, 1, wxALIGN_CENTER_VERTICAL, 0);
@@ -357,7 +374,7 @@ void ThreadSearchView::ThreadedSearch(const ThreadSearchFindData& aFindData)
 				{
 					m_pFindThread->Delete();
 					m_pFindThread = NULL;
-					cbMessageBox(wxT("Failed to run search thread"));
+					cbMessageBox(_("Failed to run search thread"));
 				}
 				else
 				{
@@ -375,19 +392,19 @@ void ThreadSearchView::ThreadedSearch(const ThreadSearchFindData& aFindData)
 				// Error
 				m_pFindThread->Delete();
 				m_pFindThread = NULL;
-				cbMessageBox(wxT("Failed to create search thread (2)"));
+				cbMessageBox(_("Failed to create search thread (2)"));
 			}
 		}
 		else
 		{
 			// Error
-			cbMessageBox(wxT("Failed to create search thread (1)"));
+			cbMessageBox(_("Failed to create search thread (1)"));
 		}
 	}
 	else
 	{
 		// Error
-		cbMessageBox(wxT("Search expression is empty !"));
+		cbMessageBox(_("Search expression is empty !"));
 	}
 }
 
@@ -679,8 +696,8 @@ void ThreadSearchView::EnableControls(bool enable)
 		}
 		else
 		{
-			cbMessageBox(wxString::Format(wxT("Failed to Enable window (id=%ld)"), idsArray[i]).c_str(),
-						 wxT("Error"), wxOK|wxICON_ERROR, this);
+			cbMessageBox(wxString::Format(_("Failed to Enable window (id=%ld)"), idsArray[i]).c_str(),
+						 _("Error"), wxOK|wxICON_ERROR, this);
 		}
 	}
 
@@ -773,7 +790,7 @@ bool ThreadSearchView::StopThread()
 		success = ClearThreadSearchEventsArray();
 		if ( success == false )
 		{
-			cbMessageBox(_T("Failed to clear events array."), _T("Error"), wxICON_ERROR);
+			cbMessageBox(_("Failed to clear events array."), _("Error"), wxICON_ERROR);
 		}
 
 		// Restores label and enables all search params graphical widgets.
@@ -804,7 +821,7 @@ bool ThreadSearchView::IsSearchRunning()
 void ThreadSearchView::UpdateSearchButtons(bool enable, eSearchButtonLabel label)
 {
 	// Labels and pictures paths
-	wxString searchButtonLabels[]        = {wxT("Search"), wxT("Cancel search"), wxEmptyString};
+	wxString searchButtonLabels[]        = {_("Search"), _("Cancel search"), wxEmptyString};
 
 	wxString prefix = ConfigManager::GetDataFolder() + _T("/images/ThreadSearch/");
 
@@ -822,7 +839,9 @@ void ThreadSearchView::UpdateSearchButtons(bool enable, eSearchButtonLabel label
 	// Changes label/bitmap only if requested
 	if ( label != skip )
 	{
-		m_pBtnSearch->SetLabel(searchButtonLabels[label]);
+		m_pBtnSearch->SetToolTip(searchButtonLabels[label]);
+		m_pBtnSearch->SetBitmapLabel   (wxBitmap(searchButtonPathsEnabled [label], wxBITMAP_TYPE_PNG));
+		m_pBtnSearch->SetBitmapDisabled(wxBitmap(searchButtonPathsDisabled[label], wxBITMAP_TYPE_PNG));
 		pToolBarSearchBtn->SetBitmapLabel   (wxBitmap(searchButtonPathsEnabled [label], wxBITMAP_TYPE_PNG));
 		pToolBarSearchBtn->SetBitmapDisabled(wxBitmap(searchButtonPathsDisabled[label], wxBITMAP_TYPE_PNG));
 	}

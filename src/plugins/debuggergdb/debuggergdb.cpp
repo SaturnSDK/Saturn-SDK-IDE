@@ -1527,6 +1527,7 @@ void DebuggerGDB::RunCommand(int cmd)
     switch (cmd)
     {
         case CMD_CONTINUE:
+        {
             ClearActiveMarkFromAllEditors();
             if (m_State.HasDriver())
             {
@@ -1535,15 +1536,19 @@ void DebuggerGDB::RunCommand(int cmd)
             }
 //            QueueCommand(new DebuggerCmd(this, _T("cont")));
             break;
+        }
 
         case CMD_STEP:
+        {
             ClearActiveMarkFromAllEditors();
             if (m_State.HasDriver())
                 m_State.GetDriver()->Step();
 //            QueueCommand(new DebuggerCmd(this, _T("next")));
             break;
+        }
 
         case CMD_STEP_INSTR:
+        {
             ClearActiveMarkFromAllEditors();
             if (!IsWindowReallyShown(m_pDisassembly))
             {
@@ -1554,33 +1559,42 @@ void DebuggerGDB::RunCommand(int cmd)
                 m_State.GetDriver()->StepInstruction();
 //            QueueCommand(new DebuggerCmd(this, _T("nexti")));
             break;
+        }
 
         case CMD_STEPIN:
+        {
             ClearActiveMarkFromAllEditors();
             if (m_State.HasDriver())
                 m_State.GetDriver()->StepIn();
 //            QueueCommand(new DebuggerCmd(this, _T("step")));
             break;
+        }
 
         case CMD_STEPOUT:
+        {
             ClearActiveMarkFromAllEditors();
             if (m_State.HasDriver())
                 m_State.GetDriver()->StepOut();
 //            QueueCommand(new DebuggerCmd(this, _T("finish")));
             break;
+        }
 
         case CMD_STOP:
+        {
             ClearActiveMarkFromAllEditors();
             if (m_State.HasDriver())
                 m_State.GetDriver()->Stop();
 //            QueueCommand(new DebuggerCmd(this, _T("quit")));
             break;
+        }
 
         case CMD_BACKTRACE:
+        {
 //            Manager::Get()->GetLogManager()->Log(m_PageIndex, "Running back-trace...");
             if (m_State.HasDriver())
                 m_State.GetDriver()->Backtrace();
             break;
+        }
 
         case CMD_DISASSEMBLE:
         {
@@ -1602,12 +1616,14 @@ void DebuggerGDB::RunCommand(int cmd)
         {
             if (m_State.HasDriver())
                 m_State.GetDriver()->MemoryDump();
+            break;
         }
 
         case CMD_RUNNINGTHREADS:
         {
             if (m_State.HasDriver())
                 m_State.GetDriver()->RunningThreads();
+            break;
         }
 
         default: break;

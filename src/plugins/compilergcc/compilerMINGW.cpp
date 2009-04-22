@@ -130,6 +130,7 @@ void CompilerMINGW::Reset()
     m_Options.AddOption(_("Warn whenever a pointer is cast such that the required alignment of the target is increased"), _T("-Wcast-align"), category);
     m_Options.AddOption(_("Warn if anything is declared more than once in the same scope"), _T("-Wredundant-decls"), category);
     m_Options.AddOption(_("Warn about unitialized variables which are initialized with themselves"), _T("-Winit-self"), category);
+    m_Options.AddOption(_("Warn whenever a local variable shadows another local variable, parameter or global variable or whenever a built-in function is shadowed"), _T("-Wshadow"), category);
 
     // optimization
     category = _("Optimization");
@@ -140,6 +141,7 @@ void CompilerMINGW::Reset()
     m_Options.AddOption(_("Optimize fully (for speed)"), _T("-O3"), category);
     m_Options.AddOption(_("Optimize generated code (for size)"), _T("-Os"), category);
     m_Options.AddOption(_("Expensive optimizations"), _T("-fexpensive-optimizations"), category);
+    m_Options.AddOption(_("Don't keep the frame pointer in a register for functions that don't need one"), _T("-fomit-frame-pointer"), category);
     // machine dependent options - cpu arch
     category = _("CPU architecture tuning (choose none, or only one of these)");
     m_Options.AddOption(_("i386"), _T("-march=i386"), category);
@@ -212,6 +214,7 @@ void CompilerMINGW::LoadDefaultRegExArray()
     m_RegExes.Add(RegExStruct(_("Linker error"), cltError, _T("(") + FilePathWithSpaces + _T("):([0-9]+):[0-9]+:[ \t](.*)"), 3, 1, 2));
     m_RegExes.Add(RegExStruct(_("Linker error (2)"), cltError, FilePathWithSpaces + _T("\\(.text\\+[0-9A-Za-z]+\\):([ \tA-Za-z0-9_:+/\\.-]+):[ \t](.*)"), 2, 1));
     m_RegExes.Add(RegExStruct(_("Linker error (lib not found)"), cltError, _T(".*(ld.*):[ \t](cannot find.*)"), 2, 1));
+    m_RegExes.Add(RegExStruct(_("Linker error (cannot open output file)"), cltError, _T(".*(ld.*):[ \t](cannot open output file.*):[ \t](.*)"), 2, 1, 0, 3));
     m_RegExes.Add(RegExStruct(_("Undefined reference"), cltError, _T("(") + FilePathWithSpaces + _T("):[ \t](undefined reference.*)"), 2, 1));
     m_RegExes.Add(RegExStruct(_("General warning"), cltWarning, _T("([Ww]arning:[ \t].*)"), 1));
     m_RegExes.Add(RegExStruct(_("Auto-import info"), cltInfo, _T("([Ii]nfo:[ \t].*)\\(auto-import\\)"), 1));

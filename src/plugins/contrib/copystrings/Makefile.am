@@ -22,4 +22,4 @@ pkgdata_DATA = copystrings.zip
 CLEANFILES = $(pkgdata_DATA)
 
 copystrings.zip: manifest.xml
-	PWD=`pwd` cd $(srcdir) && zip -j9 $(PWD)/copystrings.zip manifest.xml > /dev/null
+	PWD=`pwd` cd $(srcdir) && zip $(PWD)/copystrings.zip manifest.xml > /dev/null

@@ -503,6 +503,11 @@ void CompilerOptionsDlg::DoFillOthers()
         spn->SetRange(0, 1000);
         spn->SetValue(Manager::Get()->GetConfigManager(_T("compiler"))->ReadInt(_T("/max_reported_errors"), 50));
     }
+
+    chk = XRCCTRL(*this, "chkRebuildSeperately", wxCheckBox);
+    if (chk)
+        chk->SetValue(Manager::Get()->GetConfigManager(_T("compiler"))->ReadBool(_T("/rebuild_seperately"), false));
+
 } // DoFillOthers
 
 void CompilerOptionsDlg::DoFillTree()
@@ -2031,18 +2036,18 @@ void CompilerOptionsDlg::OnSelectProgramClick(wxCommandEvent& event)
     wxString file_selection = _("All files (*)|*");
     if (platform::windows)
         file_selection = _("Executable files (*.exe)|*.exe");
-    wxFileDialog* dlg = new wxFileDialog(this,
-                            _("Select file"),
-                            XRCCTRL(*this, "txtMasterPath", wxTextCtrl)->GetValue() + _T("/bin"),
-                            obj->GetValue(),
-                            file_selection,
-                            wxFD_OPEN | wxFD_FILE_MUST_EXIST | compatibility::wxHideReadonly );
-    dlg->SetFilterIndex(0);
+    wxFileDialog dlg(this,
+                     _("Select file"),
+                     XRCCTRL(*this, "txtMasterPath", wxTextCtrl)->GetValue() + _T("/bin"),
+                     obj->GetValue(),
+                     file_selection,
+                     wxFD_OPEN | wxFD_FILE_MUST_EXIST | compatibility::wxHideReadonly );
+    dlg.SetFilterIndex(0);
 
-    PlaceWindow(dlg);
-    if (dlg->ShowModal() != wxID_OK)
+    PlaceWindow(&dlg);
+    if (dlg.ShowModal() != wxID_OK)
         return;
-    wxFileName fname(dlg->GetPath());
+    wxFileName fname(dlg.GetPath());
     obj->SetValue(fname.GetFullName());
     m_bDirty = true;
 } // OnSelectProgramClick
@@ -2204,6 +2209,12 @@ void CompilerOptionsDlg::OnApply()
     spn = XRCCTRL(*this, "spnMaxErrors", wxSpinCtrl);
     if (spn)
         Manager::Get()->GetConfigManager(_T("compiler"))->Write(_T("/max_reported_errors"), (int)spn->GetValue());
+
+    chk = XRCCTRL(*this, "chkRebuildSeperately", wxCheckBox);
+    if (chk)
+    {
+        Manager::Get()->GetConfigManager(_T("compiler"))->Write(_T("/rebuild_seperately"), (bool)chk->IsChecked());
+    }
 
     m_Compiler->SaveOptions();
     m_Compiler->SetupEnvironment();

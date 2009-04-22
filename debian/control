@@ -82,6 +82,7 @@ Description: contrib plugins for Code::Blocks IDE
  plugins. These are:
     * Code profiler (based on gprof)
     * Code statistics (SLOCs etc)
+    * Copy strings
     * DragScroll (enhances mouse operations)
     * Setting of environment variables
     * Source exporter to PDF/HTML/ODT/RTF
@@ -90,6 +91,7 @@ Description: contrib plugins for Code::Blocks IDE
     * Keyboard shortcuts configuration
     * RAD gui-builder for wxWidgets (wxSmith)
     * wxSmith contrib items
+    * wxSmith AUI
     * Selection of small games for relaxing between coding sessions! (BYOGames)
     * Autoversioning
     * ThreadSearch

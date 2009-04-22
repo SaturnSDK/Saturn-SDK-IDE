@@ -622,8 +622,8 @@ void CompilerGCC::BuildModuleMenu(const ModuleType type, wxMenu* menu, const Fil
     {
         // popup menu on a project
         menu->AppendSeparator();
-        menu->Append(idMenuCompileFromProjectManager, _("Build\tCtrl-F9"));
-        menu->Append(idMenuRebuildFromProjectManager, _("Rebuild\tCtrl-F11"));
+        menu->Append(idMenuCompileFromProjectManager, _("Build"));
+        menu->Append(idMenuRebuildFromProjectManager, _("Rebuild"));
         menu->Append(idMenuCleanFromProjectManager, _("Clean"));
         menu->AppendSeparator();
         menu->Append(idMenuProjectCompilerOptionsFromProjectManager, _("Build options..."));
@@ -662,66 +662,46 @@ void CompilerGCC::Dispatcher(wxCommandEvent& event)
 
     if (eventId == idMenuRun)
         OnRun(event);
-
-    if (eventId == idMenuCompileAndRun)
+    else if (eventId == idMenuCompileAndRun)
         OnCompileAndRun(event);
-
-    if (eventId == idMenuCompile)
+    else if (eventId == idMenuCompile)
         OnCompile(event);
-
-    if (eventId == idMenuCompileFromProjectManager)
+    else if (eventId == idMenuCompileFromProjectManager)
         OnCompile(event);
-
-    if (eventId == idMenuCompileFile)
+    else if (eventId == idMenuCompileFile)
         OnCompileFile(event);
-
-    if (eventId == idMenuCompileFileFromProjectManager)
+    else if (eventId == idMenuCompileFileFromProjectManager)
         OnCompileFile(event);
-
-    if (eventId == idMenuRebuild)
+    else if (eventId == idMenuRebuild)
         OnRebuild(event);
-
-    if (eventId == idMenuRebuildFromProjectManager)
+    else if (eventId == idMenuRebuildFromProjectManager)
         OnRebuild(event);
-
-    if (eventId == idMenuCompileAll)
+    else if (eventId == idMenuCompileAll)
         OnCompileAll(event);
-
-    if (eventId == idMenuRebuildAll)
+    else if (eventId == idMenuRebuildAll)
         OnRebuildAll(event);
-
-    if (eventId == idMenuProjectCompilerOptions ||
-        eventId == idMenuProjectCompilerOptionsFromProjectManager)
+    else if (   eventId == idMenuProjectCompilerOptions
+	         || eventId == idMenuProjectCompilerOptionsFromProjectManager )
         OnProjectCompilerOptions(event);
-
-    if (eventId == idMenuTargetCompilerOptions)
+    else if (eventId == idMenuTargetCompilerOptions)
         OnTargetCompilerOptions(event);
-
-    if (eventId == idMenuClean)
+    else if (eventId == idMenuClean)
         OnClean(event);
-
-    if (eventId == idMenuCleanAll)
+    else if (eventId == idMenuCleanAll)
         OnCleanAll(event);
-
-    if (eventId == idMenuCleanFromProjectManager)
+    else if (eventId == idMenuCleanFromProjectManager)
         OnClean(event);
-
-    if (eventId == idMenuKillProcess)
+    else if (eventId == idMenuKillProcess)
         OnKillProcess(event);
-
-    if (eventId == idMenuNextError)
+    else if (eventId == idMenuNextError)
         OnNextError(event);
-
-    if (eventId == idMenuPreviousError)
+    else if (eventId == idMenuPreviousError)
         OnPreviousError(event);
-
-    if (eventId == idMenuClearErrors)
+    else if (eventId == idMenuClearErrors)
         OnClearErrors(event);
-
-    if (eventId == idMenuExportMakefile)
+    else if (eventId == idMenuExportMakefile)
         OnExportMakefile(event);
-
-    if (eventId == idMenuSettings)
+    else if (eventId == idMenuSettings)
         OnConfig(event);
 
     // Return focus to current editor
@@ -1453,14 +1433,15 @@ wxString CompilerGCC::GetTargetString(int index)
     return wxEmptyString;
 }
 
-void CompilerGCC::DoPrepareQueue()
+void CompilerGCC::DoPrepareQueue(bool clearLog)
 {
     if (m_CommandQueue.GetCount() == 0)
     {
         CodeBlocksEvent evt(cbEVT_COMPILER_STARTED, 0, m_Project, 0, this);
         Manager::Get()->ProcessEvent(evt);
 
-        ClearLog();
+        if(clearLog)
+            ClearLog();
         DoClearErrors();
         // wxStartTimer();
         m_StartTimer = wxGetLocalTimeMillis();
@@ -1932,11 +1913,14 @@ wxString CompilerGCC::GetMakeCommandFor(MakeCommand cmd, cbProject* project, Pro
     wxString compilerId = target ? target->GetCompilerID() : project->GetCompilerID();
     if (!CompilerFactory::IsValidCompilerID(compilerId))
         compilerId = CompilerFactory::GetDefaultCompilerID();
-    wxString command = target ? target->GetMakeCommandFor(cmd) : project->GetMakeCommandFor(cmd);
+    wxString command = target && !target->GetMakeCommandFor(cmd).empty() ?
+                       target->GetMakeCommandFor(cmd) : project->GetMakeCommandFor(cmd);
 
     command.Replace(_T("$makefile"), project->GetMakefile());
     command.Replace(_T("$make"), CompilerFactory::GetCompiler(compilerId)->GetPrograms().MAKE);
     command.Replace(_T("$target"), target ? target->GetTitle() : _T(""));
+    Manager::Get()->GetMacrosManager()->ReplaceMacros(command);
+
 //    Manager::Get()->GetMessageManager()->Log(m_PageIndex, _T("Make: %s"), command.c_str()));
     return command;
 }
@@ -1963,6 +1947,7 @@ int CompilerGCC::Clean(const wxString& target)
 bool CompilerGCC::DoCleanWithMake(const wxString& cmd, bool showOutput)
 {
     wxArrayString output, errors;
+    wxSetWorkingDirectory(m_pBuildingProject->GetExecutionDir());
     long result = wxExecute(cmd, output, errors, wxEXEC_SYNC);
     if(showOutput)
     {
@@ -2333,6 +2318,7 @@ void CompilerGCC::BuildStateManagement()
             if (UseMake(m_pBuildingProject))
             {
                 wxArrayString output, error;
+                wxSetWorkingDirectory(m_pBuildingProject->GetExecutionDir());
                 if(wxExecute(GetMakeCommandFor(mcAskRebuildNeeded, m_pBuildingProject, bt), output, error, wxEXEC_SYNC | wxEXEC_NODISABLE))
                 {
                     switch (CompilerFactory::GetCompiler(bt->GetCompilerID())->GetSwitches().logging)
@@ -2679,7 +2665,7 @@ int CompilerGCC::Rebuild(const wxString& target)
     return DoBuild(target, true, true);
 }
 
-int CompilerGCC::DoWorkspaceBuild(const wxString& target, bool clean, bool build)
+int CompilerGCC::DoWorkspaceBuild(const wxString& target, bool clean, bool build, bool clearLog)
 {
     wxString realTarget = target;
     if (realTarget.IsEmpty())
@@ -2690,8 +2676,7 @@ int CompilerGCC::DoWorkspaceBuild(const wxString& target, bool clean, bool build
     if (!StopRunningDebugger())
         return -1;
 
-    DoPrepareQueue();
-    ClearLog();
+    DoPrepareQueue(clearLog);
     m_IsWorkspaceOperation = true;
 
     InitBuildLog(true);
@@ -2727,7 +2712,11 @@ int CompilerGCC::BuildWorkspace(const wxString& target)
 
 int CompilerGCC::RebuildWorkspace(const wxString& target)
 {
-    return DoWorkspaceBuild(target, true, true);
+    if(Manager::Get()->GetConfigManager(_T("compiler"))->ReadBool(_T("/rebuild_seperately"), false))
+    {
+        return DoWorkspaceBuild(target, true, true);
+    }
+    return DoWorkspaceBuild(target, true, false) + DoWorkspaceBuild(target, false, true, false);
 }
 
 int CompilerGCC::CleanWorkspace(const wxString& target)
@@ -3317,7 +3306,28 @@ void CompilerGCC::AddOutputLine(const wxString& output, bool forceErrorColour)
             }
         }
         // actually log message
-        LogWarningOrError(clt, m_pBuildingProject, compiler->GetLastErrorFilename(), compiler->GetLastErrorLine(), compiler->GetLastError());
+        wxString last_error_filename = compiler->GetLastErrorFilename();
+        if (UseMake())
+        {
+            wxFileName last_error_file(last_error_filename);
+            if (!last_error_file.IsAbsolute())
+            {
+                cbProject* project = m_Project;
+                if (m_pLastBuildingTarget)
+                {
+                    project = m_pLastBuildingTarget->GetParentProject();
+                }
+                else
+                {
+                    AskForActiveProject();
+                    project = m_Project;
+                }
+                last_error_file.PrependDir(project->GetExecutionDir());
+                last_error_file.MakeRelativeTo(project->GetBasePath());
+                last_error_filename = last_error_file.GetFullPath();
+            }
+        }
+        LogWarningOrError(clt, m_pBuildingProject, last_error_filename, compiler->GetLastErrorLine(), compiler->GetLastError());
     }
 
     // add to log

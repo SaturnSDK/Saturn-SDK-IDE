@@ -221,9 +221,9 @@ AC_DEFUN([BUILD_CONTRIB_NONE], [
 	AM_CONDITIONAL([BUILD_BROWSETRACKER], [false])
 	AM_CONDITIONAL([BUILD_BYOGAMES], [false])
 	AM_CONDITIONAL([BUILD_CBKODERS], [false])
-	AM_CONDITIONAL([BUILD_COPYSTRINGS], [false])
 	AM_CONDITIONAL([BUILD_CODESNIPPETS], [false])
 	AM_CONDITIONAL([BUILD_CODESTAT], [false])
+	AM_CONDITIONAL([BUILD_COPYSTRINGS], [false])
 	AM_CONDITIONAL([BUILD_DRAGSCROLL], [false])
 	AM_CONDITIONAL([BUILD_ENVVARS], [false])
 	AM_CONDITIONAL([BUILD_HEADERFIXUP], [false])
@@ -238,6 +238,7 @@ AC_DEFUN([BUILD_CONTRIB_NONE], [
 	AM_CONDITIONAL([BUILD_VALGRIND], [false])
 	AM_CONDITIONAL([BUILD_WXSMITH], [false])
 	AM_CONDITIONAL([BUILD_WXSMITHCONTRIB], [false])
+	AM_CONDITIONAL([BUILD_WXSMITHAUI], [false])
 	AM_CONDITIONAL([BUILD_HEXEDITOR], [false])
 	AM_CONDITIONAL([BUILD_INCSEARCH], [false])
 ])
@@ -247,9 +248,9 @@ AC_DEFUN([BUILD_CONTRIB_ALL], [
 	AM_CONDITIONAL([BUILD_BROWSETRACKER], [true])
 	AM_CONDITIONAL([BUILD_BYOGAMES], [true])
 	AM_CONDITIONAL([BUILD_CBKODERS], [true])
-	AM_CONDITIONAL([BUILD_COPYSTRINGS], [true])
 	AM_CONDITIONAL([BUILD_CODESNIPPETS], [true])
 	AM_CONDITIONAL([BUILD_CODESTAT], [true])
+	AM_CONDITIONAL([BUILD_COPYSTRINGS], [true])
 	AM_CONDITIONAL([BUILD_DRAGSCROLL], [true])
 	AM_CONDITIONAL([BUILD_ENVVARS], [true])
 	AM_CONDITIONAL([BUILD_HEADERFIXUP], [true])
@@ -264,6 +265,7 @@ AC_DEFUN([BUILD_CONTRIB_ALL], [
 	AM_CONDITIONAL([BUILD_VALGRIND], [true])
 	AM_CONDITIONAL([BUILD_WXSMITH], [true])
 	AM_CONDITIONAL([BUILD_WXSMITHCONTRIB], [true])
+	AM_CONDITIONAL([BUILD_WXSMITHAUI], [true])
 	AM_CONDITIONAL([BUILD_HEXEDITOR], [true])
 	AM_CONDITIONAL([BUILD_INCSEARCH], [true])
 ])
@@ -279,9 +281,9 @@ AC_ARG_WITH(contrib-plugins,
   [                        "all,-help" compiles all contrib plugins except the help plugin ]
   [                        By default, no contrib plugins are compiled ]
   [                        Plugin names are: AutoVersioning,BrowseTracker,byogames,cbkoders,codesnippets,]
-  [                        		     copystrings,codestat,dragscroll,envvars,headerfixup ]
-  [                        		     help,keybinder,libfinder,profiler,regex, ]
-  [                        		     exporter,symtab,wxsmith,wxsmithcontrib,incsearch,hexeditor ],
+  [                        		     codestat,copystrings, dragscroll,envvars,headerfixup ]
+  [                        		     help,keybinder,libfinder,profiler,regex,exporter, ]
+  [                        		     symtab,wxsmith,wxsmithcontrib,wxsmithaui,incsearch,hexeditor ],
   plugins="$withval", plugins="none")
 
 plugins=`echo $plugins | sed 's/,/ /g'`
@@ -303,14 +305,14 @@ do
 	cbkoders)
 		AM_CONDITIONAL([BUILD_CBKODERS], [true])
 		;;
-	copystrings)
-		AM_CONDITIONAL([BUILD_COPYSTRINGS], [true])
-		;;
 	codesnippets)
 		AM_CONDITIONAL([BUILD_CODESNIPPETS], [true])
 		;;
 	codestat)
 		AM_CONDITIONAL([BUILD_CODESTAT], [true])
+		;;
+	copystrings)
+		AM_CONDITIONAL([BUILD_COPYSTRINGS], [true])
 		;;
 	dragscroll)
 		AM_CONDITIONAL([BUILD_DRAGSCROLL], [true])
@@ -354,6 +356,9 @@ do
 	wxsmithcontrib)
 		AM_CONDITIONAL([BUILD_WXSMITHCONTRIB], [true])
 		;;
+	wxsmithaui)
+		AM_CONDITIONAL([BUILD_WXSMITHAUI], [true])
+		;;
 	hexeditor)
 		AM_CONDITIONAL([BUILD_HEXEDITOR], [true])
 		;;
@@ -372,14 +377,14 @@ do
 	-cbkoders)
 		AM_CONDITIONAL([BUILD_CBKODERS], [false])
 		;;
-	-copystrings)
-		AM_CONDITIONAL([BUILD_COPYSTRINGS], [false])
-		;;
 	-codesnippets)
 		AM_CONDITIONAL([BUILD_CODESNIPPETS], [false])
 		;;
 	-codestat)
 		AM_CONDITIONAL([BUILD_CODESTAT], [false])
+		;;
+	-copystrings)
+		AM_CONDITIONAL([BUILD_COPYSTRINGS], [false])
 		;;
 	-dragscroll)
 		AM_CONDITIONAL([BUILD_DRAGSCROLL], [false])
@@ -423,6 +428,9 @@ do
 	-wxsmithcontrib)
 		AM_CONDITIONAL([BUILD_WXSMITHCONTRIB], [false])
 		;;
+	-wxsmithaui)
+		AM_CONDITIONAL([BUILD_WXSMITHAUI], [false])
+		;;
 	-hexeditor)
 		AM_CONDITIONAL([BUILD_HEXEDITOR], [false])
 		;;
@@ -441,7 +449,6 @@ AC_SUBST(BUILD_AUTOVERSIONING)
 AC_SUBST(BUILD_BROWSETRACKER)
 AC_SUBST(BUILD_BYOGAMES)
 AC_SUBST(BUILD_CBKODERS)
-AC_SUBST(BUILD_COPYSTRINGS)
 AC_SUBST(BUILD_CODESNIPPETS)
 AC_SUBST(BUILD_CODESTAT)
 AC_SUBST(BUILD_COPYSTRINGS)
@@ -459,6 +466,7 @@ AC_SUBST(BUILD_THREADSEARCH)
 AC_SUBST(BUILD_VALGRIND)
 AC_SUBST(BUILD_WXSMITH)
 AC_SUBST(BUILD_WXSMITHCONTRIB)
+AC_SUBST(BUILD_WXSMITHAUI)
 AC_SUBST(BUILD_HEXEDITOR)
 AC_SUBST(BUILD_INCSEARCH)
 

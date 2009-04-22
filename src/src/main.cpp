@@ -1481,17 +1481,16 @@ bool MainFrame::Open(const wxString& filename, bool addToHistory)
 
 wxString MainFrame::ShowOpenFileDialog(const wxString& caption, const wxString& filter)
 {
-    wxFileDialog* dlg = new wxFileDialog(this,
-                            caption,
-                            wxEmptyString,
-                            wxEmptyString,
-                            filter,
-                            wxFD_OPEN | compatibility::wxHideReadonly);
+    wxFileDialog dlg(this,
+                     caption,
+                     wxEmptyString,
+                     wxEmptyString,
+                     filter,
+                     wxFD_OPEN | compatibility::wxHideReadonly);
     wxString sel;
-    PlaceWindow(dlg);
-    if (dlg->ShowModal() == wxID_OK)
-        sel = dlg->GetPath();
-    dlg->Destroy();
+    PlaceWindow(&dlg);
+    if (dlg.ShowModal() == wxID_OK)
+        sel = dlg.GetPath();
     return sel;
 }
 
@@ -1808,6 +1807,8 @@ void MainFrame::ShowHideStartPage(bool forceHasProject)
         sh = new StartHerePage(this, Manager::Get()->GetEditorManager()->GetNotebook());
     else if (!show && sh)
         sh->Destroy();
+
+    DoUpdateAppTitle();
 }
 
 void MainFrame::ShowHideScriptConsole()
@@ -1876,7 +1877,7 @@ void MainFrame::OnStartHereVarSubst(wxCommandEvent& event)
     wxString buf = event.GetString();
     wxString links;
 
-    links << _T("<b>Recent projects</b><br>\n");
+    links << _("<b>Recent projects</b><br>\n");
     if (m_pProjectsHistory->GetCount())
     {
         links << _T("<ul>");
@@ -1892,7 +1893,7 @@ void MainFrame::OnStartHereVarSubst(wxCommandEvent& event)
     else
         links << _T("&nbsp;&nbsp;&nbsp;&nbsp;No recent projects<br>\n");
 
-    links << _T("<br><b>Recent files</b><br>\n");
+    links << _("<br><b>Recent files</b><br>\n");
     if (m_pFilesHistory->GetCount())
     {
         links << _T("<ul>");
@@ -1911,6 +1912,11 @@ void MainFrame::OnStartHereVarSubst(wxCommandEvent& event)
 
     // update page
     buf.Replace(_T("CB_VAR_RECENT_FILES_AND_PROJECTS"), links);
+	buf.Replace(_T("CB_TXT_NEW_PROJECT"), _("Create a new project"));
+	buf.Replace(_T("CB_TXT_OPEN_PROJECT"), _("Open an existing project"));
+	buf.Replace(_T("CB_TXT_VISIT_FORUMS"), _("Visit the Code::Blocks forums"));
+	buf.Replace(_T("CB_TXT_REPORT_BUG"), _("Report a bug"));
+	buf.Replace(_T("CB_TXT_REQ_NEW_FEATURE"), _("Request a new feature"));
     ((StartHerePage*)sh)->SetPageContent(buf);
 }
 
@@ -2380,36 +2386,35 @@ void MainFrame::DoOnFileOpen(bool bProject)
             FileFilters::GetFilterIndexFromName(Filters, _("Code::Blocks project files"), StoredIndex);
         }
     }
-    wxFileDialog* dlg = new wxFileDialog(this,
+    wxFileDialog dlg(this,
                             _("Open file"),
                             Path,
                             wxEmptyString,
                             Filters,
                             wxFD_OPEN | wxFD_MULTIPLE | compatibility::wxHideReadonly);
-    dlg->SetFilterIndex(StoredIndex);
+    dlg.SetFilterIndex(StoredIndex);
 
-    PlaceWindow(dlg);
-    if (dlg->ShowModal() == wxID_OK)
+    PlaceWindow(&dlg);
+    if (dlg.ShowModal() == wxID_OK)
     {
         // store the last used filter and directory
         // as said : don't do this in case of an 'open project'
         if(mgr && !bProject)
         {
-            int Index = dlg->GetFilterIndex();
+            int Index = dlg.GetFilterIndex();
             wxString Filter;
             if(FileFilters::GetFilterNameFromIndex(Filters, Index, Filter))
             {
                 mgr->Write(_T("/file_dialogs/file_new_open/filter"), Filter);
             }
-            wxString Test = dlg->GetDirectory();
-            mgr->Write(_T("/file_dialogs/file_new_open/directory"), dlg->GetDirectory());
+            wxString Test = dlg.GetDirectory();
+            mgr->Write(_T("/file_dialogs/file_new_open/directory"), dlg.GetDirectory());
         }
         wxArrayString files;
-        dlg->GetPaths(files);
+        dlg.GetPaths(files);
         OnDropFiles(0,0,files);
     }
 
-    dlg->Destroy();
 } // end of DoOnFileOpen
 
 void MainFrame::OnFileOpen(wxCommandEvent& event)
@@ -3414,9 +3419,9 @@ void MainFrame::OnEditBoxCommentSelected(wxCommandEvent& event)
         wxString nlc;
         switch (stc->GetEOLMode())
         {
-            case wxSCI_EOL_CRLF: nlc=_T("\r\n");
-            case wxSCI_EOL_CR:   nlc=_T("\r");
-            case wxSCI_EOL_LF:   nlc=_T("\n");
+            case wxSCI_EOL_CRLF: nlc=_T("\r\n"); break;
+            case wxSCI_EOL_CR:   nlc=_T("\r");   break;
+            case wxSCI_EOL_LF:   nlc=_T("\n");   break;
 
         }
 
@@ -3749,10 +3754,9 @@ void MainFrame::OnSearchGotoPrevChanged(wxCommandEvent& event)
 
 void MainFrame::OnHelpAbout(wxCommandEvent& WXUNUSED(event))
 {
-    dlgAbout* dlg = new dlgAbout(this);
-    PlaceWindow(dlg, pdlHead);
-    dlg->ShowModal();
-    dlg->Destroy();
+    dlgAbout dlg(this);
+    PlaceWindow(&dlg, pdlHead);
+    dlg.ShowModal();
 }
 
 void MainFrame::OnHelpTips(wxCommandEvent& event)
@@ -4253,7 +4257,6 @@ void MainFrame::OnProjectActivated(CodeBlocksEvent& event)
 void MainFrame::OnProjectOpened(CodeBlocksEvent& event)
 {
     ShowHideStartPage(true);
-    DoUpdateAppTitle();
     event.Skip();
 }
 
@@ -4292,7 +4295,6 @@ void MainFrame::OnEditorModified(CodeBlocksEvent& event)
 void MainFrame::OnProjectClosed(CodeBlocksEvent& event)
 {
     ShowHideStartPage();
-    DoUpdateAppTitle();
     event.Skip();
 }
 

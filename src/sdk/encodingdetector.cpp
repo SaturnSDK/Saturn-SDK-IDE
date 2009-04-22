@@ -407,7 +407,7 @@ bool EncodingDetector::DetectEncoding(const wxByte* buffer, size_t size, bool Co
     return true;
 } // end of DetectEncoding
 
-//bool EncodingDetector::DetectUTF8(wxByte *byt, size_t size)
+//bool EncodingDetector::DetectUTF8(const wxByte *byt, size_t size)
 //{
 //    /* The following detection code is based on modified code
 //    *  of MadEdit
@@ -488,7 +488,7 @@ bool EncodingDetector::DetectEncoding(const wxByte* buffer, size_t size, bool Co
 *  Begin: Detection Code from MadEdit
 *         Modified to suit C::B
 *  ---------------------------------------------- */
-bool EncodingDetector::IsTextUTF16LE(wxByte *text, size_t size)
+bool EncodingDetector::IsTextUTF16LE(const wxByte *text, size_t size)
 {
     if (size < 2)
         return false;
@@ -525,7 +525,7 @@ bool EncodingDetector::IsTextUTF16LE(wxByte *text, size_t size)
     return ok;
 }
 
-bool EncodingDetector::IsTextUTF16BE(wxByte *text, size_t size)
+bool EncodingDetector::IsTextUTF16BE(const wxByte *text, size_t size)
 {
     if (size < 2)
         return false;
@@ -567,7 +567,7 @@ bool EncodingDetector::IsTextUTF16BE(wxByte *text, size_t size)
 *       Modified to suit C::B
 *  ============================================== */
 
-bool EncodingDetector::DetectUTF16(wxByte *byt, size_t size)
+bool EncodingDetector::DetectUTF16(const wxByte *byt, size_t size)
 {
     if (IsTextUTF16BE(byt, size))
     {
@@ -587,7 +587,7 @@ bool EncodingDetector::DetectUTF16(wxByte *byt, size_t size)
 *  Begin: Detection Code from MadEdit
 *         Modified to suit C::B
 *  ---------------------------------------------- */
-bool EncodingDetector::IsTextUTF32LE(wxByte *text, size_t size)
+bool EncodingDetector::IsTextUTF32LE(const wxByte *text, size_t size)
 {
     size >>= 2;   // to count
     if (size < 4)
@@ -606,7 +606,7 @@ bool EncodingDetector::IsTextUTF32LE(wxByte *text, size_t size)
     return true;
 }
 
-bool EncodingDetector::IsTextUTF32BE(wxByte *text, size_t size)
+bool EncodingDetector::IsTextUTF32BE(const wxByte *text, size_t size)
 {
     size >>= 2;   // to count
     if (size < 4)
@@ -629,7 +629,7 @@ bool EncodingDetector::IsTextUTF32BE(wxByte *text, size_t size)
 *       Modified to suit C::B
 *  ============================================== */
 
-bool EncodingDetector::DetectUTF32(wxByte *byt, size_t size)
+bool EncodingDetector::DetectUTF32(const wxByte *byt, size_t size)
 {
     if (IsTextUTF32BE(byt, size))
     {

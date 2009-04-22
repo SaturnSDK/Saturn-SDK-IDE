@@ -59,6 +59,7 @@
 			<Add directory="Search" />
 			<Add directory="editor" />
 			<Add directory="." />
+			<Add directory="..\..\..\include\tinyxml" />
 			<Add directory="..\..\..\include\mozilla_chardet" />
 		</Compiler>
 		<Linker>

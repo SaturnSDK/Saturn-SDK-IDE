@@ -18,12 +18,12 @@ if BUILD_CODESNIPPETS
 MAYBE_CODESNIPPETS=codesnippets
 endif
 
-if BUILD_COPYSTRINGS
-MAYBE_COPYSTRINGS=copystrings
-endif
-
 if BUILD_CODESTAT
 MAYBE_CODESTAT=codestat
+endif
+
+if BUILD_COPYSTRINGS
+MAYBE_COPYSTRINGS=copystrings
 endif
 
 if BUILD_DRAGSCROLL
@@ -94,9 +94,9 @@ SUBDIRS = $(MAYBE_AUTOVERSIONING) \
 		$(MAYBE_BROWSETRACKER) \
 		$(MAYBE_BYOGAMES) \
 		$(MAYBE_CBKODERS) \
-		$(MAYBE_COPYSTRINGS) \
 		$(MAYBE_CODESNIPPETS) \
 		$(MAYBE_CODESTAT) \
+		$(MAYBE_COPYSTRINGS) \
 		$(MAYBE_DRAGSCROLL) \
 		$(MAYBE_ENVVARS) \
 		$(MAYBE_HELP) \
@@ -118,9 +118,10 @@ DIST_SUBDIRS = AutoVersioning \
 		BrowseTracker \
 		byogames \
 		cb_koders \
-		copystrings \
 		codesnippets \
 		codestat \
+		copystrings \
+		devpak_plugin \
 		dragscroll \
 		envvars \
 		help_plugin \
