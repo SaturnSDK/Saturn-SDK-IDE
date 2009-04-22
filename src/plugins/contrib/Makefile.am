@@ -82,6 +82,10 @@ if BUILD_WXSMITHCONTRIB
 MAYBE_WXSMITHCONTRIB=wxSmith  wxSmithContribItems
 endif
 
+if BUILD_WXSMITHAUI
+MAYBE_WXSMITHAUI=wxSmith wxSmithContribItems  wxSmithAui
+endif
+
 if BUILD_HEXEDITOR
 MAYBE_HEXEDITOR=HexEditor
 endif
@@ -110,6 +114,7 @@ SUBDIRS = $(MAYBE_AUTOVERSIONING) \
 		$(MAYBE_VALGRIND) \
 		$(MAYBE_WXSMITH) \
 		$(MAYBE_WXSMITHCONTRIB) \
+		$(MAYBE_WXSMITHAUI) \
 		$(MAYBE_LIBFINDER) \
 		$(MAYBE_HEXEDITOR) \
 		$(MAYBE_INCSEARCH)
@@ -135,6 +140,7 @@ DIST_SUBDIRS = AutoVersioning \
 		Valgrind \
 		wxSmith \
 		wxSmithContribItems \
+		wxSmithAui \
 		lib_finder \
 		HexEditor \
 		IncrementalSearch
