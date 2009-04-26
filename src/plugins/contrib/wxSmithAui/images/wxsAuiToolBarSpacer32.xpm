@@ -1,5 +1,5 @@
 /* XPM */
-static char * wxsAuiToolBarSpacer32_xpm[] = {
+static const char * wxsAuiToolBarSpacer32_xpm[] = {
 "32 32 245 2",
 "  	c None",
 ". 	c #D4D0C8",

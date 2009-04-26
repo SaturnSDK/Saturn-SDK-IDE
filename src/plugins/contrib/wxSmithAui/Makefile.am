@@ -1,5 +1,3 @@
-SUBDIRS = wxAuiManager wxAuiNotebook wxAuiToolBar .
-
 AM_CPPFLAGS = -DWXMAKINGLIB_PROPGRID
 
 INCLUDES = $(WX_CXXFLAGS) \
@@ -13,24 +11,27 @@ INCLUDES = $(WX_CXXFLAGS) \
 
 pluginlibdir = $(pkglibdir)/plugins
 
-pluginlib_LTLIBRARIES = libwxsmithaui.la
+pluginlib_LTLIBRARIES = libwxSmithAui.la
 
-libwxsmithcontribitems_la_LDFLAGS = -module -version-info 0:1:0 -shared -no-undefined -avoid-version
+libwxSmithAui_la_LDFLAGS = -module -version-info 0:1:0 -shared -no-undefined -avoid-version
 
-libwxsmithcontribitems_la_LIBADD = $(PLUGIN_WX_LIBS) ../../../sdk/libcodeblocks.la \
+libwxSmithAui_la_LIBADD = $(PLUGIN_WX_LIBS) ../../../sdk/libcodeblocks.la \
 		       ../wxSmith/libwxsmithlib.la
 
 EXTRA_DIST = $(srcdir)/images/*.xpm \
+		$(srcdir)/images/*.xcf \
+		$(srcdir)/wxsmith/*.wxs \
 		$(srcdir)/*.cbp \
 		manifest.xml
 
-pkgdata_DATA = wxsmithaui.zip
+pkgdata_DATA = wxSmithAui.zip
+
 CLEANFILES = $(pkgdata_DATA)
 
-wxsmithaui.zip: manifest.xml
-	PWD=`pwd` cd $(srcdir) && zip $(PWD)/wxsmithaui.zip manifest.xml > /dev/null
+wxSmithAui.zip: manifest.xml
+	PWD=`pwd` cd $(srcdir) && zip $(PWD)/wxSmithAui.zip manifest.xml > /dev/null
 
-libwxsmithcontribitems_la_SOURCES = \
+libwxSmithAui_la_SOURCES = \
 ./wxAuiManager/wxsAuiManager.cpp \
 ./wxAuiManager/wxsAuiManagerParentQP.cpp \
 ./wxAuiManager/wxsAuiPaneInfoProperty.cpp \

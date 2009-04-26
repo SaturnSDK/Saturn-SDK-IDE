@@ -19,6 +19,8 @@ usr/share/codeblocks/ThreadSearch.zip*
 usr/share/codeblocks/Valgrind.zip*
 usr/share/codeblocks/wxsmith.zip*
 usr/share/codeblocks/wxsmithcontribitems.zip*
+usr/share/codeblocks/wxSmithAui.zip*
+usr/lib/pkgconfig/wxsmithaui.pc
 usr/share/codeblocks/HexEditor.zip*
 usr/share/codeblocks/IncrementalSearch.zip*
 usr/share/codeblocks/images/codesnippets*

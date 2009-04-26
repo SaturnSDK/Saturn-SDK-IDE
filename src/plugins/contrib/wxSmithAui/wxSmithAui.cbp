@@ -8,29 +8,27 @@
 		<Build>
 			<Target title="Unix">
 				<Option platforms="Unix;Mac;" />
-				<Option output="..\..\..\devel\share\codeblocks\plugins\wxSmithAui" prefix_auto="1" extension_auto="1" />
-				<Option working_dir="..\..\..\devel" />
-				<Option object_output="..\..\..\.objs\plugins\contrib\wxSmithAui" />
+				<Option output="../../../devel/share/codeblocks/plugins/libwxSmithAui" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="../../../devel" />
+				<Option object_output="../../../.objs/plugins/contrib/wxSmithAui" />
 				<Option type="3" />
 				<Option compiler="gcc" />
-				<Option host_application="codeblocks" />
+				<Option parameters="-ni -ns -d" />
+				<Option host_application="../../../codeblocks" />
 				<Compiler>
-					<Add option="-g" />
-					<Add option="`pkg-config --cflags wxsmith`" />
-					<Add option="`pkg-config --cflags codeblocks`" />
-					<Add option="`pkg-config --cflags gtk+-2.0`" />
-					<Add option="`/usr/bin/wx-config --cflags`" />
+					<Add option="-Ulinux" />
+					<Add option="-Uunix" />
+					<Add option="`wx-config --cflags`" />
+					<Add option="-Winvalid-pch" />
+					<Add option="-fexceptions" />
 					<Add option="-fPIC" />
 				</Compiler>
 				<Linker>
-					<Add option="`pkg-config --libs wxsmith`" />
-					<Add option="`pkg-config --libs codeblocks`" />
-					<Add option="`pkg-config --libs gtk+-2.0`" />
 					<Add option="`/usr/bin/wx-config --libs`" />
 				</Linker>
 				<ExtraCommands>
-					<Add after="zip -j9 wxSmithAui.zip manifest.xml" />
-					<Add after="zip -j9 wxSmithAui.cbplugin wxSmithAui.so wxSmithAui.zip" />
+					<Add after="zip -j9 ../../../devel/share/codeblocks/wxSmithAui.zip manifest.xml" />
+					<Mode after="always" />
 				</ExtraCommands>
 			</Target>
 			<Target title="Windows">
@@ -48,50 +46,56 @@
 					<Add option="-fmessage-length=0" />
 					<Add option="-fexceptions" />
 					<Add option="-Winvalid-pch" />
+					<Add option="-DBUILDING_PLUGIN" />
+					<Add option="-DWX_PRECOMP" />
+					<Add option="-DwxUSE_UNICODE" />
 					<Add option="-DHAVE_W32API_H" />
 					<Add option="-D__WXMSW__" />
 					<Add option="-DWXUSINGDLL" />
+					<Add directory="..\..\..\include" />
+					<Add directory="..\..\..\include\wxscintilla\include" />
+					<Add directory="$(#wx.include)" />
+					<Add directory="$(#wx.lib)\gcc_dll$(WX_CFG)\msw$(WX_SUFFIX)" />
+					<Add directory="..\wxSmith" />
+					<Add directory="..\wxSmith\propgrid\contrib\include" />
 				</Compiler>
 				<Linker>
 					<Add option="-Wl,--enable-auto-image-base" />
 					<Add option="-Wl,--export-all-symbols" />
 					<Add option="-Wl,--add-stdcall-alias" />
 					<Add option="-Wl,--enable-auto-import" />
-					<Add library="wxsmithlib" />
-					<Add library="codeblocks" />
 					<Add library="wxmsw28$(WX_SUFFIX)" />
+					<Add directory="..\..\..\devel" />
+					<Add directory="$(#wx.lib)\gcc_dll$(WX_CFG)" />
 				</Linker>
 				<ExtraCommands>
 					<Add after="zip -j9 ..\..\..\devel\share\CodeBlocks\wxSmithAui.zip manifest.xml" />
 					<Mode after="always" />
 				</ExtraCommands>
-			</Target>
 			<Environment>
 				<Variable name="WX_SUFFIX" value="u" />
 				<Variable name="WX_CFG" value="" />
 			</Environment>
+			</Target>
 		</Build>
 		<VirtualTargets>
-			<Add alias="All" targets="Windows;" />
+			<Add alias="All" targets="Unix;Windows;" />
 		</VirtualTargets>
 		<Compiler>
-			<Add option="-DBUILDING_PLUGIN" />
+			<Add option="-g" />
 			<Add option="-DcbDEBUG" />
 			<Add option="-DCB_PRECOMP" />
-			<Add option="-DWX_PRECOMP" />
-			<Add option="-DwxUSE_UNICODE" />
 			<Add option="-DWXMAKINGLIB_PROPGRID" />
 			<Add option="-DwxPG_USE_WXMODULE=0" />
-			<Add directory="$(#cb)\include" />
-			<Add directory="$(#cb)\include\wxscintilla\include" />
-			<Add directory="$(#wx.include)" />
-			<Add directory="$(#wx.lib)\gcc_dll$(WX_CFG)\msw$(WX_SUFFIX)" />
-			<Add directory="..\wxSmith" />
-			<Add directory="..\wxSmith\propgrid\contrib\include" />
+			<Add directory="../../../include" />
+			<Add directory="../../../include/wxscintilla/include" />
+			<Add directory="../wxSmith" />
+			<Add directory="../wxSmith/propgrid/contrib/include" />
 		</Compiler>
 		<Linker>
-			<Add directory="$(#cb)\devel" />
-			<Add directory="$(#wx.lib)\gcc_dll$(WX_CFG)" />
+			<Add library="codeblocks" />
+			<Add library="wxsmithlib" />
+			<Add directory="../../../devel" />
 		</Linker>
 		<Unit filename="manifest.xml" />
 		<Unit filename="wxAuiManager/wxSmithAuiManager.h" />
