@@ -91,6 +91,7 @@ CodeSnippetsTreeCtrl::CodeSnippetsTreeCtrl(wxWindow *parent, const wxWindowID id
     m_bShutDown = false;
     m_mimeDatabase = 0;
     m_pEvtTreeCtrlBeginDrag = 0;
+    m_LastXmlModifiedTime = time_t(0);            //2009/03/15
 
     m_pSnippetsTreeCtrl = this;
     GetConfig()->SetSnippetsTreeCtrl(this);
@@ -1071,6 +1072,9 @@ void CodeSnippetsTreeCtrl::OnLeaveWindow(wxMouseEvent& event)
             fileName = textStr;
         if (textStr.StartsWith(_T("file://")))
             fileName = textStr;
+        // Remove anything pass the first \n or \r {v1.3.92}
+        fileName = fileName.BeforeFirst('\n');
+        fileName = fileName.BeforeFirst('\r');
     }
     fileData->AddFile( (fileName.Len() > 128) ? wxString(wxEmptyString) : fileName );
 
@@ -1781,7 +1785,11 @@ void CodeSnippetsTreeCtrl::EditSnippetWithMIME()
     if ( not ::wxFileExists(fileName) ) return;
 
     wxString fileNameExt;
+    #if wxCHECK_VERSION(2, 9, 0)
+    wxFileName::SplitPath( fileName, /*volume*/0, /*path*/0, /*name*/0, &fileNameExt);
+    #else
     ::wxSplitPath( fileName, /*path*/0, /*name*/0, &fileNameExt);
+    #endif
     if ( fileNameExt.IsEmpty() ) return;
 
     wxString s_defaultExt = _T("xyz");
@@ -1846,7 +1854,11 @@ void CodeSnippetsTreeCtrl::EditSnippetWithMIME()
            #endif
 
             delete filetype;
+            #if wxCHECK_VERSION(2, 9, 0)
+            if ( !open.IsEmpty() )
+            #else
             if ( open )
+            #endif
                 ::wxExecute( open, wxEXEC_ASYNC);
         }
     }
@@ -2150,7 +2162,11 @@ void CodeSnippetsTreeCtrl::OnCodeSnippetsEvent_Edit(CodeSnippetsEvent& event)
             {
                 SetAssociatedItemID( treeItemID );
                 wxCommandEvent editEvt( wxEVT_COMMAND_MENU_SELECTED , idMnuEditSnippet);
+                #if wxCHECK_VERSION(2, 9, 0)
+                GetConfig()->GetSnippetsWindow()->GetEventHandler()->AddPendingEvent(editEvt);
+                #else
                 GetConfig()->GetSnippetsWindow()->AddPendingEvent( editEvt);
+                #endif
             }
         }
     }//if id

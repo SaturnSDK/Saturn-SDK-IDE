@@ -785,7 +785,11 @@ void DebuggerGDB::DoSwitchToDebuggingLayout()
     CodeBlocksLayoutEvent queryEvent(cbEVT_QUERY_VIEW_LAYOUT);
     CodeBlocksLayoutEvent switchEvent(cbEVT_SWITCH_VIEW_LAYOUT, _("Debugging"));
 
+    #if wxCHECK_VERSION(2, 9, 0)
+    Manager::Get()->GetLogManager()->DebugLog(F(_("Switching layout to \"%s\""), switchEvent.layout.wx_str()));
+    #else
     Manager::Get()->GetLogManager()->DebugLog(F(_("Switching layout to \"%s\""), switchEvent.layout.c_str()));
+    #endif
 
     // query the current layout
     Manager::Get()->ProcessEvent(queryEvent);
@@ -799,7 +803,11 @@ void DebuggerGDB::DoSwitchToPreviousLayout()
 {
     CodeBlocksLayoutEvent switchEvent(cbEVT_SWITCH_VIEW_LAYOUT, m_PreviousLayout);
 
+    #if wxCHECK_VERSION(2, 9, 0)
+    Manager::Get()->GetLogManager()->DebugLog(F(_("Switching layout to \"%s\""), !switchEvent.layout.IsEmpty() ? switchEvent.layout.wx_str() : wxString(_("Code::Blocks default")).wx_str()));
+    #else
     Manager::Get()->GetLogManager()->DebugLog(F(_("Switching layout to \"%s\""), !switchEvent.layout.IsEmpty() ? switchEvent.layout.c_str() : wxString(_("Code::Blocks default")).c_str()));
+    #endif
 
     // switch to previous layout
     Manager::Get()->ProcessEvent(switchEvent);
@@ -1222,6 +1230,19 @@ int DebuggerGDB::DoDebug()
                                         m_pExamineMemoryDlg,
                                         m_pThreadsDlg);
 
+    // Notify debugger plugins so they could start a GDB server process
+    PluginManager *plm = Manager::Get()->GetPluginManager();
+    CodeBlocksEvent evt(cbEVT_DEBUGGER_STARTED);
+    plm->NotifyPlugins(evt);
+    int nRet = evt.GetInt();
+    if (nRet < 0)
+    {
+        cbMessageBox(_T("A plugin interrupted the debug process."));
+        msgMan->Log(_("Aborted by plugin"), m_PageIndex);
+        m_Canceled = true;
+        return -1;
+    }
+    // Continue
 
     // create gdb launch command
     wxString cmd;
@@ -1940,7 +1961,11 @@ void DebuggerGDB::Break()
                 Log(_("Failed."));
         }
     #endif
-    }
+        // Notify debugger plugins for end of debug session
+        PluginManager *plm = Manager::Get()->GetPluginManager();
+        CodeBlocksEvent evt(cbEVT_DEBUGGER_PAUSED);
+        plm->NotifyPlugins(evt);
+	}
 }
 
 void DebuggerGDB::Stop()
@@ -2401,6 +2426,11 @@ void DebuggerGDB::OnGDBTerminated(wxCommandEvent& event)
                         _("Error"),
                         wxICON_STOP);
     }
+
+    // Notify debugger plugins for end of debug session
+    PluginManager *plm = Manager::Get()->GetPluginManager();
+    CodeBlocksEvent evt(cbEVT_DEBUGGER_FINISHED);
+    plm->NotifyPlugins(evt);
 
     // switch to the user-defined layout when finished debugging
     DoSwitchToPreviousLayout();

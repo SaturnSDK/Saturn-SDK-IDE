@@ -4,9 +4,9 @@
 # This file is part of the Code::Blocks IDE and licensed under the GNU General Public License, version 3
 # http://www.gnu.org/licenses/gpl-3.0.html
 #
-# $Revision: 5373 $
-# $Id: updateChangeLog.sh 5373 2009-01-03 09:21:55Z mandrav $
-# $HeadURL: svn+ssh://jenslody@svn.berlios.de/svnroot/repos/codeblocks/trunk/src/src/dlgaboutplugin.cpp $
+# $Revision: 5586 $
+# $Id: updateChangeLog.sh 5586 2009-05-03 21:37:58Z jenslody $
+# $HeadURL:$
 #
 
 REV_TO=${1:-"HEAD"}

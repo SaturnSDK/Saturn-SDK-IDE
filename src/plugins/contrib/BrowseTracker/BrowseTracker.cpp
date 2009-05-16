@@ -76,6 +76,7 @@
 	#include "cbeditor.h"
 	#include "projectmanager.h"
 	#include "cbproject.h"
+	#include "configmanager.h"
 #endif
 #include "projectloader_hooks.h"
 #include "configurationpanel.h"
@@ -239,16 +240,16 @@ void BrowseTracker::OnAttach()
     // ---------------------------------------
     // determine location of settings
     // ---------------------------------------
-    wxStandardPaths stdPaths;
+    //-wxStandardPaths stdPaths;
     // memorize the key file name as {%HOME%}\codesnippets.ini
-    m_ConfigFolder = stdPaths.GetUserDataDir();
+    //-m_ConfigFolder = stdPaths.GetUserDataDir();
+    m_ConfigFolder = GetCBConfigDir();
     #if defined(LOGGING)
      LOGIT( _T("Argv[0][%s] Cwd[%s]"), wxTheApp->argv[0], ::wxGetCwd().GetData() );
     #endif
     m_ExecuteFolder = FindAppPath(wxTheApp->argv[0], ::wxGetCwd(), wxEmptyString);
 
-    //GTK GetConfigFolder is returning double "//?, eg, "/home/pecan//.codeblocks"
-    // remove the double //s from filename //+v0.4.11
+    // remove the double //s from filename
     m_ConfigFolder.Replace(_T("//"),_T("/"));
     m_ExecuteFolder.Replace(_T("//"),_T("/"));
     #if defined(LOGGING)
@@ -375,7 +376,7 @@ void BrowseTracker::OnRelease(bool appShutDown)
         EditorHooks::UnregisterHook(m_EditorHookId, true);
 
         //  Remove menu item
-        int idx = m_pMenuBar->FindMenu(_("View"));
+        int idx = m_pMenuBar->FindMenu(_("&View"));
         if (idx != wxNOT_FOUND)
         {
             wxMenu* viewMenu = m_pMenuBar->GetMenu(idx);
@@ -472,7 +473,11 @@ void BrowseTracker::BuildModuleMenu(const ModuleType type, wxMenu* popup, const 
     {
         wxMenuItem* item = pbtMenu->FindItemByPosition(i);
         int menuId = item->GetId();
+        #if wxCHECK_VERSION(2, 9, 0)
+        wxString menuLabel = item->GetItemLabelText();
+        #else
         wxString menuLabel = item->GetLabel();
+        #endif
         ///LOGIT( _T("OnContextMenu insert[%s]"),menuLabel.c_str() );
         wxMenuItem* pContextItem= new wxMenuItem(0, menuId, menuLabel);
         sub_menu->Append( pContextItem );
@@ -2608,6 +2613,22 @@ wxString BrowseTracker::FindAppPath(const wxString& argv0, const wxString& cwd, 
     return wxEmptyString;
     //return cwd;
 }//FindAppPath
+// ----------------------------------------------------------------------------
+wxString BrowseTracker::GetCBConfigFile()
+// ----------------------------------------------------------------------------
+{
+    PersonalityManager* PersMan = Manager::Get()->GetPersonalityManager();
+    wxString personality = PersMan->GetPersonality();
+    ConfigManager* CfgMan = Manager::Get()->GetConfigManager(_T("app"));
+    wxString current_conf_file = CfgMan->LocateDataFile(personality+_T(".conf"), sdAllKnown);
+    return current_conf_file;
+}
+// ----------------------------------------------------------------------------
+wxString BrowseTracker::GetCBConfigDir()
+// ----------------------------------------------------------------------------
+{
+    return GetCBConfigFile().BeforeLast(wxFILE_SEP_PATH);
+}
 
 //// ----------------------------------------------------------------------------
 //void BrowseTracker::OnMenuTrackBackward(wxCommandEvent& event)
