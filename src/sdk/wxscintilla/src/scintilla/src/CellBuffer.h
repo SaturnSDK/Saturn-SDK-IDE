@@ -12,36 +12,16 @@
 namespace Scintilla {
 #endif
 
-/**
- * This holds the marker identifier and the marker type to display.
- * MarkerHandleNumbers are members of lists.
- */
-struct MarkerHandleNumber {
-	int handle;
-	int number;
-	MarkerHandleNumber *next;
-};
-
-/**
- * A marker handle set contains any number of MarkerHandleNumbers.
- */
-class MarkerHandleSet {
-	MarkerHandleNumber *root;
-
+// Interface to per-line data that wants to see each line insertion and deletion
+class PerLine {
 public:
-	MarkerHandleSet();
-	~MarkerHandleSet();
-	int Length() const;
-	int NumberFromHandle(int handle) const;
-	int MarkValue() const;	///< Bit set of marker numbers.
-	bool Contains(int handle) const;
-	bool InsertHandle(int handle, int markerNum);
-	void RemoveHandle(int handle);
-	bool RemoveNumber(int markerNum);
-	void CombineWith(MarkerHandleSet *other);
+	virtual ~PerLine() {}
+	virtual void InsertLine(int)=0;
+	virtual void RemoveLine(int)=0;
 };
 
 /* CHANGEBAR begin */
+#include "RunStyles.h" 
 class LineChanges { 
     bool collecting; 
     RunStyles state; 
@@ -62,16 +42,14 @@ public:
 }; 
 /* CHANGEBAR end */
  
+
 /**
  * The line vector contains information about each of the lines in a cell buffer.
  */
 class LineVector {
 
 	Partitioning starts;
-	SplitVector<MarkerHandleSet *> markers;
-	SplitVector<int> levels;
-	/// Handles are allocated sequentially and should never have to be reused as 32 bit ints are very big.
-	int handleCurrent;
+	PerLine *perLine;
 /* CHANGEBAR begin */
     LineChanges changes; 
 /* CHANGEBAR end */
@@ -81,11 +59,7 @@ public:
 	LineVector();
 	~LineVector();
 	void Init();
-
-	void ExpandLevels(int sizeNew=-1);
-	void ClearLevels();
-	int SetLevel(int line, int level);
-	int GetLevel(int line);
+	void SetPerLine(PerLine *pl);
 
 /* CHANGEBAR begin */
     void InsertText(int line, int delta, int edition, bool undoing); 
@@ -109,6 +83,15 @@ public:
 	void DeleteMark(int line, int markerNum, bool all);
 	void DeleteMarkFromHandle(int markerHandle);
 	int LineFromHandle(int markerHandle);
+
+	void ClearLevels();
+	int SetLevel(int line, int level);
+	int GetLevel(int line);
+
+	int SetLineState(int line, int state);
+	int GetLineState(int line);
+	int GetMaxLineState();
+
  
 /* CHANGEBAR begin */
     void EnableChangeCollection(bool changesCollecting_); 
@@ -122,7 +105,7 @@ public:
 /* CHANGEBAR end */
 };
 
-enum actionType { insertAction, removeAction, startAction };
+enum actionType { insertAction, removeAction, startAction, containerAction };
 
 /**
  * Actions are used to store all the information required to perform one undo/redo step.
@@ -164,7 +147,7 @@ public:
 	~UndoHistory();
 
 /* CHANGEBAR begin */
-    void AppendAction(actionType at, int position, char *data, int length, bool &startSequence, char *persistantChanges); 
+	void AppendAction(actionType at, int position, char *data, int length, bool &startSequence, char *persistantChanges, bool mayCoalesce=true);
 /* CHANGEBAR end */
 
 	void BeginUndoAction();
@@ -220,8 +203,6 @@ private:
 
 	LineVector lv;
 
-	SplitVector<int> lineStates;
-
 public:
 
 	CellBuffer();
@@ -235,6 +216,7 @@ public:
 
 	int Length() const;
 	void Allocate(int newSize);
+	void SetPerLine(PerLine *pl);
 	int Lines() const;
 	int LineStart(int line) const;
 	int LineFromPosition(int pos) { return lv.LineFromPosition(pos); }
@@ -259,14 +241,6 @@ public:
 	void SetSavePoint();
 	bool IsSavePoint();
 
-	/// Line marker functions
-	int AddMark(int line, int markerNum);
-	void DeleteMark(int line, int markerNum);
-	void DeleteMarkFromHandle(int markerHandle);
-	int GetMark(int line);
-	void DeleteAllMarks(int markerNum);
-	int LineFromHandle(int markerHandle);
-
 /* CHANGEBAR begin */
     void EnableChangeCollection(bool changesCollecting_); 
     bool SetChangeCollection(bool collectChange);
@@ -285,6 +259,7 @@ public:
 	bool IsCollectingUndo();
 	void BeginUndoAction();
 	void EndUndoAction();
+	void AddUndoAction(int token, bool mayCoalesce);
 /* CHANGEBAR begin */
     void DeleteUndoHistory(bool collectChangeHistory); 
 /* CHANGEBAR end */
@@ -299,14 +274,6 @@ public:
 	int StartRedo();
 	const Action &GetRedoStep() const;
 	void PerformRedoStep();
-
-	int SetLineState(int line, int state);
-	int GetLineState(int line);
-	int GetMaxLineState();
-
-	int SetLevel(int line, int level);
-	int GetLevel(int line);
-	void ClearLevels();
 };
 
 #ifdef SCI_NAMESPACE
