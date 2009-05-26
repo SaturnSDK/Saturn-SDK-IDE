@@ -2777,6 +2777,9 @@
 		<Unit filename="sdk/wxscintilla/src/scintilla/src/LexCLW.cxx">
 			<Option target="scintilla" />
 		</Unit>
+		<Unit filename="sdk/wxscintilla/src/scintilla/src/LexCOBOL.cxx">
+			<Option target="scintilla" />
+		</Unit>
 		<Unit filename="sdk/wxscintilla/src/scintilla/src/LexCPP.cxx">
 			<Option target="scintilla" />
 		</Unit>
@@ -2867,6 +2870,9 @@
 		<Unit filename="sdk/wxscintilla/src/scintilla/src/LexMySQL.cxx">
 			<Option target="scintilla" />
 		</Unit>
+		<Unit filename="sdk/wxscintilla/src/scintilla/src/LexNimrod.cxx">
+			<Option target="scintilla" />
+		</Unit>
 		<Unit filename="sdk/wxscintilla/src/scintilla/src/LexNsis.cxx">
 			<Option target="scintilla" />
 		</Unit>
@@ -2894,6 +2900,9 @@
 		<Unit filename="sdk/wxscintilla/src/scintilla/src/LexPerl.cxx">
 			<Option target="scintilla" />
 		</Unit>
+		<Unit filename="sdk/wxscintilla/src/scintilla/src/LexPowerPro.cxx">
+			<Option target="scintilla" />
+		</Unit>
 		<Unit filename="sdk/wxscintilla/src/scintilla/src/LexPowerShell.cxx">
 			<Option target="scintilla" />
 		</Unit>
@@ -2912,6 +2921,9 @@
 		<Unit filename="sdk/wxscintilla/src/scintilla/src/LexRuby.cxx">
 			<Option target="scintilla" />
 		</Unit>
+		<Unit filename="sdk/wxscintilla/src/scintilla/src/LexSML.cxx">
+			<Option target="scintilla" />
+		</Unit>
 		<Unit filename="sdk/wxscintilla/src/scintilla/src/LexSQL.cxx">
 			<Option target="scintilla" />
 		</Unit>
@@ -2921,13 +2933,22 @@
 		<Unit filename="sdk/wxscintilla/src/scintilla/src/LexSmalltalk.cxx">
 			<Option target="scintilla" />
 		</Unit>
+		<Unit filename="sdk/wxscintilla/src/scintilla/src/LexSorcus.cxx">
+			<Option target="scintilla" />
+		</Unit>
 		<Unit filename="sdk/wxscintilla/src/scintilla/src/LexSpecman.cxx">
 			<Option target="scintilla" />
 		</Unit>
 		<Unit filename="sdk/wxscintilla/src/scintilla/src/LexSpice.cxx">
 			<Option target="scintilla" />
 		</Unit>
+		<Unit filename="sdk/wxscintilla/src/scintilla/src/LexTACL.cxx">
+			<Option target="scintilla" />
+		</Unit>
 		<Unit filename="sdk/wxscintilla/src/scintilla/src/LexTADS3.cxx">
+			<Option target="scintilla" />
+		</Unit>
+		<Unit filename="sdk/wxscintilla/src/scintilla/src/LexTAL.cxx">
 			<Option target="scintilla" />
 		</Unit>
 		<Unit filename="sdk/wxscintilla/src/scintilla/src/LexTCL.cxx">
@@ -2955,6 +2976,12 @@
 			<Option target="scintilla" />
 		</Unit>
 		<Unit filename="sdk/wxscintilla/src/scintilla/src/Partitioning.h">
+			<Option target="scintilla" />
+		</Unit>
+		<Unit filename="sdk/wxscintilla/src/scintilla/src/PerLine.cxx">
+			<Option target="scintilla" />
+		</Unit>
+		<Unit filename="sdk/wxscintilla/src/scintilla/src/PerLine.h">
 			<Option target="scintilla" />
 		</Unit>
 		<Unit filename="sdk/wxscintilla/src/scintilla/src/PositionCache.cxx">

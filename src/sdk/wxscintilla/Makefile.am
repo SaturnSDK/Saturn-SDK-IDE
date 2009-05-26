@@ -24,13 +24,14 @@ libwxscintilla_la_SOURCES = src/PlatWX.cpp \
 							src/scintilla/src/LexASY.cxx \
 							src/scintilla/src/LexAbaqus.cxx \
 							src/scintilla/src/LexCmake.cxx \
-							src/scintilla/src/LexCobol.cxx \
+							src/scintilla/src/LexCOBOL.cxx \
 							src/scintilla/src/LexD.cxx \
 							src/scintilla/src/LexGAP.cxx \
 							src/scintilla/src/LexMagik.cxx \
 							src/scintilla/src/LexNimrod.cxx \
 							src/scintilla/src/LexPLM.cxx \
 							src/scintilla/src/LexPowerPro.cxx \
+							src/scintilla/src/LexPowerShell.cxx \
 							src/scintilla/src/LexProgress.cxx \
 							src/scintilla/src/LexR.cxx \
 							src/scintilla/src/LexSML.cxx \
