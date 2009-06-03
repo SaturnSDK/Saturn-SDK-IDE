@@ -488,6 +488,14 @@ AppVersion::~AppVersion()
 //          99) App: check for standalone execution before closing in OnClose() to
 //              avoid error "can't delete default.conf.cbTemp"
 // ----------------------------------------------------------------------------
+//  Commit 1.3.102 2009/05/26
+//          100) Remove app default.conf.cbtemp from /APPDATA/codesnippets in OnClose;
+//          101) Correct .cbtemp name to .cbTemp for linux
+//          102) Don't raise focus when ::wxActiveWindow != CodeSnippetsTreeCtrl in OnEnterWindow()
+// ----------------------------------------------------------------------------
+//  Commit 1.3.103 2009/06/1
+//          103) Fix crash when backspace\cut after Ctrl-A
+// ----------------------------------------------------------------------------
 //  Bugs
 //      2008/04/8
 //          If floating wxAUI window is docked with Edit's open, they disappear. But

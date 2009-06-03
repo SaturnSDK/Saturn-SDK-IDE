@@ -2495,7 +2495,19 @@ void DebuggerGDB::OnValueTooltip(CodeBlocksEvent& event)
     if (!ed)
         return;
 
-    int style = event.GetInt();
+    if(ed->IsContextMenuOpened())
+    {
+    	return;
+    }
+
+	// get rid of other calltips (if any) [for example the code completion one, at this time we
+	// want the debugger value call/tool-tip to win and be shown]
+    if(ed->GetControl()->CallTipActive())
+    {
+    	ed->GetControl()->CallTipCancel();
+    }
+
+    const int style = event.GetInt();
     if (style != wxSCI_C_DEFAULT && style != wxSCI_C_OPERATOR && style != wxSCI_C_IDENTIFIER)
         return;
 
