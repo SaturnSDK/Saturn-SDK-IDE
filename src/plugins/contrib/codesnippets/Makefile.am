@@ -55,8 +55,7 @@ libcodesnippets_la_SOURCES = codesnippets.cpp \
 		csutils.cpp \
 		editsnippetframe.cpp \
 		finddialogs.cpp \
-		messageBoxForm.cpp \
-		messagebox.cpp \
+		GenericMessageBox.cpp \
 		settingsdlg.cpp \
 		settingsdlgform.cpp \
 		snippetitemdata.cpp \
@@ -109,8 +108,7 @@ noinst_HEADERS =  	codesnippets.h \
 		editsnippetframe.h \
 		finddialogs.h \
 		menuidentifiers.h \
-		messageBoxForm.h \
-		messagebox.h \
+		GenericMessageBox.h \
 		settingsdlg.h \
 		settingsdlgform.h \
 		snippetitemdata.h \

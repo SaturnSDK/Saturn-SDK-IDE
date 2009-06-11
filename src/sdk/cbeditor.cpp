@@ -2734,7 +2734,10 @@ void cbEditor::OnEditorCharAdded(wxScintillaEvent& event)
         if (autoIndent && currLine > 0)
         {
             wxString indent = GetLineIndentString(currLine - 1);
-            if ( smartIndent && (control->GetLexer() == wxSCI_LEX_CPP) )
+            if (   smartIndent
+                && (   (control->GetLexer() == wxSCI_LEX_CPP)
+                    || (control->GetLexer() == wxSCI_LEX_D)
+                    || (control->GetLexer() == wxSCI_LEX_PYTHON) ) )
             {
                 // if the last entered char before newline was an opening curly brace,
                 // increase indentation level (the closing brace is handled in another block)

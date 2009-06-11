@@ -214,7 +214,7 @@ inline void SaveIntToFile(wxOutputStream* f, int i)
     and a constant int size */
 
     unsigned int const j = i; // rshifts aren't well-defined for negatives
-    wxChar c[4] = { j>>0&0xFF, j>>8&0xFF, j>>16&0xFF, j>>24&0xFF };
+    wxChar c[4] = { (wxChar) (j>>0&0xFF), (wxChar) (j>>8&0xFF), (wxChar) (j>>16&0xFF), (wxChar) (j>>24&0xFF) };
     f->Write( c, 4 );
 }
 

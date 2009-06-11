@@ -2434,7 +2434,6 @@ void MainFrame::DoOnFileOpen(bool bProject)
         dlg.GetPaths(files);
         OnDropFiles(0,0,files);
     }
-
 } // end of DoOnFileOpen
 
 void MainFrame::OnFileOpen(wxCommandEvent& event)
@@ -3014,179 +3013,6 @@ void MainFrame::OnEditSelectAll(wxCommandEvent& event)
         eb->SelectAll();
 }
 
-CommentToken GetCommentToken(cbStyledTextCtrl* stc)
-{
-    CommentToken comment;
-    comment.lineComment        = _T("");
-    comment.streamCommentStart = _T("");
-    comment.streamCommentEnd   = _T("");
-    comment.boxCommentStart    = _T("");
-    comment.boxCommentMid      = _T("");
-    comment.boxCommentEnd      = _T("");
-
-    switch(stc->GetLexer())
-    {
-        case wxSCI_LEX_CONTAINER:  comment.lineComment = _T(""); break;
-        case wxSCI_LEX_NULL:       comment.lineComment = _T(""); break;
-        case wxSCI_LEX_PYTHON:     comment.lineComment = _T("#"); break;
-        case wxSCI_LEX_CPP:
-            comment.lineComment        = _T("//");
-            comment.streamCommentStart = _T("/*");
-            comment.streamCommentEnd   = _T("*/");
-            comment.boxCommentStart    = _T("/* ");
-            comment.boxCommentMid      = _T(" * ");
-            comment.boxCommentEnd      = _T(" */");
-            break;
-        case wxSCI_LEX_HTML:
-            comment.lineComment        = _T("//");
-            comment.streamCommentStart = _T("/*");
-            comment.streamCommentEnd   = _T("*/");
-            comment.boxCommentStart    = _T("/* ");
-            comment.boxCommentMid      = _T(" * ");
-            comment.boxCommentEnd      = _T(" */");
-            break; // PHP uses HTML lexer
-        case wxSCI_LEX_XML:
-            comment.streamCommentStart = _T("<!--");
-            comment.streamCommentEnd   = _T("-->");
-            comment.boxCommentStart    = _T("<!-- ");
-            comment.boxCommentMid      = _T("  -- ");
-            comment.boxCommentEnd      = _T("  -->");
-            break;
-        case wxSCI_LEX_PERL:       comment.lineComment = _T("#"); break;
-        case wxSCI_LEX_SQL:        comment.lineComment = _T("--"); break;
-        case wxSCI_LEX_VB:         comment.lineComment = _T("'"); break;
-        case wxSCI_LEX_PROPERTIES: comment.lineComment = _T("#"); break;
-        case wxSCI_LEX_ERRORLIST:  comment.lineComment = _T(""); break;
-        case wxSCI_LEX_MAKEFILE:   comment.lineComment = _T("#"); break;
-        case wxSCI_LEX_BATCH:      comment.lineComment = _T("REM "); break;
-        case wxSCI_LEX_XCODE:      comment.lineComment = _T(""); break;
-        case wxSCI_LEX_LATEX:      comment.lineComment = _T("%"); break;
-        case wxSCI_LEX_LUA:
-            comment.lineComment        = _T("--");
-            comment.streamCommentStart = _T("/*");
-            comment.streamCommentEnd   = _T("*/");
-            comment.boxCommentStart    = _T("/* ");
-            comment.boxCommentMid      = _T(" * ");
-            comment.boxCommentEnd      = _T(" */");
-            break;
-        case wxSCI_LEX_DIFF:       comment.lineComment = _T(""); break;
-        case wxSCI_LEX_CONF:       comment.lineComment = _T(""); break;
-        case wxSCI_LEX_PASCAL:
-            comment.lineComment        = _T("//");  //delphi style lineComments, otherwise use { } or (* and *)
-            comment.streamCommentStart = _T("{");
-            comment.streamCommentEnd   = _T("}");
-            comment.boxCommentStart    = _T("(* ");
-            comment.boxCommentMid      = _T(" * ");
-            comment.boxCommentEnd      = _T(" *)");
-            break;
-        case wxSCI_LEX_AVE:        comment.lineComment = _T(""); break;
-        case wxSCI_LEX_ADA:        comment.lineComment = _T("--"); break;
-        case wxSCI_LEX_LISP:
-            comment.lineComment        = _T(";");
-            comment.streamCommentStart = _T("#|");
-            comment.streamCommentEnd   = _T("|#");
-            comment.boxCommentStart    = _T("#| ");
-            comment.boxCommentMid      = _T(" | ");
-            comment.boxCommentEnd      = _T(" |#");
-            break;
-        case wxSCI_LEX_RUBY:
-            comment.lineComment        = _T("#");
-            comment.boxCommentStart    = _T("=begin");
-            comment.boxCommentEnd      = _T("=end");
-            break;
-        case wxSCI_LEX_EIFFEL:     comment.lineComment = _T("--"); break;
-        case wxSCI_LEX_EIFFELKW:   comment.lineComment = _T("--"); break;
-        case wxSCI_LEX_TCL:        comment.lineComment = _T("#"); break;
-        case wxSCI_LEX_NNCRONTAB:  comment.lineComment = _T(""); break;
-        case wxSCI_LEX_BULLANT:    comment.lineComment = _T(""); break;
-        case wxSCI_LEX_VBSCRIPT:   comment.lineComment = _T("'"); break;
-        case wxSCI_LEX_BAAN:       comment.lineComment = _T(""); break;
-        case wxSCI_LEX_MATLAB:
-            comment.lineComment        = _T("%");
-            comment.streamCommentStart = _T("%{");
-            comment.streamCommentEnd   = _T("}%");
-            comment.boxCommentStart    = _T("%{ ");
-            comment.boxCommentEnd      = _T(" }%");
-            break;
-        case wxSCI_LEX_SCRIPTOL:   comment.lineComment = _T("`"); break;
-        case wxSCI_LEX_ASM:        comment.lineComment = _T(";"); break;
-        case wxSCI_LEX_CPPNOCASE:
-            comment.lineComment        = _T("//");
-            comment.streamCommentStart = _T("/*");
-            comment.streamCommentEnd   = _T("*/");
-            comment.boxCommentStart    = _T("/* ");
-            comment.boxCommentMid      = _T(" * ");
-            comment.boxCommentEnd      = _T(" */");
-            break;
-        case wxSCI_LEX_FORTRAN:    comment.lineComment = _T("!"); break;
-        case wxSCI_LEX_CSS:
-            comment.lineComment        = _T("");
-            comment.streamCommentStart = _T("/*");
-            comment.streamCommentEnd   = _T("*/");
-            comment.boxCommentStart    = _T("/* ");
-            comment.boxCommentMid      = _T(" * ");
-            comment.boxCommentEnd      = _T(" */");
-            break;
-        case wxSCI_LEX_POV:
-            comment.lineComment        = _T("//"); // original here was "//@-" don't know why
-            comment.streamCommentStart = _T("/*");
-            comment.streamCommentEnd   = _T("*/");
-            comment.boxCommentStart    = _T("/* ");
-            comment.boxCommentMid      = _T(" * ");
-            comment.boxCommentEnd      = _T(" */");
-            break;
-        case wxSCI_LEX_LOUT:       comment.lineComment = _T("#"); break;
-        case wxSCI_LEX_ESCRIPT:    comment.lineComment = _T(""); break; //couldn't find
-        case wxSCI_LEX_PS:         comment.lineComment = _T("%"); break; // not sure if it's only one % or multiple
-        case wxSCI_LEX_NSIS:       comment.lineComment = _T(""); break;
-        case wxSCI_LEX_MMIXAL:     comment.lineComment = _T(""); break;
-        case wxSCI_LEX_CLW:        comment.lineComment = _T(""); break;
-        case wxSCI_LEX_CLWNOCASE:  comment.lineComment = _T(""); break;
-        case wxSCI_LEX_LOT:        comment.lineComment = _T(""); break;
-        case wxSCI_LEX_YAML:       comment.lineComment = _T(""); break;
-        case wxSCI_LEX_TEX:        comment.lineComment = _T("%"); break;
-        case wxSCI_LEX_METAPOST:   comment.lineComment = _T(""); break;
-        case wxSCI_LEX_POWERBASIC: comment.lineComment = _T(""); break;
-        case wxSCI_LEX_FORTH:      comment.lineComment = _T(""); break;
-        case wxSCI_LEX_ERLANG:     comment.lineComment = _T(""); break;
-        case wxSCI_LEX_OCTAVE:     comment.lineComment = _T("#"); break; // or '%'
-        case wxSCI_LEX_MSSQL:      comment.lineComment = _T(""); break;
-        case wxSCI_LEX_VERILOG:    comment.lineComment = _T("//"); break;
-        case wxSCI_LEX_KIX:        comment.lineComment = _T(""); break;
-        case wxSCI_LEX_SPECMAN:    comment.lineComment = _T(""); break;
-        case wxSCI_LEX_APDL:       comment.lineComment = _T(""); break;
-        case wxSCI_LEX_BASH:       comment.lineComment = _T("#"); break;
-        case wxSCI_LEX_VHDL:       comment.lineComment = _T("--"); break;
-        case wxSCI_LEX_CAML:       comment.lineComment = _T(""); break;
-        case wxSCI_LEX_BLITZBASIC: comment.lineComment = _T(""); break;
-        case wxSCI_LEX_PUREBASIC:  comment.lineComment = _T(""); break;
-        case wxSCI_LEX_HASKELL:    comment.lineComment = _T("--"); break;
-        case wxSCI_LEX_PHPSCRIPT:
-            comment.lineComment        = _T("#");
-            //comment.lineComment        = _T("//");
-            comment.streamCommentStart = _T("/*");
-            comment.streamCommentEnd   = _T("*/");
-            comment.boxCommentStart    = _T("/* ");
-            comment.boxCommentMid      = _T(" * ");
-            comment.boxCommentEnd      = _T(" */");
-            break;
-        case wxSCI_LEX_REBOL:      comment.lineComment = _T(""); break; // couldn't find
-        case wxSCI_LEX_SMALLTALK:  comment.lineComment = _T(""); break; // uses double quotes at start and end i.e. "lineComment"
-        case wxSCI_LEX_FLAGSHIP:   comment.lineComment = _T(""); break;
-        case wxSCI_LEX_CSOUND:     comment.lineComment = _T(""); break;
-        case wxSCI_LEX_FREEBASIC:  comment.lineComment = _T(""); break;
-        default: // Let the user decide if he wants to lineComment or not
-            comment.lineComment        = _T("//");
-            comment.streamCommentStart = _T("/*");
-            comment.streamCommentEnd   = _T("*/");
-            comment.boxCommentStart    = _T("/* ");
-            comment.boxCommentMid      = _T(" * ");
-            comment.boxCommentEnd      = _T(" */");
-    }
-    return comment;
-}
-
-
 /* This is a shameless rip-off of the original OnEditCommentSelected function,
  * now more suitingly named OnEditToggleCommentSelected (because that's what
  * it does :)
@@ -3197,7 +3023,8 @@ void MainFrame::OnEditCommentSelected(wxCommandEvent& event)
     if (ed)
     {
         cbStyledTextCtrl* stc = ed->GetControl();
-        CommentToken comment=GetCommentToken(stc);
+        CommentToken comment =
+            Manager::Get()->GetEditorManager()->GetColourSet()->GetCommentToken( ed->GetLanguage() );
         if(comment.lineComment==wxEmptyString && comment.streamCommentStart==wxEmptyString)
             return;
 
@@ -3246,7 +3073,9 @@ void MainFrame::OnEditUncommentSelected(wxCommandEvent& event)
     if (ed)
     {
         cbStyledTextCtrl* stc = ed->GetControl();
-        CommentToken comment=GetCommentToken(stc);
+        CommentToken comment =
+            Manager::Get()->GetEditorManager()->GetColourSet()->GetCommentToken( ed->GetLanguage() );
+
         if(comment.lineComment==wxEmptyString && comment.streamCommentStart==wxEmptyString)
             return;
 
@@ -3330,7 +3159,8 @@ void MainFrame::OnEditToggleCommentSelected(wxCommandEvent& event)
     if (ed)
     {
         cbStyledTextCtrl* stc = ed->GetControl();
-        wxString comment=GetCommentToken(stc).lineComment;
+        wxString comment =
+            Manager::Get()->GetEditorManager()->GetColourSet()->GetCommentToken( ed->GetLanguage() ).lineComment;
         if(comment==wxEmptyString)
             return;
 
@@ -3387,7 +3217,8 @@ void MainFrame::OnEditStreamCommentSelected(wxCommandEvent& event)
     if (ed)
     {
         cbStyledTextCtrl* stc = ed->GetControl();
-        CommentToken comment=GetCommentToken(stc);
+        CommentToken comment =
+            Manager::Get()->GetEditorManager()->GetColourSet()->GetCommentToken( ed->GetLanguage() );
         if(comment.streamCommentStart==wxEmptyString)
             return;
 
@@ -3432,7 +3263,8 @@ void MainFrame::OnEditBoxCommentSelected(wxCommandEvent& event)
     {
 
         cbStyledTextCtrl* stc = ed->GetControl();
-        CommentToken comment=GetCommentToken(stc);
+        CommentToken comment =
+            Manager::Get()->GetEditorManager()->GetColourSet()->GetCommentToken( ed->GetLanguage() );
         if(comment.boxCommentStart==wxEmptyString)
             return;
 

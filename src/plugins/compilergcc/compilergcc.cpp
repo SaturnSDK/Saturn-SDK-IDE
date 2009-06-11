@@ -2680,7 +2680,7 @@ void CompilerGCC::CalculateProjectDependencies(cbProject* prj, wxArrayInt& deps)
     }
 }
 
-int CompilerGCC::DoBuild(const wxString& target, bool clean, bool build)
+int CompilerGCC::DoBuild(const wxString& target, bool clean, bool build, bool clearLog)
 {
     wxString realTarget = target;
     if (realTarget.IsEmpty())
@@ -2705,7 +2705,7 @@ int CompilerGCC::DoBuild(const wxString& target, bool clean, bool build)
         DoClearErrors();
         InitBuildLog(false);
 //    if (!m_IsWorkspaceOperation)
-        DoPrepareQueue();
+        DoPrepareQueue(clearLog);
     }
 
     PreprocessJob(m_Project, realTarget);
@@ -2738,7 +2738,11 @@ int CompilerGCC::Rebuild(ProjectBuildTarget* target)
 
 int CompilerGCC::Rebuild(const wxString& target)
 {
-    return DoBuild(target, true, true);
+    if(Manager::Get()->GetConfigManager(_T("compiler"))->ReadBool(_T("/rebuild_seperately"), false))
+    {
+        return DoBuild(target, true, true);
+    }
+    return DoBuild(target, true, false) + DoBuild(target, false, true, false);
 }
 
 int CompilerGCC::DoWorkspaceBuild(const wxString& target, bool clean, bool build, bool clearLog)

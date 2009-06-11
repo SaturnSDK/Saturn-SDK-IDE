@@ -58,8 +58,7 @@ codesnippets_SOURCES =	$(srcdir)/../version.cpp \
 		$(srcdir)/../codesnippetswindow.cpp \
 		$(srcdir)/../csutils.cpp \
 		$(srcdir)/../editsnippetframe.cpp \
-		$(srcdir)/../messageBoxForm.cpp \
-		$(srcdir)/../messagebox.cpp \
+		$(srcdir)/../GenericMessageBox.cpp \
 		$(srcdir)/../settingsdlg.cpp \
 		$(srcdir)/../settingsdlgform.cpp \
 		$(srcdir)/../snippetitemdata.cpp \
@@ -110,8 +109,7 @@ noinst_HEADERS =  	$(srcdir)/../version.h \
 		$(srcdir)/../csutils.h \
 		$(srcdir)/../editsnippetframe.h \
 		$(srcdir)/../menuidentifiers.h \
-		$(srcdir)/../messageBoxForm.h \
-		$(srcdir)/../messagebox.h \
+		$(srcdir)/../GenericMessageBox.h \
 		$(srcdir)/../settingsdlg.h \
 		$(srcdir)/../settingsdlgform.h \
 		$(srcdir)/../snippetitemdata.h \
