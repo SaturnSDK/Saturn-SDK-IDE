@@ -590,7 +590,10 @@ void EditorManager::AddEditorBase(EditorBase* eb)
     if (page == -1)
     {
         //        LOGSTREAM << wxString::Format(_T("AddEditorBase(): ed=%p, title=%s\n"), eb, eb ? eb->GetTitle().c_str() : _T(""));
-        m_pNotebook->AddPage(eb, eb->GetTitle(), true);
+        // use fullname as default, so tabs stay as small as possible
+        wxString strTmp=eb->GetTitle();
+        wxFileName fn(eb->GetTitle());
+        m_pNotebook->AddPage(eb, fn.GetFullName(), true);
     }
 }
 

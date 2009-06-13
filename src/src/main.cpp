@@ -1528,13 +1528,22 @@ bool MainFrame::OpenGeneric(const wxString& filename, bool addToHistory)
                 DoCloseCurrentWorkspace())
             {
                 wxBusyCursor wait; // loading a worspace can take some time -> showhourglass
+                ShowHideStartPage(true); // hide startherepage, so we can use full tab-range
                 bool ret = Manager::Get()->GetProjectManager()->LoadWorkspace(filename);
-                if (ret && addToHistory)
+                if(!ret)
+                {
+                    ShowHideStartPage(); // show/hide startherepage, dependant of settings, if loading failed
+                }
+                else if (addToHistory)
+                {
                     AddToRecentProjectsHistory(Manager::Get()->GetProjectManager()->GetWorkspace()->GetFilename());
+                }
                 return ret;
             }
             else
+            {
                 return false;
+            }
             break;
 
         //
@@ -1597,13 +1606,17 @@ bool MainFrame::DoOpenProject(const wxString& filename, bool addToHistory)
         return false;
     }
 
+    ShowHideStartPage(true); // hide startherepage, so we can use full tab-range
     cbProject* prj = Manager::Get()->GetProjectManager()->LoadProject(filename, true);
     if (prj)
     {
         if (addToHistory)
+        {
             AddToRecentProjectsHistory(prj->GetFilename());
+        }
         return true;
     }
+    ShowHideStartPage(); // show/hide startherepage, dependant of settings, if loading failed
     return false;
 }
 
@@ -4116,7 +4129,6 @@ void MainFrame::OnProjectActivated(CodeBlocksEvent& event)
 
 void MainFrame::OnProjectOpened(CodeBlocksEvent& event)
 {
-    ShowHideStartPage(true);
     event.Skip();
 }
 
