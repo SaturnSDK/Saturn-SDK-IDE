@@ -591,7 +591,6 @@ void EditorManager::AddEditorBase(EditorBase* eb)
     {
         //        LOGSTREAM << wxString::Format(_T("AddEditorBase(): ed=%p, title=%s\n"), eb, eb ? eb->GetTitle().c_str() : _T(""));
         // use fullname as default, so tabs stay as small as possible
-        wxString strTmp=eb->GetTitle();
         wxFileName fn(eb->GetTitle());
         m_pNotebook->AddPage(eb, fn.GetFullName(), true);
     }
