@@ -4,7 +4,7 @@
 // Author:      Julian Smart
 // Modified by:
 // Created:     2007-08-19
-// RCS-ID:      $Id: switcherdlg.h,v 1.2 2007/08/18 10:55:06 anthemion Exp $
+// RCS-ID:      $Id: switcherdlg.h,v 1.3 2007/08/20 17:38:24 anthemion Exp $
 // Copyright:   (c) Julian Smart
 // Licence:     wxWidgets licence
 /////////////////////////////////////////////////////////////////////////////
@@ -131,6 +131,9 @@ public:
     // Find the index for the item associated with the current focus
     int GetIndexForFocus() const;
 
+    // Hit test, returning an index or -1
+    int HitTest(const wxPoint& pt) const;
+
     const wxSwitcherItem& GetItem(int i) const;
     wxSwitcherItem& GetItem(int i);
 
@@ -227,6 +230,7 @@ public:
     void Init();
     void GenerateSelectionEvent();
     void AdvanceToNextSelectableItem(int direction);
+    void SendCloseEvent();
 
 protected:
 

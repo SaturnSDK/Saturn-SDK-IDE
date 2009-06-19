@@ -4,7 +4,7 @@
 // Author:      Julian Smart
 // Modified by:
 // Created:     2007-08-19
-// RCS-ID:      $Id: switcherdlg.cpp,v 1.5 2007/08/18 17:46:26 anthemion Exp $
+// RCS-ID:      $Id: switcherdlg.cpp,v 1.6 2007/08/20 17:38:24 anthemion Exp $
 // Copyright:   (c) Julian Smart
 // Licence:     wxWidgets licence
 /////////////////////////////////////////////////////////////////////////////
@@ -387,6 +387,19 @@ int wxSwitcherItems::GetIndexForFocus() const
     return wxNOT_FOUND;
 }
 
+// Hit test, returning an index or -1
+int wxSwitcherItems::HitTest(const wxPoint& pt) const
+{
+    for (size_t i = 0; i < m_items.GetCount(); i++)
+    {
+        wxSwitcherItem& item = m_items[i];
+        if (item.GetRect().Contains(pt))
+            return (int) i;
+    }
+
+    return wxNOT_FOUND;
+}
+
 /*
  * A control for displaying several columns (not scrollable)
  */
@@ -424,6 +437,23 @@ wxSize wxMultiColumnListCtrl::DoGetBestSize() const
     return m_overallSize;
 }
 
+void wxMultiColumnListCtrl::SendCloseEvent()
+{
+    wxWindow* topLevel = GetParent();
+    while (topLevel && !topLevel->IsTopLevel())
+        topLevel = topLevel->GetParent();
+    
+    if (topLevel)
+    {
+        wxCloseEvent closeEvent(wxEVT_CLOSE_WINDOW, topLevel->GetId());
+        closeEvent.SetEventObject(topLevel);
+        closeEvent.SetCanVeto(false);
+        
+        topLevel->GetEventHandler()->ProcessEvent(closeEvent);
+        return;
+    }
+}
+
 void wxMultiColumnListCtrl::OnEraseBackground(wxEraseEvent& WXUNUSED(event))
 {
     // Do nothing
@@ -453,6 +483,14 @@ void wxMultiColumnListCtrl::OnMouseEvent(wxMouseEvent& event)
     if (event.LeftDown())
     {
         SetFocus();
+
+        int idx = m_items.HitTest(event.GetPosition());
+        if (idx != wxNOT_FOUND)
+        {
+            m_items.SetSelection(idx);
+
+            SendCloseEvent();
+        }
     }
 }
 
@@ -466,19 +504,7 @@ void wxMultiColumnListCtrl::OnKey(wxKeyEvent& event)
     {
         if (event.GetKeyCode() == GetModifierKey())
         {
-            wxWindow* topLevel = GetParent();
-            while (topLevel && !topLevel->IsTopLevel())
-                topLevel = topLevel->GetParent();
-            
-            if (topLevel)
-            {
-                wxCloseEvent closeEvent(wxEVT_CLOSE_WINDOW, topLevel->GetId());
-                closeEvent.SetEventObject(topLevel);
-                closeEvent.SetCanVeto(false);
-                
-                topLevel->GetEventHandler()->ProcessEvent(closeEvent);
-                return;
-            }
+            SendCloseEvent();
         }
         event.Skip();
         return;
@@ -489,19 +515,7 @@ void wxMultiColumnListCtrl::OnKey(wxKeyEvent& event)
         if (event.GetKeyCode() == WXK_ESCAPE)
             m_items.SetSelection(-1);
 
-        wxWindow* topLevel = GetParent();
-        while (topLevel && !topLevel->IsTopLevel())
-            topLevel = topLevel->GetParent();
-
-        if (topLevel)
-        {
-            wxCloseEvent closeEvent(wxEVT_CLOSE_WINDOW, topLevel->GetId());
-            closeEvent.SetEventObject(topLevel);
-            closeEvent.SetCanVeto(false);
-
-            topLevel->GetEventHandler()->ProcessEvent(closeEvent);
-            return;
-        }
+        SendCloseEvent();
     }
     else if (event.GetKeyCode() == WXK_TAB || event.GetKeyCode() == GetExtraNavigationKey())
     {
