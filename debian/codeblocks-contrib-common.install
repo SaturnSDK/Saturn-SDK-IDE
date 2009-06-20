@@ -27,4 +27,5 @@ usr/share/codeblocks/images/codesnippets*
 usr/share/codeblocks/images/wxsmith*
 usr/share/codeblocks/images/ThreadSearch*
 usr/share/codeblocks/lib_finder/*
-
+usr/share/man/man1/*snippets*
+usr/include/wxSmithContribItems/ usr/include/
