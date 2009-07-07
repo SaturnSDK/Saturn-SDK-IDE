@@ -207,21 +207,23 @@ private:
 
     wxString m_Filename;
     wxString m_Buffer;
-    wxString m_peek;
-    wxString m_curtoken;
-    bool m_peekavailable;
     unsigned int m_BufferLen;
-    unsigned int m_NestLevel; // keep track of block nesting { }
-    unsigned int m_UndoNestLevel;
+
+    wxString     m_Token;
     unsigned int m_TokenIndex;
-    unsigned int m_UndoTokenIndex;
     unsigned int m_LineNumber;
+    unsigned int m_NestLevel; // keep track of block nesting { }
+    unsigned int m_SavedNestingLevel;
+
+    unsigned int m_UndoTokenIndex;
     unsigned int m_UndoLineNumber;
+    unsigned int m_UndoNestLevel;
+
+    bool         m_PeekAvailable;
+    wxString     m_PeekToken;
     unsigned int m_PeekTokenIndex;
     unsigned int m_PeekLineNumber;
     unsigned int m_PeekNestLevel;
-
-    unsigned int m_SavedNestingLevel;
 
     bool m_IsOK;
     bool m_IsOperator;

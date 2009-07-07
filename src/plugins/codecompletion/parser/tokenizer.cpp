@@ -32,20 +32,20 @@ ConfigManagerContainer::StringToStringMap Tokenizer::s_Replacements;
 
 Tokenizer::Tokenizer(const wxString& filename)
     : m_Filename(filename),
-    m_peek(_T("")),
-    m_curtoken(_T("")),
-    m_peekavailable(false),
     m_BufferLen(0),
-    m_NestLevel(0),
-    m_UndoNestLevel(0),
+    m_Token(_T("")),
     m_TokenIndex(0),
-    m_UndoTokenIndex(0),
     m_LineNumber(1),
+    m_NestLevel(0),
+    m_SavedNestingLevel(0),
+    m_UndoTokenIndex(0),
     m_UndoLineNumber(1),
+    m_UndoNestLevel(0),
+    m_PeekAvailable(false),
+    m_PeekToken(_T("")),
     m_PeekTokenIndex(0),
     m_PeekLineNumber(0),
     m_PeekNestLevel(0),
-    m_SavedNestingLevel(0),
     m_IsOK(false),
     m_IsOperator(false),
     m_LastWasPreprocessor(false),
@@ -109,22 +109,22 @@ bool Tokenizer::InitFromBuffer(const wxString& buffer)
 
 void Tokenizer::BaseInit()
 {
-    m_TokenIndex = 0;
-    m_UndoTokenIndex = 0;
-    m_LineNumber = 1;
-    m_UndoLineNumber = 1;
-    m_PeekTokenIndex = 0;
-    m_PeekLineNumber = 0;
-    m_PeekNestLevel = 0;
-    m_NestLevel = 0;
-    m_SavedNestingLevel = 0;
-    m_UndoNestLevel = 0;
-    m_IsOperator = false;
-    m_BufferLen = 0;
+    m_BufferLen           = 0;
+    m_TokenIndex          = 0;
+    m_LineNumber          = 1;
+    m_NestLevel           = 0;
+    m_SavedNestingLevel   = 0;
+    m_UndoTokenIndex      = 0;
+    m_UndoLineNumber      = 1;
+    m_UndoNestLevel       = 0;
+    m_PeekTokenIndex      = 0;
+    m_PeekLineNumber      = 0;
+    m_PeekNestLevel       = 0;
+    m_IsOK                = false;
+    m_IsOperator          = false;
     m_LastWasPreprocessor = false;
     m_LastPreprocessor.Clear();
     m_Buffer.Clear();
-    m_IsOK = false;
 }
 
 bool Tokenizer::ReadFile()
@@ -279,18 +279,21 @@ bool Tokenizer::SkipToEOL(bool nestBraces, bool skippingComment)
     {
         while (NotEOF() && CurrentChar() != '\n')
         {
-            if (CurrentChar() == '/' && NextChar() == '*')
+            if(!skippingComment)
             {
-                SkipComment(false); // don't skip whitespace after the comment
-                if (skippingComment && CurrentChar() == '\n')
+                if (CurrentChar() == '/' && NextChar() == '*')
                 {
-                    continue; // early exit from the loop
+                    SkipComment(false); // don't skip whitespace after the comment
+                    if (skippingComment && CurrentChar() == '\n')
+                    {
+                        continue; // early exit from the loop
+                    }
                 }
+                if (nestBraces && CurrentChar() == _T('{'))
+                    ++m_NestLevel;
+                else if (nestBraces && CurrentChar() == _T('}'))
+                    --m_NestLevel;
             }
-            if (nestBraces && CurrentChar() == _T('{'))
-                ++m_NestLevel;
-            else if (nestBraces && CurrentChar() == _T('}'))
-                --m_NestLevel;
             MoveToNextChar();
         }
         wxChar last = PreviousChar();
@@ -480,50 +483,50 @@ wxString Tokenizer::GetToken()
     m_UndoLineNumber = m_LineNumber;
     m_UndoNestLevel  = m_NestLevel;
 
-    if(m_peekavailable)
+    if(m_PeekAvailable)
     {
         m_TokenIndex = m_PeekTokenIndex;
         m_LineNumber = m_PeekLineNumber;
         m_NestLevel  = m_PeekNestLevel;
-        m_curtoken   = m_peek;
+        m_Token      = m_PeekToken;
     }
     else
-        m_curtoken = DoGetToken();
+        m_Token = DoGetToken();
 
-    m_peekavailable = false;
+    m_PeekAvailable = false;
 
-    return ThisOrReplacement(m_curtoken);
+    return ThisOrReplacement(m_Token);
 }
 
 wxString Tokenizer::PeekToken()
 {
-    if(!m_peekavailable)
+    if(!m_PeekAvailable)
     {
-        m_peekavailable = true;
+        m_PeekAvailable = true;
         unsigned int undoTokenIndex = m_TokenIndex;
         unsigned int undoLineNumber = m_LineNumber;
-        unsigned int undoNestLevel = m_NestLevel;
-        m_peek = DoGetToken();
-        m_PeekTokenIndex = m_TokenIndex;
-        m_PeekLineNumber = m_LineNumber;
-        m_PeekNestLevel = m_NestLevel;
-        m_TokenIndex = undoTokenIndex;
-        m_LineNumber = undoLineNumber;
-        m_NestLevel = undoNestLevel;
+        unsigned int undoNestLevel  = m_NestLevel;
+        m_PeekToken                 = DoGetToken();
+        m_PeekTokenIndex            = m_TokenIndex;
+        m_PeekLineNumber            = m_LineNumber;
+        m_PeekNestLevel             = m_NestLevel;
+        m_TokenIndex                = undoTokenIndex;
+        m_LineNumber                = undoLineNumber;
+        m_NestLevel                 = undoNestLevel;
     }
-    return m_peek;
+    return m_PeekToken;
 }
 
 void Tokenizer::UngetToken()
 {
     m_PeekTokenIndex = m_TokenIndex;
     m_PeekLineNumber = m_LineNumber;
-    m_PeekNestLevel = m_NestLevel;
-    m_TokenIndex = m_UndoTokenIndex;
-    m_LineNumber = m_UndoLineNumber;
-    m_NestLevel = m_UndoNestLevel;
-    m_peek = m_curtoken;
-    m_peekavailable = true;
+    m_PeekNestLevel  = m_NestLevel;
+    m_TokenIndex     = m_UndoTokenIndex;
+    m_LineNumber     = m_UndoLineNumber;
+    m_NestLevel      = m_UndoNestLevel;
+    m_PeekToken      = m_Token;
+    m_PeekAvailable  = true;
 }
 
 wxString Tokenizer::DoGetToken()
@@ -560,7 +563,7 @@ wxString Tokenizer::DoGetToken()
         m_IsOperator = m_Str.IsSameAs(TokenizerConsts::operator_str);
     }
 #ifdef __WXMSW__ // This is a Windows only bug!
-    else if (c == 178  || c == 179 || c == 185) // fetch ² and ³
+    else if (c == 178 || c == 179 || c == 185) // fetch ² and ³
     {
         m_Str = c;
         MoveToNextChar();
@@ -621,7 +624,7 @@ wxString Tokenizer::DoGetToken()
         {
             //skip spaces before '=' and ','
             if (tmp.GetChar(i) == ' ' && (tmp.GetChar(i + 1) == ',' || tmp.GetChar(i + 1) == '='))
-				continue;
+                continue;
 
             if (tmp.GetChar(i) == '/' && tmp.GetChar(i + 1) == '*')
             {
