@@ -90,7 +90,7 @@
 	#include <wx/menu.h>
 	#include <wx/xrc/xmlres.h>
 	#include <wx/fileconf.h>
-
+    #include <wx/aui/auibook.h>
 
 #include "Version.h"
 #include "BrowseTracker.h"
@@ -174,7 +174,7 @@ BrowseTracker::BrowseTracker()
     m_CurrEditorIndex = 0;
     m_LastEditorIndex = 0;
     m_bProjectIsLoading = false;
-	m_UpdateUIFocusEditor = false;
+	m_UpdateUIFocusEditor = 0;
     m_nRemoveEditorSentry = 0;
     m_nBrowseMarkPreviousSentry = 0;
     m_nBrowseMarkNextSentry = 0;
@@ -187,6 +187,7 @@ BrowseTracker::BrowseTracker()
     m_LeftMouseDelay = 200;
     m_ClearAllKey = ClearAllOnSingleClick;
     m_IsMouseDoubleClick = false;
+    m_UpdateUIEditorIndex = 0;
 
 }
 // ----------------------------------------------------------------------------
@@ -207,7 +208,7 @@ void BrowseTracker::OnAttach()
 	m_apEditors.Alloc(MaxEntries);
 	for (int i=0; i<MaxEntries ; ++i ) m_apEditors[i] = 0;
 	m_nBrowsedEditorCount = 0;
-	m_UpdateUIFocusEditor = false;
+	m_UpdateUIFocusEditor = 0;
 	m_nRemoveEditorSentry = 0;
     m_nBrowseMarkPreviousSentry = 0;
     m_nBrowseMarkNextSentry = 0;
@@ -697,8 +698,8 @@ void BrowseTracker::SetSelection(int index)
         #endif
 
         // Tell OnIdle to focus the new editor. CB sdk editorManager::OnUpdateUI used to
-        // do this for us, but someone broke it.
-        m_UpdateUIFocusEditor = true;
+        // do this for us, but something broke it.
+        m_UpdateUIFocusEditor = eb;
     }
 }
 // ----------------------------------------------------------------------------
@@ -717,6 +718,9 @@ void BrowseTracker::OnMenuTrackerSelect(wxCommandEvent& event)
     m_popupWin->ShowModal();
     m_popupWin->Destroy();
     m_popupWin = 0;
+    // BrowseSelector returns the index of the selected editor in m_UpdateUIEditorIndex
+    // Activate the new editor
+    SetSelection( m_UpdateUIEditorIndex );
 }
 // ----------------------------------------------------------------------------
 void BrowseTracker::OnMenuBrowseMarkPrevious(wxCommandEvent& event)
@@ -1381,9 +1385,6 @@ void BrowseTracker::OnEditorActivated(CodeBlocksEvent& event)
     // Structures are: a hash to point to a class holding editor cursor postiions used
     // as a history to place markers.
 
-    //NB: This event is entered twice when an editor is activated. The first has
-    // no cbEditor attached. The second does.
-
     event.Skip();
 
     if (IsAttached() && m_InitDone) do
@@ -1403,14 +1404,19 @@ void BrowseTracker::OnEditorActivated(CodeBlocksEvent& event)
 
         if (not cbed)
         {
+            // Since wxAuiNotebook added, there's no cbEditor associated during
+            // an initial cbEVT_EDITOR_ACTIVATED event. So we ignore the inital
+            // call and get OnEditorOpened() to re-issue OnEditorActivated() when
+            // it does have a cbEditor, but no cbProject associated;
             #if defined(LOGGING)
-            //LOGIT( _T("[OnEditorActivated ignored:no cbEditor[%s]"), editorFullPath.c_str());
+            LOGIT( _T("[OnEditorActivated ignored:no cbEditor[%s]"), editorFullPath.c_str());
             #endif
-            break;
+            return;
         }
 
         #if defined(LOGGING)
-        LOGIT( _T("Editor Activated[%p][%s]"), eb, eb->GetShortName().c_str() );
+        cbProject* pcbProject = GetProject( eb );
+        LOGIT( _T("Editor Activated[%p]proj[%p][%s]"), eb, pcbProject, eb->GetShortName().c_str() );
         #endif
 
 
@@ -1431,7 +1437,7 @@ void BrowseTracker::OnEditorActivated(CodeBlocksEvent& event)
             }
         AddEditor(eb);
         #if defined(LOGGING)
-        LOGIT( _T("OnEditorActivated AddedEditor[%p][%s]"), eb, eb->GetShortName().c_str() );
+        LOGIT( _T("OnEditorActivated AddedEditor[%p]proj[%p][%s]"), eb, GetProject(eb),eb->GetShortName().c_str() );
         #endif
         m_CurrEditorIndex = m_LastEditorIndex;
 
@@ -1448,6 +1454,7 @@ void BrowseTracker::OnEditorActivated(CodeBlocksEvent& event)
             {
                 HashAddBrowse_Marks( eb->GetFilename() ); //create hashs and book/browse marks arrays
 
+                // Debugging statements
                 ////DumpHash(wxT("BrowseMarks"));
                 ////DumpHash(wxT("BookMarks"));
                 ////m_pActiveProjectData->DumpHash(wxT("BrowseMarks"));
@@ -1456,6 +1463,7 @@ void BrowseTracker::OnEditorActivated(CodeBlocksEvent& event)
                 cbStyledTextCtrl* control = cbed->GetControl();
                 // Setting the initial browsemark
                 //-int pos = control->GetCurrentPos();
+                //Connect to mouse to see user setting/clearing browse marks
                 control->Connect(wxEVT_LEFT_UP,
                                 (wxObjectEventFunction)(wxEventFunction)
                                 (wxMouseEventFunction)&BrowseTracker::OnMouseKeyEvent,
@@ -1496,12 +1504,14 @@ void BrowseTracker::OnEditorActivated(CodeBlocksEvent& event)
                 // the following stmt seems to do nothing for wxSCI_MARK_DOTDOTDOT
                 control->MarkerSetBackground( GetBrowseMarkerId(), wxColour(0xA0, 0xA0, 0xFF));
                 #if defined(LOGGING)
-                //LOGIT( _T("UserStyle[%d]MarkerId[%d]MarkerStyle[%d]"),m_UserMarksStyle,GetBrowseMarkerId(), GetBrowseMarkerStyle());
+                 //LOGIT( _T("UserStyle[%d]MarkerId[%d]MarkerStyle[%d]"),m_UserMarksStyle,GetBrowseMarkerId(), GetBrowseMarkerStyle());
                 #endif
                 // Set archived Layout browse marks in the editor
                 ProjectData* pProjectData = GetProjectDataByEditorName(eb->GetFilename() );
                     #if defined(LOGGING)
                     if (not pProjectData)
+                        // Since wxAuiNotebook added, there's no proj associated with cbeditor
+                        // during EVT_EDITOR_OPEN or EVT_EDITOR_ACTIVATED
                         LOGIT( _T("OnEditorActivated FAILED TO FIND PROJECT for [%s]"), eb->GetShortName().c_str() );
                     #endif
                 if ( pProjectData )
@@ -1557,16 +1567,21 @@ void BrowseTracker::OnIdle(wxIdleEvent& event)
     // is active since there's no idle time. User will have to click into
     // the editor window to activate it.
     // This used to be done by the CB editor manager, but someone removed the UI hook.
-    if (!Manager::Get()->IsAppShuttingDown() && m_UpdateUIFocusEditor)
+    if ((not Manager::Get()->IsAppShuttingDown()) && m_UpdateUIFocusEditor)
     {
-        cbEditor* ed = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
-        if (ed)
-        {    ed->GetControl()->SetFocus();
+        if (m_UpdateUIFocusEditor)
+        {
+            EditorBase* eb = m_UpdateUIFocusEditor;
+            m_UpdateUIFocusEditor = 0;
+            Manager::Get()->GetEditorManager()->SetActiveEditor(eb);
+            eb->SetFocus();
             #if defined(LOGGING)
-            ////LOGIT( _T("OnIdle Focused Editor[%p] Title[%s]"), ed, ed->GetTitle().c_str() );
+             LOGIT( _T("OnIdle Focused Editor[%p] Title[%s]"), eb, eb->GetTitle().c_str() );
             #endif
+            // re-sort the browse marks
+            wxCommandEvent ev;
+            OnMenuSortBrowse_Marks(ev);
         }
-        m_UpdateUIFocusEditor = false;
     }
      event.Skip();
 }
@@ -1622,7 +1637,7 @@ void BrowseTracker::OnEditorOpened(CodeBlocksEvent& event)
         // validate cbProject has been set
         cbProject* pcbProject = GetProject( eb );
         #if defined(LOGGING)
-         LOGIT( _T("OnEditorOpen ebase[%p]cbed[%p]stc[%p][%s]"), eb, cbed, control, eb->GetShortName().c_str() );
+         LOGIT( _T("OnEditorOpen ebase[%p]cbed[%p]stc[%p]proj[%p][%s]"), eb, cbed, control, pcbProject, eb->GetShortName().c_str() );
         #endif
 
         // stow opened editor info in the ProjectData class
@@ -1647,7 +1662,13 @@ void BrowseTracker::OnEditorOpened(CodeBlocksEvent& event)
             // LOGIT( _T("OnEditorOpen cbProject[%p]filename[%s]"), pcbProject, filename.c_str() );
             // #endif
 
-    }//if
+        // Editors opened by Alt-G and Swap header/source do not have
+        // cbEditors attached. So we have to re-call OnEditorActivated here.
+        CodeBlocksEvent evt;
+        evt.SetEditor(eb);
+        OnEditorActivated(evt);
+
+    }//if isAttached
 }
 // ----------------------------------------------------------------------------
 void BrowseTracker::OnEditorClosed(CodeBlocksEvent& event)
@@ -1707,6 +1728,15 @@ void BrowseTracker::OnEditorClosed(CodeBlocksEvent& event)
             }//if
     }//if
 }//OnEditorClosed
+// ----------------------------------------------------------------------------
+void BrowseTracker::OnWindowSetFocus(wxFocusEvent& event)
+// ----------------------------------------------------------------------------
+{
+    #if defined(LOGGING)
+    wxWindow* p = (wxWindow*)event.GetEventObject();
+    LOGIT( _T("SetFocusEvent for[%p]"), p);
+    #endif
+}
 // ----------------------------------------------------------------------------
 void BrowseTracker::AddEditor(EditorBase* eb)
 // ----------------------------------------------------------------------------
@@ -2404,6 +2434,7 @@ ProjectData* BrowseTracker::GetProjectDataByEditorName( wxString filePath)
 // ----------------------------------------------------------------------------
 {
     wxString reason = wxT("");
+    //asm("int3"); /*trap*/
     do {
         EditorBase* eb = m_pEdMgr->GetEditor( filePath );
         reason = wxT("eb");
@@ -2421,7 +2452,7 @@ ProjectData* BrowseTracker::GetProjectDataByEditorName( wxString filePath)
     }while(0);
 
     #if defined(LOGGING)
-    //LOGIT( _T("GetProjectDataByEditorName FAILED to find [%s] for [%s]"), reason.c_str(), filePath.c_str() );
+     //LOGIT( _T("GetProjectDataByEditorName FAILED to find [%s] for [%s]"), reason.c_str(), filePath.c_str() );
     #endif
 
     // At this point CB has failed to find the project by its editor filename
@@ -2433,9 +2464,25 @@ ProjectData* BrowseTracker::GetProjectDataByEditorName( wxString filePath)
             return pProjectData;
     }
 
+    // Since wxAuiNotebook added, an initial cbEVT_EDITOR_ACTIVATED has no cbEditor
+    // or project associated with it. So we'll try to use the current active project.
+    ProjectData* pProjectData = 0;
+    cbProject* pcbProject = Manager::Get()->GetProjectManager()->GetActiveProject();
+    if (pcbProject)
+    {
+        pProjectData = GetProjectDataFromHash( pcbProject );
+        if (pProjectData)
+        {
+            #if defined(LOGGING)
+            LOGIT( _T("GetProjectDataByEditorName FAILED, using Active Project for[%s]"),filePath.c_str());
+            #endif
+            return pProjectData;
+        }
+    }
     #if defined(LOGGING)
-    //LOGIT( _T("GetProjectDataByEditorName FAILED to find [%s] for [%s]"), wxT("Hash entry"), filePath.c_str() );
+     LOGIT( _T("GetProjectDataByEditorName FAILED to find [%s] for [%s]"), wxT("Hash entry"), filePath.c_str() );
     #endif
+
     return 0;
 }//GetProjectDataByEditorName
 // ----------------------------------------------------------------------------
