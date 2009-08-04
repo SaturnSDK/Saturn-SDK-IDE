@@ -18,10 +18,10 @@ class DLLIMPORT EncodingDetector :
             public nsUniversalDetector
 {
 	public:
-		EncodingDetector(const wxString& filename);
-		EncodingDetector(LoaderBase* fileLdr);
-		EncodingDetector(const wxByte* buffer, size_t size);
-		EncodingDetector(const EncodingDetector& rhs);
+		EncodingDetector(const wxString& filename, bool useLog=true);
+		EncodingDetector(LoaderBase* fileLdr, bool useLog=true);
+		EncodingDetector(const wxByte* buffer, size_t size, bool useLog=true);
+		EncodingDetector(const EncodingDetector& rhs, bool useLog=true);
 		~EncodingDetector();
 
         const wxString& DoIt(const char* aBuf, PRUint32 aLen);
@@ -41,9 +41,10 @@ class DLLIMPORT EncodingDetector :
         void Report(const char* aCharset);
 
         bool m_IsOK;
-		bool m_UseBOM;
-		int m_BOMSizeInBytes;
-		wxFontEncoding m_Encoding;
+        bool m_UseBOM;
+        bool m_UseLog;
+        int m_BOMSizeInBytes;
+        wxFontEncoding m_Encoding;
 	private:
         wxString mResult;
         wxString m_ConvStr;
