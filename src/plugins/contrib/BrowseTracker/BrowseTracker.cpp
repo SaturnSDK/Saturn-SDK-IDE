@@ -161,8 +161,6 @@ BEGIN_EVENT_TABLE(BrowseTracker, cbPlugin)
    #endif
    // -- BOOK Marks --
     EVT_MENU(idEditBookmarksToggle, BrowseTracker::OnBook_MarksToggle)
-    // --
-    //-EVT_FLATNOTEBOOK_PAGE_CHANGED(ID_NBEditorManager, BrowseTracker::OnPageChanged)
 END_EVENT_TABLE()
 
 // ----------------------------------------------------------------------------
@@ -195,6 +193,10 @@ BrowseTracker::~BrowseTracker()
 // ----------------------------------------------------------------------------
 {
     //dtor
+    if (m_pCfgFile)
+    {
+        delete m_pCfgFile;
+    }
 }
 
 // ----------------------------------------------------------------------------
@@ -691,7 +693,6 @@ void BrowseTracker::SetSelection(int index)
     EditorBase* eb = GetEditor(index);
     if (eb)
     {
-        //-int page = Manager::Get()->GetEditorManager()->FindPageFromEditor(eb);
         Manager::Get()->GetEditorManager()->SetActiveEditor(eb);
         #if defined(LOGGING)
         LOGIT( _T("SetSelection[%d] editor[%p][%s]"), index, eb, eb->GetShortName().c_str() );
