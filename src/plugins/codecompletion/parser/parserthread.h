@@ -89,6 +89,7 @@ class ParserThread : public cbThreadedTask
         void HandlePreprocessorBlocks(const wxString& preproc);
         void HandleNamespace();
         void ReadVarNames();
+        void ReadClsNames(wxString& ancestor);
         void HandleClass(EClassType ct);
         void HandleFunction(const wxString& name, bool isOperator = false);
         void HandleEnum();
