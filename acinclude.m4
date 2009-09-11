@@ -241,6 +241,7 @@ AC_DEFUN([BUILD_CONTRIB_NONE], [
 	AM_CONDITIONAL([BUILD_WXSMITHAUI], [false])
 	AM_CONDITIONAL([BUILD_HEXEDITOR], [false])
 	AM_CONDITIONAL([BUILD_INCSEARCH], [false])
+	AM_CONDITIONAL([BUILD_MOUSESAP], [false])
 ])
 
 AC_DEFUN([BUILD_CONTRIB_ALL], [
@@ -268,6 +269,7 @@ AC_DEFUN([BUILD_CONTRIB_ALL], [
 	AM_CONDITIONAL([BUILD_WXSMITHAUI], [true])
 	AM_CONDITIONAL([BUILD_HEXEDITOR], [true])
 	AM_CONDITIONAL([BUILD_INCSEARCH], [true])
+	AM_CONDITIONAL([BUILD_MOUSESAP], [true])
 ])
 
 # default to 'none'
@@ -281,9 +283,10 @@ AC_ARG_WITH(contrib-plugins,
   [                        "all,-help" compiles all contrib plugins except the help plugin ]
   [                        By default, no contrib plugins are compiled ]
   [                        Plugin names are: AutoVersioning,BrowseTracker,byogames,cbkoders,codesnippets,]
-  [                        		     codestat,copystrings, dragscroll,envvars,headerfixup ]
+  [                        		     codestat,copystrings, dragscroll,envvars,headerfixup, ]
   [                        		     help,keybinder,libfinder,profiler,regex,exporter, ]
-  [                        		     symtab,wxsmith,wxsmithcontrib,wxsmithaui,incsearch,hexeditor ],
+  [                        		     symtab,wxsmith,wxsmithcontrib,wxsmithaui,incsearch,hexeditor, ]
+  [                        		     MouseSap ],
   plugins="$withval", plugins="none")
 
 plugins=`echo $plugins | sed 's/,/ /g'`
@@ -365,6 +368,9 @@ do
 	incsearch)
 		AM_CONDITIONAL([BUILD_INCSEARCH], [true])
 		;;
+	MouseSap)
+		AM_CONDITIONAL([BUILD_MOUSESAP], [true])
+		;;
 	-AutoVersioning)
 		AM_CONDITIONAL([BUILD_AUTOVERSIONING], [false])
 		;;
@@ -437,6 +443,9 @@ do
 	-incsearch)
 		AM_CONDITIONAL([BUILD_INCSEARCH], [false])
 		;;
+	-MouseSap)
+		AM_CONDITIONAL([BUILD_MOUSESAP], [false])
+		;;
 	*)
 		echo "Unknown contrib plugin $plugin, ignoring"
 		;;
@@ -469,6 +478,7 @@ AC_SUBST(BUILD_WXSMITHCONTRIB)
 AC_SUBST(BUILD_WXSMITHAUI)
 AC_SUBST(BUILD_HEXEDITOR)
 AC_SUBST(BUILD_INCSEARCH)
+AC_SUBST(BUILD_MOUSESAP)
 
 GCC_PCH=0
 PCH_FLAGS=

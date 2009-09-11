@@ -116,7 +116,6 @@ void cbDragScroll::OnAttach()
     m_ZoomWindowIdsAry.Clear();
     m_ZoomFontSizesAry.Clear();
 
-
     m_pCB_AppWindow = Manager::Get()->GetAppWindow();
 
     #if defined(LOGGING)
@@ -126,7 +125,8 @@ void cbDragScroll::OnAttach()
             pMyLog = new wxLogWindow(pcbWindow, wxT("DragScroll"), true, false);
         wxLog::SetActiveTarget(pMyLog);
         pMyLog->Flush();
-        pMyLog->GetFrame()->Move(20,20);
+        //pMyLog->GetFrame()->Move(20,20);
+        pMyLog->GetFrame()->SetSize(20,20, 600, 300);
         wxLogMessage(_T("Logging cbDragScroll version %s"),wxString(wxT(VERSION)).c_str());
         LOGIT( _T("DragScroll::cbDragScroll Address is:[%p]"), pDragScroll);
 	#endif
@@ -244,7 +244,7 @@ void cbDragScroll::OnAttach()
 	PluginInfo* pInfo = (PluginInfo*)(Manager::Get()->GetPluginManager()->GetPluginInfo(this));
 	pInfo->version = wxT(VERSION);
 	// Allow other plugins to find our Event ID
-	m_DragScrollFirstId = wxString::Format( _T("%d"), wxEVT_DRAGSCROLL_EVENT);
+	m_DragScrollFirstId = wxString::Format( _T("%ld"), wxEVT_DRAGSCROLL_EVENT);
 	pInfo->authorWebsite = m_DragScrollFirstId;
 
 	#if defined(LOGGING)
@@ -443,7 +443,7 @@ void cbDragScroll::UpdateConfigFile()
         cfgFile.Write(_T("ZoomFontSizes"),       m_ZoomFontSizes ) ;
 	}
 
-}//OnDoConfigRequests
+}//UpdateConfigFile
 // ----------------------------------------------------------------------------
 int cbDragScroll::GetZoomWindowsArraysFrom( wxString zoomWindowIds, wxString zoomFontSizes )
 // ----------------------------------------------------------------------------
@@ -675,15 +675,6 @@ void cbDragScroll::Attach(wxWindow *p)
     // eg., wxArrayString m_UsableWindows = "sciwindow notebook";
 
     wxString windowName = p->GetName().MakeLower();
-
-    // memorize "Search Results" Window address
-    // We're assuming it's the first listcrl window found
-    //-if ( (not m_pSearchResultsWindow) && (windowName ==  wxT("listctrl")) )
-    //-{   m_pSearchResultsWindow = p;
-    //-    #ifdef LOGGING
-    //-     LOGIT(wxT("SearchResultsWindow: %p"),p );
-    //-    #endif
-    //-}
 
     if (wxNOT_FOUND == m_UsableWindows.Index(windowName,false))
      {
@@ -987,10 +978,21 @@ void cbDragScroll::OnAppStartupDoneInit()
     // Issue SetFont() for saved font sizes on our monitored windows
     // Arrays contain the previous sessions window id and the font size for that window
     if ( GetMouseWheelZoom() )
-    for (size_t i=0; i<m_WindowPtrs.GetCount(); ++i)
+    for (int i=0; i<(int)m_WindowPtrs.GetCount(); ++i)
     {
         wxWindow* pWindow = (wxWindow*)m_WindowPtrs.Item(i);
+        // verify the window still exists (htmWindows disappear without notice)
+        if (not winExists(pWindow))
+        {
+            m_WindowPtrs.RemoveAt(i);
+            --i;
+            if (i<0) break;
+            continue;
+        }
         // check for font size change
+        #if defined(LOGGING)
+        LOGIT( _T("pWindow GetName[%s]"), pWindow->GetName().c_str());
+        #endif
         if ( (pWindow->GetName() not_eq  _T("SCIwindow"))
                 and (pWindow->GetName() not_eq  _T("htmlWindow")) )
         {
