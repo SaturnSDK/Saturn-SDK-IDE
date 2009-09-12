@@ -133,7 +133,7 @@ int idFilePrev = wxNewId();
 
 int idEditUndo = XRCID("idEditUndo");
 int idEditRedo = XRCID("idEditRedo");
-int idEditDeleteHistory = XRCID("idEditDeleteHistory");
+int idEditClearHistory = XRCID("idEditClearHistory");
 int idEditCopy = XRCID("idEditCopy");
 int idEditCut = XRCID("idEditCut");
 int idEditPaste = XRCID("idEditPaste");
@@ -268,7 +268,7 @@ BEGIN_EVENT_TABLE(MainFrame, wxFrame)
 
     EVT_UPDATE_UI(idEditUndo, MainFrame::OnEditMenuUpdateUI)
     EVT_UPDATE_UI(idEditRedo, MainFrame::OnEditMenuUpdateUI)
-    EVT_UPDATE_UI(idEditDeleteHistory, MainFrame::OnEditMenuUpdateUI)
+    EVT_UPDATE_UI(idEditClearHistory, MainFrame::OnEditMenuUpdateUI)
     EVT_UPDATE_UI(idEditCopy, MainFrame::OnEditMenuUpdateUI)
     EVT_UPDATE_UI(idEditCut, MainFrame::OnEditMenuUpdateUI)
     EVT_UPDATE_UI(idEditPaste, MainFrame::OnEditMenuUpdateUI)
@@ -354,7 +354,7 @@ BEGIN_EVENT_TABLE(MainFrame, wxFrame)
 
     EVT_MENU(idEditUndo,  MainFrame::OnEditUndo)
     EVT_MENU(idEditRedo,  MainFrame::OnEditRedo)
-    EVT_MENU(idEditDeleteHistory,  MainFrame::OnEditDeleteHistory)
+    EVT_MENU(idEditClearHistory,  MainFrame::OnEditClearHistory)
     EVT_MENU(idEditCopy,  MainFrame::OnEditCopy)
     EVT_MENU(idEditCut,  MainFrame::OnEditCut)
     EVT_MENU(idEditPaste,  MainFrame::OnEditPaste)
@@ -1260,7 +1260,7 @@ void MainFrame::SaveViewLayout(const wxString& name, const wxString& layout, boo
     if (viewLayouts && viewLayouts->FindItem(name) == wxNOT_FOUND)
     {
         int id = wxNewId();
-        viewLayouts->InsertCheckItem(viewLayouts->GetMenuItemCount() - 3, id, name, wxString::Format(_("Switch to %s layout"), name.c_str()));
+        viewLayouts->InsertCheckItem(viewLayouts->GetMenuItemCount() - 3, id, name, wxString::Format(_("Switch to %s perspective"), name.c_str()));
         Connect( id,  wxEVT_COMMAND_MENU_SELECTED,
             (wxObjectEventFunction)(wxEventFunction)(wxCommandEventFunction)&MainFrame::OnViewLayout);
         m_PluginIDsMap[id] = name;
@@ -1328,7 +1328,7 @@ bool MainFrame::DoCheckCurrentLayoutForChanges(bool canCancel)
     if (!m_LastLayoutName.IsEmpty() && LayoutDifferent(lastlayout, m_LastLayoutData))
     {
         AnnoyingDialog dlg(_("Layout changed"),
-                            wxString::Format(_("The layout '%s' has changed. Do you want to save it?"), m_LastLayoutName.c_str()),
+                            wxString::Format(_("The perspective '%s' has changed. Do you want to save it?"), m_LastLayoutName.c_str()),
                             wxART_QUESTION,
                             canCancel ? AnnoyingDialog::YES_NO_CANCEL : AnnoyingDialog::YES_NO,
                             wxID_YES);
@@ -1910,7 +1910,7 @@ void MainFrame::OnStartHereVarSubst(wxCommandEvent& event)
     wxString buf = event.GetString();
     wxString links;
 
-    links << _T("<b>Recent projects</b><br>\n");
+    links << _("<b>Recent projects</b><br>\n");
     if (m_pProjectsHistory->GetCount())
     {
         links << _T("<ul>");
@@ -1926,7 +1926,7 @@ void MainFrame::OnStartHereVarSubst(wxCommandEvent& event)
     else
         links << _T("&nbsp;&nbsp;&nbsp;&nbsp;No recent projects<br>\n");
 
-    links << _T("<br><b>Recent files</b><br>\n");
+    links << _("<br><b>Recent files</b><br>\n");
     if (m_pFilesHistory->GetCount())
     {
         links << _T("<ul>");
@@ -1945,6 +1945,11 @@ void MainFrame::OnStartHereVarSubst(wxCommandEvent& event)
 
     // update page
     buf.Replace(_T("CB_VAR_RECENT_FILES_AND_PROJECTS"), links);
+	buf.Replace(_T("CB_TXT_NEW_PROJECT"), _("Create a new project"));
+	buf.Replace(_T("CB_TXT_OPEN_PROJECT"), _("Open an existing project"));
+	buf.Replace(_T("CB_TXT_VISIT_FORUMS"), _("Visit the Code::Blocks forums"));
+	buf.Replace(_T("CB_TXT_REPORT_BUG"), _("Report a bug"));
+	buf.Replace(_T("CB_TXT_REQ_NEW_FEATURE"), _("Request a new feature"));
     ((StartHerePage*)sh)->SetPageContent(buf);
 }
 
@@ -1964,29 +1969,32 @@ void MainFrame::InitializeRecentFilesHistory()
         if (!menu)
             return;
         wxMenu* recentFiles = 0;
-        wxMenuItem* clear = menu->FindItem(idFileOpenRecentFileClearHistory, &recentFiles);
+        menu->FindItem(idFileOpenRecentFileClearHistory, &recentFiles);
         if (recentFiles)
         {
-            recentFiles->Remove(clear);
-
             wxArrayString files = Manager::Get()->GetConfigManager(_T("app"))->ReadArrayString(_T("/recent_files"));
             for (int i = (int)files.GetCount() - 1; i >= 0; --i)
             {
                 if(wxFileExists(files[i]))
+                {
                     m_pFilesHistory->AddFileToHistory(files[i]);
+                }
             }
-            m_pFilesHistory->UseMenu(recentFiles);
-            m_pFilesHistory->AddFilesToMenu(recentFiles);
-            if (recentFiles->GetMenuItemCount())
-                recentFiles->AppendSeparator();
-            recentFiles->Append(clear);
+            if (m_pFilesHistory->GetCount() > 0)
+            {
+                recentFiles->InsertSeparator(0);
+                for (size_t i = 0; i < m_pFilesHistory->GetCount(); ++i)
+                {
+                    recentFiles->Insert(recentFiles->GetMenuItemCount() - 2, wxID_FILE1 + i,
+                        wxString::Format(_T("&%d "), i + 1) + m_pFilesHistory->GetHistoryFile(i));
+                }
+            }
         }
         wxMenu* recentProjects = 0;
-        clear = menu->FindItem(idFileOpenRecentProjectClearHistory, &recentProjects);
+        menu->FindItem(idFileOpenRecentProjectClearHistory, &recentProjects);
         if (recentProjects)
         {
             m_pProjectsHistory = new wxFileHistory(9, wxID_FILE10);
-            recentProjects->Remove(clear);
 
             wxArrayString files = Manager::Get()->GetConfigManager(_T("app"))->ReadArrayString(_T("/recent_projects"));
             for (int i = (int)files.GetCount() - 1; i >= 0; --i)
@@ -1994,11 +2002,15 @@ void MainFrame::InitializeRecentFilesHistory()
                 if(wxFileExists(files[i]))
                     m_pProjectsHistory->AddFileToHistory(files[i]);
             }
-            m_pProjectsHistory->UseMenu(recentProjects);
-            m_pProjectsHistory->AddFilesToMenu(recentProjects);
-            if (recentProjects->GetMenuItemCount())
-                recentProjects->AppendSeparator();
-            recentProjects->Append(clear);
+            if (m_pProjectsHistory->GetCount() > 0)
+            {
+                recentProjects->InsertSeparator(0);
+                for (size_t i = 0; i < m_pProjectsHistory->GetCount(); ++i)
+                {
+                    recentProjects->Insert(recentProjects->GetMenuItemCount() - 2, wxID_FILE10 + i,
+                        wxString::Format(_T("&%d "), i + 1) + m_pProjectsHistory->GetHistoryFile(i));
+                }
+            }
         }
     }
 }
@@ -2025,10 +2037,10 @@ void MainFrame::AddToRecentFilesHistory(const wxString& FileName)
 
     // because we append "clear history" menu to the end of the list,
     // each time we must add a history item we have to:
-    // a) remove "Clear history"
-    // b) clear the menu
-    // c) fill it with the history items
-    // and d) append "Clear history"...
+    // a) remove "Clear history" (Biplab#1: Don't remove or you'll loose icon)
+    // b) clear the menu (Biplab#1: except the last item)
+    // c) fill it with the history items (Biplab#1: by inserting them)
+    // and d) append "Clear history"... (Biplab#1: Not needed, item has not been removed)
     wxMenuBar* mbar = GetMenuBar();
     if (!mbar)
         return;
@@ -2039,22 +2051,22 @@ void MainFrame::AddToRecentFilesHistory(const wxString& FileName)
     if (!menu)
         return;
     wxMenu* recentFiles = 0;
-    wxMenuItem* clear = menu->FindItem(idFileOpenRecentFileClearHistory, &recentFiles);
-    if (clear && recentFiles)
+    menu->FindItem(idFileOpenRecentFileClearHistory, &recentFiles);
+    if (recentFiles)
     {
-        // a)
-        recentFiles->Remove(clear);
-        // b)
-        m_pFilesHistory->RemoveMenu(recentFiles);
-        while (recentFiles->GetMenuItemCount())
+        while (recentFiles->GetMenuItemCount() > 1)
+        {
             recentFiles->Delete(recentFiles->GetMenuItems()[0]);
-        // c)
-        m_pFilesHistory->UseMenu(recentFiles);
-        m_pFilesHistory->AddFilesToMenu(recentFiles);
-        // d)
-        if (recentFiles->GetMenuItemCount())
-            recentFiles->AppendSeparator();
-        recentFiles->Append(clear);
+        }
+        if (m_pFilesHistory->GetCount() > 0)
+        {
+            recentFiles->InsertSeparator(0);
+            for (size_t i = 0; i < m_pFilesHistory->GetCount(); ++i)
+            {
+                recentFiles->Insert(recentFiles->GetMenuItemCount() - 2, wxID_FILE1 + i,
+                    wxString::Format(_T("&%d "), i + 1) + m_pFilesHistory->GetHistoryFile(i));
+            }
+        }
     }
 
     // update start here page
@@ -2099,22 +2111,22 @@ void MainFrame::AddToRecentProjectsHistory(const wxString& FileName)
     if (!menu)
         return;
     wxMenu* recentProjects = 0;
-    wxMenuItem* clear = menu->FindItem(idFileOpenRecentProjectClearHistory, &recentProjects);
-    if (clear && recentProjects)
+    menu->FindItem(idFileOpenRecentProjectClearHistory, &recentProjects);
+    if (recentProjects)
     {
-        // a)
-        recentProjects->Remove(clear);
-        // b)
-        m_pProjectsHistory->RemoveMenu(recentProjects);
-        while (recentProjects->GetMenuItemCount())
+        while (recentProjects->GetMenuItemCount() > 1)
+        {
             recentProjects->Delete(recentProjects->GetMenuItems()[0]);
-        // c)
-        m_pProjectsHistory->UseMenu(recentProjects);
-        m_pProjectsHistory->AddFilesToMenu(recentProjects);
-        // d)
-        if (recentProjects->GetMenuItemCount())
-            recentProjects->AppendSeparator();
-        recentProjects->Append(clear);
+        }
+        if (m_pProjectsHistory->GetCount() > 0)
+        {
+            recentProjects->InsertSeparator(0);
+            for (size_t i = 0; i < m_pProjectsHistory->GetCount(); ++i)
+            {
+                recentProjects->Insert(recentProjects->GetMenuItemCount() - 2, wxID_FILE10 + i,
+                    wxString::Format(_T("&%d "), i + 1) + m_pProjectsHistory->GetHistoryFile(i));
+            }
+        }
     }
 
     // update start here page
@@ -2144,7 +2156,19 @@ void MainFrame::TerminateRecentFilesHistory()
                     wxMenu* recentFiles = 0;
                     menu->FindItem(idFileOpenRecentFileClearHistory, &recentFiles);
                     if (recentFiles)
-                        m_pFilesHistory->RemoveMenu(recentFiles);
+                    {
+                        if (!Manager::IsAppShuttingDown())
+                        {
+                            while (recentFiles->GetMenuItemCount() > 1)
+                            {
+                                recentFiles->Delete(recentFiles->GetMenuItems()[0]);
+                            }
+                        }
+                        else
+                        {
+                            m_pFilesHistory->RemoveMenu(recentFiles);
+                        }
+                    }
                 }
             }
         }
@@ -2156,7 +2180,9 @@ void MainFrame::TerminateRecentFilesHistory()
     {
         wxArrayString files;
         for (unsigned int i = 0; i < m_pProjectsHistory->GetCount(); ++i)
+        {
             files.Add(m_pProjectsHistory->GetHistoryFile(i));
+        }
         Manager::Get()->GetConfigManager(_T("app"))->Write(_T("/recent_projects"), files);
 
         wxMenuBar* mbar = GetMenuBar();
@@ -2171,7 +2197,19 @@ void MainFrame::TerminateRecentFilesHistory()
                     wxMenu* recentProjects = 0;
                     menu->FindItem(idFileOpenRecentProjectClearHistory, &recentProjects);
                     if (recentProjects)
-                        m_pProjectsHistory->RemoveMenu(recentProjects);
+                    {
+                        if (!Manager::IsAppShuttingDown())
+                        {
+                            while (recentProjects->GetMenuItemCount() > 1)
+                            {
+                                recentProjects->Delete(recentProjects->GetMenuItems()[0]);
+                            }
+                        }
+                        else
+                        {
+                            m_pProjectsHistory->RemoveMenu(recentProjects);
+                        }
+                    }
                 }
             }
         }
@@ -2435,6 +2473,7 @@ void MainFrame::OnFileOpenRecentProjectClearHistory(wxCommandEvent& event)
     Manager::Get()->GetConfigManager(_T("app"))->DeleteSubPath(_T("/recent_projects"));
 
     // update start here page
+    InitializeRecentFilesHistory();
     EditorBase* sh = Manager::Get()->GetEditorManager()->GetEditor(g_StartHereTitle);
     if (sh)
         ((StartHerePage*)sh)->Reload();
@@ -2459,6 +2498,7 @@ void MainFrame::OnFileOpenRecentClearHistory(wxCommandEvent& event)
     Manager::Get()->GetConfigManager(_T("app"))->DeleteSubPath(_T("/recent_files"));
 
     // update start here page
+    InitializeRecentFilesHistory();
     EditorBase* sh = Manager::Get()->GetEditorManager()->GetEditor(g_StartHereTitle);
     if (sh)
         ((StartHerePage*)sh)->Reload();
@@ -2789,11 +2829,11 @@ void MainFrame::OnEditRedo(wxCommandEvent& event)
         ed->Redo();
 }
 
-void MainFrame::OnEditDeleteHistory(wxCommandEvent& event)
+void MainFrame::OnEditClearHistory(wxCommandEvent& event)
 {
     EditorBase* ed = Manager::Get()->GetEditorManager()->GetActiveEditor();
     if (ed)
-        ed->DeleteHistory();
+        ed->ClearHistory();
 }
 
 void MainFrame::OnEditCopy(wxCommandEvent& event)
@@ -2981,9 +3021,9 @@ void MainFrame::OnEditLowerCase(wxCommandEvent& event)
 
 void MainFrame::OnEditSelectAll(wxCommandEvent& event)
 {
-    cbEditor* ed = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
-    if (ed)
-        ed->GetControl()->SelectAll();
+    EditorBase* eb = Manager::Get()->GetEditorManager()->GetActiveEditor();
+    if (eb)
+        eb->SelectAll();
 }
 
 /* This is a shameless rip-off of the original OnEditCommentSelected function,
@@ -3449,7 +3489,7 @@ void MainFrame::OnViewLayout(wxCommandEvent& event)
 void MainFrame::OnViewLayoutSave(wxCommandEvent& event)
 {
     wxString def = Manager::Get()->GetConfigManager(_T("app"))->Read(_T("/main_frame/layout/default"));
-    wxString name = wxGetTextFromUser(_("Enter the name for this layout"), _("Save current layout"), def);
+    wxString name = wxGetTextFromUser(_("Enter the name for this perspective"), _("Save current perspective"), def);
     if (!name.IsEmpty())
     {
         DoFixToolbarsLayout();
@@ -3461,7 +3501,7 @@ void MainFrame::OnViewLayoutDelete(wxCommandEvent& event)
 {
     if (m_LastLayoutName == gDefaultLayout)
     {
-        if (cbMessageBox(_("The default layout cannot be deleted. It can always be reverted to "
+        if (cbMessageBox(_("The default perspective cannot be deleted. It can always be reverted to "
                         "a predefined state though.\nDo you want to revert it now?"),
                         _("Confirmation"),
                         wxICON_QUESTION | wxYES_NO | wxNO_DEFAULT) == wxID_YES)
@@ -3472,7 +3512,7 @@ void MainFrame::OnViewLayoutDelete(wxCommandEvent& event)
         return;
     }
 
-    if (cbMessageBox(wxString::Format(_("Are you really sure you want to delete the layout '%s'?"), m_LastLayoutName.c_str()),
+    if (cbMessageBox(wxString::Format(_("Are you really sure you want to delete the perspective '%s'?"), m_LastLayoutName.c_str()),
                     _("Confirmation"),
                     wxICON_QUESTION | wxYES_NO | wxNO_DEFAULT) == wxID_YES)
     {
@@ -3495,7 +3535,7 @@ void MainFrame::OnViewLayoutDelete(wxCommandEvent& event)
                 m_PluginIDsMap.erase(it2);
         }
 
-        cbMessageBox(wxString::Format(_("Layout '%s' deleted.\nWill now revert to layout '%s'..."), m_LastLayoutName.c_str(), gDefaultLayout.c_str()),
+        cbMessageBox(wxString::Format(_("Perspective '%s' deleted.\nWill now revert to perspective '%s'..."), m_LastLayoutName.c_str(), gDefaultLayout.c_str()),
                         _("Information"), wxICON_INFORMATION);
 
         // finally, revert to the default layout
@@ -3656,6 +3696,7 @@ void MainFrame::OnEditMenuUpdateUI(wxUpdateUIEvent& event)
     bool canRedo = false;
     bool canPaste = false;
     bool canCut = false;
+    bool canSelAll = false;
     int eolMode = -1;
 
     if(Manager::Get()->GetEditorManager() && !Manager::isappShuttingDown())
@@ -3675,18 +3716,19 @@ void MainFrame::OnEditMenuUpdateUI(wxUpdateUIEvent& event)
         hasSel = eb->HasSelection();
         canPaste = eb->CanPaste();
         canCut = !eb->IsReadOnly() && hasSel;
+        canSelAll = eb->CanSelectAll();
     }
 
     mbar->Enable(idEditUndo, canUndo);
     mbar->Enable(idEditRedo, canRedo);
-    mbar->Enable(idEditDeleteHistory, canUndo || canRedo);
+    mbar->Enable(idEditClearHistory, canUndo || canRedo);
     mbar->Enable(idEditCut, canCut);
     mbar->Enable(idEditCopy, hasSel);
     mbar->Enable(idEditPaste, canPaste);
     mbar->Enable(idEditSwapHeaderSource, ed);
     mbar->Enable(idEditGotoMatchingBrace, ed);
     mbar->Enable(idEditHighlightMode, ed);
-    mbar->Enable(idEditSelectAll, ed);
+    mbar->Enable(idEditSelectAll, canSelAll);
     mbar->Enable(idEditBookmarks, ed);
     mbar->Enable(idEditFolding, ed);
     mbar->Enable(idEditEOLMode, ed);
@@ -3804,8 +3846,10 @@ void MainFrame::OnSearchMenuUpdateUI(wxUpdateUIEvent& event)
     wxMenuBar* mbar = GetMenuBar();
 
     // 'Find' and 'Replace' are always enabled for (find|replace)-in-files
+    mbar->Enable(idSearchFind, ed);
     mbar->Enable(idSearchFindNext, ed);
     mbar->Enable(idSearchFindPrevious, ed);
+    mbar->Enable(idSearchReplace, ed);
     mbar->Enable(idSearchGotoLine, ed);
     mbar->Enable(idSearchGotoNextChanged, enableGotoChanged);
     mbar->Enable(idSearchGotoPreviousChanged, enableGotoChanged);

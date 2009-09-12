@@ -12,6 +12,7 @@
 #ifndef CB_PRECOMP
     #include <wx/menu.h>
 
+    #include "cbworkspace.h"
     #include "projectmanager.h"
     #include "editormanager.h"
     #include "logmanager.h"
@@ -122,6 +123,33 @@ void MacrosManager::ClearProjectKeys()
         macros[_T("CMD_MKDIR")]  = _T("mkdir -p");
         macros[_T("CMD_RMDIR")]  = _T("rmdir");
     }
+
+    cbWorkspace* wksp = Manager::Get()->GetProjectManager()->GetWorkspace();
+    if (wksp)
+    {
+        m_wkspname.Assign(wksp->GetFilename());
+        m_WorkspaceFilename = UnixFilename(m_wkspname.GetFullName());
+        m_WorkspaceName = wksp->GetTitle();
+        m_WorkspaceDir = UnixFilename(m_wkspname.GetPath());
+    }
+    else
+    {
+        m_wkspname.Clear();
+        m_WorkspaceFilename = wxEmptyString;
+        m_WorkspaceName = wxEmptyString;
+        m_WorkspaceDir = wxEmptyString;
+    }
+    macros[_T("WORKSPACE_FILE")]  = m_WorkspaceFilename;
+    macros[_T("WORKSPACE_FILENAME")] = m_WorkspaceFilename;
+    macros[_T("WORKSPACE_FILE_NAME")] = m_WorkspaceFilename;
+    macros[_T("WORKSPACEFILE")]  = m_WorkspaceFilename;
+    macros[_T("WORKSPACEFILENAME")] = m_WorkspaceFilename;
+    macros[_T("WORKSPACENAME")]  = m_WorkspaceName;
+    macros[_T("WORKSPACE_NAME")]  = m_WorkspaceName;
+    macros[_T("WORKSPACE_DIR")]  = m_WorkspaceDir;
+    macros[_T("WORKSPACE_DIRECTORY")] = m_WorkspaceDir;
+    macros[_T("WORKSPACEDIR")]  = m_WorkspaceDir;
+    macros[_T("WORKSPACEDIRECTORY")] = m_WorkspaceDir;
 }
 
 void MacrosManager::RecalcVars(cbProject* project,EditorBase* editor,ProjectBuildTarget* target)
@@ -296,8 +324,12 @@ void MacrosManager::RecalcVars(cbProject* project,EditorBase* editor,ProjectBuil
     macros[_T("NOW_UTC")]  = nowGMT.Format(_T("%Y-%m-%d-%H.%M"));
     macros[_T("NOW_L_UTC")]  = nowGMT.Format(_T("%Y-%m-%d-%H.%M.%S"));
     macros[_T("WEEKDAY_UTC")] = nowGMT.Format(_T("%A"));
-}
 
+
+	wxDateTime january_1_2009(1, wxDateTime::Jan, 2009, 0, 0, 0, 0);
+	wxTimeSpan ts = now.Subtract(january_1_2009);
+    macros[_T("DAYCOUNT")] = wxString::Format(_T("%d"), ts.GetDays());
+}
 
 void MacrosManager::ReplaceMacros(wxString& buffer, ProjectBuildTarget* target, bool subrequest)
 {

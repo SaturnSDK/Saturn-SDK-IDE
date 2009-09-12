@@ -1331,21 +1331,21 @@ void cbEditor::InternalSetEditorStyleBeforeFileOpen(cbStyledTextCtrl* control)
     }
     else
         control->SetMarginWidth(foldingMargin, 0);
- 
-    // changebar margin 
+
+    // changebar margin
     if (mgr->ReadBool(_T("/margin/use_changebar"), true))
     {
         control->SetMarginWidth(changebarMargin, 4);
-        control->SetMarginType(changebarMargin,  wxSCI_MARGIN_SYMBOL); 
-        control->SetMarginWidth(changebarMargin, 4); 
+        control->SetMarginType(changebarMargin,  wxSCI_MARGIN_SYMBOL);
+        control->SetMarginWidth(changebarMargin, 4);
         // use "|" here or we might break plugins that use the margin (none at the moment)
         control->SetMarginMask(changebarMargin, control->GetMarginMask(changebarMargin) |
                                                 (1 << wxSCI_MARKNUM_CHANGEUNSAVED) | (1 << wxSCI_MARKNUM_CHANGESAVED) );
-     
-        control->MarkerDefine(wxSCI_MARKNUM_CHANGEUNSAVED, wxSCI_MARK_LEFTRECT); 
-        control->MarkerSetBackground(wxSCI_MARKNUM_CHANGEUNSAVED, wxColour(0xFF, 0xE6, 0x04)); 
-        control->MarkerDefine(wxSCI_MARKNUM_CHANGESAVED, wxSCI_MARK_LEFTRECT); 
-        control->MarkerSetBackground(wxSCI_MARKNUM_CHANGESAVED, wxColour(0x04, 0xFF, 0x50)); 
+
+        control->MarkerDefine(wxSCI_MARKNUM_CHANGEUNSAVED, wxSCI_MARK_LEFTRECT);
+        control->MarkerSetBackground(wxSCI_MARKNUM_CHANGEUNSAVED, wxColour(0xFF, 0xE6, 0x04));
+        control->MarkerDefine(wxSCI_MARKNUM_CHANGESAVED, wxSCI_MARK_LEFTRECT);
+        control->MarkerSetBackground(wxSCI_MARKNUM_CHANGESAVED, wxColour(0x04, 0xFF, 0x50));
     }
     else
         control->SetMarginWidth(changebarMargin, 0);

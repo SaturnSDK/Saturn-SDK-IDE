@@ -265,11 +265,12 @@ class DLLIMPORT cbEditor : public EditorBase
         // in EditorBase.
         void Undo();
         void Redo();
-        void DeleteHistory();
+        void ClearHistory();
         void GotoNextChanged();
         void GotoPreviousChanged();
         void ShowChangebarMargin(bool show=true);
         void SetChangeCollection(bool collectChange);
+        void SetScrollWidthTracking(bool trackWidth);
         void Cut();
         void Copy();
         void Paste();
@@ -278,6 +279,9 @@ class DLLIMPORT cbEditor : public EditorBase
         bool HasSelection() const;
         bool CanPaste() const;
         bool IsReadOnly() const;
+
+        bool CanSelectAll() const;
+        void SelectAll();
 
         // Workaround for shift-tab bug in wx2.4.2
         void DoIndent(); /// Indents current line/block

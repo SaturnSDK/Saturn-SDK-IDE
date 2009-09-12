@@ -119,6 +119,7 @@ void ToDoList::OnAttach()
     }
 
     m_AutoRefresh = Manager::Get()->GetConfigManager(_T("todo_list"))->ReadBool(_T("auto_refresh"), true);
+    LoadUsers();
     LoadTypes();
 
     // register event sink
@@ -145,7 +146,7 @@ void ToDoList::OnRelease(bool appShutDown)
     else
     {
         CodeBlocksLogEvent evt(cbEVT_REMOVE_LOG_WINDOW, m_pListLog);
-        evt.window = m_pListLog->GetWindow();
+//        evt.window = m_pListLog->GetWindow();
         Manager::Get()->ProcessEvent(evt);
     }
     m_pListLog = 0;
@@ -294,7 +295,9 @@ void ToDoList::OnAddItem(wxCommandEvent& event)
     PlaceWindow(&dlg);
     if (dlg.ShowModal() != wxID_OK)
         return;
-    SaveTypes();
+    // Re-load users and types as they might have changed by the user via AddTodoDlg
+    LoadUsers();
+    LoadTypes();
 
     cbStyledTextCtrl* control = ed->GetControl();
 

@@ -1242,9 +1242,9 @@ int CompilerGCC::DoRunQueue()
         wxString newLibPath = GetDynamicLinkerPathForTarget(cmd->target);
         const wxString libPathSep = platform::windows ? _T(";") : _T(":");
         if (!newLibPath.IsEmpty() && newLibPath.Mid(newLibPath.Length() - 1, 1) != libPathSep)
-			newLibPath << libPathSep;
-		newLibPath << oldLibPath;
-		wxSetEnv(LIBRARY_ENVVAR, newLibPath);
+            newLibPath << libPathSep;
+        newLibPath << oldLibPath;
+        wxSetEnv(LIBRARY_ENVVAR, newLibPath);
     }
 
     // special shell used only for build commands
@@ -1457,7 +1457,7 @@ void CompilerGCC::DoPrepareQueue(bool clearLog)
         Manager::Get()->ProcessEvent(evt);
 
         if(clearLog)
-        ClearLog();
+            ClearLog();
         DoClearErrors();
         // wxStartTimer();
         m_StartTimer = wxGetLocalTimeMillis();
@@ -1927,18 +1927,18 @@ wxString CompilerGCC::GetDynamicLinkerPathForTarget(ProjectBuildTarget* target)
         return wxEmptyString;
     }
 
-	Compiler* compiler = CompilerFactory::GetCompiler(target->GetCompilerID());
-	if (compiler)
-	{
-		wxString libPath;
-		const wxString libPathSep = platform::windows ? _T(";") : _T(":");
-		libPath << _T(".") << libPathSep;
-		libPath << GetStringFromArray(compiler->GetLinkerSearchDirs(target), libPathSep);
+    Compiler* compiler = CompilerFactory::GetCompiler(target->GetCompilerID());
+    if (compiler)
+    {
+        wxString libPath;
+        const wxString libPathSep = platform::windows ? _T(";") : _T(":");
+        libPath << _T(".") << libPathSep;
+        libPath << GetStringFromArray(compiler->GetLinkerSearchDirs(target), libPathSep);
         if (!libPath.IsEmpty() && libPath.Mid(libPath.Length() - 1, 1) == libPathSep)
-			libPath.Truncate(libPath.Length() - 1);
-		return libPath;
-	}
-	return wxEmptyString;
+            libPath.Truncate(libPath.Length() - 1);
+        return libPath;
+    }
+    return wxEmptyString;
 }
 
 wxString CompilerGCC::GetMakeCommandFor(MakeCommand cmd, cbProject* project, ProjectBuildTarget* target)
@@ -2208,7 +2208,7 @@ BuildState CompilerGCC::GetNextStateBasedOnJob()
                 if(build)
                 {
                 return bsProjectPostBuild;
-            }
+                }
                 return bsProjectDone;
             }
             m_pBuildingProject->SetCurrentlyCompilingTarget(0);
@@ -2402,7 +2402,7 @@ void CompilerGCC::BuildStateManagement()
             }
             else
             {
-            cmds = dc.GetCompileCommands(bt);
+                cmds = dc.GetCompileCommands(bt);
             }
 
             bool hasCommands = cmds.GetCount();
@@ -2617,7 +2617,7 @@ int CompilerGCC::DoBuild(bool clean, bool build)
     if (!bt || !CompilerValid(bt))
         return -2;
 
-        BuildStateManagement();
+    BuildStateManagement();
     return 0;
 }
 
@@ -2707,21 +2707,21 @@ int CompilerGCC::DoBuild(const wxString& target, bool clean, bool build, bool cl
 
     if (!m_IsWorkspaceOperation)
     {
-    DoClearErrors();
-    InitBuildLog(false);
+        DoClearErrors();
+        InitBuildLog(false);
 //    if (!m_IsWorkspaceOperation)
         DoPrepareQueue(clearLog);
     }
 
-        PreprocessJob(m_Project, realTarget);
-        if (m_BuildJobTargetsList.empty())
+    PreprocessJob(m_Project, realTarget);
+    if (m_BuildJobTargetsList.empty())
     {
-            return -1;
+        return -1;
     }
     InitBuildState(bjProject, realTarget);
     if (DoBuild(clean, build))
     {
-            return -2;
+        return -2;
     }
     return DoRunQueue();
 }

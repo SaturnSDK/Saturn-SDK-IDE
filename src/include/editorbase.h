@@ -111,6 +111,13 @@ class DLLIMPORT EditorBase : public wxPanel
           * @return True on success, false otherwise. */
         virtual bool Save() { return true; }
 
+        /** @brief Save editor contents under a different filename.
+          *
+          * Save editor contents under a different filename.
+          * The default implementation does nothing and returns true.
+          * @return True on success, false otherwise. */
+        virtual bool SaveAs() { return true; }
+
         /** @brief Is this a built-in editor?
           *
           * Query if this is a built-in editor (a.k.a cbEditor).
@@ -210,7 +217,7 @@ class DLLIMPORT EditorBase : public wxPanel
         virtual void Redo(){}
 
         /** Clear Undo- (and Changebar-) history */
-        virtual void DeleteHistory(){}
+        virtual void ClearHistory(){}
 
         /** Goto next changed line */
         virtual void GotoNextChanged(){}
@@ -223,6 +230,9 @@ class DLLIMPORT EditorBase : public wxPanel
 
         /** Enable or disable changebar */
         virtual void SetChangeCollection(bool collectChange){}
+
+        /** Enable or disable ScrollWidthTracking */
+        virtual void SetScrollWidthTracking(bool trackWidth){}
 
         /** Cut selected text/object to clipboard. */
         virtual void Cut(){}
@@ -262,6 +272,16 @@ class DLLIMPORT EditorBase : public wxPanel
           * @return True if the editor is read-only, false if not.
           */
         virtual bool IsReadOnly() const { return false; }
+
+        /** Can the editor select everything?
+          *
+          * @return True if the editor can select all content, false if not.
+          */
+        virtual bool CanSelectAll() const { return false; }
+
+        /** Select everything in the editor
+          */
+        virtual void SelectAll() { return; }
 
         /** Is there a context (right click) menu open
           *

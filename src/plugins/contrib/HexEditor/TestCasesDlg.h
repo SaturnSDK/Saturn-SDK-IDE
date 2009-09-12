@@ -1,6 +1,6 @@
 /*
 * This file is part of HexEditor plugin for Code::Blocks Studio
-* Copyright (C) 2008 Bartlomiej Swiecki
+* Copyright (C) 2008-2009 Bartlomiej Swiecki
 *
 * HexEditor plugin is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -13,11 +13,11 @@
 * GNU General Public License for more details.
 *
 * You should have received a copy of the GNU General Public License
-* along with wxSmith. If not, see <http://www.gnu.org/licenses/>.
+* along with HexEditor. If not, see <http://www.gnu.org/licenses/>.
 *
-* $Revision:$
-* $Id:$
-* $HeadURL:$
+* $Revision: 5445 $
+* $Id: TestCasesDlg.h 5445 2009-02-07 00:35:09Z byo $
+* $HeadURL: https://mortenmacfly@svn.berlios.de/svnroot/repos/codeblocks/trunk/src/plugins/contrib/HexEditor/TestCasesDlg.h $
 */
 
 #ifndef TESTCASESDLG_H
@@ -32,16 +32,21 @@
 //*)
 #include <wx/thread.h>
 
-#include "ExpressionTestCases.h"
+#include "TestCasesBase.h"
 
-class TestCasesDlg: public wxDialog, public Expression::TestCases
+class TestCasesDlg: public wxDialog, public TestCasesBase::Output
 {
 	public:
 
-		TestCasesDlg(wxWindow* parent);
+		TestCasesDlg(wxWindow* parent, TestCasesBase& tests);
 		virtual ~TestCasesDlg();
 
-	private:
+	protected:
+
+		virtual void AddLog( const wxString& logLine );
+		virtual bool StopTest();
+
+    private:
 
 		//(*Declarations(TestCasesDlg)
 		wxListBox* ListBox1;
@@ -61,8 +66,6 @@ class TestCasesDlg: public wxDialog, public Expression::TestCases
 		void OnClose(wxCloseEvent& event);
 		//*)
 
-		virtual void AddLog( const wxString& logLine );
-		virtual bool StopTest();
 		virtual int Entry();
 
 		void BuildContent(wxWindow* parent);
@@ -80,6 +83,7 @@ class TestCasesDlg: public wxDialog, public Expression::TestCases
                 virtual ExitCode Entry() { return (ExitCode)m_Dlg->Entry(); }
 		};
 
+        TestCasesBase&    m_Tests;
         MyThread*         m_Thread;
 		wxCriticalSection m_Section;
         wxArrayString     m_NewLogs;

@@ -570,7 +570,7 @@ void IncrementalSearch::DoSearch(int fromPos, int startPos, int endPos)
     }
     cbStyledTextCtrl* control = m_pEditor->GetControl();
     if (startPos == wxSCI_INVALID_POSITION && endPos == wxSCI_INVALID_POSITION)
-        {
+    {
         startPos = m_MinPos;
         endPos = m_MaxPos;
     }

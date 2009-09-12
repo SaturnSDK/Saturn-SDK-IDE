@@ -94,15 +94,46 @@
 												</object>
 												<object class="sizeritem">
 													<object class="wxStaticText" name="ID_STATICTEXT5">
-														<label>(the file must exist, no Makefile will be auto-generated)</label>
+														<label>(the file must exist, no Makefile will be auto-generated)&#x0A;If you make changes here, the special settings in the projects build options&#x0A;will only be enabled (or disabled), if the project is saved.</label>
 														<fg>#800000</fg>
 													</object>
 													<flag>wxLEFT|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL</flag>
 													<border>4</border>
 												</object>
+												<object class="sizeritem">
+													<object class="wxBoxSizer">
+														<object class="sizeritem">
+															<object class="wxStaticText" name="ID_STATICTEXT19">
+																<label>Execution directory:</label>
+															</object>
+															<flag>wxLEFT|wxRIGHT|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL</flag>
+															<border>2</border>
+														</object>
+														<object class="sizeritem">
+															<object class="wxTextCtrl" name="txtExecutionDir">
+																<size>402,25</size>
+																<enabled>0</enabled>
 											</object>
 											<flag>wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL</flag>
+															<border>2</border>
+															<option>1</option>
+														</object>
+														<object class="sizeritem">
+															<object class="wxButton" name="btnExecutionDir">
+																<label>...</label>
+																<size>24,24</size>
+																<enabled>0</enabled>
+															</object>
+															<flag>wxALL|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL</flag>
+														</object>
+													</object>
+													<flag>wxEXPAND|wxALIGN_LEFT|wxALIGN_TOP</flag>
 											<border>5</border>
+											<option>1</option>
+										</object>
+											</object>
+											<flag>wxEXPAND|wxALIGN_LEFT|wxALIGN_TOP</flag>
+											<border>2</border>
 											<option>1</option>
 										</object>
 										<object class="sizeritem">

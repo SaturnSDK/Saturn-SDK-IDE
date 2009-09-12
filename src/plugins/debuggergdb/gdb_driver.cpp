@@ -759,7 +759,7 @@ void GDB_driver::ParseOutput(const wxString& output)
         {
             re = &reChildPid;
         }
-        
+
         if (re)
         {
             // got the line with the PID, parse it out:
@@ -790,9 +790,9 @@ void GDB_driver::ParseOutput(const wxString& output)
     }
 
     if (!want_debug_events &&
-        output.StartsWith(_T("gdb: ")) ||
+        (output.StartsWith(_T("gdb: ")) ||
         output.StartsWith(_T("Warning: ")) ||
-        output.StartsWith(_T("ContinueDebugEvent ")))
+        output.StartsWith(_T("ContinueDebugEvent "))))
     {
         return;
     }

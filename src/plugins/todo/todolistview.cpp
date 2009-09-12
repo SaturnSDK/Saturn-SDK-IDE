@@ -95,33 +95,30 @@ wxWindow* ToDoListView::CreateControl(wxWindow* parent)
     control->SetMinSize(wxSize(342,56));
     wxSizer* bs = new wxBoxSizer(wxVERTICAL);
     bs->Add(control, 1, wxEXPAND);
-    if (bs)
-    {
-        wxArrayString choices;
-        choices.Add(_("Current file"));
-        choices.Add(_("Open files"));
-        choices.Add(_("All project files"));
-        wxBoxSizer* hbs = new wxBoxSizer(wxHORIZONTAL);
+    wxArrayString choices;
+    choices.Add(_("Current file"));
+    choices.Add(_("Open files"));
+    choices.Add(_("All project files"));
+    wxBoxSizer* hbs = new wxBoxSizer(wxHORIZONTAL);
 
-        hbs->Add(new wxStaticText(m_pPanel, wxID_ANY, _("Scope:")), 0, wxTOP, 4);
+    hbs->Add(new wxStaticText(m_pPanel, wxID_ANY, _("Scope:")), 0, wxTOP, 4);
 
-        m_pSource = new wxComboBox(m_pPanel, idSource, wxEmptyString, wxDefaultPosition, wxDefaultSize, 3, &choices[0], wxCB_READONLY);
-        int source = Manager::Get()->GetConfigManager(_T("todo_list"))->ReadInt(_T("source"), 0);
-        m_pSource->SetSelection(source);
-        hbs->Add(m_pSource, 0, wxLEFT | wxRIGHT, 8);
+    m_pSource = new wxComboBox(m_pPanel, idSource, wxEmptyString, wxDefaultPosition, wxDefaultSize, 3, &choices[0], wxCB_READONLY);
+    int source = Manager::Get()->GetConfigManager(_T("todo_list"))->ReadInt(_T("source"), 0);
+    m_pSource->SetSelection(source);
+    hbs->Add(m_pSource, 0, wxLEFT | wxRIGHT, 8);
 
-        hbs->Add(new wxStaticText(m_pPanel, wxID_ANY, _("User:")), 0, wxTOP, 4);
+    hbs->Add(new wxStaticText(m_pPanel, wxID_ANY, _("User:")), 0, wxTOP, 4);
 
-        m_pUser = new wxComboBox(m_pPanel, idUser, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0, 0L, wxCB_READONLY);
-        m_pUser->Append(_("<All users>"));
-        m_pUser->SetSelection(0);
-        hbs->Add(m_pUser, 0, wxLEFT, 4);
+    m_pUser = new wxComboBox(m_pPanel, idUser, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0, 0L, wxCB_READONLY);
+    m_pUser->Append(_("<All users>"));
+    m_pUser->SetSelection(0);
+    hbs->Add(m_pUser, 0, wxLEFT, 4);
 
-        m_pRefresh = new wxButton(m_pPanel, idButtonRefresh, _("Refresh"));
-        hbs->Add(m_pRefresh, 0, wxLEFT, 4);
+    m_pRefresh = new wxButton(m_pPanel, idButtonRefresh, _("Refresh"));
+    hbs->Add(m_pRefresh, 0, wxLEFT, 4);
 
-        bs->Add(hbs, 0, wxGROW | wxALL, 4);
-    }
+    bs->Add(hbs, 0, wxGROW | wxALL, 4);
     m_pPanel->SetSizer(bs);
 
     return m_pPanel;
@@ -224,11 +221,11 @@ void ToDoListView::LoadUsers()
 //        Manager::Get()->GetLogManager()->DebugLog(F(_T("Found user %s."), user.c_str()));
         if (!user.IsEmpty())
         {
-            if (m_pUser->FindString(user) == wxNOT_FOUND)
+            if (m_pUser->FindString(user, true) == wxNOT_FOUND)
                 m_pUser->Append(user);
         }
     }
-    int old = m_pUser->FindString(oldStr);
+    int old = m_pUser->FindString(oldStr, true);
     if (old != wxNOT_FOUND)
         m_pUser->SetSelection(old);
     else
@@ -413,14 +410,28 @@ void ToDoListView::ParseBuffer(const wxString& buffer, const wxString& filename)
             bool isValid = false; // found it in a comment?
             bool isC = false; // C or C++ style comment?
 
-//#warning TODO (mandrav#1#): Make viewtododlg understand and display todo notes that are compiler warnings/errors...
-
             // first check what type of comment we have
             wxString allowedChars = _T(" \t/*");
             wxChar lastChar = _T('\0');
             while (idx >= 0)
             {
+                // Check for special cases: compiler warnings, errors
+                if      ((idx>=8) && buffer.Mid(idx-8, 8).IsSameAs(_T("#warning")))
+                {
+                    isValid = true;
+                    break;
+                }
+                else if ((idx>=6) && buffer.Mid(idx-6, 6).IsSameAs(_T("#error")))
+                {
+                    isValid = true;
+                    break;
+                }
+
                 wxChar c = buffer.GetChar(--idx);
+                // Check for EOL's and terminate early (saving time)
+                if (c == _T('\r') || c == _T('\n'))
+                    break;
+
                 if ((int)allowedChars.Index(c) != wxNOT_FOUND)
                 {
                     if (c == _T('/') && (lastChar == _T('/') || lastChar == _T('*')))
@@ -432,10 +443,18 @@ void ToDoListView::ParseBuffer(const wxString& buffer, const wxString& filename)
                 }
                 else
                     break;
+
                 lastChar = c;
             }
 
-//Manager::Get()->GetLogManager()->DebugLog("Found %s %s style %s at %d", isValid ? "valid" : "invalid", isC ? "C" : "C++", m_Types[i].c_str(), pos);
+//wxString msg;
+//msg.Printf(_T("Found %s %s style %s at %d"),
+//           isValid ? _T("valid") : _T("invalid"),
+//           isC     ? _T("C")     : _T("C++"),
+//           m_Types[i].c_str(),
+//           pos);
+//Manager::Get()->GetLogManager()->DebugLog(msg);
+
             if (isValid)
             {
                 ToDoItem item;

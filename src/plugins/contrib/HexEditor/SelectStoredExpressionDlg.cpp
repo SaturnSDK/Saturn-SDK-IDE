@@ -1,6 +1,6 @@
 /*
 * This file is part of HexEditor plugin for Code::Blocks Studio
-* Copyright (C) 2008 Bartlomiej Swiecki
+* Copyright (C) 2008-2009 Bartlomiej Swiecki
 *
 * HexEditor plugin is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -13,11 +13,11 @@
 * GNU General Public License for more details.
 *
 * You should have received a copy of the GNU General Public License
-* along with wxSmith. If not, see <http://www.gnu.org/licenses/>.
+* along with HexEditor. If not, see <http://www.gnu.org/licenses/>.
 *
-* $Revision:$
-* $Id:$
-* $HeadURL:$
+* $Revision: 5445 $
+* $Id: SelectStoredExpressionDlg.cpp 5445 2009-02-07 00:35:09Z byo $
+* $HeadURL: https://mortenmacfly@svn.berlios.de/svnroot/repos/codeblocks/trunk/src/plugins/contrib/HexEditor/SelectStoredExpressionDlg.cpp $
 */
 
 #include "SelectStoredExpressionDlg.h"
@@ -25,8 +25,8 @@
 #include <wx/textdlg.h>
 
 //(*InternalHeaders(SelectStoredExpressionDlg)
-#include <wx/intl.h>
 #include <wx/string.h>
+#include <wx/intl.h>
 //*)
 
 //(*IdInit(SelectStoredExpressionDlg)
@@ -57,11 +57,11 @@ SelectStoredExpressionDlg::SelectStoredExpressionDlg(wxWindow* parent,const wxSt
 void SelectStoredExpressionDlg::BuildContent(wxWindow* parent)
 {
 	//(*Initialize(SelectStoredExpressionDlg)
+	wxBoxSizer* BoxSizer3;
 	wxBoxSizer* BoxSizer2;
 	wxBoxSizer* BoxSizer1;
-	wxStaticBoxSizer* StaticBoxSizer1;
-	wxBoxSizer* BoxSizer3;
 	wxStdDialogButtonSizer* StdDialogButtonSizer1;
+	wxStaticBoxSizer* StaticBoxSizer1;
 
 	Create(parent, wxID_ANY, _("Stored Expressions"), wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER, _T("wxID_ANY"));
 	BoxSizer1 = new wxBoxSizer(wxVERTICAL);
