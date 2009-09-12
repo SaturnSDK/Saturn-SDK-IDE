@@ -46,16 +46,21 @@
 #include "codesnippetstreectrl.h"
 #include "codesnippetswindow.h"
 #include "snippetsconfig.h"
-#include "messagebox.h"
+#include "GenericMessageBox.h"
 #include "menuidentifiers.h"
 #include "editsnippetframe.h"
 #include "codesnippetsevent.h"
 #include "snippetsconfig.h"
 #include "dragscrollevent.h"
+#include "version.h"
 
 #if defined(__WXGTK__)
-    #include "wx/gtk/win_gtk.h"
+    // hack to avoid name-conflict between wxWidgets GSocket and the one defined
+    // in newer glib-headers
+    #define GSocket GLibSocket
     #include <gdk/gdkx.h>
+    #undef GSocket
+    #include "wx/gtk/win_gtk.h"
 #endif
 
 IMPLEMENT_DYNAMIC_CLASS(CodeSnippetsTreeCtrl, wxTreeCtrl)
@@ -91,6 +96,7 @@ CodeSnippetsTreeCtrl::CodeSnippetsTreeCtrl(wxWindow *parent, const wxWindowID id
     m_bShutDown = false;
     m_mimeDatabase = 0;
     m_pEvtTreeCtrlBeginDrag = 0;
+    m_LastXmlModifiedTime = time_t(0);            //2009/03/15
 
     m_pSnippetsTreeCtrl = this;
     GetConfig()->SetSnippetsTreeCtrl(this);
@@ -590,12 +596,12 @@ void CodeSnippetsTreeCtrl::LoadItemsFromXmlNode(const TiXmlElement* node, const 
 			}
 			else
 			{
-				messageBox(_T("CodeSnippets: Error loading XML file; element \"snippet\" cannot be found."));
+                GenericMessageBox(_T("CodeSnippets: Error loading XML file; element \"snippet\" cannot be found."));
 			}
 		}
 		else
 		{
-		    messageBox(_T("CodeSnippets: Error loading XML file; attribute \"type\" is \"") + itemType + _T("\" which is invalid item type."));
+		    GenericMessageBox(_T("CodeSnippets: Error loading XML file; attribute \"type\" is \"") + itemType + _T("\" which is invalid item type."));
 			return;
 		}
 	} // end for
@@ -690,9 +696,9 @@ bool CodeSnippetsTreeCtrl::LoadItemsFromFile(const wxString& fileName, bool bApp
 		   else //IsApplication
 		   {
                 //-wxMessageBox(_T("CodeSnippets: Cannot load file \"") + fileName + _T("\": ") + csC2U(doc.ErrorDesc()));
-                messageBox(_T("CodeSnippets: Cannot load file \"") + fileName + _T("\": ") + csC2U(doc.ErrorDesc()));
+                GenericMessageBox(_T("CodeSnippets: Cannot load file \"") + fileName + _T("\": ") + csC2U(doc.ErrorDesc()));
                 //-wxMessageBox(_T("CodeSnippets: Backup of the failed file has been created."));
-                messageBox(_T("CodeSnippets: Backup of the failed file has been created."));
+                GenericMessageBox(_T("CodeSnippets: Backup of the failed file has been created."));
 		   }
 		   //-#endif
 		}
@@ -826,7 +832,7 @@ bool CodeSnippetsTreeCtrl::RemoveItem(const wxTreeItemId RemoveItemId)
 
         // if this was a FileLink, ask if user wants to delete file
         if ( not filename.IsEmpty() ) {
-            int answer = messageBox( wxT("Delete physical file?\n\n")+filename,
+            int answer = GenericMessageBox( wxT("Delete physical file?\n\n")+filename,
                                                     wxT("Delete"),wxYES_NO );
             if ( answer == wxYES)
                 /*int done =*/ ::wxRemoveFile(filename);
@@ -1012,8 +1018,11 @@ void CodeSnippetsTreeCtrl::OnEnterWindow(wxMouseEvent& event)
         //LOGIT( _T("CodeSnippetsCtrl IsFloatingWindow[%s]"), _T("TRUE"));
         #endif
         wxWindow* pw = (wxWindow*)event.GetEventObject();
-        pw->Enable();
-        pw->SetFocus();
+        // only if forground is our window, set focus
+        if ( pw == ::wxGetActiveWindow() )
+        {   pw->Enable();
+            pw->SetFocus();
+        }
     }
 
     event.Skip();
@@ -1071,6 +1080,10 @@ void CodeSnippetsTreeCtrl::OnLeaveWindow(wxMouseEvent& event)
             fileName = textStr;
         if (textStr.StartsWith(_T("file://")))
             fileName = textStr;
+        // Remove anything pass the first \n or \r {v1.3.92}
+        fileName = fileName.BeforeFirst('\n');
+        fileName = fileName.BeforeFirst('\r');
+        textData->SetText( fileName );
     }
     fileData->AddFile( (fileName.Len() > 128) ? wxString(wxEmptyString) : fileName );
 
@@ -1504,7 +1517,7 @@ void CodeSnippetsTreeCtrl::EditSnippetAsText()
         if (GetConfig()->IsApplication() ) msg = msg + wxT("Use Menu->");
         else msg = msg + wxT("Right click Root item. Use ");
         msg = msg + wxT("Settings to set a better editor.\n");
-        messageBox( msg );
+        GenericMessageBox( msg );
     }
 
     // let user edit the snippet text
@@ -1517,7 +1530,7 @@ void CodeSnippetsTreeCtrl::EditSnippetAsText()
     wxFile tmpFile( tmpFileName.GetFullPath(), wxFile::write);
     if (not tmpFile.IsOpened() )
     {
-        messageBox(wxT("Open failed for:")+tmpFileName.GetFullPath());
+        GenericMessageBox(wxT("Open failed for:")+tmpFileName.GetFullPath());
         return ;
     }
     wxString snippetData( GetSnippet() );
@@ -1536,7 +1549,7 @@ void CodeSnippetsTreeCtrl::EditSnippetAsText()
         // Read the edited data back into the snippet text
     tmpFile.Open(tmpFileName.GetFullPath(), wxFile::read);
     if (not tmpFile.IsOpened() )
-    {   messageBox(wxT("Abort.Error reading temp data file."));
+    {   GenericMessageBox(wxT("Abort.Error reading temp data file."));
         return;
     }
     unsigned long fileSize = tmpFile.Length();
@@ -1549,7 +1562,7 @@ void CodeSnippetsTreeCtrl::EditSnippetAsText()
     char pBuf[fileSize+1];
     size_t nResult = tmpFile.Read( pBuf, fileSize );
     if ( wxInvalidOffset == (int)nResult )
-        messageBox(wxT("Error reading temp file"));
+        GenericMessageBox(wxT("Error reading temp file"));
     pBuf[fileSize] = 0;
     tmpFile.Close();
 
@@ -1593,7 +1606,7 @@ void CodeSnippetsTreeCtrl::SaveSnippetAsFileLink()
     // if file already exists preserve the old data
     if ( ::wxFileExists( fileName ) )
     {   // item snippet is already a filename
-        answer = messageBox(
+        answer = GenericMessageBox(
             wxT("Item is already a file link named:\n")+fileName
                 + wxT(" \n\nAre you sure you want to rewrite the file?\n"),
             wxT("Warning"),wxYES|wxNO); //, GetMainFrame(), mousePosn.x, mousePosn.y);
@@ -1601,7 +1614,7 @@ void CodeSnippetsTreeCtrl::SaveSnippetAsFileLink()
         {   // read data from old file
             wxFile oldFile( fileName, wxFile::read);
             if (not oldFile.IsOpened() )
-            {   messageBox(wxT("Abort.Error reading data file."));
+            {   GenericMessageBox(wxT("Abort.Error reading data file."));
                 return;
             }
             unsigned long fileSize = oldFile.Length();
@@ -1655,7 +1668,7 @@ void CodeSnippetsTreeCtrl::SaveSnippetAsFileLink()
     wxFile newFile( newFileName, wxFile::write);
     if (not newFile.IsOpened() )
     {
-        messageBox(wxT("Open failed for:")+newFileName);
+        GenericMessageBox(wxT("Open failed for:")+newFileName);
         return ;
     }
     newFile.Write( csU2C(snippetData), snippetData.Length());
@@ -1781,7 +1794,11 @@ void CodeSnippetsTreeCtrl::EditSnippetWithMIME()
     if ( not ::wxFileExists(fileName) ) return;
 
     wxString fileNameExt;
+    #if wxCHECK_VERSION(2, 9, 0)
+    wxFileName::SplitPath( fileName, /*volume*/0, /*path*/0, /*name*/0, &fileNameExt);
+    #else
     ::wxSplitPath( fileName, /*path*/0, /*name*/0, &fileNameExt);
+    #endif
     if ( fileNameExt.IsEmpty() ) return;
 
     wxString s_defaultExt = _T("xyz");
@@ -1846,7 +1863,11 @@ void CodeSnippetsTreeCtrl::EditSnippetWithMIME()
            #endif
 
             delete filetype;
+            #if wxCHECK_VERSION(2, 9, 0)
+            if ( !open.IsEmpty() )
+            #else
             if ( open )
+            #endif
                 ::wxExecute( open, wxEXEC_ASYNC);
         }
     }
@@ -2150,7 +2171,11 @@ void CodeSnippetsTreeCtrl::OnCodeSnippetsEvent_Edit(CodeSnippetsEvent& event)
             {
                 SetAssociatedItemID( treeItemID );
                 wxCommandEvent editEvt( wxEVT_COMMAND_MENU_SELECTED , idMnuEditSnippet);
+                #if wxCHECK_VERSION(2, 9, 0)
+                GetConfig()->GetSnippetsWindow()->GetEventHandler()->AddPendingEvent(editEvt);
+                #else
                 GetConfig()->GetSnippetsWindow()->AddPendingEvent( editEvt);
+                #endif
             }
         }
     }//if id

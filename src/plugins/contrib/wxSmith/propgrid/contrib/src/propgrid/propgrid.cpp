@@ -2115,7 +2115,14 @@ void wxPGTextCtrlEditor::DrawValue( wxDC& dc, wxPGProperty* property, const wxRe
 void wxPGTextCtrlEditor::UpdateControl( wxPGProperty* property, wxWindow* ctrl ) const
 {
     wxPGDeclareRealTextCtrl(ctrl);
-    tc->SetValue(property->GetDisplayedString());
+    wxString s;
+
+    if ( tc->HasFlag(wxTE_PASSWORD) )
+        s = property->GetValueAsString(wxPG_FULL_VALUE);
+    else
+        s = property->GetDisplayedString();
+
+    tc->SetValue(s);    
 }
 
 
@@ -8745,6 +8752,8 @@ void wxPropertyGrid::RecalculateVirtualSize()
 void wxPropertyGrid::PGAdjustScrollbars( int y )
 {
     // Adjust scrollbars.
+
+	if (wxPG_PIXELS_PER_UNIT == 0) return; /* avoid division by zero */
 
 	y += wxPG_PIXELS_PER_UNIT+2; // One more scrollbar unit + 2 pixels.
     int y_amount = y/wxPG_PIXELS_PER_UNIT;

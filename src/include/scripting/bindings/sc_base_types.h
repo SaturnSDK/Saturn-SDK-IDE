@@ -25,10 +25,15 @@
 #include <cbeditor.h>
 #include <sqplus.h>
 
-DECLARE_INSTANCE_TYPE(wxString);
+// wx primitives and types
 DECLARE_INSTANCE_TYPE(wxArrayString);
-DECLARE_INSTANCE_TYPE(wxFileName);
 DECLARE_INSTANCE_TYPE(wxColour);
+DECLARE_INSTANCE_TYPE(wxFileName);
+DECLARE_INSTANCE_TYPE(wxPoint);
+DECLARE_INSTANCE_TYPE(wxSize);
+DECLARE_INSTANCE_TYPE(wxString);
+
+// C::B primitives and types
 DECLARE_INSTANCE_TYPE(ConfigManager);
 DECLARE_INSTANCE_TYPE(EditorManager);
 DECLARE_INSTANCE_TYPE(UserVariableManager);
@@ -84,6 +89,16 @@ namespace SqPlus
         enum {TypeID=VAR_TYPE_INT,Size=sizeof(unsigned short)};
         operator ScriptVarType() { return ScriptVarType(TypeID); }
     };
+#ifdef _SQ64
+    template<>
+    struct TypeInfo<SQInt32>
+    {
+        const SQChar * typeName;
+        TypeInfo() : typeName(sqT("int")) {}
+        enum {TypeID=VAR_TYPE_INT,Size=sizeof(SQInt32)};
+        operator ScriptVarType() { return ScriptVarType(TypeID); }
+    };
+#endif
 };
 
 #endif // SC_BASE_TYPES_H

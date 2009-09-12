@@ -291,7 +291,11 @@ CompilerOptionsDlg::CompilerOptionsDlg(wxWindow* parent, CompilerGCC* compiler, 
         msg.Printf(_("The defined compiler cannot be located (ID: %s).\n"
                     "Please choose the compiler you want to use instead and click \"OK\".\n"
                     "If you click \"Cancel\", the project/target will remain configured for that compiler and consequently can not be configured and will not be built."),
+                    #if wxCHECK_VERSION(2, 9, 0)
+                    CompilerId.wx_str());
+                    #else
                     CompilerId.c_str());
+                    #endif
         Compiler* compiler = 0;
         if ((m_pTarget && m_pTarget->SupportsCurrentPlatform()) || (!m_pTarget && m_pProject))
         {
@@ -1101,7 +1105,11 @@ void CompilerOptionsDlg::OnTreeSelectionChange(wxTreeEvent& event)
         msg.Printf(_("The defined compiler cannot be located (ID: %s).\n"
                     "Please choose the compiler you want to use instead and click \"OK\".\n"
                     "If you click \"Cancel\", the project/target will remain configured for that compiler and consequently can not be configured and will not be built."),
+                    #if wxCHECK_VERSION(2, 9, 0)
+                    CompilerId.wx_str());
+                    #else
                     CompilerId.c_str());
+                    #endif
         Compiler* compiler = 0;
         if (m_pTarget && m_pTarget->SupportsCurrentPlatform())
         {
@@ -1249,7 +1257,11 @@ void CompilerOptionsDlg::AutoDetectCompiler()
         case adrDetected:
         {
             wxString msg;
+            #if wxCHECK_VERSION(2, 9, 0)
+            msg.Printf(_("Auto-detected installation path of \"%s\"\nin \"%s\""), compiler->GetName().wx_str(), compiler->GetMasterPath().wx_str());
+            #else
             msg.Printf(_("Auto-detected installation path of \"%s\"\nin \"%s\""), compiler->GetName().c_str(), compiler->GetMasterPath().c_str());
+            #endif
             cbMessageBox(msg);
         }
         break;
@@ -1259,7 +1271,11 @@ void CompilerOptionsDlg::AutoDetectCompiler()
             wxString msg;
             msg.Printf(_("Could not auto-detect installation path of \"%s\"...\n"
                         "Do you want to use this compiler's default installation directory?"),
+                        #if wxCHECK_VERSION(2, 9, 0)
+                        compiler->GetName().wx_str());
+                        #else
                         compiler->GetName().c_str());
+                        #endif
             if (cbMessageBox(msg, _("Confirmation"), wxICON_QUESTION | wxYES_NO) == wxID_NO)
             {
                 compiler->SetMasterPath(backup);
@@ -1535,7 +1551,11 @@ void CompilerOptionsDlg::OnSetDefaultCompilerClick(wxCommandEvent& /*event*/)
     int idx = cmb->GetSelection();
     CompilerFactory::SetDefaultCompiler(idx);
     wxString msg;
+    #if wxCHECK_VERSION(2, 9, 0)
+    msg.Printf(_("%s is now selected as the default compiler for new projects"), CompilerFactory::GetDefaultCompiler()->GetName().wx_str());
+    #else
     msg.Printf(_("%s is now selected as the default compiler for new projects"), CompilerFactory::GetDefaultCompiler()->GetName().c_str());
+    #endif
     cbMessageBox(msg);
 } // OnSetDefaultCompilerClick
 
@@ -1836,7 +1856,7 @@ void CompilerOptionsDlg::OnEditExtraPathClick(wxCommandEvent& /*event*/)
         return;
 
     wxFileName dir(control->GetString(control->GetSelection()) + wxFileName::GetPathSeparator());
-    wxString initial = _T("");
+    wxString initial = control->GetString(control->GetSelection()); // might be a macro
     if (dir.DirExists())
         initial = dir.GetPath(wxPATH_GET_VOLUME);
 
@@ -2013,18 +2033,18 @@ void CompilerOptionsDlg::OnSelectProgramClick(wxCommandEvent& event)
     wxString file_selection = _("All files (*)|*");
     if (platform::windows)
         file_selection = _("Executable files (*.exe)|*.exe");
-    wxFileDialog* dlg = new wxFileDialog(this,
-                            _("Select file"),
-                            XRCCTRL(*this, "txtMasterPath", wxTextCtrl)->GetValue() + _T("/bin"),
-                            obj->GetValue(),
-                            file_selection,
-                            wxFD_OPEN | wxFD_FILE_MUST_EXIST | compatibility::wxHideReadonly );
-    dlg->SetFilterIndex(0);
+    wxFileDialog dlg(this,
+                     _("Select file"),
+                     XRCCTRL(*this, "txtMasterPath", wxTextCtrl)->GetValue() + _T("/bin"),
+                     obj->GetValue(),
+                     file_selection,
+                     wxFD_OPEN | wxFD_FILE_MUST_EXIST | compatibility::wxHideReadonly );
+    dlg.SetFilterIndex(0);
 
-    PlaceWindow(dlg);
-    if (dlg->ShowModal() != wxID_OK)
+    PlaceWindow(&dlg);
+    if (dlg.ShowModal() != wxID_OK)
         return;
-    wxFileName fname(dlg->GetPath());
+    wxFileName fname(dlg.GetPath());
     obj->SetValue(fname.GetFullName());
     m_bDirty = true;
 } // OnSelectProgramClick

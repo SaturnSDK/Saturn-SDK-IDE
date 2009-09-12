@@ -30,6 +30,7 @@
 	#include <wx/string.h>
 	#include "sdk_events.h"
 	#include "manager.h"
+	#include "configmanager.h"
 	#include "projectmanager.h"
 	#include "personalitymanager.h"
 	#include "cbworkspace.h"
@@ -40,19 +41,24 @@
 	#include <wx/stdpaths.h>
 	#include <wx/process.h>
 
-#include <wx/dnd.h>
+    #include <wx/dnd.h>
+    #include <wx/utils.h>
 
 #include "version.h"
 #include "codesnippets.h"
 #include "codesnippetswindow.h"
 #include "snippetsconfig.h"
-#include "messagebox.h"
-#include <wx/wxFlatNotebook/wxFlatNotebook.h>
+#include "GenericMessageBox.h"
+#include <wx/aui/auibook.h>
 #include "dragscrollevent.h"
 
 #if defined(__WXGTK__)
-    #include "wx/gtk/win_gtk.h"
+    // hack to avoid name-conflict between wxWidgets GSocket and the one defined
+    // in newer glib-headers
+    #define GSocket GLibSocket
     #include <gdk/gdkx.h>
+    #undef GSocket
+    #include "wx/gtk/win_gtk.h"
 #endif
 
 // ----------------------------------------------------------------------------
@@ -148,17 +154,14 @@ void CodeSnippets::OnAttach()
     // ---------------------------------------
     // determine location of settings
     // ---------------------------------------
-    wxStandardPaths stdPaths;
     //memorize the key file name as {%HOME%}\codesnippets.ini
-    GetConfig()->m_ConfigFolder = stdPaths.GetUserDataDir();
-    //-wxString m_ExecuteFolder = stdPaths.GetDataDir();
+    GetConfig()->m_ConfigFolder = GetCBConfigDir();
     #if defined(LOGGING)
      LOGIT( _T("Argv[0][%s] Cwd[%s]"), wxTheApp->argv[0], ::wxGetCwd().GetData() );
     #endif
     GetConfig()->m_ExecuteFolder = FindAppPath(wxTheApp->argv[0], ::wxGetCwd(), wxEmptyString);
 
-    //GTK GetConfigFolder is returning double "//?, eg, "/home/pecan//.codeblocks"
-    // remove the double //s from filename //+v0.4.11
+    // remove the double //s from filenames
     GetConfig()->m_ConfigFolder.Replace(_T("//"),_T("/"));
     GetConfig()->m_ExecuteFolder.Replace(_T("//"),_T("/"));
     #if defined(LOGGING)
@@ -174,13 +177,13 @@ void CodeSnippets::OnAttach()
     #endif
 
     // if codesnippets.ini is in the executable folder, use it
-    // else use the default config folder
+    // else use the config folder
     wxString m_CfgFilenameStr = GetConfig()->m_ExecuteFolder + wxFILE_SEP_PATH;
     if (not m_Personality.IsEmpty()) m_CfgFilenameStr << m_Personality + wxT(".") ;
     m_CfgFilenameStr << GetConfig()->AppName + _T(".ini");
 
     if (::wxFileExists(m_CfgFilenameStr)) {;/*OK Use exe path*/}
-    else // use the default.conf folder
+    else // use the .conf folder
     {   m_CfgFilenameStr = GetConfig()->m_ConfigFolder + wxFILE_SEP_PATH;
         if (not m_Personality.IsEmpty()) m_CfgFilenameStr <<  m_Personality + wxT(".") ;
         m_CfgFilenameStr << GetConfig()->AppName + _T(".ini");
@@ -205,7 +208,7 @@ void CodeSnippets::OnAttach()
     // Set Drop targets so we can drag items in/out of the Project/Files Tree ctrls
     // memorize manager of Open files tree
     m_pProjectMgr = Manager::Get()->GetProjectManager();
-    // set a drop target for the project managers wxFlatNotebook
+    // set a drop target for the project managers wxAuiNotebook
     m_pProjectMgr->GetNotebook()->SetDropTarget(new DropTargets(this));
 
     //NB: On Linux, we don't enable dragging out of the file windows because of the drag/drop freeze bug
@@ -340,7 +343,7 @@ void CodeSnippets::BuildMenu(wxMenuBar* menuBar)
     GetConfig()->m_pMenuBar = menuBar;
     bool isSet = false;
 
-	int idx = menuBar->FindMenu(_("&View"));
+	int idx = menuBar->FindMenu(_("View"));
 	if (idx != wxNOT_FOUND) do
 	{
 		wxMenu* viewMenu = menuBar->GetMenu(idx);
@@ -1660,7 +1663,7 @@ long CodeSnippets::LaunchExternalSnippets()
     #endif
     if ( 0 != result )
     {  wxString msg(wxString::Format(wxT("Error [%d] Launching\n %s\n"),result, PgmFullPath.c_str()));
-       messageBox( msg );
+       GenericMessageBox( msg );
     }
 
     return result;
@@ -1732,6 +1735,35 @@ cbDragScroll* CodeSnippets::FindDragScroll()
     }
 
     return GetConfig()->GetDragScrollPlugin();
+}
+// ----------------------------------------------------------------------------
+wxString CodeSnippets::GetCBConfigFile()
+// ----------------------------------------------------------------------------
+{
+    PersonalityManager* PersMan = Manager::Get()->GetPersonalityManager();
+    wxString personality = PersMan->GetPersonality();
+    ConfigManager* CfgMan = Manager::Get()->GetConfigManager(_T("app"));
+    wxString current_conf_file = CfgMan->LocateDataFile(personality+_T(".conf"), sdAllKnown);
+
+    // Config manager will return an empty string on the first run of CodeBlocks
+    if (current_conf_file.IsEmpty())
+    {
+        wxString appdata;
+        if ( personality == _T("default") )
+            personality = _T("");
+        // Get APPDATA env var and append ".codeblocks" to it
+        wxGetEnv(_T("APPDATA"), &appdata);
+        current_conf_file = appdata +
+                    wxFILE_SEP_PATH + _T("codeblocks") + wxFILE_SEP_PATH
+                    + personality + _T(".codesnippets.ini");
+    }
+    return current_conf_file;
+}
+// ----------------------------------------------------------------------------
+wxString CodeSnippets::GetCBConfigDir()
+// ----------------------------------------------------------------------------
+{
+    return GetCBConfigFile().BeforeLast(wxFILE_SEP_PATH);
 }
 //// ----------------------------------------------------------------------------
 //void CodeSnippets::OnWindowDestroy(wxEvent& event)

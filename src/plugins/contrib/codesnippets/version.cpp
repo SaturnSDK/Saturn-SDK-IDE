@@ -461,7 +461,7 @@ AppVersion::~AppVersion()
 //          79) Fixed: Loop caused by cross-frame event posting in EVT_ACTIVATE routines
 //          80) Speed up .cbp compile time by sharing .obj directory betwn plugin & standalone
 // ----------------------------------------------------------------------------
-//  Commit 1 3.--
+//  Commit 1 3.92
 //          81) App:Added RemoveFileFromRecentHistory routine
 //          82) Allow user to specify new filename at "Load Index File..."
 //          83) Adjust CodeSnippet TreeCtrl font via Ctrl-MouseWheel
@@ -478,6 +478,33 @@ AppVersion::~AppVersion()
 //              Auto show docked or floating when switching from app
 //          92) Ask user if s/he really wants multiple invocations of CS from same folder.
 // ----------------------------------------------------------------------------
+//  Commit 1 3.98 2009/04/26
+//          93) When passing URL, remove anything pass \r or \n
+//          94) Fixed: A dragged URL item to a snippet did not save. CS did not know it had changed.
+//          97) Added zoom functions to Apps DragScroll class
+//          98) Added GetCBConfigDir() to call routines that check for user APPDATA var
+// ----------------------------------------------------------------------------
+//  Commit 1 3.99 2009/04/29
+//          99) App: check for standalone execution before closing in OnClose() to
+//              avoid error "can't delete default.conf.cbTemp"
+// ----------------------------------------------------------------------------
+//  Commit 1.3.102 2009/05/26
+//          100) Remove app default.conf.cbtemp from /APPDATA/codesnippets in OnClose;
+//          101) Correct .cbtemp name to .cbTemp for linux
+//          102) Don't raise focus when ::wxActiveWindow != CodeSnippetsTreeCtrl in OnEnterWindow()
+// ----------------------------------------------------------------------------
+//  Commit 1.3.103 2009/06/1
+//          103) Fix crash when backspace\cut after Ctrl-A
+// ----------------------------------------------------------------------------
+//  Commit  1.3.105 2009/06/8
+//          104) Set dragged textdata like dragged filename for FireFox3
+//          105) Replace home grown messageBox with GenericMessaageBox
+// ----------------------------------------------------------------------------
+//  Commit  1.3.107 2009/06/22
+//          106) Add "Settings..." to plugin ">" button menu.
+//          107) Use APPDATA envar on first run since CodeBlocks returns ""
+//               for config folder in OnAttach().
+// ----------------------------------------------------------------------------
 //  Bugs
 //      2008/04/8
 //          If floating wxAUI window is docked with Edit's open, they disappear. But
@@ -485,8 +512,6 @@ AppVersion::~AppVersion()
 //            still thinks they're open, but cannot show them.
 //            Eg. Drag docked CodeSnippets to floating. Open a file. Re-dockit.
 //            Editors disappear. Show(true) didnt work;
-//      2008/08/21
-//          First drag of item to a category does not work sometimes. second does.
 //
 // ----------------------------------------------------------------------------
 //  ToDo
@@ -494,11 +519,8 @@ AppVersion::~AppVersion()
 //          App:Allow SeparateEditor configuration
 //          App:Allow user to re-clone default.conf
 //          Enable Editor context options, esp. ThreadSearch item
-//          Port messageBox fixes from cbEdit
-//          App:Put Ctrl-MouseWheel in local DragScroll
-//          Remember Font size from last use, set it in initialization
 //          Use cbEditor API
-//          keybinder capability
+//          keybinder capability ?
 //
 //  CodeSnippets
 //          Search should continue to next matching item, not just stop (F3?)
@@ -515,5 +537,15 @@ AppVersion::~AppVersion()
 //              wxGTK 2.8.4 cashes when dragging fast out of Mgt/File trees
 //              bug was reported way back in wxGTK 2.1.0
 //          Dragging file out of file panels does not work on Linux. Causes GTK to freeze.
+//          2008/08/21
+//          First drag of item to a category does not work sometimes. second does.
+//          This seems to be ok with wx2.8.10
+//          2008/10/11
+//          After dragging item, next edit uses dragged item, not newly clicked item
+//          This seems to be fixed with wx2.8.10
+//          2009/01/10
+//          double clicking for new edit item caused old edit item window to appear.
+//          This seems to be fixed with wx2.8.10
+//
 // ----------------------------------------------------------------------------
 // ----------------------------------------------------------------------------

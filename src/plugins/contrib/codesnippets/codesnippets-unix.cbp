@@ -9,13 +9,13 @@
 		<Build>
 			<Target title="Plugin-unix">
 				<Option output="../../../devel/share/codeblocks/plugins/libcodesnippets.so" prefix_auto="0" extension_auto="0" />
-				<Option object_output=".obj" />
+				<Option object_output=".obj/plugin/" />
 				<Option type="3" />
 				<Option compiler="gcc" />
 			</Target>
 			<Target title="App-unix">
 				<Option output="../../../devel/codesnippets" prefix_auto="0" extension_auto="0" />
-				<Option object_output=".obj" />
+				<Option object_output=".obj/app" />
 				<Option type="0" />
 				<Option compiler="gcc" />
 			</Target>
@@ -35,12 +35,12 @@
 			<Add option="`pkg-config --cflags gtk+-2.0`" />
 			<Add option="-DcbDEBUG" />
 			<Add option="-DCB_PRECOMP" />
-			<Add directory="$(#cb)/include" />
-			<Add directory="$(#cb)/include/wxscintilla/include" />
-			<Add directory="$(#cb)/include/wxFlatNotebook/include" />
+			<Add directory="../../../include" />
+			<Add directory="../../../include/wxscintilla/include" />
 			<Add directory="." />
 			<Add directory="editor" />
 			<Add directory="Search" />
+			<Add directory="../../../include/mozilla_chardet" />
 		</Compiler>
 		<Linker>
 			<Add option="`wx-config --libs`" />
@@ -53,6 +53,8 @@
 		<ExtraCommands>
 			<Add after="./update" />
 		</ExtraCommands>
+		<Unit filename="GenericMessageBox.cpp" />
+		<Unit filename="GenericMessageBox.h" />
 		<Unit filename="Makefile.am" />
 		<Unit filename="Search/DirectoryParamsPanel.cpp" />
 		<Unit filename="Search/DirectoryParamsPanel.h" />
@@ -128,16 +130,12 @@
 		<Unit filename="editor/prefs.cpp" />
 		<Unit filename="editor/prefs.h" />
 		<Unit filename="editor/scbeditor.cpp" />
-		<Unit filename="editor/scbeditor.cpp.bak" />
 		<Unit filename="editor/scbeditor.h" />
 		<Unit filename="editor/seditorbase.cpp" />
-		<Unit filename="editor/seditorbase.cpp.bak" />
 		<Unit filename="editor/seditorbase.h" />
 		<Unit filename="editor/seditorcolourset.cpp" />
-		<Unit filename="editor/seditorcolourset.cpp.bak" />
 		<Unit filename="editor/seditorcolourset.h" />
 		<Unit filename="editor/seditormanager.cpp" />
-		<Unit filename="editor/seditormanager.cpp.bak" />
 		<Unit filename="editor/seditormanager.h" />
 		<Unit filename="editor/sprintdlg.cpp" />
 		<Unit filename="editor/sprintdlg.h" />
@@ -146,10 +144,6 @@
 		<Unit filename="finddialogs.cpp" />
 		<Unit filename="finddialogs.h" />
 		<Unit filename="menuidentifiers.h" />
-		<Unit filename="messageBoxForm.cpp" />
-		<Unit filename="messageBoxForm.h" />
-		<Unit filename="messagebox.cpp" />
-		<Unit filename="messagebox.h" />
 		<Unit filename="settingsdlg.cpp" />
 		<Unit filename="settingsdlg.h" />
 		<Unit filename="settingsdlgform.cpp" />
@@ -171,6 +165,7 @@
 		<Extensions>
 			<code_completion />
 			<debugger />
+			<envvars />
 		</Extensions>
 	</Project>
 </CodeBlocks_project_file>

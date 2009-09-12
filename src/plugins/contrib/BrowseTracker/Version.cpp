@@ -197,6 +197,23 @@ AppVersion::~AppVersion()
 //         74) changed user interface
 //             Added Config settings panel to CB config settings menu
 // ----------------------------------------------------------------------------
+//  Commit 1.2.75 2009/04/26
+//         75) Added GetCBConfigDir() to call routines that check for APPDATA var
+// ----------------------------------------------------------------------------
+//  Commit 1.2.76 2009/04/28
+//         76) Add include ConfigManager for linux
+// ----------------------------------------------------------------------------
+//  Commit 1.2.78 2009/07/13
+//         77) Fix activation by keyboard after wxAuiNotebook added.
+//         78) Sort browse marks in idle time.
+// ----------------------------------------------------------------------------
+//  Commit  1.2.80 2009/07/22
+//      79) Call OnEditorActivated() from OnEditorOpened() because editors actived
+//          by Alt-G, "Swap header/source", and "Recent files" have no cbEditor
+//          associated in EVT_EDITOR_ACTIVATED, and GetActiveEditor() returns NULL.
+//      80) Hack to find editor's project. Since wxAuiNotebook, the initial
+//          EVT_EDITOR_ACTIVATED has no cbEditor or cbProject associated.
+// ----------------------------------------------------------------------------
 //  Bugs
 //          When searching workspace w/o open project, BT is comatose.
 //              Should say "no project" or some such.

@@ -8,7 +8,7 @@
 		<Build>
 			<Target title="Plugin - Win32">
 				<Option output="..\..\..\devel\share\CodeBlocks\plugins\codesnippets.dll" prefix_auto="0" extension_auto="0" />
-				<Option object_output="..\..\..\.objs\plugins\contrib\codesnippets" />
+				<Option object_output="..\..\..\.objs\plugins\contrib\codesnippets\plugin\" />
 				<Option type="3" />
 				<Option compiler="gcc" />
 				<Compiler>
@@ -21,7 +21,7 @@
 			</Target>
 			<Target title="App - Win32">
 				<Option output="..\..\..\devel\codesnippets.exe" prefix_auto="0" extension_auto="0" />
-				<Option object_output="..\..\..\.objs\plugins\contrib\codesnippets" />
+				<Option object_output="..\..\..\.objs\plugins\contrib\codesnippets\app\" />
 				<Option type="0" />
 				<Option compiler="gcc" />
 				<Compiler>
@@ -51,34 +51,33 @@
 			<Add option="-DCB_PRECOMP" />
 			<Add option="-DWX_PRECOMP" />
 			<Add option="-DwxUSE_UNICODE" />
-			<Add directory="$(#CB.include)" />
-			<Add directory="$(#CB.include)\wxscintilla\include" />
-			<Add directory="$(#cb)\src" />
-			<Add directory="$(#cb.include)\wxFlatNotebook\include" />
+			<Add directory="..\..\..\include" />
+			<Add directory="..\..\..\include\wxscintilla\include" />
+			<Add directory="..\..\..\src" />
 			<Add directory="$(#WX.include)" />
 			<Add directory="$(#WX.lib)\gcc_dll$(WX_CFG)\msw$(WX_SUFFIX)" />
-			<Add directory="..\..\..\include\tinyxml" />
-			<Add directory="$(#CB.include)\wxFlatNotebook\include\" />
 			<Add directory="Search" />
 			<Add directory="editor" />
 			<Add directory="." />
+			<Add directory="..\..\..\include\tinyxml" />
+			<Add directory="..\..\..\include\mozilla_chardet" />
 		</Compiler>
 		<Linker>
 			<Add option="-Wl,--enable-auto-import" />
-			<Add library="wxflatnotebook" />
 			<Add library="wxmsw28$(WX_SUFFIX)" />
 			<Add library="txml" />
 			<Add library="wxscintilla" />
 			<Add library="codeblocks" />
-			<Add directory="$(#CB)\devel" />
-			<Add directory="$(#CB)\base\tinyxml" />
+			<Add directory="..\..\..\devel" />
+			<Add directory="..\..\..\base\tinyxml" />
 			<Add directory="$(#WX.lib)\gcc_dll$(WX_CFG)" />
-			<Add directory="$(#cb)\sdk\wxFlatNotebook" />
 		</Linker>
 		<ExtraCommands>
 			<Add after="update.bat" />
 			<Mode after="always" />
 		</ExtraCommands>
+		<Unit filename="GenericMessageBox.cpp" />
+		<Unit filename="GenericMessageBox.h" />
 		<Unit filename="Makefile.am" />
 		<Unit filename="Search\DirectoryParamsPanel.cpp" />
 		<Unit filename="Search\DirectoryParamsPanel.h" />
@@ -173,10 +172,6 @@
 		</Unit>
 		<Unit filename="manifest.xml" />
 		<Unit filename="menuidentifiers.h" />
-		<Unit filename="messageBoxForm.cpp" />
-		<Unit filename="messageBoxForm.h" />
-		<Unit filename="messagebox.cpp" />
-		<Unit filename="messagebox.h" />
 		<Unit filename="resources\Makefile.am" />
 		<Unit filename="resources\allsnippets.png" />
 		<Unit filename="resources\category.png" />

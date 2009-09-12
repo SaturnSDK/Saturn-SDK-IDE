@@ -21,9 +21,8 @@
 #include <wx/choicdlg.h>
 #include <wx/notebook.h>
 #include <wx/clipbrd.h>
-#include <wx/taskbar.h>
 
-#include <wx/wxFlatNotebook/wxFlatNotebook.h>
+#include <wx/aui/auibook.h>
 #include <cbexception.h>
 #include <wx/debugrpt.h>
 #include <configmanager.h>
@@ -130,17 +129,17 @@ bool DDEConnection::OnExecute(const wxString& topic, wxChar *data, int size, wxI
         if (reCmd.Matches(strData)) 
         { 
             wxString file = reCmd.GetMatch(strData, 1); 
-            if (!s_Loading && m_Frame) 
-            {
                 CodeBlocksApp* cb = (CodeBlocksApp*)wxTheApp; 
                 cb->SetAutoFile(file); 
             }
-        }
         return true;
     }
     else if (strData.StartsWith(_T("[Raise]"))) 
     { 
+        if (m_Frame)
+        {
         m_Frame->Raise(); 
+        }
         return true; 
     } 
     return false;
@@ -150,7 +149,7 @@ bool DDEConnection::OnDisconnect()
 { 
     // delayed files will be loaded automatically if MainFrame already exists, 
     // otherwise it happens automatically in OnInit after MainFrame is created 
-    if(m_Frame) 
+    if(!s_Loading && m_Frame)
     { 
         CodeBlocksApp* cb = (CodeBlocksApp*)wxTheApp; 
         cb->LoadDelayedFiles(m_Frame); 
@@ -167,57 +166,62 @@ class DDEClient: public wxClient {
 }; 
  
 #if wxUSE_CMDLINE_PARSER
+#if wxCHECK_VERSION(2, 9, 0)
+#define CMD_ENTRY(X) X
+#else
+#define CMD_ENTRY(X) _T(X)
+#endif
 const wxCmdLineEntryDesc cmdLineDesc[] =
 {
-    { wxCMD_LINE_SWITCH, _T("h"),  _T("help"),                  _T("show this help message"),
+    { wxCMD_LINE_SWITCH, CMD_ENTRY("h"),  CMD_ENTRY("help"),                  CMD_ENTRY("show this help message"),
       wxCMD_LINE_VAL_NONE, wxCMD_LINE_OPTION_HELP },
-    { wxCMD_LINE_SWITCH, _T("?"),  _T("?"),                     _T("show this help message (alias for help)"),
+    { wxCMD_LINE_SWITCH, CMD_ENTRY("?"),  CMD_ENTRY("?"),                     CMD_ENTRY("show this help message (alias for help)"),
       wxCMD_LINE_VAL_NONE, wxCMD_LINE_OPTION_HELP },
-    { wxCMD_LINE_SWITCH, _T(""),   _T("safe-mode"),             _T("load in safe mode (all plugins will be disabled)"),
+    { wxCMD_LINE_SWITCH, CMD_ENTRY(""),   CMD_ENTRY("safe-mode"),             CMD_ENTRY("load in safe mode (all plugins will be disabled)"),
       wxCMD_LINE_VAL_NONE, wxCMD_LINE_PARAM_OPTIONAL },
 #ifdef __WXMSW__
-    { wxCMD_LINE_SWITCH, _T("na"), _T("no-check-associations"), _T("don't perform any association checks"),
+    { wxCMD_LINE_SWITCH, CMD_ENTRY("na"), CMD_ENTRY("no-check-associations"), CMD_ENTRY("don't perform any association checks"),
       wxCMD_LINE_VAL_NONE, wxCMD_LINE_PARAM_OPTIONAL },
-    { wxCMD_LINE_SWITCH, _T("nd"), _T("no-dde"),                _T("don't start a DDE server"),
+    { wxCMD_LINE_SWITCH, CMD_ENTRY("nd"), CMD_ENTRY("no-dde"),                CMD_ENTRY("don't start a DDE server"),
       wxCMD_LINE_VAL_NONE, wxCMD_LINE_PARAM_OPTIONAL },
 #endif
-#ifndef __WXMSW__ 
-    { wxCMD_LINE_SWITCH, _T("ni"), _T("no-ipc"),                _T("don't start an IPC server"), 
-      wxCMD_LINE_VAL_NONE, wxCMD_LINE_PARAM_OPTIONAL }, 
-#endif 
-    { wxCMD_LINE_SWITCH, _T("ns"), _T("no-splash-screen"),      _T("don't display a splash screen while loading"),
+#ifndef __WXMSW__
+    { wxCMD_LINE_SWITCH, CMD_ENTRY("ni"), CMD_ENTRY("no-ipc"),                CMD_ENTRY("don't start an IPC server"),
       wxCMD_LINE_VAL_NONE, wxCMD_LINE_PARAM_OPTIONAL },
-    { wxCMD_LINE_SWITCH, _T("d"),  _T("debug-log"),             _T("display application's debug log"),
+#endif
+    { wxCMD_LINE_SWITCH, CMD_ENTRY("ns"), CMD_ENTRY("no-splash-screen"),      CMD_ENTRY("don't display a splash screen while loading"),
       wxCMD_LINE_VAL_NONE, wxCMD_LINE_PARAM_OPTIONAL },
-    { wxCMD_LINE_SWITCH, _T("nc"), _T("no-crash-handler"),      _T("don't use the crash handler (useful for debugging C::B)"),
+    { wxCMD_LINE_SWITCH, CMD_ENTRY("d"),  CMD_ENTRY("debug-log"),             CMD_ENTRY("display application's debug log"),
       wxCMD_LINE_VAL_NONE, wxCMD_LINE_PARAM_OPTIONAL },
-    { wxCMD_LINE_OPTION, _T(""),   _T("prefix"),                _T("the shared data dir prefix"),
+    { wxCMD_LINE_SWITCH, CMD_ENTRY("nc"), CMD_ENTRY("no-crash-handler"),      CMD_ENTRY("don't use the crash handler (useful for debugging C::B)"),
+      wxCMD_LINE_VAL_NONE, wxCMD_LINE_PARAM_OPTIONAL },
+    { wxCMD_LINE_OPTION, CMD_ENTRY(""),   CMD_ENTRY("prefix"),                CMD_ENTRY("the shared data dir prefix"),
       wxCMD_LINE_VAL_STRING, wxCMD_LINE_NEEDS_SEPARATOR },
-    { wxCMD_LINE_OPTION, _T("p"),  _T("personality"),           _T("the personality to use: \"ask\" or <personality-name>"),
+    { wxCMD_LINE_OPTION, CMD_ENTRY("p"),  CMD_ENTRY("personality"),           CMD_ENTRY("the personality to use: \"ask\" or <personality-name>"),
       wxCMD_LINE_VAL_STRING, wxCMD_LINE_NEEDS_SEPARATOR },
-    { wxCMD_LINE_SWITCH, _T(""),   _T("no-log"),                _T("turn off the application log"),
+    { wxCMD_LINE_SWITCH, CMD_ENTRY(""),   CMD_ENTRY("no-log"),                CMD_ENTRY("turn off the application log"),
       wxCMD_LINE_VAL_NONE, wxCMD_LINE_PARAM_OPTIONAL },
-    { wxCMD_LINE_SWITCH, _T(""),   _T("log-to-file"),           _T("redirect application log to a file"),
+    { wxCMD_LINE_SWITCH, CMD_ENTRY(""),   CMD_ENTRY("log-to-file"),           CMD_ENTRY("redirect application log to a file"),
       wxCMD_LINE_VAL_NONE, wxCMD_LINE_PARAM_OPTIONAL },
-    { wxCMD_LINE_OPTION, _T(""),   _T("profile"),               _T("synonym to personality"),
+    { wxCMD_LINE_OPTION, CMD_ENTRY(""),   CMD_ENTRY("profile"),               CMD_ENTRY("synonym to personality"),
       wxCMD_LINE_VAL_STRING, wxCMD_LINE_NEEDS_SEPARATOR },
-    { wxCMD_LINE_SWITCH, _T(""),   _T("rebuild"),               _T("clean and then build the project/workspace"),
+    { wxCMD_LINE_SWITCH, CMD_ENTRY(""),   CMD_ENTRY("rebuild"),               CMD_ENTRY("clean and then build the project/workspace"),
       wxCMD_LINE_VAL_NONE, wxCMD_LINE_PARAM_OPTIONAL },
-    { wxCMD_LINE_SWITCH, _T(""),   _T("build"),                 _T("just build the project/workspace"),
+    { wxCMD_LINE_SWITCH, CMD_ENTRY(""),   CMD_ENTRY("build"),                 CMD_ENTRY("just build the project/workspace"),
       wxCMD_LINE_VAL_NONE, wxCMD_LINE_PARAM_OPTIONAL },
-    { wxCMD_LINE_SWITCH, _T(""),   _T("clean"),                 _T("clean the project/workspace"),
+    { wxCMD_LINE_SWITCH, CMD_ENTRY(""),   CMD_ENTRY("clean"),                 CMD_ENTRY("clean the project/workspace"),
       wxCMD_LINE_VAL_NONE, wxCMD_LINE_PARAM_OPTIONAL },
-    { wxCMD_LINE_OPTION, _T(""),   _T("target"),                _T("the target for the batch build"),
+    { wxCMD_LINE_OPTION, CMD_ENTRY(""),   CMD_ENTRY("target"),                CMD_ENTRY("the target for the batch build"),
       wxCMD_LINE_VAL_STRING, wxCMD_LINE_NEEDS_SEPARATOR },
-    { wxCMD_LINE_SWITCH, _T(""),   _T("no-batch-window-close"), _T("do not auto-close log window when batch build is done"),
+    { wxCMD_LINE_SWITCH, CMD_ENTRY(""),   CMD_ENTRY("no-batch-window-close"), CMD_ENTRY("do not auto-close log window when batch build is done"),
       wxCMD_LINE_VAL_NONE, wxCMD_LINE_PARAM_OPTIONAL },
-    { wxCMD_LINE_SWITCH, _T(""),   _T("batch-build-notify"),    _T("show message when batch build is done"),
+    { wxCMD_LINE_SWITCH, CMD_ENTRY(""),   CMD_ENTRY("batch-build-notify"),    CMD_ENTRY("show message when batch build is done"),
       wxCMD_LINE_VAL_NONE, wxCMD_LINE_PARAM_OPTIONAL },
-    { wxCMD_LINE_OPTION, _T(""),   _T("script"),                _T("execute script file"),
+    { wxCMD_LINE_OPTION, CMD_ENTRY(""),   CMD_ENTRY("script"),                CMD_ENTRY("execute script file"),
       wxCMD_LINE_VAL_STRING, wxCMD_LINE_NEEDS_SEPARATOR },
-    { wxCMD_LINE_OPTION, _T(""),   _T("file"),                  _T("open file and optionally jump to specific line (file[:line])"),
+    { wxCMD_LINE_OPTION, CMD_ENTRY(""),   CMD_ENTRY("file"),                  CMD_ENTRY("open file and optionally jump to specific line (file[:line])"),
       wxCMD_LINE_VAL_STRING, wxCMD_LINE_NEEDS_SEPARATOR },
-    { wxCMD_LINE_PARAM,  _T(""),   _T(""),                      _T("filename(s)"),
+    { wxCMD_LINE_PARAM,  CMD_ENTRY(""),   CMD_ENTRY(""),                      CMD_ENTRY("filename(s)"),
       wxCMD_LINE_VAL_STRING, wxCMD_LINE_PARAM_OPTIONAL | wxCMD_LINE_PARAM_MULTIPLE },
     { wxCMD_LINE_NONE }
 };
@@ -253,6 +257,7 @@ IMPLEMENT_APP(CodeBlocksApp)
 
 BEGIN_EVENT_TABLE(CodeBlocksApp, wxApp)
     EVT_ACTIVATE_APP(CodeBlocksApp::OnAppActivate)
+    EVT_TASKBAR_LEFT_DOWN(CodeBlocksApp::OnTBIconLeftDown)
 END_EVENT_TABLE()
 
 #ifdef __WXMAC__
@@ -435,7 +440,7 @@ void CodeBlocksApp::InitLocale()
 
     const wxLanguageInfo *info;
 
-    if(lang)
+    if(!lang.IsEmpty()) // Note: You can also write this line of code as !(!lang) from wx-2.9 onwards
         info = wxLocale::FindLanguageInfo(lang);
     else
         info = wxLocale::GetLanguageInfo(wxLANGUAGE_DEFAULT);
@@ -518,74 +523,80 @@ bool CodeBlocksApp::OnInit()
 
         InitLocale(); 
 
-        if(!m_NoDDE && !m_Batch && Manager::Get()->GetConfigManager(_T("app"))->ReadBool(_T("/environment/use_ipc"), true)) 
-        { 
-            // Create a new client 
-            DDEClient *client = new DDEClient; 
-            DDEConnection* connection = 0l; 
-            connection = (DDEConnection *)client->MakeConnection(_T("localhost"), DDE_SERVICE, DDE_TOPIC); 
- 
-            if(connection) 
-            { 
-                wxArrayString strFilesInCommandLine; 
-                wxCmdLineParser& parser = *Manager::GetCmdLineParser(); 
-                parser.SetDesc(cmdLineDesc); 
-                parser.SetCmdLine(argc, argv); 
- 
-                // search for valid filenames passed as argument on commandline 
-                // we cann not use "FileTypeOf" here, because it can crash if it tries to Get the projectmanager, 
-                // before the MainFrame exists 
-                if (parser.Parse(false) == 0) 
-                { 
-                    int count = parser.GetParamCount(); 
-                    for ( int param = 0; param < count; ++param ) 
-                    { 
-                        if(wxFile::Exists(parser.GetParam(param))) 
-                            strFilesInCommandLine.Add(parser.GetParam(param)); 
-                    } 
-                } 
- 
-                if (strFilesInCommandLine.Count() > 0) 
-                { 
-                    for(size_t i = 0; i < strFilesInCommandLine.Count(); i++) 
-                    { 
-                        wxFileName fn(strFilesInCommandLine[i]); 
-                        fn.Normalize(); // really important so that two same files with different names are not loaded twice 
-                        // filenames have to be sent with full path, or they can not be found in most cases 
-                        connection->Execute(_T("[Open(\"") + fn.GetFullPath() +_T("\"]")); 
-                    } 
-                } 
- 
-                if (!m_AutoFile.empty()) 
-                { 
-                    // filenames have to be sent with full path, or they can not be found in most cases, 
-                    // to get full path we have to split off the name 
-                    wxFileName fn(m_AutoFile.BeforeLast(_T(':'))); 
-                    fn.Normalize(); // really important so that two same files with different names are not loaded twice 
-                    if(m_AutoFile.Find(_T(":")) != wxNOT_FOUND) 
-                    { 
-                        connection->Execute(_T("[OpenLine(\"") + fn.GetFullPath() + _T(":") + m_AutoFile.AfterLast(_T(':')) +_T("\"]")); 
-                    } 
-                    else 
-                    { 
-                        connection->Execute(_T("[Open(\"") + fn.GetFullPath() +_T("\"]")); 
-                    } 
-                } 
-                // on linux C::B has to be raised explicitely if it's wanted 
-                if (Manager::Get()->GetConfigManager(_T("app"))->ReadBool(_T("/environment/raise_via_ipc"), true)) 
-                { 
-                    connection->Execute(_T("[Raise]")); 
-                } 
-                // return false to end the application 
-                return false; 
-            } 
-        } 
-        // Now we can start the DDE-/IPC-Server, if we did it earlier we would connect to ourselves 
-        if (!m_NoDDE) 
-        { 
-            g_DDEServer = new DDEServer(0L); 
-            g_DDEServer->Create(DDE_SERVICE); 
-        } 
+        if(!m_NoDDE && !m_Batch && Manager::Get()->GetConfigManager(_T("app"))->ReadBool(_T("/environment/use_ipc"), true))
+        {
+            // Create a new client
+            DDEClient *client = new DDEClient;
+            DDEConnection* connection = 0l;
+            connection = (DDEConnection *)client->MakeConnection(_T("localhost"), DDE_SERVICE, DDE_TOPIC);
+
+            if(connection)
+            {
+                wxArrayString strFilesInCommandLine;
+                wxCmdLineParser& parser = *Manager::GetCmdLineParser();
+                parser.SetDesc(cmdLineDesc);
+                parser.SetCmdLine(argc, argv);
+
+                // search for valid filenames passed as argument on commandline
+                // we cann not use "FileTypeOf" here, because it can crash if it tries to Get the projectmanager,
+                // before the MainFrame exists
+                if (parser.Parse(false) == 0)
+                {
+                    int count = parser.GetParamCount();
+                    for ( int param = 0; param < count; ++param )
+                    {
+                        if(wxFile::Exists(parser.GetParam(param)))
+                            strFilesInCommandLine.Add(parser.GetParam(param));
+                    }
+                }
+
+                if (strFilesInCommandLine.Count() > 0)
+                {
+                    for(size_t i = 0; i < strFilesInCommandLine.Count(); i++)
+                    {
+                        wxFileName fn(strFilesInCommandLine[i]);
+                        fn.Normalize(); // really important so that two same files with different names are not loaded twice
+                        // filenames have to be sent with full path, or they can not be found in most cases
+                        connection->Execute(_T("[Open(\"") + fn.GetFullPath() +_T("\"]"));
+                    }
+                }
+
+                if (!m_AutoFile.empty())
+                {
+                    // filenames have to be sent with full path, or they can not be found in most cases,
+                    // to get full path we have to split off the name
+                    wxFileName fn(m_AutoFile.BeforeLast(_T(':')));
+                    fn.Normalize(); // really important so that two same files with different names are not loaded twice
+                    if(m_AutoFile.Find(_T(":")) != wxNOT_FOUND)
+                    {
+                        connection->Execute(_T("[OpenLine(\"") + fn.GetFullPath() + _T(":") + m_AutoFile.AfterLast(_T(':')) +_T("\"]"));
+                    }
+                    else
+                    {
+                        connection->Execute(_T("[Open(\"") + fn.GetFullPath() +_T("\"]"));
+                    }
+                }
+                // on linux C::B has to be raised explicitely if it's wanted
+                if (Manager::Get()->GetConfigManager(_T("app"))->ReadBool(_T("/environment/raise_via_ipc"), true))
+                {
+                    connection->Execute(_T("[Raise]"));
+                }
+                connection->Disconnect();
+                delete connection;
+                delete client;
+                // return false to end the application
+
+                return false;
+            }
+            // free memory DDE-/IPC-clients, if we are here connection could not be established and there is no need to free it
+            delete client;
+        }
+        // Now we can start the DDE-/IPC-Server, if we did it earlier we would connect to ourselves
+        if (!m_NoDDE && !m_Batch)
+        {
+            g_DDEServer = new DDEServer(0L);
+            g_DDEServer->Create(DDE_SERVICE);
+        }
         m_pSingleInstance = 0;
         if(Manager::Get()->GetConfigManager(_T("app"))->ReadBool(_T("/environment/single_instance"), true))
         {
@@ -637,6 +648,7 @@ bool CodeBlocksApp::OnInit()
             if(loader->GetData())
                 Manager::Get()->GetScriptingManager()->LoadBuffer(cbC2U(loader->GetData()));
 
+            delete loader;
             frame->Close();
             return true;
         }
@@ -724,8 +736,37 @@ int CodeBlocksApp::OnExit()
     return m_Batch ? m_BatchExitCode : 0;
 }
 
+#ifdef __WXMSW__
+	inline void EnableLFH()
+	{
+		typedef BOOL  (WINAPI *HeapSetInformation_t)(HANDLE, HEAP_INFORMATION_CLASS, PVOID, SIZE_T);
+		typedef DWORD (WINAPI *GetProcessHeaps_t)(DWORD, PHANDLE);
+
+		HINSTANCE kh = GetModuleHandle(TEXT("kernel32.dll"));
+		HeapSetInformation_t  HeapSetInformation_func = (HeapSetInformation_t)  GetProcAddress(kh, "HeapSetInformation");
+		GetProcessHeaps_t     GetProcessHeaps_func    = (GetProcessHeaps_t)     GetProcAddress(kh, "GetProcessHeaps");
+
+		if(GetProcessHeaps_func && HeapSetInformation_func)
+		{
+			ULONG  HeapFragValue = 2;
+
+			int n = GetProcessHeaps_func(0, 0);
+			HANDLE *h = new HANDLE[n];
+			GetProcessHeaps_func(n, h);
+
+			for(int i = 0; i < n; ++i)
+				HeapSetInformation_func(h[i], HeapCompatibilityInformation, &HeapFragValue, sizeof(HeapFragValue));
+
+			delete[] h;
+		}
+	}
+#else
+	inline void EnableLFH() {}
+#endif
+
 int CodeBlocksApp::OnRun()
 {
+	EnableLFH();
     try
     {
         int retval = wxApp::OnRun();
@@ -816,19 +857,16 @@ int CodeBlocksApp::BatchJob()
     wxTaskBarIcon* tbIcon = 0;
     m_pBatchBuildDialog = m_Frame->GetBatchBuildDialog();
     PlaceWindow(m_pBatchBuildDialog);
-    if (!m_Clean)
-    {
-        tbIcon = new wxTaskBarIcon();
-        tbIcon->SetIcon(
-                #ifdef __WXMSW__
-                    wxICON(A_MAIN_ICON),
-                #else
-                    wxIcon(app),
-                #endif // __WXMSW__
-                    _("Building ") + wxFileNameFromPath(wxString(argv[argc-1])));
+    tbIcon = new wxTaskBarIcon();
+    tbIcon->SetIcon(
+            #ifdef __WXMSW__
+                wxICON(A_MAIN_ICON),
+            #else
+                wxIcon(app),
+            #endif // __WXMSW__
+                _("Building ") + wxFileNameFromPath(wxString(argv[argc-1])));
 
-        m_pBatchBuildDialog->Show();
-    }
+    m_pBatchBuildDialog->Show();
 
     if (m_ReBuild)
     {
@@ -920,6 +958,16 @@ void CodeBlocksApp::OnBatchBuildDone(CodeBlocksEvent& event)
             m_pBatchBuildDialog->Destroy();
             m_pBatchBuildDialog = 0;
         }
+    }
+}
+
+void CodeBlocksApp::OnTBIconLeftDown(wxTaskBarIconEvent& event)
+{
+    event.Skip();
+    if (m_pBatchBuildDialog)
+    {
+        m_pBatchBuildDialog->Raise();
+        m_pBatchBuildDialog->Refresh();
     }
 }
 

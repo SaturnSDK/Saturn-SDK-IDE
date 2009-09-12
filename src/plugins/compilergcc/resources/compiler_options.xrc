@@ -1016,11 +1016,36 @@
 														<object class="sizeritem">
 															<object class="wxStaticText" name="ID_STATICTEXT21">
 																<label>Dist-clean project/target:</label>
+																<hidden>1</hidden>
 															</object>
 															<flag>wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL</flag>
 														</object>
 														<object class="sizeritem">
-															<object class="wxTextCtrl" name="txtMakeCmd_DistClean" />
+															<object class="wxTextCtrl" name="txtMakeCmd_DistClean">
+																<hidden>1</hidden>
+															</object>
+															<flag>wxLEFT|wxRIGHT|wxEXPAND|wxALIGN_LEFT|wxALIGN_TOP</flag>
+															<border>8</border>
+														</object>
+														<object class="sizeritem">
+															<object class="wxStaticText" name="ID_STATICTEXT27">
+																<label>Ask if rebuild is needed:</label>
+															</object>
+															<flag>wxALL|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL</flag>
+														</object>
+														<object class="sizeritem">
+															<object class="wxTextCtrl" name="txtMakeCmd_AskRebuildNeeded" />
+															<flag>wxLEFT|wxRIGHT|wxEXPAND|wxALIGN_LEFT|wxALIGN_TOP</flag>
+															<border>8</border>
+														</object>
+														<object class="sizeritem">
+															<object class="wxStaticText" name="ID_STATICTEXT28">
+																<label>Silent build:</label>
+															</object>
+															<flag>wxALL|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL</flag>
+														</object>
+														<object class="sizeritem">
+															<object class="wxTextCtrl" name="txtMakeCmd_SilentBuild" />
 															<flag>wxLEFT|wxRIGHT|wxEXPAND|wxALIGN_LEFT|wxALIGN_TOP</flag>
 															<border>8</border>
 														</object>
@@ -1191,6 +1216,34 @@
 																<label>Display build progress percentage in log</label>
 															</object>
 															<flag>wxBOTTOM|wxLEFT|wxRIGHT|wxEXPAND|wxALIGN_LEFT|wxALIGN_TOP</flag>
+															<border>8</border>
+														</object>
+														<object class="sizeritem">
+															<object class="wxStaticLine" name="ID_STATICLINE8" />
+															<flag>wxBOTTOM|wxLEFT|wxRIGHT|wxEXPAND|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL</flag>
+															<border>8</border>
+														</object>
+														<object class="sizeritem">
+															<object class="wxStaticBoxSizer">
+																<label>Rebuild Workspace / Project</label>
+																<orient>wxVERTICAL</orient>
+																<object class="sizeritem">
+																	<object class="wxCheckBox" name="chkRebuildSeperately">
+																		<label>Clean and Build all projects/targets one by one</label>
+																	</object>
+																	<flag>wxALL|wxEXPAND|wxALIGN_LEFT|wxALIGN_TOP</flag>
+																	<border>8</border>
+																</object>
+																<object class="sizeritem">
+																	<object class="wxStaticText" name="ID_STATICTEXT29">
+																		<label>NOTE: Default is to clean all projects/targets at once, before building them.</label>
+																		<fg>#800000</fg>
+																	</object>
+																	<flag>wxBOTTOM|wxLEFT|wxRIGHT|wxEXPAND|wxALIGN_LEFT|wxALIGN_TOP</flag>
+																	<border>8</border>
+																</object>
+															</object>
+															<flag>wxBOTTOM|wxLEFT|wxRIGHT|wxEXPAND|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL</flag>
 															<border>8</border>
 														</object>
 													</object>

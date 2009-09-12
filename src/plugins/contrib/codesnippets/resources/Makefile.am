@@ -4,13 +4,12 @@ INCLUDES = $(WX_CXXFLAGS) \
 		-I$(top_srcdir)/src/include/wxscintilla/include \
 		-I$(top_srcdir)/src/plugins/contrib/codesnippets \
 		-I$(top_srcdir)/src/plugins/contrib/codesnippets/Search \
-		-I$(top_srcdir)/src/plugins/contrib/codesnippets/editor \
-        -I$(top_srcdir)/src/include/wxFlatNotebook/include
-
+ 		-I$(top_srcdir)/src/plugins/contrib/codesnippets/editor \
+		-I$(top_srcdir)/src/include/mozilla_chardet
 
 pluginlibdir = $(pkglibdir)/plugins
 
-##pluginlib_LTLIBRARIES = codesnippets 
+##pluginlib_LTLIBRARIES = codesnippets
 bin_PROGRAMS = codesnippets
 
 codesnippets_LDFLAGS = $(WX_GTK2_LIBS)
@@ -59,8 +58,7 @@ codesnippets_SOURCES =	$(srcdir)/../version.cpp \
 		$(srcdir)/../codesnippetswindow.cpp \
 		$(srcdir)/../csutils.cpp \
 		$(srcdir)/../editsnippetframe.cpp \
-		$(srcdir)/../messageBoxForm.cpp \
-		$(srcdir)/../messagebox.cpp \
+		$(srcdir)/../GenericMessageBox.cpp \
 		$(srcdir)/../settingsdlg.cpp \
 		$(srcdir)/../settingsdlgform.cpp \
 		$(srcdir)/../snippetitemdata.cpp \
@@ -111,8 +109,7 @@ noinst_HEADERS =  	$(srcdir)/../version.h \
 		$(srcdir)/../csutils.h \
 		$(srcdir)/../editsnippetframe.h \
 		$(srcdir)/../menuidentifiers.h \
-		$(srcdir)/../messageBoxForm.h \
-		$(srcdir)/../messagebox.h \
+		$(srcdir)/../GenericMessageBox.h \
 		$(srcdir)/../settingsdlg.h \
 		$(srcdir)/../settingsdlgform.h \
 		$(srcdir)/../snippetitemdata.h \

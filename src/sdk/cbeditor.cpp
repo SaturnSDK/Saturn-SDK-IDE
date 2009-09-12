@@ -101,6 +101,9 @@ struct cbEditorInternalData
 
         if (m_pFileLoader)
         {
+#ifdef fileload_measuring
+            wxStopWatch sw;
+#endif
             EncodingDetector enc(fileLoader);
             if (enc.IsOK())
             {
@@ -108,6 +111,9 @@ struct cbEditorInternalData
                 m_useByteOrderMark = enc.UsesBOM();
                 m_encoding = enc.GetFontEncoding();
             }
+#ifdef fileload_measuring
+            Manager::Get()->GetLogManager()->DebugLog(F(_T("Encoding via fileloader took : %d ms"),(int)sw.Time()));
+#endif
         }
     }
 
@@ -221,7 +227,150 @@ struct cbEditorInternalData
         return -1;
     }
 
-    /** Strip Trailing Blanks before saving */
+    bool IsComment( int style )
+    {
+        cbStyledTextCtrl* control = m_pOwner->GetControl();
+        switch ( control->GetLexer() )
+        {
+            case wxSCI_LEX_CPP:
+                return  style == wxSCI_C_COMMENT ||
+                        style == wxSCI_C_COMMENTLINE ||
+                        style == wxSCI_C_COMMENTDOC ||
+                        style == wxSCI_C_COMMENTDOCKEYWORD ||
+                        style == wxSCI_C_COMMENTDOCKEYWORDERROR ||
+                        style == wxSCI_C_COMMENTLINEDOC;
+            case wxSCI_LEX_D:
+                return  style == wxSCI_D_COMMENT ||
+                        style == wxSCI_D_COMMENTLINE ||
+                        style == wxSCI_D_COMMENTDOC ||
+                        style == wxSCI_D_COMMENTDOCKEYWORD ||
+                        style == wxSCI_D_COMMENTDOCKEYWORDERROR ||
+                        style == wxSCI_D_COMMENTLINEDOC;
+            default:
+                return false;
+        }
+        return false;
+    }
+
+    bool IsPreprocessor( int style )
+    {
+        cbStyledTextCtrl* control = m_pOwner->GetControl();
+        if ( control->GetLexer() == wxSCI_LEX_CPP )
+            return  style == wxSCI_C_PREPROCESSOR;
+        return false;
+    }
+
+    bool IsCharacterOrString( int  style )
+    {
+        cbStyledTextCtrl* control = m_pOwner->GetControl();
+        switch ( control->GetLexer() )
+        {
+            case wxSCI_LEX_CPP:
+                return style == wxSCI_C_STRING || style == wxSCI_C_CHARACTER;
+            case wxSCI_LEX_D:
+                return style == wxSCI_D_STRING || style == wxSCI_D_CHARACTER;
+            default:
+                return false;
+        }
+        return false;
+    }
+
+    bool IsCharacter( int  style )
+    {
+        cbStyledTextCtrl* control = m_pOwner->GetControl();
+        switch ( control->GetLexer() )
+        {
+            case wxSCI_LEX_CPP:
+                return style == wxSCI_C_CHARACTER;
+            case wxSCI_LEX_D:
+                return style == wxSCI_D_CHARACTER;
+            default:
+                return false;
+        }
+        return false;
+    }
+
+    void DoBraceCompletion(const wxChar& ch)
+    {
+        cbStyledTextCtrl* control = m_pOwner->GetControl();
+        int pos = control->GetCurrentPos();
+        int style = control->GetStyleAt(pos);
+        if ( IsComment(style) || IsPreprocessor(style) )
+            return;
+        if ( ch == _T('\'') )
+        {
+            if ( (control->GetCharAt(pos) == ch) && (pos > 1) && (control->GetCharAt(pos-2) != _T('\\')) )
+            {
+                control->DeleteBack();
+                control->GotoPos(pos);
+            }
+            else
+            {
+                if ( (control->GetCharAt(pos-2) == _T('\\')) || IsCharacterOrString(style) )
+                    return;
+                control->AddText(ch);
+                control->GotoPos(pos);
+            }
+            return;
+        }
+        if ( ch == _T('"') )
+        {
+            if ( (control->GetCharAt(pos) == ch) && (pos > 1) && (control->GetCharAt(pos-2) != _T('\\')) )
+            {
+                control->DeleteBack();
+                control->GotoPos(pos);
+            }
+            else
+            {
+                if ( (control->GetCharAt(pos-2) == _T('\\')) || IsCharacter(style) )
+                    return;
+                control->AddText(ch);
+                control->GotoPos(pos);
+            }
+            return;
+        }
+        if ( IsCharacterOrString(style) )
+            return;
+        const wxString leftBrace(_T("([{"));
+        const wxString rightBrace(_T(")]}"));
+        int index = leftBrace.find(ch);
+        const wxString unWant(_T(");\n\r\t\b "));
+        #if wxCHECK_VERSION(2, 9, 0)
+        if (index != wxNOT_FOUND && unWant.find(wxUniChar(control->GetCharAt(pos))) != wxNOT_FOUND)
+        #else
+        if (index != wxNOT_FOUND && unWant.find(control->GetCharAt(pos)) != wxNOT_FOUND)
+        #endif
+        {
+                control->AddText(rightBrace.GetChar(index));
+                control->GotoPos(pos);
+                if (ch == _T('{'))
+                {
+                    const wxRegEx reg(_T("^[ \t]*{}[ \t]*"));
+                    if (reg.Matches(control->GetCurLine()))
+                    {
+                        control->NewLine();
+                        control->GotoPos(pos);
+                        control->NewLine();
+                        return;
+                    }
+                }
+        }
+        else
+        {
+            index = rightBrace.find(ch);
+            if (index != wxNOT_FOUND)
+            {
+                if (control->GetCharAt(pos) == ch)
+                {
+                    control->DeleteBack();
+                    control->GotoPos(pos);
+                    return;
+                }
+            }
+        }
+    }
+
+    /** Strip trailing blanks before saving */
     void StripTrailingSpaces()
     {
         cbStyledTextCtrl* control = m_pOwner->GetControl();
@@ -362,15 +511,16 @@ struct cbEditorInternalData
                 flag |= wxSCI_FIND_WHOLEWORD;
             }
             // search for every occurence
-            for ( int pos = m_pOwner->m_pControl->FindText(0, eof, selectedText, flag);
+            int lengthFound = 0; // we need this to work properly with multibyte characters
+            for ( int pos = m_pOwner->m_pControl->FindText(0, eof, selectedText, flag, &lengthFound);
                 pos != wxSCI_INVALID_POSITION ;
-                pos = m_pOwner->m_pControl->FindText(pos+=selectedText.Len(), eof, selectedText, flag) )
+                pos = m_pOwner->m_pControl->FindText(pos+=selectedText.Len(), eof, selectedText, flag, &lengthFound) )
             {
                 // check that the found occurrence is not the same as the selected
                 if ( pos != m_pOwner->m_pControl->GetSelectionStart() )
                 {
                     // highlight it
-                    m_pOwner->m_pControl->IndicatorFillRange(pos, selectedText.length());
+                    m_pOwner->m_pControl->IndicatorFillRange(pos, lengthFound);
                 }
             }
         }
@@ -402,7 +552,7 @@ const int idEmptyMenu = wxNewId();
 const int idEdit = wxNewId();
 const int idUndo = wxNewId();
 const int idRedo = wxNewId();
-const int idDeleteHistory = wxNewId();
+const int idClearHistory = wxNewId();
 const int idCut = wxNewId();
 const int idCopy = wxNewId();
 const int idPaste = wxNewId();
@@ -443,7 +593,7 @@ BEGIN_EVENT_TABLE(cbEditor, EditorBase)
 
     EVT_MENU(idUndo, cbEditor::OnContextMenuEntry)
     EVT_MENU(idRedo, cbEditor::OnContextMenuEntry)
-    EVT_MENU(idDeleteHistory, cbEditor::OnContextMenuEntry)
+    EVT_MENU(idClearHistory, cbEditor::OnContextMenuEntry)
     EVT_MENU(idCut, cbEditor::OnContextMenuEntry)
     EVT_MENU(idCopy, cbEditor::OnContextMenuEntry)
     EVT_MENU(idPaste, cbEditor::OnContextMenuEntry)
@@ -582,6 +732,13 @@ void cbEditor::DoInitializations(const wxString& filename, LoaderBase* fileLdr)
     m_pControl->SetZoom(Manager::Get()->GetEditorManager()->GetZoom());
     m_pSizer->SetItemMinSize(m_pControl, 32, 32);
 
+    // by default we show no markers, marginMasks are set explicitely in "InternalSetEditorStyleBeforeFileOpen()"
+    // and/or by plugins, that use markers, like browsemarks-plugin
+    m_pControl->SetMarginMask(lineMargin, 0);
+    m_pControl->SetMarginMask(markerMargin, 0);
+    m_pControl->SetMarginMask(changebarMargin, 0);
+    m_pControl->SetMarginMask(foldingMargin, 0);
+
     SetEditorStyleBeforeFileOpen();
     m_IsOK = Open();
     SetEditorStyleAfterFileOpen();
@@ -624,11 +781,13 @@ void cbEditor::DestroySplitView()
 
 cbStyledTextCtrl* cbEditor::GetControl() const
 {
-    // return the focused control (left or right)
+    // return the last focused control (left or right)
     if (m_pControl2)
     {
-        wxWindow* focused = wxWindow::FindFocus();
-        if (focused == m_pControl2)
+        // every time a control gets the focus it stores the actual timestamp, the timestamp defaults to 0 so the
+        // greater is the timestamp of the control that had the focus last time
+        // finding the focused window does not work if another control has the keyboard-focus
+        if( m_pControl2->GetLastFocusTime() > m_pControl->GetLastFocusTime() )
             return m_pControl2;
     }
     return m_pControl;
@@ -694,12 +853,12 @@ void cbEditor::SetProjectFile(ProjectFile* project_file, bool preserve_modified)
         else
             m_Shortname = m_pProjectFile->file.GetFullName();
         SetEditorTitle(m_Shortname);
-    }
 
-    if (!wxFileExists(m_Filename))
-        m_pProjectFile->SetFileState(fvsMissing);
-    else if (!wxFile::Access(m_Filename.c_str(), wxFile::write)) // readonly
-        m_pProjectFile->SetFileState(fvsReadOnly);
+        if (!wxFileExists(m_Filename))
+            m_pProjectFile->SetFileState(fvsMissing);
+        else if (!wxFile::Access(m_Filename.c_str(), wxFile::write)) // readonly
+            m_pProjectFile->SetFileState(fvsReadOnly);
+    }
 
 #if 0
     wxString dbg;
@@ -749,7 +908,12 @@ cbStyledTextCtrl* cbEditor::CreateEditor()
 {
     m_ID = wxNewId();
 
-    cbStyledTextCtrl* control = new cbStyledTextCtrl(this, m_ID, wxDefaultPosition, m_pControl ? wxDefaultSize : GetSize());
+    // avoid gtk-critical because of sizes less than -1 (can happen with wxAuiNotebook)
+    wxSize size = m_pControl ? wxDefaultSize : GetSize();
+    size.x = std::max(size.x, -1);
+    size.y = std::max(size.y, -1);
+
+    cbStyledTextCtrl* control = new cbStyledTextCtrl(this, m_ID, wxDefaultPosition, size);
     control->UsePopUp(false);
 
     wxString enc_name = Manager::Get()->GetConfigManager(_T("editor"))->Read(_T("/default_encoding"), wxEmptyString);
@@ -860,6 +1024,18 @@ void cbEditor::Split(cbEditor::SplitType split)
     // create the right control
     m_pControl2 = CreateEditor();
 
+    // update controls' look'n'feel
+    // do it here (before) document is attached, speeds up syntaxhighlighting
+    // we do not call "SetEditorStyleAfterFileOpen" here becaus it calls SetLanguage for the already loaded text inside
+    // the left control and slows down loaduing of large files a lot.
+    ConfigManager* mgr = Manager::Get()->GetConfigManager(_T("editor"));
+    SetFoldingIndicator(mgr->ReadInt(_T("/folding/indicator"), 2));
+    UnderlineFoldedLines(mgr->ReadBool(_T("/folding/underline_folded_line"), true));
+    InternalSetEditorStyleBeforeFileOpen(m_pControl2);
+
+    if (m_pTheme)
+        m_pTheme->Apply(m_lang, m_pControl2);
+
     // and make it a live copy of left control
     m_pControl2->SetDocPointer(m_pControl->GetDocPointer());
 
@@ -887,13 +1063,8 @@ void cbEditor::Split(cbEditor::SplitType split)
             break;
     }
 
-    // update controls' look'n'feel
-    SetEditorStyleBeforeFileOpen();
     SetEditorStyleAfterFileOpen();
 
-    // apply syntax highlighting too
-    if (m_pTheme)
-        m_pTheme->Apply(m_lang, m_pControl2);
 
     // make sure the line numbers margin is correct for the new control
     m_pControl2->SetMarginWidth(lineMargin, m_pControl->GetMarginWidth(lineMargin));
@@ -1055,7 +1226,7 @@ void cbEditor::InternalSetEditorStyleBeforeFileOpen(cbStyledTextCtrl* control)
     }
 
     control->SetUseTabs(mgr->ReadBool(_T("/use_tab"), false));
-    control->SetIndentationGuides(mgr->ReadBool(_T("/show_indent_guides"), false));
+    control->SetIndentationGuides(mgr->ReadBool(_T("/show_indent_guides"), false)?wxSTI_IV_LOOKBOTH:wxSTI_IV_NONE);
     control->SetTabIndents(mgr->ReadBool(_T("/tab_indents"), true));
     control->SetBackSpaceUnIndents(mgr->ReadBool(_T("/backspace_unindents"), true));
     control->SetWrapMode(mgr->ReadBool(_T("/word_wrap"), false));
@@ -1098,7 +1269,9 @@ void cbEditor::InternalSetEditorStyleBeforeFileOpen(cbStyledTextCtrl* control)
     control->SetMarginWidth(markerMargin, 16);
     control->SetMarginType(markerMargin, wxSCI_MARGIN_SYMBOL);
     control->SetMarginSensitive(markerMargin, mgr->ReadBool(_T("/margin_1_sensitive"), true));
-    control->SetMarginMask(markerMargin, (1 << BOOKMARK_MARKER) |
+    // use "|" here or we might break plugins that use the margin (like browsemarks)
+    control->SetMarginMask(markerMargin, control->GetMarginMask(markerMargin) |
+                                         (1 << BOOKMARK_MARKER) |
                                          (1 << BREAKPOINT_MARKER) |
                                          (1 << DEBUG_MARKER) |
                                          (1 << ERROR_MARKER));
@@ -1127,7 +1300,9 @@ void cbEditor::InternalSetEditorStyleBeforeFileOpen(cbStyledTextCtrl* control)
         control->SetFoldFlags(16);
         control->SetMarginType(foldingMargin, wxSCI_MARGIN_SYMBOL);
         control->SetMarginWidth(foldingMargin, 16);
-        control->SetMarginMask(foldingMargin, wxSCI_MASK_FOLDERS - ((1 << wxSCI_MARKNUM_CHANGEUNSAVED) | (1 << wxSCI_MARKNUM_CHANGESAVED)));
+        // use "|" here or we might break plugins that use the margin (none at the moment)
+        control->SetMarginMask(foldingMargin, control->GetMarginMask(foldingMargin) |
+                                              (wxSCI_MASK_FOLDERS - ((1 << wxSCI_MARKNUM_CHANGEUNSAVED) | (1 << wxSCI_MARKNUM_CHANGESAVED))));
         control->SetMarginSensitive(foldingMargin, 1);
 
         /*Default behaviour
@@ -1163,7 +1338,9 @@ void cbEditor::InternalSetEditorStyleBeforeFileOpen(cbStyledTextCtrl* control)
         control->SetMarginWidth(changebarMargin, 4);
         control->SetMarginType(changebarMargin,  wxSCI_MARGIN_SYMBOL); 
         control->SetMarginWidth(changebarMargin, 4); 
-        control->SetMarginMask(changebarMargin, (1 << wxSCI_MARKNUM_CHANGEUNSAVED) | (1 << wxSCI_MARKNUM_CHANGESAVED) ); 
+        // use "|" here or we might break plugins that use the margin (none at the moment)
+        control->SetMarginMask(changebarMargin, control->GetMarginMask(changebarMargin) |
+                                                (1 << wxSCI_MARKNUM_CHANGEUNSAVED) | (1 << wxSCI_MARKNUM_CHANGESAVED) );
      
         control->MarkerDefine(wxSCI_MARKNUM_CHANGEUNSAVED, wxSCI_MARK_LEFTRECT); 
         control->MarkerSetBackground(wxSCI_MARKNUM_CHANGEUNSAVED, wxColour(0xFF, 0xE6, 0x04)); 
@@ -1172,6 +1349,8 @@ void cbEditor::InternalSetEditorStyleBeforeFileOpen(cbStyledTextCtrl* control)
     }
     else
         control->SetMarginWidth(changebarMargin, 0);
+
+    control->SetScrollWidthTracking(mgr->ReadBool(_T("/margin/scroll_width_tracking"), false));
 }
 
 // static
@@ -1280,7 +1459,9 @@ void cbEditor::DetectEncoding( )
 {
     if (!m_pData)
         return;
-
+#ifdef fileload_measuring
+    wxStopWatch sw;
+#endif
     EncodingDetector detector(m_Filename);
     if (!detector.IsOK())
         return;
@@ -1297,6 +1478,9 @@ void cbEditor::DetectEncoding( )
         wxString enc_name = Manager::Get()->GetConfigManager(_T("editor"))->Read(_T("/default_encoding"), wxLocale::GetSystemEncodingName());
         m_pData->m_encoding = wxFontMapper::GetEncodingFromName(enc_name);
     }
+#ifdef fileload_measuring
+    Manager::Get()->GetLogManager()->DebugLog(F(_T("Encoding via filename took : %d ms"),(int)sw.Time()));
+#endif
 }
 
 void cbEditor::SetLanguage( HighlightLanguage lang )
@@ -1339,6 +1523,9 @@ bool cbEditor::Open(bool detectEncoding)
         m_pData->m_pFileLoader = Manager::Get()->GetFileManager()->Load(m_Filename, false);
     }
 
+#ifdef fileload_measuring
+    wxStopWatch sw;
+#endif
     EncodingDetector enc((wxByte*)m_pData->m_pFileLoader->GetData(), m_pData->m_pFileLoader->GetLength());
     st = enc.GetWxStr();
     if (detectEncoding)
@@ -1353,7 +1540,11 @@ bool cbEditor::Open(bool detectEncoding)
     }
 
     ConfigManager* mgr = Manager::Get()->GetConfigManager(_T("editor"));
-    
+#ifdef fileload_measuring
+    Manager::Get()->GetLogManager()->DebugLog(F(_T("cbEditor::Open() => Encoding detection and conversion took : %d ms"),(int)sw.Time()));
+    sw.Start();
+#endif
+
     m_pControl->InsertText(0, st);
     m_pControl->EmptyUndoBuffer(mgr->ReadBool(_T("/margin/use_changebar"), true));
     m_pControl->SetModEventMask(wxSCI_MODEVENTMASKALL);
@@ -1361,7 +1552,7 @@ bool cbEditor::Open(bool detectEncoding)
     // mark the file read-only, if applicable
     bool read_only = !wxFile::Access(m_Filename.c_str(), wxFile::write);
     m_pControl->SetReadOnly(read_only);
-    SetLanguage(HL_AUTO);
+//    SetLanguage(HL_AUTO); // bottleneck !!! no need to set it here, it's already done in SetEditorStyleBeforeFileOpen
 
     if (Manager::Get()->GetConfigManager(_T("editor"))->ReadBool(_T("/folding/fold_all_on_open"), false))
         FoldAll();
@@ -1381,7 +1572,9 @@ bool cbEditor::Open(bool detectEncoding)
         delete m_pData->m_pFileLoader;
         m_pData->m_pFileLoader = 0;
     }
-
+#ifdef fileload_measuring
+    Manager::Get()->GetLogManager()->DebugLog(F(_T("loading into editor needs : %d ms"),(int)sw.Time()));
+#endif
     return true;
 }
 
@@ -1476,23 +1669,26 @@ bool cbEditor::SaveAs()
     {
         Path = mgr->Read(_T("/file_dialogs/save_file_as/directory"), Path);
     }
-    wxFileDialog* dlg = new wxFileDialog(Manager::Get()->GetAppWindow(),
+    wxFileDialog dlg(Manager::Get()->GetAppWindow(),
                                          _("Save file"),
                                          Path,
                                          fname.GetFullName(),
                                          Filters,
                                          wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
-    dlg->SetFilterIndex(StoredIndex);
-    PlaceWindow(dlg);
-    if (dlg->ShowModal() != wxID_OK)
+    dlg.SetFilterIndex(StoredIndex);
+    PlaceWindow(&dlg);
+    if (dlg.ShowModal() != wxID_OK)
     {  // cancelled out
         return false;
     }
-    m_Filename = dlg->GetPath();
+    m_Filename = dlg.GetPath();
     Manager::Get()->GetLogManager()->Log(m_Filename);
     fname.Assign(m_Filename);
     m_Shortname = fname.GetFullName();
     SetEditorTitle(m_Shortname);
+    // invalidate m_pProjectFile, because if kept, it would point to the ProjectFile with old name and
+    // cause ProjectManager::RemoveFileFromProject called via context menu to crash
+    SetProjectFile(0);
     //Manager::Get()->GetLogManager()->Log(mltDevDebug, "Filename=%s\nShort=%s", m_Filename.c_str(), m_Shortname.c_str());
     m_IsOK = true;
     SetModified(true);
@@ -1500,16 +1696,15 @@ bool cbEditor::SaveAs()
     // store the last used filter and directory
     if(mgr)
     {
-        int Index = dlg->GetFilterIndex();
+        int Index = dlg.GetFilterIndex();
         wxString Filter;
         if(FileFilters::GetFilterNameFromIndex(Filters, Index, Filter))
         {
             mgr->Write(_T("/file_dialogs/save_file_as/filter"), Filter);
         }
-        wxString Test = dlg->GetDirectory();
-        mgr->Write(_T("/file_dialogs/save_file_as/directory"), dlg->GetDirectory());
+        wxString Test = dlg.GetDirectory();
+        mgr->Write(_T("/file_dialogs/save_file_as/directory"), dlg.GetDirectory());
     }
-    dlg->Destroy();
     return Save();
 } // end of SaveAs
 
@@ -1839,13 +2034,13 @@ void cbEditor::GotoLine(int line, bool centerOnScreen)
 
     // Make sure the line is not folded. This is done before moving to that
     // line because folding may change the lines layout.
-	control->EnsureVisible(line);
+    control->EnsureVisible(line);
 
-	// If the line or the following is a fold point it will be unfolded, in this way
-	// when the line is a function declaration (or only contains the opening brace of it [yes, that happens sometimes] )
-	// the body is shown.
-	DoFoldLine(line,0);
-	DoFoldLine(line+1,0);
+    // If the line or the following is a fold point it will be unfolded, in this way
+    // when the line is a function declaration (or only contains the opening brace of it [yes, that happens sometimes] )
+    // the body is shown.
+    DoFoldLine(line,0);
+    DoFoldLine(line+1,0);
 
     if (centerOnScreen)
     {
@@ -2023,7 +2218,7 @@ void cbEditor::Redo()
     GetControl()->Redo();
 }
 
-void cbEditor::DeleteHistory()
+void cbEditor::ClearHistory()
 {
     cbAssert(GetControl());
     GetControl()->EmptyUndoBuffer(Manager::Get()->GetConfigManager(_T("editor"))->ReadBool(_T("/margin/use_changebar"), true));
@@ -2083,6 +2278,12 @@ void cbEditor::SetChangeCollection(bool collectChange)
 {
     cbAssert(GetControl());
     GetControl()->SetChangeCollection(collectChange);
+}
+
+void cbEditor::SetScrollWidthTracking(bool trackWidth)
+{
+    cbAssert(GetControl());
+    GetControl()->SetScrollWidthTracking(trackWidth);
 }
 
 void cbEditor::Cut()
@@ -2204,7 +2405,9 @@ void cbEditor::HighlightBraces()
     if (newPos == wxSCI_INVALID_POSITION)
     {
         if(currPos > 0)
+        {
             currPos--;
+        }
         newPos = control->BraceMatch(currPos);
     }
     wxChar ch = control->GetCharAt(currPos);
@@ -2212,12 +2415,21 @@ void cbEditor::HighlightBraces()
         ch == _T('}') || ch == _T(']') || ch == _T(')'))
     {
         if (newPos != wxSCI_INVALID_POSITION)
+        {
             control->BraceHighlight(currPos, newPos);
+            const int currColum = control->GetColumn(currPos);
+            const int newColum = control->GetColumn(newPos);
+            control->SetHighlightGuide((currColum < newColum) ? currColum :newColum);
+        }
         else
+        {
             control->BraceBadLight(currPos);
+        }
     }
     else
+    {
         control->BraceHighlight(-1, -1);
+    }
 }
 
 int cbEditor::GetLineIndentInSpaces(int line) const
@@ -2232,11 +2444,17 @@ int cbEditor::GetLineIndentInSpaces(int line) const
     for (unsigned int i = 0; i < len; ++i)
     {
         if (text[i] == _T(' '))
+        {
             ++spaceCount;
+        }
         else if (text[i] == _T('\t'))
+        {
             spaceCount += control->GetTabWidth();
+        }
         else
+        {
             break;
+        }
     }
     return spaceCount;
 }
@@ -2253,9 +2471,13 @@ wxString cbEditor::GetLineIndentString(int line) const
     for (unsigned int i = 0; i < len; ++i)
     {
         if (text[i] == _T(' ') || text[i] == _T('\t'))
+        {
             indent << text[i];
+        }
         else
+        {
             break;
+        }
     }
     return indent;
 }
@@ -2276,7 +2498,7 @@ wxMenu* cbEditor::CreateContextSubMenu(long id)
         menu = new wxMenu;
         menu->Append(idUndo, _("Undo"));
         menu->Append(idRedo, _("Redo"));
-        menu->Append(idDeleteHistory, _("Delete History"));
+        menu->Append(idClearHistory, _("Clear changes history"));
         menu->AppendSeparator();
         menu->Append(idCut, _("Cut"));
         menu->Append(idCopy, _("Copy"));
@@ -2292,7 +2514,7 @@ wxMenu* cbEditor::CreateContextSubMenu(long id)
 
         menu->Enable(idUndo, control->CanUndo());
         menu->Enable(idRedo, control->CanRedo());
-        menu->Enable(idDeleteHistory, control->CanUndo() || control->CanRedo());
+        menu->Enable(idClearHistory, control->CanUndo() || control->CanRedo());
         menu->Enable(idCut, !control->GetReadOnly() && hasSel);
         menu->Enable(idCopy, hasSel);
 
@@ -2549,7 +2771,7 @@ void cbEditor::OnContextMenuEntry(wxCommandEvent& event)
         control->Undo();
     else if (id == idRedo)
         control->Redo();
-    else if (id == idDeleteHistory)
+    else if (id == idClearHistory)
         control->EmptyUndoBuffer(Manager::Get()->GetConfigManager(_T("editor"))->ReadBool(_T("/margin/use_changebar"), true));
     else if (id == idCut)
         control->Cut();
@@ -2681,7 +2903,10 @@ void cbEditor::OnEditorCharAdded(wxScintillaEvent& event)
         if (autoIndent && currLine > 0)
         {
             wxString indent = GetLineIndentString(currLine - 1);
-            if (smartIndent)
+            if (   smartIndent
+                && (   (control->GetLexer() == wxSCI_LEX_CPP)
+                    || (control->GetLexer() == wxSCI_LEX_D)
+                    || (control->GetLexer() == wxSCI_LEX_PYTHON) ) )
             {
                 // if the last entered char before newline was an opening curly brace,
                 // increase indentation level (the closing brace is handled in another block)
@@ -2691,6 +2916,7 @@ void cbEditor::OnEditorCharAdded(wxScintillaEvent& event)
                 switch(control->GetLexer())
                 {
                     case wxSCI_LEX_CPP:
+                    case wxSCI_LEX_D:
                         if (b == _T('{'))
                         {
                             int nonblankpos;
@@ -2735,7 +2961,7 @@ void cbEditor::OnEditorCharAdded(wxScintillaEvent& event)
     else if (ch == _T('}'))
     {
         bool smartIndent = Manager::Get()->GetConfigManager(_T("editor"))->ReadBool(_T("/smart_indent"), true);
-        if ( smartIndent && (control->GetLexer() == wxSCI_LEX_CPP) )
+        if ( smartIndent && ( (control->GetLexer() == wxSCI_LEX_CPP) || (control->GetLexer() == wxSCI_LEX_D) ) )
         {
             control->BeginUndoAction();
             // undo block indentation, if needed
@@ -2761,6 +2987,15 @@ void cbEditor::OnEditorCharAdded(wxScintillaEvent& event)
                 }
             }
             control->EndUndoAction();
+        }
+    }
+
+    bool braceCompletion = Manager::Get()->GetConfigManager(_T("editor"))->ReadBool(_T("/brace_completion"), true);
+    if ( braceCompletion )
+    {
+        if ( control->GetLexer() == wxSCI_LEX_CPP || control->GetLexer() == wxSCI_LEX_D )
+        {
+            m_pData->DoBraceCompletion(ch );
         }
     }
 
@@ -2906,4 +3141,14 @@ void cbEditor::OnScintillaEvent(wxScintillaEvent& event)
     {
         EditorHooks::CallHooks(this, event);
     }
+}
+
+bool cbEditor::CanSelectAll() const
+{
+    return GetControl()->GetLength() > 0;
+}
+
+void cbEditor::SelectAll()
+{
+    GetControl()->SelectAll();
 }

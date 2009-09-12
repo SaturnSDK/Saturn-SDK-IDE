@@ -1,7 +1,8 @@
-SUBDIRS = scripting tinyxml wxscintilla wxFlatNotebook
+SUBDIRS = scripting tinyxml wxscintilla
 
 if PRECOMPILE_HEADERS
-BUILT_SOURCES = $(top_srcdir)/src/include/sdk_precomp.h.gch
+BUILT_SOURCES = $(top_srcdir)/src/include/sdk.h.gch \
+		$(top_srcdir)/src/include/sdk_precomp.h.gch
 else
 BUILT_SOURCES = 
 endif
@@ -11,8 +12,8 @@ INCLUDES = $(WX_CXXFLAGS) \
 			-I$(top_srcdir)/src/include/wxscintilla/include \
 			-I$(top_srcdir)/src/include/tinyxml \
 			-I$(top_srcdir)/src/include/scripting/include \
-			-I$(top_srcdir)/src/include/scripting/sqplus \
-			-I$(top_srcdir)/src/include/wxFlatNotebook/include
+ 			-I$(top_srcdir)/src/include/scripting/sqplus \
+			-I$(top_srcdir)/src/include/mozilla_chardet
 
 # Because we are not generating any programs/libraries with this makefile,
 # $(CXXCOMPILE) is empty.
@@ -122,13 +123,43 @@ ALLHEADERS = annoyingdialog.h \
 				uservarmanager.h \
 				virtualbuildtargetsdlg.h \
 				workspaceloader.h \
-				xtra_res.h
+				xtra_res.h \
+				mozilla_chardet/CharDistribution.h \
+				mozilla_chardet/JpCntx.h \
+				mozilla_chardet/nsBig5Prober.h \
+				mozilla_chardet/nsCharSetProber.h \
+				mozilla_chardet/nsCodingStateMachine.h \
+				mozilla_chardet/nscore.h \
+				mozilla_chardet/nsError.h \
+				mozilla_chardet/nsEscCharsetProber.h \
+				mozilla_chardet/nsEUCJPProber.h \
+				mozilla_chardet/nsEUCKRProber.h \
+				mozilla_chardet/nsEUCTWProber.h \
+				mozilla_chardet/nsGB2312Prober.h \
+				mozilla_chardet/nsHebrewProber.h \
+				mozilla_chardet/nsLatin1Prober.h \
+				mozilla_chardet/nsMBCSGroupProber.h \
+				mozilla_chardet/nsPkgInt.h \
+				mozilla_chardet/nsSBCharSetProber.h \
+				mozilla_chardet/nsSBCSGroupProber.h \
+				mozilla_chardet/nsSJISProber.h \
+				mozilla_chardet/nsUniversalDetector.h \
+				mozilla_chardet/nsUTF8Prober.h \
+				mozilla_chardet/prcpucfg.h \
+				mozilla_chardet/prmem.h \
+				mozilla_chardet/prtypes.h
+
 
 sdk_HEADERS = $(ALLHEADERS)
+
+$(top_srcdir)/src/include/sdk.h.gch: $(ALLHEADERS)
+	-rm -f $(top_srcdir)/src/include/sdk.h.gch
+	$(CXXCOMPILE) -o $(top_srcdir)/src/include/sdk.h.gch -xc++-header $(srcdir)/sdk.h
 
 $(top_srcdir)/src/include/sdk_precomp.h.gch: $(ALLHEADERS)
 	-rm -f $(top_srcdir)/src/include/sdk_precomp.h.gch
 	$(CXXCOMPILE) -o $(top_srcdir)/src/include/sdk_precomp.h.gch -xc++-header $(srcdir)/sdk_precomp.h
 
 clean-local:
+	-rm -f $(top_srcdir)/src/include/sdk.h.gch
 	-rm -f $(top_srcdir)/src/include/sdk_precomp.h.gch

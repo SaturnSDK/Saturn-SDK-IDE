@@ -58,10 +58,12 @@
 #include "batchbuild.h"
 #include <wx/printdlg.h>
 #include <wx/filename.h>
-#include <wx/wxFlatNotebook/wxFlatNotebook.h>
+#include <wx/aui/auibook.h>
 
 #include "uservarmanager.h"
 #include "infowindow.h"
+#include "notebookstyles.h"
+#include "switcherdlg.h"
 
 class wxMyFileDropTarget : public wxFileDropTarget
 {
@@ -208,6 +210,7 @@ int idViewLogManager = XRCID("idViewLogManager");
 int idViewStatusbar = XRCID("idViewStatusbar");
 int idViewScriptConsole = XRCID("idViewScriptConsole");
 int idViewFocusEditor = XRCID("idViewFocusEditor");
+int idViewSwitchTabs = XRCID("idViewSwitchTabs");
 int idViewFullScreen = XRCID("idViewFullScreen");
 
 int idSearchFind = XRCID("idSearchFind");
@@ -427,6 +430,7 @@ BEGIN_EVENT_TABLE(MainFrame, wxFrame)
     EVT_MENU(idViewStatusbar, MainFrame::OnToggleStatusBar)
     EVT_MENU(idViewScriptConsole, MainFrame::OnViewScriptConsole)
     EVT_MENU(idViewFocusEditor, MainFrame::OnFocusEditor)
+    EVT_MENU(idViewSwitchTabs, MainFrame::OnSwitchTabs)
     EVT_MENU(idViewFullScreen, MainFrame::OnToggleFullScreen)
 
     EVT_MENU(idSettingsEnvironment, MainFrame::OnSettingsEnvironment)
@@ -749,10 +753,18 @@ void MainFrame::RunStartupScripts()
                     else if (!se.menu.IsEmpty())
                         Manager::Get()->GetScriptingManager()->RegisterScriptMenu(se.menu, startup, false);
                     else
+                    #if wxCHECK_VERSION(2, 9, 0)
+                        Manager::Get()->GetLogManager()->LogWarning(F(_("Startup script/function '%s' not loaded: invalid configuration"), se.script.wx_str()));
+                    #else
                         Manager::Get()->GetLogManager()->LogWarning(F(_("Startup script/function '%s' not loaded: invalid configuration"), se.script.c_str()));
+                    #endif
                 }
                 else
+                #if wxCHECK_VERSION(2, 9, 0)
+                    Manager::Get()->GetLogManager()->LogWarning(F(_("Startup script '%s' not found"), se.script.wx_str()));
+                #else
                     Manager::Get()->GetLogManager()->LogWarning(F(_("Startup script '%s' not found"), se.script.c_str()));
+                #endif
             }
             catch (SquirrelError& exception)
             {
@@ -916,6 +928,28 @@ void MainFrame::CreateMenubar()
 
     Manager::Get()->GetToolsManager()->BuildToolsMenu(m_ToolsMenu);
 
+    // Ctrl+Tab workaround for non windows platforms:
+    if ((platform::carbon) || (platform::gtk))
+    {
+        // Find the menu item for tab switching:
+        tmpidx = mbar->FindMenu(_("&View"));
+        if (tmpidx != wxNOT_FOUND)
+        {
+            wxMenu* view = mbar->GetMenu(tmpidx);
+            wxMenuItem* switch_item = view->FindItem(idViewSwitchTabs);
+            if (switch_item)
+            {
+                // Change the accelerator for this menu item:
+                wxString accel;
+                if (platform::carbon)
+                    accel = wxT("Alt+Tab");
+                else if (platform::gtk)
+                    accel = wxT("Ctrl+,");
+                switch_item->SetItemLabel(wxString(_("S&witch Tabs")) + wxT("\t") + accel);
+            }
+        }
+    }
+
     SetMenuBar(mbar);
     InitializeRecentFilesHistory();
 
@@ -1029,7 +1063,11 @@ wxMenuItem* MainFrame::AddPluginInMenus(wxMenu* menu, cbPlugin* plugin, wxObject
 
     while(!item)
     {
+        #if wxCHECK_VERSION(2, 9, 0)
+        if(!pos || title.CmpNoCase(menu->FindItemByPosition(pos - 1)->GetItemLabelText()) > 0)
+        #else
         if(!pos || title.CmpNoCase(menu->FindItemByPosition(pos - 1)->GetLabel()) > 0)
+        #endif
             item = menu->Insert(pos, id, title, wxEmptyString, checkable ? wxITEM_CHECK : wxITEM_NORMAL);
 
         --pos;
@@ -1334,7 +1372,11 @@ void MainFrame::DoSelectLayout(const wxString& name)
         {
             if (!items[i]->IsCheckable())
                 continue;
+            #if wxCHECK_VERSION(2, 9, 0)
+            items[i]->Check(items[i]->GetItemLabel().IsSameAs(name));
+            #else
             items[i]->Check(items[i]->GetText().IsSameAs(name));
+            #endif
         }
 
         if (!m_LastLayoutIsTemp)
@@ -1455,17 +1497,16 @@ bool MainFrame::Open(const wxString& filename, bool addToHistory)
 
 wxString MainFrame::ShowOpenFileDialog(const wxString& caption, const wxString& filter)
 {
-    wxFileDialog* dlg = new wxFileDialog(this,
-                            caption,
-                            wxEmptyString,
-                            wxEmptyString,
-                            filter,
-                            wxFD_OPEN | compatibility::wxHideReadonly);
+    wxFileDialog dlg(this,
+                     caption,
+                     wxEmptyString,
+                     wxEmptyString,
+                     filter,
+                     wxFD_OPEN | compatibility::wxHideReadonly);
     wxString sel;
-    PlaceWindow(dlg);
-    if (dlg->ShowModal() == wxID_OK)
-        sel = dlg->GetPath();
-    dlg->Destroy();
+    PlaceWindow(&dlg);
+    if (dlg.ShowModal() == wxID_OK)
+        sel = dlg.GetPath();
     return sel;
 }
 
@@ -1487,13 +1528,22 @@ bool MainFrame::OpenGeneric(const wxString& filename, bool addToHistory)
                 DoCloseCurrentWorkspace())
             {
                 wxBusyCursor wait; // loading a worspace can take some time -> showhourglass
+                ShowHideStartPage(true); // hide startherepage, so we can use full tab-range
                 bool ret = Manager::Get()->GetProjectManager()->LoadWorkspace(filename);
-                if (ret && addToHistory)
+                if(!ret)
+                {
+                    ShowHideStartPage(); // show/hide startherepage, dependant of settings, if loading failed
+                }
+                else if (addToHistory)
+                {
                     AddToRecentProjectsHistory(Manager::Get()->GetProjectManager()->GetWorkspace()->GetFilename());
+                }
                 return ret;
             }
             else
+            {
                 return false;
+            }
             break;
 
         //
@@ -1556,13 +1606,17 @@ bool MainFrame::DoOpenProject(const wxString& filename, bool addToHistory)
         return false;
     }
 
+    ShowHideStartPage(true); // hide startherepage, so we can use full tab-range
     cbProject* prj = Manager::Get()->GetProjectManager()->LoadProject(filename, true);
     if (prj)
     {
         if (addToHistory)
+        {
             AddToRecentProjectsHistory(prj->GetFilename());
+        }
         return true;
     }
+    ShowHideStartPage(); // show/hide startherepage, dependant of settings, if loading failed
     return false;
 }
 
@@ -1627,7 +1681,11 @@ void MainFrame::DoUpdateStatusBar()
         SetStatusText(ed->GetEncodingName(), panel++);
         SetStatusText(msg, panel++);
         SetStatusText(ed->GetControl()->GetOvertype() ? _("Overwrite") : _("Insert"), panel++);
+        #if wxCHECK_VERSION(2, 9, 0)
+        SetStatusText(ed->GetModified() ? _("Modified") : _T(""), panel++);
+        #else
         SetStatusText(ed->GetModified() ? _("Modified") : wxEmptyString, panel++);
+        #endif
         SetStatusText(ed->GetControl()->GetReadOnly() ? _("Read only") : _("Read/Write"), panel++);
         SetStatusText(personality, panel++);
     }
@@ -1645,64 +1703,53 @@ void MainFrame::DoUpdateStatusBar()
 #endif // wxUSE_STATUSBAR
 }
 
-void MainFrame::DoUpdateEditorStyle(wxFlatNotebook* target, const wxString& prefix, long defaultStyle)
+void MainFrame::DoUpdateEditorStyle(wxAuiNotebook* target, const wxString& prefix, long defaultStyle)
 {
     if (!target)
         return;
 
     ConfigManager* cfg = Manager::Get()->GetConfigManager(_T("app"));
+    target->SetTabCtrlHeight(-1);
     long nbstyle = cfg->ReadInt(_T("/environment/tabs_style"), 0);
     switch (nbstyle)
     {
-        case 1: // gradient
-            nbstyle = wxFNB_FANCY_TABS;
+        case 1: // simple style
+            target->SetArtProvider(new wxAuiSimpleTabArt());
             break;
 
-        case 2: // vc71
-            nbstyle = wxFNB_VC71;
+        case 2: // VC 7.1 style
+            target->SetArtProvider(new NbStyleVC71());
             break;
 
-        case 3: // vc8
-            nbstyle = wxFNB_VC8;
+        case 3: // Firefox 2 style
+            target->SetArtProvider(new NbStyleFF2());
             break;
 
-        case 4: // ff2
-            nbstyle = wxFNB_FF2;
-            break;
-
-        default:
-            nbstyle = 0;
+        default: // default style
+            target->SetArtProvider(new wxAuiDefaultTabArt());
             break;
     }
-    nbstyle |= defaultStyle;
-    if (cfg->ReadBool(_T("/environment/") + prefix + _T("_tabs_bottom")))
-        nbstyle |= wxFNB_BOTTOM;
 
-    if (cfg->ReadBool(_T("/environment/tabs_smart")))
-        nbstyle |= wxFNB_SMART_TABS;
+    nbstyle = defaultStyle;
+    if (cfg->ReadBool(_T("/environment/") + prefix + _T("_tabs_bottom")))
+        nbstyle |= wxAUI_NB_BOTTOM;
 
     if (cfg->ReadBool(_T("/environment/tabs_list")))
-    {
-        nbstyle |= wxFNB_DROPDOWN_TABS_LIST;
-        nbstyle |= wxFNB_NO_NAV_BUTTONS;
-    }
+        nbstyle |= wxAUI_NB_WINDOWLIST_BUTTON;
 
     target->SetWindowStyleFlag(nbstyle);
-    target->SetGradientColorBorder(cfg->ReadColour(_T("/environment/gradient_border"), wxColour(wxSystemSettings::GetColour(wxSYS_COLOUR_BTNSHADOW))));
-    target->SetGradientColorFrom(cfg->ReadColour(_T("/environment/gradient_from"), wxColour(wxSystemSettings::GetColour(wxSYS_COLOUR_3DFACE))));
-    target->SetGradientColorTo(cfg->ReadColour(_T("/environment/gradient_to"), *wxWHITE));
 }
 
 void MainFrame::DoUpdateEditorStyle()
 {
-    wxFlatNotebook* fn = Manager::Get()->GetEditorManager()->GetNotebook();
-    DoUpdateEditorStyle(fn, _T("editor"), wxFNB_MOUSE_MIDDLE_CLOSES_TABS | wxFNB_X_ON_TAB | wxFNB_NO_X_BUTTON);
+    wxAuiNotebook* an = Manager::Get()->GetEditorManager()->GetNotebook();
+    DoUpdateEditorStyle(an, _T("editor"), wxAUI_NB_DEFAULT_STYLE | wxNO_FULL_REPAINT_ON_RESIZE | wxCLIP_CHILDREN);
 
-    fn = m_pInfoPane;
-    DoUpdateEditorStyle(fn, _T("message"), wxFNB_NO_X_BUTTON);
+    an = m_pInfoPane;
+    DoUpdateEditorStyle(an, _T("message"), wxAUI_NB_SCROLL_BUTTONS | wxAUI_NB_TAB_MOVE | wxAUI_NB_TAB_SPLIT);
 
-    fn = Manager::Get()->GetProjectManager()->GetNotebook();
-    DoUpdateEditorStyle(fn, _T("project"), wxFNB_NO_X_BUTTON);
+    an = Manager::Get()->GetProjectManager()->GetNotebook();
+    DoUpdateEditorStyle(an, _T("project"), wxAUI_NB_SCROLL_BUTTONS | wxAUI_NB_TAB_MOVE);
 }
 
 void MainFrame::DoUpdateLayoutColours()
@@ -1793,6 +1840,8 @@ void MainFrame::ShowHideStartPage(bool forceHasProject)
         sh = new StartHerePage(this, Manager::Get()->GetEditorManager()->GetNotebook());
     else if (!show && sh)
         sh->Destroy();
+
+    DoUpdateAppTitle();
 }
 
 void MainFrame::ShowHideScriptConsole()
@@ -2332,36 +2381,34 @@ void MainFrame::DoOnFileOpen(bool bProject)
             FileFilters::GetFilterIndexFromName(Filters, _("Code::Blocks project files"), StoredIndex);
         }
     }
-    wxFileDialog* dlg = new wxFileDialog(this,
+    wxFileDialog dlg(this,
                             _("Open file"),
                             Path,
                             wxEmptyString,
                             Filters,
                             wxFD_OPEN | wxFD_MULTIPLE | compatibility::wxHideReadonly);
-    dlg->SetFilterIndex(StoredIndex);
+    dlg.SetFilterIndex(StoredIndex);
 
-    PlaceWindow(dlg);
-    if (dlg->ShowModal() == wxID_OK)
+    PlaceWindow(&dlg);
+    if (dlg.ShowModal() == wxID_OK)
     {
         // store the last used filter and directory
         // as said : don't do this in case of an 'open project'
         if(mgr && !bProject)
         {
-            int Index = dlg->GetFilterIndex();
+            int Index = dlg.GetFilterIndex();
             wxString Filter;
             if(FileFilters::GetFilterNameFromIndex(Filters, Index, Filter))
             {
                 mgr->Write(_T("/file_dialogs/file_new_open/filter"), Filter);
             }
-            wxString Test = dlg->GetDirectory();
-            mgr->Write(_T("/file_dialogs/file_new_open/directory"), dlg->GetDirectory());
+            wxString Test = dlg.GetDirectory();
+            mgr->Write(_T("/file_dialogs/file_new_open/directory"), dlg.GetDirectory());
         }
         wxArrayString files;
-        dlg->GetPaths(files);
+        dlg.GetPaths(files);
         OnDropFiles(0,0,files);
     }
-
-    dlg->Destroy();
 } // end of DoOnFileOpen
 
 void MainFrame::OnFileOpen(wxCommandEvent& event)
@@ -2939,179 +2986,6 @@ void MainFrame::OnEditSelectAll(wxCommandEvent& event)
         ed->GetControl()->SelectAll();
 }
 
-CommentToken GetCommentToken(cbStyledTextCtrl* stc)
-{
-    CommentToken comment;
-    comment.lineComment        = _T("");
-    comment.streamCommentStart = _T("");
-    comment.streamCommentEnd   = _T("");
-    comment.boxCommentStart    = _T("");
-    comment.boxCommentMid      = _T("");
-    comment.boxCommentEnd      = _T("");
-
-    switch(stc->GetLexer())
-    {
-        case wxSCI_LEX_CONTAINER:  comment.lineComment = _T(""); break;
-        case wxSCI_LEX_NULL:       comment.lineComment = _T(""); break;
-        case wxSCI_LEX_PYTHON:     comment.lineComment = _T("#"); break;
-        case wxSCI_LEX_CPP:
-            comment.lineComment        = _T("//");
-            comment.streamCommentStart = _T("/*");
-            comment.streamCommentEnd   = _T("*/");
-            comment.boxCommentStart    = _T("/* ");
-            comment.boxCommentMid      = _T(" * ");
-            comment.boxCommentEnd      = _T(" */");
-            break;
-        case wxSCI_LEX_HTML:
-            comment.lineComment        = _T("//");
-            comment.streamCommentStart = _T("/*");
-            comment.streamCommentEnd   = _T("*/");
-            comment.boxCommentStart    = _T("/* ");
-            comment.boxCommentMid      = _T(" * ");
-            comment.boxCommentEnd      = _T(" */");
-            break; // PHP uses HTML lexer
-        case wxSCI_LEX_XML:
-            comment.streamCommentStart = _T("<!--");
-            comment.streamCommentEnd   = _T("-->");
-            comment.boxCommentStart    = _T("<!-- ");
-            comment.boxCommentMid      = _T("  -- ");
-            comment.boxCommentEnd      = _T("  -->");
-            break;
-        case wxSCI_LEX_PERL:       comment.lineComment = _T("#"); break;
-        case wxSCI_LEX_SQL:        comment.lineComment = _T("--"); break;
-        case wxSCI_LEX_VB:         comment.lineComment = _T("'"); break;
-        case wxSCI_LEX_PROPERTIES: comment.lineComment = _T("#"); break;
-        case wxSCI_LEX_ERRORLIST:  comment.lineComment = _T(""); break;
-        case wxSCI_LEX_MAKEFILE:   comment.lineComment = _T("#"); break;
-        case wxSCI_LEX_BATCH:      comment.lineComment = _T("REM "); break;
-        case wxSCI_LEX_XCODE:      comment.lineComment = _T(""); break;
-        case wxSCI_LEX_LATEX:      comment.lineComment = _T("%"); break;
-        case wxSCI_LEX_LUA:
-            comment.lineComment        = _T("--");
-            comment.streamCommentStart = _T("/*");
-            comment.streamCommentEnd   = _T("*/");
-            comment.boxCommentStart    = _T("/* ");
-            comment.boxCommentMid      = _T(" * ");
-            comment.boxCommentEnd      = _T(" */");
-            break;
-        case wxSCI_LEX_DIFF:       comment.lineComment = _T(""); break;
-        case wxSCI_LEX_CONF:       comment.lineComment = _T(""); break;
-        case wxSCI_LEX_PASCAL:
-            comment.lineComment        = _T("//");  //delphi style lineComments, otherwise use { } or (* and *)
-            comment.streamCommentStart = _T("{");
-            comment.streamCommentEnd   = _T("}");
-            comment.boxCommentStart    = _T("(* ");
-            comment.boxCommentMid      = _T(" * ");
-            comment.boxCommentEnd      = _T(" *)");
-            break;
-        case wxSCI_LEX_AVE:        comment.lineComment = _T(""); break;
-        case wxSCI_LEX_ADA:        comment.lineComment = _T("--"); break;
-        case wxSCI_LEX_LISP:
-            comment.lineComment        = _T(";");
-            comment.streamCommentStart = _T("#|");
-            comment.streamCommentEnd   = _T("|#");
-            comment.boxCommentStart    = _T("#| ");
-            comment.boxCommentMid      = _T(" | ");
-            comment.boxCommentEnd      = _T(" |#");
-            break;
-        case wxSCI_LEX_RUBY:
-            comment.lineComment        = _T("#");
-            comment.boxCommentStart    = _T("=begin");
-            comment.boxCommentEnd      = _T("=end");
-            break;
-        case wxSCI_LEX_EIFFEL:     comment.lineComment = _T("--"); break;
-        case wxSCI_LEX_EIFFELKW:   comment.lineComment = _T("--"); break;
-        case wxSCI_LEX_TCL:        comment.lineComment = _T("#"); break;
-        case wxSCI_LEX_NNCRONTAB:  comment.lineComment = _T(""); break;
-        case wxSCI_LEX_BULLANT:    comment.lineComment = _T(""); break;
-        case wxSCI_LEX_VBSCRIPT:   comment.lineComment = _T("'"); break;
-        case wxSCI_LEX_BAAN:       comment.lineComment = _T(""); break;
-        case wxSCI_LEX_MATLAB:
-            comment.lineComment        = _T("%");
-            comment.streamCommentStart = _T("%{");
-            comment.streamCommentEnd   = _T("}%");
-            comment.boxCommentStart    = _T("%{ ");
-            comment.boxCommentEnd      = _T(" }%");
-            break;
-        case wxSCI_LEX_SCRIPTOL:   comment.lineComment = _T("`"); break;
-        case wxSCI_LEX_ASM:        comment.lineComment = _T(";"); break;
-        case wxSCI_LEX_CPPNOCASE:
-            comment.lineComment        = _T("//");
-            comment.streamCommentStart = _T("/*");
-            comment.streamCommentEnd   = _T("*/");
-            comment.boxCommentStart    = _T("/* ");
-            comment.boxCommentMid      = _T(" * ");
-            comment.boxCommentEnd      = _T(" */");
-            break;
-        case wxSCI_LEX_FORTRAN:    comment.lineComment = _T("!"); break;
-        case wxSCI_LEX_CSS:
-            comment.lineComment        = _T("");
-            comment.streamCommentStart = _T("/*");
-            comment.streamCommentEnd   = _T("*/");
-            comment.boxCommentStart    = _T("/* ");
-            comment.boxCommentMid      = _T(" * ");
-            comment.boxCommentEnd      = _T(" */");
-            break;
-        case wxSCI_LEX_POV:
-            comment.lineComment        = _T("//"); // original here was "//@-" don't know why
-            comment.streamCommentStart = _T("/*");
-            comment.streamCommentEnd   = _T("*/");
-            comment.boxCommentStart    = _T("/* ");
-            comment.boxCommentMid      = _T(" * ");
-            comment.boxCommentEnd      = _T(" */");
-            break;
-        case wxSCI_LEX_LOUT:       comment.lineComment = _T("#"); break;
-        case wxSCI_LEX_ESCRIPT:    comment.lineComment = _T(""); break; //couldn't find
-        case wxSCI_LEX_PS:         comment.lineComment = _T("%"); break; // not sure if it's only one % or multiple
-        case wxSCI_LEX_NSIS:       comment.lineComment = _T(""); break;
-        case wxSCI_LEX_MMIXAL:     comment.lineComment = _T(""); break;
-        case wxSCI_LEX_CLW:        comment.lineComment = _T(""); break;
-        case wxSCI_LEX_CLWNOCASE:  comment.lineComment = _T(""); break;
-        case wxSCI_LEX_LOT:        comment.lineComment = _T(""); break;
-        case wxSCI_LEX_YAML:       comment.lineComment = _T(""); break;
-        case wxSCI_LEX_TEX:        comment.lineComment = _T("%"); break;
-        case wxSCI_LEX_METAPOST:   comment.lineComment = _T(""); break;
-        case wxSCI_LEX_POWERBASIC: comment.lineComment = _T(""); break;
-        case wxSCI_LEX_FORTH:      comment.lineComment = _T(""); break;
-        case wxSCI_LEX_ERLANG:     comment.lineComment = _T(""); break;
-        case wxSCI_LEX_OCTAVE:     comment.lineComment = _T("#"); break; // or '%'
-        case wxSCI_LEX_MSSQL:      comment.lineComment = _T(""); break;
-        case wxSCI_LEX_VERILOG:    comment.lineComment = _T("//"); break;
-        case wxSCI_LEX_KIX:        comment.lineComment = _T(""); break;
-        case wxSCI_LEX_SPECMAN:    comment.lineComment = _T(""); break;
-        case wxSCI_LEX_APDL:       comment.lineComment = _T(""); break;
-        case wxSCI_LEX_BASH:       comment.lineComment = _T("#"); break;
-        case wxSCI_LEX_VHDL:       comment.lineComment = _T("--"); break;
-        case wxSCI_LEX_CAML:       comment.lineComment = _T(""); break;
-        case wxSCI_LEX_BLITZBASIC: comment.lineComment = _T(""); break;
-        case wxSCI_LEX_PUREBASIC:  comment.lineComment = _T(""); break;
-        case wxSCI_LEX_HASKELL:    comment.lineComment = _T("--"); break;
-        case wxSCI_LEX_PHPSCRIPT:
-            comment.lineComment        = _T("#");
-            //comment.lineComment        = _T("//");
-            comment.streamCommentStart = _T("/*");
-            comment.streamCommentEnd   = _T("*/");
-            comment.boxCommentStart    = _T("/* ");
-            comment.boxCommentMid      = _T(" * ");
-            comment.boxCommentEnd      = _T(" */");
-            break;
-        case wxSCI_LEX_REBOL:      comment.lineComment = _T(""); break; // couldn't find
-        case wxSCI_LEX_SMALLTALK:  comment.lineComment = _T(""); break; // uses double quotes at start and end i.e. "lineComment"
-        case wxSCI_LEX_FLAGSHIP:   comment.lineComment = _T(""); break;
-        case wxSCI_LEX_CSOUND:     comment.lineComment = _T(""); break;
-        case wxSCI_LEX_FREEBASIC:  comment.lineComment = _T(""); break;
-        default: // Let the user decide if he wants to lineComment or not
-            comment.lineComment        = _T("//");
-            comment.streamCommentStart = _T("/*");
-            comment.streamCommentEnd   = _T("*/");
-            comment.boxCommentStart    = _T("/* ");
-            comment.boxCommentMid      = _T(" * ");
-            comment.boxCommentEnd      = _T(" */");
-    }
-    return comment;
-}
-
-
 /* This is a shameless rip-off of the original OnEditCommentSelected function,
  * now more suitingly named OnEditToggleCommentSelected (because that's what
  * it does :)
@@ -3122,7 +2996,8 @@ void MainFrame::OnEditCommentSelected(wxCommandEvent& event)
     if (ed)
     {
         cbStyledTextCtrl* stc = ed->GetControl();
-        CommentToken comment=GetCommentToken(stc);
+        CommentToken comment =
+            Manager::Get()->GetEditorManager()->GetColourSet()->GetCommentToken( ed->GetLanguage() );
         if(comment.lineComment==wxEmptyString && comment.streamCommentStart==wxEmptyString)
             return;
 
@@ -3171,7 +3046,9 @@ void MainFrame::OnEditUncommentSelected(wxCommandEvent& event)
     if (ed)
     {
         cbStyledTextCtrl* stc = ed->GetControl();
-        CommentToken comment=GetCommentToken(stc);
+        CommentToken comment =
+            Manager::Get()->GetEditorManager()->GetColourSet()->GetCommentToken( ed->GetLanguage() );
+
         if(comment.lineComment==wxEmptyString && comment.streamCommentStart==wxEmptyString)
             return;
 
@@ -3255,7 +3132,8 @@ void MainFrame::OnEditToggleCommentSelected(wxCommandEvent& event)
     if (ed)
     {
         cbStyledTextCtrl* stc = ed->GetControl();
-        wxString comment=GetCommentToken(stc).lineComment;
+        wxString comment =
+            Manager::Get()->GetEditorManager()->GetColourSet()->GetCommentToken( ed->GetLanguage() ).lineComment;
         if(comment==wxEmptyString)
             return;
 
@@ -3312,7 +3190,8 @@ void MainFrame::OnEditStreamCommentSelected(wxCommandEvent& event)
     if (ed)
     {
         cbStyledTextCtrl* stc = ed->GetControl();
-        CommentToken comment=GetCommentToken(stc);
+        CommentToken comment =
+            Manager::Get()->GetEditorManager()->GetColourSet()->GetCommentToken( ed->GetLanguage() );
         if(comment.streamCommentStart==wxEmptyString)
             return;
 
@@ -3357,16 +3236,17 @@ void MainFrame::OnEditBoxCommentSelected(wxCommandEvent& event)
     {
 
         cbStyledTextCtrl* stc = ed->GetControl();
-        CommentToken comment=GetCommentToken(stc);
+        CommentToken comment =
+            Manager::Get()->GetEditorManager()->GetColourSet()->GetCommentToken( ed->GetLanguage() );
         if(comment.boxCommentStart==wxEmptyString)
             return;
 
         wxString nlc;
         switch (stc->GetEOLMode())
         {
-            case wxSCI_EOL_CRLF: nlc=_T("\r\n");
-            case wxSCI_EOL_CR:   nlc=_T("\r");
-            case wxSCI_EOL_LF:   nlc=_T("\n");
+            case wxSCI_EOL_CRLF: nlc=_T("\r\n"); break;
+            case wxSCI_EOL_CR:   nlc=_T("\r");   break;
+            case wxSCI_EOL_LF:   nlc=_T("\n");   break;
 
         }
 
@@ -3443,7 +3323,11 @@ void MainFrame::OnEditHighlightMode(wxCommandEvent& event)
                 {
                     wxMenuItem* item = hl->FindItem(event.GetId());
                     if (item)
+                    #if wxCHECK_VERSION(2, 9, 0)
+                        lang = theme->GetHighlightLanguage(item->GetItemLabelText());
+                    #else
                         lang = theme->GetHighlightLanguage(item->GetLabel());
+                    #endif
                 }
             }
             ed->SetLanguage(lang);
@@ -3699,10 +3583,9 @@ void MainFrame::OnSearchGotoPrevChanged(wxCommandEvent& event)
 
 void MainFrame::OnHelpAbout(wxCommandEvent& WXUNUSED(event))
 {
-    dlgAbout* dlg = new dlgAbout(this);
-    PlaceWindow(dlg, pdlHead);
-    dlg->ShowModal();
-    dlg->Destroy();
+    dlgAbout dlg(this);
+    PlaceWindow(&dlg, pdlHead);
+    dlg.ShowModal();
 }
 
 void MainFrame::OnHelpTips(wxCommandEvent& event)
@@ -4025,6 +3908,54 @@ void MainFrame::OnFocusEditor(wxCommandEvent& event)
         ed->GetControl()->SetFocus();
 }
 
+void MainFrame::OnSwitchTabs(wxCommandEvent& event)
+{
+    // Get the notebook from the editormanager:
+    wxAuiNotebook* nb = Manager::Get()->GetEditorManager()->GetNotebook();
+    if (!nb)
+        return;
+
+    // Create container and add all open editors:
+    wxSwitcherItems items;
+    items.AddGroup(_("Open files"), wxT("editors"));
+    for (size_t i = 0; i < nb->GetPageCount(); ++i)
+    {
+        wxString title = nb->GetPageText(i);
+        wxWindow* window = nb->GetPage(i);
+
+        items.AddItem(title, title, i, nb->GetPageBitmap(i)).SetWindow(window);
+    }
+
+    // Select the focused editor:
+    int idx = items.GetIndexForFocus();
+    if (idx != wxNOT_FOUND)
+        items.SetSelection(idx);
+
+    // Create the switcher dialog
+    wxSwitcherDialog dlg(items, wxGetApp().GetTopWindow());
+
+    // Ctrl+Tab workaround for non windows platforms:
+    if (platform::cocoa)
+        dlg.SetModifierKey(WXK_ALT);
+    else if (platform::gtk)
+        dlg.SetExtraNavigationKey(wxT(','));
+
+    // Finally show the dialog:
+    int answer = dlg.ShowModal();
+
+    // If necessary change the selected editor:
+    if ((answer == wxID_OK) && (dlg.GetSelection() != -1))
+    {
+        wxSwitcherItem& item = items.GetItem(dlg.GetSelection());
+        wxWindow* win = item.GetWindow();
+        if(win)
+        {
+            nb->SetSelection(item.GetId());
+            win->SetFocus();
+        }
+    }
+}
+
 void MainFrame::OnToggleFullScreen(wxCommandEvent& event)
 {
     ShowFullScreen( !IsFullScreen(), wxFULLSCREEN_NOTOOLBAR// | wxFULLSCREEN_NOSTATUSBAR
@@ -4072,7 +4003,11 @@ void MainFrame::OnPluginLoaded(CodeBlocksEvent& event)
         DoAddPlugin(plug);
         const PluginInfo* info = Manager::Get()->GetPluginManager()->GetPluginInfo(plug);
         wxString msg = info ? info->title : wxString(_("<Unknown plugin>"));
+        #if wxCHECK_VERSION(2, 9, 0)
+        Manager::Get()->GetLogManager()->DebugLog(F(_T("%s plugin activated"), msg.wx_str()));
+        #else
         Manager::Get()->GetLogManager()->DebugLog(F(_T("%s plugin activated"), msg.c_str()));
+        #endif
     }
 }
 
@@ -4154,7 +4089,6 @@ void MainFrame::OnProjectActivated(CodeBlocksEvent& event)
 void MainFrame::OnProjectOpened(CodeBlocksEvent& event)
 {
     ShowHideStartPage(true);
-    DoUpdateAppTitle();
     event.Skip();
 }
 
@@ -4193,7 +4127,6 @@ void MainFrame::OnEditorModified(CodeBlocksEvent& event)
 void MainFrame::OnProjectClosed(CodeBlocksEvent& event)
 {
     ShowHideStartPage();
-    DoUpdateAppTitle();
     event.Skip();
 }
 

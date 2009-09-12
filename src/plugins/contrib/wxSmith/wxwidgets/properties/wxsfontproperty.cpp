@@ -80,13 +80,14 @@ wxFont wxsFontData::BuildFont()
     if ( !SysFont.empty() && HasSysFont )
     {
         wxFont Base;
-        if ( SysFont == _T("wxSYS_OEM_FIXED_FONT") ) Base = wxSystemSettings::GetFont(wxSYS_OEM_FIXED_FONT);
-        if ( SysFont == _T("wxSYS_ANSI_FIXED_FONT") ) Base = wxSystemSettings::GetFont(wxSYS_ANSI_FIXED_FONT);
-        if ( SysFont == _T("wxSYS_ANSI_VAR_FONT") ) Base = wxSystemSettings::GetFont(wxSYS_ANSI_VAR_FONT);
-        if ( SysFont == _T("wxSYS_SYSTEM_FONT") ) Base = wxSystemSettings::GetFont(wxSYS_SYSTEM_FONT);
-        if ( SysFont == _T("wxSYS_DEVICE_DEFAULT_FONT") ) Base = wxSystemSettings::GetFont(wxSYS_DEVICE_DEFAULT_FONT);
-        if ( SysFont == _T("wxSYS_DEFAULT_GUI_FONT") ) Base = wxSystemSettings::GetFont(wxSYS_DEFAULT_GUI_FONT);
-        if ( !Base.Ok() ) Base = wxSystemSettings::GetFont(wxSYS_DEFAULT_GUI_FONT);
+        if      ( SysFont == _T("wxSYS_OEM_FIXED_FONT") )      Base = wxSystemSettings::GetFont(wxSYS_OEM_FIXED_FONT);
+        else if ( SysFont == _T("wxSYS_ANSI_FIXED_FONT") )     Base = wxSystemSettings::GetFont(wxSYS_ANSI_FIXED_FONT);
+        else if ( SysFont == _T("wxSYS_ANSI_VAR_FONT") )       Base = wxSystemSettings::GetFont(wxSYS_ANSI_VAR_FONT);
+        else if ( SysFont == _T("wxSYS_SYSTEM_FONT") )         Base = wxSystemSettings::GetFont(wxSYS_SYSTEM_FONT);
+        else if ( SysFont == _T("wxSYS_DEVICE_DEFAULT_FONT") ) Base = wxSystemSettings::GetFont(wxSYS_DEVICE_DEFAULT_FONT);
+        else if ( SysFont == _T("wxSYS_DEFAULT_GUI_FONT") )    Base = wxSystemSettings::GetFont(wxSYS_DEFAULT_GUI_FONT);
+        
+        if ( !Base.Ok() )                                      Base = wxSystemSettings::GetFont(wxSYS_DEFAULT_GUI_FONT);
 
         if ( HasSize ) Base.SetPointSize(Size);
         else if ( HasRelativeSize ) Base.SetPointSize((int)(Base.GetPointSize() * RelativeSize));
@@ -317,32 +318,32 @@ bool wxsFontProperty::XmlRead(wxsPropertyContainer* Object,TiXmlElement* Element
     wxString Val;
 
     // Fetching size
-    if ( VALUE.HasSize = XmlGetString(Element,Val,_T("size")) )
+    if ( (VALUE.HasSize = XmlGetString(Element,Val,_T("size")) ))
     {
         Val.ToLong(&VALUE.Size);
     }
 
-    if ( VALUE.HasStyle = XmlGetString(Element,Val,_T("style")) )
+    if ( (VALUE.HasStyle = XmlGetString(Element,Val,_T("style")) ))
     {
         if ( Val == _T("italic") ) VALUE.Style = wxFONTSTYLE_ITALIC; else
         if ( Val == _T("slant") )  VALUE.Style = wxFONTSTYLE_SLANT;  else
                                    VALUE.Style = wxFONTSTYLE_NORMAL;
     }
 
-    if ( VALUE.HasWeight = XmlGetString(Element,Val,_T("weight")) )
+    if ( (VALUE.HasWeight = XmlGetString(Element,Val,_T("weight")) ))
     {
         if ( Val == _T("bold") )  VALUE.Weight = wxBOLD;   else
         if ( Val == _T("light") ) VALUE.Weight = wxLIGHT;  else
                                   VALUE.Weight = wxNORMAL;
     }
 
-    if ( VALUE.HasUnderlined = XmlGetString(Element,Val,_T("underlined")) )
+    if ( (VALUE.HasUnderlined = XmlGetString(Element,Val,_T("underlined")) ))
     {
         if ( Val == _T("1" ) ) VALUE.Underlined = true;
         else                   VALUE.Underlined = false;
     }
 
-    if ( VALUE.HasFamily = XmlGetString(Element,Val,_T("family")) )
+    if ( (VALUE.HasFamily = XmlGetString(Element,Val,_T("family")) ))
     {
         if ( Val == _T("decorative") ) VALUE.Family = wxDECORATIVE; else
         if ( Val == _T("roman") )      VALUE.Family = wxROMAN;      else
@@ -367,7 +368,7 @@ bool wxsFontProperty::XmlRead(wxsPropertyContainer* Object,TiXmlElement* Element
     VALUE.HasEncoding = XmlGetString(Element,VALUE.Encoding,_T("encoding"));
     VALUE.HasSysFont = XmlGetString(Element,VALUE.SysFont,_T("sysfont"));
 
-    if ( VALUE.HasRelativeSize = XmlGetString(Element,Val,_T("relativesize")) )
+    if ( (VALUE.HasRelativeSize = XmlGetString(Element,Val,_T("relativesize")) ))
     {
         Val.ToDouble(&VALUE.RelativeSize);
     }

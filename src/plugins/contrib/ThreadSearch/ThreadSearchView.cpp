@@ -17,6 +17,7 @@
 #endif
 
 #include "cbstyledtextctrl.h"
+#include "encodingdetector.h"
 #include "SearchInPanel.h"
 #include "DirectoryParamsPanel.h"
 #include "ThreadSearch.h"
@@ -416,8 +417,11 @@ bool ThreadSearchView::UpdatePreview(const wxString& file, long line)
 		m_PreviewFilePath = file;
 		m_PreviewFileDate = filename.GetModificationTime();
 
+        EncodingDetector enc(m_PreviewFilePath, false);
+        success = enc.IsOK();
+        m_pSearchPreview->SetText(enc.GetWxStr());
+
 		// Colorize
-		success =  m_pSearchPreview->LoadFile(m_PreviewFilePath);
 		cbEditor::ApplyStyles(m_pSearchPreview);
 		EditorColourSet EdColSet;
 		EdColSet.Apply(EdColSet.GetLanguageForFilename(m_PreviewFilePath), m_pSearchPreview);
@@ -474,7 +478,11 @@ void ThreadSearchView::OnLoggerDoubleClick(const wxString& file, long line)
 
 		wxFocusEvent ev(wxEVT_SET_FOCUS);
 		ev.SetWindow(this);
+		#if wxCHECK_VERSION(2, 9, 0)
+		control->GetEventHandler()->AddPendingEvent(ev);
+		#else
 		control->AddPendingEvent(ev);
+		#endif
 	}
 }
 

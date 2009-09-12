@@ -211,7 +211,7 @@ class DLLIMPORT EditorBase : public wxPanel
 
         /** Clear Undo- (and Changebar-) history */
         virtual void DeleteHistory(){}
-        
+
         /** Goto next changed line */
         virtual void GotoNextChanged(){}
 
@@ -223,7 +223,7 @@ class DLLIMPORT EditorBase : public wxPanel
 
         /** Enable or disable changebar */
         virtual void SetChangeCollection(bool collectChange){}
-        
+
         /** Cut selected text/object to clipboard. */
         virtual void Cut(){}
 
@@ -262,6 +262,12 @@ class DLLIMPORT EditorBase : public wxPanel
           * @return True if the editor is read-only, false if not.
           */
         virtual bool IsReadOnly() const { return false; }
+
+        /** Is there a context (right click) menu open
+          *
+          * @return True if a context menu is open, false if not.
+          */
+        virtual bool IsContextMenuOpened() const;
     protected:
         /** Initializes filename data.
           * @param filename The editor's filename for initialization.

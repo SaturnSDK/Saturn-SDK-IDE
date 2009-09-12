@@ -12,6 +12,7 @@
 #include "gdb_commands.h"
 #include "debuggerstate.h"
 #include <manager.h>
+#include <macrosmanager.h>
 #include <configmanager.h>
 #include <scriptingmanager.h>
 #include <globals.h>
@@ -276,6 +277,10 @@ void GDB_driver::Prepare(ProjectBuildTarget* target, bool isConsole)
     // define all scripted types
     m_Types.Clear();
     InitializeScripting();
+
+    wxString StlDebugCommand(_T("source $DATAPATH/scripts/stl-views-1.0.3.gdb"));
+    Manager::Get()->GetMacrosManager()->ReplaceMacros(StlDebugCommand);
+    QueueCommand(new DebuggerCmd(this, StlDebugCommand));
 
     // pass user init-commands
     wxString init = Manager::Get()->GetConfigManager(_T("debugger"))->Read(_T("init_commands"), wxEmptyString);
@@ -619,7 +624,8 @@ void GDB_driver::MemoryDump()
 
 void GDB_driver::RunningThreads()
 {
-    QueueCommand(new GdbCmd_Threads(this, m_pThreads));
+    if (m_pThreads)
+        QueueCommand(new GdbCmd_Threads(this, m_pThreads));
 }
 
 void GDB_driver::InfoFrame()

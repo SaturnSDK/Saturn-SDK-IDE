@@ -6,8 +6,8 @@ INCLUDES = $(WX_CXXFLAGS) \
 		-I$(top_srcdir)/src/include/wxscintilla/include \
 		-I$(top_srcdir)/src/plugins/contrib/codesnippets \
 		-I$(top_srcdir)/src/plugins/contrib/codesnippets/Search \
-		-I$(top_srcdir)/src/plugins/contrib/codesnippets/editor \
-        -I$(top_srcdir)/src/include/wxFlatNotebook/include
+ 		-I$(top_srcdir)/src/plugins/contrib/codesnippets/editor \
+		-I$(top_srcdir)/src/include/mozilla_chardet
 
 pluginlibdir = $(pkglibdir)/plugins
 
@@ -54,8 +54,8 @@ libcodesnippets_la_SOURCES = codesnippets.cpp \
 		codesnippetswindow.cpp \
 		csutils.cpp \
 		editsnippetframe.cpp \
-		messageBoxForm.cpp \
-		messagebox.cpp \
+		finddialogs.cpp \
+		GenericMessageBox.cpp \
 		settingsdlg.cpp \
 		settingsdlgform.cpp \
 		snippetitemdata.cpp \
@@ -106,9 +106,9 @@ noinst_HEADERS =  	codesnippets.h \
 		codesnippetswindow.h \
 		csutils.h \
 		editsnippetframe.h \
+		finddialogs.h \
 		menuidentifiers.h \
-		messageBoxForm.h \
-		messagebox.h \
+		GenericMessageBox.h \
 		settingsdlg.h \
 		settingsdlgform.h \
 		snippetitemdata.h \
@@ -129,5 +129,6 @@ EXTRA_DIST = 	codesnippets.cbp \
 		update \
 		readme.html \
 		license.txt \
+		manifest.xml \
 		$(man_MANS)
 

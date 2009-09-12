@@ -54,11 +54,28 @@ wxString ConfigManager::home_folder;
 wxString ConfigManager::data_path_user;
 wxString ConfigManager::data_path_global;
 #ifdef CB_AUTOCONF
-wxString ConfigManager::plugin_path_global; 
-#endif 
+wxString ConfigManager::plugin_path_global;
+#endif
 wxString ConfigManager::app_path;
 wxString ConfigManager::temp_folder;
 bool ConfigManager::relo = 0;
+
+#ifdef __WINDOWS__
+wxString GetPortableConfigDir()
+{
+    DWORD bufLen = 32780;
+    TCHAR buffer[32780];
+    int ret = GetEnvironmentVariable(_T("APPDATA"), buffer, bufLen);
+    if (ret == 0)
+    {
+        return wxStandardPathsBase::Get().GetUserDataDir();
+    }
+    else
+    {
+        return wxString::Format(_T("%s\\codeblocks"), buffer);
+    }
+}
+#endif
 
 namespace CfgMgrConsts
 {
@@ -172,7 +189,11 @@ CfgMgrBldr::CfgMgrBldr() : doc(0), volatile_doc(0), r(false)
 
     if(cfg.IsEmpty())
     {
+        #ifdef __WINDOWS__
+        cfg = GetPortableConfigDir() + wxFILE_SEP_PATH + personality + _T(".conf");
+        #else
         cfg = wxStandardPathsBase::Get().GetUserDataDir() + wxFILE_SEP_PATH + personality + _T(".conf");
+        #endif
         doc = new TiXmlDocument();
         doc->InsertEndChild(TiXmlDeclaration("1.0", "UTF-8", "yes"));
         doc->InsertEndChild(TiXmlElement("CodeBlocksConfig"));
@@ -187,7 +208,11 @@ wxString CfgMgrBldr::FindConfigFile(const wxString& filename)
 {
     wxPathList searchPaths;
 
+#ifdef __WINDOWS__
+    wxString u(GetPortableConfigDir() + wxFILE_SEP_PATH + filename);
+#else
     wxString u(wxStandardPathsBase::Get().GetUserDataDir() + wxFILE_SEP_PATH + filename);
+#endif
     wxString e(::DetermineExecutablePath() + wxFILE_SEP_PATH +filename);
 
     if(::wxFileExists(u))
@@ -284,9 +309,15 @@ void CfgMgrBldr::SwitchToR(const wxString& absFileName)
         {
             size_t size = is->GetSize();
             wxString str;
+            #if wxCHECK_VERSION(2, 9, 0)
+            wxChar* c = wxStringBuffer(str, size);
+            #else
             wxChar* c = str.GetWriteBuf(size);
+            #endif
             is->Read(c, size);
+            #if !wxCHECK_VERSION(2, 9, 0)
             str.UngetWriteBuf(size);
+            #endif
 
             doc = new TiXmlDocument();
 
@@ -406,11 +437,17 @@ ConfigManager* CfgMgrBldr::Build(const wxString& name_space)
 */
 inline void to_upper(wxString& s)
 {
+    #if wxCHECK_VERSION(2, 9, 0)
+    wxStringCharType *p = const_cast<wxStringCharType*>(s.wx_str());
+    wxStringCharType q;
+    #else
     wxChar *p = (wxChar*) s.c_str();
+    wxChar q;
+    #endif
     size_t len = s.length()+1;
     for(;--len;++p)
     {
-        wxChar q = *p;
+        q = *p;
         if(q >= 'a' && q <= 'z')
             *p = q - 32;
     }
@@ -418,11 +455,17 @@ inline void to_upper(wxString& s)
 
 inline void to_lower(wxString& s)
 {
+    #if wxCHECK_VERSION(2, 9, 0)
+    wxStringCharType *p = const_cast<wxStringCharType*>(s.wx_str());
+    wxStringCharType q;
+    #else
     wxChar *p = (wxChar*) s.c_str();
+    wxChar q;
+    #endif
     size_t len = s.length()+1;
     for(;--len;++p)
     {
-        wxChar q = *p;
+        q = *p;
         if(q >= 'A' && q <= 'Z')
             *p = q + 32;
     }
@@ -472,9 +515,9 @@ wxString ConfigManager::GetFolder(SearchDirs dir)
         case sdPluginsGlobal:
 #ifndef CB_AUTOCONF
             return ConfigManager::data_path_global + _T("/plugins");
-#else 
-            return ConfigManager::plugin_path_global; 
-#endif 
+#else
+            return ConfigManager::plugin_path_global;
+#endif
 
         case sdPluginsUser:
             return ConfigManager::data_path_user   + _T("/plugins");
@@ -1074,7 +1117,11 @@ wxArrayString ConfigManager::EnumerateSubPaths(const wxString& path)
     {
         while(e->IterateChildren(curr) && (curr = e->IterateChildren(curr)->ToElement()))
         {
+            #if wxCHECK_VERSION(2, 9, 0)
+            wxUniChar c = cbC2U(curr->Value())[0];
+            #else
             wxChar c = *(cbC2U(curr->Value()));
+            #endif
             if(c < _T('A') || c > _T('Z')) // first char must be a letter, uppercase letters are key names
                 ret.Add(cbC2U(curr->Value()));
         }
@@ -1156,7 +1203,11 @@ wxArrayString ConfigManager::EnumerateKeys(const wxString& path)
     {
         while(e->IterateChildren(curr) && (curr = e->IterateChildren(curr)->ToElement()))
         {
+            #if wxCHECK_VERSION(2, 9, 0)
+            wxUniChar c = cbC2U(curr->Value())[0];
+            #else
             wxChar c = *(cbC2U(curr->Value()));
+            #endif
             if(c >= _T('A') && c <= _T('Z')) // opposite of the above
                 ret.Add(cbC2U(curr->Value()));
         }
@@ -1369,7 +1420,11 @@ void ConfigManager::Write(const wxString& name, const ConfigManagerContainer::Se
 
 void ConfigManager::InitPaths()
 {
+#ifdef __WINDOWS__
+    ConfigManager::config_folder = GetPortableConfigDir();
+#else
     ConfigManager::config_folder = wxStandardPathsBase::Get().GetUserDataDir();
+#endif
     ConfigManager::home_folder = wxStandardPathsBase::Get().GetUserConfigDir();
     ConfigManager::app_path = ::DetermineExecutablePath();
     wxString res_path = ::DetermineResourcesPath();
@@ -1384,15 +1439,15 @@ void ConfigManager::InitPaths()
         else
             ConfigManager::data_path_global = wxStandardPathsBase::Get().GetDataDir();
     }
-#ifdef CB_AUTOCONF 
-    if (plugin_path_global.IsEmpty()) 
-    { 
-       if(platform::windows || platform::macosx) 
-          ConfigManager::plugin_path_global = data_path_global; 
-       else 
-          ConfigManager::plugin_path_global = wxStandardPathsBase::Get().GetPluginsDir() + _T("/plugins"); 
-    } 
-#endif 
+#ifdef CB_AUTOCONF
+    if (plugin_path_global.IsEmpty())
+    {
+       if(platform::windows || platform::macosx)
+          ConfigManager::plugin_path_global = data_path_global;
+       else
+          ConfigManager::plugin_path_global = wxStandardPathsBase::Get().GetPluginsDir() + _T("/plugins");
+    }
+#endif
 
     ConfigManager::data_path_user = ConfigManager::relo ? data_path_global : config_folder + _T("/share/codeblocks");
 

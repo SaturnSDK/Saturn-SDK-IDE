@@ -42,27 +42,28 @@
 			<Add directory="$(#WX.include)" />
 			<Add directory="$(#WX.lib)\gcc_dll$(WX_CFG)\msw$(WX_SUFFIX)" />
 			<Add directory="$(#WX)\contrib\include" />
-			<Add directory="$(#CB.include)" />
-			<Add directory="$(#CB.include)\wxscintilla\include" />
-			<Add directory="$(#CB.include)\wxFlatNotebook\include" />
-			<Add directory="$(#CB.include)\tinyxml" />
-			<Add directory="$(#CB.include)\scripting\include" />
-			<Add directory="$(#CB.include)\scripting\sqplus" />
-			<Add directory="$(#CB.include)\scripting\squirrel" />
-			<Add directory="$(#CB.include)\scripting\bindings" />
+			<Add directory="..\..\..\include" />
+			<Add directory="..\..\..\include\wxscintilla\include" />
+			<Add directory="..\..\..\include\tinyxml" />
+			<Add directory="..\..\..\include\scripting\include" />
+			<Add directory="..\..\..\include\scripting\sqplus" />
+			<Add directory="..\..\..\include\scripting\squirrel" />
+			<Add directory="..\..\..\include\scripting\bindings" />
+			<Add directory="..\wxSmithContribItems\wxflatnotebook\wxFlatNotebook\include" />
+			<Add directory="..\..\..\include\mozilla_chardet" />
 		</Compiler>
 		<ResourceCompiler>
 			<Add directory="$(#WX.include)" />
 		</ResourceCompiler>
 		<Linker>
 			<Add option="-Wl,--enable-auto-import" />
+			<Add library="wxflatnotebook" />
 			<Add library="wxmsw28$(WX_SUFFIX)" />
 			<Add library="txml" />
 			<Add library="codeblocks" />
 			<Add directory="$(#WX.lib)\gcc_dll$(WX_CFG)" />
-			<Add directory="$(#CB.lib)" />
-			<Add directory="$(#CB)\devel" />
-			<Add directory="$(#CB)\base\tinyxml" />
+			<Add directory="..\..\..\devel" />
+			<Add directory="..\..\..\base\tinyxml" />
 		</Linker>
 		<ExtraCommands>
 			<Add after="update.bat" />

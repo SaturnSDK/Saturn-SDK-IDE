@@ -60,6 +60,8 @@ EditorColourSet::EditorColourSet(const EditorColourSet& other) // copy ctor
         mset.m_BreakLine = it->second.m_BreakLine;
         mset.m_DebugLine = it->second.m_DebugLine;
         mset.m_ErrorLine = it->second.m_ErrorLine;
+        mset.comment = it->second.comment;
+        mset.m_CaseSensitive = it->second.m_CaseSensitive;
         const OptionColours& value = it->second.m_Colours;
         for (unsigned int i = 0; i < value.GetCount(); ++i)
         {
@@ -104,7 +106,11 @@ void EditorColourSet::LoadAvailableSets()
     wxString path = ConfigManager::GetFolder(sdDataUser) + _T("/lexers/");
     if (dir.Open(path))
     {
+        #if wxCHECK_VERSION(2, 9, 0)
+        Manager::Get()->GetLogManager()->Log(F(_("Scanning for lexers in %s..."), path.wx_str()));
+        #else
         Manager::Get()->GetLogManager()->Log(F(_("Scanning for lexers in %s..."), path.c_str()));
+        #endif
         bool ok = dir.GetFirst(&filename, _T("lexer_*.xml"), wxDIR_FILES);
         while(ok)
         {
@@ -120,7 +126,11 @@ void EditorColourSet::LoadAvailableSets()
     path = ConfigManager::GetFolder(sdDataGlobal) + _T("/lexers/");
     if (dir.Open(path))
     {
+        #if wxCHECK_VERSION(2, 9, 0)
+        Manager::Get()->GetLogManager()->Log(F(_("Scanning for lexers in %s..."), path.wx_str()));
+        #else
         Manager::Get()->GetLogManager()->Log(F(_("Scanning for lexers in %s..."), path.c_str()));
+        #endif
         bool ok = dir.GetFirst(&filename, _T("lexer_*.xml"), wxDIR_FILES);
         while(ok)
         {
@@ -430,13 +440,19 @@ void EditorColourSet::Apply(HighlightLanguage lang, cbStyledTextCtrl* control)
     if (lang == HL_NONE)
         return;
 
-    // first load the default colours to all styles (ignoring some built-in styles)
-    OptionColour* defaults = GetOptionByName(lang, _("Default"));
+    // first load the default colours to all styles used by the actual lexer (ignoring some built-in styles)
+    OptionColour* defaults = GetOptionByName(lang, _T("Default"));
+    OptionSet& mset = m_Sets[lang];
+    control->SetLexer(mset.m_Lexers);
+    control->SetStyleBits(control->GetStyleBitsNeeded());
     if (defaults)
     {
-        for (int i = 0; i < wxSCI_STYLE_MAX; ++i)
+        int countStyles = 1 << control->GetStyleBits();
+        // walk until countStyles, otherwise the background-colour is only set for characters,
+        // not for empty background
+        for (int i = 0; i <= countStyles; ++i)
         {
-            if (i < 33 || i > 39)
+            if (i < 33 || (i > 39 && i < wxSCI_STYLE_MAX))
                 DoApplyStyle(control, i, defaults);
         }
     }
@@ -445,7 +461,6 @@ void EditorColourSet::Apply(HighlightLanguage lang, cbStyledTextCtrl* control)
     // this makes sure it stays the correct colour
     control->StyleSetForeground(wxSCI_STYLE_LINENUMBER, wxSystemSettings::GetColour(wxSYS_COLOUR_BTNTEXT));
 
-    OptionSet& mset = m_Sets[lang];
     for (unsigned int i = 0; i < mset.m_Colours.GetCount(); ++i)
     {
         OptionColour* opt = mset.m_Colours.Item(i);
@@ -486,8 +501,6 @@ void EditorColourSet::Apply(HighlightLanguage lang, cbStyledTextCtrl* control)
 //            }
         }
     }
-    control->SetLexer(mset.m_Lexers);
-    control->SetStyleBits(control->GetStyleBitsNeeded());
     for (int i = 0; i <= wxSCI_KEYWORDSET_MAX; ++i)
     {
         control->SetKeyWords(i, mset.m_Keywords[i]);
@@ -716,7 +729,11 @@ void EditorColourSet::SetKeywords(HighlightLanguage lang, int idx, const wxStrin
         wxString tmp(_T(' '), keywords.length()); // faster than using Alloc()
 
         const wxChar *src = keywords.c_str();
+        #if wxCHECK_VERSION(2, 9, 0)
+        wxStringCharType *dst = const_cast<wxStringCharType*>(tmp.wx_str());
+        #else
         wxChar *dst = (wxChar *) tmp.c_str();
+        #endif
         wxChar c;
         size_t len = 0;
 
@@ -796,4 +813,42 @@ void EditorColourSet::SetSampleCode(HighlightLanguage lang, const wxString& samp
     mset.m_BreakLine = breakLine;
     mset.m_DebugLine = debugLine;
     mset.m_ErrorLine = errorLine;
+}
+
+void EditorColourSet::SetCommentToken(HighlightLanguage lang, CommentToken token)
+{
+    if (lang == HL_NONE)
+        return;
+    m_Sets[lang].comment = token;
+}
+
+CommentToken EditorColourSet::GetCommentToken(HighlightLanguage lang)
+{
+    CommentToken com;
+    com.lineComment        = _T("");
+    com.streamCommentStart = _T("");
+    com.streamCommentEnd   = _T("");
+    com.boxCommentStart    = _T("");
+    com.boxCommentMid      = _T("");
+    com.boxCommentEnd      = _T("");
+
+    if (lang != HL_NONE)
+    {
+        com = m_Sets[lang].comment;
+    }
+    return com;
+}
+
+void EditorColourSet::SetCaseSensitivity(HighlightLanguage lang, bool CaseSensitive)
+{
+    if ( lang == HL_NONE )
+        return;
+    m_Sets[lang].m_CaseSensitive = CaseSensitive;
+}
+
+bool EditorColourSet::GetCaseSensitivity(HighlightLanguage lang)
+{
+    if ( lang == HL_NONE )
+        return false;
+    return m_Sets[lang].m_CaseSensitive;
 }

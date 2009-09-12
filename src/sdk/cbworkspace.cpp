@@ -61,7 +61,11 @@ cbWorkspace::~cbWorkspace()
 void cbWorkspace::Load()
 {
     wxString fname = m_Filename.GetFullPath();
+    #if wxCHECK_VERSION(2, 9, 0)
+    Manager::Get()->GetLogManager()->DebugLog(F(_T("Loading workspace \"%s\""), fname.wx_str()));
+    #else
     Manager::Get()->GetLogManager()->DebugLog(F(_T("Loading workspace \"%s\""), fname.c_str()));
+    #endif
 
     if (!m_Filename.FileExists())
     {
@@ -103,7 +107,11 @@ bool cbWorkspace::Save(bool force)
     if (!force && !m_Modified)
         return true;
 
+    #if wxCHECK_VERSION(2, 9, 0)
+    Manager::Get()->GetLogManager()->DebugLog(F(_T("Saving workspace \"%s\""), m_Filename.GetFullPath().wx_str()));
+    #else
     Manager::Get()->GetLogManager()->DebugLog(F(_T("Saving workspace \"%s\""), m_Filename.GetFullPath().c_str()));
+    #endif
     WorkspaceLoader wsp;
     bool ret = wsp.Save(m_Title, m_Filename.GetFullPath());
     SetModified(!ret);
@@ -114,17 +122,17 @@ bool cbWorkspace::Save(bool force)
 
 bool cbWorkspace::SaveAs(const wxString& filename)
 {
-    wxFileDialog* dlg = new wxFileDialog(Manager::Get()->GetAppWindow(),
-                            _("Save workspace"),
-                            m_Filename.GetPath(),
-                            m_Filename.GetFullName(),
-                            FileFilters::GetFilterString(_T('.') + FileFilters::WORKSPACE_EXT),
-                            wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
-    PlaceWindow(dlg);
-    if (dlg->ShowModal() != wxID_OK)
+    wxFileDialog dlg(Manager::Get()->GetAppWindow(),
+                     _("Save workspace"),
+                     m_Filename.GetPath(),
+                     m_Filename.GetFullName(),
+                     FileFilters::GetFilterString(_T('.') + FileFilters::WORKSPACE_EXT),
+                     wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
+    PlaceWindow(&dlg);
+    if (dlg.ShowModal() != wxID_OK)
         return false;
 
-    m_Filename = dlg->GetPath();
+    m_Filename = dlg.GetPath();
     if (m_Filename.GetExt() == wxEmptyString)
         m_Filename.SetExt(_T("workspace"));
 

@@ -56,7 +56,7 @@
 #include "codesnippetswindow.h"
 #include "snippetsconfig.h"
 #include "snippetsimages.h"
-#include "messagebox.h"
+#include "GenericMessageBox.h"
 #include "codesnippetsevent.h"
 #include "dragscroll.h"
 #include "dragscrollevent.h"
@@ -236,8 +236,6 @@ CodeSnippetsAppFrame::CodeSnippetsAppFrame(wxFrame* frame, const wxString& title
 CodeSnippetsAppFrame::~CodeSnippetsAppFrame()
 // ----------------------------------------------------------------------------
 {
-    if ( GetConfig()->GetDragScrollPlugin() )
-        GetConfig()->GetDragScrollPlugin()->OnRelease(true);
 }//dtor
 // ----------------------------------------------------------------------------
 void CodeSnippetsAppFrame::InitCodeSnippetsAppFrame(wxFrame *frame, const wxString& title)
@@ -437,7 +435,7 @@ void CodeSnippetsAppFrame::InitCodeSnippetsAppFrame(wxFrame *frame, const wxStri
                 wxString msg = wxT("Another CodeSnippets is already running from this folder.\n");
                 msg << _T("Starting multiple CodeSnippets could scramble this configuration file.\n");
                 msg << _T("Run multiple CodeSnippets anyway?\n");
-                int answer = messageBox( msg, _T("Multiple CodeSnippets"),wxYES_NO );
+                int answer = GenericMessageBox( msg, _T("Multiple CodeSnippets"),wxYES_NO );
                 if ( answer == wxYES)
                     break;
 
@@ -580,7 +578,7 @@ void CodeSnippetsAppFrame::InitCodeSnippetsAppFrame(wxFrame *frame, const wxStri
          #endif
         if ( not ::wxFileExists(m_KeepAliveFileName) )
         {
-            messageBox(wxString::Format(wxT("Error: Did not find KeepAlive File[%s]"), m_KeepAliveFileName.GetData() ));
+            GenericMessageBox(wxString::Format(wxT("Error: Did not find KeepAlive File[%s]"), m_KeepAliveFileName.GetData() ));
             m_KeepAliveFileName = wxEmptyString;
             break;
         }
@@ -712,6 +710,13 @@ void CodeSnippetsAppFrame::OnClose(wxCloseEvent &event)
     if (m_bOnActivateBusy)
         return;
 
+    if ( GetConfig()->GetDragScrollPlugin() )
+    {
+        CodeBlocksEvent cbEvent;
+        GetConfig()->GetDragScrollPlugin()->OnStartShutdown( cbEvent);
+        GetConfig()->GetDragScrollPlugin()->OnRelease(true);
+    }
+
     // EVT_CLOSE is never called for codesnippetswindow.
     // so we'll invoke it here. It saves the xml indexes.
     if (GetSnippetsWindow())
@@ -729,12 +734,15 @@ void CodeSnippetsAppFrame::OnClose(wxCloseEvent &event)
     // save recently opened indexes
     TerminateRecentFilesHistory();
 
-    // Ask SDK to write config file
+    // If not started by CB, ask SDK to write config file
+    if ( 0 == GetConfig()->GetKeepAlivePid() )
     if ( Manager::Get() )
     {
         Manager::Free();
         if (wxFileExists(m_ConfigFolder+_T("/default.conf.backup")) )
             wxRemoveFile(m_ConfigFolder+_T("/default.conf.backup")) ;
+        if (wxFileExists(m_ConfigFolder+_T("/default.conf.cbTemp")) )
+            wxRemoveFile(m_ConfigFolder+_T("/default.conf.cbTemp")) ;
     }
 
     Destroy();
@@ -775,7 +783,7 @@ void CodeSnippetsAppFrame::OnFileLoad(wxCommandEvent& event)
     // Save any previously modified file
     if ( GetFileChanged() )
     {    // Ask users if they want to save the snippet xml file
-        int answer = messageBox( wxT("Save Snippets file?\n\n")+GetConfig()->SettingsSnippetsXmlPath,
+        int answer = GenericMessageBox( wxT("Save Snippets file?\n\n")+GetConfig()->SettingsSnippetsXmlPath,
                                                 wxT("Open"),wxYES_NO );
         if ( answer == wxYES)
         {
@@ -1399,13 +1407,30 @@ void CodeSnippetsAppFrame::ComplainBadInstall()
 // CodeSnippetsAppFrame:: command line parsing
 // ----------------------------------------------------------------------------
 #if wxUSE_CMDLINE_PARSER
+
+#if wxCHECK_VERSION(2, 9, 0)
+#define CMD_ENTRY(X) X
+#else
+#define CMD_ENTRY(X) _T(X)
+#endif
+
 const wxCmdLineEntryDesc cmdLineDesc[] =
 {
-    { wxCMD_LINE_SWITCH, _T("h"), _T("help"), _T("show this help message"), wxCMD_LINE_VAL_NONE, wxCMD_LINE_OPTION_HELP },
-    { wxCMD_LINE_OPTION, _T(""), _T("prefix"),  _T("the shared data dir prefix"), wxCMD_LINE_VAL_STRING, wxCMD_LINE_NEEDS_SEPARATOR },
-    { wxCMD_LINE_OPTION, _T("p"), _T("personality"),  _T("the personality to use: \"ask\" or <personality-name>"), wxCMD_LINE_VAL_STRING, wxCMD_LINE_NEEDS_SEPARATOR },
-    { wxCMD_LINE_OPTION, _T(""), _T("profile"),  _T("synonym to personality"), wxCMD_LINE_VAL_STRING, wxCMD_LINE_NEEDS_SEPARATOR },
-    { wxCMD_LINE_OPTION, _T(""), _T("KeepAlivePid"),  _T("launchers pid"), wxCMD_LINE_VAL_STRING, wxCMD_LINE_NEEDS_SEPARATOR },
+    { wxCMD_LINE_SWITCH, CMD_ENTRY("h"), CMD_ENTRY("help"),
+	  CMD_ENTRY("show this help message"),
+	  wxCMD_LINE_VAL_NONE,   wxCMD_LINE_OPTION_HELP     },
+    { wxCMD_LINE_OPTION, CMD_ENTRY(""),  CMD_ENTRY("prefix"),
+	  CMD_ENTRY("the shared data dir prefix"),
+	  wxCMD_LINE_VAL_STRING, wxCMD_LINE_NEEDS_SEPARATOR },
+    { wxCMD_LINE_OPTION, CMD_ENTRY("p"), CMD_ENTRY("personality"),
+	  CMD_ENTRY("the personality to use: \"ask\" or <personality-name>"),
+	  wxCMD_LINE_VAL_STRING, wxCMD_LINE_NEEDS_SEPARATOR },
+    { wxCMD_LINE_OPTION, CMD_ENTRY(""),  CMD_ENTRY("profile"),
+	  CMD_ENTRY("synonym to personality"),
+	  wxCMD_LINE_VAL_STRING, wxCMD_LINE_NEEDS_SEPARATOR },
+    { wxCMD_LINE_OPTION, CMD_ENTRY(""),  CMD_ENTRY("KeepAlivePid"),
+	  CMD_ENTRY("launchers pid"),
+	  wxCMD_LINE_VAL_STRING, wxCMD_LINE_NEEDS_SEPARATOR },
     { wxCMD_LINE_NONE }
 };
 #endif // wxUSE_CMDLINE_PARSER

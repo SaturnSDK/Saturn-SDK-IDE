@@ -239,7 +239,11 @@ void CompilerCommandGenerator::GenerateCommandLine(wxString& macro,
         (compiler->GetPrograms().LIB.IsEmpty() && macro.Contains(_T("$lib_linker"))) ||
         (compiler->GetPrograms().WINDRES.IsEmpty() && macro.Contains(_T("$rescomp"))))
     {
+        #if wxCHECK_VERSION(2, 9, 0)
+        Manager::Get()->GetLogManager()->DebugLog(F(_T("GenerateCommandLine: no executable found! (file=%s)"), file.wx_str()));
+        #else
         Manager::Get()->GetLogManager()->DebugLog(F(_T("GenerateCommandLine: no executable found! (file=%s)"), file.c_str()));
+        #endif
         macro.Clear();
         return;
     }
@@ -462,7 +466,15 @@ wxString CompilerCommandGenerator::SetupOutputFilenames(Compiler* compiler, Proj
 	}
 	if ((ExtensionPolicy == tgfpPlatformDefault) || (target->GetTargetType() == ttDynamicLib))
 	{
-		fname.SetExt(compiler->GetSwitches().libExtension);
+        wxString current_ext   = fname.GetExt();
+        wxString requested_ext = compiler->GetSwitches().libExtension;
+        if      (   (platform::windows && !current_ext.IsSameAs(requested_ext, false))
+                 || (!current_ext.IsSameAs(requested_ext)) )
+        {
+            // Note: Do not use SetExt here to handle libs like e.g. System.Core correctly.
+            // Otherwise SetExt would result in System.dll instead of System.Core.dll
+            fname.SetFullName(fname.GetFullName()+wxFILE_SEP_EXT+requested_ext);
+        }
 	}
     result = UnixFilename(fname.GetFullPath());
     QuoteStringIfNeeded(result);
@@ -921,28 +933,32 @@ wxString CompilerCommandGenerator::ExpandBackticks(wxString& str)
 		if (cmd.IsEmpty())
 			break;
 
-		wxString bt;
-		BackticksMap::iterator it = m_Backticks.find(cmd);
-		if (it != m_Backticks.end())
-		{
-			// in cache :)
-			bt = it->second;
-		}
-		else
-		{
-			Manager::Get()->GetLogManager()->DebugLog(F(_T("Caching result of `%s`"), cmd.c_str()));
-			wxArrayString output;
-			if (platform::WindowsVersion() >= platform::winver_WindowsNT2000)
-				wxExecute(_T("cmd /c ") + cmd, output, wxEXEC_NODISABLE);
-			else
-				wxExecute(cmd, output, wxEXEC_NODISABLE);
-			bt = GetStringFromArray(output, _T(" "));
-			// add it in the cache
-			m_Backticks[cmd] = bt;
-			Manager::Get()->GetLogManager()->DebugLog(_T("Cached"));
-		}
-		ret << bt << _T(' ');
-		str = str.substr(0, start) + bt + str.substr(end + 1, wxString::npos);
+        wxString bt;
+        BackticksMap::iterator it = m_Backticks.find(cmd);
+        if (it != m_Backticks.end())
+        {
+            // in cache :)
+            bt = it->second;
+        }
+        else
+        {
+            #if wxCHECK_VERSION(2, 9, 0)
+            Manager::Get()->GetLogManager()->DebugLog(F(_T("Caching result of `%s`"), cmd.wx_str()));
+            #else
+            Manager::Get()->GetLogManager()->DebugLog(F(_T("Caching result of `%s`"), cmd.c_str()));
+            #endif
+            wxArrayString output;
+            if (platform::WindowsVersion() >= platform::winver_WindowsNT2000)
+                wxExecute(_T("cmd /c ") + cmd, output, wxEXEC_NODISABLE);
+            else
+                wxExecute(cmd, output, wxEXEC_NODISABLE);
+            bt = GetStringFromArray(output, _T(" "));
+            // add it in the cache
+            m_Backticks[cmd] = bt;
+            Manager::Get()->GetLogManager()->DebugLog(_T("Cached"));
+        }
+        ret << bt << _T(' ');
+        str = str.substr(0, start) + bt + str.substr(end + 1, wxString::npos);
 
 		// find next occurrence
 		start = str.find(_T('`'));

@@ -66,7 +66,7 @@
 #include "snippetsconfig.h"
 #include "snippetsimages.h"
 #include "codesnippetstreectrl.h"
-#include "messagebox.h"
+#include "GenericMessageBox.h"
 #include "settingsdlg.h"
 #include "menuidentifiers.h"
 #include "ThreadSearchFrame.h"
@@ -217,7 +217,7 @@ bool SnippetsDropTarget::OnDropText(wxCoord x, wxCoord y, const wxString& data)
 					item->SetSnippet(data);
 				break;
 			}
-
+            m_TreeCtrl->SetFileChanged(true); //{v1.3.94}
 			return true;
 		}
 		else
@@ -409,6 +409,7 @@ void CodeSnippetsWindow::OnSearchCfg(wxCommandEvent& /*event*/)
 	searchCfgMenu->AppendSeparator();
 	searchCfgMenu->Append(idMnuClear, _("Clear"));
     searchCfgMenu->Append(idMnuSearchExtended, _("Full Search"));
+    searchCfgMenu->Append(idMnuSettings, _("Settings..."));
 
 	if (m_SearchSnippetCtrl->GetValue().IsEmpty())
 	{
@@ -947,7 +948,7 @@ void CodeSnippetsWindow::OnMnuFileBackup(wxCommandEvent& event)
         break;
     }//while
     int done = ::wxCopyFile(IndexFile, bkupName);
-    messageBox( wxString::Format( wxT("Backup %s for\n\n %s"),
+    GenericMessageBox( wxString::Format( wxT("Backup %s for\n\n %s"),
                 done?wxT("succeeded"):wxT("failed"),
                 bkupName.c_str()) );
 
@@ -1334,6 +1335,10 @@ void CodeSnippetsWindow::CheckForExternallyModifiedFiles()
 
     wxFileName fname( GetConfig()->SettingsSnippetsXmlPath );
     wxDateTime last = fname.GetModificationTime();
+    #if defined(LOGGING)
+    LOGIT( _T("SnippetsXmlPath[%s]time[%s]"),
+                fname.GetFullPath().c_str(), last.Format().c_str());
+    #endif
 
     //    ProjectFile* pf = ed->GetProjectFile();
     //
@@ -1357,6 +1362,13 @@ void CodeSnippetsWindow::CheckForExternallyModifiedFiles()
     //    }
 
     //Was File content changed?
+    wxDateTime fileModTime = GetSnippetsTreeCtrl()->GetSavedFileModificationTime();
+    #if defined(LOGGING)
+    LOGIT( _T("FileModTime[%s]"), fileModTime.Format().c_str());
+    #endif
+    if ( fileModTime == time_t(0) ) //not yet initialized
+        b_modified = false;
+    else
     if ( last.IsLaterThan(GetSnippetsTreeCtrl()->GetSavedFileModificationTime()) )
         b_modified = true;
 
@@ -1368,7 +1380,7 @@ void CodeSnippetsWindow::CheckForExternallyModifiedFiles()
             wxString msg;
             msg.Printf(_("%s\n\nFile is modified outside the IDE...\nDo you want to reload it (you will lose any unsaved work)?"),
                        GetConfig()->SettingsSnippetsXmlPath.c_str());
-            if (messageBox(msg, whichApp + _("needs to Reload file?!"), wxICON_QUESTION | wxYES_NO) == wxYES)
+            if (GenericMessageBox(msg, whichApp + _("needs to Reload file?!"), wxICON_QUESTION | wxYES_NO) == wxYES)
                 ret = wxYES;
             else
                 ret = wxNO;
@@ -1389,7 +1401,7 @@ void CodeSnippetsWindow::CheckForExternallyModifiedFiles()
     {
         wxString msg;
         msg.Printf(_("Could not reload file:\n\n%s"), GetConfig()->SettingsSnippetsXmlPath.c_str() );
-        messageBox(msg, whichApp +  _("Error"), wxICON_ERROR);
+        GenericMessageBox(msg, whichApp +  _("Error"), wxICON_ERROR);
     }
     m_isCheckingForExternallyModifiedFiles = false;
 
@@ -1474,9 +1486,9 @@ void CodeSnippetsWindow::ShowSnippetsAbout(wxString buildInfo)
 
     //wxString msg = wxbuildinfo(long_f);
     wxString helpText;
-    helpText << wxT(" Each Snippet item may specify either text or a File Link.\n")
+    helpText << wxT("\n\n Each Snippet item may specify either text or a File Link.\n")
              << wxT("\n")
-             << wxT(" Snippets may be edited from within the context menu \n")
+             << wxT(" Snippets may be edited via the context menu \n")
              << wxT("\n")
 
              << wxT(" File Link snippets are created by dragging text to a new snippet, \n")
@@ -1501,7 +1513,9 @@ void CodeSnippetsWindow::ShowSnippetsAbout(wxString buildInfo)
              << wxT(" will open the file. Dragging it into the edit area will \n")
              << wxT(" insert the text.\n");
 
-    messageBox(wxT("\n\n")+buildInfo+wxT("\n\n")+helpText, _("About"),wxOK, wxSIMPLE_BORDER);
+    GenericMessageBox( wxT("\n\n")+ buildInfo + helpText, _("About"),wxOK);
+
+    //wxMessageBox( wxT("\n\n") + buildInfo + wxT("\n\n") + helpText, _("About"), wxOK) ;
 
 }
 // ----------------------------------------------------------------------------

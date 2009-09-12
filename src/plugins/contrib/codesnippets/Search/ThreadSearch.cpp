@@ -21,7 +21,7 @@
 #include "ThreadSearchView.h"
 #include "ThreadSearchConfPanel.h"
 #include "ThreadSearchControlIds.h"
-#include "wx/wxFlatNotebook/wxFlatNotebook.h"
+#include <wx/aui/auibook.h>
 #include "version.h" //(pecan 2008/2/28)
 #include "MainPanel.h"
 #include "codesnippetsevent.h"
@@ -570,7 +570,11 @@ int ThreadSearch::GetInsertionMenuIndex(const wxMenu* const pCtxMenu)
 	const wxMenuItemList ItemsList = pCtxMenu->GetMenuItems();
 	for (int i = 0; i < (int)ItemsList.GetCount(); ++i)
 	{
+		#if wxCHECK_VERSION(2, 9, 0)
+		if (ItemsList[i]->GetItemLabelText().StartsWith(_T("Find implementation of:")) )
+		#else
 		if (ItemsList[i]->GetLabel().StartsWith(_T("Find implementation of:")) )
+		#endif
 		{
 			return ++i;
 		}

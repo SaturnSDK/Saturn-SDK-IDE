@@ -18,6 +18,7 @@
 #include <wx/filename.h>
 #include <wx/filefn.h>
 #include "manager.h"
+#include "macrosmanager.h"
 #include "logmanager.h"
 #include "compilerMINGWgenerator.h"
 
@@ -109,16 +110,29 @@ void CompilerMINGW::Reset()
 
     // warnings
     m_Options.AddOption(_("In C mode, support all ISO C90 programs. In C++ mode, remove GNU extensions that conflict with ISO C++"), _T("-ansi"), category);
-    m_Options.AddOption(_("Enable all compiler warnings (overrides many other setting)"), _T("-Wall"), category);
+    m_Options.AddOption(_("Enable all compiler warnings (overrides many other settings)"), _T("-Wall"), category);
     m_Options.AddOption(_("Enable extra compiler warnings"), _T("-Wextra"), category);
     m_Options.AddOption(_("Stop compiling after first error"), _T("-Wfatal-errors"), category);
     m_Options.AddOption(_("Inhibit all warning messages"), _T("-w"), category);
     m_Options.AddOption(_("Have g++ follow the 1998 ISO C++ language standard"), _T("-std=c++98"), category);
+    m_Options.AddOption(_("Have g++ follow the coming C++0x ISO C++ language standard"), _T("-std=c++0x"), category);
     m_Options.AddOption(_("Enable warnings demanded by strict ISO C and ISO C++"), _T("-pedantic"), category);
     m_Options.AddOption(_("Treat as errors the warnings demanded by strict ISO C and ISO C++"), _T("-pedantic-errors"), category);
     m_Options.AddOption(_("Warn if main() is not conformant"), _T("-Wmain"), category);
     m_Options.AddOption(_("Enable Effective-C++ warnings (thanks Scott Myers)"), _T("-Weffc++"), category);
     m_Options.AddOption(_("Warn whenever a switch statement does not have a default case"), _T("-Wswitch-default"), category);
+    m_Options.AddOption(_("Warn whenever a switch statement has an index of enumerated type and lacks a case for one or more of the named codes of that enumeration"), _T("-Wswitch-enum"), category);
+    m_Options.AddOption(_("Warn if a user supplied include directory does not exist"), _T("-Wmissing-include-dirs"), category);
+    m_Options.AddOption(_("Warn if a global function is defined without a previous declaration"), _T("-Wmissing-declarations"), category);
+    m_Options.AddOption(_("Warn if the compiler detects that code will never be executed"), _T("-Wunreachable-code"), category);
+    m_Options.AddOption(_("Warn if a function can not be inlined and it was declared as inline"), _T("-Winline"), category);
+    m_Options.AddOption(_("Warn if floating point values are used in equality comparisons"), _T("-Wfloat-equal"), category);
+    m_Options.AddOption(_("Warn if an undefined identifier is evaluated in an '#if' directive"), _T("-Wundef"), category);
+    m_Options.AddOption(_("Warn whenever a pointer is cast such that the required alignment of the target is increased"), _T("-Wcast-align"), category);
+    m_Options.AddOption(_("Warn if anything is declared more than once in the same scope"), _T("-Wredundant-decls"), category);
+    m_Options.AddOption(_("Warn about unitialized variables which are initialized with themselves"), _T("-Winit-self"), category);
+    m_Options.AddOption(_("Warn whenever a local variable shadows another local variable, parameter or global variable or whenever a built-in function is shadowed"), _T("-Wshadow"), category);
+
     // optimization
     category = _("Optimization");
     m_Options.AddOption(_("Strip all symbols from binary (minimizes size)"), _T(""), category, _T("-s"), true, _T("-g -ggdb"), _("Stripping the binary will strip debugging symbols as well!"));
@@ -128,6 +142,7 @@ void CompilerMINGW::Reset()
     m_Options.AddOption(_("Optimize fully (for speed)"), _T("-O3"), category);
     m_Options.AddOption(_("Optimize generated code (for size)"), _T("-Os"), category);
     m_Options.AddOption(_("Expensive optimizations"), _T("-fexpensive-optimizations"), category);
+    m_Options.AddOption(_("Don't keep the frame pointer in a register for functions that don't need one"), _T("-fomit-frame-pointer"), category);
     // machine dependent options - cpu arch
     category = _("CPU architecture tuning (choose none, or only one of these)");
     m_Options.AddOption(_("i386"), _T("-march=i386"), category);
@@ -141,6 +156,7 @@ void CompilerMINGW::Reset()
     m_Options.AddOption(_("Intel Pentium 4 Prescott (MMX, SSE, SSE2, SSE3)"), _T("-march=prescott"), category);
     m_Options.AddOption(_("Intel Pentium 4 Nocona (MMX, SSE, SSE2, SSE3, 64bit extensions)"), _T("-march=nocona"), category);
     m_Options.AddOption(_("Intel Pentium M (MMX, SSE, SSE2)"), _T("-march=pentium-m"), category);
+    m_Options.AddOption(_("Intel Core2 (MMX, SSE, SSE2, SSE3, SSSE3, 64bit extensions)"), _T("-march=core2"), category);
     m_Options.AddOption(_("AMD K6 (MMX)"), _T("-march=k6"), category);
     m_Options.AddOption(_("AMD K6-2 (MMX, 3DNow!)"), _T("-march=k6-2"), category);
     m_Options.AddOption(_("AMD K6-3 (MMX, 3DNow!)"), _T("-march=k6-3"), category);
@@ -196,9 +212,12 @@ void CompilerMINGW::LoadDefaultRegExArray()
     m_RegExes.Add(RegExStruct(_("General note"), cltInfo, _T("([Nn]ote:[ \t].*)"), 1));
     m_RegExes.Add(RegExStruct(_("Compiler warning"), cltWarning, _T("(") + FilePathWithSpaces + _T("):([0-9]+):[ \t]([Ww]arning:[ \t].*)"), 3, 1, 2));
     m_RegExes.Add(RegExStruct(_("Compiler error"), cltError, _T("(") + FilePathWithSpaces + _T("):([0-9]+):[ \t](.*)"), 3, 1, 2));
+    m_RegExes.Add(RegExStruct(_("Linker warning"), cltWarning, _T("(") + FilePathWithSpaces + _T("):\\(\\.text\\+[0-9a-fA-FxX]+\\):[ \t]([Ww]arning:[ \t].*)"), 2, 1));
     m_RegExes.Add(RegExStruct(_("Linker error"), cltError, _T("(") + FilePathWithSpaces + _T("):([0-9]+):[0-9]+:[ \t](.*)"), 3, 1, 2));
     m_RegExes.Add(RegExStruct(_("Linker error (2)"), cltError, FilePathWithSpaces + _T("\\(.text\\+[0-9A-Za-z]+\\):([ \tA-Za-z0-9_:+/\\.-]+):[ \t](.*)"), 2, 1));
+    m_RegExes.Add(RegExStruct(_("Linker error (3)"), cltError, _T("(") + FilePathWithSpaces + _T("):\\(\\.text\\+[0-9a-fA-FxX]+\\):(.*)"), 2, 1));
     m_RegExes.Add(RegExStruct(_("Linker error (lib not found)"), cltError, _T(".*(ld.*):[ \t](cannot find.*)"), 2, 1));
+    m_RegExes.Add(RegExStruct(_("Linker error (cannot open output file)"), cltError, _T(".*(ld.*):[ \t](cannot open output file.*):[ \t](.*)"), 2, 1, 0, 3));
     m_RegExes.Add(RegExStruct(_("Undefined reference"), cltError, _T("(") + FilePathWithSpaces + _T("):[ \t](undefined reference.*)"), 2, 1));
     m_RegExes.Add(RegExStruct(_("General warning"), cltWarning, _T("([Ww]arning:[ \t].*)"), 1));
     m_RegExes.Add(RegExStruct(_("Auto-import info"), cltInfo, _T("([Ii]nfo:[ \t].*)\\(auto-import\\)"), 1));
@@ -292,9 +311,15 @@ AutoDetectResult CompilerMINGW::AutoDetectInstallationDir()
 
 void CompilerMINGW::SetVersionString()
 {
+    /*  NOTE (Biplab#9#): There is a critical bug which blocks C::B from starting up.
+        So we'll disable version string checking till we fix the bug. */
+    #if !wxCHECK_VERSION(2, 9, 0) && defined(__WXMSW__)
+//    Manager::Get()->GetLogManager()->DebugLog(_T("Compiler detection for compiler ID: '") + GetID() + _T("' (parent ID= '") + GetParentID() + _T("')"));
+
     wxArrayString output, errors;
     wxString sep = wxFileName::GetPathSeparator();
-    wxString masterpath = m_MasterPath;
+    wxString master_path = m_MasterPath;
+    wxString compiler_exe = m_Programs.C;
 
     /* We should read the master path from the configuration manager as
      * the m_MasterPath is empty if AutoDetectInstallationDir() is not
@@ -302,36 +327,68 @@ void CompilerMINGW::SetVersionString()
      */
     ConfigManager* cmgr = Manager::Get()->GetConfigManager(_T("compiler"));
     if (cmgr)
-        cmgr->Read(_T("/sets/gcc/master_path"), &masterpath);
-
-    if (masterpath.IsEmpty())
     {
-        if (platform::windows)
-            masterpath = _T("C:\\MinGW");
+        wxString settings_path;
+        wxString compiler_path;
+        /* Differ between user-defined compilers (copies of base compilers) */
+        if (GetParentID().IsEmpty())
+        {
+            settings_path = _T("/sets/")      + GetID() + _T("/master_path");
+            compiler_path = _T("/sets/")      + GetID() + _T("/c_compiler");
+        }
         else
-            masterpath = _T("/usr");
+        {
+            settings_path = _T("/user_sets/") + GetID() + _T("/master_path");
+            compiler_path = _T("/user_sets/") + GetID() + _T("/c_compiler");
+        }
+        cmgr->Read(settings_path, &master_path);
+        cmgr->Read(compiler_path, &compiler_exe);
     }
-    wxString gcc_command = masterpath + sep + _T("bin") + sep + m_Programs.C;
-    if (!wxFileExists(gcc_command))
-        return;
-    long result = wxExecute(gcc_command + _T(" --version"), output, errors, wxEXEC_NODISABLE);
-    if (result > 0)
+    if (master_path.IsEmpty())
     {
-        Manager::Get()->GetLogManager()->DebugLog(_T("Error in executing ") + gcc_command);
+        /* Notice: In general this is bad luck as e.g. all copies of a
+         * compiler have a different path, most likely.
+         * Thus the following might even return a wrong command!
+         */
+        if (platform::windows)
+            master_path = _T("C:\\MinGW");
+        else
+            master_path = _T("/usr");
+    }
+    wxString gcc_command = master_path + sep + _T("bin") + sep + compiler_exe;
+
+    Manager::Get()->GetMacrosManager()->ReplaceMacros(gcc_command);
+    if (!wxFileExists(gcc_command))
+    {
+//        Manager::Get()->GetLogManager()->DebugLog(_T("Compiler version detection: Compiler not found: ") + gcc_command);
+        return;
+    }
+
+//    Manager::Get()->GetLogManager()->DebugLog(_T("Compiler version detection: Issuing command: ") + gcc_command);
+    long result = wxExecute(gcc_command + _T(" --version"), output, errors, wxEXEC_NODISABLE);
+    if(result != 0)
+    {
+//        Manager::Get()->GetLogManager()->DebugLog(_T("Compiler version detection: Error executing command."));
     }
     else
     {
         if (output.GetCount() > 0)
         {
+//            Manager::Get()->GetLogManager()->DebugLog(_T("Extracting compiler version from: ") + output[0]);
             wxRegEx reg_exp;
             if (reg_exp.Compile(_T("[0-9][.][0-9][.][0-9]")) && reg_exp.Matches(output[0]))
+            {
                 m_VersionString = reg_exp.GetMatch(output[0]);
+//                Manager::Get()->GetLogManager()->DebugLog(_T("Compiler version via RegExp: ") + m_VersionString);
+            }
             else
             {
                 m_VersionString = output[0].Mid(10);
                 m_VersionString = m_VersionString.Left(5);
                 m_VersionString.Trim(false);
+//                Manager::Get()->GetLogManager()->DebugLog(_T("Compiler version: ") + m_VersionString);
             }
         }
     }
+    #endif
 }
