@@ -126,7 +126,9 @@
 #define wxSCI_MARGIN_NUMBER 1
 #define wxSCI_MARGIN_BACK 2
 #define wxSCI_MARGIN_FORE 3
-#define wxSCI_MARGIN_CHANGED 4
+#define wxSTI_MARGIN_TEXT 4
+#define wxSTI_MARGIN_RTEXT 5
+#define wxSCI_MARGIN_CHANGED 6
 
 // Styles in range 32..38 are predefined for parts of the UI and are not used as normal styles.
 // Style 39 is for future use.
@@ -210,17 +212,12 @@
 #define wxSCI_FOLDLEVELBASE 0x400
 #define wxSCI_FOLDLEVELWHITEFLAG 0x1000
 #define wxSCI_FOLDLEVELHEADERFLAG 0x2000
-#define wxSCI_FOLDLEVELBOXHEADERFLAG 0x4000
-#define wxSCI_FOLDLEVELBOXFOOTERFLAG 0x8000
-#define wxSCI_FOLDLEVELCONTRACTED 0x10000
-#define wxSCI_FOLDLEVELUNINDENT 0x20000
 #define wxSCI_FOLDLEVELNUMBERMASK 0x0FFF
 #define wxSCI_FOLDFLAG_LINEBEFORE_EXPANDED 0x0002
 #define wxSCI_FOLDFLAG_LINEBEFORE_CONTRACTED 0x0004
 #define wxSCI_FOLDFLAG_LINEAFTER_EXPANDED 0x0008
 #define wxSCI_FOLDFLAG_LINEAFTER_CONTRACTED 0x0010
 #define wxSCI_FOLDFLAG_LEVELNUMBERS 0x0040
-#define wxSCI_FOLDFLAG_BOX 0x0001
 #define wxSCI_TIME_FOREVER 10000000
 #define wxSCI_WRAP_NONE 0
 #define wxSCI_WRAP_WORD 1
@@ -231,6 +228,9 @@
 #define wxSCI_WRAPVISUALFLAGLOC_DEFAULT 0x0000
 #define wxSCI_WRAPVISUALFLAGLOC_END_BY_TEXT 0x0001
 #define wxSCI_WRAPVISUALFLAGLOC_START_BY_TEXT 0x0002
+#define wxSTI_WRAPINDENT_FIXED 0
+#define wxSTI_WRAPINDENT_SAME 1
+#define wxSTI_WRAPINDENT_INDENT 2
 #define wxSCI_CACHE_NONE 0
 #define wxSCI_CACHE_CARET 1
 #define wxSCI_CACHE_PAGE 2
@@ -238,6 +238,9 @@
 #define wxSCI_EDGE_NONE 0
 #define wxSCI_EDGE_LINE 1
 #define wxSCI_EDGE_BACKGROUND 2
+#define wxSTI_STATUS_OK 0
+#define wxSTI_STATUS_FAILURE 1
+#define wxSTI_STATUS_BADALLOC 2
 #define wxSCI_CURSORNORMAL -1
 #define wxSCI_CURSORWAIT 4
 
@@ -376,8 +379,6 @@
 #define wxSCI_LEX_NNCRONTAB 26
 #define wxSCI_LEX_BULLANT 27
 #define wxSCI_LEX_VBSCRIPT 28
-#define wxSCI_LEX_ASP 29
-#define wxSCI_LEX_PHP 30
 #define wxSCI_LEX_BAAN 31
 #define wxSCI_LEX_MATLAB 32
 #define wxSCI_LEX_SCRIPTOL 33
@@ -510,6 +511,11 @@
 #define wxSCI_D_COMMENTLINEDOC 15
 #define wxSCI_D_COMMENTDOCKEYWORD 16
 #define wxSCI_D_COMMENTDOCKEYWORDERROR 17
+#define wxSTI_D_STRINGB 18
+#define wxSTI_D_STRINGR 19
+#define wxSTI_D_WORD5 20
+#define wxSTI_D_WORD6 21
+#define wxSTI_D_WORD7 22
 
 // Lexical states for SCLEX_TCL
 #define wxSCI_TCL_DEFAULT 0
@@ -1399,6 +1405,7 @@
 #define wxSCI_CAML_OPERATOR 7
 #define wxSCI_CAML_NUMBER 8
 #define wxSCI_CAML_CHAR 9
+#define wxSTI_CAML_WHITE 10
 #define wxSCI_CAML_STRING 11
 #define wxSCI_CAML_COMMENT 12
 #define wxSCI_CAML_COMMENT1 13
@@ -1573,6 +1580,7 @@
 #define wxSCI_INNO_SECTION 4
 #define wxSCI_INNO_PREPROC 5
 #define wxSCI_INNO_PREPROC_INLINE 6
+#define wxSTI_INNO_INLINE_EXPANSION 6
 #define wxSCI_INNO_COMMENT_PASCAL 7
 #define wxSCI_INNO_KEYWORD_PASCAL 8
 #define wxSCI_INNO_KEYWORD_USER 9
@@ -1775,6 +1783,7 @@
 #define wxSCI_MYSQL_USER1 18
 #define wxSCI_MYSQL_USER2 19
 #define wxSCI_MYSQL_USER3 20
+#define wxSTI_MYSQL_HIDDENCOMMAND 21
 
 // Lexical state for SCLEX_PO
 #define wxSCI_PO_DEFAULT 0
@@ -2456,10 +2465,10 @@ public:
     // Set a style to be a hotspot or not.
     void StyleSetHotSpot(int style, bool hotspot);
 
-    // Set the foreground colour of the selection and whether to use this setting.
+    // Set the foreground colour of the main and additional selections and whether to use this setting.
     void SetSelForeground(bool useSetting, const wxColour& fore);
 
-    // Set the background colour of the selection and whether to use this setting.
+    // Set the background colour of the main and additional selections and whether to use this setting.
     void SetSelBackground(bool useSetting, const wxColour& back);
 
     // Get the alpha of the selection.
@@ -2526,6 +2535,12 @@ public:
 
     // Retrieve whether indicator drawn under or over text.
     bool IndicatorGetUnder(int indic) const;
+
+    // Set alpha value for an indicator to draw under text or over(default).
+    void IndicatorSetAlpha(int indicatorNumber, int alpha);
+
+    // Retrieve alpha value used for indicator drawn under or over text.
+    int  IndicatorGetAlpha(int indicatorNumber);
 
     // Set the foreground colour of all whitespace and whether to use this setting.
     void SetWhitespaceForeground(bool useSetting, const wxColour& fore);
@@ -2783,7 +2798,7 @@ public:
     bool GetModify() const;
 
     // Select a range of text.
-    void SetSelection (int startPos, int endPos);
+    void SetSelectionVoid(int startPos, int endPos);
 
     // Retrieve the selected text.
     wxString GetSelectedText();
@@ -3020,6 +3035,12 @@ public:
 
     // Retrive the start indent for wrapped lines.
     int GetWrapStartIndent() const;
+
+    // Sets how wrapped sublines are placed. Default is fixed.
+    void SetWrapIndentMode(int mode);
+
+    // Retrieve how wrapped sublines are placed. Default is fixed.
+    int GetWrapIndentMode() const;
 
     // Sets the degree of caching of layout information.
     void SetLayoutCache(int mode);
@@ -3721,6 +3742,114 @@ public:
     // Add a container action to the undo stack
     void AddUndoAction(int token, int flags);
 
+    // Find the position of a character from a point within the window.
+    int CharPositionFromPoint(int x, int y);
+
+    // Find the position of a character from a point within the window.
+    // Return INVALID_POSITION if not close to text.
+    int CharPositionFromPointClose(int x, int y);
+
+    // Set whether multiple selections can be made
+    void SetMultipleSelection(bool multipleSelection);
+
+    // Whether multiple selections can be made
+    bool GetMultipleSelection() const;
+
+    // Set whether typing can be performed into multiple selections
+    void SetAdditionalSelectionTyping(bool additionalSelectionTyping);
+
+    // Whether typing can be performed into multiple selections
+    bool GetAdditionalSelectionTyping() const;
+
+    // Set whether additional carets will blink
+    void SetAdditionalCaretsBlink(bool additionalCaretsBlink);
+
+    // Whether additional carets will blink
+    bool GetAdditionalCaretsBlink() const;
+
+    // How many selections are there?
+    int GetSelections() const;
+
+    // Clear selections to a single empty stream selection
+    void ClearSelections();
+
+    // Set a simple selection
+    int SetSelectionInt(int caret, int anchor);
+
+    // Add a selection
+    int AddSelection(int caret, int anchor);
+
+    // Set the main selection
+    void SetMainSelection(int selection);
+
+    // Which selection is the main selection
+    int GetMainSelection() const;
+    void SetSelectionNCaret(int selection, int pos);
+    int GetSelectionNCaret(int selection) const;
+    void SetSelectionNAnchor(int selection, int posAnchor);
+    int GetSelectionNAnchor(int selection) const;
+    void SetSelectionNCaretVirtualSpace(int selection, int space);
+    int GetSelectionNCaretVirtualSpace(int selection) const;
+    void SetSelectionNAnchorVirtualSpace(int selection, int space);
+    int GetSelectionNAnchorVirtualSpace(int selection) const;
+
+    // Sets the position that starts the selection - this becomes the anchor.
+    void SetSelectionNStart(int selection, int pos);
+
+    // Returns the position at the start of the selection.
+    int GetSelectionNStart() const;
+
+    // Sets the position that ends the selection - this becomes the currentPosition.
+    void SetSelectionNEnd(int selection, int pos);
+
+    // Returns the position at the end of the selection.
+    int GetSelectionNEnd() const;
+    void SetRectangularSelectionCaret(int pos);
+    int GetRectangularSelectionCaret() const;
+    void SetRectangularSelectionAnchor(int posAnchor);
+    int GetRectangularSelectionAnchor() const;
+    void SetRectangularSelectionCaretVirtualSpace(int space);
+    int GetRectangularSelectionCaretVirtualSpace() const;
+    void SetRectangularSelectionAnchorVirtualSpace(int space);
+    int GetRectangularSelectionAnchorVirtualSpace() const;
+    void SetVirtualSpaceOptions(int virtualSpaceOptions);
+    int GetVirtualSpaceOptions() const;
+
+    // On GTK+, allow selecting the modifier key to use for mouse-based
+    // rectangular selection. Often the window manager requires Alt+Mouse Drag
+    // for moving windows.
+    // Valid values are SCMOD_CTRL(default), SCMOD_ALT, or SCMOD_SUPER.
+    void SetRectangularSelectionModifier(int modifier);
+
+    // Get the modifier key used for rectangular selection.
+    int GetRectangularSelectionModifier() const;
+
+    // Set the foreground colour of additional selections.
+    // Must have previously called SetSelFore with non-zero first argument for this to have an effect.
+    void SetAdditionalSelFore(const wxColour& fore);
+
+    // Set the background colour of additional selections.
+    // Must have previously called SetSelBack with non-zero first argument for this to have an effect.
+    void SetAdditionalSelBack(const wxColour& back);
+
+    // Set the alpha of the selection.
+    void SetAdditionalSelAlpha(int alpha);
+
+    // Get the alpha of the selection.
+    int GetAdditionalSelAlpha() const;
+
+    // Set the foreground colour of additional carets.
+    void SetAdditionalCaretFore(const wxColour& fore);
+
+    // Get the foreground colour of additional carets.
+    wxColour GetAdditionalCaretFore() const;
+
+    // Set the main selection to the next selection.
+    void RotateSelection();
+
+    // Swap that caret and anchor of the main selection.
+    void SwapMainAnchorCaret();
+
     // Start notifying the container of all key presses and commands.
     void StartRecord();
 
@@ -3872,16 +4001,6 @@ public:
     void DoDragLeave ();
 
 #endif
-
-    // Specify whether anti-aliased fonts should be used.  Will have no effect
-    // on some platforms, but on some (wxMac for example) can greatly improve
-    // performance.
-    void SetUseAntiAliasing(bool useAA);
-
-    // Returns the current UseAntiAliasing setting.
-    bool GetUseAntiAliasing();
-
-
 
     // The following methods are nearly equivallent to their similarly named
     // cousins above.  The difference is that these methods bypass wxString

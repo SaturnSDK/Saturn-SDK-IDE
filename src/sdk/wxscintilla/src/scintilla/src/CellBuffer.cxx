@@ -103,7 +103,7 @@ int LineChanges::GetChanged(int line) const {
 } 
 /* CHANGEBAR end */
  
-LineVector::LineVector() : starts(256) {
+LineVector::LineVector() : starts(256), perLine(0) {
 	Init();
 }
 
@@ -113,6 +113,9 @@ LineVector::~LineVector() {
 
 void LineVector::Init() {
 	starts.DeleteAll();
+	if (perLine) {
+		perLine->Init();
+	}
 }
 
 void LineVector::SetPerLine(PerLine *pl) {
@@ -156,7 +159,7 @@ void LineVector::RemoveLine(int line, bool undoing) {
 /* CHANGEBAR end */
 }
 
-int LineVector::LineFromPosition(int pos) {
+int LineVector::LineFromPosition(int pos) const {
 	return starts.PartitionFromPosition(pos);
 }
 /* CHANGEBAR begin */
@@ -296,8 +299,6 @@ void UndoHistory::EnsureUndoRoom() {
 /* CHANGEBAR end */
  
 		Action *actionsNew = new Action[lenActionsNew];
-		if (!actionsNew)
-			return;
 		for (int act = 0; act <= currentAction; act++)
 			actionsNew[act].Grab(&actions[act]);
 		delete []actions;

@@ -827,13 +827,13 @@ void wxScintilla::StyleSetHotSpot (int style, bool hotspot)
     SendMsg(SCI_STYLESETHOTSPOT, style, hotspot);
 }
 
-// Set the foreground colour of the selection and whether to use this setting.
+// Set the foreground colour of the main and additional selections and whether to use this setting.
 void wxScintilla::SetSelForeground(bool useSetting, const wxColour& fore)
 {
     SendMsg(SCI_SETSELFORE, useSetting, wxColourAsLong(fore));
 }
 
-// Set the background colour of the selection and whether to use this setting.
+// Set the background colour of the main and additional selections and whether to use this setting.
 void wxScintilla::SetSelBackground(bool useSetting, const wxColour& back)
 {
     SendMsg(SCI_SETSELBACK, useSetting, wxColourAsLong(back));
@@ -963,6 +963,14 @@ void wxScintilla::IndicatorSetUnder(int indic, bool under)
 bool wxScintilla::IndicatorGetUnder(int indic) const
 {
     return SendMsg(SCI_INDICGETUNDER, indic, 0) != 0;
+}
+
+int wxScintilla::IndicatorGetAlpha(int indicator) {
+	return SendMsg(SCI_INDICGETALPHA, indicator);
+}
+
+void wxScintilla::IndicatorSetAlpha(int indicator, int alpha){
+	SendMsg(SCI_INDICSETALPHA, indicator, alpha);
 }
 
 // Set the foreground colour of all whitespace and whether to use this setting.
@@ -1356,7 +1364,7 @@ void wxScintilla::SetCurrentPos (int pos)
 }
 
 // Sets the position that starts the selection - this becomes the anchor.
-void wxScintilla::SetSelectionStart (int pos)
+void wxScintilla::SetSelectionStart(int pos)
 {
     SendMsg(SCI_SETSELECTIONSTART, pos, 0);
 }
@@ -1368,7 +1376,7 @@ int wxScintilla::GetSelectionStart() const
 }
 
 // Sets the position that ends the selection - this becomes the currentPosition.
-void wxScintilla::SetSelectionEnd (int pos)
+void wxScintilla::SetSelectionEnd(int pos)
 {
     SendMsg(SCI_SETSELECTIONEND, pos, 0);
 }
@@ -1507,17 +1515,16 @@ bool wxScintilla::GetModify() const
 }
 
 // Select a range of text.
-void wxScintilla::SetSelection (int startPos, int endPos) {
+void wxScintilla::SetSelectionVoid(int startPos, int endPos) {
     SendMsg(SCI_SETSEL, startPos, endPos);
 }
 
 // Retrieve the selected text.
 wxString wxScintilla::GetSelectedText() {
-         int   start;
-         int   end;
+         int len (0);
 
-         GetSelection(&start, &end);
-         int   len  = end - start;
+         // determine the selected text range
+         len = SendMsg (SCI_GETSELTEXT, 0, 0);
          if (!len) return wxEmptyString;
 
          wxMemoryBuffer mbuf(len+2);
@@ -2001,6 +2008,18 @@ void wxScintilla::SetWrapStartIndent (int indent)
 int wxScintilla::GetWrapStartIndent() const
 {
     return SendMsg(SCI_GETWRAPSTARTINDENT, 0, 0);
+}
+
+// Sets how wrapped sublines are placed. Default is fixed.
+void wxScintilla::SetWrapIndentMode(int mode)
+{
+    SendMsg(SCI_SETWRAPINDENTMODE, mode, 0);
+}
+
+// Retrieve how wrapped sublines are placed. Default is fixed.
+int wxScintilla::GetWrapIndentMode() const
+{
+    return SendMsg(SCI_GETWRAPINDENTMODE, 0, 0);
 }
 
 // Sets the degree of caching of layout information.
@@ -2896,7 +2915,7 @@ void wxScintilla::CopyText (int length, const wxString& text)
     SendMsg(SCI_COPYTEXT, length, (sptr_t)(const char*)wx2sci(text));
 }
 
-// Set the selection mode to stream (SC_SEL_STREAM) or rectangular (SC_SEL_RECTANGLE) or
+// Set the selection mode to stream (SC_SEL_STREAM) or rectangular (SC_SEL_RECTANGLE/SC_SEL_THIN) or
 // by lines (SC_SEL_LINES).
 void wxScintilla::SetSelectionMode (int mode)
 {
@@ -3426,6 +3445,253 @@ void wxScintilla::AddUndoAction(int token, int flags)
     SendMsg(SCI_ADDUNDOACTION, token, flags);
 }
 
+// Find the position of a character from a point within the window.
+int wxScintilla::CharPositionFromPoint(int x, int y)
+{
+    return SendMsg(SCI_CHARPOSITIONFROMPOINT, x, y);
+}
+
+// Find the position of a character from a point within the window.
+// Return INVALID_POSITION if not close to text.
+int wxScintilla::CharPositionFromPointClose(int x, int y)
+{
+    return SendMsg(SCI_CHARPOSITIONFROMPOINTCLOSE, x, y);
+}
+
+// Set whether multiple selections can be made
+void wxScintilla::SetMultipleSelection(bool multipleSelection)
+{
+    SendMsg(SCI_SETMULTIPLESELECTION, multipleSelection, 0);
+}
+
+// Whether multiple selections can be made
+bool wxScintilla::GetMultipleSelection() const
+{
+    return SendMsg(SCI_GETMULTIPLESELECTION, 0, 0) != 0;
+}
+
+// Set whether typing can be performed into multiple selections
+void wxScintilla::SetAdditionalSelectionTyping(bool additionalSelectionTyping)
+{
+    SendMsg(SCI_SETADDITIONALSELECTIONTYPING, additionalSelectionTyping, 0);
+}
+
+// Whether typing can be performed into multiple selections
+bool wxScintilla::GetAdditionalSelectionTyping() const
+{
+    return SendMsg(SCI_GETADDITIONALSELECTIONTYPING, 0, 0) != 0;
+}
+
+// Set whether additional carets will blink
+void wxScintilla::SetAdditionalCaretsBlink(bool additionalCaretsBlink)
+{
+    SendMsg(SCI_SETADDITIONALCARETSBLINK, additionalCaretsBlink, 0);
+}
+
+// Whether additional carets will blink
+bool wxScintilla::GetAdditionalCaretsBlink() const
+{
+    return SendMsg(SCI_GETADDITIONALCARETSBLINK, 0, 0) != 0;
+}
+
+// How many selections are there?
+int wxScintilla::GetSelections() const
+{
+    return SendMsg(SCI_GETSELECTIONS, 0, 0);
+}
+
+// Clear selections to a single empty stream selection
+void wxScintilla::ClearSelections()
+{
+    SendMsg(SCI_CLEARSELECTIONS, 0, 0);
+}
+
+// Set a simple selection
+int wxScintilla::SetSelectionInt(int caret, int anchor)
+{
+    return SendMsg(SCI_SETSELECTION, caret, anchor);
+}
+
+// Add a selection
+int wxScintilla::AddSelection(int caret, int anchor)
+{
+    return SendMsg(SCI_ADDSELECTION, caret, anchor);
+}
+
+// Set the main selection
+void wxScintilla::SetMainSelection(int selection)
+{
+    SendMsg(SCI_SETMAINSELECTION, selection, 0);
+}
+
+// Which selection is the main selection
+int wxScintilla::GetMainSelection() const
+{
+    return SendMsg(SCI_GETMAINSELECTION, 0, 0);
+}
+void wxScintilla::SetSelectionNCaret(int selection, int pos)
+{
+    SendMsg(SCI_SETSELECTIONNCARET, selection, pos);
+}
+int wxScintilla::GetSelectionNCaret(int selection) const
+{
+    return SendMsg(SCI_GETSELECTIONNCARET, selection, 0);
+}
+void wxScintilla::SetSelectionNAnchor(int selection, int posAnchor)
+{
+    SendMsg(SCI_SETSELECTIONNANCHOR, selection, posAnchor);
+}
+int wxScintilla::GetSelectionNAnchor(int selection) const
+{
+    return SendMsg(SCI_GETSELECTIONNANCHOR, selection, 0);
+}
+void wxScintilla::SetSelectionNCaretVirtualSpace(int selection, int space)
+{
+    SendMsg(SCI_SETSELECTIONNCARETVIRTUALSPACE, selection, space);
+}
+int wxScintilla::GetSelectionNCaretVirtualSpace(int selection) const
+{
+    return SendMsg(SCI_GETSELECTIONNCARETVIRTUALSPACE, selection, 0);
+}
+
+void wxScintilla::SetSelectionNAnchorVirtualSpace(int selection, int space)
+{
+    SendMsg(SCI_SETSELECTIONNANCHORVIRTUALSPACE, selection, space);
+}
+int wxScintilla::GetSelectionNAnchorVirtualSpace(int selection) const
+{
+    return SendMsg(SCI_GETSELECTIONNANCHORVIRTUALSPACE, selection, 0);
+}
+// Sets the position that starts the selection - this becomes the anchor.
+void wxScintilla::SetSelectionNStart(int selection, int pos)
+{
+    SendMsg(SCI_SETSELECTIONNSTART, selection, pos);
+}
+
+// Returns the position at the start of the selection.
+int wxScintilla::GetSelectionNStart() const
+{
+    return SendMsg(SCI_GETSELECTIONNSTART, 0, 0);
+}
+
+// Sets the position that ends the selection - this becomes the currentPosition.
+void wxScintilla::SetSelectionNEnd(int selection, int pos)
+{
+    SendMsg(SCI_SETSELECTIONNEND, selection, pos);
+}
+
+// Returns the position at the end of the selection.
+int wxScintilla::GetSelectionNEnd() const
+{
+    return SendMsg(SCI_GETSELECTIONNEND, 0, 0);
+}
+void wxScintilla::SetRectangularSelectionCaret(int pos)
+{
+    SendMsg(SCI_SETRECTANGULARSELECTIONCARET, pos, 0);
+}
+int wxScintilla::GetRectangularSelectionCaret() const
+{
+    return SendMsg(SCI_GETRECTANGULARSELECTIONCARET, 0, 0);
+}
+void wxScintilla::SetRectangularSelectionAnchor(int posAnchor)
+{
+    SendMsg(SCI_SETRECTANGULARSELECTIONANCHOR, posAnchor, 0);
+}
+int wxScintilla::GetRectangularSelectionAnchor() const
+{
+    return SendMsg(SCI_GETRECTANGULARSELECTIONANCHOR, 0, 0);
+}
+void wxScintilla::SetRectangularSelectionCaretVirtualSpace(int space)
+{
+    SendMsg(SCI_SETRECTANGULARSELECTIONCARETVIRTUALSPACE, space, 0);
+}
+int wxScintilla::GetRectangularSelectionCaretVirtualSpace() const
+{
+    return SendMsg(SCI_GETRECTANGULARSELECTIONCARETVIRTUALSPACE, 0, 0);
+}
+void wxScintilla::SetRectangularSelectionAnchorVirtualSpace(int space)
+{
+    SendMsg(SCI_SETRECTANGULARSELECTIONANCHORVIRTUALSPACE, space, 0);
+}
+int wxScintilla::GetRectangularSelectionAnchorVirtualSpace() const
+{
+    return SendMsg(SCI_GETRECTANGULARSELECTIONANCHORVIRTUALSPACE, 0, 0);
+}
+void wxScintilla::SetVirtualSpaceOptions(int virtualSpaceOptions)
+{
+    SendMsg(SCI_SETVIRTUALSPACEOPTIONS, virtualSpaceOptions, 0);
+}
+int wxScintilla::GetVirtualSpaceOptions() const
+{
+    return SendMsg(SCI_GETVIRTUALSPACEOPTIONS, 0, 0);
+}
+
+// On GTK+, allow selecting the modifier key to use for mouse-based
+// rectangular selection. Often the window manager requires Alt+Mouse Drag
+// for moving windows.
+// Valid values are SCMOD_CTRL(default), SCMOD_ALT, or SCMOD_SUPER.
+void wxScintilla::SetRectangularSelectionModifier(int modifier)
+{
+    SendMsg(SCI_SETRECTANGULARSELECTIONMODIFIER, modifier, 0);
+}
+
+// Get the modifier key used for rectangular selection.
+int wxScintilla::GetRectangularSelectionModifier() const
+{
+    return SendMsg(SCI_GETRECTANGULARSELECTIONMODIFIER, 0, 0);
+}
+
+// Set the foreground colour of additional selections.
+// Must have previously called SetSelFore with non-zero first argument for this to have an effect.
+void wxScintilla::SetAdditionalSelFore(const wxColour& fore)
+{
+    SendMsg(SCI_SETADDITIONALSELFORE, wxColourAsLong(fore), 0);
+}
+
+// Set the background colour of additional selections.
+// Must have previously called SetSelBack with non-zero first argument for this to have an effect.
+void wxScintilla::SetAdditionalSelBack(const wxColour& back)
+{
+    SendMsg(SCI_SETADDITIONALSELBACK, wxColourAsLong(back), 0);
+}
+
+// Set the alpha of the selection.
+void wxScintilla::SetAdditionalSelAlpha(int alpha)
+{
+    SendMsg(SCI_SETADDITIONALSELALPHA, alpha, 0);
+}
+
+// Get the alpha of the selection.
+int wxScintilla::GetAdditionalSelAlpha() const
+{
+    return SendMsg(SCI_GETADDITIONALSELALPHA, 0, 0);
+}
+
+// Set the foreground colour of additional carets.
+void wxScintilla::SetAdditionalCaretFore(const wxColour& fore)
+{
+    SendMsg(SCI_SETADDITIONALCARETFORE, wxColourAsLong(fore), 0);
+}
+
+// Get the foreground colour of additional carets.
+wxColour wxScintilla::GetAdditionalCaretFore() const
+{
+    long c = SendMsg(SCI_GETADDITIONALCARETFORE, 0, 0);
+    return wxColourFromLong(c);
+}
+
+// Set the main selection to the next selection.
+void wxScintilla::RotateSelection()
+{
+    SendMsg(SCI_ROTATESELECTION, 0, 0);
+}
+
+// Swap that caret and anchor of the main selection.
+void wxScintilla::SwapMainAnchorCaret()
+{
+    SendMsg(SCI_SWAPMAINANCHORCARET, 0, 0);
+}
+
 // Start notifying the container of all key presses and commands.
 void wxScintilla::StartRecord ()
 {
@@ -3539,7 +3805,7 @@ int wxScintilla::GetCurrentLine () {
 //
 void wxScintilla::StyleSetSpec (int styleNum, const wxString& spec) {
 
-    wxStringTokenizer tkz (spec, wxT(","));
+    wxStringTokenizer tkz(spec, wxT(","));
     while (tkz.HasMoreTokens()) {
         wxString token = tkz.GetNextToken();
 
@@ -3601,7 +3867,7 @@ void wxScintilla::StyleSetFont (int styleNum, wxFont& font) {
 #ifdef __WXGTK__
     // Ensure that the native font is initialized
     int x, y;
-    GetTextExtent (wxT("X"), &x, &y, NULL, NULL, &font);
+    GetTextExtent(wxT("X"), &x, &y, NULL, NULL, &font);
 #endif
     int            size     = font.GetPointSize();
     wxString       faceName = font.GetFaceName();
@@ -3852,15 +4118,6 @@ void wxScintilla::DoDragLeave () {
     m_swx->DoDragLeave ();
 }
 #endif
-
-
-void wxScintilla::SetUseAntiAliasing (bool useAA) {
-    m_swx->SetUseAntiAliasing(useAA);
-}
-
-bool wxScintilla::GetUseAntiAliasing() {
-    return m_swx->GetUseAntiAliasing();
-}
 
 
 // Raw text handling for UTF-8

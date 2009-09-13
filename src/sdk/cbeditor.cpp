@@ -1831,7 +1831,7 @@ void cbEditor::AutoComplete()
             control->BeginUndoAction();
 
             // delete keyword
-            control->SetSelection(wordStartPos, curPos);
+            control->SetSelectionVoid(wordStartPos, curPos);
             control->ReplaceSelection(_T(""));
             curPos = wordStartPos;
 
@@ -1845,7 +1845,7 @@ void cbEditor::AutoComplete()
             if (caretPos != -1)
             {
                 control->SetCurrentPos(curPos + caretPos);
-                control->SetSelection(curPos + caretPos, curPos + caretPos + 1);
+                control->SetSelectionVoid(curPos + caretPos, curPos + caretPos + 1);
                 control->ReplaceSelection(_T(""));
             }
 

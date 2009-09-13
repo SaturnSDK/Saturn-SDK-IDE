@@ -1126,7 +1126,7 @@ void BrowseTracker::OnMouseKeyEvent(wxMouseEvent& event)
                 {   //Clear all on Ctrl Double Click
                     ClearAllBrowse_Marks(/*clearScreenMarks*/true);
                     m_IsMouseDoubleClick = false;
-                    pControl->SetSelection (-1, pControl->GetCurrentPos()); //clear selection
+                    pControl->SetSelectionVoid (-1, pControl->GetCurrentPos()); //clear selection
                     break;
                 }
                 if (ctrlKeyIsDown && clearUsesSingleClick)
@@ -1148,7 +1148,7 @@ void BrowseTracker::OnMouseKeyEvent(wxMouseEvent& event)
                 {   //Clear all on Ctrl Double Click
                     ClearAllBrowse_Marks(/*clearScreenMarks*/true);
                     m_IsMouseDoubleClick = false;
-                    pControl->SetSelection (-1, pControl->GetCurrentPos()); //clear selection
+                    pControl->SetSelectionVoid (-1, pControl->GetCurrentPos()); //clear selection
                     break;
                 }
                 RecordBrowseMark(eb);

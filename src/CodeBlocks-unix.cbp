@@ -95,7 +95,6 @@
 					<Add option="-DLINK_LEXERS" />
 					<Add option="-DGTK" />
 					<Add option="-D__WX__" />
-					<Add directory="include/wxscintilla/include" />
 					<Add directory="sdk/wxscintilla/src/scintilla/include" />
 					<Add directory="sdk/wxscintilla/src/scintilla/src" />
 				</Compiler>
@@ -979,6 +978,10 @@
 		<Unit filename="plugins/autosave/autosave.h">
 			<Option target="Autosave" />
 		</Unit>
+		<Unit filename="plugins/autosave/manifest.xml">
+			<Option compilerVar="CC" />
+			<Option target="Autosave" />
+		</Unit>
 		<Unit filename="plugins/classwizard/classwizard.cpp">
 			<Option target="Class wizard" />
 		</Unit>
@@ -989,6 +992,9 @@
 			<Option target="Class wizard" />
 		</Unit>
 		<Unit filename="plugins/classwizard/classwizarddlg.h">
+			<Option target="Class wizard" />
+		</Unit>
+		<Unit filename="plugins/classwizard/resources/manifest.xml">
 			<Option target="Class wizard" />
 		</Unit>
 		<Unit filename="plugins/classwizard/resources/new_class.xrc">
@@ -1075,76 +1081,16 @@
 		<Unit filename="plugins/codecompletion/resources/classbrowser.xrc">
 			<Option target="Code-completion" />
 		</Unit>
-		<Unit filename="plugins/codecompletion/resources/images/class.png">
-			<Option target="Code-completion" />
-		</Unit>
-		<Unit filename="plugins/codecompletion/resources/images/class_folder.png">
-			<Option target="Code-completion" />
-		</Unit>
-		<Unit filename="plugins/codecompletion/resources/images/ctor_private.png">
-			<Option target="Code-completion" />
-		</Unit>
-		<Unit filename="plugins/codecompletion/resources/images/ctor_protected.png">
-			<Option target="Code-completion" />
-		</Unit>
-		<Unit filename="plugins/codecompletion/resources/images/ctor_public.png">
-			<Option target="Code-completion" />
-		</Unit>
-		<Unit filename="plugins/codecompletion/resources/images/dtor_private.png">
-			<Option target="Code-completion" />
-		</Unit>
-		<Unit filename="plugins/codecompletion/resources/images/dtor_protected.png">
-			<Option target="Code-completion" />
-		</Unit>
-		<Unit filename="plugins/codecompletion/resources/images/dtor_public.png">
-			<Option target="Code-completion" />
-		</Unit>
-		<Unit filename="plugins/codecompletion/resources/images/enum.png">
-			<Option target="Code-completion" />
-		</Unit>
-		<Unit filename="plugins/codecompletion/resources/images/enumerator.png">
-			<Option target="Code-completion" />
-		</Unit>
-		<Unit filename="plugins/codecompletion/resources/images/enums_folder.png">
-			<Option target="Code-completion" />
-		</Unit>
-		<Unit filename="plugins/codecompletion/resources/images/method_private.png">
-			<Option target="Code-completion" />
-		</Unit>
-		<Unit filename="plugins/codecompletion/resources/images/method_protected.png">
-			<Option target="Code-completion" />
-		</Unit>
-		<Unit filename="plugins/codecompletion/resources/images/method_public.png">
-			<Option target="Code-completion" />
-		</Unit>
-		<Unit filename="plugins/codecompletion/resources/images/namespace.png">
-			<Option target="Code-completion" />
-		</Unit>
-		<Unit filename="plugins/codecompletion/resources/images/others_folder.png">
-			<Option target="Code-completion" />
-		</Unit>
-		<Unit filename="plugins/codecompletion/resources/images/preproc.png">
-			<Option target="Code-completion" />
-		</Unit>
-		<Unit filename="plugins/codecompletion/resources/images/preproc_folder.png">
-			<Option target="Code-completion" />
-		</Unit>
-		<Unit filename="plugins/codecompletion/resources/images/symbols_folder.png">
-			<Option target="Code-completion" />
-		</Unit>
-		<Unit filename="plugins/codecompletion/resources/images/var_private.png">
-			<Option target="Code-completion" />
-		</Unit>
-		<Unit filename="plugins/codecompletion/resources/images/var_protected.png">
-			<Option target="Code-completion" />
-		</Unit>
-		<Unit filename="plugins/codecompletion/resources/images/var_public.png">
-			<Option target="Code-completion" />
-		</Unit>
 		<Unit filename="plugins/codecompletion/resources/insert_class_method.xrc">
 			<Option target="Code-completion" />
 		</Unit>
+		<Unit filename="plugins/codecompletion/resources/manifest.xml">
+			<Option target="Code-completion" />
+		</Unit>
 		<Unit filename="plugins/codecompletion/resources/project_settings.xrc">
+			<Option target="Code-completion" />
+		</Unit>
+		<Unit filename="plugins/codecompletion/resources/selectincludefile.xrc">
 			<Option target="Code-completion" />
 		</Unit>
 		<Unit filename="plugins/codecompletion/resources/settings.xrc">
@@ -1437,28 +1383,7 @@
 		<Unit filename="plugins/compilergcc/resources/compiler_toolbar_16x16.xrc">
 			<Option target="Compiler" />
 		</Unit>
-		<Unit filename="plugins/compilergcc/resources/images/16x16/compile.png">
-			<Option target="Compiler" />
-		</Unit>
-		<Unit filename="plugins/compilergcc/resources/images/16x16/compilerun.png">
-			<Option target="Compiler" />
-		</Unit>
-		<Unit filename="plugins/compilergcc/resources/images/16x16/rebuild.png">
-			<Option target="Compiler" />
-		</Unit>
-		<Unit filename="plugins/compilergcc/resources/images/16x16/run.png">
-			<Option target="Compiler" />
-		</Unit>
-		<Unit filename="plugins/compilergcc/resources/images/compile.png">
-			<Option target="Compiler" />
-		</Unit>
-		<Unit filename="plugins/compilergcc/resources/images/compilerun.png">
-			<Option target="Compiler" />
-		</Unit>
-		<Unit filename="plugins/compilergcc/resources/images/rebuild.png">
-			<Option target="Compiler" />
-		</Unit>
-		<Unit filename="plugins/compilergcc/resources/images/run.png">
+		<Unit filename="plugins/compilergcc/resources/manifest.xml">
 			<Option target="Compiler" />
 		</Unit>
 		<Unit filename="plugins/debuggergdb/backtracedlg.cpp">
@@ -1611,34 +1536,7 @@
 		<Unit filename="plugins/debuggergdb/resources/edit_watches_dlg.xrc">
 			<Option target="Debugger" />
 		</Unit>
-		<Unit filename="plugins/debuggergdb/resources/images/16x16/dbgnext.png">
-			<Option target="Debugger" />
-		</Unit>
-		<Unit filename="plugins/debuggergdb/resources/images/16x16/dbgrun.png">
-			<Option target="Debugger" />
-		</Unit>
-		<Unit filename="plugins/debuggergdb/resources/images/16x16/dbgrunto.png">
-			<Option target="Debugger" />
-		</Unit>
-		<Unit filename="plugins/debuggergdb/resources/images/16x16/dbgstep.png">
-			<Option target="Debugger" />
-		</Unit>
-		<Unit filename="plugins/debuggergdb/resources/images/16x16/dbgstop.png">
-			<Option target="Debugger" />
-		</Unit>
-		<Unit filename="plugins/debuggergdb/resources/images/dbgnext.png">
-			<Option target="Debugger" />
-		</Unit>
-		<Unit filename="plugins/debuggergdb/resources/images/dbgrun.png">
-			<Option target="Debugger" />
-		</Unit>
-		<Unit filename="plugins/debuggergdb/resources/images/dbgrunto.png">
-			<Option target="Debugger" />
-		</Unit>
-		<Unit filename="plugins/debuggergdb/resources/images/dbgstep.png">
-			<Option target="Debugger" />
-		</Unit>
-		<Unit filename="plugins/debuggergdb/resources/images/dbgstop.png">
+		<Unit filename="plugins/debuggergdb/resources/manifest.xml">
 			<Option target="Debugger" />
 		</Unit>
 		<Unit filename="plugins/debuggergdb/resources/memdump.xrc">
@@ -1676,6 +1574,12 @@
 		</Unit>
 		<Unit filename="plugins/defaultmimehandler/resources/edit_files_handling.xrc">
 			<Option target="Default MIME handler" />
+		</Unit>
+		<Unit filename="plugins/defaultmimehandler/resources/manifest.xml">
+			<Option target="Default MIME handler" />
+		</Unit>
+		<Unit filename="plugins/openfileslist/manifest.xml">
+			<Option target="Open files list" />
 		</Unit>
 		<Unit filename="plugins/openfileslist/openfileslistplugin.cpp">
 			<Option target="Open files list" />
@@ -1878,6 +1782,9 @@
 		<Unit filename="plugins/todo/resources/ask_type.xrc">
 			<Option target="To-do" />
 		</Unit>
+		<Unit filename="plugins/todo/resources/manifest.xml">
+			<Option target="To-do" />
+		</Unit>
 		<Unit filename="plugins/todo/resources/settings.xrc">
 			<Option target="To-do" />
 		</Unit>
@@ -1899,25 +1806,8 @@
 		<Unit filename="plugins/todo/todosettingsdlg.h">
 			<Option target="To-do" />
 		</Unit>
-		<Unit filename="sdk.doxy">
-			<Option target="tinyXML" />
-			<Option target="AutoRevision" />
-			<Option target="ConsoleRunner" />
-			<Option target="Squirrel" />
-			<Option target="Squirrel std library" />
-			<Option target="SqPlus" />
-			<Option target="scintilla" />
-			<Option target="sdk" />
-			<Option target="src" />
-			<Option target="AStyle" />
-			<Option target="Compiler depslib" />
-			<Option target="Compiler" />
+		<Unit filename="scripts/gdb_types.script">
 			<Option target="Debugger" />
-			<Option target="Code-completion" />
-			<Option target="Class wizard" />
-			<Option target="Scripted wizard" />
-			<Option target="To-do" />
-			<Option target="Autosave" />
 		</Unit>
 		<Unit filename="sdk/annoyingdialog.cpp">
 			<Option target="sdk" />
