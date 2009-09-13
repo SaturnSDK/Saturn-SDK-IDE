@@ -1938,8 +1938,10 @@ void CodeCompletion::EditorEventHook(cbEditor* editor, wxScintillaEvent& event)
 //    else if (event.GetEventType() == wxEVT_SCI_MODIFIED)
 //        Manager::Get()->GetLogManager()->DebugLog(_T("wxEVT_SCI_MODIFIED"));
 
-    if (event.GetEventType() == wxEVT_SCI_CHARADDED &&
-        !control->AutoCompActive()) // not already active autocompletion
+    if ((event.GetKey() == '.') && control->AutoCompActive())
+        control->AutoCompCancel();
+
+    if (event.GetEventType() == wxEVT_SCI_CHARADDED)
     {
         // a character was just added in the editor
         m_timerCodeCompletion.Stop();

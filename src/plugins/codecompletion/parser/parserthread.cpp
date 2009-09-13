@@ -653,18 +653,17 @@ void ParserThread::DoParse()
                 }
                 else if (peek==ParserConsts::dcolon)
                 {
-//                    Log("peek='::', token='" + token + "', m_LastToken='" + m_LastToken + "', m_Str='" + m_Str + "'");
                     if (m_Str.IsEmpty())
                         m_EncounteredTypeNamespaces.push(token); // it's a type's namespace
                     else
                         m_EncounteredNamespaces.push(token);
                     m_Tokenizer.GetToken(); // eat ::
                 }
-                else if ((peek==ParserConsts::semicolon || (m_Options.useBuffer && peek.GetChar(0) == _T('(')) && !m_Str.Contains(ParserConsts::dcolon)) && m_pTokens)
+                else if (   m_pTokens
+                         && (   (peek==ParserConsts::semicolon)
+                             || (   (m_Options.useBuffer && (peek.GetChar(0) == _T('(')))
+                                 && (!m_Str.Contains(ParserConsts::dcolon)) ) ) )
                 {
-//                    Log("m_Str='"+m_Str+"'");
-//                    Log("token='"+token+"'");
-//                    Log("peek='"+peek+"'");
                     if (!m_Str.IsEmpty() && (wxIsalpha(token.GetChar(0)) || token.GetChar(0) == '_'))
                     {
                         if (m_Options.handleVars)

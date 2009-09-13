@@ -1248,21 +1248,20 @@ wxString NativeParser::GetNextCCToken(const wxString& line, unsigned int& startA
             ++startAt;
         }
     }
-
-//    Manager::Get()->GetLogManager()->DebugLog(_T("at %d (%c): res=%s"), startAt, line.GetChar(startAt), res.c_str());
-    while ((startAt < line.Length()) && (wxIsalnum(line.GetChar(startAt)) || line.GetChar(startAt) == '_'))
+    //Manager::Get()->GetLogManager()->DebugLog(F(_T("at %d (%c): res=%s"), startAt, line.GetChar(startAt), res.c_str()));
+    while ((startAt < line.Length()) && (wxIsalnum(line.GetChar(startAt)) || line.GetChar(startAt) == '_' || line.GetChar(startAt) == ' ' || line.GetChar(startAt) == '\t'))
     {
         res << line.GetChar(startAt);
         ++startAt;
     }
-
+    res.Trim();
     while ((nest > 0) && (startAt < line.Length()))
     {
         if (line.GetChar(startAt) == ')')
             --nest;
         ++startAt;
     }
-    //Manager::Get()->GetLogManager()->DebugLog("Done nest: at %d (%c): res=%s", startAt, line.GetChar(startAt), res.c_str());
+    //Manager::Get()->GetLogManager()->DebugLog(F(_T("Done nest: at %d (%c): res=%s"), startAt, line.GetChar(startAt), res.c_str()));
 
     if ((startAt < line.Length()) && (line.GetChar(startAt) == '(' || line.GetChar(startAt) == '['))
     {
