@@ -53,7 +53,7 @@
 					<Add option="-D__WXMSW__" />
 					<Add option="-DWXUSINGDLL" />
 					<Add directory="..\..\..\include" />
-					<Add directory="..\..\..\include\wxscintilla\include" />
+					<Add directory="..\..\..\sdk\wxscintilla\include" />
 					<Add directory="$(#wx.include)" />
 					<Add directory="$(#wx.lib)\gcc_dll$(WX_CFG)\msw$(WX_SUFFIX)" />
 					<Add directory="..\wxSmith" />
@@ -88,7 +88,7 @@
 			<Add option="-DWXMAKINGLIB_PROPGRID" />
 			<Add option="-DwxPG_USE_WXMODULE=0" />
 			<Add directory="../../../include" />
-			<Add directory="../../../include/wxscintilla/include" />
+			<Add directory="../../../sdk/wxscintilla/include" />
 			<Add directory="../wxSmith" />
 			<Add directory="../wxSmith/propgrid/contrib/include" />
 		</Compiler>

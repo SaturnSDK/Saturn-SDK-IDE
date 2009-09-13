@@ -99,7 +99,7 @@
 					<Add directory="sdk/wxscintilla/src/scintilla/src" />
 				</Compiler>
 				<ResourceCompiler>
-					<Add directory="include/wxscintilla/include" />
+					<Add directory="sdk/wxscintilla/include" />
 				</ResourceCompiler>
 			</Target>
 			<Target title="sdk">
@@ -390,7 +390,7 @@
 			<Add option="-fPIC" />
 			<Add option="-DcbDEBUG" />
 			<Add option="-DCB_PRECOMP" />
-			<Add directory="include/wxscintilla/include" />
+			<Add directory="sdk/wxscintilla/include" />
 		</Compiler>
 		<Linker>
 			<Add option="`wx-config --libs`" />
@@ -907,7 +907,7 @@
 		<Unit filename="include/workspaceloader.h">
 			<Option target="sdk" />
 		</Unit>
-		<Unit filename="include/wxscintilla/include/wx/wxscintilla.h">
+		<Unit filename="sdk/wxscintilla/include/wx/wxscintilla.h">
 			<Option target="sdk" />
 		</Unit>
 		<Unit filename="include/xtra_res.h">

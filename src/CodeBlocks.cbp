@@ -106,7 +106,7 @@
 					<Add directory="sdk\wxscintilla\src\scintilla\src" />
 				</Compiler>
 				<ResourceCompiler>
-					<Add directory="include\wxscintilla\include" />
+					<Add directory="sdk\wxscintilla\include" />
 				</ResourceCompiler>
 				<Linker>
 					<Add option="-Wl,--enable-auto-image-base" />
@@ -470,7 +470,7 @@
 			<Add directory="$(#WX.include)" />
 			<Add directory="$(#wx)\contrib\include" />
 			<Add directory="$(#WX.lib)\gcc_dll$(WX_CFG)\msw$(WX_SUFFIX)" />
-			<Add directory="include\wxscintilla\include" />
+			<Add directory="sdk\wxscintilla\include" />
 			<Add directory="include\tinyxml" />
 		</Compiler>
 		<ResourceCompiler>
@@ -991,7 +991,7 @@
 		<Unit filename="include\workspaceloader.h">
 			<Option target="sdk" />
 		</Unit>
-		<Unit filename="include\wxscintilla\include\wx\wxscintilla.h">
+		<Unit filename="sdk\wxscintilla\include\wx\wxscintilla.h">
 			<Option target="scintilla" />
 		</Unit>
 		<Unit filename="include\xtra_res.h">

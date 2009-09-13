@@ -15,7 +15,7 @@
 				<Option host_application="../../../devel/codeblocks" />
 				<Compiler>
 					<Add directory="../../../include" />
-					<Add directory="../../../include/wxscintilla/include" />
+					<Add directory="../../../sdk/wxscintilla/include" />
 				</Compiler>
 				<Linker>
 					<Add library="libcodeblocks.a" />

@@ -25,7 +25,7 @@
 					<Add option="-DCB_PRECOMP" />
 					<Add option="-DWX_PRECOMP" />
 					<Add directory="../../../include" />
-					<Add directory="../../../include/wxscintilla/include" />
+					<Add directory="../../../sdk/wxscintilla/include" />
 					<Add directory="../../../include/mozilla_chardet" />
 				</Compiler>
 				<Linker>
