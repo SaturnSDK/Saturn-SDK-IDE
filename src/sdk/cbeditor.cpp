@@ -331,19 +331,29 @@ struct cbEditorInternalData
         }
         if ( IsCharacterOrString(style) )
             return;
-        wxString leftBrace(_T("([{"));
-        wxString rightBrace(_T(")]}"));
+        const wxString leftBrace(_T("([{"));
+        const wxString rightBrace(_T(")]}"));
         int index = leftBrace.find(ch);
-        if (index != wxNOT_FOUND)
+        const wxString unWant(_T(");\n\r\t\b "));
+        #if wxCHECK_VERSION(2, 9, 0)
+        if (index != wxNOT_FOUND && unWant.find(wxUniChar(control->GetCharAt(pos))) != wxNOT_FOUND)
+        #else
+        if (index != wxNOT_FOUND && unWant.find(control->GetCharAt(pos)) != wxNOT_FOUND)
+        #endif
         {
             control->AddText(rightBrace.GetChar(index));
             control->GotoPos(pos);
             if (ch == _T('{'))
             {
+                    const wxRegEx reg(_T("^[ \t]*{}[ \t]*"));
+                    if (reg.Matches(control->GetCurLine()))
+                    {
                 control->NewLine();
                 control->GotoPos(pos);
+                        control->NewLine();
                 return;
             }
+        }
         }
         else
         {
