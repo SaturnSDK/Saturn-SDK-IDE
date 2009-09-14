@@ -1,8 +1,8 @@
 INCLUDES = $(WX_CXXFLAGS) \
-			-I$(top_srcdir)/src/sdk/wxscintilla/include \
+			-I$(srcdir)/include \
 			-I$(srcdir)/src/scintilla/include \
 			-I$(srcdir)/src/scintilla/src
-			
+
 AM_CPPFLAGS = -DSCI_LEXER -DLINK_LEXERS -DGTK -D__WX__
 
 noinst_LTLIBRARIES = libwxscintilla.la
