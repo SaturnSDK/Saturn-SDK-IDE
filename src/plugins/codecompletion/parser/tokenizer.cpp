@@ -16,15 +16,17 @@
 #include <cctype>
 #include <globals.h>
 
+#define TOKENIZER_DEBUG_OUTPUT 0
+
 namespace TokenizerConsts
 {
-const wxString colon(_T(":"));
-const wxString colon_colon(_T("::"));
+const wxString colon       (_T(":"));
+const wxString colon_colon (_T("::"));
 const wxString operator_str(_T("operator"));
-const wxString include_str(_T("#include"));
-const wxString if_str(_T("#if"));
-const wxString hash(_T("#"));
-const wxString tabcrlf(_T("\t\n\r"));
+const wxString include_str (_T("#include"));
+const wxString if_str      (_T("#if"));
+const wxString hash        (_T("#"));
+const wxString tabcrlf     (_T("\t\n\r"));
 };
 
 // static
@@ -71,25 +73,41 @@ bool Tokenizer::Init(const wxString& filename, LoaderBase* loader)
     {
         if (m_Filename.IsEmpty())
         {
-//            cbMessageBox(_T("Tokenizer::Init() called without filename..."));
+#if TOKENIZER_DEBUG_OUTPUT
+        Manager::Get()->GetLogManager()->DebugLog(F(_T("Init() : Called without filename.")));
+#endif
             return false;
         }
     }
     else
+    {
         m_Filename = filename;
+#if TOKENIZER_DEBUG_OUTPUT
+        Manager::Get()->GetLogManager()->DebugLog(F(_T("Init() : m_Filename='%s'"), m_Filename.c_str()));
+#endif
+    }
 
     if (!wxFileExists(m_Filename))
+    {
+#if TOKENIZER_DEBUG_OUTPUT
+        Manager::Get()->GetLogManager()->DebugLog(F(_T("Init() : File '%s' does not exist."), m_Filename.c_str()));
+#endif
         return false;
+    }
 
     if (!ReadFile())
     {
-//        cbMessageBox(_T("File ") + filename + _T(" does not exist..."));
+#if TOKENIZER_DEBUG_OUTPUT
+        Manager::Get()->GetLogManager()->DebugLog(F(_T("Init() : File '%s' could not be read."), m_Filename.c_str()));
+#endif
         return false;
     }
 
     if (!m_BufferLen)
     {
-        //cbMessageBox("File is empty!");
+#if TOKENIZER_DEBUG_OUTPUT
+        Manager::Get()->GetLogManager()->DebugLog(F(_T("Init() : File '%s' is empty."), m_Filename.c_str()));
+#endif
         return false;
     }
 
