@@ -3104,7 +3104,7 @@ void MainFrame::OnEditCommentSelected(wxCommandEvent& event)
                 }
                 ++curLine;
             } // end while
-            stc->SetSelection(stc->PositionFromLine(startLine),stc->PositionFromLine(endLine)+stc->LineLength(endLine));
+            stc->SetSelectionVoid(stc->PositionFromLine(startLine),stc->PositionFromLine(endLine)+stc->LineLength(endLine));
         }
         stc->EndUndoAction();
     }
@@ -3191,7 +3191,7 @@ void MainFrame::OnEditUncommentSelected(wxCommandEvent& event)
                 }
                 ++curLine;
             } // end while
-            stc->SetSelection(stc->PositionFromLine(startLine),stc->PositionFromLine(endLine)+stc->LineLength(endLine));
+            stc->SetSelectionVoid(stc->PositionFromLine(startLine),stc->PositionFromLine(endLine)+stc->LineLength(endLine));
         }
         stc->EndUndoAction();
     }
@@ -3249,7 +3249,7 @@ void MainFrame::OnEditToggleCommentSelected(wxCommandEvent& event)
                 }
                 ++curLine;
             }
-            stc->SetSelection(stc->PositionFromLine(startLine),stc->PositionFromLine(endLine)+stc->LineLength(endLine));
+            stc->SetSelectionVoid(stc->PositionFromLine(startLine),stc->PositionFromLine(endLine)+stc->LineLength(endLine));
         }
         stc->EndUndoAction();
     }
@@ -3294,7 +3294,7 @@ void MainFrame::OnEditStreamCommentSelected(wxCommandEvent& event)
              // we already inserted some characters so out endPos changed
             endPos += comment.streamCommentStart.Length();
             stc->InsertText( endPos, comment.streamCommentEnd );
-            stc->SetSelection(startPos,endPos);
+            stc->SetSelectionVoid(startPos,endPos);
         }
         stc->EndUndoAction();
     }
@@ -3364,7 +3364,7 @@ void MainFrame::OnEditBoxCommentSelected(wxCommandEvent& event)
                 // insert boxcomment end token and add a new line character
                 stc->InsertText( stc->PositionFromLine( curLine ), comment.boxCommentEnd + nlc);
             } // end if
-            stc->SetSelection(stc->PositionFromLine(startLine),stc->PositionFromLine(endLine)+stc->LineLength(endLine));
+            stc->SetSelectionVoid(stc->PositionFromLine(startLine),stc->PositionFromLine(endLine)+stc->LineLength(endLine));
         }
         stc->EndUndoAction();
     }
