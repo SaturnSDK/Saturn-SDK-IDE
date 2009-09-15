@@ -473,7 +473,7 @@ void ScbEditor::DoInitializations(const wxString& filename, LoaderBase* fileLdr)
 
         InitFilename(f);
     }
-//    GetLogManager()->DebugLog(_T("ctor: Filename=%s\nShort=%s"), m_Filename.c_str(), m_Shortname.c_str());
+//    Manager::Get()->GetLogManager()->DebugLog(_T("ctor: Filename=%s\nShort=%s"), m_Filename.c_str(), m_Shortname.c_str());
 
     // initialize left control (unsplit state)
     Freeze();
@@ -511,7 +511,7 @@ void ScbEditor::NotifyPlugins(wxEventType type, int intArg, const wxString& strA
 // ----------------------------------------------------------------------------
 {
     //(pecan 2008/4/22) Dont notify plugins from non-sdk
-    //-if (!GetPluginManager())
+    //-if (!Manager::Get()->GetPluginManager())
     //-    return; // no plugin manager! app shuting down?
     wxWindow* parent = GetEditorParent();
     if (not parent) return;
@@ -522,8 +522,8 @@ void ScbEditor::NotifyPlugins(wxEventType type, int intArg, const wxString& strA
     event.SetString(strArg);
     event.SetX(xArg);
     event.SetY(yArg);
-    //-wxPostEvent(GetAppWindow(), event);
-    //-GetPluginManager()->NotifyPlugins(event);
+    //-wxPostEvent(Manager::Get()->GetAppWindow(), event);
+    //-Manager::Get()->GetPluginManager()->NotifyPlugins(event);
     #if wxCHECK_VERSION(2, 9, 0)
     parent->GetEventHandler()->ProcessEvent(event);
     #else
@@ -1388,7 +1388,7 @@ bool ScbEditor::SaveAs()
     fname.Assign(m_Filename);
     m_Shortname = fname.GetFullName();
     SetEditorTitle(m_Shortname);
-    //GetLogManager()->Log(mltDevDebug, "Filename=%s\nShort=%s", m_Filename.c_str(), m_Shortname.c_str());
+    //Manager::Get()->GetLogManager()->Log(mltDevDebug, "Filename=%s\nShort=%s", m_Filename.c_str(), m_Shortname.c_str());
     m_IsOK = true;
     SetModified(true);
     SetLanguage( HL_AUTO );
@@ -2733,7 +2733,7 @@ void ScbEditor::OnScintillaEvent(wxScintillaEvent& event)
 //	else if (type == wxEVT_SCI_AUTOCOMP_SELECTION) txt << _T("wxEVT_SCI_AUTOCOMP_SELECTION");
 //	else if (type == wxEVT_SCI_INDICATOR_CLICK) txt << _T("wxEVT_SCI_INDICATOR_CLICK");
 //	else if (type == wxEVT_SCI_INDICATOR_RELEASE) txt << _T("wxEVT_SCI_INDICATOR_RELEASE");
-//    GetLogManager()->DebugLog(txt);
+//    Manager::Get()->GetLogManager()->DebugLog(txt);
 
     // call any hooked functors
     if (!ProjectManager::IsBusy() && EditorHooks::HasRegisteredHooks())

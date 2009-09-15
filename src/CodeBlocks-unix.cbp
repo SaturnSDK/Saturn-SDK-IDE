@@ -2189,6 +2189,9 @@
 		<Unit filename="sdk/resources/global_uservars.xrc">
 			<Option target="sdk" />
 		</Unit>
+		<Unit filename="sdk/resources/images/16x16/Makefile.am">
+			<Option target="sdk" />
+		</Unit>
 		<Unit filename="sdk/resources/incremental_select_list.xrc">
 			<Option target="sdk" />
 		</Unit>
