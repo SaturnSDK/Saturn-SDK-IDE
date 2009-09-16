@@ -19,6 +19,7 @@
 #include "debugger_defs.h"
 #include "debuggerdriver.h"
 #include "debuggertree.h"
+#include "watchesdlg.h"
 
 #include <wx/arrimpl.cpp>
 WX_DEFINE_OBJARRAY(WatchesArray);
@@ -47,7 +48,8 @@ DbgCmd_UpdateWatchesTree::DbgCmd_UpdateWatchesTree(DebuggerDriver* driver, Debug
 
 void DbgCmd_UpdateWatchesTree::Action()
 {
-    m_pTree->EndUpdateTree();
+//    m_pTree->EndUpdateTree();
+    Manager::Get()->GetDebuggerManager()->GetWatchesDialog()->UpdateWatches();
 }
 
 // Custom window to display output of DebuggerInfoCmd
@@ -74,4 +76,106 @@ void DebuggerInfoCmd::ParseOutput(const wxString& output)
 {
     DebuggerInfoWindow win(Manager::Get()->GetAppWindow(), m_Title, output);
     win.ShowModal();
+}
+
+
+GDBWatch::GDBWatch(wxString const &symbol) :
+    m_symbol(symbol),
+    m_format(Undefined),
+    m_array_start(0),
+    m_array_count(0),
+    m_is_array(false)
+{
+}
+void GDBWatch::GetSymbol(wxString &symbol) const
+{
+    symbol = m_symbol;
+}
+void GDBWatch::GetValue(wxString &value) const
+{
+    value = m_raw_value;
+}
+bool GDBWatch::SetValue(const wxString &value)
+{
+    if(m_raw_value != value)
+    {
+        MarkAsChanged(true);
+        m_raw_value = value;
+    }
+    return true;
+}
+void GDBWatch::GetFullWatchString(wxString &full_watch) const
+{
+    const cbWatch* parent = GetParent();
+    if (parent)
+    {
+        parent->GetFullWatchString(full_watch);
+        full_watch += wxT(".") + m_symbol;
+    }
+    else
+        full_watch = m_symbol;
+}
+
+void GDBWatch::GetType(wxString &type) const
+{
+    type = m_type;
+}
+void GDBWatch::SetType(const wxString &type)
+{
+    m_type = type;
+}
+
+wxString const & GDBWatch::GetDebugString() const
+{
+    return m_debug_value;
+}
+void GDBWatch::SetDebugValue(wxString const &value)
+{
+    m_debug_value = value;
+}
+
+void GDBWatch::SetSymbol(const wxString& symbol)
+{
+    m_symbol = symbol;
+}
+
+void GDBWatch::DoDestroy()
+{
+    delete this;
+}
+
+void GDBWatch::SetFormat(WatchFormat format)
+{
+    m_format = format;
+}
+
+WatchFormat GDBWatch::GetFormat() const
+{
+    return m_format;
+}
+
+void GDBWatch::SetArray(bool flag)
+{
+    m_is_array = flag;
+}
+
+bool GDBWatch::IsArray() const
+{
+    return m_is_array;
+}
+
+void GDBWatch::SetArrayParams(int start, int count)
+{
+    m_array_start = start;
+    m_array_count = count;
+}
+
+int GDBWatch::GetArrayStart() const
+{
+    return m_array_start;
+}
+
+int GDBWatch::GetArrayCount() const
+{
+    return m_array_count;
 }

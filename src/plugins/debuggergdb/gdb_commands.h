@@ -25,15 +25,21 @@
 #include <scriptingmanager.h>
 #include <sqplus.h>
 #include <infowindow.h>
+
+// FIXME (obfuscated#): remove this include
+#include "debuggertree.h"
+
+#include "backtracedlg.h"
+#include "cpuregistersdlg.h"
 #include "debugger_defs.h"
 #include "debuggergdb.h"
+#include "disassemblydlg.h"
 #include "gdb_driver.h"
-#include "debuggertree.h"
-#include "backtracedlg.h"
-#include "examinememorydlg.h"
-#include "threadsdlg.h"
 #include "gdb_tipwindow.h"
+#include "examinememorydlg.h"
 #include "remotedebugging.h"
+#include "threadsdlg.h"
+#include "parsewatchvalue.h"
 
 namespace
 {
@@ -164,7 +170,7 @@ static wxRegEx reInfoProgramThread(_T("\\(LWP[ \t]([0-9]+)\\)"));
 static wxRegEx reInfoProgramProcess(_T("child process ([0-9]+)"));
 //  2 Thread 1082132832 (LWP 8017)  0x00002aaaac5a2aca in pthread_cond_wait@@GLIBC_2.3.2 () from /lib/libpthread.so.0
 //* 1 Thread 46912568064384 (LWP 7926)  0x00002aaaac76e612 in poll () from /lib/libc.so.6
-static wxRegEx reInfoThreads(_T("(\\**)[ \t]*([0-9]+)[ \t](.*)[ \t]in"));
+static wxRegEx reInfoThreads(_T("(\\**)[ \t]*([0-9]+)[ \t](.*)"));
 static wxRegEx reGenericHexAddress(_T("(0x[A-Fa-f0-9]+)"));
 
 DECLARE_INSTANCE_TYPE(wxString);
@@ -395,7 +401,7 @@ class GdbCmd_AddBreakpoint : public DebuggerCmd
                         m_Cmd << _T("break ");
                     else
                         m_Cmd << _T("tbreak ");
-                    m_Cmd << _T('"') << out << _T(":") << wxString::Format(_T("%d"), m_BP->line + 1) << _T('"');
+                    m_Cmd << _T('"') << out << _T(":") << wxString::Format(_T("%d"), m_BP->line) << _T('"');
                 }
                 else if (m_BP->type == DebuggerBreakpoint::bptData)
                 {
@@ -647,18 +653,16 @@ class GdbCmd_InfoProgram : public DebuggerCmd
   */
 class GdbCmd_Threads : public DebuggerCmd
 {
-        ThreadsDlg* m_pList;
     public:
         /** @param tree The tree to display the args. */
-        GdbCmd_Threads(DebuggerDriver* driver, ThreadsDlg* list)
-            : DebuggerCmd(driver),
-            m_pList(list)
+        GdbCmd_Threads(DebuggerDriver* driver)
+            : DebuggerCmd(driver)
         {
             m_Cmd << _T("info threads");
         }
         void ParseOutput(const wxString& output)
         {
-            m_pList->Clear();
+            m_pDriver->GetThreads().clear();
             wxArrayString lines = GetArrayFromString(output, _T('\n'));
             for (unsigned int i = 0; i < lines.GetCount(); ++i)
             {
@@ -667,11 +671,17 @@ class GdbCmd_Threads : public DebuggerCmd
                 {
 //                    m_pDriver->Log(_T("MATCH!"));
                     wxString active = reInfoThreads.GetMatch(lines[i], 1);
+                    active.Trim(true);
+                    active.Trim(false);
                     wxString num = reInfoThreads.GetMatch(lines[i], 2);
                     wxString info = reInfoThreads.GetMatch(lines[i], 3);
-                    m_pList->AddThread(active, num, info);
+
+                    long number;
+                    num.ToLong(&number, 10);
+                    m_pDriver->GetThreads().push_back(cbThread(!active.empty(), number, info));
                 }
             }
+            Manager::Get()->GetDebuggerManager()->GetThreadsDialog()->Reload();
         }
 };
 
@@ -680,21 +690,23 @@ class GdbCmd_Threads : public DebuggerCmd
   */
 class GdbCmd_Watch : public DebuggerCmd
 {
-        DebuggerTree* m_pDTree;
-        Watch* m_pWatch;
+        GDBWatch* m_watch;
         wxString m_ParseFunc;
     public:
-        /** @param tree The tree to display the watch. */
-        GdbCmd_Watch(DebuggerDriver* driver, DebuggerTree* dtree, Watch* watch, const wxString& w_type = wxEmptyString)
-            : DebuggerCmd(driver),
-            m_pDTree(dtree),
-            m_pWatch(watch)
+        GdbCmd_Watch(DebuggerDriver* driver, GDBWatch* watch) :
+            DebuggerCmd(driver),
+            m_watch(watch)
         {
-            m_Cmd = static_cast<GDB_driver*>(m_pDriver)->GetScriptedTypeCommand(w_type, m_ParseFunc);
+            wxString type;
+            wxString symbol;
+
+            m_watch->GetSymbol(symbol);
+            m_watch->GetType(type);
+            m_Cmd = static_cast<GDB_driver*>(m_pDriver)->GetScriptedTypeCommand(type, m_ParseFunc);
             if (m_Cmd.IsEmpty())
             {
                 m_Cmd << _T("output ");
-                switch (m_pWatch->format)
+                switch (m_watch->GetFormat())
                 {
                     case Decimal:       m_Cmd << _T("/d "); break;
                     case Unsigned:      m_Cmd << _T("/u "); break;
@@ -704,25 +716,23 @@ class GdbCmd_Watch : public DebuggerCmd
                     case Float:         m_Cmd << _T("/f "); break;
                     default:            break;
                 }
-                m_Cmd << m_pWatch->keyword;
+                m_Cmd << symbol;
 
                 // auto-set array types
-                if (!m_pWatch->is_array &&
-                    m_pWatch->format == Undefined &&
-                    w_type.Contains(_T('[')))
+                if (!m_watch->IsArray() &&  m_watch->GetFormat() == Undefined && type.Contains(_T('[')))
                 {
-                    m_pWatch->is_array = true;
+                    m_watch->SetArray(true);
                 }
 
-                if (m_pWatch->is_array && m_pWatch->array_count)
-                    m_Cmd << wxString::Format(_T("[%d]@%d"), m_pWatch->array_start, m_pWatch->array_count);
+                if (m_watch->IsArray() && m_watch->GetArrayCount() > 0)
+                    m_Cmd << wxString::Format(_T("[%d]@%d"), m_watch->GetArrayStart(), m_watch->GetArrayCount());
             }
             else
             {
                 try
                 {
                     SqPlus::SquirrelFunction<wxString&> f(cbU2C(m_Cmd));
-                    m_Cmd = f(w_type, m_pWatch->keyword, watch->array_start, watch->array_count);
+                    m_Cmd = f(type, symbol, m_watch->GetArrayStart(), m_watch->GetArrayCount());
                 }
                 catch (SquirrelError e)
                 {
@@ -733,13 +743,12 @@ class GdbCmd_Watch : public DebuggerCmd
         void ParseOutput(const wxString& output)
         {
             wxString w;
-            w << m_pWatch->keyword << _T(" = ");
             if (!m_ParseFunc.IsEmpty())
             {
                 try
                 {
                     SqPlus::SquirrelFunction<wxString&> f(cbU2C(m_ParseFunc));
-                    w << f(output, m_pWatch->array_start);
+                    w << f(output, m_watch->GetArrayStart());
                 }
                 catch (SquirrelError e)
                 {
@@ -748,14 +757,28 @@ class GdbCmd_Watch : public DebuggerCmd
             }
             else
             {
-                wxArrayString lines = GetArrayFromString(output, _T('\n'));
-                for (unsigned int i = 0; i < lines.GetCount(); ++i)
-                {
-                    w << lines[i] << _T(',');
-                }
+//                wxArrayString lines = GetArrayFromString(output, _T('\n'));
+//                if(lines.GetCount() > 1)
+//                {
+//                    for (unsigned int i = 0; i < lines.GetCount(); ++i)
+//                    {
+//                        w << lines[i] << _T(',');
+//                    }
+//                }
+//                else if(lines.GetCount() == 1)
+//                    w << lines[0];
+                w = output;
             }
-            w << _T('\n');
-            m_pDTree->BuildTree(m_pWatch, w, wsfGDB);
+            w.Trim(true);
+            w.Trim(false);
+
+            if(!ParseGDBWatchValue(*m_watch, w))
+            {
+                wxString symbol;
+                m_watch->GetSymbol(symbol);
+                wxString msg = wxT("Parsing GDB output failed for '") + symbol + wxT("'!");
+                Manager::Get()->GetLogManager()->LogError(msg);
+            }
         }
 };
 
@@ -764,17 +787,22 @@ class GdbCmd_Watch : public DebuggerCmd
   */
 class GdbCmd_FindWatchType : public DebuggerCmd
 {
-        DebuggerTree* m_pDTree;
-        Watch* m_pWatch;
+//        DebuggerTree* m_pDTree;
+//        Watch* m_pWatch;
+        GDBWatch* m_watch;
     public:
         /** @param tree The tree to display the watch. */
-        GdbCmd_FindWatchType(DebuggerDriver* driver, DebuggerTree* dtree, Watch* watch)
-            : DebuggerCmd(driver),
-            m_pDTree(dtree),
-            m_pWatch(watch)
+        GdbCmd_FindWatchType(DebuggerDriver* driver, GDBWatch* watch) :
+            DebuggerCmd(driver),
+//            m_pDTree(dtree),
+//            m_pWatch(watch)
+            m_watch(watch)
         {
             m_Cmd << _T("whatis ");
-            m_Cmd << m_pWatch->keyword;
+//            m_Cmd << m_pWatch->keyword;
+            wxString symbol;
+            m_watch->GetSymbol(symbol);
+            m_Cmd << symbol;
         }
         void ParseOutput(const wxString& output)
         {
@@ -786,7 +814,16 @@ class GdbCmd_FindWatchType : public DebuggerCmd
 
             wxString tmp = output.AfterFirst(_T('='));
             // actually add this watch with high priority
-            m_pDriver->QueueCommand(new GdbCmd_Watch(m_pDriver, m_pDTree, m_pWatch, tmp), DebuggerDriver::High);
+//            m_pDriver->QueueCommand(new GdbCmd_Watch(m_pDriver, m_pDTree, m_pWatch, tmp), DebuggerDriver::High);
+            wxString old_type;
+            m_watch->GetType(old_type);
+            if(old_type != tmp)
+            {
+                m_watch->RemoveChildren();
+                m_watch->SetType(tmp);
+                m_watch->SetValue(wxEmptyString);
+            }
+            m_pDriver->QueueCommand(new GdbCmd_Watch(m_pDriver, m_watch), DebuggerDriver::High);
         }
 };
 
@@ -975,21 +1012,19 @@ bool GdbCmd_FindTooltipType::singleUsage = false;
   */
 class GdbCmd_Backtrace : public DebuggerCmd
 {
-        BacktraceDlg* m_pDlg;
     public:
         /** @param dlg The backtrace dialog. */
-        GdbCmd_Backtrace(DebuggerDriver* driver, BacktraceDlg* dlg)
-            : DebuggerCmd(driver),
-            m_pDlg(dlg)
+        GdbCmd_Backtrace(DebuggerDriver* driver)
+            : DebuggerCmd(driver)
         {
             m_Cmd << _T("bt 30");
         }
         void ParseOutput(const wxString& output)
         {
             int validFrameNumber = -1;
-            StackFrame validSF;
+            cbStackFrame validSF;
 
-            m_pDlg->Clear();
+            m_pDriver->GetStackFrames().clear();
             wxArrayString lines = GetArrayFromString(output, _T('\n'));
             for (unsigned int i = 0; i < lines.GetCount(); ++i)
             {
@@ -997,49 +1032,55 @@ class GdbCmd_Backtrace : public DebuggerCmd
                 // reBT2 matches filename and line (optional)
                 // reBT3 matches filename only (for DLLs) (optional)
 
-                StackFrame sf;
+                cbStackFrame sf;
                 bool matched = false;
                 // #0  main (argc=1, argv=0x3e2440) at my main.cpp:15
                 if (reBTX.Matches(lines[i]))
                 {
-//                    m_pDriver->DebugLog(_T("MATCH!"));
-                    reBTX.GetMatch(lines[i], 1).ToULong(&sf.number);
-                    reBTX.GetMatch(lines[i], 2).ToULong(&sf.address, 16);
-                    sf.function = reBTX.GetMatch(lines[i], 3) + reBTX.GetMatch(lines[i], 4);
+                    unsigned long number, address;
+                    reBTX.GetMatch(lines[i], 1).ToULong(&number);
+                    reBTX.GetMatch(lines[i], 2).ToULong(&address, 16);
+
+                    sf.SetNumber(number);
+                    sf.SetAddress(address);
+                    sf.SetSymbol(reBTX.GetMatch(lines[i], 3) + reBTX.GetMatch(lines[i], 4));
                     matched = true;
                 }
                 else if (reBT1.Matches(lines[i]))
                 {
-//                    m_pDriver->DebugLog(_T("MATCH!"));
-                    reBT1.GetMatch(lines[i], 1).ToULong(&sf.number);
-                    reBT1.GetMatch(lines[i], 2).ToULong(&sf.address, 16);
-                    sf.function = reBT1.GetMatch(lines[i], 3) + reBT1.GetMatch(lines[i], 4);
+                    unsigned long number, address;
+                    reBT1.GetMatch(lines[i], 1).ToULong(&number);
+                    reBT1.GetMatch(lines[i], 2).ToULong(&address, 16);
+                    sf.SetNumber(number);
+                    sf.SetAddress(address);
+                    sf.SetSymbol(reBT1.GetMatch(lines[i], 3) + reBT1.GetMatch(lines[i], 4));
                     matched = true;
                 }
                 else if (reBT0.Matches(lines[i]))
                 {
-                    reBT0.GetMatch(lines[i], 1).ToULong(&sf.number);
-                    sf.address = 0;
-                    sf.function = reBT0.GetMatch(lines[i], 2) + reBT0.GetMatch(lines[i], 3);
+                    unsigned long number;
+                    reBT0.GetMatch(lines[i], 1).ToULong(&number);
+                    sf.SetNumber(number);
+                    sf.SetAddress(0);
+                    sf.SetSymbol(reBT0.GetMatch(lines[i], 2) + reBT0.GetMatch(lines[i], 3));
                     matched = true;
                 }
 
                 if (matched)
                 {
-                    sf.valid = true;
+                    sf.MakeValid(true);
                     if (reBT2.Matches(lines[i]))
                     {
-                        sf.file = reBT2.GetMatch(lines[i], 1);
-                        sf.line = reBT2.GetMatch(lines[i], 2);
+                        sf.SetFile(reBT2.GetMatch(lines[i], 1), reBT2.GetMatch(lines[i], 2));
                         if (validFrameNumber == -1)
                         {
                             validSF = sf;
-                            validFrameNumber = sf.number;
+                            validFrameNumber = sf.GetNumber();
                         }
                     }
                     else if (reBT3.Matches(lines[i]))
-                        sf.file = reBT3.GetMatch(lines[i], 1);
-                    m_pDlg->AddFrame(sf);
+                        sf.SetFile(reBT3.GetMatch(lines[i], 1), wxEmptyString);
+                    m_pDriver->GetStackFrames().push_back(sf);
                 }
             }
             if (validFrameNumber > 0) // if it's 0, then the driver already synced the editor
@@ -1048,10 +1089,10 @@ class GdbCmd_Backtrace : public DebuggerCmd
                 if (!autoSwitch)
                 {
                     long line;
-                    if (validSF.line.ToLong(&line))
+                    if (validSF.GetLine().ToLong(&line))
                     {
                         m_pDriver->Log(wxString::Format(_T("Displaying first frame with valid source info (#%d)"), validFrameNumber));
-                        m_pDriver->ShowFile(validSF.file, line);
+                        m_pDriver->ShowFile(validSF.GetFilename(), line);
                     }
                 }
                 else
@@ -1062,6 +1103,7 @@ class GdbCmd_Backtrace : public DebuggerCmd
                     m_pDriver->QueueCommand(new DebuggerCmd(m_pDriver, wxString::Format(_T("frame %d"), validFrameNumber)));
                 }
             }
+            Manager::Get()->GetDebuggerManager()->GetBacktraceDialog()->Reload();
 //            m_pDriver->DebugLog(output);
         }
 };
@@ -1071,16 +1113,15 @@ class GdbCmd_Backtrace : public DebuggerCmd
   */
 class GdbCmd_InfoRegisters : public DebuggerCmd
 {
-        CPURegistersDlg* m_pDlg;
         wxString m_disassemblyFlavor;
 
     public:
         /** @param dlg The disassembly dialog. */
 
         // only tested on mingw/pc/win env
-        GdbCmd_InfoRegisters(DebuggerDriver* driver, CPURegistersDlg* dlg, wxString disassemblyFlavor = wxEmptyString)
-            : DebuggerCmd(driver),
-            m_pDlg(dlg), m_disassemblyFlavor(disassemblyFlavor)
+        GdbCmd_InfoRegisters(DebuggerDriver* driver, wxString disassemblyFlavor = wxEmptyString) :
+            DebuggerCmd(driver),
+            m_disassemblyFlavor(disassemblyFlavor)
         {
             m_Cmd << _T("info registers");
         };
@@ -1106,8 +1147,6 @@ class GdbCmd_InfoRegisters : public DebuggerCmd
             // fs             0x3b     59
             // gs             0x0      0
 
-            if (!m_pDlg)
-                return;
             // or32 register string parser
             if(m_disassemblyFlavor == _T("set disassembly-flavor or32"))
             {
@@ -1116,13 +1155,15 @@ class GdbCmd_InfoRegisters : public DebuggerCmd
             else
             // use generic parser - this may work for other platforms or you may have to write your own
             {
+                cbCPURegistersDlg *dialog = Manager::Get()->GetDebuggerManager()->GetCPURegistersDialog();
+
                 wxArrayString lines = GetArrayFromString(output, _T('\n'));
                 for (unsigned int i = 0; i < lines.GetCount(); ++i)
                 {
                     if (reRegisters.Matches(lines[i]))
                     {
                         long int addr = wxStrHexTo<long int>(reRegisters.GetMatch(lines[i], 2));
-                        m_pDlg->SetRegisterValue(reRegisters.GetMatch(lines[i], 1), addr);
+                        dialog->SetRegisterValue(reRegisters.GetMatch(lines[i], 1), addr);
                     }
                 }
             }
@@ -1152,6 +1193,7 @@ class GdbCmd_InfoRegisters : public DebuggerCmd
             {
                 return;
             }
+            cbCPURegistersDlg *dialog = Manager::Get()->GetDebuggerManager()->GetCPURegistersDialog();
 
             for (unsigned int i = 0; i < lines.GetCount(); i+=2)
             {
@@ -1191,7 +1233,7 @@ class GdbCmd_InfoRegisters : public DebuggerCmd
                     {
                         unsigned long int addrL;
                         addr.ToULong(&addrL, 16);
-                        m_pDlg->SetRegisterValue(reg, addrL);
+                        dialog->SetRegisterValue(reg, addrL);
                     }
                 }
             }
@@ -1203,12 +1245,9 @@ class GdbCmd_InfoRegisters : public DebuggerCmd
   */
 class GdbCmd_Disassembly : public DebuggerCmd
 {
-        DisassemblyDlg* m_pDlg;
     public:
-        /** @param dlg The disassembly dialog. */
-        GdbCmd_Disassembly(DebuggerDriver* driver, DisassemblyDlg* dlg)
-            : DebuggerCmd(driver),
-            m_pDlg(dlg)
+        GdbCmd_Disassembly(DebuggerDriver* driver)
+            : DebuggerCmd(driver)
         {
             m_Cmd << _T("disassemble");
         }
@@ -1221,8 +1260,7 @@ class GdbCmd_Disassembly : public DebuggerCmd
             // ...
             // End of assembler dump.
 
-            if (!m_pDlg)
-                return;
+            cbDisassemblyDlg *dialog = Manager::Get()->GetDebuggerManager()->GetDisassemblyDialog();
 
             wxArrayString lines = GetArrayFromString(output, _T('\n'));
             for (unsigned int i = 0; i < lines.GetCount(); ++i)
@@ -1231,7 +1269,7 @@ class GdbCmd_Disassembly : public DebuggerCmd
                 {
                     unsigned long int addr;
                     reDisassembly.GetMatch(lines[i], 1).ToULong(&addr, 16);
-                    m_pDlg->AddAssemblerLine(addr, reDisassembly.GetMatch(lines[i], 2));
+                    dialog->AddAssemblerLine(addr, reDisassembly.GetMatch(lines[i], 2));
                 }
             }
 //            m_pDlg->Show(true);
@@ -1244,38 +1282,37 @@ class GdbCmd_Disassembly : public DebuggerCmd
   */
 class GdbCmd_DisassemblyInit : public DebuggerCmd
 {
-        DisassemblyDlg* m_pDlg;
         wxString m_disassemblyFlavor;
 
     public:
         static wxString LastAddr;
-        /** @param dlg The disassembly dialog. */
 
-        // only tested on mingw/pc/win env
-        GdbCmd_DisassemblyInit(DebuggerDriver* driver, DisassemblyDlg* dlg, wxString disassemblyFlavor = wxEmptyString)
+         // only tested on mingw/pc/win env
+        GdbCmd_DisassemblyInit(DebuggerDriver* driver, wxString disassemblyFlavor = wxEmptyString)
             : DebuggerCmd(driver),
-            m_pDlg(dlg), m_disassemblyFlavor(disassemblyFlavor)
+            m_disassemblyFlavor(disassemblyFlavor)
         {
             m_Cmd << _T("info frame");
         };
 
         void ParseOutput(const wxString& output)
         {
-            if (!m_pDlg)
-                return;
+            cbDisassemblyDlg *dialog = Manager::Get()->GetDebuggerManager()->GetDisassemblyDialog();
 
             if (reDisassemblyInit.Matches(output))
             {
-                StackFrame sf;
+                cbStackFrame sf;
                 wxString addr = reDisassemblyInit.GetMatch(output, 1);
                 if (addr == LastAddr)
                     return;
                 LastAddr = addr;
-                addr.ToULong((unsigned long int*)&sf.address, 16);
+                long long_address;
+                addr.ToULong((unsigned long int*)&long_address, 16);
+                sf.SetAddress(long_address);
 
                 if (reDisassemblyInitFunc.Matches(output))
                 {
-                    sf.function = reDisassemblyInitFunc.GetMatch(output, 2);
+                    sf.SetSymbol(reDisassemblyInitFunc.GetMatch(output, 2));
                     long int active;
 
                     if(platform::windows && m_disassemblyFlavor == _T("set disassembly-flavor or32"))
@@ -1286,12 +1323,12 @@ class GdbCmd_DisassemblyInit : public DebuggerCmd
                     {
                         reDisassemblyInitFunc.GetMatch(output, 1).ToLong(&active, 16);
                     }
-                    m_pDlg->SetActiveAddress(active);
+                    dialog->SetActiveAddress(active);
                 }
 
-                sf.valid = true;
-                m_pDlg->Clear(sf);
-                m_pDriver->QueueCommand(new GdbCmd_Disassembly(m_pDriver, m_pDlg)); // chain call
+                sf.MakeValid(true);
+                dialog->Clear(sf);
+                m_pDriver->QueueCommand(new GdbCmd_Disassembly(m_pDriver)); // chain call
             }
 //            m_pDriver->DebugLog(output);
         }
@@ -1304,14 +1341,13 @@ wxString GdbCmd_DisassemblyInit::LastAddr;
   */
 class GdbCmd_ExamineMemory : public DebuggerCmd
 {
-        ExamineMemoryDlg* m_pDlg;
     public:
         /** @param dlg The memory dialog. */
-        GdbCmd_ExamineMemory(DebuggerDriver* driver, ExamineMemoryDlg* dlg)
-            : DebuggerCmd(driver),
-            m_pDlg(dlg)
+        GdbCmd_ExamineMemory(DebuggerDriver* driver)
+            : DebuggerCmd(driver)
         {
-            m_Cmd.Printf(_T("x/%dxb %s"), dlg->GetBytes(), dlg->GetBaseAddress().c_str());
+            cbExamineMemoryDlg *dialog = Manager::Get()->GetDebuggerManager()->GetExamineMemoryDialog();
+            m_Cmd.Printf(_T("x/%dxb %s"), dialog->GetBytes(), dialog->GetBaseAddress().c_str());
         }
         void ParseOutput(const wxString& output)
         {
@@ -1319,17 +1355,17 @@ class GdbCmd_ExamineMemory : public DebuggerCmd
             //
             // 0x22ffc0:       0xf0    0xff    0x22    0x00    0x4f    0x6d    0x81    0x7c
 
-            if (!m_pDlg)
-                return;
-            m_pDlg->Begin();
-            m_pDlg->Clear();
+            cbExamineMemoryDlg *dialog = Manager::Get()->GetDebuggerManager()->GetExamineMemoryDialog();
+
+            dialog->Begin();
+            dialog->Clear();
 
             wxArrayString lines = GetArrayFromString(output, _T('\n'));
             for (unsigned int i = 0; i < lines.GetCount(); ++i)
             {
                 if (lines[i].First(_T(':')) == -1)
                 {
-                    m_pDlg->AddError(lines[i]);
+                    dialog->AddError(lines[i]);
                     continue;
                 }
                 wxString addr = lines[i].BeforeFirst(_T(':'));
@@ -1339,11 +1375,11 @@ class GdbCmd_ExamineMemory : public DebuggerCmd
                     wxString hexbyte;
                     hexbyte << lines[i][pos + 1];
                     hexbyte << lines[i][pos + 2];
-                    m_pDlg->AddHexByte(addr, hexbyte);
+                    dialog->AddHexByte(addr, hexbyte);
                     pos = lines[i].find(_T('x'), pos + 1); // skip current 'x'
                 }
             }
-            m_pDlg->End();
+            dialog->End();
 //            m_pDriver->DebugLog(output);
         }
 };

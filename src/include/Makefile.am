@@ -1,4 +1,4 @@
-SUBDIRS = scripting tinyxml wxscintilla
+SUBDIRS = scripting tinyxml
 
 if PRECOMPILE_HEADERS
 BUILT_SOURCES = $(top_srcdir)/src/include/sdk.h.gch \

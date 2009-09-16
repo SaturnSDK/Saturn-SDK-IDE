@@ -41,7 +41,7 @@ wxsEnumProperty::wxsEnumProperty(const wxString& PGName, const wxString& DataNam
 void wxsEnumProperty::PGCreate(wxsPropertyContainer* Object,wxPropertyGridManager* Grid,wxPGId Parent)
 {
     wxPGChoices PGC(Names,Values);
-    PGRegister(Object,Grid,Grid->AppendIn(Parent,wxEnumProperty(GetPGName(),wxPG_LABEL,PGC,VALUE)));
+    PGRegister(Object,Grid,Grid->AppendIn(Parent,NEW_IN_WXPG14X wxEnumProperty(GetPGName(),wxPG_LABEL,PGC,VALUE)));
 }
 
 bool wxsEnumProperty::PGRead(wxsPropertyContainer* Object,wxPropertyGridManager* Grid,wxPGId Id,long Index)
@@ -54,7 +54,12 @@ bool wxsEnumProperty::PGWrite(wxsPropertyContainer* Object,wxPropertyGridManager
 {
     if ( UpdateEnteries )
     {
+        #if wxCHECK_VERSION(2, 9, 0)
+        wxPGChoices choices = Grid->GetGrid()->GetSelection()->GetChoices();  
+        choices.Set(Names,Values);
+        #else
         Grid->GetPropertyChoices(Id).Set(Names,Values);
+        #endif
     }
     Grid->SetPropertyValue(Id,VALUE);
     return true;

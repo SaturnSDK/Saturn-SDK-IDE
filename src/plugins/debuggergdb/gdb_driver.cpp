@@ -11,6 +11,7 @@
 #include "gdb_driver.h"
 #include "gdb_commands.h"
 #include "debuggerstate.h"
+#include <backtracedlg.h>
 #include <manager.h>
 #include <macrosmanager.h>
 #include <configmanager.h>
@@ -485,10 +486,10 @@ void GDB_driver::Start(bool breakOnEntry)
 
     // reset other states
     GdbCmd_DisassemblyInit::LastAddr.Clear();
-    if (m_pDisassembly)
+    if (Manager::Get()->GetDebuggerManager()->UpdateDisassembly())
     {
-        StackFrame sf;
-        m_pDisassembly->Clear(sf);
+        cbDisassemblyDlg *disassembly_dialog = Manager::Get()->GetDebuggerManager()->GetDisassemblyDialog();
+        disassembly_dialog->Clear(cbStackFrame());
     }
 
     // if performing remote debugging, use "continue" command
@@ -577,31 +578,24 @@ void GDB_driver::StepOut()
 
 void GDB_driver::Backtrace()
 {
-    if (!m_pBacktrace)
-        return;
-    QueueCommand(new GdbCmd_Backtrace(this, m_pBacktrace));
+    if (Manager::Get()->GetDebuggerManager()->UpdateBacktrace())
+        QueueCommand(new GdbCmd_Backtrace(this));
 }
 
 void GDB_driver::Disassemble()
 {
-    if (!m_pDisassembly)
-        return;
-
     if(platform::windows)
-        QueueCommand(new GdbCmd_DisassemblyInit(this, m_pDisassembly, flavour));
+        QueueCommand(new GdbCmd_DisassemblyInit(this, flavour));
     else
-        QueueCommand(new GdbCmd_DisassemblyInit(this, m_pDisassembly));
+        QueueCommand(new GdbCmd_DisassemblyInit(this));
 }
 
 void GDB_driver::CPURegisters()
 {
-    if (!m_pCPURegisters)
-        return;
-
     if(platform::windows)
-        QueueCommand(new GdbCmd_InfoRegisters(this, m_pCPURegisters, flavour));
+        QueueCommand(new GdbCmd_InfoRegisters(this, flavour));
     else
-        QueueCommand(new GdbCmd_InfoRegisters(this, m_pCPURegisters));
+        QueueCommand(new GdbCmd_InfoRegisters(this));
 }
 
 void GDB_driver::SwitchToFrame(size_t number)
@@ -617,15 +611,13 @@ void GDB_driver::SetVarValue(const wxString& var, const wxString& value)
 
 void GDB_driver::MemoryDump()
 {
-    if (!m_pExamineMemory)
-        return;
-    QueueCommand(new GdbCmd_ExamineMemory(this, m_pExamineMemory));
+    QueueCommand(new GdbCmd_ExamineMemory(this));
 }
 
 void GDB_driver::RunningThreads()
 {
-    if (m_pThreads)
-        QueueCommand(new GdbCmd_Threads(this, m_pThreads));
+    if (Manager::Get()->GetDebuggerManager()->UpdateThreads())
+        QueueCommand(new GdbCmd_Threads(this));
 }
 
 void GDB_driver::InfoFrame()
@@ -635,7 +627,10 @@ void GDB_driver::InfoFrame()
 
 void GDB_driver::InfoDLL()
 {
-    QueueCommand(new DebuggerInfoCmd(this, _T("info dll"), _("Loaded libraries")));
+    if (platform::windows)
+        QueueCommand(new DebuggerInfoCmd(this, _T("info dll"), _("Loaded libraries")));
+    else
+        QueueCommand(new DebuggerInfoCmd(this, _T("info sharedlibrary"), _("Loaded libraries")));
 }
 
 void GDB_driver::InfoFiles()
@@ -657,8 +652,8 @@ void GDB_driver::SwitchThread(size_t threadIndex)
 {
     ResetCursor();
     QueueCommand(new DebuggerCmd(this, wxString::Format(_T("thread %d"), threadIndex)));
-    if (m_pBacktrace)
-        QueueCommand(new GdbCmd_Backtrace(this, m_pBacktrace));
+    if (Manager::Get()->GetDebuggerManager()->UpdateBacktrace())
+        QueueCommand(new GdbCmd_Backtrace(this));
 }
 
 void GDB_driver::AddBreakpoint(DebuggerBreakpoint* bp)
@@ -707,23 +702,34 @@ void GDB_driver::EvaluateSymbol(const wxString& symbol, const wxRect& tipRect)
     QueueCommand(new GdbCmd_FindTooltipType(this, symbol, tipRect));
 }
 
-void GDB_driver::UpdateWatches(bool doLocals, bool doArgs, DebuggerTree* tree)
+void GDB_driver::UpdateWatches(bool doLocals, bool doArgs, DebuggerTree* tree, WatchesContainer &watches)
 {
     // start updating watches tree
-    tree->BeginUpdateTree();
+//    tree->BeginUpdateTree();
 
     // locals before args because of precedence
-    if (doLocals)
-        QueueCommand(new GdbCmd_InfoLocals(this, tree));
-    if (doArgs)
-        QueueCommand(new GdbCmd_InfoArguments(this, tree));
-    for (unsigned int i = 0; i < tree->GetWatches().GetCount(); ++i)
+//    if (doLocals)
+//        QueueCommand(new GdbCmd_InfoLocals(this, tree));
+//    if (doArgs)
+//        QueueCommand(new GdbCmd_InfoArguments(this, tree));
+//    for (unsigned int i = 0; i < tree->GetWatches().GetCount(); ++i)
+//    {
+//        Watch& w = tree->GetWatches()[i];
+//        if (w.format == Undefined)
+//            QueueCommand(new GdbCmd_FindWatchType(this, tree, &w));
+//        else
+//            QueueCommand(new GdbCmd_Watch(this, tree, &w));
+//    }
+
+    for(WatchesContainer::iterator it = watches.begin(); it != watches.end(); ++it)
     {
-        Watch& w = tree->GetWatches()[i];
-        if (w.format == Undefined)
-            QueueCommand(new GdbCmd_FindWatchType(this, tree, &w));
-        else
-            QueueCommand(new GdbCmd_Watch(this, tree, &w));
+//        wxString type;
+//        (*it)->GetType(type);
+//
+//        if(type.empty())
+            QueueCommand(new GdbCmd_FindWatchType(this, it->get()));
+//        else
+//            QueueCommand(new GdbCmd_Watch(this, it->get()));
     }
 
     // run this action-only command to update the tree
@@ -909,7 +915,9 @@ void GDB_driver::ParseOutput(const wxString& output)
             {
                 Log(lines[i]);
                 m_pDBG->BringAppToFront();
-                if (IsWindowReallyShown(m_pBacktrace))
+            // FIXME (obfuscated#): Should replace with GetDebuggerManager()->ShowBacktraceDialog()!
+                cbBacktraceDlg *dialog = Manager::Get()->GetDebuggerManager()->GetBacktraceDialog();
+                if (IsWindowReallyShown(dialog))
                 {
                     // don't ask; it's already shown
                     // just grab the user's attention
@@ -919,7 +927,7 @@ void GDB_driver::ParseOutput(const wxString& output)
                 {
                     // show the backtrace window
                     CodeBlocksDockEvent evt(cbEVT_SHOW_DOCK_WINDOW);
-                    evt.pWindow = m_pBacktrace;
+                    evt.pWindow = dialog;
                     Manager::Get()->ProcessEvent(evt);
                     m_forceUpdate = true;
                 }

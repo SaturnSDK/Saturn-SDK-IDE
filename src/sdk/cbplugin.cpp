@@ -22,6 +22,7 @@
 #endif
 
 #include <wx/toolbar.h>
+#include "cbstyledtextctrl.h"
 
 
 cbPlugin::cbPlugin()
@@ -100,9 +101,80 @@ cbCompilerPlugin::cbCompilerPlugin()
 ///// cbDebuggerPlugin
 /////
 
-cbDebuggerPlugin::cbDebuggerPlugin()
+cbDebuggerPlugin::cbDebuggerPlugin() :
+    m_toolbar(NULL)
 {
     m_Type = ptDebugger;
+}
+
+void cbDebuggerPlugin::BuildMenu(wxMenuBar* menuBar)
+{
+    if (!IsAttached())
+        return;
+    Manager::Get()->GetDebuggerManager()->GetMenu();
+}
+
+wxString cbDebuggerPlugin::GetEditorWordAtCaret()
+{
+    cbEditor* ed = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
+    if (!ed)
+        return _T("");
+    int start = ed->GetControl()->WordStartPosition(ed->GetControl()->GetCurrentPos(), true);
+    int end = ed->GetControl()->WordEndPosition(ed->GetControl()->GetCurrentPos(), true);
+    return ed->GetControl()->GetTextRange(start, end);
+}
+
+void cbDebuggerPlugin::BuildModuleMenu(const ModuleType type, wxMenu* menu, const FileTreeData* data)
+{
+    cbProject* prj = Manager::Get()->GetProjectManager()->GetActiveProject();
+    if (!prj)
+        return;
+    if (!IsAttached())
+        return;
+    // we 're only interested in editor menus
+    // we 'll add a "debug watches" entry only when the debugger is running...
+    if (type != mtEditorManager || !menu)
+        return;
+
+    wxString word;
+    if (IsRunning())
+    {
+        // has to have a word under the caret...
+        word = GetEditorWordAtCaret();
+    }
+    Manager::Get()->GetDebuggerManager()->BuildContextMenu(*menu, word, IsRunning());
+}
+
+bool cbDebuggerPlugin::BuildToolBar(wxToolBar* toolBar)
+{
+    if (!IsAttached() || !toolBar)
+        return false;
+    Manager::Get()->GetDebuggerManager()->LoadToolbar(toolBar);
+    m_toolbar = toolBar;
+    return true;
+}
+
+wxToolBar* cbDebuggerPlugin::GetToolbar()
+{
+    return m_toolbar;
+}
+
+void cbDebuggerPlugin::RemoveBreakpointFromEditor(const wxString& filename, int line)
+{
+    cbEditor* ed = Manager::Get()->GetEditorManager()->IsBuiltinOpen(filename);
+    if (ed)
+        ed->RemoveBreakpoint(line, false);
+}
+
+void cbDebuggerPlugin::ClearActiveMarkFromAllEditors()
+{
+    EditorManager* edMan = Manager::Get()->GetEditorManager();
+    for (int i = 0; i < edMan->GetEditorsCount(); ++i)
+    {
+        cbEditor* ed = edMan->GetBuiltinEditor(i);
+        if (ed)
+            ed->SetDebugLine(-1);
+    }
 }
 
 /////

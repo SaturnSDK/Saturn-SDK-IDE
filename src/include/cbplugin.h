@@ -16,6 +16,8 @@
 #include "manager.h"
 #include "pluginmanager.h"
 
+#include "debuggermanager.h"
+
 #ifdef __WXMSW__
 	#ifndef PLUGIN_EXPORT
 		#ifdef EXPORT_LIB
@@ -357,37 +359,16 @@ class PLUGIN_EXPORT cbDebuggerPlugin: public cbPlugin
 	public:
 		cbDebuggerPlugin();
 
-		/** @brief Request to add a breakpoint.
-		  * @param file The file to add the breakpoint based on a file/line pair.
-		  * @param line The line number to put the breakpoint in @c file.
-		  * @return True if succeeded, false if not.
-		  */
-		virtual bool AddBreakpoint(const wxString& file, int line) = 0;
+    public:
+		/** @brief Returns the toolbar associated with this plugin. */
+		wxToolBar* GetToolbar();
 
-		/** @brief Request to add a breakpoint based on a function signature.
-		  * @param functionSignature The function signature to add the breakpoint.
-		  * @return True if succeeded, false if not.
-		  */
-		virtual bool AddBreakpoint(const wxString& functionSignature) = 0;
+        virtual void BuildMenu(wxMenuBar* menuBar);
+        virtual void BuildModuleMenu(const ModuleType type, wxMenu* menu, const FileTreeData* data = 0);
+        virtual bool BuildToolBar(wxToolBar* toolBar);
+    public:
 
-		/** @brief Request to remove a breakpoint based on a file/line pair.
-		  * @param file The file to remove the breakpoint.
-		  * @param line The line number the breakpoint is in @c file.
-		  * @return True if succeeded, false if not.
-		  */
-		virtual bool RemoveBreakpoint(const wxString& file, int line) = 0;
-
-		/** @brief Request to remove a breakpoint based on a function signature.
-		  * @param functionSignature The function signature to remove the breakpoint.
-		  * @return True if succeeded, false if not.
-		  */
-		virtual bool RemoveBreakpoint(const wxString& functionSignature) = 0;
-
-		/** @brief Request to remove all breakpoints from a file.
-		  * @param file The file to remove all breakpoints in. If the argument is empty, all breakpoints are removed from all files.
-		  * @return True if succeeded, false if not.
-		  */
-		virtual bool RemoveAllBreakpoints(const wxString& file = wxEmptyString) = 0;
+        virtual void ShowToolMenu() = 0;
 
 		/** @brief Notify the debugger that lines were added or removed in an editor.
 		  * This causes the debugger to keep the breakpoints list in-sync with the
@@ -400,16 +381,25 @@ class PLUGIN_EXPORT cbDebuggerPlugin: public cbPlugin
 		virtual void EditorLinesAddedOrRemoved(cbEditor* editor, int startline, int lines) = 0;
 
 		/** @brief Start a new debugging process. */
-		virtual int Debug() = 0;
+		virtual int Debug(bool breakOnEntry) = 0;
 
 		/** @brief Continue running the debugged program. */
 		virtual void Continue() = 0;
 
+		/** @brief Run the debugged program until it reaches the cursor at the current editor */
+		virtual void RunToCursor(const wxString& filename, int line, const wxString& line_text) = 0;
+
 		/** @brief Execute the next instruction and return control to the debugger. */
 		virtual void Next() = 0;
 
+		/** @brief Execute the next instruction and return control to the debugger. */
+		virtual void NextInstruction() = 0;
+
 		/** @brief Execute the next instruction, stepping into function calls if needed, and return control to the debugger. */
 		virtual void Step() = 0;
+
+		/** @brief Execute the next instruction, stepping out of function calls if needed, and return control to the debugger. */
+		virtual void StepOut() = 0;
 
 		/** @brief Break the debugging process (stop the debuggee for debugging). */
 		virtual void Break() = 0;
@@ -420,8 +410,78 @@ class PLUGIN_EXPORT cbDebuggerPlugin: public cbPlugin
         /** @brief Is the plugin currently debugging? */
 		virtual bool IsRunning() const = 0;
 
+		/** @brief Is the plugin stopped on breakpoint? */
+		virtual bool IsStopped() const = 0;
+
         /** @brief Get the exit code of the last debug process. */
 		virtual int GetExitCode() const = 0;
+
+		// stack frame calls;
+		virtual int GetStackFrameCount() const = 0;
+		virtual const cbStackFrame& GetStackFrame(int index) const = 0;
+		virtual void SwitchToFrame(int number) = 0;
+
+        // breakpoints calls
+		/** @brief Request to add a breakpoint.
+		  * @param file The file to add the breakpoint based on a file/line pair.
+		  * @param line The line number to put the breakpoint in @c file.
+		  * @return True if succeeded, false if not.
+		  */
+        virtual cbBreakpoint* AddBreakpoint(const wxString& filename, int line) = 0;
+
+		/** @brief Request to add a breakpoint based on a data expression.
+		  * @param dataExpression The data expression to add the breakpoint.
+		  * @return True if succeeded, false if not.
+		  */
+        virtual cbBreakpoint* AddDataBreakpoint(const wxString& dataExpression) = 0;
+        virtual int GetBreakpointsCount() const = 0;
+        virtual cbBreakpoint* GetBreakpoint(int index) = 0;
+        virtual const cbBreakpoint* GetBreakpoint(int index) const = 0;
+        virtual void UpdateBreakpoint(cbBreakpoint *breakpoint) = 0;
+        virtual void DeleteBreakpoint(cbBreakpoint* breakpoint) = 0;
+        virtual void DeleteAllBreakpoints() = 0;
+
+        // threads
+        virtual int GetThreadsCount() const = 0;
+        virtual const cbThread& GetThread(int index) const = 0;
+        virtual bool SwitchToThread(int thread_number) = 0;
+
+        // watches
+        virtual cbWatch* AddWatch(const wxString& symbol) = 0;
+        virtual void DeleteWatch(cbWatch *watch) = 0;
+        virtual bool HasWatch(cbWatch *watch) = 0;
+        virtual void ShowWatchProperties(cbWatch *watch) = 0;
+        virtual bool SetWatchValue(cbWatch *watch, const wxString &value) = 0;
+
+        virtual void SendCommand(const wxString& cmd) = 0;
+
+        virtual void AttachToProcess(const wxString& pid) = 0;
+        virtual void DetachFromProcess() = 0;
+
+    public:
+        enum DebugWindows
+        {
+            Backtrace,
+            CPURegisters,
+            Disassembly,
+            ExamineMemory,
+            Threads,
+        };
+
+        virtual void RequestUpdate(DebugWindows window) = 0;
+
+    public:
+        virtual wxString GetEditorWordAtCaret();
+    protected:
+		/** @brief Request to remove a breakpoint based on a file/line pair.
+		  * @param file The file to remove the breakpoint.
+		  * @param line The line number the breakpoint is in @c file.
+		  * @return True if succeeded, false if not.
+		  */
+        void RemoveBreakpointFromEditor(const wxString& filename, int line);
+        void ClearActiveMarkFromAllEditors();
+    private:
+        wxToolBar *m_toolbar;
 };
 
 /** @brief Base class for tool plugins

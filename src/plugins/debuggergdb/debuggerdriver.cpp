@@ -15,9 +15,9 @@ DebuggerDriver::DebuggerDriver(DebuggerGDB* plugin)
     : m_pDBG(plugin),
     m_ProgramIsStopped(true),
     m_ChildPID(0),
-    m_pBacktrace(0),
-    m_pDisassembly(0),
-    m_pExamineMemory(0),
+//    m_pBacktrace(0),
+//    m_pDisassembly(0),
+//    m_pExamineMemory(0),
     m_QueueBusy(false)
 {
     //ctor
@@ -37,19 +37,6 @@ void DebuggerDriver::Log(const wxString& msg)
 void DebuggerDriver::DebugLog(const wxString& msg)
 {
     m_pDBG->DebugLog(msg);
-}
-
-void DebuggerDriver::SetDebugWindows(BacktraceDlg* b,
-                                    DisassemblyDlg* d,
-                                    CPURegistersDlg* r,
-                                    ExamineMemoryDlg* m,
-                                    ThreadsDlg* t)
-{
-    m_pBacktrace = b;
-    m_pDisassembly = d;
-    m_pCPURegisters = r;
-    m_pExamineMemory = m;
-    m_pThreads = t;
 }
 
 void DebuggerDriver::ClearDirectories()
@@ -166,3 +153,24 @@ void DebuggerDriver::ClearQueue()
         m_DCmds.RemoveAt(i);
     }
 }
+
+DebuggerDriver::StackFrameContainer const & DebuggerDriver::GetStackFrames() const
+{
+    return m_backtrace;
+}
+
+DebuggerDriver::StackFrameContainer& DebuggerDriver::GetStackFrames()
+{
+    return m_backtrace;
+}
+
+const DebuggerDriver::ThreadsContainer & DebuggerDriver::GetThreads() const
+{
+    return m_threads;
+}
+
+DebuggerDriver::ThreadsContainer & DebuggerDriver::GetThreads()
+{
+    return m_threads;
+}
+

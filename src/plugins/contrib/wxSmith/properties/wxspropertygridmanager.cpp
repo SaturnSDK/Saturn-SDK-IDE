@@ -34,7 +34,11 @@ wxsPropertyGridManager::wxsPropertyGridManager(
     const wxPoint& pos,
     const wxSize& size,
     long style,
+    #if wxCHECK_VERSION(2, 9, 0)
+    const char* name):
+    #else
     const wxChar* name):
+    #endif
         wxPropertyGridManager(parent,id,pos,size,style,name),
         MainContainer(0)
 {
@@ -148,7 +152,11 @@ void wxsPropertyGridManager::UnbindPropertyContainer(wxsPropertyContainer* PC)
     {
         if ( PGContainers[i] == PC )
         {
+            #if wxCHECK_VERSION(2, 9, 0) || wxCHECK_PROPGRID_VERSION(1, 4, 0)
+            DeleteProperty(PGIDs[i]);
+            #else
             Delete(PGIDs[i]);
+            #endif
             PGIDs.RemoveAt(i);
             PGEnteries.RemoveAt(i);
             PGIndexes.RemoveAt(i);
@@ -213,12 +221,20 @@ void wxsPropertyGridManager::NewPropertyContainerAddProperty(wxsProperty* Proper
 
 void wxsPropertyGridManager::NewPropertyContainerFinish(wxsPropertyContainer* Container)
 {
+    #if wxCHECK_VERSION(2, 9, 0) || wxCHECK_PROPGRID_VERSION(1, 4, 0)
+    SelectPage(0);
+    #else
     SetTargetPage(0);
+    #endif
 
     while ( PropertiesList )
     {
         TemporaryPropertiesList* Next = PropertiesList->Next;
+        #if wxCHECK_VERSION(2, 9, 0) || wxCHECK_PROPGRID_VERSION(1, 4, 0)
+        PropertiesList->Property->PGCreate(PropertiesList->Container,this,GetGrid()->GetRoot());
+        #else
         PropertiesList->Property->PGCreate(PropertiesList->Container,this,GetRoot());
+        #endif
         delete PropertiesList;
         PropertiesList = Next;
     }
@@ -251,8 +267,13 @@ void wxsPropertyGridManager::StoreSelected(SelectionData* Data)
 
     Data->m_PageIndex = GetSelectedPage();
 
+    #if wxCHECK_VERSION(2, 9, 0)
+    wxPGId Selected = GetSelection();
+    if ( Selected != NULL )
+    #else
     wxPGId Selected = GetSelectedProperty();
     if ( wxPGIdIsOk(Selected) )
+    #endif
     {
         Data->m_PropertyName = GetPropertyName(Selected);
     }

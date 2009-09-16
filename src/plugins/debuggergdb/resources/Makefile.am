@@ -1,5 +1,3 @@
-SUBDIRS = images
-
 pkgdata_DATA = debugger.zip
 CLEANFILES = $(pkgdata_DATA)
 

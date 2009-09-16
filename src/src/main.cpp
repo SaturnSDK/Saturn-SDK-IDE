@@ -849,8 +849,8 @@ void MainFrame::CreateMenubar()
     if(!mbar)
     {
       mbar = new wxMenuBar(); // Some error happened.
-      SetMenuBar(mbar);
     }
+    SetMenuBar(mbar);
 
     // Find Menus that we'll change later
 
@@ -974,9 +974,7 @@ void MainFrame::CreateToolbars()
     myres->Load(resPath + _T("/resources.zip#zip:*.xrc"));
     Manager::Get()->GetLogManager()->DebugLog(_T("Loading toolbar..."));
 
-    wxSize size = m_SmallToolBar ? wxSize(16, 16) : (platform::macosx ? wxSize(32, 32) : wxSize(22, 22));
-    m_pToolbar = new wxToolBar(this, -1, wxDefaultPosition, size, wxTB_FLAT | wxTB_NODIVIDER);
-    m_pToolbar->SetToolBitmapSize(size);
+    m_pToolbar = Manager::Get()->CreateEmptyToolbar();
     Manager::Get()->AddonToolBar(m_pToolbar,xrcToolbarName);
 
     m_pToolbar->Realize();
@@ -1016,15 +1014,10 @@ void MainFrame::ScanForPlugins()
 
     PluginManager* m_PluginManager = Manager::Get()->GetPluginManager();
 
-    // user paths first
-    wxString path = ConfigManager::GetPluginsFolder(false);
+    // global paths
+	wxString path = ConfigManager::GetPluginsFolder(true);
     Manager::Get()->GetLogManager()->Log(_("Scanning for plugins in ") + path);
     int count = m_PluginManager->ScanForPlugins(path);
-
-    // global paths
-    path = ConfigManager::GetPluginsFolder(true);
-    Manager::Get()->GetLogManager()->Log(_("Scanning for plugins in ") + path);
-    count += m_PluginManager->ScanForPlugins(path);
 
     // actually load plugins
     if (count > 0)
@@ -1386,9 +1379,7 @@ void MainFrame::DoSelectLayout(const wxString& name)
 
 void MainFrame::DoAddPluginToolbar(cbPlugin* plugin)
 {
-    wxSize size = m_SmallToolBar ? wxSize(16, 16) : (platform::macosx ? wxSize(32, 32) : wxSize(22, 22));
-    wxToolBar* tb = new wxToolBar(this, -1, wxDefaultPosition, size, wxTB_FLAT | wxTB_NODIVIDER);
-    tb->SetToolBitmapSize(size);
+    wxToolBar *tb = Manager::Get()->CreateEmptyToolbar();
     if (plugin->BuildToolBar(tb))
     {
         SetToolBar(0);

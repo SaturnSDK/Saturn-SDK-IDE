@@ -8,6 +8,8 @@
 
 #include <wx/string.h>
 #include <wx/dynarray.h>
+#include <vector>
+#include <tr1/memory>
 
 class DebuggerDriver;
 class DebuggerTree;
@@ -114,7 +116,7 @@ struct DebuggerBreakpoint
 		bptFunction,	///< Function signature breakpoint
 		bptData			///< Data breakpoint
 	};
-	
+
     /** Constructor.
       * Sets default values for members.
       */
@@ -201,13 +203,56 @@ struct Watch
 };
 WX_DECLARE_OBJARRAY(Watch, WatchesArray);
 
+class GDBWatch : public cbWatch
+{
+    public:
+        GDBWatch(wxString const &symbol);
+    public:
+
+        virtual void GetSymbol(wxString &symbol) const;
+        virtual void GetValue(wxString &value) const;
+        virtual bool SetValue(const wxString &value);
+        virtual void GetFullWatchString(wxString &full_watch) const;
+        virtual void GetType(wxString &type) const;
+        virtual void SetType(const wxString &type);
+
+        virtual wxString const & GetDebugString() const;
+	public:
+        void SetDebugValue(wxString const &value);
+        void SetSymbol(const wxString& symbol);
+
+        void SetFormat(WatchFormat format);
+        WatchFormat GetFormat() const;
+
+        void SetArray(bool flag);
+        bool IsArray() const;
+        void SetArrayParams(int start, int count);
+        int GetArrayStart() const;
+        int GetArrayCount() const;
+
+	protected:
+        virtual void DoDestroy();
+
+    private:
+        wxString m_symbol;
+        wxString m_type;
+        wxString m_raw_value;
+        wxString m_debug_value;
+        WatchFormat m_format;
+        int m_array_start;
+        int m_array_count;
+        bool m_is_array;
+    };
+
+typedef std::vector<std::tr1::shared_ptr<GDBWatch> > WatchesContainer;
+
 /** Stack frame.
   *
   * This keeps info about a specific stack frame.
   */
-struct StackFrame
+struct oldStackFrame
 {
-    StackFrame() : valid(false), number(0), address(0) {}
+    oldStackFrame() : valid(false), number(0), address(0) {}
     /** Clear everything. */
     void Clear()
     {

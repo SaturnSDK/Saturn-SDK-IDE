@@ -2,7 +2,7 @@
 <CodeBlocks_project_file>
 	<FileVersion major="1" minor="6" />
 	<Project>
-		<Option title="HexEditor (Windows)" />
+		<Option title="HexEditor" />
 		<Option platforms="Windows;" />
 		<Option pch_mode="2" />
 		<Option compiler="gcc" />
@@ -29,6 +29,8 @@
 					<Add option="-DCB_PRECOMP" />
 					<Add option="-DWX_PRECOMP" />
 					<Add option="-DwxUSE_UNICODE" />
+					<Add option="-DWXMAKINGDLL_PROPGRID" />
+					<Add option="-DwxPG_USE_WXMODULE=0" />
 					<Add directory="$(#WX.include)" />
 					<Add directory="$(#WX.lib)\gcc_dll$(WX_CFG)\msw$(WX_SUFFIX)" />
 					<Add directory="..\..\..\include" />

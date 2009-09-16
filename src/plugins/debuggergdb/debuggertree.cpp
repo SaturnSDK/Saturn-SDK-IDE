@@ -736,26 +736,28 @@ void DebuggerTree::OnSaveWatchFile(wxCommandEvent& event)
 
 void DebuggerTree::OnEditWatch(wxCommandEvent& event)
 {
-    WatchTreeData* data = static_cast<WatchTreeData*>(m_pTree->GetItemData(m_pTree->GetSelection()));
-    Watch* w = data ? data->m_pWatch : 0;
-    if (w)
-    {
-        EditWatchDlg dlg(w);
-        PlaceWindow(&dlg);
-        if (dlg.ShowModal() == wxID_OK && !dlg.GetWatch().keyword.IsEmpty())
-        {
-            *w = dlg.GetWatch();
-            NotifyForChangedWatches();
-        }
-    }
+    cbAssert(false);
+//    WatchTreeData* data = static_cast<WatchTreeData*>(m_pTree->GetItemData(m_pTree->GetSelection()));
+//    Watch* w = data ? data->m_pWatch : 0;
+//    if (w)
+//    {
+//        EditWatchDlg dlg(w);
+//        PlaceWindow(&dlg);
+//        if (dlg.ShowModal() == wxID_OK && !dlg.GetWatch().keyword.IsEmpty())
+//        {
+//            *w = dlg.GetWatch();
+//            NotifyForChangedWatches();
+//        }
+//    }
 }
 
 void DebuggerTree::OnAddWatch(wxCommandEvent& event)
 {
-    EditWatchDlg dlg;
-    PlaceWindow(&dlg);
-    if (dlg.ShowModal() == wxID_OK && !dlg.GetWatch().keyword.IsEmpty())
-        AddWatch(dlg.GetWatch().keyword, dlg.GetWatch().format);
+    cbAssert(false);
+//    EditWatchDlg dlg;
+//    PlaceWindow(&dlg);
+//    if (dlg.ShowModal() == wxID_OK && !dlg.GetWatch().keyword.IsEmpty())
+//        AddWatch(dlg.GetWatch().keyword, dlg.GetWatch().format);
 }
 
 void DebuggerTree::OnDeleteWatch(wxCommandEvent& event)

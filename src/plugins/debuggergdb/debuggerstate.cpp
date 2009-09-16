@@ -52,12 +52,17 @@ void DebuggerState::StopDriver()
     m_pDriver = 0;
 }
 
-bool DebuggerState::HasDriver()
+bool DebuggerState::HasDriver() const
 {
 	return m_pDriver != NULL;
 }
 
 DebuggerDriver* DebuggerState::GetDriver()
+{
+	cbAssert(m_pDriver != NULL);
+	return m_pDriver;
+}
+const DebuggerDriver* DebuggerState::GetDriver() const
 {
 	cbAssert(m_pDriver != NULL);
 	return m_pDriver;
@@ -299,6 +304,17 @@ DebuggerBreakpoint* DebuggerState::GetBreakpoint(int idx)
 }
 
 DebuggerBreakpoint* DebuggerState::GetBreakpointByNumber(int num)
+{
+    for (unsigned int i = 0; i < m_Breakpoints.GetCount(); ++i)
+    {
+        DebuggerBreakpoint* bp = m_Breakpoints[i];
+        if (bp->index == num)
+            return bp;
+    }
+    return 0;
+}
+
+const DebuggerBreakpoint* DebuggerState::GetBreakpointByNumber(int num) const
 {
     for (unsigned int i = 0; i < m_Breakpoints.GetCount(); ++i)
     {

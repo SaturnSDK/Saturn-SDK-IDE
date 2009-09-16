@@ -20,11 +20,11 @@
 
 class DebuggerGDB;
 class DebuggerTree;
-class BacktraceDlg;
-class DisassemblyDlg;
-class CPURegistersDlg;
-class ExamineMemoryDlg;
-class ThreadsDlg;
+//class BacktraceDlg;
+//class DisassemblyDlg;
+//class CPURegistersDlg;
+//class ExamineMemoryDlg;
+//class ThreadsDlg;
 class Compiler;
 class ProjectBuildTarget;
 
@@ -42,6 +42,8 @@ class DebuggerDriver
             Low = 0,
             High
         };
+        typedef std::vector<cbStackFrame> StackFrameContainer;
+        typedef std::vector<cbThread> ThreadsContainer;
 
         DebuggerDriver(DebuggerGDB* plugin);
         virtual ~DebuggerDriver();
@@ -52,13 +54,6 @@ class DebuggerDriver
         ////////////////////////////////
         // BEFORE PROCESS STARTS - BEGIN
         ////////////////////////////////
-
-        /** Inform the driver about the plugin's available (not necessarily visible) debugging windows. */
-        virtual void SetDebugWindows(BacktraceDlg* b,
-                                    DisassemblyDlg* d,
-                                    CPURegistersDlg* r,
-                                    ExamineMemoryDlg* m,
-                                    ThreadsDlg* t);
 
         /** Add a directory in search list. */
         virtual void AddDirectory(const wxString& dir);
@@ -135,7 +130,7 @@ class DebuggerDriver
             @param doArgs Display values of function arguments.
             @param tree The watches tree control.
         */
-        virtual void UpdateWatches(bool doLocals, bool doArgs, DebuggerTree* tree) = 0;
+        virtual void UpdateWatches(bool doLocals, bool doArgs, DebuggerTree* tree, WatchesContainer &watches) = 0;
 
         /** Detach from running process. */
         virtual void Detach() = 0;
@@ -144,7 +139,7 @@ class DebuggerDriver
         virtual void ParseOutput(const wxString& output) = 0;
 
         /** Is the program stopped? */
-        virtual bool IsStopped(){ return m_ProgramIsStopped; }
+        virtual bool IsStopped() const { return m_ProgramIsStopped; }
         /** Get debugger cursor. */
         virtual const Cursor& GetCursor() const { return m_Cursor; }
         /** Set child PID (debuggee's). Usually set by debugger commands. */
@@ -162,6 +157,12 @@ class DebuggerDriver
         void RunQueue(); ///< runs the next command in the queue, if it is idle
         void RemoveTopCommand(bool deleteIt = true); ///< removes the top command (it has finished)
         void ClearQueue(); ///< clears the queue
+
+        const StackFrameContainer & GetStackFrames() const; ///< returns the container with the current backtrace
+        StackFrameContainer & GetStackFrames(); ///< returns the container with the current backtrace
+
+        const ThreadsContainer & GetThreads() const; ///< returns the thread container with the current list of threads
+        ThreadsContainer & GetThreads(); ///< returns the thread container with the current list of threads
     protected:
         /** Called by implementations to reset the cursor. */
         virtual void ResetCursor();
@@ -184,15 +185,18 @@ class DebuggerDriver
         long m_ChildPID;
 
         // debugging windows pointers
-        BacktraceDlg* m_pBacktrace;
-        DisassemblyDlg* m_pDisassembly;
-        CPURegistersDlg* m_pCPURegisters;
-        ExamineMemoryDlg* m_pExamineMemory;
-        ThreadsDlg* m_pThreads;
+//        BacktraceDlg* m_pBacktrace;
+//        DisassemblyDlg* m_pDisassembly;
+//        CPURegistersDlg* m_pCPURegisters;
+//        ExamineMemoryDlg* m_pExamineMemory;
+//        ThreadsDlg* m_pThreads;
 
         // commands
         DebuggerCommands m_DCmds;
         bool m_QueueBusy;
+
+        StackFrameContainer m_backtrace;
+        ThreadsContainer m_threads;
     private:
 };
 

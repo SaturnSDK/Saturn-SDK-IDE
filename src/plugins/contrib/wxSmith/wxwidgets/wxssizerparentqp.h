@@ -24,11 +24,12 @@
 #define WXSSIZERPARENTQP_H
 
 //(*Headers(wxsSizerParentQP)
-#include <wx/sizer.h>
-#include <wx/checkbox.h>
 #include <wx/spinctrl.h>
+#include <wx/checkbox.h>
+#include <wx/sizer.h>
 #include <wx/radiobut.h>
 #include <wx/panel.h>
+#include <wx/statline.h>
 //*)
 
 #include "wxssizer.h"
@@ -44,6 +45,7 @@ class wxsSizerParentQP: public wxsAdvQPPChild
 		//(*Identifiers(wxsSizerParentQP)
 		static const long ID_CHECKBOX1;
 		static const long ID_CHECKBOX2;
+		static const long ID_CHECKBOX8;
 		static const long ID_CHECKBOX3;
 		static const long ID_CHECKBOX4;
 		static const long ID_SPINCTRL1;
@@ -57,6 +59,7 @@ class wxsSizerParentQP: public wxsAdvQPPChild
 		static const long ID_RADIOBUTTON10;
 		static const long ID_RADIOBUTTON11;
 		static const long ID_RADIOBUTTON12;
+		static const long ID_STATICLINE1;
 		static const long ID_CHECKBOX6;
 		static const long ID_CHECKBOX5;
 		static const long ID_SPINCTRL2;
@@ -70,32 +73,30 @@ class wxsSizerParentQP: public wxsAdvQPPChild
 		void OnPlaceChange(wxCommandEvent& event);
 		void OnProportionChange(wxSpinEvent& event);
 		void OnBrdDlgChange(wxCommandEvent& event);
+		void OnBrdAll(wxCommandEvent& event);
 		//*)
 
 		//(*Declarations(wxsSizerParentQP)
-		wxRadioButton* PlaceCB;
-		wxCheckBox* PlaceShp;
-		wxCheckBox* BrdLeft;
-		wxSpinCtrl* BrdSize;
-		wxCheckBox* BrdTop;
-		wxCheckBox* BrdRight;
-		wxFlexGridSizer* FlexGridSizer3;
-		wxRadioButton* PlaceRT;
-		wxRadioButton* PlaceRC;
-		wxCheckBox* PlaceExp;
-		wxRadioButton* PlaceCT;
-		wxCheckBox* BrdDlg;
-		wxStaticBoxSizer* StaticBoxSizer3;
-		wxCheckBox* BrdBottom;
-		wxRadioButton* PlaceLB;
 		wxRadioButton* PlaceRB;
-		wxRadioButton* PlaceCC;
-		wxBoxSizer* BoxSizer1;
-		wxSpinCtrl* Proportion;
-		wxFlexGridSizer* FlexGridSizer1;
+		wxCheckBox* BrdDlg;
+		wxRadioButton* PlaceCB;
+		wxRadioButton* PlaceRT;
 		wxRadioButton* PlaceLT;
+		wxCheckBox* BrdLeft;
+		wxCheckBox* BrdTop;
+		wxSpinCtrl* Proportion;
+		wxRadioButton* PlaceLB;
+		wxStaticLine* StaticLine1;
+		wxCheckBox* PlaceShp;
+		wxCheckBox* PlaceExp;
+		wxRadioButton* PlaceRC;
+		wxRadioButton* PlaceCC;
+		wxCheckBox* BrdAll;
 		wxRadioButton* PlaceLC;
-		wxGridSizer* GridSizer2;
+		wxCheckBox* BrdRight;
+		wxSpinCtrl* BrdSize;
+		wxCheckBox* BrdBottom;
+		wxRadioButton* PlaceCT;
 		//*)
 
         virtual void Update();

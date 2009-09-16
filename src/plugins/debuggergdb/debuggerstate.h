@@ -20,16 +20,18 @@ class DebuggerState
         ~DebuggerState();
 
         BreakpointsList& GetBreakpoints(){ return m_Breakpoints; }
+        BreakpointsList const & GetBreakpoints() const{ return m_Breakpoints; }
 
         bool StartDriver(ProjectBuildTarget* target);
         void StopDriver();
 
 		/// Check so see if Driver exists before getting it
-		bool HasDriver();
-		
+		bool HasDriver() const;
+
 		/// Will always return a driver, or throw a code assertion error
 		// (to fix multiple bugs in use of GetDriver without checking return value)
         DebuggerDriver* GetDriver();
+        const DebuggerDriver* GetDriver() const;
 
         void CleanUp();
 
@@ -50,6 +52,7 @@ class DebuggerState
 		int HasBreakpoint(const wxString& dataAddr);
         DebuggerBreakpoint* GetBreakpoint(int idx);
         DebuggerBreakpoint* GetBreakpointByNumber(int num);
+        const DebuggerBreakpoint* GetBreakpointByNumber(int num) const;
         void ResetBreakpoint(int idx);
         void ResetBreakpoint(DebuggerBreakpoint* bp);
         void ApplyBreakpoints();

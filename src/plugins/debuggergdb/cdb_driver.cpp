@@ -10,6 +10,8 @@
 #include <sdk.h>
 #include "cdb_driver.h"
 #include "cdb_commands.h"
+
+#include <backtracedlg.h>
 #include <manager.h>
 #include <configmanager.h>
 #include <globals.h>
@@ -159,23 +161,18 @@ void CDB_driver::StepOut()
 
 void CDB_driver::Backtrace()
 {
-    if (!m_pBacktrace)
-        return;
-    QueueCommand(new CdbCmd_Backtrace(this, m_pBacktrace));
+    if (Manager::Get()->GetDebuggerManager()->UpdateBacktrace())
+        QueueCommand(new CdbCmd_Backtrace(this));
 }
 
 void CDB_driver::Disassemble()
 {
-    if (!m_pDisassembly)
-        return;
-    QueueCommand(new CdbCmd_DisassemblyInit(this, m_pDisassembly));
+    QueueCommand(new CdbCmd_DisassemblyInit(this));
 }
 
 void CDB_driver::CPURegisters()
 {
-    if (!m_pCPURegisters)
-        return;
-    QueueCommand(new CdbCmd_InfoRegisters(this, m_pCPURegisters));
+    QueueCommand(new CdbCmd_InfoRegisters(this));
 }
 
 void CDB_driver::SwitchToFrame(size_t number)
@@ -238,7 +235,7 @@ void CDB_driver::EvaluateSymbol(const wxString& symbol, const wxRect& tipRect)
     QueueCommand(new CdbCmd_TooltipEvaluation(this, symbol, tipRect));
 }
 
-void CDB_driver::UpdateWatches(bool doLocals, bool doArgs, DebuggerTree* tree)
+void CDB_driver::UpdateWatches(bool doLocals, bool doArgs, DebuggerTree* tree, WatchesContainer &watches)
 {
     // start updating watches tree
     tree->BeginUpdateTree();
@@ -311,7 +308,10 @@ void CDB_driver::ParseOutput(const wxString& output)
         {
             Log(lines[i]);
             m_pDBG->BringAppToFront();
-            if (IsWindowReallyShown(m_pBacktrace))
+
+        // FIXME (obfuscated#): Should replace with GetDebuggerManager()->ShowBacktraceDialog()!
+            cbBacktraceDlg *dialog = Manager::Get()->GetDebuggerManager()->GetBacktraceDialog();
+            if (IsWindowReallyShown(dialog))
             {
                 // don't ask; it's already shown
                 // just grab the user's attention
@@ -322,7 +322,7 @@ void CDB_driver::ParseOutput(const wxString& output)
             {
                 // show the backtrace window
                 CodeBlocksDockEvent evt(cbEVT_SHOW_DOCK_WINDOW);
-                evt.pWindow = m_pBacktrace;
+                evt.pWindow = dialog;
                 Manager::Get()->ProcessEvent(evt);
                 Backtrace();
             }

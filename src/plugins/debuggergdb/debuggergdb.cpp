@@ -28,24 +28,24 @@
 #include <compilerfactory.h>
 #include <projectloader_hooks.h>
 #include <xtra_res.h>
-#include <wx/xrc/xmlres.h>
-#include <wx/fs_zip.h>
 
-#include "annoyingdialog.h"
-#include "debuggergdb.h"
+#include <annoyingdialog.h>
+#include <breakpointsdlg.h>
+#include <disassemblydlg.h>
+#include <editbreakpointdlg.h>
+#include <examinememorydlg.h>
+#include <threadsdlg.h>
+#include <watchesdlg.h>
+
+#include "cbstyledtextctrl.h"
+#include "databreakpointdlg.h"
 #include "debuggerdriver.h"
+#include "debuggergdb.h"
 #include "debuggeroptionsdlg.h"
 #include "debuggeroptionsprjdlg.h"
-#include "debuggertree.h"
-#include "editbreakpointdlg.h"
 #include "editwatchesdlg.h"
-#include "examinememorydlg.h"
-#include "threadsdlg.h"
 #include "editwatchdlg.h"
-#include "databreakpointdlg.h"
 #include "globals.h"
-#include "cbstyledtextctrl.h"
-
 
 #ifdef __WXMSW__
     #include <winbase.h>
@@ -93,33 +93,6 @@ enum DebugCommandConst
 
 const wxString g_EscapeChar = wxChar(26);
 
-int idMenuDebug = XRCID("idDebuggerMenuDebug");
-int idMenuRunToCursor = XRCID("idDebuggerMenuRunToCursor");
-int idMenuNext = XRCID("idDebuggerMenuNext");
-int idMenuStep = XRCID("idDebuggerMenuStep");
-int idMenuNextInstr = XRCID("idDebuggerMenuNextInstr");
-int idMenuStepOut = XRCID("idDebuggerMenuStepOut");
-int idMenuStop = XRCID("idDebuggerMenuStop");
-int idMenuContinue = XRCID("idDebuggerMenuContinue");
-int idMenuToggleBreakpoint = XRCID("idDebuggerMenuToggleBreakpoint");
-int idMenuRemoveAllBreakpoints = XRCID("idDebuggerMenuRemoveAllBreakpoints");
-int idMenuAddDataBreakpoint = XRCID("idMenuAddDataBreakpoint");
-int idMenuSendCommandToGDB = XRCID("idDebuggerMenuSendCommandToGDB");
-int idMenuAddSymbolFile = XRCID("idDebuggerMenuAddSymbolFile");
-int idMenuCPU = XRCID("idDebuggerMenuCPU");
-int idMenuRegisters = XRCID("idDebuggerMenuRegisters");
-int idMenuWatches = XRCID("idDebuggerMenuWatches");
-int idMenuBacktrace = XRCID("idDebuggerMenuBacktrace");
-int idMenuThreads = XRCID("idDebuggerMenuThreads");
-int idMenuMemory = XRCID("idDebuggerMenuMemory");
-int idMenuBreakpoints = XRCID("idDebuggerMenuBreakpoints");
-int idMenuEditWatches = XRCID("idDebuggerMenuEditWatches");
-int idMenuAttachToProcess = XRCID("idDebuggerMenuAttachToProcess");
-int idMenuDetach = XRCID("idDebuggerMenuDetach");
-
-int idDebuggerToolWindows = XRCID("idDebuggerToolWindows");
-
-int idDebuggerToolInfo = XRCID("idDebuggerToolInfo");
 int idMenuInfoFrame = XRCID("idDebuggerCurrentFrame");
 int idMenuInfoDLL = XRCID("idDebuggerLoadedDLLs");
 int idMenuInfoFiles = XRCID("idDebuggerFiles");
@@ -128,7 +101,6 @@ int idMenuInfoSignals = XRCID("idDebuggerSignals");
 
 int idGDBProcess = wxNewId();
 int idTimerPollDebugger = wxNewId();
-int idMenuDebuggerAddWatch = wxNewId();
 int idMenuSettings = wxNewId();
 
 // this auto-registers the plugin
@@ -138,54 +110,6 @@ namespace
 }
 
 BEGIN_EVENT_TABLE(DebuggerGDB, cbDebuggerPlugin)
-    EVT_UPDATE_UI_RANGE(idMenuContinue, idMenuDebuggerAddWatch, DebuggerGDB::OnUpdateUI)
-    // these are different because they are loaded from the XRC
-    EVT_UPDATE_UI(XRCID("idDebuggerMenuDebug"), DebuggerGDB::OnUpdateUI)
-    EVT_UPDATE_UI(XRCID("idDebuggerMenuRunToCursor"), DebuggerGDB::OnUpdateUI)
-    EVT_UPDATE_UI(XRCID("idDebuggerMenuNext"), DebuggerGDB::OnUpdateUI)
-    EVT_UPDATE_UI(XRCID("idDebuggerMenuNextInstr"), DebuggerGDB::OnUpdateUI)
-    EVT_UPDATE_UI(XRCID("idDebuggerMenuStep"), DebuggerGDB::OnUpdateUI)
-    EVT_UPDATE_UI(XRCID("idDebuggerMenuStepOut"), DebuggerGDB::OnUpdateUI)
-    EVT_UPDATE_UI(XRCID("idDebuggerMenuStop"), DebuggerGDB::OnUpdateUI)
-
-    EVT_UPDATE_UI(XRCID("idDebuggerCurrentFrame"), DebuggerGDB::OnUpdateUI)
-    EVT_UPDATE_UI(XRCID("idDebuggerLoadedDLLs"), DebuggerGDB::OnUpdateUI)
-    EVT_UPDATE_UI(XRCID("idDebuggerFiles"), DebuggerGDB::OnUpdateUI)
-    EVT_UPDATE_UI(XRCID("idDebuggerFPU"), DebuggerGDB::OnUpdateUI)
-    EVT_UPDATE_UI(XRCID("idDebuggerSignals"), DebuggerGDB::OnUpdateUI)
-    EVT_UPDATE_UI(XRCID("idDebuggerThreads"), DebuggerGDB::OnUpdateUI)
-
-    EVT_UPDATE_UI(XRCID("idDebuggerToolInfo"), DebuggerGDB::OnUpdateUI)
-
-    EVT_MENU(idMenuDebug, DebuggerGDB::OnDebug)
-    EVT_MENU(idMenuContinue, DebuggerGDB::OnContinue)
-    EVT_MENU(idMenuNext, DebuggerGDB::OnNext)
-    EVT_MENU(idMenuStep, DebuggerGDB::OnStep)
-    EVT_MENU(idMenuNextInstr, DebuggerGDB::OnNextInstr)
-    EVT_MENU(idMenuStepOut, DebuggerGDB::OnStepOut)
-    EVT_MENU(idMenuToggleBreakpoint, DebuggerGDB::OnToggleBreakpoint)
-    EVT_MENU(idMenuRemoveAllBreakpoints, DebuggerGDB::OnRemoveAllBreakpoints)
-    EVT_MENU(idMenuAddDataBreakpoint, DebuggerGDB::OnAddDataBreakpoint)
-    EVT_MENU(idMenuRunToCursor, DebuggerGDB::OnRunToCursor)
-    EVT_MENU(idMenuStop, DebuggerGDB::OnStop)
-    EVT_MENU(idMenuSendCommandToGDB, DebuggerGDB::OnSendCommandToGDB)
-    EVT_MENU(idMenuAddSymbolFile, DebuggerGDB::OnAddSymbolFile)
-    EVT_MENU(idMenuBacktrace, DebuggerGDB::OnBacktrace)
-    EVT_MENU(idMenuThreads, DebuggerGDB::OnRunningThreads)
-    EVT_MENU(idMenuMemory, DebuggerGDB::OnExamineMemory)
-    EVT_MENU(idMenuCPU, DebuggerGDB::OnDisassemble)
-    EVT_MENU(idMenuRegisters, DebuggerGDB::OnRegisters)
-    EVT_MENU(idMenuWatches, DebuggerGDB::OnViewWatches)
-    EVT_MENU(idMenuBreakpoints, DebuggerGDB::OnBreakpoints)
-    EVT_MENU(idMenuEditWatches, DebuggerGDB::OnEditWatches)
-    EVT_MENU(idMenuDebuggerAddWatch, DebuggerGDB::OnAddWatch)
-    EVT_MENU(idMenuAttachToProcess, DebuggerGDB::OnAttachToProcess)
-    EVT_MENU(idMenuDetach, DebuggerGDB::OnDetach)
-    EVT_MENU(idMenuSettings, DebuggerGDB::OnSettings)
-
-    EVT_MENU(idDebuggerToolWindows, DebuggerGDB::OnDebugWindows)
-    EVT_MENU(idDebuggerToolInfo, DebuggerGDB::OnToolInfo)
-
     EVT_MENU(idMenuInfoFrame, DebuggerGDB::OnInfoFrame)
     EVT_MENU(idMenuInfoDLL, DebuggerGDB::OnInfoDLL)
     EVT_MENU(idMenuInfoFiles, DebuggerGDB::OnInfoFiles)
@@ -199,176 +123,14 @@ BEGIN_EVENT_TABLE(DebuggerGDB, cbDebuggerPlugin)
     EVT_IDLE(DebuggerGDB::OnIdle)
     EVT_TIMER(idTimerPollDebugger, DebuggerGDB::OnTimer)
 
-    EVT_COMMAND(-1, cbCustom_WATCHES_CHANGED, DebuggerGDB::OnWatchesChanged)
+//    EVT_COMMAND(-1, cbCustom_WATCHES_CHANGED, DebuggerGDB::OnWatchesChanged)
     EVT_COMMAND(-1, DEBUGGER_CURSOR_CHANGED, DebuggerGDB::OnCursorChanged)
     EVT_COMMAND(-1, DEBUGGER_SHOW_FILE_LINE, DebuggerGDB::OnShowFile)
 END_EVENT_TABLE()
 
-
-class DebugTextCtrlLogger : public TextCtrlLogger
-{
-public:
-    DebugTextCtrlLogger(DebuggerState &state,
-                        bool fixedPitchFont = false) :
-        TextCtrlLogger(fixedPitchFont),
-        m_state(state),
-        m_panel(NULL)
-    {
-    }
-
-    wxWindow* CreateTextCtrl(wxWindow *parent)
-    {
-        return TextCtrlLogger::CreateControl(parent);
-    }
-
-    virtual wxWindow* CreateControl(wxWindow* parent);
-
-private:
-    DebuggerState &m_state;
-    wxPanel     *m_panel;
-};
-
-class DebugLogPanel : public wxPanel
-{
-public:
-    DebugLogPanel(wxWindow *parent, DebugTextCtrlLogger *text_control_logger, DebuggerState &debugger_state) :
-        wxPanel(parent),
-        m_debugger_state(debugger_state),
-        m_text_control_logger(text_control_logger)
-    {
-        int idDebug_LogEntryControl = wxNewId();
-        int idDebug_ExecuteButton = wxNewId();
-        int idDebug_ClearButton = wxNewId();
-        int idDebug_LoadButton = wxNewId();
-
-        wxBoxSizer *sizer = new wxBoxSizer(wxVERTICAL);
-        wxBoxSizer *control_sizer = new wxBoxSizer(wxHORIZONTAL);
-
-        wxWindow *text_control = text_control_logger->CreateTextCtrl(this);
-        sizer->Add(text_control, wxEXPAND, wxEXPAND | wxALL , 0);
-        sizer->Add(control_sizer, 0, wxEXPAND | wxALL, 0);
-
-        wxStaticText *label = new wxStaticText(this, wxID_ANY, _T("Command:"),
-                                               wxDefaultPosition, wxDefaultSize, wxST_NO_AUTORESIZE);
-
-        m_command_entry = new wxComboBox(this, idDebug_LogEntryControl, wxEmptyString,
-                                         wxDefaultPosition, wxDefaultSize, 0, 0,
-                                         wxCB_DROPDOWN | wxTE_PROCESS_ENTER);
-
-        wxBitmap execute_bitmap = wxArtProvider::GetBitmap(wxART_MAKE_ART_ID_FROM_STR(_T("wxART_EXECUTABLE_FILE")),
-                                                           wxART_BUTTON);
-        wxBitmap clear_bitmap = wxArtProvider::GetBitmap(wxART_MAKE_ART_ID_FROM_STR(_T("wxART_DELETE")),wxART_BUTTON);
-        wxBitmap file_open_bitmap =wxArtProvider::GetBitmap(wxART_MAKE_ART_ID_FROM_STR(_T("wxART_FILE_OPEN")),
-                                                            wxART_BUTTON);
-
-        wxBitmapButton *button_execute;
-        button_execute = new wxBitmapButton(this, idDebug_ExecuteButton, execute_bitmap, wxDefaultPosition,
-                                            wxDefaultSize, wxBU_AUTODRAW, wxDefaultValidator,
-                                            _T("idDebug_ExecuteButton"));
-        button_execute->SetToolTip(_("Execute current command"));
-
-        wxBitmapButton *button_load = new wxBitmapButton(this, idDebug_LoadButton, file_open_bitmap, wxDefaultPosition,
-                                                         wxDefaultSize, wxBU_AUTODRAW, wxDefaultValidator,
-                                                         _T("idDebug_LoadButton"));
-        button_load->SetDefault();
-        button_load->SetToolTip(_("Load from file"));
-
-        wxBitmapButton *button_clear = new wxBitmapButton(this, idDebug_ClearButton, clear_bitmap, wxDefaultPosition,
-                                                          wxDefaultSize, wxBU_AUTODRAW, wxDefaultValidator,
-                                                          _T("idDebug_ClearButton"));
-        button_clear->SetDefault();
-        button_clear->SetToolTip(_("Clear output window"));
-
-        control_sizer->Add(label, 0, wxALIGN_CENTER | wxALL, 2);
-        control_sizer->Add(m_command_entry, wxEXPAND, wxEXPAND | wxALL, 2);
-        control_sizer->Add(button_execute, 0, wxEXPAND | wxALL, 0);
-        control_sizer->Add(button_load, 0, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 0);
-        control_sizer->Add(button_clear, 0, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 0);
-
-        SetSizer(sizer);
-
-        Connect(idDebug_LogEntryControl,
-                wxEVT_COMMAND_TEXT_ENTER,
-                wxObjectEventFunction(&DebugLogPanel::OnEntryCommand));
-        Connect(idDebug_ExecuteButton,
-                wxEVT_COMMAND_BUTTON_CLICKED,
-                wxObjectEventFunction(&DebugLogPanel::OnEntryCommand));
-        Connect(idDebug_ClearButton,
-                wxEVT_COMMAND_BUTTON_CLICKED,
-                wxObjectEventFunction(&DebugLogPanel::OnClearLog));
-        Connect(idDebug_LoadButton,
-                wxEVT_COMMAND_BUTTON_CLICKED,
-                wxObjectEventFunction(&DebugLogPanel::OnLoadFile));
-
-    }
-
-    void OnEntryCommand(wxCommandEvent& event)
-    {
-        assert(m_command_entry);
-        wxString cmd = m_command_entry->GetValue();
-        cmd.Trim(false);
-        cmd.Trim(true);
-
-        if (cmd.IsEmpty())
-            return;
-        if(m_debugger_state.HasDriver())
-        {
-            m_debugger_state.GetDriver()->QueueCommand(new DebuggerCmd(m_debugger_state.GetDriver(), cmd, true));
-
-            if (m_command_entry->FindString(cmd) == wxNOT_FOUND)
-                m_command_entry->Insert(cmd, 0);
-            m_command_entry->SetValue(wxEmptyString);
-        }
-    }
-
-    void OnClearLog(wxCommandEvent& event)
-    {
-        assert(m_command_entry);
-        assert(m_text_control_logger);
-        m_text_control_logger->Clear();
-        m_command_entry->SetFocus();
-    }
-
-    void OnLoadFile(wxCommandEvent& event)
-    {
-        if(!m_debugger_state.HasDriver())
-            return;
-
-        ConfigManager* manager = Manager::Get()->GetConfigManager(_T("app"));
-        wxString path = manager->Read(_T("/file_dialogs/file_run_dbg_script/directory"), wxEmptyString);
-
-        wxFileDialog dialog(this, _("Load script"), path, wxEmptyString,
-                            _T("Debugger script files (*.gdb)|*.gdb"), wxFD_OPEN | compatibility::wxHideReadonly);
-
-        if(dialog.ShowModal() == wxID_OK)
-        {
-            manager->Write(_T("/file_dialogs/file_run_dbg_script/directory"), dialog.GetDirectory());
-
-            DebuggerCmd *cmd = new DebuggerCmd(m_debugger_state.GetDriver(), _T("source ") + dialog.GetPath(), true);
-            m_debugger_state.GetDriver()->QueueCommand(cmd);
-        }
-    }
-private:
-    DebuggerState &m_debugger_state;
-    DebugTextCtrlLogger *m_text_control_logger;
-    wxComboBox  *m_command_entry;
-};
-
-wxWindow* DebugTextCtrlLogger::CreateControl(wxWindow* parent)
-{
-    if(!m_panel)
-        m_panel = new DebugLogPanel(parent, this, m_state);
-
-    return m_panel;
-}
-
 DebuggerGDB::DebuggerGDB()
     : m_State(this),
-    m_pMenu(0L),
-    m_pLog(0L),
-    m_pDbgLog(0L),
     m_pProcess(0L),
-    m_pTbar(0L),
     m_PageIndex(-1),
     m_DbgPageIndex(-1),
     m_pCompiler(0L),
@@ -376,17 +138,11 @@ DebuggerGDB::DebuggerGDB()
     m_Pid(0),
     m_PidToAttach(0),
     m_NoDebugInfo(false),
-    m_BreakOnEntry(false),
+//    m_BreakOnEntry(false),
     m_HaltAtLine(0),
     m_HasDebugLog(false),
     m_StoppedOnSignal(false),
-    m_pTree(0L),
-    m_pDisassembly(0),
-    m_pCPURegisters(0),
-    m_pBacktrace(0),
-    m_pBreakpointsWindow(0),
-    m_pExamineMemoryDlg(0),
-    m_pThreadsDlg(0),
+//    m_pTree(0L),
     m_pProject(0),
     m_WaitingCompilerToFinish(false)
 {
@@ -415,113 +171,33 @@ void DebuggerGDB::OnAttach()
 {
     m_TimerPollDebugger.SetOwner(this, idTimerPollDebugger);
 
-    LogManager* msgMan = Manager::Get()->GetLogManager();
-    m_pLog = new DebugTextCtrlLogger(m_State, true);
-    m_PageIndex = msgMan->SetLog(m_pLog);
-    msgMan->Slot(m_PageIndex).title = _("Debugger");
-    // set log image
-    wxString prefix = ConfigManager::GetDataFolder() + _T("/images/");
-    wxBitmap* bmp = new wxBitmap(cbLoadBitmap(prefix + _T("misc_16x16.png"), wxBITMAP_TYPE_PNG));
-    msgMan->Slot(m_PageIndex).icon = bmp;
+    DebuggerManager *dbg_manager = Manager::Get()->GetDebuggerManager();
+    dbg_manager->RegisterDebugger(this, _T("gdb_debugger"));
 
-    CodeBlocksLogEvent evtAdd(cbEVT_ADD_LOG_WINDOW, m_pLog, msgMan->Slot(m_PageIndex).title, msgMan->Slot(m_PageIndex).icon);
-    Manager::Get()->ProcessEvent(evtAdd);
+    dbg_manager->GetLogger(false, m_PageIndex);
 
     m_HasDebugLog = Manager::Get()->GetConfigManager(_T("debugger"))->ReadBool(_T("debug_log"), false);
     if (m_HasDebugLog)
     {
-        m_pDbgLog = new DebugTextCtrlLogger(m_State, true);
-        m_DbgPageIndex = msgMan->SetLog(m_pDbgLog);
-        msgMan->Slot(m_DbgPageIndex).title = _("Debugger (debug)");
-        // set log image
-        bmp = new wxBitmap(cbLoadBitmap(prefix + _T("contents_16x16.png"), wxBITMAP_TYPE_PNG));
-        msgMan->Slot(m_DbgPageIndex).icon = bmp;
-
-        CodeBlocksLogEvent evtAdd(cbEVT_ADD_LOG_WINDOW, m_pDbgLog, msgMan->Slot(m_DbgPageIndex).title, msgMan->Slot(m_DbgPageIndex).icon);
-        Manager::Get()->ProcessEvent(evtAdd);
+        dbg_manager->GetLogger(true, m_DbgPageIndex);
     }
+//    m_pTree = NULL;
 
-    m_pTree = new DebuggerTree(Manager::Get()->GetAppWindow(), this);
-    m_pDisassembly = new DisassemblyDlg(Manager::Get()->GetAppWindow(), this);
-    m_pCPURegisters = new CPURegistersDlg(Manager::Get()->GetAppWindow(), this);
-    m_pBacktrace = new BacktraceDlg(Manager::Get()->GetAppWindow(), this);
-    m_pBreakpointsWindow = new BreakpointsDlg(m_State);
-    m_pExamineMemoryDlg = new ExamineMemoryDlg(Manager::Get()->GetAppWindow(), this);
-    m_pThreadsDlg = new ThreadsDlg(Manager::Get()->GetAppWindow(), this);
-
-    CodeBlocksDockEvent evt(cbEVT_ADD_DOCK_WINDOW);
-
-    evt.name = _T("DisassemblyPane");
-    evt.title = _("Disassembly");
-    evt.pWindow = m_pDisassembly;
-    evt.dockSide = CodeBlocksDockEvent::dsFloating;
-    evt.desiredSize.Set(350, 250);
-    evt.floatingSize.Set(350, 250);
-    evt.minimumSize.Set(150, 150);
-    Manager::Get()->ProcessEvent(evt);
-
-    evt.name = _T("CPURegistersPane");
-    evt.title = _("CPU Registers");
-    evt.pWindow = m_pCPURegisters;
-    evt.dockSide = CodeBlocksDockEvent::dsFloating;
-    evt.desiredSize.Set(350, 250);
-    evt.floatingSize.Set(350, 250);
-    evt.minimumSize.Set(150, 150);
-    Manager::Get()->ProcessEvent(evt);
-
-    evt.name = _T("CallStackPane");
-    evt.title = _("Call stack");
-    evt.pWindow = m_pBacktrace;
-    evt.dockSide = CodeBlocksDockEvent::dsFloating;
-    evt.desiredSize.Set(150, 150);
-    evt.floatingSize.Set(450, 150);
-    evt.minimumSize.Set(150, 150);
-    Manager::Get()->ProcessEvent(evt);
-
-    evt.name = _T("WatchesPane");
-    evt.title = _("Watches");
-    evt.pWindow = m_pTree;
-    evt.dockSide = CodeBlocksDockEvent::dsFloating;
-    evt.desiredSize.Set(150, 250);
-    evt.floatingSize.Set(150, 250);
-    evt.minimumSize.Set(150, 150);
-    Manager::Get()->ProcessEvent(evt);
-
-    evt.name = _T("BreakpointsPane");
-    evt.title = _("Breakpoints");
-    evt.pWindow = m_pBreakpointsWindow;
-    evt.dockSide = CodeBlocksDockEvent::dsFloating;
-    evt.desiredSize.Set(350, 250);
-    evt.floatingSize.Set(350, 250);
-    evt.minimumSize.Set(150, 150);
-    Manager::Get()->ProcessEvent(evt);
-
-    evt.name = _T("ExamineMemoryPane");
-    evt.title = _("Memory");
-    evt.pWindow = m_pExamineMemoryDlg;
-    evt.dockSide = CodeBlocksDockEvent::dsFloating;
-    evt.desiredSize.Set(450, 250);
-    evt.floatingSize.Set(450, 250);
-    evt.minimumSize.Set(350, 150);
-    Manager::Get()->ProcessEvent(evt);
-
-    evt.name = _T("ThreadsPane");
-    evt.title = _("Running threads");
-    evt.pWindow = m_pThreadsDlg;
-    evt.dockSide = CodeBlocksDockEvent::dsFloating;
-    evt.desiredSize.Set(350, 75);
-    evt.floatingSize.Set(450, 75);
-    evt.minimumSize.Set(250, 75);
-    Manager::Get()->ProcessEvent(evt);
+    {
+        DebuggerManager *manager = Manager::Get()->GetDebuggerManager();
+        manager->GetBacktraceDialog();
+        manager->GetBreakpointDialog();
+        manager->GetCPURegistersDialog();
+        manager->GetExamineMemoryDialog();
+        manager->GetWatchesDialog();
+        manager->GetThreadsDialog();
+    }
 
     // hook to project loading procedure
     ProjectLoaderHooks::HookFunctorBase* myhook = new ProjectLoaderHooks::HookFunctor<DebuggerGDB>(this, &DebuggerGDB::OnProjectLoadingHook);
     m_HookId = ProjectLoaderHooks::RegisterHook(myhook);
 
     // register event sink
-    Manager::Get()->RegisterEventSink(cbEVT_EDITOR_BREAKPOINT_ADD, new cbEventFunctor<DebuggerGDB, CodeBlocksEvent>(this, &DebuggerGDB::OnBreakpointAdd));
-    Manager::Get()->RegisterEventSink(cbEVT_EDITOR_BREAKPOINT_EDIT, new cbEventFunctor<DebuggerGDB, CodeBlocksEvent>(this, &DebuggerGDB::OnBreakpointEdit));
-    Manager::Get()->RegisterEventSink(cbEVT_EDITOR_BREAKPOINT_DELETE, new cbEventFunctor<DebuggerGDB, CodeBlocksEvent>(this, &DebuggerGDB::OnBreakpointDelete));
     Manager::Get()->RegisterEventSink(cbEVT_EDITOR_TOOLTIP, new cbEventFunctor<DebuggerGDB, CodeBlocksEvent>(this, &DebuggerGDB::OnValueTooltip));
     Manager::Get()->RegisterEventSink(cbEVT_EDITOR_OPEN, new cbEventFunctor<DebuggerGDB, CodeBlocksEvent>(this, &DebuggerGDB::OnEditorOpened));
 
@@ -537,72 +213,78 @@ void DebuggerGDB::OnAttach()
 void DebuggerGDB::OnRelease(bool appShutDown)
 {
     ProjectLoaderHooks::UnregisterHook(m_HookId, true);
+    DebuggerManager *dbg_manager = Manager::Get()->GetDebuggerManager();
+//    FIXME (obfuscated#) reimplement this
+//    if (m_pThreadsDlg)
+//    {
+//        CodeBlocksDockEvent evt(cbEVT_REMOVE_DOCK_WINDOW);
+//        evt.pWindow = m_pThreadsDlg;
+//        Manager::Get()->ProcessEvent(evt);
+//        m_pThreadsDlg->Destroy();
+//    }
+//    m_pThreadsDlg = 0;
 
-    if (m_State.HasDriver())
-        m_State.GetDriver()->SetDebugWindows(0, 0, 0, 0, 0);
+//    FIXME (obfuscated#) reimplement this
+//    if (m_pExamineMemoryDlg)
+//    {
+//        CodeBlocksDockEvent evt(cbEVT_REMOVE_DOCK_WINDOW);
+//        evt.pWindow = m_pExamineMemoryDlg;
+//        Manager::Get()->ProcessEvent(evt);
+//        m_pExamineMemoryDlg->Destroy();
+//    }
+//    m_pExamineMemoryDlg = 0;
 
-    if (m_pThreadsDlg)
-    {
-        CodeBlocksDockEvent evt(cbEVT_REMOVE_DOCK_WINDOW);
-        evt.pWindow = m_pThreadsDlg;
-        Manager::Get()->ProcessEvent(evt);
-        m_pThreadsDlg->Destroy();
-    }
-    m_pThreadsDlg = 0;
+//    FIXME (obfuscated#) reimplement this
+//    if (m_pBreakpointsWindow)
+//    {
+//        CodeBlocksDockEvent evt(cbEVT_REMOVE_DOCK_WINDOW);
+//        evt.pWindow = m_pBreakpointsWindow;
+//        Manager::Get()->ProcessEvent(evt);
+//        m_pBreakpointsWindow->Destroy();
+//    }
+//    m_pBreakpointsWindow = 0;
 
-    if (m_pExamineMemoryDlg)
-    {
-        CodeBlocksDockEvent evt(cbEVT_REMOVE_DOCK_WINDOW);
-        evt.pWindow = m_pExamineMemoryDlg;
-        Manager::Get()->ProcessEvent(evt);
-        m_pExamineMemoryDlg->Destroy();
-    }
-    m_pExamineMemoryDlg = 0;
 
-    if (m_pBreakpointsWindow)
-    {
-        CodeBlocksDockEvent evt(cbEVT_REMOVE_DOCK_WINDOW);
-        evt.pWindow = m_pBreakpointsWindow;
-        Manager::Get()->ProcessEvent(evt);
-        m_pBreakpointsWindow->Destroy();
-    }
-    m_pBreakpointsWindow = 0;
+//    FIXME (obfuscated#) reimplement this
+//    if (m_pDisassembly)
+//    {
+//        CodeBlocksDockEvent evt(cbEVT_REMOVE_DOCK_WINDOW);
+//        evt.pWindow = m_pDisassembly;
+//        Manager::Get()->ProcessEvent(evt);
+//        m_pDisassembly->Destroy();
+//    }
+//    m_pDisassembly = 0;
 
-    if (m_pDisassembly)
-    {
-        CodeBlocksDockEvent evt(cbEVT_REMOVE_DOCK_WINDOW);
-        evt.pWindow = m_pDisassembly;
-        Manager::Get()->ProcessEvent(evt);
-        m_pDisassembly->Destroy();
-    }
-    m_pDisassembly = 0;
+//    FIXME (obfuscated#) reimplement this
+//    if (m_pCPURegisters)
+//    {
+//        CodeBlocksDockEvent evt(cbEVT_REMOVE_DOCK_WINDOW);
+//        evt.pWindow = m_pCPURegisters;
+//        Manager::Get()->ProcessEvent(evt);
+//        m_pCPURegisters->Destroy();
+//    }
+//    m_pCPURegisters = 0;
 
-    if (m_pCPURegisters)
-    {
-        CodeBlocksDockEvent evt(cbEVT_REMOVE_DOCK_WINDOW);
-        evt.pWindow = m_pCPURegisters;
-        Manager::Get()->ProcessEvent(evt);
-        m_pCPURegisters->Destroy();
-    }
-    m_pCPURegisters = 0;
 
-    if (m_pBacktrace)
-    {
-        CodeBlocksDockEvent evt(cbEVT_REMOVE_DOCK_WINDOW);
-        evt.pWindow = m_pBacktrace;
-        Manager::Get()->ProcessEvent(evt);
-        m_pBacktrace->Destroy();
-    }
-    m_pBacktrace = 0;
+//    FIXME (obfuscated#) reimplement this
+//    if (m_pBacktrace)
+//    {
+//        CodeBlocksDockEvent evt(cbEVT_REMOVE_DOCK_WINDOW);
+//        evt.pWindow = m_pBacktrace;
+//        Manager::Get()->ProcessEvent(evt);
+//        m_pBacktrace->Destroy();
+//    }
+//    m_pBacktrace = 0;
 
-    if (m_pTree)
-    {
-        CodeBlocksDockEvent evt(cbEVT_REMOVE_DOCK_WINDOW);
-        evt.pWindow = m_pTree;
-        Manager::Get()->ProcessEvent(evt);
-        m_pTree->Destroy();
-    }
-    m_pTree = 0L;
+//    FIXME (obfuscated#) reimplement this
+//    if (m_pTree)
+//    {
+//        CodeBlocksDockEvent evt(cbEVT_REMOVE_DOCK_WINDOW);
+//        evt.pWindow = m_pTree;
+//        Manager::Get()->ProcessEvent(evt);
+//        m_pTree->Destroy();
+//    }
+//    m_pTree = 0L;
 
     //Close debug session when appShutDown
     if (m_State.HasDriver())
@@ -616,19 +298,15 @@ void DebuggerGDB::OnRelease(bool appShutDown)
     if (Manager::Get()->GetLogManager())
     {
         if (m_HasDebugLog)
-        {
-            CodeBlocksLogEvent evt(cbEVT_REMOVE_LOG_WINDOW, m_pDbgLog);
-            Manager::Get()->ProcessEvent(evt);
-            m_pDbgLog = 0;
-        }
-        CodeBlocksLogEvent evt(cbEVT_REMOVE_LOG_WINDOW, m_pLog);
-        Manager::Get()->ProcessEvent(evt);
-        m_pLog = 0;
+            dbg_manager->HideLogger(true);
+        dbg_manager->HideLogger(false);
     }
     // vars for Linux console
     m_bIsConsole = false;
     m_nConsolePid = 0;
     m_ConsoleTty = wxEmptyString;
+
+    dbg_manager->UnregisterDebugger(this);
 }
 
 int DebuggerGDB::Configure()
@@ -661,104 +339,14 @@ void DebuggerGDB::RefreshConfiguration()
 
     if (!log_visible && m_HasDebugLog)
     {
-        CodeBlocksLogEvent evt(cbEVT_REMOVE_LOG_WINDOW, m_pDbgLog);
-        Manager::Get()->ProcessEvent(evt);
-        m_pDbgLog = 0;
+        Manager::Get()->GetDebuggerManager()->HideLogger(true);
+        m_DbgPageIndex = -1;
     }
     else if (log_visible && !m_HasDebugLog)
     {
-        m_pDbgLog = new DebugTextCtrlLogger(m_State, true);
-        m_DbgPageIndex = Manager::Get()->GetLogManager()->SetLog(m_pDbgLog);
-        Manager::Get()->GetLogManager()->Slot(m_DbgPageIndex).title = _("Debugger (debug)");
-        // set log image
-        wxBitmap* bmp = new wxBitmap(cbLoadBitmap(ConfigManager::GetDataFolder() + _T("/images/contents_16x16.png"), wxBITMAP_TYPE_PNG));
-        Manager::Get()->GetLogManager()->Slot(m_DbgPageIndex).icon = bmp;
-
-        CodeBlocksLogEvent evtAdd(cbEVT_ADD_LOG_WINDOW, m_pDbgLog, Manager::Get()->GetLogManager()->Slot(m_DbgPageIndex).title, Manager::Get()->GetLogManager()->Slot(m_DbgPageIndex).icon);
-        Manager::Get()->ProcessEvent(evtAdd);
+        Manager::Get()->GetDebuggerManager()->GetLogger(true, m_DbgPageIndex);
     }
     m_HasDebugLog = log_visible;
-}
-
-void DebuggerGDB::BuildMenu(wxMenuBar* menuBar)
-{
-    if (!IsAttached())
-        return;
-    m_pMenu=Manager::Get()->LoadMenu(_T("debugger_menu"),true);
-
-    // ok, now, where do we insert?
-    // three possibilities here:
-    // a) locate "Compile" menu and insert after it
-    // b) locate "Project" menu and insert after it
-    // c) if not found (?), insert at pos 5
-    int finalPos = 5;
-    int projcompMenuPos = menuBar->FindMenu(_("&Build"));
-    if (projcompMenuPos == wxNOT_FOUND)
-        projcompMenuPos = menuBar->FindMenu(_("&Compile"));
-
-    if (projcompMenuPos != wxNOT_FOUND)
-        finalPos = projcompMenuPos + 1;
-    else
-    {
-        projcompMenuPos = menuBar->FindMenu(_("&Project"));
-        if (projcompMenuPos != wxNOT_FOUND)
-            finalPos = projcompMenuPos + 1;
-    }
-    menuBar->Insert(finalPos, m_pMenu, _("&Debug"));
-//    // Add entry in settings menu (outside "plugins")
-//    int settingsMenuPos = menuBar->FindMenu(_("&Settings"));
-//    if (settingsMenuPos != wxNOT_FOUND)
-//    {
-//        wxMenu* settingsmenu = menuBar->GetMenu(settingsMenuPos);
-//        settingsmenu->Insert(3,idMenuSettings,_("&Debugger"),_("Debugger options"));
-//    }
-}
-
-void DebuggerGDB::BuildModuleMenu(const ModuleType type, wxMenu* menu, const FileTreeData* data)
-{
-    cbProject* prj = Manager::Get()->GetProjectManager()->GetActiveProject();
-    if (!IsAttached())
-        return;
-    // we 're only interested in editor menus
-    // we 'll add a "debug watches" entry only when the debugger is running...
-    if (type != mtEditorManager || !menu) return;
-    if (!prj) return;
-    // Insert toggle breakpoint
-    menu->Insert(0,idMenuToggleBreakpoint, _("Toggle breakpoint"));
-    // Insert Run to Cursor
-    menu->Insert(1,idMenuRunToCursor, _("Run to cursor"));
-    menu->Insert(2,wxID_SEPARATOR, _T("-"));
-
-    if (!m_pProcess) return;
-    // has to have a word under the caret...
-    wxString w = GetEditorWordAtCaret();
-    if (w.IsEmpty())
-        return;
-
-
-    // data breakpoint
-    menu->Insert(2,idMenuAddDataBreakpoint, wxString::Format(_("Add data breakpoint for '%s'"), w.c_str()));
-
-    wxString s;
-    s.Printf(_("Watch '%s'"), w.c_str());
-    menu->Insert(3, idMenuDebuggerAddWatch,  s);
-}
-
-bool DebuggerGDB::BuildToolBar(wxToolBar* toolBar)
-{
-    m_pTbar = toolBar;
-    /* Loads toolbar using new Manager class functions */
-#ifdef implement_debugger_toolbar
-    if (!IsAttached() || !toolBar)
-        return false;
-    wxString my_16x16=Manager::isToolBar16x16(toolBar) ? _T("_16x16") : _T("");
-    Manager::AddonToolBar(toolBar,wxString(_T("debugger_toolbar"))+my_16x16);
-    toolBar->Realize();
-    toolBar->SetInitialSize();
-    return true;
-#else
-    return false;
-#endif
 }
 
 void DebuggerGDB::Log(const wxString& msg)
@@ -975,9 +563,11 @@ void DebuggerGDB::DoWatches()
 {
     if (!m_pProcess)
         return;
-    m_State.GetDriver()->UpdateWatches(Manager::Get()->GetConfigManager(_T("debugger"))->ReadBool(_T("watch_locals"), true),
-                            Manager::Get()->GetConfigManager(_T("debugger"))->ReadBool(_T("watch_args"), true),
-                            m_pTree);
+    ConfigManager *config_manager = Manager::Get()->GetConfigManager(_T("debugger"));
+    m_State.GetDriver()->UpdateWatches(config_manager->ReadBool(_T("watch_locals"), true),
+                                       config_manager->ReadBool(_T("watch_args"), true),
+                                       NULL,
+                                       m_watches);
 }
 
 wxString DebuggerGDB::FindDebuggerExecutable(Compiler* compiler)
@@ -1158,7 +748,7 @@ wxString DebuggerGDB::GetDebuggee(ProjectBuildTarget* target)
     return out;
 }
 
-bool DebuggerGDB::IsStopped()
+bool DebuggerGDB::IsStopped() const
 {
     return !m_State.HasDriver() || m_State.GetDriver()->IsStopped();
 }
@@ -1198,7 +788,7 @@ bool DebuggerGDB::EnsureBuildUpToDate()
     return true;
 }
 
-int DebuggerGDB::Debug()
+int DebuggerGDB::Debug(bool breakOnEntry)
 {
     // if already running, return
     if (m_pProcess || m_WaitingCompilerToFinish)
@@ -1209,16 +799,18 @@ int DebuggerGDB::Debug()
 
     // clear the debug log
     if (m_HasDebugLog)
-        m_pDbgLog->Clear();
+        Manager::Get()->GetDebuggerManager()->GetLogger(true)->Clear();
 
-    m_pTree->GetTree()->DeleteAllItems();
+//    m_pTree->GetTree()->DeleteAllItems();
+
+    TextCtrlLogger *log = Manager::Get()->GetDebuggerManager()->GetLogger(false);
 
     // switch to the debugging log and clear it
-    CodeBlocksLogEvent evtSwitch(cbEVT_SWITCH_TO_LOG_WINDOW, m_pLog);
+    CodeBlocksLogEvent evtSwitch(cbEVT_SWITCH_TO_LOG_WINDOW, log);
     CodeBlocksLogEvent evtShow(cbEVT_SHOW_LOG_MANAGER);
     Manager::Get()->ProcessEvent(evtSwitch);
     Manager::Get()->ProcessEvent(evtShow);
-    m_pLog->Clear();
+    log->Clear();
 
     // can only debug projects or attach to processes
     ProjectManager* prjMan = Manager::Get()->GetProjectManager();
@@ -1227,7 +819,7 @@ int DebuggerGDB::Debug()
         return 2;
 
     m_pProject = project;
-    if (m_ActiveBuildTarget.IsEmpty())
+    if (m_pProject && m_ActiveBuildTarget.IsEmpty())
         m_ActiveBuildTarget = m_pProject->GetActiveBuildTarget();
 
     // should we build to make sure project is up-to-date?
@@ -1256,13 +848,13 @@ int DebuggerGDB::Debug()
     // returned an error
     if (!m_WaitingCompilerToFinish && !m_State.HasDriver() && !m_Canceled)
     {
-        return DoDebug();
+        return DoDebug(breakOnEntry);
     }
 
     return 0;
 }
 
-int DebuggerGDB::DoDebug()
+int DebuggerGDB::DoDebug(bool breakOnEntry)
 {
     // set this to true before every error exit point in this function
     m_Canceled = false;
@@ -1271,7 +863,8 @@ int DebuggerGDB::DoDebug()
     ProjectManager* prjMan = Manager::Get()->GetProjectManager();
 
     // this is always called after EnsureBuildUpToDate() so we should display the build result
-    CodeBlocksLogEvent evtSwitch(cbEVT_SWITCH_TO_LOG_WINDOW, m_pLog);
+    TextCtrlLogger *logger = Manager::Get()->GetDebuggerManager()->GetLogger(false);
+    CodeBlocksLogEvent evtSwitch(cbEVT_SWITCH_TO_LOG_WINDOW, logger);
     CodeBlocksLogEvent evtShow(cbEVT_SHOW_LOG_MANAGER);
     Manager::Get()->ProcessEvent(evtSwitch);
     Manager::Get()->ProcessEvent(evtShow);
@@ -1294,7 +887,7 @@ int DebuggerGDB::DoDebug()
     Compiler* actualCompiler = 0;
     if (m_PidToAttach == 0)
     {
-        CodeBlocksLogEvent evtSwitch(cbEVT_SWITCH_TO_LOG_WINDOW, m_pLog);
+        CodeBlocksLogEvent evtSwitch(cbEVT_SWITCH_TO_LOG_WINDOW, logger);
         CodeBlocksLogEvent evtShow(cbEVT_SHOW_LOG_MANAGER);
         Manager::Get()->ProcessEvent(evtSwitch);
         Manager::Get()->ProcessEvent(evtShow);
@@ -1368,8 +961,8 @@ int DebuggerGDB::DoDebug()
     if (cmdexe.IsEmpty())
     {
         cbMessageBox(_("The debugger executable is not set.\n"
-                       "To set it, go to \"Settings/Compiler and debugger\", switch to the \"Toolchain executables\" tab,\n"
-                       "and select the debugger program."), _("Error"), wxICON_ERROR);
+                       "To set it, go to \"Settings/Compiler and debugger\", switch to the\n"
+                       "\"Toolchain executables\" tab, and select the debugger program."), _("Error"), wxICON_ERROR);
         msgMan->Log(_("Aborted"), m_PageIndex);
         m_Canceled = true;
         return 4;
@@ -1382,11 +975,6 @@ int DebuggerGDB::DoDebug()
         m_Canceled = true;
         return -1;
     }
-    m_State.GetDriver()->SetDebugWindows(m_pBacktrace,
-                                        m_pDisassembly,
-                                        m_pCPURegisters,
-                                        m_pExamineMemoryDlg,
-                                        m_pThreadsDlg);
 
     // Notify debugger plugins so they could start a GDB server process
     PluginManager *plm = Manager::Get()->GetPluginManager();
@@ -1547,7 +1135,7 @@ int DebuggerGDB::DoDebug()
 
     // Don't issue 'run' if attaching to a process (Bug #1391904)
     if (m_PidToAttach == 0)
-        m_State.GetDriver()->Start(m_BreakOnEntry);
+        m_State.GetDriver()->Start(breakOnEntry);
 
     // switch to the user-defined layout for debugging
     if (m_pProcess)
@@ -1697,6 +1285,28 @@ void DebuggerGDB::SendCommand(const wxString& cmd)
     m_pProcess->SendString(cmd);
 }
 
+void DebuggerGDB::RequestUpdate(DebugWindows window)
+{
+    switch (window)
+    {
+        case Backtrace:
+            RunCommand(CMD_BACKTRACE);
+            break;
+        case CPURegisters:
+            RunCommand(CMD_REGISTERS);
+            break;
+        case Disassembly:
+            RunCommand(CMD_DISASSEMBLE);
+            break;
+        case ExamineMemory:
+            RunCommand(CMD_MEMORYDUMP);
+            break;
+        case Threads:
+            RunCommand(CMD_RUNNINGTHREADS);
+            break;
+    }
+}
+
 void DebuggerGDB::RunCommand(int cmd)
 {
     // just check for the process
@@ -1713,7 +1323,6 @@ void DebuggerGDB::RunCommand(int cmd)
                 Manager::Get()->GetLogManager()->Log(_("Continuing..."), m_PageIndex);
                 m_State.GetDriver()->Continue();
             }
-//            QueueCommand(new DebuggerCmd(this, _T("cont")));
             break;
         }
 
@@ -1722,21 +1331,19 @@ void DebuggerGDB::RunCommand(int cmd)
             ClearActiveMarkFromAllEditors();
             if (m_State.HasDriver())
                 m_State.GetDriver()->Step();
-//            QueueCommand(new DebuggerCmd(this, _T("next")));
             break;
         }
 
         case CMD_STEP_INSTR:
         {
             ClearActiveMarkFromAllEditors();
-            if (!IsWindowReallyShown(m_pDisassembly))
+            if (!Manager::Get()->GetDebuggerManager()->UpdateDisassembly())
             {
                 // first time users should have some help from us ;)
-                Disassemble();
+                RunCommand(CMD_DISASSEMBLE);
             }
             if (m_State.HasDriver())
                 m_State.GetDriver()->StepInstruction();
-//            QueueCommand(new DebuggerCmd(this, _T("nexti")));
             break;
         }
 
@@ -1745,7 +1352,6 @@ void DebuggerGDB::RunCommand(int cmd)
             ClearActiveMarkFromAllEditors();
             if (m_State.HasDriver())
                 m_State.GetDriver()->StepIn();
-//            QueueCommand(new DebuggerCmd(this, _T("step")));
             break;
         }
 
@@ -1809,102 +1415,6 @@ void DebuggerGDB::RunCommand(int cmd)
     }
 }
 
-bool DebuggerGDB::AddBreakpoint(const wxString& file, int line)
-{
-    const bool debuggerIsRunning = !IsStopped();
-    if (debuggerIsRunning)
-    {
-        Break();
-    }
-    m_State.AddBreakpoint(file, line, false);
-    if (m_pBreakpointsWindow)
-    {
-        m_pBreakpointsWindow->Refresh();
-    }
-    if (debuggerIsRunning)
-    {
-        Continue();
-    }
-    return true;
-} // end of AddBreakpoint
-
-bool DebuggerGDB::AddBreakpoint(const wxString& functionSignature)
-{
-    const bool debuggerIsRunning = !IsStopped();
-    if (debuggerIsRunning)
-    {
-        Break();
-    }
-    m_State.AddBreakpoint(wxEmptyString, -1, false, functionSignature);
-    if (m_pBreakpointsWindow)
-    {
-        m_pBreakpointsWindow->Refresh();
-    }
-    if (debuggerIsRunning)
-    {
-        Continue();
-    }
-    return true;
-} // end of AddBreakpoint
-
-bool DebuggerGDB::RemoveBreakpoint(const wxString& file, int line)
-{
-    const bool debuggerIsRunning = !IsStopped();
-    if (debuggerIsRunning)
-    {
-        Break();
-    }
-    m_State.RemoveBreakpoint(file, line);
-    if (m_pBreakpointsWindow)
-    {
-        m_pBreakpointsWindow->Refresh();
-    }
-    if (debuggerIsRunning)
-    {
-        Continue();
-    }
-    return true;
-} // end of RemoveBreakpoint
-
-bool DebuggerGDB::RemoveBreakpoint(const wxString& functionSignature)
-{
-//    const bool debuggerIsRunning = !IsStopped();
-//    if (debuggerIsRunning)
-//    {
-//        Break();
-//    }
-        return false;
-//    m_State.RemoveBreakpoint(wxEmptyString, event.GetInt());
-//    if (m_pBreakpointsWindow)
-//    {
-//        m_pBreakpointsWindow->Refresh();
-//    }
-//    if (debuggerIsRunning)
-//    {
-//        Continue();
-//    }
-//    return true;
-} // end of RemoveBreakpoint
-
-bool DebuggerGDB::RemoveAllBreakpoints(const wxString& file)
-{
-    const bool debuggerIsRunning = !IsStopped();
-    if (debuggerIsRunning)
-    {
-        Break();
-    }
-    m_State.RemoveAllBreakpoints(file);
-    if (m_pBreakpointsWindow)
-    {
-        m_pBreakpointsWindow->Refresh();
-    }
-    if (debuggerIsRunning)
-    {
-        Continue();
-    }
-    return true;
-} // end of RemoveAllBreakpoints
-
 void DebuggerGDB::EditorLinesAddedOrRemoved(cbEditor* editor, int startline, int lines)
 {
     // here we keep the breakpoints in sync with the editors
@@ -1946,64 +1456,189 @@ void DebuggerGDB::EditorLinesAddedOrRemoved(cbEditor* editor, int startline, int
         m_State.ShiftBreakpoints(editor->GetFilename(), startline, lines);
     }
 
-    if (m_pBreakpointsWindow)
-        m_pBreakpointsWindow->Refresh();
+    cbBreakpointsDlg *dlg = Manager::Get()->GetDebuggerManager()->GetBreakpointDialog();
+    dlg->Reload();
+
 }
 
-void DebuggerGDB::Registers()
+int DebuggerGDB::GetStackFrameCount() const
 {
-    // show it
-    CodeBlocksDockEvent evt(cbEVT_SHOW_DOCK_WINDOW);
-    evt.pWindow = m_pCPURegisters;
-    Manager::Get()->ProcessEvent(evt);
-
-    RunCommand(CMD_REGISTERS);
+    return m_State.GetDriver()->GetStackFrames().size();
 }
 
-void DebuggerGDB::Disassemble()
+const cbStackFrame& DebuggerGDB::GetStackFrame(int index) const
 {
-    // show it
-    CodeBlocksDockEvent evt(cbEVT_SHOW_DOCK_WINDOW);
-    evt.pWindow = m_pDisassembly;
-    Manager::Get()->ProcessEvent(evt);
-
-    RunCommand(CMD_DISASSEMBLE);
+    return m_State.GetDriver()->GetStackFrames()[index];
 }
 
-void DebuggerGDB::Backtrace()
+void DebuggerGDB::SwitchToFrame(int number)
 {
-    m_pBacktrace->Clear();
-
-    // show it
-    CodeBlocksDockEvent evt(cbEVT_SHOW_DOCK_WINDOW);
-    evt.pWindow = m_pBacktrace;
-    Manager::Get()->ProcessEvent(evt);
-
-    RunCommand(CMD_BACKTRACE);
+    if (m_State.HasDriver())
+        m_State.GetDriver()->SwitchToFrame(number);
 }
 
-void DebuggerGDB::MemoryDump()
+int DebuggerGDB::GetThreadsCount() const
 {
-    m_pExamineMemoryDlg->Clear();
-
-    // show it
-    CodeBlocksDockEvent evt(cbEVT_SHOW_DOCK_WINDOW);
-    evt.pWindow = m_pExamineMemoryDlg;
-    Manager::Get()->ProcessEvent(evt);
-
-    RunCommand(CMD_MEMORYDUMP);
+    if (!m_State.HasDriver())
+        return 0;
+    else
+        return m_State.GetDriver()->GetThreads().size();
 }
 
-void DebuggerGDB::RunningThreads()
+const cbThread& DebuggerGDB::GetThread(int index) const
 {
-    m_pThreadsDlg->Clear();
+    return m_State.GetDriver()->GetThreads()[index];
+}
 
-    // show it
-    CodeBlocksDockEvent evt(cbEVT_SHOW_DOCK_WINDOW);
-    evt.pWindow = m_pThreadsDlg;
-    Manager::Get()->ProcessEvent(evt);
+bool DebuggerGDB::SwitchToThread(int thread_number)
+{
+    if (!m_State.HasDriver())
+        return false;
+    DebuggerDriver::ThreadsContainer const &threads = m_State.GetDriver()->GetThreads();
 
-    RunCommand(CMD_RUNNINGTHREADS);
+    for (DebuggerDriver::ThreadsContainer::const_iterator it = threads.begin(); it != threads.end(); ++it)
+    {
+        if (it->GetNumber() == thread_number)
+        {
+            if(!it->IsActive())
+                m_State.GetDriver()->SwitchThread(thread_number);
+            return true;
+        }
+    }
+    return false;
+}
+
+cbBreakpoint* DebuggerGDB::AddBreakpoint(const wxString& filename, int line)
+{
+    int index = m_State.AddBreakpoint(filename, line, false);
+    DebuggerBreakpoint *bp = m_State.GetBreakpointByNumber(index);
+
+    BreakItem item;
+    item.cb_break = std::tr1::shared_ptr<cbBreakpoint>(new cbBreakpoint(filename, line));
+    item.debugger_breakpoint = bp;
+    m_breakpoints.push_back(item);
+
+    item.cb_break->SetCondition(bp->condition);
+    item.cb_break->SetIgnoreCount(bp->ignoreCount);
+    item.cb_break->SetEnabled(bp->enabled);
+    item.cb_break->SetUseCondition(bp->useCondition);
+    item.cb_break->SetUseIgnoreCount(bp->useIgnoreCount);
+    return item.cb_break.get();
+}
+
+cbBreakpoint* DebuggerGDB::AddDataBreakpoint(const wxString& dataExpression)
+{
+    DataBreakpointDlg dlg(Manager::Get()->GetAppWindow(), dataExpression, true, 1);
+    PlaceWindow(&dlg);
+    if (dlg.ShowModal() == wxID_OK)
+    {
+        const wxString& newDataExpression = dlg.GetDataExpression();
+        int sel = dlg.GetSelection();
+        int index = m_State.AddBreakpoint(newDataExpression, sel != 1, sel != 0);
+        DebuggerBreakpoint *bp = m_State.GetBreakpointByNumber(index);
+
+        BreakItem item;
+        cbBreakpoint *temp = new cbBreakpoint(bp->breakAddress, bp->breakOnRead, bp->breakOnWrite);
+        item.cb_break = std::tr1::shared_ptr<cbBreakpoint>(temp);
+        item.debugger_breakpoint = bp;
+        m_breakpoints.push_back(item);
+
+        item.cb_break->SetEnabled(bp->enabled);
+        return item.cb_break.get();
+    }
+    else
+        return NULL;
+}
+
+int DebuggerGDB::GetBreakpointsCount() const
+{
+    return m_breakpoints.size();
+}
+
+cbBreakpoint* DebuggerGDB::GetBreakpoint(int index)
+{
+    return m_breakpoints[index].cb_break.get();
+}
+
+const cbBreakpoint* DebuggerGDB::GetBreakpoint(int index) const
+{
+    return m_breakpoints[index].cb_break.get();
+}
+
+void DebuggerGDB::UpdateBreakpoint(cbBreakpoint *breakpoint)
+{
+    for (BreakpointsContainer::iterator it = m_breakpoints.begin(); it != m_breakpoints.end(); ++it)
+    {
+        if (it->cb_break.get() == breakpoint)
+        {
+            switch (breakpoint->GetType())
+            {
+                case cbBreakpoint::Code:
+                {
+                    cbBreakpoint temp(*breakpoint);
+                    EditBreakpointDlg dlg(&temp, Manager::Get()->GetAppWindow());
+                    PlaceWindow(&dlg);
+                    if (dlg.ShowModal() == wxID_OK)
+                    {
+                        DebuggerBreakpoint *bp = it->debugger_breakpoint;
+                        bp->enabled = temp.IsEnabled();
+                        bp->filename = temp.GetFilename();
+                        bp->line = temp.GetLine() - 1;
+                        bp->ignoreCount = temp.GetIgnoreCount();
+                        bp->useIgnoreCount = temp.UseIgnoreCount();
+                        bp->condition = temp.GetCondition();
+                        bp->useCondition = temp.UseCondition();
+                        *breakpoint = temp;
+                    }
+                    break;
+                }
+                case cbBreakpoint::Data:
+                {
+                    DebuggerBreakpoint *bp = it->debugger_breakpoint;
+                    int old_sel = 0;
+                    if (bp->breakOnRead && bp->breakOnWrite)
+                        old_sel = 2;
+                    else if (!bp->breakOnRead && bp->breakOnWrite)
+                        old_sel = 1;
+                    DataBreakpointDlg dlg(Manager::Get()->GetAppWindow(),
+                                          it->cb_break->GetDataExpression(),
+                                          bp->enabled, old_sel);
+                    PlaceWindow(&dlg);
+                    if (dlg.ShowModal() == wxID_OK)
+                    {
+                        bp->enabled = dlg.IsEnabled();
+                        bp->breakOnRead = dlg.GetSelection() != 1;
+                        bp->breakOnWrite = dlg.GetSelection() != 0;
+
+                        *it->cb_break = cbBreakpoint(it->cb_break->GetDataExpression(),
+                                                     bp->breakOnRead, bp->breakOnWrite);
+                        it->cb_break->SetEnabled(bp->enabled);
+                    }
+                    break;
+                }
+            }
+            return;
+        }
+    }
+}
+
+void DebuggerGDB::DeleteBreakpoint(cbBreakpoint* breakpoint)
+{
+    for (BreakpointsContainer::iterator it = m_breakpoints.begin(); it != m_breakpoints.end(); ++it)
+    {
+        if (it->cb_break.get() == breakpoint)
+        {
+            m_State.RemoveBreakpoint(it->debugger_breakpoint, true);
+            m_breakpoints.erase(it);
+            return;
+        }
+    }
+}
+
+void DebuggerGDB::DeleteAllBreakpoints()
+{
+    m_State.RemoveAllBreakpoints(wxEmptyString, true);
+    m_breakpoints.clear();
 }
 
 void DebuggerGDB::Continue()
@@ -2016,7 +1651,7 @@ void DebuggerGDB::Next()
     RunCommand(CMD_STEP);
 }
 
-void DebuggerGDB::NextInstr()
+void DebuggerGDB::NextInstruction()
 {
     RunCommand(CMD_STEP_INSTR);
 }
@@ -2052,40 +1687,14 @@ void DebuggerGDB::StepOut()
     RunCommand(CMD_STEPOUT);
 }
 
-void DebuggerGDB::RunToCursor()
+void DebuggerGDB::RunToCursor(const wxString& filename, int line, const wxString& line_text)
 {
-    cbEditor* ed = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
-    if (!ed)
-        return;
-    wxString lb = ed->GetControl()->GetLine(ed->GetControl()->GetCurrentLine());
-    m_State.AddBreakpoint(ed->GetFilename(), ed->GetControl()->GetCurrentLine(), true, lb);
+    m_State.AddBreakpoint(filename, line, true, line_text);
 
     if (m_pProcess)
         Continue();
     else
-        Debug();
-}
-
-void DebuggerGDB::ToggleBreakpoint()
-{
-//    ClearActiveMarkFromAllEditors();
-    cbEditor* ed = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
-    if (!ed)
-        return;
-    ed->ToggleBreakpoint();
-}
-
-void DebuggerGDB::AddDataBreakpoint()
-{
-    DataBreakpointDlg dlg(0, -1);
-    PlaceWindow(&dlg);
-    if (dlg.ShowModal() == wxID_OK)
-    {
-        int sel = dlg.GetSelection();
-        m_State.AddBreakpoint(GetEditorWordAtCaret(), sel != 1, sel != 0);
-        if (m_pBreakpointsWindow)
-            m_pBreakpointsWindow->Refresh();
-    }
+        Debug(false);
 }
 
 void DebuggerGDB::Break()
@@ -2165,208 +1774,12 @@ void DebuggerGDB::BringAppToFront()
         app->Raise();
 }
 
-void DebuggerGDB::ClearActiveMarkFromAllEditors()
-{
-    EditorManager* edMan = Manager::Get()->GetEditorManager();
-//  Plugins are destroyed prior to EditorManager, so this is guaranteed to be valid at all times
-//    if (!edMan)
-//        return;
-    for (int i = 0; i < edMan->GetEditorsCount(); ++i)
-    {
-        cbEditor* ed = edMan->GetBuiltinEditor(i);
-        if (ed)
-            ed->SetDebugLine(-1);
-    }
-}
-
 void DebuggerGDB::SyncEditor(const wxString& filename, int line, bool setMarker)
 {
-    if (setMarker)
-        ClearActiveMarkFromAllEditors();
-    FileType ft = FileTypeOf(filename);
-    if (ft != ftSource && ft != ftHeader && ft != ftResource)
-        return; // don't try to open unknown files
-    cbProject* project = Manager::Get()->GetProjectManager()->GetActiveProject();
-    ProjectFile* f = project ? project->GetFileByFilename(filename, false, true) : 0;
-    wxFileName fname(filename);
-    if (project && fname.IsRelative())
-        fname.MakeAbsolute(project->GetBasePath());
-    // gdb can't work with spaces in filenames, so we have passed it the shorthand form (C:\MYDOCU~1 etc)
-    // revert this change now so the file can be located and opened...
-    // we do this by calling GetLongPath()
-    cbEditor* ed = Manager::Get()->GetEditorManager()->Open(fname.GetLongPath());
-    if (ed)
-    {
-        ed->Show(true);
-        if (f && !ed->GetProjectFile())
-            ed->SetProjectFile(f);
-        ed->GotoLine(line - 1, false);
-        if (setMarker)
-            ed->SetDebugLine(line - 1);
-    }
-    else
-        Log(_("Cannot open file: ") + fname.GetLongPath());
-}
-
-wxString DebuggerGDB::GetEditorWordAtCaret()
-{
-    cbEditor* ed = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
-    if (!ed)
-        return _T("");
-    int start = ed->GetControl()->WordStartPosition(ed->GetControl()->GetCurrentPos(), true);
-    int end = ed->GetControl()->WordEndPosition(ed->GetControl()->GetCurrentPos(), true);
-    return ed->GetControl()->GetTextRange(start, end);
-}
-
-// events
-
-void DebuggerGDB::OnUpdateUI(wxUpdateUIEvent& event)
-{
-    cbProject* prj = Manager::Get()->GetProjectManager()->GetActiveProject();
-    bool en = (prj && !prj->GetCurrentlyCompilingTarget()) || m_PidToAttach != 0;
-    cbEditor* ed = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
-    wxMenuBar* mbar = Manager::Get()->GetAppFrame()->GetMenuBar();
-    bool stopped = IsStopped();
-    if (mbar)
-    {
-        mbar->Enable(idMenuDebug, !m_pProcess && en);
-        mbar->Enable(idMenuContinue, m_pProcess && en && stopped);
-        mbar->Enable(idMenuNext, m_pProcess && en && stopped);
-        mbar->Enable(idMenuNextInstr, m_pProcess && en && stopped);
-        mbar->Enable(idMenuStep, en && stopped);
-        mbar->Enable(idMenuStepOut, m_pProcess && en && stopped);
-        mbar->Enable(idMenuRunToCursor, en && ed && stopped);
-        mbar->Enable(idMenuToggleBreakpoint, en && ed);
-        mbar->Enable(idMenuRemoveAllBreakpoints, en && ed);
-        mbar->Enable(idMenuSendCommandToGDB, m_pProcess && stopped);
-        mbar->Enable(idMenuAddSymbolFile, m_pProcess && stopped);
-        mbar->Enable(idMenuStop, m_pProcess && en);
-        mbar->Enable(idMenuAttachToProcess, !m_pProcess);
-        mbar->Enable(idMenuDetach, m_pProcess && m_PidToAttach != 0);
-
-        mbar->Enable(idMenuInfoFrame, m_pProcess && stopped);
-        mbar->Enable(idMenuInfoDLL, m_pProcess && stopped);
-        mbar->Enable(idMenuInfoFiles, m_pProcess && stopped);
-        mbar->Enable(idMenuInfoFPU, m_pProcess && stopped);
-        mbar->Enable(idMenuInfoSignals, m_pProcess && stopped);
-
-        mbar->Check(idMenuThreads, IsWindowReallyShown(m_pThreadsDlg));
-        mbar->Check(idMenuMemory, IsWindowReallyShown(m_pExamineMemoryDlg));
-        mbar->Check(idMenuBacktrace, IsWindowReallyShown(m_pBacktrace));
-        mbar->Check(idMenuCPU, IsWindowReallyShown(m_pDisassembly));
-        mbar->Check(idMenuWatches, IsWindowReallyShown(m_pTree));
-        mbar->Check(idMenuRegisters, IsWindowReallyShown(m_pCPURegisters));
-        mbar->Check(idMenuBreakpoints, IsWindowReallyShown(m_pBreakpointsWindow));
-    }
-
-    #ifdef implement_debugger_toolbar
-    wxToolBar* tbar = m_pTbar;//Manager::Get()->GetAppWindow()->GetToolBar();
-    tbar->EnableTool(idMenuDebug, (!m_pProcess || stopped) && en);
-    tbar->EnableTool(idMenuRunToCursor, en && ed && stopped);
-    tbar->EnableTool(idMenuNext, m_pProcess && en && stopped);
-    tbar->EnableTool(idMenuNextInstr, m_pProcess && en && stopped);
-    tbar->EnableTool(idMenuStep, en && stopped);
-    tbar->EnableTool(idMenuStepOut, m_pProcess && en && stopped);
-    tbar->EnableTool(idMenuStop, m_pProcess && en);
-    tbar->EnableTool(idDebuggerToolInfo, m_pProcess && en);
-    #endif
-
-    // allow other UpdateUI handlers to process this event
-    // *very* important! don't forget it...
-    event.Skip();
-}
-
-void DebuggerGDB::OnDebug(wxCommandEvent& event)
-{
-    if (!m_pProcess)
-        Debug();
-    else
-    {
-        if (IsStopped())
-            Continue();
-    }
-}
-
-void DebuggerGDB::OnContinue(wxCommandEvent& event)
-{
-    Continue();
-}
-
-void DebuggerGDB::OnNext(wxCommandEvent& event)
-{
-    Next();
-}
-
-void DebuggerGDB::OnNextInstr(wxCommandEvent& event)
-{
-    NextInstr();
-}
-
-void DebuggerGDB::OnStep(wxCommandEvent& event)
-{
-    if (!m_pProcess)
-    {
-        m_BreakOnEntry = true;
-        Debug();
-        m_BreakOnEntry = false;
-    }
-    else
-        Step();
-}
-
-void DebuggerGDB::OnStepOut(wxCommandEvent& event)
-{
-    StepOut();
-}
-
-void DebuggerGDB::OnRunToCursor(wxCommandEvent& event)
-{
-    RunToCursor();
-}
-
-void DebuggerGDB::OnToggleBreakpoint(wxCommandEvent& event)
-{
-    ToggleBreakpoint();
-}
-
-void DebuggerGDB::OnRemoveAllBreakpoints(wxCommandEvent& event)
-{
-    if (IsStopped()) // Code from BreakpointsDlg has been used
-    {
-        while (m_State.GetBreakpoints().GetCount())
-        {
-            // if not valid breakpoint, continue with the next one
-            DebuggerBreakpoint* bp = m_State.GetBreakpoints()[0];
-            if (!bp)
-                continue;
-            cbEditor* ed = Manager::Get()->GetEditorManager()->IsBuiltinOpen(bp->filenameAsPassed);
-            if (ed)
-                ed->RemoveBreakpoint(bp->line, false);
-            m_State.RemoveBreakpoint(0);
-        }
-    }
-}
-
-void DebuggerGDB::OnAddDataBreakpoint(wxCommandEvent& event)
-{
-    AddDataBreakpoint();
-}
-
-void DebuggerGDB::OnStop(wxCommandEvent& event)
-{
-    if (!IsStopped())
-        Break();
-    else
-        Stop();
-}
-
-void DebuggerGDB::OnSendCommandToGDB(wxCommandEvent& event)
-{
-    wxString cmd = wxGetTextFromUser(_("Enter command for GDB:"), _("Send command to GDB:"), m_LastCmd);
-    if (cmd.IsEmpty())
-        return;
-    m_LastCmd = cmd;
-    m_State.GetDriver()->QueueCommand(new DebuggerCmd(m_State.GetDriver(), cmd, true));
+    DebuggerManager::SyncEditorResult result;
+    result = Manager::Get()->GetDebuggerManager()->SyncEditor(filename, line, setMarker);
+    if(result == DebuggerManager::SyncFileNotFound)
+        Log(_("Cannot open file: ") + filename);
 }
 
 void DebuggerGDB::OnAddSymbolFile(wxCommandEvent& event)
@@ -2384,116 +1797,7 @@ void DebuggerGDB::OnAddSymbolFile(wxCommandEvent& event)
 //    QueueCommand(new DbgCmd_AddSymbolFile(this, file));
 }
 
-void DebuggerGDB::OnBacktrace(wxCommandEvent& event)
-{
-    // show it
-    CodeBlocksDockEvent evt(event.IsChecked() ? cbEVT_SHOW_DOCK_WINDOW : cbEVT_HIDE_DOCK_WINDOW);
-    evt.pWindow = m_pBacktrace;
-    Manager::Get()->ProcessEvent(evt);
-
-    if (event.IsChecked())
-        Backtrace();
-}
-
-void DebuggerGDB::OnDisassemble(wxCommandEvent& event)
-{
-    // show it
-    CodeBlocksDockEvent evt(event.IsChecked() ? cbEVT_SHOW_DOCK_WINDOW : cbEVT_HIDE_DOCK_WINDOW);
-    evt.pWindow = m_pDisassembly;
-    Manager::Get()->ProcessEvent(evt);
-
-    if (event.IsChecked())
-        Disassemble();
-}
-
-void DebuggerGDB::OnRegisters(wxCommandEvent& event)
-{
-    // show it
-    CodeBlocksDockEvent evt(event.IsChecked() ? cbEVT_SHOW_DOCK_WINDOW : cbEVT_HIDE_DOCK_WINDOW);
-    evt.pWindow = m_pCPURegisters;
-    Manager::Get()->ProcessEvent(evt);
-
-    if (event.IsChecked())
-        Registers();
-}
-
-void DebuggerGDB::OnViewWatches(wxCommandEvent& event)
-{
-    // show it
-    CodeBlocksDockEvent evt(event.IsChecked() ? cbEVT_SHOW_DOCK_WINDOW : cbEVT_HIDE_DOCK_WINDOW);
-    evt.pWindow = m_pTree;
-    Manager::Get()->ProcessEvent(evt);
-
-    if (event.IsChecked())
-        DoWatches();
-}
-
-void DebuggerGDB::OnBreakpoints(wxCommandEvent& event)
-{
-    // show it
-    CodeBlocksDockEvent evt(event.IsChecked() ? cbEVT_SHOW_DOCK_WINDOW : cbEVT_HIDE_DOCK_WINDOW);
-    evt.pWindow = m_pBreakpointsWindow;
-    Manager::Get()->ProcessEvent(evt);
-}
-
-void DebuggerGDB::OnExamineMemory(wxCommandEvent& event)
-{
-    // show it
-    CodeBlocksDockEvent evt(event.IsChecked() ? cbEVT_SHOW_DOCK_WINDOW : cbEVT_HIDE_DOCK_WINDOW);
-    evt.pWindow = m_pExamineMemoryDlg;
-    Manager::Get()->ProcessEvent(evt);
-
-    if (event.IsChecked())
-        MemoryDump();
-}
-
-void DebuggerGDB::OnRunningThreads(wxCommandEvent& event)
-{
-    // show it
-    CodeBlocksDockEvent evt(event.IsChecked() ? cbEVT_SHOW_DOCK_WINDOW : cbEVT_HIDE_DOCK_WINDOW);
-    evt.pWindow = m_pThreadsDlg;
-    Manager::Get()->ProcessEvent(evt);
-
-    if (event.IsChecked())
-        RunningThreads();
-}
-
-void DebuggerGDB::OnEditWatches(wxCommandEvent& event)
-{
-    WatchesArray watches = m_pTree->GetWatches();
-    EditWatchesDlg dlg(watches);
-    PlaceWindow(&dlg);
-    if (dlg.ShowModal() == wxID_OK)
-    {
-        m_pTree->SetWatches(watches);
-    }
-}
-
-void DebuggerGDB::OnDebugWindows(wxCommandEvent& event)
-{
-    wxMenu m;
-
-    m.AppendCheckItem(idMenuBreakpoints,    _("Breakpoints"));
-    m.AppendCheckItem(idMenuBacktrace,      _("Call stack"));
-    m.AppendCheckItem(idMenuRegisters,      _("CPU Registers"));
-    m.AppendCheckItem(idMenuCPU,            _("Disassembly"));
-    m.AppendCheckItem(idMenuMemory,         _("Memory dump"));
-    m.AppendCheckItem(idMenuThreads,        _("Running threads"));
-    m.AppendCheckItem(idMenuWatches,        _("Watches"));
-
-    m.Check(idMenuBreakpoints,  IsWindowReallyShown(m_pBreakpointsWindow));
-    m.Check(idMenuBacktrace,    IsWindowReallyShown(m_pBacktrace));
-    m.Check(idMenuRegisters,    IsWindowReallyShown(m_pCPURegisters));
-    m.Check(idMenuCPU,          IsWindowReallyShown(m_pDisassembly));
-    m.Check(idMenuCPU,          IsWindowReallyShown(m_pDisassembly));
-    m.Check(idMenuMemory,       IsWindowReallyShown(m_pExamineMemoryDlg));
-    m.Check(idMenuThreads,      IsWindowReallyShown(m_pThreadsDlg));
-    m.Check(idMenuWatches,      IsWindowReallyShown(m_pTree));
-
-    Manager::Get()->GetAppWindow()->PopupMenu(&m);
-}
-
-void DebuggerGDB::OnToolInfo(wxCommandEvent& event)
+void DebuggerGDB::ShowToolMenu()
 {
     wxMenu m;
     m.Append(idMenuInfoFrame,   _("Current stack frame"));
@@ -2603,41 +1907,6 @@ void DebuggerGDB::OnGDBTerminated(wxCommandEvent& event)
     }
     #endif
     ///killerbot : run there the post shell commands ?
-}
-
-void DebuggerGDB::OnBreakpointAdd(CodeBlocksEvent& event)
-{
-//    EditorBase* base = event.GetEditor();
-//    cbEditor* ed = base && base->IsBuiltinEditor() ? static_cast<cbEditor*>(base) : 0;
-//    wxString lb;
-//    if (ed)
-//        lb = ed->GetControl()->GetLine(event.GetInt());
-//    m_State.AddBreakpoint(event.GetString(), event.GetInt(), false, lb);
-//    if (m_pBreakpointsWindow)
-//        m_pBreakpointsWindow->Refresh();
-}
-
-void DebuggerGDB::OnBreakpointEdit(CodeBlocksEvent& event)
-{
-    int idx = m_State.HasBreakpoint(event.GetString(), event.GetInt());
-    DebuggerBreakpoint* bp = m_State.GetBreakpoint(idx);
-    if (!bp)
-        return;
-    EditBreakpointDlg dlg(bp);
-    PlaceWindow(&dlg);
-    if (dlg.ShowModal() == wxID_OK)
-    {
-        m_State.ResetBreakpoint(idx);
-    }
-    if (m_pBreakpointsWindow)
-        m_pBreakpointsWindow->Refresh();
-}
-
-void DebuggerGDB::OnBreakpointDelete(CodeBlocksEvent& event)
-{
-//    m_State.RemoveBreakpoint(event.GetString(), event.GetInt());
-//    if (m_pBreakpointsWindow)
-//        m_pBreakpointsWindow->Refresh();
 }
 
 void DebuggerGDB::OnValueTooltip(CodeBlocksEvent& event)
@@ -2772,8 +2041,8 @@ void DebuggerGDB::OnProjectClosed(CodeBlocksEvent& event)
 
     // remove all breakpoints belonging to the closed project
     m_State.RemoveAllProjectBreakpoints(event.GetProject());
-    if (m_pBreakpointsWindow)
-        m_pBreakpointsWindow->Refresh();
+    cbBreakpointsDlg *dlg = Manager::Get()->GetDebuggerManager()->GetBreakpointDialog();
+    dlg->Reload();
 
     // when a project closes, make sure it's not the actively debugged project.
     // if so, end debugging immediately!
@@ -2809,11 +2078,6 @@ void DebuggerGDB::OnTimer(wxTimerEvent& event)
     wxWakeUpIdle();
 }
 
-void DebuggerGDB::OnWatchesChanged(wxCommandEvent& event)
-{
-    DoWatches();
-}
-
 void DebuggerGDB::OnShowFile(wxCommandEvent& event)
 {
 	SyncEditor(event.GetString(), event.GetInt(), false);
@@ -2837,53 +2101,138 @@ void DebuggerGDB::OnCursorChanged(wxCommandEvent& event)
                 Log(wxString::Format(_("In %s (%s)"), cursor.function.c_str(), cursor.file.c_str()));
 
             // update watches
-            if (IsWindowReallyShown(m_pTree))
+//            if (IsWindowReallyShown(m_pTree))
+//                DoWatches();
+            DebuggerManager *dbg_manager = Manager::Get()->GetDebuggerManager();
+
+            if (IsWindowReallyShown(dbg_manager->GetWatchesDialog()))
                 DoWatches();
 
             // update CPU registers
-            if (IsWindowReallyShown(m_pCPURegisters))
+            if (dbg_manager->UpdateCPURegisters())
                 RunCommand(CMD_REGISTERS);
 
+//    FIXME (obfuscated#) reimplement showing the window if it has been closed
             // update callstack
-            if (IsWindowReallyShown(m_pBacktrace))
+            if (dbg_manager->UpdateBacktrace())
                 RunCommand(CMD_BACKTRACE);
 
             // update disassembly
-            if (IsWindowReallyShown(m_pDisassembly))
+            if (dbg_manager->UpdateDisassembly())
             {
                 unsigned long int addrL;
                 cursor.address.ToULong(&addrL, 16);
-                m_pDisassembly->SetActiveAddress(addrL);
+                dbg_manager->GetDisassemblyDialog()->SetActiveAddress(addrL);
                 RunCommand(CMD_DISASSEMBLE);
             }
 
+//    FIXME (obfuscated#) reimplement showing the window if it has been closed
             // update memory examiner
-            if (IsWindowReallyShown(m_pExamineMemoryDlg))
-                MemoryDump();
+            if (dbg_manager->UpdateExamineMemory())
+                RunCommand(CMD_MEMORYDUMP);
 
             // update running threads
-            if (IsWindowReallyShown(m_pThreadsDlg))
-                RunningThreads();
+            if (dbg_manager->UpdateThreads())
+                RunCommand(CMD_RUNNINGTHREADS);
         }
     }
 }
 
-void DebuggerGDB::OnAddWatch(wxCommandEvent& event)
+cbWatch* DebuggerGDB::AddWatch(const wxString& symbol)
 {
-    m_pTree->AddWatch(GetEditorWordAtCaret());
+    GDBWatch *watch = new GDBWatch(symbol);
+    m_watches.push_back(std::tr1::shared_ptr<GDBWatch>(watch));
+
+    DoWatches();
+
+    return watch;
 }
 
-void DebuggerGDB::OnAttachToProcess(wxCommandEvent& event)
+void DebuggerGDB::DeleteWatch(cbWatch *watch)
 {
-    wxString pidStr = wxGetTextFromUser(_("PID to attach to:"));
-    if (!pidStr.IsEmpty())
+    for(WatchesContainer::iterator it = m_watches.begin(); it != m_watches.end(); ++it)
     {
-        pidStr.ToLong((long*)&m_PidToAttach);
-        Debug();
+        if(it->get() == watch)
+        {
+            m_watches.erase(it);
+            return;
+        }
     }
 }
 
-void DebuggerGDB::OnDetach(wxCommandEvent& event)
+bool DebuggerGDB::HasWatch(cbWatch *watch)
+{
+    for(WatchesContainer::iterator it = m_watches.begin(); it != m_watches.end(); ++it)
+    {
+        if(it->get() == watch)
+            return true;
+    }
+    return false;
+}
+
+void DebuggerGDB::ShowWatchProperties(cbWatch *watch)
+{
+    // not supported for child nodes!
+    if(watch->GetParent())
+        return;
+
+    GDBWatch *real_watch = static_cast<GDBWatch*>(watch);
+    EditWatchDlg dlg(real_watch);
+    if(dlg.ShowModal() == wxID_OK)
+        DoWatches();
+}
+
+bool DebuggerGDB::SetWatchValue(cbWatch *watch, const wxString &value)
+{
+    cbWatch *root_watch = GetRootWatch(watch);
+    bool found = false;
+    for (WatchesContainer::iterator it = m_watches.begin(); it != m_watches.end(); ++it)
+    {
+        if (it->get() == root_watch)
+        {
+            found = true;
+            break;
+        }
+    }
+    if(!found)
+        return false;
+
+    if (!m_State.HasDriver())
+        return false;
+
+    wxString full_symbol;
+    cbWatch *temp_watch = watch;
+    while(temp_watch)
+    {
+        wxString symbol;
+        temp_watch->GetSymbol(symbol);
+        temp_watch = temp_watch->GetParent();
+
+        if(symbol.find(wxT('*')) != wxString::npos || symbol.find(wxT('&')) != wxString::npos)
+            symbol = wxT('(') + symbol + wxT(')');
+
+        if(full_symbol.empty())
+            full_symbol = symbol;
+        else
+            full_symbol = symbol + wxT('.') + full_symbol;
+    }
+
+    DebuggerDriver* driver = m_State.GetDriver();
+    driver->SetVarValue(full_symbol, value);
+    DoWatches();
+    return true;
+}
+
+void DebuggerGDB::AttachToProcess(const wxString& pid)
+{
+    if (!pid.IsEmpty())
+    {
+        pid.ToLong((long*)&m_PidToAttach);
+        Debug(false);
+    }
+}
+
+void DebuggerGDB::DetachFromProcess()
 {
     m_State.GetDriver()->Detach();
     m_State.GetDriver()->Stop();
@@ -3018,7 +2367,7 @@ void DebuggerGDB::OnCompilerFinished(CodeBlocksEvent& event)
         m_WaitingCompilerToFinish = false;
         // only proceed if build succeeeded
         if (!m_pCompiler || m_pCompiler->GetExitCode() == 0)
-            DoDebug();
+            DoDebug(false);
     }
 }
 

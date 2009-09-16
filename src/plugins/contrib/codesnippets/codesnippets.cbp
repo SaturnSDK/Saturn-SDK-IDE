@@ -12,8 +12,8 @@
 				<Option type="3" />
 				<Option compiler="gcc" />
 				<Compiler>
-					<Add option="-DBUILDING_PLUGIN" />
-					<Add option="-DNO_LOGGING" />
+					<Add option="-DWXMAKINGDLL_PROPGRID" />
+					<Add option="-DwxPG_USE_WXMODULE=0" />
 				</Compiler>
 				<Linker>
 					<Add library="codeblocks" />
@@ -24,10 +24,6 @@
 				<Option object_output="..\..\..\.objs\plugins\contrib\codesnippets\app\" />
 				<Option type="0" />
 				<Option compiler="gcc" />
-				<Compiler>
-					<Add option="-DNO_LOGGING" />
-					<Add option="-DBUILDING_PLUGIN" />
-				</Compiler>
 			</Target>
 			<Environment>
 				<Variable name="WX_SUFFIX" value="u" />
@@ -51,6 +47,8 @@
 			<Add option="-DCB_PRECOMP" />
 			<Add option="-DWX_PRECOMP" />
 			<Add option="-DwxUSE_UNICODE" />
+			<Add option="-DBUILDING_PLUGIN" />
+			<Add option="-DNO_LOGGING" />
 			<Add directory="..\..\..\include" />
 			<Add directory="..\..\..\sdk\wxscintilla\include" />
 			<Add directory="..\..\..\src" />

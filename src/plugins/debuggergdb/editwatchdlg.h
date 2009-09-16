@@ -7,20 +7,19 @@
 #define EDITWATCHDLG_H
 
 #include <wx/dialog.h>
-#include "debuggertree.h"
+class GDBWatch;
 
 class EditWatchDlg : public wxDialog
 {
     public:
-        EditWatchDlg(Watch* w = 0, wxWindow* parent = 0);
+        EditWatchDlg(GDBWatch* w = nullptr, wxWindow* parent = nullptr);
         virtual ~EditWatchDlg();
 
-        virtual const Watch& GetWatch(){ return m_Watch; }
+//        virtual const GDBWatch& GetWatch(){ return m_watch; }
     protected:
         void EndModal(int retCode);
 
-        Watch m_Watch;
-    private:
+        GDBWatch *m_watch;
 };
 
 #endif // EDITWATCHDLG_H

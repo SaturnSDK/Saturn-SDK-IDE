@@ -10,18 +10,14 @@
 #include "databreakpointdlg.h"
 
 //(*InternalHeaders(DataBreakpointDlg)
-#include <wx/bitmap.h>
 #include <wx/button.h>
-#include <wx/font.h>
-#include <wx/fontenum.h>
-#include <wx/fontmap.h>
-#include <wx/image.h>
+#include <wx/string.h>
 #include <wx/intl.h>
-#include <wx/settings.h>
 //*)
 
 //(*IdInit(DataBreakpointDlg)
 const long DataBreakpointDlg::ID_CHECKBOX1 = wxNewId();
+const long DataBreakpointDlg::ID_TEXTCTRL_DATA_EXPRESION = wxNewId();
 const long DataBreakpointDlg::ID_RADIOBOX1 = wxNewId();
 //*)
 
@@ -30,27 +26,31 @@ BEGIN_EVENT_TABLE(DataBreakpointDlg,wxDialog)
     //*)
 END_EVENT_TABLE()
 
-DataBreakpointDlg::DataBreakpointDlg(wxWindow* parent,wxWindowID id,bool enabled,int selection)
+DataBreakpointDlg::DataBreakpointDlg(wxWindow *parent, const wxString& dataExpression, bool enabled, int selection)
 {
+    int id = wxID_ANY;
     //(*Initialize(DataBreakpointDlg)
-    Create(parent,id,_("Data breakpoint"),wxDefaultPosition,wxDefaultSize,wxDEFAULT_DIALOG_STYLE,_T("wxDialog"));
+    Create(parent, id, _("Data breakpoint"), wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE, _T("id"));
     BoxSizer1 = new wxBoxSizer(wxVERTICAL);
-    CheckBox1 = new wxCheckBox(this,ID_CHECKBOX1,_("Enabled"),wxDefaultPosition,wxDefaultSize,0,wxDefaultValidator,_T("ID_CHECKBOX1"));
+    CheckBox1 = new wxCheckBox(this, ID_CHECKBOX1, _("Enabled"), wxDefaultPosition, wxDefaultSize, 0, wxDefaultValidator, _T("ID_CHECKBOX1"));
     CheckBox1->SetValue(false);
-    BoxSizer1->Add(CheckBox1,0,wxALL|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL,8);
-    wxString wxRadioBoxChoices_RadioBox1[3] =
+    BoxSizer1->Add(CheckBox1, 0, wxALL|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL, 8);
+    m_dataExpressionCtrl = new wxTextCtrl(this, ID_TEXTCTRL_DATA_EXPRESION, _("Text"), wxDefaultPosition, wxSize(265,23), wxTE_PROCESS_ENTER, wxDefaultValidator, _T("ID_TEXTCTRL_DATA_EXPRESION"));
+    m_dataExpressionCtrl->SetFocus();
+    BoxSizer1->Add(m_dataExpressionCtrl, 1, wxLEFT|wxRIGHT|wxEXPAND|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL, 10);
+    wxString __wxRadioBoxChoices_1[3] =
     {
-        _("Break on read"),
-        _("Break on write"),
-        _("Break on read or write")
+    	_("Break on read"),
+    	_("Break on write"),
+    	_("Break on read or write")
     };
-    RadioBox1 = new wxRadioBox(this,ID_RADIOBOX1,_("Condition"),wxDefaultPosition,wxDefaultSize,3,wxRadioBoxChoices_RadioBox1,1,wxRA_SPECIFY_ROWS,wxDefaultValidator,_T("ID_RADIOBOX1"));
-    BoxSizer1->Add(RadioBox1,0,wxBOTTOM|wxLEFT|wxRIGHT|wxEXPAND|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL,8);
+    RadioBox1 = new wxRadioBox(this, ID_RADIOBOX1, _("Condition"), wxDefaultPosition, wxDefaultSize, 3, __wxRadioBoxChoices_1, 1, 0, wxDefaultValidator, _T("ID_RADIOBOX1"));
+    BoxSizer1->Add(RadioBox1, 0, wxBOTTOM|wxLEFT|wxRIGHT|wxEXPAND|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 8);
     StdDialogButtonSizer1 = new wxStdDialogButtonSizer();
-    StdDialogButtonSizer1->AddButton(new wxButton(this,wxID_OK,wxEmptyString));
-    StdDialogButtonSizer1->AddButton(new wxButton(this,wxID_CANCEL,wxEmptyString));
+    StdDialogButtonSizer1->AddButton(new wxButton(this, wxID_OK, wxEmptyString));
+    StdDialogButtonSizer1->AddButton(new wxButton(this, wxID_CANCEL, wxEmptyString));
     StdDialogButtonSizer1->Realize();
-    BoxSizer1->Add(StdDialogButtonSizer1,0,wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL,8);
+    BoxSizer1->Add(StdDialogButtonSizer1, 0, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 8);
     SetSizer(BoxSizer1);
     BoxSizer1->Fit(this);
     BoxSizer1->SetSizeHints(this);
@@ -59,6 +59,7 @@ DataBreakpointDlg::DataBreakpointDlg(wxWindow* parent,wxWindowID id,bool enabled
 
     CheckBox1->SetValue(enabled);
     RadioBox1->SetSelection(selection);
+    m_dataExpressionCtrl->SetValue(dataExpression);
 }
 
 DataBreakpointDlg::~DataBreakpointDlg()
@@ -67,7 +68,7 @@ DataBreakpointDlg::~DataBreakpointDlg()
     //*)
 }
 
-bool DataBreakpointDlg::IsEnabled()
+bool DataBreakpointDlg::IsBreakpointEnabled()
 {
     return CheckBox1->IsChecked();
 }
@@ -75,4 +76,9 @@ bool DataBreakpointDlg::IsEnabled()
 int DataBreakpointDlg::GetSelection()
 {
     return RadioBox1->GetSelection();
+}
+
+wxString DataBreakpointDlg::GetDataExpression() const
+{
+    return m_dataExpressionCtrl->GetValue();
 }
