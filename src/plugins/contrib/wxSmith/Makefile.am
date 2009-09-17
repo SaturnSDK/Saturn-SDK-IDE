@@ -5,7 +5,7 @@ AM_CPPFLAGS = -DWXMAKINGDLL_PROPGRID -DwxPG_USE_WXMODULE=0
 INCLUDES = $(WX_CXXFLAGS) \
 		-I$(top_srcdir)/src/include \
 		-I$(top_srcdir)/src/sdk/wxscintilla/include \
-		-I$(top_srcdir)/sdk/wxpropgrid/include \
+		-I$(top_srcdir)/src/sdk/wxpropgrid/include \
                 -I$(top_srcdir)/src/include/scripting/include \
                 -I$(top_srcdir)/src/include/scripting/squirrel \
                 -I$(top_srcdir)/src/include/scripting/sqplus \
@@ -18,7 +18,7 @@ libwxsmithlib_la_LDFLAGS = -version-info 0:1:0 -shared
 
 libwxsmithlib_la_LIBADD = $(PLUGIN_WX_LIBS) \
 				../../../sdk/libcodeblocks.la \
-				../../../sdk/libwxpropgrid.la \
+				../../../sdk/wxpropgrid/libwxpropgrid.la \
 				properties/libwxsmith_properties.la \
 				wxwidgets/libwxsmith_wxwidgets.la
 

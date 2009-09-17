@@ -221,8 +221,8 @@ AC_CONFIG_FILES([Makefile
 	src/include/scripting/sqstdlib/Makefile
 	src/include/scripting/squirrel/Makefile
 	src/include/tinyxml/Makefile
-	src/include/wxscintilla/Makefile
 	src/sdk/Makefile
+	src/sdk/wxpropgrid/Makefile
 	src/sdk/scripting/Makefile
 	src/sdk/scripting/bindings/Makefile
 	src/sdk/scripting/squirrel/Makefile
@@ -251,8 +251,6 @@ AC_CONFIG_FILES([Makefile
 	src/plugins/compilergcc/resources/Makefile
 	src/plugins/debuggergdb/Makefile
 	src/plugins/debuggergdb/resources/Makefile
-	src/plugins/debuggergdb/resources/images/Makefile
-	src/plugins/debuggergdb/resources/images/16x16/Makefile
 	src/plugins/defaultmimehandler/Makefile
 	src/plugins/defaultmimehandler/resources/Makefile
 	src/plugins/openfileslist/Makefile
@@ -439,11 +437,12 @@ AC_CONFIG_FILES([Makefile
 	src/plugins/contrib/ThreadSearch/Makefile
 	src/plugins/contrib/ThreadSearch/resources/Makefile
 	src/plugins/contrib/ThreadSearch/resources/images/Makefile
+	src/plugins/contrib/ThreadSearch/resources/images/16x16/Makefile
+	src/plugins/contrib/ThreadSearch/resources/images/22x22/Makefile
 	src/plugins/contrib/Valgrind/Makefile
 	src/plugins/contrib/Valgrind/resources/Makefile
 	src/plugins/contrib/wxSmith/Makefile
 	src/plugins/contrib/wxSmith/wxsmith.pc
-	src/plugins/contrib/wxSmith/propgrid/Makefile
 	src/plugins/contrib/wxSmith/plugin/Makefile
 	src/plugins/contrib/wxSmith/properties/Makefile
 	src/plugins/contrib/wxSmith/wxwidgets/Makefile

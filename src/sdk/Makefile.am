@@ -1,8 +1,9 @@
-SUBDIRS = scripting wxscintilla resources
+SUBDIRS = scripting wxscintilla wxpropgrid resources
 
 INCLUDES = $(WX_CXXFLAGS) \
 			-I$(top_srcdir)/src/include \
 			-I$(top_srcdir)/src/sdk/wxscintilla/include \
+			-I$(top_srcdir)/src/sdk/wxpropgrid/include \
 			-I$(top_srcdir)/src/include/tinyxml \
 			-I$(top_srcdir)/src/include/scripting/include \
  			-I$(top_srcdir)/src/include/scripting/sqplus \
@@ -18,15 +19,18 @@ libcodeblocks_la_LIBADD =  $(WX_LIBS) \
 			scripting/sqstdlib/libsqstdlib.la \
 			scripting/squirrel/libsquirrel.la \
 			../base/tinyxml/libtinyxml.la \
-			wxscintilla/libwxscintilla.la
+			wxscintilla/libwxscintilla.la \
+			wxpropgrid/libwxpropgrid.la
 
 libcodeblocks_la_SOURCES = annoyingdialog.cpp \
 						autodetectcompilers.cpp \
+						backtracedlg.cpp \
 						base64.cpp \
 						blockallocated.cpp \
-						cbexception.cpp \
+						breakpointsdlg.cpp \
 						cbeditor.cpp \
 						cbeditorprintout.cpp \
+						cbexception.cpp \
 						cbplugin.cpp \
 						cbproject.cpp \
 						cbstyledtextctrl.cpp \
@@ -38,27 +42,33 @@ libcodeblocks_la_SOURCES = annoyingdialog.cpp \
 						compilerfactory.cpp \
 						compileroptions.cpp \
 						compiletargetbase.cpp \
-						configmanager.cpp \
 						configmanager-revision.cpp \
+						configmanager.cpp \
 						configurationpanel.cpp \
 						configuretoolsdlg.cpp \
 						confirmreplacedlg.cpp \
+						cpuregistersdlg.cpp \
 						crc32.cpp \
+						debuggermanager.cpp \
+						debuggermenu.cpp \
+						disassemblydlg.cpp \
 						editarrayfiledlg.cpp \
 						editarrayorderdlg.cpp \
 						editarraystringdlg.cpp \
+						editbreakpointdlg.cpp \
 						editkeywordsdlg.cpp \
+						editor_hooks.cpp \
 						editorbase.cpp \
 						editorcolourset.cpp \
 						editorconfigurationdlg.cpp \
 						editorlexerloader.cpp \
 						editormanager.cpp \
-						editor_hooks.cpp \
 						editpairdlg.cpp \
 						editpathdlg.cpp \
 						edittooldlg.cpp \
 						encodingdetector.cpp \
 						externaldepsdlg.cpp \
+						examinememorydlg.cpp \
 						filefilters.cpp \
 						filegroupsandmasks.cpp \
 						filemanager.cpp \
@@ -76,6 +86,7 @@ libcodeblocks_la_SOURCES = annoyingdialog.cpp \
 						menuitemsmanager.cpp \
 						multiselectdlg.cpp \
 						newfromtemplatedlg.cpp \
+						nullptr.cpp \
 						personalitymanager.cpp \
 						pipedprocess.cpp \
 						pluginmanager.cpp \
@@ -99,12 +110,13 @@ libcodeblocks_la_SOURCES = annoyingdialog.cpp \
 						searchresultslog.cpp \
 						selecttargetdlg.cpp \
 						templatemanager.cpp \
+						threadsdlg.cpp \
 						toolsmanager.cpp \
 						uservarmanager.cpp \
 						virtualbuildtargetsdlg.cpp \
+						watchesdlg.cpp \
 						workspaceloader.cpp \
 						xtra_res.cpp  \
-						nullptr.cpp \
 						mozilla_chardet/src/CharDistribution.cpp \
 						mozilla_chardet/src/JpCntx.cpp \
 						mozilla_chardet/src/LangBulgarianModel.cpp \

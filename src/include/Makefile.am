@@ -50,6 +50,7 @@ ALLHEADERS = annoyingdialog.h \
 				configurationpanel.h \
 				configuretoolsdlg.h \
 				confirmreplacedlg.h \
+				cpuregistersdlg.h \
 				crc32.h \
 				editarrayfiledlg.h \
 				editarrayorderdlg.h \
@@ -65,6 +66,7 @@ ALLHEADERS = annoyingdialog.h \
 				editpathdlg.h \
 				edittooldlg.h \
 				encodingdetector.h \
+				examinememorydlg.h \
 				externaldepsdlg.h \
 				filefilters.h \
 				filegroupsandmasks.h \
@@ -119,6 +121,7 @@ ALLHEADERS = annoyingdialog.h \
 				selecttargetdlg.h \
 				settings.h \
 				templatemanager.h \
+				threadsdlg.h \
 				toolsmanager.h \
 				uservarmanager.h \
 				virtualbuildtargetsdlg.h \
