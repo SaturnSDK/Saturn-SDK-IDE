@@ -26,7 +26,7 @@
 #include <wx/imaglist.h>
 #include <wx/tokenzr.h>
 
-#ifdef wxHAS_RAW_BITMAP
+#if defined(wxHAS_RAW_BITMAP) || defined(wxHAVE_RAW_BITMAP)
 #include <wx/rawbmp.h>
 #endif
 
@@ -368,7 +368,7 @@ void SurfaceImpl::AlphaRectangle(PRectangle rc, int cornerSize,
                                  ColourAllocated fill, int alphaFill,
                                  ColourAllocated outline, int alphaOutline,
                                  int WXUNUSED(flags)) {
-#ifdef wxHAS_RAW_BITMAP
+#if defined(wxHAS_RAW_BITMAP) || defined(wxHAVE_RAW_BITMAP)
 
     // TODO:  do something with cornerSize
     wxUnusedVar(cornerSize);
