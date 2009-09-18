@@ -2123,6 +2123,7 @@ bool cbEditor::AddBreakpoint(int line, bool notifyDebugger)
 {
     if (HasBreakpoint(line))
         return false;
+
     if (line == -1)
         line = GetControl()->GetCurrentLine();
 
@@ -2132,26 +2133,7 @@ bool cbEditor::AddBreakpoint(int line, bool notifyDebugger)
         return false;
     }
 
-    // Notify all debugger plugins
-    PluginsArray arr = Manager::Get()->GetPluginManager()->GetOffersFor(ptDebugger);
-    if (!arr.GetCount())
-        return false;
-    bool accepted=false;
-    for(size_t i=0;i<arr.GetCount();i++)
-    {
-        cbDebuggerPlugin* debugger = (cbDebuggerPlugin*)arr[i];
-        if (!debugger)
-            continue; //kinda scary if this isn't a debugger? perhaps this should be a logged error??
-        if (debugger->AddBreakpoint(m_Filename, line + 1))
-        {
-            accepted=true;
-        }
-    }
-    // If at least one breakpoint changed, return true
-    // (could still cause problems if one debugger previously responded to add but another
-    // now responds to remove of that bp - hopefully the debuggers are coded sufficiently well
-    // that this doesn't happen)
-    if(accepted)
+    if (Manager::Get()->GetDebuggerManager()->GetBreakpointDialog()->AddBreakpoint(m_Filename, line + 1))
     {
         MarkerToggle(BREAKPOINT_MARKER, line);
         return true;

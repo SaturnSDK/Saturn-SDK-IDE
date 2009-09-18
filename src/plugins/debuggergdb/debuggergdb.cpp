@@ -499,7 +499,7 @@ void DebuggerGDB::OnProjectLoadingHook(cbProject* project, TiXmlElement* elem, b
 
                 TiXmlElement* rdnode = node->InsertEndChild(TiXmlElement("remote_debugging"))->ToElement();
                 if (it->first)
-					rdnode->SetAttribute("target", cbU2C(it->first->GetTitle()));
+                    rdnode->SetAttribute("target", cbU2C(it->first->GetTitle()));
 
                 TiXmlElement* tgtnode = rdnode->InsertEndChild(TiXmlElement("options"))->ToElement();
                 tgtnode->SetAttribute("conn_type", (int)rd.connType);
@@ -563,6 +563,7 @@ void DebuggerGDB::DoWatches()
 {
     if (!m_pProcess)
         return;
+
     ConfigManager *config_manager = Manager::Get()->GetConfigManager(_T("debugger"));
     m_State.GetDriver()->UpdateWatches(config_manager->ReadBool(_T("watch_locals"), true),
                                        config_manager->ReadBool(_T("watch_args"), true),
@@ -1057,7 +1058,7 @@ int DebuggerGDB::DoDebug(bool breakOnEntry)
     RemoteDebugging rd = rdprj[0]; // project settings
     RemoteDebuggingMap::iterator it = rdprj.find(target); // target settings
     if (it != rdprj.end())
-		rd.MergeWith(it->second);
+        rd.MergeWith(it->second);
 //////////////////killerbot : most probably here : execute the shell commands (we could access the per target debugger settings)
     wxString oldLibPath; // keep old PATH/LD_LIBRARY_PATH contents
     if (!rd.skipLDpath)
@@ -1510,6 +1511,8 @@ bool DebuggerGDB::SwitchToThread(int thread_number)
 
 cbBreakpoint* DebuggerGDB::AddBreakpoint(const wxString& filename, int line)
 {
+//    Manager::Get()->GetLogManager()->DebugLog(F(_T("DebuggerGDB::AddBreakpoint : file=%s, line=%d"), filename.c_str(), line));
+
     int index = m_State.AddBreakpoint(filename, line, false);
     DebuggerBreakpoint *bp = m_State.GetBreakpointByNumber(index);
 
@@ -1756,7 +1759,7 @@ void DebuggerGDB::Break()
         PluginManager *plm = Manager::Get()->GetPluginManager();
         CodeBlocksEvent evt(cbEVT_DEBUGGER_PAUSED);
         plm->NotifyPlugins(evt);
-	}
+    }
 }
 
 void DebuggerGDB::Stop()
@@ -1948,14 +1951,14 @@ void DebuggerGDB::OnValueTooltip(CodeBlocksEvent& event)
 
     if(ed->IsContextMenuOpened())
     {
-    	return;
+        return;
     }
 
-	// get rid of other calltips (if any) [for example the code completion one, at this time we
-	// want the debugger value call/tool-tip to win and be shown]
+    // get rid of other calltips (if any) [for example the code completion one, at this time we
+    // want the debugger value call/tool-tip to win and be shown]
     if(ed->GetControl()->CallTipActive())
     {
-    	ed->GetControl()->CallTipCancel();
+        ed->GetControl()->CallTipCancel();
     }
 
     const int style = event.GetInt();
@@ -2008,7 +2011,7 @@ void DebuggerGDB::OnEditorOpened(CodeBlocksEvent& event)
             bpFileName.Normalize();
             edFileName.Normalize();
             if (bpFileName.GetFullPath().Matches(edFileName.GetFullPath()))
-                ed->ToggleBreakpoint(bp->line, false);
+                ed->ToggleBreakpoint(bp->line-1, false);
         }
         // Now check and highlight the active line under debugging
         if (m_State.HasDriver())
@@ -2104,7 +2107,7 @@ void DebuggerGDB::OnTimer(wxTimerEvent& event)
 
 void DebuggerGDB::OnShowFile(wxCommandEvent& event)
 {
-	SyncEditor(event.GetString(), event.GetInt(), false);
+    SyncEditor(event.GetString(), event.GetInt(), false);
 }
 
 void DebuggerGDB::OnCursorChanged(wxCommandEvent& event)
@@ -2125,8 +2128,6 @@ void DebuggerGDB::OnCursorChanged(wxCommandEvent& event)
                 Log(wxString::Format(_("In %s (%s)"), cursor.function.c_str(), cursor.file.c_str()));
 
             // update watches
-//            if (IsWindowReallyShown(m_pTree))
-//                DoWatches();
             DebuggerManager *dbg_manager = Manager::Get()->GetDebuggerManager();
 
             if (IsWindowReallyShown(dbg_manager->GetWatchesDialog()))

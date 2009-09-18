@@ -19,17 +19,16 @@ class DebuggerState
         DebuggerState(DebuggerGDB* plugin);
         ~DebuggerState();
 
-        BreakpointsList& GetBreakpoints(){ return m_Breakpoints; }
-        BreakpointsList const & GetBreakpoints() const{ return m_Breakpoints; }
+        BreakpointsList const & GetBreakpoints() const { return m_Breakpoints; }
 
         bool StartDriver(ProjectBuildTarget* target);
         void StopDriver();
 
-		/// Check so see if Driver exists before getting it
-		bool HasDriver() const;
+        /// Check so see if Driver exists before getting it
+        bool HasDriver() const;
 
-		/// Will always return a driver, or throw a code assertion error
-		// (to fix multiple bugs in use of GetDriver without checking return value)
+        /// Will always return a driver, or throw a code assertion error
+        // (to fix multiple bugs in use of GetDriver without checking return value)
         DebuggerDriver* GetDriver();
         const DebuggerDriver* GetDriver() const;
 
@@ -49,7 +48,7 @@ class DebuggerState
         void ShiftBreakpoints(const wxString& file, int startline, int nroflines);
 
         int HasBreakpoint(const wxString& file, int line); // returns -1 if not found
-		int HasBreakpoint(const wxString& dataAddr);
+        int HasBreakpoint(const wxString& dataAddr);
         DebuggerBreakpoint* GetBreakpoint(int idx);
         DebuggerBreakpoint* GetBreakpointByNumber(int num);
         const DebuggerBreakpoint* GetBreakpointByNumber(int num) const;

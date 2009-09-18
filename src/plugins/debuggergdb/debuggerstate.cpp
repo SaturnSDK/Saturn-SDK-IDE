@@ -54,18 +54,18 @@ void DebuggerState::StopDriver()
 
 bool DebuggerState::HasDriver() const
 {
-	return m_pDriver != NULL;
+    return m_pDriver != NULL;
 }
 
 DebuggerDriver* DebuggerState::GetDriver()
 {
-	cbAssert(m_pDriver != NULL);
-	return m_pDriver;
+    cbAssert(m_pDriver != NULL);
+    return m_pDriver;
 }
 const DebuggerDriver* DebuggerState::GetDriver() const
 {
-	cbAssert(m_pDriver != NULL);
-	return m_pDriver;
+    cbAssert(m_pDriver != NULL);
+    return m_pDriver;
 }
 
 void DebuggerState::CleanUp()
@@ -129,8 +129,9 @@ int DebuggerState::AddBreakpoint(const wxString& file, int line, bool temp, cons
     // if yes, remove old breakpoint first
     if (idx != -1)
         RemoveBreakpoint(idx, true);
+
     // create new bp
-//    Manager::Get()->GetLogManager()->DebugLog(_T("add bp: file=%s, bpfile=%s"), file.c_str(), bpfile.c_str());
+//    Manager::Get()->GetLogManager()->DebugLog(F(_T("DebuggerState::AddBreakpoint() : bp: file=%s, bpfile=%s"), file.c_str(), bpfile.c_str()));
     DebuggerBreakpoint* bp = new DebuggerBreakpoint;
     bp->type = DebuggerBreakpoint::bptCode;
     bp->filename = bpfile;
@@ -173,10 +174,10 @@ DebuggerBreakpoint* DebuggerState::RemoveBreakpoint(DebuggerBreakpoint* bp, bool
 {
     for (unsigned int i = 0; i < m_Breakpoints.GetCount(); ++i)
     {
-		if (m_Breakpoints[i] == bp)
-		{
-			return RemoveBreakpoint(i, deleteit);
-		}
+        if (m_Breakpoints[i] == bp)
+        {
+            return RemoveBreakpoint(i, deleteit);
+        }
     }
     return 0;
 }
@@ -335,12 +336,12 @@ void DebuggerState::ResetBreakpoint(DebuggerBreakpoint* bp)
 {
     for (unsigned int i = 0; i < m_Breakpoints.GetCount(); ++i)
     {
-		if (m_Breakpoints[i] == bp)
-		{
-			RemoveBreakpoint(i);
-			AddBreakpoint(bp);
-			break;
-		}
+        if (m_Breakpoints[i] == bp)
+        {
+            RemoveBreakpoint(i);
+            AddBreakpoint(bp);
+            break;
+        }
     }
 }
 

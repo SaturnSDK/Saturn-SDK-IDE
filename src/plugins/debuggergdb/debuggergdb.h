@@ -56,9 +56,9 @@ class DebuggerGDB : public cbDebuggerPlugin
 
         void EditorLinesAddedOrRemoved(cbEditor* editor, int startline, int lines);
 
-		// stack frame calls;
-		int GetStackFrameCount() const;
-		const cbStackFrame& GetStackFrame(int index) const;
+        // stack frame calls;
+        int GetStackFrameCount() const;
+        const cbStackFrame& GetStackFrame(int index) const;
         void SwitchToFrame(int number);
 
         // threads
@@ -140,7 +140,7 @@ class DebuggerGDB : public cbDebuggerPlugin
         void OnGDBTerminated(wxCommandEvent& event);
         void OnIdle(wxIdleEvent& event);
         void OnTimer(wxTimerEvent& event);
-		void OnShowFile(wxCommandEvent& event);
+        void OnShowFile(wxCommandEvent& event);
         void OnCursorChanged(wxCommandEvent& event);
         void OnSettings(wxCommandEvent& event);
 
