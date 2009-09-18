@@ -6,7 +6,7 @@ AC_INIT([codeblocks], SVN_REVISION)
 
 AC_CANONICAL_TARGET
 
-AM_INIT_AUTOMAKE
+AM_INIT_AUTOMAKE([dist-bzip2 no-dist-gzip])
 AC_CONFIG_HEADER([src/include/config.h])
 
 dnl Checks for programs.
@@ -221,8 +221,6 @@ AC_CONFIG_FILES([Makefile
 	src/include/scripting/sqstdlib/Makefile
 	src/include/scripting/squirrel/Makefile
 	src/include/tinyxml/Makefile
-	src/include/wxFlatNotebook/Makefile
-	src/include/wxscintilla/Makefile
 	src/sdk/Makefile
 	src/sdk/scripting/Makefile
 	src/sdk/scripting/bindings/Makefile
@@ -230,10 +228,8 @@ AC_CONFIG_FILES([Makefile
 	src/sdk/scripting/sqstdlib/Makefile
 	src/sdk/scripting/sqplus/Makefile
 	src/sdk/wxscintilla/Makefile
-	src/sdk/wxFlatNotebook/Makefile
 	src/sdk/resources/Makefile
 	src/sdk/resources/lexers/Makefile
-	src/src/wxAUI/Makefile
 	src/src/resources/Makefile
 	src/src/resources/icons/Makefile
 	src/src/resources/images/Makefile
@@ -422,6 +418,9 @@ AC_CONFIG_FILES([Makefile
 	src/plugins/contrib/codesnippets/resources/Makefile
 	src/plugins/contrib/codestat/Makefile
 	src/plugins/contrib/codestat/resources/Makefile
+	src/plugins/contrib/copystrings/Makefile
+	src/plugins/contrib/devpak_plugin/Makefile
+	src/plugins/contrib/devpak_plugin/bzip2/Makefile
 	src/plugins/contrib/dragscroll/Makefile
 	src/plugins/contrib/envvars/Makefile
 	src/plugins/contrib/headerfixup/Makefile
@@ -441,6 +440,8 @@ AC_CONFIG_FILES([Makefile
 	src/plugins/contrib/ThreadSearch/Makefile
 	src/plugins/contrib/ThreadSearch/resources/Makefile
 	src/plugins/contrib/ThreadSearch/resources/images/Makefile
+	src/plugins/contrib/ThreadSearch/resources/images/16x16/Makefile
+	src/plugins/contrib/ThreadSearch/resources/images/22x22/Makefile
 	src/plugins/contrib/Valgrind/Makefile
 	src/plugins/contrib/Valgrind/resources/Makefile
 	src/plugins/contrib/wxSmith/Makefile
@@ -453,8 +454,15 @@ AC_CONFIG_FILES([Makefile
 	src/plugins/contrib/wxSmith/wxwidgets/defitems/Makefile
 	src/plugins/contrib/wxSmith/wxwidgets/icons/Makefile
 	src/plugins/contrib/wxSmithContribItems/Makefile
+	src/plugins/contrib/wxSmithContribItems/wxsmith-contrib.pc
+	src/plugins/contrib/wxSmithContribItems/wxchart/wxchart-1.0/Makefile
+	src/plugins/contrib/wxSmithContribItems/wxflatnotebook/wxFlatNotebook/Makefile
+	src/plugins/contrib/wxSmithContribItems/wxthings/wxthings/Makefile
+	src/plugins/contrib/wxSmithAui/Makefile
+	src/plugins/contrib/wxSmithAui/wxsmithaui.pc
 	src/plugins/contrib/HexEditor/Makefile
 	src/plugins/contrib/IncrementalSearch/Makefile
+	src/plugins/contrib/MouseSap/Makefile
 	src/mime/Makefile
 	src/scripts/Makefile
 	src/tools/Makefile
@@ -468,6 +476,8 @@ AC_CONFIG_FILES([Makefile
 	codeblocks.pc
 	codeblocks.spec
 	codeblocks.plist
+	debian/Makefile
+	debian/lintian/Makefile
 ])
 
 AC_OUTPUT

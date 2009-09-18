@@ -223,6 +223,7 @@ AC_DEFUN([BUILD_CONTRIB_NONE], [
 	AM_CONDITIONAL([BUILD_CBKODERS], [false])
 	AM_CONDITIONAL([BUILD_CODESNIPPETS], [false])
 	AM_CONDITIONAL([BUILD_CODESTAT], [false])
+	AM_CONDITIONAL([BUILD_COPYSTRINGS], [false])
 	AM_CONDITIONAL([BUILD_DRAGSCROLL], [false])
 	AM_CONDITIONAL([BUILD_ENVVARS], [false])
 	AM_CONDITIONAL([BUILD_HEADERFIXUP], [false])
@@ -236,8 +237,11 @@ AC_DEFUN([BUILD_CONTRIB_NONE], [
 	AM_CONDITIONAL([BUILD_THREADSEARCH], [false])
 	AM_CONDITIONAL([BUILD_VALGRIND], [false])
 	AM_CONDITIONAL([BUILD_WXSMITH], [false])
+	AM_CONDITIONAL([BUILD_WXSMITHCONTRIB], [false])
+	AM_CONDITIONAL([BUILD_WXSMITHAUI], [false])
 	AM_CONDITIONAL([BUILD_HEXEDITOR], [false])
 	AM_CONDITIONAL([BUILD_INCSEARCH], [false])
+	AM_CONDITIONAL([BUILD_MOUSESAP], [false])
 ])
 
 AC_DEFUN([BUILD_CONTRIB_ALL], [
@@ -247,6 +251,7 @@ AC_DEFUN([BUILD_CONTRIB_ALL], [
 	AM_CONDITIONAL([BUILD_CBKODERS], [true])
 	AM_CONDITIONAL([BUILD_CODESNIPPETS], [true])
 	AM_CONDITIONAL([BUILD_CODESTAT], [true])
+	AM_CONDITIONAL([BUILD_COPYSTRINGS], [true])
 	AM_CONDITIONAL([BUILD_DRAGSCROLL], [true])
 	AM_CONDITIONAL([BUILD_ENVVARS], [true])
 	AM_CONDITIONAL([BUILD_HEADERFIXUP], [true])
@@ -260,8 +265,11 @@ AC_DEFUN([BUILD_CONTRIB_ALL], [
 	AM_CONDITIONAL([BUILD_THREADSEARCH], [true])
 	AM_CONDITIONAL([BUILD_VALGRIND], [true])
 	AM_CONDITIONAL([BUILD_WXSMITH], [true])
+	AM_CONDITIONAL([BUILD_WXSMITHCONTRIB], [true])
+	AM_CONDITIONAL([BUILD_WXSMITHAUI], [true])
 	AM_CONDITIONAL([BUILD_HEXEDITOR], [true])
 	AM_CONDITIONAL([BUILD_INCSEARCH], [true])
+	AM_CONDITIONAL([BUILD_MOUSESAP], [true])
 ])
 
 # default to 'none'
@@ -275,9 +283,10 @@ AC_ARG_WITH(contrib-plugins,
   [                        "all,-help" compiles all contrib plugins except the help plugin ]
   [                        By default, no contrib plugins are compiled ]
   [                        Plugin names are: AutoVersioning,BrowseTracker,byogames,cbkoders,codesnippets,]
-  [                        		     codestat,dragscroll,envvars,headerfixup ]
-  [                        		     help,keybinder,libfinder,profiler, ]
-  [                        		     regex,exporter,symtab,wxsmith,incsearch,hexeditor ],
+  [                        		     codestat,copystrings, dragscroll,envvars,headerfixup, ]
+  [                        		     help,keybinder,libfinder,profiler,regex,exporter, ]
+  [                        		     symtab,wxsmith,wxsmithcontrib,wxsmithaui,incsearch,hexeditor, ]
+  [                        		     MouseSap ],
   plugins="$withval", plugins="none")
 
 plugins=`echo $plugins | sed 's/,/ /g'`
@@ -304,6 +313,9 @@ do
 		;;
 	codestat)
 		AM_CONDITIONAL([BUILD_CODESTAT], [true])
+		;;
+	copystrings)
+		AM_CONDITIONAL([BUILD_COPYSTRINGS], [true])
 		;;
 	dragscroll)
 		AM_CONDITIONAL([BUILD_DRAGSCROLL], [true])
@@ -344,11 +356,20 @@ do
 	wxsmith)
 		AM_CONDITIONAL([BUILD_WXSMITH], [true])
 		;;
+	wxsmithcontrib)
+		AM_CONDITIONAL([BUILD_WXSMITHCONTRIB], [true])
+		;;
+	wxsmithaui)
+		AM_CONDITIONAL([BUILD_WXSMITHAUI], [true])
+		;;
 	hexeditor)
 		AM_CONDITIONAL([BUILD_HEXEDITOR], [true])
 		;;
 	incsearch)
 		AM_CONDITIONAL([BUILD_INCSEARCH], [true])
+		;;
+	MouseSap)
+		AM_CONDITIONAL([BUILD_MOUSESAP], [true])
 		;;
 	-AutoVersioning)
 		AM_CONDITIONAL([BUILD_AUTOVERSIONING], [false])
@@ -367,6 +388,9 @@ do
 		;;
 	-codestat)
 		AM_CONDITIONAL([BUILD_CODESTAT], [false])
+		;;
+	-copystrings)
+		AM_CONDITIONAL([BUILD_COPYSTRINGS], [false])
 		;;
 	-dragscroll)
 		AM_CONDITIONAL([BUILD_DRAGSCROLL], [false])
@@ -407,11 +431,20 @@ do
 	-wxsmith)
 		AM_CONDITIONAL([BUILD_WXSMITH], [false])
 		;;
+	-wxsmithcontrib)
+		AM_CONDITIONAL([BUILD_WXSMITHCONTRIB], [false])
+		;;
+	-wxsmithaui)
+		AM_CONDITIONAL([BUILD_WXSMITHAUI], [false])
+		;;
 	-hexeditor)
 		AM_CONDITIONAL([BUILD_HEXEDITOR], [false])
 		;;
 	-incsearch)
 		AM_CONDITIONAL([BUILD_INCSEARCH], [false])
+		;;
+	-MouseSap)
+		AM_CONDITIONAL([BUILD_MOUSESAP], [false])
 		;;
 	*)
 		echo "Unknown contrib plugin $plugin, ignoring"
@@ -441,8 +474,11 @@ AC_SUBST(BUILD_SYMTAB)
 AC_SUBST(BUILD_THREADSEARCH)
 AC_SUBST(BUILD_VALGRIND)
 AC_SUBST(BUILD_WXSMITH)
+AC_SUBST(BUILD_WXSMITHCONTRIB)
+AC_SUBST(BUILD_WXSMITHAUI)
 AC_SUBST(BUILD_HEXEDITOR)
 AC_SUBST(BUILD_INCSEARCH)
+AC_SUBST(BUILD_MOUSESAP)
 
 GCC_PCH=0
 PCH_FLAGS=
