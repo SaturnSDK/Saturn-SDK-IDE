@@ -17,7 +17,8 @@
 #include <globals.h>
 #include <infowindow.h>
 
-#define CDB_PROMPT _T("0:000>")
+#define CDB_PROMPT0 _T("0:000>")
+#define CDB_PROMPT1 _T("0:001>")
 
 static wxRegEx reBP(_T("Breakpoint ([0-9]+) hit"));
 // one stack frame (to access current file; is there another way???)
@@ -268,7 +269,9 @@ void CDB_driver::ParseOutput(const wxString& output)
 
     m_pDBG->DebugLog(output);
 
-    int idx = buffer.First(CDB_PROMPT);
+    int idx = buffer.First(CDB_PROMPT0);
+    if (idx == wxNOT_FOUND)
+        idx = buffer.First(CDB_PROMPT1);
     if (idx != wxNOT_FOUND)
     {
         m_ProgramIsStopped = true;

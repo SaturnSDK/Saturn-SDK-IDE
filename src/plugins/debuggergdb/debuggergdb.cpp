@@ -1641,6 +1641,30 @@ void DebuggerGDB::DeleteAllBreakpoints()
     m_breakpoints.clear();
 }
 
+struct TestIfBelogToProject
+{
+    TestIfBelogToProject(cbProject *project) :
+        m_project(project)
+    {
+    }
+
+    bool operator()(DebuggerGDB::BreakItem const &item) const
+    {
+        return item.debugger_breakpoint->userData == m_project;
+    }
+
+    cbProject* m_project;
+};
+
+void DebuggerGDB::DeleteAllProjectBreakpoints(cbProject* project)
+{
+    BreakpointsContainer::iterator new_last = std::remove_if(m_breakpoints.begin(),
+                                                             m_breakpoints.end(),
+                                                             TestIfBelogToProject(project));
+    m_breakpoints.erase(new_last, m_breakpoints.end());
+    m_State.RemoveAllProjectBreakpoints(project);
+}
+
 void DebuggerGDB::Continue()
 {
     RunCommand(CMD_CONTINUE);
@@ -2040,7 +2064,7 @@ void DebuggerGDB::OnProjectClosed(CodeBlocksEvent& event)
     GetRemoteDebuggingMap(event.GetProject()).clear();
 
     // remove all breakpoints belonging to the closed project
-    m_State.RemoveAllProjectBreakpoints(event.GetProject());
+    DeleteAllProjectBreakpoints(event.GetProject());
     cbBreakpointsDlg *dlg = Manager::Get()->GetDebuggerManager()->GetBreakpointDialog();
     dlg->Reload();
 

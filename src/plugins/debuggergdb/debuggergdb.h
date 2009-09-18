@@ -27,6 +27,7 @@ class TiXmlElement;
 class DebuggerDriver;
 class DebuggerCmd;
 class Compiler;
+struct TestIfBelogToProject;
 
 class DebuggerGDB : public cbDebuggerPlugin
 {
@@ -130,6 +131,7 @@ class DebuggerGDB : public cbDebuggerPlugin
         void OnEditorOpened(CodeBlocksEvent& event);
         void OnProjectActivated(CodeBlocksEvent& event);
         void OnProjectClosed(CodeBlocksEvent& event);
+        void DeleteAllProjectBreakpoints(cbProject* project);
         void OnCompilerStarted(CodeBlocksEvent& event);
         void OnCompilerFinished(CodeBlocksEvent& event);
         void OnBuildTargetSelected(CodeBlocksEvent& event);
@@ -201,6 +203,8 @@ class DebuggerGDB : public cbDebuggerPlugin
         };
         typedef std::vector<BreakItem> BreakpointsContainer;
         BreakpointsContainer m_breakpoints;
+
+        friend struct TestIfBelogToProject;
 
         DECLARE_EVENT_TABLE()
 };
