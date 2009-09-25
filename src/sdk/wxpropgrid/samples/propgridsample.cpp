@@ -2955,6 +2955,7 @@ void FormMain::OnSelectStyle( wxCommandEvent& WXUNUSED(event) )
         ADD_FLAG(wxPG_LIMITED_EDITING)
         ADD_FLAG(wxPG_TOOLBAR)
         ADD_FLAG(wxPG_DESCRIPTION)
+        ADD_FLAG(wxPG_THEME_BORDER)
         ADD_FLAG(wxPG_NO_INTERNAL_BORDER)
         wxMultiChoiceDialog dlg( this, wxT("Select window styles to use"),
                                  wxT("wxPropertyGrid Window Style"), chs );

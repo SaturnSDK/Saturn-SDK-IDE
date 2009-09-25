@@ -1448,7 +1448,7 @@ bool FormMain::RunTests( bool fullTest, bool interactive )
         // Recreate grid with all possible (single) flags
         wxASSERT(wxPG_AUTO_SORT == 0x000000010);
 
-        for ( i=4; i<17; i++ )
+        for ( i=4; i<16; i++ )
         {
             int flag = 1<<i;
             RT_MSG(wxString::Format(wxT("Style: 0x%X"),flag));

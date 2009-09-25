@@ -807,10 +807,15 @@ wxPG_TOOLBAR                        = 0x00001000,
 */
 wxPG_DESCRIPTION                    = 0x00002000,
 
-/** wxPropertyGridManager only: don't show an internal border around the
+/** wxPropertyGridManager only: Use an alternative and usually more better
+    looking thematic border around the embedded property grid.
+*/
+wxPG_THEME_BORDER                   = 0x00004000,
+
+/** wxPropertyGridManager only: Don't show an internal border around the
     property grid
 */
-wxPG_NO_INTERNAL_BORDER             = 0x00004000
+wxPG_NO_INTERNAL_BORDER             = 0x00008000
 
 };
 

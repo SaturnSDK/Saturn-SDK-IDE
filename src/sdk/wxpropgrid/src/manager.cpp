@@ -345,9 +345,11 @@ void wxPropertyGridManager::Init1()
 
 #ifdef __WXMAC__
     // This looks better on wxMAC (maybe on other platforms as well)
-    #define wxPG_DEFAULT_BORDER     wxBORDER_SUNKEN
+    #define wxPG_DEFAULT_BORDER         wxBORDER_SUNKEN
+    #define wxPG_DEFAULT_THEME_BORDER   wxBORDER_SUNKEN
 #else
-    #define wxPG_DEFAULT_BORDER     wxBORDER_SIMPLE
+    #define wxPG_DEFAULT_BORDER         wxBORDER_SIMPLE
+    #define wxPG_DEFAULT_THEME_BORDER   wxBORDER_SUNKEN
 #endif
 
 // Which flags can be passed to underlying wxPropertyGrid.
@@ -396,14 +398,22 @@ void wxPropertyGridManager::Init2( int style )
 
     propGridFlags &= ~wxBORDER_MASK;
 
-    if ((style & wxPG_NO_INTERNAL_BORDER) == 0)
+    if ( style & wxPG_THEME_BORDER )
     {
-        propGridFlags |= wxPG_DEFAULT_BORDER;
+#if defined(__WXMSW__) && wxCHECK_VERSION(2,8,5)
+       propGridFlags |= GetThemedBorderStyle();
+#else
+       propGridFlags |= wxPG_DEFAULT_THEME_BORDER;
+#endif
     }
-    else
+    else if ( style & wxPG_NO_INTERNAL_BORDER )
     {
         propGridFlags |= wxBORDER_NONE;
         wxWindow::SetExtraStyle(wxPG_EX_TOOLBAR_SEPARATOR);
+    }
+    else
+    {
+        propGridFlags |= wxPG_DEFAULT_BORDER;
     }
 
     // Create propertygrid.

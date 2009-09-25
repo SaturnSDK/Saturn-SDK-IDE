@@ -11,6 +11,7 @@
 #include <cbproject.h>
 #include <sdk_events.h>
 #include <wx/string.h>
+
 #include "nativeparser.h"
 
 #include <wx/timer.h>
@@ -142,6 +143,7 @@ class CodeCompletion : public cbCodeCompletionPlugin
 
         int StartIdxNameSpaceInScope;
         int m_CurrentLine;
+        map<wxString, int> searchItem;
         wxString m_LastFile;
 
         wxTimer m_FunctionsParsingTimer;

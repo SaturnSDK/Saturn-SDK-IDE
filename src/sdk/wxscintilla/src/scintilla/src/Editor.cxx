@@ -3368,6 +3368,9 @@ void Editor::Paint(Surface *surfaceWindow, PRectangle rcArea) {
 					        rcClient.right, yposScreen + vs.lineHeight);
 					surfaceWindow->Copy(rcCopyArea, from, *pixmapLine);
 				}
+
+				lineWidthMaxSeen = Platform::Maximum(
+					    lineWidthMaxSeen, ll->positions[ll->numCharsInLine]);
 				//durCopy += et.Duration(true);
 			}
 
@@ -3378,8 +3381,6 @@ void Editor::Paint(Surface *surfaceWindow, PRectangle rcArea) {
 			yposScreen += vs.lineHeight;
 			visibleLine++;
 
-			lineWidthMaxSeen = Platform::Maximum(
-			            lineWidthMaxSeen, ll->positions[ll->numCharsInLine]);
 			//gdk_flush();
 		}
 		ll.Set(0);

@@ -42,9 +42,9 @@ class DLLIMPORT WatchesDlg : public wxPanel
         void OnMenuDeleteAll(wxCommandEvent &event);
 
         DECLARE_EVENT_TABLE()
-    private:
+
         void DeleteProperty(WatchesProperty &prop);
-    private:
+
         struct WatchItem
         {
             cbWatch      *watch;
@@ -52,7 +52,6 @@ class DLLIMPORT WatchesDlg : public wxPanel
         };
         typedef std::vector<WatchItem> WatchItems;
 
-    private:
         wxPropertyGrid *m_grid;
         WatchItems m_watches;
         bool m_append_empty_watch;
