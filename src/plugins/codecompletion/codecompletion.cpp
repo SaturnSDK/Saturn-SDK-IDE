@@ -9,6 +9,28 @@
 
 #include <sdk.h>
 #include "codecompletion.h"
+
+#include <manager.h>
+#include <configmanager.h>
+#include <logmanager.h>
+#include <projectmanager.h>
+#include <editormanager.h>
+#include <editorcolourset.h>
+#include <sdk_events.h>
+#include <incrementalselectlistdlg.h>
+#include <globals.h>
+#include <cbstyledtextctrl.h>
+#include <editor_hooks.h>
+#include <cbeditor.h>
+#include <multiselectdlg.h>
+
+#include "insertclassmethoddlg.h"
+#include "ccoptionsdlg.h"
+#include "ccoptionsprjdlg.h"
+#include "parser/parser.h"
+#include "parser/tokenizer.h"
+#include "selectincludefile.h"
+
 #include <wx/mimetype.h>
 #include <wx/filename.h>
 #include <wx/regex.h>
@@ -18,27 +40,6 @@
 #include <wx/utils.h>
 #include <wx/choice.h>
 #include <wx/choicdlg.h>
-#include <manager.h>
-#include <configmanager.h>
-#include <logmanager.h>
-#include <projectmanager.h>
-#include <editormanager.h>
-#include <editorcolourset.h>
-#include <sdk_events.h>
-#include <incrementalselectlistdlg.h>
-#include "insertclassmethoddlg.h"
-#include "ccoptionsdlg.h"
-#include "ccoptionsprjdlg.h"
-#include "parser/parser.h"
-#include "parser/tokenizer.h"
-#include "selectincludefile.h"
-#include "globals.h"
-#include "cbstyledtextctrl.h"
-
-
-#include "editor_hooks.h"
-#include "cbeditor.h"
-#include "multiselectdlg.h"
 #include <wx/wxscintilla.h>
 #include <wx/tipwin.h>
 #include <wx/tokenzr.h>
@@ -481,7 +482,7 @@ void CodeCompletion::OnRelease(bool appShutDown)
         m_SearchMenu->Delete(idMenuGotoImplementation);
         m_SearchMenu->Delete(idMenuOpenIncludeFile);
     }
-} // end of OnRelease
+}
 
 static int SortCCList(const wxString& first, const wxString& second)
 {
@@ -491,18 +492,21 @@ static int SortCCList(const wxString& first, const wxString& second)
     {
         if (*a != *b)
         {
-            if (*a == _T('?') && *b != _T('?'))
+            if      ((*a == _T('?')) && (*b != _T('?')))
                 return -1;
-            else if (*a != _T('?') && *b == _T('?'))
+            else if ((*a != _T('?')) && (*b == _T('?')))
                 return 1;
-            else if (*a == _T('?') && *b == _T('?'))
+            else if ((*a == _T('?')) && (*b == _T('?')))
                 return 0;
-            if (*a == _T('_') && *b != _T('_'))
+
+            if      ((*a == _T('_')) && (*b != _T('_')))
                 return 1;
-            else if (*a != _T('_') && *b == _T('_'))
+            else if ((*a != _T('_')) && (*b == _T('_')))
                 return -1;
+
             wxChar lowerA = wxTolower(*a);
             wxChar lowerB = wxTolower(*b);
+
             if (lowerA != lowerB)
                 return lowerA - lowerB;
         }
@@ -564,6 +568,7 @@ int CodeCompletion::CodeComplete()
             TokensTree* tokens = parser->GetTokens();
             for (TokenIdxSet::iterator it = result.begin(); it != result.end(); ++it)
             {
+                searchItem.clear();
                 Token* token = tokens->at(*it);
                 if (!token || token->m_Name.IsEmpty())
                     continue;
@@ -580,7 +585,10 @@ int CodeCompletion::CodeComplete()
                 wxString tmp;
                 tmp << token->m_Name << wxString::Format(_T("?%d"), iidx);
                 items.Add(tmp);
-
+                if (token->m_TokenKind == tkFunction || token->m_TokenKind == tkConstructor || token->m_TokenKind == tkDestructor)
+                {
+                    searchItem[token->m_Name] = token->m_Args.size()-2;
+                }
                 if (token->m_TokenKind == tkNamespace && token->m_Aliases.size())
                 {
                     for (size_t i = 0; i < token->m_Aliases.size(); ++i)
@@ -645,6 +653,11 @@ int CodeCompletion::CodeComplete()
             if (s_DebugSmartSense)
                 Manager::Get()->GetLogManager()->DebugLog(_T("Done generating tokens list"));
 #endif
+            // Remove duplicate items
+            for (size_t i=0; i<items.Count()-1; i++)
+                if (items.Item(i)==items.Item(i+1))
+                    items.RemoveAt(i);
+
             ed->GetControl()->AutoCompSetIgnoreCase(!caseSens);
             ed->GetControl()->AutoCompSetCancelAtStart(true);
             ed->GetControl()->AutoCompSetFillUps(cfg->Read(_T("/fillup_chars"), wxEmptyString));
@@ -1940,7 +1953,27 @@ void CodeCompletion::EditorEventHook(cbEditor* editor, wxScintillaEvent& event)
 
     if ((event.GetKey() == '.') && control->AutoCompActive())
         control->AutoCompCancel();
-
+    if(event.GetEventType() == wxEVT_SCI_AUTOCOMP_SELECTION)
+    {
+        wxString itemText = event.GetText();
+        map<wxString, int>::iterator it = searchItem.find(itemText);
+        if (it != searchItem.end())
+        {
+            control->AutoCompCancel();
+            int pos = control->GetCurrentPos();
+            int start = control->WordStartPosition(pos, true);
+            control->SetTargetStart(start);
+            control->SetTargetEnd(pos);
+            control->ReplaceTarget(itemText+_T("()"));
+            pos = control->GetCurrentPos();
+            control->GotoPos(pos + itemText.size()+2);
+            if ((*it).second != 0)
+            {
+                pos = control->GetCurrentPos();
+                control->GotoPos(pos - 1);
+            }
+        }
+    }
     if (event.GetEventType() == wxEVT_SCI_CHARADDED)
     {
         // a character was just added in the editor
