@@ -19,6 +19,7 @@
 #include <wx/display.h>
 #endif
 
+#include <wx/dynlib.h>
 #include <wx/encconv.h>
 #include <wx/listctrl.h>
 #include <wx/mstream.h>
@@ -136,8 +137,8 @@ void Font::Create(const char *faceName, int characterSet,
                   bool extraFontFlag) {
     Release();
 
-    // The minus one is done because since Scintilla uses SC_SHARSET_DEFAULT
-    // internally and we need to have wxFONENCODING_DEFAULT == SC_SHARSET_DEFAULT
+    // The minus one is done because since Scintilla uses SC_CHARSET_DEFAULT
+    // internally and we need to have wxFONENCODING_DEFAULT == SC_CHARSET_DEFAULT
     // so we adjust the encoding before passing it to Scintilla.  See also
     // wxScintilla::StyleSetCharacterSet
     wxFontEncoding encoding = (wxFontEncoding)(characterSet-1);
@@ -624,7 +625,7 @@ Surface *Surface::Allocate() {
 //----------------------------------------------------------------------
 
 
-inline wxWindow* GETWIN(WindowID id) { return (wxWindow*)id; }
+inline wxWindow* GETWIN(WindowID wid) { return (wxWindow*)wid; }
 
 Window::~Window() {
 }
@@ -1374,9 +1375,57 @@ void Menu::Show(Point pt, Window &w) {
 
 //----------------------------------------------------------------------
 
-DynamicLibrary *DynamicLibrary::Load(const char *WXUNUSED(modulePath)) {
-    wxFAIL_MSG(wxT("Dynamic lexer loading not implemented yet"));
+class DynamicLibraryImpl : public DynamicLibrary {
+public:
+    DynamicLibraryImpl(const wxString& modulePath);
+    ~DynamicLibraryImpl();
+
+	/// @return Pointer to function "name", or NULL on failure.
+	Function FindFunction(const char *name);
+
+	/// @return true if the library was loaded successfully.
+	bool IsValid();
+
+private:
+    wxDynamicLibrary* lexModule;
+};
+
+/// @return An instance of a DynamicLibrary subclass with "modulePath" loaded.
+DynamicLibrary *DynamicLibrary::Load(const char *modulePath) {
+    return (DynamicLibrary*)new DynamicLibraryImpl(sci2wx(modulePath));
+}
+
+DynamicLibraryImpl::DynamicLibraryImpl(const wxString& modulePath) : lexModule(0)
+{
+    lexModule = new wxDynamicLibrary(modulePath);
+}
+
+DynamicLibraryImpl::~DynamicLibraryImpl()
+{
+    if(lexModule) {
+        if( lexModule->IsLoaded() ) {
+            lexModule->Unload();
+        }
+        delete lexModule;
+        lexModule = 0;
+    }
+}
+
+/// @return Pointer to function "name", or NULL on failure.
+Function DynamicLibraryImpl::FindFunction(const char *name)
+{
+    wxString symbol = sci2wx(name);
+    if( lexModule->HasSymbol(symbol) ) {
+        return lexModule->GetSymbol(symbol);
+    }
     return NULL;
+}
+
+/// @return true if the library was loaded successfully.
+bool DynamicLibraryImpl::IsValid()
+{
+    if( lexModule != NULL && lexModule->IsLoaded() ) return true;
+    return false;
 }
 
 //----------------------------------------------------------------------

@@ -99,6 +99,9 @@ public:
     ScintillaWX(wxScintilla* win);
     ~ScintillaWX();
 
+    static sptr_t DirectFunction( ScintillaWX *wxsci, UINT iMessage,
+                                  uptr_t wParam, sptr_t lParam);
+
     // base class virtuals
     virtual void Initialise();
     virtual void Finalise();
@@ -126,6 +129,7 @@ public:
                            uptr_t wParam,
                            sptr_t lParam);
 
+    virtual void NotifyFocus(bool focus);
     virtual void NotifyChange();
     virtual void NotifyParent(SCNotification scn);
 

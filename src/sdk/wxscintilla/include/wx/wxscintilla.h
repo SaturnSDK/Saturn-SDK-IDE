@@ -20,7 +20,7 @@
 #ifndef __WXSCINTILLA_H__
 #define __WXSCINTILLA_H__
 
-#define wxSCINTILLA_VERSION _T("1.71.1")
+#define wxSCINTILLA_VERSION _T("2.01.0")
 
 #include <wx/wx.h>
 #include <wx/dnd.h>
@@ -76,6 +76,7 @@
 
 // The SC_CP_DBCS value can be used to indicate a DBCS mode for GTK+.
 #define wxSCI_CP_DBCS 1
+
 #define wxSCI_MARKER_MAX 31
 #define wxSCI_MARK_CIRCLE 0
 #define wxSCI_MARK_ROUNDRECT 1
@@ -109,6 +110,8 @@
 #define wxSCI_MARK_PIXMAP 25
 #define wxSCI_MARK_FULLRECT 26
 #define wxSCI_MARK_LEFTRECT 27
+#define wxSCI_MARK_AVAILABLE 28
+#define wxSCI_MARK_UNDERLINE 29
 #define wxSCI_MARK_CHARACTER 10000
 
 // Markers used for outlining column.
@@ -126,8 +129,8 @@
 #define wxSCI_MARGIN_NUMBER 1
 #define wxSCI_MARGIN_BACK 2
 #define wxSCI_MARGIN_FORE 3
-#define wxSTI_MARGIN_TEXT 4
-#define wxSTI_MARGIN_RTEXT 5
+#define wxSCI_MARGIN_TEXT 4
+#define wxSCI_MARGIN_RTEXT 5
 #define wxSCI_MARGIN_CHANGED 6
 
 // Styles in range 32..38 are predefined for parts of the UI and are not used as normal styles.
@@ -180,15 +183,15 @@
 #define wxSCI_INDIC_ROUNDBOX 7
 #define wxSCI_INDIC_HIGHLIGHT 31 // please change also in Scintilla.h !!
 #define wxSCI_INDIC_MAX 31
-#define wxSTI_INDIC_CONTAINER 8
+#define wxSCI_INDIC_CONTAINER 8
 #define wxSCI_INDIC0_MASK 0x20
 #define wxSCI_INDIC1_MASK 0x40
 #define wxSCI_INDIC2_MASK 0x80
 #define wxSCI_INDICS_MASK 0xE0
-#define wxSTI_IV_NONE 0
-#define wxSTI_IV_REAL 1
-#define wxSTI_IV_LOOKFORWARD 2
-#define wxSTI_IV_LOOKBOTH 3
+#define wxSCI_IV_NONE 0
+#define wxSCI_IV_REAL 1
+#define wxSCI_IV_LOOKFORWARD 2
+#define wxSCI_IV_LOOKBOTH 3
 
 // PrintColourMode - use same colours as screen.
 #define wxSCI_PRINT_NORMAL 0
@@ -228,9 +231,9 @@
 #define wxSCI_WRAPVISUALFLAGLOC_DEFAULT 0x0000
 #define wxSCI_WRAPVISUALFLAGLOC_END_BY_TEXT 0x0001
 #define wxSCI_WRAPVISUALFLAGLOC_START_BY_TEXT 0x0002
-#define wxSTI_WRAPINDENT_FIXED 0
-#define wxSTI_WRAPINDENT_SAME 1
-#define wxSTI_WRAPINDENT_INDENT 2
+#define wxSCI_WRAPINDENT_FIXED 0
+#define wxSCI_WRAPINDENT_SAME 1
+#define wxSCI_WRAPINDENT_INDENT 2
 #define wxSCI_CACHE_NONE 0
 #define wxSCI_CACHE_CARET 1
 #define wxSCI_CACHE_PAGE 2
@@ -238,9 +241,9 @@
 #define wxSCI_EDGE_NONE 0
 #define wxSCI_EDGE_LINE 1
 #define wxSCI_EDGE_BACKGROUND 2
-#define wxSTI_STATUS_OK 0
-#define wxSTI_STATUS_FAILURE 1
-#define wxSTI_STATUS_BADALLOC 2
+#define wxSCI_STATUS_OK 0
+#define wxSCI_STATUS_FAILURE 1
+#define wxSCI_STATUS_BADALLOC 2
 #define wxSCI_CURSORNORMAL -1
 #define wxSCI_CURSORWAIT 4
 
@@ -278,20 +281,26 @@
 #define wxSCI_SEL_STREAM 0
 #define wxSCI_SEL_RECTANGLE 1
 #define wxSCI_SEL_LINES 2
+#define wxSCI_SEL_THIN 3
 
 // Caret line alpha background
-#define wxSTI_ALPHA_TRANSPARENT 0
-#define wxSTI_ALPHA_OPAQUE 255
-#define wxSTI_ALPHA_NOALPHA 256
+#define wxSCI_ALPHA_TRANSPARENT 0
+#define wxSCI_ALPHA_OPAQUE 255
+#define wxSCI_ALPHA_NOALPHA 256
 
 // Caret style modes
-#define wxSTI_CARETSTYLE_INVISIBLE 0
-#define wxSTI_CARETSTYLE_LINE 1
-#define wxSTI_CARETSTYLE_BLOCK 2
-#define wxSTI_ANNOTATION_HIDDEN 0
-#define wxSTI_ANNOTATION_STANDARD 1
-#define wxSTI_ANNOTATION_BOXED 2
-#define wxSTI_UNDO_MAY_COALESCE 1
+#define wxSCI_CARETSTYLE_INVISIBLE 0
+#define wxSCI_CARETSTYLE_LINE 1
+#define wxSCI_CARETSTYLE_BLOCK 2
+#define wxSCI_ANNOTATION_HIDDEN 0
+#define wxSCI_ANNOTATION_STANDARD 1
+#define wxSCI_ANNOTATION_BOXED 2
+#define wxSCI_UNDO_MAY_COALESCE 1
+
+// virtual space options
+#define wxSCI_SCVS_NONE 0
+#define wxSCI_SCVS_RECTANGULARSELECTION 1
+#define wxSCI_SCVS_USERACCESSIBLE 2
 
 // Maximum value of keywordSet parameter of SetKeyWords.
 #define wxSCI_KEYWORDSET_MAX 8
@@ -313,13 +322,15 @@
 #define wxSCI_MOD_BEFOREINSERT 0x400
 #define wxSCI_MOD_BEFOREDELETE 0x800
 #define wxSCI_MULTILINEUNDOREDO 0x1000
-#define wxSTI_STARTACTION 0x2000
-#define wxSTI_MOD_CHANGEINDICATOR 0x4000
-#define wxSTI_MOD_CHANGELINESTATE 0x8000
-#define wxSTI_MOD_CHANGEMARGIN 0x10000
-#define wxSTI_MOD_CHANGEANNOTATION 0x20000
-#define wxSTI_MOD_CONTAINER 0x40000
+#define wxSCI_STARTACTION 0x2000
+#define wxSCI_MOD_CHANGEINDICATOR 0x4000
+#define wxSCI_MOD_CHANGELINESTATE 0x8000
+#define wxSCI_MOD_CHANGEMARGIN 0x10000
+#define wxSCI_MOD_CHANGEANNOTATION 0x20000
+#define wxSCI_MOD_CONTAINER 0x40000
 #define wxSCI_MODEVENTMASKALL 0xFFFF
+
+#define wxSCI_LASTLINEUNDOREDO wxSCI_MULTILINEUNDOREDO
 
 // Symbolic key codes and modifier flags.
 // ASCII and other printable characters below 256.
@@ -341,13 +352,14 @@
 #define wxSCI_KEY_ADD 310
 #define wxSCI_KEY_SUBTRACT 311
 #define wxSCI_KEY_DIVIDE 312
-#define wxSTI_KEY_WIN 313
-#define wxSTI_KEY_RWIN 314
-#define wxSTI_KEY_MENU 315
+#define wxSCI_KEY_WIN 313
+#define wxSCI_KEY_RWIN 314
+#define wxSCI_KEY_MENU 315
 #define wxSCI_SCMOD_NORM 0
 #define wxSCI_SCMOD_SHIFT 1
 #define wxSCI_SCMOD_CTRL 2
 #define wxSCI_SCMOD_ALT 4
+#define wxSCI_SCMOD_SUPER 8
 
 // For SciLexer.h
 #define wxSCI_LEX_CONTAINER 0
@@ -439,13 +451,13 @@
 #define wxSCI_LEX_POWERSHELL 88
 #define wxSCI_LEX_MYSQL 89
 #define wxSCI_LEX_PO 90
-#define wxSTI_LEX_TAL 91
-#define wxSTI_LEX_COBOL 92
-#define wxSTI_LEX_TACL 93
-#define wxSTI_LEX_SORCUS 94
-#define wxSTI_LEX_POWERPRO 95
-#define wxSTI_LEX_NIMROD 96
-#define wxSTI_LEX_SML 97
+#define wxSCI_LEX_TAL 91
+#define wxSCI_LEX_COBOL 92
+#define wxSCI_LEX_TACL 93
+#define wxSCI_LEX_SORCUS 94
+#define wxSCI_LEX_POWERPRO 95
+#define wxSCI_LEX_NIMROD 96
+#define wxSCI_LEX_SML 97
 
 // When a lexer specifies its language as SCLEX_AUTOMATIC it receives a
 // value assigned in sequence from SCLEX_AUTOMATIC+1.
@@ -511,11 +523,11 @@
 #define wxSCI_D_COMMENTLINEDOC 15
 #define wxSCI_D_COMMENTDOCKEYWORD 16
 #define wxSCI_D_COMMENTDOCKEYWORDERROR 17
-#define wxSTI_D_STRINGB 18
-#define wxSTI_D_STRINGR 19
-#define wxSTI_D_WORD5 20
-#define wxSTI_D_WORD6 21
-#define wxSTI_D_WORD7 22
+#define wxSCI_D_STRINGB 18
+#define wxSCI_D_STRINGR 19
+#define wxSCI_D_WORD5 20
+#define wxSCI_D_WORD6 21
+#define wxSCI_D_WORD7 22
 
 // Lexical states for SCLEX_TCL
 #define wxSCI_TCL_DEFAULT 0
@@ -1405,7 +1417,7 @@
 #define wxSCI_CAML_OPERATOR 7
 #define wxSCI_CAML_NUMBER 8
 #define wxSCI_CAML_CHAR 9
-#define wxSTI_CAML_WHITE 10
+#define wxSCI_CAML_WHITE 10
 #define wxSCI_CAML_STRING 11
 #define wxSCI_CAML_COMMENT 12
 #define wxSCI_CAML_COMMENT1 13
@@ -1580,7 +1592,6 @@
 #define wxSCI_INNO_SECTION 4
 #define wxSCI_INNO_PREPROC 5
 #define wxSCI_INNO_PREPROC_INLINE 6
-#define wxSTI_INNO_INLINE_EXPANSION 6
 #define wxSCI_INNO_COMMENT_PASCAL 7
 #define wxSCI_INNO_KEYWORD_PASCAL 8
 #define wxSCI_INNO_KEYWORD_USER 9
@@ -1783,7 +1794,7 @@
 #define wxSCI_MYSQL_USER1 18
 #define wxSCI_MYSQL_USER2 19
 #define wxSCI_MYSQL_USER3 20
-#define wxSTI_MYSQL_HIDDENCOMMAND 21
+#define wxSCI_MYSQL_HIDDENCOMMAND 21
 
 // Lexical state for SCLEX_PO
 #define wxSCI_PO_DEFAULT 0
@@ -2000,7 +2011,7 @@
 #define wxSCI_CMD_DELWORDRIGHT 2336
 
 // Delete the word to the right of the caret, but not the trailing non-word characters.
-#define wxSTI_CMD_DELWORDRIGHTEND 2518
+#define wxSCI_CMD_DELWORDRIGHTEND 2518
 
 // Cut the line containing the caret.
 #define wxSCI_CMD_LINECUT 2337
@@ -2142,6 +2153,26 @@
 // END of generated section
 //----------------------------------------------------------------------
 
+// Function Aliases
+#define PointXFromPosition(pos)     PointFromPosition(pos).x
+#define PointYFromPosition(pos)     PointFromPosition(pos).y
+#define SetCursorType               SetSCICursor
+#define GetCursorType               GetSCICursor
+#define SetPositionCache            SetPositionCacheSize
+#define GetPositionCache            GetPositionCacheSize
+#define SetCaretLineBackAlpha       SetCaretLineBackgroundAlpha
+#define GetCaretLineBackAlpha       GetCaretLineBackgroundAlpha
+#define IndicatorSetUnder           IndicatorSetUnderline
+#define IndicatorGetUnder           IndicatorGetUnderline
+#define IndicSetAlpha               IndicatorSetAlpha
+#define IndicGetAlpha               IndicatorGetAlpha
+#define CharPositionFromPoint       PositionFromPoint
+#define CharPositionFromPointClose  PositionFromPointClose
+#define SetAdditionalCaretFore      SetAdditionalCaretForeground
+#define GetAdditionalCaretFore      GetAdditionalCaretForeground
+#define SetAdditionalSelFore        SetAdditionalSelForeground
+#define SetAdditionalSelBack        SetAdditionalSelBackground
+
 class  ScintillaWX;                      // forward declare
 class  WordList;
 struct SCNotification;
@@ -2155,6 +2186,9 @@ class  WXDLLIMPEXP_SCI wxScintillaEvent;
 //----------------------------------------------------------------------
 
 typedef long wxIntPtr; // FIXME: back-port from wx29 (svn) to wx289
+
+typedef wxIntPtr (* wxSciFnDirect) (wxIntPtr ptr, unsigned int iMessage,
+                                    wxUIntPtr wParam, wxIntPtr lParam);
 
 class WXDLLIMPEXP_SCI wxScintilla : public wxControl {
 public:
@@ -2531,16 +2565,10 @@ public:
     wxColour IndicatorGetForeground(int indic) const;
 
     // Set an indicator to draw under text or over(default).
-    void IndicatorSetUnder(int indic, bool under);
+    void IndicatorSetUnderline(int indic, bool under);
 
     // Retrieve whether indicator drawn under or over text.
-    bool IndicatorGetUnder(int indic) const;
-
-    // Set alpha value for an indicator to draw under text or over(default).
-    void IndicatorSetAlpha(int indicatorNumber, int alpha);
-
-    // Retrieve alpha value used for indicator drawn under or over text.
-    int  IndicatorGetAlpha(int indicatorNumber);
+    bool IndicatorGetUnderline(int indic) const;
 
     // Set the foreground colour of all whitespace and whether to use this setting.
     void SetWhitespaceForeground(bool useSetting, const wxColour& fore);
@@ -3595,10 +3623,10 @@ public:
     void SelectionDuplicate();
 
     // Set background alpha of the caret line.
-    void SetCaretLineBackAlpha(int alpha);
+    void SetCaretLineBackgroundAlpha(int alpha);
 
     // Get the background alpha of the caret line.
-    int GetCaretLineBackAlpha() const;
+    int GetCaretLineBackgroundAlpha() const;
 
     // Set the style of the caret to be drawn.
     void SetCaretStyle(int caretStyle);
@@ -3647,7 +3675,8 @@ public:
 
     // Compact the document buffer and return a read-only pointer to the
     // characters in the document.
-    int GetCharacterPointer() const;
+    //int GetCharacterPointer() const;
+    //defined later as wxUIntPtr GetCharacterPointer() const;
 
     // Always interpret keyboard input as Unicode
     void SetKeysUnicode(bool keysUnicode);
@@ -3655,11 +3684,11 @@ public:
     // Are keys always interpreted as Unicode?
     bool GetKeysUnicode() const;
 
-    // Set the alpha fill colour of the given indicator.
-    void IndicSetAlpha(int indicator, int alpha);
+    // Set alpha value for an indicator to draw under text or over(default).
+    void IndicatorSetAlpha(int indicator, int alpha);
 
-    // Get the alpha fill colour of the given indicator.
-    int IndicGetAlpha(int indicator) const;
+    // Retrieve alpha value used for indicator drawn under or over text.
+    int IndicatorGetAlpha(int indicator) const;
 
     // Set extra ascent for each line
     void SetExtraAscent(int extraAscent);
@@ -3742,13 +3771,6 @@ public:
     // Add a container action to the undo stack
     void AddUndoAction(int token, int flags);
 
-    // Find the position of a character from a point within the window.
-    int CharPositionFromPoint(int x, int y);
-
-    // Find the position of a character from a point within the window.
-    // Return INVALID_POSITION if not close to text.
-    int CharPositionFromPointClose(int x, int y);
-
     // Set whether multiple selections can be made
     void SetMultipleSelection(bool multipleSelection);
 
@@ -3784,6 +3806,7 @@ public:
 
     // Which selection is the main selection
     int GetMainSelection() const;
+
     void SetSelectionNCaret(int selection, int pos);
     int GetSelectionNCaret(int selection) const;
     void SetSelectionNAnchor(int selection, int posAnchor);
@@ -3804,6 +3827,7 @@ public:
 
     // Returns the position at the end of the selection.
     int GetSelectionNEnd() const;
+
     void SetRectangularSelectionCaret(int pos);
     int GetRectangularSelectionCaret() const;
     void SetRectangularSelectionAnchor(int posAnchor);
@@ -3826,11 +3850,11 @@ public:
 
     // Set the foreground colour of additional selections.
     // Must have previously called SetSelFore with non-zero first argument for this to have an effect.
-    void SetAdditionalSelFore(const wxColour& fore);
+    void SetAdditionalSelForeground(const wxColour& fore);
 
     // Set the background colour of additional selections.
     // Must have previously called SetSelBack with non-zero first argument for this to have an effect.
-    void SetAdditionalSelBack(const wxColour& back);
+    void SetAdditionalSelBackground(const wxColour& back);
 
     // Set the alpha of the selection.
     void SetAdditionalSelAlpha(int alpha);
@@ -3839,10 +3863,10 @@ public:
     int GetAdditionalSelAlpha() const;
 
     // Set the foreground colour of additional carets.
-    void SetAdditionalCaretFore(const wxColour& fore);
+    void SetAdditionalCaretForeground(const wxColour& fore);
 
     // Get the foreground colour of additional carets.
-    wxColour GetAdditionalCaretFore() const;
+    wxColour GetAdditionalCaretForeground() const;
 
     // Set the main selection to the next selection.
     void RotateSelection();
@@ -4074,6 +4098,7 @@ protected:
     virtual wxSize DoGetBestSize() const;
 
     // Turn notifications from Scintilla into events
+    void NotifyFocus(bool focus);
     void NotifyChange();
     void NotifyParent(SCNotification* scn);
 
@@ -4097,6 +4122,21 @@ protected:
     friend class ScintillaWX;
     friend class Platform;
 #endif // !SWIG
+
+
+public:
+    // Direct Functions
+    // this is working but is a bit useless in this platform
+    // not even SCI_* are defined in wxscintilla.h
+    wxSciFnDirect GetDirectFunction();
+    wxIntPtr GetDirectPointer() const;
+    wxUIntPtr GetCharacterPointer() const;
+
+    void GrabSCIFocus();
+    void LoadLexerLibrary(const wxString& path);
+
+    void SetUsePalette(bool allowPaletteUse);
+    bool GetUsePalette();
 };
 
 //----------------------------------------------------------------------
@@ -4200,34 +4240,38 @@ private:
 
 #ifndef SWIG
 BEGIN_DECLARE_EVENT_TYPES()
-DECLARE_EXPORTED_EVENT_TYPE (WXDLLIMPEXP_SCI, wxEVT_SCI_CHANGE,             1650)
-DECLARE_EXPORTED_EVENT_TYPE (WXDLLIMPEXP_SCI, wxEVT_SCI_STYLENEEDED,        1651)
-DECLARE_EXPORTED_EVENT_TYPE (WXDLLIMPEXP_SCI, wxEVT_SCI_CHARADDED,          1652)
-DECLARE_EXPORTED_EVENT_TYPE (WXDLLIMPEXP_SCI, wxEVT_SCI_SAVEPOINTREACHED,   1653)
-DECLARE_EXPORTED_EVENT_TYPE (WXDLLIMPEXP_SCI, wxEVT_SCI_SAVEPOINTLEFT,      1654)
-DECLARE_EXPORTED_EVENT_TYPE (WXDLLIMPEXP_SCI, wxEVT_SCI_ROMODIFYATTEMPT,    1655)
-DECLARE_EXPORTED_EVENT_TYPE (WXDLLIMPEXP_SCI, wxEVT_SCI_KEY,                1656)
-DECLARE_EXPORTED_EVENT_TYPE (WXDLLIMPEXP_SCI, wxEVT_SCI_DOUBLECLICK,        1657)
-DECLARE_EXPORTED_EVENT_TYPE (WXDLLIMPEXP_SCI, wxEVT_SCI_UPDATEUI,           1658)
-DECLARE_EXPORTED_EVENT_TYPE (WXDLLIMPEXP_SCI, wxEVT_SCI_MODIFIED,           1659)
-DECLARE_EXPORTED_EVENT_TYPE (WXDLLIMPEXP_SCI, wxEVT_SCI_MACRORECORD,        1660)
-DECLARE_EXPORTED_EVENT_TYPE (WXDLLIMPEXP_SCI, wxEVT_SCI_MARGINCLICK,        1661)
-DECLARE_EXPORTED_EVENT_TYPE (WXDLLIMPEXP_SCI, wxEVT_SCI_NEEDSHOWN,          1662)
-DECLARE_EXPORTED_EVENT_TYPE (WXDLLIMPEXP_SCI, wxEVT_SCI_PAINTED,            1664)
-DECLARE_EXPORTED_EVENT_TYPE (WXDLLIMPEXP_SCI, wxEVT_SCI_USERLISTSELECTION,  1665)
-DECLARE_EXPORTED_EVENT_TYPE (WXDLLIMPEXP_SCI, wxEVT_SCI_URIDROPPED,         1666)
-DECLARE_EXPORTED_EVENT_TYPE (WXDLLIMPEXP_SCI, wxEVT_SCI_DWELLSTART,         1667)
-DECLARE_EXPORTED_EVENT_TYPE (WXDLLIMPEXP_SCI, wxEVT_SCI_DWELLEND,           1668)
-DECLARE_EXPORTED_EVENT_TYPE (WXDLLIMPEXP_SCI, wxEVT_SCI_START_DRAG,         1669)
-DECLARE_EXPORTED_EVENT_TYPE (WXDLLIMPEXP_SCI, wxEVT_SCI_DRAG_OVER,          1670)
-DECLARE_EXPORTED_EVENT_TYPE (WXDLLIMPEXP_SCI, wxEVT_SCI_DO_DROP,            1671)
-DECLARE_EXPORTED_EVENT_TYPE (WXDLLIMPEXP_SCI, wxEVT_SCI_ZOOM,               1672)
-DECLARE_EXPORTED_EVENT_TYPE (WXDLLIMPEXP_SCI, wxEVT_SCI_HOTSPOT_CLICK,      1673)
-DECLARE_EXPORTED_EVENT_TYPE (WXDLLIMPEXP_SCI, wxEVT_SCI_HOTSPOT_DCLICK,     1674)
-DECLARE_EXPORTED_EVENT_TYPE (WXDLLIMPEXP_SCI, wxEVT_SCI_CALLTIP_CLICK,      1675)
-DECLARE_EXPORTED_EVENT_TYPE (WXDLLIMPEXP_SCI, wxEVT_SCI_AUTOCOMP_SELECTION, 1676)
-DECLARE_EXPORTED_EVENT_TYPE (WXDLLIMPEXP_SCI, wxEVT_SCI_INDICATOR_CLICK,    1677)
-DECLARE_EXPORTED_EVENT_TYPE (WXDLLIMPEXP_SCI, wxEVT_SCI_INDICATOR_RELEASE,  1678)
+DECLARE_EXPORTED_EVENT_TYPE (WXDLLIMPEXP_SCI, wxEVT_SCI_CHANGE,              1650)
+DECLARE_EXPORTED_EVENT_TYPE (WXDLLIMPEXP_SCI, wxEVT_SCI_STYLENEEDED,         1651)
+DECLARE_EXPORTED_EVENT_TYPE (WXDLLIMPEXP_SCI, wxEVT_SCI_CHARADDED,           1652)
+DECLARE_EXPORTED_EVENT_TYPE (WXDLLIMPEXP_SCI, wxEVT_SCI_SAVEPOINTREACHED,    1653)
+DECLARE_EXPORTED_EVENT_TYPE (WXDLLIMPEXP_SCI, wxEVT_SCI_SAVEPOINTLEFT,       1654)
+DECLARE_EXPORTED_EVENT_TYPE (WXDLLIMPEXP_SCI, wxEVT_SCI_ROMODIFYATTEMPT,     1655)
+DECLARE_EXPORTED_EVENT_TYPE (WXDLLIMPEXP_SCI, wxEVT_SCI_KEY,                 1656)
+DECLARE_EXPORTED_EVENT_TYPE (WXDLLIMPEXP_SCI, wxEVT_SCI_DOUBLECLICK,         1657)
+DECLARE_EXPORTED_EVENT_TYPE (WXDLLIMPEXP_SCI, wxEVT_SCI_UPDATEUI,            1658)
+DECLARE_EXPORTED_EVENT_TYPE (WXDLLIMPEXP_SCI, wxEVT_SCI_MODIFIED,            1659)
+DECLARE_EXPORTED_EVENT_TYPE (WXDLLIMPEXP_SCI, wxEVT_SCI_MACRORECORD,         1660)
+DECLARE_EXPORTED_EVENT_TYPE (WXDLLIMPEXP_SCI, wxEVT_SCI_MARGINCLICK,         1661)
+DECLARE_EXPORTED_EVENT_TYPE (WXDLLIMPEXP_SCI, wxEVT_SCI_NEEDSHOWN,           1662)
+DECLARE_EXPORTED_EVENT_TYPE (WXDLLIMPEXP_SCI, wxEVT_SCI_PAINTED,             1664)
+DECLARE_EXPORTED_EVENT_TYPE (WXDLLIMPEXP_SCI, wxEVT_SCI_USERLISTSELECTION,   1665)
+DECLARE_EXPORTED_EVENT_TYPE (WXDLLIMPEXP_SCI, wxEVT_SCI_URIDROPPED,          1666)
+DECLARE_EXPORTED_EVENT_TYPE (WXDLLIMPEXP_SCI, wxEVT_SCI_DWELLSTART,          1667)
+DECLARE_EXPORTED_EVENT_TYPE (WXDLLIMPEXP_SCI, wxEVT_SCI_DWELLEND,            1668)
+DECLARE_EXPORTED_EVENT_TYPE (WXDLLIMPEXP_SCI, wxEVT_SCI_START_DRAG,          1669)
+DECLARE_EXPORTED_EVENT_TYPE (WXDLLIMPEXP_SCI, wxEVT_SCI_DRAG_OVER,           1670)
+DECLARE_EXPORTED_EVENT_TYPE (WXDLLIMPEXP_SCI, wxEVT_SCI_DO_DROP,             1671)
+DECLARE_EXPORTED_EVENT_TYPE (WXDLLIMPEXP_SCI, wxEVT_SCI_ZOOM,                1672)
+DECLARE_EXPORTED_EVENT_TYPE (WXDLLIMPEXP_SCI, wxEVT_SCI_HOTSPOT_CLICK,       1673)
+DECLARE_EXPORTED_EVENT_TYPE (WXDLLIMPEXP_SCI, wxEVT_SCI_HOTSPOT_DCLICK,      1674)
+DECLARE_EXPORTED_EVENT_TYPE (WXDLLIMPEXP_SCI, wxEVT_SCI_CALLTIP_CLICK,       1675)
+DECLARE_EXPORTED_EVENT_TYPE (WXDLLIMPEXP_SCI, wxEVT_SCI_AUTOCOMP_SELECTION,  1676)
+DECLARE_EXPORTED_EVENT_TYPE (WXDLLIMPEXP_SCI, wxEVT_SCI_INDICATOR_CLICK,     1677)
+DECLARE_EXPORTED_EVENT_TYPE (WXDLLIMPEXP_SCI, wxEVT_SCI_INDICATOR_RELEASE,   1678)
+DECLARE_EXPORTED_EVENT_TYPE (WXDLLIMPEXP_SCI, wxEVT_SCI_AUTOCOMP_CANCELLED,  1679)
+DECLARE_EXPORTED_EVENT_TYPE (WXDLLIMPEXP_SCI, wxEVT_SCI_AUTOCOMP_CHARDELETED,1680)
+DECLARE_EXPORTED_EVENT_TYPE (WXDLLIMPEXP_SCI, wxEVT_SCI_SETFOCUS,            1681)
+DECLARE_EXPORTED_EVENT_TYPE (WXDLLIMPEXP_SCI, wxEVT_SCI_KILLFOCUS,           1682)
 END_DECLARE_EVENT_TYPES()
 #else
     enum {
@@ -4258,7 +4302,11 @@ END_DECLARE_EVENT_TYPES()
         wxEVT_SCI_CALLTIP_CLICK,
         wxEVT_SCI_AUTOCOMP_SELECTION,
         wxEVT_SCI_INDICATOR_CLICK,
-        wxEVT_SCI_INDICATOR_RELEASE
+        wxEVT_SCI_INDICATOR_RELEASE,
+        wxEVT_SCI_AUTOCOMP_CANCELLED,
+        wxEVT_SCI_AUTOCOMP_CHARDELETED,
+        wxEVT_SCI_SETFOCUS,
+        wxEVT_SCI_KILLFOCUS
     };
 #endif
 
@@ -4295,6 +4343,10 @@ typedef void (wxEvtHandler::*wxScintillaEventFunction)(wxScintillaEvent&);
 #define EVT_SCI_AUTOCOMP_SELECTION(id, fn))     DECLARE_EVENT_TABLE_ENTRY (wxEVT_SCI_AUTOCOMP_SELECTION     id, wxID_ANY, (wxObjectEventFunction) (wxEventFunction)  wxStaticCastEvent( wxScintillaEventFunction, & fn ), (wxObject *) NULL),
 #define EVT_SCI_INDICATOR_CLICK(id, fn)         DECLARE_EVENT_TABLE_ENTRY (wxEVT_SCI_INDICATOR_CLICK        id, wxID_ANY, (wxObjectEventFunction) (wxEventFunction)  wxStaticCastEvent( wxScintillaEventFunction, & fn ), (wxObject *) NULL),
 #define EVT_SCI_INDICATOR_RELEASE(id, fn)       DECLARE_EVENT_TABLE_ENTRY (wxEVT_SCI_INDICATOR_RELEASE      id, wxID_ANY, (wxObjectEventFunction) (wxEventFunction)  wxStaticCastEvent( wxScintillaEventFunction, & fn ), (wxObject *) NULL),
+#define EVT_SCI_AUTOCOMP_CANCELLED(id, fn)      DECLARE_EVENT_TABLE_ENTRY (wxEVT_SCI_AUTOCOMP_CANCELLED     id, wxID_ANY, (wxObjectEventFunction) (wxEventFunction)  wxStaticCastEvent( wxScintillaEventFunction, & fn ), (wxObject *) NULL),
+#define EVT_SCI_AUTOCOMP_CHARDELETED(id, fn)    DECLARE_EVENT_TABLE_ENTRY (wxEVT_SCI_AUTOCOMP_CHARDELETED   id, wxID_ANY, (wxObjectEventFunction) (wxEventFunction)  wxStaticCastEvent( wxScintillaEventFunction, & fn ), (wxObject *) NULL),
+#define EVT_SCI_SETFOCUS(id, fn)                DECLARE_EVENT_TABLE_ENTRY (wxEVT_SCI_SETFOCUS               id, wxID_ANY, (wxObjectEventFunction) (wxEventFunction)  wxStaticCastEvent( wxScintillaEventFunction, & fn ), (wxObject *) NULL),
+#define EVT_SCI_KILLFOCUS(id, fn)               DECLARE_EVENT_TABLE_ENTRY (wxEVT_SCI_KILLFOCUS              id, wxID_ANY, (wxObjectEventFunction) (wxEventFunction)  wxStaticCastEvent( wxScintillaEventFunction, & fn ), (wxObject *) NULL),
 
 #endif
 
@@ -4303,7 +4355,8 @@ typedef void (wxEvtHandler::*wxScintillaEventFunction)(wxScintillaEvent&);
 
 #ifndef SWIG
 
-inline wxString sci2wx (const char* str) {
+inline wxString sci2wx (const char* str)
+{
 #if wxUSE_UNICODE
     return wxString (str, wxConvUTF8);
 #else
@@ -4314,18 +4367,21 @@ inline wxString sci2wx (const char* str) {
 #if wxUSE_UNICODE
 wxString sci2wx (const char* str, size_t len);
 #else
-inline wxString sci2wx (const char* str, size_t len) {
+inline wxString sci2wx (const char* str, size_t len)
+{
     return wxString (str, len);
 }
 #endif
 
 
 #if wxUSE_UNICODE
-inline const wxWX2MBbuf wx2sci (const wxString& str) {
+inline const wxWX2MBbuf wx2sci (const wxString& str)
+{
     return str.mb_str (wxConvUTF8);
 }
 #else
-inline const wxWX2MBbuf wx2sci (const wxString& str) {
+inline const wxWX2MBbuf wx2sci (const wxString& str)
+{
     return str.mbc_str();
 }
 #endif

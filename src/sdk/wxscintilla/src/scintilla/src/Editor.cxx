@@ -3368,6 +3368,9 @@ void Editor::Paint(Surface *surfaceWindow, PRectangle rcArea) {
 					        rcClient.right, yposScreen + vs.lineHeight);
 					surfaceWindow->Copy(rcCopyArea, from, *pixmapLine);
 				}
+
+				lineWidthMaxSeen = Platform::Maximum(
+					    lineWidthMaxSeen, ll->positions[ll->numCharsInLine]);
 				//durCopy += et.Duration(true);
 			}
 
@@ -3378,8 +3381,6 @@ void Editor::Paint(Surface *surfaceWindow, PRectangle rcArea) {
 			yposScreen += vs.lineHeight;
 			visibleLine++;
 
-			lineWidthMaxSeen = Platform::Maximum(
-			            lineWidthMaxSeen, ll->positions[ll->numCharsInLine]);
 			//gdk_flush();
 		}
 		ll.Set(0);
@@ -4012,7 +4013,7 @@ void Editor::NotifyStyleNeeded(Document*, void *, int endStyleNeeded) {
 
 void Editor::NotifyChar(int ch) {
 /* C::B begin */
-	SCNotification scn = {{0}};
+	SCNotification scn; memset((void*)&scn, 0, sizeof(scn));
 /* C::B end */
 	scn.nmhdr.code = SCN_CHARADDED;
 	scn.ch = ch;
@@ -4027,7 +4028,7 @@ void Editor::NotifyChar(int ch) {
 
 void Editor::NotifySavePoint(bool isSavePoint) {
 /* C::B begin */
-	SCNotification scn = {{0}};
+	SCNotification scn; memset((void*)&scn, 0, sizeof(scn));
 /* C::B end */
 	if (isSavePoint) {
 		scn.nmhdr.code = SCN_SAVEPOINTREACHED;
@@ -4039,7 +4040,7 @@ void Editor::NotifySavePoint(bool isSavePoint) {
 
 void Editor::NotifyModifyAttempt() {
 /* C::B begin */
-	SCNotification scn = {{0}};
+	SCNotification scn; memset((void*)&scn, 0, sizeof(scn));
 /* C::B end */
 	scn.nmhdr.code = SCN_MODIFYATTEMPTRO;
 	NotifyParent(scn);
@@ -4047,7 +4048,7 @@ void Editor::NotifyModifyAttempt() {
 
 void Editor::NotifyDoubleClick(Point pt, bool shift, bool ctrl, bool alt) {
 /* C::B begin */
-	SCNotification scn = {{0}};
+	SCNotification scn; memset((void*)&scn, 0, sizeof(scn));
 /* C::B end */
 	scn.nmhdr.code = SCN_DOUBLECLICK;
 	scn.line = LineFromLocation(pt);
@@ -4059,7 +4060,7 @@ void Editor::NotifyDoubleClick(Point pt, bool shift, bool ctrl, bool alt) {
 
 void Editor::NotifyHotSpotDoubleClicked(int position, bool shift, bool ctrl, bool alt) {
 /* C::B begin */
-	SCNotification scn = {{0}};
+	SCNotification scn; memset((void*)&scn, 0, sizeof(scn));
 /* C::B end */
 	scn.nmhdr.code = SCN_HOTSPOTDOUBLECLICK;
 	scn.position = position;
@@ -4070,7 +4071,7 @@ void Editor::NotifyHotSpotDoubleClicked(int position, bool shift, bool ctrl, boo
 
 void Editor::NotifyHotSpotClicked(int position, bool shift, bool ctrl, bool alt) {
 /* C::B begin */
-	SCNotification scn = {{0}};
+	SCNotification scn; memset((void*)&scn, 0, sizeof(scn));
 /* C::B end */
 	scn.nmhdr.code = SCN_HOTSPOTCLICK;
 	scn.position = position;
@@ -4081,7 +4082,7 @@ void Editor::NotifyHotSpotClicked(int position, bool shift, bool ctrl, bool alt)
 
 void Editor::NotifyUpdateUI() {
 /* C::B begin */
-	SCNotification scn = {{0}};
+	SCNotification scn; memset((void*)&scn, 0, sizeof(scn));
 /* C::B end */
 	scn.nmhdr.code = SCN_UPDATEUI;
 	NotifyParent(scn);
@@ -4089,7 +4090,7 @@ void Editor::NotifyUpdateUI() {
 
 void Editor::NotifyPainted() {
 /* C::B begin */
-	SCNotification scn = {{0}};
+	SCNotification scn; memset((void*)&scn, 0, sizeof(scn));
 /* C::B end */
 	scn.nmhdr.code = SCN_PAINTED;
 	NotifyParent(scn);
@@ -4099,7 +4100,7 @@ void Editor::NotifyIndicatorClick(bool click, int position, bool shift, bool ctr
 	int mask = pdoc->decorations.AllOnFor(position);
 	if ((click && mask) || pdoc->decorations.clickNotified) {
 /* C::B begin */
-		SCNotification scn = {{0}};
+	SCNotification scn; memset((void*)&scn, 0, sizeof(scn));
 /* C::B end */
 		pdoc->decorations.clickNotified = click;
 		scn.nmhdr.code = click ? SCN_INDICATORCLICK : SCN_INDICATORRELEASE;
@@ -4119,7 +4120,7 @@ bool Editor::NotifyMarginClick(Point pt, bool shift, bool ctrl, bool alt) {
 	}
 	if ((marginClicked >= 0) && vs.ms[marginClicked].sensitive) {
 /* C::B begin */
-		SCNotification scn = {{0}};
+	SCNotification scn; memset((void*)&scn, 0, sizeof(scn));
 /* C::B end */
 		scn.nmhdr.code = SCN_MARGINCLICK;
 		scn.modifiers = (shift ? SCI_SHIFT : 0) | (ctrl ? SCI_CTRL : 0) |
@@ -4135,7 +4136,7 @@ bool Editor::NotifyMarginClick(Point pt, bool shift, bool ctrl, bool alt) {
 
 void Editor::NotifyNeedShown(int pos, int len) {
 /* C::B begin */
-	SCNotification scn = {{0}};
+	SCNotification scn; memset((void*)&scn, 0, sizeof(scn));
 /* C::B end */
 	scn.nmhdr.code = SCN_NEEDSHOWN;
 	scn.position = pos;
@@ -4145,7 +4146,7 @@ void Editor::NotifyNeedShown(int pos, int len) {
 
 void Editor::NotifyDwelling(Point pt, bool state) {
 /* C::B begin */
-	SCNotification scn = {{0}};
+	SCNotification scn; memset((void*)&scn, 0, sizeof(scn));
 /* C::B end */
 	scn.nmhdr.code = state ? SCN_DWELLSTART : SCN_DWELLEND;
 	scn.position = PositionFromLocation(pt, true);
@@ -4156,7 +4157,7 @@ void Editor::NotifyDwelling(Point pt, bool state) {
 
 void Editor::NotifyZoom() {
 /* C::B begin */
-	SCNotification scn = {{0}};
+	SCNotification scn; memset((void*)&scn, 0, sizeof(scn));
 /* C::B end */
 	scn.nmhdr.code = SCN_ZOOM;
 	NotifyParent(scn);
@@ -4331,7 +4332,7 @@ void Editor::NotifyModified(Document*, DocModification mh, void *) {
 		}
 
 /* C::B begin */
-		SCNotification scn = {{0}};
+	SCNotification scn; memset((void*)&scn, 0, sizeof(scn));
 /* C::B end */
 		scn.nmhdr.code = SCN_MODIFIED;
 		scn.position = mh.position;
@@ -4468,7 +4469,7 @@ void Editor::NotifyMacroRecord(unsigned int iMessage, uptr_t wParam, sptr_t lPar
 
 	// Send notification
 /* C::B begin */
-	SCNotification scn = {{0}};
+	SCNotification scn; memset((void*)&scn, 0, sizeof(scn));
 /* C::B end */
 	scn.nmhdr.code = SCN_MACRORECORD;
 	scn.message = iMessage;

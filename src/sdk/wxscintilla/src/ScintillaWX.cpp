@@ -28,6 +28,7 @@
 #include "ScintillaWX.h"
 #include "wx/wxscintilla.h"
 #include "PlatWX.h"
+#include "ExternalLexer.h"
 
 #ifdef __WXMSW__
     // GetHwndOf()
@@ -329,7 +330,7 @@ void ScintillaWX::StartDrag() {
     evt.SetPosition (wxMin(sci->GetSelectionStart(),
 	                       sci->GetSelectionEnd()));
     sci->GetEventHandler()->ProcessEvent (evt);
-    pdoc->BeginUndoAction();
+    UndoGroup ug(pdoc);
 
     dragText = evt.GetDragText();
     dragRectangle = drag.rectangular;
@@ -347,7 +348,6 @@ void ScintillaWX::StartDrag() {
         inDragDrop = ddNone;
         SetDragPosition (SelectionPosition(invalidPosition));
     }
-    pdoc->EndUndoAction();
 #endif // wxUSE_DRAG_AND_DROP
 }
 
@@ -493,6 +493,11 @@ bool ScintillaWX::ModifyScrollBars(int nMax, int nPage) {
 }
 
 
+void ScintillaWX::NotifyFocus(bool focus) {
+    sci->NotifyFocus(focus);
+}
+
+
 void ScintillaWX::NotifyChange() {
     sci->NotifyChange();
 }
@@ -517,7 +522,7 @@ void ScintillaWX::CancelModes() {
 
 
 void ScintillaWX::Copy() {
-    if (!sel.Empty()) {
+    if (!SelectionEmpty()) {
         SelectionText st;
         CopySelectionRange(&st);
 #ifdef __WXGTK__
@@ -533,7 +538,16 @@ void ScintillaWX::Copy() {
 
 
 void ScintillaWX::Paste() {
-    pdoc->BeginUndoAction();
+    UndoGroup ug(pdoc);
+	// Selection::First
+    SelectionPosition firstPosition = SelectionStart();
+    if(sel.IsRectangular() && !sel.Empty()) {
+        for (size_t i=0; i<sel.Count()-1; i++) {
+            sel.RotateMain();
+            if(firstPosition > SelectionStart())
+                firstPosition = SelectionStart();
+        }
+    }
     ClearSelection();
 
 #if wxUSE_DATAOBJ
@@ -571,7 +585,7 @@ void ScintillaWX::Paste() {
     buf = (wxWX2MBbuf)wx2sci(textString);
     len  = strlen(buf);
     int newPos = 0;
-    int caretMain = sel.MainCaret();
+    int caretMain = CurrentPosition();
     if (rectangular) {
         SelectionPosition selStart = sel.Range(sel.Main()).Start();
         int newLine = pdoc->LineFromPosition (caretMain) + wxCountLines (buf, pdoc->eolMode);
@@ -585,7 +599,6 @@ void ScintillaWX::Paste() {
     SetEmptySelection (newPos);
 #endif // wxUSE_DATAOBJ
 
-    pdoc->EndUndoAction();
     NotifyChange();
     Redraw();
 }
@@ -697,7 +710,7 @@ void ScintillaWX::UpdateSystemCaret() {
             DestroySystemCaret();
             CreateSystemCaret();
         }
-        Point pos = LocationFromPosition(sel.MainCaret());
+        Point pos = LocationFromPosition(CurrentPosition());
         ::SetCaretPos(pos.x, pos.y);
     }
 #endif
@@ -794,19 +807,33 @@ sptr_t ScintillaWX::WndProc(unsigned int iMessage, uptr_t wParam, sptr_t lParam)
           ct.wCallTip.Show();
           break;
       }
-/*? TODO
+
+      case SCI_GETDIRECTFUNCTION:
+            return reinterpret_cast<sptr_t>(DirectFunction);
+
+      case SCI_GETDIRECTPOINTER:
+            return reinterpret_cast<sptr_t>(this);
+
+      case SCI_GRABFOCUS:
+            sci->SetFocus();
+            break;
+
 #ifdef SCI_LEXER
       case SCI_LOADLEXERLIBRARY:
             LexerManager::GetInstance()->Load((const char*)lParam);
             break;
 #endif
-*/
+
       default:
           return ScintillaBase::WndProc(iMessage, wParam, lParam);
       }
       return 0;
 }
 
+sptr_t ScintillaWX::DirectFunction(
+    ScintillaWX *wxsci, UINT iMessage, uptr_t wParam, sptr_t lParam) {
+	return wxsci->WndProc(iMessage, wParam, lParam);
+}
 
 
 //----------------------------------------------------------------------
@@ -954,7 +981,7 @@ void ScintillaWX::DoMiddleButtonUp(Point pt) {
     int newPos = PositionFromLocation(pt);
     MovePositionTo(newPos, Selection::noSel, true);
 
-    pdoc->BeginUndoAction();
+    UndoGroup ug(pdoc);
     wxTextDataObject data;
     bool gotData = false;
     if (wxTheClipboard->Open()) {
@@ -969,10 +996,9 @@ void ScintillaWX::DoMiddleButtonUp(Point pt) {
         data.SetText(wxEmptyString); // free the data object content
         wxWX2MBbuf buf = (wxWX2MBbuf)wx2sci(text);
         int        len = strlen(buf);
-        pdoc->InsertString(sel.MainCaret(), buf, len);
-        SetEmptySelection(sel.MainCaret() + len);
+        pdoc->InsertString(CurrentPosition(), buf, len);
+        SetEmptySelection(CurrentPosition() + len);
     }
-    pdoc->EndUndoAction();
     NotifyChange();
     Redraw();
 
