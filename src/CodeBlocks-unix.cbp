@@ -2540,9 +2540,6 @@
 		<Unit filename="sdk/wxscintilla/src/scintilla/include/PropSet.h">
 			<Option target="scintilla" />
 		</Unit>
-		<Unit filename="sdk/wxscintilla/src/scintilla/include/SString.h">
-			<Option target="scintilla" />
-		</Unit>
 		<Unit filename="sdk/wxscintilla/src/scintilla/include/SciLexer.h">
 			<Option target="scintilla" />
 		</Unit>
