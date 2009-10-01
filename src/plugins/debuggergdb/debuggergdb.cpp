@@ -70,8 +70,17 @@
 
 // function pointer to DebugBreakProcess under windows (XP+)
 #if (_WIN32_WINNT >= 0x0501)
-typedef WINBASEAPI BOOL WINAPI (*DebugBreakProcessApiCall)(HANDLE);
-DebugBreakProcessApiCall DebugBreakProcessFunc = 0;
+#include "Tlhelp32.h"
+typedef WINBASEAPI BOOL WINAPI   (*DebugBreakProcessApiCall)       (HANDLE);
+typedef WINBASEAPI HANDLE WINAPI (*CreateToolhelp32SnapshotApiCall)(DWORD  dwFlags,   DWORD             th32ProcessID);
+typedef WINBASEAPI BOOL WINAPI   (*Process32FirstApiCall)          (HANDLE hSnapshot, LPPROCESSENTRY32W lppe);
+typedef WINBASEAPI BOOL WINAPI   (*Process32NextApiCall)           (HANDLE hSnapshot, LPPROCESSENTRY32W lppe);
+
+DebugBreakProcessApiCall        DebugBreakProcessFunc = 0;
+CreateToolhelp32SnapshotApiCall CreateToolhelp32SnapshotFunc = 0;
+Process32FirstApiCall           Process32FirstFunc = 0;
+Process32NextApiCall            Process32NextFunc = 0;
+
 HINSTANCE kernelLib = 0;
 #endif
 
@@ -155,7 +164,13 @@ DebuggerGDB::DebuggerGDB()
     #if (_WIN32_WINNT >= 0x0501)
     kernelLib = LoadLibrary(TEXT("kernel32.dll"));
     if (kernelLib)
+    {
         DebugBreakProcessFunc = (DebugBreakProcessApiCall)GetProcAddress(kernelLib, "DebugBreakProcess");
+        //Windows XP
+        CreateToolhelp32SnapshotFunc = (CreateToolhelp32SnapshotApiCall)GetProcAddress(kernelLib, "CreateToolhelp32Snapshot");
+        Process32FirstFunc = (Process32FirstApiCall)GetProcAddress(kernelLib, "Process32First");
+        Process32NextFunc = (Process32NextApiCall)GetProcAddress(kernelLib, "Process32Next");
+    }
     #endif
 }
 
@@ -1730,6 +1745,7 @@ void DebuggerGDB::Break()
     if (m_pProcess && m_Pid && !IsStopped())
     {
         long pid = m_State.GetDriver()->GetChildPID();
+    #ifndef __WXMSW__
         if (pid <= 0)
             pid = m_Pid; // try poking gdb directly
     #ifndef __WXMSW__
@@ -1740,6 +1756,32 @@ void DebuggerGDB::Break()
             wxKill(pid, wxSIGINT);
     #else
         // windows gdb can interrupt the running process too. yay!
+        if (   (pid <=0)
+            && (CreateToolhelp32SnapshotFunc!=NULL)
+            && (Process32FirstFunc!=NULL)
+            && (Process32NextFunc!=NULL) )
+        {
+            HANDLE snap = CreateToolhelp32SnapshotFunc(TH32CS_SNAPALL,0);
+            if (snap!=INVALID_HANDLE_VALUE)
+            {
+                PROCESSENTRY32 lppe;
+                lppe.dwSize = sizeof(PROCESSENTRY32);
+                BOOL ok = Process32FirstFunc(snap, &lppe);
+                while ( ok == TRUE)
+                {
+                    if (lppe.th32ParentProcessID == m_Pid) // Have my Child...
+                    {
+                        pid = lppe.th32ProcessID;
+                    }
+                    lppe.dwSize = sizeof(PROCESSENTRY32);
+                    ok = Process32NextFunc(snap, &lppe);
+                }
+                CloseHandle(snap);
+            }
+            else
+                Log(_("No handle created. Trying to pause directly with cbd.exe..."));
+        }
+
         bool done = false;
         if (DebugBreakProcessFunc && pid > 0)
         {

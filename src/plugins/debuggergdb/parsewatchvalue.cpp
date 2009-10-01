@@ -314,12 +314,20 @@ bool ParseGDBWatchValue(GDBWatch &watch, wxString const &value)
         return true;
     }
 
-    if(value[0] == wxT('{') && value[value.length() - 1] == wxT('}'))
+    // Try to find the first brace.
+    // If the watch is for a reference the brace is not at position = 0
+    wxString::size_type start = value.find(wxT('{'));
+
+    if(start != wxString::npos && value[value.length() - 1] == wxT('}'))
     {
-        int start = 1;
-        bool result = ParseGDBWatchValue(watch, value, start, value.length() - 2);
+        int t_start = start + 1;
+        bool result = ParseGDBWatchValue(watch, value, t_start, value.length() - 2);
         if(result)
+        {
+            if(start > 0)
+                watch.SetValue(value.substr(0, start));
             watch.RemoveChildren(true);
+        }
         return result;
     }
     else

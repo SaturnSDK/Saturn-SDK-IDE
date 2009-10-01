@@ -702,6 +702,8 @@ class GdbCmd_Watch : public DebuggerCmd
 
             m_watch->GetSymbol(symbol);
             m_watch->GetType(type);
+            type.Trim(true);
+            type.Trim(false);
             m_Cmd = static_cast<GDB_driver*>(m_pDriver)->GetScriptedTypeCommand(type, m_ParseFunc);
             if (m_Cmd.IsEmpty())
             {
@@ -798,7 +800,7 @@ class GdbCmd_FindWatchType : public DebuggerCmd
 //            m_pWatch(watch)
             m_watch(watch)
         {
-            m_Cmd << _T("whatis ");
+            m_Cmd << _T("whatis &");
 //            m_Cmd << m_pWatch->keyword;
             wxString symbol;
             m_watch->GetSymbol(symbol);
@@ -813,6 +815,7 @@ class GdbCmd_FindWatchType : public DebuggerCmd
             // type = bool
 
             wxString tmp = output.AfterFirst(_T('='));
+            tmp = tmp.substr(0, tmp.length() - 1);
             // actually add this watch with high priority
 //            m_pDriver->QueueCommand(new GdbCmd_Watch(m_pDriver, m_pDTree, m_pWatch, tmp), DebuggerDriver::High);
             wxString old_type;
@@ -850,6 +853,8 @@ class GdbCmd_TooltipEvaluation : public DebuggerCmd
             m_Type(w_type),
             m_Address(address)
         {
+            m_Type.Trim(true);
+            m_Type.Trim(false);
             m_Cmd = static_cast<GDB_driver*>(m_pDriver)->GetScriptedTypeCommand(w_type, m_ParseFunc);
             if (m_Cmd.IsEmpty())
             {
