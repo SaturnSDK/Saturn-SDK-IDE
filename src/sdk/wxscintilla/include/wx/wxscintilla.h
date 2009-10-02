@@ -3820,13 +3820,13 @@ public:
     void SetSelectionNStart(int selection, int pos);
 
     // Returns the position at the start of the selection.
-    int GetSelectionNStart() const;
+    int GetSelectionNStart(int selection) const;
 
     // Sets the position that ends the selection - this becomes the currentPosition.
     void SetSelectionNEnd(int selection, int pos);
 
     // Returns the position at the end of the selection.
-    int GetSelectionNEnd() const;
+    int GetSelectionNEnd(int selection) const;
 
     void SetRectangularSelectionCaret(int pos);
     int GetRectangularSelectionCaret() const;

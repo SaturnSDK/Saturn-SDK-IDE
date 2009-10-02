@@ -4000,7 +4000,7 @@ void Editor::NotifyFocus(bool) {}
 
 void Editor::NotifyStyleToNeeded(int endStyleNeeded) {
 /* C::B begin */
-	SCNotification scn = {{0}};
+	SCNotification scn; memset((void*)&scn, 0, sizeof(scn));
 /* C::B end */
 	scn.nmhdr.code = SCN_STYLENEEDED;
 	scn.position = endStyleNeeded;

@@ -997,7 +997,7 @@ void wxScintilla::IndicatorSetAlpha(int indicator, int alpha)
 // Get the alpha fill colour of the given indicator.
 int wxScintilla::IndicatorGetAlpha(int indicator) const
 {
-    return SendMsg(SCI_INDICGETALPHA, indicator);
+    return SendMsg(SCI_INDICGETALPHA, indicator, 0);
 }
 
 // Set the foreground colour of all whitespace and whether to use this setting.
@@ -3589,9 +3589,9 @@ void wxScintilla::SetSelectionNStart(int selection, int pos)
 }
 
 // Returns the position at the start of the selection.
-int wxScintilla::GetSelectionNStart() const
+int wxScintilla::GetSelectionNStart(int selection) const
 {
-    return SendMsg(SCI_GETSELECTIONNSTART, 0, 0);
+    return SendMsg(SCI_GETSELECTIONNSTART, selection, 0);
 }
 
 // Sets the position that ends the selection - this becomes the currentPosition.
@@ -3601,9 +3601,9 @@ void wxScintilla::SetSelectionNEnd(int selection, int pos)
 }
 
 // Returns the position at the end of the selection.
-int wxScintilla::GetSelectionNEnd() const
+int wxScintilla::GetSelectionNEnd(int selection) const
 {
-    return SendMsg(SCI_GETSELECTIONNEND, 0, 0);
+    return SendMsg(SCI_GETSELECTIONNEND, selection, 0);
 }
 
 void wxScintilla::SetRectangularSelectionCaret(int pos)
