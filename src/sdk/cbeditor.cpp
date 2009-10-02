@@ -2163,6 +2163,7 @@ bool cbEditor::RemoveBreakpoint(int line, bool notifyDebugger)
 {
     if (!HasBreakpoint(line))
         return false;
+
     if (line == -1)
         line = GetControl()->GetCurrentLine();
 
