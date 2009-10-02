@@ -830,8 +830,8 @@ sptr_t ScintillaWX::WndProc(unsigned int iMessage, uptr_t wParam, sptr_t lParam)
       return 0;
 }
 
-sptr_t ScintillaWX::DirectFunction(
-    ScintillaWX *wxsci, UINT iMessage, uptr_t wParam, sptr_t lParam) {
+sptr_t ScintillaWX::DirectFunction(ScintillaWX *wxsci, unsigned int iMessage, uptr_t wParam, sptr_t lParam)
+{
 	return wxsci->WndProc(iMessage, wParam, lParam);
 }
 

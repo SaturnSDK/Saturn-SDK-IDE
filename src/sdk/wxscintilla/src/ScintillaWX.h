@@ -99,7 +99,7 @@ public:
     ScintillaWX(wxScintilla* win);
     ~ScintillaWX();
 
-    static sptr_t DirectFunction( ScintillaWX *wxsci, UINT iMessage,
+    static sptr_t DirectFunction( ScintillaWX *wxsci, unsigned int iMessage,
                                   uptr_t wParam, sptr_t lParam);
 
     // base class virtuals
