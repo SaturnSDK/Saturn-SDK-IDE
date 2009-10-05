@@ -39,6 +39,7 @@ class EditorConfigurationDlg : public wxDialog
         void OnAutoCompDelete(wxCommandEvent& event);
         void OnDynamicCheck(wxCommandEvent& event);
         void OnHighlightOccurrences(wxCommandEvent& event);
+        void OnMultipleSelections(wxCommandEvent& event);
         void UpdateSampleFont(bool askForNewFont);
 
         void EndModal(int retCode);

@@ -1404,7 +1404,6 @@ void cbEditor::InternalSetEditorStyleBeforeFileOpen(cbStyledTextCtrl* control)
     {
         control->SetMarginWidth(changebarMargin, 4);
         control->SetMarginType(changebarMargin,  wxSCI_MARGIN_SYMBOL);
-        control->SetMarginWidth(changebarMargin, 4);
         // use "|" here or we might break plugins that use the margin (none at the moment)
         control->SetMarginMask(changebarMargin, control->GetMarginMask(changebarMargin) |
                                                 (1 << wxSCI_MARKNUM_CHANGEUNSAVED) | (1 << wxSCI_MARKNUM_CHANGESAVED) );
@@ -1418,6 +1417,17 @@ void cbEditor::InternalSetEditorStyleBeforeFileOpen(cbStyledTextCtrl* control)
         control->SetMarginWidth(changebarMargin, 0);
 
     control->SetScrollWidthTracking(mgr->ReadBool(_T("/margin/scroll_width_tracking"), false));
+
+    control->SetMultipleSelection(mgr->ReadBool(_T("/selection/multi_select"), false));
+    control->SetAdditionalSelectionTyping(mgr->ReadBool(_T("/selection/multi_typing"), false));
+    if(mgr->ReadBool(_T("/selection/use_vspace"), false))
+    {
+        control->SetVirtualSpaceOptions(wxSCI_SCVS_RECTANGULARSELECTION | wxSCI_SCVS_USERACCESSIBLE);
+    }
+    else
+    {
+        control->SetVirtualSpaceOptions(wxSCI_SCVS_NONE);
+    }
 }
 
 // static
@@ -2337,22 +2347,10 @@ void cbEditor::GotoPreviousChanged()
     }
 }
 
-void cbEditor::ShowChangebarMargin(bool show)
-{
-    cbAssert(GetControl());
-    GetControl()->SetMarginWidth(changebarMargin, show?4:0);
-}
-
 void cbEditor::SetChangeCollection(bool collectChange)
 {
     cbAssert(GetControl());
     GetControl()->SetChangeCollection(collectChange);
-}
-
-void cbEditor::SetScrollWidthTracking(bool trackWidth)
-{
-    cbAssert(GetControl());
-    GetControl()->SetScrollWidthTracking(trackWidth);
 }
 
 void cbEditor::Cut()
