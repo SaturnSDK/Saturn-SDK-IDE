@@ -3145,7 +3145,7 @@ void cbEditor::OnEditorModified(wxScintillaEvent& event)
         for(size_t i=0;i<arr.GetCount();i++)
         {
             cbDebuggerPlugin* debugger = (cbDebuggerPlugin*)arr[i];
-            debugger->EditorLinesAddedOrRemoved(this, startline, linesAdded);
+            debugger->EditorLinesAddedOrRemoved(this, startline + 1, linesAdded);
         }
 
     }

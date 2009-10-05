@@ -53,6 +53,11 @@ cbBreakpoint::cbBreakpoint(const wxString &dataExpression, bool breakOnRead, boo
 {
 }
 
+void cbBreakpoint::SetLine(int line)
+{
+    m_line = line;
+}
+
 void cbBreakpoint::SetCondition(wxString const &condition)
 {
     m_condition = condition;

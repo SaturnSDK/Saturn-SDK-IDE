@@ -254,6 +254,13 @@
   #endif
 #endif
 
+// Define wxBORDER_THEME if it is missing
+#if !wxCHECK_VERSION(2,8,0)
+  #ifndef wxBORDER_THEME
+    #define wxBORDER_THEME  wxSIMPLE_BORDER
+  #endif
+#endif
+
 // -----------------------------------------------------------------------
 
 #ifndef wxPG_COMPATIBILITY_1_2_0
@@ -938,7 +945,9 @@ wxPG_EX_DISABLE_TLP_TRACKING            = 0x08000000,
 */
 wxPG_EX_NO_TOOLBAR_DIVIDER              = 0x10000000,
 
-/** wxPropertyGridManager only: Show a separator below the toolbar
+/** NOTE: This style may be removed in future versions - do not rely on it!
+
+    wxPropertyGridManager only: Show a separator below the toolbar
 */
 wxPG_EX_TOOLBAR_SEPARATOR               = 0x20000000
 
@@ -3017,10 +3026,12 @@ public:
         m_clientData = clientData;
     }
 
-    /** Sets new set of choices for property.
+    /**
+        Set choices of a property to specified set of labels and values.
 
-        @remarks
-        This operation clears the property value.
+        @remarks This operation clears the property value. Also, if you
+                 try to use this on a property which cannot hold choices,
+                 a run-time error will be shown.
     */
     bool SetChoices( wxPGChoices& choices );
 
@@ -5563,10 +5574,12 @@ public:
         p->SetCell( column, new wxPGCell(text, bitmap, fgCol, bgCol) );
     }
 
-    /** Set choices of a property to specified set of labels and values.
+    /**
+        Set choices of a property to specified set of labels and values.
 
-        @remarks
-        This operation clears the property value.
+        @remarks This operation clears the property value. Also, if you
+                 try to use this on a property which cannot hold choices,
+                 a run-time error will be shown.
     */
     void SetPropertyChoices( wxPGPropArg id, wxPGChoices& choices)
     {

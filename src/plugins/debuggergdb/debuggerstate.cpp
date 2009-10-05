@@ -274,6 +274,19 @@ void DebuggerState::ShiftBreakpoints(const wxString& file, int startline, int nr
     }
 }
 
+void DebuggerState::ShiftBreakpoint(DebuggerBreakpoint* bp, int nroflines)
+{
+    // notify driver if it is active
+    if (m_pDriver)
+    {
+        m_pDriver->RemoveBreakpoint(bp);
+        bp->line += nroflines;
+        m_pDriver->AddBreakpoint(bp);
+    }
+    else
+        bp->line += nroflines;
+}
+
 int DebuggerState::HasBreakpoint(const wxString& file, int line)
 {
     wxString bpfile = ConvertToValidFilename(file);

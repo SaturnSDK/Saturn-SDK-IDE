@@ -46,6 +46,7 @@ class DebuggerState
         // helpers to keep in sync with the editors
         int RemoveBreakpointsRange(const wxString& file, int startline, int endline);
         void ShiftBreakpoints(const wxString& file, int startline, int nroflines);
+        void ShiftBreakpoint(DebuggerBreakpoint* bp, int nroflines);
 
         int HasBreakpoint(const wxString& file, int line); // returns -1 if not found
         int HasBreakpoint(const wxString& dataAddr);

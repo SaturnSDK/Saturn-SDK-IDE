@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: 1.4.7\n"
 "Report-Msgid-Bugs-To: jmsalli@users.sourceforge.net\n"
-"POT-Creation-Date: 2009-08-23 13:22+0300\n"
+"POT-Creation-Date: 2009-10-04 12:26+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -16,39 +16,39 @@ msgstr ""
 "Content-Type: text/plain; charset=ISO-8859-1\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: src/advprops.cpp:654
+#: src/advprops.cpp:660
 msgid "Point Size"
 msgstr ""
 
-#: src/advprops.cpp:657
+#: src/advprops.cpp:663
 msgid "Family"
 msgstr ""
 
-#: src/advprops.cpp:667
+#: src/advprops.cpp:673
 msgid "Face Name"
 msgstr ""
 
-#: src/advprops.cpp:674
+#: src/advprops.cpp:680
 msgid "Style"
 msgstr ""
 
-#: src/advprops.cpp:677
+#: src/advprops.cpp:683
 msgid "Weight"
 msgstr ""
 
-#: src/advprops.cpp:680
+#: src/advprops.cpp:686
 msgid "Underlined"
 msgstr ""
 
-#: src/advprops.cpp:1916
+#: src/advprops.cpp:1922
 msgid "Make a selection:"
 msgstr ""
 
-#: src/manager.cpp:1283
+#: src/manager.cpp:1332
 msgid "Categorized Mode"
 msgstr ""
 
-#: src/manager.cpp:1284
+#: src/manager.cpp:1333
 msgid "Alphabetic Mode"
 msgstr ""
 
@@ -60,18 +60,18 @@ msgstr ""
 msgid "True"
 msgstr ""
 
-#: src/propgrid.cpp:3138
+#: src/propgrid.cpp:3160
 msgid "Unspecified"
 msgstr ""
 
-#: src/propgrid.cpp:4625
+#: src/propgrid.cpp:4709
 #, c-format
 msgid ""
 "Type operation \"%s\" failed: Property labeled \"%s\" is of type \"%s\", NOT "
 "\"%s\"."
 msgstr ""
 
-#: src/propgrid.cpp:12943
+#: src/propgrid.cpp:13147
 #, c-format
 msgid "Error in resource: %s"
 msgstr ""
@@ -106,35 +106,35 @@ msgstr ""
 msgid "Not %s"
 msgstr ""
 
-#: src/props.cpp:1718
+#: src/props.cpp:1717
 msgid "Choose a directory:"
 msgstr ""
 
-#: src/props.cpp:1773
+#: src/props.cpp:1772
 msgid "Choose a file"
 msgstr ""
 
-#: src/props.cpp:1776 src/props.cpp:1805
+#: src/props.cpp:1775 src/props.cpp:1804
 msgid "All files (*.*)|*.*"
 msgstr ""
 
-#: src/props.cpp:2283
+#: src/props.cpp:2282
 msgid "Add"
 msgstr ""
 
-#: src/props.cpp:2311
+#: src/props.cpp:2310
 msgid "Update"
 msgstr ""
 
-#: src/props.cpp:2314
+#: src/props.cpp:2313
 msgid "Remove"
 msgstr ""
 
-#: src/props.cpp:2317
+#: src/props.cpp:2316
 msgid "Up"
 msgstr ""
 
-#: src/props.cpp:2320
+#: src/props.cpp:2319
 msgid "Down"
 msgstr ""
 

@@ -582,13 +582,19 @@ static const wxChar* gs_fp_es_family_labels[] = {
     wxT("Default"), wxT("Decorative"),
     wxT("Roman"), wxT("Script"),
     wxT("Swiss"), wxT("Modern"),
+#if wxCHECK_VERSION(2,8,0)
+    wxT("Teletype"), wxT("Unknown"),
+#endif
     (const wxChar*) NULL
 };
 
 static long gs_fp_es_family_values[] = {
-    wxDEFAULT, wxDECORATIVE,
-    wxROMAN, wxSCRIPT,
-    wxSWISS, wxMODERN
+    wxFONTFAMILY_DEFAULT, wxFONTFAMILY_DECORATIVE,
+    wxFONTFAMILY_ROMAN, wxFONTFAMILY_SCRIPT,
+    wxFONTFAMILY_SWISS, wxFONTFAMILY_MODERN,
+#if wxCHECK_VERSION(2,8,0)
+    wxFONTFAMILY_TELETYPE, wxFONTFAMILY_UNKNOWN
+#endif
 };
 
 static const wxChar* gs_fp_es_style_labels[] = {

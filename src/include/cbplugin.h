@@ -363,12 +363,11 @@ class PLUGIN_EXPORT cbDebuggerPlugin: public cbPlugin
 		/** @brief Returns the toolbar associated with this plugin. */
 		wxToolBar* GetToolbar();
 
+		virtual void OnAttach();
+
         virtual void BuildMenu(wxMenuBar* menuBar);
         virtual void BuildModuleMenu(const ModuleType type, wxMenu* menu, const FileTreeData* data = 0);
         virtual bool BuildToolBar(wxToolBar* toolBar);
-    public:
-
-        virtual void ShowToolMenu() = 0;
 
 		/** @brief Notify the debugger that lines were added or removed in an editor.
 		  * This causes the debugger to keep the breakpoints list in-sync with the
@@ -378,7 +377,12 @@ class PLUGIN_EXPORT cbDebuggerPlugin: public cbPlugin
 		  * @param lines The number of lines added or removed. If it's a positive number,
 		  *              lines were added. If it's a negative number, lines were removed.
 		  */
-		virtual void EditorLinesAddedOrRemoved(cbEditor* editor, int startline, int lines) = 0;
+		virtual void EditorLinesAddedOrRemoved(cbEditor* editor, int startline, int lines);
+    public:
+        virtual void OnAttachReal() = 0;
+
+        virtual void ShowToolMenu() = 0;
+
 
 		/** @brief Start a new debugging process. */
 		virtual int Debug(bool breakOnEntry) = 0;
@@ -440,7 +444,7 @@ class PLUGIN_EXPORT cbDebuggerPlugin: public cbPlugin
         virtual void UpdateBreakpoint(cbBreakpoint *breakpoint) = 0;
         virtual void DeleteBreakpoint(cbBreakpoint* breakpoint) = 0;
         virtual void DeleteAllBreakpoints() = 0;
-
+        virtual void ShiftBreakpoint(int index, int lines_to_shift) = 0;
         // threads
         virtual int GetThreadsCount() const = 0;
         virtual const cbThread& GetThread(int index) const = 0;
@@ -458,6 +462,7 @@ class PLUGIN_EXPORT cbDebuggerPlugin: public cbPlugin
         virtual void AttachToProcess(const wxString& pid) = 0;
         virtual void DetachFromProcess() = 0;
 
+        virtual void GetCurrentPosition(wxString &filename, int &line) = 0;
     public:
         enum DebugWindows
         {
@@ -473,13 +478,9 @@ class PLUGIN_EXPORT cbDebuggerPlugin: public cbPlugin
     public:
         virtual wxString GetEditorWordAtCaret();
     protected:
-		/** @brief Request to remove a breakpoint based on a file/line pair.
-		  * @param file The file to remove the breakpoint.
-		  * @param line The line number the breakpoint is in @c file.
-		  * @return True if succeeded, false if not.
-		  */
-        void RemoveBreakpointFromEditor(const wxString& filename, int line);
         void ClearActiveMarkFromAllEditors();
+    private:
+        void OnEditorOpened(CodeBlocksEvent& event);
     private:
         wxToolBar *m_toolbar;
 };

@@ -251,6 +251,17 @@ void DebuggerMenuHandler::OnToggleBreakpoint(wxCommandEvent& event)
 void DebuggerMenuHandler::OnRemoveAllBreakpoints(wxCommandEvent& event)
 {
     cbAssert(m_activeDebugger);
+
+    int count = m_activeDebugger->GetBreakpointsCount();
+    for (int i = 0; i < count; ++i)
+    {
+        cbBreakpoint const &breakpoint = *m_activeDebugger->GetBreakpoint(i);
+
+        cbEditor* editor = Manager::Get()->GetEditorManager()->GetBuiltinEditor(breakpoint.GetFilename());
+        if (editor)
+            editor->RemoveBreakpoint(breakpoint.GetLine() - 1, false);
+    }
+
     m_activeDebugger->DeleteAllBreakpoints();
     Manager::Get()->GetDebuggerManager()->GetBreakpointDialog()->Reload();
 }

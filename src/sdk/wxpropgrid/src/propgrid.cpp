@@ -1507,7 +1507,8 @@ wxPGCell* wxPGProperty::GetOrCreateCell( unsigned int column )
     return cell;
 }
 
-void wxPGProperty::SetChoiceSelection( int newValue, const wxPGChoiceInfo& choiceInfo )
+void wxPGProperty::SetChoiceSelection( int newValue,
+                                       const wxPGChoiceInfo& choiceInfo )
 {
     // Changes value of a property with choices, but only
     // works if the value type is long or string.
@@ -1530,7 +1531,9 @@ wxString wxPGProperty::GetChoiceString( unsigned int index )
 {
     wxPGChoiceInfo ci;
     GetChoiceInfo(&ci);
-    wxASSERT(ci.m_choices);
+    wxCHECK_MSG( ci.m_choices,
+                 wxEmptyString,
+                 wxT("This property class does not support choices.") );
     return ci.m_choices->GetLabel(index);
 }
 
@@ -1542,28 +1545,27 @@ int wxPGProperty::InsertChoice( const wxString& label, int index, int value )
     ci.m_choices = (wxPGChoices*) NULL;
     int sel = GetChoiceInfo(&ci);
 
-    if ( ci.m_choices )
-    {
-        int newSel = sel;
+    wxCHECK_MSG( ci.m_choices,
+                 -1,
+                 wxT("This property class does not support choices.") );
 
-        if ( index < 0 )
-            index = ci.m_choices->GetCount();
+    int newSel = sel;
 
-        if ( index <= sel )
-            newSel++;
+    if ( index < 0 )
+        index = ci.m_choices->GetCount();
 
-        ci.m_choices->Insert(label, index, value);
+    if ( index <= sel )
+        newSel++;
 
-        if ( sel != newSel )
-            SetChoiceSelection(newSel, ci);
+    ci.m_choices->Insert(label, index, value);
 
-        if ( this == pg->GetSelection() )
-            GetEditorClass()->InsertItem(pg->GetEditorControl(),label,index);
+    if ( sel != newSel )
+        SetChoiceSelection(newSel, ci);
 
-        return index;
-    }
+    if ( this == pg->GetSelection() )
+        GetEditorClass()->InsertItem(pg->GetEditorControl(),label,index);
 
-    return -1;
+    return index;
 }
 
 
@@ -1575,29 +1577,29 @@ void wxPGProperty::DeleteChoice( int index )
     ci.m_choices = (wxPGChoices*) NULL;
     int sel = GetChoiceInfo(&ci);
 
-    if ( ci.m_choices )
+    wxCHECK_RET( ci.m_choices,
+                 wxT("This property class does not support choices.") );
+
+    int newSel = sel;
+
+    // Adjust current value
+    if ( sel == index )
     {
-        int newSel = sel;
-
-        // Adjust current value
-        if ( sel == index )
-        {
-            SetValueToUnspecified();
-            newSel = 0;
-        }
-        else if ( index < sel )
-        {
-            newSel--;
-        }
-
-        ci.m_choices->RemoveAt(index);
-
-        if ( sel != newSel )
-            SetChoiceSelection(newSel, ci);
-
-        if ( this == pg->GetSelection() )
-            GetEditorClass()->DeleteItem(pg->GetEditorControl(), index);
+        SetValueToUnspecified();
+        newSel = 0;
     }
+    else if ( index < sel )
+    {
+        newSel--;
+    }
+
+    ci.m_choices->RemoveAt(index);
+
+    if ( sel != newSel )
+        SetChoiceSelection(newSel, ci);
+
+    if ( this == pg->GetSelection() )
+        GetEditorClass()->DeleteItem(pg->GetEditorControl(), index);
 }
 
 int wxPGProperty::GetChoiceInfo( wxPGChoiceInfo* WXUNUSED(info) )
@@ -1753,6 +1755,8 @@ wxPGChoices& wxPGProperty::GetChoices()
     wxPGChoiceInfo choiceInfo;
     choiceInfo.m_choices = NULL;
     GetChoiceInfo(&choiceInfo);
+    wxASSERT_MSG( choiceInfo.m_choices,
+                  wxT("This property class does not support choices.") );
     return *choiceInfo.m_choices;
 }
 
@@ -1763,9 +1767,11 @@ const wxPGChoices& wxPGProperty::GetChoices() const
 
 unsigned int wxPGProperty::GetChoiceCount() const
 {
-    const wxPGChoices& choices = GetChoices();
-    if ( &choices && choices.IsOk() )
-        return choices.GetCount();
+    wxPGChoiceInfo ci;
+    ci.m_choices = NULL;
+    ((wxPGProperty*)this)->GetChoiceInfo(&ci);
+    if ( ci.m_choices && ci.m_choices->IsOk() )
+        return ci.m_choices->GetCount();
     return 0;
 }
 
@@ -1783,28 +1789,24 @@ const wxPGChoiceEntry* wxPGProperty::GetCurrentChoice() const
 bool wxPGProperty::SetChoices( wxPGChoices& choices )
 {
     wxPGChoiceInfo ci;
-    ci.m_choices = (wxPGChoices*) NULL;
+    ci.m_choices = NULL;
 
-    // Unref existing
     GetChoiceInfo(&ci);
-    if ( ci.m_choices )
-    {
-        ci.m_choices->Assign(choices);
+    wxCHECK_MSG( ci.m_choices,
+                 false,
+                 wxT("This property class does not support choices.") );
 
-        //if ( m_parent )
-        {
-            // This may be needed to trigger some initialization
-            // (but don't do it if property is somewhat uninitialized)
-            wxVariant defVal = GetDefaultValue();
-            if ( defVal.IsNull() )
-                return false;
+    ci.m_choices->Assign(choices);
 
-            SetValue(defVal);
+    // This may be needed to trigger some initialization
+    // (but don't do it if property is somewhat uninitialized)
+    wxVariant defVal = GetDefaultValue();
+    if ( defVal.IsNull() )
+        return false;
 
-            return true;
-        }
-    }
-    return false;
+    SetValue(defVal);
+
+    return true;
 }
 
 
@@ -6686,7 +6688,12 @@ void wxPropertyGrid::OnCustomEditorEvent( wxCommandEvent &event )
     if ( !selected || selected->HasFlag(wxPG_PROP_BEING_DELETED) )
         return;
 
-    if ( m_iFlags & wxPG_FL_IN_ONCUSTOMEDITOREVENT || m_inDoSelectProperty )
+    if ( m_iFlags & wxPG_FL_IN_ONCUSTOMEDITOREVENT ||
+         m_inDoSelectProperty ||
+         // Also don't handle editor event if wxEVT_PG_CHANGED or
+         // similar is currently doing something (showing a
+         // message box, for instance).
+         m_processedEvent )
         return;
 
     wxVariant pendingValue(selected->GetValueRef());

@@ -1678,7 +1678,8 @@ void FormMain::PopulateWithExamples ()
     eech.Add(wxT("Choice 1"));
     eech.Add(wxT("Choice 2"));
     eech.Add(wxT("Choice 3"));
-    pg->Append( new wxEditEnumProperty(wxT("EditEnumProperty"), wxPG_LABEL, eech) ); // , wxT("Choice 2")
+    pg->Append( new wxEditEnumProperty(wxT("EditEnumProperty"), wxPG_LABEL, eech,
+                wxT("Choice not in list")) );
 
     //wxString v_;
     //wxTextValidator validator1(wxFILTER_NUMERIC,&v_);

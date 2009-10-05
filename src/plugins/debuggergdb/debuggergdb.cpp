@@ -182,7 +182,7 @@ DebuggerGDB::~DebuggerGDB()
     #endif
 }
 
-void DebuggerGDB::OnAttach()
+void DebuggerGDB::OnAttachReal()
 {
     m_TimerPollDebugger.SetOwner(this, idTimerPollDebugger);
 
@@ -214,7 +214,7 @@ void DebuggerGDB::OnAttach()
 
     // register event sink
     Manager::Get()->RegisterEventSink(cbEVT_EDITOR_TOOLTIP, new cbEventFunctor<DebuggerGDB, CodeBlocksEvent>(this, &DebuggerGDB::OnValueTooltip));
-    Manager::Get()->RegisterEventSink(cbEVT_EDITOR_OPEN, new cbEventFunctor<DebuggerGDB, CodeBlocksEvent>(this, &DebuggerGDB::OnEditorOpened));
+//    Manager::Get()->RegisterEventSink(cbEVT_EDITOR_OPEN, new cbEventFunctor<DebuggerGDB, CodeBlocksEvent>(this, &DebuggerGDB::OnEditorOpened));
 
     Manager::Get()->RegisterEventSink(cbEVT_PROJECT_ACTIVATE, new cbEventFunctor<DebuggerGDB, CodeBlocksEvent>(this, &DebuggerGDB::OnProjectActivated));
     Manager::Get()->RegisterEventSink(cbEVT_PROJECT_CLOSE, new cbEventFunctor<DebuggerGDB, CodeBlocksEvent>(this, &DebuggerGDB::OnProjectClosed));
@@ -1431,52 +1431,6 @@ void DebuggerGDB::RunCommand(int cmd)
     }
 }
 
-void DebuggerGDB::EditorLinesAddedOrRemoved(cbEditor* editor, int startline, int lines)
-{
-    // here we keep the breakpoints in sync with the editors
-    // (whenever lines are added or removed)
-
-    if (!editor || lines == 0)
-        return;
-
-    if (lines < 0)
-    {
-        // removed lines
-        // make "lines" positive, for easier reading below
-        lines = -lines;
-
-        int endline = startline + lines - 1;
-        // remove file's breakpoints in deleted range
-        m_State.RemoveBreakpointsRange(editor->GetFilename(), startline, endline);
-
-        // shift the rest of file's breakpoints up by "lines"
-        m_State.ShiftBreakpoints(editor->GetFilename(), endline + 1, -lines);
-
-        // special case:
-        // when deleting a block of lines, if these lines contain at least one marker,
-        // one marker is retained at the cursor position.
-        // In our case here, this means that all breakpoints will be deleted in the range
-        // but one "orphan" breakpoint (i.e. editor mark only, no actual breakpoint behind it)
-        // will be visible on the line with the cursor.
-        //
-        // If we really have an "orphan", we remove it.
-        bool is_orphan = m_State.HasBreakpoint(editor->GetFilename(), endline - lines + 1) == -1;
-        if (is_orphan)
-            editor->RemoveBreakpoint(endline - lines + 1, false);
-    }
-    else
-    {
-        // mimic scintilla's behaviour regarding moving a marker (starts from the next line)
-        startline += 1;
-        // just shift file's breakpoints down by "lines"
-        m_State.ShiftBreakpoints(editor->GetFilename(), startline, lines);
-    }
-
-    cbBreakpointsDlg *dlg = Manager::Get()->GetDebuggerManager()->GetBreakpointDialog();
-    dlg->Reload();
-
-}
-
 int DebuggerGDB::GetStackFrameCount() const
 {
     return m_State.GetDriver()->GetStackFrames().size();
@@ -1659,6 +1613,17 @@ void DebuggerGDB::DeleteAllBreakpoints()
     m_breakpoints.clear();
 }
 
+void DebuggerGDB::ShiftBreakpoint(int index, int lines_to_shift)
+{
+    BreakpointsContainer::iterator it = m_breakpoints.begin();
+    std::advance(it, index);
+    if(it != m_breakpoints.end())
+    {
+        m_State.ShiftBreakpoint(it->debugger_breakpoint, lines_to_shift);
+        it->cb_break->SetLine(it->cb_break->GetLine() + lines_to_shift);
+    }
+}
+
 struct TestIfBelogToProject
 {
     TestIfBelogToProject(cbProject *project) :
@@ -1748,7 +1713,6 @@ void DebuggerGDB::Break()
     #ifndef __WXMSW__
         if (pid <= 0)
             pid = m_Pid; // try poking gdb directly
-    #ifndef __WXMSW__
         // non-windows gdb can interrupt the running process. yay!
         if (pid <= 0) // look out for the "fake" PIDs (killall)
             cbMessageBox(_("Unable to stop the debug process!"), _("Error"), wxOK | wxICON_WARNING);
@@ -1849,6 +1813,21 @@ void DebuggerGDB::SyncEditor(const wxString& filename, int line, bool setMarker)
     result = Manager::Get()->GetDebuggerManager()->SyncEditor(filename, line, setMarker);
     if(result == DebuggerManager::SyncFileNotFound)
         Log(_("Cannot open file: ") + filename);
+}
+
+void DebuggerGDB::GetCurrentPosition(wxString &filename, int &line)
+{
+    if (m_State.HasDriver())
+    {
+        const Cursor& cursor = m_State.GetDriver()->GetCursor();
+        filename = cursor.file;
+        line = cursor.line;
+    }
+    else
+    {
+        filename = wxEmptyString;
+        line = -1;
+    }
 }
 
 void DebuggerGDB::OnAddSymbolFile(wxCommandEvent& event)
@@ -2035,38 +2014,6 @@ void DebuggerGDB::OnValueTooltip(CodeBlocksEvent& event)
         m_LastEval = token;
         m_State.GetDriver()->EvaluateSymbol(token, m_EvalRect);
     }
-}
-
-void DebuggerGDB::OnEditorOpened(CodeBlocksEvent& event)
-{
-    // when an editor opens, look if we have breakpoints for it
-    // and notify it...
-    EditorBase* ed = event.GetEditor();
-    wxFileName bpFileName, edFileName;
-    if (ed)
-    {
-        for (unsigned int i = 0; i < m_State.GetBreakpoints().GetCount(); ++i)
-        {
-            DebuggerBreakpoint* bp = m_State.GetBreakpoints()[i];
-            bpFileName.Assign(bp->filename);
-            edFileName.Assign(ed->GetFilename());
-            bpFileName.Normalize();
-            edFileName.Normalize();
-            if (bpFileName.GetFullPath().Matches(edFileName.GetFullPath()))
-                ed->ToggleBreakpoint(bp->line-1, false);
-        }
-        // Now check and highlight the active line under debugging
-        if (m_State.HasDriver())
-        {
-            const Cursor& line_cursor = m_State.GetDriver()->GetCursor();
-            wxFileName dbgFileName(line_cursor.file);
-            dbgFileName.Normalize();
-            if (dbgFileName.GetFullPath().IsSameAs(edFileName.GetFullPath())
-                && line_cursor.line != -1)
-                ed->SetDebugLine(line_cursor.line - 1);
-        }
-    }
-    event.Skip(); // must do
 }
 
 void DebuggerGDB::OnProjectActivated(CodeBlocksEvent& event)

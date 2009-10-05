@@ -40,6 +40,7 @@ class DLLIMPORT cbBreakpoint
         cbBreakpoint(const wxString &filename, int line);
         cbBreakpoint(const wxString &dataExpression, bool breakOnRead, bool breakOnWrite);
 
+        void SetLine(int line);
         void SetCondition(wxString const &condition);
         void SetIgnoreCount(int count);
         void SetEnabled(bool flag);

@@ -22,6 +22,7 @@
 #endif
 
 #include <wx/toolbar.h>
+#include "breakpointsdlg.h"
 #include "cbstyledtextctrl.h"
 
 
@@ -107,6 +108,15 @@ cbDebuggerPlugin::cbDebuggerPlugin() :
     m_Type = ptDebugger;
 }
 
+
+void cbDebuggerPlugin::OnAttach()
+{
+    OnAttachReal();
+    typedef cbEventFunctor<cbDebuggerPlugin, CodeBlocksEvent> EventOpened;
+
+    Manager::Get()->RegisterEventSink(cbEVT_EDITOR_OPEN, new EventOpened(this, &cbDebuggerPlugin::OnEditorOpened));
+}
+
 void cbDebuggerPlugin::BuildMenu(wxMenuBar* menuBar)
 {
     if (!IsAttached())
@@ -159,13 +169,6 @@ wxToolBar* cbDebuggerPlugin::GetToolbar()
     return m_toolbar;
 }
 
-void cbDebuggerPlugin::RemoveBreakpointFromEditor(const wxString& filename, int line)
-{
-    cbEditor* ed = Manager::Get()->GetEditorManager()->IsBuiltinOpen(filename);
-    if (ed)
-        ed->RemoveBreakpoint(line, false);
-}
-
 void cbDebuggerPlugin::ClearActiveMarkFromAllEditors()
 {
     EditorManager* edMan = Manager::Get()->GetEditorManager();
@@ -175,6 +178,127 @@ void cbDebuggerPlugin::ClearActiveMarkFromAllEditors()
         if (ed)
             ed->SetDebugLine(-1);
     }
+}
+
+bool HasBreakpoint(cbDebuggerPlugin &plugin, wxString const &filename, int line)
+{
+    int count = plugin.GetBreakpointsCount();
+    for (int ii = 0; ii < count; ++ii)
+    {
+        const cbBreakpoint* b = plugin.GetBreakpoint(ii);
+
+        if (b->GetFilename() == filename && b->GetLine() == line)
+            return true;
+    }
+    return false;
+}
+
+void cbDebuggerPlugin::EditorLinesAddedOrRemoved(cbEditor* editor, int startline, int lines)
+{
+    // here we keep the breakpoints in sync with the editors
+    // (whenever lines are added or removed)
+    if (!editor || lines == 0)
+        return;
+
+    const wxString& filename = editor->GetFilename();
+
+    std::vector<int> breakpoints_for_file;
+    int count = GetBreakpointsCount();
+    for (int ii = 0; ii < count; ++ii)
+    {
+        const cbBreakpoint* b = GetBreakpoint(ii);
+
+        if (b->GetFilename() == filename)
+        {
+            breakpoints_for_file.push_back(ii);
+        }
+    }
+
+    if (lines < 0)
+    {
+        // removed lines
+        // make "lines" positive, for easier reading below
+        lines = -lines;
+        int endline = startline + lines - 1;
+
+        std::vector<cbBreakpoint*> to_remove;
+
+        for (std::vector<int>::iterator it = breakpoints_for_file.begin(); it != breakpoints_for_file.end(); ++it)
+        {
+            cbBreakpoint* b = GetBreakpoint(*it);
+            if (b->GetLine() > endline)
+                ShiftBreakpoint(*it, -lines);
+            else if (b->GetLine() >= startline && b->GetLine() <= endline)
+                to_remove.push_back(b);
+        }
+
+        for (std::vector<cbBreakpoint*>::iterator it = to_remove.begin(); it != to_remove.end(); ++it)
+            DeleteBreakpoint(*it);
+
+        // special case:
+        // when deleting a block of lines, if these lines contain at least one marker,
+        // one marker is retained at the cursor position.
+        // In our case here, this means that all breakpoints will be deleted in the range
+        // but one "orphan" breakpoint (i.e. editor mark only, no actual breakpoint behind it)
+        // will be visible on the line with the cursor.
+        //
+        // If we really have an "orphan", we remove it.
+        bool is_orphan = !HasBreakpoint(*this, editor->GetFilename(), endline - lines + 1);
+        if (is_orphan)
+            editor->RemoveBreakpoint(endline - lines, false);
+    }
+    else
+    {
+        for (std::vector<int>::iterator it = breakpoints_for_file.begin(); it != breakpoints_for_file.end(); ++it)
+        {
+            cbBreakpoint* b = GetBreakpoint(*it);
+            if (b->GetLine() > startline)
+                ShiftBreakpoint(*it, lines);
+        }
+    }
+    cbBreakpointsDlg *dlg = Manager::Get()->GetDebuggerManager()->GetBreakpointDialog();
+    dlg->Reload();
+}
+
+void cbDebuggerPlugin::OnEditorOpened(CodeBlocksEvent& event)
+{
+    // when an editor opens, look if we have breakpoints for it
+    // and notify it...
+    EditorBase* ed = event.GetEditor();
+    if (ed)
+    {
+        wxFileName bpFileName, edFileName;
+
+        edFileName.Assign(ed->GetFilename());
+        edFileName.Normalize();
+
+        int count = GetBreakpointsCount();
+        for (int ii = 0; ii < count; ++ii)
+        {
+            const cbBreakpoint* breakpoint = GetBreakpoint(ii);
+
+            bpFileName.Assign(breakpoint->GetFilename());
+            bpFileName.Normalize();
+
+            if (bpFileName.GetFullPath().Matches(edFileName.GetFullPath()))
+                ed->ToggleBreakpoint(breakpoint->GetLine() - 1, false);
+        }
+
+        if (IsRunning())
+        {
+            wxString filename;
+            int line;
+            GetCurrentPosition(filename, line);
+
+            wxFileName dbgFileName(filename);
+            dbgFileName.Normalize();
+            if (dbgFileName.GetFullPath().IsSameAs(edFileName.GetFullPath()) && line != -1)
+            {
+                ed->SetDebugLine(line - 1);
+            }
+        }
+    }
+    event.Skip(); // must do
 }
 
 /////

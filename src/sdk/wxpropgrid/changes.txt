@@ -1,5 +1,5 @@
 
-Version 1.4.7 ( ?-?-2009 )
+Version 1.4.7 ( Oct-04-2009 )
 
   New Features:
 
@@ -37,11 +37,24 @@ Version 1.4.7 ( ?-?-2009 )
     if you want the old default behavior.
 
   - New wxPropertyGridManager flags (patch by Julian Smart):
+      wxPG_THEME_BORDER: Show alternative and more thematic border
+        around the wxPropertyGrid.
       wxPG_NO_INTERNAL_BORDER: Do not show internal border around
         the wxPropertyGrid.
       wxPG_EX_NO_TOOLBAR_DIVIDER: Eliminate the divider above
         wxPropertyGridManager tool bar on Windows (it may not
         look good if there's already a border).
+
+  - Added wxFONTFAMILY_TELETYPE and wxFONTFAMILY_UNKNOWN support
+    for wxFontProperty.
+
+
+  Changes:
+
+  - Most wxPGProperty choice manipulation functions will now
+    show a run-time error if you try to use them with properties
+    which do not support choices. Only exception is
+    wxPGProperty::GetChoiceCount(), which still works as before.
 
 
   Bugs Fixed:
@@ -62,6 +75,9 @@ Version 1.4.7 ( ?-?-2009 )
 
   - Property iterators crashed if iterating through
     'non-interesting' properties at the edges of grid.
+
+  - wxEditEnumProperty's initial string value could not
+    be outside the list of choices.
 
   - There were few severe mistakes in the documentation,
     specifically in custom properties section.

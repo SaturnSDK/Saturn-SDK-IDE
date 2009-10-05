@@ -40,7 +40,7 @@ class DebuggerGDB : public cbDebuggerPlugin
         int GetConfigurationGroup() const { return cgDebugger; }
         cbConfigurationPanel* GetConfigurationPanel(wxWindow* parent);
         cbConfigurationPanel* GetProjectConfigurationPanel(wxWindow* parent, cbProject* project);
-        void OnAttach(); // fires when the plugin is attached to the application
+        void OnAttachReal(); // fires when the plugin is attached to the application
         void OnRelease(bool appShutDown); // fires when the plugin is released from the application
 
         void RunCommand(int cmd);
@@ -53,8 +53,7 @@ class DebuggerGDB : public cbDebuggerPlugin
         void UpdateBreakpoint(cbBreakpoint *breakpoint);
         void DeleteBreakpoint(cbBreakpoint* breakpoint);
         void DeleteAllBreakpoints();
-
-        void EditorLinesAddedOrRemoved(cbEditor* editor, int startline, int lines);
+        void ShiftBreakpoint(int index, int lines_to_shift);
 
         // stack frame calls;
         int GetStackFrameCount() const;
@@ -73,7 +72,6 @@ class DebuggerGDB : public cbDebuggerPlugin
         void Step();
         void StepOut();
         void RunToCursor(const wxString& filename, int line, const wxString& line_text);
-//        void ToggleBreakpoint();
         void Break();
         void Stop();
         bool Validate(const wxString& line, const char cb);
@@ -87,6 +85,7 @@ class DebuggerGDB : public cbDebuggerPlugin
         virtual void ShowWatchProperties(cbWatch *watch);
         virtual bool SetWatchValue(cbWatch *watch, const wxString &value);
 
+        void GetCurrentPosition(wxString &filename, int &line);
         void SyncEditor(const wxString& filename, int line, bool setMarker = true);
         void RequestUpdate(DebugWindows window);
 
@@ -128,7 +127,6 @@ class DebuggerGDB : public cbDebuggerPlugin
         wxString GetConsoleTty(int ConsolePid);
         void OnAddSymbolFile(wxCommandEvent& event);
         void OnValueTooltip(CodeBlocksEvent& event);
-        void OnEditorOpened(CodeBlocksEvent& event);
         void OnProjectActivated(CodeBlocksEvent& event);
         void OnProjectClosed(CodeBlocksEvent& event);
         void DeleteAllProjectBreakpoints(cbProject* project);
