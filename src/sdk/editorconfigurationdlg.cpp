@@ -950,19 +950,8 @@ void EditorConfigurationDlg::EndModal(int retCode)
         cfg->Write(_T("/selection/multi_typing"), (bool)XRCCTRL(*this, "chkEnableAdditionalSelectionTyping", wxCheckBox)->GetValue());
 
         //scrollbar
-        bool enableScrollWidthTracking = XRCCTRL(*this, "chkScrollWidthTracking", wxCheckBox)->GetValue();
-        cfg->Write(_T("/margin/scroll_width_tracking"),     enableScrollWidthTracking);
-        if (enableScrollWidthTracking != m_EnableScrollWidthTracking)
-        {
-            EditorManager *em = Manager::Get()->GetEditorManager();
-            for (int idx = 0; idx<em->GetEditorsCount(); ++idx)
-            {
-                cbEditor *ed = em->GetBuiltinEditor(em->GetEditor(idx));
-                if(ed)
-                {
-                }
-            }
-        }
+        cfg->Write(_T("/margin/scroll_width_tracking"),     XRCCTRL(*this, "chkScrollWidthTracking", wxCheckBox)->GetValue());
+
         //changebar
         bool enableChangebar = XRCCTRL(*this, "chkUseChangebar", wxCheckBox)->GetValue();
         cfg->Write(_T("/margin/use_changebar"),        enableChangebar);
