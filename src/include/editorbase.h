@@ -225,10 +225,8 @@ class DLLIMPORT EditorBase : public wxPanel
         /** Goto previous changed line */
         virtual void GotoPreviousChanged(){}
 
-
         /** Enable or disable changebar */
         virtual void SetChangeCollection(bool collectChange){}
-
 
         /** Cut selected text/object to clipboard. */
         virtual void Cut(){}
