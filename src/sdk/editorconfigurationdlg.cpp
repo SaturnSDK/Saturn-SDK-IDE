@@ -81,6 +81,7 @@ BEGIN_EVENT_TABLE(EditorConfigurationDlg, wxDialog)
     EVT_BUTTON(XRCID("btnAutoCompDelete"),      EditorConfigurationDlg::OnAutoCompDelete)
     EVT_CHECKBOX(XRCID("chkDynamicWidth"),      EditorConfigurationDlg::OnDynamicCheck)
     EVT_CHECKBOX(XRCID("chkHighlightOccurrences"),  EditorConfigurationDlg::OnHighlightOccurrences)
+    EVT_CHECKBOX(XRCID("chkEnableMultipleSelections"),  EditorConfigurationDlg::OnMultipleSelections)
     EVT_BUTTON(XRCID("btnHighlightColour"),         EditorConfigurationDlg::OnChooseColour)
 
     EVT_LISTBOOK_PAGE_CHANGED(XRCID("nbMain"), EditorConfigurationDlg::OnPageChanged)
@@ -155,6 +156,13 @@ EditorConfigurationDlg::EditorConfigurationDlg(wxWindow* parent)
     XRCCTRL(*this, "spnCaretWidth", wxSpinCtrl)->SetValue(cfg->ReadInt(_T("/caret/width"), 1));
     XRCCTRL(*this, "btnCaretColour", wxButton)->SetBackgroundColour(caretColour);
     XRCCTRL(*this, "slCaretPeriod", wxSlider)->SetValue(cfg->ReadInt(_T("/caret/period"), 500));
+
+    //selections
+    XRCCTRL(*this, "chkEnableVirtualSpace", wxCheckBox)->SetValue(cfg->ReadBool(_T("/selection/use_vspace"), false));
+    bool multiSelectEnabled = cfg->ReadBool(_T("/selection/multi_select"), false);
+    XRCCTRL(*this, "chkEnableMultipleSelections", wxCheckBox)->SetValue(multiSelectEnabled);
+    XRCCTRL(*this, "chkEnableAdditionalSelectionTyping", wxCheckBox)->SetValue(cfg->ReadBool(_T("/selection/multi_typing"), false));
+    XRCCTRL(*this, "chkEnableAdditionalSelectionTyping", wxCheckBox)->Enable(multiSelectEnabled);
 
     //folding
     XRCCTRL(*this, "chkEnableFolding", wxCheckBox)->SetValue(cfg->ReadBool(_T("/folding/show_folds"), true));
@@ -935,6 +943,12 @@ void EditorConfigurationDlg::EndModal(int retCode)
         cfg->Write(_T("/margin/width_chars"),       XRCCTRL(*this, "spnMarginWidth", wxSpinCtrl)->GetValue());
         cfg->Write(_T("/margin/dynamic_width"),     XRCCTRL(*this, "chkDynamicWidth", wxCheckBox)->GetValue());
         cfg->Write(_T("/margin_1_sensitive"), (bool)XRCCTRL(*this, "chkAddBPByLeftClick", wxCheckBox)->GetValue());
+
+        //selections
+        cfg->Write(_T("/selection/use_vspace"), (bool)XRCCTRL(*this, "chkEnableVirtualSpace", wxCheckBox)->GetValue());
+        cfg->Write(_T("/selection/multi_select"), (bool)XRCCTRL(*this, "chkEnableMultipleSelections", wxCheckBox)->GetValue());
+        cfg->Write(_T("/selection/multi_typing"), (bool)XRCCTRL(*this, "chkEnableAdditionalSelectionTyping", wxCheckBox)->GetValue());
+
         //scrollbar
         cfg->Write(_T("/margin/scroll_width_tracking"),     XRCCTRL(*this, "chkScrollWidthTracking", wxCheckBox)->GetValue());
 
@@ -1019,4 +1033,9 @@ void EditorConfigurationDlg::OnHighlightOccurrences(wxCommandEvent& event)
     XRCCTRL(*this, "chkHighlightOccurrencesWholeWord", wxCheckBox)->Enable( event.IsChecked() );
     XRCCTRL(*this, "stHighlightColour", wxStaticText)->Enable( event.IsChecked() );
     XRCCTRL(*this, "btnHighlightColour", wxButton)->Enable( event.IsChecked() );
+}
+
+void EditorConfigurationDlg::OnMultipleSelections(wxCommandEvent& event)
+{
+    XRCCTRL(*this, "chkEnableAdditionalSelectionTyping", wxCheckBox)->Enable( event.IsChecked() );
 }

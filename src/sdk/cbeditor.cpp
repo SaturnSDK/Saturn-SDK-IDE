@@ -1418,6 +1418,17 @@ void cbEditor::InternalSetEditorStyleBeforeFileOpen(cbStyledTextCtrl* control)
         control->SetMarginWidth(changebarMargin, 0);
 
     control->SetScrollWidthTracking(mgr->ReadBool(_T("/margin/scroll_width_tracking"), false));
+
+    control->SetMultipleSelection(mgr->ReadBool(_T("/selection/multi_select"), false));
+    control->SetAdditionalSelectionTyping(mgr->ReadBool(_T("/selection/multi_typing"), false));
+    if(mgr->ReadBool(_T("/selection/use_vspace"), false))
+    {
+        control->SetVirtualSpaceOptions(wxSCI_SCVS_RECTANGULARSELECTION | wxSCI_SCVS_USERACCESSIBLE);
+    }
+    else
+    {
+        control->SetVirtualSpaceOptions(wxSCI_SCVS_NONE);
+    }
 }
 
 // static
