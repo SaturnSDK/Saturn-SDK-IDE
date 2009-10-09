@@ -1,9 +1,12 @@
+#include <cstdarg>
+
 struct _s
 {
   int   x;
   float y;
 };
 typedef struct _s t_s;
+typedef _s (*t_ptr)(int a, int b);
 
 typedef struct _s_inner
 {
@@ -30,7 +33,10 @@ typedef class _c_inner
   float m;
 } t_c_inner;
 
-typedef unsigned int iiiiiiiiiiiiiiii;
+typedef unsigned int i_uinteger;
+
+typedef void   t_void   (int i, const char *c, va_list v_l);
+typedef void (*t_p_void)(int i, const char *c, va_list v_l);
 
 int main (void)
 {
@@ -49,6 +55,9 @@ int main (void)
 //    rts.
 //    pts.
 //    pts->
+
+//    t_ptr_s(
+//    t_ptr_s(3,3).
 
     t_s_outer  ts_outer;
     t_s_outer* pts_outer;
@@ -75,7 +84,10 @@ int main (void)
 //    ptc_inner.
 //    ptc_inner->
 
-//    ii
+//    i_
+
+//    t_void(
+//    t_p_void(
 
     return 0;
 }
