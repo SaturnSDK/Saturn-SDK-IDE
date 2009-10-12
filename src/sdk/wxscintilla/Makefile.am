@@ -143,6 +143,7 @@ noinst_HEADERS = src/PlatWX.h \
 			src/scintilla/src/Partitioning.h \
 			src/scintilla/src/PerLine.h \
 			src/scintilla/src/PositionCache.h \
+			src/scintilla/src/PropSetSimple.h \
 			src/scintilla/src/RESearch.h \
 			src/scintilla/src/RunStyles.h \
 			src/scintilla/src/SVector.h \
