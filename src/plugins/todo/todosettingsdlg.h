@@ -6,7 +6,6 @@
 #ifndef TODOSETTINGSDLG_H
 #define TODOSETTINGSDLG_H
 
-// #include "scrollingdialog.h"
 #include <wx/intl.h>
 #include "configurationpanel.h"
 #include <settings.h>

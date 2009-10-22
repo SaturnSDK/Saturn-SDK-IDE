@@ -13,7 +13,6 @@
 #endif
 
 //(*Headers(Execution)
-#include "scrollingdialog.h"
 class wxGauge;
 class wxCheckBox;
 class wxRadioBox;
@@ -23,6 +22,7 @@ class wxStaticBoxSizer;
 class wxCheckListBox;
 //*)
 
+#include "scrollingdialog.h"
 #include <wx/arrstr.h>
 #include <wx/event.h>
 

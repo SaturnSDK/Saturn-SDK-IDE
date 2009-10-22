@@ -21,9 +21,10 @@
 #include <wx/statline.h>
 #include <wx/panel.h>
 #include <wx/button.h>
-#include "scrollingdialog.h"
 #include <wx/combobox.h>
 //*)
+
+#include "scrollingdialog.h"
 
 class Parser;
 class Token;

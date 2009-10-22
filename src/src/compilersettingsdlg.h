@@ -6,7 +6,7 @@
 #ifndef COMPILERSETTINGSDLG_H
 #define COMPILERSETTINGSDLG_H
 
-#include "scrollingdialog.h"
+#include <scrollingdialog.h>
 #include <pluginmanager.h>
 
 class wxListbookEvent;

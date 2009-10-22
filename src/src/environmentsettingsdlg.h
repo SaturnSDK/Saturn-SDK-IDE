@@ -6,7 +6,7 @@
 #ifndef ENVIRONMENTSETTINGSDLG_H
 #define ENVIRONMENTSETTINGSDLG_H
 
-#include "scrollingdialog.h"
+#include <scrollingdialog.h>
 #include <pluginmanager.h>
 
 class wxAuiDockArt;

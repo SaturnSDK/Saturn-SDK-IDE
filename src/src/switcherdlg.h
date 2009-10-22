@@ -12,8 +12,9 @@
 #ifndef _WX_SWITCHERDLG_H_
 #define _WX_SWITCHERDLG_H_
 
-#include "wx/dynarray.h"
-#include "wx/html/htmlwin.h"
+#include <wx/dynarray.h>
+#include <wx/html/htmlwin.h>
+
 #include "scrollingdialog.h"
 
 /*!

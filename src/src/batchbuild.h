@@ -3,7 +3,7 @@
  * http://www.gnu.org/licenses/gpl-3.0.html
  */
 
-#include "scrollingdialog.h"
+#include <scrollingdialog.h>
 #include <manager.h>
 #include <configmanager.h>
 #include <pluginmanager.h>

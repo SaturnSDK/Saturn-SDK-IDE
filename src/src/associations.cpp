@@ -310,7 +310,7 @@ bool Associations::DoCheckAssociation(const wxString& ext, const wxString& descr
 
 
 
-BEGIN_EVENT_TABLE(ManageAssocsDialog, wxDialog)
+BEGIN_EVENT_TABLE(ManageAssocsDialog, wxScrollingDialog)
     EVT_BUTTON(XRCID("wxID_OK"), ManageAssocsDialog::OnApply)
     EVT_BUTTON(XRCID("wxID_CANCEL"), ManageAssocsDialog::OnCancel)
     EVT_BUTTON(XRCID("clearAll"), ManageAssocsDialog::OnClearAll)
@@ -370,7 +370,7 @@ void ManageAssocsDialog::OnClearAll(wxCommandEvent& event)
 
 
 
-BEGIN_EVENT_TABLE(AskAssocDialog, wxDialog)
+BEGIN_EVENT_TABLE(AskAssocDialog, wxScrollingDialog)
     EVT_BUTTON(XRCID("wxID_OK"), AskAssocDialog::OnOK)
 END_EVENT_TABLE()
 
