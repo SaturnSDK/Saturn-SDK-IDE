@@ -20,7 +20,7 @@
     #include "infowindow.h"
 
     #include <wx/button.h>
-    #include <wx/dialog.h>
+    #include "scrollingdialog.h"
     #include <wx/intl.h>
     #include <wx/xrc/xmlres.h>
     #include <wx/textctrl.h>
@@ -54,7 +54,7 @@ const wxChar *bim[] = {_T("base"), _T("include"), _T("lib"), _T("obj"), _T("cfla
 const wxArrayString builtinMembers((size_t) 6, bim);
 
 
-class UsrGlblMgrEditDialog : public wxDialog
+class UsrGlblMgrEditDialog : public wxScrollingDialog
 {
     wxString currentSet;
     wxString currentVar;
@@ -283,7 +283,7 @@ void UserVariableManager::Migrate()
 
 
 
-BEGIN_EVENT_TABLE(UsrGlblMgrEditDialog, wxDialog)
+BEGIN_EVENT_TABLE(UsrGlblMgrEditDialog, wxScrollingDialog)
 EVT_BUTTON(XRCID("cloneVar"), UsrGlblMgrEditDialog::CloneVar)
 EVT_BUTTON(XRCID("newVar"), UsrGlblMgrEditDialog::NewVar)
 EVT_BUTTON(XRCID("deleteVar"), UsrGlblMgrEditDialog::DeleteVar)

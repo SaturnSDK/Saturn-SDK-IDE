@@ -13,7 +13,7 @@
 #endif
 
 //(*Headers(Protocol)
-#include <wx/dialog.h>
+#include "scrollingdialog.h"
 class wxTextCtrl;
 class wxStaticText;
 class wxBoxSizer;
@@ -25,7 +25,7 @@ class wxCommandEvent;
 class wxWindow;
 class wxString;
 
-class Protocol: public wxDialog
+class Protocol: public wxScrollingDialog
 {
 public:
 

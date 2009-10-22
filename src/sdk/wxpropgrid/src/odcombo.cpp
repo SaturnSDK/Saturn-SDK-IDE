@@ -38,6 +38,8 @@
 
 #endif
 
+#include "scrollingdialog.h"
+
 #include "wx/dcbuffer.h"
 #include "wx/tooltip.h"
 #include "wx/timer.h"
@@ -131,7 +133,7 @@
 
 #else
 
-    #define wxPGComboPopupWindowBase wxDialog
+    #define wxPGComboPopupWindowBase wxScrollingDialog
     #if !ALLOW_FAKE_POPUP
         #define INSTALL_TOPLEV_HANDLER      0 // Doesn't need since can monitor active event
     #else
@@ -2452,7 +2454,7 @@ void wxPGComboControlBase::ShowPopup()
 #endif
 
 #if INSTALL_TOPLEV_HANDLER
-    // If our real popup is wxDialog, then only install handler
+    // If our real popup is wxScrollingDialog, then only install handler
     // incase of fake popup.
   #if !wxUSE_POPUPWIN
     if ( m_fakePopupUsage != 2 )

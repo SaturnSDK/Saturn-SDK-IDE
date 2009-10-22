@@ -53,5 +53,5 @@ void EditWatchDlg::EndModal(int retCode)
         m_watch->SetArrayParams(XRCCTRL(*this, "spnArrStart", wxSpinCtrl)->GetValue(),
                                 XRCCTRL(*this, "spnArrCount", wxSpinCtrl)->GetValue());
     }
-    wxDialog::EndModal(retCode);
+    wxScrollingDialog::EndModal(retCode);
 }

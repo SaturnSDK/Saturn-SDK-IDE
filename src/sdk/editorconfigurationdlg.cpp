@@ -57,7 +57,7 @@ const int IMAGES_COUNT = sizeof(base_imgs) / sizeof(wxString);
 // if more entries are added to cmbDefCodeFileType, edit the mapping here
 const FileType IdxToFileType[] = { ftSource, ftHeader };
 
-BEGIN_EVENT_TABLE(EditorConfigurationDlg, wxDialog)
+BEGIN_EVENT_TABLE(EditorConfigurationDlg, wxScrollingDialog)
     EVT_BUTTON(XRCID("btnChooseEditorFont"),    EditorConfigurationDlg::OnChooseFont)
     EVT_BUTTON(XRCID("btnKeywords"),            EditorConfigurationDlg::OnEditKeywords)
     EVT_BUTTON(XRCID("btnFilemasks"),           EditorConfigurationDlg::OnEditFilemasks)
@@ -1024,7 +1024,7 @@ void EditorConfigurationDlg::EndModal(int retCode)
             panel->OnCancel();
         }
     }
-    wxDialog::EndModal(retCode);
+    wxScrollingDialog::EndModal(retCode);
 }
 
 void EditorConfigurationDlg::OnHighlightOccurrences(wxCommandEvent& event)

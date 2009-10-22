@@ -16,7 +16,7 @@
 #include "genericmultilinenotesdlg.h"
 #include <wx/textctrl.h>
 
-BEGIN_EVENT_TABLE(GenericMultiLineNotesDlg, wxDialog)
+BEGIN_EVENT_TABLE(GenericMultiLineNotesDlg, wxScrollingDialog)
     //
 END_EVENT_TABLE()
 
@@ -50,5 +50,5 @@ void GenericMultiLineNotesDlg::EndModal(int retCode)
     {
         m_Notes = XRCCTRL(*this, "txtNotes", wxTextCtrl)->GetValue();
     }
-    wxDialog::EndModal(retCode);
+    wxScrollingDialog::EndModal(retCode);
 }

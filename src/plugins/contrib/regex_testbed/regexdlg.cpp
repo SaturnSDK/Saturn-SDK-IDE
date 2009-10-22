@@ -32,7 +32,7 @@
 //(*IdInit(regex_dialog)
 //*)
 
-BEGIN_EVENT_TABLE(RegExDlg,wxDialog)
+BEGIN_EVENT_TABLE(RegExDlg,wxScrollingDialog)
 	EVT_INIT_DIALOG(RegExDlg::OnInit)
 	EVT_UPDATE_UI(-1, RegExDlg::OnUpdateUI)
 END_EVENT_TABLE()
@@ -134,7 +134,7 @@ void RegExDlg::RunBenchmark(wxCommandEvent& event)
 
 void RegExDlg::EndModal(int retCode)
 {
-    wxDialog::EndModal(retCode);
+    wxScrollingDialog::EndModal(retCode);
 }
 
 void RegExDlg::OnInit(wxInitDialogEvent& event)

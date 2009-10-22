@@ -21,7 +21,7 @@
 #include <wx/textdlg.h>
 #include "addtododlg.h"
 
-BEGIN_EVENT_TABLE(AddTodoDlg, wxDialog)
+BEGIN_EVENT_TABLE(AddTodoDlg, wxScrollingDialog)
     EVT_BUTTON(XRCID("btAddUser"), AddTodoDlg::OnAddUser)
     EVT_BUTTON(XRCID("btDelUser"), AddTodoDlg::OnDelUser)
     EVT_BUTTON(XRCID("btAddType"), AddTodoDlg::OnAddType)
@@ -175,7 +175,7 @@ void AddTodoDlg::EndModal(int retVal)
         Manager::Get()->GetConfigManager(_T("todo_list"))->Write(_T("last_used_position"), cmb->GetStringSelection());
     }
 
-    wxDialog::EndModal(retVal);
+    wxScrollingDialog::EndModal(retVal);
 }
 
 void AddTodoDlg::OnAddUser(wxCommandEvent&)

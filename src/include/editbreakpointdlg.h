@@ -6,11 +6,11 @@
 #ifndef EDITBREAKPOINT_H
 #define EDITBREAKPOINT_H
 
-#include <wx/dialog.h>
+#include "scrollingdialog.h"
 
 class cbBreakpoint;
 
-class EditBreakpointDlg : public wxDialog
+class EditBreakpointDlg : public wxScrollingDialog
 {
     public:
         EditBreakpointDlg(cbBreakpoint* breakpoint, wxWindow* parent = 0);

@@ -6,10 +6,10 @@
 #ifndef EDITWATCHDLG_H
 #define EDITWATCHDLG_H
 
-#include <wx/dialog.h>
+#include "scrollingdialog.h"
 class GDBWatch;
 
-class EditWatchDlg : public wxDialog
+class EditWatchDlg : public wxScrollingDialog
 {
     public:
         EditWatchDlg(GDBWatch* w = nullptr, wxWindow* parent = nullptr);

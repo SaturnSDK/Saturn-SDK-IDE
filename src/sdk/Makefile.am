@@ -106,6 +106,7 @@ libcodeblocks_la_SOURCES = annoyingdialog.cpp \
 						replacedlg.cpp \
 						scriptingmanager.cpp \
 						scriptsecuritywarningdlg.cpp \
+						scrollingdialog.cpp \
 						sdk_events.cpp \
 						searchresultslog.cpp \
 						selecttargetdlg.cpp \

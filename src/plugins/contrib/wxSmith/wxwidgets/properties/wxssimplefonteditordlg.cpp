@@ -42,7 +42,7 @@ const long wxsSimpleFontEditorDlg::ID_STATICTEXT2 = wxNewId();
 const long wxsSimpleFontEditorDlg::ID_STATICTEXT3 = wxNewId();
 //*)
 
-BEGIN_EVENT_TABLE(wxsSimpleFontEditorDlg,wxDialog)
+BEGIN_EVENT_TABLE(wxsSimpleFontEditorDlg,wxScrollingDialog)
 	//(*EventTable(wxsSimpleFontEditorDlg)
 	//*)
 	EVT_BUTTON(wxID_OK,wxsSimpleFontEditorDlg::OnOK)

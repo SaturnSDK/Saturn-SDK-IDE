@@ -9,10 +9,10 @@
 #include <wx/checkbox.h>
 #include <wx/listbox.h>
 #include <wx/button.h>
-#include <wx/dialog.h>
+#include "scrollingdialog.h"
 //*)
 
-class DefsDownloadDlg: public wxDialog
+class DefsDownloadDlg: public wxScrollingDialog
 {
 	public:
 

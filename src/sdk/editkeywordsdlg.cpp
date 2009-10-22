@@ -20,7 +20,7 @@
 
 #include "editkeywordsdlg.h"
 
-BEGIN_EVENT_TABLE(EditKeywordsDlg, wxDialog)
+BEGIN_EVENT_TABLE(EditKeywordsDlg, wxScrollingDialog)
     EVT_SPINCTRL(-1, EditKeywordsDlg::OnSetChange)
 END_EVENT_TABLE()
 

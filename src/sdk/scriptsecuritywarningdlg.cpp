@@ -41,5 +41,5 @@ ScriptSecurityResponse ScriptSecurityWarningDlg::GetResponse()
 
 void ScriptSecurityWarningDlg::EndModal(int retCode)
 {
-    wxDialog::EndModal(retCode);
+    wxScrollingDialog::EndModal(retCode);
 }

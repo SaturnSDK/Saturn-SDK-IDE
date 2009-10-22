@@ -33,7 +33,7 @@ const long Protocol::ID_TXT_PROTOCOL = wxNewId();
 
 // ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- -----
 
-BEGIN_EVENT_TABLE(Protocol,wxDialog)
+BEGIN_EVENT_TABLE(Protocol,wxScrollingDialog)
   //(*EventTable(Protocol)
   //*)
 END_EVENT_TABLE()
@@ -60,7 +60,7 @@ Protocol::Protocol(wxWindow* parent,wxWindowID id)
   sizMain->Fit(this);
   sizMain->SetSizeHints(this);
   Center();
-  
+
   Connect(wxID_OK,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&Protocol::OnBtnOKClick);
   //*)
 }// Protocol

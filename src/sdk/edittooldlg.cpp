@@ -26,7 +26,7 @@
 #include <wx/filedlg.h>
 
 
-BEGIN_EVENT_TABLE(EditToolDlg, wxDialog)
+BEGIN_EVENT_TABLE(EditToolDlg, wxScrollingDialog)
 	EVT_BUTTON(XRCID("btnBrowseCommand"), 	EditToolDlg::OnBrowseCommand)
 	EVT_BUTTON(XRCID("btnBrowseDir"), 		EditToolDlg::OnBrowseDir)
 	EVT_UPDATE_UI(-1,						EditToolDlg::OnUpdateUI)
@@ -87,5 +87,5 @@ void EditToolDlg::EndModal(int retCode)
         m_Tool->SetLaunchOption(static_cast<cbTool::eLaunchOption>(XRCCTRL(*this, "rbLaunchOptions", wxRadioBox)->GetSelection()));
     }
 
-	wxDialog::EndModal(retCode);
+	wxScrollingDialog::EndModal(retCode);
 } // end of EndModal

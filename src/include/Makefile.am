@@ -119,6 +119,7 @@ ALLHEADERS = annoyingdialog.h \
 				safedelete.h \
 				scriptingmanager.h \
 				scriptsecuritywarningdlg.h \
+				scrollingdialog.h \
 				sdk.h \
 				sdk_common.h \
 				sdk_precomp.h \

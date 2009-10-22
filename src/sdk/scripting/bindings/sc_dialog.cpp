@@ -19,13 +19,13 @@
 #endif
 
 #include <wx/xrc/xmlres.h>
-#include <wx/dialog.h>
+#include "scrollingdialog.h"
 
 #include "sc_base_types.h"
 
 namespace ScriptBindings
 {
-    class XrcDialog : public wxDialog
+    class XrcDialog : public wxScrollingDialog
     {
             DECLARE_EVENT_TABLE()
             wxString m_CallBack;
@@ -44,7 +44,7 @@ namespace ScriptBindings
 
     XrcDialog* s_ActiveDialog = 0;
 
-    BEGIN_EVENT_TABLE(XrcDialog, wxDialog)
+    BEGIN_EVENT_TABLE(XrcDialog, wxScrollingDialog)
         EVT_CHOICE(-1, XrcDialog::OnButton)
         EVT_COMBOBOX(-1, XrcDialog::OnButton)
         EVT_CHECKBOX(-1, XrcDialog::OnButton)

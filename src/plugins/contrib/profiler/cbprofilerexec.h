@@ -2,7 +2,7 @@
 #define CBPROFILEREXEC_H
 
 #include <wx/arrstr.h>
-#include <wx/dialog.h>
+#include "scrollingdialog.h"
 #include <wx/string.h>
 
 struct struct_config
@@ -27,7 +27,7 @@ class wxWindow;
 class wxListEvent;
 class wxCommandEvent;
 
-class CBProfilerExecDlg : public wxDialog
+class CBProfilerExecDlg : public wxScrollingDialog
 {
     public:
         CBProfilerExecDlg(wxWindow* parent) : parent(parent){}

@@ -17,7 +17,7 @@
 // ----------------------------------------------------------------------------
 EditProperties::EditProperties (wxWindow* pParent, ScbEditor* pEditor, long style)
 // ----------------------------------------------------------------------------
-        : wxDialog (pParent, -1, wxEmptyString,
+        : wxScrollingDialog (pParent, -1, wxEmptyString,
                     wxDefaultPosition, wxDefaultSize,
                     style | wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER)
 {

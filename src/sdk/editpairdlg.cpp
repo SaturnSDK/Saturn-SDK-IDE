@@ -20,7 +20,7 @@
 #include "editpairdlg.h"
 #include "filefilters.h"
 
-BEGIN_EVENT_TABLE(EditPairDlg, wxDialog)
+BEGIN_EVENT_TABLE(EditPairDlg, wxScrollingDialog)
     EVT_BUTTON(XRCID("btnBrowse"), EditPairDlg::OnBrowse)
     EVT_UPDATE_UI(-1, EditPairDlg::OnUpdateUI)
 END_EVENT_TABLE()
@@ -88,5 +88,5 @@ void EditPairDlg::EndModal(int retCode)
         m_Key = XRCCTRL(*this, "txtKey", wxTextCtrl)->GetValue();
         m_Value = XRCCTRL(*this, "txtValue", wxTextCtrl)->GetValue();
     }
-    wxDialog::EndModal(retCode);
+    wxScrollingDialog::EndModal(retCode);
 }

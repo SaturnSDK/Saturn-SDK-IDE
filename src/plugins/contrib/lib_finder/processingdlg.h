@@ -32,7 +32,7 @@
 #include <wx/sizer.h>
 #include <wx/stattext.h>
 #include <wx/button.h>
-#include <wx/dialog.h>
+#include "scrollingdialog.h"
 #include <wx/gauge.h>
 //*)
 
@@ -44,7 +44,7 @@
 WX_DECLARE_STRING_HASH_MAP(wxArrayString,FileNamesMap);
 WX_DECLARE_STRING_HASH_MAP(wxString,wxStringStringMap);
 
-class ProcessingDlg: public wxDialog
+class ProcessingDlg: public wxScrollingDialog
 {
 	public:
 

@@ -72,7 +72,7 @@ void myHandler::OnKeyDown(wxKeyEvent& event)
     }
 }
 
-BEGIN_EVENT_TABLE(IncrementalSelectListDlg, wxDialog)
+BEGIN_EVENT_TABLE(IncrementalSelectListDlg, wxScrollingDialog)
     EVT_TEXT(XRCID("txtSearch"), IncrementalSelectListDlg::OnSearch)
     EVT_LISTBOX_DCLICK(XRCID("lstItems"), IncrementalSelectListDlg::OnSelect)
 END_EVENT_TABLE()

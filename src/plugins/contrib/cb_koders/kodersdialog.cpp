@@ -29,7 +29,7 @@ const long KodersDialog::ID_CHO_LANGUAGES = wxNewId();
 const long KodersDialog::ID_CHO_LICENSES = wxNewId();
 //*)
 
-BEGIN_EVENT_TABLE(KodersDialog,wxDialog)
+BEGIN_EVENT_TABLE(KodersDialog,wxScrollingDialog)
 	//(*EventTable(KodersDialog)
 	//*)
 END_EVENT_TABLE()

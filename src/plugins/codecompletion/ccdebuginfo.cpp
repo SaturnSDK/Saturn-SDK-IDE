@@ -73,7 +73,7 @@ const long CCDebugInfo::ID_STATICTEXT31 = wxNewId();
 const long CCDebugInfo::ID_STATICLINE2 = wxNewId();
 //*)
 
-BEGIN_EVENT_TABLE(CCDebugInfo,wxDialog)
+BEGIN_EVENT_TABLE(CCDebugInfo,wxScrollingDialog)
 	//(*EventTable(CCDebugInfo)
 	//*)
 END_EVENT_TABLE()
@@ -87,7 +87,7 @@ CCDebugInfo::CCDebugInfo(wxWindow* parent, Parser* parser, Token* token)
 	wxBoxSizer* BoxSizer2;
 	wxPanel* Panel3;
 	wxBoxSizer* BoxSizer1;
-	
+
 	Create(parent, id, _("Code-completion debug tool"), wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER|wxTAB_TRAVERSAL, _T("id"));
 	BoxSizer1 = new wxBoxSizer(wxVERTICAL);
 	Notebook1 = new wxNotebook(this, ID_NOTEBOOK1, wxDefaultPosition, wxDefaultSize, 0, _T("ID_NOTEBOOK1"));
@@ -228,7 +228,7 @@ CCDebugInfo::CCDebugInfo(wxWindow* parent, Parser* parser, Token* token)
 	BoxSizer1->Fit(this);
 	BoxSizer1->SetSizeHints(this);
 	Center();
-	
+
 	Connect(ID_BUTTON1,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&CCDebugInfo::OnFindClick);
 	Connect(ID_BUTTON4,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&CCDebugInfo::OnGoParentClick);
 	Connect(ID_BUTTON5,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&CCDebugInfo::OnGoChildrenClick);

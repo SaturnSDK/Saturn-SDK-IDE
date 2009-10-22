@@ -26,7 +26,7 @@
 #include <wx/filename.h>
 #include <wx/intl.h>
 
-BEGIN_EVENT_TABLE(ScriptingSettingsDlg, wxDialog)
+BEGIN_EVENT_TABLE(ScriptingSettingsDlg, wxScrollingDialog)
     EVT_LIST_ITEM_SELECTED(XRCID("chkStartupScripts"), ScriptingSettingsDlg::OnListSelection)
     EVT_LIST_ITEM_DESELECTED(XRCID("chkStartupScripts"), ScriptingSettingsDlg::OnListDeselection)
     EVT_TEXT(XRCID("txtScript"), ScriptingSettingsDlg::OnScriptChanged)
@@ -178,7 +178,7 @@ void ScriptingSettingsDlg::EndModal(int retCode)
         mgr->Write(_T("Execute"), XRCCTRL(*this, "chkExec", wxCheckBox)->GetValue());
     }
 
-    wxDialog::EndModal(retCode);
+    wxScrollingDialog::EndModal(retCode);
 }
 
 void ScriptingSettingsDlg::LoadItem(long item)

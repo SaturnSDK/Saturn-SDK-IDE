@@ -16,12 +16,12 @@
 #include <wx/checklst.h>
 #include <wx/listbox.h>
 #include <wx/button.h>
-#include <wx/dialog.h>
+#include "scrollingdialog.h"
 //*)
 
 class cbProject;
 
-class VirtualBuildTargetsDlg: public wxDialog
+class VirtualBuildTargetsDlg: public wxScrollingDialog
 {
 	public:
 

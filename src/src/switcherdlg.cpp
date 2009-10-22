@@ -776,7 +776,7 @@ void wxMultiColumnListCtrl::Init()
  * and tabs for the user to choose. Ctrl+Tab cycles through them.
  */
 
-BEGIN_EVENT_TABLE(wxSwitcherDialog, wxDialog)
+BEGIN_EVENT_TABLE(wxSwitcherDialog, wxScrollingDialog)
     EVT_CLOSE(wxSwitcherDialog::OnCloseWindow)
     EVT_ACTIVATE(wxSwitcherDialog::OnActivate)
     EVT_LISTBOX(wxID_ANY, wxSwitcherDialog::OnSelectItem)
@@ -801,7 +801,7 @@ bool wxSwitcherDialog::Create( const wxSwitcherItems& items, wxWindow *parent, w
     style &= wxBORDER_MASK;
     style |= wxBORDER_NONE;
 
-    wxDialog::Create( parent, id, title, position, size, style );
+    wxScrollingDialog::Create( parent, id, title, position, size, style );
 
     m_listCtrl = new wxMultiColumnListCtrl();
     m_listCtrl->SetItems(items);

@@ -18,7 +18,7 @@
 
 #include "confirmreplacedlg.h"
 
-BEGIN_EVENT_TABLE(ConfirmReplaceDlg, wxDialog)
+BEGIN_EVENT_TABLE(ConfirmReplaceDlg, wxScrollingDialog)
     EVT_BUTTON(XRCID("btnYes"),       ConfirmReplaceDlg::OnYes)
     EVT_BUTTON(XRCID("btnNo"),        ConfirmReplaceDlg::OnNo)
     EVT_BUTTON(XRCID("btnAllInFile"), ConfirmReplaceDlg::OnAllInFile)

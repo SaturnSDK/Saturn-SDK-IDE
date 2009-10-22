@@ -35,7 +35,7 @@
 //*)
 
 
-class wxsArrayStringCheckEditorDlg: public wxDialog
+class wxsArrayStringCheckEditorDlg: public wxScrollingDialog
 {
 	public:
 

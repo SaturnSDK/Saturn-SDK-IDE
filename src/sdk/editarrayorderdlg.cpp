@@ -18,7 +18,7 @@
 
 #include "editarrayorderdlg.h" // class's header file
 
-BEGIN_EVENT_TABLE(EditArrayOrderDlg, wxDialog)
+BEGIN_EVENT_TABLE(EditArrayOrderDlg, wxScrollingDialog)
     EVT_UPDATE_UI( -1, EditArrayOrderDlg::OnUpdateUI)
 	EVT_BUTTON(XRCID("btnMoveUp"), EditArrayOrderDlg::OnMoveUp)
 	EVT_BUTTON(XRCID("btnMoveDown"), EditArrayOrderDlg::OnMoveDown)
@@ -92,6 +92,6 @@ void EditArrayOrderDlg::EndModal(int retCode)
             m_Array.Add(list->GetString(i));
     }
 
-    wxDialog::EndModal(retCode);
+    wxScrollingDialog::EndModal(retCode);
 }
 

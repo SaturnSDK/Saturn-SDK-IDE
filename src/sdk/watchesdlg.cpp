@@ -42,16 +42,16 @@ BEGIN_EVENT_TABLE(WatchesDlg, wxPanel)
 END_EVENT_TABLE()
 
 /// @breif dialog to show the value of a watch
-class WatchRawDialog : public wxDialog
+class WatchRawDialog : public wxScrollingDialog
 {
     public:
         WatchRawDialog(const wxString& symbol, const wxString &value) :
-            wxDialog(Manager::Get()->GetAppWindow(),
-                     wxID_ANY,
-                     wxString::Format(wxT("Watch '%s' raw value"), symbol.c_str()),
-                     wxDefaultPosition,
-                     wxSize(400, 400),
-                     wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER)
+            wxScrollingDialog(Manager::Get()->GetAppWindow(),
+                              wxID_ANY,
+                              wxString::Format(wxT("Watch '%s' raw value"), symbol.c_str()),
+                              wxDefaultPosition,
+                              wxSize(400, 400),
+                              wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER)
         {
             wxBoxSizer *bs = new wxBoxSizer(wxVERTICAL);
             wxTextCtrl *text = new wxTextCtrl(this, wxID_ANY, value, wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE);
@@ -68,7 +68,7 @@ class WatchRawDialog : public wxDialog
         DECLARE_EVENT_TABLE()
 };
 
-BEGIN_EVENT_TABLE(WatchRawDialog, wxDialog)
+BEGIN_EVENT_TABLE(WatchRawDialog, wxScrollingDialog)
     EVT_CLOSE(WatchRawDialog::OnClose)
 END_EVENT_TABLE()
 

@@ -37,7 +37,7 @@
 
 #include "wxsbitmapiconproperty.h"
 
-class wxsBitmapIconEditorDlg: public wxDialog
+class wxsBitmapIconEditorDlg: public wxScrollingDialog
 {
 	public:
 

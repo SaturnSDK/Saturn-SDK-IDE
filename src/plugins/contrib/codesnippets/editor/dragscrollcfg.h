@@ -10,7 +10,7 @@
 #include <wx/button.h>
 #include <wx/checkbox.h>
 #include <wx/choice.h>
-#include <wx/dialog.h>
+#include "scrollingdialog.h"
 #include <wx/intl.h>
 #include <wx/radiobox.h>
 #include <wx/sizer.h>

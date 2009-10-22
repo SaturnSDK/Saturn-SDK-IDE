@@ -30,7 +30,7 @@ const long byoGameSelect::ID_LISTBOX1 = wxNewId();
 const long byoGameSelect::ID_STATICLINE1 = wxNewId();
 //*)
 
-BEGIN_EVENT_TABLE(byoGameSelect,wxDialog)
+BEGIN_EVENT_TABLE(byoGameSelect,wxScrollingDialog)
 	//(*EventTable(byoGameSelect)
 	//*)
 END_EVENT_TABLE()

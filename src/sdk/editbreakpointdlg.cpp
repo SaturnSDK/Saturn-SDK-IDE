@@ -18,7 +18,7 @@
 #include <wx/checkbox.h>
 #include <wx/spinctrl.h>
 
-BEGIN_EVENT_TABLE(EditBreakpointDlg, wxDialog)
+BEGIN_EVENT_TABLE(EditBreakpointDlg, wxScrollingDialog)
     EVT_UPDATE_UI(-1, EditBreakpointDlg::OnUpdateUI)
 END_EVENT_TABLE()
 
@@ -50,7 +50,7 @@ void EditBreakpointDlg::EndModal(int retCode)
         m_breakpoint->SetUseCondition(XRCCTRL(*this, "chkExpr", wxCheckBox)->IsChecked());
         m_breakpoint->SetCondition(XRCCTRL(*this, "txtExpr", wxTextCtrl)->GetValue());
     }
-    wxDialog::EndModal(retCode);
+    wxScrollingDialog::EndModal(retCode);
 }
 
 void EditBreakpointDlg::OnUpdateUI(wxUpdateUIEvent& event)
