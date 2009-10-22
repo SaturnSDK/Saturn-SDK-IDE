@@ -29,11 +29,13 @@
 #include <wx/listbox.h>
 #include <wx/statline.h>
 #include <wx/button.h>
-#include "scrollingdialog.h"
 #include <wx/gauge.h>
 //*)
+
 #include <wx/timer.h>
 #include <projectfile.h>
+
+#include "scrollingdialog.h"
 
 class wxWidgetsGUI;
 

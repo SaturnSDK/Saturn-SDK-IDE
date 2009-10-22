@@ -10,7 +10,6 @@
 //(*Headers(regex_dialog)
 #include <wx/checkbox.h>
 #include <wx/choice.h>
-#include "scrollingdialog.h"
 #include <wx/html/htmlwin.h>
 #include <wx/sizer.h>
 #include <wx/stattext.h>
@@ -18,6 +17,8 @@
 //*)
 
 #include <wx/html/htmlwin.h>
+
+#include "scrollingdialog.h"
 
 #ifndef CB_PRECOMP
   #include <wx/listctrl.h> // wxListEvent

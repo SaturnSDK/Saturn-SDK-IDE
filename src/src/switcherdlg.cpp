@@ -9,13 +9,13 @@
 // Licence:     wxWidgets licence
 /////////////////////////////////////////////////////////////////////////////
 
-#include "wx/wx.h"
+#include <wx/wx.h>
 
-#include "wx/settings.h"
-#include "wx/dcbuffer.h"
+#include <wx/settings.h>
+#include <wx/dcbuffer.h>
 
 #if defined(__WXMSW__) && wxUSE_UXTHEME
-#include "wx/msw/uxtheme.h"
+#include <wx/msw/uxtheme.h>
 #endif
 
 #include "switcherdlg.h"
@@ -24,7 +24,7 @@
 #define wxSWITCHER_TEXT_MARGIN_Y  2
 #define wxSWITCHER_USE_BUFFERED_PAINTING 1
 
-#include "wx/arrimpl.cpp"
+#include <wx/arrimpl.cpp>
 
 WX_DEFINE_OBJARRAY(wxSwitcherItemArray);
 

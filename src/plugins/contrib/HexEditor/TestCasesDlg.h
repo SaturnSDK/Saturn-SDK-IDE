@@ -15,16 +15,15 @@
 * You should have received a copy of the GNU General Public License
 * along with HexEditor. If not, see <http://www.gnu.org/licenses/>.
 *
-* $Revision: 5445 $
-* $Id: TestCasesDlg.h 5445 2009-02-07 00:35:09Z byo $
-* $HeadURL: https://mortenmacfly@svn.berlios.de/svnroot/repos/codeblocks/trunk/src/plugins/contrib/HexEditor/TestCasesDlg.h $
+* $Revision: 5879 $
+* $Id: TestCasesDlg.h 5879 2009-10-22 11:46:23Z mortenmacfly $
+* $HeadURL: https://mortenmacfly@svn.berlios.de/svnroot/repos/codeblocks/branches/wxpropgrid_debugger/src/plugins/contrib/HexEditor/TestCasesDlg.h $
 */
 
 #ifndef TESTCASESDLG_H
 #define TESTCASESDLG_H
 
 //(*Headers(TestCasesDlg)
-#include "scrollingdialog.h"
 #include <wx/sizer.h>
 #include <wx/button.h>
 #include <wx/timer.h>
@@ -32,6 +31,7 @@
 //*)
 #include <wx/thread.h>
 
+#include "scrollingdialog.h"
 #include "TestCasesBase.h"
 
 class TestCasesDlg: public wxScrollingDialog, public TestCasesBase::Output

@@ -15,22 +15,22 @@
 * You should have received a copy of the GNU General Public License
 * along with HexEditor. If not, see <http://www.gnu.org/licenses/>.
 *
-* $Revision: 5445 $
-* $Id: ExpressionTester.h 5445 2009-02-07 00:35:09Z byo $
-* $HeadURL: https://mortenmacfly@svn.berlios.de/svnroot/repos/codeblocks/trunk/src/plugins/contrib/HexEditor/ExpressionTester.h $
+* $Revision: 5879 $
+* $Id: ExpressionTester.h 5879 2009-10-22 11:46:23Z mortenmacfly $
+* $HeadURL: https://mortenmacfly@svn.berlios.de/svnroot/repos/codeblocks/branches/wxpropgrid_debugger/src/plugins/contrib/HexEditor/ExpressionTester.h $
 */
 
 #ifndef EXPRESSIONTESTER_H
 #define EXPRESSIONTESTER_H
 
 //(*Headers(ExpressionTester)
-#include "scrollingdialog.h"
 #include <wx/sizer.h>
 #include <wx/button.h>
 #include <wx/stattext.h>
 #include <wx/textctrl.h>
 //*)
 
+#include "scrollingdialog.h"
 #include "FileContentBase.h"
 
 class ExpressionTester: public wxScrollingDialog

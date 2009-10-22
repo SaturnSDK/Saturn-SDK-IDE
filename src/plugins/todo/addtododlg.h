@@ -6,8 +6,9 @@
 #ifndef ADDTODODLG_H
 #define ADDTODODLG_H
 
-#include "scrollingdialog.h"
 #include <wx/string.h>
+
+#include "scrollingdialog.h"
 
 class wxArrayString;
 class wxWindow;

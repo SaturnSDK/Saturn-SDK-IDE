@@ -2,8 +2,8 @@
 #define CBPROFILEREXEC_H
 
 #include <wx/arrstr.h>
-#include "scrollingdialog.h"
 #include <wx/string.h>
+#include "scrollingdialog.h"
 
 struct struct_config
 {

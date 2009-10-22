@@ -35,9 +35,11 @@
 #include <wx/radiobut.h>
 #include <wx/choice.h>
 #include <wx/button.h>
-#include "scrollingdialog.h"
+#include <wx/dialog.h>
 #include <wx/combobox.h>
 //*)
+
+#include "scrollingdialog.h"
 
 class wxsFontEditorDlg: public wxScrollingDialog
 {

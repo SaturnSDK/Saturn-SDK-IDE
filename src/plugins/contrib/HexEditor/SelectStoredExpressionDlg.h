@@ -15,9 +15,9 @@
 * You should have received a copy of the GNU General Public License
 * along with HexEditor. If not, see <http://www.gnu.org/licenses/>.
 *
-* $Revision: 5445 $
-* $Id: SelectStoredExpressionDlg.h 5445 2009-02-07 00:35:09Z byo $
-* $HeadURL: https://mortenmacfly@svn.berlios.de/svnroot/repos/codeblocks/trunk/src/plugins/contrib/HexEditor/SelectStoredExpressionDlg.h $
+* $Revision: 5879 $
+* $Id: SelectStoredExpressionDlg.h 5879 2009-10-22 11:46:23Z mortenmacfly $
+* $HeadURL: https://mortenmacfly@svn.berlios.de/svnroot/repos/codeblocks/branches/wxpropgrid_debugger/src/plugins/contrib/HexEditor/SelectStoredExpressionDlg.h $
 */
 
 #ifndef SELECTSTOREDEXPRESSIONDLG_H
@@ -26,7 +26,6 @@
 #include <map>
 
 //(*Headers(SelectStoredExpressionDlg)
-#include "scrollingdialog.h"
 #include <wx/sizer.h>
 #include <wx/button.h>
 #include <wx/stattext.h>
@@ -34,6 +33,8 @@
 #include <wx/timer.h>
 #include <wx/listbox.h>
 //*)
+
+#include "scrollingdialog.h"
 
 class SelectStoredExpressionDlg: public wxScrollingDialog
 {

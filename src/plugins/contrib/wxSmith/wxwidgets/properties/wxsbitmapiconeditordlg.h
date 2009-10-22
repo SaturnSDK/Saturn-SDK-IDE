@@ -30,12 +30,14 @@
 #include <wx/radiobut.h>
 #include <wx/statbmp.h>
 #include <wx/button.h>
-#include "scrollingdialog.h"
+#include <wx/dialog.h>
 #include <wx/combobox.h>
 //*)
 #include <wx/timer.h>
 
 #include "wxsbitmapiconproperty.h"
+
+#include "scrollingdialog.h"
 
 class wxsBitmapIconEditorDlg: public wxScrollingDialog
 {

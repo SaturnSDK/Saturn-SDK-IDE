@@ -32,10 +32,10 @@
 #include <wx/sizer.h>
 #include <wx/stattext.h>
 #include <wx/button.h>
-#include "scrollingdialog.h"
 #include <wx/gauge.h>
 //*)
 
+#include "scrollingdialog.h"
 #include "librarydetectionconfig.h"
 #include "librarydetectionmanager.h"
 #include "resultmap.h"
