@@ -59,6 +59,7 @@ class DebuggerGDB : public cbDebuggerPlugin
         int GetStackFrameCount() const;
         const cbStackFrame& GetStackFrame(int index) const;
         void SwitchToFrame(int number);
+        int GetActiveStackFrame() const;
 
         // threads
         int GetThreadsCount() const;

@@ -103,7 +103,8 @@ END_EVENT_TABLE()
 
 
 DebuggerMenuHandler::DebuggerMenuHandler() :
-    m_activeDebugger(NULL)
+    m_activeDebugger(NULL),
+    m_disableContinue(false)
 {
 }
 
@@ -183,8 +184,12 @@ void DebuggerMenuHandler::OnStart(wxCommandEvent& event)
 {
     cbAssert(m_activeDebugger);
     if (!m_activeDebugger->IsRunning())
+    {
+        m_disableContinue = true;
         m_activeDebugger->Debug(false);
-    else if (m_activeDebugger->IsStopped())
+        m_disableContinue = false;
+    }
+    else if (m_activeDebugger->IsStopped() && !m_disableContinue)
         m_activeDebugger->Continue();
 }
 void DebuggerMenuHandler::OnStop(wxCommandEvent& event)
@@ -199,7 +204,8 @@ void DebuggerMenuHandler::OnStop(wxCommandEvent& event)
 void DebuggerMenuHandler::OnContinue(wxCommandEvent& event)
 {
     cbAssert(m_activeDebugger);
-    m_activeDebugger->Continue();
+    if(!m_disableContinue)
+        m_activeDebugger->Continue();
 }
 
 void DebuggerMenuHandler::OnNext(wxCommandEvent& event)
@@ -218,9 +224,16 @@ void DebuggerMenuHandler::OnStep(wxCommandEvent& event)
 {
     cbAssert(m_activeDebugger);
     if (m_activeDebugger->IsRunning())
-        m_activeDebugger->Step();
+    {
+        if(!m_disableContinue)
+            m_activeDebugger->Step();
+    }
     else
+    {
+        m_disableContinue = true;
         m_activeDebugger->Debug(true);
+        m_disableContinue = false;
+    }
 }
 
 void DebuggerMenuHandler::OnStepOut(wxCommandEvent& event)

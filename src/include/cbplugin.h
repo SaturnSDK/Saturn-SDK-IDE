@@ -424,6 +424,7 @@ class PLUGIN_EXPORT cbDebuggerPlugin: public cbPlugin
 		virtual int GetStackFrameCount() const = 0;
 		virtual const cbStackFrame& GetStackFrame(int index) const = 0;
 		virtual void SwitchToFrame(int number) = 0;
+		virtual int GetActiveStackFrame() const = 0;
 
         // breakpoints calls
 		/** @brief Request to add a breakpoint.
@@ -477,11 +478,10 @@ class PLUGIN_EXPORT cbDebuggerPlugin: public cbPlugin
 
     public:
         virtual wxString GetEditorWordAtCaret();
-    protected:
         void ClearActiveMarkFromAllEditors();
+
     private:
         void OnEditorOpened(CodeBlocksEvent& event);
-    private:
         wxToolBar *m_toolbar;
 };
 

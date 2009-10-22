@@ -21,6 +21,8 @@ namespace
     const int idSave = wxNewId();
     const int idJump = wxNewId();
     const int idCopyToClipboard = wxNewId();
+    const int idSettingJumpDefault = wxNewId();
+    const int idSettingSwitchDefault = wxNewId();
 }
 // TODO (obfuscated#): Mark (changed color) the current frame in the list control
 
@@ -31,6 +33,9 @@ BEGIN_EVENT_TABLE(cbBacktraceDlg, wxPanel)
     EVT_MENU(idSave, cbBacktraceDlg::OnSave)
     EVT_MENU(idJump, cbBacktraceDlg::OnJump)
     EVT_MENU(idCopyToClipboard, cbBacktraceDlg::OnCopyToClipboard)
+
+    EVT_MENU(idSettingJumpDefault, cbBacktraceDlg::OnSettingJumpDefault)
+    EVT_MENU(idSettingSwitchDefault, cbBacktraceDlg::OnSettingSwitchDefault)
 END_EVENT_TABLE()
 
 cbBacktraceDlg::cbBacktraceDlg(wxWindow* parent) :
@@ -58,32 +63,26 @@ void cbBacktraceDlg::Reload()
 
     m_list->Freeze();
     m_list->DeleteAllItems();
+
+    int active_frame = plugin->GetActiveStackFrame();
     for (int ii = 0; ii < plugin->GetStackFrameCount(); ++ii)
     {
         const cbStackFrame& frame = plugin->GetStackFrame(ii);
         wxString addr, num;
 
-        if (frame.IsValid())
-        {
-            if(frame.GetAddress())
-                addr.Printf(wxT("%p"), reinterpret_cast<void*>(frame.GetAddress()));
-            else
-                addr = wxT("");
-            num.Printf(wxT("%d"), frame.GetNumber());
-            int idx = m_list->InsertItem(m_list->GetItemCount(), num);
-            m_list->SetItem(idx, 1, addr);
-            m_list->SetItem(idx, 2, frame.GetSymbol());
-            m_list->SetItem(idx, 3, frame.GetFilename());
-            m_list->SetItem(idx, 4, frame.GetLine());
-        }
+        if(frame.GetAddress())
+            addr.Printf(wxT("%p"), reinterpret_cast<void*>(frame.GetAddress()));
         else
-        {
-            int idx = m_list->InsertItem(m_list->GetItemCount(), wxT("??"));
-            m_list->SetItem(idx, 1, wxT("??"));
-            m_list->SetItem(idx, 2, wxT("??"));
-            m_list->SetItem(idx, 3, wxT("??"));
-            m_list->SetItem(idx, 4, wxT("??"));
-        }
+            addr = wxT("");
+        num.Printf(wxT("%d"), frame.GetNumber());
+        int idx = m_list->InsertItem(m_list->GetItemCount(), num);
+        m_list->SetItem(idx, 1, addr);
+        m_list->SetItem(idx, 2, frame.GetSymbol());
+        m_list->SetItem(idx, 3, frame.GetFilename());
+        m_list->SetItem(idx, 4, frame.GetLine());
+
+        if (active_frame == frame.GetNumber())
+            m_list->SetItemBackgroundColour(ii, wxColor(255, 0, 0));
     }
     m_list->Thaw();
     m_list->SetColumnWidth(0, 32);
@@ -102,6 +101,15 @@ void cbBacktraceDlg::OnListRightClick(wxListEvent& event)
     m.AppendSeparator();
     m.Append(idSave, _("Save to file..."));
     m.Append(idCopyToClipboard, _("Copy to clipboard"));
+    m.AppendSeparator();
+    m.AppendRadioItem(idSettingJumpDefault, _("Jump on double-click"));
+    m.AppendRadioItem(idSettingSwitchDefault, _("Switch on double-click"));
+
+    bool jump_on_double_click;
+    jump_on_double_click = Manager::Get()->GetConfigManager(_T("debugger"))->ReadBool(_T("jump_on_double_click"), true);
+
+    m.Check(idSettingJumpDefault, jump_on_double_click);
+    m.Check(idSettingSwitchDefault, !jump_on_double_click);
 
     m_list->PopupMenu(&m);
 }
@@ -151,8 +159,12 @@ void cbBacktraceDlg::OnSwitchFrame(wxCommandEvent& event)
 
 void cbBacktraceDlg::OnDoubleClick(wxListEvent& event)
 {
+    bool jump = Manager::Get()->GetConfigManager(_T("debugger"))->ReadBool(_T("jump_on_double_click"), true);
     wxCommandEvent evt;
-    OnJump(evt);
+    if (jump)
+        OnJump(evt);
+    else
+        OnSwitchFrame(evt);
 }
 
 void cbBacktraceDlg::OnSave(wxCommandEvent& event)
@@ -218,4 +230,16 @@ void cbBacktraceDlg::OnCopyToClipboard(wxCommandEvent& event)
         wxTheClipboard->SetData(object);
         wxTheClipboard->Close();
     }
+}
+
+void cbBacktraceDlg::OnSettingJumpDefault(wxCommandEvent& event)
+{
+    bool checked = event.IsChecked();
+    Manager::Get()->GetConfigManager(_T("debugger"))->Write(_T("jump_on_double_click"), checked);
+}
+
+void cbBacktraceDlg::OnSettingSwitchDefault(wxCommandEvent& event)
+{
+    bool checked = event.IsChecked();
+    Manager::Get()->GetConfigManager(_T("debugger"))->Write(_T("jump_on_double_click"), !checked);
 }

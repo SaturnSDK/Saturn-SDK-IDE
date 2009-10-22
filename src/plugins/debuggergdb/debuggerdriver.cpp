@@ -11,6 +11,8 @@
 #include "debuggerdriver.h"
 #include "debuggergdb.h"
 
+#include <backtracedlg.h>
+
 DebuggerDriver::DebuggerDriver(DebuggerGDB* plugin)
     : m_pDBG(plugin),
     m_ProgramIsStopped(true),
@@ -18,7 +20,9 @@ DebuggerDriver::DebuggerDriver(DebuggerGDB* plugin)
 //    m_pBacktrace(0),
 //    m_pDisassembly(0),
 //    m_pExamineMemory(0),
-    m_QueueBusy(false)
+    m_QueueBusy(false),
+    m_currentFrameNo(0),
+    m_userSelectedFrameNo(-1)
 {
     //ctor
 }
@@ -172,5 +176,21 @@ const DebuggerDriver::ThreadsContainer & DebuggerDriver::GetThreads() const
 DebuggerDriver::ThreadsContainer & DebuggerDriver::GetThreads()
 {
     return m_threads;
+}
+
+void DebuggerDriver::SetCurrentFrame(int number, bool user_selected)
+{
+    m_currentFrameNo = number;
+    if (user_selected)
+        m_userSelectedFrameNo = number;
+}
+
+void DebuggerDriver::ResetCurrentFrame()
+{
+    m_currentFrameNo = 0;
+    m_userSelectedFrameNo = -1;
+
+    if (Manager::Get()->GetDebuggerManager()->UpdateBacktrace())
+        Manager::Get()->GetDebuggerManager()->GetBacktraceDialog()->Reload();
 }
 

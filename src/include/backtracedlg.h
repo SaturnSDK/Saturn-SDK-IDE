@@ -27,6 +27,9 @@ class cbBacktraceDlg : public wxPanel
         void OnSave(wxCommandEvent& event);
         void OnCopyToClipboard(wxCommandEvent& event);
 
+        void OnSettingJumpDefault(wxCommandEvent& event);
+        void OnSettingSwitchDefault(wxCommandEvent& event);
+
     private:
         DECLARE_EVENT_TABLE();
     private:

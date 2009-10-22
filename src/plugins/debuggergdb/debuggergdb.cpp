@@ -30,6 +30,7 @@
 #include <xtra_res.h>
 
 #include <annoyingdialog.h>
+#include <backtracedlg.h>
 #include <breakpointsdlg.h>
 #include <disassemblydlg.h>
 #include <editbreakpointdlg.h>
@@ -147,11 +148,9 @@ DebuggerGDB::DebuggerGDB()
     m_Pid(0),
     m_PidToAttach(0),
     m_NoDebugInfo(false),
-//    m_BreakOnEntry(false),
     m_HaltAtLine(0),
     m_HasDebugLog(false),
     m_StoppedOnSignal(false),
-//    m_pTree(0L),
     m_pProject(0),
     m_WaitingCompilerToFinish(false)
 {
@@ -1338,6 +1337,7 @@ void DebuggerGDB::RunCommand(int cmd)
             {
                 Manager::Get()->GetLogManager()->Log(_("Continuing..."), m_PageIndex);
                 m_State.GetDriver()->Continue();
+                m_State.GetDriver()->ResetCurrentFrame();
             }
             break;
         }
@@ -1346,7 +1346,10 @@ void DebuggerGDB::RunCommand(int cmd)
         {
             ClearActiveMarkFromAllEditors();
             if (m_State.HasDriver())
+            {
                 m_State.GetDriver()->Step();
+                m_State.GetDriver()->ResetCurrentFrame();
+            }
             break;
         }
 
@@ -1367,7 +1370,10 @@ void DebuggerGDB::RunCommand(int cmd)
         {
             ClearActiveMarkFromAllEditors();
             if (m_State.HasDriver())
+            {
                 m_State.GetDriver()->StepIn();
+                m_State.GetDriver()->ResetCurrentFrame();
+            }
             break;
         }
 
@@ -1375,8 +1381,11 @@ void DebuggerGDB::RunCommand(int cmd)
         {
             ClearActiveMarkFromAllEditors();
             if (m_State.HasDriver())
+            {
                 m_State.GetDriver()->StepOut();
 //            QueueCommand(new DebuggerCmd(this, _T("finish")));
+                m_State.GetDriver()->ResetCurrentFrame();
+            }
             break;
         }
 
@@ -1384,8 +1393,11 @@ void DebuggerGDB::RunCommand(int cmd)
         {
             ClearActiveMarkFromAllEditors();
             if (m_State.HasDriver())
+            {
                 m_State.GetDriver()->Stop();
 //            QueueCommand(new DebuggerCmd(this, _T("quit")));
+                m_State.GetDriver()->ResetCurrentFrame();
+            }
             break;
         }
 
@@ -1444,7 +1456,17 @@ const cbStackFrame& DebuggerGDB::GetStackFrame(int index) const
 void DebuggerGDB::SwitchToFrame(int number)
 {
     if (m_State.HasDriver())
+    {
         m_State.GetDriver()->SwitchToFrame(number);
+
+        if(Manager::Get()->GetDebuggerManager()->UpdateBacktrace())
+           Manager::Get()->GetDebuggerManager()->GetBacktraceDialog()->Reload();
+    }
+}
+
+int DebuggerGDB::GetActiveStackFrame() const
+{
+    return m_State.HasDriver() ? m_State.GetDriver()->GetCurrentFrame() : 0;
 }
 
 int DebuggerGDB::GetThreadsCount() const
@@ -1464,14 +1486,17 @@ bool DebuggerGDB::SwitchToThread(int thread_number)
 {
     if (!m_State.HasDriver())
         return false;
-    DebuggerDriver::ThreadsContainer const &threads = m_State.GetDriver()->GetThreads();
+    DebuggerDriver *driver = m_State.GetDriver();
+    DebuggerDriver::ThreadsContainer const &threads = driver->GetThreads();
 
     for (DebuggerDriver::ThreadsContainer::const_iterator it = threads.begin(); it != threads.end(); ++it)
     {
         if (it->GetNumber() == thread_number)
         {
             if(!it->IsActive())
-                m_State.GetDriver()->SwitchThread(thread_number);
+            {
+                driver->SwitchThread(thread_number);
+            }
             return true;
         }
     }

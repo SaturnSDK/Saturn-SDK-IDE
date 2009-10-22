@@ -9,7 +9,9 @@
 #include <map>
 
 #ifndef CB_PRECOMP
-#  include <wx/string.h>
+#   include <manager.h>
+#   include <settings.h>
+#   include <wx/string.h>
 #endif
 
 class wxMenu;

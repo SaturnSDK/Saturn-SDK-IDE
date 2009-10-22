@@ -49,6 +49,7 @@ class DebuggerMenuHandler : public wxEvtHandler
     private:
         cbDebuggerPlugin* m_activeDebugger;
         wxString m_lastCommand;
+        bool m_disableContinue;
 };
 
 class DebuggerToolbarHandler : public wxEvtHandler

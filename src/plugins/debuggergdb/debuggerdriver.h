@@ -149,8 +149,8 @@ class DebuggerDriver
         /** Request to switch to another thread. */
         virtual void SwitchThread(size_t threadIndex) = 0;
 
-		/** Show a file/line without changing the cursor */
-		void ShowFile(const wxString& file, int line);
+        /** Show a file/line without changing the cursor */
+        void ShowFile(const wxString& file, int line);
 
         void QueueCommand(DebuggerCmd* dcmd, QueuePriority prio = Low); ///< add a command in the queue. The DebuggerCmd will be deleted automatically when finished.
         DebuggerCmd* CurrentCommand(); ///< returns the currently executing command
@@ -163,6 +163,11 @@ class DebuggerDriver
 
         const ThreadsContainer & GetThreads() const; ///< returns the thread container with the current list of threads
         ThreadsContainer & GetThreads(); ///< returns the thread container with the current list of threads
+
+        void ResetCurrentFrame();
+        int GetCurrentFrame() const { return m_currentFrameNo; }
+        int GetUserSelectedFrame() const { return m_userSelectedFrameNo; }
+        void SetCurrentFrame(int number, bool user_selected);
     protected:
         /** Called by implementations to reset the cursor. */
         virtual void ResetCursor();
@@ -197,7 +202,8 @@ class DebuggerDriver
 
         StackFrameContainer m_backtrace;
         ThreadsContainer m_threads;
-    private:
+        int m_currentFrameNo;
+        int m_userSelectedFrameNo;
 };
 
 #endif // DEBUGGERDRIVER_H
