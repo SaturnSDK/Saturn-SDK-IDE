@@ -13,6 +13,7 @@
 #include <wx/app.h>
 #include <wx/msgdlg.h>
 #include <manager.h>
+#include "logmanager.h"
 #include <globals.h>
 
 #include <cctype>
@@ -567,6 +568,7 @@ void ParserThread::DoParse()
         {
             bool oldState = m_Tokenizer.IsSkippingUnwantedTokens();
             m_Tokenizer.SetSkipUnwantedTokens(false);
+            m_Tokenizer.SetOperatorState(true);
             wxString func = token;
             while (1)
             {
@@ -590,6 +592,7 @@ void ParserThread::DoParse()
                     break;
             }
             m_Tokenizer.SetSkipUnwantedTokens(oldState);
+            m_Tokenizer.SetOperatorState(false);
             HandleFunction(func, true);
             m_Str.Clear();
         }
@@ -681,6 +684,15 @@ void ParserThread::DoParse()
                         else
                             SkipToOneOfChars(ParserConsts::semicolonclbrace, true);
                     }
+                }
+                else if (!m_EncounteredNamespaces.empty())
+                {
+                    while (!m_EncounteredNamespaces.empty())
+					{
+						m_EncounteredTypeNamespaces.push( m_EncounteredNamespaces.front() );
+						m_EncounteredNamespaces.pop();
+					}
+					m_Str = token;
                 }
                 else
                 {
@@ -1478,7 +1490,11 @@ void ParserThread::HandleFunction(const wxString& name, bool isOperator)
                 // Show message, if skipped buffer is more than 10% of whole buffer (might be a bug in the parser)
                 if (!m_IsBuffer && ((lineEnd-lineStart) > (int)(m_FileSize*0.1)))
 #endif
+                    #if wxCHECK_VERSION(2, 9, 0)
+                    Manager::Get()->GetLogManager()->DebugLog(F(_T("HandleFunction() : Skipped function '%s' impl. from %d to %d (file name='%s', file size=%d)."), name.wx_str(), lineStart, lineEnd, m_Filename.wx_str(), m_FileSize));
+                    #else
                     Manager::Get()->GetLogManager()->DebugLog(F(_T("HandleFunction() : Skipped function '%s' impl. from %d to %d (file name='%s', file size=%d)."), name.c_str(), lineStart, lineEnd, m_Filename.c_str(), m_FileSize));
+                    #endif
                 break;
             }
             else if (peek == ParserConsts::clbrace || peek == ParserConsts::semicolon)
@@ -1714,7 +1730,6 @@ void ParserThread::HandleTypedef()
             {
                 // typedef void dMessageFunction (int errnum, const char *msg, va_list ap);
 
-                typ = _T("(*)");
                 // last component is already the name and this is the args
                 args = token;
             }
@@ -1752,7 +1767,6 @@ void ParserThread::HandleTypedef()
             ancestor << _T(' ');
         ancestor << token;
     }
-    ancestor << typ;
 
     // no return type
     m_Str.Clear();
@@ -1768,7 +1782,12 @@ void ParserThread::HandleTypedef()
             tdef->m_Type = ancestor;
         }
         else
-            tdef->m_ActualType = ancestor + args;
+        {
+            tdef->m_ActualType      = ancestor;
+            tdef->m_Type            = ancestor + typ; // + args;
+            tdef->m_AncestorsString = ancestor;
+        }
+
     }
 }
 
@@ -1795,13 +1814,15 @@ void ParserThread::ReadClsNames(wxString& ancestor)
                   current.c_str(),
                   m_Str.c_str(),
                   (m_pLastParent ? m_pLastParent->m_Name.c_str():_T("<no-parent>")));
-            Token* newToken = DoAddToken(tkClass, current, m_Tokenizer.GetLineNumber());
+            Token* newToken = DoAddToken(tkTypedef, current, m_Tokenizer.GetLineNumber());
             if (!newToken)
                 break;
             else
             {
-                wxString tempAncestor = ancestor;
+                wxString tempAncestor       = ancestor;
                 newToken->m_AncestorsString = tempAncestor;
+                newToken->m_ActualType      = tempAncestor;
+                newToken->m_Type            = tempAncestor;
             }
         }
         else // unexpected
