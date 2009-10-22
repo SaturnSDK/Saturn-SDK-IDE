@@ -26,6 +26,7 @@
     #include "projectfile.h"
     #include "pluginmanager.h"
     #include "manager.h"
+    #include "macrosmanager.h"
     #include "filemanager.h"
     #include "sdk_events.h"
     #include "projectbuildtarget.h"
@@ -1083,6 +1084,8 @@ bool EditorManager::SwapActiveHeaderSource()
     wxFileName fn(ed->GetFilename());
     dirs.Insert(fn.GetPath(wxPATH_GET_VOLUME), 0); // add file's dir
 
+    wxString HeaderSource;
+
     for (unsigned int i = 0; i < dirs.GetCount(); ++i)
     {
         ProjectManager *pm = Manager::Get()->GetProjectManager();
@@ -1100,7 +1103,7 @@ bool EditorManager::SwapActiveHeaderSource()
 //            Manager::Get()->GetLogManager()->DebugLog(F(_T("Normalizing dir to '%s'."), fname.GetFullPath().c_str()));
         }
 
-        wxString HeaderSource = pm->GetHeaderSource(fname);
+        HeaderSource = pm->GetHeaderSource(fname);
         if (!HeaderSource.IsEmpty())
         {
             fname.SetFullName(HeaderSource);
@@ -1109,7 +1112,7 @@ bool EditorManager::SwapActiveHeaderSource()
         }
     }
 
-    if (fname.FileExists())
+    if (!HeaderSource.IsEmpty() && fname.FileExists())
     {
         //Manager::Get()->GetLogManager()->DebugLog("ed=%s, pair=%s", ed->GetFilename().c_str(), pair.c_str());
         cbEditor* newEd = Open(fname.GetFullPath());
