@@ -34,6 +34,8 @@
 #include <wx/dialog.h>
 //*)
 
+#include "scrollingdialog.h"
+
 class wxsSimpleFontEditorDlg: public wxScrollingDialog
 {
 	public:

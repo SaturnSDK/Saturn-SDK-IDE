@@ -39,6 +39,8 @@
 #include <wx/combobox.h>
 //*)
 
+#include "scrollingdialog.h"
+
 class wxsFontEditorDlg: public wxScrollingDialog
 {
 	public:

@@ -1362,7 +1362,10 @@ void DebuggerGDB::RunCommand(int cmd)
                 RunCommand(CMD_DISASSEMBLE);
             }
             if (m_State.HasDriver())
+            {
                 m_State.GetDriver()->StepInstruction();
+                m_State.GetDriver()->ResetCurrentFrame();
+            }
             break;
         }
 

@@ -34,6 +34,7 @@
 #include <wx/dialog.h>
 //*)
 
+#include "scrollingdialog.h"
 
 class wxsArrayStringCheckEditorDlg: public wxScrollingDialog
 {
