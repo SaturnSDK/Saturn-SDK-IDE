@@ -21,7 +21,7 @@
 
 #include "multiselectdlg.h"
 
-BEGIN_EVENT_TABLE(MultiSelectDlg, wxDialog)
+BEGIN_EVENT_TABLE(MultiSelectDlg, wxScrollingDialog)
     EVT_CHECKLISTBOX(XRCID("lstItems"), MultiSelectDlg::OnItemToggle)
     EVT_BUTTON(XRCID("btnSelectWild"), MultiSelectDlg::OnWildcard)
     EVT_BUTTON(XRCID("btnToggle"), MultiSelectDlg::OnToggle)

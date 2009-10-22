@@ -153,7 +153,7 @@ int CodeStatExecDlg::Execute(LanguageDef languages[NB_FILETYPES_MAX], int nb_lan
 
 void CodeStatExecDlg::EndModal(int retCode)
 {
-    wxDialog::EndModal(retCode);
+    wxScrollingDialog::EndModal(retCode);
 }
 
 /** This function analyses a given source file and count the lines of code, comments etc...

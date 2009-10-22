@@ -51,7 +51,7 @@
 #include "filefilters.h"
 #include "virtualbuildtargetsdlg.h"
 
-BEGIN_EVENT_TABLE(ProjectOptionsDlg, wxDialog)
+BEGIN_EVENT_TABLE(ProjectOptionsDlg, wxScrollingDialog)
     EVT_UPDATE_UI( -1,                                 ProjectOptionsDlg::OnUpdateUI)
     EVT_BUTTON(    XRCID("wxID_OK"),                   ProjectOptionsDlg::OnOK)
     EVT_BUTTON(    XRCID("btnPlatform"),               ProjectOptionsDlg::OnPlatform)
@@ -1092,6 +1092,6 @@ void ProjectOptionsDlg::EndModal(int retCode)
         }
     }
 
-    wxDialog::EndModal(retCode);
+    wxScrollingDialog::EndModal(retCode);
 }
 

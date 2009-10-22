@@ -11,7 +11,7 @@
 #include <wx/xrc/xmlres.h>
 #include <wx/arrstr.h>
 
-BEGIN_EVENT_TABLE(SelectIncludeFile,wxDialog)
+BEGIN_EVENT_TABLE(SelectIncludeFile,wxScrollingDialog)
 	//(*EventTable(SelectIncludeFile)
 	EVT_LISTBOX_DCLICK(XRCID("ID_LISTBOX1"),SelectIncludeFile::OnOk)
 	EVT_BUTTON(XRCID("wxID_CANCEL"),SelectIncludeFile::OnOk)

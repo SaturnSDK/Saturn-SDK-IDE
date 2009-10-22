@@ -48,5 +48,5 @@ void EditWatchDlg::EndModal(int retCode)
         m_Watch.array_start = XRCCTRL(*this, "spnArrStart", wxSpinCtrl)->GetValue();
         m_Watch.array_count = XRCCTRL(*this, "spnArrCount", wxSpinCtrl)->GetValue();
     }
-    wxDialog::EndModal(retCode);
+    wxScrollingDialog::EndModal(retCode);
 }

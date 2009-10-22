@@ -46,7 +46,7 @@ static int idDiscardWizardScript = wxNewId();
 static int idInfoWizardScript = wxNewId();
 static int idEditGlobalWizardScript = wxNewId();
 
-BEGIN_EVENT_TABLE(NewFromTemplateDlg, wxDialog)
+BEGIN_EVENT_TABLE(NewFromTemplateDlg, wxScrollingDialog)
     EVT_UPDATE_UI(-1, NewFromTemplateDlg::OnUpdateUI)
 
     // projects
@@ -504,5 +504,5 @@ void NewFromTemplateDlg::EndModal(int retCode)
     Manager::Get()->GetConfigManager(_T("new_from_template"))->Write(_T("/view"), (int)sel);
 
     GetSelectedTemplate();
-    wxDialog::EndModal(retCode);
+    wxScrollingDialog::EndModal(retCode);
 }

@@ -29,7 +29,7 @@
 #include <wx/listbox.h>
 #include <wx/statline.h>
 #include <wx/button.h>
-#include <wx/dialog.h>
+#include "scrollingdialog.h"
 #include <wx/gauge.h>
 //*)
 #include <wx/timer.h>
@@ -44,7 +44,7 @@ class wxWidgetsGUI;
  *       results and get user choice what to do after
  *       scanning
  */
-class wxWidgetsGUIAppAdoptingDlg: public wxDialog
+class wxWidgetsGUIAppAdoptingDlg: public wxScrollingDialog
 {
 	public:
 

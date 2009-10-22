@@ -14,12 +14,12 @@
 
 //(*Headers(DataBreakpointDlg)
 #include <wx/checkbox.h>
-#include <wx/dialog.h>
+#include "scrollingdialog.h"
 #include <wx/radiobox.h>
 #include <wx/sizer.h>
 //*)
 
-class DataBreakpointDlg: public wxDialog
+class DataBreakpointDlg: public wxScrollingDialog
 {
 	public:
 
@@ -30,7 +30,7 @@ class DataBreakpointDlg: public wxDialog
 		static const long ID_CHECKBOX1;
 		static const long ID_RADIOBOX1;
 		//*)
-		
+
 		bool IsEnabled();
 		int GetSelection();
 

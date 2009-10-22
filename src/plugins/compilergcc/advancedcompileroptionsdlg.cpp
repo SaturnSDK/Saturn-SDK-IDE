@@ -52,7 +52,7 @@ wxString StringToControlChars(const wxString& src)
     return ret;
 } // end of StringToControlChars
 
-BEGIN_EVENT_TABLE(AdvancedCompilerOptionsDlg, wxDialog)
+BEGIN_EVENT_TABLE(AdvancedCompilerOptionsDlg, wxScrollingDialog)
     EVT_CHOICE(XRCID("lstCommands"),   		AdvancedCompilerOptionsDlg::OnCommandsChange)
     EVT_CHOICE(XRCID("lstExt"),   			AdvancedCompilerOptionsDlg::OnExtChange)
     EVT_BUTTON(XRCID("btnAddExt"),          AdvancedCompilerOptionsDlg::OnAddExt)
@@ -476,5 +476,5 @@ void AdvancedCompilerOptionsDlg::EndModal(int retCode)
         SaveRegexDetails(m_SelectedRegex);
         compiler->SetRegExArray(m_Regexes);
     }
-    wxDialog::EndModal(retCode);
+    wxScrollingDialog::EndModal(retCode);
 } // end of EndModal

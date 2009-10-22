@@ -944,6 +944,9 @@
 		<Unit filename="include\scriptsecuritywarningdlg.h">
 			<Option target="sdk" />
 		</Unit>
+		<Unit filename="include\scrollingdialog.h">
+			<Option target="sdk" />
+		</Unit>
 		<Unit filename="include\sdk.h">
 			<Option compile="1" />
 			<Option weight="0" />
@@ -3570,6 +3573,9 @@
 			<Option target="sdk" />
 		</Unit>
 		<Unit filename="sdk\scriptsecuritywarningdlg.cpp">
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="sdk\scrollingdialog.cpp">
 			<Option target="sdk" />
 		</Unit>
 		<Unit filename="sdk\sdk_events.cpp">

@@ -26,7 +26,7 @@
 
 #define CONF_GROUP _T("/replace_options")
 
-BEGIN_EVENT_TABLE(ReplaceDlg, wxDialog)
+BEGIN_EVENT_TABLE(ReplaceDlg, wxScrollingDialog)
     EVT_NOTEBOOK_PAGE_CHANGED(XRCID("nbReplace"), ReplaceDlg::OnFindChange)
 	EVT_CHECKBOX(XRCID("chkRegEx1"), 	ReplaceDlg::OnRegEx)
 	EVT_ACTIVATE(                       ReplaceDlg::OnActivate)

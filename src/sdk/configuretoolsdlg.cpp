@@ -25,7 +25,7 @@
 #include "configuretoolsdlg.h"
 #include "edittooldlg.h"
 
-BEGIN_EVENT_TABLE(ConfigureToolsDlg, wxDialog)
+BEGIN_EVENT_TABLE(ConfigureToolsDlg, wxScrollingDialog)
 	EVT_BUTTON(XRCID("btnAdd"), 	ConfigureToolsDlg::OnAdd)
 	EVT_BUTTON(XRCID("btnEdit"), 	ConfigureToolsDlg::OnEdit)
 	EVT_BUTTON(XRCID("btnRemove"), 	ConfigureToolsDlg::OnRemove)

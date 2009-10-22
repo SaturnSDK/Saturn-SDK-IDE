@@ -24,7 +24,7 @@
 #define TESTCASESDLG_H
 
 //(*Headers(TestCasesDlg)
-#include <wx/dialog.h>
+#include "scrollingdialog.h"
 #include <wx/sizer.h>
 #include <wx/button.h>
 #include <wx/timer.h>
@@ -34,7 +34,7 @@
 
 #include "TestCasesBase.h"
 
-class TestCasesDlg: public wxDialog, public TestCasesBase::Output
+class TestCasesDlg: public wxScrollingDialog, public TestCasesBase::Output
 {
 	public:
 

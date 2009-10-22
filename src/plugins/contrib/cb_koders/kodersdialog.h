@@ -11,13 +11,13 @@
 //(*Headers(KodersDialog)
 #include <wx/button.h>
 #include <wx/choice.h>
-#include <wx/dialog.h>
+#include "scrollingdialog.h"
 #include <wx/sizer.h>
 #include <wx/stattext.h>
 #include <wx/textctrl.h>
 //*)
 
-class KodersDialog: public wxDialog
+class KodersDialog: public wxScrollingDialog
 {
 	public:
 

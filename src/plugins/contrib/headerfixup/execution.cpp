@@ -18,7 +18,7 @@
 #include <wx/gauge.h>
 //*)
 
-#include <wx/dialog.h>
+#include "scrollingdialog.h"
 #include <wx/filename.h>
 #include <wx/gdicmn.h>
 #include <wx/utils.h>
@@ -58,7 +58,7 @@ const long Execution::ID_BTN_EXIT = wxNewId();
 
 // ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- -----
 
-BEGIN_EVENT_TABLE(Execution,wxDialog)
+BEGIN_EVENT_TABLE(Execution,wxScrollingDialog)
   //(*EventTable(Execution)
   //*)
 END_EVENT_TABLE()

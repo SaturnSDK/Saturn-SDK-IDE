@@ -32,7 +32,7 @@
 // flag to know when to update the search-in-files custom path
 cbProject* g_LastUsedProject = 0;
 
-BEGIN_EVENT_TABLE(FindDlg, wxDialog)
+BEGIN_EVENT_TABLE(FindDlg, wxScrollingDialog)
     EVT_NOTEBOOK_PAGE_CHANGED(XRCID("nbFind"), FindDlg::OnFindChange)
     EVT_CHECKBOX(XRCID("chkRegEx1"),    FindDlg::OnRegEx)
     EVT_BUTTON(XRCID("btnBrowsePath"),  FindDlg::OnBrowsePath)

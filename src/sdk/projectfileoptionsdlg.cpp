@@ -29,7 +29,7 @@
 #include <wx/notebook.h>
 #include <wx/textfile.h>
 
-BEGIN_EVENT_TABLE(ProjectFileOptionsDlg, wxDialog)
+BEGIN_EVENT_TABLE(ProjectFileOptionsDlg, wxScrollingDialog)
     EVT_CHOICE(-1, ProjectFileOptionsDlg::OnCompilerCombo)
     EVT_UPDATE_UI(-1, ProjectFileOptionsDlg::OnUpdateUI)
 END_EVENT_TABLE()
@@ -359,5 +359,5 @@ void ProjectFileOptionsDlg::EndModal(int retCode)
         prj->SetModified(true);
     }
 
-    wxDialog::EndModal(retCode);
+    wxScrollingDialog::EndModal(retCode);
 }

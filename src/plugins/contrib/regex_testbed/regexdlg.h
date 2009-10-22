@@ -10,7 +10,7 @@
 //(*Headers(regex_dialog)
 #include <wx/checkbox.h>
 #include <wx/choice.h>
-#include <wx/dialog.h>
+#include "scrollingdialog.h"
 #include <wx/html/htmlwin.h>
 #include <wx/sizer.h>
 #include <wx/stattext.h>
@@ -26,7 +26,7 @@
   #include <wx/regex.h>
 #endif
 
-class RegExDlg: public wxDialog
+class RegExDlg: public wxScrollingDialog
 {
 	public:
 

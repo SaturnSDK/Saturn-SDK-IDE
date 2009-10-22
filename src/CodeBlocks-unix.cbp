@@ -858,6 +858,9 @@
 		<Unit filename="include/scriptsecuritywarningdlg.h">
 			<Option target="sdk" />
 		</Unit>
+		<Unit filename="include/scrollingdialog.h">
+			<Option target="sdk" />
+		</Unit>
 		<Unit filename="include/sdk.h">
 			<Option compile="1" />
 			<Option weight="0" />
@@ -905,9 +908,6 @@
 			<Option target="sdk" />
 		</Unit>
 		<Unit filename="include/workspaceloader.h">
-			<Option target="sdk" />
-		</Unit>
-		<Unit filename="sdk/wxscintilla/include/wx/wxscintilla.h">
 			<Option target="sdk" />
 		</Unit>
 		<Unit filename="include/xtra_res.h">
@@ -2509,6 +2509,9 @@
 		<Unit filename="sdk/scriptsecuritywarningdlg.cpp">
 			<Option target="sdk" />
 		</Unit>
+		<Unit filename="sdk/scrollingdialog.cpp">
+			<Option target="sdk" />
+		</Unit>
 		<Unit filename="sdk/sdk_events.cpp">
 			<Option target="sdk" />
 		</Unit>
@@ -2531,6 +2534,9 @@
 			<Option target="sdk" />
 		</Unit>
 		<Unit filename="sdk/workspaceloader.cpp">
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="sdk/wxscintilla/include/wx/wxscintilla.h">
 			<Option target="sdk" />
 		</Unit>
 		<Unit filename="sdk/wxscintilla/src/PlatWX.cpp">

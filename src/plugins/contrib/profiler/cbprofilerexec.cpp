@@ -28,7 +28,7 @@
 #include <wx/progdlg.h>
 #include "cbprofilerexec.h"
 
-BEGIN_EVENT_TABLE(CBProfilerExecDlg, wxDialog)
+BEGIN_EVENT_TABLE(CBProfilerExecDlg, wxScrollingDialog)
     EVT_LIST_ITEM_ACTIVATED(XRCID("lstFlatProfile"), CBProfilerExecDlg::FindInCallGraph)
     EVT_LIST_ITEM_ACTIVATED(XRCID("lstCallGraph"),   CBProfilerExecDlg::JumpInCallGraph)
     EVT_BUTTON             (XRCID("btnExport"),      CBProfilerExecDlg::WriteToFile)
@@ -136,7 +136,7 @@ CBProfilerExecDlg::~CBProfilerExecDlg()
 
 void CBProfilerExecDlg::EndModal(int retCode)
 {
-    wxDialog::EndModal(retCode);
+    wxScrollingDialog::EndModal(retCode);
 }
 
 // Sorting function of the flat profile columns

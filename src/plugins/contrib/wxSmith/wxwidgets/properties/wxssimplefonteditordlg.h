@@ -31,10 +31,10 @@
 #include <wx/textctrl.h>
 #include <wx/statline.h>
 #include <wx/button.h>
-#include <wx/dialog.h>
+#include "scrollingdialog.h"
 //*)
 
-class wxsSimpleFontEditorDlg: public wxDialog
+class wxsSimpleFontEditorDlg: public wxScrollingDialog
 {
 	public:
 

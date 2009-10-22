@@ -31,7 +31,7 @@ const long avChangesDlg::ID_WRITE_BUTTON = wxNewId();
 const long avChangesDlg::ID_CANCEL_BUTTON = wxNewId();
 //*)
 
-BEGIN_EVENT_TABLE(avChangesDlg,wxDialog)
+BEGIN_EVENT_TABLE(avChangesDlg,wxScrollingDialog)
     //(*EventTable(avChangesDlg)
     //*)
 END_EVENT_TABLE()

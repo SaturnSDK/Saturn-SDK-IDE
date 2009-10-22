@@ -51,7 +51,7 @@ const long ExpressionTester::ID_BUTTON2 = wxNewId();
 const long ExpressionTester::ID_BUTTON1 = wxNewId();
 //*)
 
-BEGIN_EVENT_TABLE(ExpressionTester,wxDialog)
+BEGIN_EVENT_TABLE(ExpressionTester,wxScrollingDialog)
 	//(*EventTable(ExpressionTester)
 	//*)
 END_EVENT_TABLE()

@@ -1755,7 +1755,7 @@ void CodeSnippetsTreeCtrl::EditSnippet(SnippetItemData* pSnippetItemData, wxStri
 
         if ( pdlg->Show() )
         {
-            m_aDlgPtrs.Add((wxDialog*)pdlg);
+            m_aDlgPtrs.Add((wxScrollingDialog*)pdlg);
         }
         else
             m_aDlgRetcodes.RemoveAt(m_aDlgRetcodes.GetCount());
@@ -1882,7 +1882,7 @@ void CodeSnippetsTreeCtrl::EditSnippetWithMIME()
     return;
 }
 // ----------------------------------------------------------------------------
-int CodeSnippetsTreeCtrl::ExecuteDialog(wxDialog* pdlg, wxSemaphore& waitSem)
+int CodeSnippetsTreeCtrl::ExecuteDialog(wxScrollingDialog* pdlg, wxSemaphore& waitSem)
 // ----------------------------------------------------------------------------
 {
     if (m_pPropertiesDialog) return 0;
@@ -2049,7 +2049,7 @@ void CodeSnippetsTreeCtrl::OnShutdown(wxCloseEvent& event)
 ////    // Here because our Connect() intercepted wxTheApp EVT_CLOSE
 ////    // Blink this modeless dialog just like it was a modal dialog
 ////        //    wxWindow* oldTop = wxTheApp->GetTopWindow();
-////        //    wxDialog* pdlg = this->m_pTopDialog;
+////        //    wxScrollingDialog* pdlg = this->m_pTopDialog;
 ////        //    wxTheApp->SetTopWindow( pdlg );
 ////        //    pdlg->RequestUserAttention();
 ////        //    wxTheApp->SetTopWindow(oldTop);
@@ -2060,7 +2060,7 @@ void CodeSnippetsTreeCtrl::OnShutdown(wxCloseEvent& event)
 ////    this->m_bShutDown = true;
 ////    for (size_t i = 0; i < this->m_aDlgPtrs.GetCount(); ++i )
 ////    {
-////        wxDialog* pdlg = this->m_aDlgPtrs.Item(i);
+////        wxScrollingDialog* pdlg = this->m_aDlgPtrs.Item(i);
 ////        if (pdlg) pdlg->ProcessEvent(event);
 ////    }
 ////    #if defined(BUILDING_PLUGIN)

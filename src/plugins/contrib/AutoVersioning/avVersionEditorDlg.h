@@ -23,14 +23,14 @@
 #include <wx/statline.h>
 #include <wx/panel.h>
 #include <wx/button.h>
-#include <wx/dialog.h>
+#include "scrollingdialog.h"
 #include <wx/timer.h>
 #include <wx/combobox.h>
 //*)
 
 #include <wx/event.h>
 
-class avVersionEditorDlg: public wxDialog
+class avVersionEditorDlg: public wxScrollingDialog
 {
 private:
     long m_major;

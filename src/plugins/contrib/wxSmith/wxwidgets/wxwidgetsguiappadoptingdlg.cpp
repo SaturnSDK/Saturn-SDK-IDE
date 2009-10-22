@@ -46,7 +46,7 @@ const long wxWidgetsGUIAppAdoptingDlg::ID_STATICLINE1 = wxNewId();
 const long wxWidgetsGUIAppAdoptingDlg::ID_BUTTON6 = wxNewId();
 //*)
 
-BEGIN_EVENT_TABLE(wxWidgetsGUIAppAdoptingDlg,wxDialog)
+BEGIN_EVENT_TABLE(wxWidgetsGUIAppAdoptingDlg,wxScrollingDialog)
 	//(*EventTable(wxWidgetsGUIAppAdoptingDlg)
 	//*)
 	EVT_CLOSE(wxWidgetsGUIAppAdoptingDlg::OnClose)

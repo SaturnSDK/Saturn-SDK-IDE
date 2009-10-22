@@ -23,7 +23,7 @@
 #include <wx/filedlg.h>
 #include "selecttargetdlg.h"
 
-BEGIN_EVENT_TABLE(SelectTargetDlg, wxDialog)
+BEGIN_EVENT_TABLE(SelectTargetDlg, wxScrollingDialog)
 	EVT_CHECKBOX(XRCID("chkSetAsDefaultExec"), SelectTargetDlg::OnCheckboxSelection)
 	EVT_LISTBOX(XRCID("lstItems"), SelectTargetDlg::OnListboxSelection)
 	EVT_LISTBOX_DCLICK(XRCID("lstItems"), SelectTargetDlg::OnListboxDClick)
@@ -150,5 +150,5 @@ void SelectTargetDlg::EndModal(int retCode)
             target->SetHostApplication(XRCCTRL(*this, "txtHostApp", wxTextCtrl)->GetValue());
         }
     }
-	wxDialog::EndModal(retCode);
+	wxScrollingDialog::EndModal(retCode);
 } // end of EndModal

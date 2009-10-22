@@ -73,7 +73,7 @@ const long CCDebugInfo::ID_STATICTEXT31 = wxNewId();
 const long CCDebugInfo::ID_STATICLINE2 = wxNewId();
 //*)
 
-BEGIN_EVENT_TABLE(CCDebugInfo,wxDialog)
+BEGIN_EVENT_TABLE(CCDebugInfo,wxScrollingDialog)
 	//(*EventTable(CCDebugInfo)
 	//*)
 END_EVENT_TABLE()

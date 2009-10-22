@@ -9,7 +9,7 @@
 #include <wx/dialog.h>
 #include "debuggertree.h"
 
-class EditWatchDlg : public wxDialog
+class EditWatchDlg : public wxScrollingDialog
 {
     public:
         EditWatchDlg(Watch* w = 0, wxWindow* parent = 0);

@@ -13,7 +13,7 @@
 #endif
 
 //(*Headers(Execution)
-#include <wx/dialog.h>
+#include "scrollingdialog.h"
 class wxGauge;
 class wxCheckBox;
 class wxRadioBox;
@@ -35,7 +35,7 @@ class wxCheckListBox;
 class wxWindow;
 class wxString;
 
-class Execution: public wxDialog
+class Execution: public wxScrollingDialog
 {
 public:
 

@@ -71,5 +71,5 @@ void PrintDialog::EndModal(int retCode)
         Manager::Get()->GetConfigManager(_T("app"))->Write(_T("/print_mode"), (int)mode);
         Manager::Get()->GetConfigManager(_T("app"))->Write(_T("/print_line_numbers"), GetPrintLineNumbers());
     }
-    return wxDialog::EndModal(retCode);
+    return wxScrollingDialog::EndModal(retCode);
 }

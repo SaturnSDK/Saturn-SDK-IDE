@@ -23,7 +23,7 @@
 #include "projectdepsdlg.h"
 
 
-BEGIN_EVENT_TABLE(ProjectDepsDlg, wxDialog)
+BEGIN_EVENT_TABLE(ProjectDepsDlg, wxScrollingDialog)
     EVT_COMBOBOX(XRCID("cmbProject"), ProjectDepsDlg::OnProjectChange)
 END_EVENT_TABLE()
 
@@ -143,5 +143,5 @@ void ProjectDepsDlg::OnProjectChange(wxCommandEvent& event)
 void ProjectDepsDlg::EndModal(int retCode)
 {
     if (SaveList())
-        return wxDialog::EndModal(retCode);
+        return wxScrollingDialog::EndModal(retCode);
 }

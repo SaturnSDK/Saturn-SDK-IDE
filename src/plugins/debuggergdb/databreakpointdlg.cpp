@@ -25,7 +25,7 @@ const long DataBreakpointDlg::ID_CHECKBOX1 = wxNewId();
 const long DataBreakpointDlg::ID_RADIOBOX1 = wxNewId();
 //*)
 
-BEGIN_EVENT_TABLE(DataBreakpointDlg,wxDialog)
+BEGIN_EVENT_TABLE(DataBreakpointDlg,wxScrollingDialog)
     //(*EventTable(DataBreakpointDlg)
     //*)
 END_EVENT_TABLE()
