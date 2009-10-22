@@ -8,6 +8,25 @@
  */
 
 #include "sdk_precomp.h"
+#ifndef CB_PRECOMP
+    #include <wx/artprov.h>
+    #include <wx/bmpbuttn.h>
+    #include <wx/combobox.h>
+    #include <wx/filedlg.h>
+    #include <wx/frame.h>
+    #include <wx/menu.h>
+    #include <wx/sizer.h>
+    #include <wx/stattext.h>
+
+    #include "cbeditor.h"
+    #include "cbexception.h"
+    #include "cbplugin.h"
+    #include "cbproject.h"
+    #include "configmanager.h"
+    #include "editormanager.h"
+    #include "logmanager.h"
+    #include "projectmanager.h"
+#endif
 
 #include <algorithm>
 #include <wx/toolbar.h>

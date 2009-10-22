@@ -7,15 +7,18 @@
  * $HeadURL$
  */
 
-#include "sdk_precomp.h"
+#include <set>
 
-#include "breakpointsdlg.h"
+#include "sdk_precomp.h"
 
 #ifndef CB_PRECOMP
 #   include "globals.h"
 #   include "manager.h"
 #   include "editormanager.h"
 #   include "cbeditor.h"
+#   include "cbplugin.h"
+#   include "debuggermanager.h"
+
 #   include <wx/button.h>
 #   include <wx/checkbox.h>
 #   include <wx/intl.h>
@@ -24,9 +27,12 @@
 #   include <wx/menu.h>
 #   include <wx/textctrl.h>
 #   include <wx/spinctrl.h>
+#   include <wx/sizer.h>
 #endif
 
 #include "editbreakpointdlg.h"
+
+#include "breakpointsdlg.h"
 
 namespace
 {

@@ -7,6 +7,14 @@
  * $HeadURL$
  */
 #include "sdk_precomp.h"
+#ifndef CB_PRECOMP
+    #include <wx/xrc/xmlres.h>
+
+    #include "cbeditor.h"
+    #include "cbproject.h"
+    #include "editormanager.h"
+    #include "projectmanager.h"
+#endif
 
 #include "debuggermenu.h"
 

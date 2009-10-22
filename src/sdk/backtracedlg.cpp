@@ -7,12 +7,22 @@
  * $HeadURL$
  */
 #include "sdk_precomp.h"
+#ifndef CB_PRECOMP
+    #include <wx/filedlg.h>
+    #include <wx/listctrl.h>
+    #include <wx/menu.h>
+    #include <wx/sizer.h>
+    #include <wx/txtstrm.h>
+    #include <wx/wfstream.h>
 
-#include "backtracedlg.h"
+    #include "cbplugin.h"
+    #include "configmanager.h"
+#endif
 
 #include <wx/clipbrd.h>
-#include <wx/listctrl.h>
 #include "filefilters.h"
+
+#include "backtracedlg.h"
 
 namespace
 {

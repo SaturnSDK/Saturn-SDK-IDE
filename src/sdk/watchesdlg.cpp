@@ -7,10 +7,19 @@
  * $HeadURL$
  */
 
-#include <sdk.h>
-#include "watchesdlg.h"
+#include "sdk_precomp.h"
+#ifndef CB_PRECOMP
+    #include <wx/menu.h>
+    #include <wx/sizer.h>
+
+    #include "cbplugin.h"
+    #include "logmanager.h"
+    #include "scrollingdialog.h"
+#endif
 
 #include <wx/propgrid/propgrid.h>
+
+#include "watchesdlg.h"
 
 namespace
 {

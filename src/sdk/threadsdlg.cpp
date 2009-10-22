@@ -7,15 +7,16 @@
  * $HeadURL$
  */
 
+#include "sdk_precomp.h"
+#ifndef CB_PRECOMP
+    #include <wx/listctrl.h>
+    #include <wx/menu.h>
+    #include <wx/sizer.h>
+
+    #include "cbplugin.h"
+#endif
+
 #include "threadsdlg.h"
-
-#include "sdk.h"
-
-#include <wx/listctrl.h>
-#include <wx/menu.h>
-#include <wx/sizer.h>
-
-
 
 namespace
 {

@@ -6,7 +6,10 @@
 #ifndef X_DEBUGGER_MENU_H
 #define X_DEBUGGER_MENU_H
 
+#include <wx/event.h>
+
 class cbDebuggerPlugin;
+class wxToolBar;
 
 class DebuggerMenuHandler : public wxEvtHandler
 {

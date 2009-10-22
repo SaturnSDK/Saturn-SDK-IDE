@@ -19,6 +19,9 @@
     #include "projectbuildtarget.h"
     #include "cbproject.h"
     #include "logmanager.h"
+    #include "editormanager.h"
+    #include "cbeditor.h"
+    #include "projectmanager.h"
 #endif
 
 #include <wx/toolbar.h>

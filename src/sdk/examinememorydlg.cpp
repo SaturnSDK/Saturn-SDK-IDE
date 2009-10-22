@@ -7,7 +7,11 @@
  * $HeadURL$
  */
 
-#include <sdk.h>
+#include "sdk_precomp.h"
+#ifndef CB_PRECOMP
+    #include "cbplugin.h"
+#endif
+
 #include "examinememorydlg.h"
 #include <wx/intl.h>
 #include <wx/xrc/xmlres.h>

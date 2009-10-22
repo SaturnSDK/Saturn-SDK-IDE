@@ -6,8 +6,13 @@
 #ifndef BREAKPOINTSDLG_H
 #define BREAKPOINTSDLG_H
 
+#include <vector>
+
 #include <wx/panel.h>
 
+class cbBreakpoint;
+class CodeBlocksEvent;
+class cbDebuggerPlugin;
 class wxCommandEvent;
 class wxListCtrl;
 class wxListEvent;
