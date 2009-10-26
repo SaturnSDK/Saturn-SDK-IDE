@@ -11,6 +11,8 @@
 #include <vector>
 #include <tr1/memory>
 
+#include "debuggermanager.h"
+
 class DebuggerDriver;
 class DebuggerTree;
 
@@ -110,12 +112,12 @@ class DbgCmd_UpdateWatchesTree : public DebuggerCmd
 ////////////////////////////////////////////////////////////////////////////////
 struct DebuggerBreakpoint
 {
-	enum BreakpointType
-	{
-		bptCode = 0,	///< Normal file/line breakpoint
-		bptFunction,	///< Function signature breakpoint
-		bptData			///< Data breakpoint
-	};
+    enum BreakpointType
+    {
+        bptCode = 0,    ///< Normal file/line breakpoint
+        bptFunction,    ///< Function signature breakpoint
+        bptData            ///< Data breakpoint
+    };
 
     /** Constructor.
       * Sets default values for members.
@@ -217,7 +219,7 @@ class GDBWatch : public cbWatch
         virtual void SetType(const wxString &type);
 
         virtual wxString const & GetDebugString() const;
-	public:
+    public:
         void SetDebugValue(wxString const &value);
         void SetSymbol(const wxString& symbol);
 
@@ -230,7 +232,7 @@ class GDBWatch : public cbWatch
         int GetArrayStart() const;
         int GetArrayCount() const;
 
-	protected:
+    protected:
         virtual void DoDestroy();
 
     private:

@@ -25,6 +25,7 @@
 #include <scriptingmanager.h>
 #include <sqplus.h>
 #include <infowindow.h>
+#include "logmanager.h"
 
 // FIXME (obfuscated#): remove this include
 #include "debuggertree.h"
