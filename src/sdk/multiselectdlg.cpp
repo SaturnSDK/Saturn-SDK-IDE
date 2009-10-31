@@ -36,7 +36,7 @@ MultiSelectDlg::MultiSelectDlg(wxWindow* parent,
                                 const wxString& title)
 {
 	//ctor
-	wxXmlResource::Get()->LoadDialog(this, parent, _T("dlgGenericMultiSelect"));
+	wxXmlResource::Get()->LoadObject(this, parent, _T("dlgGenericMultiSelect"),_T("wxScrollingDialog"));
 
 	SetTitle(title);
 	XRCCTRL(*this, "lblLabel", wxStaticText)->SetLabel(label);
@@ -50,7 +50,7 @@ MultiSelectDlg::MultiSelectDlg(wxWindow* parent,
                                 const wxString& title)
 {
 	//ctor
-	wxXmlResource::Get()->LoadDialog(this, parent, _T("dlgGenericMultiSelect"));
+	wxXmlResource::Get()->LoadObject(this, parent, _T("dlgGenericMultiSelect"),_T("wxScrollingDialog"));
 
 	SetTitle(title);
 	XRCCTRL(*this, "lblLabel", wxStaticText)->SetLabel(label);

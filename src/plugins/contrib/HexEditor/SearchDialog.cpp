@@ -90,7 +90,7 @@ void SearchDialog::BuildContent(wxWindow* parent)
 	wxBoxSizer* BoxSizer1;
 	wxStdDialogButtonSizer* StdDialogButtonSizer1;
 	wxStaticBoxSizer* StaticBoxSizer1;
-
+	
 	Create(parent, wxID_ANY, _("Search..."), wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER, _T("wxID_ANY"));
 	BoxSizer1 = new wxBoxSizer(wxVERTICAL);
 	StaticBoxSizer1 = new wxStaticBoxSizer(wxVERTICAL, this, _("Search for"));
@@ -110,7 +110,7 @@ void SearchDialog::BuildContent(wxWindow* parent)
 	StaticBoxSizer1->Add(BoxSizer2, 0, wxEXPAND|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
 	BoxSizer1->Add(StaticBoxSizer1, 0, wxALL|wxEXPAND|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
 	BoxSizer3 = new wxBoxSizer(wxHORIZONTAL);
-	wxString __wxRadioBoxChoices_1[2] =
+	wxString __wxRadioBoxChoices_1[2] = 
 	{
 		_("Current position"),
 		_("Beginning")
@@ -118,7 +118,7 @@ void SearchDialog::BuildContent(wxWindow* parent)
 	m_StartFrom = new wxRadioBox(this, ID_RADIOBOX2, _("Start from"), wxDefaultPosition, wxDefaultSize, 2, __wxRadioBoxChoices_1, 1, wxRA_HORIZONTAL, wxDefaultValidator, _T("ID_RADIOBOX2"));
 	m_StartFrom->SetSelection(0);
 	BoxSizer3->Add(m_StartFrom, 1, wxALL|wxEXPAND|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
-	wxString __wxRadioBoxChoices_2[2] =
+	wxString __wxRadioBoxChoices_2[2] = 
 	{
 		_("Up"),
 		_("Down")
@@ -135,7 +135,7 @@ void SearchDialog::BuildContent(wxWindow* parent)
 	SetSizer(BoxSizer1);
 	BoxSizer1->Fit(this);
 	BoxSizer1->SetSizeHints(this);
-
+	
 	Connect(ID_COMBOBOX1,wxEVT_COMMAND_TEXT_ENTER,(wxObjectEventFunction)&SearchDialog::OnOk);
 	Connect(ID_BUTTON1,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&SearchDialog::OnButton1Click);
 	//*)

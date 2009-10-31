@@ -31,7 +31,7 @@ EditBreakpointDlg::EditBreakpointDlg(cbBreakpoint* breakpoint, wxWindow* parent)
     : m_breakpoint(breakpoint)
 {
     //ctor
-    wxXmlResource::Get()->LoadDialog(this, parent, _T("dlgEditBreakpoint"));
+    wxXmlResource::Get()->LoadObject(this, parent, _T("dlgEditBreakpoint"),_T("wxScrollingDialog"));
 
     XRCCTRL(*this, "chkEnabled", wxCheckBox)->SetValue(breakpoint->IsEnabled());
     XRCCTRL(*this, "chkIgnore", wxCheckBox)->SetValue(breakpoint->UseIgnoreCount());

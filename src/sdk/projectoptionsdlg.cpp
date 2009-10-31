@@ -92,7 +92,7 @@ ProjectOptionsDlg::ProjectOptionsDlg(wxWindow* parent, cbProject* project)
     m_Current_Sel(-1),
     m_pCompiler(0L)
 {
-    wxXmlResource::Get()->LoadDialog(this, parent, _T("dlgProjectOptions"));
+    wxXmlResource::Get()->LoadObject(this, parent, _T("dlgProjectOptions"),_T("wxScrollingDialog"));
 
     wxCheckListBox* list = XRCCTRL(*this, "lstFiles", wxCheckListBox);
     int count = m_Project->GetFilesCount();

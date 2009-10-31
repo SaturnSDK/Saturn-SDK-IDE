@@ -84,7 +84,7 @@ EnvironmentSettingsDlg::EnvironmentSettingsDlg(wxWindow* parent, wxAuiDockArt* a
     ConfigManager *mcfg = Manager::Get()->GetConfigManager(_T("message_manager"));
     ConfigManager *acfg = Manager::Get()->GetConfigManager(_T("an_dlg"));
 
-    wxXmlResource::Get()->LoadDialog(this, parent, _T("dlgEnvironmentSettings"));
+    wxXmlResource::Get()->LoadObject(this, parent, _T("dlgEnvironmentSettings"),_T("wxScrollingDialog"));
     int sel = cfg->ReadInt(_T("/environment/settings_size"), 0);
     wxListbook* lb = XRCCTRL(*this, "nbMain", wxListbook);
     SetSettingsIconsStyle(lb->GetListView(), (SettingsIconsStyle)sel);

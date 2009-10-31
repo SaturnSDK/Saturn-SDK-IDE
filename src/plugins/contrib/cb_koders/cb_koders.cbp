@@ -72,7 +72,7 @@
 			<wxsmith version="1">
 				<gui name="wxWidgets" src="" main="" init_handlers="necessary" language="CPP" />
 				<resources>
-					<wxDialog wxs="wxsmith/KodersDialog.wxs" src="kodersdialog.cpp" hdr="kodersdialog.h" name="KodersDialog" language="CPP" />
+					<wxScrollingDialog wxs="wxsmith/KodersDialog.wxs" src="kodersdialog.cpp" hdr="kodersdialog.h" name="KodersDialog" language="CPP" />
 				</resources>
 			</wxsmith>
 			<envvars />

@@ -31,7 +31,7 @@ ProjectDepsDlg::ProjectDepsDlg(wxWindow* parent, cbProject* sel)
     : m_LastSel(-1)
 {
     //ctor
-    wxXmlResource::Get()->LoadDialog(this, parent, _T("dlgConfigureProjectDeps"));
+    wxXmlResource::Get()->LoadObject(this, parent, _T("dlgConfigureProjectDeps"),_T("wxScrollingDialog"));
 
     wxComboBox* cmb = XRCCTRL(*this, "cmbProject", wxComboBox);
 

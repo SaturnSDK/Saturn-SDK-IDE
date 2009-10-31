@@ -24,15 +24,15 @@
 #include "projectconfigurationpanel.h"
 
 //(*InternalHeaders(ProjectConfigurationPanel)
-#include <wx/treectrl.h>
-#include <wx/sizer.h>
-#include <wx/stattext.h>
-#include <wx/textctrl.h>
 #include <wx/checkbox.h>
-#include <wx/listbox.h>
-#include <wx/intl.h>
+#include <wx/sizer.h>
 #include <wx/button.h>
 #include <wx/string.h>
+#include <wx/intl.h>
+#include <wx/stattext.h>
+#include <wx/textctrl.h>
+#include <wx/treectrl.h>
+#include <wx/listbox.h>
 //*)
 
 #include <wx/tokenzr.h>
@@ -95,17 +95,17 @@ ProjectConfigurationPanel::ProjectConfigurationPanel(wxWindow* parent,ProjectCon
     m_KnownLibs(KnownLibs)
 {
 	//(*Initialize(ProjectConfigurationPanel)
-	wxBoxSizer* BoxSizer4;
 	wxStaticBoxSizer* StaticBoxSizer2;
-	wxBoxSizer* BoxSizer6;
-	wxBoxSizer* BoxSizer5;
+	wxBoxSizer* BoxSizer3;
 	wxBoxSizer* BoxSizer7;
 	wxBoxSizer* BoxSizer2;
 	wxStaticBoxSizer* StaticBoxSizer3;
+	wxBoxSizer* BoxSizer4;
 	wxBoxSizer* BoxSizer1;
-	wxStaticBoxSizer* StaticBoxSizer1;
-	wxBoxSizer* BoxSizer3;
 	wxStaticBoxSizer* m_DisableAuto;
+	wxBoxSizer* BoxSizer6;
+	wxBoxSizer* BoxSizer5;
+	wxStaticBoxSizer* StaticBoxSizer1;
 	
 	Create(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL, _T("wxID_ANY"));
 	BoxSizer1 = new wxBoxSizer(wxVERTICAL);

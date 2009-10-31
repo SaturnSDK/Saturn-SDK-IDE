@@ -29,7 +29,7 @@ END_EVENT_TABLE()
 AutoDetectCompilers::AutoDetectCompilers(wxWindow* parent)
 {
 	//ctor
-	wxXmlResource::Get()->LoadDialog(this, parent, _T("dlgAutoDetectCompilers"));
+	wxXmlResource::Get()->LoadObject(this, parent, _T("dlgAutoDetectCompilers"),_T("wxScrollingDialog"));
 
     wxListCtrl* list = XRCCTRL(*this, "lcCompilers", wxListCtrl);
     if (list)

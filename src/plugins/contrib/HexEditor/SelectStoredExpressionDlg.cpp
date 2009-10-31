@@ -62,7 +62,7 @@ void SelectStoredExpressionDlg::BuildContent(wxWindow* parent)
 	wxBoxSizer* BoxSizer1;
 	wxStdDialogButtonSizer* StdDialogButtonSizer1;
 	wxStaticBoxSizer* StaticBoxSizer1;
-
+	
 	Create(parent, wxID_ANY, _("Stored Expressions"), wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER, _T("wxID_ANY"));
 	BoxSizer1 = new wxBoxSizer(wxVERTICAL);
 	StaticBoxSizer1 = new wxStaticBoxSizer(wxVERTICAL, this, _("Stored expressions"));
@@ -94,7 +94,7 @@ void SelectStoredExpressionDlg::BuildContent(wxWindow* parent)
 	Timer1.SetOwner(this, ID_TIMER1);
 	BoxSizer1->Fit(this);
 	BoxSizer1->SetSizeHints(this);
-
+	
 	Connect(ID_LISTBOX1,wxEVT_COMMAND_LISTBOX_SELECTED,(wxObjectEventFunction)&SelectStoredExpressionDlg::Onm_ExpressionsSelect);
 	Connect(ID_LISTBOX1,wxEVT_COMMAND_LISTBOX_DOUBLECLICKED,(wxObjectEventFunction)&SelectStoredExpressionDlg::Onm_ExpressionsDClick);
 	Connect(ID_TEXTCTRL1,wxEVT_COMMAND_TEXT_UPDATED,(wxObjectEventFunction)&SelectStoredExpressionDlg::Onm_FilterText);

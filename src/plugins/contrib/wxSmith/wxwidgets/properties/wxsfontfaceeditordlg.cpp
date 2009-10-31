@@ -24,8 +24,8 @@
 #include <wx/fontdlg.h>
 
 //(*InternalHeaders(wxsFontFaceEditorDlg)
-#include <wx/intl.h>
 #include <wx/string.h>
+#include <wx/intl.h>
 //*)
 
 //(*IdInit(wxsFontFaceEditorDlg)
@@ -63,7 +63,7 @@ wxsFontFaceEditorDlg::wxsFontFaceEditorDlg(wxWindow* parent,wxString& _Face,wxWi
 	BoxSizer1->Fit(this);
 	BoxSizer1->SetSizeHints(this);
 	Center();
-
+	
 	Connect(ID_BUTTON1,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&wxsFontFaceEditorDlg::OnButton1Click);
 	Connect(wxID_OK,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&wxsFontFaceEditorDlg::OnButton2Click);
 	//*)

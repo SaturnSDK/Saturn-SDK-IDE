@@ -36,7 +36,7 @@ InsertClassMethodDlg::InsertClassMethodDlg(wxWindow* parent, Parser* parser, con
     m_Filename(filename)
 {
 	//ctor
-	wxXmlResource::Get()->LoadDialog(this, parent, _T("dlgInsertClassMethod"));
+	wxXmlResource::Get()->LoadObject(this, parent, _T("dlgInsertClassMethod"),_T("wxScrollingDialog"));
     XRCCTRL(*this, "rbCode", wxRadioBox)->SetSelection(0);
     FillClasses();
 }

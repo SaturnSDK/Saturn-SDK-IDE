@@ -208,6 +208,7 @@ bool wxsToolBar::OnCanAddChild(wxsItem* Item,bool ShowMessage)
         wxString ClassName = Item->GetClassName();
         if ( ClassName == _T("wxPanel") ||
              ClassName == _T("wxDialog") ||
+             ClassName == _T("wxScrollingDialog") ||
              ClassName == _T("wxFrame") )
         {
             if ( ShowMessage )

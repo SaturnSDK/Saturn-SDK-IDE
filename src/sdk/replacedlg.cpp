@@ -37,7 +37,7 @@ ReplaceDlg::ReplaceDlg(wxWindow* parent, const wxString& initial, bool hasSelect
 	: FindReplaceBase(parent, initial, hasSelection),
 	m_Complete(!replaceInFilesActive)
 {
-	wxXmlResource::Get()->LoadDialog(this, parent, _T("dlgReplace"));
+	wxXmlResource::Get()->LoadObject(this, parent, _T("dlgReplace"),_T("wxScrollingDialog"));
     ConfigManager* cfg = Manager::Get()->GetConfigManager(_T("editor"));
 
 	// load last searches

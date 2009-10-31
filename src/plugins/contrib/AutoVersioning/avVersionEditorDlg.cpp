@@ -1,9 +1,9 @@
 #include "avVersionEditorDlg.h"
 
 //(*InternalHeaders(avVersionEditorDlg)
-#include <wx/font.h>
-#include <wx/intl.h>
 #include <wx/string.h>
+#include <wx/intl.h>
+#include <wx/font.h>
 //*)
 
 #include <globals.h>
@@ -90,10 +90,10 @@ avVersionEditorDlg::avVersionEditorDlg(wxWindow* parent,wxWindowID id)
     //(*Initialize(avVersionEditorDlg)
     wxBoxSizer* BoxSizer15;
     wxBoxSizer* BoxSizer10;
-    wxBoxSizer* BoxSizer13;
     wxBoxSizer* BoxSizer11;
+    wxBoxSizer* BoxSizer13;
     wxBoxSizer* BoxSizer14;
-
+    
     Create(parent, wxID_ANY, _("Auto Versioning Editor"), wxDefaultPosition, wxDefaultSize, wxCAPTION|wxRESIZE_BORDER, _T("wxID_ANY"));
     SetClientSize(wxSize(469,364));
     wxFont thisFont(10,wxDEFAULT,wxFONTSTYLE_NORMAL,wxNORMAL,false,wxEmptyString,wxFONTENCODING_DEFAULT);
@@ -150,7 +150,7 @@ avVersionEditorDlg::avVersionEditorDlg(wxWindow* parent,wxWindowID id)
     lblStatus = new wxStaticText(pnlStatus, ID_SATUS_LABEL, _("Software Status:"), wxDefaultPosition, wxDefaultSize, 0, _T("ID_SATUS_LABEL"));
     statusSizer->Add(lblStatus, 0, wxALL|wxEXPAND|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
     cmbStatus = new wxComboBox(pnlStatus, ID_STATUS_COMBOBOX, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0, 0, 0, wxDefaultValidator, _T("ID_STATUS_COMBOBOX"));
-    cmbStatus->SetSelection( cmbStatus->Append(_("Alpha")) );
+    cmbStatus->Append(_("Alpha"));
     cmbStatus->Append(_("Beta"));
     cmbStatus->Append(_("Release"));
     cmbStatus->Append(_("Release Candidate"));
@@ -162,7 +162,7 @@ avVersionEditorDlg::avVersionEditorDlg(wxWindow* parent,wxWindowID id)
     StaticText1 = new wxStaticText(pnlStatus, ID_STATICTEXT1, _("Abbreviation:"), wxDefaultPosition, wxDefaultSize, 0, _T("ID_STATICTEXT1"));
     statusSizer->Add(StaticText1, 0, wxALL|wxEXPAND|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
     cmbAbbreviation = new wxComboBox(pnlStatus, ID_ABBREVIATION_COMBOBOX, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0, 0, 0, wxDefaultValidator, _T("ID_ABBREVIATION_COMBOBOX"));
-    cmbAbbreviation->SetSelection( cmbAbbreviation->Append(_("a")) );
+    cmbAbbreviation->Append(_("a"));
     cmbAbbreviation->Append(_("b"));
     cmbAbbreviation->Append(_("r"));
     cmbAbbreviation->Append(_("rc"));
@@ -251,10 +251,10 @@ avVersionEditorDlg::avVersionEditorDlg(wxWindow* parent,wxWindowID id)
     BoxSizer7->Add(BoxSizer15, 1, wxALL|wxEXPAND|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
     BoxSizer5->Add(BoxSizer7, 1, wxALL|wxEXPAND|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
     BoxSizer8 = new wxBoxSizer(wxHORIZONTAL);
-    wxString __wxRadioBoxChoices_1[2] =
+    wxString __wxRadioBoxChoices_1[2] = 
     {
-        _("C"),
-        _("C++")
+    	_("C"),
+    	_("C++")
     };
     rbHeaderLanguage = new wxRadioBox(pnlSettings, ID_HEADERLANGUAGE_RADIOBOX, _("Header language"), wxDefaultPosition, wxDefaultSize, 2, __wxRadioBoxChoices_1, 2, wxRA_HORIZONTAL, wxDefaultValidator, _T("ID_HEADERLANGUAGE_RADIOBOX"));
     rbHeaderLanguage->SetSelection(1);
@@ -331,7 +331,7 @@ avVersionEditorDlg::avVersionEditorDlg(wxWindow* parent,wxWindowID id)
     tmrValidateInput.Start(500, false);
     mainSizer->SetSizeHints(this);
     Center();
-
+    
     Connect(ID_STATUS_COMBOBOX,wxEVT_COMMAND_COMBOBOX_SELECTED,(wxObjectEventFunction)&avVersionEditorDlg::OnCmbStatusSelect);
     Connect(ID_COMMIT_CHECK,wxEVT_COMMAND_CHECKBOX_CLICKED,(wxObjectEventFunction)&avVersionEditorDlg::OnChkCommitClick);
     Connect(ID_HEADERPATH_BUTTON,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&avVersionEditorDlg::OnHeaderPathClick);
@@ -341,7 +341,7 @@ avVersionEditorDlg::avVersionEditorDlg(wxWindow* parent,wxWindowID id)
     Connect(ID_ACCEPT,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&avVersionEditorDlg::OnAcceptClick);
     Connect(ID_CANCEL,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&avVersionEditorDlg::OnCancelClick);
     Connect(ID_VALIDATE_TIMER,wxEVT_TIMER,(wxObjectEventFunction)&avVersionEditorDlg::OnTmrValidateInputTrigger);
-    Connect(wxID_ANY,wxEVT_ENTER_WINDOW,(wxObjectEventFunction)&avVersionEditorDlg::OnMouseEnter);
+    Connect(wxEVT_ENTER_WINDOW,(wxObjectEventFunction)&avVersionEditorDlg::OnMouseEnter);
     //*)
 
     tmrValidateInput.Stop();

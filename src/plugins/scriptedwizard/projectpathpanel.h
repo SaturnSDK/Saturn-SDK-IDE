@@ -11,9 +11,9 @@
 #endif
 
 //(*Headers(ProjectPathPanel)
+#include <wx/sizer.h>
 #include <wx/button.h>
 #include <wx/panel.h>
-#include <wx/sizer.h>
 #include <wx/stattext.h>
 #include <wx/textctrl.h>
 //*)
@@ -68,12 +68,12 @@ class ProjectPathPanel: public wxPanel
 		//*)
 
 		//(*Declarations(ProjectPathPanel)
-		wxBoxSizer* BoxSizer1;
 		wxTextCtrl* txtPrjTitle;
-		wxBoxSizer* BoxSizer2;
 		wxTextCtrl* txtPrjPath;
-		wxButton* btnPrjPathBrowse;
+		wxBoxSizer* BoxSizer2;
+		wxBoxSizer* BoxSizer1;
 		wxTextCtrl* txtPrjName;
+		wxButton* btnPrjPathBrowse;
 		wxTextCtrl* txtFinalDir;
 		//*)
 

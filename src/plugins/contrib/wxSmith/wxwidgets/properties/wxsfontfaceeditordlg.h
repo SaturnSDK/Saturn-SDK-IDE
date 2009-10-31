@@ -31,11 +31,11 @@
 
 //(*Headers(wxsFontFaceEditorDlg)
 #include <wx/sizer.h>
-#include <wx/textctrl.h>
 #include <wx/button.h>
+#include "scrollingdialog.h"
+#include <wx/textctrl.h>
 //*)
 
-#include "scrollingdialog.h"
 
 class wxsFontFaceEditorDlg: public wxScrollingDialog
 {
@@ -57,11 +57,11 @@ class wxsFontFaceEditorDlg: public wxScrollingDialog
 		//*)
 
 		//(*Declarations(wxsFontFaceEditorDlg)
-		wxTextCtrl* FaceName;
 		wxButton* Button1;
-		wxBoxSizer* BoxSizer2;
 		wxButton* Button2;
 		wxButton* Button3;
+		wxBoxSizer* BoxSizer2;
+		wxTextCtrl* FaceName;
 		wxBoxSizer* BoxSizer1;
 		wxStaticBoxSizer* StaticBoxSizer1;
 		//*)

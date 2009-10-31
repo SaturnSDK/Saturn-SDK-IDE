@@ -25,7 +25,6 @@
 					<Add option="-Winvalid-pch" />
 					<Add option="-DcbDEBUG" />
 					<Add option="-DCB_PRECOMP" />
-					<Add option="-DWX_PRECOMP" />
 					<Add directory="../../../include" />
 					<Add directory="../../../sdk/wxscintilla/include" />
 					<Add directory="../../../include/mozilla_chardet" />
@@ -75,7 +74,7 @@
 			<wxsmith version="1">
 				<resources>
 					<wxPanel wxs="wxsmith/configuration.wxs" src="configuration.cpp" hdr="configuration.h" name="Configuration" language="CPP" />
-					<wxDialog wxs="wxsmith/execution.wxs" src="execution.cpp" hdr="execution.h" name="Execution" language="CPP" />
+					<wxScrollingDialog wxs="wxsmith/execution.wxs" src="execution.cpp" hdr="execution.h" name="Execution" language="CPP" />
 				</resources>
 			</wxsmith>
 			<SVNInside Login="" Password="" ConnectStatus="1" NeedsPassword="0" />

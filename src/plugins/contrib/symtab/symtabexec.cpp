@@ -119,7 +119,7 @@ void SymTabExecDlg::DoInitDialog()
   {
     // Instantiate and initialise dialog
     SymTabExecDlgLoaded =
-      wxXmlResource::Get()->LoadDialog(this, parent, _T("dlgSymTabExec"));
+      wxXmlResource::Get()->LoadObject(this, parent, _T("dlgSymTabExec"),_T("wxScrollingDialog"));
 
     wxFont font(10, wxMODERN, wxNORMAL, wxNORMAL);
 

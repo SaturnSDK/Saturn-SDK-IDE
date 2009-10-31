@@ -3120,6 +3120,12 @@
 		<Unit filename="src/printdlg.h">
 			<Option target="src" />
 		</Unit>
+		<Unit filename="src/resources/app_compiler_settings.xrc">
+			<Option target="src" />
+		</Unit>
+		<Unit filename="src/resources/ask_assocs.xrc">
+			<Option target="src" />
+		</Unit>
 		<Unit filename="src/resources/dlg_about.xrc">
 			<Option target="src" />
 		</Unit>
@@ -3229,9 +3235,9 @@
 			<envvars />
 			<wxsmith version="1">
 				<resources>
-					<wxDialog wxs="wxsmith/VirtualBuildTargetsDlg.wxs" src="sdk/virtualbuildtargetsdlg.cpp" hdr="include/virtualbuildtargetsdlg.h" xrc="sdk/resources/virtualbuildtargetsdlg.xrc" name="VirtualBuildTargetsDlg" language="CPP" />
-					<wxDialog wxs="wxsmith/databreakpointdlg.wxs" src="plugins/debuggergdb/databreakpointdlg.cpp" hdr="plugins/debuggergdb/databreakpointdlg.h" name="DataBreakpointDlg" language="CPP" />
-					<wxDialog wxs="wxsmith/CCDebugInfo.wxs" src="plugins/codecompletion/ccdebuginfo.cpp" hdr="plugins/codecompletion/ccdebuginfo.h" name="CCDebugInfo" language="CPP" />
+					<wxScrollingDialog wxs="wxsmith/VirtualBuildTargetsDlg.wxs" src="sdk/virtualbuildtargetsdlg.cpp" hdr="include/virtualbuildtargetsdlg.h" xrc="sdk/resources/virtualbuildtargetsdlg.xrc" name="VirtualBuildTargetsDlg" language="CPP" />
+					<wxScrollingDialog wxs="wxsmith/databreakpointdlg.wxs" src="plugins/debuggergdb/databreakpointdlg.cpp" hdr="plugins/debuggergdb/databreakpointdlg.h" name="DataBreakpointDlg" language="CPP" />
+					<wxScrollingDialog wxs="wxsmith/CCDebugInfo.wxs" src="plugins/codecompletion/ccdebuginfo.cpp" hdr="plugins/codecompletion/ccdebuginfo.h" name="CCDebugInfo" language="CPP" />
 					<wxPanel wxs="wxsmith/ScriptConsole.wxs" src="src/scriptconsole.cpp" hdr="src/scriptconsole.h" name="ScriptConsole" language="CPP" />
 					<wxPanel wxs="wxsmith/BuildTargetPanel.wxs" src="plugins/scriptedwizard/buildtargetpanel.cpp" hdr="plugins/scriptedwizard/buildtargetpanel.h" name="BuildTargetPanel" language="CPP" />
 					<wxPanel wxs="wxsmith/CompilerPanel.wxs" src="plugins/scriptedwizard/compilerpanel.cpp" hdr="plugins/scriptedwizard/compilerpanel.h" name="CompilerPanel" language="CPP" />

@@ -26,15 +26,13 @@
 #include "wxsarraystringcheckproperty.h"
 
 //(*Headers(wxsArrayStringCheckEditorDlg)
-#include <wx/sizer.h>
-#include <wx/textctrl.h>
 #include <wx/checklst.h>
-#include <wx/statline.h>
+#include <wx/sizer.h>
 #include <wx/button.h>
-#include <wx/dialog.h>
-//*)
-
 #include "scrollingdialog.h"
+#include <wx/statline.h>
+#include <wx/textctrl.h>
+//*)
 
 class wxsArrayStringCheckEditorDlg: public wxScrollingDialog
 {
@@ -71,22 +69,22 @@ class wxsArrayStringCheckEditorDlg: public wxScrollingDialog
 		//*)
 
 		//(*Declarations(wxsArrayStringCheckEditorDlg)
-		wxBoxSizer* BoxSizer4;
-		wxButton* Button4;
-		wxBoxSizer* BoxSizer5;
-		wxButton* Button1;
-		wxBoxSizer* BoxSizer2;
-		wxButton* Button2;
-		wxStaticLine* StaticLine2;
-		wxButton* Button6;
-		wxButton* Button5;
-		wxButton* Button3;
-		wxButton* Button7;
-		wxStaticLine* StaticLine1;
-		wxCheckListBox* StringList;
-		wxBoxSizer* BoxSizer1;
-		wxTextCtrl* EditArea;
 		wxBoxSizer* BoxSizer3;
+		wxStaticLine* StaticLine2;
+		wxButton* Button4;
+		wxButton* Button1;
+		wxButton* Button2;
+		wxButton* Button3;
+		wxBoxSizer* BoxSizer2;
+		wxStaticLine* StaticLine1;
+		wxButton* Button5;
+		wxBoxSizer* BoxSizer4;
+		wxCheckListBox* StringList;
+		wxTextCtrl* EditArea;
+		wxBoxSizer* BoxSizer1;
+		wxButton* Button7;
+		wxButton* Button6;
+		wxBoxSizer* BoxSizer5;
 		//*)
 
 	private:

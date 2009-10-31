@@ -44,7 +44,7 @@ FindDlg::FindDlg(wxWindow* parent, const wxString& initial, bool hasSelection, b
     : FindReplaceBase(parent, initial, hasSelection),
     m_Complete(!findInFilesOnly)
 {
-    wxXmlResource::Get()->LoadDialog(this, parent, _T("dlgFind"));
+    wxXmlResource::Get()->LoadObject(this, parent, _T("dlgFind"),_T("wxScrollingDialog"));
     ConfigManager* cfg = Manager::Get()->GetConfigManager(_T("editor"));
 
     // load last searches

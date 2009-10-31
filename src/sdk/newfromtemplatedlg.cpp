@@ -84,7 +84,7 @@ NewFromTemplateDlg::NewFromTemplateDlg(TemplateOutputType initial, const wxArray
 	m_WizardIndex(-1)
 {
 	//ctor
-	wxXmlResource::Get()->LoadDialog(this, 0L, _T("dlgNewFromTemplate"));
+	wxXmlResource::Get()->LoadObject(this, 0L, _T("dlgNewFromTemplate"),_T("wxScrollingDialog"));
 	m_Wizards = Manager::Get()->GetPluginManager()->GetOffersFor(ptWizard);
 
     wxListbook* lb = XRCCTRL(*this, "nbMain", wxListbook);

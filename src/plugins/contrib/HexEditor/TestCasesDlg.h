@@ -26,12 +26,12 @@
 //(*Headers(TestCasesDlg)
 #include <wx/sizer.h>
 #include <wx/button.h>
+#include "scrollingdialog.h"
 #include <wx/timer.h>
 #include <wx/listbox.h>
 //*)
 #include <wx/thread.h>
 
-#include "scrollingdialog.h"
 #include "TestCasesBase.h"
 
 class TestCasesDlg: public wxScrollingDialog, public TestCasesBase::Output

@@ -1,8 +1,8 @@
 #include "avChangesDlg.h"
 
 //(*InternalHeaders(avChangesDlg)
-#include <wx/intl.h>
 #include <wx/string.h>
+#include <wx/intl.h>
 //*)
 
 #include <wx/arrstr.h>
@@ -39,9 +39,9 @@ END_EVENT_TABLE()
 avChangesDlg::avChangesDlg(wxWindow* parent,wxWindowID id)
 {
     //(*Initialize(avChangesDlg)
-    wxBoxSizer* sizerButtons;
     wxBoxSizer* sizerConfirmation;
-
+    wxBoxSizer* sizerButtons;
+    
     Create(parent, wxID_ANY, _("AutoVersioning :: Changes Log"), wxDefaultPosition, wxDefaultSize, wxCAPTION|wxRESIZE_BORDER, _T("wxID_ANY"));
     SetClientSize(wxSize(700,300));
     BoxSizer1 = new wxBoxSizer(wxVERTICAL);
@@ -57,8 +57,6 @@ avChangesDlg::avChangesDlg(wxWindow* parent,wxWindowID id)
     sizerButtons->Add(btnDelete, 1, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
     BoxSizer1->Add(sizerButtons, 0, wxALL|wxEXPAND|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
     grdChanges = new wxGrid(this, ID_CHANGES_GRID, wxDefaultPosition, wxDefaultSize, 0, _T("ID_CHANGES_GRID"));
-    grdChanges->SetMinSize(wxSize(600,300));
-    grdChanges->SetToolTip(_("List of changes"));
     BoxSizer1->Add(grdChanges, 1, wxALL|wxEXPAND|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
     sizerConfirmation = new wxBoxSizer(wxHORIZONTAL);
     btnSave = new wxButton(this, ID_SAVE_BUTTON, _("Save"), wxDefaultPosition, wxDefaultSize, 0, wxDefaultValidator, _T("ID_SAVE_BUTTON"));
@@ -74,7 +72,7 @@ avChangesDlg::avChangesDlg(wxWindow* parent,wxWindowID id)
     BoxSizer1->Add(sizerConfirmation, 0, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
     SetSizer(BoxSizer1);
     BoxSizer1->SetSizeHints(this);
-
+    
     Connect(ID_ADD_BUTTON,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&avChangesDlg::OnBtnAddClick);
     Connect(ID_EDIT_BUTTON,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&avChangesDlg::OnBtnEditClick);
     Connect(ID_DELETE_BUTTON,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&avChangesDlg::OnBtnDeleteClick);

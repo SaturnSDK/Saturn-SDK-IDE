@@ -15,11 +15,10 @@
 //(*Headers(DataBreakpointDlg)
 #include <wx/checkbox.h>
 #include <wx/sizer.h>
+#include "scrollingdialog.h"
 #include <wx/textctrl.h>
 #include <wx/radiobox.h>
 //*)
-
-#include "scrollingdialog.h"
 
 class DataBreakpointDlg: public wxScrollingDialog
 {

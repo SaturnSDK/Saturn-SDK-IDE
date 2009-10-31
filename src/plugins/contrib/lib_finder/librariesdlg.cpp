@@ -1,17 +1,17 @@
 #include "librariesdlg.h"
 
 //(*InternalHeaders(LibrariesDlg)
+#include <wx/checkbox.h>
 #include <wx/sizer.h>
+#include <wx/button.h>
+#include <wx/panel.h>
+#include <wx/string.h>
+#include <wx/intl.h>
+#include <wx/wxFlatNotebook/renderer.h>
 #include <wx/stattext.h>
 #include <wx/textctrl.h>
 #include <wx/wxFlatNotebook/wxFlatNotebook.h>
-#include <wx/checkbox.h>
 #include <wx/listbox.h>
-#include <wx/wxFlatNotebook/renderer.h>
-#include <wx/panel.h>
-#include <wx/intl.h>
-#include <wx/button.h>
-#include <wx/string.h>
 //*)
 
 #include <sdk.h>
@@ -95,35 +95,35 @@ LibrariesDlg::LibrariesDlg(wxWindow* parent, TypedResults& knownLibraries)
     , m_WhileUpdating(false)
 {
 	//(*Initialize(LibrariesDlg)
-	wxBoxSizer* BoxSizer4;
-	wxStaticBoxSizer* StaticBoxSizer2;
-	wxBoxSizer* BoxSizer6;
-	wxBoxSizer* BoxSizer19;
 	wxBoxSizer* BoxSizer15;
-	wxBoxSizer* BoxSizer20;
-	wxBoxSizer* BoxSizer5;
+	wxStaticBoxSizer* StaticBoxSizer2;
+	wxFlexGridSizer* FlexGridSizer1;
+	wxFlexGridSizer* FlexGridSizer2;
+	wxBoxSizer* BoxSizer3;
+	wxBoxSizer* BoxSizer16;
 	wxBoxSizer* BoxSizer10;
 	wxBoxSizer* BoxSizer7;
-	wxBoxSizer* BoxSizer8;
-	wxBoxSizer* BoxSizer13;
-	wxStaticBoxSizer* StaticBoxSizer4;
-	wxFlexGridSizer* FlexGridSizer3;
-	wxFlexGridSizer* FlexGridSizer2;
-	wxBoxSizer* BoxSizer2;
 	wxBoxSizer* BoxSizer11;
-	wxBoxSizer* BoxSizer16;
-	wxBoxSizer* BoxSizer12;
-	wxBoxSizer* BoxSizer18;
-	wxBoxSizer* BoxSizer14;
+	wxBoxSizer* BoxSizer13;
+	wxBoxSizer* BoxSizer2;
 	wxStaticBoxSizer* StaticBoxSizer3;
 	wxBoxSizer* BoxSizer17;
-	wxBoxSizer* BoxSizer1;
 	wxBoxSizer* BoxSizer9;
-	wxStaticBoxSizer* StaticBoxSizer1;
-	wxFlexGridSizer* FlexGridSizer1;
-	wxBoxSizer* BoxSizer3;
+	wxBoxSizer* BoxSizer18;
+	wxFlexGridSizer* FlexGridSizer3;
+	wxBoxSizer* BoxSizer19;
+	wxBoxSizer* BoxSizer4;
+	wxStaticBoxSizer* StaticBoxSizer4;
+	wxBoxSizer* BoxSizer8;
+	wxBoxSizer* BoxSizer20;
+	wxBoxSizer* BoxSizer1;
+	wxBoxSizer* BoxSizer12;
+	wxBoxSizer* BoxSizer14;
+	wxBoxSizer* BoxSizer6;
 	wxStdDialogButtonSizer* StdDialogButtonSizer1;
-
+	wxBoxSizer* BoxSizer5;
+	wxStaticBoxSizer* StaticBoxSizer1;
+	
 	Create(parent, wxID_ANY, _("Registered libraries"), wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER, _T("wxID_ANY"));
 	BoxSizer1 = new wxBoxSizer(wxVERTICAL);
 	BoxSizer16 = new wxBoxSizer(wxHORIZONTAL);
@@ -319,7 +319,7 @@ LibrariesDlg::LibrariesDlg(wxWindow* parent, TypedResults& knownLibraries)
 	SetSizer(BoxSizer1);
 	BoxSizer1->Fit(this);
 	BoxSizer1->SetSizeHints(this);
-
+	
 	Connect(ID_LISTBOX1,wxEVT_COMMAND_LISTBOX_SELECTED,(wxObjectEventFunction)&LibrariesDlg::Onm_LibrariesSelect);
 	Connect(ID_CHECKBOX1,wxEVT_COMMAND_CHECKBOX_CLICKED,(wxObjectEventFunction)&LibrariesDlg::Onm_ShowPredefinedClick);
 	Connect(ID_CHECKBOX2,wxEVT_COMMAND_CHECKBOX_CLICKED,(wxObjectEventFunction)&LibrariesDlg::Onm_ShowPkgConfigClick);

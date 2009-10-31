@@ -22,13 +22,13 @@
 #include <wx/filedlg.h>
 
 //(*InternalHeaders(ScriptConsole)
-#include <wx/artprov.h>
-#include <wx/bitmap.h>
 #include <wx/settings.h>
-#include <wx/font.h>
-#include <wx/intl.h>
-#include <wx/image.h>
 #include <wx/string.h>
+#include <wx/intl.h>
+#include <wx/font.h>
+#include <wx/bitmap.h>
+#include <wx/image.h>
+#include <wx/artprov.h>
 //*)
 
 //(*IdInit(ScriptConsole)

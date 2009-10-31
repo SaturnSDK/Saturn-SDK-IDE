@@ -32,6 +32,7 @@ libwxsmith_wxwidgets_defitems_la_SOURCES = \
 ./wxsspacer.cpp \
 ./wxsscrollbar.cpp \
 ./wxsdialog.cpp \
+./wxsscrollingdialog.cpp \
 ./wxsspinbutton.cpp \
 ./wxsbutton.cpp \
 ./wxslistbox.cpp \
@@ -92,6 +93,7 @@ noinst_HEADERS = \
 ./wxsdatepickerctrl.h \
 ./wxsstatictext.h \
 ./wxsdialog.h \
+./wxsscrollingdialog.h \
 ./wxslistctrl.h \
 ./wxsspinbutton.h \
 ./wxsbutton.h \

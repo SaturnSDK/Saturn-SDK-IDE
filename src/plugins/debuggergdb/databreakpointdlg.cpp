@@ -38,7 +38,7 @@ DataBreakpointDlg::DataBreakpointDlg(wxWindow *parent, const wxString& dataExpre
     m_dataExpressionCtrl = new wxTextCtrl(this, ID_TEXTCTRL_DATA_EXPRESION, _("Text"), wxDefaultPosition, wxSize(265,23), wxTE_PROCESS_ENTER, wxDefaultValidator, _T("ID_TEXTCTRL_DATA_EXPRESION"));
     m_dataExpressionCtrl->SetFocus();
     BoxSizer1->Add(m_dataExpressionCtrl, 1, wxLEFT|wxRIGHT|wxEXPAND|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL, 10);
-    wxString __wxRadioBoxChoices_1[3] =
+    wxString __wxRadioBoxChoices_1[3] = 
     {
     	_("Break on read"),
     	_("Break on write"),

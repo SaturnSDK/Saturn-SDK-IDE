@@ -56,7 +56,7 @@ END_EVENT_TABLE()
 // class constructor
 PluginsConfigurationDlg::PluginsConfigurationDlg(wxWindow* parent)
 {
-	wxXmlResource::Get()->LoadDialog(this, parent, _T("dlgConfigurePlugins"));
+	wxXmlResource::Get()->LoadObject(this, parent, _T("dlgConfigurePlugins"),_T("wxScrollingDialog"));
     FillList();
 
     // install options

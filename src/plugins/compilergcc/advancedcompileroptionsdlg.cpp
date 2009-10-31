@@ -72,7 +72,7 @@ AdvancedCompilerOptionsDlg::AdvancedCompilerOptionsDlg(wxWindow* parent, const w
     m_LastExtIndex(-1)
 {
 	//ctor
-	wxXmlResource::Get()->LoadDialog(this, parent, _T("dlgAdvancedCompilerOptions"));
+	wxXmlResource::Get()->LoadObject(this, parent, _T("dlgAdvancedCompilerOptions"),_T("wxScrollingDialog"));
 	ReadCompilerOptions();
 	m_bDirty = false;
 

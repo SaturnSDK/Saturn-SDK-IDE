@@ -26,11 +26,11 @@
 //(*Headers(ExpressionTester)
 #include <wx/sizer.h>
 #include <wx/button.h>
+#include "scrollingdialog.h"
 #include <wx/stattext.h>
 #include <wx/textctrl.h>
 //*)
 
-#include "scrollingdialog.h"
 #include "FileContentBase.h"
 
 class ExpressionTester: public wxScrollingDialog

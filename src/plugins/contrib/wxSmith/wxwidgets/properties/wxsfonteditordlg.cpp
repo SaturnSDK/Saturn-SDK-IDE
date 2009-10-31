@@ -38,8 +38,8 @@
 #define FFAM_TELETYPE     0x05
 
 //(*InternalHeaders(wxsFontEditorDlg)
-#include <wx/intl.h>
 #include <wx/string.h>
+#include <wx/intl.h>
 //*)
 
 //(*IdInit(wxsFontEditorDlg)
@@ -212,7 +212,7 @@ wxsFontEditorDlg::wxsFontEditorDlg(wxWindow* parent,wxsFontData& _Data,wxWindowI
 	SetSizer(BoxSizer1);
 	BoxSizer1->Fit(this);
 	BoxSizer1->SetSizeHints(this);
-
+	
 	Connect(ID_CHOICE1,wxEVT_COMMAND_CHOICE_SELECTED,(wxObjectEventFunction)&wxsFontEditorDlg::OnUpdateContent);
 	Connect(ID_CHECKBOX8,wxEVT_COMMAND_CHECKBOX_CLICKED,(wxObjectEventFunction)&wxsFontEditorDlg::OnBaseFontUseChange);
 	Connect(ID_CHOICE2,wxEVT_COMMAND_CHOICE_SELECTED,(wxObjectEventFunction)&wxsFontEditorDlg::OnUpdatePreview);

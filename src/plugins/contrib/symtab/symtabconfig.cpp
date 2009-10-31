@@ -65,7 +65,7 @@ int SymTabConfigDlg::Execute()
   {
     // Instantiate and initialise dialog
     SymTabConfigDlgLoaded =
-      wxXmlResource::Get()->LoadDialog(this, parent, _T("dlgSymTabConfig"));
+      wxXmlResource::Get()->LoadObject(this, parent, _T("dlgSymTabConfig"),_T("wxScrollingDialog"));
   }
 
   LoadSettings();

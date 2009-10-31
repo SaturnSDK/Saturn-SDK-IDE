@@ -8,37 +8,21 @@
  */
 
 #include <sdk.h>
-#include <wx/txtstrm.h>
-#include <wx/regex.h>
-#include "scrollingdialog.h"
-#include <wx/msgdlg.h>
+
 #include <wx/tokenzr.h>
-
-#include <manager.h>
-#include <configmanager.h>
-#include <logmanager.h>
-#include <projectmanager.h>
-#include <pluginmanager.h>
-#include <editormanager.h>
-#include <macrosmanager.h>
-#include <cbeditor.h>
-#include <projectbuildtarget.h>
-#include <sdk_events.h>
-#include <editarraystringdlg.h>
-#include <compilerfactory.h>
-#include <projectloader_hooks.h>
-#include <xtra_res.h>
-
-#include <annoyingdialog.h>
-#include <backtracedlg.h>
-#include <breakpointsdlg.h>
-#include <disassemblydlg.h>
-#include <editbreakpointdlg.h>
-#include <examinememorydlg.h>
-#include <threadsdlg.h>
-#include <watchesdlg.h>
-
+#include "editarraystringdlg.h"
+#include "projectloader_hooks.h"
+#include "annoyingdialog.h"
 #include "cbstyledtextctrl.h"
+
+#include "backtracedlg.h"
+#include "breakpointsdlg.h"
+#include "disassemblydlg.h"
+#include "editbreakpointdlg.h"
+#include "examinememorydlg.h"
+#include "threadsdlg.h"
+#include "watchesdlg.h"
+
 #include "databreakpointdlg.h"
 #include "debuggerdriver.h"
 #include "debuggergdb.h"
@@ -46,7 +30,7 @@
 #include "debuggeroptionsprjdlg.h"
 #include "editwatchesdlg.h"
 #include "editwatchdlg.h"
-#include "globals.h"
+
 
 #ifdef __WXMSW__
     #include <winbase.h>
@@ -55,8 +39,27 @@
 #endif
 
 #ifndef CB_PRECOMP
+    #include <wx/txtstrm.h>
+    #include <wx/regex.h>
+    #include <wx/msgdlg.h>
     #include <wx/frame.h> // GetMenuBar
+
     #include "cbproject.h"
+    #include "manager.h"
+    #include "configmanager.h"
+    #include "logmanager.h"
+    #include "projectmanager.h"
+    #include "pluginmanager.h"
+    #include "editormanager.h"
+    #include "macrosmanager.h"
+    #include "cbeditor.h"
+    #include "projectbuildtarget.h"
+    #include "sdk_events.h"
+    #include "compilerfactory.h
+    #include "xtra_res.h"
+
+    #include "scrollingdialog.h"
+    #include "globals.h"
 #endif
 
 #if defined(__APPLE__) && defined(__MACH__)

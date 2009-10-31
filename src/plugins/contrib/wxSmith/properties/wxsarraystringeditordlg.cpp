@@ -25,8 +25,8 @@
 #include <wx/tokenzr.h>
 
 //(*InternalHeaders(wxsArrayStringEditorDlg)
-#include <wx/intl.h>
 #include <wx/string.h>
+#include <wx/intl.h>
 //*)
 
 //(*IdInit(wxsArrayStringEditorDlg)
@@ -43,11 +43,11 @@ wxsArrayStringEditorDlg::wxsArrayStringEditorDlg(wxWindow* parent,wxArrayString&
 {
 	//(*Initialize(wxsArrayStringEditorDlg)
 	wxButton* Button1;
-	wxBoxSizer* BoxSizer2;
 	wxButton* Button2;
+	wxBoxSizer* BoxSizer2;
 	wxBoxSizer* BoxSizer1;
 	wxStaticBoxSizer* StaticBoxSizer1;
-
+	
 	Create(parent, id, _("Edit items"), wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE, _T("id"));
 	BoxSizer1 = new wxBoxSizer(wxVERTICAL);
 	StaticBoxSizer1 = new wxStaticBoxSizer(wxHORIZONTAL, this, _("Enter items (one item per line)"));
@@ -64,7 +64,7 @@ wxsArrayStringEditorDlg::wxsArrayStringEditorDlg(wxWindow* parent,wxArrayString&
 	SetSizer(BoxSizer1);
 	BoxSizer1->Fit(this);
 	BoxSizer1->SetSizeHints(this);
-
+	
 	Connect(wxID_OK,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&wxsArrayStringEditorDlg::OnOK);
 	Connect(wxID_CANCEL,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&wxsArrayStringEditorDlg::OnCancel);
 	//*)

@@ -22,7 +22,7 @@ EditWatchDlg::EditWatchDlg(GDBWatch* w, wxWindow* parent)
     : m_watch(w)
 {
     //ctor
-    wxXmlResource::Get()->LoadDialog(this, parent, _T("dlgEditWatch"));
+    wxXmlResource::Get()->LoadObject(this, parent, _T("dlgEditWatch"),_T("wxScrollingDialog"));
 
     if (m_watch)
     {
