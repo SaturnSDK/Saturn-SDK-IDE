@@ -14,7 +14,7 @@
     #include <wx/sizer.h>
     #include <wx/txtstrm.h>
     #include <wx/wfstream.h>
-
+    #include <wx/dataobj.h>
     #include "cbplugin.h"
     #include "configmanager.h"
 #endif

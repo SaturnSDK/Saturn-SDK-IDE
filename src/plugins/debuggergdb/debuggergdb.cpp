@@ -39,6 +39,7 @@
 #endif
 
 #ifndef CB_PRECOMP
+    #include <algorithm> // std::remove_if
     #include <wx/txtstrm.h>
     #include <wx/regex.h>
     #include <wx/msgdlg.h>
@@ -55,7 +56,7 @@
     #include "cbeditor.h"
     #include "projectbuildtarget.h"
     #include "sdk_events.h"
-    #include "compilerfactory.h
+    #include "compilerfactory.h"
     #include "xtra_res.h"
 
     #include "scrollingdialog.h"
