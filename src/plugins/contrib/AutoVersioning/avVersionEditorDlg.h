@@ -49,6 +49,9 @@ private:
     long m_revisionRandomMaximun;
     long m_buildTimesToMinorIncrement;
     long m_changes;
+    wxString m_headerGuard;
+    wxString m_namespace;
+    wxString m_prefix;
     wxString m_svnDirectory;
     wxString m_status;
     wxString m_statusAbbreviation;
@@ -96,6 +99,13 @@ public:
 		static const long ID_BUILDTIMES_LABEL;
 		static const long ID_BUILDTIMES_TEXT;
 		static const long ID_SCHEME_PANEL;
+		static const long ID_HEADER_GUARD_LABEL;
+		static const long ID_HEADER_GUARD_TEXT;
+		static const long ID_NAMESPACE_LABEL;
+		static const long ID_NAMESPACE_TEXT;
+		static const long ID_PREFIX_LABEL;
+		static const long ID_PREFIX_TEXT;
+		static const long ID_CODE_PANEL;
 		static const long ID_AUTO_CHECK;
 		static const long ID_DATES_CHECK;
 		static const long ID_COMMIT_CHECK;
@@ -226,6 +236,13 @@ public:
 		wxCheckBox* chkDates;
 		wxStaticText* lblChangesTitle;
 		//*)
+		wxPanel* pnlCode;
+		wxStaticText* lblHeaderGuard;
+		wxTextCtrl* txtHeaderGuard;
+		wxStaticText* lblNamespace;
+		wxTextCtrl* txtNameSpace;
+		wxStaticText* lblPrefix;
+		wxTextCtrl* txtPrefix;
 
 public:
 	void SetCurrentProject(const wxString& projectName);
@@ -286,6 +303,15 @@ public:
 	bool GetChanges() const {return m_changes;}
 	wxString GetChangesLogPath() const {return m_changesLogPath;}
 	wxString GetChangesTitle() const {return m_changesTitle;}
+
+	void SetHeaderGuard(const wxString& value);
+	void SetNamespace(const wxString& value);
+	void SetPrefix(const wxString& value);
+
+	wxString GetHeaderGuard() const {return m_headerGuard;}
+	wxString GetNamespace() const {return m_namespace;}
+	wxString GetPrefix() const {return m_prefix;}
+
 
 };
 
