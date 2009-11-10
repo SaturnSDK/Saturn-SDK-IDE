@@ -67,7 +67,7 @@ class BrowseSelector : public wxScrollingDialog
         void OnItemSelected(wxCommandEvent &event);
         void OnPanelPaint(wxPaintEvent &event);
         void OnPanelEraseBg(wxEraseEvent &event);
-        void PopulateListControl(EditorBase* pEditor);
+        int  PopulateListControl(EditorBase* pEditor);
 
     private:
         /**
