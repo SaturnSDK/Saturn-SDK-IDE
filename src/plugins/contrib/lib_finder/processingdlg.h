@@ -29,13 +29,13 @@
 #include <wx/arrstr.h>
 
 //(*Headers(ProcessingDlg)
+#include "scrollingdialog.h"
 #include <wx/sizer.h>
 #include <wx/stattext.h>
 #include <wx/button.h>
 #include <wx/gauge.h>
 //*)
 
-#include "scrollingdialog.h"
 #include "librarydetectionconfig.h"
 #include "librarydetectionmanager.h"
 #include "resultmap.h"

@@ -1441,12 +1441,12 @@ private:
 #include <wx/textctrl.h>
 #include <wx/button.h>
 #include <wx/listbox.h>
-#include "scrollingdialog.h"
+#include <wx/dialog.h>
 
 #define wxAEDIALOG_STYLE \
     (wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER | wxOK | wxCANCEL | wxCENTRE)
 
-class WXDLLIMPEXP_PG wxArrayEditorDialog : public wxScrollingDialog
+class WXDLLIMPEXP_PG wxArrayEditorDialog : public wxDialog
 {
 public:
     wxArrayEditorDialog();

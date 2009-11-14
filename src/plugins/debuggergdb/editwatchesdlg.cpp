@@ -31,7 +31,7 @@ EditWatchesDlg::EditWatchesDlg(WatchesArray& arr, wxWindow* parent)
     m_Watches(arr)
 {
     //ctor
-    wxXmlResource::Get()->LoadDialog(this, parent, _T("dlgEditWatches"));
+    wxXmlResource::Get()->LoadObject(this, parent, _T("dlgEditWatches"),_T("wxScrollingDialog"));
     FillWatches();
     FillRecord(0);
 }

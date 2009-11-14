@@ -7,7 +7,7 @@
 #include "cbnetwork.h"
 #include "conf.h"
 
-class UpdateDlg : public wxDialog
+class UpdateDlg : public wxScrollingDialog
 {
 	public:
 		UpdateDlg(wxWindow* parent);

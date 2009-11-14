@@ -33,9 +33,8 @@
 #include <wx/sizer.h>
 #include <wx/textctrl.h>
 #include <wx/button.h>
-//*)
-
 #include "scrollingdialog.h"
+//*)
 
 class wxsFontFaceEditorDlg: public wxScrollingDialog
 {

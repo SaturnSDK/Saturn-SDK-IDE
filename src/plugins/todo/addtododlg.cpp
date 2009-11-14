@@ -32,7 +32,7 @@ AddTodoDlg::AddTodoDlg(wxWindow* parent, wxArrayString users, wxArrayString type
     m_Users(users),
     m_Types(types)
 {
-    wxXmlResource::Get()->LoadDialog(this, parent, _T("dlgAddToDo"));
+    wxXmlResource::Get()->LoadObject(this, parent, _T("dlgAddToDo"),_T("wxScrollingDialog"));
 
     wxString lastUser  = Manager::Get()->GetConfigManager(_T("todo_list"))->Read(_T("last_used_user"));
     wxString lastType  = Manager::Get()->GetConfigManager(_T("todo_list"))->Read(_T("last_used_type"));

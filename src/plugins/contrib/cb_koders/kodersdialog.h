@@ -14,9 +14,9 @@
 #include <wx/sizer.h>
 #include <wx/stattext.h>
 #include <wx/textctrl.h>
+#include "scrollingdialog.h"
 //*)
 
-#include "scrollingdialog.h"
 
 class KodersDialog: public wxScrollingDialog
 {

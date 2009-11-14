@@ -28,10 +28,10 @@
 #include <wx/button.h>
 #include <wx/timer.h>
 #include <wx/listbox.h>
+#include "scrollingdialog.h"
 //*)
 #include <wx/thread.h>
 
-#include "scrollingdialog.h"
 #include "TestCasesBase.h"
 
 class TestCasesDlg: public wxScrollingDialog, public TestCasesBase::Output

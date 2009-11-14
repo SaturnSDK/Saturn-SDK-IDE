@@ -15,10 +15,9 @@
 #include <wx/sizer.h>
 #include <wx/slider.h>
 #include <wx/stattext.h>
-
+#include "scrollingdialog.h"
 //*)
 
-#include "scrollingdialog.h"
 #include "configurationpanel.h"
 #include <wx/settings.h>
 

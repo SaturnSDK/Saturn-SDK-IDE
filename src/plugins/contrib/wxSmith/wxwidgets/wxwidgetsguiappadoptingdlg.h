@@ -24,18 +24,17 @@
 #define WXWIDGETSGUIAPPADOPTINGDLG_H
 
 //(*Headers(wxWidgetsGUIAppAdoptingDlg)
+#include <wx/gauge.h>
 #include <wx/sizer.h>
+#include <wx/button.h>
+#include "scrollingdialog.h"
+#include <wx/statline.h>
 #include <wx/stattext.h>
 #include <wx/listbox.h>
-#include <wx/statline.h>
-#include <wx/button.h>
-#include <wx/gauge.h>
 //*)
 
 #include <wx/timer.h>
 #include <projectfile.h>
-
-#include "scrollingdialog.h"
 
 class wxWidgetsGUI;
 
@@ -82,22 +81,22 @@ class wxWidgetsGUIAppAdoptingDlg: public wxScrollingDialog
 		//*)
 
 		//(*Declarations(wxWidgetsGUIAppAdoptingDlg)
-		wxBoxSizer* BoxSizer4;
-		wxButton* Button4;
-		wxButton* CreateBtn;
-		wxBoxSizer* BoxSizer2;
+		wxStaticText* ScanningFile;
+		wxBoxSizer* BoxSizer3;
 		wxStaticLine* StaticLine2;
-		wxButton* Button6;
+		wxButton* UseFileBtn;
+		wxListBox* FoundFiles;
+		wxStaticText* ScanningTxt;
+		wxButton* Button4;
+		wxBoxSizer* BoxSizer2;
+		wxButton* CreateBtn;
 		wxButton* SelectBtn;
 		wxStaticLine* StaticLine1;
-		wxButton* UseFileBtn;
+		wxBoxSizer* BoxSizer4;
 		wxBoxSizer* BoxSizer1;
 		wxGauge* Progress;
-		wxStaticText* ScanningFile;
+		wxButton* Button6;
 		wxStaticBoxSizer* StaticBoxSizer1;
-		wxBoxSizer* BoxSizer3;
-		wxStaticText* ScanningTxt;
-		wxListBox* FoundFiles;
 		//*)
 
 	private:

@@ -2,6 +2,7 @@
 #define LIBRARIESDLG_H
 
 //(*Headers(LibrariesDlg)
+#include "scrollingdialog.h"
 class wxPanel;
 class wxStdDialogButtonSizer;
 class wxCheckBox;
@@ -15,7 +16,6 @@ class wxStaticBoxSizer;
 class wxFlatNotebook;
 //*)
 
-#include "scrollingdialog.h"
 #include "resultmap.h"
 #include "librarydetectionmanager.h"
 

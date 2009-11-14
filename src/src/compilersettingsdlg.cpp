@@ -47,7 +47,7 @@ END_EVENT_TABLE()
 
 CompilerSettingsDlg::CompilerSettingsDlg(wxWindow* parent)
 {
-    wxXmlResource::Get()->LoadDialog(this, parent, _T("dlgCompilerSettings"));
+    wxXmlResource::Get()->LoadObject(this, parent, _T("dlgCompilerSettings"),_T("wxScrollingDialog"));
     wxListbook* lb = XRCCTRL(*this, "nbMain", wxListbook);
     wxImageList* images = new wxImageList(80, 80);
     lb->AssignImageList(images);

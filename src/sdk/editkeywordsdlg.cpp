@@ -29,7 +29,7 @@ EditKeywordsDlg::EditKeywordsDlg(wxWindow* parent, EditorColourSet* theme, Highl
     m_Lang(lang)
 {
     //ctor
-	wxXmlResource::Get()->LoadDialog(this, parent, _T("dlgEditLangKeywords"));
+	wxXmlResource::Get()->LoadObject(this, parent, _T("dlgEditLangKeywords"),_T("wxScrollingDialog"));
 
     spnSet = XRCCTRL(*this, "spnSet", wxSpinCtrl);
 	txtKeywords = XRCCTRL(*this, "txtKeywords", wxTextCtrl);

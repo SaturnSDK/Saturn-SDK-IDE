@@ -32,9 +32,9 @@
 #include <wx/textctrl.h>
 #include <wx/timer.h>
 #include <wx/listbox.h>
+#include "scrollingdialog.h"
 //*)
 
-#include "scrollingdialog.h"
 
 class SelectStoredExpressionDlg: public wxScrollingDialog
 {

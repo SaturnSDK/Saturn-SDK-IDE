@@ -320,7 +320,7 @@ END_EVENT_TABLE()
 
 ManageAssocsDialog::ManageAssocsDialog(wxWindow* parent)
 {
-    wxXmlResource::Get()->LoadDialog(this, parent, _T("dlgManageAssocs"));
+    wxXmlResource::Get()->LoadObject(this, parent, _T("dlgManageAssocs"),_T("wxScrollingDialog"));
 
     list = XRCCTRL(*this, "checkList", wxCheckListBox);
     assert(list);
@@ -378,7 +378,7 @@ END_EVENT_TABLE()
 
 AskAssocDialog::AskAssocDialog(wxWindow* parent)
 {
-    wxXmlResource::Get()->LoadDialog(this, parent, _T("askAssoc"));
+    wxXmlResource::Get()->LoadObject(this, parent, _T("askAssoc"),_T("wxScrollingDialog"));
 }
 
 void AskAssocDialog::OnOK(wxCommandEvent& event)

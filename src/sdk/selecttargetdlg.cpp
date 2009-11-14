@@ -35,7 +35,7 @@ SelectTargetDlg::SelectTargetDlg(wxWindow* parent, cbProject* project, int selec
 	m_Selected(selected)
 {
 	//ctor
-	wxXmlResource::Get()->LoadDialog(this, parent, _T("dlgSelectTarget"));
+	wxXmlResource::Get()->LoadObject(this, parent, _T("dlgSelectTarget"),_T("wxScrollingDialog"));
 
 	wxListBox* list = XRCCTRL(*this, "lstItems", wxListBox);
 	list->Clear();

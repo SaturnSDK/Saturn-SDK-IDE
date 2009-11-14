@@ -22,7 +22,7 @@ END_EVENT_TABLE()
 SelectIncludeFile::SelectIncludeFile(wxWindow* parent,wxWindowID id)
 {
 	//(*Initialize(SelectIncludeFile)
-	wxXmlResource::Get()->LoadDialog(this,parent,_T("SelectIncludeFile"));
+	wxXmlResource::Get()->LoadObject(this,parent,_T("SelectIncludeFile"),_T("wxScrollingDialog"));
 	ListBox1 = XRCCTRL(*this,"ID_LISTBOX1",wxListBox);
 	//*)
 }

@@ -51,7 +51,6 @@
 				<Option host_application="./codeblocks" />
 				<Option projectLinkerOptionsRelation="2" />
 				<Compiler>
-					<Add option="-DBUILDING_PLUGIN" />
 					<Add option="-DWXMAKINGLIB_PROPGRID" />
 					<Add directory="../../../sdk/wxscintilla/include" />
 					<Add directory="wxthings/wxthings/include" />

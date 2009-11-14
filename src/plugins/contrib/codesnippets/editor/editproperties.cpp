@@ -4,6 +4,7 @@
 #include <wx/wxscintilla.h>  // scintilla edit control
 
 #include "sdk.h"
+#include "scrollingdialog.h"
 #include "editproperties.h"
 #include "scbeditor.h"
 #include "cbstyledtextctrl.h"

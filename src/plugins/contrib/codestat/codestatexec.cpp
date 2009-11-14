@@ -97,7 +97,7 @@ int CodeStatExecDlg::Execute(LanguageDef languages[NB_FILETYPES_MAX], int nb_lan
    progress.Update(100);
 
    // Setting-up the statistics dialog box
-   wxXmlResource::Get()->LoadDialog(this, parent, _T("dlgCodeStatExec"));
+   wxXmlResource::Get()->LoadObject(this, parent, _T("dlgCodeStatExec"),_T("wxScrollingDialog"));
 
    wxStaticText* txt_num_files = XRCCTRL(*this, "txt_num_files", wxStaticText);
    txt_num_files->SetLabel(wxString::Format(_("%ld"), nb_files));

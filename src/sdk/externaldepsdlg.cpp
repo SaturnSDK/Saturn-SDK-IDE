@@ -39,7 +39,7 @@ ExternalDepsDlg::ExternalDepsDlg(wxWindow* parent, cbProject* project, ProjectBu
     m_pTarget(target)
 {
 	//ctor
-	wxXmlResource::Get()->LoadDialog(this, parent, _T("dlgExternalDeps"));
+	wxXmlResource::Get()->LoadObject(this, parent, _T("dlgExternalDeps"),_T("wxScrollingDialog"));
 	FillAdditional();
 	FillExternal();
 }

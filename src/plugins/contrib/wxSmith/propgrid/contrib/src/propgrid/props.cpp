@@ -1851,7 +1851,7 @@ bool wxLongStringPropertyClass::OnEvent( wxPropertyGrid* propGrid, wxWindow* pri
 bool wxLongStringPropertyClass::OnButtonClick( wxPropertyGrid* propGrid, wxString& value )
 {
     // launch editor dialog
-    wxScrollingDialog* dlg = new wxScrollingDialog(propGrid,-1,m_label,wxDefaultPosition,wxDefaultSize,
+    wxDialog* dlg = new wxDialog(propGrid,-1,m_label,wxDefaultPosition,wxDefaultSize,
                                                    wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER|wxCLIP_CHILDREN);
 
     dlg->SetFont(propGrid->GetFont()); // To allow entering chars of the same set as the propGrid
@@ -1913,7 +1913,7 @@ bool wxLongStringPropertyClass::SetValueFromString( const wxString& text, int )
 // wxArrayEditorDialog
 // -----------------------------------------------------------------------
 
-BEGIN_EVENT_TABLE(wxArrayEditorDialog, wxScrollingDialog)
+BEGIN_EVENT_TABLE(wxArrayEditorDialog, wxDialog)
     EVT_IDLE(wxArrayEditorDialog::OnIdle)
     EVT_LISTBOX(24, wxArrayEditorDialog::OnListBoxClick)
     EVT_TEXT_ENTER(21, wxArrayEditorDialog::OnAddClick)
@@ -1925,7 +1925,7 @@ BEGIN_EVENT_TABLE(wxArrayEditorDialog, wxScrollingDialog)
     //EVT_BUTTON(28, wxArrayEditorDialog::OnCustomEditClick)
 END_EVENT_TABLE()
 
-IMPLEMENT_ABSTRACT_CLASS(wxArrayEditorDialog, wxScrollingDialog)
+IMPLEMENT_ABSTRACT_CLASS(wxArrayEditorDialog, wxDialog)
 
 #include <wx/statline.h>
 
@@ -1975,7 +1975,7 @@ void wxArrayEditorDialog::OnIdle(wxIdleEvent& event)
 // -----------------------------------------------------------------------
 
 wxArrayEditorDialog::wxArrayEditorDialog()
-    : wxScrollingDialog()
+    : wxDialog()
 {
     Init();
 }
@@ -1996,7 +1996,7 @@ wxArrayEditorDialog::wxArrayEditorDialog( wxWindow *parent,
                                           long style,
                                           const wxPoint& pos,
                                           const wxSize& sz )
-    : wxScrollingDialog()
+    : wxDialog()
 {
     Init();
     Create(parent,message,caption,style,pos,sz);
@@ -2019,7 +2019,7 @@ bool wxArrayEditorDialog::Create( wxWindow *parent,
     int useStyle = style;
 #endif
 
-    bool res = wxScrollingDialog::Create(parent, wxID_ANY, caption, pos, sz, useStyle);
+    bool res = wxDialog::Create(parent, wxID_ANY, caption, pos, sz, useStyle);
 
     SetFont(parent->GetFont()); // To allow entering chars of the same set as the propGrid
 

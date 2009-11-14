@@ -54,7 +54,7 @@ END_EVENT_TABLE()
 
 ClassWizardDlg::ClassWizardDlg(wxWindow* parent)
 {
-    wxXmlResource::Get()->LoadDialog(this, parent, _T("dlgNewClass"));
+    wxXmlResource::Get()->LoadObject(this, parent, _T("dlgNewClass"),_T("wxScrollingDialog"));
 
     ProjectManager* prjMan = Manager::Get()->GetProjectManager();
     cbProject* prj = prjMan->GetActiveProject();

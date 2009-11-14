@@ -28,8 +28,8 @@
 #include <prep.h>
 
 //(*InternalHeaders(wxWidgetsGUIAppAdoptingDlg)
-#include <wx/intl.h>
 #include <wx/string.h>
+#include <wx/intl.h>
 //*)
 
 //(*IdInit(wxWidgetsGUIAppAdoptingDlg)

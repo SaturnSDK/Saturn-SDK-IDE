@@ -139,7 +139,7 @@ ProjectFileOptionsDlg::ProjectFileOptionsDlg(wxWindow* parent, ProjectFile* pf)
     : m_ProjectFile(pf),
     m_LastBuildStageCompilerSel(-1)
 {
-    wxXmlResource::Get()->LoadDialog(this, parent, _T("dlgProjectFileOptions"));
+    wxXmlResource::Get()->LoadObject(this, parent, _T("dlgProjectFileOptions"),_T("wxScrollingDialog"));
 
     if (pf)
     {
@@ -186,7 +186,7 @@ ProjectFileOptionsDlg::ProjectFileOptionsDlg(wxWindow* parent, const wxString& f
     : m_ProjectFile(0),
     m_LastBuildStageCompilerSel(-1)
 {
-    wxXmlResource::Get()->LoadDialog(this, parent, _T("dlgProjectFileOptions"));
+    wxXmlResource::Get()->LoadObject(this, parent, _T("dlgProjectFileOptions"),_T("wxScrollingDialog"));
 
     FillGeneralProperties(fileName);
 

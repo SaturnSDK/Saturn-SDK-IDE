@@ -307,7 +307,7 @@ END_EVENT_TABLE()
 
 UsrGlblMgrEditDialog::UsrGlblMgrEditDialog(const wxString& var) : currentSet(Manager::Get()->GetConfigManager(_T("gcv"))->Read(_T("/active"))), currentVar(var)
 {
-    wxXmlResource::Get()->LoadDialog(this, Manager::Get()->GetAppWindow(), _T("dlgGloabalUservars"));
+    wxXmlResource::Get()->LoadObject(this, Manager::Get()->GetAppWindow(), _T("dlgGloabalUservars"),_T("wxScrollingDialog"));
     selSet = XRCCTRL(*this, "selSet", wxChoice);
     selVar = XRCCTRL(*this, "selVar", wxChoice);
     deleteSet = XRCCTRL(*this, "deleteSet", wxButton);

@@ -83,7 +83,7 @@ IncrementalSelectListDlg::IncrementalSelectListDlg(wxWindow* parent, const wxArr
     m_Text(0L),
     m_Items(items)
 {
-    wxXmlResource::Get()->LoadDialog(this, parent, _T("dlgIncrementalSelectList"));
+    wxXmlResource::Get()->LoadObject(this, parent, _T("dlgIncrementalSelectList"),_T("wxScrollingDialog"));
     if (!caption.IsEmpty())
         SetTitle(caption);
     if (!message.IsEmpty())

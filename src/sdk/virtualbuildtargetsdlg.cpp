@@ -39,13 +39,13 @@ VirtualBuildTargetsDlg::VirtualBuildTargetsDlg(wxWindow* parent,wxWindowID id, c
     m_pProject(project)
 {
 	//(*Initialize(VirtualBuildTargetsDlg)
-	wxXmlResource::Get()->LoadObject(this,parent,_T("VirtualBuildTargetsDlg"),_T("wxDialog"));
+	wxXmlResource::Get()->LoadObject(this,parent,_T("VirtualBuildTargetsDlg"),_T("wxScrollingDialog"));
 	lstAliases = (wxListBox*)FindWindow(XRCID("ID_LISTBOX1"));
 	btnAdd = (wxButton*)FindWindow(XRCID("ID_BUTTON1"));
 	btnEdit = (wxButton*)FindWindow(XRCID("ID_BUTTON2"));
 	btnRemove = (wxButton*)FindWindow(XRCID("ID_BUTTON3"));
 	lstTargets = (wxCheckListBox*)FindWindow(XRCID("ID_CHECKLISTBOX1"));
-
+	
 	Connect(XRCID("ID_LISTBOX1"),wxEVT_COMMAND_LISTBOX_SELECTED,(wxObjectEventFunction)&VirtualBuildTargetsDlg::OnAliasesSelect);
 	Connect(XRCID("ID_BUTTON1"),wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&VirtualBuildTargetsDlg::OnAddClick);
 	Connect(XRCID("ID_BUTTON2"),wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&VirtualBuildTargetsDlg::OnEditClick);
