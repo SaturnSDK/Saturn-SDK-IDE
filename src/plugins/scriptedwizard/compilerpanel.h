@@ -9,10 +9,10 @@
 #include <wx/string.h>
 
 //(*Headers(CompilerPanel)
-#include <wx/combobox.h>
 #include <wx/checkbox.h>
-#include <wx/sizer.h>
+#include <wx/combobox.h>
 #include <wx/panel.h>
+#include <wx/sizer.h>
 #include <wx/stattext.h>
 #include <wx/textctrl.h>
 //*)
@@ -71,20 +71,20 @@ class CompilerPanel: public wxPanel
 		//*)
 
 		//(*Declarations(CompilerPanel)
-		wxStaticBoxSizer* StaticBoxSizer2;
-		wxTextCtrl* txtDbgObjOut;
-		wxComboBox* cmbCompiler;
-		wxTextCtrl* txtRelName;
 		wxStaticText* StaticText1;
+		wxComboBox* cmbCompiler;
 		wxBoxSizer* BoxSizer4;
-		wxCheckBox* chkConfRelease;
-		wxTextCtrl* txtDbgName;
-		wxTextCtrl* txtRelObjOut;
-		wxTextCtrl* txtRelOut;
-		wxTextCtrl* txtDbgOut;
-		wxBoxSizer* BoxSizer5;
-		wxStaticBoxSizer* StaticBoxSizer1;
 		wxCheckBox* chkConfDebug;
+		wxTextCtrl* txtDbgName;
+		wxStaticBoxSizer* StaticBoxSizer1;
+		wxTextCtrl* txtDbgOut;
+		wxTextCtrl* txtDbgObjOut;
+		wxBoxSizer* BoxSizer5;
+		wxCheckBox* chkConfRelease;
+		wxTextCtrl* txtRelName;
+		wxStaticBoxSizer* StaticBoxSizer2;
+		wxTextCtrl* txtRelOut;
+		wxTextCtrl* txtRelObjOut;
 		//*)
 
 		DECLARE_EVENT_TABLE()

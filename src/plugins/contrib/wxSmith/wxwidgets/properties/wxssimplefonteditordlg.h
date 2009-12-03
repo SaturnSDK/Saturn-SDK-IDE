@@ -34,7 +34,6 @@
 #include <wx/textctrl.h>
 //*)
 
-
 class wxsSimpleFontEditorDlg: public wxScrollingDialog
 {
 	public:

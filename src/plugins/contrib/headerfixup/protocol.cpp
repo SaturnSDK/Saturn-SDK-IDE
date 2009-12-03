@@ -10,12 +10,8 @@
 #include "protocol.h"
 
 //(*InternalHeaders(Protocol)
-#include <wx/sizer.h>
-#include <wx/stattext.h>
-#include <wx/textctrl.h>
-#include <wx/intl.h>
-#include <wx/button.h>
 #include <wx/string.h>
+#include <wx/intl.h>
 //*)
 
 #include <wx/event.h>
@@ -60,7 +56,7 @@ Protocol::Protocol(wxWindow* parent,wxWindowID id)
   sizMain->Fit(this);
   sizMain->SetSizeHints(this);
   Center();
-
+  
   Connect(wxID_OK,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&Protocol::OnBtnOKClick);
   //*)
 }// Protocol

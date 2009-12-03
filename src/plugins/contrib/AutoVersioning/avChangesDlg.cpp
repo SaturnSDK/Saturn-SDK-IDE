@@ -1,8 +1,8 @@
 #include "avChangesDlg.h"
 
 //(*InternalHeaders(avChangesDlg)
-#include <wx/string.h>
 #include <wx/intl.h>
+#include <wx/string.h>
 //*)
 
 #include <wx/arrstr.h>
@@ -39,9 +39,9 @@ END_EVENT_TABLE()
 avChangesDlg::avChangesDlg(wxWindow* parent,wxWindowID id)
 {
     //(*Initialize(avChangesDlg)
-    wxBoxSizer* sizerConfirmation;
     wxBoxSizer* sizerButtons;
-    
+    wxBoxSizer* sizerConfirmation;
+
     Create(parent, wxID_ANY, _("AutoVersioning :: Changes Log"), wxDefaultPosition, wxDefaultSize, wxCAPTION|wxRESIZE_BORDER, _T("wxID_ANY"));
     SetClientSize(wxSize(700,300));
     BoxSizer1 = new wxBoxSizer(wxVERTICAL);
@@ -72,7 +72,7 @@ avChangesDlg::avChangesDlg(wxWindow* parent,wxWindowID id)
     BoxSizer1->Add(sizerConfirmation, 0, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
     SetSizer(BoxSizer1);
     BoxSizer1->SetSizeHints(this);
-    
+
     Connect(ID_ADD_BUTTON,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&avChangesDlg::OnBtnAddClick);
     Connect(ID_EDIT_BUTTON,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&avChangesDlg::OnBtnEditClick);
     Connect(ID_DELETE_BUTTON,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&avChangesDlg::OnBtnDeleteClick);

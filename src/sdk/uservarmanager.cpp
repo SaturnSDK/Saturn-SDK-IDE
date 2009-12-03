@@ -18,9 +18,9 @@
     #include "manager.h"
     #include "cbexception.h"
     #include "infowindow.h"
-    #include "scrollingdialog.h"
 
     #include <wx/button.h>
+    #include "scrollingdialog.h"
     #include <wx/intl.h>
     #include <wx/xrc/xmlres.h>
     #include <wx/textctrl.h>

@@ -31,11 +31,11 @@ BEGIN_EVENT_TABLE(VirtualBuildTargetsDlg,wxScrollingDialog)
 END_EVENT_TABLE()
 
 VirtualBuildTargetsDlg::VirtualBuildTargetsDlg(wxWindow* parent,wxWindowID id, cbProject* project)
-    : lstTargets(0),
-    btnEdit(0),
-    btnRemove(0),
+    : lstAliases(0),
     btnAdd(0),
-    lstAliases(0),
+    btnRemove(0),
+    btnEdit(0),
+    lstTargets(0),
     m_pProject(project)
 {
 	//(*Initialize(VirtualBuildTargetsDlg)

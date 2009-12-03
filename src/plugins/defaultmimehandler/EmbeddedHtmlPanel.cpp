@@ -12,18 +12,18 @@
 
 #ifndef CB_PRECOMP
 	//(*InternalHeadersPCH(EmbeddedHtmlPanel)
-	#include <wx/bmpbuttn.h>
 	#include <wx/sizer.h>
-	#include <wx/string.h>
-	#include <wx/intl.h>
 	#include <wx/stattext.h>
+	#include <wx/bmpbuttn.h>
+	#include <wx/intl.h>
+	#include <wx/string.h>
 	//*)
 #endif
 //(*InternalHeaders(EmbeddedHtmlPanel)
+#include <wx/artprov.h>
 #include <wx/bitmap.h>
 #include <wx/image.h>
 #include <wx/html/htmlwin.h>
-#include <wx/artprov.h>
 //*)
 
 //(*IdInit(EmbeddedHtmlPanel)
@@ -75,7 +75,7 @@ EmbeddedHtmlPanel::EmbeddedHtmlPanel(wxWindow* parent)
 	//(*Initialize(EmbeddedHtmlPanel)
 	wxBoxSizer* BoxSizer2;
 	wxBoxSizer* BoxSizer1;
-	
+
 	Create(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL, _T("wxID_ANY"));
 	BoxSizer1 = new wxBoxSizer(wxVERTICAL);
 	Panel1 = new wxPanel(this, ID_PANEL1, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL, _T("ID_PANEL1"));
@@ -95,7 +95,7 @@ EmbeddedHtmlPanel::EmbeddedHtmlPanel(wxWindow* parent)
 	SetSizer(BoxSizer1);
 	BoxSizer1->Fit(this);
 	BoxSizer1->SetSizeHints(this);
-	
+
 	Connect(ID_BITMAPBUTTON2,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&EmbeddedHtmlPanel::OnbtnBackClick);
 	Connect(ID_BITMAPBUTTON3,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&EmbeddedHtmlPanel::OnbtnForwardClick);
 	//*)

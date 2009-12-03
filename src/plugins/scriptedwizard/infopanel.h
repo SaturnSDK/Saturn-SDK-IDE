@@ -14,8 +14,8 @@
 
 //(*Headers(InfoPanel)
 #include <wx/checkbox.h>
-#include <wx/sizer.h>
 #include <wx/panel.h>
+#include <wx/sizer.h>
 #include <wx/stattext.h>
 //*)
 
@@ -46,9 +46,9 @@ class InfoPanel: public wxPanel
 		//*)
 
 		//(*Declarations(InfoPanel)
-		wxCheckBox* chkSkip;
-		wxStaticText* lblIntro;
 		wxBoxSizer* BoxSizer1;
+		wxStaticText* lblIntro;
+		wxCheckBox* chkSkip;
 		//*)
 
 	private:

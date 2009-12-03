@@ -846,11 +846,10 @@ void MainFrame::CreateMenubar()
     wxXmlResource *myres = wxXmlResource::Get();
     myres->Load(resPath + _T("/resources.zip#zip:main_menu.xrc"));
     mbar = myres->LoadMenuBar(_T("main_menu_bar"));
-    if(!mbar)
-    {
-      mbar = new wxMenuBar(); // Some error happened.
-    }
-    SetMenuBar(mbar);
+    if (!mbar)
+        mbar = new wxMenuBar(); // Some error happened.
+    if (mbar)
+	    SetMenuBar(mbar);
 
     // Find Menus that we'll change later
 

@@ -1,10 +1,9 @@
 #ifndef EDITPROPERTIES_H
 #define EDITPROPERTIES_H
 
-#include "scrollingdialog.h"
 
 class ScbEditor;
-
+class wxScrollingDialog;
 //----------------------------------------------------------------------------
 // EditProperties
 //----------------------------------------------------------------------------

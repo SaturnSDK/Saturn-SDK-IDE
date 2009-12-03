@@ -13,12 +13,13 @@
 #endif
 
 //(*Headers(Configuration)
-#include <wx/sizer.h>
-#include <wx/button.h>
 #include <wx/panel.h>
-#include <wx/stattext.h>
-#include <wx/textctrl.h>
-#include <wx/listbox.h>
+class wxTextCtrl;
+class wxListBox;
+class wxStaticText;
+class wxBoxSizer;
+class wxButton;
+class wxStaticBoxSizer;
 //*)
 
 #include <wx/event.h>
@@ -67,27 +68,27 @@ protected:
   //*)
 
   //(*Declarations(Configuration)
-  wxButton* m_AddGroup;
   wxButton* m_DeleteIdentifier;
   wxBoxSizer* sizMain;
-  wxBoxSizer* sizHeaders;
+  wxListBox* m_Groups;
   wxListBox* m_Identifiers;
-  wxBoxSizer* sizIdentifiers;
-  wxStaticText* lblIdentifiers;
-  wxButton* m_ChangeIdentifier;
-  wxButton* m_RenameGroup;
-  wxStaticBoxSizer* sizGroups;
-  wxStaticBoxSizer* sizBindings;
-  wxButton* m_Defaults;
-  wxBoxSizer* sizAddDeleteRename;
+  wxBoxSizer* sizHeaders;
   wxBoxSizer* sizAddDeleteChange;
   wxTextCtrl* m_Headers;
-  wxBoxSizer* sizIdentifiersVert;
+  wxButton* m_ChangeIdentifier;
   wxButton* m_DeleteGroup;
+  wxButton* m_RenameGroup;
   wxButton* m_AddIdentifier;
-  wxBoxSizer* sizIdentifiersHor;
-  wxListBox* m_Groups;
+  wxButton* m_AddGroup;
+  wxButton* m_Defaults;
+  wxStaticBoxSizer* sizGroups;
   wxStaticText* lblHeaders;
+  wxBoxSizer* sizIdentifiers;
+  wxBoxSizer* sizAddDeleteRename;
+  wxBoxSizer* sizIdentifiersVert;
+  wxStaticBoxSizer* sizBindings;
+  wxBoxSizer* sizIdentifiersHor;
+  wxStaticText* lblIdentifiers;
   //*)
 
 private:

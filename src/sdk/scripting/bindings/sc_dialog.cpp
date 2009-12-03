@@ -16,10 +16,10 @@
     #include <configmanager.h>
     #include <logmanager.h>
     #include <wx/string.h>
+    #include "scrollingdialog.h"
 #endif
 
 #include <wx/xrc/xmlres.h>
-#include "scrollingdialog.h"
 
 #include "sc_base_types.h"
 
