@@ -979,7 +979,6 @@
 			<Option target="Autosave" />
 		</Unit>
 		<Unit filename="plugins/autosave/manifest.xml">
-			<Option compilerVar="CC" />
 			<Option target="Autosave" />
 		</Unit>
 		<Unit filename="plugins/classwizard/classwizard.cpp">

@@ -107,10 +107,13 @@
 		<Unit filename="resultmap.h" />
 		<Unit filename="webresourcesmanager.cpp" />
 		<Unit filename="webresourcesmanager.h" />
-		<Unit filename="wxsmith\DefsDownloadDlg1.wxs" />
+		<Unit filename="wxsmith\DefsDownloadDlg.wxs" />
+		<Unit filename="wxsmith\DirListDlg.wxs" />
 		<Unit filename="wxsmith\HeadersDetectorDlg.wxs" />
 		<Unit filename="wxsmith\LibSelectDlg.wxs" />
 		<Unit filename="wxsmith\LibrariesDlg.wxs" />
+		<Unit filename="wxsmith\ProcessingDlg.wxs" />
+		<Unit filename="wxsmith\ProjectConfigurationPanel.wxs" />
 		<Unit filename="wxsmith\ProjectMissingLibs.wxs" />
 		<Extensions>
 			<code_completion />
