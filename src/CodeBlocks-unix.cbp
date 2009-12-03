@@ -1807,24 +1807,7 @@
 			<Option target="To-do" />
 		</Unit>
 		<Unit filename="sdk.doxy">
-			<Option target="tinyXML" />
-			<Option target="AutoRevision" />
-			<Option target="ConsoleRunner" />
-			<Option target="Squirrel" />
-			<Option target="Squirrel std library" />
-			<Option target="SqPlus" />
-			<Option target="scintilla" />
 			<Option target="sdk" />
-			<Option target="src" />
-			<Option target="AStyle" />
-			<Option target="Compiler depslib" />
-			<Option target="Compiler" />
-			<Option target="Debugger" />
-			<Option target="Code-completion" />
-			<Option target="Class wizard" />
-			<Option target="Scripted wizard" />
-			<Option target="To-do" />
-			<Option target="Autosave" />
 		</Unit>
 		<Unit filename="sdk/annoyingdialog.cpp">
 			<Option target="sdk" />
