@@ -9,35 +9,6 @@
 
 #include <sdk.h>
 
-#include <wx/tokenzr.h>
-#include "editarraystringdlg.h"
-#include "projectloader_hooks.h"
-#include "annoyingdialog.h"
-#include "cbstyledtextctrl.h"
-
-#include "backtracedlg.h"
-#include "breakpointsdlg.h"
-#include "disassemblydlg.h"
-#include "editbreakpointdlg.h"
-#include "examinememorydlg.h"
-#include "threadsdlg.h"
-#include "watchesdlg.h"
-
-#include "databreakpointdlg.h"
-#include "debuggerdriver.h"
-#include "debuggergdb.h"
-#include "debuggeroptionsdlg.h"
-#include "debuggeroptionsprjdlg.h"
-#include "editwatchesdlg.h"
-#include "editwatchdlg.h"
-
-
-#ifdef __WXMSW__
-    #include <winbase.h>
-#else
-    int GetShortPathName(const void*, void*, int){/* bogus */ return 0; };
-#endif
-
 #ifndef CB_PRECOMP
     #include <algorithm> // std::remove_if
     #include <wx/txtstrm.h>
@@ -62,6 +33,35 @@
     #include "scrollingdialog.h"
     #include "globals.h"
 #endif
+
+#ifdef __WXMSW__
+    #include <winbase.h>
+#else
+    int GetShortPathName(const void*, void*, int){/* bogus */ return 0; };
+#endif
+
+#include <wx/tokenzr.h>
+#include "editarraystringdlg.h"
+#include "projectloader_hooks.h"
+#include "annoyingdialog.h"
+#include "cbstyledtextctrl.h"
+
+#include "backtracedlg.h"
+#include "breakpointsdlg.h"
+#include "disassemblydlg.h"
+#include "editbreakpointdlg.h"
+#include "examinememorydlg.h"
+#include "threadsdlg.h"
+#include "watchesdlg.h"
+
+#include "databreakpointdlg.h"
+#include "debuggerdriver.h"
+#include "debuggergdb.h"
+#include "debuggeroptionsdlg.h"
+#include "debuggeroptionsprjdlg.h"
+#include "editwatchesdlg.h"
+#include "editwatchdlg.h"
+
 
 #if defined(__APPLE__) && defined(__MACH__)
     #define LIBRARY_ENVVAR _T("DYLD_LIBRARY_PATH")

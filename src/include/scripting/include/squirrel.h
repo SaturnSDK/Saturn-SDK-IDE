@@ -38,7 +38,6 @@ extern "C" {
 #ifndef SQUIRREL_API
 #define SQUIRREL_API extern
 #endif
-
 // C::B patch: so it builds on 64bit
 #ifdef _LP64
     #define _SQ64
