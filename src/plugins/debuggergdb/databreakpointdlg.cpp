@@ -35,9 +35,9 @@ DataBreakpointDlg::DataBreakpointDlg(wxWindow* parent,wxWindowID id,bool enabled
     BoxSizer1->Add(CheckBox1, 0, wxALL|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL, 8);
     wxString __wxRadioBoxChoices_1[3] = 
     {
-    	_("Break on read"),
-    	_("Break on write"),
-    	_("Break on read or write")
+        _("Break on read"),
+        _("Break on write"),
+        _("Break on read or write")
     };
     RadioBox1 = new wxRadioBox(this, ID_RADIOBOX1, _("Condition"), wxDefaultPosition, wxDefaultSize, 3, __wxRadioBoxChoices_1, 1, 0, wxDefaultValidator, _T("ID_RADIOBOX1"));
     BoxSizer1->Add(RadioBox1, 0, wxBOTTOM|wxLEFT|wxRIGHT|wxEXPAND|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 8);

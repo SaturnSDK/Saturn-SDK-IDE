@@ -423,11 +423,7 @@ void EditorManager::SetColourSet(EditorColourSet* theme)
 
 cbEditor* EditorManager::Open(const wxString& filename, int pos, ProjectFile* data)
 {
-    LoaderBase* fileLdr = Manager::Get()->GetFileManager()->Load(filename);
-    if (!fileLdr)
-        return 0;
-
-    return Open(fileLdr, filename, pos, data);
+    return Open(0, filename, pos, data);
 }
 
 cbEditor* EditorManager::Open(LoaderBase* fileLdr, const wxString& filename, int pos,ProjectFile* data)
@@ -462,13 +458,18 @@ cbEditor* EditorManager::Open(LoaderBase* fileLdr, const wxString& filename, int
 
     if (!ed)
     {
-        ed = new cbEditor(m_pNotebook, fileLdr, fname, m_Theme);
-        if (ed->IsOK())
-            AddEditorBase(ed);
-        else
+        if (!fileLdr)
+            fileLdr = Manager::Get()->GetFileManager()->Load(filename);
+        if (fileLdr)
         {
-            ed->Destroy();
-            ed = NULL;
+            ed = new cbEditor(m_pNotebook, fileLdr, fname, m_Theme);
+            if (ed->IsOK())
+                AddEditorBase(ed);
+            else
+            {
+                ed->Destroy();
+                ed = NULL;
+            }
         }
     }
 
@@ -538,7 +539,11 @@ void EditorManager::SetActiveEditor(EditorBase* ed)
     if (page != -1)
         m_pNotebook->SetSelection(page);
     if (ed->IsBuiltinEditor())
+    {
         static_cast<cbEditor*>(ed)->GetControl()->SetFocus();
+        CodeBlocksEvent evt(cbEVT_EDITOR_ACTIVATED, -1, 0, ed);
+        Manager::Get()->GetPluginManager()->NotifyPlugins(evt);
+    }
 }
 
 cbEditor* EditorManager::New(const wxString& newFileName)
