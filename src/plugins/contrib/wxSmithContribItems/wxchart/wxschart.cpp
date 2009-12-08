@@ -169,7 +169,7 @@ wxObject* wxsChart::OnBuildPreview(wxWindow* Parent,long Flags)
 {
     long RealFlags = m_Flags;
     if ( RealFlags & DEFAULT_STYLE_FIX ) RealFlags |= DEFAULT_STYLE;
-    wxChartCtrl* Chart = new wxChartCtrl(Parent,GetId(),(STYLE)RealFlags,Pos(Parent),Size(Parent),Style());
+    wxChartCtrl* Chart = new wxChartCtrl(Parent,GetId(),(wxChartStyle)RealFlags,Pos(Parent),Size(Parent),Style());
 
     for ( size_t i=0; i<m_ChartPointsDesc.Count(); i++ )
     {
