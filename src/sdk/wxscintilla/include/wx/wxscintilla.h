@@ -458,6 +458,7 @@
 #define wxSCI_LEX_POWERPRO 95
 #define wxSCI_LEX_NIMROD 96
 #define wxSCI_LEX_SML 97
+#define wxSCI_LEX_MARKDOWN 98
 
 // When a lexer specifies its language as SCLEX_AUTOMATIC it receives a
 // value assigned in sequence from SCLEX_AUTOMATIC+1.
@@ -1592,6 +1593,7 @@
 #define wxSCI_INNO_SECTION 4
 #define wxSCI_INNO_PREPROC 5
 #define wxSCI_INNO_PREPROC_INLINE 6
+#define wxSCI_INNO_INLINE_EXPANSION 6
 #define wxSCI_INNO_COMMENT_PASCAL 7
 #define wxSCI_INNO_KEYWORD_PASCAL 8
 #define wxSCI_INNO_KEYWORD_USER 9
@@ -1871,6 +1873,30 @@
 #define wxSCI_SML_COMMENT1 13
 #define wxSCI_SML_COMMENT2 14
 #define wxSCI_SML_COMMENT3 15
+
+// Lexical state for SCLEX_MARKDOWN
+#define wxSCI_MARKDOWN_DEFAULT 0
+#define wxSCI_MARKDOWN_LINE_BEGIN 1
+#define wxSCI_MARKDOWN_STRONG1 2
+#define wxSCI_MARKDOWN_STRONG2 3
+#define wxSCI_MARKDOWN_EM1 4
+#define wxSCI_MARKDOWN_EM2 5
+#define wxSCI_MARKDOWN_HEADER1 6
+#define wxSCI_MARKDOWN_HEADER2 7
+#define wxSCI_MARKDOWN_HEADER3 8
+#define wxSCI_MARKDOWN_HEADER4 9
+#define wxSCI_MARKDOWN_HEADER5 10
+#define wxSCI_MARKDOWN_HEADER6 11
+#define wxSCI_MARKDOWN_PRECHAR 12
+#define wxSCI_MARKDOWN_ULIST_ITEM 13
+#define wxSCI_MARKDOWN_OLIST_ITEM 14
+#define wxSCI_MARKDOWN_BLOCKQUOTE 15
+#define wxSCI_MARKDOWN_STRIKEOUT 16
+#define wxSCI_MARKDOWN_HRULE 17
+#define wxSCI_MARKDOWN_LINK 18
+#define wxSCI_MARKDOWN_CODE 19
+#define wxSCI_MARKDOWN_CODE2 20
+#define wxSCI_MARKDOWN_CODEBK 21
 
 //-----------------------------------------
 // Commands that can be bound to keystrokes
@@ -2575,6 +2601,12 @@ public:
 
     // Set the background colour of all whitespace and whether to use this setting.
     void SetWhitespaceBackground(bool useSetting, const wxColour& back);
+
+    // Set the size of the dots used to mark space characters.
+    void SetWhitespaceSize(int size);
+
+    // Get the size of the dots used to mark space characters.
+    int GetWhitespaceSize();
 
     // Divide each styling byte into lexical class bits (default: 5) and indicator
     // bits (default: 3). If a lexer requires more than 32 lexical states, then this
@@ -3597,6 +3629,10 @@ public:
     // Get currently selected item position in the auto-completion list
     int AutoCompGetCurrent();
 
+    // Get currently selected item text in the auto-completion list
+    // Returns the length of the item text
+    wxString AutoCGetCurrentText();
+
     // Enlarge the document to a particular size of text bytes.
     void Allocate(int bytes);
 
@@ -3788,6 +3824,12 @@ public:
 
     // Whether additional carets will blink
     bool GetAdditionalCaretsBlink() const;
+
+    // Set whether additional carets are visible
+    void SetAdditionalCaretsVisible(bool additionalCaretsBlink);
+
+    // Whether additional carets are visible
+    bool GetAdditionalCaretsVisible() const;
 
     // How many selections are there?
     int GetSelections() const;
@@ -4355,14 +4397,14 @@ typedef void (wxEvtHandler::*wxScintillaEventFunction)(wxScintillaEvent&);
 
 #ifndef SWIG
 
+#if wxUSE_UNICODE
+wxString sci2wx (const char* str);
+#else
 inline wxString sci2wx (const char* str)
 {
-#if wxUSE_UNICODE
-    return wxString (str, wxConvUTF8);
-#else
     return wxString (str);
-#endif
 }
+#endif
 
 #if wxUSE_UNICODE
 wxString sci2wx (const char* str, size_t len);

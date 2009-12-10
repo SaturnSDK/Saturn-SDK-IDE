@@ -1212,6 +1212,21 @@ get bool GetTwoPhaseDraw=2283(,)
 # and then the foreground. This avoids chopping off characters that overlap the next run.
 set void SetTwoPhaseDraw=2284(bool twoPhase,)
 
+# Control font anti-aliasing.
+
+enu FontQuality=SC_EFF_
+val SC_EFF_QUALITY_MASK=0xF
+val SC_EFF_QUALITY_DEFAULT=0
+val SC_EFF_QUALITY_NON_ANTIALIASED=1
+val SC_EFF_QUALITY_ANTIALIASED=2
+val SC_EFF_QUALITY_LCD_OPTIMIZED=3
+
+# Choose the quality level for text from the FontQuality enumeration.
+set void SetFontQuality=2611(int fontQuality,)
+
+# Retrieve the quality level for text.
+get int GetFontQuality=2612(,)
+
 # Make the target range start and end be the same as the selection range start and end.
 fun void TargetFromSelection=2287(,)
 
@@ -1731,6 +1746,10 @@ fun void SetCharsDefault=2444(,)
 # Get currently selected item position in the auto-completion list
 fun int AutoCGetCurrent=2445(,)
 
+# Get currently selected item text in the auto-completion list
+# Returns the length of the item text
+fun int AutoCGetCurrentText=2610(, stringresult s)
+
 # Enlarge the document to a particular size of text bytes.
 fun void Allocate=2446(int bytes,)
 
@@ -1958,6 +1977,12 @@ set void SetAdditionalCaretsBlink=2567(bool additionalCaretsBlink,)
 # Whether additional carets will blink
 get bool GetAdditionalCaretsBlink=2568(,)
 
+# Set whether additional carets are visible
+set void SetAdditionalCaretsVisible=2608(bool additionalCaretsBlink,)
+
+# Whether additional carets are visible
+get bool GetAdditionalCaretsVisible=2609(,)
+
 # How many selections are there?
 get int GetSelections=2570(,)
 
@@ -2093,6 +2118,10 @@ get int GetPropertyInt=4010(string key,)
 
 # Retrieve the number of bits the current lexer needs for styling.
 get int GetStyleBitsNeeded=4011(,)
+
+# Retrieve the name of the lexer.
+# Return the length of the text.
+get int GetLexerLanguage=4012(, stringresult text)
 
 # Notifications
 # Type of modification and the action which caused the modification.
