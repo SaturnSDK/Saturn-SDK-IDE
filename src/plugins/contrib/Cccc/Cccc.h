@@ -25,8 +25,9 @@ public:
 private:
     void AppendToLog(const wxString& Text);
 
-    TextCtrlLogger*    m_CcccLog;    //!< log tab in the message pane
-    int m_LogPageIndex;    //!< index of our log tab (can this change during run time ??)
+    TextCtrlLogger* m_CcccLog;      //!< log tab in the message pane
+    int             m_LogPageIndex; //!< index of our log tab (can this change during run time ??)
+    wxString        m_CcccApp;      //!< The path to the application (provided by the user on request)
 };
 
 #endif // CCCC_H_INCLUDED
