@@ -991,18 +991,6 @@ bool wxScintilla::IndicatorGetUnderline(int indic) const
     return SendMsg(SCI_INDICGETUNDER, indic, 0) != 0;
 }
 
-// Set the alpha fill colour of the given indicator.
-void wxScintilla::IndicatorSetAlpha(int indicator, int alpha)
-{
-    SendMsg(SCI_INDICSETALPHA, indicator, alpha);
-}
-
-// Get the alpha fill colour of the given indicator.
-int wxScintilla::IndicatorGetAlpha(int indicator) const
-{
-    return SendMsg(SCI_INDICGETALPHA, indicator, 0);
-}
-
 // Set the foreground colour of all whitespace and whether to use this setting.
 void wxScintilla::SetWhitespaceForeground (bool useSetting, const wxColour& fore)
 {
@@ -1013,6 +1001,18 @@ void wxScintilla::SetWhitespaceForeground (bool useSetting, const wxColour& fore
 void wxScintilla::SetWhitespaceBackground (bool useSetting, const wxColour& back)
 {
     SendMsg(SCI_SETWHITESPACEBACK, useSetting, wxColourAsLong(back));
+}
+
+// Set the size of the dots used to mark space characters.
+void wxScintilla::SetWhitespaceSize(int size)
+{
+    SendMsg(SCI_SETWHITESPACESIZE, size, 0);
+}
+
+// Get the size of the dots used to mark space characters.
+int wxScintilla::GetWhitespaceSize()
+{
+    return SendMsg(SCI_GETWHITESPACESIZE, 0, 0);
 }
 
 // Divide each styling byte into lexical class bits (default: 5) and indicator
@@ -3109,6 +3109,24 @@ int wxScintilla::AutoCompGetCurrent()
     return SendMsg(SCI_AUTOCGETCURRENT, 0, 0);
 }
 
+// Get currently selected item text in the auto-completion list
+// Returns the length of the item text
+wxString wxScintilla::AutoCGetCurrentText()
+{
+    int len (0);
+
+    // determine the selected text range
+    len = SendMsg(SCI_AUTOCGETCURRENTTEXT, 0, 0);
+    if (!len) return wxEmptyString;
+
+    wxMemoryBuffer mbuf(len+2);
+    char* buf = (char*)mbuf.GetWriteBuf(len+1);
+    SendMsg(SCI_AUTOCGETCURRENTTEXT, 0, (sptr_t)buf);
+    mbuf.UngetWriteBuf(len);
+    mbuf.AppendByte(0);
+    return sci2wx(buf);
+}
+
 // Enlarge the document to a particular size of text bytes.
 void wxScintilla::Allocate (int bytes)
 {
@@ -3285,6 +3303,18 @@ void wxScintilla::SetKeysUnicode(bool keysUnicode)
 bool wxScintilla::GetKeysUnicode() const
 {
     return SendMsg(SCI_GETKEYSUNICODE, 0, 0) != 0;
+}
+
+// Set the alpha fill colour of the given indicator.
+void wxScintilla::IndicatorSetAlpha(int indicator, int alpha)
+{
+    SendMsg(SCI_INDICSETALPHA, indicator, alpha);
+}
+
+// Get the alpha fill colour of the given indicator.
+int wxScintilla::IndicatorGetAlpha(int indicator) const
+{
+    return SendMsg(SCI_INDICGETALPHA, indicator, 0);
 }
 
 // Set extra ascent for each line
@@ -3515,6 +3545,18 @@ void wxScintilla::SetAdditionalCaretsBlink(bool additionalCaretsBlink)
 bool wxScintilla::GetAdditionalCaretsBlink() const
 {
     return SendMsg(SCI_GETADDITIONALCARETSBLINK, 0, 0) != 0;
+}
+
+// Set whether additional carets are visible
+void wxScintilla::SetAdditionalCaretsVisible(bool additionalCaretsBlink)
+{
+    SendMsg(SCI_SETADDITIONALCARETSVISIBLE, additionalCaretsBlink, 0);
+}
+
+// Whether additional carets are visible
+bool wxScintilla::GetAdditionalCaretsVisible() const
+{
+    return SendMsg(SCI_GETADDITIONALCARETSVISIBLE, 0, 0) != 0;
 }
 
 // How many selections are there?

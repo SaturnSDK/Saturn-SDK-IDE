@@ -134,7 +134,7 @@ Font::~Font() {
 
 void Font::Create(const char *faceName, int characterSet,
                   int size, bool bold, bool italic,
-                  bool extraFontFlag) {
+                  int WXUNUSED(extraFontFlag)) {
     Release();
 
     // The minus one is done because since Scintilla uses SC_CHARSET_DEFAULT
@@ -512,17 +512,17 @@ void SurfaceImpl::MeasureWidths(Font &font, const char *s, int len, int *positio
     // Map the widths for UCS-2 characters back to the UTF-8 input string
     // NOTE:  I don't think this is right for when sizeof(wxChar) > 2, ie wxGTK2
     // so figure it out and fix it!
-    int j = 0;
+    int i = 0;
     size_t ui = 0;
-    while (j < len) {
-        unsigned char uch = (unsigned char)s[j];
-        positions[j++] = tpos[ui];
+    while (i < len) {
+        unsigned char uch = (unsigned char)s[i];
+        positions[i++] = tpos[ui];
         if (uch >= 0x80) {
             if (uch < (0x80 + 0x40 + 0x20)) {
-                positions[j++] = tpos[ui];
+                positions[i++] = tpos[ui];
             } else {
-                positions[j++] = tpos[ui];
-                positions[j++] = tpos[ui];
+                positions[i++] = tpos[ui];
+                positions[i++] = tpos[ui];
             }
         }
         ui++;
@@ -1274,6 +1274,7 @@ void ListBoxImpl::Select(int n) {
         n = 0;
         select = false;
     }
+    GETLB(wid)->EnsureVisible(n);
     GETLB(wid)->Focus(n);
     GETLB(wid)->Select(n, select);
 }
@@ -1618,6 +1619,11 @@ wxString sci2wx(const char* str, size_t len)
     return wxString(buffer.data(), actualLen);
 }
 
+
+wxString sci2wx(const char* str)
+{
+    return sci2wx(str, strlen(str));
+}
 
 
 const wxWX2MBbuf wx2stc(const wxString& str)
