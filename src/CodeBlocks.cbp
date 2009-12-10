@@ -996,9 +996,6 @@
 		<Unit filename="include\workspaceloader.h">
 			<Option target="sdk" />
 		</Unit>
-		<Unit filename="include\wxscintilla\include\wx\wxscintilla.h">
-			<Option target="scintilla" />
-		</Unit>
 		<Unit filename="include\xtra_res.h">
 			<Option target="sdk" />
 		</Unit>
@@ -3601,6 +3598,9 @@
 		</Unit>
 		<Unit filename="sdk\workspaceloader.cpp">
 			<Option target="sdk" />
+		</Unit>
+		<Unit filename="sdk\wxscintilla\include\wx\wxscintilla.h">
+			<Option target="scintilla" />
 		</Unit>
 		<Unit filename="sdk\wxscintilla\src\PlatWX.cpp">
 			<Option target="scintilla" />
