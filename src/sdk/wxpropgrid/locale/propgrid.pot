@@ -6,9 +6,9 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: 1.4.7\n"
+"Project-Id-Version: 1.4.9.1\n"
 "Report-Msgid-Bugs-To: jmsalli@users.sourceforge.net\n"
-"POT-Creation-Date: 2009-10-04 12:26+0300\n"
+"POT-Creation-Date: 2009-11-25 16:20+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -52,26 +52,26 @@ msgstr ""
 msgid "Alphabetic Mode"
 msgstr ""
 
-#: src/propgrid.cpp:537
+#: src/propgrid.cpp:542
 msgid "False"
 msgstr ""
 
-#: src/propgrid.cpp:538
+#: src/propgrid.cpp:543
 msgid "True"
 msgstr ""
 
-#: src/propgrid.cpp:3160
+#: src/propgrid.cpp:3183
 msgid "Unspecified"
 msgstr ""
 
-#: src/propgrid.cpp:4709
+#: src/propgrid.cpp:4755
 #, c-format
 msgid ""
 "Type operation \"%s\" failed: Property labeled \"%s\" is of type \"%s\", NOT "
 "\"%s\"."
 msgstr ""
 
-#: src/propgrid.cpp:13147
+#: src/propgrid.cpp:13188
 #, c-format
 msgid "Error in resource: %s"
 msgstr ""

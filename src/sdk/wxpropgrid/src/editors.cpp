@@ -920,6 +920,9 @@ void wxPropertyGrid::OnComboItemPaint( wxPGCustomComboControl* pCc,
     if ( &dc )
         dc.SetBrush(*wxWHITE_BRUSH);
 
+    wxPGCellRenderer* renderer = NULL;
+    const wxPGChoiceEntry* cell = NULL;
+
     if ( rect.x >= 0 )
     {
         //
@@ -985,11 +988,13 @@ void wxPropertyGrid::OnComboItemPaint( wxPGCustomComboControl* pCc,
 
             if ( pChoices && item >= 0 && comValIndex < 0 )
             {
-                const wxPGChoiceEntry& cell = pChoices->Item(item);
-                wxPGCellRenderer* renderer = wxPGGlobalVars->m_defaultRenderer;
-                int imageOffset = renderer->PreDrawCell( dc, rect, cell, renderFlags );
+                cell = &pChoices->Item(item);
+                renderer = wxPGGlobalVars->m_defaultRenderer;
+                int imageOffset = renderer->PreDrawCell(dc, rect, *cell,
+                                                        renderFlags );
                 if ( imageOffset )
-                    imageOffset += wxCC_CUSTOM_IMAGE_MARGIN1 + wxCC_CUSTOM_IMAGE_MARGIN2;
+                    imageOffset += wxCC_CUSTOM_IMAGE_MARGIN1 +
+                                   wxCC_CUSTOM_IMAGE_MARGIN2;
                 pt.x += imageOffset;
             }
         }
@@ -1003,6 +1008,9 @@ void wxPropertyGrid::OnComboItemPaint( wxPGCustomComboControl* pCc,
         pt.x += 1;
 
         dc.DrawText( text, pt.x + wxPG_XBEFORETEXT, pt.y );
+
+        if ( renderer )
+            renderer->PostDrawCell(dc, this, *cell, renderFlags);
     }
     else
     {
@@ -1792,7 +1800,7 @@ void wxPGCheckBoxEditor::SetControlIntValue( wxPGProperty* WXUNUSED(property), w
 
 void wxPGCheckBoxEditor::SetValueToUnspecified( wxPGProperty* WXUNUSED(property), wxWindow* ctrl ) const
 {
-    ((wxSimpleCheckBox*)ctrl)->m_state = 0;
+    ((wxSimpleCheckBox*)ctrl)->m_state = wxSCB_STATE_UNSPECIFIED;
     ctrl->Refresh();
 }
 

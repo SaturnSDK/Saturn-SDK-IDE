@@ -84,7 +84,7 @@
 // for "configure" scripts under unix, use them.
 #define wxPROPGRID_MAJOR          1
 #define wxPROPGRID_MINOR          4
-#define wxPROPGRID_RELEASE        7
+#define wxPROPGRID_RELEASE        9
 
 // For non-Unix systems (i.e. when building without a configure script),
 // users of this component can use the following macro to check if the
@@ -549,11 +549,26 @@ public:
                           wxPGProperty* property,
                           const wxPGEditor* editor ) const;
 
-    /** Utility to render cell bitmap and set text colour plus bg brush colour.
+    /**
+        Utility to render cell bitmap and set text colour plus bg brush
+        colour.
 
         Returns image width that, for instance, can be passed to DrawText.
     */
-    int PreDrawCell( wxDC& dc, const wxRect& rect, const wxPGCell& cell, int flags ) const;
+    int PreDrawCell( wxDC& dc, const wxRect& rect, const wxPGCell& cell,
+                     int flags ) const;
+
+    /**
+        Utility to be called after drawing is done, to revert whatever
+        changes PreDrawCell() did.
+
+        @param flags
+            Same as those passed to PreDrawCell().
+    */
+    void PostDrawCell( wxDC& dc,
+                       const wxPropertyGrid* propGrid,
+                       const wxPGCell& cell,
+                       int flags ) const;
 
     void IncRef()
     {
@@ -571,41 +586,6 @@ protected:
 private:
     unsigned int    m_refCount;
 };
-
-
-/** @class wxPGCell
-    @ingroup classes
-    @brief
-    Base class for simple wxPropertyGrid cell information.
-*/
-class WXDLLIMPEXP_PG wxPGCell
-{
-public:
-    wxPGCell();
-    wxPGCell( const wxString& text,
-              const wxBitmap& bitmap = wxNullBitmap,
-              const wxColour& fgCol = wxNullColour,
-              const wxColour& bgCol = wxNullColour );
-
-    virtual ~wxPGCell() { }
-
-    void SetText( const wxString& text ) { m_text = text; }
-    void SetBitmap( const wxBitmap& bitmap ) { m_bitmap = bitmap; }
-    void SetFgCol( const wxColour& col ) { m_fgCol = col; }
-    void SetBgCol( const wxColour& col ) { m_bgCol = col; }
-
-    const wxString& GetText() const { return m_text; }
-    const wxBitmap& GetBitmap() const { return m_bitmap; }
-    const wxColour& GetFgCol() const { return m_fgCol; }
-    const wxColour& GetBgCol() const { return m_bgCol; }
-
-protected:
-    wxString    m_text;
-    wxBitmap    m_bitmap;
-    wxColour    m_fgCol;
-    wxColour    m_bgCol;
-};
-
 
 /** @class wxPGDefaultRenderer
     @ingroup classes
@@ -632,6 +612,43 @@ protected:
 };
 
 #endif  // !SWIG
+
+/** @class wxPGCell
+    @ingroup classes
+    @brief
+    Base class for simple wxPropertyGrid cell information.
+*/
+class WXDLLIMPEXP_PG wxPGCell
+{
+public:
+    wxPGCell();
+    wxPGCell( const wxString& text,
+              const wxBitmap& bitmap = wxNullBitmap,
+              const wxColour& fgCol = wxNullColour,
+              const wxColour& bgCol = wxNullColour );
+
+    virtual ~wxPGCell() { }
+
+    void SetText( const wxString& text ) { m_text = text; }
+    void SetBitmap( const wxBitmap& bitmap ) { m_bitmap = bitmap; }
+    void SetFgCol( const wxColour& col ) { m_fgCol = col; }
+    void SetBgCol( const wxColour& col ) { m_bgCol = col; }
+    void SetFont( const wxFont& font ) { m_font = font; }
+
+    const wxString& GetText() const { return m_text; }
+    const wxBitmap& GetBitmap() const { return m_bitmap; }
+    const wxColour& GetFgCol() const { return m_fgCol; }
+    const wxColour& GetBgCol() const { return m_bgCol; }
+    const wxFont& GetFont() const { return m_font; }
+
+protected:
+    wxString    m_text;
+    wxBitmap    m_bitmap;
+    wxColour    m_fgCol;
+    wxColour    m_bgCol;
+    wxFont      m_font;
+};
+
 
 /** @defgroup miscellaneous wxPropertyGrid Miscellanous
     This section describes some miscellanous values, types and macros.
@@ -1543,6 +1560,11 @@ WX_PG_DECLARE_EDITOR_WITH_DECL(ChoiceAndButton,WXDLLIMPEXP_PG)
 
     @endcode
 
+    If your class has operator==() implementation, then it is recommended that
+    you use WX_PG_IMPLEMENT_VARIANT_DATA_WITH_EQ macro instead, since the
+    plain WX_PG_IMPLEMENT_VARIANT_DATA macro only implements a simple, shallow
+    equality testing.
+
     If your class is derived from wxObject, it is recommended that you use
     wxObject-versions of the macros (WX_PG_DECLARE_WXOBJECT_VARIANT_DATA and
     WX_PG_IMPLEMENT_WXOBJECT_VARIANT_DATA).
@@ -1719,6 +1741,18 @@ _WX_PG_IMPLEMENT_VARIANT_DATA_PROPER_EQ(CLASSNAME, DATATYPE) \
 public: \
     virtual void* GetValuePtr() { return (void*)&m_value; } \
     virtual wxClassInfo* GetValueClassInfo() { return m_value.GetClassInfo(); } \
+}; \
+_WX_PG_IMPLEMENT_VARIANT_DATA(CLASSNAME, DATATYPE, DATATYPE&, const DATATYPE&, (DATATYPE&)*((DATATYPE*)NULL), wxPGVariantData)
+
+#define WX_PG_IMPLEMENT_VARIANT_DATA_WITH_EQ(CLASSNAME, DATATYPE) \
+class CLASSNAME : public wxPGVariantData \
+{ \
+_WX_PG_IMPLEMENT_VARIANT_DATA_CLASS(CLASSNAME, DATATYPE, DATATYPE&, \
+                                    const DATATYPE&, wxPGDoesNothing(), \
+                                    wxVariant(new CLASSNAME(DATATYPE())), wxPGDoesNothing()) \
+_WX_PG_IMPLEMENT_VARIANT_DATA_PROPER_EQ(CLASSNAME, DATATYPE) \
+public: \
+    virtual void* GetValuePtr() { return (void*)&m_value; } \
 }; \
 _WX_PG_IMPLEMENT_VARIANT_DATA(CLASSNAME, DATATYPE, DATATYPE&, const DATATYPE&, (DATATYPE&)*((DATATYPE*)NULL), wxPGVariantData)
 
@@ -2609,6 +2643,9 @@ public:
     */
     bool IsTextEditable() const;
 
+    /**
+        Returns @true if property value is unspecified.
+    */
     bool IsValueUnspecified() const
     {
         return m_value.IsNull();
@@ -2945,10 +2982,13 @@ public:
 
     void SetName( const wxString& newName );
 
+    /**
+        Sets property value to unspecified.
+    */
     void SetValueToUnspecified()
     {
         wxVariant val;  // Create NULL variant
-        SetValue(val);
+        SetValue(val, NULL, wxPG_SETVAL_REFRESH_EDITOR);
     }
 
 #if wxUSE_VALIDATORS
@@ -5663,8 +5703,7 @@ public:
     void SetPropertyValueUnspecified( wxPGPropArg id )
     {
         wxPG_PROP_ARG_CALL_PROLOG()
-        wxVariant nullVariant;
-        SetPropVal(p, nullVariant);
+        p->SetValueToUnspecified();
     }
 
     /** Sets property (and, recursively, its children) to have read-only value. In other words,
@@ -5836,6 +5875,7 @@ public:
         wxVariant v(&value);
         SetPropVal( id, v );
     }
+#endif
 
     /** Sets value (wxVariant&) of a property.
     
@@ -5847,7 +5887,6 @@ public:
     {
         SetPropVal( id, value );
     }
-#endif
 
     /** Sets value (wxPoint&) of a property.
     */
@@ -6900,12 +6939,6 @@ public:
 
     wxPGProperty* GetSelectedProperty () const { return GetSelection(); }
 
-    /** Returns currently selected property. */
-    wxPGProperty* GetSelection() const
-    {
-        return m_pState->GetSelection();
-    }
-
     /** Returns current selection background colour. */
     wxColour GetSelectionBackgroundColour() const { return m_colSelBack; }
 
@@ -7027,11 +7060,18 @@ public:
     */
     void SetPropertyAttributeAll( const wxString& attrName, wxVariant value );
 
-    /** Sets background colour of property and all its children. Colours of
+    /**
+        Sets background colour of property and all its children. Colours of
         captions are not affected. Background brush cache is optimized for often
         set colours to be set last.
+
+        @param flags
+            Default is wxPG_RECURSE which causes colour to be set recursively.
+            Omit this flag to only set colour for the property in question
+            and not any of its children.
     */
-    void SetPropertyBackgroundColour( wxPGPropArg id, const wxColour& col );
+    void SetPropertyBackgroundColour( wxPGPropArg id, const wxColour& col,
+                                      int flags = wxPG_RECURSE );
 
 #if wxPG_COMPATIBILITY_1_2_0
     /** Sets background colour of property and all its children. Colours of
@@ -7044,9 +7084,16 @@ public:
     wxDEPRECATED( void SetPropertyColour( wxPGPropArg id, const wxColour& col ) );
 #endif
 
-    /** Sets text colour of property and all its children.
+    /**
+        Sets text colour of property and all its children.
+
+        @param flags
+            Default is wxPG_RECURSE which causes colour to be set recursively.
+            Omit this flag to only set colour for the property in question
+            and not any of its children.
     */
-    void SetPropertyTextColour( wxPGPropArg id, const wxColour& col );
+    void SetPropertyTextColour( wxPGPropArg id, const wxColour& col,
+                                int flags = wxPG_RECURSE );
 
     /** Sets background and text colour of property and all its children to the default. */
     void SetPropertyColourToDefault( wxPGPropArg id );
@@ -7411,6 +7458,11 @@ public:
     */
     virtual bool CommitChangesFromEditor( wxUint32 flags = 0 );
 
+    bool HasInternalFlag( long flag ) const { return (m_iFlags & flag) ? true : false; }
+    long GetInternalFlags() const { return m_iFlags; }
+    void SetInternalFlag( long flag ) { m_iFlags |= flag; }
+    void ClearInternalFlag( long flag ) { m_iFlags &= ~(flag); }
+
 #ifndef SWIG
 
     /** Generates contents for string dst based on the convetents of wxArrayString
@@ -7426,10 +7478,6 @@ public:
     */
     void OnCustomEditorEvent( wxCommandEvent &event );
 
-    bool HasInternalFlag( long flag ) const { return (m_iFlags & flag) ? true : false; }
-    long GetInternalFlags() const { return m_iFlags; }
-    void SetInternalFlag( long flag ) { m_iFlags |= flag; }
-    void ClearInternalFlag( long flag ) { m_iFlags &= ~(flag); }
     void IncFrozen() { m_frozen++; }
     void DecFrozen() { m_frozen--; }
 
@@ -7806,8 +7854,6 @@ protected:
     // Initializes some members (called by Create and complex constructor).
 	void Init2();
 
-	void OnPaint(wxPaintEvent &event );
-
     // main event receivers
     void OnMouseMove( wxMouseEvent &event );
     void OnMouseMoveBottom( wxMouseEvent &event );
@@ -7819,6 +7865,7 @@ protected:
     void OnKeyUp( wxKeyEvent &event );
     void OnNavigationKey( wxNavigationKeyEvent& event );
     void OnResize( wxSizeEvent &event );
+    void OnPaint( wxPaintEvent& event );
 
     // event handlers
     bool HandleMouseMove( int x, unsigned int y, wxMouseEvent &event );
@@ -7965,7 +8012,8 @@ protected:
     static void RegisterDefaultEditors();
 
     // Sets m_bgColIndex to this property and all its children.
-    void SetBackgroundColourIndex( wxPGProperty* p, int index );
+    void SetBackgroundColourIndex( wxPGProperty* p, int index,
+                                   int flags = wxPG_RECURSE );
 
     // Sets m_fgColIndex to this property and all its children.
     void SetTextColourIndex( wxPGProperty* p, int index, int flags );

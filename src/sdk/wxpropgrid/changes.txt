@@ -1,4 +1,114 @@
 
+Version 1.4.10 ( ?-?-2010 )
+
+  Changes:
+
+  - Multi-selection now uses Shift and Ctrl keys more like
+    a native Windows list box (previously it used Shift for
+    selecting individual items).
+
+
+  Bugs Fixed:
+
+  - Unspecified value rendering was incorrect for various
+    property editors, such as check box.
+
+  - Setting property value to unspecified did not properly
+    refresh the editor control.
+
+  - SetColumnCount() could crash if number of columns was
+    reduced.
+
+
+
+Version 1.4.9.3 ( Dec-10-2009 )
+
+  Bugs Fixed:
+
+  - Fixed regression: wxPropertyGrid could crash if it was
+    created in its parent's constructor (bug #2907964).
+
+  - Fixed a possible crash if wxPG was initialized in an uncommon
+    manner.
+
+
+
+Version 1.4.9.2 ( Nov-29-2009 )
+
+  Bugs Fixed:
+
+  - On some systems (at least Windows Vista) grid's horizontal size
+    could be incorrect and a horizontal scroll bar would appear
+    unintentionally (bug #2903390).
+
+  - Did not compile with GCC (bug #2905262).
+
+  - Some sample custom properties in test_propgrid.py were partially
+    broken (they incorrectly used 'true' instead of 'True').
+
+
+
+Version 1.4.9.1 ( Nov-25-2009 )
+
+  Bugs Fixed:
+
+  - Fix to the empty space redraw bug that previous version addressed
+    was incomplete.
+
+
+
+Version 1.4.9 ( Nov-24-2009 )
+
+  Bugs Fixed:
+
+  - Fixed regression: empty space below properties was rendered
+    with garbage when other windows were dragged over it.
+
+  - wxPython Bindings: PropertyGrid.SetPropertyValue() was not
+    present in the bindings.
+
+
+
+Version 1.4.8 ( Nov-01-2009 )
+
+  New Features:
+
+  * wxPGCell class now has font support. Use SetFont() and GetFont()
+    member functions.
+
+  * Added flags argument to wxPropertyGrid member functions
+      SetPropertyBackgroundColour() and
+      SetPropertyTextColour()
+
+    Default value of this argument is wxPG_RECURSE and omitting it
+    will disable recursive colour assignment.
+
+
+  Bugs Fixed:
+
+  - Fixed serious regression that caused some property expander
+    buttons not to be drawn.
+
+  - Fixed various scrolling issues. This is done by changing the
+    internal scrollbar calculation to a sizer-based solution
+    (patch #2877550 by Josh Faust).
+
+  - Thaw() should no longer moves the scroll bar when reselecting
+    property that was selected prior to Freeze() call (bug
+    #2877568).
+
+  - wxArrayStringProperty had incorrect backslash escaping
+    (bug #2888013, fix by Mathias Dz.)
+
+  - wxPython bindings: various fixes to custom property class
+    code. StringToValue() and IntToValue() should now return
+    tuple (True, newValue) on success instead of just newValue.
+
+  - wxPython bindings: various fixes to custom property editor
+    creation, including code correction in the test_propgrid.py.
+
+
+
 Version 1.4.7 ( Oct-04-2009 )
 
   New Features:

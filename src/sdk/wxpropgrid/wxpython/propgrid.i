@@ -59,7 +59,7 @@ properties such as strings, numbers, colours, and string lists."
 #else
   #define MySWIGOutputDebugString(A)
 #endif
- 
+
 #ifndef Py_RETURN_NONE
     #define Py_RETURN_NONE return Py_INCREF(Py_None), Py_None
 #endif
@@ -381,80 +381,6 @@ bool PyObject_to_wxVariant( PyObject* input, wxVariant* v )
     return true;
 }
 
-bool PyObject_to_wxPGVariantAndBool( PyObject* input, wxPGVariantAndBool& vab )
-{
-    if ( PyBool_Check(input) )
-    {
-        vab.Init((bool) PyInt_AsLong(input));
-        return true;
-    }
-
-    PyObject* item = NULL;
-
-    if ( PyTuple_Check(input) && PySequence_Length(input) == 2 )
-    {
-        item = PySequence_GetItem(input, 0);
-        if (PyErr_Occurred()) return false;
-        vab.m_result = (bool) PyInt_AsLong(item);
-        Py_DECREF(item);
-        item = PySequence_GetItem(input, 1);
-        if (PyErr_Occurred()) return false;
-        input = item;
-    }
-    else
-    {
-        vab.m_result = true;
-    }
-
-    if ( PyObject_to_wxVariant( input, &vab.m_value ) )
-        vab.m_valueValid = true;
-    else
-        return false;
-
-    if ( item )
-        Py_DECREF( item );
-
-    return true;
-}
-
-bool PyObject_to_wxPGVariant( PyObject* input, wxPGVariantAndBool& vab )
-{
-    PyDateTime_IMPORT;
-
-    if ( PyBool_Check(input) )
-    {
-        vab.Init((bool) PyInt_AsLong(input));
-        return true;
-    }
-
-    PyObject* item = NULL;
-
-    if ( PyTuple_Check(input) && PySequence_Length(input) == 2 )
-    {
-        item = PySequence_GetItem(input, 0);
-        if (PyErr_Occurred()) return false;
-        vab.m_result = (bool) PyInt_AsLong(item);
-        Py_DECREF(item);
-        item = PySequence_GetItem(input, 1);
-        if (PyErr_Occurred()) return false;
-        input = item;
-    }
-    else
-    {
-        vab.m_result = true;
-    }
-
-    if ( PyObject_to_wxVariant( input, &vab.m_value ) )
-        vab.m_valueValid = true;
-    else
-        return false;
-
-    if ( item )
-        Py_DECREF( item );
-
-    return true;
-}
-
 PyObject* wxVariant_to_PyObject( const wxVariant* v )
 {
     if ( !v || v->IsNull() )
@@ -586,6 +512,76 @@ PyObject* wxVariant_to_PyObject( const wxVariant* v )
     return NULL;
 }
 
+PyObject* wxPGVariantAndBool_to_PyObject( const wxPGVariantAndBool& vab )
+{
+    PyObject* tuple = PyTuple_New(2);
+
+    PyObject* value;
+    if ( vab.m_valueValid )
+    {
+        value = wxVariant_to_PyObject(&vab.m_value);
+    }
+    else
+    {
+        Py_INCREF(Py_None);
+        value = Py_None;
+    }
+
+    PyTuple_SetItem(tuple, 0, PyInt_FromLong((long)vab.m_result));
+    PyTuple_SetItem(tuple, 1, value);
+
+    return tuple;
+}
+
+bool PyObject_to_wxPGVariantAndBool( PyObject* input,
+                                     wxPGVariantAndBool& vab )
+{
+    PyObject* resObj = NULL;
+    PyObject* valueObj = NULL;
+
+    if ( PySequence_Check(input) && PySequence_Length(input) == 2 )
+    {
+        resObj = PySequence_GetItem(input, 0);
+        if (PyErr_Occurred()) return false;
+        valueObj = PySequence_GetItem(input, 1);
+        if (PyErr_Occurred()) return false;
+    }
+    else
+    {
+        resObj = input;
+    }
+
+    // Also checks for bool, which is subclass of int
+    if ( PyInt_Check(resObj) )
+    {
+        vab.Init((bool) PyInt_AsLong(resObj));
+    }
+    else if ( PyLong_Check(resObj) )
+    {
+        vab.Init((bool) PyLong_AsLong(resObj));
+    }
+    else
+    {
+        return false;
+    }
+
+    if ( valueObj )
+    {
+        // If valueObj is valid, then we can assume resObj was acquired from
+        // sequence and must be decref'ed.
+        Py_DECREF(resObj);
+
+        if ( PyObject_to_wxVariant(valueObj, &vab.m_value) )
+            vab.m_valueValid = true;
+        else
+            return false;
+
+        Py_DECREF(valueObj);
+    }
+
+    return true;
+}
+
 bool PyObject_to_wxPGPropArgCls( PyObject* input, wxPGPropArgCls** v )
 {
     if ( PyString_Check(input) || PyUnicode_Check(input) )
@@ -658,7 +654,7 @@ PyObject* wxPoint_to_PyObject( const wxPoint* p )
         Py_RETURN_NONE;
 
     PyObject* tuple = PyTuple_New(2);
-    // PyTuple_SetItem steals reference, so absence of Py_DECREF is ok    
+    // PyTuple_SetItem steals reference, so absence of Py_DECREF is ok
     PyTuple_SetItem(tuple, 0, PyInt_FromLong(p->x));
     PyTuple_SetItem(tuple, 1, PyInt_FromLong(p->y));
     return tuple;
@@ -670,7 +666,7 @@ PyObject* wxSize_to_PyObject( const wxSize* p )
         Py_RETURN_NONE;
 
     PyObject* tuple = PyTuple_New(2);
-    // PyTuple_SetItem steals reference, so absence of Py_DECREF is ok    
+    // PyTuple_SetItem steals reference, so absence of Py_DECREF is ok
     PyTuple_SetItem(tuple, 0, PyInt_FromLong(p->x));
     PyTuple_SetItem(tuple, 1, PyInt_FromLong(p->y));
     return tuple;
@@ -692,7 +688,7 @@ PyObject* wxPGWindowList_to_PyObject( const wxPGWindowList* p )
         if ( o2 )
         {
             PyObject* tuple = PyTuple_New(2);
-            // PyTuple_SetItem steals reference, so absence of Py_DECREF is ok    
+            // PyTuple_SetItem steals reference, so absence of Py_DECREF is ok
             PyTuple_SetItem(tuple, 0, o1);
             PyTuple_SetItem(tuple, 1, o2);
             return tuple;
@@ -738,6 +734,21 @@ bool PyObject_to_wxPGWindowList( PyObject* o, wxPGWindowList* p )
     return true;
 }
 
+// Returns allocated string that must be freed by the caller
+char* GeneratePythonConvErrMsg(PyObject* obj,
+                               const char* toType)
+{
+    PyObject* pyReprStr = PyObject_Str(obj);
+    char* reprStr = PyString_AsString(pyReprStr);
+    const char* templ = "'%s' cannot be converted to %s";
+    char* s = (char*) malloc(strlen(templ) +
+                             strlen(reprStr) +
+                             strlen(toType) + 1);
+    sprintf(s, templ, reprStr, toType);
+    Py_DECREF(pyReprStr);
+    return s;
+}
+
 %}
 
 // Suppress warning 511 (kwargs not supported for overloaded functions)
@@ -774,6 +785,22 @@ bool PyObject_to_wxPGWindowList( PyObject* o, wxPGWindowList* p )
     }
 }
 
+%extend wxPGMultiButton {
+    %pythonAppend wxPGMultiButton
+    {
+        self._setOORInfo(self)
+    }
+
+    void AddBitmapButton( const wxBitmap& bitmap, int id = -2 )
+    {
+        return self->Add(bitmap, id);
+    }
+    %pythoncode {
+        def AddButton(self, *args, **kwargs):
+            return self.Add(*args, **kwargs)
+    }
+}
+
 // wxPropertyGrid specific special code
 %{
 // We need these proxies or SWIG will fail (it has somewhat incomplete
@@ -804,14 +831,14 @@ PropertyGridManagerNameStr = "wxPropertyGridManager"
 %module outarg
 
 // This tells SWIG to treat an double * argument with name 'OutValue' as
-// an output value.  We'll append the value to the current result which 
+// an output value.  We'll append the value to the current result which
 // is guaranteed to be a List object by SWIG.
 
 %typemap(argout) wxWindow ** {
     PyObject *o;
     o = wxPyConstructObject((void*)*$1, wxT("wxWindow"), 0);
     PyObject* _tuple = PyTuple_New(2);
-    // PyTuple_SetItem steals reference, so absence of Py_DECREF is ok    
+    // PyTuple_SetItem steals reference, so absence of Py_DECREF is ok
     PyTuple_SetItem(_tuple, 0, $result);
     PyTuple_SetItem(_tuple, 1, o);
     $result = _tuple;
@@ -835,8 +862,11 @@ PropertyGridManagerNameStr = "wxPropertyGridManager"
 // wxVariant typemap
 //
 %typemap(in) wxVariant {
-    if ( !PyObject_to_wxVariant($input, &$1) ) {
-        PyErr_SetString(PyExc_TypeError, "this Python type cannot be converted to wxVariant");
+    if ( !PyObject_to_wxVariant($input, &$1) )
+    {
+        char* s = GeneratePythonConvErrMsg($input, "wxVariant");
+        PyErr_SetString(PyExc_TypeError, s);
+        free(s);
         SWIG_fail;
     }
 }
@@ -845,9 +875,11 @@ PropertyGridManagerNameStr = "wxPropertyGridManager"
     if ( $1 )
         SWIG_fail;
     $1 = new wxVariant();
-    if ( !PyObject_to_wxVariant($input, $1) ) {
-        PyErr_SetString(PyExc_TypeError,
-                        "this Python type cannot be converted to wxVariant");
+    if ( !PyObject_to_wxVariant($input, $1) )
+    {
+        char* s = GeneratePythonConvErrMsg($input, "wxVariant");
+        PyErr_SetString(PyExc_TypeError, s);
+        free(s);
         SWIG_fail;
     }
 }
@@ -860,9 +892,11 @@ PropertyGridManagerNameStr = "wxPropertyGridManager"
     if ( $1 )
         SWIG_fail;
     $1 = new wxVariant();
-    if ( !PyObject_to_wxVariant($input, $1) ) {
-        PyErr_SetString(PyExc_TypeError,
-                        "this Python type cannot be converted to wxVariant");
+    if ( !PyObject_to_wxVariant($input, $1) )
+    {
+        char* s = GeneratePythonConvErrMsg($input, "wxVariant");
+        PyErr_SetString(PyExc_TypeError, s);
+        free(s);
         SWIG_fail;
     }
 }
@@ -874,7 +908,8 @@ PropertyGridManagerNameStr = "wxPropertyGridManager"
 %typemap(out) wxVariant {
     $result = wxVariant_to_PyObject(&$1);
     if ( !$result ) {
-        PyErr_SetString(PyExc_TypeError, "this wxVariant type cannot be converted to Python object");
+        PyErr_SetString(PyExc_TypeError,
+            "this wxVariant type cannot be converted to Python object");
         SWIG_fail;
     }
 }
@@ -882,7 +917,8 @@ PropertyGridManagerNameStr = "wxPropertyGridManager"
 %typemap(out) wxVariant& {
     $result = wxVariant_to_PyObject($1);
     if ( !$result ) {
-        PyErr_SetString(PyExc_TypeError, "this wxVariant type cannot be converted to Python object");
+        PyErr_SetString(PyExc_TypeError,
+            "this wxVariant type cannot be converted to Python object");
         SWIG_fail;
     }
 }
@@ -890,7 +926,8 @@ PropertyGridManagerNameStr = "wxPropertyGridManager"
 %typemap(out) const wxVariant& {
     $result = wxVariant_to_PyObject($1);
     if ( !$result ) {
-        PyErr_SetString(PyExc_TypeError, "this wxVariant type cannot be converted to Python object");
+        PyErr_SetString(PyExc_TypeError,
+            "this wxVariant type cannot be converted to Python object");
         SWIG_fail;
     }
 }
@@ -903,7 +940,8 @@ PropertyGridManagerNameStr = "wxPropertyGridManager"
 
 %typemap(in) const wxPGPropArgCls& {
     if ( !PyObject_to_wxPGPropArgCls($input, &$1) ) {
-        PyErr_SetString(PyExc_TypeError, "this Python type cannot be converted to wxPGPropArgCls");
+        char* s = GeneratePythonConvErrMsg($input, "wxPGPropArgCls");
+        PyErr_SetString(PyExc_TypeError, s);
         SWIG_fail;
     }
 }
@@ -929,22 +967,28 @@ PropertyGridManagerNameStr = "wxPropertyGridManager"
 }
 
 //
-// wxPGVariantAndBool typemap
+// wxPGVariantAndBool typemaps
 //
 %typemap(in) wxPGVariantAndBool {
-    if ( !PyObject_to_wxPGVariantAndBool($input, $1) ) {
-        PyErr_SetString(PyExc_TypeError, "this Python type cannot be converted to wxVariant");
+    if ( !PyObject_to_wxPGVariantAndBool($input, $1) )
+    {
+        char* s = GeneratePythonConvErrMsg($input, "wxPGVariantAndBool");
+        PyErr_SetString(PyExc_TypeError, s);
         SWIG_fail;
     }
 }
 
+%typemap(out) wxPGVariantAndBool {
+    $result = wxPGVariantAndBool_to_PyObject($1);
+}
 
 //
 // wxPGWindowList typemap (used by wxPGEditor::CreateControls)
 //
 %typemap(in) wxPGWindowList {
     if ( !PyObject_to_wxPGWindowList($input, &$1) ) {
-        PyErr_SetString(PyExc_TypeError, "expected wxWindow or tuple of two wxWindows");
+        PyErr_SetString(PyExc_TypeError,
+                        "expected wxWindow or tuple of two wxWindows");
         SWIG_fail;
     }
 }

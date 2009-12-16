@@ -236,6 +236,11 @@
 
 #define wxPG_TOOLTIP_DELAY              1000
 
+// This is the number of pixels the expander button inside
+// property cells (i.e. not in the grey margin area are
+// adjusted.
+#define IN_CELL_EXPANDER_BUTTON_X_ADJUST    2
+
 #if wxMINOR_VERSION < 7 || ( wxMINOR_VERSION == 7 && wxRELEASE_NUMBER < 1 )
 // NOTE: Since wxWidgets at this point doesn't have wxArrayDouble, we have
 //   to create it ourself, using wxObjArray model.
@@ -1385,16 +1390,23 @@ void wxPGProperty::SetValue( wxVariant value, wxVariant* pList, int flags )
         UpdateParentValues();
 
     //
-    // Update editor control
-    //
-
-    // We need to check for these, otherwise GetGrid() may fail.
+    // Update editor control.
     if ( flags & wxPG_SETVAL_REFRESH_EDITOR )
     {
-        RefreshEditor();
         wxPropertyGrid* pg = GetGridIfDisplayed();
         if ( pg )
+        {
+            wxPGProperty* selected = pg->GetSelectedProperty();
+
+            // Only refresh the control if this was selected, or
+            // this was some parent of selected, or vice versa)
+            if ( selected && (selected == this ||
+                              selected->IsSomeParent(this) ||
+                              this->IsSomeParent(selected)) )
+                RefreshEditor();
+
             pg->DrawItemAndValueRelated(this);
+        }
     }
 }
 
@@ -2548,6 +2560,11 @@ int wxPGCellRenderer::PreDrawCell( wxDC& dc, const wxRect& rect, const wxPGCell&
         }
     }
 
+    // Use cell font, if provided
+    const wxFont& font = cell.GetFont();
+    if ( font.Ok() )
+        dc.SetFont(font);
+
     const wxBitmap& bmp = cell.GetBitmap();
     if ( bmp.Ok() &&
         // In control, do not draw oversized bitmap
@@ -2562,6 +2579,17 @@ int wxPGCellRenderer::PreDrawCell( wxDC& dc, const wxRect& rect, const wxPGCell&
     }
 
     return imageWidth;
+}
+
+void wxPGCellRenderer::PostDrawCell( wxDC& dc,
+                                     const wxPropertyGrid* propGrid,
+                                     const wxPGCell& cell,
+                                     int WXUNUSED(flags) ) const
+{
+    // Revert font
+    const wxFont& font = cell.GetFont();
+    if ( font.Ok() )
+        dc.SetFont(propGrid->GetFont());
 }
 
 // -----------------------------------------------------------------------
@@ -2606,10 +2634,10 @@ void wxPGDefaultRenderer::Render( wxDC& dc, const wxRect& rect,
             cell = ccell;
     }
 
+    int preDrawFlags = flags;
+
     if ( cell )
     {
-        int preDrawFlags = flags;
-
         if ( propertyGrid->GetInternalFlags() & wxPG_FL_CELL_OVERRIDES_SEL )
             preDrawFlags = preDrawFlags & ~(Selected);
 
@@ -2632,10 +2660,9 @@ void wxPGDefaultRenderer::Render( wxDC& dc, const wxRect& rect,
     }
     else if ( column == 1 )
     {
+        editor = property->GetColumnEditor(column);
         if ( !isUnspecified )
         {
-            editor = property->GetColumnEditor(column);
-
             // Regular property value
 
             wxSize imageSize = propertyGrid->GetImageSize(property, item);
@@ -2727,6 +2754,9 @@ void wxPGDefaultRenderer::Render( wxDC& dc, const wxRect& rect,
                                       propertyGrid->GetFontHeight()+(wxPG_CAPRECTYMARGIN*2) );
         }
     }
+
+    if ( cell )
+        PostDrawCell(dc, propertyGrid, *cell, preDrawFlags);
 }
 
 wxSize wxPGDefaultRenderer::GetImageSize( const wxPGProperty* property,
@@ -2958,12 +2988,11 @@ void wxPGCanvas::OnPaint( wxPaintEvent& WXUNUSED(event) )
 
     // Update everything inside the box
     wxRect r = GetUpdateRegion().GetBox();
-    wxRect fullRect = GetRect();
 
     // FIXME: This is just a workaround for a bug that causes splitters not
     //        to paint when other windows are being dragged over the grid.
-    r.x = fullRect.x;
-    r.width = fullRect.width;
+    r.x = 0;
+    r.width = GetClientSize().x;
 
     // Repaint this rectangle
     pg->DrawItems( dc, r.y, r.y + r.height, &r );
@@ -3244,8 +3273,15 @@ void wxPropertyGrid::Init2()
 
     m_canvas = new wxPGCanvas();
     m_canvas->Create(this, 1, wxPoint(0, 0), GetClientSize(),
-                     (GetWindowStyle() & wxTAB_TRAVERSAL) | wxWANTS_CHARS | wxCLIP_CHILDREN);
+                     (GetWindowStyle() & wxTAB_TRAVERSAL) |
+                                         wxWANTS_CHARS |
+                                         wxCLIP_CHILDREN);
     m_canvas->SetBackgroundStyle( wxBG_STYLE_CUSTOM );
+
+    wxBoxSizer* sizer = new wxBoxSizer(wxVERTICAL);
+    sizer->Add(m_canvas, 1, wxEXPAND, 0);
+    SetSizer(sizer);
+    SetScrollRate(wxPG_PIXELS_PER_UNIT, wxPG_PIXELS_PER_UNIT);
 
     m_iFlags |= wxPG_FL_INITIALIZED;
 
@@ -3444,7 +3480,7 @@ void wxPropertyGrid::Thaw()
     // Force property re-selection.
     // NB: We must copy the selection.
     wxArrayPGProperty selection = m_pState->m_selection;
-    DoSetSelection(selection, wxPG_SEL_FORCE);
+    DoSetSelection(selection, wxPG_SEL_FORCE | wxPG_SEL_NONVISIBLE);
 }
 
 // -----------------------------------------------------------------------
@@ -3556,9 +3592,12 @@ bool wxPropertyGrid::AddToSelectionFromInputEvent( wxPGProperty* prop,
                                                    wxMouseEvent* mouseEvent,
                                                    int selFlags )
 {
+    const wxArrayPGProperty& selection = GetSelectedProperties();
     bool alreadySelected = m_pState->DoIsPropertySelected(prop);
     bool res = true;
-    bool addToExistingSelection;
+
+    // Set to 2 if also add all items in between
+    int addToExistingSelection = 0;
 
     if ( GetExtraStyle() & wxPG_EX_MULTIPLE_SELECTION )
     {
@@ -3576,21 +3615,24 @@ bool wxPropertyGrid::AddToSelectionFromInputEvent( wxPGProperty* prop,
             }
             else
             {
-                addToExistingSelection = mouseEvent->ShiftDown();
+                if ( mouseEvent->ControlDown() )
+                {
+                    addToExistingSelection = 1;
+                }
+                else if ( mouseEvent->ShiftDown() )
+                {
+                    if ( selection.size() > 0 && !prop->IsCategory() )
+                        addToExistingSelection = 2;
+                    else
+                        addToExistingSelection = 1;
+                }
             }
         }
-        else
-        {
-            addToExistingSelection = false;
-        }
-    }
-    else
-    {
-        addToExistingSelection = false;
     }
 
-    if ( addToExistingSelection )
+    if ( addToExistingSelection == 1 )
     {
+        // Add/remove one
         if ( !alreadySelected )
         {
             res = DoAddToSelection(prop, selFlags);
@@ -3598,6 +3640,59 @@ bool wxPropertyGrid::AddToSelectionFromInputEvent( wxPGProperty* prop,
         else if ( GetSelectedProperties().size() > 1 )
         {
             res = DoRemoveFromSelection(prop, selFlags);
+        }
+    }
+    else if ( addToExistingSelection == 2 )
+    {
+        // Add this, and all in between
+
+        // Find top selected property
+        wxPGProperty* topSelProp = selection[0];
+        int topSelPropY = topSelProp->GetY();
+        for ( unsigned int i=1; i<selection.size(); i++ )
+        {
+            wxPGProperty* p = selection[i];
+            int y = p->GetY();
+            if ( y < topSelPropY )
+            {
+                topSelProp = p;
+                topSelPropY = y;
+            }
+        }
+
+        wxPGProperty* startFrom;
+        wxPGProperty* stopAt;
+
+        if ( prop->GetY() <= topSelPropY )
+        {
+            // Property is above selection (or same)
+            startFrom = prop;
+            stopAt = topSelProp;
+        }
+        else
+        {
+            // Property is below selection
+            startFrom = topSelProp;
+            stopAt = prop;
+        }
+
+        // Iterate through properties in-between, and select them
+        wxPropertyGridIterator it;
+
+        for ( it = GetIterator(wxPG_ITERATE_VISIBLE, startFrom);
+              !it.AtEnd();
+              it++ )
+        {
+            wxPGProperty* p = *it;
+
+            if ( !p->IsCategory() &&
+                 !m_pState->DoIsPropertySelected(p) )
+            {
+                DoAddToSelection(p, selFlags);
+            }
+
+            if ( p == stopAt )
+                break;
         }
     }
     else
@@ -4259,20 +4354,27 @@ void wxPropertyGrid::SetCaptionForegroundColour( const wxColour& col )
 
 // -----------------------------------------------------------------------
 
-void wxPropertyGrid::SetBackgroundColourIndex( wxPGProperty* p, int index )
+void wxPropertyGrid::SetBackgroundColourIndex( wxPGProperty* p,
+                                               int index,
+                                               int flags )
 {
     unsigned char ind = index;
 
     p->m_bgColIndex = ind;
 
-    unsigned int i;
-    for ( i=0; i<p->GetChildCount(); i++ )
-        SetBackgroundColourIndex(p->Item(i),index);
+    if ( flags & wxPG_RECURSE )
+    {
+        unsigned int i;
+        for ( i=0; i<p->GetChildCount(); i++ )
+            SetBackgroundColourIndex(p->Item(i),index);
+    }
 }
 
 // -----------------------------------------------------------------------
 
-void wxPropertyGrid::SetPropertyBackgroundColour( wxPGPropArg id, const wxColour& colour )
+void wxPropertyGrid::SetPropertyBackgroundColour( wxPGPropArg id,
+                                                  const wxColour& colour,
+                                                  int flags )
 {
     wxPG_PROP_ARG_CALL_PROLOG()
 
@@ -4285,7 +4387,8 @@ void wxPropertyGrid::SetPropertyBackgroundColour( wxPGPropArg id, const wxColour
     // from the end.
     for ( i=(m_arrBgBrushes.GetCount()-1); i>0; i-- )
     {
-        if ( ((wxPGBrush*)m_arrBgBrushes.Item(i))->GetColourAsLong() == colAsLong )
+        if ( ((wxPGBrush*)m_arrBgBrushes.Item(i))->GetColourAsLong() ==
+                colAsLong )
         {
             colInd = i;
             break;
@@ -4295,12 +4398,14 @@ void wxPropertyGrid::SetPropertyBackgroundColour( wxPGPropArg id, const wxColour
     if ( colInd < 0 )
     {
         colInd = m_arrBgBrushes.GetCount();
-        wxCHECK_RET( colInd < 256, wxT("wxPropertyGrid: Warning - Only 255 different property background colours allowed.") );
+        wxCHECK_RET( colInd < 256,
+                     wxT("wxPropertyGrid: Warning - Only 255 different ")
+                     wxT("property background colours allowed.") );
         m_arrBgBrushes.Add( (void*)new wxPGBrush(colour) );
     }
 
     // Set indexes
-    SetBackgroundColourIndex(p,colInd);
+    SetBackgroundColourIndex(p, colInd, flags);
 
     // If this was on a visible grid, then draw it.
     DrawItemAndChildren(p);
@@ -4320,13 +4425,14 @@ wxColour wxPropertyGrid::GetPropertyBackgroundColour( wxPGPropArg id ) const
 
 // -----------------------------------------------------------------------
 
-void wxPropertyGrid::SetTextColourIndex( wxPGProperty* p, int index, int flags )
+void wxPropertyGrid::SetTextColourIndex( wxPGProperty* p, int index,
+                                         int flags )
 {
     unsigned char ind = index;
 
     p->m_fgColIndex = ind;
 
-    if ( p->GetChildCount() && (flags & wxPG_RECURSE) )
+    if ( flags & wxPG_RECURSE )
     {
         unsigned int i;
         for ( i=0; i<p->GetChildCount(); i++ )
@@ -4347,7 +4453,8 @@ int wxPropertyGrid::CacheColour( const wxColour& colour )
     // from the end.
     for ( i=(m_arrFgCols.GetCount()-1); i>0; i-- )
     {
-        if ( ((wxPGColour*)m_arrFgCols.Item(i))->GetColourAsLong() == colAsLong )
+        if ( ((wxPGColour*)m_arrFgCols.Item(i))->GetColourAsLong() ==
+                colAsLong )
         {
             colInd = i;
             break;
@@ -4357,7 +4464,9 @@ int wxPropertyGrid::CacheColour( const wxColour& colour )
     if ( colInd < 0 )
     {
         colInd = m_arrFgCols.GetCount();
-        wxCHECK_MSG( colInd < 256, 0, wxT("wxPropertyGrid: Warning - Only 255 different property foreground colours allowed.") );
+        wxCHECK_MSG( colInd < 256, 0,
+                     wxT("wxPropertyGrid: Warning - Only 255 ")
+                     wxT("different property foreground colours allowed.") );
         m_arrFgCols.Add( (void*)new wxPGColour(colour) );
     }
 
@@ -4366,12 +4475,14 @@ int wxPropertyGrid::CacheColour( const wxColour& colour )
 
 // -----------------------------------------------------------------------
 
-void wxPropertyGrid::SetPropertyTextColour( wxPGPropArg id, const wxColour& colour )
+void wxPropertyGrid::SetPropertyTextColour( wxPGPropArg id,
+                                            const wxColour& colour,
+                                            int flags )
 {
     wxPG_PROP_ARG_CALL_PROLOG()
 
     // Set indexes
-    SetTextColourIndex(p, CacheColour(colour), wxPG_RECURSE);
+    SetTextColourIndex(p, CacheColour(colour), flags);
 
     // If this was on a visible grid, then draw it.
     DrawItemAndChildren(p);
@@ -4539,12 +4650,13 @@ wxPGProperty* wxPropertyGridInterface::ReplaceProperty( wxPGPropArg id, wxPGProp
 
 void wxPropertyGrid::PrepareAfterItemsAdded()
 {
-    if ( !m_pState || !m_pState->m_itemsAdded ) return;
+    if ( m_pState && m_pState->m_itemsAdded )
+    {
+        m_pState->m_itemsAdded = 0;
 
-    m_pState->m_itemsAdded = 0;
-
-    if ( m_windowStyle & wxPG_AUTO_SORT )
-        Sort();
+        if ( m_windowStyle & wxPG_AUTO_SORT )
+            Sort();
+    }
 
     RecalculateVirtualSize();
 }
@@ -5066,8 +5178,6 @@ void wxPropertyGrid::OnPaint( wxPaintEvent& WXUNUSED(event) )
     dc.DrawRectangle(r);
 }
 
-// -----------------------------------------------------------------------
-
 void wxPropertyGrid::DrawExpanderButton( wxDC& dc, const wxRect& rect,
                                          wxPGProperty* property ) const
 {
@@ -5195,27 +5305,33 @@ void wxPropertyGrid::DrawItems( wxDC& dc,
 
         if ( dcPtr )
         {
-            dc.SetClippingRegion( *clipRect );
-            paintFinishY = DoDrawItems( *dcPtr, NULL, NULL, clipRect, isBuffered );
+            paintFinishY = DoDrawItems(*dcPtr, NULL, NULL, clipRect,
+                                       isBuffered);
+
+            if ( paintFinishY <= (clipRect->y+clipRect->height) )
+            {
+                dcPtr->SetPen(m_colEmptySpace);
+                dcPtr->SetBrush(m_colEmptySpace);
+                dcPtr->DrawRectangle(0, paintFinishY, m_width,
+                                     dcPtr->GetSize().y - paintFinishY);
+            }
         }
 
     #if wxPG_DOUBLE_BUFFER
         if ( bufferDC )
         {
-            dc.Blit( clipRect->x, clipRect->y, clipRect->width, clipRect->height,
-                bufferDC, 0, 0, wxCOPY );
-            dc.DestroyClippingRegion(); // Is this really necessary?
+            dc.Blit(clipRect->x, clipRect->y, clipRect->width,
+                    clipRect->height,
+                    bufferDC, 0, 0, wxCOPY );
             delete bufferDC;
         }
     #endif
     }
-
-    // Clear area beyond bottomY?
-    if ( paintFinishY < (clipRect->y+clipRect->height) )
+    else
     {
         dc.SetPen(m_colEmptySpace);
         dc.SetBrush(m_colEmptySpace);
-        dc.DrawRectangle( 0, paintFinishY, m_width, (clipRect->y+clipRect->height) );
+        dc.DrawRectangle(*clipRect);
     }
 }
 
@@ -5248,7 +5364,7 @@ int wxPropertyGrid::DoDrawItems( wxDC& dc,
     }
 
     if ( m_frozen || m_height < 1 || firstItem == NULL )
-        return clipRect->y;
+        return 0;
 
     wxCHECK_MSG( !m_pState->m_itemsAdded, clipRect->y, wxT("no items added") );
     wxASSERT( m_pState->m_properties->GetCount() );
@@ -5268,9 +5384,10 @@ int wxPropertyGrid::DoDrawItems( wxDC& dc,
 
     // Entire range outside scrolled, visible area?
     if ( firstItemTopY >= (int)m_pState->GetVirtualHeight() || lastItemBottomY <= 0 )
-        return clipRect->y;
+        return 0;
 
-    wxCHECK_MSG( firstItemTopY < lastItemBottomY, clipRect->y, wxT("invalid y values") );
+    wxCHECK_MSG( firstItemTopY < lastItemBottomY, clipRect->y,
+                 wxT("invalid y values") );
 
     /*
     wxLogDebug(wxT("  -> DoDrawItems ( \"%s\" -> \"%s\", height=%i (ch=%i), clipRect = 0x%lX )"),
@@ -5390,6 +5507,7 @@ int wxPropertyGrid::DoDrawItems( wxDC& dc,
     m_visPropArray[arrInd] = NULL;
 
     int gridWidth = state->m_width;
+    int rowHeight = m_fontHeight+(m_spacingy*2)+1;
 
     y = firstItemTopY;
     for ( arrInd=0;
@@ -5400,7 +5518,6 @@ int wxPropertyGrid::DoDrawItems( wxDC& dc,
         wxPGProperty* nextP = (wxPGProperty*) m_visPropArray[arrInd+1];
         wxPGProperty* parent = p->GetParent();
 
-        int rowHeight = m_fontHeight+(m_spacingy*2)+1;
         int textMarginHere = x;
         int renderFlags = wxPGCellRenderer::Control;
 
@@ -5556,6 +5673,10 @@ int wxPropertyGrid::DoDrawItems( wxDC& dc,
         }
         else
         {
+            // Fine tune button rectangle to actually fit the cell
+            if ( butRect.x > 0 )
+                butRect.x += IN_CELL_EXPANDER_BUTTON_X_ADJUST;
+
             if ( p->m_flags & wxPG_PROP_MODIFIED && (windowStyle & wxPG_BOLD_MODIFIED) )
             {
                 dc.SetFont(m_captionFont);
@@ -5585,6 +5706,9 @@ int wxPropertyGrid::DoDrawItems( wxDC& dc,
 
                 if ( drawExpanderButton )
                 {
+                    drawExpanderButtonPostClip = true;
+                    // Coordinate-wise, the expander button rectangle
+                    // can be partially left of the cell rectangle.
                     if ( butRect.x < cellRect.x )
                         DrawExpanderButton(dc, butRect, p);
                     else
@@ -5699,7 +5823,7 @@ int wxPropertyGrid::DoDrawItems( wxDC& dc,
     }
 #endif
 
-    return y + yRelMod;
+    return y;
 }
 
 // -----------------------------------------------------------------------
@@ -6680,6 +6804,12 @@ bool wxPropertyGrid::ProcessEvent(wxEvent& event)
 //     (usually not).
 void wxPropertyGrid::OnCustomEditorEvent( wxCommandEvent &event )
 {
+    // It is possible that this handler receives event even before
+    // the control has been properly initialized. Let's skip the
+    // handling in that case.
+    if ( !m_pState )
+        return;
+
     wxPGProperty* selected = GetSelection();
 
     //
@@ -7202,8 +7332,11 @@ bool wxPropertyGrid::DoSelectProperty( wxPGProperty* p, unsigned int flags )
 
                 if ( m_wndEditor )
                 {
-                    wxASSERT_MSG( m_wndEditor->GetParent() == m_canvas,
-                                  wxT("CreateControls must use result of wxPropertyGrid::GetPanel() as parent of controls.") );
+                    wxCHECK_MSG( m_wndEditor->GetParent() == m_canvas,
+                                 false,
+                                 wxT("CreateControls must use result of ")
+                                 wxT("wxPropertyGrid::GetPanel() as parent ")
+                                 wxT("of controls.") );
 
                     // Set validator, if any
                 #if wxUSE_VALIDATORS
@@ -7262,8 +7395,11 @@ bool wxPropertyGrid::DoSelectProperty( wxPGProperty* p, unsigned int flags )
 
                 if ( m_wndEditor2 )
                 {
-                    wxASSERT_MSG( m_wndEditor2->GetParent() == m_canvas,
-                                  wxT("CreateControls must use result of wxPropertyGrid::GetPanel() as parent of controls.") );
+                    wxCHECK_MSG( m_wndEditor2->GetParent() == m_canvas,
+                                 false,
+                                 wxT("CreateControls must use result of ")
+                                 wxT("wxPropertyGrid::GetPanel() as parent ")
+                                 wxT("of controls.") );
 
                     // Get proper id for wndSecondary
                     m_wndSecId = m_wndEditor2->GetId();
@@ -7513,9 +7649,11 @@ bool wxPropertyGrid::DoHideProperty( wxPGProperty* p, bool hide, int flags )
 // wxPropertyGrid size related methods
 // -----------------------------------------------------------------------
 
-void wxPropertyGrid::RecalculateVirtualSize( int forceXPos )
+void wxPropertyGrid::RecalculateVirtualSize( int WXUNUSED(forceXPos) )
 {
-    if ( (m_iFlags & wxPG_FL_RECALCULATING_VIRTUAL_SIZE) || m_frozen )
+    if ( (m_iFlags & wxPG_FL_RECALCULATING_VIRTUAL_SIZE) ||
+         m_frozen ||
+         !m_pState )
         return;
 
     //
@@ -7543,36 +7681,7 @@ void wxPropertyGrid::RecalculateVirtualSize( int forceXPos )
     int y = m_pState->m_virtualHeight;
 
     int width, height;
-    GetClientSize(&width,&height);
-
-    // Now adjust virtual size.
-	SetVirtualSize(x, y);
-
-    int xAmount = 0;
-    int xPos = 0;
-
-    //
-    // Adjust scrollbars
-    if ( HasVirtualWidth() )
-    {
-        xAmount = x/wxPG_PIXELS_PER_UNIT;
-        xPos = GetScrollPos( wxHORIZONTAL );
-    }
-
-    if ( forceXPos != -1 )
-        xPos = forceXPos;
-    // xPos too high?
-    else if ( xPos > (xAmount-(width/wxPG_PIXELS_PER_UNIT)) )
-        xPos = 0;
-
-    int yAmount = y / wxPG_PIXELS_PER_UNIT;
-    int yPos = GetScrollPos( wxVERTICAL );
-
-    SetScrollbars( wxPG_PIXELS_PER_UNIT, wxPG_PIXELS_PER_UNIT,
-                   xAmount, yAmount, xPos, yPos, true );
-
-    // Must re-get size now
-    GetClientSize(&width,&height);
+    GetClientSize(&width, &height);
 
     if ( !HasVirtualWidth() )
     {
@@ -7580,7 +7689,6 @@ void wxPropertyGrid::RecalculateVirtualSize( int forceXPos )
         x = width;
     }
 
-    //
     m_width = width;
     m_height = height;
 
@@ -7588,10 +7696,10 @@ void wxPropertyGrid::RecalculateVirtualSize( int forceXPos )
     wxASSERT_MSG( y <= 32767,
                   wxT("Sorry, wxPanel height limitations exceeded") );
 
-    // Explicitly pass the position - works around a bug in wxWidgets when
-    // the property grid has a native XP border and a contained window
-    // creeps up-and-left when size is set without the position.
-    m_canvas->SetSize(0, 0, x, y);
+    // Set the min size so that the sizer can correctly determine how large
+    // the virtual window should be.
+    m_canvas->SetMinSize(wxSize(10, y));
+    FitInside();
 
     m_pState->CheckColumnWidths();
 
@@ -7651,11 +7759,8 @@ void wxPropertyGrid::OnResize( wxSizeEvent& event )
 
     if ( !m_frozen )
     {
-        if ( m_pState->m_itemsAdded )
-            PrepareAfterItemsAdded();
-        else
-            // Without this, virtual size (atleast under wxGTK) will be skewed
-            RecalculateVirtualSize();
+        // This will also call RecalculateVirtualSize()
+        PrepareAfterItemsAdded();
 
         Refresh();
     }
@@ -7683,8 +7788,10 @@ void wxPropertyGrid::SetVirtualWidth( int width )
 
 void wxPropertyGridState::SetVirtualWidth( int width )
 {
+    // Sometimes width less than 0 is offered. Let's make things easy for
+    // everybody and deal with it here.
     if ( width < 0 )
-        return;
+        width = 0;
 
     wxPropertyGrid* pg = GetGrid();
     int gw = pg->GetClientSize().x;
@@ -7919,6 +8026,11 @@ bool wxPropertyGrid::HandleMouseClick( int x, unsigned int y, wxMouseEvent &even
             if ( p->GetChildCount() )
             {
                 int nx = x + m_marginWidth - marginEnds; // Normalize x.
+
+                //
+                // Fine tune cell button x
+                if ( !p->IsCategory() )
+                    nx -= IN_CELL_EXPANDER_BUTTON_X_ADJUST;
 
                 if ( (nx >= m_gutterWidth && nx < (m_gutterWidth+m_iconWidth)) )
                 {
@@ -11655,7 +11767,8 @@ void wxPropertyGridState::SetColumnCount( int colCount )
     wxASSERT( colCount >= 2 );
     m_colWidths.SetCount( colCount, wxPG_DRAG_MARGIN );
     if ( m_colWidths.size() > (unsigned int)colCount )
-        m_colWidths.RemoveAt( m_colWidths.size(), m_colWidths.size() - colCount );
+        m_colWidths.RemoveAt( m_colWidths.size()-1,
+                              m_colWidths.size() - colCount );
 
     if ( m_pPropGrid->GetState() == this )
         m_pPropGrid->RecalculateVirtualSize();

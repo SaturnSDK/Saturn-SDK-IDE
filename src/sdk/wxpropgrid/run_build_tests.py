@@ -7,13 +7,36 @@ import sys, os, os.path
 from shutil import copyfile
 
 
-run_list = [
-('prepare_vc6.bat', '2.6.4',  r'D:\lib\wxWidgets-2.6.4', 'WX_UNICODE=1 WX_DEBUG=0'),
-# Failed on command line, succesfull in IDE. What's going on?
-#('prepare_vc6.bat', '2.8-SVN',  r'D:\lib\wxWidgets_SVN_28', 'WX_UNICODE=1 WX_DEBUG=1'),
-('prepare_vc8.bat', '2.9.0',  r'D:\lib\wxWidgets_SVN', 'WX_UNICODE=1 WX_DEBUG=1'),
+COMPILER_PREPARE_SCRIPTS = {
+'VC6' : 'prepare_vc6.bat',
+'VC7' : 'prepare_vc7.bat',
+'VC8' : 'prepare_vc8.bat',
+'VC9' : 'prepare_vc9.bat',
+}
+
+RUN_LIST = [
+('2.6.4-VC6',
+    'VC6', r'D:\lib\wxWidgets-2.6.4',
+    'WX_UNICODE=1 WX_DEBUG=0 WX_SHARED=0'),
+
+('2.8-SVN-VC9',
+    'VC9', r'D:\lib\wxWidgets_SVN_28',
+    'WX_UNICODE=1 WX_DEBUG=1 WX_SHARED=0'),
+
+('2.8-SVN-VC9-R',
+    'VC9', r'D:\lib\wxWidgets_SVN_28',
+    'WX_UNICODE=1 WX_DEBUG=0 WX_SHARED=0'),
+
+('2.8-SVN-VC9-DLL-R',
+    'VC9', r'D:\lib\wxWidgets_SVN_28',
+    'WX_UNICODE=1 WX_DEBUG=0 WX_SHARED=1'),
 ]
 
+def print_help():
+    print('Available options:')
+    print('')
+    print('  --only=X       Only do build X')
+    print('  --list         List all possible builds')
 
 def main():
     cwd = os.getcwd()
@@ -24,9 +47,20 @@ def main():
     resumed = True
 
     for arg in sys.argv[1:]:
-        if arg.startswith('--only-wxversion'):
+        if arg == '--help':
+            print_help()
+            return
+        elif arg == '--list':
+            print('Available builds:')
+            print('')
+            print('  Name                Compiler  Build Options')
+            for build_name, compiler_name, wxdir, build_opts in RUN_LIST:
+                print('  %-20s%-10s%s' % \
+                      (build_name, compiler_name, build_opts))
+            return
+        elif arg.startswith('--only'):
             only_wxversion = arg.split('=',1)[1].strip()
-        elif arg.startswith('--resume-from-wxversion'):
+        elif arg.startswith('--resume-from'):
             resume_from_wxversion = arg.split('=',1)[1].strip()
         else:
             resume_from_wxversion = arg
@@ -35,28 +69,40 @@ def main():
         resumed = False
 
     # Check dirs
-    for prepare_script, wxversion, wxdir, build_opts in run_list:
+    for build_name, compiler_name, wxdir, build_opts in RUN_LIST:
         if not os.path.isdir(wxdir):
             print '-- No such path: %s'%wxdir
             return
 
-    for prepare_script, wxversion, wxdir, build_opts in run_list:
+    for build_name, compiler_name, wxdir, build_opts in RUN_LIST:
 
-        if only_wxversion and not (only_wxversion == wxversion):
+        if only_wxversion and not (only_wxversion == build_name):
             continue
 
         if not resumed:
-            if resume_from_wxversion and resume_from_wxversion == wxversion:
+            if resume_from_wxversion and resume_from_wxversion == build_name:
                 resumed = True
             else:
                 continue
 
-        print ''
-        print 'Building for \'wxWidgets %s - %s\''%(wxversion, build_opts)
+        print('')
+        print('Building for \'wxWidgets %s - %s\'' % \
+              (build_name, build_opts))
 
-        if wxversion.startswith('2.6'):
+        is_shared = 'WX_SHARED=1' in build_opts
+        old_path = os.environ['PATH']
+
+        if is_shared:
+            # Add vc_dll dirs to the path
+            new_path = '%s;%s;%s' % \
+                    (os.path.join(wxdir, 'lib', 'vc_dll'),
+                     os.path.join(cwd, 'lib', 'vc_dll'),
+                     old_path)
+            os.environ['PATH'] = new_path
+
+        if build_name.startswith('2.6'):
             build_subdir = 'build_wx26'
-        elif wxversion.startswith('2.8'):
+        elif build_name.startswith('2.8'):
             build_subdir = 'build'
         else:
             build_subdir = 'build_wx29'
@@ -66,13 +112,6 @@ def main():
 
         os.chdir(build_path)
 
-        #res = os.system(prepare_script)
-        #if res:
-        #    print '-- Prepare script(%s) failed --'%prepare_script
-        #    return
-
-        #os.environ['WXWIN'] = wxdir
-
         build_clean_cmdline = 'nmake -f makefile.vc clean %s'%(build_opts)
         build_cmdline = 'nmake -f makefile.vc %s'%(build_opts)
 
@@ -80,6 +119,8 @@ def main():
 
         f = file(temp_builder_fn,'wt')
         f.write('@echo off\n')
+
+        prepare_script = COMPILER_PREPARE_SCRIPTS[compiler_name]
         f.write('call %s\n'%prepare_script)
         f.write('set WXWIN=%s\n'%wxdir)
         f.write('%s\n'%build_clean_cmdline)
@@ -95,8 +136,13 @@ def main():
         os.chdir(sample_path)
 
         # Copy sample app for further testing
-        copyfile('propgridsample.exe', 'propgridsample (%s %s).exe'%(wxversion, build_opts))
+        copyfile('propgridsample.exe',
+                 'propgridsample (%s %s).exe'%(build_name, build_opts))
+        copyfile('propgridsample.exe.manifest',
+                 'propgridsample (%s %s).exe.manifest' % \
+                    (build_name, build_opts))
         res = os.system('propgridsample.exe --run-tests')
+        os.environ['PATH'] = old_path
 
 if __name__ == '__main__':
     main()

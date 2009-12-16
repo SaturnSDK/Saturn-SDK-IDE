@@ -1813,9 +1813,19 @@ void FormMain::PopulateWithLibraryConfig ()
 
     wxPGProperty* pid;
 
+    wxFont italicFont = pgman->GetGrid()->GetCaptionFont();
+    italicFont.SetStyle(wxFONTSTYLE_ITALIC);
+
+    wxString italicFontHelp = wxT("Font of this property's wxPGCell has ")
+                              wxT("been modified. Obtain property's cell ")
+                              wxT("with wxPGProperty::")
+                              wxT("GetOrCreateCell(column).");
+
 #define ADD_WX_LIB_CONF_GROUP(A) \
     cat = pg->AppendIn( pid, new wxPropertyCategory(A) ); \
-    pg->SetPropertyCell( cat, 0, wxPG_LABEL, bmp );
+    pg->SetPropertyCell( cat, 0, wxPG_LABEL, bmp ); \
+    cat->GetCell(0)->SetFont(italicFont); \
+    cat->SetHelpString(italicFontHelp);
 
 #define ADD_WX_LIB_CONF(A) pg->Append( new wxBoolProperty(wxT(#A),wxPG_LABEL,(bool)((A>0)?true:false)));
 #define ADD_WX_LIB_CONF_NODEF(A) pg->Append( new wxBoolProperty(wxT(#A),wxPG_LABEL,(bool)false) ); \
@@ -2221,7 +2231,7 @@ FormMain::FormMain(const wxString& title, const wxPoint& pos, const wxSize& size
     menuTools1->Append(ID_DELETEALL, wxT("Delete All") );
     menuTools1->AppendSeparator();
     menuTools1->Append(ID_SETCOLOUR, wxT("Set Bg Colour") );
-    menuTools1->Append(ID_UNSPECIFY, wxT("Set to Unspecified") );
+    menuTools1->Append(ID_UNSPECIFY, wxT("Set Value to Unspecified") );
     menuTools1->Append(ID_CLEAR, wxT("Set Value to Default") );
     menuTools1->AppendSeparator();
     m_itemEnable = menuTools1->Append(ID_ENABLE, wxT("Enable"),

@@ -161,6 +161,7 @@
              to be initialized correctly. -->
         <library>propgrid_lib</library>
         <wx-lib>xrc</wx-lib>
+        <wx-lib>html</wx-lib>
         <wx-lib>xml</wx-lib>
         <wx-lib>adv</wx-lib>
         <wx-lib>core</wx-lib>

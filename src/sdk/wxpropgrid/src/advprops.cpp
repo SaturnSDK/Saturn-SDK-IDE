@@ -1990,7 +1990,7 @@ bool wxMultiChoiceProperty::StringToValue( wxVariant& variant, const wxString& t
             arr.Add(token);
     WX_PG_TOKENIZER2_END()
 
-    wxVariant v( WXVARIANT(arr) );
+    wxVariant v(arr);
     variant = v;
 
     return true;

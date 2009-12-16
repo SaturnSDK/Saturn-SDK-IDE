@@ -5,7 +5,7 @@
 projname = 'propgrid'
 longprojname = 'wxPropertyGrid'
 branch = 'stable'  # Must be either '', 'stable' or 'dev'
-version = '1.4.7'
+version = '1.4.9.3'
 author = 'Jaakko Salli'
 author_email = 'jmsalli@users.sourceforge.net'
 homepage = 'http://wxpropgrid.sourceforge.net/'
@@ -30,7 +30,7 @@ wx_version_list = ['2.6.1','2.6.2','2.6.3','2.6.4','2.8.0','2.8.3','2.8.4','2.8.
 
 required_wx_libs = ['base','core','adv']
 
-sample_additional_required_wx_libs = ['xml','xrc']
+sample_additional_required_wx_libs = ['xml','html','xrc']
 
 lib_exclude_source_files = ['xh_propgrid.cpp']
 

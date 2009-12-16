@@ -37,6 +37,7 @@ for i in range(0,iterations):
     setattr(object,'wxpython_rules%i'%i,True)
 """
 
+
 class Display:
     property_descriptor = []
     def __init__(self):
@@ -69,19 +70,22 @@ class IntProperty2(wxpg.PyProperty):
     def GetValueAsString(self, flags):
         return str(self.GetValue())
 
-    def PyStringToValue(self, s, flags):
+    def StringToValue(self, s, flags):
+        """ If failed, return False or (False, None). If success, return tuple
+            (True, newValue).
+        """
         try:
             v = int(s)
             if self.GetValue() != v:
-                return v
-        except TypeError:
+                return (True, v)
+        except (ValueError, TypeError):
             if flags & wxpg.PG_REPORT_ERROR:
                 wx.MessageBox("Cannot convert '%s' into a number."%s, "Error")
         return False
 
-    def PyIntToValue(self, v, flags):
+    def IntToValue(self, v, flags):
         if (self.GetValue() != v):
-            return v
+            return (True, v)
 
 
 class PyFilesProperty(wxpg.PyArrayStringProperty):
@@ -96,8 +100,12 @@ class PyFilesProperty(wxpg.PyArrayStringProperty):
     def GetValueAsString(self, argFlags):
         return self.display
 
-    def PyStringToValue(self, s, flags):
-        return [a.strip() for a in text.split(',')]
+    def StringToValue(self, s, flags):
+        """ If failed, return False or (False, None). If success, return tuple
+            (True, newValue).
+        """
+        v = [a.strip() for a in text.split(',')]
+        return (True, v)
 
     def OnEvent(self, propgrid, ctrl, event):
         if event.GetEventType() == wx.wxEVT_COMMAND_BUTTON_CLICKED:
@@ -144,8 +152,12 @@ class PyObjectProperty(wxpg.PyProperty):
     def GetValueAsString(self, flags):
         return repr(self.GetValue())
 
-    def PyStringToValue(self, s, flags):
-        return PyObjectPropertyValue(s)
+    def StringToValue(self, s, flags):
+        """ If failed, return False or (False, None). If success, return tuple
+            (True, newValue).
+        """
+        v = PyObjectPropertyValue(s)
+        return (True, v)
 
 
 class ShapeProperty(wxpg.PyEnumProperty):
@@ -179,18 +191,123 @@ class ShapeProperty(wxpg.PyEnumProperty):
             dc.DrawRectangle(rect.x, rect.y, rect.width, rect.height)
 
 
-class LargeImagePickerCtrl(wx.Window):
+class TrivialPropertyEditor(wxpg.PyEditor):
+    """\
+    This is a simple re-creation of TextCtrlWithButton. Note that it does
+    not take advantage of wx.TextCtrl and wx.Button creation helper functions
+    in wx.PropertyGrid.
+    """
+    def __init__(self):
+        wxpg.PyEditor.__init__(self)
+
+    def CreateControls(self, propgrid, property, pos, sz):
+        """ Create the actual wxPython controls here for editing the
+            property value.
+
+            You must use propgrid.GetPanel() as parent for created controls.
+
+            Return value is either single editor control or tuple of two
+            editor controls, of which first is the primary one and second
+            is usually a button.
+        """
+        try:
+            x, y = pos
+            w, h = sz
+            h = 64 + 6
+
+            # Make room for button
+            bw = propgrid.GetRowHeight()
+            w -= bw
+
+            s = property.GetDisplayedString();
+
+            tc = wx.TextCtrl(propgrid.GetPanel(), wxpg.PG_SUBID1, s,
+                             (x,y), (w,h),
+                             wx.TE_PROCESS_ENTER)
+            btn = wx.Button(propgrid.GetPanel(), wxpg.PG_SUBID2, '...',
+                            (x+w, y),
+                            (bw, h), wx.WANTS_CHARS)
+            return (tc, btn)
+        except:
+            import traceback
+            print(traceback.print_exc())
+
+    def UpdateControl(self, property, ctrl):
+        ctrl.SetValue(property.GetDisplayedString())
+
+    def DrawValue(self, dc, rect, property, text):
+        if not property.IsValueUnspecified():
+            dc.DrawText(property.GetDisplayedString(), rect.x+5, rect.y)
+
+    def OnEvent(self, propgrid, property, ctrl, event):
+        """ Return True if modified editor value should be committed to
+            the property. To just mark the property value modified, call
+            propgrid.EditorsValueWasModified().
+        """
+        if not ctrl:
+            return False
+
+        evtType = event.GetEventType()
+
+        if evtType == wx.wxEVT_COMMAND_TEXT_ENTER:
+            if propgrid.IsEditorsValueModified():
+                return True
+        elif evtType == wx.wxEVT_COMMAND_TEXT_UPDATED:
+            #
+            # Pass this event outside wxPropertyGrid so that,
+            # if necessary, program can tell when user is editing
+            # a textctrl.
+            event.Skip()
+            event.SetId(propgrid.GetId())
+
+            propgrid.EditorsValueWasModified()
+            return False
+
+        return False
+
+    def GetValueFromControl(self, property, ctrl):
+        tc = ctrl
+        textVal = tc.GetValue()
+
+        if property.UsesAutoUnspecified() and not textVal:
+            return (True, None)
+
+        # In wxPython 2.9+, call StringToValue() instead
+        res, value = property.PyStringToValue(textVal,
+                                              wxpg.PG_EDITABLE_VALUE)
+
+        # Changing unspecified always causes event (returning
+        # True here should be enough to trigger it).
+        if not res and value is None:
+            res = True
+
+        return (res, value)
+
+    def SetValueToUnspecified(self, property, ctrl):
+        ctrl.Remove(0,len(ctrl.GetValue()))
+
+    def SetControlStringValue(self, property, ctrl, text):
+        ctrl.SetValue(text)
+
+    def OnFocus(self, property, ctrl):
+        ctrl.SetSelection(-1,-1)
+        ctrl.SetFocus()
+
+
+class LargeImagePickerCtrl(wx.Panel):
     """\
     Control created and used by LargeImageEditor.
     """
     def __init__(self):
-        pre = wx.PreWindow()
+        pre = wx.PrePanel()
         self.PostCreate(pre)
 
     def Create(self, parent, id_, pos, size, style = 0):
-        wx.Window.Create(self, parent, id_, pos, size, style | wx.BORDER_SIMPLE)
+        wx.Panel.Create(self, parent, id_, pos, size,
+                        style | wx.BORDER_SIMPLE)
         img_spc = size[1]
-        self.tc = wx.TextCtrl(self, -1, "", (img_spc,0), (2048,size[1]), wx.BORDER_NONE)
+        self.tc = wx.TextCtrl(self, -1, "", (img_spc,0), (2048,size[1]),
+                              wx.BORDER_NONE)
         self.SetBackgroundColour(wx.WHITE)
         self.SetBackgroundStyle(wx.BG_STYLE_CUSTOM)
         self.property = None
@@ -252,14 +369,18 @@ class LargeImageEditor(wxpg.PyEditor):
 
     def CreateControls(self, propgrid, property, pos, sz):
         try:
+            x, y = pos
+            w, h = sz
             h = 64 + 6
-            x = propgrid.GetSplitterPosition()
-            x2 = propgrid.GetClientSize().x
+
+            # Make room for button
             bw = propgrid.GetRowHeight()
+            w -= bw
+
             lipc = LargeImagePickerCtrl()
-            if sys.platform == 'win32':
+            if sys.platform.startswith('win'):
                 lipc.Hide()
-            lipc.Create(propgrid, wxpg.PG_SUBID1, (x,pos[1]), (x2-x-bw,h))
+            lipc.Create(propgrid.GetPanel(), wxpg.PG_SUBID1, (x,y), (w,h))
             lipc.SetProperty(property)
             # Hmmm.. how to have two-stage creation without subclassing?
             #btn = wx.PreButton()
@@ -267,21 +388,24 @@ class LargeImageEditor(wxpg.PyEditor):
             #self.PostCreate(pre)
             #if sys.platform == 'win32':
             #    btn.Hide()
-            #btn.Create(propgrid, wxpg.PG_SUBID2, '...', (x2-bw,pos[1]), (bw,h), wx.WANTS_CHARS)
-            btn = wx.Button(propgrid, wxpg.PG_SUBID2, '...', (x2-bw,pos[1]), (bw,h), wx.WANTS_CHARS)
+            #btn.Create(propgrid, wxpg.PG_SUBID2, '...', (x2-bw,pos[1]),
+            #           (bw,h), wx.WANTS_CHARS)
+            btn = wx.Button(propgrid.GetPanel(), wxpg.PG_SUBID2, '...',
+                            (x+w, y),
+                            (bw, h), wx.WANTS_CHARS)
             return (lipc, btn)
         except:
             import traceback
-            print traceback.print_exc()
+            print(traceback.print_exc())
 
     def UpdateControl(self, property, ctrl):
         ctrl.SetValue(property.GetDisplayedString())
 
-    def DrawValue(self, dc, property, rect):
-        if not (property.GetFlags() & wxpg.PG_PROP_UNSPECIFIED):
-            dc.DrawText( property.GetDisplayedString(), rect.x+5, rect.y );
+    def DrawValue(self, dc, rect, property, text):
+        if not property.IsValueUnspecified():
+            dc.DrawText(property.GetDisplayedString(), rect.x+5, rect.y)
 
-    def OnEvent(self, propgrid, ctrl, event):
+    def OnEvent(self, propgrid, property, ctrl, event):
         if not ctrl:
             return False
 
@@ -290,42 +414,49 @@ class LargeImageEditor(wxpg.PyEditor):
         if evtType == wx.wxEVT_COMMAND_TEXT_ENTER:
             if propgrid.IsEditorsValueModified():
                 return True
-
         elif evtType == wx.wxEVT_COMMAND_TEXT_UPDATED:
-            if not property.HasFlag(wxpg.PG_PROP_UNSPECIFIED) or not ctrl or \
-               ctrl.GetLastPosition() > 0:
+            #
+            # Pass this event outside wxPropertyGrid so that,
+            # if necessary, program can tell when user is editing
+            # a textctrl.
+            event.Skip()
+            event.SetId(propgrid.GetId())
 
-                # We must check this since an 'empty' text event
-                # may be triggered when creating the property.
-                PG_FL_IN_SELECT_PROPERTY = 0x00100000
-                if not (propgrid.GetInternalFlags() & PG_FL_IN_SELECT_PROPERTY):
-                    event.Skip();
-                    event.SetId(propGrid.GetId());
-
-                propgrid.EditorsValueWasModified();
+            propgrid.EditorsValueWasModified()
+            return False
 
         return False
 
-
-    def CopyValueFromControl(self, property, ctrl):
+    def GetValueFromControl(self, property, ctrl):
         tc = ctrl.tc
-        res = property.SetValueFromString(tc.GetValue(),0)
+        textVal = tc.GetValue()
+
+        if property.UsesAutoUnspecified() and not textVal:
+            return (True, None)
+
+        # In wxPython 2.9+, call StringToValue() instead
+        res, value = property.PyStringToValue(textVal,
+                                              wxpg.PG_EDITABLE_VALUE)
+
         # Changing unspecified always causes event (returning
-        # true here should be enough to trigger it).
-        if not res and property.IsFlagSet(wxpg.PG_PROP_UNSPECIFIED):
-            res = true
+        # True here should be enough to trigger it).
+        if not res and value is None:
+            res = True
 
-        return res
+        return (res, value)
 
-    def SetValueToUnspecified(self, ctrl):
-        ctrl.tc.Remove(0,len(ctrl.tc.GetValue()));
+    def SetValueToUnspecified(self, property, ctrl):
+        ctrl.tc.Remove(0,len(ctrl.tc.GetValue()))
 
-    def SetControlStringValue(self, ctrl, txt):
+    def SetControlStringValue(self, property, ctrl, txt):
         ctrl.SetValue(txt)
 
     def OnFocus(self, property, ctrl):
         ctrl.tc.SetSelection(-1,-1)
         ctrl.tc.SetFocus()
+
+    def CanContainCustomImage(self):
+        return True
 
 
 class TestPropertyGridPanel(wx.Panel):
@@ -358,9 +489,11 @@ class TestPropertyGridPanel(wx.Panel):
         wx.InitAllImageHandlers()
 
         #
-        # Let's create a simple custome editor
+        # Let's use some simple custom editor
         #
-        # NOTE: Editor must be registered *before* adding a property that uses it.
+        # NOTE: Editor must be registered *before* adding a property that
+        # uses it.
+        pg.RegisterEditor(TrivialPropertyEditor)
         pg.RegisterEditor(LargeImageEditor)
 
         #
@@ -370,6 +503,7 @@ class TestPropertyGridPanel(wx.Panel):
         pg.AddPage( "Page 1 - Testing All" )
 
         pg.Append( wxpg.PropertyCategory("1 - Basic Properties") )
+
         pg.Append( wxpg.StringProperty("String",value="Some Text") )
         pg.Append( wxpg.IntProperty("Int",value=100) )
         pg.Append( wxpg.FloatProperty("Float",value=100.0) )
@@ -416,6 +550,10 @@ class TestPropertyGridPanel(wx.Panel):
         pg.Append( ShapeProperty("ShapeProperty", value=0) )
         pg.Append( PyObjectProperty("PyObjectProperty") )
 
+        prop = pg.Append( wxpg.StringProperty("StringWithCustomEditor",
+                                              value="test value") )
+        pg.SetPropertyEditor(prop, "TrivialPropertyEditor")
+
         pg.Append( wxpg.ImageFileProperty("ImageFileWithLargeEditor") )
         pg.SetPropertyEditor("ImageFileWithLargeEditor", "LargeImageEditor")
 
@@ -439,6 +577,7 @@ class TestPropertyGridPanel(wx.Panel):
         except:
             pass
             #raise
+
         topsizer.Add(pg,1,wx.EXPAND)
 
         rowsizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -472,14 +611,14 @@ class TestPropertyGridPanel(wx.Panel):
     def OnPropGridChange(self, event):
         p = event.GetProperty()
         if p:
-            print '%s changed to "%s"'%(p.GetName(),p.GetValueAsString())
+            print('%s changed to "%s"'%(p.GetName(),p.GetValueAsString()))
 
     def OnPropGridSelect(self, event):
         p = event.GetProperty()
         if p:
-            print '%s selected'%(event.GetPropertyName())
+            print('%s selected'%(event.GetPropertyName()))
         else:
-            print 'Nothing selected'
+            print('Nothing selected')
 
     def OnDeleteProperty(self, event):
         p = self.pg.GetSelectedProperty()
@@ -511,10 +650,11 @@ class TestPropertyGridPanel(wx.Panel):
                 sandbox = {'object':ValueObject(),'wx':wx}
                 exec dlg.tc.GetValue() in sandbox
                 t_start = time.time()
-                #print sandbox['object'].__dict__
+                #print(sandbox['object'].__dict__)
                 self.pg.SetPropertyValues(sandbox['object'])
                 t_end = time.time()
-                print 'SetPropertyValues finished in %.0fms'%((t_end-t_start)*1000.0)
+                print('SetPropertyValues finished in %.0fms' % \
+                      ((t_end-t_start)*1000.0))
         except:
             import traceback
             traceback.print_exc()
@@ -524,7 +664,8 @@ class TestPropertyGridPanel(wx.Panel):
             t_start = time.time()
             d = self.pg.GetPropertyValues(inc_attributes=True)
             t_end = time.time()
-            print 'GetPropertyValues finished in %.0fms'%((t_end-t_start)*1000.0)
+            print('GetPropertyValues finished in %.0fms' % \
+                  ((t_end-t_start)*1000.0))
             ss = ['%s: %s'%(k,repr(v)) for k,v in d.iteritems()]
             dlg = MemoDialog(self,"GetPropertyValues Result",
                              'Contents of resulting dictionary:\n\n'+'\n'.join(ss))
@@ -538,7 +679,8 @@ class TestPropertyGridPanel(wx.Panel):
             t_start = time.time()
             d = self.pg.GetPropertyValues(as_strings=True)
             t_end = time.time()
-            print 'GetPropertyValues(as_strings=True) finished in %.0fms'%((t_end-t_start)*1000.0)
+            print('GetPropertyValues(as_strings=True) finished in %.0fms' % \
+                  ((t_end-t_start)*1000.0))
             ss = ['%s: %s'%(k,repr(v)) for k,v in d.iteritems()]
             dlg = MemoDialog(self,"GetPropertyValues Result",
                              'Contents of resulting dictionary:\n\n'+'\n'.join(ss))
@@ -556,7 +698,8 @@ class TestPropertyGridPanel(wx.Panel):
                 t_start = time.time()
                 self.pg.AutoFill(sandbox['object'])
                 t_end = time.time()
-                print 'AutoFill finished in %.0fms'%((t_end-t_start)*1000.0)
+                print('AutoFill finished in %.0fms' % \
+                      ((t_end-t_start)*1000.0))
         except:
             import traceback
             traceback.print_exc()
@@ -564,13 +707,13 @@ class TestPropertyGridPanel(wx.Panel):
     def OnPropGridRightClick(self, event):
         p = event.GetProperty()
         if p:
-            print '%s right clicked'%(event.GetPropertyName())
+            print('%s right clicked'%(event.GetPropertyName()))
         else:
-            print 'Nothing right clicked'
+            print('Nothing right clicked')
 
     def OnPropGridPageChange(self, event):
         index = self.pg.GetSelectedPage()
-        print 'Page Changed to \'%s\''%(self.pg.GetPageName(index))
+        print('Page Changed to \'%s\''%(self.pg.GetPageName(index)))
 
     def RunTests(self, event):
         pg = self.pg
@@ -580,14 +723,14 @@ class TestPropertyGridPanel(wx.Panel):
 
         it = pg.GetPage(0).GetIterator(wxpg.PG_ITERATE_ALL)
         while not it.AtEnd():
-            print 'Iterating \'%s\''%(it.GetProperty().GetName())
+            print('Iterating \'%s\''%(it.GetProperty().GetName()))
             it.Next()
 
         # VIterator
 
         it = pg.GetVIterator(wxpg.PG_ITERATE_ALL)
         while not it.AtEnd():
-            print 'Iterating \'%s\''%(it.GetProperty().GetName())
+            print('Iterating \'%s\''%(it.GetProperty().GetName()))
             it.Next()
 
         # Selection
@@ -664,7 +807,6 @@ class MyApp(wx.App):
         return True
 
     def OnExit(self):
-        #print 'OnExit'
         return True
 
 
@@ -678,8 +820,9 @@ def main():
     redirect = True
     if __debug__: redirect = False
 
-    print 'Using Python %i.%i.%i'%(sys.version_info[0],sys.version_info[1],sys.version_info[2])
-    print 'Using wxPython %s'%wx.__version__
+    print('Using Python %i.%i.%i' % \
+          (sys.version_info[0],sys.version_info[1],sys.version_info[2]))
+    print('Using wxPython %s'%wx.__version__)
     app = MyApp(redirect=redirect)
     app.MainLoop()
     #print 'main loop ends'

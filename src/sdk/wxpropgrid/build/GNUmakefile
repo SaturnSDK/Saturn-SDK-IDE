@@ -305,7 +305,7 @@ uninstall_propgrid_dll_headers:
 endif
 
 ../samples/propgridsample: $(PROPGRIDSAMPLE_OBJECTS) make_sample_dir_propgridsample $(__propgrid_lib___depname)
-	$(CXX) -o $@ $(PROPGRIDSAMPLE_OBJECTS)  $(____propgrid_3) -L../lib  $(__propgridsample_RPATH) $(LDFLAGS)  ../lib/gcc_$(__propgrid)/libwxcode_$(WX_PORT)_propgrid-$(WX_VERSION_MAJOR).$(WX_VERSION_MINOR).a `$(WX_CONFIG) $(WX_CONFIG_FLAGS) --libs xrc,xml,adv,core,base`
+	$(CXX) -o $@ $(PROPGRIDSAMPLE_OBJECTS)  $(____propgrid_3) -L../lib  $(__propgridsample_RPATH) $(LDFLAGS)  ../lib/gcc_$(__propgrid)/libwxcode_$(WX_PORT)_propgrid-$(WX_VERSION_MAJOR).$(WX_VERSION_MINOR).a `$(WX_CONFIG) $(WX_CONFIG_FLAGS) --libs xrc,html,xml,adv,core,base`
 
 make_sample_dir_propgridsample: 
 	@mkdir -p ../samples

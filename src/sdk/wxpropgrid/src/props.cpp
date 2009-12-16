@@ -2715,7 +2715,7 @@ bool wxArrayStringProperty::StringToValue( wxVariant& variant, const wxString& t
 
         // Need to replace backslashes with empty characters
         // (opposite what is done in GenerateValueString).
-        token.Replace ( wxT("\\"), wxT(""), true );
+        token.Replace ( wxT("\\\\"), wxT("\\"), true );
 
         arr.Add( token );
 
