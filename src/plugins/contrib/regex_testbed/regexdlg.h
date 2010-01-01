@@ -7,6 +7,8 @@
     #pragma hdrstop
 #endif
 
+#include <set>
+
 //(*Headers(regex_dialog)
 #include <wx/checkbox.h>
 #include "scrollingdialog.h"
@@ -36,6 +38,8 @@ class RegExDlg: public wxScrollingDialog
 
 		void EndModal(int retCode);
 
+		static void ReleaseAll();
+
 	protected:
 
 		//(*Handlers(regex_dialog)
@@ -43,6 +47,7 @@ class RegExDlg: public wxScrollingDialog
 		void OnInit(wxInitDialogEvent& event);
 		void OnRegExItemActivated(wxListEvent& event);
         void OnUpdateUI(wxUpdateUIEvent& event);
+		void OnClose(wxCloseEvent& event);
 		//*)
 
 	private:
@@ -62,6 +67,9 @@ class RegExDlg: public wxScrollingDialog
         //*)
 
         wxRegEx m_wxre;
+
+        typedef std::set<RegExDlg*> VisibleDialogs;
+        static VisibleDialogs m_visible_dialogs;
 
 		DECLARE_EVENT_TABLE()
 };

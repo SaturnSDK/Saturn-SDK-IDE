@@ -807,6 +807,7 @@ void ClassBrowserBuilderThread::AddMembersOf(CBTreeCtrl* tree, wxTreeItemId node
     }
 
     wxTreeItemId firstItem;
+    bool haveFirstItem = false;
     if (data)
     {
         switch (data->m_SpecialFolder)
@@ -860,7 +861,15 @@ void ClassBrowserBuilderThread::AddMembersOf(CBTreeCtrl* tree, wxTreeItemId node
                         wxTreeItemId next = tree->GetPrevSibling(existing);
 
                         if (tree->GetChildrenCount(existing) > 0)
+                        {
                             tree->SetItemBold(existing, true);
+                            // make existing the firstItem, because the former firstItem might get deleted
+                            // in the else-clause, if it has no children, what can lead to a crash
+                            firstItem = existing;
+                            // needed, if no child remains, because firstItem IsOk() returns true anyway
+                            // in some cases.
+                            haveFirstItem = true;
+                        }
                         else
                         {
                             tree->Delete(existing);
@@ -884,7 +893,7 @@ void ClassBrowserBuilderThread::AddMembersOf(CBTreeCtrl* tree, wxTreeItemId node
     if (bottom)
     {
         tree->ExpandAll();
-        if (firstItem.IsOk())
+        if (haveFirstItem && firstItem.IsOk())
         {
             tree->ScrollTo(firstItem);
             tree->EnsureVisible(firstItem);
