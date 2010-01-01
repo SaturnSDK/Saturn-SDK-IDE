@@ -484,16 +484,49 @@ void wxMultiColumnListCtrl::OnPaint(wxPaintEvent& WXUNUSED(event))
 
 void wxMultiColumnListCtrl::OnMouseEvent(wxMouseEvent& event)
 {
-    if (event.LeftDown())
+    if (event.GetEventType() == wxEVT_MOUSEWHEEL)
     {
-        SetFocus();
+        int dir = event.GetWheelRotation();
 
+        if (dir > 0)
+        {
+            m_items.SetSelection(m_items.GetSelection() - 1);
+            if (m_items.GetSelection() < 0)
+                m_items.SetSelection(m_items.GetItemCount() - 1);
+
+            AdvanceToNextSelectableItem(-1);
+        }
+        else if (dir < 0)
+        {
+            m_items.SetSelection(m_items.GetSelection() + 1);
+            if (m_items.GetSelection() >= m_items.GetItemCount())
+                m_items.SetSelection(0);
+
+            AdvanceToNextSelectableItem(1);
+        }
+
+        GenerateSelectionEvent();
+
+        Refresh();
+    }
+    else
+    {
         int idx = m_items.HitTest(event.GetPosition());
+
         if (idx != wxNOT_FOUND)
         {
             m_items.SetSelection(idx);
 
+            GenerateSelectionEvent();
+
+            Refresh();
+        }
+
+        if (event.LeftDown())
+        {
             SendCloseEvent();
+
+            SetFocus();
         }
     }
 }
