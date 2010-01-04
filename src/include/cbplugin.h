@@ -382,6 +382,7 @@ class PLUGIN_EXPORT cbDebuggerPlugin: public cbPlugin
         virtual void OnAttachReal() = 0;
 
         virtual void ShowToolMenu() = 0;
+        virtual bool ToolMenuEnabled() const;
 
 
 		/** @brief Start a new debugging process. */
@@ -457,6 +458,8 @@ class PLUGIN_EXPORT cbDebuggerPlugin: public cbPlugin
         virtual bool HasWatch(cbWatch *watch) = 0;
         virtual void ShowWatchProperties(cbWatch *watch) = 0;
         virtual bool SetWatchValue(cbWatch *watch, const wxString &value) = 0;
+        virtual void ExpandWatch(cbWatch *watch) = 0;
+        virtual void CollapseWatch(cbWatch *watch) = 0;
 
         virtual void SendCommand(const wxString& cmd) = 0;
 
@@ -480,9 +483,14 @@ class PLUGIN_EXPORT cbDebuggerPlugin: public cbPlugin
         virtual wxString GetEditorWordAtCaret();
         void ClearActiveMarkFromAllEditors();
 
+    public:
+        void SwitchToDebuggingLayout();
+        void SwitchToPreviousLayout();
+
     private:
         void OnEditorOpened(CodeBlocksEvent& event);
         wxToolBar *m_toolbar;
+        wxString m_PreviousLayout;
 };
 
 /** @brief Base class for tool plugins

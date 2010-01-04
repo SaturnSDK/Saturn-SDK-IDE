@@ -1,14 +1,14 @@
 # wxPropertyGrid message catalog.
-# Copyright (C) 2009 THE PACKAGE'S COPYRIGHT HOLDER
+# Copyright (C) 2010 THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
-# FIRST AUTHOR <EMAIL@ADDRESS>, 2009.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2010.
 #
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: 1.4.9.1\n"
+"Project-Id-Version: 1.4.10\n"
 "Report-Msgid-Bugs-To: jmsalli@users.sourceforge.net\n"
-"POT-Creation-Date: 2009-11-25 16:20+0200\n"
+"POT-Creation-Date: 2010-01-03 21:46+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -60,18 +60,18 @@ msgstr ""
 msgid "True"
 msgstr ""
 
-#: src/propgrid.cpp:3183
+#: src/propgrid.cpp:3231
 msgid "Unspecified"
 msgstr ""
 
-#: src/propgrid.cpp:4755
+#: src/propgrid.cpp:4863
 #, c-format
 msgid ""
 "Type operation \"%s\" failed: Property labeled \"%s\" is of type \"%s\", NOT "
 "\"%s\"."
 msgstr ""
 
-#: src/propgrid.cpp:13188
+#: src/propgrid.cpp:13357
 #, c-format
 msgid "Error in resource: %s"
 msgstr ""

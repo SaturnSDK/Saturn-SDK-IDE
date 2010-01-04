@@ -219,6 +219,7 @@ void WatchesDlg::UpdateWatches()
         it->watch->GetSymbol(symbol);
         it->watch->GetValue(value);
         it->property->SetValue(value);
+        it->property->SetExpanded(it->watch->IsExpanded());
         if(it->watch->IsChanged())
             m_grid->SetPropertyTextColour(it->property, wxColor(255, 0, 0));
         else
@@ -274,12 +275,20 @@ void WatchesDlg::OnExpand(wxPropertyGridEvent &event)
 {
     WatchesProperty *prop = static_cast<WatchesProperty*>(event.GetProperty());
     prop->GetWatch()->Expand(true);
+
+    cbDebuggerPlugin *plugin = Manager::Get()->GetDebuggerManager()->GetActiveDebugger();
+    cbAssert(plugin);
+    plugin->ExpandWatch(prop->GetWatch());
 }
 
 void WatchesDlg::OnCollapse(wxPropertyGridEvent &event)
 {
     WatchesProperty *prop = static_cast<WatchesProperty*>(event.GetProperty());
     prop->GetWatch()->Expand(false);
+
+    cbDebuggerPlugin *plugin = Manager::Get()->GetDebuggerManager()->GetActiveDebugger();
+    cbAssert(plugin);
+    plugin->CollapseWatch(prop->GetWatch());
 }
 
 void WatchesDlg::OnPropertyChanged(wxPropertyGridEvent &event)

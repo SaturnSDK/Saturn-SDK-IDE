@@ -1,5 +1,13 @@
 
-Version 1.4.10 ( ?-?-2010 )
+Version 1.4.10 ( Jan-03-2010 )
+
+  New Features:
+
+  - wxPropertyGrid::SetUnspecifiedValueAppearance() can
+    now be used to set exact appearance of an unspecified
+    value. Argument is a wxPGCell, so custom text, colours
+    and font can be set.
+
 
   Changes:
 
@@ -10,11 +18,22 @@ Version 1.4.10 ( ?-?-2010 )
 
   Bugs Fixed:
 
+  - Crash on startup on OS X (bug #2915549).
+
+  - Editor focus code was usually not executed. This should
+    now be fixed, and for instance, when a wxTextCtrl based
+    editor gets a focus, all the contained text will be
+    selected.
+
   - Unspecified value rendering was incorrect for various
     property editors, such as check box.
 
   - Setting property value to unspecified did not properly
     refresh the editor control.
+
+  - wxPython bindings: setting control name in PropertyGrid
+    or PropertyGridManager __init__() or Create() did not
+    work.
 
   - SetColumnCount() could crash if number of columns was
     reduced.

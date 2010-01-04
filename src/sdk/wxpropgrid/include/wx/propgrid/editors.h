@@ -594,6 +594,13 @@ protected:
 #endif // !DOXYGEN
 };
 
+
+// -----------------------------------------------------------------------
+// Utilities
+
+WXDLLIMPEXP_PG bool wxPG_TextCtrl_SetMargins(wxWindow* tc,
+                                             const wxPoint& margins);
+
 // -----------------------------------------------------------------------
 
 #endif // _WX_PROPGRID_EDITORS_H_

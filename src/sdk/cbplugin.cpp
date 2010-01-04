@@ -139,6 +139,10 @@ wxString cbDebuggerPlugin::GetEditorWordAtCaret()
 
 void cbDebuggerPlugin::BuildModuleMenu(const ModuleType type, wxMenu* menu, const FileTreeData* data)
 {
+    cbDebuggerPlugin *active_plugin = Manager::Get()->GetDebuggerManager()->GetActiveDebugger();
+    if (active_plugin != this)
+        return;
+
     cbProject* prj = Manager::Get()->GetProjectManager()->GetActiveProject();
     if (!prj)
         return;
@@ -170,6 +174,14 @@ bool cbDebuggerPlugin::BuildToolBar(wxToolBar* toolBar)
 wxToolBar* cbDebuggerPlugin::GetToolbar()
 {
     return m_toolbar;
+}
+
+bool cbDebuggerPlugin::ToolMenuEnabled() const
+{
+    cbProject* prj = Manager::Get()->GetProjectManager()->GetActiveProject();
+    // FIXME (obfuscated#) reimplement m_pidToAttach
+    bool en = (prj && !prj->GetCurrentlyCompilingTarget()) /* || m_PidToAttach != 0*/;
+    return IsRunning() && en;
 }
 
 void cbDebuggerPlugin::ClearActiveMarkFromAllEditors()
@@ -302,6 +314,39 @@ void cbDebuggerPlugin::OnEditorOpened(CodeBlocksEvent& event)
         }
     }
     event.Skip(); // must do
+}
+
+void cbDebuggerPlugin::SwitchToDebuggingLayout()
+{
+    CodeBlocksLayoutEvent queryEvent(cbEVT_QUERY_VIEW_LAYOUT);
+    CodeBlocksLayoutEvent switchEvent(cbEVT_SWITCH_VIEW_LAYOUT, _("Debugging"));
+
+    #if wxCHECK_VERSION(2, 9, 0)
+    Manager::Get()->GetLogManager()->DebugLog(F(_("Switching layout to \"%s\""), switchEvent.layout.wx_str()));
+    #else
+    Manager::Get()->GetLogManager()->DebugLog(F(_("Switching layout to \"%s\""), switchEvent.layout.c_str()));
+    #endif
+
+    // query the current layout
+    Manager::Get()->ProcessEvent(queryEvent);
+    m_PreviousLayout = queryEvent.layout;
+
+    // switch to debugging layout
+    Manager::Get()->ProcessEvent(switchEvent);
+}
+
+void cbDebuggerPlugin::SwitchToPreviousLayout()
+{
+    CodeBlocksLayoutEvent switchEvent(cbEVT_SWITCH_VIEW_LAYOUT, m_PreviousLayout);
+
+    #if wxCHECK_VERSION(2, 9, 0)
+    Manager::Get()->GetLogManager()->DebugLog(F(_("Switching layout to \"%s\""), (!switchEvent.layout.IsEmpty() ? switchEvent.layout.wx_str() : wxString(_("Code::Blocks default")).wx_str()));
+    #else
+    Manager::Get()->GetLogManager()->DebugLog(F(_("Switching layout to \"%s\""), !switchEvent.layout.IsEmpty() ? switchEvent.layout.c_str() : wxString(_("Code::Blocks default")).c_str()));
+    #endif
+
+    // switch to previous layout
+    Manager::Get()->ProcessEvent(switchEvent);
 }
 
 /////

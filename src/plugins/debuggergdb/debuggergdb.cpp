@@ -8,9 +8,9 @@
  */
 
 #include <sdk.h>
+#include <algorithm> // std::remove_if
 
 #ifndef CB_PRECOMP
-    #include <algorithm> // std::remove_if
     #include <wx/txtstrm.h>
     #include <wx/regex.h>
     #include <wx/msgdlg.h>
@@ -542,39 +542,6 @@ void DebuggerGDB::OnProjectLoadingHook(cbProject* project, TiXmlElement* elem, b
             }
         }
     }
-}
-
-void DebuggerGDB::DoSwitchToDebuggingLayout()
-{
-    CodeBlocksLayoutEvent queryEvent(cbEVT_QUERY_VIEW_LAYOUT);
-    CodeBlocksLayoutEvent switchEvent(cbEVT_SWITCH_VIEW_LAYOUT, _("Debugging"));
-
-    #if wxCHECK_VERSION(2, 9, 0)
-    Manager::Get()->GetLogManager()->DebugLog(F(_("Switching layout to \"%s\""), switchEvent.layout.wx_str()));
-    #else
-    Manager::Get()->GetLogManager()->DebugLog(F(_("Switching layout to \"%s\""), switchEvent.layout.c_str()));
-    #endif
-
-    // query the current layout
-    Manager::Get()->ProcessEvent(queryEvent);
-    m_PreviousLayout = queryEvent.layout;
-
-    // switch to debugging layout
-    Manager::Get()->ProcessEvent(switchEvent);
-}
-
-void DebuggerGDB::DoSwitchToPreviousLayout()
-{
-    CodeBlocksLayoutEvent switchEvent(cbEVT_SWITCH_VIEW_LAYOUT, m_PreviousLayout);
-
-    #if wxCHECK_VERSION(2, 9, 0)
-    Manager::Get()->GetLogManager()->DebugLog(F(_("Switching layout to \"%s\""), !switchEvent.layout.IsEmpty() ? switchEvent.layout.wx_str() : wxString(_("Code::Blocks default")).wx_str()));
-    #else
-    Manager::Get()->GetLogManager()->DebugLog(F(_("Switching layout to \"%s\""), !switchEvent.layout.IsEmpty() ? switchEvent.layout.c_str() : wxString(_("Code::Blocks default")).c_str()));
-    #endif
-
-    // switch to previous layout
-    Manager::Get()->ProcessEvent(switchEvent);
 }
 
 void DebuggerGDB::DoWatches()
@@ -1158,7 +1125,7 @@ int DebuggerGDB::DoDebug(bool breakOnEntry)
 
     // switch to the user-defined layout for debugging
     if (m_pProcess)
-        DoSwitchToDebuggingLayout();
+        SwitchToDebuggingLayout();
 
     return 0;
 } // Debug
@@ -1975,7 +1942,7 @@ void DebuggerGDB::OnGDBTerminated(wxCommandEvent& event)
     plm->NotifyPlugins(evt);
 
     // switch to the user-defined layout when finished debugging
-    DoSwitchToPreviousLayout();
+    SwitchToPreviousLayout();
 
     #ifdef __WXGTK__
     // kill any linux console
@@ -2267,6 +2234,14 @@ bool DebuggerGDB::SetWatchValue(cbWatch *watch, const wxString &value)
     driver->SetVarValue(full_symbol, value);
     DoWatches();
     return true;
+}
+
+void DebuggerGDB::ExpandWatch(cbWatch *watch)
+{
+}
+
+void DebuggerGDB::CollapseWatch(cbWatch *watch)
+{
 }
 
 void DebuggerGDB::AttachToProcess(const wxString& pid)

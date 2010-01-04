@@ -486,7 +486,7 @@ void EnableToolbar(DebuggerManager::RegisteredPlugins::reference pair)
         toolbar->EnableTool(idMenuStep, en && stopped);
         toolbar->EnableTool(idMenuStepOut, isRunning && en && stopped);
         toolbar->EnableTool(idMenuStop, isRunning && en);
-        toolbar->EnableTool(idDebuggerToolInfo, isRunning && en);
+        toolbar->EnableTool(idDebuggerToolInfo, plugin->ToolMenuEnabled());
     }
     else
     {

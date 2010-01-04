@@ -922,22 +922,10 @@ void GDB_driver::ParseOutput(const wxString& output)
             {
                 Log(lines[i]);
                 m_pDBG->BringAppToFront();
-            // FIXME (obfuscated#): Should replace with GetDebuggerManager()->ShowBacktraceDialog()!
-                cbBacktraceDlg *dialog = Manager::Get()->GetDebuggerManager()->GetBacktraceDialog();
-                if (IsWindowReallyShown(dialog))
-                {
-                    // don't ask; it's already shown
-                    // just grab the user's attention
-//                    cbMessageBox(lines[i], _("Signal received"), wxICON_ERROR);
-                }
-                else// if (cbMessageBox(wxString::Format(_("%s\nDo you want to view the backtrace?"), lines[i].c_str()), _("Signal received"), wxICON_ERROR | wxYES_NO) == wxID_YES)
-                {
-                    // show the backtrace window
-                    CodeBlocksDockEvent evt(cbEVT_SHOW_DOCK_WINDOW);
-                    evt.pWindow = dialog;
-                    Manager::Get()->ProcessEvent(evt);
+
+                if (Manager::Get()->GetDebuggerManager()->ShowBacktraceDialog())
                     m_forceUpdate = true;
-                }
+
                 InfoWindow::Display(_("Signal received"), _T("\n\n") + lines[i] + _T("\n\n"));
                 m_needsUpdate = true;
                 // the backtrace will be generated when NotifyPlugins() is called

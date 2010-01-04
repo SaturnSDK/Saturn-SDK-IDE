@@ -7,7 +7,7 @@
 
   ************************************************
 
-    Version:   1.4.9.3
+    Version:   1.4.10
     Requires:  wxWidgets 2.8.0 series
                (wxWidgets 2.6.x works too, but requires patching, see
                patch_wx26 directory)

@@ -256,7 +256,7 @@ public:
                	           const wxPoint& pos = wxDefaultPosition,
                	           const wxSize& size = wxDefaultSize,
                	           long style = wxPGMAN_DEFAULT_STYLE,
-               	           const wxChar* name = wxPyPropertyGridManagerNameStr );
+               	           const wxString& name = wxPyPropertyGridManagerNameStr );
     %RenameCtor(PrePropertyGridManager,  wxPropertyGridManager());
 
 #else
@@ -274,7 +274,7 @@ public:
                	           const wxPoint& pos = wxDefaultPosition,
                	           const wxSize& size = wxDefaultSize,
                	           long style = wxPGMAN_DEFAULT_STYLE,
-               	           const wxChar* name = wxPropertyGridManagerNameStr );
+               	           const wxString& name = wxPropertyGridManagerNameStr );
 
     /** Destructor */
     virtual ~wxPropertyGridManager();
@@ -346,7 +346,7 @@ public:
                  const wxPoint& pos = wxDefaultPosition,
                  const wxSize& size = wxDefaultSize,
                  long style = wxPGMAN_DEFAULT_STYLE,
-                 const wxChar* name = wxPropertyGridManagerNameStr );
+                 const wxString& name = wxPropertyGridManagerNameStr );
 
     /** Enables or disables (shows/hides) categories according to parameter enable.
         WARNING: Not tested properly, use at your own risk.

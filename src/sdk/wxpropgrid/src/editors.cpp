@@ -267,7 +267,6 @@ bool wxPGEditor::CanContainCustomImage() const
 // wxPGClipperWindow
 // -----------------------------------------------------------------------
 
-
 #if wxPG_ENABLE_CLIPPER_WINDOW
 
 //
@@ -317,6 +316,22 @@ public:
     virtual void SetFocus();
 
     virtual bool SetFont(const wxFont& font);
+
+    virtual bool SetForegroundColour(const wxColour& col)
+    {
+        bool res = wxWindow::SetForegroundColour(col);
+        if ( m_ctrl )
+            m_ctrl->SetForegroundColour(col);
+        return res;
+    }
+
+    virtual bool SetBackgroundColour(const wxColour& col)
+    {
+        bool res = wxWindow::SetBackgroundColour(col);
+        if ( m_ctrl )
+            m_ctrl->SetBackgroundColour(col);
+        return res;
+    }
 
     inline int GetXClip() const { return m_xadj; }
 
@@ -474,7 +489,15 @@ wxPGWindowList wxPGTextCtrlEditor::CreateControls( wxPropertyGrid* propGrid,
         return (wxWindow*) NULL;
 
     if ( !property->IsValueUnspecified() )
-        text = property->GetValueString(property->HasFlag(wxPG_PROP_READONLY)?0:wxPG_EDITABLE_VALUE);
+    {
+        int flags = property->HasFlag(wxPG_PROP_READONLY) ? 
+            0 : wxPG_EDITABLE_VALUE;
+        text = property->GetValueString(flags);
+    }
+    else
+    {
+        text = propGrid->GetUnspecifiedValueText();
+    }
 
     int flags = 0;
     if ( (property->GetFlags() & wxPG_PROP_PASSWORD) &&
@@ -519,6 +542,9 @@ void wxPGTextCtrlEditor::UpdateControl( wxPGProperty* property, wxWindow* ctrl )
     else
         s = property->GetDisplayedString();
 
+    wxPropertyGrid* pg = property->GetGrid();
+
+    pg->SetupTextCtrlValue(s);
     tc->SetValue(s);    
 
     // Must always fix indentation, just in case
@@ -607,7 +633,11 @@ void wxPGTextCtrlEditor::SetValueToUnspecified( wxPGProperty* property, wxWindow
     wxPropertyGrid* pg = property->GetGrid();
     wxASSERT(pg);  // Really, property grid should exist if editor does
     if ( pg )
-        tc->SetValue(wxT(""));
+    {
+        wxString tcText = pg->GetUnspecifiedValueText();
+        pg->SetupTextCtrlValue(tcText);
+        tc->SetValue(tcText);
+    }
 }
 
 
@@ -621,12 +651,29 @@ void wxPGTextCtrlEditor::SetControlStringValue( wxPGProperty* property, wxWindow
         tc->SetValue(txt);
 }
 
-
-void wxPGTextCtrlEditor::OnFocus( wxPGProperty*, wxWindow* wnd ) const
+void wxPGTextCtrlEditor_OnFocus( wxPGProperty* property,
+                                 wxTextCtrl*tc )
 {
-    wxTextCtrl* tc = wxStaticCast(wnd, wxTextCtrl);
+    // Make sure there is correct text (instead of unspecified value
+    // indicator or inline help)
+    int flags = property->HasFlag(wxPG_PROP_READONLY) ? 
+        0 : wxPG_EDITABLE_VALUE;
+    wxString correctText = property->GetValueString(flags);
+
+    if ( tc->GetValue() != correctText )
+    {
+        property->GetGrid()->SetupTextCtrlValue(correctText);
+        tc->SetValue(correctText);
+    }
 
     tc->SetSelection(-1,-1);
+}
+
+void wxPGTextCtrlEditor::OnFocus( wxPGProperty* property,
+                                  wxWindow* wnd ) const
+{
+    wxTextCtrl* tc = wxStaticCast(wnd, wxTextCtrl);
+    wxPGTextCtrlEditor_OnFocus(property, tc);
 }
 
 
@@ -921,7 +968,7 @@ void wxPropertyGrid::OnComboItemPaint( wxPGCustomComboControl* pCc,
         dc.SetBrush(*wxWHITE_BRUSH);
 
     wxPGCellRenderer* renderer = NULL;
-    const wxPGChoiceEntry* cell = NULL;
+    const wxPGCell* cell = NULL;
 
     if ( rect.x >= 0 )
     {
@@ -983,8 +1030,18 @@ void wxPropertyGrid::OnComboItemPaint( wxPGCustomComboControl* pCc,
             //       sure if its needed, but seems to not cause any harm.
             pt.x -= 1;
 
-            if ( item < 0 && (flags & wxPGCC_PAINTING_CONTROL) )
-                item = pCb->GetSelection();
+            if ( (flags & wxPGCC_PAINTING_CONTROL) )
+            {
+                if ( p->IsValueUnspecified() )
+                    cell = &m_unspecifiedAppearance;
+                else if ( item < 0 )
+                    item = pCb->GetSelection();
+            }
+
+            if ( p->IsValueUnspecified() && item < 0 )
+            {
+                cell = &m_unspecifiedAppearance;
+            }
 
             if ( pChoices && item >= 0 && comValIndex < 0 )
             {
@@ -1023,11 +1080,12 @@ void wxPropertyGrid::OnComboItemPaint( wxPGCustomComboControl* pCc,
     }
 }
 
-bool wxPGChoiceEditor_SetCustomPaintWidth( wxPropertyGrid* propGrid, wxPGComboBox* cb, int cmnVal )
+bool wxPGChoiceEditor_SetCustomPaintWidth( wxPropertyGrid* propGrid,
+                                           wxPGComboBox* cb,
+                                           wxPGProperty* property,
+                                           int cmnVal )
 {
-    wxPGProperty* property = propGrid->GetSelectedProperty();
-    wxASSERT( property );
-
+    // Must return true if value was not a common value
     int custPaintMargin;
 
     //
@@ -1036,6 +1094,12 @@ bool wxPGChoiceEditor_SetCustomPaintWidth( wxPropertyGrid* propGrid, wxPGComboBo
         custPaintMargin = ODCB_CUST_PAINT_MARGIN_RO;
     else
         custPaintMargin = ODCB_CUST_PAINT_MARGIN;
+
+    if ( property->IsValueUnspecified() )
+    {
+        cb->SetCustomPaintWidth( 0 );
+        return true;
+    }
 
     if ( cmnVal >= 0 )
     {
@@ -1134,7 +1198,8 @@ wxWindow* wxPGChoiceEditor::CreateControlsBase( wxPropertyGrid* propGrid,
     //cb->SetPopupExtents( 1, extRight );
     cb->SetTextIndent(wxPG_XBEFORETEXT-1);
 
-    wxPGChoiceEditor_SetCustomPaintWidth( propGrid, cb, property->GetCommonValue() );
+    wxPGChoiceEditor_SetCustomPaintWidth( propGrid, cb, property,
+                                          property->GetCommonValue() );
     /*if ( property->GetFlags() & wxPG_PROP_CUSTOMIMAGE )
     {
         wxSize imageSize = propGrid->GetImageSize(property, index);
@@ -1227,7 +1292,8 @@ bool wxPGChoiceEditor::OnEvent( wxPropertyGrid* propGrid, wxPGProperty* property
                 return false;
             }
         }
-        return wxPGChoiceEditor_SetCustomPaintWidth( propGrid, cb, cmnValIndex );        
+        return wxPGChoiceEditor_SetCustomPaintWidth( propGrid, cb, property,
+                                                     cmnValIndex);
     }
     return false;
 }
@@ -1267,10 +1333,25 @@ void wxPGChoiceEditor::SetControlIntValue( wxPGProperty* WXUNUSED(property), wxW
 }
 
 
-void wxPGChoiceEditor::SetValueToUnspecified( wxPGProperty* WXUNUSED(property), wxWindow* ctrl ) const
+void wxPGChoiceEditor::SetValueToUnspecified( wxPGProperty* property,
+                                              wxWindow* ctrl ) const
 {
     wxPGOwnerDrawnComboBox* cb = (wxPGOwnerDrawnComboBox*)ctrl;
-    cb->SetSelection(-1);
+
+    if ( !cb->HasFlag(wxCB_READONLY) )
+    {
+        wxPropertyGrid* pg = property->GetGrid();
+        if ( pg )
+        {
+            wxString tcText = pg->GetUnspecifiedValueText();
+            pg->SetupTextCtrlValue(tcText);
+            cb->SetValue(tcText);
+        }
+    }
+    else
+    {
+        cb->SetSelection(-1);
+    }
 }
 
 
@@ -1351,11 +1432,11 @@ bool wxPGComboBoxEditor::GetValueFromControl( wxVariant& variant, wxPGProperty* 
     return res;
 }
 
-
-void wxPGComboBoxEditor::OnFocus( wxPGProperty*, wxWindow* ctrl ) const
+void wxPGComboBoxEditor::OnFocus( wxPGProperty* property,
+                                  wxWindow* ctrl ) const
 {
     wxPGOwnerDrawnComboBox* cb = (wxPGOwnerDrawnComboBox*)ctrl;
-    cb->GetTextCtrl()->SetSelection(-1,-1);
+    wxPGTextCtrlEditor_OnFocus(property, cb->GetTextCtrl());
 }
 
 
@@ -2178,6 +2259,109 @@ wxWindow* wxPropertyGrid::GenerateEditorTextCtrlAndButton( const wxPoint& pos,
 
 // -----------------------------------------------------------------------
 
+void wxPropertyGrid::SetEditorAppearance( const wxPGCell& cell )
+{
+    wxWindow* editor = GetEditorControl();
+    if ( !editor )
+        return;
+
+    // Get old editor appearance
+    const wxPGCell& oCell = m_editorAppearance;
+    wxPGProperty* property = GetSelection();
+
+    wxTextCtrl* tc = GetEditorTextCtrl();
+
+    wxPGComboBox* cb;
+    if ( editor->IsKindOf(CLASSINFO(wxPGOwnerDrawnComboBox)) )
+        cb = (wxPGComboBox*) editor;
+    else
+        cb = NULL;
+
+    if ( tc || cb )
+    {
+        wxString tcText;
+        bool changeText = false;
+
+        if ( cell.HasText() && !IsEditorFocused() )
+        {
+            tcText = cell.GetText();
+            changeText = true;
+        }
+        else if ( oCell.HasText() )
+        {
+            tcText = GetSelection()->GetValueString(
+                property->HasFlag(wxPG_PROP_READONLY)?0:wxPG_EDITABLE_VALUE);
+            changeText = true;
+        }
+
+        if ( changeText )
+        {
+            if ( tc )
+            {
+                // The next line prevents spurious EVT_TEXT from being
+                // received.
+                SetupTextCtrlValue(tcText);
+                tc->SetValue(tcText);
+            }
+            else
+            {
+                cb->SetText(tcText);
+            }
+        }
+    }
+
+    wxVisualAttributes vattrs = editor->GetClassDefaultAttributes();
+
+    const wxColour& fgCol = cell.GetFgCol();
+    if ( wxGDI_IS_OK(fgCol) )
+    {
+        editor->SetForegroundColour(fgCol);
+
+        // Set for wxTextCtrl separately to work around bug in wx2.8
+        // that may not be fixable due to ABI compatibility issues.
+        if ( tc && tc != editor )
+            tc->SetForegroundColour(fgCol);
+    }
+    else if ( wxGDI_IS_OK(oCell.GetFgCol()) )
+    {
+        editor->SetForegroundColour(vattrs.colFg);
+        if ( tc && tc != editor )
+            tc->SetForegroundColour(vattrs.colFg);
+    }
+
+    const wxColour& bgCol = cell.GetBgCol();
+    if ( wxGDI_IS_OK(bgCol) )
+    {
+        editor->SetBackgroundColour(bgCol);
+        if ( tc && tc != editor )
+            tc->SetBackgroundColour(bgCol);
+    }
+    else if ( wxGDI_IS_OK(oCell.GetBgCol()) )
+    {
+        editor->SetBackgroundColour(vattrs.colBg);
+        if ( tc && tc != editor )
+            tc->SetBackgroundColour(vattrs.colBg);
+    }
+
+    const wxFont& font = cell.GetFont();
+    if ( wxGDI_IS_OK(font) )
+    {
+        editor->SetFont(font);
+        if ( tc && tc != editor )
+            tc->SetFont(font);
+    }
+    else if ( wxGDI_IS_OK(oCell.GetFont()) )
+    {
+        editor->SetFont(vattrs.font);
+        if ( tc && tc != editor )
+            tc->SetFont(vattrs.font);
+    }
+
+    m_editorAppearance.Assign(cell);
+}
+
+// -----------------------------------------------------------------------
+
 wxTextCtrl* wxPropertyGrid::GetEditorTextCtrl() const
 {
     wxWindow* wnd = GetEditorControl();
@@ -2196,6 +2380,98 @@ wxTextCtrl* wxPropertyGrid::GetEditorTextCtrl() const
 
     return NULL;
 }
+
+// -----------------------------------------------------------------------
+
+#if defined(__WXMSW__) && !defined(__WXWINCE__)
+
+bool wxPG_TextCtrl_SetMargins(wxWindow* tc, const wxPoint& margins)
+{
+    ::SendMessage(GetHwndOf(tc),
+                  EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN,
+                  MAKELONG(margins.x, margins.x));
+    return true;
+}
+
+/*#elif defined(__WXGTK20__)
+
+//
+// NOTE: For this to work we need to somehow include gtk devel
+//       in the bake/makefile.
+//
+
+#include <gtk/gtk.h>
+
+bool wxPG_TextCtrl_SetMargins(wxWindow* tc, const wxPoint& margins)
+{
+    //
+    // NB: This code has been ported from wx2.9 SVN trunk
+    //
+
+  #if GTK_CHECK_VERSION(2,10,0)
+    GtkEntry *entry = NULL;
+
+    entry = GTK_ENTRY( m_widget );
+
+    if ( !entry )
+        return false;
+
+    const GtkBorder* oldBorder = gtk_entry_get_inner_border(entry);
+    GtkBorder* newBorder;
+
+    if ( oldBorder )
+    {
+        newBorder = gtk_border_copy(oldBorder);
+    }
+    else
+    {
+    #if GTK_CHECK_VERSION(2,14,0)
+        newBorder = gtk_border_new();
+    #else
+        newBorder = g_slice_new0(GtkBorder);
+    #endif
+        // Use some reasonable defaults for initial margins
+        newBorder->left = 2;
+        newBorder->right = 2;
+
+        // These numbers seem to let the text remain vertically centered
+        // in common use scenarios when margins.y == -1.
+        newBorder->top = 3;
+        newBorder->bottom = 3;
+    }
+
+    if ( margins.x != -1 )
+        newBorder->left = (gint) margins.x;
+
+    if ( margins.y != -1 )
+        newBorder->top = (gint) margins.y;
+
+    gtk_entry_set_inner_border(entry, newBorder);
+
+  #if GTK_CHECK_VERSION(2,14,0)
+    gtk_border_free(newBorder);
+  #else
+    g_slice_free(GtkBorder, newBorder);
+  #endif
+
+    return true;
+  #else
+    wxUnusedVar(tc);
+    wxUnusedVar(margins);
+    return false;
+  #endif
+}
+*/
+#else
+
+bool wxPG_TextCtrl_SetMargins(wxWindow* tc, const wxPoint& margins)
+{
+    wxUnusedVar(tc);
+    wxUnusedVar(margins);
+    return false;
+}
+
+#endif
 
 // -----------------------------------------------------------------------
 // wxPGEditorDialogAdapter

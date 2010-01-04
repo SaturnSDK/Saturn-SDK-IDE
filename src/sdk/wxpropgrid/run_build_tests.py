@@ -37,6 +37,7 @@ def print_help():
     print('')
     print('  --only=X       Only do build X')
     print('  --list         List all possible builds')
+    print('  --no-test      Just build the sample, don\'t run tests')
 
 def main():
     cwd = os.getcwd()
@@ -45,6 +46,7 @@ def main():
     only_wxversion = None
     resume_from_wxversion = None
     resumed = True
+    no_test = False
 
     for arg in sys.argv[1:]:
         if arg == '--help':
@@ -62,6 +64,8 @@ def main():
             only_wxversion = arg.split('=',1)[1].strip()
         elif arg.startswith('--resume-from'):
             resume_from_wxversion = arg.split('=',1)[1].strip()
+        elif arg == '--no-test':
+            no_test = True
         else:
             resume_from_wxversion = arg
 
@@ -141,7 +145,8 @@ def main():
         copyfile('propgridsample.exe.manifest',
                  'propgridsample (%s %s).exe.manifest' % \
                     (build_name, build_opts))
-        res = os.system('propgridsample.exe --run-tests')
+        if not no_test:
+            res = os.system('propgridsample.exe --run-tests')
         os.environ['PATH'] = old_path
 
 if __name__ == '__main__':

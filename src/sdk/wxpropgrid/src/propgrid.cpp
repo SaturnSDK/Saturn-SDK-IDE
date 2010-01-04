@@ -879,15 +879,16 @@ wxString wxPGProperty::GetValueAsString( int argFlags ) const
 
 wxString wxPGProperty::GetValueString( int argFlags ) const
 {
+    wxPropertyGrid* pg = GetGrid();
+
     if ( IsValueUnspecified() )
-        return wxEmptyString;
+        return pg->GetUnspecifiedValueText(argFlags);
 
     if ( m_commonValue == -1 )
         return GetValueAsString(argFlags);
 
     //
     // Return common value's string representation
-    wxPropertyGrid* pg = GetGrid();
     const wxPGCommonValue* cv = pg->GetCommonValue(m_commonValue);
 
     if ( argFlags & wxPG_FULL_VALUE )
@@ -2620,18 +2621,26 @@ void wxPGDefaultRenderer::Render( wxDC& dc, const wxRect& rect,
     wxString text;
     int imageWidth = 0;
 
-    // Use choice cell?
-    if ( column == 1 && (flags & Control) )
+    if ( column == 1 )
     {
-        const wxPGCell* ccell = property->GetCurrentChoice();
-        if ( ccell &&
-#if wxCHECK_VERSION(2,8,0)
-             ( ccell->GetBitmap().IsOk() || ccell->GetFgCol().IsOk() || ccell->GetBgCol().IsOk() )
-#else
-             ( ccell->GetBitmap().Ok() || ccell->GetFgCol().Ok() || ccell->GetBgCol().Ok() )
-#endif
-           )
-            cell = ccell;
+        if ( !(flags & Control) )
+        {
+            // Use special unspecified value cell
+            if ( property->IsValueUnspecified() )
+                cell = &propertyGrid->GetUnspecifiedValueAppearance();
+        }
+
+        if ( !cell )
+        {
+            // Use choice cell?
+            const wxPGCell* ccell = property->GetCurrentChoice();
+            if ( ccell &&
+                 ( wxGDI_IS_OK(ccell->GetBitmap()) ||
+                   wxGDI_IS_OK(ccell->GetFgCol()) ||
+                   wxGDI_IS_OK(ccell->GetBgCol()) )
+               )
+                cell = ccell;
+        }
     }
 
     int preDrawFlags = flags;
@@ -2720,6 +2729,10 @@ void wxPGDefaultRenderer::Render( wxDC& dc, const wxRect& rect,
             {
                 text = vInlineHelp.GetString();
                 dc.SetTextForeground(propertyGrid->GetCellDisabledTextColour());
+
+                // Must make the editor NULL to override it's own rendering
+                // code.
+                editor = NULL;
             }
         }
     }
@@ -2784,6 +2797,13 @@ wxPGCell::wxPGCell()
 {
 }
 
+bool wxPGCell::HasText() const
+{
+    if ( m_text != gs_noCellText )
+        return true;
+    return false;
+}
+
 wxPGCell::wxPGCell( const wxString& text,
                     const wxBitmap& bitmap,
                     const wxColour& fgCol,
@@ -2804,6 +2824,28 @@ wxPGCell::wxPGCell( const wxString& text,
     {
         m_text = gs_noCellText;
     }
+}
+
+void wxPGCell::Assign(const wxPGCell& cell)
+{
+    if ( cell.HasText() )
+        SetText(cell.GetText());
+
+    const wxBitmap& bmp = cell.GetBitmap();
+    if ( wxGDI_IS_OK(bmp) )
+        SetBitmap(bmp);
+
+    const wxColour& fgCol = cell.GetFgCol();
+    if ( wxGDI_IS_OK(fgCol) )
+        SetFgCol(fgCol);
+
+    const wxColour& bgCol = cell.GetBgCol();
+    if ( wxGDI_IS_OK(bgCol) )
+        SetBgCol(bgCol);
+
+    const wxFont& font = cell.GetFont();
+    if ( wxGDI_IS_OK(font) )
+        SetFont(font);
 }
 
 // -----------------------------------------------------------------------
@@ -3040,7 +3082,7 @@ wxPropertyGrid::wxPropertyGrid( wxWindow *parent,
                                 const wxPoint& pos,
                                 const wxSize& size,
                                 long style,
-                                const wxChar* name )
+                                const wxString& name )
     : wxScrolledWindow()
 {
     Init1();
@@ -3054,7 +3096,7 @@ bool wxPropertyGrid::Create( wxWindow *parent,
                              const wxPoint& pos,
                              const wxSize& size,
                              long style,
-                             const wxChar* name )
+                             const wxString& name )
 {
     // Use a native border if border not specified
     if ( !(style&wxBORDER_MASK) || (style & wxBORDER_THEME) )
@@ -3131,7 +3173,7 @@ void wxPropertyGrid::Init1()
     m_sortFunction = NULL;
     m_inDoPropertyChanged = 0;
     m_inCommitChangesFromEditor = 0;
-    m_inDoSelectProperty = 0;
+    m_inDoSelectProperty = false;
     m_permanentValidationFailureBehavior = wxPG_VFB_DEFAULT;
     m_dragStatus = 0;
     m_mouseSide = 16;
@@ -5519,7 +5561,7 @@ int wxPropertyGrid::DoDrawItems( wxDC& dc,
         wxPGProperty* parent = p->GetParent();
 
         int textMarginHere = x;
-        int renderFlags = wxPGCellRenderer::Control;
+        int renderFlags = 0;
 
         int greyDepth = m_marginWidth;
         if ( !(windowStyle & wxPG_HIDE_CATEGORIES) )
@@ -5944,7 +5986,10 @@ void wxPropertyGrid::RefreshEditor()
     editorClass->UpdateControl(p, wnd);
 
     if ( p->IsValueUnspecified() )
-        editorClass ->SetValueToUnspecified(p, wnd);
+    {
+        editorClass->SetValueToUnspecified(p, wnd);
+        SetEditorAppearance(m_unspecifiedAppearance);
+    }
 }
 
 // -----------------------------------------------------------------------
@@ -6841,17 +6886,26 @@ void wxPropertyGrid::OnCustomEditorEvent( wxCommandEvent &event )
 
     //
     // Filter out excess wxTextCtrl modified events
-    if ( event.GetEventType() == wxEVT_COMMAND_TEXT_UPDATED &&
-         wnd &&
-         wnd->IsKindOf(CLASSINFO(wxTextCtrl)) )
+    if ( event.GetEventType() == wxEVT_COMMAND_TEXT_UPDATED && wnd )
     {
-        wxTextCtrl* tc = (wxTextCtrl*) wnd;
+        if ( wnd->IsKindOf(CLASSINFO(wxTextCtrl)) )
+        {
+            wxTextCtrl* tc = (wxTextCtrl*) wnd;
 
-        wxString newTcValue = tc->GetValue();
-        if ( m_prevTcValue == newTcValue )
-            return;
+            wxString newTcValue = tc->GetValue();
+            if ( m_prevTcValue == newTcValue )
+                return;
+            m_prevTcValue = newTcValue;
+        }
+        else if ( wnd->IsKindOf(CLASSINFO(wxPGComboCtrl)) )
+        {
+            wxPGComboCtrl* cc = (wxPGComboCtrl*) wnd;
 
-        m_prevTcValue = newTcValue;
+            wxString newTcValue = cc->GetTextCtrl()->GetValue();
+            if ( m_prevTcValue == newTcValue )
+                return;
+            m_prevTcValue = newTcValue;
+        }
     }
 
     SetInternalFlag(wxPG_FL_IN_ONCUSTOMEDITOREVENT);
@@ -7060,6 +7114,20 @@ void wxPropertyGrid::CustomSetCursor( int type, bool override )
 }
 
 // -----------------------------------------------------------------------
+
+wxString wxPropertyGrid::GetUnspecifiedValueText( int argFlags ) const
+{
+    const wxPGCell& ua = GetUnspecifiedValueAppearance();
+
+    if ( ua.HasText() &&
+         !(argFlags & wxPG_FULL_VALUE) &&
+         !(argFlags & wxPG_EDITABLE_VALUE) )
+        return ua.GetText();
+
+    return wxEmptyString;
+}
+
+// -----------------------------------------------------------------------
 // wxPropertyGrid property selection
 // -----------------------------------------------------------------------
 
@@ -7151,7 +7219,7 @@ bool wxPropertyGrid::DoSelectProperty( wxPGProperty* p, unsigned int flags )
     if ( m_inDoSelectProperty )
         return true;
 
-    m_inDoSelectProperty = 1;
+    m_inDoSelectProperty = true;
 
 #if !wxCHECK_VERSION(2,8,0)
     //
@@ -7169,7 +7237,7 @@ bool wxPropertyGrid::DoSelectProperty( wxPGProperty* p, unsigned int flags )
 
     if ( !m_pState )
     {
-        m_inDoSelectProperty = 0;
+        m_inDoSelectProperty = false;
         return false;
     }
 
@@ -7294,19 +7362,22 @@ bool wxPropertyGrid::DoSelectProperty( wxPGProperty* p, unsigned int flags )
 
                 m_selColumn = 1;
 
+                const wxPGEditor* editor = p->GetEditorClass();
+                wxCHECK_MSG(editor, false,
+                    wxT("NULL editor class not allowed"));
+
                 // Do we need to paint the custom image, if any?
                 m_iFlags &= ~(wxPG_FL_CUR_USES_CUSTOM_IMAGE);
                 if ( (p->m_flags & wxPG_PROP_CUSTOMIMAGE) &&
-                     !p->GetEditorClass()->CanContainCustomImage()
-                   )
+                     !editor->CanContainCustomImage() )
                     m_iFlags |= wxPG_FL_CUR_USES_CUSTOM_IMAGE;
 
                 wxRect grect = GetEditorWidgetRect(p, m_selColumn);
                 wxPoint goodPos = grect.GetPosition();
 
-                const wxPGEditor* editor = p->GetEditorClass();
-                wxCHECK_MSG(editor, false,
-                    wxT("NULL editor class not allowed"));
+                // Reset editor appearance
+                wxPGCell emptyCell;
+                m_editorAppearance.Assign(emptyCell);
 
                 m_iFlags &= ~wxPG_FL_FIXED_WIDTH_EDITOR;
 
@@ -7358,15 +7429,13 @@ bool wxPropertyGrid::DoSelectProperty( wxPGProperty* p, unsigned int flags )
 
                     //
                     // Fix TextCtrl indentation
-                #if defined(__WXMSW__) && !defined(__WXWINCE__)
                     wxTextCtrl* tc = NULL;
                     if ( primaryCtrl->IsKindOf(CLASSINFO(wxPGOwnerDrawnComboBox)) )
                         tc = ((wxPGOwnerDrawnComboBox*)primaryCtrl)->GetTextCtrl();
                     else
                         tc = wxDynamicCast(primaryCtrl, wxTextCtrl);
                     if ( tc )
-                        ::SendMessage(GetHwndOf(tc), EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, MAKELONG(0, 0));
-                #endif
+                        wxPG_TextCtrl_SetMargins(tc, wxPoint(0, -1));
 
                     // Store x relative to splitter (we'll need it).
                     m_ctrlXAdjust = m_wndEditor->GetPosition().x - splitterX;
@@ -7384,12 +7453,18 @@ bool wxPropertyGrid::DoSelectProperty( wxPGProperty* p, unsigned int flags )
 
                     SetupEventHandling(primaryCtrl, wxPG_SUBID1);
 
+                    if ( p->IsValueUnspecified() )
+                    {
+                        editor->SetValueToUnspecified(p, primaryCtrl);
+                        SetEditorAppearance(m_unspecifiedAppearance);
+                    }
+    
                     // Focus and select all (wxTextCtrl, wxComboBox etc)
                     if ( flags & wxPG_SEL_FOCUS )
                     {
                         primaryCtrl->SetFocus();
 
-                        p->GetEditorClass()->OnFocus(p, primaryCtrl);
+                        editor->OnFocus(p, primaryCtrl);
                     }
                 }
 
@@ -7651,7 +7726,7 @@ bool wxPropertyGrid::DoHideProperty( wxPGProperty* p, bool hide, int flags )
 
 void wxPropertyGrid::RecalculateVirtualSize( int WXUNUSED(forceXPos) )
 {
-    if ( (m_iFlags & wxPG_FL_RECALCULATING_VIRTUAL_SIZE) ||
+    if ( HasInternalFlag(wxPG_FL_RECALCULATING_VIRTUAL_SIZE) ||
          m_frozen ||
          !m_pState )
         return;
@@ -7698,7 +7773,11 @@ void wxPropertyGrid::RecalculateVirtualSize( int WXUNUSED(forceXPos) )
 
     // Set the min size so that the sizer can correctly determine how large
     // the virtual window should be.
-    m_canvas->SetMinSize(wxSize(10, y));
+    //
+    // NB: It is possible that m_canvas is NULL (at least on OS X).
+    if ( m_canvas )
+        m_canvas->SetMinSize(wxSize(10, y));
+
     FitInside();
 
     m_pState->CheckColumnWidths();
@@ -9207,6 +9286,8 @@ bool wxPropertyGrid::IsEditorFocused() const
 void wxPropertyGrid::HandleFocusChange( wxWindow* newFocused )
 {
     unsigned int oldFlags = m_iFlags;
+    bool wasEditorFocused = false;
+    wxWindow* wndEditor = m_wndEditor;
 
     m_iFlags &= ~(wxPG_FL_FOCUSED);
 
@@ -9217,12 +9298,28 @@ void wxPropertyGrid::HandleFocusChange( wxWindow* newFocused )
     {
         // Use m_eventObject, which is either wxPropertyGrid or
         // wxPropertyGridManager, as appropriate.
-        if ( parent == m_eventObject )
+        if ( parent == wndEditor )
+        {
+            wasEditorFocused = true;
+        }
+        else if ( parent == m_eventObject )
         {
             m_iFlags |= wxPG_FL_FOCUSED;
             break;
         }
         parent = parent->GetParent();
+    }
+
+    // Notify editor control about it receiving focus
+    if ( wasEditorFocused && m_curFocused != newFocused )
+    {
+        wxPGProperty* p = GetSelection();
+        if ( p )
+        {
+            const wxPGEditor* editor = p->GetEditorClass();
+            ResetEditorAppearance();
+            editor->OnFocus(p, GetEditorControl());
+        }
     }
 
     m_curFocused = newFocused;

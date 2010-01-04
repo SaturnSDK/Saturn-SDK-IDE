@@ -2141,6 +2141,13 @@ void FormMain::CreateGrid( int style, int extraStyle )
 
     m_pPropGridManager->GetGrid()->SetVerticalSpacing( 2 );
 
+    //
+    // Set somewhat different unspecified value appearance
+    wxPGCell cell;
+    cell.SetText(wxT("Unspecified"));
+    cell.SetFgCol(*wxLIGHT_GREY);
+    m_propGrid->SetUnspecifiedValueAppearance(cell);
+
     PopulateGrid();
 
     // Change some attributes in all properties

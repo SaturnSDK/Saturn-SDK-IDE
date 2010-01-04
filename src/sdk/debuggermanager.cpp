@@ -910,6 +910,22 @@ WatchesDlg* DebuggerManager::GetWatchesDialog()
     return m_watchesDialog;
 }
 
+bool DebuggerManager::ShowBacktraceDialog()
+{
+    cbBacktraceDlg *dialog = GetBacktraceDialog();
+
+    if (!IsWindowReallyShown(dialog))
+    {
+        // show the backtrace window
+        CodeBlocksDockEvent evt(cbEVT_SHOW_DOCK_WINDOW);
+        evt.pWindow = dialog;
+        Manager::Get()->ProcessEvent(evt);
+        return true;
+    }
+    else
+        return false;
+}
+
 bool DebuggerManager::UpdateBacktrace()
 {
     return m_backtraceDialog && IsWindowReallyShown(m_backtraceDialog);
@@ -985,7 +1001,10 @@ DebuggerManager::SyncEditorResult DebuggerManager::SyncEditor(const wxString& fi
 
     cbProject* project = Manager::Get()->GetProjectManager()->GetActiveProject();
     ProjectFile* f = project ? project->GetFileByFilename(filename, false, true) : 0;
-    wxFileName fname(filename);
+
+    wxString unixfilename = UnixFilename(filename);
+    wxFileName fname(unixfilename);
+
     if (project && fname.IsRelative())
         fname.MakeAbsolute(project->GetBasePath());
 

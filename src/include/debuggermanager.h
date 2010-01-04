@@ -222,6 +222,8 @@ class DLLIMPORT DebuggerManager : public Mgr<DebuggerManager>
         cbThreadsDlg* GetThreadsDialog();
         WatchesDlg* GetWatchesDialog();
 
+        bool ShowBacktraceDialog();
+
     public: // tests if something should be done
         bool UpdateBacktrace();
         bool UpdateCPURegisters();

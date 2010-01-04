@@ -84,7 +84,7 @@
 // for "configure" scripts under unix, use them.
 #define wxPROPGRID_MAJOR          1
 #define wxPROPGRID_MINOR          4
-#define wxPROPGRID_RELEASE        9
+#define wxPROPGRID_RELEASE        10
 
 // For non-Unix systems (i.e. when building without a configure script),
 // users of this component can use the following macro to check if the
@@ -225,12 +225,15 @@
 #endif
 
 #if wxPG_USING_WXOWNERDRAWNCOMBOBOX
+    #define wxPGComboCtrl                   wxComboCtrl
     #define wxPGOwnerDrawnComboBox          wxOwnerDrawnComboBox
     #define wxPGCC_DCLICK_CYCLES            wxCC_SPECIAL_DCLICK
     #define wxPGCC_PAINTING_CONTROL         wxODCB_PAINTING_CONTROL
     #define wxPGCC_PAINTING_SELECTED        wxODCB_PAINTING_SELECTED
     #define wxPGCC_PROCESS_ENTER            wxTE_PROCESS_ENTER
     #define wxPGCC_ALT_KEYS                 0
+#else
+    #define wxPGComboCtrl                   wxPGComboControl
 #endif
 
 // wxRect: Inside(<=2.7.0) or Contains(>2.7.0)?
@@ -259,6 +262,12 @@
   #ifndef wxBORDER_THEME
     #define wxBORDER_THEME  wxSIMPLE_BORDER
   #endif
+#endif
+
+#if wxCHECK_VERSION(2,8,0)
+    #define wxGDI_IS_OK(OBJ) ((OBJ).IsOk())
+#else
+    #define wxGDI_IS_OK(OBJ) ((OBJ).Ok())
 #endif
 
 // -----------------------------------------------------------------------
@@ -628,6 +637,16 @@ public:
               const wxColour& bgCol = wxNullColour );
 
     virtual ~wxPGCell() { }
+
+    /**
+        Copies content of one wxPGCell to this.
+    */
+    void Assign(const wxPGCell& cell);
+
+    /**
+        Returns @true if the cell has valid text.
+    */
+    bool HasText() const;
 
     void SetText( const wxString& text ) { m_text = text; }
     void SetBitmap( const wxBitmap& bitmap ) { m_bitmap = bitmap; }
@@ -6494,7 +6513,7 @@ public:
                	    const wxPoint& pos = wxDefaultPosition,
                	    const wxSize& size = wxDefaultSize,
                	    long style = wxPG_DEFAULT_STYLE,
-               	    const wxChar* name = wxPyPropertyGridNameStr );
+               	    const wxString& name = wxPyPropertyGridNameStr );
     %RenameCtor(PrePropertyGrid,  wxPropertyGrid());
 
 #else
@@ -6509,7 +6528,7 @@ public:
                	    const wxPoint& pos = wxDefaultPosition,
                	    const wxSize& size = wxDefaultSize,
                	    long style = wxPG_DEFAULT_STYLE,
-               	    const wxChar* name = wxPropertyGridNameStr );
+               	    const wxString& name = wxPropertyGridNameStr );
 
     /** Destructor */
     virtual ~wxPropertyGrid();
@@ -6574,7 +6593,7 @@ public:
                  const wxPoint& pos = wxDefaultPosition,
                  const wxSize& size = wxDefaultSize,
                  long style = wxPG_DEFAULT_STYLE,
-                 const wxChar* name = wxPropertyGridNameStr );
+                 const wxString& name = wxPropertyGridNameStr );
 
     /** Deletes all properties. Does not free memory allocated for arrays etc.
         This should *not* be called in wxPropertyGridManager.
@@ -7178,6 +7197,38 @@ public:
         return m_sortFunction;
     }
 
+    /**
+        Sets appearance of value cells representing an unspecified property
+        value. Default appearance is blank.
+
+        @see wxPGProperty::SetValueToUnspecified(),
+             wxPGProperty::IsValueUnspecified(),
+    */
+    void SetUnspecifiedValueAppearance( const wxPGCell& cell )
+    {
+        m_unspecifiedAppearance.Assign(cell);
+    }
+
+    /**
+        Returns current appearance of unspecified value cells.
+
+        @remarks If you set the unspecified value to have any
+                 textual representation, then that will override
+                 "InlineHelp" attribute.
+
+        @see SetUnspecifiedValueAppearance()
+    */
+    const wxPGCell& GetUnspecifiedValueAppearance() const
+    {
+        return m_unspecifiedAppearance;
+    }
+
+    /**
+        Returns (visual) text representation of the unspecified
+        property value.
+    */
+    wxString GetUnspecifiedValueText( int argFlags = 0 ) const;
+
     /** Set index of common value that will truly change value to unspecified.
         Using -1 will set none to have such effect.
         Default is 0.
@@ -7740,6 +7791,12 @@ protected:
     /** Actions and keys that trigger them. */
     wxPGHashMapI2I      m_actionTriggers;
 
+    /** Appearance of currently active editor. */
+    wxPGCell            m_editorAppearance;
+
+    /** Appearance of a unspecified value cell. */
+    wxPGCell            m_unspecifiedAppearance;
+
     //
     // Temporary values
     //
@@ -7780,7 +7837,7 @@ protected:
     unsigned char       m_inCommitChangesFromEditor;
 
     /** 1 if in DoSelectProperty() */
-    unsigned char       m_inDoSelectProperty;
+    bool                m_inDoSelectProperty;
 
     wxPGVFBFlags        m_permanentValidationFailureBehavior;  // Set by app
 
@@ -8032,6 +8089,14 @@ protected:
     /** Repositions scrollbar and underlying panel according to changed virtual size.
     */
     void RecalculateVirtualSize( int forceXPos = -1 );
+
+    void SetEditorAppearance( const wxPGCell& cell );
+
+    void ResetEditorAppearance()
+    {
+        wxPGCell cell;
+        SetEditorAppearance(cell);
+    }
 
     void PrepareAfterItemsAdded();
 

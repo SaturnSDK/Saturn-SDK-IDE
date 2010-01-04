@@ -275,7 +275,7 @@ wxPropertyGridManager::wxPropertyGridManager( wxWindow *parent,
                                               const wxPoint& pos,
                                               const wxSize& size,
                                               long style,
-                                              const wxChar* name )
+                                              const wxString& name )
     : wxPanel()
 {
     Init1();
@@ -289,7 +289,7 @@ bool wxPropertyGridManager::Create( wxWindow *parent,
                                     const wxPoint& pos,
                                     const wxSize& size,
                                     long style,
-                                    const wxChar* name )
+                                    const wxString& name )
 {
     if ( !m_pPropGrid )
         m_pPropGrid = CreatePropertyGrid();

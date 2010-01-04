@@ -80,11 +80,13 @@ class DebuggerGDB : public cbDebuggerPlugin
         bool IsStopped() const;
         int GetExitCode() const { return m_LastExitCode; }
 
-        virtual cbWatch* AddWatch(const wxString& symbol);
-        virtual void DeleteWatch(cbWatch *watch);
-        virtual bool HasWatch(cbWatch *watch);
-        virtual void ShowWatchProperties(cbWatch *watch);
-        virtual bool SetWatchValue(cbWatch *watch, const wxString &value);
+        cbWatch* AddWatch(const wxString& symbol);
+        void DeleteWatch(cbWatch *watch);
+        bool HasWatch(cbWatch *watch);
+        void ShowWatchProperties(cbWatch *watch);
+        bool SetWatchValue(cbWatch *watch, const wxString &value);
+        void ExpandWatch(cbWatch *watch);
+        void CollapseWatch(cbWatch *watch);
 
         void GetCurrentPosition(wxString &filename, int &line);
         void SyncEditor(const wxString& filename, int line, bool setMarker = true);
@@ -114,8 +116,6 @@ class DebuggerGDB : public cbDebuggerPlugin
     protected:
         void AddSourceDir(const wxString& dir);
     private:
-        void DoSwitchToDebuggingLayout();
-        void DoSwitchToPreviousLayout();
         void ParseOutput(const wxString& output);
         void DoWatches();
         wxString FindDebuggerExecutable(Compiler* compiler);
@@ -190,8 +190,6 @@ class DebuggerGDB : public cbDebuggerPlugin
 
         bool m_WaitingCompilerToFinish;
         bool m_Canceled; // flag to avoid re-entering DoDebug when we shouldn't
-
-        wxString m_PreviousLayout;
 
         WatchesContainer m_watches;
 
