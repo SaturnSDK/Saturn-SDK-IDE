@@ -276,7 +276,6 @@ static int wxCountLines(const char* text, int scintillaMode)
 
 
 ScintillaWX::ScintillaWX(wxScintilla* win) {
-    capturedMouse = false;
     focusEvent = false;
     wMain = win;
     sci   = win;
@@ -386,17 +385,16 @@ void ScintillaWX::SetTicking(bool on) {
 
 void ScintillaWX::SetMouseCapture(bool on) {
     if (mouseDownCaptures) {
-        if (on && !capturedMouse)
+        if (on && !sci->HasCapture())
             sci->CaptureMouse();
-        else if (!on && capturedMouse && sci->HasCapture())
+        else if (!on && sci->HasCapture())
             sci->ReleaseMouse();
-        capturedMouse = on;
     }
 }
 
 
 bool ScintillaWX::HaveMouseCapture() {
-    return capturedMouse;
+    return sci->HasCapture();
 }
 
 
@@ -947,6 +945,7 @@ void ScintillaWX::DoLoseFocus(){
     focusEvent = true;
     SetFocusState(false);
     focusEvent = false;
+    SetMouseCapture(false);
     DestroySystemCaret();
 }
 
