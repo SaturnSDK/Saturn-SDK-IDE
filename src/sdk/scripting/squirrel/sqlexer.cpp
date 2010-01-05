@@ -66,6 +66,8 @@ void SQLexer::Init(SQSharedState *ss, SQLEXREADFUNC rg, SQUserPointer up,Compile
 	ADD_KEYWORD(true,TK_TRUE);
 	ADD_KEYWORD(false,TK_FALSE);
 	ADD_KEYWORD(static,TK_STATIC);
+	ADD_KEYWORD(enum,TK_ENUM);
+	ADD_KEYWORD(const,TK_CONST);
 
 	_readf = rg;
 	_up = up;
@@ -135,7 +137,7 @@ SQInteger SQLexer::Lex()
 			case _SC('*'):
 				NEXT();
 				LexBlockComment();
-				continue;	
+				continue;
 			case _SC('/'):
 				do { NEXT(); } while (CUR_CHAR != _SC('\n') && (!IS_EOB()));
 				continue;
@@ -165,8 +167,8 @@ SQInteger SQLexer::Lex()
 		case _SC('>'):
 			NEXT();
 			if (CUR_CHAR == _SC('=')){ NEXT(); RETURN_TOKEN(TK_GE);}
-			else if(CUR_CHAR == _SC('>')){ 
-				NEXT(); 
+			else if(CUR_CHAR == _SC('>')){
+				NEXT();
 				if(CUR_CHAR == _SC('>')){
 					NEXT();
 					RETURN_TOKEN(TK_USHIFTR);
@@ -180,7 +182,7 @@ SQInteger SQLexer::Lex()
 			else { NEXT(); RETURN_TOKEN(TK_NE); }
 		case _SC('@'): {
 			SQInteger stype;
-			NEXT(); 
+			NEXT();
 			if(CUR_CHAR != _SC('"'))
 				Error(_SC("string expected"));
 			if((stype=ReadString('"',true))!=-1) {
@@ -252,15 +254,15 @@ SQInteger SQLexer::Lex()
 					SQInteger c = CUR_CHAR;
 					if (sciscntrl((int)c)) Error(_SC("unexpected character(control)"));
 					NEXT();
-					RETURN_TOKEN(c);  
+					RETURN_TOKEN(c);
 				}
 				RETURN_TOKEN(0);
 			}
 		}
 	}
-	return 0;    
+	return 0;
 }
-	
+
 SQInteger SQLexer::GetIDType(SQChar *s)
 {
 	SQObjectPtr t;
@@ -282,20 +284,20 @@ SQInteger SQLexer::ReadString(SQInteger ndelim,bool verbatim)
 			case SQUIRREL_EOB:
 				Error(_SC("unfinished string"));
 				return -1;
-			case _SC('\n'): 
-				if(!verbatim) Error(_SC("newline in a constant")); 
-				APPEND_CHAR(CUR_CHAR); NEXT(); 
+			case _SC('\n'):
+				if(!verbatim) Error(_SC("newline in a constant"));
+				APPEND_CHAR(CUR_CHAR); NEXT();
 				_currentline++;
 				break;
 			case _SC('\\'):
 				if(verbatim) {
-					APPEND_CHAR('\\'); NEXT(); 
+					APPEND_CHAR('\\'); NEXT();
 				}
 				else {
 					NEXT();
 					switch(CUR_CHAR) {
 					case _SC('x'): NEXT(); {
-						if(!isxdigit(CUR_CHAR)) Error(_SC("hexadecimal number expected")); 
+						if(!isxdigit(CUR_CHAR)) Error(_SC("hexadecimal number expected"));
 						const SQInteger maxdigits = 4;
 						SQChar temp[maxdigits+1];
 						SQInteger n = 0;
@@ -372,7 +374,21 @@ void LexInteger(const SQChar *s,SQUnsignedInteger *res)
 	}
 }
 
+SQInteger scisodigit(SQInteger c) { return c >= _SC('0') && c <= _SC('7'); }
+
+void LexOctal(const SQChar *s,SQUnsignedInteger *res)
+{
+	*res = 0;
+	while(*s != 0)
+	{
+		if(scisodigit(*s)) *res = (*res)*8+((*s++)-'0');
+		else { assert(0); }
+	}
+}
+
 SQInteger isexponent(SQInteger c) { return c == 'e' || c=='E'; }
+
+
 #define MAX_HEX_DIGITS (sizeof(SQInteger)*2)
 SQInteger SQLexer::ReadNumber()
 {
@@ -380,21 +396,33 @@ SQInteger SQLexer::ReadNumber()
 #define TFLOAT 2
 #define THEX 3
 #define TSCIENTIFIC 4
+#define TOCTAL 5
 	SQInteger type = TINT, firstchar = CUR_CHAR;
 	SQChar *sTemp;
 	INIT_TEMP_STRING();
 	NEXT();
-	if(firstchar == _SC('0') && toupper(CUR_CHAR) == _SC('X')) {
-		NEXT();
-		type = THEX;
-		while(isxdigit(CUR_CHAR)) {
-			APPEND_CHAR(CUR_CHAR);
-			NEXT();
+	if(firstchar == _SC('0') && (toupper(CUR_CHAR) == _SC('X') || scisodigit(CUR_CHAR)) ) {
+		if(scisodigit(CUR_CHAR)) {
+			type = TOCTAL;
+			while(scisodigit(CUR_CHAR)) {
+				APPEND_CHAR(CUR_CHAR);
+				NEXT();
+			}
+			if(scisdigit(CUR_CHAR)) Error(_SC("invalid octal number"));
 		}
-		if(_longstr.size() > MAX_HEX_DIGITS) Error(_SC("too many digits for an Hex number"));
+		else {
+			NEXT();
+			type = THEX;
+			while(isxdigit(CUR_CHAR)) {
+				APPEND_CHAR(CUR_CHAR);
+				NEXT();
+			}
+			if(_longstr.size() > MAX_HEX_DIGITS) Error(_SC("too many digits for an Hex number"));
+		}
 	}
 	else {
-		APPEND_CHAR((int)firstchar);
+		// C::B patch: Eliminate compiler warnings
+		APPEND_CHAR((char)firstchar);
 		while (CUR_CHAR == _SC('.') || scisdigit(CUR_CHAR) || isexponent(CUR_CHAR)) {
             if(CUR_CHAR == _SC('.')) type = TFLOAT;
 			if(isexponent(CUR_CHAR)) {
@@ -408,7 +436,7 @@ SQInteger SQLexer::ReadNumber()
 				}
 				if(!scisdigit(CUR_CHAR)) Error(_SC("exponent expected"));
 			}
-			
+
 			APPEND_CHAR(CUR_CHAR);
 			NEXT();
 		}
@@ -424,6 +452,9 @@ SQInteger SQLexer::ReadNumber()
 		return TK_INTEGER;
 	case THEX:
 		LexHexadecimal(&_longstr[0],(SQUnsignedInteger *)&_nvalue);
+		return TK_INTEGER;
+	case TOCTAL:
+		LexOctal(&_longstr[0],(SQUnsignedInteger *)&_nvalue);
 		return TK_INTEGER;
 	}
 	return 0;
