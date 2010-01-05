@@ -47,7 +47,7 @@ static void Colourise4glDoc(unsigned int startPos, int length, int initStyle, Wo
     WordList &keywords2 = *keywordlists[1];   // block opening keywords, only when SentenceStart
     WordList &keywords3 = *keywordlists[2];   // block opening keywords
     //WordList &keywords4 = *keywordlists[3]; // preprocessor keywords. Not implemented
-
+    
 
 	int visibleChars = 0;
 	int mask;
@@ -101,7 +101,9 @@ static void Colourise4glDoc(unsigned int startPos, int length, int initStyle, Wo
 				if (!IsAWordChar(sc.ch) && sc.ch != '-') {
 					char s[1000];
 					sc.GetCurrentLowered(s, sizeof(s));
+					/* C::B begin */
 					if ( ((sc.state & 0x10) == 0) && (keywords2.InList(s) || keywords3.InList(s)) ) {
+					/* C::B end */
 						sc.ChangeState(SCE_4GL_BLOCK | ResetSentenceStart);
 					}
 					else if (keywords1.InList(s)) {
@@ -180,7 +182,7 @@ static void Colourise4glDoc(unsigned int startPos, int length, int initStyle, Wo
 			} else if (isoperator(static_cast<char>(sc.ch))) {
 		/* 	This code allows highlight of handles. Alas, it would cause the phrase "last-event:function"
 			to be recognized as a BlockBegin */
-
+			
 				if (sc.ch == ':')
 					sc.SetState(SCE_4GL_OPERATOR & SetSentenceStart);
 				/* else */

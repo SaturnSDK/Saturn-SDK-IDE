@@ -238,6 +238,13 @@
 #define wxSCI_CACHE_CARET 1
 #define wxSCI_CACHE_PAGE 2
 #define wxSCI_CACHE_DOCUMENT 3
+
+// Control font anti-aliasing.
+#define wxSCI_EFF_QUALITY_MASK 0xF
+#define wxSCI_EFF_QUALITY_DEFAULT 0
+#define wxSCI_EFF_QUALITY_NON_ANTIALIASED 1
+#define wxSCI_EFF_QUALITY_ANTIALIASED 2
+#define wxSCI_EFF_QUALITY_LCD_OPTIMIZED 3
 #define wxSCI_EDGE_NONE 0
 #define wxSCI_EDGE_LINE 1
 #define wxSCI_EDGE_BACKGROUND 2
@@ -2179,26 +2186,6 @@
 // END of generated section
 //----------------------------------------------------------------------
 
-// Function Aliases
-#define PointXFromPosition(pos)     PointFromPosition(pos).x
-#define PointYFromPosition(pos)     PointFromPosition(pos).y
-#define SetCursorType               SetSCICursor
-#define GetCursorType               GetSCICursor
-#define SetPositionCache            SetPositionCacheSize
-#define GetPositionCache            GetPositionCacheSize
-#define SetCaretLineBackAlpha       SetCaretLineBackgroundAlpha
-#define GetCaretLineBackAlpha       GetCaretLineBackgroundAlpha
-#define IndicatorSetUnder           IndicatorSetUnderline
-#define IndicatorGetUnder           IndicatorGetUnderline
-#define IndicSetAlpha               IndicatorSetAlpha
-#define IndicGetAlpha               IndicatorGetAlpha
-#define CharPositionFromPoint       PositionFromPoint
-#define CharPositionFromPointClose  PositionFromPointClose
-#define SetAdditionalCaretFore      SetAdditionalCaretForeground
-#define GetAdditionalCaretFore      GetAdditionalCaretForeground
-#define SetAdditionalSelFore        SetAdditionalSelForeground
-#define SetAdditionalSelBack        SetAdditionalSelBackground
-
 class  ScintillaWX;                      // forward declare
 class  WordList;
 struct SCNotification;
@@ -2591,10 +2578,10 @@ public:
     wxColour IndicatorGetForeground(int indic) const;
 
     // Set an indicator to draw under text or over(default).
-    void IndicatorSetUnderline(int indic, bool under);
+    void IndicatorSetUnder(int indic, bool under);
 
     // Retrieve whether indicator drawn under or over text.
-    bool IndicatorGetUnderline(int indic) const;
+    bool IndicatorGetUnder(int indic) const;
 
     // Set the foreground colour of all whitespace and whether to use this setting.
     void SetWhitespaceForeground(bool useSetting, const wxColour& fore);
@@ -3155,6 +3142,12 @@ public:
     // and then the foreground. This avoids chopping off characters that overlap the next run.
     void SetTwoPhaseDraw(bool twoPhase);
 
+    // Choose the quality level for text from the FontQuality enumeration.
+    void SetFontQuality(int fontQuality);
+
+    // Retrieve the quality level for text.
+    int GetFontQuality() const;
+
     // Make the target range start and end be the same as the selection range start and end.
     void TargetFromSelection();
 
@@ -3659,10 +3652,10 @@ public:
     void SelectionDuplicate();
 
     // Set background alpha of the caret line.
-    void SetCaretLineBackgroundAlpha(int alpha);
+    void SetCaretLineBackAlpha(int alpha);
 
     // Get the background alpha of the caret line.
-    int GetCaretLineBackgroundAlpha() const;
+    int GetCaretLineBackAlpha() const;
 
     // Set the style of the caret to be drawn.
     void SetCaretStyle(int caretStyle);
@@ -3711,8 +3704,8 @@ public:
 
     // Compact the document buffer and return a read-only pointer to the
     // characters in the document.
+    // defined later as wxUIntPtr GetCharacterPointer() const;
     //int GetCharacterPointer() const;
-    //defined later as wxUIntPtr GetCharacterPointer() const;
 
     // Always interpret keyboard input as Unicode
     void SetKeysUnicode(bool keysUnicode);
@@ -3721,10 +3714,10 @@ public:
     bool GetKeysUnicode() const;
 
     // Set alpha value for an indicator to draw under text or over(default).
-    void IndicatorSetAlpha(int indicator, int alpha);
+    void IndicSetAlpha(int indicator, int alpha);
 
     // Retrieve alpha value used for indicator drawn under or over text.
-    int IndicatorGetAlpha(int indicator) const;
+    int IndicGetAlpha(int indicator) const;
 
     // Set extra ascent for each line
     void SetExtraAscent(int extraAscent);
@@ -3806,6 +3799,13 @@ public:
 
     // Add a container action to the undo stack
     void AddUndoAction(int token, int flags);
+
+    // Find the position of a character from a point within the window.
+    int CharPositionFromPoint(int x, int y);
+
+    // Find the position of a character from a point within the window.
+    // Return INVALID_POSITION if not close to text.
+    int CharPositionFromPointClose(int x, int y);
 
     // Set whether multiple selections can be made
     void SetMultipleSelection(bool multipleSelection);
@@ -3892,11 +3892,11 @@ public:
 
     // Set the foreground colour of additional selections.
     // Must have previously called SetSelFore with non-zero first argument for this to have an effect.
-    void SetAdditionalSelForeground(const wxColour& fore);
+    void SetAdditionalSelFore(const wxColour& fore);
 
     // Set the background colour of additional selections.
     // Must have previously called SetSelBack with non-zero first argument for this to have an effect.
-    void SetAdditionalSelBackground(const wxColour& back);
+    void SetAdditionalSelBack(const wxColour& back);
 
     // Set the alpha of the selection.
     void SetAdditionalSelAlpha(int alpha);
@@ -3905,10 +3905,10 @@ public:
     int GetAdditionalSelAlpha() const;
 
     // Set the foreground colour of additional carets.
-    void SetAdditionalCaretForeground(const wxColour& fore);
+    void SetAdditionalCaretFore(const wxColour& fore);
 
     // Get the foreground colour of additional carets.
-    wxColour GetAdditionalCaretForeground() const;
+    wxColour GetAdditionalCaretFore() const;
 
     // Set the main selection to the next selection.
     void RotateSelection();
@@ -3953,6 +3953,9 @@ public:
 
     // Retrieve the number of bits the current lexer needs for styling.
     int GetStyleBitsNeeded() const;
+
+    // Retrieve the name of the lexer.
+    wxString GetLexerLanguage() const;
 
 // END of generated section
 //----------------------------------------------------------------------
@@ -4115,6 +4118,9 @@ public:
 
 #ifndef SWIG
 protected:
+    virtual wxString DoGetValue() const { return GetText(); }
+    virtual wxWindow *GetEditableWindow() { return this; }
+
     // Event handlers
     void OnPaint(wxPaintEvent& evt);
     void OnScrollWin(wxScrollWinEvent& evt);

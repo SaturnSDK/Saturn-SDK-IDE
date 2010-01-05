@@ -2017,7 +2017,9 @@ set void SetSelectionNStart=2584(int selection, position pos)
 get position GetSelectionNStart=2585(int selection,)
 
 # Sets the position that ends the selection - this becomes the currentPosition.
+# C::B begin #
 set void SetSelectionNEnd=2586(int selection, position pos)
+# C::B end #
 
 # Returns the position at the end of the selection.
 get position GetSelectionNEnd=2587(int selection,)

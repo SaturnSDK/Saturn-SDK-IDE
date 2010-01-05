@@ -424,7 +424,7 @@ void wxScintilla::SetViewWhiteSpace (int viewWS)
 // Find the position from a point within the window.
 int wxScintilla::PositionFromPoint (wxPoint pt) const
 {
-        return SendMsg(SCI_POSITIONFROMPOINT, pt.x, pt.y);
+    return SendMsg(SCI_POSITIONFROMPOINT, pt.x, pt.y);
 }
 
 // Find the position from a point within the window but return
@@ -980,13 +980,13 @@ wxColour wxScintilla::IndicatorGetForeground (int indic) const
 }
 
 // Set an indicator to draw under text or over(default).
-void wxScintilla::IndicatorSetUnderline(int indic, bool under)
+void wxScintilla::IndicatorSetUnder(int indic, bool under)
 {
     SendMsg(SCI_INDICSETUNDER, indic, under);
 }
 
 // Retrieve whether indicator drawn under or over text.
-bool wxScintilla::IndicatorGetUnderline(int indic) const
+bool wxScintilla::IndicatorGetUnder(int indic) const
 {
     return SendMsg(SCI_INDICGETUNDER, indic, 0) != 0;
 }
@@ -1457,6 +1457,7 @@ int wxScintilla::FindText (int minPos, int maxPos,
     int ret = SendMsg(SCI_FINDTEXT, flags, (sptr_t)&ft);
     if (lengthFound)
         *lengthFound = ft.chrgText.cpMax - ft.chrgText.cpMin;
+
     return ret;
 }
 
@@ -2162,6 +2163,18 @@ bool wxScintilla::GetTwoPhaseDraw() const
 void wxScintilla::SetTwoPhaseDraw (bool twoPhase)
 {
     SendMsg(SCI_SETTWOPHASEDRAW, twoPhase, 0);
+}
+
+// Choose the quality level for text from the FontQuality enumeration.
+void wxScintilla::SetFontQuality(int fontQuality)
+{
+    SendMsg(SCI_SETFONTQUALITY, fontQuality, 0);
+}
+
+// Retrieve the quality level for text.
+int wxScintilla::GetFontQuality() const
+{
+    return SendMsg(SCI_GETFONTQUALITY, 0, 0);
 }
 
 // Make the target range start and end be the same as the selection range start and end.
@@ -3183,13 +3196,13 @@ void wxScintilla::SelectionDuplicate ()
 }
 
 // Set background alpha of the caret line.
-void wxScintilla::SetCaretLineBackgroundAlpha(int alpha)
+void wxScintilla::SetCaretLineBackAlpha(int alpha)
 {
     SendMsg(SCI_SETCARETLINEBACKALPHA, alpha, 0);
 }
 
 // Get the background alpha of the caret line.
-int wxScintilla::GetCaretLineBackgroundAlpha () const
+int wxScintilla::GetCaretLineBackAlpha () const
 {
     return SendMsg(SCI_GETCARETLINEBACKALPHA, 0, 0);
 }
@@ -3286,6 +3299,7 @@ void wxScintilla::CopyAllowLine()
 
 // Compact the document buffer and return a read-only pointer to the
 // characters in the document.
+// defined later as wxUIntPtr wxScintilla::GetCharacterPointer() const;
 /*
 int wxScintilla::GetCharacterPointer() const
 {
@@ -3306,13 +3320,13 @@ bool wxScintilla::GetKeysUnicode() const
 }
 
 // Set the alpha fill colour of the given indicator.
-void wxScintilla::IndicatorSetAlpha(int indicator, int alpha)
+void wxScintilla::IndicSetAlpha(int indicator, int alpha)
 {
     SendMsg(SCI_INDICSETALPHA, indicator, alpha);
 }
 
 // Get the alpha fill colour of the given indicator.
-int wxScintilla::IndicatorGetAlpha(int indicator) const
+int wxScintilla::IndicGetAlpha(int indicator) const
 {
     return SendMsg(SCI_INDICGETALPHA, indicator, 0);
 }
@@ -3509,6 +3523,19 @@ int wxScintilla::AnnotationGetStyleOffset() const
 void wxScintilla::AddUndoAction(int token, int flags)
 {
     SendMsg(SCI_ADDUNDOACTION, token, flags);
+}
+
+// Find the position of a character from a point within the window.
+int wxScintilla::CharPositionFromPoint(int x, int y)
+{
+    return SendMsg(SCI_CHARPOSITIONFROMPOINT, x, y);
+}
+
+// Find the position of a character from a point within the window.
+// Return INVALID_POSITION if not close to text.
+int wxScintilla::CharPositionFromPointClose(int x, int y)
+{
+    return SendMsg(SCI_CHARPOSITIONFROMPOINTCLOSE, x, y);
 }
 
 // Set whether multiple selections can be made
@@ -3718,14 +3745,14 @@ int wxScintilla::GetRectangularSelectionModifier() const
 
 // Set the foreground colour of additional selections.
 // Must have previously called SetSelFore with non-zero first argument for this to have an effect.
-void wxScintilla::SetAdditionalSelForeground(const wxColour& fore)
+void wxScintilla::SetAdditionalSelFore(const wxColour& fore)
 {
     SendMsg(SCI_SETADDITIONALSELFORE, wxColourAsLong(fore), 0);
 }
 
 // Set the background colour of additional selections.
 // Must have previously called SetSelBack with non-zero first argument for this to have an effect.
-void wxScintilla::SetAdditionalSelBackground(const wxColour& back)
+void wxScintilla::SetAdditionalSelBack(const wxColour& back)
 {
     SendMsg(SCI_SETADDITIONALSELBACK, wxColourAsLong(back), 0);
 }
@@ -3743,13 +3770,13 @@ int wxScintilla::GetAdditionalSelAlpha() const
 }
 
 // Set the foreground colour of additional carets.
-void wxScintilla::SetAdditionalCaretForeground(const wxColour& fore)
+void wxScintilla::SetAdditionalCaretFore(const wxColour& fore)
 {
     SendMsg(SCI_SETADDITIONALCARETFORE, wxColourAsLong(fore), 0);
 }
 
 // Get the foreground colour of additional carets.
-wxColour wxScintilla::GetAdditionalCaretForeground() const
+wxColour wxScintilla::GetAdditionalCaretFore() const
 {
     long c = SendMsg(SCI_GETADDITIONALCARETFORE, 0, 0);
     return wxColourFromLong(c);
@@ -3891,6 +3918,23 @@ int wxScintilla::GetPropertyInt (const wxString& key) const
 int wxScintilla::GetStyleBitsNeeded () const
 {
     return SendMsg(SCI_GETSTYLEBITSNEEDED, 0, 0);
+}
+
+// Retrieve the name of the lexer.
+wxString wxScintilla::GetLexerLanguage() const
+{
+    int len (0);
+
+    // determine the lexers language string length
+    len = SendMsg(SCI_GETLEXERLANGUAGE, 0, 0);
+    if (!len) return wxEmptyString;
+
+    wxMemoryBuffer mbuf(len+2);
+    char* buf = (char*)mbuf.GetWriteBuf(len+1);
+    SendMsg(SCI_GETLEXERLANGUAGE, 0, (sptr_t)buf);
+    mbuf.UngetWriteBuf(len);
+    mbuf.AppendByte(0);
+    return sci2wx(buf);
 }
 
 // END of generated section
