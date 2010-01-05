@@ -14,6 +14,7 @@
     #include "manager.h"
     #include "logmanager.h"
     #include <wx/dynarray.h>
+    #include <wx/regex.h>
     #include <wx/wxscintilla.h>
 #endif
 
@@ -178,7 +179,11 @@ void EditorLexerLoader::DoSingleKeywordNode(HighlightLanguage language, TiXmlEle
             wxString value(keywords->Attribute("value"), wxConvUTF8);
             regex.Replace(&value, _T(" "));
 
+            #if wxCHECK_VERSION(2, 9, 0)
+            m_pTarget->SetKeywords(language, keyidx, value );
+            #else
             m_pTarget->SetKeywords(language, keyidx, wxString ( value, wxConvUTF8 ) );
+            #endif
         }
 
         keywords = keywords->NextSiblingElement(nodename.mb_str());
