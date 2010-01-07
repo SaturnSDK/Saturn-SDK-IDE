@@ -330,7 +330,7 @@ bool EditorHasNameUnderCursor(wxString& NameUnderCursor, bool& IsInclude)
         }
     }
     return ReturnValue;
-} // end of EditorHasNameUnderCursor
+}
 
 void CodeCompletion::BuildModuleMenu(const ModuleType type, wxMenu* menu, const FileTreeData* data)
 {
@@ -388,7 +388,7 @@ void CodeCompletion::BuildModuleMenu(const ModuleType type, wxMenu* menu, const 
             Manager::Get()->GetLogManager()->DebugLog(_T("Could not find Insert menu!"));
         }
     }
-} // end of BuildModuleMenu
+}
 
 bool CodeCompletion::BuildToolBar(wxToolBar* toolBar)
 {
@@ -528,7 +528,7 @@ int CodeCompletion::CodeComplete()
 
     FileType ft = FileTypeOf(ed->GetShortName());
 
-    Parser* parser = m_NativeParser.FindParserFromEditor(ed);
+    Parser* parser = m_NativeParser.GetParserPtr();
     if (!parser)
     {
         Manager::Get()->GetLogManager()->DebugLog(_T("Active editor has no associated parser?!"));
@@ -762,7 +762,7 @@ void CodeCompletion::CodeCompleteIncludes()
     if (!ed)
         return;
 
-    Parser* parser = m_NativeParser.FindParserFromActiveEditor();
+    Parser* parser = m_NativeParser.GetParserPtr();
     const bool caseSens = parser ? parser->Options().caseSensitive : false;
 
     FileType ft = FileTypeOf(ed->GetShortName());
@@ -917,7 +917,7 @@ int CodeCompletion::DoClassMethodDeclImpl()
     if ( ft != ftHeader && ft != ftSource) // only parse source/header files
         return -4;
 
-    Parser* parser = m_NativeParser.FindParserFromActiveEditor();
+    Parser* parser = m_NativeParser.GetParserPtr();
     if (!parser)
     {
         Manager::Get()->GetLogManager()->DebugLog(_T("Active editor has no associated parser ?!?"));
@@ -966,7 +966,7 @@ int CodeCompletion::DoAllMethodsImpl()
     if ( ft != ftHeader && ft != ftSource) // only parse source/header files
         return -4;
 
-    Parser* parser = m_NativeParser.FindParserFromActiveEditor();
+    Parser* parser = m_NativeParser.GetParserPtr();
     if (!parser)
     {
         Manager::Get()->GetLogManager()->DebugLog(_T("Active editor has no associated parser ?!?"));
@@ -1259,7 +1259,7 @@ void CodeCompletion::OnReparseActiveEditor(CodeBlocksEvent& event)
         EditorBase* ed = event.GetEditor();
         if (!ed)
             return;
-        Parser* parser = m_NativeParser.FindParserFromEditor(ed);
+        Parser* parser = m_NativeParser.GetParserPtr();
         if (!parser)
             return;
         parser->Reparse(ed->GetFilename());
@@ -1279,7 +1279,7 @@ bool LessFunctionScope(const CodeCompletion::FunctionScope& fs1, const CodeCompl
     {
         return fs1.Name < fs2.Name;
     }
-} // end of LessFunctionScope
+}
 
 
 // help method in finding the namespace position in the vector for the namespace containing the current line
@@ -1299,7 +1299,7 @@ int CodeCompletion::NameSpacePosition() const
             }
     } // end for : idx : idxNs
     return retValue;
-} // end of NameSpacePosition
+}
 
 // help method in finding the function position in the vector for the function containing the current line
 int CodeCompletion::FunctionPosition() const
@@ -1402,7 +1402,7 @@ void CodeCompletion::ParseFunctionsAndFillToolbar(bool force)
         funcdata->m_NameSpaces.clear();
         funcdata->parsed = true;
 
-        Parser* parser = m_NativeParser.FindParserFromEditor(ed);
+        Parser* parser = m_NativeParser.GetParserPtr();
         if (!parser)
             return;
         TokenIdxSet result;
@@ -1437,10 +1437,10 @@ void CodeCompletion::ParseFunctionsAndFillToolbar(bool force)
         sort(funcdata->m_FunctionsScope.begin(), funcdata->m_FunctionsScope.end(), LessFunctionScope);
         m_ToolbarChanged = true;
     }
-    // *** Part 2: Fill the toolbar ***
 
+    // *** Part 2: Fill the toolbar ***
     m_FunctionsScope = funcdata->m_FunctionsScope;
-    m_NameSpaces = funcdata->m_NameSpaces;
+    m_NameSpaces     = funcdata->m_NameSpaces;
 
     // Does the toolbar need a refresh?
     if (m_ToolbarChanged || m_LastFile!=filename)
@@ -1491,7 +1491,7 @@ void CodeCompletion::ParseFunctionsAndFillToolbar(bool force)
             m_Scope->SetSelection(wxNOT_FOUND);
         }
     }
-} // end of ParseFunctionsAndFillToolbar
+}
 
 void CodeCompletion::OnEditorOpen(CodeBlocksEvent& event)
 {
@@ -1589,7 +1589,7 @@ void CodeCompletion::OnValueTooltip(CodeBlocksEvent& event)
             return;
         int endOfWord = ed->GetControl()->WordEndPosition(pos, true);
 
-        Parser* parser = m_NativeParser.FindParserFromEditor(ed);
+        Parser* parser = m_NativeParser.GetParserPtr();
         if (parser)
         {
             TokenIdxSet result;
@@ -1654,7 +1654,7 @@ void CodeCompletion::OnUpdateUI(wxUpdateUIEvent& event)
 
     // must do...
     event.Skip();
-} // end of OnUpdateUI
+}
 
 void CodeCompletion::OnCodeComplete(wxCommandEvent& event)
 {
@@ -1699,7 +1699,7 @@ void CodeCompletion::OnGotoFunction(wxCommandEvent& event)
         if (token && (token->m_TokenKind == tkFunction || token->m_TokenKind == tkConstructor || token->m_TokenKind == tkDestructor))
         {
             tokens.Add(token->DisplayName());
-            tmpsearch.AddItem(token->DisplayName(),token);
+            tmpsearch.AddItem(token->DisplayName(), token);
         }
     }
     IncrementalSelectListDlg dlg(Manager::Get()->GetAppWindow(), tokens, _("Select function..."), _("Please select function to go to:"));
@@ -1753,19 +1753,11 @@ void CodeCompletion::OnGotoDeclaration(wxCommandEvent& event)
         }
     }
     if (!MoveOn)
-    {
         return;
-    }
 
-    Parser* parser = m_NativeParser.FindParserFromActiveEditor();
+    Parser* parser = m_NativeParser.GetParserPtr();
     if (!parser)
-    {
-        parser = m_NativeParser.FindParserFromActiveProject(); // get parser of active project, then
-    }
-    if (!parser)
-    {
         return;
-    }
 
     // prepare a boolean filter for declaration/implementation
     bool isDecl = event.GetId() == idGotoDeclaration || event.GetId() == idMenuGotoDeclaration;
@@ -1852,7 +1844,7 @@ void CodeCompletion::OnGotoDeclaration(wxCommandEvent& event)
     {
         cbMessageBox(wxString::Format(_("Not found: %s"), NameUnderCursor.c_str()), _("Warning"), wxICON_WARNING);
     }
-} // end of OnGotoDeclaration
+}
 
 void CodeCompletion::OnOpenIncludeFile(wxCommandEvent& event)
 {
@@ -1878,13 +1870,8 @@ void CodeCompletion::OnOpenIncludeFile(wxCommandEvent& event)
         return;
     }
 
-    Parser* parser = m_NativeParser.FindParserFromActiveEditor();
-    if (!parser)
-    {
-        parser = m_NativeParser.FindParserFromActiveProject(); // get parser of active project, then
-    }
-
     wxArrayString foundSet;
+    Parser* parser = m_NativeParser.GetParserPtr();
     if (parser)
     {
         // search in all parser's include dirs
@@ -1960,7 +1947,7 @@ void CodeCompletion::OnOpenIncludeFile(wxCommandEvent& event)
     }
 
     cbMessageBox(wxString::Format(_("Not found: %s"), NameUnderCursor.c_str()), _("Warning"), wxICON_WARNING);
-} // end of OnOpenIncludeFile
+}
 
 void CodeCompletion::EditorEventHook(cbEditor* editor, wxScintillaEvent& event)
 {
@@ -2100,11 +2087,9 @@ void CodeCompletion::EditorEventHook(cbEditor* editor, wxScintillaEvent& event)
     {
         if (m_NeedReparse)
         {
-            Parser* parser = m_NativeParser.FindParserFromActiveEditor();
+            Parser* parser = m_NativeParser.GetParserPtr();
             if (parser)
-            {
                 parser->Reparse(editor->GetFilename());
-            }
             m_NeedReparse= false;
         }
         else
