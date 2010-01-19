@@ -217,8 +217,6 @@ void DebuggerGDB::OnAttachReal()
     // register event sink
     Manager::Get()->RegisterEventSink(cbEVT_EDITOR_TOOLTIP, new cbEventFunctor<DebuggerGDB, CodeBlocksEvent>(this, &DebuggerGDB::OnValueTooltip));
     Manager::Get()->RegisterEventSink(cbEVT_BUILDTARGET_SELECTED, new cbEventFunctor<DebuggerGDB, CodeBlocksEvent>(this, &DebuggerGDB::OnBuildTargetSelected));
-
-    Manager::Get()->RegisterEventSink(cbEVT_PROJECT_CLOSE, new cbEventFunctor<DebuggerGDB, CodeBlocksEvent>(this, &DebuggerGDB::OnProjectClosed));
 }
 
 void DebuggerGDB::OnRelease(bool appShutDown)
@@ -1819,41 +1817,6 @@ void DebuggerGDB::CleanupWhenProjectClosed(cbProject *project)
     DeleteAllProjectBreakpoints(project);
     cbBreakpointsDlg *dlg = Manager::Get()->GetDebuggerManager()->GetBreakpointDialog();
     dlg->Reload();
-}
-
-void DebuggerGDB::OnProjectClosed(CodeBlocksEvent& event)
-{
-    // allow others to catch this
-    event.Skip();
-
-    // remove all search dirs stored for this project so we don't have conflicts
-    // if a newly opened project happens to use the same memory address
-    GetSearchDirs(event.GetProject()).clear();
-
-    // the same for remote debugging
-    GetRemoteDebuggingMap(event.GetProject()).clear();
-
-    // remove all breakpoints belonging to the closed project
-    DeleteAllProjectBreakpoints(event.GetProject());
-    cbBreakpointsDlg *dlg = Manager::Get()->GetDebuggerManager()->GetBreakpointDialog();
-    dlg->Reload();
-
-    // when a project closes, make sure it's not the actively debugged project.
-    // if so, end debugging immediately!
-
-    if (!m_State.HasDriver() || !m_pProject)
-        return;
-
-    if (event.GetProject() == m_pProject)
-    {
-        AnnoyingDialog dlg(_("Project closed while debugging message"),
-                           _("The project you were debugging has closed.\n"
-                             "(The application most likely just finished.)\n"
-                             "The debugging session will terminate immediately."),
-                            wxART_WARNING, AnnoyingDialog::OK, wxID_OK);
-        dlg.ShowModal();
-        Stop();
-    }
 }
 
 void DebuggerGDB::OnIdle(wxIdleEvent& event)
