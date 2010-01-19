@@ -34,7 +34,6 @@ namespace
     const int idSettingJumpDefault = wxNewId();
     const int idSettingSwitchDefault = wxNewId();
 }
-// TODO (obfuscated#): Mark (changed color) the current frame in the list control
 
 BEGIN_EVENT_TABLE(cbBacktraceDlg, wxPanel)
     EVT_LIST_ITEM_RIGHT_CLICK(idList, cbBacktraceDlg::OnListRightClick)

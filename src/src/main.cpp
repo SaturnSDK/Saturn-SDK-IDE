@@ -205,6 +205,7 @@ int idViewLayoutDelete = XRCID("idViewLayoutDelete");
 int idViewLayoutSave = XRCID("idViewLayoutSave");
 int idViewToolbars = XRCID("idViewToolbars");
 int idViewToolMain = XRCID("idViewToolMain");
+int idViewToolDebugger = XRCID("idViewToolDebugger");
 int idViewManager = XRCID("idViewManager");
 int idViewLogManager = XRCID("idViewLogManager");
 int idViewStatusbar = XRCID("idViewStatusbar");
@@ -425,6 +426,7 @@ BEGIN_EVENT_TABLE(MainFrame, wxFrame)
     EVT_MENU(idViewLayoutSave, MainFrame::OnViewLayoutSave)
     EVT_MENU(idViewLayoutDelete, MainFrame::OnViewLayoutDelete)
     EVT_MENU(idViewToolMain, MainFrame::OnToggleBar)
+    EVT_MENU(XRCID("idViewToolDebugger"), MainFrame::OnToggleBar)
     EVT_MENU(idViewLogManager, MainFrame::OnToggleBar)
     EVT_MENU(idViewManager, MainFrame::OnToggleBar)
     EVT_MENU(idViewStatusbar, MainFrame::OnToggleStatusBar)
@@ -977,12 +979,16 @@ void MainFrame::CreateToolbars()
     Manager::Get()->AddonToolBar(m_pToolbar,xrcToolbarName);
 
     m_pToolbar->Realize();
-
     m_pToolbar->SetInitialSize();
+
+    wxToolBar *debugger_toolbar = Manager::Get()->GetDebuggerManager()->GetToolbar();
 
     // add toolbars in docking system
     m_LayoutManager.AddPane(m_pToolbar, wxAuiPaneInfo().
                           Name(wxT("MainToolbar")).Caption(_("Main Toolbar")).
+                          ToolbarPane().Top());
+    m_LayoutManager.AddPane(debugger_toolbar, wxAuiPaneInfo().
+                          Name(wxT("DebuggerToolbar")).Caption(_("Debugger Toolbar")).
                           ToolbarPane().Top());
     DoUpdateLayout();
 
@@ -3845,6 +3851,7 @@ void MainFrame::OnViewMenuUpdateUI(wxUpdateUIEvent& event)
 
     // toolbars
     mbar->Check(idViewToolMain, m_LayoutManager.GetPane(m_pToolbar).IsShown());
+    mbar->Check(idViewToolDebugger, m_LayoutManager.GetPane(Manager::Get()->GetDebuggerManager()->GetToolbar(false)).IsShown());
     wxMenu* viewToolbars = 0;
     GetMenuBar()->FindItem(idViewToolMain, &viewToolbars);
     if (viewToolbars)
@@ -3946,6 +3953,8 @@ void MainFrame::OnToggleBar(wxCommandEvent& event)
         win = m_pInfoPane;
     else if (event.GetId() == idViewToolMain)
         win = m_pToolbar;
+    else if (event.GetId() == idViewToolDebugger)
+        win = Manager::Get()->GetDebuggerManager()->GetToolbar();
     else
     {
         wxString pluginName = m_PluginIDsMap[event.GetId()];

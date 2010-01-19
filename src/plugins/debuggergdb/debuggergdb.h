@@ -127,7 +127,6 @@ class DebuggerGDB : public cbDebuggerPlugin
         int DoDebug(bool breakOnEntry);
 
         void OnAddSymbolFile(wxCommandEvent& event);
-        void OnProjectClosed(CodeBlocksEvent& event);
         void OnValueTooltip(CodeBlocksEvent& event);
         void DeleteAllProjectBreakpoints(cbProject* project);
         void OnBuildTargetSelected(CodeBlocksEvent& event);

@@ -55,17 +55,23 @@ void cbThreadsDlg::Reload()
 
     m_list->Freeze();
     m_list->DeleteAllItems();
+    long active_index = -1;
     for (int ii = 0; ii < plugin->GetThreadsCount(); ++ii)
     {
         const cbThread& thread = plugin->GetThread(ii);
 
-        int index = m_list->InsertItem(m_list->GetItemCount(), thread.IsActive() ? wxT("-->") : wxT(""));
+        long index = m_list->InsertItem(m_list->GetItemCount(), thread.IsActive() ? wxT("-->") : wxT(""));
 
         m_list->SetItem(index, 1, wxString::Format(wxT("%d"), thread.GetNumber()));
         m_list->SetItem(index, 2, thread.GetInfo());
         if (thread.IsActive())
+        {
             m_list->SetItemBackgroundColour(index, wxColor(255, 0, 0));
+            active_index = index;
+        }
     }
+    if (active_index != -1)
+        m_list->EnsureVisible(active_index);
     m_list->Thaw();
     for (int ii = 0; ii < m_list->GetColumnCount(); ++ii)
     {

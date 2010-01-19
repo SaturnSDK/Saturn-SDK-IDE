@@ -167,6 +167,20 @@ bool WatchRawDialogAdapter::DoShowDialog(wxPropertyGrid* WXUNUSED(propGrid), wxP
     return false;
 }
 
+class WatchesDropTarget : public wxTextDropTarget
+{
+public:
+    virtual bool OnDropText(wxCoord x, wxCoord y, const wxString& text)
+    {
+        cbDebuggerPlugin *activeDebugger = Manager::Get()->GetDebuggerManager()->GetActiveDebugger();
+        cbWatch *watch = activeDebugger->AddWatch(text);
+        if (watch)
+            Manager::Get()->GetDebuggerManager()->GetWatchesDialog()->AddWatch(watch);
+        return true;
+    }
+private:
+};
+
 WatchesDlg::WatchesDlg() :
     wxPanel(Manager::Get()->GetAppWindow(), -1),
     m_append_empty_watch(false)
@@ -176,11 +190,12 @@ WatchesDlg::WatchesDlg() :
                                 wxPG_SPLITTER_AUTO_CENTER | wxTAB_TRAVERSAL);
 
     m_grid->SetExtraStyle(wxPG_EX_DISABLE_TLP_TRACKING);
+    m_grid->SetDropTarget(new WatchesDropTarget);
+    m_grid->SetColumnCount(3);
     bs->Add(m_grid, 1, wxEXPAND | wxALL);
     SetAutoLayout(TRUE);
     SetSizer(bs);
 
-//    m_grid->MakeColumnEditable(0);
     m_grid->Append(new WatchesProperty(wxT(""), wxT(""), NULL));
 }
 
@@ -190,13 +205,15 @@ void AppendChildren(wxPropertyGrid &grid, wxPGProperty &property, cbWatch &watch
     {
         cbWatch &child = *watch.GetChild(ii);
 
-        wxString symbol, value;
+        wxString symbol, value, type;
         child.GetSymbol(symbol);
         child.GetValue(value);
+        child.GetType(type);
 
         wxPGProperty *prop = new WatchesProperty(symbol, value, &child);
         prop->SetExpanded(child.IsExpanded());
-        grid.AppendIn(&property, prop);
+        wxPGProperty *new_prop = grid.AppendIn(&property, prop);
+        grid.SetPropertyAttribute(new_prop, wxT("Units"), type);
 
         if(child.IsChanged())
             grid.SetPropertyTextColour(prop, wxColor(255, 0, 0));
@@ -215,15 +232,17 @@ void WatchesDlg::UpdateWatches()
         if(!it->property)
             continue;
 
-        wxString value, symbol;
+        wxString value, symbol, type;
         it->watch->GetSymbol(symbol);
         it->watch->GetValue(value);
         it->property->SetValue(value);
         it->property->SetExpanded(it->watch->IsExpanded());
+        it->watch->GetType(type);
         if(it->watch->IsChanged())
             m_grid->SetPropertyTextColour(it->property, wxColor(255, 0, 0));
         else
             m_grid->SetPropertyColourToDefault(it->property);
+        m_grid->SetPropertyAttribute(it->property, wxT("Units"), type);
         it->watch->MarkAsChanged(false);
 
         it->property->DeleteChildren();
