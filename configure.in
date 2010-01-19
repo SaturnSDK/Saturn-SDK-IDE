@@ -349,7 +349,8 @@ AC_CONFIG_FILES([Makefile
 	src/plugins/scriptedwizard/resources/sdl/Makefile
 	src/plugins/scriptedwizard/resources/sdl/files/Makefile
 	src/plugins/scriptedwizard/resources/sharedlib/Makefile
-	src/plugins/scriptedwizard/resources/sharedlib/files/Makefile
+	src/plugins/scriptedwizard/resources/sharedlib/c/Makefile
+	src/plugins/scriptedwizard/resources/sharedlib/cpp/Makefile
 	src/plugins/scriptedwizard/resources/smartwin/Makefile
 	src/plugins/scriptedwizard/resources/smartwin/files/Makefile
 	src/plugins/scriptedwizard/resources/staticlib/Makefile
@@ -433,8 +434,6 @@ AC_CONFIG_FILES([Makefile
 	src/plugins/contrib/help_plugin/bzip2/Makefile
 	src/plugins/contrib/help_plugin/zlib/Makefile
 	src/plugins/contrib/keybinder/Makefile
-	src/plugins/contrib/lib_finder/Makefile
-	src/plugins/contrib/lib_finder/lib_finder/Makefile
 	src/plugins/contrib/profiler/Makefile
 	src/plugins/contrib/profiler/resources/Makefile
 	src/plugins/contrib/source_exporter/Makefile
@@ -465,6 +464,8 @@ AC_CONFIG_FILES([Makefile
 	src/plugins/contrib/wxSmithContribItems/wxthings/wxthings/Makefile
 	src/plugins/contrib/wxSmithAui/Makefile
 	src/plugins/contrib/wxSmithAui/wxsmithaui.pc
+	src/plugins/contrib/lib_finder/Makefile
+	src/plugins/contrib/lib_finder/lib_finder/Makefile
 	src/plugins/contrib/HexEditor/Makefile
 	src/plugins/contrib/IncrementalSearch/Makefile
 	src/plugins/contrib/MouseSap/Makefile
