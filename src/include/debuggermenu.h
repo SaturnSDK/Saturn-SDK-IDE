@@ -21,6 +21,7 @@ class DebuggerMenuHandler : public wxEvtHandler
     private:
         void OnUpdateUI(wxUpdateUIEvent& event);
         void OnStart(wxCommandEvent& event);
+        void OnBreak(wxCommandEvent& event);
         void OnStop(wxCommandEvent& event);
 
         void OnContinue(wxCommandEvent& event);
@@ -60,11 +61,13 @@ class DebuggerToolbarHandler : public wxEvtHandler
         friend class DebuggerManager;
     public:
         DebuggerToolbarHandler();
-        void LoadToolbar(wxToolBar *toolbar);
+        wxToolBar* GetToolbar(bool create = true);
     private:
         void OnUpdateUI(wxUpdateUIEvent& event);
         void OnToolInfo(wxCommandEvent& event);
         void OnDebugWindows(wxCommandEvent& event);
+
+        wxToolBar *m_Toolbar;
 
         DECLARE_EVENT_TABLE();
 };

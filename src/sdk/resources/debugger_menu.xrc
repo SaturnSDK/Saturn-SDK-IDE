@@ -15,6 +15,14 @@
 
       <help>Run current project in debugger</help>
     </object>
+    <object class="wxMenuItem" name="idDebuggerMenuBreak">
+
+      <label>Break debugger</label>
+
+      <bitmap>images\16x16\dbgstop.png</bitmap>
+
+      <help>Break the debuggee in order to examine its state</help>
+    </object>
     <object class="wxMenuItem" name="idDebuggerMenuStop">
 
       <label>Stop debugger</label>

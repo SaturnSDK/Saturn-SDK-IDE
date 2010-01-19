@@ -31,6 +31,11 @@
       <longhelp>Continue execution until the current frame exits</longhelp>
       <bitmap>images/16x16/dbgstepout.png</bitmap>
     </object>
+    <object class="tool" name="idDebuggerMenuBreak">
+      <tooltip>Break debugger</tooltip>
+      <longhelp>Break the debuggee in order to examine its state</longhelp>
+      <bitmap>images/16x16/dbgstop.png</bitmap>
+    </object>
     <object class="tool" name="idDebuggerMenuStop">
       <tooltip>Stop debugger</tooltip>
       <longhelp>Stop current debugging session</longhelp>

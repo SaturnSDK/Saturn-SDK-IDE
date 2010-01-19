@@ -147,7 +147,7 @@ DebuggerGDB::DebuggerGDB()
     m_pProcess(0L),
     m_PageIndex(-1),
     m_DbgPageIndex(-1),
-    m_pCompiler(0L),
+//    m_pCompiler(0L),
     m_LastExitCode(0),
     m_Pid(0),
     m_PidToAttach(0),
@@ -155,8 +155,7 @@ DebuggerGDB::DebuggerGDB()
     m_HaltAtLine(0),
     m_HasDebugLog(false),
     m_StoppedOnSignal(false),
-    m_pProject(0),
-    m_WaitingCompilerToFinish(false)
+    m_pProject(0)
 {
     if(!Manager::LoadResource(_T("debugger.zip")))
     {
@@ -217,92 +216,15 @@ void DebuggerGDB::OnAttachReal()
 
     // register event sink
     Manager::Get()->RegisterEventSink(cbEVT_EDITOR_TOOLTIP, new cbEventFunctor<DebuggerGDB, CodeBlocksEvent>(this, &DebuggerGDB::OnValueTooltip));
-//    Manager::Get()->RegisterEventSink(cbEVT_EDITOR_OPEN, new cbEventFunctor<DebuggerGDB, CodeBlocksEvent>(this, &DebuggerGDB::OnEditorOpened));
-
-    Manager::Get()->RegisterEventSink(cbEVT_PROJECT_ACTIVATE, new cbEventFunctor<DebuggerGDB, CodeBlocksEvent>(this, &DebuggerGDB::OnProjectActivated));
-    Manager::Get()->RegisterEventSink(cbEVT_PROJECT_CLOSE, new cbEventFunctor<DebuggerGDB, CodeBlocksEvent>(this, &DebuggerGDB::OnProjectClosed));
-
-    Manager::Get()->RegisterEventSink(cbEVT_COMPILER_STARTED, new cbEventFunctor<DebuggerGDB, CodeBlocksEvent>(this, &DebuggerGDB::OnCompilerStarted));
-    Manager::Get()->RegisterEventSink(cbEVT_COMPILER_FINISHED, new cbEventFunctor<DebuggerGDB, CodeBlocksEvent>(this, &DebuggerGDB::OnCompilerFinished));
-
     Manager::Get()->RegisterEventSink(cbEVT_BUILDTARGET_SELECTED, new cbEventFunctor<DebuggerGDB, CodeBlocksEvent>(this, &DebuggerGDB::OnBuildTargetSelected));
+
+    Manager::Get()->RegisterEventSink(cbEVT_PROJECT_CLOSE, new cbEventFunctor<DebuggerGDB, CodeBlocksEvent>(this, &DebuggerGDB::OnProjectClosed));
 }
 
 void DebuggerGDB::OnRelease(bool appShutDown)
 {
     ProjectLoaderHooks::UnregisterHook(m_HookId, true);
     DebuggerManager *dbg_manager = Manager::Get()->GetDebuggerManager();
-//    FIXME (obfuscated#) reimplement this
-//    if (m_pThreadsDlg)
-//    {
-//        CodeBlocksDockEvent evt(cbEVT_REMOVE_DOCK_WINDOW);
-//        evt.pWindow = m_pThreadsDlg;
-//        Manager::Get()->ProcessEvent(evt);
-//        m_pThreadsDlg->Destroy();
-//    }
-//    m_pThreadsDlg = 0;
-
-//    FIXME (obfuscated#) reimplement this
-//    if (m_pExamineMemoryDlg)
-//    {
-//        CodeBlocksDockEvent evt(cbEVT_REMOVE_DOCK_WINDOW);
-//        evt.pWindow = m_pExamineMemoryDlg;
-//        Manager::Get()->ProcessEvent(evt);
-//        m_pExamineMemoryDlg->Destroy();
-//    }
-//    m_pExamineMemoryDlg = 0;
-
-//    FIXME (obfuscated#) reimplement this
-//    if (m_pBreakpointsWindow)
-//    {
-//        CodeBlocksDockEvent evt(cbEVT_REMOVE_DOCK_WINDOW);
-//        evt.pWindow = m_pBreakpointsWindow;
-//        Manager::Get()->ProcessEvent(evt);
-//        m_pBreakpointsWindow->Destroy();
-//    }
-//    m_pBreakpointsWindow = 0;
-
-
-//    FIXME (obfuscated#) reimplement this
-//    if (m_pDisassembly)
-//    {
-//        CodeBlocksDockEvent evt(cbEVT_REMOVE_DOCK_WINDOW);
-//        evt.pWindow = m_pDisassembly;
-//        Manager::Get()->ProcessEvent(evt);
-//        m_pDisassembly->Destroy();
-//    }
-//    m_pDisassembly = 0;
-
-//    FIXME (obfuscated#) reimplement this
-//    if (m_pCPURegisters)
-//    {
-//        CodeBlocksDockEvent evt(cbEVT_REMOVE_DOCK_WINDOW);
-//        evt.pWindow = m_pCPURegisters;
-//        Manager::Get()->ProcessEvent(evt);
-//        m_pCPURegisters->Destroy();
-//    }
-//    m_pCPURegisters = 0;
-
-
-//    FIXME (obfuscated#) reimplement this
-//    if (m_pBacktrace)
-//    {
-//        CodeBlocksDockEvent evt(cbEVT_REMOVE_DOCK_WINDOW);
-//        evt.pWindow = m_pBacktrace;
-//        Manager::Get()->ProcessEvent(evt);
-//        m_pBacktrace->Destroy();
-//    }
-//    m_pBacktrace = 0;
-
-//    FIXME (obfuscated#) reimplement this
-//    if (m_pTree)
-//    {
-//        CodeBlocksDockEvent evt(cbEVT_REMOVE_DOCK_WINDOW);
-//        evt.pWindow = m_pTree;
-//        Manager::Get()->ProcessEvent(evt);
-//        m_pTree->Destroy();
-//    }
-//    m_pTree = 0L;
 
     //Close debug session when appShutDown
     if (m_State.HasDriver())
@@ -322,7 +244,6 @@ void DebuggerGDB::OnRelease(bool appShutDown)
     // vars for Linux console
     m_bIsConsole = false;
     m_nConsolePid = 0;
-    m_ConsoleTty = wxEmptyString;
 
     dbg_manager->UnregisterDebugger(this);
 }
@@ -556,55 +477,6 @@ void DebuggerGDB::DoWatches()
                                        m_watches);
 }
 
-wxString DebuggerGDB::FindDebuggerExecutable(Compiler* compiler)
-{
-    if (compiler->GetPrograms().DBG.IsEmpty())
-        return wxEmptyString;
-//    if (!wxFileExists(compiler->GetMasterPath() + wxFILE_SEP_PATH + _T("bin") + wxFILE_SEP_PATH + compiler->GetPrograms().DBG))
-//        return wxEmptyString;
-
-    wxString masterPath = compiler->GetMasterPath();
-    while (masterPath.Last() == '\\' || masterPath.Last() == '/')
-        masterPath.RemoveLast();
-    wxString gdb = compiler->GetPrograms().DBG;
-    const wxArrayString& extraPaths = compiler->GetExtraPaths();
-
-    wxPathList pathList;
-    pathList.Add(masterPath + wxFILE_SEP_PATH + _T("bin"));
-    for (unsigned int i = 0; i < extraPaths.GetCount(); ++i)
-    {
-        if (!extraPaths[i].IsEmpty())
-            pathList.Add(extraPaths[i]);
-    }
-    pathList.AddEnvList(_T("PATH"));
-    wxString binPath = pathList.FindAbsoluteValidPath(gdb);
-    // it seems, under Win32, the above command doesn't search in paths with spaces...
-    // look directly for the file in question in masterPath
-    if (binPath.IsEmpty() || !(pathList.Index(wxPathOnly(binPath)) != wxNOT_FOUND))
-    {
-        if (wxFileExists(masterPath + wxFILE_SEP_PATH + _T("bin") + wxFILE_SEP_PATH + gdb))
-            binPath = masterPath + wxFILE_SEP_PATH + _T("bin");
-        else if (wxFileExists(masterPath + wxFILE_SEP_PATH + gdb))
-            binPath = masterPath;
-        else
-        {
-            for (unsigned int i = 0; i < extraPaths.GetCount(); ++i)
-            {
-                if (!extraPaths[i].IsEmpty())
-                {
-                    if (wxFileExists(extraPaths[i] + wxFILE_SEP_PATH + gdb))
-                    {
-                        binPath = extraPaths[i];
-                        break;
-                    }
-                }
-            }
-        }
-    }
-
-    return binPath;
-}
-
 int DebuggerGDB::LaunchProcess(const wxString& cmd, const wxString& cwd)
 {
     if (m_pProcess)
@@ -688,96 +560,16 @@ int DebuggerGDB::LaunchProcess(const wxString& cmd, const wxString& cwd)
     return 0;
 }
 
-wxString DebuggerGDB::GetDebuggee(ProjectBuildTarget* target)
-{
-    if (!target)
-        return wxEmptyString;
-
-    wxString out;
-    switch (target->GetTargetType())
-    {
-        case ttExecutable:
-        case ttConsoleOnly:
-            out = UnixFilename(target->GetOutputFilename());
-            Manager::Get()->GetMacrosManager()->ReplaceEnvVars(out); // apply env vars
-            Manager::Get()->GetLogManager()->Log(_("Adding file: ") + out, m_PageIndex);
-            ConvertToGDBDirectory(out);
-            break;
-
-        case ttStaticLib:
-        case ttDynamicLib:
-            // check for hostapp
-            if (target->GetHostApplication().IsEmpty())
-            {
-                cbMessageBox(_("You must select a host application to \"run\" a library..."));
-                return wxEmptyString;
-            }
-            out = UnixFilename(target->GetHostApplication());
-            Manager::Get()->GetMacrosManager()->ReplaceEnvVars(out); // apply env vars
-            Manager::Get()->GetLogManager()->Log(_("Adding file: ") + out, m_PageIndex);
-            ConvertToGDBDirectory(out);
-            break;
-//            // for DLLs, add the DLL's symbols
-//            if (target->GetTargetType() == ttDynamicLib)
-//            {
-//                wxString symbols;
-//                out = UnixFilename(target->GetOutputFilename());
-//                Manager::Get()->GetMacrosManager()->ReplaceEnvVars(out); // apply env vars
-//                msgMan->Log(m_PageIndex, _("Adding symbol file: %s"), out.c_str());
-//                ConvertToGDBDirectory(out);
-//                QueueCommand(new DbgCmd_AddSymbolFile(this, out));
-//            }
-//            break;
-
-        default: break;
-    }
-    return out;
-}
-
 bool DebuggerGDB::IsStopped() const
 {
     return !m_State.HasDriver() || m_State.GetDriver()->IsStopped();
 }
 
-bool DebuggerGDB::EnsureBuildUpToDate()
-{
-    m_WaitingCompilerToFinish = false;
-
-    // compile project/target (if not attaching to a PID)
-    if (m_PidToAttach == 0)
-    {
-        LogManager* msgMan = Manager::Get()->GetLogManager();
-
-        // make sure the target is compiled
-        PluginsArray plugins = Manager::Get()->GetPluginManager()->GetCompilerOffers();
-        if (plugins.GetCount())
-            m_pCompiler = (cbCompilerPlugin*)plugins[0];
-        else
-            m_pCompiler = 0;
-        if (m_pCompiler)
-        {
-            // is the compiler already running?
-            if (m_pCompiler->IsRunning())
-            {
-                msgMan->Log(_("Compiler in use..."), m_PageIndex);
-                msgMan->Log(_("Aborting debugging session"), m_PageIndex);
-                cbMessageBox(_("The compiler is currently in use. Aborting debugging session..."), _("Compiler running"), wxICON_WARNING);
-                return false;
-            }
-
-            msgMan->Log(_("Building to ensure sources are up-to-date"), m_PageIndex);
-            m_WaitingCompilerToFinish = true;
-            m_pCompiler->Build();
-            // now, when the build is finished, DoDebug will be launched in OnCompilerFinished()
-        }
-    }
-    return true;
-}
 
 int DebuggerGDB::Debug(bool breakOnEntry)
 {
     // if already running, return
-    if (m_pProcess || m_WaitingCompilerToFinish)
+    if (m_pProcess || WaitingCompilerToFinish())
         return 1;
 
     m_pProject = 0;
@@ -787,16 +579,7 @@ int DebuggerGDB::Debug(bool breakOnEntry)
     if (m_HasDebugLog)
         Manager::Get()->GetDebuggerManager()->GetLogger(true)->Clear();
 
-//    m_pTree->GetTree()->DeleteAllItems();
-
-    TextCtrlLogger *log = Manager::Get()->GetDebuggerManager()->GetLogger(false);
-
-    // switch to the debugging log and clear it
-    CodeBlocksLogEvent evtSwitch(cbEVT_SWITCH_TO_LOG_WINDOW, log);
-    CodeBlocksLogEvent evtShow(cbEVT_SHOW_LOG_MANAGER);
-    Manager::Get()->ProcessEvent(evtSwitch);
-    Manager::Get()->ProcessEvent(evtShow);
-    log->Clear();
+    ShowLog(true);
 
     // can only debug projects or attach to processes
     ProjectManager* prjMan = Manager::Get()->GetProjectManager();
@@ -818,8 +601,9 @@ int DebuggerGDB::Debug(bool breakOnEntry)
     }
     else
     {
-        m_pCompiler = 0;
-        m_WaitingCompilerToFinish = false;
+// FIXME (obfuscated#): replace the commented code with something that works.
+//        m_pCompiler = 0;
+//        m_WaitingCompilerToFinish = false;
         m_Canceled = false;
     }
 
@@ -832,7 +616,7 @@ int DebuggerGDB::Debug(bool breakOnEntry)
     // a second consecutive time...
     // the same applies for m_Canceled: it is true if DoDebug() was launched but
     // returned an error
-    if (!m_WaitingCompilerToFinish && !m_State.HasDriver() && !m_Canceled)
+    if (!WaitingCompilerToFinish() && !m_State.HasDriver() && !m_Canceled)
     {
         return DoDebug(breakOnEntry);
     }
@@ -848,24 +632,12 @@ int DebuggerGDB::DoDebug(bool breakOnEntry)
     LogManager* msgMan = Manager::Get()->GetLogManager();
     ProjectManager* prjMan = Manager::Get()->GetProjectManager();
 
-    // this is always called after EnsureBuildUpToDate() so we should display the build result
-    TextCtrlLogger *logger = Manager::Get()->GetDebuggerManager()->GetLogger(false);
-    CodeBlocksLogEvent evtSwitch(cbEVT_SWITCH_TO_LOG_WINDOW, logger);
-    CodeBlocksLogEvent evtShow(cbEVT_SHOW_LOG_MANAGER);
-    Manager::Get()->ProcessEvent(evtSwitch);
-    Manager::Get()->ProcessEvent(evtShow);
+    ShowLog(false);
 
-    if (m_pCompiler)
+    if (!CheckBuild())
     {
-        if (m_pCompiler->GetExitCode() != 0)
-        {
-            msgMan->Log(_("Build failed..."), m_PageIndex);
-            msgMan->Log(_("Aborting debugging session"), m_PageIndex);
-            cbMessageBox(_("Build failed. Aborting debugging session..."), _("Build failed"), wxICON_WARNING);
-            m_Canceled = true;
-            return 1;
-        }
-        msgMan->Log(_("Build succeeded"), m_PageIndex);
+        m_Canceled = true;
+        return 1;
     }
 
     // select the build target to debug
@@ -873,10 +645,7 @@ int DebuggerGDB::DoDebug(bool breakOnEntry)
     Compiler* actualCompiler = 0;
     if (m_PidToAttach == 0)
     {
-        CodeBlocksLogEvent evtSwitch(cbEVT_SWITCH_TO_LOG_WINDOW, logger);
-        CodeBlocksLogEvent evtShow(cbEVT_SHOW_LOG_MANAGER);
-        Manager::Get()->ProcessEvent(evtSwitch);
-        Manager::Get()->ProcessEvent(evtShow);
+        ShowLog(false);
 
         msgMan->Log(_("Selecting target: "), m_PageIndex);
         if (!m_pProject->BuildTargetValid(m_ActiveBuildTarget, false))
@@ -1110,9 +879,11 @@ int DebuggerGDB::DoDebug(bool breakOnEntry)
     m_bIsConsole = (target && target->GetTargetType() == ttConsoleOnly);
     if (m_bIsConsole)
     {
-        if (RunNixConsole() > 0 )
+        wxString consoleTty;
+        m_nConsolePid = RunNixConsole(consoleTty);
+        if (m_nConsolePid > 0)
         {   wxString gdbTtyCmd;
-            gdbTtyCmd << wxT("tty ") << m_ConsoleTty;
+            gdbTtyCmd << wxT("tty ") << consoleTty;
             m_State.GetDriver()->QueueCommand(new DebuggerCmd(m_State.GetDriver(), gdbTtyCmd, true));
             DebugLog(wxString::Format( _("Queued:[%s]"), gdbTtyCmd.c_str()) );
         }
@@ -1171,6 +942,11 @@ void DebuggerGDB::ConvertToGDBFile(wxString& str)
     str = fname.GetPath(wxPATH_GET_VOLUME | wxPATH_GET_SEPARATOR);
     DebuggerGDB::ConvertToGDBDirectory(str);
     str << fname.GetFullName();
+}
+
+void DebuggerGDB::ConvertDirectory(wxString& str, wxString base, bool relative)
+{
+    ConvertToGDBDirectory(str, base, relative);
 }
 
 // static
@@ -1479,10 +1255,15 @@ bool DebuggerGDB::SwitchToThread(int thread_number)
 
 cbBreakpoint* DebuggerGDB::AddBreakpoint(const wxString& filename, int line)
 {
-//    Manager::Get()->GetLogManager()->DebugLog(F(_T("DebuggerGDB::AddBreakpoint : file=%s, line=%d"), filename.c_str(), line));
+    bool debuggerIsRunning = !IsStopped();
+    if (debuggerIsRunning)
+        Break();
 
     int index = m_State.AddBreakpoint(filename, line, false);
     DebuggerBreakpoint *bp = m_State.GetBreakpointByNumber(index);
+
+    if (debuggerIsRunning)
+        Continue();
 
     BreakItem item;
     item.cb_break = std::tr1::shared_ptr<cbBreakpoint>(new cbBreakpoint(filename, line));
@@ -1599,8 +1380,15 @@ void DebuggerGDB::DeleteBreakpoint(cbBreakpoint* breakpoint)
     {
         if (it->cb_break.get() == breakpoint)
         {
+            bool debuggerIsRunning = !IsStopped();
+            if (debuggerIsRunning)
+                Break();
+
             m_State.RemoveBreakpoint(it->debugger_breakpoint, true);
             m_breakpoints.erase(it);
+
+            if (debuggerIsRunning)
+                Continue();
             return;
         }
     }
@@ -1608,8 +1396,14 @@ void DebuggerGDB::DeleteBreakpoint(cbBreakpoint* breakpoint)
 
 void DebuggerGDB::DeleteAllBreakpoints()
 {
+    bool debuggerIsRunning = !IsStopped();
+    if (debuggerIsRunning)
+        Break();
     m_State.RemoveAllBreakpoints(wxEmptyString, true);
     m_breakpoints.clear();
+
+    if (debuggerIsRunning)
+        Continue();
 }
 
 void DebuggerGDB::ShiftBreakpoint(int index, int lines_to_shift)
@@ -1774,10 +1568,13 @@ void DebuggerGDB::Stop()
     {
         if (!IsStopped())
         {
-            long pid = m_State.GetDriver()->GetChildPID();
+            Break();
+/*            long pid = m_State.GetDriver()->GetChildPID();
             if (pid <= 0) // look out for the "fake" PIDs (killall)
             {
-                cbMessageBox(_("Unable to stop the debug process!"), _("Error"), wxOK | wxICON_WARNING);
+                m_pProcess->CloseOutput();
+                m_pProcess->Kill(m_Pid, wxSIGKILL);
+//                cbMessageBox(_("Unable to stop the debug process!"), _("Error"), wxOK | wxICON_WARNING);
                 return;
             }
             else
@@ -1785,6 +1582,7 @@ void DebuggerGDB::Stop()
                 m_pProcess->CloseOutput();
                 m_pProcess->Kill(pid, wxSIGKILL);
             }
+*/
         }
         RunCommand(CMD_STOP);
         m_pProcess->CloseOutput();
@@ -1797,13 +1595,6 @@ void DebuggerGDB::ParseOutput(const wxString& output)
     {
         m_State.GetDriver()->ParseOutput(output);
     }
-}
-
-void DebuggerGDB::BringAppToFront()
-{
-    wxWindow* app = Manager::Get()->GetAppWindow();
-    if (app)
-        app->Raise();
 }
 
 void DebuggerGDB::SyncEditor(const wxString& filename, int line, bool setMarker)
@@ -2015,31 +1806,19 @@ void DebuggerGDB::OnValueTooltip(CodeBlocksEvent& event)
     }
 }
 
-void DebuggerGDB::OnProjectActivated(CodeBlocksEvent& event)
+void DebuggerGDB::CleanupWhenProjectClosed(cbProject *project)
 {
-    // allow others to catch this
-    event.Skip();
+    // remove all search dirs stored for this project so we don't have conflicts
+    // if a newly opened project happens to use the same memory address
+    GetSearchDirs(project).clear();
 
-    // when a project is activated and it's not the actively debugged project,
-    // ask the user to end debugging or re-activate the debugged project.
+    // the same for remote debugging
+    GetRemoteDebuggingMap(project).clear();
 
-    if (!m_State.HasDriver() || !m_pProject)
-        return;
-
-    if (event.GetProject() != m_pProject)
-    {
-        wxString msg = _("You can't change the active project while you 're actively debugging another.\n"
-                        "Do you want to stop debugging?\n\n"
-                        "Click \"Yes\" to stop debugging now or click \"No\" to re-activate the debuggee.");
-        if (cbMessageBox(msg, _("Warning"), wxICON_WARNING | wxYES_NO) == wxID_YES)
-        {
-            Stop();
-        }
-        else
-        {
-            Manager::Get()->GetProjectManager()->SetProject(m_pProject);
-        }
-    }
+    // remove all breakpoints belonging to the closed project
+    DeleteAllProjectBreakpoints(project);
+    cbBreakpointsDlg *dlg = Manager::Get()->GetDebuggerManager()->GetBreakpointDialog();
+    dlg->Reload();
 }
 
 void DebuggerGDB::OnProjectClosed(CodeBlocksEvent& event)
@@ -2109,7 +1888,7 @@ void DebuggerGDB::OnCursorChanged(wxCommandEvent& event)
         {
             SyncEditor(cursor.file, cursor.line);
             m_HaltAtLine = cursor.line - 1;
-            BringAppToFront();
+            BringCBToFront();
             if (cursor.line != -1)
                 Log(wxString::Format(_("At %s:%d"), cursor.file.c_str(), cursor.line));
             else
@@ -2264,132 +2043,9 @@ void DebuggerGDB::OnSettings(wxCommandEvent& event)
     Configure();
 }
 
-int DebuggerGDB::RunNixConsole()
+void DebuggerGDB::CompilerFinished()
 {
-#ifndef __WXMSW__
-
-    // start the xterm and put the shell to sleep with -e sleep 80000
-    // fetch the xterm tty so we can issue to gdb a "tty /dev/pts/#"
-    // redirecting program stdin/stdout/stderr to the xterm console.
-
-    wxString cmd;
-    wxString title = wxT("Program Console");
-    m_nConsolePid = 0;
-    // for non-win platforms, use m_ConsoleTerm to run the console app
-    wxString term = Manager::Get()->GetConfigManager(_T("app"))->Read(_T("/console_terminal"), DEFAULT_CONSOLE_TERM);
-    term.Replace(_T("$TITLE"), _T("'") + title + _T("'"));
-    cmd << term << _T(" ");
-    cmd << wxT("sleep ");
-    cmd << wxString::Format(wxT("%d"),80000 + ::wxGetProcessId());
-
-    Manager::Get()->GetMacrosManager()->ReplaceEnvVars(cmd);
-    DebugLog(wxString::Format( _("Executing: %s"), cmd.c_str()) );
-    //start xterm -e sleep {some unique # of seconds}
-    m_nConsolePid = wxExecute(cmd, wxEXEC_ASYNC);
-    if (m_nConsolePid <= 0) return -1;
-
-    // Issue the PS command to get the /dev/tty device name
-    // First, wait for the xterm to settle down, else PS won't see the sleep task
-    Manager::Yield();
-    ::wxSleep(1);
-    m_ConsoleTty = GetConsoleTty(m_nConsolePid);
-    if (not m_ConsoleTty.IsEmpty() )
-    {
-        // show what we found as tty
-        DebugLog(wxString::Format(wxT("GetConsoleTTY[%s]ConsolePid[%d]"),m_ConsoleTty.c_str(),m_nConsolePid));
-        return m_nConsolePid;
-    }
-    // failed to find the console tty
-    DebugLog( wxT("Console Execution error:failed to find console tty."));
-    if (m_nConsolePid != 0)
-        ::wxKill(m_nConsolePid);
-    m_nConsolePid = 0;
-#endif // !__WWXMSW__
-    return -1;
-}
-
-wxString DebuggerGDB::GetConsoleTty(int ConsolePid)
-{
-#ifndef __WXMSW__
-
-    // execute the ps x -o command  and read PS output to get the /dev/tty field
-
-    unsigned long ConsPid = ConsolePid;
-    wxString psCmd;
-    wxArrayString psOutput;
-    wxArrayString psErrors;
-
-    psCmd << wxT("ps x -o tty,pid,command");
-    DebugLog(wxString::Format( _("Executing: %s"), psCmd.c_str()) );
-    int result = wxExecute(psCmd, psOutput, psErrors, wxEXEC_SYNC);
-    psCmd.Clear();
-    if (result != 0)
-    {
-        psCmd << wxT("Result of ps x:") << result;
-        DebugLog(wxString::Format( _("Execution Error:"), psCmd.c_str()) );
-        return wxEmptyString;
-    }
-
-    wxString ConsTtyStr;
-    wxString ConsPidStr;
-    ConsPidStr << ConsPid;
-    //find task with our unique sleep time
-    wxString uniqueSleepTimeStr;
-    uniqueSleepTimeStr << wxT("sleep ") << wxString::Format(wxT("%d"),80000 + ::wxGetProcessId());
-    // search the output of "ps pid" command
-    int knt = psOutput.GetCount();
-    for (int i=knt-1; i>-1; --i)
-    {
-        psCmd = psOutput.Item(i);
-        DebugLog(wxString::Format( _("PS result: %s"), psCmd.c_str()) );
-        // find the pts/# or tty/# or whatever it's called
-        // by seaching the output of "ps x -o tty,pid,command" command.
-        // The output of ps looks like:
-        // TT       PID   COMMAND
-        // pts/0    13342 /bin/sh ./run.sh
-        // pts/0    13343 /home/pecanpecan/devel/trunk/src/devel/codeblocks
-        // pts/0    13361 /usr/bin/gdb -nx -fullname -quiet -args ./conio
-        // pts/0    13362 xterm -font -*-*-*-*-*-*-20-*-*-*-*-*-*-* -T Program Console -e sleep 93343
-        // pts/2    13363 sleep 93343
-        // ?        13365 /home/pecan/proj/conio/conio
-        // pts/1    13370 ps x -o tty,pid,command
-
-        if (psCmd.Contains(uniqueSleepTimeStr))
-        do
-        {
-            // check for correct "sleep" line
-            if (psCmd.Contains(wxT("-T")))
-                break; //error;wrong sleep line.
-            // found "sleep 93343" string, extract tty field
-            ConsTtyStr = wxT("/dev/") + psCmd.BeforeFirst(' ');
-            DebugLog(wxString::Format( _("TTY is[%s]"), ConsTtyStr.c_str()) );
-            return ConsTtyStr;
-        } while(0);//if do
-    }//for
-
-    knt = psErrors.GetCount();
-    for (int i=0; i<knt; ++i)
-        DebugLog(wxString::Format( _("PS Error:%s"), psErrors.Item(i).c_str()) );
-#endif // !__WXMSW__
-    return wxEmptyString;
-}
-
-void DebuggerGDB::OnCompilerStarted(CodeBlocksEvent& event)
-{
-//    Manager::Get()->GetLogManager()->DebugLog(F(_T("DebuggerGDB::OnCompilerStarted")));
-}
-
-void DebuggerGDB::OnCompilerFinished(CodeBlocksEvent& event)
-{
-//    Manager::Get()->GetLogManager()->DebugLog(F(_T("DebuggerGDB::OnCompilerFinished")));
-
-    if (m_WaitingCompilerToFinish)
-    {
-        m_WaitingCompilerToFinish = false;
-        // only proceed if build succeeeded
-        if (!m_pCompiler || m_pCompiler->GetExitCode() == 0)
-            DoDebug(false);
-    }
+    DoDebug(false);
 }
 
 void DebuggerGDB::OnBuildTargetSelected(CodeBlocksEvent& event)

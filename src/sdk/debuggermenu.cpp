@@ -38,6 +38,7 @@ namespace
     const int idMenuStep = XRCID("idDebuggerMenuStep");
     const int idMenuNextInstr = XRCID("idDebuggerMenuNextInstr");
     const int idMenuStepOut = XRCID("idDebuggerMenuStepOut");
+    const int idMenuBreak = XRCID("idDebuggerMenuBreak");
     const int idMenuStop = XRCID("idDebuggerMenuStop");
     const int idMenuContinue = XRCID("idDebuggerMenuContinue");
     const int idMenuToggleBreakpoint = XRCID("idDebuggerMenuToggleBreakpoint");
@@ -83,6 +84,7 @@ BEGIN_EVENT_TABLE(DebuggerMenuHandler, wxEvtHandler)
     EVT_UPDATE_UI(XRCID("idDebuggerToolInfo"), DebuggerMenuHandler::OnUpdateUI)
 
     EVT_MENU(idMenuDebug, DebuggerMenuHandler::OnStart)
+    EVT_MENU(idMenuBreak, DebuggerMenuHandler::OnBreak)
     EVT_MENU(idMenuStop, DebuggerMenuHandler::OnStop)
     EVT_MENU(idMenuContinue, DebuggerMenuHandler::OnContinue)
     EVT_MENU(idMenuNext, DebuggerMenuHandler::OnNext)
@@ -166,6 +168,7 @@ void DebuggerMenuHandler::OnUpdateUI(wxUpdateUIEvent& event)
         mbar->Enable(idMenuSendCommand, isRunning && stopped);
         mbar->Enable(idMenuAddSymbolFile, isRunning && stopped);
         mbar->Enable(idMenuStop, isRunning && en);
+        mbar->Enable(idMenuBreak, isRunning && !stopped && en);
         mbar->Enable(idMenuAttachToProcess, !isRunning);
         mbar->Enable(idMenuDetach, false); //isRunning && m_PidToAttach != 0);
 
@@ -200,13 +203,17 @@ void DebuggerMenuHandler::OnStart(wxCommandEvent& event)
     else if (m_activeDebugger->IsStopped() && !m_disableContinue)
         m_activeDebugger->Continue();
 }
+
+void DebuggerMenuHandler::OnBreak(wxCommandEvent& event)
+{
+    cbAssert(m_activeDebugger);
+    m_activeDebugger->Break();
+}
+
 void DebuggerMenuHandler::OnStop(wxCommandEvent& event)
 {
     cbAssert(m_activeDebugger);
-    if(m_activeDebugger->IsStopped())
-        m_activeDebugger->Stop();
-    else
-        m_activeDebugger->Break();
+    m_activeDebugger->Stop();
 }
 
 void DebuggerMenuHandler::OnContinue(wxCommandEvent& event)
@@ -424,7 +431,6 @@ void DebuggerMenuHandler::OnActiveDebuggerClick(wxCommandEvent& event)
 
 
 BEGIN_EVENT_TABLE(DebuggerToolbarHandler, wxEvtHandler)
-//    EVT_UPDATE_UI_RANGE(idMenuContinue, idMenuDebuggerAddWatch, DebuggerMenuHandler::OnUpdateUI)
     // these are different because they are loaded from the XRC
     EVT_UPDATE_UI(XRCID("idDebuggerMenuDebug"), DebuggerToolbarHandler::OnUpdateUI)
     EVT_UPDATE_UI(XRCID("idDebuggerMenuRunToCursor"), DebuggerToolbarHandler::OnUpdateUI)
@@ -439,76 +445,49 @@ BEGIN_EVENT_TABLE(DebuggerToolbarHandler, wxEvtHandler)
 
 END_EVENT_TABLE()
 
-DebuggerToolbarHandler::DebuggerToolbarHandler()
+DebuggerToolbarHandler::DebuggerToolbarHandler() : m_Toolbar(NULL)
 {
 }
 
-void DebuggerToolbarHandler::LoadToolbar(wxToolBar *toolbar)
+wxToolBar* DebuggerToolbarHandler::GetToolbar(bool create)
 {
-//    if(m_toolbar)
-//        return;
-//    m_toolbar = Manager::Get()->CreateEmptyToolbar();
-    wxString my_16x16 = Manager::isToolBar16x16(toolbar) ? _T("_16x16") : _T("");
-    Manager::AddonToolBar(toolbar, wxString(_T("debugger_toolbar")) + my_16x16);
-//    m_toolbar->Realize();
-    toolbar->SetInitialSize();
-//    m_toolbar->Show();
-//
-//    wxAuiManager* layout = Manager::Get()->GetAppMainFrame()->GetLayoutManager();
-////    layout->AddPane(m_toolbar, wxAuiPaneInfo().
-////                              Name(_T("Debugger Toolbar")).Caption(_("Debugger Toolbar")).
-////                              ToolbarPane().Top().Row(1));
-//    layout->AddPane(m_toolbar, wxAuiPaneInfo().Name(_T("dbg_Toolbar")).Caption(_T("dbg_toolbar")).Floatable().Float());
-//    Manager::Get()->GetAppMainFrame()->DoUpdateLayout();
-//    Manager::ProcessPendingEvents();
-}
-
-
-// FIXME (obfuscated#) this code should be removed when we can have one toolbar for more than one plugin
-void EnableToolbar(DebuggerManager::RegisteredPlugins::reference pair)
-{
-    cbDebuggerPlugin *plugin = pair.first;
-    wxToolBar *toolbar = plugin->GetToolbar();
-
-    if(plugin == Manager::Get()->GetDebuggerManager()->GetActiveDebugger())
+    if (!m_Toolbar)
     {
-        cbProject* prj = Manager::Get()->GetProjectManager()->GetActiveProject();
-        // FIXME (obfuscated#) reimplement m_pidToAttach
-        bool en = (prj && !prj->GetCurrentlyCompilingTarget()) /* || m_PidToAttach != 0*/;
-        cbEditor* ed = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
-        bool stopped = plugin->IsStopped();
-        bool isRunning = plugin->IsRunning();
+        if (!create)
+            return NULL;
 
-        toolbar->EnableTool(idMenuDebug, (!isRunning || stopped) && en);
-        toolbar->EnableTool(idMenuRunToCursor, en && ed && stopped);
-        toolbar->EnableTool(idMenuNext, isRunning && en && stopped);
-        toolbar->EnableTool(idMenuNextInstr, isRunning && en && stopped);
-        toolbar->EnableTool(idMenuStep, en && stopped);
-        toolbar->EnableTool(idMenuStepOut, isRunning && en && stopped);
-        toolbar->EnableTool(idMenuStop, isRunning && en);
-        toolbar->EnableTool(idDebuggerToolInfo, plugin->ToolMenuEnabled());
+        m_Toolbar = Manager::Get()->CreateEmptyToolbar();
+        wxString my_16x16 = Manager::isToolBar16x16(m_Toolbar) ? _T("_16x16") : _T("");
+        Manager::AddonToolBar(m_Toolbar, wxString(_T("debugger_toolbar")) + my_16x16);
+
+        m_Toolbar->Realize();
+        m_Toolbar->SetInitialSize();
     }
-    else
-    {
-        toolbar->EnableTool(idMenuDebug, false);
-        toolbar->EnableTool(idMenuRunToCursor, false);
-        toolbar->EnableTool(idMenuNext, false);
-        toolbar->EnableTool(idMenuNextInstr, false);
-        toolbar->EnableTool(idMenuStep, false);
-        toolbar->EnableTool(idMenuStepOut, false);
-        toolbar->EnableTool(idMenuStop, false);
-        toolbar->EnableTool(idDebuggerToolInfo, false);
-    }
+    return m_Toolbar;
 }
 
 void DebuggerToolbarHandler::OnUpdateUI(wxUpdateUIEvent& event)
 {
     cbDebuggerPlugin *plugin = Manager::Get()->GetDebuggerManager()->GetActiveDebugger();
-    if(!plugin)
+    if (!plugin)
         return;
 
-    DebuggerManager::RegisteredPlugins &plugins = Manager::Get()->GetDebuggerManager()->GetAllDebuggers();
-    std::for_each(plugins.begin(), plugins.end(), EnableToolbar);
+    cbProject* prj = Manager::Get()->GetProjectManager()->GetActiveProject();
+    // FIXME (obfuscated#) reimplement m_pidToAttach
+    bool en = (prj && !prj->GetCurrentlyCompilingTarget()) /* || m_PidToAttach != 0*/;
+    cbEditor* ed = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
+    bool stopped = plugin->IsStopped();
+    bool isRunning = plugin->IsRunning();
+
+    m_Toolbar->EnableTool(idMenuDebug, (!isRunning || stopped) && en);
+    m_Toolbar->EnableTool(idMenuRunToCursor, en && ed && stopped);
+    m_Toolbar->EnableTool(idMenuNext, isRunning && en && stopped);
+    m_Toolbar->EnableTool(idMenuNextInstr, isRunning && en && stopped);
+    m_Toolbar->EnableTool(idMenuStep, en && stopped);
+    m_Toolbar->EnableTool(idMenuStepOut, isRunning && en && stopped);
+    m_Toolbar->EnableTool(idMenuStop, isRunning && en);
+    m_Toolbar->EnableTool(idMenuBreak, isRunning && !stopped && en);
+    m_Toolbar->EnableTool(idDebuggerToolInfo, plugin->ToolMenuEnabled());
 
     // allow other UpdateUI handlers to process this event
     // *very* important! don't forget it...

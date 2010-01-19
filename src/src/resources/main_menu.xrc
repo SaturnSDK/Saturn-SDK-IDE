@@ -494,6 +494,12 @@
           <checkable>1</checkable>
           <enabled>1</enabled>
         </object>
+        <object class="wxMenuItem" name="idViewToolDebugger">
+          <label>&amp;Debugger</label>
+          <help>Show/hide debugger toolbar</help>
+          <checkable>1</checkable>
+          <enabled>1</enabled>
+        </object>
       </object>
       <object class="wxMenuItem" name="idViewManager">
         <label>&amp;Manager</label>

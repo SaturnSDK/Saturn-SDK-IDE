@@ -101,7 +101,6 @@ class DebuggerGDB : public cbDebuggerPlugin
 
         DebuggerState& GetState(){ return m_State; }
 
-        void BringAppToFront();
         void RefreshConfiguration();
 
         wxArrayString& GetSearchDirs(cbProject* prj);
@@ -113,26 +112,24 @@ class DebuggerGDB : public cbDebuggerPlugin
         static void ConvertToGDBFile(wxString& str);
         static void ConvertToGDBDirectory(wxString& str, wxString base = _T(""), bool relative = true);
         static void StripQuotes(wxString& str);
+
+    protected:
+        cbProject* GetProject() { return m_pProject; }
+        void ConvertDirectory(wxString& str, wxString base, bool relative);
+        void CleanupWhenProjectClosed(cbProject *project);
+        void CompilerFinished();
     protected:
         void AddSourceDir(const wxString& dir);
     private:
         void ParseOutput(const wxString& output);
         void DoWatches();
-        wxString FindDebuggerExecutable(Compiler* compiler);
         int LaunchProcess(const wxString& cmd, const wxString& cwd);
-        wxString GetDebuggee(ProjectBuildTarget* target);
-        bool EnsureBuildUpToDate();
         int DoDebug(bool breakOnEntry);
 
-        int RunNixConsole();
-        wxString GetConsoleTty(int ConsolePid);
         void OnAddSymbolFile(wxCommandEvent& event);
-        void OnValueTooltip(CodeBlocksEvent& event);
-        void OnProjectActivated(CodeBlocksEvent& event);
         void OnProjectClosed(CodeBlocksEvent& event);
+        void OnValueTooltip(CodeBlocksEvent& event);
         void DeleteAllProjectBreakpoints(cbProject* project);
-        void OnCompilerStarted(CodeBlocksEvent& event);
-        void OnCompilerFinished(CodeBlocksEvent& event);
         void OnBuildTargetSelected(CodeBlocksEvent& event);
         void OnGDBOutput(wxCommandEvent& event);
         void OnGDBError(wxCommandEvent& event);
@@ -151,13 +148,13 @@ class DebuggerGDB : public cbDebuggerPlugin
         void OnInfoFPU(wxCommandEvent& event);
         void OnInfoSignals(wxCommandEvent& event);
 
+    private:
         PipedProcess* m_pProcess;
         int m_PageIndex;
         int m_DbgPageIndex;
         wxRegEx reSource;
         wxString m_LastCmd;
         wxString m_Variable;
-        cbCompilerPlugin* m_pCompiler;
         bool m_LastExitCode;
         int m_Pid;
         int m_PidToAttach; // for "attach to process"
@@ -186,9 +183,7 @@ class DebuggerGDB : public cbDebuggerPlugin
         // Linux console support
         bool     m_bIsConsole;
         int      m_nConsolePid;
-        wxString m_ConsoleTty;
 
-        bool m_WaitingCompilerToFinish;
         bool m_Canceled; // flag to avoid re-entering DoDebug when we shouldn't
 
         WatchesContainer m_watches;

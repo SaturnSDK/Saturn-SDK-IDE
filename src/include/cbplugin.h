@@ -50,6 +50,7 @@ class cbEditor;
 class cbProject;
 class ProjectBuildTarget;
 class CompileTargetBase;
+class Compiler;
 class FileTreeData;
 class cbConfigurationPanel;
 struct PluginInfo;
@@ -467,6 +468,11 @@ class PLUGIN_EXPORT cbDebuggerPlugin: public cbPlugin
         virtual void DetachFromProcess() = 0;
 
         virtual void GetCurrentPosition(wxString &filename, int &line) = 0;
+    protected:
+        virtual void ConvertDirectory(wxString& str, wxString base = _T(""), bool relative = true) = 0;
+        virtual cbProject* GetProject() = 0;
+        virtual void CleanupWhenProjectClosed(cbProject *project) = 0;
+        virtual void CompilerFinished() {}
     public:
         enum DebugWindows
         {
@@ -482,15 +488,34 @@ class PLUGIN_EXPORT cbDebuggerPlugin: public cbPlugin
     public:
         virtual wxString GetEditorWordAtCaret();
         void ClearActiveMarkFromAllEditors();
+        void BringCBToFront();
 
-    public:
+    protected:
         void SwitchToDebuggingLayout();
         void SwitchToPreviousLayout();
+        void ShowLog(bool clear);
+
+        wxString GetDebuggee(ProjectBuildTarget* target);
+        wxString FindDebuggerExecutable(Compiler* compiler);
+        bool EnsureBuildUpToDate();
+        bool WaitingCompilerToFinish() const { return m_WaitingCompilerToFinish; }
+        bool CheckBuild();
+
+        int RunNixConsole(wxString &consoleTty);
+
+    private:
+        wxString GetConsoleTty(int ConsolePid);
 
     private:
         void OnEditorOpened(CodeBlocksEvent& event);
+        void OnProjectActivated(CodeBlocksEvent& event);
+        void OnProjectClosed(CodeBlocksEvent& event);
+        void OnCompilerFinished(CodeBlocksEvent& event);
+    private:
         wxToolBar *m_toolbar;
         wxString m_PreviousLayout;
+        cbCompilerPlugin* m_pCompiler;
+        bool m_WaitingCompilerToFinish;
 };
 
 /** @brief Base class for tool plugins

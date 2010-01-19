@@ -25,8 +25,11 @@
 #endif
 
 #include <wx/toolbar.h>
+#include "annoyingdialog.h"
 #include "breakpointsdlg.h"
 #include "cbstyledtextctrl.h"
+#include "loggers.h"
+
 
 
 cbPlugin::cbPlugin()
@@ -106,7 +109,9 @@ cbCompilerPlugin::cbCompilerPlugin()
 /////
 
 cbDebuggerPlugin::cbDebuggerPlugin() :
-    m_toolbar(NULL)
+    m_toolbar(NULL),
+    m_pCompiler(NULL),
+    m_WaitingCompilerToFinish(false)
 {
     m_Type = ptDebugger;
 }
@@ -115,9 +120,14 @@ cbDebuggerPlugin::cbDebuggerPlugin() :
 void cbDebuggerPlugin::OnAttach()
 {
     OnAttachReal();
-    typedef cbEventFunctor<cbDebuggerPlugin, CodeBlocksEvent> EventOpened;
+    typedef cbEventFunctor<cbDebuggerPlugin, CodeBlocksEvent> Event;
 
-    Manager::Get()->RegisterEventSink(cbEVT_EDITOR_OPEN, new EventOpened(this, &cbDebuggerPlugin::OnEditorOpened));
+    Manager::Get()->RegisterEventSink(cbEVT_EDITOR_OPEN, new Event(this, &cbDebuggerPlugin::OnEditorOpened));
+    Manager::Get()->RegisterEventSink(cbEVT_PROJECT_ACTIVATE, new Event(this, &cbDebuggerPlugin::OnProjectActivated));
+    Manager::Get()->RegisterEventSink(cbEVT_PROJECT_CLOSE, new Event(this, &cbDebuggerPlugin::OnProjectClosed));
+
+    Manager::Get()->RegisterEventSink(cbEVT_COMPILER_FINISHED, new Event(this, &cbDebuggerPlugin::OnCompilerFinished));
+
 }
 
 void cbDebuggerPlugin::BuildMenu(wxMenuBar* menuBar)
@@ -166,9 +176,9 @@ bool cbDebuggerPlugin::BuildToolBar(wxToolBar* toolBar)
 {
     if (!IsAttached() || !toolBar)
         return false;
-    Manager::Get()->GetDebuggerManager()->LoadToolbar(toolBar);
-    m_toolbar = toolBar;
-    return true;
+
+    m_toolbar = Manager::Get()->GetDebuggerManager()->GetToolbar();
+    return false;
 }
 
 wxToolBar* cbDebuggerPlugin::GetToolbar()
@@ -316,6 +326,75 @@ void cbDebuggerPlugin::OnEditorOpened(CodeBlocksEvent& event)
     event.Skip(); // must do
 }
 
+void cbDebuggerPlugin::OnProjectActivated(CodeBlocksEvent& event)
+{
+    // allow others to catch this
+    event.Skip();
+
+    if(this != Manager::Get()->GetDebuggerManager()->GetActiveDebugger())
+        return;
+    // when a project is activated and it's not the actively debugged project,
+    // ask the user to end debugging or re-activate the debugged project.
+
+    if (!IsRunning())
+        return;
+
+    if (event.GetProject() != GetProject())
+    {
+        wxString msg = _("You can't change the active project while you 're actively debugging another.\n"
+                        "Do you want to stop debugging?\n\n"
+                        "Click \"Yes\" to stop debugging now or click \"No\" to re-activate the debuggee.");
+        if (cbMessageBox(msg, _("Warning"), wxICON_WARNING | wxYES_NO) == wxID_YES)
+        {
+            Stop();
+        }
+        else
+        {
+            Manager::Get()->GetProjectManager()->SetProject(GetProject());
+        }
+    }
+}
+
+void cbDebuggerPlugin::OnProjectClosed(CodeBlocksEvent& event)
+{
+    // allow others to catch this
+    event.Skip();
+
+    if(this != Manager::Get()->GetDebuggerManager()->GetActiveDebugger())
+        return;
+    CleanupWhenProjectClosed(event.GetProject());
+
+    // when a project closes, make sure it's not the actively debugged project.
+    // if so, end debugging immediately!
+    if (!IsRunning())
+        return;
+
+    if (event.GetProject() == GetProject())
+    {
+        AnnoyingDialog dlg(_("Project closed while debugging message"),
+                           _("The project you were debugging has closed.\n"
+                             "(The application most likely just finished.)\n"
+                             "The debugging session will terminate immediately."),
+                            wxART_WARNING, AnnoyingDialog::OK, wxID_OK);
+        dlg.ShowModal();
+        Stop();
+    }
+}
+
+void cbDebuggerPlugin::ShowLog(bool clear)
+{
+    TextCtrlLogger *log = Manager::Get()->GetDebuggerManager()->GetLogger(false);
+
+    // switch to the debugging log and clear it
+    // TODO (obfuscated#): if the "Debugger (debug)" log pane is active don't activate the "Debugger"
+    CodeBlocksLogEvent event_switch_log(cbEVT_SWITCH_TO_LOG_WINDOW, log);
+    CodeBlocksLogEvent event_show_log(cbEVT_SHOW_LOG_MANAGER);
+    Manager::Get()->ProcessEvent(event_switch_log);
+    Manager::Get()->ProcessEvent(event_show_log);
+    if (clear)
+        log->Clear();
+}
+
 void cbDebuggerPlugin::SwitchToDebuggingLayout()
 {
     CodeBlocksLayoutEvent queryEvent(cbEVT_QUERY_VIEW_LAYOUT);
@@ -348,6 +427,299 @@ void cbDebuggerPlugin::SwitchToPreviousLayout()
     // switch to previous layout
     Manager::Get()->ProcessEvent(switchEvent);
 }
+
+
+wxString cbDebuggerPlugin::GetDebuggee(ProjectBuildTarget* target)
+{
+    if (!target)
+        return wxEmptyString;
+
+    int log_index;
+    Manager::Get()->GetDebuggerManager()->GetLogger(false, log_index);
+
+    wxString out;
+    switch (target->GetTargetType())
+    {
+        case ttExecutable:
+        case ttConsoleOnly:
+            out = UnixFilename(target->GetOutputFilename());
+            Manager::Get()->GetMacrosManager()->ReplaceEnvVars(out); // apply env vars
+            Manager::Get()->GetLogManager()->Log(_("Adding file: ") + out, log_index);
+            ConvertDirectory(out);
+            break;
+
+        case ttStaticLib:
+        case ttDynamicLib:
+            // check for hostapp
+            if (target->GetHostApplication().IsEmpty())
+            {
+                cbMessageBox(_("You must select a host application to \"run\" a library..."));
+                return wxEmptyString;
+            }
+            out = UnixFilename(target->GetHostApplication());
+            Manager::Get()->GetMacrosManager()->ReplaceEnvVars(out); // apply env vars
+            Manager::Get()->GetLogManager()->Log(_("Adding file: ") + out, log_index);
+            ConvertDirectory(out);
+            break;
+//            // for DLLs, add the DLL's symbols
+//            if (target->GetTargetType() == ttDynamicLib)
+//            {
+//                wxString symbols;
+//                out = UnixFilename(target->GetOutputFilename());
+//                Manager::Get()->GetMacrosManager()->ReplaceEnvVars(out); // apply env vars
+//                msgMan->Log(m_PageIndex, _("Adding symbol file: %s"), out.c_str());
+//                ConvertToGDBDirectory(out);
+//                QueueCommand(new DbgCmd_AddSymbolFile(this, out));
+//            }
+//            break;
+
+        default: break;
+    }
+    return out;
+}
+
+wxString cbDebuggerPlugin::FindDebuggerExecutable(Compiler* compiler)
+{
+    if (compiler->GetPrograms().DBG.IsEmpty())
+        return wxEmptyString;
+//    if (!wxFileExists(compiler->GetMasterPath() + wxFILE_SEP_PATH + _T("bin") + wxFILE_SEP_PATH + compiler->GetPrograms().DBG))
+//        return wxEmptyString;
+
+    wxString masterPath = compiler->GetMasterPath();
+    while (masterPath.Last() == '\\' || masterPath.Last() == '/')
+        masterPath.RemoveLast();
+    wxString gdb = compiler->GetPrograms().DBG;
+    const wxArrayString& extraPaths = compiler->GetExtraPaths();
+
+    wxPathList pathList;
+    pathList.Add(masterPath + wxFILE_SEP_PATH + _T("bin"));
+    for (unsigned int i = 0; i < extraPaths.GetCount(); ++i)
+    {
+        if (!extraPaths[i].IsEmpty())
+            pathList.Add(extraPaths[i]);
+    }
+    pathList.AddEnvList(_T("PATH"));
+    wxString binPath = pathList.FindAbsoluteValidPath(gdb);
+    // it seems, under Win32, the above command doesn't search in paths with spaces...
+    // look directly for the file in question in masterPath
+    if (binPath.IsEmpty() || !(pathList.Index(wxPathOnly(binPath)) != wxNOT_FOUND))
+    {
+        if (wxFileExists(masterPath + wxFILE_SEP_PATH + _T("bin") + wxFILE_SEP_PATH + gdb))
+            binPath = masterPath + wxFILE_SEP_PATH + _T("bin");
+        else if (wxFileExists(masterPath + wxFILE_SEP_PATH + gdb))
+            binPath = masterPath;
+        else
+        {
+            for (unsigned int i = 0; i < extraPaths.GetCount(); ++i)
+            {
+                if (!extraPaths[i].IsEmpty())
+                {
+                    if (wxFileExists(extraPaths[i] + wxFILE_SEP_PATH + gdb))
+                    {
+                        binPath = extraPaths[i];
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    return binPath;
+}
+
+bool cbDebuggerPlugin::EnsureBuildUpToDate()
+{
+    m_WaitingCompilerToFinish = false;
+
+    // compile project/target (if not attaching to a PID)
+//  FIXME (obfuscated#): reimplement pid to attach
+//    if (m_PidToAttach == 0)
+    {
+        LogManager* msgMan = Manager::Get()->GetLogManager();
+
+        // make sure the target is compiled
+        PluginsArray plugins = Manager::Get()->GetPluginManager()->GetCompilerOffers();
+        if (plugins.GetCount())
+            m_pCompiler = (cbCompilerPlugin*)plugins[0];
+        else
+            m_pCompiler = NULL;
+        if (m_pCompiler)
+        {
+            int page_index;
+            Manager::Get()->GetDebuggerManager()->GetLogger(false, page_index);
+            // is the compiler already running?
+            if (m_pCompiler->IsRunning())
+            {
+                msgMan->Log(_("Compiler in use..."), page_index);
+                msgMan->Log(_("Aborting debugging session"), page_index);
+                cbMessageBox(_("The compiler is currently in use. Aborting debugging session..."),
+                             _("Compiler running"), wxICON_WARNING);
+                return false;
+            }
+
+            msgMan->Log(_("Building to ensure sources are up-to-date"), page_index);
+            m_WaitingCompilerToFinish = true;
+            m_pCompiler->Build();
+            // now, when the build is finished, DoDebug will be launched in OnCompilerFinished()
+        }
+    }
+    return true;
+}
+
+bool cbDebuggerPlugin::CheckBuild()
+{
+    if (m_pCompiler)
+    {
+        LogManager* msgMan = Manager::Get()->GetLogManager();
+        int page_index;
+        Manager::Get()->GetDebuggerManager()->GetLogger(false, page_index);
+
+        if (m_pCompiler->GetExitCode() != 0)
+        {
+            msgMan->Log(_("Build failed..."), page_index);
+            msgMan->Log(_("Aborting debugging session"), page_index);
+            cbMessageBox(_("Build failed. Aborting debugging session..."), _("Build failed"), wxICON_WARNING);
+            return false;
+        }
+        msgMan->Log(_("Build succeeded"), page_index);
+        return true;
+    }
+    else
+        return true;
+}
+
+void cbDebuggerPlugin::OnCompilerFinished(CodeBlocksEvent& event)
+{
+//    Manager::Get()->GetLogManager()->DebugLog(F(_T("DebuggerGDB::OnCompilerFinished")));
+
+    if (m_WaitingCompilerToFinish)
+    {
+        m_WaitingCompilerToFinish = false;
+        // only proceed if build succeeeded
+        if (!m_pCompiler || m_pCompiler->GetExitCode() == 0)
+            CompilerFinished();
+    }
+}
+
+int cbDebuggerPlugin::RunNixConsole(wxString &consoleTty)
+{
+    consoleTty = wxEmptyString;
+#ifndef __WXMSW__
+
+    // start the xterm and put the shell to sleep with -e sleep 80000
+    // fetch the xterm tty so we can issue to gdb a "tty /dev/pts/#"
+    // redirecting program stdin/stdout/stderr to the xterm console.
+
+    wxString cmd;
+    wxString title = wxT("Program Console");
+    int consolePid = 0;
+    // for non-win platforms, use m_ConsoleTerm to run the console app
+    wxString term = Manager::Get()->GetConfigManager(_T("app"))->Read(_T("/console_terminal"), DEFAULT_CONSOLE_TERM);
+    term.Replace(_T("$TITLE"), _T("'") + title + _T("'"));
+    cmd << term << _T(" ");
+    cmd << wxT("sleep ");
+    cmd << wxString::Format(wxT("%d"),80000 + ::wxGetProcessId());
+
+    Manager::Get()->GetMacrosManager()->ReplaceEnvVars(cmd);
+//    DebugLog(wxString::Format( _("Executing: %s"), cmd.c_str()) );
+    //start xterm -e sleep {some unique # of seconds}
+    consolePid = wxExecute(cmd, wxEXEC_ASYNC);
+    if (consolePid <= 0) return -1;
+
+    // Issue the PS command to get the /dev/tty device name
+    // First, wait for the xterm to settle down, else PS won't see the sleep task
+    Manager::Yield();
+    ::wxSleep(1);
+    consoleTty = GetConsoleTty(consolePid);
+    if (!consoleTty.IsEmpty() )
+    {
+        // show what we found as tty
+//        DebugLog(wxString::Format(wxT("GetConsoleTTY[%s]ConsolePid[%d]"), m_ConsoleTty.c_str(), consolePid));
+        return consolePid;
+    }
+    // failed to find the console tty
+//    DebugLog( wxT("Console Execution error:failed to find console tty."));
+    if (consolePid != 0)
+        ::wxKill(consolePid);
+    consolePid = 0;
+#endif // !__WWXMSW__
+    return -1;
+}
+
+wxString cbDebuggerPlugin::GetConsoleTty(int ConsolePid)
+{
+#ifndef __WXMSW__
+
+    // execute the ps x -o command  and read PS output to get the /dev/tty field
+
+    unsigned long ConsPid = ConsolePid;
+    wxString psCmd;
+    wxArrayString psOutput;
+    wxArrayString psErrors;
+
+    psCmd << wxT("ps x -o tty,pid,command");
+//    DebugLog(wxString::Format( _("Executing: %s"), psCmd.c_str()) );
+    int result = wxExecute(psCmd, psOutput, psErrors, wxEXEC_SYNC);
+    psCmd.Clear();
+    if (result != 0)
+    {
+        psCmd << wxT("Result of ps x:") << result;
+//        DebugLog(wxString::Format( _("Execution Error:"), psCmd.c_str()) );
+        return wxEmptyString;
+    }
+
+    wxString ConsTtyStr;
+    wxString ConsPidStr;
+    ConsPidStr << ConsPid;
+    //find task with our unique sleep time
+    wxString uniqueSleepTimeStr;
+    uniqueSleepTimeStr << wxT("sleep ") << wxString::Format(wxT("%d"),80000 + ::wxGetProcessId());
+    // search the output of "ps pid" command
+    int knt = psOutput.GetCount();
+    for (int i=knt-1; i>-1; --i)
+    {
+        psCmd = psOutput.Item(i);
+//        DebugLog(wxString::Format( _("PS result: %s"), psCmd.c_str()) );
+        // find the pts/# or tty/# or whatever it's called
+        // by seaching the output of "ps x -o tty,pid,command" command.
+        // The output of ps looks like:
+        // TT       PID   COMMAND
+        // pts/0    13342 /bin/sh ./run.sh
+        // pts/0    13343 /home/pecanpecan/devel/trunk/src/devel/codeblocks
+        // pts/0    13361 /usr/bin/gdb -nx -fullname -quiet -args ./conio
+        // pts/0    13362 xterm -font -*-*-*-*-*-*-20-*-*-*-*-*-*-* -T Program Console -e sleep 93343
+        // pts/2    13363 sleep 93343
+        // ?        13365 /home/pecan/proj/conio/conio
+        // pts/1    13370 ps x -o tty,pid,command
+
+        if (psCmd.Contains(uniqueSleepTimeStr))
+        do
+        {
+            // check for correct "sleep" line
+            if (psCmd.Contains(wxT("-T")))
+                break; //error;wrong sleep line.
+            // found "sleep 93343" string, extract tty field
+            ConsTtyStr = wxT("/dev/") + psCmd.BeforeFirst(' ');
+//            DebugLog(wxString::Format( _("TTY is[%s]"), ConsTtyStr.c_str()) );
+            return ConsTtyStr;
+        } while(0);//if do
+    }//for
+
+    knt = psErrors.GetCount();
+//    for (int i=0; i<knt; ++i)
+//        DebugLog(wxString::Format( _("PS Error:%s"), psErrors.Item(i).c_str()) );
+#endif // !__WXMSW__
+    return wxEmptyString;
+}
+
+
+void cbDebuggerPlugin::BringCBToFront()
+{
+    wxWindow* app = Manager::Get()->GetAppWindow();
+    if (app)
+        app->Raise();
+}
+
 
 /////
 ///// cbToolPlugin

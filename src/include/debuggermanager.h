@@ -207,7 +207,7 @@ class DLLIMPORT DebuggerManager : public Mgr<DebuggerManager>
 
         wxMenu* GetMenu();
         void BuildContextMenu(wxMenu &menu, const wxString& word_at_caret, bool is_running);
-        void LoadToolbar(wxToolBar *toolbar);
+        wxToolBar* GetToolbar(bool create = true);
 
         TextCtrlLogger* GetLogger(bool for_debug, int &index);
         TextCtrlLogger* GetLogger(bool for_debug);

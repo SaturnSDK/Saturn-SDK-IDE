@@ -921,7 +921,7 @@ void GDB_driver::ParseOutput(const wxString& output)
             else
             {
                 Log(lines[i]);
-                m_pDBG->BringAppToFront();
+                m_pDBG->BringCBToFront();
 
                 if (Manager::Get()->GetDebuggerManager()->ShowBacktraceDialog())
                     m_forceUpdate = true;

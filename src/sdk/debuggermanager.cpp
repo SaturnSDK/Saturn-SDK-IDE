@@ -33,6 +33,7 @@
 
 #include "debuggermanager.h"
 
+#include "annoyingdialog.h"
 #include "backtracedlg.h"
 #include "breakpointsdlg.h"
 #include "cpuregistersdlg.h"
@@ -593,7 +594,7 @@ DebuggerManager::~DebuggerManager()
 bool DebuggerManager::RegisterDebugger(cbDebuggerPlugin *plugin, wxString const &name)
 {
     RegisteredPlugins::const_iterator it = m_registered.find(plugin);
-    if(it != m_registered.end())
+    if (it != m_registered.end())
         return false;
 
     PluginData data;
@@ -602,13 +603,27 @@ bool DebuggerManager::RegisterDebugger(cbDebuggerPlugin *plugin, wxString const 
 
     m_registered[plugin] = data;
 
-    if(!m_activeDebugger)
+    ConfigManager &config = *Manager::Get()->GetConfigManager(_T("debugger_common"));
+    wxString active_debugger_name = config.Read(wxT("active_debugger"), wxEmptyString);
+
+    if (!m_activeDebugger || active_debugger_name == name)
     {
         m_activeDebugger = plugin;
         m_menuHandler->SetActiveDebugger(m_activeDebugger);
     }
     RebuildActiveDebuggersMenu();
     return true;
+}
+
+void RemoveDockWindow(wxWindow *window)
+{
+    if (window)
+    {
+        CodeBlocksDockEvent evt(cbEVT_REMOVE_DOCK_WINDOW);
+        evt.pWindow = window;
+        Manager::Get()->ProcessEvent(evt);
+        window->Destroy();
+    }
 }
 
 bool DebuggerManager::UnregisterDebugger(cbDebuggerPlugin *plugin)
@@ -618,7 +633,39 @@ bool DebuggerManager::UnregisterDebugger(cbDebuggerPlugin *plugin)
         return false;
 
     m_registered.erase(it);
+    if (plugin == m_activeDebugger)
+    {
+        if (m_registered.empty())
+            m_activeDebugger = NULL;
+        else
+            m_activeDebugger = m_registered.begin()->first;
+    }
     RebuildActiveDebuggersMenu();
+
+    if (m_registered.empty())
+    {
+        RemoveDockWindow(m_backtraceDialog);
+        m_backtraceDialog = NULL;
+
+        RemoveDockWindow(m_breakPointsDialog);
+        m_breakPointsDialog = NULL;
+
+        RemoveDockWindow(m_cpuRegistersDialog);
+        m_cpuRegistersDialog = NULL;
+
+        RemoveDockWindow(m_disassemblyDialog);
+        m_disassemblyDialog = NULL;
+
+        RemoveDockWindow(m_examineMemoryDialog);
+        m_examineMemoryDialog = NULL;
+
+        RemoveDockWindow(m_threadsDialog);
+        m_threadsDialog = NULL;
+
+        RemoveDockWindow(m_watchesDialog);
+        m_watchesDialog = NULL;
+    }
+
     return true;
 }
 
@@ -633,7 +680,7 @@ wxMenu* DebuggerManager::GetMenu()
     if(menu_pos != wxNOT_FOUND)
         menu = menuBar->GetMenu(menu_pos);
 
-    if(!menu)
+    if (!menu)
     {
         menu = Manager::Get()->LoadMenu(_T("debugger_menu"),true);
 
@@ -668,9 +715,9 @@ void DebuggerManager::BuildContextMenu(wxMenu &menu, const wxString& word_at_car
     m_menuHandler->BuildContextMenu(menu, word_at_caret, is_running);
 }
 
-void DebuggerManager::LoadToolbar(wxToolBar *toolbar)
+wxToolBar* DebuggerManager::GetToolbar(bool create)
 {
-    m_toolbarHandler->LoadToolbar(toolbar);
+    return m_toolbarHandler->GetToolbar(create);
 }
 
 TextCtrlLogger* DebuggerManager::GetLogger(bool for_debug, int &index)
@@ -746,23 +793,23 @@ void DebuggerManager::HideLogger(bool for_debug)
 bool DebuggerManager::RebuildActiveDebuggersMenu()
 {
     wxMenu* debug_menu = GetMenu();
-    if(!debug_menu)
+    if (!debug_menu)
         return true;
     int item_id = debug_menu->FindItem(_("&Active debuggers"));
     wxMenuItem *menuitem = debug_menu->FindItem(item_id, NULL);
-    if(!menuitem)
+    if (!menuitem)
         return false;
 
     wxMenu *menu = menuitem->GetSubMenu();
-    if(!menu)
+    if (!menu)
         return false;
-    while(menu->GetMenuItemCount() > 0)
+    while (menu->GetMenuItemCount() > 0)
     {
         wxMenuItem *item = menu->FindItemByPosition(0);
         menu->Destroy(item);
     }
 
-    for(RegisteredPlugins::const_iterator it = m_registered.begin(); it != m_registered.end(); ++it)
+    for (RegisteredPlugins::const_iterator it = m_registered.begin(); it != m_registered.end(); ++it)
     {
         PluginData const &data = it->second;
         menu->AppendRadioItem(data.menu_id, data.name);
@@ -770,6 +817,14 @@ bool DebuggerManager::RebuildActiveDebuggersMenu()
         m_menuHandler->Connect(data.menu_id, -1, wxEVT_COMMAND_MENU_SELECTED,
                                (wxObjectEventFunction) (wxEventFunction) (wxCommandEventFunction)
                                &DebuggerMenuHandler::OnActiveDebuggerClick);
+    }
+
+    if (m_activeDebugger)
+    {
+        RegisteredPlugins::const_iterator it = m_registered.find(m_activeDebugger);
+        cbAssert(it != m_registered.end());
+
+        menu->Check(it->second.menu_id, true);
     }
 
     return true;
@@ -796,7 +851,7 @@ cbBacktraceDlg* DebuggerManager::GetBacktraceDialog()
 
 cbBreakpointsDlg* DebuggerManager::GetBreakpointDialog()
 {
-    if(!m_breakPointsDialog)
+    if (!m_breakPointsDialog)
     {
         m_breakPointsDialog = new cbBreakpointsDlg;
 
@@ -893,7 +948,7 @@ cbThreadsDlg* DebuggerManager::GetThreadsDialog()
 
 WatchesDlg* DebuggerManager::GetWatchesDialog()
 {
-    if(!m_watchesDialog)
+    if (!m_watchesDialog)
     {
         m_watchesDialog = new WatchesDlg;
         CodeBlocksDockEvent evt(cbEVT_ADD_DOCK_WINDOW);
@@ -954,9 +1009,9 @@ bool DebuggerManager::UpdateThreads()
 cbDebuggerPlugin* DebuggerManager::GetDebuggerHavingWatch(cbWatch *watch)
 {
     watch = GetRootWatch(watch);
-    for(RegisteredPlugins::iterator it = m_registered.begin(); it != m_registered.end(); ++it)
+    for (RegisteredPlugins::iterator it = m_registered.begin(); it != m_registered.end(); ++it)
     {
-        if(it->first->HasWatch(watch))
+        if (it->first->HasWatch(watch))
             return it->first;
     }
     return NULL;
@@ -977,6 +1032,21 @@ cbDebuggerPlugin* DebuggerManager::GetActiveDebugger()
 
 void DebuggerManager::SetActiveDebugger(cbDebuggerPlugin* activeDebugger)
 {
+    if (m_activeDebugger && m_activeDebugger->IsRunning())
+    {
+        AnnoyingDialog dlg(_("Debugger is running"),
+                           _("Can't change the active debugger while it is running!"),
+                           wxART_WARNING, AnnoyingDialog::OK, wxID_OK);
+        dlg.ShowModal();
+        return;
+    }
+
+    RegisteredPlugins::const_iterator it = m_registered.find(activeDebugger);
+    cbAssert(it != m_registered.end());
+
+    ConfigManager &config = *Manager::Get()->GetConfigManager(_T("debugger_common"));
+    config.Write(wxT("active_debugger"), it->second.name);
+
     m_activeDebugger = activeDebugger;
     m_menuHandler->SetActiveDebugger(activeDebugger);
 }
