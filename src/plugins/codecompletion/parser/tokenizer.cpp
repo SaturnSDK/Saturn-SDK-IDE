@@ -57,7 +57,6 @@ Tokenizer::Tokenizer(const wxString& filename)
     m_PeekNestLevel(0),
     m_IsOK(false),
     m_IsOperator(false),
-    m_SkipUnwantedTokens(true),
     m_State(tsSkipUnWanted),
     m_pLoader(0)
 {
@@ -85,24 +84,24 @@ bool Tokenizer::Init(const wxString& filename, LoaderBase* loader)
     else
     {
         m_Filename = filename;
-        TRACE(_T("Init() : m_Filename='%s'"), m_Filename.c_str());
+        TRACE(_T("Init() : m_Filename='%s'"), m_Filename.wx_str());
     }
 
     if (!wxFileExists(m_Filename))
     {
-        TRACE(_T("Init() : File '%s' does not exist."), m_Filename.c_str());
+        TRACE(_T("Init() : File '%s' does not exist."), m_Filename.wx_str());
         return false;
     }
 
     if (!ReadFile())
     {
-        TRACE(_T("Init() : File '%s' could not be read."), m_Filename.c_str());
+        TRACE(_T("Init() : File '%s' could not be read."), m_Filename.wx_str());
         return false;
     }
 
     if (!m_BufferLen)
     {
-        TRACE(_T("Init() : File '%s' is empty."), m_Filename.c_str());
+        TRACE(_T("Init() : File '%s' is empty."), m_Filename.wx_str());
         return false;
     }
 
@@ -183,6 +182,18 @@ bool Tokenizer::ReadFile()
         success = true;
     }
 
+//    size_t replacements  = m_Buffer.Replace(_T("_GLIBCXX_BEGIN_NESTED_NAMESPACE(std, _GLIBCXX_STD_D)"), _T("namespace std {"),       true);
+//           replacements += m_Buffer.Replace(_T("_GLIBCXX_BEGIN_NESTED_NAMESPACE(std, _GLIBCXX_STD_P)"), _T("namespace std {"),       true);
+//           replacements += m_Buffer.Replace(_T("_GLIBCXX_END_NESTED_NAMESPACE"),                        _T("}"),                     true);
+//           replacements += m_Buffer.Replace(_T("_GLIBCXX_BEGIN_NAMESPACE_TR1"),                         _T("namespace tr1 {"),       true);
+//           // The following must be before replacing "_GLIBCXX_END_NAMESPACE"!!!
+//           replacements += m_Buffer.Replace(_T("_GLIBCXX_END_NAMESPACE_TR1"),                           _T("}"),                     true);
+//           replacements += m_Buffer.Replace(_T("_GLIBCXX_BEGIN_NAMESPACE(__gnu_cxx)"),                  _T("namespace __gnu_cxx {"), true);
+//           replacements += m_Buffer.Replace(_T("_GLIBCXX_BEGIN_NAMESPACE(std)"),                        _T("namespace std {"),       true);
+//           replacements += m_Buffer.Replace(_T("_GLIBCXX_END_NAMESPACE"),                               _T("}"),                     true);
+//
+//    if (replacements) TRACE(_T("Did %d replacements in buffer of '%s'."), replacements, fileName.wx_str());
+
     m_BufferLen = m_Buffer.Length();
 
     // add 'sentinel' to the end of the string (not counted to the length of the string)
@@ -217,9 +228,9 @@ bool Tokenizer::IsEscapedChar()
     {
         // check for multiple backslashes, e.g. "\\"
         unsigned int numBackslash = 2; // for sure we have at least two at this point
-        while(   ((m_TokenIndex - numBackslash) >= 0)
-              && ((m_TokenIndex - numBackslash) <= m_BufferLen)
-              && (m_Buffer.GetChar(m_TokenIndex - numBackslash) == '\\') )
+        while (   ((m_TokenIndex - numBackslash) >= 0)
+               && ((m_TokenIndex - numBackslash) <= m_BufferLen)
+               && (m_Buffer.GetChar(m_TokenIndex - numBackslash) == '\\') )
             ++numBackslash; // another one...
 
         if ( (numBackslash%2) == 1) // number of backslashes (including current char) is odd
@@ -249,7 +260,7 @@ bool Tokenizer::SkipToChar(const wxChar& ch)
 //  The double quote before H is a "C-escaped-character", We shouldn't quite from that
 bool Tokenizer::SkipToStringEnd(const wxChar& ch)
 {
-    while(true)
+    while (true)
     {
         while (CurrentChar() != ch && MoveToNextChar()) // don't check EOF when MoveToNextChar already does
             ;
@@ -287,7 +298,7 @@ bool Tokenizer::SkipToOneOfChars(const wxChar* chars, bool supportNesting)
     {
         MoveToNextChar();
 
-        while(SkipString()||SkipComment())
+        while (SkipString()||SkipComment())
             ;
 
         // use 'while' here to cater for consecutive blocks to skip (e.g. sometemplate<foo>(bar)
@@ -334,7 +345,7 @@ bool Tokenizer::SkipToEOL(bool nestBraces, bool skippingComment)
     {
         while (NotEOF() && CurrentChar() != '\n')
         {
-            if(!skippingComment)
+            if (!skippingComment)
             {
                 if (CurrentChar() == '/' && NextChar() == '*')
                 {
@@ -388,7 +399,7 @@ bool Tokenizer::SkipBlock(const wxChar& ch)
     while (NotEOF())
     {
 
-        while(SkipString() || SkipComment())
+        while (SkipString() || SkipComment())
             ;
 
         if (CurrentChar() == ch)
@@ -430,7 +441,7 @@ bool Tokenizer::SkipComment(bool skipEndWhite)
 
 
     // Here, we are in the comment body
-    while(true)
+    while (true)
     {
         if (cstyle)      // C style comment
         {
@@ -440,7 +451,7 @@ bool Tokenizer::SkipComment(bool skipEndWhite)
                 MoveToNextChar();
                 break;
             }
-            if(!MoveToNextChar())
+            if (!MoveToNextChar())
                 break;
         }
         else             // C++ style comment
@@ -472,7 +483,7 @@ bool Tokenizer::SkipUnwanted()
     // skip [XXX][YYY]
     if (m_State&tsSkipSubScrip)
     {
-        while(c == _T('[') )
+        while (c == _T('[') )
         {
             SkipBlock('[');
             if (!SkipWhiteSpace())
@@ -482,11 +493,11 @@ bool Tokenizer::SkipUnwanted()
     }
 
     // skip the following = or ?
-    if(m_State&tsSkipEqual)
+    if (m_State&tsSkipEqual)
     {
-        if(c == _T('='))
+        if (c == _T('='))
         {
-            if (!SkipToOneOfChars(_T(";}"), true))
+            if (!SkipToOneOfChars(_T(",;}"), true))
                 return false;
         }
     }
@@ -514,7 +525,7 @@ wxString Tokenizer::GetToken()
     m_UndoLineNumber = m_LineNumber;
     m_UndoNestLevel  = m_NestLevel;
 
-    if(m_PeekAvailable)
+    if (m_PeekAvailable)
     {
         m_TokenIndex = m_PeekTokenIndex;
         m_LineNumber = m_PeekLineNumber;
@@ -531,7 +542,7 @@ wxString Tokenizer::GetToken()
 
 wxString Tokenizer::PeekToken()
 {
-    if(!m_PeekAvailable)
+    if (!m_PeekAvailable)
     {
         m_PeekAvailable = true;
 
@@ -573,7 +584,7 @@ wxString Tokenizer::DoGetToken()
     if (!SkipWhiteSpace())
         return wxEmptyString;
 
-    if(!SkipUnwanted())
+    if (!SkipUnwanted())
         return wxEmptyString;;
 
     int start = m_TokenIndex;
@@ -685,12 +696,12 @@ wxString Tokenizer::FixArgument(wxString src)
 {
     wxString dst;
 
-    TRACE(_T("FixArgument() : src='%s'."), src.c_str());
+    TRACE(_T("FixArgument() : src='%s'."), src.wx_str());
 
     // str.Replace is massive overkill here since it has to allocate one new block per replacement
     { // this is much faster:
         size_t i;
-        while((i = src.find_first_of(TokenizerConsts::tabcrlf)) != wxString::npos)
+        while ((i = src.find_first_of(TokenizerConsts::tabcrlf)) != wxString::npos)
             src[i] = _T(' ');
     }
 
@@ -765,32 +776,21 @@ wxString Tokenizer::FixArgument(wxString src)
     dst << _T(')'); // add closing parenthesis (see "i < src.Length() - 1" in previous "for")
     // str.Replace is massive overkill here since it has to allocate one new block per replacement
 
-    TRACE(_T("FixArgument() : dst='%s'."), dst.c_str());
+    TRACE(_T("FixArgument() : dst='%s'."), dst.wx_str());
 
     return dst;
 }
 
-/*
-  Just do the macro replace like below:
-  m_Buffer.Replace(_T("_GLIBCXX_BEGIN_NESTED_NAMESPACE(std, _GLIBCXX_STD_D)"), _T("namespace std {"),       true);
-  m_Buffer.Replace(_T("_GLIBCXX_BEGIN_NESTED_NAMESPACE(std, _GLIBCXX_STD_P)"), _T("namespace std {"),       true);
-  m_Buffer.Replace(_T("_GLIBCXX_END_NESTED_NAMESPACE"),                        _T("}"),                     true);
-  m_Buffer.Replace(_T("_GLIBCXX_BEGIN_NAMESPACE_TR1"),                         _T("namespace tr1 {"),       true);
-  // The following must be before replacing "_GLIBCXX_END_NAMESPACE"!!!
-  m_Buffer.Replace(_T("_GLIBCXX_END_NAMESPACE_TR1"),                           _T("}"),                     true);
-  m_Buffer.Replace(_T("_GLIBCXX_BEGIN_NAMESPACE(__gnu_cxx)"),                  _T("namespace __gnu_cxx {"), true);
-  m_Buffer.Replace(_T("_GLIBCXX_BEGIN_NAMESPACE(std)"),                        _T("namespace std {"),       true);
-  m_Buffer.Replace(_T("_GLIBCXX_END_NAMESPACE"),                               _T("}"),                     true);
-*/
 wxString Tokenizer::MacroReplace(const wxString str)
 {
-   ConfigManagerContainer::StringToStringMap::const_iterator it = s_Replacements.find(str);
+    ConfigManagerContainer::StringToStringMap::const_iterator it = s_Replacements.find(str);
 
     if (it != s_Replacements.end())
     {
         // match one!
         wxString key   = it->first;
         wxString value = it->second;
+        TRACE(_T("MacroReplace() : Replacing '%s' with '%s' (file='%s')."), key.wx_str(), value.wx_str(), m_ m_Filename.wx_str());
         if (value[0]=='+' && CurrentChar()=='(')
         {
             unsigned int start = m_TokenIndex;
@@ -832,6 +832,7 @@ wxString Tokenizer::MacroReplace(const wxString str)
         else
             return value;
     }
+
     return str;
 }
 

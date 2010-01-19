@@ -61,6 +61,7 @@
 		</ResourceCompiler>
 		<Linker>
 			<Add option="-Wl,--enable-auto-import" />
+			<Add option="-mthreads" />
 			<Add library="wxflatnotebook" />
 			<Add library="wxmsw28$(WX_SUFFIX)" />
 			<Add library="txml" />

@@ -65,7 +65,6 @@
 			<Add directory="..\..\..\include\scripting\squirrel" />
 			<Add directory="..\..\..\include\scripting\sqplus" />
 			<Add directory="..\..\..\include\scripting\bindings" />
-			<Add directory="..\..\..\sdk\wxscintilla\include" />
 			<Add directory="..\..\..\sdk\wxpropgrid\include" />
 		</Compiler>
 		<ResourceCompiler>
@@ -76,8 +75,10 @@
 			<Add option="-Wl,--export-all-symbols" />
 			<Add option="-Wl,--add-stdcall-alias" />
 			<Add option="-Wl,--enable-auto-import" />
-			<Add library="wxscintilla" />
+			<Add option="-mthreads" />
+			<Add library="txml" />
 			<Add library="wxpropgrid" />
+			<Add library="wxscintilla" />
 			<Add library="wxmsw28$(WX_SUFFIX)" />
 			<Add library="codeblocks" />
 			<Add directory="$(#WX.lib)\gcc_dll$(WX_CFG)" />
