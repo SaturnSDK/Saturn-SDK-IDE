@@ -108,6 +108,7 @@ class Token : public BlockAllocated<Token, 10000>
         wxString      m_Args;
         wxString      m_StrippedArgs;
         wxString      m_AncestorsString; // all ancestors comma-separated list
+        wxString      m_TemplateArgument;
         unsigned int  m_FileIdx;
         unsigned int  m_Line;
         unsigned int  m_ImplFileIdx;

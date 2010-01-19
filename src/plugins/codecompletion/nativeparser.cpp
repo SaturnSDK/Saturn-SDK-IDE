@@ -114,11 +114,14 @@ void NativeParser::OnProjectLoadingHook(cbProject* project, TiXmlElement* elem, 
         TiXmlElement* node = elem->FirstChildElement("code_completion");
         if (!node)
             node = elem->InsertEndChild(TiXmlElement("code_completion"))->ToElement();
-        node->Clear();
-        for (size_t i = 0; i < pdirs.GetCount(); ++i)
+        if (node)
         {
-            TiXmlElement* path = node->InsertEndChild(TiXmlElement("search_path"))->ToElement();
-            path->SetAttribute("add", cbU2C(pdirs[i]));
+            node->Clear();
+            for (size_t i = 0; i < pdirs.GetCount(); ++i)
+            {
+                TiXmlElement* path = node->InsertEndChild(TiXmlElement("search_path"))->ToElement();
+                if (path) path->SetAttribute("add", cbU2C(pdirs[i]));
+            }
         }
     }
 }
@@ -695,7 +698,7 @@ bool NativeParser::ParseFunctionArguments(cbEditor* ed, int caretPos)
     if (!ed)
         return false;
 
-    if (m_Parser.Done())
+    if (!m_Parser.Done())
         return false;
 
     if (s_DebugSmartSense)
@@ -765,7 +768,11 @@ bool NativeParser::ParseLocalBlock(cbEditor* ed, int caretPos)
         ++blockStart; // skip {
         int blockEnd = caretPos == -1 ? ed->GetControl()->GetCurrentPos() : caretPos;
         if (blockEnd < 0 || blockEnd > ed->GetControl()->GetLength())
+        {
+            if (s_DebugSmartSense)
+                Manager::Get()->GetLogManager()->DebugLog(F(_T("ParseLocalBlock() ERROR blockEnd=%d and edLength=%d?!"), blockEnd, ed->GetControl()->GetLength()));
             return false;
+        }
 
         if (blockStart >= blockEnd)
             blockStart = blockEnd;
@@ -999,8 +1006,10 @@ const wxArrayString& NativeParser::GetCallTips(int chars_per_line)
     {
         if (!ed)
             break;
+
         if (!m_Parser.Done())
             break;
+
         int line = ed->GetControl()->GetCurrentLine();
         lineText = ed->GetControl()->GetLine(line);
         end = ed->GetControl()->GetCurrentPos() - ed->GetControl()->PositionFromLine(line);
@@ -1056,8 +1065,10 @@ const wxArrayString& NativeParser::GetCallTips(int chars_per_line)
                 m_CallTips.Add(token->m_ActualType); // typedef'd function pointer
         }
     } while (false);
+
     if (lock)
         delete lock;
+
     m_GettingCalltips = false;
     m_CallTipCommas = commas;
 
@@ -1632,7 +1643,16 @@ size_t NativeParser::BreakUpComponents(const wxString& actual, std::queue<Parser
             Manager::Get()->GetLogManager()->DebugLog(F(_T("BreakUpComponents() Found component: '%s' (%s)"), tok.wx_str(), tokenTypeString.wx_str()));
         }
 
-        components.push(pc);
+        // Support global namespace like ::MessageBoxA
+        // Break up into "", type is pttNameSpace and "MessageBoxA", type is pttSearchText.
+        // for pttNameSpace  type, if its text (tok) is empty -> ignore this component.
+        // for pttSearchText type, don't do this because for ss:: we need this, too.
+        if (tok.Length() != 0 || tokenType == pttSearchText)
+        {
+            if (s_DebugSmartSense)
+                Manager::Get()->GetLogManager()->DebugLog(F(_T("BreakUpComponents() Adding component: '%s'."), tok.wx_str()));
+            components.push(pc);
+        }
 
         if (tokenType == pttSearchText)
             break;

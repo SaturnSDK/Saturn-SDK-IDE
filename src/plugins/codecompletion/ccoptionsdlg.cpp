@@ -89,6 +89,7 @@ CCOptionsDlg::CCOptionsDlg(wxWindow* parent, NativeParser* np, CodeCompletion* c
     XRCCTRL(*this, "chkPreprocessor", wxCheckBox)->SetValue(m_Parser.Options().wantPreprocessor);
     XRCCTRL(*this, "chkNoCC", wxCheckBox)->SetValue(!cfg->ReadBool(_T("/use_code_completion"), true));
     XRCCTRL(*this, "chkSimpleMode", wxCheckBox)->SetValue(!m_Parser.Options().useSmartSense);
+    XRCCTRL(*this, "chkTypeMode", wxCheckBox)->SetValue(m_Parser.Options().whileTyping);
     XRCCTRL(*this, "chkCaseSensitive", wxCheckBox)->SetValue(m_Parser.Options().caseSensitive);
     XRCCTRL(*this, "chkEvalTooltip", wxCheckBox)->SetValue(cfg->ReadBool(_T("/eval_tooltip"), true));
     XRCCTRL(*this, "chkAutoSelectOne", wxCheckBox)->SetValue(cfg->ReadBool(_T("/auto_select_one"), false));
@@ -172,11 +173,24 @@ bool CCOptionsDlg::ValidateReplacementToken(wxString& from, wxString& to)
     }
 
     wxRegEx re(_T("[A-Za-z_]+[0-9]*[A-Za-z_]*"));
-    if (!re.Matches(from) || !re.Matches(to))
+    if (!re.Matches(from))
     {
-        cbMessageBox(_("Replacement tokens can only contain alphanumeric characters and underscores."),
+        cbMessageBox(_("Search token can only contain alphanumeric characters and underscores."),
                      _("Error"), wxICON_ERROR);
         return false;
+    }
+    if (!re.Matches(to))
+    {
+        // Allow replacing with special characters only if the user says it's ok.
+        if (cbMessageBox( _("You are replacing a token with a string that contains\n"
+                            "characters other than alphanumeric and underscores.\n"
+                            "This could make parsing the file impossible.\n"
+                            "Are you sure?"),
+                          _("Confirmation"),
+                          wxICON_QUESTION | wxYES_NO ) != wxID_YES)
+        {
+            return false;
+        }
     }
 
     return true;
@@ -274,6 +288,7 @@ void CCOptionsDlg::OnUpdateUI(wxUpdateUIEvent& event)
     XRCCTRL(*this, "spnMaxMatches", wxSpinCtrl)->Enable(en);
     XRCCTRL(*this, "sliderDelay", wxSlider)->Enable(en);
     XRCCTRL(*this, "chkSimpleMode", wxCheckBox)->Enable(en);
+    XRCCTRL(*this, "chkTypeMode", wxCheckBox)->Enable(en);
     XRCCTRL(*this, "lblFillupChars", wxStaticText)->Enable(en);
     XRCCTRL(*this, "txtFillupChars", wxTextCtrl)->Enable(en);
 
@@ -309,6 +324,7 @@ void CCOptionsDlg::OnApply()
     m_Parser.Options().caseSensitive = XRCCTRL(*this, "chkCaseSensitive", wxCheckBox)->GetValue();
     cfg->Write(_T("/eval_tooltip"), (bool)XRCCTRL(*this, "chkEvalTooltip", wxCheckBox)->GetValue());
     m_Parser.Options().useSmartSense = !XRCCTRL(*this, "chkSimpleMode", wxCheckBox)->GetValue();
+    m_Parser.Options().whileTyping = XRCCTRL(*this, "chkTypeMode", wxCheckBox)->GetValue();
 
     cfg->Write(_T("/use_symbols_browser"), (bool)!XRCCTRL(*this, "chkNoSB", wxCheckBox)->GetValue());
     cfg->Write(_T("/fillup_chars"), XRCCTRL(*this, "txtFillupChars", wxTextCtrl)->GetValue());

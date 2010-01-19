@@ -20,9 +20,8 @@ enum TokenizerState
 
     tsSkipNone         = 0x1000,
     // convenient masks
-    tsSkipUnWanted     = tsSkipEqual | tsSkipQuestion | tsSkipSubScrip,
-    tsTemplateArgument = tsSkipUnWanted|tsSingleAngleBrace
-
+    tsSkipUnWanted     = tsSkipEqual    | tsSkipQuestion | tsSkipSubScrip,
+    tsTemplateArgument = tsSkipUnWanted | tsSingleAngleBrace
 };
 
 
@@ -44,7 +43,6 @@ public:
     wxString GetToken();
     wxString PeekToken();
     void     UngetToken();
-
 
     void SetTokenizerOption(bool wantPreprocessor)
     {
@@ -273,7 +271,6 @@ private:
 
     bool             m_IsOK;
     bool             m_IsOperator;
-    bool             m_SkipUnwantedTokens;
 
     TokenizerState   m_State;
 
