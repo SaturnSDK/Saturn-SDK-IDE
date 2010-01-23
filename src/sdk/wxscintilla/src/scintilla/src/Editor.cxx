@@ -2365,7 +2365,7 @@ void Editor::DrawEOL(Surface *surface, ViewStyle &vsDraw, PRectangle rcLine, Lin
 		PRectangle rcPlace = rcSegment;
 
 		if (wrapVisualFlagsLocation & SC_WRAPVISUALFLAGLOC_END_BY_TEXT) {
-			rcPlace.left = ll->positions[ll->numCharsInLine] + xStart + virtualSpace;
+			rcPlace.left = xEol + xStart + virtualSpace;
 			rcPlace.right = rcPlace.left + vsDraw.aveCharWidth;
 		} else {
 			// draw left of the right text margin, to avoid clipping by the current clip rect
@@ -3926,6 +3926,7 @@ void Editor::Clear() {
 }
 
 void Editor::SelectAll() {
+	sel.Clear();
 	SetSelection(0, pdoc->Length());
 	Redraw();
 }

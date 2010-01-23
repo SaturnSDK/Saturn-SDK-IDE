@@ -20,7 +20,7 @@
 #ifndef __WXSCINTILLA_H__
 #define __WXSCINTILLA_H__
 
-#define wxSCINTILLA_VERSION _T("2.01.0")
+#define wxSCINTILLA_VERSION _T("2.02.0")
 
 #include <wx/wx.h>
 #include <wx/dnd.h>

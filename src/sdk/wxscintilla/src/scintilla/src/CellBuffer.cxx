@@ -198,6 +198,7 @@ Action::Action() {
 	position = 0;
 	data = 0;
 	lenData = 0;
+	mayCoalesce = false;
 }
 
 Action::~Action() {
