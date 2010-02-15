@@ -28,6 +28,8 @@ libcodeblocks_la_SOURCES = annoyingdialog.cpp \
 						base64.cpp \
 						blockallocated.cpp \
 						breakpointsdlg.cpp \
+						cbauibook.cpp \
+						cbexception.cpp \
 						cbeditor.cpp \
 						cbeditorprintout.cpp \
 						cbexception.cpp \
@@ -63,6 +65,7 @@ libcodeblocks_la_SOURCES = annoyingdialog.cpp \
 						editorconfigurationdlg.cpp \
 						editorlexerloader.cpp \
 						editormanager.cpp \
+						editor_hooks.cpp \
 						editpairdlg.cpp \
 						editpathdlg.cpp \
 						edittooldlg.cpp \
@@ -118,6 +121,7 @@ libcodeblocks_la_SOURCES = annoyingdialog.cpp \
 						watchesdlg.cpp \
 						workspaceloader.cpp \
 						xtra_res.cpp  \
+						nullptr.cpp \
 						mozilla_chardet/src/CharDistribution.cpp \
 						mozilla_chardet/src/JpCntx.cpp \
 						mozilla_chardet/src/LangBulgarianModel.cpp \

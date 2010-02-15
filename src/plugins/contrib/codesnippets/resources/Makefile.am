@@ -140,3 +140,12 @@ install-data-local: codesnippets.zip
 	if test -f $(srcdir)/codesnippets.zip; then p=$(srcdir)/codesnippets.zip; else p=codesnippets.zip; fi; \
 	$(INSTALL_DATA) $$p $(DESTDIR)$(datadir)/@PACKAGE@/codesnippets.zip
 
+clean-local:
+	if test -f $(srcdir)/codesnippets.zip; then rm $(srcdir)/codesnippets.zip; fi;
+
+distclean-local:
+	if test -f $(srcdir)/codesnippets.zip; then rm $(srcdir)/codesnippets.zip; fi;
+
+uninstall-local:
+	if test -f $(DESTDIR)$(datadir)/@PACKAGE@/codesnippets.zip; then rm $(DESTDIR)$(datadir)/@PACKAGE@/codesnippets.zip; fi;
+

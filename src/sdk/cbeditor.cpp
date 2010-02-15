@@ -984,7 +984,7 @@ cbStyledTextCtrl* cbEditor::CreateEditor()
 {
     m_ID = wxNewId();
 
-    // avoid gtk-critical because of sizes less than -1 (can happen with wxAuiNotebook)
+    // avoid gtk-critical because of sizes less than -1 (can happen with wxAuiNotebook/cbAuiNotebook)
     wxSize size = m_pControl ? wxDefaultSize : GetSize();
     size.x = std::max(size.x, -1);
     size.y = std::max(size.y, -1);
@@ -2644,12 +2644,20 @@ void cbEditor::AddToContextMenu(wxMenu* popup,ModuleType type,bool pluginsdone)
 
         if (Manager::Get()->GetProjectManager()->GetActiveProject()) // project must be open
         {
+            bool isAddRemoveEnabled = true;
+            isAddRemoveEnabled = Manager::Get()->GetProjectManager()->GetActiveProject()->GetCurrentlyCompilingTarget() == 0;
             popup->AppendSeparator();
 
             if (m_pProjectFile)
+            {
                 popup->Append(idRemoveFileFromProject, _("Remove file from project"));
+                popup->Enable(idRemoveFileFromProject, isAddRemoveEnabled);
+            }
             else
+            {
                 popup->Append(idAddFileToProject, _("Add file to active project"));
+                popup->Enable(idAddFileToProject, isAddRemoveEnabled);
+            }
         }
         // remove "Insert/Empty" if more than one entry
         wxMenu* insert = 0;

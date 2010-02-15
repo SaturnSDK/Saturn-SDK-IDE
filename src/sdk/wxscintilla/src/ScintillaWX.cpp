@@ -326,7 +326,9 @@ void ScintillaWX::StartDrag() {
     wxScintillaEvent evt(wxEVT_SCI_START_DRAG, sci->GetId());
     evt.SetEventObject (sci);
     evt.SetDragText(dragText);
-    evt.SetDragAllowMove(true);
+/* C::B begin */
+    evt.SetDragAllowMove(wxDrag_DefaultMove);
+/* C::B end */
     evt.SetPosition (wxMin(sci->GetSelectionStart(),
 	                       sci->GetSelectionEnd()));
     sci->GetEventHandler()->ProcessEvent (evt);
@@ -560,7 +562,11 @@ void ScintillaWX::Paste() {
 
     if (wxTheClipboard->Open()) {
         wxTheClipboard->UsePrimarySelection(false);
-        wxCustomDataObject selData(wxDataFormat(wxString(wxT("application/x-cbrectdata"))));
+/* C::B begin */
+        // Leave the followig lines that way to enable compilation with GCC 3.3.3
+        wxDataFormat dataFormat(wxString(wxT("application/x-cbrectdata")));
+        wxCustomDataObject selData(dataFormat);
+/* C::B end */
         bool gotRectData = wxTheClipboard->GetData(selData);
 
         if (gotRectData && selData.GetSize()>1) {

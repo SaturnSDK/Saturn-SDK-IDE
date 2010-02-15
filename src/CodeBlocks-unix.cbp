@@ -410,6 +410,7 @@
 		</Compiler>
 		<Linker>
 			<Add option="`wx-config --libs`" />
+			<Add option="`wx-config --libs aui`" />
 			<Add directory="base/tinyxml" />
 		</Linker>
 		<Unit filename="base/tinyxml/tinystr.cpp">
@@ -449,6 +450,9 @@
 			<Option target="sdk" />
 		</Unit>
 		<Unit filename="include/breakpointsdlg.h">
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="include/cbauibook.h">
 			<Option target="sdk" />
 		</Unit>
 		<Unit filename="include/cbeditor.h">
@@ -1810,6 +1814,9 @@
 			<Option target="sdk" />
 		</Unit>
 		<Unit filename="sdk/breakpointsdlg.cpp">
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="sdk/cbauibook.cpp">
 			<Option target="sdk" />
 		</Unit>
 		<Unit filename="sdk/cbeditor.cpp">

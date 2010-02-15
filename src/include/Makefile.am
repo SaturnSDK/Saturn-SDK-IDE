@@ -30,6 +30,7 @@ ALLHEADERS = annoyingdialog.h \
 				base64.h \
 				blockallocated.h \
 				breakpointsdlg.h \
+				cbauibook.h \
 				cbeditor.h \
 				cbeditorprintout.h \
 				cbexception.h \
