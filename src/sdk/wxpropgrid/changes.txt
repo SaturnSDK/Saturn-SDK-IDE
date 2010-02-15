@@ -1,4 +1,36 @@
 
+Version 1.4.11 ( ?-?-2010 )
+
+  New Features:
+
+  - Columns can now have custom proportions for auto-
+    resize purposes. Use the new SetColumnProportion(col,
+    proportion) function. wxPG_SPLITTER_AUTO_CENTER style
+    must be used, and naturally it now also works when
+    the grid has more than two columns.
+
+
+  Changes:
+
+  - Property selection is no longer cleared when adding
+    new properties (feature request #2942477).
+
+
+  Bugs Fixed:
+
+  - wxPropertyGrid::CanClose() could crash if there was
+    no property selected (bug #2951533, fix by Andrey
+    Kuznetsov).
+
+  - wxPropertyGridInterface::Enable/DisableProperty() would
+    crash if called for a property which did not belong to
+    any grid (bug #2925499).
+
+  - Property editors other than text ctrl based ones did not
+    respect wxPG_PROP_READONLY flag (bug #2940435).
+
+
+
 Version 1.4.10 ( Jan-03-2010 )
 
   New Features:

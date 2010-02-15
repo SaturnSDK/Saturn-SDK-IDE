@@ -1129,6 +1129,12 @@ wxWindow* wxPGChoiceEditor::CreateControlsBase( wxPropertyGrid* propGrid,
 {
     wxString        defString;
 
+    // Since it is not possible (yet) to create a read-only combo box in
+    // the same sense that wxTextCtrl is read-only, simply do not create
+    // the control in this case.
+    if ( property->HasFlag(wxPG_PROP_READONLY) )
+        return NULL;
+
     // Get choices.
     int index = property->GetChoiceInfo( NULL );
 
@@ -1757,6 +1763,9 @@ wxPGWindowList wxPGCheckBoxEditor::CreateControls( wxPropertyGrid* propGrid,
                                                    const wxPoint& pos,
                                                    const wxSize& size ) const
 {
+    if ( property->HasFlag(wxPG_PROP_READONLY) )
+        return NULL;
+
     wxPoint pt = pos;
     pt.x -= wxPG_XBEFOREWIDGET;
     wxSize sz = size;
@@ -2310,7 +2319,10 @@ void wxPropertyGrid::SetEditorAppearance( const wxPGCell& cell )
         }
     }
 
-    wxVisualAttributes vattrs = editor->GetClassDefaultAttributes();
+    // We used to obtain wxVisualAttributes via
+    // editor->GetDefaultAttributes() here, but that is not
+    // very consistently implemented in wx2.8, so it is safer
+    // to just use colours from wxSystemSettings etc. 
 
     const wxColour& fgCol = cell.GetFgCol();
     if ( wxGDI_IS_OK(fgCol) )
@@ -2324,9 +2336,11 @@ void wxPropertyGrid::SetEditorAppearance( const wxPGCell& cell )
     }
     else if ( wxGDI_IS_OK(oCell.GetFgCol()) )
     {
-        editor->SetForegroundColour(vattrs.colFg);
+        wxColour vColFg =
+            wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOWTEXT);
+        editor->SetForegroundColour(vColFg);
         if ( tc && tc != editor )
-            tc->SetForegroundColour(vattrs.colFg);
+            tc->SetForegroundColour(vColFg);
     }
 
     const wxColour& bgCol = cell.GetBgCol();
@@ -2338,9 +2352,10 @@ void wxPropertyGrid::SetEditorAppearance( const wxPGCell& cell )
     }
     else if ( wxGDI_IS_OK(oCell.GetBgCol()) )
     {
-        editor->SetBackgroundColour(vattrs.colBg);
+        wxColour vColBg = wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW);
+        editor->SetBackgroundColour(vColBg);
         if ( tc && tc != editor )
-            tc->SetBackgroundColour(vattrs.colBg);
+            tc->SetBackgroundColour(vColBg);
     }
 
     const wxFont& font = cell.GetFont();
@@ -2352,9 +2367,10 @@ void wxPropertyGrid::SetEditorAppearance( const wxPGCell& cell )
     }
     else if ( wxGDI_IS_OK(oCell.GetFont()) )
     {
-        editor->SetFont(vattrs.font);
+        wxFont vFont = wxSystemSettings::GetFont(wxSYS_DEFAULT_GUI_FONT);
+        editor->SetFont(vFont);
         if ( tc && tc != editor )
-            tc->SetFont(vattrs.font);
+            tc->SetFont(vFont);
     }
 
     m_editorAppearance.Assign(cell);

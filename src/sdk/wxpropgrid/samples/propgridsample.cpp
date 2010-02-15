@@ -629,6 +629,7 @@ enum
     ID_INSERTPROP,
     ID_INSERTCAT,
     ID_ENABLE,
+    ID_SETREADONLY,
     ID_HIDE,
     ID_DELETE,
     ID_DELETER,
@@ -731,6 +732,7 @@ BEGIN_EVENT_TABLE(FormMain, wxFrame)
     EVT_MENU( ID_UNSPECIFY, FormMain::OnMisc )
     EVT_MENU( ID_DELETEALL, FormMain::OnClearClick )
     EVT_MENU( ID_ENABLE, FormMain::OnEnableDisable )
+    EVT_MENU( ID_SETREADONLY, FormMain::OnSetReadOnly )
     EVT_MENU( ID_HIDE, FormMain::OnHideShow )
     EVT_MENU( ID_ITERATE1, FormMain::OnIterate1Click )
     EVT_MENU( ID_ITERATE2, FormMain::OnIterate2Click )
@@ -1807,6 +1809,10 @@ void FormMain::PopulateWithLibraryConfig ()
     wxPropertyGridManager* pgman = m_pPropGridManager;
     wxPropertyGridPage* pg = pgman->GetPage(wxT("wxWidgets Library Config"));
 
+    // Set custom column proportions
+    pg->SetColumnProportion(0, 3);
+    pg->SetColumnProportion(1, 1);
+
     wxPGProperty* cat;
 
     wxBitmap bmp = wxArtProvider::GetBitmap(wxART_REPORT_VIEW);
@@ -2245,6 +2251,8 @@ FormMain::FormMain(const wxString& title, const wxPoint& pos, const wxSize& size
         wxT("Toggles item's enabled state.") );
     m_itemEnable->Enable( FALSE );
     menuTools1->Append(ID_HIDE, wxT("Hide"), wxT("Shows or hides a property") );
+    menuTools1->Append(ID_SETREADONLY, wxT("Set as Read-Only"),
+                        wxT("Set property as read-only") );
 
     menuTools2->Append(ID_ITERATE1, wxT("Iterate Over Properties") );
     menuTools2->Append(ID_ITERATE2, wxT("Iterate Over Visible Items") );
@@ -2685,6 +2693,19 @@ void FormMain::OnEnableDisable( wxCommandEvent& )
         m_pPropGridManager->EnableProperty ( id );
         m_itemEnable->SetText( wxT("Disable") );
     }
+}
+
+// -----------------------------------------------------------------------
+
+void FormMain::OnSetReadOnly( wxCommandEvent& WXUNUSED(event) )
+{
+    wxPGProperty* p = m_pPropGridManager->GetGrid()->GetSelection();
+    if ( !p )
+    {
+        wxMessageBox(wxT("First select a property."));
+        return;
+    }
+    m_pPropGridManager->SetPropertyReadOnly(p);
 }
 
 // -----------------------------------------------------------------------

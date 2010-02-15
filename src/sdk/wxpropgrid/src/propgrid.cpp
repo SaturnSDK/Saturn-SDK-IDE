@@ -644,6 +644,7 @@ void wxPGProperty::Init()
 {
 #ifdef __WXPYTHON__
     m_scriptObject = NULL;
+    m_OORClientData = NULL;
 #endif
 
     m_commonValue = -1;
@@ -706,6 +707,7 @@ wxPGProperty::wxPGProperty( const wxString& label, const wxString& name )
 wxPGProperty::~wxPGProperty()
 {
 #ifdef __WXPYTHON__
+    delete m_OORClientData;
     if ( m_clientData )
         Py_DECREF( m_clientData );
 #endif
@@ -4777,7 +4779,7 @@ bool wxPropertyGridInterface::EnableProperty( wxPGPropArg id, bool enable )
             return false;
 
         // If active, Set active Editor.
-        if ( grid->GetState() == state && p == grid->GetSelection() )
+        if ( grid && grid->GetState() == state && p == grid->GetSelection() )
             grid->DoSelectProperty( p, wxPG_SEL_FORCE );
     }
     else
@@ -4786,7 +4788,7 @@ bool wxPropertyGridInterface::EnableProperty( wxPGPropArg id, bool enable )
             return false;
 
         // If active, Disable as active Editor.
-        if ( grid->GetState() == state && p == grid->GetSelection() )
+        if ( grid && grid->GetState() == state && p == grid->GetSelection() )
             grid->DoSelectProperty( p, wxPG_SEL_FORCE );
     }
 
@@ -5788,9 +5790,8 @@ int wxPropertyGrid::DoDrawItems( wxDC& dc,
                     {
                         dc.SetBrush(m_colPropBack);
                         dc.SetPen(m_colPropBack);
-                        dc.SetTextForeground(m_colDisPropFore);
                         if ( p->IsEnabled() )
-                            dc.SetTextForeground(rowFgCol);
+                            dc.SetTextForeground(m_colPropFore);
                         else
                             dc.SetTextForeground(m_colDisPropFore);
                     }
@@ -6199,8 +6200,10 @@ void wxPropertyGrid::Sort( wxPGPropArg id )
 
 void wxPropertyGrid::Sort()
 {
-    ClearSelection(false);  // This must be before state clear
     m_pState->Sort();
+
+    // Y-position of any open property editor may have changed
+    CorrectEditorWidgetPosY();
 }
 
 // -----------------------------------------------------------------------
@@ -6790,8 +6793,12 @@ bool wxPropertyGrid::DoEditorValidate()
     }
 
     wxWindow* wnd = GetEditorControl();
+    wxPGProperty* selected = GetSelection();
+    wxValidator* validator = NULL;
 
-    wxValidator* validator = GetSelection()->GetValidator();
+    if ( selected )
+        validator = selected->GetValidator();
+
     if ( validator && wnd )
     {
         // Use TextCtrl of ODComboBox instead
@@ -7501,7 +7508,6 @@ bool wxPropertyGrid::DoSelectProperty( wxPGProperty* p, unsigned int flags )
 
                 if ( flags & wxPG_SEL_FOCUS )
                     m_editorFocused = 1;
-
             }
             else
             {
@@ -11801,61 +11807,91 @@ void wxPropertyGridState::CheckColumnWidths( int widthChange )
 #endif
 
     // Auto center splitter
-    if ( !(pg->GetInternalFlags() & wxPG_FL_DONT_CENTER_SPLITTER) &&
-         m_colWidths.size() == 2 )
+    if ( !(pg->GetInternalFlags() & wxPG_FL_DONT_CENTER_SPLITTER) )
     {
-        float centerX = (float)(pg->m_width/2);
-        float splitterX;
-
-        if ( m_fSplitterX < 0.0 )
+        if ( m_colWidths.size() == 2 &&
+             m_columnProportions[0] == m_columnProportions[1] )
         {
-        #ifdef __WXDEBUG__
-            if ( debug )
-                wxLogDebug(wxT("  auto-center splitter reset"));
-        #endif
-            splitterX = centerX;
-        }
-        else if ( widthChange )
-        {
-        #ifdef __WXDEBUG__
-            if ( debug )
-                wxLogDebug(wxT("  auto-center with widthChange=%i"),
-                           widthChange);
-        #endif
-            //float centerX = float(pg->GetSize().x) * 0.5;
+            //
+            // When we have two columns of equal proportion, then use this
+            // code. It will look nicer when the scrollbar visibility is
+            // toggled on and off.
+            //
+            // TODO: Adapt this to generic recenter code.
+            //
+            float centerX = (float)(pg->m_width/2);
+            float splitterX;
 
-            // Recenter?
-            splitterX = m_fSplitterX + (float(widthChange) * 0.5);
-            float deviation = fabs(centerX - splitterX);
-
-            // If deviating from center, adjust towards it
-            if ( deviation > 20.0 )
+            if ( m_fSplitterX < 0.0 )
             {
-                if ( splitterX > centerX)
-                    splitterX -= 2;
-                else
-                    splitterX += 2;
+            #ifdef __WXDEBUG__
+                if ( debug )
+                    wxLogDebug(wxT("  auto-center splitter reset"));
+            #endif
+                splitterX = centerX;
             }
+            else if ( widthChange )
+            {
+            #ifdef __WXDEBUG__
+                if ( debug )
+                    wxLogDebug(wxT("  auto-center with widthChange=%i"),
+                               widthChange);
+            #endif
+                //float centerX = float(pg->GetSize().x) * 0.5;
+
+                // Recenter?
+                splitterX = m_fSplitterX + (float(widthChange) * 0.5);
+                float deviation = fabs(centerX - splitterX);
+
+                // If deviating from center, adjust towards it
+                if ( deviation > 20.0 )
+                {
+                    if ( splitterX > centerX)
+                        splitterX -= 2;
+                    else
+                        splitterX += 2;
+                }
+            }
+            else
+            {
+                // No width change, just keep sure we keep splitter position intact
+                splitterX = m_fSplitterX;
+                float deviation = fabs(centerX - splitterX);
+            #ifdef __WXDEBUG__
+                if ( debug )
+                    wxLogDebug(wxT("  auto-center with deviation=%.2f"),
+                               deviation);
+            #endif
+                if ( deviation > 50.0 )
+                {
+                    splitterX = centerX;
+                }
+            }
+
+            DoSetSplitterPosition((int)splitterX, 0, false, true);
+
+            m_fSplitterX = splitterX; // needed to retain accuracy
         }
         else
         {
-            // No width change, just keep sure we keep splitter position intact
-            splitterX = m_fSplitterX;
-            float deviation = fabs(centerX - splitterX);
-        #ifdef __WXDEBUG__
-            if ( debug )
-                wxLogDebug(wxT("  auto-center with deviation=%.2f"),
-                           deviation);
-        #endif
-            if ( deviation > 50.0 )
+            //
+            // Generic re-center code
+            //
+
+            // Calculate sum of proportions
+            int psum = 0;
+            for ( i=0; i<m_colWidths.size(); i++ )
+                psum += m_columnProportions[i];
+            int puwid = (pg->m_width*256) / psum;
+            int cpos = 0;
+
+            for ( i=0; i<(m_colWidths.size() - 1); i++ )
             {
-                splitterX = centerX;
+                int cwid = (puwid*m_columnProportions[i]) / 256;
+                cpos += cwid;
+                DoSetSplitterPosition(cpos, i, false, true);
             }
         }
-
-        DoSetSplitterPosition((int)splitterX, 0, false, true);
-
-        m_fSplitterX = splitterX; // needed to retain accuracy
     }
 }
 
@@ -11863,6 +11899,7 @@ void wxPropertyGridState::SetColumnCount( int colCount )
 {
     wxASSERT( colCount >= 2 );
     m_colWidths.SetCount( colCount, wxPG_DRAG_MARGIN );
+    m_columnProportions.SetCount( colCount, 1 );
     if ( m_colWidths.size() > (unsigned int)colCount )
         m_colWidths.RemoveAt( m_colWidths.size()-1,
                               m_colWidths.size() - colCount );
@@ -11871,6 +11908,21 @@ void wxPropertyGridState::SetColumnCount( int colCount )
         m_pPropGrid->RecalculateVirtualSize();
     else
         CheckColumnWidths();
+}
+
+void wxPropertyGridState::DoSetColumnProportion( unsigned int column,
+                                                 int proportion )
+{
+    wxASSERT_MSG( proportion >= 1,
+                  wxT("Column proportion must 1 or higher") );
+
+    if ( proportion < 1 )
+        proportion = 1;
+
+    while ( m_columnProportions.size() <= column )
+        m_columnProportions.push_back(1);
+
+    m_columnProportions[column] = proportion;
 }
 
 // Returns column index, -1 for margin
@@ -11942,6 +11994,17 @@ bool wxPropertyGridState::ArePropertiesAdjacent( wxPGProperty* prop1,
         return true;
 
     return false;
+}
+
+bool wxPropertyGridInterface::SetColumnProportion( unsigned int column,
+                                                   int proportion )
+{
+    wxCHECK(m_pState, false);
+    wxPropertyGrid* pg = m_pState->GetGrid();
+    wxCHECK(pg, false);
+    wxCHECK(pg->HasFlag(wxPG_SPLITTER_AUTO_CENTER), false);
+    m_pState->DoSetColumnProportion(column, proportion);
+    return true;
 }
 
 // -----------------------------------------------------------------------
@@ -12585,10 +12648,6 @@ int wxPropertyGridState::PrepareToAddItem( wxPGProperty* property,
     }
 #endif
 
-    // Make sure nothing is selected.
-    if ( propGrid )
-        propGrid->ClearSelection(false);
-
     if ( scheduledParent )
     {
         // Use parent's colours.
@@ -12817,6 +12876,10 @@ wxPGProperty* wxPropertyGridState::DoInsert( wxPGProperty* parent, int index, wx
 
     property->UpdateParentValues();
 
+    // Fix y-position of any open property editor
+    if ( m_pPropGrid )
+        m_pPropGrid->CorrectEditorWidgetPosY();
+
     m_itemsAdded = 1;
 
     return property;
@@ -13038,6 +13101,9 @@ wxPropertyGridState::wxPropertyGridState()
     m_colWidths.push_back( wxPG_DEFAULT_SPLITTERX );
     m_colWidths.push_back( wxPG_DEFAULT_SPLITTERX );
     m_fSplitterX = wxPG_DEFAULT_SPLITTERX;
+
+    m_columnProportions.push_back(1);
+    m_columnProportions.push_back(1);
 
     // By default, we only have the 'value' column editable
     m_editableColumns.push_back(1);

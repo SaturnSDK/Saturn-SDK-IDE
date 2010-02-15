@@ -799,8 +799,12 @@ wxPG_ALPHABETIC_MODE                = (wxPG_HIDE_CATEGORIES|wxPG_AUTO_SORT),
 */
 wxPG_BOLD_MODIFIED                  = 0x00000040,
 
-/** When wxPropertyGrid is resized, splitter moves to the center. This
-    behavior stops once the user manually moves the splitter.
+/** Using this style, the column splitters move automatically based on column
+    proportions (default is equal proportion for every column). This behavior
+    stops once the user manually moves a splitter, and returns when a
+    splitter is double-clicked.
+
+    @see wxPropertyGridInterface::SetColumnProportion().
 */
 wxPG_SPLITTER_AUTO_CENTER           = 0x00000080,
 
@@ -1234,7 +1238,9 @@ wxPG_PROP_CATEGORY                  = 0x2000,
 */
 wxPG_PROP_MISC_PARENT               = 0x4000,
 
-/** Property is read-only. Editor is still created.
+/** Property is read-only. Editor is still created for wxTextCtrl-based
+    property editors. For others, editor is not usually created because
+    they do implement wxTE_READONLY style or equivalent.
 */
 wxPG_PROP_READONLY                  = 0x8000,
 
@@ -3125,6 +3131,7 @@ public:
 #if defined(__WXPYTHON__) && !defined(SWIG)
     // This is the python object that contains and owns the C++ representation.
     PyObject*                   m_scriptObject;
+    wxClientData*               m_OORClientData;
 #endif
 
     /** Adapts list variant into proper value using consequtive ChildChanged-calls.
@@ -4534,6 +4541,8 @@ public:
             m_selection.push_back(prop);
     }
 
+    void DoSetColumnProportion( unsigned int column, int proportion );
+
     /**
         Returns information about arbitrary position in the grid.
 
@@ -4644,6 +4653,9 @@ protected:
 
     /** List of indices of columns the user can edit by clicking it. */
     wxArrayInt                  m_editableColumns;
+
+    /** Column proportions */
+    wxArrayInt                  m_columnProportions;
 
     double                      m_fSplitterX;
 
@@ -5592,6 +5604,19 @@ public:
     */
     static void SetBoolChoices( const wxString& true_choice, const wxString& false_choice );
 
+    /**
+        Set proportion of a auto-stretchable column.
+
+        @returns Returns @false on failure.
+
+        @remarks This member function will fail unless window style
+                 wxPG_SPLITTER_AUTO_CENTER is used.
+
+                 Also, you should call this for individual pages of
+                 wxPropertyGridManager (if used).
+    */
+    bool SetColumnProportion( unsigned int column, int proportion );
+
     /** Sets all properties in given array as expanded.
         @param expand
         False if you want to collapse properties instead.
@@ -5725,15 +5750,22 @@ public:
         p->SetValueToUnspecified();
     }
 
-    /** Sets property (and, recursively, its children) to have read-only value. In other words,
-        user cannot change the value in the editor, but they can still copy it.
-        @remarks
-        This is mainly for use with textctrl editor. Not all other editors fully
-        support it.
+    /** Sets property (and, recursively, its children) to have read-only
+        value. In other words, user cannot change the value in the editor,
+        but they can still copy it.
+
         @param flags
-        By default changes are applied recursively. Set this paramter wxPG_DONT_RECURSE to prevent this.
+            By default changes are applied recursively. Set this paramter
+            wxPG_DONT_RECURSE to prevent this.
+
+        @remarks This is mainly for use with textctrl editor. Not all other
+                 editors fully support it.
+
+                 Also note that read-only state does not immediately become
+                 active for currently open property editor.
     */
-    void SetPropertyReadOnly( wxPGPropArg id, bool set = true, int flags = wxPG_RECURSE )
+    void SetPropertyReadOnly( wxPGPropArg id, bool set = true,
+                              int flags = wxPG_RECURSE )
     {
         wxPG_PROP_ARG_CALL_PROLOG()
         if ( flags & wxPG_RECURSE )

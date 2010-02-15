@@ -1084,6 +1084,11 @@
     the sizer setup and SetSize calls!</b> (ie. usually at the end of the
     frame/dialog constructor)
 
+      Splitter centering behavior can be customized using
+    wxPropertyGridInterface::SetColumnProportion(). Usually it is used to set
+    non-equal column proportions, which in essence stops the splitter(s) no
+    longer being 'centered' as such.
+
     @subsection splittersetting Setting Splitter Position When Creating Property Grid
 
     Splitter position cannot exceed grid size, and therefore setting it during
