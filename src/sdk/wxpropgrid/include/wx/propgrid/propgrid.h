@@ -4543,6 +4543,13 @@ public:
 
     void DoSetColumnProportion( unsigned int column, int proportion );
 
+    int DoGetColumnProportion( unsigned int column ) const
+    {
+        return m_columnProportions[column];
+    }
+
+    void ResetColumnSizes( bool fromAutoCenter );
+
     /**
         Returns information about arbitrary position in the grid.
 
@@ -5614,8 +5621,20 @@ public:
 
                  Also, you should call this for individual pages of
                  wxPropertyGridManager (if used).
+
+        @see GetColumnProportion()
     */
     bool SetColumnProportion( unsigned int column, int proportion );
+
+    /**
+        Returns auto-resize proportion of the given column.
+
+        @see SetColumnProportion()
+    */
+    int GetColumnProportion( unsigned int column ) const
+    {
+        return m_pState->DoGetColumnProportion(column);
+    }
 
     /** Sets all properties in given array as expanded.
         @param expand
@@ -6603,10 +6622,14 @@ public:
         return DoEditorValidate();
     }
 
-    /** Centers the splitter. If argument is true, automatic splitter centering is
-        enabled (only applicapple if style wxPG_SPLITTER_AUTO_CENTER was defined).
+    /**
+        Centers the splitter.
+        
+        @param enableAutoResizing
+            If @true, automatic column resizing is enabled (only applicapple
+            if window style wxPG_SPLITTER_AUTO_CENTER is used).
     */
-    void CenterSplitter( bool enable_auto_centering = false );
+    void CenterSplitter( bool enableAutoResizing = false );
 
     /** Changes value of a property, as if from an editor. Use this instead of SetPropertyValue()
         if you need the value to run through validation process, and also send the property
@@ -7083,6 +7106,17 @@ public:
     /** Resets all colours to the original system values.
     */
     void ResetColours();
+
+    /**
+        Resets column sizes and splitter positions, based on proportions.
+
+        @param enableAutoResizing
+            If @true, automatic column resizing is enabled (only applicapple
+            if window style wxPG_SPLITTER_AUTO_CENTER is used).
+
+        @see wxPropertyGridInterface::SetColumnProportion()
+    */
+    void ResetColumnSizes( bool enableAutoResizing = false );
 
     /** Changes keyboard shortcut to push the editor button.
         @remarks

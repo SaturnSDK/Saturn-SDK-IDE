@@ -6230,10 +6230,22 @@ void wxPropertyGrid::DoSetSplitterPosition_( int newxpos, bool refresh, int spli
 
 // -----------------------------------------------------------------------
 
-void wxPropertyGrid::CenterSplitter( bool enableAutoCentering )
+void wxPropertyGrid::ResetColumnSizes( bool enableAutoResizing )
+{
+    wxPropertyGridState* state = m_pState;
+    if ( state )
+        state->ResetColumnSizes(false);
+
+    if ( enableAutoResizing && ( m_windowStyle & wxPG_SPLITTER_AUTO_CENTER ) )
+        m_iFlags &= ~(wxPG_FL_DONT_CENTER_SPLITTER);
+}
+
+// -----------------------------------------------------------------------
+
+void wxPropertyGrid::CenterSplitter( bool enableAutoResizing )
 {
     SetSplitterPosition( m_width/2, true );
-    if ( enableAutoCentering && ( m_windowStyle & wxPG_SPLITTER_AUTO_CENTER ) )
+    if ( enableAutoResizing && ( m_windowStyle & wxPG_SPLITTER_AUTO_CENTER ) )
         m_iFlags &= ~(wxPG_FL_DONT_CENTER_SPLITTER);
 }
 
@@ -8061,7 +8073,7 @@ bool wxPropertyGrid::HandleMouseClick( int x, unsigned int y, wxMouseEvent &even
                     if ( event.GetEventType() == wxEVT_LEFT_DCLICK )
                     {
                         // Double-clicking the splitter causes auto-centering
-                        CenterSplitter( true );
+                        ResetColumnSizes( true );
                     }
                     else if ( m_dragStatus == 0 )
                     {
@@ -11877,21 +11889,28 @@ void wxPropertyGridState::CheckColumnWidths( int widthChange )
             //
             // Generic re-center code
             //
-
-            // Calculate sum of proportions
-            int psum = 0;
-            for ( i=0; i<m_colWidths.size(); i++ )
-                psum += m_columnProportions[i];
-            int puwid = (pg->m_width*256) / psum;
-            int cpos = 0;
-
-            for ( i=0; i<(m_colWidths.size() - 1); i++ )
-            {
-                int cwid = (puwid*m_columnProportions[i]) / 256;
-                cpos += cwid;
-                DoSetSplitterPosition(cpos, i, false, true);
-            }
+            ResetColumnSizes(true);
         }
+    }
+}
+
+void wxPropertyGridState::ResetColumnSizes( bool fromAutoCenter )
+{
+    unsigned int i;
+
+    // Calculate sum of proportions
+    int psum = 0;
+    for ( i=0; i<m_colWidths.size(); i++ )
+        psum += m_columnProportions[i];
+    int puwid = (m_pPropGrid->m_width*256) / psum;
+    int cpos = 0;
+
+    // Apply proportions
+    for ( i=0; i<(m_colWidths.size() - 1); i++ )
+    {
+        int cwid = (puwid*m_columnProportions[i]) / 256;
+        cpos += cwid;
+        DoSetSplitterPosition(cpos, i, false, fromAutoCenter);
     }
 }
 
