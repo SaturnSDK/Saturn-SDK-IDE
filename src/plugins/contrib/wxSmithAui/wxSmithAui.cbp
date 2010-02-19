@@ -9,13 +9,12 @@
 			<Target title="Unix">
 				<Option platforms="Unix;Mac;" />
 				<Option output="../../../devel/share/codeblocks/plugins/libwxSmithAui" prefix_auto="1" extension_auto="1" />
-				<Option working_dir="../../../devel" />
 				<Option object_output="../../../.objs/plugins/contrib/wxSmithAui" />
 				<Option external_deps="../../../devel/libwxsmithlib.so;" />
 				<Option type="3" />
 				<Option compiler="gcc" />
 				<Option parameters="--debug-log -ns -ni" />
-				<Option host_application="./codeblocks" />
+				<Option host_application="../../../devel/codeblocks" />
 				<Compiler>
 					<Add option="-Ulinux" />
 					<Add option="-Uunix" />
@@ -34,14 +33,13 @@
 			</Target>
 			<Target title="Windows">
 				<Option platforms="Windows;" />
-				<Option output="../../../devel/share/codeblocks/plugins/wxSmithAui" prefix_auto="1" extension_auto="1" />
-				<Option working_dir="../../../devel" />
-				<Option object_output="../../../.objs/plugins/contrib/wxSmithAui" />
-				<Option external_deps="../../../devel/wxsmithlib.dll;" />
+				<Option output="..\..\..\devel\share\codeblocks\plugins\wxSmithAui" prefix_auto="1" extension_auto="1" />
+				<Option object_output="..\..\..\.objs\plugins\contrib\wxSmithAui" />
+				<Option external_deps="..\..\..\devel\wxsmithlib.dll;" />
 				<Option type="3" />
 				<Option compiler="gcc" />
 				<Option parameters="--debug-log -na -ns -nd" />
-				<Option host_application="./codeblocks.exe" />
+				<Option host_application="..\..\..\devel\codeblocks.exe" />
 				<Compiler>
 					<Add option="-g" />
 					<Add option="-pipe" />
