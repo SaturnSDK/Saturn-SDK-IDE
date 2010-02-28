@@ -240,6 +240,7 @@
 				<Linker>
 					<Add option="`wx-config --libs`" />
 					<Add option="`pkg-config --libs gtk+-2.0`" />
+					<Add option="-z defs" />
 					<Add library="codeblocks" />
 					<Add library="wxscintilla" />
 					<Add directory="devel" />

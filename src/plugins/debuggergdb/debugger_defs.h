@@ -98,11 +98,9 @@ class DebuggerInfoCmd : public DebuggerCmd
 class DbgCmd_UpdateWatchesTree : public DebuggerCmd
 {
     public:
-        DbgCmd_UpdateWatchesTree(DebuggerDriver* driver, DebuggerTree* tree);
+        DbgCmd_UpdateWatchesTree(DebuggerDriver* driver);
         virtual ~DbgCmd_UpdateWatchesTree(){}
         virtual void Action();
-    protected:
-        DebuggerTree* m_pTree;
 };
 
 /** Debugger breakpoint interface.
@@ -207,6 +205,8 @@ WX_DECLARE_OBJARRAY(Watch, WatchesArray);
 
 class GDBWatch : public cbWatch
 {
+    public:
+        typedef std::tr1::shared_ptr<GDBWatch> Pointer;
     public:
         GDBWatch(wxString const &symbol);
     public:

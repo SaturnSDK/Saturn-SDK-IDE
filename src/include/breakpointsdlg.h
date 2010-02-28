@@ -38,7 +38,7 @@ class cbBreakpointsDlg : public wxPanel
         void OnBreakpointAdd(CodeBlocksEvent& event);
         void OnBreakpointEdit(CodeBlocksEvent& event);
         void OnBreakpointDelete(CodeBlocksEvent& event);
-
+        void OnKeyUp(wxKeyEvent& event);
     private:
         enum Columns
         {

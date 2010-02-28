@@ -130,7 +130,8 @@ class DebuggerDriver
             @param doArgs Display values of function arguments.
             @param tree The watches tree control.
         */
-        virtual void UpdateWatches(bool doLocals, bool doArgs, DebuggerTree* tree, WatchesContainer &watches) = 0;
+        virtual void UpdateWatches(bool doLocals, bool doArgs, WatchesContainer &watches) = 0;
+        virtual void UpdateWatch(GDBWatch::Pointer const &watch) = 0;
 
         /** Detach from running process. */
         virtual void Detach() = 0;

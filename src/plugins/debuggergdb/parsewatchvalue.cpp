@@ -326,7 +326,7 @@ bool ParseGDBWatchValue(GDBWatch &watch, wxString const &value)
         {
             if(start > 0)
                 watch.SetValue(value.substr(0, start));
-            watch.RemoveChildren(true);
+            watch.RemoveMarkedChildren();
         }
         return result;
     }

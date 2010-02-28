@@ -100,7 +100,8 @@ class DLLIMPORT cbWatch
 	public:
         void AddChild(cbWatch *watch);
         void RemoveChild(int index);
-        void RemoveChildren(bool only_marked = false);
+        void RemoveChildren();
+        bool RemoveMarkedChildren();
         int GetChildCount() const;
         cbWatch* GetChild(int index);
         const cbWatch* GetChild(int index) const;
@@ -118,6 +119,7 @@ class DLLIMPORT cbWatch
         void MarkAsRemoved(bool flag);
         void MarkChildsAsRemoved();
         void MarkAsChanged(bool flag);
+        void MarkAsChangedRecursive(bool flag);
 
         bool IsExpanded() const;
         void Expand(bool expand);

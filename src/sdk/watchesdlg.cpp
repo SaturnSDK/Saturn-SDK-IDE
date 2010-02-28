@@ -196,7 +196,12 @@ WatchesDlg::WatchesDlg() :
     SetAutoLayout(TRUE);
     SetSizer(bs);
 
-    m_grid->Append(new WatchesProperty(wxT(""), wxT(""), NULL));
+    m_grid->SetColumnProportion(0, 40);
+    m_grid->SetColumnProportion(1, 40);
+    m_grid->SetColumnProportion(2, 20);
+
+    wxPGProperty *prop = m_grid->Append(new WatchesProperty(wxEmptyString, wxEmptyString, NULL));
+    m_grid->SetPropertyAttribute(prop, wxT("Units"), wxEmptyString);
 }
 
 void AppendChildren(wxPropertyGrid &grid, wxPGProperty &property, cbWatch &watch)
@@ -219,7 +224,7 @@ void AppendChildren(wxPropertyGrid &grid, wxPGProperty &property, cbWatch &watch
             grid.SetPropertyTextColour(prop, wxColor(255, 0, 0));
         else
             grid.SetPropertyColourToDefault(prop);
-        child.MarkAsChanged(false);
+//        child.MarkAsChanged(false);
 
         AppendChildren(grid, *prop, child);
     }
@@ -243,7 +248,7 @@ void WatchesDlg::UpdateWatches()
         else
             m_grid->SetPropertyColourToDefault(it->property);
         m_grid->SetPropertyAttribute(it->property, wxT("Units"), type);
-        it->watch->MarkAsChanged(false);
+//        it->watch->MarkAsChanged(false);
 
         it->property->DeleteChildren();
 
@@ -255,6 +260,7 @@ void WatchesDlg::UpdateWatches()
 
         AppendChildren(*m_grid, *it->property, *it->watch);
     }
+    m_grid->Refresh();
 }
 
 void WatchesDlg::AddWatch(cbWatch *watch)
@@ -278,7 +284,7 @@ void WatchesDlg::AddWatch(cbWatch *watch)
 
         WatchesProperty *watches_prop = static_cast<WatchesProperty*>(last_prop);
         watches_prop->SetWatch(watch);
-        m_grid->Append(new WatchesProperty(wxT(""), wxT(""), NULL));
+        m_grid->Append(new WatchesProperty(wxEmptyString, wxEmptyString, NULL));
     }
     else
     {
@@ -394,7 +400,8 @@ void WatchesDlg::OnIdle(wxIdleEvent &event)
 {
     if(m_append_empty_watch)
     {
-        m_grid->Append(new WatchesProperty(wxT(""), wxT(""), NULL));
+        m_grid->Append(new WatchesProperty(wxEmptyString, wxEmptyString, NULL));
+        m_grid->Refresh();
         m_append_empty_watch = false;
     }
 }

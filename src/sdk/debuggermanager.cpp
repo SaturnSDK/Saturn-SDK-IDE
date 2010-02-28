@@ -165,10 +165,14 @@ cbWatch::cbWatch() :
     m_expanded(false)
 {
 }
+
 cbWatch::~cbWatch()
 {
-    RemoveChildren();
+    for(PtrContainer::iterator it = m_children.begin(); it != m_children.end(); ++it)
+        (*it)->Destroy();
+    m_children.clear();
 }
+
 void cbWatch::Destroy()
 {
     if (this)
@@ -180,6 +184,7 @@ void cbWatch::AddChild(cbWatch *watch)
     watch->SetParent(this);
     m_children.push_back(watch);
 }
+
 void cbWatch::RemoveChild(int index)
 {
     PtrContainer::iterator it = m_children.begin();
@@ -196,39 +201,39 @@ bool TestIfMarkedForRemoval(cbWatch *watch)
     }
     else
     {
-        watch->RemoveChildren(true);
+        watch->RemoveMarkedChildren();
         return false;
     }
 }
-void cbWatch::RemoveChildren(bool only_marked)
+
+bool cbWatch::RemoveMarkedChildren()
 {
-    if(only_marked)
-    {
         size_t start_size = m_children.size();
         PtrContainer::iterator new_last = std::remove_if(m_children.begin(), m_children.end(), &TestIfMarkedForRemoval);
         m_children.erase(new_last, m_children.end());
 
-        if(start_size != m_children.size())
-            MarkAsChanged(true);
-    }
-    else
-    {
+    return start_size != m_children.size();
+
+}
+void cbWatch::RemoveChildren()
+{
         for(PtrContainer::iterator it = m_children.begin(); it != m_children.end(); ++it)
             (*it)->Destroy();
         m_children.clear();
-        MarkAsChanged(true);
-    }
 }
+
 int cbWatch::GetChildCount() const
 {
     return m_children.size();
 }
+
 cbWatch* cbWatch::GetChild(int index)
 {
     PtrContainer::iterator it = m_children.begin();
     std::advance(it, index);
     return *it;
 }
+
 const cbWatch* cbWatch::GetChild(int index) const
 {
     PtrContainer::const_iterator it = m_children.begin();
@@ -265,10 +270,12 @@ void cbWatch::SetParent(cbWatch *parent)
 {
     m_parent = parent;
 }
+
 const cbWatch* cbWatch::GetParent() const
 {
     return m_parent;
 }
+
 cbWatch* cbWatch::GetParent()
 {
     return m_parent;
@@ -278,6 +285,7 @@ bool cbWatch::IsRemoved() const
 {
     return m_removed;
 }
+
 bool cbWatch::IsChanged() const
 {
     return m_changed;
@@ -287,6 +295,7 @@ void cbWatch::MarkAsRemoved(bool flag)
 {
     m_removed = flag;
 }
+
 void cbWatch::MarkChildsAsRemoved()
 {
     for(PtrContainer::iterator it = m_children.begin(); it != m_children.end(); ++it)
@@ -295,6 +304,13 @@ void cbWatch::MarkChildsAsRemoved()
 void cbWatch::MarkAsChanged(bool flag)
 {
     m_changed = flag;
+}
+
+void cbWatch::MarkAsChangedRecursive(bool flag)
+{
+    m_changed = flag;
+    for(PtrContainer::iterator it = m_children.begin(); it != m_children.end(); ++it)
+        (*it)->MarkAsChangedRecursive(flag);
 }
 
 bool cbWatch::IsExpanded() const

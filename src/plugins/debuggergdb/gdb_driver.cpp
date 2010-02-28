@@ -703,38 +703,23 @@ void GDB_driver::EvaluateSymbol(const wxString& symbol, const wxRect& tipRect)
     QueueCommand(new GdbCmd_FindTooltipType(this, symbol, tipRect));
 }
 
-void GDB_driver::UpdateWatches(bool doLocals, bool doArgs, DebuggerTree* tree, WatchesContainer &watches)
+void GDB_driver::UpdateWatches(bool doLocals, bool doArgs, WatchesContainer &watches)
 {
-    // start updating watches tree
-//    tree->BeginUpdateTree();
-
-    // locals before args because of precedence
-//    if (doLocals)
-//        QueueCommand(new GdbCmd_InfoLocals(this, tree));
-//    if (doArgs)
-//        QueueCommand(new GdbCmd_InfoArguments(this, tree));
-//    for (unsigned int i = 0; i < tree->GetWatches().GetCount(); ++i)
-//    {
-//        Watch& w = tree->GetWatches()[i];
-//        if (w.format == Undefined)
-//            QueueCommand(new GdbCmd_FindWatchType(this, tree, &w));
-//        else
-//            QueueCommand(new GdbCmd_Watch(this, tree, &w));
-//    }
+    // FIXME (obfuscated#): add local and argument watches
 
     for(WatchesContainer::iterator it = watches.begin(); it != watches.end(); ++it)
     {
-//        wxString type;
-//        (*it)->GetType(type);
-//
-//        if(type.empty())
-            QueueCommand(new GdbCmd_FindWatchType(this, it->get()));
-//        else
-//            QueueCommand(new GdbCmd_Watch(this, it->get()));
+        QueueCommand(new GdbCmd_FindWatchType(this, *it));
     }
 
     // run this action-only command to update the tree
-    QueueCommand(new DbgCmd_UpdateWatchesTree(this, tree));
+    QueueCommand(new DbgCmd_UpdateWatchesTree(this));
+}
+
+void GDB_driver::UpdateWatch(GDBWatch::Pointer const &watch)
+{
+    QueueCommand(new GdbCmd_FindWatchType(this, watch));
+    QueueCommand(new DbgCmd_UpdateWatchesTree(this));
 }
 
 void GDB_driver::Detach()

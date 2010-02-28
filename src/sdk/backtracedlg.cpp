@@ -74,6 +74,7 @@ void cbBacktraceDlg::Reload()
     m_list->DeleteAllItems();
 
     int active_frame = plugin->GetActiveStackFrame();
+    int active_frame_index;
     for (int ii = 0; ii < plugin->GetStackFrameCount(); ++ii)
     {
         const cbStackFrame& frame = plugin->GetStackFrame(ii);
@@ -91,8 +92,12 @@ void cbBacktraceDlg::Reload()
         m_list->SetItem(idx, 4, frame.GetLine());
 
         if (active_frame == frame.GetNumber())
+        {
+            active_frame_index = ii;
             m_list->SetItemBackgroundColour(ii, wxColor(255, 0, 0));
     }
+    }
+    m_list->EnsureVisible(active_frame_index);
     m_list->Thaw();
     m_list->SetColumnWidth(0, 32);
     for (int i = 1; i < 3; ++i)

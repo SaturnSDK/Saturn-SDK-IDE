@@ -691,10 +691,10 @@ class GdbCmd_Threads : public DebuggerCmd
   */
 class GdbCmd_Watch : public DebuggerCmd
 {
-        GDBWatch* m_watch;
+        GDBWatch::Pointer m_watch;
         wxString m_ParseFunc;
     public:
-        GdbCmd_Watch(DebuggerDriver* driver, GDBWatch* watch) :
+        GdbCmd_Watch(DebuggerDriver* driver, GDBWatch::Pointer watch) :
             DebuggerCmd(driver),
             m_watch(watch)
         {
@@ -792,10 +792,10 @@ class GdbCmd_FindWatchType : public DebuggerCmd
 {
 //        DebuggerTree* m_pDTree;
 //        Watch* m_pWatch;
-        GDBWatch* m_watch;
+        GDBWatch::Pointer m_watch;
     public:
         /** @param tree The tree to display the watch. */
-        GdbCmd_FindWatchType(DebuggerDriver* driver, GDBWatch* watch) :
+        GdbCmd_FindWatchType(DebuggerDriver* driver, GDBWatch::Pointer watch) :
             DebuggerCmd(driver),
 //            m_pDTree(dtree),
 //            m_pWatch(watch)

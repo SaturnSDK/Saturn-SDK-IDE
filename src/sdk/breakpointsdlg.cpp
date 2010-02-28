@@ -48,6 +48,8 @@ BEGIN_EVENT_TABLE(cbBreakpointsDlg, wxPanel)
     EVT_MENU(idRemoveAll, cbBreakpointsDlg::OnRemoveAll)
     EVT_MENU(idProperties, cbBreakpointsDlg::OnProperties)
     EVT_MENU(idOpen, cbBreakpointsDlg::OnOpen)
+
+    EVT_KEY_UP(cbBreakpointsDlg::OnKeyUp)
 END_EVENT_TABLE()
 
 cbBreakpointsDlg::cbBreakpointsDlg() :
@@ -270,6 +272,18 @@ void cbBreakpointsDlg::OnDoubleClick(wxListEvent& event)
 {
     wxCommandEvent evt;
     OnOpen(evt);
+}
+
+void cbBreakpointsDlg::OnKeyUp(wxKeyEvent& event)
+{
+    if (event.GetKeyCode() == WXK_DELETE || event.GetKeyCode() == WXK_NUMPAD_DELETE)
+    {
+        long item = m_pList->GetNextItem(-1, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED);
+        if (item == -1)
+            return;
+        RemoveBreakpoint(item);
+        Reload();
+    }
 }
 
 void cbBreakpointsDlg::OnBreakpointAdd(CodeBlocksEvent& event)

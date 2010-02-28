@@ -471,7 +471,6 @@ void DebuggerGDB::DoWatches()
     ConfigManager *config_manager = Manager::Get()->GetConfigManager(_T("debugger"));
     m_State.GetDriver()->UpdateWatches(config_manager->ReadBool(_T("watch_locals"), true),
                                        config_manager->ReadBool(_T("watch_args"), true),
-                                       NULL,
                                        m_watches);
 }
 
@@ -1849,6 +1848,7 @@ void DebuggerGDB::OnCursorChanged(wxCommandEvent& event)
         // send us this event if it was stopped anyway
         if (/*m_State.GetDriver()->IsStopped() &&*/ cursor.changed)
         {
+            MarkAllWatchesAsUnchanged();
             SyncEditor(cursor.file, cursor.line);
             m_HaltAtLine = cursor.line - 1;
             BringCBToFront();
@@ -1898,7 +1898,8 @@ cbWatch* DebuggerGDB::AddWatch(const wxString& symbol)
     GDBWatch *watch = new GDBWatch(symbol);
     m_watches.push_back(std::tr1::shared_ptr<GDBWatch>(watch));
 
-    DoWatches();
+    if(m_pProcess)
+        m_State.GetDriver()->UpdateWatch(m_watches.back());
 
     return watch;
 }
@@ -1984,6 +1985,12 @@ void DebuggerGDB::ExpandWatch(cbWatch *watch)
 
 void DebuggerGDB::CollapseWatch(cbWatch *watch)
 {
+}
+
+void DebuggerGDB::MarkAllWatchesAsUnchanged()
+{
+    for(WatchesContainer::iterator it = m_watches.begin(); it != m_watches.end(); ++it)
+        (*it)->MarkAsChangedRecursive(false);
 }
 
 void DebuggerGDB::AttachToProcess(const wxString& pid)

@@ -40,15 +40,13 @@ void DebuggerCmd::ParseOutput(const wxString& output)
         m_pDriver->Log(output);
 }
 
-DbgCmd_UpdateWatchesTree::DbgCmd_UpdateWatchesTree(DebuggerDriver* driver, DebuggerTree* tree)
-    : DebuggerCmd(driver),
-    m_pTree(tree)
+DbgCmd_UpdateWatchesTree::DbgCmd_UpdateWatchesTree(DebuggerDriver* driver)
+    : DebuggerCmd(driver)
 {
 }
 
 void DbgCmd_UpdateWatchesTree::Action()
 {
-//    m_pTree->EndUpdateTree();
     Manager::Get()->GetDebuggerManager()->GetWatchesDialog()->UpdateWatches();
 }
 

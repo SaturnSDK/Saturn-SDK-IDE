@@ -236,24 +236,30 @@ void CDB_driver::EvaluateSymbol(const wxString& symbol, const wxRect& tipRect)
     QueueCommand(new CdbCmd_TooltipEvaluation(this, symbol, tipRect));
 }
 
-void CDB_driver::UpdateWatches(bool doLocals, bool doArgs, DebuggerTree* tree, WatchesContainer &watches)
+void CDB_driver::UpdateWatches(bool doLocals, bool doArgs, WatchesContainer &watches)
 {
-    // start updating watches tree
-    tree->BeginUpdateTree();
+    // FIXME (obfuscated#): reimplement this code
+//    // start updating watches tree
+//    tree->BeginUpdateTree();
+//
+//    // locals before args because of precedence
+//    if (doLocals)
+//        QueueCommand(new CdbCmd_InfoLocals(this, tree));
+////    if (doArgs)
+////        QueueCommand(new CdbCmd_InfoArguments(this, tree));
+//    for (unsigned int i = 0; i < tree->GetWatches().GetCount(); ++i)
+//    {
+//        Watch& w = tree->GetWatches()[i];
+//        QueueCommand(new CdbCmd_Watch(this, tree, &w));
+//    }
+//
+//    // run this action-only command to update the tree
+//    QueueCommand(new DbgCmd_UpdateWatchesTree(this, tree));
+}
 
-    // locals before args because of precedence
-    if (doLocals)
-        QueueCommand(new CdbCmd_InfoLocals(this, tree));
-//    if (doArgs)
-//        QueueCommand(new CdbCmd_InfoArguments(this, tree));
-    for (unsigned int i = 0; i < tree->GetWatches().GetCount(); ++i)
-    {
-        Watch& w = tree->GetWatches()[i];
-        QueueCommand(new CdbCmd_Watch(this, tree, &w));
-    }
-
-    // run this action-only command to update the tree
-    QueueCommand(new DbgCmd_UpdateWatchesTree(this, tree));
+void CDB_driver::UpdateWatch(GDBWatch::Pointer const &watch)
+{
+    // FIXME (obfuscated#): implement this
 }
 
 void CDB_driver::Detach()

@@ -123,6 +123,7 @@ class DebuggerGDB : public cbDebuggerPlugin
     private:
         void ParseOutput(const wxString& output);
         void DoWatches();
+        void MarkAllWatchesAsUnchanged();
         int LaunchProcess(const wxString& cmd, const wxString& cwd);
         int DoDebug(bool breakOnEntry);
 
