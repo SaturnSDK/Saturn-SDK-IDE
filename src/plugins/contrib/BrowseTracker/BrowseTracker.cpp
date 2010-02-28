@@ -215,8 +215,7 @@ void BrowseTracker::OnAttach()
 	m_InitDone = false;
 	m_CurrEditorIndex = 0;
 	m_LastEditorIndex = MaxEntries-1;
-	m_apEditors.Alloc(MaxEntries);
-	for (int i=0; i<MaxEntries ; ++i ) m_apEditors[i] = 0;
+    m_apEditors.SetCount(MaxEntries, 0);    //patch 2886
 	m_nBrowsedEditorCount = 0;
 	m_UpdateUIFocusEditor = 0;
 	m_nRemoveEditorSentry = 0;
@@ -508,11 +507,11 @@ void BrowseTracker::BuildModuleMenu(const ModuleType type, wxMenu* popup, const 
         wxString menuLabel = item->GetLabel();
         #endif
         ///LOGIT( _T("BT OnContextMenu insert[%s]"),menuLabel.c_str() );
-        wxMenuItem* pContextItem= new wxMenuItem(0, menuId, menuLabel);
+        wxMenuItem* pContextItem= new wxMenuItem(sub_menu, menuId, menuLabel); //patch 2886
         sub_menu->Append( pContextItem );
     }
     popup->AppendSeparator();
-    pbtMenuItem = new wxMenuItem(0, wxID_ANY, _("Browse Tracker"), _T(""), wxITEM_NORMAL);
+    pbtMenuItem = new wxMenuItem(sub_menu, wxID_ANY, _("Browse Tracker"), _T(""), wxITEM_NORMAL);   //patch 2886
     pbtMenuItem->SetSubMenu(sub_menu);
     popup->Append(pbtMenuItem);
 
@@ -1145,10 +1144,15 @@ void BrowseTracker::OnMouseKeyEvent(wxMouseEvent& event)
             bool useCtrlLeftMouse       = (m_ToggleKey == Ctrl_Left_Mouse);
             bool clearUsesDoubleClick   = (m_ClearAllKey == ClearAllOnDoubleClick);
             bool clearUsesSingleClick   = (m_ClearAllKey == ClearAllOnSingleClick);
+           //bool bEdMultiSelOn = Manager::Get()->GetConfigManager(_T("editor"))->ReadBool(_T("/selection/multi_select"), false);
+           bool bEdMultiSelOn = pControl->GetMultipleSelection();
 
             // -- ONLY_LEFT_MOUSE --
             if ( useOnlyLeftMouse )
-            {   if( ctrlKeyIsDown && clearUsesDoubleClick && m_IsMouseDoubleClick)
+            {
+                if( ctrlKeyIsDown && bEdMultiSelOn)
+                    break;
+                if( ctrlKeyIsDown && clearUsesDoubleClick && m_IsMouseDoubleClick)
                 {   //Clear all on Ctrl Double Click
                     ClearAllBrowse_Marks(/*clearScreenMarks*/true);
                     m_IsMouseDoubleClick = false;
@@ -1169,6 +1173,8 @@ void BrowseTracker::OnMouseKeyEvent(wxMouseEvent& event)
             }//if useOnlyLeftMouse
 
             // -- CTRL-LEFT_MOUSE --
+            // Don't intercept Ctrl key if it belongs to editor multi-selection mechanism
+            if (bEdMultiSelOn) break;
             if ( useCtrlLeftMouse && ctrlKeyIsDown)
             {   if( clearUsesDoubleClick && m_IsMouseDoubleClick)
                 {   //Clear all on Ctrl Double Click
@@ -1325,7 +1331,7 @@ void BrowseTracker::OnMenuTrackerDump(wxCommandEvent& event)
             wxString edName = GetPageFilename(i);
             LOGIT( _T("BT Index[%d]Editor[%p]Name[%s]"), i, GetEditor(i), edName.c_str()  );;
         }
-        return; //FIXME: remove this
+        return; //FIXME: remove this line to get rest of diagnostics
         for (EbBrowse_MarksHash::iterator it = m_EbBrowse_MarksHash.begin(); it != m_EbBrowse_MarksHash.end(); ++it)
         {
             LOGIT( _T("BT Hash Ed[%p] AryPtr[%p]"), it->first, it->second );
@@ -2185,7 +2191,8 @@ void BrowseTracker::OnProjectActivatedEvent(CodeBlocksEvent& event)
         tmpArray.Alloc(MaxEntries);
         // copy current editors & clear for compression
         for (int i = 0; i<MaxEntries; ++i)
-        {   tmpArray[i] = m_apEditors[i];
+        {
+            tmpArray.Add(m_apEditors[i]);   //patch 2886
             m_apEditors[i] = 0;
         }//for
         m_CurrEditorIndex = 0;
@@ -2530,7 +2537,7 @@ ProjectData* BrowseTracker::GetProjectDataByEditorName( wxString filePath)
 // ----------------------------------------------------------------------------
 {
     wxString reason = wxT("");
-    //asm("int3"); /*trap*/
+
     do {
         EditorBase* eb = m_pEdMgr->GetEditor( filePath );
         reason = wxT("eb");
