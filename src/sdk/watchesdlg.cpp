@@ -176,7 +176,9 @@ public:
         cbWatch *watch = activeDebugger->AddWatch(text);
         if (watch)
             Manager::Get()->GetDebuggerManager()->GetWatchesDialog()->AddWatch(watch);
-        return true;
+        // we return false here to veto the operation, otherwise the dragged text might get cut,
+        // because we use wxDrag_DefaultMove in ScintillaWX::StartDrag (seems to happen only on windows)
+        return false;
     }
 private:
 };
