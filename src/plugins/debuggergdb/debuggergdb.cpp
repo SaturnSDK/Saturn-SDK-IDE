@@ -76,10 +76,10 @@
 // function pointer to DebugBreakProcess under windows (XP+)
 #if (_WIN32_WINNT >= 0x0501)
 #include "Tlhelp32.h"
-typedef WINBASEAPI BOOL WINAPI   (*DebugBreakProcessApiCall)       (HANDLE);
-typedef WINBASEAPI HANDLE WINAPI (*CreateToolhelp32SnapshotApiCall)(DWORD  dwFlags,   DWORD             th32ProcessID);
-typedef WINBASEAPI BOOL WINAPI   (*Process32FirstApiCall)          (HANDLE hSnapshot, LPPROCESSENTRY32W lppe);
-typedef WINBASEAPI BOOL WINAPI   (*Process32NextApiCall)           (HANDLE hSnapshot, LPPROCESSENTRY32W lppe);
+typedef BOOL WINAPI   (*DebugBreakProcessApiCall)       (HANDLE);
+typedef HANDLE WINAPI (*CreateToolhelp32SnapshotApiCall)(DWORD  dwFlags,   DWORD             th32ProcessID);
+typedef BOOL WINAPI   (*Process32FirstApiCall)          (HANDLE hSnapshot, LPPROCESSENTRY32W lppe);
+typedef BOOL WINAPI   (*Process32NextApiCall)           (HANDLE hSnapshot, LPPROCESSENTRY32W lppe);
 
 DebugBreakProcessApiCall        DebugBreakProcessFunc = 0;
 CreateToolhelp32SnapshotApiCall CreateToolhelp32SnapshotFunc = 0;
