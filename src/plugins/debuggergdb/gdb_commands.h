@@ -569,6 +569,24 @@ class GdbCmd_RemoveBreakpoint : public DebuggerCmd
         DebuggerBreakpoint* m_BP;
 };
 
+
+/**
+  * Command that notifies the debugger plugin that the debuggee has been continued
+  */
+class DebuggerContinueCommand : public DebuggerCmd
+{
+    public:
+        DebuggerContinueCommand(DebuggerDriver* driver) :
+            DebuggerCmd(driver, wxT("cont"))
+        {
+        }
+
+        virtual void Action()
+        {
+            m_pDriver->NotifyDebuggeeContinued();
+        }
+};
+
 /**
   * Command to get info about local frame variables.
   */

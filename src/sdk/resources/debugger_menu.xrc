@@ -19,7 +19,7 @@
 
       <label>Break debugger</label>
 
-      <bitmap>images\16x16\dbgstop.png</bitmap>
+      <bitmap>images\16x16\dbgpause.png</bitmap>
 
       <help>Break the debuggee in order to examine its state</help>
     </object>
@@ -82,6 +82,22 @@
 
       <help>Continue execution until the current frame exits</help>
     </object>
+    <object class="wxMenuItem" name="idDebuggerMenuRunToCursor">
+
+      <label>Run to cursor</label>
+
+      <bitmap>images\16x16\dbgrunto.png</bitmap>
+
+      <accel>F4</accel>
+
+      <help>Run program until it reaches the current line</help>
+    </object>
+    <object class="wxMenuItem" name="idDebuggerMenuSetNextStatement">
+
+      <label>Set next statement</label>
+
+      <help>Move the Program counter to the selected/current line</help>
+    </object>
     <object class="separator"/>
     <object class="wxMenuItem" name="idDebuggerMenuToggleBreakpoint">
 
@@ -96,16 +112,6 @@
       <label>Remove all breakpoints</label>
 
       <help>Remove all breakpoints</help>
-    </object>
-    <object class="wxMenuItem" name="idDebuggerMenuRunToCursor">
-
-      <label>Run to cursor</label>
-
-      <bitmap>images\16x16\dbgrunto.png</bitmap>
-
-      <accel>F4</accel>
-
-      <help>Run program until it reaches the current line</help>
     </object>
     <object class="separator"/>
     <object class="wxMenuItem" name="idDebuggerMenuAddSymbolFile">

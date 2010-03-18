@@ -155,7 +155,8 @@ DebuggerGDB::DebuggerGDB()
     m_HaltAtLine(0),
     m_HasDebugLog(false),
     m_StoppedOnSignal(false),
-    m_pProject(0)
+    m_pProject(0),
+    m_TemporaryBreak(false)
 {
     if(!Manager::LoadResource(_T("debugger.zip")))
     {
@@ -1254,10 +1255,9 @@ cbBreakpoint* DebuggerGDB::AddBreakpoint(const wxString& filename, int line)
 {
     bool debuggerIsRunning = !IsStopped();
     if (debuggerIsRunning)
-        Break();
+        DoBreak(true);
 
-    int index = m_State.AddBreakpoint(filename, line, false);
-    DebuggerBreakpoint *bp = m_State.GetBreakpointByNumber(index);
+    DebuggerBreakpoint *bp = m_State.AddBreakpoint(filename, line, false);
 
     if (debuggerIsRunning)
         Continue();
@@ -1283,8 +1283,7 @@ cbBreakpoint* DebuggerGDB::AddDataBreakpoint(const wxString& dataExpression)
     {
         const wxString& newDataExpression = dlg.GetDataExpression();
         int sel = dlg.GetSelection();
-        int index = m_State.AddBreakpoint(newDataExpression, sel != 1, sel != 0);
-        DebuggerBreakpoint *bp = m_State.GetBreakpointByNumber(index);
+        DebuggerBreakpoint *bp = m_State.AddBreakpoint(newDataExpression, sel != 1, sel != 0);
 
         BreakItem item;
         cbBreakpoint *temp = new cbBreakpoint(bp->breakAddress, bp->breakOnRead, bp->breakOnWrite);
@@ -1316,7 +1315,8 @@ const cbBreakpoint* DebuggerGDB::GetBreakpoint(int index) const
 
 void DebuggerGDB::UpdateBreakpoint(cbBreakpoint *breakpoint)
 {
-    for (BreakpointsContainer::iterator it = m_breakpoints.begin(); it != m_breakpoints.end(); ++it)
+    int index = 0;
+    for (BreakpointsContainer::iterator it = m_breakpoints.begin(); it != m_breakpoints.end(); ++it, ++index)
     {
         if (it->cb_break.get() == breakpoint)
         {
@@ -1338,6 +1338,8 @@ void DebuggerGDB::UpdateBreakpoint(cbBreakpoint *breakpoint)
                         bp->condition = temp.GetCondition();
                         bp->useCondition = temp.UseCondition();
                         *breakpoint = temp;
+
+                        m_State.ResetBreakpoint(index);
                     }
                     break;
                 }
@@ -1362,6 +1364,8 @@ void DebuggerGDB::UpdateBreakpoint(cbBreakpoint *breakpoint)
                         *it->cb_break = cbBreakpoint(it->cb_break->GetDataExpression(),
                                                      bp->breakOnRead, bp->breakOnWrite);
                         it->cb_break->SetEnabled(bp->enabled);
+
+                        m_State.ResetBreakpoint(index);
                     }
                     break;
                 }
@@ -1379,7 +1383,7 @@ void DebuggerGDB::DeleteBreakpoint(cbBreakpoint* breakpoint)
         {
             bool debuggerIsRunning = !IsStopped();
             if (debuggerIsRunning)
-                Break();
+                DoBreak(true);
 
             m_State.RemoveBreakpoint(it->debugger_breakpoint, true);
             m_breakpoints.erase(it);
@@ -1395,7 +1399,7 @@ void DebuggerGDB::DeleteAllBreakpoints()
 {
     bool debuggerIsRunning = !IsStopped();
     if (debuggerIsRunning)
-        Break();
+        DoBreak(true);
     m_State.RemoveAllBreakpoints(wxEmptyString, true);
     m_breakpoints.clear();
 
@@ -1414,9 +1418,9 @@ void DebuggerGDB::ShiftBreakpoint(int index, int lines_to_shift)
     }
 }
 
-struct TestIfBelogToProject
+struct TestIfBelongToProject
 {
-    TestIfBelogToProject(cbProject *project) :
+    TestIfBelongToProject(cbProject *project) :
         m_project(project)
     {
     }
@@ -1433,7 +1437,7 @@ void DebuggerGDB::DeleteAllProjectBreakpoints(cbProject* project)
 {
     BreakpointsContainer::iterator new_last = std::remove_if(m_breakpoints.begin(),
                                                              m_breakpoints.end(),
-                                                             TestIfBelogToProject(project));
+                                                             TestIfBelongToProject(project));
     m_breakpoints.erase(new_last, m_breakpoints.end());
     m_State.RemoveAllProjectBreakpoints(project);
 }
@@ -1494,8 +1498,23 @@ void DebuggerGDB::RunToCursor(const wxString& filename, int line, const wxString
         Debug(false);
 }
 
+void DebuggerGDB::SetNextStatement(const wxString& filename, int line)
+{
+    if (m_State.HasDriver() && IsStopped())
+    {
+        m_State.GetDriver()->SetNextStatement(filename, line);
+    }
+}
+
 void DebuggerGDB::Break()
 {
+    DoBreak(false);
+}
+
+void DebuggerGDB::DoBreak(bool temporary)
+{
+    m_TemporaryBreak = temporary;
+
     // m_Process is PipedProcess I/O; m_Pid is debugger pid
     if (m_pProcess && m_Pid && !IsStopped())
     {
@@ -1839,8 +1858,16 @@ void DebuggerGDB::OnShowFile(wxCommandEvent& event)
     SyncEditor(event.GetString(), event.GetInt(), false);
 }
 
+void DebuggerGDB::DebuggeeContinued()
+{
+    m_TemporaryBreak = false;
+}
+
 void DebuggerGDB::OnCursorChanged(wxCommandEvent& event)
 {
+    if(m_TemporaryBreak)
+        return;
+
     if (m_State.HasDriver())
     {
         const Cursor& cursor = m_State.GetDriver()->GetCursor();

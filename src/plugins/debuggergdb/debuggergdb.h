@@ -73,6 +73,7 @@ class DebuggerGDB : public cbDebuggerPlugin
         void Step();
         void StepOut();
         void RunToCursor(const wxString& filename, int line, const wxString& line_text);
+        void SetNextStatement(const wxString& filename, int line);
         void Break();
         void Stop();
         bool Validate(const wxString& line, const char cb);
@@ -113,6 +114,8 @@ class DebuggerGDB : public cbDebuggerPlugin
         static void ConvertToGDBDirectory(wxString& str, wxString base = _T(""), bool relative = true);
         static void StripQuotes(wxString& str);
 
+        void DebuggeeContinued();
+
     protected:
         cbProject* GetProject() { return m_pProject; }
         void ConvertDirectory(wxString& str, wxString base, bool relative);
@@ -126,6 +129,7 @@ class DebuggerGDB : public cbDebuggerPlugin
         void MarkAllWatchesAsUnchanged();
         int LaunchProcess(const wxString& cmd, const wxString& cwd);
         int DoDebug(bool breakOnEntry);
+        void DoBreak(bool temporary);
 
         void OnAddSymbolFile(wxCommandEvent& event);
         void OnValueTooltip(CodeBlocksEvent& event);
@@ -186,6 +190,8 @@ class DebuggerGDB : public cbDebuggerPlugin
 
         bool m_Canceled; // flag to avoid re-entering DoDebug when we shouldn't
 
+        bool m_TemporaryBreak;
+
         WatchesContainer m_watches;
 
         struct BreakItem
@@ -196,7 +202,7 @@ class DebuggerGDB : public cbDebuggerPlugin
         typedef std::vector<BreakItem> BreakpointsContainer;
         BreakpointsContainer m_breakpoints;
 
-        friend struct TestIfBelogToProject;
+        friend struct TestIfBelongToProject;
 
         DECLARE_EVENT_TABLE()
 };

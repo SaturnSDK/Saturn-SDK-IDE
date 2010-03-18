@@ -34,6 +34,7 @@ namespace
 {
     const int idMenuDebug = XRCID("idDebuggerMenuDebug");
     const int idMenuRunToCursor = XRCID("idDebuggerMenuRunToCursor");
+    const int idMenuSetNextStatement = XRCID("idDebuggerMenuSetNextStatement");
     const int idMenuNext = XRCID("idDebuggerMenuNext");
     const int idMenuStep = XRCID("idDebuggerMenuStep");
     const int idMenuNextInstr = XRCID("idDebuggerMenuNextInstr");
@@ -68,6 +69,7 @@ BEGIN_EVENT_TABLE(DebuggerMenuHandler, wxEvtHandler)
     // these are different because they are loaded from the XRC
     EVT_UPDATE_UI(XRCID("idDebuggerMenuDebug"), DebuggerMenuHandler::OnUpdateUI)
     EVT_UPDATE_UI(XRCID("idDebuggerMenuRunToCursor"), DebuggerMenuHandler::OnUpdateUI)
+    EVT_UPDATE_UI(XRCID("idDebuggerMenuSetNextStatement"), DebuggerMenuHandler::OnUpdateUI)
     EVT_UPDATE_UI(XRCID("idDebuggerMenuNext"), DebuggerMenuHandler::OnUpdateUI)
     EVT_UPDATE_UI(XRCID("idDebuggerMenuNextInstr"), DebuggerMenuHandler::OnUpdateUI)
     EVT_UPDATE_UI(XRCID("idDebuggerMenuStep"), DebuggerMenuHandler::OnUpdateUI)
@@ -92,6 +94,7 @@ BEGIN_EVENT_TABLE(DebuggerMenuHandler, wxEvtHandler)
     EVT_MENU(idMenuNextInstr, DebuggerMenuHandler::OnNextInstr)
     EVT_MENU(idMenuStepOut, DebuggerMenuHandler::OnStepOut)
     EVT_MENU(idMenuRunToCursor, DebuggerMenuHandler::OnRunToCursor)
+    EVT_MENU(idMenuSetNextStatement, DebuggerMenuHandler::OnSetNextStatement)
     EVT_MENU(idMenuToggleBreakpoint, DebuggerMenuHandler::OnToggleBreakpoint)
     EVT_MENU(idMenuRemoveAllBreakpoints, DebuggerMenuHandler::OnRemoveAllBreakpoints)
     EVT_MENU(idMenuAddDataBreakpoint, DebuggerMenuHandler::OnAddDataBreakpoint)
@@ -125,18 +128,22 @@ void DebuggerMenuHandler::SetActiveDebugger(cbDebuggerPlugin *active)
 
 void DebuggerMenuHandler::BuildContextMenu(wxMenu &menu, const wxString& word_at_caret, bool is_running)
 {
+    int item = 0;
     // Insert toggle breakpoint
-    menu.Insert(0, idMenuToggleBreakpoint, _("Toggle breakpoint"));
+    menu.Insert(item++, idMenuToggleBreakpoint, _("Toggle breakpoint"));
     // Insert Run to Cursor
-    menu.Insert(1, idMenuRunToCursor, _("Run to cursor"));
-    menu.Insert(2, wxID_SEPARATOR, _T("-"));
+    menu.Insert(item++, idMenuRunToCursor, _("Run to cursor"));
+    if (is_running)
+        menu.Insert(item++, idMenuSetNextStatement, _("Set next statement"));
+    menu.Insert(item++, wxID_SEPARATOR, _T("-"));
 
     if (!is_running && word_at_caret.empty())
         return;
 
     // data breakpoint
-    menu.Insert(2, idMenuAddDataBreakpoint, wxString::Format(_("Add data breakpoint for '%s'"), word_at_caret.c_str()));
-    menu.Insert(3, idMenuDebuggerAddWatch, wxString::Format(_("Watch '%s'"), word_at_caret.c_str()));
+    menu.Insert(item++, idMenuAddDataBreakpoint,
+                wxString::Format(_("Add data breakpoint for '%s'"), word_at_caret.c_str()));
+    menu.Insert(item++, idMenuDebuggerAddWatch, wxString::Format(_("Watch '%s'"), word_at_caret.c_str()));
 }
 
 void DebuggerMenuHandler::OnUpdateUI(wxUpdateUIEvent& event)
@@ -163,6 +170,7 @@ void DebuggerMenuHandler::OnUpdateUI(wxUpdateUIEvent& event)
         mbar->Enable(idMenuStep, en && stopped);
         mbar->Enable(idMenuStepOut, isRunning && en && stopped);
         mbar->Enable(idMenuRunToCursor, en && ed && stopped);
+        mbar->Enable(idMenuSetNextStatement, en && ed && stopped && isRunning);
         mbar->Enable(idMenuToggleBreakpoint, en && ed);
         mbar->Enable(idMenuRemoveAllBreakpoints, en && ed);
         mbar->Enable(idMenuSendCommand, isRunning && stopped);
@@ -265,6 +273,15 @@ void DebuggerMenuHandler::OnRunToCursor(wxCommandEvent& event)
         return;
     const wxString &line_text = ed->GetControl()->GetLine(ed->GetControl()->GetCurrentLine());
     m_activeDebugger->RunToCursor(ed->GetFilename(), ed->GetControl()->GetCurrentLine() + 1, line_text);
+}
+
+void DebuggerMenuHandler::OnSetNextStatement(wxCommandEvent& event)
+{
+    cbAssert(m_activeDebugger);
+    cbEditor* ed = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
+    if (!ed)
+        return;
+    m_activeDebugger->SetNextStatement(ed->GetFilename(), ed->GetControl()->GetCurrentLine() + 1);
 }
 
 void DebuggerMenuHandler::OnToggleBreakpoint(wxCommandEvent& event)

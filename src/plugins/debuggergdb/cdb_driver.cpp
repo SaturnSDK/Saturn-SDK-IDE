@@ -160,6 +160,12 @@ void CDB_driver::StepOut()
     NOT_IMPLEMENTED();
 }
 
+void CDB_driver::SetNextStatement(const wxString& filename, int line)
+{
+    ResetCursor();
+    NOT_IMPLEMENTED();
+}
+
 void CDB_driver::Backtrace()
 {
     if (Manager::Get()->GetDebuggerManager()->UpdateBacktrace())

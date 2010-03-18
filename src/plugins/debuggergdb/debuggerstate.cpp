@@ -120,7 +120,7 @@ cbProject* DebuggerState::FindProjectForFile(const wxString& file)
     return 0;
 }
 
-int DebuggerState::AddBreakpoint(const wxString& file, int line, bool temp, const wxString& lineText)
+DebuggerBreakpoint* DebuggerState::AddBreakpoint(const wxString& file, int line, bool temp, const wxString& lineText)
 {
     wxString bpfile = ConvertToValidFilename(file);
 
@@ -140,17 +140,21 @@ int DebuggerState::AddBreakpoint(const wxString& file, int line, bool temp, cons
     bp->temporary = temp;
     bp->lineText = lineText;
     bp->userData = FindProjectForFile(file);
-    return AddBreakpoint(bp);
+    AddBreakpoint(bp);
+
+    return bp;
 }
 
-int DebuggerState::AddBreakpoint(const wxString& dataAddr, bool onRead, bool onWrite)
+DebuggerBreakpoint* DebuggerState::AddBreakpoint(const wxString& dataAddr, bool onRead, bool onWrite)
 {
     DebuggerBreakpoint* bp = new DebuggerBreakpoint;
     bp->type = DebuggerBreakpoint::bptData;
     bp->breakAddress = dataAddr;
     bp->breakOnRead = onRead;
     bp->breakOnWrite = onWrite;
-    return AddBreakpoint(bp);
+    AddBreakpoint(bp);
+
+    return bp;
 }
 
 int DebuggerState::AddBreakpoint(DebuggerBreakpoint* bp)

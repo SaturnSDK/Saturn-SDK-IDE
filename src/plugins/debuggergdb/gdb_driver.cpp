@@ -544,7 +544,7 @@ void GDB_driver::Continue()
 {
     ResetCursor();
     if (m_IsStarted)
-        QueueCommand(new DebuggerCmd(this, _T("cont")));
+        QueueCommand(new DebuggerContinueCommand(this));
     else
     {
         QueueCommand(new DebuggerCmd(this, m_ManualBreakOnEntry ? _T("start") : _T("run")));
@@ -574,6 +574,13 @@ void GDB_driver::StepOut()
 {
     ResetCursor();
     QueueCommand(new DebuggerCmd(this, _T("finish")));
+}
+
+void GDB_driver::SetNextStatement(const wxString& filename, int line)
+{
+    ResetCursor();
+    QueueCommand(new DebuggerCmd(this, wxString::Format(wxT("tbreak %s:%d"), filename.c_str(), line)));
+    QueueCommand(new DebuggerCmd(this, wxString::Format(wxT("jump %s:%d"), filename.c_str(), line)));
 }
 
 void GDB_driver::Backtrace()

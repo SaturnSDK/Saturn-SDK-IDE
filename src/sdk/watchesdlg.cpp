@@ -296,6 +296,7 @@ void WatchesDlg::AddWatch(cbWatch *watch)
     item.property->SetExpanded(watch->IsExpanded());
     item.watch = watch;
     m_watches.push_back(item);
+    m_grid->Refresh();
 }
 
 void WatchesDlg::OnExpand(wxPropertyGridEvent &event)
@@ -402,7 +403,8 @@ void WatchesDlg::OnIdle(wxIdleEvent &event)
 {
     if(m_append_empty_watch)
     {
-        m_grid->Append(new WatchesProperty(wxEmptyString, wxEmptyString, NULL));
+        wxPGProperty *new_prop = m_grid->Append(new WatchesProperty(wxEmptyString, wxEmptyString, NULL));
+        m_grid->SelectProperty(new_prop, true);
         m_grid->Refresh();
         m_append_empty_watch = false;
     }
@@ -449,7 +451,14 @@ void WatchesDlg::OnKeyDown(wxKeyEvent &event)
     {
         case WXK_DELETE:
             if(prop && !m_grid->GetLabelEditor())
+            {
+                wxPGProperty *prop_to_select = m_grid->GetNextSiblingProperty(watches_prop);
+
                 DeleteProperty(*watches_prop);
+
+                if(prop_to_select)
+                    m_grid->SelectProperty(prop_to_select, true);
+            }
             break;
         case WXK_INSERT:
             if(prop && prop->GetParent() && prop->GetParent()->IsRoot())

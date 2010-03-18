@@ -81,6 +81,11 @@ void DebuggerDriver::NotifyCursorChanged()
     m_pDBG->ProcessEvent(event);
 }
 
+void DebuggerDriver::NotifyDebuggeeContinued()
+{
+    m_pDBG->DebuggeeContinued();
+}
+
 void DebuggerDriver::ResetCursor()
 {
     m_LastCursorAddress.Clear();

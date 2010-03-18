@@ -395,6 +395,9 @@ class PLUGIN_EXPORT cbDebuggerPlugin: public cbPlugin
 		/** @brief Run the debugged program until it reaches the cursor at the current editor */
 		virtual void RunToCursor(const wxString& filename, int line, const wxString& line_text) = 0;
 
+		/** @brief Sets the position of the Program counter to the specified filename:line */
+		virtual void SetNextStatement(const wxString& filename, int line) = 0;
+
 		/** @brief Execute the next instruction and return control to the debugger. */
 		virtual void Next() = 0;
 

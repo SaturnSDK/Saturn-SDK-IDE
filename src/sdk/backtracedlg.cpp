@@ -97,6 +97,7 @@ void cbBacktraceDlg::Reload()
             m_list->SetItemBackgroundColour(ii, wxColor(255, 0, 0));
     }
     }
+
     m_list->EnsureVisible(active_frame_index);
     m_list->Thaw();
     m_list->SetColumnWidth(0, 32);

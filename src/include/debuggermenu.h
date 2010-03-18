@@ -30,6 +30,7 @@ class DebuggerMenuHandler : public wxEvtHandler
         void OnStep(wxCommandEvent& event);
         void OnStepOut(wxCommandEvent& event);
         void OnRunToCursor(wxCommandEvent& event);
+        void OnSetNextStatement(wxCommandEvent& event);
 
         void OnToggleBreakpoint(wxCommandEvent& event);
         void OnRemoveAllBreakpoints(wxCommandEvent& event);

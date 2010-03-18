@@ -94,6 +94,7 @@ class DebuggerDriver
         virtual void StepInstruction() = 0;
         virtual void StepIn() = 0;
         virtual void StepOut() = 0;
+        virtual void SetNextStatement(const wxString& filename, int line) = 0;
         virtual void Backtrace() = 0;
         virtual void Disassemble() = 0;
         virtual void CPURegisters() = 0;
@@ -169,6 +170,8 @@ class DebuggerDriver
         int GetCurrentFrame() const { return m_currentFrameNo; }
         int GetUserSelectedFrame() const { return m_userSelectedFrameNo; }
         void SetCurrentFrame(int number, bool user_selected);
+
+        void NotifyDebuggeeContinued();
     protected:
         /** Called by implementations to reset the cursor. */
         virtual void ResetCursor();

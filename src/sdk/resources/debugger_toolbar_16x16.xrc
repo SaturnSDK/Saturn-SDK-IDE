@@ -34,7 +34,7 @@
     <object class="tool" name="idDebuggerMenuBreak">
       <tooltip>Break debugger</tooltip>
       <longhelp>Break the debuggee in order to examine its state</longhelp>
-      <bitmap>images/16x16/dbgstop.png</bitmap>
+      <bitmap>images/16x16/dbgpause.png</bitmap>
     </object>
     <object class="tool" name="idDebuggerMenuStop">
       <tooltip>Stop debugger</tooltip>

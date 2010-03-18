@@ -50,6 +50,7 @@ class GDB_driver : public DebuggerDriver
         virtual void StepInstruction();
         virtual void StepIn();
         virtual void StepOut();
+        virtual void SetNextStatement(const wxString& filename, int line);
         virtual void Backtrace();
         virtual void Disassemble();
         virtual void CPURegisters();

@@ -35,8 +35,9 @@ class DebuggerState
         void CleanUp();
 
         int AddBreakpoint(DebuggerBreakpoint* bp); // returns -1 if not found
-        int AddBreakpoint(const wxString& file, int line, bool temp = false, const wxString& lineText = wxEmptyString); // returns -1 if not found
-        int AddBreakpoint(const wxString& dataAddr, bool onRead = false, bool onWrite = true); // returns -1 if not found
+        DebuggerBreakpoint* AddBreakpoint(const wxString& file, int line, bool temp = false,
+                                          const wxString& lineText = wxEmptyString);
+        DebuggerBreakpoint* AddBreakpoint(const wxString& dataAddr, bool onRead = false, bool onWrite = true);
         DebuggerBreakpoint* RemoveBreakpoint(const wxString& file, int line, bool deleteit = true);
         DebuggerBreakpoint* RemoveBreakpoint(int idx, bool deleteit = true);
         DebuggerBreakpoint* RemoveBreakpoint(DebuggerBreakpoint* bp, bool deleteit = true);
