@@ -733,7 +733,7 @@ BEGIN_EVENT_TABLE(FormMain, wxFrame)
     EVT_MENU( ID_DELETEALL, FormMain::OnClearClick )
     EVT_MENU( ID_ENABLE, FormMain::OnEnableDisable )
     EVT_MENU( ID_SETREADONLY, FormMain::OnSetReadOnly )
-    EVT_MENU( ID_HIDE, FormMain::OnHideShow )
+    EVT_MENU( ID_HIDE, FormMain::OnHide )
     EVT_MENU( ID_ITERATE1, FormMain::OnIterate1Click )
     EVT_MENU( ID_ITERATE2, FormMain::OnIterate2Click )
     EVT_MENU( ID_ITERATE3, FormMain::OnIterate3Click )
@@ -1809,9 +1809,14 @@ void FormMain::PopulateWithLibraryConfig ()
     wxPropertyGridManager* pgman = m_pPropGridManager;
     wxPropertyGridPage* pg = pgman->GetPage(wxT("wxWidgets Library Config"));
 
-    // Set custom column proportions
-    pg->SetColumnProportion(0, 3);
-    pg->SetColumnProportion(1, 1);
+    // Set custom column proportions (here in the sample app we need
+    // to check if the grid has wxPG_SPLITTER_AUTO_CENTER style. You usually
+    // need not to do it in your application).
+    if ( pgman->HasFlag(wxPG_SPLITTER_AUTO_CENTER) )
+    {
+        pg->SetColumnProportion(0, 3);
+        pg->SetColumnProportion(1, 1);
+    }
 
     wxPGProperty* cat;
 
@@ -2250,7 +2255,7 @@ FormMain::FormMain(const wxString& title, const wxPoint& pos, const wxSize& size
     m_itemEnable = menuTools1->Append(ID_ENABLE, wxT("Enable"),
         wxT("Toggles item's enabled state.") );
     m_itemEnable->Enable( FALSE );
-    menuTools1->Append(ID_HIDE, wxT("Hide"), wxT("Shows or hides a property") );
+    menuTools1->Append(ID_HIDE, wxT("Hide"), wxT("Hides a property") );
     menuTools1->Append(ID_SETREADONLY, wxT("Set as Read-Only"),
                         wxT("Set property as read-only") );
 
@@ -2710,29 +2715,21 @@ void FormMain::OnSetReadOnly( wxCommandEvent& WXUNUSED(event) )
 
 // -----------------------------------------------------------------------
 
-void FormMain::OnHideShow( wxCommandEvent& WXUNUSED(event) )
+void FormMain::OnHide( wxCommandEvent& WXUNUSED(event) )
 {
-    wxPGProperty* id = m_pPropGridManager->GetGrid()->GetSelection();
-    if ( !id )
+    wxPGProperty* prop = m_pPropGridManager->GetGrid()->GetSelection();
+    if ( !prop )
     {
         wxMessageBox(wxT("First select a property."));
         return;
     }
 
-    if ( m_pPropGridManager->IsPropertyShown( id ) )
-    {
-        m_pPropGridManager->HideProperty( id, true );
-        m_itemEnable->SetText( wxT("Show") );
-    }
-    else
-    {
-        m_pPropGridManager->HideProperty( id, false );
-        m_itemEnable->SetText( wxT("Hide") );
-    }
-
-    wxPropertyGridPage* curPage = m_pPropGridManager->GetCurrentPage();
+    m_pPropGridManager->HideProperty( prop, true );
 
     // Check for bottomY precalculation validity
+    // (only for testing purposes!)
+    wxPropertyGridPage* curPage = m_pPropGridManager->GetCurrentPage();
+
     unsigned int byPre = curPage->GetVirtualHeight();
     unsigned int byAct = curPage->GetActualVirtualHeight();
 

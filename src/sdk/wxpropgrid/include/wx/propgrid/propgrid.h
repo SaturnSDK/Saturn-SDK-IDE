@@ -84,7 +84,7 @@
 // for "configure" scripts under unix, use them.
 #define wxPROPGRID_MAJOR          1
 #define wxPROPGRID_MINOR          4
-#define wxPROPGRID_RELEASE        10
+#define wxPROPGRID_RELEASE        11
 
 // For non-Unix systems (i.e. when building without a configure script),
 // users of this component can use the following macro to check if the
@@ -1170,7 +1170,7 @@ WXDLLIMPEXP_PG void wxPGGetFailed( const wxPGProperty* p, const wxChar* typestr 
     @{
 */
 
-enum wxPG_PROPERTY_FLAGS
+enum wxPGPropertyFlags
 {
 
 /** Indicates bold font.
@@ -2676,6 +2676,12 @@ public:
         return m_value.IsNull();
     }
 
+    /**
+        Returns non-zero if given property flag is set.
+
+        For list of supported flags, see
+        @link propflags List of wxPGProperty Flags@endlink.
+    */
     FlagType HasFlag( FlagType flag ) const
     {
         return ( m_flags & flag );
@@ -2976,11 +2982,17 @@ public:
 
     /**
         Sets given property flag(s).
+
+        For list of allowed flags, see
+        @link propflags List of wxPGProperty Flags@endlink.
     */
     void SetFlag( FlagType flag ) { m_flags |= flag; }
 
     /**
         Sets or clears given property flag(s).
+
+        For list of allowed flags, see
+        @link propflags List of wxPGProperty Flags@endlink.
     */
     void ChangeFlag( FlagType flag, bool set )
     {
@@ -2990,6 +3002,13 @@ public:
             m_flags &= ~flag;
     }
 
+    /**
+        Sets or clears given property flag(s), recursively in
+        child properties (if any).
+
+        For list of allowed flags, see
+        @link propflags List of wxPGProperty Flags@endlink.
+    */
     void SetFlagRecursively( FlagType flag, bool set );
 
     void SetHelpString( const wxString& helpString )
@@ -3097,6 +3116,9 @@ public:
         @remarks This operation clears the property value. Also, if you
                  try to use this on a property which cannot hold choices,
                  a run-time error will be shown.
+
+                 This function will deselect the property, if
+                 necessary.
     */
     bool SetChoices( wxPGChoices& choices );
 
@@ -4868,16 +4890,30 @@ public:
                                               const wxString &label,
                                               const wxString &name);
 
-    /** Deletes a property by id. If category is deleted, all children are automatically deleted as well. */
+    /**
+        Removes and deletes a property.
+
+        @param id
+            Pointer or name of a property.
+
+        @remarks If you delete a property in a wxPropertyGrid event
+                 handler, the actual deletion is postponed until the next
+                 idle event.
+    */
     void DeleteProperty( wxPGPropArg id );
 
     /**
-        Removes and returns a given property..
+        Removes a property. Does not delete the property object, but
+        instead returns it.
 
         @param id
             Pointer or name of a property.
 
         @remarks Removed property cannot have any children.
+
+                 Also, if you remove property in a wxPropertyGrid event
+                 handler, the actual removal is postponed until the next
+                 idle event.
     */
     wxPGProperty* RemoveProperty( wxPGPropArg id );
 
@@ -5683,6 +5719,9 @@ public:
         @remarks This operation clears the property value. Also, if you
                  try to use this on a property which cannot hold choices,
                  a run-time error will be shown.
+
+                 This function will deselect the property, if
+                 necessary.
     */
     void SetPropertyChoices( wxPGPropArg id, wxPGChoices& choices)
     {
@@ -7862,6 +7901,10 @@ protected:
 
     /** Appearance of a unspecified value cell. */
     wxPGCell            m_unspecifiedAppearance;
+
+    /** List of properties to be deleted/removed in idle event handler. */
+    wxArrayPGProperty   m_deletedProperties;
+    wxArrayPGProperty   m_removedProperties;
 
     //
     // Temporary values

@@ -15,6 +15,10 @@ Version 1.4.11 ( ?-?-2010 )
   - Property selection is no longer cleared when adding
     new properties (feature request #2942477).
 
+  - Property removal and deletion will now be postponed to
+    idle time when it is done from a wxPropertyGrid event
+    handling (resolves bug #2953675).
+
 
   Bugs Fixed:
 
@@ -25,6 +29,12 @@ Version 1.4.11 ( ?-?-2010 )
   - wxPropertyGridInterface::Enable/DisableProperty() would
     crash if called for a property which did not belong to
     any grid (bug #2925499).
+
+  - SetChoices() could crash if called on a selected
+    property (now the property selection is cleared).
+
+  - Various bugs when re-positioning editors for columns
+    other than 1 (for example, property label editors).
 
   - Property editors other than text ctrl based ones did not
     respect wxPG_PROP_READONLY flag (bug #2940435).

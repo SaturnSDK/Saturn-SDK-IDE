@@ -1547,17 +1547,12 @@ const int wxSCB_SETVALUE_CYCLE = 2;
 
 
 static void DrawSimpleCheckBox( wxDC& dc, const wxRect& rect, int box_hei,
-                                int state, const wxColour& lineCol )
+                                int state )
 {
     // Box rectangle.
     wxRect r(rect.x+wxPG_XBEFORETEXT,rect.y+((rect.height-box_hei)/2),
              box_hei,box_hei);
-    wxColour useCol = lineCol;
-
-    if ( state & wxSCB_STATE_UNSPECIFIED )
-    {
-        useCol = wxColour(220, 220, 220);
-    }
+    wxColour useCol = dc.GetTextForeground();
 
     // Draw check mark first because it is likely to overdraw the
     // surrounding rectangle.
@@ -1720,14 +1715,14 @@ bool wxSimpleCheckBox::ProcessEvent(wxEvent& event)
         dc.SetPen( bgcol );
         dc.DrawRectangle( rect );
 
-        wxColour txcol = GetForegroundColour();
+        dc.SetTextForeground(GetForegroundColour());
 
         int state = m_state;
         if ( !(state & wxSCB_STATE_UNSPECIFIED) &&
              GetFont().GetWeight() == wxBOLD )
             state |= wxSCB_STATE_BOLD;
 
-        DrawSimpleCheckBox(dc,rect,m_boxHeight,state,txcol);
+        DrawSimpleCheckBox(dc, rect, m_boxHeight, state);
 
         return true;
     }
@@ -1821,7 +1816,6 @@ void wxPGCheckBoxEditor::DrawValue( wxDC& dc, const wxRect& rect,
                                     const wxString& WXUNUSED(text) ) const
 {
     int state = wxSCB_STATE_UNCHECKED;
-    wxColour rectCol = dc.GetTextForeground();
 
     if ( !property->IsValueUnspecified() )
     {
@@ -1834,7 +1828,7 @@ void wxPGCheckBoxEditor::DrawValue( wxDC& dc, const wxRect& rect,
         state |= wxSCB_STATE_UNSPECIFIED;
     }
 
-    DrawSimpleCheckBox(dc, rect, dc.GetCharHeight(), state, rectCol);
+    DrawSimpleCheckBox(dc, rect, dc.GetCharHeight(), state);
 }
 
 void wxPGCheckBoxEditor::UpdateControl( wxPGProperty* property,
@@ -1944,8 +1938,10 @@ wxTextCtrl* wxPropertyGrid::GetLabelEditor() const
 void wxPropertyGrid::CorrectEditorWidgetSizeX()
 {
     int secWid = 0;
-    int newSplitterx = m_pState->DoGetSplitterPosition(m_selColumn-1);
-    int newWidth = newSplitterx + m_pState->m_colWidths[m_selColumn];
+
+    // Use fixed selColumn 1 for main editor widgets
+    int newSplitterx = m_pState->DoGetSplitterPosition(0);
+    int newWidth = newSplitterx + m_pState->m_colWidths[1];
 
     if ( m_wndEditor2 )
     {
@@ -1987,25 +1983,39 @@ void wxPropertyGrid::CorrectEditorWidgetPosY()
 {
     wxPGProperty* selected = GetSelection();
 
-    if ( selected&& (m_wndEditor || m_wndEditor2) ) 
+    if ( selected )
     {
-        wxRect r = GetEditorWidgetRect(selected, m_selColumn);
-
-        if ( m_wndEditor )
+        if ( m_labelEditor )
         {
-            wxPoint pos = m_wndEditor->GetPosition();
+            wxRect r = GetEditorWidgetRect(selected, m_selColumn);
+            wxPoint pos = m_labelEditor->GetPosition();
 
             // Calculate y offset
             int offset = pos.y % m_lineHeight;
 
-            m_wndEditor->Move(pos.x, r.y + offset);
+            m_labelEditor->Move(pos.x, r.y + offset);
         }
 
-        if ( m_wndEditor2 )
+        if ( m_wndEditor || m_wndEditor2 ) 
         {
-            wxPoint pos = m_wndEditor2->GetPosition();
+            wxRect r = GetEditorWidgetRect(selected, 1);
 
-            m_wndEditor2->Move(pos.x, r.y);
+            if ( m_wndEditor )
+            {
+                wxPoint pos = m_wndEditor->GetPosition();
+
+                // Calculate y offset
+                int offset = pos.y % m_lineHeight;
+
+                m_wndEditor->Move(pos.x, r.y + offset);
+            }
+
+            if ( m_wndEditor2 )
+            {
+                wxPoint pos = m_wndEditor2->GetPosition();
+
+                m_wndEditor2->Move(pos.x, r.y);
+            }
         }
     }
 }

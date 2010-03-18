@@ -1811,6 +1811,12 @@ bool wxPGProperty::SetChoices( wxPGChoices& choices )
                  false,
                  wxT("This property class does not support choices.") );
 
+    // Property must be de-selected first (otherwise choices in
+    // the control would be de-synced with true choices)
+    wxPropertyGrid* pg = GetGrid();
+    if ( pg && pg->GetSelection() == this )
+        pg->ClearSelection();
+
     ci.m_choices->Assign(choices);
 
     // This may be needed to trigger some initialization
@@ -2316,10 +2322,16 @@ void wxPGProperty::DeleteChildren()
 {
     wxPropertyGridState* state = m_parentState;
 
-    while ( GetChildCount() )
+    if ( !GetChildCount() )
+        return;
+
+    // Because deletion is sometimes deferred, we have to use
+    // this sort of code for enumerating the child properties.
+    unsigned int i = GetChildCount();
+    while ( i > 0 )
     {
-        wxPGProperty* child = Item(GetChildCount()-1);
-        state->DoDelete(child, true);
+        i--;
+        state->DoDelete(Item(i), true);
     }
 }
 
@@ -2651,6 +2663,11 @@ void wxPGDefaultRenderer::Render( wxDC& dc, const wxRect& rect,
     {
         if ( propertyGrid->GetInternalFlags() & wxPG_FL_CELL_OVERRIDES_SEL )
             preDrawFlags = preDrawFlags & ~(Selected);
+
+        // Always use check box editor's DrawValue() function, if present
+        editor = property->GetColumnEditor(column);
+        if ( editor && !editor->IsKindOf(CLASSINFO(wxPGCheckBoxEditor)) )
+            editor = NULL;
 
         imageWidth = PreDrawCell( dc, rect, *cell, preDrawFlags );
         text = cell->GetText();
@@ -3180,6 +3197,9 @@ void wxPropertyGrid::Init1()
     m_dragStatus = 0;
     m_mouseSide = 16;
     m_editorFocused = 0;
+
+    // Set up default unspecified value 'colour'
+    m_unspecifiedAppearance.SetFgCol(*wxLIGHT_GREY);
 
     // Set default keys
     AddActionTrigger( wxPG_ACTION_NEXT_PROPERTY, WXK_RIGHT );
@@ -4652,10 +4672,6 @@ wxPGProperty* wxPropertyGridInterface::RemoveProperty( wxPGPropArg id )
     wxPropertyGridState* state = p->GetParentState();
 
     state->DoDelete( p, false );
-
-    // Mark the property as 'unattached'
-    p->m_parentState = NULL;
-    p->m_parent = NULL;
 
     RefreshGrid(state);
 
@@ -7036,14 +7052,21 @@ wxRect wxPropertyGrid::GetEditorWidgetRect( wxPGProperty* p, int column ) const
     int colEnd = splitterX + m_pState->m_colWidths[column];
     int imageOffset = 0;
 
-    // TODO: If custom image detection changes from current, change this.
-    if ( m_iFlags & wxPG_FL_CUR_USES_CUSTOM_IMAGE )
+    if ( column == 1 )
     {
-        //m_iFlags |= wxPG_FL_CUR_USES_CUSTOM_IMAGE;
-        int iw = p->OnMeasureImage().x;
-        if ( iw < 1 )
-            iw = wxPG_CUSTOM_IMAGE_WIDTH;
-        imageOffset = p->GetImageOffset(iw);
+        // TODO: If custom image detection changes from current, change this.
+        if ( m_iFlags & wxPG_FL_CUR_USES_CUSTOM_IMAGE )
+        {
+            //m_iFlags |= wxPG_FL_CUR_USES_CUSTOM_IMAGE;
+            int iw = p->OnMeasureImage().x;
+            if ( iw < 1 )
+                iw = wxPG_CUSTOM_IMAGE_WIDTH;
+            imageOffset = p->GetImageOffset(iw);
+        }
+    }
+    else if ( column == 0 )
+    {
+        splitterX += (p->m_depth-1) * m_subgroup_extramargin;
     }
 
     return wxRect
@@ -7973,11 +7996,12 @@ bool wxPropertyGrid::SendEvent( int eventType, wxPGProperty* p,
 
     wxEvtHandler* evtHandler = m_eventObject->GetEventHandler();
 
+    wxPropertyGridEvent* prevProcessedEvent = m_processedEvent;
     m_processedEvent = &evt;
 
     evtHandler->ProcessEvent(evt);
 
-    m_processedEvent = NULL;
+    m_processedEvent = prevProcessedEvent;
 
     return evt.WasVetoed();
 }
@@ -9286,6 +9310,27 @@ void wxPropertyGrid::OnIdle( wxIdleEvent& WXUNUSED(event) )
         {
             OnTLPChanging(tlp);
         }
+    }
+
+    //
+    // Resolve pending property removals
+    if ( m_deletedProperties.size() > 0 )
+    {
+        wxArrayPGProperty& arr = m_deletedProperties;
+        for ( unsigned int i=0; i<arr.size(); i++ )
+        {
+            DeleteProperty(arr[i]);
+        }
+        arr.clear();
+    }
+    if ( m_removedProperties.size() > 0 )
+    {
+        wxArrayPGProperty& arr = m_removedProperties;
+        for ( unsigned int i=0; i<arr.size(); i++ )
+        {
+            RemoveProperty(arr[i]);
+        }
+        arr.clear();
     }
 }
 
@@ -12920,6 +12965,28 @@ void wxPropertyGridState::DoDelete( wxPGProperty* item, bool doDelete )
 
 	wxPropertyGrid* pg = GetGrid();
 
+    // Must defer deletion? Yes, if handling a wxPG event.
+    if ( pg && pg->m_processedEvent )
+    {
+        if ( doDelete )
+            pg->m_deletedProperties.push_back(item);
+        else
+            pg->m_removedProperties.push_back(item);
+
+        // Rename the property so it won't remain in the way
+        // of the user code.
+
+        // Let's trust that no sane property uses prefix like
+        // this. It would be anyway fairly inconvenient (in
+        // current code) to check whether a new name is used
+        // by another property with parent (due to the child
+        // name notation).
+        wxString newName = wxT("_&/_%$") + item->GetBaseName();
+        pg->DoSetPropertyName(item, newName);
+
+        return;
+    }
+
     if ( DoIsPropertySelected(item) )
     {
         if ( pg && pg->GetState() == this )
@@ -13023,6 +13090,10 @@ void wxPropertyGridState::DoDelete( wxPGProperty* item, bool doDelete )
 	// We need to clear parent grid's m_propHover, if it matches item
 	if ( pg && pg->m_propHover == item )
 		pg->m_propHover = NULL;
+
+    // Mark the property as 'unattached'
+    item->m_parentState = NULL;
+    item->m_parent = NULL;
 
     // We can actually delete it now
     if ( doDelete )
