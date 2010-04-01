@@ -23,7 +23,9 @@
         Instead, if you want to generate a format not declared there,
         use:
 
-             <add-formats>yyy</add-formats>
+        <add-formats>xxx</add-formats>
     -->
+
+     <add-formats>msvs2008prj</add-formats>
 
 </bakefile-gen>

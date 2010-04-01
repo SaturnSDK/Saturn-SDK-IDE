@@ -9,8 +9,8 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="propgridsample"
-	ProjectGUID="{3E5E89F7-6420-500C-9277-91A5DBB31651}"
+	Name="propgrid"
+	ProjectGUID="{ECA5FC4D-29CE-5030-9175-551834BF6CB0}"
 	>
 	<Platforms>
 		<Platform
@@ -26,9 +26,9 @@
 	<Configurations>
 		<Configuration
 			Name="Static ANSI Release Multilib|Win32"
-			OutputDirectory="..\samples"
-			IntermediateDirectory="vcmsw\propgridsample"
-			ConfigurationType="1"
+			OutputDirectory="..\lib\vc_lib"
+			IntermediateDirectory="vcmsw\propgrid"
+			ConfigurationType="4"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			>
@@ -46,7 +46,7 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				PreprocessorDefinitions="WIN32;__WXMSW__;_WINDOWS"
+				PreprocessorDefinitions="WIN32;_LIB;__WXMSW__"
 				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_lib\msw;$(WXWIN)\include;..\include"
 			/>
 			<Tool
@@ -54,12 +54,12 @@
 				AdditionalOptions="/MP"
 				Optimization="2"
 				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_lib\msw;$(WXWIN)\include;..\include"
-				PreprocessorDefinitions="WIN32;__WXMSW__;_WINDOWS"
+				PreprocessorDefinitions="WIN32;_LIB;__WXMSW__"
 				ExceptionHandling="1"
 				RuntimeLibrary="2"
 				RuntimeTypeInfo="true"
-				ObjectFile="vcmsw\propgridsample\"
-				ProgramDataBaseFileName="..\samples\propgridsample.pdb"
+				ObjectFile="vcmsw\propgrid\"
+				ProgramDataBaseFileName="..\lib\vc_lib\wxcode_msw28_propgrid.pdb"
 				WarningLevel="4"
 				SuppressStartupBanner="true"
 				DebugInformationFormat="0"
@@ -69,25 +69,17 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="__WXMSW__;_WINDOWS"
+				PreprocessorDefinitions="__WXMSW__"
 				Culture="1033"
-				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_lib\msw;$(WXWIN)\include;..\include;..\samples"
+				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_lib\msw;$(WXWIN)\include;..\include"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
-				Name="VCLinkerTool"
-				AdditionalOptions=""
-				AdditionalDependencies="..\lib\vc_lib\wxcode_msw26_propgrid.lib wxmsw26_xrc.lib wxmsw26_html.lib wxbase26_xml.lib wxmsw26_adv.lib wxmsw26_core.lib wxbase26.lib wxtiff.lib wxjpeg.lib wxpng.lib wxzlib.lib wxregex.lib wxexpat.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib winspool.lib winmm.lib shell32.lib comctl32.lib ole32.lib oleaut32.lib uuid.lib rpcrt4.lib advapi32.lib wsock32.lib odbc32.lib"
-				OutputFile="..\samples\propgridsample.exe"
-				LinkIncremental="1"
+				Name="VCLibrarianTool"
+				OutputFile="..\lib\vc_lib\wxcode_msw28_propgrid.lib"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="$(WXWIN)\lib\vc_lib;..\lib\vc_lib"
-				GenerateManifest="true"
-				ProgramDatabaseFile="..\samples\propgridsample.pdb"
-				SubSystem="2"
-				TargetMachine="1"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -100,14 +92,11 @@
 			/>
 			<Tool
 				Name="VCBscMakeTool"
-				OutputFile="..\samples\propgrid_propgridsample.bsc"
+				OutputFile="..\lib\vc_lib\propgrid_propgrid.bsc"
 				SuppressStartupBanner="true"
 			/>
 			<Tool
 				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCAppVerifierTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -115,9 +104,9 @@
 		</Configuration>
 		<Configuration
 			Name="Static ANSI Release Monolithic|Win32"
-			OutputDirectory="..\samples"
-			IntermediateDirectory="vcmsw\propgridsample"
-			ConfigurationType="1"
+			OutputDirectory="..\lib\vc_lib"
+			IntermediateDirectory="vcmsw\propgrid"
+			ConfigurationType="4"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			>
@@ -135,7 +124,7 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				PreprocessorDefinitions="WIN32;__WXMSW__;_WINDOWS"
+				PreprocessorDefinitions="WIN32;_LIB;__WXMSW__"
 				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_lib\msw;$(WXWIN)\include;..\include"
 			/>
 			<Tool
@@ -143,12 +132,12 @@
 				AdditionalOptions="/MP"
 				Optimization="2"
 				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_lib\msw;$(WXWIN)\include;..\include"
-				PreprocessorDefinitions="WIN32;__WXMSW__;_WINDOWS"
+				PreprocessorDefinitions="WIN32;_LIB;__WXMSW__"
 				ExceptionHandling="1"
 				RuntimeLibrary="2"
 				RuntimeTypeInfo="true"
-				ObjectFile="vcmsw\propgridsample\"
-				ProgramDataBaseFileName="..\samples\propgridsample.pdb"
+				ObjectFile="vcmsw\propgrid\"
+				ProgramDataBaseFileName="..\lib\vc_lib\wxcode_msw28_propgrid.pdb"
 				WarningLevel="4"
 				SuppressStartupBanner="true"
 				DebugInformationFormat="0"
@@ -158,25 +147,17 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="__WXMSW__;_WINDOWS"
+				PreprocessorDefinitions="__WXMSW__"
 				Culture="1033"
-				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_lib\msw;$(WXWIN)\include;..\include;..\samples"
+				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_lib\msw;$(WXWIN)\include;..\include"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
-				Name="VCLinkerTool"
-				AdditionalOptions=""
-				AdditionalDependencies="..\lib\vc_lib\wxcode_msw26_propgrid.lib      wxmsw26.lib wxtiff.lib wxjpeg.lib wxpng.lib wxzlib.lib wxregex.lib wxexpat.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib winspool.lib winmm.lib shell32.lib comctl32.lib ole32.lib oleaut32.lib uuid.lib rpcrt4.lib advapi32.lib wsock32.lib odbc32.lib"
-				OutputFile="..\samples\propgridsample.exe"
-				LinkIncremental="1"
+				Name="VCLibrarianTool"
+				OutputFile="..\lib\vc_lib\wxcode_msw28_propgrid.lib"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="$(WXWIN)\lib\vc_lib;..\lib\vc_lib"
-				GenerateManifest="true"
-				ProgramDatabaseFile="..\samples\propgridsample.pdb"
-				SubSystem="2"
-				TargetMachine="1"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -189,14 +170,11 @@
 			/>
 			<Tool
 				Name="VCBscMakeTool"
-				OutputFile="..\samples\propgrid_propgridsample.bsc"
+				OutputFile="..\lib\vc_lib\propgrid_propgrid.bsc"
 				SuppressStartupBanner="true"
 			/>
 			<Tool
 				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCAppVerifierTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -204,9 +182,9 @@
 		</Configuration>
 		<Configuration
 			Name="Static ANSI Debug Multilib|Win32"
-			OutputDirectory="..\samples"
-			IntermediateDirectory="vcmswd\propgridsample"
-			ConfigurationType="1"
+			OutputDirectory="..\lib\vc_lib"
+			IntermediateDirectory="vcmswd\propgrid"
+			ConfigurationType="4"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			>
@@ -224,7 +202,7 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				PreprocessorDefinitions="WIN32;__WXDEBUG__;__WXMSW__;_WINDOWS;_DEBUG"
+				PreprocessorDefinitions="WIN32;_LIB;__WXDEBUG__;__WXMSW__;_DEBUG"
 				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_lib\mswd;$(WXWIN)\include;..\include"
 			/>
 			<Tool
@@ -232,14 +210,14 @@
 				AdditionalOptions="/MP"
 				Optimization="0"
 				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_lib\mswd;$(WXWIN)\include;..\include"
-				PreprocessorDefinitions="WIN32;__WXDEBUG__;__WXMSW__;_WINDOWS;_DEBUG"
+				PreprocessorDefinitions="WIN32;_LIB;__WXDEBUG__;__WXMSW__;_DEBUG"
 				ExceptionHandling="1"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
 				BufferSecurityCheck="true"
 				RuntimeTypeInfo="true"
-				ObjectFile="vcmswd\propgridsample\"
-				ProgramDataBaseFileName="..\samples\propgridsample.pdb"
+				ObjectFile="vcmswd\propgrid\"
+				ProgramDataBaseFileName="..\lib\vc_lib\wxcode_msw28d_propgrid.pdb"
 				WarningLevel="4"
 				SuppressStartupBanner="true"
 				DebugInformationFormat="3"
@@ -249,26 +227,17 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="__WXDEBUG__;__WXMSW__;_WINDOWS;_DEBUG"
+				PreprocessorDefinitions="__WXDEBUG__;__WXMSW__;_DEBUG"
 				Culture="1033"
-				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_lib\mswd;$(WXWIN)\include;..\include;..\samples"
+				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_lib\mswd;$(WXWIN)\include;..\include"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
-				Name="VCLinkerTool"
-				AdditionalOptions=""
-				AdditionalDependencies="..\lib\vc_lib\wxcode_msw26d_propgrid.lib wxmsw26d_xrc.lib wxmsw26d_html.lib wxbase26d_xml.lib wxmsw26d_adv.lib wxmsw26d_core.lib wxbase26d.lib wxtiffd.lib wxjpegd.lib wxpngd.lib wxzlibd.lib wxregexd.lib wxexpatd.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib winspool.lib winmm.lib shell32.lib comctl32.lib ole32.lib oleaut32.lib uuid.lib rpcrt4.lib advapi32.lib wsock32.lib odbc32.lib"
-				OutputFile="..\samples\propgridsample.exe"
-				LinkIncremental="2"
+				Name="VCLibrarianTool"
+				OutputFile="..\lib\vc_lib\wxcode_msw28d_propgrid.lib"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="$(WXWIN)\lib\vc_lib;..\lib\vc_lib"
-				GenerateManifest="true"
-				GenerateDebugInformation="true"
-				ProgramDatabaseFile="..\samples\propgridsample.pdb"
-				SubSystem="2"
-				TargetMachine="1"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -281,14 +250,11 @@
 			/>
 			<Tool
 				Name="VCBscMakeTool"
-				OutputFile="..\samples\propgrid_propgridsample.bsc"
+				OutputFile="..\lib\vc_lib\propgrid_propgrid.bsc"
 				SuppressStartupBanner="true"
 			/>
 			<Tool
 				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCAppVerifierTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -296,9 +262,9 @@
 		</Configuration>
 		<Configuration
 			Name="Static ANSI Debug Monolithic|Win32"
-			OutputDirectory="..\samples"
-			IntermediateDirectory="vcmswd\propgridsample"
-			ConfigurationType="1"
+			OutputDirectory="..\lib\vc_lib"
+			IntermediateDirectory="vcmswd\propgrid"
+			ConfigurationType="4"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			>
@@ -316,7 +282,7 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				PreprocessorDefinitions="WIN32;__WXDEBUG__;__WXMSW__;_WINDOWS;_DEBUG"
+				PreprocessorDefinitions="WIN32;_LIB;__WXDEBUG__;__WXMSW__;_DEBUG"
 				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_lib\mswd;$(WXWIN)\include;..\include"
 			/>
 			<Tool
@@ -324,14 +290,14 @@
 				AdditionalOptions="/MP"
 				Optimization="0"
 				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_lib\mswd;$(WXWIN)\include;..\include"
-				PreprocessorDefinitions="WIN32;__WXDEBUG__;__WXMSW__;_WINDOWS;_DEBUG"
+				PreprocessorDefinitions="WIN32;_LIB;__WXDEBUG__;__WXMSW__;_DEBUG"
 				ExceptionHandling="1"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
 				BufferSecurityCheck="true"
 				RuntimeTypeInfo="true"
-				ObjectFile="vcmswd\propgridsample\"
-				ProgramDataBaseFileName="..\samples\propgridsample.pdb"
+				ObjectFile="vcmswd\propgrid\"
+				ProgramDataBaseFileName="..\lib\vc_lib\wxcode_msw28d_propgrid.pdb"
 				WarningLevel="4"
 				SuppressStartupBanner="true"
 				DebugInformationFormat="3"
@@ -341,26 +307,17 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="__WXDEBUG__;__WXMSW__;_WINDOWS;_DEBUG"
+				PreprocessorDefinitions="__WXDEBUG__;__WXMSW__;_DEBUG"
 				Culture="1033"
-				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_lib\mswd;$(WXWIN)\include;..\include;..\samples"
+				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_lib\mswd;$(WXWIN)\include;..\include"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
-				Name="VCLinkerTool"
-				AdditionalOptions=""
-				AdditionalDependencies="..\lib\vc_lib\wxcode_msw26d_propgrid.lib      wxmsw26d.lib wxtiffd.lib wxjpegd.lib wxpngd.lib wxzlibd.lib wxregexd.lib wxexpatd.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib winspool.lib winmm.lib shell32.lib comctl32.lib ole32.lib oleaut32.lib uuid.lib rpcrt4.lib advapi32.lib wsock32.lib odbc32.lib"
-				OutputFile="..\samples\propgridsample.exe"
-				LinkIncremental="2"
+				Name="VCLibrarianTool"
+				OutputFile="..\lib\vc_lib\wxcode_msw28d_propgrid.lib"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="$(WXWIN)\lib\vc_lib;..\lib\vc_lib"
-				GenerateManifest="true"
-				GenerateDebugInformation="true"
-				ProgramDatabaseFile="..\samples\propgridsample.pdb"
-				SubSystem="2"
-				TargetMachine="1"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -373,14 +330,11 @@
 			/>
 			<Tool
 				Name="VCBscMakeTool"
-				OutputFile="..\samples\propgrid_propgridsample.bsc"
+				OutputFile="..\lib\vc_lib\propgrid_propgrid.bsc"
 				SuppressStartupBanner="true"
 			/>
 			<Tool
 				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCAppVerifierTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -388,9 +342,9 @@
 		</Configuration>
 		<Configuration
 			Name="Static Unicode Release Multilib|Win32"
-			OutputDirectory="..\samples"
-			IntermediateDirectory="vcmswu\propgridsample"
-			ConfigurationType="1"
+			OutputDirectory="..\lib\vc_lib"
+			IntermediateDirectory="vcmswu\propgrid"
+			ConfigurationType="4"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="1"
@@ -409,7 +363,7 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				PreprocessorDefinitions="WIN32;_UNICODE;__WXMSW__;_WINDOWS"
+				PreprocessorDefinitions="WIN32;_LIB;_UNICODE;__WXMSW__"
 				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_lib\mswu;$(WXWIN)\include;..\include"
 			/>
 			<Tool
@@ -417,12 +371,12 @@
 				AdditionalOptions="/MP"
 				Optimization="2"
 				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_lib\mswu;$(WXWIN)\include;..\include"
-				PreprocessorDefinitions="WIN32;_UNICODE;__WXMSW__;_WINDOWS"
+				PreprocessorDefinitions="WIN32;_LIB;_UNICODE;__WXMSW__"
 				ExceptionHandling="1"
 				RuntimeLibrary="2"
 				RuntimeTypeInfo="true"
-				ObjectFile="vcmswu\propgridsample\"
-				ProgramDataBaseFileName="..\samples\propgridsample.pdb"
+				ObjectFile="vcmswu\propgrid\"
+				ProgramDataBaseFileName="..\lib\vc_lib\wxcode_msw28u_propgrid.pdb"
 				WarningLevel="4"
 				SuppressStartupBanner="true"
 				DebugInformationFormat="0"
@@ -432,25 +386,17 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="_UNICODE;__WXMSW__;_WINDOWS"
+				PreprocessorDefinitions="_UNICODE;__WXMSW__"
 				Culture="1033"
-				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_lib\mswu;$(WXWIN)\include;..\include;..\samples"
+				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_lib\mswu;$(WXWIN)\include;..\include"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
-				Name="VCLinkerTool"
-				AdditionalOptions=""
-				AdditionalDependencies="..\lib\vc_lib\wxcode_msw26u_propgrid.lib wxmsw26u_xrc.lib wxmsw26u_html.lib wxbase26u_xml.lib wxmsw26u_adv.lib wxmsw26u_core.lib wxbase26u.lib wxtiff.lib wxjpeg.lib wxpng.lib wxzlib.lib wxregexu.lib wxexpat.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib winspool.lib winmm.lib shell32.lib comctl32.lib ole32.lib oleaut32.lib uuid.lib rpcrt4.lib advapi32.lib wsock32.lib odbc32.lib"
-				OutputFile="..\samples\propgridsample.exe"
-				LinkIncremental="1"
+				Name="VCLibrarianTool"
+				OutputFile="..\lib\vc_lib\wxcode_msw28u_propgrid.lib"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="$(WXWIN)\lib\vc_lib;..\lib\vc_lib"
-				GenerateManifest="true"
-				ProgramDatabaseFile="..\samples\propgridsample.pdb"
-				SubSystem="2"
-				TargetMachine="1"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -463,14 +409,11 @@
 			/>
 			<Tool
 				Name="VCBscMakeTool"
-				OutputFile="..\samples\propgrid_propgridsample.bsc"
+				OutputFile="..\lib\vc_lib\propgrid_propgrid.bsc"
 				SuppressStartupBanner="true"
 			/>
 			<Tool
 				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCAppVerifierTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -478,9 +421,9 @@
 		</Configuration>
 		<Configuration
 			Name="Static Unicode Release Monolithic|Win32"
-			OutputDirectory="..\samples"
-			IntermediateDirectory="vcmswu\propgridsample"
-			ConfigurationType="1"
+			OutputDirectory="..\lib\vc_lib"
+			IntermediateDirectory="vcmswu\propgrid"
+			ConfigurationType="4"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="1"
@@ -499,7 +442,7 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				PreprocessorDefinitions="WIN32;_UNICODE;__WXMSW__;_WINDOWS"
+				PreprocessorDefinitions="WIN32;_LIB;_UNICODE;__WXMSW__"
 				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_lib\mswu;$(WXWIN)\include;..\include"
 			/>
 			<Tool
@@ -507,12 +450,12 @@
 				AdditionalOptions="/MP"
 				Optimization="2"
 				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_lib\mswu;$(WXWIN)\include;..\include"
-				PreprocessorDefinitions="WIN32;_UNICODE;__WXMSW__;_WINDOWS"
+				PreprocessorDefinitions="WIN32;_LIB;_UNICODE;__WXMSW__"
 				ExceptionHandling="1"
 				RuntimeLibrary="2"
 				RuntimeTypeInfo="true"
-				ObjectFile="vcmswu\propgridsample\"
-				ProgramDataBaseFileName="..\samples\propgridsample.pdb"
+				ObjectFile="vcmswu\propgrid\"
+				ProgramDataBaseFileName="..\lib\vc_lib\wxcode_msw28u_propgrid.pdb"
 				WarningLevel="4"
 				SuppressStartupBanner="true"
 				DebugInformationFormat="0"
@@ -522,25 +465,17 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="_UNICODE;__WXMSW__;_WINDOWS"
+				PreprocessorDefinitions="_UNICODE;__WXMSW__"
 				Culture="1033"
-				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_lib\mswu;$(WXWIN)\include;..\include;..\samples"
+				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_lib\mswu;$(WXWIN)\include;..\include"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
-				Name="VCLinkerTool"
-				AdditionalOptions=""
-				AdditionalDependencies="..\lib\vc_lib\wxcode_msw26u_propgrid.lib      wxmsw26u.lib wxtiff.lib wxjpeg.lib wxpng.lib wxzlib.lib wxregexu.lib wxexpat.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib winspool.lib winmm.lib shell32.lib comctl32.lib ole32.lib oleaut32.lib uuid.lib rpcrt4.lib advapi32.lib wsock32.lib odbc32.lib"
-				OutputFile="..\samples\propgridsample.exe"
-				LinkIncremental="1"
+				Name="VCLibrarianTool"
+				OutputFile="..\lib\vc_lib\wxcode_msw28u_propgrid.lib"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="$(WXWIN)\lib\vc_lib;..\lib\vc_lib"
-				GenerateManifest="true"
-				ProgramDatabaseFile="..\samples\propgridsample.pdb"
-				SubSystem="2"
-				TargetMachine="1"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -553,14 +488,11 @@
 			/>
 			<Tool
 				Name="VCBscMakeTool"
-				OutputFile="..\samples\propgrid_propgridsample.bsc"
+				OutputFile="..\lib\vc_lib\propgrid_propgrid.bsc"
 				SuppressStartupBanner="true"
 			/>
 			<Tool
 				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCAppVerifierTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -568,9 +500,9 @@
 		</Configuration>
 		<Configuration
 			Name="Static Unicode Debug Multilib|Win32"
-			OutputDirectory="..\samples"
-			IntermediateDirectory="vcmswud\propgridsample"
-			ConfigurationType="1"
+			OutputDirectory="..\lib\vc_lib"
+			IntermediateDirectory="vcmswud\propgrid"
+			ConfigurationType="4"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="1"
@@ -589,7 +521,7 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				PreprocessorDefinitions="WIN32;_UNICODE;__WXDEBUG__;__WXMSW__;_WINDOWS;_DEBUG"
+				PreprocessorDefinitions="WIN32;_LIB;_UNICODE;__WXDEBUG__;__WXMSW__;_DEBUG"
 				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_lib\mswud;$(WXWIN)\include;..\include"
 			/>
 			<Tool
@@ -597,14 +529,14 @@
 				AdditionalOptions="/MP"
 				Optimization="0"
 				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_lib\mswud;$(WXWIN)\include;..\include"
-				PreprocessorDefinitions="WIN32;_UNICODE;__WXDEBUG__;__WXMSW__;_WINDOWS;_DEBUG"
+				PreprocessorDefinitions="WIN32;_LIB;_UNICODE;__WXDEBUG__;__WXMSW__;_DEBUG"
 				ExceptionHandling="1"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
 				BufferSecurityCheck="true"
 				RuntimeTypeInfo="true"
-				ObjectFile="vcmswud\propgridsample\"
-				ProgramDataBaseFileName="..\samples\propgridsample.pdb"
+				ObjectFile="vcmswud\propgrid\"
+				ProgramDataBaseFileName="..\lib\vc_lib\wxcode_msw28ud_propgrid.pdb"
 				WarningLevel="4"
 				SuppressStartupBanner="true"
 				DebugInformationFormat="3"
@@ -614,26 +546,17 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="_UNICODE;__WXDEBUG__;__WXMSW__;_WINDOWS;_DEBUG"
+				PreprocessorDefinitions="_UNICODE;__WXDEBUG__;__WXMSW__;_DEBUG"
 				Culture="1033"
-				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_lib\mswud;$(WXWIN)\include;..\include;..\samples"
+				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_lib\mswud;$(WXWIN)\include;..\include"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
-				Name="VCLinkerTool"
-				AdditionalOptions=""
-				AdditionalDependencies="..\lib\vc_lib\wxcode_msw26ud_propgrid.lib wxmsw26ud_xrc.lib wxmsw26ud_html.lib wxbase26ud_xml.lib wxmsw26ud_adv.lib wxmsw26ud_core.lib wxbase26ud.lib wxtiffd.lib wxjpegd.lib wxpngd.lib wxzlibd.lib wxregexud.lib wxexpatd.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib winspool.lib winmm.lib shell32.lib comctl32.lib ole32.lib oleaut32.lib uuid.lib rpcrt4.lib advapi32.lib wsock32.lib odbc32.lib"
-				OutputFile="..\samples\propgridsample.exe"
-				LinkIncremental="2"
+				Name="VCLibrarianTool"
+				OutputFile="..\lib\vc_lib\wxcode_msw28ud_propgrid.lib"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="$(WXWIN)\lib\vc_lib;..\lib\vc_lib"
-				GenerateManifest="true"
-				GenerateDebugInformation="true"
-				ProgramDatabaseFile="..\samples\propgridsample.pdb"
-				SubSystem="2"
-				TargetMachine="1"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -646,14 +569,11 @@
 			/>
 			<Tool
 				Name="VCBscMakeTool"
-				OutputFile="..\samples\propgrid_propgridsample.bsc"
+				OutputFile="..\lib\vc_lib\propgrid_propgrid.bsc"
 				SuppressStartupBanner="true"
 			/>
 			<Tool
 				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCAppVerifierTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -661,9 +581,9 @@
 		</Configuration>
 		<Configuration
 			Name="Static Unicode Debug Monolithic|Win32"
-			OutputDirectory="..\samples"
-			IntermediateDirectory="vcmswud\propgridsample"
-			ConfigurationType="1"
+			OutputDirectory="..\lib\vc_lib"
+			IntermediateDirectory="vcmswud\propgrid"
+			ConfigurationType="4"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="1"
@@ -682,7 +602,7 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				PreprocessorDefinitions="WIN32;_UNICODE;__WXDEBUG__;__WXMSW__;_WINDOWS;_DEBUG"
+				PreprocessorDefinitions="WIN32;_LIB;_UNICODE;__WXDEBUG__;__WXMSW__;_DEBUG"
 				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_lib\mswud;$(WXWIN)\include;..\include"
 			/>
 			<Tool
@@ -690,14 +610,14 @@
 				AdditionalOptions="/MP"
 				Optimization="0"
 				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_lib\mswud;$(WXWIN)\include;..\include"
-				PreprocessorDefinitions="WIN32;_UNICODE;__WXDEBUG__;__WXMSW__;_WINDOWS;_DEBUG"
+				PreprocessorDefinitions="WIN32;_LIB;_UNICODE;__WXDEBUG__;__WXMSW__;_DEBUG"
 				ExceptionHandling="1"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
 				BufferSecurityCheck="true"
 				RuntimeTypeInfo="true"
-				ObjectFile="vcmswud\propgridsample\"
-				ProgramDataBaseFileName="..\samples\propgridsample.pdb"
+				ObjectFile="vcmswud\propgrid\"
+				ProgramDataBaseFileName="..\lib\vc_lib\wxcode_msw28ud_propgrid.pdb"
 				WarningLevel="4"
 				SuppressStartupBanner="true"
 				DebugInformationFormat="3"
@@ -707,26 +627,17 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="_UNICODE;__WXDEBUG__;__WXMSW__;_WINDOWS;_DEBUG"
+				PreprocessorDefinitions="_UNICODE;__WXDEBUG__;__WXMSW__;_DEBUG"
 				Culture="1033"
-				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_lib\mswud;$(WXWIN)\include;..\include;..\samples"
+				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_lib\mswud;$(WXWIN)\include;..\include"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
-				Name="VCLinkerTool"
-				AdditionalOptions=""
-				AdditionalDependencies="..\lib\vc_lib\wxcode_msw26ud_propgrid.lib      wxmsw26ud.lib wxtiffd.lib wxjpegd.lib wxpngd.lib wxzlibd.lib wxregexud.lib wxexpatd.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib winspool.lib winmm.lib shell32.lib comctl32.lib ole32.lib oleaut32.lib uuid.lib rpcrt4.lib advapi32.lib wsock32.lib odbc32.lib"
-				OutputFile="..\samples\propgridsample.exe"
-				LinkIncremental="2"
+				Name="VCLibrarianTool"
+				OutputFile="..\lib\vc_lib\wxcode_msw28ud_propgrid.lib"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="$(WXWIN)\lib\vc_lib;..\lib\vc_lib"
-				GenerateManifest="true"
-				GenerateDebugInformation="true"
-				ProgramDatabaseFile="..\samples\propgridsample.pdb"
-				SubSystem="2"
-				TargetMachine="1"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -739,14 +650,11 @@
 			/>
 			<Tool
 				Name="VCBscMakeTool"
-				OutputFile="..\samples\propgrid_propgridsample.bsc"
+				OutputFile="..\lib\vc_lib\propgrid_propgrid.bsc"
 				SuppressStartupBanner="true"
 			/>
 			<Tool
 				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCAppVerifierTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -754,9 +662,9 @@
 		</Configuration>
 		<Configuration
 			Name="DLL ANSI Release Multilib|Win32"
-			OutputDirectory="..\samples"
-			IntermediateDirectory="vcmsw_dll\propgridsample"
-			ConfigurationType="1"
+			OutputDirectory="..\lib\vc_dll"
+			IntermediateDirectory="vcmsw_dll\propgrid"
+			ConfigurationType="2"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			>
@@ -774,7 +682,7 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				PreprocessorDefinitions="WIN32;WXUSINGDLL;__WXMSW__;_WINDOWS"
+				PreprocessorDefinitions="WIN32;_USRDLL;DLL_EXPORTS;WXUSINGDLL;__WXMSW__;WXMAKINGDLL_PROPGRID"
 				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_dll\msw;$(WXWIN)\include;..\include"
 			/>
 			<Tool
@@ -782,12 +690,12 @@
 				AdditionalOptions="/MP"
 				Optimization="2"
 				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_dll\msw;$(WXWIN)\include;..\include"
-				PreprocessorDefinitions="WIN32;WXUSINGDLL;__WXMSW__;_WINDOWS"
+				PreprocessorDefinitions="WIN32;_USRDLL;DLL_EXPORTS;WXUSINGDLL;__WXMSW__;WXMAKINGDLL_PROPGRID"
 				ExceptionHandling="1"
 				RuntimeLibrary="2"
 				RuntimeTypeInfo="true"
-				ObjectFile="vcmsw_dll\propgridsample\"
-				ProgramDataBaseFileName="..\samples\propgridsample.pdb"
+				ObjectFile="vcmsw_dll\propgrid\"
+				ProgramDataBaseFileName="..\lib\vc_dll\wxcode_msw28_propgrid.pdb"
 				WarningLevel="4"
 				SuppressStartupBanner="true"
 				DebugInformationFormat="0"
@@ -797,9 +705,9 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="WXUSINGDLL;__WXMSW__;_WINDOWS"
+				PreprocessorDefinitions="WXUSINGDLL;__WXMSW__;WXMAKINGDLL_PROPGRID"
 				Culture="1033"
-				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_dll\msw;$(WXWIN)\include;..\include;..\samples"
+				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_dll\msw;$(WXWIN)\include;..\include"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
@@ -807,14 +715,14 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions=""
-				AdditionalDependencies="..\lib\vc_dll\wxcode_msw26_propgrid.lib wxmsw26_xrc.lib wxmsw26_html.lib wxbase26_xml.lib wxmsw26_adv.lib wxmsw26_core.lib wxbase26.lib wxtiff.lib wxjpeg.lib wxpng.lib wxzlib.lib wxregex.lib wxexpat.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib winspool.lib winmm.lib shell32.lib comctl32.lib ole32.lib oleaut32.lib uuid.lib rpcrt4.lib advapi32.lib wsock32.lib odbc32.lib"
-				OutputFile="..\samples\propgridsample.exe"
+				AdditionalDependencies="wxmsw28_adv.lib wxmsw28_core.lib wxbase28.lib wxtiff.lib wxjpeg.lib wxpng.lib wxzlib.lib wxregex.lib wxexpat.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib winspool.lib winmm.lib shell32.lib comctl32.lib ole32.lib oleaut32.lib uuid.lib rpcrt4.lib advapi32.lib wsock32.lib odbc32.lib"
+				OutputFile="..\lib\vc_dll\wxcode_msw28_propgrid.dll"
 				LinkIncremental="1"
+				ImportLibrary="..\lib\vc_dll\wxcode_msw28_propgrid.lib"
 				SuppressStartupBanner="true"
 				AdditionalLibraryDirectories="$(WXWIN)\lib\vc_dll;..\lib\vc_dll"
 				GenerateManifest="true"
-				ProgramDatabaseFile="..\samples\propgridsample.pdb"
-				SubSystem="2"
+				ProgramDatabaseFile="..\lib\vc_dll\wxcode_msw28_propgrid.pdb"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -828,14 +736,11 @@
 			/>
 			<Tool
 				Name="VCBscMakeTool"
-				OutputFile="..\samples\propgrid_propgridsample.bsc"
+				OutputFile="..\lib\vc_dll\propgrid_propgrid.bsc"
 				SuppressStartupBanner="true"
 			/>
 			<Tool
 				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCAppVerifierTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -843,9 +748,9 @@
 		</Configuration>
 		<Configuration
 			Name="DLL ANSI Release Monolithic|Win32"
-			OutputDirectory="..\samples"
-			IntermediateDirectory="vcmsw_dll\propgridsample"
-			ConfigurationType="1"
+			OutputDirectory="..\lib\vc_dll"
+			IntermediateDirectory="vcmsw_dll\propgrid"
+			ConfigurationType="2"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			>
@@ -863,7 +768,7 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				PreprocessorDefinitions="WIN32;WXUSINGDLL;__WXMSW__;_WINDOWS"
+				PreprocessorDefinitions="WIN32;_USRDLL;DLL_EXPORTS;WXUSINGDLL;__WXMSW__;WXMAKINGDLL_PROPGRID"
 				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_dll\msw;$(WXWIN)\include;..\include"
 			/>
 			<Tool
@@ -871,12 +776,12 @@
 				AdditionalOptions="/MP"
 				Optimization="2"
 				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_dll\msw;$(WXWIN)\include;..\include"
-				PreprocessorDefinitions="WIN32;WXUSINGDLL;__WXMSW__;_WINDOWS"
+				PreprocessorDefinitions="WIN32;_USRDLL;DLL_EXPORTS;WXUSINGDLL;__WXMSW__;WXMAKINGDLL_PROPGRID"
 				ExceptionHandling="1"
 				RuntimeLibrary="2"
 				RuntimeTypeInfo="true"
-				ObjectFile="vcmsw_dll\propgridsample\"
-				ProgramDataBaseFileName="..\samples\propgridsample.pdb"
+				ObjectFile="vcmsw_dll\propgrid\"
+				ProgramDataBaseFileName="..\lib\vc_dll\wxcode_msw28_propgrid.pdb"
 				WarningLevel="4"
 				SuppressStartupBanner="true"
 				DebugInformationFormat="0"
@@ -886,9 +791,9 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="WXUSINGDLL;__WXMSW__;_WINDOWS"
+				PreprocessorDefinitions="WXUSINGDLL;__WXMSW__;WXMAKINGDLL_PROPGRID"
 				Culture="1033"
-				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_dll\msw;$(WXWIN)\include;..\include;..\samples"
+				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_dll\msw;$(WXWIN)\include;..\include"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
@@ -896,14 +801,14 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions=""
-				AdditionalDependencies="..\lib\vc_dll\wxcode_msw26_propgrid.lib      wxmsw26.lib wxtiff.lib wxjpeg.lib wxpng.lib wxzlib.lib wxregex.lib wxexpat.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib winspool.lib winmm.lib shell32.lib comctl32.lib ole32.lib oleaut32.lib uuid.lib rpcrt4.lib advapi32.lib wsock32.lib odbc32.lib"
-				OutputFile="..\samples\propgridsample.exe"
+				AdditionalDependencies="wxmsw28.lib wxtiff.lib wxjpeg.lib wxpng.lib wxzlib.lib wxregex.lib wxexpat.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib winspool.lib winmm.lib shell32.lib comctl32.lib ole32.lib oleaut32.lib uuid.lib rpcrt4.lib advapi32.lib wsock32.lib odbc32.lib"
+				OutputFile="..\lib\vc_dll\wxcode_msw28_propgrid.dll"
 				LinkIncremental="1"
+				ImportLibrary="..\lib\vc_dll\wxcode_msw28_propgrid.lib"
 				SuppressStartupBanner="true"
 				AdditionalLibraryDirectories="$(WXWIN)\lib\vc_dll;..\lib\vc_dll"
 				GenerateManifest="true"
-				ProgramDatabaseFile="..\samples\propgridsample.pdb"
-				SubSystem="2"
+				ProgramDatabaseFile="..\lib\vc_dll\wxcode_msw28_propgrid.pdb"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -917,14 +822,11 @@
 			/>
 			<Tool
 				Name="VCBscMakeTool"
-				OutputFile="..\samples\propgrid_propgridsample.bsc"
+				OutputFile="..\lib\vc_dll\propgrid_propgrid.bsc"
 				SuppressStartupBanner="true"
 			/>
 			<Tool
 				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCAppVerifierTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -932,9 +834,9 @@
 		</Configuration>
 		<Configuration
 			Name="DLL ANSI Debug Multilib|Win32"
-			OutputDirectory="..\samples"
-			IntermediateDirectory="vcmswd_dll\propgridsample"
-			ConfigurationType="1"
+			OutputDirectory="..\lib\vc_dll"
+			IntermediateDirectory="vcmswd_dll\propgrid"
+			ConfigurationType="2"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			>
@@ -952,7 +854,7 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				PreprocessorDefinitions="WIN32;WXUSINGDLL;__WXDEBUG__;__WXMSW__;_WINDOWS;_DEBUG"
+				PreprocessorDefinitions="WIN32;_USRDLL;DLL_EXPORTS;WXUSINGDLL;__WXDEBUG__;__WXMSW__;_DEBUG;WXMAKINGDLL_PROPGRID"
 				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_dll\mswd;$(WXWIN)\include;..\include"
 			/>
 			<Tool
@@ -960,14 +862,14 @@
 				AdditionalOptions="/MP"
 				Optimization="0"
 				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_dll\mswd;$(WXWIN)\include;..\include"
-				PreprocessorDefinitions="WIN32;WXUSINGDLL;__WXDEBUG__;__WXMSW__;_WINDOWS;_DEBUG"
+				PreprocessorDefinitions="WIN32;_USRDLL;DLL_EXPORTS;WXUSINGDLL;__WXDEBUG__;__WXMSW__;_DEBUG;WXMAKINGDLL_PROPGRID"
 				ExceptionHandling="1"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
 				BufferSecurityCheck="true"
 				RuntimeTypeInfo="true"
-				ObjectFile="vcmswd_dll\propgridsample\"
-				ProgramDataBaseFileName="..\samples\propgridsample.pdb"
+				ObjectFile="vcmswd_dll\propgrid\"
+				ProgramDataBaseFileName="..\lib\vc_dll\wxcode_msw28d_propgrid.pdb"
 				WarningLevel="4"
 				SuppressStartupBanner="true"
 				DebugInformationFormat="3"
@@ -977,9 +879,9 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="WXUSINGDLL;__WXDEBUG__;__WXMSW__;_WINDOWS;_DEBUG"
+				PreprocessorDefinitions="WXUSINGDLL;__WXDEBUG__;__WXMSW__;_DEBUG;WXMAKINGDLL_PROPGRID"
 				Culture="1033"
-				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_dll\mswd;$(WXWIN)\include;..\include;..\samples"
+				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_dll\mswd;$(WXWIN)\include;..\include"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
@@ -987,15 +889,15 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions=""
-				AdditionalDependencies="..\lib\vc_dll\wxcode_msw26d_propgrid.lib wxmsw26d_xrc.lib wxmsw26d_html.lib wxbase26d_xml.lib wxmsw26d_adv.lib wxmsw26d_core.lib wxbase26d.lib wxtiffd.lib wxjpegd.lib wxpngd.lib wxzlibd.lib wxregexd.lib wxexpatd.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib winspool.lib winmm.lib shell32.lib comctl32.lib ole32.lib oleaut32.lib uuid.lib rpcrt4.lib advapi32.lib wsock32.lib odbc32.lib"
-				OutputFile="..\samples\propgridsample.exe"
+				AdditionalDependencies="wxmsw28d_adv.lib wxmsw28d_core.lib wxbase28d.lib wxtiffd.lib wxjpegd.lib wxpngd.lib wxzlibd.lib wxregexd.lib wxexpatd.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib winspool.lib winmm.lib shell32.lib comctl32.lib ole32.lib oleaut32.lib uuid.lib rpcrt4.lib advapi32.lib wsock32.lib odbc32.lib"
+				OutputFile="..\lib\vc_dll\wxcode_msw28d_propgrid.dll"
 				LinkIncremental="2"
+				ImportLibrary="..\lib\vc_dll\wxcode_msw28d_propgrid.lib"
 				SuppressStartupBanner="true"
 				AdditionalLibraryDirectories="$(WXWIN)\lib\vc_dll;..\lib\vc_dll"
 				GenerateManifest="true"
 				GenerateDebugInformation="true"
-				ProgramDatabaseFile="..\samples\propgridsample.pdb"
-				SubSystem="2"
+				ProgramDatabaseFile="..\lib\vc_dll\wxcode_msw28d_propgrid.pdb"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -1009,14 +911,11 @@
 			/>
 			<Tool
 				Name="VCBscMakeTool"
-				OutputFile="..\samples\propgrid_propgridsample.bsc"
+				OutputFile="..\lib\vc_dll\propgrid_propgrid.bsc"
 				SuppressStartupBanner="true"
 			/>
 			<Tool
 				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCAppVerifierTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -1024,9 +923,9 @@
 		</Configuration>
 		<Configuration
 			Name="DLL ANSI Debug Monolithic|Win32"
-			OutputDirectory="..\samples"
-			IntermediateDirectory="vcmswd_dll\propgridsample"
-			ConfigurationType="1"
+			OutputDirectory="..\lib\vc_dll"
+			IntermediateDirectory="vcmswd_dll\propgrid"
+			ConfigurationType="2"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			>
@@ -1044,7 +943,7 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				PreprocessorDefinitions="WIN32;WXUSINGDLL;__WXDEBUG__;__WXMSW__;_WINDOWS;_DEBUG"
+				PreprocessorDefinitions="WIN32;_USRDLL;DLL_EXPORTS;WXUSINGDLL;__WXDEBUG__;__WXMSW__;_DEBUG;WXMAKINGDLL_PROPGRID"
 				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_dll\mswd;$(WXWIN)\include;..\include"
 			/>
 			<Tool
@@ -1052,14 +951,14 @@
 				AdditionalOptions="/MP"
 				Optimization="0"
 				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_dll\mswd;$(WXWIN)\include;..\include"
-				PreprocessorDefinitions="WIN32;WXUSINGDLL;__WXDEBUG__;__WXMSW__;_WINDOWS;_DEBUG"
+				PreprocessorDefinitions="WIN32;_USRDLL;DLL_EXPORTS;WXUSINGDLL;__WXDEBUG__;__WXMSW__;_DEBUG;WXMAKINGDLL_PROPGRID"
 				ExceptionHandling="1"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
 				BufferSecurityCheck="true"
 				RuntimeTypeInfo="true"
-				ObjectFile="vcmswd_dll\propgridsample\"
-				ProgramDataBaseFileName="..\samples\propgridsample.pdb"
+				ObjectFile="vcmswd_dll\propgrid\"
+				ProgramDataBaseFileName="..\lib\vc_dll\wxcode_msw28d_propgrid.pdb"
 				WarningLevel="4"
 				SuppressStartupBanner="true"
 				DebugInformationFormat="3"
@@ -1069,9 +968,9 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="WXUSINGDLL;__WXDEBUG__;__WXMSW__;_WINDOWS;_DEBUG"
+				PreprocessorDefinitions="WXUSINGDLL;__WXDEBUG__;__WXMSW__;_DEBUG;WXMAKINGDLL_PROPGRID"
 				Culture="1033"
-				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_dll\mswd;$(WXWIN)\include;..\include;..\samples"
+				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_dll\mswd;$(WXWIN)\include;..\include"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
@@ -1079,15 +978,15 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions=""
-				AdditionalDependencies="..\lib\vc_dll\wxcode_msw26d_propgrid.lib      wxmsw26d.lib wxtiffd.lib wxjpegd.lib wxpngd.lib wxzlibd.lib wxregexd.lib wxexpatd.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib winspool.lib winmm.lib shell32.lib comctl32.lib ole32.lib oleaut32.lib uuid.lib rpcrt4.lib advapi32.lib wsock32.lib odbc32.lib"
-				OutputFile="..\samples\propgridsample.exe"
+				AdditionalDependencies="wxmsw28d.lib wxtiffd.lib wxjpegd.lib wxpngd.lib wxzlibd.lib wxregexd.lib wxexpatd.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib winspool.lib winmm.lib shell32.lib comctl32.lib ole32.lib oleaut32.lib uuid.lib rpcrt4.lib advapi32.lib wsock32.lib odbc32.lib"
+				OutputFile="..\lib\vc_dll\wxcode_msw28d_propgrid.dll"
 				LinkIncremental="2"
+				ImportLibrary="..\lib\vc_dll\wxcode_msw28d_propgrid.lib"
 				SuppressStartupBanner="true"
 				AdditionalLibraryDirectories="$(WXWIN)\lib\vc_dll;..\lib\vc_dll"
 				GenerateManifest="true"
 				GenerateDebugInformation="true"
-				ProgramDatabaseFile="..\samples\propgridsample.pdb"
-				SubSystem="2"
+				ProgramDatabaseFile="..\lib\vc_dll\wxcode_msw28d_propgrid.pdb"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -1101,14 +1000,11 @@
 			/>
 			<Tool
 				Name="VCBscMakeTool"
-				OutputFile="..\samples\propgrid_propgridsample.bsc"
+				OutputFile="..\lib\vc_dll\propgrid_propgrid.bsc"
 				SuppressStartupBanner="true"
 			/>
 			<Tool
 				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCAppVerifierTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -1116,9 +1012,9 @@
 		</Configuration>
 		<Configuration
 			Name="DLL Unicode Release Multilib|Win32"
-			OutputDirectory="..\samples"
-			IntermediateDirectory="vcmswu_dll\propgridsample"
-			ConfigurationType="1"
+			OutputDirectory="..\lib\vc_dll"
+			IntermediateDirectory="vcmswu_dll\propgrid"
+			ConfigurationType="2"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="1"
@@ -1137,7 +1033,7 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				PreprocessorDefinitions="WIN32;WXUSINGDLL;_UNICODE;__WXMSW__;_WINDOWS"
+				PreprocessorDefinitions="WIN32;_USRDLL;DLL_EXPORTS;WXUSINGDLL;_UNICODE;__WXMSW__;WXMAKINGDLL_PROPGRID"
 				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_dll\mswu;$(WXWIN)\include;..\include"
 			/>
 			<Tool
@@ -1145,12 +1041,12 @@
 				AdditionalOptions="/MP"
 				Optimization="2"
 				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_dll\mswu;$(WXWIN)\include;..\include"
-				PreprocessorDefinitions="WIN32;WXUSINGDLL;_UNICODE;__WXMSW__;_WINDOWS"
+				PreprocessorDefinitions="WIN32;_USRDLL;DLL_EXPORTS;WXUSINGDLL;_UNICODE;__WXMSW__;WXMAKINGDLL_PROPGRID"
 				ExceptionHandling="1"
 				RuntimeLibrary="2"
 				RuntimeTypeInfo="true"
-				ObjectFile="vcmswu_dll\propgridsample\"
-				ProgramDataBaseFileName="..\samples\propgridsample.pdb"
+				ObjectFile="vcmswu_dll\propgrid\"
+				ProgramDataBaseFileName="..\lib\vc_dll\wxcode_msw28u_propgrid.pdb"
 				WarningLevel="4"
 				SuppressStartupBanner="true"
 				DebugInformationFormat="0"
@@ -1160,9 +1056,9 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="WXUSINGDLL;_UNICODE;__WXMSW__;_WINDOWS"
+				PreprocessorDefinitions="WXUSINGDLL;_UNICODE;__WXMSW__;WXMAKINGDLL_PROPGRID"
 				Culture="1033"
-				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_dll\mswu;$(WXWIN)\include;..\include;..\samples"
+				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_dll\mswu;$(WXWIN)\include;..\include"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
@@ -1170,14 +1066,14 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions=""
-				AdditionalDependencies="..\lib\vc_dll\wxcode_msw26u_propgrid.lib wxmsw26u_xrc.lib wxmsw26u_html.lib wxbase26u_xml.lib wxmsw26u_adv.lib wxmsw26u_core.lib wxbase26u.lib wxtiff.lib wxjpeg.lib wxpng.lib wxzlib.lib wxregexu.lib wxexpat.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib winspool.lib winmm.lib shell32.lib comctl32.lib ole32.lib oleaut32.lib uuid.lib rpcrt4.lib advapi32.lib wsock32.lib odbc32.lib"
-				OutputFile="..\samples\propgridsample.exe"
+				AdditionalDependencies="wxmsw28u_adv.lib wxmsw28u_core.lib wxbase28u.lib wxtiff.lib wxjpeg.lib wxpng.lib wxzlib.lib wxregexu.lib wxexpat.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib winspool.lib winmm.lib shell32.lib comctl32.lib ole32.lib oleaut32.lib uuid.lib rpcrt4.lib advapi32.lib wsock32.lib odbc32.lib"
+				OutputFile="..\lib\vc_dll\wxcode_msw28u_propgrid.dll"
 				LinkIncremental="1"
+				ImportLibrary="..\lib\vc_dll\wxcode_msw28u_propgrid.lib"
 				SuppressStartupBanner="true"
 				AdditionalLibraryDirectories="$(WXWIN)\lib\vc_dll;..\lib\vc_dll"
 				GenerateManifest="true"
-				ProgramDatabaseFile="..\samples\propgridsample.pdb"
-				SubSystem="2"
+				ProgramDatabaseFile="..\lib\vc_dll\wxcode_msw28u_propgrid.pdb"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -1191,14 +1087,11 @@
 			/>
 			<Tool
 				Name="VCBscMakeTool"
-				OutputFile="..\samples\propgrid_propgridsample.bsc"
+				OutputFile="..\lib\vc_dll\propgrid_propgrid.bsc"
 				SuppressStartupBanner="true"
 			/>
 			<Tool
 				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCAppVerifierTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -1206,9 +1099,9 @@
 		</Configuration>
 		<Configuration
 			Name="DLL Unicode Release Monolithic|Win32"
-			OutputDirectory="..\samples"
-			IntermediateDirectory="vcmswu_dll\propgridsample"
-			ConfigurationType="1"
+			OutputDirectory="..\lib\vc_dll"
+			IntermediateDirectory="vcmswu_dll\propgrid"
+			ConfigurationType="2"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="1"
@@ -1227,7 +1120,7 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				PreprocessorDefinitions="WIN32;WXUSINGDLL;_UNICODE;__WXMSW__;_WINDOWS"
+				PreprocessorDefinitions="WIN32;_USRDLL;DLL_EXPORTS;WXUSINGDLL;_UNICODE;__WXMSW__;WXMAKINGDLL_PROPGRID"
 				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_dll\mswu;$(WXWIN)\include;..\include"
 			/>
 			<Tool
@@ -1235,12 +1128,12 @@
 				AdditionalOptions="/MP"
 				Optimization="2"
 				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_dll\mswu;$(WXWIN)\include;..\include"
-				PreprocessorDefinitions="WIN32;WXUSINGDLL;_UNICODE;__WXMSW__;_WINDOWS"
+				PreprocessorDefinitions="WIN32;_USRDLL;DLL_EXPORTS;WXUSINGDLL;_UNICODE;__WXMSW__;WXMAKINGDLL_PROPGRID"
 				ExceptionHandling="1"
 				RuntimeLibrary="2"
 				RuntimeTypeInfo="true"
-				ObjectFile="vcmswu_dll\propgridsample\"
-				ProgramDataBaseFileName="..\samples\propgridsample.pdb"
+				ObjectFile="vcmswu_dll\propgrid\"
+				ProgramDataBaseFileName="..\lib\vc_dll\wxcode_msw28u_propgrid.pdb"
 				WarningLevel="4"
 				SuppressStartupBanner="true"
 				DebugInformationFormat="0"
@@ -1250,9 +1143,9 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="WXUSINGDLL;_UNICODE;__WXMSW__;_WINDOWS"
+				PreprocessorDefinitions="WXUSINGDLL;_UNICODE;__WXMSW__;WXMAKINGDLL_PROPGRID"
 				Culture="1033"
-				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_dll\mswu;$(WXWIN)\include;..\include;..\samples"
+				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_dll\mswu;$(WXWIN)\include;..\include"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
@@ -1260,14 +1153,14 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions=""
-				AdditionalDependencies="..\lib\vc_dll\wxcode_msw26u_propgrid.lib      wxmsw26u.lib wxtiff.lib wxjpeg.lib wxpng.lib wxzlib.lib wxregexu.lib wxexpat.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib winspool.lib winmm.lib shell32.lib comctl32.lib ole32.lib oleaut32.lib uuid.lib rpcrt4.lib advapi32.lib wsock32.lib odbc32.lib"
-				OutputFile="..\samples\propgridsample.exe"
+				AdditionalDependencies="wxmsw28u.lib wxtiff.lib wxjpeg.lib wxpng.lib wxzlib.lib wxregexu.lib wxexpat.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib winspool.lib winmm.lib shell32.lib comctl32.lib ole32.lib oleaut32.lib uuid.lib rpcrt4.lib advapi32.lib wsock32.lib odbc32.lib"
+				OutputFile="..\lib\vc_dll\wxcode_msw28u_propgrid.dll"
 				LinkIncremental="1"
+				ImportLibrary="..\lib\vc_dll\wxcode_msw28u_propgrid.lib"
 				SuppressStartupBanner="true"
 				AdditionalLibraryDirectories="$(WXWIN)\lib\vc_dll;..\lib\vc_dll"
 				GenerateManifest="true"
-				ProgramDatabaseFile="..\samples\propgridsample.pdb"
-				SubSystem="2"
+				ProgramDatabaseFile="..\lib\vc_dll\wxcode_msw28u_propgrid.pdb"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -1281,14 +1174,11 @@
 			/>
 			<Tool
 				Name="VCBscMakeTool"
-				OutputFile="..\samples\propgrid_propgridsample.bsc"
+				OutputFile="..\lib\vc_dll\propgrid_propgrid.bsc"
 				SuppressStartupBanner="true"
 			/>
 			<Tool
 				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCAppVerifierTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -1296,9 +1186,9 @@
 		</Configuration>
 		<Configuration
 			Name="DLL Unicode Debug Multilib|Win32"
-			OutputDirectory="..\samples"
-			IntermediateDirectory="vcmswud_dll\propgridsample"
-			ConfigurationType="1"
+			OutputDirectory="..\lib\vc_dll"
+			IntermediateDirectory="vcmswud_dll\propgrid"
+			ConfigurationType="2"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="1"
@@ -1317,7 +1207,7 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				PreprocessorDefinitions="WIN32;WXUSINGDLL;_UNICODE;__WXDEBUG__;__WXMSW__;_WINDOWS;_DEBUG"
+				PreprocessorDefinitions="WIN32;_USRDLL;DLL_EXPORTS;WXUSINGDLL;_UNICODE;__WXDEBUG__;__WXMSW__;_DEBUG;WXMAKINGDLL_PROPGRID"
 				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_dll\mswud;$(WXWIN)\include;..\include"
 			/>
 			<Tool
@@ -1325,14 +1215,14 @@
 				AdditionalOptions="/MP"
 				Optimization="0"
 				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_dll\mswud;$(WXWIN)\include;..\include"
-				PreprocessorDefinitions="WIN32;WXUSINGDLL;_UNICODE;__WXDEBUG__;__WXMSW__;_WINDOWS;_DEBUG"
+				PreprocessorDefinitions="WIN32;_USRDLL;DLL_EXPORTS;WXUSINGDLL;_UNICODE;__WXDEBUG__;__WXMSW__;_DEBUG;WXMAKINGDLL_PROPGRID"
 				ExceptionHandling="1"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
 				BufferSecurityCheck="true"
 				RuntimeTypeInfo="true"
-				ObjectFile="vcmswud_dll\propgridsample\"
-				ProgramDataBaseFileName="..\samples\propgridsample.pdb"
+				ObjectFile="vcmswud_dll\propgrid\"
+				ProgramDataBaseFileName="..\lib\vc_dll\wxcode_msw28ud_propgrid.pdb"
 				WarningLevel="4"
 				SuppressStartupBanner="true"
 				DebugInformationFormat="3"
@@ -1342,9 +1232,9 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="WXUSINGDLL;_UNICODE;__WXDEBUG__;__WXMSW__;_WINDOWS;_DEBUG"
+				PreprocessorDefinitions="WXUSINGDLL;_UNICODE;__WXDEBUG__;__WXMSW__;_DEBUG;WXMAKINGDLL_PROPGRID"
 				Culture="1033"
-				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_dll\mswud;$(WXWIN)\include;..\include;..\samples"
+				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_dll\mswud;$(WXWIN)\include;..\include"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
@@ -1352,15 +1242,15 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions=""
-				AdditionalDependencies="..\lib\vc_dll\wxcode_msw26ud_propgrid.lib wxmsw26ud_xrc.lib wxmsw26ud_html.lib wxbase26ud_xml.lib wxmsw26ud_adv.lib wxmsw26ud_core.lib wxbase26ud.lib wxtiffd.lib wxjpegd.lib wxpngd.lib wxzlibd.lib wxregexud.lib wxexpatd.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib winspool.lib winmm.lib shell32.lib comctl32.lib ole32.lib oleaut32.lib uuid.lib rpcrt4.lib advapi32.lib wsock32.lib odbc32.lib"
-				OutputFile="..\samples\propgridsample.exe"
+				AdditionalDependencies="wxmsw28ud_adv.lib wxmsw28ud_core.lib wxbase28ud.lib wxtiffd.lib wxjpegd.lib wxpngd.lib wxzlibd.lib wxregexud.lib wxexpatd.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib winspool.lib winmm.lib shell32.lib comctl32.lib ole32.lib oleaut32.lib uuid.lib rpcrt4.lib advapi32.lib wsock32.lib odbc32.lib"
+				OutputFile="..\lib\vc_dll\wxcode_msw28ud_propgrid.dll"
 				LinkIncremental="2"
+				ImportLibrary="..\lib\vc_dll\wxcode_msw28ud_propgrid.lib"
 				SuppressStartupBanner="true"
 				AdditionalLibraryDirectories="$(WXWIN)\lib\vc_dll;..\lib\vc_dll"
 				GenerateManifest="true"
 				GenerateDebugInformation="true"
-				ProgramDatabaseFile="..\samples\propgridsample.pdb"
-				SubSystem="2"
+				ProgramDatabaseFile="..\lib\vc_dll\wxcode_msw28ud_propgrid.pdb"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -1374,14 +1264,11 @@
 			/>
 			<Tool
 				Name="VCBscMakeTool"
-				OutputFile="..\samples\propgrid_propgridsample.bsc"
+				OutputFile="..\lib\vc_dll\propgrid_propgrid.bsc"
 				SuppressStartupBanner="true"
 			/>
 			<Tool
 				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCAppVerifierTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -1389,9 +1276,9 @@
 		</Configuration>
 		<Configuration
 			Name="DLL Unicode Debug Monolithic|Win32"
-			OutputDirectory="..\samples"
-			IntermediateDirectory="vcmswud_dll\propgridsample"
-			ConfigurationType="1"
+			OutputDirectory="..\lib\vc_dll"
+			IntermediateDirectory="vcmswud_dll\propgrid"
+			ConfigurationType="2"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="1"
@@ -1410,7 +1297,7 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				PreprocessorDefinitions="WIN32;WXUSINGDLL;_UNICODE;__WXDEBUG__;__WXMSW__;_WINDOWS;_DEBUG"
+				PreprocessorDefinitions="WIN32;_USRDLL;DLL_EXPORTS;WXUSINGDLL;_UNICODE;__WXDEBUG__;__WXMSW__;_DEBUG;WXMAKINGDLL_PROPGRID"
 				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_dll\mswud;$(WXWIN)\include;..\include"
 			/>
 			<Tool
@@ -1418,14 +1305,14 @@
 				AdditionalOptions="/MP"
 				Optimization="0"
 				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_dll\mswud;$(WXWIN)\include;..\include"
-				PreprocessorDefinitions="WIN32;WXUSINGDLL;_UNICODE;__WXDEBUG__;__WXMSW__;_WINDOWS;_DEBUG"
+				PreprocessorDefinitions="WIN32;_USRDLL;DLL_EXPORTS;WXUSINGDLL;_UNICODE;__WXDEBUG__;__WXMSW__;_DEBUG;WXMAKINGDLL_PROPGRID"
 				ExceptionHandling="1"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
 				BufferSecurityCheck="true"
 				RuntimeTypeInfo="true"
-				ObjectFile="vcmswud_dll\propgridsample\"
-				ProgramDataBaseFileName="..\samples\propgridsample.pdb"
+				ObjectFile="vcmswud_dll\propgrid\"
+				ProgramDataBaseFileName="..\lib\vc_dll\wxcode_msw28ud_propgrid.pdb"
 				WarningLevel="4"
 				SuppressStartupBanner="true"
 				DebugInformationFormat="3"
@@ -1435,9 +1322,9 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="WXUSINGDLL;_UNICODE;__WXDEBUG__;__WXMSW__;_WINDOWS;_DEBUG"
+				PreprocessorDefinitions="WXUSINGDLL;_UNICODE;__WXDEBUG__;__WXMSW__;_DEBUG;WXMAKINGDLL_PROPGRID"
 				Culture="1033"
-				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_dll\mswud;$(WXWIN)\include;..\include;..\samples"
+				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_dll\mswud;$(WXWIN)\include;..\include"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
@@ -1445,15 +1332,15 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions=""
-				AdditionalDependencies="..\lib\vc_dll\wxcode_msw26ud_propgrid.lib      wxmsw26ud.lib wxtiffd.lib wxjpegd.lib wxpngd.lib wxzlibd.lib wxregexud.lib wxexpatd.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib winspool.lib winmm.lib shell32.lib comctl32.lib ole32.lib oleaut32.lib uuid.lib rpcrt4.lib advapi32.lib wsock32.lib odbc32.lib"
-				OutputFile="..\samples\propgridsample.exe"
+				AdditionalDependencies="wxmsw28ud.lib wxtiffd.lib wxjpegd.lib wxpngd.lib wxzlibd.lib wxregexud.lib wxexpatd.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib winspool.lib winmm.lib shell32.lib comctl32.lib ole32.lib oleaut32.lib uuid.lib rpcrt4.lib advapi32.lib wsock32.lib odbc32.lib"
+				OutputFile="..\lib\vc_dll\wxcode_msw28ud_propgrid.dll"
 				LinkIncremental="2"
+				ImportLibrary="..\lib\vc_dll\wxcode_msw28ud_propgrid.lib"
 				SuppressStartupBanner="true"
 				AdditionalLibraryDirectories="$(WXWIN)\lib\vc_dll;..\lib\vc_dll"
 				GenerateManifest="true"
 				GenerateDebugInformation="true"
-				ProgramDatabaseFile="..\samples\propgridsample.pdb"
-				SubSystem="2"
+				ProgramDatabaseFile="..\lib\vc_dll\wxcode_msw28ud_propgrid.pdb"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -1467,14 +1354,11 @@
 			/>
 			<Tool
 				Name="VCBscMakeTool"
-				OutputFile="..\samples\propgrid_propgridsample.bsc"
+				OutputFile="..\lib\vc_dll\propgrid_propgrid.bsc"
 				SuppressStartupBanner="true"
 			/>
 			<Tool
 				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCAppVerifierTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -1482,9 +1366,9 @@
 		</Configuration>
 		<Configuration
 			Name="Static ANSI Release Multilib|x64"
-			OutputDirectory="..\samples"
-			IntermediateDirectory="vcmsw\propgridsample"
-			ConfigurationType="1"
+			OutputDirectory="..\lib\vc_amd64_lib"
+			IntermediateDirectory="vcmsw\propgrid"
+			ConfigurationType="4"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			>
@@ -1502,20 +1386,20 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				PreprocessorDefinitions="WIN32;__WXMSW__;_WINDOWS"
-				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_lib\msw;$(WXWIN)\include;..\include"
+				PreprocessorDefinitions="WIN32;_LIB;__WXMSW__"
+				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_amd64_lib\msw;$(WXWIN)\include;..\include"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/MP"
 				Optimization="2"
-				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_lib\msw;$(WXWIN)\include;..\include"
-				PreprocessorDefinitions="WIN32;__WXMSW__;_WINDOWS"
+				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_amd64_lib\msw;$(WXWIN)\include;..\include"
+				PreprocessorDefinitions="WIN32;_LIB;__WXMSW__"
 				ExceptionHandling="1"
 				RuntimeLibrary="2"
 				RuntimeTypeInfo="true"
-				ObjectFile="vcmsw\propgridsample\"
-				ProgramDataBaseFileName="..\samples\propgridsample.pdb"
+				ObjectFile="vcmsw\propgrid\"
+				ProgramDataBaseFileName="..\lib\vc_amd64_lib\wxcode_msw28_propgrid.pdb"
 				WarningLevel="4"
 				SuppressStartupBanner="true"
 				DebugInformationFormat="0"
@@ -1525,25 +1409,17 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="__WXMSW__;_WINDOWS"
+				PreprocessorDefinitions="__WXMSW__"
 				Culture="1033"
-				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_lib\msw;$(WXWIN)\include;..\include;..\samples"
+				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_amd64_lib\msw;$(WXWIN)\include;..\include"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
-				Name="VCLinkerTool"
-				AdditionalOptions=""
-				AdditionalDependencies="..\lib\vc_lib\wxcode_msw26_propgrid.lib wxmsw26_xrc.lib wxmsw26_html.lib wxbase26_xml.lib wxmsw26_adv.lib wxmsw26_core.lib wxbase26.lib wxtiff.lib wxjpeg.lib wxpng.lib wxzlib.lib wxregex.lib wxexpat.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib winspool.lib winmm.lib shell32.lib comctl32.lib ole32.lib oleaut32.lib uuid.lib rpcrt4.lib advapi32.lib wsock32.lib odbc32.lib"
-				OutputFile="..\samples\propgridsample.exe"
-				LinkIncremental="1"
+				Name="VCLibrarianTool"
+				OutputFile="..\lib\vc_amd64_lib\wxcode_msw28_propgrid.lib"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="$(WXWIN)\lib\vc_lib;..\lib\vc_lib"
-				GenerateManifest="true"
-				ProgramDatabaseFile="..\samples\propgridsample.pdb"
-				SubSystem="2"
-				TargetMachine="17"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -1556,14 +1432,11 @@
 			/>
 			<Tool
 				Name="VCBscMakeTool"
-				OutputFile="..\samples\propgrid_propgridsample.bsc"
+				OutputFile="..\lib\vc_amd64_lib\propgrid_propgrid.bsc"
 				SuppressStartupBanner="true"
 			/>
 			<Tool
 				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCAppVerifierTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -1571,9 +1444,9 @@
 		</Configuration>
 		<Configuration
 			Name="Static ANSI Release Monolithic|x64"
-			OutputDirectory="..\samples"
-			IntermediateDirectory="vcmsw\propgridsample"
-			ConfigurationType="1"
+			OutputDirectory="..\lib\vc_amd64_lib"
+			IntermediateDirectory="vcmsw\propgrid"
+			ConfigurationType="4"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			>
@@ -1591,20 +1464,20 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				PreprocessorDefinitions="WIN32;__WXMSW__;_WINDOWS"
-				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_lib\msw;$(WXWIN)\include;..\include"
+				PreprocessorDefinitions="WIN32;_LIB;__WXMSW__"
+				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_amd64_lib\msw;$(WXWIN)\include;..\include"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/MP"
 				Optimization="2"
-				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_lib\msw;$(WXWIN)\include;..\include"
-				PreprocessorDefinitions="WIN32;__WXMSW__;_WINDOWS"
+				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_amd64_lib\msw;$(WXWIN)\include;..\include"
+				PreprocessorDefinitions="WIN32;_LIB;__WXMSW__"
 				ExceptionHandling="1"
 				RuntimeLibrary="2"
 				RuntimeTypeInfo="true"
-				ObjectFile="vcmsw\propgridsample\"
-				ProgramDataBaseFileName="..\samples\propgridsample.pdb"
+				ObjectFile="vcmsw\propgrid\"
+				ProgramDataBaseFileName="..\lib\vc_amd64_lib\wxcode_msw28_propgrid.pdb"
 				WarningLevel="4"
 				SuppressStartupBanner="true"
 				DebugInformationFormat="0"
@@ -1614,25 +1487,17 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="__WXMSW__;_WINDOWS"
+				PreprocessorDefinitions="__WXMSW__"
 				Culture="1033"
-				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_lib\msw;$(WXWIN)\include;..\include;..\samples"
+				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_amd64_lib\msw;$(WXWIN)\include;..\include"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
-				Name="VCLinkerTool"
-				AdditionalOptions=""
-				AdditionalDependencies="..\lib\vc_lib\wxcode_msw26_propgrid.lib      wxmsw26.lib wxtiff.lib wxjpeg.lib wxpng.lib wxzlib.lib wxregex.lib wxexpat.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib winspool.lib winmm.lib shell32.lib comctl32.lib ole32.lib oleaut32.lib uuid.lib rpcrt4.lib advapi32.lib wsock32.lib odbc32.lib"
-				OutputFile="..\samples\propgridsample.exe"
-				LinkIncremental="1"
+				Name="VCLibrarianTool"
+				OutputFile="..\lib\vc_amd64_lib\wxcode_msw28_propgrid.lib"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="$(WXWIN)\lib\vc_lib;..\lib\vc_lib"
-				GenerateManifest="true"
-				ProgramDatabaseFile="..\samples\propgridsample.pdb"
-				SubSystem="2"
-				TargetMachine="17"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -1645,14 +1510,11 @@
 			/>
 			<Tool
 				Name="VCBscMakeTool"
-				OutputFile="..\samples\propgrid_propgridsample.bsc"
+				OutputFile="..\lib\vc_amd64_lib\propgrid_propgrid.bsc"
 				SuppressStartupBanner="true"
 			/>
 			<Tool
 				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCAppVerifierTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -1660,9 +1522,9 @@
 		</Configuration>
 		<Configuration
 			Name="Static ANSI Debug Multilib|x64"
-			OutputDirectory="..\samples"
-			IntermediateDirectory="vcmswd\propgridsample"
-			ConfigurationType="1"
+			OutputDirectory="..\lib\vc_amd64_lib"
+			IntermediateDirectory="vcmswd\propgrid"
+			ConfigurationType="4"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			>
@@ -1680,22 +1542,22 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				PreprocessorDefinitions="WIN32;__WXDEBUG__;__WXMSW__;_WINDOWS;_DEBUG"
-				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_lib\mswd;$(WXWIN)\include;..\include"
+				PreprocessorDefinitions="WIN32;_LIB;__WXDEBUG__;__WXMSW__;_DEBUG"
+				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_amd64_lib\mswd;$(WXWIN)\include;..\include"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/MP"
 				Optimization="0"
-				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_lib\mswd;$(WXWIN)\include;..\include"
-				PreprocessorDefinitions="WIN32;__WXDEBUG__;__WXMSW__;_WINDOWS;_DEBUG"
+				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_amd64_lib\mswd;$(WXWIN)\include;..\include"
+				PreprocessorDefinitions="WIN32;_LIB;__WXDEBUG__;__WXMSW__;_DEBUG"
 				ExceptionHandling="1"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
 				BufferSecurityCheck="true"
 				RuntimeTypeInfo="true"
-				ObjectFile="vcmswd\propgridsample\"
-				ProgramDataBaseFileName="..\samples\propgridsample.pdb"
+				ObjectFile="vcmswd\propgrid\"
+				ProgramDataBaseFileName="..\lib\vc_amd64_lib\wxcode_msw28d_propgrid.pdb"
 				WarningLevel="4"
 				SuppressStartupBanner="true"
 				DebugInformationFormat="3"
@@ -1705,26 +1567,17 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="__WXDEBUG__;__WXMSW__;_WINDOWS;_DEBUG"
+				PreprocessorDefinitions="__WXDEBUG__;__WXMSW__;_DEBUG"
 				Culture="1033"
-				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_lib\mswd;$(WXWIN)\include;..\include;..\samples"
+				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_amd64_lib\mswd;$(WXWIN)\include;..\include"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
-				Name="VCLinkerTool"
-				AdditionalOptions=""
-				AdditionalDependencies="..\lib\vc_lib\wxcode_msw26d_propgrid.lib wxmsw26d_xrc.lib wxmsw26d_html.lib wxbase26d_xml.lib wxmsw26d_adv.lib wxmsw26d_core.lib wxbase26d.lib wxtiffd.lib wxjpegd.lib wxpngd.lib wxzlibd.lib wxregexd.lib wxexpatd.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib winspool.lib winmm.lib shell32.lib comctl32.lib ole32.lib oleaut32.lib uuid.lib rpcrt4.lib advapi32.lib wsock32.lib odbc32.lib"
-				OutputFile="..\samples\propgridsample.exe"
-				LinkIncremental="2"
+				Name="VCLibrarianTool"
+				OutputFile="..\lib\vc_amd64_lib\wxcode_msw28d_propgrid.lib"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="$(WXWIN)\lib\vc_lib;..\lib\vc_lib"
-				GenerateManifest="true"
-				GenerateDebugInformation="true"
-				ProgramDatabaseFile="..\samples\propgridsample.pdb"
-				SubSystem="2"
-				TargetMachine="17"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -1737,14 +1590,11 @@
 			/>
 			<Tool
 				Name="VCBscMakeTool"
-				OutputFile="..\samples\propgrid_propgridsample.bsc"
+				OutputFile="..\lib\vc_amd64_lib\propgrid_propgrid.bsc"
 				SuppressStartupBanner="true"
 			/>
 			<Tool
 				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCAppVerifierTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -1752,9 +1602,9 @@
 		</Configuration>
 		<Configuration
 			Name="Static ANSI Debug Monolithic|x64"
-			OutputDirectory="..\samples"
-			IntermediateDirectory="vcmswd\propgridsample"
-			ConfigurationType="1"
+			OutputDirectory="..\lib\vc_amd64_lib"
+			IntermediateDirectory="vcmswd\propgrid"
+			ConfigurationType="4"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			>
@@ -1772,22 +1622,22 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				PreprocessorDefinitions="WIN32;__WXDEBUG__;__WXMSW__;_WINDOWS;_DEBUG"
-				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_lib\mswd;$(WXWIN)\include;..\include"
+				PreprocessorDefinitions="WIN32;_LIB;__WXDEBUG__;__WXMSW__;_DEBUG"
+				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_amd64_lib\mswd;$(WXWIN)\include;..\include"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/MP"
 				Optimization="0"
-				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_lib\mswd;$(WXWIN)\include;..\include"
-				PreprocessorDefinitions="WIN32;__WXDEBUG__;__WXMSW__;_WINDOWS;_DEBUG"
+				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_amd64_lib\mswd;$(WXWIN)\include;..\include"
+				PreprocessorDefinitions="WIN32;_LIB;__WXDEBUG__;__WXMSW__;_DEBUG"
 				ExceptionHandling="1"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
 				BufferSecurityCheck="true"
 				RuntimeTypeInfo="true"
-				ObjectFile="vcmswd\propgridsample\"
-				ProgramDataBaseFileName="..\samples\propgridsample.pdb"
+				ObjectFile="vcmswd\propgrid\"
+				ProgramDataBaseFileName="..\lib\vc_amd64_lib\wxcode_msw28d_propgrid.pdb"
 				WarningLevel="4"
 				SuppressStartupBanner="true"
 				DebugInformationFormat="3"
@@ -1797,26 +1647,17 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="__WXDEBUG__;__WXMSW__;_WINDOWS;_DEBUG"
+				PreprocessorDefinitions="__WXDEBUG__;__WXMSW__;_DEBUG"
 				Culture="1033"
-				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_lib\mswd;$(WXWIN)\include;..\include;..\samples"
+				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_amd64_lib\mswd;$(WXWIN)\include;..\include"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
-				Name="VCLinkerTool"
-				AdditionalOptions=""
-				AdditionalDependencies="..\lib\vc_lib\wxcode_msw26d_propgrid.lib      wxmsw26d.lib wxtiffd.lib wxjpegd.lib wxpngd.lib wxzlibd.lib wxregexd.lib wxexpatd.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib winspool.lib winmm.lib shell32.lib comctl32.lib ole32.lib oleaut32.lib uuid.lib rpcrt4.lib advapi32.lib wsock32.lib odbc32.lib"
-				OutputFile="..\samples\propgridsample.exe"
-				LinkIncremental="2"
+				Name="VCLibrarianTool"
+				OutputFile="..\lib\vc_amd64_lib\wxcode_msw28d_propgrid.lib"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="$(WXWIN)\lib\vc_lib;..\lib\vc_lib"
-				GenerateManifest="true"
-				GenerateDebugInformation="true"
-				ProgramDatabaseFile="..\samples\propgridsample.pdb"
-				SubSystem="2"
-				TargetMachine="17"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -1829,14 +1670,11 @@
 			/>
 			<Tool
 				Name="VCBscMakeTool"
-				OutputFile="..\samples\propgrid_propgridsample.bsc"
+				OutputFile="..\lib\vc_amd64_lib\propgrid_propgrid.bsc"
 				SuppressStartupBanner="true"
 			/>
 			<Tool
 				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCAppVerifierTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -1844,9 +1682,9 @@
 		</Configuration>
 		<Configuration
 			Name="Static Unicode Release Multilib|x64"
-			OutputDirectory="..\samples"
-			IntermediateDirectory="vcmswu\propgridsample"
-			ConfigurationType="1"
+			OutputDirectory="..\lib\vc_amd64_lib"
+			IntermediateDirectory="vcmswu\propgrid"
+			ConfigurationType="4"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="1"
@@ -1865,20 +1703,20 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				PreprocessorDefinitions="WIN32;_UNICODE;__WXMSW__;_WINDOWS"
-				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_lib\mswu;$(WXWIN)\include;..\include"
+				PreprocessorDefinitions="WIN32;_LIB;_UNICODE;__WXMSW__"
+				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_amd64_lib\mswu;$(WXWIN)\include;..\include"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/MP"
 				Optimization="2"
-				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_lib\mswu;$(WXWIN)\include;..\include"
-				PreprocessorDefinitions="WIN32;_UNICODE;__WXMSW__;_WINDOWS"
+				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_amd64_lib\mswu;$(WXWIN)\include;..\include"
+				PreprocessorDefinitions="WIN32;_LIB;_UNICODE;__WXMSW__"
 				ExceptionHandling="1"
 				RuntimeLibrary="2"
 				RuntimeTypeInfo="true"
-				ObjectFile="vcmswu\propgridsample\"
-				ProgramDataBaseFileName="..\samples\propgridsample.pdb"
+				ObjectFile="vcmswu\propgrid\"
+				ProgramDataBaseFileName="..\lib\vc_amd64_lib\wxcode_msw28u_propgrid.pdb"
 				WarningLevel="4"
 				SuppressStartupBanner="true"
 				DebugInformationFormat="0"
@@ -1888,25 +1726,17 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="_UNICODE;__WXMSW__;_WINDOWS"
+				PreprocessorDefinitions="_UNICODE;__WXMSW__"
 				Culture="1033"
-				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_lib\mswu;$(WXWIN)\include;..\include;..\samples"
+				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_amd64_lib\mswu;$(WXWIN)\include;..\include"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
-				Name="VCLinkerTool"
-				AdditionalOptions=""
-				AdditionalDependencies="..\lib\vc_lib\wxcode_msw26u_propgrid.lib wxmsw26u_xrc.lib wxmsw26u_html.lib wxbase26u_xml.lib wxmsw26u_adv.lib wxmsw26u_core.lib wxbase26u.lib wxtiff.lib wxjpeg.lib wxpng.lib wxzlib.lib wxregexu.lib wxexpat.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib winspool.lib winmm.lib shell32.lib comctl32.lib ole32.lib oleaut32.lib uuid.lib rpcrt4.lib advapi32.lib wsock32.lib odbc32.lib"
-				OutputFile="..\samples\propgridsample.exe"
-				LinkIncremental="1"
+				Name="VCLibrarianTool"
+				OutputFile="..\lib\vc_amd64_lib\wxcode_msw28u_propgrid.lib"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="$(WXWIN)\lib\vc_lib;..\lib\vc_lib"
-				GenerateManifest="true"
-				ProgramDatabaseFile="..\samples\propgridsample.pdb"
-				SubSystem="2"
-				TargetMachine="17"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -1919,14 +1749,11 @@
 			/>
 			<Tool
 				Name="VCBscMakeTool"
-				OutputFile="..\samples\propgrid_propgridsample.bsc"
+				OutputFile="..\lib\vc_amd64_lib\propgrid_propgrid.bsc"
 				SuppressStartupBanner="true"
 			/>
 			<Tool
 				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCAppVerifierTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -1934,9 +1761,9 @@
 		</Configuration>
 		<Configuration
 			Name="Static Unicode Release Monolithic|x64"
-			OutputDirectory="..\samples"
-			IntermediateDirectory="vcmswu\propgridsample"
-			ConfigurationType="1"
+			OutputDirectory="..\lib\vc_amd64_lib"
+			IntermediateDirectory="vcmswu\propgrid"
+			ConfigurationType="4"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="1"
@@ -1955,20 +1782,20 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				PreprocessorDefinitions="WIN32;_UNICODE;__WXMSW__;_WINDOWS"
-				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_lib\mswu;$(WXWIN)\include;..\include"
+				PreprocessorDefinitions="WIN32;_LIB;_UNICODE;__WXMSW__"
+				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_amd64_lib\mswu;$(WXWIN)\include;..\include"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/MP"
 				Optimization="2"
-				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_lib\mswu;$(WXWIN)\include;..\include"
-				PreprocessorDefinitions="WIN32;_UNICODE;__WXMSW__;_WINDOWS"
+				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_amd64_lib\mswu;$(WXWIN)\include;..\include"
+				PreprocessorDefinitions="WIN32;_LIB;_UNICODE;__WXMSW__"
 				ExceptionHandling="1"
 				RuntimeLibrary="2"
 				RuntimeTypeInfo="true"
-				ObjectFile="vcmswu\propgridsample\"
-				ProgramDataBaseFileName="..\samples\propgridsample.pdb"
+				ObjectFile="vcmswu\propgrid\"
+				ProgramDataBaseFileName="..\lib\vc_amd64_lib\wxcode_msw28u_propgrid.pdb"
 				WarningLevel="4"
 				SuppressStartupBanner="true"
 				DebugInformationFormat="0"
@@ -1978,25 +1805,17 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="_UNICODE;__WXMSW__;_WINDOWS"
+				PreprocessorDefinitions="_UNICODE;__WXMSW__"
 				Culture="1033"
-				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_lib\mswu;$(WXWIN)\include;..\include;..\samples"
+				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_amd64_lib\mswu;$(WXWIN)\include;..\include"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
-				Name="VCLinkerTool"
-				AdditionalOptions=""
-				AdditionalDependencies="..\lib\vc_lib\wxcode_msw26u_propgrid.lib      wxmsw26u.lib wxtiff.lib wxjpeg.lib wxpng.lib wxzlib.lib wxregexu.lib wxexpat.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib winspool.lib winmm.lib shell32.lib comctl32.lib ole32.lib oleaut32.lib uuid.lib rpcrt4.lib advapi32.lib wsock32.lib odbc32.lib"
-				OutputFile="..\samples\propgridsample.exe"
-				LinkIncremental="1"
+				Name="VCLibrarianTool"
+				OutputFile="..\lib\vc_amd64_lib\wxcode_msw28u_propgrid.lib"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="$(WXWIN)\lib\vc_lib;..\lib\vc_lib"
-				GenerateManifest="true"
-				ProgramDatabaseFile="..\samples\propgridsample.pdb"
-				SubSystem="2"
-				TargetMachine="17"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -2009,14 +1828,11 @@
 			/>
 			<Tool
 				Name="VCBscMakeTool"
-				OutputFile="..\samples\propgrid_propgridsample.bsc"
+				OutputFile="..\lib\vc_amd64_lib\propgrid_propgrid.bsc"
 				SuppressStartupBanner="true"
 			/>
 			<Tool
 				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCAppVerifierTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -2024,9 +1840,9 @@
 		</Configuration>
 		<Configuration
 			Name="Static Unicode Debug Multilib|x64"
-			OutputDirectory="..\samples"
-			IntermediateDirectory="vcmswud\propgridsample"
-			ConfigurationType="1"
+			OutputDirectory="..\lib\vc_amd64_lib"
+			IntermediateDirectory="vcmswud\propgrid"
+			ConfigurationType="4"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="1"
@@ -2045,22 +1861,22 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				PreprocessorDefinitions="WIN32;_UNICODE;__WXDEBUG__;__WXMSW__;_WINDOWS;_DEBUG"
-				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_lib\mswud;$(WXWIN)\include;..\include"
+				PreprocessorDefinitions="WIN32;_LIB;_UNICODE;__WXDEBUG__;__WXMSW__;_DEBUG"
+				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_amd64_lib\mswud;$(WXWIN)\include;..\include"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/MP"
 				Optimization="0"
-				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_lib\mswud;$(WXWIN)\include;..\include"
-				PreprocessorDefinitions="WIN32;_UNICODE;__WXDEBUG__;__WXMSW__;_WINDOWS;_DEBUG"
+				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_amd64_lib\mswud;$(WXWIN)\include;..\include"
+				PreprocessorDefinitions="WIN32;_LIB;_UNICODE;__WXDEBUG__;__WXMSW__;_DEBUG"
 				ExceptionHandling="1"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
 				BufferSecurityCheck="true"
 				RuntimeTypeInfo="true"
-				ObjectFile="vcmswud\propgridsample\"
-				ProgramDataBaseFileName="..\samples\propgridsample.pdb"
+				ObjectFile="vcmswud\propgrid\"
+				ProgramDataBaseFileName="..\lib\vc_amd64_lib\wxcode_msw28ud_propgrid.pdb"
 				WarningLevel="4"
 				SuppressStartupBanner="true"
 				DebugInformationFormat="3"
@@ -2070,26 +1886,17 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="_UNICODE;__WXDEBUG__;__WXMSW__;_WINDOWS;_DEBUG"
+				PreprocessorDefinitions="_UNICODE;__WXDEBUG__;__WXMSW__;_DEBUG"
 				Culture="1033"
-				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_lib\mswud;$(WXWIN)\include;..\include;..\samples"
+				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_amd64_lib\mswud;$(WXWIN)\include;..\include"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
-				Name="VCLinkerTool"
-				AdditionalOptions=""
-				AdditionalDependencies="..\lib\vc_lib\wxcode_msw26ud_propgrid.lib wxmsw26ud_xrc.lib wxmsw26ud_html.lib wxbase26ud_xml.lib wxmsw26ud_adv.lib wxmsw26ud_core.lib wxbase26ud.lib wxtiffd.lib wxjpegd.lib wxpngd.lib wxzlibd.lib wxregexud.lib wxexpatd.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib winspool.lib winmm.lib shell32.lib comctl32.lib ole32.lib oleaut32.lib uuid.lib rpcrt4.lib advapi32.lib wsock32.lib odbc32.lib"
-				OutputFile="..\samples\propgridsample.exe"
-				LinkIncremental="2"
+				Name="VCLibrarianTool"
+				OutputFile="..\lib\vc_amd64_lib\wxcode_msw28ud_propgrid.lib"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="$(WXWIN)\lib\vc_lib;..\lib\vc_lib"
-				GenerateManifest="true"
-				GenerateDebugInformation="true"
-				ProgramDatabaseFile="..\samples\propgridsample.pdb"
-				SubSystem="2"
-				TargetMachine="17"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -2102,14 +1909,11 @@
 			/>
 			<Tool
 				Name="VCBscMakeTool"
-				OutputFile="..\samples\propgrid_propgridsample.bsc"
+				OutputFile="..\lib\vc_amd64_lib\propgrid_propgrid.bsc"
 				SuppressStartupBanner="true"
 			/>
 			<Tool
 				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCAppVerifierTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -2117,9 +1921,9 @@
 		</Configuration>
 		<Configuration
 			Name="Static Unicode Debug Monolithic|x64"
-			OutputDirectory="..\samples"
-			IntermediateDirectory="vcmswud\propgridsample"
-			ConfigurationType="1"
+			OutputDirectory="..\lib\vc_amd64_lib"
+			IntermediateDirectory="vcmswud\propgrid"
+			ConfigurationType="4"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="1"
@@ -2138,22 +1942,22 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				PreprocessorDefinitions="WIN32;_UNICODE;__WXDEBUG__;__WXMSW__;_WINDOWS;_DEBUG"
-				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_lib\mswud;$(WXWIN)\include;..\include"
+				PreprocessorDefinitions="WIN32;_LIB;_UNICODE;__WXDEBUG__;__WXMSW__;_DEBUG"
+				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_amd64_lib\mswud;$(WXWIN)\include;..\include"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/MP"
 				Optimization="0"
-				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_lib\mswud;$(WXWIN)\include;..\include"
-				PreprocessorDefinitions="WIN32;_UNICODE;__WXDEBUG__;__WXMSW__;_WINDOWS;_DEBUG"
+				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_amd64_lib\mswud;$(WXWIN)\include;..\include"
+				PreprocessorDefinitions="WIN32;_LIB;_UNICODE;__WXDEBUG__;__WXMSW__;_DEBUG"
 				ExceptionHandling="1"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
 				BufferSecurityCheck="true"
 				RuntimeTypeInfo="true"
-				ObjectFile="vcmswud\propgridsample\"
-				ProgramDataBaseFileName="..\samples\propgridsample.pdb"
+				ObjectFile="vcmswud\propgrid\"
+				ProgramDataBaseFileName="..\lib\vc_amd64_lib\wxcode_msw28ud_propgrid.pdb"
 				WarningLevel="4"
 				SuppressStartupBanner="true"
 				DebugInformationFormat="3"
@@ -2163,26 +1967,17 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="_UNICODE;__WXDEBUG__;__WXMSW__;_WINDOWS;_DEBUG"
+				PreprocessorDefinitions="_UNICODE;__WXDEBUG__;__WXMSW__;_DEBUG"
 				Culture="1033"
-				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_lib\mswud;$(WXWIN)\include;..\include;..\samples"
+				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_amd64_lib\mswud;$(WXWIN)\include;..\include"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
-				Name="VCLinkerTool"
-				AdditionalOptions=""
-				AdditionalDependencies="..\lib\vc_lib\wxcode_msw26ud_propgrid.lib      wxmsw26ud.lib wxtiffd.lib wxjpegd.lib wxpngd.lib wxzlibd.lib wxregexud.lib wxexpatd.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib winspool.lib winmm.lib shell32.lib comctl32.lib ole32.lib oleaut32.lib uuid.lib rpcrt4.lib advapi32.lib wsock32.lib odbc32.lib"
-				OutputFile="..\samples\propgridsample.exe"
-				LinkIncremental="2"
+				Name="VCLibrarianTool"
+				OutputFile="..\lib\vc_amd64_lib\wxcode_msw28ud_propgrid.lib"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="$(WXWIN)\lib\vc_lib;..\lib\vc_lib"
-				GenerateManifest="true"
-				GenerateDebugInformation="true"
-				ProgramDatabaseFile="..\samples\propgridsample.pdb"
-				SubSystem="2"
-				TargetMachine="17"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -2195,14 +1990,11 @@
 			/>
 			<Tool
 				Name="VCBscMakeTool"
-				OutputFile="..\samples\propgrid_propgridsample.bsc"
+				OutputFile="..\lib\vc_amd64_lib\propgrid_propgrid.bsc"
 				SuppressStartupBanner="true"
 			/>
 			<Tool
 				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCAppVerifierTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -2210,9 +2002,9 @@
 		</Configuration>
 		<Configuration
 			Name="DLL ANSI Release Multilib|x64"
-			OutputDirectory="..\samples"
-			IntermediateDirectory="vcmsw_dll\propgridsample"
-			ConfigurationType="1"
+			OutputDirectory="..\lib\vc_amd64_dll"
+			IntermediateDirectory="vcmsw_dll\propgrid"
+			ConfigurationType="2"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			>
@@ -2230,20 +2022,20 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				PreprocessorDefinitions="WIN32;WXUSINGDLL;__WXMSW__;_WINDOWS"
-				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_dll\msw;$(WXWIN)\include;..\include"
+				PreprocessorDefinitions="WIN32;_USRDLL;DLL_EXPORTS;WXUSINGDLL;__WXMSW__;WXMAKINGDLL_PROPGRID"
+				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_amd64_dll\msw;$(WXWIN)\include;..\include"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/MP"
 				Optimization="2"
-				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_dll\msw;$(WXWIN)\include;..\include"
-				PreprocessorDefinitions="WIN32;WXUSINGDLL;__WXMSW__;_WINDOWS"
+				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_amd64_dll\msw;$(WXWIN)\include;..\include"
+				PreprocessorDefinitions="WIN32;_USRDLL;DLL_EXPORTS;WXUSINGDLL;__WXMSW__;WXMAKINGDLL_PROPGRID"
 				ExceptionHandling="1"
 				RuntimeLibrary="2"
 				RuntimeTypeInfo="true"
-				ObjectFile="vcmsw_dll\propgridsample\"
-				ProgramDataBaseFileName="..\samples\propgridsample.pdb"
+				ObjectFile="vcmsw_dll\propgrid\"
+				ProgramDataBaseFileName="..\lib\vc_amd64_dll\wxcode_msw28_propgrid.pdb"
 				WarningLevel="4"
 				SuppressStartupBanner="true"
 				DebugInformationFormat="0"
@@ -2253,9 +2045,9 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="WXUSINGDLL;__WXMSW__;_WINDOWS"
+				PreprocessorDefinitions="WXUSINGDLL;__WXMSW__;WXMAKINGDLL_PROPGRID"
 				Culture="1033"
-				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_dll\msw;$(WXWIN)\include;..\include;..\samples"
+				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_amd64_dll\msw;$(WXWIN)\include;..\include"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
@@ -2263,14 +2055,14 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions=""
-				AdditionalDependencies="..\lib\vc_dll\wxcode_msw26_propgrid.lib wxmsw26_xrc.lib wxmsw26_html.lib wxbase26_xml.lib wxmsw26_adv.lib wxmsw26_core.lib wxbase26.lib wxtiff.lib wxjpeg.lib wxpng.lib wxzlib.lib wxregex.lib wxexpat.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib winspool.lib winmm.lib shell32.lib comctl32.lib ole32.lib oleaut32.lib uuid.lib rpcrt4.lib advapi32.lib wsock32.lib odbc32.lib"
-				OutputFile="..\samples\propgridsample.exe"
+				AdditionalDependencies="wxmsw28_adv.lib wxmsw28_core.lib wxbase28.lib wxtiff.lib wxjpeg.lib wxpng.lib wxzlib.lib wxregex.lib wxexpat.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib winspool.lib winmm.lib shell32.lib comctl32.lib ole32.lib oleaut32.lib uuid.lib rpcrt4.lib advapi32.lib wsock32.lib odbc32.lib"
+				OutputFile="..\lib\vc_amd64_dll\wxcode_msw28_propgrid.dll"
 				LinkIncremental="1"
+				ImportLibrary="..\lib\vc_amd64_dll\wxcode_msw28_propgrid.lib"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="$(WXWIN)\lib\vc_dll;..\lib\vc_dll"
+				AdditionalLibraryDirectories="$(WXWIN)\lib\vc_amd64_dll;..\lib\vc_amd64_dll"
 				GenerateManifest="true"
-				ProgramDatabaseFile="..\samples\propgridsample.pdb"
-				SubSystem="2"
+				ProgramDatabaseFile="..\lib\vc_amd64_dll\wxcode_msw28_propgrid.pdb"
 				TargetMachine="17"
 			/>
 			<Tool
@@ -2284,14 +2076,11 @@
 			/>
 			<Tool
 				Name="VCBscMakeTool"
-				OutputFile="..\samples\propgrid_propgridsample.bsc"
+				OutputFile="..\lib\vc_amd64_dll\propgrid_propgrid.bsc"
 				SuppressStartupBanner="true"
 			/>
 			<Tool
 				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCAppVerifierTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -2299,9 +2088,9 @@
 		</Configuration>
 		<Configuration
 			Name="DLL ANSI Release Monolithic|x64"
-			OutputDirectory="..\samples"
-			IntermediateDirectory="vcmsw_dll\propgridsample"
-			ConfigurationType="1"
+			OutputDirectory="..\lib\vc_amd64_dll"
+			IntermediateDirectory="vcmsw_dll\propgrid"
+			ConfigurationType="2"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			>
@@ -2319,20 +2108,20 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				PreprocessorDefinitions="WIN32;WXUSINGDLL;__WXMSW__;_WINDOWS"
-				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_dll\msw;$(WXWIN)\include;..\include"
+				PreprocessorDefinitions="WIN32;_USRDLL;DLL_EXPORTS;WXUSINGDLL;__WXMSW__;WXMAKINGDLL_PROPGRID"
+				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_amd64_dll\msw;$(WXWIN)\include;..\include"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/MP"
 				Optimization="2"
-				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_dll\msw;$(WXWIN)\include;..\include"
-				PreprocessorDefinitions="WIN32;WXUSINGDLL;__WXMSW__;_WINDOWS"
+				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_amd64_dll\msw;$(WXWIN)\include;..\include"
+				PreprocessorDefinitions="WIN32;_USRDLL;DLL_EXPORTS;WXUSINGDLL;__WXMSW__;WXMAKINGDLL_PROPGRID"
 				ExceptionHandling="1"
 				RuntimeLibrary="2"
 				RuntimeTypeInfo="true"
-				ObjectFile="vcmsw_dll\propgridsample\"
-				ProgramDataBaseFileName="..\samples\propgridsample.pdb"
+				ObjectFile="vcmsw_dll\propgrid\"
+				ProgramDataBaseFileName="..\lib\vc_amd64_dll\wxcode_msw28_propgrid.pdb"
 				WarningLevel="4"
 				SuppressStartupBanner="true"
 				DebugInformationFormat="0"
@@ -2342,9 +2131,9 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="WXUSINGDLL;__WXMSW__;_WINDOWS"
+				PreprocessorDefinitions="WXUSINGDLL;__WXMSW__;WXMAKINGDLL_PROPGRID"
 				Culture="1033"
-				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_dll\msw;$(WXWIN)\include;..\include;..\samples"
+				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_amd64_dll\msw;$(WXWIN)\include;..\include"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
@@ -2352,14 +2141,14 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions=""
-				AdditionalDependencies="..\lib\vc_dll\wxcode_msw26_propgrid.lib      wxmsw26.lib wxtiff.lib wxjpeg.lib wxpng.lib wxzlib.lib wxregex.lib wxexpat.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib winspool.lib winmm.lib shell32.lib comctl32.lib ole32.lib oleaut32.lib uuid.lib rpcrt4.lib advapi32.lib wsock32.lib odbc32.lib"
-				OutputFile="..\samples\propgridsample.exe"
+				AdditionalDependencies="wxmsw28.lib wxtiff.lib wxjpeg.lib wxpng.lib wxzlib.lib wxregex.lib wxexpat.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib winspool.lib winmm.lib shell32.lib comctl32.lib ole32.lib oleaut32.lib uuid.lib rpcrt4.lib advapi32.lib wsock32.lib odbc32.lib"
+				OutputFile="..\lib\vc_amd64_dll\wxcode_msw28_propgrid.dll"
 				LinkIncremental="1"
+				ImportLibrary="..\lib\vc_amd64_dll\wxcode_msw28_propgrid.lib"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="$(WXWIN)\lib\vc_dll;..\lib\vc_dll"
+				AdditionalLibraryDirectories="$(WXWIN)\lib\vc_amd64_dll;..\lib\vc_amd64_dll"
 				GenerateManifest="true"
-				ProgramDatabaseFile="..\samples\propgridsample.pdb"
-				SubSystem="2"
+				ProgramDatabaseFile="..\lib\vc_amd64_dll\wxcode_msw28_propgrid.pdb"
 				TargetMachine="17"
 			/>
 			<Tool
@@ -2373,14 +2162,11 @@
 			/>
 			<Tool
 				Name="VCBscMakeTool"
-				OutputFile="..\samples\propgrid_propgridsample.bsc"
+				OutputFile="..\lib\vc_amd64_dll\propgrid_propgrid.bsc"
 				SuppressStartupBanner="true"
 			/>
 			<Tool
 				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCAppVerifierTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -2388,9 +2174,9 @@
 		</Configuration>
 		<Configuration
 			Name="DLL ANSI Debug Multilib|x64"
-			OutputDirectory="..\samples"
-			IntermediateDirectory="vcmswd_dll\propgridsample"
-			ConfigurationType="1"
+			OutputDirectory="..\lib\vc_amd64_dll"
+			IntermediateDirectory="vcmswd_dll\propgrid"
+			ConfigurationType="2"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			>
@@ -2408,22 +2194,22 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				PreprocessorDefinitions="WIN32;WXUSINGDLL;__WXDEBUG__;__WXMSW__;_WINDOWS;_DEBUG"
-				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_dll\mswd;$(WXWIN)\include;..\include"
+				PreprocessorDefinitions="WIN32;_USRDLL;DLL_EXPORTS;WXUSINGDLL;__WXDEBUG__;__WXMSW__;_DEBUG;WXMAKINGDLL_PROPGRID"
+				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_amd64_dll\mswd;$(WXWIN)\include;..\include"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/MP"
 				Optimization="0"
-				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_dll\mswd;$(WXWIN)\include;..\include"
-				PreprocessorDefinitions="WIN32;WXUSINGDLL;__WXDEBUG__;__WXMSW__;_WINDOWS;_DEBUG"
+				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_amd64_dll\mswd;$(WXWIN)\include;..\include"
+				PreprocessorDefinitions="WIN32;_USRDLL;DLL_EXPORTS;WXUSINGDLL;__WXDEBUG__;__WXMSW__;_DEBUG;WXMAKINGDLL_PROPGRID"
 				ExceptionHandling="1"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
 				BufferSecurityCheck="true"
 				RuntimeTypeInfo="true"
-				ObjectFile="vcmswd_dll\propgridsample\"
-				ProgramDataBaseFileName="..\samples\propgridsample.pdb"
+				ObjectFile="vcmswd_dll\propgrid\"
+				ProgramDataBaseFileName="..\lib\vc_amd64_dll\wxcode_msw28d_propgrid.pdb"
 				WarningLevel="4"
 				SuppressStartupBanner="true"
 				DebugInformationFormat="3"
@@ -2433,9 +2219,9 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="WXUSINGDLL;__WXDEBUG__;__WXMSW__;_WINDOWS;_DEBUG"
+				PreprocessorDefinitions="WXUSINGDLL;__WXDEBUG__;__WXMSW__;_DEBUG;WXMAKINGDLL_PROPGRID"
 				Culture="1033"
-				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_dll\mswd;$(WXWIN)\include;..\include;..\samples"
+				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_amd64_dll\mswd;$(WXWIN)\include;..\include"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
@@ -2443,15 +2229,15 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions=""
-				AdditionalDependencies="..\lib\vc_dll\wxcode_msw26d_propgrid.lib wxmsw26d_xrc.lib wxmsw26d_html.lib wxbase26d_xml.lib wxmsw26d_adv.lib wxmsw26d_core.lib wxbase26d.lib wxtiffd.lib wxjpegd.lib wxpngd.lib wxzlibd.lib wxregexd.lib wxexpatd.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib winspool.lib winmm.lib shell32.lib comctl32.lib ole32.lib oleaut32.lib uuid.lib rpcrt4.lib advapi32.lib wsock32.lib odbc32.lib"
-				OutputFile="..\samples\propgridsample.exe"
+				AdditionalDependencies="wxmsw28d_adv.lib wxmsw28d_core.lib wxbase28d.lib wxtiffd.lib wxjpegd.lib wxpngd.lib wxzlibd.lib wxregexd.lib wxexpatd.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib winspool.lib winmm.lib shell32.lib comctl32.lib ole32.lib oleaut32.lib uuid.lib rpcrt4.lib advapi32.lib wsock32.lib odbc32.lib"
+				OutputFile="..\lib\vc_amd64_dll\wxcode_msw28d_propgrid.dll"
 				LinkIncremental="2"
+				ImportLibrary="..\lib\vc_amd64_dll\wxcode_msw28d_propgrid.lib"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="$(WXWIN)\lib\vc_dll;..\lib\vc_dll"
+				AdditionalLibraryDirectories="$(WXWIN)\lib\vc_amd64_dll;..\lib\vc_amd64_dll"
 				GenerateManifest="true"
 				GenerateDebugInformation="true"
-				ProgramDatabaseFile="..\samples\propgridsample.pdb"
-				SubSystem="2"
+				ProgramDatabaseFile="..\lib\vc_amd64_dll\wxcode_msw28d_propgrid.pdb"
 				TargetMachine="17"
 			/>
 			<Tool
@@ -2465,14 +2251,11 @@
 			/>
 			<Tool
 				Name="VCBscMakeTool"
-				OutputFile="..\samples\propgrid_propgridsample.bsc"
+				OutputFile="..\lib\vc_amd64_dll\propgrid_propgrid.bsc"
 				SuppressStartupBanner="true"
 			/>
 			<Tool
 				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCAppVerifierTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -2480,9 +2263,9 @@
 		</Configuration>
 		<Configuration
 			Name="DLL ANSI Debug Monolithic|x64"
-			OutputDirectory="..\samples"
-			IntermediateDirectory="vcmswd_dll\propgridsample"
-			ConfigurationType="1"
+			OutputDirectory="..\lib\vc_amd64_dll"
+			IntermediateDirectory="vcmswd_dll\propgrid"
+			ConfigurationType="2"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			>
@@ -2500,22 +2283,22 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				PreprocessorDefinitions="WIN32;WXUSINGDLL;__WXDEBUG__;__WXMSW__;_WINDOWS;_DEBUG"
-				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_dll\mswd;$(WXWIN)\include;..\include"
+				PreprocessorDefinitions="WIN32;_USRDLL;DLL_EXPORTS;WXUSINGDLL;__WXDEBUG__;__WXMSW__;_DEBUG;WXMAKINGDLL_PROPGRID"
+				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_amd64_dll\mswd;$(WXWIN)\include;..\include"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/MP"
 				Optimization="0"
-				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_dll\mswd;$(WXWIN)\include;..\include"
-				PreprocessorDefinitions="WIN32;WXUSINGDLL;__WXDEBUG__;__WXMSW__;_WINDOWS;_DEBUG"
+				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_amd64_dll\mswd;$(WXWIN)\include;..\include"
+				PreprocessorDefinitions="WIN32;_USRDLL;DLL_EXPORTS;WXUSINGDLL;__WXDEBUG__;__WXMSW__;_DEBUG;WXMAKINGDLL_PROPGRID"
 				ExceptionHandling="1"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
 				BufferSecurityCheck="true"
 				RuntimeTypeInfo="true"
-				ObjectFile="vcmswd_dll\propgridsample\"
-				ProgramDataBaseFileName="..\samples\propgridsample.pdb"
+				ObjectFile="vcmswd_dll\propgrid\"
+				ProgramDataBaseFileName="..\lib\vc_amd64_dll\wxcode_msw28d_propgrid.pdb"
 				WarningLevel="4"
 				SuppressStartupBanner="true"
 				DebugInformationFormat="3"
@@ -2525,9 +2308,9 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="WXUSINGDLL;__WXDEBUG__;__WXMSW__;_WINDOWS;_DEBUG"
+				PreprocessorDefinitions="WXUSINGDLL;__WXDEBUG__;__WXMSW__;_DEBUG;WXMAKINGDLL_PROPGRID"
 				Culture="1033"
-				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_dll\mswd;$(WXWIN)\include;..\include;..\samples"
+				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_amd64_dll\mswd;$(WXWIN)\include;..\include"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
@@ -2535,15 +2318,15 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions=""
-				AdditionalDependencies="..\lib\vc_dll\wxcode_msw26d_propgrid.lib      wxmsw26d.lib wxtiffd.lib wxjpegd.lib wxpngd.lib wxzlibd.lib wxregexd.lib wxexpatd.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib winspool.lib winmm.lib shell32.lib comctl32.lib ole32.lib oleaut32.lib uuid.lib rpcrt4.lib advapi32.lib wsock32.lib odbc32.lib"
-				OutputFile="..\samples\propgridsample.exe"
+				AdditionalDependencies="wxmsw28d.lib wxtiffd.lib wxjpegd.lib wxpngd.lib wxzlibd.lib wxregexd.lib wxexpatd.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib winspool.lib winmm.lib shell32.lib comctl32.lib ole32.lib oleaut32.lib uuid.lib rpcrt4.lib advapi32.lib wsock32.lib odbc32.lib"
+				OutputFile="..\lib\vc_amd64_dll\wxcode_msw28d_propgrid.dll"
 				LinkIncremental="2"
+				ImportLibrary="..\lib\vc_amd64_dll\wxcode_msw28d_propgrid.lib"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="$(WXWIN)\lib\vc_dll;..\lib\vc_dll"
+				AdditionalLibraryDirectories="$(WXWIN)\lib\vc_amd64_dll;..\lib\vc_amd64_dll"
 				GenerateManifest="true"
 				GenerateDebugInformation="true"
-				ProgramDatabaseFile="..\samples\propgridsample.pdb"
-				SubSystem="2"
+				ProgramDatabaseFile="..\lib\vc_amd64_dll\wxcode_msw28d_propgrid.pdb"
 				TargetMachine="17"
 			/>
 			<Tool
@@ -2557,14 +2340,11 @@
 			/>
 			<Tool
 				Name="VCBscMakeTool"
-				OutputFile="..\samples\propgrid_propgridsample.bsc"
+				OutputFile="..\lib\vc_amd64_dll\propgrid_propgrid.bsc"
 				SuppressStartupBanner="true"
 			/>
 			<Tool
 				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCAppVerifierTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -2572,9 +2352,9 @@
 		</Configuration>
 		<Configuration
 			Name="DLL Unicode Release Multilib|x64"
-			OutputDirectory="..\samples"
-			IntermediateDirectory="vcmswu_dll\propgridsample"
-			ConfigurationType="1"
+			OutputDirectory="..\lib\vc_amd64_dll"
+			IntermediateDirectory="vcmswu_dll\propgrid"
+			ConfigurationType="2"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="1"
@@ -2593,20 +2373,20 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				PreprocessorDefinitions="WIN32;WXUSINGDLL;_UNICODE;__WXMSW__;_WINDOWS"
-				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_dll\mswu;$(WXWIN)\include;..\include"
+				PreprocessorDefinitions="WIN32;_USRDLL;DLL_EXPORTS;WXUSINGDLL;_UNICODE;__WXMSW__;WXMAKINGDLL_PROPGRID"
+				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_amd64_dll\mswu;$(WXWIN)\include;..\include"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/MP"
 				Optimization="2"
-				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_dll\mswu;$(WXWIN)\include;..\include"
-				PreprocessorDefinitions="WIN32;WXUSINGDLL;_UNICODE;__WXMSW__;_WINDOWS"
+				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_amd64_dll\mswu;$(WXWIN)\include;..\include"
+				PreprocessorDefinitions="WIN32;_USRDLL;DLL_EXPORTS;WXUSINGDLL;_UNICODE;__WXMSW__;WXMAKINGDLL_PROPGRID"
 				ExceptionHandling="1"
 				RuntimeLibrary="2"
 				RuntimeTypeInfo="true"
-				ObjectFile="vcmswu_dll\propgridsample\"
-				ProgramDataBaseFileName="..\samples\propgridsample.pdb"
+				ObjectFile="vcmswu_dll\propgrid\"
+				ProgramDataBaseFileName="..\lib\vc_amd64_dll\wxcode_msw28u_propgrid.pdb"
 				WarningLevel="4"
 				SuppressStartupBanner="true"
 				DebugInformationFormat="0"
@@ -2616,9 +2396,9 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="WXUSINGDLL;_UNICODE;__WXMSW__;_WINDOWS"
+				PreprocessorDefinitions="WXUSINGDLL;_UNICODE;__WXMSW__;WXMAKINGDLL_PROPGRID"
 				Culture="1033"
-				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_dll\mswu;$(WXWIN)\include;..\include;..\samples"
+				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_amd64_dll\mswu;$(WXWIN)\include;..\include"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
@@ -2626,14 +2406,14 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions=""
-				AdditionalDependencies="..\lib\vc_dll\wxcode_msw26u_propgrid.lib wxmsw26u_xrc.lib wxmsw26u_html.lib wxbase26u_xml.lib wxmsw26u_adv.lib wxmsw26u_core.lib wxbase26u.lib wxtiff.lib wxjpeg.lib wxpng.lib wxzlib.lib wxregexu.lib wxexpat.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib winspool.lib winmm.lib shell32.lib comctl32.lib ole32.lib oleaut32.lib uuid.lib rpcrt4.lib advapi32.lib wsock32.lib odbc32.lib"
-				OutputFile="..\samples\propgridsample.exe"
+				AdditionalDependencies="wxmsw28u_adv.lib wxmsw28u_core.lib wxbase28u.lib wxtiff.lib wxjpeg.lib wxpng.lib wxzlib.lib wxregexu.lib wxexpat.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib winspool.lib winmm.lib shell32.lib comctl32.lib ole32.lib oleaut32.lib uuid.lib rpcrt4.lib advapi32.lib wsock32.lib odbc32.lib"
+				OutputFile="..\lib\vc_amd64_dll\wxcode_msw28u_propgrid.dll"
 				LinkIncremental="1"
+				ImportLibrary="..\lib\vc_amd64_dll\wxcode_msw28u_propgrid.lib"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="$(WXWIN)\lib\vc_dll;..\lib\vc_dll"
+				AdditionalLibraryDirectories="$(WXWIN)\lib\vc_amd64_dll;..\lib\vc_amd64_dll"
 				GenerateManifest="true"
-				ProgramDatabaseFile="..\samples\propgridsample.pdb"
-				SubSystem="2"
+				ProgramDatabaseFile="..\lib\vc_amd64_dll\wxcode_msw28u_propgrid.pdb"
 				TargetMachine="17"
 			/>
 			<Tool
@@ -2647,14 +2427,11 @@
 			/>
 			<Tool
 				Name="VCBscMakeTool"
-				OutputFile="..\samples\propgrid_propgridsample.bsc"
+				OutputFile="..\lib\vc_amd64_dll\propgrid_propgrid.bsc"
 				SuppressStartupBanner="true"
 			/>
 			<Tool
 				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCAppVerifierTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -2662,9 +2439,9 @@
 		</Configuration>
 		<Configuration
 			Name="DLL Unicode Release Monolithic|x64"
-			OutputDirectory="..\samples"
-			IntermediateDirectory="vcmswu_dll\propgridsample"
-			ConfigurationType="1"
+			OutputDirectory="..\lib\vc_amd64_dll"
+			IntermediateDirectory="vcmswu_dll\propgrid"
+			ConfigurationType="2"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="1"
@@ -2683,20 +2460,20 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				PreprocessorDefinitions="WIN32;WXUSINGDLL;_UNICODE;__WXMSW__;_WINDOWS"
-				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_dll\mswu;$(WXWIN)\include;..\include"
+				PreprocessorDefinitions="WIN32;_USRDLL;DLL_EXPORTS;WXUSINGDLL;_UNICODE;__WXMSW__;WXMAKINGDLL_PROPGRID"
+				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_amd64_dll\mswu;$(WXWIN)\include;..\include"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/MP"
 				Optimization="2"
-				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_dll\mswu;$(WXWIN)\include;..\include"
-				PreprocessorDefinitions="WIN32;WXUSINGDLL;_UNICODE;__WXMSW__;_WINDOWS"
+				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_amd64_dll\mswu;$(WXWIN)\include;..\include"
+				PreprocessorDefinitions="WIN32;_USRDLL;DLL_EXPORTS;WXUSINGDLL;_UNICODE;__WXMSW__;WXMAKINGDLL_PROPGRID"
 				ExceptionHandling="1"
 				RuntimeLibrary="2"
 				RuntimeTypeInfo="true"
-				ObjectFile="vcmswu_dll\propgridsample\"
-				ProgramDataBaseFileName="..\samples\propgridsample.pdb"
+				ObjectFile="vcmswu_dll\propgrid\"
+				ProgramDataBaseFileName="..\lib\vc_amd64_dll\wxcode_msw28u_propgrid.pdb"
 				WarningLevel="4"
 				SuppressStartupBanner="true"
 				DebugInformationFormat="0"
@@ -2706,9 +2483,9 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="WXUSINGDLL;_UNICODE;__WXMSW__;_WINDOWS"
+				PreprocessorDefinitions="WXUSINGDLL;_UNICODE;__WXMSW__;WXMAKINGDLL_PROPGRID"
 				Culture="1033"
-				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_dll\mswu;$(WXWIN)\include;..\include;..\samples"
+				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_amd64_dll\mswu;$(WXWIN)\include;..\include"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
@@ -2716,14 +2493,14 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions=""
-				AdditionalDependencies="..\lib\vc_dll\wxcode_msw26u_propgrid.lib      wxmsw26u.lib wxtiff.lib wxjpeg.lib wxpng.lib wxzlib.lib wxregexu.lib wxexpat.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib winspool.lib winmm.lib shell32.lib comctl32.lib ole32.lib oleaut32.lib uuid.lib rpcrt4.lib advapi32.lib wsock32.lib odbc32.lib"
-				OutputFile="..\samples\propgridsample.exe"
+				AdditionalDependencies="wxmsw28u.lib wxtiff.lib wxjpeg.lib wxpng.lib wxzlib.lib wxregexu.lib wxexpat.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib winspool.lib winmm.lib shell32.lib comctl32.lib ole32.lib oleaut32.lib uuid.lib rpcrt4.lib advapi32.lib wsock32.lib odbc32.lib"
+				OutputFile="..\lib\vc_amd64_dll\wxcode_msw28u_propgrid.dll"
 				LinkIncremental="1"
+				ImportLibrary="..\lib\vc_amd64_dll\wxcode_msw28u_propgrid.lib"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="$(WXWIN)\lib\vc_dll;..\lib\vc_dll"
+				AdditionalLibraryDirectories="$(WXWIN)\lib\vc_amd64_dll;..\lib\vc_amd64_dll"
 				GenerateManifest="true"
-				ProgramDatabaseFile="..\samples\propgridsample.pdb"
-				SubSystem="2"
+				ProgramDatabaseFile="..\lib\vc_amd64_dll\wxcode_msw28u_propgrid.pdb"
 				TargetMachine="17"
 			/>
 			<Tool
@@ -2737,14 +2514,11 @@
 			/>
 			<Tool
 				Name="VCBscMakeTool"
-				OutputFile="..\samples\propgrid_propgridsample.bsc"
+				OutputFile="..\lib\vc_amd64_dll\propgrid_propgrid.bsc"
 				SuppressStartupBanner="true"
 			/>
 			<Tool
 				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCAppVerifierTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -2752,9 +2526,9 @@
 		</Configuration>
 		<Configuration
 			Name="DLL Unicode Debug Multilib|x64"
-			OutputDirectory="..\samples"
-			IntermediateDirectory="vcmswud_dll\propgridsample"
-			ConfigurationType="1"
+			OutputDirectory="..\lib\vc_amd64_dll"
+			IntermediateDirectory="vcmswud_dll\propgrid"
+			ConfigurationType="2"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="1"
@@ -2773,22 +2547,22 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				PreprocessorDefinitions="WIN32;WXUSINGDLL;_UNICODE;__WXDEBUG__;__WXMSW__;_WINDOWS;_DEBUG"
-				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_dll\mswud;$(WXWIN)\include;..\include"
+				PreprocessorDefinitions="WIN32;_USRDLL;DLL_EXPORTS;WXUSINGDLL;_UNICODE;__WXDEBUG__;__WXMSW__;_DEBUG;WXMAKINGDLL_PROPGRID"
+				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_amd64_dll\mswud;$(WXWIN)\include;..\include"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/MP"
 				Optimization="0"
-				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_dll\mswud;$(WXWIN)\include;..\include"
-				PreprocessorDefinitions="WIN32;WXUSINGDLL;_UNICODE;__WXDEBUG__;__WXMSW__;_WINDOWS;_DEBUG"
+				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_amd64_dll\mswud;$(WXWIN)\include;..\include"
+				PreprocessorDefinitions="WIN32;_USRDLL;DLL_EXPORTS;WXUSINGDLL;_UNICODE;__WXDEBUG__;__WXMSW__;_DEBUG;WXMAKINGDLL_PROPGRID"
 				ExceptionHandling="1"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
 				BufferSecurityCheck="true"
 				RuntimeTypeInfo="true"
-				ObjectFile="vcmswud_dll\propgridsample\"
-				ProgramDataBaseFileName="..\samples\propgridsample.pdb"
+				ObjectFile="vcmswud_dll\propgrid\"
+				ProgramDataBaseFileName="..\lib\vc_amd64_dll\wxcode_msw28ud_propgrid.pdb"
 				WarningLevel="4"
 				SuppressStartupBanner="true"
 				DebugInformationFormat="3"
@@ -2798,9 +2572,9 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="WXUSINGDLL;_UNICODE;__WXDEBUG__;__WXMSW__;_WINDOWS;_DEBUG"
+				PreprocessorDefinitions="WXUSINGDLL;_UNICODE;__WXDEBUG__;__WXMSW__;_DEBUG;WXMAKINGDLL_PROPGRID"
 				Culture="1033"
-				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_dll\mswud;$(WXWIN)\include;..\include;..\samples"
+				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_amd64_dll\mswud;$(WXWIN)\include;..\include"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
@@ -2808,15 +2582,15 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions=""
-				AdditionalDependencies="..\lib\vc_dll\wxcode_msw26ud_propgrid.lib wxmsw26ud_xrc.lib wxmsw26ud_html.lib wxbase26ud_xml.lib wxmsw26ud_adv.lib wxmsw26ud_core.lib wxbase26ud.lib wxtiffd.lib wxjpegd.lib wxpngd.lib wxzlibd.lib wxregexud.lib wxexpatd.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib winspool.lib winmm.lib shell32.lib comctl32.lib ole32.lib oleaut32.lib uuid.lib rpcrt4.lib advapi32.lib wsock32.lib odbc32.lib"
-				OutputFile="..\samples\propgridsample.exe"
+				AdditionalDependencies="wxmsw28ud_adv.lib wxmsw28ud_core.lib wxbase28ud.lib wxtiffd.lib wxjpegd.lib wxpngd.lib wxzlibd.lib wxregexud.lib wxexpatd.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib winspool.lib winmm.lib shell32.lib comctl32.lib ole32.lib oleaut32.lib uuid.lib rpcrt4.lib advapi32.lib wsock32.lib odbc32.lib"
+				OutputFile="..\lib\vc_amd64_dll\wxcode_msw28ud_propgrid.dll"
 				LinkIncremental="2"
+				ImportLibrary="..\lib\vc_amd64_dll\wxcode_msw28ud_propgrid.lib"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="$(WXWIN)\lib\vc_dll;..\lib\vc_dll"
+				AdditionalLibraryDirectories="$(WXWIN)\lib\vc_amd64_dll;..\lib\vc_amd64_dll"
 				GenerateManifest="true"
 				GenerateDebugInformation="true"
-				ProgramDatabaseFile="..\samples\propgridsample.pdb"
-				SubSystem="2"
+				ProgramDatabaseFile="..\lib\vc_amd64_dll\wxcode_msw28ud_propgrid.pdb"
 				TargetMachine="17"
 			/>
 			<Tool
@@ -2830,14 +2604,11 @@
 			/>
 			<Tool
 				Name="VCBscMakeTool"
-				OutputFile="..\samples\propgrid_propgridsample.bsc"
+				OutputFile="..\lib\vc_amd64_dll\propgrid_propgrid.bsc"
 				SuppressStartupBanner="true"
 			/>
 			<Tool
 				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCAppVerifierTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -2845,9 +2616,9 @@
 		</Configuration>
 		<Configuration
 			Name="DLL Unicode Debug Monolithic|x64"
-			OutputDirectory="..\samples"
-			IntermediateDirectory="vcmswud_dll\propgridsample"
-			ConfigurationType="1"
+			OutputDirectory="..\lib\vc_amd64_dll"
+			IntermediateDirectory="vcmswud_dll\propgrid"
+			ConfigurationType="2"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="1"
@@ -2866,22 +2637,22 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				PreprocessorDefinitions="WIN32;WXUSINGDLL;_UNICODE;__WXDEBUG__;__WXMSW__;_WINDOWS;_DEBUG"
-				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_dll\mswud;$(WXWIN)\include;..\include"
+				PreprocessorDefinitions="WIN32;_USRDLL;DLL_EXPORTS;WXUSINGDLL;_UNICODE;__WXDEBUG__;__WXMSW__;_DEBUG;WXMAKINGDLL_PROPGRID"
+				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_amd64_dll\mswud;$(WXWIN)\include;..\include"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/MP"
 				Optimization="0"
-				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_dll\mswud;$(WXWIN)\include;..\include"
-				PreprocessorDefinitions="WIN32;WXUSINGDLL;_UNICODE;__WXDEBUG__;__WXMSW__;_WINDOWS;_DEBUG"
+				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_amd64_dll\mswud;$(WXWIN)\include;..\include"
+				PreprocessorDefinitions="WIN32;_USRDLL;DLL_EXPORTS;WXUSINGDLL;_UNICODE;__WXDEBUG__;__WXMSW__;_DEBUG;WXMAKINGDLL_PROPGRID"
 				ExceptionHandling="1"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
 				BufferSecurityCheck="true"
 				RuntimeTypeInfo="true"
-				ObjectFile="vcmswud_dll\propgridsample\"
-				ProgramDataBaseFileName="..\samples\propgridsample.pdb"
+				ObjectFile="vcmswud_dll\propgrid\"
+				ProgramDataBaseFileName="..\lib\vc_amd64_dll\wxcode_msw28ud_propgrid.pdb"
 				WarningLevel="4"
 				SuppressStartupBanner="true"
 				DebugInformationFormat="3"
@@ -2891,9 +2662,9 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="WXUSINGDLL;_UNICODE;__WXDEBUG__;__WXMSW__;_WINDOWS;_DEBUG"
+				PreprocessorDefinitions="WXUSINGDLL;_UNICODE;__WXDEBUG__;__WXMSW__;_DEBUG;WXMAKINGDLL_PROPGRID"
 				Culture="1033"
-				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_dll\mswud;$(WXWIN)\include;..\include;..\samples"
+				AdditionalIncludeDirectories="$(WXWIN)\lib\vc_amd64_dll\mswud;$(WXWIN)\include;..\include"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
@@ -2901,15 +2672,15 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions=""
-				AdditionalDependencies="..\lib\vc_dll\wxcode_msw26ud_propgrid.lib      wxmsw26ud.lib wxtiffd.lib wxjpegd.lib wxpngd.lib wxzlibd.lib wxregexud.lib wxexpatd.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib winspool.lib winmm.lib shell32.lib comctl32.lib ole32.lib oleaut32.lib uuid.lib rpcrt4.lib advapi32.lib wsock32.lib odbc32.lib"
-				OutputFile="..\samples\propgridsample.exe"
+				AdditionalDependencies="wxmsw28ud.lib wxtiffd.lib wxjpegd.lib wxpngd.lib wxzlibd.lib wxregexud.lib wxexpatd.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib winspool.lib winmm.lib shell32.lib comctl32.lib ole32.lib oleaut32.lib uuid.lib rpcrt4.lib advapi32.lib wsock32.lib odbc32.lib"
+				OutputFile="..\lib\vc_amd64_dll\wxcode_msw28ud_propgrid.dll"
 				LinkIncremental="2"
+				ImportLibrary="..\lib\vc_amd64_dll\wxcode_msw28ud_propgrid.lib"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="$(WXWIN)\lib\vc_dll;..\lib\vc_dll"
+				AdditionalLibraryDirectories="$(WXWIN)\lib\vc_amd64_dll;..\lib\vc_amd64_dll"
 				GenerateManifest="true"
 				GenerateDebugInformation="true"
-				ProgramDatabaseFile="..\samples\propgridsample.pdb"
-				SubSystem="2"
+				ProgramDatabaseFile="..\lib\vc_amd64_dll\wxcode_msw28ud_propgrid.pdb"
 				TargetMachine="17"
 			/>
 			<Tool
@@ -2923,14 +2694,11 @@
 			/>
 			<Tool
 				Name="VCBscMakeTool"
-				OutputFile="..\samples\propgrid_propgridsample.bsc"
+				OutputFile="..\lib\vc_amd64_dll\propgrid_propgrid.bsc"
 				SuppressStartupBanner="true"
 			/>
 			<Tool
 				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCAppVerifierTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -2947,23 +2715,31 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath="..\samples\minimal.cpp"
+				RelativePath="..\src\advprops.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\samples\propgridsample.cpp"
+				RelativePath="..\src\editors.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\samples\sampleprops.cpp"
+				RelativePath="..\src\extras.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\samples\tests.cpp"
+				RelativePath="..\src\manager.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\src\xh_propgrid.cpp"
+				RelativePath="..\src\odcombo.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\propgrid.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\props.cpp"
 				>
 			</File>
 		</Filter>
@@ -2973,21 +2749,43 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath="..\samples\propgridsample.h"
+				RelativePath="..\include\wx\propgrid\advprops.h"
 				>
 			</File>
 			<File
-				RelativePath="..\samples\sampleprops.h"
+				RelativePath="..\include\wx\propgrid\editors.h"
 				>
 			</File>
-		</Filter>
-		<Filter
-			Name="Resource Files"
-			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav"
-			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
-			>
 			<File
-				RelativePath="..\samples\sample.rc"
+				RelativePath="..\include\wx\propgrid\extras.h"
+				>
+			</File>
+			<File
+				RelativePath="..\include\wx\propgrid\manager.h"
+				>
+			</File>
+			<File
+				RelativePath="..\include\wx\propgrid\odcombo.h"
+				>
+			</File>
+			<File
+				RelativePath="..\include\wx\propgrid\pg_dox_mainpage.h"
+				>
+			</File>
+			<File
+				RelativePath="..\include\wx\propgrid\propdev.h"
+				>
+			</File>
+			<File
+				RelativePath="..\include\wx\propgrid\propgrid.h"
+				>
+			</File>
+			<File
+				RelativePath="..\include\wx\propgrid\props.h"
+				>
+			</File>
+			<File
+				RelativePath="..\include\wx\propgrid\xh_propgrid.h"
 				>
 			</File>
 		</Filter>

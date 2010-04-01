@@ -4319,7 +4319,8 @@ wxPG_VFB_UNDEFINED                  = 0x80
 /** @}
 */
 
-typedef wxByte wxPGVFBFlags;
+// This being define instead of typedef is more SWIG friendly
+#define wxPGVFBFlags unsigned char
 
 /** @class wxPGValidationInfo
 	@ingroup classes

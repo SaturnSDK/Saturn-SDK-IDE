@@ -1,5 +1,20 @@
 
-Version 1.4.11 ( ?-?-2010 )
+
+Version 1.4.12 ( ?-?-2010 )
+
+  Bugs Fixed:
+
+  - Some makefile problems introduced by switching to
+    newer version of Bakefile (for now, stick with
+    0.2.6 for everything except Visual Studio
+    project files).
+
+  - Various bugs in property label editors (some
+    of which were rather fatal).
+
+
+
+Version 1.4.11 ( Mar-21-2010 )
 
   New Features:
 
@@ -8,6 +23,9 @@ Version 1.4.11 ( ?-?-2010 )
     proportion) function. wxPG_SPLITTER_AUTO_CENTER style
     must be used, and naturally it now also works when
     the grid has more than two columns.
+
+  - Much improved Visual Studio project files have now
+    been included, with experimental win64 support.
 
 
   Changes:
@@ -21,6 +39,9 @@ Version 1.4.11 ( ?-?-2010 )
 
 
   Bugs Fixed:
+
+  - Value cell could be rendered incorrectly for properties
+    with 'limited editing' enabled.
 
   - wxPropertyGrid::CanClose() could crash if there was
     no property selected (bug #2951533, fix by Andrey
@@ -38,6 +59,11 @@ Version 1.4.11 ( ?-?-2010 )
 
   - Property editors other than text ctrl based ones did not
     respect wxPG_PROP_READONLY flag (bug #2940435).
+
+  - wxPython Bindings: Using validationInfo member functions
+    in ValidateValue() implementation of custom properties
+    should no longer complain about 'wxPGVFBFlags *'
+    memory leaks.
 
 
 

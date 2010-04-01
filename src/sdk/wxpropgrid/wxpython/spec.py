@@ -26,7 +26,7 @@ auto_version_numbers = [('propgrid.h','wxPG_VERSION','ABC0')]
 # List of supported wxWidgets versions
 # Let's only supply makefiles for the two latest versions of the dev branch.
 # After new stable branch comes out,
-wx_version_list = ['2.6.1','2.6.2','2.6.3','2.6.4','2.8.0','2.8.3','2.8.4','2.8.6']
+wx_version_list = ['2.6.4', '2.8.10']
 
 required_wx_libs = ['base','core','adv']
 

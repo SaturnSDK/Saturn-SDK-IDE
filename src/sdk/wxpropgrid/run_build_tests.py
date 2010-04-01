@@ -8,27 +8,27 @@ from shutil import copyfile
 
 
 COMPILER_PREPARE_SCRIPTS = {
-'VC6' : 'prepare_vc6.bat',
+#'VC6' : 'prepare_vc6.bat',
 'VC7' : 'prepare_vc7.bat',
 'VC8' : 'prepare_vc8.bat',
 'VC9' : 'prepare_vc9.bat',
 }
 
 RUN_LIST = [
-('2.6.4-VC6',
-    'VC6', r'D:\lib\wxWidgets-2.6.4',
-    'WX_UNICODE=1 WX_DEBUG=0 WX_SHARED=0'),
+#('2.6.4-VC6',
+#    'VC6', r'C:\lib\wxWidgets-2.6.4',
+#    'WX_UNICODE=1 WX_DEBUG=0 WX_SHARED=0'),
 
 ('2.8-SVN-VC9',
-    'VC9', r'D:\lib\wxWidgets_SVN_28',
+    'VC9', r'C:\lib\wxWidgets_SVN_28',
     'WX_UNICODE=1 WX_DEBUG=1 WX_SHARED=0'),
 
 ('2.8-SVN-VC9-R',
-    'VC9', r'D:\lib\wxWidgets_SVN_28',
+    'VC9', r'C:\lib\wxWidgets_SVN_28',
     'WX_UNICODE=1 WX_DEBUG=0 WX_SHARED=0'),
 
 ('2.8-SVN-VC9-DLL-R',
-    'VC9', r'D:\lib\wxWidgets_SVN_28',
+    'VC9', r'C:\lib\wxWidgets_SVN_28',
     'WX_UNICODE=1 WX_DEBUG=0 WX_SHARED=1'),
 ]
 
