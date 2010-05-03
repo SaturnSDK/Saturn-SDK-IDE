@@ -28,6 +28,7 @@
 #include "annoyingdialog.h"
 #include "breakpointsdlg.h"
 #include "cbstyledtextctrl.h"
+#include "editor_hooks.h"
 #include "loggers.h"
 
 
@@ -111,7 +112,9 @@ cbCompilerPlugin::cbCompilerPlugin()
 cbDebuggerPlugin::cbDebuggerPlugin() :
     m_toolbar(NULL),
     m_pCompiler(NULL),
-    m_WaitingCompilerToFinish(false)
+    m_WaitingCompilerToFinish(false),
+    m_EditorHookId(-1),
+    m_DragInProgress(false)
 {
     m_Type = ptDebugger;
 }
@@ -128,6 +131,16 @@ void cbDebuggerPlugin::OnAttach()
 
     Manager::Get()->RegisterEventSink(cbEVT_COMPILER_FINISHED, new Event(this, &cbDebuggerPlugin::OnCompilerFinished));
 
+    EditorHooks::HookFunctorBase *editor_hook;
+    editor_hook = new EditorHooks::HookFunctor<cbDebuggerPlugin>(this, &cbDebuggerPlugin::OnEditorHook);
+    m_EditorHookId = EditorHooks::RegisterHook(editor_hook);
+}
+
+void cbDebuggerPlugin::OnRelease(bool appShutDown)
+{
+    EditorHooks::UnregisterHook(m_EditorHookId, true);
+
+    OnReleaseReal(appShutDown);
 }
 
 void cbDebuggerPlugin::BuildMenu(wxMenuBar* menuBar)
@@ -381,6 +394,19 @@ void cbDebuggerPlugin::OnProjectClosed(CodeBlocksEvent& event)
     }
 }
 
+void cbDebuggerPlugin::OnEditorHook(cbEditor* editor, wxScintillaEvent& event)
+{
+    if (event.GetEventType() == wxEVT_SCI_START_DRAG)
+        m_DragInProgress = true;
+    else if (event.GetEventType() == wxEVT_SCI_FINISHED_DRAG)
+        m_DragInProgress = false;
+}
+
+bool cbDebuggerPlugin::DragInProgress() const
+{
+    return m_DragInProgress;
+}
+
 void cbDebuggerPlugin::ShowLog(bool clear)
 {
     TextCtrlLogger *log = Manager::Get()->GetDebuggerManager()->GetLogger(false);
@@ -418,10 +444,12 @@ void cbDebuggerPlugin::SwitchToPreviousLayout()
 {
     CodeBlocksLayoutEvent switchEvent(cbEVT_SWITCH_VIEW_LAYOUT, m_PreviousLayout);
 
+    wxString const &name = !switchEvent.layout.IsEmpty() ? switchEvent.layout : wxString(_("Code::Blocks default"));
+
     #if wxCHECK_VERSION(2, 9, 0)
-    Manager::Get()->GetLogManager()->DebugLog(F(_("Switching layout to \"%s\""), (!switchEvent.layout.IsEmpty() ? switchEvent.layout.wx_str() : wxString(_("Code::Blocks default")).wx_str()));
+    Manager::Get()->GetLogManager()->DebugLog(F(_("Switching layout to \"%s\""), name.wx_str());
     #else
-    Manager::Get()->GetLogManager()->DebugLog(F(_("Switching layout to \"%s\""), !switchEvent.layout.IsEmpty() ? switchEvent.layout.c_str() : wxString(_("Code::Blocks default")).c_str()));
+    Manager::Get()->GetLogManager()->DebugLog(F(_("Switching layout to \"%s\""), name.c_str()));
     #endif
 
     // switch to previous layout

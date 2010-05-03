@@ -350,6 +350,9 @@ class PLUGIN_EXPORT cbCompilerPlugin: public cbPlugin
 	private:
 };
 
+
+class wxScintillaEvent;
+
 /** @brief Base class for debugger plugins
   *
   * This plugin type must offer some pre-defined debug facilities, on top
@@ -365,6 +368,7 @@ class PLUGIN_EXPORT cbDebuggerPlugin: public cbPlugin
 		wxToolBar* GetToolbar();
 
 		virtual void OnAttach();
+		virtual void OnRelease(bool appShutDown);
 
         virtual void BuildMenu(wxMenuBar* menuBar);
         virtual void BuildModuleMenu(const ModuleType type, wxMenu* menu, const FileTreeData* data = 0);
@@ -381,6 +385,7 @@ class PLUGIN_EXPORT cbDebuggerPlugin: public cbPlugin
 		virtual void EditorLinesAddedOrRemoved(cbEditor* editor, int startline, int lines);
     public:
         virtual void OnAttachReal() = 0;
+        virtual void OnReleaseReal(bool appShutDown) = 0;
 
         virtual void ShowToolMenu() = 0;
         virtual bool ToolMenuEnabled() const;
@@ -493,6 +498,8 @@ class PLUGIN_EXPORT cbDebuggerPlugin: public cbPlugin
         void ClearActiveMarkFromAllEditors();
         void BringCBToFront();
 
+        bool DragInProgress() const;
+
     protected:
         void SwitchToDebuggingLayout();
         void SwitchToPreviousLayout();
@@ -514,11 +521,15 @@ class PLUGIN_EXPORT cbDebuggerPlugin: public cbPlugin
         void OnProjectActivated(CodeBlocksEvent& event);
         void OnProjectClosed(CodeBlocksEvent& event);
         void OnCompilerFinished(CodeBlocksEvent& event);
+        void OnEditorHook(cbEditor* editor, wxScintillaEvent& event);
     private:
         wxToolBar *m_toolbar;
         wxString m_PreviousLayout;
         cbCompilerPlugin* m_pCompiler;
         bool m_WaitingCompilerToFinish;
+
+        int m_EditorHookId;
+        bool m_DragInProgress;
 };
 
 /** @brief Base class for tool plugins

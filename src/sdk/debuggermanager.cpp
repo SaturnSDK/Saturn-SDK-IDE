@@ -208,18 +208,18 @@ bool TestIfMarkedForRemoval(cbWatch *watch)
 
 bool cbWatch::RemoveMarkedChildren()
 {
-        size_t start_size = m_children.size();
-        PtrContainer::iterator new_last = std::remove_if(m_children.begin(), m_children.end(), &TestIfMarkedForRemoval);
-        m_children.erase(new_last, m_children.end());
+    size_t start_size = m_children.size();
+    PtrContainer::iterator new_last = std::remove_if(m_children.begin(), m_children.end(), &TestIfMarkedForRemoval);
+    m_children.erase(new_last, m_children.end());
 
     return start_size != m_children.size();
 
 }
 void cbWatch::RemoveChildren()
 {
-        for(PtrContainer::iterator it = m_children.begin(); it != m_children.end(); ++it)
-            (*it)->Destroy();
-        m_children.clear();
+    for(PtrContainer::iterator it = m_children.begin(); it != m_children.end(); ++it)
+        (*it)->Destroy();
+    m_children.clear();
 }
 
 int cbWatch::GetChildCount() const

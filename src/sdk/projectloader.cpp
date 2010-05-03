@@ -535,6 +535,7 @@ void ProjectLoader::DoBuildTargetOptions(TiXmlElement* parentNode, ProjectBuildT
     wxString compilerId = m_pProject->GetCompilerID();
     wxString parameters;
     wxString hostApplication;
+    bool runHostApplicationInTerminal = false;
     bool includeInTargetAll = m_IsPre_1_2 ? true : false;
     bool createStaticLib = false;
     bool createDefFile = false;
@@ -589,6 +590,12 @@ void ProjectLoader::DoBuildTargetOptions(TiXmlElement* parentNode, ProjectBuildT
 
         if (node->Attribute("host_application"))
             hostApplication = UnixFilename(cbC2U(node->Attribute("host_application")));
+
+        if (node->Attribute("run_host_application_in_terminal"))
+        {
+            wxString runInTerminal = cbC2U(node->Attribute("run_host_application_in_terminal"));
+            runHostApplicationInTerminal = (runInTerminal == wxT("1"));
+        }
 
         // used in versions prior to 1.5
         if (node->Attribute("includeInTargetAll"))
@@ -651,6 +658,7 @@ void ProjectLoader::DoBuildTargetOptions(TiXmlElement* parentNode, ProjectBuildT
         target->SetAdditionalOutputFiles(added);
         target->SetExecutionParameters(parameters);
         target->SetHostApplication(hostApplication);
+        target->SetRunHostApplicationInTerminal(runHostApplicationInTerminal);
         target->SetIncludeInTargetAll(includeInTargetAll); // used in versions prior to 1.5
         target->SetCreateDefFile(createDefFile);
         target->SetCreateStaticLib(createStaticLib);
@@ -1180,7 +1188,14 @@ bool ProjectLoader::ExportTargetAsProject(const wxString& filename, const wxStri
         if (!target->GetExecutionParameters().IsEmpty())
             AddElement(tgtnode, "Option", "parameters", target->GetExecutionParameters());
         if (!target->GetHostApplication().IsEmpty())
+        {
             AddElement(tgtnode, "Option", "host_application", target->GetHostApplication());
+            if (target->GetRunHostApplicationInTerminal())
+                AddElement(tgtnode, "Option", "run_host_application_in_terminal", 1);
+            else
+                AddElement(tgtnode, "Option", "run_host_application_in_terminal", 0);
+        }
+
         // used in versions prior to 1.5
 //        if (target->GetIncludeInTargetAll())
 //            AddElement(tgtnode, "Option", "includeInTargetAll", 1);

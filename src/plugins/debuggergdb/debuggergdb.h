@@ -41,7 +41,7 @@ class DebuggerGDB : public cbDebuggerPlugin
         cbConfigurationPanel* GetConfigurationPanel(wxWindow* parent);
         cbConfigurationPanel* GetProjectConfigurationPanel(wxWindow* parent, cbProject* project);
         void OnAttachReal(); // fires when the plugin is attached to the application
-        void OnRelease(bool appShutDown); // fires when the plugin is released from the application
+        void OnReleaseReal(bool appShutDown); // fires when the plugin is released from the application
 
         void RunCommand(int cmd);
 
@@ -145,6 +145,7 @@ class DebuggerGDB : public cbDebuggerPlugin
         void OnSettings(wxCommandEvent& event);
 
         void ShowToolMenu();
+        void KillConsole();
 
         void OnInfoFrame(wxCommandEvent& event);
         void OnInfoDLL(wxCommandEvent& event);

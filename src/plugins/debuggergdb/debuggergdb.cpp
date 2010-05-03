@@ -199,7 +199,6 @@ void DebuggerGDB::OnAttachReal()
     {
         dbg_manager->GetLogger(true, m_DbgPageIndex);
     }
-//    m_pTree = NULL;
 
     {
         DebuggerManager *manager = Manager::Get()->GetDebuggerManager();
@@ -220,9 +219,10 @@ void DebuggerGDB::OnAttachReal()
     Manager::Get()->RegisterEventSink(cbEVT_BUILDTARGET_SELECTED, new cbEventFunctor<DebuggerGDB, CodeBlocksEvent>(this, &DebuggerGDB::OnBuildTargetSelected));
 }
 
-void DebuggerGDB::OnRelease(bool appShutDown)
+void DebuggerGDB::OnReleaseReal(bool appShutDown)
 {
     ProjectLoaderHooks::UnregisterHook(m_HookId, true);
+
     DebuggerManager *dbg_manager = Manager::Get()->GetDebuggerManager();
 
     //Close debug session when appShutDown
@@ -240,9 +240,8 @@ void DebuggerGDB::OnRelease(bool appShutDown)
             dbg_manager->HideLogger(true);
         dbg_manager->HideLogger(false);
     }
-    // vars for Linux console
-    m_bIsConsole = false;
-    m_nConsolePid = 0;
+
+    KillConsole();
 
     dbg_manager->UnregisterDebugger(this);
 }
@@ -874,7 +873,7 @@ int DebuggerGDB::DoDebug(bool breakOnEntry)
    #ifdef __WXGTK__
     // create xterm and issue tty "/dev/pts/#" to GDB where
     // # is the tty for the newly created xterm
-    m_bIsConsole = (target && target->GetTargetType() == ttConsoleOnly);
+    m_bIsConsole = target && target->GetUseConsoleRunner();
     if (m_bIsConsole)
     {
         wxString consoleTty;
@@ -1750,8 +1749,14 @@ void DebuggerGDB::OnGDBTerminated(wxCommandEvent& event)
 
     // switch to the user-defined layout when finished debugging
     SwitchToPreviousLayout();
+    KillConsole();
 
-    #ifdef __WXGTK__
+    ///killerbot : run there the post shell commands ?
+}
+
+void DebuggerGDB::KillConsole()
+{
+#ifdef __WXGTK__
     // kill any linux console
     if ( m_bIsConsole && (m_nConsolePid > 0) )
     {
@@ -1759,8 +1764,7 @@ void DebuggerGDB::OnGDBTerminated(wxCommandEvent& event)
         m_nConsolePid = 0;
         m_bIsConsole = false;
     }
-    #endif
-    ///killerbot : run there the post shell commands ?
+#endif
 }
 
 void DebuggerGDB::OnValueTooltip(CodeBlocksEvent& event)
@@ -1769,6 +1773,9 @@ void DebuggerGDB::OnValueTooltip(CodeBlocksEvent& event)
     if (!m_pProcess || !IsStopped())
         return;
     if (!Manager::Get()->GetConfigManager(_T("debugger"))->ReadBool(_T("eval_tooltip"), false))
+        return;
+
+    if (DragInProgress())
         return;
 
     EditorBase* base = event.GetEditor();

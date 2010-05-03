@@ -4341,6 +4341,9 @@ DECLARE_EXPORTED_EVENT_TYPE (WXDLLIMPEXP_SCI, wxEVT_SCI_AUTOCOMP_CANCELLED,  167
 DECLARE_EXPORTED_EVENT_TYPE (WXDLLIMPEXP_SCI, wxEVT_SCI_AUTOCOMP_CHARDELETED,1680)
 DECLARE_EXPORTED_EVENT_TYPE (WXDLLIMPEXP_SCI, wxEVT_SCI_SETFOCUS,            1681)
 DECLARE_EXPORTED_EVENT_TYPE (WXDLLIMPEXP_SCI, wxEVT_SCI_KILLFOCUS,           1682)
+// C::B begin
+DECLARE_EXPORTED_EVENT_TYPE (WXDLLIMPEXP_SCI, wxEVT_SCI_FINISHED_DRAG,          1683)
+// C::B end
 END_DECLARE_EVENT_TYPES()
 #else
     enum {
@@ -4403,6 +4406,9 @@ typedef void (wxEvtHandler::*wxScintillaEventFunction)(wxScintillaEvent&);
 #define EVT_SCI_DWELLSTART(id, fn)              DECLARE_EVENT_TABLE_ENTRY (wxEVT_SCI_DWELLSTART,            id, wxID_ANY, (wxObjectEventFunction) (wxEventFunction)  wxStaticCastEvent( wxScintillaEventFunction, & fn ), (wxObject *) NULL),
 #define EVT_SCI_DWELLEND(id, fn)                DECLARE_EVENT_TABLE_ENTRY (wxEVT_SCI_DWELLEND,              id, wxID_ANY, (wxObjectEventFunction) (wxEventFunction)  wxStaticCastEvent( wxScintillaEventFunction, & fn ), (wxObject *) NULL),
 #define EVT_SCI_START_DRAG(id, fn)              DECLARE_EVENT_TABLE_ENTRY (wxEVT_SCI_START_DRAG,            id, wxID_ANY, (wxObjectEventFunction) (wxEventFunction)  wxStaticCastEvent( wxScintillaEventFunction, & fn ), (wxObject *) NULL),
+// C::B begin
+#define EVT_SCI_FINISHED_DRAG(id, fn)           DECLARE_EVENT_TABLE_ENTRY (wxEVT_SCI_FINISHED_DRAG,         id, wxID_ANY, (wxObjectEventFunction) (wxEventFunction)  wxStaticCastEvent( wxScintillaEventFunction, & fn ), (wxObject *) NULL),
+// C::B end
 #define EVT_SCI_DRAG_OVER(id, fn)               DECLARE_EVENT_TABLE_ENTRY (wxEVT_SCI_DRAG_OVER,             id, wxID_ANY, (wxObjectEventFunction) (wxEventFunction)  wxStaticCastEvent( wxScintillaEventFunction, & fn ), (wxObject *) NULL),
 #define EVT_SCI_DO_DROP(id, fn)                 DECLARE_EVENT_TABLE_ENTRY (wxEVT_SCI_DO_DROP,               id, wxID_ANY, (wxObjectEventFunction) (wxEventFunction)  wxStaticCastEvent( wxScintillaEventFunction, & fn ), (wxObject *) NULL),
 #define EVT_SCI_ZOOM(id, fn)                    DECLARE_EVENT_TABLE_ENTRY (wxEVT_SCI_ZOOM,                  id, wxID_ANY, (wxObjectEventFunction) (wxEventFunction)  wxStaticCastEvent( wxScintillaEventFunction, & fn ), (wxObject *) NULL),
