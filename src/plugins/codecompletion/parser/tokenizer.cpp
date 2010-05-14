@@ -51,7 +51,7 @@ namespace TokenizerConsts
 };
 
 // static
-ConfigManagerContainer::StringToStringMap Tokenizer::s_Replacements;
+wxStringHashMap Tokenizer::s_Replacements;
 
 Tokenizer::Tokenizer(TokensTree* tokensTree, const wxString& filename)
     : m_pTokensTree(tokensTree),
@@ -857,7 +857,7 @@ wxString Tokenizer::DoGetToken()
 
 wxString Tokenizer::MacroReplace(const wxString str)
 {
-    ConfigManagerContainer::StringToStringMap::const_iterator it = s_Replacements.find(str);
+    wxStringHashMap::const_iterator it = s_Replacements.find(str);
 
     if (it != s_Replacements.end())
     {

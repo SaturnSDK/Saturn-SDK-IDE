@@ -186,9 +186,7 @@ CodeCompletion::~CodeCompletion()
 void CodeCompletion::LoadTokenReplacements()
 {
     ConfigManager* cfg = Manager::Get()->GetConfigManager(_T("code_completion"));
-
-    ConfigManagerContainer::StringToStringMap& repl = Tokenizer::GetTokenReplacementsMap();
-    repl.clear();
+    ConfigManagerContainer::StringToStringMap repl;
 
     if (!cfg->Exists(_T("token_replacements")))
     {
@@ -210,13 +208,21 @@ void CodeCompletion::LoadTokenReplacements()
     }
     else
         cfg->Read(_T("token_replacements"), &repl);
+    
+    Tokenizer::ConvertToHashReplacementMap(repl);
 }
 
 void CodeCompletion::SaveTokenReplacements()
 {
     ConfigManager* cfg = Manager::Get()->GetConfigManager(_T("code_completion"));
 
-    const ConfigManagerContainer::StringToStringMap& repl = Tokenizer::GetTokenReplacementsMap();
+    const wxStringHashMap& hashRepl = Tokenizer::GetTokenReplacementsMap();
+    ConfigManagerContainer::StringToStringMap repl;
+    wxStringHashMap::const_iterator it = hashRepl.begin();
+    for (; it != hashRepl.end(); it++)
+    {
+        repl[it->first] = it->second;
+    }
     cfg->Write(_T("token_replacements"), repl);
 }
 

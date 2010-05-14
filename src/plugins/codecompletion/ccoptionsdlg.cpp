@@ -119,8 +119,8 @@ CCOptionsDlg::CCOptionsDlg(wxWindow* parent, NativeParser* np, CodeCompletion* c
     XRCCTRL(*this, "sliderDelay", wxSlider)->SetValue(timerDelay / 100);
     UpdateSliderLabel();
 
-    const ConfigManagerContainer::StringToStringMap& repl = Tokenizer::GetTokenReplacementsMap();
-    ConfigManagerContainer::StringToStringMap::const_iterator it = repl.begin();
+    const wxStringHashMap& repl = Tokenizer::GetTokenReplacementsMap();
+    wxStringHashMap::const_iterator it = repl.begin();
     while (it != repl.end())
     {
         XRCCTRL(*this, "lstRepl", wxListBox)->Append(it->first + _T(" -> ") + it->second);

@@ -7,11 +7,41 @@
 #define TOKENIZER_H
 
 #include <wx/string.h>
+#include <wx/hashmap.h>
 #include <configmanager.h>
 #include <filemanager.h>
 #include "token.h"
 
 #include <stack>
+
+class HashForWxStringMap
+{
+public:
+    HashForWxStringMap() {}
+    unsigned long operator()(const wxString& x) const
+    {
+        const size_t len = x.length();
+        const size_t intWxChar = sizeof(unsigned int) / sizeof(wxChar);
+        const size_t shortWxChar = sizeof(unsigned short) / sizeof(wxChar);
+        if (len >= intWxChar)
+            return size_t((128 ^ len) + *((unsigned int*)(x.c_str() + len - intWxChar)));
+        else if (len >= shortWxChar)
+            return size_t((256 ^ len) + *((unsigned short*)(x.c_str() + len - shortWxChar)));
+        else
+            return size_t((512 ^ len) + *(x.c_str() + len - 1));
+    }
+    HashForWxStringMap& operator=(const HashForWxStringMap&) { return *this; }
+};
+
+class EqualForWxStringMap
+{
+public:
+    EqualForWxStringMap() { }
+    bool operator()(const wxString& a, const wxString& b) const { return a == b; }
+    EqualForWxStringMap& operator=(const EqualForWxStringMap&) { return *this; }
+};
+
+WX_DECLARE_HASH_MAP(wxString, wxString, HashForWxStringMap, EqualForWxStringMap, wxStringHashMap);
 
 enum TokenizerState
 {
@@ -104,20 +134,29 @@ public:
 
     static void SetReplacementString(const wxString& from, const wxString& to)
     {
-        s_Replacements.insert(s_Replacements.end(), std::make_pair(from, to));
+        s_Replacements[from] = to;
     };
 
     static void RemoveReplacementString(const wxString& from)
     {
-        ConfigManagerContainer::StringToStringMap::iterator it = s_Replacements.find(from);
+        wxStringHashMap::iterator it = s_Replacements.find(from);
         if (it != s_Replacements.end())
             s_Replacements.erase(it);
     };
-
-    static ConfigManagerContainer::StringToStringMap& GetTokenReplacementsMap()
+    
+    static wxStringHashMap& GetTokenReplacementsMap()
     {
         return s_Replacements;
-    };
+    }
+    
+    static void ConvertToHashReplacementMap(const ConfigManagerContainer::StringToStringMap& map)
+    {
+        ConfigManagerContainer::StringToStringMap::const_iterator it = map.begin();
+        for (; it != map.end(); it++)
+        {
+            s_Replacements[it->first] = it->second;
+        }
+    }
 
     bool IsEOF() const
     {
@@ -218,7 +257,7 @@ private:
 
     inline const wxString& ThisOrReplacement(const wxString& str) const
     {
-        ConfigManagerContainer::StringToStringMap::const_iterator it = s_Replacements.find(str);
+        wxStringHashMap::const_iterator it = s_Replacements.find(str);
         if (it != s_Replacements.end())
             return it->second;
         return str;
@@ -288,7 +327,7 @@ private:
     /** Calc Expression's result, true or false */
     std::stack<bool> m_ExpressionResult;
 
-    static ConfigManagerContainer::StringToStringMap s_Replacements;
+    static wxStringHashMap s_Replacements;
 };
 
 #endif // TOKENIZER_H
