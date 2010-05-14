@@ -432,219 +432,305 @@ void ParserThread::DoParse()
 
         TRACE(_T("DoParse() : Loop:m_Str='%s', token='%s'"), m_Str.wx_str(), token.wx_str());
 
-        if (token == ParserConsts::kw_template)
+        bool switchHandled = true;
+        switch (token.Length())
         {
-            // There are some template defintions that are not working like
-            // within gcc headers (NB: This syntax is a GNU extension):
-            // extern template
-            //    const codecvt<char, char, mbstate_t>&
-            //    use_facet<codecvt<char, char, mbstate_t> >(const locale&);
-            m_Tokenizer.SetState(tsTemplateArgument);
-            m_TemplateArgument = m_Tokenizer.GetToken();
-            TRACE(_T("DoParse() : Template argument='%s'"), m_TemplateArgument.wx_str());
-            m_Str.Clear();
-            m_Tokenizer.SetState(tsSkipUnWanted);
-        }
-        else if (token==ParserConsts::semicolon)
-        {
-            m_Str.Clear();
-            m_IsPointer = false;
-            // Notice: clears the queue "m_EncounteredTypeNamespaces"
-            while (!m_EncounteredTypeNamespaces.empty())
-                m_EncounteredTypeNamespaces.pop();
-            m_TemplateArgument.Clear();
-        }
-        else if (   token==ParserConsts::kw_delete
-                 || token==ParserConsts::dot
-                 || (   token==ParserConsts::gt
-                     && m_LastToken==ParserConsts::dash) )
-        {
-            m_Str.Clear();
-            SkipToOneOfChars(ParserConsts::semicolonclbrace);
-        }
-        else if (token==ParserConsts::opbrace)
-        {
-            if (!m_Options.useBuffer || m_Options.bufferSkipBlocks)
-                SkipBlock();
-            m_Str.Clear();
-        }
-        else if (token==ParserConsts::clbrace)
-        {
-            m_pLastParent = 0L;
-            m_LastScope = tsUndefined;
-            m_Str.Clear();
-            // the only time we get to find a } is when recursively called by e.g. HandleClass
-            // we have to return now...
-            if (!m_Options.useBuffer || m_Options.bufferSkipBlocks)
-                break;
-        }
-        else if (token==ParserConsts::colon)
-        {
-            if (m_LastToken==ParserConsts::kw_public)
-                m_LastScope = tsPublic;
-            else if (m_LastToken==ParserConsts::kw_protected)
-                m_LastScope = tsProtected;
-            else if (m_LastToken==ParserConsts::kw_private)
-                m_LastScope = tsPrivate;
-            m_Str.Clear();
-        }
-        else if (   (token==ParserConsts::kw_while)
-                 || (token==ParserConsts::kw_if)
-                 || (token==ParserConsts::kw_do)
-                 || (token==ParserConsts::kw_else)
-                 || (token==ParserConsts::kw_for)
-                 || (token==ParserConsts::kw_switch) )
-        {
-            if (!m_Options.useBuffer || m_Options.bufferSkipBlocks)
-                SkipToOneOfChars(ParserConsts::semicolonclbrace, true);
-            else
-                m_Tokenizer.GetToken(); //skip args
-            m_Str.Clear();
-        }
-        else if (token==ParserConsts::kw_typedef)
-        {
-            if (m_Options.handleTypedefs)
-                HandleTypedef();
-            else
-                SkipToOneOfChars(ParserConsts::semicolonclbrace, true);
-            m_Str.Clear();
-        }
-        else if (token==ParserConsts::kw_return ||
-            token==ParserConsts::colon)
-        {
-            SkipToOneOfChars(ParserConsts::semicolonclbrace, true);
-            m_Str.Clear();
-        }
-        else if (token==ParserConsts::kw_const)
-        {
-            // do nothing, just skip keyword "const", otherwise uncomment:
-            //m_Str.Clear();
-        }
-        else if (token==ParserConsts::kw_extern)
-        {
-            // check for "C"
-            m_Str = m_Tokenizer.GetToken();
-            if (m_Str==ParserConsts::kw_C || m_Str==ParserConsts::kw_CPP)
+            case 1:
+            if (token == ParserConsts::semicolon)
             {
-                m_Tokenizer.GetToken(); // "eat" {
-                DoParse(); // time for recursion ;)
+                m_Str.Clear();
+                m_IsPointer = false;
+                // Notice: clears the queue "m_EncounteredTypeNamespaces"
+                while (!m_EncounteredTypeNamespaces.empty())
+                    m_EncounteredTypeNamespaces.pop();
+                m_TemplateArgument.Clear();
+            }
+            else if (token == ParserConsts::dot
+                     || (token == ParserConsts::gt && m_LastToken == ParserConsts::dash))
+            {
+                m_Str.Clear();
+                SkipToOneOfChars(ParserConsts::semicolonclbrace);
+            }
+            else if (token == ParserConsts::opbrace)
+            {
+                if (!m_Options.useBuffer || m_Options.bufferSkipBlocks)
+                    SkipBlock();
+                m_Str.Clear();
+            }
+            else if (token == ParserConsts::clbrace)
+            {
+                m_pLastParent = 0L;
+                m_LastScope = tsUndefined;
+                m_Str.Clear();
+                // the only time we get to find a } is when recursively called by e.g. HandleClass
+                // we have to return now...
+                if (!m_Options.useBuffer || m_Options.bufferSkipBlocks)
+                {
+                    m_Tokenizer.SetState(oldState);
+                    return;
+                }
+            }
+            else if (token == ParserConsts::colon)
+            {
+                if (m_LastToken == ParserConsts::kw_public)
+                    m_LastScope = tsPublic;
+                else if (m_LastToken == ParserConsts::kw_protected)
+                    m_LastScope = tsProtected;
+                else if (m_LastToken == ParserConsts::kw_private)
+                    m_LastScope = tsPrivate;
+                m_Str.Clear();
+            }
+            else if (token == ParserConsts::hash)
+            {
+                TokenizerState oldState = m_Tokenizer.GetState();
+                m_Tokenizer.SetState(tsSkipNone);
+
+                token = m_Tokenizer.GetToken();
+                if (token == ParserConsts::kw_include)
+                    HandleIncludes();
+                else if (token == ParserConsts::kw_define)
+                    HandleDefines();
+                else if (token == ParserConsts::kw_undef)
+                    HandleUndefs();
+                else
+                    m_Tokenizer.SkipToEOL(false, true);
+
+                m_Str.Clear();
+                m_Tokenizer.SetState(oldState);
             }
             else
+                switchHandled = false;
+            break;
+
+            case 2:
+            if (token == ParserConsts::kw_if || token == ParserConsts::kw_do)
             {
-                // do nothing, just skip keyword "extern", otherwise uncomment:
-                //SkipToOneOfChars(ParserConsts::semicolon); // skip externs
-                m_Tokenizer.UngetToken();
+                if (!m_Options.useBuffer || m_Options.bufferSkipBlocks)
+                    SkipToOneOfChars(ParserConsts::semicolonclbrace, true);
+                else
+                    m_Tokenizer.GetToken(); //skip args
+                m_Str.Clear();
             }
-            m_Str.Clear();
+            else
+                switchHandled = false;
+            break;
+
+            case 3:
+            if (token == ParserConsts::kw_for)
+            {
+                if (!m_Options.useBuffer || m_Options.bufferSkipBlocks)
+                    SkipToOneOfChars(ParserConsts::semicolonclbrace, true);
+                else
+                    m_Tokenizer.GetToken(); //skip args
+                m_Str.Clear();
+            }
+            else
+                switchHandled = false;
+            break;
+
+            case 4:
+            if (token == ParserConsts::kw_else)
+            {
+                if (!m_Options.useBuffer || m_Options.bufferSkipBlocks)
+                    SkipToOneOfChars(ParserConsts::semicolonclbrace, true);
+                else
+                    m_Tokenizer.GetToken(); //skip args
+                m_Str.Clear();
+            }
+            else if (token == ParserConsts::kw_enum)
+            {
+                m_Str.Clear();
+                if (m_Options.handleEnums)
+                    HandleEnum();
+                else
+                    SkipToOneOfChars(ParserConsts::semicolonclbrace, true);
+            }
+            else
+                switchHandled = false;
+            break;
+
+            case 5:
+            if (token == ParserConsts::kw_while)
+            {
+                if (!m_Options.useBuffer || m_Options.bufferSkipBlocks)
+                    SkipToOneOfChars(ParserConsts::semicolonclbrace, true);
+                else
+                    m_Tokenizer.GetToken(); //skip args
+                m_Str.Clear();
+            }
+            else if (token == ParserConsts::kw_const)
+            {
+                // do nothing, just skip keyword "const", otherwise uncomment:
+                //m_Str.Clear();
+            }
+            else if (token == ParserConsts::kw_using) // using namespace ?
+            {
+                SkipToOneOfChars(ParserConsts::semicolonclbrace, true);
+                m_Str.Clear();
+            }
+            else if (token == ParserConsts::kw_class)
+            {
+                m_Str.Clear();
+                if (m_Options.handleClasses)
+                    HandleClass(ctClass);
+                else
+                    SkipToOneOfChars(ParserConsts::semicolonclbrace, true);
+            }
+            else if (token == ParserConsts::kw_union)
+            {
+                m_Str.Clear();
+                if (m_Options.handleClasses)
+                    HandleClass(ctUnion);
+                else
+                    SkipToOneOfChars(ParserConsts::semicolonclbrace, true);
+            }
+            else
+                switchHandled = false;
+            break;
+
+            case 6:
+            if (token == ParserConsts::kw_delete)
+            {
+                m_Str.Clear();
+                SkipToOneOfChars(ParserConsts::semicolonclbrace);
+            }
+            else if (token == ParserConsts::kw_switch)
+            {
+                if (!m_Options.useBuffer || m_Options.bufferSkipBlocks)
+                    SkipToOneOfChars(ParserConsts::semicolonclbrace, true);
+                else
+                    m_Tokenizer.GetToken(); //skip args
+                m_Str.Clear();
+            }
+            else if (token == ParserConsts::kw_return)
+            {
+                SkipToOneOfChars(ParserConsts::semicolonclbrace, true);
+                m_Str.Clear();
+            }
+            else if (token == ParserConsts::kw_extern)
+            {
+                // check for "C", "C++"
+                m_Str = m_Tokenizer.GetToken();
+                if (m_Str == ParserConsts::kw_C || m_Str == ParserConsts::kw_CPP)
+                {
+                    m_Tokenizer.GetToken(); // "eat" {
+                    DoParse(); // time for recursion ;)
+                }
+                else
+                {
+                    // do nothing, just skip keyword "extern", otherwise uncomment:
+                    //SkipToOneOfChars(ParserConsts::semicolon); // skip externs
+                    m_Tokenizer.UngetToken();
+                }
+                m_Str.Clear();
+            }
+            else if (token == ParserConsts::kw_static || token == ParserConsts::kw_inline)
+            {
+                // do nothing, just skip keyword "static" / "virtual" / "inline"
+            }
+            else if (token == ParserConsts::kw_friend)
+            {
+                // friend methods can be either the decl only or an inline implementation
+                SkipToOneOfChars(ParserConsts::semicolonclbrace, true);
+                m_Str.Clear();
+            }
+            else if (token == ParserConsts::kw_struct)
+            {
+                m_Str.Clear();
+                if (m_Options.handleClasses)
+                    HandleClass(ctStructure);
+                else
+                    SkipToOneOfChars(ParserConsts::semicolonclbrace, true);
+            }
+            else
+                switchHandled = false;
+            break;
+
+            case 7:
+            if (token == ParserConsts::kw_typedef)
+            {
+                if (m_Options.handleTypedefs)
+                    HandleTypedef();
+                else
+                    SkipToOneOfChars(ParserConsts::semicolonclbrace, true);
+                m_Str.Clear();
+            }
+            else if (token == ParserConsts::kw_virtual)
+            {
+                // do nothing, just skip keyword "static" / "virtual" / "inline"
+            }
+            else
+                switchHandled = false;
+            break;
+
+            case 8:
+            if (token == ParserConsts::kw_template)
+            {
+                // There are some template defintions that are not working like
+                // within gcc headers (NB: This syntax is a GNU extension):
+                // extern template
+                //    const codecvt<char, char, mbstate_t>&
+                //    use_facet<codecvt<char, char, mbstate_t> >(const locale&);
+                m_Tokenizer.SetState(tsTemplateArgument);
+                m_TemplateArgument = m_Tokenizer.GetToken();
+                TRACE(_T("DoParse() : Template argument='%s'"), m_TemplateArgument.wx_str());
+                m_Str.Clear();
+                m_Tokenizer.SetState(tsSkipUnWanted);
+            }
+            else if (token == ParserConsts::kw_operator)
+            {
+                TokenizerState oldState = m_Tokenizer.GetState();
+                m_Tokenizer.SetState(tsSkipNone);
+                wxString func = token;
+                while (1)
+                {
+                    token = m_Tokenizer.GetToken();
+                    if (!token.IsEmpty())
+                    {
+                        if (token.GetChar(0) == '(')
+                        {
+                            // check for operator()()
+                            wxString peek = m_Tokenizer.PeekToken();
+                            if (!peek.IsEmpty() && peek.GetChar(0) != '(')
+                                m_Tokenizer.UngetToken();
+                            else
+                                func << token;
+                            break;
+                        }
+                        else
+                            func << token;
+                    }
+                    else
+                        break;
+                }
+                m_Tokenizer.SetState(oldState);
+                HandleFunction(func, true);
+                m_Str.Clear();
+            }
+            else
+                switchHandled = false;
+            break;
+
+            case 9:
+            if (token == ParserConsts::kw_namespace)
+            {
+                m_Str.Clear();
+                HandleNamespace();
+            }
+            else
+                switchHandled = false;
+            break;
+
+            default:
+                switchHandled = false;
+            break;
         }
-        else if (token.StartsWith(ParserConsts::kw__asm))
+
+        if (token.StartsWith(ParserConsts::kw__asm))
         {
             SkipToOneOfChars(ParserConsts::semicolon, true);
         }
-        else if (   token==ParserConsts::kw_static
-                 || token==ParserConsts::kw_virtual
-                 || token==ParserConsts::kw_inline)
-        {
-            // do nothing, just skip keyword "static" / "virtual" / "inline"
-        }
-        else if (token==ParserConsts::hash)
-        {
-            TokenizerState oldState = m_Tokenizer.GetState();
-            m_Tokenizer.SetState(tsSkipNone);
-
-            token = m_Tokenizer.GetToken();
-            if (token==ParserConsts::kw_include)
-                HandleIncludes();
-            else if (token==ParserConsts::kw_define)
-                HandleDefines();
-            else if (token==ParserConsts::kw_undef)
-                HandleUndefs();
-            else
-                m_Tokenizer.SkipToEOL(false, true);
-
-            m_Str.Clear();
-            m_Tokenizer.SetState(oldState);
-
-        }
-        else if (token==ParserConsts::kw_using) // using namespace ?
-        {
-            SkipToOneOfChars(ParserConsts::semicolonclbrace, true);
-            m_Str.Clear();
-        }
-        else if (token==ParserConsts::kw_namespace)
-        {
-            m_Str.Clear();
-            HandleNamespace();
-        }
-        else if (token==ParserConsts::kw_friend)
-        {
-            // friend methods can be either the decl only or an inline implementation
-            SkipToOneOfChars(ParserConsts::semicolonclbrace, true);
-            m_Str.Clear();
-        }
-        else if (token==ParserConsts::kw_class)
-        {
-            m_Str.Clear();
-            if (m_Options.handleClasses)
-                HandleClass(ctClass);
-            else
-                SkipToOneOfChars(ParserConsts::semicolonclbrace, true);
-        }
-        else if (token==ParserConsts::kw_struct)
-        {
-            m_Str.Clear();
-            if (m_Options.handleClasses)
-                HandleClass(ctStructure);
-            else
-                SkipToOneOfChars(ParserConsts::semicolonclbrace, true);
-        }
-        else if (token==ParserConsts::kw_enum)
-        {
-            m_Str.Clear();
-            if (m_Options.handleEnums)
-                HandleEnum();
-            else
-                SkipToOneOfChars(ParserConsts::semicolonclbrace, true);
-        }
-        else if (token==ParserConsts::kw_union)
-        {
-            m_Str.Clear();
-            if (m_Options.handleClasses)
-                HandleClass(ctUnion);
-            else
-                SkipToOneOfChars(ParserConsts::semicolonclbrace, true);
-        }
-        else if (token==ParserConsts::kw_operator)
-        {
-            TokenizerState oldState = m_Tokenizer.GetState();
-            m_Tokenizer.SetState(tsSkipNone);
-            wxString func = token;
-            while (1)
-            {
-                token = m_Tokenizer.GetToken();
-                if (!token.IsEmpty())
-                {
-                    if (token.GetChar(0) == '(')
-                    {
-                        // check for operator()()
-                        wxString peek = m_Tokenizer.PeekToken();
-                        if (!peek.IsEmpty() && peek.GetChar(0) != '(')
-                            m_Tokenizer.UngetToken();
-                        else
-                            func << token;
-                        break;
-                    }
-                    else
-                        func << token;
-                }
-                else
-                    break;
-            }
-            m_Tokenizer.SetState(oldState);
-            HandleFunction(func, true);
-            m_Str.Clear();
-        }
-        else
+        else if (!switchHandled)
         {
             wxString peek = m_Tokenizer.PeekToken();
             if (!peek.IsEmpty())
@@ -765,8 +851,10 @@ void ParserThread::DoParse()
                 }
             }
         }
+
         m_LastToken = token;
     }
+
     // reset tokenizer behavior
     m_Tokenizer.SetState(oldState);
 }
