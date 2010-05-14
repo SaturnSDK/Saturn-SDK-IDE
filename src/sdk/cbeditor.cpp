@@ -353,6 +353,23 @@ struct cbEditorInternalData
             control->GotoPos(pos);
             if (ch == _T('{'))
             {
+                int curLine = control->GetCurrentLine();
+                int keyLine = curLine;
+                wxString text;
+                do
+                {
+                    int keyPos = control->GetLineIndentPosition(keyLine);
+                    int start = control->WordStartPosition(keyPos, true);
+                    int end = control->WordEndPosition(keyPos, true);
+                    text = control->GetTextRange(start, end);
+                }
+                while ((text.IsEmpty() || text == _T("public") || text == _T("protected") || text == _T("private"))
+                       && text != _T("namespace")
+                       && (--keyLine));
+
+                if (text == _T("class") || text == _T("struct") || text == _T("enum") || text == _T("union"))
+                    control->InsertText(control->GetLineEndPosition(curLine), _T(";"));
+
                 const wxRegEx reg(_T("^[ \t]*{}[ \t]*"));
                 if (reg.Matches(control->GetCurLine()))
                 {
