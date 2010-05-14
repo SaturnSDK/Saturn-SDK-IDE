@@ -583,13 +583,23 @@ bool Parser::Parse(const wxString& bufferOrFilename, bool isLocal, ParserThreadO
         if (m_IgnoreThreadEvents)
             m_IgnoreThreadEvents = false;
 
-        #ifdef CODECOMPLETION_PROFILING
+#ifdef CODECOMPLETION_PROFILING
         StartStopWatch();
         m_BatchTimer.Stop();
         thread->Parse();
-        #else
+        delete thread;
+#else
+        if (opts.followLocalIncludes)
+        {
+            while (true)
+            {
+                if (m_Pool.GetConcurrentThreads() == 1)
+                    break;
+                wxMilliSleep(1);
+            }
+        }
         m_Pool.AddTask(thread, true);
-        #endif
+#endif
 
         // For every parse, reset the countdown to -batch_timer_delay.
         // This will give us a tolerance period before the next parse job is queued.
@@ -860,6 +870,19 @@ void Parser::AddIncludeDir(const wxString& file)
         TRACE(_T("AddIncludeDir() : Adding %s"), base.wx_str());
         m_IncludeDirs.Add(base);
     }
+}
+
+void Parser::AddPredefinedMacros(const wxString& defs, bool isLocal)
+{
+    ParserThreadOptions opts;
+    opts.wantPreprocessor = m_Options.wantPreprocessor;
+    opts.followLocalIncludes = m_Options.followLocalIncludes;
+    opts.followGlobalIncludes = m_Options.followGlobalIncludes;
+    opts.useBuffer = true;
+    opts.isTemp = false;
+    opts.bufferSkipBlocks = false;
+    opts.handleFunctions = false;
+    Parse(defs, isLocal, opts);
 }
 
 wxString Parser::FindFirstFileInIncludeDirs(const wxString& file)

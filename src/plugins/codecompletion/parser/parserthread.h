@@ -137,10 +137,8 @@ class ParserThread : public cbThreadedTask
         /** handle the statement: #define XXXXX */
         void HandleDefines();
 
-        /** handle the proprocessor directive:
-          * #ifdef XXX or #endif or ...
-          */
-        void HandlePreprocessorBlocks(const wxString& preproc);
+        /** handle the statement: #undef XXXXX */
+        void HandleUndefs();
 
         /** handle the statement:
           * namespace XXX {
@@ -304,9 +302,6 @@ class ParserThread : public cbThreadedTask
 
         /** this makes a difference in unnamed class/struct/enum handling */
         bool                 m_ParsingTypedef;
-
-        /** handle nesting of #if...#if...#else...#endif...#endif */
-        int                  m_PreprocessorIfCount;
 
         /**  local file or buffer in memory*/
         bool                 m_IsBuffer;

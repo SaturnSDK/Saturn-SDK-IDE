@@ -21,11 +21,17 @@
 
 #define PARSERTHREAD_DEBUG_OUTPUT 0
 
+#ifdef PARSER_TEST
+    extern void ParserTrace(const wxChar* format, ...);
+    #define TRACE(format, args...)\
+    ParserTrace(format , ## args)
+#else
 #if PARSERTHREAD_DEBUG_OUTPUT
     #define TRACE(format, args...)\
     Manager::Get()->GetLogManager()->DebugLog(F( format , ## args))
 #else
     #define TRACE(format, args...)
+#endif
 #endif
 
 int THREAD_START       = wxNewId();
@@ -61,6 +67,7 @@ namespace ParserConsts
     const wxString kw_class        (_T("class"));
     const wxString kw_const        (_T("const"));
     const wxString kw_define       (_T("define"));
+    const wxString kw_undef        (_T("undef"));
     const wxString kw_delete       (_T("delete"));
     const wxString kw_do           (_T("do"));
     const wxString kw_else         (_T("else"));
@@ -69,10 +76,7 @@ namespace ParserConsts
     const wxString kw_for          (_T("for"));
     const wxString kw_friend       (_T("friend"));
     const wxString kw_if           (_T("if"));
-    const wxString kw_ifdef        (_T("ifdef"));
-    const wxString kw_ifndef       (_T("ifndef"));
     const wxString kw_elif         (_T("elif"));
-    const wxString kw_endif        (_T("endif"));
     const wxString kw_include      (_T("include"));
     const wxString kw_inline       (_T("inline"));
     const wxString kw_namespace    (_T("namespace"));
@@ -102,7 +106,7 @@ ParserThread::ParserThread(Parser* parent,
                             bool isLocal,
                             ParserThreadOptions& parserThreadOptions,
                             TokensTree* tokensTree) :
-    m_Tokenizer(),
+    m_Tokenizer(tokensTree),
     m_pParent(parent),
     m_pTokensTree(tokensTree),
     m_pLastParent(0),
@@ -118,7 +122,6 @@ ParserThread::ParserThread(Parser* parent,
     m_EncounteredTypeNamespaces(),
     m_LastUnnamedTokenName(wxEmptyString),
     m_ParsingTypedef(false),
-    m_PreprocessorIfCount(0),
     m_IsBuffer(parserThreadOptions.useBuffer),
     m_Buffer(bufferOrFilename),
     m_IsPointer(false),
@@ -214,11 +217,6 @@ void ParserThread::SkipBlock()
         wxString token = m_Tokenizer.GetToken();
         if (token.IsEmpty())
             break; // eof
-        else if (token == ParserConsts::hash)
-        {
-            token = m_Tokenizer.GetToken();
-            HandlePreprocessorBlocks(token);
-        }
 
         // if we reach the initial nesting level, we are done
         if (level == m_Tokenizer.GetNestingLevel())
@@ -248,11 +246,6 @@ void ParserThread::SkipAngleBraces()
             ++nestLvl;
         else if (tmp==ParserConsts::gt)
             --nestLvl;
-        else if (tmp==ParserConsts::hash)
-        {
-            tmp = m_Tokenizer.GetToken();
-            HandlePreprocessorBlocks(tmp);
-        }
         else if (tmp==ParserConsts::semicolon)
         {
             // unget token - leave ; on the stack
@@ -564,11 +557,12 @@ void ParserThread::DoParse()
                 HandleIncludes();
             else if (token==ParserConsts::kw_define)
                 HandleDefines();
+            else if (token==ParserConsts::kw_undef)
+                HandleUndefs();
             else
-                HandlePreprocessorBlocks(token);
+                m_Tokenizer.SkipToEOL(false, true);
 
             m_Str.Clear();
-
             m_Tokenizer.SetState(oldState);
 
         }
@@ -1124,7 +1118,6 @@ void ParserThread::HandleIncludes()
 
 void ParserThread::HandleDefines()
 {
-    wxString filename;
     int lineNr = m_Tokenizer.GetLineNumber();
     wxString token = m_Tokenizer.GetToken(); // read the token after #define
     m_Str.Clear();
@@ -1133,7 +1126,7 @@ void ParserThread::HandleDefines()
     if (!token.IsEmpty())
     {
         // skip the rest of the #define
-        wxString defVal = token + m_Tokenizer.ReadToEOL();
+        wxString defVal = token + m_Tokenizer.ReadToEOL(false, true);
         wxString para(_T(""));
         int start = defVal.Find('(');
         int end   = defVal.Find(')');
@@ -1161,42 +1154,17 @@ void ParserThread::HandleDefines()
     }
 }
 
-void ParserThread::HandlePreprocessorBlocks(const wxString& preproc)
+void ParserThread::HandleUndefs()
 {
-    if (preproc.StartsWith(ParserConsts::kw_if)) // #if, #ifdef, #ifndef
+    const wxString token = m_Tokenizer.GetToken(); // read the token after #undef
+    if (!token.IsEmpty())
     {
-        wxString token = preproc;
-        ++m_PreprocessorIfCount;
+        Token* tk = TokenExists(token, NULL, tkPreprocessor);
+        if (tk != NULL)
+            m_pTokensTree->erase(tk);
+    }
 
-        token = m_Tokenizer.GetToken();
-        if (token.IsSameAs(_T("0")))
-        {
-            // TODO: handle special case "#if 0"
-            TRACE(_T("HandlePreprocessorBlocks() : Special case \"#if 0\" not skipped."));
-        }
-        m_Tokenizer.SkipToEOL();
-    }
-    else if (preproc==ParserConsts::kw_else || preproc==ParserConsts::kw_elif) // #else, #elif
-    {
-        TRACE(_T("HandlePreprocessorBlocks() : Saving nesting level: %d"), m_Tokenizer.GetNestingLevel());
-        m_Tokenizer.SaveNestingLevel();
-        wxString token = preproc;
-        while (!token.IsEmpty() && token != ParserConsts::kw_endif)
-            token = m_Tokenizer.GetToken();
-        --m_PreprocessorIfCount;
-#if PARSERTHREAD_DEBUG_OUTPUT
-        int l = m_Tokenizer.GetNestingLevel();
-#endif
-        m_Tokenizer.RestoreNestingLevel();
-        TRACE(_T("HandlePreprocessorBlocks() : Restoring nesting level: %d (was %d)"), m_Tokenizer.GetNestingLevel(), l);
-    }
-    else if (preproc==ParserConsts::kw_endif) // #endif
-        --m_PreprocessorIfCount;
-    else
-    {
-        m_Tokenizer.SkipToEOL();
-        TRACE( _T("HandlePreprocessorBlocks() : Skip Unrecognized Preprocessor blocks")  );
-    }
+    m_Tokenizer.SkipToEOL(false, true);
 }
 
 void ParserThread::HandleNamespace()
@@ -1306,22 +1274,6 @@ void ParserThread::HandleClass(EClassType ct)
         wxString next = m_Tokenizer.PeekToken();
 
         TRACE(_T("HandleClass() : Found class '%s'"), current.wx_str());
-
-        // handle preprocessor directives in class definition, e.g.
-        //
-        // class MyClass
-        //         #ifdef FOO
-        //             : public MyClass1
-        //             , public MyClass2
-        //         #endif
-        // {}
-        while (next==ParserConsts::hash)
-        {
-            m_Tokenizer.GetToken(); // make # current
-            next = m_Tokenizer.GetToken();
-            HandlePreprocessorBlocks(next);
-            next = m_Tokenizer.PeekToken();
-        }
 
         if (!current.IsEmpty() && !next.IsEmpty())
         {

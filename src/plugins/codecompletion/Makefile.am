@@ -25,7 +25,8 @@ libcodecompletion_la_SOURCES = ccdebuginfo.cpp \
 			parser/parserthread.cpp \
 			parser/token.cpp \
 			parser/tokenizer.cpp \
-			parser/searchtree.cpp
+			parser/searchtree.cpp \
+			parser/expression.cpp
 
 noinst_HEADERS = ccdebuginfo.h \
 			ccoptionsdlg.h \
@@ -40,4 +41,5 @@ noinst_HEADERS = ccdebuginfo.h \
 			parser/parserthread.h \
 			parser/token.h \
 			parser/tokenizer.h \
-			parser/searchtree.h
+			parser/searchtree.h \
+			parser/expression.h

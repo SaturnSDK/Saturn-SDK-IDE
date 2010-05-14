@@ -9,7 +9,9 @@
 #include <wx/string.h>
 #include <configmanager.h>
 #include <filemanager.h>
+#include "token.h"
 
+#include <stack>
 
 enum TokenizerState
 {
@@ -17,6 +19,7 @@ enum TokenizerState
     tsSkipQuestion     = 0x0002,
     tsSkipSubScrip     = 0x0004,
     tsSingleAngleBrace = 0x0008,
+    tsReadRawExpression= 0x0010,
 
     tsSkipNone         = 0x1000,
     // convenient masks
@@ -33,7 +36,7 @@ struct TokenizerOptions
 class Tokenizer
 {
 public:
-    Tokenizer(const wxString& filename = wxEmptyString);
+    Tokenizer(TokensTree* tokensTree, const wxString& filename = wxEmptyString);
     ~Tokenizer();
 
     bool Init(const wxString& filename = wxEmptyString, LoaderBase* loader = 0);
@@ -94,7 +97,8 @@ public:
         return m_IsOK;
     };
 
-    wxString ReadToEOL(bool nestBraces = true); // use with care outside this class!
+    wxString ReadToEOL(bool nestBraces = true, bool stripComment = false); // use with care outside this class!
+    wxString ReadBlock(const wxChar& leftBrace); // the argument must be one of: ( [ < {
 
     bool SkipToEOL(bool nestBraces = true, bool skippingComment = false); // use with care outside this class!
 
@@ -127,17 +131,15 @@ public:
 
 protected:
     void BaseInit();
-
     wxString DoGetToken();
-    wxString FixArgument(wxString src);
     bool ReadFile();
-    bool SkipWhiteSpace();
     bool IsEscapedChar();
     bool SkipToChar(const wxChar& ch);
     bool SkipToOneOfChars(const wxChar* chars, bool supportNesting = false, bool skipPreprocessor = false, bool skipAngleBrace = true);
     bool SkipBlock(const wxChar& ch);
-    bool SkipUnwanted(); // skips comments, assignments, preprocessor etc.
-    bool SkipComment(bool skipWhiteAtEnd = true);
+    bool SkipUnwanted(); // skips whitespace, comments, assignments etc.
+    bool SkipWhiteSpace();
+    bool SkipComment();
     bool SkipString();
     bool SkipToStringEnd(const wxChar& ch);
 
@@ -202,30 +204,6 @@ protected:
         return m_Buffer.GetChar(m_TokenIndex - 1);
     };
 
-    void CompactSpaces(wxString& str) const  // zero-alloc single-copy  --- wxString::Replace has to do an awful lot of copying
-    {
-        if(str.size() < 3)
-            return;
-
-        wxChar c = 0;
-        wxChar last = 0;
-        size_t dst = 0;
-
-        for(size_t src = 0; src < str.size(); ++src)
-        {
-            c = str[src];
-
-            if(c == _T(' ') && (last == _T(' ') || last == _T('(')) )
-                continue;
-            else if(c == _T(')') && last == _T(' '))
-                --dst;
-
-            str[dst++] = c;
-            last = c;
-        }
-        str.Truncate(dst);
-    };
-
 private:
     inline bool CharInString(const wxChar ch, const wxChar* chars) const
     {
@@ -248,7 +226,38 @@ private:
 
     wxString MacroReplace(const wxString str);
 
+    /** Get the value of pre-processor
+      * @param 'found' MUST BE Initialized to false, 'value' MUST BE Initialized to -1
+      * @return finded or not)
+      */
+    void GetPreprocessorValue(const wxString& token, bool& found, long& value);
+
+    /** Judge what is the first block
+      * If call this function, it will call 'SkipToEOL(false, true)' final.
+      */
+    bool CalcConditionExpression();
+
+    /** If the macro defined, return true
+      * If call this function, it will call 'SkipToEOL(false, true)' final.
+      */
+    bool IsMacroDefined();
+
+    /** Skip to next condition preprocessor, To mark #else #elif #endif as the end
+      */
+    void SkipToNextConditionPreprocessor();
+
+    /** Skip to end condition preprocessor, To mark #endif as the end
+      */
+    void SkipToEndConditionPreprocessor();
+
+    /** handle the proprocessor directive:
+      * #ifdef XXX or #endif or #if or #elif or...
+      * If handled condition preprocessor, return true; if Un-condition preprocessor, return false
+      */
+    bool HandleConditionPreprocessor();
+
     TokenizerOptions m_TokenizerOptions;
+    TokensTree*      m_pTokensTree;
     wxString         m_Filename;
     wxString         m_Buffer;
     unsigned int     m_BufferLen;
@@ -275,6 +284,9 @@ private:
     TokenizerState   m_State;
 
     LoaderBase*      m_pLoader;
+
+    /** Calc Expression's result, true or false */
+    std::stack<bool> m_ExpressionResult;
 
     static ConfigManagerContainer::StringToStringMap s_Replacements;
 };

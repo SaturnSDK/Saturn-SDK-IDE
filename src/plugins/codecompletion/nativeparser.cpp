@@ -428,6 +428,106 @@ void NativeParser::AddCompilerDirs(cbProject* project)
     delete [] Compilers;
 }
 
+void NativeParser::AddCompilerPredefinedMacros(cbProject* project)
+{
+	wxString defs;
+	wxString compilerId = project->GetCompilerID();
+
+	// gcc
+	if (compilerId == _T("gcc"))
+	{
+#ifdef __WXMSW__
+        wxString cmd(_T("cpp -dM -E nul"));
+#else
+		wxString cmd(_T("cpp -dM -E /dev/null"));
+#endif
+		wxArrayString output;
+		wxExecute(cmd, output, wxEXEC_NODISABLE);
+        for (size_t i = 0; i < output.Count(); ++i)
+            defs += output[i] + _T("\n");
+	}
+
+	// vc
+	else if (compilerId.StartsWith(_T("msvc")))
+	{
+	    Compiler* compiler = CompilerFactory::GetCompiler(project->GetCompilerID());
+	    wxString cmd = compiler->GetMasterPath() + _T("\\bin\\") + compiler->GetPrograms().C;
+	    Manager::Get()->GetMacrosManager()->ReplaceMacros(cmd);
+
+	    wxArrayString output, error;
+		wxExecute(cmd, output, error, wxEXEC_NODISABLE);
+		wxString str = error[0];
+		wxString tmp(_T("Microsoft (R) "));
+		int pos = str.Find(tmp);
+		if (pos != wxNOT_FOUND)
+        {
+            wxString bit = str.Mid(pos + tmp.Length(), 2);
+            if (bit == _T("32"))
+                defs += _T("#define _WIN32") _T("\n");
+            else if (bit == _T("64"))
+                defs += _T("#define _WIN64") _T("\n");
+        }
+
+        tmp = _T("Compiler Version ");
+        pos = str.Find(tmp);
+		if (pos != wxNOT_FOUND)
+        {
+            wxString ver = str.Mid(pos + tmp.Length(), 4);
+            pos = ver.Find(_T('.'));
+            if (pos != wxNOT_FOUND)
+            {
+                ver[pos] = ver[pos + 1];
+                ver[pos + 1] = _T('0');
+                defs += _T("#define _MSC_VER ") + ver;
+            }
+        }
+	}
+
+	TRACE(_T("Add compiler predefined preprocessor macros:\n%s"), defs.wx_str());
+	m_Parser.AddPredefinedMacros(defs, false);
+}
+
+void NativeParser::AddProjectDefinedMacros(cbProject* project)
+{
+    wxString compilerId = project->GetCompilerID();
+    wxString param;
+    if (compilerId == _T("gcc"))
+        param = _T("-D");
+    else if (compilerId.StartsWith(_T("msvc")))
+        param = _T("/D");
+
+    if (param.IsEmpty())
+        return;
+
+    wxString defs;
+    wxArrayString opts = project->GetCompilerOptions();
+    ProjectBuildTarget* target = project->GetBuildTarget(project->GetActiveBuildTarget());
+    if (target != NULL)
+    {
+        wxArrayString targetOpts = target->GetCompilerOptions();
+        for (size_t i = 0; i < targetOpts.GetCount(); ++i)
+            opts.Add(targetOpts[i]);
+    }
+
+    for (size_t i = 0; i < opts.GetCount(); ++i)
+    {
+        wxString def = opts[i];
+        Manager::Get()->GetMacrosManager()->ReplaceMacros(def);
+        if (!def.StartsWith(param))
+            continue;
+
+        def = def.Right(def.Length() - param.Length());
+        int pos = def.Find(_T('='));
+        if (pos != wxNOT_FOUND)
+            def[pos] = _T(' ');
+
+        defs += _T("#define ") + def + _T("\n");
+    }
+
+	TRACE(_T("Add project and current buildtarget defined preprocessor macros:\n%s"), defs.wx_str());
+	m_Parser.AddPredefinedMacros(defs, true);
+}
+
 wxArrayString NativeParser::GetGCCCompilerDirs(const wxString &cpp_compiler, const wxString &base)
 {
     wxArrayString gcc_compiler_dirs;
@@ -538,6 +638,8 @@ void NativeParser::RemoveFileFromParser(cbProject* project, const wxString& file
 void NativeParser::ReparseProject(cbProject* project)
 {
     AddCompilerDirs(project);
+    AddCompilerPredefinedMacros(project);
+    AddProjectDefinedMacros(project);
 
     // add per-project dirs
     wxArrayString& pdirs = GetProjectSearchDirs(project);
@@ -2337,4 +2439,3 @@ void NativeParser::OnEditorActivated(EditorBase* editor)
         m_pClassBrowser->UpdateView(true);
     }
 }
-

@@ -113,6 +113,8 @@ class NativeParser : public wxEvtHandler
         wxString GetCCToken(wxString& line, ParserTokenType& tokenType);
         void BreakUpInLines(wxString& str, const wxString& original_str, int chars_per_line = -1);
         void AddCompilerDirs(cbProject* project);
+        void AddCompilerPredefinedMacros(cbProject* project);
+        void AddProjectDefinedMacros(cbProject* project);
         wxArrayString GetGCCCompilerDirs(const wxString &cpp_compiler, const wxString &base);
         bool LoadCachedData(cbProject* project);
         bool SaveCachedData(const wxString& projectFilename);
