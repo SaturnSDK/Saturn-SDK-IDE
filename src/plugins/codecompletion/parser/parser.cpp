@@ -63,6 +63,7 @@ Parser::Parser(wxEvtHandler* parent)
 #endif
     m_UsingCache(false),
     m_Pool(this, idPool, 1), // in the meanwhile it'll have to be forced to 1
+    m_IsUpFront(false),
     m_pTokensTree(0),
     m_pTempTokensTree(0),
     m_NeedsReparse(false),
@@ -292,7 +293,7 @@ unsigned int Parser::GetFilesCount()
 bool Parser::Done()
 {
     wxCriticalSectionLocker lock(s_mutexListProtection);
-    return m_Pool.Done();
+    return m_PoolQueue.empty() && m_Pool.Done();
 }
 
 #ifndef STANDALONE
@@ -503,18 +504,37 @@ bool Parser::ParseBuffer(const wxString& buffer, bool isLocal, bool bufferSkipBl
     return Parse(buffer, isLocal, opts);
 }
 
-void Parser::BatchParse(const wxArrayString& filenames)
+void Parser::AddBatchParse(const wxArrayString& filenames, bool isUpFront)
 {
-    m_BatchTimer.Stop();
-    m_IsBatch = true;
-    m_Pool.BatchBegin();
+    if (m_BatchTimer.IsRunning())
+        return;
 
-    Manager::Get()->GetLogManager()->DebugLog(F(_T("Batch-parsing %d file(s)..."), filenames.GetCount()));
+    if (isUpFront)
+        Manager::Get()->GetLogManager()->DebugLog(F(_T("Add up-front parsing %d file(s)..."), filenames.GetCount()));
+    else
+        Manager::Get()->GetLogManager()->DebugLog(F(_T("Add batch-parsing %d file(s)..."), filenames.GetCount()));
+
+    m_IsBatch = false;
+    if (isUpFront)
+        m_IsUpFront = true;
+
     for (unsigned int i = 0; i < filenames.GetCount(); ++i)
         Parse(filenames[i]); // defer loading until later
 
+    if (m_IsUpFront)
+        m_IsUpFront = false;
+}
+
+void Parser::StartBatchParse(bool delay)
+{
     // Allow future parses to take place in this same run
-    m_BatchTimer.Start(batch_timer_delay,wxTIMER_ONE_SHOT);
+    if (m_IsBatch)
+        m_BatchTimer.Start(delay ? batch_timer_delay : 1, wxTIMER_ONE_SHOT);
+    else
+    {
+        CodeBlocksEvent evt;
+        OnAllThreadsDone(evt);
+    }
 }
 
 bool Parser::Parse(const wxString& filename, bool isLocal, LoaderBase* loader)
@@ -570,43 +590,49 @@ bool Parser::Parse(const wxString& bufferOrFilename, bool isLocal, ParserThreadO
             break;
         }
 
-        bool use_timer = m_BatchTimer.IsRunning();
-        if (!m_IsBatch && wxThread::IsMain())
-        {
-            use_timer = true;
-            m_IsBatch = true;
-            m_Pool.BatchBegin();
-        }
-
         TRACE(_T("Parse() : Parsing %s"), buffOrFile.wx_str());
 
         if (m_IgnoreThreadEvents)
             m_IgnoreThreadEvents = false;
 
-#ifdef CODECOMPLETION_PROFILING
-        StartStopWatch();
-        m_BatchTimer.Stop();
-        thread->Parse();
-        delete thread;
-#else
-        if (opts.followLocalIncludes)
+        if (!m_IsUpFront)
         {
-            while (true)
+            TRACE(_T("Parse() : Parallel Parsing %s"), buffOrFile.wx_str());
+
+            if (!m_IsBatch && wxThread::IsMain())
             {
-                if (m_Pool.GetConcurrentThreads() == 1)
-                    break;
-                wxMilliSleep(1);
+                m_IsBatch = true;
+                m_PoolQueue.push(PTVector());
+            }
+
+            if (m_IsBatch)
+                m_PoolQueue.back().push_back(thread);
+            else
+                m_Pool.AddTask(thread, true);
+        }
+        else if (m_IsUpFront && wxThread::IsMain())
+        {
+            if (isLocal) // local include files
+            {
+                result = thread->Parse();
+                delete thread;
+                break;
+            }
+            else // global include files
+            {
+                TRACE(_T("Parse() : Parsing %s"), buffOrFile.wx_str());
+
+                if (!m_IsBatch)
+                    m_IsBatch = true;
+
+                m_PoolQueue.push(PTVector());
+                m_PoolQueue.back().push_back(thread);
             }
         }
-        m_Pool.AddTask(thread, true);
-#endif
 
-        // For every parse, reset the countdown to -batch_timer_delay.
-        // This will give us a tolerance period before the next parse job is queued.
-        if (use_timer)
-            m_BatchTimer.Start(batch_timer_delay, wxTIMER_ONE_SHOT);
         result = true;
-    } while(false);
+    }
+    while (false);
 
     return result;
 }
@@ -856,7 +882,16 @@ bool Parser::WriteToCache(wxOutputStream* f)
 void Parser::TerminateAllThreads()
 {
     m_IgnoreThreadEvents = true;
+
     m_Pool.AbortAllTasks();
+
+    while (!m_PoolQueue.empty())
+    {
+        PTVector& v = m_PoolQueue.front();
+        for (PTVector::const_iterator it = v.begin(); it != v.end(); ++it)
+            delete *it;
+        m_PoolQueue.pop();
+    }
 }
 
 void Parser::AddIncludeDir(const wxString& file)
@@ -928,11 +963,18 @@ void Parser::OnAllThreadsDone(CodeBlocksEvent& event)
     if (m_IgnoreThreadEvents)
         return;
 
-    EndStopWatch();
+    if (!m_PoolQueue.empty())
+    {
+        m_BatchTimer.Start(1, wxTIMER_ONE_SHOT);
+    }
+    else
+    {
+        EndStopWatch();
 
-    wxCommandEvent evt(wxEVT_COMMAND_MENU_SELECTED, PARSER_END);
-    evt.SetClientData(this);
-    wxPostEvent(m_pParent, evt);
+        wxCommandEvent evt(wxEVT_COMMAND_MENU_SELECTED, PARSER_END);
+        evt.SetClientData(this);
+        wxPostEvent(m_pParent, evt);
+    }
 }
 
 wxString Parser::GetFullFileName(const wxString& src, const wxString& tgt, bool isGlobal)
@@ -1027,23 +1069,24 @@ void Parser::OnTimer(wxTimerEvent& event)
 
 void Parser::OnBatchTimer(wxTimerEvent& event)
 {
-#ifndef CODECOMPLETION_PROFILING
-    Manager::Get()->GetLogManager()->DebugLog(_T("Starting batch parsing..."));
     if (m_IsBatch)
     {
         m_IsBatch = false;
+        Manager::Get()->GetLogManager()->DebugLog(_T("Starting batch parsing..."));
         StartStopWatch();
+    }
+
+    if (!m_PoolQueue.empty())
+    {
+        m_Pool.BatchBegin();
+
+        PTVector& v = m_PoolQueue.front();
+        for (PTVector::const_iterator it = v.begin(); it != v.end(); ++it)
+            m_Pool.AddTask(*it, true);
+        m_PoolQueue.pop();
+
         m_Pool.BatchEnd();
     }
-#else
-    EndStopWatch();
-    if (m_LastStopWatchTime > batch_timer_delay)
-        m_LastStopWatchTime -= batch_timer_delay;
-    else
-        m_LastStopWatchTime = 0;
-    CodeBlocksEvent evt;
-    OnAllThreadsDone(evt);
-#endif
 }
 
 bool Parser::ReparseModifiedFiles()
@@ -1079,12 +1122,17 @@ bool Parser::ReparseModifiedFiles()
         }
     }
 
+    bool startBatchParse = !files_list.empty();
     while (!files_list.empty())
     {
         wxString& filename = files_list.front();
         Parse(filename, m_LocalFiles.count(filename));
         files_list.pop();
     }
+
+    if (startBatchParse)
+        StartBatchParse(false);
+
     return true;
 }
 

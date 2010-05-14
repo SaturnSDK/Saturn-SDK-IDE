@@ -32,6 +32,7 @@
 #include <wx/log.h> // for wxSafeShowMessage()
 #include <wx/regex.h>
 #include <wx/wfstream.h>
+#include <wx/tokenzr.h>
 
 #include <cctype>
 
@@ -657,7 +658,40 @@ void NativeParser::ReparseProject(cbProject* project)
 
     }
 
+    wxArrayString fronts;
     wxArrayString files;
+
+    ConfigManager* cfg = Manager::Get()->GetConfigManager(_T("code_completion"));
+    wxArrayString tokens;
+    wxStringTokenizer tkz(cfg->Read(_T("/up_front_headers"), _T("<cstddef>, \"stdafx.h\", \"wx_pch.h\", \"sdk.h\"")), _T(","));
+    size_t tokenCnt = 0;
+    while (tkz.HasMoreTokens())
+    {
+        wxString token = tkz.GetNextToken().Trim(false).Trim(true);
+        if (token.Len() <= 2) // "" or <>
+            continue;
+
+        if (token[0] == _T('"') && token[token.Len() - 1] == _T('"'))
+        {
+            ++tokenCnt;
+            tokens.Add(token.SubString(1, token.Len() - 2).Trim(false).Trim(true));
+        }
+        else if (token[0] == _T('<') && token[token.Len() - 1] == _T('>'))
+        {
+            ++tokenCnt;
+            token = token.SubString(1, token.Len() - 2).Trim(false).Trim(true);
+            wxArrayString finds = m_Parser.FindFileInIncludeDirs(token);
+            for (size_t i = 0; i < finds.GetCount(); ++i)
+            {
+                if (fronts.GetCount() < tokenCnt)
+                {
+                    while (fronts.GetCount() < tokenCnt)
+                        fronts.Add(wxEmptyString);
+                    fronts[tokenCnt - 1] = finds[i];
+                }
+            }
+        }
+    }
 
     // parse header files first
     for (int i = 0; i < project->GetFilesCount(); ++i)
@@ -666,7 +700,28 @@ void NativeParser::ReparseProject(cbProject* project)
         FileType ft = FileTypeOf(pf->relativeFilename);
         if (ft == ftHeader) // only parse header files
         {
-            files.Add(pf->file.GetFullPath());
+            bool isUpFrontFile = false;
+            for (size_t i = 0; i < tokens.GetCount(); ++i)
+            {
+                if (tokens[i].IsSameAs(pf->file.GetFullName(), false))
+                {
+                    isUpFrontFile = true;
+                    while (fronts.GetCount() < i + 2)
+                        fronts.Add(wxEmptyString);
+                    for (size_t j = i; j < fronts.GetCount(); ++j)
+                    {
+                        if (fronts[j].IsEmpty())
+                        {
+                            fronts[j] =  pf->file.GetFullPath();
+                            break;
+                        }
+                    }
+                    break;
+                }
+            }
+
+            if (!isUpFrontFile)
+                files.Add(pf->file.GetFullPath());
         }
     }
     // next, parse source files
@@ -679,10 +734,33 @@ void NativeParser::ReparseProject(cbProject* project)
             files.Add(pf->file.GetFullPath());
         }
     }
-    if (!files.IsEmpty())
+
+    for (size_t i = 0; i < fronts.GetCount();)
+    {
+        if (fronts[i].IsEmpty())
+            fronts.RemoveAt(i);
+        else
+            ++i;
+    }
+
+    if (!fronts.IsEmpty() || !files.IsEmpty())
     {
         Manager::Get()->GetLogManager()->DebugLog(_T("Passing list of files to batch-parser."));
-        m_Parser.BatchParse(files);
+
+        // parse up-front files
+        if (!fronts.IsEmpty())
+        {
+            for (size_t i = 0; i < fronts.GetCount(); ++i)
+                Manager::Get()->GetLogManager()->DebugLog(F(_T("Header to parse up-front: '%s'"), fronts[i].wx_str()));
+            m_Parser.AddBatchParse(fronts, true);
+        }
+
+
+        if (!files.IsEmpty())
+            m_Parser.AddBatchParse(files);
+
+        // start batch parse!
+        m_Parser.StartBatchParse();
     }
 }
 

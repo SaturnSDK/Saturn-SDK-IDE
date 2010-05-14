@@ -123,7 +123,8 @@ class Parser : public wxEvtHandler
         Parser(wxEvtHandler* parent);
         ~Parser();
 
-        void BatchParse (const wxArrayString& filenames);
+        void AddBatchParse(const wxArrayString& filenames, bool isUpFront = false);
+        void StartBatchParse(bool delay = true);
         bool Parse      (const wxString& filename,         bool isLocal = true, LoaderBase* loader = 0);
         bool Parse      (const wxString& bufferOrFilename, bool isLocal,        ParserThreadOptions& opts);
         bool ParseBuffer(const wxString& buffer,           bool isLocal = true, bool bufferSkipBlocks = false, bool isTemp = false);
@@ -202,7 +203,10 @@ class Parser : public wxEvtHandler
         // in-mem data and cache
         bool m_UsingCache; // true if loaded from cache
 
+        typedef std::vector<ParserThread*> PTVector;
+        std::queue<PTVector>           m_PoolQueue;
         cbThreadPool                   m_Pool;
+        bool                           m_IsUpFront;
         TokensTree*                    m_pTokensTree;
         TokensTree*                    m_pTempTokensTree;
         set<wxString, less<wxString> > m_LocalFiles;

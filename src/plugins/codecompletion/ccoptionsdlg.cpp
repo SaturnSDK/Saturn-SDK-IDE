@@ -104,6 +104,7 @@ CCOptionsDlg::CCOptionsDlg(wxWindow* parent, NativeParser* np, CodeCompletion* c
     XRCCTRL(*this, "chkFloatCB", wxCheckBox)->SetValue(cfg->ReadBool(_T("/as_floating_window"), false));
     XRCCTRL(*this, "chkNoSB", wxCheckBox)->SetValue(!cfg->ReadBool(_T("/use_symbols_browser"), true));
     XRCCTRL(*this, "txtFillupChars", wxTextCtrl)->SetValue(cfg->Read(_T("/fillup_chars"), wxEmptyString));
+    XRCCTRL(*this, "txtUpFrontHeaders", wxTextCtrl)->SetValue(cfg->Read(_T("/up_front_headers"), _T("<cstddef>, \"stdafx.h\", \"wx_pch.h\", \"sdk.h\"")));
 
     XRCCTRL(*this, "chkKL_1", wxCheckBox)->SetValue(cfg->ReadBool(_T("/lexer_keywords_set1"), true));
     XRCCTRL(*this, "chkKL_2", wxCheckBox)->SetValue(cfg->ReadBool(_T("/lexer_keywords_set2"), true));
@@ -291,6 +292,7 @@ void CCOptionsDlg::OnUpdateUI(wxUpdateUIEvent& event)
     XRCCTRL(*this, "chkTypeMode", wxCheckBox)->Enable(en);
     XRCCTRL(*this, "lblFillupChars", wxStaticText)->Enable(en);
     XRCCTRL(*this, "txtFillupChars", wxTextCtrl)->Enable(en);
+    XRCCTRL(*this, "txtUpFrontHeaders", wxTextCtrl)->Enable(en);
 
     en = !XRCCTRL(*this, "chkNoSB", wxCheckBox)->GetValue();
     XRCCTRL(*this, "chkInheritance", wxCheckBox)->Enable(en);
@@ -328,6 +330,7 @@ void CCOptionsDlg::OnApply()
 
     cfg->Write(_T("/use_symbols_browser"), (bool)!XRCCTRL(*this, "chkNoSB", wxCheckBox)->GetValue());
     cfg->Write(_T("/fillup_chars"), XRCCTRL(*this, "txtFillupChars", wxTextCtrl)->GetValue());
+    cfg->Write(_T("/up_front_headers"), XRCCTRL(*this, "txtUpFrontHeaders", wxTextCtrl)->GetValue());
     m_Parser.ClassBrowserOptions().showInheritance = XRCCTRL(*this, "chkInheritance", wxCheckBox)->GetValue();
     m_Parser.ClassBrowserOptions().expandNS = XRCCTRL(*this, "chkExpandNS", wxCheckBox)->GetValue();
     m_Parser.ClassBrowserOptions().treeMembers = XRCCTRL(*this, "chkTreeMembers", wxCheckBox)->GetValue();
