@@ -521,9 +521,7 @@ int TokensTree::TokenExists(const wxString& name, int parent, short int kindMask
         if (!curToken)
             continue;
 
-        if (   (   (parent < 0)
-                || (curToken->m_ParentIndex == parent) )
-            && (curToken->m_TokenKind & kindMask) )
+        if ((curToken->m_ParentIndex == parent) && (curToken->m_TokenKind & kindMask))
         {
             return result;
         }
