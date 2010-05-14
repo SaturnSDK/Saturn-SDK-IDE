@@ -296,75 +296,12 @@ struct cbEditorInternalData
         return -1;
     }
 
-    bool IsComment( int style )
-    {
-        cbStyledTextCtrl* control = m_pOwner->GetControl();
-        switch ( control->GetLexer() )
-        {
-            case wxSCI_LEX_CPP:
-                return  style == wxSCI_C_COMMENT ||
-                        style == wxSCI_C_COMMENTLINE ||
-                        style == wxSCI_C_COMMENTDOC ||
-                        style == wxSCI_C_COMMENTDOCKEYWORD ||
-                        style == wxSCI_C_COMMENTDOCKEYWORDERROR ||
-                        style == wxSCI_C_COMMENTLINEDOC;
-            case wxSCI_LEX_D:
-                return  style == wxSCI_D_COMMENT ||
-                        style == wxSCI_D_COMMENTLINE ||
-                        style == wxSCI_D_COMMENTDOC ||
-                        style == wxSCI_D_COMMENTDOCKEYWORD ||
-                        style == wxSCI_D_COMMENTDOCKEYWORDERROR ||
-                        style == wxSCI_D_COMMENTLINEDOC;
-            default:
-                return false;
-        }
-        return false;
-    }
-
-    bool IsPreprocessor( int style )
-    {
-        cbStyledTextCtrl* control = m_pOwner->GetControl();
-        if ( control->GetLexer() == wxSCI_LEX_CPP )
-            return  style == wxSCI_C_PREPROCESSOR;
-        return false;
-    }
-
-    bool IsCharacterOrString( int  style )
-    {
-        cbStyledTextCtrl* control = m_pOwner->GetControl();
-        switch ( control->GetLexer() )
-        {
-            case wxSCI_LEX_CPP:
-                return style == wxSCI_C_STRING || style == wxSCI_C_CHARACTER;
-            case wxSCI_LEX_D:
-                return style == wxSCI_D_STRING || style == wxSCI_D_CHARACTER;
-            default:
-                return false;
-        }
-        return false;
-    }
-
-    bool IsCharacter( int  style )
-    {
-        cbStyledTextCtrl* control = m_pOwner->GetControl();
-        switch ( control->GetLexer() )
-        {
-            case wxSCI_LEX_CPP:
-                return style == wxSCI_C_CHARACTER;
-            case wxSCI_LEX_D:
-                return style == wxSCI_D_CHARACTER;
-            default:
-                return false;
-        }
-        return false;
-    }
-
     void DoBraceCompletion(const wxChar& ch)
     {
         cbStyledTextCtrl* control = m_pOwner->GetControl();
         int pos = control->GetCurrentPos();
         int style = control->GetStyleAt(pos);
-        if ( IsComment(style) || IsPreprocessor(style) )
+        if ( control->IsComment(style) || control->IsPreprocessor(style) )
             return;
         if ( ch == _T('\'') )
         {
@@ -375,7 +312,8 @@ struct cbEditorInternalData
             }
             else
             {
-                if ( (control->GetCharAt(pos-2) == _T('\\')) || IsCharacterOrString(style) )
+                if ( (control->GetCharAt(pos-2) == _T('\\')) || control->IsCharacter(style)
+                    || control->IsString(style) )
                     return;
                 control->AddText(ch);
                 control->GotoPos(pos);
@@ -391,14 +329,14 @@ struct cbEditorInternalData
             }
             else
             {
-                if ( (control->GetCharAt(pos-2) == _T('\\')) || IsCharacter(style) )
+                if ( (control->GetCharAt(pos-2) == _T('\\')) || control->IsCharacter(style) )
                     return;
                 control->AddText(ch);
                 control->GotoPos(pos);
             }
             return;
         }
-        if ( IsCharacterOrString(style) )
+        if ( control->IsCharacter(style) || control->IsString(style) )
             return;
         const wxString leftBrace(_T("([{"));
         const wxString rightBrace(_T(")]}"));
@@ -406,9 +344,9 @@ struct cbEditorInternalData
         const wxString unWant(_T(");\n\r\t\b "));
         const wxChar nextChar = control->GetCharAt(pos);
         #if wxCHECK_VERSION(2, 9, 0)
-        if ((index != wxNOT_FOUND) && ((unWant.Find(wxUniChar(nextChar)) != wxNOT_FOUND) || nextChar == _T('\0')))
+        if ((index != wxNOT_FOUND) && ((unWant.Find(wxUniChar(nextChar)) != wxNOT_FOUND) || (pos == control->GetLength())))
         #else
-        if ((index != wxNOT_FOUND) && ((unWant.Find(nextChar) != wxNOT_FOUND) || nextChar == _T('\0')))
+        if ((index != wxNOT_FOUND) && ((unWant.Find(nextChar) != wxNOT_FOUND) || (pos == control->GetLength())))
         #endif
         {
             control->AddText(rightBrace.GetChar(index));

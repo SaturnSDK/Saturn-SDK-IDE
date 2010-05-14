@@ -1986,6 +1986,7 @@ void CodeCompletion::EditorEventHook(cbEditor* editor, wxScintillaEvent& event)
             control->SetTargetStart(start);
             control->SetTargetEnd(pos);
             control->ReplaceTarget(itemText+_T("()"));
+            control->SetTabSmartJump();
             pos = control->GetCurrentPos();
             control->GotoPos(pos + itemText.size()+2);
             if ((*it).second != 0)
