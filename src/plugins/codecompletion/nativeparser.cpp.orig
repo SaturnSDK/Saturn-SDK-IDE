@@ -2,9 +2,9 @@
  * This file is part of the Code::Blocks IDE and licensed under the GNU General Public License, version 3
  * http://www.gnu.org/licenses/gpl-3.0.html
  *
- * $Revision$
- * $Id$
- * $HeadURL$
+ * $Revision: 6209 $
+ * $Id: nativeparser.cpp 6209 2010-05-05 14:06:51Z mortenmacfly $
+ * $HeadURL: https://mortenmacfly@svn.berlios.de/svnroot/repos/codeblocks/branches/codecompletion_refactoring/src/plugins/codecompletion/nativeparser.cpp $
  */
 
 #include <sdk.h>
@@ -1015,9 +1015,7 @@ const wxArrayString& NativeParser::GetCallTips(int chars_per_line)
         }
         if (!end)
             break;
-        lineText.Remove(end).Trim(false);
-        if (lineText.StartsWith(_T("::")))
-            lineText = lineText.Right(lineText.Length() - 2);
+        lineText.Remove(end);
 //        Manager::Get()->GetLogManager()->DebugLog(_T("Sending \"%s\" for call-tip"), lineText.c_str());
 
         TokensTree* tokens = m_Parser.GetTokens();
@@ -1032,14 +1030,8 @@ const wxArrayString& NativeParser::GetCallTips(int chars_per_line)
         ParseLocalBlock(ed);
 
         m_GettingCalltips = true;
-
-        Token* tk = tokens->at(tokens->TokenExists(lineText, -1, tkPreprocessor));
-        if (tk != NULL)
-            lineText = tk->m_Type;
-
         if (!AI(result, ed, lineText, true, true, &search_scope))
             break;
-
         for (TokenIdxSet::iterator it = result.begin(); it != result.end(); ++it)
         {
             Token* token = tokens->at(*it);

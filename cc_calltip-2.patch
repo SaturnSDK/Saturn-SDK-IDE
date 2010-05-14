@@ -1,0 +1,95 @@
+Index: src/plugins/codecompletion/codecompletion.cpp
+===================================================================
+--- src/plugins/codecompletion/codecompletion.cpp	(revision 6205)
++++ src/plugins/codecompletion/codecompletion.cpp	(working copy)
+@@ -1992,12 +1992,12 @@
+             {
+                 pos = control->GetCurrentPos();
+                 control->GotoPos(pos - 1);
++                ShowCallTip();
+             }
+         }
+     }
+ 
+-    if (   (event.GetEventType() == wxEVT_SCI_CHARADDED)
+-        && (!control->AutoCompActive()) ) // not already active autocompletion)
++    if (event.GetEventType() == wxEVT_SCI_CHARADDED)
+     {
+         // a character was just added in the editor
+         m_TimerCodeCompletion.Stop();
+@@ -2015,25 +2015,34 @@
+             ShowCallTip();
+ 
+         // start calltip
+-        if (ch == _T('('))
++        if (ch == _T('(') || ch == _T(','))
+         {
+-            if (control->CallTipActive())
+-                ++m_ActiveCalltipsNest;
+-            ShowCallTip();
++            int style = control->GetStyleAt(control->GetCurrentPos() - 1);
++            if (!(control->IsString(style) || control->IsCharacter(style) || control->IsComment(style)))
++            {
++                if (control->CallTipActive())
++                    ++m_ActiveCalltipsNest;
++                ShowCallTip();
++            }
+         }
++
+         // end calltip
+-        else if (ch == _T(')'))
++        else if (ch == _T(')') || ch == _T(';'))
+         {
+-            // cancel any active calltip
+-            control->CallTipCancel();
+-            if (m_ActiveCalltipsNest > 0)
++            int style = control->GetStyleAt(control->GetCurrentPos() - 1);
++            if (!(control->IsString(style) || control->IsCharacter(style) || control->IsComment(style)))
+             {
+-                --m_ActiveCalltipsNest;
+-                ShowCallTip();
++                // cancel any active calltip
++                control->CallTipCancel();
++                if (m_ActiveCalltipsNest > 0)
++                {
++                    --m_ActiveCalltipsNest;
++                    ShowCallTip();
++                }
+             }
+         }
+ 
+-        else if (    autoCC
++        else if (   (autoCC && !control->AutoCompActive()) // not already active autocompletion
+                  || (ch == _T('"')) // this and the next one are for #include's completion
+                  || (ch == _T('<'))
+                  || (ch == _T('.'))
+Index: src/plugins/codecompletion/nativeparser.cpp
+===================================================================
+--- src/plugins/codecompletion/nativeparser.cpp	(revision 6205)
++++ src/plugins/codecompletion/nativeparser.cpp	(working copy)
+@@ -1033,7 +1033,9 @@
+         }
+         if (!end)
+             break;
+-        lineText.Remove(end);
++        lineText.Remove(end).Trim(false);
++        if (lineText.StartsWith(_T("::")))
++            lineText = lineText.Right(lineText.Length() - 2);
+ //        Manager::Get()->GetLogManager()->DebugLog(_T("Sending \"%s\" for call-tip"), lineText.c_str());
+ 
+         TokensTree* tokens = m_Parser.GetTokens();
+@@ -1048,8 +1050,14 @@
+         ParseLocalBlock(ed);
+ 
+         m_GettingCalltips = true;
++
++        Token* tk = tokens->at(tokens->TokenExists(lineText, -1, tkPreprocessor));
++        if (tk != NULL)
++            lineText = tk->m_Type;
++
+         if (!AI(result, ed, lineText, true, true, &search_scope))
+             break;
++
+         for (TokenIdxSet::iterator it = result.begin(); it != result.end(); ++it)
+         {
+             Token* token = tokens->at(*it);
