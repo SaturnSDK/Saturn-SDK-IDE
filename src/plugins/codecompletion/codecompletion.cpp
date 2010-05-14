@@ -2002,6 +2002,25 @@ void CodeCompletion::EditorEventHook(cbEditor* editor, wxScintillaEvent& event)
                 ShowCallTip();
             }
         }
+        else
+        {
+            const int pos = control->GetCurrentPos();
+            const int start = control->WordStartPosition(pos, true);
+            wxChar ch = control->GetCharAt(start - 1);
+            if (ch == _T('"') ||  ch == _T('<'))
+            {
+                if (itemText.Find(_T('.'), true) != wxNOT_FOUND)
+                {
+                    control->AutoCompCancel();
+                    control->SetTargetStart(start);
+                    control->SetTargetEnd(pos);
+                    if (ch == _T('<')) ch = _T('>');
+                    itemText.Append(ch);
+                    control->ReplaceTarget(itemText);
+                    control->GotoPos(start + itemText.Length());
+                }
+            }
+        }
     }
 
     if (event.GetEventType() == wxEVT_SCI_CHARADDED)
