@@ -221,7 +221,6 @@ AC_CONFIG_FILES([Makefile
 	src/include/scripting/sqstdlib/Makefile
 	src/include/scripting/squirrel/Makefile
 	src/include/tinyxml/Makefile
-	src/include/wxscintilla/Makefile
 	src/sdk/Makefile
 	src/sdk/scripting/Makefile
 	src/sdk/scripting/bindings/Makefile
@@ -303,7 +302,8 @@ AC_CONFIG_FILES([Makefile
 	src/plugins/scriptedwizard/resources/d/Makefile
 	src/plugins/scriptedwizard/resources/d/console/Makefile
 	src/plugins/scriptedwizard/resources/directx/Makefile
-	src/plugins/scriptedwizard/resources/directx/files/Makefile
+	src/plugins/scriptedwizard/resources/directx/dx8/Makefile
+	src/plugins/scriptedwizard/resources/directx/dx9/Makefile
 	src/plugins/scriptedwizard/resources/dll/Makefile
 	src/plugins/scriptedwizard/resources/dll/files/Makefile
 	src/plugins/scriptedwizard/resources/empty/Makefile
@@ -348,8 +348,11 @@ AC_CONFIG_FILES([Makefile
 	src/plugins/scriptedwizard/resources/qt4/files/Makefile
 	src/plugins/scriptedwizard/resources/sdl/Makefile
 	src/plugins/scriptedwizard/resources/sdl/files/Makefile
+	src/plugins/scriptedwizard/resources/sfml/Makefile
+	src/plugins/scriptedwizard/resources/sfml/files/Makefile
 	src/plugins/scriptedwizard/resources/sharedlib/Makefile
-	src/plugins/scriptedwizard/resources/sharedlib/files/Makefile
+	src/plugins/scriptedwizard/resources/sharedlib/c/Makefile
+	src/plugins/scriptedwizard/resources/sharedlib/cpp/Makefile
 	src/plugins/scriptedwizard/resources/smartwin/Makefile
 	src/plugins/scriptedwizard/resources/smartwin/files/Makefile
 	src/plugins/scriptedwizard/resources/staticlib/Makefile
@@ -414,6 +417,10 @@ AC_CONFIG_FILES([Makefile
 	src/plugins/contrib/AutoVersioning/Makefile
 	src/plugins/contrib/BrowseTracker/Makefile
 	src/plugins/contrib/byogames/Makefile
+	src/plugins/contrib/Cccc/Makefile
+	src/plugins/contrib/Cccc/resources/Makefile
+	src/plugins/contrib/CppCheck/Makefile
+	src/plugins/contrib/CppCheck/resources/Makefile
 	src/plugins/contrib/cb_koders/Makefile
 	src/plugins/contrib/codesnippets/Makefile
 	src/plugins/contrib/codesnippets/resources/Makefile
@@ -439,6 +446,8 @@ AC_CONFIG_FILES([Makefile
 	src/plugins/contrib/ThreadSearch/Makefile
 	src/plugins/contrib/ThreadSearch/resources/Makefile
 	src/plugins/contrib/ThreadSearch/resources/images/Makefile
+	src/plugins/contrib/ThreadSearch/resources/images/16x16/Makefile
+	src/plugins/contrib/ThreadSearch/resources/images/22x22/Makefile
 	src/plugins/contrib/Valgrind/Makefile
 	src/plugins/contrib/Valgrind/resources/Makefile
 	src/plugins/contrib/wxSmith/Makefile

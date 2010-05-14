@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <resource>
-	<object class="wxDialog" name="dlgConfigureEditor">
+	<object class="wxScrollingDialog" name="dlgConfigureEditor">
 		<title>Configure editor</title>
 		<centered>1</centered>
 		<style>wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER</style>
@@ -102,7 +102,7 @@
 												<orient>wxVERTICAL</orient>
 												<object class="sizeritem">
 													<object class="wxCheckBox" name="chkEncodingFindLatin2">
-														<label>try to detect latin-2 encodings (use with care: can break latin-1 detection)</label>
+														<label>Try to detect latin-2 encodings (use with care: can break latin-1 detection)</label>
 													</object>
 													<flag>wxALIGN_LEFT|wxALIGN_TOP</flag>
 												</object>
@@ -124,7 +124,6 @@
 								<object class="sizeritem">
 									<object class="wxFlexGridSizer">
 										<cols>2</cols>
-										<rows>2</rows>
 										<vgap>8</vgap>
 										<hgap>8</hgap>
 										<growablecols>1</growablecols>
@@ -135,7 +134,6 @@
 												<object class="sizeritem">
 													<object class="wxFlexGridSizer">
 														<cols>1</cols>
-														<rows>4</rows>
 														<vgap>4</vgap>
 														<hgap>4</hgap>
 														<object class="sizeritem">
@@ -188,7 +186,6 @@
 												<object class="sizeritem">
 													<object class="wxFlexGridSizer">
 														<cols>1</cols>
-														<rows>4</rows>
 														<vgap>4</vgap>
 														<hgap>4</hgap>
 														<object class="sizeritem">
@@ -258,7 +255,6 @@
 												<object class="sizeritem">
 													<object class="wxFlexGridSizer">
 														<cols>1</cols>
-														<rows>4</rows>
 														<vgap>4</vgap>
 														<hgap>4</hgap>
 														<object class="sizeritem">
@@ -335,7 +331,6 @@
 												<object class="sizeritem">
 													<object class="wxFlexGridSizer">
 														<cols>1</cols>
-														<rows>4</rows>
 														<vgap>4</vgap>
 														<hgap>4</hgap>
 														<object class="sizeritem">
@@ -403,7 +398,6 @@
 												<object class="sizeritem">
 													<object class="wxFlexGridSizer">
 														<cols>1</cols>
-														<rows>2</rows>
 														<vgap>4</vgap>
 														<hgap>4</hgap>
 														<object class="sizeritem">
@@ -415,7 +409,7 @@
 														</object>
 														<object class="sizeritem">
 															<object class="wxCheckBox" name="chkHighlightOccurrencesCaseSensitive">
-																<label>Case-sensitive</label>
+																<label>Case sensitive</label>
 																<checked>1</checked>
 															</object>
 															<flag>wxLEFT|wxALIGN_LEFT|wxALIGN_TOP</flag>
@@ -433,7 +427,7 @@
 															<object class="wxBoxSizer">
 																<object class="sizeritem">
 																	<object class="wxStaticText" name="stHighlightColour">
-																		<label>Highlight Colour</label>
+																		<label>Highlight colour</label>
 																	</object>
 																	<flag>wxRIGHT|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL</flag>
 																	<border>5</border>
@@ -516,7 +510,7 @@
 								</object>
 								<object class="sizeritem">
 									<object class="wxStaticBoxSizer">
-										<label>Folding Style</label>
+										<label>Folding style</label>
 										<orient>wxVERTICAL</orient>
 										<object class="sizeritem">
 											<object class="wxStaticText" name="lblIndicator">
@@ -540,7 +534,7 @@
 										</object>
 										<object class="sizeritem">
 											<object class="wxCheckBox" name="chkUnderlineFoldedLine">
-												<label>Underline Folded Line</label>
+												<label>Underline folded line</label>
 												<checked>1</checked>
 											</object>
 											<flag>wxBOTTOM|wxLEFT|wxRIGHT|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL</flag>
@@ -628,12 +622,11 @@
 										</object>
 										<object class="sizeritem">
 											<object class="wxCheckBox" name="chkUseChangebar">
-												<label>Use Changebar</label>
+												<label>Use changebar</label>
 												<checked>1</checked>
 											</object>
 											<flag>wxBOTTOM|wxLEFT|wxEXPAND|wxALIGN_LEFT|wxALIGN_TOP</flag>
-											<border>5</border>
-											<option>1</option>
+											<border>4</border>
 										</object>
 									</object>
 									<flag>wxLEFT|wxEXPAND|wxALIGN_LEFT|wxALIGN_TOP</flag>
@@ -762,6 +755,45 @@
 										</object>
 									</object>
 									<flag>wxTOP|wxLEFT|wxEXPAND|wxALIGN_LEFT|wxALIGN_TOP</flag>
+									<border>5</border>
+								</object>
+								<object class="sizeritem">
+									<object class="wxStaticBoxSizer">
+										<label>Selections</label>
+										<orient>wxVERTICAL</orient>
+										<object class="sizeritem">
+											<object class="wxCheckBox" name="chkEnableVirtualSpace">
+												<label>Enable virtual space (space beyond the end of line)</label>
+											</object>
+											<flag>wxBOTTOM|wxLEFT|wxEXPAND|wxALIGN_LEFT|wxALIGN_BOTTOM</flag>
+											<border>4</border>
+										</object>
+										<object class="sizeritem">
+											<object class="wxCheckBox" name="chkEnableMultipleSelections">
+												<label>Allow multiple selections</label>
+											</object>
+											<flag>wxBOTTOM|wxLEFT|wxEXPAND|wxALIGN_LEFT|wxALIGN_BOTTOM</flag>
+											<border>4</border>
+										</object>
+										<object class="sizeritem">
+											<object class="wxBoxSizer">
+												<object class="spacer">
+													<flag>wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL</flag>
+													<border>6</border>
+													<size>15,6</size>
+												</object>
+												<object class="sizeritem">
+													<object class="wxCheckBox" name="chkEnableAdditionalSelectionTyping">
+														<label>Enable typing (and deleting) in multiple selections simultaneously</label>
+													</object>
+													<flag>wxBOTTOM|wxLEFT|wxEXPAND|wxALIGN_LEFT|wxALIGN_BOTTOM</flag>
+													<border>4</border>
+												</object>
+											</object>
+											<flag>wxALL|wxEXPAND|wxALIGN_LEFT|wxALIGN_BOTTOM</flag>
+										</object>
+									</object>
+									<flag>wxALL|wxEXPAND|wxALIGN_LEFT|wxALIGN_BOTTOM</flag>
 									<border>5</border>
 								</object>
 							</object>

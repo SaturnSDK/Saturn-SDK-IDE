@@ -17,9 +17,15 @@
 
 #include "sdk.h"
 #ifndef CB_PRECOMP
-	#include <wx/checkbox.h>
-	#include <wx/sizer.h>
+    #include <wx/bitmap.h>
+    #include <wx/bmpbuttn.h>
+    #include <wx/checkbox.h>
+    #include <wx/sizer.h>
+    #include "configmanager.h"
 #endif
+
+#include "wx/things/toggle.h"
+#include "wx/tglbtn.h"
 
 #include "SearchInPanel.h"
 #include "ThreadSearchControlIds.h"
@@ -28,12 +34,37 @@
 SearchInPanel::SearchInPanel(wxWindow* parent, int id, const wxPoint& pos, const wxSize& size, long WXUNUSED(style)):
     wxPanel(parent, id, pos, size, wxTAB_TRAVERSAL)
 {
-    // begin wxGlade: SearchInPanel::SearchInPanel
-    m_pChkSearchOpenFiles = new wxCheckBox(this, idChkSearchOpenFiles, _("Open"));
-    m_pChkSearchTargetFiles = new wxCheckBox(this, idChkSearchTargetFiles, _("Target"));
-    m_pChkSearchProjectFiles = new wxCheckBox(this, idChkSearchProjectFiles, _("Project"));
-    m_pChkSearchWorkspaceFiles = new wxCheckBox(this, idChkSearchWorkspaceFiles, _("Workspace"));
-    m_pChkSearchDir = new wxCheckBox(this, idChkSearchDirectoryFiles, _("Directory"));
+    //{ Getting the imagesize for the buttons (16x16 or 22x22) and the appropriate path
+    ConfigManager *cfg = Manager::Get()->GetConfigManager(_T("app"));
+    bool toolbar_size = cfg->ReadBool(_T("/environment/toolbar_size"),true);
+    wxString prefix = ConfigManager::GetDataFolder() + _T("/images/ThreadSearch/") + (toolbar_size?_T("16x16/"):_T("22x22/"));
+
+    // create a dummy button to get the standard button-size,
+    // wxCustomButton does not do that properly
+    // we have to force this size as MinSize to make it work
+    wxBitmapButton dummyBtn(this, wxID_ANY, wxBitmap(prefix + wxT("openfiles.png"), wxBITMAP_TYPE_PNG));
+    wxSize dummySize = dummyBtn.GetSize();
+
+    m_pBtnSearchOpenFiles = new wxCustomButton(this, idBtnSearchOpenFiles, wxBitmap(prefix + wxT("openfiles.png"), wxBITMAP_TYPE_PNG), wxDefaultPosition, dummySize);
+    m_pBtnSearchOpenFiles->SetBitmapDisabled(wxBitmap(prefix + wxT("openfilesdisabled.png"), wxBITMAP_TYPE_PNG));
+    m_pBtnSearchOpenFiles->SetBitmapSelected(wxBitmap(prefix + wxT("openfilesselected.png"), wxBITMAP_TYPE_PNG));
+    m_pBtnSearchOpenFiles->SetMinSize(dummySize);
+    m_pBtnSearchTargetFiles = new wxCustomButton(this, idBtnSearchTargetFiles, wxBitmap(prefix + wxT("target.png"), wxBITMAP_TYPE_PNG), wxDefaultPosition, dummySize);
+    m_pBtnSearchTargetFiles->SetBitmapDisabled(wxBitmap(prefix + wxT("targetdisabled.png"), wxBITMAP_TYPE_PNG));
+    m_pBtnSearchTargetFiles->SetBitmapSelected(wxBitmap(prefix + wxT("targetselected.png"), wxBITMAP_TYPE_PNG));
+    m_pBtnSearchTargetFiles->SetMinSize(dummySize);
+    m_pBtnSearchProjectFiles = new wxCustomButton(this, idBtnSearchProjectFiles, wxBitmap(prefix + wxT("project.png"), wxBITMAP_TYPE_PNG), wxDefaultPosition, dummySize);
+    m_pBtnSearchProjectFiles->SetBitmapDisabled(wxBitmap(prefix + wxT("projectdisabled.png"), wxBITMAP_TYPE_PNG));
+    m_pBtnSearchProjectFiles->SetBitmapSelected(wxBitmap(prefix + wxT("projectselected.png"), wxBITMAP_TYPE_PNG));
+    m_pBtnSearchProjectFiles->SetMinSize(dummySize);
+    m_pBtnSearchWorkspaceFiles = new wxCustomButton(this, idBtnSearchWorkspaceFiles, wxBitmap(prefix + wxT("workspace.png"), wxBITMAP_TYPE_PNG), wxDefaultPosition, dummySize);
+    m_pBtnSearchWorkspaceFiles->SetBitmapDisabled(wxBitmap(prefix + wxT("workspacedisabled.png"), wxBITMAP_TYPE_PNG));
+    m_pBtnSearchWorkspaceFiles->SetBitmapSelected(wxBitmap(prefix + wxT("workspaceselected.png"), wxBITMAP_TYPE_PNG));
+    m_pBtnSearchWorkspaceFiles->SetMinSize(dummySize);
+    m_pBtnSearchDir = new wxCustomButton(this, idBtnSearchDirectoryFiles, wxBitmap(prefix + wxT("folder.png"), wxBITMAP_TYPE_PNG), wxDefaultPosition, dummySize);
+    m_pBtnSearchDir->SetBitmapDisabled(wxBitmap(prefix + wxT("folderdisabled.png"), wxBITMAP_TYPE_PNG));
+    m_pBtnSearchDir->SetBitmapSelected(wxBitmap(prefix + wxT("folderselected.png"), wxBITMAP_TYPE_PNG));
+    m_pBtnSearchDir->SetMinSize(dummySize);
 
     set_properties();
     do_layout();
@@ -43,95 +74,56 @@ SearchInPanel::SearchInPanel(wxWindow* parent, int id, const wxPoint& pos, const
 
 BEGIN_EVENT_TABLE(SearchInPanel, wxPanel)
     // begin wxGlade: SearchInPanel::event_table
-    EVT_CHECKBOX(idChkSearchOpenFiles, SearchInPanel::OnChkClickEvent)
-    EVT_CHECKBOX(idChkSearchTargetFiles, SearchInPanel::OnChkSearchTargetFilesClick)
-    EVT_CHECKBOX(idChkSearchProjectFiles, SearchInPanel::OnChkSearchProjectFilesClick)
-    EVT_CHECKBOX(idChkSearchWorkspaceFiles, SearchInPanel::OnChkSearchWorkspaceFilesClick)
-    EVT_CHECKBOX(idChkSearchDirectoryFiles, SearchInPanel::OnChkClickEvent)
+    EVT_TOGGLEBUTTON(idBtnSearchOpenFiles, SearchInPanel::OnBtnClickEvent)
+    EVT_TOGGLEBUTTON(idBtnSearchTargetFiles, SearchInPanel::OnBtnSearchTargetFilesClick)
+    EVT_TOGGLEBUTTON(idBtnSearchProjectFiles, SearchInPanel::OnBtnSearchProjectFilesClick)
+    EVT_TOGGLEBUTTON(idBtnSearchWorkspaceFiles, SearchInPanel::OnBtnSearchWorkspaceFilesClick)
+    EVT_TOGGLEBUTTON(idBtnSearchDirectoryFiles, SearchInPanel::OnBtnClickEvent)
     // end wxGlade
 END_EVENT_TABLE();
 
 
-void SearchInPanel::OnChkClickEvent(wxCommandEvent &event)
+void SearchInPanel::OnBtnClickEvent(wxCommandEvent &event)
 {
     event.Skip();
 }
 
 
-void SearchInPanel::OnChkSearchTargetFilesClick(wxCommandEvent &event)
+void SearchInPanel::OnBtnSearchTargetFilesClick(wxCommandEvent &event)
 {
-	// If target scope checkbox becomes checked, we uncheck if necessary project
-	// and workspace checkboxes.
-	if ( event.IsChecked() == true )
-	{
-		if ( m_pChkSearchProjectFiles->IsChecked() == true )
-		{
-			m_pChkSearchProjectFiles->SetValue(false);
-			wxCommandEvent ChkEvent(wxEVT_COMMAND_CHECKBOX_CLICKED, idChkSearchProjectFiles);
-			ChkEvent.SetInt(0);
-			ProcessEvent(ChkEvent);
-		}
-
-		if ( m_pChkSearchWorkspaceFiles->IsChecked() == true )
-		{
-			m_pChkSearchWorkspaceFiles->SetValue(false);
-			wxCommandEvent ChkEvent(wxEVT_COMMAND_CHECKBOX_CLICKED, idChkSearchWorkspaceFiles);
-			ChkEvent.SetInt(0);
-			ProcessEvent(ChkEvent);
-		}
-	}
+    // If target scope becomes checked, we uncheck if necessary project
+    // and workspace.
+    if(event.GetInt())
+    {
+        SetSearchInProjectFiles(false);
+        SetSearchInWorkspaceFiles(false);
+    }
     event.Skip();
 }
 
 
-void SearchInPanel::OnChkSearchProjectFilesClick(wxCommandEvent &event)
+void SearchInPanel::OnBtnSearchProjectFilesClick(wxCommandEvent &event)
 {
-	// If project scope checkbox becomes checked, we uncheck if necessary target
-	// and workspace checkboxes.
-	if ( event.IsChecked() == true )
-	{
-		if ( m_pChkSearchTargetFiles->IsChecked() == true )
-		{
-			m_pChkSearchTargetFiles->SetValue(false);
-			wxCommandEvent ChkEvent(wxEVT_COMMAND_CHECKBOX_CLICKED, idChkSearchTargetFiles);
-			ChkEvent.SetInt(0);
-			ProcessEvent(ChkEvent);
-		}
-
-		if ( m_pChkSearchWorkspaceFiles->IsChecked() == true )
-		{
-			m_pChkSearchWorkspaceFiles->SetValue(false);
-			wxCommandEvent ChkEvent(wxEVT_COMMAND_CHECKBOX_CLICKED, idChkSearchWorkspaceFiles);
-			ChkEvent.SetInt(0);
-			ProcessEvent(ChkEvent);
-		}
-	}
-	event.Skip();
+    // If project scope becomes checked, we uncheck if necessary target
+    // and workspace.
+    if (event.GetInt())
+    {
+        SetSearchInTargetFiles(false);
+        SetSearchInWorkspaceFiles(false);
+    }
+    event.Skip();
 }
 
 
-void SearchInPanel::OnChkSearchWorkspaceFilesClick(wxCommandEvent &event)
+void SearchInPanel::OnBtnSearchWorkspaceFilesClick(wxCommandEvent &event)
 {
-	// If workspace scope checkbox becomes checked, we uncheck if necessary target
-	// and project checkboxes.
-	if ( event.IsChecked() == true )
-	{
-		if ( m_pChkSearchTargetFiles->IsChecked() == true )
-		{
-			m_pChkSearchTargetFiles->SetValue(false);
-			wxCommandEvent ChkEvent(wxEVT_COMMAND_CHECKBOX_CLICKED, idChkSearchTargetFiles);
-			ChkEvent.SetInt(0);
-			ProcessEvent(ChkEvent);
-		}
-
-		if ( m_pChkSearchProjectFiles->IsChecked() == true )
-		{
-			m_pChkSearchProjectFiles->SetValue(false);
-			wxCommandEvent ChkEvent(wxEVT_COMMAND_CHECKBOX_CLICKED, idChkSearchProjectFiles);
-			ChkEvent.SetInt(0);
-			ProcessEvent(ChkEvent);
-		}
-	}
+    // If workspace scope becomes checked, we uncheck if necessary target
+    // and project.
+    if (event.GetInt())
+    {
+        SetSearchInTargetFiles(false);
+        SetSearchInProjectFiles(false);
+    }
     event.Skip();
 }
 
@@ -142,13 +134,11 @@ void SearchInPanel::OnChkSearchWorkspaceFilesClick(wxCommandEvent &event)
 void SearchInPanel::set_properties()
 {
     // begin wxGlade: SearchInPanel::set_properties
-    m_pChkSearchOpenFiles->SetToolTip(_("Search in open files"));
-    m_pChkSearchOpenFiles->SetValue(1);
-    m_pChkSearchTargetFiles->SetToolTip(_("Search in target files"));
-    m_pChkSearchProjectFiles->SetToolTip(_("Search in project files"));
-    m_pChkSearchProjectFiles->SetValue(1);
-    m_pChkSearchWorkspaceFiles->SetToolTip(_("Search in workspace files"));
-    m_pChkSearchDir->SetToolTip(_("Search in directory files"));
+    m_pBtnSearchOpenFiles->SetToolTip(_("Search in open files"));
+    m_pBtnSearchTargetFiles->SetToolTip(_("Search in target files"));
+    m_pBtnSearchProjectFiles->SetToolTip(_("Search in project files"));
+    m_pBtnSearchWorkspaceFiles->SetToolTip(_("Search in workspace files"));
+    m_pBtnSearchDir->SetToolTip(_("Search in directory files"));
     // end wxGlade
 }
 
@@ -157,11 +147,11 @@ void SearchInPanel::do_layout()
 {
     // begin wxGlade: SearchInPanel::do_layout
     wxBoxSizer* SizerTop = new wxBoxSizer(wxHORIZONTAL);
-    SizerTop->Add(m_pChkSearchOpenFiles, 0, wxALL|wxALIGN_CENTER_VERTICAL|wxADJUST_MINSIZE, 4);
-    SizerTop->Add(m_pChkSearchTargetFiles, 0, wxALL|wxALIGN_CENTER_VERTICAL|wxADJUST_MINSIZE, 4);
-    SizerTop->Add(m_pChkSearchProjectFiles, 0, wxALL|wxALIGN_CENTER_VERTICAL|wxADJUST_MINSIZE, 4);
-    SizerTop->Add(m_pChkSearchWorkspaceFiles, 0, wxALL|wxALIGN_CENTER_VERTICAL|wxADJUST_MINSIZE, 4);
-    SizerTop->Add(m_pChkSearchDir, 0, wxALL|wxALIGN_CENTER_VERTICAL|wxADJUST_MINSIZE, 4);
+    SizerTop->Add(m_pBtnSearchOpenFiles, 0, wxALL|wxALIGN_CENTER_VERTICAL|wxADJUST_MINSIZE, 4);
+    SizerTop->Add(m_pBtnSearchTargetFiles, 0, wxALL|wxALIGN_CENTER_VERTICAL|wxADJUST_MINSIZE, 4);
+    SizerTop->Add(m_pBtnSearchProjectFiles, 0, wxALL|wxALIGN_CENTER_VERTICAL|wxADJUST_MINSIZE, 4);
+    SizerTop->Add(m_pBtnSearchWorkspaceFiles, 0, wxALL|wxALIGN_CENTER_VERTICAL|wxADJUST_MINSIZE, 4);
+    SizerTop->Add(m_pBtnSearchDir, 0, wxALL|wxALIGN_CENTER_VERTICAL|wxADJUST_MINSIZE, 4);
     SetAutoLayout(true);
     SetSizer(SizerTop);
     SizerTop->Fit(this);
@@ -170,16 +160,33 @@ void SearchInPanel::do_layout()
 }
 
 
-// Getters
-bool SearchInPanel::GetSearchInOpenFiles()      const                       {return m_pChkSearchOpenFiles->IsChecked();}
-bool SearchInPanel::GetSearchInTargetFiles()    const                       {return m_pChkSearchTargetFiles->IsChecked();}
-bool SearchInPanel::GetSearchInProjectFiles()   const                       {return m_pChkSearchProjectFiles->IsChecked();}
-bool SearchInPanel::GetSearchInWorkspaceFiles() const                       {return m_pChkSearchWorkspaceFiles->IsChecked();}
-bool SearchInPanel::GetSearchInDirectory()      const                       {return m_pChkSearchDir->IsChecked();}
+//{ Getters
+bool SearchInPanel::GetSearchInOpenFiles()      const {return m_pBtnSearchOpenFiles->GetValue();}
+bool SearchInPanel::GetSearchInTargetFiles()    const {return m_pBtnSearchTargetFiles->GetValue();}
+bool SearchInPanel::GetSearchInProjectFiles()   const {return m_pBtnSearchProjectFiles->GetValue();}
+bool SearchInPanel::GetSearchInWorkspaceFiles() const {return m_pBtnSearchWorkspaceFiles->GetValue();}
+bool SearchInPanel::GetSearchInDirectory()      const {return m_pBtnSearchDir->GetValue();}
+//}
 
-// Setters
-void SearchInPanel::SetSearchInOpenFiles     (bool bSearchInOpenFiles)      {m_pChkSearchOpenFiles->SetValue(bSearchInOpenFiles);}
-void SearchInPanel::SetSearchInTargetFiles   (bool bSearchInTargetFiles)    {m_pChkSearchTargetFiles->SetValue(bSearchInTargetFiles);}
-void SearchInPanel::SetSearchInProjectFiles  (bool bSearchInProjectFiles)   {m_pChkSearchProjectFiles->SetValue(bSearchInProjectFiles);}
-void SearchInPanel::SetSearchInWorkspaceFiles(bool bSearchInWorkspaceFiles) {m_pChkSearchWorkspaceFiles->SetValue(bSearchInWorkspaceFiles);}
-void SearchInPanel::SetSearchInDirectory     (bool bSearchInDirectory)      {m_pChkSearchDir->SetValue(bSearchInDirectory);}
+//{ Setters
+void SearchInPanel::SetSearchInOpenFiles(bool bSearchInOpenFiles)
+{
+    m_pBtnSearchOpenFiles->SetValue(bSearchInOpenFiles);
+}
+void SearchInPanel::SetSearchInTargetFiles(bool bSearchInTargetFiles)
+{
+    m_pBtnSearchTargetFiles->SetValue(bSearchInTargetFiles);
+}
+void SearchInPanel::SetSearchInProjectFiles(bool bSearchInProjectFiles)
+{
+    m_pBtnSearchProjectFiles->SetValue(bSearchInProjectFiles);
+}
+void SearchInPanel::SetSearchInWorkspaceFiles(bool bSearchInWorkspaceFiles)
+{
+    m_pBtnSearchWorkspaceFiles->SetValue(bSearchInWorkspaceFiles);
+}
+void SearchInPanel::SetSearchInDirectory(bool bSearchInDirectoryFiles)
+{
+    m_pBtnSearchDir->SetValue(bSearchInDirectoryFiles);
+}
+//}

@@ -2,13 +2,13 @@
 #define AVCHANGESDLG_H
 
 //(*Headers(avChangesDlg)
-#include <wx/sizer.h>
 #include <wx/grid.h>
+#include <wx/sizer.h>
 #include <wx/button.h>
-#include <wx/dialog.h>
+#include "scrollingdialog.h"
 //*)
 
-class avChangesDlg: public wxDialog
+class avChangesDlg: public wxScrollingDialog
 {
 	public:
 
@@ -41,14 +41,14 @@ class avChangesDlg: public wxDialog
 		//*)
 
 		//(*Declarations(avChangesDlg)
-		wxButton* btnSave;
-		wxButton* btnCancel;
-		wxButton* btnWrite;
 		wxButton* btnDelete;
-		wxButton* btnAdd;
-		wxGrid* grdChanges;
-		wxBoxSizer* BoxSizer1;
 		wxButton* btnEdit;
+		wxButton* btnWrite;
+		wxBoxSizer* BoxSizer1;
+		wxButton* btnCancel;
+		wxButton* btnAdd;
+		wxButton* btnSave;
+		wxGrid* grdChanges;
 		//*)
 
 	private:

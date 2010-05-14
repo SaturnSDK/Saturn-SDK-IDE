@@ -103,7 +103,7 @@ namespace LibLoader
         Libs::iterator it = s_Libs.find(filename);
         if (it != s_Libs.end())
         {
-            // existing lib
+            // existing lib./codeblocks
             it->second.ref++;
             return it->second.lib;
         }
@@ -1262,6 +1262,14 @@ int PluginManager::ExecutePlugin(const wxString& pluginName)
                 exception.ShowErrorMessage(false);
             }
         }
+    }
+    else
+    {
+		#if wxCHECK_VERSION(2, 9, 0)
+		Manager::Get()->GetLogManager()->LogError(F(_T("No plugin registered by this name: %s"), pluginName.wx_str()));
+		#else
+		Manager::Get()->GetLogManager()->LogError(F(_T("No plugin registered by this name: %s"), pluginName.c_str()));
+		#endif
     }
     return 0;
 }

@@ -10,6 +10,21 @@
 #include <configmanager.h>
 #include <filemanager.h>
 
+
+enum TokenizerState
+{
+    tsSkipEqual        = 0x0001,
+    tsSkipQuestion     = 0x0002,
+    tsSkipSubScrip     = 0x0004,
+    tsSingleAngleBrace = 0x0008,
+
+    tsSkipNone         = 0x1000,
+    // convenient masks
+    tsSkipUnWanted     = tsSkipEqual    | tsSkipQuestion | tsSkipSubScrip,
+    tsTemplateArgument = tsSkipUnWanted | tsSingleAngleBrace
+};
+
+
 struct TokenizerOptions
 {
     bool wantPreprocessor;
@@ -23,65 +38,82 @@ public:
 
     bool Init(const wxString& filename = wxEmptyString, LoaderBase* loader = 0);
     bool InitFromBuffer(const wxString& buffer);
+
+
     wxString GetToken();
     wxString PeekToken();
-    void UngetToken();
+    void     UngetToken();
 
-    void SetSkipUnwantedTokens(bool skip)
+    void SetTokenizerOption(bool wantPreprocessor)
     {
-        m_SkipUnwantedTokens = skip;
+      m_TokenizerOptions.wantPreprocessor = wantPreprocessor;
+    };
+
+    void SetState(TokenizerState state)
+    {
+        m_State = state;
+    };
+
+    TokenizerState GetState()
+    {
+        return m_State;
     }
 
     bool IsSkippingUnwantedTokens() const
     {
-        return m_SkipUnwantedTokens;
-    }
+        return (m_State == tsSkipUnWanted);
+    };
 
     const wxString& GetFilename() const
     {
         return m_Filename;
     };
+
     unsigned int GetLineNumber() const
     {
         return m_LineNumber;
     };
+
     unsigned int GetNestingLevel() const
     {
         return m_NestLevel;
     };
+
     void SaveNestingLevel() // the parser might need to ignore the nesting level in some cases
     {
         m_SavedNestingLevel = m_NestLevel;
-    }
+    };
+
     void RestoreNestingLevel()
     {
         m_NestLevel = m_SavedNestingLevel;
-    }
+    };
+
     bool IsOK() const
     {
         return m_IsOK;
     };
-    TokenizerOptions m_Options;
 
     wxString ReadToEOL(bool nestBraces = true); // use with care outside this class!
+
     bool SkipToEOL(bool nestBraces = true, bool skippingComment = false); // use with care outside this class!
 
     static void SetReplacementString(const wxString& from, const wxString& to)
     {
         s_Replacements.insert(s_Replacements.end(), std::make_pair(from, to));
-    }
+    };
 
     static void RemoveReplacementString(const wxString& from)
     {
         ConfigManagerContainer::StringToStringMap::iterator it = s_Replacements.find(from);
         if (it != s_Replacements.end())
             s_Replacements.erase(it);
-    }
+    };
 
     static ConfigManagerContainer::StringToStringMap& GetTokenReplacementsMap()
     {
         return s_Replacements;
-    }
+    };
 
     bool IsEOF() const
     {
@@ -95,14 +127,19 @@ public:
 
 protected:
     void BaseInit();
+
     wxString DoGetToken();
+    wxString FixArgument(wxString src);
     bool ReadFile();
     bool SkipWhiteSpace();
+    bool IsEscapedChar();
     bool SkipToChar(const wxChar& ch);
-    bool SkipToOneOfChars(const wxChar* chars, bool supportNesting = false);
+    bool SkipToOneOfChars(const wxChar* chars, bool supportNesting = false, bool skipPreprocessor = false, bool skipAngleBrace = true);
     bool SkipBlock(const wxChar& ch);
     bool SkipUnwanted(); // skips comments, assignments, preprocessor etc.
     bool SkipComment(bool skipWhiteAtEnd = true);
+    bool SkipString();
+    bool SkipToStringEnd(const wxChar& ch);
 
     bool MoveToNextChar(const unsigned int amount = 1)
     {
@@ -144,9 +181,9 @@ protected:
 
     wxChar CurrentCharMoveNext()
     {
-        if(m_TokenIndex < m_BufferLen)
-            m_TokenIndex++;
-        return CurrentChar();
+        wxChar c = CurrentChar();
+        m_TokenIndex++;
+        return c;
     };
 
     wxChar NextChar() const
@@ -159,7 +196,7 @@ protected:
 
     wxChar PreviousChar() const
     {
-        if (((m_TokenIndex - 1) < 0 || (m_BufferLen==0) )) // (m_TokenIndex - 1) >= m_BufferLen can never be true
+        if ( ((m_TokenIndex - 1) < 0) || (m_BufferLen==0) ) // (m_TokenIndex - 1) >= m_BufferLen can never be true
             return 0;
 
         return m_Buffer.GetChar(m_TokenIndex - 1);
@@ -169,9 +206,6 @@ protected:
     {
         if(str.size() < 3)
             return;
-//          str.Replace(_T("  "), _T(" "));   // replace two-spaces with single-space (introduced if it skipped comments or assignments)
-//          str.Replace(_T("( "), _T("("));
-//          str.Replace(_T(" )"), _T(")"));
 
         wxChar c = 0;
         wxChar last = 0;
@@ -193,7 +227,7 @@ protected:
     };
 
 private:
-    bool CharInString(const wxChar ch, const wxChar* chars) const
+    inline bool CharInString(const wxChar ch, const wxChar* chars) const
     {
         int len = wxStrlen(chars);
         for (int i = 0; i < len; ++i)
@@ -210,35 +244,37 @@ private:
         if (it != s_Replacements.end())
             return it->second;
         return str;
-    }
+    };
 
-    wxString m_Filename;
-    wxString m_Buffer;
-    unsigned int m_BufferLen;
+    wxString MacroReplace(const wxString str);
 
-    wxString     m_Token;
-    unsigned int m_TokenIndex;
-    unsigned int m_LineNumber;
-    unsigned int m_NestLevel; // keep track of block nesting { }
-    unsigned int m_SavedNestingLevel;
+    TokenizerOptions m_TokenizerOptions;
+    wxString         m_Filename;
+    wxString         m_Buffer;
+    unsigned int     m_BufferLen;
 
-    unsigned int m_UndoTokenIndex;
-    unsigned int m_UndoLineNumber;
-    unsigned int m_UndoNestLevel;
+    wxString         m_Token;
+    unsigned int     m_TokenIndex;
+    unsigned int     m_LineNumber;
+    unsigned int     m_NestLevel; // keep track of block nesting { }
+    unsigned int     m_SavedNestingLevel;
 
-    bool         m_PeekAvailable;
-    wxString     m_PeekToken;
-    unsigned int m_PeekTokenIndex;
-    unsigned int m_PeekLineNumber;
-    unsigned int m_PeekNestLevel;
+    unsigned int     m_UndoTokenIndex;
+    unsigned int     m_UndoLineNumber;
+    unsigned int     m_UndoNestLevel;
 
-    bool m_IsOK;
-    bool m_IsOperator;
-    bool m_LastWasPreprocessor;
-    wxString m_LastPreprocessor;
-    bool m_SkipUnwantedTokens;
+    bool             m_PeekAvailable;
+    wxString         m_PeekToken;
+    unsigned int     m_PeekTokenIndex;
+    unsigned int     m_PeekLineNumber;
+    unsigned int     m_PeekNestLevel;
 
-    LoaderBase* m_pLoader;
+    bool             m_IsOK;
+    bool             m_IsOperator;
+
+    TokenizerState   m_State;
+
+    LoaderBase*      m_pLoader;
 
     static ConfigManagerContainer::StringToStringMap s_Replacements;
 };

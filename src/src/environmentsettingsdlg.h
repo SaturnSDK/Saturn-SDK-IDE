@@ -6,14 +6,14 @@
 #ifndef ENVIRONMENTSETTINGSDLG_H
 #define ENVIRONMENTSETTINGSDLG_H
 
-#include <wx/dialog.h>
+#include <scrollingdialog.h>
 #include <pluginmanager.h>
 
 class wxAuiDockArt;
 class wxListbookEvent;
 class wxCheckListBox;
 
-class EnvironmentSettingsDlg : public wxDialog
+class EnvironmentSettingsDlg : public wxScrollingDialog
 {
 	public:
 		EnvironmentSettingsDlg(wxWindow* parent, wxAuiDockArt* art);
@@ -25,7 +25,8 @@ class EnvironmentSettingsDlg : public wxDialog
         void OnSetAssocs(wxCommandEvent& event);
         void OnManageAssocs(wxCommandEvent& event);
         void OnChooseColour(wxCommandEvent& event);
-        void OnUseIpcCheck(wxCommandEvent& event); 
+        void OnResetDefaultColours(wxCommandEvent& event);
+        void OnUseIpcCheck(wxCommandEvent& event);
         void OnPlaceCheck(wxCommandEvent& event);
         void OnHeadCheck(wxCommandEvent& event);
         void OnAutoHide(wxCommandEvent& event);

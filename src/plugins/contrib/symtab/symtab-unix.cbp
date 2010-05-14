@@ -8,8 +8,11 @@
 		<Build>
 			<Target title="default">
 				<Option output="../../../devel/share/codeblocks/plugins/libSymTab.so" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../../.objs/plugins/contrib/symtab" />
 				<Option type="3" />
 				<Option compiler="gcc" />
+				<Option parameters="--debug-log -ns -ni" />
+				<Option host_application="../../../devel/codeblocks" />
 			</Target>
 			<Environment>
 				<Variable name="CBDIR" value="../../.." />
@@ -27,7 +30,7 @@
 			<Add option="-DcbDEBUG" />
 			<Add option="-DCB_PRECOMP" />
 			<Add directory="$(CBDIR)/include" />
-			<Add directory="$(CBDIR)/include/wxscintilla/include" />
+			<Add directory="$(CBDIR)/sdk/wxscintilla/include" />
 		</Compiler>
 		<Linker>
 			<Add option="`wx-config --libs`" />
@@ -46,6 +49,8 @@
 		<Unit filename="symtabexec.h" />
 		<Extensions>
 			<code_completion />
+			<envvars />
+			<debugger />
 		</Extensions>
 	</Project>
 </CodeBlocks_project_file>

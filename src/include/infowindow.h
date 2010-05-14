@@ -26,7 +26,8 @@
     #include <wx/popupwin.h>
     typedef wxPopupWindow wxInfoWindowBase;
 #else
-    typedef wxDialog wxInfoWindowBase;
+    #include "scrollingdialog.h"
+    typedef wxScrollingDialog wxInfoWindowBase;
 #endif
 
 #undef new

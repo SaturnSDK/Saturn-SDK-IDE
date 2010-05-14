@@ -21,7 +21,7 @@
 #ifndef BROWSE_SELECTOR_H
 #define BROWSE_SELECTOR_H
 
-#include <wx/dialog.h>
+#include "scrollingdialog.h"
 #include <map>
 #include <wx/bitmap.h>
 
@@ -30,7 +30,7 @@ class wxAuiNotebook;
 class wxPanel;
 
 // ----------------------------------------------------------------------------
-class BrowseSelector : public wxDialog
+class BrowseSelector : public wxScrollingDialog
 // ----------------------------------------------------------------------------
 {
     protected:
@@ -67,7 +67,7 @@ class BrowseSelector : public wxDialog
         void OnItemSelected(wxCommandEvent &event);
         void OnPanelPaint(wxPaintEvent &event);
         void OnPanelEraseBg(wxEraseEvent &event);
-        void PopulateListControl(EditorBase* pEditor);
+        int  PopulateListControl(EditorBase* pEditor);
 
     private:
         /**

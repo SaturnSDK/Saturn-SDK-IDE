@@ -1,6 +1,6 @@
 <?xml version="1.0" ?>
 <resource>
-  <object class="wxDialog" name="dlgReplace">
+  <object class="wxScrollingDialog" name="dlgReplace">
     <style>wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER</style>
     <title>Replace</title>
     <centered>1</centered>
@@ -230,8 +230,8 @@
                         <style>wxRA_SPECIFY_COLS</style>
                         <label>Scope</label>
                         <content>
-                          <item>&amp;Project files</item>
                           <item>&amp;Open files</item>
+                          <item>&amp;Project files</item>
                           <item>Workspace files</item>
                         </content>
                       </object>

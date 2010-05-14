@@ -58,7 +58,7 @@ class AppVersion
 
 #include <wx/string.h>
 //-----Release-Feature-Fix------------------
-#define VERSION wxT("1.2.80 2009/07/22")
+#define VERSION wxT("1.2.94 2010/02/25")
 //------------------------------------------
 // Release - Current development identifier
 // Feature - User interface level

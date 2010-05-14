@@ -11,8 +11,8 @@
 				<Option object_output="..\..\..\.objs\plugins\contrib\headerfixup" />
 				<Option type="3" />
 				<Option compiler="gcc" />
-				<Option parameters="--debug-log --no-check-associations -ns --profile=foo" />
-				<Option host_application="$(#CB)\devel\codeblocks.exe" />
+				<Option parameters="--debug-log -na -ns -nd" />
+				<Option host_application="..\..\..\devel\codeblocks.exe" />
 				<Compiler>
 					<Add option="-g" />
 					<Add option="-pipe" />
@@ -32,9 +32,10 @@
 					<Add directory="$(#WX.lib)\gcc_dll$(WX_CFG)\msw$(WX_SUFFIX)" />
 					<Add directory="$(#WX)\contrib\include" />
 					<Add directory="..\..\..\include" />
-					<Add directory="..\..\..\include\wxscintilla\include" />
+					<Add directory="..\..\..\sdk\wxscintilla\include" />
 				</Compiler>
 				<Linker>
+					<Add option="-mthreads" />
 					<Add library="wxmsw28$(WX_SUFFIX)" />
 					<Add library="codeblocks" />
 					<Add library="wxscintilla" />
@@ -81,8 +82,8 @@
 				<gui name="wxWidgets" src="" main="" init_handlers="necessary" language="CPP" />
 				<resources>
 					<wxPanel wxs="wxsmith/configuration.wxs" src="configuration.cpp" hdr="configuration.h" fwddecl="1" name="Configuration" language="CPP" />
-					<wxDialog wxs="wxsmith/execution.wxs" src="execution.cpp" hdr="execution.h" fwddecl="1" name="Execution" language="CPP" />
-					<wxDialog wxs="wxsmith/protocol.wxs" src="protocol.cpp" hdr="protocol.h" fwddecl="1" name="Protocol" language="CPP" />
+					<wxScrollingDialog wxs="wxsmith/execution.wxs" src="execution.cpp" hdr="execution.h" fwddecl="1" name="Execution" language="CPP" />
+					<wxScrollingDialog wxs="wxsmith/protocol.wxs" src="protocol.cpp" hdr="protocol.h" fwddecl="1" name="Protocol" language="CPP" />
 				</resources>
 			</wxsmith>
 			<SVNInside Login="" Password="" ConnectStatus="1" NeedsPassword="0" />

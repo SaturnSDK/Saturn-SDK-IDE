@@ -20,7 +20,7 @@
     #include "infowindow.h"
 
     #include <wx/button.h>
-    #include <wx/dialog.h>
+    #include "scrollingdialog.h"
     #include <wx/intl.h>
     #include <wx/xrc/xmlres.h>
     #include <wx/textctrl.h>
@@ -54,7 +54,7 @@ const wxChar *bim[] = {_T("base"), _T("include"), _T("lib"), _T("obj"), _T("cfla
 const wxArrayString builtinMembers((size_t) 6, bim);
 
 
-class UsrGlblMgrEditDialog : public wxDialog
+class UsrGlblMgrEditDialog : public wxScrollingDialog
 {
     wxString currentSet;
     wxString currentVar;
@@ -283,7 +283,7 @@ void UserVariableManager::Migrate()
 
 
 
-BEGIN_EVENT_TABLE(UsrGlblMgrEditDialog, wxDialog)
+BEGIN_EVENT_TABLE(UsrGlblMgrEditDialog, wxScrollingDialog)
 EVT_BUTTON(XRCID("cloneVar"), UsrGlblMgrEditDialog::CloneVar)
 EVT_BUTTON(XRCID("newVar"), UsrGlblMgrEditDialog::NewVar)
 EVT_BUTTON(XRCID("deleteVar"), UsrGlblMgrEditDialog::DeleteVar)
@@ -307,7 +307,7 @@ END_EVENT_TABLE()
 
 UsrGlblMgrEditDialog::UsrGlblMgrEditDialog(const wxString& var) : currentSet(Manager::Get()->GetConfigManager(_T("gcv"))->Read(_T("/active"))), currentVar(var)
 {
-    wxXmlResource::Get()->LoadDialog(this, Manager::Get()->GetAppWindow(), _T("dlgGloabalUservars"));
+    wxXmlResource::Get()->LoadObject(this, Manager::Get()->GetAppWindow(), _T("dlgGloabalUservars"),_T("wxScrollingDialog"));
     selSet = XRCCTRL(*this, "selSet", wxChoice);
     selVar = XRCCTRL(*this, "selVar", wxChoice);
     deleteSet = XRCCTRL(*this, "deleteSet", wxButton);
@@ -541,7 +541,10 @@ void UsrGlblMgrEditDialog::Load()
     for(unsigned int i = 0; i < builtinMembers.GetCount(); ++i)
     {
         ((wxTextCtrl*) FindWindow(builtinMembers[i]))->SetValue(cfg->Read(path + builtinMembers[i]));
-        knownMembers.RemoveAt(knownMembers.Index(builtinMembers[i], false));
+        
+        int index = knownMembers.Index(builtinMembers[i], false);
+        if (index != wxNOT_FOUND)
+            knownMembers.RemoveAt(index);
     }
 
     for(unsigned int i = 0; i < 7; ++i)
@@ -608,8 +611,7 @@ void UsrGlblMgrEditDialog::UpdateChoices()
     selVar->Clear();
     selVar->Append(vars);
 
-
-    if(currentVar.IsEmpty())
+    if(currentVar.IsEmpty() && selVar->GetCount() > 0)
         currentVar = selVar->GetString(0);
 
     selSet->SetStringSelection(currentSet);

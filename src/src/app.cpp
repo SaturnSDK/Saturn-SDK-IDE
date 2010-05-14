@@ -22,7 +22,7 @@
 #include <wx/notebook.h>
 #include <wx/clipbrd.h>
 
-#include <wx/aui/auibook.h>
+#include "cbauibook.h"
 #include <cbexception.h>
 #include <wx/debugrpt.h>
 #include <configmanager.h>
@@ -234,7 +234,7 @@ class Splash
         {
             if (show)
             {
-                wxBitmap bmp = cbLoadBitmap(ConfigManager::ReadDataPath() + _T("/images/splash_new.png"));
+                wxBitmap bmp = cbLoadBitmap(ConfigManager::ReadDataPath() + _T("/images/splash_0802.png"));
                 m_pSplash = new cbSplashScreen(bmp, -1, 0, -1, wxNO_BORDER | wxFRAME_NO_TASKBAR | wxFRAME_SHAPED);
                 Manager::Yield();
             }
@@ -334,7 +334,7 @@ void CodeBlocksApp::InitAssociations()
 {
 #ifdef __WXMSW__
     ConfigManager *cfg = Manager::Get()->GetConfigManager(_T("app"));
-    if (!m_NoAssocs && cfg->ReadBool(_T("/environment/check_associations"), true))
+    if (m_Assocs && cfg->ReadBool(_T("/environment/check_associations"), true))
     {
         if (!Associations::Check())
         {
@@ -401,8 +401,8 @@ MainFrame* CodeBlocksApp::InitFrame()
     MainFrame *frame = new MainFrame();
     wxUpdateUIEvent::SetUpdateInterval(100);
     SetTopWindow(0);
-    //frame->Hide(); // shouldn't need this explicitly
-    if (g_DDEServer && !m_NoDDE)
+
+    if (g_DDEServer && m_DDE)
     {
         // Set m_Frame in DDE-Server
         g_DDEServer->SetFrame(frame);
@@ -489,15 +489,19 @@ bool CodeBlocksApp::OnInit()
 
     wxTheClipboard->Flush();
 
+    wxCmdLineParser& parser = *Manager::GetCmdLineParser();
+    parser.SetDesc(cmdLineDesc);
+
     // NOTE: crash handler explicitly disabled because it causes problems
     //       with plugins loading/unloading...
     //
-    // static CrashHandler crash_handler(m_NoCrashHandler);
+    // static CrashHandler crash_handler(!m_CrashHandler);
 
     // we'll do this once and for all at startup
     wxFileSystem::AddHandler(new wxZipFSHandler);
     wxFileSystem::AddHandler(new wxMemoryFSHandler);
     wxXmlResource::Get()->InsertHandler(new wxToolBarAddOnXmlHandler);
+    wxXmlResource::Get()->InsertHandler(new wxScrollingDialogXmlHandler);
     wxInitAllImageHandlers();
     wxXmlResource::Get()->InitAllHandlers();
 
@@ -523,7 +527,7 @@ bool CodeBlocksApp::OnInit()
 
         InitLocale();
 
-        if(!m_NoDDE && !m_Batch && Manager::Get()->GetConfigManager(_T("app"))->ReadBool(_T("/environment/use_ipc"), true))
+        if(m_DDE && !m_Batch && Manager::Get()->GetConfigManager(_T("app"))->ReadBool(_T("/environment/use_ipc"), true))
         {
             // Create a new client
             DDEClient *client = new DDEClient;
@@ -533,8 +537,6 @@ bool CodeBlocksApp::OnInit()
             if(connection)
             {
                 wxArrayString strFilesInCommandLine;
-                wxCmdLineParser& parser = *Manager::GetCmdLineParser();
-                parser.SetDesc(cmdLineDesc);
                 parser.SetCmdLine(argc, argv);
 
                 // search for valid filenames passed as argument on commandline
@@ -592,7 +594,7 @@ bool CodeBlocksApp::OnInit()
             delete client;
         }
         // Now we can start the DDE-/IPC-Server, if we did it earlier we would connect to ourselves
-        if (!m_NoDDE && !m_Batch)
+        if (m_DDE && !m_Batch)
         {
             g_DDEServer = new DDEServer(0L);
             g_DDEServer->Create(DDE_SERVICE);
@@ -607,23 +609,25 @@ bool CodeBlocksApp::OnInit()
             {
 
                 /* NOTE: Due to a recent change in logging code, this visual warning got disabled.
-                   So the wxLogError() has been changed to a wxMessageBox(). */
-                wxMessageBox(_("Another program instance is already running.\nCode::Blocks is currently configured to only allow one running instance.\n\nYou can access this Setting under the menu item 'Environment'."),
+                   So the wxLogError() has been changed to a cbMessageBox(). */
+                cbMessageBox(_("Another program instance is already running.\nCode::Blocks is currently configured to only allow one running instance.\n\nYou can access this Setting under the menu item 'Environment'."),
                             _T("Code::Blocks"), wxOK | wxICON_ERROR);
                 return false;
             }
         }
         // Splash screen moved to this place, otherwise it would be short visible, even if we only pass filenames via DDE/IPC
         // we also don't need it, if only a single instance is allowed
-        Splash splash(!m_Batch && m_Script.IsEmpty() &&
-                      !m_NoSplash &&
+        Splash splash(!m_Batch && m_Script.IsEmpty() && m_Splash &&
                       Manager::Get()->GetConfigManager(_T("app"))->ReadBool(_T("/environment/show_splash"), true));
         InitDebugConsole();
 
         Manager::SetBatchBuild(m_Batch || !m_Script.IsEmpty());
         Manager::Get()->GetScriptingManager();
-        MainFrame* frame = 0; frame = InitFrame();
+        MainFrame* frame = 0; 
+        frame = InitFrame();
         m_Frame = frame;
+
+        if (m_SafeMode) wxLog::EnableLogging(true); // re-enable logging in safe-mode
 
         if (m_Batch)
         {
@@ -1035,7 +1039,6 @@ int CodeBlocksApp::ParseCmdLine(MainFrame* handlerFrame)
 
 #if wxUSE_CMDLINE_PARSER
     wxCmdLineParser& parser = *Manager::GetCmdLineParser();
-    parser.SetDesc(cmdLineDesc);
     parser.SetCmdLine(argc, argv);
     // wxApp::argc is a wxChar**
 
@@ -1087,15 +1090,15 @@ int CodeBlocksApp::ParseCmdLine(MainFrame* handlerFrame)
                     wxString val;
                     parser.Found(_T("prefix"), &m_Prefix);
 #ifdef __WXMSW__
-                    m_NoDDE = parser.Found(_T("no-dde"));
-                    m_NoAssocs = parser.Found(_T("no-check-associations"));
+                    m_DDE = !parser.Found(_T("no-dde"));
+                    m_Assocs = !parser.Found(_T("no-check-associations"));
 #else
-                    m_NoDDE = parser.Found(_T("no-ipc"));
+                    m_DDE = !parser.Found(_T("no-ipc"));
 #endif
                     m_SafeMode = parser.Found(_T("safe-mode"));
-                    m_NoSplash = parser.Found(_T("no-splash-screen"));
+                    m_Splash = !parser.Found(_T("no-splash-screen"));
                     m_HasDebugLog = parser.Found(_T("debug-log"));
-                    m_NoCrashHandler = parser.Found(_T("no-crash-handler"));
+                    m_CrashHandler = !parser.Found(_T("no-crash-handler"));
                     if (parser.Found(_T("personality"), &val) ||
                         parser.Found(_T("profile"), &val))
                     {

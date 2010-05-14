@@ -34,6 +34,7 @@
 #include <wx/statline.h>
 #include <wx/ffile.h>
 #include <wx/utils.h>
+#include <wx/uri.h>
 #include "makefilegenerator.h"
 #include "compileroptionsdlg.h"
 #include "directcommands.h"
@@ -1609,10 +1610,10 @@ void CompilerGCC::PrintBanner(BuildAction action, cbProject* prj, ProjectBuildTa
                     Action.wx_str(),
                     target
                         ? target->GetTitle().wx_str()
-                        : _T("\"no target\""),
+                        : _("\"no target\"").wx_str(),
                     prj
                         ? prj->GetTitle().wx_str()
-                        : _T("\"no project\"")
+                        : _("\"no project\"").wx_str()
                 );
     #else
     banner.Printf(_("-------------- %s: %s in %s ---------------"),
@@ -2344,7 +2345,7 @@ void CompilerGCC::BuildStateManagement()
                 if(cleanOK)
                 {
                     #if wxCHECK_VERSION(2, 9, 0)
-                    Manager::Get()->GetLogManager()->Log(F(_("Cleaned \"%s - %s\""), m_pBuildingProject->GetTitle().wx_str(), bt ? bt->GetTitle().wx_str() : _T("<all targets>")), m_PageIndex);
+                    Manager::Get()->GetLogManager()->Log(F(_("Cleaned \"%s - %s\""), m_pBuildingProject->GetTitle().wx_str(), bt ? bt->GetTitle().wx_str() : _("<all targets>").wx_str()), m_PageIndex);
                     #else
                     Manager::Get()->GetLogManager()->Log(F(_("Cleaned \"%s - %s\""), m_pBuildingProject->GetTitle().c_str(), bt ? bt->GetTitle().c_str() : _("<all targets>")), m_PageIndex);
                     #endif
@@ -2352,7 +2353,7 @@ void CompilerGCC::BuildStateManagement()
                 else
                 {
                     #if wxCHECK_VERSION(2, 9, 0)
-                    Manager::Get()->GetLogManager()->Log(F(_("Error cleaning \"%s - %s\""), m_pBuildingProject->GetTitle().wx_str(), bt ? bt->GetTitle().wx_str() : _T("<all targets>")), m_PageIndex);
+                    Manager::Get()->GetLogManager()->Log(F(_("Error cleaning \"%s - %s\""), m_pBuildingProject->GetTitle().wx_str(), bt ? bt->GetTitle().wx_str() : _("<all targets>").wx_str()), m_PageIndex);
                     #else
                     Manager::Get()->GetLogManager()->Log(F(_("Error cleaning \"%s - %s\""), m_pBuildingProject->GetTitle().c_str(), bt ? bt->GetTitle().c_str() : _("<all targets>")), m_PageIndex);
                     #endif
@@ -2363,7 +2364,7 @@ void CompilerGCC::BuildStateManagement()
                 wxArrayString clean = dc.GetCleanCommands(bt, true);
                 DoClean(clean);
                 #if wxCHECK_VERSION(2, 9, 0)
-                Manager::Get()->GetLogManager()->Log(F(_("Cleaned \"%s - %s\""), m_pBuildingProject->GetTitle().wx_str(), bt ? bt->GetTitle().wx_str() : _T("<all targets>")), m_PageIndex);
+                Manager::Get()->GetLogManager()->Log(F(_("Cleaned \"%s - %s\""), m_pBuildingProject->GetTitle().wx_str(), bt ? bt->GetTitle().wx_str() : _("<all targets>").wx_str()), m_PageIndex);
                 #else
                 Manager::Get()->GetLogManager()->Log(F(_("Cleaned \"%s - %s\""), m_pBuildingProject->GetTitle().c_str(), bt ? bt->GetTitle().c_str() : _("<all targets>")), m_PageIndex);
                 #endif
@@ -3363,6 +3364,23 @@ void CompilerGCC::OnGCCError(CodeBlocksEvent& event)
 
 void CompilerGCC::AddOutputLine(const wxString& output, bool forceErrorColour)
 {
+    wxArrayString ignore_output = Manager::Get()->GetConfigManager(_T("compiler"))->ReadArrayString(_T("/ignore_output"));
+    if (!ignore_output.IsEmpty())
+    {
+        for (size_t i = 0; i<ignore_output.GetCount(); ++i)
+        {
+            if (output.Find(ignore_output.Item(i)) != wxNOT_FOUND)
+            {
+            #if wxCHECK_VERSION(2, 9, 0)
+                Manager::Get()->GetLogManager()->DebugLog(F(_T("Ignoring compiler output: %s"), output.wx_str()));
+            #else
+                Manager::Get()->GetLogManager()->DebugLog(F(_T("Ignoring compiler output: %s"), output.c_str()));
+            #endif
+                return;
+            }
+        }
+    }
+
     Compiler* compiler = CompilerFactory::GetCompiler(m_CompilerId);
     CompilerLineType clt = compiler->CheckForWarningsAndErrors(output);
 
@@ -3423,7 +3441,7 @@ void CompilerGCC::AddOutputLine(const wxString& output, bool forceErrorColour)
                     AskForActiveProject();
                     project = m_Project;
                 }
-                last_error_file.PrependDir(project->GetExecutionDir());
+                last_error_file = project->GetExecutionDir() + last_error_file.GetFullPath();
                 last_error_file.MakeRelativeTo(project->GetBasePath());
                 last_error_filename = last_error_file.GetFullPath();
             }
@@ -3577,6 +3595,8 @@ void CompilerGCC::SaveBuildLog()
     f.Write(_T("<html>\n"));
     f.Write(_T("<head>\n"));
     f.Write(_T("<title>") + m_BuildLogTitle + _T("</title>\n"));
+    f.Write(_T("<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\" />"));
+
     f.Write(_T("</head>\n"));
     f.Write(_T("<body>\n"));
 
@@ -3604,10 +3624,12 @@ void CompilerGCC::SaveBuildLog()
     f.Write(_T("</html>\n"));
 
     Manager::Get()->GetLogManager()->Log(_("Build log saved as: "), m_PageIndex);
+    wxURI tmpFilename = m_BuildLogFilename;
+
     #if wxCHECK_VERSION(2, 9, 0)
-    Manager::Get()->GetLogManager()->Log(F(_T("file://%s"), m_BuildLogFilename.wx_str()), m_PageIndex, Logger::warning);
+    Manager::Get()->GetLogManager()->Log(F(_T("file://%s"), tmpFilename.BuildURI().wx_str()), m_PageIndex, Logger::warning);
     #else
-    Manager::Get()->GetLogManager()->Log(F(_T("file://%s"), m_BuildLogFilename.c_str()), m_PageIndex, Logger::warning);
+    Manager::Get()->GetLogManager()->Log(F(_T("file://%s"), tmpFilename.BuildURI().c_str()), m_PageIndex, Logger::warning);
     #endif
 }
 

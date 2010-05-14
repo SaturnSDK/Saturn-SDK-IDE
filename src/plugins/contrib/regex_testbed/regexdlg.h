@@ -7,10 +7,12 @@
     #pragma hdrstop
 #endif
 
+#include <set>
+
 //(*Headers(regex_dialog)
 #include <wx/checkbox.h>
+#include "scrollingdialog.h"
 #include <wx/choice.h>
-#include <wx/dialog.h>
 #include <wx/html/htmlwin.h>
 #include <wx/sizer.h>
 #include <wx/stattext.h>
@@ -26,7 +28,7 @@
   #include <wx/regex.h>
 #endif
 
-class RegExDlg: public wxDialog
+class RegExDlg: public wxScrollingDialog
 {
 	public:
 
@@ -38,6 +40,8 @@ class RegExDlg: public wxDialog
 
 		void EndModal(int retCode);
 
+		static void ReleaseAll();
+
 	protected:
 
 		//(*Handlers(regex_dialog)
@@ -45,6 +49,7 @@ class RegExDlg: public wxDialog
 		void OnInit(wxInitDialogEvent& event);
 		void OnRegExItemActivated(wxListEvent& event);
         void OnUpdateUI(wxUpdateUIEvent& event);
+		void OnClose(wxCloseEvent& event);
 		//*)
 
 	private:
@@ -54,16 +59,19 @@ class RegExDlg: public wxDialog
         wxArrayString GetPregMatches(const wxString& text);
 
         //(*Declarations(regex_dialog)
-        wxTextCtrl* m_regex;
-        wxTextCtrl* m_quoted;
-        wxChoice* m_library;
         wxCheckBox* m_nocase;
-        wxCheckBox* m_newlines;
-        wxTextCtrl* m_text;
         wxHtmlWindow* m_output;
+        wxTextCtrl* m_text;
+        wxTextCtrl* m_quoted;
+        wxTextCtrl* m_regex;
+        wxCheckBox* m_newlines;
+        wxChoice* m_library;
         //*)
 
         wxRegEx m_wxre;
+
+        typedef std::set<RegExDlg*> VisibleDialogs;
+        static VisibleDialogs m_visible_dialogs;
 
 		DECLARE_EVENT_TABLE()
 };

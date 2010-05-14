@@ -1,7 +1,8 @@
 #ifndef BROWSEMARKERDEFS_H_INCLUDED
 #define BROWSEMARKERDEFS_H_INCLUDED
 
-#include "wxscintilla/include/wx/wxscintilla.h"
+//svn5785 #include "wxscintilla/include/wx/wxscintilla.h"
+#include <wx/wxscintilla.h>
 
     const int MaxEntries = 20;
 

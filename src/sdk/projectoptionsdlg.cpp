@@ -51,7 +51,7 @@
 #include "filefilters.h"
 #include "virtualbuildtargetsdlg.h"
 
-BEGIN_EVENT_TABLE(ProjectOptionsDlg, wxDialog)
+BEGIN_EVENT_TABLE(ProjectOptionsDlg, wxScrollingDialog)
     EVT_UPDATE_UI( -1,                                 ProjectOptionsDlg::OnUpdateUI)
     EVT_BUTTON(    XRCID("wxID_OK"),                   ProjectOptionsDlg::OnOK)
     EVT_BUTTON(    XRCID("btnPlatform"),               ProjectOptionsDlg::OnPlatform)
@@ -92,7 +92,7 @@ ProjectOptionsDlg::ProjectOptionsDlg(wxWindow* parent, cbProject* project)
     m_Current_Sel(-1),
     m_pCompiler(0L)
 {
-    wxXmlResource::Get()->LoadDialog(this, parent, _T("dlgProjectOptions"));
+    wxXmlResource::Get()->LoadObject(this, parent, _T("dlgProjectOptions"),_T("wxScrollingDialog"));
 
     wxCheckListBox* list = XRCCTRL(*this, "lstFiles", wxCheckListBox);
     int count = m_Project->GetFilesCount();
@@ -884,7 +884,7 @@ void ProjectOptionsDlg::OnAddScript(wxCommandEvent& event)
         fname.Assign(paths[i]);
         fname.MakeRelativeTo(m_Project->GetBasePath());
         ctrl->Append(fname.GetFullPath());
-        ctrl->SetSelection(ctrl->GetCount());
+        ctrl->SetSelection(ctrl->GetCount()-1);
 
         wxTreeCtrl* tc = XRCCTRL(*this, "tcOverview", wxTreeCtrl);
         wxTreeItemId sel = tc->GetSelection();
@@ -1092,6 +1092,6 @@ void ProjectOptionsDlg::EndModal(int retCode)
         }
     }
 
-    wxDialog::EndModal(retCode);
+    wxScrollingDialog::EndModal(retCode);
 }
 

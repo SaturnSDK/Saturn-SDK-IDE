@@ -2,7 +2,7 @@ SUBDIRS = scripting wxscintilla resources
 
 INCLUDES = $(WX_CXXFLAGS) \
 			-I$(top_srcdir)/src/include \
-			-I$(top_srcdir)/src/include/wxscintilla/include \
+			-I$(top_srcdir)/src/sdk/wxscintilla/include \
 			-I$(top_srcdir)/src/include/tinyxml \
 			-I$(top_srcdir)/src/include/scripting/include \
  			-I$(top_srcdir)/src/include/scripting/sqplus \
@@ -24,6 +24,7 @@ libcodeblocks_la_SOURCES = annoyingdialog.cpp \
 						autodetectcompilers.cpp \
 						base64.cpp \
 						blockallocated.cpp \
+						cbauibook.cpp \
 						cbexception.cpp \
 						cbeditor.cpp \
 						cbeditorprintout.cpp \
@@ -95,6 +96,7 @@ libcodeblocks_la_SOURCES = annoyingdialog.cpp \
 						replacedlg.cpp \
 						scriptingmanager.cpp \
 						scriptsecuritywarningdlg.cpp \
+						scrollingdialog.cpp \
 						sdk_events.cpp \
 						searchresultslog.cpp \
 						selecttargetdlg.cpp \

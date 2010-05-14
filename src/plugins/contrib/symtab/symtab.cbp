@@ -12,6 +12,7 @@
 				<Option object_output="..\..\..\.objs\plugins\contrib\symtab" />
 				<Option type="3" />
 				<Option compiler="gcc" />
+				<Option parameters="--debug-log -na -ns -nd" />
 				<Option host_application="..\..\..\devel\codeblocks.exe" />
 				<Compiler>
 					<Add option="-Wall" />
@@ -40,7 +41,7 @@
 			<Add option="-DcbDEBUG" />
 			<Add option="-DwxUSE_UNICODE" />
 			<Add directory="..\..\..\include" />
-			<Add directory="..\..\..\include\wxscintilla\include" />
+			<Add directory="..\..\..\sdk\wxscintilla\include" />
 			<Add directory="$(#WX.include)" />
 			<Add directory="$(#WX.lib)\gcc_dll$(WX_CFG)\msw$(WX_SUFFIX)" />
 		</Compiler>
@@ -48,6 +49,7 @@
 			<Add directory="$(#WX.include)" />
 		</ResourceCompiler>
 		<Linker>
+			<Add option="-mthreads" />
 			<Add library="codeblocks" />
 			<Add library="wxmsw28$(WX_SUFFIX)" />
 			<Add directory="..\..\..\devel" />

@@ -1,7 +1,8 @@
 <resource>
-    <object class="wxDialog" name="regex_dialog">
+    <object class="wxScrollingDialog" name="regex_dialog">
         <title>Regular expression utility</title>
         <centered>1</centered>
+        <style>wxSTAY_ON_TOP|wxDEFAULT_DIALOG_STYLE</style>
         <object class="wxFlexGridSizer">
             <cols>1</cols>
             <growablecols>0</growablecols>

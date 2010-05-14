@@ -21,12 +21,12 @@
 #ifndef EDITSNIPPETFRAME_H
 #define EDITSNIPPETFRAME_H
 
-#include <wx/dialog.h>
+#include "scrollingdialog.h"
 #include <wx/stattext.h>
 #include <wx/button.h>
 #include <wx/frame.h>
 #include <wx/treectrl.h>
-#include <wx/aui/auibook.h>
+#include "cbauibook.h"
 
 //class Edit;
 class ScbEditor;
@@ -75,7 +75,8 @@ class EditSnippetFrame : public wxFrame
         void OncbEditorSave( CodeBlocksEvent& event );
         void OnMenuFileClose (wxCommandEvent& event);
 
-        void OnCloseWindow (wxCloseEvent &event);
+        void OnCloseFrameOrWindow(wxCloseEvent &event);
+        //-void OnCloseWindow (wxCloseEvent &event);
         ////void OnWindowDestroy( wxCommandEvent event );
         void OnPageClose( wxAuiNotebookEvent event );
         void OnFileCheckModified();

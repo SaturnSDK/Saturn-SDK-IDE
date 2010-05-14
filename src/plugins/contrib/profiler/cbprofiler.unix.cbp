@@ -8,8 +8,11 @@
 		<Build>
 			<Target title="default">
 				<Option output="../../../devel/share/codeblocks/plugins/libProfiler.so" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../../.objs/plugins/contrib/profiler" />
 				<Option type="3" />
 				<Option compiler="gcc" />
+				<Option parameters="--debug-log -ns -ni" />
+				<Option host_application="../../../devel/codeblocks" />
 			</Target>
 			<Environment>
 				<Variable name="CBDIR" value="../../.." />
@@ -27,7 +30,7 @@
 			<Add option="-DcbDEBUG" />
 			<Add option="-DCB_PRECOMP" />
 			<Add directory="$(CBDIR)/include" />
-			<Add directory="$(CBDIR)/include/wxscintilla/include" />
+			<Add directory="$(CBDIR)/sdk/wxscintilla/include" />
 		</Compiler>
 		<Linker>
 			<Add option="`wx-config --libs`" />
@@ -44,8 +47,13 @@
 		<Unit filename="cbprofilerconfig.h" />
 		<Unit filename="cbprofilerexec.cpp" />
 		<Unit filename="cbprofilerexec.h" />
+		<Unit filename="resources/configuration.xrc" />
+		<Unit filename="resources/main_dialog.xrc" />
+		<Unit filename="resources/manifest.xml" />
 		<Extensions>
 			<code_completion />
+			<envvars />
+			<debugger />
 		</Extensions>
 	</Project>
 </CodeBlocks_project_file>

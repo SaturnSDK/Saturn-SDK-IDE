@@ -11,7 +11,8 @@
 				<Option object_output="..\..\..\.objs\plugins\contrib\AutoVersioning" />
 				<Option type="3" />
 				<Option compiler="gcc" />
-				<Option host_application="$(#cb)\devel\codeblocks" />
+				<Option parameters="--debug-log -na -ns -nd" />
+				<Option host_application="..\..\..\devel\codeblocks.exe" />
 				<Compiler>
 					<Add option="-g" />
 					<Add option="-pipe" />
@@ -28,12 +29,13 @@
 					<Add option="-DWX_PRECOMP" />
 					<Add option="-DwxUSE_UNICODE" />
 					<Add directory="..\..\..\include" />
-					<Add directory="..\..\..\include\wxscintilla\include" />
+					<Add directory="..\..\..\sdk\wxscintilla\include" />
 					<Add directory="$(#WX.include)" />
 					<Add directory="$(#WX.lib)\gcc_dll$(WX_CFG)\msw$(WX_SUFFIX)" />
 				</Compiler>
 				<Linker>
 					<Add option="-Wl,--enable-auto-import" />
+					<Add option="-mthreads" />
 					<Add library="wxmsw28$(WX_SUFFIX)" />
 					<Add library="codeblocks" />
 					<Add directory="..\..\..\devel" />
@@ -74,8 +76,8 @@
 			<wxsmith version="1">
 				<gui name="wxWidgets" src="avVersionEditorDlg.cpp" main="avVersionEditorDlg" init_handlers="necessary" language="CPP" />
 				<resources>
-					<wxDialog wxs="wxsmith/avVersionEditorDlg.wxs" src="avVersionEditorDlg.cpp" hdr="avVersionEditorDlg.h" name="avVersionEditorDlg" language="CPP" />
-					<wxDialog wxs="wxsmith/avChangesDlg.wxs" src="avChangesDlg.cpp" hdr="avChangesDlg.h" name="avChangesDlg" language="CPP" />
+					<wxScrollingDialog wxs="wxsmith/avVersionEditorDlg.wxs" src="avVersionEditorDlg.cpp" hdr="avVersionEditorDlg.h" name="avVersionEditorDlg" language="CPP" />
+					<wxScrollingDialog wxs="wxsmith/avChangesDlg.wxs" src="avChangesDlg.cpp" hdr="avChangesDlg.h" name="avChangesDlg" language="CPP" />
 				</resources>
 			</wxsmith>
 			<debugger />

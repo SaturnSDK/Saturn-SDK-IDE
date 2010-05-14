@@ -209,7 +209,7 @@ void OpenFilesListPlugin::RebuildOpenFilesTree()
 
 void OpenFilesListPlugin::RefreshOpenFilesTree(EditorBase* ed, bool remove)
 {
-    if(Manager::IsAppShuttingDown())
+    if(Manager::IsAppShuttingDown() || !ed)
         return;
 
     EditorManager* mgr = Manager::Get()->GetEditorManager();
@@ -257,7 +257,6 @@ void OpenFilesListPlugin::RefreshOpenFilesTree(EditorBase* ed, bool remove)
         if(mgr->GetActiveEditor() == ed)
             m_pTree->SelectItem(item);
         m_pTree->SortChildren(m_pTree->GetRootItem());
-        m_pTree->Expand(m_pTree->GetRootItem());
     }
 
     m_pTree->Thaw();

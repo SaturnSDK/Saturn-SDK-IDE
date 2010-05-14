@@ -11,7 +11,8 @@
 				<Option object_output="..\..\..\.objs\plugins\contrib\BrowseTracker" />
 				<Option type="3" />
 				<Option compiler="gcc" />
-				<Option host_application="$(#cb)\devel\codeblocks.exe" />
+				<Option parameters="--debug-log -na -ns -nd" />
+				<Option host_application="..\..\..\devel\codeblocks.exe" />
 				<Compiler>
 					<Add option="-Wall" />
 					<Add option="-pipe" />
@@ -29,13 +30,14 @@
 					<Add option="-DwxUSE_UNICODE" />
 					<Add option="-DNO_LOGGING" />
 					<Add directory="..\..\..\include" />
-					<Add directory="..\..\..\include\wxscintilla\include" />
+					<Add directory="..\..\..\sdk\wxscintilla\include" />
 					<Add directory="$(#WX.include)" />
 					<Add directory="$(#WX.lib)\gcc_dll$(WX_CFG)\msw$(WX_SUFFIX)" />
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
 					<Add option="-Wl,--enable-auto-import" />
+					<Add option="-mthreads" />
 					<Add library="wxmsw28$(WX_SUFFIX)" />
 					<Add library="libwxscintilla.a" />
 					<Add library="codeblocks" />
@@ -69,6 +71,10 @@
 		<Unit filename="BrowseXpms.h" />
 		<Unit filename="ConfigPanel.cpp" />
 		<Unit filename="ConfigPanel.h" />
+		<Unit filename="JumpData.cpp" />
+		<Unit filename="JumpData.h" />
+		<Unit filename="JumpTracker.cpp" />
+		<Unit filename="JumpTracker.h" />
 		<Unit filename="Makefile.am" />
 		<Unit filename="ProjectData.cpp" />
 		<Unit filename="ProjectData.h" />

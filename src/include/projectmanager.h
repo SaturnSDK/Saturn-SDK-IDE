@@ -27,7 +27,7 @@ class wxImageList;
 class ProjectFile;
 class FilesGroupsAndMasks;
 class cbWorkspace;
-class wxAuiNotebook;
+class cbAuiNotebook;
 class wxAuiNotebookEvent;
 
 DLLIMPORT extern int ID_ProjectManager; /* Used by both Project and Editor Managers */
@@ -55,7 +55,7 @@ class DLLIMPORT ProjectManager : public Mgr<ProjectManager>, public wxEvtHandler
         ProjectManager(const ProjectManager& rhs) { cbThrow(_T("Can't call ProjectManager's copy ctor!!!")); }
         virtual void operator=(const ProjectManager& rhs){ cbThrow(_T("Can't assign an ProjectManager* !!!")); }
 
-        wxAuiNotebook* GetNotebook() { return m_pNotebook; }
+        cbAuiNotebook* GetNotebook() { return m_pNotebook; }
 
         const FilesGroupsAndMasks* GetFilesGroupsAndMasks() const { return m_pFileGroups; }
 
@@ -478,13 +478,14 @@ class DLLIMPORT ProjectManager : public Mgr<ProjectManager>, public wxEvtHandler
         void OnUpdateUI(wxUpdateUIEvent& event);
         void OnIdle(wxIdleEvent& event);
         void OnAppDoneStartup(CodeBlocksEvent& event);
+        void OnKeyDown(wxTreeEvent& event);
 
         void DoOpenSelectedFile();
         void DoOpenFile(ProjectFile* pf, const wxString& filename);
         int DoAddFileToProject(const wxString& filename, cbProject* project, wxArrayInt& targets);
         void RemoveFilesRecursively(wxTreeItemId& sel_id);
 
-        wxAuiNotebook* m_pNotebook;
+        cbAuiNotebook* m_pNotebook;
         wxTreeCtrl* m_pTree;
         wxTreeItemId m_TreeRoot;
         cbProject* m_pActiveProject;

@@ -220,7 +220,9 @@ namespace ScriptBindings
                 func(&wxColour::Blue, "Blue").
                 func(&wxColour::Green, "Green").
                 func(&wxColour::Red, "Red").
+#if wxVERSION_NUMBER < 2900 || !wxCOLOUR_IS_GDIOBJECT
                 func(&wxColour::IsOk, "IsOk").
+#endif
                 func<WXC_SET>(&wxColour::Set, "Set");
 
         ////////////////
@@ -229,7 +231,11 @@ namespace ScriptBindings
         typedef void(wxFileName::*WXFN_ASSIGN_FN)(const wxFileName&);
         typedef void(wxFileName::*WXFN_ASSIGN_STR)(const wxString&, wxPathFormat);
         typedef wxString(wxFileName::*WXFN_GETPATH)(int, wxPathFormat)const;
+#if wxCHECK_VERSION(2, 9, 1)
+        typedef bool(wxFileName::*WXFN_SETCWD)()const;
+#else
         typedef bool(wxFileName::*WXFN_SETCWD)();
+#endif
 
         SqPlus::SQClassDef<wxFileName>("wxFileName").
                 emptyCtor().

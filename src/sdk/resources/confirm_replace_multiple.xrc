@@ -1,6 +1,6 @@
 <?xml version="1.0" ?>
 <resource>
-  <object class="wxDialog" name="dlgConfirmReplaceMultiple">
+  <object class="wxScrollingDialog" name="dlgConfirmReplaceMultiple">
     <title>Confirm replace multiple</title>
     <object class="wxBoxSizer">
       <orient>wxVERTICAL</orient>
@@ -33,7 +33,7 @@
           </object>
           <object class="sizeritem">
             <object class="wxButton" name="btnAllInFile">
-              <label>&amp;All in this file</label>
+              <label>All in &amp;this file</label>
             </object>
             <flag>wxRIGHT</flag>
             <border>4</border>

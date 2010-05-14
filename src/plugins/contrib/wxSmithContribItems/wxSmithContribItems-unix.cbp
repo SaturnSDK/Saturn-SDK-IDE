@@ -4,11 +4,11 @@
 	<Project>
 		<Option title="wxSmith - Contrib Items (Unix)" />
 		<Option pch_mode="2" />
+		<Option default_target="wxSmithContribItems" />
 		<Option compiler="gcc" />
 		<Build>
 			<Target title="wxFlatNoteBook">
 				<Option output="../../../devel/libwxflatnotebook.so" prefix_auto="0" extension_auto="0" />
-				<Option working_dir="../../../devel" />
 				<Option object_output="../../../.objs/plugins/contrib/wxSmithContribItems" />
 				<Option type="3" />
 				<Option compiler="gcc" />
@@ -19,7 +19,6 @@
 			</Target>
 			<Target title="wxChartCtrl">
 				<Option output="../../../devel/libwxchartctrl" prefix_auto="1" extension_auto="1" />
-				<Option working_dir="../../../devel" />
 				<Option object_output="../../../.objs/plugins/contrib/wxSmithContribItems" />
 				<Option type="3" />
 				<Option compiler="gcc" />
@@ -30,7 +29,6 @@
 			</Target>
 			<Target title="wxCustomButton">
 				<Option output="../../../devel/libwxcustombutton" prefix_auto="1" extension_auto="1" />
-				<Option working_dir="../../../devel" />
 				<Option object_output="../../../.objs/plugins/contrib/wxSmithContribItems" />
 				<Option type="3" />
 				<Option compiler="gcc" />
@@ -42,14 +40,15 @@
 			<Target title="wxSmithContribItems">
 				<Option output="../../../devel/share/codeblocks/plugins/libwxSmithContribItems.so" prefix_auto="0" extension_auto="0" />
 				<Option object_output="../../../.objs/plugins/contrib/wxSmithContribItems" />
+				<Option external_deps="../../../devel/libwxsmithlib.so;" />
 				<Option type="3" />
 				<Option compiler="gcc" />
-				<Option host_application="$(#cb)/devel/codeblocks.exe" />
+				<Option parameters="--debug-log -ns -ni" />
+				<Option host_application="../../../devel/codeblocks" />
 				<Option projectLinkerOptionsRelation="2" />
 				<Compiler>
-					<Add option="-DBUILDING_PLUGIN" />
 					<Add option="-DWXMAKINGLIB_PROPGRID" />
-					<Add directory="../../../include/wxscintilla/include" />
+					<Add directory="../../../sdk/wxscintilla/include" />
 					<Add directory="wxthings/wxthings/include" />
 					<Add directory="wxchart/wxchart-1.0/include" />
 					<Add directory="wxflatnotebook/wxFlatNotebook/include" />
@@ -140,6 +139,9 @@
 		<Unit filename="wxchart/wxchart-1.0/include/wx/chartpointstypes.h">
 			<Option target="wxChartCtrl" />
 		</Unit>
+		<Unit filename="wxchart/wxchart-1.0/include/wx/chartsizes.h">
+			<Option target="wxChartCtrl" />
+		</Unit>
 		<Unit filename="wxchart/wxchart-1.0/include/wx/charttypes.h">
 			<Option target="wxChartCtrl" />
 		</Unit>
@@ -192,6 +194,9 @@
 			<Option target="wxChartCtrl" />
 		</Unit>
 		<Unit filename="wxchart/wxchart-1.0/src/chartctrl.cpp">
+			<Option target="wxChartCtrl" />
+		</Unit>
+		<Unit filename="wxchart/wxchart-1.0/src/chartsizes.cpp">
 			<Option target="wxChartCtrl" />
 		</Unit>
 		<Unit filename="wxchart/wxchart-1.0/src/chartwindow.cpp">

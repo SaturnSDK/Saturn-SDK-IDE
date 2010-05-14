@@ -10,7 +10,7 @@
 #include <sdk.h>
 #include <wx/txtstrm.h>
 #include <wx/regex.h>
-#include <wx/dialog.h>
+#include "scrollingdialog.h"
 #include <wx/msgdlg.h>
 #include <wx/tokenzr.h>
 
@@ -70,7 +70,7 @@
 
 // function pointer to DebugBreakProcess under windows (XP+)
 #if (_WIN32_WINNT >= 0x0501)
-typedef WINBASEAPI BOOL WINAPI (*DebugBreakProcessApiCall)(HANDLE);
+typedef BOOL WINAPI (*DebugBreakProcessApiCall)(HANDLE);
 DebugBreakProcessApiCall DebugBreakProcessFunc = 0;
 HINSTANCE kernelLib = 0;
 #endif

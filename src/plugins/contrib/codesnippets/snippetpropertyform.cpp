@@ -36,13 +36,14 @@
 #pragma hdrstop
 #endif //__BORLANDC__
 
-#include "wxscintilla/include/wx/wxscintilla.h"
+//#include "wxscintilla/include/wx/wxscintilla.h" //svn5785
+#include <wx/wxscintilla.h>                       //svn5785
 #include "snippetpropertyform.h"
 //-#include "edit.h"
 
 ///////////////////////////////////////////////////////////////////////////
 
-SnippetPropertyForm::SnippetPropertyForm( wxWindow* parent, int id, wxString title, wxPoint pos, wxSize size, int style ) : wxDialog( parent, id, title, pos, size, style )
+SnippetPropertyForm::SnippetPropertyForm( wxWindow* parent, int id, wxString title, wxPoint pos, wxSize size, int style ) : wxScrollingDialog( parent, id, title, pos, size, style )
 {
 	wxBoxSizer* sbSizer;
 	sbSizer = new wxBoxSizer(  wxVERTICAL );

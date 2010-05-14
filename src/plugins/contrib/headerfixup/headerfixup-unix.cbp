@@ -11,7 +11,8 @@
 				<Option object_output="../../../.objs/plugins/contrib/headerfixup" />
 				<Option type="3" />
 				<Option compiler="gcc" />
-				<Option host_application="$(#CB)/devel/codeblocks" />
+				<Option parameters="--debug-log -ns -ni" />
+				<Option host_application="../../../devel/codeblocks" />
 				<Compiler>
 					<Add option="-g" />
 					<Add option="-fmessage-length=0" />
@@ -23,9 +24,8 @@
 					<Add option="-Winvalid-pch" />
 					<Add option="-DcbDEBUG" />
 					<Add option="-DCB_PRECOMP" />
-					<Add option="-DWX_PRECOMP" />
 					<Add directory="../../../include" />
-					<Add directory="../../../include/wxscintilla/include" />
+					<Add directory="../../../sdk/wxscintilla/include" />
 					<Add directory="../../../include/mozilla_chardet" />
 				</Compiler>
 				<Linker>
@@ -73,7 +73,8 @@
 			<wxsmith version="1">
 				<resources>
 					<wxPanel wxs="wxsmith/configuration.wxs" src="configuration.cpp" hdr="configuration.h" name="Configuration" language="CPP" />
-					<wxDialog wxs="wxsmith/execution.wxs" src="execution.cpp" hdr="execution.h" name="Execution" language="CPP" />
+					<wxScrollingDialog wxs="wxsmith/execution.wxs" src="execution.cpp" hdr="execution.h" name="Execution" language="CPP" />
+					<wxScrollingDialog wxs="wxsmith/protocol.wxs" src="protocol.cpp" hdr="protocol.h" name="Protocol" language="CPP" />
 				</resources>
 			</wxsmith>
 			<SVNInside Login="" Password="" ConnectStatus="1" NeedsPassword="0" />

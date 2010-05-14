@@ -131,16 +131,20 @@ void HexEditor::BuildMenu(wxMenuBar* menuBar)
     for ( wxMenuItemList::iterator i = list.begin(); i != list.end(); ++i, ++pos )
     {
         wxMenuItem* item = *i;
+        #if wxCHECK_VERSION(2, 9, 0)
+        wxString label = item->GetItemLabelText();
+        #else
         wxString label = item->GetLabel();
+        #endif
         label.Replace( _T("_"), _T("") );
         if ( label.Contains( _("Open...")) )
         {
-            fileMenu->Insert( pos+1, idOpenWithHE, _("Open with HexEditor"), _("Open file using HexEditor") );
+            fileMenu->Insert( pos+1, idOpenWithHE, _("Open with hex editor"), _("Open file using hex editor") );
             return;
         }
     }
 
-    fileMenu->Append( idOpenWithHE, _("Open with HexEditor"), _("Open file using HexEditor") );
+    fileMenu->Append( idOpenWithHE, _("Open with hex editor"), _("Open file using hex editor") );
 }
 
 void HexEditor::OnOpenHexEditFileBrowser( wxCommandEvent& event )

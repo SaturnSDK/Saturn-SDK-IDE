@@ -118,6 +118,9 @@
     #include "workspaceloader.h"
     #include "editorcolourset.h"
     #include "pipedprocess.h"
+    #include "scrollingdialog.h"
+    #include "cbauibook.h"
+
 
     // managers
     #include "manager.h"

@@ -11,6 +11,7 @@
 				<Option object_output="..\..\..\.objs\plugins\contrib\profiler" />
 				<Option type="3" />
 				<Option compiler="gcc" />
+				<Option parameters="--debug-log -na -ns -nd" />
 				<Option host_application="..\..\..\devel\codeblocks.exe" />
 			</Target>
 			<Environment>
@@ -36,7 +37,7 @@
 			<Add option="-DcbDEBUG" />
 			<Add option="-DwxUSE_UNICODE" />
 			<Add directory="..\..\..\include" />
-			<Add directory="..\..\..\include\wxscintilla\include" />
+			<Add directory="..\..\..\sdk\wxscintilla\include" />
 			<Add directory="$(#WX.include)" />
 			<Add directory="$(#WX)\contrib\include" />
 			<Add directory="$(#WX.lib)\gcc_dll$(WX_CFG)\msw$(WX_SUFFIX)" />
@@ -45,6 +46,8 @@
 			<Add directory="$(#WX.include)" />
 		</ResourceCompiler>
 		<Linker>
+			<Add option="-Wl,--enable-auto-import" />
+			<Add option="-mthreads" />
 			<Add library="codeblocks" />
 			<Add library="wxmsw28$(WX_SUFFIX)" />
 			<Add directory="..\..\..\devel" />

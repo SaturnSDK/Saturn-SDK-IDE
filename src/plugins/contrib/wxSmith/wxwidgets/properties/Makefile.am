@@ -2,7 +2,7 @@ AM_CPPFLAGS = -DWXMAKINGLIB_PROPGRID
 
 INCLUDES = $(WX_CXXFLAGS) \
 		-I$(top_srcdir)/src/include \
-		-I$(top_srcdir)/src/include/wxscintilla/include \
+		-I$(top_srcdir)/src/sdk/wxscintilla/include \
 		-I$(top_srcdir)/src/plugins/contrib/wxSmith/propgrid/contrib/include
 
 noinst_LTLIBRARIES = libwxsmith_wxwidgets_properties.la
@@ -27,7 +27,7 @@ libwxsmith_wxwidgets_properties_la_SOURCES = \
 ./wxssimplefonteditordlg.cpp
 
 sdkdir=$(includedir)/wxsmith/wxwidgets/properties/
- 
+
 sdk_HEADERS = \
 ./wxsdimensionproperty.h \
 ./wxsbitmapiconproperty.h \

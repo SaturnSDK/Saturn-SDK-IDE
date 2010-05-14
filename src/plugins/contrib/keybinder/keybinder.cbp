@@ -11,6 +11,7 @@
 				<Option object_output="..\..\..\.objs\plugins\contrib\keybinder" />
 				<Option type="3" />
 				<Option compiler="gcc" />
+				<Option parameters="--debug-log -na -ns -nd" />
 				<Option host_application="..\..\..\devel\codeblocks.exe" />
 				<Compiler>
 					<Add option="-Winvalid-pch" />
@@ -27,6 +28,9 @@
 					<Add option="-DcbDEBUG" />
 					<Add option="-DwxUSE_UNICODE" />
 				</Compiler>
+				<Linker>
+					<Add option="-mthreads" />
+				</Linker>
 			</Target>
 			<Environment>
 				<Variable name="WX_SUFFIX" value="u" />
@@ -40,7 +44,7 @@
 			<Add option="-Wall" />
 			<Add option="-g" />
 			<Add directory="..\..\..\include" />
-			<Add directory="..\..\..\include\wxscintilla\include" />
+			<Add directory="..\..\..\sdk\wxscintilla\include" />
 			<Add directory="$(#WX.include)" />
 			<Add directory="$(#WX.lib)\gcc_dll$(WX_CFG)\msw$(WX_SUFFIX)" />
 			<Add directory="$(#WX)\contrib\include" />

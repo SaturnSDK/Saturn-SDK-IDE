@@ -19,6 +19,7 @@
 #include "cbplugin.h"
 #include "sdk_events.h"
 #include "scripting/bindings/sc_base_types.h"
+#include "scrollingdialog.h"
 
 WX_DECLARE_HASH_MAP(int, wxString, wxIntegerHash, wxIntegerEqual, PluginIDsMap);
 WX_DECLARE_HASH_MAP(cbPlugin*, wxToolBar*, wxPointerHash, wxPointerEqual, PluginToolbarsMap);
@@ -27,7 +28,7 @@ WX_DECLARE_STRING_HASH_MAP(wxString, LayoutViewsMap);
 extern int idStartHerePageLink;
 extern int idStartHerePageVarSubst;
 
-class wxAuiNotebook;
+class cbAuiNotebook;
 class InfoPane;
 class wxGauge;
 
@@ -50,7 +51,7 @@ class MainFrame : public wxFrame
         bool OnDropFiles(wxCoord x, wxCoord y, const wxArrayString& filenames);
         void ShowTips(bool forceShow = false);
 
-        wxDialog* GetBatchBuildDialog(){ return m_pBatchBuildDialog; }
+        wxScrollingDialog* GetBatchBuildDialog(){ return m_pBatchBuildDialog; }
 
         // show a file-open dialog and return the selection
         wxString ShowOpenFileDialog(const wxString& caption, const wxString& filter);
@@ -261,7 +262,7 @@ class MainFrame : public wxFrame
         void DoFixToolbarsLayout();
         bool DoCheckCurrentLayoutForChanges(bool canCancel = true);
 
-        void AskToRemoveFileFromHistory(wxFileHistory* hist, int id);
+        void AskToRemoveFileFromHistory(wxFileHistory* hist, int id, bool cannot_open = true);
 
         void AddEditorInWindowMenu(const wxString& filename, const wxString& title);
         void RemoveEditorFromWindowMenu(const wxString& filename);
@@ -278,7 +279,7 @@ class MainFrame : public wxFrame
         void DoUpdateLayout();
         void DoUpdateLayoutColours();
         void DoUpdateEditorStyle();
-        void DoUpdateEditorStyle(wxAuiNotebook* target, const wxString& prefix, long defaultStyle);
+        void DoUpdateEditorStyle(cbAuiNotebook* target, const wxString& prefix, long defaultStyle);
 
         void ShowHideStartPage(bool forceHasProject = false);
         void ShowHideScriptConsole();
@@ -325,7 +326,7 @@ class MainFrame : public wxFrame
         typedef std::map<int, const wxString> MenuIDToScript; // script menuitem ID -> script function name
         MenuIDToScript m_MenuIDToScript;
 
-        wxDialog* m_pBatchBuildDialog;
+        wxScrollingDialog* m_pBatchBuildDialog;
         wxGauge* m_pProgressBar;
 
         DECLARE_EVENT_TABLE()

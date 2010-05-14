@@ -8,8 +8,10 @@
 		<Build>
 			<Target title="default">
 				<Option output="../../../devel/share/codeblocks/plugins/libAutoversioning" prefix_auto="1" extension_auto="1" />
+				<Option object_output="../../../.objs/plugins/contrib/AutoVersioning" />
 				<Option type="3" />
 				<Option compiler="gcc" />
+				<Option parameters="--debug-log -ns -ni" />
 				<Option host_application="../../../devel/codeblocks" />
 				<Compiler>
 					<Add option="-g" />
@@ -53,8 +55,8 @@
 			<wxsmith version="1">
 				<gui name="wxWidgets" src="avVersionEditorDlg.cpp" main="avVersionEditorDlg" init_handlers="necessary" language="CPP" />
 				<resources>
-					<wxDialog wxs="wxsmith/avVersionEditorDlg.wxs" src="avVersionEditorDlg.cpp" hdr="avVersionEditorDlg.h" name="avVersionEditorDlg" language="CPP" />
-					<wxDialog wxs="wxsmith/avChangesDlg.wxs" src="avChangesDlg.cpp" hdr="avChangesDlg.h" name="avChangesDlg" language="CPP" />
+					<wxScrollingDialog wxs="wxsmith/avVersionEditorDlg.wxs" src="avVersionEditorDlg.cpp" hdr="avVersionEditorDlg.h" name="avVersionEditorDlg" language="CPP" />
+					<wxScrollingDialog wxs="wxsmith/avChangesDlg.wxs" src="avChangesDlg.cpp" hdr="avChangesDlg.h" name="avChangesDlg" language="CPP" />
 				</resources>
 			</wxsmith>
 			<debugger />

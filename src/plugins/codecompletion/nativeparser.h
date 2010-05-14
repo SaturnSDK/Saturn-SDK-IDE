@@ -6,14 +6,14 @@
 #ifndef NATIVEPARSER_H
 #define NATIVEPARSER_H
 
+#include "parser/parser.h"
+
 #include <queue>
 #include <map>
 
 #include <wx/event.h>
 #include <wx/hashmap.h> // TODO: replace with std::map
-#include "parser/parser.h"
 
-#define DEBUG_CC_AI
 extern bool s_DebugSmartSense;
 
 // forward decls
@@ -21,7 +21,6 @@ class cbEditor;
 class EditorBase;
 class cbProject;
 class ClassBrowser;
-//class Parser;
 class Token;
 
 WX_DECLARE_HASH_MAP(cbProject*, Parser*, wxPointerHash, wxPointerEqual, ParsersMap);
@@ -55,6 +54,7 @@ class NativeParser : public wxEvtHandler
         NativeParser();
         ~NativeParser();
 
+        Parser* GetParserPtr() { return &m_Parser; };
         void AddParser(cbProject* project, bool useCache = true);
         void RemoveParser(cbProject* project, bool useCache = true);
         void ClearParsers();
@@ -67,18 +67,13 @@ class NativeParser : public wxEvtHandler
         size_t MarkItemsByAI(TokenIdxSet& result, bool reallyUseAI = true, bool noPartialMatch = false, bool caseSensitive = false, int caretPos = -1);
 
         const wxString& GetCodeCompletionItems();
-        const wxArrayString& GetCallTips(int chars_per_line);
-        int GetCallTipCommas(){ return m_CallTipCommas; }
-        int CountCommas(const wxString& calltip, int start);
         void GetCallTipHighlight(const wxString& calltip, int* start, int* end);
+        int CountCommas(const wxString& calltip, int start);
+        const wxArrayString& GetCallTips(int chars_per_line);
+        int GetCallTipCommas() const { return m_CallTipCommas; }
 
         int GetEditorStartWord() const { return m_EditorStartWord; }
         int GetEditorEndWord() const { return m_EditorEndWord; }
-
-        Parser* FindParserFromActiveEditor();
-        Parser* FindParserFromEditor(EditorBase* editor);
-        Parser* FindParserFromActiveProject();
-        Parser* FindParserFromProject(cbProject* project);
 
         wxArrayString& GetProjectSearchDirs(cbProject* project);
 
@@ -99,13 +94,13 @@ class NativeParser : public wxEvtHandler
     protected:
     private:
         friend class CodeCompletion;
-        size_t AI(TokenIdxSet& result, cbEditor* editor, Parser* parser, const wxString& lineText = wxEmptyString, bool noPartialMatch = false, bool caseSensitive = false, TokenIdxSet* search_scope = 0, int caretPos = -1);
+        size_t AI(TokenIdxSet& result, cbEditor* editor, const wxString& lineText = wxEmptyString, bool noPartialMatch = false, bool caseSensitive = false, TokenIdxSet* search_scope = 0, int caretPos = -1);
 
-        size_t FindAIMatches(Parser* parser, std::queue<ParserComponent> components, TokenIdxSet& result, int parentTokenIdx = -1, bool noPartialMatch = false, bool caseSensitive = false, bool use_inheritance = true, short int kindMask = 0xFFFF, TokenIdxSet* search_scope = 0);
-        size_t BreakUpComponents(Parser* parser, const wxString& actual, std::queue<ParserComponent>& components);
+        size_t FindAIMatches(std::queue<ParserComponent> components, TokenIdxSet& result, int parentTokenIdx = -1, bool noPartialMatch = false, bool caseSensitive = false, bool use_inheritance = true, short int kindMask = 0xFFFF, TokenIdxSet* search_scope = 0);
+        size_t BreakUpComponents(const wxString& actual, std::queue<ParserComponent>& components);
         bool BelongsToParentOrItsAncestors(TokensTree* tree, Token* token, int parentIdx, bool use_inheritance = true);
         size_t GenerateResultSet(TokensTree* tree, const wxString& search, int parentIdx, TokenIdxSet& result, bool caseSens = true, bool isPrefix = false, short int kindMask = 0xFFFF);
-
+        size_t GenerateResultSet(const wxString& search, int parentIdx, TokenIdxSet& result, bool caseSens = true, bool isPrefix = false, short int kindMask = 0xFFFF);
         bool LastAISearchWasGlobal() const { return m_LastAISearchWasGlobal; }
         const wxString& LastAIGlobalSearch() const { return m_LastAIGlobalSearch; }
 
@@ -117,11 +112,11 @@ class NativeParser : public wxEvtHandler
         wxString GetNextCCToken(const wxString& line, unsigned int& startAt, bool& is_function);
         wxString GetCCToken(wxString& line, ParserTokenType& tokenType);
         void BreakUpInLines(wxString& str, const wxString& original_str, int chars_per_line = -1);
-        void AddCompilerDirs(Parser* parser, cbProject* project);
+        void AddCompilerDirs(cbProject* project);
         wxArrayString GetGCCCompilerDirs(const wxString &cpp_compiler, const wxString &base);
-        bool LoadCachedData(Parser* parser, cbProject* project);
-        bool SaveCachedData(Parser* parser, const wxString& projectFilename);
-        void DisplayStatus(Parser* parser);
+        bool LoadCachedData(cbProject* project);
+        bool SaveCachedData(const wxString& projectFilename);
+        void DisplayStatus();
         void OnThreadStart(wxCommandEvent& event);
         void OnThreadEnd(wxCommandEvent& event);
         void OnParserEnd(wxCommandEvent& event);
@@ -130,21 +125,21 @@ class NativeParser : public wxEvtHandler
         bool SkipWhitespaceForward(cbEditor* editor, int& pos);
         bool SkipWhitespaceBackward(cbEditor* editor, int& pos);
 
-        Parser m_Parser;
-        int m_EditorStartWord;
-        int m_EditorEndWord;
-        wxString m_CCItems;
-        wxArrayString m_CallTips;
-        int m_CallTipCommas;
-        ClassBrowser* m_pClassBrowser;
-        bool m_GettingCalltips; // flag while getting calltips
-        bool m_ClassBrowserIsFloating;
+        Parser               m_Parser;
+        int                  m_EditorStartWord;
+        int                  m_EditorEndWord;
+        wxString             m_CCItems;
+        wxArrayString        m_CallTips;
+        int                  m_CallTipCommas;
+        ClassBrowser*        m_pClassBrowser;
+        bool                 m_GettingCalltips; // flag while getting calltips
+        bool                 m_ClassBrowserIsFloating;
 
-        bool m_LastAISearchWasGlobal; // true if the phrase for code-completion is empty or partial text (i.e. no . -> or :: operators)
-        wxString m_LastAIGlobalSearch; // same case like above, it holds the search string
+        bool                 m_LastAISearchWasGlobal; // true if the phrase for code-completion is empty or partial text (i.e. no . -> or :: operators)
+        wxString             m_LastAIGlobalSearch; // same case like above, it holds the search string
 
         ProjectSearchDirsMap m_ProjectSearchDirsMap;
-        int m_HookId; // project loader hook ID
+        int                  m_HookId; // project loader hook ID
 
         DECLARE_EVENT_TABLE()
 };

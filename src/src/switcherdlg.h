@@ -12,8 +12,10 @@
 #ifndef _WX_SWITCHERDLG_H_
 #define _WX_SWITCHERDLG_H_
 
-#include "wx/dynarray.h"
-#include "wx/html/htmlwin.h"
+#include <wx/dynarray.h>
+#include <wx/html/htmlwin.h>
+
+#include "scrollingdialog.h"
 
 /*!
  * wxSwitcherItem
@@ -248,7 +250,7 @@ DECLARE_EVENT_TABLE()
  * and tabs for the user to choose. Ctrl+Tab cycles through them.
  */
 
-class wxSwitcherDialog: public wxDialog
+class wxSwitcherDialog: public wxScrollingDialog
 {
 public:
     // constructors and destructors
@@ -278,7 +280,7 @@ public:
     void ShowDescription(int i);
 
     void SetBorderColour(const wxColour& colour) { m_borderColour = colour; }
-   
+
     // Set an extra key that can be used to cycle through items,
     // in case not using the Ctrl+Tab combination
     void SetExtraNavigationKey(int keyCode);

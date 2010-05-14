@@ -16,9 +16,17 @@
 // Headers
 //----------------------------------------------------------------------------
 
+#if defined(__GNUG__) && !defined(NO_GCC_PRAGMA)
+#pragma interface "xaxiswindow.h"
+#endif
+
 #include <wx/window.h>
 
 #include "wx/xaxis.h"
+
+// External Classes
+//-----------------
+class wxChartSizes;
 
 //----------------------------------------------------------------------------
 // Consts
@@ -28,7 +36,7 @@ const int XAXIS_HEIGHT	= 60;	// height in pixels
 
 //+++-S-cd-------------------------------------------------------------------
 //	NAME:		wxXAxisWindow
-//	DESC:
+//	DESC:		
 //	INTERFACE:
 //
 //----------------------------------------------------------------------E-+++
@@ -49,8 +57,8 @@ public:
 	//---------------------------------------
 	void SetZoom(double z);
 	double GetZoom();
-	void SetSizes(ChartSizes sizes);
-	const ChartSizes& GetSizes() const;
+	void SetSizes(wxChartSizes *sizes);
+	const wxChartSizes* GetSizes() const;
 
 	// Draw y-axis window
 	//-------------------

@@ -27,7 +27,7 @@ DLLIMPORT extern int ID_EditorManagerCloseButton;
 
 // forward decls
 class EditorBase;
-class wxAuiNotebook;
+class cbAuiNotebook;
 class wxAuiNotebookEvent;
 class wxMenuBar;
 class EditorColourSet;
@@ -58,7 +58,7 @@ class DLLIMPORT EditorManager : public Mgr<EditorManager>, public wxEvtHandler
         EditorManager(const EditorManager& rhs) { cbThrow(_T("Can't call EditorManager's copy ctor!!!")); }
         virtual void operator=(const EditorManager& rhs){ cbThrow(_T("Can't assign an EditorManager* !!!")); }
 
-        wxAuiNotebook* GetNotebook(){ return m_pNotebook; }
+        cbAuiNotebook* GetNotebook() { return m_pNotebook; }
         void CreateMenu(wxMenuBar* menuBar);
         void ReleaseMenu(wxMenuBar* menuBar);
         void Configure();
@@ -136,6 +136,8 @@ class DLLIMPORT EditorManager : public Mgr<EditorManager>, public wxEvtHandler
         void OnSwapHeaderSource(wxCommandEvent& event);
         void OnTabPosition(wxCommandEvent& event);
         void OnProperties(wxCommandEvent& event);
+        void OnAddFileToProject(wxCommandEvent& event);
+        void OnRemoveFileFromProject(wxCommandEvent& event);
         void OnAppDoneStartup(wxCommandEvent& event);
         void OnAppStartShutdown(wxCommandEvent& event);
         void OnUpdateUI(wxUpdateUIEvent& event);
@@ -168,16 +170,17 @@ class DLLIMPORT EditorManager : public Mgr<EditorManager>, public wxEvtHandler
         int FindInFiles(cbFindReplaceData* data);
         int Replace(cbStyledTextCtrl* control, cbFindReplaceData* data);
         int ReplaceInFiles(cbFindReplaceData* data);
+        bool IsHeaderSource(const wxFileName& candidateFile, const wxFileName& activeFile, FileType ftActive);
+        wxFileName FindHeaderSource(const wxArrayString& candidateFilesArray, const wxFileName& activeFile, bool& isCandidate);
 
-        wxAuiNotebook* m_pNotebook;
-        cbFindReplaceData* m_LastFindReplaceData;
-        EditorColourSet* m_Theme;
-        ListCtrlLogger* m_pSearchLog;
-        int m_SearchLogIndex;
-        int m_SashPosition;
-        int m_zoom;
-        bool m_isCheckingForExternallyModifiedFiles;
-        friend struct EditorManagerInternalData;
+        cbAuiNotebook*             m_pNotebook;
+        cbFindReplaceData*         m_LastFindReplaceData;
+        EditorColourSet*           m_Theme;
+        ListCtrlLogger*            m_pSearchLog;
+        int                        m_SearchLogIndex;
+        int                        m_Zoom;
+        bool                       m_isCheckingForExternallyModifiedFiles;
+        friend struct              EditorManagerInternalData;
         EditorManagerInternalData* m_pData;
 
         DECLARE_EVENT_TABLE()

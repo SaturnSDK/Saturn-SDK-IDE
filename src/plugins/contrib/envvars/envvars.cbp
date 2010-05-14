@@ -12,8 +12,8 @@
 				<Option object_output="..\..\..\.objs\plugins\contrib\envvars" />
 				<Option type="3" />
 				<Option compiler="gcc" />
-				<Option parameters="--profile=foo" />
-				<Option host_application="$(#cb)\devel\codeblocks" />
+				<Option parameters="--debug-log -na -ns -nd" />
+				<Option host_application="..\..\..\devel\codeblocks.exe" />
 				<Compiler>
 					<Add option="-DCB_PRECOMP" />
 					<Add option="-DWX_PRECOMP" />
@@ -24,7 +24,8 @@
 				<Option object_output="..\..\..\.objs\plugins\contrib\envvars" />
 				<Option type="3" />
 				<Option compiler="gcc" />
-				<Option host_application="..\..\..\devel\codeblocks.exe" />
+				<Option parameters="--debug-log -na -ns -nd" />
+				<Option host_application=".\codeblocks.exe" />
 				<Compiler>
 					<Add option="-DNOPCH" />
 				</Compiler>
@@ -50,7 +51,7 @@
 			<Add option="-DcbDEBUG" />
 			<Add option="-DwxUSE_UNICODE" />
 			<Add directory="..\..\..\include" />
-			<Add directory="..\..\..\include\wxscintilla\include" />
+			<Add directory="..\..\..\sdk\wxscintilla\include" />
 			<Add directory="$(#WX.INCLUDE)" />
 			<Add directory="$(#WX)\contrib\include" />
 			<Add directory="$(#WX.lib)\gcc_dll$(WX_CFG)\msw$(WX_SUFFIX)" />
@@ -59,6 +60,7 @@
 			<Add directory="$(#WX.include)" />
 		</ResourceCompiler>
 		<Linker>
+			<Add option="-mthreads" />
 			<Add library="wxmsw28$(WX_SUFFIX)" />
 			<Add library="codeblocks" />
 			<Add directory="..\..\..\devel" />

@@ -2,19 +2,21 @@
 #define CBPROFILEREXEC_H
 
 #include <wx/arrstr.h>
-#include <wx/dialog.h>
 #include <wx/string.h>
+#include "scrollingdialog.h"
 
 struct struct_config
 {
-    bool chkAnnSource;
+    bool     chkAnnSource;
+    bool     chkMinCount;
+    bool     chkBrief;
+    bool     chkFileInfo;
+    bool     chkUnusedFunctions;
+    bool     chkStaticCallGraph;
+    bool     chkNoStatic;
+    bool     chkSum;
+    int      spnMinCount;
     wxString txtAnnSource;
-    bool chkMinCount;
-    int  spnMinCount;
-    bool chkBrief;
-    bool chkFileInfo;
-    bool chkNoStatic;
-    bool chkSum;
     wxString txtExtra;
 };
 
@@ -25,35 +27,39 @@ class wxWindow;
 class wxListEvent;
 class wxCommandEvent;
 
-class CBProfilerExecDlg : public wxDialog
+class CBProfilerExecDlg : public wxScrollingDialog
 {
     public:
         CBProfilerExecDlg(wxWindow* parent) : parent(parent){}
         virtual ~CBProfilerExecDlg();
 
-        int Execute(wxString exename, wxString dataname, struct_config config);
-        void ShowOutput(wxArrayString  msg, bool error);
-        wxListCtrl* GetoutputFlatProfileArea() {return outputFlatProfileArea;};
-        int GetsortColumn() {return sortColumn;};
-        int GetsortAscending() {return sortAscending;};
+        int         Execute(wxString exename, wxString dataname, struct_config config);
+        void        ShowOutput(const wxArrayString&  msg, bool error);
+        wxListCtrl* GetoutputFlatProfileArea() { return outputFlatProfileArea; };
+        int         GetsortColumn()            { return sortColumn;            };
+        int         GetsortAscending()         { return sortAscending;         };
     private:
         void EndModal(int retCode);
-        void FindInCallGraph(wxListEvent& event);
-        void WriteToFile(wxCommandEvent& event);
         void OnColumnClick(wxListEvent& event);
+        void FindInCallGraph(wxListEvent& event);
+        void JumpInCallGraph(wxListEvent& event);
+        void WriteToFile(wxCommandEvent& event);
 
-        size_t ParseFlatProfile(wxArrayString msg, size_t begin, wxProgressDialog &progress);
-        size_t ParseCallGraph(wxArrayString msg, size_t begin, wxProgressDialog &progress);
-        wxWindow*   parent;
-        wxListCtrl* outputFlatProfileArea;
-        wxTextCtrl* outputHelpFlatProfileArea;
-        wxListCtrl* outputCallGraphArea;
-        wxTextCtrl* outputHelpCallGraphArea;
-        wxTextCtrl* outputMiscArea;
-        wxArrayString gprof_output, gprof_errors;
-        static bool sortAscending;
-        static int sortColumn;
-        int LastListClickedCol;
+        void ParseFlatProfile(const wxArrayString& msg, wxProgressDialog &progress, const size_t maxcount, size_t& count);
+        void ParseCallGraph(const wxArrayString& msg, wxProgressDialog &progress, const size_t maxcount, size_t &count);
+        void ParseMisc(const wxArrayString& msg, wxProgressDialog &progress, const size_t maxcount, size_t &count);
+
+        wxWindow*     parent;
+        wxListCtrl*   outputFlatProfileArea;
+        wxTextCtrl*   outputHelpFlatProfileArea;
+        wxListCtrl*   outputCallGraphArea;
+        wxTextCtrl*   outputHelpCallGraphArea;
+        wxTextCtrl*   outputMiscArea;
+        wxArrayString gprof_output;
+        wxArrayString gprof_errors;
+
+        static bool   sortAscending;
+        static int    sortColumn;
 
         DECLARE_EVENT_TABLE()
 };

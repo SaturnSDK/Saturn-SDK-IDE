@@ -39,9 +39,7 @@
 				<Option working_dir="tools\ConsoleRunner" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Option projectCompilerOptionsRelation="0" />
 				<Option projectLinkerOptionsRelation="1" />
-				<Option projectIncludeDirsRelation="2" />
 				<Compiler>
 					<Add option="-Os" />
 				</Compiler>
@@ -91,7 +89,7 @@
 				</Linker>
 			</Target>
 			<Target title="scintilla">
-				<Option output="devel\wxscintilla.dll" prefix_auto="0" extension_auto="0" />
+				<Option output="devel\wxscintilla" prefix_auto="1" extension_auto="1" />
 				<Option working_dir="devel" />
 				<Option type="3" />
 				<Option compiler="gcc" />
@@ -102,16 +100,16 @@
 					<Add option="-DSCI_LEXER" />
 					<Add option="-DLINK_LEXERS" />
 					<Add option="-DWXMAKINGDLL_SCI" />
-					<Add directory="include\wxscintilla\include" />
 					<Add directory="sdk\wxscintilla\src\scintilla\include" />
 					<Add directory="sdk\wxscintilla\src\scintilla\src" />
 				</Compiler>
 				<ResourceCompiler>
-					<Add directory="include\wxscintilla\include" />
+					<Add directory="sdk\wxscintilla\include" />
 				</ResourceCompiler>
 				<Linker>
-					<Add option="--enable-auto-image-base" />
-					<Add library="wxmsw28$(WX_SUFFIX)" />
+					<Add option="-Wl,--enable-auto-image-base" />
+					<Add option="-Wl,--add-stdcall-alias" />
+					<Add option="-Wl,--enable-auto-import" />
 					<Add library="gdi32" />
 				</Linker>
 			</Target>
@@ -137,6 +135,7 @@
 					<Add option="-Wl,--enable-auto-image-base" />
 					<Add option="-Wl,--export-all-symbols" />
 					<Add option="-Wl,--add-stdcall-alias" />
+					<Add option="-Wl,--enable-auto-import" />
 					<Add library="shfolder" />
 					<Add library="txml" />
 					<Add library="wxscintilla" />
@@ -148,6 +147,7 @@
 				</Linker>
 				<ExtraCommands>
 					<Add before="build_tools/autorevision/autorevision +wx +int +t . include/autorevision.h" />
+					<Mode after="always" />
 				</ExtraCommands>
 			</Target>
 			<Target title="src">
@@ -157,8 +157,6 @@
 				<Option compiler="gcc" />
 				<Option parameters="--debug-log --no-check-associations -ns -nd" />
 				<Option projectLinkerOptionsRelation="2" />
-				<Option projectIncludeDirsRelation="2" />
-				<Option projectLibDirsRelation="2" />
 				<Compiler>
 					<Add option="-DBUILDING_PLUGIN" />
 					<Add directory="include" />
@@ -201,9 +199,11 @@
 				<Linker>
 					<Add option="-Wl,--enable-auto-image-base" />
 					<Add option="-Wl,--add-stdcall-alias" />
+					<Add option="-Wl,--enable-auto-import" />
+					<Add option="-mthreads" />
 					<Add library="codeblocks" />
+					<Add library="wxmsw$(WX_VERSION)$(WX_SUFFIX)" />
 					<Add library="wxscintilla" />
-					<Add library="wxmsw28$(WX_SUFFIX)" />
 					<Add directory="devel" />
 				</Linker>
 			</Target>
@@ -215,6 +215,9 @@
 				<Compiler>
 					<Add option="-DDEPSLIB_WINDOWS" />
 				</Compiler>
+				<Linker>
+					<Add option="-mthreads" />
+				</Linker>
 			</Target>
 			<Target title="Compiler">
 				<Option output="devel\share\CodeBlocks\plugins\compiler.dll" prefix_auto="0" extension_auto="0" />
@@ -223,8 +226,6 @@
 				<Option type="3" />
 				<Option compiler="gcc" />
 				<Option projectLinkerOptionsRelation="1" />
-				<Option projectIncludeDirsRelation="2" />
-				<Option projectLibDirsRelation="2" />
 				<Compiler>
 					<Add option="-DBUILDING_PLUGIN" />
 					<Add directory="include" />
@@ -236,9 +237,10 @@
 					<Add option="-Wl,--enable-auto-image-base" />
 					<Add option="-Wl,--add-stdcall-alias" />
 					<Add option="-Wl,--enable-auto-import" />
+					<Add option="-mthreads" />
 					<Add library="codeblocks" />
 					<Add library="wxscintilla" />
-					<Add library="wxmsw28$(WX_SUFFIX)" />
+					<Add library="wxmsw$(WX_VERSION)$(WX_SUFFIX)" />
 					<Add library="depslib" />
 					<Add directory="devel" />
 					<Add directory="plugins\compilergcc\depslib" />
@@ -250,8 +252,6 @@
 				<Option type="3" />
 				<Option compiler="gcc" />
 				<Option projectLinkerOptionsRelation="1" />
-				<Option projectIncludeDirsRelation="2" />
-				<Option projectLibDirsRelation="2" />
 				<Compiler>
 					<Add option="-DBUILDING_PLUGIN" />
 					<Add directory="include" />
@@ -262,9 +262,10 @@
 					<Add option="-Wl,--enable-auto-image-base" />
 					<Add option="-Wl,--add-stdcall-alias" />
 					<Add option="-Wl,--enable-auto-import" />
+					<Add option="-mthreads" />
 					<Add library="codeblocks" />
 					<Add library="wxscintilla" />
-					<Add library="wxmsw28$(WX_SUFFIX)" />
+					<Add library="wxmsw$(WX_VERSION)$(WX_SUFFIX)" />
 					<Add directory="devel" />
 				</Linker>
 			</Target>
@@ -274,8 +275,6 @@
 				<Option type="3" />
 				<Option compiler="gcc" />
 				<Option projectLinkerOptionsRelation="1" />
-				<Option projectIncludeDirsRelation="2" />
-				<Option projectLibDirsRelation="2" />
 				<Compiler>
 					<Add option="-DBUILDING_PLUGIN" />
 					<Add directory="include" />
@@ -283,9 +282,11 @@
 				<Linker>
 					<Add option="-Wl,--enable-auto-image-base" />
 					<Add option="-Wl,--add-stdcall-alias" />
+					<Add option="-Wl,--enable-auto-import" />
+					<Add option="-mthreads" />
 					<Add library="codeblocks" />
 					<Add library="wxscintilla" />
-					<Add library="wxmsw28$(WX_SUFFIX)" />
+					<Add library="wxmsw$(WX_VERSION)$(WX_SUFFIX)" />
 					<Add directory="devel" />
 				</Linker>
 			</Target>
@@ -295,8 +296,6 @@
 				<Option type="3" />
 				<Option compiler="gcc" />
 				<Option projectLinkerOptionsRelation="1" />
-				<Option projectIncludeDirsRelation="2" />
-				<Option projectLibDirsRelation="2" />
 				<Compiler>
 					<Add option="-DBUILDING_PLUGIN" />
 					<Add directory="include" />
@@ -304,9 +303,11 @@
 				<Linker>
 					<Add option="-Wl,--enable-auto-image-base" />
 					<Add option="-Wl,--add-stdcall-alias" />
+					<Add option="-Wl,--enable-auto-import" />
+					<Add option="-mthreads" />
 					<Add library="codeblocks" />
 					<Add library="wxscintilla" />
-					<Add library="wxmsw28$(WX_SUFFIX)" />
+					<Add library="wxmsw$(WX_VERSION)$(WX_SUFFIX)" />
 					<Add directory="devel" />
 				</Linker>
 			</Target>
@@ -316,8 +317,6 @@
 				<Option type="3" />
 				<Option compiler="gcc" />
 				<Option projectLinkerOptionsRelation="1" />
-				<Option projectIncludeDirsRelation="2" />
-				<Option projectLibDirsRelation="2" />
 				<Compiler>
 					<Add option="-DBUILDING_PLUGIN" />
 					<Add directory="include" />
@@ -325,8 +324,10 @@
 				<Linker>
 					<Add option="-Wl,--enable-auto-image-base" />
 					<Add option="-Wl,--add-stdcall-alias" />
+					<Add option="-Wl,--enable-auto-import" />
+					<Add option="-mthreads" />
 					<Add library="codeblocks" />
-					<Add library="wxmsw28$(WX_SUFFIX)" />
+					<Add library="wxmsw$(WX_VERSION)$(WX_SUFFIX)" />
 					<Add directory="devel" />
 				</Linker>
 			</Target>
@@ -335,6 +336,7 @@
 				<Option working_dir="devel\share\codeblocks\plugins" />
 				<Option type="3" />
 				<Option compiler="gcc" />
+				<Option projectLinkerOptionsRelation="1" />
 				<Compiler>
 					<Add option="-DBUILDING_PLUGIN" />
 					<Add directory="include" />
@@ -342,8 +344,11 @@
 				<Linker>
 					<Add option="-Wl,--enable-auto-image-base" />
 					<Add option="-Wl,--add-stdcall-alias" />
+					<Add option="-Wl,--enable-auto-import" />
+					<Add option="-mthreads" />
 					<Add library="codeblocks" />
 					<Add library="wxscintilla" />
+					<Add library="wxmsw$(WX_VERSION)$(WX_SUFFIX)" />
 					<Add directory="devel" />
 				</Linker>
 			</Target>
@@ -352,6 +357,7 @@
 				<Option working_dir="devel\share\CodeBlocks\plugins" />
 				<Option type="3" />
 				<Option compiler="gcc" />
+				<Option projectLinkerOptionsRelation="1" />
 				<Compiler>
 					<Add option="-DBUILDING_PLUGIN" />
 					<Add directory="include" />
@@ -362,8 +368,10 @@
 					<Add option="-Wl,--enable-auto-image-base" />
 					<Add option="-Wl,--add-stdcall-alias" />
 					<Add option="-Wl,--enable-auto-import" />
+					<Add option="-mthreads" />
 					<Add library="codeblocks" />
 					<Add library="wxscintilla" />
+					<Add library="wxmsw$(WX_VERSION)$(WX_SUFFIX)" />
 					<Add directory="devel" />
 				</Linker>
 			</Target>
@@ -372,62 +380,7 @@
 				<Option working_dir="devel\share\CodeBlocks\plugins" />
 				<Option type="3" />
 				<Option compiler="gcc" />
-				<Compiler>
-					<Add option="-DBUILDING_PLUGIN" />
-					<Add directory="include" />
-					<Add directory="include\mozilla_chardet" />
-				</Compiler>
-				<Linker>
-					<Add option="-Wl,--enable-auto-image-base" />
-					<Add option="-Wl,--add-stdcall-alias" />
-					<Add library="codeblocks" />
-					<Add library="wxscintilla" />
-					<Add directory="devel" />
-				</Linker>
-			</Target>
-			<Target title="Autosave">
-				<Option output="devel\share\CodeBlocks\plugins\autosave.dll" prefix_auto="0" extension_auto="0" />
-				<Option working_dir="devel\share\CodeBlocks\plugins" />
-				<Option type="3" />
-				<Option compiler="gcc" />
-				<Compiler>
-					<Add option="-DBUILDING_PLUGIN" />
-					<Add directory="include" />
-				</Compiler>
-				<Linker>
-					<Add option="-Wl,--enable-auto-image-base" />
-					<Add option="-Wl,--add-stdcall-alias" />
-					<Add library="codeblocks" />
-					<Add library="wxscintilla" />
-					<Add directory="devel" />
-				</Linker>
-			</Target>
-			<Target title="XP look &amp; feel">
-				<Option output="devel\share\CodeBlocks\plugins\xpmanifest.dll" prefix_auto="0" extension_auto="0" />
-				<Option working_dir="devel\share\CodeBlocks\plugins" />
-				<Option type="3" />
-				<Option compiler="gcc" />
-				<Option projectIncludeDirsRelation="2" />
-				<Option projectLibDirsRelation="2" />
-				<Compiler>
-					<Add option="-DBUILDING_PLUGIN" />
-					<Add directory="include" />
-				</Compiler>
-				<Linker>
-					<Add option="-Wl,--enable-auto-image-base" />
-					<Add option="-Wl,--add-stdcall-alias" />
-					<Add library="codeblocks" />
-					<Add directory="devel" />
-				</Linker>
-			</Target>
-			<Target title="Projects-workspaces importer">
-				<Option output="devel\share\CodeBlocks\plugins\projectsimporter.dll" prefix_auto="0" extension_auto="0" />
-				<Option working_dir="devel\share\CodeBlocks\plugins" />
-				<Option type="3" />
-				<Option compiler="gcc" />
 				<Option projectLinkerOptionsRelation="1" />
-				<Option projectIncludeDirsRelation="2" />
-				<Option projectLibDirsRelation="2" />
 				<Compiler>
 					<Add option="-DBUILDING_PLUGIN" />
 					<Add directory="include" />
@@ -437,19 +390,84 @@
 					<Add option="-Wl,--enable-auto-image-base" />
 					<Add option="-Wl,--add-stdcall-alias" />
 					<Add option="-Wl,--enable-auto-import" />
+					<Add option="-mthreads" />
 					<Add library="codeblocks" />
-					<Add library="wxmsw28$(WX_SUFFIX)" />
+					<Add library="wxscintilla" />
+					<Add library="wxmsw$(WX_VERSION)$(WX_SUFFIX)" />
+					<Add directory="devel" />
+				</Linker>
+			</Target>
+			<Target title="Autosave">
+				<Option output="devel\share\CodeBlocks\plugins\autosave.dll" prefix_auto="0" extension_auto="0" />
+				<Option working_dir="devel\share\CodeBlocks\plugins" />
+				<Option type="3" />
+				<Option compiler="gcc" />
+				<Option projectLinkerOptionsRelation="1" />
+				<Compiler>
+					<Add option="-DBUILDING_PLUGIN" />
+					<Add directory="include" />
+				</Compiler>
+				<Linker>
+					<Add option="-Wl,--enable-auto-image-base" />
+					<Add option="-Wl,--add-stdcall-alias" />
+					<Add option="-Wl,--enable-auto-import" />
+					<Add option="-mthreads" />
+					<Add library="codeblocks" />
+					<Add library="wxscintilla" />
+					<Add library="wxmsw$(WX_VERSION)$(WX_SUFFIX)" />
+					<Add directory="devel" />
+				</Linker>
+			</Target>
+			<Target title="XP look &amp; feel">
+				<Option output="devel\share\CodeBlocks\plugins\xpmanifest.dll" prefix_auto="0" extension_auto="0" />
+				<Option working_dir="devel\share\CodeBlocks\plugins" />
+				<Option type="3" />
+				<Option compiler="gcc" />
+				<Option projectLinkerOptionsRelation="1" />
+				<Compiler>
+					<Add option="-DBUILDING_PLUGIN" />
+					<Add directory="include" />
+				</Compiler>
+				<Linker>
+					<Add option="-Wl,--enable-auto-image-base" />
+					<Add option="-Wl,--add-stdcall-alias" />
+					<Add option="-Wl,--enable-auto-import" />
+					<Add option="-mthreads" />
+					<Add library="codeblocks" />
+					<Add library="wxmsw$(WX_VERSION)$(WX_SUFFIX)" />
+					<Add directory="devel" />
+				</Linker>
+			</Target>
+			<Target title="Projects-workspaces importer">
+				<Option output="devel\share\CodeBlocks\plugins\projectsimporter.dll" prefix_auto="0" extension_auto="0" />
+				<Option working_dir="devel\share\CodeBlocks\plugins" />
+				<Option type="3" />
+				<Option compiler="gcc" />
+				<Option projectLinkerOptionsRelation="1" />
+				<Compiler>
+					<Add option="-DBUILDING_PLUGIN" />
+					<Add directory="include" />
+					<Add directory="include\mozilla_chardet" />
+				</Compiler>
+				<Linker>
+					<Add option="-Wl,--enable-auto-image-base" />
+					<Add option="-Wl,--add-stdcall-alias" />
+					<Add option="-Wl,--enable-auto-import" />
+					<Add option="-mthreads" />
+					<Add library="codeblocks" />
+					<Add library="wxmsw$(WX_VERSION)$(WX_SUFFIX)" />
 					<Add directory="devel" />
 				</Linker>
 			</Target>
 			<Environment>
 				<Variable name="WX_SUFFIX" value="u" />
+				<Variable name="WX_VERSION" value="28" />
 				<Variable name="WX_CFG" value="" />
 			</Environment>
 		</Build>
 		<VirtualTargets>
 			<Add alias="All" targets="tinyXML;AutoRevision;ConsoleRunner;Squirrel;Squirrel std lib;SqPlus;scintilla;sdk;src;AStyle;Compiler depslib;Compiler;Debugger;Code-completion;Class wizard;Default MIME handler;Open files list;Scripted wizard;To-do;Autosave;XP look &amp; feel;Projects-workspaces importer;" />
-			<Add alias="Core app &amp; plugins" targets="sdk;src;AStyle;Compiler;Debugger;Code-completion;Class wizard;Default MIME handler;Scripted wizard;To-do;Autosave;XP look &amp; feel;" />
+			<Add alias="Core app &amp; plugins" targets="sdk;src;AStyle;Autosave;Compiler;Debugger;Code-completion;Class wizard;Default MIME handler;Scripted wizard;To-do;XP look &amp; feel;" />
 			<Add alias="Third-party libs" targets="tinyXML;AutoRevision;ConsoleRunner;Squirrel;Squirrel std lib;SqPlus;scintilla;Compiler depslib;" />
 		</VirtualTargets>
 		<Compiler>
@@ -468,15 +486,19 @@
 			<Add option="-DWX_PRECOMP" />
 			<Add option="-DwxUSE_UNICODE" />
 			<Add directory="$(#WX.include)" />
+			<Add directory="$(#wx)\contrib\include" />
 			<Add directory="$(#WX.lib)\gcc_dll$(WX_CFG)\msw$(WX_SUFFIX)" />
-			<Add directory="include\wxscintilla\include" />
+			<Add directory="sdk\wxscintilla\include" />
 			<Add directory="include\tinyxml" />
 		</Compiler>
 		<ResourceCompiler>
 			<Add directory="$(#WX.include)" />
+			<Add directory="$(#wx)\contrib\include" />
+			<Add directory="$(#wx)\lib\gcc_dll$(WX_CFG)\msw$(WX_SUFFIX)" />
 		</ResourceCompiler>
 		<Linker>
-			<Add library="wxmsw28$(WX_SUFFIX)" />
+			<Add option="-mthreads" />
+			<Add library="wxmsw$(WX_VERSION)$(WX_SUFFIX)" />
 			<Add directory="base\tinyxml" />
 			<Add directory="$(#WX.lib)\gcc_dll$(WX_CFG)" />
 		</Linker>
@@ -511,6 +533,9 @@
 			<Option target="sdk" />
 		</Unit>
 		<Unit filename="include\blockallocated.h">
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="include\cbauibook.h">
 			<Option target="sdk" />
 		</Unit>
 		<Unit filename="include\cbeditor.h">
@@ -939,6 +964,9 @@
 		<Unit filename="include\scriptsecuritywarningdlg.h">
 			<Option target="sdk" />
 		</Unit>
+		<Unit filename="include\scrollingdialog.h">
+			<Option target="sdk" />
+		</Unit>
 		<Unit filename="include\sdk.h">
 			<Option compile="1" />
 			<Option weight="0" />
@@ -988,9 +1016,6 @@
 		<Unit filename="include\workspaceloader.h">
 			<Option target="sdk" />
 		</Unit>
-		<Unit filename="include\wxscintilla\include\wx\wxscintilla.h">
-			<Option target="scintilla" />
-		</Unit>
 		<Unit filename="include\xtra_res.h">
 			<Option target="sdk" />
 		</Unit>
@@ -1018,6 +1043,9 @@
 		<Unit filename="plugins\astyle\astyle\astyle_main.cpp">
 			<Option compile="0" />
 			<Option link="0" />
+			<Option target="AStyle" />
+		</Unit>
+		<Unit filename="plugins\astyle\astyle\astyle_main.h">
 			<Option target="AStyle" />
 		</Unit>
 		<Unit filename="plugins\astyle\astyleconfigdlg.cpp">
@@ -1928,6 +1956,9 @@
 			<Option target="sdk" />
 		</Unit>
 		<Unit filename="sdk\blockallocated.cpp">
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="sdk\cbauibook.cpp">
 			<Option target="sdk" />
 		</Unit>
 		<Unit filename="sdk\cbeditor.cpp">
@@ -3564,6 +3595,9 @@
 		<Unit filename="sdk\scriptsecuritywarningdlg.cpp">
 			<Option target="sdk" />
 		</Unit>
+		<Unit filename="sdk\scrollingdialog.cpp">
+			<Option target="sdk" />
+		</Unit>
 		<Unit filename="sdk\sdk_events.cpp">
 			<Option target="sdk" />
 		</Unit>
@@ -3588,6 +3622,9 @@
 		<Unit filename="sdk\workspaceloader.cpp">
 			<Option target="sdk" />
 		</Unit>
+		<Unit filename="sdk\wxscintilla\include\wx\wxscintilla.h">
+			<Option target="scintilla" />
+		</Unit>
 		<Unit filename="sdk\wxscintilla\src\PlatWX.cpp">
 			<Option target="scintilla" />
 		</Unit>
@@ -3610,9 +3647,6 @@
 			<Option target="scintilla" />
 		</Unit>
 		<Unit filename="sdk\wxscintilla\src\scintilla\include\PropSet.h">
-			<Option target="scintilla" />
-		</Unit>
-		<Unit filename="sdk\wxscintilla\src\scintilla\include\SString.h">
 			<Option target="scintilla" />
 		</Unit>
 		<Unit filename="sdk\wxscintilla\src\scintilla\include\SciLexer.h">
@@ -3831,6 +3865,9 @@
 		<Unit filename="sdk\wxscintilla\src\scintilla\src\LexMagik.cxx">
 			<Option target="scintilla" />
 		</Unit>
+		<Unit filename="sdk\wxscintilla\src\scintilla\src\LexMarkdown.cxx">
+			<Option target="scintilla" />
+		</Unit>
 		<Unit filename="sdk\wxscintilla\src\scintilla\src\LexMatlab.cxx">
 			<Option target="scintilla" />
 		</Unit>
@@ -3963,6 +4000,9 @@
 		<Unit filename="sdk\wxscintilla\src\scintilla\src\PropSet.cxx">
 			<Option target="scintilla" />
 		</Unit>
+		<Unit filename="sdk\wxscintilla\src\scintilla\src\PropSetSimple.h">
+			<Option target="scintilla" />
+		</Unit>
 		<Unit filename="sdk\wxscintilla\src\scintilla\src\RESearch.cxx">
 			<Option target="scintilla" />
 		</Unit>
@@ -3982,6 +4022,12 @@
 			<Option target="scintilla" />
 		</Unit>
 		<Unit filename="sdk\wxscintilla\src\scintilla\src\ScintillaBase.h">
+			<Option target="scintilla" />
+		</Unit>
+		<Unit filename="sdk\wxscintilla\src\scintilla\src\Selection.cxx">
+			<Option target="scintilla" />
+		</Unit>
+		<Unit filename="sdk\wxscintilla\src\scintilla\src\Selection.h">
 			<Option target="scintilla" />
 		</Unit>
 		<Unit filename="sdk\wxscintilla\src\scintilla\src\SplitVector.h">
@@ -4331,9 +4377,9 @@
 			<envvars />
 			<wxsmith version="1">
 				<resources>
-					<wxDialog wxs="wxsmith/VirtualBuildTargetsDlg.wxs" src="sdk/virtualbuildtargetsdlg.cpp" hdr="include/virtualbuildtargetsdlg.h" xrc="sdk/resources/virtualbuildtargetsdlg.xrc" name="VirtualBuildTargetsDlg" language="CPP" />
-					<wxDialog wxs="wxsmith/databreakpointdlg.wxs" src="plugins/debuggergdb/databreakpointdlg.cpp" hdr="plugins/debuggergdb/databreakpointdlg.h" name="DataBreakpointDlg" language="CPP" />
-					<wxDialog wxs="wxsmith/CCDebugInfo.wxs" src="plugins/codecompletion/ccdebuginfo.cpp" hdr="plugins/codecompletion/ccdebuginfo.h" name="CCDebugInfo" language="CPP" />
+					<wxScrollingDialog wxs="wxsmith/VirtualBuildTargetsDlg.wxs" src="sdk/virtualbuildtargetsdlg.cpp" hdr="include/virtualbuildtargetsdlg.h" xrc="sdk/resources/virtualbuildtargetsdlg.xrc" name="VirtualBuildTargetsDlg" language="CPP" />
+					<wxScrollingDialog wxs="wxsmith/databreakpointdlg.wxs" src="plugins/debuggergdb/databreakpointdlg.cpp" hdr="plugins/debuggergdb/databreakpointdlg.h" name="DataBreakpointDlg" language="CPP" />
+					<wxScrollingDialog wxs="wxsmith/CCDebugInfo.wxs" src="plugins/codecompletion/ccdebuginfo.cpp" hdr="plugins/codecompletion/ccdebuginfo.h" name="CCDebugInfo" language="CPP" />
 					<wxPanel wxs="wxsmith/ScriptConsole.wxs" src="src/scriptconsole.cpp" hdr="src/scriptconsole.h" name="ScriptConsole" language="CPP" />
 					<wxPanel wxs="wxsmith/BuildTargetPanel.wxs" src="plugins/scriptedwizard/buildtargetpanel.cpp" hdr="plugins/scriptedwizard/buildtargetpanel.h" name="BuildTargetPanel" language="CPP" />
 					<wxPanel wxs="wxsmith/CompilerPanel.wxs" src="plugins/scriptedwizard/compilerpanel.cpp" hdr="plugins/scriptedwizard/compilerpanel.h" name="CompilerPanel" language="CPP" />

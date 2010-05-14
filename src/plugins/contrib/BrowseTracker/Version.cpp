@@ -214,15 +214,40 @@ AppVersion::~AppVersion()
 //      80) Hack to find editor's project. Since wxAuiNotebook, the initial
 //          EVT_EDITOR_ACTIVATED has no cbEditor or cbProject associated.
 // ----------------------------------------------------------------------------
-//  Bugs
-//          When searching workspace w/o open project, BT is comatose.
-//              Should say "no project" or some such.
-//          Requires CB to be restarted after Install before Alt-Left/Right work.
-//          When CB reloads a changed editor, the marks are missing
-//          In one fell swoop: uninstall BrowseTracker, reInstall it,
-//              click on a project. CB::OnProjectHook call crashes.
+//  Commit 1.2.85 2009/11/9
+//       81) Set browse marks sorting flag in OnEditorActivated()
+//       82) Set BrowseSelector width window by filename width
+//       83) Added JumpTracker; record each activated cursor posn within a half-page
+//       84) Activate previously active editor when secondary project closes.
+//       85  Fix crash when disabling plugins (in BuildMenu)
 // ----------------------------------------------------------------------------
-//  ToDo    All
+//  Commit 1.2.90 2009/11/30
+//       86) Add Shutdown test to OnIdle
+//       87) OnCloseEditor, Activate the previously active edtor, not the last tab
+//           EditorManager::OnUpdateUI() used to do this. wxAuiNotebook broke it.
+//       88) OnProjectClosing() ignore recording closing editors
+//           OnProjectActivated() activate the current edtior for this project (not last tab).
+//       89) Record last deactivated editor; OnEditorClose activate last deactivated editor (vs. last tab)
+//       90) Fixed: loop in OnIdle() after svn 5939 changes
+// ----------------------------------------------------------------------------
+//  Commit 1.2.92 2009/12/11
+//       91) Clear m_bProjectClosing in OnProjectOpened() else no initial activation recorded after project closed.
+//       92) Fix JumpTracker inablility to switch between editors (caused by Editor Activation fix)
+// ----------------------------------------------------------------------------
+//  Commit 1.2.93 2010/02/19
+//       93) Diable Ctrl-Left_Mouse key usage when user sets editor multi-selection enabled.
+// ----------------------------------------------------------------------------
+//  Commit 1.2.94 2010/02/25
+//       94) Apply patch 2886 by techy
+// ----------------------------------------------------------------------------
+//  //FIXME: Bugs
+//      01) Requires CB to be restarted after Install before Alt-Left/Right work.
+//          When CB reloads a changed editor, the marks are missing
+//       2) In one fell swoop: uninstall BrowseTracker, reInstall it,
+//              click on a project. CB::OnProjectHook call crashes.
+//       3) On first project load, browse/book marks dont set bec there's no active editor in arrays
+// ----------------------------------------------------------------------------
+//  //TODO:   All
 //          Config dialog: Max tracked editors Max tracked lines etc
 //          Navigation toolbar arrows
 //          Shadow the menuitem cmdkey definitions w/ wxMenuItem->GetAccel()

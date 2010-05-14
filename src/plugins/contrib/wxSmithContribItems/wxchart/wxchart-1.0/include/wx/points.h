@@ -16,6 +16,9 @@
 // Headers
 //----------------------------------------------------------------------------
 // wx
+#if defined(__GNUG__) && !defined(NO_GCC_PRAGMA)
+#pragma implementation "points.h"
+#endif
 
 // For compilers that support precompilation, includes "wx.h".
 #include <wx/wxprec.h>
@@ -42,7 +45,7 @@ struct Point
     ChartValue m_xval;
     ChartValue m_yval;
     ChartColor m_col;
-    Point(wxString name=wxEmptyString, ChartValue x=0, ChartValue y=0,
+    Point(wxString name=wxEmptyString, ChartValue x=0, ChartValue y=0, 
             ChartColor c = 0);
 };
 
@@ -58,7 +61,7 @@ WX_DECLARE_OBJARRAY(Point, ListPoints);
 //
 //----------------------------------------------------------------------E-+++
 class WXDLLIMPEXP_CHART wxPoints
-{
+{	
 public:
 	wxPoints();
 	~wxPoints();

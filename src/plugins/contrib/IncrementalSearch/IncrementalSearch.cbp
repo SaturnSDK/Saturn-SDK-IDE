@@ -11,7 +11,8 @@
 				<Option object_output="..\..\..\.objs\plugins\contrib\IncrementalSearch" />
 				<Option type="3" />
 				<Option compiler="gcc" />
-				<Option host_application="codeblocks" />
+				<Option parameters="--debug-log -na -ns -nd" />
+				<Option host_application="..\..\..\devel\codeblocks.exe" />
 				<Compiler>
 					<Add option="-Wall" />
 					<Add option="-g" />
@@ -29,12 +30,13 @@
 					<Add option="-DWX_PRECOMP" />
 					<Add option="-DwxUSE_UNICODE" />
 					<Add directory="..\..\..\include" />
-					<Add directory="..\..\..\include\wxscintilla\include" />
+					<Add directory="..\..\..\sdk\wxscintilla\include" />
 					<Add directory="$(#WX.include)" />
 					<Add directory="$(#WX.lib)\gcc_dll$(WX_CFG)\msw$(WX_SUFFIX)" />
 					<Add directory="$(#WX)\contrib\include" />
 				</Compiler>
 				<Linker>
+					<Add option="-mthreads" />
 					<Add library="codeblocks" />
 					<Add library="wxmsw28$(WX_SUFFIX)" />
 					<Add library="wxscintilla" />

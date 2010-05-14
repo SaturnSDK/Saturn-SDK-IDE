@@ -4,6 +4,7 @@
 	<Project>
 		<Option title="Exporter" />
 		<Option pch_mode="0" />
+		<Option default_target="default" />
 		<Option compiler="gcc" />
 		<Build>
 			<Target title="wxPdfDocument">
@@ -21,6 +22,7 @@
 				<Option external_deps="libwxPdfDocument.a;" />
 				<Option type="3" />
 				<Option compiler="gcc" />
+				<Option parameters="--debug-log -na -ns -nd" />
 				<Option host_application="..\..\..\devel\codeblocks.exe" />
 				<Option projectLinkerOptionsRelation="2" />
 				<Linker>
@@ -58,13 +60,14 @@
 			<Add directory="$(#WX.include)" />
 			<Add directory="$(#WX.lib)\gcc_dll$(WX_CFG)\msw$(WX_SUFFIX)" />
 			<Add directory="..\..\..\include" />
-			<Add directory="..\..\..\include\wxscintilla\include" />
+			<Add directory="..\..\..\sdk\wxscintilla\include" />
 			<Add directory="wxPdfDocument\include" />
 		</Compiler>
 		<ResourceCompiler>
 			<Add directory="$(#WX.include)" />
 		</ResourceCompiler>
 		<Linker>
+			<Add option="-mthreads" />
 			<Add library="wxmsw28$(WX_SUFFIX)" />
 			<Add library="codeblocks" />
 			<Add library="wxscintilla" />

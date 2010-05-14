@@ -36,7 +36,7 @@ const wxString base_imgs[] =
 };
 const int IMAGES_COUNT = sizeof(base_imgs) / sizeof(wxString);
 
-BEGIN_EVENT_TABLE(CompilerSettingsDlg, wxDialog)
+BEGIN_EVENT_TABLE(CompilerSettingsDlg, wxScrollingDialog)
     EVT_LISTBOOK_PAGE_CHANGING(XRCID("nbMain"), CompilerSettingsDlg::OnPageChanging)
     EVT_LISTBOOK_PAGE_CHANGED(XRCID("nbMain"), CompilerSettingsDlg::OnPageChanged)
 END_EVENT_TABLE()
@@ -47,7 +47,7 @@ END_EVENT_TABLE()
 
 CompilerSettingsDlg::CompilerSettingsDlg(wxWindow* parent)
 {
-    wxXmlResource::Get()->LoadDialog(this, parent, _T("dlgCompilerSettings"));
+    wxXmlResource::Get()->LoadObject(this, parent, _T("dlgCompilerSettings"),_T("wxScrollingDialog"));
     wxListbook* lb = XRCCTRL(*this, "nbMain", wxListbook);
     wxImageList* images = new wxImageList(80, 80);
     lb->AssignImageList(images);
@@ -216,7 +216,11 @@ void CompilerSettingsDlg::OnPageChanging(wxListbookEvent& event)
 
 void CompilerSettingsDlg::OnPageChanged(wxListbookEvent& event)
 {
-    UpdateListbookImages();
+    // update only on real change, not on dialog creation
+    if (event.GetOldSelection() != -1 && event.GetSelection() != -1)
+    {
+        UpdateListbookImages();
+    }
 }
 
 void CompilerSettingsDlg::EndModal(int retCode)
@@ -232,6 +236,7 @@ void CompilerSettingsDlg::EndModal(int retCode)
             cfg->Write(_T("/batch_build_args"), bbargs);
             Associations::SetBatchBuildOnly();
         }
+#endif //#ifdef __WXMSW__
 
         // batch build plugins
         ConfigManager *bbcfg = Manager::Get()->GetConfigManager(_T("plugins"));
@@ -266,7 +271,6 @@ void CompilerSettingsDlg::EndModal(int retCode)
                         _("Warning"), wxICON_WARNING);
         }
         bbcfg->Write(_T("/batch_build_plugins"), bbplugins);
-#endif
 
         // finally, apply settings in all plugins' panels
         for (size_t i = 0; i < m_PluginPanels.GetCount(); ++i)
@@ -285,5 +289,5 @@ void CompilerSettingsDlg::EndModal(int retCode)
         }
     }
 
-    wxDialog::EndModal(retCode);
+    wxScrollingDialog::EndModal(retCode);
 }

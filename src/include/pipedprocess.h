@@ -18,7 +18,7 @@ class DLLIMPORT PipedProcess : public wxProcess
 {
 	public:
 		// class constructor
-		PipedProcess(void** pvThis, wxEvtHandler* parent, int id = wxID_ANY, bool pipe = true, const wxString& dir = wxEmptyString);
+        PipedProcess(void** pvThis, wxEvtHandler* parent, int id = wxID_ANY, bool pipe = true, const wxString& dir = wxEmptyString);
 		// class destructor
 		~PipedProcess();
 		virtual int Launch(const wxString& cmd, unsigned int pollingInterval = 100);

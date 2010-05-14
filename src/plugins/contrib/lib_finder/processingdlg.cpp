@@ -31,8 +31,12 @@
 #include <prep.h>
 
 //(*InternalHeaders(ProcessingDlg)
-#include <wx/intl.h>
+#include <wx/gauge.h>
+#include <wx/sizer.h>
+#include <wx/button.h>
 #include <wx/string.h>
+#include <wx/intl.h>
+#include <wx/stattext.h>
 //*)
 
 #include "librarydetectionmanager.h"
@@ -46,7 +50,7 @@ const long ProcessingDlg::ID_GAUGE1 = wxNewId();
 const long ProcessingDlg::ID_BUTTON1 = wxNewId();
 //*)
 
-BEGIN_EVENT_TABLE(ProcessingDlg,wxDialog)
+BEGIN_EVENT_TABLE(ProcessingDlg,wxScrollingDialog)
 	//(*EventTable(ProcessingDlg)
 	//*)
 END_EVENT_TABLE()
@@ -70,7 +74,7 @@ ProcessingDlg::ProcessingDlg(wxWindow* parent,LibraryDetectionManager& Manager,T
 	SetSizer(FlexGridSizer1);
 	FlexGridSizer1->Fit(this);
 	FlexGridSizer1->SetSizeHints(this);
-
+	
 	Connect(ID_BUTTON1,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&ProcessingDlg::OnButton1Click);
 	//*)
 }

@@ -67,7 +67,7 @@ MAYBE_SYMTAB=symtab
 endif
 
 if BUILD_THREADSEARCH
-MAYBE_THREADSEARCH=ThreadSearch
+MAYBE_THREADSEARCH=wxSmith wxSmithContribItems ThreadSearch
 endif
 
 if BUILD_VALGRIND
@@ -98,6 +98,14 @@ if BUILD_MOUSESAP
 MAYBE_MOUSESAP=MouseSap
 endif
 
+if BUILD_CCCC
+MAYBE_CCCC=Cccc
+endif
+
+if BUILD_CPPCHECK
+MAYBE_CPPCHECK=CppCheck
+endif
+
 SUBDIRS = $(MAYBE_AUTOVERSIONING) \
 		$(MAYBE_BROWSETRACKER) \
 		$(MAYBE_BYOGAMES) \
@@ -122,7 +130,9 @@ SUBDIRS = $(MAYBE_AUTOVERSIONING) \
 		$(MAYBE_LIBFINDER) \
 		$(MAYBE_HEXEDITOR) \
 		$(MAYBE_INCSEARCH) \
-		$(MAYBE_MOUSESAP)
+		$(MAYBE_MOUSESAP) \
+		$(MAYBE_CCCC) \
+		$(MAYBE_CPPCHECK)
 
 DIST_SUBDIRS = AutoVersioning \
 		BrowseTracker \
@@ -149,5 +159,7 @@ DIST_SUBDIRS = AutoVersioning \
 		lib_finder \
 		HexEditor \
 		IncrementalSearch \
-		MouseSap
+		MouseSap \
+		Cccc \
+		CppCheck
 

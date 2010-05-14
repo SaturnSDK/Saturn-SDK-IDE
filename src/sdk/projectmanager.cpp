@@ -35,12 +35,14 @@
     #include "cbexception.h"  // for cbassert
 #endif
 
-#include <wx/utils.h>
-#include <wx/textdlg.h>
-#include <wx/progdlg.h>
-#include <wx/filedlg.h>
+#include "cbauibook.h"
+#include <wx/busyinfo.h>
 #include <wx/choicdlg.h>
-#include <wx/aui/auibook.h>
+#include <wx/filedlg.h>
+#include <wx/progdlg.h>
+#include <wx/textdlg.h>
+#include <wx/tokenzr.h>
+#include <wx/utils.h>
 
 #include "incrementalselectlistdlg.h"
 #include "filegroupsandmasks.h"
@@ -157,6 +159,7 @@ BEGIN_EVENT_TABLE(ProjectManager, wxEvtHandler)
 
     EVT_TREE_ITEM_ACTIVATED(ID_ProjectManager, ProjectManager::OnProjectFileActivated)
     EVT_TREE_ITEM_RIGHT_CLICK(ID_ProjectManager, ProjectManager::OnTreeItemRightClick)
+    EVT_TREE_KEY_DOWN(ID_ProjectManager, ProjectManager::OnKeyDown)
     EVT_COMMAND_RIGHT_CLICK(ID_ProjectManager, ProjectManager::OnRightClick)
 
     EVT_AUINOTEBOOK_TAB_RIGHT_UP(idNB, ProjectManager::OnTabContextMenu)
@@ -220,7 +223,7 @@ ProjectManager::ProjectManager()
     m_isCheckingForExternallyModifiedProjects(false),
     m_CanSendWorkspaceChanged(false)
 {
-    m_pNotebook = new wxAuiNotebook(Manager::Get()->GetAppWindow(), idNB, wxDefaultPosition, wxDefaultSize, wxAUI_NB_WINDOWLIST_BUTTON);
+    m_pNotebook = new cbAuiNotebook(Manager::Get()->GetAppWindow(), idNB, wxDefaultPosition, wxDefaultSize, wxAUI_NB_WINDOWLIST_BUTTON);
     if (Manager::Get()->GetConfigManager(_T("app"))->ReadBool(_T("/environment/project_tabs_bottom"), false))
         m_pNotebook->SetWindowStyleFlag(m_pNotebook->GetWindowStyleFlag() | wxAUI_NB_BOTTOM);
 
@@ -1754,12 +1757,18 @@ void ProjectManager::OnProjectFileActivated(wxTreeEvent& event)
         if (ftd->GetProject() != m_pActiveProject)
         {
             SetProject(ftd->GetProject(), false);
-            // prevent item expand state toggle when project is activated
-            #ifdef __WXMSW__
-            // toggle it one time so that it is toggled back by wx
-            m_pTree->IsExpanded(id) ? m_pTree->Collapse(id) : m_pTree->Expand(id);
-            #endif
         }
+        // prevent item expand state toggle when project is activated
+        // toggle it one time so that it is toggled back by wx
+        m_pTree->IsExpanded(id) ? m_pTree->Collapse(id) : m_pTree->Expand(id);
+    }
+    else if (ftd && (ftd->GetKind() == FileTreeData::ftdkVirtualGroup || ftd->GetKind() == FileTreeData::ftdkFolder))
+    {
+        m_pTree->IsExpanded(id) ? m_pTree->Collapse(id) : m_pTree->Expand(id);
+    }
+    else if (!ftd && m_pWorkspace)
+    {
+        m_pTree->IsExpanded(m_TreeRoot) ? m_pTree->Collapse(m_TreeRoot) : m_pTree->Expand(m_TreeRoot);
     }
     else
         DoOpenSelectedFile();
@@ -1966,9 +1975,12 @@ void ProjectManager::OnAddFilesToProjectRecursively(wxCommandEvent& event)
             ++i;
     }
 
-    // ask the user which files to add
-// TODO (mandrav#1#): Make these masks configurable
-    wxString wild = _T("*.c;*.cc;*.cpp;*.cxx;*.h;*.hh;*.hpp;*.hxx;*.inl;*.rc;*.xrc");
+    wxString wild;
+    for (unsigned i = 0; i < m_pFileGroups->GetGroupsCount(); i++)
+    {
+        wild += m_pFileGroups->GetFileMasks(i);
+    }
+
     MultiSelectDlg dlg(0, array, wild, _("Select the files to add to the project:"));
     PlaceWindow(&dlg);
     if (dlg.ShowModal() != wxID_OK)
@@ -2089,14 +2101,18 @@ void ProjectManager::OnRemoveFileFromProject(wxCommandEvent& event)
     }
     else if (event.GetId() == idMenuRemoveFilePopup)
     {
-        // remove single file
-        prj->BeginRemoveFiles();
-        RemoveFileFromProject(ftd->GetProjectFile(), prj);
-        prj->CalculateCommonTopLevelPath();
-        if (prj->GetCommonTopLevelPath() == oldpath)
-            m_pTree->Delete(sel);
-        prj->EndRemoveFiles();
-        RebuildTree();
+        ProjectFile *prjfile = ftd->GetProjectFile();
+		if(prjfile)
+        {
+            // remove single file
+            prj->BeginRemoveFiles();
+            RemoveFileFromProject(prjfile, prj);
+            prj->CalculateCommonTopLevelPath();
+            if (prj->GetCommonTopLevelPath() == oldpath)
+                m_pTree->Delete(sel);
+            prj->EndRemoveFiles();
+            RebuildTree();
+        }
     }
     else if (event.GetId() == idMenuRemoveFolderFilesPopup)
     {
@@ -2527,7 +2543,8 @@ void ProjectManager::OnRenameFile(wxCommandEvent& event)
         if(name != new_name)
         {
         #ifdef __WXMSW__
-            if (!wxRenameFile(path + name, path + new_name, true))
+            // only overwrite files, if the names are the same, but with different cases
+            if (!wxRenameFile(path + name, path + new_name, (name.Lower() == new_name.Lower())))
         #else
             if (!wxRenameFile(path + name, path + new_name, false))
         #endif
@@ -2701,7 +2718,6 @@ void ProjectManager::EndLoadingProject(cbProject* project)
     s_CanShutdown = true;
     if (!m_IsLoadingProject)
         return;
-    //m_IsLoadingProject = false;
 
     if (project)
     {
@@ -2841,5 +2857,17 @@ void ProjectManager::EndLoadingWorkspace()
     else
     {
         CloseWorkspace();
+    }
+}
+
+void ProjectManager::OnKeyDown(wxTreeEvent& event)
+{
+    const wxKeyEvent& key_event = event.GetKeyEvent();
+
+    if( Manager::Get()->GetProjectManager()->GetActiveProject()->GetCurrentlyCompilingTarget() == 0 &&
+       (key_event.GetKeyCode() == WXK_DELETE || key_event.GetKeyCode() == WXK_NUMPAD_DELETE))
+    {
+        wxCommandEvent command(0, idMenuRemoveFilePopup);
+        OnRemoveFileFromProject(command);
     }
 }
