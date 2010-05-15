@@ -1727,6 +1727,10 @@ int CompilerGCC::Run(ProjectBuildTarget* target)
             return RunSingleFile(Manager::Get()->GetEditorManager()->GetActiveEditor()->GetFilename());
         return -1;
     }
+    else
+    {
+        target = m_Project->GetBuildTarget(m_Project->GetActiveBuildTarget());
+    }
     DoPrepareQueue();
     if (!CompilerValid(target))
         return -1;
@@ -2912,8 +2916,14 @@ ProjectBuildTarget* CompilerGCC::GetBuildTargetForFile(const wxString& file)
 
 int CompilerGCC::CompileFile(const wxString& file)
 {
+    ProjectBuildTarget* target = NULL;
+    if (CheckProject())
+    {
+        target = m_Project->GetBuildTarget(m_Project->GetActiveBuildTarget());
+    }
+
     DoPrepareQueue();
-    if (!CompilerValid())
+    if (!CompilerValid(target))
         return -1;
 
     ProjectFile* pf = m_Project ? m_Project->GetFileByFilename(file, true, false) : 0;
