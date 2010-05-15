@@ -3286,9 +3286,13 @@ void MainFrame::OnEditStreamCommentSelected(wxCommandEvent& event)
         {
             int startPos = stc->GetSelectionStart();
             int endPos   = stc->GetSelectionEnd();
-            if ( startPos == endPos ) { // if nothing selected stream comment current line
-                startPos = stc->PositionFromLine  (stc->LineFromPosition(startPos));
-                endPos   = stc->GetLineEndPosition(stc->LineFromPosition(startPos));
+            if ( startPos == endPos ) { // if nothing selected stream comment current *word* first
+                startPos = stc->WordStartPosition(stc->GetCurrentPos(), true);
+                endPos   = stc->WordEndPosition  (stc->GetCurrentPos(), true);
+                if ( startPos == endPos ) { // if nothing selected stream comment current line
+                    startPos = stc->PositionFromLine  (stc->LineFromPosition(startPos));
+                    endPos   = stc->GetLineEndPosition(stc->LineFromPosition(startPos));
+                }
             }
             else {
                 /**
