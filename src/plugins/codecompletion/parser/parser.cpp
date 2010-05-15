@@ -18,14 +18,12 @@
 #include "../classbrowser.h"
 #include "../classbrowserbuilderthread.h"
 
-#ifndef STANDALONE
-    #include <configmanager.h>
-    #include <logmanager.h>
-    #include <editormanager.h>
-    #include <manager.h>
-    #include <globals.h>
-    #include <infowindow.h>
-#endif // STANDALONE
+#include <configmanager.h>
+#include <logmanager.h>
+#include <editormanager.h>
+#include <manager.h>
+#include <globals.h>
+#include <infowindow.h>
 
 #include <queue>
 
@@ -58,9 +56,7 @@ Parser::Parser(wxEvtHandler* parent)
     : m_Options(),
     m_BrowserOptions(),
     m_pParent(parent),
-#ifndef STANDALONE
     m_pImageList(0L),
-#endif
     m_UsingCache(false),
     m_Pool(this, idPool, 1), // in the meanwhile it'll have to be forced to 1
     m_IsUpFront(false),
@@ -83,7 +79,7 @@ Parser::Parser(wxEvtHandler* parent)
     m_LocalFiles.clear();
     m_GlobalIncludes.clear();
     ReadOptions();
-#ifndef STANDALONE
+
     m_pImageList = new wxImageList(16, 16);
     wxBitmap bmp;
     wxString prefix;
@@ -169,7 +165,7 @@ Parser::Parser(wxEvtHandler* parent)
     m_pImageList->Add(bmp); // PARSER_IMG_MACRO_PUBLIC
     bmp = cbLoadBitmap(prefix + _T("macro_folder.png"), wxBITMAP_TYPE_PNG);
     m_pImageList->Add(bmp); // PARSER_IMG_MACRO_FOLDER
-#endif // STANDALONE
+
     ConnectEvents();
 }
 
@@ -182,11 +178,9 @@ Parser::~Parser()
     m_pClassBrowser = 0;
 
     Clear(); // Clear also disconnects the events
-#ifndef STANDALONE
     Delete(m_pImageList);
     Delete(m_pTempTokensTree);
     Delete(m_pTokensTree);
-#endif // STANDALONE
 }
 
 void Parser::ConnectEvents()
@@ -211,18 +205,6 @@ void Parser::DisconnectEvents()
 
 void Parser::ReadOptions()
 {
-#ifdef STANDALONE
-    m_Options.followLocalIncludes    = true;
-    m_Options.followGlobalIncludes   = false;
-    m_Options.caseSensitive          = true;
-    m_Options.wantPreprocessor       = false;
-    m_Options.useSmartSense          = true;
-    m_Options.whileTyping            = true;
-    m_BrowserOptions.showInheritance = false;
-    m_BrowserOptions.expandNS        = false;
-    m_BrowserOptions.viewFlat        = false;
-    m_BrowserOptions.displayFilter   = bdfWorkspace;
-#else // !STANDALONE
     ConfigManager* cfg = Manager::Get()->GetConfigManager(_T("code_completion"));
 
     // one-time default settings change: upgrade everyone
@@ -250,12 +232,10 @@ void Parser::ReadOptions()
     m_BrowserOptions.treeMembers     = cfg->ReadBool(_T("/browser_tree_members"), true);
     m_BrowserOptions.displayFilter   = (BrowserDisplayFilter)cfg->ReadInt(_T("/browser_display_filter"), bdfWorkspace);
     m_BrowserOptions.sortType        = (BrowserSortType)cfg->ReadInt(_T("/browser_sort_type"), bstKind);
-#endif // STANDALONE
 }
 
 void Parser::WriteOptions()
 {
-#ifndef STANDALONE
     ConfigManager* cfg = Manager::Get()->GetConfigManager(_T("code_completion"));
 
     cfg->Write(_T("/max_threads"),                   (int)GetMaxThreads());
@@ -271,7 +251,6 @@ void Parser::WriteOptions()
     cfg->Write(_T("/browser_tree_members"),          m_BrowserOptions.treeMembers);
     cfg->Write(_T("/browser_display_filter"),        m_BrowserOptions.displayFilter);
     cfg->Write(_T("/browser_sort_type"),             m_BrowserOptions.sortType);
-#endif // STANDALONE
 }
 
 bool Parser::CacheNeedsUpdate()
@@ -296,7 +275,6 @@ bool Parser::Done()
     return m_PoolQueue.empty() && m_Pool.Done();
 }
 
-#ifndef STANDALONE
 void Parser::SetTokenKindImage(int kind, const wxBitmap& bitmap, const wxBitmap& mask)
 {
     if (kind < PARSER_IMG_MIN || kind > PARSER_IMG_MAX)
@@ -404,7 +382,6 @@ int Parser::GetTokenKindImage(Token* token)
         default:                  return PARSER_IMG_NONE;
     }
 }
-#endif // STANDALONE
 
 Token* Parser::FindTokenByName(const wxString& name, bool globalsOnly, short int kindMask) const
 {

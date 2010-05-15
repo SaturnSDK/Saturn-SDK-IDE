@@ -12,15 +12,12 @@
 #include <wx/timer.h>
 #include <wx/file.h>
 #include <wx/filefn.h> // wxPathList
+#include <wx/imaglist.h>
 
 #include "parserthread.h"
 
 #include <cbthreadpool.h>
 #include <sdk_events.h>
-
-#ifndef STANDALONE
-    #include <wx/imaglist.h>
-#endif // STANDALONE
 
 #define PARSER_IMG_NONE                -2
 #define PARSER_IMG_CLASS_FOLDER         0
@@ -145,13 +142,11 @@ class Parser : public wxEvtHandler
         long EllapsedTime();
         long LastParseTime();
 
-#ifndef STANDALONE
         int  GetTokenKindImage(Token* token);
         void SetTokenKindImage(int kind, const wxBitmap& bitmap, const wxBitmap& mask = wxNullBitmap);
         void SetTokenKindImage(int kind, const wxBitmap& bitmap, const wxColour& maskColour);
         void SetTokenKindImage(int kind, const wxIcon& icon);
         wxImageList* GetImageList() { return m_pImageList; }
-#endif // STANDALONE
         Token* FindTokenByName(const wxString& name, bool globalsOnly = true, short int kindMask = 0xFFFF) const;
         Token* FindChildTokenByName(Token* parent, const wxString& name, bool useInheritance = false, short int kindMask = 0xFFFF) const;
         size_t FindMatches(const wxString& s, TokenList&   result, bool caseSensitive = true, bool is_prefix = true);
@@ -180,12 +175,14 @@ class Parser : public wxEvtHandler
         void SetMaxThreads(unsigned int max) { m_Pool.SetConcurrentThreads(max); }
 
         void TerminateAllThreads();
+
     protected:
         void DoParseFile(const wxString& filename, bool isGlobal);
 
         void OnAllThreadsDone(CodeBlocksEvent& event);
         void OnTimer(wxTimerEvent& event);
         void OnBatchTimer(wxTimerEvent& event);
+
     private:
         void ConnectEvents();
         void DisconnectEvents();
@@ -196,8 +193,8 @@ class Parser : public wxEvtHandler
         wxArrayString                  m_IncludeDirs;
         wxEvtHandler*                  m_pParent;
         wxTreeItemId                   m_RootNode;
-#ifndef STANDALONE
         wxImageList*                   m_pImageList;
+
     protected:
         // the following three members are used to detect changes between
         // in-mem data and cache
@@ -215,6 +212,7 @@ class Parser : public wxEvtHandler
         ClassBrowser*                  m_pClassBrowser; // Which class browser are we updating?
         int                            m_TreeBuildingStatus; // 0 = Done; 1 = Needs update; 2 = Updating.
         size_t                         m_TreeBuildingTokenIdx; // Bookmark for the tree-building process
+
     private:
         wxTimer                        m_Timer;
         wxTimer                        m_BatchTimer;
@@ -223,8 +221,6 @@ class Parser : public wxEvtHandler
         long                           m_LastStopWatchTime;
         bool                           m_IgnoreThreadEvents;
         bool                           m_ShuttingDown;
-
-#endif // STANDALONE
 
         DECLARE_EVENT_TABLE()
 };
