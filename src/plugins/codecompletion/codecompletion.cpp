@@ -419,7 +419,6 @@ void CodeCompletion::OnAttach()
     m_ViewMenu   = 0;
     m_Function   = 0;
     m_Scope      = 0;
-    m_ParsedProjects.clear();
     m_FunctionsScope.clear();
     m_NameSpaces.clear();
     m_AllFunctionsScopes.clear();
@@ -468,7 +467,6 @@ void CodeCompletion::OnRelease(bool appShutDown)
 
     m_NativeParser.RemoveClassBrowser(appShutDown);
     m_NativeParser.ClearParsers();
-    m_ParsedProjects.clear();
     m_FunctionsScope.clear();
     m_NameSpaces.clear();
     m_AllFunctionsScopes.clear();
@@ -1134,8 +1132,8 @@ void CodeCompletion::OnAppDoneStartup(CodeBlocksEvent& event)
     // Dreaded DDE-open bug related: do not touch the following lines unless for a good reason
 
     // parse any projects opened through DDE or the command-line
-    ParseActiveProjects();
     ProjectManager* prjMan = Manager::Get()->GetProjectManager();
+    m_NativeParser.AddParser(prjMan->GetActiveProject());
     m_NativeParser.SetClassBrowserProject(prjMan->GetActiveProject());
 
     event.Skip();
@@ -1154,23 +1152,6 @@ void CodeCompletion::OnCodeCompleteTimer(wxTimerEvent& event)
     }
 }
 
-void CodeCompletion::ParseActiveProjects()
-{
-    // parse all active projects
-    m_InitDone = false;
-    ProjectManager* prjMan = Manager::Get()->GetProjectManager();
-    for (unsigned int i = 0; i < prjMan->GetProjects()->GetCount(); ++i)
-    {
-        cbProject* curproject = prjMan->GetProjects()->Item(i);
-        if (m_ParsedProjects.find(curproject)==m_ParsedProjects.end())
-        {
-            m_ParsedProjects.insert(curproject);
-            m_NativeParser.AddParser(curproject);
-        }
-    }
-    m_InitDone = true;
-}
-
 void CodeCompletion::OnWorkspaceChanged(CodeBlocksEvent& event)
 {
 //    Manager::Get()->GetLogManager()->DebugLog(_T("CodeCompletion::OnWorkspaceChanged"));
@@ -1182,12 +1163,11 @@ void CodeCompletion::OnWorkspaceChanged(CodeBlocksEvent& event)
     // widgets.
     if (IsAttached() && m_InitDone)
     {
-        // Parse the projects
-        ParseActiveProjects();
         // Update the Function toolbar
         ParseFunctionsAndFillToolbar();
         // Update the class browser
         ProjectManager* prjMan = Manager::Get()->GetProjectManager();
+        m_NativeParser.AddParser(prjMan->GetActiveProject());
         m_NativeParser.SetClassBrowserProject(prjMan->GetActiveProject());
         if (m_NativeParser.GetParserPtr() && m_NativeParser.GetParserPtr()->ClassBrowserOptions().displayFilter == bdfProject)
             m_NativeParser.UpdateClassBrowser();
@@ -1206,10 +1186,12 @@ void CodeCompletion::OnProjectActivated(CodeBlocksEvent& event)
 
     if (!ProjectManager::IsBusy() && IsAttached() && m_InitDone)
     {
+        m_NativeParser.AddParser(event.GetProject());
         m_NativeParser.SetClassBrowserProject(event.GetProject());
         if (m_NativeParser.GetParserPtr() && m_NativeParser.GetParserPtr()->ClassBrowserOptions().displayFilter == bdfProject)
             m_NativeParser.UpdateClassBrowser();
     }
+    else
         m_NativeParser.SetClassBrowserProject(event.GetProject());
     event.Skip();
 }
@@ -1222,7 +1204,6 @@ void CodeCompletion::OnProjectClosed(CodeBlocksEvent& event)
     // when we receive the next EVT_PROJECT_ACTIVATED event.
     if (IsAttached() && m_InitDone)
     {
-        m_ParsedProjects.erase(event.GetProject());
         m_NativeParser.RemoveParser(event.GetProject());
     }
     event.Skip();

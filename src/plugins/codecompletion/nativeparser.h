@@ -54,9 +54,10 @@ class NativeParser : public wxEvtHandler
         NativeParser();
         ~NativeParser();
 
-        Parser* GetParserPtr() { return &m_Parser; };
+        Parser* GetParserPtr() { return m_pParser; };
         void AddParser(cbProject* project, bool useCache = true);
         void RemoveParser(cbProject* project, bool useCache = true);
+        void ChangeParser(cbProject* project);
         void ClearParsers();
         void RereadParserOptions();
         void AddFileToParser(cbProject* project, const wxString& filename);
@@ -127,7 +128,10 @@ class NativeParser : public wxEvtHandler
         bool SkipWhitespaceForward(cbEditor* editor, int& pos);
         bool SkipWhitespaceBackward(cbEditor* editor, int& pos);
 
-        Parser               m_Parser;
+        typedef std::list<std::pair<cbProject*, Parser*> > ParserList;
+        ParserList           m_ParserList;
+        Parser*              m_pParser;
+        Parser*              m_pTempParser;
         int                  m_EditorStartWord;
         int                  m_EditorEndWord;
         wxString             m_CCItems;

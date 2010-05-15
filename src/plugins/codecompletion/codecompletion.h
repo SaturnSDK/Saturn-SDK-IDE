@@ -125,8 +125,6 @@ class CodeCompletion : public cbCodeCompletionPlugin
         wxMenu*                            m_SearchMenu;
         wxMenu*                            m_ViewMenu;
         NativeParser                       m_NativeParser;
-        set<cbProject*, less<cbProject*> > m_ParsedProjects;
-
         int                                m_EditorHookId;
         int                                m_LastPosForCodeCompletion;
         wxTimer                            m_TimerCodeCompletion;
