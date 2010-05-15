@@ -121,6 +121,7 @@ int idMenuGotoDeclaration       = wxNewId();
 int idMenuGotoImplementation    = wxNewId();
 int idMenuOpenIncludeFile       = wxNewId();
 int idViewClassBrowser          = wxNewId();
+int idProjectReparse            = wxNewId();
 int idEditorSubMenu             = wxNewId();
 int idClassMethod               = wxNewId();
 int idUnimplementedClassMethods = wxNewId();
@@ -152,6 +153,7 @@ BEGIN_EVENT_TABLE(CodeCompletion, cbCodeCompletionPlugin)
     EVT_MENU(idMenuOpenIncludeFile, CodeCompletion::OnOpenIncludeFile)
 
     EVT_MENU(idViewClassBrowser, CodeCompletion::OnViewClassBrowser)
+    EVT_MENU(idProjectReparse, CodeCompletion::OnProjectReparse)
 
     EVT_TIMER(idCodeCompleteTimer, CodeCompletion::OnCodeCompleteTimer)
     EVT_TIMER(idFunctionsParsingTimer, CodeCompletion::OnStartParsingFunctions)
@@ -294,20 +296,55 @@ void CodeCompletion::BuildMenu(wxMenuBar* menuBar)
     {
         m_ViewMenu = menuBar->GetMenu(idx);
         wxMenuItemList& items = m_ViewMenu->GetMenuItems();
+        bool inserted = false;
+
         // find the first separator and insert before it
         for (size_t i = 0; i < items.GetCount(); ++i)
         {
             if (items[i]->IsSeparator())
             {
                 m_ViewMenu->InsertCheckItem(i, idViewClassBrowser, _("Symbols browser"), _("Toggle displaying the symbols browser"));
-                return;
+                inserted = true;
+                break;
             }
         }
+
         // not found, just append
-        m_ViewMenu->AppendCheckItem(idViewClassBrowser, _("Symbols browser"), _("Toggle displaying the symbols browser"));
+        if (!inserted)
+            m_ViewMenu->AppendCheckItem(idViewClassBrowser, _("Symbols browser"), _("Toggle displaying the symbols browser"));
     }
     else
         Manager::Get()->GetLogManager()->DebugLog(_T("Could not find View menu!"));
+
+    // add Reparse item in the "Project" menu
+    idx = menuBar->FindMenu(_("&Project"));
+    if (idx != wxNOT_FOUND)
+    {
+        wxMenu* projMenu = menuBar->GetMenu(idx);
+        wxMenuItemList& items = projMenu->GetMenuItems();
+        bool inserted = false;
+
+        // find the first separator and insert before it
+        for (size_t i = items.GetCount() - 1; i > 0; --i)
+        {
+            if (items[i]->IsSeparator())
+            {
+                projMenu->InsertSeparator(i);
+                projMenu->Insert(i + 1, idProjectReparse, _("Reparse this project"), _("Reparse current actived project"));
+                inserted = true;
+                break;
+            }
+        }
+
+        // not found, just append
+        if (!inserted)
+        {
+            projMenu->AppendSeparator();
+            projMenu->Append(idProjectReparse, _("Reparse this project"), _("Reparse current actived project"));
+        }
+    }
+    else
+        Manager::Get()->GetLogManager()->DebugLog(_T("Could not find Project menu!"));
 }
 
 // invariant : on return true : NameUnderCursor is NOT empty
@@ -395,6 +432,11 @@ void CodeCompletion::BuildModuleMenu(const ModuleType type, wxMenu* menu, const 
         }
         else
             Manager::Get()->GetLogManager()->DebugLog(_T("Could not find Insert menu!"));
+    }
+    else if (type == mtProjectManager)
+    {
+        if (data && data->GetKind() == FileTreeData::ftdkProject)
+            menu->Append(idProjectReparse, _("Reparse this project"), _("Reparse current actived project"));
     }
 }
 
@@ -1934,6 +1976,18 @@ void CodeCompletion::OnOpenIncludeFile(wxCommandEvent& event)
     }
 
     cbMessageBox(wxString::Format(_("Not found: %s"), NameUnderCursor.c_str()), _("Warning"), wxICON_WARNING);
+}
+
+void CodeCompletion::OnProjectReparse(wxCommandEvent& event)
+{
+    ProjectManager* prjMan = Manager::Get()->GetProjectManager();
+    if (prjMan != NULL)
+    {
+        m_NativeParser.RemoveParser(prjMan->GetActiveProject());
+        m_NativeParser.AddParser(prjMan->GetActiveProject());
+    }
+
+    event.Skip();
 }
 
 void CodeCompletion::EditorEventHook(cbEditor* editor, wxScintillaEvent& event)

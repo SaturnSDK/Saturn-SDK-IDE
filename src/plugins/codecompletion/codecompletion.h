@@ -90,6 +90,7 @@ class CodeCompletion : public cbCodeCompletionPlugin
         void OnUnimplementedClassMethods(wxCommandEvent& event);
         void OnGotoDeclaration(wxCommandEvent& event);
         void OnOpenIncludeFile(wxCommandEvent& event);
+        void OnProjectReparse(wxCommandEvent& event);
         void OnAppDoneStartup(CodeBlocksEvent& event);
         void OnCodeCompleteTimer(wxTimerEvent& event);
         void OnWorkspaceChanged(CodeBlocksEvent& event);
