@@ -106,7 +106,7 @@ struct BrowserOptions
     bool                 showInheritance; // default: false
     bool                 expandNS;        // default: false (auto-expand namespaces)
     bool                 treeMembers;     //
-    BrowserDisplayFilter displayFilter;   // default: bdfProject
+    BrowserDisplayFilter displayFilter;   // default: bdfWorkspace
     BrowserSortType      sortType;        //
 };
 
@@ -209,7 +209,6 @@ class Parser : public wxEvtHandler
         set<wxString, less<wxString> > m_LocalFiles;
         bool                           m_NeedsReparse;
         bool                           m_IsBatch;
-        bool                           m_IsParsing;
         ClassBrowser*                  m_pClassBrowser; // Which class browser are we updating?
         int                            m_TreeBuildingStatus; // 0 = Done; 1 = Needs update; 2 = Updating.
         size_t                         m_TreeBuildingTokenIdx; // Bookmark for the tree-building process

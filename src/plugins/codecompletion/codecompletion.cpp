@@ -210,7 +210,7 @@ void CodeCompletion::LoadTokenReplacements()
     }
     else
         cfg->Read(_T("token_replacements"), &repl);
-
+    
     Tokenizer::ConvertToHashReplacementMap(repl);
 }
 
@@ -1174,7 +1174,9 @@ void CodeCompletion::OnAppDoneStartup(CodeBlocksEvent& event)
     // Dreaded DDE-open bug related: do not touch the following lines unless for a good reason
 
     // parse any projects opened through DDE or the command-line
-    m_NativeParser.AddParser(Manager::Get()->GetProjectManager()->GetActiveProject());
+    ProjectManager* prjMan = Manager::Get()->GetProjectManager();
+    m_NativeParser.AddParser(prjMan->GetActiveProject());
+    m_NativeParser.SetClassBrowserProject(prjMan->GetActiveProject());
 
     event.Skip();
 }
@@ -1206,7 +1208,9 @@ void CodeCompletion::OnWorkspaceChanged(CodeBlocksEvent& event)
         // Update the Function toolbar
         ParseFunctionsAndFillToolbar();
         // Update the class browser
-        m_NativeParser.AddParser(Manager::Get()->GetProjectManager()->GetActiveProject());
+        ProjectManager* prjMan = Manager::Get()->GetProjectManager();
+        m_NativeParser.AddParser(prjMan->GetActiveProject());
+        m_NativeParser.SetClassBrowserProject(prjMan->GetActiveProject());
         if (m_NativeParser.GetParserPtr() && m_NativeParser.GetParserPtr()->ClassBrowserOptions().displayFilter == bdfProject)
             m_NativeParser.UpdateClassBrowser();
     }
@@ -1225,10 +1229,12 @@ void CodeCompletion::OnProjectActivated(CodeBlocksEvent& event)
     if (!ProjectManager::IsBusy() && IsAttached() && m_InitDone)
     {
         m_NativeParser.AddParser(event.GetProject());
+        m_NativeParser.SetClassBrowserProject(event.GetProject());
         if (m_NativeParser.GetParserPtr() && m_NativeParser.GetParserPtr()->ClassBrowserOptions().displayFilter == bdfProject)
             m_NativeParser.UpdateClassBrowser();
     }
-
+    else
+        m_NativeParser.SetClassBrowserProject(event.GetProject());
     event.Skip();
 }
 
@@ -1974,7 +1980,13 @@ void CodeCompletion::OnOpenIncludeFile(wxCommandEvent& event)
 
 void CodeCompletion::OnProjectReparse(wxCommandEvent& event)
 {
-    m_NativeParser.ForceReparseActiveProject();
+    ProjectManager* prjMan = Manager::Get()->GetProjectManager();
+    if (prjMan != NULL)
+    {
+        m_NativeParser.RemoveParser(prjMan->GetActiveProject());
+        m_NativeParser.AddParser(prjMan->GetActiveProject());
+    }
+
     event.Skip();
 }
 
