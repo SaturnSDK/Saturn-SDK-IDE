@@ -3309,11 +3309,33 @@ void MainFrame::OnEditStreamCommentSelected(wxCommandEvent& event)
                 }
             }
             // stream comment block
-            stc->InsertText( startPos, comment.streamCommentStart );
-             // we already inserted some characters so out endPos changed
-            endPos += comment.streamCommentStart.Length();
-            stc->InsertText( endPos, comment.streamCommentEnd );
-            stc->SetSelectionVoid(startPos,endPos);
+            int p1 = startPos - 1;
+            while (stc->GetCharAt(p1) == _T(' ') && p1 > 0)
+                --p1;
+            p1 -= 1;
+            int p2 = endPos;
+            while (stc->GetCharAt(p2) == _T(' ') && p2 < stc->GetLength())
+                ++p2;
+            const wxString start = stc->GetTextRange(p1, p1 + comment.streamCommentStart.Length());
+            const wxString end = stc->GetTextRange(p2, p2 + comment.streamCommentEnd.Length());
+            if (start == comment.streamCommentStart && end == comment.streamCommentEnd)
+            {
+                stc->SetTargetStart(p1);
+                stc->SetTargetEnd(p2 + 2);
+                wxString target = stc->GetTextRange(p1 + 2, p2);
+                stc->ReplaceTarget(target);
+                stc->GotoPos(p1 + target.Length());
+            }
+            else
+            {
+                stc->InsertText( startPos, comment.streamCommentStart );
+                // we already inserted some characters so out endPos changed
+                startPos += comment.streamCommentStart.Length();
+                endPos += comment.streamCommentStart.Length();
+                stc->InsertText( endPos, comment.streamCommentEnd );
+                stc->SetSelectionVoid(startPos,endPos);
+            }
+
         }
         stc->EndUndoAction();
     }
