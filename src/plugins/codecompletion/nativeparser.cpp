@@ -80,10 +80,6 @@ NativeParser::~NativeParser()
     RemoveClassBrowser();
     ClearParsers();
 
-    for (ParserList::iterator it = m_ParserList.begin(); it != m_ParserList.end(); ++it)
-        delete it->second;
-    m_ParserList.clear();
-
     delete m_pTempParser;
 }
 
@@ -207,13 +203,8 @@ void NativeParser::UpdateClassBrowser()
 
 void NativeParser::RereadParserOptions()
 {
-    ConfigManager* cfg = Manager::Get()->GetConfigManager(_T("code_completion"));
-    bool needsReparsing = false;
-
-    ParserOptions opts = m_pParser->Options();
-    m_pParser->ReadOptions();
-
     // disabled?
+    ConfigManager* cfg = Manager::Get()->GetConfigManager(_T("code_completion"));
     if (cfg->ReadBool(_T("/use_symbols_browser"), true))
     {
         if (!m_pClassBrowser)
@@ -234,36 +225,30 @@ void NativeParser::RereadParserOptions()
         RemoveClassBrowser();
 
     // reparse if settings changed
+    ParserOptions opts = m_pParser->Options();
+    m_pParser->ReadOptions();
     if (opts.followLocalIncludes != m_pParser->Options().followLocalIncludes ||
         opts.followGlobalIncludes != m_pParser->Options().followGlobalIncludes ||
         opts.wantPreprocessor != m_pParser->Options().wantPreprocessor)
     {
         // important options changed... flag for reparsing
-        needsReparsing = true;
-    }
-
-    if (needsReparsing && m_pParser->GetTokens()->size() > 0)
-    {
         if (cbMessageBox(_("You changed some class parser options. Do you want to "
                         "reparse your projects now, using the new options?"),
                         _("Reparse?"),
                         wxYES_NO | wxICON_QUESTION) == wxID_YES)
         {
             ClearParsers();
-            ProjectsArray* projects = Manager::Get()->GetProjectManager()->GetProjects();
-            for (unsigned int i = 0; i < projects->GetCount(); ++i)
-            {
-                AddParser(projects->Item(i));
-            }
+            AddParser(Manager::Get()->GetProjectManager()->GetActiveProject());
             if (m_pClassBrowser)
                 m_pClassBrowser->SetParser(m_pParser);
         }
     }
+
     if (m_pClassBrowser)
         m_pClassBrowser->UpdateView();
 }
 
-void NativeParser::SetClassBrowserProject(cbProject* project)
+void NativeParser::SetClassBrowserParser()
 {
     if (m_pClassBrowser)
     {
@@ -272,7 +257,7 @@ void NativeParser::SetClassBrowserProject(cbProject* project)
     else
     {
         if (s_DebugSmartSense)
-            Manager::Get()->GetLogManager()->DebugLog(_T("SetClassBrowserProject() Class browser not available."));
+            Manager::Get()->GetLogManager()->DebugLog(_T("SetClassBrowserParser() Class browser not available."));
     }
 }
 
@@ -289,7 +274,10 @@ void NativeParser::ClearParsers()
         m_pClassBrowser->SetParser(0L);
         m_pClassBrowser->UpdateView();
     }
-    m_pParser->Clear();
+
+    for (ParserList::iterator it = m_ParserList.begin(); it != m_ParserList.end(); ++it)
+        delete it->second;
+    m_ParserList.clear();
 }
 
 void NativeParser::AddCompilerDirs(cbProject* project)
@@ -605,13 +593,16 @@ void NativeParser::AddParser(cbProject* project, bool useCache)
     if (!project)
         return;
 
-    Manager::Get()->GetLogManager()->DebugLog(F(_T("Add project %s in parsing queue"), project->GetTitle().wx_str()));
-
     for (ParserList::iterator it = m_ParserList.begin(); it != m_ParserList.end(); ++it)
     {
-        if ((*it).first == project)
+        if (it->first == project)
         {
-            m_pParser = (*it).second;
+            m_pParser = it->second;
+            SetClassBrowserParser();
+
+            wxCommandEvent evt(wxEVT_COMMAND_MENU_SELECTED, PARSER_END);
+            evt.SetClientData(this);
+            wxPostEvent(this, evt);
             return;
         }
     }
@@ -624,6 +615,7 @@ void NativeParser::AddParser(cbProject* project, bool useCache)
             delete [] tmp;
 
             m_pParser = new Parser(this);
+            SetClassBrowserParser();
             m_ParserList.push_back(std::make_pair(project, m_pParser));
             ReparseProject(project);
             break;
@@ -653,15 +645,16 @@ void NativeParser::RemoveParser(cbProject* project, bool useCache)
 
     for (ParserList::iterator it = m_ParserList.begin(); it != m_ParserList.end(); ++it)
     {
-        if ((*it).first == project)
+        if (it->first == project)
         {
-            delete (*it).second;
+            delete it->second;
             m_ParserList.erase(it);
             break;
         }
     }
 
     m_pParser = m_pTempParser;
+    SetClassBrowserParser();
     UpdateClassBrowser();
 }
 
@@ -669,9 +662,9 @@ void NativeParser::ChangeParser(cbProject* project)
 {
     for (ParserList::iterator it = m_ParserList.begin(); it != m_ParserList.end(); ++it)
     {
-        if ((*it).first == project)
+        if (it->first == project)
         {
-            m_pParser = (*it).second;
+            m_pParser = it->second;
             break;
         }
     }
@@ -808,7 +801,6 @@ void NativeParser::ReparseProject(cbProject* project)
             m_pParser->AddBatchParse(fronts, true);
         }
 
-
         if (!files.IsEmpty())
             m_pParser->AddBatchParse(files);
 
@@ -817,17 +809,11 @@ void NativeParser::ReparseProject(cbProject* project)
     }
 }
 
-// NOTE: it actually forces reparsing of workspace
 void NativeParser::ForceReparseActiveProject()
 {
-    m_pParser->Clear();
-    UpdateClassBrowser();
-
-    ProjectsArray* projects = Manager::Get()->GetProjectManager()->GetProjects();
-    for (size_t i = 0; i < projects->GetCount(); ++i)
-    {
-        AddParser(projects->Item(i), false);
-    }
+    cbProject* curProject = Manager::Get()->GetProjectManager()->GetActiveProject();
+    RemoveParser(curProject);
+    AddParser(curProject);
 }
 
 // UNUSED
@@ -2522,17 +2508,16 @@ void NativeParser::OnParserEnd(wxCommandEvent& event)
     // inheritance post-step
     m_pParser->LinkInheritance(false);
 
-    // also, mark all workspace files as local
-    ProjectsArray* projects = Manager::Get()->GetProjectManager()->GetProjects();
-    for (size_t i = 0; i < projects->GetCount(); ++i) // for all projects
+    // also, mark all project files as local
+    cbProject* curProject = Manager::Get()->GetProjectManager()->GetActiveProject();
+    if (curProject != NULL)
     {
-        cbProject* prj = projects->Item(i);
-        for (int x = 0; x < prj->GetFilesCount(); ++x) // for all files in project
+        for (int x = 0; x < curProject->GetFilesCount(); ++x) // for all files in project
         {
-            ProjectFile* pf = prj->GetFile(x);
+            ProjectFile* pf = curProject->GetFile(x);
             if (!pf)
                 continue;
-            m_pParser->MarkFileTokensAsLocal(pf->file.GetFullPath(), true, prj);
+            m_pParser->MarkFileTokensAsLocal(pf->file.GetFullPath(), true, curProject);
         }
     }
 
