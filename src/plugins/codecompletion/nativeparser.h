@@ -88,11 +88,13 @@ class NativeParser : public wxEvtHandler
         void CreateClassBrowser();
         void RemoveClassBrowser(bool appShutDown = false);
         void UpdateClassBrowser();
-        void SetClassBrowserProject(cbProject* project);
         void SetCBViewMode(const BrowserViewMode& mode);
 
         void OnProjectLoadingHook(cbProject* project, TiXmlElement* elem, bool loading);
+
     protected:
+        void SetClassBrowserParser();
+
     private:
         friend class CodeCompletion;
         size_t AI(TokenIdxSet& result, cbEditor* editor, const wxString& lineText = wxEmptyString, bool noPartialMatch = false, bool caseSensitive = false, TokenIdxSet* search_scope = 0, int caretPos = -1);

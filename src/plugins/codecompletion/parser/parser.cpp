@@ -64,6 +64,7 @@ Parser::Parser(wxEvtHandler* parent)
     m_pTempTokensTree(0),
     m_NeedsReparse(false),
     m_IsBatch(false),
+    m_IsParsing(false),
     m_pClassBrowser(0),
     m_TreeBuildingStatus(0),
     m_TreeBuildingTokenIdx(0),
@@ -230,7 +231,7 @@ void Parser::ReadOptions()
     m_BrowserOptions.showInheritance = cfg->ReadBool(_T("/browser_show_inheritance"), false);
     m_BrowserOptions.expandNS        = cfg->ReadBool(_T("/browser_expand_ns"), false);
     m_BrowserOptions.treeMembers     = cfg->ReadBool(_T("/browser_tree_members"), true);
-    m_BrowserOptions.displayFilter   = (BrowserDisplayFilter)cfg->ReadInt(_T("/browser_display_filter"), bdfWorkspace);
+    m_BrowserOptions.displayFilter   = (BrowserDisplayFilter)cfg->ReadInt(_T("/browser_display_filter"), bdfProject);
     m_BrowserOptions.sortType        = (BrowserSortType)cfg->ReadInt(_T("/browser_sort_type"), bstKind);
 }
 
@@ -504,6 +505,8 @@ void Parser::AddBatchParse(const wxArrayString& filenames, bool isUpFront)
 
 void Parser::StartBatchParse(bool delay)
 {
+    m_IsParsing = true;
+
     // Allow future parses to take place in this same run
     if (m_IsBatch)
         m_BatchTimer.Start(delay ? batch_timer_delay : 1, wxTIMER_ONE_SHOT);
@@ -937,7 +940,7 @@ wxArrayString Parser::FindFileInIncludeDirs(const wxString& file, bool firstonly
 
 void Parser::OnAllThreadsDone(CodeBlocksEvent& event)
 {
-    if (m_IgnoreThreadEvents)
+    if (m_IgnoreThreadEvents || !m_IsParsing)
         return;
 
     if (!m_PoolQueue.empty())
@@ -947,6 +950,7 @@ void Parser::OnAllThreadsDone(CodeBlocksEvent& event)
     else
     {
         EndStopWatch();
+        m_IsParsing = false;
 
         wxCommandEvent evt(wxEVT_COMMAND_MENU_SELECTED, PARSER_END);
         evt.SetClientData(this);
