@@ -44,6 +44,7 @@ static const char CACHE_MAGIC[] = "CCCACHE_1_3";
 static const int batch_timer_delay = 500;
 static const int reparse_timer_delay = 250;
 
+int PARSER_START = wxNewId();
 int PARSER_END = wxNewId();
 static int idPool = wxNewId();
 int TIMER_ID = wxNewId();
@@ -1055,6 +1056,10 @@ void Parser::OnBatchTimer(wxTimerEvent& event)
         m_IsBatch = false;
         Manager::Get()->GetLogManager()->DebugLog(_T("Starting batch parsing..."));
         StartStopWatch();
+
+        wxCommandEvent evt(wxEVT_COMMAND_MENU_SELECTED, PARSER_START);
+        evt.SetClientData(this);
+        wxPostEvent(m_pParent, evt);
     }
 
     if (!m_PoolQueue.empty())

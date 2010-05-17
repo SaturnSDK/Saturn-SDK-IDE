@@ -64,6 +64,7 @@
 #define PARSER_IMG_MIN PARSER_IMG_CLASS_FOLDER
 #define PARSER_IMG_MAX PARSER_IMG_MACRO_FOLDER
 
+extern int PARSER_START;
 extern int PARSER_END;
 class ClassTreeData : public BlockAllocated<ClassTreeData, 500>, public wxTreeItemData
 {

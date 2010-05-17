@@ -105,6 +105,7 @@ class CodeCompletion : public cbCodeCompletionPlugin
         void OnEditorActivated(CodeBlocksEvent& event);
         void OnEditorClosed(CodeBlocksEvent& event);
         void OnParserEnd(wxCommandEvent& event);
+        void OnParserStart(wxCommandEvent& event);
         void OnValueTooltip(CodeBlocksEvent& event);
         void DoCodeComplete();
         void DoInsertCodeCompleteToken(wxString tokName);

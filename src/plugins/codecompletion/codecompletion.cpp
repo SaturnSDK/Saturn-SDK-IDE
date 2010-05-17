@@ -164,6 +164,7 @@ BEGIN_EVENT_TABLE(CodeCompletion, cbCodeCompletionPlugin)
     EVT_CHOICE(XRCID("chcCodeCompletionFunction"),  CodeCompletion::OnFunction)
 
     EVT_MENU(PARSER_END, CodeCompletion::OnParserEnd)
+    EVT_MENU(PARSER_START, CodeCompletion::OnParserStart)
 
 END_EVENT_TABLE()
 
@@ -452,6 +453,8 @@ bool CodeCompletion::BuildToolBar(wxToolBar* toolBar)
     m_Scope->Disable();
     toolBar->Realize();
     toolBar->SetInitialSize();
+
+    EnableToolbarTools(false);
     return true;
 }
 
@@ -1178,7 +1181,6 @@ void CodeCompletion::OnAppDoneStartup(CodeBlocksEvent& event)
     // Dreaded DDE-open bug related: do not touch the following lines unless for a good reason
 
     // parse any projects opened through DDE or the command-line
-    EnableToolbarTools(false);
     m_NativeParser.AddParser(Manager::Get()->GetProjectManager()->GetActiveProject());
 
     event.Skip();
@@ -1208,7 +1210,6 @@ void CodeCompletion::OnWorkspaceChanged(CodeBlocksEvent& event)
     // widgets.
     if (IsAttached() && m_InitDone)
     {
-        EnableToolbarTools(false);
         m_NativeParser.AddParser(Manager::Get()->GetProjectManager()->GetActiveProject());
 
         // Update the Function toolbar
@@ -1232,7 +1233,6 @@ void CodeCompletion::OnProjectActivated(CodeBlocksEvent& event)
 
     if (!ProjectManager::IsBusy() && IsAttached() && m_InitDone)
     {
-        EnableToolbarTools(false);
         m_NativeParser.AddParser(event.GetProject());
         if (m_NativeParser.GetParserPtr() && m_NativeParser.GetParserPtr()->ClassBrowserOptions().displayFilter == bdfProject)
             m_NativeParser.UpdateClassBrowser();
@@ -1564,10 +1564,19 @@ void CodeCompletion::OnEditorOpen(CodeBlocksEvent& event)
 
 void CodeCompletion::OnEditorActivated(CodeBlocksEvent& event)
 {
+    // Here has too many cbEVT_EDITOR_ACTIVATED event, we need the first *only*
+    static EditorBase* lastEditor;
+    if (lastEditor == event.GetEditor())
+        return;
+
     if (!ProjectManager::IsBusy() && IsAttached() && m_InitDone)
     {
-        EditorBase* eb = event.GetEditor();
-        m_NativeParser.OnEditorActivated(eb);
+        EditorBase* editor = event.GetEditor();
+        if (!editor || !editor->IsBuiltinEditor())
+            return;
+
+        lastEditor = editor;
+        m_NativeParser.OnEditorActivated(editor);
         ParseFunctionsAndFillToolbar();
     }
 
@@ -2280,9 +2289,14 @@ void CodeCompletion::OnFunction(wxCommandEvent& /*event*/)
     }
 }
 
+void CodeCompletion::OnParserStart(wxCommandEvent& event)
+{
+    EnableToolbarTools(false);
+}
+
 void CodeCompletion::OnParserEnd(wxCommandEvent& event)
 {
-    EnableToolbarTools();
+    EnableToolbarTools(true);
     if (!ProjectManager::IsBusy())
         ParseFunctionsAndFillToolbar(true);
 }

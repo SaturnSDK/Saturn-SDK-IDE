@@ -57,7 +57,6 @@ class NativeParser : public wxEvtHandler
         Parser* GetParserPtr() { return m_pParser; };
         void AddParser(cbProject* project, bool useCache = true);
         void RemoveParser(cbProject* project, bool useCache = true);
-        void ChangeParser(cbProject* project);
         void ClearParsers();
         void RereadParserOptions();
         void AddFileToParser(cbProject* project, const wxString& filename);

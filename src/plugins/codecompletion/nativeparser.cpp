@@ -667,18 +667,6 @@ void NativeParser::RemoveParser(cbProject* project, bool useCache)
     SetClassBrowserParser();
 }
 
-void NativeParser::ChangeParser(cbProject* project)
-{
-    for (ParserList::iterator it = m_ParserList.begin(); it != m_ParserList.end(); ++it)
-    {
-        if (it->first == project)
-        {
-            m_pParser = it->second;
-            break;
-        }
-    }
-}
-
 void NativeParser::AddFileToParser(cbProject* project, const wxString& filename)
 {
     if (m_pParser)
@@ -2821,25 +2809,62 @@ void NativeParser::OnParserEnd(wxCommandEvent& event)
     event.Skip();
 }
 
-// there is a bug, some times, OnEditorActivated received, but ed == 0;
 void NativeParser::OnEditorActivated(EditorBase* editor)
 {
+    if (!m_pParser)
+        return;
+
+    static cbProject* lastProject;
+    bool findInAnyProject = false;
+    wxString filename = editor->GetFilename();
+    cbProject* project = Manager::Get()->GetProjectManager()->GetActiveProject();
+    if (project)
+    {
+        if (project->GetFileByFilename(filename, false, true))
+        {
+            if (project != lastProject)
+            {
+                AddParser(project);
+                UpdateClassBrowser();
+            }
+
+            findInAnyProject = true;
+            lastProject = project;
+        }
+        else
+        {
+            ProjectsArray* projArr = Manager::Get()->GetProjectManager()->GetProjects();
+            for (size_t i = 0; i < projArr->GetCount(); ++i)
+            {
+                if (projArr->Item(i) == project)
+                    continue;
+
+                if (projArr->Item(i)->GetFileByFilename(filename, false, true))
+                {
+                    if (projArr->Item(i) != lastProject)
+                    {
+                        AddParser(projArr->Item(i));
+                        UpdateClassBrowser();
+                    }
+
+                    findInAnyProject = true;
+                    lastProject = projArr->Item(i);
+                    break;
+                }
+            }
+        }
+    }
+
+    if (!findInAnyProject)
+    {
+        lastProject = NULL;
+        // TODO (Loaden) for standalone file parser
+    }
+
     if (!m_pClassBrowser)
     {
         if (s_DebugSmartSense)
             Manager::Get()->GetLogManager()->DebugLog(_T("OnEditorActivated() Class browser not available."));
-        return;
-    }
-    if (!editor)
-    {
-        if (s_DebugSmartSense)
-            Manager::Get()->GetLogManager()->DebugLog(_T("OnEditorActivated() Editor not available."));
-        return;
-    }
-    if (!editor->IsBuiltinEditor())
-    {
-        if (s_DebugSmartSense)
-            Manager::Get()->GetLogManager()->DebugLog(_T("OnEditorActivated() Editor not a built-in editor."));
         return;
     }
 
