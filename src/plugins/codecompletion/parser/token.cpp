@@ -761,7 +761,6 @@ void TokensTree::RemoveTokenFromList(int idx)
     {
         m_Tokens[idx] = 0;
         m_FreeTokens.push_back(idx);
-        m_FilesToBeReparsed.insert(oldToken->m_FileIdx);
         delete oldToken;
     }
 }

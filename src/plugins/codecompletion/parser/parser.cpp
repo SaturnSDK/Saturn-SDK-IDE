@@ -1087,19 +1087,19 @@ bool Parser::ReparseModifiedFiles()
         // when we parse the normal source files...
         for (it = m_pTokensTree->m_FilesToBeReparsed.begin(); it != m_pTokensTree->m_FilesToBeReparsed.end(); ++it)
         {
-            m_pTokensTree->RemoveFile(*it);
             wxString filename = m_pTokensTree->m_FilenamesMap.GetString(*it);
             if (FileTypeOf(filename) == ftSource) // ignore source files (*.cpp etc)
                 continue;
             files_list.push(filename);
+            m_pTokensTree->RemoveFile(*it);
         }
         for (it = m_pTokensTree->m_FilesToBeReparsed.begin(); it != m_pTokensTree->m_FilesToBeReparsed.end(); ++it)
         {
-            m_pTokensTree->RemoveFile(*it);
             wxString filename = m_pTokensTree->m_FilenamesMap.GetString(*it);
             if (FileTypeOf(filename) != ftSource) // ignore non-source files (*.h etc)
                 continue;
             files_list.push(filename);
+            m_pTokensTree->RemoveFile(*it);
         }
     }
 
