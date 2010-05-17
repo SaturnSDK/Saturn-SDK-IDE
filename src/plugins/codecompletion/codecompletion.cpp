@@ -136,7 +136,7 @@ int idFunctionsParsingTimer     = wxNewId();
 #define EDITOR_AND_LINE_INTERVAL 150
 
 BEGIN_EVENT_TABLE(CodeCompletion, cbCodeCompletionPlugin)
-    EVT_UPDATE_UI_RANGE(idMenuCodeComplete, idViewClassBrowser, CodeCompletion::OnUpdateUI)
+    EVT_UPDATE_UI_RANGE(idMenuCodeComplete, idProjectReparse, CodeCompletion::OnUpdateUI)
 
     EVT_MENU(idMenuCodeComplete, CodeCompletion::OnCodeComplete)
     EVT_MENU(idMenuShowCallTip, CodeCompletion::OnShowCallTip)
@@ -320,8 +320,8 @@ void CodeCompletion::BuildMenu(wxMenuBar* menuBar)
     idx = menuBar->FindMenu(_("&Project"));
     if (idx != wxNOT_FOUND)
     {
-        wxMenu* projMenu = menuBar->GetMenu(idx);
-        wxMenuItemList& items = projMenu->GetMenuItems();
+        m_ProjectMenu = menuBar->GetMenu(idx);
+        wxMenuItemList& items = m_ProjectMenu->GetMenuItems();
         bool inserted = false;
 
         // find the first separator and insert before it
@@ -329,8 +329,8 @@ void CodeCompletion::BuildMenu(wxMenuBar* menuBar)
         {
             if (items[i]->IsSeparator())
             {
-                projMenu->InsertSeparator(i);
-                projMenu->Insert(i + 1, idProjectReparse, _("Reparse this project"), _("Reparse current actived project"));
+                m_ProjectMenu->InsertSeparator(i);
+                m_ProjectMenu->Insert(i + 1, idProjectReparse, _("Reparse this project"), _("Reparse current actived project"));
                 inserted = true;
                 break;
             }
@@ -339,8 +339,8 @@ void CodeCompletion::BuildMenu(wxMenuBar* menuBar)
         // not found, just append
         if (!inserted)
         {
-            projMenu->AppendSeparator();
-            projMenu->Append(idProjectReparse, _("Reparse this project"), _("Reparse current actived project"));
+            m_ProjectMenu->AppendSeparator();
+            m_ProjectMenu->Append(idProjectReparse, _("Reparse this project"), _("Reparse current actived project"));
         }
     }
     else
@@ -459,6 +459,7 @@ void CodeCompletion::OnAttach()
     m_EditMenu   = 0;
     m_SearchMenu = 0;
     m_ViewMenu   = 0;
+    m_ProjectMenu= 0;
     m_Function   = 0;
     m_Scope      = 0;
     m_FunctionsScope.clear();
@@ -1694,6 +1695,12 @@ void CodeCompletion::OnUpdateUI(wxUpdateUIEvent& event)
     {
         bool isVis = IsWindowReallyShown((wxWindow*)m_NativeParser.GetClassBrowser());
         m_ViewMenu->Check(idViewClassBrowser, isVis);
+    }
+
+    if (m_ProjectMenu)
+    {
+        bool projActived = Manager::Get()->GetProjectManager()->GetActiveProject();
+        m_ProjectMenu->Enable(idProjectReparse, projActived);
     }
 
     // must do...

@@ -125,6 +125,7 @@ class CodeCompletion : public cbCodeCompletionPlugin
         wxMenu*                            m_EditMenu;
         wxMenu*                            m_SearchMenu;
         wxMenu*                            m_ViewMenu;
+        wxMenu*                            m_ProjectMenu;
         NativeParser                       m_NativeParser;
         int                                m_EditorHookId;
         int                                m_LastPosForCodeCompletion;
