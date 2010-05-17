@@ -160,13 +160,13 @@ public:
      * function is used in handling #define, use with care outside this class!
      */
     wxString ReadToEOL(bool nestBraces = true, bool stripComment = false); // use with care outside this class!
-    
+
     /** // the argument must be one of: ( [ < { */
-    wxString ReadBlock(const wxChar& leftBrace); 
+    wxString ReadBlock(const wxChar& leftBrace);
 
     /** Skip fron the current position to the end of line.
      * @param nestBraces if true, we should still couting the brace levels in this function.
-     * @param skippingComment if true, we will not handling comment (not dealing with "/*" ).
+     * @param skippingComment if true, we will not handling comment (not dealing with C type comment ).
      */
     bool SkipToEOL(bool nestBraces = true, bool skippingComment = false); // use with care outside this class!
 
@@ -240,15 +240,15 @@ protected:
 
     /** Skip the blocks like <>, {}, [], () */
     bool SkipBlock(const wxChar& ch);
-    
+
     /** skips comments, assignments, preprocessor etc. Eg, sometimes, it will skip the statement after
      * the "=" statement (depend on the TokenizerState value).
      */
     bool SkipUnwanted(); // skips whitespace, comments, assignments etc.
-    
+
     /** Skip Write spaces */
     bool SkipWhiteSpace();
-    
+
     /** Skip the C/C++ comment */
     bool SkipComment();
 
@@ -381,7 +381,7 @@ private:
 
     TokenizerOptions m_TokenizerOptions;
     TokensTree*      m_pTokensTree;
-     
+
     /** File name */
     wxString         m_Filename;
     /** Buffer, all the lexial analysis is done on this buffer string */
