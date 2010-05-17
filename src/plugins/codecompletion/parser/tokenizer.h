@@ -72,7 +72,6 @@ public:
     bool Init(const wxString& filename = wxEmptyString, LoaderBase* loader = 0);
     bool InitFromBuffer(const wxString& buffer);
 
-
     wxString GetToken();
     wxString PeekToken();
     void     UngetToken();
@@ -143,12 +142,12 @@ public:
         if (it != s_Replacements.end())
             s_Replacements.erase(it);
     };
-    
+
     static wxStringHashMap& GetTokenReplacementsMap()
     {
         return s_Replacements;
     }
-    
+
     static void ConvertToHashReplacementMap(const ConfigManagerContainer::StringToStringMap& map)
     {
         ConfigManagerContainer::StringToStringMap::const_iterator it = map.begin();

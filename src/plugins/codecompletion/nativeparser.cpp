@@ -55,7 +55,6 @@ END_EVENT_TABLE()
 
 NativeParser::NativeParser() :
     m_pParser(0),
-    m_pTempParser(0),
     m_EditorStartWord(-1),
     m_EditorEndWord(-1),
     m_CallTipCommas(0),
@@ -64,10 +63,6 @@ NativeParser::NativeParser() :
     m_ClassBrowserIsFloating(false),
     m_LastAISearchWasGlobal(false)
 {
-    //ctor
-    m_pTempParser = new Parser(this);
-    m_pParser = m_pTempParser;
-
     // hook to project loading procedure
     ProjectLoaderHooks::HookFunctorBase* myhook = new ProjectLoaderHooks::HookFunctor<NativeParser>(this, &NativeParser::OnProjectLoadingHook);
     m_HookId = ProjectLoaderHooks::RegisterHook(myhook);
@@ -79,8 +74,6 @@ NativeParser::~NativeParser()
 
     RemoveClassBrowser();
     ClearParsers();
-
-    delete m_pTempParser;
 }
 
 void NativeParser::OnProjectLoadingHook(cbProject* project, TiXmlElement* elem, bool loading)
@@ -193,6 +186,9 @@ void NativeParser::RemoveClassBrowser(bool appShutDown)
 
 void NativeParser::UpdateClassBrowser()
 {
+    if (!m_pParser)
+        return;
+
     if (m_pClassBrowser && m_pParser->Done() && !Manager::isappShuttingDown())
     {
         Manager::Get()->GetLogManager()->DebugLog(_T("Updating class browser..."));
@@ -203,6 +199,9 @@ void NativeParser::UpdateClassBrowser()
 
 void NativeParser::RereadParserOptions()
 {
+    if (!m_pParser)
+        return;
+
     // disabled?
     ConfigManager* cfg = Manager::Get()->GetConfigManager(_T("code_completion"));
     if (cfg->ReadBool(_T("/use_symbols_browser"), true))
@@ -263,6 +262,8 @@ void NativeParser::SetClassBrowserParser()
 
 void NativeParser::SetCBViewMode(const BrowserViewMode& mode)
 {
+    if (!m_pParser)
+        return;
     m_pParser->ClassBrowserOptions().showInheritance = mode == bvmInheritance;
     UpdateClassBrowser();
 }
@@ -283,6 +284,9 @@ void NativeParser::ClearParsers()
 void NativeParser::AddCompilerDirs(cbProject* project)
 {
     if (!project)
+        return;
+
+    if (!m_pParser)
         return;
 
     // do not clean include dirs: we use a single parser for the whole workspace
@@ -428,6 +432,9 @@ void NativeParser::AddCompilerDirs(cbProject* project)
 
 void NativeParser::AddCompilerPredefinedMacros(cbProject* project)
 {
+    if (!m_pParser)
+        return;
+
 	wxString defs;
 	wxString compilerId = project->GetCompilerID();
 
@@ -597,6 +604,7 @@ void NativeParser::AddParser(cbProject* project, bool useCache)
     {
         if (it->first == project)
         {
+            Manager::Get()->GetLogManager()->DebugLog(F(_T("Switch to project %s from parsed projects"), project->GetTitle().wx_str()));
             m_pParser = it->second;
             SetClassBrowserParser();
 
@@ -613,6 +621,8 @@ void NativeParser::AddParser(cbProject* project, bool useCache)
         {
             char* tmp = new char[1024 * 1000 * 100];
             delete [] tmp;
+
+            Manager::Get()->GetLogManager()->DebugLog(F(_T("Add new parser for project %s ..."), project->GetTitle().wx_str()));
 
             m_pParser = new Parser(this);
             SetClassBrowserParser();
@@ -653,9 +663,8 @@ void NativeParser::RemoveParser(cbProject* project, bool useCache)
         }
     }
 
-    m_pParser = m_pTempParser;
+    m_pParser = NULL;
     SetClassBrowserParser();
-    UpdateClassBrowser();
 }
 
 void NativeParser::ChangeParser(cbProject* project)
@@ -672,18 +681,23 @@ void NativeParser::ChangeParser(cbProject* project)
 
 void NativeParser::AddFileToParser(cbProject* project, const wxString& filename)
 {
-    m_pParser->Parse(filename, true);
+    if (m_pParser)
+        m_pParser->Parse(filename, true);
 }
 
 void NativeParser::RemoveFileFromParser(cbProject* project, const wxString& filename)
 {
-    m_pParser->RemoveFile(filename);
+    if (m_pParser)
+        m_pParser->RemoveFile(filename);
 }
 
 // reparses the project files
 // (important thing is it re-reads the project search dirs, adding newly added ones)
 void NativeParser::ReparseProject(cbProject* project)
 {
+    if (!m_pParser)
+        return;
+
     AddCompilerDirs(project);
     AddCompilerPredefinedMacros(project);
     AddProjectDefinedMacros(project);
@@ -822,6 +836,9 @@ bool NativeParser::LoadCachedData(cbProject* project)
     if (!project)
         return false;
 
+    if (!m_pParser)
+        return false;
+
     wxFileName projectCache = project->GetFilename();
     projectCache.SetExt(_T("cbCache"));
 
@@ -860,6 +877,9 @@ bool NativeParser::LoadCachedData(cbProject* project)
 // UNUSED
 bool NativeParser::SaveCachedData(const wxString& projectFilename)
 {
+    if (!m_pParser)
+        return false;
+
     bool result = false;
 
     wxFileName projectCache = projectFilename;
@@ -885,6 +905,9 @@ bool NativeParser::SaveCachedData(const wxString& projectFilename)
 
 void NativeParser::DisplayStatus()
 {
+    if (!m_pParser)
+        return;
+
     long int tim = m_pParser->LastParseTime();
     Manager::Get()->GetLogManager()->DebugLog(F(_T("Parsing stage done (%d total parsed files, %d tokens in %d minute(s), %d.%d seconds)."),
                     m_pParser->GetFilesCount(),
@@ -899,7 +922,7 @@ bool NativeParser::ParseFunctionArguments(cbEditor* ed, int caretPos)
     if (!ed)
         return false;
 
-    if (!m_pParser->Done())
+    if (!m_pParser || !m_pParser->Done())
         return false;
 
     if (s_DebugSmartSense)
@@ -957,7 +980,7 @@ bool NativeParser::ParseLocalBlock(cbEditor* ed, int caretPos)
     if (!ed)
         return false;
 
-    if (!m_pParser->Done())
+    if (!m_pParser || !m_pParser->Done())
         return false;
 
     if (s_DebugSmartSense)
@@ -1016,6 +1039,9 @@ bool NativeParser::ParseLocalBlock(cbEditor* ed, int caretPos)
 bool NativeParser::ParseUsingNamespace(cbEditor* ed, TokenIdxSet& search_scope, int caretPos)
 {
     if (!ed)
+        return false;
+
+    if (!m_pParser)
         return false;
 
     TokensTree* tree = m_pParser->GetTokens();
@@ -1078,7 +1104,9 @@ size_t NativeParser::MarkItemsByAI(TokenIdxSet& result, bool reallyUseAI, bool n
     if (!ed)
         return 0;
 
-    if (!m_pParser->Done())
+    if (!m_pParser)
+        Manager::Get()->GetLogManager()->DebugLog(_T("C++ Parser is invalid!"));
+    else if (!m_pParser->Done())
         Manager::Get()->GetLogManager()->DebugLog(_T("C++ Parser is still parsing files..."));
     else
     {
@@ -1116,7 +1144,7 @@ const wxString& NativeParser::GetCodeCompletionItems()
 
     TokenIdxSet result;
     int count = MarkItemsByAI(result);
-    if (count)
+    if (count && m_pParser)
     {
         TokensTree* tokens = m_pParser->GetTokens();
         for (TokenIdxSet::iterator it = result.begin(); it != result.end(); ++it)
@@ -1197,6 +1225,9 @@ int NativeParser::CountCommas(const wxString& lineText, int start)
 
 const wxArrayString& NativeParser::GetCallTips(int chars_per_line)
 {
+    if (!m_pParser)
+        return m_CallTips;
+
     m_CallTips.Clear();
     int end = 0;
     int commas = 0;
@@ -1627,6 +1658,9 @@ size_t NativeParser::AI(TokenIdxSet& result,
                         TokenIdxSet* search_scope,
                         int caretPos)
 {
+    if (!m_pParser)
+        return 0;
+
     m_LastAISearchWasGlobal = false;
     m_LastAIGlobalSearch.Clear();
 
@@ -1892,6 +1926,9 @@ size_t NativeParser::FindAIMatches(std::queue<ParserComponent> components,
                                    TokenIdxSet* search_scope)
 {
     if (components.empty())
+        return 0;
+
+    if (!m_pParser)
         return 0;
 
     if (s_DebugSmartSense)
@@ -2224,6 +2261,9 @@ size_t NativeParser::GenerateResultSet(const wxString& search,
                                        bool            isPrefix,
                                        short int       kindMask)
 {
+    if (!m_pParser)
+        return 0;
+
     if (search.IsEmpty())
     {
         Token* parent = m_pParser->GetTokens()->at(parentIdx);
@@ -2345,6 +2385,9 @@ int NativeParser::FindCurrentFunctionStart(cbEditor* editor, wxString* nameSpace
         return -1;
     }
 
+    if (!m_pParser)
+        return -2;
+
     static ProjectFile* s_LastProject =  0;
     static cbEditor*    s_LastEditor  =  0;
     static int          s_LastLine    = -1;
@@ -2455,7 +2498,7 @@ size_t NativeParser::FindCurrentFunctionToken(cbEditor* editor, TokenIdxSet& res
     if (!editor)
         return 0;
 
-    if (!m_pParser->Done())
+    if (!m_pParser || !m_pParser->Done())
         return 0;
 
     TokenIdxSet scope_result;

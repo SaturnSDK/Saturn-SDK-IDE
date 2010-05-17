@@ -133,7 +133,6 @@ class NativeParser : public wxEvtHandler
         typedef std::list<std::pair<cbProject*, Parser*> > ParserList;
         ParserList           m_ParserList;
         Parser*              m_pParser;
-        Parser*              m_pTempParser;
         int                  m_EditorStartWord;
         int                  m_EditorEndWord;
         wxString             m_CCItems;

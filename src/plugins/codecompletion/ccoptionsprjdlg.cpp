@@ -114,7 +114,8 @@ void CCOptionsProjectDlg::OnApply()
     {
         for (size_t i = 0; i < newpaths.GetCount(); ++i)
         {
-            m_pParser->AddIncludeDir(newpaths[i]);
+            if (m_pParser)
+                m_pParser->AddIncludeDir(newpaths[i]);
         }
 
         wxArrayString& pdirs = m_pNativeParser->GetProjectSearchDirs(m_pProject);
