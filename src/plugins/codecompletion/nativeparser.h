@@ -103,7 +103,7 @@ class NativeParser : public wxEvtHandler
         size_t BreakUpComponents(const wxString& actual, std::queue<ParserComponent>& components);
         bool BelongsToParentOrItsAncestors(TokensTree* tree, Token* token, int parentIdx, bool use_inheritance = true);
         size_t GenerateResultSet(TokensTree* tree, const wxString& search, int parentIdx, TokenIdxSet& result, bool caseSens = true, bool isPrefix = false, short int kindMask = 0xFFFF);
-        size_t GenerateResultSet(const wxString& search, int parentIdx, TokenIdxSet& result, bool caseSens = true, bool isPrefix = false, short int kindMask = 0xFFFF);
+        size_t GenerateResultSet(wxString search, const TokenIdxSet& ptrParentID, TokenIdxSet& result, bool caseSens = true, bool isPrefix = false, short int kindMask = 0xFFFF);
         bool LastAISearchWasGlobal() const { return m_LastAISearchWasGlobal; }
         const wxString& LastAIGlobalSearch() const { return m_LastAIGlobalSearch; }
 
@@ -129,6 +129,9 @@ class NativeParser : public wxEvtHandler
 
         bool SkipWhitespaceForward(cbEditor* editor, int& pos);
         bool SkipWhitespaceBackward(cbEditor* editor, int& pos);
+
+        size_t ResolveActualType(wxString searchText, const TokenIdxSet& searchScope, TokenIdxSet& result);
+        size_t ResolveExpression(std::queue<ParserComponent> components, const TokenIdxSet& searchScope,TokenIdxSet& result, bool IsCaseSense = true, bool IsPrefix = false);
 
         typedef std::list<std::pair<cbProject*, Parser*> > ParserList;
         ParserList           m_ParserList;

@@ -1791,6 +1791,8 @@ size_t NativeParser::AI(TokenIdxSet& result,
             ++it;
     }
 
+    //alwayser search the global scope.
+    search_scope->insert(-1);
 
     // find all other matches
     std::queue<ParserComponent> components;
@@ -1800,33 +1802,7 @@ size_t NativeParser::AI(TokenIdxSet& result,
     if (!components.empty())
         m_LastAIGlobalSearch = components.front().component;
 
-    // actually find all matches in selected namespaces
-    for (TokenIdxSet::iterator it = search_scope->begin(); it != search_scope->end(); ++it)
-    {
-        if (s_DebugSmartSense)
-        {
-            Token* scopeToken = tree->at(*it);
-#if wxCHECK_VERSION(2, 9, 0)
-            Manager::Get()->GetLogManager()->DebugLog(F(_("AI() Parent scope: '%s' (%d)"),
-                                                        scopeToken ? scopeToken->m_Name.wx_str() : _("Global namespace").wx_str(),
-                                                        *it));
-#else
-            Manager::Get()->GetLogManager()->DebugLog(F(_("AI() Parent scope: '%s' (%d)"),
-                                                        scopeToken ? scopeToken->m_Name.wx_str() : _("Global namespace"),
-                                                        *it));
-#endif
-        }
-        FindAIMatches(components, result, *it, noPartialMatch, caseSensitive, true, 0xffff, search_scope);
-    }
-
-    if (result.size()<1) // found nothing in the search_scope, add global namespace
-    {
-        if (s_DebugSmartSense)
-            Manager::Get()->GetLogManager()->DebugLog(F(_("AI() result is zero. Adding global namespace.")));
-
-        search_scope->insert(-1);
-        FindAIMatches(components, result, -1, noPartialMatch, caseSensitive, true, 0xffff, search_scope);
-    }
+    ResolveExpression(components, *search_scope, result, caseSensitive, noPartialMatch);
 
     cached_editor = editor;
     if (result.size() || (m_EditorEndWord - m_EditorStartWord))
@@ -1896,7 +1872,7 @@ size_t NativeParser::BreakUpComponents(const wxString& actual, std::queue<Parser
         // Break up into "", type is pttNameSpace and "MessageBoxA", type is pttSearchText.
         // for pttNameSpace  type, if its text (tok) is empty -> ignore this component.
         // for pttSearchText type, don't do this because for ss:: we need this, too.
-        if (tok.Length() != 0 || tokenType == pttSearchText)
+        if (!tok.IsEmpty() || (tokenType == pttSearchText && components.size() != 0))
         {
             if (s_DebugSmartSense)
                 Manager::Get()->GetLogManager()->DebugLog(F(_T("BreakUpComponents() Adding component: '%s'."), tok.wx_str()));
@@ -2156,7 +2132,7 @@ size_t NativeParser::GenerateResultSet(TokensTree*     tree,
         Manager::Get()->GetLogManager()->DebugLog(F(_("GenerateResultSet() search '%s', parent='%s (id:%d, type:%s), isPrefix=%d'"),
                                                     search.wx_str(),
 #if wxCHECK_VERSION(2, 9, 0)
-                                                                                                        parent ? parent->m_Name.wx_str() : _("Global namespace").wx_str(),
+                                                    parent ? parent->m_Name.wx_str() : _("Global namespace").wx_str(),
 #else
                                                     parent ? parent->m_Name.wx_str() : _("Global namespace"),
 #endif
@@ -2254,8 +2230,224 @@ size_t NativeParser::GenerateResultSet(TokensTree*     tree,
     return result.size();
 }
 
-size_t NativeParser::GenerateResultSet(const wxString& search,
-                                       int             parentIdx,
+size_t NativeParser::ResolveActualType(wxString searchText, const TokenIdxSet& searchScope, TokenIdxSet& result)
+{
+    //break up the search text for next analysis.
+    std::queue<ParserComponent> typeComponents;
+    BreakUpComponents(searchText, typeComponents);
+    if (!typeComponents.empty())
+    {
+
+        TokenIdxSet initialScope;
+        if (!searchScope.empty())
+            initialScope = searchScope;
+        else
+            initialScope.insert(-1);
+        while (typeComponents.size() > 0)
+        {
+            TokenIdxSet initialResult;
+            ParserComponent component = typeComponents.front();
+            typeComponents.pop();
+            wxString actualTypeStr = component.component;
+            GenerateResultSet(actualTypeStr, initialScope, initialResult, true, false, 0xFFFF);
+            if (initialResult.size() > 0)
+            {
+                initialScope.clear();
+                for (TokenIdxSet::iterator it = initialResult.begin(); it != initialResult.end(); ++it)
+                {
+                    // TODO (blueshake#1#): eclimate the variable/function
+                    initialScope.insert(*it);
+                }
+            }
+            else
+            {
+                initialScope.clear();
+                break;
+            }
+
+        }
+        if (initialScope.size() > 0)
+        {
+//            for (TokenIdxSet::iterator it = initialScope.begin(); it != initialScope.end(); ++it)
+//            {
+//                result.insert(*it);
+//            }
+            result = initialScope;
+        }
+    }
+
+    return (result.size()>0 ? result.size() : 0);
+}
+
+size_t NativeParser::ResolveExpression(std::queue<ParserComponent> components, const TokenIdxSet& searchScope, TokenIdxSet& result, bool isCaseSense, bool IsPrefix)
+{
+    static ParserComponent lastComponent;
+    if (components.empty())
+        return 0;
+
+    if (!m_pParser)
+        return 0;
+
+    TokensTree* tree = m_pParser->GetTokens();
+    if (!tree)
+        return 0;
+
+    TokenIdxSet initialScope;
+    //TokenIdxSet initialResult;
+    if (!searchScope.empty())
+        initialScope = searchScope;
+    else
+        initialScope.insert(-1);
+
+    while (components.size() > 0)
+    {
+        TokenIdxSet initialResult;
+        ParserComponent subComponent = components.front();
+        components.pop();
+        bool isLastComponent = components.empty();
+        wxString searchText = subComponent.component;
+        if (searchText == _T("this"))
+        {
+            initialScope.erase(-1);
+            TokenIdxSet tempInitialScope = initialScope;
+            for (TokenIdxSet::iterator it=tempInitialScope.begin(); it!=tempInitialScope.end(); ++it)
+            {
+                Token* token = tree->at(*it);
+                if (token && (token->m_TokenKind !=tkClass))
+                {
+                    initialScope.erase(*it);
+                }
+            }
+            if (initialScope.size() > 0)
+                continue;
+            else
+                break;//error happened.
+        }
+
+        if (s_DebugSmartSense)
+        {
+            Manager::Get()->GetLogManager()->DebugLog(F(_T("ResolveExpression() search scope is %d result."), initialScope.size()));
+            for (TokenIdxSet::iterator tt=initialScope.begin(); tt != initialScope.end(); ++tt)
+            Manager::Get()->GetLogManager()->DebugLog(F(_T("search scope: %d"), (*tt)));
+        }
+
+
+        GenerateResultSet(searchText, initialScope, initialResult, (isCaseSense || !isLastComponent), (!IsPrefix && isLastComponent));
+        //now we should clear the initialScope.
+        initialScope.clear();
+
+        //-------------------------------------
+
+        if (s_DebugSmartSense)
+            Manager::Get()->GetLogManager()->DebugLog(F(_T("ResolveExpression() Looping %d result."), initialResult.size()));
+
+        //------------------------------------
+        if (initialResult.size() > 0)
+        {
+            //loop all matches.
+            for (TokenIdxSet::iterator it=initialResult.begin(); it!=initialResult.end(); ++it)
+            {
+                size_t id = (*it);
+                Token* token = tree->at(id);
+
+                if (!token)
+                {
+                    if (s_DebugSmartSense)
+                        Manager::Get()->GetLogManager()->DebugLog(F(_T("ResolveExpression() token is NULL?!")));
+
+                    continue;
+                }
+
+                //TODO: we should deal with operators carefully.
+                //it should work for class::/namespace::
+                if (token->m_IsOperator && (lastComponent.token_type!=pttNamespace))
+                    continue;
+
+                //------------------------------
+
+                if (s_DebugSmartSense)
+                    Manager::Get()->GetLogManager()->DebugLog(F(_T("ResolvExpression() Match:'%s(ID=%d) : type='%s'"), token->m_Name.wx_str(), id, token->m_ActualType.wx_str()));
+
+                //------------------------------
+
+                //handle it if the token is a function/variable(i.e. is not a type)
+                if (!searchText.IsEmpty()
+                    && (subComponent.token_type != pttSearchText)
+                    && !token->m_ActualType.IsEmpty())
+                {
+                    TokenIdxSet autualTypeResult;
+                    std::queue<ParserComponent> actualTypeComponents;
+                    wxString actualTypeStr = token->m_ActualType;
+
+                    BreakUpComponents(actualTypeStr, actualTypeComponents);
+
+                    //--------------------------------
+                    if (s_DebugSmartSense)
+                        Manager::Get()->GetLogManager()->DebugLog(F(_T("ResolveExpression() Looking for type:'%s'(%d components)"), actualTypeStr.wx_str(), actualTypeComponents.size()));
+                    //--------------------------------
+
+                    TokenIdxSet actualTypeScope;
+                    if (searchScope.empty())
+                        actualTypeScope.insert(-1);
+                    else
+                    {
+                        for (TokenIdxSet::iterator pScope=searchScope.begin(); pScope!=searchScope.end(); ++pScope)
+                        {
+                            actualTypeScope.insert(*pScope);
+                            //we need to pScope's parent scope too.
+                            if ((*pScope) != -1)
+                            {
+                                Token* parent = tree->at(*pScope)->GetParentToken();
+                                while(true)
+                                {
+                                    if (!parent)
+                                        break;
+                                    actualTypeScope.insert(parent->GetSelf());
+                                    parent = parent->GetParentToken();
+
+                                }
+                            }
+                        }
+
+
+                    }
+
+                    //now get the tokens of variable/function.
+                    TokenIdxSet actualTypeResult;
+                    ResolveActualType(actualTypeStr, actualTypeScope, actualTypeResult);
+                    if (actualTypeResult.size() > 0)
+                    {
+                        for (TokenIdxSet::iterator it2=actualTypeResult.begin(); it2!=actualTypeResult.end(); ++it2)
+                        {
+                            initialScope.insert(*it2);
+                        }
+                    }
+                    continue;
+
+                }
+
+
+                initialScope.insert(id);
+
+            }
+        }
+        else
+        {
+            initialScope.clear();
+            break;
+        }
+        if (subComponent.token_type != pttSearchText)
+            lastComponent = subComponent;
+    }
+
+
+    if (initialScope.size() > 0)
+        result = initialScope;
+    return (result.size()>0 ? result.size() : 0);
+}
+
+size_t NativeParser::GenerateResultSet(wxString search,
+                                       const TokenIdxSet& ptrParentID,
                                        TokenIdxSet&    result,
                                        bool            caseSens,
                                        bool            isPrefix,
@@ -2264,49 +2456,108 @@ size_t NativeParser::GenerateResultSet(const wxString& search,
     if (!m_pParser)
         return 0;
 
+    TokensTree* tree = m_pParser->GetTokens();
+    if (!tree)
+        return 0;
+
     if (search.IsEmpty())
     {
-        Token* parent = m_pParser->GetTokens()->at(parentIdx);
-        if (parent)
+        for (TokenIdxSet::iterator ptr = ptrParentID.begin(); ptr != ptrParentID.end(); ++ptr)
         {
-            for (TokenIdxSet::iterator it = parent->m_Children.begin(); it != parent->m_Children.end(); ++it)
+            size_t parentIdx = (*ptr);
+            Token* parent = m_pParser->GetTokens()->at(parentIdx);
+            if (parent)
             {
-                Token* token = m_pParser->GetTokens()->at(*it);
-                if (token)
-                    result.insert(*it);
-            }
-            for (TokenIdxSet::iterator it = parent->m_Ancestors.begin(); it != parent->m_Ancestors.end(); ++it)
-            {
-                Token* ancestor = m_pParser->GetTokens()->at(*it);
-                if (!ancestor)
-                    continue;
-                for (TokenIdxSet::iterator it2 = ancestor->m_Children.begin(); it2 != ancestor->m_Children.end(); ++it2)
+                for (TokenIdxSet::iterator it = parent->m_Children.begin(); it != parent->m_Children.end(); ++it)
                 {
-                    Token* token = m_pParser->GetTokens()->at(*it2);
+                    Token* token = m_pParser->GetTokens()->at(*it);
                     if (token)
+                        result.insert(*it);
+                }
+
+                for (TokenIdxSet::iterator it = parent->m_Ancestors.begin(); it != parent->m_Ancestors.end(); ++it)
+                {
+                    Token* ancestor = m_pParser->GetTokens()->at(*it);
+                    if (!ancestor)
+                        continue;
+                    for (TokenIdxSet::iterator it2 = ancestor->m_Children.begin(); it2 != ancestor->m_Children.end(); ++it2)
                     {
-                        result.insert(*it2);
-                        if (token->m_TokenKind == tkEnum) // check enumerators for match too
+                        Token* token = m_pParser->GetTokens()->at(*it2);
+                        if (token)
                         {
-                            for (TokenIdxSet::iterator it3 = token->m_Children.begin(); it3 != token->m_Children.end(); ++it3)
-                            result.insert(*it3);
+                            result.insert(*it2);
                         }
                     }
                 }
             }
         }
+
     }
     else
     {
         TokenIdxSet tempResult;
-        if (m_pParser->FindMatches(search, tempResult, caseSens, isPrefix))
+        // we use FindMatches to get the items from tree directly and eclimate the
+        //items which are not under the search scope.
+        size_t resultCount = m_pParser->FindMatches(search, tempResult, caseSens, isPrefix);
+        //if (m_pParser->FindMatches(search, tempResult, caseSens, isPrefix))
+        if (resultCount > 0)
         {
-            for (TokenIdxSet::iterator it = tempResult.begin(); it != tempResult.end(); ++it)
+            Manager::Get()->GetLogManager()->DebugLog(F(_T("Find %d result from the tree."), resultCount));
+            //get the tokens under the search scope.
+            for (TokenIdxSet::iterator ptr = ptrParentID.begin(); ptr != ptrParentID.end(); ++ptr)
             {
-                Token* token = m_pParser->GetTokens()->at(*it);
-                if (token && (token->m_ParentIndex ==parentIdx))
-                    result.insert(*it);
+                //to make it clear, parentIdx stand for search scope.
+                // (*it) stand for matched item id.
+                int parentIdx = (*ptr);
+                for (TokenIdxSet::iterator it = tempResult.begin(); it != tempResult.end(); ++it)
+                {
+                    Token* token = tree->at(*it);
+                    if (token && (token->m_ParentIndex == parentIdx))
+                        result.insert(*it);
 
+                    //if the matched item id is under the search scope's ancestor scope.
+                    //we need to add them too.
+                    Token* tokenParent = tree->at(token->m_ParentIndex);//get the matched item's parent token.
+                    if (tokenParent)
+                    {
+                        //match the ancestor scope,add them
+                        //(*it2) should be the search scope ancestor's id(search scope)
+                        for (TokenIdxSet::iterator it2=tokenParent->m_Descendants.begin(); it2!=tokenParent->m_Descendants.end(); ++it2)
+                        {
+                            if (parentIdx == (*it2)) //matched
+                                result.insert(*it);
+                        }
+                        //if the search scope is global,and the token's parent token kind is tkEnum ,we add them too.
+                        if (-1==parentIdx && tokenParent->m_TokenKind==tkEnum)
+                            result.insert(*it);
+                    }
+
+                }
+
+            }
+
+        }
+        else
+        {
+            //we need to handle namespace aliases too.I hope we can find a good to do this.
+            //TODO: handle template class here.
+            if (ptrParentID.count(-1))
+            {
+                for (TokenList::iterator it = tree->m_Tokens.begin(); it != tree->m_Tokens.end(); ++it)
+                {
+                    Token* token = (*it);
+                    if (token && token->m_TokenKind == tkNamespace && token->m_Aliases.size())
+                    {
+                        for (size_t i = 0; i < token->m_Aliases.size(); ++i)
+                        {
+                            if (token->m_Aliases[i] == search)
+                            {
+                                result.insert(token->GetSelf());
+                                // break; ?
+                            }
+                        }
+                    }
+                }
             }
         }
     }
