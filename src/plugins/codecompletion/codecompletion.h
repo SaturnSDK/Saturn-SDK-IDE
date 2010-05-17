@@ -118,6 +118,7 @@ class CodeCompletion : public cbCodeCompletionPlugin
         void OnFunction(wxCommandEvent& event);
         void ParseFunctionsAndFillToolbar(bool force = false);
         void FindFunctionAndUpdate(int currentLine);
+        void EnableToolbarTools(bool enable = true);
 
         int                                m_PageIndex;
         bool                               m_InitDone;

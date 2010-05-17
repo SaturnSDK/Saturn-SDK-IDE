@@ -1175,6 +1175,7 @@ void CodeCompletion::OnAppDoneStartup(CodeBlocksEvent& event)
     // Dreaded DDE-open bug related: do not touch the following lines unless for a good reason
 
     // parse any projects opened through DDE or the command-line
+    EnableToolbarTools(false);
     m_NativeParser.AddParser(Manager::Get()->GetProjectManager()->GetActiveProject());
 
     event.Skip();
@@ -1204,10 +1205,13 @@ void CodeCompletion::OnWorkspaceChanged(CodeBlocksEvent& event)
     // widgets.
     if (IsAttached() && m_InitDone)
     {
+        EnableToolbarTools(false);
+        m_NativeParser.AddParser(Manager::Get()->GetProjectManager()->GetActiveProject());
+
         // Update the Function toolbar
         ParseFunctionsAndFillToolbar();
+
         // Update the class browser
-        m_NativeParser.AddParser(Manager::Get()->GetProjectManager()->GetActiveProject());
         if (m_NativeParser.GetParserPtr() && m_NativeParser.GetParserPtr()->ClassBrowserOptions().displayFilter == bdfProject)
             m_NativeParser.UpdateClassBrowser();
     }
@@ -1225,6 +1229,7 @@ void CodeCompletion::OnProjectActivated(CodeBlocksEvent& event)
 
     if (!ProjectManager::IsBusy() && IsAttached() && m_InitDone)
     {
+        EnableToolbarTools(false);
         m_NativeParser.AddParser(event.GetProject());
         if (m_NativeParser.GetParserPtr() && m_NativeParser.GetParserPtr()->ClassBrowserOptions().displayFilter == bdfProject)
             m_NativeParser.UpdateClassBrowser();
@@ -1241,6 +1246,7 @@ void CodeCompletion::OnProjectClosed(CodeBlocksEvent& event)
     // when we receive the next EVT_PROJECT_ACTIVATED event.
     if (IsAttached() && m_InitDone)
     {
+        EnableToolbarTools(false);
         m_NativeParser.RemoveParser(event.GetProject());
     }
     event.Skip();
@@ -2215,6 +2221,13 @@ void CodeCompletion::OnFunction(wxCommandEvent& /*event*/)
 
 void CodeCompletion::OnParserEnd(wxCommandEvent& event)
 {
+    EnableToolbarTools();
     if (!ProjectManager::IsBusy())
         ParseFunctionsAndFillToolbar(true);
+}
+
+void CodeCompletion::EnableToolbarTools(bool enable)
+{
+//    m_Scope->Enalbe(enable);
+    m_Function->Enable(enable);
 }
