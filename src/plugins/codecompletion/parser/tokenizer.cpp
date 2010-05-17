@@ -770,7 +770,8 @@ wxString Tokenizer::DoGetToken()
         str = m_Buffer.Mid(start, m_TokenIndex - start);
     }
 #ifdef __WXMSW__ // This is a Windows only bug!
-    else if (c == 178 || c == 179 || c == 185) // fetch ² and ³
+// fetch non-English characters, see more details in: http://forums.codeblocks.org/index.php/topic,11387.0.html
+    else if (c == 178 || c == 179 || c == 185)
     {
         str = c;
         MoveToNextChar();
