@@ -2156,6 +2156,8 @@ void CodeCompletion::EditorEventHook(cbEditor* editor, wxScintillaEvent& event)
 
     if (event.GetEventType() == wxEVT_SCI_CHARADDED)
     {
+        static bool autoIndent = false;
+
         if (event.GetKey() == _T(':'))
         {
             if (control->AutoCompActive())
@@ -2178,6 +2180,62 @@ void CodeCompletion::EditorEventHook(cbEditor* editor, wxScintillaEvent& event)
                         control->NewLine();
                         control->Tab();
                     }
+                }
+            }
+        }
+        else if (event.GetKey() == _T('\n'))
+        {
+            wxChar last;
+            const int lastLine = control->GetCurrentLine() - 1;
+            int lastPos = control->GetLineEndPosition(lastLine);
+            while ((last = control->GetCharAt(--lastPos)) <= _T(' '))
+                ;
+
+            if (last == _T(';'))
+            {
+                if (autoIndent)
+                {
+                    autoIndent = false;
+                    control->BackTab();
+                }
+            }
+            else
+            {
+                const int pos = control->GetLineIndentPosition(lastLine);
+                const wxString text = control->GetTextRange(pos, control->WordEndPosition(pos, true));
+                if (text == _T("if") || text == _T("else") || text == _T("for") ||
+                    text == _T("while") || text == _T("do"))
+                {
+                    autoIndent = true;
+                    control->Tab();
+                }
+            }
+        }
+        else if (event.GetKey() == _T('{'))
+        {
+            if (autoIndent)
+            {
+                autoIndent = false;
+
+                bool braceCompletion = Manager::Get()->GetConfigManager(_T("editor"))->ReadBool(_T("/brace_completion"), true);
+                if (braceCompletion)
+                {
+                    const int lastLine = control->GetCurrentLine() - 1;
+                    const int nextLine = control->GetCurrentLine() + 1;
+                    const int curLine = control->GetCurrentLine();
+                    control->GotoPos(control->PositionFromLine(lastLine));
+                    control->BackTab();
+                    control->GotoPos(control->PositionFromLine(nextLine));
+                    control->BackTab();
+                    control->GotoPos(control->GetLineEndPosition(curLine));
+                    control->BackTab();
+                }
+                else
+                {
+                    const int curLine = control->GetCurrentLine();
+                    control->GotoPos(control->PositionFromLine(curLine));
+                    control->BackTab();
+                    control->GotoPos(control->GetLineEndPosition(curLine));
                 }
             }
         }
