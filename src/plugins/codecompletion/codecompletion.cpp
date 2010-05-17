@@ -131,6 +131,7 @@ int idOpenIncludeFile           = wxNewId();
 int idStartParsingProjects      = wxNewId();
 int idCodeCompleteTimer         = wxNewId();
 int idFunctionsParsingTimer     = wxNewId();
+int idRealtimeParsingTimer      = wxNewId();
 
 // milliseconds
 #define EDITOR_AND_LINE_INTERVAL 150
@@ -157,6 +158,7 @@ BEGIN_EVENT_TABLE(CodeCompletion, cbCodeCompletionPlugin)
 
     EVT_TIMER(idCodeCompleteTimer, CodeCompletion::OnCodeCompleteTimer)
     EVT_TIMER(idFunctionsParsingTimer, CodeCompletion::OnStartParsingFunctions)
+    EVT_TIMER(idRealtimeParsingTimer, CodeCompletion::OnRealtimeParsing)
 
 //    EVT_CHOICE(XRCID("chcCodeCompletionScope"),  CodeCompletion::OnScope)
     EVT_CHOICE(XRCID("chcCodeCompletionFunction"),  CodeCompletion::OnFunction)
@@ -169,6 +171,7 @@ CodeCompletion::CodeCompletion() :
     m_EditorHookId(0),
     m_TimerCodeCompletion(this, idCodeCompleteTimer),
     m_TimerFunctionsParsing(this, idFunctionsParsingTimer),
+    m_TimerRealtimeParsing(this, idRealtimeParsingTimer),
     m_pCodeCompletionLastEditor(0),
     m_ActiveCalltipsNest(0),
     m_IsAutoPopup(false),
@@ -2191,8 +2194,8 @@ void CodeCompletion::EditorEventHook(cbEditor* editor, wxScintillaEvent& event)
     {
         if (parser && m_NeedReparse)
         {
-            Manager::Get()->GetLogManager()->DebugLog(_T("Reparsing while typing for editor ") + editor->GetFilename());
-            parser->Reparse(editor->GetFilename());
+            m_TimerRealtimeParsing.Stop();
+            m_TimerRealtimeParsing.Start(500, wxTIMER_ONE_SHOT);
             m_NeedReparse = false;
         }
         else
@@ -2230,4 +2233,19 @@ void CodeCompletion::EnableToolbarTools(bool enable)
 {
 //    m_Scope->Enalbe(enable);
     m_Function->Enable(enable);
+}
+
+void CodeCompletion::OnRealtimeParsing(wxTimerEvent& event)
+{
+    Parser* parser = m_NativeParser.GetParserPtr();
+    if (!parser)
+        return;
+
+    cbEditor* editor = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
+    if (!editor)
+        return;
+
+    wxString file = editor->GetFilename();
+    Manager::Get()->GetLogManager()->DebugLog(_T("Reparsing while typing for editor ") + file);
+    parser->Reparse(file);
 }
