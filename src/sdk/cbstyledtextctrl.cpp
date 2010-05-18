@@ -122,7 +122,7 @@ void cbStyledTextCtrl::OnKeyDown(wxKeyEvent& event)
         {
             if (m_tabSmartJump && !(event.ControlDown() || event.ShiftDown() || event.AltDown()))
             {
-                if (m_bracePosition != wxSCI_INVALID_POSITION)
+                if (!AutoCompActive() && m_bracePosition != wxSCI_INVALID_POSITION)
                 {
                     m_lastPosition = GetCurrentPos();
                     GotoPos(m_bracePosition);
@@ -131,8 +131,8 @@ void cbStyledTextCtrl::OnKeyDown(wxKeyEvent& event)
                     HighlightRightBrace();
                     if (!m_tabSmartJump && CallTipActive())
                         CallTipCancel();
+                    return;
                 }
-                return;
             }
         }
         break;
