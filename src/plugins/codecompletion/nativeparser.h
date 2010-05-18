@@ -15,6 +15,7 @@
 #include <wx/hashmap.h> // TODO: replace with std::map
 
 extern bool s_DebugSmartSense;
+extern const wxString g_StartHereTitle;
 
 // forward decls
 class cbEditor;
@@ -55,11 +56,12 @@ class NativeParser : public wxEvtHandler
         ~NativeParser();
 
         Parser* GetParserPtr() { return m_pParser; };
+        Parser* GetParserPtrByProject(cbProject* project);
         void AddParser(cbProject* project, bool useCache = true);
         void RemoveParser(cbProject* project, bool useCache = true);
         void ClearParsers();
         void RereadParserOptions();
-        void AddFileToParser(cbProject* project, const wxString& filename);
+        void AddFileToParser(cbProject* project, const wxString& filename, bool isLocal = true);
         void RemoveFileFromParser(cbProject* project, const wxString& filename);
         void ReparseProject(cbProject* project);
         void ForceReparseActiveProject();
@@ -117,7 +119,8 @@ class NativeParser : public wxEvtHandler
         void AddCompilerDirs(cbProject* project);
         void AddCompilerPredefinedMacros(cbProject* project);
         void AddProjectDefinedMacros(cbProject* project);
-        wxArrayString GetGCCCompilerDirs(const wxString &cpp_compiler, const wxString &base);
+        void AddDefaultCompilerDirs();
+        const wxArrayString& GetGCCCompilerDirs(const wxString &cpp_compiler);
         bool LoadCachedData(cbProject* project);
         bool SaveCachedData(const wxString& projectFilename);
         void DisplayStatus();
@@ -125,6 +128,8 @@ class NativeParser : public wxEvtHandler
         void OnThreadEnd(wxCommandEvent& event);
         void OnParserEnd(wxCommandEvent& event);
         void OnEditorActivated(EditorBase* editor);
+        void OnEditorClosed(EditorBase* editor);
+        cbProject* GetProjectByFilename(const wxString& filename);
 
         bool SkipWhitespaceForward(cbEditor* editor, int& pos);
         bool SkipWhitespaceBackward(cbEditor* editor, int& pos);
@@ -149,6 +154,7 @@ class NativeParser : public wxEvtHandler
 
         ProjectSearchDirsMap m_ProjectSearchDirsMap;
         int                  m_HookId; // project loader hook ID
+        int                  m_StandaloneFileCount;
 
         DECLARE_EVENT_TABLE()
 };

@@ -1181,7 +1181,9 @@ void CodeCompletion::OnAppDoneStartup(CodeBlocksEvent& event)
     // Dreaded DDE-open bug related: do not touch the following lines unless for a good reason
 
     // parse any projects opened through DDE or the command-line
-    m_NativeParser.AddParser(Manager::Get()->GetProjectManager()->GetActiveProject());
+    cbProject* curProject = Manager::Get()->GetProjectManager()->GetActiveProject();
+    if (curProject)
+        m_NativeParser.AddParser(curProject);
 
     event.Skip();
 }
@@ -1210,7 +1212,9 @@ void CodeCompletion::OnWorkspaceChanged(CodeBlocksEvent& event)
     // widgets.
     if (IsAttached() && m_InitDone)
     {
-        m_NativeParser.AddParser(Manager::Get()->GetProjectManager()->GetActiveProject());
+        cbProject* curProject = Manager::Get()->GetProjectManager()->GetActiveProject();
+        if (curProject)
+            m_NativeParser.AddParser(curProject);
 
         // Update the Function toolbar
         ParseFunctionsAndFillToolbar();
@@ -1564,20 +1568,15 @@ void CodeCompletion::OnEditorOpen(CodeBlocksEvent& event)
 
 void CodeCompletion::OnEditorActivated(CodeBlocksEvent& event)
 {
-    // Here has too many cbEVT_EDITOR_ACTIVATED event, we need the first *only*
-    static EditorBase* lastEditor;
-    if (lastEditor == event.GetEditor())
-        return;
-
     if (!ProjectManager::IsBusy() && IsAttached() && m_InitDone)
     {
         EditorBase* editor = event.GetEditor();
         if (!editor || !editor->IsBuiltinEditor())
             return;
 
-        lastEditor = editor;
         m_NativeParser.OnEditorActivated(editor);
         ParseFunctionsAndFillToolbar();
+        EnableToolbarTools(true);
     }
 
     event.Skip();
@@ -1586,11 +1585,19 @@ void CodeCompletion::OnEditorActivated(CodeBlocksEvent& event)
 void CodeCompletion::OnEditorClosed(CodeBlocksEvent& event)
 {
     EditorManager* edm = Manager::Get()->GetEditorManager();
+    m_NativeParser.OnEditorClosed(event.GetEditor());
+
+    wxString activeFile;
+    EditorBase* eb = edm->GetActiveEditor();
+    if (eb)
+        activeFile = eb->GetFilename();
 
     // we need to clear CC toolbar only when we are closing last editor
     // in other situations OnEditorActivated does this job
-    if (edm->GetEditorsCount() == 0)
+    if (edm->GetEditorsCount() == 0 || activeFile == g_StartHereTitle)
     {
+        EnableToolbarTools(false);
+
         // clear toolbar when closing last editor
         m_Scope->Clear();
         m_Function->Clear();

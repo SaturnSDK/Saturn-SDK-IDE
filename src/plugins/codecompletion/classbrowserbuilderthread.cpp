@@ -307,7 +307,7 @@ void ClassBrowserBuilderThread::ExpandNamespaces(wxTreeItemId node)
 
 void ClassBrowserBuilderThread::BuildTree(bool useLock)
 {
-    if ((!::wxIsMainThread() && TestDestroy()) || Manager::IsAppShuttingDown())
+    if ((!::wxIsMainThread() && TestDestroy()) || Manager::IsAppShuttingDown() || !m_pParser)
         return;
 
 #ifdef buildtree_measuring
@@ -649,6 +649,9 @@ bool ClassBrowserBuilderThread::AddDescendantsOf(CBTreeCtrl* tree, wxTreeItemId 
 
 bool ClassBrowserBuilderThread::AddNodes(CBTreeCtrl* tree, wxTreeItemId parent, const TokenIdxSet& tokens, short int tokenKindMask, int tokenScopeMask, bool allowGlobals)
 {
+    if (!m_pParser)
+        return false;
+
     int count = 0;
     set<unsigned long, less<unsigned long> > tickets;
 
@@ -896,6 +899,9 @@ void ClassBrowserBuilderThread::AddMembersOf(CBTreeCtrl* tree, wxTreeItemId node
 // checks if there are respective children and colors the nodes
 bool ClassBrowserBuilderThread::CreateSpecialFolders(CBTreeCtrl* tree, wxTreeItemId parent)
 {
+    if (!m_pParser)
+        return false;
+
     bool hasGF = false;
     bool hasGV = false;
     bool hasGP = false;
@@ -952,7 +958,7 @@ bool ClassBrowserBuilderThread::CreateSpecialFolders(CBTreeCtrl* tree, wxTreeIte
 
 void ClassBrowserBuilderThread::ExpandItem(wxTreeItemId item)
 {
-    if ((!::wxIsMainThread() && TestDestroy()) || Manager::IsAppShuttingDown())
+    if ((!::wxIsMainThread() && TestDestroy()) || Manager::IsAppShuttingDown() || !m_pParser)
         return;
 
 #ifdef buildtree_measuring

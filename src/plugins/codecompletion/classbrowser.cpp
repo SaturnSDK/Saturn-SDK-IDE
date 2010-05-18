@@ -220,7 +220,10 @@ void ClassBrowser::UpdateView(bool checkHeaderSwap)
         }
     }
     else
+    {
         m_Tree->DeleteAllItems();
+        m_TreeBottom->DeleteAllItems();
+    }
 }
 
 void ClassBrowser::ShowMenu(wxTreeCtrl* tree, wxTreeItemId id, const wxPoint& pt)
@@ -234,7 +237,7 @@ void ClassBrowser::ShowMenu(wxTreeCtrl* tree, wxTreeItemId id, const wxPoint& pt
 // on exit.
 
     m_TreeForPopupMenu = tree;
-    if ( !id.IsOk() )
+    if ( !id.IsOk() || !m_pParser)
         return;
 
 #if wxUSE_MENUS
@@ -432,26 +435,38 @@ void ClassBrowser::OnJumpTo(wxCommandEvent& event)
     CBTreeData* ctd = (CBTreeData*)tree->GetItemData(id);
     if (ctd)
     {
+        wxFileName fname;
+        if (event.GetId() == idMenuJumpToImplementation)
+            fname.Assign(ctd->m_pToken->GetImplFilename());
+        else
+            fname.Assign(ctd->m_pToken->GetFilename());
+
         cbProject* prj = Manager::Get()->GetProjectManager()->GetActiveProject();
+        wxString base;
         if (prj)
         {
-            wxString base = prj->GetBasePath();
-            wxFileName fname;
-            if (event.GetId() == idMenuJumpToImplementation)
-                fname.Assign(ctd->m_pToken->GetImplFilename());
-            else
-                fname.Assign(ctd->m_pToken->GetFilename());
-            NormalizePath(fname,base);
-            cbEditor* ed = Manager::Get()->GetEditorManager()->Open(fname.GetFullPath());
-            if (ed)
+            base = prj->GetBasePath();
+            NormalizePath(fname, base);
+        }
+        else
+        {
+            const wxArrayString& incDirs = m_pParser->GetIncludeDirs();
+            for (size_t i = 0; i < incDirs.GetCount(); ++i)
             {
-                int line;
-                if (event.GetId() == idMenuJumpToImplementation)
-                    line = ctd->m_pToken->m_ImplLine - 1;
-                else
-                    line = ctd->m_pToken->m_Line - 1;
-                ed->GotoLine(line);
+                if (NormalizePath(fname, incDirs.Item(i)))
+                    break;
             }
+        }
+
+        cbEditor* ed = Manager::Get()->GetEditorManager()->Open(fname.GetFullPath());
+        if (ed)
+        {
+            int line;
+            if (event.GetId() == idMenuJumpToImplementation)
+                line = ctd->m_pToken->m_ImplLine - 1;
+            else
+                line = ctd->m_pToken->m_Line - 1;
+            ed->GotoLine(line);
         }
     }
 }
@@ -459,7 +474,7 @@ void ClassBrowser::OnJumpTo(wxCommandEvent& event)
 void ClassBrowser::OnTreeItemDoubleClick(wxTreeEvent& event)
 {
     wxTreeCtrl* tree = (wxTreeCtrl*)event.GetEventObject();
-    if (!tree)
+    if (!tree || !m_pParser)
         return;
 
     wxTreeItemId id = event.GetItem();
@@ -473,48 +488,59 @@ void ClassBrowser::OnTreeItemDoubleClick(wxTreeEvent& event)
             return;
         }
 
+        bool toImp = false;
+        switch (ctd->m_pToken->m_TokenKind)
+        {
+        case tkConstructor:
+        case tkDestructor:
+        case tkFunction:
+            if (ctd->m_pToken->m_ImplLine != 0 && !ctd->m_pToken->GetImplFilename().IsEmpty())
+                toImp = true;
+            break;
+        default:
+            break;
+        }
+
+        wxFileName fname;
+        if (toImp)
+            fname.Assign(ctd->m_pToken->GetImplFilename());
+        else
+            fname.Assign(ctd->m_pToken->GetFilename());
+
         cbProject* prj = Manager::Get()->GetProjectManager()->GetActiveProject();
+        wxString base;
         if (prj)
         {
-            bool toImp = false;
-            switch (ctd->m_pToken->m_TokenKind)
-            {
-            case tkConstructor:
-            case tkDestructor:
-            case tkFunction:
-                if (ctd->m_pToken->m_ImplLine != 0 && !ctd->m_pToken->GetImplFilename().IsEmpty())
-                    toImp = true;
-                break;
-            default:
-                break;
-            }
-
-            wxString base = prj->GetBasePath();
-            wxFileName fname;
-            if (toImp)
-                fname.Assign(ctd->m_pToken->GetImplFilename());
-            else
-                fname.Assign(ctd->m_pToken->GetFilename());
-
+            base = prj->GetBasePath();
             NormalizePath(fname, base);
-            cbEditor* ed = Manager::Get()->GetEditorManager()->Open(fname.GetFullPath());
-            if (ed)
+        }
+        else
+        {
+            const wxArrayString& incDirs = m_pParser->GetIncludeDirs();
+            for (size_t i = 0; i < incDirs.GetCount(); ++i)
             {
-                int line;
-                if (toImp)
-                    line = ctd->m_pToken->m_ImplLine - 1;
-                else
-                    line = ctd->m_pToken->m_Line - 1;
-                ed->GotoLine(line);
-
-                wxFocusEvent ev(wxEVT_SET_FOCUS);
-                ev.SetWindow(this);
-                #if wxCHECK_VERSION(2, 9, 0)
-                ed->GetControl()->GetEventHandler()->AddPendingEvent(ev);
-                #else
-                ed->GetControl()->AddPendingEvent(ev);
-                #endif
+                if (NormalizePath(fname, incDirs.Item(i)))
+                    break;
             }
+        }
+
+        cbEditor* ed = Manager::Get()->GetEditorManager()->Open(fname.GetFullPath());
+        if (ed)
+        {
+            int line;
+            if (toImp)
+                line = ctd->m_pToken->m_ImplLine - 1;
+            else
+                line = ctd->m_pToken->m_Line - 1;
+            ed->GotoLine(line);
+
+            wxFocusEvent ev(wxEVT_SET_FOCUS);
+            ev.SetWindow(this);
+            #if wxCHECK_VERSION(2, 9, 0)
+            ed->GetControl()->GetEventHandler()->AddPendingEvent(ev);
+            #else
+            ed->GetControl()->AddPendingEvent(ev);
+            #endif
         }
     }
 }
@@ -709,7 +735,7 @@ void ClassBrowser::OnSearch(wxCommandEvent& event)
 
 void ClassBrowser::BuildTree()
 {
-    if (Manager::IsAppShuttingDown())
+    if (Manager::IsAppShuttingDown() || !m_pParser)
         return;
 
     // tree shall only be  created in case of a new builder thread

@@ -122,7 +122,7 @@ class Parser : public wxEvtHandler
         ~Parser();
 
         void AddBatchParse(const wxArrayString& filenames, bool isUpFront = false);
-        void StartBatchParse(bool delay = true);
+        void StartParse(bool delay = true);
         bool Parse      (const wxString& filename,         bool isLocal = true, LoaderBase* loader = 0);
         bool Parse      (const wxString& bufferOrFilename, bool isLocal,        ParserThreadOptions& opts);
         bool ParseBuffer(const wxString& buffer,           bool isLocal = true, bool bufferSkipBlocks = false, bool isTemp = false);
@@ -137,6 +137,7 @@ class Parser : public wxEvtHandler
         bool ReadFromCache(wxInputStream* f);
         bool WriteToCache(wxOutputStream* f);
         bool CacheNeedsUpdate();
+        bool IsFileParsed(const wxString& filename) { return m_pTokensTree->IsFileParsed(filename); }
 
         void StartStopWatch();
         void EndStopWatch();

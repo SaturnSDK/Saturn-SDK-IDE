@@ -504,7 +504,7 @@ void Parser::AddBatchParse(const wxArrayString& filenames, bool isUpFront)
         m_IsUpFront = false;
 }
 
-void Parser::StartBatchParse(bool delay)
+void Parser::StartParse(bool delay)
 {
     m_IsParsing = true;
 
@@ -542,7 +542,7 @@ bool Parser::Parse(const wxString& bufferOrFilename, bool isLocal, ParserThreadO
         {
             wxCriticalSectionLocker lock(s_MutexProtection);
 
-            bool canparse = !m_pTokensTree->IsFileParsed(buffOrFile);
+            bool canparse = !IsFileParsed(buffOrFile);
             if (canparse)
                 canparse = m_pTokensTree->ReserveFileForParsing(buffOrFile, true) != 0;
 
@@ -586,10 +586,10 @@ bool Parser::Parse(const wxString& bufferOrFilename, bool isLocal, ParserThreadO
                 m_PoolQueue.push(PTVector());
             }
 
-            if (m_IsBatch)
-                m_PoolQueue.back().push_back(thread);
+            if (!m_IsBatch)
+                m_Pool.AddTask(thread, true); // If batch-parsing is starting, m_IsBatch will be false always
             else
-                m_Pool.AddTask(thread, true);
+                m_PoolQueue.back().push_back(thread);
         }
         else if (m_IsUpFront && wxThread::IsMain())
         {
@@ -1108,7 +1108,7 @@ bool Parser::ReparseModifiedFiles()
         }
     }
 
-    bool startBatchParse = !files_list.empty();
+    bool needStartParse = !files_list.empty();
     while (!files_list.empty())
     {
         wxString& filename = files_list.front();
@@ -1116,8 +1116,8 @@ bool Parser::ReparseModifiedFiles()
         files_list.pop();
     }
 
-    if (startBatchParse)
-        StartBatchParse(false);
+    if (needStartParse)
+        StartParse(false);
 
     return true;
 }

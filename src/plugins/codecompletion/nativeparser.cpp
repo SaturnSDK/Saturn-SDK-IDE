@@ -46,6 +46,7 @@
 #endif
 
 bool s_DebugSmartSense = false;
+const wxString g_StartHereTitle = _("Start here");
 
 BEGIN_EVENT_TABLE(NativeParser, wxEvtHandler)
 //    EVT_MENU(THREAD_START, NativeParser::OnThreadStart)
@@ -61,7 +62,8 @@ NativeParser::NativeParser() :
     m_pClassBrowser(0),
     m_GettingCalltips(false),
     m_ClassBrowserIsFloating(false),
-    m_LastAISearchWasGlobal(false)
+    m_LastAISearchWasGlobal(false),
+    m_StandaloneFileCount(0)
 {
     // hook to project loading procedure
     ProjectLoaderHooks::HookFunctorBase* myhook = new ProjectLoaderHooks::HookFunctor<NativeParser>(this, &NativeParser::OnProjectLoadingHook);
@@ -237,7 +239,9 @@ void NativeParser::RereadParserOptions()
                         wxYES_NO | wxICON_QUESTION) == wxID_YES)
         {
             ClearParsers();
-            AddParser(Manager::Get()->GetProjectManager()->GetActiveProject());
+            cbProject* curProject = Manager::Get()->GetProjectManager()->GetActiveProject();
+            if (curProject)
+                AddParser(curProject);
             if (m_pClassBrowser)
                 m_pClassBrowser->SetParser(m_pParser);
         }
@@ -289,8 +293,6 @@ void NativeParser::AddCompilerDirs(cbProject* project)
     if (!m_pParser)
         return;
 
-    // do not clean include dirs: we use a single parser for the whole workspace
-//    m_pParser->ClearIncludeDirs();
     wxString base = project->GetBasePath();
     m_pParser->AddIncludeDir(base); // add project's base path
     TRACE(_T("AddCompilerDirs() : Adding project base dir to parser: ") + base);
@@ -380,9 +382,7 @@ void NativeParser::AddCompilerDirs(cbProject* project)
         Compilers[nCompilers++] = compiler;
     }
 
-    // keep the gcc compiler path's once if found accross C::B session
-    // makes opening workspaces a *lot* faster by avoiding endless calls to the compiler
-    static wxArrayString gcc_compiler_dirs;
+
 
     // add compiler include dirs
     for (int idxCompiler = 0; idxCompiler < nCompilers; ++idxCompiler)
@@ -409,16 +409,12 @@ void NativeParser::AddCompilerDirs(cbProject* project)
         wxString CompilerID = (Compilers[idxCompiler])->GetID();
         if (CompilerID == _T("gcc"))
         {
-            if (gcc_compiler_dirs.IsEmpty())
+            const wxArrayString& gccDirs = GetGCCCompilerDirs(((Compilers[idxCompiler])->GetPrograms()).CPP);
+            TRACE(_T("Adding %d cached gcc dirs to parser..."), gccDirs.GetCount());
+            for (size_t i = 0; i < gccDirs.GetCount(); ++i)
             {
-                Manager::Get()->GetLogManager()->DebugLog(_T("Caching internal gcc dirs for adding to parser..."));
-                gcc_compiler_dirs = GetGCCCompilerDirs(((Compilers[idxCompiler])->GetPrograms()).CPP, base);
-            }
-            TRACE(_T("Adding %d cached gcc dirs to parser..."), gcc_compiler_dirs.GetCount());
-            for (size_t i=0; i<gcc_compiler_dirs.GetCount(); i++)
-            {
-                m_pParser->AddIncludeDir(gcc_compiler_dirs[i]);
-                TRACE(_T("AddCompilerDirs() : Adding cached compiler dir to parser: ") + gcc_compiler_dirs[i]);
+                m_pParser->AddIncludeDir(gccDirs[i]);
+                TRACE(_T("AddCompilerDirs() : Adding cached compiler dir to parser: ") + gccDirs[i]);
             }
         }
     } // end of while loop over the found compilers
@@ -430,13 +426,46 @@ void NativeParser::AddCompilerDirs(cbProject* project)
     delete [] Compilers;
 }
 
+void NativeParser::AddDefaultCompilerDirs()
+{
+    if (!m_pParser)
+        return;
+
+    const wxString compilerId = CompilerFactory::GetDefaultCompilerID();
+    const Compiler* compiler = CompilerFactory::GetCompiler(compilerId);
+    const wxArrayString& dirs = compiler->GetIncludeDirs();
+    for (unsigned int i = 0; i < dirs.GetCount(); ++i)
+    {
+        wxString dir = dirs[i];
+        Manager::Get()->GetMacrosManager()->ReplaceMacros(dir);
+        m_pParser->AddIncludeDir(dir);
+        TRACE(_T("AddDefaultCompilerDirs() : Adding compiler dir to parser: ") + dir);
+    }
+
+    if (compilerId == _T("gcc"))
+    {
+        const wxArrayString& gccDirs = GetGCCCompilerDirs(compiler->GetPrograms().CPP);
+        TRACE(_T("Adding %d cached gcc dirs to parser..."), gccDirs.GetCount());
+        for (size_t i = 0; i < gccDirs.GetCount(); ++i)
+        {
+            m_pParser->AddIncludeDir(gccDirs[i]);
+            TRACE(_T("AddDefaultCompilerDirs() : Adding cached compiler dir to parser: ") + gccDirs[i]);
+        }
+    }
+}
+
 void NativeParser::AddCompilerPredefinedMacros(cbProject* project)
 {
     if (!m_pParser)
         return;
 
 	wxString defs;
-	wxString compilerId = project->GetCompilerID();
+	wxString compilerId;
+
+	if (project)
+        compilerId = project->GetCompilerID();
+    else
+        compilerId = CompilerFactory::GetDefaultCompilerID();
 
 	// gcc
 	if (compilerId == _T("gcc"))
@@ -455,7 +484,7 @@ void NativeParser::AddCompilerPredefinedMacros(cbProject* project)
 	// vc
 	else if (compilerId.StartsWith(_T("msvc")))
 	{
-	    Compiler* compiler = CompilerFactory::GetCompiler(project->GetCompilerID());
+	    Compiler* compiler = CompilerFactory::GetCompiler(compilerId);
 	    wxString cmd = compiler->GetMasterPath() + _T("\\bin\\") + compiler->GetPrograms().C;
 	    Manager::Get()->GetMacrosManager()->ReplaceMacros(cmd);
 
@@ -533,9 +562,13 @@ void NativeParser::AddProjectDefinedMacros(cbProject* project)
 	m_pParser->AddPredefinedMacros(defs, true);
 }
 
-wxArrayString NativeParser::GetGCCCompilerDirs(const wxString &cpp_compiler, const wxString &base)
+const wxArrayString& NativeParser::GetGCCCompilerDirs(const wxString &cpp_compiler)
 {
-    wxArrayString gcc_compiler_dirs;
+    // keep the gcc compiler path's once if found accross C::B session
+    // makes opening workspaces a *lot* faster by avoiding endless calls to the compiler
+    static wxArrayString gcc_compiler_dirs;
+    if (!gcc_compiler_dirs.IsEmpty())
+        return gcc_compiler_dirs;
 
     // for starters , only do this for gnu compiler
     //Manager::Get()->GetLogManager()->DebugLog(_T("CompilerID ") + CompilerID);
@@ -597,14 +630,12 @@ wxArrayString& NativeParser::GetProjectSearchDirs(cbProject* project)
 
 void NativeParser::AddParser(cbProject* project, bool useCache)
 {
-    if (!project)
-        return;
-
     for (ParserList::iterator it = m_ParserList.begin(); it != m_ParserList.end(); ++it)
     {
         if (it->first == project)
         {
-            Manager::Get()->GetLogManager()->DebugLog(F(_T("Switch to project %s from parsed projects"), project->GetTitle().wx_str()));
+            Manager::Get()->GetLogManager()->DebugLog(F(_T("Switch to project %s from parsed projects"),
+                                                        project ? project->GetTitle().wx_str() : _T("*NONE*")));
             m_pParser = it->second;
             SetClassBrowserParser();
 
@@ -622,12 +653,17 @@ void NativeParser::AddParser(cbProject* project, bool useCache)
             char* tmp = new char[1024 * 1000 * 100];
             delete [] tmp;
 
-            Manager::Get()->GetLogManager()->DebugLog(F(_T("Add new parser for project %s ..."), project->GetTitle().wx_str()));
+            Manager::Get()->GetLogManager()->DebugLog(F(_T("Add new parser for project %s ..."),
+                                                        project ? project->GetTitle().wx_str() : _T("*NONE*")));
 
             m_pParser = new Parser(this);
             SetClassBrowserParser();
             m_ParserList.push_back(std::make_pair(project, m_pParser));
-            ReparseProject(project);
+
+            if (project)
+                ReparseProject(project);
+            else
+                AddCompilerPredefinedMacros(NULL);
             break;
         }
         catch (std::bad_alloc& e)
@@ -648,10 +684,8 @@ void NativeParser::AddParser(cbProject* project, bool useCache)
 
 void NativeParser::RemoveParser(cbProject* project, bool useCache)
 {
-    if (!project)
-        return;
-
-    Manager::Get()->GetLogManager()->DebugLog(F(_T("Removing project %s from parsed projects"), project->GetTitle().wx_str()));
+    Manager::Get()->GetLogManager()->DebugLog(F(_T("Removing project %s from parsed projects"),
+                                                project ? project->GetTitle().wx_str() : _T("*NONE*")));
 
     for (ParserList::iterator it = m_ParserList.begin(); it != m_ParserList.end(); ++it)
     {
@@ -665,18 +699,36 @@ void NativeParser::RemoveParser(cbProject* project, bool useCache)
 
     m_pParser = NULL;
     SetClassBrowserParser();
+    if (m_pClassBrowser)
+        m_pClassBrowser->UpdateView();
 }
 
-void NativeParser::AddFileToParser(cbProject* project, const wxString& filename)
+Parser* NativeParser::GetParserPtrByProject(cbProject* project)
 {
-    if (m_pParser)
-        m_pParser->Parse(filename, true);
+    for (ParserList::iterator it = m_ParserList.begin(); it != m_ParserList.end(); ++it)
+    {
+        if (it->first == project)
+            return it->second;
+    }
+
+    return NULL;
+}
+
+void NativeParser::AddFileToParser(cbProject* project, const wxString& filename, bool isLocal)
+{
+    Parser* parser = GetParserPtrByProject(project);
+    if (parser)
+    {
+        parser->Parse(filename, isLocal);
+        parser->StartParse(false);
+    }
 }
 
 void NativeParser::RemoveFileFromParser(cbProject* project, const wxString& filename)
 {
-    if (m_pParser)
-        m_pParser->RemoveFile(filename);
+    Parser* parser = GetParserPtrByProject(project);
+    if (parser)
+        parser->RemoveFile(filename);
 }
 
 // reparses the project files
@@ -807,15 +859,18 @@ void NativeParser::ReparseProject(cbProject* project)
             m_pParser->AddBatchParse(files);
 
         // start batch parse!
-        m_pParser->StartBatchParse();
+        m_pParser->StartParse();
     }
 }
 
 void NativeParser::ForceReparseActiveProject()
 {
     cbProject* curProject = Manager::Get()->GetProjectManager()->GetActiveProject();
-    RemoveParser(curProject);
-    AddParser(curProject);
+    if (curProject)
+    {
+        RemoveParser(curProject);
+        AddParser(curProject);
+    }
 }
 
 // UNUSED
@@ -2490,7 +2545,7 @@ size_t NativeParser::GenerateResultSet(wxString search,
         //if (m_pParser->FindMatches(search, tempResult, caseSens, isPrefix))
         if (resultCount > 0)
         {
-            Manager::Get()->GetLogManager()->DebugLog(F(_T("Find %d result from the tree."), resultCount));
+//            Manager::Get()->GetLogManager()->DebugLog(F(_T("Find %d result from the tree."), resultCount));
             //get the tokens under the search scope.
             for (TokenIdxSet::iterator ptr = ptrParentID.begin(); ptr != ptrParentID.end(); ++ptr)
             {
@@ -2811,54 +2866,38 @@ void NativeParser::OnParserEnd(wxCommandEvent& event)
 
 void NativeParser::OnEditorActivated(EditorBase* editor)
 {
+    static cbProject* lastProject;
+    wxString filename = editor->GetFilename();
+    if (filename == g_StartHereTitle)
+        return;
+
+    cbProject* project = GetProjectByFilename(filename);
+    if (project != lastProject || (!project && !m_StandaloneFileCount))
+    {
+        AddParser(project);
+        lastProject = project;
+    }
+
     if (!m_pParser)
         return;
 
-    static cbProject* lastProject;
-    bool findInAnyProject = false;
-    wxString filename = editor->GetFilename();
-    cbProject* project = Manager::Get()->GetProjectManager()->GetActiveProject();
-    if (project)
+    if (!project)
     {
-        if (project->GetFileByFilename(filename, false, true))
+        wxFileName file(filename);
+        if (m_pParser->IsFileParsed(filename))
         {
-            if (project != lastProject)
-            {
-                AddParser(project);
-                UpdateClassBrowser();
-            }
-
-            findInAnyProject = true;
-            lastProject = project;
+            // Need update parser include dir, for classbrowser
+            if (m_pParser->GetIncludeDirs().Item(0) != file.GetPath())
+                m_pParser->GetIncludeDirs().Item(0) = file.GetPath();
         }
         else
         {
-            ProjectsArray* projArr = Manager::Get()->GetProjectManager()->GetProjects();
-            for (size_t i = 0; i < projArr->GetCount(); ++i)
-            {
-                if (projArr->Item(i) == project)
-                    continue;
-
-                if (projArr->Item(i)->GetFileByFilename(filename, false, true))
-                {
-                    if (projArr->Item(i) != lastProject)
-                    {
-                        AddParser(projArr->Item(i));
-                        UpdateClassBrowser();
-                    }
-
-                    findInAnyProject = true;
-                    lastProject = projArr->Item(i);
-                    break;
-                }
-            }
+            ++m_StandaloneFileCount;
+            m_pParser->ClearIncludeDirs();
+            m_pParser->AddIncludeDir(file.GetPath());
+            AddDefaultCompilerDirs();
+            AddFileToParser(project, filename, false);
         }
-    }
-
-    if (!findInAnyProject)
-    {
-        lastProject = NULL;
-        // TODO (Loaden) for standalone file parser
     }
 
     if (!m_pClassBrowser)
@@ -2873,4 +2912,50 @@ void NativeParser::OnEditorActivated(EditorBase* editor)
         // check header and implementation file swap, if yes, don't need to rebuild browser tree
         m_pClassBrowser->UpdateView(true);
     }
+}
+
+void NativeParser::OnEditorClosed(EditorBase* editor)
+{
+    if (!m_pParser)
+        return;
+
+    wxString filename = editor->GetFilename();
+    if (filename == g_StartHereTitle)
+        return;
+
+    cbProject* project = GetProjectByFilename(filename);
+    if (!project)
+    {
+        --m_StandaloneFileCount;
+        if (m_StandaloneFileCount)
+            RemoveFileFromParser(project, filename);
+        else
+            RemoveParser(project);
+    }
+}
+
+cbProject* NativeParser::GetProjectByFilename(const wxString& filename)
+{
+    cbProject* project = Manager::Get()->GetProjectManager()->GetActiveProject();
+    if (project)
+    {
+        Parser* parser = GetParserPtrByProject(project);
+        if (parser->IsFileParsed(filename))
+            return project;
+        else
+        {
+            for (ParserList::iterator it = m_ParserList.begin(); it != m_ParserList.end(); ++it)
+            {
+                if (it->first == project)
+                    continue;
+                if(it->second->IsFileParsed(filename))
+                {
+                    return it->first;
+                    break;
+                }
+            }
+        }
+    }
+
+    return NULL;
 }
