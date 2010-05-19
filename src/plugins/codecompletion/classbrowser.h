@@ -36,6 +36,7 @@ class ClassBrowser : public wxPanel
         const Parser* GetParserPtr() { return m_pParser; }
         void UnlinkParser();
         void UpdateView(bool checkHeaderSwap = false);
+        void UpdateSash();
 
         void OnSize(wxSizeEvent& event);
     private:

@@ -121,10 +121,7 @@ ClassBrowser::ClassBrowser(wxWindow* parent, NativeParser* np)
     int filter = cfg->ReadInt(_T("/browser_display_filter"), bdfWorkspace);
     XRCCTRL(*this, "cmbView", wxChoice)->SetSelection(filter);
 
-    int pos = cfg->ReadInt(_T("/splitter_pos"), 250);
     XRCCTRL(*this, "splitterWin", wxSplitterWindow)->SetMinSize(wxSize(-1, 200));
-    XRCCTRL(*this, "splitterWin", wxSplitterWindow)->SetSashPosition(pos, false);
-
     // if the classbrowser is put under the control of a wxFlatNotebook,
     // somehow the main panel is like "invisible" :/
     // so we force the correct color for the panel here...
@@ -171,6 +168,12 @@ void ClassBrowser::UnlinkParser()
 
         m_pParser = NULL;
     }
+}
+
+void ClassBrowser::UpdateSash()
+{
+    int pos = Manager::Get()->GetConfigManager(_T("code_completion"))->ReadInt(_T("/splitter_pos"), 250);
+    XRCCTRL(*this, "splitterWin", wxSplitterWindow)->SetSashPosition(pos, false);
 }
 
 void ClassBrowser::UpdateView(bool checkHeaderSwap)

@@ -138,6 +138,7 @@ void NativeParser::CreateClassBrowser()
             // make this a tab in projectmanager notebook
             m_pClassBrowser = new ClassBrowser(Manager::Get()->GetProjectManager()->GetNotebook(), this);
             Manager::Get()->GetProjectManager()->GetNotebook()->AddPage(m_pClassBrowser, _("Symbols"));
+            m_pClassBrowser->UpdateSash();
         }
         else
         {
@@ -156,6 +157,7 @@ void NativeParser::CreateClassBrowser()
             evt.shown = true;
             evt.hideable = true;
             Manager::Get()->ProcessEvent(evt);
+            m_pClassBrowser->UpdateSash();
         }
         m_ClassBrowserIsFloating = isFloating;
 
