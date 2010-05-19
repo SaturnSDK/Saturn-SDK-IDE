@@ -154,7 +154,7 @@ class NativeParser : public wxEvtHandler
 
         ProjectSearchDirsMap m_ProjectSearchDirsMap;
         int                  m_HookId; // project loader hook ID
-        int                  m_StandaloneFileCount;
+        std::set<wxString>   m_StandaloneFile;
 
         DECLARE_EVENT_TABLE()
 };

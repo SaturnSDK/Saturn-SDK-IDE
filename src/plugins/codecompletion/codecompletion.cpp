@@ -178,7 +178,6 @@ CodeCompletion::CodeCompletion() :
     m_IsAutoPopup(false),
     m_ToolbarChanged(true),
     m_CurrentLine(0),
-    m_LastFile(wxEmptyString),
     m_NeedReparse(false)
 {
     if (!Manager::LoadResource(_T("codecompletion.zip")))
@@ -473,7 +472,7 @@ void CodeCompletion::OnAttach()
     m_AllFunctionsScopes.clear();
     m_ToolbarChanged = true; // by default
 
-    m_LastFile = wxEmptyString;
+    m_LastFile.clear();
 
     LoadTokenReplacements();
     RereadOptions();
@@ -1574,6 +1573,9 @@ void CodeCompletion::OnEditorActivated(CodeBlocksEvent& event)
         if (!editor || !editor->IsBuiltinEditor())
             return;
 
+        if (m_LastFile == editor->GetFilename())
+            return;
+
         m_NativeParser.OnEditorActivated(editor);
         ParseFunctionsAndFillToolbar();
         EnableToolbarTools(true);
@@ -1584,6 +1586,8 @@ void CodeCompletion::OnEditorActivated(CodeBlocksEvent& event)
 
 void CodeCompletion::OnEditorClosed(CodeBlocksEvent& event)
 {
+    m_LastFile.clear();
+
     EditorManager* edm = Manager::Get()->GetEditorManager();
     m_NativeParser.OnEditorClosed(event.GetEditor());
 
@@ -2304,8 +2308,19 @@ void CodeCompletion::OnParserStart(wxCommandEvent& event)
 void CodeCompletion::OnParserEnd(wxCommandEvent& event)
 {
     EnableToolbarTools(true);
-    if (!ProjectManager::IsBusy())
-        ParseFunctionsAndFillToolbar(true);
+
+    if (ProjectManager::IsBusy())
+        return;
+
+    EditorManager* edMan = Manager::Get()->GetEditorManager();
+    if (edMan)
+    {
+        EditorBase* editor = edMan->GetActiveEditor();
+        if (editor)
+            m_NativeParser.OnEditorActivated(editor);
+    }
+
+    ParseFunctionsAndFillToolbar(true);
 }
 
 void CodeCompletion::EnableToolbarTools(bool enable)

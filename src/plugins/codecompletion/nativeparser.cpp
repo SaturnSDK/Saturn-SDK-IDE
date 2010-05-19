@@ -62,8 +62,7 @@ NativeParser::NativeParser() :
     m_pClassBrowser(0),
     m_GettingCalltips(false),
     m_ClassBrowserIsFloating(false),
-    m_LastAISearchWasGlobal(false),
-    m_StandaloneFileCount(0)
+    m_LastAISearchWasGlobal(false)
 {
     // hook to project loading procedure
     ProjectLoaderHooks::HookFunctorBase* myhook = new ProjectLoaderHooks::HookFunctor<NativeParser>(this, &NativeParser::OnProjectLoadingHook);
@@ -2874,8 +2873,14 @@ void NativeParser::OnEditorActivated(EditorBase* editor)
     if (filename == g_StartHereTitle)
         return;
 
-    cbProject* project = GetProjectByFilename(filename);
-    if (project != lastProject || (!project && !m_StandaloneFileCount))
+    cbProject* project;
+    std::set<wxString>::iterator it = m_StandaloneFile.find(filename);
+    if (it != m_StandaloneFile.end())
+        project = NULL;
+    else
+        project = GetProjectByFilename(filename);
+
+    if (project != lastProject || !project)
     {
         AddParser(project);
         lastProject = project;
@@ -2895,7 +2900,7 @@ void NativeParser::OnEditorActivated(EditorBase* editor)
         }
         else
         {
-            ++m_StandaloneFileCount;
+            m_StandaloneFile.insert(filename);
             m_pParser->ClearIncludeDirs();
             m_pParser->AddIncludeDir(file.GetPath());
             AddDefaultCompilerDirs();
@@ -2926,14 +2931,14 @@ void NativeParser::OnEditorClosed(EditorBase* editor)
     if (filename == g_StartHereTitle)
         return;
 
-    cbProject* project = GetProjectByFilename(filename);
-    if (!project)
+    std::set<wxString>::iterator it = m_StandaloneFile.find(filename);
+    if (it != m_StandaloneFile.end())
     {
-        --m_StandaloneFileCount;
-        if (m_StandaloneFileCount)
-            RemoveFileFromParser(project, filename);
+        m_StandaloneFile.erase(it);
+        if (m_StandaloneFile.empty())
+            RemoveParser(NULL);
         else
-            RemoveParser(project);
+            RemoveFileFromParser(NULL, filename);
     }
 }
 
@@ -2947,14 +2952,22 @@ cbProject* NativeParser::GetProjectByFilename(const wxString& filename)
             return project;
         else
         {
-            for (ParserList::iterator it = m_ParserList.begin(); it != m_ParserList.end(); ++it)
+            ProjectsArray* projArr = Manager::Get()->GetProjectManager()->GetProjects();
+            for (size_t i = 0; i < projArr->GetCount(); ++i)
             {
-                if (it->first == project)
+                if (projArr->Item(i) == project)
                     continue;
-                if(it->second->IsFileParsed(filename))
+
+                parser = GetParserPtrByProject(projArr->Item(i));
+                if (parser)
                 {
-                    return it->first;
-                    break;
+                    if (parser->IsFileParsed(filename))
+                        return projArr->Item(i);
+                }
+                else
+                {
+                    if (projArr->Item(i)->GetFileByFilename(filename, false, true))
+                        return projArr->Item(i);
                 }
             }
         }
