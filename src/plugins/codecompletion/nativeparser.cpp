@@ -607,12 +607,15 @@ const wxArrayString& NativeParser::GetGCCCompilerDirs(const wxString &cpp_compil
             start = true;
         }
 
-        if (!wxDirExists(path))
+        wxFileName fname(path, wxEmptyString);
+        fname.Normalize();
+        fname.SetVolume(fname.GetVolume().MakeUpper());
+        if (!fname.DirExists())
             break;
 
-        Manager::Get()->GetLogManager()->DebugLog(_T("Caching GCC dir: ") + path);
-        gcc_compiler_dirs.Add(path);
-    } // end for : idx : idxCount
+        Manager::Get()->GetLogManager()->DebugLog(_T("Caching GCC dir: ") + fname.GetPath());
+        gcc_compiler_dirs.Add(fname.GetPath());
+    }
 
     return gcc_compiler_dirs;
 }

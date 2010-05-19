@@ -137,7 +137,7 @@ class Parser : public wxEvtHandler
         bool ReadFromCache(wxInputStream* f);
         bool WriteToCache(wxOutputStream* f);
         bool CacheNeedsUpdate();
-        bool IsFileParsed(const wxString& filename) { return m_pTokensTree->IsFileParsed(filename); }
+        bool IsFileParsed(const wxString& filename);
 
         void StartStopWatch();
         void EndStopWatch();

@@ -542,7 +542,7 @@ bool Parser::Parse(const wxString& bufferOrFilename, bool isLocal, ParserThreadO
         {
             wxCriticalSectionLocker lock(s_MutexProtection);
 
-            bool canparse = !IsFileParsed(buffOrFile);
+            bool canparse = !m_pTokensTree->IsFileParsed(buffOrFile);
             if (canparse)
                 canparse = m_pTokensTree->ReserveFileForParsing(buffOrFile, true) != 0;
 
@@ -1140,4 +1140,9 @@ size_t Parser::FindTokensInFile(const wxString& fileName, TokenIdxSet& result, s
             result.insert(*it);
     }
     return result.size();
+}
+
+bool Parser::IsFileParsed(const wxString& filename)
+{
+    return m_pTokensTree->IsFileParsed(UnixFilename(filename));
 }
