@@ -182,7 +182,7 @@ void ClassBrowser::UpdateView(bool checkHeaderSwap)
 
     if (m_pParser && !Manager::IsAppShuttingDown())
     {
-        m_pActiveProject = Manager::Get()->GetProjectManager()->GetActiveProject();
+        m_pActiveProject = m_NativeParser->GetProjectByParser(m_pParser);
         cbEditor* ed = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
         if (ed)
         {
@@ -428,7 +428,7 @@ void ClassBrowser::OnTreeItemRightClick(wxTreeEvent& event)
 void ClassBrowser::OnJumpTo(wxCommandEvent& event)
 {
     wxTreeCtrl* tree = m_TreeForPopupMenu;
-    if (!tree)
+    if (!tree || !m_pParser)
         return;
 
     wxTreeItemId id = tree->GetSelection();
@@ -441,7 +441,7 @@ void ClassBrowser::OnJumpTo(wxCommandEvent& event)
         else
             fname.Assign(ctd->m_pToken->GetFilename());
 
-        cbProject* prj = Manager::Get()->GetProjectManager()->GetActiveProject();
+        cbProject* prj = m_NativeParser->GetProjectByParser(m_pParser);
         wxString base;
         if (prj)
         {
@@ -507,7 +507,7 @@ void ClassBrowser::OnTreeItemDoubleClick(wxTreeEvent& event)
         else
             fname.Assign(ctd->m_pToken->GetFilename());
 
-        cbProject* prj = Manager::Get()->GetProjectManager()->GetActiveProject();
+        cbProject* prj = m_NativeParser->GetProjectByParser(m_pParser);
         wxString base;
         if (prj)
         {

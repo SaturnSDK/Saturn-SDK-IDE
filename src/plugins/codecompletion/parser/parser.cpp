@@ -504,7 +504,7 @@ void Parser::AddBatchParse(const wxArrayString& filenames, bool isUpFront)
         m_IsUpFront = false;
 }
 
-void Parser::StartParse(bool delay)
+void Parser::StartBatchParse(bool delay)
 {
     m_IsParsing = true;
 
@@ -687,7 +687,7 @@ bool Parser::Reparse(const wxString& filename, bool isLocal)
     }
 
     m_NeedsReparse = true;
-    m_Timer.Start(reparse_timer_delay,wxTIMER_ONE_SHOT);
+    m_Timer.Start(reparse_timer_delay, wxTIMER_ONE_SHOT);
 
     return true;
 }
@@ -952,10 +952,7 @@ void Parser::OnAllThreadsDone(CodeBlocksEvent& event)
     {
         EndStopWatch();
         m_IsParsing = false;
-
-        wxCommandEvent evt(wxEVT_COMMAND_MENU_SELECTED, PARSER_END);
-        evt.SetClientData(this);
-        wxPostEvent(m_pParent, evt);
+        PostParserEvent(PARSER_END);
     }
 }
 
@@ -1056,10 +1053,7 @@ void Parser::OnBatchTimer(wxTimerEvent& event)
         m_IsBatch = false;
         Manager::Get()->GetLogManager()->DebugLog(_T("Starting batch parsing..."));
         StartStopWatch();
-
-        wxCommandEvent evt(wxEVT_COMMAND_MENU_SELECTED, PARSER_START);
-        evt.SetClientData(this);
-        wxPostEvent(m_pParent, evt);
+        PostParserEvent(PARSER_START);
     }
 
     if (!m_PoolQueue.empty())
@@ -1108,7 +1102,7 @@ bool Parser::ReparseModifiedFiles()
         }
     }
 
-    bool needStartParse = !files_list.empty();
+    bool needBatchParse = !files_list.empty();
     while (!files_list.empty())
     {
         wxString& filename = files_list.front();
@@ -1116,8 +1110,8 @@ bool Parser::ReparseModifiedFiles()
         files_list.pop();
     }
 
-    if (needStartParse)
-        StartParse(false);
+    if (needBatchParse)
+        StartBatchParse(false);
 
     return true;
 }
@@ -1145,4 +1139,11 @@ size_t Parser::FindTokensInFile(const wxString& fileName, TokenIdxSet& result, s
 bool Parser::IsFileParsed(const wxString& filename)
 {
     return m_pTokensTree->IsFileParsed(UnixFilename(filename));
+}
+
+void Parser::PostParserEvent(int id)
+{
+    wxCommandEvent evt(wxEVT_COMMAND_MENU_SELECTED, id);
+    evt.SetClientData(this);
+    wxPostEvent(m_pParent, evt);
 }

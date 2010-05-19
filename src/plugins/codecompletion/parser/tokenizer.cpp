@@ -1083,16 +1083,6 @@ bool Tokenizer::HandleConditionPreprocessor()
     while (SkipWhiteSpace() || SkipComment())
         ;
 
-    const wxString token = DoGetToken();
-
-    std::string file(m_Filename.mb_str());
-    static std::vector<std::string> v;
-    if (!file.empty())
-    {
-        if (v.empty() || (!v.empty() && *(v.end() - 1) != file))
-            v.push_back(file);
-    }
-
     // ONLY FOR TEST!
 //    if (m_Filename.Contains(_T("exception"))) // Line: 38
 //    {
@@ -1102,6 +1092,8 @@ bool Tokenizer::HandleConditionPreprocessor()
 //    {
 //        m_Filename.Len();
 //    }
+
+    const wxString token = DoGetToken();
 
     // #if #ifdef #ifndef
     if (token.StartsWith(TokenizerConsts::kw_if))

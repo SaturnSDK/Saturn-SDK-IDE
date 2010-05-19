@@ -809,7 +809,7 @@ void CodeCompletion::CodeCompleteIncludes()
     if (!IsAttached() || !m_InitDone)
         return;
 
-    cbProject* pPrj = Manager::Get()->GetProjectManager()->GetActiveProject();
+    cbProject* pPrj = m_NativeParser.GetProjectByParser(m_NativeParser.GetParserPtr());
     if (!pPrj)
         return;
 
@@ -1182,7 +1182,7 @@ void CodeCompletion::OnAppDoneStartup(CodeBlocksEvent& event)
     // parse any projects opened through DDE or the command-line
     cbProject* curProject = Manager::Get()->GetProjectManager()->GetActiveProject();
     if (curProject)
-        m_NativeParser.AddParser(curProject);
+        m_NativeParser.AddOrChangeParser(curProject);
 
     event.Skip();
 }
@@ -1213,8 +1213,15 @@ void CodeCompletion::OnWorkspaceChanged(CodeBlocksEvent& event)
     {
         cbProject* curProject = Manager::Get()->GetProjectManager()->GetActiveProject();
         if (curProject)
-            m_NativeParser.AddParser(curProject);
+            m_NativeParser.AddOrChangeParser(curProject);
 
+        EditorManager* edMan = Manager::Get()->GetEditorManager();
+        if (edMan)
+        {
+            EditorBase* editor = edMan->GetActiveEditor();
+            if (editor)
+                m_NativeParser.OnEditorActivated(editor);
+        }
         // Update the Function toolbar
         ParseFunctionsAndFillToolbar();
 
@@ -1236,7 +1243,7 @@ void CodeCompletion::OnProjectActivated(CodeBlocksEvent& event)
 
     if (!ProjectManager::IsBusy() && IsAttached() && m_InitDone)
     {
-        m_NativeParser.AddParser(event.GetProject());
+        m_NativeParser.AddOrChangeParser(event.GetProject());
         if (m_NativeParser.GetParserPtr() && m_NativeParser.GetParserPtr()->ClassBrowserOptions().displayFilter == bdfProject)
             m_NativeParser.UpdateClassBrowser();
     }
@@ -1307,12 +1314,11 @@ void CodeCompletion::OnReparseActiveEditor(CodeBlocksEvent& event)
         EditorBase* ed = event.GetEditor();
         if (!ed)
             return;
-        Parser* parser = m_NativeParser.GetParserPtr();
-        if (!parser)
+        if (!m_NativeParser.GetParserPtr())
             return;
 
         Manager::Get()->GetLogManager()->DebugLog(_T("Reparsing active editor ") + ed->GetFilename());
-        parser->Reparse(ed->GetFilename());
+        m_NativeParser.ReparseFile(ed->GetFilename());
         ParseFunctionsAndFillToolbar(true);
     }
     event.Skip();
@@ -1958,7 +1964,7 @@ void CodeCompletion::OnOpenIncludeFile(wxCommandEvent& event)
         foundSet.Add(fname.GetFullPath());
 
     // search for the file in project files
-    cbProject* project = Manager::Get()->GetProjectManager()->GetActiveProject();
+    cbProject* project = m_NativeParser.GetProjectByParser(m_NativeParser.GetParserPtr());
     if (project)
     {
         for (int i = 0; i < project->GetFilesCount(); ++i)
@@ -2312,14 +2318,6 @@ void CodeCompletion::OnParserEnd(wxCommandEvent& event)
     if (ProjectManager::IsBusy())
         return;
 
-    EditorManager* edMan = Manager::Get()->GetEditorManager();
-    if (edMan)
-    {
-        EditorBase* editor = edMan->GetActiveEditor();
-        if (editor)
-            m_NativeParser.OnEditorActivated(editor);
-    }
-
     ParseFunctionsAndFillToolbar(true);
 }
 
@@ -2331,8 +2329,7 @@ void CodeCompletion::EnableToolbarTools(bool enable)
 
 void CodeCompletion::OnRealtimeParsing(wxTimerEvent& event)
 {
-    Parser* parser = m_NativeParser.GetParserPtr();
-    if (!parser)
+    if (!m_NativeParser.GetParserPtr())
         return;
 
     cbEditor* editor = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
@@ -2341,5 +2338,5 @@ void CodeCompletion::OnRealtimeParsing(wxTimerEvent& event)
 
     wxString file = editor->GetFilename();
     Manager::Get()->GetLogManager()->DebugLog(_T("Reparsing while typing for editor ") + file);
-    parser->Reparse(file);
+    m_NativeParser.ReparseFile(file);
 }

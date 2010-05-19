@@ -122,14 +122,13 @@ class Parser : public wxEvtHandler
         ~Parser();
 
         void AddBatchParse(const wxArrayString& filenames, bool isUpFront = false);
-        void StartParse(bool delay = true);
+        void StartBatchParse(bool delay = true);
         bool Parse      (const wxString& filename,         bool isLocal = true, LoaderBase* loader = 0);
         bool Parse      (const wxString& bufferOrFilename, bool isLocal,        ParserThreadOptions& opts);
         bool ParseBuffer(const wxString& buffer,           bool isLocal = true, bool bufferSkipBlocks = false, bool isTemp = false);
         bool ParseBufferForFunctions(const wxString& buffer);
         bool ParseBufferForUsingNamespace(const wxString& buffer, wxArrayString& result);
         bool Reparse(const wxString& filename, bool isLocal = true);
-        bool ReparseModifiedFiles();
         bool RemoveFile(const wxString& filename);
         void Clear();
         void ReadOptions();
@@ -138,6 +137,7 @@ class Parser : public wxEvtHandler
         bool WriteToCache(wxOutputStream* f);
         bool CacheNeedsUpdate();
         bool IsFileParsed(const wxString& filename);
+        void PostParserEvent(int id);
 
         void StartStopWatch();
         void EndStopWatch();
@@ -180,6 +180,7 @@ class Parser : public wxEvtHandler
 
     protected:
         void DoParseFile(const wxString& filename, bool isGlobal);
+        bool ReparseModifiedFiles();
 
         void OnAllThreadsDone(CodeBlocksEvent& event);
         void OnTimer(wxTimerEvent& event);
