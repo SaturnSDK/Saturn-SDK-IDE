@@ -2267,33 +2267,6 @@ void CodeCompletion::EditorEventHook(cbEditor* editor, wxScintillaEvent& event)
         }
     }
 
-    if (event.GetEventType() == wxEVT_SCI_CHARADDED)
-    {
-        if (event.GetKey() == _T(':'))
-        {
-            if (control->AutoCompActive()) control->AutoCompCancel();
-            wxString text = control->GetCurLine().Trim(false);
-            text = text.Remove(text.Find(_T(':'), true));
-            text = text.Trim();
-            if (text == _T("public") || text == _T("protected") || text == _T("private"))
-            {
-                int curLine = control->GetCurrentLine();
-                control->GotoPos(control->PositionFromLine(curLine));
-                control->BackTab();
-                const int column = control->GetColumn(control->GetCurrentPos());
-                control->GotoPos(control->GetLineEndPosition(curLine));
-                if (control->GetLineCount() > curLine)
-                {
-                    if (control->GetColumn(control->GetLineIndentPosition(curLine + 1)) == column)
-                    {
-                        control->NewLine();
-                        control->Tab();
-                    }
-                }
-            }
-        }
-    }
-
     Parser* parser = m_NativeParser.GetParserPtr();
     if (   parser && parser->Options().whileTyping
         && (   (event.GetModificationType() & wxSCI_MOD_INSERTTEXT)
