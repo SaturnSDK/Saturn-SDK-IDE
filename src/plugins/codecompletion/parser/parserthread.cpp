@@ -262,6 +262,92 @@ void ParserThread::SkipAngleBraces()
     m_Tokenizer.SetState(oldState);
 }
 
+bool ParserThread::ParseBufferForNamespaces(const wxString& buffer, NameSpaceVec& result)
+{
+	if (TestDestroy())
+		return false;
+
+	m_Tokenizer.InitFromBuffer(buffer);
+	if (!m_Tokenizer.IsOK())
+		return false;
+
+	result.clear();
+
+	wxArrayString nsStack;
+	nsStack.Alloc(4);
+
+	m_Tokenizer.SetState(tsSkipUnWanted);
+	m_ParsingTypedef = false;
+
+	while (m_Tokenizer.NotEOF())
+	{
+		if (!m_pTokensTree || TestDestroy())
+            return false;
+
+        wxString token = m_Tokenizer.GetToken();
+        if (token.IsEmpty())
+            continue;
+
+		if (token == ParserConsts::kw_using)
+		{
+			SkipToOneOfChars(ParserConsts::semicolonclbrace);
+		}
+		else if (token == ParserConsts::opbrace)
+		{
+			SkipBlock();
+		}
+		else if (token == ParserConsts::kw_namespace)
+		{
+			wxString name = m_Tokenizer.GetToken();
+			if (name == ParserConsts::opbrace)
+			{
+				name = wxEmptyString; // anonymous namespace
+			}
+			else
+			{
+				m_Tokenizer.SetState(tsSkipNone);
+				wxString next = m_Tokenizer.PeekToken();
+				m_Tokenizer.SetState(tsSkipUnWanted);
+				if (next == ParserConsts::equals)
+				{
+					SkipToOneOfChars(ParserConsts::semicolonclbrace);
+					continue;
+				}
+				else if (next == ParserConsts::opbrace) {
+					m_Tokenizer.GetToken();
+					name += _T("::");
+				}
+			}
+
+			nsStack.Add(name);
+			NameSpace ns;
+			for (size_t i = 0; i < nsStack.Count(); ++i)
+				ns.Name << nsStack[i];
+			ns.StartLine = m_Tokenizer.GetLineNumber() - 1;
+			ns.EndLine = -1;
+
+			result.push_back(ns);
+		}
+		else if (token == ParserConsts::clbrace)
+		{
+			NameSpaceVec::reverse_iterator it = result.rbegin();
+			for ( ; it != result.rend(); ++it)
+			{
+				NameSpace& ns = *it;
+				if (ns.EndLine == -1)
+				{
+					ns.EndLine = m_Tokenizer.GetLineNumber() - 1;
+					break;
+				}
+			}
+
+			if (!nsStack.IsEmpty())
+				nsStack.RemoveAt(nsStack.GetCount() - 1);
+		}
+	}
+	return true;
+}
+
 bool ParserThread::ParseBufferForUsingNamespace(const wxString& buffer, wxArrayString& result)
 {
     if (TestDestroy())
@@ -1324,19 +1410,34 @@ void ParserThread::HandleNamespace()
             // }
             // namespace abi = __cxxabiv1; <-- we 're in this case now
 
-            m_Tokenizer.GetToken(); // eat '='
-            wxString aliasns = m_Tokenizer.GetToken();
-
+			m_Tokenizer.GetToken(); // eat '='
             m_Tokenizer.SetState(tsSkipUnWanted);
 
-            // use the existing copy (if any)
-            Token* aliasToken = TokenExists(aliasns, m_pLastParent, tkNamespace);
-            if (!aliasToken)
-                aliasToken = DoAddToken(tkNamespace, aliasns, line);
-            if (!aliasToken)
-                return;
+            Token* lastParent = m_pLastParent;
+            Token* aliasToken = NULL;
+
+            while (true)
+            {
+                wxString aliasStr = m_Tokenizer.GetToken();
+
+                // use the existing copy (if any)
+                aliasToken = TokenExists(aliasStr, m_pLastParent, tkNamespace);
+                if (!aliasToken)
+                    aliasToken = DoAddToken(tkNamespace, aliasStr, line);
+                if (!aliasToken)
+                    return;
+
+                if (m_Tokenizer.PeekToken() == ParserConsts::dcolon)
+                {
+                    m_Tokenizer.GetToken();
+                    m_pLastParent = aliasToken;
+                }
+                else
+                    break;
+            }
 
             aliasToken->m_Aliases.Add(ns);
+            m_pLastParent = lastParent;
         }
         else
         {
@@ -1439,6 +1540,9 @@ void ParserThread::HandleClass(EClassType ct)
                 m_LastScope = ct == ctClass ? tsPrivate : tsPublic;
                 m_ParsingTypedef = false;
 
+				newToken->m_ImplLine = lineNr;
+				newToken->m_ImplLineStart = m_Tokenizer.GetLineNumber();
+
                 DoParse();
 
                 m_ParsingTypedef = parsingTypedef;
@@ -1487,7 +1591,12 @@ void ParserThread::HandleClass(EClassType ct)
                 m_LastScope = ct == ctClass ? tsPrivate : tsPublic;
                 m_ParsingTypedef = false;
 
+				newToken->m_ImplLine = lineNr;
+				newToken->m_ImplLineStart = m_Tokenizer.GetLineNumber();
+
                 DoParse();
+
+                newToken->m_ImplLineEnd = m_Tokenizer.GetLineNumber();
 
                 m_ParsingTypedef = parsingTypedef;
                 m_pLastParent = lastParent;
@@ -1756,6 +1865,8 @@ void ParserThread::HandleEnum()
         level = m_Tokenizer.GetNestingLevel() - 1; // we 've already entered the { block
     }
 
+    int lineStart = m_Tokenizer.GetLineNumber();
+
     while (1)
     {
         // process enumerators
@@ -1786,6 +1897,10 @@ void ParserThread::HandleEnum()
             }
         }
     }
+
+	newEnum->m_ImplLine = lineNr;
+	newEnum->m_ImplLineStart = lineStart;
+	newEnum->m_ImplLineEnd = m_Tokenizer.GetLineNumber();
 //    // skip to ;
 //    SkipToOneOfChars(ParserConsts::semicolon);
 }

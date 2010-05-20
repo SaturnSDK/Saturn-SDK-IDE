@@ -105,6 +105,7 @@ CCOptionsDlg::CCOptionsDlg(wxWindow* parent, NativeParser* np, CodeCompletion* c
     XRCCTRL(*this, "chkNoSB", wxCheckBox)->SetValue(!cfg->ReadBool(_T("/use_symbols_browser"), true));
     XRCCTRL(*this, "txtFillupChars", wxTextCtrl)->SetValue(cfg->Read(_T("/fillup_chars"), wxEmptyString));
     XRCCTRL(*this, "txtUpFrontHeaders", wxTextCtrl)->SetValue(cfg->Read(_T("/up_front_headers"), _T("<cstddef>, \"stdafx.h\", \"wx_pch.h\", \"sdk.h\"")));
+    XRCCTRL(*this, "chkScopeFilter", wxCheckBox)->SetValue(cfg->ReadBool(_T("/scope_filter"), true));
 
     XRCCTRL(*this, "chkKL_1", wxCheckBox)->SetValue(cfg->ReadBool(_T("/lexer_keywords_set1"), true));
     XRCCTRL(*this, "chkKL_2", wxCheckBox)->SetValue(cfg->ReadBool(_T("/lexer_keywords_set2"), true));
@@ -335,6 +336,7 @@ void CCOptionsDlg::OnApply()
     m_Parser.ClassBrowserOptions().expandNS = XRCCTRL(*this, "chkExpandNS", wxCheckBox)->GetValue();
     m_Parser.ClassBrowserOptions().treeMembers = XRCCTRL(*this, "chkTreeMembers", wxCheckBox)->GetValue();
     cfg->Write(_T("/as_floating_window"), (bool)XRCCTRL(*this, "chkFloatCB", wxCheckBox)->GetValue());
+    cfg->Write(_T("/scope_filter"),  (bool)XRCCTRL(*this, "chkScopeFilter", wxCheckBox)->GetValue());
 
     cfg->Write(_T("/lexer_keywords_set1"), (bool)XRCCTRL(*this, "chkKL_1", wxCheckBox)->GetValue());
     cfg->Write(_T("/lexer_keywords_set2"), (bool)XRCCTRL(*this, "chkKL_2", wxCheckBox)->GetValue());

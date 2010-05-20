@@ -430,6 +430,22 @@
                   <flag>wxALL|wxEXPAND|wxALIGN_LEFT|wxALIGN_TOP</flag>
                   <border>8</border>
                 </object>
+                <object class="sizeritem">
+                    <object class="wxStaticBoxSizer">
+                    <label>Toolbar</label>
+                    <orient>wxVERTICAL</orient>
+                    <object class="sizeritem">
+                        <object class="wxCheckBox" name="chkScopeFilter">
+                        <label>Use scope filtering</label>
+                        </object>
+                        <flag>wxALL|wxALIGN_LEFT|wxALIGN_BOTTOM</flag>
+                        <border>8</border>
+                        <option>1</option>
+                    </object>
+                    </object>
+                    <flag>wxALL|wxEXPAND|wxALIGN_LEFT|wxALIGN_BOTTOM</flag>
+                    <border>8</border>
+               </object>
               </object>
             </object>
             <label>Symbols browser</label>

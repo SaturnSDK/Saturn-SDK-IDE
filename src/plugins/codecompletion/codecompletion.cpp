@@ -132,9 +132,11 @@ int idStartParsingProjects      = wxNewId();
 int idCodeCompleteTimer         = wxNewId();
 int idFunctionsParsingTimer     = wxNewId();
 int idRealtimeParsingTimer      = wxNewId();
+int idToolbarTimer              = wxNewId();
 
 // milliseconds
-#define EDITOR_AND_LINE_INTERVAL 150
+#define REALTIME_PARSING_DELAY      500
+#define EDITOR_AND_LINE_INTERVAL    150
 
 BEGIN_EVENT_TABLE(CodeCompletion, cbCodeCompletionPlugin)
     EVT_UPDATE_UI_RANGE(idMenuCodeComplete, idProjectReparse, CodeCompletion::OnUpdateUI)
@@ -159,8 +161,9 @@ BEGIN_EVENT_TABLE(CodeCompletion, cbCodeCompletionPlugin)
     EVT_TIMER(idCodeCompleteTimer, CodeCompletion::OnCodeCompleteTimer)
     EVT_TIMER(idFunctionsParsingTimer, CodeCompletion::OnStartParsingFunctions)
     EVT_TIMER(idRealtimeParsingTimer, CodeCompletion::OnRealtimeParsing)
+    EVT_TIMER(idToolbarTimer, CodeCompletion::OnStartParsingFunctions)
 
-//    EVT_CHOICE(XRCID("chcCodeCompletionScope"),  CodeCompletion::OnScope)
+    EVT_CHOICE(XRCID("chcCodeCompletionScope"),  CodeCompletion::OnScope)
     EVT_CHOICE(XRCID("chcCodeCompletionFunction"),  CodeCompletion::OnFunction)
 
     EVT_MENU(PARSER_END, CodeCompletion::OnParserEnd)
@@ -173,9 +176,11 @@ CodeCompletion::CodeCompletion() :
     m_TimerCodeCompletion(this, idCodeCompleteTimer),
     m_TimerFunctionsParsing(this, idFunctionsParsingTimer),
     m_TimerRealtimeParsing(this, idRealtimeParsingTimer),
+    m_TimerToolbar(this, idToolbarTimer),
     m_pCodeCompletionLastEditor(0),
     m_ActiveCalltipsNest(0),
     m_IsAutoPopup(false),
+    m_pToolBar(0),
     m_ToolbarChanged(true),
     m_CurrentLine(0),
     m_NeedReparse(false)
@@ -260,7 +265,38 @@ void CodeCompletion::RereadOptions()
     m_LexerKeywordsToInclude[6] = cfg->ReadBool(_T("/lexer_keywords_set7"), false);
     m_LexerKeywordsToInclude[7] = cfg->ReadBool(_T("/lexer_keywords_set8"), false);
     m_LexerKeywordsToInclude[8] = cfg->ReadBool(_T("/lexer_keywords_set9"), false);
+
+    if (m_pToolBar)
+        UpdateToolBar();
+
+    CodeBlocksLayoutEvent evt(cbEVT_UPDATE_VIEW_LAYOUT);
+    Manager::Get()->ProcessEvent(evt);
+
+    ParseFunctionsAndFillToolbar(true);
 }
+
+void CodeCompletion::UpdateToolBar()
+{
+    ConfigManager* cfg = Manager::Get()->GetConfigManager(_T("code_completion"));
+    bool showScope = cfg->ReadBool(_T("/scope_filter"), true);
+
+    if (showScope && !m_Scope)
+    {
+        m_Scope = new wxChoice(m_pToolBar, wxNewId(), wxPoint(0,0), wxSize(350,-1), 0, 0);
+        m_pToolBar->InsertControl(0, m_Scope);
+    }
+    else if (!showScope && m_Scope)
+    {
+        m_pToolBar->DeleteTool(m_Scope->GetId());
+        m_Scope = NULL;
+    }
+    else
+        return;
+
+    m_pToolBar->Realize();
+    m_pToolBar->SetInitialSize();
+}
+
 
 void CodeCompletion::BuildMenu(wxMenuBar* menuBar)
 {
@@ -449,11 +485,11 @@ bool CodeCompletion::BuildToolBar(wxToolBar* toolBar)
 
     m_Function = XRCCTRL(*toolBar, "chcCodeCompletionFunction", wxChoice);
     m_Scope = XRCCTRL(*toolBar, "chcCodeCompletionScope", wxChoice);
-    m_Scope->Disable();
-    toolBar->Realize();
-    toolBar->SetInitialSize();
 
+    m_pToolBar = toolBar;
+    UpdateToolBar();
     EnableToolbarTools(false);
+
     return true;
 }
 
@@ -464,6 +500,7 @@ void CodeCompletion::OnAttach()
     m_EditMenu   = 0;
     m_SearchMenu = 0;
     m_ViewMenu   = 0;
+    m_pToolBar	 = 0;
     m_ProjectMenu= 0;
     m_Function   = 0;
     m_Scope      = 0;
@@ -477,8 +514,7 @@ void CodeCompletion::OnAttach()
     LoadTokenReplacements();
     RereadOptions();
 
-    m_LastPosForCodeCompletion = -1;
-    m_StartIdxNameSpaceInScope = -1;
+    m_LastPosForCodeCompletion = wxNOT_FOUND;
     m_NativeParser.SetNextHandler(this);
 
     m_NativeParser.CreateClassBrowser();
@@ -1215,13 +1251,6 @@ void CodeCompletion::OnWorkspaceChanged(CodeBlocksEvent& event)
         if (curProject)
             m_NativeParser.AddOrChangeParser(curProject);
 
-        EditorManager* edMan = Manager::Get()->GetEditorManager();
-        if (edMan)
-        {
-            EditorBase* editor = edMan->GetActiveEditor();
-            if (editor)
-                m_NativeParser.OnEditorActivated(editor);
-        }
         // Update the Function toolbar
         ParseFunctionsAndFillToolbar();
 
@@ -1327,50 +1356,80 @@ void CodeCompletion::OnReparseActiveEditor(CodeBlocksEvent& event)
 // compare method for the sort algorithm for our FunctionScope struct
 bool LessFunctionScope(const CodeCompletion::FunctionScope& fs1, const CodeCompletion::FunctionScope& fs2)
 {
-    if (fs1.Name == fs2.Name)
+	int result = wxStricmp(fs1.Scope, fs2.Scope);
+	if (result == 0)
     {
-        return fs1.StartLine < fs2.StartLine;
+		result = wxStricmp(fs1.Name, fs2.Name);
+		if (result == 0)
+		{
+			result = fs1.StartLine - fs2.StartLine;
+		}
     }
-    else
-    {
-        return fs1.Name < fs2.Name;
-    }
+
+    return result < 0;
 }
 
+bool EqualFunctionScope(const CodeCompletion::FunctionScope& fs1, const CodeCompletion::FunctionScope& fs2)
+{
+    int result = wxStricmp(fs1.Scope, fs2.Scope);
+    if (result == 0)
+    {
+        result = wxStricmp(fs1.Name, fs2.Name);
+    }
+
+    return result == 0;
+}
+
+bool LessNameSpace(const NameSpace& ns1, const NameSpace& ns2)
+{
+	return ns1.Name < ns2.Name;
+}
+
+bool EqualNameSpace(const NameSpace& ns1, const NameSpace& ns2)
+{
+	return ns1.Name == ns2.Name;
+}
 
 // help method in finding the namespace position in the vector for the namespace containing the current line
 int CodeCompletion::NameSpacePosition() const
 {
-    int retValue = -1; // -1 : not found
-    for(unsigned int idxNs = 0; idxNs < m_NameSpaces.size(); ++idxNs)
+    int retValue = wxNOT_FOUND;
+    int startLine = wxNOT_FOUND;
+    for (unsigned int idxNs = 0; idxNs < m_NameSpaces.size(); ++idxNs)
     {
-            const NameSpace Ns = m_NameSpaces[idxNs];
-            if (Ns.StartLine <= m_CurrentLine && Ns.EndLine >= m_CurrentLine)
-            {    // got one, maybe there might be a btter fitting namespace (embedded namespaces)
-                // so keep on looking
-                retValue = static_cast<int>(idxNs);
-            }
-            else if (Ns.StartLine > m_CurrentLine)
-            {    // past the curent line, stop searching
-            }
-    } // end for : idx : idxNs
+		const NameSpace& Ns = m_NameSpaces[idxNs];
+		if (m_CurrentLine >= Ns.StartLine && m_CurrentLine <= Ns.EndLine && Ns.StartLine > startLine)
+		{
+		    // got one, maybe there might be a btter fitting namespace (embedded namespaces)
+			// so keep on looking
+			retValue = static_cast<int>(idxNs);
+			startLine = Ns.StartLine;
+		}
+    }
+
     return retValue;
 }
 
 // help method in finding the function position in the vector for the function containing the current line
-int CodeCompletion::FunctionPosition() const
+void CodeCompletion::FunctionPosition(int &scopeItem, int &functionItem) const
 {
-    int retValue = -1; // -1 : not found
-    for (unsigned int idxFn = 0; idxFn < m_FunctionsScope.size(); ++idxFn)
+    scopeItem = wxNOT_FOUND;
+    functionItem = wxNOT_FOUND;
+
+    for (unsigned int idxSc = 0; idxSc < m_ScopeMarks.size(); ++idxSc)
     {
-        const FunctionScope fs = m_FunctionsScope[idxFn];
-        if (fs.StartLine <= m_CurrentLine && fs.EndLine >= m_CurrentLine)
-        {    // got it :)
-            retValue = static_cast<int>(idxFn);
-            break;
-        }
+		unsigned int start = m_ScopeMarks[idxSc];
+		unsigned int end = (idxSc + 1 < m_ScopeMarks.size()) ? m_ScopeMarks[idxSc + 1] : m_FunctionsScope.size();
+		for (int idxFn = 0; start + idxFn < end; ++idxFn)
+		{
+			const FunctionScope fs = m_FunctionsScope[start + idxFn];
+			if (m_CurrentLine >= fs.StartLine && m_CurrentLine <= fs.EndLine)
+			{
+				scopeItem = idxSc;
+				functionItem = idxFn;
+			}
+		}
     }
-    return retValue;
 }
 
 void CodeCompletion::GotoFunctionPrevNext(bool next /* = false */)
@@ -1383,7 +1442,7 @@ void CodeCompletion::GotoFunctionPrevNext(bool next /* = false */)
     int current_line = ed->GetControl()->GetCurrentLine();
 
     // search previous/next function from current line, default: previous
-    int line = -1;  // -1 : not found
+    int line = wxNOT_FOUND;
     if (m_FunctionsScope.size())
     {
         unsigned int best_func = 0;
@@ -1424,7 +1483,7 @@ void CodeCompletion::GotoFunctionPrevNext(bool next /* = false */)
         { line = m_FunctionsScope[best_func].StartLine; }
     }
 
-    if (line != -1)
+    if (line != wxNOT_FOUND)
     {
         ed->GotoLine(line);
         ed->SetFocus();
@@ -1463,65 +1522,129 @@ void CodeCompletion::ParseFunctionsAndFillToolbar(bool force)
             return;
         TokenIdxSet result;
         TokensTree* tmptree = parser->GetTokens();
-        parser->FindTokensInFile(filename, result, tkFunction | tkConstructor | tkDestructor);
+        parser->FindTokensInFile(filename, result, tkAnyFunction | tkEnum | tkClass | tkNamespace);
         for (TokenIdxSet::iterator it = result.begin(); it != result.end(); ++it)
         {
+            unsigned int fileIdx = parser->GetTokens()->GetFileIndex(filename);
             const Token* token = tmptree->at(*it);
             if (token && token->m_ImplLine != 0)
             {
-                FunctionScope func;
-                func.StartLine = token->m_ImplLine - 1;
-                func.EndLine = token->m_ImplLineEnd - 1;
-                func.Scope = token->GetNamespace();
-                wxString result = token->m_Name;
-                result << token->m_Args;
-                if (!token->m_Type.IsEmpty())
-                    result << _T(" : ") << token->m_Type;
-                func.Name = result;
-                funcdata->m_FunctionsScope.push_back(func);
+                FunctionScope fs;
+                fs.StartLine = token->m_ImplLine - 1;
+                fs.EndLine = token->m_ImplLineEnd - 1;
+                if (token->m_TokenKind & tkAnyFunction && fileIdx == token->m_ImplFileIdx)
+                {
+					fs.Scope = token->GetNamespace();
+                    if (fs.Scope.IsEmpty())
+                        fs.Scope = _T("::");
+					wxString result = token->m_Name;
+					result << token->m_Args;
+					if (!token->m_Type.IsEmpty())
+						result << _T(" : ") << token->m_Type;
+					fs.Name = result;
+					funcdata->m_FunctionsScope.push_back(fs);
+                }
+				else if (token->m_TokenKind & (tkEnum | tkClass | tkNamespace))
+				{
+					fs.Scope = token->GetNamespace() + token->m_Name + _T("::");
+					funcdata->m_FunctionsScope.push_back(fs);
+				}
             }
-            else if (token && token->m_TokenKind == tkNamespace)
-            {
-                NameSpace Ns;
-                Ns.StartLine = token->m_ImplLine - 1;
-                Ns.EndLine = token->m_ImplLineEnd - 1;
-                Ns.Name = token->m_Name;
-                funcdata->m_NameSpaces.push_back(Ns);
-            }
-        }
-        // sort the vector
-        sort(funcdata->m_FunctionsScope.begin(), funcdata->m_FunctionsScope.end(), LessFunctionScope);
-        m_ToolbarChanged = true;
+		}
+
+		FunctionsScopeVec& functionsScopes = funcdata->m_FunctionsScope;
+		NameSpaceVec& nameSpaces = funcdata->m_NameSpaces;
+
+		parser->ParseBufferForNamespaces(ed->GetControl()->GetText(), nameSpaces);
+		sort(nameSpaces.begin(), nameSpaces.end(), LessNameSpace);
+
+		copy(nameSpaces.begin(), nameSpaces.end(), back_inserter(functionsScopes));
+        sort(functionsScopes.begin(), functionsScopes.end(), LessFunctionScope);
+
+        // remove consecutive duplicates
+        FunctionsScopeVec::iterator it;
+        it = unique(functionsScopes.begin(), functionsScopes.end(), EqualFunctionScope);
+        functionsScopes.resize(it - functionsScopes.begin());
+
+		/*
+		Manager::Get()->GetLogManager()->DebugLog(F(_T("Found %d namespace locations"), nameSpaces.size()));
+		for (unsigned int i = 0; i < nameSpaces.size(); ++i)
+			Manager::Get()->GetLogManager()->DebugLog(F(_T("\t%s (%d:%d)"),
+				nameSpaces[i].Name.wx_str(), nameSpaces[i].StartLine, nameSpaces[i].EndLine));
+		*/
+
+       m_ToolbarChanged = true;
     }
 
     // *** Part 2: Fill the toolbar ***
     m_FunctionsScope = funcdata->m_FunctionsScope;
     m_NameSpaces     = funcdata->m_NameSpaces;
 
+	m_ScopeMarks.clear();
+	unsigned int fsSize = m_FunctionsScope.size();
+	if (!m_FunctionsScope.empty())
+	{
+		m_ScopeMarks.push_back(0);
+		if (m_Scope)
+		{
+            wxString lastScope = m_FunctionsScope[0].Scope;
+            for (unsigned int idx = 1; idx < fsSize; ++idx)
+            {
+                const wxString& currentScope = m_FunctionsScope[idx].Scope;
+                if (lastScope != currentScope)
+                {
+                    m_ScopeMarks.push_back(idx);
+                    lastScope = currentScope;
+                }
+            }
+		}
+	}
+
+    /*
+	Manager::Get()->GetLogManager()->DebugLog(F(_T("Parsed %d functionscope items"), m_FunctionsScope.size()));
+	for (unsigned int i = 0; i < m_FunctionsScope.size(); ++i)
+		Manager::Get()->GetLogManager()->DebugLog(F(_T("\t%s%s (%d:%d)"),
+			m_FunctionsScope[i].Scope.wx_str(), m_FunctionsScope[i].Name.wx_str(),
+			m_FunctionsScope[i].StartLine, m_FunctionsScope[i].EndLine));
+    */
+
     // Does the toolbar need a refresh?
-    if (m_ToolbarChanged || m_LastFile!=filename)
+    if (m_ToolbarChanged || m_LastFile != filename)
     {
         // Update the last editor and changed flag...
         m_ToolbarChanged = false;
         m_LastFile = filename;
+
         // ...and refresh the toolbars.
         m_Function->Clear();
-        m_Scope->Clear();
 
-        // add to the choice controls
-        for(unsigned int idxFn = 0; idxFn < m_FunctionsScope.size(); ++idxFn)
-        {
-            const FunctionScope fs = m_FunctionsScope[idxFn];
-            m_Function->Append(fs.Name);
-            m_Scope->Append(fs.Scope);
-        } // end for : idx : idxFn
-        // add namespaces to the scope
-        m_StartIdxNameSpaceInScope = m_FunctionsScope.size();
-        for(unsigned int idxNs = 0; idxNs < m_NameSpaces.size(); ++idxNs)
-        {
-            const NameSpace Ns = m_NameSpaces[idxNs];
-            m_Scope->Append(Ns.Name);
-        } // end for : idx : idxNs
+		if (m_Scope)
+		{
+		    m_Scope->Freeze();
+            m_Scope->Clear();
+
+            // add to the choice controls
+            for (unsigned int idxSc = 0; idxSc < m_ScopeMarks.size(); ++idxSc)
+            {
+                int idxFn = m_ScopeMarks[idxSc];
+                const FunctionScope& fs = m_FunctionsScope[idxFn];
+                m_Scope->Append(fs.Scope);
+            }
+
+            m_Scope->Thaw();
+		}
+		else
+		{
+            m_Function->Freeze();
+
+            for (unsigned int idxFn = 0; idxFn < m_FunctionsScope.size(); ++idxFn)
+            {
+                const FunctionScope& fs = m_FunctionsScope[idxFn];
+                m_Function->Append(fs.Scope + fs.Name);
+            }
+
+            m_Function->Thaw();
+		}
     }
 
     // Finally, find the current function and update
@@ -1530,24 +1653,55 @@ void CodeCompletion::ParseFunctionsAndFillToolbar(bool force)
 
 void CodeCompletion::FindFunctionAndUpdate(int currentLine)
 {
-    // Find the current function and update
     m_CurrentLine = currentLine;
-    int sel = FunctionPosition();
-    if ( (sel != -1) && (sel != m_Function->GetSelection()) )
+
+    int selSc, selFn;
+    FunctionPosition(selSc, selFn);
+
+	if (m_Scope)
+	{
+        if (selSc != wxNOT_FOUND && selSc != m_Scope->GetSelection())
+        {
+            m_Scope->SetSelection(selSc);
+            UpdateFunctions(selSc);
+        }
+        else if (selSc == wxNOT_FOUND)
+        {
+            m_Scope->SetSelection(wxNOT_FOUND);
+        }
+	}
+
+    if (selFn != wxNOT_FOUND && selFn != m_Function->GetSelection())
     {
-        m_Function->SetSelection(sel);
-        m_Scope->SetSelection(sel);
+        m_Function->SetSelection(selFn);
     }
-    else if (sel == -1)
+    else if (selFn == wxNOT_FOUND)
     {
         m_Function->SetSelection(wxNOT_FOUND);
-        // TODO (Morten#5#): Set scope correctly
+
+        wxChoice* choice = (m_Scope) ? m_Scope : m_Function;
+
         int NsSel = NameSpacePosition();
-        if (NsSel != -1)
-            m_Scope->SetSelection(NsSel + m_StartIdxNameSpaceInScope);
+        if (NsSel != wxNOT_FOUND)
+            choice->SetStringSelection(m_NameSpaces[NsSel].Name);
         else
-            m_Scope->SetSelection(wxNOT_FOUND);
+            choice->SetSelection(wxNOT_FOUND);
     }
+
+}
+
+void CodeCompletion::UpdateFunctions(unsigned int scopeItem) {
+	m_Function->Freeze();
+	m_Function->Clear();
+
+	unsigned int idxEnd = (scopeItem + 1 < m_ScopeMarks.size()) ? m_ScopeMarks[scopeItem + 1] : m_FunctionsScope.size();
+	for (unsigned int idxFn = m_ScopeMarks[scopeItem]; idxFn < idxEnd; ++idxFn)
+	{
+		const wxString &name = m_FunctionsScope[idxFn].Name;
+		m_Function->Append(name);
+	}
+
+	m_Function->Thaw();
 }
 
 void CodeCompletion::OnEditorOpen(CodeBlocksEvent& event)
@@ -1609,8 +1763,10 @@ void CodeCompletion::OnEditorClosed(CodeBlocksEvent& event)
         EnableToolbarTools(false);
 
         // clear toolbar when closing last editor
-        m_Scope->Clear();
-        m_Function->Clear();
+        if (m_Scope)
+            m_Scope->Clear();
+        if (m_Function)
+            m_Function->Clear();
         cbEditor* ed = edm->GetBuiltinEditor(event.GetEditor());
         wxString filename(wxEmptyString);
         if (ed)
@@ -1632,6 +1788,15 @@ void CodeCompletion::OnStartParsingFunctions(wxTimerEvent& event)
     {
         ParseFunctionsAndFillToolbar();
     }
+}
+
+void CodeCompletion::OnFindFunctionAndUpdate(wxTimerEvent& event)
+{
+    cbEditor* ed = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
+    if (!ed)
+        return;
+
+    FindFunctionAndUpdate(ed->GetControl()->GetCurrentLine());
 }
 
 void CodeCompletion::OnValueTooltip(CodeBlocksEvent& event)
@@ -1889,7 +2054,7 @@ void CodeCompletion::OnGotoDeclaration(wxCommandEvent& event)
         if (selections.GetCount() > 1)
         {
             int sel = wxGetSingleChoiceIndex(_("Please make a selection:"), _("Multiple matches"), selections);
-            if (sel == -1)
+            if (sel == wxNOT_FOUND)
                 return;
             token = parser->GetTokens()->at(int_selections[sel]);
         }
@@ -2279,30 +2444,46 @@ void CodeCompletion::EditorEventHook(cbEditor* editor, wxScintillaEvent& event)
         if (parser && m_NeedReparse)
         {
             m_TimerRealtimeParsing.Stop();
-            m_TimerRealtimeParsing.Start(500, wxTIMER_ONE_SHOT);
+            m_TimerRealtimeParsing.Start(REALTIME_PARSING_DELAY, wxTIMER_ONE_SHOT);
             m_NeedReparse = false;
         }
-        else
-            FindFunctionAndUpdate(control->GetCurrentLine());
+
+        if (event.GetEventType() == wxEVT_SCI_UPDATEUI)
+        {
+            m_TimerToolbar.Stop();
+            m_TimerToolbar.Start(EDITOR_AND_LINE_INTERVAL, wxTIMER_ONE_SHOT);
+        }
     }
 
     // allow others to handle this event
     event.Skip();
 }
 
+void CodeCompletion::OnScope(wxCommandEvent&)
+{
+	int sel = m_Scope->GetSelection();
+	if (sel != wxNOT_FOUND && sel < static_cast<int>(m_ScopeMarks.size()))
+	{
+		UpdateFunctions(sel);
+	}
+}
+
 void CodeCompletion::OnFunction(wxCommandEvent& /*event*/)
 {
-    int sel = m_Function->GetSelection();
-    if (sel != -1 && sel < static_cast<int>(m_FunctionsScope.size()))
+    int selSc = (m_Scope) ? m_Scope->GetSelection() : 0;
+    if (selSc != wxNOT_FOUND && selSc < static_cast<int>(m_ScopeMarks.size()))
     {
-        int Line = m_FunctionsScope[sel].StartLine;
-        EditorManager* edMan = Manager::Get()->GetEditorManager();
-        cbEditor* ed = edMan->GetBuiltinActiveEditor();
-        if (!ed)
-            return;
-        ed->GotoLine(Line);
-        m_Scope->SetSelection(sel);
-        ed->SetFocus();
+		int idxFn = m_ScopeMarks[selSc] + m_Function->GetSelection();
+		if (idxFn != wxNOT_FOUND && idxFn < static_cast<int>(m_FunctionsScope.size()))
+		{
+			int Line = m_FunctionsScope[idxFn].StartLine;
+			EditorManager* edMan = Manager::Get()->GetEditorManager();
+			cbEditor* ed = edMan->GetBuiltinActiveEditor();
+			if (!ed)
+				return;
+			ed->GotoLine(Line);
+			ed->SetFocus();
+		}
     }
 }
 
@@ -2323,8 +2504,10 @@ void CodeCompletion::OnParserEnd(wxCommandEvent& event)
 
 void CodeCompletion::EnableToolbarTools(bool enable)
 {
-//    m_Scope->Enalbe(enable);
-    m_Function->Enable(enable);
+    if (m_Scope)
+        m_Scope->Enable(enable);
+    if (m_Function)
+        m_Function->Enable(enable);
 }
 
 void CodeCompletion::OnRealtimeParsing(wxTimerEvent& event)

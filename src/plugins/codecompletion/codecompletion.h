@@ -28,21 +28,17 @@ class CodeCompletion : public cbCodeCompletionPlugin
     public:
 	struct FunctionScope
 	{
-		int StartLine;
-		int EndLine;
-		wxString Name;
-		wxString Scope;
-	};
+		FunctionScope() {}
+		FunctionScope(const NameSpace& ns): StartLine(ns.StartLine), EndLine(ns.EndLine), Scope(ns.Name) {}
 
-	struct NameSpace
-	{
 		int StartLine;
 		int EndLine;
 		wxString Name;
+		wxString Scope;	// class or namespace
 	};
 
 	typedef std::vector<FunctionScope> FunctionsScopeVec;
-	typedef std::vector<NameSpace> NameSpaceVec;
+	typedef std::vector<int> ScopeMarksVec;
 
 	struct FunctionsScopePerFile
 	{
@@ -70,11 +66,11 @@ class CodeCompletion : public cbCodeCompletionPlugin
         virtual void ShowCallTip();
 
         virtual void CodeCompleteIncludes();
-
         void EditorEventHook(cbEditor* editor, wxScintillaEvent& event);
-
 		void RereadOptions(); // called by the configuration panel
+
     private:
+        void UpdateToolBar();
 
         void LoadTokenReplacements();
         void SaveTokenReplacements();
@@ -111,14 +107,17 @@ class CodeCompletion : public cbCodeCompletionPlugin
         void DoInsertCodeCompleteToken(wxString tokName);
         int DoClassMethodDeclImpl();
         int DoAllMethodsImpl();
-        int FunctionPosition() const;
+        void FunctionPosition(int &scopeItem, int &functionItem) const;
         void GotoFunctionPrevNext(bool next = false);
         int NameSpacePosition() const;
         void ParseActiveProjects();
         void OnStartParsingFunctions(wxTimerEvent& event);
+        void OnFindFunctionAndUpdate(wxTimerEvent& event);
+        void OnScope(wxCommandEvent& event);
         void OnFunction(wxCommandEvent& event);
         void ParseFunctionsAndFillToolbar(bool force = false);
         void FindFunctionAndUpdate(int currentLine);
+        void UpdateFunctions(unsigned int scopeItem);
         void EnableToolbarTools(bool enable = true);
 		void OnRealtimeParsing(wxTimerEvent& event);
 
@@ -135,19 +134,21 @@ class CodeCompletion : public cbCodeCompletionPlugin
         wxTimer                            m_TimerCodeCompletion;
         wxTimer                            m_TimerFunctionsParsing;
         wxTimer                            m_TimerRealtimeParsing;
+        wxTimer                            m_TimerToolbar;
         cbEditor*                          m_pCodeCompletionLastEditor;
         int                                m_ActiveCalltipsNest;
 
         bool                               m_IsAutoPopup;
 
+        wxToolBar*                         m_pToolBar;
         wxChoice*                          m_Function;
         wxChoice*                          m_Scope;
         FunctionsScopeVec                  m_FunctionsScope;
         NameSpaceVec                       m_NameSpaces;
+        ScopeMarksVec					   m_ScopeMarks;
         FunctionsScopeMap                  m_AllFunctionsScopes;
         bool                               m_ToolbarChanged;
 
-        int                                m_StartIdxNameSpaceInScope;
         int                                m_CurrentLine;
         map<wxString, int>                 m_SearchItem;
         wxString                           m_LastFile;

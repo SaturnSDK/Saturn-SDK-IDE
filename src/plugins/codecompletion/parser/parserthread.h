@@ -16,11 +16,21 @@
 #include <filemanager.h>
 
 #include <queue>
+#include <vector>
 
 //extern int THREAD_START;
 //extern int THREAD_END;
 extern int NEW_TOKEN;
 extern int FILE_NEEDS_PARSING;
+
+struct NameSpace
+{
+	wxString Name;
+	int StartLine;
+	int EndLine;
+};
+
+typedef std::vector<NameSpace> NameSpaceVec;
 
 class Parser;
 static wxCriticalSection s_mutexListProtection;
@@ -63,6 +73,7 @@ struct ParserThreadOptions
 
     LoaderBase* loader; // if not NULL, load through filemanager (using threads)
 };
+
 /** @brief A parser thread
   *
   * This class represents a thread for the Code Completion plugin, the main task is doing the syntax
@@ -95,6 +106,8 @@ class ParserThread : public cbThreadedTask
 
         /** Do the main job here */
         bool Parse();
+
+        bool ParseBufferForNamespaces(const wxString& buffer, NameSpaceVec& result);
 
         /** Get the context "using namespace XXX" directive
           * @param buffer  wxString to be parsed.

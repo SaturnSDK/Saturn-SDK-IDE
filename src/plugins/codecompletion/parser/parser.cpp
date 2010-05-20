@@ -635,6 +635,20 @@ bool Parser::ParseBufferForFunctions(const wxString& buffer)
     return thread.Parse();
 }
 
+bool Parser::ParseBufferForNamespaces(const wxString& buffer, NameSpaceVec& result)
+{
+	ParserThreadOptions opts;
+	opts.useBuffer = true;
+
+	ParserThread thread(this,
+						wxEmptyString,
+						true,
+						opts,
+						m_pTempTokensTree);
+
+	return thread.ParseBufferForNamespaces(buffer, result);
+}
+
 bool Parser::ParseBufferForUsingNamespace(const wxString& buffer, wxArrayString& result)
 {
     ParserThreadOptions opts;

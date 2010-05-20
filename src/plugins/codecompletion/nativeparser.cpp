@@ -739,7 +739,7 @@ void NativeParser::RemoveParser(cbProject* project, bool useCache)
         }
     }
 
-    m_pParser = NULL;
+    m_pParser = GetParserByProject(Manager::Get()->GetProjectManager()->GetActiveProject());
     SetClassBrowserParser();
     if (m_pClassBrowser)
         m_pClassBrowser->UpdateView();
