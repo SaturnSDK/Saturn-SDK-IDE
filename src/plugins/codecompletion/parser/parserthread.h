@@ -322,8 +322,8 @@ class ParserThread : public cbThreadedTask
         /**  a wxString holding the parsing buffer*/
         wxString             m_Buffer;
 
-        /** a pointer indicator*/
-        bool m_IsPointer;
+        /** a pointer indicator or a references*/
+        wxString m_PointerOrRef;
 
         /** holds current template agrument(s) when a template occurs */
         wxString m_TemplateArgument;

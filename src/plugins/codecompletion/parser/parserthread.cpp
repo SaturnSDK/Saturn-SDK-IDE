@@ -124,7 +124,6 @@ ParserThread::ParserThread(Parser* parent,
     m_ParsingTypedef(false),
     m_IsBuffer(parserThreadOptions.useBuffer),
     m_Buffer(bufferOrFilename),
-    m_IsPointer(false),
     m_TemplateArgument(wxEmptyString)
 {
     m_Tokenizer.SetTokenizerOption(parserThreadOptions.wantPreprocessor);
@@ -525,7 +524,7 @@ void ParserThread::DoParse()
             if (token == ParserConsts::semicolon)
             {
                 m_Str.Clear();
-                m_IsPointer = false;
+                m_PointerOrRef.Clear();
                 // Notice: clears the queue "m_EncounteredTypeNamespaces"
                 while (!m_EncounteredTypeNamespaces.empty())
                     m_EncounteredTypeNamespaces.pop();
@@ -929,7 +928,7 @@ void ParserThread::DoParse()
                 }
                 else if (token == _T("*"))
                 {
-                    m_IsPointer = true;
+                    m_PointerOrRef << token;
                 }
                 else
                 {
@@ -1154,10 +1153,10 @@ Token* ParserThread::DoAddToken(TokenKind kind,
     if (!(kind & (tkConstructor | tkDestructor)))
     {
         wxString tokenType       = m_Str;
-        if (m_IsPointer)
+        if (!m_PointerOrRef.IsEmpty())
         {
-            m_IsPointer = false;
-            tokenType << _T("*");
+            tokenType << m_PointerOrRef;
+            m_PointerOrRef.Clear();
         }
         wxString actualTokenType = GetActualTokenType();
         if (actualTokenType.Find(_T(' ')) == wxNOT_FOUND)
@@ -1960,7 +1959,7 @@ void ParserThread::HandleTypedef()
         }
         else if (token == _T("*"))
         {
-            m_IsPointer = false;
+            m_PointerOrRef << token;
             continue;
         }
         else if (peek == ParserConsts::comma)
@@ -2112,12 +2111,12 @@ void ParserThread::ReadVarNames()
             continue;
         else if (token==ParserConsts::semicolon) // end of variable name(s)
         {
-            m_IsPointer = false;
+            m_PointerOrRef.Clear();
             break;
         }
         else if (token == _T("*"))               // variable is a pointer
         {
-            m_IsPointer = true;
+            m_PointerOrRef << token;
         }
         else if (   wxIsalpha(token.GetChar(0))
                  || (token.GetChar(0) == '_') )
@@ -2153,12 +2152,12 @@ void ParserThread::ReadClsNames(wxString& ancestor)
         else if (token==ParserConsts::semicolon) // end of class name(s)
         {
             m_Tokenizer.UngetToken();
-            m_IsPointer = false;
+            m_PointerOrRef.Clear();
             break;
         }
         else if (token == _T("*"))               // variable is a pointer
         {
-            m_IsPointer = true;
+            m_PointerOrRef << token;
         }
         else if (   wxIsalpha(token.GetChar(0))
                  || (token.GetChar(0) == '_') )
