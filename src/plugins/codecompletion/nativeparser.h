@@ -61,8 +61,9 @@ class NativeParser : public wxEvtHandler
         cbProject* GetProjectByFilename(const wxString& filename);
         Parser* GetParserByFilename(const wxString& filename);
 
-        void AddOrChangeParser(cbProject* project, bool useCache = true);
-        void RemoveParser(cbProject* project, bool useCache = true);
+        // If return != m_pParser, the mean is waiting...for parser task
+        const Parser* AddOrChangeParser(cbProject* project, bool useCache = true);
+        bool RemoveParser(cbProject* project, bool useCache = true);
         void ClearParsers();
         void RereadParserOptions();
         void AddFileToParser(cbProject* project, const wxString& filename);

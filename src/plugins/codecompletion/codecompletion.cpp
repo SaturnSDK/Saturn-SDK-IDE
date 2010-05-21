@@ -1249,7 +1249,10 @@ void CodeCompletion::OnWorkspaceChanged(CodeBlocksEvent& event)
     {
         cbProject* curProject = Manager::Get()->GetProjectManager()->GetActiveProject();
         if (curProject)
-            m_NativeParser.AddOrChangeParser(curProject);
+        {
+            if (m_NativeParser.AddOrChangeParser(curProject) != m_NativeParser.GetParserPtr())
+                return;
+        }
 
         // Update the Function toolbar
         ParseFunctionsAndFillToolbar();
@@ -1272,7 +1275,8 @@ void CodeCompletion::OnProjectActivated(CodeBlocksEvent& event)
 
     if (!ProjectManager::IsBusy() && IsAttached() && m_InitDone)
     {
-        m_NativeParser.AddOrChangeParser(event.GetProject());
+        if (m_NativeParser.AddOrChangeParser(event.GetProject()) != m_NativeParser.GetParserPtr())
+            return;
         if (m_NativeParser.GetParserPtr() && m_NativeParser.GetParserPtr()->ClassBrowserOptions().displayFilter == bdfProject)
             m_NativeParser.UpdateClassBrowser();
     }
@@ -2494,12 +2498,14 @@ void CodeCompletion::OnParserStart(wxCommandEvent& event)
 
 void CodeCompletion::OnParserEnd(wxCommandEvent& event)
 {
-    EnableToolbarTools(true);
-
     if (ProjectManager::IsBusy())
         return;
 
-    ParseFunctionsAndFillToolbar(true);
+    if (Manager::Get()->GetEditorManager()->GetActiveEditor())
+    {
+        EnableToolbarTools(true);
+        ParseFunctionsAndFillToolbar(true);
+    }
 }
 
 void CodeCompletion::EnableToolbarTools(bool enable)

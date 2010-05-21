@@ -242,9 +242,10 @@ void NativeParser::RereadParserOptions()
             ClearParsers();
             cbProject* curProject = Manager::Get()->GetProjectManager()->GetActiveProject();
             if (curProject)
-                AddOrChangeParser(curProject);
-            if (m_pClassBrowser)
-                m_pClassBrowser->SetParser(m_pParser);
+            {
+                if (AddOrChangeParser(curProject) != m_pParser)
+                    return;
+            }
         }
     }
 
@@ -636,7 +637,7 @@ wxArrayString& NativeParser::GetProjectSearchDirs(cbProject* project)
     return it->second;
 }
 
-void NativeParser::AddOrChangeParser(cbProject* project, bool useCache)
+const Parser* NativeParser::AddOrChangeParser(cbProject* project, bool useCache)
 {
     Parser* parser = GetParserByProject(project);
     if (parser)
@@ -645,13 +646,13 @@ void NativeParser::AddOrChangeParser(cbProject* project, bool useCache)
             SwitchParser(project, parser);
         else
             m_LastParser = std::make_pair(project, parser); // Wait for current parsing END
-        return;
+        return parser;
     }
 
     for (ParserList::const_iterator it = m_ParserWaitList.begin(); it != m_ParserWaitList.end(); ++it)
     {
         if (it->first == project)
-            return;
+            return NULL;
     }
 
     for (;;)
@@ -667,7 +668,7 @@ void NativeParser::AddOrChangeParser(cbProject* project, bool useCache)
             // Ignore current switch
             m_LastParser.second = NULL;
 
-            Parser* parser = new Parser(this);
+            parser = new Parser(this);
             if (project)
             {
                 if (m_ParserWaitList.empty())
@@ -687,9 +688,9 @@ void NativeParser::AddOrChangeParser(cbProject* project, bool useCache)
                 if (m_ParserWaitList.empty())
                 {
                     m_pParser = parser;
-                    AddCompilerPredefinedMacros(NULL);
                     SetClassBrowserParser();
                     m_ParserList.push_back(std::make_pair(project, parser));
+                    AddCompilerPredefinedMacros(NULL);
                 }
                 else
                 {
@@ -713,40 +714,60 @@ void NativeParser::AddOrChangeParser(cbProject* project, bool useCache)
             }
         }
     }
+
+    return parser;
 }
 
-void NativeParser::RemoveParser(cbProject* project, bool useCache)
+bool NativeParser::RemoveParser(cbProject* project, bool useCache)
 {
     Manager::Get()->GetLogManager()->DebugLog(F(_T("Removing project %s from parsed projects"),
                                                 project ? project->GetTitle().wx_str() : _T("*NONE*")));
 
-    for (ParserList::iterator it = m_ParserList.begin(); it != m_ParserList.end(); ++it)
+    bool removed = false;
+    if (!removed)
     {
-        if (it->first == project)
+        for (ParserList::iterator it = m_ParserList.begin(); it != m_ParserList.end(); ++it)
         {
-            delete it->second;
-            m_ParserList.erase(it);
-            break;
-        }
-    }
-    for (ParserList::iterator it = m_ParserWaitList.begin(); it != m_ParserWaitList.end(); ++it)
-    {
-        if (it->first == project)
-        {
-            delete it->second;
-            m_ParserWaitList.erase(it);
-            break;
+            if (it->first == project)
+            {
+                delete it->second;
+                m_ParserList.erase(it);
+                removed = true;
+                break;
+            }
         }
     }
 
-    m_pParser = GetParserByProject(Manager::Get()->GetProjectManager()->GetActiveProject());
-    SetClassBrowserParser();
-    if (m_pClassBrowser)
-        m_pClassBrowser->UpdateView();
+    if (!removed)
+    {
+        for (ParserList::iterator it = m_ParserWaitList.begin(); it != m_ParserWaitList.end(); ++it)
+        {
+            if (it->first == project)
+            {
+                delete it->second;
+                m_ParserWaitList.erase(it);
+                removed = true;
+                break;
+            }
+        }
+    }
+
+    if (removed)
+    {
+        m_pParser = GetParserByProject(Manager::Get()->GetProjectManager()->GetActiveProject());
+        SetClassBrowserParser();
+        if (m_pClassBrowser)
+            m_pClassBrowser->UpdateView();
+    }
+
+    return removed;
 }
 
 void NativeParser::SwitchParser(cbProject* project, Parser* parser)
 {
+    if (!parser)
+        return;
+
     Manager::Get()->GetLogManager()->DebugLog(F(_T("Switch to project %s from parsed projects"),
                                                 project ? project->GetTitle().wx_str() : _T("*NONE*")));
     m_pParser = parser;
@@ -1041,7 +1062,7 @@ void NativeParser::DisplayStatus()
 
     cbProject* project = GetProjectByParser(m_pParser);
     long int tim = m_pParser->LastParseTime();
-    Manager::Get()->GetLogManager()->DebugLog(F(_T("Project \"%s\" parsing stage done (%d total parsed files, %d tokens in %d minute(s), %d.%d seconds)."),
+    Manager::Get()->GetLogManager()->DebugLog(F(_T("Project %s parsing stage done (%d total parsed files, %d tokens in %d minute(s), %d.%d seconds)."),
                     project ? project->GetTitle().wx_str() : _T("*NONE*"),
                     m_pParser->GetFilesCount(),
                     m_pParser->GetTokens()->realsize(),
@@ -2936,7 +2957,10 @@ void NativeParser::OnParserEnd(wxCommandEvent& event)
     {
         if (!m_ParserWaitList.empty())
         {
-            m_ParserList.push_back(std::make_pair(m_ParserWaitList.front().first, m_ParserWaitList.front().second));
+            cbProject* project = m_ParserWaitList.front().first;
+            m_ParserList.push_back(std::make_pair(project, m_ParserWaitList.front().second));
+            Manager::Get()->GetAppFrame()->SetStatusText(F(_("Project %s parsing stage done!"), project ?
+                                                           project->GetTitle().wx_str() : _T("*NONE*")));
             m_ParserWaitList.pop_front();
             Manager::Get()->GetLogManager()->DebugLog(F(_T("Waiting task: %d"), m_ParserWaitList.size()));
         }
@@ -2974,10 +2998,10 @@ void NativeParser::OnParserEnd(wxCommandEvent& event)
         else // for *NONE* project, don't call ReparseProject function
         {
             m_pParser = m_ParserWaitList.front().second;
-            AddCompilerPredefinedMacros(NULL);
             SetClassBrowserParser();
             m_ParserList.push_back(std::make_pair(m_ParserWaitList.front().first, m_ParserWaitList.front().second));
             m_ParserWaitList.pop_front();
+            AddCompilerPredefinedMacros(NULL);
             Manager::Get()->GetLogManager()->DebugLog(F(_T("Waiting task: %d"), m_ParserWaitList.size()));
         }
     }
@@ -3023,10 +3047,9 @@ void NativeParser::OnEditorActivated(EditorBase* editor)
     else
         project = GetProjectByFilename(filename);
 
-    if (project != lastProject || !project)
+    if (project != lastProject || m_StandaloneFile.empty())
     {
-        AddOrChangeParser(project);
-        if (m_pParser && GetProjectByParser(m_pParser) != project)
+        if (AddOrChangeParser(project) != m_pParser)
             return;
         lastProject = project;
     }
