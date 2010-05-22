@@ -57,7 +57,6 @@ Parser::Parser(wxEvtHandler* parent)
     : m_Options(),
     m_BrowserOptions(),
     m_pParent(parent),
-    m_pImageList(0L),
     m_UsingCache(false),
     m_Pool(this, idPool, 1), // in the meanwhile it'll have to be forced to 1
     m_IsUpFront(false),
@@ -81,93 +80,6 @@ Parser::Parser(wxEvtHandler* parent)
     m_LocalFiles.clear();
     m_GlobalIncludes.clear();
     ReadOptions();
-
-    m_pImageList = new wxImageList(16, 16);
-    wxBitmap bmp;
-    wxString prefix;
-    prefix = ConfigManager::GetDataFolder() + _T("/images/codecompletion/");
-    // bitmaps must be added by order of PARSER_IMG_* consts
-    bmp = cbLoadBitmap(prefix + _T("class_folder.png"), wxBITMAP_TYPE_PNG);
-    m_pImageList->Add(bmp); // PARSER_IMG_CLASS_FOLDER
-    bmp = cbLoadBitmap(prefix + _T("class.png"), wxBITMAP_TYPE_PNG);
-    m_pImageList->Add(bmp); // PARSER_IMG_CLASS
-    bmp = cbLoadBitmap(prefix + _T("class_private.png"), wxBITMAP_TYPE_PNG);
-    m_pImageList->Add(bmp); // PARSER_IMG_CLASS_PRIVATE
-    bmp = cbLoadBitmap(prefix + _T("class_protected.png"), wxBITMAP_TYPE_PNG);
-    m_pImageList->Add(bmp); // PARSER_IMG_CLASS_PROTECTED
-    bmp = cbLoadBitmap(prefix + _T("class_public.png"), wxBITMAP_TYPE_PNG);
-    m_pImageList->Add(bmp); // PARSER_IMG_CLASS_PUBLIC
-    bmp = cbLoadBitmap(prefix + _T("ctor_private.png"), wxBITMAP_TYPE_PNG);
-    m_pImageList->Add(bmp); // PARSER_IMG_CTOR_PRIVATE
-    bmp = cbLoadBitmap(prefix + _T("ctor_protected.png"), wxBITMAP_TYPE_PNG);
-    m_pImageList->Add(bmp); // PARSER_IMG_CTOR_PROTECTED
-    bmp = cbLoadBitmap(prefix + _T("ctor_public.png"), wxBITMAP_TYPE_PNG);
-    m_pImageList->Add(bmp); // PARSER_IMG_CTOR_PUBLIC
-    bmp = cbLoadBitmap(prefix + _T("dtor_private.png"), wxBITMAP_TYPE_PNG);
-    m_pImageList->Add(bmp); // PARSER_IMG_DTOR_PRIVATE
-    bmp = cbLoadBitmap(prefix + _T("dtor_protected.png"), wxBITMAP_TYPE_PNG);
-    m_pImageList->Add(bmp); // PARSER_IMG_DTOR_PROTECTED
-    bmp = cbLoadBitmap(prefix + _T("dtor_public.png"), wxBITMAP_TYPE_PNG);
-    m_pImageList->Add(bmp); // PARSER_IMG_DTOR_PUBLIC
-    bmp = cbLoadBitmap(prefix + _T("method_private.png"), wxBITMAP_TYPE_PNG);
-    m_pImageList->Add(bmp); // PARSER_IMG_FUNC_PRIVATE
-    bmp = cbLoadBitmap(prefix + _T("method_protected.png"), wxBITMAP_TYPE_PNG);
-    m_pImageList->Add(bmp); // PARSER_IMG_FUNC_PRIVATE
-    bmp = cbLoadBitmap(prefix + _T("method_public.png"), wxBITMAP_TYPE_PNG);
-    m_pImageList->Add(bmp); // PARSER_IMG_FUNC_PUBLIC
-    bmp = cbLoadBitmap(prefix + _T("var_private.png"), wxBITMAP_TYPE_PNG);
-    m_pImageList->Add(bmp); // PARSER_IMG_VAR_PRIVATE
-    bmp = cbLoadBitmap(prefix + _T("var_protected.png"), wxBITMAP_TYPE_PNG);
-    m_pImageList->Add(bmp); // PARSER_IMG_VAR_PROTECTED
-    bmp = cbLoadBitmap(prefix + _T("var_public.png"), wxBITMAP_TYPE_PNG);
-    m_pImageList->Add(bmp); // PARSER_IMG_VAR_PUBLIC
-    bmp = cbLoadBitmap(prefix + _T("preproc.png"), wxBITMAP_TYPE_PNG);
-    m_pImageList->Add(bmp); // PARSER_IMG_PREPROCESSOR
-    bmp = cbLoadBitmap(prefix + _T("enum.png"), wxBITMAP_TYPE_PNG);
-    m_pImageList->Add(bmp); // PARSER_IMG_ENUM
-    bmp = cbLoadBitmap(prefix + _T("enum_private.png"), wxBITMAP_TYPE_PNG);
-    m_pImageList->Add(bmp); // PARSER_IMG_ENUM_PRIVATE
-    bmp = cbLoadBitmap(prefix + _T("enum_protected.png"), wxBITMAP_TYPE_PNG);
-    m_pImageList->Add(bmp); // PARSER_IMG_ENUM_PROTECTED
-    bmp = cbLoadBitmap(prefix + _T("enum_public.png"), wxBITMAP_TYPE_PNG);
-    m_pImageList->Add(bmp); // PARSER_IMG_ENUM_PUBLIC
-    bmp = cbLoadBitmap(prefix + _T("enumerator.png"), wxBITMAP_TYPE_PNG);
-    m_pImageList->Add(bmp); // PARSER_IMG_ENUMERATOR
-    bmp = cbLoadBitmap(prefix + _T("namespace.png"), wxBITMAP_TYPE_PNG);
-    m_pImageList->Add(bmp); // PARSER_IMG_NAMESPACE
-    bmp = cbLoadBitmap(prefix + _T("typedef.png"), wxBITMAP_TYPE_PNG);
-    m_pImageList->Add(bmp); // PARSER_IMG_TYPEDEF
-    bmp = cbLoadBitmap(prefix + _T("typedef_private.png"), wxBITMAP_TYPE_PNG);
-    m_pImageList->Add(bmp); // PARSER_IMG_TYPEDEF_PRIVATE
-    bmp = cbLoadBitmap(prefix + _T("typedef_protected.png"), wxBITMAP_TYPE_PNG);
-    m_pImageList->Add(bmp); // PARSER_IMG_TYPEDEF_PROTECTED
-    bmp = cbLoadBitmap(prefix + _T("typedef_public.png"), wxBITMAP_TYPE_PNG);
-    m_pImageList->Add(bmp); // PARSER_IMG_TYPEDEF_PUBLIC
-    bmp = cbLoadBitmap(prefix + _T("symbols_folder.png"), wxBITMAP_TYPE_PNG);
-    m_pImageList->Add(bmp); // PARSER_IMG_SYMBOLS_FOLDER
-    bmp = cbLoadBitmap(prefix + _T("vars_folder.png"), wxBITMAP_TYPE_PNG);
-    m_pImageList->Add(bmp); // PARSER_IMG_VARS_FOLDER
-    bmp = cbLoadBitmap(prefix + _T("funcs_folder.png"), wxBITMAP_TYPE_PNG);
-    m_pImageList->Add(bmp); // PARSER_IMG_FUNCS_FOLDER
-    bmp = cbLoadBitmap(prefix + _T("enums_folder.png"), wxBITMAP_TYPE_PNG);
-    m_pImageList->Add(bmp); // PARSER_IMG_ENUMS_FOLDER
-    bmp = cbLoadBitmap(prefix + _T("preproc_folder.png"), wxBITMAP_TYPE_PNG);
-    m_pImageList->Add(bmp); // PARSER_IMG_PREPROC_FOLDER
-    bmp = cbLoadBitmap(prefix + _T("others_folder.png"), wxBITMAP_TYPE_PNG);
-    m_pImageList->Add(bmp); // PARSER_IMG_OTHERS_FOLDER
-    bmp = cbLoadBitmap(prefix + _T("typedefs_folder.png"), wxBITMAP_TYPE_PNG);
-    m_pImageList->Add(bmp); // PARSER_IMG_TYPEDEF_FOLDER
-    bmp = cbLoadBitmap(prefix + _T("macro.png"), wxBITMAP_TYPE_PNG);
-    m_pImageList->Add(bmp); // PARSER_IMG_MACRO
-    bmp = cbLoadBitmap(prefix + _T("macro_private.png"), wxBITMAP_TYPE_PNG);
-    m_pImageList->Add(bmp); // PARSER_IMG_MACRO_PRIVATE
-    bmp = cbLoadBitmap(prefix + _T("macro_protected.png"), wxBITMAP_TYPE_PNG);
-    m_pImageList->Add(bmp); // PARSER_IMG_MACRO_PROTECTED
-    bmp = cbLoadBitmap(prefix + _T("macro_public.png"), wxBITMAP_TYPE_PNG);
-    m_pImageList->Add(bmp); // PARSER_IMG_MACRO_PUBLIC
-    bmp = cbLoadBitmap(prefix + _T("macro_folder.png"), wxBITMAP_TYPE_PNG);
-    m_pImageList->Add(bmp); // PARSER_IMG_MACRO_FOLDER
-
     ConnectEvents();
 }
 
@@ -176,11 +88,11 @@ Parser::~Parser()
     m_ShuttingDown = true;
     if (m_pClassBrowser && m_pClassBrowser->GetParserPtr() == this)
         m_pClassBrowser->UnlinkParser();
+
     m_TreeBuildingStatus = 0;
     m_pClassBrowser = 0;
 
     Clear(); // Clear also disconnects the events
-    Delete(m_pImageList);
     Delete(m_pTempTokensTree);
     Delete(m_pTokensTree);
 }
@@ -275,114 +187,6 @@ bool Parser::Done()
 {
     wxCriticalSectionLocker lock(s_mutexListProtection);
     return m_PoolQueue.empty() && m_Pool.Done();
-}
-
-void Parser::SetTokenKindImage(int kind, const wxBitmap& bitmap, const wxBitmap& mask)
-{
-    if (kind < PARSER_IMG_MIN || kind > PARSER_IMG_MAX)
-        return;
-#ifdef __WXMSW__
-    m_pImageList->Replace(kind, bitmap, mask);
-#endif
-}
-
-void Parser::SetTokenKindImage(int kind, const wxBitmap& bitmap, const wxColour& maskColour)
-{
-    if (kind < PARSER_IMG_MIN || kind > PARSER_IMG_MAX)
-        return;
-    m_pImageList->Replace(kind, bitmap);//, maskColour);
-}
-
-void Parser::SetTokenKindImage(int kind, const wxIcon& icon)
-{
-    if (kind < PARSER_IMG_MIN || kind > PARSER_IMG_MAX)
-        return;
-    m_pImageList->Replace(kind, icon);
-}
-
-int Parser::GetTokenKindImage(Token* token)
-{
-    if (!token)
-        return PARSER_IMG_NONE;
-
-    switch (token->m_TokenKind)
-    {
-        case tkPreprocessor:      return PARSER_IMG_PREPROCESSOR;
-
-        case tkEnum:
-            switch (token->m_Scope)
-            {
-                case tsPublic:    return PARSER_IMG_ENUM_PUBLIC;
-                case tsProtected: return PARSER_IMG_ENUM_PROTECTED;
-                case tsPrivate:   return PARSER_IMG_ENUM_PRIVATE;
-                default:          return PARSER_IMG_ENUM;
-            }
-
-        case tkEnumerator:        return PARSER_IMG_ENUMERATOR;
-
-        case tkClass:
-            switch (token->m_Scope)
-            {
-                case tsPublic:    return PARSER_IMG_CLASS_PUBLIC;
-                case tsProtected: return PARSER_IMG_CLASS_PROTECTED;
-                case tsPrivate:   return PARSER_IMG_CLASS_PRIVATE;
-                default:          return PARSER_IMG_CLASS_PUBLIC;
-            }
-
-        case tkNamespace:         return PARSER_IMG_NAMESPACE;
-
-        case tkTypedef:
-            switch (token->m_Scope)
-            {
-                case tsPublic:    return PARSER_IMG_TYPEDEF_PUBLIC;
-                case tsProtected: return PARSER_IMG_TYPEDEF_PROTECTED;
-                case tsPrivate:   return PARSER_IMG_TYPEDEF_PRIVATE;
-                default:          return PARSER_IMG_TYPEDEF;
-            }
-
-        case tkMacro:
-            switch (token->m_Scope)
-            {
-                case tsPublic:    return PARSER_IMG_MACRO_PUBLIC;
-                case tsProtected: return PARSER_IMG_MACRO_PROTECTED;
-                case tsPrivate:   return PARSER_IMG_MACRO_PRIVATE;
-                default:          return PARSER_IMG_MACRO;
-            }
-
-        case tkConstructor:
-            switch (token->m_Scope)
-            {
-                case tsProtected: return PARSER_IMG_CTOR_PROTECTED;
-                case tsPrivate:   return PARSER_IMG_CTOR_PRIVATE;
-                default:          return PARSER_IMG_CTOR_PUBLIC;
-            }
-
-        case tkDestructor:
-            switch (token->m_Scope)
-            {
-                case tsProtected: return PARSER_IMG_DTOR_PROTECTED;
-                case tsPrivate:   return PARSER_IMG_DTOR_PRIVATE;
-                default:          return PARSER_IMG_DTOR_PUBLIC;
-            }
-
-        case tkFunction:
-            switch (token->m_Scope)
-            {
-                case tsProtected: return PARSER_IMG_FUNC_PROTECTED;
-                case tsPrivate:   return PARSER_IMG_FUNC_PRIVATE;
-                default:          return PARSER_IMG_FUNC_PUBLIC;
-            }
-
-        case tkVariable:
-            switch (token->m_Scope)
-            {
-                case tsProtected: return PARSER_IMG_VAR_PROTECTED;
-                case tsPrivate:   return PARSER_IMG_VAR_PRIVATE;
-                default:          return PARSER_IMG_VAR_PUBLIC;
-            }
-
-        default:                  return PARSER_IMG_NONE;
-    }
 }
 
 Token* Parser::FindTokenByName(const wxString& name, bool globalsOnly, short int kindMask) const

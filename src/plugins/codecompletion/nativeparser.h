@@ -60,6 +60,11 @@ class NativeParser : public wxEvtHandler
         cbProject* GetProjectByParser(Parser* parser);
         cbProject* GetProjectByFilename(const wxString& filename);
         Parser* GetParserByFilename(const wxString& filename);
+        wxImageList* GetImageList() { return m_pImageList; }
+        int  GetTokenKindImage(Token* token);
+        void SetTokenKindImage(int kind, const wxBitmap& bitmap, const wxBitmap& mask = wxNullBitmap);
+        void SetTokenKindImage(int kind, const wxBitmap& bitmap, const wxColour& maskColour);
+        void SetTokenKindImage(int kind, const wxIcon& icon);
 
         // If return != m_pParser, the mean is waiting...for parser task
         const Parser* AddOrChangeParser(cbProject* project, bool useCache = true);
@@ -136,6 +141,7 @@ class NativeParser : public wxEvtHandler
         void OnParserEnd(wxCommandEvent& event);
         void OnEditorActivated(EditorBase* editor);
         void OnEditorClosed(EditorBase* editor);
+        void OnTimerEditorActivated(wxTimerEvent& event);
 
         bool SkipWhitespaceForward(cbEditor* editor, int& pos);
         bool SkipWhitespaceBackward(cbEditor* editor, int& pos);
@@ -168,6 +174,10 @@ class NativeParser : public wxEvtHandler
         typedef std::list<std::pair<Parser*, wxString> > ParserFileList;
         ParserFileList       m_AddFileToParserList;
         ParserFileList       m_RepaseFileList;
+
+        wxTimer              m_TimerEditorActivated;
+        EditorBase*          m_LastEditor;
+        wxImageList*         m_pImageList;
 
         DECLARE_EVENT_TABLE()
 };

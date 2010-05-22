@@ -9,6 +9,7 @@
 #include <wx/thread.h>
 #include <wx/treectrl.h>
 
+#include "nativeparser.h"
 #include "parser/token.h"
 #include "parser/parser.h"
 
@@ -92,14 +93,9 @@ class ClassBrowserBuilderThread : public wxThread
         ClassBrowserBuilderThread(wxSemaphore& sem, ClassBrowserBuilderThread** threadVar);
         virtual ~ClassBrowserBuilderThread();
 
-        void Init(Parser* parser,
-                    CBTreeCtrl* treeTop,
-                    CBTreeCtrl* treeBottom,
-                    const wxString& active_filename,
-                    void* user_data, // active project
-                    const BrowserOptions& options,
-                    TokensTree* pTokensTree,
-                    bool build_tree);
+        void Init(NativeParser* nativeParser, CBTreeCtrl* treeTop, CBTreeCtrl* treeBottom,
+                  const wxString& active_filename, void* user_data/*active project*/,
+                  const BrowserOptions& options, TokensTree* pTokensTree, bool build_tree);
         void AbortBuilding();
         void ExpandItem(wxTreeItemId item);
         void CollapseItem(wxTreeItemId item, bool useLock=true);
@@ -121,7 +117,7 @@ class ClassBrowserBuilderThread : public wxThread
         void ExpandNamespaces(wxTreeItemId node);
 
         wxSemaphore& m_Semaphore;
-        Parser* m_pParser;
+        NativeParser* m_pNativeParser;
         CBTreeCtrl* m_pTreeTop;
         CBTreeCtrl* m_pTreeBottom;
         wxString m_ActiveFilename;

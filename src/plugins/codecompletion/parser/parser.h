@@ -145,11 +145,6 @@ class Parser : public wxEvtHandler
         long EllapsedTime();
         long LastParseTime();
 
-        int  GetTokenKindImage(Token* token);
-        void SetTokenKindImage(int kind, const wxBitmap& bitmap, const wxBitmap& mask = wxNullBitmap);
-        void SetTokenKindImage(int kind, const wxBitmap& bitmap, const wxColour& maskColour);
-        void SetTokenKindImage(int kind, const wxIcon& icon);
-        wxImageList* GetImageList() { return m_pImageList; }
         Token* FindTokenByName(const wxString& name, bool globalsOnly = true, short int kindMask = 0xFFFF) const;
         Token* FindChildTokenByName(Token* parent, const wxString& name, bool useInheritance = false, short int kindMask = 0xFFFF) const;
         size_t FindMatches(const wxString& s, TokenList&   result, bool caseSensitive = true, bool is_prefix = true);
@@ -197,7 +192,6 @@ class Parser : public wxEvtHandler
         wxArrayString                  m_IncludeDirs;
         wxEvtHandler*                  m_pParent;
         wxTreeItemId                   m_RootNode;
-        wxImageList*                   m_pImageList;
 
     protected:
         // the following three members are used to detect changes between

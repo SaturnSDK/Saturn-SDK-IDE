@@ -47,11 +47,15 @@
 
 bool s_DebugSmartSense = false;
 const wxString g_StartHereTitle = _("Start here");
+int idTimerEditorActivated  = wxNewId();
+
+#define EDITOR_ACTIVATED_HANDLE_DELAY   150
 
 BEGIN_EVENT_TABLE(NativeParser, wxEvtHandler)
 //    EVT_MENU(THREAD_START, NativeParser::OnThreadStart)
 //    EVT_MENU(THREAD_END, NativeParser::OnThreadEnd)
     EVT_MENU(PARSER_END, NativeParser::OnParserEnd)
+    EVT_TIMER(idTimerEditorActivated, NativeParser::OnTimerEditorActivated)
 END_EVENT_TABLE()
 
 NativeParser::NativeParser() :
@@ -62,11 +66,100 @@ NativeParser::NativeParser() :
     m_pClassBrowser(0),
     m_GettingCalltips(false),
     m_ClassBrowserIsFloating(false),
-    m_LastAISearchWasGlobal(false)
+    m_LastAISearchWasGlobal(false),
+    m_TimerEditorActivated(this, idTimerEditorActivated),
+    m_LastEditor(NULL),
+    m_pImageList(0L)
 {
     // hook to project loading procedure
     ProjectLoaderHooks::HookFunctorBase* myhook = new ProjectLoaderHooks::HookFunctor<NativeParser>(this, &NativeParser::OnProjectLoadingHook);
     m_HookId = ProjectLoaderHooks::RegisterHook(myhook);
+
+    m_pImageList = new wxImageList(16, 16);
+    wxBitmap bmp;
+    wxString prefix;
+    prefix = ConfigManager::GetDataFolder() + _T("/images/codecompletion/");
+    // bitmaps must be added by order of PARSER_IMG_* consts
+    bmp = cbLoadBitmap(prefix + _T("class_folder.png"), wxBITMAP_TYPE_PNG);
+    m_pImageList->Add(bmp); // PARSER_IMG_CLASS_FOLDER
+    bmp = cbLoadBitmap(prefix + _T("class.png"), wxBITMAP_TYPE_PNG);
+    m_pImageList->Add(bmp); // PARSER_IMG_CLASS
+    bmp = cbLoadBitmap(prefix + _T("class_private.png"), wxBITMAP_TYPE_PNG);
+    m_pImageList->Add(bmp); // PARSER_IMG_CLASS_PRIVATE
+    bmp = cbLoadBitmap(prefix + _T("class_protected.png"), wxBITMAP_TYPE_PNG);
+    m_pImageList->Add(bmp); // PARSER_IMG_CLASS_PROTECTED
+    bmp = cbLoadBitmap(prefix + _T("class_public.png"), wxBITMAP_TYPE_PNG);
+    m_pImageList->Add(bmp); // PARSER_IMG_CLASS_PUBLIC
+    bmp = cbLoadBitmap(prefix + _T("ctor_private.png"), wxBITMAP_TYPE_PNG);
+    m_pImageList->Add(bmp); // PARSER_IMG_CTOR_PRIVATE
+    bmp = cbLoadBitmap(prefix + _T("ctor_protected.png"), wxBITMAP_TYPE_PNG);
+    m_pImageList->Add(bmp); // PARSER_IMG_CTOR_PROTECTED
+    bmp = cbLoadBitmap(prefix + _T("ctor_public.png"), wxBITMAP_TYPE_PNG);
+    m_pImageList->Add(bmp); // PARSER_IMG_CTOR_PUBLIC
+    bmp = cbLoadBitmap(prefix + _T("dtor_private.png"), wxBITMAP_TYPE_PNG);
+    m_pImageList->Add(bmp); // PARSER_IMG_DTOR_PRIVATE
+    bmp = cbLoadBitmap(prefix + _T("dtor_protected.png"), wxBITMAP_TYPE_PNG);
+    m_pImageList->Add(bmp); // PARSER_IMG_DTOR_PROTECTED
+    bmp = cbLoadBitmap(prefix + _T("dtor_public.png"), wxBITMAP_TYPE_PNG);
+    m_pImageList->Add(bmp); // PARSER_IMG_DTOR_PUBLIC
+    bmp = cbLoadBitmap(prefix + _T("method_private.png"), wxBITMAP_TYPE_PNG);
+    m_pImageList->Add(bmp); // PARSER_IMG_FUNC_PRIVATE
+    bmp = cbLoadBitmap(prefix + _T("method_protected.png"), wxBITMAP_TYPE_PNG);
+    m_pImageList->Add(bmp); // PARSER_IMG_FUNC_PRIVATE
+    bmp = cbLoadBitmap(prefix + _T("method_public.png"), wxBITMAP_TYPE_PNG);
+    m_pImageList->Add(bmp); // PARSER_IMG_FUNC_PUBLIC
+    bmp = cbLoadBitmap(prefix + _T("var_private.png"), wxBITMAP_TYPE_PNG);
+    m_pImageList->Add(bmp); // PARSER_IMG_VAR_PRIVATE
+    bmp = cbLoadBitmap(prefix + _T("var_protected.png"), wxBITMAP_TYPE_PNG);
+    m_pImageList->Add(bmp); // PARSER_IMG_VAR_PROTECTED
+    bmp = cbLoadBitmap(prefix + _T("var_public.png"), wxBITMAP_TYPE_PNG);
+    m_pImageList->Add(bmp); // PARSER_IMG_VAR_PUBLIC
+    bmp = cbLoadBitmap(prefix + _T("preproc.png"), wxBITMAP_TYPE_PNG);
+    m_pImageList->Add(bmp); // PARSER_IMG_PREPROCESSOR
+    bmp = cbLoadBitmap(prefix + _T("enum.png"), wxBITMAP_TYPE_PNG);
+    m_pImageList->Add(bmp); // PARSER_IMG_ENUM
+    bmp = cbLoadBitmap(prefix + _T("enum_private.png"), wxBITMAP_TYPE_PNG);
+    m_pImageList->Add(bmp); // PARSER_IMG_ENUM_PRIVATE
+    bmp = cbLoadBitmap(prefix + _T("enum_protected.png"), wxBITMAP_TYPE_PNG);
+    m_pImageList->Add(bmp); // PARSER_IMG_ENUM_PROTECTED
+    bmp = cbLoadBitmap(prefix + _T("enum_public.png"), wxBITMAP_TYPE_PNG);
+    m_pImageList->Add(bmp); // PARSER_IMG_ENUM_PUBLIC
+    bmp = cbLoadBitmap(prefix + _T("enumerator.png"), wxBITMAP_TYPE_PNG);
+    m_pImageList->Add(bmp); // PARSER_IMG_ENUMERATOR
+    bmp = cbLoadBitmap(prefix + _T("namespace.png"), wxBITMAP_TYPE_PNG);
+    m_pImageList->Add(bmp); // PARSER_IMG_NAMESPACE
+    bmp = cbLoadBitmap(prefix + _T("typedef.png"), wxBITMAP_TYPE_PNG);
+    m_pImageList->Add(bmp); // PARSER_IMG_TYPEDEF
+    bmp = cbLoadBitmap(prefix + _T("typedef_private.png"), wxBITMAP_TYPE_PNG);
+    m_pImageList->Add(bmp); // PARSER_IMG_TYPEDEF_PRIVATE
+    bmp = cbLoadBitmap(prefix + _T("typedef_protected.png"), wxBITMAP_TYPE_PNG);
+    m_pImageList->Add(bmp); // PARSER_IMG_TYPEDEF_PROTECTED
+    bmp = cbLoadBitmap(prefix + _T("typedef_public.png"), wxBITMAP_TYPE_PNG);
+    m_pImageList->Add(bmp); // PARSER_IMG_TYPEDEF_PUBLIC
+    bmp = cbLoadBitmap(prefix + _T("symbols_folder.png"), wxBITMAP_TYPE_PNG);
+    m_pImageList->Add(bmp); // PARSER_IMG_SYMBOLS_FOLDER
+    bmp = cbLoadBitmap(prefix + _T("vars_folder.png"), wxBITMAP_TYPE_PNG);
+    m_pImageList->Add(bmp); // PARSER_IMG_VARS_FOLDER
+    bmp = cbLoadBitmap(prefix + _T("funcs_folder.png"), wxBITMAP_TYPE_PNG);
+    m_pImageList->Add(bmp); // PARSER_IMG_FUNCS_FOLDER
+    bmp = cbLoadBitmap(prefix + _T("enums_folder.png"), wxBITMAP_TYPE_PNG);
+    m_pImageList->Add(bmp); // PARSER_IMG_ENUMS_FOLDER
+    bmp = cbLoadBitmap(prefix + _T("preproc_folder.png"), wxBITMAP_TYPE_PNG);
+    m_pImageList->Add(bmp); // PARSER_IMG_PREPROC_FOLDER
+    bmp = cbLoadBitmap(prefix + _T("others_folder.png"), wxBITMAP_TYPE_PNG);
+    m_pImageList->Add(bmp); // PARSER_IMG_OTHERS_FOLDER
+    bmp = cbLoadBitmap(prefix + _T("typedefs_folder.png"), wxBITMAP_TYPE_PNG);
+    m_pImageList->Add(bmp); // PARSER_IMG_TYPEDEF_FOLDER
+    bmp = cbLoadBitmap(prefix + _T("macro.png"), wxBITMAP_TYPE_PNG);
+    m_pImageList->Add(bmp); // PARSER_IMG_MACRO
+    bmp = cbLoadBitmap(prefix + _T("macro_private.png"), wxBITMAP_TYPE_PNG);
+    m_pImageList->Add(bmp); // PARSER_IMG_MACRO_PRIVATE
+    bmp = cbLoadBitmap(prefix + _T("macro_protected.png"), wxBITMAP_TYPE_PNG);
+    m_pImageList->Add(bmp); // PARSER_IMG_MACRO_PROTECTED
+    bmp = cbLoadBitmap(prefix + _T("macro_public.png"), wxBITMAP_TYPE_PNG);
+    m_pImageList->Add(bmp); // PARSER_IMG_MACRO_PUBLIC
+    bmp = cbLoadBitmap(prefix + _T("macro_folder.png"), wxBITMAP_TYPE_PNG);
+    m_pImageList->Add(bmp); // PARSER_IMG_MACRO_FOLDER
 }
 
 NativeParser::~NativeParser()
@@ -75,6 +168,116 @@ NativeParser::~NativeParser()
 
     RemoveClassBrowser();
     ClearParsers();
+
+    Delete(m_pImageList);
+}
+
+void NativeParser::SetTokenKindImage(int kind, const wxBitmap& bitmap, const wxBitmap& mask)
+{
+    if (kind < PARSER_IMG_MIN || kind > PARSER_IMG_MAX)
+        return;
+#ifdef __WXMSW__
+    m_pImageList->Replace(kind, bitmap, mask);
+#endif
+}
+
+void NativeParser::SetTokenKindImage(int kind, const wxBitmap& bitmap, const wxColour& maskColour)
+{
+    if (kind < PARSER_IMG_MIN || kind > PARSER_IMG_MAX)
+        return;
+    m_pImageList->Replace(kind, bitmap);//, maskColour);
+}
+
+void NativeParser::SetTokenKindImage(int kind, const wxIcon& icon)
+{
+    if (kind < PARSER_IMG_MIN || kind > PARSER_IMG_MAX)
+        return;
+    m_pImageList->Replace(kind, icon);
+}
+
+int NativeParser::GetTokenKindImage(Token* token)
+{
+    if (!token)
+        return PARSER_IMG_NONE;
+
+    switch (token->m_TokenKind)
+    {
+        case tkPreprocessor:      return PARSER_IMG_PREPROCESSOR;
+
+        case tkEnum:
+            switch (token->m_Scope)
+            {
+                case tsPublic:    return PARSER_IMG_ENUM_PUBLIC;
+                case tsProtected: return PARSER_IMG_ENUM_PROTECTED;
+                case tsPrivate:   return PARSER_IMG_ENUM_PRIVATE;
+                default:          return PARSER_IMG_ENUM;
+            }
+
+        case tkEnumerator:        return PARSER_IMG_ENUMERATOR;
+
+        case tkClass:
+            switch (token->m_Scope)
+            {
+                case tsPublic:    return PARSER_IMG_CLASS_PUBLIC;
+                case tsProtected: return PARSER_IMG_CLASS_PROTECTED;
+                case tsPrivate:   return PARSER_IMG_CLASS_PRIVATE;
+                default:          return PARSER_IMG_CLASS_PUBLIC;
+            }
+
+        case tkNamespace:         return PARSER_IMG_NAMESPACE;
+
+        case tkTypedef:
+            switch (token->m_Scope)
+            {
+                case tsPublic:    return PARSER_IMG_TYPEDEF_PUBLIC;
+                case tsProtected: return PARSER_IMG_TYPEDEF_PROTECTED;
+                case tsPrivate:   return PARSER_IMG_TYPEDEF_PRIVATE;
+                default:          return PARSER_IMG_TYPEDEF;
+            }
+
+        case tkMacro:
+            switch (token->m_Scope)
+            {
+                case tsPublic:    return PARSER_IMG_MACRO_PUBLIC;
+                case tsProtected: return PARSER_IMG_MACRO_PROTECTED;
+                case tsPrivate:   return PARSER_IMG_MACRO_PRIVATE;
+                default:          return PARSER_IMG_MACRO;
+            }
+
+        case tkConstructor:
+            switch (token->m_Scope)
+            {
+                case tsProtected: return PARSER_IMG_CTOR_PROTECTED;
+                case tsPrivate:   return PARSER_IMG_CTOR_PRIVATE;
+                default:          return PARSER_IMG_CTOR_PUBLIC;
+            }
+
+        case tkDestructor:
+            switch (token->m_Scope)
+            {
+                case tsProtected: return PARSER_IMG_DTOR_PROTECTED;
+                case tsPrivate:   return PARSER_IMG_DTOR_PRIVATE;
+                default:          return PARSER_IMG_DTOR_PUBLIC;
+            }
+
+        case tkFunction:
+            switch (token->m_Scope)
+            {
+                case tsProtected: return PARSER_IMG_FUNC_PROTECTED;
+                case tsPrivate:   return PARSER_IMG_FUNC_PRIVATE;
+                default:          return PARSER_IMG_FUNC_PUBLIC;
+            }
+
+        case tkVariable:
+            switch (token->m_Scope)
+            {
+                case tsProtected: return PARSER_IMG_VAR_PROTECTED;
+                case tsPrivate:   return PARSER_IMG_VAR_PRIVATE;
+                default:          return PARSER_IMG_VAR_PUBLIC;
+            }
+
+        default:                  return PARSER_IMG_NONE;
+    }
 }
 
 void NativeParser::OnProjectLoadingHook(cbProject* project, TiXmlElement* elem, bool loading)
@@ -642,10 +845,13 @@ const Parser* NativeParser::AddOrChangeParser(cbProject* project, bool useCache)
     Parser* parser = GetParserByProject(project);
     if (parser)
     {
-        if (m_ParserWaitList.empty())
-            SwitchParser(project, parser);
-        else
-            m_LastParser = std::make_pair(project, parser); // Wait for current parsing END
+        if (parser != m_pParser)
+        {
+            if (m_ParserWaitList.empty())
+                SwitchParser(project, parser);
+            else
+                m_LastParser = std::make_pair(project, parser); // Wait for current parsing END
+        }
         return parser;
     }
 
@@ -655,63 +861,60 @@ const Parser* NativeParser::AddOrChangeParser(cbProject* project, bool useCache)
             return NULL;
     }
 
-    for (;;)
+    try
     {
-        try
+        char* tmp = new char[(m_ParserWaitList.size() + 1) * 1024 * 1000 * 100];
+        delete [] tmp;
+
+        Manager::Get()->GetLogManager()->DebugLog(F(_T("Add new parser for project %s ..."),
+                                                    project ? project->GetTitle().wx_str() : _T("*NONE*")));
+
+        // Ignore current switch
+        m_LastParser.second = NULL;
+
+        parser = new Parser(this);
+        if (project)
         {
-            char* tmp = new char[(m_ParserWaitList.size() + 1) * 1024 * 1000 * 100];
-            delete [] tmp;
-
-            Manager::Get()->GetLogManager()->DebugLog(F(_T("Add new parser for project %s ..."),
-                                                        project ? project->GetTitle().wx_str() : _T("*NONE*")));
-
-            // Ignore current switch
-            m_LastParser.second = NULL;
-
-            parser = new Parser(this);
-            if (project)
+            if (m_ParserWaitList.empty())
             {
-                if (m_ParserWaitList.empty())
-                {
-                    m_pParser = parser;
-                    SetClassBrowserParser();
-                    ReparseProject(project);
-                }
+                m_pParser = parser;
+                SetClassBrowserParser();
+                ReparseProject(project);
+            }
 
+            // When parser END, do pop_front()!
+            m_ParserWaitList.push_back(std::make_pair(project, parser));
+        }
+
+        // for single file parser (non project)
+        else
+        {
+            if (m_ParserWaitList.empty())
+            {
+                m_pParser = parser;
+                SetClassBrowserParser();
+                m_ParserList.push_back(std::make_pair(project, parser));
+                AddCompilerPredefinedMacros(NULL);
+            }
+            else
+            {
                 // When parser END, do pop_front()!
                 m_ParserWaitList.push_back(std::make_pair(project, parser));
             }
-
-            // for single file parser (non project)
-            else
-            {
-                if (m_ParserWaitList.empty())
-                {
-                    m_pParser = parser;
-                    SetClassBrowserParser();
-                    m_ParserList.push_back(std::make_pair(project, parser));
-                    AddCompilerPredefinedMacros(NULL);
-                }
-                else
-                {
-                    // When parser END, do pop_front()!
-                    m_ParserWaitList.push_back(std::make_pair(project, parser));
-                }
-            }
-            break;
         }
-        catch (std::bad_alloc& e)
+    }
+    catch (std::bad_alloc& e)
+    {
+        Manager::Get()->GetAppFrame()->SetStatusText((F(_("Parser project %s failed, Because memory not enough,"
+                                                    "Please try again."),
+                                                    project ? project->GetTitle().wx_str() : _T("*NONE*"))));
+        if (!m_ParserList.empty())
         {
-            Manager::Get()->GetLogManager()->DebugLog(F(_T("Memory is not enough: %d"), m_ParserList.size()));
-            if (!m_ParserList.empty())
-            {
-                delete m_ParserList.front().second;
-                m_ParserList.pop_front();
-            }
-            else
-            {
-                break;
-            }
+            project = m_ParserList.front().first;
+            Manager::Get()->GetLogManager()->DebugLog(F(_T("Delete parser %s for enough memory."),
+                                                    project ? project->GetTitle().wx_str() : _T("*NONE*")));
+            delete m_ParserList.front().second;
+            m_ParserList.pop_front();
         }
     }
 
@@ -720,9 +923,6 @@ const Parser* NativeParser::AddOrChangeParser(cbProject* project, bool useCache)
 
 bool NativeParser::RemoveParser(cbProject* project, bool useCache)
 {
-    Manager::Get()->GetLogManager()->DebugLog(F(_T("Removing project %s from parsed projects"),
-                                                project ? project->GetTitle().wx_str() : _T("*NONE*")));
-
     bool removed = false;
     if (!removed)
     {
@@ -754,10 +954,11 @@ bool NativeParser::RemoveParser(cbProject* project, bool useCache)
 
     if (removed)
     {
+        Manager::Get()->GetLogManager()->DebugLog(F(_T("Removing project %s from parsed projects"),
+                                                    project ? project->GetTitle().wx_str() : _T("*NONE*")));
+
         m_pParser = GetParserByProject(Manager::Get()->GetProjectManager()->GetActiveProject());
         SetClassBrowserParser();
-        if (m_pClassBrowser)
-            m_pClassBrowser->UpdateView();
     }
 
     return removed;
@@ -2983,7 +3184,6 @@ void NativeParser::OnParserEnd(wxCommandEvent& event)
     }
 
     DisplayStatus();
-    UpdateClassBrowser();
 
     bool startNextBatchParser = false;
     if (!m_ParserWaitList.empty())
@@ -3028,6 +3228,8 @@ void NativeParser::OnParserEnd(wxCommandEvent& event)
             SwitchParser(m_LastParser.first, m_LastParser.second);
             m_LastParser.second = NULL;
         }
+        else
+            UpdateClassBrowser();
     }
 
     event.Skip();
@@ -3035,11 +3237,42 @@ void NativeParser::OnParserEnd(wxCommandEvent& event)
 
 void NativeParser::OnEditorActivated(EditorBase* editor)
 {
-    static cbProject* lastProject;
+    m_TimerEditorActivated.Stop();
+    m_TimerEditorActivated.Start(EDITOR_ACTIVATED_HANDLE_DELAY, wxTIMER_ONE_SHOT);
+    m_LastEditor = editor;
+}
+
+void NativeParser::OnEditorClosed(EditorBase* editor)
+{
+    if (m_LastEditor == editor && m_TimerEditorActivated.IsRunning())
+        m_TimerEditorActivated.Stop();
+
     wxString filename = editor->GetFilename();
     if (filename == g_StartHereTitle)
         return;
 
+    std::set<wxString>::iterator it = m_StandaloneFile.find(filename);
+    if (it != m_StandaloneFile.end())
+    {
+        m_StandaloneFile.erase(it);
+        if (m_StandaloneFile.empty())
+            RemoveParser(NULL);
+        else
+            RemoveFileFromParser(NULL, filename);
+    }
+}
+
+void NativeParser::OnTimerEditorActivated(wxTimerEvent& event)
+{
+    EditorBase* editor = Manager::Get()->GetEditorManager()->GetActiveEditor();
+    if (!editor)
+        return;
+
+    wxString filename = editor->GetFilename();
+    if (filename == g_StartHereTitle)
+        return;
+
+    static cbProject* lastProject = Manager::Get()->GetProjectManager()->GetActiveProject();
     cbProject* project;
     std::set<wxString>::iterator it = m_StandaloneFile.find(filename);
     if (it != m_StandaloneFile.end())
@@ -3047,7 +3280,7 @@ void NativeParser::OnEditorActivated(EditorBase* editor)
     else
         project = GetProjectByFilename(filename);
 
-    if (project != lastProject || m_StandaloneFile.empty())
+    if (project != lastProject || (!project && m_StandaloneFile.empty()))
     {
         if (AddOrChangeParser(project) != m_pParser)
             return;
@@ -3087,26 +3320,6 @@ void NativeParser::OnEditorActivated(EditorBase* editor)
     {
         // check header and implementation file swap, if yes, don't need to rebuild browser tree
         m_pClassBrowser->UpdateView(true);
-    }
-}
-
-void NativeParser::OnEditorClosed(EditorBase* editor)
-{
-    if (!m_pParser)
-        return;
-
-    wxString filename = editor->GetFilename();
-    if (filename == g_StartHereTitle)
-        return;
-
-    std::set<wxString>::iterator it = m_StandaloneFile.find(filename);
-    if (it != m_StandaloneFile.end())
-    {
-        m_StandaloneFile.erase(it);
-        if (m_StandaloneFile.empty())
-            RemoveParser(NULL);
-        else
-            RemoveFileFromParser(NULL, filename);
     }
 }
 

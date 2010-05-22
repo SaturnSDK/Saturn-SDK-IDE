@@ -22,7 +22,6 @@
 
 #include <algorithm>
 
-
 namespace compatibility { typedef TernaryCondTypedef<wxMinimumVersion<2,5>::eval, wxTreeItemIdValue, long int>::eval tree_cookie_t; };
 
 IMPLEMENT_DYNAMIC_CLASS(CBTreeCtrl, wxTreeCtrl)
@@ -148,7 +147,7 @@ void CBTreeCtrl::RemoveDoubles(const wxTreeItemId& parent)
 ClassBrowserBuilderThread::ClassBrowserBuilderThread(wxSemaphore& sem, ClassBrowserBuilderThread** threadVar)
     : wxThread(wxTHREAD_JOINABLE),
     m_Semaphore(sem),
-    m_pParser(0),
+    m_pNativeParser(0),
     m_pTreeTop(0),
     m_pTreeBottom(0),
     m_pUserData(0),
@@ -164,7 +163,7 @@ ClassBrowserBuilderThread::~ClassBrowserBuilderThread()
     //dtor
 }
 
-void ClassBrowserBuilderThread::Init(Parser* parser,
+void ClassBrowserBuilderThread::Init(NativeParser* nativeParser,
                                     CBTreeCtrl* treeTop,
                                     CBTreeCtrl* treeBottom,
                                     const wxString& active_filename,
@@ -174,7 +173,7 @@ void ClassBrowserBuilderThread::Init(Parser* parser,
                                     bool build_tree)
 {
     wxMutexLocker lock(m_BuildMutex);
-    m_pParser        = parser;
+    m_pNativeParser  = nativeParser;
     m_pTreeTop       = treeTop;
     m_pTreeBottom    = treeBottom;
     m_ActiveFilename = active_filename;
@@ -185,7 +184,7 @@ void ClassBrowserBuilderThread::Init(Parser* parser,
     m_CurrentFileSet.clear();
     m_CurrentTokenSet.clear();
 
-    TokensTree* tree = m_pParser->GetTokens();
+    TokensTree* tree = m_pNativeParser->GetParserPtr()->GetTokens();
     // fill filter set for current-file-filter
     if (m_Options.displayFilter == bdfFile && !m_ActiveFilename.IsEmpty())
     {
@@ -274,7 +273,7 @@ void* ClassBrowserBuilderThread::Entry()
         }
     }
 
-    m_pParser = 0;
+    m_pNativeParser = 0;
     m_pTreeTop = 0;
     m_pTreeBottom = 0;
 
@@ -307,15 +306,15 @@ void ClassBrowserBuilderThread::ExpandNamespaces(wxTreeItemId node)
 
 void ClassBrowserBuilderThread::BuildTree(bool useLock)
 {
-    if ((!::wxIsMainThread() && TestDestroy()) || Manager::IsAppShuttingDown() || !m_pParser)
+    if ((!::wxIsMainThread() && TestDestroy()) || Manager::IsAppShuttingDown())
         return;
 
 #ifdef buildtree_measuring
     wxStopWatch sw;
     wxStopWatch sw_total;
 #endif
-    m_pTreeTop->SetImageList(m_pParser->GetImageList());
-    m_pTreeBottom->SetImageList(m_pParser->GetImageList());
+    m_pTreeTop->SetImageList(m_pNativeParser->GetImageList());
+    m_pTreeBottom->SetImageList(m_pNativeParser->GetImageList());
 
     wxTreeItemId root = m_pTreeTop->GetRootItem();
     if (!root.IsOk())
@@ -649,9 +648,6 @@ bool ClassBrowserBuilderThread::AddDescendantsOf(CBTreeCtrl* tree, wxTreeItemId 
 
 bool ClassBrowserBuilderThread::AddNodes(CBTreeCtrl* tree, wxTreeItemId parent, const TokenIdxSet& tokens, short int tokenKindMask, int tokenScopeMask, bool allowGlobals)
 {
-    if (!m_pParser)
-        return false;
-
     int count = 0;
     set<unsigned long, less<unsigned long> > tickets;
 
@@ -685,7 +681,7 @@ bool ClassBrowserBuilderThread::AddNodes(CBTreeCtrl* tree, wxTreeItemId parent, 
             if (tree == m_pTreeTop && tickets.find(token->GetTicket()) != tickets.end())
                 continue; // dupe
             ++count;
-            int img = m_pParser->GetTokenKindImage(token);
+            int img = m_pNativeParser->GetTokenKindImage(token);
 
             wxString str = token->m_Name;
             if (   (token->m_TokenKind == tkFunction)
@@ -899,9 +895,6 @@ void ClassBrowserBuilderThread::AddMembersOf(CBTreeCtrl* tree, wxTreeItemId node
 // checks if there are respective children and colors the nodes
 bool ClassBrowserBuilderThread::CreateSpecialFolders(CBTreeCtrl* tree, wxTreeItemId parent)
 {
-    if (!m_pParser)
-        return false;
-
     bool hasGF = false;
     bool hasGV = false;
     bool hasGP = false;
@@ -909,7 +902,7 @@ bool ClassBrowserBuilderThread::CreateSpecialFolders(CBTreeCtrl* tree, wxTreeIte
     bool hasGM = false;
 
     // loop all tokens in global namespace and see if we have matches
-    TokensTree* tt = m_pParser->GetTokens();
+    TokensTree* tt = m_pNativeParser->GetParserPtr()->GetTokens();
     for (TokenIdxSet::iterator it = tt->m_GlobalNameSpace.begin(); it != tt->m_GlobalNameSpace.end(); ++it)
     {
         Token* token = tt->at(*it);
@@ -958,7 +951,7 @@ bool ClassBrowserBuilderThread::CreateSpecialFolders(CBTreeCtrl* tree, wxTreeIte
 
 void ClassBrowserBuilderThread::ExpandItem(wxTreeItemId item)
 {
-    if ((!::wxIsMainThread() && TestDestroy()) || Manager::IsAppShuttingDown() || !m_pParser)
+    if ((!::wxIsMainThread() && TestDestroy()) || Manager::IsAppShuttingDown())
         return;
 
 #ifdef buildtree_measuring
@@ -1012,7 +1005,7 @@ void ClassBrowserBuilderThread::ExpandItem(wxTreeItemId item)
             default: break;
         }
     }
-    if (m_pParser && !m_Options.treeMembers)
+    if (m_pNativeParser && !m_Options.treeMembers)
     {
         AddMembersOf(m_pTreeTop, item);
     }

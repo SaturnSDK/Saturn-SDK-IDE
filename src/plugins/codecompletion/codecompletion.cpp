@@ -639,7 +639,7 @@ int CodeCompletion::CodeComplete()
             if (s_DebugSmartSense)
                 Manager::Get()->GetLogManager()->DebugLog(_T("Generating tokens list..."));
 
-            wxImageList* ilist = parser->GetImageList();
+            wxImageList* ilist = m_NativeParser.GetImageList();
             ed->GetControl()->ClearRegisteredImages();
 
             bool caseSens = parser ? parser->Options().caseSensitive : false;
@@ -662,7 +662,7 @@ int CodeCompletion::CodeComplete()
                     continue;
 
                 unique_strings.insert(token->m_Name);
-                int iidx = parser->GetTokenKindImage(token);
+                int iidx = m_NativeParser.GetTokenKindImage(token);
                 if (already_registered.Index(iidx) == wxNOT_FOUND)
                 {
                     ed->GetControl()->RegisterImage(iidx, ilist->GetBitmap(iidx));

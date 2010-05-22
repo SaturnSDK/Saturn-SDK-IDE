@@ -754,7 +754,7 @@ void ClassBrowser::BuildTree()
     }
 
     // initialise it
-    m_pBuilderThread->Init(m_pParser,
+    m_pBuilderThread->Init(m_NativeParser,
                             m_Tree,
                             m_TreeBottom,
                             m_ActiveFilename,
