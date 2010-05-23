@@ -75,7 +75,7 @@ enum TokenKind
 };
 
 
-class Token : public BlockAllocated<Token, 10000>
+class Token : public BlockAllocated<Token, 50000>
 {
     friend class TokensTree;
     public:

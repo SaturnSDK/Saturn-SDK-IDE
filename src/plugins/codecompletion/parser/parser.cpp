@@ -85,16 +85,23 @@ Parser::Parser(wxEvtHandler* parent)
 
 Parser::~Parser()
 {
-    m_ShuttingDown = true;
-    if (m_pClassBrowser && m_pClassBrowser->GetParserPtr() == this)
-        m_pClassBrowser->UnlinkParser();
+    try
+    {
+        m_ShuttingDown = true;
+        if (m_pClassBrowser && m_pClassBrowser->GetParserPtr() == this)
+            m_pClassBrowser->UnlinkParser();
 
-    m_TreeBuildingStatus = 0;
-    m_pClassBrowser = 0;
+        m_TreeBuildingStatus = 0;
+        m_pClassBrowser = 0;
 
-    Clear(); // Clear also disconnects the events
-    Delete(m_pTempTokensTree);
-    Delete(m_pTokensTree);
+        Clear(); // Clear also disconnects the events
+        Delete(m_pTempTokensTree);
+        Delete(m_pTokensTree);
+    }
+    catch (...)
+    {
+        Manager::Get()->GetLogManager()->Log(_T("Exception catch in ~Parser()."));
+    }
 }
 
 void Parser::ConnectEvents()
@@ -683,6 +690,7 @@ void Parser::TerminateAllThreads()
     m_IgnoreThreadEvents = true;
 
     m_Pool.AbortAllTasks();
+    wxMilliSleep(10);
 
     while (!m_PoolQueue.empty())
     {

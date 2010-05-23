@@ -131,8 +131,6 @@ ParserThread::ParserThread(Parser* parent,
 
 ParserThread::~ParserThread()
 {
-    //dtor
-
     // wait for file loader object to complete (can't abort it)
     if (m_Options.loader)
     {

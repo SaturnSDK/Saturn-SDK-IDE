@@ -136,7 +136,7 @@ int idToolbarTimer              = wxNewId();
 
 // milliseconds
 #define REALTIME_PARSING_DELAY      500
-#define EDITOR_AND_LINE_INTERVAL    150
+#define EDITOR_AND_LINE_INTERVAL    100
 
 BEGIN_EVENT_TABLE(CodeCompletion, cbCodeCompletionPlugin)
     EVT_UPDATE_UI_RANGE(idMenuCodeComplete, idProjectReparse, CodeCompletion::OnUpdateUI)
@@ -1254,9 +1254,6 @@ void CodeCompletion::OnWorkspaceChanged(CodeBlocksEvent& event)
                 return;
         }
 
-        // Update the Function toolbar
-        ParseFunctionsAndFillToolbar();
-
         // Update the class browser
         if (m_NativeParser.GetParserPtr() && m_NativeParser.GetParserPtr()->ClassBrowserOptions().displayFilter == bdfProject)
             m_NativeParser.UpdateClassBrowser();
@@ -1499,6 +1496,7 @@ void CodeCompletion::ParseFunctionsAndFillToolbar(bool force)
     EditorManager* edMan = Manager::Get()->GetEditorManager();
     if (!edMan) // Closing the app?
         return;
+
     cbEditor* ed = edMan->GetBuiltinActiveEditor();
     if (!ed || !ed->GetControl())
     {
@@ -1508,9 +1506,11 @@ void CodeCompletion::ParseFunctionsAndFillToolbar(bool force)
             m_Scope->Clear();
         return;
     }
+
     wxString filename = ed->GetFilename();
     if (filename.IsEmpty())
         return;
+
     FunctionsScopePerFile* funcdata = &(m_AllFunctionsScopes[filename]);
 
     // *** Part 1: Parse the file (if needed) ***
@@ -1617,7 +1617,6 @@ void CodeCompletion::ParseFunctionsAndFillToolbar(bool force)
     {
         // Update the last editor and changed flag...
         m_ToolbarChanged = false;
-        m_LastFile = filename;
 
         // ...and refresh the toolbars.
         m_Function->Clear();
@@ -1713,17 +1712,21 @@ void CodeCompletion::OnEditorOpen(CodeBlocksEvent& event)
     if (!Manager::IsAppShuttingDown() && IsAttached() && m_InitDone)
     {
         cbEditor* ed = Manager::Get()->GetEditorManager()->GetBuiltinEditor(event.GetEditor());
+        wxString filename;
         if (ed)
         {
-            wxString filename = ed->GetFilename();
+            filename = ed->GetFilename();
             // wxString s_tmplog = _T("CC: OnEditorOpen... Filename: ");
             // s_tmplog = s_tmplog + filename;
             // Manager::Get()->GetLogManager()->DebugLog(s_tmplog);
             FunctionsScopePerFile* funcdata = &(m_AllFunctionsScopes[filename]);
             funcdata->parsed = false;
         }
-        if (!ProjectManager::IsBusy())
+        if (!ProjectManager::IsBusy() && (filename.IsEmpty() || m_NativeParser.GetParserByFilename(filename)))
+        {
+            m_TimerFunctionsParsing.Stop();
             m_TimerFunctionsParsing.Start(50, wxTIMER_ONE_SHOT);
+        }
     }
 
     event.Skip();
@@ -1737,12 +1740,18 @@ void CodeCompletion::OnEditorActivated(CodeBlocksEvent& event)
         if (!editor || !editor->IsBuiltinEditor())
             return;
 
-        if (m_LastFile == editor->GetFilename())
+        wxString filename = editor->GetFilename();
+        if (filename.IsEmpty() || m_LastFile == filename)
             return;
 
+        if (m_NativeParser.GetParserByFilename(filename))
+        {
+            EnableToolbarTools(true);
+            ParseFunctionsAndFillToolbar();
+        }
+
         m_NativeParser.OnEditorActivated(editor);
-        ParseFunctionsAndFillToolbar();
-        EnableToolbarTools(true);
+        m_LastFile = filename;
     }
 
     event.Skip();
@@ -2454,8 +2463,11 @@ void CodeCompletion::EditorEventHook(cbEditor* editor, wxScintillaEvent& event)
 
         if (event.GetEventType() == wxEVT_SCI_UPDATEUI)
         {
-            m_TimerToolbar.Stop();
-            m_TimerToolbar.Start(EDITOR_AND_LINE_INTERVAL, wxTIMER_ONE_SHOT);
+            if (m_NativeParser.GetParserByFilename(m_LastFile))
+            {
+                m_TimerToolbar.Stop();
+                m_TimerToolbar.Start(EDITOR_AND_LINE_INTERVAL, wxTIMER_ONE_SHOT);
+            }
         }
     }
 
@@ -2526,6 +2538,6 @@ void CodeCompletion::OnRealtimeParsing(wxTimerEvent& event)
         return;
 
     wxString file = editor->GetFilename();
-    Manager::Get()->GetLogManager()->DebugLog(_T("Reparsing while typing for editor ") + file);
-    m_NativeParser.ReparseFile(file);
+    if (m_NativeParser.ReparseFile(file))
+        Manager::Get()->GetLogManager()->DebugLog(_T("Reparsing while typing for editor ") + file);
 }

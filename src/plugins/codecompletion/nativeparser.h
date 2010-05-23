@@ -72,7 +72,7 @@ class NativeParser : public wxEvtHandler
         void ClearParsers();
         void RereadParserOptions();
         void AddFileToParser(cbProject* project, const wxString& filename);
-        void ReparseFile(const wxString& filename);
+        bool ReparseFile(const wxString& filename);
         void RemoveFileFromParser(cbProject* project, const wxString& filename);
         void ReparseProject(cbProject* project);
         void ForceReparseActiveProject();
@@ -176,6 +176,7 @@ class NativeParser : public wxEvtHandler
         ParserFileList       m_RepaseFileList;
 
         wxTimer              m_TimerEditorActivated;
+        cbProject*           m_LastProject;
         EditorBase*          m_LastEditor;
         wxImageList*         m_pImageList;
 
