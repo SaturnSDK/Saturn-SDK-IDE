@@ -144,8 +144,8 @@ void cbStyledTextCtrl::OnKeyDown(wxKeyEvent& event)
                 if (!(event.ControlDown() || event.ShiftDown() || event.AltDown()))
                 {
                     const int pos = GetCurrentPos();
-                    const int index = s_leftBrace.Find(GetCharAt(pos - 1));
-                    if (index != wxNOT_FOUND && GetCharAt(pos) == s_rightBrace.GetChar(index))
+                    const int index = s_leftBrace.Find((wxChar)GetCharAt(pos - 1));
+                    if (index != wxNOT_FOUND && (wxChar)GetCharAt(pos) == s_rightBrace.GetChar(index))
                     {
                         CharRight();
                         DeleteBack();
@@ -201,7 +201,7 @@ void cbStyledTextCtrl::OnKeyUp(wxKeyEvent& event)
             }
 
             int index = s_leftBrace.Find(ch);
-            if (index != wxNOT_FOUND && GetCharAt(GetCurrentPos()) == s_rightBrace.GetChar(index))
+            if (index != wxNOT_FOUND && (wxChar)GetCharAt(GetCurrentPos()) == s_rightBrace.GetChar(index))
             {
                 const int pos = GetCurrentPos();
                 if (pos != wxSCI_INVALID_POSITION)
