@@ -53,6 +53,7 @@
 #ifdef __WXMSW__
     #include "compilerMSVC.h"
     #include "compilerMSVC8.h"
+    #include "compilerMSVC10.h"
     #include "compilerBCC.h"
     #include "compilerDMC.h"
     #include "compilerOW.h"
@@ -383,6 +384,7 @@ void CompilerGCC::OnAttach()
     // can't use platform::windows here due to classes do *not* exist on other platform than windows!
     CompilerFactory::RegisterCompiler(new CompilerMSVC);
     CompilerFactory::RegisterCompiler(new CompilerMSVC8);
+    CompilerFactory::RegisterCompiler(new CompilerMSVC10);
     CompilerFactory::RegisterCompiler(new CompilerBCC);
     CompilerFactory::RegisterCompiler(new CompilerDMC);
     CompilerFactory::RegisterCompiler(new CompilerOW);
