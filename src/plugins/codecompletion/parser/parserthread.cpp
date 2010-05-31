@@ -1496,6 +1496,7 @@ void ParserThread::HandleClass(EClassType ct)
                 while (!TestDestroy())
                 {
                     wxString tmp = m_Tokenizer.GetToken();
+                    GetRealType(tmp);
                     next = m_Tokenizer.PeekToken();
                     if (tmp==ParserConsts::kw_public ||
                         tmp==ParserConsts::kw_protected ||
@@ -2366,4 +2367,22 @@ wxString ParserThread::GetStrippedArgs(const wxString & args)
     TRACE(_T("GetStrippedArgs() : stripped_args='%s'."), stripped_args.wx_str());
 
     return stripped_args;
+}
+
+void ParserThread::GetRealType(wxString& token)
+{
+    wxString type = token;
+    Token* tk = NULL;
+
+    while (!TestDestroy())
+    {
+        tk = TokenExists(type, NULL, tkPreprocessor);
+        if (!tk || tk->m_Type.IsEmpty())
+            break;
+        type = tk->m_Type;
+    }
+
+    tk = TokenExists(type, NULL, tkClass);
+    if (tk)
+        token = tk->m_Name;
 }
