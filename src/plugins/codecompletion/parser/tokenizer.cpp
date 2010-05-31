@@ -371,7 +371,11 @@ wxString Tokenizer::ReadToEOL(bool nestBraces, bool stripComment)
             {
                 while (SkipComment())
                     ;
+
                 const wxChar ch = CurrentChar();
+                if (ch == _T('\n'))
+                    break;
+
                 str.Append(ch);
                 if (nestBraces)
                 {
@@ -382,6 +386,7 @@ wxString Tokenizer::ReadToEOL(bool nestBraces, bool stripComment)
                 }
                 MoveToNextChar();
             }
+
             wxChar last = PreviousChar();
             // if DOS line endings, we 've hit \r and we skip to \n...
             if (last == _T('\r'))
