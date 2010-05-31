@@ -1088,11 +1088,11 @@ bool Tokenizer::HandleConditionPreprocessor()
         ;
 
     // ONLY FOR TEST!
-//    if (m_Filename.Contains(_T("exception"))) // Line: 38
+//    if (m_Filename.EndsWith(_T("exception"))) // Line: 38
 //    {
 //        m_Filename.Len();
 //    }
-//    else if (m_Filename.Contains(_T("yvals.h"))) // Line: 79
+//    else if (m_Filename.EndsWith(_T("yvals.h"))) // Line: 79
 //    {
 //        m_Filename.Len();
 //    }

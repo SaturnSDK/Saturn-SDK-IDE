@@ -176,7 +176,7 @@ void* ParserThread::DoRun()
 wxChar ParserThread::SkipToOneOfChars(const wxString& chars, bool supportNesting)
 {
     unsigned int level = m_Tokenizer.GetNestingLevel();
-    while (1)
+    while (!TestDestroy())
     {
         if (TestDestroy())
             return '\0';
@@ -191,6 +191,8 @@ wxChar ParserThread::SkipToOneOfChars(const wxString& chars, bool supportNesting
                 return ch;
         }
     }
+
+    return _T('\0');
 }
 
 void ParserThread::SkipBlock()
@@ -207,10 +209,8 @@ void ParserThread::SkipBlock()
     // we subtract 1 because we 're already inside the block
     // (since we 've read the {)
     unsigned int level = m_Tokenizer.GetNestingLevel() - 1;
-    while (1)
+    while (!TestDestroy())
     {
-        if (TestDestroy())
-            return;
         wxString token = m_Tokenizer.GetToken();
         if (token.IsEmpty())
             break; // eof
@@ -234,10 +234,8 @@ void ParserThread::SkipAngleBraces()
     int nestLvl = 0;
     // NOTE: only exit this loop with 'break' so the tokenizer's state can
     // be reset afterwards (i.e. don't use 'return')
-    while (true)
+    while (!TestDestroy())
     {
-        if (TestDestroy())
-            break;
         wxString tmp = m_Tokenizer.GetToken();
         if (tmp==ParserConsts::lt)
             ++nestLvl;
@@ -396,7 +394,7 @@ bool ParserThread::ParseBufferForUsingNamespace(const wxString& buffer, wxArrayS
             {
                 // ok
                 m_Tokenizer.GetToken(); // eat namespace
-                while (true) // support full namespaces
+                while (!TestDestroy()) // support full namespaces
                 {
                     m_Str << m_Tokenizer.GetToken();
                     if (m_Tokenizer.PeekToken() == ParserConsts::dcolon)
@@ -451,7 +449,7 @@ bool ParserThread::Parse()
 {
     TRACE(_T("Parse() : Parsing '%s'"), m_Filename.wx_str());
 
-    if (!InitTokenizer())
+    if (TestDestroy() || !InitTokenizer())
         return false;
 
     bool result = false;
@@ -765,7 +763,7 @@ void ParserThread::DoParse()
                 TokenizerState oldState = m_Tokenizer.GetState();
                 m_Tokenizer.SetState(tsSkipNone);
                 wxString func = token;
-                while (1)
+                while (!TestDestroy())
                 {
                     token = m_Tokenizer.GetToken();
                     if (!token.IsEmpty())
@@ -1032,7 +1030,9 @@ Token* ParserThread::FindTokenFromQueue(std::queue<wxString>& q, Token* parent, 
 
     if (!result && createIfNotExist)
     {
-        result = new Token(ns, m_FileIdx, 0);
+        result = new(std::nothrow) Token(ns, m_FileIdx, 0);
+        if (!result)
+            return NULL;
         result->m_TokenKind = q.empty() ? tkClass : tkNamespace;
         result->m_IsLocal = m_IsLocal;
         result->m_ParentIndex = parentIfCreated ? parentIfCreated->GetSelf() : -1;
@@ -1128,9 +1128,12 @@ Token* ParserThread::DoAddToken(TokenKind kind,
     else
     {
         Token* finalParent = localParent ? localParent : m_pLastParent;
-        newToken = new Token(newname, m_FileIdx, line);
+
+        if (!TestDestroy())
+            newToken = new(std::nothrow) Token(newname, m_FileIdx, line);
 
         if (newToken) TRACE(_T("DoAddToken() : Created token='%s', file_idx=%d, line=%d"), newname.wx_str(), m_FileIdx, line);
+        else return 0;
 
         newToken->m_ParentIndex  = finalParent ? finalParent->GetSelf() : -1;
         newToken->m_TokenKind    = kind;
@@ -1211,15 +1214,16 @@ Token* ParserThread::DoAddToken(TokenKind kind,
 
 void ParserThread::HandleIncludes()
 {
-    wxString filename;
-    bool isGlobal = !m_IsLocal;
-    wxString token = m_Tokenizer.GetToken();
-    // now token holds something like:
-    // "someheader.h"
-    // < and will follow iostream.h, >
     if (TestDestroy())
         return;
 
+    wxString filename;
+    bool isGlobal = !m_IsLocal;
+    wxString token = m_Tokenizer.GetToken();
+
+    // now token holds something like:
+    // "someheader.h"
+    // < and will follow iostream.h, >
     if (!token.IsEmpty())
     {
         if (token.GetChar(0) == '"')
@@ -1240,7 +1244,7 @@ void ParserThread::HandleIncludes()
             isGlobal = true;
             // next token is filename, next is . (dot), next is extension
             // basically we'll loop until >
-            while (1)
+            while (!TestDestroy())
             {
                 token = m_Tokenizer.GetToken();
                 if (token.IsEmpty())
@@ -1334,6 +1338,9 @@ void ParserThread::HandleDefines()
 
 void ParserThread::HandleUndefs()
 {
+    if (TestDestroy())
+        return;
+
     const wxString token = m_Tokenizer.GetToken(); // read the token after #undef
     if (!token.IsEmpty())
     {
@@ -1347,6 +1354,9 @@ void ParserThread::HandleUndefs()
 
 void ParserThread::HandleNamespace()
 {
+    if (TestDestroy())
+        return;
+
     wxString ns = m_Tokenizer.GetToken();
     int line = m_Tokenizer.GetLineNumber();
 
@@ -1420,7 +1430,7 @@ void ParserThread::HandleNamespace()
             Token* lastParent = m_pLastParent;
             Token* aliasToken = NULL;
 
-            while (true)
+            while (!TestDestroy())
             {
                 wxString aliasStr = m_Tokenizer.GetToken();
 
@@ -1453,6 +1463,9 @@ void ParserThread::HandleNamespace()
 
 void ParserThread::HandleClass(EClassType ct)
 {
+    if (TestDestroy())
+        return;
+
     // need to force the tokenizer _not_ skip anything
     // as we 're manually parsing class decls
     // don't forget to reset that if you add any early exit condition!
@@ -1461,7 +1474,7 @@ void ParserThread::HandleClass(EClassType ct)
 
     int lineNr = m_Tokenizer.GetLineNumber();
     wxString ancestors;
-    while (1)
+    while (!TestDestroy())
     {
         wxString current = m_Tokenizer.GetToken(); // class name
         wxString next = m_Tokenizer.PeekToken();
@@ -1480,7 +1493,7 @@ void ParserThread::HandleClass(EClassType ct)
             {
                 TRACE(_T("HandleClass() : Class '%s' has ancestors"), current.wx_str());
                 m_Tokenizer.GetToken(); // eat ":"
-                while (1)
+                while (!TestDestroy())
                 {
                     wxString tmp = m_Tokenizer.GetToken();
                     next = m_Tokenizer.PeekToken();
@@ -1689,6 +1702,9 @@ void ParserThread::HandleClass(EClassType ct)
 
 void ParserThread::HandleFunction(const wxString& name, bool isOperator)
 {
+    if (TestDestroy())
+        return;
+
     TRACE(_T("HandleFunction() : Adding function '")+name+_T("': m_Str='")+m_Str+_T("'"));
     wxString args = m_Tokenizer.GetToken();
     wxString peek = m_Tokenizer.PeekToken();
@@ -1797,6 +1813,9 @@ void ParserThread::HandleFunction(const wxString& name, bool isOperator)
 
 void ParserThread::HandleEnum()
 {
+    if (TestDestroy())
+        return;
+
     // enums have the following rough definition:
     // enum [xxx] { type1 name1 [= 1][, [type2 name2 [= 2]]] };
     bool isUnnamed = false;
@@ -1871,7 +1890,7 @@ void ParserThread::HandleEnum()
 
     int lineStart = m_Tokenizer.GetLineNumber();
 
-    while (1)
+    while (!TestDestroy())
     {
         // process enumerators
         token = m_Tokenizer.GetToken();
@@ -1911,6 +1930,9 @@ void ParserThread::HandleEnum()
 
 void ParserThread::HandleTypedef()
 {
+    if (TestDestroy())
+        return;
+
     // typedefs are handled as tkClass and we put the typedef'd type as the
     // class's ancestor. This way, it will work through inheritance.
     // Function pointers are a different beast and are handled differently.
@@ -1941,7 +1963,7 @@ void ParserThread::HandleTypedef()
     wxString peek;
     m_ParsingTypedef = true;
 
-    while (true)
+    while (!TestDestroy())
     {
         token = m_Tokenizer.GetToken();
         peek  = m_Tokenizer.PeekToken();
@@ -2099,13 +2121,16 @@ void ParserThread::HandleTypedef()
 
 void ParserThread::HandleMacro(const wxString &token, const wxString &peek)
 {
+    if (TestDestroy())
+        return;
+
     TRACE(_T("HandleMacro() : Adding token '%s' (peek='%s')"), token.wx_str(), peek.wx_str());
     DoAddToken(tkMacro, token, m_Tokenizer.GetLineNumber(), 0, 0, peek);
 }
 
 void ParserThread::ReadVarNames()
 {
-    while (1)
+    while (!TestDestroy())
     {
         wxString token = m_Tokenizer.GetToken();
 
@@ -2145,7 +2170,7 @@ void ParserThread::ReadVarNames()
 
 void ParserThread::ReadClsNames(wxString& ancestor)
 {
-    while (1)
+    while (!TestDestroy())
     {
         wxString token = m_Tokenizer.GetToken();
 

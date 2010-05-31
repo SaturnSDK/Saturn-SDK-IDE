@@ -134,7 +134,6 @@ class CodeCompletion : public cbCodeCompletionPlugin
         wxTimer                            m_TimerCodeCompletion;
         wxTimer                            m_TimerFunctionsParsing;
         wxTimer                            m_TimerRealtimeParsing;
-        wxTimer                            m_TimerToolbar;
         cbEditor*                          m_pCodeCompletionLastEditor;
         int                                m_ActiveCalltipsNest;
 

@@ -55,26 +55,25 @@ class NativeParser : public wxEvtHandler
         NativeParser();
         ~NativeParser();
 
-        Parser* GetParserPtr() { return m_pParser; };
+        Parser* GetParserPtr() const { return m_pParser; }
         Parser* GetParserByProject(cbProject* project);
+        Parser* GetParserByFilename(const wxString& filename);
         cbProject* GetProjectByParser(Parser* parser);
         cbProject* GetProjectByFilename(const wxString& filename);
-        Parser* GetParserByFilename(const wxString& filename);
         wxImageList* GetImageList() { return m_pImageList; }
         int  GetTokenKindImage(Token* token);
         void SetTokenKindImage(int kind, const wxBitmap& bitmap, const wxBitmap& mask = wxNullBitmap);
         void SetTokenKindImage(int kind, const wxBitmap& bitmap, const wxColour& maskColour);
         void SetTokenKindImage(int kind, const wxIcon& icon);
+        bool Done() const { return m_WaitParsingList.empty(); }
 
         // If return != m_pParser, the mean is waiting...for parser task
         const Parser* AddOrChangeParser(cbProject* project, bool useCache = true);
         bool RemoveParser(cbProject* project, bool useCache = true);
-        void ClearParsers();
         void RereadParserOptions();
         void AddFileToParser(cbProject* project, const wxString& filename);
         bool ReparseFile(const wxString& filename);
         void RemoveFileFromParser(cbProject* project, const wxString& filename);
-        void ReparseProject(cbProject* project);
         void ForceReparseActiveProject();
 
         size_t MarkItemsByAI(TokenIdxSet& result, bool reallyUseAI = true, bool noPartialMatch = false, bool caseSensitive = false, int caretPos = -1);
@@ -105,8 +104,13 @@ class NativeParser : public wxEvtHandler
         void OnProjectLoadingHook(cbProject* project, TiXmlElement* elem, bool loading);
 
     protected:
-        void SetClassBrowserParser();
-        void SwitchParser(cbProject* project, Parser* parser);
+        void ReparseProject(cbProject* project, Parser* parser);
+        bool SwitchParser(cbProject* project, Parser* parser);
+        bool DeleteParser(cbProject* project, Parser* parser);
+        void SetParserPtr(Parser* parser);
+        void ClearParsers();
+        size_t GetParserCount();
+        void RemoveObsoleteParsers();
 
     private:
         friend class CodeCompletion;
@@ -128,10 +132,10 @@ class NativeParser : public wxEvtHandler
         wxString GetNextCCToken(const wxString& line, unsigned int& startAt, bool& is_function);
         wxString GetCCToken(wxString& line, ParserTokenType& tokenType);
         void BreakUpInLines(wxString& str, const wxString& original_str, int chars_per_line = -1);
-        void AddCompilerDirs(cbProject* project);
-        void AddCompilerPredefinedMacros(cbProject* project);
-        void AddProjectDefinedMacros(cbProject* project);
-        void AddDefaultCompilerDirs();
+        bool AddCompilerDirs(cbProject* project, Parser* parser);
+        bool AddCompilerPredefinedMacros(cbProject* project, Parser* parser);
+        bool AddProjectDefinedMacros(cbProject* project, Parser* parser);
+        bool AddDefaultCompilerDirs(Parser* parser);
         const wxArrayString& GetGCCCompilerDirs(const wxString &cpp_compiler);
         bool LoadCachedData(cbProject* project);
         bool SaveCachedData(const wxString& projectFilename);
@@ -142,6 +146,7 @@ class NativeParser : public wxEvtHandler
         void OnEditorActivated(EditorBase* editor);
         void OnEditorClosed(EditorBase* editor);
         void OnTimerEditorActivated(wxTimerEvent& event);
+        void OnTimerRestartParsing(wxTimerEvent& event);
 
         bool SkipWhitespaceForward(cbEditor* editor, int& pos);
         bool SkipWhitespaceBackward(cbEditor* editor, int& pos);
@@ -149,11 +154,29 @@ class NativeParser : public wxEvtHandler
         size_t ResolveActualType(wxString searchText, const TokenIdxSet& searchScope, TokenIdxSet& result);
         size_t ResolveExpression(std::queue<ParserComponent> components, const TokenIdxSet& searchScope,TokenIdxSet& result, bool IsCaseSense = true, bool IsPrefix = false);
 
+        enum ParsingType
+        {
+            ptRepaseFile        = 1,
+            ptAddFileToParser   = 2,
+            ptAddParser         = 3,
+            ptUnknown           = 4,
+        };
+
+        struct ParsingNode
+        {
+            cbProject* project;
+            Parser* parser;
+            wxString file;
+            ParsingType type;
+        };
+
         typedef std::pair<cbProject*, Parser*> ParserPair;
         typedef std::list<ParserPair> ParserList;
+        typedef std::list<ParsingNode> WaitParsingList;
         ParserList           m_ParserList;
-        ParserList           m_ParserWaitList;
         ParserPair           m_LastParser;
+        WaitParsingList      m_WaitParsingList;
+
         Parser*              m_pParser;
         int                  m_EditorStartWord;
         int                  m_EditorEndWord;
@@ -171,11 +194,8 @@ class NativeParser : public wxEvtHandler
         int                  m_HookId; // project loader hook ID
         std::set<wxString>   m_StandaloneFile;
 
-        typedef std::list<std::pair<Parser*, wxString> > ParserFileList;
-        ParserFileList       m_AddFileToParserList;
-        ParserFileList       m_RepaseFileList;
-
         wxTimer              m_TimerEditorActivated;
+        wxTimer              m_TimerRestartParsing;
         cbProject*           m_LastProject;
         EditorBase*          m_LastEditor;
         wxImageList*         m_pImageList;

@@ -132,11 +132,10 @@ int idStartParsingProjects      = wxNewId();
 int idCodeCompleteTimer         = wxNewId();
 int idFunctionsParsingTimer     = wxNewId();
 int idRealtimeParsingTimer      = wxNewId();
-int idToolbarTimer              = wxNewId();
 
 // milliseconds
 #define REALTIME_PARSING_DELAY      500
-#define EDITOR_AND_LINE_INTERVAL    100
+#define FUNCTIONS_PARSING_DELAY     150
 
 BEGIN_EVENT_TABLE(CodeCompletion, cbCodeCompletionPlugin)
     EVT_UPDATE_UI_RANGE(idMenuCodeComplete, idProjectReparse, CodeCompletion::OnUpdateUI)
@@ -161,7 +160,6 @@ BEGIN_EVENT_TABLE(CodeCompletion, cbCodeCompletionPlugin)
     EVT_TIMER(idCodeCompleteTimer, CodeCompletion::OnCodeCompleteTimer)
     EVT_TIMER(idFunctionsParsingTimer, CodeCompletion::OnStartParsingFunctions)
     EVT_TIMER(idRealtimeParsingTimer, CodeCompletion::OnRealtimeParsing)
-    EVT_TIMER(idToolbarTimer, CodeCompletion::OnStartParsingFunctions)
 
     EVT_CHOICE(XRCID("chcCodeCompletionScope"),  CodeCompletion::OnScope)
     EVT_CHOICE(XRCID("chcCodeCompletionFunction"),  CodeCompletion::OnFunction)
@@ -176,7 +174,6 @@ CodeCompletion::CodeCompletion() :
     m_TimerCodeCompletion(this, idCodeCompleteTimer),
     m_TimerFunctionsParsing(this, idFunctionsParsingTimer),
     m_TimerRealtimeParsing(this, idRealtimeParsingTimer),
-    m_TimerToolbar(this, idToolbarTimer),
     m_pCodeCompletionLastEditor(0),
     m_ActiveCalltipsNest(0),
     m_IsAutoPopup(false),
@@ -1255,7 +1252,8 @@ void CodeCompletion::OnWorkspaceChanged(CodeBlocksEvent& event)
         }
 
         // Update the class browser
-        if (m_NativeParser.GetParserPtr() && m_NativeParser.GetParserPtr()->ClassBrowserOptions().displayFilter == bdfProject)
+        Parser* parser = m_NativeParser.GetParserPtr();
+        if (parser && parser->ClassBrowserOptions().displayFilter == bdfProject)
             m_NativeParser.UpdateClassBrowser();
     }
     event.Skip();
@@ -1274,7 +1272,9 @@ void CodeCompletion::OnProjectActivated(CodeBlocksEvent& event)
     {
         if (m_NativeParser.AddOrChangeParser(event.GetProject()) != m_NativeParser.GetParserPtr())
             return;
-        if (m_NativeParser.GetParserPtr() && m_NativeParser.GetParserPtr()->ClassBrowserOptions().displayFilter == bdfProject)
+
+        Parser* parser = m_NativeParser.GetParserPtr();
+        if (parser && parser->ClassBrowserOptions().displayFilter == bdfProject)
             m_NativeParser.UpdateClassBrowser();
     }
 
@@ -1303,7 +1303,12 @@ void CodeCompletion::OnProjectSaved(CodeBlocksEvent& event)
     if (IsAttached() && m_InitDone && event.GetProject())
     {
         Manager::Get()->GetLogManager()->DebugLog(_T("Reparsing project."));
-        m_NativeParser.ReparseProject(event.GetProject());
+        cbProject* project = event.GetProject();
+        if (m_NativeParser.Done() && m_NativeParser.GetParserByProject(project))
+        {
+            m_NativeParser.RemoveParser(project);
+            m_NativeParser.AddOrChangeParser(project);
+        }
     }
     event.Skip();
 }
@@ -1516,14 +1521,15 @@ void CodeCompletion::ParseFunctionsAndFillToolbar(bool force)
     // *** Part 1: Parse the file (if needed) ***
     if (force || !funcdata->parsed)
     {
+        Parser* parser = m_NativeParser.GetParserPtr();
+        if (!parser)
+            return;
+
         m_TimerFunctionsParsing.Stop();
         funcdata->m_FunctionsScope.clear();
         funcdata->m_NameSpaces.clear();
         funcdata->parsed = true;
 
-        Parser* parser = m_NativeParser.GetParserPtr();
-        if (!parser)
-            return;
         TokenIdxSet result;
         TokensTree* tmptree = parser->GetTokens();
         parser->FindTokensInFile(filename, result, tkAnyFunction | tkEnum | tkClass | tkNamespace);
@@ -1722,11 +1728,6 @@ void CodeCompletion::OnEditorOpen(CodeBlocksEvent& event)
             FunctionsScopePerFile* funcdata = &(m_AllFunctionsScopes[filename]);
             funcdata->parsed = false;
         }
-        if (!ProjectManager::IsBusy() && (filename.IsEmpty() || m_NativeParser.GetParserByFilename(filename)))
-        {
-            m_TimerFunctionsParsing.Stop();
-            m_TimerFunctionsParsing.Start(50, wxTIMER_ONE_SHOT);
-        }
     }
 
     event.Skip();
@@ -1744,13 +1745,16 @@ void CodeCompletion::OnEditorActivated(CodeBlocksEvent& event)
         if (filename.IsEmpty() || m_LastFile == filename)
             return;
 
-        if (m_NativeParser.GetParserByFilename(filename))
+        m_NativeParser.OnEditorActivated(editor);
+
+        Parser* parser = m_NativeParser.GetParserPtr();
+        if (parser && m_NativeParser.GetParserByFilename(filename) == parser)
         {
+            m_TimerFunctionsParsing.Stop();
+            m_TimerFunctionsParsing.Start(FUNCTIONS_PARSING_DELAY, wxTIMER_ONE_SHOT);
             EnableToolbarTools(true);
-            ParseFunctionsAndFillToolbar();
         }
 
-        m_NativeParser.OnEditorActivated(editor);
         m_LastFile = filename;
     }
 
@@ -1788,8 +1792,6 @@ void CodeCompletion::OnEditorClosed(CodeBlocksEvent& event)
         m_AllFunctionsScopes[filename].m_FunctionsScope.clear();
         m_AllFunctionsScopes[filename].m_NameSpaces.clear();
         m_AllFunctionsScopes[filename].parsed = false;
-        if (m_NativeParser.GetParserPtr() && m_NativeParser.GetParserPtr()->ClassBrowserOptions().displayFilter == bdfFile)
-            m_NativeParser.UpdateClassBrowser();
     }
 
     event.Skip();
@@ -2361,6 +2363,7 @@ void CodeCompletion::EditorEventHook(cbEditor* editor, wxScintillaEvent& event)
     if (event.GetEventType() == wxEVT_SCI_CHARADDED)
     {
         static bool autoIndent = false;
+        static int autoIndentLine = m_CurrentLine;
 
         if (event.GetKey() == _T(':'))
         {
@@ -2391,12 +2394,15 @@ void CodeCompletion::EditorEventHook(cbEditor* editor, wxScintillaEvent& event)
         {
             wxChar last;
             const int lastLine = control->GetCurrentLine() - 1;
+            const int pos = control->GetLineIndentPosition(lastLine);
             int lastPos = control->GetLineEndPosition(lastLine);
-            while ((last = control->GetCharAt(--lastPos)) <= _T(' '))
+            while ((last = control->GetCharAt(--lastPos)) <= _T(' ') && lastPos > pos)
                 ;
 
             if (last == _T(';'))
             {
+                if (autoIndentLine != lastLine)
+                    autoIndent = false;
                 if (autoIndent)
                 {
                     autoIndent = false;
@@ -2411,6 +2417,7 @@ void CodeCompletion::EditorEventHook(cbEditor* editor, wxScintillaEvent& event)
                     text == _T("while") || text == _T("do"))
                 {
                     autoIndent = true;
+                    autoIndentLine = lastLine + 1;
                     control->Tab();
                 }
             }
@@ -2463,10 +2470,11 @@ void CodeCompletion::EditorEventHook(cbEditor* editor, wxScintillaEvent& event)
 
         if (event.GetEventType() == wxEVT_SCI_UPDATEUI)
         {
-            if (m_NativeParser.GetParserByFilename(m_LastFile))
+            Parser* parser = m_NativeParser.GetParserPtr();
+            if (parser && m_NativeParser.GetParserByFilename(m_LastFile) == parser)
             {
-                m_TimerToolbar.Stop();
-                m_TimerToolbar.Start(EDITOR_AND_LINE_INTERVAL, wxTIMER_ONE_SHOT);
+                m_TimerFunctionsParsing.Stop();
+                m_TimerFunctionsParsing.Start(FUNCTIONS_PARSING_DELAY, wxTIMER_ONE_SHOT);
             }
         }
     }
@@ -2493,8 +2501,7 @@ void CodeCompletion::OnFunction(wxCommandEvent& /*event*/)
 		if (idxFn != wxNOT_FOUND && idxFn < static_cast<int>(m_FunctionsScope.size()))
 		{
 			int Line = m_FunctionsScope[idxFn].StartLine;
-			EditorManager* edMan = Manager::Get()->GetEditorManager();
-			cbEditor* ed = edMan->GetBuiltinActiveEditor();
+			cbEditor* ed = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
 			if (!ed)
 				return;
 			ed->GotoLine(Line);
@@ -2513,11 +2520,21 @@ void CodeCompletion::OnParserEnd(wxCommandEvent& event)
     if (ProjectManager::IsBusy())
         return;
 
-    if (Manager::Get()->GetEditorManager()->GetActiveEditor())
-    {
-        EnableToolbarTools(true);
-        ParseFunctionsAndFillToolbar(true);
-    }
+    EditorBase* editor = Manager::Get()->GetEditorManager()->GetActiveEditor();
+    if (!editor)
+        return;
+
+    wxString filename = editor->GetFilename();
+    if (filename.IsEmpty())
+        return;
+
+    Parser* parser = m_NativeParser.GetParserPtr();
+    if (!parser || (parser && m_NativeParser.GetParserByFilename(filename) != parser))
+        return;
+
+    m_TimerFunctionsParsing.Stop();
+    EnableToolbarTools(true);
+    ParseFunctionsAndFillToolbar(true);
 }
 
 void CodeCompletion::EnableToolbarTools(bool enable)

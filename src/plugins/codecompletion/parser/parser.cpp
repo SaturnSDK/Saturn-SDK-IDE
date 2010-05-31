@@ -65,18 +65,14 @@ Parser::Parser(wxEvtHandler* parent)
     m_NeedsReparse(false),
     m_IsBatch(false),
     m_IsParsing(false),
-    m_pClassBrowser(0),
-    m_TreeBuildingStatus(0),
-    m_TreeBuildingTokenIdx(0),
     m_Timer(this, TIMER_ID),
     m_BatchTimer(this,BATCH_TIMER_ID),
     m_StopWatchRunning(false),
     m_LastStopWatchTime(0),
-    m_IgnoreThreadEvents(false),
-    m_ShuttingDown(false)
+    m_IgnoreThreadEvents(false)
 {
-    m_pTokensTree = new TokensTree;
-    m_pTempTokensTree = new TokensTree;
+    m_pTokensTree = new(std::nothrow) TokensTree;
+    m_pTempTokensTree = new(std::nothrow) TokensTree;
     m_LocalFiles.clear();
     m_GlobalIncludes.clear();
     ReadOptions();
@@ -85,23 +81,9 @@ Parser::Parser(wxEvtHandler* parent)
 
 Parser::~Parser()
 {
-    try
-    {
-        m_ShuttingDown = true;
-        if (m_pClassBrowser && m_pClassBrowser->GetParserPtr() == this)
-            m_pClassBrowser->UnlinkParser();
-
-        m_TreeBuildingStatus = 0;
-        m_pClassBrowser = 0;
-
-        Clear(); // Clear also disconnects the events
-        Delete(m_pTempTokensTree);
-        Delete(m_pTokensTree);
-    }
-    catch (...)
-    {
-        Manager::Get()->GetLogManager()->Log(_T("Exception catch in ~Parser()."));
-    }
+    Clear(); // Clear also disconnects the events
+    Delete(m_pTempTokensTree);
+    Delete(m_pTokensTree);
 }
 
 void Parser::ConnectEvents()
@@ -294,15 +276,23 @@ bool Parser::ParseBuffer(const wxString& buffer, bool isLocal, bool bufferSkipBl
     return Parse(buffer, isLocal, opts);
 }
 
+void Parser::SetProject(cbProject* project)
+{
+    if (project)
+        m_Project = project->GetTitle();
+}
+
 void Parser::AddBatchParse(const wxArrayString& filenames, bool isUpFront)
 {
     if (m_BatchTimer.IsRunning())
         return;
 
     if (isUpFront)
-        Manager::Get()->GetLogManager()->DebugLog(F(_T("Add up-front parsing %d file(s)..."), filenames.GetCount()));
+        Manager::Get()->GetLogManager()->DebugLog(F(_T("Add up-front parsing %d file(s) for Project %s..."),
+                                                    filenames.GetCount(), m_Project.wx_str()));
     else
-        Manager::Get()->GetLogManager()->DebugLog(F(_T("Add batch-parsing %d file(s)..."), filenames.GetCount()));
+        Manager::Get()->GetLogManager()->DebugLog(F(_T("Add batch-parsing %d file(s) for Project %s..."),
+                                                    filenames.GetCount(), m_Project.wx_str()));
 
     m_IsBatch = false;
     if (isUpFront)
@@ -369,11 +359,9 @@ bool Parser::Parse(const wxString& bufferOrFilename, bool isLocal, ParserThreadO
         }
 
         TRACE(_T("Parse() : Creating task for: %s"), buffOrFile.wx_str());
-        ParserThread* thread = new ParserThread(this,
-                                                buffOrFile,
-                                                isLocal,
-                                                opts,
-                                                m_pTokensTree);
+        ParserThread* thread = new(std::nothrow) ParserThread(this, buffOrFile, isLocal, opts, m_pTokensTree);
+        if (!thread)
+            return false;
         if (opts.useBuffer)
         {
             result = thread->Parse();
@@ -383,9 +371,6 @@ bool Parser::Parse(const wxString& bufferOrFilename, bool isLocal, ParserThreadO
         }
 
         TRACE(_T("Parse() : Parsing %s"), buffOrFile.wx_str());
-
-        if (m_IgnoreThreadEvents)
-            m_IgnoreThreadEvents = false;
 
         if (!m_IsUpFront)
         {
@@ -519,6 +504,8 @@ bool Parser::Reparse(const wxString& filename, bool isLocal)
 
 void Parser::Clear()
 {
+    m_IgnoreThreadEvents = true;
+
     DisconnectEvents();
     TerminateAllThreads();
     Manager::ProcessPendingEvents();
@@ -530,13 +517,8 @@ void Parser::Clear()
     m_LocalFiles.clear();
     m_GlobalIncludes.clear();
 
-    if (!m_ShuttingDown)
-    {
-        Manager::ProcessPendingEvents();
-        ConnectEvents();
-    }
-
     m_UsingCache = false;
+    m_IgnoreThreadEvents = false;
 }
 
 bool Parser::ReadFromCache(wxInputStream* f)
@@ -611,7 +593,9 @@ bool Parser::ReadFromCache(wxInputStream* f)
                 break;
                 if (nonempty_token != 0)
                 {
-                    token = new Token();
+                    token = new(std::nothrow) Token();
+                    if (!token)
+                        return false;
                     if (!token->SerializeIn(f))
                     {
                         delete token;
@@ -687,10 +671,9 @@ bool Parser::WriteToCache(wxOutputStream* f)
 
 void Parser::TerminateAllThreads()
 {
-    m_IgnoreThreadEvents = true;
-
     m_Pool.AbortAllTasks();
-    wxMilliSleep(10);
+    while (!m_Pool.Done())
+        wxMilliSleep(20);
 
     while (!m_PoolQueue.empty())
     {
@@ -877,7 +860,7 @@ void Parser::OnBatchTimer(wxTimerEvent& event)
     if (m_IsBatch)
     {
         m_IsBatch = false;
-        Manager::Get()->GetLogManager()->DebugLog(_T("Starting batch parsing..."));
+        Manager::Get()->GetLogManager()->DebugLog(F(_T("Starting batch parsing for Project %s..."), m_Project.wx_str()));
         StartStopWatch();
         PostParserEvent(PARSER_START);
     }
@@ -900,7 +883,7 @@ bool Parser::ReparseModifiedFiles()
     if (!m_NeedsReparse || !m_Pool.Done())
         return false;
 
-    Manager::Get()->GetLogManager()->DebugLog(_T("Reparsing saved files..."));
+    Manager::Get()->GetLogManager()->DebugLog(F(_T("Reparsing saved files for Project %s..."), m_Project.wx_str()));
     m_NeedsReparse = false;
     std::queue<wxString> files_list;
     {

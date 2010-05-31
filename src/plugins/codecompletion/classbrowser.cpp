@@ -134,7 +134,8 @@ ClassBrowser::~ClassBrowser()
     int pos = XRCCTRL(*this, "splitterWin", wxSplitterWindow)->GetSashPosition();
     Manager::Get()->GetConfigManager(_T("code_completion"))->Write(_T("/splitter_pos"), pos);
 
-    UnlinkParser();
+    SetParser(NULL);
+
     if (m_pBuilderThread)
     {
         m_Semaphore.Post();
@@ -145,29 +146,8 @@ ClassBrowser::~ClassBrowser()
 
 void ClassBrowser::SetParser(Parser* parser)
 {
-    if (   parser != m_pParser
-        || (   parser && m_pParser
-            && parser->ClassBrowserOptions().displayFilter != m_pParser->ClassBrowserOptions().displayFilter) )
-    {
-        UnlinkParser();
-        if (parser)
-        {
-            parser->m_pClassBrowser = this;
-            m_pParser = parser;
-            UpdateView();
-        }
-    }
-}
-
-void ClassBrowser::UnlinkParser()
-{
-    if (m_pParser)
-    {
-        if (m_pParser->m_pClassBrowser == this)
-            m_pParser->m_pClassBrowser = NULL;
-
-        m_pParser = NULL;
-    }
+    m_pParser = parser;
+    UpdateView();
 }
 
 void ClassBrowser::UpdateSash()
@@ -747,7 +727,9 @@ void ClassBrowser::BuildTree()
     // create the thread if needed
     if (!m_pBuilderThread)
     {
-        m_pBuilderThread = new ClassBrowserBuilderThread(m_Semaphore, &m_pBuilderThread);
+        m_pBuilderThread = new(std::nothrow) ClassBrowserBuilderThread(m_Semaphore, &m_pBuilderThread);
+        if (!m_pBuilderThread)
+            return;
         m_pBuilderThread->Create();
         m_pBuilderThread->Run();
         create_tree = true; // new builder thread - need to create new tree

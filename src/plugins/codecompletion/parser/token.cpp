@@ -125,7 +125,7 @@ wxString Token::GetParentName()
     wxString parentname = _T("");
     wxCriticalSectionLocker* lock = 0;
     if (m_pTree)
-        lock = new wxCriticalSectionLocker(s_MutexProtection);
+        lock = new(std::nothrow) wxCriticalSectionLocker(s_MutexProtection);
     Token* parent = GetParentToken();
     if (parent)
         parentname = parent->m_Name;

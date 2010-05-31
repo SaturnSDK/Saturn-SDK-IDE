@@ -901,8 +901,12 @@ bool ClassBrowserBuilderThread::CreateSpecialFolders(CBTreeCtrl* tree, wxTreeIte
     bool hasTD = false;
     bool hasGM = false;
 
+    Parser* parser = m_pNativeParser->GetParserPtr();
+    if (!parser)
+        return false;
+
     // loop all tokens in global namespace and see if we have matches
-    TokensTree* tt = m_pNativeParser->GetParserPtr()->GetTokens();
+    TokensTree* tt = parser->GetTokens();
     for (TokenIdxSet::iterator it = tt->m_GlobalNameSpace.begin(); it != tt->m_GlobalNameSpace.end(); ++it)
     {
         Token* token = tt->at(*it);

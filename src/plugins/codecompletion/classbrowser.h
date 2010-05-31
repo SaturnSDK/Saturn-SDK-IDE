@@ -34,7 +34,6 @@ class ClassBrowser : public wxPanel
         void SetParser(Parser* parser);
         const Parser& GetParser(){ return *m_pParser; }
         const Parser* GetParserPtr() { return m_pParser; }
-        void UnlinkParser();
         void UpdateView(bool checkHeaderSwap = false);
         void UpdateSash();
 
@@ -72,7 +71,6 @@ class ClassBrowser : public wxPanel
         wxComboBox*     m_Search;
         wxTreeCtrl*     m_TreeForPopupMenu;
         Parser*         m_pParser;
-        wxTreeItemId    m_RootNode;
 
         // filtering
         wxString m_ActiveFilename;

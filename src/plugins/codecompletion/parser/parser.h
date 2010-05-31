@@ -66,7 +66,7 @@
 
 extern int PARSER_START;
 extern int PARSER_END;
-class ClassTreeData : public BlockAllocated<ClassTreeData, 2000>, public wxTreeItemData
+class ClassTreeData : public wxTreeItemData
 {
     public:
         ClassTreeData(Token* token){ m_Token = token; }
@@ -116,11 +116,11 @@ class ClassBrowser;
 class Parser : public wxEvtHandler
 {
     public:
-        friend class ClassBrowser;
         friend class ParserThread;
         Parser(wxEvtHandler* parent);
         ~Parser();
 
+        void SetProject(cbProject* project);
         void AddBatchParse(const wxArrayString& filenames, bool isUpFront = false);
         void StartBatchParse(bool delay = true);
         bool Parse      (const wxString& filename,         bool isLocal = true, LoaderBase* loader = 0);
@@ -131,14 +131,13 @@ class Parser : public wxEvtHandler
         bool ParseBufferForUsingNamespace(const wxString& buffer, wxArrayString& result);
         bool Reparse(const wxString& filename, bool isLocal = true);
         bool RemoveFile(const wxString& filename);
-        void Clear();
+
         void ReadOptions();
         void WriteOptions();
         bool ReadFromCache(wxInputStream* f);
         bool WriteToCache(wxOutputStream* f);
         bool CacheNeedsUpdate();
         bool IsFileParsed(const wxString& filename);
-        void PostParserEvent(int id);
 
         void StartStopWatch();
         void EndStopWatch();
@@ -172,15 +171,16 @@ class Parser : public wxEvtHandler
         unsigned int GetMaxThreads() const { return m_Pool.GetConcurrentThreads(); }
         void SetMaxThreads(unsigned int max) { m_Pool.SetConcurrentThreads(max); }
 
-        void TerminateAllThreads();
-
     protected:
         void DoParseFile(const wxString& filename, bool isGlobal);
         bool ReparseModifiedFiles();
+        void Clear();
+        void TerminateAllThreads();
 
         void OnAllThreadsDone(CodeBlocksEvent& event);
         void OnTimer(wxTimerEvent& event);
         void OnBatchTimer(wxTimerEvent& event);
+        void PostParserEvent(int id);
 
     private:
         void ConnectEvents();
@@ -191,7 +191,6 @@ class Parser : public wxEvtHandler
         SearchTree<wxString>           m_GlobalIncludes;
         wxArrayString                  m_IncludeDirs;
         wxEvtHandler*                  m_pParent;
-        wxTreeItemId                   m_RootNode;
 
     protected:
         // the following three members are used to detect changes between
@@ -208,9 +207,6 @@ class Parser : public wxEvtHandler
         bool                           m_NeedsReparse;
         bool                           m_IsBatch;
         bool                           m_IsParsing;
-        ClassBrowser*                  m_pClassBrowser; // Which class browser are we updating?
-        int                            m_TreeBuildingStatus; // 0 = Done; 1 = Needs update; 2 = Updating.
-        size_t                         m_TreeBuildingTokenIdx; // Bookmark for the tree-building process
 
     private:
         wxTimer                        m_Timer;
@@ -219,7 +215,7 @@ class Parser : public wxEvtHandler
         bool                           m_StopWatchRunning;
         long                           m_LastStopWatchTime;
         bool                           m_IgnoreThreadEvents;
-        bool                           m_ShuttingDown;
+        wxString                       m_Project;
 
         DECLARE_EVENT_TABLE()
 };

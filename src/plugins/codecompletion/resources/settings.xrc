@@ -291,26 +291,55 @@
                       <border>8</border>
                     </object>
                     <object class="sizeritem">
-                      <object class="wxBoxSizer">
+                    <option>0</option>
+                    <flag>wxALIGN_LEFT|wxALIGN_TOP|wxALL</flag>
+                    <border>8</border>
+                        <object class="wxFlexGridSizer">
+                        <rows>0</rows>
+                        <cols>2</cols>
+                        <vgap>8</vgap>
+                        <hgap>8</hgap>
+                        <growablecols></growablecols>
+                        <growablerows></growablerows>
                         <object class="sizeritem">
-                          <object class="wxStaticText" name="ID_STATICTEXT6">
-                            <label>Concurrently parsing threads:</label>
-                          </object>
-                          <flag>wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL</flag>
-                          <border>5</border>
+                            <option>0</option>
+                            <flag>wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL</flag>
+                            <border>5</border>
+                            <object class="wxStaticText" name="ID_STATICTEXT6">
+                                <label>Concurrently parsing threads:</label>
+                            </object>
+                        </object>
+                            <object class="sizeritem">
+                            <option>0</option>
+                            <flag>wxLEFT|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL</flag>
+                            <border>8</border>
+                            <object class="wxSpinCtrl" name="spnThreadsNum">
+                                <style>wxSP_ARROW_KEYS</style>
+                                <value>2</value>
+                                <min>1</min>
+                                <max>16</max>
+                            </object>
+                        </object>
+                            <object class="sizeritem">
+                            <option>0</option>
+                            <flag>wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL</flag>
+                            <border>5</border>
+                            <object class="wxStaticText" name="m_staticText9">
+                                <label>Maximum allowed parsers:</label>
+                            </object>
                         </object>
                         <object class="sizeritem">
-                          <object class="wxSpinCtrl" name="spnThreadsNum">
-                            <value>2</value>
-                            <min>1</min>
-                            <max>16</max>
-                          </object>
-                          <flag>wxLEFT|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL</flag>
-                          <border>8</border>
+                            <option>0</option>
+                            <flag>wxLEFT|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL</flag>
+                            <border>8</border>
+                            <object class="wxSpinCtrl" name="spnParsersNum">
+                                <style>wxSP_ARROW_KEYS</style>
+                                <value>5</value>
+                                <min>1</min>
+                                <max>32</max>
+                            </object>
                         </object>
-                      </object>
-                      <flag>wxALL|wxEXPAND|wxALIGN_LEFT|wxALIGN_TOP</flag>
-                      <border>8</border>
+                        </object>
                     </object>
                   </object>
                   <flag>wxALL|wxEXPAND|wxALIGN_LEFT|wxALIGN_TOP</flag>

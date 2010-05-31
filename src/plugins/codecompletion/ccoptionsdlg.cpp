@@ -100,6 +100,7 @@ CCOptionsDlg::CCOptionsDlg(wxWindow* parent, NativeParser* np, CodeCompletion* c
     XRCCTRL(*this, "chkExpandNS", wxCheckBox)->SetValue(m_Parser.ClassBrowserOptions().expandNS);
     XRCCTRL(*this, "chkTreeMembers", wxCheckBox)->SetValue(m_Parser.ClassBrowserOptions().treeMembers);
     XRCCTRL(*this, "spnThreadsNum", wxSpinCtrl)->SetValue(cfg->ReadInt(_T("/max_threads"), 1));
+    XRCCTRL(*this, "spnParsersNum", wxSpinCtrl)->SetValue(cfg->ReadInt(_T("/max_parsers"), 5));
     XRCCTRL(*this, "spnThreadsNum", wxSpinCtrl)->Enable(false);
     XRCCTRL(*this, "chkFloatCB", wxCheckBox)->SetValue(cfg->ReadBool(_T("/as_floating_window"), false));
     XRCCTRL(*this, "chkNoSB", wxCheckBox)->SetValue(!cfg->ReadBool(_T("/use_symbols_browser"), true));
@@ -311,6 +312,7 @@ void CCOptionsDlg::OnApply()
     // force parser to read its options that we write in the config
     cfg->Write(_T("/use_code_completion"), (bool)!XRCCTRL(*this, "chkNoCC", wxCheckBox)->GetValue());
     cfg->Write(_T("/max_threads"), (int)XRCCTRL(*this, "spnThreadsNum", wxSpinCtrl)->GetValue());
+    cfg->Write(_T("/max_parsers"), (int)XRCCTRL(*this, "spnParsersNum", wxSpinCtrl)->GetValue());
 
     int timerDelay = XRCCTRL(*this, "sliderDelay", wxSlider)->GetValue() * 100;
     cfg->Write(_T("/cc_delay"), (int)timerDelay);
