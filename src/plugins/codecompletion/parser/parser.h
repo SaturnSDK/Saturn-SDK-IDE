@@ -216,6 +216,7 @@ class Parser : public wxEvtHandler
         long                           m_LastStopWatchTime;
         bool                           m_IgnoreThreadEvents;
         wxString                       m_Project;
+        wxArrayString                  m_UpFrontHeaders;
 
         DECLARE_EVENT_TABLE()
 };

@@ -1175,7 +1175,7 @@ void NativeParser::ReparseProject(cbProject* project, Parser* parser)
 
     ConfigManager* cfg = Manager::Get()->GetConfigManager(_T("code_completion"));
     wxArrayString tokens;
-    wxStringTokenizer tkz(cfg->Read(_T("/up_front_headers"), _T("<cstddef>, \"stdafx.h\", \"wx_pch.h\", \"sdk.h\"")), _T(","));
+    wxStringTokenizer tkz(cfg->Read(_T("/up_front_headers"), _T("<cstddef>, <wx/defs.h>, <wx/toplevel.h>, \"stdafx.h\", \"wx_pch.h\", \"sdk.h\"")), _T(","));
     size_t tokenCnt = 0;
     while (tkz.HasMoreTokens())
     {
@@ -2763,7 +2763,6 @@ size_t NativeParser::ResolveExpression(std::queue<ParserComponent> components, c
             Manager::Get()->GetLogManager()->DebugLog(F(_T("search scope: %d"), (*tt)));
         }
 
-
         GenerateResultSet(searchText, initialScope, initialResult, (isCaseSense || !isLastComponent), (!IsPrefix && isLastComponent));
         //now we should clear the initialScope.
         initialScope.clear();
@@ -2840,8 +2839,6 @@ size_t NativeParser::ResolveExpression(std::queue<ParserComponent> components, c
                                 }
                             }
                         }
-
-
                     }
 
                     //now get the tokens of variable/function.
@@ -2858,9 +2855,7 @@ size_t NativeParser::ResolveExpression(std::queue<ParserComponent> components, c
 
                 }
 
-
                 initialScope.insert(id);
-
             }
         }
         else

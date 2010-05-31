@@ -299,7 +299,11 @@ void Parser::AddBatchParse(const wxArrayString& filenames, bool isUpFront)
         m_IsUpFront = true;
 
     for (unsigned int i = 0; i < filenames.GetCount(); ++i)
+    {
         Parse(filenames[i]); // defer loading until later
+        if (isUpFront)
+            m_UpFrontHeaders.Add(filenames[i]);
+    }
 
     if (m_IsUpFront)
         m_IsUpFront = false;
@@ -307,8 +311,6 @@ void Parser::AddBatchParse(const wxArrayString& filenames, bool isUpFront)
 
 void Parser::StartBatchParse(bool delay)
 {
-    m_IsParsing = true;
-
     // Allow future parses to take place in this same run
     if (m_IsBatch)
         m_BatchTimer.Start(delay ? batch_timer_delay : 1, wxTIMER_ONE_SHOT);
@@ -757,6 +759,22 @@ void Parser::OnAllThreadsDone(CodeBlocksEvent& event)
     {
         m_BatchTimer.Start(1, wxTIMER_ONE_SHOT);
     }
+    else if (!m_UpFrontHeaders.IsEmpty())
+    {
+        // Part.1 Remove all up-front headers in token tree
+        for (size_t i = 0; i < m_UpFrontHeaders.GetCount(); ++i)
+            RemoveFile(m_UpFrontHeaders[i]);
+
+        // Part.2 Re-parse all the up-front headers
+        for (size_t i = 0; i < m_UpFrontHeaders.GetCount(); ++i)
+            Parse(m_UpFrontHeaders[i], false);
+
+        // Part.3 Clear
+        m_UpFrontHeaders.Clear();
+
+        // Part.4 Start
+        StartBatchParse();
+    }
     else
     {
         EndStopWatch();
@@ -857,8 +875,9 @@ void Parser::OnTimer(wxTimerEvent& event)
 
 void Parser::OnBatchTimer(wxTimerEvent& event)
 {
-    if (m_IsBatch)
+    if (m_IsBatch && !m_IsParsing)
     {
+        m_IsParsing = true;
         m_IsBatch = false;
         Manager::Get()->GetLogManager()->DebugLog(F(_T("Starting batch parsing for Project %s..."), m_Project.wx_str()));
         StartStopWatch();
