@@ -84,7 +84,7 @@
 // for "configure" scripts under unix, use them.
 #define wxPROPGRID_MAJOR          1
 #define wxPROPGRID_MINOR          4
-#define wxPROPGRID_RELEASE        11
+#define wxPROPGRID_RELEASE        12
 
 // For non-Unix systems (i.e. when building without a configure script),
 // users of this component can use the following macro to check if the
@@ -1851,6 +1851,9 @@ WXDLLIMPEXP_PG bool wxPGVariantToULongLong( const wxVariant& variant, wxULongLon
 // Safely converts a wxVariant to double. Supports converting from string and wxLongLong as well.
 WXDLLIMPEXP_PG bool wxPGVariantToDouble( const wxVariant& variant, double* pResult );
 
+// Convert wxVariant from various forms to a wxObject pointer
+WXDLLIMPEXP_PG bool wxPGVariantToWxObjectPtr( const wxVariant& value,
+                                              wxObject** result );
 
 // -----------------------------------------------------------------------
 
@@ -2775,13 +2778,7 @@ public:
         return (int) m_maxLen;
     }
 
-#ifdef SWIG
-    %pythoncode {
-        def GetValue(self):
-            return self.GetGrid().GetPropertyValue(self)
-    }
-#else
-
+#ifndef SWIG
   #if wxPG_COMPATIBILITY_1_2_0
     /** Returns value as wxVariant.
         @deprecated
@@ -3250,6 +3247,8 @@ protected:
 
     /** This is used by Insert etc. */
     void AddChild2( wxPGProperty* prop, int index = -1, bool correct_mode = true );
+
+    bool DoHide( bool hide, int flags );
 
     void DoSetName(const wxString& str) { m_name = str; }
 
@@ -5220,6 +5219,13 @@ public:
         wxPG_PROP_ARG_CALL_PROLOG_RETVAL(wxVariant())
         return p->GetValue();
     }
+#else
+    %pythoncode {
+        def GetPropertyValue(self, prop):
+            if isinstance(prop, basestring):
+                prop = self.GetProperty(prop)
+            return prop.GetValue()
+    }
 #endif
 
     wxString GetPropertyValueAsString( wxPGPropArg id ) const;
@@ -6092,56 +6098,6 @@ public:
             mappings[wx.Size] = SizeProperty
             mappings[wx.Point] = PointProperty
             mappings[wx.FontData] = FontDataProperty
-
-
-        def GetPropertyValue(self,p):
-            "Returns Python object value for property.\n\nCaches getters on value type id basis for performance purposes."
-            global _vt2getter
-            vtid = self.GetPVTI(p)
-            if not vtid:
-                return None
-            if vtid == 1:
-                raise TypeError("Property '%s' doesn't have valid value type"%(p.GetName()))
-            try:
-                getter = _vt2getter[vtid]
-            except KeyError:
-
-                cls = PropertyGridInterface
-                vtn = self.GetPropertyValueType(p)
-
-                if vtn == 'long':
-                    getter = cls.GetPropertyValueAsLong
-                elif vtn == 'string':
-                    getter = cls.GetPropertyValueAsString
-                elif vtn == 'double':
-                    getter = cls.GetPropertyValueAsDouble
-                elif vtn == 'bool':
-                    getter = cls.GetPropertyValueAsBool
-                elif vtn == 'arrstring':
-                    getter = cls.GetPropertyValueAsArrayString
-                elif vtn == 'wxArrayInt':
-                    getter = cls.GetPropertyValueAsArrayInt
-                elif vtn == 'PyObject*':
-                    getter = cls.GetPropertyValueAsPyObject
-                elif vtn == 'datetime':
-                    getter = cls.GetPropertyValueAsDateTime
-                elif vtn == 'wxPoint':
-                    getter = cls.GetPropertyValueAsPoint
-                elif vtn == 'wxSize':
-                    getter = cls.GetPropertyValueAsSize
-                elif vtn.startswith('wx'):
-                    getter = cls.GetPropertyValueAsWxObjectPtr
-                elif vtn == 'null':
-                    return None
-                elif not vtn:
-                    if p:
-                        raise ValueError("no property with name '%s'"%p)
-                    else:
-                        raise ValueError("NULL property")
-                else:
-                    raise AssertionError("Unregistered property grid value type '%s'"%vtn)
-                _vt2getter[vtid] = getter
-            return getter(self,p)
 
 
         def SetPropertyValueArrstr(self,p,v):
@@ -8268,11 +8224,6 @@ inline int wxPGProperty::GetDisplayedCommonValueCount() const
 inline void wxPGProperty::SetEditor( const wxString& editorName )
 {
     m_customEditor = wxPropertyGridInterface::GetEditorByName(editorName);
-}
-
-inline bool wxPGProperty::Hide( bool hide, int flags )
-{
-    return GetGrid()->HideProperty(this, hide, flags);
 }
 
 inline bool wxPGProperty::SetMaxLength( int maxLen )

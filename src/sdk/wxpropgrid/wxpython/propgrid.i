@@ -508,6 +508,18 @@ PyObject* wxVariant_to_PyObject( const wxVariant* v )
             SWIGTYPE_p_wxColourPropertyValue,
             SWIG_POINTER_OWN | 0 );
     }
+    else if ( variantType.StartsWith(wxT("wx")) )
+    {
+        // As a last desperate measure, go ahead and assume it is
+        // wxObject ptr (such as wxFontData), if the variant type name
+        // begins with 'wx'. Note that this should still correctly
+        // return NULL if variant is really not wxObject ptr.
+        wxObject* result;
+        if ( wxPGVariantToWxObjectPtr(*v, &result) )
+        {
+            return wxPyMake_wxObject(result, (bool)0);
+        }
+    }
 
     return NULL;
 }

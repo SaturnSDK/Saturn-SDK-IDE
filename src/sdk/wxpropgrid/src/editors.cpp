@@ -981,7 +981,15 @@ void wxPropertyGrid::OnComboItemPaint( wxPGCustomComboControl* pCc,
         int renderFlags = 0;
 
         if ( flags & wxPGCC_PAINTING_CONTROL )
+        {
             renderFlags |= wxPGCellRenderer::Control;
+        }
+        else
+        {
+            // For consistency, always use normal font when drawing drop down
+            // items
+            dc.SetFont(GetFont());
+        }
 
         if ( flags & wxPGCC_PAINTING_SELECTED )
             renderFlags |= wxPGCellRenderer::Selected;

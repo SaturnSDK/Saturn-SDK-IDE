@@ -1876,6 +1876,32 @@ void wxPGProperty::SetChoicesExclusive()
         ci.m_choices->SetExclusive();
 }
 
+bool wxPGProperty::Hide( bool hide, int flags )
+{
+    wxPropertyGrid* pg = GetGrid();
+    if ( pg )
+        return pg->HideProperty(this, hide, flags);
+
+    return DoHide( hide, flags );
+}
+
+bool wxPGProperty::DoHide( bool hide, int flags )
+{
+    if ( !hide )
+        ClearFlag( wxPG_PROP_HIDDEN );
+    else
+        SetFlag( wxPG_PROP_HIDDEN );
+
+    if ( flags & wxPG_RECURSE )
+    {
+        unsigned int i;
+        for ( i = 0; i < GetChildCount(); i++ )
+            Item(i)->DoHide(hide, flags | wxPG_RECURSE_STARTS);
+    }
+
+    return true;
+}
+
 bool wxPGProperty::HasVisibleChildren() const
 {
     unsigned int i;
@@ -6693,7 +6719,6 @@ bool wxPropertyGrid::DoPropertyChanged( wxPGProperty* p, unsigned int selFlags )
     if ( m_inDoPropertyChanged )
         return true;
 
-    wxWindow* editor = GetEditorControl();
     wxPGProperty* selected = GetSelection();
 
     m_pState->m_anyModified = 1;
@@ -6716,6 +6741,10 @@ bool wxPropertyGrid::DoPropertyChanged( wxPGProperty* p, unsigned int selFlags )
     }
 
     changedProperty->SetValue(value, &m_chgInfo_valueList, wxPG_SETVAL_BY_USER);
+
+    // NB: Call GetEditorControl() as late as possible, because OnSetValue()
+    //     and perhaps other user-defined virtual functions may change it.
+    wxWindow* editor = GetEditorControl();
 
     // Set as Modified (not if dragging just began)
     if ( !(p->m_flags & wxPG_PROP_MODIFIED) )
@@ -9820,6 +9849,32 @@ bool wxPGVariantToDouble( const wxVariant& variant, double* pResult )
 }
 
 // -----------------------------------------------------------------------
+
+bool wxPGVariantToWxObjectPtr( const wxVariant& value, wxObject** result )
+{
+    wxVariantData* vdata = value.GetData();
+
+    if ( !vdata->GetValueClassInfo() )
+        return false;
+
+	wxPGVariantData* pgvdata = wxDynamicCastVariantData(vdata, wxPGVariantData);
+    if ( pgvdata )
+    {
+        *result = (wxObject*) pgvdata->GetValuePtr();
+        return true;
+    }
+
+    if ( wxPGIsVariantClassInfo(wxPGVariantDataGetClassInfo(vdata),
+                                wxobject) )
+    {
+        *result = value.GetWxObjectPtr();
+        return true;
+    }
+
+    return false;
+}
+
+// -----------------------------------------------------------------------
 // Editor class specific.
 
 // noDefCheck = true prevents infinite recursion.
@@ -10672,24 +10727,15 @@ PyObject* wxPropertyGridInterface::GetPropertyValueAsPyObject( wxPGPropArg id ) 
 #endif
 
 // wxObject is different than others.
-wxObject* wxPropertyGridInterface::GetPropertyValueAsWxObjectPtr( wxPGPropArg id ) const
+wxObject*
+wxPropertyGridInterface::GetPropertyValueAsWxObjectPtr( wxPGPropArg id ) const
 {
     wxPG_PROP_ARG_CALL_PROLOG_RETVAL((wxObject*)NULL)
-
-    wxVariant value = p->GetValue();
-    wxVariantData* vdata = value.GetData();
-
-    if ( !vdata->GetValueClassInfo() )
-        return (wxObject*) NULL;
-
-	wxPGVariantData* pgvdata = wxDynamicCastVariantData(vdata, wxPGVariantData);
-    if ( pgvdata )
-         return (wxObject*) pgvdata->GetValuePtr();
-
-    if ( wxPGIsVariantClassInfo(wxPGVariantDataGetClassInfo(vdata), wxobject) )
-        return (wxObject*) value.GetWxObjectPtr();
-
-    return (wxObject*) NULL;
+    wxVariant variant = p->GetValue();
+    wxObject* result;
+    if ( wxPGVariantToWxObjectPtr(variant, &result) )
+        return result;
+    return NULL;
 }
 
 // -----------------------------------------------------------------------
@@ -12277,18 +12323,7 @@ bool wxPropertyGridState::DoSelectProperty( wxPGProperty* p, unsigned int flags 
 
 bool wxPropertyGridState::DoHideProperty( wxPGProperty* p, bool hide, int flags )
 {
-    if ( !hide )
-        p->ClearFlag( wxPG_PROP_HIDDEN );
-    else
-        p->SetFlag( wxPG_PROP_HIDDEN );
-
-    if ( flags & wxPG_RECURSE )
-    {
-        unsigned int i;
-        for ( i = 0; i < p->GetChildCount(); i++ )
-            DoHideProperty(p->Item(i), hide, flags | wxPG_RECURSE_STARTS);
-    }
-
+    p->DoHide(hide, flags);
     VirtualHeightChanged();
 
     return true;

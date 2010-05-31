@@ -717,7 +717,12 @@ bool wxFontProperty::OnEvent( wxPropertyGrid* propgrid, wxWindow* WXUNUSED(prima
         PrepareValueForDialogEditing(propgrid);
 
         wxFontData data;
-        data.SetInitialFont( wxFontFromVariant(m_value) );
+        wxFont font;
+
+        if ( m_value.GetType() == wxT("wxFont") )
+            font = wxFontFromVariant(m_value);
+
+        data.SetInitialFont( font );
         data.SetColour(*wxBLACK);
 
         wxFontDialog dlg(propgrid, data);

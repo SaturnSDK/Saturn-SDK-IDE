@@ -1,16 +1,28 @@
 
 
-Version 1.4.12 ( ?-?-2010 )
+Version 1.4.12 ( May-30-2010 )
 
   Bugs Fixed:
 
-  - Some makefile problems introduced by switching to
-    newer version of Bakefile (for now, stick with
-    0.2.6 for everything except Visual Studio
+  - Various bugs in property label editors (some of which were rather fatal).
+
+  - Editing wxFontProperty with unspecified value caused wxPropertyGrid to
+    crash (resolves wxWidgets ticket #12086).
+
+  - Hiding property in OnSetValue() caused wxPropertyGrid to crash
+    (resolves wxWidgets ticket #11987).
+
+  - Calling wxPGProperty::Hide() crashed for unattached properties.
+
+  - wxPython bindings: Refactored GetValue(), GetPropertyValue()
+    (fixes bug #2977923).
+
+  - Some makefile problems introduced by switching to newer version of
+    Bakefile (for now, stick with 0.2.6 for everything except Visual Studio
     project files).
 
-  - Various bugs in property label editors (some
-    of which were rather fatal).
+  - Always use non-bold font when drawing drop down items (resolves
+    wxWidgets ticket #12088).
 
 
 
@@ -18,52 +30,46 @@ Version 1.4.11 ( Mar-21-2010 )
 
   New Features:
 
-  - Columns can now have custom proportions for auto-
-    resize purposes. Use the new SetColumnProportion(col,
-    proportion) function. wxPG_SPLITTER_AUTO_CENTER style
-    must be used, and naturally it now also works when
-    the grid has more than two columns.
+  - Columns can now have custom proportions for auto-resize purposes. Use the
+    new SetColumnProportion(col, proportion) function.
+    wxPG_SPLITTER_AUTO_CENTER style must be used, and naturally it now also
+    works when the grid has more than two columns.
 
-  - Much improved Visual Studio project files have now
-    been included, with experimental win64 support.
-
+  - Much improved Visual Studio project files have now been included, with
+    experimental win64 support.
 
   Changes:
 
-  - Property selection is no longer cleared when adding
-    new properties (feature request #2942477).
+  - Property selection is no longer cleared when adding new properties
+    (feature request #2942477).
 
-  - Property removal and deletion will now be postponed to
-    idle time when it is done from a wxPropertyGrid event
-    handling (resolves bug #2953675).
+  - Property removal and deletion will now be postponed to idle time when it
+    is done from a wxPropertyGrid event handling (resolves bug #2953675).
 
 
   Bugs Fixed:
 
-  - Value cell could be rendered incorrectly for properties
-    with 'limited editing' enabled.
+  - Value cell could be rendered incorrectly for properties with
+    'limited editing' enabled.
 
-  - wxPropertyGrid::CanClose() could crash if there was
-    no property selected (bug #2951533, fix by Andrey
-    Kuznetsov).
+  - wxPropertyGrid::CanClose() could crash if there was no property selected
+    (bug #2951533, fix by Andrey Kuznetsov).
 
-  - wxPropertyGridInterface::Enable/DisableProperty() would
-    crash if called for a property which did not belong to
-    any grid (bug #2925499).
+  - wxPropertyGridInterface::Enable/DisableProperty() would crash if called
+    for a property which did not belong to any grid (bug #2925499).
 
-  - SetChoices() could crash if called on a selected
-    property (now the property selection is cleared).
+  - SetChoices() could crash if called on a selected property (now the
+    property selection is cleared).
 
-  - Various bugs when re-positioning editors for columns
-    other than 1 (for example, property label editors).
+  - Various bugs when re-positioning editors for columns other than 1 (for
+    example, property label editors).
 
-  - Property editors other than text ctrl based ones did not
-    respect wxPG_PROP_READONLY flag (bug #2940435).
+  - Property editors other than text ctrl based ones did not respect
+    wxPG_PROP_READONLY flag (bug #2940435).
 
-  - wxPython Bindings: Using validationInfo member functions
-    in ValidateValue() implementation of custom properties
-    should no longer complain about 'wxPGVFBFlags *'
-    memory leaks.
+  - wxPython Bindings: Using validationInfo member functions in
+    ValidateValue() implementation of custom properties should no longer
+    complain about 'wxPGVFBFlags *' memory leaks.
 
 
 
