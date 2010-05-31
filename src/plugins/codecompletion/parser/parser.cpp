@@ -24,6 +24,7 @@
 #include <manager.h>
 #include <globals.h>
 #include <infowindow.h>
+#include <cbproject.h>
 
 #include <queue>
 
