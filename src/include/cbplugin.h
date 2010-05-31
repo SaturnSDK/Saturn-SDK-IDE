@@ -474,11 +474,14 @@ class PLUGIN_EXPORT cbDebuggerPlugin: public cbPlugin
 
         virtual void AttachToProcess(const wxString& pid) = 0;
         virtual void DetachFromProcess() = 0;
+        virtual bool IsAttachedToProcess() const = 0;
 
         virtual void GetCurrentPosition(wxString &filename, int &line) = 0;
+
     protected:
         virtual void ConvertDirectory(wxString& str, wxString base = _T(""), bool relative = true) = 0;
         virtual cbProject* GetProject() = 0;
+        virtual void ResetProject() = 0;
         virtual void CleanupWhenProjectClosed(cbProject *project) = 0;
         virtual void CompilerFinished() {}
     public:
@@ -496,6 +499,16 @@ class PLUGIN_EXPORT cbDebuggerPlugin: public cbPlugin
     public:
         virtual wxString GetEditorWordAtCaret();
         void ClearActiveMarkFromAllEditors();
+
+        enum SyncEditorResult
+        {
+            SyncOk = 0,
+            SyncFileNotFound,
+            SyncFileUnknown
+        };
+
+        SyncEditorResult SyncEditor(const wxString& filename, int line, bool setMarker = true);
+
         void BringCBToFront();
 
         bool DragInProgress() const;
@@ -509,7 +522,7 @@ class PLUGIN_EXPORT cbDebuggerPlugin: public cbPlugin
         wxString FindDebuggerExecutable(Compiler* compiler);
         bool EnsureBuildUpToDate();
         bool WaitingCompilerToFinish() const { return m_WaitingCompilerToFinish; }
-        bool CheckBuild();
+//        bool CheckBuild();
 
         int RunNixConsole(wxString &consoleTty);
 

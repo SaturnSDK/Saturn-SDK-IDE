@@ -134,14 +134,18 @@ class DebuggerDriver
         virtual void UpdateWatches(bool doLocals, bool doArgs, WatchesContainer &watches) = 0;
         virtual void UpdateWatch(GDBWatch::Pointer const &watch) = 0;
 
+        /** Attach to process */
+        virtual void Attach(int pid) = 0;
         /** Detach from running process. */
         virtual void Detach() = 0;
 
         /** Parse debugger's output. */
         virtual void ParseOutput(const wxString& output) = 0;
 
+        /** Is debugging started */
+        virtual bool IsDebuggingStarted() const = 0;
         /** Is the program stopped? */
-        virtual bool IsStopped() const { return m_ProgramIsStopped; }
+        virtual bool IsProgramStopped() const { return m_ProgramIsStopped; }
         /** Get debugger cursor. */
         virtual const Cursor& GetCursor() const { return m_Cursor; }
         /** Set child PID (debuggee's). Usually set by debugger commands. */

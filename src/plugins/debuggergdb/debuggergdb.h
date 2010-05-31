@@ -90,11 +90,11 @@ class DebuggerGDB : public cbDebuggerPlugin
         void CollapseWatch(cbWatch *watch);
 
         void GetCurrentPosition(wxString &filename, int &line);
-        void SyncEditor(const wxString& filename, int line, bool setMarker = true);
         void RequestUpdate(DebugWindows window);
 
         void AttachToProcess(const wxString& pid);
         void DetachFromProcess();
+        bool IsAttachedToProcess() const;
 
         void Log(const wxString& msg);
         void DebugLog(const wxString& msg);
@@ -118,6 +118,7 @@ class DebuggerGDB : public cbDebuggerPlugin
 
     protected:
         cbProject* GetProject() { return m_pProject; }
+        void ResetProject() { m_pProcess = NULL; }
         void ConvertDirectory(wxString& str, wxString base, bool relative);
         void CleanupWhenProjectClosed(cbProject *project);
         void CompilerFinished();

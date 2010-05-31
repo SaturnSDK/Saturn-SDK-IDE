@@ -27,9 +27,6 @@
 #include <infowindow.h>
 #include "logmanager.h"
 
-// FIXME (obfuscated#): remove this include
-#include "debuggertree.h"
-
 #include "backtracedlg.h"
 #include "cpuregistersdlg.h"
 #include "debugger_defs.h"
@@ -587,57 +584,57 @@ class DebuggerContinueCommand : public DebuggerCmd
         }
 };
 
-/**
-  * Command to get info about local frame variables.
-  */
-class GdbCmd_InfoLocals : public DebuggerCmd
-{
-        DebuggerTree* m_pDTree;
-    public:
-        /** @param tree The tree to display the locals. */
-        GdbCmd_InfoLocals(DebuggerDriver* driver, DebuggerTree* dtree)
-            : DebuggerCmd(driver),
-            m_pDTree(dtree)
-        {
-            m_Cmd << _T("info locals");
-        }
-        void ParseOutput(const wxString& output)
-        {
-            wxArrayString lines = GetArrayFromString(output, _T('\n'));
-            wxString locals;
-            locals << _T("Local variables = {");
-            for (unsigned int i = 0; i < lines.GetCount(); ++i)
-                locals << lines[i] << _T(',');
-            locals << _T("}") << _T('\n');
-            m_pDTree->BuildTree(0, locals, wsfGDB);
-        }
-};
-
-/**
-  * Command to get info about current function arguments.
-  */
-class GdbCmd_InfoArguments : public DebuggerCmd
-{
-        DebuggerTree* m_pDTree;
-    public:
-        /** @param tree The tree to display the args. */
-        GdbCmd_InfoArguments(DebuggerDriver* driver, DebuggerTree* dtree)
-            : DebuggerCmd(driver),
-            m_pDTree(dtree)
-        {
-            m_Cmd << _T("info args");
-        }
-        void ParseOutput(const wxString& output)
-        {
-            wxArrayString lines = GetArrayFromString(output, _T('\n'));
-            wxString args;
-            args << _T("Function Arguments = {");
-            for (unsigned int i = 0; i < lines.GetCount(); ++i)
-                args << lines[i] << _T(',');
-            args << _T("}") << _T('\n');
-            m_pDTree->BuildTree(0, args, wsfGDB);
-        }
-};
+///**
+//  * Command to get info about local frame variables.
+//  */
+//class GdbCmd_InfoLocals : public DebuggerCmd
+//{
+//        DebuggerTree* m_pDTree;
+//    public:
+//        /** @param tree The tree to display the locals. */
+//        GdbCmd_InfoLocals(DebuggerDriver* driver, DebuggerTree* dtree)
+//            : DebuggerCmd(driver),
+//            m_pDTree(dtree)
+//        {
+//            m_Cmd << _T("info locals");
+//        }
+//        void ParseOutput(const wxString& output)
+//        {
+//            wxArrayString lines = GetArrayFromString(output, _T('\n'));
+//            wxString locals;
+//            locals << _T("Local variables = {");
+//            for (unsigned int i = 0; i < lines.GetCount(); ++i)
+//                locals << lines[i] << _T(',');
+//            locals << _T("}") << _T('\n');
+//            m_pDTree->BuildTree(0, locals, wsfGDB);
+//        }
+//};
+//
+///**
+//  * Command to get info about current function arguments.
+//  */
+//class GdbCmd_InfoArguments : public DebuggerCmd
+//{
+//        DebuggerTree* m_pDTree;
+//    public:
+//        /** @param tree The tree to display the args. */
+//        GdbCmd_InfoArguments(DebuggerDriver* driver, DebuggerTree* dtree)
+//            : DebuggerCmd(driver),
+//            m_pDTree(dtree)
+//        {
+//            m_Cmd << _T("info args");
+//        }
+//        void ParseOutput(const wxString& output)
+//        {
+//            wxArrayString lines = GetArrayFromString(output, _T('\n'));
+//            wxString args;
+//            args << _T("Function Arguments = {");
+//            for (unsigned int i = 0; i < lines.GetCount(); ++i)
+//                args << lines[i] << _T(',');
+//            args << _T("}") << _T('\n');
+//            m_pDTree->BuildTree(0, args, wsfGDB);
+//        }
+//};
 
 /**
   * Command to get info about current program and state.
@@ -797,7 +794,8 @@ class GdbCmd_Watch : public DebuggerCmd
             {
                 wxString symbol;
                 m_watch->GetSymbol(symbol);
-                wxString msg = wxT("Parsing GDB output failed for '") + symbol + wxT("'!");
+                wxString const &msg = wxT("Parsing GDB output failed for '") + symbol + wxT("'!");
+                m_watch->SetValue(msg);
                 Manager::Get()->GetLogManager()->LogError(msg);
             }
         }
@@ -940,8 +938,17 @@ class GdbCmd_TooltipEvaluation : public DebuggerCmd
             }
 
             if (s_pWin)
-                (s_pWin)->Close();
-            s_pWin = new GDBTipWindow((wxWindow*)Manager::Get()->GetAppWindow(), m_What, m_Type, m_Address, contents, 640, &s_pWin, &m_WinRect);
+                s_pWin->Close();
+
+            wxPoint mouse_position;
+            ::wxGetMousePosition(&mouse_position.x, &mouse_position.y);
+
+            // We show the tooltip only if the user hasn't moved the mouse.
+            if (m_WinRect.Contains(mouse_position))
+            {
+                s_pWin = new GDBTipWindow((wxWindow*)Manager::Get()->GetAppWindow(), m_What, m_Type, m_Address,
+                                          contents, 640, &s_pWin, &m_WinRect);
+            }
         }
 };
 

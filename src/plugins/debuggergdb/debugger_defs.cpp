@@ -24,6 +24,8 @@
 #include <wx/arrimpl.cpp>
 WX_DEFINE_OBJARRAY(WatchesArray);
 
+#if !defined(CB_TEST_PROJECT)
+
 const int DEBUGGER_CURSOR_CHANGED = wxNewId();
 const int DEBUGGER_SHOW_FILE_LINE = wxNewId();
 
@@ -75,6 +77,8 @@ void DebuggerInfoCmd::ParseOutput(const wxString& output)
     DebuggerInfoWindow win(Manager::Get()->GetAppWindow(), m_Title, output);
     win.ShowModal();
 }
+
+#endif // !defined(CB_TEST_PROJECT)
 
 
 GDBWatch::GDBWatch(wxString const &symbol) :

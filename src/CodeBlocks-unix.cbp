@@ -134,8 +134,10 @@
 					<Add directory="sdk/wxpropgrid/include" />
 				</Compiler>
 				<Linker>
+					<Add option="-z defs" />
 					<Add library="txml" />
 					<Add library="wxscintilla" />
+					<Add library="wxpropgrid" />
 					<Add library="sqplus" />
 					<Add library="sqstdlib" />
 					<Add library="squirrel" />

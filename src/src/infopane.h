@@ -67,6 +67,10 @@ public:
     void ShowNonLogger(wxWindow* p);
 
     int GetPageIndexByWindow(wxWindow* win);
+    int GetCurrentPage(bool &is_logger);
+
+    Logger* GetLogger(int index);
+    wxWindow* GetWindow(int index);
 
     /*
     *  You should not need to call these functions under normal conditions. The application initialises

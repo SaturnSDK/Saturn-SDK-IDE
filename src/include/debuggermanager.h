@@ -197,12 +197,12 @@ class DLLIMPORT DebuggerManager : public Mgr<DebuggerManager>
         };
         typedef std::map<cbDebuggerPlugin*, PluginData> RegisteredPlugins;
 
-        enum SyncEditorResult
-        {
-            SyncOk = 0,
-            SyncFileNotFound,
-            SyncFileUnknown
-        };
+//        enum SyncEditorResult
+//        {
+//            SyncOk = 0,
+//            SyncFileNotFound,
+//            SyncFileUnknown
+//        };
     public:
         bool RegisterDebugger(cbDebuggerPlugin *plugin, wxString const &name);
         bool UnregisterDebugger(cbDebuggerPlugin *plugin);
@@ -240,7 +240,6 @@ class DLLIMPORT DebuggerManager : public Mgr<DebuggerManager>
         RegisteredPlugins & GetAllDebuggers();
         cbDebuggerPlugin* GetActiveDebugger();
         void SetActiveDebugger(cbDebuggerPlugin* activeDebugger);
-        SyncEditorResult SyncEditor(const wxString& filename, int line, bool setMarker);
     private:
         bool RebuildActiveDebuggersMenu();
     private:

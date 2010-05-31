@@ -559,7 +559,7 @@ int DebuggerGDB::LaunchProcess(const wxString& cmd, const wxString& cwd)
 
 bool DebuggerGDB::IsStopped() const
 {
-    return !m_State.HasDriver() || m_State.GetDriver()->IsStopped();
+    return !m_State.HasDriver() || m_State.GetDriver()->IsProgramStopped();
 }
 
 
@@ -588,21 +588,9 @@ int DebuggerGDB::Debug(bool breakOnEntry)
     if (m_pProject && m_ActiveBuildTarget.IsEmpty())
         m_ActiveBuildTarget = m_pProject->GetActiveBuildTarget();
 
-    // should we build to make sure project is up-to-date?
-    if (Manager::Get()->GetConfigManager(_T("debugger"))->ReadBool(_T("auto_build"), true))
-    {
-        // compile project/target (if not attaching to a PID)
-        // this will wait for the compiler to finish and then call DoDebug
+    m_Canceled = false;
         if (!EnsureBuildUpToDate())
             return -1;
-    }
-    else
-    {
-// FIXME (obfuscated#): replace the commented code with something that works.
-//        m_pCompiler = 0;
-//        m_WaitingCompilerToFinish = false;
-        m_Canceled = false;
-    }
 
     // if not waiting for the compiler, start debugging now
     // but first check if the driver has already been started:
@@ -631,11 +619,11 @@ int DebuggerGDB::DoDebug(bool breakOnEntry)
 
     ShowLog(false);
 
-    if (!CheckBuild())
-    {
-        m_Canceled = true;
-        return 1;
-    }
+//    if (!CheckBuild())
+//    {
+//        m_Canceled = true;
+//        return 1;
+//    }
 
     // select the build target to debug
     ProjectBuildTarget* target = 0;
@@ -890,6 +878,8 @@ int DebuggerGDB::DoDebug(bool breakOnEntry)
     // Don't issue 'run' if attaching to a process (Bug #1391904)
     if (m_PidToAttach == 0)
         m_State.GetDriver()->Start(breakOnEntry);
+    else
+        m_State.GetDriver()->Attach(m_PidToAttach);
 
     // switch to the user-defined layout for debugging
     if (m_pProcess)
@@ -1612,14 +1602,6 @@ void DebuggerGDB::ParseOutput(const wxString& output)
     }
 }
 
-void DebuggerGDB::SyncEditor(const wxString& filename, int line, bool setMarker)
-{
-    DebuggerManager::SyncEditorResult result;
-    result = Manager::Get()->GetDebuggerManager()->SyncEditor(filename, line, setMarker);
-    if(result == DebuggerManager::SyncFileNotFound)
-        Log(_("Cannot open file: ") + filename);
-}
-
 void DebuggerGDB::GetCurrentPosition(wxString &filename, int &line)
 {
     if (m_State.HasDriver())
@@ -1772,6 +1754,10 @@ void DebuggerGDB::OnValueTooltip(CodeBlocksEvent& event)
     event.Skip();
     if (!m_pProcess || !IsStopped())
         return;
+
+    if (!m_State.HasDriver() || !m_State.GetDriver()->IsDebuggingStarted())
+        return;
+
     if (!Manager::Get()->GetConfigManager(_T("debugger"))->ReadBool(_T("eval_tooltip"), false))
         return;
 
@@ -1783,17 +1769,13 @@ void DebuggerGDB::OnValueTooltip(CodeBlocksEvent& event)
     if (!ed)
         return;
 
-    if(ed->IsContextMenuOpened())
-    {
+    if (ed->IsContextMenuOpened())
         return;
-    }
 
     // get rid of other calltips (if any) [for example the code completion one, at this time we
     // want the debugger value call/tool-tip to win and be shown]
-    if(ed->GetControl()->CallTipActive())
-    {
+    if (ed->GetControl()->CallTipActive())
         ed->GetControl()->CallTipCancel();
-    }
 
     const int style = event.GetInt();
     if (style != wxSCI_C_DEFAULT && style != wxSCI_C_OPERATOR && style != wxSCI_C_IDENTIFIER)
@@ -1901,7 +1883,6 @@ void DebuggerGDB::OnCursorChanged(wxCommandEvent& event)
             if (dbg_manager->UpdateCPURegisters())
                 RunCommand(CMD_REGISTERS);
 
-//    FIXME (obfuscated#) reimplement showing the window if it has been closed
             // update callstack
             if (dbg_manager->UpdateBacktrace())
                 RunCommand(CMD_BACKTRACE);
@@ -1915,7 +1896,6 @@ void DebuggerGDB::OnCursorChanged(wxCommandEvent& event)
                 RunCommand(CMD_DISASSEMBLE);
             }
 
-//    FIXME (obfuscated#) reimplement showing the window if it has been closed
             // update memory examiner
             if (dbg_manager->UpdateExamineMemory())
                 RunCommand(CMD_MEMORYDUMP);
@@ -2039,7 +2019,13 @@ void DebuggerGDB::AttachToProcess(const wxString& pid)
 void DebuggerGDB::DetachFromProcess()
 {
     m_State.GetDriver()->Detach();
+    m_PidToAttach = 0;
     m_State.GetDriver()->Stop();
+}
+
+bool DebuggerGDB::IsAttachedToProcess() const
+{
+    return m_PidToAttach != 0;
 }
 
 void DebuggerGDB::OnSettings(wxCommandEvent& event)

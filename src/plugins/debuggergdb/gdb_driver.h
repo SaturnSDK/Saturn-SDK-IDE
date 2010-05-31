@@ -57,6 +57,7 @@ class GDB_driver : public DebuggerDriver
         virtual void SwitchToFrame(size_t number);
         virtual void SetVarValue(const wxString& var, const wxString& value);
         virtual void MemoryDump();
+        virtual void Attach(int pid);
         virtual void Detach();
         virtual void RunningThreads();
 
@@ -74,6 +75,7 @@ class GDB_driver : public DebuggerDriver
         virtual void UpdateWatches(bool doLocals, bool doArgs, WatchesContainer &watches);
         virtual void UpdateWatch(GDBWatch::Pointer const &watch);
         virtual void ParseOutput(const wxString& output);
+        virtual bool IsDebuggingStarted() const { return m_IsStarted; }
         virtual wxString GetDisassemblyFlavour(void);
 
         wxString GetScriptedTypeCommand(const wxString& gdb_type, wxString& parse_func);

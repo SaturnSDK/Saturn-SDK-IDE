@@ -154,10 +154,30 @@ wxString cbDebuggerPlugin::GetEditorWordAtCaret()
 {
     cbEditor* ed = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
     if (!ed)
-        return _T("");
-    int start = ed->GetControl()->WordStartPosition(ed->GetControl()->GetCurrentPos(), true);
-    int end = ed->GetControl()->WordEndPosition(ed->GetControl()->GetCurrentPos(), true);
-    return ed->GetControl()->GetTextRange(start, end);
+        return wxEmptyString;
+    cbStyledTextCtrl* control = ed->GetControl();
+    if (!control)
+        return wxEmptyString;
+
+    wxString selected_text = control->GetSelectedText();
+    if (selected_text != wxEmptyString)
+    {
+        selected_text.Trim(true);
+        selected_text.Trim(false);
+
+        wxString::size_type pos = selected_text.find(wxT('\n'));
+        if (pos != wxString::npos)
+        {
+            selected_text.Remove(pos, selected_text.length() - pos);
+            selected_text.Trim(true);
+            selected_text.Trim(false);
+        }
+        return selected_text;
+    }
+
+    int start = control->WordStartPosition(control->GetCurrentPos(), true);
+    int end = control->WordEndPosition(control->GetCurrentPos(), true);
+    return control->GetTextRange(start, end);
 }
 
 void cbDebuggerPlugin::BuildModuleMenu(const ModuleType type, wxMenu* menu, const FileTreeData* data)
@@ -202,8 +222,8 @@ wxToolBar* cbDebuggerPlugin::GetToolbar()
 bool cbDebuggerPlugin::ToolMenuEnabled() const
 {
     cbProject* prj = Manager::Get()->GetProjectManager()->GetActiveProject();
-    // FIXME (obfuscated#) reimplement m_pidToAttach
-    bool en = (prj && !prj->GetCurrentlyCompilingTarget()) /* || m_PidToAttach != 0*/;
+
+    bool en = (prj && !prj->GetCurrentlyCompilingTarget()) || IsAttachedToProcess();
     return IsRunning() && en;
 }
 
@@ -215,6 +235,72 @@ void cbDebuggerPlugin::ClearActiveMarkFromAllEditors()
         cbEditor* ed = edMan->GetBuiltinEditor(i);
         if (ed)
             ed->SetDebugLine(-1);
+    }
+}
+
+cbDebuggerPlugin::SyncEditorResult cbDebuggerPlugin::SyncEditor(const wxString& filename, int line, bool setMarker)
+{
+    int log_index;
+    Manager::Get()->GetDebuggerManager()->GetLogger(false, log_index);
+
+    if (setMarker)
+    {
+        EditorManager* edMan = Manager::Get()->GetEditorManager();
+        for (int i = 0; i < edMan->GetEditorsCount(); ++i)
+        {
+            cbEditor* ed = edMan->GetBuiltinEditor(i);
+            if (ed)
+                ed->SetDebugLine(-1);
+        }
+    }
+    FileType ft = FileTypeOf(filename);
+    if (ft != ftSource && ft != ftHeader && ft != ftResource)
+    {
+        if(log_index != -1)
+        {
+            ShowLog(false);
+            Manager::Get()->GetLogManager()->LogError(_("Unknown file: ") + filename, log_index);
+        }
+
+        InfoWindow::Display(_("Unknown file"), _("File: ") + filename, 5000);
+
+        return SyncFileUnknown; // don't try to open unknown files
+    }
+
+    cbProject* project = Manager::Get()->GetProjectManager()->GetActiveProject();
+    ProjectFile* f = project ? project->GetFileByFilename(filename, false, true) : 0;
+
+    wxString unixfilename = UnixFilename(filename);
+    wxFileName fname(unixfilename);
+
+    if (project && fname.IsRelative())
+        fname.MakeAbsolute(project->GetBasePath());
+
+    // gdb can't work with spaces in filenames, so we have passed it the shorthand form (C:\MYDOCU~1 etc)
+    // revert this change now so the file can be located and opened...
+    // we do this by calling GetLongPath()
+    cbEditor* ed = Manager::Get()->GetEditorManager()->Open(fname.GetLongPath());
+    if (ed)
+    {
+        ed->Show(true);
+        if (f && !ed->GetProjectFile())
+            ed->SetProjectFile(f);
+        ed->GotoLine(line - 1, false);
+        if (setMarker)
+            ed->SetDebugLine(line - 1);
+        return SyncOk;
+    }
+    else
+    {
+        if(log_index != -1)
+        {
+            ShowLog(false);
+            Manager::Get()->GetLogManager()->LogError(_("Cannot open file: ") + filename, log_index);
+        }
+
+        InfoWindow::Display(_("Cannot open file"), _("File: ") + filename, 5000);
+
+        return SyncFileNotFound;
     }
 }
 
@@ -352,7 +438,7 @@ void cbDebuggerPlugin::OnProjectActivated(CodeBlocksEvent& event)
     if (!IsRunning())
         return;
 
-    if (event.GetProject() != GetProject())
+    if (event.GetProject() != GetProject() && GetProject())
     {
         wxString msg = _("You can't change the active project while you 're actively debugging another.\n"
                         "Do you want to stop debugging?\n\n"
@@ -391,6 +477,7 @@ void cbDebuggerPlugin::OnProjectClosed(CodeBlocksEvent& event)
                             wxART_WARNING, AnnoyingDialog::OK, wxID_OK);
         dlg.ShowModal();
         Stop();
+        ResetProject();
     }
 }
 
@@ -410,16 +497,24 @@ bool cbDebuggerPlugin::DragInProgress() const
 void cbDebuggerPlugin::ShowLog(bool clear)
 {
     TextCtrlLogger *log = Manager::Get()->GetDebuggerManager()->GetLogger(false);
+    TextCtrlLogger *debug_log = Manager::Get()->GetDebuggerManager()->GetLogger(true);
 
+    CodeBlocksLogEvent event_get_active(cbEVT_GET_ACTIVE_LOG_WINDOW);
+    Manager::Get()->ProcessEvent(event_get_active);
+
+    if (event_get_active.logger != debug_log || !debug_log)
+    {
     // switch to the debugging log and clear it
-    // TODO (obfuscated#): if the "Debugger (debug)" log pane is active don't activate the "Debugger"
     CodeBlocksLogEvent event_switch_log(cbEVT_SWITCH_TO_LOG_WINDOW, log);
     CodeBlocksLogEvent event_show_log(cbEVT_SHOW_LOG_MANAGER);
     Manager::Get()->ProcessEvent(event_switch_log);
     Manager::Get()->ProcessEvent(event_show_log);
-    if (clear)
+    }
+
+    if (clear && log)
         log->Clear();
 }
+
 
 void cbDebuggerPlugin::SwitchToDebuggingLayout()
 {
@@ -560,9 +655,16 @@ bool cbDebuggerPlugin::EnsureBuildUpToDate()
     m_WaitingCompilerToFinish = false;
 
     // compile project/target (if not attaching to a PID)
-//  FIXME (obfuscated#): reimplement pid to attach
-//    if (m_PidToAttach == 0)
+    if (!IsAttachedToProcess())
     {
+        // should we build to make sure project is up-to-date?
+        if (!Manager::Get()->GetConfigManager(_T("debugger"))->ReadBool(_T("auto_build"), true))
+        {
+            m_WaitingCompilerToFinish = false;
+            m_pCompiler = NULL;
+            return true;
+        }
+
         LogManager* msgMan = Manager::Get()->GetLogManager();
 
         // make sure the target is compiled
@@ -594,37 +696,41 @@ bool cbDebuggerPlugin::EnsureBuildUpToDate()
     return true;
 }
 
-bool cbDebuggerPlugin::CheckBuild()
-{
-    if (m_pCompiler)
-    {
-        LogManager* msgMan = Manager::Get()->GetLogManager();
-        int page_index;
-        Manager::Get()->GetDebuggerManager()->GetLogger(false, page_index);
-
-        if (m_pCompiler->GetExitCode() != 0)
-        {
-            msgMan->Log(_("Build failed..."), page_index);
-            msgMan->Log(_("Aborting debugging session"), page_index);
-            cbMessageBox(_("Build failed. Aborting debugging session..."), _("Build failed"), wxICON_WARNING);
-            return false;
-        }
-        msgMan->Log(_("Build succeeded"), page_index);
-        return true;
-    }
-    else
-        return true;
-}
+//bool cbDebuggerPlugin::CheckBuild()
+//{
+//    if (m_pCompiler)
+//    {
+//        LogManager* msgMan = Manager::Get()->GetLogManager();
+//        int page_index;
+//        Manager::Get()->GetDebuggerManager()->GetLogger(false, page_index);
+//
+//        if (m_pCompiler->GetExitCode() != 0)
+//        {
+//            msgMan->Log(_("Build failed..."), page_index);
+//            msgMan->Log(_("Aborting debugging session"), page_index);
+//            cbMessageBox(_("Build failed. Aborting debugging session..."), _("Build failed"), wxICON_WARNING);
+//            return false;
+//        }
+//        msgMan->Log(_("Build succeeded"), page_index);
+//        return true;
+//    }
+//    else
+//        return true;
+//}
 
 void cbDebuggerPlugin::OnCompilerFinished(CodeBlocksEvent& event)
 {
-//    Manager::Get()->GetLogManager()->DebugLog(F(_T("DebuggerGDB::OnCompilerFinished")));
-
     if (m_WaitingCompilerToFinish)
     {
         m_WaitingCompilerToFinish = false;
         // only proceed if build succeeeded
-        if (!m_pCompiler || m_pCompiler->GetExitCode() == 0)
+        if (m_pCompiler && m_pCompiler->GetExitCode() != 0)
+        {
+            AnnoyingDialog dlg(_("Debug anyway?"), _("Build failed, do you want to debug the program?"),
+                               wxART_QUESTION, AnnoyingDialog::YES_NO, wxID_NO);
+            if (dlg.ShowModal() != wxID_YES)
+                return;
+        }
             CompilerFinished();
     }
 }

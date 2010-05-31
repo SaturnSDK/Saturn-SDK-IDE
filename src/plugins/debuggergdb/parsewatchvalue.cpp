@@ -198,7 +198,20 @@ bool ParseGDBWatchValue(GDBWatch &watch, wxString const &value, int &start, int 
 //            break;
         token_real_end = token.end;
         token.Trim(value);
-        wxString dbg = token.ExtractString(value);
+        wxString const &str = token.ExtractString(value);
+        if(str.StartsWith(wxT("members of ")))
+        {
+            wxString::size_type pos = str.find(wxT('\n'));
+            if(pos == wxString::npos)
+                return false;
+            else
+            {
+                if(str.find_last_of(wxT(':'), pos) == wxString::npos)
+                    return false;
+                token.start += pos + 2;
+                token.Trim(value);
+            }
+        }
         switch (token.type)
         {
         case Token::String:
@@ -241,11 +254,17 @@ bool ParseGDBWatchValue(GDBWatch &watch, wxString const &value, int &start, int 
             break;
         case Token::OpenBrace:
             {
+                GDBWatch *child;
                 if(token_name.type == Token::Undefined)
-                    return false;
-                GDBWatch *child = AddChild(watch, value, token_name);
+                {
+                    int start = watch.IsArray() ? watch.GetArrayStart() : 0;
+                    child = AddChild(watch, wxString::Format(wxT("[%d]"), start + added_children));
+                }
+                else
+                    child = AddChild(watch, value, token_name);
                 position = token_real_end;
                 added_children++;
+
                 if(!ParseGDBWatchValue(*child, value, position, 0))
                     return false;
                 token_real_end = position;

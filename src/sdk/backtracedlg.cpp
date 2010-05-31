@@ -149,7 +149,11 @@ void cbBacktraceDlg::OnJump(wxCommandEvent& event)
     {
         long line_number;
         line.ToLong(&line_number, 10);
-        Manager::Get()->GetDebuggerManager()->SyncEditor(file, line_number, false);
+
+
+        cbDebuggerPlugin *plugin = Manager::Get()->GetDebuggerManager()->GetActiveDebugger();
+        if(plugin)
+            plugin->SyncEditor(file, line_number, false);
     }
 }
 

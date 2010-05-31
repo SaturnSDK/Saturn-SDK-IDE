@@ -67,6 +67,7 @@ class DebuggerToolbarHandler : public wxEvtHandler
         void OnUpdateUI(wxUpdateUIEvent& event);
         void OnToolInfo(wxCommandEvent& event);
         void OnDebugWindows(wxCommandEvent& event);
+        void OnStop(wxCommandEvent& event);
 
         wxToolBar *m_Toolbar;
 

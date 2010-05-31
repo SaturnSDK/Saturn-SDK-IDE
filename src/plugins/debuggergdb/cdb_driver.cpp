@@ -268,6 +268,11 @@ void CDB_driver::UpdateWatch(GDBWatch::Pointer const &watch)
     // FIXME (obfuscated#): implement this
 }
 
+void CDB_driver::Attach(int /*pid*/)
+{
+    // FIXME (obfuscated#): implement this
+}
+
 void CDB_driver::Detach()
 {
     QueueCommand(new CdbCmd_Detach(this));
@@ -372,4 +377,10 @@ void CDB_driver::ParseOutput(const wxString& output)
         }
     }
     buffer.Clear();
+}
+
+bool CDB_driver::IsDebuggingStarted() const
+{
+    //FIXME (obfuscated#): implement this
+    return false;
 }

@@ -96,6 +96,33 @@ int InfoPane::GetPageIndexByWindow(wxWindow* win)
     return -1;
 }
 
+int InfoPane::GetCurrentPage(bool &is_logger)
+{
+    int page_index = GetSelection();
+    for (int ii = 0; ii < num_pages; ++ii)
+    {
+        if (page[ii].indexInNB == page_index)
+        {
+            is_logger = page[ii].islogger;
+            return ii;
+        }
+    }
+    return -1;
+}
+
+Logger* InfoPane::GetLogger(int index)
+{
+    if (index < 0 || index > num_pages)
+        return NULL;
+    return page[index].islogger ? page[index].logger : NULL;
+}
+wxWindow* InfoPane::GetWindow(int index)
+{
+    if (index < 0 || index > num_pages)
+        return NULL;
+    return !page[index].islogger ? page[index].window : NULL;
+}
+
 void InfoPane::Show(size_t i)
 {
     if(page[i].window == 0)

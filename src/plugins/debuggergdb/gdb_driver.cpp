@@ -536,6 +536,8 @@ void GDB_driver::Start(bool breakOnEntry)
 void GDB_driver::Stop()
 {
     ResetCursor();
+    if(m_pDBG->IsAttachedToProcess())
+        QueueCommand(new DebuggerCmd(this, wxT("kill")));
     QueueCommand(new DebuggerCmd(this, _T("quit")));
     m_IsStarted = false;
 }
@@ -727,6 +729,11 @@ void GDB_driver::UpdateWatch(GDBWatch::Pointer const &watch)
 {
     QueueCommand(new GdbCmd_FindWatchType(this, watch));
     QueueCommand(new DbgCmd_UpdateWatchesTree(this));
+}
+
+void GDB_driver::Attach(int /*pid*/)
+{
+    m_IsStarted = true;
 }
 
 void GDB_driver::Detach()

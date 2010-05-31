@@ -355,6 +355,9 @@ extern EVTIMPORT const wxEventType cbEVT_REMOVE_LOG_WINDOW;
 // switch to a log window (make it visible)
 extern EVTIMPORT const wxEventType cbEVT_SWITCH_TO_LOG_WINDOW;
 #define EVT_SWITCH_TO_LOG_WINDOW(fn) DECLARE_EVENT_TABLE_ENTRY( cbEVT_SWITCH_TO_LOG_WINDOW, -1, -1, (wxObjectEventFunction)(wxEventFunction)(CodeBlocksLogEventFunction)&fn, (wxObject *) NULL ),
+// gets the active log window
+extern EVTIMPORT const wxEventType cbEVT_GET_ACTIVE_LOG_WINDOW;
+#define EVT_GET_ACTIVE_LOG_WINDOW(fn) DECLARE_EVENT_TABLE_ENTRY( cbEVT_GET_ACTIVE_LOG_WINDOW, -1, -1, (wxObjectEventFunction)(wxEventFunction)(CodeBlocksLogEventFunction)&fn, (wxObject *) NULL ),
 // show log manager
 extern EVTIMPORT const wxEventType cbEVT_SHOW_LOG_MANAGER;
 #define EVT_SHOW_LOG_MANAGER(fn) DECLARE_EVENT_TABLE_ENTRY( cbEVT_SHOW_LOG_MANAGER, -1, -1, (wxObjectEventFunction)(wxEventFunction)(CodeBlocksLogEventFunction)&fn, (wxObject *) NULL ),

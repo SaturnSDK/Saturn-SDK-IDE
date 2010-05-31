@@ -3106,6 +3106,16 @@ void cbEditor::OnEditorCharAdded(wxScintillaEvent& event)
 void cbEditor::OnEditorDwellStart(wxScintillaEvent& event)
 {
     cbStyledTextCtrl* control = GetControl();
+
+    // FIXME: For some reason wxScintilla is sending this event even if the mouse is outside the editor window.
+    //        The code below test if the mouse is still inside the editor window
+    wxRect const &screen_rect = control->GetScreenRect();
+    wxPoint mouse_position;
+    ::wxGetMousePosition(&mouse_position.x, &mouse_position.y);
+
+    if (!screen_rect.Contains(mouse_position))
+        return;
+
     int pos = control->PositionFromPoint(wxPoint(event.GetX(), event.GetY()));
     int style = control->GetStyleAt(pos);
     NotifyPlugins(cbEVT_EDITOR_TOOLTIP, style, wxEmptyString, event.GetX(), event.GetY());

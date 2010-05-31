@@ -17,6 +17,7 @@
     #include "scrollingdialog.h"
 #endif
 
+#include <map>
 #include <wx/propgrid/propgrid.h>
 
 #include "watchesdlg.h"
@@ -50,38 +51,54 @@ BEGIN_EVENT_TABLE(WatchesDlg, wxPanel)
     EVT_MENU(idMenuDeleteAll, WatchesDlg::OnMenuDeleteAll)
 END_EVENT_TABLE()
 
-/// @breif dialog to show the value of a watch
-class WatchRawDialog : public wxScrollingDialog
-{
-    public:
-        WatchRawDialog(const wxString& symbol, const wxString &value) :
-            wxScrollingDialog(Manager::Get()->GetAppWindow(),
-                              wxID_ANY,
-                              wxString::Format(wxT("Watch '%s' raw value"), symbol.c_str()),
-                              wxDefaultPosition,
-                              wxSize(400, 400),
-                              wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER)
-        {
-            wxBoxSizer *bs = new wxBoxSizer(wxVERTICAL);
-            wxTextCtrl *text = new wxTextCtrl(this, wxID_ANY, value, wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE);
-            bs->Add(text, 1, wxEXPAND | wxALL, 5);
-            SetAutoLayout(TRUE);
-            SetSizer(bs);
-        }
 
-        void OnClose(wxCloseEvent &event)
-        {
-            Destroy();
-        }
-    private:
-        DECLARE_EVENT_TABLE()
+class cbTextCtrlAndButtonTooltipEditor : public wxPGTextCtrlAndButtonEditor
+{
+    DECLARE_DYNAMIC_CLASS(wxTextCtrlAndButtonTooltipEditor)
+public:
+    virtual wxPG_CONST_WXCHAR_PTR GetName() const;
+
+    virtual wxPGWindowList CreateControls(wxPropertyGrid* propgrid, wxPGProperty* property,
+                                          const wxPoint& pos, const wxSize& sz) const
+    {
+        wxPGWindowList const &list = wxPGTextCtrlAndButtonEditor::CreateControls(propgrid, property, pos, sz);
+
+        list.m_secondary->SetToolTip(_("Click the button to see the value.\n"
+                                       "Hold CONTROL to see the raw output string returned by the debugger.\n"
+                                       "Hold SHIFT to see debugging representation of the cbWatch object."));
+        return list;
+    }
+
 };
 
-BEGIN_EVENT_TABLE(WatchRawDialog, wxScrollingDialog)
-    EVT_CLOSE(WatchRawDialog::OnClose)
-END_EVENT_TABLE()
+WX_PG_DECLARE_EDITOR(cbTextCtrlAndButtonTooltip);
+WX_PG_IMPLEMENT_EDITOR_CLASS(cbTextCtrlAndButtonTooltip, cbTextCtrlAndButtonTooltipEditor, wxPGTextCtrlAndButtonEditor);
 
-class WatchesProperty;
+class WatchesProperty : public wxStringProperty
+{
+    public:
+        WatchesProperty(const wxString& label, const wxString& value, cbWatch *watch) :
+            wxStringProperty(label, wxPG_LABEL, value),
+            m_watch(watch)
+        {
+        }
+
+        // Set editor to have button
+        virtual const wxPGEditor* DoGetEditorClass() const
+        {
+            return wxPG_EDITOR(cbTextCtrlAndButtonTooltip);
+        }
+
+        // Set what happens on button click
+        virtual wxPGEditorDialogAdapter* GetEditorDialog() const;
+
+        cbWatch* GetWatch() { return m_watch; }
+        const cbWatch* GetWatch() const { return m_watch; }
+        void SetWatch(cbWatch* watch) { m_watch = watch; }
+
+    protected:
+        cbWatch *m_watch;
+};
 
 class WatchRawDialogAdapter : public wxPGEditorDialogAdapter
 {
@@ -93,7 +110,108 @@ class WatchRawDialogAdapter : public wxPGEditorDialogAdapter
 
         virtual bool DoShowDialog(wxPropertyGrid* WXUNUSED(propGrid), wxPGProperty* property);
 
-        void WatchToString(wxString &result, const cbWatch &watch, const wxString &indent = wxEmptyString)
+    protected:
+};
+
+/// @breif dialog to show the value of a watch
+class WatchRawDialog : public wxScrollingDialog
+{
+    private:
+        enum Type
+        {
+            TypeNormal,
+            TypeDebug,
+            TypeWatchTree
+        };
+    public:
+        static WatchRawDialog* Create(const WatchesProperty* watch)
+        {
+            cbAssert(watch->GetWatch());
+
+            WatchRawDialog *dlg;
+            Map::iterator it = s_dialogs.find(watch->GetWatch());
+            if (it != s_dialogs.end())
+                dlg = it->second;
+            else
+            {
+                dlg = new WatchRawDialog;
+                s_dialogs[watch->GetWatch()] = dlg;
+            }
+
+            dlg->m_type = TypeNormal;
+
+            if (wxGetKeyState(WXK_CONTROL))
+                dlg->m_type = TypeDebug;
+            else if (wxGetKeyState(WXK_SHIFT))
+                dlg->m_type = TypeWatchTree;
+
+            dlg->SetTitle(wxString::Format(wxT("Watch '%s' raw value"), watch->GetName().c_str()));
+            dlg->SetValue(watch);
+            dlg->Raise();
+
+            return dlg;
+        }
+
+        static void UpdateValue(const WatchesProperty* watch)
+        {
+            Map::iterator it = s_dialogs.find(watch->GetWatch());
+            if (it != s_dialogs.end())
+                it->second->SetValue(watch);
+        }
+    private:
+        WatchRawDialog() :
+            wxScrollingDialog(Manager::Get()->GetAppWindow(),
+                              wxID_ANY,
+                              wxEmptyString,
+                              wxDefaultPosition,
+                              wxSize(400, 400),
+                              wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER),
+            m_type(TypeNormal)
+        {
+            wxBoxSizer *bs = new wxBoxSizer(wxVERTICAL);
+            m_text = new wxTextCtrl(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize,
+                                    wxTE_MULTILINE | wxTE_READONLY);
+            bs->Add(m_text, 1, wxEXPAND | wxALL, 5);
+            SetAutoLayout(TRUE);
+            SetSizer(bs);
+        }
+
+        void OnClose(wxCloseEvent &event)
+        {
+            for (Map::iterator it = s_dialogs.begin(); it != s_dialogs.end(); ++it)
+            {
+                if (it->second == this)
+                {
+                    s_dialogs.erase(it);
+                    break;
+                }
+            }
+            Destroy();
+        }
+
+        void SetValue(const WatchesProperty* watch)
+        {
+            switch (m_type)
+            {
+                case TypeNormal:
+                    m_text->SetValue(watch->GetValueAsString(wxPG_FULL_VALUE));
+                    break;
+
+                case TypeDebug:
+                    m_text->SetValue(watch->GetWatch()->GetDebugString());
+                    break;
+
+                case TypeWatchTree:
+        {
+                        wxString value;
+                        WatchToString(value, *watch->GetWatch());
+                        m_text->SetValue(value);
+                    }
+                    break;
+            }
+        }
+
+        static void WatchToString(wxString &result, const cbWatch &watch, const wxString &indent = wxEmptyString)
         {
             wxString sym, value;
             watch.GetSymbol(sym);
@@ -111,60 +229,38 @@ class WatchRawDialogAdapter : public wxPGEditorDialogAdapter
                 WatchToString(result, *child, indent + wxT("    "));
             }
         }
+    private:
+        DECLARE_EVENT_TABLE()
+    private:
+        typedef std::map<cbWatch const*, WatchRawDialog*> Map;
 
-    protected:
+        static Map s_dialogs;
+
+        wxTextCtrl *m_text;
+        Type        m_type;
 };
 
-class WatchesProperty : public wxStringProperty
-{
-    public:
-        WatchesProperty(const wxString& label, const wxString& value, cbWatch *watch) :
-            wxStringProperty(label, wxPG_LABEL, value),
-            m_watch(watch)
-        {
-        }
+WatchRawDialog::Map WatchRawDialog::s_dialogs;
 
-        // Set editor to have button
-        virtual const wxPGEditor* DoGetEditorClass() const
-        {
-            return wxPG_EDITOR(TextCtrlAndButton);
-        }
+BEGIN_EVENT_TABLE(WatchRawDialog, wxScrollingDialog)
+    EVT_CLOSE(WatchRawDialog::OnClose)
+END_EVENT_TABLE()
 
-        // Set what happens on button click
-        virtual wxPGEditorDialogAdapter* GetEditorDialog() const
-        {
-            return new WatchRawDialogAdapter();
-        }
-
-        cbWatch* GetWatch() { return m_watch; }
-        void SetWatch(cbWatch* watch) { m_watch = watch; }
-
-    protected:
-        cbWatch *m_watch;
-};
 
 bool WatchRawDialogAdapter::DoShowDialog(wxPropertyGrid* WXUNUSED(propGrid), wxPGProperty* property)
 {
     WatchesProperty *watch = static_cast<WatchesProperty*>(property);
-    wxString value;
-
     if (watch->GetWatch())
     {
-        if (wxGetKeyState(WXK_CONTROL))
-            value = watch->GetWatch()->GetDebugString();
-        else if (wxGetKeyState(WXK_SHIFT))
-            WatchToString(value, *watch->GetWatch());
-        else
-            value = property->GetValueAsString(wxPG_FULL_VALUE);
-    }
-    else
-        value = property->GetValueAsString(wxPG_FULL_VALUE);
-
-    WatchRawDialog *dlg = new WatchRawDialog(property->GetName(), value);
-    //dlg.ShowModal();
+        WatchRawDialog *dlg = WatchRawDialog::Create(watch);
     dlg->Show();
-
+    }
     return false;
+}
+
+wxPGEditorDialogAdapter* WatchesProperty::GetEditorDialog() const
+{
+    return new WatchRawDialogAdapter();
 }
 
 class WatchesDropTarget : public wxTextDropTarget
@@ -198,6 +294,8 @@ WatchesDlg::WatchesDlg() :
     SetAutoLayout(TRUE);
     SetSizer(bs);
 
+    wxPGRegisterEditorClass(cbTextCtrlAndButtonTooltip);
+
     m_grid->SetColumnProportion(0, 40);
     m_grid->SetColumnProportion(1, 40);
     m_grid->SetColumnProportion(2, 20);
@@ -223,7 +321,10 @@ void AppendChildren(wxPropertyGrid &grid, wxPGProperty &property, cbWatch &watch
         grid.SetPropertyAttribute(new_prop, wxT("Units"), type);
 
         if(child.IsChanged())
+        {
             grid.SetPropertyTextColour(prop, wxColor(255, 0, 0));
+            WatchRawDialog::UpdateValue(static_cast<const WatchesProperty*>(prop));
+        }
         else
             grid.SetPropertyColourToDefault(prop);
 
@@ -259,6 +360,8 @@ void WatchesDlg::UpdateWatches()
         }
 
         AppendChildren(*m_grid, *it->property, *it->watch);
+
+        WatchRawDialog::UpdateValue(static_cast<const WatchesProperty*>(it->property));
     }
     m_grid->Refresh();
 }

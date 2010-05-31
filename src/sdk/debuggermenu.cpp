@@ -41,6 +41,7 @@ namespace
     const int idMenuStepOut = XRCID("idDebuggerMenuStepOut");
     const int idMenuBreak = XRCID("idDebuggerMenuBreak");
     const int idMenuStop = XRCID("idDebuggerMenuStop");
+    const int idToolbarStop = XRCID("idDebuggerToolbarStop");
     const int idMenuContinue = XRCID("idDebuggerMenuContinue");
     const int idMenuToggleBreakpoint = XRCID("idDebuggerMenuToggleBreakpoint");
     const int idMenuRemoveAllBreakpoints = XRCID("idDebuggerMenuRemoveAllBreakpoints");
@@ -67,14 +68,18 @@ namespace
 BEGIN_EVENT_TABLE(DebuggerMenuHandler, wxEvtHandler)
 //    EVT_UPDATE_UI_RANGE(idMenuContinue, idMenuDebuggerAddWatch, DebuggerMenuHandler::OnUpdateUI)
     // these are different because they are loaded from the XRC
-    EVT_UPDATE_UI(XRCID("idDebuggerMenuDebug"), DebuggerMenuHandler::OnUpdateUI)
-    EVT_UPDATE_UI(XRCID("idDebuggerMenuRunToCursor"), DebuggerMenuHandler::OnUpdateUI)
-    EVT_UPDATE_UI(XRCID("idDebuggerMenuSetNextStatement"), DebuggerMenuHandler::OnUpdateUI)
-    EVT_UPDATE_UI(XRCID("idDebuggerMenuNext"), DebuggerMenuHandler::OnUpdateUI)
-    EVT_UPDATE_UI(XRCID("idDebuggerMenuNextInstr"), DebuggerMenuHandler::OnUpdateUI)
-    EVT_UPDATE_UI(XRCID("idDebuggerMenuStep"), DebuggerMenuHandler::OnUpdateUI)
-    EVT_UPDATE_UI(XRCID("idDebuggerMenuStepOut"), DebuggerMenuHandler::OnUpdateUI)
-    EVT_UPDATE_UI(XRCID("idDebuggerMenuStop"), DebuggerMenuHandler::OnUpdateUI)
+    EVT_UPDATE_UI(idMenuDebug, DebuggerMenuHandler::OnUpdateUI)
+    EVT_UPDATE_UI(idMenuRunToCursor, DebuggerMenuHandler::OnUpdateUI)
+    EVT_UPDATE_UI(idMenuSetNextStatement, DebuggerMenuHandler::OnUpdateUI)
+    EVT_UPDATE_UI(idMenuNext, DebuggerMenuHandler::OnUpdateUI)
+    EVT_UPDATE_UI(idMenuNextInstr, DebuggerMenuHandler::OnUpdateUI)
+    EVT_UPDATE_UI(idMenuStep, DebuggerMenuHandler::OnUpdateUI)
+    EVT_UPDATE_UI(idMenuStepOut, DebuggerMenuHandler::OnUpdateUI)
+    EVT_UPDATE_UI(idMenuBreak, DebuggerMenuHandler::OnUpdateUI)
+    EVT_UPDATE_UI(idMenuStop, DebuggerMenuHandler::OnUpdateUI)
+
+    EVT_UPDATE_UI(idMenuAttachToProcess, DebuggerMenuHandler::OnUpdateUI)
+    EVT_UPDATE_UI(idMenuDetach, DebuggerMenuHandler::OnUpdateUI)
 
     EVT_UPDATE_UI(XRCID("idDebuggerCurrentFrame"), DebuggerMenuHandler::OnUpdateUI)
     EVT_UPDATE_UI(XRCID("idDebuggerLoadedDLLs"), DebuggerMenuHandler::OnUpdateUI)
@@ -152,8 +157,7 @@ void DebuggerMenuHandler::OnUpdateUI(wxUpdateUIEvent& event)
         return;
 
     cbProject* prj = Manager::Get()->GetProjectManager()->GetActiveProject();
-    // FIXME (obfuscated#) reimplement m_pidToAttach
-    bool en = (prj && !prj->GetCurrentlyCompilingTarget()) /* || m_PidToAttach != 0*/;
+    bool en = (prj && !prj->GetCurrentlyCompilingTarget()) || m_activeDebugger->IsAttachedToProcess();
     cbEditor* ed = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
     wxMenuBar* mbar = Manager::Get()->GetAppFrame()->GetMenuBar();
     bool stopped = m_activeDebugger->IsStopped();
@@ -178,7 +182,7 @@ void DebuggerMenuHandler::OnUpdateUI(wxUpdateUIEvent& event)
         mbar->Enable(idMenuStop, isRunning && en);
         mbar->Enable(idMenuBreak, isRunning && !stopped && en);
         mbar->Enable(idMenuAttachToProcess, !isRunning);
-        mbar->Enable(idMenuDetach, false); //isRunning && m_PidToAttach != 0);
+        mbar->Enable(idMenuDetach, isRunning && stopped && m_activeDebugger->IsAttachedToProcess());
 
 //        mbar->Enable(idMenuInfoFrame, isRunning && stopped);
 //        mbar->Enable(idMenuInfoDLL, isRunning && stopped);
@@ -449,17 +453,18 @@ void DebuggerMenuHandler::OnActiveDebuggerClick(wxCommandEvent& event)
 
 BEGIN_EVENT_TABLE(DebuggerToolbarHandler, wxEvtHandler)
     // these are different because they are loaded from the XRC
-    EVT_UPDATE_UI(XRCID("idDebuggerMenuDebug"), DebuggerToolbarHandler::OnUpdateUI)
-    EVT_UPDATE_UI(XRCID("idDebuggerMenuRunToCursor"), DebuggerToolbarHandler::OnUpdateUI)
-    EVT_UPDATE_UI(XRCID("idDebuggerMenuNext"), DebuggerToolbarHandler::OnUpdateUI)
-    EVT_UPDATE_UI(XRCID("idDebuggerMenuNextInstr"), DebuggerToolbarHandler::OnUpdateUI)
-    EVT_UPDATE_UI(XRCID("idDebuggerMenuStep"), DebuggerToolbarHandler::OnUpdateUI)
-    EVT_UPDATE_UI(XRCID("idDebuggerMenuStepOut"), DebuggerToolbarHandler::OnUpdateUI)
-    EVT_UPDATE_UI(XRCID("idDebuggerMenuStop"), DebuggerToolbarHandler::OnUpdateUI)
+    EVT_UPDATE_UI(idMenuDebug, DebuggerToolbarHandler::OnUpdateUI)
+    EVT_UPDATE_UI(idMenuRunToCursor, DebuggerToolbarHandler::OnUpdateUI)
+    EVT_UPDATE_UI(idMenuNext, DebuggerToolbarHandler::OnUpdateUI)
+    EVT_UPDATE_UI(idMenuNextInstr, DebuggerToolbarHandler::OnUpdateUI)
+    EVT_UPDATE_UI(idMenuStep, DebuggerToolbarHandler::OnUpdateUI)
+    EVT_UPDATE_UI(idMenuStepOut, DebuggerToolbarHandler::OnUpdateUI)
+    EVT_UPDATE_UI(idMenuBreak, DebuggerToolbarHandler::OnUpdateUI)
+    EVT_UPDATE_UI(idToolbarStop, DebuggerToolbarHandler::OnUpdateUI)
 
     EVT_MENU(idDebuggerToolInfo, DebuggerToolbarHandler::OnToolInfo)
     EVT_MENU(idDebuggerToolWindows, DebuggerToolbarHandler::OnDebugWindows)
-
+    EVT_MENU(idToolbarStop, DebuggerToolbarHandler::OnStop)
 END_EVENT_TABLE()
 
 DebuggerToolbarHandler::DebuggerToolbarHandler() : m_Toolbar(NULL)
@@ -490,8 +495,7 @@ void DebuggerToolbarHandler::OnUpdateUI(wxUpdateUIEvent& event)
         return;
 
     cbProject* prj = Manager::Get()->GetProjectManager()->GetActiveProject();
-    // FIXME (obfuscated#) reimplement m_pidToAttach
-    bool en = (prj && !prj->GetCurrentlyCompilingTarget()) /* || m_PidToAttach != 0*/;
+    bool en = (prj && !prj->GetCurrentlyCompilingTarget()) || plugin->IsAttachedToProcess();
     cbEditor* ed = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
     bool stopped = plugin->IsStopped();
     bool isRunning = plugin->IsRunning();
@@ -502,7 +506,7 @@ void DebuggerToolbarHandler::OnUpdateUI(wxUpdateUIEvent& event)
     m_Toolbar->EnableTool(idMenuNextInstr, isRunning && en && stopped);
     m_Toolbar->EnableTool(idMenuStep, en && stopped);
     m_Toolbar->EnableTool(idMenuStepOut, isRunning && en && stopped);
-    m_Toolbar->EnableTool(idMenuStop, isRunning && en);
+    m_Toolbar->EnableTool(idToolbarStop, isRunning && en);
     m_Toolbar->EnableTool(idMenuBreak, isRunning && !stopped && en);
     m_Toolbar->EnableTool(idDebuggerToolInfo, plugin->ToolMenuEnabled());
 
@@ -544,4 +548,32 @@ void DebuggerToolbarHandler::OnDebugWindows(wxCommandEvent& event)
     Manager::Get()->GetAppWindow()->PopupMenu(&m);
 }
 
+void DebuggerToolbarHandler::OnStop(wxCommandEvent& event)
+{
+    DebuggerManager *manager = Manager::Get()->GetDebuggerManager();
+    cbDebuggerPlugin *plugin = manager->GetActiveDebugger();
+    if (!plugin)
+        return;
 
+    if (plugin->IsAttachedToProcess())
+    {
+        wxMenu m;
+
+        if (plugin->IsStopped())
+            m.Append(idMenuDetach, _("Detach"));
+        else
+        {
+            wxMenuItem *detach_item = m.Append(idMenuDetach, _("Detach (debugger is running)"));
+            detach_item->Enable(false);
+        }
+
+        m.Append(idMenuStop, _("Stop debugger (kills the debuggee)"));
+
+        Manager::Get()->GetAppWindow()->PopupMenu(&m);
+    }
+    else
+    {
+        wxCommandEvent event(wxEVT_COMMAND_TOOL_CLICKED, idMenuStop);
+        m_Toolbar->ProcessEvent(event);
+    }
+}
