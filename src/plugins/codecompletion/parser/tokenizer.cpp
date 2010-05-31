@@ -499,11 +499,10 @@ bool Tokenizer::SkipToEOL(bool nestBraces, bool skippingComment)
                 if (CurrentChar() == '/' && NextChar() == '*')
                 {
                     SkipComment();
-                    if (skippingComment && CurrentChar() == '\n')
-                    {
-                        continue; // early exit from the loop
-                    }
+                    if (CurrentChar() == _T('\n'))
+                        break;
                 }
+
                 if (nestBraces && CurrentChar() == _T('{'))
                     ++m_NestLevel;
                 else if (nestBraces && CurrentChar() == _T('}'))
