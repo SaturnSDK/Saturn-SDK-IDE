@@ -107,6 +107,9 @@ class ParserThread : public cbThreadedTask
         /** Do the main job here */
         bool Parse();
 
+        /** Get the context "namespace XXX { ... }" directive
+          * @param buffer  wxString to be parsed.
+          * @param result  vector containing all the namespace names.*/
         bool ParseBufferForNamespaces(const wxString& buffer, NameSpaceVec& result);
 
         /** Get the context "using namespace XXX" directive

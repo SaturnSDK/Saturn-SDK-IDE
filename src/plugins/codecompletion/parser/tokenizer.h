@@ -79,7 +79,8 @@ class Tokenizer
 public:
     /** Tokenizer constructor.
      * @param filename the file to be opened.
-     */ Tokenizer(const wxString& filename = wxEmptyString);
+     */
+    Tokenizer(const wxString& filename = wxEmptyString);
     Tokenizer(TokensTree* tokensTree, const wxString& filename = wxEmptyString);
 
     /** ParserThread destructor.*/
@@ -139,11 +140,13 @@ public:
     {
         return m_NestLevel;
     };
+
     /** Save the brace level, the parser might need to ignore the nesting level in some cases */
     void SaveNestingLevel()
     {
         m_SavedNestingLevel = m_NestLevel;
     };
+
     /** Restore the brace level */
     void RestoreNestingLevel()
     {
@@ -220,6 +223,7 @@ public:
 protected:
     /** Initialize some member variables */
     void BaseInit();
+
     /** Do the job of lexer, both GetToken() and PeekToken will internally call this function */
     wxString DoGetToken();
 
@@ -244,9 +248,9 @@ protected:
     /** skips comments, assignments, preprocessor etc. Eg, sometimes, it will skip the statement after
      * the "=" statement (depend on the TokenizerState value).
      */
-    bool SkipUnwanted(); // skips whitespace, comments, assignments etc.
+    bool SkipUnwanted();
 
-    /** Skip Write spaces */
+    /** Skip any "tab" "whitespace" */
     bool SkipWhiteSpace();
 
     /** Skip the C/C++ comment */
@@ -379,6 +383,7 @@ private:
       */
     bool HandleConditionPreprocessor();
 
+    /** Tokenizer options specify the current skipping option */
     TokenizerOptions m_TokenizerOptions;
     TokensTree*      m_pTokensTree;
 

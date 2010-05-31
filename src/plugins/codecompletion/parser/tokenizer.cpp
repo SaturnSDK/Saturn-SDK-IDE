@@ -8,15 +8,17 @@
  */
 
 #include <sdk.h>
-#include "tokenizer.h"
+
+#include <cctype>
 #include <wx/utils.h>
 #include <wx/file.h>
 #include <wx/msgdlg.h>
-#include "manager.h"
-#include <cctype>
-#include <globals.h>
-#include "logmanager.h"
+
 #include "expression.h"
+#include "globals.h"
+#include "logmanager.h"
+#include "manager.h"
+#include "tokenizer.h"
 
 #define TOKENIZER_DEBUG_OUTPUT 0
 
@@ -774,7 +776,7 @@ wxString Tokenizer::DoGetToken()
         str = m_Buffer.Mid(start, m_TokenIndex - start);
     }
 #ifdef __WXMSW__ // This is a Windows only bug!
-// fetch non-English characters, see more details in: http://forums.codeblocks.org/index.php/topic,11387.0.html
+    // fetch non-English characters, see more details in: http://forums.codeblocks.org/index.php/topic,11387.0.html
     else if (c == 178 || c == 179 || c == 185)
     {
         str = c;
