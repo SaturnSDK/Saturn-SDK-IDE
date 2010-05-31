@@ -1289,6 +1289,9 @@ void ParserThread::HandleIncludes()
 
 void ParserThread::HandleDefines()
 {
+    if (TestDestroy())
+        return;
+
     int lineNr = m_Tokenizer.GetLineNumber();
     wxString token = m_Tokenizer.GetToken(); // read the token after #define
     m_Str.Clear();
@@ -1314,13 +1317,17 @@ void ParserThread::HandleDefines()
         else
         {
             m_Str = defVal.substr(token.length());
-            m_Str.Trim(false);
-            //defVal = _T("");
+            m_Str.Trim(false).Trim(true);
         }
-        Token* oldParent = m_pLastParent;
-        m_pLastParent = 0L;
-        DoAddToken(tkPreprocessor, token, lineNr, lineNr, m_Tokenizer.GetLineNumber(), para, false, true);
-        m_pLastParent = oldParent;
+
+        if (m_Str != token)
+        {
+            Token* oldParent = m_pLastParent;
+            m_pLastParent = 0L;
+            DoAddToken(tkPreprocessor, token, lineNr, lineNr, m_Tokenizer.GetLineNumber(), para, false, true);
+            m_pLastParent = oldParent;
+        }
+
         m_Str.Clear();
     }
 }

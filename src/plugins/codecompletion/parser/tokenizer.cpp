@@ -929,7 +929,7 @@ void Tokenizer::GetPreprocessorValue(const wxString& token, bool& found, long& v
 
         if (wxIsdigit(tk->m_Type[0]))
             tk->m_Type.ToLong(&value, tk->m_Type.StartsWith(_T("0x")) ? 16 : 10);
-        else
+        else if (tk->m_Type != token)
             GetPreprocessorValue(tk->m_Type, found, value);
     }
 }
