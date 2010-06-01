@@ -153,6 +153,7 @@ class CodeCompletion : public cbCodeCompletionPlugin
         wxString                           m_LastFile;
         bool                               m_LexerKeywordsToInclude[9];
         bool                               m_NeedReparse;
+        bool                               m_IsCreateNewProject;
 
         DECLARE_EVENT_TABLE()
 };

@@ -180,7 +180,8 @@ CodeCompletion::CodeCompletion() :
     m_pToolBar(0),
     m_ToolbarChanged(true),
     m_CurrentLine(0),
-    m_NeedReparse(false)
+    m_NeedReparse(false),
+    m_IsCreateNewProject(false)
 {
     if (!Manager::LoadResource(_T("codecompletion.zip")))
         NotifyMissingFile(_T("codecompletion.zip"));
@@ -1242,7 +1243,7 @@ void CodeCompletion::OnWorkspaceChanged(CodeBlocksEvent& event)
     // the workspace has been changed, and it's not sent if the application is
     // shutting down. So it's the ideal time to parse files and update your
     // widgets.
-    if (IsAttached() && m_InitDone)
+    if (IsAttached() && m_InitDone && !m_IsCreateNewProject)
     {
         cbProject* curProject = Manager::Get()->GetProjectManager()->GetActiveProject();
         if (curProject)
@@ -1268,7 +1269,7 @@ void CodeCompletion::OnProjectActivated(CodeBlocksEvent& event)
     // So we need to update it with the EVT_WORKSPACE_CHANGED event, which gets
     // triggered after everything's finished loading/closing.
 
-    if (!ProjectManager::IsBusy() && IsAttached() && m_InitDone)
+    if (!ProjectManager::IsBusy() && IsAttached() && m_InitDone && !m_IsCreateNewProject)
     {
         if (m_NativeParser.AddOrChangeParser(event.GetProject()) != m_NativeParser.GetParserPtr())
             return;
@@ -1299,17 +1300,27 @@ void CodeCompletion::OnProjectSaved(CodeBlocksEvent& event)
 {
 //    Manager::Get()->GetLogManager()->DebugLog(_T("CodeCompletion::OnProjectSaved"));
 
-    // reparse project (compiler search dirs might have changed)
-    if (IsAttached() && m_InitDone && event.GetProject())
+    if (m_IsCreateNewProject)
     {
-        Manager::Get()->GetLogManager()->DebugLog(_T("Reparsing project."));
+        m_IsCreateNewProject = false;
+        m_NativeParser.AddOrChangeParser(event.GetProject());
+    }
+
+    else if (!Manager::Get()->GetProjectManager()->GetActiveProject())
+        m_IsCreateNewProject = true;
+
+    // reparse project (compiler search dirs might have changed)
+    else if (IsAttached() && m_InitDone && event.GetProject())
+    {
         cbProject* project = event.GetProject();
         if (m_NativeParser.Done() && m_NativeParser.GetParserByProject(project))
         {
+            Manager::Get()->GetLogManager()->DebugLog(_T("Reparsing project."));
             m_NativeParser.RemoveParser(project);
             m_NativeParser.AddOrChangeParser(project);
         }
     }
+
     event.Skip();
 }
 
@@ -1317,7 +1328,7 @@ void CodeCompletion::OnProjectFileAdded(CodeBlocksEvent& event)
 {
 //    Manager::Get()->GetLogManager()->DebugLog(_T("CodeCompletion::OnProjectFileAdded"));
 
-    if (IsAttached() && m_InitDone)
+    if (IsAttached() && m_InitDone && !m_IsCreateNewProject)
         m_NativeParser.AddFileToParser(event.GetProject(), event.GetString());
     event.Skip();
 }
@@ -1326,7 +1337,7 @@ void CodeCompletion::OnProjectFileRemoved(CodeBlocksEvent& event)
 {
 //    Manager::Get()->GetLogManager()->DebugLog(_T("CodeCompletion::OnProjectFileRemoved"));
 
-    if (IsAttached() && m_InitDone)
+    if (IsAttached() && m_InitDone && !m_IsCreateNewProject)
         m_NativeParser.RemoveFileFromParser(event.GetProject(), event.GetString());
     event.Skip();
 }
