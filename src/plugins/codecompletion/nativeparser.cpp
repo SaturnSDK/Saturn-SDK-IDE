@@ -3506,3 +3506,11 @@ void NativeParser::RemoveObsoleteParsers()
         DeleteParser(delProject, delParser);
     }
 }
+
+ParsingType NativeParser::GetParsingType()
+{
+    if (Done())
+        return ptUnknown;
+    else
+        return m_WaitParsingList.front().type;
+}

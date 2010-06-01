@@ -1634,6 +1634,7 @@ void CodeCompletion::ParseFunctionsAndFillToolbar(bool force)
     {
         // Update the last editor and changed flag...
         m_ToolbarChanged = false;
+        m_LastFile = filename;
 
         // ...and refresh the toolbars.
         m_Function->Clear();
@@ -1753,20 +1754,22 @@ void CodeCompletion::OnEditorActivated(CodeBlocksEvent& event)
             return;
 
         wxString filename = editor->GetFilename();
-        if (filename.IsEmpty() || m_LastFile == filename)
+        if (filename.IsEmpty())
             return;
 
-        m_NativeParser.OnEditorActivated(editor);
-
-        Parser* parser = m_NativeParser.GetParserPtr();
-        if (parser && m_NativeParser.GetParserByFilename(filename) == parser)
+        // Do *NOT* set m_LastFile = filename, because we need a delay for m_TimerFunctionsParsing
+        if (m_LastFile != filename)
         {
-            m_TimerFunctionsParsing.Stop();
-            m_TimerFunctionsParsing.Start(FUNCTIONS_PARSING_DELAY, wxTIMER_ONE_SHOT);
-            EnableToolbarTools(true);
-        }
+            m_NativeParser.OnEditorActivated(editor);
 
-        m_LastFile = filename;
+            Parser* parser = m_NativeParser.GetParserPtr();
+            if (parser && m_NativeParser.GetParserByFilename(filename) == parser)
+            {
+                m_TimerFunctionsParsing.Stop();
+                m_TimerFunctionsParsing.Start(FUNCTIONS_PARSING_DELAY, wxTIMER_ONE_SHOT);
+                EnableToolbarTools(true);
+            }
+        }
     }
 
     event.Skip();
@@ -2523,7 +2526,8 @@ void CodeCompletion::OnFunction(wxCommandEvent& /*event*/)
 
 void CodeCompletion::OnParserStart(wxCommandEvent& event)
 {
-    EnableToolbarTools(false);
+    if (m_NativeParser.GetParsingType() != ptRepaseFile)
+        EnableToolbarTools(false);
 }
 
 void CodeCompletion::OnParserEnd(wxCommandEvent& event)

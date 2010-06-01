@@ -43,6 +43,14 @@ enum BrowserViewMode
     bvmInheritance
 };
 
+enum ParsingType
+{
+    ptRepaseFile        = 1,
+    ptAddFileToParser   = 2,
+    ptAddParser         = 3,
+    ptUnknown           = 4,
+};
+
 struct ParserComponent
 {
     wxString component;
@@ -61,11 +69,12 @@ class NativeParser : public wxEvtHandler
         cbProject* GetProjectByParser(Parser* parser);
         cbProject* GetProjectByFilename(const wxString& filename);
         wxImageList* GetImageList() { return m_pImageList; }
-        int  GetTokenKindImage(Token* token);
+        int GetTokenKindImage(Token* token);
         void SetTokenKindImage(int kind, const wxBitmap& bitmap, const wxBitmap& mask = wxNullBitmap);
         void SetTokenKindImage(int kind, const wxBitmap& bitmap, const wxColour& maskColour);
         void SetTokenKindImage(int kind, const wxIcon& icon);
         bool Done() const { return m_WaitParsingList.empty(); }
+        ParsingType GetParsingType();
 
         // If return != m_pParser, the mean is waiting...for parser task
         const Parser* AddOrChangeParser(cbProject* project, bool useCache = true);
@@ -153,14 +162,6 @@ class NativeParser : public wxEvtHandler
 
         size_t ResolveActualType(wxString searchText, const TokenIdxSet& searchScope, TokenIdxSet& result);
         size_t ResolveExpression(std::queue<ParserComponent> components, const TokenIdxSet& searchScope,TokenIdxSet& result, bool IsCaseSense = true, bool IsPrefix = false);
-
-        enum ParsingType
-        {
-            ptRepaseFile        = 1,
-            ptAddFileToParser   = 2,
-            ptAddParser         = 3,
-            ptUnknown           = 4,
-        };
 
         struct ParsingNode
         {
