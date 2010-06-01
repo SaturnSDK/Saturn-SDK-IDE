@@ -644,9 +644,35 @@ void ParserThread::DoParse()
                 // do nothing, just skip keyword "const", otherwise uncomment:
                 //m_Str.Clear();
             }
-            else if (token == ParserConsts::kw_using) // using namespace ?
+            else if (token==ParserConsts::kw_using)
             {
-                SkipToOneOfChars(ParserConsts::semicolonclbrace, true);
+                wxString peek = m_Tokenizer.PeekToken();
+                if (peek == ParserConsts::kw_namespace)
+                {
+                    // ok
+                    m_Tokenizer.GetToken(); // eat namespace
+                    while (true) // support full namespaces
+                    {
+                        m_Str << m_Tokenizer.GetToken();
+                        if (m_Tokenizer.PeekToken() == ParserConsts::dcolon)
+                            m_Str << m_Tokenizer.GetToken();
+                        else
+                            break;
+                    }
+                    if ((!m_Str.IsEmpty())
+                            && m_pLastParent != 0L
+                            && (m_pLastParent->GetSelf() != -1)
+                            && (m_pLastParent->m_TokenKind == tkNamespace ) )
+                    {
+                        if(m_pLastParent->m_AncestorsString.IsEmpty())
+                            m_pLastParent->m_AncestorsString<<m_Str;
+                        else
+                            m_pLastParent->m_AncestorsString<<_T(',')<<m_Str;
+                    }
+                }
+                else
+                    SkipToOneOfChars(ParserConsts::semicolonclbrace);
+
                 m_Str.Clear();
             }
             else if (token == ParserConsts::kw_class)
@@ -823,7 +849,7 @@ void ParserThread::DoParse()
                     && m_EncounteredTypeNamespaces.empty()
                     && (!m_pLastParent || m_pLastParent->m_Name != token) ) // if func has same name as current scope (class)
                 {
-                    if (false /* TODO: Handle Macro detection properly */)
+                    if (true)
                     {
                         HandleMacro(token, peek);
                         m_Tokenizer.GetToken();

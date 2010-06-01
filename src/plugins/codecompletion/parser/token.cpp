@@ -848,7 +848,7 @@ void TokensTree::RecalcData()
         if (!token)
             continue;
 
-        if (!(token->m_TokenKind & (tkClass | tkTypedef | tkEnum)))
+        if (!(token->m_TokenKind & (tkClass | tkTypedef | tkEnum | tkNamespace)))
             continue;
         if (token->m_AncestorsString.IsEmpty())
             continue;
@@ -889,7 +889,9 @@ void TokensTree::RecalcData()
                             break;
                     }
                 }
-                if (ancestorToken && ancestorToken != token && ancestorToken->m_TokenKind == tkClass)
+                if (ancestorToken
+                    && ancestorToken != token
+                    && (ancestorToken->m_TokenKind == tkClass || ancestorToken->m_TokenKind == tkNamespace) )
                 {
                     TRACE(_T("RecalcData() : Resolved to %s"), ancestorToken->m_Name.wx_str());
                     token->m_Ancestors.insert(ancestorToken->GetSelf());
@@ -913,7 +915,8 @@ void TokensTree::RecalcData()
                         && (ancestorToken != token)
                         && (   (ancestorToken->m_TokenKind == tkClass)
                             || (ancestorToken->m_TokenKind == tkEnum)
-                            || (ancestorToken->m_TokenKind == tkTypedef) ) )
+                            || (ancestorToken->m_TokenKind == tkTypedef)
+                            || (ancestorToken->m_TokenKind == tkNamespace) ) )
                     {
                         token->m_Ancestors.insert(*it);
                         ancestorToken->m_Descendants.insert(i);
