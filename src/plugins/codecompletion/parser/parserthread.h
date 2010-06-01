@@ -253,8 +253,11 @@ class ParserThread : public cbThreadedTask
           */
         wxString GetStrippedArgs(const wxString & args);
 
-        /** Get the real type */
-        void GetRealType(wxString& token);
+        /** Get the class name from a macro */
+        wxString GetClassFromMacro(const wxString& macro);
+
+        /** Get the macro's type */
+        wxString GetMacroType(const wxString& macro);
 
         /** if we regard the parserThread class as a syntax anilyzer, then the Tokenizer class is
           * regard as the lexer, which always feeds a wxString by calling m_Tokenizer.GetToken()

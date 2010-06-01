@@ -1495,8 +1495,7 @@ void ParserThread::HandleClass(EClassType ct)
                 m_Tokenizer.GetToken(); // eat ":"
                 while (!TestDestroy())
                 {
-                    wxString tmp = m_Tokenizer.GetToken();
-                    GetRealType(tmp);
+                    wxString tmp = GetClassFromMacro(m_Tokenizer.GetToken());
                     next = m_Tokenizer.PeekToken();
                     if (tmp==ParserConsts::kw_public ||
                         tmp==ParserConsts::kw_protected ||
@@ -1589,6 +1588,7 @@ void ParserThread::HandleClass(EClassType ct)
             }
             else if (next==ParserConsts::opbrace)
             {
+                current = GetMacroType(current);
                 Token* newToken = DoAddToken(tkClass, current, lineNr);
                 if (!newToken)
                 {
@@ -2369,10 +2369,24 @@ wxString ParserThread::GetStrippedArgs(const wxString & args)
     return stripped_args;
 }
 
-void ParserThread::GetRealType(wxString& token)
+wxString ParserThread::GetClassFromMacro(const wxString& macro)
 {
-    wxString type = token;
+    wxString real(macro);
+    wxString type = GetMacroType(macro);
+    if (!type.IsEmpty())
+    {
+        Token* tk = TokenExists(type, NULL, tkClass);
+        if (tk)
+            real = tk->m_Name;
+    }
+
+    return real;
+}
+
+wxString ParserThread::GetMacroType(const wxString& macro)
+{
     Token* tk = NULL;
+    wxString type(macro);
 
     while (!TestDestroy())
     {
@@ -2382,7 +2396,5 @@ void ParserThread::GetRealType(wxString& token)
         type = tk->m_Type;
     }
 
-    tk = TokenExists(type, NULL, tkClass);
-    if (tk)
-        token = tk->m_Name;
+    return type;
 }
