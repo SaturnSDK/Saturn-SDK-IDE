@@ -2526,7 +2526,7 @@ void CodeCompletion::OnFunction(wxCommandEvent& /*event*/)
 
 void CodeCompletion::OnParserStart(wxCommandEvent& event)
 {
-    if (m_NativeParser.GetParsingType() != ptRepaseFile)
+    if (m_NativeParser.GetParsingType() != ptReparseFile)
         EnableToolbarTools(false);
 }
 

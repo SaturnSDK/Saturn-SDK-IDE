@@ -45,7 +45,7 @@ enum BrowserViewMode
 
 enum ParsingType
 {
-    ptRepaseFile        = 1,
+    ptReparseFile       = 1,
     ptAddFileToParser   = 2,
     ptAddParser         = 3,
     ptUnknown           = 4,

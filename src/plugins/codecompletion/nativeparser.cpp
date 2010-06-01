@@ -1129,7 +1129,7 @@ bool NativeParser::ReparseFile(const wxString& filename)
     cbProject* project = GetProjectByParser(parser);
     const bool doItNow = m_WaitParsingList.empty();
 
-    ParsingNode node = { project, parser, filename, ptRepaseFile };
+    ParsingNode node = { project, parser, filename, ptReparseFile };
     m_WaitParsingList.push_back(node);
 
     if (doItNow)
@@ -3318,7 +3318,7 @@ void NativeParser::OnParserEnd(wxCommandEvent& event)
     if (!m_WaitParsingList.empty())
     {
         const ParsingType nextType = m_WaitParsingList.front().type;
-        if (nextType == ptRepaseFile)
+        if (nextType == ptReparseFile)
         {
             Parser* parser = m_WaitParsingList.front().parser;
             SwitchParser(m_WaitParsingList.front().project, parser);
@@ -3352,7 +3352,7 @@ void NativeParser::OnParserEnd(wxCommandEvent& event)
     }
 
     // Parse the actived editor
-    if (!doNextTask && curType != ptRepaseFile)
+    if (!doNextTask && curType != ptReparseFile)
     {
         EditorBase* editor = Manager::Get()->GetEditorManager()->GetActiveEditor();
         if (editor)
