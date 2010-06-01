@@ -1107,8 +1107,9 @@ void NativeParser::AddFileToParser(cbProject* project, const wxString& filename)
     if (doItNow)
     {
         SwitchParser(project, parser);
-        parser->Parse(file, true);
-        parser->StartBatchParse(false);
+        parser->PrepareParsing();
+        parser->AddParse(file);
+        parser->StartParsing(false);
     }
 }
 
@@ -1171,7 +1172,8 @@ void NativeParser::ReparseProject(cbProject* project, Parser* parser)
     }
 
     wxArrayString fronts;
-    wxArrayString files;
+    wxArrayString headers;
+    wxArrayString sources;
 
     ConfigManager* cfg = Manager::Get()->GetConfigManager(_T("code_completion"));
     wxArrayString tokens;
@@ -1210,7 +1212,7 @@ void NativeParser::ReparseProject(cbProject* project, Parser* parser)
     {
         ProjectFile* pf = project->GetFile(i);
         FileType ft = FileTypeOf(pf->relativeFilename);
-        if (ft == ftHeader) // only parse header files
+        if (ft == ftHeader) // parse header files
         {
             bool isUpFrontFile = false;
             for (size_t i = 0; i < tokens.GetCount(); ++i)
@@ -1233,17 +1235,11 @@ void NativeParser::ReparseProject(cbProject* project, Parser* parser)
             }
 
             if (!isUpFrontFile)
-                files.Add(pf->file.GetFullPath());
+                headers.Add(pf->file.GetFullPath());
         }
-    }
-    // next, parse source files
-    for (int i = 0; i < project->GetFilesCount(); ++i)
-    {
-        ProjectFile* pf = project->GetFile(i);
-        FileType ft = FileTypeOf(pf->relativeFilename);
-        if (ft == ftSource) // only parse source files
+        else if (ft == ftSource) // parse source files
         {
-            files.Add(pf->file.GetFullPath());
+            sources.Add(pf->file.GetFullPath());
         }
     }
 
@@ -1255,23 +1251,34 @@ void NativeParser::ReparseProject(cbProject* project, Parser* parser)
             ++i;
     }
 
-    if (!fronts.IsEmpty() || !files.IsEmpty())
+    if (!fronts.IsEmpty() || !headers.IsEmpty() || !sources.IsEmpty())
     {
         Manager::Get()->GetLogManager()->DebugLog(_T("Passing list of files to batch-parser."));
+
+        // prepare parsing
+        parser->PrepareParsing();
 
         // parse up-front files
         if (!fronts.IsEmpty())
         {
             for (size_t i = 0; i < fronts.GetCount(); ++i)
                 Manager::Get()->GetLogManager()->DebugLog(F(_T("Header to parse up-front: '%s'"), fronts[i].wx_str()));
+
+            Manager::Get()->GetLogManager()->DebugLog(F(_T("Add up-front parsing %d file(s) for Project %s..."),
+                                                        fronts.GetCount(), project->GetTitle().wx_str()));
             parser->AddBatchParse(fronts, true);
         }
 
-        if (!files.IsEmpty())
-            parser->AddBatchParse(files);
+        if (!headers.IsEmpty() || !sources.IsEmpty())
+        {
+            Manager::Get()->GetLogManager()->DebugLog(F(_T("Add batch-parsing %d file(s) for Project %s..."),
+                                                        headers.GetCount() + sources.GetCount(), project->GetTitle().wx_str()));
+            parser->AddBatchParse(headers);
+            parser->AddBatchParse(sources);
+        }
 
-        // start batch parse!
-        parser->StartBatchParse();
+        // start parsing
+        parser->StartParsing();
     }
 }
 
@@ -3315,8 +3322,9 @@ void NativeParser::OnParserEnd(wxCommandEvent& event)
         {
             Parser* parser = m_WaitParsingList.front().parser;
             SwitchParser(m_WaitParsingList.front().project, parser);
-            parser->Parse(m_WaitParsingList.front().file, true);
-            parser->StartBatchParse(false);
+            parser->PrepareParsing();
+            parser->AddParse(m_WaitParsingList.front().file);
+            parser->StartParsing(false);
             doNextTask = true;
         }
         else if (nextType == ptAddParser)
@@ -3350,7 +3358,7 @@ void NativeParser::OnParserEnd(wxCommandEvent& event)
         if (editor)
         {
             cbProject* project = GetProjectByFilename(editor->GetFilename());
-            if (!GetParserByProject(project))
+            if (project && !GetParserByProject(project))
             {
                 AddOrChangeParser(project);
                 doNextTask = true;

@@ -121,11 +121,13 @@ class Parser : public wxEvtHandler
         ~Parser();
 
         void SetProject(cbProject* project);
+
+        void PrepareParsing();
         void AddBatchParse(const wxArrayString& filenames, bool isUpFront = false);
-        void StartBatchParse(bool delay = true);
-        bool Parse      (const wxString& filename,         bool isLocal = true, LoaderBase* loader = 0);
-        bool Parse      (const wxString& bufferOrFilename, bool isLocal,        ParserThreadOptions& opts);
-        bool ParseBuffer(const wxString& buffer,           bool isLocal = true, bool bufferSkipBlocks = false, bool isTemp = false);
+        bool AddParse(const wxString& filename, bool isLocal = true, LoaderBase* loader = NULL);
+        void StartParsing(bool delay = true);
+
+        bool ParseBuffer(const wxString& buffer, bool isLocal = true, bool bufferSkipBlocks = false, bool isTemp = false);
         bool ParseBufferForFunctions(const wxString& buffer);
         bool ParseBufferForNamespaces(const wxString& buffer, NameSpaceVec& result);
         bool ParseBufferForUsingNamespace(const wxString& buffer, wxArrayString& result);
@@ -172,6 +174,7 @@ class Parser : public wxEvtHandler
         void SetMaxThreads(unsigned int max) { m_Pool.SetConcurrentThreads(max); }
 
     protected:
+        bool Parse(const wxString& bufferOrFilename, bool isLocal, ParserThreadOptions& opts);
         void DoParseFile(const wxString& filename, bool isGlobal);
         bool ReparseModifiedFiles();
         void Clear();
@@ -205,7 +208,7 @@ class Parser : public wxEvtHandler
         TokensTree*                    m_pTempTokensTree;
         set<wxString, less<wxString> > m_LocalFiles;
         bool                           m_NeedsReparse;
-        bool                           m_IsBatch;
+        bool                           m_IsFirstBatch;
         bool                           m_IsParsing;
 
     private:
