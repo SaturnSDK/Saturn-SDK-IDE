@@ -550,7 +550,7 @@ size_t TokensTree::FindMatches(const wxString& s, TokenIdxSet& result, bool case
         {
             for (TokenIdxSet::iterator it2 = curset->begin(); it2 != curset->end(); it2++)
             {
-                Token* token = at(*it);
+                Token* token = at(*it2);
                 if (   token
                     && (   (kindMask == tkUndefined)
                         || (token->m_TokenKind & kindMask) ) )
