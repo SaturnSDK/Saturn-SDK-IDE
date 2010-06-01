@@ -8,62 +8,55 @@
  */
 
 #include <sdk.h>
+
 #include "app.h"
-#include "main.h"
 #include "appglobals.h"
-#include "environmentsettingsdlg.h"
-#include "compilersettingsdlg.h"
-#include <cbworkspace.h>
-#include <globals.h>
-#include <filefilters.h>
-#include <wx/tokenzr.h>
-
-#if defined(_MSC_VER) && defined( _DEBUG )
-    #define _CRTDBG_MAP_ALLOC
-    #include <stdlib.h>
-    #include <crtdbg.h>
-#endif
-
-#include <wx/tipdlg.h>
-#include <wx/dnd.h>
-#include <wx/sstream.h>
-#include <wx/fileconf.h>
-#include <wx/xrc/xmlres.h>
-#include <wx/gauge.h>
-#include <configmanager.h>
-#include <cbproject.h>
-#include <cbplugin.h>
-#include <sdk_events.h>
-#include <projectmanager.h>
-#include <editormanager.h>
-#include <logmanager.h>
-#include <pluginmanager.h>
-#include <templatemanager.h>
-#include <toolsmanager.h>
-#include <scriptingmanager.h>
-#include <cbexception.h>
-#include <annoyingdialog.h>
-#include <editorcolourset.h>
-#include <logmanager.h>
-#include <personalitymanager.h>
+#include "batchbuild.h"
+#include "cbauibook.h"
 #include "cbstyledtextctrl.h"
-
-#include "infopane.h"
-#include "dlgaboutplugin.h"
+#include "compilersettingsdlg.h"
 #include "dlgabout.h"
-#include "startherepage.h"
+#include "dlgaboutplugin.h"
+#include "environmentsettingsdlg.h"
+#include "infopane.h"
+#include "infowindow.h"
+#include "main.h"
+#include "notebookstyles.h"
+#include "printdlg.h"
 #include "scriptconsole.h"
 #include "scriptingsettingsdlg.h"
-#include "printdlg.h"
-#include "batchbuild.h"
-#include <wx/printdlg.h>
-#include <wx/filename.h>
-#include "cbauibook.h"
-
-#include "uservarmanager.h"
-#include "infowindow.h"
-#include "notebookstyles.h"
+#include "startherepage.h"
 #include "switcherdlg.h"
+
+#include <wx/dnd.h>
+#include <wx/fileconf.h>
+#include <wx/filename.h>
+#include <wx/gauge.h>
+#include <wx/printdlg.h>
+#include <wx/sstream.h>
+#include <wx/tipdlg.h>
+#include <wx/tokenzr.h>
+#include <wx/xrc/xmlres.h>
+
+#include <annoyingdialog.h>
+#include <cbexception.h>
+#include <cbplugin.h>
+#include <cbproject.h>
+#include <cbworkspace.h>
+#include <configmanager.h>
+#include <editorcolourset.h>
+#include <editormanager.h>
+#include <filefilters.h>
+#include <globals.h>
+#include <logmanager.h>
+#include <personalitymanager.h>
+#include <pluginmanager.h>
+#include <projectmanager.h>
+#include <scriptingmanager.h>
+#include <sdk_events.h>
+#include <templatemanager.h>
+#include <toolsmanager.h>
+#include <uservarmanager.h>
 
 class wxMyFileDropTarget : public wxFileDropTarget
 {
@@ -478,12 +471,6 @@ MainFrame::MainFrame(wxWindow* parent)
        m_pBatchBuildDialog(0),
        m_pProgressBar(0)
 {
-#if defined( _MSC_VER ) && defined( _DEBUG )
-    int tmpFlag = _CrtSetDbgFlag( _CRTDBG_REPORT_FLAG );
-    //tmpFlag |= _CRTDBG_CHECK_ALWAYS_DF;
-    _CrtSetDbgFlag( tmpFlag );
-#endif
-
     // register event sinks
     RegisterEvents();
 
@@ -629,7 +616,7 @@ void MainFrame::CreateIDE()
 {
     int leftW = Manager::Get()->GetConfigManager(_T("app"))->ReadInt(_T("/main_frame/layout/left_block_width"), 200);
 //    int bottomH = Manager::Get()->GetConfigManager(_T("app"))->ReadInt(_T("/main_frame/layout/bottom_block_height"), 150);
-    SetSize(800,600);
+    SetSize(800, 600);
     wxSize clientsize = GetClientSize();
 
     // Create CloseFullScreen Button, and hide it initially
@@ -638,10 +625,10 @@ void MainFrame::CreateIDE()
 
     // project manager
     Manager::Get(this);
-    m_LayoutManager.AddPane(Manager::Get()->GetProjectManager()->GetNotebook(), wxAuiPaneInfo().
-                              Name(wxT("ManagementPane")).Caption(_("Management")).
-                              BestSize(wxSize(leftW, clientsize.GetHeight())).MinSize(wxSize(100,100)).
-                              Left().Layer(1));
+    m_LayoutManager.AddPane( Manager::Get()->GetProjectManager()->GetNotebook(),
+                             wxAuiPaneInfo().Name(wxT("ManagementPane")).Caption(_("Management")).
+                                 BestSize(wxSize(leftW, clientsize.GetHeight())).
+                                 MinSize(wxSize(100,100)).Left().Layer(1) );
 
     // logs manager
     SetupGUILogging();
@@ -659,6 +646,7 @@ void MainFrame::CreateIDE()
     m_LayoutManager.AddPane(m_pEdMan->GetNotebook(), wxAuiPaneInfo().Name(wxT("MainPane")).
                             CentrePane());
 
+    // script console
     m_pScriptConsole = new ScriptConsole(this, -1);
     m_LayoutManager.AddPane(m_pScriptConsole, wxAuiPaneInfo().Name(wxT("ScriptConsole")).
                             Caption(_("Scripting console")).Float().MinSize(100,100));
@@ -1171,17 +1159,14 @@ void MainFrame::LoadWindowState()
     int h = 600;
 
     // load window size and position
-    wxRect rect(Manager::Get()->GetConfigManager(_T("app"))->ReadInt(_T("/main_frame/layout/left"), x),
-                Manager::Get()->GetConfigManager(_T("app"))->ReadInt(_T("/main_frame/layout/top"), y),
-                Manager::Get()->GetConfigManager(_T("app"))->ReadInt(_T("/main_frame/layout/width"), w),
+    wxRect rect(Manager::Get()->GetConfigManager(_T("app"))->ReadInt(_T("/main_frame/layout/left"),   x),
+                Manager::Get()->GetConfigManager(_T("app"))->ReadInt(_T("/main_frame/layout/top"),    y),
+                Manager::Get()->GetConfigManager(_T("app"))->ReadInt(_T("/main_frame/layout/width"),  w),
                 Manager::Get()->GetConfigManager(_T("app"))->ReadInt(_T("/main_frame/layout/height"), h));
     // maximize if needed
     Maximize(Manager::Get()->GetConfigManager(_T("app"))->ReadBool(_T("/main_frame/layout/maximized"), true));
     // set size and position
     SetSize(rect);
-
-    // close message manager (if auto-hiding)
-//    Manager::Get()->GetLogManager()->Close();
 }
 
 void MainFrame::SaveWindowState()
@@ -1650,12 +1635,12 @@ void MainFrame::DoCreateStatusBar()
 
     width[num++] = -1; // main field
 //    width[num++] = 128; // progress bar
-    dc.GetTextExtent(_(" WINDOWS-1252 "), &width[num++], &h);
+    dc.GetTextExtent(_(" WINDOWS-1252 "),           &width[num++], &h);
     dc.GetTextExtent(_(" Line 12345, Column 123 "), &width[num++], &h);
-    dc.GetTextExtent(_(" Overwrite "),  &width[num++], &h);
-    dc.GetTextExtent(_(" Modified "),   &width[num++], &h);
-    dc.GetTextExtent(_(" Read/Write....."), &width[num++], &h);
-    dc.GetTextExtent(_(" name_of_profile "), &width[num++], &h);
+    dc.GetTextExtent(_(" Overwrite "),              &width[num++], &h);
+    dc.GetTextExtent(_(" Modified "),               &width[num++], &h);
+    dc.GetTextExtent(_(" Read/Write....."),         &width[num++], &h);
+    dc.GetTextExtent(_(" name_of_profile "),        &width[num++], &h);
 
     CreateStatusBar(num);
     SetStatusWidths(num, width);
@@ -1678,7 +1663,7 @@ void MainFrame::DoUpdateStatusBar()
         int pos = ed->GetControl()->GetCurrentPos();
         wxString msg;
         msg.Printf(_("Line %d, Column %d"), ed->GetControl()->GetCurrentLine() + 1, ed->GetControl()->GetColumn(pos) + 1);
-        SetStatusText(ed->GetFilename(), panel++);                    //tiwag 050917
+        SetStatusText(ed->GetFilename(), panel++);
         SetStatusText(ed->GetEncodingName(), panel++);
         SetStatusText(msg, panel++);
         SetStatusText(ed->GetControl()->GetOvertype() ? _("Overwrite") : _("Insert"), panel++);
@@ -2266,6 +2251,30 @@ void MainFrame::TerminateRecentFilesHistory()
         delete m_pProjectsHistory;
         m_pProjectsHistory = 0;
     }
+}
+
+wxString MainFrame::GetEditorDescription(EditorBase* eb)
+{
+    wxString descr = wxEmptyString;
+    cbProject* prj = NULL;
+    if(eb && eb->IsBuiltinEditor())
+    {
+        ProjectFile* prjf = ((cbEditor*)eb)->GetProjectFile();
+        if(prjf)
+            prj = prjf->GetParentProject();
+    }
+    else
+        prj = Manager::Get()->GetProjectManager() ? Manager::Get()->GetProjectManager()->GetActiveProject() : 0L;
+    if(prj)
+    {
+        descr = wxString(_("Project: ")) + _T("<b>") + prj->GetTitle() + _T("</b>");
+        if(Manager::Get()->GetProjectManager()->GetActiveProject() == prj)
+            descr += wxString(_(" (Active)"));
+        descr += wxString(_T("<br>"));
+    }
+    if(eb)
+        descr += eb->GetFilename();
+    return descr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4030,18 +4039,40 @@ void MainFrame::OnSwitchTabs(wxCommandEvent& event)
     // Create container and add all open editors:
     wxSwitcherItems items;
     items.AddGroup(_("Open files"), wxT("editors"));
-    for (size_t i = 0; i < nb->GetPageCount(); ++i)
-    {
-        wxString title = nb->GetPageText(i);
-        wxWindow* window = nb->GetPage(i);
+    if (!Manager::Get()->GetConfigManager(_T("app"))->ReadBool(_T("/environment/tabs_stacked_based_switching")))
+    {   // Switch tabs editor with tab order
+        for (size_t i = 0; i < nb->GetPageCount(); ++i)
+        {
+            wxString title = nb->GetPageText(i);
+            wxWindow* window = nb->GetPage(i);
 
-        items.AddItem(title, title, i, nb->GetPageBitmap(i)).SetWindow(window);
+            items.AddItem(title, title, GetEditorDescription(static_cast<EditorBase*> (window)), i, nb->GetPageBitmap(i)).SetWindow(window);
+        }
+
+        // Select the focused editor:
+        int idx = items.GetIndexForFocus();
+        if (idx != wxNOT_FOUND)
+            items.SetSelection(idx);
     }
+    else
+    {   // Switch tabs editor with last used order
+        int index = 0;
+        cbNotebookStack* body;
+        for (body = Manager::Get()->GetEditorManager()->GetNotebookStack(); body != NULL; body = body->next)
+        {
+            index = nb->GetPageIndex(body->window);
+            if (index == wxNOT_FOUND)
+                continue;
+            wxString title = nb->GetPageText(index);
+            items.AddItem(title, title, GetEditorDescription(static_cast<EditorBase*> (body->window)), index, nb->GetPageBitmap(index)).SetWindow(body->window);
+        }
 
-    // Select the focused editor:
-    int idx = items.GetIndexForFocus();
-    if (idx != wxNOT_FOUND)
-        items.SetSelection(idx);
+        // Select the focused editor:
+        if(items.GetItemCount() > 2)
+            items.SetSelection(2); // CTRL + TAB directly select the last editor, not the current one
+        else
+            items.SetSelection(items.GetItemCount()-1);
+    }
 
     // Create the switcher dialog
     wxSwitcherDialog dlg(items, wxGetApp().GetTopWindow());
