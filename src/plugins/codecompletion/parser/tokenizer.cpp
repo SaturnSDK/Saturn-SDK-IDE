@@ -910,6 +910,20 @@ wxString Tokenizer::MacroReplace(const wxString str)
 
             return value.Mid(0,firstSpace);
         }
+        else if (value[0] == '*')
+        {
+            wxString arg = m_Buffer.Mid(m_TokenIndex,15);
+            int left = arg.Find(_T('('));
+            int right= arg.Find(_T(')'));
+            if(left==wxNOT_FOUND||right==wxNOT_FOUND||left+2>right)
+                return value;
+            arg = arg.Mid(left+1,right-left-1);
+            arg.Trim(false);
+            arg.Trim(true);
+            m_TokenIndex = m_TokenIndex + right + 1;
+            TRACE(_T("MacroReplace() : Return %s, and move to '%s'"), arg.wx_str(), m_Buffer.Mid(m_TokenIndex,1).wx_str());
+            return arg;
+        }
         else
             return value;
     }
