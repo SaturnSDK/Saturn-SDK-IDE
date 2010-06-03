@@ -2964,6 +2964,9 @@ void cbEditor::OnEditorCharAdded(wxScintillaEvent& event)
     int pos = control->GetCurrentPos();
     wxChar ch = event.GetKey();
 
+    static bool autoIndented = false;
+    static int autoIndentedLine = control->GetCurrentLine();
+
     // indent
     if (ch == _T('\n'))
     {
@@ -3043,7 +3046,50 @@ void cbEditor::OnEditorCharAdded(wxScintillaEvent& event)
             control->GotoPos(pos + indent.Length());
             control->ChooseCaretX();
         }
+
+        // smart indent
+        if (smartIndent && currLine > 0)
+        {
+            if (m_pData->GetLastNonWhitespaceChar() == _T(';'))
+            {
+                if (autoIndentedLine != currLine - 1)
+                    autoIndented = false;
+                if (autoIndented)
+                {
+                    autoIndented = false;
+                    control->BackTab();
+                }
+            }
+            else
+            {
+                const int pos = control->GetLineIndentPosition(currLine - 1);
+                const wxString text = control->GetTextRange(pos, control->WordEndPosition(pos, true));
+                if (text == _T("if") || text == _T("else") || text == _T("for") ||
+                    text == _T("while") || text == _T("do"))
+                {
+                    autoIndented = true;
+                    autoIndentedLine = currLine;
+                    control->Tab();
+                }
+            }
+        }
+
         control->EndUndoAction();
+    }
+
+    // unindent
+    else if (ch == _T('{'))
+    {
+        if (autoIndented)
+        {
+            control->BeginUndoAction();
+            autoIndented = false;
+            const int curLine = control->GetCurrentLine();
+            control->GotoPos(control->PositionFromLine(curLine));
+            control->BackTab();
+            control->GotoPos(control->GetLineEndPosition(curLine));
+            control->EndUndoAction();
+        }
     }
 
     // unindent
@@ -3076,6 +3122,36 @@ void cbEditor::OnEditorCharAdded(wxScintillaEvent& event)
                 }
             }
             control->EndUndoAction();
+        }
+    }
+
+    // unindent
+    else if (ch == _T(':'))
+    {
+        bool smartIndent = Manager::Get()->GetConfigManager(_T("editor"))->ReadBool(_T("/smart_indent"), true);
+        if (smartIndent && control->GetLexer() == wxSCI_LEX_CPP)
+        {
+            const int curLine = control->GetCurrentLine();
+            const int pos = control->GetLineIndentPosition(curLine);
+            const wxString text = control->GetTextRange(pos, control->WordEndPosition(pos, true));
+            if (text == _T("public") || text == _T("protected") || text == _T("private") ||
+                text == _T("case") || text == _T("default"))
+            {
+                control->BeginUndoAction();
+                control->GotoPos(control->PositionFromLine(curLine));
+                control->BackTab();
+                const int column = control->GetColumn(control->GetCurrentPos());
+                control->GotoPos(control->GetLineEndPosition(curLine));
+                if (control->GetLineCount() > curLine)
+                {
+                    if (control->GetColumn(control->GetLineIndentPosition(curLine + 1)) == column)
+                    {
+                        control->NewLine();
+                        control->Tab();
+                    }
+                }
+                control->EndUndoAction();
+            }
         }
     }
 
