@@ -613,8 +613,9 @@ bool Tokenizer::SkipComment()
         }
         else             // C++ style comment
         {
+            // Dont eat '\n' in here!
+            // We need keep the EOL for ReadToEOL or SkipToEOL
             SkipToEOL(false, true); // nestBrace = false, skipComment = true
-            MoveToNextChar();
             break;
         }
     }
