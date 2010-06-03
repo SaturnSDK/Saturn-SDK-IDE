@@ -1176,9 +1176,11 @@ void NativeParser::ReparseProject(cbProject* project, Parser* parser)
     wxArrayString sources;
 
     ConfigManager* cfg = Manager::Get()->GetConfigManager(_T("code_completion"));
-    wxArrayString tokens;
-    wxStringTokenizer tkz(cfg->Read(_T("/up_front_headers"), _T("<cstddef>, <wx/defs.h>, <wx/toplevel.h>, \"stdafx.h\", \"wx_pch.h\", \"sdk.h\"")), _T(","));
-    size_t tokenCnt = 0;
+    wxStringTokenizer tkz(cfg->Read(_T("/up_front_headers"), _T("<cstddef>, <wx/defs.h>, <wx/toplevel.h>, \"pch.h\", \"sdk.h\", \"stdafx.h\"")), _T(","));
+    typedef std::map<int, wxString> FrontMap;
+    FrontMap frontMap;
+    FrontMap frontTempMap;
+    int frontCnt = 0;
     while (tkz.HasMoreTokens())
     {
         wxString token = tkz.GetNextToken().Trim(false).Trim(true);
@@ -1186,24 +1188,13 @@ void NativeParser::ReparseProject(cbProject* project, Parser* parser)
             continue;
 
         if (token[0] == _T('"') && token[token.Len() - 1] == _T('"'))
-        {
-            ++tokenCnt;
-            tokens.Add(token.SubString(1, token.Len() - 2).Trim(false).Trim(true));
-        }
+            frontTempMap[++frontCnt] = token.SubString(1, token.Len() - 2).Trim(false).Trim(true);
         else if (token[0] == _T('<') && token[token.Len() - 1] == _T('>'))
         {
-            ++tokenCnt;
             token = token.SubString(1, token.Len() - 2).Trim(false).Trim(true);
             wxArrayString finds = parser->FindFileInIncludeDirs(token);
             for (size_t i = 0; i < finds.GetCount(); ++i)
-            {
-                if (fronts.GetCount() < tokenCnt)
-                {
-                    while (fronts.GetCount() < tokenCnt)
-                        fronts.Add(wxEmptyString);
-                    fronts[tokenCnt - 1] = finds[i];
-                }
-            }
+                frontMap[++frontCnt] = finds[i];
         }
     }
 
@@ -1215,21 +1206,13 @@ void NativeParser::ReparseProject(cbProject* project, Parser* parser)
         if (ft == ftHeader) // parse header files
         {
             bool isUpFrontFile = false;
-            for (size_t i = 0; i < tokens.GetCount(); ++i)
+            for (FrontMap::iterator it = frontTempMap.begin(); it != frontTempMap.end(); ++it)
             {
-                if (tokens[i].IsSameAs(pf->file.GetFullName(), false))
+                if (it->second.IsSameAs(pf->file.GetFullName(), false))
                 {
                     isUpFrontFile = true;
-                    while (fronts.GetCount() < i + 2)
-                        fronts.Add(wxEmptyString);
-                    for (size_t j = i; j < fronts.GetCount(); ++j)
-                    {
-                        if (fronts[j].IsEmpty())
-                        {
-                            fronts[j] =  pf->file.GetFullPath();
-                            break;
-                        }
-                    }
+                    frontMap[it->first] = pf->file.GetFullPath();
+                    frontTempMap.erase(it);
                     break;
                 }
             }
@@ -1243,13 +1226,8 @@ void NativeParser::ReparseProject(cbProject* project, Parser* parser)
         }
     }
 
-    for (size_t i = 0; i < fronts.GetCount();)
-    {
-        if (fronts[i].IsEmpty())
-            fronts.RemoveAt(i);
-        else
-            ++i;
-    }
+    for (FrontMap::const_iterator it = frontMap.begin(); it != frontMap.end(); ++it)
+        fronts.Add(it->second);
 
     if (!fronts.IsEmpty() || !headers.IsEmpty() || !sources.IsEmpty())
     {
