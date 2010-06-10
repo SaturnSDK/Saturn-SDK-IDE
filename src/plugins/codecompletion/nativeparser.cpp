@@ -1126,6 +1126,9 @@ bool NativeParser::ReparseFile(const wxString& filename)
     if (!parser)
         return false;
 
+    if (!m_WaitParsingList.empty() && m_WaitParsingList.front().parser == parser)
+        return false;
+
     cbProject* project = GetProjectByParser(parser);
     const bool doItNow = m_WaitParsingList.empty();
 

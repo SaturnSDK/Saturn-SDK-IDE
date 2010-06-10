@@ -351,7 +351,7 @@ bool Parser::Parse(const wxString& bufferOrFilename, bool isLocal, ParserThreadO
             }
 
             if (!opts.loader) // this should always be true (memory will leak if a loader has already been initialized before this point)
-                opts.loader = Manager::Get()->GetFileManager()->Load(bufferOrFilename, true);
+                opts.loader = Manager::Get()->GetFileManager()->Load(bufferOrFilename, m_NeedsReparse);
         }
 
         TRACE(_T("Parse() : Creating task for: %s"), buffOrFile.wx_str());
@@ -778,6 +778,9 @@ void Parser::OnAllThreadsDone(CodeBlocksEvent& event)
     }
     else
     {
+        if (m_NeedsReparse)
+            m_NeedsReparse = false;
+
         EndStopWatch();
         m_IsParsing = false;
         PostParserEvent(PARSER_END);
@@ -911,7 +914,6 @@ bool Parser::ReparseModifiedFiles()
         return false;
 
     Manager::Get()->GetLogManager()->DebugLog(F(_T("Reparsing saved files for Project %s..."), m_Project.wx_str()));
-    m_NeedsReparse = false;
     std::queue<wxString> files_list;
     {
         wxCriticalSectionLocker lock(s_MutexProtection);
