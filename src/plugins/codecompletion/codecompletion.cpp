@@ -1245,6 +1245,10 @@ void CodeCompletion::OnWorkspaceChanged(CodeBlocksEvent& event)
     // widgets.
     if (IsAttached() && m_InitDone && !m_IsCreateNewProject)
     {
+        EditorBase* editor = Manager::Get()->GetEditorManager()->GetActiveEditor();
+        if (editor)
+            m_LastFile = editor->GetFilename();
+
         cbProject* curProject = Manager::Get()->GetProjectManager()->GetActiveProject();
         if (curProject)
         {
@@ -1358,15 +1362,17 @@ void CodeCompletion::OnReparseActiveEditor(CodeBlocksEvent& event)
     if (!ProjectManager::IsBusy() && IsAttached() && m_InitDone)
     {
         EditorBase* ed = event.GetEditor();
-        if (!ed)
-            return;
-        if (!m_NativeParser.GetParserPtr())
+        if (!ed || !m_NativeParser.GetParserPtr())
             return;
 
-        Manager::Get()->GetLogManager()->DebugLog(_T("Reparsing active editor ") + ed->GetFilename());
-        m_NativeParser.ReparseFile(ed->GetFilename());
-        ParseFunctionsAndFillToolbar(true);
+        wxString filename = ed->GetFilename();
+        FunctionsScopePerFile* funcdata = &(m_AllFunctionsScopes[filename]);
+        funcdata->parsed = false;
+
+        Manager::Get()->GetLogManager()->DebugLog(_T("Reparsing active editor ") + filename);
+        m_NativeParser.ReparseFile(filename);
     }
+
     event.Skip();
 }
 
@@ -1528,15 +1534,12 @@ void CodeCompletion::ParseFunctionsAndFillToolbar(bool force)
         return;
 
     FunctionsScopePerFile* funcdata = &(m_AllFunctionsScopes[filename]);
+    Parser* parser = m_NativeParser.GetParserPtr();
+    bool parsed = funcdata->parsed;
 
     // *** Part 1: Parse the file (if needed) ***
-    if (force || !funcdata->parsed)
+    if (parser && (force || !parsed))
     {
-        Parser* parser = m_NativeParser.GetParserPtr();
-        if (!parser)
-            return;
-
-        m_TimerFunctionsParsing.Stop();
         funcdata->m_FunctionsScope.clear();
         funcdata->m_NameSpaces.clear();
         funcdata->parsed = true;
@@ -1762,12 +1765,18 @@ void CodeCompletion::OnEditorActivated(CodeBlocksEvent& event)
         {
             m_NativeParser.OnEditorActivated(editor);
 
-            Parser* parser = m_NativeParser.GetParserPtr();
-            if (parser && m_NativeParser.GetParserByFilename(filename) == parser)
+            if (m_NativeParser.VerifyParserByFilename(filename))
             {
-                m_TimerFunctionsParsing.Stop();
+                if (m_TimerFunctionsParsing.IsRunning())
+                    m_TimerFunctionsParsing.Stop();
+
                 m_TimerFunctionsParsing.Start(FUNCTIONS_PARSING_DELAY, wxTIMER_ONE_SHOT);
                 EnableToolbarTools(true);
+            }
+            else
+            {
+                FunctionsScopePerFile* funcdata = &(m_AllFunctionsScopes[filename]);
+                funcdata->parsed = false;
             }
         }
     }
@@ -1777,18 +1786,31 @@ void CodeCompletion::OnEditorActivated(CodeBlocksEvent& event)
 
 void CodeCompletion::OnEditorClosed(CodeBlocksEvent& event)
 {
-    m_LastFile.clear();
-
     EditorManager* edm = Manager::Get()->GetEditorManager();
+    if (!edm)
+        return;
+
     m_NativeParser.OnEditorClosed(event.GetEditor());
 
+    cbEditor* editor = edm->GetBuiltinEditor(event.GetEditor());
+    if (editor)
+    {
+        if (!m_LastFile.IsEmpty())
+            m_LastFile.clear();
+
+        wxString filename = editor->GetFilename();
+        FunctionsScopePerFile* funcdata = &(m_AllFunctionsScopes[filename]);
+        funcdata->m_FunctionsScope.clear();
+        funcdata->m_NameSpaces.clear();
+        funcdata->parsed = false;
+    }
+
+    // we need to clear CC toolbar only when we are closing last editor
+    // in other situations OnEditorActivated does this job
     wxString activeFile;
     EditorBase* eb = edm->GetActiveEditor();
     if (eb)
         activeFile = eb->GetFilename();
-
-    // we need to clear CC toolbar only when we are closing last editor
-    // in other situations OnEditorActivated does this job
     if (edm->GetEditorsCount() == 0 || activeFile == g_StartHereTitle)
     {
         EnableToolbarTools(false);
@@ -1798,14 +1820,8 @@ void CodeCompletion::OnEditorClosed(CodeBlocksEvent& event)
             m_Scope->Clear();
         if (m_Function)
             m_Function->Clear();
-        cbEditor* ed = edm->GetBuiltinEditor(event.GetEditor());
-        wxString filename(wxEmptyString);
-        if (ed)
-            filename = ed->GetFilename();
 
-        m_AllFunctionsScopes[filename].m_FunctionsScope.clear();
-        m_AllFunctionsScopes[filename].m_NameSpaces.clear();
-        m_AllFunctionsScopes[filename].parsed = false;
+        m_NativeParser.UpdateClassBrowser();
     }
 
     event.Skip();
@@ -2392,11 +2408,16 @@ void CodeCompletion::EditorEventHook(cbEditor* editor, wxScintillaEvent& event)
 
         if (event.GetEventType() == wxEVT_SCI_UPDATEUI)
         {
-            Parser* parser = m_NativeParser.GetParserPtr();
-            if (parser && m_NativeParser.GetParserByFilename(m_LastFile) == parser)
+            if (m_NativeParser.VerifyParserByFilename(m_LastFile))
             {
-                m_TimerFunctionsParsing.Stop();
+                if (m_TimerFunctionsParsing.IsRunning())
+                    m_TimerFunctionsParsing.Stop();
                 m_TimerFunctionsParsing.Start(FUNCTIONS_PARSING_DELAY, wxTIMER_ONE_SHOT);
+            }
+            else if (!m_LastFile.IsEmpty())
+            {
+                FunctionsScopePerFile* funcdata = &(m_AllFunctionsScopes[m_LastFile]);
+                funcdata->parsed = false;
             }
         }
     }
@@ -2440,24 +2461,26 @@ void CodeCompletion::OnParserStart(wxCommandEvent& event)
 
 void CodeCompletion::OnParserEnd(wxCommandEvent& event)
 {
-    if (ProjectManager::IsBusy())
-        return;
-
     EditorBase* editor = Manager::Get()->GetEditorManager()->GetActiveEditor();
     if (!editor)
         return;
 
     wxString filename = editor->GetFilename();
-    if (filename.IsEmpty())
+    if (filename.IsEmpty() || filename != m_LastFile)
         return;
 
-    Parser* parser = m_NativeParser.GetParserPtr();
-    if (!parser || (parser && m_NativeParser.GetParserByFilename(filename) != parser))
-        return;
-
-    m_TimerFunctionsParsing.Stop();
-    EnableToolbarTools(true);
-    ParseFunctionsAndFillToolbar(true);
+    if (m_NativeParser.VerifyParserByFilename(filename))
+    {
+        if (m_TimerFunctionsParsing.IsRunning())
+            m_TimerFunctionsParsing.Stop();
+        ParseFunctionsAndFillToolbar(true);
+        EnableToolbarTools(true);
+    }
+    else
+    {
+        FunctionsScopePerFile* funcdata = &(m_AllFunctionsScopes[filename]);
+        funcdata->parsed = false;
+    }
 }
 
 void CodeCompletion::EnableToolbarTools(bool enable)
@@ -2473,11 +2496,10 @@ void CodeCompletion::OnRealtimeParsing(wxTimerEvent& event)
     if (!m_NativeParser.GetParserPtr())
         return;
 
-    cbEditor* editor = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
-    if (!editor)
+    EditorBase* editor = Manager::Get()->GetEditorManager()->GetActiveEditor();
+    if (!editor || !editor->GetModified())
         return;
 
-    wxString file = editor->GetFilename();
-    if (m_NativeParser.ReparseFile(file))
-        Manager::Get()->GetLogManager()->DebugLog(_T("Reparsing while typing for editor ") + file);
+    if (m_NativeParser.ReparseFile(m_LastFile))
+        Manager::Get()->GetLogManager()->DebugLog(_T("Reparsing while typing for editor ") + m_LastFile);
 }

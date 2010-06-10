@@ -896,6 +896,13 @@ void Parser::OnBatchTimer(wxTimerEvent& event)
 
         m_Pool.BatchEnd();
     }
+    else
+    {
+        Manager::Get()->GetLogManager()->DebugLog(F(_T("Batch parsing error in Project %s..."), m_Project.wx_str()));
+        CodeBlocksEvent evt;
+        evt.SetEventObject(this);
+        OnAllThreadsDone(evt);
+    }
 }
 
 bool Parser::ReparseModifiedFiles()

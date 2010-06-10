@@ -3300,9 +3300,7 @@ void NativeParser::OnParserEnd(wxCommandEvent& event)
         {
             Parser* parser = m_WaitParsingList.front().parser;
             SwitchParser(m_WaitParsingList.front().project, parser);
-            parser->PrepareParsing();
-            parser->AddParse(m_WaitParsingList.front().file);
-            parser->StartParsing(false);
+            parser->Reparse(m_WaitParsingList.front().file);
             doNextTask = true;
         }
         else if (nextType == ptAddParser)
@@ -3317,7 +3315,9 @@ void NativeParser::OnParserEnd(wxCommandEvent& event)
         {
             Parser* parser = m_WaitParsingList.front().parser;
             SwitchParser(m_WaitParsingList.front().project, parser);
-            parser->Reparse(m_WaitParsingList.front().file);
+            parser->PrepareParsing();
+            parser->AddParse(m_WaitParsingList.front().file);
+            parser->StartParsing(false);
             doNextTask = true;
         }
     }
@@ -3345,8 +3345,7 @@ void NativeParser::OnParserEnd(wxCommandEvent& event)
     }
 
     // Update class browser
-    if (!doNextTask)
-        UpdateClassBrowser();
+    UpdateClassBrowser();
 
     event.Skip();
 }
@@ -3491,4 +3490,16 @@ ParsingType NativeParser::GetParsingType()
         return ptUnknown;
     else
         return m_WaitParsingList.front().type;
+}
+
+bool NativeParser::VerifyParserByFilename(const wxString& filename)
+{
+    if (!m_pParser || filename.IsEmpty())
+        return false;
+    if (Done() || m_pParser->IsFileParsed(filename))
+        return true;
+    else if (GetParsingType() == ptReparseFile && m_WaitParsingList.front().file == filename)
+        return true;
+    else
+        return false;
 }
