@@ -858,7 +858,7 @@ int DebuggerGDB::DoDebug(bool breakOnEntry)
     m_State.GetDriver()->Prepare(target, target && target->GetTargetType() == ttConsoleOnly);
     m_State.ApplyBreakpoints();
 
-   #ifdef __WXGTK__
+   #ifndef __WXMSW__
     // create xterm and issue tty "/dev/pts/#" to GDB where
     // # is the tty for the newly created xterm
     m_bIsConsole = target && target->GetUseConsoleRunner();
@@ -873,7 +873,7 @@ int DebuggerGDB::DoDebug(bool breakOnEntry)
             DebugLog(wxString::Format( _("Queued:[%s]"), gdbTtyCmd.c_str()) );
         }
     }//if
-   #endif//def __WXGTK__
+   #endif//ndef __WXMSW__
 
     // Don't issue 'run' if attaching to a process (Bug #1391904)
     if (m_PidToAttach == 0)
