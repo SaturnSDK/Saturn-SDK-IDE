@@ -504,11 +504,11 @@ void cbDebuggerPlugin::ShowLog(bool clear)
 
     if (event_get_active.logger != debug_log || !debug_log)
     {
-    // switch to the debugging log and clear it
-    CodeBlocksLogEvent event_switch_log(cbEVT_SWITCH_TO_LOG_WINDOW, log);
-    CodeBlocksLogEvent event_show_log(cbEVT_SHOW_LOG_MANAGER);
-    Manager::Get()->ProcessEvent(event_switch_log);
-    Manager::Get()->ProcessEvent(event_show_log);
+        // switch to the debugging log and clear it
+        CodeBlocksLogEvent event_switch_log(cbEVT_SWITCH_TO_LOG_WINDOW, log);
+        CodeBlocksLogEvent event_show_log(cbEVT_SHOW_LOG_MANAGER);
+        Manager::Get()->ProcessEvent(event_switch_log);
+        Manager::Get()->ProcessEvent(event_show_log);
     }
 
     if (clear && log)
@@ -731,7 +731,7 @@ void cbDebuggerPlugin::OnCompilerFinished(CodeBlocksEvent& event)
             if (dlg.ShowModal() != wxID_YES)
                 return;
         }
-            CompilerFinished();
+        CompilerFinished();
     }
 }
 

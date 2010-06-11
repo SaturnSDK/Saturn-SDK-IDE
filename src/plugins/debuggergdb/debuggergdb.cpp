@@ -589,8 +589,8 @@ int DebuggerGDB::Debug(bool breakOnEntry)
         m_ActiveBuildTarget = m_pProject->GetActiveBuildTarget();
 
     m_Canceled = false;
-        if (!EnsureBuildUpToDate())
-            return -1;
+    if (!EnsureBuildUpToDate())
+        return -1;
 
     // if not waiting for the compiler, start debugging now
     // but first check if the driver has already been started:

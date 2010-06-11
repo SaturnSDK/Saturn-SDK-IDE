@@ -202,7 +202,7 @@ class WatchRawDialog : public wxScrollingDialog
                     break;
 
                 case TypeWatchTree:
-        {
+                    {
                         wxString value;
                         WatchToString(value, *watch->GetWatch());
                         m_text->SetValue(value);
@@ -253,7 +253,7 @@ bool WatchRawDialogAdapter::DoShowDialog(wxPropertyGrid* WXUNUSED(propGrid), wxP
     if (watch->GetWatch())
     {
         WatchRawDialog *dlg = WatchRawDialog::Create(watch);
-    dlg->Show();
+        dlg->Show();
     }
     return false;
 }
