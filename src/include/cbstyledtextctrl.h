@@ -30,8 +30,8 @@ class cbStyledTextCtrl : public wxScintilla
     private:
         void OnContextMenu(wxContextMenuEvent& event);
         void OnKillFocus(wxFocusEvent& event);
-        void OnGetFocus(wxFocusEvent& event);
-        void OnGPM(wxMouseEvent& event);
+        void OnSetFocus(wxFocusEvent& event);
+        void OnMouseMiddleDown(wxMouseEvent& event);
         void OnKeyDown(wxKeyEvent& event);
         void OnKeyUp(wxKeyEvent& event);
         void OnMouseLeftUp(wxMouseEvent& event);

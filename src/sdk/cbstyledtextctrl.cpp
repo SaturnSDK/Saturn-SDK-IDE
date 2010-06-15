@@ -24,16 +24,16 @@ static const int s_indicHighlight(20);
 
 BEGIN_EVENT_TABLE(cbStyledTextCtrl, wxScintilla)
     EVT_CONTEXT_MENU(cbStyledTextCtrl::OnContextMenu)
-    EVT_KILL_FOCUS(cbStyledTextCtrl::OnKillFocus)
-    EVT_MIDDLE_DOWN(cbStyledTextCtrl::OnGPM)
-    EVT_SET_FOCUS(cbStyledTextCtrl::OnGetFocus)
-    EVT_KEY_DOWN(cbStyledTextCtrl::OnKeyDown)
-    EVT_KEY_UP(cbStyledTextCtrl::OnKeyUp)
-    EVT_LEFT_UP(cbStyledTextCtrl::OnMouseLeftUp)
+    EVT_KILL_FOCUS  (cbStyledTextCtrl::OnKillFocus)
+    EVT_MIDDLE_DOWN (cbStyledTextCtrl::OnMouseMiddleDown)
+    EVT_SET_FOCUS   (cbStyledTextCtrl::OnSetFocus)
+    EVT_KEY_DOWN    (cbStyledTextCtrl::OnKeyDown)
+    EVT_KEY_UP      (cbStyledTextCtrl::OnKeyUp)
+    EVT_LEFT_UP     (cbStyledTextCtrl::OnMouseLeftUp)
 END_EVENT_TABLE()
 
-cbStyledTextCtrl::cbStyledTextCtrl(wxWindow* pParent, int id, const wxPoint& pos, const wxSize& size, long style)
-    : wxScintilla(pParent, id, pos, size, style),
+cbStyledTextCtrl::cbStyledTextCtrl(wxWindow* pParent, int id, const wxPoint& pos, const wxSize& size, long style) :
+    wxScintilla(pParent, id, pos, size, style),
     m_pParent(pParent),
     m_lastFocusTime(0L),
     m_bracePosition(wxSCI_INVALID_POSITION),
@@ -57,24 +57,26 @@ void cbStyledTextCtrl::OnKillFocus(wxFocusEvent& event)
     {
         AutoCompCancel();
     }
+
     if (CallTipActive())
     {
         CallTipCancel();
     }
-    event.Skip();
-} // end of OnKillFocus
 
-void cbStyledTextCtrl::OnGetFocus(wxFocusEvent& event)
+    event.Skip();
+}
+
+void cbStyledTextCtrl::OnSetFocus(wxFocusEvent& event)
 {
     // store timestamp for use in cbEditor::GetControl()
     // don't use event.GetTimeStamp(), because the focus event has no timestamp !
     m_lastFocusTime = wxGetLocalTimeMillis();
     event.Skip();
-} // end of OnGetFocus
+}
 
 void cbStyledTextCtrl::OnContextMenu(wxContextMenuEvent& event)
 {
-    if ( m_pParent )
+    if (m_pParent)
     {
         if ( EditorBase* pParent = dynamic_cast<EditorBase*>(m_pParent) )
         {
@@ -87,19 +89,19 @@ void cbStyledTextCtrl::OnContextMenu(wxContextMenuEvent& event)
             event.Skip();
         }
     }
-} // end of OnContextMenu
+}
 
-void cbStyledTextCtrl::OnGPM(wxMouseEvent& event)
+void cbStyledTextCtrl::OnMouseMiddleDown(wxMouseEvent& event)
 {
-    if(platform::gtk == false) // only if GPM is not already implemented by the OS
+    if (platform::gtk == false) // only if OnMouseMiddleDown is not already implemented by the OS
     {
         int pos = PositionFromPoint(wxPoint(event.GetX(), event.GetY()));
 
-        if(pos == wxSCI_INVALID_POSITION)
+        if (pos == wxSCI_INVALID_POSITION)
             return;
 
         int start = GetSelectionStart();
-        int end = GetSelectionEnd();
+        int end   = GetSelectionEnd();
 
         const wxString s = GetSelectedText();
 
@@ -112,7 +114,7 @@ void cbStyledTextCtrl::OnGPM(wxMouseEvent& event)
         InsertText(pos, s);
         SetSelectionVoid(start, end);
     }
-} // end of OnGPM
+}
 
 void cbStyledTextCtrl::OnKeyDown(wxKeyEvent& event)
 {
