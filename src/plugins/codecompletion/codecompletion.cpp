@@ -178,7 +178,6 @@ CodeCompletion::CodeCompletion() :
     m_ActiveCalltipsNest(0),
     m_IsAutoPopup(false),
     m_pToolBar(0),
-    m_ToolbarChanged(true),
     m_CurrentLine(0),
     m_NeedReparse(false),
     m_IsCreateNewProject(false)
@@ -505,7 +504,6 @@ void CodeCompletion::OnAttach()
     m_FunctionsScope.clear();
     m_NameSpaces.clear();
     m_AllFunctionsScopes.clear();
-    m_ToolbarChanged = true; // by default
 
     m_LastFile.clear();
 
@@ -552,7 +550,6 @@ void CodeCompletion::OnRelease(bool appShutDown)
     m_FunctionsScope.clear();
     m_NameSpaces.clear();
     m_AllFunctionsScopes.clear();
-    m_ToolbarChanged = false;
 
 /* TODO (mandrav#1#): Delete separator line too... */
     if (m_EditMenu)
@@ -1533,6 +1530,9 @@ void CodeCompletion::ParseFunctionsAndFillToolbar(bool force)
     if (filename.IsEmpty())
         return;
 
+    const int currLine = ed->GetControl()->GetCurrentLine();
+    const int lastLine = m_CurrentLine;
+
     FunctionsScopePerFile* funcdata = &(m_AllFunctionsScopes[filename]);
     Parser* parser = m_NativeParser.GetParserPtr();
     bool parsed = funcdata->parsed;
@@ -1596,8 +1596,6 @@ void CodeCompletion::ParseFunctionsAndFillToolbar(bool force)
 			Manager::Get()->GetLogManager()->DebugLog(F(_T("\t%s (%d:%d)"),
 				nameSpaces[i].Name.wx_str(), nameSpaces[i].StartLine, nameSpaces[i].EndLine));
 		*/
-
-       m_ToolbarChanged = true;
     }
 
     // *** Part 2: Fill the toolbar ***
@@ -1632,19 +1630,27 @@ void CodeCompletion::ParseFunctionsAndFillToolbar(bool force)
 			m_FunctionsScope[i].StartLine, m_FunctionsScope[i].EndLine));
     */
 
-    // Does the toolbar need a refresh?
-    if (m_ToolbarChanged || m_LastFile != filename)
+    // Refresh the toolbar
+    bool needRefreshToolbar = true; // The inited value *MUST* be true
+    for (size_t i = 0; i < m_FunctionsScope.size(); ++i)
     {
-        // Update the last editor and changed flag...
-        m_ToolbarChanged = false;
-        m_LastFile = filename;
+        if (lastLine >= m_FunctionsScope[i].StartLine && lastLine <= m_FunctionsScope[i].EndLine)
+        {
+            if (!(currLine >= m_FunctionsScope[i].StartLine && currLine <= m_FunctionsScope[i].EndLine))
+                needRefreshToolbar = true;
+            else
+                needRefreshToolbar = false;
+            break;
+        }
+    }
 
-        // ...and refresh the toolbars.
+    if (needRefreshToolbar)
+    {
         m_Function->Clear();
 
-		if (m_Scope)
-		{
-		    m_Scope->Freeze();
+        if (m_Scope)
+        {
+            m_Scope->Freeze();
             m_Scope->Clear();
 
             // add to the choice controls
@@ -1656,9 +1662,9 @@ void CodeCompletion::ParseFunctionsAndFillToolbar(bool force)
             }
 
             m_Scope->Thaw();
-		}
-		else
-		{
+        }
+        else
+        {
             m_Function->Freeze();
 
             for (unsigned int idxFn = 0; idxFn < m_FunctionsScope.size(); ++idxFn)
@@ -1668,11 +1674,11 @@ void CodeCompletion::ParseFunctionsAndFillToolbar(bool force)
             }
 
             m_Function->Thaw();
-		}
+        }
     }
 
     // Finally, find the current function and update
-    FindFunctionAndUpdate(ed->GetControl()->GetCurrentLine());
+    FindFunctionAndUpdate(currLine);
 }
 
 void CodeCompletion::FindFunctionAndUpdate(int currentLine)
@@ -1760,10 +1766,10 @@ void CodeCompletion::OnEditorActivated(CodeBlocksEvent& event)
         if (filename.IsEmpty())
             return;
 
-        // Do *NOT* set m_LastFile = filename, because we need a delay for m_TimerFunctionsParsing
         if (m_LastFile != filename)
         {
             m_NativeParser.OnEditorActivated(editor);
+            m_LastFile = filename;
 
             if (m_NativeParser.VerifyParserByFilename(filename))
             {

@@ -146,7 +146,6 @@ class CodeCompletion : public cbCodeCompletionPlugin
         NameSpaceVec                       m_NameSpaces;
         ScopeMarksVec					   m_ScopeMarks;
         FunctionsScopeMap                  m_AllFunctionsScopes;
-        bool                               m_ToolbarChanged;
 
         int                                m_CurrentLine;
         map<wxString, int>                 m_SearchItem;
