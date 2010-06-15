@@ -333,7 +333,7 @@ bool Tokenizer::SkipToOneOfChars(const wxChar* chars, bool supportNesting, bool 
             {
                 case '#':
 					if (skipPreprocessor)
-						SkipToEOL(true, true);
+						SkipToEOL(true);
 					else
 						done = true;
 					break;
@@ -494,15 +494,19 @@ wxString Tokenizer::ReadBlock(const wxChar& leftBrace)
     return str;
 }
 
-bool Tokenizer::SkipToEOL(bool nestBraces, bool skippingComment)
+bool Tokenizer::SkipToEOL(bool nestBraces)
 {
+    TRACE(_T("%s : line=%d, CurrentChar='%s', nestBrace(%d)"),
+          wxString(__PRETTY_FUNCTION__,wxConvUTF8).wc_str(),
+          m_LineNumber,
+          m_Buffer.Mid(m_TokenIndex,1).wx_str(),
+          nestBraces? 1:0);
     // skip everything until we find EOL
     while (1)
     {
         while (NotEOF() && CurrentChar() != '\n')
         {
-            if (!skippingComment)
-            {
+
                 if (CurrentChar() == '/' && NextChar() == '*')
                 {
                     SkipComment();
@@ -514,9 +518,36 @@ bool Tokenizer::SkipToEOL(bool nestBraces, bool skippingComment)
                     ++m_NestLevel;
                 else if (nestBraces && CurrentChar() == _T('}'))
                     --m_NestLevel;
+
+            MoveToNextChar();
             }
+
+        if (IsEOF() || !IsBackslashBeforeEOL())
+            break;
+        else
             MoveToNextChar();
         }
+    TRACE(_T("Tokenizer::SkipToEOL() Exit: we are now at line %d, CurrentChar ='%s'"),
+          m_LineNumber,
+          m_Buffer.Mid(m_TokenIndex,1).wx_str()
+         );
+    if (IsEOF())
+        return false;
+    return true;
+}
+
+
+bool Tokenizer::SkipToInlineCommentEnd()
+{
+    TRACE(_T("%s : line=%d, CurrentChar='%s'"),
+          wxString(__PRETTY_FUNCTION__,wxConvUTF8).wc_str(),
+          m_LineNumber,
+          m_Buffer.Mid(m_TokenIndex,1).wx_str()
+          );
+    // skip everything until we find EOL
+    while (1)
+    {
+        SkipToChar('\n');
         wxChar last = PreviousChar();
         // if DOS line endings, we 've hit \r and we skip to \n...
         if (last == '\r')
@@ -526,11 +557,16 @@ bool Tokenizer::SkipToEOL(bool nestBraces, bool skippingComment)
             else
                 last = _T('\0');
         }
-        if (IsEOF() || last != '\\')
+        if (IsEOF() || !IsBackslashBeforeEOL())
             break;
         else
             MoveToNextChar();
     }
+    TRACE(_T("%s Exit : line=%d, CurrentChar='%s'"),
+          wxString(__PRETTY_FUNCTION__,wxConvUTF8).wc_str(),
+          m_LineNumber,
+          m_Buffer.Mid(m_TokenIndex,1).wx_str()
+          );
     if (IsEOF())
         return false;
     return true;
@@ -577,6 +613,7 @@ bool Tokenizer::SkipBlock(const wxChar& ch)
 // if we stay here, return false
 bool Tokenizer::SkipComment()
 {
+    //TRACE(_T(Tokenizer::SkipComment() Start from line = %d"), m_LineNumber);
     if (IsEOF())
         return false;
 
@@ -613,9 +650,9 @@ bool Tokenizer::SkipComment()
         }
         else             // C++ style comment
         {
-            // Dont eat '\n' in here!
-            // We need keep the EOL for ReadToEOL or SkipToEOL
-            SkipToEOL(false, true); // nestBrace = false, skipComment = true
+            TRACE(_T("Tokenizer::SkipComment() , Need to call SkipToEOL() here at line = %d"), m_LineNumber);
+
+            SkipToInlineCommentEnd();
             break;
         }
     }
@@ -959,7 +996,7 @@ bool Tokenizer::CalcConditionExpression()
 
     const unsigned int undoIndex = m_TokenIndex;
     const unsigned int undoLine = m_LineNumber;
-    SkipToEOL(false, true);
+    SkipToEOL(false);
     const unsigned int expEndIndex = m_TokenIndex;
     m_TokenIndex = undoIndex;
     m_LineNumber = undoLine;
@@ -1009,7 +1046,7 @@ bool Tokenizer::IsMacroDefined()
     bool found = false; // Must be initialized to false
     long value = -1; // Must be initialized to -1
     GetPreprocessorValue(token, found, value);
-    SkipToEOL(false, true);
+    SkipToEOL(false);
     return found;
 }
 
@@ -1092,6 +1129,11 @@ void Tokenizer::SkipToEndConditionPreprocessor()
 
 bool Tokenizer::HandleConditionPreprocessor()
 {
+#ifdef PARSER_TEST
+    if (CurrentChar() != _T('#'))
+        TRACE(_T("HandleConditionPreprocessor() : Error handling!"));
+#endif
+
     const unsigned int undoIndex = m_TokenIndex;
     const unsigned int undoLine = m_LineNumber;
 
@@ -1114,6 +1156,7 @@ bool Tokenizer::HandleConditionPreprocessor()
     // #if #ifdef #ifndef
     if (token.StartsWith(TokenizerConsts::kw_if))
     {
+        TRACE(_T("Tokenizer::HandleConditionPreprocessor() Find #if at line=%d"),m_LineNumber);
         bool result = false;
         if (token == TokenizerConsts::kw_if)
         {
@@ -1134,6 +1177,7 @@ bool Tokenizer::HandleConditionPreprocessor()
     // #elif #elifdef #elifndef
     else if (token.StartsWith(TokenizerConsts::kw_elif))
     {
+        TRACE(_T("Tokenizer::HandleConditionPreprocessor() Find #elif at line=%d"),m_LineNumber);
         bool result = false;
         if (!m_ExpressionResult.empty() && !m_ExpressionResult.top())
         {
@@ -1155,8 +1199,9 @@ bool Tokenizer::HandleConditionPreprocessor()
     // #else
     else if (token==TokenizerConsts::kw_else)
     {
+        TRACE(_T("Tokenizer::HandleConditionPreprocessor() Find #else at line=%d"),m_LineNumber);
         if (!m_ExpressionResult.empty() && !m_ExpressionResult.top())
-            SkipToEOL(false, true);
+            SkipToEOL(false);
         else
             SkipToEndConditionPreprocessor();
     }
@@ -1164,7 +1209,8 @@ bool Tokenizer::HandleConditionPreprocessor()
     // #endif
     else if (token==TokenizerConsts::kw_endif)
     {
-        SkipToEOL(false, true);
+        TRACE(_T("Tokenizer::HandleConditionPreprocessor() Find #endif at line=%d"),m_LineNumber);
+        SkipToEOL(false);
         if (!m_ExpressionResult.empty())
             m_ExpressionResult.pop();
     }
@@ -1174,7 +1220,7 @@ bool Tokenizer::HandleConditionPreprocessor()
     {
         m_TokenIndex = undoIndex;
         m_LineNumber = undoLine;
-        TRACE(_T("HandleConditionPreprocessor() : Skip Non-conditional expression blocks"));
+        TRACE(_T("Tokenizer::HandleConditionPreprocessor() Skip Non-conditional expression blocks at line %d"),m_LineNumber);
         return false;
     }
 

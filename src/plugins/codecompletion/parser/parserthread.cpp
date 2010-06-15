@@ -574,7 +574,7 @@ void ParserThread::DoParse()
                 else if (token == ParserConsts::kw_undef)
                     HandleUndefs();
                 else
-                    m_Tokenizer.SkipToEOL(false, true);
+                    m_Tokenizer.SkipToEOL(false);
 
                 m_Str.Clear();
                 m_Tokenizer.SetState(oldState);
@@ -1375,7 +1375,7 @@ void ParserThread::HandleUndefs()
             m_pTokensTree->erase(tk);
     }
 
-    m_Tokenizer.SkipToEOL(false, true);
+    m_Tokenizer.SkipToEOL(false);
 }
 
 void ParserThread::HandleNamespace()

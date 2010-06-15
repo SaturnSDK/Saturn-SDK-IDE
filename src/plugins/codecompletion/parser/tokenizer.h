@@ -169,9 +169,11 @@ public:
 
     /** Skip fron the current position to the end of line.
      * @param nestBraces if true, we should still couting the brace levels in this function.
-     * @param skippingComment if true, we will not handling comment (not dealing with C type comment ).
      */
-    bool SkipToEOL(bool nestBraces = true, bool skippingComment = false); // use with care outside this class!
+    bool SkipToEOL(bool nestBraces = true); // use with care outside this class!
+
+    /** Skip to then end of the C++ style comemnt */
+    bool SkipToInlineCommentEnd();
 
     /** Add one Replacement rules, this is just a simple way of handling preprocessor (macro) replacement.
      * the rule composite of two strings. if the first string has found in
@@ -349,6 +351,25 @@ private:
             return it->second;
         return str;
     };
+
+    /** Check the previous char before EOL is a backslash */
+    inline bool IsBackslashBeforeEOL()
+    {
+        wxChar last = PreviousChar();
+        // if DOS line endings, we 've hit \r and we skip to \n...
+        if (last == '\r')
+        {
+            if (m_TokenIndex - 2 >= 0)
+                last = m_Buffer.GetChar(m_TokenIndex - 2);
+            else
+                last = _T('\0');
+        }
+
+        if(last == '\\')
+            return true;
+        else
+            return false;
+    }
 
     /** Do the Macro replacement according to the macro replacement rules */
     wxString MacroReplace(const wxString str);
