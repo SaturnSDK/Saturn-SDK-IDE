@@ -1092,11 +1092,6 @@ void Tokenizer::SkipToEndConditionPreprocessor()
 
 bool Tokenizer::HandleConditionPreprocessor()
 {
-#ifdef PARSER_TEST
-    if (PreviousChar() != _T('#'))
-        TRACE(_T("HandleConditionPreprocessor() : Error handling!"));
-#endif
-
     const unsigned int undoIndex = m_TokenIndex;
     const unsigned int undoLine = m_LineNumber;
 
@@ -1105,11 +1100,11 @@ bool Tokenizer::HandleConditionPreprocessor()
         ;
 
     // ONLY FOR TEST!
-    if (m_Filename.EndsWith(_T("wx\\setup.h"))) // Line: 38
-    {
-        m_Filename.Len();
-    }
-//    else if (m_Filename.EndsWith(_T("yvals.h"))) // Line: 79
+//    if (m_Filename.EndsWith(_T("wx\\setup.h")))
+//    {
+//        m_Filename.Len();
+//    }
+//    else if (m_Filename.EndsWith(_T("wx\\toplevel.h")))
 //    {
 //        m_Filename.Len();
 //    }
