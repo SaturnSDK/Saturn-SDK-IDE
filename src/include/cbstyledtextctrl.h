@@ -19,13 +19,13 @@ class cbStyledTextCtrl : public wxScintilla
         cbStyledTextCtrl(wxWindow* pParent, int id, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize, long style = 0);
         virtual ~cbStyledTextCtrl();
         wxDateTime GetLastFocusTime() const {return m_lastFocusTime;}
-        void SetTabSmartJump(bool enable = true) { m_tabSmartJump = enable; }
 
-    bool IsCharacter(int style);
-    bool IsString(int style);
-    bool IsPreprocessor(int style);
-    bool IsComment(int style);
-    void CallTipCancel();
+        void EnableTabSmartJump(bool enable = true);
+        bool IsCharacter(int style);
+        bool IsString(int style);
+        bool IsPreprocessor(int style);
+        bool IsComment(int style);
+        void CallTipCancel();
 
     private:
         void OnContextMenu(wxContextMenuEvent& event);

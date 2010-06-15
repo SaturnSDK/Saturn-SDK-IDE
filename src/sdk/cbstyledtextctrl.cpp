@@ -386,3 +386,10 @@ void cbStyledTextCtrl::HighlightRightBrace()
     SetCaretForeground(caretForeground);
     SetCaretWidth(caretWidth);
 }
+
+void cbStyledTextCtrl::EnableTabSmartJump(bool enable)
+{
+    m_tabSmartJump = enable;
+    m_bracePosition = GetCurrentPos();
+    HighlightRightBrace();
+}
