@@ -629,6 +629,7 @@ int CodeCompletion::CodeComplete()
             Manager::Get()->GetLogManager()->DebugLog(F(_T("%d results"), result.size()));
 
         size_t max_match = cfg->ReadInt(_T("/max/matches"), 16384);
+        bool autoAddParentheses = cfg->ReadBool(_T("/auto_add_parentheses"), true);
         if (result.size() <= max_match)
         {
             if (s_DebugSmartSense)
@@ -645,9 +646,9 @@ int CodeCompletion::CodeComplete()
             wxArrayInt already_registered;
             std::set< wxString, std::less<wxString> > unique_strings; // check against this before inserting a new string in the list
             TokensTree* tokens = parser->GetTokens();
+            m_SearchItem.clear();
             for (TokenIdxSet::iterator it = result.begin(); it != result.end(); ++it)
             {
-                m_SearchItem.clear();
                 Token* token = tokens->at(*it);
                 if (!token || token->m_Name.IsEmpty())
                     continue;
@@ -666,9 +667,9 @@ int CodeCompletion::CodeComplete()
                 wxString tmp;
                 tmp << token->m_Name << wxString::Format(_T("?%d"), iidx);
                 items.Add(tmp);
-                if (token->m_TokenKind == tkFunction || token->m_TokenKind == tkConstructor || token->m_TokenKind == tkDestructor)
+                if (autoAddParentheses && token->m_TokenKind == tkFunction)
                 {
-                    m_SearchItem[token->m_Name] = token->m_Args.size()-2;
+                    m_SearchItem[token->m_Name] = token->m_Args.size() - 2;
                 }
                 if (token->m_TokenKind == tkNamespace && token->m_Aliases.size())
                 {
@@ -2269,16 +2270,26 @@ void CodeCompletion::EditorEventHook(cbEditor* editor, wxScintillaEvent& event)
         {
             control->AutoCompCancel();
             int pos = control->GetCurrentPos();
-            int start = control->WordStartPosition(pos, true);
+            const int start = control->WordStartPosition(pos, true);
+            const int end = control->WordEndPosition(pos, true);
+
+            wxString alreadyText = control->GetTextRange(pos, end);
+            if (!alreadyText.IsEmpty() && itemText.EndsWith(alreadyText))
+                pos = end;
+
             control->SetTargetStart(start);
             control->SetTargetEnd(pos);
-            control->ReplaceTarget(itemText+_T("()"));
-            pos = control->GetCurrentPos();
-            control->GotoPos(pos + itemText.size()+2);
+
+            //Check if there are brace behind the target
+            wxString addString(itemText);
+            if (control->GetCharAt(pos) != _T('('))
+                addString += _T("()");
+
+            control->ReplaceTarget(addString);
+            control->GotoPos(control->GetCurrentPos() + itemText.size() + 2);
             if ((*it).second != 0)
             {
-                pos = control->GetCurrentPos();
-                control->GotoPos(pos - 1);
+                control->GotoPos(control->GetCurrentPos() - 1);
                 control->EnableTabSmartJump();
                 ShowCallTip();
             }
