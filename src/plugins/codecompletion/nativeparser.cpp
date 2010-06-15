@@ -1092,23 +1092,28 @@ void NativeParser::AddFileToParser(cbProject* project, const wxString& filename)
     if (!parser)
         return;
 
-    wxString file(filename);
-    if (project)
+    wxFileName fn(filename);
+    if (project && fn.IsRelative())
     {
         ProjectFile* pf = project->GetFileByFilename(filename);
         if (pf)
-            file = pf->file.GetFullPath();
+            fn = pf->file;
+        else
+            return;
     }
 
+    if (parser->IsFileParsed(fn.GetFullPath()))
+        return;
+
     const bool doItNow = m_WaitParsingList.empty();
-    ParsingNode node = { project, parser, file, ptAddFileToParser };
+    ParsingNode node = { project, parser, fn.GetFullPath(), ptAddFileToParser };
     m_WaitParsingList.push_back(node);
 
     if (doItNow)
     {
         SwitchParser(project, parser);
         parser->PrepareParsing();
-        parser->AddParse(file);
+        parser->AddParse(fn.GetFullPath());
         parser->StartParsing(false);
     }
 }
