@@ -1639,7 +1639,7 @@ void CodeCompletion::ParseFunctionsAndFillToolbar(bool force)
     */
 
     // Refresh the toolbar
-    bool needRefreshToolbar = true; // The inited value *MUST* be true
+    bool needRefreshToolbar = true;
     for (size_t i = 0; i < m_FunctionsScope.size(); ++i)
     {
         if (lastLine >= m_FunctionsScope[i].StartLine && lastLine <= m_FunctionsScope[i].EndLine)
@@ -1651,6 +1651,9 @@ void CodeCompletion::ParseFunctionsAndFillToolbar(bool force)
             break;
         }
     }
+
+    if ((m_Scope && m_Scope->IsEmpty()) || m_Function->IsEmpty())
+        needRefreshToolbar = true;
 
     if (needRefreshToolbar)
     {
