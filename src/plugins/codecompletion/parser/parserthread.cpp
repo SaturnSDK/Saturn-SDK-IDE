@@ -18,7 +18,7 @@
 
 #include <cctype>
 #include <queue>
-
+#include <wx/tokenzr.h>
 #define PARSERTHREAD_DEBUG_OUTPUT 0
 
 #ifdef PARSER_TEST
@@ -849,16 +849,18 @@ void ParserThread::DoParse()
                     && m_EncounteredTypeNamespaces.empty()
                     && (!m_pLastParent || m_pLastParent->m_Name != token) ) // if func has same name as current scope (class)
                 {
-                    if (true)
+                    int id = m_pTokensTree->TokenExists(token, -1, tkPreprocessor);
+
+                    if (id != -1)
                     {
-                        HandleMacro(token, peek);
                         m_Tokenizer.GetToken();
+                        HandleMacro(id, peek);
                         m_Str.Clear();
                     }
                     else
                     {
                         wxString arg = m_Tokenizer.GetToken(); // eat args ()
-                        m_Str = token+arg;
+                        m_Str = token + arg;
                     }
                 }
                 else if (peek.GetChar(0) == '(' && m_Options.handleFunctions)
@@ -1108,7 +1110,7 @@ Token* ParserThread::DoAddToken(TokenKind kind,
         m_Str.Clear();
     }
 
-    wxString strippedArgs = _T("");
+    wxString strippedArgs;
     if (kind & tkAnyFunction)
         strippedArgs = GetStrippedArgs(args);
 
@@ -1179,7 +1181,7 @@ Token* ParserThread::DoAddToken(TokenKind kind,
 
     if (!(kind & (tkConstructor | tkDestructor)))
     {
-        wxString tokenType       = m_Str;
+        wxString tokenType = m_Str;
         if (!m_PointerOrRef.IsEmpty())
         {
             tokenType << m_PointerOrRef;
@@ -1322,7 +1324,7 @@ void ParserThread::HandleDefines()
     if (TestDestroy())
         return;
 
-    int lineNr = m_Tokenizer.GetLineNumber();
+    size_t lineNr = m_Tokenizer.GetLineNumber();
     wxString token = m_Tokenizer.GetToken(); // read the token after #define
     m_Str.Clear();
     // now token holds something like:
@@ -1330,35 +1332,33 @@ void ParserThread::HandleDefines()
     if (!token.IsEmpty())
     {
         // skip the rest of the #define
-        wxString defVal = token + m_Tokenizer.ReadToEOL(false, true);
-        wxString para(_T(""));
-        int start = defVal.Find('(');
-        int end   = defVal.Find(')');
-
-        TRACE(_T("HandleDefines() : Saving nesting level: %d,%d"), start, end);
-
-        // make sure preprocessor definitions are not going under namespaces or classes!
-        if (start != wxNOT_FOUND && end != wxNOT_FOUND)
+        //TokenKind type = tkUndefined;
+        //get the argument,if they are not in the same line,we think the define handle is over
+        //if the they are in the same line and the the first char is "(",we regard it as function-like macro.
+        wxString para = m_Tokenizer.GetToken();
+        if (lineNr == m_Tokenizer.GetLineNumber())
         {
-            para = defVal.Mid(start, end-start+1);
-            m_Str = defVal.Mid(end + 1);
-            m_Str.Trim(false);
+            if (para.IsEmpty() || para.GetChar(0) != '(')
+            {
+                //m_Tokenizer.UngetToken();
+                m_Str = para;
+                para = wxEmptyString;
+            }
+            if (!m_Str.IsEmpty())
+                m_Str << _T(" ");
+            m_Str << m_Tokenizer.ReadToEOL();
         }
         else
         {
-            m_Str = defVal.substr(token.length());
-            m_Str.Trim(false).Trim(true);
+            m_Tokenizer.UngetToken();
+            para = wxEmptyString;
+            m_Str << m_Tokenizer.ReadToEOL();
         }
 
-        if (m_Str != token)
-        {
-            Token* oldParent = m_pLastParent;
-            m_pLastParent = 0L;
-            DoAddToken(tkPreprocessor, token, lineNr, lineNr, m_Tokenizer.GetLineNumber(), para, false, true);
-            m_pLastParent = oldParent;
-        }
-
-        m_Str.Clear();
+        Token* oldParent = m_pLastParent;
+        m_pLastParent = 0L;
+        DoAddToken(tkPreprocessor, token, lineNr, lineNr, m_Tokenizer.GetLineNumber(), para, false, true);
+        m_pLastParent = oldParent;
     }
 }
 
@@ -2146,13 +2146,43 @@ void ParserThread::HandleTypedef()
     }
 }
 
-void ParserThread::HandleMacro(const wxString &token, const wxString &peek)
+//void ParserThread::HandleMacro(const wxString &token, const wxString &peek)
+void ParserThread::HandleMacro(int id, const wxString &peek)
 {
     if (TestDestroy())
         return;
 
-    TRACE(_T("HandleMacro() : Adding token '%s' (peek='%s')"), token.wx_str(), peek.wx_str());
-    DoAddToken(tkMacro, token, m_Tokenizer.GetLineNumber(), 0, 0, peek);
+    Token* normalToken = m_pTokensTree->at(id);
+    if (normalToken)
+    {
+        wxString token = normalToken->m_Name;
+        TRACE(_T("HandleMacro() : Adding token '%s' (peek='%s')"), token.wx_str(), peek.wx_str());
+        DoAddToken(tkMacro, token, m_Tokenizer.GetLineNumber(), 0, 0, peek);
+
+        // the next step is parsing the actual context for macro.
+        // 1. break the args into substring with "," and store them in normals
+        wxArrayString normals;
+        DecomposeString(normalToken->m_Args, normals);
+
+        // 2. splite the actual macro arguments
+        wxArrayString actuals;
+        m_Tokenizer.SpliteMacroActualArgument(actuals);
+
+        wxString actualStr = normalToken->m_Type;
+        size_t count = normals.GetCount() < actuals.GetCount() ? normals.GetCount() : actuals.GetCount();
+        for (size_t i = 0; i < count; ++i)
+        {
+            TRACE(_T("The normal args are '%s' and the actual args are '%s'."), normals[i].wx_str(),
+                  actuals[i].wx_str());
+            actualStr.Replace(normals[i], actuals[i]);
+        }
+
+        // erease string "##"
+        actualStr.Replace(_T("##"), _T(""));
+        TRACE(_T("The replaced actual context are '%s'."), actualStr.wx_str());
+
+        m_Tokenizer.ReplaceBufferForReparse(actualStr);
+    }
 }
 
 void ParserThread::ReadVarNames()
@@ -2423,4 +2453,15 @@ wxString ParserThread::GetMacroType(const wxString& macro)
     }
 
     return type;
+}
+
+void ParserThread::DecomposeString(const wxString& args, wxArrayString& results)
+{
+    wxString tempArgs(args);
+    tempArgs.Trim(true).Trim(false);
+    tempArgs.Remove(0, 1); //eat (
+    tempArgs.RemoveLast(); //eat )
+    wxStringTokenizer tkz(tempArgs, _T(","), wxTOKEN_STRTOK);
+    while (tkz.HasMoreTokens())
+        results.Add(tkz.GetNextToken());
 }

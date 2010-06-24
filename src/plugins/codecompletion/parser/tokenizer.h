@@ -222,6 +222,12 @@ public:
         return m_TokenIndex < m_BufferLen;
     };
 
+    /** Splite the actual macro arguments, and store them in results*/
+    void SpliteMacroActualArgument(wxArrayString& results);
+
+    /** Replace buffer for 'function-like macro' parse */
+    void ReplaceBufferForReparse(wxString& buffer);
+
 protected:
     /** Initialize some member variables */
     void BaseInit();
@@ -357,18 +363,9 @@ private:
     {
         wxChar last = PreviousChar();
         // if DOS line endings, we 've hit \r and we skip to \n...
-        if (last == '\r')
-        {
-            if (m_TokenIndex - 2 >= 0)
-                last = m_Buffer.GetChar(m_TokenIndex - 2);
-            else
-                last = _T('\0');
-        }
-
-        if(last == '\\')
-            return true;
-        else
-            return false;
+        if (last == _T('\r') && (m_TokenIndex - 2 >= 0))
+            return m_Buffer.GetChar(m_TokenIndex - 2) == _T('\\');
+        return last == _T('\\');
     }
 
     /** Do the Macro replacement according to the macro replacement rules */
@@ -453,5 +450,3 @@ private:
 };
 
 #endif // TOKENIZER_H
-
-

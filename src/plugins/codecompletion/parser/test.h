@@ -1,24 +1,20 @@
-WINBASEAPI
-__success(return != 0)
-BOOL
-WINAPI
-GetExitCodeThread(
-    __in  HANDLE hThread,
-    __out LPDWORD lpExitCode
-    );
+#define wxDEPRECATED(x, y)  x y
+wxDEPRECATED(void , static wxChar* SetLogBuffer(wxChar* buf, size_t size = 0));
 
-WINBASEAPI
-BOOL
-WINAPI
-GetThreadSelectorEntry(
-    __in  HANDLE hThread,
-    __in  DWORD dwSelector,
-    __out LPLDT_ENTRY lpSelectorEntry
-    );
 
-WINBASEAPI
-EXECUTION_STATE
-WINAPI
-SetThreadExecutionState(
-    __in EXECUTION_STATE esFlags
-    );
+#define DECLARE_LOG_FUNCTION(level) \
+    void AAA##level(const wxChar *szFormat, va_list argptr); \
+    void BBB##level(const wxChar *szFormat, ...)
+DECLARE_LOG_FUNCTION(FatalError);
+DECLARE_LOG_FUNCTION(Error);
+DECLARE_LOG_FUNCTION(Warning);
+DECLARE_LOG_FUNCTION(Message);
+DECLARE_LOG_FUNCTION(Info);
+DECLARE_LOG_FUNCTION(Verbose);
+
+#define AAA(arg) unsigned arg
+AAA(int)  abc() {}
+
+#define WXDLLIMPEXP_DATA_BASE(x) x
+extern WXDLLIMPEXP_DATA_BASE(const wxChar*) wxEmptyString;
+

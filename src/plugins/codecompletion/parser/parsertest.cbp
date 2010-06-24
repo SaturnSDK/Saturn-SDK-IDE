@@ -65,6 +65,9 @@
 		</Unit>
 		<Unit filename="searchtree.cpp" />
 		<Unit filename="searchtree.h" />
+		<Unit filename="test.h">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
 		<Unit filename="token.cpp" />
 		<Unit filename="token.h" />
 		<Unit filename="tokenizer.cpp" />

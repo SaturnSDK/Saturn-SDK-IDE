@@ -263,14 +263,10 @@ bool Tokenizer::IsEscapedChar()
 bool Tokenizer::SkipToChar(const wxChar& ch)
 {
     // skip everything until we find ch
-
     while (CurrentChar() != ch && MoveToNextChar())  // don't check EOF when MoveToNextChar already does
         ;
 
-    if (IsEOF())
-        return false;
-
-    return true;
+    return NotEOF();
 }
 
 //  For example: X"ABCDEFG\"HIJKLMN"Y
@@ -356,18 +352,19 @@ bool Tokenizer::SkipToOneOfChars(const wxChar* chars, bool supportNesting, bool 
 
     }
 
-    if (IsEOF())
-        return false;
-
-    return true;
+    return NotEOF();
 }
 
 wxString Tokenizer::ReadToEOL(bool nestBraces, bool stripComment)
 {
     if (stripComment)
     {
+        TRACE(_T("%s : line=%d, CurrentChar='%c', PreviousChar='%c', NextChar='%c', nestBrace(%d)"),
+              wxString(__PRETTY_FUNCTION__, wxConvUTF8).wc_str(), m_LineNumber, CurrentChar(),
+              PreviousChar(), NextChar(), nestBraces ? 1 : 0);
+
         wxString str;
-        while (true)
+        for (;;)
         {
             while (NotEOF() && CurrentChar() != _T('\n'))
             {
@@ -389,16 +386,7 @@ wxString Tokenizer::ReadToEOL(bool nestBraces, bool stripComment)
                 MoveToNextChar();
             }
 
-            wxChar last = PreviousChar();
-            // if DOS line endings, we 've hit \r and we skip to \n...
-            if (last == _T('\r'))
-            {
-                if (m_TokenIndex - 2 >= 0)
-                    last = m_Buffer.GetChar(m_TokenIndex - 2);
-                else
-                    last = _T('\0');
-            }
-            if (IsEOF() || last != _T('\\'))
+            if (IsEOF() || !IsBackslashBeforeEOL())
                 break;
             else
             {
@@ -407,6 +395,10 @@ wxString Tokenizer::ReadToEOL(bool nestBraces, bool stripComment)
                 MoveToNextChar();
             }
         }
+
+        TRACE(_T("ReadToEOL(): (END) We are now at line %d, CurrentChar='%c', PreviousChar='%c', NextChar='%c'"),
+              m_LineNumber, CurrentChar(), PreviousChar(), NextChar());
+
         return str;
     }
     else
@@ -417,9 +409,12 @@ wxString Tokenizer::ReadToEOL(bool nestBraces, bool stripComment)
     }
 }
 
-
 wxString Tokenizer::ReadBlock(const wxChar& leftBrace)
 {
+    TRACE(_T("%s : line=%d, CurrentChar='%c', PreviousChar='%c', NextChar='%c', leftBrace(%c)"),
+          wxString(__PRETTY_FUNCTION__, wxConvUTF8).wc_str(), m_LineNumber, CurrentChar(),
+          PreviousChar(), NextChar(), leftBrace);
+
     wxString str;
     int nestLevel = 0;
 
@@ -491,22 +486,23 @@ wxString Tokenizer::ReadBlock(const wxChar& leftBrace)
             break;
     }
 
+    TRACE(_T("ReadBlock(): (END) We are now at line %d, CurrentChar='%c', PreviousChar='%c', NextChar='%c'"),
+          m_LineNumber, CurrentChar(), PreviousChar(), NextChar());
+
     return str;
 }
 
 bool Tokenizer::SkipToEOL(bool nestBraces)
 {
-    TRACE(_T("%s : line=%d, CurrentChar='%s', nestBrace(%d)"),
-          wxString(__PRETTY_FUNCTION__,wxConvUTF8).wc_str(),
-          m_LineNumber,
-          m_Buffer.Mid(m_TokenIndex,1).wx_str(),
-          nestBraces? 1:0);
+    TRACE(_T("%s : line=%d, CurrentChar='%c', PreviousChar='%c', NextChar='%c', nestBrace(%d)"),
+          wxString(__PRETTY_FUNCTION__, wxConvUTF8).wc_str(), m_LineNumber, CurrentChar(),
+          PreviousChar(), NextChar(), nestBraces ? 1 : 0);
+
     // skip everything until we find EOL
-    while (1)
+    for (;;)
     {
         while (NotEOF() && CurrentChar() != '\n')
         {
-
                 if (CurrentChar() == '/' && NextChar() == '*')
                 {
                     SkipComment();
@@ -520,56 +516,40 @@ bool Tokenizer::SkipToEOL(bool nestBraces)
                     --m_NestLevel;
 
             MoveToNextChar();
-            }
-
-        if (IsEOF() || !IsBackslashBeforeEOL())
-            break;
-        else
-            MoveToNextChar();
         }
-    TRACE(_T("Tokenizer::SkipToEOL() Exit: we are now at line %d, CurrentChar ='%s'"),
-          m_LineNumber,
-          m_Buffer.Mid(m_TokenIndex,1).wx_str()
-         );
-    if (IsEOF())
-        return false;
-    return true;
-}
 
-
-bool Tokenizer::SkipToInlineCommentEnd()
-{
-    TRACE(_T("%s : line=%d, CurrentChar='%s'"),
-          wxString(__PRETTY_FUNCTION__,wxConvUTF8).wc_str(),
-          m_LineNumber,
-          m_Buffer.Mid(m_TokenIndex,1).wx_str()
-          );
-    // skip everything until we find EOL
-    while (1)
-    {
-        SkipToChar('\n');
-        wxChar last = PreviousChar();
-        // if DOS line endings, we 've hit \r and we skip to \n...
-        if (last == '\r')
-        {
-            if (m_TokenIndex - 2 >= 0)
-                last = m_Buffer.GetChar(m_TokenIndex - 2);
-            else
-                last = _T('\0');
-        }
         if (IsEOF() || !IsBackslashBeforeEOL())
             break;
         else
             MoveToNextChar();
     }
-    TRACE(_T("%s Exit : line=%d, CurrentChar='%s'"),
-          wxString(__PRETTY_FUNCTION__,wxConvUTF8).wc_str(),
-          m_LineNumber,
-          m_Buffer.Mid(m_TokenIndex,1).wx_str()
-          );
-    if (IsEOF())
-        return false;
-    return true;
+
+    TRACE(_T("SkipToEOL(): (END) We are now at line %d, CurrentChar='%c', PreviousChar='%c', NextChar='%c'"),
+          m_LineNumber, CurrentChar(), PreviousChar(), NextChar());
+
+    return NotEOF();
+}
+
+bool Tokenizer::SkipToInlineCommentEnd()
+{
+    TRACE(_T("%s : line=%d, CurrentChar='%c', PreviousChar='%c', NextChar='%c'"),
+          wxString(__PRETTY_FUNCTION__, wxConvUTF8).wc_str(), m_LineNumber, CurrentChar(),
+          PreviousChar(), NextChar());
+
+    // skip everything until we find EOL
+    while (true)
+    {
+        SkipToChar('\n');
+        if (IsEOF() || !IsBackslashBeforeEOL())
+            break;
+        else
+            MoveToNextChar();
+    }
+
+    TRACE(_T("SkipToInlineCommentEnd(): (END) We are now at line %d, CurrentChar='%c', PreviousChar='%c',")
+          _T(" NextChar='%c'"), m_LineNumber, CurrentChar(), PreviousChar(), NextChar());
+
+    return NotEOF();
 }
 
 bool Tokenizer::SkipBlock(const wxChar& ch)
@@ -589,7 +569,6 @@ bool Tokenizer::SkipBlock(const wxChar& ch)
     int nestLevel = 1; // counter for nested blocks (xxx())
     while (NotEOF())
     {
-
         while (SkipWhiteSpace() || SkipString() || SkipComment())
             ;
 
@@ -604,9 +583,7 @@ bool Tokenizer::SkipBlock(const wxChar& ch)
             break;
     }
 
-    if (IsEOF())
-        return false;
-    return true;
+    return NotEOF();
 }
 
 // if we really move forward, return true, which means we have the new m_TokenIndex
@@ -773,8 +750,8 @@ wxString Tokenizer::PeekToken()
         m_TokenIndex                 = savedTokenIndex;
         m_LineNumber                 = savedLineNumber;
         m_NestLevel                  = savedNestLevel;
-
     }
+
     return m_PeekToken;
 }
 
@@ -1129,11 +1106,6 @@ void Tokenizer::SkipToEndConditionPreprocessor()
 
 bool Tokenizer::HandleConditionPreprocessor()
 {
-#ifdef PARSER_TEST
-    if (CurrentChar() != _T('#'))
-        TRACE(_T("HandleConditionPreprocessor() : Error handling!"));
-#endif
-
     const unsigned int undoIndex = m_TokenIndex;
     const unsigned int undoLine = m_LineNumber;
 
@@ -1156,7 +1128,7 @@ bool Tokenizer::HandleConditionPreprocessor()
     // #if #ifdef #ifndef
     if (token.StartsWith(TokenizerConsts::kw_if))
     {
-        TRACE(_T("Tokenizer::HandleConditionPreprocessor() Find #if at line=%d"),m_LineNumber);
+        TRACE(_T("Tokenizer::HandleConditionPreprocessor() Find #if at line=%d"), m_LineNumber);
         bool result = false;
         if (token == TokenizerConsts::kw_if)
         {
@@ -1177,7 +1149,7 @@ bool Tokenizer::HandleConditionPreprocessor()
     // #elif #elifdef #elifndef
     else if (token.StartsWith(TokenizerConsts::kw_elif))
     {
-        TRACE(_T("Tokenizer::HandleConditionPreprocessor() Find #elif at line=%d"),m_LineNumber);
+        TRACE(_T("Tokenizer::HandleConditionPreprocessor() Find #elif at line=%d"), m_LineNumber);
         bool result = false;
         if (!m_ExpressionResult.empty() && !m_ExpressionResult.top())
         {
@@ -1199,7 +1171,7 @@ bool Tokenizer::HandleConditionPreprocessor()
     // #else
     else if (token==TokenizerConsts::kw_else)
     {
-        TRACE(_T("Tokenizer::HandleConditionPreprocessor() Find #else at line=%d"),m_LineNumber);
+        TRACE(_T("Tokenizer::HandleConditionPreprocessor() Find #else at line=%d"), m_LineNumber);
         if (!m_ExpressionResult.empty() && !m_ExpressionResult.top())
             SkipToEOL(false);
         else
@@ -1209,7 +1181,7 @@ bool Tokenizer::HandleConditionPreprocessor()
     // #endif
     else if (token==TokenizerConsts::kw_endif)
     {
-        TRACE(_T("Tokenizer::HandleConditionPreprocessor() Find #endif at line=%d"),m_LineNumber);
+        TRACE(_T("Tokenizer::HandleConditionPreprocessor() Find #endif at line=%d"), m_LineNumber);
         SkipToEOL(false);
         if (!m_ExpressionResult.empty())
             m_ExpressionResult.pop();
@@ -1220,9 +1192,87 @@ bool Tokenizer::HandleConditionPreprocessor()
     {
         m_TokenIndex = undoIndex;
         m_LineNumber = undoLine;
-        TRACE(_T("Tokenizer::HandleConditionPreprocessor() Skip Non-conditional expression blocks at line %d"),m_LineNumber);
         return false;
     }
 
     return true;
+}
+
+void Tokenizer::SpliteMacroActualArgument(wxArrayString& results)
+{
+    UngetToken();
+    m_PeekAvailable = false; // as the peek is already parsed, we need to reparse the peek string
+
+    if (CurrentChar() != _T('('))
+        return;
+
+    const TokenizerState oldState = m_State;
+    m_State = tsSkipNone;
+
+    MoveToNextChar(); // Skip the '('
+
+    wxString testStr;
+    wxString piece;
+    while (NotEOF())
+    {
+        testStr = DoGetToken();
+        if (testStr == _T(","))
+        {
+            results.Add(piece);
+            piece.Clear();
+        }
+        else if (testStr == _T(")"))
+        {
+            results.Add(piece);
+            break; // if it is ')' or other chracters, we break, we hopefully it is a ')'
+        }
+        else
+            piece << testStr << _T(" ");
+    }
+
+    m_State = oldState;
+}
+
+void Tokenizer::ReplaceBufferForReparse(wxString& buffer)
+{
+    // Keep all in one line
+    for (size_t i = 0; i < buffer.Len(); ++i)
+    {
+        switch (buffer.GetChar(i))
+        {
+        case _T('\\'):
+        case _T('\r'):
+        case _T('\n'):
+            buffer.SetChar(i, _T(' '));
+        }
+    }
+
+    // Increase memory
+    const size_t bufLen = buffer.Len();
+    if (m_TokenIndex < bufLen)
+    {
+        const size_t diff = bufLen - m_TokenIndex;
+        m_Buffer.insert(0, wxString(_T(' '), diff));
+        m_BufferLen += diff;
+        m_TokenIndex += diff;
+    }
+
+    // Replacement back
+    wxChar* p = const_cast<wxChar*>(m_Buffer.GetData()) + m_TokenIndex - bufLen;
+    TRACE(_T("ReplaceBufferForReparse() : <FROM>:%s<TO>:%s"), wxString(p, bufLen).wx_str(), buffer.wx_str());
+    memcpy(p, buffer.GetData(), bufLen * sizeof(wxChar));
+
+    // Fix members value
+    m_TokenIndex        = m_TokenIndex - bufLen;
+    m_NestLevel         = 0;
+    m_SavedNestingLevel = 0;
+    m_UndoTokenIndex    = m_TokenIndex;
+    m_UndoLineNumber    = m_LineNumber;
+    m_UndoNestLevel     = 0;
+    m_PeekTokenIndex    = 0;
+    m_PeekLineNumber    = 0;
+    m_PeekNestLevel     = 0;
+    m_PeekAvailable     = false;
+    m_IsOK              = false;
+    m_IsOperator        = false;
 }

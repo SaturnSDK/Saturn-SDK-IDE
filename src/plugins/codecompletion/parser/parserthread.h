@@ -182,8 +182,8 @@ class ParserThread : public cbThreadedTask
           * @param token macro name
           * @param peek macro body
           */
-        void HandleMacro(const wxString & token, const wxString & peek);
-
+        //void HandleMacro(const wxString & token, const wxString & peek);
+        void HandleMacro(int id, const wxString& peek);
         /** eg: class ClassA{...} varA, varB, varC
           * This function will read the "varA, varB, varC"
           */
@@ -258,6 +258,9 @@ class ParserThread : public cbThreadedTask
 
         /** Get the macro's type */
         wxString GetMacroType(const wxString& macro);
+
+        /** Break the args into substring with "," and store them in results */
+        void DecomposeString(const wxString& args, wxArrayString& results);
 
         /** if we regard the parserThread class as a syntax anilyzer, then the Tokenizer class is
           * regard as the lexer, which always feeds a wxString by calling m_Tokenizer.GetToken()

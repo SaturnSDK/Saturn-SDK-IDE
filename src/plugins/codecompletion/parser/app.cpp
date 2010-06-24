@@ -55,8 +55,24 @@ void ParserTrace(const wxChar* format, ...)
 {
     va_list ap;
     va_start(ap, format);
-    const wxString& log = wxString::FormatV(format, ap);
+    wxString log = wxString::FormatV(format, ap);
     va_end(ap);
+
+    // Convert '\r' to "\r", '\n' to "\n"
+    for (size_t i = 0; i < log.Len(); ++i)
+    {
+        if (log.GetChar(i) == _T('\r'))
+        {
+            log.SetChar(i, _T('\\'));
+            log.insert(++i, 1, _T('r'));
+        }
+        else if (log.GetChar(i) == _T('\n'))
+        {
+            log.SetChar(i, _T('\\'));
+            log.insert(++i, 1, _T('n'));
+        }
+    }
+
     wxGetApp().GetFrame()->DoLog(log);
 }
 
