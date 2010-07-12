@@ -50,6 +50,8 @@ static wxRegEx reThreadSwitch2(_T("^\\[Switching to thread .*\\]#0[ \t]+(0x[A-Fa
 #endif
 static wxRegEx reBreak2(_T("^(0x[A-Fa-f0-9]+) in (.*) from (.*)"));
 static wxRegEx reBreak3(_T("^(0x[A-Fa-f0-9]+) in (.*)"));
+// Catchpoint 1 (exception thrown), 0x00007ffff7b982b0 in __cxa_throw () from /usr/lib/gcc/x86_64-pc-linux-gnu/4.4.4/libstdc++.so.6
+static wxRegEx reCatchThrow(_T("^Catchpoint ([0-9]+) \\(exception thrown\\), (0x[0-9a-f]+) in (.+) from (.+)$"));
 
 // easily match cygwin paths
 //static wxRegEx reCygwin(_T("/cygdrive/([A-Za-z])/"));
@@ -215,6 +217,8 @@ void GDB_driver::Prepare(ProjectBuildTarget* target, bool isConsole)
     QueueCommand(new DebuggerCmd(this, _T("set print asm-demangle on")));
     // unwind stack on signal
     QueueCommand(new DebuggerCmd(this, _T("set unwindonsignal on")));
+    // disalbe result string truncations
+    QueueCommand(new DebuggerCmd(this, wxT("set print elements -1")));
 
     // want debug events
     if(platform::windows)
@@ -1075,6 +1079,15 @@ void GDB_driver::ParseOutput(const wxString& output)
                 m_Cursor.file=_T("");
                 m_Cursor.function= reBreak3.GetMatch(lines[i], 2);
                 m_Cursor.address = reBreak3.GetMatch(lines[i], 1);
+                m_Cursor.line = -1;
+                m_Cursor.changed = true;
+                m_needsUpdate = true;
+            }
+            else if (reCatchThrow.Matches(lines[i]) )
+            {
+                m_Cursor.file = reCatchThrow.GetMatch(lines[i], 4);
+                m_Cursor.function= reCatchThrow.GetMatch(lines[i], 3);
+                m_Cursor.address = reCatchThrow.GetMatch(lines[i], 2);
                 m_Cursor.line = -1;
                 m_Cursor.changed = true;
                 m_needsUpdate = true;
