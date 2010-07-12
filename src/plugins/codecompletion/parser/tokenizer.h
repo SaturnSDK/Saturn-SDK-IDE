@@ -45,18 +45,30 @@ WX_DECLARE_HASH_MAP(wxString, wxString, HashForWxStringMap, EqualForWxStringMap,
 
 enum TokenizerState
 {
-    tsSkipEqual        = 0x0001,
-    tsSkipQuestion     = 0x0002,
-    tsSkipSubScrip     = 0x0004,
-    tsSingleAngleBrace = 0x0008,
-    tsReadRawExpression= 0x0010,
+    tsSkipEqual         = 0x0001,
+    tsSkipQuestion      = 0x0002,
+    tsSkipSubScrip      = 0x0004,
+    tsSingleAngleBrace  = 0x0008,
+    tsReadRawExpression = 0x0010,
 
-    tsSkipNone         = 0x1000,
+    tsSkipNone          = 0x1000,
     // convenient masks
-    tsSkipUnWanted     = tsSkipEqual    | tsSkipQuestion | tsSkipSubScrip,
-    tsTemplateArgument = tsSkipUnWanted | tsSingleAngleBrace
+    tsSkipUnWanted      = tsSkipEqual    | tsSkipQuestion | tsSkipSubScrip,
+    tsTemplateArgument  = tsSkipUnWanted | tsSingleAngleBrace
 };
 
+enum PreprocessorType
+{
+    ptIf                = 0x0001,   // #if
+    ptIfdef             = 0x0002,   // #ifdef
+    ptIfndef            = 0x0003,   // #ifndef
+    ptElif              = 0x0004,   // #elif
+    ptElifdef           = 0x0005,   // #elifdef
+    ptElifndef          = 0x0006,   // #elifndef
+    ptElse              = 0x0007,   // #else
+    ptEndif             = 0x0008,   // #endif
+    ptOthers            = 0x0009,   // #include, #define ...
+};
 
 struct TokenizerOptions
 {
@@ -162,7 +174,10 @@ public:
     /** return the string from the current position to the end of current line, in most case, this
      * function is used in handling #define, use with care outside this class!
      */
-    wxString ReadToEOL(bool nestBraces = true, bool stripComment = false); // use with care outside this class!
+    wxString ReadToEOL(bool nestBraces = true, bool stripComment = true); // use with care outside this class!
+
+    /** Read all tokens from the current position to the end of current line */
+    void ReadToEOL(wxArrayString& tokens);
 
     /** // the argument must be one of: ( [ < { */
     wxString ReadBlock(const wxChar& leftBrace);
@@ -371,12 +386,6 @@ private:
     /** Do the Macro replacement according to the macro replacement rules */
     wxString MacroReplace(const wxString str);
 
-    /** Get the value of pre-processor
-      * @param 'found' MUST BE Initialized to false, 'value' MUST BE Initialized to -1
-      * @return finded or not)
-      */
-    void GetPreprocessorValue(const wxString& token, bool& found, long& value);
-
     /** Judge what is the first block
       * If call this function, it will call 'SkipToEOL(false, true)' final.
       */
@@ -395,11 +404,14 @@ private:
       */
     void SkipToEndConditionPreprocessor();
 
+    /** Get current condition preprocessor type */
+    PreprocessorType GetPreprocessorType();
+
     /** handle the proprocessor directive:
       * #ifdef XXX or #endif or #if or #elif or...
       * If handled condition preprocessor, return true; if Un-condition preprocessor, return false
       */
-    bool HandleConditionPreprocessor();
+    void HandleConditionPreprocessor(const PreprocessorType type);
 
     /** Tokenizer options specify the current skipping option */
     TokenizerOptions m_TokenizerOptions;

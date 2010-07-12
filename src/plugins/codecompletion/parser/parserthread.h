@@ -262,6 +262,15 @@ class ParserThread : public cbThreadedTask
         /** Break the args into substring with "," and store them in results */
         void DecomposeString(const wxString& args, wxArrayString& results);
 
+        /** Replace defval from normals to actuals */
+        bool ReplaceDefineVal(const wxArrayString& normals, const wxArrayString& actuals, wxString& defval);
+
+        /** Get level from a buffer */
+        int GetLevel(const wxString& buffer);
+
+        /** Do real handle macro parse */
+        void DoHandleMacro(Token* tk, const wxString& peek, int& level);
+
         /** if we regard the parserThread class as a syntax anilyzer, then the Tokenizer class is
           * regard as the lexer, which always feeds a wxString by calling m_Tokenizer.GetToken()
           */
@@ -339,6 +348,9 @@ class ParserThread : public cbThreadedTask
 
         /** holds current template agrument(s) when a template occurs */
         wxString m_TemplateArgument;
+
+        /**  a wxString holding the replaced function-like macro */
+        wxString             m_Macro;
 };
 
 #endif // PARSERTHREAD_H
