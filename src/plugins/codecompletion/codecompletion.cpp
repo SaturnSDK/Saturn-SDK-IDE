@@ -214,11 +214,6 @@ void CodeCompletion::LoadTokenReplacements()
         Tokenizer::SetReplacementString(_T("_STD_END"),                        _T("}"));
         Tokenizer::SetReplacementString(_T("_STDEXT_BEGIN"),                   _T("-namespace std {"));
         Tokenizer::SetReplacementString(_T("_STDEXT_END"),                     _T("}"));
-
-        // for wxWidgets
-        Tokenizer::SetReplacementString(_T("WXDLLIMPEXP_DATA"),                _T("*"));
-        Tokenizer::SetReplacementString(_T("WXDLLIMPEXP_DATA_BASE"),           _T("*"));
-        Tokenizer::SetReplacementString(_T("WXDLLIMPEXP_DATA_CORE"),           _T("*"));
     }
     else
         cfg->Read(_T("token_replacements"), &repl);

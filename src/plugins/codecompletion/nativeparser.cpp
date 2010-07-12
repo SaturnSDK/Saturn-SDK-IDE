@@ -1184,7 +1184,7 @@ void NativeParser::ReparseProject(cbProject* project, Parser* parser)
     wxArrayString sources;
 
     ConfigManager* cfg = Manager::Get()->GetConfigManager(_T("code_completion"));
-    wxStringTokenizer tkz(cfg->Read(_T("/up_front_headers"), _T("<cstddef>, <wx/defs.h>, <wx/toplevel.h>, \"pch.h\", \"sdk.h\", \"stdafx.h\"")), _T(","));
+    wxStringTokenizer tkz(cfg->Read(_T("/up_front_headers"), _T("<cstddef>, <wx/defs.h>, <wx/dlimpexp.h>, <wx/toplevel.h>, \"pch.h\", \"sdk.h\", \"stdafx.h\"")), _T(","));
     typedef std::map<int, wxString> FrontMap;
     FrontMap frontMap;
     FrontMap frontTempMap;

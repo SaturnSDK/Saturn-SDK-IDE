@@ -1200,6 +1200,7 @@ bool Tokenizer::HandleConditionPreprocessor()
 
 void Tokenizer::SpliteMacroActualArgument(wxArrayString& results)
 {
+    const unsigned int savedTokenIndex = m_TokenIndex;
     UngetToken();
     m_PeekAvailable = false; // as the peek is already parsed, we need to reparse the peek string
 
@@ -1213,7 +1214,7 @@ void Tokenizer::SpliteMacroActualArgument(wxArrayString& results)
 
     wxString testStr;
     wxString piece;
-    while (NotEOF())
+    while (m_TokenIndex < savedTokenIndex)
     {
         testStr = DoGetToken();
         if (testStr == _T(","))

@@ -124,7 +124,7 @@
                         <border>8</border>
                         <object class="wxTextCtrl" name="txtUpFrontHeaders">
                             <style>wxTE_MULTILINE</style>
-                            <value>&lt;cstddef&gt;, &lt;wx/defs.h&gt;, &lt;wx/toplevel.h&gt;, &quot;pch.h&quot;, &quot;sdk.h&quot;, &quot;stdafx.h&quot;</value>
+                            <value>&lt;cstddef&gt;, &lt;wx/defs.h&gt;, &lt;wx/dlimpexp.h&gt;, &lt;wx/toplevel.h&gt;, &quot;pch.h&quot;, &quot;sdk.h&quot;, &quot;stdafx.h&quot;</value>
                             <maxlength>0</maxlength>
                         </object>
                     </object>
