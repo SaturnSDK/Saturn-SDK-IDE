@@ -33,6 +33,7 @@
 #endif
 
 #define PARSER_DEBUG_OUTPUT 0
+#define PARSER_PROFILE_TEST 0
 
 #if PARSER_DEBUG_OUTPUT
     #define TRACE(format, args...)\
@@ -70,7 +71,8 @@ Parser::Parser(wxEvtHandler* parent)
     m_BatchTimer(this,BATCH_TIMER_ID),
     m_StopWatchRunning(false),
     m_LastStopWatchTime(0),
-    m_IgnoreThreadEvents(false)
+    m_IgnoreThreadEvents(false),
+    m_IsBatchParseDone(false)
 {
     m_pTokensTree = new(std::nothrow) TokensTree;
     m_pTempTokensTree = new(std::nothrow) TokensTree;
@@ -293,6 +295,8 @@ void Parser::AddBatchParse(const wxArrayString& filenames, bool isUpFront)
     if (filenames.IsEmpty() || m_IsParsing)
         return;
 
+    StartStopWatch();
+
     if (isUpFront)
         m_IsUpFront = true;
 
@@ -303,6 +307,7 @@ void Parser::AddBatchParse(const wxArrayString& filenames, bool isUpFront)
             m_UpFrontHeaders.Add(filenames[i]);
     }
 
+    EndStopWatch();
     m_IsUpFront = false;
 }
 
@@ -358,7 +363,11 @@ bool Parser::Parse(const wxString& bufferOrFilename, bool isLocal, ParserThreadO
         ParserThread* thread = new(std::nothrow) ParserThread(this, buffOrFile, isLocal, opts, m_pTokensTree);
         if (!thread)
             return false;
+#if !PARSER_PROFILE_TEST
         if (opts.useBuffer)
+#else
+        if (true)
+#endif
         {
             result = thread->Parse();
             LinkInheritance(true);
@@ -758,6 +767,7 @@ void Parser::OnAllThreadsDone(CodeBlocksEvent& event)
     {
         m_BatchTimer.Start(1, wxTIMER_ONE_SHOT);
     }
+#if !PARSER_PROFILE_TEST
     else if (!m_UpFrontHeaders.IsEmpty())
     {
         // Part.1 Set m_IsParsing to false
@@ -779,6 +789,7 @@ void Parser::OnAllThreadsDone(CodeBlocksEvent& event)
         // Part.6 Start parsing
         StartParsing();
     }
+#endif
     else
     {
         if (m_NeedsReparse)
@@ -786,6 +797,7 @@ void Parser::OnAllThreadsDone(CodeBlocksEvent& event)
 
         EndStopWatch();
         m_IsParsing = false;
+        m_IsBatchParseDone = true;
         PostParserEvent(PARSER_END);
     }
 }
@@ -859,7 +871,10 @@ void Parser::EndStopWatch()
     {
         m_StopWatch.Pause();
         m_StopWatchRunning = false;
-        m_LastStopWatchTime = m_StopWatch.Time();
+        if (m_IsBatchParseDone)
+            m_LastStopWatchTime = m_StopWatch.Time();
+        else
+            m_LastStopWatchTime += m_StopWatch.Time();
     }
 }
 

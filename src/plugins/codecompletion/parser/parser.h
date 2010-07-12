@@ -220,6 +220,7 @@ class Parser : public wxEvtHandler
         bool                           m_IgnoreThreadEvents;
         wxString                       m_Project;
         wxArrayString                  m_UpFrontHeaders;
+        bool                           m_IsBatchParseDone;
 
         DECLARE_EVENT_TABLE()
 };
