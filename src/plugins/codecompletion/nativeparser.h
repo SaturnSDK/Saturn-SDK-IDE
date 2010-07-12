@@ -157,6 +157,8 @@ class NativeParser : public wxEvtHandler
         void OnEditorClosed(EditorBase* editor);
         void OnTimerEditorActivated(wxTimerEvent& event);
         void OnTimerRestartParsing(wxTimerEvent& event);
+        void OnTimerAddFileToParser(wxTimerEvent& event);
+        void OnTimerReparseFile(wxTimerEvent& event);
 
         bool SkipWhitespaceForward(cbEditor* editor, int& pos);
         bool SkipWhitespaceBackward(cbEditor* editor, int& pos);
@@ -168,7 +170,7 @@ class NativeParser : public wxEvtHandler
         {
             cbProject* project;
             Parser* parser;
-            wxString file;
+            wxArrayString files;
             ParsingType type;
         };
 
@@ -198,9 +200,15 @@ class NativeParser : public wxEvtHandler
 
         wxTimer              m_TimerEditorActivated;
         wxTimer              m_TimerRestartParsing;
+        wxTimer              m_TimerAddFileToParser;
+        wxTimer              m_TimerReparseFile;
         cbProject*           m_LastProject;
         EditorBase*          m_LastEditor;
         wxImageList*         m_pImageList;
+        ParsingNode          m_AddFileToParser;
+
+        typedef std::map<Parser*, ParsingNode> ReparseFileMap;
+        ReparseFileMap       m_ReparseFileMap;
 
         DECLARE_EVENT_TABLE()
 };

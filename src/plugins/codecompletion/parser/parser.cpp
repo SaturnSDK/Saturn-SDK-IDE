@@ -483,6 +483,9 @@ bool Parser::Reparse(const wxString& filename, bool isLocal)
     if (!Done())
         return false; // if still parsing, exit with error
 
+    if (m_Timer.IsRunning())
+        m_Timer.Stop();
+
     wxString file = UnixFilename(filename);
     if (isLocal)
         m_LocalFiles.insert(filename);

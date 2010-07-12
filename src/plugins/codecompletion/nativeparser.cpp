@@ -49,11 +49,15 @@ bool s_DebugSmartSense = false;
 const wxString g_StartHereTitle = _("Start here");
 int idTimerEditorActivated = wxNewId();
 int idTimerRestartParsing = wxNewId();
+int idTimerAddFileToParser = wxNewId();
+int idTimerReparseFile = wxNewId();
 int PARSER_END_SWITCH = wxNewId();
 int PARSER_END_RESTART_PARSING = wxNewId();
 
 #define EDITOR_ACTIVATED_HANDLE_DELAY   150
 #define RESTART_PARSING_DELAY           500
+#define ADD_FILE_TO_PARSER_DELAY        200
+#define REPARSE_FILE_DELAY              200 // *MUST* < reparse_timer_delay
 
 BEGIN_EVENT_TABLE(NativeParser, wxEvtHandler)
 //    EVT_MENU(THREAD_START, NativeParser::OnThreadStart)
@@ -61,6 +65,8 @@ BEGIN_EVENT_TABLE(NativeParser, wxEvtHandler)
     EVT_MENU(PARSER_END, NativeParser::OnParserEnd)
     EVT_TIMER(idTimerEditorActivated, NativeParser::OnTimerEditorActivated)
     EVT_TIMER(idTimerRestartParsing, NativeParser::OnTimerRestartParsing)
+    EVT_TIMER(idTimerAddFileToParser, NativeParser::OnTimerAddFileToParser)
+    EVT_TIMER(idTimerReparseFile, NativeParser::OnTimerReparseFile)
 END_EVENT_TABLE()
 
 NativeParser::NativeParser() :
@@ -74,6 +80,8 @@ NativeParser::NativeParser() :
     m_LastAISearchWasGlobal(false),
     m_TimerEditorActivated(this, idTimerEditorActivated),
     m_TimerRestartParsing(this, idTimerRestartParsing),
+    m_TimerAddFileToParser(this, idTimerAddFileToParser),
+    m_TimerReparseFile(this, idTimerReparseFile),
     m_LastProject(NULL),
     m_LastEditor(NULL),
     m_pImageList(0L)
@@ -986,7 +994,7 @@ const Parser* NativeParser::AddOrChangeParser(cbProject* project, bool useCache)
         return parser;
     }
 
-    ParsingNode node = { project, parser, wxEmptyString, ptAddParser };
+    ParsingNode node = { project, parser, wxArrayString(), ptAddParser };
     m_WaitParsingList.push_back(node);
     if (doItNow)
     {
@@ -1086,6 +1094,28 @@ bool NativeParser::SwitchParser(cbProject* project, Parser* parser)
     return true;
 }
 
+void NativeParser::OnTimerAddFileToParser(wxTimerEvent& event)
+{
+    const bool doItNow = m_WaitParsingList.empty();
+    m_WaitParsingList.push_back(m_AddFileToParser);
+
+    if (doItNow)
+    {
+        Parser* parser = m_AddFileToParser.parser;
+        wxArrayString& files = m_AddFileToParser.files;
+        SwitchParser(m_AddFileToParser.project, parser);
+        parser->PrepareParsing();
+        for (size_t i = 0; i < files.GetCount(); ++i)
+            parser->AddParse(files[i]);
+        parser->StartParsing(false);
+    }
+
+    m_AddFileToParser.files.Clear();
+    m_AddFileToParser.parser = NULL;
+    m_AddFileToParser.project = NULL;
+    m_AddFileToParser.type = ptUnknown;
+}
+
 void NativeParser::AddFileToParser(cbProject* project, const wxString& filename)
 {
     Parser* parser = GetParserByProject(project);
@@ -1105,17 +1135,17 @@ void NativeParser::AddFileToParser(cbProject* project, const wxString& filename)
     if (parser->IsFileParsed(fn.GetFullPath()))
         return;
 
-    const bool doItNow = m_WaitParsingList.empty();
-    ParsingNode node = { project, parser, fn.GetFullPath(), ptAddFileToParser };
-    m_WaitParsingList.push_back(node);
-
-    if (doItNow)
+    if (m_TimerAddFileToParser.IsRunning())
+        m_TimerAddFileToParser.Stop();
+    else
     {
-        SwitchParser(project, parser);
-        parser->PrepareParsing();
-        parser->AddParse(fn.GetFullPath());
-        parser->StartParsing(false);
+        m_AddFileToParser.project = project;
+        m_AddFileToParser.parser = parser;
+        m_AddFileToParser.type = ptAddFileToParser;
     }
+
+    m_AddFileToParser.files.Add(fn.GetFullPath());
+    m_TimerAddFileToParser.Start(ADD_FILE_TO_PARSER_DELAY, wxTIMER_ONE_SHOT);
 }
 
 void NativeParser::RemoveFileFromParser(cbProject* project, const wxString& filename)
@@ -1123,6 +1153,29 @@ void NativeParser::RemoveFileFromParser(cbProject* project, const wxString& file
     Parser* parser = GetParserByProject(project);
     if (parser)
         parser->RemoveFile(filename);
+}
+
+void NativeParser::OnTimerReparseFile(wxTimerEvent& event)
+{
+    const bool doItNow = m_WaitParsingList.empty();
+
+    ParsingNode* firstNode = NULL;
+    for (ReparseFileMap::iterator it = m_ReparseFileMap.begin(); it != m_ReparseFileMap.end(); ++it)
+    {
+        firstNode = &it->second;
+        m_WaitParsingList.push_back(it->second);
+    }
+
+    if (doItNow && firstNode)
+    {
+        Parser* parser = firstNode->parser;
+        wxArrayString& files = firstNode->files;
+        SwitchParser(firstNode->project, parser);
+        for (size_t i = 0; i < files.GetCount(); ++i)
+            parser->Reparse(files[i]);
+    }
+
+    m_ReparseFileMap.clear();
 }
 
 bool NativeParser::ReparseFile(const wxString& filename)
@@ -1135,16 +1188,22 @@ bool NativeParser::ReparseFile(const wxString& filename)
         return false;
 
     cbProject* project = GetProjectByParser(parser);
-    const bool doItNow = m_WaitParsingList.empty();
+    if (!project)
+        return false;
 
-    ParsingNode node = { project, parser, filename, ptReparseFile };
-    m_WaitParsingList.push_back(node);
+    if (m_TimerReparseFile.IsRunning())
+        m_TimerReparseFile.Stop();
 
-    if (doItNow)
+    ReparseFileMap::iterator it = m_ReparseFileMap.find(parser);
+    if (it != m_ReparseFileMap.end())
+        it->second.files.Add(filename);
+    else
     {
-        SwitchParser(project, parser);
-        parser->Reparse(filename);
+        ParsingNode node = { project, parser, wxArrayString(1, &filename), ptReparseFile };
+        m_ReparseFileMap[parser] = node;
     }
+
+    m_TimerReparseFile.Start(REPARSE_FILE_DELAY, wxTIMER_ONE_SHOT);
 
     return true;
 }
@@ -3231,8 +3290,8 @@ void NativeParser::OnParserEnd(wxCommandEvent& event)
         }
         else if (curType == ptAddFileToParser)
         {
-            Manager::Get()->GetLogManager()->DebugLog(F(_("Add file %s to parser for Project %s"),
-                                                        m_WaitParsingList.front().file.wx_str(), project ?
+            Manager::Get()->GetLogManager()->DebugLog(F(_("Add %d files to parser for Project %s"),
+                                                        m_WaitParsingList.front().files.GetCount(), project ?
                                                         project->GetTitle().wx_str() : _T("*NONE*")));
         }
 
@@ -3308,7 +3367,9 @@ void NativeParser::OnParserEnd(wxCommandEvent& event)
         {
             Parser* parser = m_WaitParsingList.front().parser;
             SwitchParser(m_WaitParsingList.front().project, parser);
-            parser->Reparse(m_WaitParsingList.front().file);
+            wxArrayString& files = m_WaitParsingList.front().files;
+            for (size_t i = 0; i < files.GetCount(); ++i)
+                parser->Reparse(files[i]);
             doNextTask = true;
         }
         else if (nextType == ptAddParser)
@@ -3324,7 +3385,9 @@ void NativeParser::OnParserEnd(wxCommandEvent& event)
             Parser* parser = m_WaitParsingList.front().parser;
             SwitchParser(m_WaitParsingList.front().project, parser);
             parser->PrepareParsing();
-            parser->AddParse(m_WaitParsingList.front().file);
+            wxArrayString& files = m_WaitParsingList.front().files;
+            for (size_t i = 0; i < files.GetCount(); ++i)
+                parser->AddParse(files[i]);
             parser->StartParsing(false);
             doNextTask = true;
         }
@@ -3506,7 +3569,7 @@ bool NativeParser::VerifyParserByFilename(const wxString& filename)
         return false;
     if (Done() || m_pParser->IsFileParsed(filename))
         return true;
-    else if (GetParsingType() == ptReparseFile && m_WaitParsingList.front().file == filename)
+    else if (GetParsingType() == ptReparseFile && m_WaitParsingList.front().files[0] == filename)
         return true;
     else
         return false;
