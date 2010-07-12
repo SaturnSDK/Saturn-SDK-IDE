@@ -175,7 +175,6 @@ GDBWatch* AddChild(GDBWatch &parent, wxString const &str_name)
     {
         child = new GDBWatch(str_name);
         parent.AddChild(child);
-        index = parent.GetChildCount();
     }
     child->MarkAsRemoved(false);
     return child;
@@ -355,5 +354,148 @@ bool ParseGDBWatchValue(GDBWatch &watch, wxString const &value)
         watch.RemoveChildren();
         return true;
     }
+    return false;
+}
+
+//
+//    struct HWND__ * 0x7ffd8000
+//
+//    struct tagWNDCLASSEXA
+//       +0x000 cbSize           : 0x7c8021b5
+//       +0x004 style            : 0x7c802011
+//       +0x008 lpfnWndProc      : 0x7c80b529     kernel32!GetModuleHandleA+0
+//       +0x00c cbClsExtra       : 0
+//       +0x010 cbWndExtra       : 2147319808
+//       +0x014 hInstance        : 0x00400000
+//       +0x018 hIcon            : 0x0012fe88
+//       +0x01c hCursor          : 0x0040a104
+//       +0x020 hbrBackground    : 0x689fa962
+//       +0x024 lpszMenuName     : 0x004028ae  "???"
+//       +0x028 lpszClassName    : 0x0040aa30  "CodeBlocksWindowsApp"
+//       +0x02c hIconSm          : (null)
+//
+//    char * 0x0040aa30
+//     "CodeBlocksWindowsApp"
+//
+//    char [16] 0x0012fef8
+//    116 't'
+//
+//    int [10] 0x0012fee8
+//    0
+
+bool ParseCDBWatchValue(GDBWatch &watch, wxString const &value)
+{
+    wxArrayString lines = GetArrayFromString(value, wxT('\n'));
+    watch.SetDebugValue(value);
+    watch.MarkChildsAsRemoved();
+
+    if (lines.GetCount() == 0)
+        return false;
+
+    static wxRegEx unexpected_error(wxT("^Unexpected token '.+'$"));
+    static wxRegEx resolve_error(wxT("^Couldn't resolve error at '.+'$"));
+
+    // search for errors
+    for (unsigned ii = 0; ii < lines.GetCount(); ++ii)
+    {
+        if (unexpected_error.Matches(lines[ii])
+            || resolve_error.Matches(lines[ii])
+            || lines[ii] == wxT("No pointer for operator* '<EOL>'"))
+        {
+            watch.SetValue(lines[ii]);
+            return true;
+        }
+    }
+
+    if (lines.GetCount() == 1)
+    {
+        wxArrayString tokens = GetArrayFromString(lines[0], wxT(' '));
+        if (tokens.GetCount() < 2)
+            return false;
+
+        int type_token = 0;
+        if (tokens[0] == wxT("class") || tokens[0] == wxT("class"))
+            type_token = 1;
+
+        if (static_cast<int>(tokens.GetCount()) < type_token + 2)
+            return false;
+
+        int value_start = type_token + 1;
+        if (tokens[type_token + 1] == wxT('*'))
+        {
+            watch.SetType(tokens[type_token] + tokens[type_token + 1]);
+            value_start++;
+        }
+        else
+            watch.SetType(tokens[type_token]);
+
+        if(value_start >= static_cast<int>(tokens.GetCount()))
+            return false;
+
+        watch.SetValue(tokens[value_start]);
+        watch.RemoveMarkedChildren();
+        return true;
+    }
+    else
+    {
+        wxArrayString tokens = GetArrayFromString(lines[0], wxT(' '));
+
+        if (tokens.GetCount() < 2)
+            return false;
+
+        bool set_type = true;
+        if (tokens.GetCount() > 2)
+        {
+            if (tokens[0] == wxT("struct") || tokens[0] == wxT("class"))
+            {
+                if (tokens[2] == wxT('*') || tokens[2].StartsWith(wxT("[")))
+                {
+                    watch.SetType(tokens[1] + tokens[2]);
+                    set_type = false;
+                }
+            }
+            else
+            {
+                if (tokens[1] == wxT('*') || tokens[1].StartsWith(wxT("[")))
+                {
+
+                    watch.SetType(tokens[0] + tokens[1]);
+                    watch.SetValue(lines[1]);
+                    return true;
+                }
+            }
+        }
+
+        if (set_type)
+            watch.SetType(tokens[1]);
+
+        static wxRegEx class_line(wxT("[ \\t]*\\+(0x[0-9a-f]+)[ \\t]([a-zA-Z0-9_]+)[ \\t]+:[ \\t]+(.+)"));
+        if (!class_line.IsValid())
+        {
+            int *p = NULL;
+            *p = 0;
+        }
+        else
+        {
+            if (!class_line.Matches(wxT("   +0x000 a                : 10")))
+            {
+                int *p = NULL;
+                *p = 0;
+            }
+        }
+
+        for (unsigned ii = 1; ii < lines.GetCount(); ++ii)
+        {
+            if (class_line.Matches(lines[ii]))
+            {
+                GDBWatch *w = AddChild(watch, class_line.GetMatch(lines[ii], 2));
+                w->SetValue(class_line.GetMatch(lines[ii], 3));
+                w->SetDebugValue(lines[ii]);
+            }
+        }
+        watch.RemoveMarkedChildren();
+        return true;
+    }
+
     return false;
 }

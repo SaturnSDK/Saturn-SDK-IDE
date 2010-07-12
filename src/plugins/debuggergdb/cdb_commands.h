@@ -14,10 +14,11 @@
 #include "debugger_defs.h"
 #include "debuggergdb.h"
 #include "debuggermanager.h"
-#include "debuggertree.h"
+//#include "debuggertree.h"
 #include "backtracedlg.h"
 #include "cpuregistersdlg.h"
 #include "disassemblydlg.h"
+#include "parsewatchvalue.h"
 
 static wxRegEx reWatch(_T("(\\+0x[A-Fa-f0-9]+ )"));
 static wxRegEx reBT1(_T("([0-9]+) ([A-Fa-f0-9]+) ([A-Fa-f0-9]+) ([^[]*)"));
@@ -30,6 +31,9 @@ static wxRegEx reDisassembly(_T("^[0-9]+[ \t]+([A-Fa-f0-9]+)[ \t]+[A-Fa-f0-9]+[ 
 // 00 0012fe98 00401426 Win32GUI!WinMain+0x89 [c:\devel\tmp\win32 test\main.cpp @ 55]
 static wxRegEx reDisassemblyFile(_T("[0-9]+[ \t]+([A-Fa-f0-9]+)[ \t]+[A-Fa-f0-9]+[ \t]+(.*)\\[([A-z]:)(.*) @ ([0-9]+)\\]"));
 static wxRegEx reDisassemblyFunc(_T("^\\(([A-Fa-f0-9]+)\\)[ \t]+"));
+
+// 01 0012ff68 00404168 cdb_test!main+0xae [c:\dev\projects\tests\cdb_test\main.cpp @ 21]
+static wxRegEx reSwitchFrame(wxT("[ \\t]*([0-9]+)[ \\t]([0-9a-z]+)[ \\t](.+)[ \\t]\\[(.+)[ \\t]@[ \\t]([0-9]+)\\][ \\t]*"));
 
 /**
   * Command to add a search directory for source files in debugger's paths.
@@ -247,83 +251,60 @@ class CdbCmd_RemoveBreakpoint : public DebuggerCmd
         DebuggerBreakpoint* m_BP;
 };
 
-/**
-  * Command to get info about local frame variables.
-  */
-class CdbCmd_InfoLocals : public DebuggerCmd
-{
-        DebuggerTree* m_pDTree;
-    public:
-        /** @param tree The tree to display the locals. */
-        CdbCmd_InfoLocals(DebuggerDriver* driver, DebuggerTree* dtree)
-            : DebuggerCmd(driver),
-            m_pDTree(dtree)
-        {
-            m_Cmd << _T("dv");
-        }
-        void ParseOutput(const wxString& output)
-        {
-            if (output.StartsWith(_T("Unable to enumerate locals")))
-                return;
-            wxString locals;
-            locals << _T("Local variables\n");
-            wxArrayString lines = GetArrayFromString(output, _T('\n'));
-            for (unsigned int i = 0; i < lines.GetCount(); ++i)
-                locals << _T(' ') << lines[i].Strip(wxString::both) << _T('\n');
-// FIXME (obfuscated#): Should reimplement
-//            m_pDTree->BuildTree(0, locals, wsfCDB);
-        }
-};
+///**
+//  * Command to get info about local frame variables.
+//  */
+//class CdbCmd_InfoLocals : public DebuggerCmd
+//{
+//        DebuggerTree* m_pDTree;
+//    public:
+//        /** @param tree The tree to display the locals. */
+//        CdbCmd_InfoLocals(DebuggerDriver* driver, DebuggerTree* dtree)
+//            : DebuggerCmd(driver),
+//            m_pDTree(dtree)
+//        {
+//            m_Cmd << _T("dv");
+//        }
+//        void ParseOutput(const wxString& output)
+//        {
+//            if (output.StartsWith(_T("Unable to enumerate locals")))
+//                return;
+//            wxString locals;
+//            locals << _T("Local variables\n");
+//            wxArrayString lines = GetArrayFromString(output, _T('\n'));
+//            for (unsigned int i = 0; i < lines.GetCount(); ++i)
+//                locals << _T(' ') << lines[i].Strip(wxString::both) << _T('\n');
+//// FIXME (obfuscated#): Should reimplement
+////            m_pDTree->BuildTree(0, locals, wsfCDB);
+//        }
+//};
 
 /**
   * Command to get info about a watched variable.
   */
 class CdbCmd_Watch : public DebuggerCmd
 {
-        DebuggerTree* m_pDTree;
-        Watch* m_pWatch;
+        GDBWatch::Pointer m_watch;
     public:
-        /** @param tree The tree to display the watch. */
-        CdbCmd_Watch(DebuggerDriver* driver, DebuggerTree* dtree, Watch* watch)
+        CdbCmd_Watch(DebuggerDriver* driver, GDBWatch::Pointer const &watch)
             : DebuggerCmd(driver),
-            m_pDTree(dtree),
-            m_pWatch(watch)
+            m_watch(watch)
         {
-            if (m_pWatch->format != Undefined)
-                m_pDriver->DebugLog(_T("Watch formats are not supported by this driver"));
-            m_Cmd << _T("?? ") << m_pWatch->keyword;
+            wxString symbol;
+            m_watch->GetSymbol(symbol);
+            m_Cmd << wxT("?? ") << symbol;
         }
+
         void ParseOutput(const wxString& output)
         {
-//            struct HWND__ * 0x7ffd8000
-//
-//            struct tagWNDCLASSEXA
-//               +0x000 cbSize           : 0x7c8021b5
-//               +0x004 style            : 0x7c802011
-//               +0x008 lpfnWndProc      : 0x7c80b529     kernel32!GetModuleHandleA+0
-//               +0x00c cbClsExtra       : 0
-//               +0x010 cbWndExtra       : 2147319808
-//               +0x014 hInstance        : 0x00400000
-//               +0x018 hIcon            : 0x0012fe88
-//               +0x01c hCursor          : 0x0040a104
-//               +0x020 hbrBackground    : 0x689fa962
-//               +0x024 lpszMenuName     : 0x004028ae  "???"
-//               +0x028 lpszClassName    : 0x0040aa30  "CodeBlocksWindowsApp"
-//               +0x02c hIconSm          : (null)
-//
-//            char * 0x0040aa30
-//             "CodeBlocksWindowsApp"
-
-            // just remove struct offsets
-            wxString lines = output;
-            if (reWatch.Matches(lines))
-                reWatch.ReplaceAll(&lines, wxEmptyString);
-
-            // replace : with =
-            while (lines.Replace(_T(" : "), _T(" = ")))
-                ;
-
-            m_pDTree->BuildTree(m_pWatch, m_pWatch->keyword + _T(" = ") + lines, wsfCDB);
+            if(!ParseCDBWatchValue(*m_watch, output))
+            {
+                wxString symbol;
+                m_watch->GetSymbol(symbol);
+                wxString const &msg = wxT("Parsing CDB output failed for '") + symbol + wxT("'!");
+                m_watch->SetValue(msg);
+                Manager::Get()->GetLogManager()->LogError(msg);
+            }
         }
 };
 
@@ -384,8 +365,9 @@ class CdbCmd_Backtrace : public DebuggerCmd
 {
     public:
         /** @param dlg The backtrace dialog. */
-        CdbCmd_Backtrace(DebuggerDriver* driver)
-            : DebuggerCmd(driver)
+        CdbCmd_Backtrace(DebuggerDriver* driver, bool switchToFirst)
+            : DebuggerCmd(driver),
+            m_SwitchToFirst(switchToFirst)
         {
             m_Cmd << _T("k n");
         }
@@ -404,6 +386,10 @@ class CdbCmd_Backtrace : public DebuggerCmd
             wxArrayString lines = GetArrayFromString(output, _T('\n'));
             if (!lines.GetCount() || !lines[0].Contains(_T("ChildEBP")))
                 return;
+
+            bool firstValid = true;
+            cbStackFrame frameToSwitch;
+
             // start from line 1
             for (unsigned int i = 1; i < lines.GetCount(); ++i)
             {
@@ -426,10 +412,70 @@ class CdbCmd_Backtrace : public DebuggerCmd
                                    reBT2.GetMatch(lines[i], 3));
                     }
                     m_pDriver->GetStackFrames().push_back(sf);
+
+                    if (m_SwitchToFirst && sf.IsValid() && firstValid)
+                    {
+                        firstValid = false;
+                        frameToSwitch = sf;
+                    }
                 }
             }
-//            m_pDriver->DebugLog(output);
             Manager::Get()->GetDebuggerManager()->GetBacktraceDialog()->Reload();
+            if (!firstValid)
+            {
+                Cursor cursor;
+                cursor.file = frameToSwitch.GetFilename();
+                frameToSwitch.GetLine().ToLong(&cursor.line);
+                cursor.address = wxString::Format(wxT("0x%X"), frameToSwitch.GetAddress());
+                cursor.changed = true;
+                m_pDriver->SetCursor(cursor);
+                m_pDriver->NotifyCursorChanged();
+            }
+        }
+    private:
+        bool m_SwitchToFirst;
+};
+
+class CdbCmd_SwitchFrame : public DebuggerCmd
+{
+    public:
+        CdbCmd_SwitchFrame(DebuggerDriver *driver, int frameNumber) :
+            DebuggerCmd(driver)
+        {
+            if (frameNumber < 0)
+                m_Cmd = wxT("k n 1");
+            else
+                m_Cmd = wxString::Format(wxT(".frame %d"), frameNumber);
+        }
+
+        virtual void ParseOutput(const wxString& output)
+        {
+            wxArrayString lines = GetArrayFromString(output, wxT('\n'));
+
+            for (unsigned ii = 0; ii < lines.GetCount(); ++ii)
+            {
+                if (lines[ii].Contains(wxT("ChildEBP")))
+                    continue;
+                else if (reSwitchFrame.Matches(lines[ii]))
+                {
+                    Cursor cursor;
+                    cursor.file = reSwitchFrame.GetMatch(lines[ii], 4);
+                    wxString const &line_str = reSwitchFrame.GetMatch(lines[ii], 5);
+                    if (!line_str.empty())
+                        line_str.ToLong(&cursor.line);
+                    else
+                        cursor.line = -1;
+
+                    cursor.address = reSwitchFrame.GetMatch(lines[ii], 1);
+                    cursor.changed = true;
+                    m_pDriver->SetCursor(cursor);
+                    m_pDriver->NotifyCursorChanged();
+                    Manager::Get()->GetDebuggerManager()->GetBacktraceDialog()->Reload();
+                    break;
+                }
+                else
+                    break;
+            }
         }
 };
 

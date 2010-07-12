@@ -146,8 +146,6 @@ class DebuggerDriver
         virtual bool IsDebuggingStarted() const = 0;
         /** Is the program stopped? */
         virtual bool IsProgramStopped() const { return m_ProgramIsStopped; }
-        /** Get debugger cursor. */
-        virtual const Cursor& GetCursor() const { return m_Cursor; }
         /** Set child PID (debuggee's). Usually set by debugger commands. */
         virtual void SetChildPID(long pid) { m_ChildPID = pid; }
         /** Get the child's (debuggee's) PID. */
@@ -170,17 +168,22 @@ class DebuggerDriver
         const ThreadsContainer & GetThreads() const; ///< returns the thread container with the current list of threads
         ThreadsContainer & GetThreads(); ///< returns the thread container with the current list of threads
 
+        /** Get debugger's cursor. */
+        const Cursor& GetCursor() const { return m_Cursor; }
+        /** Set debugger's cursor. */
+        void SetCursor(const Cursor& cursor) { m_Cursor = cursor; }
+
         void ResetCurrentFrame();
         int GetCurrentFrame() const { return m_currentFrameNo; }
         int GetUserSelectedFrame() const { return m_userSelectedFrameNo; }
         void SetCurrentFrame(int number, bool user_selected);
 
         void NotifyDebuggeeContinued();
+        /** Called by implementations to notify cursor changes. */
+        void NotifyCursorChanged();
     protected:
         /** Called by implementations to reset the cursor. */
-        virtual void ResetCursor();
-        /** Called by implementations to notify cursor changes. */
-        virtual void NotifyCursorChanged();
+        void ResetCursor();
 
         // the debugger plugin
         DebuggerGDB* m_pDBG;

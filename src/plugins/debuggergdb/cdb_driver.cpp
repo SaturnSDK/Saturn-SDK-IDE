@@ -27,7 +27,8 @@ static wxRegEx reBP(_T("Breakpoint ([0-9]+) hit"));
 static wxRegEx reFile(_T("[ \t]([A-z]+.*)[ \t]+\\[([A-z]:)(.*) @ ([0-9]+)\\]"));
 
 CDB_driver::CDB_driver(DebuggerGDB* plugin)
-    : DebuggerDriver(plugin)
+    : DebuggerDriver(plugin),
+    m_IsStarted(false)
 {
     //ctor
 }
@@ -118,19 +119,24 @@ void CDB_driver::Start(bool breakOnEntry)
     QueueCommand(new DebuggerCmd(this, _T("l+o"))); // only source lines
 
     if (!Manager::Get()->GetConfigManager(_T("debugger"))->ReadBool(_T("do_not_run"), false))
+    {
         QueueCommand(new DebuggerCmd(this, _T("g")));
+        m_IsStarted = true;
+    }
 }
 
 void CDB_driver::Stop()
 {
     ResetCursor();
     QueueCommand(new DebuggerCmd(this, _T("q")));
+    m_IsStarted = false;
 }
 
 void CDB_driver::Continue()
 {
     ResetCursor();
     QueueCommand(new DebuggerCmd(this, _T("g")));
+    m_IsStarted = true;
 }
 
 void CDB_driver::Step()
@@ -138,38 +144,41 @@ void CDB_driver::Step()
     ResetCursor();
     QueueCommand(new DebuggerCmd(this, _T("p")));
     // print a stack frame to find out about the file we 've stopped
-    QueueCommand(new DebuggerCmd(this, _T("k n 1")));
+    QueueCommand(new CdbCmd_SwitchFrame(this, -1));
 }
 
 void CDB_driver::StepInstruction()
 {
-    ResetCursor();
     NOT_IMPLEMENTED();
 }
 
 void CDB_driver::StepIn()
 {
     ResetCursor();
-//    QueueCommand(new DebuggerCmd(this, _T("step")));
-    NOT_IMPLEMENTED();
+    QueueCommand(new DebuggerCmd(this, _T("t")));
+    Step();
 }
 
 void CDB_driver::StepOut()
 {
     ResetCursor();
-    NOT_IMPLEMENTED();
+    QueueCommand(new DebuggerCmd(this, _T("gu")));
+    Step();
 }
 
 void CDB_driver::SetNextStatement(const wxString& filename, int line)
 {
-    ResetCursor();
     NOT_IMPLEMENTED();
 }
 
 void CDB_driver::Backtrace()
 {
+    DoBacktrace(false);
+}
+void CDB_driver::DoBacktrace(bool switchToFirst)
+{
     if (Manager::Get()->GetDebuggerManager()->UpdateBacktrace())
-        QueueCommand(new CdbCmd_Backtrace(this));
+        QueueCommand(new CdbCmd_Backtrace(this, switchToFirst));
 }
 
 void CDB_driver::Disassemble()
@@ -184,7 +193,8 @@ void CDB_driver::CPURegisters()
 
 void CDB_driver::SwitchToFrame(size_t number)
 {
-    NOT_IMPLEMENTED();
+    ResetCursor();
+    QueueCommand(new CdbCmd_SwitchFrame(this, number));
 }
 
 void CDB_driver::SetVarValue(const wxString& var, const wxString& value)
@@ -244,6 +254,11 @@ void CDB_driver::EvaluateSymbol(const wxString& symbol, const wxRect& tipRect)
 
 void CDB_driver::UpdateWatches(bool doLocals, bool doArgs, WatchesContainer &watches)
 {
+    for (WatchesContainer::iterator it = watches.begin(); it != watches.end(); ++it)
+        QueueCommand(new CdbCmd_Watch(this, *it));
+
+    QueueCommand(new DbgCmd_UpdateWatchesTree(this));
+
     // FIXME (obfuscated#): reimplement this code
 //    // start updating watches tree
 //    tree->BeginUpdateTree();
@@ -265,7 +280,8 @@ void CDB_driver::UpdateWatches(bool doLocals, bool doArgs, WatchesContainer &wat
 
 void CDB_driver::UpdateWatch(GDBWatch::Pointer const &watch)
 {
-    // FIXME (obfuscated#): implement this
+    QueueCommand(new CdbCmd_Watch(this, watch));
+    QueueCommand(new DbgCmd_UpdateWatchesTree(this));
 }
 
 void CDB_driver::Attach(int /*pid*/)
@@ -312,6 +328,8 @@ void CDB_driver::ParseOutput(const wxString& output)
         return; // come back later
     }
 
+    bool notifyChange = false;
+
     // non-command messages (e.g. breakpoint hits)
     // break them up in lines
     wxArrayString lines = GetArrayFromString(buffer, _T('\n'));
@@ -330,10 +348,12 @@ void CDB_driver::ParseOutput(const wxString& output)
             m_pDBG->BringCBToFront();
 
             Manager::Get()->GetDebuggerManager()->ShowBacktraceDialog();
-            Backtrace();
+            DoBacktrace(true);
             InfoWindow::Display(_("Access violation"), lines[i]);
             break;
         }
+        else if (notifyChange)
+            continue;
 
         // Breakpoint 0 hit
         // >   38:     if (!RegisterClassEx (&wincl))
@@ -358,29 +378,17 @@ void CDB_driver::ParseOutput(const wxString& output)
             else
                 Log(wxString::Format(_T("Breakpoints inconsistency detected!\nNothing known about breakpoint %ld"), bpNum));
             m_Cursor.changed = true;
-            NotifyCursorChanged();
-        }
-        // one stack frame (to access current file; is there another way???)
-        else if (lines[i].Contains(_T("ChildEBP")))
-        {
-            if (reFile.Matches(lines[i + 1]))
-            {
-                ++i; // we 're interested in the next line
-                m_Cursor.address = reFile.GetMatch(lines[i], 1);
-                m_Cursor.file = reFile.GetMatch(lines[i], 2) + reFile.GetMatch(lines[i], 3);
-//                if (m_Cursor.file.Last() == _T(' '))
-//                    m_Cursor.file.RemoveLast(); // see regex reFile for the reason
-                reFile.GetMatch(lines[i], 4).ToLong(&m_Cursor.line);
-                m_Cursor.changed = true;
-                NotifyCursorChanged();
-            }
+            notifyChange = true;
         }
     }
+
+    if (notifyChange)
+        NotifyCursorChanged();
+
     buffer.Clear();
 }
 
 bool CDB_driver::IsDebuggingStarted() const
 {
-    //FIXME (obfuscated#): implement this
-    return false;
+    return m_IsStarted;
 }

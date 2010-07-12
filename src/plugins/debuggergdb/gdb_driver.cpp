@@ -614,7 +614,6 @@ void GDB_driver::CPURegisters()
 void GDB_driver::SwitchToFrame(size_t number)
 {
     ResetCursor();
-    SetCurrentFrame(number, true);
     QueueCommand(new DebuggerCmd(this, wxString::Format(_T("frame %d"), number)));
 }
 

@@ -11,3 +11,4 @@
 
 bool ParseGDBWatchValue(GDBWatch &watch, wxString const &value);
 
+bool ParseCDBWatchValue(GDBWatch &watch, wxString const &value);

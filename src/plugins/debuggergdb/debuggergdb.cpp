@@ -1194,6 +1194,7 @@ void DebuggerGDB::SwitchToFrame(int number)
 {
     if (m_State.HasDriver())
     {
+        m_State.GetDriver()->SetCurrentFrame(number, true);
         m_State.GetDriver()->SwitchToFrame(number);
 
         if(Manager::Get()->GetDebuggerManager()->UpdateBacktrace())

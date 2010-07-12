@@ -53,6 +53,9 @@ class CDB_driver : public DebuggerDriver
         virtual bool IsDebuggingStarted() const;
     protected:
     private:
+        void DoBacktrace(bool switchToFirst);
+    private:
+        bool m_IsStarted;
 };
 
 #endif // CDB_DRIVER_H
