@@ -860,7 +860,23 @@ void ParserThread::DoParse()
                     else
                     {
                         wxString arg = m_Tokenizer.GetToken(); // eat args ()
-                        m_Str = token + arg;
+                        int pos = peek.find(_T("*"));
+                        if (pos != wxNOT_FOUND)
+                        {
+                            if (m_Tokenizer.PeekToken().GetChar(0) == '(')
+                            {
+                                arg.Trim(true).RemoveLast();
+                                //wxString token = arg.Mid(pos+1,)
+                                arg.Remove(0, pos+1);
+                                if (!m_Options.useBuffer || m_Options.bufferSkipBlocks)
+                                {
+                                    // function
+                                    HandleFunction(arg);
+                                }
+                            }
+                        }
+                        else//wxString arg = m_Tokenizer.GetToken(); // eat args ()
+                            m_Str = token + arg;
                     }
                 }
                 else if (peek.GetChar(0) == '(' && m_Options.handleFunctions)
