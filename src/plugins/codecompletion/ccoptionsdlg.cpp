@@ -200,7 +200,7 @@ bool CCOptionsDlg::ValidateReplacementToken(wxString& from, wxString& to)
     return true;
 }
 
-void CCOptionsDlg::OnAddRepl(wxCommandEvent& event)
+void CCOptionsDlg::OnAddRepl(wxCommandEvent& /*event*/)
 {
     wxString key;
     wxString value;
@@ -216,7 +216,7 @@ void CCOptionsDlg::OnAddRepl(wxCommandEvent& event)
     }
 }
 
-void CCOptionsDlg::OnEditRepl(wxCommandEvent& event)
+void CCOptionsDlg::OnEditRepl(wxCommandEvent& /*event*/)
 {
     wxString key;
     wxString value;
@@ -243,7 +243,7 @@ void CCOptionsDlg::OnEditRepl(wxCommandEvent& event)
     }
 }
 
-void CCOptionsDlg::OnDelRepl(wxCommandEvent& event)
+void CCOptionsDlg::OnDelRepl(wxCommandEvent& /*event*/)
 {
     int sel = XRCCTRL(*this, "lstRepl", wxListBox)->GetSelection();
     if (sel == -1)
@@ -274,12 +274,12 @@ void CCOptionsDlg::OnChooseColour(wxCommandEvent& event)
     }
 }
 
-void CCOptionsDlg::OnSliderScroll(wxScrollEvent& event)
+void CCOptionsDlg::OnSliderScroll(wxScrollEvent& /*event*/)
 {
     UpdateSliderLabel();
 }
 
-void CCOptionsDlg::OnUpdateUI(wxUpdateUIEvent& event)
+void CCOptionsDlg::OnUpdateUI(wxUpdateUIEvent& /*event*/)
 {
     bool en = !XRCCTRL(*this, "chkNoCC", wxCheckBox)->GetValue();
     bool auto_launch = XRCCTRL(*this, "chkAutoLaunch", wxCheckBox)->GetValue();

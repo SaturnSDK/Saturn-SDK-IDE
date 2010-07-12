@@ -8,7 +8,10 @@
  * License:   GPL
  **************************************************************/
 
-#include <sdk.h> // Code::Blocks SDK
+#if defined(CB_PRECOMP)
+#include "sdk.h"
+#endif
+//#include <sdk.h> // Code::Blocks SDK
 #ifndef CB_PRECOMP
 	#include <wx/xrc/xmlres.h>
 	//-#include "cbeditor.h"
@@ -267,7 +270,7 @@ void ThreadSearch::OnAttach()
 }
 
 // ----------------------------------------------------------------------------
-void ThreadSearch::OnRelease(bool appShutDown)
+void ThreadSearch::OnRelease(bool /*appShutDown*/)
 // ----------------------------------------------------------------------------
 {
 	// do de-initialization for your plugin
@@ -464,7 +467,7 @@ void ThreadSearch::OnMnuViewThreadSearch(wxCommandEvent& event)
 
 
 // ----------------------------------------------------------------------------
-void ThreadSearch::OnMnuSearchThreadSearch(wxCommandEvent& event)
+void ThreadSearch::OnMnuSearchThreadSearch(wxCommandEvent& WXUNUSED(event))
 // ----------------------------------------------------------------------------
 {
 	if ( !IsAttached() )
@@ -485,7 +488,7 @@ void ThreadSearch::OnMnuSearchThreadSearch(wxCommandEvent& event)
 
 
 // ----------------------------------------------------------------------------
-void ThreadSearch::OnCtxThreadSearch(wxCommandEvent& event)
+void ThreadSearch::OnCtxThreadSearch(wxCommandEvent& WXUNUSED(event))
 // ----------------------------------------------------------------------------
 {
 	if ( !IsAttached() )
@@ -497,7 +500,7 @@ void ThreadSearch::OnCtxThreadSearch(wxCommandEvent& event)
 
 
 // ----------------------------------------------------------------------------
-void ThreadSearch::OnMnuViewThreadSearchUpdateUI(wxUpdateUIEvent& event)
+void ThreadSearch::OnMnuViewThreadSearchUpdateUI(wxUpdateUIEvent& WXUNUSED(event))
 // ----------------------------------------------------------------------------
 {
     // UpdateUI on "View/Search/Options" not used in CodeSnippets
@@ -520,7 +523,7 @@ void ThreadSearch::OnMnuSearchThreadSearchUpdateUI(wxUpdateUIEvent& event)
 	event.Enable(m_pThreadSearchView->IsSearchRunning() == false);
 }
 // ----------------------------------------------------------------------------
-void ThreadSearch::BuildModuleMenu(const ModuleType type, wxMenu* pMenu, const FileTreeData* data)
+void ThreadSearch::BuildModuleMenu(const ModuleType type, wxMenu* pMenu, const FileTreeData* /*data*/)
 // ----------------------------------------------------------------------------
 {
 	wxMenuItem* pMenuItem = NULL;
@@ -685,7 +688,7 @@ void ThreadSearch::LoadConfig(bool& showPanel, int& sashPosition,
 }
 // ----------------------------------------------------------------------------
 void ThreadSearch::SaveConfig(bool showPanel, int sashPosition,
-                          ThreadSearchViewManagerBase::eManagerTypes mgrType,
+                          ThreadSearchViewManagerBase::eManagerTypes /*mgrType*/,
                           const wxArrayString& searchPatterns)
 // ----------------------------------------------------------------------------
 {
@@ -1062,7 +1065,7 @@ void ThreadSearch::SetManagerType(ThreadSearchViewManagerBase::eManagerTypes mgr
 	}
 }
 // ----------------------------------------------------------------------------
-void ThreadSearch::UserResizingWindow(wxSizeEvent &event)
+void ThreadSearch::UserResizingWindow(wxSizeEvent & WXUNUSED(event))
 // ----------------------------------------------------------------------------
 {
     // Called from parent ThreadSearchFrame::OnResizingWindow()
