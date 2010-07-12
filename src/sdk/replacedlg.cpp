@@ -19,6 +19,7 @@
     #include <wx/button.h>
     #include <wx/notebook.h>
     #include <wx/radiobox.h>
+    #include <wx/sizer.h>
 #endif
 
 #include "replacedlg.h"
@@ -521,7 +522,7 @@ void ReplaceDlg::OnFindChange(wxNotebookEvent& event)
     event.Skip();
 }
 
-void ReplaceDlg::OnRegEx(wxCommandEvent& event)
+void ReplaceDlg::OnRegEx(wxCommandEvent& /*event*/)
 {
     if (m_Complete)
         XRCCTRL(*this, "rbDirection", wxRadioBox)->Enable(!XRCCTRL(*this, "chkRegEx1", wxCheckBox)->GetValue());

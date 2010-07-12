@@ -131,7 +131,7 @@ void JumpTracker::OnAttach()
 
 }
 // ----------------------------------------------------------------------------
-void JumpTracker::OnRelease(bool appShutDown)
+void JumpTracker::OnRelease(bool /*appShutDown*/)
 // ----------------------------------------------------------------------------
 {
     // do de-initialization for your plugin
@@ -190,7 +190,7 @@ void JumpTracker::BuildMenu(wxMenuBar* menuBar)
 
 }
 // ----------------------------------------------------------------------------
-void JumpTracker::BuildModuleMenu(const ModuleType type, wxMenu* menu, const FileTreeData* data)
+void JumpTracker::BuildModuleMenu(const ModuleType /*type*/, wxMenu* /*menu*/, const FileTreeData* /*data*/)
 // ----------------------------------------------------------------------------
 {
     //Some library module is ready to display a pop-up menu.
@@ -200,7 +200,7 @@ void JumpTracker::BuildModuleMenu(const ModuleType type, wxMenu* menu, const Fil
     //-NotImplemented(_T("JumpTracker::BuildModuleMenu()"));
 }
 // ----------------------------------------------------------------------------
-bool JumpTracker::BuildToolBar(wxToolBar* toolBar)
+bool JumpTracker::BuildToolBar(wxToolBar* /*toolBar*/)
 // ----------------------------------------------------------------------------
 {
     //The application is offering its toolbar for your plugin,
@@ -245,12 +245,13 @@ void JumpTracker::OnEditorUpdateEvent(CodeBlocksEvent& event)
     //LOGIT( _T("JT \ttopLine[%ld] botLine[%ld] OnScrn[%ld] "), topLine, botLine, edstc->LinesOnScreen());
     #endif
 
+    // New editor activated?
     if (m_FilenameLast not_eq edFilename)
     {
         m_PosnLast = edPosn;
         m_FilenameLast = edFilename;
         //if ( m_Cursor not_eq JumpDataContains(edFilename, edPosn) )
-            JumpDataAdd(edFilename, edPosn);
+            JumpDataAdd(edFilename, edPosn, edLine);
     }
 
     // If new line within half screen of old line, don't record current line
@@ -266,7 +267,7 @@ void JumpTracker::OnEditorUpdateEvent(CodeBlocksEvent& event)
     m_PosnLast = edPosn;
     m_FilenameLast = edFilename;
     //if ( m_Cursor not_eq JumpDataContains(edFilename, edPosn) )
-        JumpDataAdd(edFilename, edPosn);
+        JumpDataAdd(edFilename, edPosn, edLine);
 
     return;
 }//OnEditorUpdateEvent
@@ -310,11 +311,11 @@ void JumpTracker::OnEditorActivated(CodeBlocksEvent& event)
 
     long edPosn = edstc->GetCurrentPos();
     //if ( m_Cursor not_eq JumpDataContains(edFilename, edPosn) )
-        JumpDataAdd(edFilename, edPosn);
+        JumpDataAdd(edFilename, edPosn, edstc->GetCurrentLine());
     return;
 }//OnEditorActivated
 // ----------------------------------------------------------------------------
-void JumpTracker::OnStartShutdown(CodeBlocksEvent& event)
+void JumpTracker::OnStartShutdown(CodeBlocksEvent& /*event*/)
 // ----------------------------------------------------------------------------
 {
     m_bShuttingDown = true;
@@ -356,13 +357,20 @@ void JumpTracker::OnProjectActivatedEvent(CodeBlocksEvent& event)
 
 }//OnProjectActivatedEvent
 // ----------------------------------------------------------------------------
-void JumpTracker::JumpDataAdd(const wxString& filename, const long posn)
+void JumpTracker::JumpDataAdd(const wxString& filename, const long posn, const long lineNum)
 // ----------------------------------------------------------------------------
 {
     // Do not record old jump locations when a jump is in progress
     // Caused by activating an editor inside the jump routines
     if (m_bJumpInProgress)
         return;
+
+    // Dont record position if line number is < 1 since a newly loaded
+    // file always reports an event for line 0
+     if (lineNum < 1)       // user requested feature 2010/06/1
+     {
+        return;
+     }
 
     // if current entry is identical, return
     if (m_Cursor == JumpDataContains(filename, posn))
@@ -430,7 +438,7 @@ int JumpTracker::JumpDataContains(const wxString& filename, const long posn)
     return wxNOT_FOUND;
 }
 // ----------------------------------------------------------------------------
-void JumpTracker::OnMenuJumpBack(wxCommandEvent &event)
+void JumpTracker::OnMenuJumpBack(wxCommandEvent &/*event*/)
 // ----------------------------------------------------------------------------
 {
     #if defined(LOGGING)
@@ -495,7 +503,7 @@ void JumpTracker::OnMenuJumpBack(wxCommandEvent &event)
     return;
 }
 // ----------------------------------------------------------------------------
-void JumpTracker::OnMenuJumpNext(wxCommandEvent &event)
+void JumpTracker::OnMenuJumpNext(wxCommandEvent &/*event*/)
 // ----------------------------------------------------------------------------
 {
     #if defined(LOGGING)
@@ -552,14 +560,14 @@ void JumpTracker::OnMenuJumpNext(wxCommandEvent &event)
     return;
 }
 // ----------------------------------------------------------------------------
-void JumpTracker::OnMenuJumpClear(wxCommandEvent &event)
+void JumpTracker::OnMenuJumpClear(wxCommandEvent &/*event*/)
 // ----------------------------------------------------------------------------
 {
     m_Cursor = maxJumpEntries;
     m_ArrayOfJumpData.Clear();
 }
 // ----------------------------------------------------------------------------
-void JumpTracker::OnMenuJumpDump(wxCommandEvent &event)
+void JumpTracker::OnMenuJumpDump(wxCommandEvent &/*event*/)
 // ----------------------------------------------------------------------------
 {
     //-return; //debugging

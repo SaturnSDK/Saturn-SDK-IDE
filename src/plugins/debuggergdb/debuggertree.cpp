@@ -632,7 +632,7 @@ void DebuggerTree::OnTreeRightClick(wxTreeEvent& event)
     ShowMenu(event.GetItem(), event.GetPoint());
 }
 
-void DebuggerTree::OnRightClick(wxCommandEvent& event)
+void DebuggerTree::OnRightClick(wxCommandEvent& WXUNUSED(event))
 {
     wxTreeItemId tmp; // dummy var for next call
     // get right-click point
@@ -642,7 +642,7 @@ void DebuggerTree::OnRightClick(wxCommandEvent& event)
     ShowMenu(tmp, pt);
 }
 
-void DebuggerTree::OnLoadWatchFile(wxCommandEvent& event)
+void DebuggerTree::OnLoadWatchFile(wxCommandEvent& WXUNUSED(event))
 {
     WatchesArray fromFile = m_Watches; // copy current watches
 
@@ -688,7 +688,7 @@ void DebuggerTree::OnLoadWatchFile(wxCommandEvent& event)
         Manager::Get()->GetLogManager()->DebugLog(_T("Error opening debugger watch file: ") + fname);
 }
 
-void DebuggerTree::OnSaveWatchFile(wxCommandEvent& event)
+void DebuggerTree::OnSaveWatchFile(wxCommandEvent& WXUNUSED(event))
 {
     // Verify that there ARE watches to save
     size_t wc = m_Watches.GetCount();
@@ -739,7 +739,7 @@ void DebuggerTree::OnSaveWatchFile(wxCommandEvent& event)
         Manager::Get()->GetLogManager()->DebugLog(_T("Error opening debugger watch file: ") + fname);
 }
 
-void DebuggerTree::OnEditWatch(wxCommandEvent& event)
+void DebuggerTree::OnEditWatch(wxCommandEvent& WXUNUSED(event))
 {
     cbAssert(false);
 //    WatchTreeData* data = static_cast<WatchTreeData*>(m_pTree->GetItemData(m_pTree->GetSelection()));
@@ -756,7 +756,7 @@ void DebuggerTree::OnEditWatch(wxCommandEvent& event)
 //    }
 }
 
-void DebuggerTree::OnAddWatch(wxCommandEvent& event)
+void DebuggerTree::OnAddWatch(wxCommandEvent& WXUNUSED(event))
 {
     cbAssert(false);
 //    EditWatchDlg dlg;
@@ -765,7 +765,7 @@ void DebuggerTree::OnAddWatch(wxCommandEvent& event)
 //        AddWatch(dlg.GetWatch().keyword, dlg.GetWatch().format);
 }
 
-void DebuggerTree::OnDeleteWatch(wxCommandEvent& event)
+void DebuggerTree::OnDeleteWatch(wxCommandEvent& WXUNUSED(event))
 {
     WatchTreeData* data = static_cast<WatchTreeData*>(m_pTree->GetItemData(m_pTree->GetSelection()));
     Watch* w = data ? data->m_pWatch : 0;
@@ -776,13 +776,13 @@ void DebuggerTree::OnDeleteWatch(wxCommandEvent& event)
     }
 }
 
-void DebuggerTree::OnDeleteAllWatches(wxCommandEvent& event)
+void DebuggerTree::OnDeleteAllWatches(wxCommandEvent& WXUNUSED(event))
 {
     if (cbMessageBox(_("Are you sure you want to delete all watches?"), _("Question"), wxICON_QUESTION | wxYES_NO) == wxID_YES)
         DeleteAllWatches();
 }
 
-void DebuggerTree::OnDereferencePointer(wxCommandEvent& event)
+void DebuggerTree::OnDereferencePointer(wxCommandEvent& WXUNUSED(event))
 {
     WatchTreeData* data = static_cast<WatchTreeData*>(m_pTree->GetItemData(m_pTree->GetSelection()));
     Watch* w = data ? data->m_pWatch : 0;
@@ -796,7 +796,7 @@ void DebuggerTree::OnDereferencePointer(wxCommandEvent& event)
     NotifyForChangedWatches();
 }
 
-void DebuggerTree::OnWatchThis(wxCommandEvent& event)
+void DebuggerTree::OnWatchThis(wxCommandEvent& WXUNUSED(event))
 {
     m_Watches.Add(Watch(_T("*this")));
     NotifyForChangedWatches();
@@ -814,7 +814,7 @@ void DebuggerTree::FixupVarNameForChange(wxString& str)
         str.Clear();
 }
 
-void DebuggerTree::OnChangeValue(wxCommandEvent& event)
+void DebuggerTree::OnChangeValue(wxCommandEvent& WXUNUSED(event))
 {
     if (!m_pDebugger->GetState().HasDriver())
 	    return;

@@ -57,7 +57,7 @@ void CB_Koders::OnAttach()
 	// (see: does not need) this plugin...
 }
 
-void CB_Koders::OnRelease(bool appShutDown)
+void CB_Koders::OnRelease(bool /*appShutDown*/)
 {
 	// do de-initialization for your plugin
 	// if appShutDown is false, the plugin is unloaded because Code::Blocks is being shut down,
@@ -91,7 +91,7 @@ int CB_Koders::Execute()
 	return 0;
 }
 
-void CB_Koders::BuildModuleMenu(const ModuleType type, wxMenu* menu, const FileTreeData* data)
+void CB_Koders::BuildModuleMenu(const ModuleType type, wxMenu* menu, const FileTreeData* /*data*/)
 {
 	if (!menu || !IsAttached())
 		return;
@@ -119,7 +119,7 @@ bool CB_Koders::IsReady()
   return false;
 }
 
-void CB_Koders::OnSearchKoders(wxCommandEvent& event)
+void CB_Koders::OnSearchKoders(wxCommandEvent& /*event*/)
 {
   if (IsReady())
   {

@@ -8,7 +8,10 @@
  * License:   GPL
  **************************************************************/
 
-#include <sdk.h> // Code::Blocks SDK
+#if defined(CB_PRECOMP)
+#include "sdk.h"
+#endif
+//#include <sdk.h> // Code::Blocks SDK
 #ifndef CB_PRECOMP
 	// Required extra includes
 	#include "configmanager.h"
@@ -165,7 +168,7 @@ void ThreadSearchLoggerList::OnLoggerListDoubleClick(wxListEvent& event)
 }
 
 
-bool ThreadSearchLoggerList::GetFileLineFromListEvent(wxListEvent& event, wxString& filepath, long &line)
+bool ThreadSearchLoggerList::GetFileLineFromListEvent(wxListEvent& /*event*/, wxString& filepath, long &line)
 {
 	bool success = false;
 	wxListItem listItem;

@@ -189,7 +189,7 @@ void InfoPane::OnCopy(wxCommandEvent& event)
     }
 }
 
-void InfoPane::OnClear(wxCommandEvent& event)
+void InfoPane::OnClear(wxCommandEvent& /*event*/)
 {
     int i = GetPageIndexByWindow(GetPage(GetSelection()));
     if (page[i].islogger)
@@ -208,7 +208,7 @@ void InfoPane::OnMenu(wxCommandEvent& event)
     Toggle(i);
 }
 
-void InfoPane::ContextMenu(wxContextMenuEvent& event)
+void InfoPane::ContextMenu(wxContextMenuEvent& /*event*/)
 {
     DoShowContextMenu();
 }

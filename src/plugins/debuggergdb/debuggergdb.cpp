@@ -219,7 +219,7 @@ void DebuggerGDB::OnAttachReal()
     Manager::Get()->RegisterEventSink(cbEVT_BUILDTARGET_SELECTED, new cbEventFunctor<DebuggerGDB, CodeBlocksEvent>(this, &DebuggerGDB::OnBuildTargetSelected));
 }
 
-void DebuggerGDB::OnReleaseReal(bool appShutDown)
+void DebuggerGDB::OnReleaseReal(bool /*appShutDown*/)
 {
     ProjectLoaderHooks::UnregisterHook(m_HookId, true);
 
@@ -1618,7 +1618,7 @@ void DebuggerGDB::GetCurrentPosition(wxString &filename, int &line)
     }
 }
 
-void DebuggerGDB::OnAddSymbolFile(wxCommandEvent& event)
+void DebuggerGDB::OnAddSymbolFile(wxCommandEvent& WXUNUSED(event))
 {
     wxString file = wxFileSelector(_("Choose file to read symbols from"),
                                     _T(""),
@@ -1644,7 +1644,7 @@ void DebuggerGDB::ShowToolMenu()
     Manager::Get()->GetAppWindow()->PopupMenu(&m);
 }
 
-void DebuggerGDB::OnInfoFrame(wxCommandEvent& event)
+void DebuggerGDB::OnInfoFrame(wxCommandEvent& WXUNUSED(event))
 {
     if (m_State.HasDriver())
     {
@@ -1652,7 +1652,7 @@ void DebuggerGDB::OnInfoFrame(wxCommandEvent& event)
     }
 }
 
-void DebuggerGDB::OnInfoDLL(wxCommandEvent& event)
+void DebuggerGDB::OnInfoDLL(wxCommandEvent& WXUNUSED(event))
 {
     if (m_State.HasDriver())
     {
@@ -1660,7 +1660,7 @@ void DebuggerGDB::OnInfoDLL(wxCommandEvent& event)
     }
 }
 
-void DebuggerGDB::OnInfoFiles(wxCommandEvent& event)
+void DebuggerGDB::OnInfoFiles(wxCommandEvent& WXUNUSED(event))
 {
     if (m_State.HasDriver())
     {
@@ -1668,7 +1668,7 @@ void DebuggerGDB::OnInfoFiles(wxCommandEvent& event)
     }
 }
 
-void DebuggerGDB::OnInfoFPU(wxCommandEvent& event)
+void DebuggerGDB::OnInfoFPU(wxCommandEvent& WXUNUSED(event))
 {
     if (m_State.HasDriver())
     {
@@ -1676,7 +1676,7 @@ void DebuggerGDB::OnInfoFPU(wxCommandEvent& event)
     }
 }
 
-void DebuggerGDB::OnInfoSignals(wxCommandEvent& event)
+void DebuggerGDB::OnInfoSignals(wxCommandEvent& WXUNUSED(event))
 {
     if (m_State.HasDriver())
     {
@@ -1853,7 +1853,7 @@ void DebuggerGDB::DebuggeeContinued()
     m_TemporaryBreak = false;
 }
 
-void DebuggerGDB::OnCursorChanged(wxCommandEvent& event)
+void DebuggerGDB::OnCursorChanged(wxCommandEvent& WXUNUSED(event))
 {
     if(m_TemporaryBreak)
         return;

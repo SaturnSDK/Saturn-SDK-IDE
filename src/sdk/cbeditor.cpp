@@ -276,7 +276,7 @@ struct cbEditorInternalData
         return 0;
     }
 
-    int FindBlockStart(int position, wxChar blockStart, wxChar blockEnd, bool skipNested = true)
+    int FindBlockStart(int position, wxChar blockStart, wxChar blockEnd, bool /*skipNested*/ = true)
     {
         cbStyledTextCtrl* control = m_pOwner->GetControl();
         int lvl = 0;
@@ -2753,7 +2753,7 @@ bool cbEditor::OnBeforeBuildContextMenu(const wxPoint& position, ModuleType type
     return EditorBase::OnBeforeBuildContextMenu(position, type);
 }
 
-void cbEditor::OnAfterBuildContextMenu(ModuleType type)
+void cbEditor::OnAfterBuildContextMenu(ModuleType /*type*/)
 {
     // we don't care
 }
@@ -3187,7 +3187,7 @@ void cbEditor::OnUserListSelection(wxScintillaEvent& event)
     OnScintillaEvent(event);
 }
 
-void cbEditor::OnClose(wxCloseEvent& event)
+void cbEditor::OnClose(wxCloseEvent& /*event*/)
 {
     Manager::Get()->GetEditorManager()->Close(this);
 }

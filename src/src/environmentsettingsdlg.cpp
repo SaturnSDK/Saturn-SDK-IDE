@@ -13,6 +13,7 @@
 #include <wx/xrc/xmlres.h>
 #include <manager.h>
 #include <configmanager.h>
+#include <editormanager.h>
 #include <pluginmanager.h>
 #include <wx/intl.h>
 #include <wx/listbook.h>
@@ -288,7 +289,7 @@ void EnvironmentSettingsDlg::UpdateListbookImages()
     XRCCTRL(*this, "lblBigTitle", wxStaticText)->SetLabel(label);
 }
 
-void EnvironmentSettingsDlg::OnPageChanging(wxListbookEvent& event)
+void EnvironmentSettingsDlg::OnPageChanging(wxListbookEvent& /*event*/)
 {
 }
 
@@ -301,7 +302,7 @@ void EnvironmentSettingsDlg::OnPageChanged(wxListbookEvent& event)
     }
 }
 
-void EnvironmentSettingsDlg::OnSetAssocs(wxCommandEvent& event)
+void EnvironmentSettingsDlg::OnSetAssocs(wxCommandEvent& /*event*/)
 {
 #ifdef __WXMSW__
     Associations::SetCore();
@@ -309,7 +310,7 @@ void EnvironmentSettingsDlg::OnSetAssocs(wxCommandEvent& event)
 #endif
 }
 
-void EnvironmentSettingsDlg::OnManageAssocs(wxCommandEvent& event)
+void EnvironmentSettingsDlg::OnManageAssocs(wxCommandEvent& /*event*/)
 {
 #ifdef __WXMSW__
     ManageAssocsDialog dlg(this);
@@ -333,7 +334,7 @@ void EnvironmentSettingsDlg::OnChooseColour(wxCommandEvent& event)
     }
 }
 
-void EnvironmentSettingsDlg::OnResetDefaultColours(wxCommandEvent& event)
+void EnvironmentSettingsDlg::OnResetDefaultColours(wxCommandEvent& /*event*/)
 {
     wxAuiDockArt* art = new wxAuiDefaultDockArt;
 
@@ -350,7 +351,7 @@ void EnvironmentSettingsDlg::OnResetDefaultColours(wxCommandEvent& event)
     delete art;
 }
 
-void EnvironmentSettingsDlg::OnAutoHide(wxCommandEvent& event)
+void EnvironmentSettingsDlg::OnAutoHide(wxCommandEvent& /*event*/)
 {
     bool en = XRCCTRL(*this, "chkAutoHideMessages", wxCheckBox)->GetValue();
     XRCCTRL(*this, "chkAutoShowMessagesOnSearch",   wxCheckBox)->Enable(en);
