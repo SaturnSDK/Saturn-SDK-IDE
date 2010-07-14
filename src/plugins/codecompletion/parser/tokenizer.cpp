@@ -354,15 +354,19 @@ bool Tokenizer::SkipToOneOfChars(const wxChar* chars, bool supportNesting, bool 
     return NotEOF();
 }
 
-wxString Tokenizer::ReadToEOL(bool nestBraces, bool stripComment)
+wxString Tokenizer::ReadToEOL(bool nestBraces, bool stripUnneeded)
 {
-    if (stripComment)
+    if (stripUnneeded)
     {
         TRACE(_T("%s : line=%d, CurrentChar='%c', PreviousChar='%c', NextChar='%c', nestBrace(%d)"),
               wxString(__PRETTY_FUNCTION__, wxConvUTF8).wc_str(), m_LineNumber, CurrentChar(),
               PreviousChar(), NextChar(), nestBraces ? 1 : 0);
 
+        static const size_t maxBufferLen = 1024;
+        wxChar buffer[maxBufferLen + 2];
+        wxChar* p = buffer;
         wxString str;
+
         for (;;)
         {
             while (NotEOF() && CurrentChar() != _T('\n'))
@@ -374,7 +378,21 @@ wxString Tokenizer::ReadToEOL(bool nestBraces, bool stripComment)
                 if (ch == _T('\n'))
                     break;
 
-                str.Append(ch);
+                if (ch == _T(' ') && (p == buffer || *(p - 1) == ch))
+                {
+                    MoveToNextChar();
+                    continue;
+                }
+
+                *p = ch;
+                ++p;
+
+                if ((size_t)(p - buffer) >= maxBufferLen)
+                {
+                    str.Append(buffer, p - buffer);
+                    p = buffer;
+                }
+
                 if (nestBraces)
                 {
                     if (ch == _T('{'))
@@ -389,16 +407,19 @@ wxString Tokenizer::ReadToEOL(bool nestBraces, bool stripComment)
                 break;
             else
             {
-                str.Trim();
-                str.RemoveLast();
+                while (*(--p) <= _T(' ') && p > buffer) {}
                 MoveToNextChar();
             }
         }
 
+        while (*(p - 1) <= _T(' ') && --p > buffer) {}
+        str.Append(buffer, p - buffer);
+
         TRACE(_T("ReadToEOL(): (END) We are now at line %d, CurrentChar='%c', PreviousChar='%c', NextChar='%c'"),
               m_LineNumber, CurrentChar(), PreviousChar(), NextChar());
+        TRACE(F(_T("ReadToEOL(): %s"), str.wx_str()));
 
-        return str.Trim();
+        return str;
     }
     else
     {
@@ -480,26 +501,12 @@ void Tokenizer::ReadToEOL(wxArrayString& tokens)
     m_State = oldState;
 }
 
-wxString Tokenizer::ReadBlock(const wxChar& leftBrace)
+void Tokenizer::ReadParentheses(wxString& str)
 {
-    TRACE(_T("%s : line=%d, CurrentChar='%c', PreviousChar='%c', NextChar='%c', leftBrace(%c)"),
-          wxString(__PRETTY_FUNCTION__, wxConvUTF8).wc_str(), m_LineNumber, CurrentChar(),
-          PreviousChar(), NextChar(), leftBrace);
-
-    wxString str;
-    int nestLevel = 0;
-
-    wxChar rightBrace;
-    if (leftBrace == _T('('))
-        rightBrace = _T(')');
-    else if (leftBrace == _T('{'))
-        rightBrace = _T('}');
-    else if (leftBrace == _T('['))
-        rightBrace = _T(']');
-    else if (leftBrace == _T('<'))
-        rightBrace = _T('>');
-    else
-        return wxEmptyString;
+    static const size_t maxBufferLen = 1024;
+    wxChar buffer[maxBufferLen + 2];
+    wxChar* p = buffer;
+    int level = 0;
 
     while (NotEOF())
     {
@@ -507,20 +514,8 @@ wxString Tokenizer::ReadBlock(const wxChar& leftBrace)
             ;
 
         wxChar ch = CurrentChar();
-        if (ch == leftBrace)
-        {
-            ++nestLevel;
-            str.Trim(true);
-        }
-        else if (ch == rightBrace)
-        {
-            --nestLevel;
-            str.Trim(true);
-        }
 
-        const unsigned int startIndex = m_TokenIndex;
-
-        while (ch == _T('#')) // do not use if
+        while (CurrentChar() == _T('#')) // do not use if
         {
             const PreprocessorType type = GetPreprocessorType();
             if (type == ptOthers)
@@ -529,41 +524,139 @@ wxString Tokenizer::ReadBlock(const wxChar& leftBrace)
             ch = CurrentChar();
         }
 
-        if (ch == _T('\'') || ch == _T('"'))
+        const unsigned int startIndex = m_TokenIndex;
+
+        switch(ch)
         {
-            unsigned int start = m_TokenIndex;
-            MoveToNextChar();
-            SkipToStringEnd(ch);
-            MoveToNextChar();
-            str.Append(m_Buffer.Mid(start, m_TokenIndex - start));
+        case _T('('):
+            {
+                ++level;
+                *p = ch;
+                ++p;
+            }
+            break;
+
+        case _T(')'):
+            {
+                --level;
+                *p = ch;
+                ++p;
+            }
+            break;
+
+        case _T('\''):
+        case _T('"'):
+            {
+                MoveToNextChar();
+                SkipToStringEnd(ch);
+                MoveToNextChar();
+                const size_t writeLen = m_TokenIndex - startIndex;
+                const size_t usedLen = p - buffer;
+                if (usedLen + writeLen > maxBufferLen)
+                {
+                    str.Append(buffer, writeLen);
+                    p = buffer;
+                }
+
+                memcpy((void*)p, (void*)(&m_Buffer[startIndex]), writeLen * sizeof(wxChar));
+                p += writeLen;
+            }
+            break;
+
+        case _T(','):
+            {
+                if (*(p - 1) == _T(' '))
+                    --p;
+
+                *p = _T(',');
+                *++p = _T(' ');
+                ++p;
+            }
+            break;
+
+        case _T('*'):
+            {
+                if (*(p - 1) == _T(' '))
+                    --p;
+
+                *p = _T('*');
+                *++p = _T(' ');
+                ++p;
+            }
+            break;
+
+        case _T('='):
+            {
+                if (*(p - 1) == _T(' '))
+                {
+                    *p = _T('=');
+                    *++p = _T(' ');
+                    ++p;
+                }
+                else
+                {
+                    switch (*(p - 1))
+                    {
+                    case _T('='):
+                    case _T('!'):
+                    case _T('>'):
+                    case _T('<'):
+                        {
+                            *p = _T('=');
+                            *++p = _T(' ');
+                            ++p;
+                        }
+
+                    default:
+                        {
+                            *p = _T(' ');
+                            *++p = _T('=');
+                            *++p = _T(' ');
+                            ++p;
+                        }
+                    }
+                }
+            }
+            break;
+
+        case _T(' '):
+            {
+                if (*(p - 1) != _T(' '))
+                {
+                    *p = _T(' ');
+                    ++p;
+                }
+            }
+            break;
+
+        case _T('\r'):
+        case _T('\n'):
+        case _T('\t'):
+            break;
+
+        default:
+            {
+                *p = ch;
+                ++p;
+            }
+            break;
         }
-        else if (ch == _T(','))
+
+        if ((size_t)(p - buffer) >= maxBufferLen)
         {
-            str.Trim(true);
-            str.Append(_T(", "));
+            str.Append(buffer, p - buffer);
+            p = buffer;
         }
-        else if (ch == _T('='))
-        {
-            str.Trim(true);
-            const wxChar last = str.Last();
-            if (!(last == _T('=') || last == _T('!') || last == _T('>') || last == _T('<')))
-                str.Append(_T(' '));
-            str.Append(_T("= "));
-        }
-        else if ((ch > _T(' ')) || (ch == _T(' ') && str.Last() != _T(' ')))
-            str.Append(ch);
 
         if (startIndex == m_TokenIndex)
             MoveToNextChar();
 
-        if (nestLevel == 0)
+        if (level == 0)
             break;
     }
 
-    TRACE(_T("ReadBlock(): (END) We are now at line %d, CurrentChar='%c', PreviousChar='%c', NextChar='%c'"),
-          m_LineNumber, CurrentChar(), PreviousChar(), NextChar());
-
-    return str;
+    str.Append(buffer, p - buffer);
+    TRACE(_T("ReadParentheses(): %s"), str.wx_str());
 }
 
 bool Tokenizer::SkipToEOL(bool nestBraces)
@@ -925,7 +1018,7 @@ wxString Tokenizer::DoGetToken()
         }
         else
         {
-            str = ReadBlock(c);
+            ReadParentheses(str);
         }
     }
     else

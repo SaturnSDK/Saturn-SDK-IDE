@@ -113,7 +113,7 @@ public:
     /** doc me */
     void SetTokenizerOption(bool wantPreprocessor)
     {
-      m_TokenizerOptions.wantPreprocessor = wantPreprocessor;
+        m_TokenizerOptions.wantPreprocessor = wantPreprocessor;
     };
 
     /** Set the Tokenizer Skipping options. Eg, sometimes, we need to skip the statement after "=",
@@ -174,13 +174,13 @@ public:
     /** return the string from the current position to the end of current line, in most case, this
      * function is used in handling #define, use with care outside this class!
      */
-    wxString ReadToEOL(bool nestBraces = true, bool stripComment = true); // use with care outside this class!
+    wxString ReadToEOL(bool nestBraces = true, bool stripUnneeded = true);
 
     /** Read all tokens from the current position to the end of current line */
     void ReadToEOL(wxArrayString& tokens);
 
-    /** // the argument must be one of: ( [ < { */
-    wxString ReadBlock(const wxChar& leftBrace);
+    /** Read and format between (), stored in 'str' */
+    void ReadParentheses(wxString& str);
 
     /** Skip fron the current position to the end of line.
      * @param nestBraces if true, we should still couting the brace levels in this function.
