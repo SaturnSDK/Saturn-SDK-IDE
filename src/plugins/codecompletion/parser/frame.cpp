@@ -23,9 +23,12 @@
 #include <wx/string.h>
 //*)
 
+#include <wx/filename.h>
+
 //(*IdInit(Frame)
 const long Frame::ID_LOGMAIN = wxNewId();
 const long Frame::ID_OPEN = wxNewId();
+const long Frame::ID_RELOAD = wxNewId();
 const long Frame::ID_SAVE = wxNewId();
 const long Frame::ID_QUIT = wxNewId();
 const long Frame::ID_FIND = wxNewId();
@@ -54,19 +57,22 @@ Frame::Frame() : m_logCnt(0), m_dlgFind(NULL)
     wxMenuItem* MenuItem4;
     wxMenu* Menu1;
     wxMenuItem* MenuItem3;
+    wxMenuItem* MenuItem6;
     wxMenuBar* MenuBar1;
     wxMenu* Menu2;
 
     Create(0, wxID_ANY, _("Parser Testing"), wxDefaultPosition, wxDefaultSize, wxDEFAULT_FRAME_STYLE, _T("wxID_ANY"));
     SetBackgroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_MENUBAR));
     sizer = new wxBoxSizer(wxHORIZONTAL);
-    m_logCtrl = new wxTextCtrl(this, ID_LOGMAIN, wxEmptyString, wxDefaultPosition, wxSize(900, 550), wxTE_MULTILINE | wxTE_READONLY | wxHSCROLL | wxTE_RICH2, wxDefaultValidator, _T("ID_LOGMAIN"));
-    sizer->Add(m_logCtrl, 1, wxALL | wxEXPAND | wxALIGN_CENTER_HORIZONTAL | wxALIGN_CENTER_VERTICAL, 5);
+    m_logCtrl = new wxTextCtrl(this, ID_LOGMAIN, wxEmptyString, wxDefaultPosition, wxSize(900,550), wxTE_MULTILINE|wxTE_READONLY|wxHSCROLL|wxTE_RICH2, wxDefaultValidator, _T("ID_LOGMAIN"));
+    sizer->Add(m_logCtrl, 1, wxALL|wxEXPAND|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
     SetSizer(sizer);
     MenuBar1 = new wxMenuBar();
     Menu2 = new wxMenu();
     MenuItem3 = new wxMenuItem(Menu2, ID_OPEN, _("&Open...\tCtrl+O"), _("Open the source code to be tested"), wxITEM_NORMAL);
     Menu2->Append(MenuItem3);
+    MenuItem6 = new wxMenuItem(Menu2, ID_RELOAD, _("&Reload\tF5"), _("Reload test file"), wxITEM_NORMAL);
+    Menu2->Append(MenuItem6);
     Menu2->AppendSeparator();
     MenuItem1 = new wxMenuItem(Menu2, ID_SAVE, _("&Save Log...\tCtrl+S"), _("Save log file to hard disk "), wxITEM_NORMAL);
     Menu2->Append(MenuItem1);
@@ -86,20 +92,21 @@ Frame::Frame() : m_logCnt(0), m_dlgFind(NULL)
     m_statuBar = new wxStatusBar(this, ID_STATUSBAR, 0, _T("ID_STATUSBAR"));
     int __wxStatusBarWidths_1[1] = { -10 };
     int __wxStatusBarStyles_1[1] = { wxSB_NORMAL };
-    m_statuBar->SetFieldsCount(1, __wxStatusBarWidths_1);
-    m_statuBar->SetStatusStyles(1, __wxStatusBarStyles_1);
+    m_statuBar->SetFieldsCount(1,__wxStatusBarWidths_1);
+    m_statuBar->SetStatusStyles(1,__wxStatusBarStyles_1);
     SetStatusBar(m_statuBar);
     m_openFile = new wxFileDialog(this, _("Select Test Source File"), _("."), wxEmptyString, _("*.cpp;*.h"), wxFD_DEFAULT_STYLE, wxDefaultPosition, wxDefaultSize, _T("wxFileDialog"));
-    m_saveFile = new wxFileDialog(this, _("Select file"), _("."), _("log.txt"), _("*.txt"), wxFD_DEFAULT_STYLE | wxFD_SAVE, wxDefaultPosition, wxDefaultSize, _T("wxFileDialog"));
+    m_saveFile = new wxFileDialog(this, _("Select file"), _("."), _("log.txt"), _("*.txt"), wxFD_DEFAULT_STYLE|wxFD_SAVE, wxDefaultPosition, wxDefaultSize, _T("wxFileDialog"));
     sizer->Fit(this);
     sizer->SetSizeHints(this);
     Center();
 
-    Connect(ID_OPEN, wxEVT_COMMAND_MENU_SELECTED, (wxObjectEventFunction)&Frame::OnMenuOpenSelected);
-    Connect(ID_SAVE, wxEVT_COMMAND_MENU_SELECTED, (wxObjectEventFunction)&Frame::OnMenuSaveSelected);
-    Connect(ID_QUIT, wxEVT_COMMAND_MENU_SELECTED, (wxObjectEventFunction)&Frame::OnMenuQuitSelected);
-    Connect(ID_FIND, wxEVT_COMMAND_MENU_SELECTED, (wxObjectEventFunction)&Frame::OnMenuFindSelected);
-    Connect(ID_ABOUT, wxEVT_COMMAND_MENU_SELECTED, (wxObjectEventFunction)&Frame::OnMenuAboutSelected);
+    Connect(ID_OPEN,wxEVT_COMMAND_MENU_SELECTED,(wxObjectEventFunction)&Frame::OnMenuOpenSelected);
+    Connect(ID_RELOAD,wxEVT_COMMAND_MENU_SELECTED,(wxObjectEventFunction)&Frame::OnMenuReloadSelected);
+    Connect(ID_SAVE,wxEVT_COMMAND_MENU_SELECTED,(wxObjectEventFunction)&Frame::OnMenuSaveSelected);
+    Connect(ID_QUIT,wxEVT_COMMAND_MENU_SELECTED,(wxObjectEventFunction)&Frame::OnMenuQuitSelected);
+    Connect(ID_FIND,wxEVT_COMMAND_MENU_SELECTED,(wxObjectEventFunction)&Frame::OnMenuFindSelected);
+    Connect(ID_ABOUT,wxEVT_COMMAND_MENU_SELECTED,(wxObjectEventFunction)&Frame::OnMenuAboutSelected);
     //*)
 
     m_statuBar->SetStatusText(_("Ready!"));
@@ -117,9 +124,22 @@ Frame::~Frame()
 
 void Frame::Start(const wxString& file)
 {
-    m_statuBar->SetStatusText(file);
+    if (!wxFileName::FileExists(file))
+        return;
+
+    m_lastFile = file;
+    m_logCnt = 0;
+    m_log.Clear();
+    m_logCtrl->Clear();
+    m_parserTest.Clear();
+    DoStart();
+}
+
+void Frame::DoStart()
+{
+    m_statuBar->SetStatusText(m_lastFile);
     m_log += _T("--------------M-a-i-n--L-o-g--------------\r\n\r\n");
-    m_parserTest.Start(file);
+    m_parserTest.Start(m_lastFile);
     m_log += _T("\r\n\r\n--------------T-r-e-e--L-o-g--------------\r\n\r\n");
     m_parserTest.PrintTree();
     m_log += _T("\r\n\r\n--------------L-i-s-t--L-o-g--------------\r\n\r\n");
@@ -127,21 +147,15 @@ void Frame::Start(const wxString& file)
     ShowLog();
 }
 
-void Frame::ReStart(const wxString& file)
-{
-    m_logCnt = 0;
-    m_log.Clear();
-    m_logCtrl->Clear();
-    m_parserTest.Clear();
-    Start(file);
-}
-
 void Frame::ShowLog()
 {
     m_logCtrl->SetValue(m_log);
+    Freeze();
+    m_logCtrl->ScrollLines(m_logCtrl->GetLastPosition());
+    Thaw();
 }
 
-void Frame::DoLog(const wxString& log)
+void Frame::Log(const wxString& log)
 {
     m_log += wxString::Format(_T("%06d. "), ++m_logCnt);
     m_log += log;
@@ -170,8 +184,8 @@ void Frame::OnMenuSaveSelected(wxCommandEvent& event)
 
 void Frame::OnMenuOpenSelected(wxCommandEvent& event)
 {
-    m_openFile->ShowModal();
-    ReStart(m_openFile->GetPath());
+    if (m_openFile->ShowModal() == wxID_OK)
+        Start(m_openFile->GetPath());
 }
 
 void Frame::OnMenuFindSelected(wxCommandEvent& event)
@@ -267,4 +281,9 @@ void Frame::OnFindDialog(wxFindDialogEvent& event)
         delete m_dlgFind;
         m_dlgFind = NULL;
     }
+}
+
+void Frame::OnMenuReloadSelected(wxCommandEvent& event)
+{
+    Start(m_lastFile);
 }

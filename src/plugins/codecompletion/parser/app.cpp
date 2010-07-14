@@ -11,7 +11,6 @@
 
 #ifndef WX_PRECOMP
 #include <wx/app.h>
-#include <wx/filename.h>
 #endif
 
 //(*AppHeaders
@@ -43,10 +42,7 @@ bool TestApp::OnInit()
     m_frame = new Frame;
     m_frame->Center();
     m_frame->Show();
-    if (wxFileName::FileExists(_T("test.h")))
-    {
-        m_frame->Start(_T("test.h"));
-    }
+    m_frame->Start(_T("test.h"));
 
     return wxsOK;
 }
@@ -73,6 +69,6 @@ void ParserTrace(const wxChar* format, ...)
         }
     }
 
-    wxGetApp().GetFrame()->DoLog(log);
+    wxGetApp().GetFrame()->Log(log);
 }
 

@@ -26,6 +26,12 @@
 					<help>Open the source code to be tested</help>
 					<handler function="OnMenuOpenSelected" entry="EVT_MENU" />
 				</object>
+				<object class="wxMenuItem" name="ID_RELOAD" variable="MenuItem6" member="no">
+					<label>&amp;Reload</label>
+					<accel>F5</accel>
+					<help>Reload test file</help>
+					<handler function="OnMenuReloadSelected" entry="EVT_MENU" />
+				</object>
 				<object class="separator" />
 				<object class="wxMenuItem" name="ID_SAVE" variable="MenuItem1" member="no">
 					<label>&amp;Save Log...</label>

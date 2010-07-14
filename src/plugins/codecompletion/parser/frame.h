@@ -24,17 +24,19 @@ public:
     Frame();
     virtual ~Frame();
 
-    void DoLog(const wxString& log);
+    void Log(const wxString& log);
     void Start(const wxString& file);
 
+
 private:
-    void ReStart(const wxString& file);
+    void DoStart();
     void ShowLog();
 
 protected:
     //(*Identifiers(Frame)
     static const long ID_LOGMAIN;
     static const long ID_OPEN;
+    static const long ID_RELOAD;
     static const long ID_SAVE;
     static const long ID_QUIT;
     static const long ID_FIND;
@@ -49,6 +51,7 @@ private:
     void OnMenuSaveSelected(wxCommandEvent& event);
     void OnMenuOpenSelected(wxCommandEvent& event);
     void OnMenuFindSelected(wxCommandEvent& event);
+    void OnMenuReloadSelected(wxCommandEvent& event);
     //*)
     void OnFindDialog(wxFindDialogEvent& event);
 
@@ -66,6 +69,7 @@ private:
     wxFindReplaceData m_findData;
     wxFindReplaceDialog* m_dlgFind;
     int m_lastIndex;
+    wxString m_lastFile;
 
     ParserTest m_parserTest;
 
