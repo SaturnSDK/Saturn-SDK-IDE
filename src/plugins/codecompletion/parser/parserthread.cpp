@@ -639,8 +639,7 @@ void ParserThread::DoParse()
             }
             else if (token == ParserConsts::kw_const)
             {
-                // do nothing, just skip keyword "const", otherwise uncomment:
-                //m_Str.Clear();
+                m_Str << token << _T(" ");
             }
             else if (token==ParserConsts::kw_using)
             {
