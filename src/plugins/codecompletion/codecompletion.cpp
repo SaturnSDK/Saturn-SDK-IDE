@@ -1092,8 +1092,8 @@ int CodeCompletion::DoAllMethodsImpl()
                 (token->m_TokenKind & (tkFunction | tkConstructor | tkDestructor)) && // is method
                 token->m_ImplLine == 0) // is un-implemented
             {
-                arr.Add(token->DisplayName());
-                arrint.Add(*its);
+                arr.Insert(token->DisplayName(), 0);
+                arrint.Insert(*its, 0);
             }
         }
     }
@@ -1113,6 +1113,9 @@ int CodeCompletion::DoAllMethodsImpl()
         int line = control->LineFromPosition(pos);
         control->GotoPos(control->PositionFromLine(line));
 
+        ConfigManager* cfg = Manager::Get()->GetConfigManager(_T("code_completion"));
+        bool addDoxgenComment = cfg->ReadBool(_T("/add_doxgen_comment"), false);
+
         wxArrayInt indices = dlg.GetSelectedIndices();
         for (size_t i = 0; i < indices.GetCount(); ++i)
         {
@@ -1125,14 +1128,22 @@ int CodeCompletion::DoAllMethodsImpl()
 
             // actual code generation
             wxString str;
+            str << _T("\n");
             str << ed->GetLineIndentString(line - 1);
-            str << _T("/** @brief ") << token->m_Name << _T("\n  *\n  * @todo: document this function\n  */\n");
-            str << token->m_Type << _T(" ") << token->GetParentName() << _T("::") << token->m_Name << token->m_Args;
+            if (addDoxgenComment)
+                str << _T("/** @brief ") << token->m_Name << _T("\n  *\n  * @todo: document this function\n  */\n");
+            wxString type = token->m_Type;
+            if ((type.Last() == _T('&') || type.Last() == _T('*')) && type[type.Len() - 2] == _T(' '))
+            {
+                type[type.Len() - 2] = type.Last();
+                type.RemoveLast();
+            }
+            str << type << _T(" ") << token->GetParentName() << _T("::") << token->m_Name << token->m_Args;
             if (token->m_IsConst)
             {
                 str << _T(" const");
             }
-            str << _T("\n{\n\n}\n\n");
+            str << _T("\n{\n}\n");
 
             // add code in editor
             control->SetTargetStart(pos);
