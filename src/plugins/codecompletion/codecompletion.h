@@ -120,6 +120,7 @@ class CodeCompletion : public cbCodeCompletionPlugin
         void UpdateFunctions(unsigned int scopeItem);
         void EnableToolbarTools(bool enable = true);
 		void OnRealtimeParsing(wxTimerEvent& event);
+		void OnReParsing(wxTimerEvent& event);
 
         int                                m_PageIndex;
         bool                               m_InitDone;
@@ -134,6 +135,7 @@ class CodeCompletion : public cbCodeCompletionPlugin
         wxTimer                            m_TimerCodeCompletion;
         wxTimer                            m_TimerFunctionsParsing;
         wxTimer                            m_TimerRealtimeParsing;
+        wxTimer                            m_TimerReParsing;
         cbEditor*                          m_pCodeCompletionLastEditor;
         int                                m_ActiveCalltipsNest;
 

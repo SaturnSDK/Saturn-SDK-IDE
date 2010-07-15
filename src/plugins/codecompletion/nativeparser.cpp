@@ -1170,9 +1170,14 @@ void NativeParser::OnTimerReparseFile(wxTimerEvent& event)
     {
         Parser* parser = firstNode->parser;
         wxArrayString& files = firstNode->files;
-        SwitchParser(firstNode->project, parser);
-        for (size_t i = 0; i < files.GetCount(); ++i)
-            parser->Reparse(files[i]);
+        if (GetParserByFilename(files.Last()) == parser)
+        {
+            SwitchParser(firstNode->project, parser);
+            for (size_t i = 0; i < files.GetCount(); ++i)
+                parser->Reparse(files[i]);
+        }
+        else
+            m_WaitParsingList.pop_front();
     }
 
     m_ReparseFileMap.clear();
@@ -1187,10 +1192,6 @@ bool NativeParser::ReparseFile(const wxString& filename)
     if (!m_WaitParsingList.empty() && m_WaitParsingList.front().parser == parser)
         return false;
 
-    cbProject* project = GetProjectByParser(parser);
-    if (!project)
-        return false;
-
     if (m_TimerReparseFile.IsRunning())
         m_TimerReparseFile.Stop();
 
@@ -1199,7 +1200,7 @@ bool NativeParser::ReparseFile(const wxString& filename)
         it->second.files.Add(filename);
     else
     {
-        ParsingNode node = { project, parser, wxArrayString(1, &filename), ptReparseFile };
+        ParsingNode node = { GetProjectByParser(parser), parser, wxArrayString(1, &filename), ptReparseFile };
         m_ReparseFileMap[parser] = node;
     }
 
@@ -3561,16 +3562,4 @@ ParsingType NativeParser::GetParsingType()
         return ptUnknown;
     else
         return m_WaitParsingList.front().type;
-}
-
-bool NativeParser::VerifyParserByFilename(const wxString& filename)
-{
-    if (!m_pParser || filename.IsEmpty())
-        return false;
-    if (Done() || m_pParser->IsFileParsed(filename))
-        return true;
-    else if (GetParsingType() == ptReparseFile && m_WaitParsingList.front().files[0] == filename)
-        return true;
-    else
-        return false;
 }
