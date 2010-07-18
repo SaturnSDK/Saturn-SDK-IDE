@@ -191,7 +191,7 @@ void CDB_driver::CPURegisters()
     QueueCommand(new CdbCmd_InfoRegisters(this));
 }
 
-void CDB_driver::SwitchToFrame(size_t /*number*/)
+void CDB_driver::SwitchToFrame(size_t number)
 {
     ResetCursor();
     QueueCommand(new CdbCmd_SwitchFrame(this, number));
