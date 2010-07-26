@@ -387,7 +387,7 @@ wxString Tokenizer::ReadToEOL(bool nestBraces, bool stripUnneeded)
                 *p = ch;
                 ++p;
 
-                if ((size_t)(p - buffer) >= maxBufferLen)
+                if (p >= buffer + maxBufferLen)
                 {
                     str.Append(buffer, p - buffer);
                     p = buffer;
@@ -400,6 +400,7 @@ wxString Tokenizer::ReadToEOL(bool nestBraces, bool stripUnneeded)
                     else if (ch == _T('}'))
                         --m_NestLevel;
                 }
+
                 MoveToNextChar();
             }
 
@@ -407,12 +408,14 @@ wxString Tokenizer::ReadToEOL(bool nestBraces, bool stripUnneeded)
                 break;
             else
             {
-                while (*(--p) <= _T(' ') && p > buffer) {}
+                while (*(--p) <= _T(' ') && p > buffer)
+                    ;
                 MoveToNextChar();
             }
         }
 
-        while (*(p - 1) <= _T(' ') && --p > buffer) {}
+        while (*(p - 1) <= _T(' ') && --p > buffer)
+            ;
         str.Append(buffer, p - buffer);
 
         TRACE(_T("ReadToEOL(): (END) We are now at line %d, CurrentChar='%c', PreviousChar='%c', NextChar='%c'"),
@@ -512,10 +515,9 @@ void Tokenizer::ReadParentheses(wxString& str)
     {
         while (SkipComment())
             ;
-
         wxChar ch = CurrentChar();
 
-        while (CurrentChar() == _T('#')) // do not use if
+        while (ch == _T('#')) // do not use if
         {
             const PreprocessorType type = GetPreprocessorType();
             if (type == ptOthers)
@@ -554,12 +556,21 @@ void Tokenizer::ReadParentheses(wxString& str)
                 const size_t usedLen = p - buffer;
                 if (usedLen + writeLen > maxBufferLen)
                 {
-                    str.Append(buffer, writeLen);
-                    p = buffer;
+                    if (p != buffer)
+                    {
+                        str.Append(buffer, usedLen);
+                        p = buffer;
+                    }
+
+                    str.Append(&m_Buffer[startIndex], writeLen);
+                }
+                else
+                {
+                    memcpy((void*)p, (void*)(&m_Buffer[startIndex]), writeLen * sizeof(wxChar));
+                    p += writeLen;
                 }
 
-                memcpy((void*)p, (void*)(&m_Buffer[startIndex]), writeLen * sizeof(wxChar));
-                p += writeLen;
+                continue;
             }
             break;
 
@@ -642,20 +653,20 @@ void Tokenizer::ReadParentheses(wxString& str)
             break;
         }
 
-        if ((size_t)(p - buffer) >= maxBufferLen)
+        if (p >= buffer + maxBufferLen)
         {
             str.Append(buffer, p - buffer);
             p = buffer;
         }
 
-        if (startIndex == m_TokenIndex)
-            MoveToNextChar();
+        MoveToNextChar();
 
         if (level == 0)
             break;
     }
 
-    str.Append(buffer, p - buffer);
+    if (p != buffer)
+        str.Append(buffer, p - buffer);
     TRACE(_T("ReadParentheses(): %s"), str.wx_str());
 }
 
