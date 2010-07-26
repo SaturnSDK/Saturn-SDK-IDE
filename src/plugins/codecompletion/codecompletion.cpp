@@ -1141,11 +1141,11 @@ int CodeCompletion::DoAllMethodsImpl()
                 type[type.Len() - 2] = type.Last();
                 type.RemoveLast();
             }
-            str << type << _T(" ") << token->GetParentName() << _T("::") << token->m_Name << token->m_Args;
+            if (!type.IsEmpty())
+                str << type << _T(" ");
+            str << token->GetParentName() << _T("::") << token->m_Name << token->m_Args;
             if (token->m_IsConst)
-            {
                 str << _T(" const");
-            }
             str << _T("\n{\n}\n");
 
             // add code in editor
