@@ -241,7 +241,7 @@ public:
     void SpliteMacroActualArgument(wxArrayString& results);
 
     /** Replace buffer for 'function-like macro' parse */
-    void ReplaceBufferForReparse(wxString& buffer);
+    void ReplaceBufferForReparse(const wxString& target);
 
 protected:
     /** Initialize some member variables */
@@ -384,7 +384,7 @@ private:
     }
 
     /** Do the Macro replacement according to the macro replacement rules */
-    wxString MacroReplace(const wxString str);
+    void MacroReplace(wxString& str);
 
     /** Judge what is the first block
       * If call this function, it will call 'SkipToEOL(false, true)' final.

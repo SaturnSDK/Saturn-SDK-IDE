@@ -30,16 +30,22 @@ ParserTest::ParserTest()
 
     // for GCC
     Tokenizer::SetReplacementString(_T("_GLIBCXX_STD"),                     _T("std"));
-    Tokenizer::SetReplacementString(_T("_GLIBCXX_BEGIN_NESTED_NAMESPACE"),  _T("+namespace"));
+    Tokenizer::SetReplacementString(_T("_GLIBCXX_STD_D"),                   _T("std"));
+    Tokenizer::SetReplacementString(_T("_GLIBCXX_BEGIN_NESTED_NAMESPACE"),  _T("+namespace std {"));
     Tokenizer::SetReplacementString(_T("_GLIBCXX_END_NESTED_NAMESPACE"),    _T("}"));
-    Tokenizer::SetReplacementString(_T("_GLIBCXX_BEGIN_NAMESPACE"),         _T("+namespace"));
+    Tokenizer::SetReplacementString(_T("_GLIBCXX_BEGIN_NAMESPACE"),         _T("+namespace std {"));
     Tokenizer::SetReplacementString(_T("_GLIBCXX_END_NAMESPACE"),           _T("}"));
     Tokenizer::SetReplacementString(_T("_GLIBCXX_END_NAMESPACE_TR1"),       _T("}"));
-    Tokenizer::SetReplacementString(_T("_GLIBCXX_BEGIN_NAMESPACE_TR1"),     _T("-namespace tr1 {"));
+    Tokenizer::SetReplacementString(_T("_GLIBCXX_BEGIN_NAMESPACE_TR1"),     _T("namespace tr1 {"));
 
-    // for VC2005/2008/2010
-    Tokenizer::SetReplacementString(_T("_STD_BEGIN"),                       _T("-namespace std {"));
+    // for VC
+    Tokenizer::SetReplacementString(_T("_STD_BEGIN"),                       _T("namespace std {"));
     Tokenizer::SetReplacementString(_T("_STD_END"),                         _T("}"));
+    Tokenizer::SetReplacementString(_T("_STDEXT_BEGIN"),                    _T("namespace std {"));
+    Tokenizer::SetReplacementString(_T("_STDEXT_END"),                      _T("}"));
+
+    // for wxWidgets
+    Tokenizer::SetReplacementString(_T("BEGIN_EVENT_TABLE"),                _T("-END_EVENT_TABLE"));
 }
 
 ParserTest::~ParserTest()

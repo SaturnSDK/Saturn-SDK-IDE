@@ -197,30 +197,28 @@ void CodeCompletion::LoadTokenReplacements()
 {
     ConfigManager* cfg = Manager::Get()->GetConfigManager(_T("code_completion"));
     ConfigManagerContainer::StringToStringMap repl;
+    cfg->Read(_T("token_replacements"), &repl);
 
-    if (!cfg->Exists(_T("token_replacements")))
-    {
-        // first run; add default replacements string
-        Tokenizer::SetReplacementString(_T("_GLIBCXX_STD"),                    _T("std"));
+    // for GCC
+    repl[_T("_GLIBCXX_STD")]                    = _T("std");
+    repl[_T("_GLIBCXX_STD_D")]                  = _T("std");
+    repl[_T("_GLIBCXX_BEGIN_NESTED_NAMESPACE")] = _T("+namespace std {");
+    repl[_T("_GLIBCXX_END_NESTED_NAMESPACE")]   = _T("}");
+    repl[_T("_GLIBCXX_BEGIN_NAMESPACE")]        = _T("+namespace std {");
+    repl[_T("_GLIBCXX_END_NAMESPACE")]          = _T("}");
+    repl[_T("_GLIBCXX_BEGIN_NAMESPACE_TR1")]    = _T("namespace tr1 {");
+    repl[_T("_GLIBCXX_END_NAMESPACE_TR1")]      = _T("}");
 
-        Tokenizer::SetReplacementString(_T("_GLIBCXX_BEGIN_NESTED_NAMESPACE"), _T("+namespace"));
-        Tokenizer::SetReplacementString(_T("_GLIBCXX_END_NESTED_NAMESPACE"),   _T("}"));
+    // for VC
+    repl[_T("_STD_BEGIN")]                      = _T("namespace std {");
+    repl[_T("_STD_END")]                        = _T("}");
+    repl[_T("_STDEXT_BEGIN")]                   = _T("namespace std {");
+    repl[_T("_STDEXT_END")]                     = _T("}");
 
-        Tokenizer::SetReplacementString(_T("_GLIBCXX_BEGIN_NAMESPACE"),        _T("+namespace"));
-        Tokenizer::SetReplacementString(_T("_GLIBCXX_END_NAMESPACE"),          _T("}"));
+    // for wxWidgets
+    repl[_T("BEGIN_EVENT_TABLE")]               = _T("-END_EVENT_TABLE");
 
-        Tokenizer::SetReplacementString(_T("_GLIBCXX_END_NAMESPACE_TR1"),      _T("}"));
-        Tokenizer::SetReplacementString(_T("_GLIBCXX_BEGIN_NAMESPACE_TR1"),    _T("-namespace tr1 {"));
-
-        // for VC
-        Tokenizer::SetReplacementString(_T("_STD_BEGIN"),                      _T("-namespace std {"));
-        Tokenizer::SetReplacementString(_T("_STD_END"),                        _T("}"));
-        Tokenizer::SetReplacementString(_T("_STDEXT_BEGIN"),                   _T("-namespace std {"));
-        Tokenizer::SetReplacementString(_T("_STDEXT_END"),                     _T("}"));
-    }
-    else
-        cfg->Read(_T("token_replacements"), &repl);
-
+    // apply
     Tokenizer::ConvertToHashReplacementMap(repl);
 }
 

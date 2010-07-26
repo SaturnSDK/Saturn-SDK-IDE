@@ -1033,78 +1033,50 @@ wxString Tokenizer::DoGetToken()
     }
 
     if (needReplace)
-        return MacroReplace(str);
+        MacroReplace(str);
 
     return str;
 }
 
-wxString Tokenizer::MacroReplace(const wxString str)
+void Tokenizer::MacroReplace(wxString& str)
 {
     wxStringHashMap::const_iterator it = s_Replacements.find(str);
+    if (it == s_Replacements.end())
+        return;
 
-    if (it != s_Replacements.end())
+    TRACE(_T("MacroReplace() : Replacing '%s' with '%s' (file='%s', line='%d')."), it->first.wx_str(),
+          it->second.wx_str(), m_Filename.wx_str(), m_LineNumber);
+
+    if (it->second.IsEmpty())
     {
-        // match one!
-        wxString key   = it->first;
-        wxString value = it->second;
-        TRACE(_T("MacroReplace() : Replacing '%s' with '%s' (file='%s')."), key.wx_str(), value.wx_str(), m_Filename.wx_str());
-        if (value[0]=='+' && CurrentChar()=='(')
-        {
-            unsigned int start = m_TokenIndex;
-            m_Buffer[start] = ' ';
-            bool fillSpace = false;
-            while (m_Buffer[start]!=')')
-            {
-                if (m_Buffer[start]==',')
-                    fillSpace = true;
-
-                if (fillSpace==true)
-                    m_Buffer[start]=' ';
-
-                start++;
-            }
-            m_Buffer[start] = '{';
-            return value.Remove(0,1);
-        }
-        else if (value[0] == '-')
-        {
-            unsigned int lenKey = key.Len();
-            value = value.Remove(0,1);
-            unsigned int lenValue = value.Len();
-
-            for (unsigned int i=1; i<=lenKey; i++)
-            {
-                if (i < lenValue)
-                    m_Buffer[m_TokenIndex-i] = value[lenValue-i];
-                else
-                    m_Buffer[m_TokenIndex-i] = ' ';
-            }
-
-            int firstSpace = value.First(' ');
-            // adjust m_TokenIndex
-            m_TokenIndex = m_TokenIndex - lenValue + firstSpace;
-
-            return value.Mid(0,firstSpace);
-        }
-        else if (value[0] == '*')
-        {
-            wxString arg = m_Buffer.Mid(m_TokenIndex,15);
-            int left = arg.Find(_T('('));
-            int right= arg.Find(_T(')'));
-            if(left==wxNOT_FOUND||right==wxNOT_FOUND||left+2>right)
-                return value;
-            arg = arg.Mid(left+1,right-left-1);
-            arg.Trim(false);
-            arg.Trim(true);
-            m_TokenIndex = m_TokenIndex + right + 1;
-            TRACE(_T("MacroReplace() : Return %s, and move to '%s'"), arg.wx_str(), m_Buffer.Mid(m_TokenIndex,1).wx_str());
-            return arg;
-        }
-        else
-            return value;
+        SkipUnwanted();
+        str = DoGetToken();
     }
-
-    return str;
+    else if (it->second[0] == _T('+'))
+    {
+        SkipUnwanted();
+        DoGetToken(); // eat (...)
+        ReplaceBufferForReparse(&it->second[1]);
+        str = DoGetToken();
+    }
+    else if (it->second[0] == _T('-'))
+    {
+        wxString end(&it->second[1]);
+        while (NotEOF() && DoGetToken() != end)
+            ;
+        SkipUnwanted();
+        str = DoGetToken(); // eat ()
+        if (str[0] == _T('('))
+        {
+            SkipUnwanted();
+            str = DoGetToken();
+        }
+    }
+    else
+    {
+        ReplaceBufferForReparse(it->second);
+        str = DoGetToken();
+    }
 }
 
 bool Tokenizer::CalcConditionExpression()
@@ -1446,8 +1418,9 @@ void Tokenizer::SpliteMacroActualArgument(wxArrayString& results)
     m_State = oldState;
 }
 
-void Tokenizer::ReplaceBufferForReparse(wxString& buffer)
+void Tokenizer::ReplaceBufferForReparse(const wxString& target)
 {
+    wxString buffer(target);
     if (buffer.IsEmpty())
         return;
 
