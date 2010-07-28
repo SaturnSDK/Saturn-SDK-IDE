@@ -86,6 +86,7 @@ NativeParser::NativeParser() :
     m_LastEditor(NULL),
     m_pImageList(0L)
 {
+    m_TemplateMap.clear();
     // hook to project loading procedure
     ProjectLoaderHooks::HookFunctorBase* myhook = new ProjectLoaderHooks::HookFunctor<NativeParser>(this, &NativeParser::OnProjectLoadingHook);
     m_HookId = ProjectLoaderHooks::RegisterHook(myhook);
@@ -184,6 +185,7 @@ NativeParser::~NativeParser()
     ClearParsers();
     RemoveClassBrowser();
 
+    m_TemplateMap.clear();
     Delete(m_pImageList);
 }
 
@@ -940,9 +942,8 @@ wxArrayString& NativeParser::GetProjectSearchDirs(cbProject* project)
     ProjectSearchDirsMap::iterator it;
     it = m_ProjectSearchDirsMap.find(project);
     if (it == m_ProjectSearchDirsMap.end())
-    {
         it = m_ProjectSearchDirsMap.insert(m_ProjectSearchDirsMap.end(), std::make_pair(project, wxArrayString()));
-    }
+
     return it->second;
 }
 
@@ -1374,8 +1375,6 @@ bool NativeParser::LoadCachedData(cbProject* project)
     }
     if (!ret)
         Manager::Get()->GetLogManager()->DebugLog(_T("Error reading Cache! Re-parsing from scratch."));
-//    else
-//        DisplayStatus(parser, project);
     return ret;
 }
 
@@ -1551,7 +1550,7 @@ bool NativeParser::ParseUsingNamespace(cbEditor* ed, TokenIdxSet& search_scope, 
     if (pos < 0 || pos > ed->GetControl()->GetLength())
         return false;
 
-    //Get the buffer from begin of the editor to the current caret position
+    // Get the buffer from begin of the editor to the current caret position
     wxString buffer = ed->GetControl()->GetTextRange(0, pos);
     m_pParser->ParseBufferForUsingNamespace(buffer, ns);
 
@@ -1736,7 +1735,6 @@ const wxArrayString& NativeParser::GetCallTips(int chars_per_line)
         int line = ed->GetControl()->GetCurrentLine();
         lineText = ed->GetControl()->GetLine(line);
         end = ed->GetControl()->GetCurrentPos() - ed->GetControl()->PositionFromLine(line);
-//        end = lineText.Length();
         int nest = 0;
         while (end > 0)
         {
@@ -2568,9 +2566,7 @@ size_t NativeParser::FindAIMatches(std::queue<ParserComponent> components,
                 }
             }
             else if (s_DebugSmartSense)
-            {
-                    Manager::Get()->GetLogManager()->DebugLog(F(_T("FindAIMatches() No types matched '%s'."), token->m_ActualType.wx_str()));
-            }
+                Manager::Get()->GetLogManager()->DebugLog(F(_T("FindAIMatches() No types matched '%s'."), token->m_ActualType.wx_str()));
         }
 
         // if no more components, add to result set
@@ -2720,7 +2716,7 @@ size_t NativeParser::GenerateResultSet(TokensTree*     tree,
 
 size_t NativeParser::ResolveActualType(wxString searchText, const TokenIdxSet& searchScope, TokenIdxSet& result)
 {
-    //break up the search text for next analysis.
+    // break up the search text for next analysis.
     std::queue<ParserComponent> typeComponents;
     BreakUpComponents(searchText, typeComponents);
     if (!typeComponents.empty())
@@ -2756,10 +2752,6 @@ size_t NativeParser::ResolveActualType(wxString searchText, const TokenIdxSet& s
         }
         if (initialScope.size() > 0)
         {
-//            for (TokenIdxSet::iterator it = initialScope.begin(); it != initialScope.end(); ++it)
-//            {
-//                result.insert(*it);
-//            }
             result = initialScope;
         }
     }
@@ -2769,6 +2761,7 @@ size_t NativeParser::ResolveActualType(wxString searchText, const TokenIdxSet& s
 
 size_t NativeParser::ResolveExpression(std::queue<ParserComponent> components, const TokenIdxSet& searchScope, TokenIdxSet& result, bool isCaseSense, bool IsPrefix)
 {
+    m_TemplateMap.clear();
     static ParserComponent lastComponent;
     if (!m_pParser || components.empty())
         return 0;
@@ -2778,7 +2771,6 @@ size_t NativeParser::ResolveExpression(std::queue<ParserComponent> components, c
         return 0;
 
     TokenIdxSet initialScope;
-    //TokenIdxSet initialResult;
     if (!searchScope.empty())
         initialScope = searchScope;
     else
@@ -2817,7 +2809,7 @@ size_t NativeParser::ResolveExpression(std::queue<ParserComponent> components, c
         }
 
         GenerateResultSet(searchText, initialScope, initialResult, (isCaseSense || !isLastComponent), (!IsPrefix && isLastComponent));
-        //now we should clear the initialScope.
+        // now we should clear the initialScope.
         initialScope.clear();
 
         //-------------------------------------
@@ -2842,8 +2834,8 @@ size_t NativeParser::ResolveExpression(std::queue<ParserComponent> components, c
                     continue;
                 }
 
-                //TODO: we should deal with operators carefully.
-                //it should work for class::/namespace::
+                // TODO: we should deal with operators carefully.
+                // it should work for class::/namespace::
                 if (token->m_IsOperator && (lastComponent.token_type!=pttNamespace))
                     continue;
 
@@ -2853,22 +2845,18 @@ size_t NativeParser::ResolveExpression(std::queue<ParserComponent> components, c
                     Manager::Get()->GetLogManager()->DebugLog(F(_T("ResolvExpression() Match:'%s(ID=%d) : type='%s'"), token->m_Name.wx_str(), id, token->m_ActualType.wx_str()));
 
                 //------------------------------
-
-                //handle it if the token is a function/variable(i.e. is not a type)
-                if (!searchText.IsEmpty()
+                // recond the template map message here. hope it will work.
+                // wxString tkname = token->m_Name;
+                // wxArrayString tks = token->m_TemplateType;
+                if (!token->m_TemplateMap.empty())
+                    m_TemplateMap = token->m_TemplateMap;
+                // handle it if the token is a function/variable(i.e. is not a type)
+                if (   !searchText.IsEmpty()
                     && (subComponent.token_type != pttSearchText)
                     && !token->m_ActualType.IsEmpty())
                 {
                     TokenIdxSet autualTypeResult;
-                    std::queue<ParserComponent> actualTypeComponents;
                     wxString actualTypeStr = token->m_ActualType;
-
-                    BreakUpComponents(actualTypeStr, actualTypeComponents);
-
-                    //--------------------------------
-                    if (s_DebugSmartSense)
-                        Manager::Get()->GetLogManager()->DebugLog(F(_T("ResolveExpression() Looking for type:'%s'(%d components)"), actualTypeStr.wx_str(), actualTypeComponents.size()));
-                    //--------------------------------
 
                     TokenIdxSet actualTypeScope;
                     if (searchScope.empty())
@@ -2900,8 +2888,20 @@ size_t NativeParser::ResolveExpression(std::queue<ParserComponent> components, c
                     if (actualTypeResult.size() > 0)
                     {
                         for (TokenIdxSet::iterator it2=actualTypeResult.begin(); it2!=actualTypeResult.end(); ++it2)
-                        {
                             initialScope.insert(*it2);
+                    }
+                    else // ok ,we search template container to check if type is template formal.
+                    {
+                        map<wxString, wxString>::iterator it = m_TemplateMap.find(actualTypeStr);
+                        if (it != m_TemplateMap.end())
+                        {
+                            actualTypeStr = it->second;
+                            ResolveActualType(actualTypeStr, actualTypeScope, actualTypeResult);
+                            if (actualTypeResult.size() > 0)
+                            {
+                                for (TokenIdxSet::iterator it2=actualTypeResult.begin(); it2!=actualTypeResult.end(); ++it2)
+                                    initialScope.insert(*it2);
+                            }
                         }
                     }
                     continue;

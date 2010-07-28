@@ -208,7 +208,7 @@ class NativeParser : public wxEvtHandler
 
         typedef std::map<Parser*, ParsingNode> ReparseFileMap;
         ReparseFileMap       m_ReparseFileMap;
-
+        map<wxString, wxString> m_TemplateMap;
         DECLARE_EVENT_TABLE()
 };
 

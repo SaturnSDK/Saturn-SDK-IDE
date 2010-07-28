@@ -83,6 +83,8 @@ Token::Token()
     m_Self(-1)
 {
     m_Ticket = GetTokenTicket();
+    m_TemplateMap.clear();
+    m_TemplateType.clear();
 }
 
 Token::Token(const wxString& name, unsigned int file, unsigned int line) :
@@ -105,11 +107,15 @@ Token::Token(const wxString& name, unsigned int file, unsigned int line) :
 {
     //ctor
     m_Ticket = GetTokenTicket();
+    m_TemplateMap.clear();
+    m_TemplateType.clear();
 }
 
 Token::~Token()
 {
     //dtor
+    m_TemplateMap.clear();
+    m_TemplateType.clear();
 }
 
 unsigned long Token::GetTokenTicket()

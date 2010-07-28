@@ -560,6 +560,8 @@ void ParserThread::DoParse()
                 m_Str.Clear();
                 m_Tokenizer.SetState(oldState);
             }
+            else if (token == _T("*"))
+                m_PointerOrRef << token;
             else
                 switchHandled = false;
             break;
@@ -763,7 +765,11 @@ void ParserThread::DoParse()
                 TRACE(_T("DoParse() : Template argument='%s'"), m_TemplateArgument.wx_str());
                 m_Str.Clear();
                 m_Tokenizer.SetState(tsSkipUnWanted);
+                if (m_Tokenizer.PeekToken() != _T("class"))
+                    m_TemplateArgument.clear();
             }
+            else if (token == _T("typename"))
+                SkipToOneOfChars(_T(";"), true);
             else if (token == ParserConsts::kw_operator)
             {
                 TokenizerState oldState = m_Tokenizer.GetState();
@@ -891,7 +897,12 @@ void ParserThread::DoParse()
                     // token should hold the var (x/y/z)
                     // m_Str should hold the type (int)
                     if (!m_Str.IsEmpty() && m_Options.handleVars)
-                        DoAddToken(tkVariable, token, m_Tokenizer.GetLineNumber());
+                    {
+                        Token* newToken = DoAddToken(tkVariable, token, m_Tokenizer.GetLineNumber());
+                        if (newToken && !m_TemplateArgument.IsEmpty())
+                            ResolveTemplateArgs(newToken);
+                        //HandleVariable(token, m_Tokenizer.GetLineNumber());
+                    }
 
                     // else it's a syntax error; let's hope we can recover from this...
                     // skip comma (we had peeked it)
@@ -901,7 +912,10 @@ void ParserThread::DoParse()
                 {
                     // a template, e.g. someclass<void>::memberfunc
                     // we have to skip <>, so we 're left with someclass::memberfunc
-                    SkipAngleBraces();
+                    if (m_Str.IsEmpty())
+                        GetTemplateArgs();
+                    else
+                        SkipAngleBraces();
                     peek = m_Tokenizer.PeekToken();
                     if (peek==ParserConsts::dcolon)
                     {
@@ -931,7 +945,12 @@ void ParserThread::DoParse()
                     if (!m_Str.IsEmpty() && (wxIsalpha(token.GetChar(0)) || token.GetChar(0) == '_'))
                     {
                         if (m_Options.handleVars)
-                            DoAddToken(tkVariable, token, m_Tokenizer.GetLineNumber());
+                        {
+                            Token* newToken = DoAddToken(tkVariable, token, m_Tokenizer.GetLineNumber());
+                            if (newToken && !m_TemplateArgument.IsEmpty())
+                                ResolveTemplateArgs(newToken);
+                            //HandleVariable(token, m_Tokenizer.GetLineNumber());
+                        }
                         else
                             SkipToOneOfChars(ParserConsts::semicolonclbrace, true);
                     }
@@ -945,10 +964,6 @@ void ParserThread::DoParse()
                         m_EncounteredNamespaces.pop();
                     }
                     m_Str = token;
-                }
-                else if (token == _T("*"))
-                {
-                    m_PointerOrRef << token;
                 }
                 else
                 {
@@ -1628,7 +1643,22 @@ void ParserThread::HandleClass(EClassType ct)
                                                   _T("Struct"), num++);
 
                 Token* newToken = DoAddToken(tkClass, unnamedTmp, lineNr);
+                // maybe it is a bug here.I just fixed it.
+                if (!newToken)
+                {
+                    // restore tokenizer's functionality
+                    m_Tokenizer.SetState(oldState);
+                    return;
+                }
                 newToken->m_TemplateArgument = m_TemplateArgument;
+
+                wxArrayString formals;
+                ResolveTemplateFormalArgs(m_TemplateArgument, formals);
+
+                for (size_t i=0; i<formals.GetCount(); ++i)
+                    TRACE(_T("The template normal arguments are '%s'."), formals[i].wx_str());
+
+                newToken->m_TemplateType = formals;
                 m_TemplateArgument.Clear();
 
                 Token* lastParent = m_pLastParent;
@@ -1694,6 +1724,15 @@ void ParserThread::HandleClass(EClassType ct)
 
 				newToken->m_ImplLine = lineNr;
 				newToken->m_ImplLineStart = m_Tokenizer.GetLineNumber();
+
+                newToken->m_TemplateArgument = m_TemplateArgument;
+                wxArrayString formals;
+                ResolveTemplateFormalArgs(m_TemplateArgument, formals);
+                for (size_t i=0; i<formals.GetCount(); ++i)
+                    TRACE(_T("The template formals arguments are '%s'."), formals[i].wx_str());
+
+                newToken->m_TemplateType = formals;
+                m_TemplateArgument.Clear();
 
                 DoParse();
 
@@ -1890,6 +1929,8 @@ void ParserThread::HandleFunction(const wxString& name, bool isOperator)
         {
             newToken->m_IsConst = isConst;
             newToken->m_TemplateArgument = m_TemplateArgument;
+            if (!m_TemplateArgument.IsEmpty() && newToken->m_TemplateMap.empty())
+                ResolveTemplateArgs(newToken);
         }
         m_TemplateArgument.Clear();
     }
@@ -2583,4 +2624,200 @@ int ParserThread::GetLevel(const wxString& buffer)
     }
 
     return level;
+}
+
+void ParserThread::ResolveTemplateFormalArgs(const wxString& templateArgs, wxArrayString& formals)
+{
+
+    wxString word(wxEmptyString);
+    wxString args = templateArgs;
+    args.Trim(true).Trim(false);
+    wxArrayString container;
+    int n = args.size();
+    for (int i = 0; i<n; ++i)
+    {
+        switch (args[i])
+        {
+        case _T(' '):
+            container.Add(word);
+            word.clear();
+            continue;
+        case _T('<'):
+        case _T('>'):
+        case _T(','):
+
+            container.Add(word);
+            word.clear();
+            container.Add(args[i]);
+            continue;
+        default:
+            word << args[i];
+        }
+    }
+    n = container.GetCount();
+    for (int j=0; j<n; ++j)
+    {
+        if (container[j] == _T("typename") || container[j] == _T("class"))
+        {
+            if ((j+1)<n)
+            {
+                formals.Add(container[j+1]);
+                ++j;
+            }
+        }
+    }
+
+}
+
+void ParserThread::GetTemplateArgs()
+{
+    // need to force the tokenizer _not_ skip anything
+    // or else default values for template params would cause us to miss everything (because of the '=' symbol)
+    TokenizerState oldState = m_Tokenizer.GetState();
+    m_Tokenizer.SetState(tsSkipNone);
+    m_TemplateArgument.clear();
+    int nestLvl = 0;
+    // NOTE: only exit this loop with 'break' so the tokenizer's state can
+    // be reset afterwards (i.e. don't use 'return')
+    while (!TestDestroy())
+    {
+        wxString tmp = m_Tokenizer.GetToken();
+
+        if (tmp==ParserConsts::lt)
+        {
+            ++nestLvl;
+            m_TemplateArgument << tmp;
+
+        }
+        else if (tmp==ParserConsts::gt)
+        {
+            --nestLvl;
+            m_TemplateArgument << tmp;
+        }
+        else if (tmp==ParserConsts::semicolon)
+        {
+            // unget token - leave ; on the stack
+            m_Tokenizer.UngetToken();
+            m_TemplateArgument.clear();
+            break;
+        }
+        else if (tmp.IsEmpty())
+            break;
+        else
+            m_TemplateArgument << tmp;
+        if (nestLvl <= 0)
+            break;
+    }
+
+    // reset tokenizer's functionality
+    m_Tokenizer.SetState(oldState);
+}
+
+void ParserThread::ResolveTemplateActualArgs(const wxString& templateArgs, wxArrayString& actuals)
+{
+    wxString word(wxEmptyString);
+    wxString args = templateArgs;
+    args.Trim(true).Trim(false);
+    args.Remove(0, 1);
+    args.RemoveLast();
+    wxArrayString container;
+    int n = args.size();
+    for (int i = 0; i<n; ++i)
+    {
+        switch (args[i])
+        {
+        case _T(' '):
+            container.Add(word);
+            word.clear();
+            continue;
+        case _T('<'):
+        case _T('>'):
+        case _T(','):
+
+            container.Add(word);
+            word.clear();
+            container.Add(args[i]);
+            continue;
+        default:
+            word << args[i];
+        }
+    }
+    if (!word.IsEmpty())
+    {
+        container.Add(word);
+        word.clear();
+    }
+    n = container.GetCount();
+    for (int k=0; k<n; ++k)
+        TRACE(_T("The container elements are '%s'."), container[k].wx_str());
+    int level = 0;
+    for (int j=0; j<n; ++j)
+    {
+        if (container[j] == _T("<"))
+        {
+            ++level;
+            while (level > 0 && (j+1)<n)
+            {
+                if (container[j] == _T(">"))
+                    --level;
+                ++j;
+            }
+
+        }
+        else if (container[j] == _T(","))
+        {
+            ++j;
+            continue;
+        }
+        else
+            actuals.Add(container[j]);
+        ++j;
+    }
+}
+
+bool ParserThread::ResolveTemplateMap(wxString parentType, const wxArrayString& actuals, map<wxString, wxString>& results)
+{
+    parentType.Trim(true).Trim(false);
+    // now not support the class under the namespace;
+    int id = m_pTokensTree->TokenExists(parentType, -1, tkClass);
+    if (id != -1)
+    {
+        Token* normalToken = m_pTokensTree->at(id);
+        if (normalToken)
+        {
+            wxArrayString normals =  normalToken->m_TemplateType;
+            for (size_t i=0; i<normals.GetCount(); ++i)
+                TRACE(_T("ResolveTemplateMap get the template arguments are '%s'."), normals[i].wx_str());
+
+            size_t n = normals.GetCount() < actuals.GetCount() ? normals.GetCount() : actuals.GetCount();
+            for (size_t i=0; i<n; ++i)
+            {
+                results[normals[i]] = actuals[i];
+                TRACE(_T("In ResolveTemplateMap function the normal is '%s',the actual is '%s'."), normals[i].wx_str(), actuals[i].wx_str());
+            }
+            return n>0 ? true : false;
+        }
+        else
+            return false;
+
+    }
+    else
+        return false;
+}
+
+void ParserThread::ResolveTemplateArgs(Token* newToken)
+{
+    TRACE(_T("The variable template arguments are '%s'."), m_TemplateArgument.wx_str());
+    newToken->m_TemplateArgument = m_TemplateArgument;
+    wxArrayString actuals;
+    ResolveTemplateActualArgs(m_TemplateArgument, actuals);
+    for (size_t i=0; i<actuals.GetCount(); ++i)
+        TRACE(_T("The template actual arguments are '%s'."), actuals[i].wx_str());
+
+    newToken->m_TemplateType = actuals;
+    // now resolve the template normal and actual map
+    // wxString parentType = m_Str;
+    map<wxString, wxString> templateMap;
+    ResolveTemplateMap(m_Str, actuals, templateMap);
+    newToken->m_TemplateMap = templateMap;
 }

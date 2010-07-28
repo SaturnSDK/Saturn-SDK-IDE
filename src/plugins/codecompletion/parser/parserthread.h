@@ -275,6 +275,12 @@ class ParserThread : public cbThreadedTask
         /** Do real handle macro parse */
         void DoHandleMacro(Token* tk, const wxString& peek, int& level);
 
+        void GetTemplateArgs();
+        void ResolveTemplateArgs(Token* newToken);
+        void ResolveTemplateFormalArgs(const wxString& templateArgs, wxArrayString& formals);
+        void ResolveTemplateActualArgs(const wxString& templateArgs, wxArrayString& actuals);
+        bool ResolveTemplateMap(wxString parentType, const wxArrayString& actuals, map<wxString, wxString>& results);
+
         /** if we regard the parserThread class as a syntax analyzer, then the Tokenizer class is
           * regard as the lexer, which always feeds a wxString by calling m_Tokenizer.GetToken()
           */
