@@ -1121,7 +1121,12 @@ bool Tokenizer::CalcConditionExpression()
                 if (tk)
                 {
                     if (tk->m_Type.IsEmpty() || tk->m_Type == token)
-                        token = _T("1");
+                    {
+                        exp.AddToInfixExpression(_T("1"));
+                        continue;
+                    }
+                    else if (wxIsdigit(tk->m_Type[0]))
+                        token = tk->m_Type;
                     else
                     {
                         ReplaceBufferForReparse(tk->m_Type);
@@ -1130,18 +1135,22 @@ bool Tokenizer::CalcConditionExpression()
                 }
             }
             else
-                token = _T("0");
+            {
+                exp.AddToInfixExpression(_T("0"));
+                continue;
+            }
         }
-        else if (token.StartsWith(_T("0x")))
+
+        if (!token.StartsWith(_T("0x")))
+            exp.AddToInfixExpression(token);
+        else
         {
             long value;
             if (token.ToLong(&value, 16))
-                token.Printf(_T("%d"), value);
+                exp.AddToInfixExpression(wxString::Format(_T("%d"), value));
             else
-                token = _T("0");
+                exp.AddToInfixExpression(_T("0"));
         }
-
-        exp.AddToInfixExpression(token);
     }
 
     // reset tokenizer's functionality
