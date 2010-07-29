@@ -667,7 +667,7 @@ void Tokenizer::ReadParentheses(wxString& str)
 
     if (p != buffer)
         str.Append(buffer, p - buffer);
-    TRACE(_T("ReadParentheses(): %s"), str.wx_str());
+    TRACE(_T("ReadParentheses(): %s, line=%d"), str.wx_str(), m_LineNumber);
 }
 
 bool Tokenizer::SkipToEOL(bool nestBraces)
@@ -1073,10 +1073,25 @@ void Tokenizer::MacroReplace(wxString& str)
     else if (it->second[0] == _T('-'))
     {
         wxString end(&it->second[1]);
-        while (NotEOF() && DoGetToken() != end)
-            ;
+        if (end.IsEmpty())
+            return;
+
+        while (NotEOF())
+        {
+            while (SkipComment() && SkipWhiteSpace())
+                ;
+            if (CurrentChar() == end[0])
+            {
+                if (DoGetToken() == end)
+                    break;
+            }
+            else
+                MoveToNextChar();
+        }
+
+        // eat ()
         SkipUnwanted();
-        str = DoGetToken(); // eat ()
+        str = DoGetToken();
         if (str[0] == _T('('))
         {
             SkipUnwanted();
