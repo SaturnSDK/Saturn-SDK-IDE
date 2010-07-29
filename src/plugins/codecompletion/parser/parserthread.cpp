@@ -1156,8 +1156,13 @@ Token* ParserThread::DoAddToken(TokenKind kind,
 
 
     wxString newTokenArgs = (newToken) ? (newToken->m_Args) : _T("");
+    // need to check if the current token already exists in the tokenTree
+    // token's template argument is checked to support template specialization
+    // eg:  template<typename T> class A {...} and template<> class A<int> {...}
+    // we record them as different tokens
     if (   newToken
         && (newToken->m_TokenKind == kind)
+        && (newToken->m_TemplateArgument == m_TemplateArgument)
         && (   (newTokenArgs == args)
             || (   (kind & tkAnyFunction)
                 && (newToken->m_StrippedArgs == strippedArgs) ) ) )
@@ -1583,7 +1588,8 @@ void ParserThread::HandleClass(EClassType ct)
         {
             if (next==ParserConsts::lt) // template specialization
             {
-                SkipAngleBraces();
+                // eg: template<> class A<int> {...}, then we update template argument with "<int>"
+                GetTemplateArgs();
                 next = m_Tokenizer.PeekToken();
             }
 
