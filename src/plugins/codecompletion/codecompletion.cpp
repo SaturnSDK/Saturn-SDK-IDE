@@ -2274,22 +2274,24 @@ void CodeCompletion::EditorEventHook(cbEditor* editor, wxScintillaEvent& event)
 
     if (event.GetEventType() == wxEVT_SCI_AUTOCOMP_SELECTION)
     {
+
+        const int curPos   = control->GetCurrentPos();
+        const int startPos = control->WordStartPosition(curPos, true);
+        const int endPos   = control->WordEndPosition(curPos, true);
+
         wxString itemText = event.GetText();
-        map<wxString, int>::iterator it = m_SearchItem.find(itemText);
+        int pos = curPos;
+        const wxString alreadyText = control->GetTextRange(pos, endPos);
+        if (!alreadyText.IsEmpty() && itemText.EndsWith(alreadyText))
+            pos = endPos;
+
+        control->AutoCompCancel();
+        control->SetTargetStart(startPos);
+        control->SetTargetEnd(pos);
+
+        map<wxString, int>::const_iterator it = m_SearchItem.find(itemText);
         if (it != m_SearchItem.end())
         {
-            control->AutoCompCancel();
-            int pos = control->GetCurrentPos();
-            const int start = control->WordStartPosition(pos, true);
-            const int end = control->WordEndPosition(pos, true);
-
-            wxString alreadyText = control->GetTextRange(pos, end);
-            if (!alreadyText.IsEmpty() && itemText.EndsWith(alreadyText))
-                pos = end;
-
-            control->SetTargetStart(start);
-            control->SetTargetEnd(pos);
-
             //Check if there are brace behind the target
             wxString addString(itemText);
             if (control->GetCharAt(pos) != _T('('))
@@ -2306,22 +2308,11 @@ void CodeCompletion::EditorEventHook(cbEditor* editor, wxScintillaEvent& event)
         }
         else
         {
-            const int pos = control->GetCurrentPos();
-            const int start = control->WordStartPosition(pos, true);
-            wxChar ch = control->GetCharAt(start - 1);
-            if (ch == _T('"') ||  ch == _T('<'))
-            {
-                if (itemText.Find(_T('.'), true) != wxNOT_FOUND)
-                {
-                    control->AutoCompCancel();
-                    control->SetTargetStart(start);
-                    control->SetTargetEnd(pos);
-                    if (ch == _T('<')) ch = _T('>');
-                    itemText.Append(ch);
-                    control->ReplaceTarget(itemText);
-                    control->GotoPos(start + itemText.Length());
-                }
-            }
+            const wxChar ch = control->GetCharAt(startPos - 1);
+            if ((ch == _T('"') ||  ch == _T('<')) && itemText.Find(_T('.'), true) != wxNOT_FOUND)
+                itemText.Append((ch == _T('<')) ? _T('>') : ch);
+            control->ReplaceTarget(itemText);
+            control->GotoPos(startPos + itemText.Length());
         }
     }
 
