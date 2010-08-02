@@ -804,40 +804,45 @@ bool TestIncludeLine(wxString const &line)
     return false;
 }
 
-wxArrayString GetIncludeDirs(cbProject &project)
+int CompareStringLen(const wxString& first, const wxString& second)
+{
+    return second.Len() - first.Len();
+}
+
+void GetAbsolutePath(const wxArrayString& targets, const wxString& basePath, wxArrayString& dirs)
+{
+    for (size_t i = 0; i < targets.GetCount(); ++i)
+    {
+        Manager::Get()->GetMacrosManager()->ReplaceMacros(targets[i]);
+        wxFileName fn(targets[i], wxEmptyString);
+        if (fn.IsRelative())
+        {
+            const wxArrayString oldDirs = fn.GetDirs();
+            fn.SetPath(basePath);
+            for (size_t j = 0; j < oldDirs.GetCount(); ++j)
+                fn.AppendDir(oldDirs[j]);
+        }
+
+        wxString fullPath = fn.GetFullPath();
+        if (dirs.Index(fullPath) == wxNOT_FOUND)
+            dirs.Add(fullPath);
+    }
+}
+
+wxArrayString GetIncludeDirs(cbProject& project, wxArrayString& buildTargets)
 {
     wxArrayString dirs;
+    const wxString prjPath = project.GetCommonTopLevelPath();
+    GetAbsolutePath(project.GetIncludeDirs(), prjPath, dirs);
+
+    for (size_t t = 0; t < buildTargets.GetCount(); ++t)
     {
-        wxArrayString target_dirs = project.GetIncludeDirs();
-
-        for(size_t ii = 0; ii < target_dirs.GetCount(); ++ii)
-        {
-            wxFileName filename;
-            NormalizePath(filename, target_dirs[ii]);
-
-            wxString fullname = filename.GetFullPath();
-            fullname.Replace(_T("\\"), _T("/"), true);
-            if (dirs.Index(fullname) == wxNOT_FOUND)
-                dirs.Add(fullname);
-        }
+        wxArrayString target_dirs = project.GetBuildTarget(buildTargets[t])->GetIncludeDirs();
+        GetAbsolutePath(target_dirs, prjPath, dirs);
     }
 
-    wxString target_name = project.GetActiveBuildTarget();
-    ProjectBuildTarget *target = project.GetBuildTarget(target_name);
-    if (target)
-    {
-        wxArrayString target_dirs = target->GetIncludeDirs();
-        for(size_t ii = 0; ii < target_dirs.GetCount(); ++ii)
-        {
-            wxFileName filename;
-            NormalizePath(filename, target_dirs[ii]);
+    dirs.Sort(CompareStringLen);
 
-            wxString fullname = filename.GetFullPath();
-            fullname.Replace(_T("\\"), _T("/"), true);
-            if (dirs.Index(fullname) == wxNOT_FOUND)
-                dirs.Add(fullname);
-        }
-    }
     return dirs;
 }
 
@@ -856,6 +861,13 @@ void CodeCompletion::CodeCompleteIncludes()
     cbEditor* ed = edMan->GetBuiltinActiveEditor();
     if (!ed)
         return;
+
+    const wxString curFile(ed->GetFilename());
+    const wxString curPath(wxFileName(curFile).GetPath());
+    wxArrayString buildTargets;
+    ProjectFile* pf = pPrj->GetFileByFilename(curFile, false);
+    if (pf)
+        buildTargets = pf->buildTargets;
 
     Parser* parser = m_NativeParser.GetParserPtr();
     const bool caseSens = parser ? parser->Options().caseSensitive : false;
@@ -883,7 +895,7 @@ void CodeCompletion::CodeCompleteIncludes()
     wxString filename = line.substr(quote_pos, pos - lineStartPos - quote_pos);
     filename.Replace(_T("\\"), _T("/"), true);
 
-    wxArrayString include_dirs = GetIncludeDirs(*pPrj);
+    wxArrayString include_dirs = GetIncludeDirs(*pPrj, buildTargets);
 
     // fill a list of matching project files
     wxArrayString files;
@@ -892,35 +904,35 @@ void CodeCompletion::CodeCompleteIncludes()
         ProjectFile* pf = pPrj->GetFile(i);
         if (pf && FileTypeOf(pf->relativeFilename) == ftHeader)
         {
-            wxString current_filename = pf->relativeFilename;
-            current_filename.Replace(_T("\\"), _T("/"), true);
+            wxString current_filename = pf->file.GetFullPath();
             if (current_filename.find(filename) != wxString::npos)
             {
-                if (include_dirs.GetCount() > 0)
+                wxString header;
+                for (size_t dir_index = 0; dir_index < include_dirs.GetCount(); ++dir_index)
                 {
-                    bool found = false;
-                    for(size_t dir_index = 0; dir_index < include_dirs.GetCount(); ++dir_index)
+                    const wxString& dir = include_dirs[dir_index];
+                    if (current_filename.StartsWith(dir))
                     {
-                        wxString const &dir = include_dirs[dir_index];
-                        if (current_filename.StartsWith(dir))
-                        {
-                            files.Add(current_filename.substr(dir.length()));
-                            found = true;
-                            break;
-                        }
+                        header = current_filename.substr(dir.length());
+                        break;
                     }
-
-                    if (!found)
-                        files.Add(current_filename);
                 }
-                else
-                    files.Add(current_filename);
+
+                if (header.IsEmpty())
+                {
+                    wxFileName fn(current_filename);
+                    fn.MakeRelativeTo(curPath);
+                    header = fn.GetFullPath();
+                }
+
+                header.Replace(_T("\\"), _T("/"), true);
+                files.Add(header);
             }
         }
     }
 
     // popup the auto completion window
-    if (files.GetCount() != 0)
+    if (!files.IsEmpty())
     {
         files.Sort();
         ed->GetControl()->ClearRegisteredImages();
