@@ -785,6 +785,43 @@ int CodeCompletion::CodeComplete()
     return -5;
 }
 
+class HeaderDirTraverser : public wxDirTraverser
+{
+public:
+    HeaderDirTraverser(const CodeCompletion::SystemHeadersMap& headersMap, const wxString& basePath,
+                       wxArrayString& headers) :
+        m_SystemHeadersMap(headersMap),
+        m_BasePath(basePath),
+        m_Headers(headers)
+    {}
+
+    virtual wxDirTraverseResult OnFile(const wxString& filename)
+    {
+        wxFileName fn(filename);
+        if (fn.GetExt().IsEmpty() || fn.GetExt().GetChar(0) == _T('h'))
+        {
+            fn.MakeRelativeTo(m_BasePath);
+            wxString final(fn.GetFullPath());
+            final.Replace(_T("\\"), _T("/"), true);
+            m_Headers.Add(final);
+        }
+
+        return wxDIR_CONTINUE;
+    }
+
+    virtual wxDirTraverseResult OnDir(const wxString& dirname)
+    {
+        if (m_SystemHeadersMap.find(dirname) != m_SystemHeadersMap.end())
+            return wxDIR_IGNORE;
+        return wxDIR_CONTINUE;
+    }
+
+private:
+    const CodeCompletion::SystemHeadersMap& m_SystemHeadersMap;
+    const wxString& m_BasePath;
+    wxArrayString& m_Headers;
+};
+
 bool TestIncludeLine(wxString const &line)
 {
     size_t index = line.find(_T('#'));
@@ -804,32 +841,107 @@ bool TestIncludeLine(wxString const &line)
     return false;
 }
 
+void GetSystemHeaders(CodeCompletion::SystemHeadersMap& headersMap, const wxString& filePath)
+{
+    CodeCompletion::SystemHeadersMap::iterator iter = headersMap.find(filePath);
+    if (iter != headersMap.end())
+        return;
+
+    wxDir dir(filePath);
+    if (!dir.IsOpened())
+        return;
+
+    headersMap[filePath] = wxArrayString();
+    HeaderDirTraverser traverser(headersMap, filePath, headersMap[filePath]);
+    dir.Traverse(traverser);
+}
+
 int CompareStringLen(const wxString& first, const wxString& second)
 {
     return second.Len() - first.Len();
 }
 
-void GetAbsolutePath(const wxArrayString& targets, const wxString& basePath, wxArrayString& dirs)
+class SystemHeadersThread : public wxThread
+{
+public:
+    SystemHeadersThread(CodeCompletion::SystemHeadersMap& headersMap, const wxArrayString& incDirs) :
+        m_SystemHeadersMap(headersMap),
+        m_IncludeDirs(incDirs)
+    {
+        Create();
+    }
+
+    virtual void* Entry()
+    {
+        for (size_t i = 0; i < m_IncludeDirs.GetCount(); ++i)
+        {
+            if (m_SystemHeadersMap.find(m_IncludeDirs[i]) == m_SystemHeadersMap.end())
+                GetSystemHeaders(m_SystemHeadersMap, m_IncludeDirs[i]);
+        }
+
+        return NULL;
+    }
+
+private:
+    CodeCompletion::SystemHeadersMap& m_SystemHeadersMap;
+    wxArrayString m_IncludeDirs;
+};
+
+wxArrayString& CodeCompletion::GetSystemIncludeDirs(Parser* parser)
+{
+    static Parser* curParser = 0;
+    static wxArrayString incDirs;
+
+    if (!parser || curParser == parser)
+        return incDirs;
+    else
+    {
+        incDirs.Clear();
+        curParser = parser;
+    }
+
+    cbProject* project = m_NativeParser.GetProjectByParser(curParser);
+    if (project)
+    {
+        incDirs = curParser->GetIncludeDirs();
+        const wxString prjPath = project->GetCommonTopLevelPath();
+        for (size_t i = 0; i < incDirs.GetCount();)
+        {
+            if (incDirs[i].StartsWith(prjPath) || prjPath.StartsWith(incDirs[i]))
+                incDirs.RemoveAt(i);
+            else
+                ++i;
+        }
+    }
+
+    return incDirs;
+}
+
+void CodeCompletion::GetAbsolutePath(const wxArrayString& targets, const wxString& basePath, wxArrayString& dirs)
 {
     for (size_t i = 0; i < targets.GetCount(); ++i)
     {
         Manager::Get()->GetMacrosManager()->ReplaceMacros(targets[i]);
         wxFileName fn(targets[i], wxEmptyString);
+        bool isAbsolutePath = true;
         if (fn.IsRelative())
         {
+            isAbsolutePath = false;
             const wxArrayString oldDirs = fn.GetDirs();
             fn.SetPath(basePath);
             for (size_t j = 0; j < oldDirs.GetCount(); ++j)
                 fn.AppendDir(oldDirs[j]);
         }
 
-        wxString fullPath = fn.GetFullPath();
+        const wxString fullPath = fn.GetFullPath();
+        if (isAbsolutePath)
+            GetSystemHeaders(m_SystemHeadersMap, fullPath);
         if (dirs.Index(fullPath) == wxNOT_FOUND)
             dirs.Add(fullPath);
     }
 }
 
-wxArrayString GetIncludeDirs(cbProject& project, wxArrayString& buildTargets)
+wxArrayString CodeCompletion::GetIncludeDirs(cbProject& project, wxArrayString& buildTargets)
 {
     wxArrayString dirs;
     const wxString prjPath = project.GetCommonTopLevelPath();
@@ -853,7 +965,11 @@ void CodeCompletion::CodeCompleteIncludes()
     if (!IsAttached() || !m_InitDone)
         return;
 
-    cbProject* pPrj = m_NativeParser.GetProjectByParser(m_NativeParser.GetParserPtr());
+    Parser* parser = m_NativeParser.GetParserPtr();
+    if (!parser)
+        return;
+
+    cbProject* pPrj = m_NativeParser.GetProjectByParser(parser);
     if (!pPrj)
         return;
 
@@ -869,9 +985,6 @@ void CodeCompletion::CodeCompleteIncludes()
     if (pf)
         buildTargets = pf->buildTargets;
 
-    Parser* parser = m_NativeParser.GetParserPtr();
-    const bool caseSens = parser ? parser->Options().caseSensitive : false;
-
     FileType ft = FileTypeOf(ed->GetShortName());
     if ( ft != ftHeader && ft != ftSource) // only parse source/header files
         return;
@@ -884,9 +997,13 @@ void CodeCompletion::CodeCompleteIncludes()
     if (line.IsEmpty() || !TestIncludeLine(line))
         return;
 
+    bool useSystemHeaders = false;
     size_t quote_pos = line.find(_T('"'));
     if (quote_pos == wxString::npos)
+    {
+        useSystemHeaders = true;
         quote_pos = line.find(_T('<'));
+    }
     if (quote_pos == wxString::npos || quote_pos > static_cast<size_t>(pos - lineStartPos))
         return;
     ++quote_pos;
@@ -895,38 +1012,76 @@ void CodeCompletion::CodeCompleteIncludes()
     wxString filename = line.substr(quote_pos, pos - lineStartPos - quote_pos);
     filename.Replace(_T("\\"), _T("/"), true);
 
-    wxArrayString include_dirs = GetIncludeDirs(*pPrj, buildTargets);
-
     // fill a list of matching project files
     wxArrayString files;
-    for (int i = 0; i < pPrj->GetFilesCount(); ++i)
+    if (useSystemHeaders)
     {
-        ProjectFile* pf = pPrj->GetFile(i);
-        if (pf && FileTypeOf(pf->relativeFilename) == ftHeader)
+        wxArrayString& incDirs = GetSystemIncludeDirs(parser);
+        for (size_t i = 0; i < incDirs.GetCount(); ++i)
         {
-            wxString current_filename = pf->file.GetFullPath();
-            if (current_filename.find(filename) != wxString::npos)
+            SystemHeadersMap::iterator it = m_SystemHeadersMap.find(incDirs[i]);
+            if (it == m_SystemHeadersMap.end())
             {
-                wxString header;
-                for (size_t dir_index = 0; dir_index < include_dirs.GetCount(); ++dir_index)
+                GetSystemHeaders(m_SystemHeadersMap, incDirs[i]);
+                it = m_SystemHeadersMap.find(incDirs[i]);
+            }
+
+            const wxArrayString& headers = it->second;
+            for (size_t j = 0; j < headers.GetCount(); ++j)
+                files.Add(headers[j]);
+        }
+    }
+
+    wxArrayString include_dirs = GetIncludeDirs(*pPrj, buildTargets);
+    for (size_t i = 0; i < include_dirs.GetCount();)
+    {
+        SystemHeadersMap::const_iterator it = m_SystemHeadersMap.find(include_dirs[i]);
+        if (it != m_SystemHeadersMap.end())
+        {
+            include_dirs.RemoveAt(i);
+            if (useSystemHeaders)
+            {
+                const wxArrayString& headers = it->second;
+                for (size_t j = 0; j < headers.GetCount(); ++j)
+                    files.Add(headers[i]);
+            }
+            continue;
+        }
+
+        ++i;
+    }
+
+    if (!useSystemHeaders)
+    {
+        for (int i = 0; i < pPrj->GetFilesCount(); ++i)
+        {
+            ProjectFile* pf = pPrj->GetFile(i);
+            if (pf && FileTypeOf(pf->relativeFilename) == ftHeader)
+            {
+                wxString current_filename = pf->file.GetFullPath();
+                if (current_filename.find(filename) != wxString::npos)
                 {
-                    const wxString& dir = include_dirs[dir_index];
-                    if (current_filename.StartsWith(dir))
+                    wxString header;
+                    for (size_t dir_index = 0; dir_index < include_dirs.GetCount(); ++dir_index)
                     {
-                        header = current_filename.substr(dir.length());
-                        break;
+                        const wxString& dir = include_dirs[dir_index];
+                        if (current_filename.StartsWith(dir))
+                        {
+                            header = current_filename.substr(dir.length());
+                            break;
+                        }
                     }
-                }
 
-                if (header.IsEmpty())
-                {
-                    wxFileName fn(current_filename);
-                    fn.MakeRelativeTo(curPath);
-                    header = fn.GetFullPath();
-                }
+                    if (header.IsEmpty())
+                    {
+                        wxFileName fn(current_filename);
+                        fn.MakeRelativeTo(curPath);
+                        header = fn.GetFullPath();
+                    }
 
-                header.Replace(_T("\\"), _T("/"), true);
-                files.Add(header);
+                    header.Replace(_T("\\"), _T("/"), true);
+                    files.Add(header);
+                }
             }
         }
     }
@@ -936,7 +1091,7 @@ void CodeCompletion::CodeCompleteIncludes()
     {
         files.Sort();
         ed->GetControl()->ClearRegisteredImages();
-        ed->GetControl()->AutoCompSetIgnoreCase(!caseSens);
+        ed->GetControl()->AutoCompSetIgnoreCase(false);
         ed->GetControl()->AutoCompShow(pos - lineStartPos - quote_pos, GetStringFromArray(files, _T(" ")));
     }
 }
@@ -2286,10 +2441,18 @@ void CodeCompletion::EditorEventHook(cbEditor* editor, wxScintillaEvent& event)
 
     if (event.GetEventType() == wxEVT_SCI_AUTOCOMP_SELECTION)
     {
-
-        const int curPos   = control->GetCurrentPos();
-        const int startPos = control->WordStartPosition(curPos, true);
-        const int endPos   = control->WordEndPosition(curPos, true);
+        const int curPos = control->GetCurrentPos();
+        int startPos = control->WordStartPosition(curPos, true);
+        int endPos = control->WordEndPosition(curPos, true);
+        if (control->IsPreprocessor(control->GetStyleAt(curPos)))
+        {
+            int pos = startPos;
+            wxChar ch = control->GetCharAt(pos);
+            while (ch != _T('<') && ch != _T('"') && ch != _T('#'))
+                ch = control->GetCharAt(--pos);
+            if (ch == _T('<') || ch == _T('"'))
+                startPos = pos + 1;
+        }
 
         wxString itemText = event.GetText();
         int pos = curPos;
@@ -2321,7 +2484,7 @@ void CodeCompletion::EditorEventHook(cbEditor* editor, wxScintillaEvent& event)
         else
         {
             const wxChar ch = control->GetCharAt(startPos - 1);
-            if ((ch == _T('"') ||  ch == _T('<')) && itemText.Find(_T('.'), true) != wxNOT_FOUND)
+            if (ch == _T('"') ||  ch == _T('<'))
                 itemText.Append((ch == _T('<')) ? _T('>') : ch);
             control->ReplaceTarget(itemText);
             control->GotoPos(startPos + itemText.Length());
@@ -2481,6 +2644,13 @@ void CodeCompletion::OnParserStart(wxCommandEvent& event)
     {
         EnableToolbarTools(false);
         ParseFunctionsAndFillToolbar(true);
+    }
+
+    if (m_NativeParser.GetParsingType() == ptAddParser)
+    {
+        wxArrayString& dirs = GetSystemIncludeDirs(m_NativeParser.GetParserPtr());
+        SystemHeadersThread* thread = new SystemHeadersThread(m_SystemHeadersMap, dirs);
+        thread->Run();
     }
 }
 

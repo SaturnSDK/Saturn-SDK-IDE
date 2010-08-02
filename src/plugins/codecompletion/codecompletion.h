@@ -39,6 +39,7 @@ class CodeCompletion : public cbCodeCompletionPlugin
 
 	typedef std::vector<FunctionScope> FunctionsScopeVec;
 	typedef std::vector<int> ScopeMarksVec;
+	typedef std::map<wxString, wxArrayString> SystemHeadersMap;
 
 	struct FunctionsScopePerFile
 	{
@@ -65,7 +66,11 @@ class CodeCompletion : public cbCodeCompletionPlugin
         virtual int CodeComplete();
         virtual void ShowCallTip();
 
-        virtual void CodeCompleteIncludes();
+        void CodeCompleteIncludes();
+        wxArrayString GetIncludeDirs(cbProject& project, wxArrayString& buildTargets);
+        void GetAbsolutePath(const wxArrayString& targets, const wxString& basePath, wxArrayString& dirs);
+        wxArrayString& GetSystemIncludeDirs(Parser* parser);
+
         void EditorEventHook(cbEditor* editor, wxScintillaEvent& event);
 		void RereadOptions(); // called by the configuration panel
 
@@ -155,6 +160,7 @@ class CodeCompletion : public cbCodeCompletionPlugin
         bool                               m_LexerKeywordsToInclude[9];
         bool                               m_NeedReparse;
         bool                               m_IsCreateNewProject;
+        SystemHeadersMap                   m_SystemHeadersMap;
 
         DECLARE_EVENT_TABLE()
 };
