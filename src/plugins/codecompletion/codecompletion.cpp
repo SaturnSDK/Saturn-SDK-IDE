@@ -202,6 +202,7 @@ void CodeCompletion::LoadTokenReplacements()
     // for GCC
     repl[_T("_GLIBCXX_STD")]                    = _T("std");
     repl[_T("_GLIBCXX_STD_D")]                  = _T("std");
+    repl[_T("_GLIBCXX_STD_P")]                  = _T("std");
     repl[_T("_GLIBCXX_BEGIN_NESTED_NAMESPACE")] = _T("+namespace std {");
     repl[_T("_GLIBCXX_END_NESTED_NAMESPACE")]   = _T("}");
     repl[_T("_GLIBCXX_BEGIN_NAMESPACE")]        = _T("+namespace std {");
@@ -217,6 +218,9 @@ void CodeCompletion::LoadTokenReplacements()
 
     // for wxWidgets
     repl[_T("BEGIN_EVENT_TABLE")]               = _T("-END_EVENT_TABLE");
+    repl[_T("WXDLLEXPORT")]                     = _T("");
+    repl[_T("WXEXPORT")]                        = _T("");
+    repl[_T("WXIMPORT")]                        = _T("");
 
     // apply
     Tokenizer::ConvertToHashReplacementMap(repl);

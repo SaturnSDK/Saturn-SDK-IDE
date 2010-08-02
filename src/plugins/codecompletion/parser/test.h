@@ -1,25 +1,13 @@
-//#define BEGIN(X) int FuncX (
-//#define ARG(X, Y) X a, Y b
-//#define END() )
+//#define CCCCCC const
+//#define BB CCCCCC
+//#define AAA BB
+//#define EXPORT AAA
+//#define DD(z) EXPORT z
+//#define EEEE(y) DD(y)
+//#define FFF(x) EEEE(x)
 //
-//BEGIN(Test)
-//    ARG(int, float)
-//END()
+//extern FFF(wxChar*) wxEmptyString;
 
-
-//#define MACRO 0
-//
-//#if 1
-//#define AAA
-//#endif
-//
-//#if 2
-//#define BBB
-//#endif
-//
-//#if !MACRO && 1
-//#define CCC
-//#endif
 
 //#define wxUSE_UNICODE
 //
@@ -31,7 +19,7 @@
 //#ifndef wxABI_VERSION
 //#define wxABI_VERSION ( wxMAJOR_VERSION * 10000 + wxMINOR_VERSION * 100 + 99 )
 //#endif
-//
+
 //#if wxABI_VERSION >= 20804
 //    // conversion to/from UTF-8:
 //#if wxUSE_UNICODE
@@ -68,7 +56,6 @@
 
 //#define wxDEPRECATED(x, y)  x y
 //wxDEPRECATED(void , static wxChar* SetLogBuffer(wxChar* buf, size_t size = 0));
-//wxDEPRECATED(void , (static wxChar* SetLogBuffer(wxChar* buf, size_t size = 0)));
 
 
 //#define AAA(Z) int AAAZ ()
@@ -106,6 +93,7 @@
 //// hello
 //{
 //};
+
 
 //#if 0
 //    #define Expression_1
@@ -150,12 +138,13 @@
 //#endif
 //#endif
 
-#define DECLARE_LOG_FUNCTION(level) \
-void wxLog##level(const wxChar *szFormat, va_list argptr); \
-void wxTrace##level(const wxChar *szFormat, ...)
-DECLARE_LOG_FUNCTION(FatalError);
-DECLARE_LOG_FUNCTION(Error);
-DECLARE_LOG_FUNCTION(Warning);
-DECLARE_LOG_FUNCTION(Message);
-DECLARE_LOG_FUNCTION(Info);
-DECLARE_LOG_FUNCTION(Verbose);
+
+//#define DECLARE_LOG_FUNCTION(level) \
+//void wxLog##level(const wxChar *szFormat, va_list argptr); \
+//void wxTrace##level(const wxChar *szFormat, ...)
+//DECLARE_LOG_FUNCTION(FatalError);
+//DECLARE_LOG_FUNCTION(Error);
+//DECLARE_LOG_FUNCTION(Warning);
+//DECLARE_LOG_FUNCTION(Message);
+//DECLARE_LOG_FUNCTION(Info);
+//DECLARE_LOG_FUNCTION(Verbose);

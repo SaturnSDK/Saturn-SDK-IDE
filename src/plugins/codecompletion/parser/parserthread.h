@@ -263,18 +263,6 @@ class ParserThread : public cbThreadedTask
         /** Get the macro's type */
         wxString GetMacroType(const wxString& macro);
 
-        /** Break the args into substring with "," and store them in results */
-        void DecomposeString(const wxString& args, wxArrayString& results);
-
-        /** Replace defval from normals to actuals */
-        bool ReplaceDefineVal(const wxArrayString& normals, const wxArrayString& actuals, wxString& defval);
-
-        /** Get level from a buffer */
-        int GetLevel(const wxString& buffer);
-
-        /** Do real handle macro parse */
-        void DoHandleMacro(Token* tk, const wxString& peek, int& level);
-
         void GetTemplateArgs();
         void ResolveTemplateArgs(Token* newToken);
         void ResolveTemplateFormalArgs(const wxString& templateArgs, wxArrayString& formals);
@@ -354,13 +342,10 @@ class ParserThread : public cbThreadedTask
         wxString             m_Buffer;
 
         /** a pointer indicator or a references*/
-        wxString m_PointerOrRef;
+        wxString             m_PointerOrRef;
 
         /** holds current template argument(s) when a template occurs */
-        wxString m_TemplateArgument;
-
-        /**  a wxString holding the replaced function-like macro */
-        wxString             m_Macro;
+        wxString             m_TemplateArgument;
 };
 
 #endif // PARSERTHREAD_H

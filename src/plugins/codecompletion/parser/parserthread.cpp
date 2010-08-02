@@ -18,7 +18,7 @@
 
 #include <cctype>
 #include <queue>
-#include <wx/tokenzr.h>
+
 #define PARSERTHREAD_DEBUG_OUTPUT 0
 
 #ifdef PARSER_TEST
@@ -240,9 +240,6 @@ void ParserThread::SkipAngleBraces()
 
 bool ParserThread::ParseBufferForNamespaces(const wxString& buffer, NameSpaceVec& result)
 {
-	if (TestDestroy())
-		return false;
-
 	m_Tokenizer.InitFromBuffer(buffer);
 	if (!m_Tokenizer.IsOK())
 		return false;
@@ -326,9 +323,6 @@ bool ParserThread::ParseBufferForNamespaces(const wxString& buffer, NameSpaceVec
 
 bool ParserThread::ParseBufferForUsingNamespace(const wxString& buffer, wxArrayString& result)
 {
-    if (TestDestroy())
-        return false;
-
     m_Tokenizer.InitFromBuffer(buffer);
     if (!m_Tokenizer.IsOK())
         return false;
@@ -839,7 +833,6 @@ void ParserThread::DoParse()
 
                     if (id != -1)
                     {
-                        m_Tokenizer.GetToken(); // eat args ()
                         HandleMacro(id, peek);
                         m_Str.Clear();
                     }
@@ -1104,9 +1097,6 @@ Token* ParserThread::DoAddToken(TokenKind kind,
                                 bool isOperator,
                                 bool isImpl)
 {
-    if (TestDestroy())
-        return 0;
-
     if (name.IsEmpty())
         return 0; // oops!
 
@@ -1173,9 +1163,7 @@ Token* ParserThread::DoAddToken(TokenKind kind,
     {
         Token* finalParent = localParent ? localParent : m_pLastParent;
 
-        if (!TestDestroy())
-            newToken = new(std::nothrow) Token(newname, m_FileIdx, line);
-
+        newToken = new(std::nothrow) Token(newname, m_FileIdx, line);
         if (newToken) TRACE(_T("DoAddToken() : Created token='%s', file_idx=%d, line=%d"), newname.wx_str(), m_FileIdx, line);
         else return 0;
 
@@ -1258,9 +1246,6 @@ Token* ParserThread::DoAddToken(TokenKind kind,
 
 void ParserThread::HandleIncludes()
 {
-    if (TestDestroy())
-        return;
-
     wxString filename;
     bool isGlobal = !m_IsLocal;
     wxString token = m_Tokenizer.GetToken();
@@ -1337,11 +1322,11 @@ void ParserThread::HandleIncludes()
 
 void ParserThread::HandleDefines()
 {
-    if (TestDestroy())
-        return;
-
     size_t lineNr = m_Tokenizer.GetLineNumber();
+    TokenizerState oldState = m_Tokenizer.GetState();
+    m_Tokenizer.SetState(tsReadRawExpression);
     wxString token = m_Tokenizer.GetToken(); // read the token after #define
+    m_Tokenizer.SetState(oldState);
     m_Str.Clear();
     // now token holds something like:
     // BLAH_BLAH
@@ -1354,76 +1339,14 @@ void ParserThread::HandleDefines()
         wxString para = m_Tokenizer.GetToken();
         if (lineNr == m_Tokenizer.GetLineNumber())
         {
-            if (para.IsEmpty() || para.GetChar(0) != '(')
+            if (para.IsEmpty() || para.GetChar(0) != _T('('))
             {
                 m_Str = para;
                 para.Clear();
             }
-
-            if (!m_Str.IsEmpty())
+            if (!m_Str.IsEmpty() && m_Str.Last() != _T(' '))
                 m_Str << _T(" ");
-
-            wxArrayString tokens;
-            m_Tokenizer.ReadToEOL(tokens);
-            wxArrayString actuals;
-            for (size_t i = 0; i < tokens.GetCount(); ++i)
-            {
-                if (tokens[i].Len() > 1 && !wxIsdigit(tokens[i][0]))
-                {
-                    Token* tk = TokenExists(tokens[i], NULL, tkPreprocessor);
-                    if (tk)
-                    {
-                        wxString type = tk->m_Type;
-
-                        if ((i + 1) < tokens.GetCount())
-                        {
-                            //firstly try to resolve the actual argus.
-                            wxString actualArgs = tokens[i + 1];
-                            wxArrayString actuals;
-                            if (actualArgs.GetChar(0) == _T('(') && actualArgs.size() > 1)
-                                DecomposeString(actualArgs, actuals);
-#ifdef PARSER_TEST
-                            for (size_t j = 0; j < actuals.GetCount(); ++j)
-                                TRACE(_T("The actuals argument is '%s'."), actuals[j].wx_str());
-#endif
-                            //secondly, try to resolve the normal argus.
-                            wxArrayString normals;
-                            wxString normalPara = tk->m_Args;
-                            DecomposeString(tk->m_Args, normals);
-#ifdef PARSER_TEST
-                            for (size_t j = 0; j < normals.GetCount(); ++j)
-                                TRACE(_T("The normal argument is '%s'."), normals[j].wx_str());
-#endif
-                            //do the replace step now,and eat the next token because it should be eaten.^_^
-                            if (ReplaceDefineVal(normals, actuals, type))
-                                ++i;
-                            TRACE(_T("The replaced defalval are '%s'."), type.wx_str());
-                        }
-
-                        if (type != ParserConsts::hash)
-                            m_Str << type << _T(" ");
-                        else
-                            m_Str.Trim().Append(type);
-
-                        continue;
-                    }
-                }
-
-                if (tokens[i] != ParserConsts::hash)
-                    m_Str << tokens[i] << _T(" ");
-                else
-                    m_Str.Trim().Append(tokens[i]);
-
-                continue;
-            }
-
-            m_Str.Trim();
-
-            if (m_Str.IsEmpty())
-            {
-                m_Str = para;
-                para.Clear();
-            }
+            m_Str << m_Tokenizer.ReadToEOL();
         }
         else
         {
@@ -1441,10 +1364,10 @@ void ParserThread::HandleDefines()
 
 void ParserThread::HandleUndefs()
 {
-    if (TestDestroy())
-        return;
-
+    TokenizerState oldState = m_Tokenizer.GetState();
+    m_Tokenizer.SetState(tsReadRawExpression);
     const wxString token = m_Tokenizer.GetToken(); // read the token after #undef
+    m_Tokenizer.SetState(oldState);
     if (!token.IsEmpty())
     {
         Token* tk = TokenExists(token, NULL, tkPreprocessor);
@@ -1457,9 +1380,6 @@ void ParserThread::HandleUndefs()
 
 void ParserThread::HandleNamespace()
 {
-    if (TestDestroy())
-        return;
-
     wxString ns = m_Tokenizer.GetToken();
     int line = m_Tokenizer.GetLineNumber();
 
@@ -1566,9 +1486,6 @@ void ParserThread::HandleNamespace()
 
 void ParserThread::HandleClass(EClassType ct)
 {
-    if (TestDestroy())
-        return;
-
     // need to force the tokenizer _not_ skip anything
     // as we 're manually parsing class decls
     // don't forget to reset that if you add any early exit condition!
@@ -1831,9 +1748,6 @@ void ParserThread::HandleClass(EClassType ct)
 
 void ParserThread::HandleFunction(const wxString& name, bool isOperator)
 {
-    if (TestDestroy())
-        return;
-
     TRACE(_T("HandleFunction() : Adding function '")+name+_T("': m_Str='")+m_Str+_T("'"));
     wxString args = m_Tokenizer.GetToken();
     wxString peek = m_Tokenizer.PeekToken();
@@ -1944,9 +1858,6 @@ void ParserThread::HandleFunction(const wxString& name, bool isOperator)
 
 void ParserThread::HandleEnum()
 {
-    if (TestDestroy())
-        return;
-
     // enums have the following rough definition:
     // enum [xxx] { type1 name1 [= 1][, [type2 name2 [= 2]]] };
     bool isUnnamed = false;
@@ -2061,9 +1972,6 @@ void ParserThread::HandleEnum()
 
 void ParserThread::HandleTypedef()
 {
-    if (TestDestroy())
-        return;
-
     // typedefs are handled as tkClass and we put the typedef'd type as the
     // class's ancestor. This way, it will work through inheritance.
     // Function pointers are a different beast and are handled differently.
@@ -2250,65 +2158,14 @@ void ParserThread::HandleTypedef()
     }
 }
 
-void ParserThread::HandleMacro(int id, const wxString& peek)
+void ParserThread::HandleMacro(int id, const wxString &peek)
 {
-    Token* normalToken = m_pTokensTree->at(id);
-    int level = 0;
-    DoHandleMacro(normalToken, peek, level);
-    m_Tokenizer.ReplaceBufferForReparse(m_Macro);
-    m_Macro.Clear();
-}
-
-void ParserThread::DoHandleMacro(Token* tk, const wxString& peek, int& level)
-{
-    while (!TestDestroy() && tk)
+    Token* tk = m_pTokensTree->at(id);
+    if (tk)
     {
-        wxString token = tk->m_Name;
-        TRACE(_T("HandleMacro() : Adding token '%s' (peek='%s')"), token.wx_str(), peek.wx_str());
-        DoAddToken(tkMacro, token, m_Tokenizer.GetLineNumber(), 0, 0, peek);
-
-        // the next step is parsing the actual context for macro.
-        // 1. break the args into substring with "," and store them in normals
-        wxArrayString normals;
-        DecomposeString(tk->m_Args, normals);
-
-        // 2. splite the actual macro arguments
-        wxArrayString actuals;
-        m_Tokenizer.SpliteMacroActualArgument(actuals);
-
-        // 3. replace from normals to actuals
-        wxString actualStr = tk->m_Type;
-        ReplaceDefineVal(normals, actuals, actualStr);
-
-        // 4. erease string "##"
-        actualStr.Replace(_T("##"), _T(""));
-        TRACE(_T("The replaced actual context are '%s'."), actualStr.wx_str());
-
-        // 5. append to m_Macro
-        m_Macro += actualStr;
-
-        // 6. final, we need judge level and peek next token, if it is or not a macro
-        actualStr.Trim();
-        if (actualStr.Last() != _T(';'))
-        {
-            level += GetLevel(actualStr);
-            if (level == 0)
-                break;
-
-            const wxString nextToken  = m_Tokenizer.PeekToken();
-            if (ParserConsts::semicolonclbrace.Find(nextToken) != wxNOT_FOUND)
-                break;
-
-            Token* nextTk = TokenExists(nextToken, NULL, tkPreprocessor);
-            if (nextTk && !nextTk->m_Args.IsEmpty() && nextTk->m_Args[0] == _T('('))
-            {
-                TRACE(F(_T("DoHandleMacro() : next token is %s, level is %d"), nextToken.wx_str(), level));
-                m_Tokenizer.GetToken(); // eat the next token
-                DoHandleMacro(nextTk, m_Tokenizer.GetToken(), level); // eat arg ()
-            }
-        }
-
-        break;
+        TRACE(_T("HandleMacro() : Adding token '%s' (peek='%s')"), tk->m_Name.wx_str(), peek.wx_str());
+        DoAddToken(tkMacro, tk->m_Name, m_Tokenizer.GetLineNumber(), 0, 0, peek);
+        m_Tokenizer.ReplaceBufferForReparse(m_Tokenizer.GetActualContextForMacro(tk));
     }
 }
 
@@ -2582,56 +2439,6 @@ wxString ParserThread::GetMacroType(const wxString& macro)
     return type;
 }
 
-void ParserThread::DecomposeString(const wxString& args, wxArrayString& results)
-{
-    wxString tempArgs(args);
-    tempArgs.Trim(true).Trim(false);
-    tempArgs.Remove(0, 1); //eat (
-    tempArgs.RemoveLast(); //eat )
-    wxStringTokenizer tkz(tempArgs, _T(","), wxTOKEN_STRTOK);
-    while (tkz.HasMoreTokens())
-        results.Add(tkz.GetNextToken());
-}
-
-bool ParserThread::ReplaceDefineVal(const wxArrayString& normals, const wxArrayString& actuals, wxString& defval)
-{
-    size_t count = normals.GetCount() < actuals.GetCount() ? normals.GetCount() : actuals.GetCount();
-    for (size_t i = 0; i < count; ++i)
-    {
-        TRACE(_T("The normal args are '%s' and the actual args are '%s'."), normals[i].wx_str(),
-              actuals[i].wx_str());
-        defval.Replace(normals[i], actuals[i]);
-    }
-
-    return count > 0;
-}
-
-int ParserThread::GetLevel(const wxString& buffer)
-{
-    int level = 0;
-    for (size_t i = 0; i < buffer.Len(); ++i)
-    {
-        switch (buffer[i])
-        {
-        case _T('('):
-        case _T('['):
-        case _T('{'):
-        case _T('<'):
-            ++level;
-            break;
-
-        case _T(')'):
-        case _T(']'):
-        case _T('}'):
-        case _T('>'):
-            --level;
-            break;
-        }
-    }
-
-    return level;
-}
-
 void ParserThread::ResolveTemplateFormalArgs(const wxString& templateArgs, wxArrayString& formals)
 {
 
@@ -2827,3 +2634,4 @@ void ParserThread::ResolveTemplateArgs(Token* newToken)
     ResolveTemplateMap(m_Str, actuals, templateMap);
     newToken->m_TemplateMap = templateMap;
 }
+

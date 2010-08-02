@@ -237,11 +237,11 @@ public:
         return m_TokenIndex < m_BufferLen;
     };
 
-    /** Splite the actual macro arguments, and store them in results*/
-    void SpliteMacroActualArgument(wxArrayString& results);
+    /** Get the actual context for macro */
+    wxString GetActualContextForMacro(Token* tk);
 
     /** Replace buffer for 'function-like macro' parse */
-    void ReplaceBufferForReparse(const wxString& target);
+    void ReplaceBufferForReparse(const wxString& target, bool forceUpdatePeekToken = true);
 
 protected:
     /** Initialize some member variables */
@@ -413,6 +413,9 @@ private:
       */
     void HandleConditionPreprocessor(const PreprocessorType type);
 
+    /** Splite the actual macro arguments, and store them in results*/
+    void SpliteArguments(wxArrayString& results);
+
     /** Tokenizer options specify the current skipping option */
     TokenizerOptions m_TokenizerOptions;
     TokensTree*      m_pTokensTree;
@@ -455,7 +458,13 @@ private:
     LoaderBase*      m_pLoader;
 
     /** Calc Expression's result, true or false */
-    std::stack<bool> m_ExpressionResult;
+    std::stack<bool>     m_ExpressionResult;
+
+    /** is replace buffer parsing */
+    bool                 m_IsReplaceParsing;
+
+    /** the first replace token index */
+    unsigned int         m_ReplaceTokenIndex;
 
     /** Static member, this is a map to hold the replacement rules */
     static wxStringHashMap s_Replacements;
