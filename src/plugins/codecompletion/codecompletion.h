@@ -66,6 +66,7 @@ class CodeCompletion : public cbCodeCompletionPlugin
         virtual int CodeComplete();
         virtual void ShowCallTip();
 
+        void CodeCompletePreprocessor();
         void CodeCompleteIncludes();
         wxArrayString GetIncludeDirs(cbProject& project, wxArrayString& buildTargets);
         void GetAbsolutePath(const wxArrayString& targets, const wxString& basePath, wxArrayString& dirs);

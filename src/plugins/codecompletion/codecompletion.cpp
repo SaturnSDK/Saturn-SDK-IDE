@@ -869,6 +869,7 @@ public:
         m_IncludeDirs(incDirs)
     {
         Create();
+        SetPriority(WXTHREAD_MIN_PRIORITY);
     }
 
     virtual void* Entry()
@@ -879,6 +880,7 @@ public:
                 GetSystemHeaders(m_SystemHeadersMap, m_IncludeDirs[i]);
         }
 
+        Manager::Get()->GetLogManager()->DebugLog(_T("System headers thread is done!"));
         return NULL;
     }
 
@@ -1094,6 +1096,37 @@ void CodeCompletion::CodeCompleteIncludes()
         ed->GetControl()->AutoCompSetIgnoreCase(false);
         ed->GetControl()->AutoCompShow(pos - lineStartPos - quote_pos, GetStringFromArray(files, _T(" ")));
     }
+}
+
+void CodeCompletion::CodeCompletePreprocessor()
+{
+    if (!IsAttached() || !m_InitDone)
+        return;
+
+    EditorManager* edMan = Manager::Get()->GetEditorManager();
+    cbEditor* ed = edMan->GetBuiltinActiveEditor();
+    if (!ed)
+        return;
+
+    wxArrayString tokens;
+    tokens.Add(_T("include"));
+    tokens.Add(_T("if"));
+    tokens.Add(_T("ifdef"));
+    tokens.Add(_T("ifndef"));
+    tokens.Add(_T("elif"));
+    tokens.Add(_T("elifdef"));
+    tokens.Add(_T("elifndef"));
+    tokens.Add(_T("else"));
+    tokens.Add(_T("endif"));
+    tokens.Add(_T("define"));
+    tokens.Add(_T("undef"));
+    tokens.Add(_T("pragma"));
+    tokens.Add(_T("error"));
+    tokens.Add(_T("line"));
+    tokens.Sort();
+    ed->GetControl()->ClearRegisteredImages();
+    ed->GetControl()->AutoCompSetIgnoreCase(false);
+    ed->GetControl()->AutoCompShow(0, GetStringFromArray(tokens, _T(" ")));
 }
 
 wxArrayString CodeCompletion::GetCallTips()
@@ -1336,12 +1369,15 @@ void CodeCompletion::DoCodeComplete()
     if (!ed)
         return;
 
-    int style = ed->GetControl()->GetStyleAt(ed->GetControl()->GetCurrentPos());
-//    Manager::Get()->GetLogManager()->DebugLog(_T("Style at %d is %d"), ed->GetControl()->GetCurrentPos(), style);
-//    Manager::Get()->GetLogManager()->DebugLog(_T("wxSCI_C_PREPROCESSOR is %d"), wxSCI_C_PREPROCESSOR);
-    if (style == wxSCI_C_PREPROCESSOR)
+    const int pos = ed->GetControl()->GetCurrentPos();
+    const int style = ed->GetControl()->GetStyleAt(pos);
+
+    if (ed->GetControl()->IsPreprocessor(style))
     {
-        CodeCompleteIncludes();
+        if (ed->GetControl()->GetCharAt(pos - 1) == _T('#'))
+            CodeCompletePreprocessor();
+        else
+            CodeCompleteIncludes();
         return;
     }
 
@@ -2441,9 +2477,10 @@ void CodeCompletion::EditorEventHook(cbEditor* editor, wxScintillaEvent& event)
 
     if (event.GetEventType() == wxEVT_SCI_AUTOCOMP_SELECTION)
     {
-        const int curPos = control->GetCurrentPos();
+        int curPos = control->GetCurrentPos();
         int startPos = control->WordStartPosition(curPos, true);
         int endPos = control->WordEndPosition(curPos, true);
+
         if (control->IsPreprocessor(control->GetStyleAt(curPos)))
         {
             int pos = startPos;
@@ -2452,24 +2489,30 @@ void CodeCompletion::EditorEventHook(cbEditor* editor, wxScintillaEvent& event)
                 ch = control->GetCharAt(--pos);
             if (ch == _T('<') || ch == _T('"'))
                 startPos = pos + 1;
+
+            pos = endPos;
+            ch = control->GetCharAt(pos);
+            while (ch != _T('>') && ch != _T('"') && ch != _T('\r') && ch != _T('\n'))
+                ch = control->GetCharAt(++pos);
+            if (ch == _T('>') || ch == _T('"'))
+                endPos = pos;
         }
 
         wxString itemText = event.GetText();
-        int pos = curPos;
-        const wxString alreadyText = control->GetTextRange(pos, endPos);
+        const wxString alreadyText = control->GetTextRange(curPos, endPos);
         if (!alreadyText.IsEmpty() && itemText.EndsWith(alreadyText))
-            pos = endPos;
+            curPos = endPos;
 
         control->AutoCompCancel();
         control->SetTargetStart(startPos);
-        control->SetTargetEnd(pos);
+        control->SetTargetEnd(curPos);
 
         map<wxString, int>::const_iterator it = m_SearchItem.find(itemText);
         if (it != m_SearchItem.end())
         {
             //Check if there are brace behind the target
             wxString addString(itemText);
-            if (control->GetCharAt(pos) != _T('('))
+            if (control->GetCharAt(curPos) != _T('('))
                 addString += _T("()");
 
             control->ReplaceTarget(addString);
@@ -2483,11 +2526,14 @@ void CodeCompletion::EditorEventHook(cbEditor* editor, wxScintillaEvent& event)
         }
         else
         {
-            const wxChar ch = control->GetCharAt(startPos - 1);
-            if (ch == _T('"') ||  ch == _T('<'))
-                itemText.Append((ch == _T('<')) ? _T('>') : ch);
+            const wxChar start = control->GetCharAt(startPos - 1);
+            const wxChar end = control->GetCharAt(endPos);
+            bool alreadyMatched = (end == _T('>') || end == _T('"'));
+            if ((start == _T('"') ||  start == _T('<')) && !alreadyMatched)
+                itemText.Append((start == _T('<')) ? _T('>') : _T('"'));
             control->ReplaceTarget(itemText);
-            control->GotoPos(startPos + itemText.Length());
+            int mousePos = alreadyMatched ? startPos + itemText.Length() + 1 : startPos + itemText.Length();
+            control->GotoPos(mousePos);
         }
     }
 
@@ -2540,6 +2586,7 @@ void CodeCompletion::EditorEventHook(cbEditor* editor, wxScintillaEvent& event)
                  || (ch == _T('"')) // this and the next one are for #include's completion
                  || (ch == _T('<'))
                  || (ch == _T('.'))
+                 || (ch == _T('#'))
                  // -2 is used next because the char has already been added and Pos is ahead of it...
                  || (   (ch == _T('>'))
                      && (control->GetCharAt(pos - 2) == _T('-')) )
