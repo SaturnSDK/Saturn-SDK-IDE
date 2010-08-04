@@ -3563,3 +3563,80 @@ ParsingType NativeParser::GetParsingType()
     else
         return m_WaitParsingList.front().type;
 }
+
+class ParserDirTraverser : public wxDirTraverser
+{
+public:
+    ParserDirTraverser(const wxString& excludePath, wxArrayString& files) :
+        m_ExcludeDir(excludePath),
+        m_Files(files)
+    {}
+
+    virtual wxDirTraverseResult OnFile(const wxString& filename)
+    {
+        wxString ext = filename.AfterLast(_T('.')).Lower();
+        if (ext.StartsWith(_T("h")) || ext.StartsWith(_T("c")) || ext.IsEmpty())
+            m_Files.Add(filename);
+        return wxDIR_CONTINUE;
+    }
+
+    virtual wxDirTraverseResult OnDir(const wxString& dirname)
+    {
+        if (dirname == m_ExcludeDir)
+            return wxDIR_IGNORE;
+        if (m_Files.GetCount() == 1)
+            return wxDIR_STOP;
+        m_Files.Clear();
+        return wxDIR_CONTINUE;
+    }
+
+private:
+    const wxString& m_ExcludeDir;
+    wxArrayString& m_Files;
+};
+
+wxArrayString NativeParser::GetAllPathsByFilename(const wxString& filename)
+{
+    wxArrayString dirs;
+    const wxFileName fn(filename);
+    const wxString curPath = fn.GetPath();
+    const wxString filespec = fn.HasExt() ? fn.GetName() + _T(".*") : fn.GetName();
+
+    wxDir dir(curPath);
+    if (!dir.IsOpened())
+        return wxArrayString();
+
+    wxArrayString files;
+    ParserDirTraverser traverser(wxEmptyString, files);
+    dir.Traverse(traverser, filespec);
+    if (files.GetCount() == 1)
+    {
+        cbProject* project = GetProjectByParser(m_pParser);
+        if (project)
+        {
+            const wxString prjPath = project->GetCommonTopLevelPath();
+            wxDir prjDir(prjPath);
+            if (prjDir.IsOpened())
+            {
+                wxArrayString others;
+                ParserDirTraverser traverser(curPath, others);
+                prjDir.Traverse(traverser, filespec);
+                if (others.GetCount() == 1)
+                {
+                    dirs.Add(UnixFilename(others[0].BeforeLast(_T('.'))));
+                    if (fn.HasExt())
+                        dirs.Last().Append(_T("."));
+                }
+            }
+        }
+    }
+
+    for (size_t i = 0; i < files.GetCount(); ++i)
+    {
+        dirs.Add(UnixFilename(files[i].BeforeLast(_T('.'))));
+        if (fn.HasExt())
+            dirs.Last().Append(_T("."));
+    }
+
+    return dirs;
+}

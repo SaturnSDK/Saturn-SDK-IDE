@@ -1268,25 +1268,31 @@ int CodeCompletion::DoAllMethodsImpl()
         return -4;
     }
 
-    // mask for filenames (include only classes declared in filename.*)
-    wxString filename = UnixFilename(ed->GetFilename().BeforeLast(_T('.')));
-    filename << _T('.');
-
     TokensTree* tree = parser->GetTokens();
 
     // get all filenames' indices matching our mask
-    std::set<size_t> result;
-    tree->m_FilenamesMap.FindMatches(filename, result, true, true);
+    TokenFilesSet result;
+    TokenFilesSet tmp;
+    wxArrayString paths = m_NativeParser.GetAllPathsByFilename(ed->GetFilename());
+    for (size_t i = 0; i < paths.GetCount(); ++i)
+    {
+        tree->m_FilenamesMap.FindMatches(paths[i], tmp, true, true);
+        for (TokenFilesSet::iterator it = tmp.begin(); it != tmp.end(); ++it)
+            result.insert(*it);
+    }
+
     if (result.empty())
     {
-        cbMessageBox(_("File not in parser's database: ") + filename + _T('*'), _("Warning"), wxICON_WARNING);
+        cbMessageBox(_("Can not find any file in parser's database."), _("Warning"), wxICON_WARNING);
         return -5;
     }
 
     // loop matching files, loop tokens in file and get list of un-implemented functions
     wxArrayString arr; // for selection (keeps strings)
     wxArrayInt arrint; // for selection (keeps indices)
-    for (std::set<size_t>::iterator itf = result.begin(); itf != result.end(); ++itf)
+    typedef std::map<int, std::pair<int, wxString> > ImplMap;
+    ImplMap im;
+    for (TokenFilesSet::iterator itf = result.begin(); itf != result.end(); ++itf)
     {
         TokenIdxSet& tokens = tree->m_FilesMap[*itf];
         // loop tokens in file
@@ -1297,15 +1303,20 @@ int CodeCompletion::DoAllMethodsImpl()
                 (token->m_TokenKind & (tkFunction | tkConstructor | tkDestructor)) && // is method
                 token->m_ImplLine == 0) // is un-implemented
             {
-                arr.Insert(token->DisplayName(), 0);
-                arrint.Insert(*its, 0);
+                im[token->m_Line] = std::make_pair(*its, token->DisplayName());
             }
         }
     }
 
+    for (ImplMap::iterator it = im.begin(); it != im.end(); ++it)
+    {
+        arrint.Add(it->second.first);
+        arr.Add(it->second.second);
+    }
+
     if (arr.empty())
     {
-        cbMessageBox(_("No classes declared or no un-implemented class methods found in ") + filename + _T('*'), _("Warning"), wxICON_WARNING);
+        cbMessageBox(_("No classes declared or no un-implemented class methods found."), _("Warning"), wxICON_WARNING);
         return -5;
     }
 

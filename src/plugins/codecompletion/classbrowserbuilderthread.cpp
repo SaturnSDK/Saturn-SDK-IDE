@@ -190,7 +190,14 @@ void ClassBrowserBuilderThread::Init(NativeParser* nativeParser,
     {
         // m_ActiveFilename is the full filename up to the extension dot. No extension though.
         // get all filenames' indices matching our mask
-        tree->m_FilenamesMap.FindMatches(m_ActiveFilename, m_CurrentFileSet, true, true);
+        wxArrayString paths = m_pNativeParser->GetAllPathsByFilename(m_ActiveFilename);
+        TokenFilesSet tmp;
+        for (size_t i = 0; i < paths.GetCount(); ++i)
+        {
+            tree->m_FilenamesMap.FindMatches(paths[i], tmp, true, true);
+            for (TokenFilesSet::iterator it = tmp.begin(); it != tmp.end(); ++it)
+                m_CurrentFileSet.insert(*it);
+        }
     }
 
     if (m_Options.displayFilter == bdfProject && (user_data != 0))
