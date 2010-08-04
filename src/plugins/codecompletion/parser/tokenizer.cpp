@@ -20,19 +20,19 @@
 #include "manager.h"
 #include "tokenizer.h"
 
-#define TOKENIZER_DEBUG_OUTPUT 0
+#define CC_TOKENIZER_DEBUG_OUTPUT 0
 
-#ifdef PARSER_TEST
+#ifdef CC_PARSER_TEST
     extern void ParserTrace(const wxChar* format, ...);
     #define TRACE(format, args...)\
     ParserTrace(format , ## args)
 #else
-#if TOKENIZER_DEBUG_OUTPUT
-    #define TRACE(format, args...)\
-    Manager::Get()->GetLogManager()->DebugLog(F( format , ## args))
-#else
-    #define TRACE(format, args...)
-#endif
+    #if CC_TOKENIZER_DEBUG_OUTPUT
+        #define TRACE(format, args...)\
+        Manager::Get()->GetLogManager()->DebugLog(F( format , ## args))
+    #else
+        #define TRACE(format, args...)
+    #endif
 #endif
 
 namespace TokenizerConsts

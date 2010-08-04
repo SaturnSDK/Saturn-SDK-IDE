@@ -16,7 +16,90 @@
 #include <globals.h>
 #include "searchtree.h"
 #include <deque>
+
 using namespace std;
+
+#define CC_PARSER_PROFILE_TEST 0
+
+#if CC_PARSER_PROFILE_TEST
+#define CC_PROFILE_TIMER()                                                                        \
+    static ProfileTimerData __ptd;                                                                  \
+    static size_t __i = ProfileTimer::Registry(&__ptd, wxString(__PRETTY_FUNCTION__, wxConvUTF8));  \
+    __ptd.m_CallTimes += __i;                                                                       \
+    ProfileTimerHelper __profileTimerHelper(__ptd)
+#define CC_PROFILE_TIMER_LOG() ProfileTimer::Log()
+#else
+#define CC_PROFILE_TIMER()
+#define CC_PROFILE_TIMER_LOG()
+#endif
+
+class ProfileTimerData
+{
+public:
+    ProfileTimerData() : m_CallTimes(0), m_Count(0)
+    {
+        m_StopWatch.Pause();
+    }
+    void Zero()
+    {
+        m_StopWatch.Start();
+        m_StopWatch.Pause();
+        m_CallTimes = 0;
+        m_Count = 0;
+    }
+    wxStopWatch m_StopWatch;
+    size_t m_CallTimes;
+    size_t m_Count;
+};
+
+class ProfileTimerHelper
+{
+public:
+    ProfileTimerHelper(ProfileTimerData& profileTimerData) : m_ProfileTimerData(profileTimerData)
+    {
+        if (m_ProfileTimerData.m_Count++ == 0)
+            m_ProfileTimerData.m_StopWatch.Resume();
+    }
+    ~ProfileTimerHelper()
+    {
+        if (--m_ProfileTimerData.m_Count == 0)
+            m_ProfileTimerData.m_StopWatch.Pause();
+    }
+
+private:
+    ProfileTimerData& m_ProfileTimerData;
+};
+
+class ProfileTimer
+{
+public:
+    static size_t Registry(ProfileTimerData* ptd, const wxString& funcName)
+    {
+        m_ProfileMap[ptd] = funcName;
+        return 1;
+    }
+
+    static void Log()
+    {
+        for (ProfileMap::iterator it = m_ProfileMap.begin(); it != m_ProfileMap.end(); ++it)
+        {
+            const long totalTime = it->first->m_StopWatch.Time();
+            wxString log;
+            log.Printf(_T("\"%s\" used time is %d minute(s), %d.%03d seconds; call times is %d."),
+                       it->second.wx_str(),
+                       (totalTime / 60000),
+                       (totalTime / 1000) % 60,
+                       (totalTime % 1000),
+                       it->first->m_CallTimes);
+            Manager::Get()->GetLogManager()->DebugLog(log);
+            it->first->Zero();
+        }
+    }
+
+private:
+    typedef std::map<ProfileTimerData*, wxString> ProfileMap;
+    static ProfileMap m_ProfileMap;
+};
 
 class Token;
 class TokensTree;

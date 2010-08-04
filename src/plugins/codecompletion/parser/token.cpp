@@ -15,15 +15,17 @@
 #include <wx/intl.h>
 #include <wx/tokenzr.h>
 
-#define TOKEN_DEBUG_OUTPUT 0
+#define CC_TOKEN_DEBUG_OUTPUT 0
 
-#if TOKEN_DEBUG_OUTPUT
+#if CC_TOKEN_DEBUG_OUTPUT
     #include <wx/stopwatch.h>
     #define TRACE(format, args...)\
     Manager::Get()->GetLogManager()->DebugLog(F( format , ## args))
 #else
     #define TRACE(format, args...)
 #endif
+
+ProfileTimer::ProfileMap ProfileTimer::m_ProfileMap;
 
 inline void SaveTokenIdxSetToFile(wxOutputStream* f,const TokenIdxSet& data)
 {
@@ -842,7 +844,7 @@ void TokensTree::RecalcFreeList()
 
 void TokensTree::RecalcData()
 {
-#if TOKEN_DEBUG_OUTPUT
+#if CC_TOKEN_DEBUG_OUTPUT
     wxStopWatch sw;
 #endif
 
@@ -929,7 +931,7 @@ void TokensTree::RecalcData()
                         TRACE(_T("RecalcData() :  + '%s'"), ancestorToken->m_Name.wx_str());
                     }
                 }
-#if TOKEN_DEBUG_OUTPUT
+#if CC_TOKEN_DEBUG_OUTPUT
                 if (result.empty())
                     TRACE(_T("RecalcData() :  ! '%s' (unresolved)"), ancestor.wx_str());
 #endif
@@ -945,7 +947,7 @@ void TokensTree::RecalcData()
         }
     }
 
-#if TOKEN_DEBUG_OUTPUT
+#if CC_TOKEN_DEBUG_OUTPUT
     TRACE(_T("RecalcData() : First iteration took : %ld ms"), sw.Time());
     sw.Start();
 #endif
@@ -976,7 +978,7 @@ void TokensTree::RecalcData()
             }
         }
 
-#if TOKEN_DEBUG_OUTPUT
+#if CC_TOKEN_DEBUG_OUTPUT
         if (token)
         {
             // debug loop
@@ -993,7 +995,7 @@ void TokensTree::RecalcData()
         }
 #endif
     }
-#if TOKEN_DEBUG_OUTPUT
+#if CC_TOKEN_DEBUG_OUTPUT
     TRACE(_T("RecalcData() : Second iteration took : %ld ms"), sw.Time());
 #endif
 

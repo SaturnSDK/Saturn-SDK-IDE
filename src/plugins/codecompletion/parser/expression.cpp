@@ -10,19 +10,19 @@
 
 #include <stack>
 
-#define PARSERTHREAD_DEBUG_OUTPUT 0
+#define CC_PARSERTHREAD_DEBUG_OUTPUT 0
 
-#ifdef PARSER_TEST
+#ifdef CC_PARSER_TEST
     extern void ParserTrace(const wxChar* format, ...);
     #define TRACE(format, args...)\
     ParserTrace(format , ## args)
 #else
-#if PARSERTHREAD_DEBUG_OUTPUT
-    #define TRACE(format, args...)\
-    Manager::Get()->GetLogManager()->DebugLog(F( format , ## args))
-#else
-    #define TRACE(format, args...)
-#endif
+    #if CC_PARSERTHREAD_DEBUG_OUTPUT
+        #define TRACE(format, args...)\
+        Manager::Get()->GetLogManager()->DebugLog(F( format , ## args))
+    #else
+        #define TRACE(format, args...)
+    #endif
 #endif
 
 namespace ExpressionConsts
@@ -299,7 +299,7 @@ void Expression::ConvertInfixToPostfix()
         stackOperator.pop();
     }
 
-#ifdef PARSER_TEST
+#ifdef CC_PARSER_TEST
     wxString infix, postfix;
     for (InfixVector::size_type i = 0; i < m_InfixExpression.size(); ++i)
         infix += m_InfixExpression[i] + _T(" ");

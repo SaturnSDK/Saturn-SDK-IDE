@@ -40,9 +40,9 @@
 #include "ccdebuginfo.h"
 
 
-#define CLASS_BROWSER_DEBUG_OUTPUT 0
+#define CC_CLASS_BROWSER_DEBUG_OUTPUT 0
 
-#if CLASS_BROWSER_DEBUG_OUTPUT
+#if CC_CLASS_BROWSER_DEBUG_OUTPUT
     #define TRACE(format, args...)\
     Manager::Get()->GetLogManager()->DebugLog(F( format , ## args))
 #else

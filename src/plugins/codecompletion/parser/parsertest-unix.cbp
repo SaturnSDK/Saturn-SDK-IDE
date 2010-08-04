@@ -31,7 +31,7 @@
 			<Add option="-Uunix" />
 			<Add option="-fPIC" />
 			<Add option="-DcbDEBUG" />
-			<Add option="-DPARSER_TEST" />
+			<Add option="-DCC_PARSER_TEST" />
 			<Add directory="../../../../src/include" />
 		</Compiler>
 		<Linker>

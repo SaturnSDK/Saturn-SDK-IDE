@@ -32,10 +32,9 @@
       #include "editorbase.h"
 #endif
 
-#define PARSER_DEBUG_OUTPUT 0
-#define PARSER_PROFILE_TEST 0
+#define CC_PARSER_DEBUG_OUTPUT 0
 
-#if PARSER_DEBUG_OUTPUT
+#if CC_PARSER_DEBUG_OUTPUT
     #define TRACE(format, args...)\
     Manager::Get()->GetLogManager()->DebugLog(F( format , ## args))
 #else
@@ -363,7 +362,7 @@ bool Parser::Parse(const wxString& bufferOrFilename, bool isLocal, ParserThreadO
         ParserThread* thread = new(std::nothrow) ParserThread(this, buffOrFile, isLocal, opts, m_pTokensTree);
         if (!thread)
             return false;
-#if !PARSER_PROFILE_TEST
+#if !CC_PARSER_PROFILE_TEST
         if (opts.useBuffer)
 #else
         if (true)
@@ -775,7 +774,7 @@ void Parser::OnAllThreadsDone(CodeBlocksEvent& event)
     {
         m_BatchTimer.Start(1, wxTIMER_ONE_SHOT);
     }
-#if !PARSER_PROFILE_TEST
+#if !CC_PARSER_PROFILE_TEST
     else if (!m_UpFrontHeaders.IsEmpty())
     {
         // Part.1 Set m_IsParsing to false

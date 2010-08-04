@@ -36,9 +36,9 @@
 
 #include <cctype>
 
-#define NATIVE_PARSER_DEBUG_OUTPUT 0
+#define CC_NATIVE_PARSER_DEBUG_OUTPUT 0
 
-#if NATIVE_PARSER_DEBUG_OUTPUT
+#if CC_NATIVE_PARSER_DEBUG_OUTPUT
     #define TRACE(format, args...)\
     Manager::Get()->GetLogManager()->DebugLog(F( format , ## args))
 #else
@@ -1413,7 +1413,8 @@ void NativeParser::DisplayStatus()
         return;
 
     long int tim = m_pParser->LastParseTime();
-    Manager::Get()->GetLogManager()->DebugLog(F(_T("Project %s parsing stage done (%d total parsed files, %d tokens in %d minute(s), %d.%d seconds)."),
+    Manager::Get()->GetLogManager()->DebugLog(F(_T("Project %s parsing stage done (%d total parsed files, ")
+                                                _T("%d tokens in %d minute(s), %d.%03d seconds)."),
                     m_LastProject ? m_LastProject->GetTitle().wx_str() : _T("*NONE*"),
                     m_pParser->GetFilesCount(),
                     m_pParser->GetTokens()->realsize(),
@@ -3288,6 +3289,7 @@ void NativeParser::OnParserEnd(wxCommandEvent& event)
             m_ParserList.push_back(std::make_pair(project, m_WaitParsingList.front().parser));
             Manager::Get()->GetLogManager()->Log(F(_("Project %s parsing stage done!"), project ?
                                                    project->GetTitle().wx_str() : _T("*NONE*")));
+            CC_PROFILE_TIMER_LOG();
         }
         else if (curType == ptAddFileToParser)
         {

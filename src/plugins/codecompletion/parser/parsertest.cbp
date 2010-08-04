@@ -32,7 +32,7 @@
 			<Add option="-DWXUSINGDLL" />
 			<Add option="-DwxUSE_UNICODE" />
 			<Add option="-DcbDEBUG" />
-			<Add option="-DPARSER_TEST" />
+			<Add option="-DCC_PARSER_TEST" />
 			<Add directory="$(#WX.include)" />
 			<Add directory="$(#WX.lib)\gcc_dll\mswu" />
 			<Add directory="..\..\..\..\src\include" />
