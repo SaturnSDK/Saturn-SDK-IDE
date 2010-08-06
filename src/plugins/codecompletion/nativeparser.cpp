@@ -3633,9 +3633,9 @@ wxArrayString NativeParser::GetAllPathsByFilename(const wxString& filename)
         }
     }
 
-    for (size_t i = 0; i < files.GetCount(); ++i)
+    if (!files.IsEmpty())
     {
-        dirs.Add(UnixFilename(files[i].BeforeLast(_T('.'))));
+        dirs.Add(UnixFilename(files[0].BeforeLast(_T('.'))));
         if (fn.HasExt())
             dirs.Last().Append(_T("."));
     }

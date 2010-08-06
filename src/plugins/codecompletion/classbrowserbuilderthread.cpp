@@ -203,7 +203,7 @@ void ClassBrowserBuilderThread::Init(NativeParser* nativeParser,
     if (m_Options.displayFilter == bdfProject && (user_data != 0))
     {
         cbProject* prj = (cbProject*)user_data;
-        for (int i = 0; i < prj->GetFilesCount(); i++)
+        for (int i = 0; i < prj->GetFilesCount(); ++i)
         {
             ProjectFile* curfile = prj->GetFile(i);
             if (!curfile)
@@ -222,10 +222,10 @@ void ClassBrowserBuilderThread::Init(NativeParser* nativeParser,
     {
         m_CurrentTokenSet.clear();
         m_CurrentGlobalTokensSet.clear();
-        for (TokenFilesSet::iterator it = m_CurrentFileSet.begin();it != m_CurrentFileSet.end(); it++)
+        for (TokenFilesSet::iterator it = m_CurrentFileSet.begin();it != m_CurrentFileSet.end(); ++it)
         {
             TokenIdxSet* curset = &(tree->m_FilesMap[*it]);
-            for (TokenIdxSet::iterator it2 = curset->begin(); it2 != curset->end(); it2++)
+            for (TokenIdxSet::iterator it2 = curset->begin(); it2 != curset->end(); ++it2)
             {
                 Token* curtoken = tree->at(*it2);
                 if (curtoken)

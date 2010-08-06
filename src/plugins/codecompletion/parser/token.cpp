@@ -30,7 +30,7 @@ ProfileTimer::ProfileMap ProfileTimer::m_ProfileMap;
 inline void SaveTokenIdxSetToFile(wxOutputStream* f,const TokenIdxSet& data)
 {
     SaveIntToFile(f, (int)(data.size()));
-    for (TokenIdxSet::iterator it = data.begin(); it != data.end(); it++)
+    for (TokenIdxSet::iterator it = data.begin(); it != data.end(); ++it)
     {
         int num = *it;
         SaveIntToFile(f, num);
@@ -53,7 +53,7 @@ bool LoadTokenIdxSetFromFile(wxInputStream* f,TokenIdxSet* data)
             break;
         }
         int num = 0;
-        for (int i = 0; i < size; i++)
+        for (int i = 0; i < size; ++i)
         {
             if (!LoadIntFromFile(f,&num))
             {
@@ -458,7 +458,7 @@ void TokensTree::clear()
     m_FilesStatus.clear();
 
     size_t i;
-    for (i = 0;i < m_Tokens.size(); i++)
+    for (i = 0;i < m_Tokens.size(); ++i)
     {
         Token* token = m_Tokens[i];
         if (token)
@@ -519,7 +519,7 @@ int TokensTree::TokenExists(const wxString& name, int parent, short int kindMask
     TokenIdxSet::iterator it;
     TokenIdxSet& curList = m_Tree.GetItemAtPos(idx);
     int result = -1;
-    for (it = curList.begin(); it != curList.end(); it++)
+    for (it = curList.begin(); it != curList.end(); ++it)
     {
         result = *it;
         if (result < 0 || (size_t)result >= m_Tokens.size())
@@ -549,14 +549,14 @@ size_t TokensTree::FindMatches(const wxString& s, TokenIdxSet& result, bool case
 
     // now the lists contains indexes to all the matching keywords
     // first loop will find all the keywords
-    for (set<size_t>::iterator it = lists.begin(); it != lists.end(); it++)
+    for (set<size_t>::iterator it = lists.begin(); it != lists.end(); ++it)
     {
         TokenIdxSet* curset = &(m_Tree.GetItemAtPos(*it));
         // second loop will get all the items mapped by the same keyword,
         // for example, we have ClassA::foo, ClassB::foo ...
         if (curset)
         {
-            for (TokenIdxSet::iterator it2 = curset->begin(); it2 != curset->end(); it2++)
+            for (TokenIdxSet::iterator it2 = curset->begin(); it2 != curset->end(); ++it2)
             {
                 Token* token = at(*it2);
                 if (   token
@@ -660,7 +660,7 @@ void TokensTree::RemoveToken(Token* oldToken)
     // Step 2: Detach token from its ancestors
 
     nodes = (oldToken->m_DirectAncestors);
-    for (it = nodes.begin();it!=nodes.end(); it++)
+    for (it = nodes.begin();it!=nodes.end(); ++it)
     {
         int ancestoridx = *it;
         if (ancestoridx < 0 || (size_t)ancestoridx >= m_Tokens.size())
@@ -675,7 +675,7 @@ void TokensTree::RemoveToken(Token* oldToken)
     // Step 3: Remove children
 
     nodes = (oldToken->m_Children); // Copy the list to avoid interference
-    for (it = nodes.begin();it!=nodes.end(); it++)
+    for (it = nodes.begin();it!=nodes.end(); ++it)
         RemoveToken(*it);
     // m_Children SHOULD be empty by now - but clear anyway.
     oldToken->m_Children.clear();
@@ -683,14 +683,14 @@ void TokensTree::RemoveToken(Token* oldToken)
     // Step 4: Remove descendants
 
     nodes = oldToken->m_Descendants; // Copy the list to avoid interference
-    for (it = nodes.begin();it!=nodes.end(); it++)
+    for (it = nodes.begin();it!=nodes.end(); ++it)
     {
         if (*it == idx) // that should not happen, we can not be our own descendant, but in fact that can happen with boost
         {
             Manager::Get()->GetLogManager()->DebugLog(_T("Break out the loop to remove descendants, to avoid a crash. We can not be our own descendant!"));
             break;
         }
-         RemoveToken(*it);
+        RemoveToken(*it);
     }
     // m_Descendants SHOULD be empty by now - but clear anyway.
     oldToken->m_Descendants.clear();
@@ -781,29 +781,39 @@ void TokensTree::RemoveFile(const wxString& filename)
 
 void TokensTree::RemoveFile(int fileIndex)
 {
-    if (fileIndex <=0 )
+    if (fileIndex <= 0)
         return;
+
     TokenIdxSet& the_list = m_FilesMap[fileIndex];
-    TokenIdxSet::iterator it;
-    for (it = the_list.begin(); it != the_list.end();it++)
+    for (TokenIdxSet::iterator it = the_list.begin(); it != the_list.end();)
     {
         int idx = *it;
         if (idx < 0 || (size_t)idx > m_Tokens.size())
+        {
+            the_list.erase(it++);
             continue;
-        Token* the_token = at(idx);
+        }
 
+        Token* the_token = at(idx);
         if (!the_token)
+        {
+            the_list.erase(it++);
             continue;
+        }
 
         // do not remove token lightly...
         // only if both its decl filename and impl filename are either empty or match this file
         // if one of those filenames do not match the above criteria
         // just clear the relevant info, leaving the token where it is...
-
         bool match1 = the_token->m_FileIdx     == 0 || (int)the_token->m_FileIdx     == fileIndex;
         bool match2 = the_token->m_ImplFileIdx == 0 || (int)the_token->m_ImplFileIdx == fileIndex;
-        if (match1 && match2)
+        bool match3 = CheckChildRemove(the_token,fileIndex);
+        if (match1 && match2 && match3)
+        {
             RemoveToken(the_token); // safe to remove the token
+            the_list.erase(it++);
+            continue;
+        }
         else
         {
             // do not remove token, just clear the matching info
@@ -818,10 +828,35 @@ void TokensTree::RemoveFile(int fileIndex)
                 the_token->m_ImplLine = 0;
             }
         }
+
+        ++it;
     }
-    the_list.clear();
 }
 
+bool TokensTree::CheckChildRemove(Token * token, int fileIndex)
+{
+    TokenIdxSet& nodes = (token->m_Children); // Copy the list to avoid interference
+    TokenIdxSet::iterator it;
+    for (it = nodes.begin(); it != nodes.end(); ++it)
+    {
+        int idx = *it;
+        if (idx < 0 || (size_t)idx > m_Tokens.size())
+            continue;
+
+        Token* the_token = at(idx);
+        if (!the_token)
+            continue;
+
+        bool match1 = the_token->m_FileIdx     == 0 || (int)the_token->m_FileIdx     == fileIndex;
+        bool match2 = the_token->m_ImplFileIdx == 0 || (int)the_token->m_ImplFileIdx == fileIndex;
+        if(match1 && match2)
+            continue;
+        else
+            return false;          // one child is belong to another file
+    }
+    return true;                   // no children should be reserved, so we can safely remov the token
+
+}
 void TokensTree::FreeTemporaries()
 {
     for (int i = m_Tokens.size() -1;i >= 0;i--)
@@ -915,7 +950,7 @@ void TokensTree::RecalcData()
                 // accept multiple matches for inheritance
                 TokenIdxSet result;
                 FindMatches(ancestor, result, true, false);
-                for (TokenIdxSet::iterator it = result.begin(); it != result.end(); it++)
+                for (TokenIdxSet::iterator it = result.begin(); it != result.end(); ++it)
                 {
                     Token* ancestorToken = at(*it);
                     // only classes take part in inheritance
@@ -964,11 +999,11 @@ void TokensTree::RecalcData()
 
         // recalc
         TokenIdxSet result;
-        for (TokenIdxSet::iterator it = token->m_Ancestors.begin(); it != token->m_Ancestors.end(); it++)
+        for (TokenIdxSet::iterator it = token->m_Ancestors.begin(); it != token->m_Ancestors.end(); ++it)
             RecalcFullInheritance(*it, result);
 
         // now, add the resulting set to ancestors set
-        for (TokenIdxSet::iterator it = result.begin(); it != result.end(); it++)
+        for (TokenIdxSet::iterator it = result.begin(); it != result.end(); ++it)
         {
             Token* ancestor = at(*it);
             if (ancestor)
@@ -983,7 +1018,7 @@ void TokensTree::RecalcData()
         {
             // debug loop
             TRACE(_T("RecalcData() : Ancestors for %s:"), token->m_Name.wx_str());
-            for (TokenIdxSet::iterator it = token->m_Ancestors.begin(); it != token->m_Ancestors.end(); it++)
+            for (TokenIdxSet::iterator it = token->m_Ancestors.begin(); it != token->m_Ancestors.end(); ++it)
             {
                 Token* anc_token = at(*it);
                 if (anc_token)
@@ -1021,7 +1056,7 @@ void TokensTree::RecalcFullInheritance(int parentIdx, TokenIdxSet& result)
     TRACE(_T("RecalcFullInheritance() : Anc: '%s'"), ancestor->m_Name.wx_str());
 
     // for all its ancestors
-    for (TokenIdxSet::iterator it = ancestor->m_Ancestors.begin(); it != ancestor->m_Ancestors.end(); it++)
+    for (TokenIdxSet::iterator it = ancestor->m_Ancestors.begin(); it != ancestor->m_Ancestors.end(); ++it)
     {
         if (*it != -1 && // not global scope
             *it != parentIdx && // not the same token (avoid infinite loop)

@@ -503,14 +503,6 @@ bool Parser::Reparse(const wxString& filename, bool isLocal)
     {
         wxCriticalSectionLocker lock(s_MutexProtection);
         m_pTokensTree->FlagFileForReparsing(file);
-
-        wxFileName fn(file);
-        if (fn.GetExt() == _T("h"))
-        {
-            fn.SetExt(_T("cpp"));
-            if (fn.FileExists())
-                m_pTokensTree->FlagFileForReparsing(fn.GetFullPath());
-        }
     }
 
     m_NeedsReparse = true;

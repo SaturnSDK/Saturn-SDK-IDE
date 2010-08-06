@@ -11,6 +11,7 @@
 #include <wx/file.h>
 #include <wx/thread.h>
 #include <wx/stream.h>
+#include <wx/stopwatch.h>
 #include <settings.h>
 
 #include <globals.h>
@@ -91,7 +92,9 @@ public:
                        (totalTime / 1000) % 60,
                        (totalTime % 1000),
                        it->first->m_CallTimes);
+#ifndef CC_PARSER_TEST
             Manager::Get()->GetLogManager()->DebugLog(log);
+#endif
             it->first->Zero();
         }
     }
@@ -293,6 +296,13 @@ class TokensTree
         void RemoveTokenFromList(int idx);
 
         void RecalcFullInheritance(int parentIdx, TokenIdxSet& result); // called by RecalcData
+
+        /** Check all the children belong this token should be remove
+          * @param token the checked token pointer
+          * @param fileIndex file index the token belongs to
+          * @return if true, we can safely remove the token
+          */
+        bool CheckChildRemove(Token * token, int fileIndex);
 };
 
 
