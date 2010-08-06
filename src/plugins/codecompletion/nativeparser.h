@@ -75,7 +75,9 @@ class NativeParser : public wxEvtHandler
         void SetTokenKindImage(int kind, const wxIcon& icon);
         bool Done() const { return m_WaitParsingList.empty(); }
         ParsingType GetParsingType();
+
         wxArrayString GetAllPathsByFilename(const wxString& filename);
+        void AddPaths(wxArrayString& dirs, const wxString& path, bool hasExt);
 
         // If return != m_pParser, the mean is waiting...for parser task
         const Parser* AddOrChangeParser(cbProject* project, bool useCache = true);

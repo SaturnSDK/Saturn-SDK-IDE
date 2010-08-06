@@ -3601,44 +3601,71 @@ wxArrayString NativeParser::GetAllPathsByFilename(const wxString& filename)
 {
     wxArrayString dirs;
     const wxFileName fn(filename);
-    const wxString curPath = fn.GetPath();
     const wxString filespec = fn.HasExt() ? fn.GetName() + _T(".*") : fn.GetName();
 
-    wxDir dir(curPath);
+    wxDir dir(fn.GetPath());
     if (!dir.IsOpened())
         return wxArrayString();
 
     wxArrayString files;
     ParserDirTraverser traverser(wxEmptyString, files);
-    dir.Traverse(traverser, filespec);
+    dir.Traverse(traverser, filespec, wxDIR_FILES);
     if (files.GetCount() == 1)
     {
         cbProject* project = GetProjectByParser(m_pParser);
         if (project)
         {
             const wxString prjPath = project->GetCommonTopLevelPath();
-            wxDir prjDir(prjPath);
-            if (prjDir.IsOpened())
+            wxString priorityPath;
+            if (fn.HasExt() && (fn.GetExt().StartsWith(_T("h")) || fn.GetExt().StartsWith(_T("c"))))
             {
-                wxArrayString others;
-                ParserDirTraverser traverser(curPath, others);
-                prjDir.Traverse(traverser, filespec);
-                if (others.GetCount() == 1)
+                wxFileName priFn(prjPath);
+                priFn.AppendDir(fn.GetExt().StartsWith(_T("h")) ? _T("sdk") : _T("include"));
+                if (priFn.DirExists())
                 {
-                    dirs.Add(UnixFilename(others[0].BeforeLast(_T('.'))));
-                    if (fn.HasExt())
-                        dirs.Last().Append(_T("."));
+                    priorityPath = priFn.GetFullPath();
+                    wxDir priorityDir(priorityPath);
+                    if (priorityDir.IsOpened())
+                    {
+                        wxArrayString others;
+                        ParserDirTraverser traverser(wxEmptyString, others);
+                        priorityDir.Traverse(traverser, filespec, wxDIR_FILES | wxDIR_DIRS);
+                        if (others.GetCount() == 1)
+                            AddPaths(dirs, others[0], fn.HasExt());
+                    }
+                }
+            }
+
+            if (dirs.IsEmpty())
+            {
+                wxDir prjDir(prjPath);
+                if (prjDir.IsOpened())
+                {
+                    wxArrayString others;
+                    ParserDirTraverser traverser(priorityPath, others);
+                    prjDir.Traverse(traverser, filespec, wxDIR_FILES | wxDIR_DIRS);
+                    if (others.GetCount() == 1)
+                        AddPaths(dirs, others[0], fn.HasExt());
                 }
             }
         }
     }
 
     if (!files.IsEmpty())
-    {
-        dirs.Add(UnixFilename(files[0].BeforeLast(_T('.'))));
-        if (fn.HasExt())
-            dirs.Last().Append(_T("."));
-    }
+        AddPaths(dirs, files[0], fn.HasExt());
 
     return dirs;
+}
+
+
+void NativeParser::AddPaths(wxArrayString& dirs, const wxString& path, bool hasExt)
+{
+    wxString s;
+    if (hasExt)
+        s = UnixFilename(path.BeforeLast(_T('.'))) + _T(".");
+    else
+        s = UnixFilename(path);
+
+    if (dirs.Index(s, false) == wxNOT_FOUND)
+        dirs.Add(s);
 }
