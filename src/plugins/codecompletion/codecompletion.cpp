@@ -1998,6 +1998,9 @@ void CodeCompletion::OnEditorActivated(CodeBlocksEvent& event)
 
         m_NativeParser.OnEditorActivated(editor);
         ParseFunctionsAndFillToolbar();
+
+        if (m_NativeParser.GetParserByFilename(editor->GetFilename()))
+            EnableToolbarTools(true);
     }
 
     event.Skip();
