@@ -562,6 +562,9 @@ void Tokenizer::ReadParentheses(wxString& str)
                 const size_t usedLen = p - buffer;
                 if (usedLen + writeLen > maxBufferLen)
                 {
+                    if (writeLen > maxBufferLen)
+                        return;
+
                     if (p != buffer)
                     {
                         str.Append(buffer, usedLen);
@@ -572,7 +575,7 @@ void Tokenizer::ReadParentheses(wxString& str)
                 }
                 else
                 {
-                    memcpy((void*)p, (void*)(&m_Buffer[startIndex]), writeLen * sizeof(wxChar));
+                    memcpy(p, &m_Buffer[startIndex], writeLen * sizeof(wxChar));
                     p += writeLen;
                 }
 
@@ -1520,8 +1523,8 @@ void Tokenizer::ReplaceBufferForReparse(const wxString& target, bool forceUpdate
     {
         const size_t diffLen = bufLen - m_TokenIndex;
         m_Buffer.insert(0, wxString(_T(' '), diffLen));
-        m_BufferLen         += diffLen;
-        m_TokenIndex        += diffLen;
+        m_BufferLen += diffLen;
+        m_TokenIndex += diffLen;
     }
 
     // Set replace parsing state, and save first replace token index

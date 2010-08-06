@@ -877,10 +877,13 @@ public:
         for (size_t i = 0; i < m_IncludeDirs.GetCount(); ++i)
         {
             if (m_SystemHeadersMap.find(m_IncludeDirs[i]) == m_SystemHeadersMap.end())
-                GetSystemHeaders(m_SystemHeadersMap, m_IncludeDirs[i]);
+            {
+                const wxString& sysPath = m_IncludeDirs[i];
+                GetSystemHeaders(m_SystemHeadersMap, sysPath);
+                Manager::Get()->GetLogManager()->DebugLog(F(_T("SystemHeadersThread : %s"), sysPath.wx_str()));
+            }
         }
 
-        Manager::Get()->GetLogManager()->DebugLog(_T("System headers thread is done!"));
         return NULL;
     }
 

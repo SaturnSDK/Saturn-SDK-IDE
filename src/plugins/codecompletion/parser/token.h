@@ -22,7 +22,7 @@ using namespace std;
 #define CC_PARSER_PROFILE_TEST 0
 
 #if CC_PARSER_PROFILE_TEST
-#define CC_PROFILE_TIMER()                                                                        \
+#define CC_PROFILE_TIMER()                                                                          \
     static ProfileTimerData __ptd;                                                                  \
     static size_t __i = ProfileTimer::Registry(&__ptd, wxString(__PRETTY_FUNCTION__, wxConvUTF8));  \
     __ptd.m_CallTimes += __i;                                                                       \
