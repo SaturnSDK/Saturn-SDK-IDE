@@ -167,10 +167,9 @@ void ClassBrowser::UpdateView(bool checkHeaderSwap)
     {
         m_pActiveProject = m_NativeParser->GetProjectByParser(m_pParser);
         cbEditor* ed = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
-        if (!ed)
-            return;
+        if (ed)
+            m_ActiveFilename = ed->GetFilename();
 
-        m_ActiveFilename = ed->GetFilename();
         TRACE(_T("ClassBrowser::UpdateView(), new m_ActiveFilename = %s"), m_ActiveFilename.wx_str());
 
         if (checkHeaderSwap && oldActiveFilename.IsSameAs(m_ActiveFilename))
