@@ -1176,6 +1176,11 @@ bool Tokenizer::CalcConditionExpression()
                             ReplaceBufferForReparse(tk->m_Args, false);
                         continue;
                     }
+                    else if (!tk->m_Args.IsEmpty())
+                    {
+                        ReplaceBufferForReparse(GetActualContextForMacro(tk), false);
+                        continue;
+                    }
                     else if (wxIsdigit(tk->m_Type[0]))
                         token = tk->m_Type;
                     else
@@ -1210,9 +1215,9 @@ bool Tokenizer::CalcConditionExpression()
     exp.ConvertInfixToPostfix();
     if (exp.CalcPostfix())
     {
-        bool result = exp.GetStatus() && exp.GetResult();
-        TRACE(_T("CalcConditionExpression() : exp.GetStatus() : %d, exp.GetResult() : %d"), exp.GetStatus(), exp.GetResult());
-        return result;
+        TRACE(_T("CalcConditionExpression() : exp.GetStatus() : %d, exp.GetResult() : %d"),
+              exp.GetStatus(), exp.GetResult());
+        return exp.GetStatus() && exp.GetResult();
     }
 
     return true;
