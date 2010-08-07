@@ -107,7 +107,7 @@ CCOptionsDlg::CCOptionsDlg(wxWindow* parent, NativeParser* np, CodeCompletion* c
     XRCCTRL(*this, "chkFloatCB", wxCheckBox)->SetValue(cfg->ReadBool(_T("/as_floating_window"), false));
     XRCCTRL(*this, "chkNoSB", wxCheckBox)->SetValue(!cfg->ReadBool(_T("/use_symbols_browser"), true));
     XRCCTRL(*this, "txtFillupChars", wxTextCtrl)->SetValue(cfg->Read(_T("/fillup_chars"), wxEmptyString));
-    XRCCTRL(*this, "txtUpFrontHeaders", wxTextCtrl)->SetValue(cfg->Read(_T("/up_front_headers"), _T("<cstddef>, <wx/defs.h>, <wx/dlimpexp.h>, <wx/toplevel.h>, \"pch.h\", \"sdk.h\", \"stdafx.h\"")));
+    XRCCTRL(*this, "txtUpFrontHeaders", wxTextCtrl)->SetValue(cfg->Read(_T("/up_front_headers"), _T("<cstddef>, <w32api.h>, <wx/defs.h>, <wx/dlimpexp.h>, <wx/toplevel.h>, \"pch.h\", \"sdk.h\", \"stdafx.h\"")));
     XRCCTRL(*this, "chkScopeFilter", wxCheckBox)->SetValue(cfg->ReadBool(_T("/scope_filter"), true));
 
     XRCCTRL(*this, "chkKL_1", wxCheckBox)->SetValue(cfg->ReadBool(_T("/lexer_keywords_set1"), true));

@@ -1245,7 +1245,33 @@ void NativeParser::ReparseProject(cbProject* project, Parser* parser)
     wxArrayString sources;
 
     ConfigManager* cfg = Manager::Get()->GetConfigManager(_T("code_completion"));
-    wxStringTokenizer tkz(cfg->Read(_T("/up_front_headers"), _T("<cstddef>, <wx/defs.h>, <wx/dlimpexp.h>, <wx/toplevel.h>, \"pch.h\", \"sdk.h\", \"stdafx.h\"")), _T(","));
+    const wxString def_fronts = _T("<cstddef>, <w32api.h>, <wx/defs.h>, <wx/dlimpexp.h>, <wx/toplevel.h>, ")
+                                _T("\"pch.h\", \"sdk.h\", \"stdafx.h\"");
+    wxString up_fronts = cfg->Read(_T("/up_front_headers"), def_fronts);
+    if (!up_fronts.StartsWith(def_fronts))
+    {
+        wxStringTokenizer def(def_fronts, _T(","));
+        wxArrayString defs;
+        while (def.HasMoreTokens())
+            defs.Add(def.GetNextToken().Trim(false).Trim(true));
+
+        wxStringTokenizer user(up_fronts, _T(","));
+        wxArrayString users;
+        while (user.HasMoreTokens())
+            users.Add(user.GetNextToken().Trim(false).Trim(true));
+
+        up_fronts = def_fronts;
+        for (size_t i = 0; i < users.GetCount(); ++i)
+        {
+            if (!users[i].IsEmpty() && defs.Index(users[i], false) == wxNOT_FOUND)
+                up_fronts.Append(_T(", ") + users[i]);
+        }
+
+        cfg->Write(_T("/up_front_headers"), up_fronts);
+    }
+
+    wxStringTokenizer tkz(up_fronts, _T(","));
+
     typedef std::map<int, wxString> FrontMap;
     FrontMap frontMap;
     FrontMap frontTempMap;
