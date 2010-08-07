@@ -303,33 +303,21 @@ struct cbEditorInternalData
         int style = control->GetStyleAt(pos);
         if ( control->IsComment(style) || control->IsPreprocessor(style) )
             return;
-        if ( ch == _T('\'') )
+        if (ch == _T('\'') || ch == _T('"'))
         {
-            if ( (control->GetCharAt(pos) == ch) && (pos > 1) && (control->GetCharAt(pos-2) != _T('\\')) )
+            if ((control->GetCharAt(pos) == ch) && (pos > 1) && (control->GetCharAt(pos - 2) != _T('\\')))
             {
                 control->DeleteBack();
                 control->GotoPos(pos);
             }
             else
             {
-                if ( (control->GetCharAt(pos-2) == _T('\\')) || control->IsCharacter(style)
-                    || control->IsString(style) )
-                    return;
-                control->AddText(ch);
-                control->GotoPos(pos);
-            }
-            return;
-        }
-        if ( ch == _T('"') )
-        {
-            if ( (control->GetCharAt(pos) == ch) && (pos > 1) && (control->GetCharAt(pos-2) != _T('\\')) )
-            {
-                control->DeleteBack();
-                control->GotoPos(pos);
-            }
-            else
-            {
-                if ( (control->GetCharAt(pos-2) == _T('\\')) || control->IsCharacter(style) )
+                wxChar left = ch;
+                if (pos > 2)
+                    left = control->GetCharAt(pos - 2);
+                wxChar right = control->GetCharAt(pos);
+                if (control->IsCharacter(style) || control->IsString(style) || left == _T('\\') ||
+                    (left > _T(' ') && left != _T('(')) || (right > _T(' ') && right != _T(')')))
                     return;
                 control->AddText(ch);
                 control->GotoPos(pos);
