@@ -315,10 +315,19 @@ struct cbEditorInternalData
                 wxChar left = ch;
                 if (pos > 2)
                     left = control->GetCharAt(pos - 2);
+
                 wxChar right = control->GetCharAt(pos);
-                if (control->IsCharacter(style) || control->IsString(style) || left == _T('\\') ||
-                    (left > _T(' ') && left != _T('(')) || (right > _T(' ') && right != _T(')')))
+                if (   control->IsCharacter(style)
+                    || control->IsString(style)
+                    || left == _T('\\')
+                    || (   (left > _T(' '))
+                        && (left != _T('('))
+                        && (left != _T('=')) )
+                    || (   (right > _T(' '))
+                        && (right != _T(')')) ) )
+                {
                     return;
+                }
                 control->AddText(ch);
                 control->GotoPos(pos);
             }
