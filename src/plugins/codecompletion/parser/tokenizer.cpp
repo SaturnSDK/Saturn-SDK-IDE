@@ -1573,17 +1573,19 @@ wxString Tokenizer::GetActualContextForMacro(Token* tk)
     SpliteArguments(actualArgs);
 
     // 3. get actual context
-    wxString actualContext = tk->m_Type;
+    const int pos = tk->m_Type.Find(_T('('));
+    const wxString name = tk->m_Type.SubString(0, pos - 1);
+    wxString args = tk->m_Type.SubString(pos, tk->m_Type.Len());
     for (size_t i = 0; i < std::min(normalArgs.GetCount(), actualArgs.GetCount()); ++i)
     {
         TRACE(_T("The normal args are '%s' and the actual args are '%s'."), normalArgs[i].wx_str(),
               actualArgs[i].wx_str());
-        actualContext.Replace(normalArgs[i], actualArgs[i]);
+        args.Replace(normalArgs[i], actualArgs[i]);
     }
 
     // 4. erease string "##"
-    actualContext.Replace(_T("##"), _T(""));
-    TRACE(_T("The replaced actual context are '%s'."), actualContext.wx_str());
+    args.Replace(_T("##"), _T(""));
+    TRACE(_T("The replaced actual context are '%s'."), (name + args).wx_str());
 
-    return actualContext;
+    return name + args;
 }
