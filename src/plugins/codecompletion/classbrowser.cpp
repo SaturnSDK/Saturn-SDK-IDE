@@ -172,10 +172,21 @@ void ClassBrowser::UpdateView(bool checkHeaderSwap)
 
         TRACE(_T("ClassBrowser::UpdateView(), new m_ActiveFilename = %s"), m_ActiveFilename.wx_str());
 
-        if (checkHeaderSwap && oldActiveFilename.IsSameAs(m_ActiveFilename))
+        if (checkHeaderSwap)
         {
-            TRACE(_T("ClassBrowser::UpdateView() match the old filename, return!"));
-            return;
+            wxString oldShortName = oldActiveFilename.AfterLast(wxFILE_SEP_PATH);
+            if (oldShortName.Find(_T('.')) != wxNOT_FOUND)
+                oldShortName = oldShortName.BeforeLast(_T('.'));
+
+            wxString newShortName = m_ActiveFilename.AfterLast(wxFILE_SEP_PATH);
+            if (newShortName.Find(_T('.')) != wxNOT_FOUND)
+                newShortName = newShortName.BeforeLast(_T('.'));
+
+            if (oldShortName.IsSameAs(newShortName))
+            {
+                TRACE(_T("ClassBrowser::UpdateView() match the old filename, return!"));
+                return;
+            }
         }
 
         BuildTree();
