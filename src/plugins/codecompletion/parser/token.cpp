@@ -82,7 +82,8 @@ Token::Token()
     m_ParentIndex(-1),
     m_pUserData(0),
     m_pTree(0),
-    m_Self(-1)
+    m_Self(-1),
+    m_TemplateAlias(wxEmptyString)
 {
     m_Ticket = GetTokenTicket();
     m_TemplateMap.clear();
@@ -105,7 +106,8 @@ Token::Token(const wxString& name, unsigned int file, unsigned int line) :
     m_ParentIndex(-1),
     m_pUserData(0),
     m_pTree(0),
-    m_Self(-1)
+    m_Self(-1),
+    m_TemplateAlias(wxEmptyString)
 {
     //ctor
     m_Ticket = GetTokenTicket();

@@ -2907,6 +2907,16 @@ size_t NativeParser::ResolveExpression(std::queue<ParserComponent> components, c
                                 }
                             }
                         }
+                        //now add the current token's parent scope;
+                        Token* currentTokenParent = token->GetParentToken();
+                        while(true)
+                        {
+                            if (!currentTokenParent)
+                                break;
+                            actualTypeScope.insert(currentTokenParent->GetSelf());
+                            currentTokenParent = currentTokenParent->GetParentToken();
+
+                        }
                     }
 
                     //now get the tokens of variable/function.
@@ -2915,7 +2925,27 @@ size_t NativeParser::ResolveExpression(std::queue<ParserComponent> components, c
                     if (actualTypeResult.size() > 0)
                     {
                         for (TokenIdxSet::iterator it2=actualTypeResult.begin(); it2!=actualTypeResult.end(); ++it2)
+                        {
                             initialScope.insert(*it2);
+                            //and we need to add the template argument alias too.
+                            Token* typeToken = tree->at(*it2);
+                            if (typeToken && typeToken->m_TokenKind == tkTypedef && !typeToken->m_TemplateAlias.IsEmpty())
+                            {
+                                actualTypeStr = typeToken->m_TemplateAlias;
+                                map<wxString, wxString>::iterator it = m_TemplateMap.find(actualTypeStr);
+                                if (it != m_TemplateMap.end())
+                                {
+                                    actualTypeStr = it->second;
+                                    ResolveActualType(actualTypeStr, actualTypeScope, actualTypeResult);
+                                    if (actualTypeResult.size() > 0)
+                                    {
+                                        for (TokenIdxSet::iterator it3=actualTypeResult.begin(); it3!=actualTypeResult.end(); ++it3)
+                                            initialScope.insert(*it3);
+                                    }
+                                }
+                            }
+
+                        }
                     }
                     else // ok ,we search template container to check if type is template formal.
                     {

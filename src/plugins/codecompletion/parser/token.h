@@ -216,7 +216,9 @@ class Token
         wxArrayString m_Aliases; // used for namespace aliases
 
         wxArrayString m_TemplateType;
-        map<wxString, wxString> m_TemplateMap;
+        map<wxString, wxString>
+                      m_TemplateMap;
+        wxString      m_TemplateAlias; // alias for templates, e.g. template T1 T2;
         void*         m_pUserData; // custom user-data (the classbrowser expects it to be a pointer to a cbProject)
 
     protected:

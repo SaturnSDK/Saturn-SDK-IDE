@@ -2122,15 +2122,31 @@ void ParserThread::HandleTypedef()
             return; // invalid typedef
 
     // now get the type
-    wxString ancestor;
-    while (components.size() > 1)
+    wxString ancestor(wxEmptyString);
+    wxString alias(wxEmptyString);
+    if (components.size() == 2)
     {
-        wxString token = components.front();
-        components.pop();
+        if (m_pLastParent && m_pLastParent->m_TokenKind == tkClass && (!m_pLastParent->m_TemplateType.IsEmpty()))
+        {
+            wxArrayString templateType = m_pLastParent->m_TemplateType;
+            wxString type = components.front();
+            components.pop();
+            ancestor = components.front();
+            if (templateType.Index(type) != wxNOT_FOUND)
+                alias = type;
+        }
+    }
+    else
+    {
+        while (components.size() > 1)
+        {
+            wxString token = components.front();
+            components.pop();
 
-        if (!ancestor.IsEmpty())
-            ancestor << _T(' ');
-        ancestor << token;
+            if (!ancestor.IsEmpty())
+                ancestor << _T(' ');
+            ancestor << token;
+        }
     }
 
     // no return type
@@ -2154,6 +2170,8 @@ void ParserThread::HandleTypedef()
             tdef->m_Type            = ancestor;
             tdef->m_ActualType      = actualAncestor;
             tdef->m_AncestorsString = ancestor;
+            tdef->m_TemplateAlias   = alias;
+            TRACE(_T("The typedef alias is %s."), tdef->m_TemplateAlias.wx_str());
         }
     }
 }
