@@ -2122,19 +2122,19 @@ void ParserThread::HandleTypedef()
             return; // invalid typedef
 
     // now get the type
-    wxString ancestor(wxEmptyString);
-    wxString alias(wxEmptyString);
-    if (components.size() == 2)
+    wxString ancestor;
+    wxString alias;
+    if ( components.size() == 2
+        && m_pLastParent
+        && m_pLastParent->m_TokenKind == tkClass
+        && (!m_pLastParent->m_TemplateType.IsEmpty()) )
     {
-        if (m_pLastParent && m_pLastParent->m_TokenKind == tkClass && (!m_pLastParent->m_TemplateType.IsEmpty()))
-        {
-            wxArrayString templateType = m_pLastParent->m_TemplateType;
-            wxString type = components.front();
-            components.pop();
-            ancestor = components.front();
-            if (templateType.Index(type) != wxNOT_FOUND)
-                alias = type;
-        }
+        wxArrayString templateType = m_pLastParent->m_TemplateType;
+        wxString type = components.front();
+        components.pop();
+        ancestor = components.front();
+        if (templateType.Index(type) != wxNOT_FOUND)
+            alias = type;
     }
     else
     {
