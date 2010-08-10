@@ -1058,6 +1058,12 @@ Token* ParserThread::FindTokenFromQueue(std::queue<wxString>& q, Token* parent, 
 
     Token* result = TokenExists(ns, parent, tkNamespace | tkClass);
 
+    // if we can't find one in global namespace, then we check the local parent
+    if (!result && parent == 0)
+    {
+        result = TokenExists(ns, parentIfCreated, tkNamespace | tkClass);
+    }
+
     if (!result && createIfNotExist)
     {
         result = new(std::nothrow) Token(ns, m_FileIdx, 0);
