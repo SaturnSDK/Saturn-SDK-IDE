@@ -762,8 +762,6 @@ void ParserThread::DoParse()
                 if (m_Tokenizer.PeekToken() != _T("class"))
                     m_TemplateArgument.clear();
             }
-            else if (token == _T("typename"))
-                SkipToOneOfChars(_T(";"), true);
             else if (token == ParserConsts::kw_operator)
             {
                 TokenizerState oldState = m_Tokenizer.GetState();
