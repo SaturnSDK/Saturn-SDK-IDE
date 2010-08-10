@@ -1052,7 +1052,7 @@ wxString Tokenizer::DoGetToken()
         MoveToNextChar();
     }
 
-    if (m_ReplaceTokenIndex != 0 && m_ReplaceTokenIndex <= m_TokenIndex)
+    if (m_ReplaceTokenIndex != 0 && m_ReplaceTokenIndex < m_TokenIndex)
     {
         m_ReplaceTokenIndex = 0;
         m_IsReplaceParsing = false;
@@ -1555,6 +1555,61 @@ void Tokenizer::ReplaceBufferForReparse(const wxString& target, bool forceUpdate
     }
 }
 
+void KMP_GetNextVal(const wxChar* pattern, int next[])
+{
+    int j = 0, k = -1;
+    next[0] = -1;
+    while (pattern[j] != _T('\0'))
+    {
+        if (k == -1 || pattern[j] == pattern[k])
+        {
+            ++j;
+            ++k;
+            if (pattern[j] != pattern[k])
+                next[j] = k;
+            else
+                next[j] = next[k];
+        }
+        else
+            k = next[k];
+    }
+}
+
+int KMP_Find(const wxChar* text, const wxChar* pattern, const int patternLen)
+{
+    if (!text || !pattern || pattern[0] == _T('\0') || text[0] == _T('\0'))
+        return -1;
+
+    int next[patternLen];
+    KMP_GetNextVal(pattern, next);
+
+    int index = 0, i = 0, j = 0;
+    while (text[i] != _T('\0') && pattern[j] != _T('\0'))
+    {
+        if (text[i] == pattern[j])
+        {
+            ++i;
+            ++j;
+        }
+        else
+        {
+            index += j - next[j];
+            if (next[j] != -1)
+                j = next[j];
+            else
+            {
+                j = 0;
+                ++i;
+            }
+        }
+    }
+
+    if (pattern[j] == _T('\0'))
+        return index;
+    else
+        return -1;
+}
+
 wxString Tokenizer::GetActualContextForMacro(Token* tk)
 {
     if (!tk)
@@ -1573,19 +1628,93 @@ wxString Tokenizer::GetActualContextForMacro(Token* tk)
     SpliteArguments(actualArgs);
 
     // 3. get actual context
-    const int pos = tk->m_Type.Find(_T('('));
-    const wxString name = tk->m_Type.SubString(0, pos - 1);
-    wxString args = tk->m_Type.SubString(pos, tk->m_Type.Len());
+    wxString actualContext = tk->m_Type;
     for (size_t i = 0; i < std::min(normalArgs.GetCount(), actualArgs.GetCount()); ++i)
     {
         TRACE(_T("The normal args are '%s' and the actual args are '%s'."), normalArgs[i].wx_str(),
               actualArgs[i].wx_str());
-        args.Replace(normalArgs[i], actualArgs[i]);
+
+        static const int maxBufferLen = 4096;
+        wxChar buffer[maxBufferLen + 2];
+        wxChar* p = buffer;
+        wxChar* data = const_cast<wxChar*>(actualContext.GetData());
+        wxString alreadyReplaced;
+
+        for (;;)
+        {
+            const int pos = KMP_Find(data, normalArgs[i].GetData(), normalArgs[i].Len());
+            if (pos != -1)
+            {
+                const wxChar left = *(data + pos - 1);
+                const wxChar right = *(data + pos + normalArgs[i].Len());
+                if (   (wxIsalpha(left) || left == _T('_'))
+                    || (wxIsalpha(right) || right == _T('_')) )
+                {
+                    const int totalLen = pos + normalArgs[i].Len();
+                    if (p + totalLen >= buffer + maxBufferLen)
+                    {
+                        alreadyReplaced += wxString(buffer, p - buffer);
+                        p = buffer;
+                    }
+
+                    memcpy(p, data, totalLen * sizeof(wxChar));
+                    p += totalLen;
+                    data += totalLen;
+                }
+                else
+                {
+                    if (p + (pos + actualArgs[i].Len())  >= buffer + maxBufferLen)
+                    {
+                        alreadyReplaced += wxString(buffer, p - buffer);
+                        p = buffer;
+                    }
+
+                    if (pos >= maxBufferLen)
+                        alreadyReplaced += wxString(data, pos);
+                    else if (pos)
+                    {
+                        memcpy(p, data, pos * sizeof(wxChar));
+                        p += pos;
+                    }
+
+                    data += pos + normalArgs[i].Len();
+
+                    if (!actualArgs[i].IsEmpty())
+                    {
+                        if (p + actualArgs[i].Len() < buffer + maxBufferLen)
+                        {
+                            memcpy(p, actualArgs[i].GetData(), actualArgs[i].Len() * sizeof(wxChar));
+                            p += actualArgs[i].Len();
+                        }
+                        else
+                        {
+                            alreadyReplaced += wxString(buffer, p - buffer);
+                            alreadyReplaced += actualArgs[i];
+                            p = buffer;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                if (p != buffer)
+                    alreadyReplaced += wxString(buffer, p - buffer);
+
+                const int lastLen = actualContext.Len() - (data - actualContext.GetData());
+                if (lastLen)
+                    alreadyReplaced += wxString(data, lastLen);
+
+                break;
+            }
+        }
+
+        actualContext = alreadyReplaced;
     }
 
     // 4. erease string "##"
-    args.Replace(_T("##"), _T(""));
-    TRACE(_T("The replaced actual context are '%s'."), (name + args).wx_str());
+    actualContext.Replace(_T("##"), wxEmptyString);
 
-    return name + args;
+    TRACE(_T("The replaced actual context are '%s'."), actualContext.wx_str());
+
+    return actualContext;
 }
