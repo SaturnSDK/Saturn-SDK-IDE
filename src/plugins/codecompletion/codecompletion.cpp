@@ -1398,17 +1398,18 @@ void CodeCompletion::DoCodeComplete()
 
     if (ed->GetControl()->GetCharAt(lineIndentPos) == _T('#'))
     {
-        CodeCompletePreprocessor();
+        const int start = control->WordStartPosition(lineIndentPos + 1, true);
+        const int end = control->WordEndPosition(lineIndentPos + 1, true);
+        const wxString str = control->GetTextRange(start, end);
+
+        if (control->IsPreprocessor(style) && str == _T("include"))
+            CodeCompleteIncludes();
+        else if (end >= pos)
+            CodeCompletePreprocessor();
         return;
     }
     else if (ed->GetControl()->GetCharAt(pos - 1) == _T('#'))
         return;
-
-    if (control->IsPreprocessor(style))
-    {
-        CodeCompleteIncludes();
-        return;
-    }
 
     if (style != wxSCI_C_DEFAULT && style != wxSCI_C_OPERATOR && style != wxSCI_C_IDENTIFIER)
         return;
