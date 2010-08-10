@@ -1114,6 +1114,11 @@ void CodeCompletion::CodeCompletePreprocessor()
     if (!ed)
         return;
 
+    cbStyledTextCtrl* control = ed->GetControl();
+    const int curPos = control->GetCurrentPos();
+    const int start = control->WordStartPosition(curPos, true);
+    const int end = control->WordEndPosition(curPos, true);
+
     wxArrayString tokens;
     tokens.Add(_T("include"));
     tokens.Add(_T("if"));
@@ -1132,7 +1137,7 @@ void CodeCompletion::CodeCompletePreprocessor()
     tokens.Sort();
     ed->GetControl()->ClearRegisteredImages();
     ed->GetControl()->AutoCompSetIgnoreCase(false);
-    ed->GetControl()->AutoCompShow(0, GetStringFromArray(tokens, _T(" ")));
+    ed->GetControl()->AutoCompShow(end - start, GetStringFromArray(tokens, _T(" ")));
 }
 
 wxArrayString CodeCompletion::GetCallTips()
@@ -1386,15 +1391,22 @@ void CodeCompletion::DoCodeComplete()
     if (!ed)
         return;
 
-    const int pos = ed->GetControl()->GetCurrentPos();
-    const int style = ed->GetControl()->GetStyleAt(pos);
+    cbStyledTextCtrl* control = ed->GetControl();
+    const int pos = control->GetCurrentPos();
+    const int style = control->GetStyleAt(pos);
+    const int lineIndentPos = control->GetLineIndentPosition(control->GetCurrentLine());
 
-    if (ed->GetControl()->IsPreprocessor(style))
+    if (ed->GetControl()->GetCharAt(lineIndentPos) == _T('#'))
     {
-        if (ed->GetControl()->GetCharAt(pos - 1) == _T('#'))
-            CodeCompletePreprocessor();
-        else
-            CodeCompleteIncludes();
+        CodeCompletePreprocessor();
+        return;
+    }
+    else if (ed->GetControl()->GetCharAt(pos - 1) == _T('#'))
+        return;
+
+    if (control->IsPreprocessor(style))
+    {
+        CodeCompleteIncludes();
         return;
     }
 
@@ -2527,11 +2539,16 @@ void CodeCompletion::EditorEventHook(cbEditor* editor, wxScintillaEvent& event)
         }
         else
         {
-            const wxChar start = control->GetCharAt(startPos - 1);
-            const wxChar end = control->GetCharAt(endPos);
-            bool alreadyMatched = (end == _T('>') || end == _T('"'));
-            if ((start == _T('"') ||  start == _T('<')) && !alreadyMatched)
-                itemText.Append((start == _T('<')) ? _T('>') : _T('"'));
+            bool alreadyMatched = false;
+            if (control->IsPreprocessor(control->GetStyleAt(curPos)))
+            {
+                const wxChar start = control->GetCharAt(startPos - 1);
+                const wxChar end = control->GetCharAt(endPos);
+                alreadyMatched = (end == _T('>') || end == _T('"'));
+                if ((start == _T('"') ||  start == _T('<')) && !alreadyMatched)
+                    itemText.Append((start == _T('<')) ? _T('>') : _T('"'));
+            }
+
             control->ReplaceTarget(itemText);
             int mousePos = alreadyMatched ? startPos + itemText.Length() + 1 : startPos + itemText.Length();
             control->GotoPos(mousePos);
