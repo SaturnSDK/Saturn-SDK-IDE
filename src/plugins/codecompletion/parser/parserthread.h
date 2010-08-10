@@ -134,7 +134,7 @@ class ParserThread : public cbThreadedTask
         /** specify which "class like type" we are handling: struct or class or union*/
         enum EClassType { ctStructure = 0, ctClass = 1, ctUnion = 3 };
 
-        /** skip until we meet one of the characters in the wxString, we don't do conditional preprocessor handling here
+        /** skip until we meet one of the characters in the wxString
           * @param chars wxString specifies all the ending characters
           * @param supportNesting if true, we need to record the "{" and "}" nesting levels when skipping.
           */

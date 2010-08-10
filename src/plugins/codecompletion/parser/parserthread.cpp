@@ -90,6 +90,7 @@ namespace ParserConsts
     const wxString kw_switch       (_T("switch"));
     const wxString kw_template     (_T("template"));
     const wxString kw_typedef      (_T("typedef"));
+    const wxString kw_typename     (_T("typename"));
     const wxString kw_union        (_T("union"));
     const wxString kw_using        (_T("using"));
     const wxString kw_virtual      (_T("virtual"));
@@ -111,20 +112,15 @@ ParserThread::ParserThread(Parser* parent,
     m_pTokensTree(tokensTree),
     m_pLastParent(0),
     m_LastScope(tsUndefined),
-    m_Filename(wxEmptyString),
     m_FileSize(0),
     m_FileIdx(0),
     m_IsLocal(isLocal),
-    m_Str(wxEmptyString),
-    m_LastToken(wxEmptyString),
     m_Options(parserThreadOptions),
     m_EncounteredNamespaces(),
     m_EncounteredTypeNamespaces(),
-    m_LastUnnamedTokenName(wxEmptyString),
     m_ParsingTypedef(false),
     m_IsBuffer(parserThreadOptions.useBuffer),
-    m_Buffer(bufferOrFilename),
-    m_TemplateArgument(wxEmptyString)
+    m_Buffer(bufferOrFilename)
 {
     m_Tokenizer.SetTokenizerOption(parserThreadOptions.wantPreprocessor);
 }
@@ -759,7 +755,7 @@ void ParserThread::DoParse()
                 TRACE(_T("DoParse() : Template argument='%s'"), m_TemplateArgument.wx_str());
                 m_Str.Clear();
                 m_Tokenizer.SetState(tsSkipUnWanted);
-                if (m_Tokenizer.PeekToken() != _T("class"))
+                if (m_Tokenizer.PeekToken() != ParserConsts::kw_class)
                     m_TemplateArgument.clear();
             }
             else if (token == ParserConsts::kw_operator)
@@ -2463,8 +2459,7 @@ wxString ParserThread::GetMacroType(const wxString& macro)
 
 void ParserThread::ResolveTemplateFormalArgs(const wxString& templateArgs, wxArrayString& formals)
 {
-
-    wxString word(wxEmptyString);
+    wxString word;
     wxString args = templateArgs;
     args.Trim(true).Trim(false);
     wxArrayString container;
@@ -2492,7 +2487,7 @@ void ParserThread::ResolveTemplateFormalArgs(const wxString& templateArgs, wxArr
     n = container.GetCount();
     for (int j=0; j<n; ++j)
     {
-        if (container[j] == _T("typename") || container[j] == _T("class"))
+        if (container[j] == ParserConsts::kw_typename || container[j] == ParserConsts::kw_class)
         {
             if ((j+1)<n)
             {
@@ -2550,7 +2545,7 @@ void ParserThread::GetTemplateArgs()
 
 void ParserThread::ResolveTemplateActualArgs(const wxString& templateArgs, wxArrayString& actuals)
 {
-    wxString word(wxEmptyString);
+    wxString word;
     wxString args = templateArgs;
     args.Trim(true).Trim(false);
     args.Remove(0, 1);
