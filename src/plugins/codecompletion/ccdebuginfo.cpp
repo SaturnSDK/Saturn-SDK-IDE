@@ -601,6 +601,7 @@ void CCDebugInfo::OnSave(wxCommandEvent& /*event*/)
     saveWhat.Add(_("Dump the tokens tree"));
     saveWhat.Add(_("Dump the file list"));
     saveWhat.Add(_("Dump the list of include directories"));
+    saveWhat.Add(_("Dump the token list of files"));
 
     int sel = wxGetSingleChoiceIndex(_("What do you want to save?"),
                                      _("CC Debug Info"), saveWhat, this);
@@ -629,7 +630,7 @@ void CCDebugInfo::OnSave(wxCommandEvent& /*event*/)
                 {
                     wxString file = tokens->m_FilenamesMap.GetString(i);
                     if (!file.IsEmpty())
-                        files += file + _T("\n");
+                        files += file + _T("\r\n");
                 }
                 SaveCCDebugInfo(_("Save file list"), files);
             }
@@ -642,9 +643,44 @@ void CCDebugInfo::OnSave(wxCommandEvent& /*event*/)
                 {
                     const wxString& dir = dirsArray[i];
                     if (!dir.IsEmpty())
-                        dirs += dir + _T("\n");
+                        dirs += dir + _T("\r\n");
                 }
                 SaveCCDebugInfo(_("Save list of include directories"), dirs);
+            }
+            break;
+        case 3:
+            {
+                wxString fileTokens;
+                {
+                    wxWindowDisabler disableAll;
+                    wxBusyInfo running(_("Obtaining tokens tree... please wait (this may take several seconds)..."),
+                                       Manager::Get()->GetAppWindow());
+                    for (size_t i = 0; i < tokens->m_FilenamesMap.size(); ++i)
+                    {
+                        const wxString file = tokens->m_FilenamesMap.GetString(i);
+                        if (!file.IsEmpty())
+                        {
+                            fileTokens += file + _T("\r\n");
+
+                            TokenIdxSet result;
+                            tokens->FindTokensInFile(file, result, tkUndefined);
+                            for (TokenIdxSet::iterator it = result.begin(); it != result.end(); ++it)
+                            {
+                                Token* token = tokens->at(*it);
+                                fileTokens << token->GetTokenKindString() << _T(" ");
+                                if (token->m_TokenKind == tkFunction)
+                                    fileTokens << token->m_Name << token->m_Args << _T("\t");
+                                else
+                                    fileTokens << token->DisplayName() << _T("\t");
+                                fileTokens << _T("[") << token->m_Line << _T(",") << token->m_ImplLine << _T("]");
+                                fileTokens << _T("\r\n");
+                            }
+                        }
+                        fileTokens += _T("\r\n");
+                    }
+                }
+
+                SaveCCDebugInfo(_("Save token list of files"), fileTokens);
             }
             break;
         default:
