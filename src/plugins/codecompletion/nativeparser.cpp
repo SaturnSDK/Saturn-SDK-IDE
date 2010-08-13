@@ -768,6 +768,9 @@ bool NativeParser::AddCompilerPredefinedMacros(cbProject* project, Parser* parse
     if (!parser)
         return false;
 
+    if (!parser->Options().wantPreprocessor)
+        return false;
+
 	wxString defs;
 	wxString compilerId;
 
@@ -1282,9 +1285,15 @@ void NativeParser::ReparseProject(cbProject* project, Parser* parser)
         if (token.Len() <= 2) // "" or <>
             continue;
 
-        if (token[0] == _T('"') && token[token.Len() - 1] == _T('"'))
+        if (   parser->Options().followLocalIncludes
+            && token[0] == _T('"')
+            && token[token.Len() - 1] == _T('"') )
+        {
             frontTempMap[++frontCnt] = token.SubString(1, token.Len() - 2).Trim(false).Trim(true);
-        else if (token[0] == _T('<') && token[token.Len() - 1] == _T('>'))
+        }
+        else if (   parser->Options().followLocalIncludes
+                 && token[0] == _T('<')
+                 && token[token.Len() - 1] == _T('>') )
         {
             token = token.SubString(1, token.Len() - 2).Trim(false).Trim(true);
             wxArrayString finds = parser->FindFileInIncludeDirs(token);
