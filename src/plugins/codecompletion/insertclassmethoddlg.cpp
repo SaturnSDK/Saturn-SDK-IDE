@@ -135,6 +135,7 @@ void InsertClassMethodDlg::DoFillMethodsFor(wxCheckListBox* clb,
     //Manager::Get()->GetLogManager()->DebugLog("Fill methods for %s", parentToken->m_DisplayName.c_str());
 
     // loop ascending the inheritance tree
+    tree->RecalcInheritanceChain(parentToken);
 
     for (TokenIdxSet::iterator it = parentToken->m_Children.begin(); it != parentToken->m_Children.end(); ++it)
     {

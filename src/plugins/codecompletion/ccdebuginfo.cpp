@@ -332,6 +332,7 @@ void CCDebugInfo::DisplayTokenInfo()
 
     TokensTree* tokens = m_pParser->GetTokens();
     Token* parent = tokens->at(m_pToken->m_ParentIndex);
+    tokens->RecalcInheritanceChain(m_pToken);
 
     wxString args = m_pToken->m_Args;
     wxString argsStr = m_pToken->m_StrippedArgs;
@@ -363,9 +364,11 @@ void CCDebugInfo::DisplayTokenInfo()
     #else
     txtParent->SetLabel(wxString::Format(_T("%s (%d)"), parent ? parent->m_Name.c_str() : _("<Global namespace>"), m_pToken->m_ParentIndex));
     #endif
+
     FillChildren();
     FillAncestors();
     FillDescendants();
+
     if (!m_pToken->GetFilename().IsEmpty())
         txtDeclFile->SetLabel(wxString::Format(_T("%s : %d"), m_pToken->GetFilename().c_str(), m_pToken->m_Line));
     else

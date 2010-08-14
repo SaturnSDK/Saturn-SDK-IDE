@@ -632,6 +632,8 @@ bool ClassBrowserBuilderThread::AddAncestorsOf(CBTreeCtrl* tree, wxTreeItemId pa
     if (!token)
         return false;
 
+    m_pTokensTree->RecalcInheritanceChain(token);
+
     return AddNodes(tree, parent, token->m_DirectAncestors, tkClass | tkTypedef, 0, true);
 }
 
@@ -643,6 +645,8 @@ bool ClassBrowserBuilderThread::AddDescendantsOf(CBTreeCtrl* tree, wxTreeItemId 
     Token* token = m_pTokensTree->at(tokenIdx);
     if (!token)
         return false;
+
+    m_pTokensTree->RecalcInheritanceChain(token);
 
     bool inh = m_Options.showInheritance;
     m_Options.showInheritance = allowInheritance;
@@ -970,6 +974,7 @@ void ClassBrowserBuilderThread::ExpandItem(wxTreeItemId item)
 #endif
 //    wxMutexLocker lock(m_BuildMutex);
     CBTreeData* data = (CBTreeData*)m_pTreeTop->GetItemData(item);
+    m_pTokensTree->RecalcInheritanceChain(data->m_pToken);
     if (data)
     {
         switch (data->m_SpecialFolder)

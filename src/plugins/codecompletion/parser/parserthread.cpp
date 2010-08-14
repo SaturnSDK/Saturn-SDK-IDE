@@ -2163,15 +2163,18 @@ void ParserThread::HandleTypedef()
         {
             tdef->m_Type            = ancestor + typ; // + args;
             tdef->m_ActualType      = actualAncestor;
-            tdef->m_AncestorsString = ancestor;
+            if (tdef->IsValidAncestor(ancestor))
+                tdef->m_AncestorsString = ancestor;
         }
         else
         {
             tdef->m_Type            = ancestor;
             tdef->m_ActualType      = actualAncestor;
-            tdef->m_AncestorsString = ancestor;
             tdef->m_TemplateAlias   = alias;
             TRACE(_T("The typedef alias is %s."), tdef->m_TemplateAlias.wx_str());
+
+            if (tdef->IsValidAncestor(ancestor))
+                tdef->m_AncestorsString = ancestor;
         }
     }
 }

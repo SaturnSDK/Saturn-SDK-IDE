@@ -186,6 +186,7 @@ class Token
         wxString GetParentName();
         Token* GetParentToken();
         TokensTree* GetTree() { return m_pTree; }
+        bool IsValidAncestor(const wxString& ancestor);
 
         wxString      m_Type;       // this is the return value (if any): e.g. const wxString&
         wxString      m_ActualType; // this is what the parser believes is the actual return value: e.g. wxString
@@ -254,6 +255,7 @@ class TokensTree
         // Token specific functions
         void   RecalcFreeList();
         void   RecalcData();
+        void   RecalcInheritanceChain(Token* token);
         int    TokenExists(const wxString& name, int parent, short int kindMask);
         size_t FindMatches(const wxString& s, TokenIdxSet& result, bool caseSensitive, bool is_prefix, short int kindMask = tkUndefined);
         size_t FindTokensInFile(const wxString& file, TokenIdxSet& result, short int kindMask);

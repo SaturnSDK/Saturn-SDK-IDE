@@ -204,6 +204,7 @@ Token* Parser::FindChildTokenByName(Token* parent, const wxString& name, bool us
         // it will only recurse to itself.
         // the critical section above is sufficient
         TokenIdxSet::iterator it;
+        m_pTokensTree->RecalcInheritanceChain(parent);
         for (it = parent->m_DirectAncestors.begin(); it != parent->m_DirectAncestors.end(); ++it)
         {
             Token* ancestor = m_pTokensTree->at(*it);
@@ -513,6 +514,7 @@ bool Parser::Reparse(const wxString& filename, bool isLocal)
 
 void Parser::Clear()
 {
+    wxCriticalSectionLocker lock(s_MutexProtection);
     m_IgnoreThreadEvents = true;
 
     DisconnectEvents();

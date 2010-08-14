@@ -187,6 +187,58 @@ Token* Token::GetParentToken()
     return the_token;
 }
 
+bool Token::IsValidAncestor(const wxString& ancestor)
+{
+    switch (ancestor.Len())
+    {
+    case 3:
+        if (ancestor == _T("int"))
+            return false;
+        break;
+
+    case 4:
+        if (   ancestor == _T("void")
+            || ancestor == _T("bool")
+            || ancestor == _T("long")
+            || ancestor == _T("char") )
+        {
+            return false;
+        }
+        break;
+
+    case 5:
+        if (   ancestor == _T("short")
+            || ancestor == _T("float") )
+        {
+            return false;
+        }
+        break;
+
+    case 6:
+        if (   ancestor == _T("size_t")
+            || ancestor == _T("double") )
+        {
+            return false;
+        }
+        break;
+
+    case 10:
+        if (ancestor == _T("value_type"))
+            return false;
+        break;
+
+    default:
+        if (   ancestor.StartsWith(_T("unsigned"))
+            || ancestor.StartsWith(_T("signed")) )
+        {
+            return false;
+        }
+        break;
+    }
+
+    return true;
+}
+
 wxString Token::GetFilename() const
 {
     if (!m_pTree)
@@ -873,6 +925,143 @@ void TokensTree::RecalcFreeList()
     }
 }
 
+void TokensTree::RecalcInheritanceChain(Token* token)
+{
+    if (!token)
+        return;
+    if (!(token->m_TokenKind & (tkClass | tkTypedef | tkEnum | tkNamespace)))
+        return;
+    if (token->m_AncestorsString.IsEmpty())
+        return;
+
+    token->m_DirectAncestors.clear();
+    token->m_Ancestors.clear();
+
+    TRACE(_T("RecalcInheritanceChain() : Token %s, Ancestors %s"), token->m_Name.wx_str(),
+          token->m_AncestorsString.wx_str());
+
+    wxStringTokenizer tkz(token->m_AncestorsString, _T(","));
+    while (tkz.HasMoreTokens())
+    {
+        wxString ancestor = tkz.GetNextToken();
+        if (ancestor.IsEmpty() || ancestor == token->m_Name)
+            continue;
+
+        TRACE(_T("RecalcInheritanceChain() : Ancestor %s"), ancestor.wx_str());
+
+        // ancestors might contain namespaces, e.g. NS::Ancestor
+        if (ancestor.Find(_T("::")) != wxNOT_FOUND)
+        {
+            Token* ancestorToken = 0;
+            wxStringTokenizer anctkz(ancestor, _T("::"));
+            while (anctkz.HasMoreTokens())
+            {
+                wxString ns = anctkz.GetNextToken();
+                if (!ns.IsEmpty())
+                {
+                    int ancestorIdx = TokenExists(ns, ancestorToken ? ancestorToken->GetSelf() : -1,
+                                                  tkNamespace | tkClass | tkTypedef);
+                    ancestorToken = at(ancestorIdx);
+                    if (!ancestorToken) // unresolved
+                        break;
+                }
+            }
+            if (   ancestorToken
+                && ancestorToken != token
+                && (ancestorToken->m_TokenKind == tkClass || ancestorToken->m_TokenKind == tkNamespace) )
+            {
+                TRACE(_T("RecalcInheritanceChain() : Resolved to %s"), ancestorToken->m_Name.wx_str());
+                RecalcInheritanceChain(ancestorToken);
+                token->m_Ancestors.insert(ancestorToken->GetSelf());
+                ancestorToken->m_Descendants.insert(token->GetSelf());
+                TRACE(_T("RecalcInheritanceChain() :  + '%s'"), ancestorToken->m_Name.wx_str());
+            }
+            else
+                TRACE(_T("RecalcInheritanceChain() :  ! '%s' (unresolved)"), ancestor.wx_str());
+        }
+        else // no namespaces in ancestor
+        {
+            // accept multiple matches for inheritance
+            TokenIdxSet result;
+            FindMatches(ancestor, result, true, false);
+            for (TokenIdxSet::iterator it = result.begin(); it != result.end(); ++it)
+            {
+                Token* ancestorToken = at(*it);
+                // only classes take part in inheritance
+                if (   ancestorToken
+                    && (ancestorToken != token)
+                    && (   (ancestorToken->m_TokenKind == tkClass)
+                        || (ancestorToken->m_TokenKind == tkEnum)
+                        || (ancestorToken->m_TokenKind == tkTypedef)
+                        || (ancestorToken->m_TokenKind == tkNamespace) ) )
+                {
+                    RecalcInheritanceChain(ancestorToken);
+                    token->m_Ancestors.insert(*it);
+                    ancestorToken->m_Descendants.insert(token->GetSelf());
+                    TRACE(_T("RecalcInheritanceChain() :  + '%s'"), ancestorToken->m_Name.wx_str());
+                }
+            }
+#if CC_TOKEN_DEBUG_OUTPUT
+            if (result.empty())
+                TRACE(_T("RecalcInheritanceChain() :  ! '%s' (unresolved)"), ancestor.wx_str());
+#endif
+        }
+
+        // Now, we have calc all the direct ancestors
+
+        token->m_DirectAncestors = token->m_Ancestors;
+
+        if (!token->m_IsLocal) // global symbols are linked once
+        {
+            TRACE(_T("RecalcInheritanceChain() : Removing ancestor string from %s"), token->m_Name.wx_str());
+            token->m_AncestorsString.Clear();
+        }
+    }
+
+#if CC_TOKEN_DEBUG_OUTPUT
+    TRACE(_T("RecalcInheritanceChain() : First iteration took : %ld ms"), sw.Time());
+    sw.Start();
+#endif
+
+    // recalc
+    TokenIdxSet result;
+    for (TokenIdxSet::iterator it = token->m_Ancestors.begin(); it != token->m_Ancestors.end(); ++it)
+        RecalcFullInheritance(*it, result);
+
+    // now, add the resulting set to ancestors set
+    for (TokenIdxSet::iterator it = result.begin(); it != result.end(); ++it)
+    {
+        Token* ancestor = at(*it);
+        if (ancestor)
+        {
+            token->m_Ancestors.insert(*it);
+            ancestor->m_Descendants.insert(token->GetSelf());
+        }
+    }
+
+#if CC_TOKEN_DEBUG_OUTPUT
+    if (token)
+    {
+        // debug loop
+        TRACE(_T("RecalcInheritanceChain() : Ancestors for %s:"), token->m_Name.wx_str());
+        for (TokenIdxSet::iterator it = token->m_Ancestors.begin(); it != token->m_Ancestors.end(); ++it)
+        {
+            Token* anc_token = at(*it);
+            if (anc_token)
+                TRACE(_T("RecalcInheritanceChain() :  + %s"), anc_token->m_Name.wx_str());
+            else
+                TRACE(_T("RecalcInheritanceChain() :  + NULL?!"));
+        }
+    }
+#endif
+
+#if CC_TOKEN_DEBUG_OUTPUT
+    TRACE(_T("RecalcInheritanceChain() : Second iteration took : %ld ms"), sw.Time());
+#endif
+
+    TRACE(_T("RecalcInheritanceChain() : Full inheritance calculated."));
+}
+
 void TokensTree::RecalcData()
 {
 #if CC_TOKEN_DEBUG_OUTPUT
@@ -936,7 +1125,6 @@ void TokensTree::RecalcData()
                     token->m_Ancestors.insert(ancestorToken->GetSelf());
                     ancestorToken->m_Descendants.insert(i);
                     TRACE(_T("RecalcData() :  + '%s'"), ancestorToken->m_Name.wx_str());
-
                 }
                 else
                     TRACE(_T("RecalcData() :  ! '%s' (unresolved)"), ancestor.wx_str());
@@ -973,7 +1161,7 @@ void TokensTree::RecalcData()
 
         if (!token->m_IsLocal) // global symbols are linked once
         {
-            TRACE(_T("RecalcData() : Removing ancestor string from %s"), token->m_Name.wx_str(), token->m_Name.wx_str());
+            TRACE(_T("RecalcData() : Removing ancestor string from %s"), token->m_Name.wx_str());
             token->m_AncestorsString.Clear();
         }
     }
@@ -1022,7 +1210,6 @@ void TokensTree::RecalcData()
                 else
                     TRACE(_T("RecalcData() :  + NULL?!"));
             }
-
         }
 #endif
     }

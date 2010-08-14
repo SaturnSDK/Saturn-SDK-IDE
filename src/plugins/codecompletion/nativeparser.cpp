@@ -2687,6 +2687,7 @@ size_t NativeParser::GenerateResultSet(TokensTree*     tree,
             }
         }
         // now go up the inheritance chain and add all ancestors' children too
+        tree->RecalcInheritanceChain(parent);
         for (TokenIdxSet::iterator it = parent->m_Ancestors.begin(); it != parent->m_Ancestors.end(); ++it)
         {
             Token* ancestor = tree->at(*it);
@@ -3020,7 +3021,7 @@ size_t NativeParser::GenerateResultSet(wxString search,
                     if (token)
                         result.insert(*it);
                 }
-
+                tree->RecalcInheritanceChain(parent);
                 for (TokenIdxSet::iterator it = parent->m_Ancestors.begin(); it != parent->m_Ancestors.end(); ++it)
                 {
                     Token* ancestor = m_pParser->GetTokens()->at(*it);
@@ -3066,6 +3067,8 @@ size_t NativeParser::GenerateResultSet(wxString search,
                     Token* tokenParent = tree->at(token->m_ParentIndex);//get the matched item's parent token.
                     if (tokenParent)
                     {
+                        tree->RecalcInheritanceChain(tokenParent);
+
                         //match the ancestor scope,add them
                         //(*it2) should be the search scope ancestor's id(search scope)
                         for (TokenIdxSet::iterator it2=tokenParent->m_Descendants.begin(); it2!=tokenParent->m_Descendants.end(); ++it2)
@@ -3133,6 +3136,7 @@ bool NativeParser::BelongsToParentOrItsAncestors(TokensTree* tree, Token* token,
         return false;
 
     // now search up the ancestors list
+    tree->RecalcInheritanceChain(parentToken);
     return parentToken->m_Ancestors.find(token->m_ParentIndex) != parentToken->m_Ancestors.end();
 }
 
@@ -3361,21 +3365,6 @@ void NativeParser::OnParserEnd(wxCommandEvent& event)
             Manager::Get()->GetLogManager()->DebugLog(F(_("Add %d files to parser for Project %s"),
                                                         m_WaitParsingList.front().files.GetCount(), project ?
                                                         project->GetTitle().wx_str() : _T("*NONE*")));
-        }
-
-        // inheritance post-step
-        m_pParser->LinkInheritance(false);
-
-        // also, mark all project files as local
-        if (project)
-        {
-            for (int i = 0; i < project->GetFilesCount(); ++i)
-            {
-                ProjectFile* pf = project->GetFile(i);
-                if (!pf)
-                    continue;
-                m_pParser->MarkFileTokensAsLocal(pf->file.GetFullPath(), true, project);
-            }
         }
 
         // POP current task
