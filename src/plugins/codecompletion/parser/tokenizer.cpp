@@ -1056,6 +1056,7 @@ wxString Tokenizer::DoGetToken()
     {
         m_ReplaceTokenIndex = 0;
         m_IsReplaceParsing = false;
+        m_ReplacedPreprocessor.clear();
     }
 
     if (needReplace && m_State ^ tsReadRawExpression)
@@ -1066,7 +1067,8 @@ wxString Tokenizer::DoGetToken()
 
 void Tokenizer::MacroReplace(wxString& str)
 {
-    if (m_IsReplaceParsing)
+    if (   m_IsReplaceParsing
+        && m_ReplacedPreprocessor.find(str) == m_ReplacedPreprocessor.end() )
     {
         const int id = m_pTokensTree->TokenExists(str, -1, tkPreprocessor);
         if (id != -1)
@@ -1074,6 +1076,8 @@ void Tokenizer::MacroReplace(wxString& str)
             Token* tk = m_pTokensTree->at(id);
             if (tk)
             {
+                m_ReplacedPreprocessor.insert(str);
+
                 if (!tk->m_Args.IsEmpty())
                     ReplaceBufferForReparse(GetActualContextForMacro(tk), false);
                 else

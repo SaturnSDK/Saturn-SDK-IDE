@@ -466,6 +466,9 @@ private:
     /** the first replace token index */
     unsigned int         m_ReplaceTokenIndex;
 
+    /** Save replaced preprocessor if is replace parsing */
+    std::set<wxString>   m_ReplacedPreprocessor;
+
     /** Static member, this is a map to hold the replacement rules */
     static wxStringHashMap s_Replacements;
 };
