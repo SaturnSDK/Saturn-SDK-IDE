@@ -544,6 +544,7 @@ void CodeCompletion::OnAttach()
     pm->RegisterEventSink(cbEVT_PROJECT_SAVE,         new cbEventFunctor<CodeCompletion, CodeBlocksEvent>(this, &CodeCompletion::OnProjectSaved));
     pm->RegisterEventSink(cbEVT_PROJECT_FILE_ADDED,   new cbEventFunctor<CodeCompletion, CodeBlocksEvent>(this, &CodeCompletion::OnProjectFileAdded));
     pm->RegisterEventSink(cbEVT_PROJECT_FILE_REMOVED, new cbEventFunctor<CodeCompletion, CodeBlocksEvent>(this, &CodeCompletion::OnProjectFileRemoved));
+    pm->RegisterEventSink(cbEVT_PROJECT_FILE_CHANGED, new cbEventFunctor<CodeCompletion, CodeBlocksEvent>(this, &CodeCompletion::OnProjectFileChanged));
 }
 
 void CodeCompletion::OnRelease(bool appShutDown)
@@ -1588,6 +1589,16 @@ void CodeCompletion::OnProjectFileRemoved(CodeBlocksEvent& event)
 
     if (IsAttached() && m_InitDone && !m_IsCreateNewProject)
         m_NativeParser.RemoveFileFromParser(event.GetProject(), event.GetString());
+    event.Skip();
+}
+
+void CodeCompletion::OnProjectFileChanged(CodeBlocksEvent& event)
+{
+    if (IsAttached() && m_InitDone)
+    {
+        if (m_NativeParser.ReparseFile(event.GetString()))
+            Manager::Get()->GetLogManager()->DebugLog(_T("Reparsing when file changed: ") + event.GetString());
+    }
     event.Skip();
 }
 
@@ -2742,5 +2753,5 @@ void CodeCompletion::EnableToolbarTools(bool enable)
 void CodeCompletion::OnRealtimeParsing(wxTimerEvent& event)
 {
     if (m_NativeParser.ReparseFile(m_LastFile))
-        Manager::Get()->GetLogManager()->DebugLog(_T("Reparsing while typing for editor ") + m_LastFile);
+        Manager::Get()->GetLogManager()->DebugLog(_T("Reparsing when typing for editor ") + m_LastFile);
 }
