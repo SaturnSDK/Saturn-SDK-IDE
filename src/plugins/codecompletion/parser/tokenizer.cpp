@@ -605,6 +605,17 @@ void Tokenizer::ReadParentheses(wxString& str)
             }
             break;
 
+        case _T('&'):
+            {
+                if (*(p - 1) == _T(' '))
+                    --p;
+
+                *p = _T('&');
+                *++p = _T(' ');
+                ++p;
+            }
+            break;
+
         case _T('='):
             {
                 if (*(p - 1) == _T(' '))
