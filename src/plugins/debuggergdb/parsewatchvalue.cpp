@@ -8,6 +8,11 @@
  */
 
 #include <sdk.h>
+
+#ifndef CB_PRECOMP
+#   include <wx/regex.h>
+#endif
+
 #include "parsewatchvalue.h"
 
 struct Token
@@ -44,11 +49,11 @@ struct Token
 
     void Trim(wxString const &s)
     {
-        while(start < static_cast<int>(s.length())
-              && (s[start] == wxT(' ') || s[start] == wxT('\t') || s[start] == wxT('\n')))
+        while (start < static_cast<int>(s.length())
+               && (s[start] == wxT(' ') || s[start] == wxT('\t') || s[start] == wxT('\n')))
             start++;
-        while(end > 0
-              && (s[end - 1] == wxT(' ') || s[end - 1] == wxT('\t') || s[end - 1] == wxT('\n')))
+        while (end > 0
+               && (s[end - 1] == wxT(' ') || s[end - 1] == wxT('\t') || s[end - 1] == wxT('\n')))
             end--;
     }
 
@@ -58,18 +63,18 @@ struct Token
 
 bool GetNextToken(wxString const &str, int pos, Token &token)
 {
-    while(pos < static_cast<int>(str.length())
-          && (str[pos] == _T(' ') || str[pos] == _T('\t') || str[pos] == _T('\n')))
+    while (pos < static_cast<int>(str.length())
+           && (str[pos] == _T(' ') || str[pos] == _T('\t') || str[pos] == _T('\n')))
         ++pos;
 
-    if(pos >= static_cast<int>(str.length()))
+    if (pos >= static_cast<int>(str.length()))
         return false;
 
     token.start = -1;
     bool in_quote = false;
     int open_angle_braces = 0;
 
-    switch(str[pos])
+    switch (str[pos])
     {
     case _T('='):
         token = Token(pos, pos + 1, Token::Equal);
@@ -100,44 +105,41 @@ bool GetNextToken(wxString const &str, int pos, Token &token)
     ++pos;
 
     bool escape_next = false;
-    while(pos < static_cast<int>(str.length()))
+    while (pos < static_cast<int>(str.length()))
     {
-        if(open_angle_braces == 0)
+        if (open_angle_braces == 0)
         {
-            if((str[pos] == _T(',') || str[pos] == _T('=') || str[pos] == _T('{')
+            if ((str[pos] == _T(',') || str[pos] == _T('=') || str[pos] == _T('{')
                 || str[pos] == _T('}'))
                 && !in_quote)
             {
                 token.end = pos;
                 return true;
             }
-            else if(str[pos] == _T('"') && in_quote && !escape_next)
+            else if (str[pos] == _T('"') && in_quote && !escape_next)
             {
                 token.end = pos + 1;
                 return true;
             }
-            else if(str[pos] == _T('\\'))
-            {
+            else if (str[pos] == _T('\\'))
                 escape_next = true;
-            }
             else
-            {
                 escape_next = false;
-            }
-            if(str[pos] == wxT('<'))
+
+            if (str[pos] == wxT('<'))
                 open_angle_braces++;
         }
         else
         {
-            if(str[pos] == wxT('<'))
+            if (str[pos] == wxT('<'))
                 open_angle_braces++;
-            else if(str[pos] == wxT('>'))
+            else if (str[pos] == wxT('>'))
                 --open_angle_braces;
         }
         ++pos;
     }
 
-    if(in_quote)
+    if (in_quote)
     {
         token.end = -1;
         return false;
@@ -154,7 +156,7 @@ GDBWatch* AddChild(GDBWatch &parent, wxString const &full_value, Token &name)
     wxString const &str_name = name.ExtractString(full_value);
     cbWatch *old_child = parent.FindChild(str_name);
     GDBWatch *child;
-    if(old_child)
+    if (old_child)
         child = static_cast<GDBWatch*>(old_child);
     else
     {
@@ -169,7 +171,7 @@ GDBWatch* AddChild(GDBWatch &parent, wxString const &str_name)
 {
     int index = parent.FindChildIndex(str_name);
     GDBWatch *child;
-    if(index != -1)
+    if (index != -1)
         child = static_cast<GDBWatch*>(parent.GetChild(index));
     else
     {
@@ -191,32 +193,31 @@ bool ParseGDBWatchValue(GDBWatch &watch, wxString const &value, int &start, int 
     bool last_was_closing_brace = false;
     int added_children = 0;
     int token_real_end = 0;
-    while(GetNextToken(value, position, token))
+    while (GetNextToken(value, position, token))
     {
-//        if(length > 0 && token.start >= start + length - 1)
-//            break;
         token_real_end = token.end;
         token.Trim(value);
-        wxString const &str = token.ExtractString(value);
-        if(str.StartsWith(wxT("members of ")))
+        const wxString &str = token.ExtractString(value);
+        if (str.StartsWith(wxT("members of ")))
         {
             wxString::size_type pos = str.find(wxT('\n'));
-            if(pos == wxString::npos)
+            if (pos == wxString::npos)
                 return false;
             else
             {
-                if(str.find_last_of(wxT(':'), pos) == wxString::npos)
+                if (str.find_last_of(wxT(':'), pos) == wxString::npos)
                     return false;
                 token.start += pos + 2;
                 token.Trim(value);
             }
         }
+
         switch (token.type)
         {
         case Token::String:
-            if(token_name.type == Token::Undefined)
+            if (token_name.type == Token::Undefined)
                 token_name = token;
-            else if(token_value.type == Token::Undefined)
+            else if (token_value.type == Token::Undefined)
                 token_value = token;
             else
                 return false;
@@ -227,13 +228,13 @@ bool ParseGDBWatchValue(GDBWatch &watch, wxString const &value, int &start, int 
             break;
         case Token::Comma:
             last_was_closing_brace = false;
-            if(skip_comma)
+            if (skip_comma)
                 skip_comma = false;
             else
             {
-                if(token_name.type != Token::Undefined)
+                if (token_name.type != Token::Undefined)
                 {
-                    if(token_value.type != Token::Undefined)
+                    if (token_value.type != Token::Undefined)
                     {
                         GDBWatch *child = AddChild(watch, value, token_name);
                         child->SetValue(token_value.ExtractString(value));
@@ -292,7 +293,7 @@ bool ParseGDBWatchValue(GDBWatch &watch, wxString const &value, int &start, int 
                     added_children++;
                 }
                 else
-                    return false;
+                    watch.SetValue(wxT(""));
             }
 
             start = token_real_end;
@@ -302,14 +303,14 @@ bool ParseGDBWatchValue(GDBWatch &watch, wxString const &value, int &start, int 
         }
 
         position = token_real_end;
-        if(length > 0 && position >= start + length)
+        if (length > 0 && position >= start + length)
             break;
     }
 
     start = position + 1;
-    if(token_name.type != Token::Undefined)
+    if (token_name.type != Token::Undefined)
     {
-        if(token_value.type != Token::Undefined)
+        if (token_value.type != Token::Undefined)
         {
             GDBWatch *child = AddChild(watch, value, token_name);
             child->SetValue(token_value.ExtractString(value));
@@ -324,26 +325,64 @@ bool ParseGDBWatchValue(GDBWatch &watch, wxString const &value, int &start, int 
 
     return true;
 }
-bool ParseGDBWatchValue(GDBWatch &watch, wxString const &value)
+
+wxString RemoveWarnings(wxString const &input)
 {
-    if(value.empty())
+    wxString::size_type pos = input.find(wxT('\n'));
+
+    if (pos == wxString::npos)
+        return input;
+
+    wxString::size_type lastPos = 0;
+    wxString result;
+
+    while (pos != wxString::npos)
     {
-        watch.SetValue(value);
+        wxString const &line = input.substr(lastPos, pos - lastPos);
+
+        if (!line.StartsWith(wxT("warning:")))
+        {
+            result += line;
+            result += wxT('\n');
+        }
+
+        lastPos = pos + 1;
+        pos = input.find(wxT('\n'), lastPos);
+    }
+
+    if (lastPos < input.length())
+        result += input.substr(lastPos, input.length() - lastPos);
+
+    return result;
+}
+
+bool ParseGDBWatchValue(GDBWatch &watch, wxString const &inputValue)
+{
+    if(inputValue.empty())
+    {
+        watch.SetValue(inputValue);
         return true;
     }
+
+    wxString value = RemoveWarnings(inputValue);
 
     // Try to find the first brace.
     // If the watch is for a reference the brace is not at position = 0
     wxString::size_type start = value.find(wxT('{'));
 
-    if(start != wxString::npos && value[value.length() - 1] == wxT('}'))
+    if (start != wxString::npos && value[value.length() - 1] == wxT('}'))
     {
         int t_start = start + 1;
         bool result = ParseGDBWatchValue(watch, value, t_start, value.length() - 2);
-        if(result)
+        if (result)
         {
-            if(start > 0)
-                watch.SetValue(value.substr(0, start));
+            if (start > 0)
+            {
+                wxString referenceValue = value.substr(0, start);
+                referenceValue.Trim(true);
+                referenceValue.Trim(false);
+                watch.SetValue(referenceValue);
+            }
             watch.RemoveMarkedChildren();
         }
         return result;
