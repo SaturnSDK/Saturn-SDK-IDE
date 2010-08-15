@@ -305,18 +305,16 @@ struct cbEditorInternalData
             return;
         if (ch == _T('\'') || ch == _T('"'))
         {
-            if ((control->GetCharAt(pos) == ch) && (pos > 1) && (control->GetCharAt(pos - 2) != _T('\\')))
+            if (   (control->GetCharAt(pos) == ch)
+                && (control->GetCharAt(pos - 2) != _T('\\')) )
             {
                 control->DeleteBack();
                 control->GotoPos(pos);
             }
             else
             {
-                wxChar left = ch;
-                if (pos > 2)
-                    left = control->GetCharAt(pos - 2);
-
-                wxChar right = control->GetCharAt(pos);
+                const wxChar left = control->GetCharAt(pos - 2);
+                const wxChar right = control->GetCharAt(pos);
                 if (   control->IsCharacter(style)
                     || control->IsString(style)
                     || left == _T('\\')
@@ -350,7 +348,7 @@ struct cbEditorInternalData
             control->GotoPos(pos);
             if (ch == _T('{'))
             {
-                int curLine = control->GetCurrentLine();
+                const int curLine = control->GetCurrentLine();
                 int keyLine = curLine;
                 wxString text;
                 do
@@ -360,9 +358,9 @@ struct cbEditorInternalData
                     int end = control->WordEndPosition(keyPos, true);
                     text = control->GetTextRange(start, end);
                 }
-                while ((text.IsEmpty() || text == _T("public") || text == _T("protected") || text == _T("private"))
-                       && text != _T("namespace")
-                       && (--keyLine));
+                while (   (text.IsEmpty() || text == _T("public") || text == _T("protected") || text == _T("private"))
+                       && (text != _T("namespace"))
+                       && (--keyLine >= 0) );
 
                 if (text == _T("class") || text == _T("struct") || text == _T("enum") || text == _T("union"))
                     control->InsertText(control->GetLineEndPosition(curLine), _T(";"));
@@ -2958,11 +2956,13 @@ void cbEditor::OnEditorCharAdded(wxScintillaEvent& event)
 //    Manager::Get()->GetLogManager()->Close();
 
     cbStyledTextCtrl* control = GetControl();
-    int pos = control->GetCurrentPos();
-    wxChar ch = event.GetKey();
+    const int pos = control->GetCurrentPos();
+    const wxChar ch = event.GetKey();
 
-    static bool autoIndented = false;
-    static int autoIndentedLine = control->GetCurrentLine();
+    static bool autoIndentStart = false;
+    static bool autoIndentDone = true;
+    static int autoIndentLine = -1;
+    static int autoIndentLineIndent = -1;
 
     // indent
     if (ch == _T('\n'))
@@ -2995,7 +2995,7 @@ void cbEditor::OnEditorCharAdded(wxScintillaEvent& event)
                             int brace_position = m_pData->GetFirstBraceInLine(string_style);
                             if (brace_position >= 0)
                             {
-                                if(control->GetUseTabs())
+                                if (control->GetUseTabs())
                                 {
                                     brace_position /= control->GetTabWidth();
                                     indent = wxString(_T('\t'), brace_position);
@@ -3013,7 +3013,7 @@ void cbEditor::OnEditorCharAdded(wxScintillaEvent& event)
 
                             if ( c != _T('}') )
                             {
-                                if(control->GetUseTabs())
+                                if (control->GetUseTabs())
                                     indent << _T('\t'); // 1 tab
                                 else
                                     indent << wxString(_T(' '), control->GetTabWidth()); // n spaces
@@ -3027,11 +3027,19 @@ void cbEditor::OnEditorCharAdded(wxScintillaEvent& event)
                                 }
                             }
                         }
+                        else if (b == _T(':'))
+                        {
+                            if (control->GetUseTabs())
+                                indent << _T('\t'); // 1 tab
+                            else
+                                indent << wxString(_T(' '), control->GetTabWidth()); // n spaces
+                        }
                         break;
+
                     case wxSCI_LEX_PYTHON:
                         if (b == _T(':'))
                         {
-                            if(control->GetUseTabs())
+                            if (control->GetUseTabs())
                                 indent << _T('\t'); // 1 tab
                             else
                                 indent << wxString(_T(' '), control->GetTabWidth()); // n spaces
@@ -3047,26 +3055,105 @@ void cbEditor::OnEditorCharAdded(wxScintillaEvent& event)
         // smart indent
         if (smartIndent && currLine > 0)
         {
-            if (m_pData->GetLastNonWhitespaceChar() == _T(';'))
+            if (!autoIndentDone)
             {
-                if (autoIndentedLine != currLine - 1)
-                    autoIndented = false;
-                if (autoIndented)
+                bool valid = true;
+                int line = control->GetCurrentLine();
+                if (line < autoIndentLine)
+                    valid = false;
+                else
                 {
-                    autoIndented = false;
-                    control->BackTab();
+                    while (--line > autoIndentLine)
+                    {
+                        if (control->GetLineIndentation(line) < autoIndentLineIndent)
+                        {
+                            valid = false;
+                            break;
+                        }
+                    }
+                }
+
+                if (!valid)
+                {
+                    autoIndentStart = false;
+                    autoIndentDone = true;
+                    autoIndentLine = -1;
+                    autoIndentLineIndent = -1;
                 }
             }
-            else
+
+            if (autoIndentDone)
             {
                 const int pos = control->GetLineIndentPosition(currLine - 1);
                 const wxString text = control->GetTextRange(pos, control->WordEndPosition(pos, true));
-                if (text == _T("if") || text == _T("else") || text == _T("for") ||
-                    text == _T("while") || text == _T("do"))
+                if (   text == _T("if")
+                    || text == _T("else")
+                    || text == _T("for")
+                    || text == _T("while")
+                    || text == _T("do") )
                 {
-                    autoIndented = true;
-                    autoIndentedLine = currLine;
-                    control->Tab();
+                    const wxChar ch = m_pData->GetLastNonWhitespaceChar();
+                    if (ch != _T(';') && ch != _T('}'))
+                    {
+                        autoIndentDone = false;
+                        autoIndentLine = currLine - 1;
+                        autoIndentLineIndent = control->GetLineIndentation(currLine - 1);
+                    }
+                }
+            }
+
+            if (!autoIndentDone)
+            {
+                if (autoIndentStart)
+                {
+                    const wxChar ch = m_pData->GetLastNonWhitespaceChar();
+                    if (ch == _T(';') || ch == _T('}'))
+                    {
+                        control->SetLineIndentation(currLine, autoIndentLineIndent);
+                        control->GotoPos(control->GetLineEndPosition(currLine));
+
+                        autoIndentStart = false;
+                        autoIndentDone = true;
+                        autoIndentLine = -1;
+                        autoIndentLineIndent = -1;
+                    }
+                }
+                else
+                {
+                    int lastLine = currLine;
+                    while (--lastLine >= 0)
+                    {
+                        const int lineIndentPos = control->GetLineIndentPosition(lastLine);
+                        const int start = control->WordStartPosition(lineIndentPos, true);
+                        const int end = control->WordEndPosition(lineIndentPos, true);
+                        const wxString last = control->GetTextRange(start, end);
+
+                        if (   last == _T("if")
+                            || last == _T("else")
+                            || last == _T("for")
+                            || last == _T("while")
+                            || last == _T("do") )
+                        {
+                            const wxString text = control->GetTextRange(lineIndentPos + last.Len(), pos);
+                            int level = 0;
+                            for (size_t i = 0; i < text.Len(); ++i)
+                            {
+                                if (text[i] == _T('('))
+                                    ++level;
+                                else if (text[i] == _T(')'))
+                                    --level;
+                            }
+
+                            if (!level)
+                            {
+                                autoIndentStart = true;
+                                control->SetLineIndentation(currLine, autoIndentLineIndent);
+                                control->Tab();
+                            }
+
+                            break;
+                        }
+                    }
                 }
             }
         }
@@ -3077,15 +3164,35 @@ void cbEditor::OnEditorCharAdded(wxScintillaEvent& event)
     // unindent
     else if (ch == _T('{'))
     {
-        if (autoIndented)
+        if (autoIndentStart)
         {
-            control->BeginUndoAction();
-            autoIndented = false;
-            const int curLine = control->GetCurrentLine();
-            control->GotoPos(control->PositionFromLine(curLine));
-            control->BackTab();
-            control->GotoPos(control->GetLineEndPosition(curLine));
-            control->EndUndoAction();
+            bool valid = true;
+            int line = control->GetCurrentLine();
+            if (line < autoIndentLine)
+                valid = false;
+            else
+            {
+                while (--line > autoIndentLine)
+                {
+                    if (control->GetLineIndentation(line) < autoIndentLineIndent)
+                    {
+                        valid = false;
+                        break;
+                    }
+                }
+            }
+
+            if (valid)
+            {
+                control->BeginUndoAction();
+                control->SetLineIndentation(control->GetCurrentLine(), autoIndentLineIndent);
+                control->EndUndoAction();
+            }
+
+            autoIndentStart = false;
+            autoIndentDone = true;
+            autoIndentLine = -1;
+            autoIndentLineIndent = -1;
         }
     }
 
@@ -3131,22 +3238,61 @@ void cbEditor::OnEditorCharAdded(wxScintillaEvent& event)
             const int curLine = control->GetCurrentLine();
             const int pos = control->GetLineIndentPosition(curLine);
             const wxString text = control->GetTextRange(pos, control->WordEndPosition(pos, true));
-            if (text == _T("public") || text == _T("protected") || text == _T("private") ||
-                text == _T("case") || text == _T("default"))
+            if (   text == _T("public")
+                || text == _T("protected")
+                || text == _T("private")
+                || text == _T("case")
+                || text == _T("default") )
             {
-                control->BeginUndoAction();
-                control->GotoPos(control->PositionFromLine(curLine));
-                control->BackTab();
-                const int column = control->GetColumn(control->GetCurrentPos());
-                control->GotoPos(control->GetLineEndPosition(curLine));
-                if (control->GetLineCount() > curLine)
+                const bool isSwitch = (text == _T("case") || text == _T("default"));
+                int lastLine = curLine;
+                int lastLineIndent = -1;
+                while (--lastLine >= 0)
                 {
-                    if (control->GetColumn(control->GetLineIndentPosition(curLine + 1)) == column)
+                    const int lineIndentPos = control->GetLineIndentPosition(lastLine);
+                    const int start = control->WordStartPosition(lineIndentPos, true);
+                    const int end = control->WordEndPosition(lineIndentPos, true);
+
+                    const wxString last = control->GetTextRange(start, end);
+                    if (last.IsEmpty())
+                        continue;
+
+                    if (isSwitch)
                     {
-                        control->NewLine();
-                        control->Tab();
+                        if (last == _T("case"))
+                        {
+                            lastLineIndent = control->GetLineIndentation(lastLine);
+                            break;
+                        }
+                        else if (last == _T("switch"))
+                            break;
+                    }
+                    else
+                    {
+                        if (   last == _T("public")
+                            || last == _T("protected")
+                            || last == _T("private") )
+                        {
+                            lastLineIndent = control->GetLineIndentation(lastLine);
+                            break;
+                        }
+                        else if (last == _T("class"))
+                            break;
                     }
                 }
+
+                control->BeginUndoAction();
+
+                if (lastLineIndent != -1)
+                    control->SetLineIndentation(curLine, lastLineIndent);
+                else
+                {
+                    const int curLineIndent = control->GetLineIndentation(curLine);
+                    const int tabWidth = control->GetTabWidth();
+                    if (curLineIndent >= tabWidth)
+                        control->SetLineIndentation(curLine, curLineIndent - tabWidth);
+                }
+
                 control->EndUndoAction();
             }
         }
