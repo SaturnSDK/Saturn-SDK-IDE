@@ -1917,8 +1917,8 @@ static bool IsOperatorEnd(int startAt, const wxString& line)
 }
 static bool IsOperatorBegin(int startAt, const wxString& line)
 {
-    return (   (startAt > 0)
-            && ((size_t)startAt + 1< line.Len())
+    return (   (startAt >= 0)
+            && ((size_t)startAt < line.Len())
             && (   (   (line.GetChar(startAt ) == '-')
                     && (line.GetChar(startAt + 1) == '>') )
                 || (   (line.GetChar(startAt) == ':')

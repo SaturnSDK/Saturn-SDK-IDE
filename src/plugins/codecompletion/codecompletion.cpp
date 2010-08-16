@@ -1397,7 +1397,10 @@ void CodeCompletion::DoCodeComplete()
     const int style = control->GetStyleAt(pos);
     const int lineIndentPos = control->GetLineIndentPosition(control->GetCurrentLine());
 
-    if (ed->GetControl()->GetCharAt(lineIndentPos) == _T('#'))
+    const wxChar lineFirstChar = ed->GetControl()->GetCharAt(lineIndentPos);
+    const wxChar curChar = ed->GetControl()->GetCharAt(pos - 1);
+
+    if (lineFirstChar == _T('#'))
     {
         const int start = control->WordStartPosition(lineIndentPos + 1, true);
         const int end = control->WordEndPosition(lineIndentPos + 1, true);
@@ -1409,7 +1412,9 @@ void CodeCompletion::DoCodeComplete()
             CodeCompletePreprocessor();
         return;
     }
-    else if (ed->GetControl()->GetCharAt(pos - 1) == _T('#'))
+    else if (curChar == _T('#'))
+        return;
+    else if (lineFirstChar == _T(':') && curChar == _T(':'))
         return;
 
     if (style != wxSCI_C_DEFAULT && style != wxSCI_C_OPERATOR && style != wxSCI_C_IDENTIFIER)
