@@ -39,7 +39,7 @@ class CodeCompletion : public cbCodeCompletionPlugin
 
 	typedef std::vector<FunctionScope> FunctionsScopeVec;
 	typedef std::vector<int> ScopeMarksVec;
-	typedef std::map<wxString, wxArrayString> SystemHeadersMap;
+	typedef std::map<wxString, std::list<wxString> > SystemHeadersMap;
 
 	struct FunctionsScopePerFile
 	{
@@ -68,9 +68,9 @@ class CodeCompletion : public cbCodeCompletionPlugin
 
         void CodeCompletePreprocessor();
         void CodeCompleteIncludes();
-        wxArrayString GetIncludeDirs(cbProject& project, wxArrayString& buildTargets);
-        void GetAbsolutePath(const wxArrayString& targets, const wxString& basePath, wxArrayString& dirs);
-        wxArrayString& GetSystemIncludeDirs(Parser* parser);
+        wxArrayString GetLocalIncludeDirs(cbProject* project, const wxArrayString& buildTargets);
+        wxArrayString& GetSystemIncludeDirs(Parser* parser, bool force);
+        void GetAbsolutePath(const wxString& basePath, const wxArrayString& targets, wxArrayString& dirs);
 
         void EditorEventHook(cbEditor* editor, wxScintillaEvent& event);
 		void RereadOptions(); // called by the configuration panel
