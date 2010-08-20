@@ -24,6 +24,8 @@
 
 extern void ParserTrace(const wxChar* format, ...);
 
+wxCriticalSection s_ParserCritical;
+
 ParserTest::ParserTest()
 {
     m_tokensTree = new TokensTree();
