@@ -13,6 +13,7 @@
 #include <wx/file.h>
 #include <wx/filefn.h> // wxPathList
 #include <wx/imaglist.h>
+#include <wx/thread.h>
 
 #include "parserthread.h"
 
@@ -64,8 +65,6 @@
 #define PARSER_IMG_MIN PARSER_IMG_CLASS_FOLDER
 #define PARSER_IMG_MAX PARSER_IMG_MACRO_FOLDER
 
-extern int PARSER_START;
-extern int PARSER_END;
 class ClassTreeData : public wxTreeItemData
 {
     public:
@@ -90,7 +89,6 @@ enum BrowserDisplayFilter
 {
     bdfFile = 0,
     bdfProject,
-    bdfWorkspace,
     bdfEverything
 };
 
@@ -113,6 +111,19 @@ struct BrowserOptions
 
 class ClassBrowser;
 
+extern int PARSER_START;
+extern int PARSER_END;
+
+enum ParsingType
+{
+    ptCreateParser      = 1,
+    ptReparseFile       = 2,
+    ptAddFileToParser   = 3,
+    ptUndefined         = 4,
+};
+
+extern wxCriticalSection s_ParserCritical;
+
 class Parser : public wxEvtHandler
 {
     public:
@@ -120,11 +131,8 @@ class Parser : public wxEvtHandler
         Parser(wxEvtHandler* parent);
         ~Parser();
 
-        void SetProject(cbProject* project);
-
         void PrepareParsing();
         void AddBatchParse(const wxArrayString& filenames, bool isUpFront = false);
-        bool AddParse(const wxString& filename, bool isLocal = true, LoaderBase* loader = NULL);
         void StartParsing(bool delay = true);
 
         bool ParseBuffer(const wxString& buffer, bool isLocal = true, bool bufferSkipBlocks = false, bool isTemp = false);
@@ -132,7 +140,11 @@ class Parser : public wxEvtHandler
         bool ParseBufferForNamespaces(const wxString& buffer, NameSpaceVec& result);
         bool ParseBufferForUsingNamespace(const wxString& buffer, wxArrayString& result);
         bool Reparse(const wxString& filename, bool isLocal = true);
+        bool AddFile(const wxString& filename, bool isLocal = true);
         bool RemoveFile(const wxString& filename);
+
+        wxCriticalSection& GetTokensTreeCritical() { return m_TokensTreeCritical; }
+        wxCriticalSection& GetBatchParsingCritical() { return m_BatchParsingCritical; }
 
         void ReadOptions();
         void WriteOptions();
@@ -146,8 +158,8 @@ class Parser : public wxEvtHandler
         long EllapsedTime();
         long LastParseTime();
 
-        Token* FindTokenByName(const wxString& name, bool globalsOnly = true, short int kindMask = 0xFFFF) const;
-        Token* FindChildTokenByName(Token* parent, const wxString& name, bool useInheritance = false, short int kindMask = 0xFFFF) const;
+        Token* FindTokenByName(const wxString& name, bool globalsOnly = true, short int kindMask = 0xFFFF);
+        Token* FindChildTokenByName(Token* parent, const wxString& name, bool useInheritance = false, short int kindMask = 0xFFFF);
         size_t FindMatches(const wxString& s, TokenList&   result, bool caseSensitive = true, bool is_prefix = true);
         size_t FindMatches(const wxString& s, TokenIdxSet& result, bool caseSensitive = true, bool is_prefix = true);
         size_t FindTokensInFile(const wxString& fileName, TokenIdxSet& result, short int kindMask);
@@ -174,6 +186,7 @@ class Parser : public wxEvtHandler
         void SetMaxThreads(unsigned int max) { m_Pool.SetConcurrentThreads(max); }
 
     protected:
+        bool AddParse(const wxString& filename, bool isLocal = true, LoaderBase* loader = NULL);
         bool Parse(const wxString& bufferOrFilename, bool isLocal, ParserThreadOptions& opts);
         void DoParseFile(const wxString& filename, bool isGlobal);
         bool ReparseModifiedFiles();
@@ -183,7 +196,7 @@ class Parser : public wxEvtHandler
         void OnAllThreadsDone(CodeBlocksEvent& event);
         void OnTimer(wxTimerEvent& event);
         void OnBatchTimer(wxTimerEvent& event);
-        void PostParserEvent(int id);
+        void PostParserEvent(ParsingType type, int id);
 
     private:
         void ConnectEvents();
@@ -218,9 +231,11 @@ class Parser : public wxEvtHandler
         bool                           m_StopWatchRunning;
         long                           m_LastStopWatchTime;
         bool                           m_IgnoreThreadEvents;
-        wxString                       m_Project;
         wxArrayString                  m_UpFrontHeaders;
         bool                           m_IsBatchParseDone;
+        ParsingType                    m_ParsingType;
+        wxCriticalSection              m_TokensTreeCritical;
+        wxCriticalSection              m_BatchParsingCritical;
 
         DECLARE_EVENT_TABLE()
 };

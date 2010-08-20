@@ -128,6 +128,7 @@ class CodeCompletion : public cbCodeCompletionPlugin
         void EnableToolbarTools(bool enable = true);
 		void OnRealtimeParsing(wxTimerEvent& event);
 
+        cbThreadPool                       m_ThreadPool;
         int                                m_PageIndex;
         bool                               m_InitDone;
 
@@ -161,7 +162,6 @@ class CodeCompletion : public cbCodeCompletionPlugin
         wxString                           m_LastFile;
         bool                               m_LexerKeywordsToInclude[9];
         bool                               m_NeedReparse;
-        bool                               m_IsCreateNewProject;
         SystemHeadersMap                   m_SystemHeadersMap;
 
         DECLARE_EVENT_TABLE()

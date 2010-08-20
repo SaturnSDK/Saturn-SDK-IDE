@@ -184,7 +184,7 @@ void ClassBrowserBuilderThread::Init(NativeParser* nativeParser,
     m_CurrentFileSet.clear();
     m_CurrentTokenSet.clear();
 
-    TokensTree* tree = m_pNativeParser->GetParserPtr()->GetTokens();
+    TokensTree* tree = m_pNativeParser->GetParser()->GetTokens();
     // fill filter set for current-file-filter
     if (m_Options.displayFilter == bdfFile && !m_ActiveFilename.IsEmpty())
     {
@@ -604,7 +604,7 @@ bool ClassBrowserBuilderThread::AddChildrenOf(CBTreeCtrl* tree, wxTreeItemId par
 
     if (parentTokenIdx == -1)
     {
-        if (m_Options.displayFilter >= bdfWorkspace)
+        if (m_Options.displayFilter == bdfEverything)
             tokens = &m_pTokensTree->m_GlobalNameSpace;
         else
             tokens = &m_CurrentGlobalTokensSet;
@@ -739,8 +739,7 @@ bool ClassBrowserBuilderThread::TokenMatchesFilter(Token* token)
     if (token->m_IsTemp)
         return false;
 
-    if (    m_Options.displayFilter == bdfEverything
-        || (m_Options.displayFilter == bdfWorkspace && token->m_IsLocal) )
+    if (m_Options.displayFilter == bdfEverything)
         return true;
 
     if (m_Options.displayFilter == bdfFile && !m_CurrentTokenSet.empty())
@@ -912,7 +911,7 @@ bool ClassBrowserBuilderThread::CreateSpecialFolders(CBTreeCtrl* tree, wxTreeIte
     bool hasTD = false;
     bool hasGM = false;
 
-    Parser* parser = m_pNativeParser->GetParserPtr();
+    Parser* parser = m_pNativeParser->GetParser();
     if (!parser)
         return false;
 

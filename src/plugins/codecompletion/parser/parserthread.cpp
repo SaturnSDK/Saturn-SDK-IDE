@@ -418,6 +418,8 @@ bool ParserThread::InitTokenizer()
 
 bool ParserThread::Parse()
 {
+    wxCriticalSectionLocker locker(s_ParserCritical);
+
     TRACE(_T("Parse() : Parsing '%s'"), m_Filename.wx_str());
 
     if (TestDestroy() || !InitTokenizer())
@@ -433,9 +435,8 @@ bool ParserThread::Parse()
 
         if (!m_Options.useBuffer) // Parse a file
         {
-            s_MutexProtection.Enter();
+            wxCriticalSectionLocker locker(m_pParent->GetTokensTreeCritical());
             m_FileIdx = m_pTokensTree->ReserveFileForParsing(m_Filename);
-            s_MutexProtection.Leave();
             if (!m_FileIdx)
                 break;
         }
@@ -444,9 +445,8 @@ bool ParserThread::Parse()
 
         if (!m_Options.useBuffer) // Parsing a file
         {
-            s_MutexProtection.Enter();
+            wxCriticalSectionLocker locker(m_pParent->GetTokensTreeCritical());
             m_pTokensTree->FlagFileAsParsed(m_Filename);
-            s_MutexProtection.Leave();
         }
         result = true;
     } while (false);
@@ -1044,7 +1044,10 @@ wxString ParserThread::GetActualTokenType()
     return m_Str; // token ends at start of phrase
 }
 
-Token* ParserThread::FindTokenFromQueue(std::queue<wxString>& q, Token* parent, bool createIfNotExist, Token* parentIfCreated)
+// Before call this function, *MUST* add a locker
+// e.g. wxCriticalSectionLocker locker(m_pParent->GetTokensTreeCritical());
+Token* ParserThread::FindTokenFromQueue(std::queue<wxString>& q, Token* parent, bool createIfNotExist,
+                                        Token* parentIfCreated)
 {
     if (q.empty())
         return 0;
@@ -1062,9 +1065,13 @@ Token* ParserThread::FindTokenFromQueue(std::queue<wxString>& q, Token* parent, 
 
     if (!result && createIfNotExist)
     {
-        result = new(std::nothrow) Token(ns, m_FileIdx, 0);
+        result = new(std::nothrow) Token(ns, m_FileIdx, 0, ++m_pTokensTree->m_TokenTicketCount);
         if (!result)
+        {
+            --m_pTokensTree->m_TokenTicketCount;
             return NULL;
+        }
+
         result->m_TokenKind = q.empty() ? tkClass : tkNamespace;
         result->m_IsLocal = m_IsLocal;
         result->m_ParentIndex = parentIfCreated ? parentIfCreated->GetSelf() : -1;
@@ -1100,7 +1107,8 @@ Token* ParserThread::DoAddToken(TokenKind kind,
     if (name.IsEmpty())
         return 0; // oops!
 
-    s_MutexProtection.Enter();
+    wxCriticalSectionLocker locker(m_pParent->GetTokensTreeCritical());
+
     Token* newToken = 0;
     wxString newname(name);
     m_Str.Trim();
@@ -1144,7 +1152,6 @@ Token* ParserThread::DoAddToken(TokenKind kind,
         if (newToken) TRACE(_T("DoAddToken() : Found token (parent)."));
     }
 
-
     wxString newTokenArgs = (newToken) ? (newToken->m_Args) : _T("");
     // need to check if the current token already exists in the tokenTree
     // token's template argument is checked to support template specialization
@@ -1163,9 +1170,15 @@ Token* ParserThread::DoAddToken(TokenKind kind,
     {
         Token* finalParent = localParent ? localParent : m_pLastParent;
 
-        newToken = new(std::nothrow) Token(newname, m_FileIdx, line);
-        if (newToken) TRACE(_T("DoAddToken() : Created token='%s', file_idx=%d, line=%d"), newname.wx_str(), m_FileIdx, line);
-        else return 0;
+        newToken = new(std::nothrow) Token(newname, m_FileIdx, line, ++m_pTokensTree->m_TokenTicketCount);
+        if (newToken)
+            TRACE(_T("DoAddToken() : Created token='%s', file_idx=%d, line=%d, ticket="), newname.wx_str(),
+                  m_FileIdx, line, m_pTokensTree->m_TokenTicketCount);
+        else
+        {
+            --m_pTokensTree->m_TokenTicketCount;
+            return 0;
+        }
 
         newToken->m_ParentIndex  = finalParent ? finalParent->GetSelf() : -1;
         newToken->m_TokenKind    = kind;
@@ -1240,7 +1253,6 @@ Token* ParserThread::DoAddToken(TokenKind kind,
     while (!m_EncounteredNamespaces.empty())
         m_EncounteredNamespaces.pop();
 
-    s_MutexProtection.Leave();
     return newToken;
 }
 
@@ -1305,7 +1317,7 @@ void ParserThread::HandleIncludes()
                 break; // File not found, do nothing.
 
             {
-                wxCriticalSectionLocker lock(s_MutexProtection);
+                wxCriticalSectionLocker locker(m_pParent->GetTokensTreeCritical());
                 if (m_pTokensTree->IsFileParsed(real_filename))
                     break; // Already being parsed elsewhere
             }
@@ -1313,7 +1325,7 @@ void ParserThread::HandleIncludes()
             TRACE(F(_T("HandleIncludes() : Adding include file '%s'"), real_filename.wx_str()));
             // since we 'll be calling directly the parser's method, let's make it thread-safe
             {
-                wxCriticalSectionLocker lock2(s_mutexListProtection);
+                wxCriticalSectionLocker locker(m_pParent->GetBatchParsingCritical());
                 m_pParent->DoParseFile(real_filename, isGlobal);
             }
         } while (false);
@@ -1557,13 +1569,12 @@ void ParserThread::HandleClass(EClassType ct)
 
             if (current==ParserConsts::opbrace) // unnamed class/struct/union
             {
-                static size_t num = 0;
                 wxString unnamedTmp;
                 unnamedTmp.Printf(_T("%s%s%d"),
                                   ParserConsts::unnamed.wx_str(),
                                   ct == ctClass ? _T("Class") :
                                   ct == ctUnion ? _T("Union") :
-                                                  _T("Struct"), num++);
+                                                  _T("Struct"), ++m_pTokensTree->m_StructUnionUnnamedCount);
 
                 Token* newToken = DoAddToken(tkClass, unnamedTmp, lineNr);
                 // maybe it is a bug here.I just fixed it.
@@ -1870,8 +1881,7 @@ void ParserThread::HandleEnum()
         // we have an un-named enum
         if (m_ParsingTypedef)
         {
-            static size_t num = 0;
-            token.Printf(_T("%sEnum%d"), ParserConsts::unnamed.wx_str(), num++);
+            token.Printf(_T("%sEnum%d"), ParserConsts::unnamed.wx_str(), ++m_pTokensTree->m_EnumUnnamedCount);
             m_LastUnnamedTokenName = token;
         }
         else

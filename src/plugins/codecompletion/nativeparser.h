@@ -43,14 +43,6 @@ enum BrowserViewMode
     bvmInheritance
 };
 
-enum ParsingType
-{
-    ptReparseFile       = 1,
-    ptAddFileToParser   = 2,
-    ptAddParser         = 3,
-    ptUnknown           = 4,
-};
-
 struct ParserComponent
 {
     wxString component;
@@ -63,32 +55,35 @@ class NativeParser : public wxEvtHandler
         NativeParser();
         ~NativeParser();
 
-        Parser* GetParserPtr() const { return m_pParser; }
+        // Return value is *ALWAYS* valid, without checking
+        Parser* GetParser() const { return m_pParser; }
+
         Parser* GetParserByProject(cbProject* project);
         Parser* GetParserByFilename(const wxString& filename);
         cbProject* GetProjectByParser(Parser* parser);
         cbProject* GetProjectByFilename(const wxString& filename);
+
         wxImageList* GetImageList() { return m_pImageList; }
         int GetTokenKindImage(Token* token);
         void SetTokenKindImage(int kind, const wxBitmap& bitmap, const wxBitmap& mask = wxNullBitmap);
         void SetTokenKindImage(int kind, const wxBitmap& bitmap, const wxColour& maskColour);
         void SetTokenKindImage(int kind, const wxIcon& icon);
-        bool Done() const { return m_WaitParsingList.empty(); }
-        ParsingType GetParsingType();
 
         wxArrayString GetAllPathsByFilename(const wxString& filename);
         void AddPaths(wxArrayString& dirs, const wxString& path, bool hasExt);
 
-        // If return != m_pParser, the mean is waiting...for parser task
-        const Parser* AddOrChangeParser(cbProject* project, bool useCache = true);
-        bool RemoveParser(cbProject* project, bool useCache = true);
+        bool CreateParser(cbProject* project);
+        bool DeleteParser(cbProject* project);
+        bool ReparseFile(cbProject* project, const wxString& filename);
+        bool AddFileToParser(cbProject* project, const wxString& filename);
+        bool RemoveFileFromParser(cbProject* project, const wxString& filename);
+
         void RereadParserOptions();
-        void AddFileToParser(cbProject* project, const wxString& filename);
-        bool ReparseFile(const wxString& filename);
-        void RemoveFileFromParser(cbProject* project, const wxString& filename);
         void ForceReparseActiveProject();
 
-        size_t MarkItemsByAI(TokenIdxSet& result, bool reallyUseAI = true, bool noPartialMatch = false, bool caseSensitive = false, int caretPos = -1);
+
+        size_t MarkItemsByAI(TokenIdxSet& result, bool reallyUseAI = true, bool noPartialMatch = false,
+                             bool caseSensitive = false, int caretPos = -1);
 
         const wxString& GetCodeCompletionItems();
         void GetCallTipHighlight(const wxString& calltip, int* start, int* end);
@@ -116,13 +111,11 @@ class NativeParser : public wxEvtHandler
         void OnProjectLoadingHook(cbProject* project, TiXmlElement* elem, bool loading);
 
     protected:
-        void ReparseProject(cbProject* project, Parser* parser);
+        void StartCompleteParsing(cbProject* project, Parser* parser);
         bool SwitchParser(cbProject* project, Parser* parser);
-        bool DeleteParser(cbProject* project, Parser* parser);
-        void SetParserPtr(Parser* parser);
+        void SetParser(Parser* parser);
         void ClearParsers();
-        size_t GetParserCount();
-        void RemoveObsoleteParsers();
+        size_t RemoveObsoleteParsers();
 
     private:
         friend class CodeCompletion;
@@ -151,38 +144,27 @@ class NativeParser : public wxEvtHandler
         const wxArrayString& GetGCCCompilerDirs(const wxString &cpp_compiler);
         bool LoadCachedData(cbProject* project);
         bool SaveCachedData(const wxString& projectFilename);
-        void DisplayStatus();
+
         void OnThreadStart(wxCommandEvent& event);
         void OnThreadEnd(wxCommandEvent& event);
+        void OnParserStart(wxCommandEvent& event);
         void OnParserEnd(wxCommandEvent& event);
+
         void OnEditorActivated(EditorBase* editor);
         void OnEditorClosed(EditorBase* editor);
-        void OnTimerEditorActivated(wxTimerEvent& event);
-        void OnTimerRestartParsing(wxTimerEvent& event);
-        void OnTimerAddFileToParser(wxTimerEvent& event);
-        void OnTimerReparseFile(wxTimerEvent& event);
 
         bool SkipWhitespaceForward(cbEditor* editor, int& pos);
         bool SkipWhitespaceBackward(cbEditor* editor, int& pos);
 
         size_t ResolveActualType(wxString searchText, const TokenIdxSet& searchScope, TokenIdxSet& result);
-        size_t ResolveExpression(std::queue<ParserComponent> components, const TokenIdxSet& searchScope,TokenIdxSet& result, bool IsCaseSense = true, bool IsPrefix = false);
-
-        struct ParsingNode
-        {
-            cbProject* project;
-            Parser* parser;
-            wxArrayString files;
-            ParsingType type;
-        };
+        size_t ResolveExpression(std::queue<ParserComponent> components, const TokenIdxSet& searchScope,
+                                 TokenIdxSet& result, bool IsCaseSense = true, bool IsPrefix = false);
 
         typedef std::pair<cbProject*, Parser*> ParserPair;
         typedef std::list<ParserPair> ParserList;
-        typedef std::list<ParsingNode> WaitParsingList;
         ParserList           m_ParserList;
-        ParserPair           m_LastParser;
-        WaitParsingList      m_WaitParsingList;
 
+        Parser               m_TempParser;
         Parser*              m_pParser;
         int                  m_EditorStartWord;
         int                  m_EditorEndWord;
@@ -198,19 +180,10 @@ class NativeParser : public wxEvtHandler
 
         ProjectSearchDirsMap m_ProjectSearchDirsMap;
         int                  m_HookId; // project loader hook ID
-        std::set<wxString>   m_StandaloneFile;
+        wxArrayString        m_StandaloneFiles;
 
-        wxTimer              m_TimerEditorActivated;
-        wxTimer              m_TimerRestartParsing;
-        wxTimer              m_TimerAddFileToParser;
-        wxTimer              m_TimerReparseFile;
-        cbProject*           m_LastProject;
-        EditorBase*          m_LastEditor;
         wxImageList*         m_pImageList;
-        ParsingNode          m_AddFileToParser;
 
-        typedef std::map<Parser*, ParsingNode> ReparseFileMap;
-        ReparseFileMap       m_ReparseFileMap;
         map<wxString, wxString> m_TemplateMap;
         DECLARE_EVENT_TABLE()
 };

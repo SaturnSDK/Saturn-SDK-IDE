@@ -33,7 +33,6 @@ struct NameSpace
 typedef std::vector<NameSpace> NameSpaceVec;
 
 class Parser;
-static wxCriticalSection s_mutexListProtection;
 
 struct ParserThreadOptions
 {
@@ -243,7 +242,9 @@ class ParserThread : public cbThreadedTask
           */
         Token* TokenExists(const wxString& name, Token* parent = 0, short int kindMask = 0xFFFF);
 
-        /** TODO: describe this function */
+        /** Before call this function, *MUST* add a locker
+          * e.g. wxCriticalSectionLocker locker(m_pParent->GetTokensTreeCritical());
+          */
         Token* FindTokenFromQueue(std::queue<wxString>& q,
                                   Token* parent = 0,
                                   bool createIfNotExist = false,

@@ -107,7 +107,6 @@ private:
 class Token;
 class TokensTree;
 
-static wxCriticalSection s_MutexProtection;
 enum FileParsingStatus
 {
     fpsNotParsed = 0,
@@ -164,8 +163,7 @@ class Token
 {
     friend class TokensTree;
     public:
-        Token();
-        Token(const wxString& name, unsigned int file, unsigned int line);
+        Token(const wxString& name, unsigned int file, unsigned int line, size_t ticket);
         ~Token();
 
         void AddChild(int child);
@@ -177,7 +175,7 @@ class Token
         wxString GetTokenScopeString() const;
         wxString GetFilename() const;
         wxString GetImplFilename() const;
-        inline unsigned long GetTicket() const { return m_Ticket; }
+        size_t GetTicket() const { return m_Ticket; }
         bool MatchesFiles(const TokenFilesSet& files);
 
         bool SerializeIn(wxInputStream* f);
@@ -225,9 +223,7 @@ class Token
     protected:
         TokensTree*   m_pTree;
         int           m_Self; // current index in the tree
-        unsigned long m_Ticket;
-
-        static unsigned long GetTokenTicket();
+        size_t        m_Ticket;
 };
 
 class TokensTree
@@ -288,6 +284,9 @@ class TokensTree
 
         TokenFilesStatus  m_FilesStatus;       /** Parse status for each file */
         bool              m_Modified;
+        size_t            m_StructUnionUnnamedCount;
+        size_t            m_EnumUnnamedCount;
+        size_t            m_TokenTicketCount;
 
     protected:
         Token* GetTokenAt(int idx);

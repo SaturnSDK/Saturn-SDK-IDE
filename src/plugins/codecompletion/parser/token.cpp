@@ -66,28 +66,7 @@ bool LoadTokenIdxSetFromFile(wxInputStream* f,TokenIdxSet* data)
     return result;
 }
 
-Token::Token()
-    :
-    m_FileIdx(0),
-    m_Line(0),
-    m_ImplFileIdx(0),
-    m_ImplLine(0),
-    m_ImplLineStart(0),
-    m_ImplLineEnd(0),
-    m_Scope(tsUndefined),
-    m_TokenKind(tkUndefined),
-    m_IsOperator(false),
-    m_IsLocal(false),
-    m_IsTemp(false),
-    m_ParentIndex(-1),
-    m_pUserData(0),
-    m_pTree(0),
-    m_Self(-1)
-{
-    m_Ticket = GetTokenTicket();
-}
-
-Token::Token(const wxString& name, unsigned int file, unsigned int line) :
+Token::Token(const wxString& name, unsigned int file, unsigned int line, size_t ticket) :
     m_Name(name),
     m_FileIdx(file),
     m_Line(line),
@@ -103,10 +82,10 @@ Token::Token(const wxString& name, unsigned int file, unsigned int line) :
     m_ParentIndex(-1),
     m_pUserData(0),
     m_pTree(0),
-    m_Self(-1)
+    m_Self(-1),
+    m_Ticket(ticket)
 {
     //ctor
-    m_Ticket = GetTokenTicket();
 }
 
 Token::~Token()
@@ -116,25 +95,12 @@ Token::~Token()
     m_TemplateType.clear();
 }
 
-unsigned long Token::GetTokenTicket()
-{
-    static wxCriticalSection s_TicketProtection;
-    static unsigned long ticket = 256; // Reserve some space for the class browser
-    wxCriticalSectionLocker lock(s_TicketProtection);
-    return ticket++;
-}
-
 wxString Token::GetParentName()
 {
-    wxString parentname = _T("");
-    wxCriticalSectionLocker* lock = 0;
-    if (m_pTree)
-        lock = new(std::nothrow) wxCriticalSectionLocker(s_MutexProtection);
+    wxString parentname;
     Token* parent = GetParentToken();
     if (parent)
         parentname = parent->m_Name;
-    if (lock)
-        delete lock;
     return parentname;
 }
 
@@ -469,7 +435,10 @@ bool Token::SerializeOut(wxOutputStream* f)
 // *** TokensTree ***
 
 TokensTree::TokensTree() :
-    m_Modified(false)
+    m_Modified(false),
+    m_StructUnionUnnamedCount(0),
+    m_EnumUnnamedCount(0),
+    m_TokenTicketCount(255) // Reserve some space for the class browser
 {
     m_Tokens.clear();
     m_Tree.clear();

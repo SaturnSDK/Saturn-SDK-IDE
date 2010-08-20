@@ -118,7 +118,7 @@ ClassBrowser::ClassBrowser(wxWindow* parent, NativeParser* np)
     m_Tree       = XRCCTRL(*this, "treeAll", CBTreeCtrl);
     m_TreeBottom = XRCCTRL(*this, "treeMembers", CBTreeCtrl);
 
-    int filter = cfg->ReadInt(_T("/browser_display_filter"), bdfWorkspace);
+    int filter = cfg->ReadInt(_T("/browser_display_filter"), bdfFile);
     XRCCTRL(*this, "cmbView", wxChoice)->SetSelection(filter);
 
     XRCCTRL(*this, "splitterWin", wxSplitterWindow)->SetMinSize(wxSize(-1, 200));
@@ -202,11 +202,6 @@ void ClassBrowser::UpdateView(bool checkHeaderSwap)
             splitter->Unsplit();
             m_TreeBottom->Show(false);
         }
-    }
-    else
-    {
-        m_Tree->DeleteAllItems();
-        m_TreeBottom->DeleteAllItems();
     }
 }
 
