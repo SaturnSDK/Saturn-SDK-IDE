@@ -520,7 +520,7 @@ MainFrame::MainFrame(wxWindow* parent)
     DoFixToolbarsLayout();
     gDefaultLayoutData = m_LayoutManager.SavePerspective(); // keep the "hardcoded" layout handy
     gDefaultMessagePaneLayoutData = m_pInfoPane->SaveTabOrder();
-    SaveViewLayout(gDefaultLayout, gDefaultLayoutData,gDefaultMessagePaneLayoutData);
+    SaveViewLayout(gDefaultLayout, gDefaultLayoutData, gDefaultMessagePaneLayoutData);
     LoadWindowState();
 
     ShowHideStartPage();
@@ -1228,9 +1228,7 @@ void MainFrame::LoadViewLayout(const wxString& name, bool isTemp)
     wxString layout = m_LayoutViews[name];
     wxString layoutMP = m_LayoutMessagePane[name];
     if (layoutMP.IsEmpty())
-    {
         layoutMP = m_LayoutMessagePane[gDefaultLayout];
-    }
     if (layout.IsEmpty())
     {
         layout = m_LayoutViews[gDefaultLayout];
