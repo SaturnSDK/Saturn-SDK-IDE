@@ -127,7 +127,9 @@ struct cbEditorInternalData
         }
     }
 
-    // add member vars/funcs below
+    // funcs
+
+    /** Get the EOL pattern according to the editor's scintilla settings */
     wxString GetEOLString() const
     {
         wxString eolstring;
@@ -145,7 +147,8 @@ struct cbEditorInternalData
         }
         return eolstring;
     }
-    // funcs
+
+    /** Get the first brace in the line according to the line style */
     int GetFirstBraceInLine(int string_style)
     {
         cbStyledTextCtrl* control = m_pOwner->GetControl();
@@ -1885,7 +1888,7 @@ void cbEditor::AutoComplete()
         if (keyword == it->first)
         {
             // found; auto-complete it
-            msgMan->DebugLog(_T("Match found"));
+            msgMan->DebugLog(_T("Auto-complete match for keyword found."));
 
             // indent code accordingly
             wxString code = it->second;

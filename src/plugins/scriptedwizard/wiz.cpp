@@ -346,9 +346,12 @@ CompileTargetBase* Wiz::RunProjectWizard(wxString* pFilename)
     }
 
     // now create the project
+    // make sure to respect the compiler chosen by the user for the project, too
     wxString defCompilerID = CompilerFactory::GetDefaultCompilerID();
     CompilerFactory::SetDefaultCompiler(GetCompilerID());
+    // create the project with the (probably) updated compiler
     theproject = Manager::Get()->GetProjectManager()->NewProject(prjname);
+    // setup the old default compiler again
     CompilerFactory::SetDefaultCompiler(defCompilerID);
     if (!theproject)
     {
@@ -810,9 +813,13 @@ void Wiz::FillComboboxWithCompilers(const wxString& name)
         {
             for (size_t i = 0; i < CompilerFactory::GetCompilersCount(); ++i)
             {
-                win->Append(CompilerFactory::GetCompiler(i)->GetName());
+                Compiler* compiler = CompilerFactory::GetCompiler(i);
+                if (compiler)
+                    win->Append(compiler->GetName());
             }
-            win->SetSelection(win->FindString(CompilerFactory::GetDefaultCompiler()->GetName()));
+            Compiler* compiler = CompilerFactory::GetDefaultCompiler();
+            if (compiler)
+                win->SetSelection(win->FindString(compiler->GetName()));
         }
     }
 }
