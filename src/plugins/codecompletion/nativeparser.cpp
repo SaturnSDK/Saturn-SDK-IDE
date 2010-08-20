@@ -889,7 +889,7 @@ bool NativeParser::CreateParser(cbProject* project)
 {
     if (GetParserByProject(project))
     {
-        Manager::Get()->GetLogManager()->DebugLog(_T("Parser has been in existence."));
+        Manager::Get()->GetLogManager()->DebugLog(_T("Parser has been in existence!"));
         return false;
     }
 
@@ -906,7 +906,7 @@ bool NativeParser::CreateParser(cbProject* project)
     if (m_pParser == &m_TempParser)
         SetParser(parser);
 
-    wxString log(F(_("Create new parser for project \"%s\"."), project
+    wxString log(F(_("Create new parser for project '%s'"), project
                    ? project->GetTitle().wx_str()
                    : _T("*NONE*")));
     Manager::Get()->GetLogManager()->Log(log);
@@ -938,7 +938,7 @@ bool NativeParser::DeleteParser(cbProject* project)
     delete it->second;
     m_ParserList.erase(it);
 
-    wxString log(F(_("Delete parser for project \"%s\"!"), project ?
+    wxString log(F(_("Delete parser for project '%s'!"), project ?
                    project->GetTitle().wx_str() : _T("*NONE*")));
     Manager::Get()->GetLogManager()->Log(log);
     Manager::Get()->GetLogManager()->DebugLog(log);
@@ -952,7 +952,7 @@ bool NativeParser::SwitchParser(cbProject* project, Parser* parser)
         return false;
 
     SetParser(parser);
-    Manager::Get()->GetLogManager()->DebugLog(F(_T("Switch parser to project \"%s\"."), project
+    Manager::Get()->GetLogManager()->DebugLog(F(_T("Switch parser to project '%s'"), project
                                                 ? project->GetTitle().wx_str()
                                                 : _T("*NONE*")));
     return true;
@@ -1116,15 +1116,13 @@ void NativeParser::StartCompleteParsing(cbProject* project, Parser* parser)
             for (size_t i = 0; i < fronts.GetCount(); ++i)
                 Manager::Get()->GetLogManager()->DebugLog(F(_T("Header to parse up-front: '%s'"), fronts[i].wx_str()));
 
-            Manager::Get()->GetLogManager()->DebugLog(F(_T("Add up-front parsing %d file(s) for Project %s..."),
-                                                        fronts.GetCount(), project->GetTitle().wx_str()));
+            Manager::Get()->GetLogManager()->DebugLog(F(_T("Add up-front parsing %d file(s) for project '%s'..."),                                                        fronts.GetCount(), project->GetTitle().wx_str()));
             parser->AddBatchParse(fronts, true);
         }
 
         if (!headers.IsEmpty() || !sources.IsEmpty())
         {
-            Manager::Get()->GetLogManager()->DebugLog(F(_T("Add batch-parsing %d file(s) for Project %s..."),
-                                                        headers.GetCount() + sources.GetCount(), project->GetTitle().wx_str()));
+            Manager::Get()->GetLogManager()->DebugLog(F(_T("Add batch-parsing %d file(s) for project '%s'..."),                                                        headers.GetCount() + sources.GetCount(), project->GetTitle().wx_str()));
             parser->AddBatchParse(headers);
             parser->AddBatchParse(sources);
         }
@@ -3088,7 +3086,7 @@ void NativeParser::OnParserStart(wxCommandEvent& event)
     switch (static_cast<ParsingType>(event.GetInt()))
     {
     case ptCreateParser:
-        Manager::Get()->GetLogManager()->DebugLog(F(_("Starting batch parsing for project \"%s\""), project
+        Manager::Get()->GetLogManager()->DebugLog(F(_("Starting batch parsing for project \"%s\"..."), project
                                                     ? project->GetTitle().wx_str()
                                                     : _T("*NONE*")));
         {
@@ -3138,7 +3136,7 @@ void NativeParser::OnParserEnd(wxCommandEvent& event)
     {
     case ptCreateParser:
         {
-            wxString log(F(_("Project \"%s\" parsing stage done!"), project
+            wxString log(F(_("Project '%s' parsing stage done!"), project
                            ? project->GetTitle().wx_str()
                            : _T("*NONE*")));
             Manager::Get()->GetLogManager()->Log(log);
@@ -3148,26 +3146,26 @@ void NativeParser::OnParserEnd(wxCommandEvent& event)
         break;
 
     case ptAddFileToParser:
-        Manager::Get()->GetLogManager()->DebugLog(F(_T("Add files to parser for project \"%s\""), project
+        Manager::Get()->GetLogManager()->DebugLog(F(_T("Add files to parser for project '%s'"), project
                                                     ? project->GetTitle().wx_str()
                                                     : _T("*NONE*")));
         break;
 
     case ptReparseFile:
-        Manager::Get()->GetLogManager()->DebugLog(F(_T("Reparsing modified files for project \"%s\""), project
+        Manager::Get()->GetLogManager()->DebugLog(F(_T("Reparsing modified files for project '%s'"), project
                                                     ? project->GetTitle().wx_str()
                                                     : _T("*NONE*")));
         break;
 
     case ptUndefined:
-        Manager::Get()->GetLogManager()->DebugLog(F(_T("Error parser end handle for project \"%s\""), project
+        Manager::Get()->GetLogManager()->DebugLog(F(_T("Error parser end handle for project '%s'"), project
                                                     ? project->GetTitle().wx_str()
                                                     : _T("*NONE*")));
         return;
     }
 
     long tim = parser->LastParseTime();
-    Manager::Get()->GetLogManager()->DebugLog(F(_T("Project %s parsing stage done (%d total parsed files, ")
+    Manager::Get()->GetLogManager()->DebugLog(F(_T("Project '%s' parsing stage done (%d total parsed files, ")
                                                 _T("%d tokens in %d minute(s), %d.%03d seconds)."),
                     project ? project->GetTitle().wx_str() : _T("*NONE*"),
                     parser->GetFilesCount(),

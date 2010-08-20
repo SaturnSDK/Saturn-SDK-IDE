@@ -898,9 +898,9 @@ public:
             HeaderDirTraverser traverser(m_SystemHeadersMap, dirs[i]);
             dir.Traverse(traverser, wxEmptyString, wxDIR_FILES | wxDIR_DIRS);
 
-#ifdef __WXMSW__
-            Manager::Get()->GetLogManager()->DebugLog(F(_T("Get Headers: %s , %d"), dirs[i].wx_str(),
-                                                        m_SystemHeadersMap[dirs[i]].size()));
+            // crash in linux, why?
+//            Manager::Get()->GetLogManager()->DebugLog(F(_T("Get Headers: %s , %d"), dirs[i].wx_str(),
+//                                                        m_SystemHeadersMap[dirs[i]].size()));
 #endif // crash in linux, why?
         }
 
