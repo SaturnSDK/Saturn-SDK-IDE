@@ -55,15 +55,11 @@ int BATCH_TIMER_ID = wxNewId();
 BEGIN_EVENT_TABLE(Parser, wxEvtHandler)
 END_EVENT_TABLE()
 
-Parser::Parser(wxEvtHandler* parent)
-    : m_Options(),
-    m_BrowserOptions(),
+Parser::Parser(wxEvtHandler* parent) :
     m_pParent(parent),
     m_UsingCache(false),
     m_Pool(this, wxNewId(), 1), // in the meanwhile it'll have to be forced to 1
     m_IsUpFront(false),
-    m_pTokensTree(0),
-    m_pTempTokensTree(0),
     m_NeedsReparse(false),
     m_IsFirstBatch(false),
     m_IsParsing(false),
@@ -77,17 +73,27 @@ Parser::Parser(wxEvtHandler* parent)
 {
     m_pTokensTree = new(std::nothrow) TokensTree;
     m_pTempTokensTree = new(std::nothrow) TokensTree;
-    m_LocalFiles.clear();
-    m_GlobalIncludes.clear();
     ReadOptions();
     ConnectEvents();
 }
 
 Parser::~Parser()
 {
-    Clear(); // Clear also disconnects the events
-    Delete(m_pTempTokensTree);
-    Delete(m_pTokensTree);
+    // 1. Let's OnAllThreadsDone can not process event
+    m_IgnoreThreadEvents = true;
+
+    // 2. abort all thread
+    TerminateAllThreads();
+
+    // 3. disconnect event
+    DisconnectEvents();
+
+    // 4. free tree
+    {
+        wxCriticalSectionLocker locker(m_TokensTreeCritical);
+        delete m_pTempTokensTree;
+        delete m_pTokensTree;
+    }
 }
 
 void Parser::ConnectEvents()
@@ -529,26 +535,6 @@ bool Parser::Reparse(const wxString& filename, bool isLocal)
     return true;
 }
 
-void Parser::Clear()
-{
-    wxCriticalSectionLocker locker(m_TokensTreeCritical);
-    m_IgnoreThreadEvents = true;
-
-    DisconnectEvents();
-    TerminateAllThreads();
-    Manager::ProcessPendingEvents();
-
-    m_IncludeDirs.Clear();
-    m_pTokensTree->clear();
-    m_pTempTokensTree->clear();
-
-    m_LocalFiles.clear();
-    m_GlobalIncludes.clear();
-
-    m_UsingCache = false;
-    m_IgnoreThreadEvents = false;
-}
-
 bool Parser::ReadFromCache(wxInputStream* f)
 {
     bool result = false;
@@ -704,6 +690,7 @@ bool Parser::WriteToCache(wxOutputStream* f)
 void Parser::TerminateAllThreads()
 {
     m_Pool.AbortAllTasks();
+    wxMilliSleep(10);
     while (!m_Pool.Done())
         wxMilliSleep(20);
 
@@ -942,10 +929,10 @@ void Parser::OnBatchTimer(wxTimerEvent& event)
     }
     else
     {
+        PostParserEvent(ptUndefined, PARSER_START, _T("No files for batch parsing"));
         CodeBlocksEvent evt;
         evt.SetEventObject(this);
         OnAllThreadsDone(evt);
-        PostParserEvent(ptUndefined, PARSER_START);
     }
 }
 
@@ -1025,10 +1012,11 @@ bool Parser::IsFileParsed(const wxString& filename)
     return m_pTokensTree->IsFileParsed(UnixFilename(filename));
 }
 
-void Parser::PostParserEvent(ParsingType type, int id)
+void Parser::PostParserEvent(ParsingType type, int id, const wxString& info)
 {
     wxCommandEvent evt(wxEVT_COMMAND_MENU_SELECTED, id);
     evt.SetClientData(this);
     evt.SetInt(type);
+    evt.SetString(info);
     wxPostEvent(m_pParent, evt);
 }

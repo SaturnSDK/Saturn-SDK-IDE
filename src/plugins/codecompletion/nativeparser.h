@@ -150,6 +150,7 @@ class NativeParser : public wxEvtHandler
         void OnParserStart(wxCommandEvent& event);
         void OnParserEnd(wxCommandEvent& event);
 
+        void OnEditorActivatedTimer(wxTimerEvent& event);
         void OnEditorActivated(EditorBase* editor);
         void OnEditorClosed(EditorBase* editor);
 
@@ -168,6 +169,7 @@ class NativeParser : public wxEvtHandler
         Parser*              m_pParser;
         int                  m_EditorStartWord;
         int                  m_EditorEndWord;
+        wxTimer              m_TimerEditorActivated;
         wxString             m_CCItems;
         wxArrayString        m_CallTips;
         int                  m_CallTipCommas;
@@ -183,6 +185,7 @@ class NativeParser : public wxEvtHandler
         wxArrayString        m_StandaloneFiles;
 
         wxImageList*         m_pImageList;
+        wxString             m_LastActivatedFile;
 
         map<wxString, wxString> m_TemplateMap;
         DECLARE_EVENT_TABLE()

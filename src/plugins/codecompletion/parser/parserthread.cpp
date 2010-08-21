@@ -116,8 +116,6 @@ ParserThread::ParserThread(Parser* parent,
     m_FileIdx(0),
     m_IsLocal(isLocal),
     m_Options(parserThreadOptions),
-    m_EncounteredNamespaces(),
-    m_EncounteredTypeNamespaces(),
     m_ParsingTypedef(false),
     m_IsBuffer(parserThreadOptions.useBuffer),
     m_Buffer(bufferOrFilename)
@@ -131,7 +129,7 @@ ParserThread::~ParserThread()
     if (m_Options.loader)
     {
         m_Options.loader->Sync();
-        Delete(m_Options.loader);
+        delete m_Options.loader;
     }
 }
 

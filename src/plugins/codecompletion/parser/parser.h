@@ -190,13 +190,12 @@ class Parser : public wxEvtHandler
         bool Parse(const wxString& bufferOrFilename, bool isLocal, ParserThreadOptions& opts);
         void DoParseFile(const wxString& filename, bool isGlobal);
         bool ReparseModifiedFiles();
-        void Clear();
         void TerminateAllThreads();
 
         void OnAllThreadsDone(CodeBlocksEvent& event);
         void OnTimer(wxTimerEvent& event);
         void OnBatchTimer(wxTimerEvent& event);
-        void PostParserEvent(ParsingType type, int id);
+        void PostParserEvent(ParsingType type, int id, const wxString& info = wxEmptyString);
 
     private:
         void ConnectEvents();

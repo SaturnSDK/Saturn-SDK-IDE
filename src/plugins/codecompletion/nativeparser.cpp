@@ -33,6 +33,7 @@
 #include <wx/regex.h>
 #include <wx/wfstream.h>
 #include <wx/tokenzr.h>
+#include <wx/busyinfo.h>
 
 #include <cctype>
 
@@ -45,6 +46,8 @@
     #define TRACE(format, args...)
 #endif
 
+int idTimerEditorActivated = wxNewId();
+
 bool s_DebugSmartSense = false;
 const wxString g_StartHereTitle = _("Start here");
 
@@ -53,6 +56,7 @@ BEGIN_EVENT_TABLE(NativeParser, wxEvtHandler)
 //    EVT_MENU(THREAD_END, NativeParser::OnThreadEnd)
     EVT_MENU(PARSER_START, NativeParser::OnParserStart)
     EVT_MENU(PARSER_END, NativeParser::OnParserEnd)
+    EVT_TIMER(idTimerEditorActivated, NativeParser::OnEditorActivatedTimer)
 END_EVENT_TABLE()
 
 NativeParser::NativeParser() :
@@ -60,6 +64,7 @@ NativeParser::NativeParser() :
     m_pParser(&m_TempParser),
     m_EditorStartWord(-1),
     m_EditorEndWord(-1),
+    m_TimerEditorActivated(this, idTimerEditorActivated),
     m_CallTipCommas(0),
     m_pClassBrowser(0),
     m_GettingCalltips(false),
@@ -163,12 +168,9 @@ NativeParser::NativeParser() :
 NativeParser::~NativeParser()
 {
     ProjectLoaderHooks::UnregisterHook(m_HookId, true);
-
     ClearParsers();
     RemoveClassBrowser();
-
-    m_TemplateMap.clear();
-    Delete(m_pImageList);
+    delete m_pImageList;
 }
 
 void NativeParser::SetParser(Parser* parser)
@@ -524,7 +526,14 @@ void NativeParser::ClearParsers()
     SetParser(&m_TempParser);
 
     for (ParserList::const_iterator it = m_ParserList.begin(); it != m_ParserList.end(); ++it)
+    {
         delete it->second;
+        wxString log(F(_("Delete parser for project '%s'!"), it->first
+                       ? it->first->GetTitle().wx_str()
+                       : _T("*NONE*")));
+        Manager::Get()->GetLogManager()->Log(log);
+        Manager::Get()->GetLogManager()->DebugLog(log);
+    }
 
     m_ParserList.clear();
 }
@@ -699,11 +708,7 @@ bool NativeParser::AddDefaultCompilerDirs(Parser* parser)
 
 bool NativeParser::AddCompilerPredefinedMacros(cbProject* project, Parser* parser)
 {
-    // If project == NULL, the mean for single file parser (non project)
-    if (!parser)
-        return false;
-
-    if (!parser->Options().wantPreprocessor)
+    if (!parser || !parser->Options().wantPreprocessor)
         return false;
 
 	wxString defs;
@@ -712,59 +717,80 @@ bool NativeParser::AddCompilerPredefinedMacros(cbProject* project, Parser* parse
 	if (project)
         compilerId = project->GetCompilerID();
     else
-        compilerId = CompilerFactory::GetDefaultCompilerID();
+        compilerId = CompilerFactory::GetDefaultCompilerID(); // for single file parser (non project)
 
 	// gcc
 	if (compilerId == _T("gcc"))
 	{
+        static wxString gccDefs;
+        if (gccDefs.IsEmpty())
+        {
 #ifdef __WXMSW__
-        wxString cmd(_T("cpp -dM -E nul"));
+            wxString cmd(_T("cpp -dM -E nul"));
 #else
-		wxString cmd(_T("cpp -dM -E /dev/null"));
+            wxString cmd(_T("cpp -dM -E /dev/null"));
 #endif
-		wxArrayString output;
-		wxExecute(cmd, output, wxEXEC_NODISABLE);
-        for (size_t i = 0; i < output.Count(); ++i)
-            defs += output[i] + _T("\n");
+            wxWindowDisabler disableAll;
+            wxBusyInfo running(_("Get compiler pre-defined macros,please wait..."),
+                               Manager::Get()->GetAppWindow());
+
+            wxArrayString output;
+            if (wxExecute(cmd, output, wxEXEC_SYNC | wxEXEC_NODISABLE) == -1)
+                return false;
+
+            for (size_t i = 0; i < output.Count(); ++i)
+                gccDefs += output[i] + _T("\n");
+        }
+
+        defs = gccDefs;
 	}
 
 	// vc
 	else if (compilerId.StartsWith(_T("msvc")))
 	{
-	    Compiler* compiler = CompilerFactory::GetCompiler(compilerId);
-	    wxString cmd = compiler->GetMasterPath() + _T("\\bin\\") + compiler->GetPrograms().C;
-	    Manager::Get()->GetMacrosManager()->ReplaceMacros(cmd);
-
-	    wxArrayString output, error;
-		wxExecute(cmd, output, error, wxEXEC_NODISABLE);
-		if (error.IsEmpty())
-            return false;
-
-		wxString str = error[0];
-		wxString tmp(_T("Microsoft (R) "));
-		int pos = str.Find(tmp);
-		if (pos != wxNOT_FOUND)
+	    static wxString vcDefs;
+	    if (vcDefs.IsEmpty())
         {
-            wxString bit = str.Mid(pos + tmp.Length(), 2);
-            if (bit == _T("32"))
-                defs += _T("#define _WIN32") _T("\n");
-            else if (bit == _T("64"))
-                defs += _T("#define _WIN64") _T("\n");
-        }
+            Compiler* compiler = CompilerFactory::GetCompiler(compilerId);
+            wxString cmd = compiler->GetMasterPath() + _T("\\bin\\") + compiler->GetPrograms().C;
+            Manager::Get()->GetMacrosManager()->ReplaceMacros(cmd);
 
-        tmp = _T("Compiler Version ");
-        pos = str.Find(tmp);
-		if (pos != wxNOT_FOUND)
-        {
-            wxString ver = str.Mid(pos + tmp.Length(), 4);
-            pos = ver.Find(_T('.'));
+            wxWindowDisabler disableAll;
+            wxBusyInfo running(_("Get compiler pre-defined macros,please wait..."),
+                               Manager::Get()->GetAppWindow());
+
+            wxArrayString output, error;
+            if (wxExecute(cmd, output, error, wxEXEC_SYNC | wxEXEC_NODISABLE) == -1 || error.IsEmpty())
+                return false;
+
+            wxString str = error[0];
+            wxString tmp(_T("Microsoft (R) "));
+            int pos = str.Find(tmp);
             if (pos != wxNOT_FOUND)
             {
-                ver[pos] = ver[pos + 1];
-                ver[pos + 1] = _T('0');
-                defs += _T("#define _MSC_VER ") + ver;
+                wxString bit = str.Mid(pos + tmp.Length(), 2);
+                if (bit == _T("32"))
+                    defs += _T("#define _WIN32") _T("\n");
+                else if (bit == _T("64"))
+                    defs += _T("#define _WIN64") _T("\n");
+            }
+
+            tmp = _T("Compiler Version ");
+            pos = str.Find(tmp);
+            if (pos != wxNOT_FOUND)
+            {
+                wxString ver = str.Mid(pos + tmp.Length(), 4);
+                pos = ver.Find(_T('.'));
+                if (pos != wxNOT_FOUND)
+                {
+                    ver[pos] = ver[pos + 1];
+                    ver[pos + 1] = _T('0');
+                    defs += _T("#define _MSC_VER ") + ver;
+                }
             }
         }
+
+        defs = vcDefs;
 	}
 
 	TRACE(_T("Add compiler predefined preprocessor macros:\n%s"), defs.wx_str());
@@ -938,8 +964,9 @@ bool NativeParser::DeleteParser(cbProject* project)
     delete it->second;
     m_ParserList.erase(it);
 
-    wxString log(F(_("Delete parser for project '%s'!"), project ?
-                   project->GetTitle().wx_str() : _T("*NONE*")));
+    wxString log(F(_("Delete parser for project '%s'!"), project
+                   ? project->GetTitle().wx_str()
+                   : _T("*NONE*")));
     Manager::Get()->GetLogManager()->Log(log);
     Manager::Get()->GetLogManager()->DebugLog(log);
 
@@ -1103,33 +1130,30 @@ void NativeParser::StartCompleteParsing(cbProject* project, Parser* parser)
     for (FrontMap::const_iterator it = frontMap.begin(); it != frontMap.end(); ++it)
         fronts.Add(it->second);
 
-    if (!fronts.IsEmpty() || !headers.IsEmpty() || !sources.IsEmpty())
+    Manager::Get()->GetLogManager()->DebugLog(_T("Passing list of files to batch-parser."));
+
+    // prepare parsing
+    parser->PrepareParsing();
+
+    // parse up-front files
+    if (!fronts.IsEmpty())
     {
-        Manager::Get()->GetLogManager()->DebugLog(_T("Passing list of files to batch-parser."));
+        for (size_t i = 0; i < fronts.GetCount(); ++i)
+            Manager::Get()->GetLogManager()->DebugLog(F(_T("Header to parse up-front: '%s'"), fronts[i].wx_str()));
 
-        // prepare parsing
-        parser->PrepareParsing();
-
-        // parse up-front files
-        if (!fronts.IsEmpty())
-        {
-            for (size_t i = 0; i < fronts.GetCount(); ++i)
-                Manager::Get()->GetLogManager()->DebugLog(F(_T("Header to parse up-front: '%s'"), fronts[i].wx_str()));
-
-            Manager::Get()->GetLogManager()->DebugLog(F(_T("Add up-front parsing %d file(s) for project '%s'..."),                                                        fronts.GetCount(), project->GetTitle().wx_str()));
-            parser->AddBatchParse(fronts, true);
-        }
-
-        if (!headers.IsEmpty() || !sources.IsEmpty())
-        {
-            Manager::Get()->GetLogManager()->DebugLog(F(_T("Add batch-parsing %d file(s) for project '%s'..."),                                                        headers.GetCount() + sources.GetCount(), project->GetTitle().wx_str()));
-            parser->AddBatchParse(headers);
-            parser->AddBatchParse(sources);
-        }
-
-        // start parsing
-        parser->StartParsing();
+        Manager::Get()->GetLogManager()->DebugLog(F(_T("Add up-front parsing %d file(s) for project '%s'..."),                                                        fronts.GetCount(), project->GetTitle().wx_str()));
+        parser->AddBatchParse(fronts, true);
     }
+
+    if (!headers.IsEmpty() || !sources.IsEmpty())
+    {
+        Manager::Get()->GetLogManager()->DebugLog(F(_T("Add batch-parsing %d file(s) for project '%s'..."),                                                        headers.GetCount() + sources.GetCount(), project->GetTitle().wx_str()));
+        parser->AddBatchParse(headers);
+        parser->AddBatchParse(sources);
+    }
+
+    // start parsing
+    parser->StartParsing();
 }
 
 void NativeParser::ForceReparseActiveProject()
@@ -3086,7 +3110,7 @@ void NativeParser::OnParserStart(wxCommandEvent& event)
     switch (static_cast<ParsingType>(event.GetInt()))
     {
     case ptCreateParser:
-        Manager::Get()->GetLogManager()->DebugLog(F(_("Starting batch parsing for project \"%s\"..."), project
+        Manager::Get()->GetLogManager()->DebugLog(F(_("Starting batch parsing for project '%s'..."), project
                                                     ? project->GetTitle().wx_str()
                                                     : _T("*NONE*")));
         {
@@ -3117,9 +3141,14 @@ void NativeParser::OnParserStart(wxCommandEvent& event)
         break;
 
     case ptUndefined:
-        Manager::Get()->GetLogManager()->DebugLog(F(_("Batch parsing error in project \"%s\""), project
-                                                    ? project->GetTitle().wx_str()
-                                                    : _T("*NONE*")));
+        if (event.GetString().IsEmpty())
+            Manager::Get()->GetLogManager()->DebugLog(F(_("Batch parsing error in project '%s'"), project
+                                                        ? project->GetTitle().wx_str()
+                                                        : _T("*NONE*")));
+        else
+            Manager::Get()->GetLogManager()->DebugLog(F(_("%s in project '%s'"), event.GetString().wx_str(), project
+                                                        ? project->GetTitle().wx_str()
+                                                        : _T("*NONE*")));
         return;
     }
 
@@ -3179,24 +3208,23 @@ void NativeParser::OnParserEnd(wxCommandEvent& event)
     event.Skip();
 }
 
-void NativeParser::OnEditorActivated(EditorBase* editor)
+void NativeParser::OnEditorActivatedTimer(wxTimerEvent& event)
 {
-    wxString filename = editor->GetFilename();
-    if (filename == g_StartHereTitle || filename.IsEmpty())
+    if (m_LastActivatedFile == g_StartHereTitle || m_LastActivatedFile.IsEmpty())
     {
         SetParser(&m_TempParser);
         return;
     }
 
-    cbProject* project = GetProjectByFilename(filename);
-    const int pos = m_StandaloneFiles.Index(filename);
-    if (!project && pos != wxNOT_FOUND)
+    cbProject* project = GetProjectByFilename(m_LastActivatedFile);
+    const int pos = m_StandaloneFiles.Index(m_LastActivatedFile);
+    if (project && pos != wxNOT_FOUND)
     {
         m_StandaloneFiles.RemoveAt(pos);
         if (m_StandaloneFiles.IsEmpty())
             DeleteParser(NULL);
         else
-            RemoveFileFromParser(NULL, filename);
+            RemoveFileFromParser(NULL, m_LastActivatedFile);
     }
 
     Parser* parser = GetParserByProject(project);
@@ -3207,8 +3235,8 @@ void NativeParser::OnEditorActivated(EditorBase* editor)
             parser = GetParserByProject(project);
             if (!project)
             {
-                parser->AddFile(filename);
-                m_StandaloneFiles.Add(filename);
+                parser->AddFile(m_LastActivatedFile);
+                m_StandaloneFiles.Add(m_LastActivatedFile);
             }
         }
         else
@@ -3216,21 +3244,21 @@ void NativeParser::OnEditorActivated(EditorBase* editor)
     }
     else if (!project)
     {
-        wxFileName file(filename);
-        if (parser->IsFileParsed(filename))
+        wxFileName file(m_LastActivatedFile);
+        if (parser->IsFileParsed(m_LastActivatedFile))
         {
             // Need update parser include dir, for classbrowser
             if (parser->GetIncludeDirs().Item(0) != file.GetPath())
                 parser->GetIncludeDirs().Item(0) = file.GetPath();
-            ReparseFile(project, filename);
+            ReparseFile(project, m_LastActivatedFile);
         }
         else
         {
-            m_StandaloneFiles.Add(filename);
+            m_StandaloneFiles.Add(m_LastActivatedFile);
             parser->ClearIncludeDirs();
             parser->AddIncludeDir(file.GetPath());
             AddDefaultCompilerDirs(parser);
-            AddFileToParser(NULL, filename);
+            AddFileToParser(NULL, m_LastActivatedFile);
         }
     }
 
@@ -3244,8 +3272,23 @@ void NativeParser::OnEditorActivated(EditorBase* editor)
     }
 }
 
+void NativeParser::OnEditorActivated(EditorBase* editor)
+{
+    if (m_LastActivatedFile != editor->GetFilename())
+    {
+        if (m_TimerEditorActivated.IsRunning())
+            m_TimerEditorActivated.Stop();
+
+        m_LastActivatedFile = editor->GetFilename();
+        m_TimerEditorActivated.Start(500, wxTIMER_ONE_SHOT);
+    }
+}
+
 void NativeParser::OnEditorClosed(EditorBase* editor)
 {
+    if (m_TimerEditorActivated.IsRunning())
+        m_TimerEditorActivated.Stop();
+
     wxString filename = editor->GetFilename();
     if (filename == g_StartHereTitle)
         return;

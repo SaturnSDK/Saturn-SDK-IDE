@@ -54,11 +54,10 @@ namespace TokenizerConsts
 // static
 wxStringHashMap Tokenizer::s_Replacements;
 
-Tokenizer::Tokenizer(TokensTree* tokensTree, const wxString& filename)
-    : m_pTokensTree(tokensTree),
+Tokenizer::Tokenizer(TokensTree* tokensTree, const wxString& filename) :
+    m_pTokensTree(tokensTree),
     m_Filename(filename),
     m_BufferLen(0),
-    m_Token(_T("")),
     m_TokenIndex(0),
     m_LineNumber(1),
     m_NestLevel(0),
@@ -67,7 +66,6 @@ Tokenizer::Tokenizer(TokensTree* tokensTree, const wxString& filename)
     m_UndoLineNumber(1),
     m_UndoNestLevel(0),
     m_PeekAvailable(false),
-    m_PeekToken(_T("")),
     m_PeekTokenIndex(0),
     m_PeekLineNumber(0),
     m_PeekNestLevel(0),
