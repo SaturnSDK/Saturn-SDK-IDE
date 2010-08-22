@@ -135,6 +135,7 @@ int idCodeCompleteTimer         = wxNewId();
 int idFunctionsParsingTimer     = wxNewId();
 int idRealtimeParsingTimer      = wxNewId();
 int idToolbarTimer              = wxNewId();
+int idProjectSavedTimer         = wxNewId();
 
 // milliseconds
 #define REALTIME_PARSING_DELAY      500
@@ -164,6 +165,7 @@ BEGIN_EVENT_TABLE(CodeCompletion, cbCodeCompletionPlugin)
     EVT_TIMER(idFunctionsParsingTimer, CodeCompletion::OnStartParsingFunctions)
     EVT_TIMER(idRealtimeParsingTimer, CodeCompletion::OnRealtimeParsing)
     EVT_TIMER(idToolbarTimer, CodeCompletion::OnStartParsingFunctions)
+    EVT_TIMER(idProjectSavedTimer, CodeCompletion::OnProjectSavedTimer)
 
     EVT_CHOICE(XRCID("chcCodeCompletionScope"),  CodeCompletion::OnScope)
     EVT_CHOICE(XRCID("chcCodeCompletionFunction"),  CodeCompletion::OnFunction)
@@ -180,6 +182,7 @@ CodeCompletion::CodeCompletion() :
     m_TimerFunctionsParsing(this, idFunctionsParsingTimer),
     m_TimerRealtimeParsing(this, idRealtimeParsingTimer),
     m_TimerToolbar(this, idToolbarTimer),
+    m_TimerProjectSaved(this, idProjectSavedTimer),
     m_pCodeCompletionLastEditor(0),
     m_ActiveCalltipsNest(0),
     m_IsAutoPopup(false),
@@ -901,7 +904,6 @@ public:
             // crash in linux, why?
 //            Manager::Get()->GetLogManager()->DebugLog(F(_T("Get Headers: %s , %d"), dirs[i].wx_str(),
 //                                                        m_SystemHeadersMap[dirs[i]].size()));
-#endif // crash in linux, why?
         }
 
         return 0;
@@ -1486,8 +1488,6 @@ void CodeCompletion::OnCodeCompleteTimer(wxTimerEvent& event)
 
 void CodeCompletion::OnWorkspaceChanged(CodeBlocksEvent& event)
 {
-//    Manager::Get()->GetLogManager()->DebugLog(_T("CodeCompletion::OnWorkspaceChanged"));
-
     // EVT_WORKSPACE_CHANGED is a powerful event, it's sent after any project
     // has finished loading or closing. It's the *LAST* event to be sent when
     // the workspace has been changed, and it's not sent if the application is
@@ -1511,8 +1511,6 @@ void CodeCompletion::OnWorkspaceChanged(CodeBlocksEvent& event)
 
 void CodeCompletion::OnProjectActivated(CodeBlocksEvent& event)
 {
-//    Manager::Get()->GetLogManager()->DebugLog(_T("CodeCompletion::OnProjectActivated"));
-
     // The Class browser shouldn't be updated if we're in the middle of loading/closing
     // a project/workspace, because the class browser would need to be updated again.
     // So we need to update it with the EVT_WORKSPACE_CHANGED event, which gets
@@ -1533,8 +1531,6 @@ void CodeCompletion::OnProjectActivated(CodeBlocksEvent& event)
 
 void CodeCompletion::OnProjectClosed(CodeBlocksEvent& event)
 {
-//    Manager::Get()->GetLogManager()->DebugLog(_T("CodeCompletion::OnProjectClosed"));
-
     // After this, the Class Browser needs to be updated. It will happen
     // when we receive the next EVT_PROJECT_ACTIVATED event.
     if (IsAttached() && m_InitDone)
@@ -1549,14 +1545,25 @@ void CodeCompletion::OnProjectClosed(CodeBlocksEvent& event)
 void CodeCompletion::OnProjectSaved(CodeBlocksEvent& event)
 {
     // reparse project (compiler search dirs might have changed)
-    cbProject* project = event.GetProject();
-    if (IsAttached() && m_InitDone)
+    if (m_TimerProjectSaved.IsRunning())
+        m_TimerProjectSaved.Stop();
+
+    m_TimerProjectSaved.SetClientData(event.GetProject());
+    // we need more time for waiting wxExecute in NativeParser::AddCompilerPredefinedMacros
+    m_TimerProjectSaved.Start(1000, wxTIMER_ONE_SHOT);
+
+    event.Skip();
+}
+
+void CodeCompletion::OnProjectSavedTimer(wxTimerEvent& event)
+{
+    cbProject* project = static_cast<cbProject*>(m_TimerProjectSaved.GetClientData());
+    m_TimerProjectSaved.SetClientData(NULL);
+
+    if (IsAttached() && m_InitDone && project && m_NativeParser.DeleteParser(project))
     {
-        if (project && m_NativeParser.DeleteParser(project))
-        {
-            Manager::Get()->GetLogManager()->DebugLog(_T("Reparsing project."));
-            m_NativeParser.CreateParser(project);
-        }
+        Manager::Get()->GetLogManager()->DebugLog(_T("Reparsing project."));
+        m_NativeParser.CreateParser(project);
     }
 
     event.Skip();
