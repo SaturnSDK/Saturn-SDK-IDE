@@ -22,6 +22,9 @@
 class cbEditor;
 class wxScintillaEvent;
 class wxChoice;
+class SystemHeadersThread;
+
+typedef std::map<wxString, std::list<wxString> > SystemHeadersMap;
 
 class CodeCompletion : public cbCodeCompletionPlugin
 {
@@ -39,7 +42,6 @@ class CodeCompletion : public cbCodeCompletionPlugin
 
 	typedef std::vector<FunctionScope> FunctionsScopeVec;
 	typedef std::vector<int> ScopeMarksVec;
-	typedef std::map<wxString, std::list<wxString> > SystemHeadersMap;
 
 	struct FunctionsScopePerFile
 	{
@@ -110,6 +112,9 @@ class CodeCompletion : public cbCodeCompletionPlugin
         void OnParserEnd(wxCommandEvent& event);
         void OnParserStart(wxCommandEvent& event);
         void OnValueTooltip(CodeBlocksEvent& event);
+        void OnThreadUpdate(wxCommandEvent& event);
+        void OnThreadCompletion(wxCommandEvent& event);
+
         void DoCodeComplete();
         void DoInsertCodeCompleteToken(wxString tokName);
         int DoClassMethodDeclImpl();
@@ -129,7 +134,6 @@ class CodeCompletion : public cbCodeCompletionPlugin
 		void OnRealtimeParsing(wxTimerEvent& event);
 		void OnProjectSavedTimer(wxTimerEvent& event);
 
-        cbThreadPool                       m_ThreadPool;
         int                                m_PageIndex;
         bool                               m_InitDone;
 
@@ -165,6 +169,7 @@ class CodeCompletion : public cbCodeCompletionPlugin
         bool                               m_LexerKeywordsToInclude[9];
         bool                               m_NeedReparse;
         SystemHeadersMap                   m_SystemHeadersMap;
+        std::list<SystemHeadersThread*>    m_SystemHeadersThread;
 
         DECLARE_EVENT_TABLE()
 };
