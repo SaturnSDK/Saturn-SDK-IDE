@@ -70,6 +70,7 @@ class DebuggerGDB : public cbDebuggerPlugin
         void Continue();
         void Next();
         void NextInstruction();
+        void StepIntoInstruction();
         void Step();
         void StepOut();
         void RunToCursor(const wxString& filename, int line, const wxString& line_text);

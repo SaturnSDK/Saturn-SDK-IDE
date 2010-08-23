@@ -152,6 +152,11 @@ void CDB_driver::StepInstruction()
     NOT_IMPLEMENTED();
 }
 
+void CDB_driver::StepIntoInstruction()
+{
+    NOT_IMPLEMENTED();
+}
+
 void CDB_driver::StepIn()
 {
     ResetCursor();

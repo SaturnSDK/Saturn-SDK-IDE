@@ -570,6 +570,12 @@ void GDB_driver::StepInstruction()
     QueueCommand(new DebuggerCmd(this, _T("nexti")));
 }
 
+void GDB_driver::StepIntoInstruction()
+{
+    ResetCursor();
+    QueueCommand(new DebuggerCmd(this, _T("stepi")));
+}
+
 void GDB_driver::StepIn()
 {
     ResetCursor();

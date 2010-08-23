@@ -97,6 +97,7 @@ enum DebugCommandConst
     CMD_STEPIN,
     CMD_STEPOUT,
     CMD_STEP_INSTR,
+    CMD_STEP_INTO_INSTR,
     CMD_STOP,
     CMD_BACKTRACE,
     CMD_DISASSEMBLE,
@@ -1103,6 +1104,22 @@ void DebuggerGDB::RunCommand(int cmd)
             break;
         }
 
+        case CMD_STEP_INTO_INSTR:
+        {
+            ClearActiveMarkFromAllEditors();
+            if (!Manager::Get()->GetDebuggerManager()->UpdateBacktrace())
+            {
+                // first time users should have some help from us ;)
+                RunCommand(CMD_DISASSEMBLE);
+            }
+            if (m_State.HasDriver())
+            {
+                m_State.GetDriver()->StepIntoInstruction();
+                m_State.GetDriver()->ResetCurrentFrame();
+            }
+            break;
+        }
+
         case CMD_STEPIN:
         {
             ClearActiveMarkFromAllEditors();
@@ -1445,6 +1462,11 @@ void DebuggerGDB::Next()
 void DebuggerGDB::NextInstruction()
 {
     RunCommand(CMD_STEP_INSTR);
+}
+
+void DebuggerGDB::StepIntoInstruction()
+{
+    RunCommand(CMD_STEP_INTO_INSTR);
 }
 
 void DebuggerGDB::Step()

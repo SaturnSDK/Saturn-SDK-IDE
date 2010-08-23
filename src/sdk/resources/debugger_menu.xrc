@@ -52,16 +52,6 @@
 
       <help>Execute the next line of code</help>
     </object>
-    <object class="wxMenuItem" name="idDebuggerMenuNextInstr">
-
-      <label>Next instruction</label>
-
-      <bitmap>images\16x16\dbgstepi.png</bitmap>
-
-      <accel>Alt-F7</accel>
-
-      <help>Execute the next assembly instruction</help>
-    </object>
     <object class="wxMenuItem" name="idDebuggerMenuStep">
 
       <label>Step into</label>
@@ -81,6 +71,26 @@
       <accel>Shift-Ctrl-F7</accel>
 
       <help>Continue execution until the current frame exits</help>
+    </object>
+    <object class="wxMenuItem" name="idDebuggerMenuNextInstr">
+
+      <label>Next instruction</label>
+
+      <bitmap>images\16x16\dbgstepi.png</bitmap>
+
+      <accel>Alt-F7</accel>
+
+      <help>Execute the next assembly instruction</help>
+    </object>
+    <object class="wxMenuItem" name="idDebuggerMenuStepIntoInstr">
+
+      <label>Step into instruction</label>
+
+      <bitmap>images\16x16\dbgstepi.png</bitmap>
+
+      <accel>Shift-Alt-F7</accel>
+
+      <help>Execute the next assembly instruction, if it is a function call step into it</help>
     </object>
     <object class="wxMenuItem" name="idDebuggerMenuRunToCursor">
 

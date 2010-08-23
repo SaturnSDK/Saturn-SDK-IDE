@@ -409,6 +409,9 @@ class PLUGIN_EXPORT cbDebuggerPlugin: public cbPlugin
 		/** @brief Execute the next instruction and return control to the debugger. */
 		virtual void NextInstruction() = 0;
 
+		/** @brief Execute the next instruction and return control to the debugger, if the instruction is a function call step into it. */
+		virtual void StepIntoInstruction() = 0;
+
 		/** @brief Execute the next instruction, stepping into function calls if needed, and return control to the debugger. */
 		virtual void Step() = 0;
 

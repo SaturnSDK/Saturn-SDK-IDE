@@ -23,6 +23,7 @@ class CDB_driver : public DebuggerDriver
         virtual void Continue();
         virtual void Step();
         virtual void StepInstruction();
+        virtual void StepIntoInstruction();
         virtual void StepIn();
         virtual void StepOut();
         virtual void SetNextStatement(const wxString& filename, int line);

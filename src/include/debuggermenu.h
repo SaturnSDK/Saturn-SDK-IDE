@@ -27,6 +27,7 @@ class DebuggerMenuHandler : public wxEvtHandler
         void OnContinue(wxCommandEvent& event);
         void OnNext(wxCommandEvent& event);
         void OnNextInstr(wxCommandEvent& event);
+        void OnStepIntoInstr(wxCommandEvent& event);
         void OnStep(wxCommandEvent& event);
         void OnStepOut(wxCommandEvent& event);
         void OnRunToCursor(wxCommandEvent& event);

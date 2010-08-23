@@ -38,6 +38,7 @@ namespace
     const int idMenuNext = XRCID("idDebuggerMenuNext");
     const int idMenuStep = XRCID("idDebuggerMenuStep");
     const int idMenuNextInstr = XRCID("idDebuggerMenuNextInstr");
+    const int idMenuStepIntoInstr = XRCID("idDebuggerMenuStepIntoInstr");
     const int idMenuStepOut = XRCID("idDebuggerMenuStepOut");
     const int idMenuBreak = XRCID("idDebuggerMenuBreak");
     const int idMenuStop = XRCID("idDebuggerMenuStop");
@@ -73,6 +74,7 @@ BEGIN_EVENT_TABLE(DebuggerMenuHandler, wxEvtHandler)
     EVT_UPDATE_UI(idMenuSetNextStatement, DebuggerMenuHandler::OnUpdateUI)
     EVT_UPDATE_UI(idMenuNext, DebuggerMenuHandler::OnUpdateUI)
     EVT_UPDATE_UI(idMenuNextInstr, DebuggerMenuHandler::OnUpdateUI)
+    EVT_UPDATE_UI(idMenuStepIntoInstr, DebuggerMenuHandler::OnUpdateUI)
     EVT_UPDATE_UI(idMenuStep, DebuggerMenuHandler::OnUpdateUI)
     EVT_UPDATE_UI(idMenuStepOut, DebuggerMenuHandler::OnUpdateUI)
     EVT_UPDATE_UI(idMenuBreak, DebuggerMenuHandler::OnUpdateUI)
@@ -97,6 +99,7 @@ BEGIN_EVENT_TABLE(DebuggerMenuHandler, wxEvtHandler)
     EVT_MENU(idMenuNext, DebuggerMenuHandler::OnNext)
     EVT_MENU(idMenuStep, DebuggerMenuHandler::OnStep)
     EVT_MENU(idMenuNextInstr, DebuggerMenuHandler::OnNextInstr)
+    EVT_MENU(idMenuStepIntoInstr, DebuggerMenuHandler::OnStepIntoInstr)
     EVT_MENU(idMenuStepOut, DebuggerMenuHandler::OnStepOut)
     EVT_MENU(idMenuRunToCursor, DebuggerMenuHandler::OnRunToCursor)
     EVT_MENU(idMenuSetNextStatement, DebuggerMenuHandler::OnSetNextStatement)
@@ -171,6 +174,7 @@ void DebuggerMenuHandler::OnUpdateUI(wxUpdateUIEvent& event)
         mbar->Enable(idMenuContinue, isRunning && en && stopped);
         mbar->Enable(idMenuNext, isRunning && en && stopped);
         mbar->Enable(idMenuNextInstr, isRunning && en && stopped);
+        mbar->Enable(idMenuStepIntoInstr, isRunning && en && stopped);
         mbar->Enable(idMenuStep, en && stopped);
         mbar->Enable(idMenuStepOut, isRunning && en && stopped);
         mbar->Enable(idMenuRunToCursor, en && ed && stopped);
@@ -245,6 +249,12 @@ void DebuggerMenuHandler::OnNextInstr(wxCommandEvent& event)
 {
     cbAssert(m_activeDebugger);
     m_activeDebugger->NextInstruction();
+}
+
+void DebuggerMenuHandler::OnStepIntoInstr(wxCommandEvent& event)
+{
+    cbAssert(m_activeDebugger);
+    m_activeDebugger->StepIntoInstruction();
 }
 
 void DebuggerMenuHandler::OnStep(wxCommandEvent& event)
@@ -457,6 +467,7 @@ BEGIN_EVENT_TABLE(DebuggerToolbarHandler, wxEvtHandler)
     EVT_UPDATE_UI(idMenuRunToCursor, DebuggerToolbarHandler::OnUpdateUI)
     EVT_UPDATE_UI(idMenuNext, DebuggerToolbarHandler::OnUpdateUI)
     EVT_UPDATE_UI(idMenuNextInstr, DebuggerToolbarHandler::OnUpdateUI)
+    EVT_UPDATE_UI(idMenuStepIntoInstr, DebuggerToolbarHandler::OnUpdateUI)
     EVT_UPDATE_UI(idMenuStep, DebuggerToolbarHandler::OnUpdateUI)
     EVT_UPDATE_UI(idMenuStepOut, DebuggerToolbarHandler::OnUpdateUI)
     EVT_UPDATE_UI(idMenuBreak, DebuggerToolbarHandler::OnUpdateUI)
@@ -504,6 +515,7 @@ void DebuggerToolbarHandler::OnUpdateUI(wxUpdateUIEvent& event)
     m_Toolbar->EnableTool(idMenuRunToCursor, en && ed && stopped);
     m_Toolbar->EnableTool(idMenuNext, isRunning && en && stopped);
     m_Toolbar->EnableTool(idMenuNextInstr, isRunning && en && stopped);
+    m_Toolbar->EnableTool(idMenuStepIntoInstr, isRunning && en && stopped);
     m_Toolbar->EnableTool(idMenuStep, en && stopped);
     m_Toolbar->EnableTool(idMenuStepOut, isRunning && en && stopped);
     m_Toolbar->EnableTool(idToolbarStop, isRunning && en);
