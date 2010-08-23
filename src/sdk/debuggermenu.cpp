@@ -193,14 +193,14 @@ void DebuggerMenuHandler::OnUpdateUI(wxUpdateUIEvent& event)
 //        mbar->Enable(idMenuInfoFiles, isRunning && stopped);
 //        mbar->Enable(idMenuInfoFPU, isRunning && stopped);
 //        mbar->Enable(idMenuInfoSignals, isRunning && stopped);
-//
-//        mbar->Check(idMenuThreads, IsWindowReallyShown(m_pThreadsDlg));
-//        mbar->Check(idMenuMemory, IsWindowReallyShown(m_pExamineMemoryDlg));
-//        mbar->Check(idMenuBacktrace, IsWindowReallyShown(m_pBacktrace));
-//        mbar->Check(idMenuCPU, IsWindowReallyShown(m_pDisassembly));
-//        mbar->Check(idMenuWatches, IsWindowReallyShown(m_pTree));
-//        mbar->Check(idMenuRegisters, IsWindowReallyShown(m_pCPURegisters));
-        mbar->Check(idMenuBreakpoints, IsWindowReallyShown(dbg_manager->GetBreakpointDialog()));
+
+        mbar->Check(idMenuBreakpoints,  IsWindowReallyShown(dbg_manager->GetBreakpointDialog()));
+        mbar->Check(idMenuBacktrace,    IsWindowReallyShown(dbg_manager->GetBacktraceDialog()));
+        mbar->Check(idMenuRegisters,    IsWindowReallyShown(dbg_manager->GetCPURegistersDialog()));
+        mbar->Check(idMenuCPU,          IsWindowReallyShown(dbg_manager->GetDisassemblyDialog()));
+        mbar->Check(idMenuMemory,       IsWindowReallyShown(dbg_manager->GetExamineMemoryDialog()));
+        mbar->Check(idMenuThreads,      IsWindowReallyShown(dbg_manager->GetThreadsDialog()));
+        mbar->Check(idMenuWatches,      IsWindowReallyShown(dbg_manager->GetWatchesDialog()));
     }
 
     // allow other UpdateUI handlers to process this event
