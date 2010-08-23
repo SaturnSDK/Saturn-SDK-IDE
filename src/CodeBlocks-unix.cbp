@@ -1068,10 +1068,10 @@
 		<Unit filename="plugins/codecompletion/nativeparser.h">
 			<Option target="Code-completion" />
 		</Unit>
-       	<Unit filename="plugins\codecompletion\parser\expression.cpp">
+		<Unit filename="plugins/codecompletion/parser/expression.cpp">
 			<Option target="Code-completion" />
 		</Unit>
-		<Unit filename="plugins\codecompletion\parser\expression.h">
+		<Unit filename="plugins/codecompletion/parser/expression.h">
 			<Option target="Code-completion" />
 		</Unit>
 		<Unit filename="plugins/codecompletion/parser/parser.cpp">

@@ -406,18 +406,18 @@ wxString Tokenizer::ReadToEOL(bool nestBraces, bool stripUnneeded)
                 MoveToNextChar();
             }
 
-            if (IsEOF() || !IsBackslashBeforeEOL())
+            if (!IsBackslashBeforeEOL() || IsEOF())
                 break;
             else
             {
-                while (*(--p) <= _T(' ') && p > buffer)
+                while (p > buffer && *(--p) <= _T(' '))
                     ;
                 MoveToNextChar();
             }
         }
 
-        while (*(p - 1) <= _T(' ') && --p > buffer)
-            ;
+        while (p > buffer && *(p - 1) <= _T(' '))
+            --p;
         str.Append(buffer, p - buffer);
 
         TRACE(_T("ReadToEOL(): (END) We are now at line %d, CurrentChar='%c', PreviousChar='%c', NextChar='%c'"),
@@ -509,8 +509,11 @@ void Tokenizer::ReadToEOL(wxArrayString& tokens)
 void Tokenizer::ReadParentheses(wxString& str)
 {
     static const size_t maxBufferLen = 1024;
-    wxChar buffer[maxBufferLen + 2];
-    wxChar* p = buffer;
+    wxChar buffer[maxBufferLen + 3];
+    buffer[0] = _T('$'); // avoid segfault error
+    wxChar* realBuffer = buffer + 1;
+    wxChar* p = realBuffer;
+
     int level = 0;
 
     while (NotEOF())
@@ -557,16 +560,16 @@ void Tokenizer::ReadParentheses(wxString& str)
                 SkipToStringEnd(ch);
                 MoveToNextChar();
                 const size_t writeLen = m_TokenIndex - startIndex;
-                const size_t usedLen = p - buffer;
+                const size_t usedLen = p - realBuffer;
                 if (usedLen + writeLen > maxBufferLen)
                 {
                     if (writeLen > maxBufferLen)
                         return;
 
-                    if (p != buffer)
+                    if (p != realBuffer)
                     {
-                        str.Append(buffer, usedLen);
-                        p = buffer;
+                        str.Append(realBuffer, usedLen);
+                        p = realBuffer;
                     }
 
                     str.Append(&m_Buffer[startIndex], writeLen);
@@ -671,10 +674,10 @@ void Tokenizer::ReadParentheses(wxString& str)
             break;
         }
 
-        if (p >= buffer + maxBufferLen)
+        if (p >= realBuffer + maxBufferLen)
         {
-            str.Append(buffer, p - buffer);
-            p = buffer;
+            str.Append(realBuffer, p - realBuffer);
+            p = realBuffer;
         }
 
         MoveToNextChar();
@@ -683,8 +686,8 @@ void Tokenizer::ReadParentheses(wxString& str)
             break;
     }
 
-    if (p != buffer)
-        str.Append(buffer, p - buffer);
+    if (p != realBuffer)
+        str.Append(realBuffer, p - realBuffer);
     TRACE(_T("ReadParentheses(): %s, line=%d"), str.wx_str(), m_LineNumber);
 }
 
@@ -714,7 +717,7 @@ bool Tokenizer::SkipToEOL(bool nestBraces)
             MoveToNextChar();
         }
 
-        if (IsEOF() || !IsBackslashBeforeEOL())
+        if (!IsBackslashBeforeEOL() || IsEOF())
             break;
         else
             MoveToNextChar();
@@ -735,8 +738,8 @@ bool Tokenizer::SkipToInlineCommentEnd()
     // skip everything until we find EOL
     while (true)
     {
-        SkipToChar('\n');
-        if (IsEOF() || !IsBackslashBeforeEOL())
+        SkipToChar(_T('\n'));
+        if (!IsBackslashBeforeEOL() || IsEOF())
             break;
         else
             MoveToNextChar();
