@@ -29,7 +29,7 @@
     <object class="tool" name="idDebuggerMenuNextInstr">
       <tooltip>Next instruction</tooltip>
       <longhelp>Execute the next assembly instruction</longhelp>
-      <bitmap>images/16x16/dbgstepi.png</bitmap>
+      <bitmap>images/16x16/dbgnexti.png</bitmap>
     </object>
     <object class="tool" name="idDebuggerMenuStepIntoInstr">
       <tooltip>Step into instruction</tooltip>
