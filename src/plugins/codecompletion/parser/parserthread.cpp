@@ -1347,6 +1347,12 @@ void ParserThread::HandleDefines()
         //get the argument,if they are not in the same line,we think the define handle is over
         //if the they are in the same line and the the first char is "(",we regard it as function-like macro.
         wxString para = m_Tokenizer.GetToken();
+        if (para == _T('\\')) // eat backslash
+        {
+            para = m_Tokenizer.GetToken();
+            ++lineNr;
+        }
+
         if (lineNr == m_Tokenizer.GetLineNumber())
         {
             if (para.IsEmpty() || para.GetChar(0) != _T('('))
