@@ -33,7 +33,6 @@
 #include <wx/regex.h>
 #include <wx/wfstream.h>
 #include <wx/tokenzr.h>
-#include <wx/busyinfo.h>
 
 #include <cctype>
 
@@ -730,10 +729,6 @@ bool NativeParser::AddCompilerPredefinedMacros(cbProject* project, Parser* parse
 #else
             wxString cmd(_T("cpp -dM -E /dev/null"));
 #endif
-            wxWindowDisabler disableAll;
-            wxBusyInfo running(_("Get compiler pre-defined macros,please wait..."),
-                               Manager::Get()->GetAppWindow());
-
             wxArrayString output;
             if (wxExecute(cmd, output, wxEXEC_SYNC | wxEXEC_NODISABLE) == -1)
                 return false;
@@ -754,10 +749,6 @@ bool NativeParser::AddCompilerPredefinedMacros(cbProject* project, Parser* parse
             Compiler* compiler = CompilerFactory::GetCompiler(compilerId);
             wxString cmd = compiler->GetMasterPath() + _T("\\bin\\") + compiler->GetPrograms().C;
             Manager::Get()->GetMacrosManager()->ReplaceMacros(cmd);
-
-            wxWindowDisabler disableAll;
-            wxBusyInfo running(_("Get compiler pre-defined macros,please wait..."),
-                               Manager::Get()->GetAppWindow());
 
             wxArrayString output, error;
             if (wxExecute(cmd, output, error, wxEXEC_SYNC | wxEXEC_NODISABLE) == -1 || error.IsEmpty())
@@ -1566,9 +1557,6 @@ const wxArrayString& NativeParser::GetCallTips(int chars_per_line)
 //        Manager::Get()->GetLogManager()->DebugLog(_T("Sending \"%s\" for call-tip"), lineText.c_str());
 
         TokensTree* tokens = m_pParser->GetTokens();
-        TokenIdxSet result;
-        wxCriticalSectionLocker locker(m_pParser->GetTokensTreeCritical());
-
         tokens->FreeTemporaries();
 
         TokenIdxSet search_scope;
@@ -1582,6 +1570,7 @@ const wxArrayString& NativeParser::GetCallTips(int chars_per_line)
         if (tk != NULL)
             lineText = tk->m_Type;
 
+        TokenIdxSet result;
         if (!AI(result, ed, lineText, true, true, &search_scope))
             break;
 
