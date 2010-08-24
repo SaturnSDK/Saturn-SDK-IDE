@@ -2076,7 +2076,11 @@ void CodeCompletion::OnEditorActivated(CodeBlocksEvent& event)
             return;
 
         m_NativeParser.OnEditorActivated(editor);
-        ParseFunctionsAndFillToolbar();
+
+        if (m_TimerFunctionsParsing.IsRunning())
+            m_TimerFunctionsParsing.Stop();
+
+        m_TimerFunctionsParsing.Start(50, wxTIMER_ONE_SHOT);
     }
 
     event.Skip();
