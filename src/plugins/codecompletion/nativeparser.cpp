@@ -3237,8 +3237,9 @@ void NativeParser::OnEditorActivatedTimer(wxTimerEvent& event)
         if (parser->IsFileParsed(m_LastActivatedFile))
         {
             // Need update parser include dir, for classbrowser
-            if (parser->GetIncludeDirs().Item(0) != file.GetPath())
-                parser->GetIncludeDirs().Item(0) = file.GetPath();
+            wxArrayString incDirs = parser->GetIncludeDirs();
+            if (!incDirs.IsEmpty() && incDirs.Item(0) != file.GetPath())
+                incDirs.Item(0) = file.GetPath();
             ReparseFile(project, m_LastActivatedFile);
         }
         else
