@@ -527,11 +527,14 @@ void NativeParser::ClearParsers()
     for (ParserList::const_iterator it = m_ParserList.begin(); it != m_ParserList.end(); ++it)
     {
         delete it->second;
-        wxString log(F(_("Delete parser for project '%s'!"), it->first
-                       ? it->first->GetTitle().wx_str()
-                       : _T("*NONE*")));
-        Manager::Get()->GetLogManager()->Log(log);
-        Manager::Get()->GetLogManager()->DebugLog(log);
+        if (!Manager::IsAppShuttingDown())
+        {
+            wxString log(F(_("Delete parser for project '%s'!"), it->first
+                           ? it->first->GetTitle().wx_str()
+                           : _T("*NONE*")));
+            Manager::Get()->GetLogManager()->Log(log);
+            Manager::Get()->GetLogManager()->DebugLog(log);
+        }
     }
 
     m_ParserList.clear();
