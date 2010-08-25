@@ -911,12 +911,8 @@ bool ClassBrowserBuilderThread::CreateSpecialFolders(CBTreeCtrl* tree, wxTreeIte
     bool hasTD = false;
     bool hasGM = false;
 
-    Parser* parser = m_pNativeParser->GetParser();
-    if (!parser)
-        return false;
-
     // loop all tokens in global namespace and see if we have matches
-    TokensTree* tt = parser->GetTokens();
+    TokensTree* tt = m_pNativeParser->GetParser()->GetTokens();
     for (TokenIdxSet::iterator it = tt->m_GlobalNameSpace.begin(); it != tt->m_GlobalNameSpace.end(); ++it)
     {
         Token* token = tt->at(*it);
@@ -1036,7 +1032,7 @@ void ClassBrowserBuilderThread::CollapseItem(wxTreeItemId item, bool useLock)
         return;
 
     if (useLock)
-    wxMutexLocker lock(m_BuildMutex);
+        wxMutexLocker lock(m_BuildMutex);
 #ifndef __WXGTK__
     m_pTreeTop->CollapseAndReset(item); // this freezes gtk
 #else

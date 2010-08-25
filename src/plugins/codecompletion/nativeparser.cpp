@@ -3185,6 +3185,19 @@ void NativeParser::OnParserEnd(wxCommandEvent& event)
         return;
     }
 
+    // also, mark all project files as local
+    if (   project
+        && (type == ptCreateParser || type == ptAddFileToParser) )
+    {
+        for (int i = 0; i < project->GetFilesCount(); ++i)
+        {
+            ProjectFile* pf = project->GetFile(i);
+            if (!pf)
+                continue;
+            parser->MarkFileTokensAsLocal(pf->file.GetFullPath(), true, project);
+        }
+    }
+
     long tim = parser->LastParseTime();
     Manager::Get()->GetLogManager()->DebugLog(F(_T("Project '%s' parsing stage done (%d total parsed files, ")
                                                 _T("%d tokens in %d minute(s), %d.%03d seconds)."),
