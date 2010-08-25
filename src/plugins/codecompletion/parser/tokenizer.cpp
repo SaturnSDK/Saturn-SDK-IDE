@@ -1381,8 +1381,6 @@ PreprocessorType Tokenizer::GetPreprocessorType()
 
 void Tokenizer::HandleConditionPreprocessor(const PreprocessorType type)
 {
-    if (m_Filename.EndsWith(_T("wx\\gdicmn.h")))
-        m_Filename.Len();
     switch (type)
     {
     case ptIf:
