@@ -472,7 +472,7 @@ void Tokenizer::ReadToEOL(wxArrayString& tokens)
             {
                 wxString blockStr;
                 for (size_t i = 0; i < tmp.GetCount(); ++i)
-                    blockStr += tmp[i];
+                    blockStr << tmp[i];
                 tokens.Add(blockStr.Trim());
                 tmp.Clear();
             }
@@ -490,7 +490,7 @@ void Tokenizer::ReadToEOL(wxArrayString& tokens)
         {
             wxString blockStr;
             for (size_t i = 0; i < tmp.GetCount(); ++i)
-                blockStr += tmp[i];
+                blockStr << tmp[i];
             tokens.Add(blockStr.Trim());
         }
         else
@@ -1094,6 +1094,8 @@ void Tokenizer::MacroReplace(wxString& str)
                     ReplaceBufferForReparse(GetActualContextForMacro(tk), false);
                 else
                     ReplaceBufferForReparse(tk->m_Type, false);
+
+                SkipUnwanted();
                 str = DoGetToken();
             }
         }
@@ -1379,6 +1381,8 @@ PreprocessorType Tokenizer::GetPreprocessorType()
 
 void Tokenizer::HandleConditionPreprocessor(const PreprocessorType type)
 {
+    if (m_Filename.EndsWith(_T("wx\\gdicmn.h")))
+        m_Filename.Len();
     switch (type)
     {
     case ptIf:
@@ -1504,8 +1508,8 @@ void Tokenizer::SpliteArguments(wxArrayString& results)
         else if (level != 0)
         {
             if (!piece.IsEmpty() && piece.Last() != _T(' '))
-                piece += _T(" ");
-            piece += token;
+                piece << _T(" ");
+            piece << token;
         }
 
         if (level == 0)
@@ -1520,7 +1524,7 @@ void Tokenizer::SpliteArguments(wxArrayString& results)
     }
 }
 
-void Tokenizer::ReplaceBufferForReparse(const wxString& target, bool forceUpdatePeekToken)
+void Tokenizer::ReplaceBufferForReparse(const wxString& target, bool updatePeekToken)
 {
     wxString buffer(target);
     if (buffer.IsEmpty())
@@ -1564,7 +1568,7 @@ void Tokenizer::ReplaceBufferForReparse(const wxString& target, bool forceUpdate
     m_TokenIndex -= bufLen;
 
     // Update the peek token
-    if (forceUpdatePeekToken)
+    if (m_PeekAvailable && updatePeekToken)
     {
         m_PeekAvailable = false;
         PeekToken();
@@ -1635,13 +1639,14 @@ wxString Tokenizer::GetActualContextForMacro(Token* tk)
     wxArrayString normalArgs;
     if (!tk->m_Args.IsEmpty())
     {
-        ReplaceBufferForReparse(tk->m_Args);
+        ReplaceBufferForReparse(tk->m_Args, false);
         SpliteArguments(normalArgs);
     }
 
     // 2. splite the actual macro arguments
     wxArrayString actualArgs;
-    SpliteArguments(actualArgs);
+    if (!normalArgs.IsEmpty())
+        SpliteArguments(actualArgs);
 
     // 3. get actual context
     wxString actualContext = tk->m_Type;
@@ -1669,7 +1674,7 @@ wxString Tokenizer::GetActualContextForMacro(Token* tk)
                     const int totalLen = pos + normalArgs[i].Len();
                     if (p + totalLen >= buffer + maxBufferLen)
                     {
-                        alreadyReplaced += wxString(buffer, p - buffer);
+                        alreadyReplaced << wxString(buffer, p - buffer);
                         p = buffer;
                     }
 
@@ -1681,12 +1686,12 @@ wxString Tokenizer::GetActualContextForMacro(Token* tk)
                 {
                     if (p + (pos + actualArgs[i].Len())  >= buffer + maxBufferLen)
                     {
-                        alreadyReplaced += wxString(buffer, p - buffer);
+                        alreadyReplaced << wxString(buffer, p - buffer);
                         p = buffer;
                     }
 
                     if (pos >= maxBufferLen)
-                        alreadyReplaced += wxString(data, pos);
+                        alreadyReplaced << wxString(data, pos);
                     else if (pos)
                     {
                         memcpy(p, data, pos * sizeof(wxChar));
@@ -1704,8 +1709,7 @@ wxString Tokenizer::GetActualContextForMacro(Token* tk)
                         }
                         else
                         {
-                            alreadyReplaced += wxString(buffer, p - buffer);
-                            alreadyReplaced += actualArgs[i];
+                            alreadyReplaced << wxString(buffer, p - buffer) << actualArgs[i];
                             p = buffer;
                         }
                     }
@@ -1714,11 +1718,11 @@ wxString Tokenizer::GetActualContextForMacro(Token* tk)
             else
             {
                 if (p != buffer)
-                    alreadyReplaced += wxString(buffer, p - buffer);
+                    alreadyReplaced << wxString(buffer, p - buffer);
 
                 const int lastLen = actualContext.Len() - (data - actualContext.GetData());
                 if (lastLen)
-                    alreadyReplaced += wxString(data, lastLen);
+                    alreadyReplaced << wxString(data, lastLen);
 
                 break;
             }

@@ -5,7 +5,6 @@
 //#define DD(z) EXPORT z
 //#define EEEE(y) DD(y)
 //#define FFF(x) EEEE(x)
-//
 //extern FFF(wxChar*) wxEmptyString;
 
 
@@ -58,10 +57,8 @@
 //#define AAA(Z) int AAA##Z ()
 //#define BBB(Y) AAA(Y)
 //#define CCC(X) unsinged BBB(X)
-//
 //#define EEE(Z, K) int AAA##Z (int K, float Z)
 //#define FFF(Y) EEE(Y, china)
-//
 //AAA(a);
 //BBB(b);
 //CCC(c);
@@ -103,25 +100,33 @@
 //DECLARE_LOG_FUNCTION(Verbose);
 
 
-#define WXDLLIMPEXP_BASE
-#define _WX_PTROP_NONE
-#define WX_DEFINE_USER_EXPORTED_ARRAY_SHORT(T, name, expmode)          \
-    WX_DEFINE_TYPEARRAY_WITH_DECL_PTR(T, name, wxBaseArrayShort, wxARRAY_EMPTY expmode)
-#define WX_DEFINE_TYPEARRAY_WITH_DECL_PTR(T, name, base, classdecl) \
-    typedef T _wxArray##name;                                          \
-    _WX_DEFINE_TYPEARRAY_PTR(_wxArray##name, name, base, classdecl)
-#define _WX_DEFINE_TYPEARRAY_PTR(T, name, base, classexp)          \
-    _WX_DEFINE_TYPEARRAY_HELPER(T, name, base, classexp, _WX_PTROP_NONE)
-#define  _WX_DEFINE_TYPEARRAY_HELPER(T, name, base, classexp, ptrop)  \
-wxCOMPILE_TIME_ASSERT2(sizeof(T) <= sizeof(base::base_type),          \
-                      TypeTooBigToBeStoredIn##base,                  \
-                      name);                                         \
-typedef int (CMPFUNC_CONV *CMPFUNC##T)(T *pItem1, T *pItem2);         \
-classexp name : public base                                           \
-{                                                                     \
-public:                                                               \
- name() { }                                                          \
- ~name() { }                                                         \
-};
+//#define WXDLLIMPEXP_BASE
+//#define _WX_PTROP_NONE
+//#define WX_DEFINE_USER_EXPORTED_ARRAY_SHORT(T, name, expmode)          \
+//    WX_DEFINE_TYPEARRAY_WITH_DECL_PTR(T, name, wxBaseArrayShort, wxARRAY_EMPTY expmode)
+//#define WX_DEFINE_TYPEARRAY_WITH_DECL_PTR(T, name, base, classdecl) \
+//    typedef T _wxArray##name;                                          \
+//    _WX_DEFINE_TYPEARRAY_PTR(_wxArray##name, name, base, classdecl)
+//#define _WX_DEFINE_TYPEARRAY_PTR(T, name, base, classexp)          \
+//    _WX_DEFINE_TYPEARRAY_HELPER(T, name, base, classexp, _WX_PTROP_NONE)
+//#define  _WX_DEFINE_TYPEARRAY_HELPER(T, name, base, classexp, ptrop)  \
+//wxCOMPILE_TIME_ASSERT2(sizeof(T) <= sizeof(base::base_type),          \
+//                      TypeTooBigToBeStoredIn##base,                  \
+//                      name);                                         \
+//typedef int (CMPFUNC_CONV *CMPFUNC##T)(T *pItem1, T *pItem2);         \
+//classexp name : public base                                           \
+//{                                                                     \
+//public:                                                               \
+// name() { }                                                          \
+// ~name() { }                                                         \
+//};
+//
+//WX_DEFINE_USER_EXPORTED_ARRAY_SHORT(short, wxArrayShort, class WXDLLIMPEXP_BASE);
 
-WX_DEFINE_USER_EXPORTED_ARRAY_SHORT(short, wxArrayShort, class WXDLLIMPEXP_BASE);
+
+#define WXIMPORT
+#define WXDLLIMPEXP_DATA_CORE(type) WXIMPORT type
+#define WXDLLEXPORT_DATA WXDLLIMPEXP_DATA_CORE
+extern WXDLLEXPORT_DATA(const wxSize) wxDefaultSize;
+extern WXDLLEXPORT_DATA(const wxPoint) wxDefaultPosition;
+

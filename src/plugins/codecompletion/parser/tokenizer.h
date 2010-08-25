@@ -241,7 +241,7 @@ public:
     wxString GetActualContextForMacro(Token* tk);
 
     /** Replace buffer for 'function-like macro' parse */
-    void ReplaceBufferForReparse(const wxString& target, bool forceUpdatePeekToken = true);
+    void ReplaceBufferForReparse(const wxString& target, bool updatePeekToken = true);
 
 protected:
     /** Initialize some member variables */

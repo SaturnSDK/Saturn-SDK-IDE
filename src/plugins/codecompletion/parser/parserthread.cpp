@@ -1347,8 +1347,12 @@ void ParserThread::HandleDefines()
         //get the argument,if they are not in the same line,we think the define handle is over
         //if the they are in the same line and the the first char is "(",we regard it as function-like macro.
         wxString para = m_Tokenizer.GetToken();
-        if (para == _T('\\')) // eat backslash
+        while (para == _T('\\')) // eat backslash
         {
+            /*
+            #define AAA \
+               BBB
+            */
             para = m_Tokenizer.GetToken();
             ++lineNr;
         }
@@ -1360,9 +1364,13 @@ void ParserThread::HandleDefines()
                 m_Str = para;
                 para.Clear();
             }
-            if (!m_Str.IsEmpty() && m_Str.Last() != _T(' '))
-                m_Str << _T(" ");
-            m_Str << m_Tokenizer.ReadToEOL();
+
+            wxString readToEOL = m_Tokenizer.ReadToEOL();
+            if (   (!m_Str.IsEmpty() && m_Str.Last() != _T(' '))        // #define AA unsigned int
+                && (!readToEOL.IsEmpty() && readToEOL[0] != _T(':')) )  // #define BB a::b::c
+                m_Str << _T(" ") << readToEOL;
+            else
+                m_Str << readToEOL;
         }
         else
         {
