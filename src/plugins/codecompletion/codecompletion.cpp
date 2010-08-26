@@ -1565,7 +1565,7 @@ void CodeCompletion::OnProjectClosed(CodeBlocksEvent& event)
     if (IsAttached() && m_InitDone)
     {
         cbProject* project = event.GetProject();
-        if (project)
+        if (project && m_NativeParser.GetParserByProject(project))
             m_NativeParser.DeleteParser(project);
     }
     event.Skip();
@@ -1589,7 +1589,11 @@ void CodeCompletion::OnProjectSavedTimer(wxTimerEvent& event)
     cbProject* project = static_cast<cbProject*>(m_TimerProjectSaved.GetClientData());
     m_TimerProjectSaved.SetClientData(NULL);
 
-    if (IsAttached() && m_InitDone && project && m_NativeParser.DeleteParser(project))
+    if (   IsAttached()
+        && m_InitDone
+        && project
+        && m_NativeParser.GetParserByProject(project)
+        && m_NativeParser.DeleteParser(project) )
     {
         Manager::Get()->GetLogManager()->DebugLog(_T("Reparsing project."));
         m_NativeParser.CreateParser(project);
