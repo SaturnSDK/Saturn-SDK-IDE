@@ -267,7 +267,8 @@ public:
         {
             wxCommandEvent evt(wxEVT_COMMAND_MENU_SELECTED, THREAD_COMPLETED);
             evt.SetClientData(this);
-            evt.SetString(wxString::Format(_T("Get system headers thread 0x%x done!"), this));
+            if (!dirs.IsEmpty())
+                evt.SetString(wxString::Format(_T("Get the system header file path: %d"), dirs.GetCount()));
             wxPostEvent(m_Parent, evt);
         }
 
@@ -1670,7 +1671,8 @@ void CodeCompletion::OnThreadCompletion(wxCommandEvent& event)
         SystemHeadersThread* thread = static_cast<SystemHeadersThread*>(event.GetClientData());
         if (thread == m_SystemHeadersThread.front())
         {
-            Manager::Get()->GetLogManager()->DebugLog(event.GetString());
+            if (!event.GetString().IsEmpty())
+                Manager::Get()->GetLogManager()->DebugLog(event.GetString());
             m_SystemHeadersThread.pop_front();
         }
 
