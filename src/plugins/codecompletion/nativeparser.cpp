@@ -3152,6 +3152,13 @@ void NativeParser::OnParserEnd(wxCommandEvent& event)
     Parser* parser = static_cast<Parser*>(event.GetClientData());
     cbProject* project = GetProjectByParser(parser);
 
+    // When delete a parser, and the parser-event has been sent.
+    // We need avoid this event!
+    if (   !project
+        && (   m_StandaloneFiles.IsEmpty()
+            || !parser->IsFileParsed(m_StandaloneFiles[0]) ) )
+        return;
+
     const ParsingType type = static_cast<ParsingType>(event.GetInt());
     switch (type)
     {
