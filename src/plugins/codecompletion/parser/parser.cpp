@@ -143,7 +143,7 @@ void Parser::ReadOptions()
     m_BrowserOptions.showInheritance = cfg->ReadBool(_T("/browser_show_inheritance"), false);
     m_BrowserOptions.expandNS        = cfg->ReadBool(_T("/browser_expand_ns"), false);
     m_BrowserOptions.treeMembers     = cfg->ReadBool(_T("/browser_tree_members"), true);
-    m_BrowserOptions.displayFilter   = (BrowserDisplayFilter)cfg->ReadInt(_T("/browser_display_filter"), bdfProject);
+    m_BrowserOptions.displayFilter   = (BrowserDisplayFilter)cfg->ReadInt(_T("/browser_display_filter"), bdfFile);
     m_BrowserOptions.sortType        = (BrowserSortType)cfg->ReadInt(_T("/browser_sort_type"), bstKind);
 }
 

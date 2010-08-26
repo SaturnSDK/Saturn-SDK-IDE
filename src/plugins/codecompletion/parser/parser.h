@@ -105,7 +105,7 @@ struct BrowserOptions
     bool                 showInheritance; // default: false
     bool                 expandNS;        // default: false (auto-expand namespaces)
     bool                 treeMembers;     //
-    BrowserDisplayFilter displayFilter;   // default: bdfProject
+    BrowserDisplayFilter displayFilter;   // default: bdfFile
     BrowserSortType      sortType;        //
 };
 
