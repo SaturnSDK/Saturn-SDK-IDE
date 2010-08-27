@@ -1,6 +1,8 @@
 #include "NassiFileContent.h"
 #include "bricks.h"
 
+#include <wx/intl.h>
+
 NassiFileContent::NassiFileContent():
 m_firstbrick(0)
 {
@@ -26,7 +28,7 @@ wxInputStream& NassiFileContent::LoadObject(wxInputStream& stream)
 
 wxString NassiFileContent::GetWildcard()
 {
-    return _T("Nassi Shneiderman diagram, (*.nsd)|*.nsd");
+    return _("Nassi Shneiderman diagram, (*.nsd)|*.nsd");
 }
 
 NassiBrick *NassiFileContent::GetFirstBrick(void)
