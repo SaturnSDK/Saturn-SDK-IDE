@@ -489,6 +489,9 @@ void NativeParser::RereadParserOptions()
     else if (!cfg->ReadBool(_T("/use_symbols_browser"), true) && m_pClassBrowser)
         RemoveClassBrowser();
 
+    if (m_pParser == &m_TempParser)
+        return;
+
     // reparse if settings changed
     ParserOptions opts = m_pParser->Options();
     m_pParser->ReadOptions();
@@ -498,9 +501,8 @@ void NativeParser::RereadParserOptions()
     {
         // important options changed... flag for reparsing
         if (cbMessageBox(_("You changed some class parser options. Do you want to "
-                        "reparse your projects now, using the new options?"),
-                        _("Reparse?"),
-                        wxYES_NO | wxICON_QUESTION) == wxID_YES)
+                           "reparse your projects now, using the new options?"),
+                         _("Reparse?"), wxYES_NO | wxICON_QUESTION) == wxID_YES)
         {
             ClearParsers();
             ForceReparseActiveProject();
@@ -1420,7 +1422,6 @@ bool NativeParser::ParseUsingNamespace(cbEditor* ed, TokenIdxSet& search_scope, 
 // Also, the variables in the function body( local block ) was add to the Token trie
 size_t NativeParser::MarkItemsByAI(TokenIdxSet& result, bool reallyUseAI, bool noPartialMatch, bool caseSensitive, int caretPos)
 {
-
     if (s_DebugSmartSense)
         Manager::Get()->GetLogManager()->DebugLog(F(_T("MarkItemsByAI()")));
 
