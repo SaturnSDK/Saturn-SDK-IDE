@@ -740,7 +740,34 @@ bool NativeParser::AddCompilerPredefinedMacros(cbProject* project, Parser* parse
                 gccDefs += output[i] + _T("\n");
         }
 
-        defs = gccDefs;
+        static const wxString cxx0xOption(_T("-std=c++0x"));
+        static const wxString gnu0xOption(_T("-std=gnu++0x"));
+        bool useCxx0x = false;
+        const wxArrayString& options = project->GetCompilerOptions();
+        if (   options.Index(cxx0xOption) != wxNOT_FOUND
+            || options.Index(gnu0xOption) != wxNOT_FOUND )
+        {
+            useCxx0x = true;
+        }
+        else
+        {
+            for (int i = 0; i < project->GetBuildTargetsCount(); ++i)
+            {
+                ProjectBuildTarget* target = project->GetBuildTarget(i);
+                const wxArrayString& targetOptions = target->GetCompilerOptions();
+                if (   targetOptions.Index(cxx0xOption) != wxNOT_FOUND
+                    || targetOptions.Index(gnu0xOption) != wxNOT_FOUND )
+                {
+                    useCxx0x = true;
+                    break;
+                }
+            }
+        }
+
+        if (useCxx0x)
+            defs = gccDefs + _T("#define __GXX_EXPERIMENTAL_CXX0X__ 1 \n");
+        else
+            defs = gccDefs;
 	}
 
 	// vc
