@@ -1772,13 +1772,13 @@ void ParserThread::HandleClass(EClassType ct)
 void ParserThread::HandleFunction(const wxString& name, bool isOperator)
 {
     TRACE(_T("HandleFunction() : Adding function '")+name+_T("': m_Str='")+m_Str+_T("'"));
+    int lineNr = m_Tokenizer.GetLineNumber();
     wxString args = m_Tokenizer.GetToken();
     wxString peek = m_Tokenizer.PeekToken();
     TRACE(_T("HandleFunction() : name='")+name+_T("', args='")+args+_T("', peek='")+peek+_T("'"));
 
     if (!m_Str.StartsWith(ParserConsts::kw_friend))
     {
-        int lineNr = m_Tokenizer.GetLineNumber();
         int lineStart = 0;
         int lineEnd = 0;
         bool isCtor = m_Str.IsEmpty();
