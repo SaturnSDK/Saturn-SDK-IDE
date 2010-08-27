@@ -136,10 +136,10 @@ wxString Token::DisplayName() const
 
     // else
     if (!m_Type.IsEmpty())
-        result << m_Type << _T(" ");
+        result << m_Type << m_TemplateArgument << _T(" ");
 
     if (m_TokenKind == tkEnumerator)
-        return     result << GetNamespace() << m_Name << _T("=") << m_Args;
+        return result << GetNamespace() << m_Name << _T("=") << m_Args;
 
     return result << GetNamespace() << m_Name << m_Args;
 }
