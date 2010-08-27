@@ -2360,12 +2360,26 @@ void CodeCompletion::OnGotoDeclaration(wxCommandEvent& event)
     bool isImpl = event.GetId() == idGotoImplementation || event.GetId() == idMenuGotoImplementation;
 
     // get the matching set
-    Token* token = 0;
     TokenIdxSet result;
-    m_NativeParser.GetParser()->GetTokens()->FindMatches(NameUnderCursor, result, true, false);
+    if (   !m_NativeParser.MarkItemsByAI(result, m_NativeParser.GetParser()->Options().useSmartSense)
+        && m_NativeParser.LastAISearchWasGlobal() )
+    {
+        return;
+    }
 
-//cbMessageBox(wxString::Format(_("TEST: %s %d"), NameUnderCursor.c_str(), result.size()), _("Warning"), wxICON_WARNING);
+    // filter
+    TokensTree* tokens = m_NativeParser.GetParser()->GetTokens();
+    for (TokenIdxSet::iterator it = result.begin(); it != result.end();)
+    {
+        Token* tk = tokens->at(*it);
+        if (!tk || tk->m_Name != NameUnderCursor)
+            result.erase(it++);
+        else
+            ++it;
+    }
+
     // one match
+    Token* token = NULL;
     if (result.size() == 1)
     {
         Token* sel = m_NativeParser.GetParser()->GetTokens()->at(*(result.begin()));
