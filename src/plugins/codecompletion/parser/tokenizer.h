@@ -298,7 +298,7 @@ protected:
                 return false;
             }
 
-            if (CurrentChar() == _T('\n'))
+            if (PreviousChar() == _T('\n'))
                 ++m_LineNumber;
             return true;
         }
@@ -311,7 +311,7 @@ protected:
                 return false;
             }
 
-            if (CurrentChar() == _T('\n'))
+            if (PreviousChar() == _T('\n'))
                 ++m_LineNumber;
             return true;
         }
