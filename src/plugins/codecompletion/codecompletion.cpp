@@ -1548,8 +1548,18 @@ void CodeCompletion::OnProjectActivated(CodeBlocksEvent& event)
     if (!ProjectManager::IsBusy() && IsAttached() && m_InitDone)
     {
         cbProject* project = event.GetProject();
-        if (project && !m_NativeParser.GetParserByProject(project))
+        if (!project)
+            return;
+
+        if (!m_NativeParser.GetParserByProject(project))
             m_NativeParser.CreateParser(project);
+
+        if (!Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor())
+        {
+            Parser* parser = m_NativeParser.GetParserByProject(project);
+            if (parser != m_NativeParser.GetParser())
+                m_NativeParser.SwitchParser(project, parser);
+        }
 
         if (m_NativeParser.GetParser()->ClassBrowserOptions().displayFilter == bdfProject)
             m_NativeParser.UpdateClassBrowser();
