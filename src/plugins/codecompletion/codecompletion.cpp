@@ -1589,6 +1589,10 @@ void CodeCompletion::OnProjectSavedTimer(wxTimerEvent& event)
     cbProject* project = static_cast<cbProject*>(m_TimerProjectSaved.GetClientData());
     m_TimerProjectSaved.SetClientData(NULL);
 
+    ProjectsArray* projs = Manager::Get()->GetProjectManager()->GetProjects();
+    if (projs->Index(project) == wxNOT_FOUND)
+        return;
+
     if (   IsAttached()
         && m_InitDone
         && project
