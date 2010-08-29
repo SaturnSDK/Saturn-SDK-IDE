@@ -82,7 +82,7 @@ class NativeParser : public wxEvtHandler
         void ForceReparseActiveProject();
 
 
-        size_t MarkItemsByAI(TokenIdxSet& result, bool reallyUseAI = true, bool noPartialMatch = false,
+        size_t MarkItemsByAI(TokenIdxSet& result, bool reallyUseAI = true, bool fullMatch = false,
                              bool caseSensitive = false, int caretPos = -1);
 
         const wxString& GetCodeCompletionItems();
@@ -119,9 +119,9 @@ class NativeParser : public wxEvtHandler
 
     private:
         friend class CodeCompletion;
-        size_t AI(TokenIdxSet& result, cbEditor* editor, const wxString& lineText = wxEmptyString, bool noPartialMatch = false, bool caseSensitive = false, TokenIdxSet* search_scope = 0, int caretPos = -1);
+        size_t AI(TokenIdxSet& result, cbEditor* editor, const wxString& lineText = wxEmptyString, bool fullMatch = false, bool caseSensitive = false, TokenIdxSet* search_scope = 0, int caretPos = -1);
 
-        size_t FindAIMatches(std::queue<ParserComponent> components, TokenIdxSet& result, int parentTokenIdx = -1, bool noPartialMatch = false, bool caseSensitive = false, bool use_inheritance = true, short int kindMask = 0xFFFF, TokenIdxSet* search_scope = 0);
+        size_t FindAIMatches(std::queue<ParserComponent> components, TokenIdxSet& result, int parentTokenIdx = -1, bool fullMatch = false, bool caseSensitive = false, bool use_inheritance = true, short int kindMask = 0xFFFF, TokenIdxSet* search_scope = 0);
         size_t BreakUpComponents(const wxString& actual, std::queue<ParserComponent>& components);
         bool BelongsToParentOrItsAncestors(TokensTree* tree, Token* token, int parentIdx, bool use_inheritance = true);
         size_t GenerateResultSet(TokensTree* tree, const wxString& search, int parentIdx, TokenIdxSet& result, bool caseSens = true, bool isPrefix = false, short int kindMask = 0xFFFF);
