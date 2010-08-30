@@ -2353,21 +2353,14 @@ void CodeCompletion::OnUnimplementedClassMethods(wxCommandEvent& event)
 void CodeCompletion::OnGotoDeclaration(wxCommandEvent& event)
 {
     EditorManager* edMan = Manager::Get()->GetEditorManager();
-    // killerbot : the menu and right click pop up menu ensured there is a name under the cursor
-    // BUT it seems the shortcut keys are not disabled although there menu counter part is
-    // ---> so check is needed and gracefully shut up when the Name under the cursor is empty
-    bool MoveOn = false;
-    wxString NameUnderCursor;
-    bool IsInclude = false;
-    if (EditorHasNameUnderCursor(NameUnderCursor, IsInclude))
-    {
-        if (!IsInclude)
-        {   // alright move on
-            MoveOn = true;
-        }
-    }
-    if (!MoveOn)
+    cbEditor* editor = edMan->GetBuiltinActiveEditor();
+    if (!editor)
         return;
+
+    const int pos = editor->GetControl()->GetCurrentPos();
+    const int start = editor->GetControl()->WordStartPosition(pos, true);
+    const int end = editor->GetControl()->WordEndPosition(pos, true);
+    const wxString target = editor->GetControl()->GetTextRange(start, end);
 
     // prepare a boolean filter for declaration/implementation
     bool isDecl = event.GetId() == idGotoDeclaration || event.GetId() == idMenuGotoDeclaration;
@@ -2375,18 +2368,14 @@ void CodeCompletion::OnGotoDeclaration(wxCommandEvent& event)
 
     // get the matching set
     TokenIdxSet result;
-    if (   !m_NativeParser.MarkItemsByAI(result, m_NativeParser.GetParser()->Options().useSmartSense)
-        && m_NativeParser.LastAISearchWasGlobal() )
-    {
-        return;
-    }
+    m_NativeParser.MarkItemsByAI(result, m_NativeParser.GetParser()->Options().useSmartSense);
 
     // filter
     TokensTree* tokens = m_NativeParser.GetParser()->GetTokens();
     for (TokenIdxSet::iterator it = result.begin(); it != result.end();)
     {
         Token* tk = tokens->at(*it);
-        if (!tk || tk->m_Name != NameUnderCursor)
+        if (!tk || tk->m_Name != target)
             result.erase(it++);
         else
             ++it;
@@ -2449,7 +2438,7 @@ void CodeCompletion::OnGotoDeclaration(wxCommandEvent& event)
             }
             else
             {
-                cbMessageBox(wxString::Format(_("Implementation not found: %s"), NameUnderCursor.c_str()), _("Warning"), wxICON_WARNING);
+                cbMessageBox(wxString::Format(_("Implementation not found: %s"), target.wx_str()), _("Warning"), wxICON_WARNING);
             }
         }
         else
@@ -2460,13 +2449,13 @@ void CodeCompletion::OnGotoDeclaration(wxCommandEvent& event)
             }
             else
             {
-                cbMessageBox(wxString::Format(_("Declaration not found: %s"), NameUnderCursor.c_str()), _("Warning"), wxICON_WARNING);
+                cbMessageBox(wxString::Format(_("Declaration not found: %s"), target.wx_str()), _("Warning"), wxICON_WARNING);
             }
         }
     }
     else
     {
-        cbMessageBox(wxString::Format(_("Not found: %s"), NameUnderCursor.c_str()), _("Warning"), wxICON_WARNING);
+        cbMessageBox(wxString::Format(_("Not found: %s"), target.wx_str()), _("Warning"), wxICON_WARNING);
     }
 }
 
