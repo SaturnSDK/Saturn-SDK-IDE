@@ -2055,7 +2055,11 @@ size_t NativeParser::AI(TokenIdxSet& result,
             Token* token = m_pParser->GetTokens()->at(*it);
             if (!token)
                 continue;
-            scope_result.insert(token->m_ParentIndex);
+
+            if (token->m_TokenKind == tkClass)
+                scope_result.insert(*it);
+            else
+                scope_result.insert(token->m_ParentIndex);
 
             if (s_DebugSmartSense)
             {
@@ -3000,12 +3004,15 @@ int NativeParser::FindCurrentFunctionStart(cbEditor* editor, wxString* nameSpace
     s_LastEditor  = editor;
     s_LastLine    = line;
 
+    // we have all the tokens in the current file, then just do a loop on all the tokens, see if the line is in
+    // the token's imp.
     TokenIdxSet result;
-    size_t num_results = m_pParser->FindTokensInFile(editor->GetFilename(), result, tkFunction|tkConstructor|tkDestructor);
+    size_t num_results = m_pParser->FindTokensInFile(editor->GetFilename(), result, tkAnyFunction | tkClass);
     if (s_DebugSmartSense)
         Manager::Get()->GetLogManager()->DebugLog(F(_T("FindCurrentFunctionStart() Found %d results"), num_results));
 
     TokensTree* tree = m_pParser->GetTokens();
+    const size_t currentFileIndex = tree->GetFileIndex(editor->GetFilename());
     for (TokenIdxSet::iterator it = result.begin(); it != result.end(); ++it)
     {
         if (s_DebugSmartSense)
@@ -3017,7 +3024,12 @@ int NativeParser::FindCurrentFunctionStart(cbEditor* editor, wxString* nameSpace
                 Manager::Get()->GetLogManager()->DebugLog(F(_T("FindCurrentFunctionStart() Iterating: tN='%s', tF='%s', tStart=%d, tEnd=%d"),
                                                             token->DisplayName().wx_str(), token->GetFilename().wx_str(), token->m_ImplLineStart, token->m_ImplLineEnd));
             // found a matching function; check its bounds
-            if (token->m_ImplLineStart <= (size_t)line && token->m_ImplLineEnd >= (size_t)line)
+            // the token is in the current file
+            if (   token->m_ImplLineStart <= (size_t)line
+                && token->m_ImplLineEnd >= (size_t)line
+                && (   token->m_TokenKind == tkClass
+                    || (   token->m_TokenKind & tkAnyFunction
+                        && token->m_ImplFileIdx == currentFileIndex ) ) )
             {
                 // got it :)
                 if (s_DebugSmartSense)
@@ -3030,19 +3042,22 @@ int NativeParser::FindCurrentFunctionStart(cbEditor* editor, wxString* nameSpace
                 s_LastResult = control->PositionFromLine(token->m_ImplLine - 1);
 
                 // locate function's opening brace
-                while (s_LastResult < control->GetTextLength())
+                if(token->m_TokenKind & tkAnyFunction)
                 {
-                    wxChar ch = control->GetCharAt(s_LastResult);
-                    if (ch == _T('{'))
-                        break;
-                    else if (ch == 0)
+                    while (s_LastResult < control->GetTextLength())
                     {
-                        if (s_DebugSmartSense)
-                            Manager::Get()->GetLogManager()->DebugLog(_T("FindCurrentFunctionStart() Can't determine functions opening brace..."));
-                        return -1;
-                    }
+                        wxChar ch = control->GetCharAt(s_LastResult);
+                        if (ch == _T('{'))
+                            break;
+                        else if (ch == 0)
+                        {
+                            if (s_DebugSmartSense)
+                                Manager::Get()->GetLogManager()->DebugLog(_T("FindCurrentFunctionStart() Can't determine functions opening brace..."));
+                            return -1;
+                        }
 
-                    ++s_LastResult;
+                        ++s_LastResult;
+                    }
                 }
 
                 if (nameSpace) *nameSpace = s_LastNS;
@@ -3066,6 +3081,9 @@ int NativeParser::FindCurrentFunctionStart(cbEditor* editor, wxString* nameSpace
     return -1;
 }
 
+// find a function where current caret located.
+// We need to find extra class scope, otherwise, we will failed do the cc in a class declaration
+//
 size_t NativeParser::FindCurrentFunctionToken(cbEditor* editor, TokenIdxSet& result, int caretPos)
 {
     if (!editor || !m_pParser->Done())
@@ -3098,7 +3116,7 @@ size_t NativeParser::FindCurrentFunctionToken(cbEditor* editor, TokenIdxSet& res
 
     for (TokenIdxSet::iterator it = scope_result.begin(); it != scope_result.end(); ++it)
     {
-        GenerateResultSet(m_pParser->GetTokens(), procName, *it, result, true, false, tkFunction | tkConstructor | tkDestructor);
+        GenerateResultSet(m_pParser->GetTokens(), procName, *it, result, true, false, tkAnyFunction | tkClass);
     }
 
     return result.size();
