@@ -282,6 +282,7 @@ private:
 };
 
 CodeCompletion::CodeCompletion() :
+    m_InitDone(false),
     m_EditorHookId(0),
     m_TimerCodeCompletion(this, idCodeCompleteTimer),
     m_TimerFunctionsParsing(this, idFunctionsParsingTimer),
@@ -292,6 +293,8 @@ CodeCompletion::CodeCompletion() :
     m_ActiveCalltipsNest(0),
     m_IsAutoPopup(false),
     m_pToolBar(0),
+    m_Function(0),
+    m_Scope(0),
     m_ToolbarChanged(true),
     m_CurrentLine(0),
     m_NeedReparse(false)
@@ -394,7 +397,8 @@ void CodeCompletion::RereadOptions()
     CodeBlocksLayoutEvent evt(cbEVT_UPDATE_VIEW_LAYOUT);
     Manager::Get()->ProcessEvent(evt);
 
-    ParseFunctionsAndFillToolbar(true);
+    if (m_pToolBar)
+        ParseFunctionsAndFillToolbar(true);
 }
 
 void CodeCompletion::UpdateToolBar()
@@ -618,12 +622,11 @@ bool CodeCompletion::BuildToolBar(wxToolBar* toolBar)
 void CodeCompletion::OnAttach()
 {
     m_PageIndex  = -1;
-    m_InitDone   = false;
     m_EditMenu   = 0;
     m_SearchMenu = 0;
     m_ViewMenu   = 0;
-    m_pToolBar	 = 0;
     m_ProjectMenu= 0;
+    m_pToolBar   = 0;
     m_Function   = 0;
     m_Scope      = 0;
     m_FunctionsScope.clear();
@@ -671,6 +674,9 @@ void CodeCompletion::OnRelease(bool appShutDown)
     // unregister hook
     // 'true' will delete the functor too
     EditorHooks::UnregisterHook(m_EditorHookId, true);
+
+    // remove registered event sinks
+    Manager::Get()->RemoveAllEventSinksFor(this);
 
     m_NativeParser.RemoveClassBrowser(appShutDown);
     m_NativeParser.ClearParsers();
