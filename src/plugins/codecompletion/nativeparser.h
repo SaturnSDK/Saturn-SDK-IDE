@@ -37,6 +37,15 @@ enum ParserTokenType
     pttFunction
 };
 
+
+enum OperatorType
+{
+    otOperatorUndefine = 0,
+    otOperatorSquare,
+    otOperatorParentheses,
+    otOperatorPointer
+};
+
 enum BrowserViewMode
 {
     bvmRaw = 0,
@@ -47,6 +56,7 @@ struct ParserComponent
 {
     wxString component;
     ParserTokenType token_type;
+    OperatorType tokenOperatorType;
 };
 
 class NativeParser : public wxEvtHandler
@@ -134,8 +144,8 @@ class NativeParser : public wxEvtHandler
         bool ParseLocalBlock(cbEditor* ed, int caretPos = -1); // parses from the start of function up to the cursor
 
         unsigned int FindCCTokenStart(const wxString& line);
-        wxString GetNextCCToken(const wxString& line, unsigned int& startAt, bool& is_function);
-        wxString GetCCToken(wxString& line, ParserTokenType& tokenType);
+        wxString GetNextCCToken(const wxString& line, unsigned int& startAt, OperatorType& tokenOperatroType);
+        wxString GetCCToken(wxString& line, ParserTokenType& tokenType, OperatorType& tokenOperatroType);
         void BreakUpInLines(wxString& str, const wxString& original_str, int chars_per_line = -1);
         bool AddCompilerDirs(cbProject* project, Parser* parser);
         bool AddCompilerPredefinedMacros(cbProject* project, Parser* parser);
@@ -161,6 +171,10 @@ class NativeParser : public wxEvtHandler
         size_t ResolveExpression(std::queue<ParserComponent> components, const TokenIdxSet& searchScope,
                                  TokenIdxSet& result, bool IsCaseSense = true, bool IsPrefix = false);
 
+        void CollectSS(const TokenIdxSet& searchScope, TokenIdxSet& actualTypeScope, TokensTree* tree);
+        void AddTemplateAlias(const int& actualTypeResult, const TokenIdxSet& actualTypeScope, TokenIdxSet& initialScope, TokensTree* tree);
+        void ResolveTemplateMap(const wxString& searchStr, const TokenIdxSet& actualTypeScope, TokenIdxSet& initialScope);
+        void ResolveOpeartor(const OperatorType& tokenOperatorType, const TokenIdxSet& tokens, TokensTree* tree, const TokenIdxSet& searchScope, TokenIdxSet& result);
         typedef std::pair<cbProject*, Parser*> ParserPair;
         typedef std::list<ParserPair> ParserList;
         ParserList           m_ParserList;

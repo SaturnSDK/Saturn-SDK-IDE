@@ -1707,6 +1707,13 @@ static bool IsOperatorEnd(int startAt, const wxString& line)
                 || (   (line.GetChar(startAt) == ':')
                     && (line.GetChar(startAt - 1) == ':') ) ) );
 }
+static bool IsOperatorPointer(int startAt, const wxString& line)
+{
+    return (   (startAt > 0)
+        && ((size_t)startAt < line.Len())
+        && (   (   (line.GetChar(startAt) == '>')
+                && (line.GetChar(startAt - 1) == '-') )));
+}
 static bool IsOperatorBegin(int startAt, const wxString& line)
 {
     return (   (startAt >= 0)
@@ -1828,7 +1835,7 @@ unsigned int NativeParser::FindCCTokenStart(const wxString& line)
     return startAt;
 }
 
-wxString NativeParser::GetNextCCToken(const wxString& line, unsigned int& startAt, bool& is_function)
+wxString NativeParser::GetNextCCToken(const wxString& line, unsigned int& startAt, OperatorType& tokenOperatroType)
 {
     wxString res;
     int nest = 0;
@@ -1867,8 +1874,10 @@ wxString NativeParser::GetNextCCToken(const wxString& line, unsigned int& startA
     startAt = AfterWhitespace(startAt, line);
     if (IsOpeningBracket(startAt, line))
     {
-        is_function = line.GetChar(startAt) == '(';
-
+        if (line.GetChar(startAt) == _T('('))
+            tokenOperatroType = otOperatorParentheses;
+        else if (line.GetChar(startAt) == _T('['))
+            tokenOperatroType = otOperatorSquare;
         ++nest;
         while (   (startAt < line.Len()-1)
                && (nest != 0) )
@@ -1883,7 +1892,7 @@ wxString NativeParser::GetNextCCToken(const wxString& line, unsigned int& startA
                 case ']':
                 case ')': --nest; ++startAt; break;
 
-                case '[':
+                case '[':tokenOperatroType = otOperatorSquare;
                 case '(': ++nest; ++startAt; break;
             }
 
@@ -1901,7 +1910,7 @@ wxString NativeParser::GetNextCCToken(const wxString& line, unsigned int& startA
     return res;
 }
 
-wxString NativeParser::GetCCToken(wxString& line, ParserTokenType& tokenType)
+wxString NativeParser::GetCCToken(wxString& line, ParserTokenType& tokenType, OperatorType& tokenOperatroType)
 {
     // line contains a string on the following form:
     // "    char* mychar = SomeNamespace::m_SomeVar.SomeMeth"
@@ -1920,12 +1929,13 @@ wxString NativeParser::GetCCToken(wxString& line, ParserTokenType& tokenType)
     // NOTE: if we find () args or [] arrays in our way, we skip them (done in GetNextCCToken)...
 
     tokenType = pttSearchText;
+    tokenOperatroType = otOperatorUndefine;
     if (line.IsEmpty())
         return wxEmptyString;
 
-    bool is_function = false;
+    tokenOperatroType = otOperatorUndefine;
     unsigned int startAt = FindCCTokenStart(line);
-    wxString res = GetNextCCToken(line, startAt, is_function);
+    wxString res = GetNextCCToken(line, startAt, tokenOperatroType);
 
     TRACE(_T("GetCCToken() : FindCCTokenStart returned %d \"%s\""), startAt, line.c_str());
     TRACE(_T("GetCCToken() : GetNextCCToken returned %d \"%s\""), startAt, res.c_str());
@@ -1948,6 +1958,8 @@ wxString NativeParser::GetCCToken(wxString& line, ParserTokenType& tokenType)
         // Check for [Class]:: (':' pressed)
         else if (IsOperatorEnd(startAt, line))
         {
+            if (IsOperatorPointer(startAt, line) && !res.IsEmpty())
+                tokenOperatroType = otOperatorPointer;
             if (line.GetChar(startAt) == ':')
                 tokenType = pttNamespace;
             else
@@ -1960,7 +1972,7 @@ wxString NativeParser::GetCCToken(wxString& line, ParserTokenType& tokenType)
 
     TRACE(_T("GetCCToken() : Left \"%s\""), line.c_str());
 
-    if (is_function)
+    if (tokenOperatroType == otOperatorParentheses)
         tokenType = pttFunction;
     return res;
 }
@@ -2142,19 +2154,19 @@ size_t NativeParser::BreakUpComponents(const wxString& actual, std::queue<Parser
 {
     ParserTokenType tokenType;
     wxString tmp = actual;
-
+    OperatorType tokenOperatorType;
     // break up components of phrase
     if (s_DebugSmartSense)
         Manager::Get()->GetLogManager()->DebugLog(F(_T("BreakUpComponents() Breaking up '%s'"), tmp.wx_str()));
 
     while (true)
     {
-        wxString tok = GetCCToken(tmp, tokenType);
+        wxString tok = GetCCToken(tmp, tokenType, tokenOperatorType);
 
         ParserComponent pc;
         pc.component = tok;
         pc.token_type = tokenType;
-
+        pc.tokenOperatorType = tokenOperatorType;
         // Debug smart sense: output the component's name and type.
         if (s_DebugSmartSense)
         {
@@ -2682,23 +2694,8 @@ size_t NativeParser::ResolveExpression(std::queue<ParserComponent> components, c
                         actualTypeScope.insert(-1);
                     else
                     {
-                        for (TokenIdxSet::iterator pScope=searchScope.begin(); pScope!=searchScope.end(); ++pScope)
-                        {
-                            actualTypeScope.insert(*pScope);
-                            //we need to pScope's parent scope too.
-                            if ((*pScope) != -1)
-                            {
-                                Token* parent = tree->at(*pScope)->GetParentToken();
-                                while(true)
-                                {
-                                    if (!parent)
-                                        break;
-                                    actualTypeScope.insert(parent->GetSelf());
-                                    parent = parent->GetParentToken();
-
-                                }
-                            }
-                        }
+                        //now collect the search scope for actual type of function/variable.
+                        CollectSS(searchScope, actualTypeScope, tree);
                         //now add the current token's parent scope;
                         Token* currentTokenParent = token->GetParentToken();
                         while(true)
@@ -2720,38 +2717,12 @@ size_t NativeParser::ResolveExpression(std::queue<ParserComponent> components, c
                         {
                             initialScope.insert(*it2);
                             //and we need to add the template argument alias too.
-                            Token* typeToken = tree->at(*it2);
-                            if (typeToken && typeToken->m_TokenKind == tkTypedef && !typeToken->m_TemplateAlias.IsEmpty())
-                            {
-                                actualTypeStr = typeToken->m_TemplateAlias;
-                                map<wxString, wxString>::iterator it = m_TemplateMap.find(actualTypeStr);
-                                if (it != m_TemplateMap.end())
-                                {
-                                    actualTypeStr = it->second;
-                                    ResolveActualType(actualTypeStr, actualTypeScope, actualTypeResult);
-                                    if (actualTypeResult.size() > 0)
-                                    {
-                                        for (TokenIdxSet::iterator it3=actualTypeResult.begin(); it3!=actualTypeResult.end(); ++it3)
-                                            initialScope.insert(*it3);
-                                    }
-                                }
-                            }
-
+                            AddTemplateAlias(*it2, actualTypeScope, initialScope, tree);
                         }
                     }
                     else // ok ,we search template container to check if type is template formal.
                     {
-                        map<wxString, wxString>::iterator it = m_TemplateMap.find(actualTypeStr);
-                        if (it != m_TemplateMap.end())
-                        {
-                            actualTypeStr = it->second;
-                            ResolveActualType(actualTypeStr, actualTypeScope, actualTypeResult);
-                            if (actualTypeResult.size() > 0)
-                            {
-                                for (TokenIdxSet::iterator it2=actualTypeResult.begin(); it2!=actualTypeResult.end(); ++it2)
-                                    initialScope.insert(*it2);
-                            }
-                        }
+                        ResolveTemplateMap(actualTypeStr, actualTypeScope, initialScope);
                     }
                     continue;
 
@@ -2764,6 +2735,14 @@ size_t NativeParser::ResolveExpression(std::queue<ParserComponent> components, c
         {
             initialScope.clear();
             break;
+        }
+
+        if (subComponent.tokenOperatorType != otOperatorUndefine)
+        {
+            TokenIdxSet operatorResult;
+            ResolveOpeartor(subComponent.tokenOperatorType, initialScope, tree, searchScope, operatorResult);
+            if (operatorResult.size() > 0)
+                initialScope = operatorResult;
         }
         if (subComponent.token_type != pttSearchText)
             lastComponent = subComponent;
@@ -3488,4 +3467,138 @@ void NativeParser::AddPaths(wxArrayString& dirs, const wxString& path, bool hasE
 
     if (dirs.Index(s, false) == wxNOT_FOUND)
         dirs.Add(s);
+}
+
+void NativeParser::CollectSS(const TokenIdxSet& searchScope, TokenIdxSet& actualTypeScope, TokensTree* tree)
+{
+    for (TokenIdxSet::iterator pScope=searchScope.begin(); pScope!=searchScope.end(); ++pScope)
+    {
+        actualTypeScope.insert(*pScope);
+        //we need to pScope's parent scope too.
+        if ((*pScope) != -1)
+        {
+            Token* parent = tree->at(*pScope)->GetParentToken();
+            while(true)
+            {
+                if (!parent)
+                    break;
+                actualTypeScope.insert(parent->GetSelf());
+                parent = parent->GetParentToken();
+
+            }
+        }
+    }
+}
+void NativeParser::AddTemplateAlias(const int& id, const TokenIdxSet& actualTypeScope, TokenIdxSet& initialScope, TokensTree* tree)
+{
+    if (!tree)
+        return;
+    if (actualTypeScope.empty())
+        return;
+    //and we need to add the template argument alias too.
+    Token* typeToken = tree->at(id);
+    if (typeToken && typeToken->m_TokenKind == tkTypedef && !typeToken->m_TemplateAlias.IsEmpty())
+    {
+        wxString actualTypeStr = typeToken->m_TemplateAlias;
+        map<wxString, wxString>::iterator it = m_TemplateMap.find(actualTypeStr);
+        if (it != m_TemplateMap.end())
+        {
+            actualTypeStr = it->second;
+            TokenIdxSet actualTypeResult;
+            ResolveActualType(actualTypeStr, actualTypeScope, actualTypeResult);
+            if (actualTypeResult.size() > 0)
+            {
+                for (TokenIdxSet::iterator it3=actualTypeResult.begin(); it3!=actualTypeResult.end(); ++it3)
+                    initialScope.insert(*it3);
+            }
+        }
+    }
+}
+void NativeParser::ResolveTemplateMap(const wxString& searchStr, const TokenIdxSet& actualTypeScope, TokenIdxSet& initialScope)
+{
+    if (actualTypeScope.empty())
+        return;
+    wxString actualTypeStr = searchStr;
+    map<wxString, wxString>::iterator it = m_TemplateMap.find(actualTypeStr);
+    if (it != m_TemplateMap.end())
+    {
+        actualTypeStr = it->second;
+        TokenIdxSet actualTypeResult;
+        ResolveActualType(actualTypeStr, actualTypeScope, actualTypeResult);
+        if (actualTypeResult.size() > 0)
+        {
+            for (TokenIdxSet::iterator it2=actualTypeResult.begin(); it2!=actualTypeResult.end(); ++it2)
+                initialScope.insert(*it2);
+        }
+    }
+}
+void NativeParser::ResolveOpeartor(const OperatorType& tokenOperatorType, const TokenIdxSet& tokens, TokensTree* tree, const TokenIdxSet& searchScope, TokenIdxSet& result)
+{
+    TokenIdxSet opInitialScope;
+    if (!tree)
+        return;
+    if (searchScope.empty())
+        return;
+    //first,we need to eliminate the tokens which are not tokens.
+    for (TokenIdxSet::iterator it=tokens.begin(); it!=tokens.end(); ++it)
+    {
+        int id = (*it);
+        Token* token = tree->at(id);
+        if (token && (token->m_TokenKind == tkClass))
+            opInitialScope.insert(id);
+
+    }
+    //if we get nothing,should return.
+    if (opInitialScope.size() <= 0)
+        return;
+
+    wxString operatorStr;
+    switch(tokenOperatorType)
+    {
+    case otOperatorParentheses:
+        operatorStr = _T("operator()"); break;
+    case otOperatorSquare:
+        operatorStr = _T("operator[]"); break;
+    case otOperatorPointer:
+        operatorStr = _T("operator->"); break;
+    default:
+        break;
+    }
+    if (operatorStr.IsEmpty())
+        return;
+
+    //start to parse the opeartor overload actual type.
+    TokenIdxSet opInitialResult;
+    GenerateResultSet(operatorStr, opInitialScope, opInitialResult);
+    CollectSS(searchScope, opInitialScope, tree);
+    if (opInitialResult.size() > 0)
+    {
+        for (TokenIdxSet::iterator it=opInitialResult.begin(); it!=opInitialResult.end(); ++it)
+        {
+            int id = (*it);
+            Token* token = tree->at(id);
+            if (token)
+            {
+                wxString type = token->m_ActualType;
+                if (type.IsEmpty())
+                    continue;
+
+                TokenIdxSet typeResult;
+                ResolveActualType(type, opInitialScope, typeResult);
+                if (typeResult.size() > 0)
+                {
+                    for (TokenIdxSet::iterator pTypeResult=typeResult.begin(); pTypeResult!=typeResult.end(); ++pTypeResult)
+                    {
+                        result.insert(*pTypeResult);
+                        AddTemplateAlias(*pTypeResult, opInitialScope, result, tree);
+                    }
+                }
+                else
+                {
+                    ResolveTemplateMap(type, opInitialScope, result);
+                }
+
+            }
+        }
+    }
 }

@@ -2633,31 +2633,34 @@ void ParserThread::ResolveTemplateActualArgs(const wxString& templateArgs, wxArr
 bool ParserThread::ResolveTemplateMap(wxString parentType, const wxArrayString& actuals, map<wxString, wxString>& results)
 {
     parentType.Trim(true).Trim(false);
-    // now not support the class under the namespace;
-    int id = m_pTokensTree->TokenExists(parentType, -1, tkClass);
-    if (id != -1)
+    //I add this for temporary support for template under std, I will write  better codes later.
+    TokenIdxSet parentResult;
+    size_t tokenCounts = m_pTokensTree->FindMatches(parentType, parentResult, true, false, tkClass);
+    if (tokenCounts > 0)
     {
-        Token* normalToken = m_pTokensTree->at(id);
-        if (normalToken)
+        for (TokenIdxSet::iterator it=parentResult.begin(); it!=parentResult.end(); ++it)
         {
-            wxArrayString normals =  normalToken->m_TemplateType;
-            for (size_t i=0; i<normals.GetCount(); ++i)
-                TRACE(_T("ResolveTemplateMap get the template arguments are '%s'."), normals[i].wx_str());
-
-            size_t n = normals.GetCount() < actuals.GetCount() ? normals.GetCount() : actuals.GetCount();
-            for (size_t i=0; i<n; ++i)
+            int id = (*it);
+            Token* normalToken = m_pTokensTree->at(id);
+            if (normalToken)
             {
-                results[normals[i]] = actuals[i];
-                TRACE(_T("In ResolveTemplateMap function the normal is '%s',the actual is '%s'."), normals[i].wx_str(), actuals[i].wx_str());
-            }
-            return n>0 ? true : false;
-        }
-        else
-            return false;
+                wxArrayString normals =  normalToken->m_TemplateType;
+                for (size_t i=0; i<normals.GetCount(); ++i)
+                    TRACE(_T("ResolveTemplateMap get the template arguments are '%s'."), normals[i].wx_str());
 
+                size_t n = normals.GetCount() < actuals.GetCount() ? normals.GetCount() : actuals.GetCount();
+                for (size_t i=0; i<n; ++i)
+                {
+                    results[normals[i]] = actuals[i];
+                    TRACE(_T("In ResolveTemplateMap function the normal is '%s',the actual is '%s'."), normals[i].wx_str(), actuals[i].wx_str());
+                }
+            }
+        }
+        return results.size()>0 ? true : false;
     }
     else
         return false;
+
 }
 
 void ParserThread::ResolveTemplateArgs(Token* newToken)
