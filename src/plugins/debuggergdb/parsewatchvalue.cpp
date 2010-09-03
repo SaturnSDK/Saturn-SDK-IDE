@@ -116,10 +116,22 @@ bool GetNextToken(wxString const &str, int pos, Token &token)
                 token.end = pos;
                 return true;
             }
-            else if (str[pos] == _T('"') && in_quote && !escape_next)
+            else if (str[pos] == _T('"'))
             {
-                token.end = pos + 1;
-                return true;
+                if (in_quote)
+                {
+                    if (!escape_next)
+                    {
+                        token.end = pos + 1;
+                        return true;
+                    }
+                }
+                else
+                {
+                    if (escape_next)
+                        return false;
+                    in_quote = true;
+                }
             }
             else if (str[pos] == _T('\\'))
                 escape_next = true;

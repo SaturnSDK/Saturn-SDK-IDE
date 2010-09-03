@@ -1502,12 +1502,17 @@ void DebuggerGDB::StepOut()
 
 void DebuggerGDB::RunToCursor(const wxString& filename, int line, const wxString& line_text)
 {
-    m_State.AddBreakpoint(filename, line, true, line_text);
-
     if (m_pProcess)
+    {
+        m_State.AddBreakpoint(filename, line, true, line_text);
         Continue();
+    }
     else
+    {
+        if (!Manager::Get()->GetConfigManager(_T("debugger"))->ReadBool(_T("do_not_run"), false))
+            m_State.AddBreakpoint(filename, line, true, line_text);
         Debug(false);
+    }
 }
 
 void DebuggerGDB::SetNextStatement(const wxString& filename, int line)

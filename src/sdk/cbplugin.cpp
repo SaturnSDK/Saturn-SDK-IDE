@@ -762,17 +762,19 @@ int cbDebuggerPlugin::RunNixConsole(wxString &consoleTty)
 
     // Issue the PS command to get the /dev/tty device name
     // First, wait for the xterm to settle down, else PS won't see the sleep task
+    for (int ii = 0; ii < 100; ++ii)
+    {
     Manager::Yield();
-    ::wxSleep(1);
-    consoleTty = GetConsoleTty(consolePid);
+        ::wxMilliSleep(200);
+        int localConsolePid = consolePid;
+        consoleTty = GetConsoleTty(localConsolePid);
     if (!consoleTty.IsEmpty() )
     {
         // show what we found as tty
-//        DebugLog(wxString::Format(wxT("GetConsoleTTY[%s]ConsolePid[%d]"), m_ConsoleTty.c_str(), consolePid));
-        return consolePid;
+            return localConsolePid;
+        }
     }
     // failed to find the console tty
-//    DebugLog( wxT("Console Execution error:failed to find console tty."));
     if (consolePid != 0)
         ::wxKill(consolePid);
     consolePid = 0;

@@ -52,6 +52,8 @@ static wxRegEx reBreak2(_T("^(0x[A-Fa-f0-9]+) in (.*) from (.*)"));
 static wxRegEx reBreak3(_T("^(0x[A-Fa-f0-9]+) in (.*)"));
 // Catchpoint 1 (exception thrown), 0x00007ffff7b982b0 in __cxa_throw () from /usr/lib/gcc/x86_64-pc-linux-gnu/4.4.4/libstdc++.so.6
 static wxRegEx reCatchThrow(_T("^Catchpoint ([0-9]+) \\(exception thrown\\), (0x[0-9a-f]+) in (.+) from (.+)$"));
+// Catchpoint 1 (exception thrown), 0x00401610 in __cxa_throw ()
+static wxRegEx reCatchThrowNoFile(_T("^Catchpoint ([0-9]+) \\(exception thrown\\), (0x[0-9a-f]+) in (.+)$"));
 
 // easily match cygwin paths
 //static wxRegEx reCygwin(_T("/cygdrive/([A-Za-z])/"));
@@ -517,10 +519,10 @@ void GDB_driver::Start(bool breakOnEntry)
     else
     {
         m_BreakOnEntry = breakOnEntry && !remoteDebugging;
-        m_ManualBreakOnEntry = !remoteDebugging;
 
         if (!Manager::Get()->GetConfigManager(_T("debugger"))->ReadBool(_T("do_not_run"), false))
         {
+            m_ManualBreakOnEntry = !remoteDebugging;
             // start the process
             if(breakOnEntry)
             {
@@ -553,7 +555,14 @@ void GDB_driver::Continue()
         QueueCommand(new DebuggerContinueCommand(this));
     else
     {
-        QueueCommand(new DebuggerCmd(this, m_ManualBreakOnEntry ? _T("start") : _T("run")));
+        // if performing remote debugging, use "continue" command
+        RemoteDebugging* rd = GetRemoteDebuggingInfo();
+        bool remoteDebugging = rd && rd->IsOk();
+        if (remoteDebugging)
+            QueueCommand(new DebuggerContinueCommand(this));
+        else
+            QueueCommand(new DebuggerCmd(this, m_ManualBreakOnEntry ? wxT("start") : wxT("run")));
+        m_ManualBreakOnEntry = false;
         m_IsStarted = true;
     }
 }
@@ -1093,6 +1102,15 @@ void GDB_driver::ParseOutput(const wxString& output)
                 m_Cursor.file = reCatchThrow.GetMatch(lines[i], 4);
                 m_Cursor.function= reCatchThrow.GetMatch(lines[i], 3);
                 m_Cursor.address = reCatchThrow.GetMatch(lines[i], 2);
+                m_Cursor.line = -1;
+                m_Cursor.changed = true;
+                m_needsUpdate = true;
+            }
+            else if (reCatchThrowNoFile.Matches(lines[i]) )
+            {
+                m_Cursor.file = wxEmptyString;
+                m_Cursor.function= reCatchThrowNoFile.GetMatch(lines[i], 3);
+                m_Cursor.address = reCatchThrowNoFile.GetMatch(lines[i], 2);
                 m_Cursor.line = -1;
                 m_Cursor.changed = true;
                 m_needsUpdate = true;

@@ -938,7 +938,10 @@ class GdbCmd_TooltipEvaluation : public DebuggerCmd
             }
 
             if (s_pWin)
+            {
                 s_pWin->Close();
+                s_pWin = NULL;
+            }
 
             wxPoint mouse_position;
             ::wxGetMousePosition(&mouse_position.x, &mouse_position.y);
