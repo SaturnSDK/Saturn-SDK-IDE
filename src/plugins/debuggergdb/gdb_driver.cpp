@@ -294,6 +294,7 @@ void GDB_driver::Prepare(bool isConsole)
 
     // pass user init-commands
     wxString init = Manager::Get()->GetConfigManager(_T("debugger"))->Read(_T("init_commands"), wxEmptyString);
+    Manager::Get()->GetMacrosManager()->ReplaceMacros(init);
     // commands are passed in one go, in case the user defines functions in there
     // or else it would lock up...
     QueueCommand(new DebuggerCmd(this, init));
