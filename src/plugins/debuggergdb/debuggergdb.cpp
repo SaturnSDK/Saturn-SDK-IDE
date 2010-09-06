@@ -87,6 +87,15 @@ Process32FirstApiCall           Process32FirstFunc = 0;
 Process32NextApiCall            Process32NextFunc = 0;
 
 HINSTANCE kernelLib = 0;
+
+#endif
+
+#ifdef __WXMSW__
+// disable the CTRL_C event
+BOOL WINAPI HandlerRoutine(DWORD dwCtrlType)
+{
+    return TRUE;
+}
 #endif
 
 // valid debugger command constants
@@ -620,12 +629,6 @@ int DebuggerGDB::DoDebug(bool breakOnEntry)
 
     ShowLog(false);
 
-//    if (!CheckBuild())
-//    {
-//        m_Canceled = true;
-//        return 1;
-//    }
-
     // select the build target to debug
     ProjectBuildTarget* target = 0;
     Compiler* actualCompiler = 0;
@@ -793,6 +796,7 @@ int DebuggerGDB::DoDebug(bool breakOnEntry)
     }
     else // m_PidToAttach != 0
         cmdline = m_State.GetDriver()->GetCommandLine(cmdexe, m_PidToAttach);
+    m_State.GetDriver()->SetTarget(target);
 
     RemoteDebuggingMap& rdprj = GetRemoteDebuggingMap();
     RemoteDebugging rd = rdprj[0]; // project settings
@@ -820,6 +824,15 @@ int DebuggerGDB::DoDebug(bool breakOnEntry)
         }
     }
 
+    #ifdef __WXMSW__
+    if (!m_State.GetDriver()->UseDebugBreakProcess())
+    {
+        AllocConsole();
+        SetConsoleTitleA("Codeblocks debug console - DO NOT CLOSE!");
+        SetConsoleCtrlHandler(HandlerRoutine, TRUE);
+        m_bIsConsole = true;
+    }
+    #endif
     // start the gdb process
     wxString wdir = m_pProject ? m_pProject->GetBasePath() : _T(".");
     DebugLog(_T("Command-line: ") + cmdline);
@@ -856,7 +869,7 @@ int DebuggerGDB::DoDebug(bool breakOnEntry)
     if (!m_State.HasDriver())
         return -1;
 
-    m_State.GetDriver()->Prepare(target, target && target->GetTargetType() == ttConsoleOnly);
+    m_State.GetDriver()->Prepare(target && target->GetTargetType() == ttConsoleOnly);
     m_State.ApplyBreakpoints();
 
    #ifndef __WXMSW__
@@ -1559,7 +1572,7 @@ void DebuggerGDB::DoBreak(bool temporary)
                 BOOL ok = Process32FirstFunc(snap, &lppe);
                 while ( ok == TRUE)
                 {
-                    if (lppe.th32ParentProcessID == m_Pid) // Have my Child...
+                    if (static_cast<int>(lppe.th32ParentProcessID) == m_Pid) // Have my Child...
                     {
                         pid = lppe.th32ProcessID;
                     }
@@ -1573,18 +1586,35 @@ void DebuggerGDB::DoBreak(bool temporary)
         }
 
         bool done = false;
-        if (DebugBreakProcessFunc && pid > 0)
+        if (m_State.GetDriver()->UseDebugBreakProcess())
         {
-            Log(_("Trying to pause the running process..."));
-            HANDLE proc = OpenProcess(PROCESS_ALL_ACCESS, FALSE, (DWORD)pid);
-            if (proc)
+            if (!DebugBreakProcessFunc)
+                Log(_("DebugBreakProcess is not supported, you need Windows XP or newer..."));
+            else if (pid > 0)
             {
-                DebugBreakProcessFunc(proc); // yay!
-                CloseHandle(proc);
-                done = true;
+                Log(_("Trying to pause the running process..."));
+                HANDLE proc = OpenProcess(PROCESS_ALL_ACCESS, FALSE, (DWORD)pid);
+                if (proc)
+                {
+                    DebugBreakProcessFunc(proc); // yay!
+                    CloseHandle(proc);
+                    done = true;
+                }
+                else
+                    Log(_("Failed."));
             }
-            else
-                Log(_("Failed."));
+        }
+        else
+        {
+            if (m_Pid > 0)
+            {
+                if (GenerateConsoleCtrlEvent(CTRL_C_EVENT, 0) == 0)
+                {
+                    Log(wxT("Interupting debugger failed :("));
+                    DebugLog(wxT("GenerateConsoleCtrlEvent failed :("));
+                    return;
+                }
+            }
         }
     #endif
         // Notify debugger plugins for end of debug session
@@ -1766,7 +1796,15 @@ void DebuggerGDB::OnGDBTerminated(wxCommandEvent& event)
 
 void DebuggerGDB::KillConsole()
 {
-#ifdef __WXGTK__
+#ifdef __WXMSW__
+    if (m_bIsConsole)
+    {
+        // remove the CTRL_C handler
+        SetConsoleCtrlHandler(HandlerRoutine, FALSE);
+        FreeConsole();
+        m_bIsConsole = false;
+    }
+#else
     // kill any linux console
     if ( m_bIsConsole && (m_nConsolePid > 0) )
     {

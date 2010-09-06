@@ -105,8 +105,11 @@ wxString CDB_driver::GetCommandLine(const wxString& debugger, int pid)
 
     return cmd;
 }
+void CDB_driver::SetTarget(ProjectBuildTarget* /*target*/)
+{
+}
 
-void CDB_driver::Prepare(ProjectBuildTarget* /*target*/, bool /*isConsole*/)
+void CDB_driver::Prepare(bool /*isConsole*/)
 {
     // default initialization
 }

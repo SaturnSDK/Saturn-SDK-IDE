@@ -6,7 +6,7 @@
     </object>
     <object class="separator"/>
     <object class="wxMenuItem" name="idDebuggerMenuDebug">
-      <label>&amp;Start</label>
+      <label>&amp;Start / Continue</label>
       <bitmap>images\16x16\dbgrun.png</bitmap>
       <accel>F8</accel>
       <help>Run current project in debugger</help>
@@ -21,13 +21,19 @@
       <bitmap>images\16x16\dbgstop.png</bitmap>
       <help>Stop current debugging session</help>
     </object>
+    <object class="wxMenuItem" name="idDebuggerMenuRunToCursor">
+      <label>Run to cursor</label>
+      <bitmap>images\16x16\dbgrunto.png</bitmap>
+      <accel>F4</accel>
+      <help>Run program until it reaches the current line</help>
+    </object>
     <object class="separator"/>
-    <object class="wxMenuItem" name="idDebuggerMenuContinue">
+    <!--object class="wxMenuItem" name="idDebuggerMenuContinue">
       <label>Continue</label>
       <bitmap>images\dbgrun.png</bitmap>
       <accel>Ctrl-F7</accel>
       <help>Continue execution until next breakpoint or program exits</help>
-    </object>
+    </object-->
     <object class="wxMenuItem" name="idDebuggerMenuNext">
       <label>Next line</label>
       <bitmap>images\16x16\dbgnext.png</bitmap>
@@ -57,12 +63,6 @@
       <bitmap>images\16x16\dbgstepi.png</bitmap>
       <accel>Shift-Alt-F7</accel>
       <help>Execute the next assembly instruction, if it is a function call step into it</help>
-    </object>
-    <object class="wxMenuItem" name="idDebuggerMenuRunToCursor">
-      <label>Run to cursor</label>
-      <bitmap>images\16x16\dbgrunto.png</bitmap>
-      <accel>F4</accel>
-      <help>Run program until it reaches the current line</help>
     </object>
     <object class="wxMenuItem" name="idDebuggerMenuSetNextStatement">
       <label>Set next statement</label>

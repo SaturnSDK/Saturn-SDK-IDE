@@ -73,11 +73,14 @@ class DebuggerDriver
         /** Get the command-line to launch the debugger. */
         virtual wxString GetCommandLine(const wxString& debugger, int pid) = 0;
 
+        /** Sets the target */
+        virtual void SetTarget(ProjectBuildTarget* target) = 0;
+
         /** Prepares the debugging process by setting up search dirs etc.
             @param target The build target to debug.
             @param isConsole If true, the debuggee is a console executable.
         */
-        virtual void Prepare(ProjectBuildTarget* target, bool isConsole) = 0;
+        virtual void Prepare(bool isConsole) = 0;
 
         /** Begin the debugging process by launching a program. */
         virtual void Start(bool breakOnEntry) = 0;
@@ -153,6 +156,11 @@ class DebuggerDriver
         virtual long GetChildPID() const { return m_ChildPID; }
         /** Request to switch to another thread. */
         virtual void SwitchThread(size_t threadIndex) = 0;
+
+#ifdef __WXMSW__
+        /** Ask the driver if the debugger should be interrupted with DebugBreakProcess or Ctrl+C event */
+        virtual bool UseDebugBreakProcess() = 0;
+#endif
 
         /** Show a file/line without changing the cursor */
         void ShowFile(const wxString& file, int line);

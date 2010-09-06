@@ -170,7 +170,7 @@ void DebuggerMenuHandler::OnUpdateUI(wxUpdateUIEvent& event)
 
     if (mbar)
     {
-        mbar->Enable(idMenuDebug, !isRunning && en);
+        mbar->Enable(idMenuDebug, (!isRunning || stopped) && en);
         mbar->Enable(idMenuContinue, isRunning && en && stopped);
         mbar->Enable(idMenuNext, isRunning && en && stopped);
         mbar->Enable(idMenuNextInstr, isRunning && en && stopped);

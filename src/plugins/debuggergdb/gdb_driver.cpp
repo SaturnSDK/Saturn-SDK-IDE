@@ -191,12 +191,15 @@ wxString GDB_driver::GetCommandLine(const wxString& debugger, int pid)
     return cmd;
 }
 
-void GDB_driver::Prepare(ProjectBuildTarget* target, bool isConsole)
+void GDB_driver::SetTarget(ProjectBuildTarget* target)
 {
-    // default initialization
-
     // init for remote debugging
     m_pTarget = target;
+}
+
+void GDB_driver::Prepare(bool isConsole)
+{
+    // default initialization
 
     // for the possibility that the program to be debugged is compiled under Cygwin
     if(platform::windows)
@@ -477,6 +480,15 @@ void GDB_driver::CorrectCygwinPath(wxString& path)
 #else
     void GDB_driver::DetectCygwinMount(void){/* dummy */}
     void GDB_driver::CorrectCygwinPath(wxString& /*path*/){/* dummy */}
+#endif
+
+#ifdef __WXMSW__
+bool GDB_driver::UseDebugBreakProcess()
+{
+    RemoteDebugging* rd = GetRemoteDebuggingInfo();
+    bool remoteDebugging = rd && rd->IsOk();
+    return !remoteDebugging;
+}
 #endif
 
 wxString GDB_driver::GetDisassemblyFlavour(void)

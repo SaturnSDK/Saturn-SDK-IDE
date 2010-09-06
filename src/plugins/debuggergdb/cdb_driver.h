@@ -16,7 +16,8 @@ class CDB_driver : public DebuggerDriver
 
         virtual wxString GetCommandLine(const wxString& debugger, const wxString& debuggee);
         virtual wxString GetCommandLine(const wxString& debugger, int pid);
-        virtual void Prepare(ProjectBuildTarget* target, bool isConsole);
+        virtual void SetTarget(ProjectBuildTarget* target);
+        virtual void Prepare(bool isConsole);
         virtual void Start(bool breakOnEntry);
         virtual void Stop();
 
@@ -52,6 +53,9 @@ class CDB_driver : public DebuggerDriver
         virtual void UpdateWatch(GDBWatch::Pointer const &watch);
         virtual void ParseOutput(const wxString& output);
         virtual bool IsDebuggingStarted() const;
+#ifdef __WXMSW__
+        virtual bool UseDebugBreakProcess() { return true; }
+#endif
     protected:
     private:
         void DoBacktrace(bool switchToFirst);
