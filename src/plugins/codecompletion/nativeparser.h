@@ -43,7 +43,8 @@ enum OperatorType
     otOperatorUndefine = 0,
     otOperatorSquare,
     otOperatorParentheses,
-    otOperatorPointer
+    otOperatorPointer,
+    otOperatorStar
 };
 
 enum BrowserViewMode

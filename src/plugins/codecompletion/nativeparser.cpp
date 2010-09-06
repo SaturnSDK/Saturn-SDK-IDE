@@ -1850,6 +1850,8 @@ wxString NativeParser::GetNextCCToken(const wxString& line, unsigned int& startA
         {
             if (line.GetChar(startAt) == '(')
                 ++nest;
+            if (line.GetChar(startAt) == _T('*'))
+                tokenOperatroType = otOperatorStar;
             ++startAt;
         }
     }
@@ -3561,6 +3563,8 @@ void NativeParser::ResolveOpeartor(const OperatorType& tokenOperatorType, const 
         operatorStr = _T("operator[]"); break;
     case otOperatorPointer:
         operatorStr = _T("operator->"); break;
+    case otOperatorStar:
+        operatorStr = _T("operator*"); break;
     default:
         break;
     }
