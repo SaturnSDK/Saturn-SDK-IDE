@@ -13,6 +13,7 @@
 #include <wx/xrc/xmlres.h>
 #include <manager.h>
 #include <configmanager.h>
+#include <editormanager.h>
 #include <pluginmanager.h>
 #include <wx/intl.h>
 #include <wx/listbook.h>
@@ -65,6 +66,7 @@ BEGIN_EVENT_TABLE(EnvironmentSettingsDlg, wxScrollingDialog)
     EVT_BUTTON(XRCID("btnAuiInactiveCaptionColour"), EnvironmentSettingsDlg::OnChooseColour)
     EVT_BUTTON(XRCID("btnAuiInactiveCaptionGradientColour"), EnvironmentSettingsDlg::OnChooseColour)
     EVT_BUTTON(XRCID("btnAuiInactiveCaptionTextColour"), EnvironmentSettingsDlg::OnChooseColour)
+    EVT_BUTTON(XRCID("btnResetDefaultColours"), EnvironmentSettingsDlg::OnResetDefaultColours)
     EVT_CHECKBOX(XRCID("chkUseIPC"), EnvironmentSettingsDlg::OnUseIpcCheck)
     EVT_CHECKBOX(XRCID("chkDoPlace"), EnvironmentSettingsDlg::OnPlaceCheck)
     EVT_CHECKBOX(XRCID("chkPlaceHead"), EnvironmentSettingsDlg::OnHeadCheck)
@@ -144,6 +146,8 @@ EnvironmentSettingsDlg::EnvironmentSettingsDlg(wxWindow* parent, wxAuiDockArt* a
     XRCCTRL(*this, "chkAutoShowMessagesOnWarn", wxCheckBox)->Enable(en);
     XRCCTRL(*this, "chkAutoShowMessagesOnErr", wxCheckBox)->Enable(en);
 
+    XRCCTRL(*this, "chkSaveSelectionChangeInMP", wxCheckBox)->SetValue(mcfg->ReadBool(_T("/save_selection_change_in_mp"), true));
+
     bool i18n=cfg->ReadBool(_T("/locale/enable"), false);
         XRCCTRL(*this, "chkI18N", wxCheckBox)->SetValue(i18n);
 
@@ -168,19 +172,21 @@ EnvironmentSettingsDlg::EnvironmentSettingsDlg(wxWindow* parent, wxAuiDockArt* a
 
 
     // tab "Notebook"
-    XRCCTRL(*this, "cmbEditorTabs", wxComboBox)->SetSelection(cfg->ReadInt(_T("/environment/tabs_style"), 0));
-    XRCCTRL(*this, "chkListTabs", wxCheckBox)->SetValue(cfg->ReadBool(_T("/environment/tabs_list"), 0));
+    XRCCTRL(*this, "cmbEditorTabs",               wxComboBox)->SetSelection(cfg->ReadInt(_T("/environment/tabs_style"), 0));
+    XRCCTRL(*this, "chkCloseOnAll",               wxCheckBox)->SetValue(cfg->ReadBool(_T("/environment/tabs_close_on_all"), 0));
+    XRCCTRL(*this, "chkListTabs",                 wxCheckBox)->SetValue(cfg->ReadBool(_T("/environment/tabs_list"), 0));
+    XRCCTRL(*this, "chkStackedBasedTabSwitching", wxCheckBox)->SetValue(cfg->ReadBool(_T("/environment/tabs_stacked_based_switching"), 0));
 
     // tab "Docking"
-    XRCCTRL(*this, "spnAuiBorder", wxSpinCtrl)->SetValue(cfg->ReadInt(_T("/environment/aui/border_size"), m_pArt->GetMetric(wxAUI_DOCKART_PANE_BORDER_SIZE)));
-    XRCCTRL(*this, "spnAuiSash", wxSpinCtrl)->SetValue(cfg->ReadInt(_T("/environment/aui/sash_size"), m_pArt->GetMetric(wxAUI_DOCKART_SASH_SIZE)));
-    XRCCTRL(*this, "spnAuiCaption", wxSpinCtrl)->SetValue(cfg->ReadInt(_T("/environment/aui/caption_size"), m_pArt->GetMetric(wxAUI_DOCKART_CAPTION_SIZE)));
-    XRCCTRL(*this, "btnAuiActiveCaptionColour", wxButton)->SetBackgroundColour(cfg->ReadColour(_T("/environment/aui/active_caption_colour"), m_pArt->GetColour(wxAUI_DOCKART_ACTIVE_CAPTION_COLOUR)));
-    XRCCTRL(*this, "btnAuiActiveCaptionGradientColour", wxButton)->SetBackgroundColour(cfg->ReadColour(_T("/environment/aui/active_caption_gradient_colour"), m_pArt->GetColour(wxAUI_DOCKART_ACTIVE_CAPTION_GRADIENT_COLOUR)));
-    XRCCTRL(*this, "btnAuiActiveCaptionTextColour", wxButton)->SetBackgroundColour(cfg->ReadColour(_T("/environment/aui/active_caption_text_colour"), m_pArt->GetColour(wxAUI_DOCKART_ACTIVE_CAPTION_TEXT_COLOUR)));
-    XRCCTRL(*this, "btnAuiInactiveCaptionColour", wxButton)->SetBackgroundColour(cfg->ReadColour(_T("/environment/aui/inactive_caption_colour"), m_pArt->GetColour(wxAUI_DOCKART_INACTIVE_CAPTION_COLOUR)));
+    XRCCTRL(*this, "spnAuiBorder",                        wxSpinCtrl)->SetValue(cfg->ReadInt(_T("/environment/aui/border_size"), m_pArt->GetMetric(wxAUI_DOCKART_PANE_BORDER_SIZE)));
+    XRCCTRL(*this, "spnAuiSash",                          wxSpinCtrl)->SetValue(cfg->ReadInt(_T("/environment/aui/sash_size"), m_pArt->GetMetric(wxAUI_DOCKART_SASH_SIZE)));
+    XRCCTRL(*this, "spnAuiCaption",                       wxSpinCtrl)->SetValue(cfg->ReadInt(_T("/environment/aui/caption_size"), m_pArt->GetMetric(wxAUI_DOCKART_CAPTION_SIZE)));
+    XRCCTRL(*this, "btnAuiActiveCaptionColour",           wxButton)->SetBackgroundColour(cfg->ReadColour(_T("/environment/aui/active_caption_colour"), m_pArt->GetColour(wxAUI_DOCKART_ACTIVE_CAPTION_COLOUR)));
+    XRCCTRL(*this, "btnAuiActiveCaptionGradientColour",   wxButton)->SetBackgroundColour(cfg->ReadColour(_T("/environment/aui/active_caption_gradient_colour"), m_pArt->GetColour(wxAUI_DOCKART_ACTIVE_CAPTION_GRADIENT_COLOUR)));
+    XRCCTRL(*this, "btnAuiActiveCaptionTextColour",       wxButton)->SetBackgroundColour(cfg->ReadColour(_T("/environment/aui/active_caption_text_colour"), m_pArt->GetColour(wxAUI_DOCKART_ACTIVE_CAPTION_TEXT_COLOUR)));
+    XRCCTRL(*this, "btnAuiInactiveCaptionColour",         wxButton)->SetBackgroundColour(cfg->ReadColour(_T("/environment/aui/inactive_caption_colour"), m_pArt->GetColour(wxAUI_DOCKART_INACTIVE_CAPTION_COLOUR)));
     XRCCTRL(*this, "btnAuiInactiveCaptionGradientColour", wxButton)->SetBackgroundColour(cfg->ReadColour(_T("/environment/aui/inactive_caption_gradient_colour"), m_pArt->GetColour(wxAUI_DOCKART_INACTIVE_CAPTION_GRADIENT_COLOUR)));
-    XRCCTRL(*this, "btnAuiInactiveCaptionTextColour", wxButton)->SetBackgroundColour(cfg->ReadColour(_T("/environment/aui/inactive_caption_text_colour"), m_pArt->GetColour(wxAUI_DOCKART_INACTIVE_CAPTION_TEXT_COLOUR)));
+    XRCCTRL(*this, "btnAuiInactiveCaptionTextColour",     wxButton)->SetBackgroundColour(cfg->ReadColour(_T("/environment/aui/inactive_caption_text_colour"), m_pArt->GetColour(wxAUI_DOCKART_INACTIVE_CAPTION_TEXT_COLOUR)));
 
     // tab "Dialogs"
     wxCheckListBox* clb = XRCCTRL(*this, "chkDialogs", wxCheckListBox);
@@ -225,14 +231,15 @@ void EnvironmentSettingsDlg::AddPluginPanels()
     for (size_t i = 0; i < m_PluginPanels.GetCount(); ++i)
     {
         cbConfigurationPanel* panel = m_PluginPanels[i];
+        panel->SetParentDialog(this);
         lb->AddPage(panel, panel->GetTitle());
 
         wxString onFile = ConfigManager::LocateDataFile(base + panel->GetBitmapBaseName() + _T(".png"), sdDataGlobal | sdDataUser);
         if (onFile.IsEmpty())
-			onFile = ConfigManager::LocateDataFile(noimg + _T(".png"), sdDataGlobal | sdDataUser);
+            onFile = ConfigManager::LocateDataFile(noimg + _T(".png"), sdDataGlobal | sdDataUser);
         wxString offFile = ConfigManager::LocateDataFile(base + panel->GetBitmapBaseName() + _T("-off.png"), sdDataGlobal | sdDataUser);
         if (offFile.IsEmpty())
-			offFile = ConfigManager::LocateDataFile(noimg + _T("-off.png"), sdDataGlobal | sdDataUser);
+            offFile = ConfigManager::LocateDataFile(noimg + _T("-off.png"), sdDataGlobal | sdDataUser);
 
         lb->GetImageList()->Add(cbLoadBitmap(onFile));
         lb->GetImageList()->Add(cbLoadBitmap(offFile));
@@ -285,7 +292,7 @@ void EnvironmentSettingsDlg::UpdateListbookImages()
     XRCCTRL(*this, "lblBigTitle", wxStaticText)->SetLabel(label);
 }
 
-void EnvironmentSettingsDlg::OnPageChanging(wxListbookEvent& event)
+void EnvironmentSettingsDlg::OnPageChanging(wxListbookEvent& /*event*/)
 {
 }
 
@@ -298,15 +305,15 @@ void EnvironmentSettingsDlg::OnPageChanged(wxListbookEvent& event)
     }
 }
 
-void EnvironmentSettingsDlg::OnSetAssocs(wxCommandEvent& event)
+void EnvironmentSettingsDlg::OnSetAssocs(wxCommandEvent& /*event*/)
 {
 #ifdef __WXMSW__
     Associations::SetCore();
-    //cbMessageBox(_("Code::Blocks associated with C/C++ files."), _("Information"), wxICON_INFORMATION);
+    //cbMessageBox(_("Code::Blocks associated with C/C++ files."), _("Information"), wxICON_INFORMATION, this);
 #endif
 }
 
-void EnvironmentSettingsDlg::OnManageAssocs(wxCommandEvent& event)
+void EnvironmentSettingsDlg::OnManageAssocs(wxCommandEvent& /*event*/)
 {
 #ifdef __WXMSW__
     ManageAssocsDialog dlg(this);
@@ -330,7 +337,24 @@ void EnvironmentSettingsDlg::OnChooseColour(wxCommandEvent& event)
     }
 }
 
-void EnvironmentSettingsDlg::OnAutoHide(wxCommandEvent& event)
+void EnvironmentSettingsDlg::OnResetDefaultColours(wxCommandEvent& /*event*/)
+{
+    wxAuiDockArt* art = new wxAuiDefaultDockArt;
+
+    XRCCTRL(*this, "spnAuiBorder", wxSpinCtrl)->SetValue(art->GetMetric(wxAUI_DOCKART_PANE_BORDER_SIZE));
+    XRCCTRL(*this, "spnAuiSash", wxSpinCtrl)->SetValue(art->GetMetric(wxAUI_DOCKART_SASH_SIZE));
+    XRCCTRL(*this, "spnAuiCaption", wxSpinCtrl)->SetValue(art->GetMetric(wxAUI_DOCKART_CAPTION_SIZE));
+    XRCCTRL(*this, "btnAuiActiveCaptionColour", wxButton)->SetBackgroundColour(art->GetColour(wxAUI_DOCKART_ACTIVE_CAPTION_COLOUR));
+    XRCCTRL(*this, "btnAuiActiveCaptionGradientColour", wxButton)->SetBackgroundColour(art->GetColour(wxAUI_DOCKART_ACTIVE_CAPTION_GRADIENT_COLOUR));
+    XRCCTRL(*this, "btnAuiActiveCaptionTextColour", wxButton)->SetBackgroundColour(art->GetColour(wxAUI_DOCKART_ACTIVE_CAPTION_TEXT_COLOUR));
+    XRCCTRL(*this, "btnAuiInactiveCaptionColour", wxButton)->SetBackgroundColour(art->GetColour(wxAUI_DOCKART_INACTIVE_CAPTION_COLOUR));
+    XRCCTRL(*this, "btnAuiInactiveCaptionGradientColour", wxButton)->SetBackgroundColour(art->GetColour(wxAUI_DOCKART_INACTIVE_CAPTION_GRADIENT_COLOUR));
+    XRCCTRL(*this, "btnAuiInactiveCaptionTextColour", wxButton)->SetBackgroundColour(art->GetColour(wxAUI_DOCKART_INACTIVE_CAPTION_TEXT_COLOUR));
+
+    delete art;
+}
+
+void EnvironmentSettingsDlg::OnAutoHide(wxCommandEvent& /*event*/)
 {
     bool en = XRCCTRL(*this, "chkAutoHideMessages", wxCheckBox)->GetValue();
     XRCCTRL(*this, "chkAutoShowMessagesOnSearch",   wxCheckBox)->Enable(en);
@@ -393,6 +417,8 @@ void EnvironmentSettingsDlg::EndModal(int retCode)
         mcfg->Write(_T("/auto_show_search"),                 (bool) XRCCTRL(*this, "chkAutoShowMessagesOnSearch", wxCheckBox)->GetValue());
         mcfg->Write(_T("/auto_show_build_warnings"),         (bool) XRCCTRL(*this, "chkAutoShowMessagesOnWarn", wxCheckBox)->GetValue());
         mcfg->Write(_T("/auto_show_build_errors"),           (bool) XRCCTRL(*this, "chkAutoShowMessagesOnErr", wxCheckBox)->GetValue());
+        mcfg->Write(_T("/save_selection_change_in_mp"),       (bool) XRCCTRL(*this, "chkSaveSelectionChangeInMP", wxCheckBox)->GetValue());
+
         cfg->Write(_T("/environment/start_here_page"),       (bool) XRCCTRL(*this, "chkShowStartPage", wxCheckBox)->GetValue());
 
         cfg->Write(_T("/locale/enable"),                     (bool) XRCCTRL(*this, "chkI18N", wxCheckBox)->GetValue());
@@ -403,15 +429,25 @@ void EnvironmentSettingsDlg::EndModal(int retCode)
             cfg->Write(_T("/locale/language"), wxEmptyString);
 
         mcfg->Write(_T("/log_font_size"),                    (int)  XRCCTRL(*this, "spnLogFontSize", wxSpinCtrl)->GetValue());
-        cfg->Write(_T("/dialog_placement/do_place"),         (bool) XRCCTRL(*this, "chkDoPlace", wxCheckBox)->GetValue());
-        cfg->Write(_T("/dialog_placement/dialog_position"),  (int)  XRCCTRL(*this, "chkPlaceHead", wxCheckBox)->GetValue() ? pdlHead : pdlCentre);
+        cfg->Write(_T("/dialog_placement/do_place"),         (bool) XRCCTRL(*this, "chkDoPlace",     wxCheckBox)->GetValue());
+        cfg->Write(_T("/dialog_placement/dialog_position"),  (int)  XRCCTRL(*this, "chkPlaceHead",   wxCheckBox)->GetValue() ? pdlHead : pdlCentre);
 
         // tab "Appearence"
-        cfg->Write(_T("/environment/tabs_style"),           (int)XRCCTRL(*this, "cmbEditorTabs", wxComboBox)->GetSelection());
-        cfg->Write(_T("/environment/tabs_list"),           (bool)XRCCTRL(*this, "chkListTabs", wxCheckBox)->GetValue());
-        cfg->Write(_T("/environment/aui/border_size"),          (int)XRCCTRL(*this, "spnAuiBorder", wxSpinCtrl)->GetValue());
-        cfg->Write(_T("/environment/aui/sash_size"),            (int)XRCCTRL(*this, "spnAuiSash", wxSpinCtrl)->GetValue());
-        cfg->Write(_T("/environment/aui/caption_size"),         (int)XRCCTRL(*this, "spnAuiCaption", wxSpinCtrl)->GetValue());
+        cfg->Write(_T("/environment/tabs_style"),            (int)  XRCCTRL(*this, "cmbEditorTabs",               wxComboBox)->GetSelection());
+        cfg->Write(_T("/environment/tabs_close_on_all"),     (bool) XRCCTRL(*this, "chkCloseOnAll",               wxCheckBox)->GetValue());
+        cfg->Write(_T("/environment/tabs_list"),             (bool) XRCCTRL(*this, "chkListTabs",                 wxCheckBox)->GetValue());
+        bool tab_switcher_mode =                             (bool) XRCCTRL(*this, "chkStackedBasedTabSwitching", wxCheckBox)->GetValue();
+        if (Manager::Get()->GetConfigManager(_T("app"))->ReadBool(_T("/environment/tabs_stacked_based_switching")) != tab_switcher_mode)
+        {
+            if (tab_switcher_mode)
+                Manager::Get()->GetEditorManager()->RebuildNotebookStack();
+            else
+                Manager::Get()->GetEditorManager()->DeleteNotebookStack();
+        }
+        cfg->Write(_T("/environment/tabs_stacked_based_switching"),          tab_switcher_mode);
+        cfg->Write(_T("/environment/aui/border_size"),                  (int)XRCCTRL(*this, "spnAuiBorder", wxSpinCtrl)->GetValue());
+        cfg->Write(_T("/environment/aui/sash_size"),                    (int)XRCCTRL(*this, "spnAuiSash", wxSpinCtrl)->GetValue());
+        cfg->Write(_T("/environment/aui/caption_size"),                 (int)XRCCTRL(*this, "spnAuiCaption", wxSpinCtrl)->GetValue());
         cfg->Write(_T("/environment/aui/active_caption_colour"),             XRCCTRL(*this, "btnAuiActiveCaptionColour", wxButton)->GetBackgroundColour());
         cfg->Write(_T("/environment/aui/active_caption_gradient_colour"),    XRCCTRL(*this, "btnAuiActiveCaptionGradientColour", wxButton)->GetBackgroundColour());
         cfg->Write(_T("/environment/aui/active_caption_text_colour"),        XRCCTRL(*this, "btnAuiActiveCaptionTextColour", wxButton)->GetBackgroundColour());
@@ -419,9 +455,9 @@ void EnvironmentSettingsDlg::EndModal(int retCode)
         cfg->Write(_T("/environment/aui/inactive_caption_gradient_colour"),  XRCCTRL(*this, "btnAuiInactiveCaptionGradientColour", wxButton)->GetBackgroundColour());
         cfg->Write(_T("/environment/aui/inactive_caption_text_colour"),      XRCCTRL(*this, "btnAuiInactiveCaptionTextColour", wxButton)->GetBackgroundColour());
 
-        m_pArt->SetMetric(wxAUI_DOCKART_PANE_BORDER_SIZE,   XRCCTRL(*this, "spnAuiBorder", wxSpinCtrl)->GetValue());
-        m_pArt->SetMetric(wxAUI_DOCKART_SASH_SIZE,          XRCCTRL(*this, "spnAuiSash", wxSpinCtrl)->GetValue());
-        m_pArt->SetMetric(wxAUI_DOCKART_CAPTION_SIZE,       XRCCTRL(*this, "spnAuiCaption", wxSpinCtrl)->GetValue());
+        m_pArt->SetMetric(wxAUI_DOCKART_PANE_BORDER_SIZE,                XRCCTRL(*this, "spnAuiBorder", wxSpinCtrl)->GetValue());
+        m_pArt->SetMetric(wxAUI_DOCKART_SASH_SIZE,                       XRCCTRL(*this, "spnAuiSash", wxSpinCtrl)->GetValue());
+        m_pArt->SetMetric(wxAUI_DOCKART_CAPTION_SIZE,                    XRCCTRL(*this, "spnAuiCaption", wxSpinCtrl)->GetValue());
         m_pArt->SetColour(wxAUI_DOCKART_ACTIVE_CAPTION_COLOUR,           XRCCTRL(*this, "btnAuiActiveCaptionColour", wxButton)->GetBackgroundColour());
         m_pArt->SetColour(wxAUI_DOCKART_ACTIVE_CAPTION_GRADIENT_COLOUR,  XRCCTRL(*this, "btnAuiActiveCaptionGradientColour", wxButton)->GetBackgroundColour());
         m_pArt->SetColour(wxAUI_DOCKART_ACTIVE_CAPTION_TEXT_COLOUR,      XRCCTRL(*this, "btnAuiActiveCaptionTextColour", wxButton)->GetBackgroundColour());

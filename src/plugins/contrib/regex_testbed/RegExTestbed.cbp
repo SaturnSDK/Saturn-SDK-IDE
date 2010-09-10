@@ -9,13 +9,12 @@
 		<Build>
 			<Target title="default">
 				<Option output="..\..\..\devel\share\CodeBlocks\plugins\RegExTestbed" prefix_auto="1" extension_auto="1" />
-				<Option working_dir="..\..\..\devel" />
 				<Option object_output="..\..\..\.objs\plugins\contrib\regex_testbed" />
 				<Option external_deps="..\..\..\devel\libcodeblocks.a;" />
 				<Option type="3" />
 				<Option compiler="gcc" />
 				<Option parameters="--debug-log -na -ns -nd" />
-				<Option host_application=".\codeblocks.exe" />
+				<Option host_application="..\..\..\devel\codeblocks.exe" />
 				<Compiler>
 					<Add option="-g" />
 				</Compiler>
@@ -47,6 +46,8 @@
 			<Add option="-DwxUSE_UNICODE" />
 			<Add option="-DBUILDING_PLUGIN" />
 			<Add option="-DcbDEBUG" />
+			<Add option="-DWXMAKINGDLL_PROPGRID" />
+			<Add option="-DwxPG_USE_WXMODULE=0" />
 			<Add option="-DSUPPORT_UTF8" />
 			<Add directory="$(#WX.include)" />
 			<Add directory="$(#WX.lib)\gcc_dll$(WX_CFG)\msw$(WX_SUFFIX)" />

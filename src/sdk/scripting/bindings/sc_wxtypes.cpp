@@ -220,7 +220,9 @@ namespace ScriptBindings
                 func(&wxColour::Blue, "Blue").
                 func(&wxColour::Green, "Green").
                 func(&wxColour::Red, "Red").
+#if wxVERSION_NUMBER < 2900 || !wxCOLOUR_IS_GDIOBJECT
                 func(&wxColour::IsOk, "IsOk").
+#endif
                 func<WXC_SET>(&wxColour::Set, "Set");
 
         ////////////////
@@ -234,6 +236,7 @@ namespace ScriptBindings
 #else
         typedef bool(wxFileName::*WXFN_SETCWD)();
 #endif
+	typedef bool(wxFileName::*WXFN_ISFILEWRITEABLE)()const;
 
         SqPlus::SQClassDef<wxFileName>("wxFileName").
                 emptyCtor().
@@ -276,7 +279,8 @@ namespace ScriptBindings
                 func(&wxFileName::SetEmptyExt, "SetEmptyExt").
                 func(&wxFileName::SetFullName, "SetFullName").
                 func(&wxFileName::SetName, "SetName").
-                func(&wxFileName::SetVolume, "SetVolume");
+                func(&wxFileName::SetVolume, "SetVolume").
+                func<WXFN_ISFILEWRITEABLE>(&wxFileName::IsFileWritable,"IsFileWritable");
 
         /////////////
         // wxPoint //

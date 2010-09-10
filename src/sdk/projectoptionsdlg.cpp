@@ -176,6 +176,7 @@ void ProjectOptionsDlg::AddPluginPanels()
     for (size_t i = 0; i < m_PluginPanels.GetCount(); ++i)
     {
         cbConfigurationPanel* panel = m_PluginPanels[i];
+        panel->SetParentDialog(this);
         nb->AddPage(panel, panel->GetTitle());
     }
 }
@@ -374,7 +375,7 @@ void ProjectOptionsDlg::DoBeforeTargetChange(bool force)
 
 // events
 
-void ProjectOptionsDlg::OnProjectTypeChanged(wxCommandEvent& event)
+void ProjectOptionsDlg::OnProjectTypeChanged(wxCommandEvent& /*event*/)
 {
     ProjectBuildTarget* target = m_Project->GetBuildTarget(m_Current_Sel);
     if (!target)
@@ -471,7 +472,7 @@ void ProjectOptionsDlg::OnProjectTypeChanged(wxCommandEvent& event)
     }
 }
 
-void ProjectOptionsDlg::OnBuildTargetChanged(wxCommandEvent& event)
+void ProjectOptionsDlg::OnBuildTargetChanged(wxCommandEvent& /*event*/)
 {
     DoTargetChange();
     CodeBlocksEvent e(cbEVT_PROJECT_TARGETS_MODIFIED);
@@ -479,7 +480,7 @@ void ProjectOptionsDlg::OnBuildTargetChanged(wxCommandEvent& event)
     Manager::Get()->GetPluginManager()->NotifyPlugins(e);
 }
 
-void ProjectOptionsDlg::OnBuildOrderClick(wxCommandEvent& event)
+void ProjectOptionsDlg::OnBuildOrderClick(wxCommandEvent& /*event*/)
 {
     wxArrayString array;
     for (int i = 0; i < m_Project->GetBuildTargetsCount(); ++i)
@@ -500,18 +501,18 @@ void ProjectOptionsDlg::OnBuildOrderClick(wxCommandEvent& event)
     }
 }
 
-void ProjectOptionsDlg::OnProjectDepsClick(wxCommandEvent& event)
+void ProjectOptionsDlg::OnProjectDepsClick(wxCommandEvent& /*event*/)
 {
     Manager::Get()->GetProjectManager()->ConfigureProjectDependencies(m_Project);
 }
 
-void ProjectOptionsDlg::OnProjectBuildOptionsClick(wxCommandEvent& event)
+void ProjectOptionsDlg::OnProjectBuildOptionsClick(wxCommandEvent& /*event*/)
 {
     if (m_pCompiler)
         m_pCompiler->Configure(m_Project);
 }
 
-void ProjectOptionsDlg::OnTargetBuildOptionsClick(wxCommandEvent& event)
+void ProjectOptionsDlg::OnTargetBuildOptionsClick(wxCommandEvent& /*event*/)
 {
     if (m_pCompiler)
     {
@@ -524,7 +525,7 @@ void ProjectOptionsDlg::OnTargetBuildOptionsClick(wxCommandEvent& event)
     }
 }
 
-void ProjectOptionsDlg::OnAddBuildTargetClick(wxCommandEvent& event)
+void ProjectOptionsDlg::OnAddBuildTargetClick(wxCommandEvent& /*event*/)
 {
     wxString targetName = wxGetTextFromUser(_("Enter the new build target name:"),
                                             _("New build target"));
@@ -534,9 +535,10 @@ void ProjectOptionsDlg::OnAddBuildTargetClick(wxCommandEvent& event)
     ProjectBuildTarget* target = m_Project->AddBuildTarget(targetName);
     if (!target)
     {
-        wxMessageDialog(this, _("The new target could not be added..."),
-                                _("Error"),
-                                wxOK | wxCENTRE | wxICON_ERROR);
+        cbMessageBox(_("The new target could not be added..."),
+                     _("Error"),
+                     wxOK | wxICON_ERROR,
+                     this);
         return;
     }
 
@@ -551,7 +553,7 @@ void ProjectOptionsDlg::OnAddBuildTargetClick(wxCommandEvent& event)
     Manager::Get()->GetPluginManager()->NotifyPlugins(e);
 }
 
-void ProjectOptionsDlg::OnEditBuildTargetClick(wxCommandEvent& event)
+void ProjectOptionsDlg::OnEditBuildTargetClick(wxCommandEvent& /*event*/)
 {
     wxListBox* lstTargets = XRCCTRL(*this, "lstBuildTarget", wxListBox);
     int targetIdx = lstTargets->GetSelection();
@@ -559,9 +561,10 @@ void ProjectOptionsDlg::OnEditBuildTargetClick(wxCommandEvent& event)
     ProjectBuildTarget* target = m_Project->GetBuildTarget(targetIdx);
     if (!target)
     {
-        wxMessageDialog(this, _("Could not locate target..."),
-                                _("Error"),
-                                wxOK | wxCENTRE | wxICON_ERROR);
+        cbMessageBox(_("Could not locate target..."),
+                     _("Error"),
+                     wxOK | wxICON_ERROR,
+                     this);
         return;
     }
 
@@ -581,7 +584,7 @@ void ProjectOptionsDlg::OnEditBuildTargetClick(wxCommandEvent& event)
     Manager::Get()->GetPluginManager()->NotifyPlugins(e);
 }
 
-void ProjectOptionsDlg::OnCopyBuildTargetClick(wxCommandEvent& event)
+void ProjectOptionsDlg::OnCopyBuildTargetClick(wxCommandEvent& /*event*/)
 {
     wxListBox* lstTargets = XRCCTRL(*this, "lstBuildTarget", wxListBox);
     int targetIdx = lstTargets->GetSelection();
@@ -589,9 +592,10 @@ void ProjectOptionsDlg::OnCopyBuildTargetClick(wxCommandEvent& event)
     ProjectBuildTarget* target = m_Project->GetBuildTarget(targetIdx);
     if (!target)
     {
-        wxMessageDialog(this, _("Could not locate target..."),
-                                _("Error"),
-                                wxOK | wxCENTRE | wxICON_ERROR);
+        cbMessageBox(_("Could not locate target..."),
+                     _("Error"),
+                     wxOK | wxICON_ERROR,
+                     this);
         return;
     }
 
@@ -602,7 +606,7 @@ void ProjectOptionsDlg::OnCopyBuildTargetClick(wxCommandEvent& event)
         return;
     if (!m_Project->DuplicateBuildTarget(targetIdx, newTargetName))
     {
-        cbMessageBox(_("Failed to duplicate this build target..."), _("Error"), wxICON_ERROR);
+        cbMessageBox(_("Failed to duplicate this build target..."), _("Error"), wxICON_ERROR, this);
         return;
     }
 
@@ -616,19 +620,14 @@ void ProjectOptionsDlg::OnCopyBuildTargetClick(wxCommandEvent& event)
     Manager::Get()->GetPluginManager()->NotifyPlugins(e);
 }
 
-void ProjectOptionsDlg::OnRemoveBuildTargetClick(wxCommandEvent& event)
+void ProjectOptionsDlg::OnRemoveBuildTargetClick(wxCommandEvent& /*event*/)
 {
     wxListBox* lstTargets = XRCCTRL(*this, "lstBuildTarget", wxListBox);
     int targetIdx = lstTargets->GetSelection();
 
     wxString caption;
     caption.Printf(_("Are you sure you want to delete build target \"%s\"?"), lstTargets->GetStringSelection().c_str());
-    wxMessageDialog dlg(this,
-                        caption,
-                        _("Confirmation"),
-                        wxYES_NO | wxNO_DEFAULT | wxCENTRE | wxICON_QUESTION);
-    PlaceWindow(&dlg);
-    if (dlg.ShowModal() == wxID_NO)
+    if (cbMessageBox(caption, _("Confirmation"), wxYES_NO | wxNO_DEFAULT | wxICON_QUESTION, this) == wxID_NO)
         return;
 
     lstTargets->Delete(targetIdx);
@@ -643,13 +642,13 @@ void ProjectOptionsDlg::OnRemoveBuildTargetClick(wxCommandEvent& event)
     Manager::Get()->GetPluginManager()->NotifyPlugins(e);
 }
 
-void ProjectOptionsDlg::OnVirtualTargets(wxCommandEvent& event)
+void ProjectOptionsDlg::OnVirtualTargets(wxCommandEvent& /*event*/)
 {
     VirtualBuildTargetsDlg dlg(this, -1, m_Project);
     dlg.ShowModal();
 }
 
-void ProjectOptionsDlg::OnEditDepsClick(wxCommandEvent& event)
+void ProjectOptionsDlg::OnEditDepsClick(wxCommandEvent& /*event*/)
 {
     wxListBox* lstTargets = XRCCTRL(*this, "lstBuildTarget", wxListBox);
     ProjectBuildTarget* target = m_Project->GetBuildTarget(lstTargets->GetSelection());
@@ -661,7 +660,7 @@ void ProjectOptionsDlg::OnEditDepsClick(wxCommandEvent& event)
     dlg.ShowModal();
 }
 
-void ProjectOptionsDlg::OnExportTargetClick(wxCommandEvent& event)
+void ProjectOptionsDlg::OnExportTargetClick(wxCommandEvent& /*event*/)
 {
     wxListBox* lstTargets = XRCCTRL(*this, "lstBuildTarget", wxListBox);
     ProjectBuildTarget* target = m_Project->GetBuildTarget(lstTargets->GetSelection());
@@ -678,7 +677,7 @@ void ProjectOptionsDlg::OnExportTargetClick(wxCommandEvent& event)
     if (dlg.ShowModal() == wxID_YES)
     {
         if (m_Project->ExportTargetAsProject(target->GetTitle()))
-            cbMessageBox(_("New project created succesfully!"), _("Information"), wxICON_INFORMATION);
+            cbMessageBox(_("New project created succesfully!"), _("Information"), wxICON_INFORMATION, this);
     }
 }
 
@@ -710,7 +709,7 @@ void ProjectOptionsDlg::OnBrowseDirClick(wxCommandEvent& event)
     targettext->SetValue(path);
 }
 
-void ProjectOptionsDlg::OnBrowseOutputFilenameClick(wxCommandEvent& event)
+void ProjectOptionsDlg::OnBrowseOutputFilenameClick(wxCommandEvent& /*event*/)
 {
     wxFileName fname;
     fname.Assign(XRCCTRL(*this, "txtOutputFilename", wxTextCtrl)->GetValue());
@@ -730,7 +729,7 @@ void ProjectOptionsDlg::OnBrowseOutputFilenameClick(wxCommandEvent& event)
     XRCCTRL(*this, "txtOutputFilename", wxTextCtrl)->SetValue(fname.GetFullPath());
 }
 
-void ProjectOptionsDlg::OnFileOptionsClick(wxCommandEvent& event)
+void ProjectOptionsDlg::OnFileOptionsClick(wxCommandEvent& /*event*/)
 {
     wxCheckListBox* list = XRCCTRL(*this, "lstFiles", wxCheckListBox);
 
@@ -742,7 +741,7 @@ void ProjectOptionsDlg::OnFileOptionsClick(wxCommandEvent& event)
     }
 }
 
-void ProjectOptionsDlg::OnFileToggleMarkClick(wxCommandEvent& event)
+void ProjectOptionsDlg::OnFileToggleMarkClick(wxCommandEvent& /*event*/)
 {
     wxListBox* lstTargets = XRCCTRL(*this, "lstBuildTarget", wxListBox);
     int targetIdx = lstTargets->GetSelection();
@@ -760,7 +759,7 @@ void ProjectOptionsDlg::OnFileToggleMarkClick(wxCommandEvent& event)
     }
 }
 
-void ProjectOptionsDlg::OnScriptsOverviewSelChanged(wxTreeEvent& event)
+void ProjectOptionsDlg::OnScriptsOverviewSelChanged(wxTreeEvent& /*event*/)
 {
     FillScripts();
 }
@@ -797,7 +796,7 @@ bool ProjectOptionsDlg::ValidateTargetName(const wxString& name)
     {
         cbMessageBox(_("A target with this name already exists in this project!"),
                         _("Error"),
-                        wxOK | wxCENTRE | wxICON_ERROR);
+                        wxOK | wxCENTRE | wxICON_ERROR, this);
         return false;
     }
 
@@ -805,7 +804,7 @@ bool ProjectOptionsDlg::ValidateTargetName(const wxString& name)
     {
         cbMessageBox(_("A virtual target with this name already exists in this project!"),
                         _("Error"),
-                        wxOK | wxCENTRE | wxICON_ERROR);
+                        wxOK | wxCENTRE | wxICON_ERROR, this);
         return false;
     }
 
@@ -814,7 +813,7 @@ bool ProjectOptionsDlg::ValidateTargetName(const wxString& name)
     {
         cbMessageBox(_("The name contains at least one invalid character:\n\n") + forbidden,
                         _("Error"),
-                        wxOK | wxCENTRE | wxICON_ERROR);
+                        wxOK | wxCENTRE | wxICON_ERROR, this);
         return false;
     }
 
@@ -832,14 +831,14 @@ bool ProjectOptionsDlg::DoCheckScripts(CompileTargetBase* base)
             wxString msg;
             msg << _("Invalid build script: ") + scripts[i] << _T('\n');
             msg << _("First seen in: ") + base->GetTitle() << _T('\n');
-            cbMessageBox(msg, _("Error"), wxICON_ERROR);
+            cbMessageBox(msg, _("Error"), wxICON_ERROR, this);
             return false;
         }
     }
     return true;
 }
 
-void ProjectOptionsDlg::OnCheckScripts(wxCommandEvent& event)
+void ProjectOptionsDlg::OnCheckScripts(wxCommandEvent& /*event*/)
 {
     if (!DoCheckScripts(m_Project))
         return;
@@ -850,10 +849,10 @@ void ProjectOptionsDlg::OnCheckScripts(wxCommandEvent& event)
             return;
     }
 
-    cbMessageBox(_("All scripts seem to be valid!"), _("Information"), wxICON_INFORMATION);
+    cbMessageBox(_("All scripts seem to be valid!"), _("Information"), wxICON_INFORMATION, this);
 }
 
-void ProjectOptionsDlg::OnAddScript(wxCommandEvent& event)
+void ProjectOptionsDlg::OnAddScript(wxCommandEvent& /*event*/)
 {
     wxListBox* ctrl = XRCCTRL(*this, "lstPreScripts", wxListBox);
     if (!ctrl)
@@ -895,7 +894,7 @@ void ProjectOptionsDlg::OnAddScript(wxCommandEvent& event)
     }
 }
 
-void ProjectOptionsDlg::OnRemoveScript(wxCommandEvent& event)
+void ProjectOptionsDlg::OnRemoveScript(wxCommandEvent& /*event*/)
 {
     wxListBox* ctrl = XRCCTRL(*this, "lstPreScripts", wxListBox);
     if (!ctrl || ctrl->GetSelection() == -1)
@@ -946,7 +945,7 @@ void ProjectOptionsDlg::OnPlatform(wxCommandEvent& event)
     }
 }
 
-void ProjectOptionsDlg::OnScriptMoveUp(wxSpinEvent& event)
+void ProjectOptionsDlg::OnScriptMoveUp(wxSpinEvent& /*event*/)
 {
     wxListBox* ctrl = XRCCTRL(*this, "lstPreScripts", wxListBox);
     if (!ctrl || ctrl->GetSelection() <= 0)
@@ -970,7 +969,7 @@ void ProjectOptionsDlg::OnScriptMoveUp(wxSpinEvent& event)
     base->SetBuildScripts(scripts);
 }
 
-void ProjectOptionsDlg::OnScriptMoveDown(wxSpinEvent& event)
+void ProjectOptionsDlg::OnScriptMoveDown(wxSpinEvent& /*event*/)
 {
     wxListBox* ctrl = XRCCTRL(*this, "lstPreScripts", wxListBox);
     if (!ctrl || ctrl->GetSelection() == (int)(ctrl->GetCount()) - 1)
@@ -994,7 +993,7 @@ void ProjectOptionsDlg::OnScriptMoveDown(wxSpinEvent& event)
     base->SetBuildScripts(scripts);
 }
 
-void ProjectOptionsDlg::OnUpdateUI(wxUpdateUIEvent& event)
+void ProjectOptionsDlg::OnUpdateUI(wxUpdateUIEvent& /*event*/)
 {
     wxListBox* lstTargets = XRCCTRL(*this, "lstBuildTarget", wxListBox);
     wxCheckListBox* list = XRCCTRL(*this, "lstFiles", wxCheckListBox);
@@ -1048,7 +1047,7 @@ void ProjectOptionsDlg::OnOK(wxCommandEvent& event)
     if (XRCCTRL(*this, "txtProjectName", wxTextCtrl)->GetValue().Trim().IsEmpty())
     {
         cbMessageBox(_("The project title (name) cannot be empty."), _("Error"),
-                     wxOK | wxCENTRE | wxICON_ERROR);
+                     wxOK | wxCENTRE | wxICON_ERROR, this);
         return; // Stop propagating the event
     }
     event.Skip();

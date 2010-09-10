@@ -94,7 +94,7 @@ bool ProjectDepsDlg::SaveList()
             cbMessageBox(wxString::Format(_("Cannot add project '%s' as a dependency to '%s' because this "
                                             "would cause a circular dependency error..."),
                                             thisprj->GetTitle().c_str(), prj->GetTitle().c_str()),
-                        _("Error"), wxICON_ERROR);
+                        _("Error"), wxICON_ERROR, this);
             return false;
         }
     }
@@ -135,7 +135,7 @@ void ProjectDepsDlg::FillList()
     }
 }
 
-void ProjectDepsDlg::OnProjectChange(wxCommandEvent& event)
+void ProjectDepsDlg::OnProjectChange(wxCommandEvent& /*event*/)
 {
     FillList();
 }

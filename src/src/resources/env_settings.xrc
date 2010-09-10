@@ -112,7 +112,7 @@
 								<object class="sizeritem">
 									<object class="wxCheckBox" name="chkInvalidTargets">
 										<label>Ignore invalid targets</label>
-										<tooltip>When checked the user will not be prompted to deal with invalid targets, &#x0A;during the build process they will be ignored (example : the target&apos;s compiler is not installed)</tooltip>
+										<tooltip>When checked the user will not be prompted to deal with invalid targets,&#x0A;during the build process they will be ignored (example : the target&apos;s compiler is not installed)</tooltip>
 									</object>
 									<flag>wxTOP|wxLEFT|wxEXPAND|wxALIGN_LEFT|wxALIGN_TOP</flag>
 									<border>8</border>
@@ -238,7 +238,7 @@
 								</object>
 								<object class="spacer">
 									<flag>wxALIGN_LEFT|wxALIGN_TOP</flag>
-									<size>0,16</size>
+									<size>0,8</size>
 								</object>
 								<object class="sizeritem">
 									<object class="wxCheckBox" name="chkDoPlace">
@@ -292,9 +292,16 @@
 									<flag>wxLEFT|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL</flag>
 									<border>25</border>
 								</object>
+								<object class="sizeritem">
+									<object class="wxCheckBox" name="chkSaveSelectionChangeInMP">
+										<label>Save selected tab in message pane on perspective change</label>
+									</object>
+									<flag>wxALL|wxALIGN_LEFT|wxALIGN_BOTTOM</flag>
+									<border>5</border>
+								</object>
 								<object class="spacer">
 									<flag>wxALIGN_LEFT|wxALIGN_TOP</flag>
-									<size>0,16</size>
+									<size>0,8</size>
 								</object>
 								<object class="sizeritem">
 									<object class="wxBoxSizer">
@@ -392,8 +399,22 @@
 									<size>0,16</size>
 								</object>
 								<object class="sizeritem">
+									<object class="wxCheckBox" name="chkCloseOnAll">
+										<label>Show close on all tabs</label>
+									</object>
+									<flag>wxALL|wxALIGN_LEFT|wxALIGN_TOP</flag>
+									<border>8</border>
+								</object>
+								<object class="sizeritem">
 									<object class="wxCheckBox" name="chkListTabs">
 										<label>Use drop-down tab list</label>
+									</object>
+									<flag>wxALL|wxALIGN_LEFT|wxALIGN_TOP</flag>
+									<border>8</border>
+								</object>
+								<object class="sizeritem">
+									<object class="wxCheckBox" name="chkStackedBasedTabSwitching">
+										<label>Use stacked based tab-switching</label>
 									</object>
 									<flag>wxALL|wxALIGN_LEFT|wxALIGN_TOP</flag>
 									<border>8</border>
@@ -512,6 +533,13 @@
 									</object>
 									<flag>wxLEFT|wxEXPAND|wxALIGN_LEFT|wxALIGN_TOP</flag>
 									<border>8</border>
+								</object>
+								<object class="sizeritem">
+									<object class="wxButton" name="btnResetDefaultColours">
+										<label>Reset to defaults</label>
+									</object>
+									<flag>wxALL|wxALIGN_RIGHT|wxALIGN_TOP</flag>
+									<border>5</border>
 								</object>
 							</object>
 						</object>

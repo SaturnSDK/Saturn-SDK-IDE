@@ -23,7 +23,7 @@
 #include "ExpressionExecutor.h"
 
 #include <wx/intl.h>
-#include <math.h>
+#include <cmath>
 
 namespace Expression
 {
@@ -51,7 +51,7 @@ namespace Expression
 
         template<> struct Moduler< long double >
         {
-            inline long double operator()( const long double& val1, const long double& val2 ) { throw errorOperation; }
+            inline long double operator()( const long double& /*val1*/, const long double& /*val2*/ ) { throw errorOperation; }
         };
 
         template< typename T > struct Negation
@@ -200,25 +200,25 @@ namespace Expression
                 break;
 
             case Operation::fnSin:
-                ReplaceStack( Value( sinl( GetStack().GetFloat() ) ) );
+                ReplaceStack( Value( std::sin( GetStack().GetFloat() ) ) );
                 break;
 
             case Operation::fnCos:
-                ReplaceStack( Value( cosl( GetStack().GetFloat() ) ) );
+                ReplaceStack( Value( std::cos( GetStack().GetFloat() ) ) );
                 break;
 
             case Operation::fnTan:
-                ReplaceStack( Value( tanl( GetStack().GetFloat() ) ) );
+                ReplaceStack( Value( std::tan( GetStack().GetFloat() ) ) );
                 break;
 
             case Operation::fnLn:
-                ReplaceStack( Value( logl( GetStack().GetFloat() ) ) );
+                ReplaceStack( Value( std::log( GetStack().GetFloat() ) ) );
                 break;
 
             case Operation::fnPow:
             {
                 Value p = GetStack(); PopStack();
-                ReplaceStack( Value( powl( GetStack().GetFloat(), p.GetFloat() ) ) );
+                ReplaceStack( Value( std::pow( GetStack().GetFloat(), p.GetFloat() ) ) );
                 break;
             }
 
@@ -227,7 +227,7 @@ namespace Expression
         }
     }
 
-    inline void Executor::PushArgument( const Operation& op, long long address )
+    inline void Executor::PushArgument( const Operation& /*op*/, long long address )
     {
         PushStack( m_Code->GetArgument( address ) );
     }

@@ -34,7 +34,11 @@
 
 #include "pluginsconfigurationdlg.h" // class's header file
 
-int wxCALLBACK sortByTitle(long item1, long item2, long sortData)
+#if wxCHECK_VERSION(2, 9, 1)
+int wxCALLBACK sortByTitle(long item1, long item2, wxIntPtr /*sortData*/)
+#else
+int wxCALLBACK sortByTitle(long item1, long item2, long /*sortData*/)
+#endif
 {
     const PluginElement* elem1 = (const PluginElement*)item1;
     const PluginElement* elem2 = (const PluginElement*)item2;
@@ -218,7 +222,7 @@ void PluginsConfigurationDlg::OnToggle(wxCommandEvent& event)
     }
 }
 
-void PluginsConfigurationDlg::OnInstall(wxCommandEvent& event)
+void PluginsConfigurationDlg::OnInstall(wxCommandEvent& /*event*/)
 {
     wxFileDialog fd(this,
                         _("Select plugin to install"),
@@ -246,10 +250,10 @@ void PluginsConfigurationDlg::OnInstall(wxCommandEvent& event)
 
     FillList();
     if (!failure.IsEmpty())
-        cbMessageBox(_("One or more plugins were not installed succesfully:\n\n") + failure, _("Warning"), wxICON_WARNING);
+        cbMessageBox(_("One or more plugins were not installed succesfully:\n\n") + failure, _("Warning"), wxICON_WARNING, this);
 }
 
-void PluginsConfigurationDlg::OnUninstall(wxCommandEvent& event)
+void PluginsConfigurationDlg::OnUninstall(wxCommandEvent& /*event*/)
 {
     wxListCtrl* list = XRCCTRL(*this, "lstPlugins", wxListCtrl);
     if (list->GetSelectedItemCount() == 0)
@@ -275,10 +279,10 @@ void PluginsConfigurationDlg::OnUninstall(wxCommandEvent& event)
 
     FillList();
     if (!failure.IsEmpty())
-        cbMessageBox(_("One or more plugins were not uninstalled succesfully:\n\n") + failure, _("Warning"), wxICON_WARNING);
+        cbMessageBox(_("One or more plugins were not uninstalled succesfully:\n\n") + failure, _("Warning"), wxICON_WARNING, this);
 }
 
-void PluginsConfigurationDlg::OnExport(wxCommandEvent& event)
+void PluginsConfigurationDlg::OnExport(wxCommandEvent& /*event*/)
 {
     wxListCtrl* list = XRCCTRL(*this, "lstPlugins", wxListCtrl);
     if (list->GetSelectedItemCount() == 0)
@@ -377,10 +381,10 @@ void PluginsConfigurationDlg::OnExport(wxCommandEvent& event)
     }
 
     if (!failure.IsEmpty())
-        cbMessageBox(_("Failed exporting one or more plugins:\n\n") + failure, _("Warning"), wxICON_WARNING);
+        cbMessageBox(_("Failed exporting one or more plugins:\n\n") + failure, _("Warning"), wxICON_WARNING, this);
 }
 
-void PluginsConfigurationDlg::OnSelect(wxListEvent& event)
+void PluginsConfigurationDlg::OnSelect(wxListEvent& /*event*/)
 {
     wxListCtrl* list = XRCCTRL(*this, "lstPlugins", wxListCtrl);
     if (list->GetSelectedItemCount() != 1)

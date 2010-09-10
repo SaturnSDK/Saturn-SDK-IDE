@@ -44,7 +44,7 @@ static SQInteger validate_format(HSQUIRRELVM v, SQChar *fmt, const SQChar *src, 
 		width = 0;
 	if (src[n] == '.') {
 	    n++;
-    	
+
 		wc = 0;
 		while (scisdigit(src[n])) {
 			swidth[wc] = src[n];
@@ -83,12 +83,13 @@ SQRESULT sqstd_format(HSQUIRRELVM v,SQInteger nformatstringidx,SQInteger *outlen
 		}
 		else if(format[n+1] == '%') { //handles %%
 				dest[i++] = '%';
-				n += 2; 
+				n += 2;
 		}
 		else {
 			n++;
 			if( nparam > sq_gettop(v) )
-				return sq_throwerror(v,_SC("not enough paramters for the given format string"));
+                // C::B patch: Correct misspelled "parameters"
+				return sq_throwerror(v,_SC("not enough parameters for the given format string"));
 			n = validate_format(v,fmt,format,n,w);
 			if(n < 0) return -1;
 			SQInteger addlen = 0;
@@ -98,19 +99,19 @@ SQRESULT sqstd_format(HSQUIRRELVM v,SQInteger nformatstringidx,SQInteger *outlen
 			SQFloat tf;
 			switch(format[n]) {
 			case 's':
-				if(SQ_FAILED(sq_getstring(v,nparam,&ts))) 
+				if(SQ_FAILED(sq_getstring(v,nparam,&ts)))
 					return sq_throwerror(v,_SC("string expected for the specified format"));
 				addlen = (sq_getsize(v,nparam)*sizeof(SQChar))+((w+1)*sizeof(SQChar));
 				valtype = 's';
 				break;
 			case 'i': case 'd': case 'c':case 'o':  case 'u':  case 'x':  case 'X':
-				if(SQ_FAILED(sq_getinteger(v,nparam,&ti))) 
+				if(SQ_FAILED(sq_getinteger(v,nparam,&ti)))
 					return sq_throwerror(v,_SC("integer expected for the specified format"));
 				addlen = (ADDITIONAL_FORMAT_SPACE)+((w+1)*sizeof(SQChar));
 				valtype = 'i';
 				break;
 			case 'f': case 'g': case 'G': case 'e':  case 'E':
-				if(SQ_FAILED(sq_getfloat(v,nparam,&tf))) 
+				if(SQ_FAILED(sq_getfloat(v,nparam,&tf)))
 					return sq_throwerror(v,_SC("float expected for the specified format"));
 				addlen = (ADDITIONAL_FORMAT_SPACE)+((w+1)*sizeof(SQChar));
 				valtype = 'f';
@@ -215,9 +216,10 @@ static SQInteger _string_split(HSQUIRRELVM v)
 
 #define SETUP_REX(v) \
 	SQRex *self = NULL; \
-	sq_getinstanceup(v,1,(SQUserPointer *)&self,0); 
+	sq_getinstanceup(v,1,(SQUserPointer *)&self,0);
 
-static SQInteger _rexobj_releasehook(SQUserPointer p, SQInteger size)
+// C::B patch: Make the compiler happy by commenting unused variables
+static SQInteger _rexobj_releasehook(SQUserPointer p, SQInteger /*size*/)
 {
 	SQRex *self = ((SQRex *)p);
 	sqstd_rex_free(self);

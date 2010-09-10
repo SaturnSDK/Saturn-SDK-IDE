@@ -145,7 +145,7 @@ OldConfigManagerContainer::StringSet sset;
 sset.insert("zac");
 sset.insert("boing");
 sset.insert("boom");
-sset.insert("Was würde der Fürst von Thurn & Taxis zu Umlauten sagen?"); // test how good tinyXML is at quoting special chars :)
+sset.insert("Was wYrde der FYrst von Thurn & Taxis zu Umlauten sagen?"); // test how good tinyXML is at quoting special chars :)
 
 c->Write("unique_strings", sset);
 sset.clear();

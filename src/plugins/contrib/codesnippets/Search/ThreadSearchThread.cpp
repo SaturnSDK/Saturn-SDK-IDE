@@ -14,12 +14,15 @@
  * License:   GPL
  **************************************************************/
 
+#if defined(CB_PRECOMP)
 #include "sdk.h"
+#endif
+//#include "sdk.h"
 #ifndef CB_PRECOMP
 	#include "cbeditor.h"
 #endif
 
-#include <wx/aui/auibook.h>
+#include "cbauibook.h"
 
 #include "ThreadSearchThread.h"
 #include "ThreadSearchEvent.h"

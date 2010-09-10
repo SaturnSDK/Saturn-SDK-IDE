@@ -67,7 +67,7 @@ EditPathDlg::~EditPathDlg()
 	//dtor
 }
 
-void EditPathDlg::OnBrowse(wxCommandEvent& event)
+void EditPathDlg::OnBrowse(wxCommandEvent& /*event*/)
 {
     wxFileName path;
     wxArrayString multi;
@@ -133,7 +133,7 @@ void EditPathDlg::OnBrowse(wxCommandEvent& event)
         // ask the user if he wants it to be kept as relative
         if (cbMessageBox(_("Keep this as a relative path?"),
                         _("Question"),
-                        wxICON_QUESTION | wxYES_NO) == wxID_YES)
+                        wxICON_QUESTION | wxYES_NO, this) == wxID_YES)
         {
             if (m_AllowMultiSel)
             {
@@ -171,7 +171,7 @@ void EditPathDlg::OnBrowse(wxCommandEvent& event)
     XRCCTRL(*this, "txtPath", wxTextCtrl)->SetValue(result);
 }
 
-void EditPathDlg::OnUpdateUI(wxUpdateUIEvent& event)
+void EditPathDlg::OnUpdateUI(wxUpdateUIEvent& /*event*/)
 {
     wxButton* btn = (wxButton*)FindWindow(wxID_OK);
     if (btn)

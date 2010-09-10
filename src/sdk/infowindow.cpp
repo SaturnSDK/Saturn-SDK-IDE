@@ -30,6 +30,7 @@ END_EVENT_TABLE()
 
 const wxColour titleBackground(96,96,96); // dark grey
 const wxColour textBackground(255,255,160); // yellowish
+const wxColour textForeground(0, 0, 0); // black for the text color
 
 
 const char *iBitmap[] = {
@@ -165,6 +166,7 @@ InfoWindow::InfoWindow(const wxString& title, const wxString& message, unsigned 
 
         ForwardingTextControl *text = new ForwardingTextControl(this, -1, message, wxDefaultPosition, wxDefaultSize, 0);
         text->SetBackgroundColour(textBackground);
+        text->SetForegroundColour(textForeground);
         bs->Add(text, 0, wxALIGN_CENTER|wxALL, 12);
         SetBackgroundColour(textBackground);
         SetSizer(bs);
@@ -206,7 +208,7 @@ InfoWindow::~InfoWindow()
     active_messages.erase(my_message_iterator);
 };
 
-void InfoWindow::OnTimer(wxTimerEvent& e)
+void InfoWindow::OnTimer(wxTimerEvent& /*e*/)
 {
     switch(status)
     {
@@ -239,13 +241,13 @@ void InfoWindow::OnTimer(wxTimerEvent& e)
     };
 };
 
-void InfoWindow::OnMove(wxMouseEvent& e)
+void InfoWindow::OnMove(wxMouseEvent& /*e*/)
 {
     if(status == 2)
         m_timer->Start(m_delay, true);
 }
 
-void InfoWindow::OnClick(wxMouseEvent& e)
+void InfoWindow::OnClick(wxMouseEvent& /*e*/)
 {
     ks = 6;
     status = 3;

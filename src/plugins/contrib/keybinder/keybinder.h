@@ -75,7 +75,7 @@ class wxKeyBind
 {
 protected:
 
-    //! One of wxACCEL_ALT, wxACCEL_CTRL or wxACCEL_SHIFT flags.
+    //! One of wxACCEL_ALT, wxACCEL_CTRL, wxACCEL_SHIFT, or wxACCEL_CMD flags.
     int m_nFlags;
 
     //! One of the wxWidgets key code which defines the key shortcut.
@@ -445,7 +445,7 @@ protected:
 
     //! Called after an Add/Remove function is called.
     //! Default implementation does nothing.
-    virtual void Update(wxMenuItem* pMnuItem = 0) {}
+    virtual void Update(wxMenuItem* /*pMnuItem*/ = 0) {}
 
     //! Executes the command.
     //! - obj ("origin") is the object which generated the event that
@@ -730,7 +730,10 @@ protected:
 public:
 
     wxKeyBinder() {}
-    wxKeyBinder(const wxKeyBinder &tocopy) { DeepCopy(tocopy); }
+    wxKeyBinder(const wxKeyBinder &tocopy) : wxObject(tocopy)
+    {
+    	DeepCopy(tocopy);
+	}
 
 
     virtual ~wxKeyBinder() { DetachAll(); }
@@ -945,10 +948,12 @@ protected:
 public:
     wxKeyProfile(const wxString &name = wxEmptyString,
                 const wxString &desc = wxEmptyString)
-        : m_strName(name), m_strDescription(desc) {}
+        : wxKeyBinder(), m_strName(name), m_strDescription(desc) {}
 
-    wxKeyProfile(const wxKeyProfile &tocopy)
-        { DeepCopy(tocopy); }
+    wxKeyProfile(const wxKeyProfile &tocopy) : wxKeyBinder(tocopy)
+	{
+		DeepCopy(tocopy);
+	}
 
     virtual ~wxKeyProfile() {}
 
@@ -1171,7 +1176,7 @@ public:
         const wxValidator& validator = wxDefaultValidator,
         const wxString& name = wxTextCtrlNameStr) :
         wxTextCtrl(parent, id, value, pos, size, style, validator, name)
-        { validCmdPrefixes = wxT("Ctrl-Alt-Shift-");}
+        { validCmdPrefixes = wxT("Ctrl-XCtrl-Alt-Shift-");}
 
     virtual ~wxKeyMonitorTextCtrl() {}
 

@@ -234,6 +234,14 @@ AppVersion::~AppVersion()
 //       91) Clear m_bProjectClosing in OnProjectOpened() else no initial activation recorded after project closed.
 //       92) Fix JumpTracker inablility to switch between editors (caused by Editor Activation fix)
 // ----------------------------------------------------------------------------
+//  Commit 1.2.93 2010/02/19
+//       93) Diable Ctrl-Left_Mouse key usage when user sets editor multi-selection enabled.
+// ----------------------------------------------------------------------------
+//  Commit 1.2.94 2010/02/25
+//       94) Apply patch 2886 by techy
+//  Commit 1.2.95 2010/06/30
+//       95) Do not record firt source line in JumpTracker
+// ----------------------------------------------------------------------------
 //  //FIXME: Bugs
 //      01) Requires CB to be restarted after Install before Alt-Left/Right work.
 //          When CB reloads a changed editor, the marks are missing

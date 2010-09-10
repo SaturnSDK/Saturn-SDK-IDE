@@ -188,7 +188,11 @@ void NewFromTemplateDlg::BuildCategoriesFor(TemplateOutputType otype, wxChoice* 
 	cat->SetSelection(0);
 }
 
-int wxCALLBACK SortTemplates(long item1, long item2, long sortData)
+#if wxCHECK_VERSION(2, 9, 1)
+int wxCALLBACK SortTemplates(long item1, long item2, wxIntPtr /*sortData*/)
+#else
+int wxCALLBACK SortTemplates(long item1, long item2, long /*sortData*/)
+#endif
 {
     ListItemData* data1 = reinterpret_cast<ListItemData*>(item1);
     ListItemData* data2 = reinterpret_cast<ListItemData*>(item2);
@@ -362,7 +366,7 @@ void NewFromTemplateDlg::EditScript(const wxString& filename)
         EndModal(wxID_CANCEL);
         return;
     }
-    cbMessageBox(_("Couldn't open script:\n") + script, _("Error"), wxICON_ERROR);
+    cbMessageBox(_("Couldn't open script:\n") + script, _("Error"), wxICON_ERROR, this);
 }
 
 void NewFromTemplateDlg::ChangeView()
@@ -416,12 +420,12 @@ void NewFromTemplateDlg::OnListActivate(wxListEvent& /*event*/)
 	EndModal(wxID_OK);
 }
 
-void NewFromTemplateDlg::OnCategoryChanged(wxCommandEvent& event)
+void NewFromTemplateDlg::OnCategoryChanged(wxCommandEvent& /*event*/)
 {
     BuildListFor(GetVisibleOutputType(), GetVisibleListCtrl(), GetVisibleCategory());
 }
 
-void NewFromTemplateDlg::OnEditScript(wxCommandEvent& event)
+void NewFromTemplateDlg::OnEditScript(wxCommandEvent& /*event*/)
 {
     wxListCtrl* list = GetVisibleListCtrl();
     if (!list)
@@ -434,7 +438,7 @@ void NewFromTemplateDlg::OnEditScript(wxCommandEvent& event)
     EditScript(wiz->GetScriptFilename(data->wizPluginIndex));
 }
 
-void NewFromTemplateDlg::OnDiscardScript(wxCommandEvent& event)
+void NewFromTemplateDlg::OnDiscardScript(wxCommandEvent& /*event*/)
 {
     wxListCtrl* list = GetVisibleListCtrl();
     if (!list)
@@ -450,7 +454,7 @@ void NewFromTemplateDlg::OnDiscardScript(wxCommandEvent& event)
 	if (wxFileExists(script))
 	{
 		if (cbMessageBox(_("Are you sure you want to discard all local modifications to this script?"),
-						_("Confirmation"), wxICON_QUESTION | wxYES_NO) == wxID_YES)
+						_("Confirmation"), wxICON_QUESTION | wxYES_NO, this) == wxID_YES)
 		{
 			if (wxRemoveFile(script))
 				list->SetItemTextColour(index, wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOWTEXT));
@@ -458,20 +462,20 @@ void NewFromTemplateDlg::OnDiscardScript(wxCommandEvent& event)
 	}
 }
 
-void NewFromTemplateDlg::OnEditGlobalScript(wxCommandEvent& event)
+void NewFromTemplateDlg::OnEditGlobalScript(wxCommandEvent& /*event*/)
 {
     cbMessageBox(_("Any changes you make to the global wizard registration script will "
                     "take effect after you restart Code::Blocks."),
-                    _("Information"), wxICON_INFORMATION);
+                    _("Information"), wxICON_INFORMATION, this);
     EditScript(_T("config.script"));
 }
 
-void NewFromTemplateDlg::OnViewChange(wxCommandEvent& event)
+void NewFromTemplateDlg::OnViewChange(wxCommandEvent& /*event*/)
 {
     ChangeView();
 }
 
-void NewFromTemplateDlg::OnHelp(wxCommandEvent& event)
+void NewFromTemplateDlg::OnHelp(wxCommandEvent& /*event*/)
 {
     cbMessageBox(_("When you edit a wizard's script, you actually edit a copy of it which "
                     "is automatically placed inside your user configuration directory.\n"
@@ -486,10 +490,10 @@ void NewFromTemplateDlg::OnHelp(wxCommandEvent& event)
                     "On this computer, the customized scripts are located under:\n") +
                     ConfigManager::GetFolder(sdDataUser) + _T("/templates/wizard/"),
                     _("Help"),
-                    wxICON_INFORMATION);
+                    wxICON_INFORMATION, this);
 }
 
-void NewFromTemplateDlg::OnUpdateUI(wxUpdateUIEvent& event)
+void NewFromTemplateDlg::OnUpdateUI(wxUpdateUIEvent& /*event*/)
 {
     wxListbook* lb = XRCCTRL(*this, "nbMain", wxListbook);
     size_t page = lb->GetSelection();

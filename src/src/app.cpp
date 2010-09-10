@@ -22,7 +22,7 @@
 #include <wx/notebook.h>
 #include <wx/clipbrd.h>
 
-#include <wx/aui/auibook.h>
+#include "cbauibook.h"
 #include <cbexception.h>
 #include <wx/debugrpt.h>
 #include <configmanager.h>
@@ -104,7 +104,7 @@ wxConnectionBase* DDEServer::OnAcceptConnection(const wxString& topic)
     return topic == DDE_TOPIC ? new DDEConnection(m_Frame) : 0L;
 }
 
-bool DDEConnection::OnExecute(const wxString& topic, wxChar *data, int size, wxIPCFormat format)
+bool DDEConnection::OnExecute(const wxString& /*topic*/, wxChar *data, int /*size*/, wxIPCFormat /*format*/)
 {
     wxString strData(data);
 
@@ -234,7 +234,7 @@ class Splash
         {
             if (show)
             {
-                wxBitmap bmp = cbLoadBitmap(ConfigManager::ReadDataPath() + _T("/images/splash_new.png"));
+                wxBitmap bmp = cbLoadBitmap(ConfigManager::ReadDataPath() + _T("/images/splash_1005.png"));
                 m_pSplash = new cbSplashScreen(bmp, -1, 0, -1, wxNO_BORDER | wxFRAME_NO_TASKBAR | wxFRAME_SHAPED);
                 Manager::Yield();
             }
@@ -343,15 +343,15 @@ void CodeBlocksApp::InitAssociations()
 
             switch(dlg.ShowModal())
             {
-            case 0:
+            case ASC_ASSOC_DLG_NO_DONT_ASK:
                 Manager::Get()->GetConfigManager(_T("app"))->Write(_T("/environment/check_associations"), false);
                 break;
-            case 1:
+            case ASC_ASSOC_DLG_NO_ONLY_NOW:
                 break;
-            case 2:
+            case ASC_ASSOC_DLG_YES_C_FILES:
                 Associations::SetCore();
                 break;
-            case 3:
+            case ASC_ASSOC_DLG_YES_ALL_FILES:
                 Associations::SetAll();
                 break;
             };
@@ -489,6 +489,9 @@ bool CodeBlocksApp::OnInit()
 
     wxTheClipboard->Flush();
 
+    wxCmdLineParser& parser = *Manager::GetCmdLineParser();
+    parser.SetDesc(cmdLineDesc);
+
     // NOTE: crash handler explicitly disabled because it causes problems
     //       with plugins loading/unloading...
     //
@@ -534,8 +537,6 @@ bool CodeBlocksApp::OnInit()
             if(connection)
             {
                 wxArrayString strFilesInCommandLine;
-                wxCmdLineParser& parser = *Manager::GetCmdLineParser();
-                parser.SetDesc(cmdLineDesc);
                 parser.SetCmdLine(argc, argv);
 
                 // search for valid filenames passed as argument on commandline
@@ -608,8 +609,8 @@ bool CodeBlocksApp::OnInit()
             {
 
                 /* NOTE: Due to a recent change in logging code, this visual warning got disabled.
-                   So the wxLogError() has been changed to a wxMessageBox(). */
-                wxMessageBox(_("Another program instance is already running.\nCode::Blocks is currently configured to only allow one running instance.\n\nYou can access this Setting under the menu item 'Environment'."),
+                   So the wxLogError() has been changed to a cbMessageBox(). */
+                cbMessageBox(_("Another program instance is already running.\nCode::Blocks is currently configured to only allow one running instance.\n\nYou can access this Setting under the menu item 'Environment'."),
                             _T("Code::Blocks"), wxOK | wxICON_ERROR);
                 return false;
             }
@@ -622,7 +623,8 @@ bool CodeBlocksApp::OnInit()
 
         Manager::SetBatchBuild(m_Batch || !m_Script.IsEmpty());
         Manager::Get()->GetScriptingManager();
-        MainFrame* frame = 0; frame = InitFrame();
+        MainFrame* frame = 0;
+        frame = InitFrame();
         m_Frame = frame;
 
         if (m_SafeMode) wxLog::EnableLogging(true); // re-enable logging in safe-mode
@@ -739,36 +741,36 @@ int CodeBlocksApp::OnExit()
 }
 
 #ifdef __WXMSW__
-	inline void EnableLFH()
-	{
-		typedef BOOL  (WINAPI *HeapSetInformation_t)(HANDLE, HEAP_INFORMATION_CLASS, PVOID, SIZE_T);
-		typedef DWORD (WINAPI *GetProcessHeaps_t)(DWORD, PHANDLE);
+    inline void EnableLFH()
+    {
+        typedef BOOL  (WINAPI *HeapSetInformation_t)(HANDLE, HEAP_INFORMATION_CLASS, PVOID, SIZE_T);
+        typedef DWORD (WINAPI *GetProcessHeaps_t)(DWORD, PHANDLE);
 
-		HINSTANCE kh = GetModuleHandle(TEXT("kernel32.dll"));
-		HeapSetInformation_t  HeapSetInformation_func = (HeapSetInformation_t)  GetProcAddress(kh, "HeapSetInformation");
-		GetProcessHeaps_t     GetProcessHeaps_func    = (GetProcessHeaps_t)     GetProcAddress(kh, "GetProcessHeaps");
+        HINSTANCE kh = GetModuleHandle(TEXT("kernel32.dll"));
+        HeapSetInformation_t  HeapSetInformation_func = (HeapSetInformation_t)  GetProcAddress(kh, "HeapSetInformation");
+        GetProcessHeaps_t     GetProcessHeaps_func    = (GetProcessHeaps_t)     GetProcAddress(kh, "GetProcessHeaps");
 
-		if(GetProcessHeaps_func && HeapSetInformation_func)
-		{
-			ULONG  HeapFragValue = 2;
+        if(GetProcessHeaps_func && HeapSetInformation_func)
+        {
+            ULONG  HeapFragValue = 2;
 
-			int n = GetProcessHeaps_func(0, 0);
-			HANDLE *h = new HANDLE[n];
-			GetProcessHeaps_func(n, h);
+            int n = GetProcessHeaps_func(0, 0);
+            HANDLE *h = new HANDLE[n];
+            GetProcessHeaps_func(n, h);
 
-			for(int i = 0; i < n; ++i)
-				HeapSetInformation_func(h[i], HeapCompatibilityInformation, &HeapFragValue, sizeof(HeapFragValue));
+            for(int i = 0; i < n; ++i)
+                HeapSetInformation_func(h[i], HeapCompatibilityInformation, &HeapFragValue, sizeof(HeapFragValue));
 
-			delete[] h;
-		}
-	}
+            delete[] h;
+        }
+    }
 #else
-	inline void EnableLFH() {}
+    inline void EnableLFH() {}
 #endif
 
 int CodeBlocksApp::OnRun()
 {
-	EnableLFH();
+    EnableLFH();
     try
     {
         int retval = wxApp::OnRun();
@@ -1037,7 +1039,6 @@ int CodeBlocksApp::ParseCmdLine(MainFrame* handlerFrame)
 
 #if wxUSE_CMDLINE_PARSER
     wxCmdLineParser& parser = *Manager::GetCmdLineParser();
-    parser.SetDesc(cmdLineDesc);
     parser.SetCmdLine(argc, argv);
     // wxApp::argc is a wxChar**
 
@@ -1166,29 +1167,29 @@ void CodeBlocksApp::LoadDelayedFiles(MainFrame *const frame)
     // --file foo.cpp[:line]
     if (!m_AutoFile.IsEmpty())
     {
-    	wxString linePart;
+        wxString linePart;
         // wxString::Last is deprecated
         long linePos = m_AutoFile.Find(_T(':'), true);
-    	if (linePos != wxNOT_FOUND)
-    	{
-			linePart = m_AutoFile.Mid(linePos + 1, wxString::npos);
-			m_AutoFile.Remove(linePos);
-    	}
+        if (linePos != wxNOT_FOUND)
+        {
+            linePart = m_AutoFile.Mid(linePos + 1, wxString::npos);
+            m_AutoFile.Remove(linePos);
+        }
 
-//    	Manager::Get()->GetLogManager()->Log(m_AutoFile);
-//    	Manager::Get()->GetLogManager()->Log(linePart);
+//        Manager::Get()->GetLogManager()->Log(m_AutoFile);
+//        Manager::Get()->GetLogManager()->Log(linePart);
 
-    	if (frame->Open(m_AutoFile, false) && linePos != wxNOT_FOUND)
-		{
-			long line;
-			if (linePart.ToLong(&line))
-			{
-				EditorBase* eb = Manager::Get()->GetEditorManager()->GetEditor(Manager::Get()->GetEditorManager()->GetEditorsCount() - 1);
-//				Manager::Get()->GetLogManager()->Log(F(_T("%p"), eb));
-				if (eb)
-					eb->GotoLine(line - 1, true);
-			}
-    	}
+        if (frame->Open(m_AutoFile, false) && linePos != wxNOT_FOUND)
+        {
+            long line;
+            if (linePart.ToLong(&line))
+            {
+                EditorBase* eb = Manager::Get()->GetEditorManager()->GetEditor(Manager::Get()->GetEditorManager()->GetEditorsCount() - 1);
+//                Manager::Get()->GetLogManager()->Log(F(_T("%p"), eb));
+                if (eb)
+                    eb->GotoLine(line - 1, true);
+            }
+        }
     }
 }
 

@@ -292,7 +292,7 @@ bool Tokenizer::SkipString()
 }
 
 // expect we are not in a C-string.
-bool Tokenizer::SkipToOneOfChars(const wxChar* chars, bool supportNesting)
+bool Tokenizer::SkipToOneOfChars(const wxChar* chars, bool supportNesting, bool skipPreprocessor, bool skipAngleBrace)
 {
     while (NotEOF() && !CharInString(CurrentChar(), chars))
     {
@@ -310,15 +310,25 @@ bool Tokenizer::SkipToOneOfChars(const wxChar* chars, bool supportNesting)
         {
             switch (CurrentChar())
             {
+                case '#':
+					if (skipPreprocessor)
+						SkipToEOL(true, true);
+					else
+						done = true;
+					break;
                 case '{': SkipBlock('{'); break;
                 case '(': SkipBlock('('); break;
                 case '[': SkipBlock('['); break;
                 case '<': // don't skip if << operator
-                    if (NextChar() == '<')
-                        MoveToNextChar(2); // skip it and also the next '<' or the next '<' leads to a SkipBlock('<');
-                    else
-                        SkipBlock('<');
-                    break;
+                    if (skipAngleBrace)
+                    {
+                        if (NextChar() == '<')
+                            MoveToNextChar(2); // skip it and also the next '<' or the next '<' leads to a SkipBlock('<');
+                        else
+                            SkipBlock('<');
+                        break;
+                    }
+
                 default: done = true; break;
             }
         }
@@ -497,7 +507,7 @@ bool Tokenizer::SkipUnwanted()
     {
         if (c == _T('='))
         {
-            if (!SkipToOneOfChars(_T(",;}"), true))
+            if (!SkipToOneOfChars(_T(",;}"), true, true, false))
                 return false;
         }
     }
@@ -505,7 +515,7 @@ bool Tokenizer::SkipUnwanted()
     {
         if (c == _T('?'))
         {
-            if (!SkipToOneOfChars(_T(";}")))
+            if (!SkipToOneOfChars(_T(";}"), false, true))
                 return false;
         }
     }
@@ -652,7 +662,7 @@ wxString Tokenizer::DoGetToken()
     {
         if (m_State&tsSingleAngleBrace)
         {
-            if ( !SkipToOneOfChars(  _T(">"), true)   )
+            if ( !SkipToOneOfChars(  _T(">"), true, true)   )
                 return wxEmptyString;
             MoveToNextChar();
             str= m_Buffer.Mid(start, m_TokenIndex - start);
@@ -697,6 +707,16 @@ wxString Tokenizer::FixArgument(wxString src)
     wxString dst;
 
     TRACE(_T("FixArgument() : src='%s'."), src.wx_str());
+
+    // skip C++ comments
+    for (size_t i = 0; i < src.Length() - 1; ++i)
+    {
+        if (src.GetChar(i) == _T('/') && src.GetChar(i + 1) == _T('/'))
+        {
+            do src.SetChar(i, _T(' '));
+            while (src.GetChar(++i) != _T('\n') && i < src.Length() - 1);
+        }
+    }
 
     // str.Replace is massive overkill here since it has to allocate one new block per replacement
     { // this is much faster:
@@ -790,7 +810,7 @@ wxString Tokenizer::MacroReplace(const wxString str)
         // match one!
         wxString key   = it->first;
         wxString value = it->second;
-        TRACE(_T("MacroReplace() : Replacing '%s' with '%s' (file='%s')."), key.wx_str(), value.wx_str(), m_ m_Filename.wx_str());
+        TRACE(_T("MacroReplace() : Replacing '%s' with '%s' (file='%s')."), key.wx_str(), value.wx_str(), m_Filename.wx_str());
         if (value[0]=='+' && CurrentChar()=='(')
         {
             unsigned int start = m_TokenIndex;

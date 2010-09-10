@@ -1,5 +1,6 @@
 INCLUDES = $(WX_CXXFLAGS) \
         $(WX_GTK2_CFLAGS) \
+        $(WX_X11_CFLAGS) \
 		-I$(top_srcdir)/src/include \
 		-I$(top_srcdir)/src/sdk/wxscintilla/include \
 		-I$(top_srcdir)/src/plugins/contrib/codesnippets \
@@ -12,13 +13,11 @@ pluginlibdir = $(pkglibdir)/plugins
 ##pluginlib_LTLIBRARIES = codesnippets
 bin_PROGRAMS = codesnippets
 
-codesnippets_LDFLAGS = $(WX_GTK2_LIBS)
-
 ##codesnippets_LIBADD = $(PLUGIN_WX_LIBS) ../../../../sdk/libcodeblocks.la
 ##codesnippets_LDADD = $(PLUGIN_WX_LIBS) ../../../../sdk/libcodeblocks.la
 codesnippets_LDADD =  -L../../../../base/tinyxml -ltinyxml \
             -L../../../../sdk ../../../../sdk/libcodeblocks.la \
-			$(PLUGIN_WX_LIBS) $(WX_LIBS)
+			$(PLUGIN_WX_LIBS) $(WX_LIBS) $(WX_GTK2_LIBS) $(WX_X11_LIBS)
 
 codesnippets_SOURCES =	$(srcdir)/../version.cpp \
 		$(srcdir)/../Search/DirectoryParamsPanel.cpp \
@@ -118,25 +117,23 @@ noinst_HEADERS =  	$(srcdir)/../version.h \
 		$(srcdir)/../snippetsconfig.h \
 		$(srcdir)/../snippetsimages.h
 
-pkgdatadir = $(datadir)/@PACKAGE@/images/codesnippets
+pkgdata_DATA = codesnippets.zip
+CLEANFILES = $(pkgdata_DATA)
 
-dist_pkgdata_DATA = 	allsnippets.png \
-			category.png \
-			snippet.png \
-			findf.png \
-			findfdisabled.png \
-			options.png \
-            optionsdisabled.png \
-            stop.png \
-            stopdisabled.png
+imagedir = $(pkgdatadir)/images/codesnippets
+
+dist_image_DATA =  allsnippets.png \
+		category.png \
+		snippet.png \
+		findf.png \
+		findfdisabled.png \
+		options.png \
+		optionsdisabled.png \
+		stop.png \
+		stopdisabled.png
 
 EXTRA_DIST = manifest.xml
 
-codesnippets.zip: manifest.xml
+codesnippets.zip: $(EXTRA_DIST)
 	PWD=`pwd` cd $(srcdir) && zip $(PWD)/codesnippets.zip manifest.xml > /dev/null
-
-install-data-local: codesnippets.zip
-	$(mkinstalldirs) $(DESTDIR)$(datadir)/@PACKAGE@/; \
-	if test -f $(srcdir)/codesnippets.zip; then p=$(srcdir)/codesnippets.zip; else p=codesnippets.zip; fi; \
-	$(INSTALL_DATA) $$p $(DESTDIR)$(datadir)/@PACKAGE@/codesnippets.zip
 

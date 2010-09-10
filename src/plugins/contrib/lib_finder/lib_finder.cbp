@@ -8,13 +8,12 @@
 		<Build>
 			<Target title="default">
 				<Option output="..\..\..\devel\share\CodeBlocks\plugins\lib_finder.dll" prefix_auto="0" extension_auto="0" />
-				<Option working_dir="..\..\..\devel" />
 				<Option object_output="..\..\..\.objs\plugins\contrib\lib_finder" />
 				<Option external_deps="..\..\..\devel\wxflatnotebook.dll;" />
 				<Option type="3" />
 				<Option compiler="gcc" />
 				<Option parameters="--debug-log -na -ns -nd" />
-				<Option host_application=".\codeblocks.exe" />
+				<Option host_application="..\..\..\devel\codeblocks.exe" />
 				<Option projectResourceIncludeDirsRelation="0" />
 			</Target>
 			<Environment>
@@ -41,6 +40,8 @@
 			<Add option="-DWX_PRECOMP" />
 			<Add option="-DwxUSE_UNICODE" />
 			<Add option="-DBUILDING_PLUGIN" />
+			<Add option="-DWXMAKINGDLL_PROPGRID" />
+			<Add option="-DwxPG_USE_WXMODULE=0" />
 			<Add directory="$(#WX.include)" />
 			<Add directory="$(#WX.lib)\gcc_dll$(WX_CFG)\msw$(WX_SUFFIX)" />
 			<Add directory="$(#WX)\contrib\include" />
@@ -62,7 +63,6 @@
 			<Add option="-mthreads" />
 			<Add library="wxflatnotebook" />
 			<Add library="wxmsw28$(WX_SUFFIX)" />
-			<Add library="txml" />
 			<Add library="codeblocks" />
 			<Add directory="$(#WX.lib)\gcc_dll$(WX_CFG)" />
 			<Add directory="..\..\..\devel" />

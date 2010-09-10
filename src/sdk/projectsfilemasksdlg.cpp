@@ -77,7 +77,7 @@ void ProjectsFileMasksDlg::ListChange()
     m_LastListSelection = sel;
 }
 
-void ProjectsFileMasksDlg::OnUpdateUI(wxUpdateUIEvent& event)
+void ProjectsFileMasksDlg::OnUpdateUI(wxUpdateUIEvent& /*event*/)
 {
     int sel = XRCCTRL(*this, "lstCategories", wxListBox)->GetSelection();
 
@@ -85,7 +85,7 @@ void ProjectsFileMasksDlg::OnUpdateUI(wxUpdateUIEvent& event)
     XRCCTRL(*this, "btnDelete", wxButton)->Enable(sel >= 0);
 }
 
-void ProjectsFileMasksDlg::OnAdd(wxCommandEvent& event)
+void ProjectsFileMasksDlg::OnAdd(wxCommandEvent& /*event*/)
 {
     wxString groupName = wxGetTextFromUser(_("Enter the new group name:"),
                                             _("New group"));
@@ -99,7 +99,7 @@ void ProjectsFileMasksDlg::OnAdd(wxCommandEvent& event)
     XRCCTRL(*this, "txtFileMasks", wxTextCtrl)->SetFocus();
 }
 
-void ProjectsFileMasksDlg::OnEdit(wxCommandEvent& event)
+void ProjectsFileMasksDlg::OnEdit(wxCommandEvent& /*event*/)
 {
     wxListBox* pList = XRCCTRL(*this, "lstCategories", wxListBox);
     wxString oldName = pList->GetStringSelection();
@@ -112,30 +112,25 @@ void ProjectsFileMasksDlg::OnEdit(wxCommandEvent& event)
     }
 }
 
-void ProjectsFileMasksDlg::OnDelete(wxCommandEvent& event)
+void ProjectsFileMasksDlg::OnDelete(wxCommandEvent& /*event*/)
 {
     wxListBox* pList = XRCCTRL(*this, "lstCategories", wxListBox);
     wxString name = pList->GetStringSelection();
     wxString caption;
     caption.Printf(_("Are you sure you want to delete the group \"%s\"?"), name.c_str());
-    wxMessageDialog dlg(this,
-                        caption,
-                        _("Confirmation"),
-                        wxYES_NO | wxNO_DEFAULT | wxCENTRE | wxICON_QUESTION);
-    PlaceWindow(&dlg);
-    if (dlg.ShowModal() == wxID_NO)
+    if (cbMessageBox(caption, _("Confirmation"), wxYES_NO | wxNO_DEFAULT | wxICON_QUESTION, this) == wxID_NO)
         return;
     m_FileGroups.DeleteGroup(pList->GetSelection());
     RebuildList();
 }
 
-void ProjectsFileMasksDlg::OnSetDefault(wxCommandEvent& event)
+void ProjectsFileMasksDlg::OnSetDefault(wxCommandEvent& /*event*/)
 {
     m_FileGroups.SetDefault();
     RebuildList();
 }
 
-void ProjectsFileMasksDlg::OnListChanged(wxCommandEvent& event)
+void ProjectsFileMasksDlg::OnListChanged(wxCommandEvent& /*event*/)
 {
     ListChange();
 }

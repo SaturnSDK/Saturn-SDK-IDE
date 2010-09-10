@@ -26,7 +26,7 @@
 #include "keybinder.h"
 
 // --Version-Rlease-Feature-Fix-------
-#define VERSION "1.0.48 2009/06/8"
+#define VERSION "1.0.49 2010/03/3"
 // -----------------------------------
 class MyDialog;
 class wxKeyConfigPanel;
@@ -372,7 +372,7 @@ private:
 //
 //  closed  1/11/2006 1:20 PM opened 1/11/2006 1:20 PM
 //          Re: wxKeyBinder problems/solutions discussion
-//          « Reply #7 on: Today at 01:06:03 PM »
+//             Reply #7 on: Today at 01:06:03 PM   
 //      	Reply with quote
 //          Quote from: Pecan on January 10, 2006, 06:40:49 PM
 //          ...Have commited KeyBinder v0.4.8 (svn 1708)...
@@ -699,4 +699,6 @@ private:
 //          47) If tree item is a sub-menu don't allow key assignment
 //          48) Change KeyBinder menu access from GetLabel() to GetLabel().Trim() (wx2.8.9/10)
 // ----------------------------------------------------------------------------
-
+//  Commit  1.0.49 2010/03/3
+//          49) Apply patch 2885 by techy
+// ----------------------------------------------------------------------------

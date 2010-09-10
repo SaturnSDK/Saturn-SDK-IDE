@@ -21,9 +21,33 @@
 
 #include "loggers.h"
 
+wxColour BlendTextColour(wxColour col)
+{
+    wxColour fgCol = wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOWTEXT);
+    wxColour bgCol = wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW);
+    int dist=
+        (fgCol.Red()*fgCol.Red() + fgCol.Green()*fgCol.Green() + fgCol.Blue()*fgCol.Blue()) -
+        (bgCol.Red()*bgCol.Red() + bgCol.Green()*bgCol.Green() + bgCol.Blue()*bgCol.Blue());
+    if (dist > 0)
+    {
+        // If foreground color is brighter than background color, this is a dark theme, so
+        // brighten the text colour.
+        // I would use wxColour::changeLightness(), but it's only available in v2.9.0 or later.
+        int d= int(sqrt(dist)/4);
+        int r= col.Red()+d, g= col.Green()+d, b= col.Blue()+d;
+        return wxColour( r>255? 255: r, g>255? 255: g, b>255? 255: b );
+    }
+    return col;
+}
+
 TextCtrlLogger::TextCtrlLogger(bool fixedPitchFont)
     : control(0), fixed(fixedPitchFont)
 {
+}
+
+TextCtrlLogger::~TextCtrlLogger()
+{
+    control = 0; // invalidate, do NOT destroy
 }
 
 void TextCtrlLogger::CopyContentsToClipboard(bool selectionOnly)
@@ -40,7 +64,7 @@ void TextCtrlLogger::UpdateSettings()
     if (!control)
         return;
 
-    control->SetBackgroundColour(*wxWHITE);
+    control->SetBackgroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW));
 
     int size = Manager::Get()->GetConfigManager(_T("message_manager"))->ReadInt(_T("/log_font_size"), platform::macosx ? 10 : 8);
 
@@ -61,12 +85,13 @@ void TextCtrlLogger::UpdateSettings()
     // might try alternatively
     //italic_font.SetStyle(wxFONTSTYLE_SLANT);
 
+    wxColour default_text_colour = wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOWTEXT);
     for(unsigned int i = 0; i < num_levels; ++i)
     {
         style[i].SetFont(default_font);
         style[i].SetAlignment(wxTEXT_ALIGNMENT_DEFAULT);
-        style[i].SetTextColour(*wxBLACK);
-        style[i].SetBackgroundColour(*wxWHITE);
+        style[i].SetTextColour(default_text_colour);
+        style[i].SetBackgroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW));
 
         // is it necessary to do that?
         //style[i].SetFlags(...);
@@ -76,16 +101,16 @@ void TextCtrlLogger::UpdateSettings()
     bigger_font.SetUnderlined(true);
     style[caption].SetFont(bigger_font);
 
-    style[success].SetTextColour(*wxBLUE);
+    style[success].SetTextColour(BlendTextColour(*wxBLUE));
 
     style[warning].SetFont(italic_font);
 
     style[error].SetFont(bold_font);
-    style[error].SetTextColour(*wxRED);
+    style[error].SetTextColour(BlendTextColour(*wxRED));
 
     style[critical].SetFont(bold_font);
-    style[critical].SetTextColour(*wxWHITE);
-    style[critical].SetBackgroundColour(*wxRED);
+    style[critical].SetTextColour(*wxWHITE);        // we're setting both fore and background colors here
+    style[critical].SetBackgroundColour(*wxRED);    // so we don't have to mix in default colors
     style[spacer].SetFont(small_font);
 
     // Tell control about the font change
@@ -94,13 +119,13 @@ void TextCtrlLogger::UpdateSettings()
 
 void TextCtrlLogger::Append(const wxString& msg, Logger::level lv)
 {
-    if(!control)
+    if (!control)
         return;
 
     ::temp_string.assign(msg);
     ::temp_string.append(_T("\n"));
 
-    if(lv == caption)
+    if (lv == caption)
     {
         control->SetDefaultStyle(style[info]);
         control->AppendText(::newline_string);
@@ -121,7 +146,7 @@ void TextCtrlLogger::Append(const wxString& msg, Logger::level lv)
 
 void TextCtrlLogger::Clear()
 {
-    if(control)
+    if (control)
         control->Clear();
 }
 
@@ -135,7 +160,7 @@ wxWindow* TextCtrlLogger::CreateControl(wxWindow* parent)
 
 void TimestampTextCtrlLogger::Append(const wxString& msg, Logger::level lv)
 {
-    if(!control)
+    if (!control)
         return;
 
     wxDateTime timestamp(wxDateTime::UNow());
@@ -152,6 +177,10 @@ ListCtrlLogger::ListCtrlLogger(const wxArrayString& titles, const wxArrayInt& wi
     cbAssert(titles.GetCount() == widths.GetCount());
 }
 
+ListCtrlLogger::~ListCtrlLogger()
+{
+    control = 0; // invalidate, do NOT destroy
+}
 
 void ListCtrlLogger::CopyContentsToClipboard(bool selectionOnly)
 {
@@ -182,6 +211,9 @@ void ListCtrlLogger::CopyContentsToClipboard(bool selectionOnly)
 
 wxString ListCtrlLogger::GetItemAsText(long item) const
 {
+    if (!control)
+        return wxEmptyString;
+
     wxString text;
 
     wxListItem info;
@@ -217,23 +249,24 @@ void ListCtrlLogger::UpdateSettings()
 
     italic_font.SetStyle(wxFONTSTYLE_ITALIC);
 
+    wxColour default_text_colour = wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOWTEXT);
     for(unsigned int i = 0; i < num_levels; ++i)
     {
         style[i].font = default_font;
-        style[i].colour = *wxBLACK;
+        style[i].colour = default_text_colour;
     }
 
     style[caption].font = bigger_font;
-    style[success].colour = *wxBLUE;
-    style[failure].colour = wxColour(0x00, 0x00, 0xa0);
+    style[success].colour = BlendTextColour(*wxBLUE);
+    style[failure].colour = BlendTextColour(wxColour(0x00, 0x00, 0xa0));
 
     style[warning].font = italic_font;
-    style[warning].colour = wxColour(0x00, 0x00, 0xa0); // navy blue
+    style[warning].colour = BlendTextColour(wxColour(0x00, 0x00, 0xa0));    // navy blue
 
-    style[error].colour = *wxRED;
+    style[error].colour = BlendTextColour(*wxRED);
 
     style[critical].font = bold_font;
-    style[critical].colour = wxColour(0x0a, 0x00, 0x00); // maroon
+    style[critical].colour = BlendTextColour(wxColour(0x0a, 0x00, 0x00));   // maroon
 
     style[spacer].font = small_font;
     style[pagetitle] = style[caption];
@@ -274,23 +307,19 @@ void ListCtrlLogger::Append(const wxArrayString& colValues, Logger::level lv)
     Append(colValues[0], lv);
     int idx = control->GetItemCount() - 1;
     for (size_t i = 1; i < colValues.GetCount(); ++i)
-    {
         control->SetItem(idx, i, colValues[i]);
-    }
     control->Thaw();
 }
 
 size_t ListCtrlLogger::GetItemsCount() const
 {
-    return control?control->GetItemCount():0;
+    return control ? control->GetItemCount() : 0;
 }
 
 void ListCtrlLogger::Clear()
 {
-    if(control)
-    {
+    if (control)
         control->DeleteAllItems();
-    }
 }
 
 wxWindow* ListCtrlLogger::CreateControl(wxWindow* parent)
@@ -300,24 +329,23 @@ wxWindow* ListCtrlLogger::CreateControl(wxWindow* parent)
 
     control = new wxListCtrl(parent, -1, wxDefaultPosition, wxDefaultSize, wxLC_REPORT | wxLC_SINGLE_SEL);
     for (size_t i = 0; i < titles.GetCount(); ++i)
-    {
         control->InsertColumn(i, titles[i], wxLIST_FORMAT_LEFT, widths[i]);
-    }
+
     return control;
 }
 
 
 CSS::CSS() :
-    caption     (_T("font-size: 12pt;")),
-    info        (wxEmptyString),
-    warning     (_T("margin-left: 2em;")),
-    success     (wxEmptyString),
-    error       (_T("margin-left: 2em; border-left: 1px solid red;")),
-    critical    (_T("color: red; font-weight: bold;")),
-    failure     (_T("color: maroon;")),
-    pagetitle   (_T("font-size: 16pt;")),
-    spacer      (wxEmptyString),
-    asterisk    (_T("font-family: Arial, Helvetica, \"Bitstream Vera Sans\", sans;"))
+    caption  (_T("font-size: 12pt;")),
+    info     (wxEmptyString),
+    warning  (_T("margin-left: 2em;")),
+    success  (wxEmptyString),
+    error    (_T("margin-left: 2em; border-left: 1px solid red;")),
+    critical (_T("color: red; font-weight: bold;")),
+    failure  (_T("color: maroon;")),
+    pagetitle(_T("font-size: 16pt;")),
+    spacer   (wxEmptyString),
+    asterisk (_T("font-family: Arial, Helvetica, \"Bitstream Vera Sans\", sans;"))
 {
 }
 
@@ -334,7 +362,7 @@ HTMLFileLogger::HTMLFileLogger(const wxString& filename)
 
 
 
-void HTMLFileLogger::Append(const wxString& msg, Logger::level lv)
+void HTMLFileLogger::Append(const wxString& msg, Logger::level /*lv*/)
 {
     fputs(wxSafeConvertWX2MB(msg), f.fp());
     fputs(::newline_string.mb_str(), f.fp());
@@ -348,23 +376,23 @@ void HTMLFileLogger::Open(const wxString& filename)
     FileLogger::Open(filename);
     fputs("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">\n<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"en-US\" lang=\"en-US\">\n<head>\n<title>Build log</title>\n<style>\n", f.fp());
 
-    if(!!css.asterisk)
+    if (!!css.asterisk)
         fprintf(f.fp(), "* { %s }\n", (wxStringSucks) wxSafeConvertWX2MB(css.asterisk));
-    if(!!css.pagetitle)
+    if (!!css.pagetitle)
         fprintf(f.fp(), "h1 { %s }\n", (wxStringSucks) wxSafeConvertWX2MB(css.pagetitle));
-    if(!!css.caption)
+    if (!!css.caption)
         fprintf(f.fp(), "h2 { %s }\n", (wxStringSucks) wxSafeConvertWX2MB(css.caption));
-    if(!!css.info)
+    if (!!css.info)
         fprintf(f.fp(), ".info { %s }\n", (wxStringSucks) wxSafeConvertWX2MB(css.info));
-    if(!!css.warning)
+    if (!!css.warning)
         fprintf(f.fp(), ".warn { %s }\n", (wxStringSucks) wxSafeConvertWX2MB(css.warning));
-    if(!!css.error)
+    if (!!css.error)
         fprintf(f.fp(), ".error { %s }\n", (wxStringSucks) wxSafeConvertWX2MB(css.error));
-    if(!!css.success)
+    if (!!css.success)
         fprintf(f.fp(), ".success { %s }\n", (wxStringSucks) wxSafeConvertWX2MB(css.success));
-    if(!!css.failure)
+    if (!!css.failure)
         fprintf(f.fp(), ".failure { %s }\n", (wxStringSucks) wxSafeConvertWX2MB(css.failure));
-    if(!!css.critical)
+    if (!!css.critical)
         fprintf(f.fp(), ".critical { %s }\n", (wxStringSucks) wxSafeConvertWX2MB(css.critical));
     fputs("</style>\n</head>\n\n<body>", f.fp());
 }
@@ -374,6 +402,3 @@ void HTMLFileLogger::Close()
     fputs("</body>\n</html>\n", f.fp());
     FileLogger::Close();
 }
-
-
-

@@ -162,7 +162,7 @@ void cbKeyBinder::OnAttach()
 }//OnAttach
 
 // ----------------------------------------------------------------------------
-void cbKeyBinder::OnRelease(bool appShutDown)
+void cbKeyBinder::OnRelease(bool /*appShutDown*/)
 // ----------------------------------------------------------------------------
 {
 	// do de-initialization for your plugin
@@ -299,7 +299,7 @@ void cbKeyBinder::BuildMenu(wxMenuBar* menuBar)
 
 }//BuildMenu
 // ----------------------------------------------------------------------------
-void cbKeyBinder::BuildModuleMenu(const ModuleType type, wxMenu* menu, const FileTreeData* data)
+void cbKeyBinder::BuildModuleMenu(const ModuleType /*type*/, wxMenu* /*menu*/, const FileTreeData* /*data*/)
 // ----------------------------------------------------------------------------
 {
 	//Some library module is ready to display a pop-up menu.
@@ -311,7 +311,7 @@ void cbKeyBinder::BuildModuleMenu(const ModuleType type, wxMenu* menu, const Fil
 	return;
 }
 // ----------------------------------------------------------------------------
-bool cbKeyBinder::BuildToolBar(wxToolBar* toolBar)
+bool cbKeyBinder::BuildToolBar(wxToolBar* /*toolBar*/)
 // ----------------------------------------------------------------------------
 {
 	//The application is offering its toolbar for your plugin,
@@ -705,7 +705,7 @@ void cbKeyBinder::OnSave(bool backitup)
 //     keybindings dialog: a super-simple wrapper for wxKeyConfigPanel
 // ----------------------------------------------------------------------------
 MyDialog::MyDialog(cbKeyBinder* binder, wxKeyProfileArray &prof,
-				   wxWindow *parent, const wxString &title, int mode)
+				   wxWindow *parent, const wxString & /*title*/, int mode)
 // ----------------------------------------------------------------------------
     :m_pBinder(binder)
 {
@@ -1046,7 +1046,7 @@ void cbKeyBinder::OnWindowDestroyEvent(wxEvent& event)
         // deleteing the EvtHandler here will crash CB
         // detach before removing the ed ptr
         DetachEditor(thisWindow, /*DeleteEvtHander*/false);
-        m_EditorPtrs.Remove(thisWindow);
+        //-m_EditorPtrs.Remove(thisWindow); //patch 2885, already removed by DetachEditor()
 
         #ifdef LOGGING
          LOGIT( _T("OnWindowDestroyEvent Removed %p"), thisWindow);
@@ -1055,7 +1055,7 @@ void cbKeyBinder::OnWindowDestroyEvent(wxEvent& event)
     event.Skip();
 }//OnWindowClose
 // ----------------------------------------------------------------------------
-void cbKeyBinder::OnTimerAlarm(wxTimerEvent& event)
+void cbKeyBinder::OnTimerAlarm(wxTimerEvent& /*event*/)
 // ----------------------------------------------------------------------------
 {
     m_bTimerAlarm = true;

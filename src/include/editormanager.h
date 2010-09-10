@@ -27,7 +27,7 @@ DLLIMPORT extern int ID_EditorManagerCloseButton;
 
 // forward decls
 class EditorBase;
-class wxAuiNotebook;
+class cbAuiNotebook;
 class wxAuiNotebookEvent;
 class wxMenuBar;
 class EditorColourSet;
@@ -45,6 +45,20 @@ WX_DECLARE_STRING_HASH_MAP(wxString, AutoCompleteMap);
 struct cbFindReplaceData;
 
 /*
+ * Struct for store tabs stack info
+ */
+struct cbNotebookStack
+{
+    cbNotebookStack(wxWindow* a_pWindow = 0)
+        : window (a_pWindow),
+          next (0)
+   {}
+
+    wxWindow*           window;
+    cbNotebookStack*    next;
+};
+
+/*
  * No description
  */
 class DLLIMPORT EditorManager : public Mgr<EditorManager>, public wxEvtHandler
@@ -52,13 +66,20 @@ class DLLIMPORT EditorManager : public Mgr<EditorManager>, public wxEvtHandler
         friend class Mgr<EditorManager>;
         static bool s_CanShutdown;
     public:
+        EditorManager& operator=(const EditorManager& /*rhs*/) // prevent assignment operator
+        {
+        	cbThrow(_T("Can't assign an EditorManager* !!!"));
+        	return *this;
+		}
+
         friend class Manager; // give Manager access to our private members
         static bool CanShutdown(){ return s_CanShutdown; }
 
-        EditorManager(const EditorManager& rhs) { cbThrow(_T("Can't call EditorManager's copy ctor!!!")); }
-        virtual void operator=(const EditorManager& rhs){ cbThrow(_T("Can't assign an EditorManager* !!!")); }
+        cbAuiNotebook* GetNotebook() { return m_pNotebook; }
+        cbNotebookStack* GetNotebookStack();
+        void DeleteNotebookStack();
+        void RebuildNotebookStack();
 
-        wxAuiNotebook* GetNotebook(){ return m_pNotebook; }
         void CreateMenu(wxMenuBar* menuBar);
         void ReleaseMenu(wxMenuBar* menuBar);
         void Configure();
@@ -95,16 +116,16 @@ class DLLIMPORT EditorManager : public Mgr<EditorManager>, public wxEvtHandler
         bool UpdateProjectFiles(cbProject* project);
         bool SwapActiveHeaderSource();
         bool CloseActive(bool dontsave = false);
-        bool Close(const wxString& filename,bool dontsave = false);
-        bool Close(EditorBase* editor,bool dontsave = false);
-        bool Close(int index,bool dontsave = false);
+        bool Close(const wxString& filename, bool dontsave = false);
+        bool Close(EditorBase* editor, bool dontsave = false);
+        bool Close(int index, bool dontsave = false);
 
         // If file is modified, queries to save (yes/no/cancel).
         // Returns false on "cancel".
         bool QueryClose(EditorBase* editor);
         bool QueryCloseAll();
         bool CloseAll(bool dontsave=false);
-        bool CloseAllExcept(EditorBase* editor,bool dontsave=false);
+        bool CloseAllExcept(EditorBase* editor, bool dontsave=false);
         bool Save(const wxString& filename);
         bool Save(int index);
         bool SaveActive();
@@ -162,6 +183,8 @@ class DLLIMPORT EditorManager : public Mgr<EditorManager>, public wxEvtHandler
 
         AutoCompleteMap m_AutoCompleteMap;
     private:
+        EditorManager(const EditorManager& /*rhs*/); // prevent copy construction
+
         EditorManager();
         ~EditorManager();
         void CalculateFindReplaceStartEnd(cbStyledTextCtrl* control, cbFindReplaceData* data, bool replace = false);
@@ -173,15 +196,17 @@ class DLLIMPORT EditorManager : public Mgr<EditorManager>, public wxEvtHandler
         bool IsHeaderSource(const wxFileName& candidateFile, const wxFileName& activeFile, FileType ftActive);
         wxFileName FindHeaderSource(const wxArrayString& candidateFilesArray, const wxFileName& activeFile, bool& isCandidate);
 
-        wxAuiNotebook* m_pNotebook;
-        cbFindReplaceData* m_LastFindReplaceData;
-        EditorColourSet* m_Theme;
-        ListCtrlLogger* m_pSearchLog;
-        int m_SearchLogIndex;
-        int m_SashPosition;
-        int m_zoom;
-        bool m_isCheckingForExternallyModifiedFiles;
-        friend struct EditorManagerInternalData;
+        cbAuiNotebook*             m_pNotebook;
+        cbNotebookStack*           m_pNotebookStackHead;
+        cbNotebookStack*           m_pNotebookStackTail;
+        size_t                     m_nNotebookStackSize;
+        cbFindReplaceData*         m_LastFindReplaceData;
+        EditorColourSet*           m_Theme;
+        ListCtrlLogger*            m_pSearchLog;
+        int                        m_SearchLogIndex;
+        int                        m_Zoom;
+        bool                       m_isCheckingForExternallyModifiedFiles;
+        friend struct              EditorManagerInternalData;
         EditorManagerInternalData* m_pData;
 
         DECLARE_EVENT_TABLE()

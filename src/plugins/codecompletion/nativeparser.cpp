@@ -28,7 +28,7 @@
 #include <projectloader_hooks.h>
 #include <tinyxml/tinyxml.h>
 
-#include <wx/aui/auibook.h>
+#include "cbauibook.h"
 #include <wx/log.h> // for wxSafeShowMessage()
 #include <wx/regex.h>
 #include <wx/wfstream.h>
@@ -361,10 +361,10 @@ void NativeParser::AddCompilerDirs(cbProject* project)
             }
             // get the compiler
             wxString CompilerIndex = target->GetCompilerID();
-            Compiler* myc = CompilerFactory::GetCompiler(CompilerIndex);
-            if (myc)
+            Compiler* tgtCompiler = CompilerFactory::GetCompiler(CompilerIndex);
+            if (tgtCompiler)
             {
-                Compilers[nCompilers] = myc;
+                Compilers[nCompilers] = tgtCompiler;
                 ++nCompilers;
             }
         } // if (target)
@@ -453,45 +453,27 @@ wxArrayString NativeParser::GetGCCCompilerDirs(const wxString &cpp_compiler, con
     // action time  (everything shows up on the error stream
     wxArrayString Output, Errors;
     wxExecute(Command, Output, Errors, wxEXEC_NODISABLE);
-    int nCount = Errors.GetCount();
-    // the include dir (1 per line) show up between the lines
-    // #include <...> search starts here:
-    // End of search list
-    //   let's hope this does not change too quickly, otherwise we need
-    // to adjust our search code (for several versions ...)
-    bool bStart = false;
-    for (int idxCount = 0; idxCount < nCount; ++idxCount)
-    {
-        if (!bStart && Errors[idxCount] == _("#include <...> search starts here:"))
-        {
-            bStart = true;
-        }
-        else if (bStart && Errors[idxCount] == _("End of search list."))
-        {
-            bStart = false; // could jump out of for loop if we want
-        }
-        else if (bStart)
-        {
-//                Manager::Get()->GetLogManager()->DebugLog("include dir " + Errors[idxCount]);
-            // get rid of the leading space (more general : any whitespace)in front
-            wxRegEx reg(_T("^[ \t]*(.*)"));
-            if (reg.Matches(Errors[idxCount]))
-            {
-                wxString out = reg.GetMatch(Errors[idxCount], 1);
-                if (!out.IsEmpty())
-                {
-                    wxFileName dir(out);
-                    if (NormalizePath(dir,base))
-                    {
-                        Manager::Get()->GetLogManager()->DebugLog(_T("Caching GCC dir: ") + dir.GetFullPath());
-                        gcc_compiler_dirs.Add(dir.GetFullPath());
-                    }
-                    else
-                        Manager::Get()->GetLogManager()->DebugLog(F(_T("Error normalizing path: '%s' from '%s'"),out.wx_str(),base.wx_str()));
 
-                }
-            }
+    // start from "#include <...>", and the path followed
+    // let's hope this does not change too quickly, otherwise we need
+    // to adjust our search code (for several versions ...)
+    bool start = false;
+    for (size_t idxCount = 0; idxCount < Errors.GetCount(); ++idxCount)
+    {
+        wxString path = Errors[idxCount].Trim(true).Trim(false);
+        if (!start)
+        {
+            if (!path.StartsWith(_T("#include <...>")))
+                continue;
+            path = Errors[++idxCount].Trim(true).Trim(false);
+            start = true;
         }
+
+        if (!wxDirExists(path))
+            break;
+
+        Manager::Get()->GetLogManager()->DebugLog(_T("Caching GCC dir: ") + path);
+        gcc_compiler_dirs.Add(path);
     } // end for : idx : idxCount
 
     return gcc_compiler_dirs;
@@ -1563,9 +1545,15 @@ size_t NativeParser::AI(TokenIdxSet& result,
         if (s_DebugSmartSense)
         {
             Token* scopeToken = tree->at(*it);
-            Manager::Get()->GetLogManager()->DebugLog(F(_T("AI() Parent scope: '%s' (%d)"),
-                                                        scopeToken ? scopeToken->m_Name.wx_str() : _T("Global namespace"),
+#if wxCHECK_VERSION(2, 9, 0)
+            Manager::Get()->GetLogManager()->DebugLog(F(_("AI() Parent scope: '%s' (%d)"),
+                                                        scopeToken ? scopeToken->m_Name.wx_str() : _("Global namespace").wx_str(),
                                                         *it));
+#else
+            Manager::Get()->GetLogManager()->DebugLog(F(_("AI() Parent scope: '%s' (%d)"),
+                                                        scopeToken ? scopeToken->m_Name.wx_str() : _("Global namespace"),
+                                                        *it));
+#endif
         }
         FindAIMatches(components, result, *it, noPartialMatch, caseSensitive, true, 0xffff, search_scope);
     }
@@ -1573,7 +1561,7 @@ size_t NativeParser::AI(TokenIdxSet& result,
     if (result.size()<1) // found nothing in the search_scope, add global namespace
     {
         if (s_DebugSmartSense)
-            Manager::Get()->GetLogManager()->DebugLog(F(_T("AI() result is zero. Adding global namespace.")));
+            Manager::Get()->GetLogManager()->DebugLog(F(_("AI() result is zero. Adding global namespace.")));
 
         search_scope->insert(-1);
         FindAIMatches(components, result, -1, noPartialMatch, caseSensitive, true, 0xffff, search_scope);
@@ -1753,7 +1741,7 @@ size_t NativeParser::FindAIMatches(std::queue<ParserComponent> components,
         // is the token a function or variable (i.e. is not a type)
         if (    !searchtext.IsEmpty()
              && (parser_component.token_type != pttSearchText)
-	         /* || m_GettingCalltips */ // DISABLED! (crash in some cases) this allows calltips for typedef'd function pointers
+             /* || m_GettingCalltips */ // DISABLED! (crash in some cases) this allows calltips for typedef'd function pointers
              && !token->m_ActualType.IsEmpty() )
         {
             // the token is not a type
@@ -1798,8 +1786,13 @@ size_t NativeParser::FindAIMatches(std::queue<ParserComponent> components,
                 Token* parent = tree->at(*itsearch);
 
                 if (s_DebugSmartSense)
+#if wxCHECK_VERSION(2, 9, 0)
                     Manager::Get()->GetLogManager()->DebugLog(F(_T("FindAIMatches() Now looking under '%s'"),
-                                                                parent ? parent->m_Name.wx_str() : _T("Global namespace")));
+                                                                parent ? parent->m_Name.wx_str() : _("Global namespace").wx_str()));
+#else
+                    Manager::Get()->GetLogManager()->DebugLog(F(_T("FindAIMatches() Now looking under '%s'"),
+                                                                parent ? parent->m_Name.wx_str() : _("Global namespace")));
+#endif
                 do
                 {
                     // types are searched as whole words, case sensitive and only classes/namespaces
@@ -1896,9 +1889,13 @@ size_t NativeParser::GenerateResultSet(TokensTree*     tree,
 
     Token* parent = tree->at(parentIdx);
     if (s_DebugSmartSense)
-        Manager::Get()->GetLogManager()->DebugLog(F(_T("GenerateResultSet() search '%s', parent='%s (id:%d, type:%s), isPrefix=%d'"),
+        Manager::Get()->GetLogManager()->DebugLog(F(_("GenerateResultSet() search '%s', parent='%s (id:%d, type:%s), isPrefix=%d'"),
                                                     search.wx_str(),
-                                                    parent ? parent->m_Name.wx_str() : _T("Global namespace"),
+#if wxCHECK_VERSION(2, 9, 0)
+                                                                                                        parent ? parent->m_Name.wx_str() : _("Global namespace").wx_str(),
+#else
+                                                    parent ? parent->m_Name.wx_str() : _("Global namespace"),
+#endif
                                                     parent ? parent->GetSelf() : 0,
                                                     parent ? parent->GetTokenKindString().wx_str():0,
                                                     isPrefix ? 1 : 0));

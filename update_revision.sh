@@ -4,8 +4,8 @@
 # This file is part of the Code::Blocks IDE and licensed under the GNU General Public License, version 3
 # http://www.gnu.org/licenses/gpl-3.0.html
 #
-# $Revision: 5334 $
-# $Id: update_revision.sh 5334 2008-12-14 00:07:52Z jenslody $
+# $Revision$
+# $Id$
 # $HeadURL: svn+ssh://jenslody@svn.berlios.de/svnroot/repos/codeblocks/trunk/src/src/dlgaboutplugin.cpp $
 #
 
@@ -31,13 +31,22 @@ fi
 
 if [ "x$REV" != "x$OLD_REV" -o ! -r $REV_FILE ]; then
 	echo "m4_define([SVN_REV], $REV)" > $REV_FILE
-	echo "m4_define([SVN_REVISION], 8.02svn$REV)" >> $REV_FILE
+	echo "m4_define([SVN_REVISION], 10.05svn$REV)" >> $REV_FILE
 	echo "m4_define([SVN_DATE], $LCD)" >> $REV_FILE
 
 	# Also change the revision number in debian/changelog for package versioning
-	mv debian/changelog debian/changelog.tmp
-	sed "1 s/(8.02svn[^-)]*/(8.02svn$REV/" < debian/changelog.tmp > debian/changelog
-	rm debian/changelog.tmp
+	if [ -x `which dch` ]; then
+		AKT_REV=`sed -e 's/.*svn\([0-9]*\).*/\1/' -e 'q' < debian/changelog`
+		if [ $REV -gt $AKT_REV ]; then
+			dch -v 10.05svn$REV "New svn revision"
+		fi
+	else
+		echo 'ups'
+
+		mv debian/changelog debian/changelog.tmp
+		sed "1 s/(10.05svn[^-)]*/(10.05svn$REV/" < debian/changelog.tmp > debian/changelog
+		rm debian/changelog.tmp
+	fi
 fi
 
 echo "OLD_REV=$REV" > ./.last_revision

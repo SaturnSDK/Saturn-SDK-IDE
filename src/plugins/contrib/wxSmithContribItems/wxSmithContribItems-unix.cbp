@@ -9,7 +9,6 @@
 		<Build>
 			<Target title="wxFlatNoteBook">
 				<Option output="../../../devel/libwxflatnotebook.so" prefix_auto="0" extension_auto="0" />
-				<Option working_dir="../../../devel" />
 				<Option object_output="../../../.objs/plugins/contrib/wxSmithContribItems" />
 				<Option type="3" />
 				<Option compiler="gcc" />
@@ -20,7 +19,6 @@
 			</Target>
 			<Target title="wxChartCtrl">
 				<Option output="../../../devel/libwxchartctrl" prefix_auto="1" extension_auto="1" />
-				<Option working_dir="../../../devel" />
 				<Option object_output="../../../.objs/plugins/contrib/wxSmithContribItems" />
 				<Option type="3" />
 				<Option compiler="gcc" />
@@ -31,7 +29,6 @@
 			</Target>
 			<Target title="wxCustomButton">
 				<Option output="../../../devel/libwxcustombutton" prefix_auto="1" extension_auto="1" />
-				<Option working_dir="../../../devel" />
 				<Option object_output="../../../.objs/plugins/contrib/wxSmithContribItems" />
 				<Option type="3" />
 				<Option compiler="gcc" />
@@ -42,18 +39,18 @@
 			</Target>
 			<Target title="wxSmithContribItems">
 				<Option output="../../../devel/share/codeblocks/plugins/libwxSmithContribItems.so" prefix_auto="0" extension_auto="0" />
-				<Option working_dir="../../../devel" />
 				<Option object_output="../../../.objs/plugins/contrib/wxSmithContribItems" />
 				<Option external_deps="../../../devel/libwxsmithlib.so;" />
 				<Option type="3" />
 				<Option compiler="gcc" />
 				<Option parameters="--debug-log -ns -ni" />
-				<Option host_application="./codeblocks" />
+				<Option host_application="../../../devel/codeblocks" />
 				<Option projectLinkerOptionsRelation="2" />
 				<Compiler>
 					<Add option="-DWXMAKINGLIB_PROPGRID" />
 					<Add directory="../../../sdk/wxscintilla/include" />
 					<Add directory="wxthings/wxthings/include" />
+					<Add directory="../../../sdk/wxpropgrid/include" />
 					<Add directory="wxchart/wxchart-1.0/include" />
 					<Add directory="wxflatnotebook/wxFlatNotebook/include" />
 				</Compiler>
@@ -90,7 +87,6 @@
 			<Add option="-DCB_PRECOMP" />
 			<Add directory="../../../include" />
 			<Add directory="../wxSmith" />
-			<Add directory="../wxSmith/propgrid/contrib/include" />
 		</Compiler>
 		<Linker>
 			<Add option="`wx-config --libs`" />

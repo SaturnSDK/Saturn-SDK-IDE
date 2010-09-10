@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 #include <stdarg.h>
 
 #define _DEBUG_DUMP
@@ -21,7 +22,7 @@ HSQUIRRELVM SquirrelVM::_VM = NULL;
 SQInteger SquirrelVM::_CallState = -1;
 SquirrelObject * SquirrelVM::_root = NULL;
 
-SquirrelError::SquirrelError() 
+SquirrelError::SquirrelError()
 {
 	const SQChar *s;
 	sq_getlasterror(SquirrelVM::_VM);
@@ -81,7 +82,7 @@ void SquirrelVM::Shutdown()
   } // if
 }
 
-void SquirrelVM::PrintFunc(HSQUIRRELVM v,const SQChar* s,...)
+void SquirrelVM::PrintFunc(HSQUIRRELVM /*v*/,const SQChar* s,...)
 {
 	static SQChar temp[2048];
 	va_list vl;
@@ -131,7 +132,7 @@ SquirrelObject SquirrelVM::RunScript(const SquirrelObject &o,SquirrelObject *_th
 	}
 	sq_pop(_VM,1);
 	throw SquirrelError();
-	
+
 }
 
 
@@ -204,7 +205,7 @@ void SquirrelVM::PushParam(SQUserPointer up)
 SquirrelObject SquirrelVM::EndCall()
 {
 	SquirrelObject ret;
-	if(_CallState >= 0) { 
+	if(_CallState >= 0) {
 		SQInteger oldtop = sq_gettop(_VM);
 		SQInteger nparams = _CallState;
 		_CallState = -1;
@@ -215,7 +216,7 @@ SquirrelObject SquirrelVM::EndCall()
 			sq_settop(_VM,oldtop-(nparams+1));
 			throw SquirrelError();
 		}
-		
+
 	}
 	return ret;
 }

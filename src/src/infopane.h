@@ -7,9 +7,10 @@
 #define INFOPANE_H
 
 
+#include <limits>
 #include <logmanager.h>
 
-#include <wx/aui/auibook.h>
+#include "cbauibook.h"
 
 static const int infopane_flags = wxAUI_NB_WINDOWLIST_BUTTON | wxAUI_NB_SCROLL_BUTTONS | wxAUI_NB_TAB_MOVE | wxAUI_NB_TAB_SPLIT;
 
@@ -17,26 +18,31 @@ class wxWindow;
 class wxCommandEvent;
 class wxMouseEvent;
 
-class InfoPane : public wxAuiNotebook
+class InfoPane : public cbAuiNotebook
 {
     DECLARE_EVENT_TABLE()
 
     struct Page
     {
-        Page() : icon(0), window(0), logger(0), indexInNB(-1), islogger(0) {};
+        Page() : icon(0), window(0), logger(0), indexInNB(std::numeric_limits<int>::min()), eventID(0), islogger(0) {};
         wxString title;
         wxBitmap* icon;
         wxWindow* window;
         Logger* logger;
         int indexInNB; // used to be "visible" flag: invisible is <0, any other value means visible
+        int eventID;
         bool islogger;
     };
 
-    static const int num_pages = ::max_logs + 8;
+    WX_DEFINE_ARRAY(Page *, wxArrayOfPage);
+
+    typedef int (*CompareFunction)(Page**, Page**);
+    static int CompareIndexes(Page **p1, Page **p2);
+    void ReorderTabs(CompareFunction cmp_f);
     wxBitmap defaultBitmap;
 
-    Page page[num_pages];
-    const int baseID;
+
+    wxArrayOfPage page;
 
     void Toggle(size_t index);
     void Hide(size_t i);
@@ -46,9 +52,11 @@ class InfoPane : public wxAuiNotebook
     void OnClear(wxCommandEvent& event);
     void ContextMenu(wxContextMenuEvent& event);
     void OnTabContextMenu(wxAuiNotebookEvent& event);
+    void OnCloseClicked(wxAuiNotebookEvent& event);
     void OnTabPosition(wxCommandEvent& event);
     void DoShowContextMenu();
     int AddPagePrivate(wxWindow* p, const wxString& title, wxBitmap* icon = 0);
+    bool InsertPagePrivate(wxWindow* p, const wxString& title, wxBitmap* icon = 0 , int index = -1);
 public:
 
     InfoPane(wxWindow* parent);
@@ -66,6 +74,9 @@ public:
     void ShowNonLogger(wxWindow* p);
 
     int GetPageIndexByWindow(wxWindow* win);
+    void UpdateEffectiveTabOrder(); // refreshes the tab effective order, needed, because tabs might have moved with drag and drop
+    void LoadTabOrder(wxString layout);
+    wxString SaveTabOrder();
 
     /*
     *  You should not need to call these functions under normal conditions. The application initialises
@@ -77,7 +88,7 @@ public:
     *  will be redirected to the null log thereafter.
     *  To prove that you are serious, you must know the logger belonging to the tab to delete.
     */
-    int AddLogger(Logger* logger, wxWindow* p, const wxString& title, wxBitmap* icon = 0);
+    bool AddLogger(Logger* logger, wxWindow* p, const wxString& title, wxBitmap* icon = 0);
     bool DeleteLogger(Logger* l);
 
     /*
@@ -85,7 +96,7 @@ public:
     *  use AddNonLogger()/DeleteNonLogger() for that purpose.
     *  An example of something that is not a logger but might still show up in the info pane is the list of search results.
     */
-    int AddNonLogger(wxWindow* p, const wxString& title, wxBitmap* icon = 0);
+    bool AddNonLogger(wxWindow* p, const wxString& title, wxBitmap* icon = 0);
     bool RemoveNonLogger(wxWindow* p);
     bool DeleteNonLogger(wxWindow* p);
 };

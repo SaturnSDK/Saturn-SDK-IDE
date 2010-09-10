@@ -15,6 +15,10 @@
 
 class wxListCtrl;
 
+// Helper function which blends a colour with the default window text colour,
+// so that text will be readable in bright and dark colour schemes
+wxColour BlendTextColour(wxColour col);
+
 class DLLIMPORT StdoutLogger : public Logger
 {
 public:
@@ -33,7 +37,7 @@ public:
     FileLogger(const wxString& filename) : f(filename, _T("wb")) {};
     FileLogger() {};
 
-    virtual void Append(const wxString& msg, Logger::level lv)
+    virtual void Append(const wxString& msg, Logger::level /*lv*/)
     {
         fputs(wxSafeConvertWX2MB(msg), f.fp());
         fputs(::newline_string.mb_str(), f.fp());
@@ -83,6 +87,7 @@ protected:
 
 public:
     TextCtrlLogger(bool fixedPitchFont = false);
+    ~TextCtrlLogger();
 
     virtual void CopyContentsToClipboard(bool selectionOnly = false);
     virtual void UpdateSettings();
@@ -118,6 +123,7 @@ protected:
 public:
 
     ListCtrlLogger(const wxArrayString& titles, const wxArrayInt& widths, bool fixedPitchFont = false);
+    ~ListCtrlLogger();
 
     virtual void CopyContentsToClipboard(bool selectionOnly = false);
     virtual void UpdateSettings();

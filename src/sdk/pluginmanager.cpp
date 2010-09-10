@@ -176,11 +176,11 @@ PluginManager::~PluginManager()
     UnloadAllPlugins();
 }
 
-void PluginManager::CreateMenu(wxMenuBar* menuBar)
+void PluginManager::CreateMenu(wxMenuBar* /*menuBar*/)
 {
 }
 
-void PluginManager::ReleaseMenu(wxMenuBar* menuBar)
+void PluginManager::ReleaseMenu(wxMenuBar* /*menuBar*/)
 {
 }
 
@@ -1263,6 +1263,14 @@ int PluginManager::ExecutePlugin(const wxString& pluginName)
             }
         }
     }
+    else
+    {
+		#if wxCHECK_VERSION(2, 9, 0)
+		Manager::Get()->GetLogManager()->LogError(F(_T("No plugin registered by this name: %s"), pluginName.wx_str()));
+		#else
+		Manager::Get()->GetLogManager()->LogError(F(_T("No plugin registered by this name: %s"), pluginName.c_str()));
+		#endif
+    }
     return 0;
 }
 
@@ -1391,7 +1399,7 @@ void PluginManager::AskPluginsForModuleMenu(const ModuleType type, wxMenu* menu,
     for (unsigned int i = 0; i < m_Plugins.GetCount(); ++i)
     {
         cbPlugin* plug = m_Plugins[i]->plugin;
-        if (plug)
+        if (plug && plug->IsAttached())
         {
             try
             {

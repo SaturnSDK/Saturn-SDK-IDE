@@ -8,12 +8,11 @@
 		<Build>
 			<Target title="default">
 				<Option output="../../../devel/share/codeblocks/plugins/libMouseSap" prefix_auto="1" extension_auto="1" />
-				<Option working_dir="../../../devel" />
 				<Option object_output="../../../.objs/plugins/contrib/MouseSap" />
 				<Option type="3" />
 				<Option compiler="gcc" />
 				<Option parameters="--debug-log -ns -ni" />
-				<Option host_application="./codeblocks" />
+				<Option host_application="../../../devel/codeblocks" />
 				<Compiler>
 					<Add option="-Wall" />
 					<Add option="-g" />
@@ -25,8 +24,7 @@
 					<Add option="-fPIC" />
 					<Add option="`pkg-config --cflags gtk+-2.0`" />
 					<Add option="-DcbDEBUG" />
-					<Add option="-DNO_CB_PRECOMP" />
-					<Add option="-DNOPCH" />
+					<Add option="-DCB_PRECOMP" />
 					<Add directory="../../../include" />
 					<Add directory="../../../sdk/wxscintilla/include" />
 				</Compiler>

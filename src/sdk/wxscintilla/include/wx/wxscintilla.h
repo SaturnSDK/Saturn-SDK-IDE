@@ -20,7 +20,7 @@
 #ifndef __WXSCINTILLA_H__
 #define __WXSCINTILLA_H__
 
-#define wxSCINTILLA_VERSION _T("2.02.0")
+#define wxSCINTILLA_VERSION _T("2.03.0")
 
 #include <wx/wx.h>
 #include <wx/dnd.h>
@@ -76,7 +76,6 @@
 
 // The SC_CP_DBCS value can be used to indicate a DBCS mode for GTK+.
 #define wxSCI_CP_DBCS 1
-
 #define wxSCI_MARKER_MAX 31
 #define wxSCI_MARK_CIRCLE 0
 #define wxSCI_MARK_ROUNDRECT 1
@@ -124,7 +123,9 @@
 #define wxSCI_MARKNUM_FOLDERSUB 29
 #define wxSCI_MARKNUM_FOLDER 30
 #define wxSCI_MARKNUM_FOLDEROPEN 31
+/* C::B begin */
 #define wxSCI_MASK_FOLDERS 0xFF800000
+/* C::B end */
 #define wxSCI_MARGIN_SYMBOL 0
 #define wxSCI_MARGIN_NUMBER 1
 #define wxSCI_MARGIN_BACK 2
@@ -181,7 +182,9 @@
 #define wxSCI_INDIC_HIDDEN 5
 #define wxSCI_INDIC_BOX 6
 #define wxSCI_INDIC_ROUNDBOX 7
+/* C::B begin */
 #define wxSCI_INDIC_HIGHLIGHT 31 // please change also in Scintilla.h !!
+/* C::B end */
 #define wxSCI_INDIC_MAX 31
 #define wxSCI_INDIC_CONTAINER 8
 #define wxSCI_INDIC0_MASK 0x20
@@ -245,6 +248,8 @@
 #define wxSCI_EFF_QUALITY_NON_ANTIALIASED 1
 #define wxSCI_EFF_QUALITY_ANTIALIASED 2
 #define wxSCI_EFF_QUALITY_LCD_OPTIMIZED 3
+#define wxSCI_MULTIPASTE_ONCE 0
+#define wxSCI_MULTIPASTE_EACH 1
 #define wxSCI_EDGE_NONE 0
 #define wxSCI_EDGE_LINE 1
 #define wxSCI_EDGE_BACKGROUND 2
@@ -337,7 +342,9 @@
 #define wxSCI_MOD_CONTAINER 0x40000
 #define wxSCI_MODEVENTMASKALL 0xFFFF
 
+/* C::B begin */
 #define wxSCI_LASTLINEUNDOREDO wxSCI_MULTILINEUNDOREDO
+/* C::B end */
 
 // Symbolic key codes and modifier flags.
 // ASCII and other printable characters below 256.
@@ -510,7 +517,9 @@
 #define wxSCI_C_COMMENTDOCKEYWORD 17
 #define wxSCI_C_COMMENTDOCKEYWORDERROR 18
 #define wxSCI_C_GLOBALCLASS 19
+/* C::B begin */
 #define wxSCI_C_WXSMITH 20
+/* C::B end */
 
 // Lexical states for SCLEX_D
 #define wxSCI_D_DEFAULT 0
@@ -1252,8 +1261,19 @@
 #define wxSCI_ERLANG_CHARACTER 9
 #define wxSCI_ERLANG_MACRO 10
 #define wxSCI_ERLANG_RECORD 11
-#define wxSCI_ERLANG_SEPARATOR 12
+#define wxSCI_ERLANG_PREPROC 12
 #define wxSCI_ERLANG_NODE_NAME 13
+#define wxSCI_ERLANG_COMMENT_FUNCTION 14
+#define wxSCI_ERLANG_COMMENT_MODULE 15
+#define wxSCI_ERLANG_COMMENT_DOC 16
+#define wxSCI_ERLANG_COMMENT_DOC_MACRO 17
+#define wxSCI_ERLANG_ATOM_QUOTED 18
+#define wxSCI_ERLANG_MACRO_QUOTED 19
+#define wxSCI_ERLANG_RECORD_QUOTED 20
+#define wxSCI_ERLANG_NODE_NAME_QUOTED 21
+#define wxSCI_ERLANG_BIFS 22
+#define wxSCI_ERLANG_MODULES 23
+#define wxSCI_ERLANG_MODULES_ATT 24
 #define wxSCI_ERLANG_UNKNOWN 31
 
 // Lexical states for SCLEX_OCTAVE are identical to MatLab
@@ -1568,11 +1588,19 @@
 #define wxSCI_FS_DATE 16
 #define wxSCI_FS_STRINGEOL 17
 #define wxSCI_FS_CONSTANT 18
-#define wxSCI_FS_ASM 19
-#define wxSCI_FS_LABEL 20
-#define wxSCI_FS_ERROR 21
-#define wxSCI_FS_HEXNUMBER 22
-#define wxSCI_FS_BINNUMBER 23
+#define wxSCI_FS_WORDOPERATOR 19
+#define wxSCI_FS_DISABLEDCODE 20
+#define wxSCI_FS_DEFAULT_C 21
+#define wxSCI_FS_COMMENTDOC_C 22
+#define wxSCI_FS_COMMENTLINEDOC_C 23
+#define wxSCI_FS_KEYWORD_C 24
+#define wxSCI_FS_KEYWORD2_C 25
+#define wxSCI_FS_NUMBER_C 26
+#define wxSCI_FS_STRING_C 27
+#define wxSCI_FS_PREPROCESSOR_C 28
+#define wxSCI_FS_OPERATOR_C 29
+#define wxSCI_FS_IDENTIFIER_C 30
+#define wxSCI_FS_STRINGEOL_C 31
 
 // Lexical states for SCLEX_CSOUND
 #define wxSCI_CSOUND_DEFAULT 0
@@ -1599,7 +1627,6 @@
 #define wxSCI_INNO_PARAMETER 3
 #define wxSCI_INNO_SECTION 4
 #define wxSCI_INNO_PREPROC 5
-#define wxSCI_INNO_PREPROC_INLINE 6
 #define wxSCI_INNO_INLINE_EXPANSION 6
 #define wxSCI_INNO_COMMENT_PASCAL 7
 #define wxSCI_INNO_KEYWORD_PASCAL 8
@@ -2198,10 +2225,14 @@ class  WXDLLIMPEXP_SCI wxScintillaEvent;
 
 //----------------------------------------------------------------------
 
-typedef long wxIntPtr; // FIXME: back-port from wx29 (svn) to wx289
+/* C::B begin */
+#if !wxCHECK_VERSION(2, 9, 0)
+typedef long wxIntPtr;
+#endif
 
 typedef wxIntPtr (* wxSciFnDirect) (wxIntPtr ptr, unsigned int iMessage,
                                     wxUIntPtr wParam, wxIntPtr lParam);
+/* C::B end */
 
 class WXDLLIMPEXP_SCI wxScintilla : public wxControl {
 public:
@@ -2240,7 +2271,9 @@ public:
 
     // Add text to the document.
     void AddText(const wxString& text);
+/* C::B begin */
     void AddText(const int length, const wxString& text);
+/* C::B end */
 
     // Add array of cells to document.
     void AddStyledText(const wxMemoryBuffer& data);
@@ -2276,12 +2309,14 @@ public:
     // history and discarding them.
     void SetUndoCollection(bool collectUndo);
 
+/* C::B begin */
     // Choose between collecting actions into the changes
     // history and discarding them.
     void SetChangeCollection(bool collectChange);
 
     // Find a changed line, if fromLine > toLine search is performed backwards.
     int FindChangedLine (const int fromLine, const int toLine) const;
+/* C::B end */
 
     // Select all the text in the document.
     void SelectAll();
@@ -2331,7 +2366,7 @@ public:
 
     // Retrieve the text of the line containing the caret.
     // Returns the index of the caret on the line.
-    #ifdef SWIG
+#ifdef SWIG
     wxString GetCurLine(int* OUTPUT);
 #else
     wxString GetCurLine(int* linePos=NULL);
@@ -2593,7 +2628,7 @@ public:
     void SetWhitespaceSize(int size);
 
     // Get the size of the dots used to mark space characters.
-    int GetWhitespaceSize();
+    int GetWhitespaceSize() const;
 
     // Divide each styling byte into lexical class bits (default: 5) and indicator
     // bits (default: 3). If a lexer requires more than 32 lexical states, then this
@@ -2809,7 +2844,9 @@ public:
     int GetPrintColourMode() const;
 
     // Find some text in the document.
-    int FindText(int minPos, int maxPos, const wxString& text, int flags=0, int* lengthFound = NULL);
+/* C::B begin */
+    int FindText(int minPos, int maxPos, const wxString& text, int flags=0, int* lengthFound = 0);
+/* C::B end */
 
     // On Windows, will draw the document into a display context such as a printer.
     int FormatRange(bool   doDraw,
@@ -2843,9 +2880,6 @@ public:
 
     // Is the document different from when it was last saved?
     bool GetModify() const;
-
-    // Select a range of text.
-    void SetSelectionVoid(int startPos, int endPos);
 
     // Retrieve the selected text.
     wxString GetSelectedText();
@@ -2881,7 +2915,9 @@ public:
     bool CanUndo() const;
 
     // Delete the undo history.
+/* C::B begin */
     void EmptyUndoBuffer(bool collectChangeHistory=false);
+/* C::B end */
 
     // Undo one action in the undo history.
     void Undo();
@@ -3133,7 +3169,9 @@ public:
     // Append a string to the end of the document without changing the selection.
     void AppendText(const wxString& text);
 
+/* C::B begin */
     void AppendText(int length, const wxString& text);
+/* C::B end */
 
     // Is drawing done in two phases with backgrounds drawn before faoregrounds?
     bool GetTwoPhaseDraw() const;
@@ -3142,11 +3180,25 @@ public:
     // and then the foreground. This avoids chopping off characters that overlap the next run.
     void SetTwoPhaseDraw(bool twoPhase);
 
+/* C::B begin */
     // Choose the quality level for text from the FontQuality enumeration.
     void SetFontQuality(int fontQuality);
 
     // Retrieve the quality level for text.
     int GetFontQuality() const;
+/* C::B end */
+
+    // Scroll so that a display line is at the top of the display.
+    void SetFirstVisibleLine(int lineDisplay);
+
+    // Change the effect of pasting when there are multiple selections.
+    void SetMultiPaste(int multiPaste);
+
+    // Retrieve the effect of pasting when there are multiple selections..
+    int GetMultiPaste() const;
+
+    // Retrieve the value of a tag from a regular expression search.
+    wxString GetTag(int tagNumber);
 
     // Make the target range start and end be the same as the selection range start and end.
     void TargetFromSelection();
@@ -3622,9 +3674,11 @@ public:
     // Get currently selected item position in the auto-completion list
     int AutoCompGetCurrent();
 
+/* C::B begin */
     // Get currently selected item text in the auto-completion list
     // Returns the length of the item text
     wxString AutoCGetCurrentText();
+/* C::B end */
 
     // Enlarge the document to a particular size of text bytes.
     void Allocate(int bytes);
@@ -3704,8 +3758,10 @@ public:
 
     // Compact the document buffer and return a read-only pointer to the
     // characters in the document.
+/* C::B begin */
     // defined later as wxUIntPtr GetCharacterPointer() const;
     //int GetCharacterPointer() const;
+/* C::B end */
 
     // Always interpret keyboard input as Unicode
     void SetKeysUnicode(bool keysUnicode);
@@ -3713,11 +3769,13 @@ public:
     // Are keys always interpreted as Unicode?
     bool GetKeysUnicode() const;
 
-    // Set alpha value for an indicator to draw under text or over(default).
+    // Set the alpha fill colour of the given indicator.
+/* C::B begin */
     void IndicSetAlpha(int indicator, int alpha);
 
-    // Retrieve alpha value used for indicator drawn under or over text.
+    // Get the alpha fill colour of the given indicator.
     int IndicGetAlpha(int indicator) const;
+/* C::B end */
 
     // Set extra ascent for each line
     void SetExtraAscent(int extraAscent);
@@ -3732,7 +3790,7 @@ public:
     int GetExtraDescent() const;
 
     // Which symbol was defined for markerNumber with MarkerDefine
-    int MarkerSymbolDefined(int markerNumber);
+    int GetMarkerSymbolDefined(int markerNumber);
 
     // Set the text in the text margin for a line
     void MarginSetText(int line, const wxString& text);
@@ -3837,8 +3895,13 @@ public:
     // Clear selections to a single empty stream selection
     void ClearSelections();
 
+/* C::B begin */
+    // Select a range of text.
+    void SetSelectionVoid(int startPos, int endPos);
+
     // Set a simple selection
     int SetSelectionInt(int caret, int anchor);
+/* C::B end */
 
     // Add a selection
     int AddSelection(int caret, int anchor);
@@ -3848,7 +3911,6 @@ public:
 
     // Which selection is the main selection
     int GetMainSelection() const;
-
     void SetSelectionNCaret(int selection, int pos);
     int GetSelectionNCaret(int selection) const;
     void SetSelectionNAnchor(int selection, int posAnchor);
@@ -3869,7 +3931,6 @@ public:
 
     // Returns the position at the end of the selection.
     int GetSelectionNEnd(int selection) const;
-
     void SetRectangularSelectionCaret(int pos);
     int GetRectangularSelectionCaret() const;
     void SetRectangularSelectionAnchor(int posAnchor);
@@ -3892,11 +3953,15 @@ public:
 
     // Set the foreground colour of additional selections.
     // Must have previously called SetSelFore with non-zero first argument for this to have an effect.
+/* C::B begin */
     void SetAdditionalSelFore(const wxColour& fore);
+/* C::B end */
 
     // Set the background colour of additional selections.
     // Must have previously called SetSelBack with non-zero first argument for this to have an effect.
+/* C::B begin */
     void SetAdditionalSelBack(const wxColour& back);
+/* C::B end */
 
     // Set the alpha of the selection.
     void SetAdditionalSelAlpha(int alpha);
@@ -3905,10 +3970,14 @@ public:
     int GetAdditionalSelAlpha() const;
 
     // Set the foreground colour of additional carets.
+/* C::B begin */
     void SetAdditionalCaretFore(const wxColour& fore);
+/* C::B end */
 
     // Get the foreground colour of additional carets.
+/* C::B begin */
     wxColour GetAdditionalCaretFore() const;
+/* C::B end */
 
     // Set the main selection to the next selection.
     void RotateSelection();
@@ -3954,8 +4023,10 @@ public:
     // Retrieve the number of bits the current lexer needs for styling.
     int GetStyleBitsNeeded() const;
 
+/* C::B begin */
     // Retrieve the name of the lexer.
     wxString GetLexerLanguage() const;
+/* C::B end */
 
 // END of generated section
 //----------------------------------------------------------------------
@@ -4012,12 +4083,16 @@ public:
     // Set the left and right margin in the edit area, measured in pixels.
     void SetMargins(int left, int right);
 
+/* C::B begin */
     // Retrieve the start and end positions of the current selection.
 #ifdef SWIG
-    void GetSelection (int* OUTPUT, int* OUTPUT);
+    void GetSelection (long* OUTPUT, long* OUTPUT);
 #else
-    void GetSelection (int* startPos, int* endPos);
+    void GetSelection (long *from, long *to);
+    // kept for compatibility only
+//    void GetSelection(int *from, int *to)
 #endif
+/* C::B end */
 
     // Retrieve the point in the window where a position is displayed.
     wxPoint PointFromPosition(int pos);
@@ -4063,11 +4138,13 @@ public:
     // Allow for simulating a DnD DropText
     bool DoDropText(long x, long y, const wxString& data);
 
+/* C::B begin */
     // Allow for simulating a DnD DragEnter
     wxDragResult DoDragEnter (wxCoord x, wxCoord y, wxDragResult def);
 
     // Allow for simulating a DnD DragEnter
     void DoDragLeave ();
+/* C::B end */
 
 #endif
 
@@ -4146,7 +4223,9 @@ protected:
     virtual wxSize DoGetBestSize() const;
 
     // Turn notifications from Scintilla into events
+/* C::B begin */
     void NotifyFocus(bool focus);
+/* C::B end */
     void NotifyChange();
     void NotifyParent(SCNotification* scn);
 
@@ -4173,6 +4252,7 @@ protected:
 
 
 public:
+/* C::B begin */
     // Direct Functions
     // this is working but is a bit useless in this platform
     // not even SCI_* are defined in wxscintilla.h
@@ -4185,6 +4265,7 @@ public:
 
     void SetUsePalette(bool allowPaletteUse);
     bool GetUsePalette();
+/* C::B end */
 };
 
 //----------------------------------------------------------------------
@@ -4215,7 +4296,9 @@ public:
     void SetX(int val)                    { m_x = val; }
     void SetY(int val)                    { m_y = val; }
     void SetDragText(const wxString& val) { m_dragText = val; }
-    void SetDragAllowMove(bool val)       { m_dragAllowMove = val; }
+/* C::B begin */
+    void SetDragAllowMove(int val)        { m_dragAllowMove = val; }
+/* C::B end */
 #ifdef  SCI_USE_DND
     void SetDragResult(wxDragResult val)  { m_dragResult = val; }
 #endif
@@ -4238,7 +4321,9 @@ public:
     int  GetX() const                { return m_x; }
     int  GetY() const                { return m_y; }
     wxString GetDragText()           { return m_dragText; }
-    bool GetDragAllowMove()          { return wxDrag_DefaultMove; }
+/* C::B begin */
+    int GetDragAllowMove()           { return m_dragAllowMove; }
+/* C::B end */
 #ifdef SCI_USE_DND
     wxDragResult GetDragResult()     { return m_dragResult; }
 #endif
@@ -4276,7 +4361,9 @@ private:
     int m_y;
 
     wxString m_dragText;        // wxEVT_SCI_START_DRAG, wxEVT_SCI_DO_DROP
-    bool     m_dragAllowMove;   // wxEVT_SCI_START_DRAG
+/* C::B begin */
+    int     m_dragAllowMove;    // wxEVT_SCI_START_DRAG
+/* C::B end */
 
 #if wxUSE_DRAG_AND_DROP
     wxDragResult m_dragResult; // wxEVT_SCI_DRAG_OVER,wxEVT_SCI_DO_DROP
@@ -4318,8 +4405,11 @@ DECLARE_EXPORTED_EVENT_TYPE (WXDLLIMPEXP_SCI, wxEVT_SCI_INDICATOR_CLICK,     167
 DECLARE_EXPORTED_EVENT_TYPE (WXDLLIMPEXP_SCI, wxEVT_SCI_INDICATOR_RELEASE,   1678)
 DECLARE_EXPORTED_EVENT_TYPE (WXDLLIMPEXP_SCI, wxEVT_SCI_AUTOCOMP_CANCELLED,  1679)
 DECLARE_EXPORTED_EVENT_TYPE (WXDLLIMPEXP_SCI, wxEVT_SCI_AUTOCOMP_CHARDELETED,1680)
+/* C::B begin */
 DECLARE_EXPORTED_EVENT_TYPE (WXDLLIMPEXP_SCI, wxEVT_SCI_SETFOCUS,            1681)
 DECLARE_EXPORTED_EVENT_TYPE (WXDLLIMPEXP_SCI, wxEVT_SCI_KILLFOCUS,           1682)
+DECLARE_EXPORTED_EVENT_TYPE (WXDLLIMPEXP_SCI, wxEVT_SCI_FINISHED_DRAG,       1683)
+/* C::B end */
 END_DECLARE_EVENT_TYPES()
 #else
     enum {
@@ -4353,8 +4443,11 @@ END_DECLARE_EVENT_TYPES()
         wxEVT_SCI_INDICATOR_RELEASE,
         wxEVT_SCI_AUTOCOMP_CANCELLED,
         wxEVT_SCI_AUTOCOMP_CHARDELETED,
+/* C::B begin */
         wxEVT_SCI_SETFOCUS,
-        wxEVT_SCI_KILLFOCUS
+        wxEVT_SCI_KILLFOCUS,
+        wxEVT_SCI_FINISHED_DRAG
+/* C::B end */
     };
 #endif
 
@@ -4393,8 +4486,11 @@ typedef void (wxEvtHandler::*wxScintillaEventFunction)(wxScintillaEvent&);
 #define EVT_SCI_INDICATOR_RELEASE(id, fn)       DECLARE_EVENT_TABLE_ENTRY (wxEVT_SCI_INDICATOR_RELEASE      id, wxID_ANY, (wxObjectEventFunction) (wxEventFunction)  wxStaticCastEvent( wxScintillaEventFunction, & fn ), (wxObject *) NULL),
 #define EVT_SCI_AUTOCOMP_CANCELLED(id, fn)      DECLARE_EVENT_TABLE_ENTRY (wxEVT_SCI_AUTOCOMP_CANCELLED     id, wxID_ANY, (wxObjectEventFunction) (wxEventFunction)  wxStaticCastEvent( wxScintillaEventFunction, & fn ), (wxObject *) NULL),
 #define EVT_SCI_AUTOCOMP_CHARDELETED(id, fn)    DECLARE_EVENT_TABLE_ENTRY (wxEVT_SCI_AUTOCOMP_CHARDELETED   id, wxID_ANY, (wxObjectEventFunction) (wxEventFunction)  wxStaticCastEvent( wxScintillaEventFunction, & fn ), (wxObject *) NULL),
+/* C::B begin */
 #define EVT_SCI_SETFOCUS(id, fn)                DECLARE_EVENT_TABLE_ENTRY (wxEVT_SCI_SETFOCUS               id, wxID_ANY, (wxObjectEventFunction) (wxEventFunction)  wxStaticCastEvent( wxScintillaEventFunction, & fn ), (wxObject *) NULL),
 #define EVT_SCI_KILLFOCUS(id, fn)               DECLARE_EVENT_TABLE_ENTRY (wxEVT_SCI_KILLFOCUS              id, wxID_ANY, (wxObjectEventFunction) (wxEventFunction)  wxStaticCastEvent( wxScintillaEventFunction, & fn ), (wxObject *) NULL),
+#define EVT_SCI_FINISHED_DRAG(id, fn)           DECLARE_EVENT_TABLE_ENTRY (wxEVT_SCI_FINISHED_DRAG,         id, wxID_ANY, (wxObjectEventFunction) (wxEventFunction)  wxStaticCastEvent( wxScintillaEventFunction, & fn ), (wxObject *) NULL),
+/* C::B end */
 
 #endif
 

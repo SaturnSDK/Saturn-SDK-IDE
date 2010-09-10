@@ -61,7 +61,7 @@ void CBProfiler::OnAttach()
     // (see: does not need) this plugin...
 }
 
-void CBProfiler::OnRelease(bool appShutDown)
+void CBProfiler::OnRelease(bool /*appShutDown*/)
 {
     // do de-initialization for your plugin
     // if appShutDown is false, the plugin is unloaded because Code::Blocks is being shut down,
@@ -102,14 +102,18 @@ int CBProfiler::Execute()
     {
         // more than one executable target? ask...
         wxString choices[project->GetBuildTargetsCount()];
+        wxString active_target = project->GetActiveBuildTarget();
+        int selected = 0;
         for (int i=0; i<project->GetBuildTargetsCount(); ++i)
         {
             choices[i] = project->GetBuildTarget(i)->GetTitle();
+            if (choices[i] == active_target)
+                selected = i;
         }
         wxSingleChoiceDialog dialog(Manager::Get()->GetAppWindow(),
                                     _("Select the target you want to profile"),
                                     _("Select Target"),project->GetBuildTargetsCount(),choices);
-        dialog.SetSelection(0);
+        dialog.SetSelection(selected);
         if (dialog.ShowModal() != wxID_OK)
             return -1;
         int targetIndex = dialog.GetSelection();

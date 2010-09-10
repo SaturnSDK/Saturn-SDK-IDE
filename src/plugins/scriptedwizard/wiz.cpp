@@ -346,7 +346,13 @@ CompileTargetBase* Wiz::RunProjectWizard(wxString* pFilename)
     }
 
     // now create the project
+    // make sure to respect the compiler chosen by the user for the project, too
+    wxString defCompilerID = CompilerFactory::GetDefaultCompilerID();
+    CompilerFactory::SetDefaultCompiler(GetCompilerID());
+    // create the project with the (probably) updated compiler
     theproject = Manager::Get()->GetProjectManager()->NewProject(prjname);
+    // setup the old default compiler again
+    CompilerFactory::SetDefaultCompiler(defCompilerID);
     if (!theproject)
     {
         cbMessageBox(_("Couldn't create the new project:\n") + prjdir, _("Error"), wxICON_ERROR);
@@ -527,7 +533,7 @@ CompileTargetBase* Wiz::RunProjectWizard(wxString* pFilename)
     return theproject;
 }
 
-CompileTargetBase* Wiz::RunTargetWizard(wxString* pFilename)
+CompileTargetBase* Wiz::RunTargetWizard(wxString* /*pFilename*/)
 {
     cbProject* theproject = Manager::Get()->GetProjectManager()->GetActiveProject(); // can't fail; if no project, the wizard didn't even run
     ProjectBuildTarget* target = theproject->AddBuildTarget(GetTargetName());
@@ -641,7 +647,7 @@ CompileTargetBase* Wiz::RunFilesWizard(wxString* pFilename)
     return 0;
 }
 
-CompileTargetBase* Wiz::RunCustomWizard(wxString* pFilename)
+CompileTargetBase* Wiz::RunCustomWizard(wxString* /*pFilename*/)
 {
     try
     {
@@ -807,9 +813,13 @@ void Wiz::FillComboboxWithCompilers(const wxString& name)
         {
             for (size_t i = 0; i < CompilerFactory::GetCompilersCount(); ++i)
             {
-                win->Append(CompilerFactory::GetCompiler(i)->GetName());
+                Compiler* compiler = CompilerFactory::GetCompiler(i);
+                if (compiler)
+                    win->Append(compiler->GetName());
             }
-            win->SetSelection(win->FindString(CompilerFactory::GetDefaultCompiler()->GetName()));
+            Compiler* compiler = CompilerFactory::GetDefaultCompiler();
+            if (compiler)
+                win->SetSelection(win->FindString(compiler->GetName()));
         }
     }
 }
@@ -1336,7 +1346,7 @@ void Wiz::SetFilePathSelectionFilter(const wxString& filter)
         m_pWizFilePathPanel->SetFilePathSelectionFilter(filter);
 }
 
-void Wiz::SetCompilerDefault(const wxString& defCompilerID)
+void Wiz::SetCompilerDefault(const wxString& /*defCompilerID*/)
 {
     // default compiler settings (returned if no compiler page is added in the wizard)
     m_DefCompilerID = CompilerFactory::GetDefaultCompilerID();

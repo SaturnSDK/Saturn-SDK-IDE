@@ -13,10 +13,11 @@
 				<Option type="3" />
 				<Option compiler="gcc" />
 				<Option parameters="--debug-log -na -ns -nd" />
-				<Option host_application=".\codeblocks.exe" />
+				<Option host_application="..\..\..\devel\codeblocks.exe" />
 				<Compiler>
-					<Add option="-DBUILDING_PLUGIN" />
-					<Add option="-DNO_LOGGING" />
+					<Add option="-DWXMAKINGDLL_PROPGRID" />
+					<Add option="-DCB_PRECOMP" />
+					<Add option="-DwxPG_USE_WXMODULE=0" />
 				</Compiler>
 				<Linker>
 					<Add library="codeblocks" />
@@ -48,7 +49,6 @@
 			<Add option="-DHAVE_W32API_H" />
 			<Add option="-D__WXMSW__" />
 			<Add option="-DcbDEBUG" />
-			<Add option="-DCB_PRECOMP" />
 			<Add option="-DWX_PRECOMP" />
 			<Add option="-DwxUSE_UNICODE" />
 			<Add option="-DBUILDING_PLUGIN" />
@@ -68,7 +68,6 @@
 			<Add option="-Wl,--enable-auto-import" />
 			<Add option="-mthreads" />
 			<Add library="wxmsw28$(WX_SUFFIX)" />
-			<Add library="txml" />
 			<Add library="wxscintilla" />
 			<Add library="codeblocks" />
 			<Add directory="..\..\..\devel" />

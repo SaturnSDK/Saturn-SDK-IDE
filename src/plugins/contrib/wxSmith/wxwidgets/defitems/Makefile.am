@@ -1,9 +1,9 @@
-AM_CPPFLAGS = -DWXMAKINGLIB_PROPGRID
+AM_CPPFLAGS = -DWXMAKINGDLL_PROPGRID -DwxPG_USE_WXMODULE=0
 
 INCLUDES = $(WX_CXXFLAGS) \
 		-I$(top_srcdir)/src/include \
 		-I$(top_srcdir)/src/sdk/wxscintilla/include \
-		-I$(top_srcdir)/src/plugins/contrib/wxSmith/propgrid/contrib/include
+		-I$(top_srcdir)/src/sdk/wxpropgrid/include
 
 noinst_LTLIBRARIES = libwxsmith_wxwidgets_defitems.la
 
@@ -74,7 +74,32 @@ libwxsmith_wxwidgets_defitems_la_SOURCES = \
 ./wxssingleinstancechecker.cpp \
 ./wxsstopwatch.cpp \
 ./wxssymbolpickerdialog.cpp \
-./wxsglcanvas.cpp
+./wxsglcanvas.cpp \
+./wxshyperlinkctrl.cpp \
+./wxsanimationctrl.cpp \
+./wxsfindreplacedialog.cpp \
+./wxsfontdialog.cpp \
+./wxsmessagedialog.cpp \
+./wxspagesetupdialog.cpp \
+./wxspasswordentrydialog.cpp \
+./wxsprintdialog.cpp \
+./wxsprogressdialog.cpp \
+./wxsrichtextformattingdialog.cpp \
+./wxsrichtextstyleorganiserdialog.cpp \
+./wxstextentrydialog.cpp \
+./wxscolourpickerctrl.cpp \
+./wxsdirpickerctrl.cpp \
+./wxsfilepickerctrl.cpp \
+./wxsfontpickerctrl.cpp \
+./wxsbitmapcombobox.cpp \
+./wxscontexthelpbutton.cpp \
+./wxsdialupmanager.cpp \
+./wxshtmleasyprinting.cpp \
+./wxslistview.cpp \
+./wxsrichtextctrl.cpp \
+./wxssearchctrl.cpp \
+./wxssimplehtmllistbox.cpp \
+./wxstreebook.cpp
 
 noinst_HEADERS = \
 ./wxsgauge.h \
@@ -139,5 +164,31 @@ noinst_HEADERS = \
 ./wxssingleinstancechecker.h \
 ./wxsstopwatch.h \
 ./wxssymbolpickerdialog.h \
-./wxsglcanvas.h
+./wxsglcanvas.h \
+./wxshyperlinkctrl.h \
+./wxsanimationctrl.h \
+./wxsfindreplacedialog.h \
+./wxsfontdialog.h \
+./wxsmessagedialog.h \
+./wxspagesetupdialog.h \
+./wxspasswordentrydialog.h \
+./wxsprintdialog.h \
+./wxsprogressdialog.h \
+./wxsrichtextformattingdialog.h \
+./wxsrichtextstyleorganiserdialog.h \
+./wxstextentrydialog.h \
+./wxscolourpickerctrl.h \
+./wxsdirpickerctrl.h \
+./wxsfilepickerctrl.h \
+./wxsfontpickerctrl.h \
+./wxsbitmapcombobox.h \
+./wxscontexthelpbutton.h \
+./wxsdialupmanager.h \
+./wxshtmleasyprinting.h \
+./wxslistview.h \
+./wxsrichtextctrl.h \
+./wxssearchctrl.h \
+./wxssimplehtmllistbox.h \
+./wxstreebook.h
+
 

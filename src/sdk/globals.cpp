@@ -318,6 +318,57 @@ FileType FileTypeOf(const wxString& filename)
     return ftOther;
 }
 
+void DoRememberSelectedNode(wxTreeCtrl* tree, wxString& selectedItemPath)
+{
+    wxTreeItemId item = tree->GetSelection();
+    while(item.IsOk())
+    {
+        selectedItemPath = _T("/") + tree->GetItemText(item) + selectedItemPath;
+        item = tree->GetItemParent(item);
+    }
+}
+
+void DoSelectRememberedNode(wxTreeCtrl* tree, const wxTreeItemId& parent, wxString& selectedItemPath)
+{
+    if (tree && !selectedItemPath.IsEmpty())
+    {
+        wxString tmpPath;
+        wxString folder;
+        tmpPath = selectedItemPath;
+        int pos = tmpPath.Find(_T('/'));
+        while (pos == 0)
+        {
+            tmpPath = tmpPath.Right(tmpPath.Length() - pos - 1);
+            pos = tmpPath.Find(_T('/'));
+        }
+
+        folder = tmpPath.Left(pos);
+        tmpPath = tmpPath.Right(tmpPath.Length() - pos - 1);
+        wxTreeItemId item = parent;
+        compatibility::tree_cookie_t cookie = 0;
+
+        while (item.IsOk())
+        {
+            if(tree->GetItemText(item) != folder)
+                item = tree->GetNextSibling(item);
+            else
+            {
+                if(pos < 0)
+                {
+                    tree->SelectItem(item);
+                    break;
+                }
+                else
+                {
+                    item=tree->GetNextChild(item, cookie);
+                    DoSelectRememberedNode(tree, item, tmpPath);
+                }
+            }
+        }
+
+    }
+}
+
 bool DoRememberExpandedNodes(wxTreeCtrl* tree, const wxTreeItemId& parent, wxArrayString& nodePaths, wxString& path)
 {
     // remember expanded tree nodes of this tree
@@ -390,7 +441,7 @@ void DoExpandRememberedNode(wxTreeCtrl* tree, const wxTreeItemId& parent, const 
     }
 }
 
-void SaveTreeState(wxTreeCtrl* tree, const wxTreeItemId& parent, wxArrayString& nodePaths)
+void SaveTreeState(wxTreeCtrl* tree, const wxTreeItemId& parent, wxArrayString& nodePaths, wxString& selectedItemPath)
 {
     nodePaths.Clear();
     if (!parent.IsOk() || !tree || !tree->ItemHasChildren(parent) || !tree->IsExpanded(parent))
@@ -398,9 +449,12 @@ void SaveTreeState(wxTreeCtrl* tree, const wxTreeItemId& parent, wxArrayString& 
     wxString tmp;
     if (!DoRememberExpandedNodes(tree, parent, nodePaths, tmp))
         nodePaths.Add(tmp); // just the tree root
+
+    selectedItemPath.clear();
+    DoRememberSelectedNode(tree, selectedItemPath);
 }
 
-void RestoreTreeState(wxTreeCtrl* tree, const wxTreeItemId& parent, wxArrayString& nodePaths)
+void RestoreTreeState(wxTreeCtrl* tree, const wxTreeItemId& parent, wxArrayString& nodePaths, wxString& selectedItemPath)
 {
     if (!parent.IsOk() || !tree)
         return;
@@ -412,6 +466,8 @@ void RestoreTreeState(wxTreeCtrl* tree, const wxTreeItemId& parent, wxArrayStrin
     for (unsigned int i = 0; i < nodePaths.GetCount(); ++i)
         DoExpandRememberedNode(tree, parent, nodePaths[i]);
     nodePaths.Clear();
+    DoSelectRememberedNode(tree, tree->GetRootItem(), selectedItemPath);
+    selectedItemPath.clear();
 }
 
 bool CreateDirRecursively(const wxString& full_path, int perms)
@@ -665,14 +721,14 @@ bool NormalizePath(wxFileName& f,const wxString& base)
     return result;
 }
 
-// Checks whether 'suffix' could be a suffix of 'path' and therefore represents 
+// Checks whether 'suffix' could be a suffix of 'path' and therefore represents
 // the same path. This is used to check whether a relative path could represent
-// the same path as absolute path. For instance, for 
+// the same path as absolute path. For instance, for
 // suffix = sdk/globals.cpp
 // path = /home/user/codeblocks/trunk/src/sdk/globals.cpp
 // it returns true. The function expects that 'path' is normalized and compares
-// 'path' with 'suffix' starting from the end of the path. When it reaches .. in 
-// 'suffix' it gives up (there is no way to check relative filename names 
+// 'path' with 'suffix' starting from the end of the path. When it reaches .. in
+// 'suffix' it gives up (there is no way to check relative filename names
 // exactly) and if the path compared so far is identical, it returns true
 bool IsSuffixOfPath(wxFileName const & suffix, wxFileName const & path)
 {
@@ -701,7 +757,7 @@ bool IsSuffixOfPath(wxFileName const & suffix, wxFileName const & path)
 
         if (suffixDirArray[i] == _T(".."))
         {
-            // suffix contains ".." - from now on we cannot precisely determine 
+            // suffix contains ".." - from now on we cannot precisely determine
             // whether suffix and path match - we assume that they do
             return true;
         }
@@ -849,11 +905,11 @@ void PlaceWindow(wxTopLevelWindow *w, cbPlaceDialogMode mode, bool enforce)
 
 
     static MonitorFromWindow_t MonitorFromWindowProc = (MonitorFromWindow_t) GetProcAddress(GetModuleHandle(_T("user32.dll")), "MonitorFromWindow");
-    static GetMonitorInfo_t GetMonitorInfoProc = (GetMonitorInfo_t) GetProcAddress(GetModuleHandle(_T("user32.dll")), "GetMonitorInfoA");
+    static GetMonitorInfo_t    GetMonitorInfoProc    = (GetMonitorInfo_t)    GetProcAddress(GetModuleHandle(_T("user32.dll")), "GetMonitorInfoA");
     int monitorWidth;
     int monitorHeight;
 
-    if(GetMonitorInfoProc)
+    if (GetMonitorInfoProc)
     {
         hMonitor = MonitorFromWindowProc((HWND) referenceWindow->GetHandle(), MONITOR_DEFAULTTONEAREST);
 
@@ -1112,4 +1168,38 @@ wxString realpath(const wxString& path)
     }
     return cbC2U(ret.c_str());
 #endif
+}
+
+int cbMessageBox(const wxString& message, const wxString& caption, int style, wxWindow *parent, int x, int y)
+{
+    if (!parent)
+    {
+        parent = Manager::Get()->GetAppWindow();
+    }
+
+    // Cannot create a wxMessageDialog with a NULL as parent
+    if (!parent)
+    {
+      // wxMessage*Box* returns any of: wxYES, wxNO, wxCANCEL, wxOK.
+      int answer = wxMessageBox(message, caption, style, parent, x, y);
+      switch (answer)
+      {
+        // map answer to the one of wxMessage*Dialog* to ensure compatibility
+        case (wxOK):
+          return wxID_OK;
+        case (wxCANCEL):
+          return wxID_CANCEL;
+        case (wxYES):
+          return wxID_YES;
+        case (wxNO):
+          return wxID_NO;
+        default:
+          return -1; // NOTE: Cannot happen unless wxWidgets API changes
+      }
+    }
+
+    wxMessageDialog dlg(parent, message, caption, style, wxPoint(x,y));
+    PlaceWindow(&dlg);
+    // wxMessage*Dialog* returns any of wxID_OK, wxID_CANCEL, wxID_YES, wxID_NO
+    return dlg.ShowModal();
 }

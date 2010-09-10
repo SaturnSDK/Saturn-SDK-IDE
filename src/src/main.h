@@ -28,24 +28,31 @@ WX_DECLARE_STRING_HASH_MAP(wxString, LayoutViewsMap);
 extern int idStartHerePageLink;
 extern int idStartHerePageVarSubst;
 
-class wxAuiNotebook;
+class cbAuiNotebook;
 class InfoPane;
 class wxGauge;
 
 class MainFrame : public wxFrame
 {
+	public:
+        // needed for binding with SqPlus
+        MainFrame& operator=(const MainFrame& /*rhs*/) // prevent assignement operator
+        {
+        	cbThrow(_T("Can't use MainFrame's operator="));
+        	return *this;
+		}
     private:
+        MainFrame(const MainFrame& /*rhs*/); // prevent copy construction
+
         wxAuiManager m_LayoutManager;
         LayoutViewsMap m_LayoutViews;
+        LayoutViewsMap m_LayoutMessagePane;
         bool LayoutDifferent(const wxString& layout1,const wxString& layout2,const wxString& delimiter=_("|"));
+        bool LayoutMessagePaneDifferent(const wxString& layout1,const wxString& layout2, bool checkSelection=false);
     public:
         wxAcceleratorTable* m_pAccel;
         MainFrame(wxWindow* parent = (wxWindow*)NULL);
         ~MainFrame();
-
-        // needed for binding with SqPlus
-        MainFrame(const MainFrame& rhs){ cbThrow(_T("Can't use MainFrame's copy constructor")); }
-        MainFrame& operator=(const MainFrame& rhs){ cbThrow(_T("Can't use MainFrame's operator=")); }
 
         bool Open(const wxString& filename, bool addToHistory = true);
         bool OnDropFiles(wxCoord x, wxCoord y, const wxArrayString& filenames);
@@ -257,7 +264,7 @@ class MainFrame : public wxFrame
         void RemovePluginFromMenus(const wxString& pluginName);
 
         void LoadViewLayout(const wxString& name, bool isTemp = false);
-        void SaveViewLayout(const wxString& name, const wxString& layout, bool select = false);
+        void SaveViewLayout(const wxString& name, const wxString& layout, const wxString& layoutMP, bool select = false);
         void DoSelectLayout(const wxString& name);
         void DoFixToolbarsLayout();
         bool DoCheckCurrentLayoutForChanges(bool canCancel = true);
@@ -267,6 +274,7 @@ class MainFrame : public wxFrame
         void AddEditorInWindowMenu(const wxString& filename, const wxString& title);
         void RemoveEditorFromWindowMenu(const wxString& filename);
         int IsEditorInWindowMenu(const wxString& filename);
+        wxString GetEditorDescription(EditorBase* eb);
 
         bool DoCloseCurrentWorkspace();
         bool DoOpenProject(const wxString& filename, bool addToHistory = true);
@@ -279,7 +287,7 @@ class MainFrame : public wxFrame
         void DoUpdateLayout();
         void DoUpdateLayoutColours();
         void DoUpdateEditorStyle();
-        void DoUpdateEditorStyle(wxAuiNotebook* target, const wxString& prefix, long defaultStyle);
+        void DoUpdateEditorStyle(cbAuiNotebook* target, const wxString& prefix, long defaultStyle);
 
         void ShowHideStartPage(bool forceHasProject = false);
         void ShowHideScriptConsole();
@@ -319,6 +327,7 @@ class MainFrame : public wxFrame
 
         wxString m_LastLayoutName;
         wxString m_LastLayoutData;
+        wxString m_LastMessagePaneLayoutData;
         bool m_LastLayoutIsTemp;
 
         wxWindow* m_pScriptConsole;

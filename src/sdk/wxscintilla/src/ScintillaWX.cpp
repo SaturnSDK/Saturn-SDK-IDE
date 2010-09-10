@@ -326,7 +326,9 @@ void ScintillaWX::StartDrag() {
     wxScintillaEvent evt(wxEVT_SCI_START_DRAG, sci->GetId());
     evt.SetEventObject (sci);
     evt.SetDragText(dragText);
-    evt.SetDragAllowMove(true);
+/* C::B begin */
+    evt.SetDragAllowMove(wxDrag_DefaultMove);
+/* C::B end */
     evt.SetPosition (wxMin(sci->GetSelectionStart(),
 	                       sci->GetSelectionEnd()));
     sci->GetEventHandler()->ProcessEvent (evt);
@@ -347,6 +349,11 @@ void ScintillaWX::StartDrag() {
             ClearSelection();
         inDragDrop = ddNone;
         SetDragPosition (SelectionPosition(invalidPosition));
+/* C::B begin */
+        wxScintillaEvent evt(wxEVT_SCI_FINISHED_DRAG, sci->GetId());
+        evt.SetEventObject (sci);
+        sci->GetEventHandler()->ProcessEvent (evt);
+/* C::B end */
     }
 #endif // wxUSE_DRAG_AND_DROP
 }
@@ -560,7 +567,11 @@ void ScintillaWX::Paste() {
 
     if (wxTheClipboard->Open()) {
         wxTheClipboard->UsePrimarySelection(false);
-        wxCustomDataObject selData(wxDataFormat(wxString(wxT("application/x-cbrectdata"))));
+/* C::B begin */
+        // Leave the followig lines that way to enable compilation with GCC 3.3.3
+        wxDataFormat dataFormat(wxString(wxT("application/x-cbrectdata")));
+        wxCustomDataObject selData(dataFormat);
+/* C::B end */
         bool gotRectData = wxTheClipboard->GetData(selData);
 
         if (gotRectData && selData.GetSize()>1) {
@@ -781,6 +792,10 @@ sptr_t ScintillaWX::WndProc(unsigned int iMessage, uptr_t wParam, sptr_t lParam)
           char* defn = reinterpret_cast<char *>(lParam);
           AutoCompleteCancel();
           pt.y += vs.lineHeight;
+/* C::B begin */
+          /* This fix will allow you to actually modify the calltip font (it
+           * was hardcoded to STYLE_DEFAULT instead of allowing user to
+           * override it when STYLE_CALLTIP is set). */
           int ctStyle = ct.UseStyleCallTip() ? STYLE_CALLTIP : STYLE_DEFAULT;
           PRectangle rc = ct.CallTipStart(sel.MainCaret(), pt,
                                           defn,
@@ -789,6 +804,7 @@ sptr_t ScintillaWX::WndProc(unsigned int iMessage, uptr_t wParam, sptr_t lParam)
                                           CodePage(),
                                           vs.styles[ctStyle].characterSet,
                                           wMain);
+/* C::B end */
           // If the call-tip window would be out of the client
           // space, adjust so it displays above the text.
           PRectangle rcClient = GetClientRectangle();

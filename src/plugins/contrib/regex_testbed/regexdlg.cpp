@@ -19,6 +19,13 @@
 #endif
 
 //(*InternalHeaders(regex_dialog)
+#include <wx/bitmap.h>
+#include <wx/font.h>
+#include <wx/fontenum.h>
+#include <wx/fontmap.h>
+#include <wx/image.h>
+#include <wx/intl.h>
+#include <wx/settings.h>
 #include <wx/xrc/xmlres.h>
 //*)
 
@@ -32,7 +39,7 @@ END_EVENT_TABLE()
 
 RegExDlg::VisibleDialogs RegExDlg::m_visible_dialogs;
 
-RegExDlg::RegExDlg(wxWindow* parent,wxWindowID id)
+RegExDlg::RegExDlg(wxWindow* parent,wxWindowID /*id*/)
 {
     //(*Initialize(regex_dialog)
     wxXmlResource::Get()->LoadObject(this,parent,_T("regex_dialog"),_T("wxScrollingDialog"));
@@ -68,7 +75,7 @@ RegExDlg::~RegExDlg()
 {
 }
 
-void RegExDlg::OnClose(wxCloseEvent& event)
+void RegExDlg::OnClose(wxCloseEvent& /*event*/)
 {
     VisibleDialogs::iterator it = m_visible_dialogs.find(this);
     if(it != m_visible_dialogs.end())
@@ -98,7 +105,7 @@ void cbEscapeHtml(wxString &s)
     s.Replace(wxT("\""), wxT("&quot;"));
 }
 
-void RegExDlg::OnUpdateUI(wxUpdateUIEvent& event)
+void RegExDlg::OnUpdateUI(wxUpdateUIEvent& /*event*/)
 {
     static wxString regex;
     static wxString text;
@@ -108,7 +115,7 @@ void RegExDlg::OnUpdateUI(wxUpdateUIEvent& event)
 
 //    if(event.GetId() == XRCID("ID_NOCASE") || event.GetId() == XRCID("ID_NEWLINES"))
 //        regex = _T("$^"); // bullshit
-//    all UI elements send events quite often (on linux on every mouse mouve, if the parent window
+//    all UI elements send events quite often (on linux on every mouse move, if the parent window
 //    has the focus, on windows even without any user action). So we can not use the event Id to force a new
 //    run of GetBuiltinMatches(), because every time the value of m_quoted and m_output gets upadeted a selection of text in m_quoted
 //    will be reset and therefore the user can not copy it's content (linux) and m_output jumps to the top, so that the user
@@ -158,7 +165,7 @@ void RegExDlg::OnUpdateUI(wxUpdateUIEvent& event)
 }
 
 
-void RegExDlg::RunBenchmark(wxCommandEvent& event)
+void RegExDlg::RunBenchmark(wxCommandEvent& /*event*/)
 {
 }
 
@@ -168,11 +175,11 @@ void RegExDlg::EndModal(int retCode)
     wxScrollingDialog::EndModal(retCode);
 }
 
-void RegExDlg::OnInit(wxInitDialogEvent& event)
+void RegExDlg::OnInit(wxInitDialogEvent& /*event*/)
 {
 }
 
-void RegExDlg::OnRegExItemActivated(wxListEvent& event)
+void RegExDlg::OnRegExItemActivated(wxListEvent& /*event*/)
 {
     //
 }
@@ -194,13 +201,13 @@ wxArrayString RegExDlg::GetBuiltinMatches(const wxString& text)
         return ret;
 
     for(size_t i = 0; i < m_wxre.GetMatchCount(); ++i)
-        if(!!m_wxre.GetMatch(text, i))
+        if(m_wxre.GetMatch(text, i))
             ret.Add(m_wxre.GetMatch(text, i));
 
     return ret;
 }
 
-wxArrayString RegExDlg::GetPregMatches(const wxString& text)
+wxArrayString RegExDlg::GetPregMatches(const wxString& /*text*/)
 {
     wxArrayString ret;
 

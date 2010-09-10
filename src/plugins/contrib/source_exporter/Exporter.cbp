@@ -18,13 +18,12 @@
 			</Target>
 			<Target title="default">
 				<Option output="..\..\..\devel\share\CodeBlocks\plugins\Exporter.dll" prefix_auto="0" extension_auto="0" />
-				<Option working_dir="..\..\..\devel" />
 				<Option object_output="..\..\..\.objs\plugins\contrib\Exporter" />
 				<Option external_deps="libwxPdfDocument.a;" />
 				<Option type="3" />
 				<Option compiler="gcc" />
 				<Option parameters="--debug-log -na -ns -nd" />
-				<Option host_application=".\codeblocks.exe" />
+				<Option host_application="..\..\..\devel\codeblocks.exe" />
 				<Option projectLinkerOptionsRelation="2" />
 				<Linker>
 					<Add library="libwxPdfDocument.a" />
@@ -58,6 +57,8 @@
 			<Add option="-DcbDEBUG" />
 			<Add option="-DwxUSE_UNICODE" />
 			<Add option="-DWXMAKINGLIB_WXPDFDOC" />
+			<Add option="-DWXMAKINGDLL_PROPGRID" />
+			<Add option="-DwxPG_USE_WXMODULE=0" />
 			<Add directory="$(#WX.include)" />
 			<Add directory="$(#WX.lib)\gcc_dll$(WX_CFG)\msw$(WX_SUFFIX)" />
 			<Add directory="..\..\..\include" />

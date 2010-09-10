@@ -56,6 +56,7 @@ namespace ParserConsts
     const wxString unnamed         (_T("Unnamed"));
     const wxString quot            (_T("\""));
     const wxString kw_C            (_T("\"C\""));
+    const wxString kw_CPP          (_T("\"C++\""));
     const wxString kw__asm         (_T("__asm"));
     const wxString kw_class        (_T("class"));
     const wxString kw_const        (_T("const"));
@@ -247,6 +248,11 @@ void ParserThread::SkipAngleBraces()
             ++nestLvl;
         else if (tmp==ParserConsts::gt)
             --nestLvl;
+        else if (tmp==ParserConsts::hash)
+        {
+            tmp = m_Tokenizer.GetToken();
+            HandlePreprocessorBlocks(tmp);
+        }
         else if (tmp==ParserConsts::semicolon)
         {
             // unget token - leave ; on the stack
@@ -525,7 +531,7 @@ void ParserThread::DoParse()
         {
             // check for "C"
             m_Str = m_Tokenizer.GetToken();
-            if (m_Str==ParserConsts::kw_C)
+            if (m_Str==ParserConsts::kw_C || m_Str==ParserConsts::kw_CPP)
             {
                 m_Tokenizer.GetToken(); // "eat" {
                 DoParse(); // time for recursion ;)
@@ -1189,7 +1195,7 @@ void ParserThread::HandlePreprocessorBlocks(const wxString& preproc)
     else
     {
         m_Tokenizer.SkipToEOL();
-        TRACE( _T("HandlePreprocessorBlocks() : Skip Unrecognized Proprocessor blocks")  );
+        TRACE( _T("HandlePreprocessorBlocks() : Skip Unrecognized Preprocessor blocks")  );
     }
 }
 

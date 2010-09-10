@@ -33,7 +33,7 @@ void dlgFormatterSettings::ApplyTo(astyle::ASFormatter& formatter)
     else if (XRCCTRL(*m_dlg, "rbJava", wxRadioButton)->GetValue())
         formatter.setFormattingStyle(astyle::STYLE_JAVA);
     else if (XRCCTRL(*m_dlg, "rbKr", wxRadioButton)->GetValue())
-        formatter.setFormattingStyle(astyle::STYLE_KandR);
+        formatter.setFormattingStyle(astyle::STYLE_KR);
     else if (XRCCTRL(*m_dlg, "rbStroustrup", wxRadioButton)->GetValue())
         formatter.setFormattingStyle(astyle::STYLE_STROUSTRUP);
     else if (XRCCTRL(*m_dlg, "rbWhitesmith", wxRadioButton)->GetValue())
@@ -122,5 +122,6 @@ void dlgFormatterSettings::ApplyTo(astyle::ASFormatter& formatter)
         formatter.setBreakOneLineBlocksMode(!XRCCTRL(*m_dlg, "chkKeepBlocks", wxCheckBox)->GetValue());
         formatter.setTabSpaceConversionMode(XRCCTRL(*m_dlg, "chkConvertTabs", wxCheckBox)->GetValue());
         formatter.setEmptyLineFill(XRCCTRL(*m_dlg, "chkFillEmptyLines", wxCheckBox)->GetValue());
+        formatter.setAddBracketsMode(XRCCTRL(*m_dlg, "chkAddBrackets", wxCheckBox)->GetValue());
     }
 }

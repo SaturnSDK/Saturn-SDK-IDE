@@ -72,7 +72,7 @@ void HexEditor::OnRelease(bool appShutDown)
     }
 }
 
-bool HexEditor::BuildToolBar(wxToolBar* toolBar)
+bool HexEditor::BuildToolBar(wxToolBar* /*toolBar*/)
 {
     return false;
 }
@@ -137,22 +137,22 @@ void HexEditor::BuildMenu(wxMenuBar* menuBar)
         wxString label = item->GetLabel();
         #endif
         label.Replace( _T("_"), _T("") );
-        if ( label.Contains( _("&Open...")) )
+        if ( label.Contains( _("Open...")) )
         {
-            fileMenu->Insert( pos+1, idOpenWithHE, _("Open with HexEditor"), _("Open file using HexEditor") );
+            fileMenu->Insert( pos+1, idOpenWithHE, _("Open with hex editor"), _("Open file using hex editor") );
             return;
         }
     }
 
-    fileMenu->Append( idOpenWithHE, _("Open with HexEditor"), _("Open file using HexEditor") );
+    fileMenu->Append( idOpenWithHE, _("Open with hex editor"), _("Open file using hex editor") );
 }
 
-void HexEditor::OnOpenHexEditFileBrowser( wxCommandEvent& event )
+void HexEditor::OnOpenHexEditFileBrowser( wxCommandEvent& /*event*/ )
 {
     OpenFileFromName(m_browserselectedfile);
 }
 
-void HexEditor::OnOpenHexEdit( wxCommandEvent& event )
+void HexEditor::OnOpenHexEdit( wxCommandEvent& /*event*/ )
 {
     wxTreeCtrl *tree = Manager::Get()->GetProjectManager()->GetTree();
 
@@ -211,7 +211,7 @@ void HexEditor::OpenFileFromName(const wxString& fileName)
     new HexEditPanel( fileName, title );
 }
 
-void HexEditor::OnOpenWithHE(wxCommandEvent& event)
+void HexEditor::OnOpenWithHE(wxCommandEvent& /*event*/)
 {
     wxString file = ::wxFileSelector( _("Open file with HexEditor" ) );
     if ( file.IsEmpty() ) return;

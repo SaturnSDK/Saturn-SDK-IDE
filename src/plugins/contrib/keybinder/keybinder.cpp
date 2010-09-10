@@ -482,9 +482,14 @@ wxString wxKeyBind::KeyModifierToString(int keyModifier)
 {
     wxString result;
 
-    if (keyModifier & wxACCEL_CTRL)
+    if (keyModifier & wxACCEL_CMD)
         //result += wxT("Ctrl+");   //CB uses dashes
         result += wxT("Ctrl-");
+#if defined(__WXMAC__) || defined(__WXCOCOA__)
+    if (keyModifier & wxACCEL_CTRL)
+        //result += wxT("XCtrl+");   //CB uses dashes
+        result += wxT("XCtrl-");
+#endif
     if (keyModifier & wxACCEL_ALT)
         //result += wxT("Alt+");   //CB uses dashes
         result += wxT("Alt-");
@@ -509,7 +514,11 @@ int wxKeyBind::StringToKeyModifier(const wxString &keyModifier)
         mod |= wxACCEL_ALT;
 
     if (str.Contains(wxT("CTRL")))
+        mod |= wxACCEL_CMD;
+#if defined(__WXMAC__) || defined(__WXCOCOA__)
+    if (str.Contains(wxT("XCTRL")))
         mod |= wxACCEL_CTRL;
+#endif
 
     if (str.Contains(wxT("SHIFT")))
         mod |= wxACCEL_SHIFT;
@@ -536,6 +545,11 @@ int wxKeyBind::GetKeyModifier(wxKeyEvent &event)
     if (event.ShiftDown())
         mod |= wxACCEL_SHIFT;
 
+#if defined(__WXMAC__) || defined(__WXCOCOA__)
+    if (event.CmdDown())
+        mod |= wxACCEL_CMD;
+#endif
+
     return mod;
 }
 
@@ -560,6 +574,9 @@ bool wxKeyBind::MatchKey(const wxKeyEvent &key) const
 	b &= (key.AltDown() == ((m_nFlags & wxACCEL_ALT) != 0));
 	b &= (key.ControlDown() == ((m_nFlags & wxACCEL_CTRL) != 0));
 	b &= (key.ShiftDown() == ((m_nFlags & wxACCEL_SHIFT) != 0));
+#if defined(__WXMAC__) || defined(__WXCOCOA__)
+	b &= (key.CmdDown() == ((m_nFlags & wxACCEL_CMD) != 0));
+#endif
 
 	return b;
 }
@@ -621,7 +638,10 @@ wxCmd *wxCmd::CreateNew(wxString cmdName, int type, int id, bool updateMnu)
 
 	// create the wxCmd-derived class & init it
 	wxCmd* ret = fnc(cmdName, id);
-	wxASSERT(ret);			// for debug builds
+// ret == NULL can easily happen on runtime when dynamic menu entries are stored    //patch 2885
+// into the config file and upon reload during startup the same entries don't       //patch 2885
+// exist - usage of wxASSERT isn't probably a good idea here...                     //patch 2885
+//	wxASSERT(ret);			// for debug builds                                     //patch 2885
 	if (!ret) return NULL;	// for release builds
 	if (updateMnu) ret->Update();
 
@@ -2137,6 +2157,10 @@ wxTreeItemId wxKeyConfigPanel::GetSelCmdId() const
 	if (p == NULL)
 		return wxTreeItemId();		// an empty wxTreeItemId is always invalid...
 
+    // if tree item is a sub-menu don't allow key assignment
+    if (m_pCommandsTree->ItemHasChildren(selection))        //patch 2885
+        return wxTreeItemId();                              //patch 2885
+
 	return selection;
 }
 // ----------------------------------------------------------------------------
@@ -2167,16 +2191,10 @@ bool wxKeyConfigPanel::IsSelectedValidCmd() const
 ////		return GetSelCmdId().IsOk();
 
 	if (IsUsingTreeCtrl())
-	{
-	    // if tree item is a sub-menu don't allow key assignment //(pecan 2009/6/04)
-	    if (m_pCommandsTree->ItemHasChildren(m_pCommandsTree->GetSelection()))
-            return false;
 	    return GetSelCmdId().IsOk();
-	}
 	else
 		return m_pCommandsList->GetSelection() >= 0;
 }
-
 // ----------------------------------------------------------------------------
 wxKeyProfileArray wxKeyConfigPanel::GetProfiles() const
 // ----------------------------------------------------------------------------

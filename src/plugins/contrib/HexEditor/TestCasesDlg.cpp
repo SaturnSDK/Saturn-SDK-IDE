@@ -15,9 +15,9 @@
 * You should have received a copy of the GNU General Public License
 * along with HexEditor. If not, see <http://www.gnu.org/licenses/>.
 *
-* $Revision: 5452 $
-* $Id: TestCasesDlg.cpp 5452 2009-02-12 23:21:10Z byo $
-* $HeadURL: https://mortenmacfly@svn.berlios.de/svnroot/repos/codeblocks/trunk/src/plugins/contrib/HexEditor/TestCasesDlg.cpp $
+* $Revision$
+* $Id$
+* $HeadURL$
 */
 
 #include "TestCasesDlg.h"
@@ -107,7 +107,7 @@ void TestCasesDlg::AddLog( const wxString& logLine )
     m_NewLogs.Add( logLine );
 }
 
-void TestCasesDlg::OnButton1Click(wxCommandEvent& event)
+void TestCasesDlg::OnButton1Click(wxCommandEvent& /*event*/)
 {
     if ( m_Running )
     {
@@ -121,7 +121,7 @@ void TestCasesDlg::OnButton1Click(wxCommandEvent& event)
     }
 }
 
-void TestCasesDlg::OnTimer1Trigger(wxTimerEvent& event)
+void TestCasesDlg::OnTimer1Trigger(wxTimerEvent& /*event*/)
 {
     if ( !m_Running && !m_BtnChanged )
     {

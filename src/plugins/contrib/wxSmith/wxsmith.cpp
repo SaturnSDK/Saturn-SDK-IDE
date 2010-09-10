@@ -28,7 +28,7 @@
 #include "wxsresourcefactory.h"
 #include "properties/wxsproperties.h"
 
-#include <wx/aui/auibook.h>
+#include "cbauibook.h"
 #include <projectloader_hooks.h>
 #include "manager.h"
 #include "configmanager.h"
@@ -175,7 +175,7 @@ void wxSmith::BuildBrowserParents()
 
         default:
         {
-            wxAuiNotebook* Notebook = Manager::Get()->GetProjectManager()->GetNotebook();
+            cbAuiNotebook* Notebook = Manager::Get()->GetProjectManager()->GetNotebook();
             wxASSERT(Notebook!=0);
 
             // Creating main splitting object
@@ -203,7 +203,7 @@ void wxSmith::BuildBrowsers()
 
     // Adding properties / events browser
     Sizer = new wxGridSizer(1);
-    wxsPropertyGridManager* PGManager = new wxsPropertyGridManager(m_PropertyBrowserParent,-1,wxDefaultPosition,wxDefaultSize,wxPG_TOOLBAR|wxTAB_TRAVERSAL);
+    wxsPropertyGridManager* PGManager = new wxsPropertyGridManager(m_PropertyBrowserParent,-1,wxDefaultPosition,wxDefaultSize,wxPG_TOOLBAR|wxTAB_TRAVERSAL|wxPG_SPLITTER_AUTO_CENTER);
     PGManager->AddPage(_("Properties"));
     PGManager->AddPage(_("Events"),wxBitmap(Events_xpm));
     PGManager->SelectPage(0);
@@ -425,7 +425,7 @@ wxsProject* wxSmith::GetSmithProject(cbProject* Proj)
 
 void wxSmith::ShowResourcesTab()
 {
-    wxAuiNotebook* Notebook = Manager::Get()->GetProjectManager()->GetNotebook();
+    cbAuiNotebook* Notebook = Manager::Get()->GetProjectManager()->GetNotebook();
     Notebook->SetSelection( Notebook->GetPageIndex(m_Splitter) );
 }
 
