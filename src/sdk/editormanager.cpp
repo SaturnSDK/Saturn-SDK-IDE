@@ -2600,7 +2600,7 @@ int EditorManager::FindInFiles(cbFindReplaceData* data)
 
     if (count > 0)
     {
-        static_cast<SearchResultsLog*>(m_pSearchLog)->SetBasePath(data->searchPath);
+        m_pSearchLog->SetBasePath(data->searchPath);
         if (Manager::Get()->GetConfigManager(_T("message_manager"))->ReadBool(_T("/auto_show_search"), true))
         {
             CodeBlocksLogEvent evtSwitch(cbEVT_SWITCH_TO_LOG_WINDOW, m_pSearchLog);
@@ -2609,7 +2609,7 @@ int EditorManager::FindInFiles(cbFindReplaceData* data)
             Manager::Get()->ProcessEvent(evtSwitch);
             Manager::Get()->ProcessEvent(evtShow);
         }
-        static_cast<SearchResultsLog*>(m_pSearchLog)->FocusEntry(oldcount);
+        m_pSearchLog->FocusEntry(oldcount);
     }
     else
     {
@@ -2626,7 +2626,7 @@ int EditorManager::FindInFiles(cbFindReplaceData* data)
         {
             msg.Printf(_("not found in %d files"), filesList.GetCount());
             LogSearch(_T(""), -1, msg );
-            static_cast<SearchResultsLog*>(m_pSearchLog)->FocusEntry(oldcount);
+            m_pSearchLog->FocusEntry(oldcount);
         }
     }
 

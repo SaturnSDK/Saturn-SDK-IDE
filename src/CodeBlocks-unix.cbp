@@ -256,6 +256,7 @@
 				<Option projectLibDirsRelation="2" />
 				<Compiler>
 					<Add directory="include" />
+					<Add directory="include/mozilla_chardet" />
 				</Compiler>
 				<Linker>
 					<Add option="`wx-config --libs`" />
@@ -1054,6 +1055,12 @@
 			<Option target="Code-completion" />
 		</Unit>
 		<Unit filename="plugins/codecompletion/codecompletion.h">
+			<Option target="Code-completion" />
+		</Unit>
+		<Unit filename="plugins/codecompletion/coderefactoring.cpp">
+			<Option target="Code-completion" />
+		</Unit>
+		<Unit filename="plugins/codecompletion/coderefactoring.h">
 			<Option target="Code-completion" />
 		</Unit>
 		<Unit filename="plugins/codecompletion/insertclassmethoddlg.cpp">

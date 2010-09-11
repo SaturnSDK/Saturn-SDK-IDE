@@ -2477,9 +2477,14 @@ bool MainFrame::OnDropFiles(wxCoord /*x*/, wxCoord /*y*/, const wxArrayString& f
         wxBusyCursor useless;
         wxPaintEvent e;
         ProcessEvent(e);
-
+#if !wxCHECK_VERSION(2, 8, 11)
+        Freeze();
+#endif
         for (unsigned int i = 0; i < files.GetCount(); ++i)
           success &= OpenGeneric(files[i]);
+#if !wxCHECK_VERSION(2, 8, 11)
+        Thaw();
+#endif
     }
     return success;
 }

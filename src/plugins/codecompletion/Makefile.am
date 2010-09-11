@@ -2,7 +2,8 @@ SUBDIRS = resources
 
 INCLUDES = $(WX_CXXFLAGS) \
 		-I$(top_srcdir)/src/include \
-		-I$(top_srcdir)/src/sdk/wxscintilla/include
+		-I$(top_srcdir)/src/sdk/wxscintilla/include \
+		-I$(top_srcdir)/src/include/mozilla_chardet
 
 pluginlibdir = $(pkglibdir)/plugins
 
@@ -18,6 +19,7 @@ libcodecompletion_la_SOURCES = ccdebuginfo.cpp \
 			classbrowser.cpp \
 			classbrowserbuilderthread.cpp \
 			codecompletion.cpp \
+			coderefactoring.cpp \
 			insertclassmethoddlg.cpp \
 			nativeparser.cpp \
 			selectincludefile.cpp \
@@ -34,6 +36,7 @@ noinst_HEADERS = ccdebuginfo.h \
 			classbrowser.h \
 			classbrowserbuilderthread.h \
 			codecompletion.h \
+			coderefactoring.h \
 			insertclassmethoddlg.h \
 			nativeparser.h \
 			selectincludefile.h \

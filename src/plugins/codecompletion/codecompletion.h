@@ -13,6 +13,7 @@
 #include <wx/string.h>
 
 #include "nativeparser.h"
+#include "coderefactoring.h"
 
 #include <wx/timer.h>
 #include <map>
@@ -93,8 +94,12 @@ class CodeCompletion : public cbCodeCompletionPlugin
         void OnClassMethod(wxCommandEvent& event);
         void OnUnimplementedClassMethods(wxCommandEvent& event);
         void OnGotoDeclaration(wxCommandEvent& event);
+        void OnFindReferences(wxCommandEvent& event);
+        void OnRenameSymbols(wxCommandEvent& event);
         void OnOpenIncludeFile(wxCommandEvent& event);
-        void OnProjectReparse(wxCommandEvent& event);
+        void OnCurrentProjectReparse(wxCommandEvent& event);
+        void OnSelectedProjectReparse(wxCommandEvent& event);
+        void OnSelectedFileReparse(wxCommandEvent& event);
         void OnAppDoneStartup(CodeBlocksEvent& event);
         void OnCodeCompleteTimer(wxTimerEvent& event);
         void OnWorkspaceChanged(CodeBlocksEvent& event);
@@ -122,7 +127,6 @@ class CodeCompletion : public cbCodeCompletionPlugin
         void FunctionPosition(int &scopeItem, int &functionItem) const;
         void GotoFunctionPrevNext(bool next = false);
         int NameSpacePosition() const;
-        void ParseActiveProjects();
         void OnStartParsingFunctions(wxTimerEvent& event);
         void OnFindFunctionAndUpdate(wxTimerEvent& event);
         void OnScope(wxCommandEvent& event);
@@ -142,6 +146,7 @@ class CodeCompletion : public cbCodeCompletionPlugin
         wxMenu*                            m_ViewMenu;
         wxMenu*                            m_ProjectMenu;
         NativeParser                       m_NativeParser;
+        CodeRefactoring                    m_CodeRefactoring;
         int                                m_EditorHookId;
         int                                m_LastPosForCodeCompletion;
         wxTimer                            m_TimerCodeCompletion;

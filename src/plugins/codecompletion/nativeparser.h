@@ -16,6 +16,7 @@
 
 extern bool s_DebugSmartSense;
 extern const wxString g_StartHereTitle;
+extern const int g_EditorActivatedDelay;
 
 // forward decls
 class cbEditor;
@@ -60,6 +61,12 @@ struct ParserComponent
     OperatorType tokenOperatorType;
 };
 
+struct ccSearchData
+{
+    cbStyledTextCtrl* control;
+    wxString file;
+};
+
 class NativeParser : public wxEvtHandler
 {
     public:
@@ -73,6 +80,8 @@ class NativeParser : public wxEvtHandler
         Parser* GetParserByFilename(const wxString& filename);
         cbProject* GetProjectByParser(Parser* parser);
         cbProject* GetProjectByFilename(const wxString& filename);
+
+        bool AllBatchParseDone();
 
         wxImageList* GetImageList() { return m_pImageList; }
         int GetTokenKindImage(Token* token);
@@ -90,11 +99,14 @@ class NativeParser : public wxEvtHandler
         bool RemoveFileFromParser(cbProject* project, const wxString& filename);
 
         void RereadParserOptions();
-        void ForceReparseActiveProject();
+        void ReparseCurrentProject();
+        void ReparseSelectedProject();
 
-
-        size_t MarkItemsByAI(TokenIdxSet& result, bool reallyUseAI = true, bool fullMatch = false,
+        size_t MarkItemsByAI(TokenIdxSet& result, bool reallyUseAI = true, bool isPrefix = false,
                              bool caseSensitive = false, int caretPos = -1);
+        size_t MarkItemsByAI(ccSearchData* searchData, TokenIdxSet& result, bool reallyUseAI = true,
+                             bool isPrefix = false, bool caseSensitive = false, int caretPos = -1);
+        void RemoveInvalid(TokenIdxSet& result, const wxString& target);
 
         const wxString& GetCodeCompletionItems();
         void GetCallTipHighlight(const wxString& calltip, int* start, int* end);
@@ -109,9 +121,9 @@ class NativeParser : public wxEvtHandler
 
         // returns the editor's position where the current function starts
         // optionally, returns the function's namespace (ends in double-colon ::) and name
-        int FindCurrentFunctionStart(cbEditor* editor, wxString* nameSpace = 0L, wxString* procName = 0L, int caretPos = -1);
+        int FindCurrentFunctionStart(ccSearchData* searchData, wxString* nameSpace = 0L, wxString* procName = 0L, int caretPos = -1);
         // fills the result argument with all the tokens matching the current function (hopefully, just one)
-        size_t FindCurrentFunctionToken(cbEditor* editor, TokenIdxSet& result, int caretPos = -1);
+        size_t FindCurrentFunctionToken(ccSearchData* searchData, TokenIdxSet& result, int caretPos = -1);
 
         ClassBrowser* GetClassBrowser() const { return m_pClassBrowser; }
         void CreateClassBrowser();
@@ -130,19 +142,25 @@ class NativeParser : public wxEvtHandler
 
     private:
         friend class CodeCompletion;
-        size_t AI(TokenIdxSet& result, cbEditor* editor, const wxString& lineText = wxEmptyString, bool fullMatch = false, bool caseSensitive = false, TokenIdxSet* search_scope = 0, int caretPos = -1);
+        size_t AI(TokenIdxSet& result, ccSearchData* searchData, const wxString& lineText = wxEmptyString,
+                  bool isPrefix = false, bool caseSensitive = false, TokenIdxSet* search_scope = 0,
+                  int caretPos = -1);
 
-        size_t FindAIMatches(std::queue<ParserComponent> components, TokenIdxSet& result, int parentTokenIdx = -1, bool fullMatch = false, bool caseSensitive = false, bool use_inheritance = true, short int kindMask = 0xFFFF, TokenIdxSet* search_scope = 0);
+        size_t FindAIMatches(std::queue<ParserComponent> components, TokenIdxSet& result, int parentTokenIdx = -1,
+                             bool isPrefix = false, bool caseSensitive = false, bool use_inheritance = true,
+                             short int kindMask = 0xFFFF, TokenIdxSet* search_scope = 0);
         size_t BreakUpComponents(const wxString& actual, std::queue<ParserComponent>& components);
         bool BelongsToParentOrItsAncestors(TokensTree* tree, Token* token, int parentIdx, bool use_inheritance = true);
-        size_t GenerateResultSet(TokensTree* tree, const wxString& search, int parentIdx, TokenIdxSet& result, bool caseSens = true, bool isPrefix = false, short int kindMask = 0xFFFF);
-        size_t GenerateResultSet(wxString search, const TokenIdxSet& ptrParentID, TokenIdxSet& result, bool caseSens = true, bool isPrefix = false, short int kindMask = 0xFFFF);
+        size_t GenerateResultSet(TokensTree* tree, const wxString& search, int parentIdx, TokenIdxSet& result,
+                                 bool caseSens = true, bool isPrefix = false, short int kindMask = 0xFFFF);
+        size_t GenerateResultSet(wxString search, const TokenIdxSet& ptrParentID, TokenIdxSet& result,
+                                 bool caseSens = true, bool isPrefix = false, short int kindMask = 0xFFFF);
         bool LastAISearchWasGlobal() const { return m_LastAISearchWasGlobal; }
         const wxString& LastAIGlobalSearch() const { return m_LastAIGlobalSearch; }
 
-        bool ParseUsingNamespace(cbEditor* ed, TokenIdxSet& search_scope, int caretPos = -1);
-        bool ParseFunctionArguments(cbEditor* ed, int caretPos = -1);
-        bool ParseLocalBlock(cbEditor* ed, int caretPos = -1); // parses from the start of function up to the cursor
+        bool ParseUsingNamespace(ccSearchData* searchData, TokenIdxSet& search_scope, int caretPos = -1);
+        bool ParseFunctionArguments(ccSearchData* searchData, int caretPos = -1);
+        bool ParseLocalBlock(ccSearchData* searchData, int caretPos = -1); // parses from the start of function up to the cursor
 
         unsigned int FindCCTokenStart(const wxString& line);
         wxString GetNextCCToken(const wxString& line, unsigned int& startAt, OperatorType& tokenOperatroType);
@@ -170,7 +188,7 @@ class NativeParser : public wxEvtHandler
 
         size_t ResolveActualType(wxString searchText, const TokenIdxSet& searchScope, TokenIdxSet& result);
         size_t ResolveExpression(std::queue<ParserComponent> components, const TokenIdxSet& searchScope,
-                                 TokenIdxSet& result, bool IsCaseSense = true, bool IsPrefix = false);
+                                 TokenIdxSet& result, bool caseSense = true, bool isPrefix = false);
 
         void CollectSS(const TokenIdxSet& searchScope, TokenIdxSet& actualTypeScope, TokensTree* tree);
         void AddTemplateAlias(const int& actualTypeResult, const TokenIdxSet& actualTypeScope, TokenIdxSet& initialScope, TokensTree* tree);

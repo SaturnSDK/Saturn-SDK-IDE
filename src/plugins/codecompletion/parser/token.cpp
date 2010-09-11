@@ -27,6 +27,27 @@
 
 ProfileTimer::ProfileMap ProfileTimer::m_ProfileMap;
 
+FileType CCFileTypeOf(const wxString& filename)
+{
+    const wxString file = filename.AfterLast(wxFILE_SEP_PATH).Lower();
+    const int pos = file.Find(_T('.'), true);
+    wxString ext;
+    if (pos != wxNOT_FOUND)
+        ext = file.SubString(pos + 1, file.Len());
+
+    if (   ext.IsEmpty()
+        || ext == _T("h")
+        || ext == _T("hpp")
+        || ext == _T("tcc"))
+        return ftHeader;
+    else if (   ext ==_T("cpp")
+             || ext ==_T("c")
+             || ext ==_T("cxx") )
+        return ftSource;
+    else
+        return ftOther;
+}
+
 inline void SaveTokenIdxSetToFile(wxOutputStream* f,const TokenIdxSet& data)
 {
     SaveIntToFile(f, (int)(data.size()));

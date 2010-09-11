@@ -149,7 +149,6 @@ void ParserThread::SetTokens(TokensTree* tokensTree)
     m_pTokensTree = tokensTree;
 }
 
-
 wxChar ParserThread::SkipToOneOfChars(const wxString& chars, bool supportNesting)
 {
     unsigned int level = m_Tokenizer.GetNestingLevel();
@@ -416,12 +415,12 @@ bool ParserThread::InitTokenizer()
 
 bool ParserThread::Parse()
 {
-    wxCriticalSectionLocker locker(s_ParserCritical);
-
-    TRACE(_T("Parse() : Parsing '%s'"), m_Filename.wx_str());
+    wxCriticalSectionLocker locker(g_ParserCritical);
 
     if (TestDestroy() || !InitTokenizer())
         return false;
+
+    TRACE(_T("Parse() : Parsing '%s'"), m_Filename.wx_str());
 
     bool result = false;
     m_ParsingTypedef = false;
@@ -446,8 +445,10 @@ bool ParserThread::Parse()
             wxCriticalSectionLocker locker(m_pParent->GetTokensTreeCritical());
             m_pTokensTree->FlagFileAsParsed(m_Filename);
         }
+
         result = true;
-    } while (false);
+    }
+    while (false);
 
     return result;
 }
@@ -1295,6 +1296,9 @@ void ParserThread::HandleIncludes()
             }
         }
     }
+
+    if (CCFileTypeOf(filename) == ftOther)
+        return;
 
     if (!filename.IsEmpty())
     {

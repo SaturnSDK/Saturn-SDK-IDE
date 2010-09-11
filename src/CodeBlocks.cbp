@@ -312,6 +312,7 @@
 					<Add option="-DWXMAKINGDLL_PROPGRID" />
 					<Add option="-DwxPG_USE_WXMODULE=0" />
 					<Add directory="include" />
+					<Add directory="include\mozilla_chardet" />
 				</Compiler>
 				<Linker>
 					<Add option="-Wl,--enable-auto-image-base" />
@@ -1195,6 +1196,12 @@
 		<Unit filename="plugins\codecompletion\codecompletion.h">
 			<Option target="Code-completion" />
 		</Unit>
+		<Unit filename="plugins\codecompletion\coderefactoring.cpp">
+			<Option target="Code-completion" />
+		</Unit>
+		<Unit filename="plugins\codecompletion\coderefactoring.h">
+			<Option target="Code-completion" />
+		</Unit>
 		<Unit filename="plugins\codecompletion\insertclassmethoddlg.cpp">
 			<Option target="Code-completion" />
 		</Unit>
@@ -1363,7 +1370,7 @@
 		<Unit filename="plugins\compilergcc\compilerMSVC.h">
 			<Option target="Compiler" />
 		</Unit>
-			<Unit filename="plugins\compilergcc\compilerMSVC10.cpp">
+		<Unit filename="plugins\compilergcc\compilerMSVC10.cpp">
 			<Option target="Compiler" />
 		</Unit>
 		<Unit filename="plugins\compilergcc\compilerMSVC10.h">

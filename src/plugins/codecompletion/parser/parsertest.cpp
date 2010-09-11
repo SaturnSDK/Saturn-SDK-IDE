@@ -24,7 +24,7 @@
 
 extern void ParserTrace(const wxChar* format, ...);
 
-wxCriticalSection s_ParserCritical;
+wxCriticalSection g_ParserCritical;
 
 ParserTest::ParserTest()
 {

@@ -49,6 +49,7 @@ int idTimerEditorActivated = wxNewId();
 
 bool s_DebugSmartSense = false;
 const wxString g_StartHereTitle = _("Start here");
+const int g_EditorActivatedDelay = 100;
 
 BEGIN_EVENT_TABLE(NativeParser, wxEvtHandler)
 //    EVT_MENU(THREAD_START, NativeParser::OnThreadStart)
@@ -216,25 +217,48 @@ cbProject* NativeParser::GetProjectByFilename(const wxString& filename)
     if (activeProject)
     {
         Parser* parser = GetParserByProject(activeProject);
-        if ((parser && parser->IsFileParsed(filename)) || activeProject->GetFileByFilename(filename, false, true))
+        if (   (   parser
+                && parser->IsFileParsed(filename) )
+            || activeProject->GetFileByFilename(filename, false, true) )
+        {
             return activeProject;
+        }
         else
         {
-            ProjectsArray* projArr = Manager::Get()->GetProjectManager()->GetProjects();
-            for (size_t i = 0; i < projArr->GetCount(); ++i)
+            ProjectsArray* projs = Manager::Get()->GetProjectManager()->GetProjects();
+            for (size_t i = 0; i < projs->GetCount(); ++i)
             {
-                cbProject* project = projArr->Item(i);
+                cbProject* project = projs->Item(i);
                 if (!project || project == activeProject)
                     continue;
 
                 parser = GetParserByProject(project);
-                if ((parser && parser->IsFileParsed(filename)) || project->GetFileByFilename(filename, false, true))
+                if (   (   parser
+                        && parser->IsFileParsed(filename) )
+                    || project->GetFileByFilename(filename, false, true) )
+                {
                     return project;
+                }
             }
         }
     }
 
     return NULL;
+}
+
+bool NativeParser::AllBatchParseDone()
+{
+    bool done = true;
+    for (ParserList::const_iterator it = m_ParserList.begin(); it != m_ParserList.end(); ++it)
+    {
+        if (it->second->GetParsingType() == ptCreateParser)
+        {
+            done = false;
+            break;
+        }
+    }
+
+    return done;
 }
 
 void NativeParser::SetTokenKindImage(int kind, const wxBitmap& bitmap, const wxBitmap& mask)
@@ -505,7 +529,7 @@ void NativeParser::RereadParserOptions()
                          _("Reparse?"), wxYES_NO | wxICON_QUESTION) == wxID_YES)
         {
             ClearParsers();
-            ForceReparseActiveProject();
+            ReparseCurrentProject();
             return;
         }
     }
@@ -654,7 +678,8 @@ bool NativeParser::AddCompilerDirs(cbProject* project, Parser* parser)
                 TRACE(_T("AddCompilerDirs() : Adding compiler dir to parser: ") + dir.GetFullPath());
             }
             else
-                Manager::Get()->GetLogManager()->DebugLog(F(_T("Error normalizing path: '%s' from '%s'"), out.wx_str(), base.wx_str()));
+                Manager::Get()->GetLogManager()->DebugLog(F(_T("Error normalizing path: '%s' from '%s'"),
+                                                            out.wx_str(), base.wx_str()));
         }
 
         // find out which compiler, if gnu, do the special trick
@@ -727,8 +752,10 @@ bool NativeParser::AddCompilerPredefinedMacros(cbProject* project, Parser* parse
 	if (compilerId == _T("gcc"))
 	{
         static wxString gccDefs;
-        if (gccDefs.IsEmpty())
+        static bool firstExecute = true;
+        if (firstExecute)
         {
+            firstExecute = false;
 #ifdef __WXMSW__
             wxString cmd(_T("cpp -dM -E nul"));
 #else
@@ -779,8 +806,10 @@ bool NativeParser::AddCompilerPredefinedMacros(cbProject* project, Parser* parse
 	else if (compilerId.StartsWith(_T("msvc")))
 	{
 	    static wxString vcDefs;
-	    if (vcDefs.IsEmpty())
+	    static bool firstExecute = true;
+        if (firstExecute)
         {
+            firstExecute = false;
             Compiler* compiler = CompilerFactory::GetCompiler(compilerId);
             wxString cmd = compiler->GetMasterPath() + _T("\\bin\\") + compiler->GetPrograms().C;
             Manager::Get()->GetMacrosManager()->ReplaceMacros(cmd);
@@ -874,8 +903,11 @@ const wxArrayString& NativeParser::GetGCCCompilerDirs(const wxString &cpp_compil
     // keep the gcc compiler path's once if found accross C::B session
     // makes opening workspaces a *lot* faster by avoiding endless calls to the compiler
     static wxArrayString gcc_compiler_dirs;
-    if (!gcc_compiler_dirs.IsEmpty())
+    static bool firstExecute = true;
+    if (!firstExecute)
         return gcc_compiler_dirs;
+    else
+        firstExecute = false;
 
     // for starters , only do this for gnu compiler
     //Manager::Get()->GetLogManager()->DebugLog(_T("CompilerID ") + CompilerID);
@@ -945,6 +977,12 @@ bool NativeParser::CreateParser(cbProject* project)
         return false;
     }
 
+    if (project && project->GetFilesCount() == 0)
+    {
+        Manager::Get()->GetLogManager()->DebugLog(_T("Can not parsing empty project!"));
+        return false;
+    }
+
     Parser* parser = new(std::nothrow) Parser(this);
     if (!parser)
     {
@@ -1001,7 +1039,7 @@ bool NativeParser::DeleteParser(cbProject* project)
 
 bool NativeParser::SwitchParser(cbProject* project, Parser* parser)
 {
-    if (parser == m_pParser || GetParserByProject(project) != parser)
+    if (!parser || parser == m_pParser || GetParserByProject(project) != parser)
         return false;
 
     SetParser(parser);
@@ -1015,6 +1053,9 @@ bool NativeParser::SwitchParser(cbProject* project, Parser* parser)
 
 bool NativeParser::ReparseFile(cbProject* project, const wxString& filename)
 {
+    if (CCFileTypeOf(filename) == ftOther)
+        return false;
+
     Parser* parser = GetParserByProject(project);
     if (!parser)
         return false;
@@ -1024,6 +1065,9 @@ bool NativeParser::ReparseFile(cbProject* project, const wxString& filename)
 
 bool NativeParser::AddFileToParser(cbProject* project, const wxString& filename)
 {
+    if (CCFileTypeOf(filename) == ftOther)
+        return false;
+
     Parser* parser = GetParserByProject(project);
     if (!parser)
         return false;
@@ -1064,8 +1108,8 @@ void NativeParser::StartCompleteParsing(cbProject* project, Parser* parser)
         if (NormalizePath(dir, base))
             parser->AddIncludeDir(dir.GetFullPath());
         else
-            Manager::Get()->GetLogManager()->DebugLog(F(_T("Error normalizing path: '%s' from '%s'"), path.wx_str(), base.wx_str()));
-
+            Manager::Get()->GetLogManager()->DebugLog(F(_T("Error normalizing path: '%s' from '%s'"),
+                                                        path.wx_str(), base.wx_str()));
     }
 
     wxArrayString fronts;
@@ -1123,7 +1167,7 @@ void NativeParser::StartCompleteParsing(cbProject* project, Parser* parser)
             token = token.SubString(1, token.Len() - 2).Trim(false).Trim(true);
             wxArrayString finds = parser->FindFileInIncludeDirs(token);
             for (size_t i = 0; i < finds.GetCount(); ++i)
-                frontMap[++frontCnt] = finds[i];
+                frontMap[++frontCnt] = finds[i] + _T(", 1");
         }
     }
 
@@ -1131,7 +1175,7 @@ void NativeParser::StartCompleteParsing(cbProject* project, Parser* parser)
     for (int i = 0; i < project->GetFilesCount(); ++i)
     {
         ProjectFile* pf = project->GetFile(i);
-        FileType ft = FileTypeOf(pf->relativeFilename);
+        FileType ft = CCFileTypeOf(pf->relativeFilename);
         if (ft == ftHeader) // parse header files
         {
             bool isUpFrontFile = false;
@@ -1140,7 +1184,7 @@ void NativeParser::StartCompleteParsing(cbProject* project, Parser* parser)
                 if (it->second.IsSameAs(pf->file.GetFullName(), false))
                 {
                     isUpFrontFile = true;
-                    frontMap[it->first] = pf->file.GetFullPath();
+                    frontMap[it->first] = pf->file.GetFullPath() + _T(", 0");
                     frontTempMap.erase(it);
                     break;
                 }
@@ -1167,15 +1211,24 @@ void NativeParser::StartCompleteParsing(cbProject* project, Parser* parser)
     if (!fronts.IsEmpty())
     {
         for (size_t i = 0; i < fronts.GetCount(); ++i)
-            Manager::Get()->GetLogManager()->DebugLog(F(_T("Header to parse up-front: '%s'"), fronts[i].wx_str()));
+        {
+            const bool systemHeaderFile = (fronts[i].Last() == _T('1'));
+            const int pos = fronts[i].Find(_T(','), true);
+            wxString file = fronts[i].SubString(0, pos - 1);
+            Manager::Get()->GetLogManager()->DebugLog(F(_T("Header to parse up-front: '%s'"),
+                                                        file.wx_str()));
+            parser->AddUpFrontHeaders(file, systemHeaderFile);
+        }
 
-        Manager::Get()->GetLogManager()->DebugLog(F(_T("Add up-front parsing %d file(s) for project '%s'..."),                                                        fronts.GetCount(), project->GetTitle().wx_str()));
-        parser->AddBatchParse(fronts, true);
+        Manager::Get()->GetLogManager()->DebugLog(F(_T("Add up-front parsing %d file(s) for project '%s'..."),
+                                                    fronts.GetCount(), project->GetTitle().wx_str()));
     }
 
     if (!headers.IsEmpty() || !sources.IsEmpty())
     {
-        Manager::Get()->GetLogManager()->DebugLog(F(_T("Add batch-parsing %d file(s) for project '%s'..."),                                                        headers.GetCount() + sources.GetCount(), project->GetTitle().wx_str()));
+        Manager::Get()->GetLogManager()->DebugLog(F(_T("Add batch-parsing %d file(s) for project '%s'..."),
+                                                    headers.GetCount() + sources.GetCount(),
+                                                    project->GetTitle().wx_str()));
         parser->AddBatchParse(headers);
         parser->AddBatchParse(sources);
     }
@@ -1184,13 +1237,38 @@ void NativeParser::StartCompleteParsing(cbProject* project, Parser* parser)
     parser->StartParsing();
 }
 
-void NativeParser::ForceReparseActiveProject()
+void NativeParser::ReparseCurrentProject()
 {
-    cbProject* curProject = Manager::Get()->GetProjectManager()->GetActiveProject();
-    if (curProject)
+    cbProject* project = GetProjectByParser(m_pParser);
+    if (project)
     {
-        DeleteParser(curProject);
-        CreateParser(curProject);
+        DeleteParser(project);
+        CreateParser(project);
+    }
+}
+
+void NativeParser::ReparseSelectedProject()
+{
+    wxTreeCtrl* tree = Manager::Get()->GetProjectManager()->GetTree();
+    if (!tree)
+        return;
+
+    wxTreeItemId treeItem =  tree->GetSelection();
+    if (!treeItem.IsOk())
+        return;
+
+    const FileTreeData* data = static_cast<FileTreeData*>(tree->GetItemData(treeItem));
+    if (!data)
+        return;
+
+    if (data->GetKind() == FileTreeData::ftdkProject)
+    {
+        cbProject* project = data->GetProject();
+        if (project)
+        {
+            DeleteParser(project);
+            CreateParser(project);
+        }
     }
 }
 
@@ -1259,16 +1337,13 @@ bool NativeParser::SaveCachedData(const wxString& projectFilename)
     return result;
 }
 
-bool NativeParser::ParseFunctionArguments(cbEditor* ed, int caretPos)
+bool NativeParser::ParseFunctionArguments(ccSearchData* searchData, int caretPos)
 {
-    if (!ed || !m_pParser->Done())
-        return false;
-
     if (s_DebugSmartSense)
         Manager::Get()->GetLogManager()->DebugLog(_T("ParseFunctionArguments() Parse function arguments"));
 
     TokenIdxSet proc_result;
-    if (FindCurrentFunctionToken(ed, proc_result, caretPos) != 0)
+    if (FindCurrentFunctionToken(searchData, proc_result, caretPos) != 0)
     {
         for (TokenIdxSet::iterator it = proc_result.begin(); it != proc_result.end(); ++it)
         {
@@ -1314,30 +1389,27 @@ bool NativeParser::ParseFunctionArguments(cbEditor* ed, int caretPos)
     return false;
 }
 
-bool NativeParser::ParseLocalBlock(cbEditor* ed, int caretPos)
+bool NativeParser::ParseLocalBlock(ccSearchData* searchData, int caretPos)
 {
-    if (!ed || !m_pParser->Done())
-        return false;
-
     if (s_DebugSmartSense)
         Manager::Get()->GetLogManager()->DebugLog(_T("ParseLocalBlock() Parse local block"));
 
-    int blockStart = FindCurrentFunctionStart(ed, 0, 0, caretPos);
+    int blockStart = FindCurrentFunctionStart(searchData, 0, 0, caretPos);
     if (blockStart != -1)
     {
         ++blockStart; // skip {
-        int blockEnd = caretPos == -1 ? ed->GetControl()->GetCurrentPos() : caretPos;
-        if (blockEnd < 0 || blockEnd > ed->GetControl()->GetLength())
+        int blockEnd = caretPos == -1 ? searchData->control->GetCurrentPos() : caretPos;
+        if (blockEnd < 0 || blockEnd > searchData->control->GetLength())
         {
             if (s_DebugSmartSense)
-                Manager::Get()->GetLogManager()->DebugLog(F(_T("ParseLocalBlock() ERROR blockEnd=%d and edLength=%d?!"), blockEnd, ed->GetControl()->GetLength()));
+                Manager::Get()->GetLogManager()->DebugLog(F(_T("ParseLocalBlock() ERROR blockEnd=%d and edLength=%d?!"), blockEnd, searchData->control->GetLength()));
             return false;
         }
 
         if (blockStart >= blockEnd)
             blockStart = blockEnd;
 
-        wxString buffer = ed->GetControl()->GetTextRange(blockStart, blockEnd);
+        wxString buffer = searchData->control->GetTextRange(blockStart, blockEnd);
         buffer.Trim();
         if (!buffer.IsEmpty() && !m_pParser->ParseBuffer(buffer, false, false, true))
         {
@@ -1372,23 +1444,20 @@ bool NativeParser::ParseLocalBlock(cbEditor* ed, int caretPos)
     return false;
 }
 
-bool NativeParser::ParseUsingNamespace(cbEditor* ed, TokenIdxSet& search_scope, int caretPos)
+bool NativeParser::ParseUsingNamespace(ccSearchData* searchData, TokenIdxSet& search_scope, int caretPos)
 {
-    if (!ed)
-        return false;
-
     TokensTree* tree = m_pParser->GetTokens();
 
     if (s_DebugSmartSense)
         Manager::Get()->GetLogManager()->DebugLog(_T("ParseUsingNamespace() Parse file scope for \"using namespace\""));
 
     wxArrayString ns;
-    int pos = caretPos == -1 ? ed->GetControl()->GetCurrentPos() : caretPos;
-    if (pos < 0 || pos > ed->GetControl()->GetLength())
+    int pos = caretPos == -1 ? searchData->control->GetCurrentPos() : caretPos;
+    if (pos < 0 || pos > searchData->control->GetLength())
         return false;
 
     // Get the buffer from begin of the editor to the current caret position
-    wxString buffer = ed->GetControl()->GetTextRange(0, pos);
+    wxString buffer = searchData->control->GetTextRange(0, pos);
     m_pParser->ParseBufferForUsingNamespace(buffer, ns);
 
     for (size_t i = 0; i < ns.GetCount(); ++i)
@@ -1422,22 +1491,33 @@ bool NativeParser::ParseUsingNamespace(cbEditor* ed, TokenIdxSet& search_scope, 
     return true;
 }
 
-// Here, we collect the "using namespace XXXX" directives
-// Also, we locate the current caret in which function, then, add the function parameters to Token trie
-// Also, the variables in the function body( local block ) was add to the Token trie
-size_t NativeParser::MarkItemsByAI(TokenIdxSet& result, bool reallyUseAI, bool fullMatch, bool caseSensitive, int caretPos)
+size_t NativeParser::MarkItemsByAI(TokenIdxSet& result, bool reallyUseAI, bool isPrefix, bool caseSensitive, int caretPos)
 {
     if (s_DebugSmartSense)
         Manager::Get()->GetLogManager()->DebugLog(F(_T("MarkItemsByAI()")));
 
-    result.clear();
-
-    cbEditor* ed = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
-    if (!ed)
+    cbEditor* editor = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
+    if (!editor)
         return 0;
 
+    ccSearchData searchData = { editor->GetControl(), editor->GetFilename() };
+
+    return MarkItemsByAI(&searchData, result, reallyUseAI, isPrefix, caseSensitive, caretPos);
+}
+
+// Here, we collect the "using namespace XXXX" directives
+// Also, we locate the current caret in which function, then, add the function parameters to Token trie
+// Also, the variables in the function body( local block ) was add to the Token trie
+size_t NativeParser::MarkItemsByAI(ccSearchData* searchData, TokenIdxSet& result, bool reallyUseAI, bool isPrefix,
+                                   bool caseSensitive, int caretPos)
+{
+    result.clear();
+
     if (!m_pParser->Done())
+    {
         Manager::Get()->GetLogManager()->DebugLog(_T("C++ Parser is still parsing files..."));
+        return 0;
+    }
     else
     {
         // remove old temporaries
@@ -1446,13 +1526,13 @@ size_t NativeParser::MarkItemsByAI(TokenIdxSet& result, bool reallyUseAI, bool f
 
         // find "using namespace" directives in the file
         TokenIdxSet search_scope;
-        ParseUsingNamespace(ed, search_scope, caretPos);
+        ParseUsingNamespace(searchData, search_scope, caretPos);
 
         // parse function's arguments
-        ParseFunctionArguments(ed, caretPos);
+        ParseFunctionArguments(searchData, caretPos);
 
         // parse current code block (from the start of function up to the cursor)
-        ParseLocalBlock(ed, caretPos);
+        ParseLocalBlock(searchData, caretPos);
 
         if (!reallyUseAI)
         {
@@ -1462,10 +1542,23 @@ size_t NativeParser::MarkItemsByAI(TokenIdxSet& result, bool reallyUseAI, bool f
                 result.insert(i);
             return result.size();
         }
+
         // we have correctly collected all the tokens, so we will do the artificial intelligence search
-        return AI(result, ed, wxEmptyString, fullMatch, caseSensitive, &search_scope, caretPos);
+        return AI(result, searchData, wxEmptyString, isPrefix, caseSensitive, &search_scope, caretPos);
     }
-    return 0;
+}
+
+void NativeParser::RemoveInvalid(TokenIdxSet& result, const wxString& target)
+{
+    TokensTree* tokens = m_pParser->GetTokens();
+    for (TokenIdxSet::iterator it = result.begin(); it != result.end();)
+    {
+        Token* tk = tokens->at(*it);
+        if (!tk || tk->m_Name != target)
+            result.erase(it++);
+        else
+            ++it;
+    }
 }
 
 const wxString& NativeParser::GetCodeCompletionItems()
@@ -1558,16 +1651,18 @@ const wxArrayString& NativeParser::GetCallTips(int chars_per_line)
     m_CallTips.Clear();
     int end = 0;
     int commas = 0;
-    wxString lineText = _T("");
+    wxString lineText;
     cbEditor* ed = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
     do
     {
         if (!ed || !m_pParser->Done())
             break;
 
-        int line = ed->GetControl()->GetCurrentLine();
-        lineText = ed->GetControl()->GetLine(line);
-        end = ed->GetControl()->GetCurrentPos() - ed->GetControl()->PositionFromLine(line);
+        ccSearchData searchData = { ed->GetControl(), ed->GetFilename() };
+
+        int line = searchData.control->GetCurrentLine();
+        lineText = searchData.control->GetLine(line);
+        end = searchData.control->GetCurrentPos() - ed->GetControl()->PositionFromLine(line);
         int nest = 0;
         while (end > 0)
         {
@@ -1596,9 +1691,9 @@ const wxArrayString& NativeParser::GetCallTips(int chars_per_line)
         tokens->FreeTemporaries();
 
         TokenIdxSet search_scope;
-        ParseUsingNamespace(ed, search_scope);
-        ParseFunctionArguments(ed);
-        ParseLocalBlock(ed);
+        ParseUsingNamespace(&searchData, search_scope);
+        ParseFunctionArguments(&searchData);
+        ParseLocalBlock(&searchData);
 
         m_GettingCalltips = true;
 
@@ -1607,7 +1702,7 @@ const wxArrayString& NativeParser::GetCallTips(int chars_per_line)
             lineText = tk->m_Type;
 
         TokenIdxSet result;
-        if (!AI(result, ed, lineText, true, true, &search_scope))
+        if (!AI(result, &searchData, lineText, true, true, &search_scope))
             break;
 
         for (TokenIdxSet::iterator it = result.begin(); it != result.end(); ++it)
@@ -1982,9 +2077,9 @@ wxString NativeParser::GetCCToken(wxString& line, ParserTokenType& tokenType, Op
 // Start an Artificial Intelligence (!) sequence to gather all the matching tokens..
 // The actual AI is in FindAIMatches() below...
 size_t NativeParser::AI(TokenIdxSet& result,
-                        cbEditor* editor,
+                        ccSearchData* searchData,
                         const wxString& lineText,
-                        bool fullMatch,
+                        bool isPrefix,
                         bool caseSensitive,
                         TokenIdxSet* search_scope,
                         int caretPos)
@@ -1992,23 +2087,23 @@ size_t NativeParser::AI(TokenIdxSet& result,
     m_LastAISearchWasGlobal = false;
     m_LastAIGlobalSearch.Clear();
 
-    int pos = caretPos == -1 ? editor->GetControl()->GetCurrentPos() : caretPos;
-    if (pos < 0 || pos > editor->GetControl()->GetLength())
+    int pos = caretPos == -1 ? searchData->control->GetCurrentPos() : caretPos;
+    if (pos < 0 || pos > searchData->control->GetLength())
         return 0;
 
-    m_EditorStartWord = editor->GetControl()->WordStartPosition(pos, true);
+    m_EditorStartWord = searchData->control->WordStartPosition(pos, true);
     m_EditorEndWord   = pos; //editor->GetControl()->WordEndPosition(pos, true);
-    int line = editor->GetControl()->LineFromPosition(pos);
+    int line = searchData->control->LineFromPosition(pos);
 
     // Get the actual search text, such as "objA.m_aaa.m_bbb"
     wxString actual_search;
     int col;
     wxString tabwidth;
-    tabwidth.Pad(editor->GetControl()->GetTabWidth(), ' ');
+    tabwidth.Pad(searchData->control->GetTabWidth(), ' ');
     if (lineText.IsEmpty())
     {
-        actual_search = editor->GetControl()->GetLine(line);
-        col = editor->GetControl()->GetColumn(pos);
+        actual_search = searchData->control->GetLine(line);
+        col = searchData->control->GetColumn(pos);
         // replace tabs in line by equal-count spaces because col is in spaces!
         actual_search.Replace(_T("\t"), tabwidth);
         actual_search.Remove(col);
@@ -2018,37 +2113,6 @@ size_t NativeParser::AI(TokenIdxSet& result,
     {
         actual_search = lineText;
         col = actual_search.Length() - 1;
-    }
-
-    if (s_DebugSmartSense)
-        Manager::Get()->GetLogManager()->DebugLog(F(_T("AI() AI enter, actual_search: \"%s\""), actual_search.wx_str()));
-
-    static ProjectFile* cached_project           = 0;
-    static cbEditor*    cached_editor            = 0;
-    static int          cached_editor_start_word = 0;
-    static wxString     cached_search;
-    static size_t       cached_results_count     = 0;
-
-    // early-out opportunity
-    // if the user starts typing a token that in our last search had 0 results,
-    // and we see that he's continuing typing for that same token,
-    // don't even bother to search
-    if (   cached_project           == editor->GetProjectFile()
-        && cached_editor            == editor
-        && cached_editor_start_word == m_EditorStartWord
-        && cached_results_count     == 0
-        && actual_search.StartsWith(cached_search) )
-    {
-        if (s_DebugSmartSense)
-            Manager::Get()->GetLogManager()->DebugLog(_T("AI() AI leave, Aborting search: last attempt returned 0 results"));
-
-        // but set m_LastAISearchWasGlobal correctly so C++ keywords can be shown
-        std::queue<ParserComponent> components;
-        BreakUpComponents(actual_search, components);
-        m_LastAISearchWasGlobal = components.size() <= 1;
-        if (!components.empty())
-            m_LastAIGlobalSearch = components.front().component;
-        return 0;
     }
 
     // Do the whole job here
@@ -2062,7 +2126,7 @@ size_t NativeParser::AI(TokenIdxSet& result,
     // we ' ll get the function's token (all matches) and add its parent namespace
     TokenIdxSet scope_result;
     TokenIdxSet proc_result;
-    if (FindCurrentFunctionToken(editor, proc_result) != 0)
+    if (FindCurrentFunctionToken(searchData, proc_result) != 0)
     {
         for (TokenIdxSet::iterator it = proc_result.begin(); it != proc_result.end(); ++it)
         {
@@ -2123,14 +2187,7 @@ size_t NativeParser::AI(TokenIdxSet& result,
     if (!components.empty())
         m_LastAIGlobalSearch = components.front().component;
 
-    ResolveExpression(components, *search_scope, result, caseSensitive, fullMatch);
-
-    cached_editor = editor;
-    if (result.size() || (m_EditorEndWord - m_EditorStartWord))
-        cached_editor_start_word = m_EditorStartWord;
-
-    cached_search = actual_search;
-    cached_results_count = result.size();
+    ResolveExpression(components, *search_scope, result, caseSensitive, isPrefix);
 
     if (s_DebugSmartSense)
         Manager::Get()->GetLogManager()->DebugLog(F(_T("AI() AI leave, returned %d results"),result.size()));
@@ -2216,7 +2273,7 @@ size_t NativeParser::BreakUpComponents(const wxString& actual, std::queue<Parser
 size_t NativeParser::FindAIMatches(std::queue<ParserComponent> components,
                                    TokenIdxSet& result,
                                    int parentTokenIdx,
-                                   bool fullMatch,
+                                   bool isPrefix,
                                    bool caseSensitive,
                                    bool use_inheritance,
                                    short int kindMask,
@@ -2240,7 +2297,7 @@ size_t NativeParser::FindAIMatches(std::queue<ParserComponent> components,
         // this will make the AI behave like it's the previous scope (or the current if no previous scope)
 
         // move on please, nothing to see here...
-        return FindAIMatches(components, result, parentTokenIdx, fullMatch, caseSensitive, use_inheritance, kindMask, search_scope);
+        return FindAIMatches(components, result, parentTokenIdx, isPrefix, caseSensitive, use_inheritance, kindMask, search_scope);
     }
 
     // we 'll only add tokens in the result set if we get matches for the last token
@@ -2256,7 +2313,7 @@ size_t NativeParser::FindAIMatches(std::queue<ParserComponent> components,
     TokenIdxSet local_result;
     GenerateResultSet(tree, searchtext, parentTokenIdx, local_result,
                       (caseSensitive || !isLastComponent),
-                      (isLastComponent && !fullMatch), kindMask);
+                      (isLastComponent && !isPrefix), kindMask);
 
     if (s_DebugSmartSense)
         Manager::Get()->GetLogManager()->DebugLog(F(_T("FindAIMatches() Looping %d results"), local_result.size()));
@@ -2383,7 +2440,7 @@ size_t NativeParser::FindAIMatches(std::queue<ParserComponent> components,
                     while (it != type_result.end())
                     {
                         std::queue<ParserComponent> lcomp = components;
-                        FindAIMatches(lcomp, result, *it, fullMatch, caseSensitive, use_inheritance, kindMask, search_scope);
+                        FindAIMatches(lcomp, result, *it, isPrefix, caseSensitive, use_inheritance, kindMask, search_scope);
                         ++it;
                     }
                 }
@@ -2406,7 +2463,7 @@ size_t NativeParser::FindAIMatches(std::queue<ParserComponent> components,
             result.insert(id);
         // else recurse this function using id as a parent
         else
-            FindAIMatches(components, result, id, fullMatch, caseSensitive, use_inheritance, kindMask, search_scope);
+            FindAIMatches(components, result, id, isPrefix, caseSensitive, use_inheritance, kindMask, search_scope);
     }
 
     if (s_DebugSmartSense)
@@ -2592,7 +2649,8 @@ size_t NativeParser::ResolveActualType(wxString searchText, const TokenIdxSet& s
     return (result.size()>0 ? result.size() : 0);
 }
 
-size_t NativeParser::ResolveExpression(std::queue<ParserComponent> components, const TokenIdxSet& searchScope, TokenIdxSet& result, bool isCaseSense, bool IsPrefix)
+size_t NativeParser::ResolveExpression(std::queue<ParserComponent> components, const TokenIdxSet& searchScope,
+                                       TokenIdxSet& result, bool caseSense, bool isPrefix)
 {
     m_TemplateMap.clear();
     static ParserComponent lastComponent;
@@ -2641,7 +2699,7 @@ size_t NativeParser::ResolveExpression(std::queue<ParserComponent> components, c
             Manager::Get()->GetLogManager()->DebugLog(F(_T("search scope: %d"), (*tt)));
         }
 
-        GenerateResultSet(searchText, initialScope, initialResult, (isCaseSense || !isLastComponent), (!IsPrefix && isLastComponent));
+        GenerateResultSet(searchText, initialScope, initialResult, (caseSense || !isLastComponent), (!isPrefix && isLastComponent));
         // now we should clear the initialScope.
         initialScope.clear();
 
@@ -2936,37 +2994,29 @@ bool NativeParser::SkipWhitespaceBackward(cbEditor* editor, int& pos)
 }
 
 // returns current function's position (not line) in the editor
-int NativeParser::FindCurrentFunctionStart(cbEditor* editor, wxString* nameSpace, wxString* procName, int caretPos)
+int NativeParser::FindCurrentFunctionStart(ccSearchData* searchData, wxString* nameSpace, wxString* procName, int caretPos)
 {
-    cbStyledTextCtrl* control = editor->GetControl();
-    if (!control)
-    {
-        if (s_DebugSmartSense)
-            Manager::Get()->GetLogManager()->DebugLog(_T("FindCurrentFunctionStart() Cannot access control."));
-        return -1;
-    }
-
-    static ProjectFile* s_LastProject =  0;
-    static cbEditor*    s_LastEditor  =  0;
-    static int          s_LastLine    = -1;
-    static int          s_LastResult  = -1;
-    static wxString     s_LastNS;
-    static wxString     s_LastPROC;
+    static cbStyledTextCtrl* s_LastControl =  0;
+    static int               s_LastLine    = -1;
+    static int               s_LastResult  = -1;
+    static wxString          s_LastFile;
+    static wxString          s_LastNS;
+    static wxString          s_LastPROC;
 
     // cache last result for optimization
-    int pos = caretPos == -1 ? control->GetCurrentPos() : caretPos;
-    if ((pos < 0) || (pos > control->GetLength()))
+    int pos = caretPos == -1 ? searchData->control->GetCurrentPos() : caretPos;
+    if ((pos < 0) || (pos > searchData->control->GetLength()))
     {
         if (s_DebugSmartSense)
             Manager::Get()->GetLogManager()->DebugLog(F(_T("FindCurrentFunctionStart() Cannot determine position. caretPos=%d, control=%d"),
-                                                        caretPos, control->GetCurrentPos()));
+                                                        caretPos, searchData->control->GetCurrentPos()));
         return -1;
     }
 
-    int line = control->LineFromPosition(pos) + 1;
+    int line = searchData->control->LineFromPosition(pos) + 1;
     if (   (line == s_LastLine)
-        && ( (editor == s_LastEditor) && (!editor->GetModified()) )
-        && (editor->GetProjectFile()==s_LastProject) )
+        && ( (searchData->control == s_LastControl) && (!searchData->control->GetModify()) )
+        && (searchData->file == s_LastFile) )
     {
         if (nameSpace) *nameSpace = s_LastNS;
         if (procName)  *procName  = s_LastPROC;
@@ -2980,20 +3030,20 @@ int NativeParser::FindCurrentFunctionStart(cbEditor* editor, wxString* nameSpace
 
     if (s_DebugSmartSense)
         Manager::Get()->GetLogManager()->DebugLog(F(_T("FindCurrentFunctionStart() Looking for tokens in '%s'"),
-                                                    editor->GetFilename().wx_str()));
-    s_LastProject = editor->GetProjectFile();
-    s_LastEditor  = editor;
+                                                    searchData->file.wx_str()));
+    s_LastFile    = searchData->file;
+    s_LastControl = searchData->control;
     s_LastLine    = line;
 
     // we have all the tokens in the current file, then just do a loop on all the tokens, see if the line is in
     // the token's imp.
     TokenIdxSet result;
-    size_t num_results = m_pParser->FindTokensInFile(editor->GetFilename(), result, tkAnyFunction | tkClass);
+    size_t num_results = m_pParser->FindTokensInFile(searchData->file, result, tkAnyFunction | tkClass);
     if (s_DebugSmartSense)
         Manager::Get()->GetLogManager()->DebugLog(F(_T("FindCurrentFunctionStart() Found %d results"), num_results));
 
     TokensTree* tree = m_pParser->GetTokens();
-    const size_t currentFileIndex = tree->GetFileIndex(editor->GetFilename());
+    const size_t currentFileIndex = tree->GetFileIndex(searchData->file);
     for (TokenIdxSet::iterator it = result.begin(); it != result.end(); ++it)
     {
         if (s_DebugSmartSense)
@@ -3020,14 +3070,14 @@ int NativeParser::FindCurrentFunctionStart(cbEditor* editor, wxString* nameSpace
 
                 s_LastNS     = token->GetNamespace();
                 s_LastPROC   = token->m_Name;
-                s_LastResult = control->PositionFromLine(token->m_ImplLine - 1);
+                s_LastResult = searchData->control->PositionFromLine(token->m_ImplLine - 1);
 
                 // locate function's opening brace
                 if(token->m_TokenKind & tkAnyFunction)
                 {
-                    while (s_LastResult < control->GetTextLength())
+                    while (s_LastResult < searchData->control->GetTextLength())
                     {
-                        wxChar ch = control->GetCharAt(s_LastResult);
+                        wxChar ch = searchData->control->GetCharAt(s_LastResult);
                         if (ch == _T('{'))
                             break;
                         else if (ch == 0)
@@ -3065,15 +3115,12 @@ int NativeParser::FindCurrentFunctionStart(cbEditor* editor, wxString* nameSpace
 // find a function where current caret located.
 // We need to find extra class scope, otherwise, we will failed do the cc in a class declaration
 //
-size_t NativeParser::FindCurrentFunctionToken(cbEditor* editor, TokenIdxSet& result, int caretPos)
+size_t NativeParser::FindCurrentFunctionToken(ccSearchData* searchData, TokenIdxSet& result, int caretPos)
 {
-    if (!editor || !m_pParser->Done())
-        return 0;
-
     TokenIdxSet scope_result;
     wxString procName;
     wxString scopeName;
-    FindCurrentFunctionStart(editor, &scopeName, &procName, caretPos);
+    FindCurrentFunctionStart(searchData, &scopeName, &procName, caretPos);
 
     if (procName.IsEmpty())
         return 0;
@@ -3131,19 +3178,16 @@ void NativeParser::OnParserStart(wxCommandEvent& event)
             if (!editor || editor->GetFilename() == g_StartHereTitle)
                 break;
 
-            cbProject* edPrject = GetProjectByFilename(editor->GetFilename());
-            if (edPrject && edPrject != project)
+            cbProject* edProject = GetProjectByFilename(editor->GetFilename());
+            Parser* edParser = GetParserByProject(edProject);
+            if (edProject && edProject != project && !edParser)
             {
-                Parser* parser = GetParserByProject(edPrject);
-                if (!parser)
-                {
-                    if (CreateParser(edPrject))
-                        parser = GetParserByProject(edPrject);
-                }
-
-                if (parser)
-                    SetParser(parser);
+                if (CreateParser(edProject))
+                    edParser = GetParserByProject(edProject);
             }
+
+            if (edParser && edParser != m_pParser)
+                SwitchParser(edProject, edParser);
         }
         break;
 
@@ -3151,6 +3195,17 @@ void NativeParser::OnParserStart(wxCommandEvent& event)
         break;
 
     case ptReparseFile:
+        if (parser != m_pParser)
+        {
+            EditorBase* editor = Manager::Get()->GetEditorManager()->GetActiveEditor();
+            if (!editor || editor->GetFilename() == g_StartHereTitle)
+                break;
+
+            cbProject* edProject = GetProjectByFilename(editor->GetFilename());
+            Parser* edParser = GetParserByProject(edProject);
+            if (edParser && edParser != m_pParser)
+                SwitchParser(edProject, edParser);
+        }
         break;
 
     case ptUndefined:
@@ -3222,9 +3277,8 @@ void NativeParser::OnParserEnd(wxCommandEvent& event)
         for (int i = 0; i < project->GetFilesCount(); ++i)
         {
             ProjectFile* pf = project->GetFile(i);
-            if (!pf)
-                continue;
-            parser->MarkFileTokensAsLocal(pf->file.GetFullPath(), true, project);
+            if (CCFileTypeOf(pf->relativeFilename) != ftOther)
+                parser->MarkFileTokensAsLocal(pf->file.GetFullPath(), true, project);
         }
     }
 
@@ -3265,7 +3319,8 @@ void NativeParser::OnEditorActivatedTimer(wxTimerEvent& event)
     Parser* parser = GetParserByProject(project);
     if (!parser)
     {
-        if (CreateParser(project))
+        FileType ft = CCFileTypeOf(m_LastActivatedFile);
+        if (ft != ftOther && CreateParser(project))
         {
             parser = GetParserByProject(project);
             if (!project)
@@ -3316,14 +3371,19 @@ void NativeParser::OnEditorActivated(EditorBase* editor)
             m_TimerEditorActivated.Stop();
 
         m_LastActivatedFile = editor->GetFilename();
-        m_TimerEditorActivated.Start(500, wxTIMER_ONE_SHOT);
+        m_TimerEditorActivated.SetClientData(editor);
+        m_TimerEditorActivated.Start(g_EditorActivatedDelay, wxTIMER_ONE_SHOT);
     }
 }
 
 void NativeParser::OnEditorClosed(EditorBase* editor)
 {
-    if (m_TimerEditorActivated.IsRunning())
+    const EditorBase* lastActivedEditor = static_cast<EditorBase*>(m_TimerEditorActivated.GetClientData());
+    if (lastActivedEditor == editor && m_TimerEditorActivated.IsRunning())
         m_TimerEditorActivated.Stop();
+
+    if (m_LastActivatedFile = editor->GetFilename())
+        m_LastActivatedFile.Clear();
 
     wxString filename = editor->GetFilename();
     if (filename == g_StartHereTitle)
@@ -3377,8 +3437,7 @@ public:
 
     virtual wxDirTraverseResult OnFile(const wxString& filename)
     {
-        wxString ext = filename.AfterLast(_T('.')).Lower();
-        if (ext.StartsWith(_T("h")) || ext.StartsWith(_T("c")) || ext.IsEmpty())
+        if (CCFileTypeOf(filename) != ftOther)
             m_Files.Add(filename);
         return wxDIR_CONTINUE;
     }
@@ -3458,7 +3517,6 @@ wxArrayString NativeParser::GetAllPathsByFilename(const wxString& filename)
     return dirs;
 }
 
-
 void NativeParser::AddPaths(wxArrayString& dirs, const wxString& path, bool hasExt)
 {
     wxString s;
@@ -3491,6 +3549,7 @@ void NativeParser::CollectSS(const TokenIdxSet& searchScope, TokenIdxSet& actual
         }
     }
 }
+
 void NativeParser::AddTemplateAlias(const int& id, const TokenIdxSet& actualTypeScope, TokenIdxSet& initialScope, TokensTree* tree)
 {
     if (!tree)
@@ -3516,6 +3575,7 @@ void NativeParser::AddTemplateAlias(const int& id, const TokenIdxSet& actualType
         }
     }
 }
+
 void NativeParser::ResolveTemplateMap(const wxString& searchStr, const TokenIdxSet& actualTypeScope, TokenIdxSet& initialScope)
 {
     if (actualTypeScope.empty())
@@ -3534,6 +3594,7 @@ void NativeParser::ResolveTemplateMap(const wxString& searchStr, const TokenIdxS
         }
     }
 }
+
 void NativeParser::ResolveOpeartor(const OperatorType& tokenOperatorType, const TokenIdxSet& tokens, TokensTree* tree, const TokenIdxSet& searchScope, TokenIdxSet& result)
 {
     TokenIdxSet opInitialScope;

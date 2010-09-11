@@ -122,18 +122,23 @@ enum ParsingType
     ptUndefined         = 4,
 };
 
-extern wxCriticalSection s_ParserCritical;
+extern wxCriticalSection g_ParserCritical;
 
 class Parser : public wxEvtHandler
 {
+    friend class ParserThread;
+    friend class AddParseThread;
+
     public:
-        friend class ParserThread;
         Parser(wxEvtHandler* parent);
         ~Parser();
 
         void PrepareParsing();
-        void AddBatchParse(const wxArrayString& filenames, bool isUpFront = false);
+        void AddUpFrontHeaders(const wxString& filename, bool systemHeaderFile);
+        void AddBatchParse(const wxArrayString& filenames);
         void StartParsing(bool delay = true);
+
+        ParsingType GetParsingType() const { return m_ParsingType; }
 
         bool ParseBuffer(const wxString& buffer, bool isLocal = true, bool bufferSkipBlocks = false, bool isTemp = false);
         bool ParseBufferForFunctions(const wxString& buffer);
@@ -213,7 +218,7 @@ class Parser : public wxEvtHandler
         bool m_UsingCache; // true if loaded from cache
 
         typedef std::vector<ParserThread*> PTVector;
-        std::queue<PTVector>           m_PoolQueue;
+        std::queue<PTVector>           m_PoolTask; // Do task one by one!
         cbThreadPool                   m_Pool;
         bool                           m_IsUpFront;
         TokensTree*                    m_pTokensTree;
@@ -230,9 +235,13 @@ class Parser : public wxEvtHandler
         bool                           m_StopWatchRunning;
         long                           m_LastStopWatchTime;
         bool                           m_IgnoreThreadEvents;
-        wxArrayString                  m_UpFrontHeaders;
+
+        wxArrayString                  m_UpFrontHeaders;        // All up-front headers
+        wxArrayString                  m_SystemUpFrontHeaders;  // Only system up-front headers, for reparse
+        wxArrayString                  m_BatchParseFiles;       // All other batch parse files
         bool                           m_IsBatchParseDone;
         ParsingType                    m_ParsingType;
+
         wxCriticalSection              m_TokensTreeCritical;
         wxCriticalSection              m_BatchParsingCritical;
 

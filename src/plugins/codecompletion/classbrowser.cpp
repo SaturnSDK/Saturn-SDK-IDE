@@ -532,7 +532,7 @@ void ClassBrowser::OnRefreshTree(wxCommandEvent& /*event*/)
 void ClassBrowser::OnForceReparse(wxCommandEvent& /*event*/)
 {
     if (m_NativeParser)
-        m_NativeParser->ForceReparseActiveProject();
+        m_NativeParser->ReparseCurrentProject();
 }
 
 void ClassBrowser::OnCBViewMode(wxCommandEvent& event)
