@@ -3,22 +3,22 @@
  * http://www.gnu.org/licenses/gpl-3.0.html
  */
 
-#ifndef COMPILERDMD_H
-#define COMPILERDMD_H
+#ifndef COMPILER_LDC_H
+#define COMPILER_LDC_H
 
 #include <compiler.h>
 
-class CompilerDMD : public Compiler
+class CompilerLDC : public Compiler
 {
     public:
-        CompilerDMD();
-        virtual ~CompilerDMD();
+        CompilerLDC();
+        virtual ~CompilerLDC();
         virtual void Reset();
         virtual void LoadDefaultRegExArray();
         virtual AutoDetectResult AutoDetectInstallationDir();
     protected:
-        Compiler * CreateCopy();
+        virtual Compiler* CreateCopy();
     private:
 };
 
-#endif // COMPILERDMD_H
+#endif // COMPILER_LDC_H
