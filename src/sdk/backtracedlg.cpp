@@ -98,14 +98,12 @@ void cbBacktraceDlg::Reload()
         }
     }
 
-
     m_list->EnsureVisible(active_frame_index);
     m_list->Thaw();
     m_list->SetColumnWidth(0, 32);
-    for (int i = 1; i < 3; ++i)
-    {
+
+    for (int i = 1; i < 4; ++i)
         m_list->SetColumnWidth(i, wxLIST_AUTOSIZE);
-    }
 }
 
 

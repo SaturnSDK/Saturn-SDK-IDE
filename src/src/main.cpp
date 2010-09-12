@@ -1010,10 +1010,15 @@ void MainFrame::ScanForPlugins()
 
     PluginManager* m_PluginManager = Manager::Get()->GetPluginManager();
 
-    // global paths
-    wxString path = ConfigManager::GetPluginsFolder(true);
+    // user paths first
+    wxString path = ConfigManager::GetPluginsFolder(false);
     Manager::Get()->GetLogManager()->Log(_("Scanning for plugins in ") + path);
     int count = m_PluginManager->ScanForPlugins(path);
+
+    // global paths
+    path = ConfigManager::GetPluginsFolder(true);
+    Manager::Get()->GetLogManager()->Log(_("Scanning for plugins in ") + path);
+    count += m_PluginManager->ScanForPlugins(path);
 
     // actually load plugins
     if (count > 0)

@@ -619,8 +619,7 @@ void GDB_driver::SetNextStatement(const wxString& filename, int line)
 
 void GDB_driver::Backtrace()
 {
-    if (Manager::Get()->GetDebuggerManager()->UpdateBacktrace())
-        QueueCommand(new GdbCmd_Backtrace(this));
+    QueueCommand(new GdbCmd_Backtrace(this));
 }
 
 void GDB_driver::Disassemble()

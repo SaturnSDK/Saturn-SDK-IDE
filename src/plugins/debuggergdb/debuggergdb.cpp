@@ -1930,8 +1930,16 @@ void DebuggerGDB::OnCursorChanged(wxCommandEvent& WXUNUSED(event))
         // send us this event if it was stopped anyway
         if (/*m_State.GetDriver()->IsStopped() &&*/ cursor.changed)
         {
+            bool autoSwitch = Manager::Get()->GetConfigManager(_T("debugger"))->ReadBool(_T("auto_switch_frame"), true);
+
             MarkAllWatchesAsUnchanged();
-            SyncEditor(cursor.file, cursor.line);
+
+            // if the cursor line is invalid and the auto switch is on,
+            // we don't sync the editor, because there is no line to sync to
+            // and also we are going to execute a backtrace command hoping to find a valid frame.
+            if (!autoSwitch || cursor.line != -1)
+                SyncEditor(cursor.file, cursor.line);
+
             m_HaltAtLine = cursor.line - 1;
             BringCBToFront();
             if (cursor.line != -1)
@@ -1952,6 +1960,11 @@ void DebuggerGDB::OnCursorChanged(wxCommandEvent& WXUNUSED(event))
             // update callstack
             if (dbg_manager->UpdateBacktrace())
                 RunCommand(CMD_BACKTRACE);
+            else
+            {
+                if (cursor.line == -1 && autoSwitch)
+                    RunCommand(CMD_BACKTRACE);
+            }
 
             // update disassembly
             if (dbg_manager->UpdateDisassembly())
