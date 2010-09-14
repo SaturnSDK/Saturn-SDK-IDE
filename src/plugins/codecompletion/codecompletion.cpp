@@ -1043,16 +1043,16 @@ wxArrayString& CodeCompletion::GetSystemIncludeDirs(Parser* parser, bool force)
     }
 
     cbProject* project = m_NativeParser.GetProjectByParser(parser);
-    if (!project)
-        return incDirs;
+    wxString prjPath;
+    if (project)
+        prjPath = project->GetCommonTopLevelPath();
 
-    const wxString prjPath = project->GetCommonTopLevelPath();
     incDirs = parser->GetIncludeDirs();
     for (size_t i = 0; i < incDirs.GetCount();)
     {
         if (incDirs[i].Last() != wxFILE_SEP_PATH)
             incDirs[i].Append(wxFILE_SEP_PATH);
-        if (incDirs[i].StartsWith(prjPath))
+        if (project && incDirs[i].StartsWith(prjPath))
             incDirs.RemoveAt(i);
         else
             ++i;
@@ -1125,10 +1125,6 @@ void CodeCompletion::CodeCompleteIncludes()
     if (!IsAttached() || !m_InitDone)
         return;
 
-    cbProject* project = m_NativeParser.GetProjectByParser(m_NativeParser.GetParser());
-    if (!project)
-        return;
-
     cbEditor* ed = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
     if (!ed)
         return;
@@ -1136,7 +1132,9 @@ void CodeCompletion::CodeCompleteIncludes()
     const wxString curFile(ed->GetFilename());
     const wxString curPath(wxFileName(curFile).GetPath());
     wxArrayString buildTargets;
-    ProjectFile* pf = project->GetFileByFilename(curFile, false);
+
+    cbProject* project = m_NativeParser.GetProjectByParser(m_NativeParser.GetParser());
+    ProjectFile* pf = project ? project->GetFileByFilename(curFile, false) : 0;
     if (pf)
         buildTargets = pf->buildTargets;
 
@@ -1172,7 +1170,8 @@ void CodeCompletion::CodeCompleteIncludes()
     // #include <|
     {
         wxCriticalSectionLocker locker(s_HeadersCriticalSection);
-        wxArrayString& incDirs = GetSystemIncludeDirs(m_NativeParser.GetParser(), project->GetModified());
+        wxArrayString& incDirs = GetSystemIncludeDirs(m_NativeParser.GetParser(),
+                                                      project ? project->GetModified() : true);
         for (size_t i = 0; i < incDirs.GetCount(); ++i)
         {
             SystemHeadersMap::iterator it = m_SystemHeadersMap.find(incDirs[i]);
@@ -1186,7 +1185,7 @@ void CodeCompletion::CodeCompleteIncludes()
     }
 
     // #include "|
-    if (!useSystemHeaders)
+    if (!useSystemHeaders && project)
     {
         const wxArrayString localIncludeDirs = GetLocalIncludeDirs(project, buildTargets);
         for (int i = 0; i < project->GetFilesCount(); ++i)

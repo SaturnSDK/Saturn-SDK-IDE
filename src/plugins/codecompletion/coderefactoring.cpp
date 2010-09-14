@@ -79,7 +79,7 @@ void CodeRefactoring::FindReferences()
 void CodeRefactoring::RenameSymbols()
 {
     const wxString targetText = GetSymbolUnderCursor();
-    if (targetText.Len() < 2)
+    if (targetText.IsEmpty())
         return;
 
     wxString replaceText = wxGetTextFromUser(_("Rename symbols under cursor"),

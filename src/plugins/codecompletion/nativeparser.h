@@ -134,7 +134,7 @@ class NativeParser : public wxEvtHandler
         void OnProjectLoadingHook(cbProject* project, TiXmlElement* elem, bool loading);
 
     protected:
-        void StartCompleteParsing(cbProject* project, Parser* parser);
+        bool StartCompleteParsing(cbProject* project, Parser* parser);
         bool SwitchParser(cbProject* project, Parser* parser);
         void SetParser(Parser* parser);
         void ClearParsers();
@@ -169,7 +169,6 @@ class NativeParser : public wxEvtHandler
         bool AddCompilerDirs(cbProject* project, Parser* parser);
         bool AddCompilerPredefinedMacros(cbProject* project, Parser* parser);
         bool AddProjectDefinedMacros(cbProject* project, Parser* parser);
-        bool AddDefaultCompilerDirs(Parser* parser);
         const wxArrayString& GetGCCCompilerDirs(const wxString &cpp_compiler);
         bool LoadCachedData(cbProject* project);
         bool SaveCachedData(const wxString& projectFilename);

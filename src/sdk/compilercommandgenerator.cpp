@@ -55,6 +55,7 @@ void CompilerCommandGenerator::Init(cbProject* project)
     m_CFlags.clear();
     m_LDFlags.clear();
     m_RCFlags.clear();
+    m_LDAdd.clear();
 
     // don't clear the backticks cache - it wouldn't be a cache then :)
 //    m_Backticks.clear();
@@ -68,17 +69,7 @@ void CompilerCommandGenerator::Init(cbProject* project)
         cbThrow(_T("Default compiler is invalid!"));
 
     if (!project)
-    {
-        m_DefOutput[0] = SetupOutputFilenames(compiler, 0);
-        m_Inc[0] = SetupIncludeDirs(compiler, 0);
-        m_Lib[0] = SetupLibrariesDirs(compiler, 0);
-        m_RC[0] = SetupResourceIncludeDirs(compiler, 0);
-        m_CFlags[0] = SetupCompilerOptions(compiler, 0);
-        m_LDFlags[0] = SetupLinkerOptions(compiler, 0);
-        m_LDAdd[0] = SetupLinkLibraries(compiler, 0);
-        m_RCFlags[0] = SetupResourceCompilerOptions(compiler, 0);
         return;
-    }
     else
     {
         m_PrjIncPath = project->GetCommonTopLevelPath();

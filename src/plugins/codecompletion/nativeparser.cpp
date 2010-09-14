@@ -492,7 +492,6 @@ void NativeParser::UpdateClassBrowser()
 
 void NativeParser::RereadParserOptions()
 {
-    // disabled?
     ConfigManager* cfg = Manager::Get()->GetConfigManager(_T("code_completion"));
     if (cfg->ReadBool(_T("/use_symbols_browser"), true))
     {
@@ -516,12 +515,14 @@ void NativeParser::RereadParserOptions()
     if (m_pParser == &m_TempParser)
         return;
 
+    RemoveObsoleteParsers();
+
     // reparse if settings changed
     ParserOptions opts = m_pParser->Options();
     m_pParser->ReadOptions();
-    if (opts.followLocalIncludes != m_pParser->Options().followLocalIncludes ||
-        opts.followGlobalIncludes != m_pParser->Options().followGlobalIncludes ||
-        opts.wantPreprocessor != m_pParser->Options().wantPreprocessor)
+    if (   opts.followLocalIncludes  != m_pParser->Options().followLocalIncludes
+        || opts.followGlobalIncludes != m_pParser->Options().followGlobalIncludes
+        || opts.wantPreprocessor     != m_pParser->Options().wantPreprocessor )
     {
         // important options changed... flag for reparsing
         if (cbMessageBox(_("You changed some class parser options. Do you want to "
@@ -533,8 +534,6 @@ void NativeParser::RereadParserOptions()
             return;
         }
     }
-
-    RemoveObsoleteParsers();
 
     if (m_pClassBrowser)
         m_pClassBrowser->UpdateView();
@@ -553,6 +552,8 @@ void NativeParser::ClearParsers()
     for (ParserList::const_iterator it = m_ParserList.begin(); it != m_ParserList.end(); ++it)
     {
         delete it->second;
+        wxMilliSleep(10);
+
         if (!Manager::IsAppShuttingDown())
         {
             wxString log(F(_("Delete parser for project '%s'!"), it->first
@@ -568,8 +569,36 @@ void NativeParser::ClearParsers()
 
 bool NativeParser::AddCompilerDirs(cbProject* project, Parser* parser)
 {
-    if (!project || !parser)
+    if (!parser)
         return false;
+
+    if (!project)
+    {
+        Compiler* compiler = CompilerFactory::GetDefaultCompiler();
+        if (!compiler)
+            cbThrow(_T("Default compiler is invalid!"));
+
+        const wxArrayString& dirs = compiler->GetIncludeDirs();
+        for (size_t i = 0; i < dirs.GetCount(); ++i)
+        {
+            wxString path = dirs[i];
+            Manager::Get()->GetMacrosManager()->ReplaceMacros(path);
+            parser->AddIncludeDir(path);
+        }
+
+        if (compiler->GetID() == _T("gcc"))
+        {
+            const wxArrayString& gccDirs = GetGCCCompilerDirs(compiler->GetPrograms().CPP);
+            TRACE(_T("Adding %d cached gcc dirs to parser..."), gccDirs.GetCount());
+            for (size_t i = 0; i < gccDirs.GetCount(); ++i)
+            {
+                parser->AddIncludeDir(gccDirs[i]);
+                TRACE(_T("AddCompilerDirs() : Adding cached compiler dir to parser: ") + gccDirs[i]);
+            }
+        }
+
+        return true;
+    }
 
     wxString base = project->GetBasePath();
     parser->AddIncludeDir(base); // add project's base path
@@ -702,36 +731,8 @@ bool NativeParser::AddCompilerDirs(cbProject* project, Parser* parser)
     {
         Manager::Get()->GetLogManager()->DebugLog(_T("No compilers found!"));
     }
+
     delete [] Compilers;
-    return true;
-}
-
-bool NativeParser::AddDefaultCompilerDirs(Parser* parser)
-{
-    if (!parser)
-        return false;
-
-    const wxString compilerId = CompilerFactory::GetDefaultCompilerID();
-    const Compiler* compiler = CompilerFactory::GetCompiler(compilerId);
-    const wxArrayString& dirs = compiler->GetIncludeDirs();
-    for (unsigned int i = 0; i < dirs.GetCount(); ++i)
-    {
-        wxString dir = dirs[i];
-        Manager::Get()->GetMacrosManager()->ReplaceMacros(dir);
-        parser->AddIncludeDir(dir);
-        TRACE(_T("AddDefaultCompilerDirs() : Adding compiler dir to parser: ") + dir);
-    }
-
-    if (compilerId == _T("gcc"))
-    {
-        const wxArrayString& gccDirs = GetGCCCompilerDirs(compiler->GetPrograms().CPP);
-        TRACE(_T("Adding %d cached gcc dirs to parser..."), gccDirs.GetCount());
-        for (size_t i = 0; i < gccDirs.GetCount(); ++i)
-        {
-            parser->AddIncludeDir(gccDirs[i]);
-            TRACE(_T("AddDefaultCompilerDirs() : Adding cached compiler dir to parser: ") + gccDirs[i]);
-        }
-    }
     return true;
 }
 
@@ -855,7 +856,7 @@ bool NativeParser::AddCompilerPredefinedMacros(cbProject* project, Parser* parse
 
 bool NativeParser::AddProjectDefinedMacros(cbProject* project, Parser* parser)
 {
-    if (!parser)
+    if (!project || !parser)
         return false;
 
     wxString compilerId = project->GetCompilerID();
@@ -935,9 +936,12 @@ const wxArrayString& NativeParser::GetGCCCompilerDirs(const wxString &cpp_compil
     // let's hope this does not change too quickly, otherwise we need
     // to adjust our search code (for several versions ...)
     bool start = false;
+    Manager::Get()->GetLogManager()->DebugLog(_T("Loaden------for-test-->"));
     for (size_t idxCount = 0; idxCount < Errors.GetCount(); ++idxCount)
     {
+        // TODO Loaden for w64 test
         wxString path = Errors[idxCount].Trim(true).Trim(false);
+        Manager::Get()->GetLogManager()->DebugLog(path);
         if (!start)
         {
             if (!path.StartsWith(_T("#include <...>")))
@@ -955,6 +959,8 @@ const wxArrayString& NativeParser::GetGCCCompilerDirs(const wxString &cpp_compil
         Manager::Get()->GetLogManager()->DebugLog(_T("Caching GCC dir: ") + fname.GetPath());
         gcc_compiler_dirs.Add(fname.GetPath());
     }
+
+    Manager::Get()->GetLogManager()->DebugLog(_T("-------Test-End!"));
 
     return gcc_compiler_dirs;
 }
@@ -1084,32 +1090,32 @@ bool NativeParser::RemoveFileFromParser(cbProject* project, const wxString& file
     return parser->RemoveFile(filename);
 }
 
-void NativeParser::StartCompleteParsing(cbProject* project, Parser* parser)
+bool NativeParser::StartCompleteParsing(cbProject* project, Parser* parser)
 {
-    if (!project)
-    {
-        AddCompilerPredefinedMacros(project, parser);
-        return;
-    }
+    if (!parser)
+        return false;
 
     AddCompilerDirs(project, parser);
     AddCompilerPredefinedMacros(project, parser);
     AddProjectDefinedMacros(project, parser);
 
     // add per-project dirs
-    wxArrayString& pdirs = GetProjectSearchDirs(project);
-    wxString base = project->GetBasePath();
-    for (size_t i = 0; i < pdirs.GetCount(); ++i)
+    if (project)
     {
-        wxString path = pdirs[i];
-        Manager::Get()->GetMacrosManager()->ReplaceMacros(path);
-        wxFileName dir(path);
+        wxArrayString& pdirs = GetProjectSearchDirs(project);
+        wxString base = project->GetBasePath();
+        for (size_t i = 0; i < pdirs.GetCount(); ++i)
+        {
+            wxString path = pdirs[i];
+            Manager::Get()->GetMacrosManager()->ReplaceMacros(path);
+            wxFileName dir(path);
 
-        if (NormalizePath(dir, base))
-            parser->AddIncludeDir(dir.GetFullPath());
-        else
-            Manager::Get()->GetLogManager()->DebugLog(F(_T("Error normalizing path: '%s' from '%s'"),
-                                                        path.wx_str(), base.wx_str()));
+            if (NormalizePath(dir, base))
+                parser->AddIncludeDir(dir.GetFullPath());
+            else
+                Manager::Get()->GetLogManager()->DebugLog(F(_T("Error normalizing path: '%s' from '%s'"),
+                                                            path.wx_str(), base.wx_str()));
+        }
     }
 
     wxArrayString fronts;
@@ -1172,7 +1178,7 @@ void NativeParser::StartCompleteParsing(cbProject* project, Parser* parser)
     }
 
     // parse header files first
-    for (int i = 0; i < project->GetFilesCount(); ++i)
+    for (int i = 0; project && i < project->GetFilesCount(); ++i)
     {
         ProjectFile* pf = project->GetFile(i);
         FileType ft = CCFileTypeOf(pf->relativeFilename);
@@ -1221,7 +1227,8 @@ void NativeParser::StartCompleteParsing(cbProject* project, Parser* parser)
         }
 
         Manager::Get()->GetLogManager()->DebugLog(F(_T("Add up-front parsing %d file(s) for project '%s'..."),
-                                                    fronts.GetCount(), project->GetTitle().wx_str()));
+                                                    fronts.GetCount(), project ? project->GetTitle().wx_str()
+                                                                               : _T("*NONE*")));
     }
 
     if (!headers.IsEmpty() || !sources.IsEmpty())
@@ -1235,6 +1242,7 @@ void NativeParser::StartCompleteParsing(cbProject* project, Parser* parser)
 
     // start parsing
     parser->StartParsing();
+    return true;
 }
 
 void NativeParser::ReparseCurrentProject()
@@ -3334,21 +3342,11 @@ void NativeParser::OnEditorActivatedTimer(wxTimerEvent& event)
     }
     else if (!project)
     {
-        wxFileName file(m_LastActivatedFile);
-        if (parser->IsFileParsed(m_LastActivatedFile))
+        if (!parser->IsFileParsed(m_LastActivatedFile))
         {
-            // Need update parser include dir, for classbrowser
-            wxArrayString incDirs = parser->GetIncludeDirs();
-            if (!incDirs.IsEmpty() && incDirs.Item(0) != file.GetPath())
-                incDirs.Item(0) = file.GetPath();
-            ReparseFile(project, m_LastActivatedFile);
-        }
-        else
-        {
-            m_StandaloneFiles.Add(m_LastActivatedFile);
-            parser->ClearIncludeDirs();
+            wxFileName file(m_LastActivatedFile);
             parser->AddIncludeDir(file.GetPath());
-            AddDefaultCompilerDirs(parser);
+            m_StandaloneFiles.Add(m_LastActivatedFile);
             AddFileToParser(NULL, m_LastActivatedFile);
         }
     }
@@ -3382,9 +3380,6 @@ void NativeParser::OnEditorClosed(EditorBase* editor)
     if (lastActivedEditor == editor && m_TimerEditorActivated.IsRunning())
         m_TimerEditorActivated.Stop();
 
-    if (m_LastActivatedFile = editor->GetFilename())
-        m_LastActivatedFile.Clear();
-
     wxString filename = editor->GetFilename();
     if (filename == g_StartHereTitle)
         return;
@@ -3398,6 +3393,9 @@ void NativeParser::OnEditorClosed(EditorBase* editor)
         else
             RemoveFileFromParser(NULL, filename);
     }
+
+    if (m_LastActivatedFile = editor->GetFilename())
+        m_LastActivatedFile.Clear();
 }
 
 size_t NativeParser::RemoveObsoleteParsers()
