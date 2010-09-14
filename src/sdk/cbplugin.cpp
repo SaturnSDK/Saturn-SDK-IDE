@@ -256,15 +256,19 @@ cbDebuggerPlugin::SyncEditorResult cbDebuggerPlugin::SyncEditor(const wxString& 
     FileType ft = FileTypeOf(filename);
     if (ft != ftSource && ft != ftHeader && ft != ftResource)
     {
-        if(log_index != -1)
+        // if the line is >= 0 and ft == ftOther assume, that we are in header without extension
+        if (line < 0 || ft != ftOther)
         {
-            ShowLog(false);
-            Manager::Get()->GetLogManager()->LogError(_("Unknown file: ") + filename, log_index);
+            if(log_index != -1)
+            {
+                ShowLog(false);
+                Manager::Get()->GetLogManager()->LogError(_("Unknown file: ") + filename, log_index);
+            }
+
+            InfoWindow::Display(_("Unknown file"), _("File: ") + filename, 5000);
+
+            return SyncFileUnknown; // don't try to open unknown files
         }
-
-        InfoWindow::Display(_("Unknown file"), _("File: ") + filename, 5000);
-
-        return SyncFileUnknown; // don't try to open unknown files
     }
 
     cbProject* project = Manager::Get()->GetProjectManager()->GetActiveProject();

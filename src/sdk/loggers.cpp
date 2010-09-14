@@ -103,6 +103,7 @@ void TextCtrlLogger::UpdateSettings()
 
     style[success].SetTextColour(BlendTextColour(*wxBLUE));
 
+    style[warning].SetTextColour(BlendTextColour(*wxBLUE));
     style[warning].SetFont(italic_font);
 
     style[error].SetFont(bold_font);

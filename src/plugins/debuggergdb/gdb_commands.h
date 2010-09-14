@@ -153,6 +153,8 @@ static wxRegEx reDisassembly(_T("(0x[0-9A-Za-z]+)[ \t]+<.*>:[ \t]+(.*)"));
 // Saved registers:
 //  ebx at 0x22ff6c, ebp at 0x22ff78, esi at 0x22ff70, edi at 0x22ff74, eip at 0x22ff7c
 static wxRegEx reDisassemblyInit(_T("^Stack level [0-9]+, frame at (0x[A-Fa-f0-9]+):"));
+//  rip = 0x400931 in Bugtest<int> (/src/_cb_dbg/disassembly/main.cpp:6);
+static wxRegEx reDisassemblyInitSymbol(_T("[ \\t]*[er]ip[ \\t]+=[ \\t]+0x[0-9a-f]+[ \\t]+in[ \\t]+(.+)\\((.+):[0-9]+\\);"));
 static wxRegEx reDisassemblyInitFunc(_T("eip = (0x[A-Fa-f0-9]+) in ([^;]*)"));
 // or32 variant
 #ifdef __WXMSW__
@@ -1336,9 +1338,9 @@ class GdbCmd_DisassemblyInit : public DebuggerCmd
 {
         wxString m_disassemblyFlavor;
 
-    public:
         static wxString LastAddr;
-
+        static wxString LastSymbol;
+    public:
          // only tested on mingw/pc/win env
         GdbCmd_DisassemblyInit(DebuggerDriver* driver, wxString disassemblyFlavor = wxEmptyString)
             : DebuggerCmd(driver),
@@ -1353,9 +1355,21 @@ class GdbCmd_DisassemblyInit : public DebuggerCmd
 
             if (reDisassemblyInit.Matches(output))
             {
+                const wxArrayString &lines = GetArrayFromString(output, _T('\n'));
+                bool sameSymbol = false;
+                if (lines.Count() > 2 && reDisassemblyInitSymbol.Matches(lines[1]))
+                {
+                    const wxString &symbol = reDisassemblyInitSymbol.GetMatch(lines[1], 1)
+                                             + reDisassemblyInitSymbol.GetMatch(lines[1], 2);
+                    sameSymbol = (LastSymbol == symbol);
+
+                    if (!sameSymbol)
+                        LastSymbol = symbol;
+                }
+
                 cbStackFrame sf;
-                wxString addr = reDisassemblyInit.GetMatch(output, 1);
-                if (addr == LastAddr)
+                const wxString &addr = reDisassemblyInit.GetMatch(output, 1);
+                if (addr == LastAddr && sameSymbol)
                     return;
                 LastAddr = addr;
                 long long_address;
@@ -1384,9 +1398,16 @@ class GdbCmd_DisassemblyInit : public DebuggerCmd
             }
 //            m_pDriver->DebugLog(output);
         }
+
+        static void Clear()
+        {
+            LastAddr.Clear();
+            LastSymbol.Clear();
+        }
 };
 // static
 wxString GdbCmd_DisassemblyInit::LastAddr;
+wxString GdbCmd_DisassemblyInit::LastSymbol;
 
 /**
   * Command to examine a memory region.

@@ -504,7 +504,7 @@ void GDB_driver::Start(bool breakOnEntry)
     ResetCursor();
 
     // reset other states
-    GdbCmd_DisassemblyInit::LastAddr.Clear();
+    GdbCmd_DisassemblyInit::Clear();
     if (Manager::Get()->GetDebuggerManager()->UpdateDisassembly())
     {
         cbDisassemblyDlg *disassembly_dialog = Manager::Get()->GetDebuggerManager()->GetDisassemblyDialog();
