@@ -167,8 +167,8 @@ NativeParser::NativeParser() :
 
 NativeParser::~NativeParser()
 {
-    ProjectLoaderHooks::UnregisterHook(m_HookId, true);
     ClearParsers();
+    ProjectLoaderHooks::UnregisterHook(m_HookId, true);
     RemoveClassBrowser();
     delete m_pImageList;
 }
@@ -529,6 +529,7 @@ void NativeParser::RereadParserOptions()
                            "reparse your projects now, using the new options?"),
                          _("Reparse?"), wxYES_NO | wxICON_QUESTION) == wxID_YES)
         {
+            Manager::Get()->GetLogManager()->DebugLog(_T("RereadParserOptions() : Clear parsers!"));
             ClearParsers();
             ReparseCurrentProject();
             return;
@@ -936,12 +937,9 @@ const wxArrayString& NativeParser::GetGCCCompilerDirs(const wxString &cpp_compil
     // let's hope this does not change too quickly, otherwise we need
     // to adjust our search code (for several versions ...)
     bool start = false;
-    Manager::Get()->GetLogManager()->DebugLog(_T("Loaden------for-test-->"));
     for (size_t idxCount = 0; idxCount < Errors.GetCount(); ++idxCount)
     {
-        // TODO Loaden for w64 test
         wxString path = Errors[idxCount].Trim(true).Trim(false);
-        Manager::Get()->GetLogManager()->DebugLog(path);
         if (!start)
         {
             if (!path.StartsWith(_T("#include <...>")))
@@ -959,8 +957,6 @@ const wxArrayString& NativeParser::GetGCCCompilerDirs(const wxString &cpp_compil
         Manager::Get()->GetLogManager()->DebugLog(_T("Caching GCC dir: ") + fname.GetPath());
         gcc_compiler_dirs.Add(fname.GetPath());
     }
-
-    Manager::Get()->GetLogManager()->DebugLog(_T("-------Test-End!"));
 
     return gcc_compiler_dirs;
 }
@@ -999,9 +995,6 @@ bool NativeParser::CreateParser(cbProject* project)
     m_ParserList.push_back(std::make_pair(project, parser));
     StartCompleteParsing(project, parser);
 
-    if (m_pParser == &m_TempParser)
-        SetParser(parser);
-
     wxString log(F(_("Create new parser for project '%s'"), project
                    ? project->GetTitle().wx_str()
                    : _T("*NONE*")));
@@ -1032,6 +1025,7 @@ bool NativeParser::DeleteParser(cbProject* project)
         SetParser(&m_TempParser);
 
     delete it->second;
+    wxMilliSleep(10);
     m_ParserList.erase(it);
 
     wxString log(F(_("Delete parser for project '%s'!"), project
@@ -3182,20 +3176,12 @@ void NativeParser::OnParserStart(wxCommandEvent& event)
                                                     ? project->GetTitle().wx_str()
                                                     : _T("*NONE*")));
         {
-            EditorBase* editor = Manager::Get()->GetEditorManager()->GetActiveEditor();
-            if (!editor || editor->GetFilename() == g_StartHereTitle)
-                break;
-
-            cbProject* edProject = GetProjectByFilename(editor->GetFilename());
-            Parser* edParser = GetParserByProject(edProject);
-            if (edProject && edProject != project && !edParser)
+            std::pair<cbProject*, Parser*> prjParser = GetProjectParserByActivedEditor();
+            if (prjParser.second && m_pParser != prjParser.second)
             {
-                if (CreateParser(edProject))
-                    edParser = GetParserByProject(edProject);
+                Manager::Get()->GetLogManager()->DebugLog(_T("Start switch from OnParserStart::ptCreateParser"));
+                SwitchParser(prjParser.first, prjParser.second);
             }
-
-            if (edParser && edParser != m_pParser)
-                SwitchParser(edProject, edParser);
         }
         break;
 
@@ -3203,17 +3189,6 @@ void NativeParser::OnParserStart(wxCommandEvent& event)
         break;
 
     case ptReparseFile:
-        if (parser != m_pParser)
-        {
-            EditorBase* editor = Manager::Get()->GetEditorManager()->GetActiveEditor();
-            if (!editor || editor->GetFilename() == g_StartHereTitle)
-                break;
-
-            cbProject* edProject = GetProjectByFilename(editor->GetFilename());
-            Parser* edParser = GetParserByProject(edProject);
-            if (edParser && edParser != m_pParser)
-                SwitchParser(edProject, edParser);
-        }
         break;
 
     case ptUndefined:
@@ -3236,12 +3211,13 @@ void NativeParser::OnParserEnd(wxCommandEvent& event)
     Parser* parser = static_cast<Parser*>(event.GetClientData());
     cbProject* project = GetProjectByParser(parser);
 
-    // When delete a parser, and the parser-event has been sent.
+    // When delete a parser, and the parser-event has been send.
     // We need avoid this event!
     if (   !project
         && (   m_StandaloneFiles.IsEmpty()
             || !parser->IsFileParsed(m_StandaloneFiles[0]) ) )
     {
+        Manager::Get()->GetLogManager()->DebugLog(_T("OnParserEnd() : avoid deleted parser event."));
         return;
     }
 
@@ -3255,7 +3231,21 @@ void NativeParser::OnParserEnd(wxCommandEvent& event)
                            : _T("*NONE*")));
             Manager::Get()->GetLogManager()->Log(log);
             Manager::Get()->GetLogManager()->DebugLog(log);
+
             CC_PROFILE_TIMER_LOG();
+
+            std::pair<cbProject*, Parser*> prjParser = GetProjectParserByActivedEditor();
+            if (prjParser.first && prjParser.first != project && !prjParser.second)
+            {
+                if (CreateParser(prjParser.first))
+                    prjParser.second = GetParserByProject(prjParser.first);
+            }
+
+            if (prjParser.second && prjParser.second != m_pParser)
+            {
+                Manager::Get()->GetLogManager()->DebugLog(_T("Start switch from OnParserEnd::ptCreateParser"));
+                SwitchParser(prjParser.first, prjParser.second);
+            }
         }
         break;
 
@@ -3269,6 +3259,15 @@ void NativeParser::OnParserEnd(wxCommandEvent& event)
         Manager::Get()->GetLogManager()->DebugLog(F(_T("Reparsing modified files for project '%s'"), project
                                                     ? project->GetTitle().wx_str()
                                                     : _T("*NONE*")));
+        if (parser != m_pParser)
+        {
+            std::pair<cbProject*, Parser*> prjParser = GetProjectParserByActivedEditor();
+            if (prjParser.second && prjParser.second != m_pParser)
+            {
+                Manager::Get()->GetLogManager()->DebugLog(_T("Start switch from OnParserEnd::ptReparseFile"));
+                SwitchParser(prjParser.first, prjParser.second);
+            }
+        }
         break;
 
     case ptUndefined:
@@ -3352,7 +3351,10 @@ void NativeParser::OnEditorActivatedTimer(wxTimerEvent& event)
     }
 
     if (parser != m_pParser)
+    {
+        Manager::Get()->GetLogManager()->DebugLog(_T("Start switch from OnEditorActivatedTimer"));
         SwitchParser(project, parser);
+    }
 
     if (m_pClassBrowser && parser->ClassBrowserOptions().displayFilter == bdfFile)
     {
@@ -3382,7 +3384,10 @@ void NativeParser::OnEditorClosed(EditorBase* editor)
 
     wxString filename = editor->GetFilename();
     if (filename == g_StartHereTitle)
+    {
+        m_LastActivatedFile.Clear();
         return;
+    }
 
     const int pos = m_StandaloneFiles.Index(filename);
     if (pos != wxNOT_FOUND)
@@ -3394,35 +3399,50 @@ void NativeParser::OnEditorClosed(EditorBase* editor)
             RemoveFileFromParser(NULL, filename);
     }
 
-    if (m_LastActivatedFile = editor->GetFilename())
+    if (m_LastActivatedFile == editor->GetFilename())
         m_LastActivatedFile.Clear();
 }
 
-size_t NativeParser::RemoveObsoleteParsers()
+void NativeParser::RemoveObsoleteParsers()
 {
     ConfigManager* cfg = Manager::Get()->GetConfigManager(_T("code_completion"));
     const size_t maxParsers = cfg->ReadInt(_T("/max_parsers"), 5);
-    size_t removedCount = 0;
+    wxArrayString removedProjectNames;
 
     while (m_ParserList.size() > maxParsers)
     {
+        wxString prjName = _T("*NONE*");
+        if (m_ParserList.front().first)
+            prjName = m_ParserList.front().first->GetTitle();
         if (DeleteParser(m_ParserList.front().first))
         {
             m_ParserList.pop_front();
-            ++removedCount;
+            removedProjectNames.Add(prjName);
         }
         else
             break;
     }
 
-    if (removedCount)
+    for (size_t i = 0; i < removedProjectNames.GetCount(); ++i)
     {
-        wxString log(F(_("Removed obsolete parser count is %d"), removedCount));
+        wxString log(F(_("Removed obsolete parser of '%s'"), removedProjectNames[i].wx_str()));
         Manager::Get()->GetLogManager()->Log(log);
         Manager::Get()->GetLogManager()->DebugLog(log);
     }
+}
 
-    return removedCount;
+std::pair<cbProject*, Parser*> NativeParser::GetProjectParserByActivedEditor()
+{
+    std::pair<cbProject*, Parser*> prjParser;
+
+    EditorBase* editor = Manager::Get()->GetEditorManager()->GetActiveEditor();
+    if (editor && editor->GetFilename() != g_StartHereTitle)
+    {
+        prjParser.first = GetProjectByFilename(editor->GetFilename());
+        prjParser.second = GetParserByProject(prjParser.first);
+    }
+
+    return prjParser;
 }
 
 class ParserDirTraverser : public wxDirTraverser
@@ -3660,7 +3680,6 @@ void NativeParser::ResolveOpeartor(const OperatorType& tokenOperatorType, const 
                 {
                     ResolveTemplateMap(type, opInitialScope, result);
                 }
-
             }
         }
     }

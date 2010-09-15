@@ -69,6 +69,13 @@
                       <flag>wxTOP|wxLEFT|wxRIGHT|wxEXPAND|wxALIGN_LEFT|wxALIGN_TOP</flag>
                       <border>8</border>
                     </object>
+					<object class="sizeritem">
+                      <object class="wxCheckBox" name="chkSystemHeaderFiles">
+                        <label>Enable system header files code-completion</label>
+                      </object>
+                      <flag>wxTOP|wxLEFT|wxRIGHT|wxEXPAND|wxALIGN_LEFT|wxALIGN_TOP</flag>
+                      <border>8</border>
+                    </object>
                     <object class="sizeritem">
                       <object class="wxFlexGridSizer">
                         <cols>2</cols>

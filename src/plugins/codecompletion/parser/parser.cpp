@@ -42,6 +42,7 @@
 #endif
 
 wxCriticalSection g_ParserCritical;
+static wxCriticalSection s_AddParseCritical;
 
 static const char CACHE_MAGIC[] = "CCCACHE_1_3";
 static const int batch_timer_delay = 300;
@@ -63,6 +64,8 @@ public:
 
     int Execute()
     {
+        wxCriticalSectionLocker locker(s_AddParseCritical);
+
         // Add up-front headers
         m_Parent->m_IsUpFront = true;
         for (size_t i = 0; i < m_Parent->m_UpFrontHeaders.GetCount(); ++i)
@@ -375,7 +378,7 @@ bool Parser::Parse(const wxString& bufferOrFilename, bool isLocal, ParserThreadO
         {
             wxCriticalSectionLocker locker(m_TokensTreeCritical);
 
-            bool canparse = !m_pTokensTree->IsFileParsed(bufferOrFilename);
+            bool canparse = !IsFileParsed(bufferOrFilename);
             if (canparse)
                 canparse = m_pTokensTree->ReserveFileForParsing(bufferOrFilename, true) != 0;
 
@@ -1051,6 +1054,7 @@ size_t Parser::FindTokensInFile(const wxString& fileName, TokenIdxSet& result, s
 
 bool Parser::IsFileParsed(const wxString& filename)
 {
+    wxCriticalSectionLocker locker(m_TokensTreeCritical);
     return m_pTokensTree->IsFileParsed(UnixFilename(filename));
 }
 

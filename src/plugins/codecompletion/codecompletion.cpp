@@ -337,7 +337,15 @@ CodeCompletion::CodeCompletion() :
     m_Scope(0),
     m_ToolbarChanged(true),
     m_CurrentLine(0),
-    m_NeedReparse(false)
+    m_NeedReparse(false),
+    m_UseCodeCompletion(true),
+    m_CCAutoLaunchChars(3),
+    m_CCAutoLaunch(true),
+    m_CCLaunchDelay(300),
+    m_CCMaxMatches(16384),
+    m_CCAutoAddParentheses(true),
+    m_CCAutoSelectOne(false),
+    m_CCSystemHeaderFiles(true)
 {
     if (!Manager::LoadResource(_T("codecompletion.zip")))
         NotifyMissingFile(_T("codecompletion.zip"));
@@ -430,6 +438,17 @@ void CodeCompletion::RereadOptions()
     m_LexerKeywordsToInclude[6] = cfg->ReadBool(_T("/lexer_keywords_set7"), false);
     m_LexerKeywordsToInclude[7] = cfg->ReadBool(_T("/lexer_keywords_set8"), false);
     m_LexerKeywordsToInclude[8] = cfg->ReadBool(_T("/lexer_keywords_set9"), false);
+
+    // for CC
+    m_UseCodeCompletion    = cfg->ReadBool(_T("/use_code_completion"), true);
+    m_CCAutoLaunchChars    = cfg->ReadInt(_T("/auto_launch_chars"), 3);
+    m_CCAutoLaunch         = cfg->ReadBool(_T("/auto_launch"), true);
+    m_CCLaunchDelay        = cfg->ReadInt(_T("/cc_delay"), 300);
+    m_CCMaxMatches         = cfg->ReadInt(_T("/max/matches"), 16384);
+    m_CCAutoAddParentheses = cfg->ReadBool(_T("/auto_add_parentheses"), true);
+    m_CCFillupChars        = cfg->Read(_T("/fillup_chars"), wxEmptyString);
+    m_CCAutoSelectOne      = cfg->ReadBool(_T("/auto_select_one"), false);
+    m_CCSystemHeaderFiles  = cfg->ReadBool(_T("/system_header_files"), true);
 
     if (m_pToolBar)
     {
@@ -748,6 +767,9 @@ void CodeCompletion::OnRelease(bool appShutDown)
 {
     SaveTokenReplacements();
 
+    m_NativeParser.RemoveClassBrowser(appShutDown);
+    m_NativeParser.ClearParsers();
+
     // unregister hook
     // 'true' will delete the functor too
     EditorHooks::UnregisterHook(m_EditorHookId, true);
@@ -755,8 +777,6 @@ void CodeCompletion::OnRelease(bool appShutDown)
     // remove registered event sinks
     Manager::Get()->RemoveAllEventSinksFor(this);
 
-    m_NativeParser.RemoveClassBrowser(appShutDown);
-    m_NativeParser.ClearParsers();
     m_FunctionsScope.clear();
     m_NameSpaces.clear();
     m_AllFunctionsScopes.clear();
@@ -819,7 +839,6 @@ int CodeCompletion::CodeComplete()
     if (!IsAttached() || !m_InitDone)
         return -1;
 
-    ConfigManager* cfg = Manager::Get()->GetConfigManager(_T("code_completion"));
     EditorManager* edMan = Manager::Get()->GetEditorManager();
     cbEditor* ed = edMan->GetBuiltinActiveEditor();
     if (!ed)
@@ -834,9 +853,7 @@ int CodeCompletion::CodeComplete()
         if (s_DebugSmartSense)
             Manager::Get()->GetLogManager()->DebugLog(F(_T("%d results"), result.size()));
 
-        size_t max_match = cfg->ReadInt(_T("/max/matches"), 16384);
-        bool autoAddParentheses = cfg->ReadBool(_T("/auto_add_parentheses"), true);
-        if (result.size() <= max_match)
+        if (result.size() <= m_CCMaxMatches)
         {
             if (s_DebugSmartSense)
                 Manager::Get()->GetLogManager()->DebugLog(_T("Generating tokens list..."));
@@ -873,7 +890,7 @@ int CodeCompletion::CodeComplete()
                 wxString tmp;
                 tmp << token->m_Name << wxString::Format(_T("?%d"), iidx);
                 items.Add(tmp);
-                if (autoAddParentheses && token->m_TokenKind == tkFunction)
+                if (m_CCAutoAddParentheses && token->m_TokenKind == tkFunction)
                 {
                     m_SearchItem[token->m_Name] = token->m_Args.size() - 2;
                 }
@@ -957,8 +974,8 @@ int CodeCompletion::CodeComplete()
 
             ed->GetControl()->AutoCompSetIgnoreCase(!caseSens);
             ed->GetControl()->AutoCompSetCancelAtStart(true);
-            ed->GetControl()->AutoCompSetFillUps(cfg->Read(_T("/fillup_chars"), wxEmptyString));
-            ed->GetControl()->AutoCompSetChooseSingle(m_IsAutoPopup ? false : cfg->ReadBool(_T("/auto_select_one"), false));
+            ed->GetControl()->AutoCompSetFillUps(m_CCFillupChars);
+            ed->GetControl()->AutoCompSetChooseSingle(m_IsAutoPopup ? false : m_CCAutoSelectOne);
             ed->GetControl()->AutoCompSetAutoHide(true);
             ed->GetControl()->AutoCompSetDropRestOfWord(m_IsAutoPopup ? false : true);
             wxString final = GetStringFromArray(items, _T(" "));
@@ -1168,6 +1185,7 @@ void CodeCompletion::CodeCompleteIncludes()
     std::set<wxString> files;
 
     // #include <|
+    if (m_CCSystemHeaderFiles)
     {
         wxCriticalSectionLocker locker(s_HeadersCriticalSection);
         wxArrayString& incDirs = GetSystemIncludeDirs(m_NativeParser.GetParser(),
@@ -1642,13 +1660,6 @@ void CodeCompletion::OnProjectActivated(CodeBlocksEvent& event)
 
         if (!m_NativeParser.GetParserByProject(project))
             m_NativeParser.CreateParser(project);
-
-        if (!Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor())
-        {
-            Parser* parser = m_NativeParser.GetParserByProject(project);
-            if (parser && parser != m_NativeParser.GetParser())
-                m_NativeParser.SwitchParser(project, parser);
-        }
 
         if (m_NativeParser.GetParser()->ClassBrowserOptions().displayFilter == bdfProject)
             m_NativeParser.UpdateClassBrowser();
@@ -2681,15 +2692,12 @@ void CodeCompletion::OnSelectedFileReparse(wxCommandEvent& event)
 
 void CodeCompletion::EditorEventHook(cbEditor* editor, wxScintillaEvent& event)
 {
-    ConfigManager* cfg = Manager::Get()->GetConfigManager(_T("code_completion"));
-
-    if (!IsAttached() ||
-        !m_InitDone ||
-        !cfg->ReadBool(_T("/use_code_completion"), true))
+    if (!IsAttached() || !m_InitDone || !m_UseCodeCompletion)
     {
         event.Skip();
         return;
     }
+
     cbStyledTextCtrl* control = editor->GetControl();
 
 //    if (event.GetEventType() == wxEVT_SCI_CHARADDED)
@@ -2780,9 +2788,7 @@ void CodeCompletion::EditorEventHook(cbEditor* editor, wxScintillaEvent& event)
         int wordstart = control->WordStartPosition(pos, true);
 
         // if more than two chars have been typed, invoke CC
-        int autoCCchars = cfg->ReadInt(_T("/auto_launch_chars"), 4);
-        bool autoCC = cfg->ReadBool(_T("/auto_launch"), true) &&
-                      pos - wordstart >= autoCCchars;
+        const bool autoCC = m_CCAutoLaunch && (pos - wordstart >= m_CCAutoLaunchChars);
 
         // update calltip highlight while we type
         if (control->CallTipActive())
@@ -2846,8 +2852,7 @@ void CodeCompletion::EditorEventHook(cbEditor* editor, wxScintillaEvent& event)
                 }
             }
 
-            int timerDelay = cfg->ReadInt(_T("/cc_delay"), 500);
-            if (autoCC || timerDelay == 0)
+            if (autoCC || m_CCLaunchDelay == 0)
             {
                 if (autoCC)
                     m_IsAutoPopup = true;
@@ -2859,7 +2864,7 @@ void CodeCompletion::EditorEventHook(cbEditor* editor, wxScintillaEvent& event)
             {
                 m_LastPosForCodeCompletion = pos;
                 m_pCodeCompletionLastEditor = editor;
-                m_TimerCodeCompletion.Start(timerDelay, wxTIMER_ONE_SHOT);
+                m_TimerCodeCompletion.Start(m_CCLaunchDelay, wxTIMER_ONE_SHOT);
             }
         }
     }

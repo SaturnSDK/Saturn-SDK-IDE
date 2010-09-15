@@ -176,6 +176,16 @@ class CodeCompletion : public cbCodeCompletionPlugin
         SystemHeadersMap                   m_SystemHeadersMap;
         std::list<SystemHeadersThread*>    m_SystemHeadersThread;
 
+        bool                               m_UseCodeCompletion;
+        int                                m_CCAutoLaunchChars;
+        bool                               m_CCAutoLaunch;
+        bool                               m_CCLaunchDelay;
+        size_t                             m_CCMaxMatches;
+        bool                               m_CCAutoAddParentheses;
+        wxString                           m_CCFillupChars;
+        bool                               m_CCAutoSelectOne;
+        bool                               m_CCSystemHeaderFiles;
+
         DECLARE_EVENT_TABLE()
 };
 

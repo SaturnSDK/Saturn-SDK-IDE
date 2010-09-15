@@ -138,7 +138,8 @@ class NativeParser : public wxEvtHandler
         bool SwitchParser(cbProject* project, Parser* parser);
         void SetParser(Parser* parser);
         void ClearParsers();
-        size_t RemoveObsoleteParsers();
+        void RemoveObsoleteParsers();
+        std::pair<cbProject*, Parser*> GetProjectParserByActivedEditor();
 
     private:
         friend class CodeCompletion;
