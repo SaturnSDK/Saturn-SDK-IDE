@@ -415,8 +415,6 @@ bool ParserThread::InitTokenizer()
 
 bool ParserThread::Parse()
 {
-    wxCriticalSectionLocker locker(g_ParserCritical);
-
     if (TestDestroy() || !InitTokenizer())
         return false;
 
@@ -1325,12 +1323,9 @@ void ParserThread::HandleIncludes()
             }
 
             TRACE(F(_T("HandleIncludes() : Adding include file '%s'"), real_filename.wx_str()));
-            // since we 'll be calling directly the parser's method, let's make it thread-safe
-            {
-                wxCriticalSectionLocker locker(m_pParent->GetBatchParsingCritical());
-                m_pParent->DoParseFile(real_filename, isGlobal);
-            }
-        } while (false);
+            m_pParent->DoParseFile(real_filename, isGlobal);
+        }
+        while (false);
     }
 }
 

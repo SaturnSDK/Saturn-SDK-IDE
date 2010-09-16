@@ -357,7 +357,7 @@ CodeCompletion::~CodeCompletion()
     {
         SystemHeadersThread* thread = m_SystemHeadersThread.front();
         if (thread->IsRunning())
-            thread->Delete();
+            thread->Kill();
         m_SystemHeadersThread.pop_front();
     }
 }
@@ -1125,7 +1125,7 @@ wxArrayString CodeCompletion::GetLocalIncludeDirs(cbProject* project, const wxAr
     {
         SystemHeadersThread* thread = new SystemHeadersThread(this, m_SystemHeadersMap, sysDirs);
         m_SystemHeadersThread.push_back(thread);
-        if (!m_SystemHeadersThread.front()->IsRunning() && m_NativeParser.AllBatchParseDone())
+        if (!m_SystemHeadersThread.front()->IsRunning() && m_NativeParser.Done())
             thread->Run();
     }
 
@@ -1655,10 +1655,7 @@ void CodeCompletion::OnProjectActivated(CodeBlocksEvent& event)
     if (!ProjectManager::IsBusy() && IsAttached() && m_InitDone)
     {
         cbProject* project = event.GetProject();
-        if (!project)
-            return;
-
-        if (!m_NativeParser.GetParserByProject(project))
+        if (project && !m_NativeParser.GetParserByProject(project))
             m_NativeParser.CreateParser(project);
 
         if (m_NativeParser.GetParser()->ClassBrowserOptions().displayFilter == bdfProject)
@@ -1713,8 +1710,6 @@ void CodeCompletion::OnProjectSavedTimer(wxTimerEvent& event)
 
         m_NativeParser.CreateParser(project);
     }
-
-    event.Skip();
 }
 
 void CodeCompletion::OnProjectFileAdded(CodeBlocksEvent& event)
@@ -1759,15 +1754,15 @@ void CodeCompletion::OnReparseActiveEditor(CodeBlocksEvent& event)
     if (!ProjectManager::IsBusy() && IsAttached() && m_InitDone)
     {
         EditorBase* ed = event.GetEditor();
-        if (!ed)
-            return;
+        if (ed)
+        {
+            wxString filename = ed->GetFilename();
+            cbProject* project = m_NativeParser.GetProjectByFilename(filename);
+            if (project && m_NativeParser.ReparseFile(project, filename))
+                Manager::Get()->GetLogManager()->DebugLog(_T("Reparsing active editor ") + filename);
 
-        wxString filename = ed->GetFilename();
-        cbProject* project = m_NativeParser.GetProjectByFilename(filename);
-        if (project && m_NativeParser.ReparseFile(project, filename))
-            Manager::Get()->GetLogManager()->DebugLog(_T("Reparsing active editor ") + filename);
-
-        ParseFunctionsAndFillToolbar(true);
+            ParseFunctionsAndFillToolbar(true);
+        }
     }
 
     event.Skip();
@@ -1797,7 +1792,7 @@ void CodeCompletion::OnThreadCompletion(wxCommandEvent& event)
 
         if (   !m_SystemHeadersThread.empty()
             && !m_SystemHeadersThread.front()->IsRunning()
-            && m_NativeParser.AllBatchParseDone() )
+            && m_NativeParser.Done() )
         {
             m_SystemHeadersThread.front()->Run();
         }
@@ -2950,7 +2945,7 @@ void CodeCompletion::OnParserEnd(wxCommandEvent& event)
     {
         if (   !m_SystemHeadersThread.empty()
             && !m_SystemHeadersThread.front()->IsRunning()
-            && m_NativeParser.AllBatchParseDone() )
+            && m_NativeParser.Done() )
         {
             m_SystemHeadersThread.front()->Run();
         }

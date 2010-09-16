@@ -122,8 +122,6 @@ enum ParsingType
     ptUndefined         = 4,
 };
 
-extern wxCriticalSection g_ParserCritical;
-
 class Parser : public wxEvtHandler
 {
     friend class ParserThread;
@@ -136,9 +134,12 @@ class Parser : public wxEvtHandler
         void PrepareParsing();
         void AddUpFrontHeaders(const wxString& filename, bool systemHeaderFile);
         void AddBatchParse(const wxArrayString& filenames);
+        void AddParse(const wxString& filename);
         void StartParsing(bool delay = true);
 
         ParsingType GetParsingType() const { return m_ParsingType; }
+        static bool IsValidParser(Parser* parser)
+        { return sm_ValidParserSet.find(parser) != sm_ValidParserSet.end(); }
 
         bool ParseBuffer(const wxString& buffer, bool isLocal = true, bool bufferSkipBlocks = false, bool isTemp = false);
         bool ParseBufferForFunctions(const wxString& buffer);
@@ -149,7 +150,6 @@ class Parser : public wxEvtHandler
         bool RemoveFile(const wxString& filename);
 
         wxCriticalSection& GetTokensTreeCritical() { return m_TokensTreeCritical; }
-        wxCriticalSection& GetBatchParsingCritical() { return m_BatchParsingCritical; }
 
         void ReadOptions();
         void WriteOptions();
@@ -191,16 +191,21 @@ class Parser : public wxEvtHandler
         void SetMaxThreads(unsigned int max) { m_Pool.SetConcurrentThreads(max); }
 
     protected:
-        bool AddParse(const wxString& filename, bool isLocal = true, LoaderBase* loader = NULL);
+        // *MUST* called from child thread-->
+        bool Parse(const wxString& filename, bool isLocal = true, LoaderBase* loader = NULL);
         bool Parse(const wxString& bufferOrFilename, bool isLocal, ParserThreadOptions& opts);
         void DoParseFile(const wxString& filename, bool isGlobal);
+        // *MUST* end--<
+
         bool ReparseModifiedFiles();
         void TerminateAllThreads();
 
         void OnAllThreadsDone(CodeBlocksEvent& event);
         void OnTimer(wxTimerEvent& event);
         void OnBatchTimer(wxTimerEvent& event);
-        void PostParserEvent(ParsingType type, int id, const wxString& info = wxEmptyString);
+        void OnAddParseEnd(wxCommandEvent& event);
+
+        void ProcessParserEvent(ParsingType type, int id, const wxString& info = wxEmptyString);
 
     private:
         void ConnectEvents();
@@ -243,7 +248,9 @@ class Parser : public wxEvtHandler
         ParsingType                    m_ParsingType;
 
         wxCriticalSection              m_TokensTreeCritical;
-        wxCriticalSection              m_BatchParsingCritical;
+        wxThread*                      m_AddParseThread;
+        wxCriticalSectionLocker*       m_ParserLocker;
+        static std::set<Parser*>       sm_ValidParserSet;
 
         DECLARE_EVENT_TABLE()
 };

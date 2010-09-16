@@ -81,7 +81,7 @@ class NativeParser : public wxEvtHandler
         cbProject* GetProjectByParser(Parser* parser);
         cbProject* GetProjectByFilename(const wxString& filename);
 
-        bool AllBatchParseDone();
+        bool Done();
 
         wxImageList* GetImageList() { return m_pImageList; }
         int GetTokenKindImage(Token* token);

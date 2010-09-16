@@ -185,7 +185,7 @@ void NativeParser::SetParser(Parser* parser)
 
 Parser* NativeParser::GetParserByProject(cbProject* project)
 {
-    for (ParserList::const_iterator it = m_ParserList.begin(); it != m_ParserList.end(); ++it)
+    for (ParserList::iterator it = m_ParserList.begin(); it != m_ParserList.end(); ++it)
     {
         if (it->first == project)
             return it->second;
@@ -202,7 +202,7 @@ Parser* NativeParser::GetParserByFilename(const wxString& filename)
 
 cbProject* NativeParser::GetProjectByParser(Parser* parser)
 {
-    for (ParserList::const_iterator it = m_ParserList.begin(); it != m_ParserList.end(); ++it)
+    for (ParserList::iterator it = m_ParserList.begin(); it != m_ParserList.end(); ++it)
     {
         if (it->second == parser)
             return it->first;
@@ -246,12 +246,12 @@ cbProject* NativeParser::GetProjectByFilename(const wxString& filename)
     return NULL;
 }
 
-bool NativeParser::AllBatchParseDone()
+bool NativeParser::Done()
 {
     bool done = true;
-    for (ParserList::const_iterator it = m_ParserList.begin(); it != m_ParserList.end(); ++it)
+    for (ParserList::iterator it = m_ParserList.begin(); it != m_ParserList.end(); ++it)
     {
-        if (it->second->GetParsingType() == ptCreateParser)
+        if (!it->second->Done())
         {
             done = false;
             break;
@@ -550,7 +550,7 @@ void NativeParser::ClearParsers()
 {
     SetParser(&m_TempParser);
 
-    for (ParserList::const_iterator it = m_ParserList.begin(); it != m_ParserList.end(); ++it)
+    for (ParserList::iterator it = m_ParserList.begin(); it != m_ParserList.end(); ++it)
     {
         delete it->second;
         wxMilliSleep(10);
@@ -1199,7 +1199,7 @@ bool NativeParser::StartCompleteParsing(cbProject* project, Parser* parser)
         }
     }
 
-    for (FrontMap::const_iterator it = frontMap.begin(); it != frontMap.end(); ++it)
+    for (FrontMap::iterator it = frontMap.begin(); it != frontMap.end(); ++it)
         fronts.Add(it->second);
 
     Manager::Get()->GetLogManager()->DebugLog(_T("Passing list of files to batch-parser."));
@@ -3211,13 +3211,9 @@ void NativeParser::OnParserEnd(wxCommandEvent& event)
     Parser* parser = static_cast<Parser*>(event.GetClientData());
     cbProject* project = GetProjectByParser(parser);
 
-    // When delete a parser, and the parser-event has been send.
-    // We need avoid this event!
-    if (   !project
-        && (   m_StandaloneFiles.IsEmpty()
-            || !parser->IsFileParsed(m_StandaloneFiles[0]) ) )
+    if (!Parser::IsValidParser(parser))
     {
-        Manager::Get()->GetLogManager()->DebugLog(_T("OnParserEnd() : avoid deleted parser event."));
+        Manager::Get()->GetLogManager()->DebugLog(_T("OnParserEnd() : this parser should be deleted!"));
         return;
     }
 
@@ -3271,7 +3267,7 @@ void NativeParser::OnParserEnd(wxCommandEvent& event)
         break;
 
     case ptUndefined:
-        Manager::Get()->GetLogManager()->DebugLog(F(_T("Error parser end handle for project '%s'"), project
+        Manager::Get()->GetLogManager()->DebugLog(F(_T("Parser event handling error of project '%s'"), project
                                                     ? project->GetTitle().wx_str()
                                                     : _T("*NONE*")));
         return;
@@ -3415,10 +3411,7 @@ void NativeParser::RemoveObsoleteParsers()
         if (m_ParserList.front().first)
             prjName = m_ParserList.front().first->GetTitle();
         if (DeleteParser(m_ParserList.front().first))
-        {
-            m_ParserList.pop_front();
             removedProjectNames.Add(prjName);
-        }
         else
             break;
     }
