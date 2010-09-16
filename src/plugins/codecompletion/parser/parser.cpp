@@ -408,7 +408,7 @@ bool Parser::Parse(const wxString& bufferOrFilename, bool isLocal, ParserThreadO
         {
             wxCriticalSectionLocker locker(m_TokensTreeCritical);
 
-            bool canparse = !IsFileParsed(bufferOrFilename);
+            bool canparse = !m_pTokensTree->IsFileParsed(bufferOrFilename);
             if (canparse)
                 canparse = m_pTokensTree->ReserveFileForParsing(bufferOrFilename, true) != 0;
 
@@ -876,7 +876,6 @@ void Parser::OnAllThreadsDone(CodeBlocksEvent& event)
         m_IsParsing = false;
         m_IsBatchParseDone = true;
         EndStopWatch();
-        ParsingType type = m_ParsingType;
         ProcessParserEvent(m_ParsingType, PARSER_END);
         m_ParsingType = ptUndefined;
     }
