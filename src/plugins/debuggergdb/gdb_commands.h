@@ -134,7 +134,7 @@ static wxRegEx reBT3(_T("\\)[ \t]+[atfrom]+[ \t]+(.*)"));
 // Breakpoint 1 at 0x4013d6: file main.cpp, line 8.
 static wxRegEx reBreakpoint(_T("Breakpoint ([0-9]+) at (0x[0-9A-Fa-f]+)"));
 // Breakpoint 1 ("/home/jens/codeblocks-build/codeblocks-1.0svn/src/plugins/debuggergdb/gdb_commands.h:125) pending.
-static wxRegEx rePendingBreakpoint(_T("Breakpoint ([0-9]+)[ \\t]\\(\\\"(.+):([0-9]+)\\)[ \\t]pending\\."));
+static wxRegEx rePendingBreakpoint(_T("Breakpoint ([0-9]+)[ \t]\\(\\\"(.+):([0-9]+)\\)[ \t]pending\\."));
 // Hardware assisted breakpoint 1 at 0x4013d6: file main.cpp, line 8.
 static wxRegEx reHWBreakpoint(_T("Hardware assisted breakpoint ([0-9]+) at (0x[0-9A-Fa-f]+)"));
 // Hardware watchpoint 1: expr
@@ -154,7 +154,7 @@ static wxRegEx reDisassembly(_T("(0x[0-9A-Za-z]+)[ \t]+<.*>:[ \t]+(.*)"));
 //  ebx at 0x22ff6c, ebp at 0x22ff78, esi at 0x22ff70, edi at 0x22ff74, eip at 0x22ff7c
 static wxRegEx reDisassemblyInit(_T("^Stack level [0-9]+, frame at (0x[A-Fa-f0-9]+):"));
 //  rip = 0x400931 in Bugtest<int> (/src/_cb_dbg/disassembly/main.cpp:6);
-static wxRegEx reDisassemblyInitSymbol(_T("[ \\t]*[er]ip[ \\t]+=[ \\t]+0x[0-9a-f]+[ \\t]+in[ \\t]+(.+)\\((.+):[0-9]+\\);"));
+static wxRegEx reDisassemblyInitSymbol(_T("[ \t]*[er]ip[ \t]+=[ \t]+0x[0-9a-f]+[ \t]+in[ \t]+(.+)\\((.+):[0-9]+\\);"));
 static wxRegEx reDisassemblyInitFunc(_T("eip = (0x[A-Fa-f0-9]+) in ([^;]*)"));
 // or32 variant
 #ifdef __WXMSW__
@@ -172,6 +172,8 @@ static wxRegEx reInfoProgramProcess(_T("child process ([0-9]+)"));
 //* 1 Thread 46912568064384 (LWP 7926)  0x00002aaaac76e612 in poll () from /lib/libc.so.6
 static wxRegEx reInfoThreads(_T("(\\**)[ \t]*([0-9]+)[ \t](.*)"));
 static wxRegEx reGenericHexAddress(_T("(0x[A-Fa-f0-9]+)"));
+
+static wxRegEx reExamineMemoryLine(wxT("[ \t]*(0x[0-9a-f]+)[ \t]<.+>:[ \t]+(.+)"));
 
 DECLARE_INSTANCE_TYPE(wxString);
 
@@ -1427,6 +1429,8 @@ class GdbCmd_ExamineMemory : public DebuggerCmd
             // output is a series of:
             //
             // 0x22ffc0:       0xf0    0xff    0x22    0x00    0x4f    0x6d    0x81    0x7c
+            // or
+            // 0x85267a0 <RS485TxTask::taskProc()::rcptBuf>:   0x00   0x00   0x00   0x00   0x00   0x00   0x00   0x00
 
             cbExamineMemoryDlg *dialog = Manager::Get()->GetDebuggerManager()->GetExamineMemoryDialog();
 
@@ -1434,26 +1438,36 @@ class GdbCmd_ExamineMemory : public DebuggerCmd
             dialog->Clear();
 
             wxArrayString lines = GetArrayFromString(output, _T('\n'));
+            wxString addr, memory;
             for (unsigned int i = 0; i < lines.GetCount(); ++i)
             {
-                if (lines[i].First(_T(':')) == -1)
+                if (reExamineMemoryLine.Matches(lines[i]))
                 {
-                    dialog->AddError(lines[i]);
-                    continue;
+                    addr = reExamineMemoryLine.GetMatch(lines[i], 1);
+                    memory = reExamineMemoryLine.GetMatch(lines[i], 2);
                 }
-                wxString addr = lines[i].BeforeFirst(_T(':'));
-                size_t pos = lines[i].find(_T('x'), 3); // skip 'x' of address
+                else
+                {
+                    if (lines[i].First(_T(':')) == -1)
+                    {
+                        dialog->AddError(lines[i]);
+                        continue;
+                    }
+                    addr = lines[i].BeforeFirst(_T(':'));
+                    memory = lines[i].AfterFirst(_T(':'));
+                }
+
+                size_t pos = memory.find(_T('x'));
                 while (pos != wxString::npos)
                 {
                     wxString hexbyte;
-                    hexbyte << lines[i][pos + 1];
-                    hexbyte << lines[i][pos + 2];
+                    hexbyte << memory[pos + 1];
+                    hexbyte << memory[pos + 2];
                     dialog->AddHexByte(addr, hexbyte);
-                    pos = lines[i].find(_T('x'), pos + 1); // skip current 'x'
+                    pos = memory.find(_T('x'), pos + 1); // skip current 'x'
                 }
             }
             dialog->End();
-//            m_pDriver->DebugLog(output);
         }
 };
 

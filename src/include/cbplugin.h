@@ -521,7 +521,7 @@ class PLUGIN_EXPORT cbDebuggerPlugin: public cbPlugin
         void SwitchToPreviousLayout();
         void ShowLog(bool clear);
 
-        wxString GetDebuggee(ProjectBuildTarget* target);
+        bool GetDebuggee(wxString &pathToDebuggee, ProjectBuildTarget* target);
         wxString FindDebuggerExecutable(Compiler* compiler);
         bool EnsureBuildUpToDate();
         bool WaitingCompilerToFinish() const { return m_WaitingCompilerToFinish; }

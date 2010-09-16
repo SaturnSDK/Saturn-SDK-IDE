@@ -20,6 +20,7 @@
       <label>Stop debugger</label>
       <bitmap>images\16x16\dbgstop.png</bitmap>
       <help>Stop current debugging session</help>
+      <accel>Shift-F8</accel>
     </object>
     <object class="wxMenuItem" name="idDebuggerMenuRunToCursor">
       <label>Run to cursor</label>
@@ -28,12 +29,6 @@
       <help>Run program until it reaches the current line</help>
     </object>
     <object class="separator"/>
-    <!--object class="wxMenuItem" name="idDebuggerMenuContinue">
-      <label>Continue</label>
-      <bitmap>images\dbgrun.png</bitmap>
-      <accel>Ctrl-F7</accel>
-      <help>Continue execution until next breakpoint or program exits</help>
-    </object-->
     <object class="wxMenuItem" name="idDebuggerMenuNext">
       <label>Next line</label>
       <bitmap>images\16x16\dbgnext.png</bitmap>
@@ -49,7 +44,7 @@
     <object class="wxMenuItem" name="idDebuggerMenuStepOut">
       <label>Step out</label>
       <bitmap>images\16x16\dbgstepout.png</bitmap>
-      <accel>Shift-Ctrl-F7</accel>
+      <accel>Ctrl-F7</accel>
       <help>Continue execution until the current frame exits</help>
     </object>
     <object class="wxMenuItem" name="idDebuggerMenuNextInstr">

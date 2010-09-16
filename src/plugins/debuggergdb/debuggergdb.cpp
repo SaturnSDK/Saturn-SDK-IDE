@@ -786,8 +786,8 @@ int DebuggerGDB::DoDebug(bool breakOnEntry)
 
         // set the file to debug
         // (depends on the target type)
-        wxString debuggee = GetDebuggee(target);
-        if (debuggee.IsEmpty())
+        wxString debuggee;
+        if (!GetDebuggee(debuggee, target))
         {
             m_Canceled = true;
             return -3;

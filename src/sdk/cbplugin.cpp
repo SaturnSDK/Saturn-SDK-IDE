@@ -556,7 +556,7 @@ void cbDebuggerPlugin::SwitchToPreviousLayout()
 }
 
 
-wxString cbDebuggerPlugin::GetDebuggee(ProjectBuildTarget* target)
+bool cbDebuggerPlugin::GetDebuggee(wxString &pathToDebuggee, ProjectBuildTarget* target)
 {
     if (!target)
         return wxEmptyString;
@@ -569,6 +569,7 @@ wxString cbDebuggerPlugin::GetDebuggee(ProjectBuildTarget* target)
     {
         case ttExecutable:
         case ttConsoleOnly:
+        case ttNative:
             out = UnixFilename(target->GetOutputFilename());
             Manager::Get()->GetMacrosManager()->ReplaceEnvVars(out); // apply env vars
             Manager::Get()->GetLogManager()->Log(_("Adding file: ") + out, log_index);
@@ -588,21 +589,18 @@ wxString cbDebuggerPlugin::GetDebuggee(ProjectBuildTarget* target)
             Manager::Get()->GetLogManager()->Log(_("Adding file: ") + out, log_index);
             ConvertDirectory(out);
             break;
-//            // for DLLs, add the DLL's symbols
-//            if (target->GetTargetType() == ttDynamicLib)
-//            {
-//                wxString symbols;
-//                out = UnixFilename(target->GetOutputFilename());
-//                Manager::Get()->GetMacrosManager()->ReplaceEnvVars(out); // apply env vars
-//                msgMan->Log(m_PageIndex, _("Adding symbol file: %s"), out.c_str());
-//                ConvertToGDBDirectory(out);
-//                QueueCommand(new DbgCmd_AddSymbolFile(this, out));
-//            }
-//            break;
 
-        default: break;
+        default:
+            Manager::Get()->GetLogManager()->LogError(_("Unsupported target type (Project -> Properties -> Build Targets -> Type)"), log_index);
+            return false;
     }
-    return out;
+    if (out.empty())
+    {
+        Manager::Get()->GetLogManager()->LogError(_("Couldn't find the path to the debuggee!"), log_index);
+        return false;
+    }
+    pathToDebuggee = out;
+    return true;
 }
 
 wxString cbDebuggerPlugin::FindDebuggerExecutable(Compiler* compiler)
