@@ -473,7 +473,7 @@ class PLUGIN_EXPORT cbDebuggerPlugin: public cbPlugin
         virtual void ExpandWatch(cbWatch *watch) = 0;
         virtual void CollapseWatch(cbWatch *watch) = 0;
 
-        virtual void SendCommand(const wxString& cmd) = 0;
+        virtual void SendCommand(const wxString& cmd, bool debugLog) = 0;
 
         virtual void AttachToProcess(const wxString& pid) = 0;
         virtual void DetachFromProcess() = 0;

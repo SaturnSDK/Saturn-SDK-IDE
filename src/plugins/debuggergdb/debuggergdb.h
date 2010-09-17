@@ -99,7 +99,8 @@ class DebuggerGDB : public cbDebuggerPlugin
 
         void Log(const wxString& msg);
         void DebugLog(const wxString& msg);
-        void SendCommand(const wxString& cmd);
+        void SendCommand(const wxString& cmd, bool debugLog);
+        void DoSendCommand(const wxString& cmd);
 
         DebuggerState& GetState(){ return m_State; }
 

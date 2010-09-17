@@ -359,7 +359,7 @@ void DebuggerMenuHandler::OnSendCommand(wxCommandEvent& event)
     if (cmd.IsEmpty())
         return;
 
-    m_activeDebugger->SendCommand(cmd);
+    m_activeDebugger->SendCommand(cmd, false);
     m_lastCommand = cmd;
 }
 

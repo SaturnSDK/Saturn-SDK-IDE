@@ -1037,14 +1037,25 @@ void DebuggerGDB::ConvertToGDBDirectory(wxString& str, wxString base, bool relat
     ConvertToGDBFriendly(str);
 }
 
-void DebuggerGDB::SendCommand(const wxString& cmd)
+void DebuggerGDB::SendCommand(const wxString& cmd, bool debugLog)
 {
-//    Log(cmd);
+    if (!debugLog)
+        Manager::Get()->GetLogManager()->Log(_T("> ") + cmd, m_PageIndex);
+
+    if (debugLog)
+        DoSendCommand(cmd);
+    else if (m_State.HasDriver())
+        m_State.GetDriver()->QueueCommand(new DebuggerCmd(m_State.GetDriver(), cmd, true));
+}
+
+void DebuggerGDB::DoSendCommand(const wxString& cmd)
+{
     if (!m_pProcess || !IsStopped())
         return;
+
     if (m_HasDebugLog)
         Manager::Get()->GetLogManager()->Log(_T("> ") + cmd, m_DbgPageIndex);
-//    m_QueueBusy = true;
+
     m_pProcess->SendString(cmd);
 }
 
@@ -1150,7 +1161,6 @@ void DebuggerGDB::RunCommand(int cmd)
             if (m_State.HasDriver())
             {
                 m_State.GetDriver()->StepOut();
-//            QueueCommand(new DebuggerCmd(this, _T("finish")));
                 m_State.GetDriver()->ResetCurrentFrame();
             }
             break;
@@ -1162,7 +1172,6 @@ void DebuggerGDB::RunCommand(int cmd)
             if (m_State.HasDriver())
             {
                 m_State.GetDriver()->Stop();
-//            QueueCommand(new DebuggerCmd(this, _T("quit")));
                 m_State.GetDriver()->ResetCurrentFrame();
             }
             break;
@@ -1170,7 +1179,6 @@ void DebuggerGDB::RunCommand(int cmd)
 
         case CMD_BACKTRACE:
         {
-//            Manager::Get()->GetLogManager()->Log(m_PageIndex, "Running back-trace...");
             if (m_State.HasDriver())
                 m_State.GetDriver()->Backtrace();
             break;
@@ -1178,7 +1186,6 @@ void DebuggerGDB::RunCommand(int cmd)
 
         case CMD_DISASSEMBLE:
         {
-//            Manager::Get()->GetLogManager()->Log(m_PageIndex, "Disassembling...");
             if (m_State.HasDriver())
                 m_State.GetDriver()->Disassemble();
             break;
@@ -1186,7 +1193,6 @@ void DebuggerGDB::RunCommand(int cmd)
 
         case CMD_REGISTERS:
         {
-//            Manager::Get()->GetLogManager()->Log(m_PageIndex, "Displaying registers...");
             if (m_State.HasDriver())
                 m_State.GetDriver()->CPURegisters();
             break;

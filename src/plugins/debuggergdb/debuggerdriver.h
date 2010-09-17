@@ -16,15 +16,13 @@
 #include <wx/regex.h>
 #include <globals.h>
 
-#define NOT_IMPLEMENTED() DebugLog(wxString(cbC2U(__PRETTY_FUNCTION__)) + _T(": Not implemented in driver"))
+#define NOT_IMPLEMENTED()   \
+    do {                    \
+        DebugLog(wxString(cbC2U(__PRETTY_FUNCTION__)) + _T(": Not implemented in driver"));     \
+        Log(wxString(cbC2U(__PRETTY_FUNCTION__)) + _T(": Not implemented in driver"));           \
+    } while(0)
 
 class DebuggerGDB;
-class DebuggerTree;
-//class BacktraceDlg;
-//class DisassemblyDlg;
-//class CPURegistersDlg;
-//class ExamineMemoryDlg;
-//class ThreadsDlg;
 class Compiler;
 class ProjectBuildTarget;
 
@@ -193,7 +191,7 @@ class DebuggerDriver
     protected:
         /** Called by implementations to reset the cursor. */
         void ResetCursor();
-
+    protected:
         // the debugger plugin
         DebuggerGDB* m_pDBG;
 
@@ -208,13 +206,6 @@ class DebuggerDriver
         Cursor m_Cursor;
 
         long m_ChildPID;
-
-        // debugging windows pointers
-//        BacktraceDlg* m_pBacktrace;
-//        DisassemblyDlg* m_pDisassembly;
-//        CPURegistersDlg* m_pCPURegisters;
-//        ExamineMemoryDlg* m_pExamineMemory;
-//        ThreadsDlg* m_pThreads;
 
         // commands
         DebuggerCommands m_DCmds;

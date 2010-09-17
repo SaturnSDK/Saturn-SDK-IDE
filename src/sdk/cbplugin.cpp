@@ -698,28 +698,6 @@ bool cbDebuggerPlugin::EnsureBuildUpToDate()
     return true;
 }
 
-//bool cbDebuggerPlugin::CheckBuild()
-//{
-//    if (m_pCompiler)
-//    {
-//        LogManager* msgMan = Manager::Get()->GetLogManager();
-//        int page_index;
-//        Manager::Get()->GetDebuggerManager()->GetLogger(false, page_index);
-//
-//        if (m_pCompiler->GetExitCode() != 0)
-//        {
-//            msgMan->Log(_("Build failed..."), page_index);
-//            msgMan->Log(_("Aborting debugging session"), page_index);
-//            cbMessageBox(_("Build failed. Aborting debugging session..."), _("Build failed"), wxICON_WARNING);
-//            return false;
-//        }
-//        msgMan->Log(_("Build succeeded"), page_index);
-//        return true;
-//    }
-//    else
-//        return true;
-//}
-
 void cbDebuggerPlugin::OnCompilerFinished(CodeBlocksEvent& event)
 {
     if (m_WaitingCompilerToFinish)
@@ -766,13 +744,13 @@ int cbDebuggerPlugin::RunNixConsole(wxString &consoleTty)
     // First, wait for the xterm to settle down, else PS won't see the sleep task
     for (int ii = 0; ii < 100; ++ii)
     {
-    Manager::Yield();
+        Manager::Yield();
         ::wxMilliSleep(200);
         int localConsolePid = consolePid;
         consoleTty = GetConsoleTty(localConsolePid);
-    if (!consoleTty.IsEmpty() )
-    {
-        // show what we found as tty
+        if (!consoleTty.IsEmpty() )
+        {
+            // show what we found as tty
             return localConsolePid;
         }
     }

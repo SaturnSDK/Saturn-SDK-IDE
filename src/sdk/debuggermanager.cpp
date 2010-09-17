@@ -422,9 +422,10 @@ const wxString& cbThread::GetInfo() const
 class DebugTextCtrlLogger : public TextCtrlLogger
 {
 public:
-    DebugTextCtrlLogger(bool fixedPitchFont = false) :
+    DebugTextCtrlLogger(bool fixedPitchFont, bool debugLog) :
         TextCtrlLogger(fixedPitchFont),
-        m_panel(NULL)
+        m_panel(NULL),
+        m_debugLog(debugLog)
     {
     }
 
@@ -436,15 +437,17 @@ public:
     virtual wxWindow* CreateControl(wxWindow* parent);
 
 private:
-    wxPanel     *m_panel;
+    wxPanel *m_panel;
+    bool    m_debugLog;
 };
 
 class DebugLogPanel : public wxPanel
 {
 public:
-    DebugLogPanel(wxWindow *parent, DebugTextCtrlLogger *text_control_logger) :
+    DebugLogPanel(wxWindow *parent, DebugTextCtrlLogger *text_control_logger, bool debug_log) :
         wxPanel(parent),
-        m_text_control_logger(text_control_logger)
+        m_text_control_logger(text_control_logger),
+        m_debug_log(debug_log)
     {
         int idDebug_LogEntryControl = wxNewId();
         int idDebug_ExecuteButton = wxNewId();
@@ -510,6 +513,16 @@ public:
                 wxEVT_COMMAND_BUTTON_CLICKED,
                 wxObjectEventFunction(&DebugLogPanel::OnLoadFile));
 
+        // UpdateUI events
+        Connect(idDebug_ExecuteButton,
+                wxEVT_UPDATE_UI,
+                wxObjectEventFunction(&DebugLogPanel::OnUpdateUI));
+        Connect(idDebug_LoadButton,
+                wxEVT_UPDATE_UI,
+                wxObjectEventFunction(&DebugLogPanel::OnUpdateUI));
+        Connect(idDebug_LogEntryControl,
+                wxEVT_UPDATE_UI,
+                wxObjectEventFunction(&DebugLogPanel::OnUpdateUI));
     }
 
     void OnEntryCommand(wxCommandEvent& event)
@@ -524,7 +537,7 @@ public:
         cbDebuggerPlugin *plugin = Manager::Get()->GetDebuggerManager()->GetActiveDebugger();
         if (plugin)
         {
-            plugin->SendCommand(cmd);
+            plugin->SendCommand(cmd, m_debug_log);
 
             if (m_command_entry->FindString(cmd) == wxNOT_FOUND)
                 m_command_entry->Insert(cmd, 0);
@@ -556,18 +569,25 @@ public:
         {
             manager->Write(_T("/file_dialogs/file_run_dbg_script/directory"), dialog.GetDirectory());
 
-            plugin->SendCommand(_T("source ") + dialog.GetPath());
+            plugin->SendCommand(_T("source ") + dialog.GetPath(), m_debug_log);
         }
+    }
+
+    void OnUpdateUI(wxUpdateUIEvent &event)
+    {
+        cbDebuggerPlugin *plugin = Manager::Get()->GetDebuggerManager()->GetActiveDebugger();
+        event.Enable(plugin && plugin->IsRunning() && plugin->IsStopped());
     }
 private:
     DebugTextCtrlLogger *m_text_control_logger;
     wxComboBox  *m_command_entry;
+    bool m_debug_log;
 };
 
 wxWindow* DebugTextCtrlLogger::CreateControl(wxWindow* parent)
 {
     if(!m_panel)
-        m_panel = new DebugLogPanel(parent, this);
+        m_panel = new DebugLogPanel(parent, this, m_debugLog);
 
     return m_panel;
 }
@@ -744,7 +764,7 @@ TextCtrlLogger* DebuggerManager::GetLogger(bool for_debug, int &index)
     {
         if (!m_debugLogger)
         {
-            m_debugLogger = new DebugTextCtrlLogger(true);
+            m_debugLogger = new DebugTextCtrlLogger(true, true);
             m_debugLoggerIndex = msgMan->SetLog(m_debugLogger);
             LogSlot &slot = msgMan->Slot(m_debugLoggerIndex);
 
@@ -764,7 +784,7 @@ TextCtrlLogger* DebuggerManager::GetLogger(bool for_debug, int &index)
     {
         if (!m_logger)
         {
-            m_logger = new DebugTextCtrlLogger(true);
+            m_logger = new DebugTextCtrlLogger(true, false);
             m_loggerIndex = msgMan->SetLog(m_logger);
             LogSlot &slot = msgMan->Slot(m_loggerIndex);
             slot.title = _("Debugger");

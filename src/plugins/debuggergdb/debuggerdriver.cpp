@@ -121,7 +121,7 @@ void DebuggerDriver::RunQueue()
     if (!CurrentCommand()->m_Cmd.IsEmpty())
     {
         m_QueueBusy = true;
-        m_pDBG->SendCommand(CurrentCommand()->m_Cmd);
+        m_pDBG->DoSendCommand(CurrentCommand()->m_Cmd);
         m_ProgramIsStopped = false;
     }
 
