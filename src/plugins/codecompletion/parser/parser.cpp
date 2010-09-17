@@ -41,8 +41,6 @@
     #define TRACE(format, args...)
 #endif
 
-static wxCriticalSection s_ParserCritical;
-
 static const char CACHE_MAGIC[] = "CCCACHE_1_3";
 static const int batch_timer_delay = 300;
 static const int reparse_timer_delay = 100;
@@ -51,25 +49,21 @@ int PARSER_START = wxNewId();
 int PARSER_END = wxNewId();
 int TIMER_ID = wxNewId();
 int BATCH_TIMER_ID = wxNewId();
-int ADD_PARSER_END = wxNewId();
+
+static Parser* s_CurrentParser = 0;
+static wxCriticalSection s_ParseCritical;
 
 BEGIN_EVENT_TABLE(Parser, wxEvtHandler)
-    EVT_MENU(ADD_PARSER_END, Parser::OnAddParseEnd)
 END_EVENT_TABLE()
 
-class AddParseThread : public wxThread
+class AddParseThread : public cbThreadedTask
 {
 public:
     AddParseThread(Parser* parser) : m_Parent(parser)
-    {
-        Create();
-    }
+    {}
 
-    virtual void* Entry()
+    int Execute()
     {
-        if (!m_Parent->m_ParserLocker)
-            m_Parent->m_ParserLocker = new(std::nothrow) wxCriticalSectionLocker(s_ParserCritical);
-
         // Add up-front headers
         m_Parent->m_IsUpFront = true;
         for (size_t i = 0; !TestDestroy() && i < m_Parent->m_UpFrontHeaders.GetCount(); ++i)
@@ -80,12 +74,12 @@ public:
         for (size_t i = 0; !TestDestroy() && i < m_Parent->m_BatchParseFiles.GetCount(); ++i)
             m_Parent->Parse(m_Parent->m_BatchParseFiles[i]);
 
-        m_Parent->m_UpFrontHeaders.Clear();
-        m_Parent->m_BatchParseFiles.Clear();
-        m_Parent->m_IsParsing = true;
-
-        wxCommandEvent evt(wxEVT_COMMAND_MENU_SELECTED, ADD_PARSER_END);
-        wxPostEvent(m_Parent, evt);
+        {
+            wxCriticalSectionLocker locker(s_ParseCritical);
+            m_Parent->m_UpFrontHeaders.Clear();
+            m_Parent->m_BatchParseFiles.Clear();
+            m_Parent->m_IsParsing = true;
+        }
 
         return 0;
     }
@@ -93,8 +87,6 @@ public:
 private:
     Parser* m_Parent;
 };
-
-std::set<Parser*> Parser::sm_ValidParserSet;
 
 Parser::Parser(wxEvtHandler* parent) :
     m_pParent(parent),
@@ -110,11 +102,8 @@ Parser::Parser(wxEvtHandler* parent) :
     m_LastStopWatchTime(0),
     m_IgnoreThreadEvents(false),
     m_IsBatchParseDone(false),
-    m_ParsingType(ptCreateParser),
-    m_AddParseThread(NULL),
-    m_ParserLocker(NULL)
+    m_ParsingType(ptCreateParser)
 {
-    sm_ValidParserSet.insert(this);
     m_pTokensTree = new(std::nothrow) TokensTree;
     m_pTempTokensTree = new(std::nothrow) TokensTree;
     ReadOptions();
@@ -123,35 +112,28 @@ Parser::Parser(wxEvtHandler* parent) :
 
 Parser::~Parser()
 {
-    // 0. Remove pointer from set
-    sm_ValidParserSet.erase(this);
+    // 1. Lock tokens tree
+    wxCriticalSectionLocker locker(s_TokensTreeCritical);
 
-    // 1. Let's OnAllThreadsDone can not process event
-    m_IgnoreThreadEvents = true;
+    // 2. Process event
+    Manager::ProcessPendingEvents();
 
-    // 2. Disconnect events
+    // 3. Disconnect events
     DisconnectEvents();
 
-    // 3. Waitting add parse thread
-    if (m_AddParseThread && m_AddParseThread->IsRunning())
-    {
-        m_AddParseThread->Kill();
-        m_AddParseThread = NULL;
-    }
+    // 4. Let's OnAllThreadsDone can not process event
+    m_IgnoreThreadEvents = true;
 
-    // 4. Abort all thread
+    // 5. Abort all thread
     TerminateAllThreads();
 
-    // 5. Delete parser critical
-    if (m_ParserLocker)
-        Delete(m_ParserLocker);
+    // 6. Reset current parser
+    if (s_CurrentParser == this)
+        s_CurrentParser = NULL;
 
-    // 6. Free all tree
-    {
-        wxCriticalSectionLocker locker(m_TokensTreeCritical);
-        delete m_pTempTokensTree;
-        delete m_pTokensTree;
-    }
+    // 7. Free memory
+    delete m_pTempTokensTree;
+    delete m_pTokensTree;
 }
 
 void Parser::ConnectEvents()
@@ -228,7 +210,7 @@ bool Parser::CacheNeedsUpdate()
 {
     if (m_UsingCache)
     {
-        wxCriticalSectionLocker locker(m_TokensTreeCritical);
+        wxCriticalSectionLocker locker(s_TokensTreeCritical);
         return m_pTokensTree->m_Modified;
     }
     return true;
@@ -236,18 +218,24 @@ bool Parser::CacheNeedsUpdate()
 
 unsigned int Parser::GetFilesCount()
 {
-    wxCriticalSectionLocker locker(m_TokensTreeCritical);
+    wxCriticalSectionLocker locker(s_TokensTreeCritical);
     return m_pTokensTree->m_FilesMap.size();
 }
 
 bool Parser::Done()
 {
-    return !m_AddParseThread && m_PoolTask.empty() && m_Pool.Done();
+    wxCriticalSectionLocker locker(s_ParseCritical);
+    bool done =    m_UpFrontHeaders.IsEmpty()
+                && m_SystemUpFrontHeaders.IsEmpty()
+                && m_BatchParseFiles.IsEmpty()
+                && m_PoolTask.empty()
+                && m_Pool.Done();
+    return done;
 }
 
 Token* Parser::FindTokenByName(const wxString& name, bool globalsOnly, short int kindMask)
 {
-    wxCriticalSectionLocker locker(m_TokensTreeCritical);
+    wxCriticalSectionLocker locker(s_TokensTreeCritical);
     int result = m_pTokensTree->TokenExists(name, -1, kindMask);
     return m_pTokensTree->at(result);
 }
@@ -259,7 +247,7 @@ Token* Parser::FindChildTokenByName(Token* parent, const wxString& name, bool us
 
     Token* result = 0;
     {
-        wxCriticalSectionLocker locker(m_TokensTreeCritical);
+        wxCriticalSectionLocker locker(s_TokensTreeCritical);
         result = m_pTokensTree->at(m_pTokensTree->TokenExists(name, parent->GetSelf(), kindMask));
     }
 
@@ -285,7 +273,7 @@ size_t Parser::FindMatches(const wxString& s, TokenList& result, bool caseSensit
 {
     result.clear();
     TokenIdxSet tmpresult;
-    wxCriticalSectionLocker locker(m_TokensTreeCritical);
+    wxCriticalSectionLocker locker(s_TokensTreeCritical);
     if (!m_pTokensTree->FindMatches(s, tmpresult, caseSensitive, is_prefix))
         return 0;
 
@@ -303,7 +291,7 @@ size_t Parser::FindMatches(const wxString& s, TokenIdxSet& result, bool caseSens
 {
     result.clear();
     TokenIdxSet tmpresult;
-    wxCriticalSectionLocker locker(m_TokensTreeCritical);
+    wxCriticalSectionLocker locker(s_TokensTreeCritical);
     if (!m_pTokensTree->FindMatches(s, tmpresult, caseSensitive, is_prefix))
         return 0;
 
@@ -320,13 +308,13 @@ size_t Parser::FindMatches(const wxString& s, TokenIdxSet& result, bool caseSens
 
 void Parser::LinkInheritance(bool tempsOnly)
 {
-    wxCriticalSectionLocker locker(m_TokensTreeCritical);
+    wxCriticalSectionLocker locker(s_TokensTreeCritical);
     (tempsOnly ? m_pTempTokensTree :  m_pTokensTree)->RecalcData();
 }
 
 void Parser::MarkFileTokensAsLocal(const wxString& filename, bool local, void* userData)
 {
-    wxCriticalSectionLocker locker(m_TokensTreeCritical);
+    wxCriticalSectionLocker locker(s_TokensTreeCritical);
     m_pTokensTree->MarkFileTokensAsLocal(filename, local, userData);
 }
 
@@ -351,6 +339,8 @@ void Parser::PrepareParsing()
 
 void Parser::AddUpFrontHeaders(const wxString& filename, bool systemHeaderFile)
 {
+    wxCriticalSectionLocker locker(s_ParseCritical);
+
     // Do up-front parse in sub thread
     m_UpFrontHeaders.Add(filename);
 
@@ -361,6 +351,8 @@ void Parser::AddUpFrontHeaders(const wxString& filename, bool systemHeaderFile)
 
 void Parser::AddBatchParse(const wxArrayString& filenames)
 {
+    wxCriticalSectionLocker locker(s_ParseCritical);
+
     if (m_BatchParseFiles.IsEmpty())
         m_BatchParseFiles = filenames;
     else
@@ -373,6 +365,7 @@ void Parser::AddBatchParse(const wxArrayString& filenames)
 
 void Parser::AddParse(const wxString& filename)
 {
+    wxCriticalSectionLocker locker(s_ParseCritical);
     m_BatchParseFiles.Add(filename);
 }
 
@@ -406,7 +399,7 @@ bool Parser::Parse(const wxString& bufferOrFilename, bool isLocal, ParserThreadO
     {
         if (!opts.useBuffer)
         {
-            wxCriticalSectionLocker locker(m_TokensTreeCritical);
+            wxCriticalSectionLocker locker(s_TokensTreeCritical);
 
             bool canparse = !m_pTokensTree->IsFileParsed(bufferOrFilename);
             if (canparse)
@@ -449,6 +442,7 @@ bool Parser::Parse(const wxString& bufferOrFilename, bool isLocal, ParserThreadO
             // Add a task for all project files
             if (m_IsFirstBatch)
             {
+                wxCriticalSectionLocker locker(s_ParseCritical);
                 m_IsFirstBatch = false;
                 m_PoolTask.push(PTVector());
             }
@@ -462,7 +456,10 @@ bool Parser::Parse(const wxString& bufferOrFilename, bool isLocal, ParserThreadO
             if (m_IsParsing)
                 m_Pool.AddTask(thread, true);
             else
+            {
+                wxCriticalSectionLocker locker(s_ParseCritical);
                 m_PoolTask.back().push_back(thread);
+            }
         }
         else if (m_IsUpFront)
         {
@@ -476,6 +473,7 @@ bool Parser::Parse(const wxString& bufferOrFilename, bool isLocal, ParserThreadO
             else // Add task when parsing up-front files
             {
                 TRACE(_T("Parse() : Add task for up-front header, %s"), bufferOrFilename.wx_str());
+                wxCriticalSectionLocker locker(s_ParseCritical);
                 m_PoolTask.push(PTVector());
                 m_PoolTask.back().push_back(thread);
             }
@@ -540,7 +538,7 @@ bool Parser::RemoveFile(const wxString& filename)
     bool result = false;
     wxString file = UnixFilename(filename);
     {
-        wxCriticalSectionLocker locker(m_TokensTreeCritical);
+        wxCriticalSectionLocker locker(s_TokensTreeCritical);
         size_t index = m_pTokensTree->GetFileIndex(file);
         result = m_pTokensTree->m_FilesStatus.count(index);
 
@@ -590,7 +588,7 @@ bool Parser::Reparse(const wxString& filename, bool isLocal)
         m_LocalFiles.erase(filename);
 
     {
-        wxCriticalSectionLocker locker(m_TokensTreeCritical);
+        wxCriticalSectionLocker locker(s_TokensTreeCritical);
         m_pTokensTree->FlagFileForReparsing(file);
     }
 
@@ -603,7 +601,7 @@ bool Parser::Reparse(const wxString& filename, bool isLocal)
 bool Parser::ReadFromCache(wxInputStream* f)
 {
     bool result = false;
-    wxCriticalSectionLocker locker(m_TokensTreeCritical);
+    wxCriticalSectionLocker locker(s_TokensTreeCritical);
 
     char CACHE_MAGIC_READ[] = "           ";
     m_pTokensTree->clear(); // Clear data
@@ -712,7 +710,7 @@ bool Parser::ReadFromCache(wxInputStream* f)
 bool Parser::WriteToCache(wxOutputStream* f)
 {
     bool result = false;
-    wxCriticalSectionLocker locker(m_TokensTreeCritical);
+    wxCriticalSectionLocker locker(s_TokensTreeCritical);
 //  Begin saving process
 
     size_t tcount = m_pTokensTree->m_Tokens.size();
@@ -757,7 +755,7 @@ void Parser::TerminateAllThreads()
     m_Pool.AbortAllTasks();
     wxMilliSleep(10);
     while (!m_Pool.Done())
-        wxMilliSleep(20);
+        wxMilliSleep(10);
 
     while (!m_PoolTask.empty())
     {
@@ -869,15 +867,13 @@ void Parser::OnAllThreadsDone(CodeBlocksEvent& event)
     // Finish all task, then we need post a Parse_END event
     else
     {
-        if (m_ParserLocker)
-            Delete(m_ParserLocker);
-
         m_NeedsReparse = false;
         m_IsParsing = false;
         m_IsBatchParseDone = true;
         EndStopWatch();
         ProcessParserEvent(m_ParsingType, PARSER_END);
         m_ParsingType = ptUndefined;
+        s_CurrentParser = NULL;
     }
 }
 
@@ -975,23 +971,35 @@ void Parser::OnTimer(wxTimerEvent& event)
 void Parser::OnBatchTimer(wxTimerEvent& event)
 {
     if (!m_StopWatchRunning)
-    {
         StartStopWatch();
-        ProcessParserEvent(m_ParsingType, PARSER_START);
-    }
 
     // Add parse by child thread
     if (!m_UpFrontHeaders.IsEmpty() || !m_BatchParseFiles.IsEmpty())
     {
-        if (m_AddParseThread && m_AddParseThread->IsRunning())
+        do
         {
-            Manager::Get()->GetLogManager()->DebugLog(_T("The add parse thread existed!"));
-            m_AddParseThread->Kill();
-            m_AddParseThread = NULL;
-        }
+            // Current batch parser is already exists
+            if (s_CurrentParser && s_CurrentParser != this)
+                break;
 
-        m_AddParseThread = new AddParseThread(this);
-        m_AddParseThread->Run();
+            AddParseThread* thread = new(std::nothrow) AddParseThread(this);
+            if (!thread)
+                break;
+
+            // Have not any batch parsing
+            if (!s_CurrentParser)
+            {
+                s_CurrentParser = this;
+                m_StopWatch.Start(); // reset timer
+                ProcessParserEvent(m_ParsingType, PARSER_START);
+            }
+
+            m_Pool.AddTask(thread, true);
+            return;
+        }
+        while (false);
+
+        m_BatchTimer.Start(1000, wxTIMER_ONE_SHOT);
         return;
     }
 
@@ -1019,17 +1027,6 @@ void Parser::OnBatchTimer(wxTimerEvent& event)
     }
 }
 
-void Parser::OnAddParseEnd(wxCommandEvent& event)
-{
-    m_AddParseThread = NULL;
-    if (!Manager::IsAppShuttingDown())
-    {
-        CodeBlocksEvent evt;
-        evt.SetEventObject(this);
-        OnAllThreadsDone(evt);
-    }
-}
-
 bool Parser::ReparseModifiedFiles()
 {
     if (!m_NeedsReparse || !m_Pool.Done())
@@ -1037,7 +1034,7 @@ bool Parser::ReparseModifiedFiles()
 
     std::queue<wxString> files_list;
     {
-        wxCriticalSectionLocker locker(m_TokensTreeCritical);
+        wxCriticalSectionLocker locker(s_TokensTreeCritical);
         TokenFilesSet::iterator it;
 
         // loop two times so that we reparse modified *header* files first
@@ -1087,7 +1084,7 @@ size_t Parser::FindTokensInFile(const wxString& fileName, TokenIdxSet& result, s
     wxString file = UnixFilename(fileName);
     TokenIdxSet tmpresult;
 
-    wxCriticalSectionLocker locker(m_TokensTreeCritical);
+    wxCriticalSectionLocker locker(s_TokensTreeCritical);
     TRACE(_T("Parser::FindTokensInFile() : Searching for file '%s' in tokens tree..."), file.wx_str());
     if ( !m_pTokensTree->FindTokensInFile(file, tmpresult, kindMask) )
         return 0;
@@ -1103,7 +1100,7 @@ size_t Parser::FindTokensInFile(const wxString& fileName, TokenIdxSet& result, s
 
 bool Parser::IsFileParsed(const wxString& filename)
 {
-    wxCriticalSectionLocker locker(m_TokensTreeCritical);
+    wxCriticalSectionLocker locker(s_TokensTreeCritical);
     return m_pTokensTree->IsFileParsed(UnixFilename(filename));
 }
 

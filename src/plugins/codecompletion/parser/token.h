@@ -107,6 +107,8 @@ private:
 class Token;
 class TokensTree;
 
+static wxCriticalSection s_TokensTreeCritical;
+
 enum FileParsingStatus
 {
     fpsNotParsed = 0,

@@ -553,7 +553,6 @@ void NativeParser::ClearParsers()
     for (ParserList::iterator it = m_ParserList.begin(); it != m_ParserList.end(); ++it)
     {
         delete it->second;
-        wxMilliSleep(10);
 
         if (!Manager::IsAppShuttingDown())
         {
@@ -1025,7 +1024,6 @@ bool NativeParser::DeleteParser(cbProject* project)
         SetParser(&m_TempParser);
 
     delete it->second;
-    wxMilliSleep(10);
     m_ParserList.erase(it);
 
     wxString log(F(_("Delete parser for project '%s'!"), project
@@ -1655,6 +1653,7 @@ const wxArrayString& NativeParser::GetCallTips(int chars_per_line)
     int commas = 0;
     wxString lineText;
     cbEditor* ed = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
+    wxCriticalSectionLocker* locker = 0;
     do
     {
         if (!ed || !m_pParser->Done())
@@ -1691,6 +1690,7 @@ const wxArrayString& NativeParser::GetCallTips(int chars_per_line)
 
         TokensTree* tokens = m_pParser->GetTokens();
         tokens->FreeTemporaries();
+        locker = new wxCriticalSectionLocker(s_TokensTreeCritical);
 
         TokenIdxSet search_scope;
         ParseUsingNamespace(&searchData, search_scope);
@@ -1722,6 +1722,9 @@ const wxArrayString& NativeParser::GetCallTips(int chars_per_line)
                 m_CallTips.Add(token->m_ActualType); // typedef'd function pointer
         }
     } while (false);
+
+    if (locker)
+        delete locker;
 
     m_GettingCalltips = false;
     m_CallTipCommas = commas;
@@ -3210,14 +3213,8 @@ void NativeParser::OnParserEnd(wxCommandEvent& event)
 {
     Parser* parser = static_cast<Parser*>(event.GetClientData());
     cbProject* project = GetProjectByParser(parser);
-
-    if (!Parser::IsValidParser(parser))
-    {
-        Manager::Get()->GetLogManager()->DebugLog(_T("OnParserEnd() : this parser should be deleted!"));
-        return;
-    }
-
     const ParsingType type = static_cast<ParsingType>(event.GetInt());
+
     switch (type)
     {
     case ptCreateParser:

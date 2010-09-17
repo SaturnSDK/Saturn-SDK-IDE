@@ -138,8 +138,6 @@ class Parser : public wxEvtHandler
         void StartParsing(bool delay = true);
 
         ParsingType GetParsingType() const { return m_ParsingType; }
-        static bool IsValidParser(Parser* parser)
-        { return sm_ValidParserSet.find(parser) != sm_ValidParserSet.end(); }
 
         bool ParseBuffer(const wxString& buffer, bool isLocal = true, bool bufferSkipBlocks = false, bool isTemp = false);
         bool ParseBufferForFunctions(const wxString& buffer);
@@ -148,8 +146,6 @@ class Parser : public wxEvtHandler
         bool Reparse(const wxString& filename, bool isLocal = true);
         bool AddFile(const wxString& filename, bool isLocal = true);
         bool RemoveFile(const wxString& filename);
-
-        wxCriticalSection& GetTokensTreeCritical() { return m_TokensTreeCritical; }
 
         void ReadOptions();
         void WriteOptions();
@@ -203,7 +199,6 @@ class Parser : public wxEvtHandler
         void OnAllThreadsDone(CodeBlocksEvent& event);
         void OnTimer(wxTimerEvent& event);
         void OnBatchTimer(wxTimerEvent& event);
-        void OnAddParseEnd(wxCommandEvent& event);
 
         void ProcessParserEvent(ParsingType type, int id, const wxString& info = wxEmptyString);
 
@@ -246,11 +241,6 @@ class Parser : public wxEvtHandler
         wxArrayString                  m_BatchParseFiles;       // All other batch parse files
         bool                           m_IsBatchParseDone;
         ParsingType                    m_ParsingType;
-
-        wxCriticalSection              m_TokensTreeCritical;
-        wxThread*                      m_AddParseThread;
-        wxCriticalSectionLocker*       m_ParserLocker;
-        static std::set<Parser*>       sm_ValidParserSet;
 
         DECLARE_EVENT_TABLE()
 };

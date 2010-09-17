@@ -357,7 +357,7 @@ CodeCompletion::~CodeCompletion()
     {
         SystemHeadersThread* thread = m_SystemHeadersThread.front();
         if (thread->IsRunning())
-            thread->Kill();
+            thread->Delete();
         m_SystemHeadersThread.pop_front();
     }
 }

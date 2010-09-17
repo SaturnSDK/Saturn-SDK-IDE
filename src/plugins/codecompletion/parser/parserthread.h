@@ -243,7 +243,7 @@ class ParserThread : public cbThreadedTask
         Token* TokenExists(const wxString& name, Token* parent = 0, short int kindMask = 0xFFFF);
 
         /** Before call this function, *MUST* add a locker
-          * e.g. wxCriticalSectionLocker locker(m_pParent->GetTokensTreeCritical());
+          * e.g. wxCriticalSectionLocker locker(s_TokensTreeCritical);
           */
         Token* FindTokenFromQueue(std::queue<wxString>& q,
                                   Token* parent = 0,

@@ -430,8 +430,9 @@ bool ParserThread::Parse()
 
         if (!m_Options.useBuffer) // Parse a file
         {
-            wxCriticalSectionLocker locker(m_pParent->GetTokensTreeCritical());
+            s_TokensTreeCritical.Enter();
             m_FileIdx = m_pTokensTree->ReserveFileForParsing(m_Filename);
+            s_TokensTreeCritical.Leave();
             if (!m_FileIdx)
                 break;
         }
@@ -440,8 +441,9 @@ bool ParserThread::Parse()
 
         if (!m_Options.useBuffer) // Parsing a file
         {
-            wxCriticalSectionLocker locker(m_pParent->GetTokensTreeCritical());
+            s_TokensTreeCritical.Enter();
             m_pTokensTree->FlagFileAsParsed(m_Filename);
+            s_TokensTreeCritical.Leave();
         }
 
         result = true;
@@ -1042,7 +1044,7 @@ wxString ParserThread::GetActualTokenType()
 }
 
 // Before call this function, *MUST* add a locker
-// e.g. wxCriticalSectionLocker locker(m_pParent->GetTokensTreeCritical());
+// e.g. wxCriticalSectionLocker locker(s_TokensTreeCritical);
 Token* ParserThread::FindTokenFromQueue(std::queue<wxString>& q, Token* parent, bool createIfNotExist,
                                         Token* parentIfCreated)
 {
@@ -1104,7 +1106,7 @@ Token* ParserThread::DoAddToken(TokenKind kind,
     if (name.IsEmpty())
         return 0; // oops!
 
-    wxCriticalSectionLocker locker(m_pParent->GetTokensTreeCritical());
+    s_TokensTreeCritical.Enter();
 
     Token* newToken = 0;
     wxString newname(name);
@@ -1250,6 +1252,7 @@ Token* ParserThread::DoAddToken(TokenKind kind,
     while (!m_EncounteredNamespaces.empty())
         m_EncounteredNamespaces.pop();
 
+    s_TokensTreeCritical.Leave();
     return newToken;
 }
 
@@ -1317,7 +1320,7 @@ void ParserThread::HandleIncludes()
                 break; // File not found, do nothing.
 
             {
-                wxCriticalSectionLocker locker(m_pParent->GetTokensTreeCritical());
+                wxCriticalSectionLocker locker(s_TokensTreeCritical);
                 if (m_pTokensTree->IsFileParsed(real_filename))
                     break; // Already being parsed elsewhere
             }
