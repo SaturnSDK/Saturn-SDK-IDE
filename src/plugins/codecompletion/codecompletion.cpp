@@ -2196,6 +2196,13 @@ void CodeCompletion::OnEditorActivated(CodeBlocksEvent& event)
         if (!editor || editor->GetFilename().IsEmpty())
             return;
 
+        if (   !m_LastFile.IsEmpty()
+            && m_LastFile != g_StartHereTitle
+            && m_LastFile == editor->GetFilename() )
+        {
+            return;
+        }
+
         m_NativeParser.OnEditorActivated(editor);
 
         if (m_TimerFunctionsParsing.IsRunning())
@@ -2881,7 +2888,8 @@ void CodeCompletion::EditorEventHook(cbEditor* editor, wxScintillaEvent& event)
 
         if (event.GetEventType() == wxEVT_SCI_UPDATEUI)
         {
-            m_TimerToolbar.Stop();
+            if (m_TimerToolbar.IsRunning())
+                m_TimerToolbar.Stop();
             m_TimerToolbar.Start(EDITOR_AND_LINE_INTERVAL, wxTIMER_ONE_SHOT);
         }
     }
