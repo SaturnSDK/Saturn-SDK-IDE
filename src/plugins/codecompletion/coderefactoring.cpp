@@ -115,6 +115,8 @@ size_t CodeRefactoring::SearchInFiles(cbProject* project, const wxString& target
             for (int i = 0; i < project->GetFilesCount(); ++i)
             {
                 ProjectFile* pf = project->GetFile(i);
+                if (!pf)
+                    continue;
                 FileType ft = CCFileTypeOf(pf->relativeFilename);
                 if (ft != ftOther)
                     files.Add(pf->file.GetFullPath());

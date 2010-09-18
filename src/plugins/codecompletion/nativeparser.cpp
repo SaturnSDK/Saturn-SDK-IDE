@@ -1173,6 +1173,8 @@ bool NativeParser::StartCompleteParsing(cbProject* project, Parser* parser)
     for (int i = 0; project && i < project->GetFilesCount(); ++i)
     {
         ProjectFile* pf = project->GetFile(i);
+        if (!pf)
+            continue;
         FileType ft = CCFileTypeOf(pf->relativeFilename);
         if (ft == ftHeader) // parse header files
         {
@@ -3215,6 +3217,12 @@ void NativeParser::OnParserEnd(wxCommandEvent& event)
     cbProject* project = GetProjectByParser(parser);
     const ParsingType type = static_cast<ParsingType>(event.GetInt());
 
+    if (!Parser::IsValidParser(parser))
+    {
+        Manager::Get()->GetLogManager()->DebugLog(_T("OnParserEnd() : this parser should be deleted!"));
+        return;
+    }
+
     switch (type)
     {
     case ptCreateParser:
@@ -3274,9 +3282,12 @@ void NativeParser::OnParserEnd(wxCommandEvent& event)
     if (   project
         && (type == ptCreateParser || type == ptAddFileToParser) )
     {
+        wxCriticalSectionLocker locker(s_TokensTreeCritical);
         for (int i = 0; i < project->GetFilesCount(); ++i)
         {
             ProjectFile* pf = project->GetFile(i);
+            if (!pf)
+                continue;
             if (CCFileTypeOf(pf->relativeFilename) != ftOther)
                 parser->MarkFileTokensAsLocal(pf->file.GetFullPath(), true, project);
         }

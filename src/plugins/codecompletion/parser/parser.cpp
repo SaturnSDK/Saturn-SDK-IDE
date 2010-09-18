@@ -88,6 +88,8 @@ private:
     Parser* m_Parent;
 };
 
+std::set<Parser*> Parser::sm_ValidParserSet;
+
 Parser::Parser(wxEvtHandler* parent) :
     m_pParent(parent),
     m_UsingCache(false),
@@ -104,6 +106,7 @@ Parser::Parser(wxEvtHandler* parent) :
     m_IsBatchParseDone(false),
     m_ParsingType(ptCreateParser)
 {
+    sm_ValidParserSet.insert(this);
     m_pTokensTree = new(std::nothrow) TokensTree;
     m_pTempTokensTree = new(std::nothrow) TokensTree;
     ReadOptions();
@@ -112,28 +115,35 @@ Parser::Parser(wxEvtHandler* parent) :
 
 Parser::~Parser()
 {
-    // 1. Lock tokens tree
-    wxCriticalSectionLocker locker(s_TokensTreeCritical);
+    // 1. Remove this pointer from set
+    sm_ValidParserSet.erase(this);
 
     // 2. Process event
     Manager::ProcessPendingEvents();
 
-    // 3. Disconnect events
+    // 3. Lock tokens tree
+    wxCriticalSectionLocker locker(s_TokensTreeCritical);
+
+    // 4. Disconnect events
     DisconnectEvents();
 
-    // 4. Let's OnAllThreadsDone can not process event
+    // 5. Let's OnAllThreadsDone can not process event
     m_IgnoreThreadEvents = true;
 
-    // 5. Abort all thread
+    // 6. Abort all thread
     TerminateAllThreads();
 
-    // 6. Reset current parser
+    // 7. Reset current parser
     if (s_CurrentParser == this)
         s_CurrentParser = NULL;
 
-    // 7. Free memory
+    // 8. Free memory
     delete m_pTempTokensTree;
     delete m_pTokensTree;
+
+#ifdef __WXMSW_
+    SetProcessWorkingSetSize(GetCurrentProcess(), -1, -1);
+#endif
 }
 
 void Parser::ConnectEvents()
@@ -314,7 +324,6 @@ void Parser::LinkInheritance(bool tempsOnly)
 
 void Parser::MarkFileTokensAsLocal(const wxString& filename, bool local, void* userData)
 {
-    wxCriticalSectionLocker locker(s_TokensTreeCritical);
     m_pTokensTree->MarkFileTokensAsLocal(filename, local, userData);
 }
 

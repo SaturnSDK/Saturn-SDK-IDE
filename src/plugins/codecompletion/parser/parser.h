@@ -138,6 +138,8 @@ class Parser : public wxEvtHandler
         void StartParsing(bool delay = true);
 
         ParsingType GetParsingType() const { return m_ParsingType; }
+        static bool IsValidParser(Parser* parser)
+        { return sm_ValidParserSet.find(parser) != sm_ValidParserSet.end(); }
 
         bool ParseBuffer(const wxString& buffer, bool isLocal = true, bool bufferSkipBlocks = false, bool isTemp = false);
         bool ParseBufferForFunctions(const wxString& buffer);
@@ -181,6 +183,10 @@ class Parser : public wxEvtHandler
 
         bool Done();
         void LinkInheritance(bool tempsOnly = false);
+
+        /** Before call this function, *MUST* add a locker
+          * e.g. wxCriticalSectionLocker locker(s_TokensTreeCritical);
+          */
         void MarkFileTokensAsLocal(const wxString& filename, bool local, void* userData = 0);
 
         unsigned int GetMaxThreads() const { return m_Pool.GetConcurrentThreads(); }
@@ -241,6 +247,8 @@ class Parser : public wxEvtHandler
         wxArrayString                  m_BatchParseFiles;       // All other batch parse files
         bool                           m_IsBatchParseDone;
         ParsingType                    m_ParsingType;
+
+        static std::set<Parser*>       sm_ValidParserSet;
 
         DECLARE_EVENT_TABLE()
 };
