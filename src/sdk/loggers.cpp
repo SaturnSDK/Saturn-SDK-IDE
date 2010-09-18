@@ -11,6 +11,7 @@
 #ifndef CB_PRECOMP
     #include <wx/listctrl.h>
     #include <wx/textctrl.h>
+    #include <wx/settings.h>
     #include "cbexception.h"
     #include "manager.h"
     #include "configmanager.h"
@@ -103,7 +104,6 @@ void TextCtrlLogger::UpdateSettings()
 
     style[success].SetTextColour(BlendTextColour(*wxBLUE));
 
-    style[warning].SetTextColour(BlendTextColour(*wxBLUE));
     style[warning].SetFont(italic_font);
 
     style[error].SetFont(bold_font);
