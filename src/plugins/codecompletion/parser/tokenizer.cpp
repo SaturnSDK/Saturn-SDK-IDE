@@ -55,7 +55,7 @@ namespace TokenizerConsts
 wxStringHashMap Tokenizer::s_Replacements;
 
 Tokenizer::Tokenizer(TokensTree* tokensTree, const wxString& filename) :
-    m_pTokensTree(tokensTree),
+    m_TokensTree(tokensTree),
     m_Filename(filename),
     m_BufferLen(0),
     m_TokenIndex(0),
@@ -72,7 +72,7 @@ Tokenizer::Tokenizer(TokensTree* tokensTree, const wxString& filename) :
     m_IsOK(false),
     m_IsOperator(false),
     m_State(tsSkipUnWanted),
-    m_pLoader(0),
+    m_Loader(0),
     m_IsReplaceParsing(false),
     m_ReplaceTokenIndex(0)
 {
@@ -87,7 +87,7 @@ Tokenizer::~Tokenizer()
 
 bool Tokenizer::Init(const wxString& filename, LoaderBase* loader)
 {
-    m_pLoader = loader;
+    m_Loader = loader;
     BaseInit();
     if (filename.IsEmpty())
     {
@@ -161,11 +161,11 @@ bool Tokenizer::ReadFile()
 {
     bool success = false;
     wxString fileName = wxEmptyString;
-    if (m_pLoader)
+    if (m_Loader)
     {
-        fileName = m_pLoader->FileName();
-        char* data  = m_pLoader->GetData();
-        m_BufferLen = m_pLoader->GetLength();
+        fileName = m_Loader->FileName();
+        char* data  = m_Loader->GetData();
+        m_BufferLen = m_Loader->GetLength();
 
         // the following code is faster than DetectEncodingAndConvert()
 //        DetectEncodingAndConvert(data, m_Buffer);
@@ -1082,10 +1082,10 @@ void Tokenizer::MacroReplace(wxString& str)
     if (   m_IsReplaceParsing
         && m_ReplacedPreprocessor.find(str) == m_ReplacedPreprocessor.end() )
     {
-        const int id = m_pTokensTree->TokenExists(str, -1, tkPreprocessor);
+        const int id = m_TokensTree->TokenExists(str, -1, tkPreprocessor);
         if (id != -1)
         {
-            Token* tk = m_pTokensTree->at(id);
+            Token* tk = m_TokensTree->at(id);
             if (tk)
             {
                 m_ReplacedPreprocessor.insert(str);
@@ -1180,10 +1180,10 @@ bool Tokenizer::CalcConditionExpression()
 
         if (token.Len() > 1 && !wxIsdigit(token[0]))
         {
-            const int id = m_pTokensTree->TokenExists(token, -1, tkPreprocessor);
+            const int id = m_TokensTree->TokenExists(token, -1, tkPreprocessor);
             if (id != -1)
             {
-                Token* tk = m_pTokensTree->at(id);
+                Token* tk = m_TokensTree->at(id);
                 if (tk)
                 {
                     if (tk->m_Type.IsEmpty() || tk->m_Type == token)
@@ -1245,7 +1245,7 @@ bool Tokenizer::IsMacroDefined()
 {
     while (SkipWhiteSpace() || SkipComment())
         ;
-    int id = m_pTokensTree->TokenExists(DoGetToken(), -1, tkPreprocessor);
+    int id = m_TokensTree->TokenExists(DoGetToken(), -1, tkPreprocessor);
     SkipToEOL(false);
     return (id != -1);
 }

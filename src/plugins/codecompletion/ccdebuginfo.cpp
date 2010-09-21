@@ -377,7 +377,7 @@ void CCDebugInfo::DisplayTokenInfo()
         txtImplFile->SetLabel(wxString::Format(_("%s : %d (code lines: %d to %d)"), m_pToken->GetImplFilename().c_str(), m_pToken->m_ImplLine, m_pToken->m_ImplLineStart, m_pToken->m_ImplLineEnd));
     else
         txtImplFile->SetLabel(wxEmptyString);
-    txtUserData->SetLabel(wxString::Format(_T("0x%p"), m_pToken->m_pUserData));
+    txtUserData->SetLabel(wxString::Format(_T("0x%p"), m_pToken->m_UserData));
 }
 
 void CCDebugInfo::FillChildren()

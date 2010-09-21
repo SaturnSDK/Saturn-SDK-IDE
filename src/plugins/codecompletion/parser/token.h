@@ -187,7 +187,7 @@ class Token
         int GetSelf()         { return m_Self; } // current index in the tree
         wxString GetParentName();
         Token* GetParentToken();
-        TokensTree* GetTree() { return m_pTree; }
+        TokensTree* GetTree() { return m_TokensTree; }
         bool IsValidAncestor(const wxString& ancestor);
 
         wxString      m_Type;       // this is the return value (if any): e.g. const wxString&
@@ -222,10 +222,10 @@ class Token
         map<wxString, wxString>
                       m_TemplateMap;
         wxString      m_TemplateAlias; // alias for templates, e.g. template T1 T2;
-        void*         m_pUserData; // custom user-data (the classbrowser expects it to be a pointer to a cbProject)
+        void*         m_UserData; // custom user-data (the classbrowser expects it to be a pointer to a cbProject)
 
     protected:
-        TokensTree*   m_pTree;
+        TokensTree*   m_TokensTree;
         int           m_Self; // current index in the tree
         size_t        m_Ticket;
 };

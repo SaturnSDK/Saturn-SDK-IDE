@@ -29,7 +29,7 @@ wxString CodeRefactoring::GetSymbolUnderCursor()
     if (!editor)
         return wxEmptyString;
 
-    if (!m_NativeParser.GetParser()->Done())
+    if (!m_NativeParser.GetParser().Done())
     {
         cbMessageBox(_("C++ Parser is still parsing files..."), _("Code Refactoring"), wxOK | wxICON_WARNING);
         return wxEmptyString;
@@ -52,7 +52,7 @@ bool CodeRefactoring::Parse()
         return false;
 
     TokenIdxSet targetResult;
-    m_NativeParser.MarkItemsByAI(targetResult, m_NativeParser.GetParser()->Options().useSmartSense);
+    m_NativeParser.MarkItemsByAI(targetResult, m_NativeParser.GetParser().Options().useSmartSense);
     m_NativeParser.RemoveInvalid(targetResult, targetText);
     if (targetResult.empty())
     {
@@ -225,7 +225,7 @@ size_t CodeRefactoring::VerifyResult(cbProject* project, const TokenIdxSet& targ
             // we *must* goto pos as "void T|est(..."
             control->GotoPos(itList->pos + 1);
 
-            m_NativeParser.MarkItemsByAI(&searchData, result, m_NativeParser.GetParser()->Options().useSmartSense);
+            m_NativeParser.MarkItemsByAI(&searchData, result, m_NativeParser.GetParser().Options().useSmartSense);
             m_NativeParser.RemoveInvalid(result, targetText);
 
             TokenIdxSet::iterator intersect = std::find_first_of(targetResult.begin(), targetResult.end(),

@@ -29,8 +29,8 @@ enum SpecialFolder
 class CBTreeData : public wxTreeItemData
 {
     public:
-        CBTreeData(SpecialFolder sf = sfToken, Token* token = 0, short int kindMask = 0xffff, int parentIdx = -1)
-            : m_pToken(token),
+        CBTreeData(SpecialFolder sf = sfToken, Token* token = 0, short int kindMask = 0xffff, int parentIdx = -1) :
+            m_Token(token),
             m_KindMask(kindMask),
             m_SpecialFolder(sf),
             m_TokenIndex(token ? token->GetSelf() : -1),
@@ -40,13 +40,13 @@ class CBTreeData : public wxTreeItemData
             m_Ticket(token ? token->GetTicket() : 0)
         {
         }
-        Token* m_pToken;
-        short int m_KindMask;
+        Token*        m_Token;
+        short int     m_KindMask;
         SpecialFolder m_SpecialFolder;
-        int m_TokenIndex;
-        TokenKind m_TokenKind;
-        wxString m_TokenName;
-        int m_ParentIndex;
+        int           m_TokenIndex;
+        TokenKind     m_TokenKind;
+        wxString      m_TokenName;
+        int           m_ParentIndex;
         unsigned long m_Ticket;
 };
 
@@ -116,23 +116,21 @@ class ClassBrowserBuilderThread : public wxThread
         bool CreateSpecialFolders(CBTreeCtrl* tree, wxTreeItemId parent);
         void ExpandNamespaces(wxTreeItemId node);
 
-        wxSemaphore& m_Semaphore;
-        NativeParser* m_pNativeParser;
-        CBTreeCtrl* m_pTreeTop;
-        CBTreeCtrl* m_pTreeBottom;
-        wxString m_ActiveFilename;
-        void* m_pUserData; // active project
-        BrowserOptions m_Options;
-        TokensTree* m_pTokensTree;
-        ClassBrowserBuilderThread** m_ppThreadVar;
+        wxSemaphore&                m_Semaphore;
+        NativeParser*               m_NativeParser;
+        CBTreeCtrl*                 m_TreeTop;
+        CBTreeCtrl*                 m_TreeBottom;
+        wxString                    m_ActiveFilename;
+        void*                       m_UserData; // active project
+        BrowserOptions              m_Options;
+        TokensTree*                 m_TokensTree;
+        ClassBrowserBuilderThread** m_ThreadVar;
 
         // pair of current-file-filter
-        TokenFilesSet m_CurrentFileSet;
-        TokenIdxSet m_CurrentTokenSet;
-        TokenIdxSet m_CurrentGlobalTokensSet;
-
-
-        wxMutex m_BuildMutex;
+        TokenFilesSet               m_CurrentFileSet;
+        TokenIdxSet                 m_CurrentTokenSet;
+        TokenIdxSet                 m_CurrentGlobalTokensSet;
+        wxMutex                     m_BuildMutex;
     private:
         void SaveExpandedItems(CBTreeCtrl* tree, wxTreeItemId parent, int level);
         void ExpandSavedItems(CBTreeCtrl* tree, wxTreeItemId parent, int level);

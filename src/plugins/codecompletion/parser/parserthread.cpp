@@ -415,6 +415,8 @@ bool ParserThread::InitTokenizer()
 
 bool ParserThread::Parse()
 {
+    wxCriticalSectionLocker locker(s_ParserThreadCritical);
+
     if (TestDestroy() || !InitTokenizer())
         return false;
 
@@ -430,9 +432,8 @@ bool ParserThread::Parse()
 
         if (!m_Options.useBuffer) // Parse a file
         {
-            s_TokensTreeCritical.Enter();
+            wxCriticalSectionLocker locker(s_TokensTreeCritical);
             m_FileIdx = m_pTokensTree->ReserveFileForParsing(m_Filename);
-            s_TokensTreeCritical.Leave();
             if (!m_FileIdx)
                 break;
         }
@@ -441,9 +442,8 @@ bool ParserThread::Parse()
 
         if (!m_Options.useBuffer) // Parsing a file
         {
-            s_TokensTreeCritical.Enter();
+            wxCriticalSectionLocker locker(s_TokensTreeCritical);
             m_pTokensTree->FlagFileAsParsed(m_Filename);
-            s_TokensTreeCritical.Leave();
         }
 
         result = true;
@@ -1106,7 +1106,7 @@ Token* ParserThread::DoAddToken(TokenKind kind,
     if (name.IsEmpty())
         return 0; // oops!
 
-    s_TokensTreeCritical.Enter();
+    wxCriticalSectionLocker locker(s_TokensTreeCritical);
 
     Token* newToken = 0;
     wxString newname(name);
@@ -1252,7 +1252,6 @@ Token* ParserThread::DoAddToken(TokenKind kind,
     while (!m_EncounteredNamespaces.empty())
         m_EncounteredNamespaces.pop();
 
-    s_TokensTreeCritical.Leave();
     return newToken;
 }
 
@@ -1326,7 +1325,13 @@ void ParserThread::HandleIncludes()
             }
 
             TRACE(F(_T("HandleIncludes() : Adding include file '%s'"), real_filename.wx_str()));
+
+            wxCriticalSectionLocker* locker = NULL;
+            if (m_pParent->m_IsParsing)
+                locker = new wxCriticalSectionLocker(s_ParserCritical);
             m_pParent->DoParseFile(real_filename, isGlobal);
+            if (locker)
+                delete locker;
         }
         while (false);
     }

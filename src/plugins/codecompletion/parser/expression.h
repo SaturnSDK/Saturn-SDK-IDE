@@ -63,10 +63,10 @@ public:
     static bool IsBinaryOperator(wxString first, wxString second);
 
 private:
-    wxString m_Token;
+    wxString           m_Token;
     ExpressionNodeType m_Type;
-    bool m_UnaryOperator;
-    long m_Priority;
+    bool               m_UnaryOperator;
+    long               m_Priority;
 };
 
 class Expression
@@ -85,13 +85,12 @@ private:
 
 private:
     typedef std::vector<ExpressionNode> PostfixVector;
-    PostfixVector m_PostfixExpression;
-
     typedef std::vector<wxString> InfixVector;
-    InfixVector m_InfixExpression;
 
-    bool m_Result;
-    bool m_Status;
+    PostfixVector m_PostfixExpression;
+    InfixVector   m_InfixExpression;
+    bool          m_Result;
+    bool          m_Status;
 };
 
 #endif // EXPRESSION_H

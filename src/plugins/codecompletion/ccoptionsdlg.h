@@ -35,9 +35,9 @@ class CCOptionsDlg : public cbConfigurationPanel
 	private:
 		void UpdateSliderLabel();
 		bool ValidateReplacementToken(wxString& from, wxString& to);
-		Parser m_Parser;
-		NativeParser* m_pNativeParsers;
-		CodeCompletion* m_pCodeCompletion;
+		NativeParser* m_NativeParsers;
+		CodeCompletion* m_CodeCompletion;
+		Parser& m_Parser;
 		DECLARE_EVENT_TABLE()
 };
 

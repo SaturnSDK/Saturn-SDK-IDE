@@ -45,8 +45,8 @@ private:
     bool Parse();
 
 private:
-    NativeParser&           m_NativeParser;
-    SearchDataMap           m_SearchDataMap;
+    NativeParser& m_NativeParser;
+    SearchDataMap m_SearchDataMap;
 };
 
 #endif // CODEREFACTORING_H

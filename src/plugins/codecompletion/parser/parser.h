@@ -122,13 +122,15 @@ enum ParsingType
     ptUndefined         = 4,
 };
 
+static wxCriticalSection s_ParserCritical;
+
 class Parser : public wxEvtHandler
 {
     friend class ParserThread;
     friend class AddParseThread;
 
     public:
-        Parser(wxEvtHandler* parent);
+        Parser(wxEvtHandler* parent, cbProject* project);
         ~Parser();
 
         void PrepareParsing();
@@ -138,6 +140,7 @@ class Parser : public wxEvtHandler
         void StartParsing(bool delay = true);
 
         ParsingType GetParsingType() const { return m_ParsingType; }
+        cbProject* GetParsingProject() const { return m_Project; }
         static bool IsValidParser(Parser* parser)
         { return sm_ValidParserSet.find(parser) != sm_ValidParserSet.end(); }
 
@@ -158,8 +161,6 @@ class Parser : public wxEvtHandler
 
         void StartStopWatch();
         void EndStopWatch();
-        long EllapsedTime();
-        long LastParseTime();
 
         Token* FindTokenByName(const wxString& name, bool globalsOnly = true, short int kindMask = 0xFFFF);
         Token* FindChildTokenByName(Token* parent, const wxString& name, bool useInheritance = false, short int kindMask = 0xFFFF);
@@ -171,14 +172,14 @@ class Parser : public wxEvtHandler
 
         void ClearIncludeDirs() { m_IncludeDirs.Clear(); }
         void AddIncludeDir(const wxString& dir);
-        void AddPredefinedMacros(const wxString& defs, bool isLocal);
+        void AddPredefinedMacros(const wxString& defs);
         const wxArrayString& GetIncludeDirs() const { return m_IncludeDirs; }
         wxString GetFullFileName(const wxString& src, const wxString& tgt, bool isGlobal);
         wxString FindFirstFileInIncludeDirs(const wxString& file);
         wxArrayString FindFileInIncludeDirs(const wxString& file, bool firstonly = false);
 
-        TokensTree* GetTokens(){ return m_pTokensTree; }
-        TokensTree* GetTempTokens() { return m_pTempTokensTree; }
+        TokensTree* GetTokens(){ return m_TokensTree; }
+        TokensTree* GetTempTokens() { return m_TempTokensTree; }
         unsigned int GetFilesCount();
 
         bool Done();
@@ -216,7 +217,8 @@ class Parser : public wxEvtHandler
         BrowserOptions                 m_BrowserOptions;
         SearchTree<wxString>           m_GlobalIncludes;
         wxArrayString                  m_IncludeDirs;
-        wxEvtHandler*                  m_pParent;
+        wxEvtHandler*                  m_Parent;
+        cbProject*                     m_Project;
 
     protected:
         // the following three members are used to detect changes between
@@ -227,8 +229,8 @@ class Parser : public wxEvtHandler
         std::queue<PTVector>           m_PoolTask; // Do task one by one!
         cbThreadPool                   m_Pool;
         bool                           m_IsUpFront;
-        TokensTree*                    m_pTokensTree;
-        TokensTree*                    m_pTempTokensTree;
+        TokensTree*                    m_TokensTree;
+        TokensTree*                    m_TempTokensTree;
         set<wxString, less<wxString> > m_LocalFiles;
         bool                           m_NeedsReparse;
         bool                           m_IsFirstBatch;
@@ -245,8 +247,10 @@ class Parser : public wxEvtHandler
         wxArrayString                  m_UpFrontHeaders;        // All up-front headers
         wxArrayString                  m_SystemUpFrontHeaders;  // Only system up-front headers, for reparse
         wxArrayString                  m_BatchParseFiles;       // All other batch parse files
+        wxString                       m_PredefinedMacros;      // Pre-defined macros
         bool                           m_IsBatchParseDone;
         ParsingType                    m_ParsingType;
+        bool                           m_NeedMarkFileAsLocal;
 
         static std::set<Parser*>       sm_ValidParserSet;
 

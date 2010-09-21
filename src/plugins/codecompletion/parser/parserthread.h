@@ -23,6 +23,8 @@
 extern int NEW_TOKEN;
 extern int FILE_NEEDS_PARSING;
 
+static wxCriticalSection s_ParserThreadCritical;
+
 struct NameSpace
 {
 	wxString Name;

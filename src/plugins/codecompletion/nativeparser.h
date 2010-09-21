@@ -73,8 +73,8 @@ class NativeParser : public wxEvtHandler
         NativeParser();
         ~NativeParser();
 
-        // Return value is *ALWAYS* valid, without checking
-        Parser* GetParser() const { return m_pParser; }
+        Parser& GetParser() { return *m_Parser; }
+        Parser& GetTempParser() { return m_TempParser; }
 
         Parser* GetParserByProject(cbProject* project);
         Parser* GetParserByFilename(const wxString& filename);
@@ -83,7 +83,7 @@ class NativeParser : public wxEvtHandler
 
         bool Done();
 
-        wxImageList* GetImageList() { return m_pImageList; }
+        wxImageList* GetImageList() { return m_ImageList; }
         int GetTokenKindImage(Token* token);
         void SetTokenKindImage(int kind, const wxBitmap& bitmap, const wxBitmap& mask = wxNullBitmap);
         void SetTokenKindImage(int kind, const wxBitmap& bitmap, const wxColour& maskColour);
@@ -125,7 +125,7 @@ class NativeParser : public wxEvtHandler
         // fills the result argument with all the tokens matching the current function (hopefully, just one)
         size_t FindCurrentFunctionToken(ccSearchData* searchData, TokenIdxSet& result, int caretPos = -1);
 
-        ClassBrowser* GetClassBrowser() const { return m_pClassBrowser; }
+        ClassBrowser* GetClassBrowser() const { return m_ClassBrowser; }
         void CreateClassBrowser();
         void RemoveClassBrowser(bool appShutDown = false);
         void UpdateClassBrowser();
@@ -139,7 +139,7 @@ class NativeParser : public wxEvtHandler
         void SetParser(Parser* parser);
         void ClearParsers();
         void RemoveObsoleteParsers();
-        std::pair<cbProject*, Parser*> GetProjectParserByActivedEditor();
+        std::pair<cbProject*, Parser*> GetActiveProjectParser();
 
     private:
         friend class CodeCompletion;
@@ -194,33 +194,37 @@ class NativeParser : public wxEvtHandler
         void AddTemplateAlias(const int& actualTypeResult, const TokenIdxSet& actualTypeScope, TokenIdxSet& initialScope, TokensTree* tree);
         void ResolveTemplateMap(const wxString& searchStr, const TokenIdxSet& actualTypeScope, TokenIdxSet& initialScope);
         void ResolveOpeartor(const OperatorType& tokenOperatorType, const TokenIdxSet& tokens, TokensTree* tree, const TokenIdxSet& searchScope, TokenIdxSet& result);
+
+    private:
         typedef std::pair<cbProject*, Parser*> ParserPair;
         typedef std::list<ParserPair> ParserList;
-        ParserList           m_ParserList;
 
-        Parser               m_TempParser;
-        Parser*              m_pParser;
-        int                  m_EditorStartWord;
-        int                  m_EditorEndWord;
-        wxTimer              m_TimerEditorActivated;
-        wxString             m_CCItems;
-        wxArrayString        m_CallTips;
-        int                  m_CallTipCommas;
-        ClassBrowser*        m_pClassBrowser;
-        bool                 m_GettingCalltips; // flag while getting calltips
-        bool                 m_ClassBrowserIsFloating;
+        ParserList              m_ParserList;
 
-        bool                 m_LastAISearchWasGlobal; // true if the phrase for code-completion is empty or partial text (i.e. no . -> or :: operators)
-        wxString             m_LastAIGlobalSearch; // same case like above, it holds the search string
+        Parser                  m_TempParser;
+        Parser*                 m_Parser;
+        int                     m_EditorStartWord;
+        int                     m_EditorEndWord;
+        wxTimer                 m_TimerEditorActivated;
+        wxString                m_CCItems;
+        wxArrayString           m_CallTips;
+        int                     m_CallTipCommas;
+        ClassBrowser*           m_ClassBrowser;
+        bool                    m_GettingCalltips; // flag while getting calltips
+        bool                    m_ClassBrowserIsFloating;
 
-        ProjectSearchDirsMap m_ProjectSearchDirsMap;
-        int                  m_HookId; // project loader hook ID
-        wxArrayString        m_StandaloneFiles;
+        bool                    m_LastAISearchWasGlobal; // true if the phrase for code-completion is empty or partial text (i.e. no . -> or :: operators)
+        wxString                m_LastAIGlobalSearch; // same case like above, it holds the search string
 
-        wxImageList*         m_pImageList;
-        wxString             m_LastActivatedFile;
+        ProjectSearchDirsMap    m_ProjectSearchDirsMap;
+        int                     m_HookId; // project loader hook ID
+        wxArrayString           m_StandaloneFiles;
+
+        wxImageList*            m_ImageList;
+        wxString                m_LastActivatedFile;
 
         map<wxString, wxString> m_TemplateMap;
+
         DECLARE_EVENT_TABLE()
 };
 

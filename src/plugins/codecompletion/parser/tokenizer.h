@@ -95,7 +95,7 @@ public:
     Tokenizer(const wxString& filename = wxEmptyString);
     Tokenizer(TokensTree* tokensTree, const wxString& filename = wxEmptyString);
 
-    /** ParserThread destructor.*/
+    /** Tokenizer destructor.*/
     ~Tokenizer();
 
     /** Initialize the buffer by opening a file through a loader. */
@@ -417,45 +417,45 @@ private:
     void SpliteArguments(wxArrayString& results);
 
     /** Tokenizer options specify the current skipping option */
-    TokenizerOptions m_TokenizerOptions;
-    TokensTree*      m_pTokensTree;
+    TokenizerOptions     m_TokenizerOptions;
+    TokensTree*          m_TokensTree;
 
     /** File name */
-    wxString         m_Filename;
+    wxString             m_Filename;
     /** Buffer, all the lexial analysis is done on this buffer string */
-    wxString         m_Buffer;
+    wxString             m_Buffer;
     /** Buffer length */
-    unsigned int     m_BufferLen;
+    unsigned int         m_BufferLen;
 
     /** These varialbes defined the current Token string attached information,
      * such as the token name, the line of the token, the current brace nest level
      */
-    wxString         m_Token;
-    unsigned int     m_TokenIndex;
-    unsigned int     m_LineNumber;
-    unsigned int     m_NestLevel; // keep track of block nesting { }
-    unsigned int     m_SavedNestingLevel;
+    wxString             m_Token;
+    unsigned int         m_TokenIndex;
+    unsigned int         m_LineNumber;
+    unsigned int         m_NestLevel; // keep track of block nesting { }
+    unsigned int         m_SavedNestingLevel;
 
     /** Backuped the previous Token information */
-    unsigned int     m_UndoTokenIndex;
-    unsigned int     m_UndoLineNumber;
-    unsigned int     m_UndoNestLevel;
+    unsigned int         m_UndoTokenIndex;
+    unsigned int         m_UndoLineNumber;
+    unsigned int         m_UndoNestLevel;
 
     /** Peek token information */
-    bool             m_PeekAvailable;
-    wxString         m_PeekToken;
-    unsigned int     m_PeekTokenIndex;
-    unsigned int     m_PeekLineNumber;
-    unsigned int     m_PeekNestLevel;
+    bool                 m_PeekAvailable;
+    wxString             m_PeekToken;
+    unsigned int         m_PeekTokenIndex;
+    unsigned int         m_PeekLineNumber;
+    unsigned int         m_PeekNestLevel;
 
     /** bool variable specifies the buffer is ok */
-    bool             m_IsOK;
+    bool                 m_IsOK;
     /** bool variable specifies whether the previous token is a "operator" */
-    bool             m_IsOperator;
+    bool                 m_IsOperator;
     /** Tokeniser state specifies the skipping option */
-    TokenizerState   m_State;
+    TokenizerState       m_State;
     /** File loader pointer */
-    LoaderBase*      m_pLoader;
+    LoaderBase*          m_Loader;
 
     /** Calc Expression's result, true or false */
     std::stack<bool>     m_ExpressionResult;

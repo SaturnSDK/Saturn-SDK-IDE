@@ -30,9 +30,9 @@ class CCOptionsProjectDlg : public cbConfigurationPanel
         void OnDelete(wxCommandEvent& event);
         void OnUpdateUI(wxUpdateUIEvent& event);
     private:
-        cbProject* m_pProject;
-        NativeParser* m_pNativeParser;
-        Parser* m_pParser;
+        cbProject* m_Project;
+        NativeParser* m_NativeParser;
+        Parser* m_Parser;
         wxArrayString m_OldPaths;
         DECLARE_EVENT_TABLE()
 };

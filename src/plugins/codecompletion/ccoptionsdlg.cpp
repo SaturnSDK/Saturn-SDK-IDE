@@ -75,10 +75,10 @@ BEGIN_EVENT_TABLE(CCOptionsDlg, wxPanel)
     EVT_COMMAND_SCROLL(XRCID("sliderDelay"), CCOptionsDlg::OnSliderScroll)
 END_EVENT_TABLE()
 
-CCOptionsDlg::CCOptionsDlg(wxWindow* parent, NativeParser* np, CodeCompletion* cc)
-    : m_Parser(this),
-    m_pNativeParsers(np),
-    m_pCodeCompletion(cc)
+CCOptionsDlg::CCOptionsDlg(wxWindow* parent, NativeParser* np, CodeCompletion* cc) :
+    m_NativeParsers(np),
+    m_CodeCompletion(cc),
+    m_Parser(np->GetTempParser())
 {
     ConfigManager* cfg = Manager::Get()->GetConfigManager(_T("code_completion"));
 
@@ -360,6 +360,6 @@ void CCOptionsDlg::OnApply()
     cfg->Write(_T("/lexer_keywords_set9"), (bool)XRCCTRL(*this, "chkKL_9", wxCheckBox)->GetValue());
 
     m_Parser.WriteOptions();
-    m_pNativeParsers->RereadParserOptions();
-    m_pCodeCompletion->RereadOptions();
+    m_NativeParsers->RereadParserOptions();
+    m_CodeCompletion->RereadOptions();
 }

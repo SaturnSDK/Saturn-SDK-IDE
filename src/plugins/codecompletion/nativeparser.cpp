@@ -60,17 +60,17 @@ BEGIN_EVENT_TABLE(NativeParser, wxEvtHandler)
 END_EVENT_TABLE()
 
 NativeParser::NativeParser() :
-    m_TempParser(this),
-    m_pParser(&m_TempParser),
+    m_TempParser(this, NULL),
+    m_Parser(&m_TempParser),
     m_EditorStartWord(-1),
     m_EditorEndWord(-1),
     m_TimerEditorActivated(this, idTimerEditorActivated),
     m_CallTipCommas(0),
-    m_pClassBrowser(0),
+    m_ClassBrowser(NULL),
     m_GettingCalltips(false),
     m_ClassBrowserIsFloating(false),
     m_LastAISearchWasGlobal(false),
-    m_pImageList(0L)
+    m_ImageList(NULL)
 {
     m_TemplateMap.clear();
 
@@ -78,91 +78,91 @@ NativeParser::NativeParser() :
     ProjectLoaderHooks::HookFunctorBase* myhook = new ProjectLoaderHooks::HookFunctor<NativeParser>(this, &NativeParser::OnProjectLoadingHook);
     m_HookId = ProjectLoaderHooks::RegisterHook(myhook);
 
-    m_pImageList = new wxImageList(16, 16);
+    m_ImageList = new wxImageList(16, 16);
     wxBitmap bmp;
     wxString prefix;
     prefix = ConfigManager::GetDataFolder() + _T("/images/codecompletion/");
     // bitmaps must be added by order of PARSER_IMG_* consts
     bmp = cbLoadBitmap(prefix + _T("class_folder.png"), wxBITMAP_TYPE_PNG);
-    m_pImageList->Add(bmp); // PARSER_IMG_CLASS_FOLDER
+    m_ImageList->Add(bmp); // PARSER_IMG_CLASS_FOLDER
     bmp = cbLoadBitmap(prefix + _T("class.png"), wxBITMAP_TYPE_PNG);
-    m_pImageList->Add(bmp); // PARSER_IMG_CLASS
+    m_ImageList->Add(bmp); // PARSER_IMG_CLASS
     bmp = cbLoadBitmap(prefix + _T("class_private.png"), wxBITMAP_TYPE_PNG);
-    m_pImageList->Add(bmp); // PARSER_IMG_CLASS_PRIVATE
+    m_ImageList->Add(bmp); // PARSER_IMG_CLASS_PRIVATE
     bmp = cbLoadBitmap(prefix + _T("class_protected.png"), wxBITMAP_TYPE_PNG);
-    m_pImageList->Add(bmp); // PARSER_IMG_CLASS_PROTECTED
+    m_ImageList->Add(bmp); // PARSER_IMG_CLASS_PROTECTED
     bmp = cbLoadBitmap(prefix + _T("class_public.png"), wxBITMAP_TYPE_PNG);
-    m_pImageList->Add(bmp); // PARSER_IMG_CLASS_PUBLIC
+    m_ImageList->Add(bmp); // PARSER_IMG_CLASS_PUBLIC
     bmp = cbLoadBitmap(prefix + _T("ctor_private.png"), wxBITMAP_TYPE_PNG);
-    m_pImageList->Add(bmp); // PARSER_IMG_CTOR_PRIVATE
+    m_ImageList->Add(bmp); // PARSER_IMG_CTOR_PRIVATE
     bmp = cbLoadBitmap(prefix + _T("ctor_protected.png"), wxBITMAP_TYPE_PNG);
-    m_pImageList->Add(bmp); // PARSER_IMG_CTOR_PROTECTED
+    m_ImageList->Add(bmp); // PARSER_IMG_CTOR_PROTECTED
     bmp = cbLoadBitmap(prefix + _T("ctor_public.png"), wxBITMAP_TYPE_PNG);
-    m_pImageList->Add(bmp); // PARSER_IMG_CTOR_PUBLIC
+    m_ImageList->Add(bmp); // PARSER_IMG_CTOR_PUBLIC
     bmp = cbLoadBitmap(prefix + _T("dtor_private.png"), wxBITMAP_TYPE_PNG);
-    m_pImageList->Add(bmp); // PARSER_IMG_DTOR_PRIVATE
+    m_ImageList->Add(bmp); // PARSER_IMG_DTOR_PRIVATE
     bmp = cbLoadBitmap(prefix + _T("dtor_protected.png"), wxBITMAP_TYPE_PNG);
-    m_pImageList->Add(bmp); // PARSER_IMG_DTOR_PROTECTED
+    m_ImageList->Add(bmp); // PARSER_IMG_DTOR_PROTECTED
     bmp = cbLoadBitmap(prefix + _T("dtor_public.png"), wxBITMAP_TYPE_PNG);
-    m_pImageList->Add(bmp); // PARSER_IMG_DTOR_PUBLIC
+    m_ImageList->Add(bmp); // PARSER_IMG_DTOR_PUBLIC
     bmp = cbLoadBitmap(prefix + _T("method_private.png"), wxBITMAP_TYPE_PNG);
-    m_pImageList->Add(bmp); // PARSER_IMG_FUNC_PRIVATE
+    m_ImageList->Add(bmp); // PARSER_IMG_FUNC_PRIVATE
     bmp = cbLoadBitmap(prefix + _T("method_protected.png"), wxBITMAP_TYPE_PNG);
-    m_pImageList->Add(bmp); // PARSER_IMG_FUNC_PRIVATE
+    m_ImageList->Add(bmp); // PARSER_IMG_FUNC_PRIVATE
     bmp = cbLoadBitmap(prefix + _T("method_public.png"), wxBITMAP_TYPE_PNG);
-    m_pImageList->Add(bmp); // PARSER_IMG_FUNC_PUBLIC
+    m_ImageList->Add(bmp); // PARSER_IMG_FUNC_PUBLIC
     bmp = cbLoadBitmap(prefix + _T("var_private.png"), wxBITMAP_TYPE_PNG);
-    m_pImageList->Add(bmp); // PARSER_IMG_VAR_PRIVATE
+    m_ImageList->Add(bmp); // PARSER_IMG_VAR_PRIVATE
     bmp = cbLoadBitmap(prefix + _T("var_protected.png"), wxBITMAP_TYPE_PNG);
-    m_pImageList->Add(bmp); // PARSER_IMG_VAR_PROTECTED
+    m_ImageList->Add(bmp); // PARSER_IMG_VAR_PROTECTED
     bmp = cbLoadBitmap(prefix + _T("var_public.png"), wxBITMAP_TYPE_PNG);
-    m_pImageList->Add(bmp); // PARSER_IMG_VAR_PUBLIC
+    m_ImageList->Add(bmp); // PARSER_IMG_VAR_PUBLIC
     bmp = cbLoadBitmap(prefix + _T("preproc.png"), wxBITMAP_TYPE_PNG);
-    m_pImageList->Add(bmp); // PARSER_IMG_PREPROCESSOR
+    m_ImageList->Add(bmp); // PARSER_IMG_PREPROCESSOR
     bmp = cbLoadBitmap(prefix + _T("enum.png"), wxBITMAP_TYPE_PNG);
-    m_pImageList->Add(bmp); // PARSER_IMG_ENUM
+    m_ImageList->Add(bmp); // PARSER_IMG_ENUM
     bmp = cbLoadBitmap(prefix + _T("enum_private.png"), wxBITMAP_TYPE_PNG);
-    m_pImageList->Add(bmp); // PARSER_IMG_ENUM_PRIVATE
+    m_ImageList->Add(bmp); // PARSER_IMG_ENUM_PRIVATE
     bmp = cbLoadBitmap(prefix + _T("enum_protected.png"), wxBITMAP_TYPE_PNG);
-    m_pImageList->Add(bmp); // PARSER_IMG_ENUM_PROTECTED
+    m_ImageList->Add(bmp); // PARSER_IMG_ENUM_PROTECTED
     bmp = cbLoadBitmap(prefix + _T("enum_public.png"), wxBITMAP_TYPE_PNG);
-    m_pImageList->Add(bmp); // PARSER_IMG_ENUM_PUBLIC
+    m_ImageList->Add(bmp); // PARSER_IMG_ENUM_PUBLIC
     bmp = cbLoadBitmap(prefix + _T("enumerator.png"), wxBITMAP_TYPE_PNG);
-    m_pImageList->Add(bmp); // PARSER_IMG_ENUMERATOR
+    m_ImageList->Add(bmp); // PARSER_IMG_ENUMERATOR
     bmp = cbLoadBitmap(prefix + _T("namespace.png"), wxBITMAP_TYPE_PNG);
-    m_pImageList->Add(bmp); // PARSER_IMG_NAMESPACE
+    m_ImageList->Add(bmp); // PARSER_IMG_NAMESPACE
     bmp = cbLoadBitmap(prefix + _T("typedef.png"), wxBITMAP_TYPE_PNG);
-    m_pImageList->Add(bmp); // PARSER_IMG_TYPEDEF
+    m_ImageList->Add(bmp); // PARSER_IMG_TYPEDEF
     bmp = cbLoadBitmap(prefix + _T("typedef_private.png"), wxBITMAP_TYPE_PNG);
-    m_pImageList->Add(bmp); // PARSER_IMG_TYPEDEF_PRIVATE
+    m_ImageList->Add(bmp); // PARSER_IMG_TYPEDEF_PRIVATE
     bmp = cbLoadBitmap(prefix + _T("typedef_protected.png"), wxBITMAP_TYPE_PNG);
-    m_pImageList->Add(bmp); // PARSER_IMG_TYPEDEF_PROTECTED
+    m_ImageList->Add(bmp); // PARSER_IMG_TYPEDEF_PROTECTED
     bmp = cbLoadBitmap(prefix + _T("typedef_public.png"), wxBITMAP_TYPE_PNG);
-    m_pImageList->Add(bmp); // PARSER_IMG_TYPEDEF_PUBLIC
+    m_ImageList->Add(bmp); // PARSER_IMG_TYPEDEF_PUBLIC
     bmp = cbLoadBitmap(prefix + _T("symbols_folder.png"), wxBITMAP_TYPE_PNG);
-    m_pImageList->Add(bmp); // PARSER_IMG_SYMBOLS_FOLDER
+    m_ImageList->Add(bmp); // PARSER_IMG_SYMBOLS_FOLDER
     bmp = cbLoadBitmap(prefix + _T("vars_folder.png"), wxBITMAP_TYPE_PNG);
-    m_pImageList->Add(bmp); // PARSER_IMG_VARS_FOLDER
+    m_ImageList->Add(bmp); // PARSER_IMG_VARS_FOLDER
     bmp = cbLoadBitmap(prefix + _T("funcs_folder.png"), wxBITMAP_TYPE_PNG);
-    m_pImageList->Add(bmp); // PARSER_IMG_FUNCS_FOLDER
+    m_ImageList->Add(bmp); // PARSER_IMG_FUNCS_FOLDER
     bmp = cbLoadBitmap(prefix + _T("enums_folder.png"), wxBITMAP_TYPE_PNG);
-    m_pImageList->Add(bmp); // PARSER_IMG_ENUMS_FOLDER
+    m_ImageList->Add(bmp); // PARSER_IMG_ENUMS_FOLDER
     bmp = cbLoadBitmap(prefix + _T("preproc_folder.png"), wxBITMAP_TYPE_PNG);
-    m_pImageList->Add(bmp); // PARSER_IMG_PREPROC_FOLDER
+    m_ImageList->Add(bmp); // PARSER_IMG_PREPROC_FOLDER
     bmp = cbLoadBitmap(prefix + _T("others_folder.png"), wxBITMAP_TYPE_PNG);
-    m_pImageList->Add(bmp); // PARSER_IMG_OTHERS_FOLDER
+    m_ImageList->Add(bmp); // PARSER_IMG_OTHERS_FOLDER
     bmp = cbLoadBitmap(prefix + _T("typedefs_folder.png"), wxBITMAP_TYPE_PNG);
-    m_pImageList->Add(bmp); // PARSER_IMG_TYPEDEF_FOLDER
+    m_ImageList->Add(bmp); // PARSER_IMG_TYPEDEF_FOLDER
     bmp = cbLoadBitmap(prefix + _T("macro.png"), wxBITMAP_TYPE_PNG);
-    m_pImageList->Add(bmp); // PARSER_IMG_MACRO
+    m_ImageList->Add(bmp); // PARSER_IMG_MACRO
     bmp = cbLoadBitmap(prefix + _T("macro_private.png"), wxBITMAP_TYPE_PNG);
-    m_pImageList->Add(bmp); // PARSER_IMG_MACRO_PRIVATE
+    m_ImageList->Add(bmp); // PARSER_IMG_MACRO_PRIVATE
     bmp = cbLoadBitmap(prefix + _T("macro_protected.png"), wxBITMAP_TYPE_PNG);
-    m_pImageList->Add(bmp); // PARSER_IMG_MACRO_PROTECTED
+    m_ImageList->Add(bmp); // PARSER_IMG_MACRO_PROTECTED
     bmp = cbLoadBitmap(prefix + _T("macro_public.png"), wxBITMAP_TYPE_PNG);
-    m_pImageList->Add(bmp); // PARSER_IMG_MACRO_PUBLIC
+    m_ImageList->Add(bmp); // PARSER_IMG_MACRO_PUBLIC
     bmp = cbLoadBitmap(prefix + _T("macro_folder.png"), wxBITMAP_TYPE_PNG);
-    m_pImageList->Add(bmp); // PARSER_IMG_MACRO_FOLDER
+    m_ImageList->Add(bmp); // PARSER_IMG_MACRO_FOLDER
 }
 
 NativeParser::~NativeParser()
@@ -170,16 +170,16 @@ NativeParser::~NativeParser()
     ClearParsers();
     ProjectLoaderHooks::UnregisterHook(m_HookId, true);
     RemoveClassBrowser();
-    delete m_pImageList;
+    delete m_ImageList;
 }
 
 void NativeParser::SetParser(Parser* parser)
 {
-    m_pParser = parser;
-    if (m_pClassBrowser)
+    m_Parser = parser;
+    if (m_ClassBrowser)
     {
-        m_pClassBrowser->SetParser(parser);
-        m_pClassBrowser->UpdateView();
+        m_ClassBrowser->SetParser(parser);
+        m_ClassBrowser->UpdateView();
     }
 }
 
@@ -266,7 +266,7 @@ void NativeParser::SetTokenKindImage(int kind, const wxBitmap& bitmap, const wxB
     if (kind < PARSER_IMG_MIN || kind > PARSER_IMG_MAX)
         return;
 #ifdef __WXMSW__
-    m_pImageList->Replace(kind, bitmap, mask);
+    m_ImageList->Replace(kind, bitmap, mask);
 #endif
 }
 
@@ -274,14 +274,14 @@ void NativeParser::SetTokenKindImage(int kind, const wxBitmap& bitmap, const wxC
 {
     if (kind < PARSER_IMG_MIN || kind > PARSER_IMG_MAX)
         return;
-    m_pImageList->Replace(kind, bitmap);//, maskColour);
+    m_ImageList->Replace(kind, bitmap);//, maskColour);
 }
 
 void NativeParser::SetTokenKindImage(int kind, const wxIcon& icon)
 {
     if (kind < PARSER_IMG_MIN || kind > PARSER_IMG_MAX)
         return;
-    m_pImageList->Replace(kind, icon);
+    m_ImageList->Replace(kind, icon);
 }
 
 int NativeParser::GetTokenKindImage(Token* token)
@@ -421,27 +421,27 @@ void NativeParser::OnProjectLoadingHook(cbProject* project, TiXmlElement* elem, 
 void NativeParser::CreateClassBrowser()
 {
     ConfigManager* cfg = Manager::Get()->GetConfigManager(_T("code_completion"));
-    if (!m_pClassBrowser && cfg->ReadBool(_T("/use_symbols_browser"), true))
+    if (!m_ClassBrowser && cfg->ReadBool(_T("/use_symbols_browser"), true))
     {
         bool isFloating = cfg->ReadBool(_T("/as_floating_window"), false);
 
         if (!isFloating)
         {
             // make this a tab in projectmanager notebook
-            m_pClassBrowser = new ClassBrowser(Manager::Get()->GetProjectManager()->GetNotebook(), this);
-            Manager::Get()->GetProjectManager()->GetNotebook()->AddPage(m_pClassBrowser, _("Symbols"));
-            m_pClassBrowser->UpdateSash();
+            m_ClassBrowser = new ClassBrowser(Manager::Get()->GetProjectManager()->GetNotebook(), this);
+            Manager::Get()->GetProjectManager()->GetNotebook()->AddPage(m_ClassBrowser, _("Symbols"));
+            m_ClassBrowser->UpdateSash();
         }
         else
         {
-            m_pClassBrowser = new ClassBrowser(Manager::Get()->GetAppWindow(), this);
+            m_ClassBrowser = new ClassBrowser(Manager::Get()->GetAppWindow(), this);
 
             // make this a free floating/docking window
             CodeBlocksDockEvent evt(cbEVT_ADD_DOCK_WINDOW);
 
             evt.name = _T("SymbolsBrowser");
             evt.title = _("Symbols browser");
-            evt.pWindow = m_pClassBrowser;
+            evt.pWindow = m_ClassBrowser;
             evt.dockSide = CodeBlocksDockEvent::dsRight;
             evt.desiredSize.Set(200, 250);
             evt.floatingSize.Set(200, 250);
@@ -449,43 +449,43 @@ void NativeParser::CreateClassBrowser()
             evt.shown = true;
             evt.hideable = true;
             Manager::Get()->ProcessEvent(evt);
-            m_pClassBrowser->UpdateSash();
+            m_ClassBrowser->UpdateSash();
         }
         m_ClassBrowserIsFloating = isFloating;
 
         // Dreaded DDE-open bug related: do not touch unless for a good reason
         // TODO by Loaden ? what's bug? I test it, it's works well now.
-        m_pClassBrowser->SetParser(m_pParser);
+        m_ClassBrowser->SetParser(m_Parser);
     }
 }
 
 void NativeParser::RemoveClassBrowser(bool appShutDown)
 {
-    if (m_pClassBrowser)
+    if (m_ClassBrowser)
     {
         if (!m_ClassBrowserIsFloating)
         {
-            int idx = Manager::Get()->GetProjectManager()->GetNotebook()->GetPageIndex(m_pClassBrowser);
+            int idx = Manager::Get()->GetProjectManager()->GetNotebook()->GetPageIndex(m_ClassBrowser);
             if (idx != -1)
                 Manager::Get()->GetProjectManager()->GetNotebook()->RemovePage(idx);
         }
         else if (m_ClassBrowserIsFloating)
         {
             CodeBlocksDockEvent evt(cbEVT_REMOVE_DOCK_WINDOW);
-            evt.pWindow = m_pClassBrowser;
+            evt.pWindow = m_ClassBrowser;
             Manager::Get()->ProcessEvent(evt);
         }
-        m_pClassBrowser->Destroy();
+        m_ClassBrowser->Destroy();
     }
-    m_pClassBrowser = 0L;
+    m_ClassBrowser = NULL;
 }
 
 void NativeParser::UpdateClassBrowser()
 {
-    if (m_pClassBrowser && m_pParser->Done() && !Manager::isappShuttingDown())
+    if (m_ClassBrowser && m_Parser->Done() && !Manager::IsAppShuttingDown())
     {
         Manager::Get()->GetLogManager()->DebugLog(_T("Updating class browser..."));
-        m_pClassBrowser->UpdateView();
+        m_ClassBrowser->UpdateView();
         Manager::Get()->GetLogManager()->DebugLog(_T("Class browser updated."));
     }
 }
@@ -495,7 +495,7 @@ void NativeParser::RereadParserOptions()
     ConfigManager* cfg = Manager::Get()->GetConfigManager(_T("code_completion"));
     if (cfg->ReadBool(_T("/use_symbols_browser"), true))
     {
-        if (!m_pClassBrowser)
+        if (!m_ClassBrowser)
         {
             CreateClassBrowser();
             UpdateClassBrowser();
@@ -509,20 +509,20 @@ void NativeParser::RereadParserOptions()
             UpdateClassBrowser();
         }
     }
-    else if (!cfg->ReadBool(_T("/use_symbols_browser"), true) && m_pClassBrowser)
+    else if (!cfg->ReadBool(_T("/use_symbols_browser"), true) && m_ClassBrowser)
         RemoveClassBrowser();
 
-    if (m_pParser == &m_TempParser)
+    if (m_Parser == &m_TempParser)
         return;
 
     RemoveObsoleteParsers();
 
     // reparse if settings changed
-    ParserOptions opts = m_pParser->Options();
-    m_pParser->ReadOptions();
-    if (   opts.followLocalIncludes  != m_pParser->Options().followLocalIncludes
-        || opts.followGlobalIncludes != m_pParser->Options().followGlobalIncludes
-        || opts.wantPreprocessor     != m_pParser->Options().wantPreprocessor )
+    ParserOptions opts = m_Parser->Options();
+    m_Parser->ReadOptions();
+    if (   opts.followLocalIncludes  != m_Parser->Options().followLocalIncludes
+        || opts.followGlobalIncludes != m_Parser->Options().followGlobalIncludes
+        || opts.wantPreprocessor     != m_Parser->Options().wantPreprocessor )
     {
         // important options changed... flag for reparsing
         if (cbMessageBox(_("You changed some class parser options. Do you want to "
@@ -536,13 +536,13 @@ void NativeParser::RereadParserOptions()
         }
     }
 
-    if (m_pClassBrowser)
-        m_pClassBrowser->UpdateView();
+    if (m_ClassBrowser)
+        m_ClassBrowser->UpdateView();
 }
 
 void NativeParser::SetCBViewMode(const BrowserViewMode& mode)
 {
-    m_pParser->ClassBrowserOptions().showInheritance = (mode == bvmInheritance) ? true : false;
+    m_Parser->ClassBrowserOptions().showInheritance = (mode == bvmInheritance) ? true : false;
     UpdateClassBrowser();
 }
 
@@ -850,7 +850,7 @@ bool NativeParser::AddCompilerPredefinedMacros(cbProject* project, Parser* parse
 	}
 
 	TRACE(_T("Add compiler predefined preprocessor macros:\n%s"), defs.wx_str());
-	parser->AddPredefinedMacros(defs, false);
+	parser->AddPredefinedMacros(defs);
 	return true;
 }
 
@@ -895,7 +895,7 @@ bool NativeParser::AddProjectDefinedMacros(cbProject* project, Parser* parser)
     }
 
 	TRACE(_T("Add project and current buildtarget defined preprocessor macros:\n%s"), defs.wx_str());
-	parser->AddPredefinedMacros(defs, true);
+	parser->AddPredefinedMacros(defs);
 	return true;
 }
 
@@ -984,7 +984,7 @@ bool NativeParser::CreateParser(cbProject* project)
         return false;
     }
 
-    Parser* parser = new(std::nothrow) Parser(this);
+    Parser* parser = new(std::nothrow) Parser(this, project);
     if (!parser)
     {
         Manager::Get()->GetLogManager()->DebugLog(_T("Failed to create parser instances!"));
@@ -1020,7 +1020,7 @@ bool NativeParser::DeleteParser(cbProject* project)
         return false;
     }
 
-    if (it->second == m_pParser)
+    if (it->second == m_Parser)
         SetParser(&m_TempParser);
 
     delete it->second;
@@ -1037,7 +1037,7 @@ bool NativeParser::DeleteParser(cbProject* project)
 
 bool NativeParser::SwitchParser(cbProject* project, Parser* parser)
 {
-    if (!parser || parser == m_pParser || GetParserByProject(project) != parser)
+    if (!parser || parser == m_Parser || GetParserByProject(project) != parser)
         return false;
 
     SetParser(parser);
@@ -1241,7 +1241,7 @@ bool NativeParser::StartCompleteParsing(cbProject* project, Parser* parser)
 
 void NativeParser::ReparseCurrentProject()
 {
-    cbProject* project = GetProjectByParser(m_pParser);
+    cbProject* project = GetProjectByParser(m_Parser);
     if (project)
     {
         DeleteParser(project);
@@ -1277,7 +1277,7 @@ void NativeParser::ReparseSelectedProject()
 // UNUSED
 bool NativeParser::LoadCachedData(cbProject* project)
 {
-    if (!project || !m_pParser)
+    if (!project || !m_Parser)
         return false;
 
     wxFileName projectCache = project->GetFilename();
@@ -1295,7 +1295,7 @@ bool NativeParser::LoadCachedData(cbProject* project)
         wxFileInputStream fs(f);
         wxBufferedInputStream fb(fs);
 
-        ret = m_pParser->ReadFromCache(&fb);
+        ret = m_Parser->ReadFromCache(&fb);
     }
     catch (cbException& ex)
     {
@@ -1334,7 +1334,7 @@ bool NativeParser::SaveCachedData(const wxString& projectFilename)
     wxFileOutputStream fs(f);
     {
         wxBufferedOutputStream fb(fs);
-        result = m_pParser->WriteToCache(&fb);
+        result = m_Parser->WriteToCache(&fb);
     }
     return result;
 }
@@ -1349,7 +1349,7 @@ bool NativeParser::ParseFunctionArguments(ccSearchData* searchData, int caretPos
     {
         for (TokenIdxSet::iterator it = proc_result.begin(); it != proc_result.end(); ++it)
         {
-            Token* token = m_pParser->GetTokens()->at(*it);
+            Token* token = m_Parser->GetTokens()->at(*it);
             if (!token)
                 continue;
 
@@ -1374,7 +1374,7 @@ bool NativeParser::ParseFunctionArguments(ccSearchData* searchData, int caretPos
                     Manager::Get()->GetLogManager()->DebugLog(F(_T("ParseFunctionArguments() Parsing arguments: \"%s\""), buffer.wx_str()));
                 }
 
-                if (!buffer.IsEmpty() && !m_pParser->ParseBuffer(buffer, false, false, true))
+                if (!buffer.IsEmpty() && !m_Parser->ParseBuffer(buffer, false, false, true))
                 {
                     if (s_DebugSmartSense)
                         Manager::Get()->GetLogManager()->DebugLog(_T("ParseFunctionArguments() Error parsing arguments."));
@@ -1413,7 +1413,7 @@ bool NativeParser::ParseLocalBlock(ccSearchData* searchData, int caretPos)
 
         wxString buffer = searchData->control->GetTextRange(blockStart, blockEnd);
         buffer.Trim();
-        if (!buffer.IsEmpty() && !m_pParser->ParseBuffer(buffer, false, false, true))
+        if (!buffer.IsEmpty() && !m_Parser->ParseBuffer(buffer, false, false, true))
         {
             if (s_DebugSmartSense)
                 Manager::Get()->GetLogManager()->DebugLog(_T("ParseLocalBlock() ERROR parsing block:\n") + buffer);
@@ -1424,9 +1424,9 @@ bool NativeParser::ParseLocalBlock(ccSearchData* searchData, int caretPos)
             {
                 Manager::Get()->GetLogManager()->DebugLog(F(_T("ParseLocalBlock() Block:\n%s"), buffer.wx_str()));
                 Manager::Get()->GetLogManager()->DebugLog(_T("ParseLocalBlock() Local tokens:"));
-                for (size_t i = 0; i < m_pParser->GetTokens()->size(); ++i)
+                for (size_t i = 0; i < m_Parser->GetTokens()->size(); ++i)
                 {
-                    Token* t = m_pParser->GetTokens()->at(i);
+                    Token* t = m_Parser->GetTokens()->at(i);
                     if (t && t->m_IsTemp)
                     {
                        Manager::Get()->GetLogManager()->DebugLog(
@@ -1448,7 +1448,7 @@ bool NativeParser::ParseLocalBlock(ccSearchData* searchData, int caretPos)
 
 bool NativeParser::ParseUsingNamespace(ccSearchData* searchData, TokenIdxSet& search_scope, int caretPos)
 {
-    TokensTree* tree = m_pParser->GetTokens();
+    TokensTree* tree = m_Parser->GetTokens();
 
     if (s_DebugSmartSense)
         Manager::Get()->GetLogManager()->DebugLog(_T("ParseUsingNamespace() Parse file scope for \"using namespace\""));
@@ -1460,7 +1460,7 @@ bool NativeParser::ParseUsingNamespace(ccSearchData* searchData, TokenIdxSet& se
 
     // Get the buffer from begin of the editor to the current caret position
     wxString buffer = searchData->control->GetTextRange(0, pos);
-    m_pParser->ParseBufferForUsingNamespace(buffer, ns);
+    m_Parser->ParseBufferForUsingNamespace(buffer, ns);
 
     for (size_t i = 0; i < ns.GetCount(); ++i)
     {
@@ -1515,7 +1515,7 @@ size_t NativeParser::MarkItemsByAI(ccSearchData* searchData, TokenIdxSet& result
 {
     result.clear();
 
-    if (!m_pParser->Done())
+    if (!m_Parser->Done())
     {
         Manager::Get()->GetLogManager()->DebugLog(_T("C++ Parser is still parsing files..."));
         return 0;
@@ -1523,8 +1523,8 @@ size_t NativeParser::MarkItemsByAI(ccSearchData* searchData, TokenIdxSet& result
     else
     {
         // remove old temporaries
-        m_pParser->GetTokens()->FreeTemporaries();
-        m_pParser->GetTempTokens()->Clear();
+        m_Parser->GetTokens()->FreeTemporaries();
+        m_Parser->GetTempTokens()->Clear();
 
         // find "using namespace" directives in the file
         TokenIdxSet search_scope;
@@ -1539,7 +1539,7 @@ size_t NativeParser::MarkItemsByAI(ccSearchData* searchData, TokenIdxSet& result
         if (!reallyUseAI)
         {
             // all tokens, no AI whatsoever
-            TokensTree* tokens = m_pParser->GetTokens();
+            TokensTree* tokens = m_Parser->GetTokens();
             for (size_t i = 0; i < tokens->size(); ++i)
                 result.insert(i);
             return result.size();
@@ -1552,7 +1552,7 @@ size_t NativeParser::MarkItemsByAI(ccSearchData* searchData, TokenIdxSet& result
 
 void NativeParser::RemoveInvalid(TokenIdxSet& result, const wxString& target)
 {
-    TokensTree* tokens = m_pParser->GetTokens();
+    TokensTree* tokens = m_Parser->GetTokens();
     for (TokenIdxSet::iterator it = result.begin(); it != result.end();)
     {
         Token* tk = tokens->at(*it);
@@ -1571,7 +1571,7 @@ const wxString& NativeParser::GetCodeCompletionItems()
     int count = MarkItemsByAI(result);
     if (count)
     {
-        TokensTree* tokens = m_pParser->GetTokens();
+        TokensTree* tokens = m_Parser->GetTokens();
         for (TokenIdxSet::iterator it = result.begin(); it != result.end(); ++it)
         {
             Token* token = tokens->at(*it);
@@ -1655,10 +1655,10 @@ const wxArrayString& NativeParser::GetCallTips(int chars_per_line)
     int commas = 0;
     wxString lineText;
     cbEditor* ed = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
-    wxCriticalSectionLocker* locker = 0;
+
     do
     {
-        if (!ed || !m_pParser->Done())
+        if (!ed || !m_Parser->Done())
             break;
 
         ccSearchData searchData = { ed->GetControl(), ed->GetFilename() };
@@ -1690,9 +1690,10 @@ const wxArrayString& NativeParser::GetCallTips(int chars_per_line)
             lineText = lineText.Right(lineText.Length() - 2);
 //        Manager::Get()->GetLogManager()->DebugLog(_T("Sending \"%s\" for call-tip"), lineText.c_str());
 
-        TokensTree* tokens = m_pParser->GetTokens();
+        TokensTree* tokens = m_Parser->GetTokens();
         tokens->FreeTemporaries();
-        locker = new wxCriticalSectionLocker(s_TokensTreeCritical);
+
+        wxCriticalSectionLocker locker(s_TokensTreeCritical);
 
         TokenIdxSet search_scope;
         ParseUsingNamespace(&searchData, search_scope);
@@ -1723,10 +1724,8 @@ const wxArrayString& NativeParser::GetCallTips(int chars_per_line)
             else if (token->m_TokenKind == tkTypedef && token->m_ActualType.Contains(_T("(")))
                 m_CallTips.Add(token->m_ActualType); // typedef'd function pointer
         }
-    } while (false);
-
-    if (locker)
-        delete locker;
+    }
+    while (false);
 
     m_GettingCalltips = false;
     m_CallTipCommas = commas;
@@ -2137,7 +2136,7 @@ size_t NativeParser::AI(TokenIdxSet& result,
     {
         for (TokenIdxSet::iterator it = proc_result.begin(); it != proc_result.end(); ++it)
         {
-            Token* token = m_pParser->GetTokens()->at(*it);
+            Token* token = m_Parser->GetTokens()->at(*it);
             if (!token)
                 continue;
 
@@ -2148,7 +2147,7 @@ size_t NativeParser::AI(TokenIdxSet& result,
 
             if (s_DebugSmartSense)
             {
-                Token* parent = m_pParser->GetTokens()->at(token->m_ParentIndex);
+                Token* parent = m_Parser->GetTokens()->at(token->m_ParentIndex);
                 Manager::Get()->GetLogManager()->DebugLog(_T("AI() Adding search namespace: ") + (parent ? parent->m_Name : _T("Global namespace")));
             }
         }
@@ -2173,7 +2172,7 @@ size_t NativeParser::AI(TokenIdxSet& result,
     }
 
     // remove non-namespace/class tokens
-    TokensTree* tree = m_pParser->GetTokens();
+    TokensTree* tree = m_Parser->GetTokens();
     for (TokenIdxSet::iterator it = search_scope->begin(); it != search_scope->end();)
     {
         Token* token = tree->at(*it);
@@ -2292,7 +2291,7 @@ size_t NativeParser::FindAIMatches(std::queue<ParserComponent> components,
     if (s_DebugSmartSense)
         Manager::Get()->GetLogManager()->DebugLog(_T("FindAIMatches() ----- FindAIMatches - enter -----"));
 
-    TokensTree* tree = m_pParser->GetTokens();
+    TokensTree* tree = m_Parser->GetTokens();
 
     // pop top component
     ParserComponent parser_component = components.front();
@@ -2664,7 +2663,7 @@ size_t NativeParser::ResolveExpression(std::queue<ParserComponent> components, c
     if (components.empty())
         return 0;
 
-    TokensTree* tree = m_pParser->GetTokens();
+    TokensTree* tree = m_Parser->GetTokens();
     if (!tree)
         return 0;
 
@@ -2828,7 +2827,7 @@ size_t NativeParser::GenerateResultSet(wxString search,
                                        bool            isPrefix,
                                        short int       kindMask)
 {
-    TokensTree* tree = m_pParser->GetTokens();
+    TokensTree* tree = m_Parser->GetTokens();
     if (!tree)
         return 0;
 
@@ -2837,24 +2836,24 @@ size_t NativeParser::GenerateResultSet(wxString search,
         for (TokenIdxSet::iterator ptr = ptrParentID.begin(); ptr != ptrParentID.end(); ++ptr)
         {
             size_t parentIdx = (*ptr);
-            Token* parent = m_pParser->GetTokens()->at(parentIdx);
+            Token* parent = m_Parser->GetTokens()->at(parentIdx);
             if (parent)
             {
                 for (TokenIdxSet::iterator it = parent->m_Children.begin(); it != parent->m_Children.end(); ++it)
                 {
-                    Token* token = m_pParser->GetTokens()->at(*it);
+                    Token* token = m_Parser->GetTokens()->at(*it);
                     if (token)
                         result.insert(*it);
                 }
                 tree->RecalcInheritanceChain(parent);
                 for (TokenIdxSet::iterator it = parent->m_Ancestors.begin(); it != parent->m_Ancestors.end(); ++it)
                 {
-                    Token* ancestor = m_pParser->GetTokens()->at(*it);
+                    Token* ancestor = m_Parser->GetTokens()->at(*it);
                     if (!ancestor)
                         continue;
                     for (TokenIdxSet::iterator it2 = ancestor->m_Children.begin(); it2 != ancestor->m_Children.end(); ++it2)
                     {
-                        Token* token = m_pParser->GetTokens()->at(*it2);
+                        Token* token = m_Parser->GetTokens()->at(*it2);
                         if (token)
                         {
                             result.insert(*it2);
@@ -2870,8 +2869,8 @@ size_t NativeParser::GenerateResultSet(wxString search,
         TokenIdxSet tempResult;
         // we use FindMatches to get the items from tree directly and eclimate the
         //items which are not under the search scope.
-        size_t resultCount = m_pParser->FindMatches(search, tempResult, caseSens, isPrefix);
-        //if (m_pParser->FindMatches(search, tempResult, caseSens, isPrefix))
+        size_t resultCount = m_Parser->FindMatches(search, tempResult, caseSens, isPrefix);
+        //if (m_Parser->FindMatches(search, tempResult, caseSens, isPrefix))
         if (resultCount > 0)
         {
 //            Manager::Get()->GetLogManager()->DebugLog(F(_T("Find %d result from the tree."), resultCount));
@@ -3045,11 +3044,11 @@ int NativeParser::FindCurrentFunctionStart(ccSearchData* searchData, wxString* n
     // we have all the tokens in the current file, then just do a loop on all the tokens, see if the line is in
     // the token's imp.
     TokenIdxSet result;
-    size_t num_results = m_pParser->FindTokensInFile(searchData->file, result, tkAnyFunction | tkClass);
+    size_t num_results = m_Parser->FindTokensInFile(searchData->file, result, tkAnyFunction | tkClass);
     if (s_DebugSmartSense)
         Manager::Get()->GetLogManager()->DebugLog(F(_T("FindCurrentFunctionStart() Found %d results"), num_results));
 
-    TokensTree* tree = m_pParser->GetTokens();
+    TokensTree* tree = m_Parser->GetTokens();
     const size_t currentFileIndex = tree->GetFileIndex(searchData->file);
     for (TokenIdxSet::iterator it = result.begin(); it != result.end(); ++it)
     {
@@ -3151,7 +3150,7 @@ size_t NativeParser::FindCurrentFunctionToken(ccSearchData* searchData, TokenIdx
 
     for (TokenIdxSet::iterator it = scope_result.begin(); it != scope_result.end(); ++it)
     {
-        GenerateResultSet(m_pParser->GetTokens(), procName, *it, result, true, false, tkAnyFunction | tkClass);
+        GenerateResultSet(m_Parser->GetTokens(), procName, *it, result, true, false, tkAnyFunction | tkClass);
     }
 
     return result.size();
@@ -3171,7 +3170,7 @@ void NativeParser::OnThreadEnd(wxCommandEvent& event)
 
 void NativeParser::OnParserStart(wxCommandEvent& event)
 {
-    Parser* parser = static_cast<Parser*>(event.GetClientData());
+    Parser* parser = static_cast<Parser*>(event.GetEventObject());
     cbProject* project = GetProjectByParser(parser);
 
     switch (static_cast<ParsingType>(event.GetInt()))
@@ -3181,8 +3180,8 @@ void NativeParser::OnParserStart(wxCommandEvent& event)
                                                     ? project->GetTitle().wx_str()
                                                     : _T("*NONE*")));
         {
-            std::pair<cbProject*, Parser*> prjParser = GetProjectParserByActivedEditor();
-            if (prjParser.second && m_pParser != prjParser.second)
+            std::pair<cbProject*, Parser*> prjParser = GetActiveProjectParser();
+            if (prjParser.second && m_Parser != prjParser.second)
             {
                 Manager::Get()->GetLogManager()->DebugLog(_T("Start switch from OnParserStart::ptCreateParser"));
                 SwitchParser(prjParser.first, prjParser.second);
@@ -3213,9 +3212,9 @@ void NativeParser::OnParserStart(wxCommandEvent& event)
 
 void NativeParser::OnParserEnd(wxCommandEvent& event)
 {
-    Parser* parser = static_cast<Parser*>(event.GetClientData());
-    cbProject* project = GetProjectByParser(parser);
-    const ParsingType type = static_cast<ParsingType>(event.GetInt());
+    Parser* parser = static_cast<Parser*>(event.GetEventObject());
+    if (!parser)
+        return;
 
     if (!Parser::IsValidParser(parser))
     {
@@ -3223,26 +3222,28 @@ void NativeParser::OnParserEnd(wxCommandEvent& event)
         return;
     }
 
+    cbProject* project = GetProjectByParser(parser);
+    if (project != parser->GetParsingProject())
+        return;
+
+    const ParsingType type = static_cast<ParsingType>(event.GetInt());
     switch (type)
     {
     case ptCreateParser:
         {
-            wxString log(F(_("Project '%s' parsing stage done!"), project
-                           ? project->GetTitle().wx_str()
-                           : _T("*NONE*")));
-            Manager::Get()->GetLogManager()->Log(log);
-            Manager::Get()->GetLogManager()->DebugLog(log);
-
+            Manager::Get()->GetLogManager()->Log(F(_("Project '%s' parsing stage done!"), project
+                                                   ? project->GetTitle().wx_str()
+                                                   : _T("*NONE*")));
             CC_PROFILE_TIMER_LOG();
 
-            std::pair<cbProject*, Parser*> prjParser = GetProjectParserByActivedEditor();
+            std::pair<cbProject*, Parser*> prjParser = GetActiveProjectParser();
             if (prjParser.first && prjParser.first != project && !prjParser.second)
             {
                 if (CreateParser(prjParser.first))
                     prjParser.second = GetParserByProject(prjParser.first);
             }
 
-            if (prjParser.second && prjParser.second != m_pParser)
+            if (prjParser.second && prjParser.second != m_Parser)
             {
                 Manager::Get()->GetLogManager()->DebugLog(_T("Start switch from OnParserEnd::ptCreateParser"));
                 SwitchParser(prjParser.first, prjParser.second);
@@ -3260,10 +3261,10 @@ void NativeParser::OnParserEnd(wxCommandEvent& event)
         Manager::Get()->GetLogManager()->DebugLog(F(_T("Reparsing modified files for project '%s'"), project
                                                     ? project->GetTitle().wx_str()
                                                     : _T("*NONE*")));
-        if (parser != m_pParser)
+        if (parser != m_Parser)
         {
-            std::pair<cbProject*, Parser*> prjParser = GetProjectParserByActivedEditor();
-            if (prjParser.second && prjParser.second != m_pParser)
+            std::pair<cbProject*, Parser*> prjParser = GetActiveProjectParser();
+            if (prjParser.second && prjParser.second != m_Parser)
             {
                 Manager::Get()->GetLogManager()->DebugLog(_T("Start switch from OnParserEnd::ptReparseFile"));
                 SwitchParser(prjParser.first, prjParser.second);
@@ -3278,30 +3279,8 @@ void NativeParser::OnParserEnd(wxCommandEvent& event)
         return;
     }
 
-    // also, mark all project files as local
-    if (   project
-        && (type == ptCreateParser || type == ptAddFileToParser) )
-    {
-        wxCriticalSectionLocker locker(s_TokensTreeCritical);
-        for (int i = 0; i < project->GetFilesCount(); ++i)
-        {
-            ProjectFile* pf = project->GetFile(i);
-            if (!pf)
-                continue;
-            if (CCFileTypeOf(pf->relativeFilename) != ftOther)
-                parser->MarkFileTokensAsLocal(pf->file.GetFullPath(), true, project);
-        }
-    }
-
-    long tim = parser->LastParseTime();
-    Manager::Get()->GetLogManager()->DebugLog(F(_T("Project '%s' parsing stage done (%d total parsed files, ")
-                                                _T("%d tokens in %d minute(s), %d.%03d seconds)."),
-                    project ? project->GetTitle().wx_str() : _T("*NONE*"),
-                    parser->GetFilesCount(),
-                    parser->GetTokens()->realsize(),
-                    (tim / 60000),
-                    ((tim / 1000) %60),
-                    tim % 1000));
+    if (!event.GetString().IsEmpty())
+        Manager::Get()->GetLogManager()->DebugLog(event.GetString());
 
     UpdateClassBrowser();
 
@@ -3354,16 +3333,16 @@ void NativeParser::OnEditorActivatedTimer(wxTimerEvent& event)
         }
     }
 
-    if (parser != m_pParser)
+    if (parser != m_Parser)
     {
         Manager::Get()->GetLogManager()->DebugLog(_T("Start switch from OnEditorActivatedTimer"));
         SwitchParser(project, parser);
     }
 
-    if (m_pClassBrowser && parser->ClassBrowserOptions().displayFilter == bdfFile)
+    if (m_ClassBrowser && parser->ClassBrowserOptions().displayFilter == bdfFile)
     {
         // check header and implementation file swap, if yes, don't need to rebuild browser tree
-        m_pClassBrowser->UpdateView(true);
+        m_ClassBrowser->UpdateView(true);
     }
 }
 
@@ -3412,15 +3391,28 @@ void NativeParser::RemoveObsoleteParsers()
     ConfigManager* cfg = Manager::Get()->GetConfigManager(_T("code_completion"));
     const size_t maxParsers = cfg->ReadInt(_T("/max_parsers"), 5);
     wxArrayString removedProjectNames;
+    std::pair<cbProject*, Parser*> prjParser = GetActiveProjectParser();
 
     while (m_ParserList.size() > maxParsers)
     {
-        wxString prjName = _T("*NONE*");
-        if (m_ParserList.front().first)
-            prjName = m_ParserList.front().first->GetTitle();
-        if (DeleteParser(m_ParserList.front().first))
-            removedProjectNames.Add(prjName);
-        else
+        bool deleted = false;
+        for (ParserList::iterator it = m_ParserList.begin(); it != m_ParserList.end(); ++it)
+        {
+            if (it->second == prjParser.second)
+                continue;
+
+            wxString prjName = _T("*NONE*");
+            if (it->first)
+                prjName = it->first->GetTitle();
+            if (DeleteParser(it->first))
+            {
+                removedProjectNames.Add(prjName);
+                deleted = true;
+                break;
+            }
+        }
+
+        if (!deleted)
             break;
     }
 
@@ -3432,7 +3424,7 @@ void NativeParser::RemoveObsoleteParsers()
     }
 }
 
-std::pair<cbProject*, Parser*> NativeParser::GetProjectParserByActivedEditor()
+std::pair<cbProject*, Parser*> NativeParser::GetActiveProjectParser()
 {
     std::pair<cbProject*, Parser*> prjParser;
 
@@ -3473,7 +3465,7 @@ public:
 
 private:
     const wxString& m_ExcludeDir;
-    wxArrayString& m_Files;
+    wxArrayString&  m_Files;
 };
 
 wxArrayString NativeParser::GetAllPathsByFilename(const wxString& filename)
@@ -3491,7 +3483,7 @@ wxArrayString NativeParser::GetAllPathsByFilename(const wxString& filename)
     dir.Traverse(traverser, filespec, wxDIR_FILES);
     if (files.GetCount() == 1)
     {
-        cbProject* project = GetProjectByParser(m_pParser);
+        cbProject* project = GetProjectByParser(m_Parser);
         if (project)
         {
             const wxString prjPath = project->GetCommonTopLevelPath();

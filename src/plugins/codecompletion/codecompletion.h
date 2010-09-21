@@ -154,12 +154,12 @@ class CodeCompletion : public cbCodeCompletionPlugin
         wxTimer                            m_TimerRealtimeParsing;
         wxTimer                            m_TimerToolbar;
         wxTimer                            m_TimerProjectSaved;
-        cbEditor*                          m_pCodeCompletionLastEditor;
+        cbEditor*                          m_LastEditor;
         int                                m_ActiveCalltipsNest;
 
         bool                               m_IsAutoPopup;
 
-        wxToolBar*                         m_pToolBar;
+        wxToolBar*                         m_ToolBar;
         wxChoice*                          m_Function;
         wxChoice*                          m_Scope;
         FunctionsScopeVec                  m_FunctionsScope;

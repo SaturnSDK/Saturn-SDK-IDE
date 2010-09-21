@@ -35,9 +35,10 @@ class InsertClassMethodDlg : public wxScrollingDialog
         void OnCodeChange(wxCommandEvent& event);
         void OnFilterChange(wxCommandEvent& event);
 
-        Parser* m_pParser;
-        bool m_Decl;
+        Parser*  m_pParser;
+        bool     m_Decl;
         wxString m_Filename;
+
         DECLARE_EVENT_TABLE();
 };
 

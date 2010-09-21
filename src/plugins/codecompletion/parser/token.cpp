@@ -101,8 +101,8 @@ Token::Token(const wxString& name, unsigned int file, unsigned int line, size_t 
     m_IsLocal(false),
     m_IsTemp(false),
     m_ParentIndex(-1),
-    m_pUserData(0),
-    m_pTree(0),
+    m_UserData(0),
+    m_TokensTree(0),
     m_Self(-1),
     m_Ticket(ticket)
 {
@@ -120,7 +120,7 @@ wxString Token::GetParentName()
 {
     wxString parentname;
     wxCriticalSectionLocker* locker = 0;
-    if (m_pTree)
+    if (m_TokensTree)
         locker = new(std::nothrow) wxCriticalSectionLocker(s_TokensTreeCritical);
     Token* parent = GetParentToken();
     if (parent)
@@ -173,9 +173,9 @@ wxString Token::DisplayName() const
 Token* Token::GetParentToken()
 {
     Token* the_token = 0;
-    if (!m_pTree)
+    if (!m_TokensTree)
         return 0;
-    the_token = m_pTree->at(m_ParentIndex);
+    the_token = m_TokensTree->at(m_ParentIndex);
     return the_token;
 }
 
@@ -233,16 +233,16 @@ bool Token::IsValidAncestor(const wxString& ancestor)
 
 wxString Token::GetFilename() const
 {
-    if (!m_pTree)
+    if (!m_TokensTree)
         return wxString(_T(""));
-    return m_pTree->GetFilename(m_FileIdx);
+    return m_TokensTree->GetFilename(m_FileIdx);
 }
 
 wxString Token::GetImplFilename() const
 {
-    if (!m_pTree)
+    if (!m_TokensTree)
         return wxString(_T(""));
-    return m_pTree->GetFilename(m_ImplFileIdx);
+    return m_TokensTree->GetFilename(m_ImplFileIdx);
 }
 
 bool Token::MatchesFiles(const TokenFilesSet& files)
@@ -263,7 +263,7 @@ wxString Token::GetNamespace() const
 {
     const wxString dcolon(_T("::"));
     wxString res;
-    Token* parentToken = m_pTree->at(m_ParentIndex);
+    Token* parentToken = m_TokensTree->at(m_ParentIndex);
     while (parentToken)
     {
         res.Prepend(dcolon);
@@ -281,17 +281,17 @@ void Token::AddChild(int child)
 
 bool Token::InheritsFrom(int idx) const
 {
-    if (idx < 0 || !m_pTree)
+    if (idx < 0 || !m_TokensTree)
         return false;
 
-    Token* token = m_pTree->at(idx);
+    Token* token = m_TokensTree->at(idx);
     if (!token)
         return false;
 
     for (TokenIdxSet::iterator it = m_DirectAncestors.begin(); it != m_DirectAncestors.end(); it++)
     {
         int idx2 = *it;
-        Token* ancestor = m_pTree->at(idx2);
+        Token* ancestor = m_TokensTree->at(idx2);
 
         if (!ancestor)
             continue;
@@ -791,7 +791,7 @@ int TokensTree::AddTokenToList(Token* newToken, int forceidx)
         }
     }
 
-    newToken->m_pTree = this;
+    newToken->m_TokensTree = this;
     newToken->m_Self = result;
     // Clean up extra string memory
 
@@ -1297,7 +1297,7 @@ void TokensTree::MarkFileTokensAsLocal(size_t file, bool local, void* userData)
         if (token)
         {
             token->m_IsLocal = local;
-            token->m_pUserData = userData;
+            token->m_UserData = userData;
         }
     }
 }
