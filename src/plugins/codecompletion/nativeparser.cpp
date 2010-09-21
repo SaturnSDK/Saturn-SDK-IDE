@@ -3316,7 +3316,8 @@ void NativeParser::OnEditorActivatedTimer(wxTimerEvent& event)
             if (!project)
             {
                 parser->AddFile(m_LastActivatedFile);
-                m_StandaloneFiles.Add(m_LastActivatedFile);
+                if (m_StandaloneFiles.Index(m_LastActivatedFile) == wxNOT_FOUND)
+                    m_StandaloneFiles.Add(m_LastActivatedFile);
             }
         }
         else
@@ -3328,8 +3329,9 @@ void NativeParser::OnEditorActivatedTimer(wxTimerEvent& event)
         {
             wxFileName file(m_LastActivatedFile);
             parser->AddIncludeDir(file.GetPath());
-            m_StandaloneFiles.Add(m_LastActivatedFile);
-            AddFileToParser(NULL, m_LastActivatedFile);
+            if (m_StandaloneFiles.Index(m_LastActivatedFile) == wxNOT_FOUND)
+                m_StandaloneFiles.Add(m_LastActivatedFile);
+            AddFileToParser(project, m_LastActivatedFile);
         }
     }
 

@@ -1607,6 +1607,11 @@ void CodeCompletion::OnAppDoneStartup(CodeBlocksEvent& event)
     if (curProject && !m_NativeParser.GetParserByProject(curProject))
         m_NativeParser.CreateParser(curProject);
 
+    // parse any files opened through DDE or the command-line
+    EditorBase* editor = Manager::Get()->GetEditorManager()->GetActiveEditor();
+    if (editor)
+        m_NativeParser.OnEditorActivated(editor);
+
     event.Skip();
 }
 

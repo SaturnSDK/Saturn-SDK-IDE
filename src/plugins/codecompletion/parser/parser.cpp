@@ -608,7 +608,8 @@ bool Parser::AddFile(const wxString& filename, bool isLocal)
         m_ParsingType = ptAddFileToParser;
 
     AddParse(file);
-    m_NeedMarkFileAsLocal = true;
+    if (m_Project)
+        m_NeedMarkFileAsLocal = true;
 
     if (done)
         StartParsing(false);
@@ -915,6 +916,9 @@ void Parser::OnAllThreadsDone(CodeBlocksEvent& event)
     // Finish all task, then we need post a Parse_END event
     else
     {
+        if (!m_Project)
+            m_NeedMarkFileAsLocal = false;
+
         m_NeedsReparse = false;
         m_IsParsing = false;
         m_IsBatchParseDone = true;
@@ -1156,7 +1160,10 @@ size_t Parser::FindTokensInFile(const wxString& fileName, TokenIdxSet& result, s
 bool Parser::IsFileParsed(const wxString& filename)
 {
     wxCriticalSectionLocker locker(s_TokensTreeCritical);
-    return m_TokensTree->IsFileParsed(UnixFilename(filename));
+    wxCriticalSectionLocker parserLocker(s_ParserCritical);
+    bool isParsed =    m_TokensTree->IsFileParsed(UnixFilename(filename))
+                    || m_BatchParseFiles.Index(filename) != wxNOT_FOUND;
+    return isParsed;
 }
 
 void Parser::ProcessParserEvent(ParsingType type, int id, const wxString& info)
