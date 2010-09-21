@@ -152,7 +152,7 @@ static wxRegEx reDisassembly(_T("(0x[0-9A-Za-z]+)[ \t]+<.*>:[ \t]+(.*)"));
 // Locals at 0x22ff78, Previous frame's sp is 0x22ff80
 // Saved registers:
 //  ebx at 0x22ff6c, ebp at 0x22ff78, esi at 0x22ff70, edi at 0x22ff74, eip at 0x22ff7c
-static wxRegEx reDisassemblyInit(_T("^Stack level [0-9]+, frame at (0x[A-Fa-f0-9]+):"));
+static wxRegEx reDisassemblyInit(_T("^[ \t]*Stack level [0-9]+, frame at (0x[A-Fa-f0-9]+):"));
 //  rip = 0x400931 in Bugtest<int> (/src/_cb_dbg/disassembly/main.cpp:6);
 static wxRegEx reDisassemblyInitSymbol(_T("[ \t]*[er]ip[ \t]+=[ \t]+0x[0-9a-f]+[ \t]+in[ \t]+(.+)\\((.+):[0-9]+\\);"));
 static wxRegEx reDisassemblyInitFunc(_T("eip = (0x[A-Fa-f0-9]+) in ([^;]*)"));
@@ -1317,7 +1317,6 @@ class GdbCmd_Disassembly : public DebuggerCmd
             // End of assembler dump.
 
             cbDisassemblyDlg *dialog = Manager::Get()->GetDebuggerManager()->GetDisassemblyDialog();
-
             wxArrayString lines = GetArrayFromString(output, _T('\n'));
             for (unsigned int i = 0; i < lines.GetCount(); ++i)
             {
@@ -1328,8 +1327,6 @@ class GdbCmd_Disassembly : public DebuggerCmd
                     dialog->AddAssemblerLine(addr, reDisassembly.GetMatch(lines[i], 2));
                 }
             }
-//            m_pDlg->Show(true);
-//            m_pDriver->DebugLog(output);
         }
 };
 
@@ -1355,14 +1352,19 @@ class GdbCmd_DisassemblyInit : public DebuggerCmd
         {
             cbDisassemblyDlg *dialog = Manager::Get()->GetDebuggerManager()->GetDisassemblyDialog();
 
-            if (reDisassemblyInit.Matches(output))
+            const wxArrayString &lines = GetArrayFromString(output, _T('\n'));
+            if (lines.Count() <= 2)
+                return;
+            size_t firstLine = 0;
+            for (; firstLine < lines.Count() && !reDisassemblyInit.Matches(lines[firstLine]); ++firstLine)
+                ;
+            if (firstLine + 1 < lines.Count())
             {
-                const wxArrayString &lines = GetArrayFromString(output, _T('\n'));
                 bool sameSymbol = false;
-                if (lines.Count() > 2 && reDisassemblyInitSymbol.Matches(lines[1]))
+                if (reDisassemblyInitSymbol.Matches(lines[firstLine]))
                 {
-                    const wxString &symbol = reDisassemblyInitSymbol.GetMatch(lines[1], 1)
-                                             + reDisassemblyInitSymbol.GetMatch(lines[1], 2);
+                    const wxString &symbol = reDisassemblyInitSymbol.GetMatch(lines[firstLine], 1)
+                                             + reDisassemblyInitSymbol.GetMatch(lines[firstLine], 2);
                     sameSymbol = (LastSymbol == symbol);
 
                     if (!sameSymbol)

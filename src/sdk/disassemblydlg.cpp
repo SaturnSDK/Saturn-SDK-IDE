@@ -116,6 +116,9 @@ void cbDisassemblyDlg::AddAssemblerLine(unsigned long int addr, const wxString& 
     }
     wxString fmt;
     fmt.Printf(_T("%p\t%s\n"), (void*)addr, line.c_str());
+    if (!fmt.StartsWith(wxT("0x")))
+        fmt = wxT("0x") + fmt;
+
     m_pCode->AppendText(fmt);
     SetActiveAddress(m_LastActiveAddr);
     m_pCode->SetReadOnly(true);
