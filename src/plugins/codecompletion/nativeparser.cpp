@@ -1693,8 +1693,6 @@ const wxArrayString& NativeParser::GetCallTips(int chars_per_line)
         TokensTree* tokens = m_Parser->GetTokens();
         tokens->FreeTemporaries();
 
-        wxCriticalSectionLocker locker(s_TokensTreeCritical);
-
         TokenIdxSet search_scope;
         ParseUsingNamespace(&searchData, search_scope);
         ParseFunctionArguments(&searchData);

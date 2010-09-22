@@ -1159,10 +1159,18 @@ size_t Parser::FindTokensInFile(const wxString& fileName, TokenIdxSet& result, s
 
 bool Parser::IsFileParsed(const wxString& filename)
 {
-    wxCriticalSectionLocker locker(s_TokensTreeCritical);
-    wxCriticalSectionLocker parserLocker(s_ParserCritical);
-    bool isParsed =    m_TokensTree->IsFileParsed(UnixFilename(filename))
-                    || m_BatchParseFiles.Index(filename) != wxNOT_FOUND;
+    bool isParsed = false;
+    {
+        wxCriticalSectionLocker locker(s_TokensTreeCritical);
+        isParsed = m_TokensTree->IsFileParsed(UnixFilename(filename));
+    }
+
+    if (!isParsed)
+    {
+        wxCriticalSectionLocker locker(s_ParserCritical);
+        isParsed = m_BatchParseFiles.Index(filename) != wxNOT_FOUND;
+    }
+
     return isParsed;
 }
 
