@@ -4,6 +4,8 @@ Version 1.4.14 ( ?-?-2010 )
 
   Bugs Fixed:
 
+  - wxPG_EX_HELP_AS_TOOLTIPS did not work for the selected property.
+
   - wxPython Bindings: Custom properties did not properly support wxRect
     as a value.
 
@@ -86,6 +88,7 @@ Version 1.4.11 ( Mar-21-2010 )
 
   - Much improved Visual Studio project files have now been included, with
     experimental win64 support.
+
 
   Changes:
 
