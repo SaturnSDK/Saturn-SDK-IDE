@@ -17,7 +17,7 @@ void Parser::DoParseFile(const wxString & filename, bool flag)
 {
 }
 
-Parser::Parser(wxEvtHandler* pEvt):m_Pool(NULL,0,0)
+Parser::Parser(wxEvtHandler* pEvt, cbProject* project):m_Pool(NULL,0,0)
 {
 }
 

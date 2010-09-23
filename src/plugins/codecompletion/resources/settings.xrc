@@ -69,7 +69,7 @@
                       <flag>wxTOP|wxLEFT|wxRIGHT|wxEXPAND|wxALIGN_LEFT|wxALIGN_TOP</flag>
                       <border>8</border>
                     </object>
-					<object class="sizeritem">
+                    <object class="sizeritem">
                       <object class="wxCheckBox" name="chkSystemHeaderFiles">
                         <label>Enable system header files code-completion</label>
                       </object>

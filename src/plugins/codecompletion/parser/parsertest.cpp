@@ -60,7 +60,7 @@ ParserTest::~ParserTest()
 
 bool ParserTest::Start(const wxString& file)
 {
-    Parser client(NULL);
+    Parser client(NULL,NULL);
     FileLoader* loader = new FileLoader(file);
     (*loader)();
 
