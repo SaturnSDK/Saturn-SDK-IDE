@@ -83,6 +83,7 @@ public:
         m_Parser.m_IsUpFront = false;
 
         // Add all other files
+        m_Parser.m_IsFirstBatch = true;
         for (size_t i = 0; !TestDestroy() && i < m_Parser.m_BatchParseFiles.GetCount(); ++i)
             m_Parser.Parse(m_Parser.m_BatchParseFiles[i]);
 
@@ -378,14 +379,12 @@ bool Parser::ParseBuffer(const wxString& buffer, bool isLocal, bool bufferSkipBl
     return Parse(buffer, isLocal, opts);
 }
 
-void Parser::PrepareParsing()
-{
-    m_IsFirstBatch = true;
-}
-
-void Parser::AddUpFrontHeaders(const wxString& filename, bool systemHeaderFile)
+void Parser::AddUpFrontHeaders(const wxString& filename, bool systemHeaderFile, bool delay)
 {
     wxCriticalSectionLocker locker(s_ParserCritical);
+
+    if (m_BatchTimer.IsRunning())
+        m_BatchTimer.Stop();
 
     // Do up-front parse in sub thread
     m_UpFrontHeaders.Add(filename);
@@ -393,11 +392,16 @@ void Parser::AddUpFrontHeaders(const wxString& filename, bool systemHeaderFile)
     // Save system up-front headers, when all task is over, we need reparse it!
     if (systemHeaderFile)
         m_SystemUpFrontHeaders.Add(filename);
+
+    m_BatchTimer.Start(delay ? batch_timer_delay : 1, wxTIMER_ONE_SHOT);
 }
 
-void Parser::AddBatchParse(const wxArrayString& filenames)
+void Parser::AddBatchParse(const wxArrayString& filenames, bool delay)
 {
     wxCriticalSectionLocker locker(s_ParserCritical);
+
+    if (m_BatchTimer.IsRunning())
+        m_BatchTimer.Stop();
 
     if (m_BatchParseFiles.IsEmpty())
         m_BatchParseFiles = filenames;
@@ -407,21 +411,19 @@ void Parser::AddBatchParse(const wxArrayString& filenames)
         for (size_t i = 0; i < filenames.GetCount(); ++i)
             m_BatchParseFiles.Add(filenames[i]);
     }
+
+    m_BatchTimer.Start(delay ? batch_timer_delay : 1, wxTIMER_ONE_SHOT);
 }
 
-void Parser::AddParse(const wxString& filename)
+void Parser::AddParse(const wxString& filename, bool delay)
 {
     wxCriticalSectionLocker locker(s_ParserCritical);
-    m_BatchParseFiles.Add(filename);
-}
 
-void Parser::StartParsing(bool delay)
-{
-    // Allow future parses to take place in this same run
-    if (!m_IsParsing)
-        m_BatchTimer.Start(delay ? batch_timer_delay : 1, wxTIMER_ONE_SHOT);
-    else
-        Manager::Get()->GetLogManager()->DebugLog(_T("Start parsing failed!"));
+    if (m_BatchTimer.IsRunning())
+        m_BatchTimer.Stop();
+
+    m_BatchParseFiles.Add(filename);
+    m_BatchTimer.Start(delay ? batch_timer_delay : 10, wxTIMER_ONE_SHOT);
 }
 
 bool Parser::Parse(const wxString& filename, bool isLocal, LoaderBase* loader)
@@ -490,12 +492,6 @@ bool Parser::Parse(const wxString& bufferOrFilename, bool isLocal, ParserThreadO
             {
                 m_IsFirstBatch = false;
                 m_PoolTask.push(PTVector());
-            }
-
-            if (!m_IsParsing && m_PoolTask.empty())
-            {
-                Manager::Get()->GetLogManager()->DebugLog(_T("Parse file failed!"));
-                break;
             }
 
             if (m_IsParsing)
@@ -600,19 +596,12 @@ bool Parser::AddFile(const wxString& filename, bool isLocal)
     if (IsFileParsed(file))
         return false;
 
-    const bool done = Done();
-    if (done)
-        PrepareParsing();
-
     if (m_ParsingType == ptUndefined)
         m_ParsingType = ptAddFileToParser;
 
     AddParse(file);
     if (m_Project)
         m_NeedMarkFileAsLocal = true;
-
-    if (done)
-        StartParsing(false);
 
     return true;
 }
@@ -891,17 +880,11 @@ void Parser::OnAllThreadsDone(CodeBlocksEvent& event)
         for (size_t i = 0; i < m_SystemUpFrontHeaders.GetCount(); ++i)
             RemoveFile(m_SystemUpFrontHeaders[i]);
 
-        // Part.3 Prepare parsing
-        PrepareParsing();
+        // Part.3 Reparse system up-front headers
+        AddBatchParse(m_SystemUpFrontHeaders, false);
 
-        // Part.4 Reparse system up-front headers
-        AddBatchParse(m_SystemUpFrontHeaders);
-
-        // Part.5 Clear
+        // Part.4 Clear
         m_SystemUpFrontHeaders.Clear();
-
-        // Part.6 Start parsing
-        StartParsing();
     }
     else if (   (m_ParsingType == ptCreateParser || m_ParsingType == ptAddFileToParser)
              && m_NeedMarkFileAsLocal
@@ -1117,22 +1100,15 @@ bool Parser::ReparseModifiedFiles()
         }
     }
 
-    const bool done = Done();
-    if (done)
-        PrepareParsing();
-
     while (!files_list.empty())
     {
         wxString& filename = files_list.front();
-        AddParse(filename);
+        AddParse(filename, false);
         files_list.pop();
     }
 
     if (m_ParsingType == ptUndefined)
         m_ParsingType = ptReparseFile;
-
-    if (done)
-        StartParsing(false);
 
     return true;
 }

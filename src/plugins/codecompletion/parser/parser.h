@@ -133,11 +133,9 @@ class Parser : public wxEvtHandler
         Parser(wxEvtHandler* parent, cbProject* project);
         ~Parser();
 
-        void PrepareParsing();
-        void AddUpFrontHeaders(const wxString& filename, bool systemHeaderFile);
-        void AddBatchParse(const wxArrayString& filenames);
-        void AddParse(const wxString& filename);
-        void StartParsing(bool delay = true);
+        void AddUpFrontHeaders(const wxString& filename, bool systemHeaderFile, bool delay = true);
+        void AddBatchParse(const wxArrayString& filenames, bool delay = true);
+        void AddParse(const wxString& filename, bool delay = true);
 
         ParsingType GetParsingType() const { return m_ParsingType; }
         cbProject* GetParsingProject() const { return m_Project; }

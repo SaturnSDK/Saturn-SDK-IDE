@@ -1204,9 +1204,6 @@ bool NativeParser::StartCompleteParsing(cbProject* project, Parser* parser)
 
     Manager::Get()->GetLogManager()->DebugLog(_T("Passing list of files to batch-parser."));
 
-    // prepare parsing
-    parser->PrepareParsing();
-
     // parse up-front files
     if (!fronts.IsEmpty())
     {
@@ -1231,11 +1228,9 @@ bool NativeParser::StartCompleteParsing(cbProject* project, Parser* parser)
                                                     headers.GetCount() + sources.GetCount(),
                                                     project->GetTitle().wx_str()));
         parser->AddBatchParse(headers);
-        parser->AddBatchParse(sources);
+        parser->AddBatchParse(sources, false);
     }
 
-    // start parsing
-    parser->StartParsing();
     return true;
 }
 
