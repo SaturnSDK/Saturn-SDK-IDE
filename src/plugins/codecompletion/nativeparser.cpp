@@ -3055,7 +3055,7 @@ int NativeParser::FindCurrentFunctionStart(ccSearchData* searchData, wxString* n
                                                             token->DisplayName().wx_str(), token->GetFilename().wx_str(), token->m_ImplLineStart, token->m_ImplLineEnd));
             // found a matching function; check its bounds
             // the token is in the current file
-            if (   token->m_ImplLineStart <= (size_t)line
+            if (   token->m_ImplLine <= (size_t)line
                 && token->m_ImplLineEnd >= (size_t)line
                 && (   token->m_TokenKind == tkClass
                     || (   token->m_TokenKind & tkAnyFunction
