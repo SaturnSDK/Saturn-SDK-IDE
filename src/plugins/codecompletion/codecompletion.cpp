@@ -218,47 +218,6 @@ BEGIN_EVENT_TABLE(CodeCompletion, cbCodeCompletionPlugin)
     EVT_MENU(THREAD_COMPLETED, CodeCompletion::OnThreadCompletion)
 END_EVENT_TABLE()
 
-class HeaderDirTraverser : public wxDirTraverser
-{
-public:
-    HeaderDirTraverser(SystemHeadersMap& headersMap, const wxString& searchDir) :
-        m_SystemHeadersMap(headersMap),
-        m_SearchDir(searchDir),
-        m_Headers(headersMap[searchDir])
-    {}
-
-    virtual wxDirTraverseResult OnFile(const wxString& filename)
-    {
-        wxFileName fn(filename);
-        if (!fn.HasExt() || fn.GetExt().GetChar(0) == _T('h'))
-        {
-            fn.MakeRelativeTo(m_SearchDir);
-            wxString final(fn.GetFullPath());
-            final.Replace(_T("\\"), _T("/"), true);
-            m_Headers.push_back(final);
-        }
-
-        return wxDIR_CONTINUE;
-    }
-
-    virtual wxDirTraverseResult OnDir(const wxString& dirname)
-    {
-        wxString path(dirname);
-        if (path.Last() != wxFILE_SEP_PATH)
-            path.Append(wxFILE_SEP_PATH);
-
-        wxCriticalSectionLocker locker(s_HeadersCriticalSection);
-        if (m_SystemHeadersMap.find(path) != m_SystemHeadersMap.end())
-            return wxDIR_IGNORE;
-        return wxDIR_CONTINUE;
-    }
-
-private:
-    const SystemHeadersMap& m_SystemHeadersMap;
-    const wxString&         m_SearchDir;
-    std::list<wxString>&    m_Headers;
-};
-
 class SystemHeadersThread : public wxThread
 {
 public:
@@ -318,6 +277,72 @@ private:
     CodeCompletion*   m_Parent;
     SystemHeadersMap& m_SystemHeadersMap;
     wxArrayString     m_IncludeDirs;
+
+private:
+    class HeaderDirTraverser : public wxDirTraverser
+    {
+    public:
+        HeaderDirTraverser(SystemHeadersMap& headersMap, const wxString& searchDir) :
+            m_SystemHeadersMap(headersMap),
+            m_SearchDir(searchDir),
+            m_Headers(headersMap[searchDir]),
+            m_Locker(NULL),
+            m_HeaderCount(0)
+        {}
+
+        ~HeaderDirTraverser()
+        {
+            if (!m_Locker)
+                delete m_Locker;
+        }
+
+        virtual wxDirTraverseResult OnFile(const wxString& filename)
+        {
+            AddLock();
+
+            wxFileName fn(filename);
+            if (!fn.HasExt() || fn.GetExt().GetChar(0) == _T('h'))
+            {
+                fn.MakeRelativeTo(m_SearchDir);
+                wxString final(fn.GetFullPath());
+                final.Replace(_T("\\"), _T("/"), true);
+                m_Headers.push_back(final);
+            }
+
+            return wxDIR_CONTINUE;
+        }
+
+        virtual wxDirTraverseResult OnDir(const wxString& dirname)
+        {
+            AddLock();
+
+            wxString path(dirname);
+            if (path.Last() != wxFILE_SEP_PATH)
+                path.Append(wxFILE_SEP_PATH);
+
+            if (m_SystemHeadersMap.find(path) != m_SystemHeadersMap.end())
+                return wxDIR_IGNORE;
+            return wxDIR_CONTINUE;
+        }
+
+        void AddLock()
+        {
+            if (++m_HeaderCount % 100 == 1)
+            {
+                if (m_Locker)
+                    delete m_Locker;
+                wxMilliSleep(1);
+                m_Locker = new wxCriticalSectionLocker(s_HeadersCriticalSection);
+            }
+        }
+
+    private:
+        const SystemHeadersMap&  m_SystemHeadersMap;
+        const wxString&          m_SearchDir;
+        std::list<wxString>&     m_Headers;
+        wxCriticalSectionLocker* m_Locker;
+        size_t                   m_HeaderCount;
+    };
 };
 
 CodeCompletion::CodeCompletion() :
