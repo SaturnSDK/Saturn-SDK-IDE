@@ -292,13 +292,14 @@ private:
 
         ~HeaderDirTraverser()
         {
-            if (!m_Locker)
+            if (m_Locker)
                 delete m_Locker;
         }
 
         virtual wxDirTraverseResult OnFile(const wxString& filename)
         {
-            AddLock();
+            if (!AddLock())
+                return wxDIR_STOP;
 
             wxFileName fn(filename);
             if (!fn.HasExt() || fn.GetExt().GetChar(0) == _T('h'))
@@ -314,7 +315,8 @@ private:
 
         virtual wxDirTraverseResult OnDir(const wxString& dirname)
         {
-            AddLock();
+            if (!AddLock())
+                return wxDIR_STOP;
 
             wxString path(dirname);
             if (path.Last() != wxFILE_SEP_PATH)
@@ -325,15 +327,21 @@ private:
             return wxDIR_CONTINUE;
         }
 
-        void AddLock()
+        bool AddLock()
         {
             if (++m_HeaderCount % 100 == 1)
             {
                 if (m_Locker)
+                {
                     delete m_Locker;
+                    m_Locker = NULL;
+                }
+
                 wxMilliSleep(1);
-                m_Locker = new wxCriticalSectionLocker(s_HeadersCriticalSection);
+                m_Locker = new(std::nothrow) wxCriticalSectionLocker(s_HeadersCriticalSection);
             }
+
+            return !!m_Locker;
         }
 
     private:
