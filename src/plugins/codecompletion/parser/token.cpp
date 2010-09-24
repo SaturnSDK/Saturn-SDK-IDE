@@ -585,14 +585,14 @@ size_t TokensTree::FindMatches(const wxString& s, TokenIdxSet& result, bool case
 {
     result.clear();
 
-    set<size_t> lists;
+    std::set<size_t> lists;
     int numitems = m_Tree.FindMatches(s, lists, caseSensitive, is_prefix);
     if (!numitems)
         return 0;
 
     // now the lists contains indexes to all the matching keywords
     // first loop will find all the keywords
-    for (set<size_t>::iterator it = lists.begin(); it != lists.end(); ++it)
+    for (std::set<size_t>::iterator it = lists.begin(); it != lists.end(); ++it)
     {
         TokenIdxSet* curset = &(m_Tree.GetItemAtPos(*it));
         // second loop will get all the items mapped by the same keyword,

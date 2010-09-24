@@ -67,12 +67,12 @@
 
 class ClassTreeData : public wxTreeItemData
 {
-    public:
-        ClassTreeData(Token* token){ m_Token = token; }
-        Token* GetToken(){ return m_Token; }
-        void SetToken(Token* token){ m_Token = token; }
-    private:
-        Token* m_Token;
+public:
+    ClassTreeData(Token* token) { m_Token = token; }
+    Token* GetToken() { return m_Token; }
+    void SetToken(Token* token) { m_Token = token; }
+private:
+    Token* m_Token;
 };
 
 struct ParserOptions
@@ -116,143 +116,226 @@ extern int PARSER_END;
 
 enum ParsingType
 {
-    ptCreateParser      = 1,
-    ptReparseFile       = 2,
-    ptAddFileToParser   = 3,
-    ptUndefined         = 4,
+    ptCreateParser    = 1,
+    ptReparseFile     = 2,
+    ptAddFileToParser = 3,
+    ptUndefined       = 4,
 };
 
 static wxCriticalSection s_ParserCritical;
 
+
+/** @brief Parser class holds all the tokens of a C::B project
+  *
+  * Parser class contains the TokensTree which is a Trie structure to recored Token information.
+  * For compact Trie, see more details in http://en.wikipedia.org/wiki/Trie
+  * Parser class controls the several ParserThread Pool, which hold ParserThread objects for each source file.
+  * Batch Parse Mode means We have a lot of files to be parsed, so a lot of Parserthread was generated and
+  * Add to the ThreadPool, and lately, the ParserThread was executed by ThreadPool.
+  */
 class Parser : public wxEvtHandler
 {
     friend class ParserThread;
     friend class AddParseThread;
 
-    public:
-        Parser(wxEvtHandler* parent, cbProject* project);
-        ~Parser();
+public:
+    /** constructor
+     * @param parent which is actually a NativeParser object
+     * @param project the C::B project associated with the current Parser
+     */
+    Parser(wxEvtHandler* parent, cbProject* project);
+    /** destructor */
+    ~Parser();
 
-        void AddUpFrontHeaders(const wxString& filename, bool systemHeaderFile, bool delay = true);
-        void AddBatchParse(const wxArrayString& filenames, bool delay = true);
-        void AddParse(const wxString& filename, bool delay = true);
+    /** Add the UpFront header files, there files will be parsed with the sequence as they added.
+     * @param filename input UpFront file name
+     * @param systemHeaderFile true if it is a system header file
+     * @param delay true if it use predefined delay time, otherwise it use 1 ms delay
+     */
+    void AddUpFrontHeaders(const wxString& filename, bool systemHeaderFile, bool delay = true);
 
-        ParsingType GetParsingType() const { return m_ParsingType; }
-        cbProject* GetParsingProject() const { return m_Project; }
-        static bool IsValidParser(Parser* parser)
-        { return sm_ValidParserSet.find(parser) != sm_ValidParserSet.end(); }
+    /** Add files to Batch Parse mode, internally, The files added were parsed sequentially.
+     * Not that when some "#include" files were added to the Batch Parse, their parsing sequence
+     * May be random.
+     * @param filenames input files name array
+     * @param delay true if it use predefined delay time, otherwise it use 1 ms delay.
+     */
+    void AddBatchParse(const wxArrayString& filenames, bool delay = true);
 
-        bool ParseBuffer(const wxString& buffer, bool isLocal = true, bool bufferSkipBlocks = false, bool isTemp = false);
-        bool ParseBufferForFunctions(const wxString& buffer);
-        bool ParseBufferForNamespaces(const wxString& buffer, NameSpaceVec& result);
-        bool ParseBufferForUsingNamespace(const wxString& buffer, wxArrayString& result);
-        bool Reparse(const wxString& filename, bool isLocal = true);
-        bool AddFile(const wxString& filename, bool isLocal = true);
-        bool RemoveFile(const wxString& filename);
+    /** Add one file to Batch mode Parsing
+     * @param filenames input file name
+     * @param delay true if it use predefined delay time, otherwise it use 1 ms delay.
+     */
+    void AddParse(const wxString& filename, bool delay = true);
 
-        void ReadOptions();
-        void WriteOptions();
-        bool ReadFromCache(wxInputStream* f);
-        bool WriteToCache(wxOutputStream* f);
-        bool CacheNeedsUpdate();
-        bool IsFileParsed(const wxString& filename);
+    /** verify (return) the associated C::B project pointer.
+     * @return C::B project pointer
+     */
+    cbProject* GetParsingProject() const { return m_Project; }
 
-        void StartStopWatch();
-        void EndStopWatch();
+    /** Check the Parser is valid, will return false if the Parser object is removed.
+     * @param parser Parser pointer to be checked.
+     * @return true if the Parser is valid, false if the Parser is deleted.
+     */
+    static bool IsValidParser(Parser* parser)
+    { return sm_ValidParserSet.find(parser) != sm_ValidParserSet.end(); }
 
-        Token* FindTokenByName(const wxString& name, bool globalsOnly = true, short int kindMask = 0xFFFF);
-        Token* FindChildTokenByName(Token* parent, const wxString& name, bool useInheritance = false, short int kindMask = 0xFFFF);
-        size_t FindMatches(const wxString& s, TokenList&   result, bool caseSensitive = true, bool is_prefix = true);
-        size_t FindMatches(const wxString& s, TokenIdxSet& result, bool caseSensitive = true, bool is_prefix = true);
-        size_t FindTokensInFile(const wxString& fileName, TokenIdxSet& result, short int kindMask);
-        ParserOptions& Options() { return m_Options; }
-        BrowserOptions& ClassBrowserOptions() { return m_BrowserOptions; }
+    bool ParseBuffer(const wxString& buffer, bool isLocal = true, bool bufferSkipBlocks = false, bool isTemp = false);
+    bool ParseBufferForFunctions(const wxString& buffer);
+    bool ParseBufferForNamespaces(const wxString& buffer, NameSpaceVec& result);
+    bool ParseBufferForUsingNamespace(const wxString& buffer, wxArrayString& result);
 
-        void ClearIncludeDirs() { m_IncludeDirs.Clear(); }
-        void AddIncludeDir(const wxString& dir);
-        void AddPredefinedMacros(const wxString& defs);
-        const wxArrayString& GetIncludeDirs() const { return m_IncludeDirs; }
-        wxString GetFullFileName(const wxString& src, const wxString& tgt, bool isGlobal);
-        wxString FindFirstFileInIncludeDirs(const wxString& file);
-        wxArrayString FindFileInIncludeDirs(const wxString& file, bool firstonly = false);
+    bool Reparse(const wxString& filename, bool isLocal = true);
+    bool AddFile(const wxString& filename, bool isLocal = true);
+    bool RemoveFile(const wxString& filename);
 
-        TokensTree* GetTokens(){ return m_TokensTree; }
-        TokensTree* GetTempTokens() { return m_TempTokensTree; }
-        unsigned int GetFilesCount();
+    void ReadOptions();
+    void WriteOptions();
+    bool ReadFromCache(wxInputStream* f);
+    bool WriteToCache(wxOutputStream* f);
+    bool CacheNeedsUpdate();
+    bool IsFileParsed(const wxString& filename);
 
-        bool Done();
-        void LinkInheritance(bool tempsOnly = false);
+    void StartStopWatch();
+    void EndStopWatch();
 
-        /** Before call this function, *MUST* add a locker
-          * e.g. wxCriticalSectionLocker locker(s_TokensTreeCritical);
-          */
-        void MarkFileTokensAsLocal(const wxString& filename, bool local, void* userData = 0);
+    Token* FindTokenByName(const wxString& name, bool globalsOnly = true, short int kindMask = 0xFFFF);
+    Token* FindChildTokenByName(Token* parent, const wxString& name, bool useInheritance = false, short int kindMask = 0xFFFF);
+    size_t FindMatches(const wxString& s, TokenList&   result, bool caseSensitive = true, bool is_prefix = true);
+    size_t FindMatches(const wxString& s, TokenIdxSet& result, bool caseSensitive = true, bool is_prefix = true);
+    size_t FindTokensInFile(const wxString& fileName, TokenIdxSet& result, short int kindMask);
+    ParserOptions& Options() { return m_Options; }
+    BrowserOptions& ClassBrowserOptions() { return m_BrowserOptions; }
 
-        unsigned int GetMaxThreads() const { return m_Pool.GetConcurrentThreads(); }
-        void SetMaxThreads(unsigned int max) { m_Pool.SetConcurrentThreads(max); }
+    void ClearIncludeDirs() { m_IncludeDirs.Clear(); }
+    void AddIncludeDir(const wxString& dir);
+    void AddPredefinedMacros(const wxString& defs);
+    const wxArrayString& GetIncludeDirs() const { return m_IncludeDirs; }
+    wxString GetFullFileName(const wxString& src, const wxString& tgt, bool isGlobal);
+    wxString FindFirstFileInIncludeDirs(const wxString& file);
+    wxArrayString FindFileInIncludeDirs(const wxString& file, bool firstonly = false);
 
-    protected:
-        // *MUST* called from child thread-->
-        bool Parse(const wxString& filename, bool isLocal = true, LoaderBase* loader = NULL);
-        bool Parse(const wxString& bufferOrFilename, bool isLocal, ParserThreadOptions& opts);
-        void DoParseFile(const wxString& filename, bool isGlobal);
-        // *MUST* end--<
+    TokensTree* GetTokens() { return m_TokensTree; }
+    TokensTree* GetTempTokens() { return m_TempTokensTree; }
+    unsigned int GetFilesCount();
 
-        bool ReparseModifiedFiles();
-        void TerminateAllThreads();
+    bool Done();
+    void LinkInheritance(bool tempsOnly = false);
 
-        void OnAllThreadsDone(CodeBlocksEvent& event);
-        void OnTimer(wxTimerEvent& event);
-        void OnBatchTimer(wxTimerEvent& event);
+    /** Before call this function, *MUST* add a locker
+      * e.g. wxCriticalSectionLocker locker(s_TokensTreeCritical);
+      */
+    void MarkFileTokensAsLocal(const wxString& filename, bool local, void* userData = 0);
 
-        void ProcessParserEvent(ParsingType type, int id, const wxString& info = wxEmptyString);
+    /** Node: Currently, the Max concurrent Parserthread number should be ONE, CC does not support
+     * Multiply threads Parsing.
+     */
+    unsigned int GetMaxThreads() const { return m_Pool.GetConcurrentThreads(); }
 
-    private:
-        void ConnectEvents();
-        void DisconnectEvents();
+    /** Not used, because the ThreadPool only support running ONE ParserThread concurrently */
+    void SetMaxThreads(unsigned int max) { m_Pool.SetConcurrentThreads(max); }
 
-        ParserOptions                  m_Options;
-        BrowserOptions                 m_BrowserOptions;
-        SearchTree<wxString>           m_GlobalIncludes;
-        wxArrayString                  m_IncludeDirs;
-        wxEvtHandler*                  m_Parent;
-        cbProject*                     m_Project;
+protected:
+    // *MUST* called from child thread-->
+    bool Parse(const wxString& filename, bool isLocal = true, LoaderBase* loader = NULL);
+    bool Parse(const wxString& bufferOrFilename, bool isLocal, ParserThreadOptions& opts);
+    void DoParseFile(const wxString& filename, bool isGlobal);
+    // *MUST* end--<
 
-    protected:
-        // the following three members are used to detect changes between
-        // in-mem data and cache
-        bool m_UsingCache; // true if loaded from cache
+    bool ReparseModifiedFiles();
+    void TerminateAllThreads();
 
-        typedef std::vector<ParserThread*> PTVector;
-        std::queue<PTVector>           m_PoolTask; // Do task one by one!
-        cbThreadPool                   m_Pool;
-        bool                           m_IsUpFront;
-        TokensTree*                    m_TokensTree;
-        TokensTree*                    m_TempTokensTree;
-        set<wxString, less<wxString> > m_LocalFiles;
-        bool                           m_NeedsReparse;
-        bool                           m_IsFirstBatch;
-        bool                           m_IsParsing;
+    /** When a ThreadPool batch Parse stage is done, it will receive cbEVT_THREADTASK_ALLDONE Message.
+     * Some situations we will receive this Message, such as:
+     * After UpFront header Parsing.
+     * Batch Parsing for general(normal) source files.
+     * System header files Parsing.
+     */
+    void OnAllThreadsDone(CodeBlocksEvent& event);
 
-    private:
-        wxTimer                        m_Timer;
-        wxTimer                        m_BatchTimer;
-        wxStopWatch                    m_StopWatch;
-        bool                           m_StopWatchRunning;
-        long                           m_LastStopWatchTime;
-        bool                           m_IgnoreThreadEvents;
+    void OnTimer(wxTimerEvent& event);
+    void OnBatchTimer(wxTimerEvent& event);
 
-        wxArrayString                  m_UpFrontHeaders;        // All up-front headers
-        wxArrayString                  m_SystemUpFrontHeaders;  // Only system up-front headers, for reparse
-        wxArrayString                  m_BatchParseFiles;       // All other batch parse files
-        wxString                       m_PredefinedMacros;      // Pre-defined macros
-        bool                           m_IsBatchParseDone;
-        ParsingType                    m_ParsingType;
-        bool                           m_NeedMarkFileAsLocal;
+    void ProcessParserEvent(ParsingType type, int id, const wxString& info = wxEmptyString);
 
-        static std::set<Parser*>       sm_ValidParserSet;
+private:
+    void ConnectEvents();
+    void DisconnectEvents();
 
-        DECLARE_EVENT_TABLE()
+    ParserOptions        m_Options;
+    BrowserOptions       m_BrowserOptions;
+    SearchTree<wxString> m_GlobalIncludes;
+    wxArrayString        m_IncludeDirs;
+    wxEvtHandler*        m_Parent;
+    cbProject*           m_Project;
+
+protected:
+    // the following three members are used to detect changes between
+    // in-memory data and cache
+    bool                 m_UsingCache; // true if loaded from cache
+
+    typedef std::vector<ParserThread*> PTVector;
+
+    /** Thread Queue, these Thread Tasks will be executed FIFO mode as they added */
+    std::queue<PTVector> m_PoolTask;
+
+    /** Thread Pool, Manage all the ParserThread, used in Batch Parse Mode. The thread pool can
+     * add/remove/execute the Parserthread Tasks.
+     */
+    cbThreadPool         m_Pool;
+
+    /** determine whether we need a UpFront Header Parsing, if Yes, The added file will be parsed when they
+     * added. Otherwise, added file will be parsed by thread pool(batch parse mode), thus the sequence
+     * of the parsed files were not confirmed
+     */
+    bool                 m_IsUpFront;
+
+    /** each Parser class contains a TokensTree object which used to record tokens per project
+      * this tree will be created in the constructor and destroyed in destructor.
+      */
+    TokensTree*          m_TokensTree;
+
+    /** a temp Tokenstree hold some temporary tokens, e.g. parsing a buffer containing some
+      * preprocessor directives, see ParseBufferForFunctions() like functions
+      * this tree will be created in the constructor and destroyed in destructor.
+      */
+    TokensTree*          m_TempTokensTree;
+
+    std::set<wxString, std::less<wxString> >
+                         m_LocalFiles;
+
+    /** Indicates some files in the current project need to be re-parsed, this is commonly caused
+      * that the "real-time parsing option" is enabled, and user is editing source file.
+      */
+    bool                 m_NeedsReparse;
+
+    /** Batch Parse mode flag. Normal files( Non-UpFront files) stage will set this flag. */
+    bool                 m_IsFirstBatch;
+    /** flag variable if true, which means Parser are busy running Parsing, false if all the parse stage finishes*/
+    bool                 m_IsParsing;
+
+private:
+    wxTimer              m_Timer;
+    wxTimer              m_BatchTimer;
+    wxStopWatch          m_StopWatch;
+    bool                 m_StopWatchRunning;
+    long                 m_LastStopWatchTime;
+    bool                 m_IgnoreThreadEvents;
+
+    wxArrayString        m_UpFrontHeaders;        // All up-front headers
+    wxArrayString        m_SystemUpFrontHeaders;  // Only system up-front headers, for reparse
+    wxArrayString        m_BatchParseFiles;       // All other batch parse files
+    wxString             m_PredefinedMacros;      // Pre-defined macros
+    /** used to measure Batch Parse time*/
+    bool                 m_IsBatchParseDone;
+    ParsingType          m_ParsingType;
+    /** if true, means all the files contains in the C::B project will be labeled as "local"*/
+    bool                 m_NeedMarkFileAsLocal;
+
+    /** Static variable to record all the Parser pointers, used to verify the valid of Parser Pointer*/
+    static std::set<Parser*> sm_ValidParserSet;
+
+    DECLARE_EVENT_TABLE()
 };
 
 #endif // PARSER_H

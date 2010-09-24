@@ -2637,7 +2637,8 @@ void ParserThread::ResolveTemplateActualArgs(const wxString& templateArgs, wxArr
     }
 }
 
-bool ParserThread::ResolveTemplateMap(wxString parentType, const wxArrayString& actuals, map<wxString, wxString>& results)
+bool ParserThread::ResolveTemplateMap(wxString parentType, const wxArrayString& actuals,
+                                      std::map<wxString, wxString>& results)
 {
     parentType.Trim(true).Trim(false);
     //I add this for temporary support for template under std, I will write  better codes later.
@@ -2682,7 +2683,7 @@ void ParserThread::ResolveTemplateArgs(Token* newToken)
     newToken->m_TemplateType = actuals;
     // now resolve the template normal and actual map
     // wxString parentType = m_Str;
-    map<wxString, wxString> templateMap;
+    std::map<wxString, wxString> templateMap;
     ResolveTemplateMap(m_Str, actuals, templateMap);
     newToken->m_TemplateMap = templateMap;
 }

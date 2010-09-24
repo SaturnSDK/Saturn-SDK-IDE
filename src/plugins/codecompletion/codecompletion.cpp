@@ -48,8 +48,6 @@
 #include <algorithm>
 #include <iterator>
 
-using namespace std;
-
 static wxCriticalSection s_HeadersCriticalSection;
 static wxString g_GlobalScope(_T("<global>"));
 
@@ -2786,7 +2784,7 @@ void CodeCompletion::EditorEventHook(cbEditor* editor, wxScintillaEvent& event)
         control->SetTargetStart(startPos);
         control->SetTargetEnd(curPos);
 
-        map<wxString, int>::const_iterator it = m_SearchItem.find(itemText);
+        std::map<wxString, int>::const_iterator it = m_SearchItem.find(itemText);
         if (it != m_SearchItem.end())
         {
             //Check if there are brace behind the target

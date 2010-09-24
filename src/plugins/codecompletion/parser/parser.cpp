@@ -473,6 +473,11 @@ bool Parser::Parse(const wxString& bufferOrFilename, bool isLocal, ParserThreadO
 #if CC_PARSER_PROFILE_TEST
         doParseNow = true;
 #endif
+        //if we are parsing a memory buffer or Parser is under Profile (CC_PARSER_PROFILE_TEST is defined as 1),
+        // then just call Parse() directly and thread pool is NOT used.
+        // other wise, we are parsing a local file, the thread pool is used, the Parserthread generated was pushed
+        // to the memory pool.
+
         if (doParseNow)
         {
             result = thread->Parse();

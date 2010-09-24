@@ -3568,7 +3568,7 @@ void NativeParser::AddTemplateAlias(const int& id, const TokenIdxSet& actualType
     if (typeToken && typeToken->m_TokenKind == tkTypedef && !typeToken->m_TemplateAlias.IsEmpty())
     {
         wxString actualTypeStr = typeToken->m_TemplateAlias;
-        map<wxString, wxString>::iterator it = m_TemplateMap.find(actualTypeStr);
+        std::map<wxString, wxString>::iterator it = m_TemplateMap.find(actualTypeStr);
         if (it != m_TemplateMap.end())
         {
             actualTypeStr = it->second;
@@ -3588,7 +3588,7 @@ void NativeParser::ResolveTemplateMap(const wxString& searchStr, const TokenIdxS
     if (actualTypeScope.empty())
         return;
     wxString actualTypeStr = searchStr;
-    map<wxString, wxString>::iterator it = m_TemplateMap.find(actualTypeStr);
+    std::map<wxString, wxString>::iterator it = m_TemplateMap.find(actualTypeStr);
     if (it != m_TemplateMap.end())
     {
         actualTypeStr = it->second;

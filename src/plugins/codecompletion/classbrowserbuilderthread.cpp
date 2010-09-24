@@ -660,7 +660,7 @@ bool ClassBrowserBuilderThread::AddDescendantsOf(CBTreeCtrl* tree, wxTreeItemId 
 bool ClassBrowserBuilderThread::AddNodes(CBTreeCtrl* tree, wxTreeItemId parent, const TokenIdxSet& tokens, short int tokenKindMask, int tokenScopeMask, bool allowGlobals)
 {
     int count = 0;
-    set<unsigned long, less<unsigned long> > tickets;
+    std::set<unsigned long, std::less<unsigned long> > tickets;
 
     // Build temporary list of Token tickets - if the token's ticket is present
     // among the parent node's children, it's a dupe, and we'll skip it.

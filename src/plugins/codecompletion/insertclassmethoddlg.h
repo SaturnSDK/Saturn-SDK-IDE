@@ -17,29 +17,30 @@ class wxCommandEvent;
 
 class InsertClassMethodDlg : public wxScrollingDialog
 {
-	public:
-		InsertClassMethodDlg(wxWindow* parent, Parser* parser, const wxString& filename);
-		virtual ~InsertClassMethodDlg();
+public:
+    InsertClassMethodDlg(wxWindow* parent, Parser* parser, const wxString& filename);
+    virtual ~InsertClassMethodDlg();
 
-        wxArrayString GetCode() const; // return an array of checked methods
-	private:
-        void FillClasses();
-        void FillMethods();
-        void DoFillMethodsFor(wxCheckListBox* clb,
-                                Token* parentToken,
-                                const wxString& ns,
-                                bool includePrivate,
-                                bool includeProtected,
-                                bool includePublic);
-        void OnClassesChange(wxCommandEvent& event);
-        void OnCodeChange(wxCommandEvent& event);
-        void OnFilterChange(wxCommandEvent& event);
+    wxArrayString GetCode() const; // return an array of checked methods
 
-        Parser*  m_pParser;
-        bool     m_Decl;
-        wxString m_Filename;
+private:
+    void FillClasses();
+    void FillMethods();
+    void DoFillMethodsFor(wxCheckListBox* clb,
+                          Token* parentToken,
+                          const wxString& ns,
+                          bool includePrivate,
+                          bool includeProtected,
+                          bool includePublic);
+    void OnClassesChange(wxCommandEvent& event);
+    void OnCodeChange(wxCommandEvent& event);
+    void OnFilterChange(wxCommandEvent& event);
 
-        DECLARE_EVENT_TABLE();
+    Parser*  m_Parser;
+    bool     m_Decl;
+    wxString m_Filename;
+
+    DECLARE_EVENT_TABLE();
 };
 
 #endif // INSERTCLASSMETHODDLG_H

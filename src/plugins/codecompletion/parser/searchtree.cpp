@@ -11,37 +11,33 @@
 
 // *** SearchTreeIterator ***
 
-BasicSearchTreeIterator::BasicSearchTreeIterator()
-    : m_CurNode(0),
-    m_eof(false),
-    m_pTree(0),
+BasicSearchTreeIterator::BasicSearchTreeIterator() :
+    m_CurNode(0),
+    m_Eof(false),
+    m_Tree(0),
     m_LastTreeSize(0),
     m_LastAddedNode(0)
 {
-    m_Stack.clear();
-    m_Stack2.clear();
 }
 
-BasicSearchTreeIterator::BasicSearchTreeIterator(BasicSearchTree* tree)
-    : m_CurNode(0),
-    m_eof(false),
-    m_pTree(tree),
+BasicSearchTreeIterator::BasicSearchTreeIterator(BasicSearchTree* tree) :
+    m_CurNode(0),
+    m_Eof(false),
+    m_Tree(tree),
     m_LastTreeSize(0),
     m_LastAddedNode(0)
 {
-    if (m_pTree)
+    if (m_Tree)
     {
-        m_LastTreeSize = m_pTree->m_pNodes.size();
+        m_LastTreeSize = m_Tree->m_pNodes.size();
         if (m_LastTreeSize)
-            m_LastAddedNode = m_pTree->GetNode(m_LastTreeSize - 1);
+            m_LastAddedNode = m_Tree->GetNode(m_LastTreeSize - 1);
     }
-    m_Stack.clear();
-    m_Stack2.clear();
 }
 
 bool BasicSearchTreeIterator::IsValid()
 {
-    if (!this || !m_pTree || m_LastTreeSize!= m_pTree->m_pNodes.size() || m_LastAddedNode != m_pTree->m_pNodes[m_LastTreeSize - 1])
+    if (!this || !m_Tree || m_LastTreeSize!= m_Tree->m_pNodes.size() || m_LastAddedNode != m_Tree->m_pNodes[m_LastTreeSize - 1])
         return false;
     return true;
 }
@@ -56,21 +52,21 @@ bool BasicSearchTreeIterator::FindPrev(bool includechildren)
     {
         if (!IsValid())
             break;
-        SearchTreeNode* curnode = m_pTree->GetNode(m_CurNode);
+        SearchTreeNode* curnode = m_Tree->GetNode(m_CurNode);
         if (!curnode)
             break;
 
         result = true;
         while (m_CurNode)
         {
-            m_eof = false;
+            m_Eof = false;
             result = FindPrevSibling();
             if (!result)
                 return false;
-            if (!m_eof)
+            if (!m_Eof)
                 break;
-            m_CurNode = curnode->m_parent;
-            curnode = m_pTree->GetNode(m_CurNode);
+            m_CurNode = curnode->m_Parent;
+            curnode = m_Tree->GetNode(m_CurNode);
             if (!curnode)
                 return false;
         }
@@ -82,12 +78,12 @@ bool BasicSearchTreeIterator::FindPrev(bool includechildren)
                 it = curnode->m_Children.end();
                 --it;
                 m_CurNode = it->second;
-                curnode = m_pTree->GetNode(m_CurNode,true);
+                curnode = m_Tree->GetNode(m_CurNode,true);
                 if (!curnode)
                     return false;
             }
         }
-        m_eof = false;
+        m_Eof = false;
         break;
     }while (true);
     return result;
@@ -103,7 +99,7 @@ bool BasicSearchTreeIterator::FindNext(bool includechildren)
     {
         if (!IsValid())
             break;
-        SearchTreeNode* curnode = m_pTree->GetNode(m_CurNode);
+        SearchTreeNode* curnode = m_Tree->GetNode(m_CurNode);
         if (!curnode)
             break;
 
@@ -114,7 +110,7 @@ bool BasicSearchTreeIterator::FindNext(bool includechildren)
             if (it != curnode->m_Children.end())
             {
                 m_CurNode = it->second;
-                curnode = m_pTree->GetNode(m_CurNode);
+                curnode = m_Tree->GetNode(m_CurNode);
                 if (!curnode)
                 {
                     return false;
@@ -122,15 +118,15 @@ bool BasicSearchTreeIterator::FindNext(bool includechildren)
                 break;
             }
         }
-        m_eof = true;
+        m_Eof = true;
         while (m_CurNode)
         {
-            m_eof = false;
+            m_Eof = false;
             result = FindNextSibling();
-            if (!m_eof)
+            if (!m_Eof)
                 break;
-            m_CurNode = curnode->m_parent;
-            curnode = m_pTree->GetNode(m_CurNode);
+            m_CurNode = curnode->m_Parent;
+            curnode = m_Tree->GetNode(m_CurNode);
             if (!curnode)
                 return false;
         }
@@ -144,24 +140,24 @@ bool BasicSearchTreeIterator::FindNextSibling()
     if (!IsValid())
         return false;
     if (!m_CurNode /* || !m_Stack.size() */)
-        m_eof = true;
+        m_Eof = true;
 
-    SearchTreeNode* node = m_pTree->GetNode(m_CurNode);
+    SearchTreeNode* node = m_Tree->GetNode(m_CurNode);
     if (!node)
         return false;
-    wxChar ch = node->GetChar(m_pTree);
-    node = node->GetParent(m_pTree);
+    wxChar ch = node->GetChar(m_Tree);
+    node = node->GetParent(m_Tree);
     if (!node)
         return false;
     SearchTreeLinkMap* the_map = &node->m_Children;
     SearchTreeLinkMap::iterator it = the_map->find(ch);
     if (it == the_map->end())
-        m_eof = true;
+        m_Eof = true;
     else
     {
         ++it;
         if (it == the_map->end())
-            m_eof = true;
+            m_Eof = true;
         else
             m_CurNode = it->second;
     }
@@ -173,23 +169,23 @@ bool BasicSearchTreeIterator::FindPrevSibling()
     if (!IsValid())
         return false;
     if (!m_CurNode /* || !m_Stack.size() */)
-        m_eof = true;
+        m_Eof = true;
 
-    SearchTreeNode* node = m_pTree->GetNode(m_CurNode);
+    SearchTreeNode* node = m_Tree->GetNode(m_CurNode);
     if (!node)
         return false;
-    wxChar ch = node->GetChar(m_pTree);
-    node = node->GetParent(m_pTree);
+    wxChar ch = node->GetChar(m_Tree);
+    node = node->GetParent(m_Tree);
     if (!node)
         return false;
     SearchTreeLinkMap* the_map = &node->m_Children;
     SearchTreeLinkMap::iterator it = the_map->find(ch);
     if (it == the_map->end())
-        m_eof = true;
+        m_Eof = true;
     else
     {
         if (it == the_map->begin())
-            m_eof = true;
+            m_Eof = true;
         else
         {
             --it;
@@ -204,19 +200,19 @@ bool BasicSearchTreeIterator::FindSibling(wxChar ch)
     if (!IsValid())
         return false;
     if (!m_CurNode /* || !m_Stack.size() */)
-        m_eof = true;
+        m_Eof = true;
 
-    SearchTreeNode* node = m_pTree->GetNode(m_CurNode);
+    SearchTreeNode* node = m_Tree->GetNode(m_CurNode);
     if (!node)
         return false;
-    node = node->GetParent(m_pTree);
+    node = node->GetParent(m_Tree);
     if (!node)
         return false;
 
     SearchTreeLinkMap* the_map = &node->m_Children;
     SearchTreeLinkMap::iterator it = the_map->find(ch);
     if (it == the_map->end())
-        m_eof = true;
+        m_Eof = true;
     else
     {
         m_CurNode = it->second;
@@ -226,26 +222,23 @@ bool BasicSearchTreeIterator::FindSibling(wxChar ch)
 
 // *** SearchTreeNode ***
 
-SearchTreeNode::SearchTreeNode():
-m_depth(0),
-m_parent(0),
-m_label(0),
-m_labelstart(0),
-m_labellen(0)
+SearchTreeNode::SearchTreeNode() :
+    m_Depth(0),
+    m_Parent(0),
+    m_Label(0),
+    m_LabelStart(0),
+    m_LabelLen(0)
 {
-    m_Children.clear();
-    m_Items.clear();
 }
 
-SearchTreeNode::SearchTreeNode(unsigned int depth,nSearchTreeNode parent,nSearchTreeLabel label, unsigned int labelstart, unsigned int labellen):
-m_depth(depth),
-m_parent(parent),
-m_label(label),
-m_labelstart(labelstart),
-m_labellen(labellen)
+SearchTreeNode::SearchTreeNode(unsigned int depth, nSearchTreeNode parent, nSearchTreeLabel label,
+                               unsigned int labelstart, unsigned int labellen) :
+    m_Depth(depth),
+    m_Parent(parent),
+    m_Label(label),
+    m_LabelStart(labelstart),
+    m_LabelLen(labellen)
 {
-    m_Children.clear();
-    m_Items.clear();
 }
 
 SearchTreeNode::~SearchTreeNode()
@@ -282,9 +275,9 @@ size_t SearchTreeNode::AddItemNo(size_t depth, size_t itemno)
 
 inline SearchTreeNode* SearchTreeNode::GetParent(const BasicSearchTree* tree) const
 {
-    if (!m_depth)
+    if (!m_Depth)
         return NULL;
-    return tree->m_pNodes[m_parent];
+    return tree->m_pNodes[m_Parent];
 }
 
 inline SearchTreeNode* SearchTreeNode::GetChild(BasicSearchTree* tree,wxChar ch)
@@ -295,36 +288,36 @@ inline SearchTreeNode* SearchTreeNode::GetChild(BasicSearchTree* tree,wxChar ch)
 
 wxString SearchTreeNode::GetLabel(const BasicSearchTree* tree) const
 {
-    if (!m_depth || m_label >= tree->m_Labels.size())
+    if (!m_Depth || m_Label >= tree->m_Labels.size())
         return wxString(_T(""));
-    return tree->m_Labels[m_label].substr(m_labelstart,m_labellen);
+    return tree->m_Labels[m_Label].substr(m_LabelStart,m_LabelLen);
 }
 
 inline wxChar SearchTreeNode::GetChar(const BasicSearchTree* tree) const
 {
-    if (!m_depth)
+    if (!m_Depth)
         return 0;
     const wxString& the_label = GetActualLabel(tree);
-    return the_label[m_labelstart];
+    return the_label[m_LabelStart];
 }
 
 inline const wxString& SearchTreeNode::GetActualLabel(const BasicSearchTree* tree) const
 {
-    return tree->m_Labels[m_label];
+    return tree->m_Labels[m_Label];
 }
 
 inline void SearchTreeNode::SetLabel(nSearchTreeLabel label, unsigned int labelstart, unsigned int labellen)
 {
-    m_label = label;
-    m_labelstart = labelstart;
-    m_labellen = labellen;
+    m_Label = label;
+    m_LabelStart = labelstart;
+    m_LabelLen = labellen;
 }
 
 inline unsigned int SearchTreeNode::GetLabelStartDepth() const
 {
-    if (!m_depth || m_labellen >= m_depth )
+    if (!m_Depth || m_LabelLen >= m_Depth )
         return 0;
-    return (m_depth - m_labellen);
+    return (m_Depth - m_LabelLen);
 }
 
 inline unsigned int SearchTreeNode::GetDeepestMatchingPosition(BasicSearchTree* tree, const wxString& s,unsigned int StringStartDepth)
@@ -352,12 +345,12 @@ inline unsigned int SearchTreeNode::GetDeepestMatchingPosition(BasicSearchTree* 
     const wxString& the_label = GetActualLabel(tree);
     size_t i,i_limit;
     i_limit = s.length() - startpos;
-    if (i_limit > m_labellen)
-        i_limit = m_labellen;
+    if (i_limit > m_LabelLen)
+        i_limit = m_LabelLen;
 
     for (i = 0; i < i_limit; i++)
     {
-        if (the_label[m_labelstart+i]!=s[startpos+i])
+        if (the_label[m_LabelStart+i]!=s[startpos+i])
             break;
     }
 
@@ -370,12 +363,12 @@ inline void SearchTreeNode::RecalcDepth(BasicSearchTree* tree)
     SearchTreeNode *parent = GetParent(tree);
     if (parent)
         curdepth = parent->GetDepth();
-    m_depth = curdepth + m_labellen;
+    m_Depth = curdepth + m_LabelLen;
 }
 
 void SearchTreeNode::UpdateItems(BasicSearchTree* tree)
 {
-    SearchTreeNode* parentnode = tree->GetNode(m_parent,true);
+    SearchTreeNode* parentnode = tree->GetNode(m_Parent,true);
     if (!parentnode)
        return;
     SearchTreeItemsMap newmap;
@@ -394,7 +387,7 @@ void SearchTreeNode::UpdateItems(BasicSearchTree* tree)
         m_Items[i->first]=i->second;
 }
 
-wxString SearchTreeNode::u2s(unsigned int u)
+wxString SearchTreeNode::U2S(unsigned int u)
 {
     if (!u)
         return _T("0");
@@ -414,12 +407,12 @@ wxString SearchTreeNode::u2s(unsigned int u)
     return result;
 }
 
-wxString SearchTreeNode::i2s(int i)
+wxString SearchTreeNode::I2S(int i)
 {
     wxString result(_T(""));
     if (i<0)
         result << _T('-');
-    result << u2s(abs(i));
+    result << U2S(abs(i));
     return result;
 }
 
@@ -428,11 +421,11 @@ wxString SearchTreeNode::Serialize(BasicSearchTree* tree,nSearchTreeNode node_id
     wxString result,children,sparent,sdepth,slabelno,slabelstart,slabellen;
     SearchTreeLinkMap::iterator link;
     SearchTreeItemsMap::iterator item;
-    sparent = u2s(m_parent);
-    sdepth = u2s(m_depth);
-    slabelno = u2s(m_label);
-    slabelstart = u2s(m_labelstart);
-    slabellen = u2s(m_labellen);
+    sparent = U2S(m_Parent);
+    sdepth = U2S(m_Depth);
+    slabelno = U2S(m_Label);
+    slabelstart = U2S(m_LabelStart);
+    slabellen = U2S(m_LabelLen);
 
     result << _T(" <node id=\"") << node_id << _T("\" parent=\"") << sparent << _T("\"");
     result << _T(" depth=\"") << sdepth << _T("\" label=\"");
@@ -444,7 +437,7 @@ wxString SearchTreeNode::Serialize(BasicSearchTree* tree,nSearchTreeNode node_id
         if (item->second)
         {
 
-            result << _T("    <item depth=\"") << u2s(item->first) << _T("\" itemid=\"") << u2s(item->second) <<  _T("\"") << _T(" />\n");
+            result << _T("    <item depth=\"") << U2S(item->first) << _T("\" itemid=\"") << U2S(item->second) <<  _T("\"") << _T(" />\n");
         }
     }
     result << _T("  </items>\n");
@@ -454,7 +447,7 @@ wxString SearchTreeNode::Serialize(BasicSearchTree* tree,nSearchTreeNode node_id
         if (link->second)
         {
 
-            result << _T("    <child char=\"") << SerializeString(wxString(link->first)) << _T("\" nodeid=\"") << u2s(link->second) <<  _T("\"") << _T(" />\n");
+            result << _T("    <child char=\"") << SerializeString(wxString(link->first)) << _T("\" nodeid=\"") << U2S(link->second) <<  _T("\"") << _T(" />\n");
         }
     }
 
@@ -473,10 +466,10 @@ wxString SearchTreeNode::Serialize(BasicSearchTree* tree,nSearchTreeNode node_id
     return result;
 }
 
-void SearchTreeNode::dump(BasicSearchTree* tree, nSearchTreeNode node_id, const wxString& prefix, wxString& result)
+void SearchTreeNode::Dump(BasicSearchTree* tree, nSearchTreeNode node_id, const wxString& prefix, wxString& result)
 {
     wxString suffix(_T(""));
-    suffix << _T("- \"") << SerializeString(GetLabel(tree)) << _T("\" (") << u2s(node_id) << _T(")");
+    suffix << _T("- \"") << SerializeString(GetLabel(tree)) << _T("\" (") << U2S(node_id) << _T(")");
     if (prefix.length() && prefix[prefix.length()-1]=='|')
         result << prefix.substr(0,prefix.length()-1) << _T('+') << suffix << _T('\n');
     else if (prefix.length() && prefix[prefix.length()-1]==' ')
@@ -492,7 +485,7 @@ void SearchTreeNode::dump(BasicSearchTree* tree, nSearchTreeNode node_id, const 
     {
         if (cnt == m_Children.size() - 1)
             newprefix[newprefix.length() - 1] = _T(' ');
-        tree->GetNode(i->second,false)->dump(tree,i->second,newprefix,result);
+        tree->GetNode(i->second,false)->Dump(tree,i->second,newprefix,result);
         cnt++;
     }
 }
@@ -552,7 +545,7 @@ wxString BasicSearchTree::GetString(const SearchTreePoint &nn,nSearchTreeNode to
     if (!nn.n || nn.n==top)
         return result;
     const SearchTreeNode *curnode;
-    vector<wxString> the_strings;
+    std::vector<wxString> the_strings;
     the_strings.clear();
     for (curnode = m_pNodes[nn.n];curnode && curnode->GetDepth();curnode = curnode->GetParent(this))
     {
@@ -727,13 +720,10 @@ size_t BasicSearchTree::GetItemNo(const wxString& s)
     return m_pNodes[resultpos.n]->GetItemNo(resultpos.depth);
 }
 
-size_t BasicSearchTree::FindMatches(const wxString& s,set<size_t> &result,bool caseSensitive,bool is_prefix)
+size_t BasicSearchTree::FindMatches(const wxString& s, std::set<size_t>& result, bool caseSensitive, bool is_prefix)
 {
-
     // NOTE: Current algorithm is suboptimal, but certainly it's much better
     // than an exhaustive search.
-
-
     result.clear();
     wxString s2,curcmp,s3;
     nSearchTreeNode ncurnode;
@@ -748,17 +738,17 @@ size_t BasicSearchTree::FindMatches(const wxString& s,set<size_t> &result,bool c
     else
         s2 = s;
 
-    while (!it.eof())
+    while (!it.Eof())
     {
         matches = false;
         ncurnode = *it;
         curnode = m_pNodes[*it];
         if (!curnode)
             break; // Error! Found a NULL Node
-        if (curnode->m_depth < s.length())
+        if (curnode->m_Depth < s.length())
         {   // Node's string is shorter than S, therefore it CANNOT be a suffix
             // However, we can test if it does NOT match the current string.
-            if (!curnode->m_depth)
+            if (!curnode->m_Depth)
                 matches = true;
             else
             {
@@ -927,7 +917,7 @@ bool SearchTreeNode::UnSerializeString(const wxString& s,wxString& result)
                         ch = _T('<');
                     else if (entity==_T("gt"))
                         ch = _T('>');
-                    else if (entity[0]==_T('#') && s2u(entity.substr(1),u))
+                    else if (entity[0]==_T('#') && S2U(entity.substr(1),u))
                         ch = u;
                     else
                     {
@@ -944,7 +934,7 @@ bool SearchTreeNode::UnSerializeString(const wxString& s,wxString& result)
     return (mode >= 0);
 }
 
-bool SearchTreeNode::s2u(const wxString& s,unsigned int& u)
+bool SearchTreeNode::S2U(const wxString& s,unsigned int& u)
 {
     bool is_ok = true;
     u = 0;
@@ -966,7 +956,7 @@ bool SearchTreeNode::s2u(const wxString& s,unsigned int& u)
     return is_ok;
 }
 
-bool SearchTreeNode::s2i(const wxString& s,int& i)
+bool SearchTreeNode::S2I(const wxString& s,int& i)
 {
     bool is_ok = true;
     i = 0;
@@ -975,14 +965,14 @@ bool SearchTreeNode::s2i(const wxString& s,int& i)
     {
         if (s[0]==_T('-'))
         {
-            if (!s2u(s.substr(1),u))
+            if (!S2U(s.substr(1),u))
                 is_ok = false;
             else
                 i = 0 - u;
         }
         else
         {
-            if (!s2u(s.substr(1),u))
+            if (!S2U(s.substr(1),u))
                 is_ok = false;
             else
                 i = u;
@@ -1015,7 +1005,7 @@ wxString SearchTreeNode::SerializeString(const wxString& s)
                 if (ch >= 32 && ch <= 126)
                     result << ch;
                 else
-                    result << _T("&#") << SearchTreeNode::u2s((unsigned int)ch) << _T(";");
+                    result << _T("&#") << SearchTreeNode::U2S((unsigned int)ch) << _T(";");
         }
     }
     return result;
@@ -1035,7 +1025,7 @@ wxString BasicSearchTree::SerializeLabels()
     result << _T(" <labels>\n");
     for (unsigned int i=0;i<m_Labels.size();i++)
     {
-        result << _T("  <label id=\"") << SearchTreeNode::u2s(i) << _T("\" data=\"") << SerializeLabel(i) << _T("\" />\n");
+        result << _T("  <label id=\"") << SearchTreeNode::U2S(i) << _T("\" data=\"") << SerializeLabel(i) << _T("\" />\n");
     }
     result << _T(" </labels>\n");
     return result;
@@ -1044,6 +1034,6 @@ wxString BasicSearchTree::SerializeLabels()
 wxString BasicSearchTree::dump()
 {
     wxString result(_T(""));
-    m_pNodes[0]->dump(this,0,_T(""),result);
+    m_pNodes[0]->Dump(this, 0, _T(""), result);
     return result;
 }
