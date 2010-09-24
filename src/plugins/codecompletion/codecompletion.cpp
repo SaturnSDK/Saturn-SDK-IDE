@@ -339,7 +339,7 @@ private:
                 m_Locker = new(std::nothrow) wxCriticalSectionLocker(s_HeadersCriticalSection);
             }
 
-            return !!m_Locker;
+            return m_Locker != NULL;
         }
 
     private:
