@@ -609,6 +609,7 @@ const int idRemoveFileFromProject = wxNewId();
 
 const int idBookmarkAdd = wxNewId();
 const int idBookmarkRemove = wxNewId();
+const int idBookmarkRemoveAll = wxNewId();
 
 const int idBreakpointAdd = wxNewId();
 const int idBreakpointEdit = wxNewId();
@@ -644,6 +645,7 @@ BEGIN_EVENT_TABLE(cbEditor, EditorBase)
     EVT_MENU(idRemoveFileFromProject, cbEditor::OnContextMenuEntry)
     EVT_MENU(idBookmarkAdd, cbEditor::OnContextMenuEntry)
     EVT_MENU(idBookmarkRemove, cbEditor::OnContextMenuEntry)
+    EVT_MENU(idBookmarkRemoveAll, cbEditor::OnContextMenuEntry)
     EVT_MENU(idBreakpointAdd, cbEditor::OnContextMenuEntry)
     EVT_MENU(idBreakpointEdit, cbEditor::OnContextMenuEntry)
     EVT_MENU(idBreakpointRemove, cbEditor::OnContextMenuEntry)
@@ -2697,6 +2699,8 @@ bool cbEditor::OnBeforeBuildContextMenu(const wxPoint& position, ModuleType type
                 popup->Append(idBookmarkAdd, _("Add bookmark"));
             }
 
+            popup->Append(idBookmarkRemoveAll, _("Remove all bookmark"));
+
             // display menu... wxWindows help says not to force the position
             PopupMenu(popup);
 
@@ -2825,6 +2829,8 @@ void cbEditor::OnContextMenuEntry(wxCommandEvent& event)
         control->MarkerAdd(m_pData->m_LastMarginMenuLine, BOOKMARK_MARKER);
     else if (id == idBookmarkRemove)
         control->MarkerDelete(m_pData->m_LastMarginMenuLine, BOOKMARK_MARKER);
+    else if (id == idBookmarkRemoveAll)
+        control->MarkerDeleteAll(BOOKMARK_MARKER);
     else if (id == idBookmarksToggle)
         MarkerToggle(BOOKMARK_MARKER);
     else if (id == idBookmarksNext)
