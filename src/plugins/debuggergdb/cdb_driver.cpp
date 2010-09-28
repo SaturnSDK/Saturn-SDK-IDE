@@ -8,6 +8,11 @@
  */
 
 #include <sdk.h>
+
+#ifndef CB_PRECOMP
+    #include "logmanager.h"
+#endif
+
 #include "cdb_driver.h"
 #include "cdb_commands.h"
 

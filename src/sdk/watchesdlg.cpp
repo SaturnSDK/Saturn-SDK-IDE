@@ -9,9 +9,11 @@
 
 #include "sdk_precomp.h"
 #ifndef CB_PRECOMP
+    #include <wx/dnd.h>
     #include <wx/menu.h>
     #include <wx/sizer.h>
 
+    #include "cbexception.h"
     #include "cbplugin.h"
     #include "logmanager.h"
     #include "scrollingdialog.h"

@@ -22,6 +22,9 @@
     #include "editormanager.h"
     #include "cbeditor.h"
     #include "projectmanager.h"
+    #include "infowindow.h"
+    #include "macrosmanager.h"
+    #include "configmanager.h"
 #endif
 
 #include <wx/toolbar.h>
