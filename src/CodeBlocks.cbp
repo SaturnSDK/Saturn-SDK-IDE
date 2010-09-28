@@ -2298,9 +2298,6 @@
 		<Unit filename="sdk\newfromtemplatedlg.cpp">
 			<Option target="sdk" />
 		</Unit>
-		<Unit filename="sdk\nullptr.cpp">
-			<Option target="sdk" />
-		</Unit>
 		<Unit filename="sdk\personalitymanager.cpp">
 			<Option target="sdk" />
 		</Unit>
