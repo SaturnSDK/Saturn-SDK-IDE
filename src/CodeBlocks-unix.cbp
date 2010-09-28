@@ -117,6 +117,7 @@
 				<Compiler>
 					<Add option="-DWXMAKINGLIB_PROPGRID" />
 					<Add option="-DwxPG_USE_WXMODULE=0" />
+					<Add option="-DwxPG_SUPPORT_TOOLTIPS" />
 					<Add directory="sdk/wxpropgrid/include" />
 					<Add directory="include" />
 				</Compiler>
@@ -401,8 +402,8 @@
 				</Linker>
 			</Target>
 			<Environment>
-				<Variable name="WX_SUFFIX" value="u" />
 				<Variable name="WX_VERSION" value="28" />
+				<Variable name="WX_SUFFIX" value="u" />
 				<Variable name="WX_CFG" value="" />
 			</Environment>
 		</Build>

@@ -289,7 +289,7 @@ WatchesDlg::WatchesDlg() :
     m_grid = new wxPropertyGrid(this, idGrid, wxDefaultPosition, wxDefaultSize,
                                 wxPG_SPLITTER_AUTO_CENTER | wxTAB_TRAVERSAL);
 
-    m_grid->SetExtraStyle(wxPG_EX_DISABLE_TLP_TRACKING);
+    m_grid->SetExtraStyle(wxPG_EX_DISABLE_TLP_TRACKING | wxPG_EX_HELP_AS_TOOLTIPS);
     m_grid->SetDropTarget(new WatchesDropTarget);
     m_grid->SetColumnCount(3);
     bs->Add(m_grid, 1, wxEXPAND | wxALL);
@@ -321,6 +321,10 @@ void AppendChildren(wxPropertyGrid &grid, wxPGProperty &property, cbWatch &watch
         prop->SetExpanded(child.IsExpanded());
         wxPGProperty *new_prop = grid.AppendIn(&property, prop);
         grid.SetPropertyAttribute(new_prop, wxT("Units"), type);
+        if (value.empty())
+            grid.SetPropertyHelpString(new_prop, wxEmptyString);
+        else
+            grid.SetPropertyHelpString(new_prop, symbol + wxT("=") + value);
 
         if(child.IsChanged())
         {
@@ -352,6 +356,10 @@ void WatchesDlg::UpdateWatches()
         else
             m_grid->SetPropertyColourToDefault(it->property);
         m_grid->SetPropertyAttribute(it->property, wxT("Units"), type);
+        if (value.empty())
+            m_grid->SetPropertyHelpString(it->property, wxEmptyString);
+        else
+            m_grid->SetPropertyHelpString(it->property, symbol + wxT("=") + value);
 
         it->property->DeleteChildren();
 
@@ -443,7 +451,6 @@ void WatchesDlg::OnPropertyChanging(wxPropertyGridEvent &event)
 {
     if(event.GetProperty()->GetCount() > 0)
         event.Veto(true);
-//    Manager::Get()->GetLogManager()->DebugLog(wxT("OnPropertyChanged"));
 }
 
 void WatchesDlg::OnPropertyLableEditBegin(wxPropertyGridEvent &event)
