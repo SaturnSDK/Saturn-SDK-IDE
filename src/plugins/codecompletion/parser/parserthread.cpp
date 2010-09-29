@@ -1412,6 +1412,13 @@ void ParserThread::HandleUndefs()
 void ParserThread::HandleNamespace()
 {
     wxString ns = m_Tokenizer.GetToken();
+    Token* tk = TokenExists(ns, nullptr, tkPreprocessor);
+    if (tk)
+    {
+        m_Tokenizer.ReplaceBufferForReparse(tk->m_Name);
+        ns = m_Tokenizer.GetToken();
+    }
+
     int line = m_Tokenizer.GetLineNumber();
 
     if (ns == ParserConsts::opbrace)

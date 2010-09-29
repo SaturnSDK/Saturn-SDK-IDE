@@ -1116,6 +1116,7 @@ bool NativeParser::StartCompleteParsing(cbProject* project, Parser* parser)
 
     ConfigManager* cfg = Manager::Get()->GetConfigManager(_T("code_completion"));
     const wxString def_fronts = _T("<cstddef>, <w32api.h>, <wx/defs.h>, <wx/dlimpexp.h>, <wx/toplevel.h>, ")
+                                _T("<boost/config.hpp>, <boost/filesystem/config.hpp>, ")
                                 _T("\"pch.h\", \"sdk.h\", \"stdafx.h\"");
     wxString up_fronts = cfg->Read(_T("/up_front_headers"), def_fronts);
     if (!up_fronts.StartsWith(def_fronts))
