@@ -521,6 +521,7 @@ private:
                          TokensTree* tree,
                          const TokenIdxSet& searchScope,
                          TokenIdxSet& result);
+    Token* GetTokenFromPos(const TokenIdxSet& tokens, int pos);
 
 private:
     typedef std::pair<cbProject*, Parser*> ParserPair;

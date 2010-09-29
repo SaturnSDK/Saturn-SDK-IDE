@@ -3041,68 +3041,46 @@ int NativeParser::FindCurrentFunctionStart(ccSearchData* searchData, wxString* n
     if (s_DebugSmartSense)
         Manager::Get()->GetLogManager()->DebugLog(F(_T("FindCurrentFunctionStart() Found %d results"), num_results));
 
-    TokensTree* tree = m_Parser->GetTokens();
-    const size_t currentFileIndex = tree->GetFileIndex(searchData->file);
-    for (TokenIdxSet::iterator it = result.begin(); it != result.end(); ++it)
-    {
-        if (s_DebugSmartSense)
-            Manager::Get()->GetLogManager()->DebugLog(_T("FindCurrentFunctionStart() (Next) Iteration..."));
-        Token* token = tree->at(*it);
+        Token* token = GetTokenFromPos(result, line);
         if (token)
         {
+            // got it :)
             if (s_DebugSmartSense)
-                Manager::Get()->GetLogManager()->DebugLog(F(_T("FindCurrentFunctionStart() Iterating: tN='%s', tF='%s', tStart=%d, tEnd=%d"),
-                                                            token->DisplayName().wx_str(), token->GetFilename().wx_str(), token->m_ImplLineStart, token->m_ImplLineEnd));
-            // found a matching function; check its bounds
-            // the token is in the current file
-            if (   token->m_ImplLine <= (size_t)line
-                && token->m_ImplLineEnd >= (size_t)line
-                && (   token->m_TokenKind == tkClass
-                    || (   token->m_TokenKind & tkAnyFunction
-                        && token->m_ImplFileIdx == currentFileIndex ) ) )
+                Manager::Get()->GetLogManager()->DebugLog(F(_T("FindCurrentFunctionStart() Current function: '%s' (at line %d)"),
+                                                            token->DisplayName().wx_str(),
+                                                            token->m_ImplLine));
+
+            s_LastNS     = token->GetNamespace();
+            s_LastPROC   = token->m_Name;
+            s_LastResult = searchData->control->PositionFromLine(token->m_ImplLine - 1);
+
+            // locate function's opening brace
+            if(token->m_TokenKind & tkAnyFunction)
             {
-                // got it :)
-                if (s_DebugSmartSense)
-                    Manager::Get()->GetLogManager()->DebugLog(F(_T("FindCurrentFunctionStart() Current function: '%s' (at line %d)"),
-                                                                token->DisplayName().wx_str(),
-                                                                token->m_ImplLine));
-
-                s_LastNS     = token->GetNamespace();
-                s_LastPROC   = token->m_Name;
-                s_LastResult = searchData->control->PositionFromLine(token->m_ImplLine - 1);
-
-                // locate function's opening brace
-                if(token->m_TokenKind & tkAnyFunction)
+                while (s_LastResult < searchData->control->GetTextLength())
                 {
-                    while (s_LastResult < searchData->control->GetTextLength())
+                    wxChar ch = searchData->control->GetCharAt(s_LastResult);
+                    if (ch == _T('{'))
+                        break;
+                    else if (ch == 0)
                     {
-                        wxChar ch = searchData->control->GetCharAt(s_LastResult);
-                        if (ch == _T('{'))
-                            break;
-                        else if (ch == 0)
-                        {
-                            if (s_DebugSmartSense)
-                                Manager::Get()->GetLogManager()->DebugLog(_T("FindCurrentFunctionStart() Can't determine functions opening brace..."));
-                            return -1;
-                        }
-
-                        ++s_LastResult;
+                        if (s_DebugSmartSense)
+                            Manager::Get()->GetLogManager()->DebugLog(_T("FindCurrentFunctionStart() Can't determine functions opening brace..."));
+                        return -1;
                     }
+
+                    ++s_LastResult;
                 }
-
-                if (nameSpace) *nameSpace = s_LastNS;
-                if (procName)  *procName  = s_LastPROC;
-
-                if (s_DebugSmartSense)
-                    Manager::Get()->GetLogManager()->DebugLog(F(_T("FindCurrentFunctionStart() Namespace='%s', proc='%s' (returning %d)"),
-                                                                s_LastNS.wx_str(), s_LastPROC.wx_str(), s_LastResult));
-                return s_LastResult;
             }
-            else if (s_DebugSmartSense)
-                Manager::Get()->GetLogManager()->DebugLog(F(_T("FindCurrentFunctionStart() Function out of bounds: tN='%s', tF='%s', tStart=%d, tEnd=%d, line=%d (size_t)line=%d"),
-                                                            token->DisplayName().wx_str(), token->GetFilename().wx_str(), token->m_ImplLineStart, token->m_ImplLineEnd, line, (size_t)line));
+
+            if (nameSpace) *nameSpace = s_LastNS;
+            if (procName)  *procName  = s_LastPROC;
+
+            if (s_DebugSmartSense)
+                Manager::Get()->GetLogManager()->DebugLog(F(_T("FindCurrentFunctionStart() Namespace='%s', proc='%s' (returning %d)"),
+                                                            s_LastNS.wx_str(), s_LastPROC.wx_str(), s_LastResult));
+            return s_LastResult;
         }
-    }
 
     if (s_DebugSmartSense)
         Manager::Get()->GetLogManager()->DebugLog(_T("FindCurrentFunctionStart() Can't determine current function..."));
@@ -3672,4 +3650,48 @@ void NativeParser::ResolveOpeartor(const OperatorType& tokenOperatorType, const 
             }
         }
     }
+}
+Token* NativeParser::GetTokenFromPos(const TokenIdxSet& tokens, int pos)
+{
+    TokensTree* tree = m_Parser->GetTokens();
+    if (!tree)
+        return nullptr;
+    Token* classToken = nullptr;
+    for (TokenIdxSet::iterator it = tokens.begin(); it != tokens.end(); ++it)
+    {
+        Token* token = tree->at(*it);
+        if (token)
+        {
+            if (s_DebugSmartSense)
+                Manager::Get()->GetLogManager()->DebugLog(F(_T("FindCurrentFunctionStart() Iterating: tN='%s', tF='%s', tStart=%d, tEnd=%d"),
+                                                            token->DisplayName().wx_str(), token->GetFilename().wx_str(), token->m_ImplLineStart, token->m_ImplLineEnd));
+            if (   token->m_TokenKind & tkAnyFunction
+                && token->m_ImplLineStart <= (size_t)pos
+                && token->m_ImplLineEnd >= (size_t)pos)
+            {
+                if (classToken)
+                    classToken = nullptr;
+                return token;
+            }
+            else if (  token->m_TokenKind == tkConstructor
+                     && token->m_ImplLine <= (size_t)pos
+                     && token->m_ImplLineStart >= (size_t)pos)
+            {
+                if (classToken)
+                    classToken = nullptr;
+                return token;
+            }
+            else if (  token->m_TokenKind == tkClass
+                     && token->m_ImplLineStart <= (size_t)pos
+                     && token->m_ImplLineEnd >= (size_t)pos)
+            {
+                classToken = token;
+            }
+            else if (s_DebugSmartSense)
+                Manager::Get()->GetLogManager()->DebugLog(F(_T("FindCurrentFunctionStart() Function out of bounds: tN='%s', tF='%s', tStart=%d, tEnd=%d, line=%d (size_t)line=%d"),
+                                                            token->DisplayName().wx_str(), token->GetFilename().wx_str(), token->m_ImplLineStart, token->m_ImplLineEnd, pos, (size_t)pos));
+        }
+    }
+
+    return ((classToken) ? classToken : nullptr);
 }
