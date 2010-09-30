@@ -29,6 +29,11 @@ wxString CodeRefactoring::GetSymbolUnderCursor()
     if (!editor)
         return wxEmptyString;
 
+    cbStyledTextCtrl* control = editor->GetControl();
+    const int style = control->GetStyleAt(control->GetCurrentPos());
+    if (control->IsString(style) || control->IsComment(style))
+        return wxEmptyString;
+
     if (!m_NativeParser.GetParser().Done())
     {
         cbMessageBox(_("C++ Parser is still parsing files..."), _("Code Refactoring"), wxOK | wxICON_WARNING);
@@ -178,6 +183,10 @@ size_t CodeRefactoring::VerifyResult(cbProject* project, const TokenIdxSet& targ
     cbStyledTextCtrl* control = new cbStyledTextCtrl(editor->GetParent(), wxID_ANY, wxDefaultPosition, wxSize(0, 0));
     control->Show(false);
 
+    // styled the text to support control->GetStyleAt()
+    cbEditor::ApplyStyles(control);
+    EditorColourSet edColSet;
+
     size_t totalCount = 0;
     for (SearchDataMap::iterator it = m_SearchDataMap.begin(); it != m_SearchDataMap.end(); ++it)
         totalCount += it->second.size();
@@ -205,13 +214,16 @@ size_t CodeRefactoring::VerifyResult(cbProject* project, const TokenIdxSet& targ
             if (!detector.IsOK())
             {
                 task -= it->second.size();
+                m_SearchDataMap.erase(it++);
                 continue; // failed
             }
             control->SetText(detector.GetWxStr());
         }
 
-        ccSearchData searchData = { control, it->first };
+        // apply the corlor setting
+        edColSet.Apply(editor->GetLanguage(), control);
 
+        ccSearchData searchData = { control, it->first };
         for (SearchDataList::iterator itList = it->second.begin(); itList != it->second.end();)
         {
             // update the progress bar
@@ -219,6 +231,14 @@ size_t CodeRefactoring::VerifyResult(cbProject* project, const TokenIdxSet& targ
             {
                 userBreak = true;
                 break; // user pressed "Cancel"
+            }
+
+            // skip string or comment
+            const int style = control->GetStyleAt(itList->pos);
+            if (control->IsString(style) || control->IsComment(style))
+            {
+                it->second.erase(itList++);
+                continue;
             }
 
             // e.g. void |Test(...
@@ -264,13 +284,7 @@ void CodeRefactoring::Find(cbStyledTextCtrl* control, const wxString& file, cons
         if (pos != wxSCI_INVALID_POSITION)
         {
             start = pos + lengthFound;
-
-            // TODO (Loaden) not work?
-            const int style = control->GetStyleAt(pos); // always been zero?
-            if (control->IsString(style) || control->IsComment(style))
-                continue;
-
-            int line = control->LineFromPosition(pos);
+            const int line = control->LineFromPosition(pos);
             wxString text = control->GetLine(line).Trim(true).Trim(false);
             m_SearchDataMap[file].push_back(crSearchData(pos, line, text));
         }
