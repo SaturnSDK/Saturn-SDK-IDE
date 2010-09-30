@@ -99,7 +99,12 @@ libwxsmith_wxwidgets_defitems_la_SOURCES = \
 ./wxsrichtextctrl.cpp \
 ./wxssearchctrl.cpp \
 ./wxssimplehtmllistbox.cpp \
-./wxstreebook.cpp
+./wxstreebook.cpp \
+./wxsimage.cpp \
+./wxsimagelist.cpp \
+./wxsrichtextstylecomboctrl.cpp \
+./wxsrichtextstylelistbox.cpp \
+./wxsrichtextstylelistctrl.cpp
 
 noinst_HEADERS = \
 ./wxsgauge.h \
@@ -189,6 +194,11 @@ noinst_HEADERS = \
 ./wxsrichtextctrl.h \
 ./wxssearchctrl.h \
 ./wxssimplehtmllistbox.h \
-./wxstreebook.h
+./wxstreebook.h \
+./wxsimage.h \
+./wxsimagelist.h \
+./wxsrichtextstylecomboctrl.h \
+./wxsrichtextstylelistbox.h \
+./wxsrichtextstylelistctrl.h
 
 
