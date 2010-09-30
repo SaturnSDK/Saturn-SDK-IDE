@@ -1,4 +1,4 @@
-/** \file wxsbitmapcombobox.h
+/** \file wxsrichtextstylelistbox.h
 *
 * This file is part of wxSmith plugin for Code::Blocks Studio
 * Copyright (C) 2010 Gary Harris
@@ -18,20 +18,22 @@
 *
 */
 
-#ifndef WXSBITMAPCOMBOBOX_H
-#define WXSBITMAPCOMBOBOX_H
+#ifndef WXSRICHTEXTSTYLELISTBOX_H
+#define WXSRICHTEXTSTYLELISTBOX_H
 
 #include "../wxswidget.h"
-#include <wx/dynarray.h>
 
-WX_DECLARE_OBJARRAY(wxsBitmapData, BmpComboBitmapDataArray);
-
-/** \brief Class for wxsBitmapComboBox widget */
-class wxsBitmapComboBox: public wxsWidget
+/** \brief Class for wxsRichTextStyleListBox widget
+ *	\note If you set the control or a style sheet for this control in wxSmith you must ensure that it has been declared
+ *	beforehand, or use SetRichTextCtrl() and SetStyleSheet(). If set via wxSmith, these functions are called late enough
+ *	that you can using the style sheet declared for wxRichTextStyleOrganiserDialog. Alternatively, you could declare one
+ *	manually before the wxSmith-managed code block.
+*/
+class wxsRichTextStyleListBox: public wxsWidget
 {
     public:
 
-        wxsBitmapComboBox(wxsItemResData* Data);
+        wxsRichTextStyleListBox(wxsItemResData* Data);
 
     private:
 
@@ -39,11 +41,10 @@ class wxsBitmapComboBox: public wxsWidget
         virtual wxObject* OnBuildPreview(wxWindow* Parent,long Flags);
         virtual void OnEnumWidgetProperties(long Flags);
 
-        wxArrayString 	m_arrChoices;											//!< Array of entries for the choice list.
-        long 					m_defaultSelection;									//!< The item selected by default.
-		wxString    		m_sImageList;                     						//!< The selected image list .
-		wxString    		m_arrImageListNames[128];					//!< Array of image list names.
-
+		wxString	m_sControl;							//!< The associated wxRichTextCtrl.
+		wxString	m_sStyleSheet;					//!< The associated style sheet.
+		int				m_iStyleType;						//!< The style type to display.
+		bool			m_bApplyOnSelection;		//!< Whether to apply the style on selection.
 };
 
 #endif
