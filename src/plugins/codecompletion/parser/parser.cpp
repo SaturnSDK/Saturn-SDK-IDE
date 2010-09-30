@@ -66,30 +66,39 @@ public:
         wxCriticalSectionLocker locker(s_ParserCritical);
 
         // Pre-defined macros
-        ParserThreadOptions opts;
-        opts.wantPreprocessor     = m_Parser.m_Options.wantPreprocessor;
-        opts.followLocalIncludes  = m_Parser.m_Options.followLocalIncludes;
-        opts.followGlobalIncludes = m_Parser.m_Options.followGlobalIncludes;
-        opts.useBuffer            = true;
-        opts.isTemp               = false;
-        opts.bufferSkipBlocks     = false;
-        opts.handleFunctions      = false;
-        m_Parser.Parse(m_Parser.m_PredefinedMacros, false, opts);
+        if (!m_Parser.m_PredefinedMacros.IsEmpty())
+        {
+            ParserThreadOptions opts;
+            opts.wantPreprocessor     = m_Parser.m_Options.wantPreprocessor;
+            opts.followLocalIncludes  = m_Parser.m_Options.followLocalIncludes;
+            opts.followGlobalIncludes = m_Parser.m_Options.followGlobalIncludes;
+            opts.useBuffer            = true;
+            opts.isTemp               = false;
+            opts.bufferSkipBlocks     = false;
+            opts.handleFunctions      = false;
+            m_Parser.Parse(m_Parser.m_PredefinedMacros, false, opts);
+            m_Parser.m_PredefinedMacros.Clear();
+        }
 
         // Add up-front headers
-        m_Parser.m_IsUpFront = true;
-        for (size_t i = 0; !TestDestroy() && i < m_Parser.m_UpFrontHeaders.GetCount(); ++i)
-            m_Parser.Parse(m_Parser.m_UpFrontHeaders[i]);
-        m_Parser.m_IsUpFront = false;
+        if (!m_Parser.m_UpFrontHeaders.IsEmpty())
+        {
+            m_Parser.m_IsUpFront = true;
+            for (size_t i = 0; !TestDestroy() && i < m_Parser.m_UpFrontHeaders.GetCount(); ++i)
+                m_Parser.Parse(m_Parser.m_UpFrontHeaders[i]);
+            m_Parser.m_IsUpFront = false;
+            m_Parser.m_UpFrontHeaders.Clear();
+        }
 
         // Add all other files
-        m_Parser.m_IsFirstBatch = true;
-        for (size_t i = 0; !TestDestroy() && i < m_Parser.m_BatchParseFiles.GetCount(); ++i)
-            m_Parser.Parse(m_Parser.m_BatchParseFiles[i]);
+        if (!m_Parser.m_BatchParseFiles.IsEmpty())
+        {
+            m_Parser.m_IsFirstBatch = true;
+            for (size_t i = 0; !TestDestroy() && i < m_Parser.m_BatchParseFiles.GetCount(); ++i)
+                m_Parser.Parse(m_Parser.m_BatchParseFiles[i]);
+            m_Parser.m_BatchParseFiles.Clear();
+        }
 
-        m_Parser.m_UpFrontHeaders.Clear();
-        m_Parser.m_BatchParseFiles.Clear();
-        m_Parser.m_PredefinedMacros.Clear();
         m_Parser.m_IsParsing = true;
 
         return 0;

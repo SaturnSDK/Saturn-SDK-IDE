@@ -978,12 +978,6 @@ bool NativeParser::CreateParser(cbProject* project)
         return false;
     }
 
-    if (project && project->GetFilesCount() == 0)
-    {
-        Manager::Get()->GetLogManager()->DebugLog(_T("Can not parsing empty project!"));
-        return false;
-    }
-
     Parser* parser = new(std::nothrow) Parser(this, project);
     if (!parser)
     {
