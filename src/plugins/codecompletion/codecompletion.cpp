@@ -783,6 +783,7 @@ void CodeCompletion::OnAttach()
     pm->RegisterEventSink(cbEVT_EDITOR_ACTIVATED,     new cbEventFunctor<CodeCompletion, CodeBlocksEvent>(this, &CodeCompletion::OnEditorActivated));
     pm->RegisterEventSink(cbEVT_EDITOR_TOOLTIP,       new cbEventFunctor<CodeCompletion, CodeBlocksEvent>(this, &CodeCompletion::OnValueTooltip));
     pm->RegisterEventSink(cbEVT_EDITOR_CLOSE,         new cbEventFunctor<CodeCompletion, CodeBlocksEvent>(this, &CodeCompletion::OnEditorClosed));
+    pm->RegisterEventSink(cbEVT_EDITOR_MODIFIED,      new cbEventFunctor<CodeCompletion, CodeBlocksEvent>(this, &CodeCompletion::OnEditorModified));
 
     pm->RegisterEventSink(cbEVT_APP_STARTUP_DONE,     new cbEventFunctor<CodeCompletion, CodeBlocksEvent>(this, &CodeCompletion::OnAppDoneStartup));
     pm->RegisterEventSink(cbEVT_WORKSPACE_CHANGED,    new cbEventFunctor<CodeCompletion, CodeBlocksEvent>(this, &CodeCompletion::OnWorkspaceChanged));
@@ -1769,7 +1770,7 @@ void CodeCompletion::OnProjectFileChanged(CodeBlocksEvent& event)
         wxString filename = event.GetString();
         cbProject* project = m_NativeParser.GetProjectByFilename(filename);
         if (project && m_NativeParser.ReparseFile(project, filename))
-            Manager::Get()->GetLogManager()->DebugLog(_T("Reparsing when file changed: ") + event.GetString());
+            Manager::Get()->GetLogManager()->DebugLog(_T("Reparsing when file changed: ") + filename);
     }
     event.Skip();
 }
@@ -1789,15 +1790,17 @@ void CodeCompletion::OnReparseActiveEditor(CodeBlocksEvent& event)
 {
     if (!ProjectManager::IsBusy() && IsAttached() && m_InitDone)
     {
-        EditorBase* ed = event.GetEditor();
-        if (ed)
+        EditorBase* editor = event.GetEditor();
+        if (editor)
         {
-            wxString filename = ed->GetFilename();
+            wxString filename = editor->GetFilename();
             cbProject* project = m_NativeParser.GetProjectByFilename(filename);
             if (project && m_NativeParser.ReparseFile(project, filename))
+            {
                 Manager::Get()->GetLogManager()->DebugLog(_T("Reparsing active editor ") + filename);
-
-            ParseFunctionsAndFillToolbar(true);
+                if (editor == Manager::Get()->GetEditorManager()->GetActiveEditor())
+                    ParseFunctionsAndFillToolbar(true);
+            }
         }
     }
 
@@ -2291,6 +2294,24 @@ void CodeCompletion::OnEditorClosed(CodeBlocksEvent& event)
     event.Skip();
 }
 
+void CodeCompletion::OnEditorModified(CodeBlocksEvent& event)
+{
+    EditorBase* editor = event.GetEditor();
+    if (editor)
+    {
+        wxString filename = editor->GetFilename();
+        cbProject* project = m_NativeParser.GetProjectByFilename(filename);
+        if (project && m_NativeParser.ReparseFile(project, filename))
+        {
+            Manager::Get()->GetLogManager()->DebugLog(_T("Reparsing when editor modified: ") + filename);
+            if (editor == Manager::Get()->GetEditorManager()->GetActiveEditor())
+                ParseFunctionsAndFillToolbar(true);
+        }
+    }
+
+    event.Skip();
+}
+
 void CodeCompletion::OnStartParsingFunctions(wxTimerEvent& event)
 {
     if (!ProjectManager::IsBusy())
@@ -2344,7 +2365,7 @@ void CodeCompletion::OnValueTooltip(CodeBlocksEvent& event)
 
         TokenIdxSet result;
         int endOfWord = ed->GetControl()->WordEndPosition(pos, true);
-        if (m_NativeParser.MarkItemsByAI(result, true, true, true, endOfWord))
+        if (m_NativeParser.MarkItemsByAI(result, true, false, true, endOfWord))
         {
             wxString msg;
             int count = 0;
@@ -2520,8 +2541,7 @@ void CodeCompletion::OnGotoDeclaration(wxCommandEvent& event)
 
     // get the matching set
     TokenIdxSet result;
-    m_NativeParser.MarkItemsByAI(result, m_NativeParser.GetParser().Options().useSmartSense);
-    m_NativeParser.RemoveInvalid(result, target);
+    m_NativeParser.MarkItemsByAI(result, true, false, true, end);
 
     // one match
     Token* token = NULL;

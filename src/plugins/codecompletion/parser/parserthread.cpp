@@ -887,7 +887,6 @@ void ParserThread::DoParse()
                         Token* newToken = DoAddToken(tkVariable, token, m_Tokenizer.GetLineNumber());
                         if (newToken && !m_TemplateArgument.IsEmpty())
                             ResolveTemplateArgs(newToken);
-                        //HandleVariable(token, m_Tokenizer.GetLineNumber());
                     }
 
                     // else it's a syntax error; let's hope we can recover from this...
@@ -935,7 +934,6 @@ void ParserThread::DoParse()
                             Token* newToken = DoAddToken(tkVariable, token, m_Tokenizer.GetLineNumber());
                             if (newToken && !m_TemplateArgument.IsEmpty())
                                 ResolveTemplateArgs(newToken);
-                            //HandleVariable(token, m_Tokenizer.GetLineNumber());
                         }
                         else
                             SkipToOneOfChars(ParserConsts::semicolonclbrace, true);
@@ -2142,7 +2140,7 @@ void ParserThread::HandleTypedef()
         // skip templates <>
         if (peek == ParserConsts::lt)
         {
-            SkipAngleBraces();
+            GetTemplateArgs();
             continue;
         }
 
@@ -2211,6 +2209,8 @@ void ParserThread::HandleTypedef()
 
             if (tdef->IsValidAncestor(ancestor))
                 tdef->m_AncestorsString = ancestor;
+            if (!m_TemplateArgument.IsEmpty())
+                ResolveTemplateArgs(tdef);
         }
     }
 }
@@ -2644,9 +2644,10 @@ void ParserThread::ResolveTemplateActualArgs(const wxString& templateArgs, wxArr
     }
 }
 
-bool ParserThread::ResolveTemplateMap(wxString parentType, const wxArrayString& actuals,
+bool ParserThread::ResolveTemplateMap(const wxString& typeStr, const wxArrayString& actuals,
                                       std::map<wxString, wxString>& results)
 {
+    wxString parentType = typeStr;
     parentType.Trim(true).Trim(false);
     //I add this for temporary support for template under std, I will write  better codes later.
     TokenIdxSet parentResult;
@@ -2675,7 +2676,6 @@ bool ParserThread::ResolveTemplateMap(wxString parentType, const wxArrayString& 
     }
     else
         return false;
-
 }
 
 void ParserThread::ResolveTemplateArgs(Token* newToken)
@@ -2691,7 +2691,7 @@ void ParserThread::ResolveTemplateArgs(Token* newToken)
     // now resolve the template normal and actual map
     // wxString parentType = m_Str;
     std::map<wxString, wxString> templateMap;
-    ResolveTemplateMap(m_Str, actuals, templateMap);
+    ResolveTemplateMap(newToken->m_Type, actuals, templateMap);
     newToken->m_TemplateMap = templateMap;
 }
 

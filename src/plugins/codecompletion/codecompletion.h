@@ -114,6 +114,7 @@ private:
     void OnEditorOpen(CodeBlocksEvent& event);
     void OnEditorActivated(CodeBlocksEvent& event);
     void OnEditorClosed(CodeBlocksEvent& event);
+    void OnEditorModified(CodeBlocksEvent& event);
     void OnParserEnd(wxCommandEvent& event);
     void OnParserStart(wxCommandEvent& event);
     void OnValueTooltip(CodeBlocksEvent& event);

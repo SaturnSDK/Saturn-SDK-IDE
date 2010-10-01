@@ -269,7 +269,7 @@ private:
     void ResolveTemplateArgs(Token* newToken);
     void ResolveTemplateFormalArgs(const wxString& templateArgs, wxArrayString& formals);
     void ResolveTemplateActualArgs(const wxString& templateArgs, wxArrayString& actuals);
-    bool ResolveTemplateMap(wxString parentType, const wxArrayString& actuals,
+    bool ResolveTemplateMap(const wxString& typeStr, const wxArrayString& actuals,
                             std::map<wxString, wxString>& results);
 
     /** if we regard the parserThread class as a syntax analyzer, then the Tokenizer class is

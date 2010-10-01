@@ -1540,19 +1540,6 @@ size_t NativeParser::MarkItemsByAI(ccSearchData* searchData, TokenIdxSet& result
     }
 }
 
-void NativeParser::RemoveInvalid(TokenIdxSet& result, const wxString& target)
-{
-    TokensTree* tokens = m_Parser->GetTokens();
-    for (TokenIdxSet::iterator it = result.begin(); it != result.end();)
-    {
-        Token* tk = tokens->at(*it);
-        if (!tk || tk->m_Name != target)
-            result.erase(it++);
-        else
-            ++it;
-    }
-}
-
 const wxString& NativeParser::GetCodeCompletionItems()
 {
     m_CCItems.Clear();
@@ -1568,7 +1555,7 @@ const wxString& NativeParser::GetCodeCompletionItems()
             if (!token)
                 continue;
             if (!m_CCItems.IsEmpty())
-                 m_CCItems << _T(";");
+                m_CCItems << _T(";");
             m_CCItems << token->m_Name << token->m_Args;//" " << token->m_Filename << ":" << token->m_Line;
         }
     }
@@ -2244,7 +2231,7 @@ size_t NativeParser::BreakUpComponents(const wxString& actual, std::queue<Parser
         // Break up into "", type is pttNameSpace and "MessageBoxA", type is pttSearchText.
         // for pttNameSpace  type, if its text (tok) is empty -> ignore this component.
         // for pttSearchText type, don't do this because for ss:: we need this, too.
-        if (!tok.IsEmpty() || (tokenType == pttSearchText && components.size() != 0))
+        if (!tok.IsEmpty() || (tokenType == pttSearchText && !components.empty()))
         {
             if (s_DebugSmartSense)
                 Manager::Get()->GetLogManager()->DebugLog(F(_T("BreakUpComponents() Adding component: '%s'."), tok.wx_str()));
@@ -2611,14 +2598,15 @@ size_t NativeParser::ResolveActualType(wxString searchText, const TokenIdxSet& s
             initialScope = searchScope;
         else
             initialScope.insert(-1);
-        while (typeComponents.size() > 0)
+
+        while (!typeComponents.empty())
         {
             TokenIdxSet initialResult;
             ParserComponent component = typeComponents.front();
             typeComponents.pop();
             wxString actualTypeStr = component.component;
             GenerateResultSet(actualTypeStr, initialScope, initialResult, true, false, 0xFFFF);
-            if (initialResult.size() > 0)
+            if (!initialResult.empty())
             {
                 initialScope.clear();
                 for (TokenIdxSet::iterator it = initialResult.begin(); it != initialResult.end(); ++it)
@@ -2634,13 +2622,12 @@ size_t NativeParser::ResolveActualType(wxString searchText, const TokenIdxSet& s
             }
 
         }
-        if (initialScope.size() > 0)
-        {
+
+        if (!initialScope.empty())
             result = initialScope;
-        }
     }
 
-    return (result.size()>0 ? result.size() : 0);
+    return result.size();
 }
 
 size_t NativeParser::ResolveExpression(std::queue<ParserComponent> components, const TokenIdxSet& searchScope,
@@ -2661,12 +2648,11 @@ size_t NativeParser::ResolveExpression(std::queue<ParserComponent> components, c
     else
         initialScope.insert(-1);
 
-    while (components.size() > 0)
+    while (!components.empty())
     {
         TokenIdxSet initialResult;
         ParserComponent subComponent = components.front();
         components.pop();
-        bool isLastComponent = components.empty();
         wxString searchText = subComponent.component;
         if (searchText == _T("this"))
         {
@@ -2680,7 +2666,7 @@ size_t NativeParser::ResolveExpression(std::queue<ParserComponent> components, c
                     initialScope.erase(*it);
                 }
             }
-            if (initialScope.size() > 0)
+            if (!initialScope.empty())
                 continue;
             else
                 break;//error happened.
@@ -2693,7 +2679,12 @@ size_t NativeParser::ResolveExpression(std::queue<ParserComponent> components, c
             Manager::Get()->GetLogManager()->DebugLog(F(_T("search scope: %d"), (*tt)));
         }
 
-        GenerateResultSet(searchText, initialScope, initialResult, (caseSense || !isLastComponent), (!isPrefix && isLastComponent));
+        // e.g. A.BB.CCC.DDDD|
+        if (components.empty()) // is the last component (DDDD)
+            GenerateResultSet(searchText, initialScope, initialResult, caseSense, isPrefix);
+        else // case sensitive and full-match always (A / BB / CCC)
+            GenerateResultSet(searchText, initialScope, initialResult, true, false);
+
         // now we should clear the initialScope.
         initialScope.clear();
 
@@ -2703,7 +2694,7 @@ size_t NativeParser::ResolveExpression(std::queue<ParserComponent> components, c
             Manager::Get()->GetLogManager()->DebugLog(F(_T("ResolveExpression() Looping %d result."), initialResult.size()));
 
         //------------------------------------
-        if (initialResult.size() > 0)
+        if (!initialResult.empty())
         {
             //loop all matches.
             for (TokenIdxSet::iterator it=initialResult.begin(); it!=initialResult.end(); ++it)
@@ -2765,11 +2756,14 @@ size_t NativeParser::ResolveExpression(std::queue<ParserComponent> components, c
                     //now get the tokens of variable/function.
                     TokenIdxSet actualTypeResult;
                     ResolveActualType(actualTypeStr, actualTypeScope, actualTypeResult);
-                    if (actualTypeResult.size() > 0)
+                    if (!actualTypeResult.empty())
                     {
                         for (TokenIdxSet::iterator it2=actualTypeResult.begin(); it2!=actualTypeResult.end(); ++it2)
                         {
                             initialScope.insert(*it2);
+                            Token* typeToken = tree->at(*it2);
+                            if (typeToken && !typeToken->m_TemplateMap.empty())
+                                m_TemplateMap = typeToken->m_TemplateMap;
                             //and we need to add the template argument alias too.
                             AddTemplateAlias(*it2, actualTypeScope, initialScope, tree);
                         }
@@ -2795,7 +2789,7 @@ size_t NativeParser::ResolveExpression(std::queue<ParserComponent> components, c
         {
             TokenIdxSet operatorResult;
             ResolveOpeartor(subComponent.tokenOperatorType, initialScope, tree, searchScope, operatorResult);
-            if (operatorResult.size() > 0)
+            if (!operatorResult.empty())
                 initialScope = operatorResult;
         }
         if (subComponent.token_type != pttSearchText)
@@ -2803,17 +2797,17 @@ size_t NativeParser::ResolveExpression(std::queue<ParserComponent> components, c
     }
 
 
-    if (initialScope.size() > 0)
+    if (!initialScope.empty())
         result = initialScope;
-    return (result.size()>0 ? result.size() : 0);
+    return result.size();
 }
 
-size_t NativeParser::GenerateResultSet(wxString search,
+size_t NativeParser::GenerateResultSet(const wxString&    search,
                                        const TokenIdxSet& ptrParentID,
-                                       TokenIdxSet&    result,
-                                       bool            caseSens,
-                                       bool            isPrefix,
-                                       short int       kindMask)
+                                       TokenIdxSet&       result,
+                                       bool               caseSens,
+                                       bool               isPrefix,
+                                       short int          kindMask)
 {
     TokensTree* tree = m_Parser->GetTokens();
     if (!tree)
@@ -2858,7 +2852,6 @@ size_t NativeParser::GenerateResultSet(wxString search,
         // we use FindMatches to get the items from tree directly and eclimate the
         //items which are not under the search scope.
         size_t resultCount = m_Parser->FindMatches(search, tempResult, caseSens, isPrefix);
-        //if (m_Parser->FindMatches(search, tempResult, caseSens, isPrefix))
         if (resultCount > 0)
         {
 //            Manager::Get()->GetLogManager()->DebugLog(F(_T("Find %d result from the tree."), resultCount));
@@ -2876,16 +2869,16 @@ size_t NativeParser::GenerateResultSet(wxString search,
 
                     //if the matched item id is under the search scope's ancestor scope.
                     //we need to add them too.
-                    Token* tokenParent = tree->at(token->m_ParentIndex);//get the matched item's parent token.
+                    Token* tokenParent = tree->at(parentIdx);
                     if (tokenParent)
                     {
                         tree->RecalcInheritanceChain(tokenParent);
 
                         //match the ancestor scope,add them
                         //(*it2) should be the search scope ancestor's id(search scope)
-                        for (TokenIdxSet::iterator it2=tokenParent->m_Descendants.begin(); it2!=tokenParent->m_Descendants.end(); ++it2)
+                        for (TokenIdxSet::iterator it2=tokenParent->m_Ancestors.begin(); it2!=tokenParent->m_Ancestors.end(); ++it2)
                         {
-                            if (parentIdx == (*it2)) //matched
+                            if (token->m_ParentIndex == (*it2)) //matched
                                 result.insert(*it);
                         }
                         //if the search scope is global,and the token's parent token kind is tkEnum ,we add them too.
@@ -3036,7 +3029,7 @@ int NativeParser::FindCurrentFunctionStart(ccSearchData* searchData, wxString* n
     if (s_DebugSmartSense)
         Manager::Get()->GetLogManager()->DebugLog(F(_T("FindCurrentFunctionStart() Found %d results"), num_results));
 
-        Token* token = GetTokenFromPos(result, line);
+        Token* token = GetTokenFromCurrentLine(result, line);
         if (token)
         {
             // got it :)
@@ -3547,7 +3540,7 @@ void NativeParser::AddTemplateAlias(const int& id, const TokenIdxSet& actualType
             actualTypeStr = it->second;
             TokenIdxSet actualTypeResult;
             ResolveActualType(actualTypeStr, actualTypeScope, actualTypeResult);
-            if (actualTypeResult.size() > 0)
+            if (!actualTypeResult.empty())
             {
                 for (TokenIdxSet::iterator it3=actualTypeResult.begin(); it3!=actualTypeResult.end(); ++it3)
                     initialScope.insert(*it3);
@@ -3567,7 +3560,7 @@ void NativeParser::ResolveTemplateMap(const wxString& searchStr, const TokenIdxS
         actualTypeStr = it->second;
         TokenIdxSet actualTypeResult;
         ResolveActualType(actualTypeStr, actualTypeScope, actualTypeResult);
-        if (actualTypeResult.size() > 0)
+        if (!actualTypeResult.empty())
         {
             for (TokenIdxSet::iterator it2=actualTypeResult.begin(); it2!=actualTypeResult.end(); ++it2)
                 initialScope.insert(*it2);
@@ -3587,12 +3580,12 @@ void NativeParser::ResolveOpeartor(const OperatorType& tokenOperatorType, const 
     {
         int id = (*it);
         Token* token = tree->at(id);
-        if (token && (token->m_TokenKind == tkClass))
+        if (token && (token->m_TokenKind == tkClass || token->m_TokenKind == tkTypedef))
             opInitialScope.insert(id);
 
     }
     //if we get nothing,should return.
-    if (opInitialScope.size() <= 0)
+    if (opInitialScope.empty())
         return;
 
     wxString operatorStr;
@@ -3616,7 +3609,7 @@ void NativeParser::ResolveOpeartor(const OperatorType& tokenOperatorType, const 
     TokenIdxSet opInitialResult;
     GenerateResultSet(operatorStr, opInitialScope, opInitialResult);
     CollectSS(searchScope, opInitialScope, tree);
-    if (opInitialResult.size() > 0)
+    if (!opInitialResult.empty())
     {
         for (TokenIdxSet::iterator it=opInitialResult.begin(); it!=opInitialResult.end(); ++it)
         {
@@ -3630,7 +3623,7 @@ void NativeParser::ResolveOpeartor(const OperatorType& tokenOperatorType, const 
 
                 TokenIdxSet typeResult;
                 ResolveActualType(type, opInitialScope, typeResult);
-                if (typeResult.size() > 0)
+                if (!typeResult.empty())
                 {
                     for (TokenIdxSet::iterator pTypeResult=typeResult.begin(); pTypeResult!=typeResult.end(); ++pTypeResult)
                     {
@@ -3646,11 +3639,13 @@ void NativeParser::ResolveOpeartor(const OperatorType& tokenOperatorType, const 
         }
     }
 }
-Token* NativeParser::GetTokenFromPos(const TokenIdxSet& tokens, int pos)
+
+Token* NativeParser::GetTokenFromCurrentLine(const TokenIdxSet& tokens, size_t curLine)
 {
     TokensTree* tree = m_Parser->GetTokens();
     if (!tree)
         return nullptr;
+
     Token* classToken = nullptr;
     for (TokenIdxSet::iterator it = tokens.begin(); it != tokens.end(); ++it)
     {
@@ -3658,35 +3653,31 @@ Token* NativeParser::GetTokenFromPos(const TokenIdxSet& tokens, int pos)
         if (token)
         {
             if (s_DebugSmartSense)
-                Manager::Get()->GetLogManager()->DebugLog(F(_T("FindCurrentFunctionStart() Iterating: tN='%s', tF='%s', tStart=%d, tEnd=%d"),
+                Manager::Get()->GetLogManager()->DebugLog(F(_T("GetTokenFromCurrentLine() Iterating: tN='%s', tF='%s', tStart=%d, tEnd=%d"),
                                                             token->DisplayName().wx_str(), token->GetFilename().wx_str(), token->m_ImplLineStart, token->m_ImplLineEnd));
             if (   token->m_TokenKind & tkAnyFunction
-                && token->m_ImplLineStart <= (size_t)pos
-                && token->m_ImplLineEnd >= (size_t)pos)
+                && token->m_ImplLineStart <= curLine
+                && token->m_ImplLineEnd >= curLine)
             {
-                if (classToken)
-                    classToken = nullptr;
                 return token;
             }
-            else if (  token->m_TokenKind == tkConstructor
-                     && token->m_ImplLine <= (size_t)pos
-                     && token->m_ImplLineStart >= (size_t)pos)
+            else if (   token->m_TokenKind == tkConstructor
+                     && token->m_ImplLine <= curLine
+                     && token->m_ImplLineStart >= curLine)
             {
-                if (classToken)
-                    classToken = nullptr;
                 return token;
             }
-            else if (  token->m_TokenKind == tkClass
-                     && token->m_ImplLineStart <= (size_t)pos
-                     && token->m_ImplLineEnd >= (size_t)pos)
+            else if (   token->m_TokenKind == tkClass
+                     && token->m_ImplLineStart <= curLine
+                     && token->m_ImplLineEnd >= curLine)
             {
                 classToken = token;
             }
             else if (s_DebugSmartSense)
-                Manager::Get()->GetLogManager()->DebugLog(F(_T("FindCurrentFunctionStart() Function out of bounds: tN='%s', tF='%s', tStart=%d, tEnd=%d, line=%d (size_t)line=%d"),
-                                                            token->DisplayName().wx_str(), token->GetFilename().wx_str(), token->m_ImplLineStart, token->m_ImplLineEnd, pos, (size_t)pos));
+                Manager::Get()->GetLogManager()->DebugLog(F(_T("GetTokenFromCurrentLine() Function out of bounds: tN='%s', tF='%s', tStart=%d, tEnd=%d, line=%d (size_t)line=%d"),
+                                                            token->DisplayName().wx_str(), token->GetFilename().wx_str(), token->m_ImplLineStart, token->m_ImplLineEnd, curLine, curLine));
         }
     }
 
-    return ((classToken) ? classToken : nullptr);
+    return classToken;
 }

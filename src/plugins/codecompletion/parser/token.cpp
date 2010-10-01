@@ -151,6 +151,10 @@ wxString Token::DisplayName() const
             result.RemoveLast();
             return result << m_Name << _T(")") <<  m_Args;
         }
+
+        if (!m_TemplateArgument.IsEmpty())
+            result << m_TemplateArgument;
+
         return result << _T(" ") << m_Name;
     }
     else if (m_TokenKind == tkPreprocessor)

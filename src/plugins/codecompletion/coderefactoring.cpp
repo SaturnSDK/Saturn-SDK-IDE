@@ -57,8 +57,8 @@ bool CodeRefactoring::Parse()
         return false;
 
     TokenIdxSet targetResult;
-    m_NativeParser.MarkItemsByAI(targetResult, m_NativeParser.GetParser().Options().useSmartSense);
-    m_NativeParser.RemoveInvalid(targetResult, targetText);
+    const int endOfWord = editor->GetControl()->WordEndPosition(editor->GetControl()->GetCurrentPos(), true);
+    m_NativeParser.MarkItemsByAI(targetResult, true, false, true, endOfWord);
     if (targetResult.empty())
     {
         cbMessageBox(_("Symbol not found under cursor!"), _("Code Refactoring"), wxOK | wxICON_WARNING);
@@ -67,12 +67,15 @@ bool CodeRefactoring::Parse()
 
     cbProject* project = m_NativeParser.GetProjectByFilename(editor->GetFilename());
     const int ret = cbMessageBox(_("Only search open files? Select \"No\" search the project!"),
-                                 _("Code Refactoring"), wxYES_NO);
+                                 _("Code Refactoring"), wxICON_QUESTION | wxYES_NO);
+    if (ret == wxID_CANCEL)
+        return false;
+
     size_t count = SearchInFiles(project, targetText, ret == wxID_YES);
     if (count)
         count = VerifyResult(project, targetResult, targetText);
 
-    return !!count;
+    return count != 0;
 }
 
 void CodeRefactoring::FindReferences()
@@ -171,8 +174,7 @@ size_t CodeRefactoring::SearchInFiles(cbProject* project, const wxString& target
     return m_SearchDataMap.size();
 }
 
-size_t CodeRefactoring::VerifyResult(cbProject* project, const TokenIdxSet& targetResult,
-                                     const wxString& targetText)
+size_t CodeRefactoring::VerifyResult(cbProject* project, const TokenIdxSet& targetResult, const wxString& targetText)
 {
     EditorManager* edMan = Manager::Get()->GetEditorManager();
     cbEditor* editor = edMan->GetBuiltinActiveEditor();
@@ -241,16 +243,19 @@ size_t CodeRefactoring::VerifyResult(cbProject* project, const TokenIdxSet& targ
                 continue;
             }
 
-            // e.g. void |Test(...
-            // we *must* goto pos as "void T|est(..."
-            control->GotoPos(itList->pos + 1);
+            // do cc search
+            const int endOfWord = itList->pos + targetText.Len();
+            control->GotoPos(endOfWord); // TODO (Loaden) why need goto the pos too?
+            m_NativeParser.MarkItemsByAI(&searchData, result, true, false, true, endOfWord);
 
-            m_NativeParser.MarkItemsByAI(&searchData, result, m_NativeParser.GetParser().Options().useSmartSense);
-            m_NativeParser.RemoveInvalid(result, targetText);
-
-            TokenIdxSet::iterator intersect = std::find_first_of(targetResult.begin(), targetResult.end(),
-                                                                 result.begin(), result.end());
-            if (intersect == targetResult.end())
+            // verify result
+            TokenIdxSet::iterator findIter = targetResult.begin();
+            for (; findIter != targetResult.end(); ++findIter)
+            {
+                if (result.find(*findIter) != result.end())
+                    break;
+            }
+            if (findIter == targetResult.end()) // not found
                 it->second.erase(itList++);
             else
                 ++itList;

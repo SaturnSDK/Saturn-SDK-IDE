@@ -201,27 +201,19 @@ public:
      * @param searchData input search location
      * @param result output the all matching result token index
      * @param reallyUseAI true means the context scope should be considered, false if only do a plain word match
-     * @param isPrefix the other side is partially match which result all the works with the same prefix
+     * @param isPrefix the other side is partially match which result all the works with the same prefix, else use full-match
      * @param caseSensitive care about case or not
      * @param caretPos Where the current caret locates, -1 means we used the current caret position.
      * @return the matching number
      */
-    size_t MarkItemsByAI(ccSearchData* searchData,
-                         TokenIdxSet& result,
-                         bool reallyUseAI = true,
-                         bool isPrefix = false,
-                         bool caseSensitive = false,
-                         int caretPos = -1);
+    size_t MarkItemsByAI(ccSearchData* searchData, TokenIdxSet& result, bool reallyUseAI = true,
+                         bool isPrefix = true, bool caseSensitive = false, int caretPos = -1);
 
     /** the same as before, but we don't specify the searchData information, so it will use the active
      *  editor and current caret information.
      */
-    size_t MarkItemsByAI(TokenIdxSet& result, bool reallyUseAI = true, bool isPrefix = false,
+    size_t MarkItemsByAI(TokenIdxSet& result, bool reallyUseAI = true, bool isPrefix = true,
                          bool caseSensitive = false, int caretPos = -1);
-
-
-    /** do a match in the result, remove the Tokens which m_Name is not equal to target. */
-    void RemoveInvalid(TokenIdxSet& result, const wxString& target);
 
     /** Collect the suggestion list items, internally it call MarkItemsByAI() */
     const wxString& GetCodeCompletionItems();
@@ -383,7 +375,7 @@ private:
     /** This function is just like the one above, especially that no Tokentree information is used
      * So, it use the current parser's Tokenstree.
      */
-    size_t GenerateResultSet(wxString search,
+    size_t GenerateResultSet(const wxString& search,
                              const TokenIdxSet& ptrParentID,
                              TokenIdxSet& result,
                              bool caseSens = true,
@@ -521,7 +513,12 @@ private:
                          TokensTree* tree,
                          const TokenIdxSet& searchScope,
                          TokenIdxSet& result);
-    Token* GetTokenFromPos(const TokenIdxSet& tokens, int pos);
+
+    /** used to get the correct token in current line, e.g. class A { void test() { | } };
+     * @param tokens all current file's function and class
+     * @param curLine the line of the current position
+     */
+    Token* GetTokenFromCurrentLine(const TokenIdxSet& tokens, size_t curLine);
 
 private:
     typedef std::pair<cbProject*, Parser*> ParserPair;
