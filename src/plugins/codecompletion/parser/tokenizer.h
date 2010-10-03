@@ -241,7 +241,13 @@ public:
     wxString GetActualContextForMacro(Token* tk);
 
     /** Replace buffer for 'function-like macro' parse */
-    void ReplaceBufferForReparse(const wxString& target, bool updatePeekToken = true);
+    bool ReplaceBufferForReparse(const wxString& target, bool updatePeekToken = true);
+
+    /** Get first token position in buffer */
+    int GetFirstTokenPosition(const wxString& buffer, const wxString& token);
+
+    /** KMP find, get the first pos, if find nothing, return -1 */
+    int KMP_Find(const wxChar* text, const wxChar* pattern, const int patternLen);
 
 protected:
     /** Initialize some member variables */
@@ -416,6 +422,9 @@ private:
     /** Splite the actual macro arguments, and store them in results*/
     void SpliteArguments(wxArrayString& results);
 
+    /** Just for KMP find */
+    void KMP_GetNextVal(const wxChar* pattern, int next[]);
+
     /** Tokenizer options specify the current skipping option */
     TokenizerOptions     m_TokenizerOptions;
     TokensTree*          m_TokensTree;
@@ -463,11 +472,11 @@ private:
     /** is replace buffer parsing */
     bool                 m_IsReplaceParsing;
 
-    /** the first replace token index */
-    unsigned int         m_ReplaceTokenIndex;
+    /** save the remaining length, after the first replace buffer */
+    size_t               m_FirstRemainingLength;
 
-    /** Save replaced preprocessor if is replace parsing */
-    std::set<wxString>   m_ReplacedPreprocessor;
+    /** Save the replace buffer count if current is replace parsing */
+    size_t               m_ReplacedCount;
 
     /** Static member, this is a map to hold the replacement rules */
     static wxStringHashMap s_Replacements;
