@@ -877,9 +877,10 @@ int CodeCompletion::CodeComplete()
         return -3;
 
     FileType ft = FileTypeOf(ed->GetShortName());
+    const bool caseSens = m_NativeParser.GetParser().Options().caseSensitive;
 
     TokenIdxSet result;
-    if (  (m_NativeParser.MarkItemsByAI(result, m_NativeParser.GetParser().Options().useSmartSense) > 0)
+    if (   m_NativeParser.MarkItemsByAI(result, m_NativeParser.GetParser().Options().useSmartSense, true, caseSens)
         || m_NativeParser.LastAISearchWasGlobal() ) // enter even if no match (code-complete C++ keywords)
     {
         if (s_DebugSmartSense)
@@ -893,7 +894,6 @@ int CodeCompletion::CodeComplete()
             wxImageList* ilist = m_NativeParser.GetImageList();
             ed->GetControl()->ClearRegisteredImages();
 
-            bool caseSens = m_NativeParser.GetParser().Options().caseSensitive;
             wxArrayString items;
             items.Alloc(result.size());
             int pos   = ed->GetControl()->GetCurrentPos();
@@ -982,7 +982,7 @@ int CodeCompletion::CodeComplete()
                 }
             }
 
-            if (items.GetCount() == 0)
+            if (items.IsEmpty())
             {
                 if (s_DebugSmartSense)
                     Manager::Get()->GetLogManager()->DebugLog(_T("No items found."));
@@ -996,13 +996,6 @@ int CodeCompletion::CodeComplete()
 
             if (s_DebugSmartSense)
                 Manager::Get()->GetLogManager()->DebugLog(_T("Done generating tokens list"));
-
-            // Remove duplicate items
-            for (size_t i=0; i<items.Count()-1; i++)
-            {
-                if (items.Item(i)==items.Item(i+1))
-                    items.RemoveAt(i);
-            }
 
             ed->GetControl()->AutoCompSetIgnoreCase(!caseSens);
             ed->GetControl()->AutoCompSetCancelAtStart(true);
