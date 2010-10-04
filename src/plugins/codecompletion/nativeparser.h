@@ -304,8 +304,8 @@ protected:
      */
     void RemoveObsoleteParsers();
 
-    /** Get the active project and Parser pair according to the active editor*/
-    std::pair<cbProject*, Parser*> GetActiveProjectParser();
+    /** Get cbProject and Parser pointer, according to the current active editor*/
+    std::pair<cbProject*, Parser*> GetParserInfoByCurEditor();
 
 private:
     friend class CodeCompletion;

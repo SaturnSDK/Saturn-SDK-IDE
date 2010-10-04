@@ -3150,7 +3150,7 @@ void NativeParser::OnParserStart(wxCommandEvent& event)
                                                     ? project->GetTitle().wx_str()
                                                     : _T("*NONE*")));
         {
-            std::pair<cbProject*, Parser*> prjParser = GetActiveProjectParser();
+            std::pair<cbProject*, Parser*> prjParser = GetParserInfoByCurEditor();
             if (prjParser.second && m_Parser != prjParser.second)
             {
                 Manager::Get()->GetLogManager()->DebugLog(_T("Start switch from OnParserStart::ptCreateParser"));
@@ -3206,7 +3206,7 @@ void NativeParser::OnParserEnd(wxCommandEvent& event)
                                                    : _T("*NONE*")));
             CC_PROFILE_TIMER_LOG();
 
-            std::pair<cbProject*, Parser*> prjParser = GetActiveProjectParser();
+            std::pair<cbProject*, Parser*> prjParser = GetParserInfoByCurEditor();
             if (prjParser.first && prjParser.first != project && !prjParser.second)
             {
                 if (CreateParser(prjParser.first))
@@ -3233,7 +3233,7 @@ void NativeParser::OnParserEnd(wxCommandEvent& event)
                                                     : _T("*NONE*")));
         if (parser != m_Parser)
         {
-            std::pair<cbProject*, Parser*> prjParser = GetActiveProjectParser();
+            std::pair<cbProject*, Parser*> prjParser = GetParserInfoByCurEditor();
             if (prjParser.second && prjParser.second != m_Parser)
             {
                 Manager::Get()->GetLogManager()->DebugLog(_T("Start switch from OnParserEnd::ptReparseFile"));
@@ -3364,7 +3364,7 @@ void NativeParser::RemoveObsoleteParsers()
     ConfigManager* cfg = Manager::Get()->GetConfigManager(_T("code_completion"));
     const size_t maxParsers = cfg->ReadInt(_T("/max_parsers"), 5);
     wxArrayString removedProjectNames;
-    std::pair<cbProject*, Parser*> prjParser = GetActiveProjectParser();
+    std::pair<cbProject*, Parser*> prjParser = GetParserInfoByCurEditor();
 
     while (m_ParserList.size() > maxParsers)
     {
@@ -3397,7 +3397,7 @@ void NativeParser::RemoveObsoleteParsers()
     }
 }
 
-std::pair<cbProject*, Parser*> NativeParser::GetActiveProjectParser()
+std::pair<cbProject*, Parser*> NativeParser::GetParserInfoByCurEditor()
 {
     std::pair<cbProject*, Parser*> prjParser;
 
