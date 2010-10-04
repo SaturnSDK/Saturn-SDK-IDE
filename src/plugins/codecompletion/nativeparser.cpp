@@ -2869,20 +2869,28 @@ size_t NativeParser::GenerateResultSet(const wxString&    search,
 
                     //if the matched item id is under the search scope's ancestor scope.
                     //we need to add them too.
-                    Token* tokenParent = tree->at(parentIdx);
-                    if (tokenParent)
+                    if (parentIdx != -1)
                     {
-                        tree->RecalcInheritanceChain(tokenParent);
-
-                        //match the ancestor scope,add them
-                        //(*it2) should be the search scope ancestor's id(search scope)
-                        for (TokenIdxSet::iterator it2=tokenParent->m_Ancestors.begin(); it2!=tokenParent->m_Ancestors.end(); ++it2)
+                        Token* tokenParent = tree->at(parentIdx);
+                        if (tokenParent)
                         {
-                            if (token->m_ParentIndex == (*it2)) //matched
-                                result.insert(*it);
+                            tree->RecalcInheritanceChain(tokenParent);
+
+                            //match the ancestor scope,add them
+                            //(*it2) should be the search scope ancestor's id(search scope)
+                            for (TokenIdxSet::iterator it2=tokenParent->m_Ancestors.begin(); it2!=tokenParent->m_Ancestors.end(); ++it2)
+                            {
+                                if (token->m_ParentIndex == (*it2)) //matched
+                                    result.insert(*it);
+                            }
+
                         }
+                    }
+                    else if (-1 == parentIdx)
+                    {
                         //if the search scope is global,and the token's parent token kind is tkEnum ,we add them too.
-                        if (-1==parentIdx && tokenParent->m_TokenKind==tkEnum)
+                        Token* parentToken = tree->at(token->m_ParentIndex);
+                        if (parentToken && parentToken->m_TokenKind == tkEnum)
                             result.insert(*it);
                     }
 
