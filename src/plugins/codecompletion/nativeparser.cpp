@@ -985,6 +985,9 @@ bool NativeParser::CreateParser(cbProject* project)
         return false;
     }
 
+    if (m_Parser == &m_TempParser)
+        SetParser(parser);
+
     m_ParserList.push_back(std::make_pair(project, parser));
     StartCompleteParsing(project, parser);
 
