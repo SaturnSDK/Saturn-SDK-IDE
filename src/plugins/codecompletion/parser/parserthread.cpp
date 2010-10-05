@@ -1660,7 +1660,7 @@ void ParserThread::HandleClass(EClassType ct)
             }
             else if (next==ParserConsts::opbrace)
             {
-                current = GetMacroType(current);
+                GetRealTypeIfTokenIsMacro(current);
                 Token* newToken = DoAddToken(tkClass, current, lineNr);
                 if (!newToken)
                 {
@@ -2470,31 +2470,30 @@ wxString ParserThread::GetStrippedArgs(const wxString & args)
 wxString ParserThread::GetClassFromMacro(const wxString& macro)
 {
     wxString real(macro);
-    wxString type = GetMacroType(macro);
-    if (!type.IsEmpty())
+    if (GetRealTypeIfTokenIsMacro(real))
     {
-        Token* tk = TokenExists(type, NULL, tkClass);
+        Token* tk = TokenExists(real, NULL, tkClass);
         if (tk)
-            real = tk->m_Name;
+            return tk->m_Name;
     }
 
     return real;
 }
 
-wxString ParserThread::GetMacroType(const wxString& macro)
+bool ParserThread::GetRealTypeIfTokenIsMacro(wxString& tokenName)
 {
-    Token* tk = NULL;
-    wxString type(macro);
-
+    bool tokenIsMacro = false;
+    Token* tk = nullptr;
     while (!TestDestroy())
     {
-        tk = TokenExists(type, NULL, tkPreprocessor);
-        if (!tk || tk->m_Type.IsEmpty())
+        tk = TokenExists(tokenName, NULL, tkPreprocessor);
+        if (!tk || tk->m_Type.IsEmpty() || (tk->m_Type[0] != _T('_') && !wxIsalpha(tk->m_Type[0])))
             break;
-        type = tk->m_Type;
+        tokenName = tk->m_Type;
+        tokenIsMacro = true;
     }
 
-    return type;
+    return tokenIsMacro;
 }
 
 void ParserThread::ResolveTemplateFormalArgs(const wxString& templateArgs, wxArrayString& formals)
