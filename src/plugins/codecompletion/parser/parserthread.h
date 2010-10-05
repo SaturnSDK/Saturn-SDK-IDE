@@ -22,6 +22,7 @@
 //extern int THREAD_END;
 extern int NEW_TOKEN;
 extern int FILE_NEEDS_PARSING;
+extern const wxString g_UnnamedSymbol;
 
 static wxCriticalSection s_ParserThreadCritical;
 

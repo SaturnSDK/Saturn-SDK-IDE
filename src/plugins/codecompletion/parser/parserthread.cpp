@@ -39,6 +39,8 @@ int THREAD_END         = wxNewId();
 int NEW_TOKEN          = wxNewId();
 int FILE_NEEDS_PARSING = wxNewId();
 
+const wxString g_UnnamedSymbol = _T("__Unnamed");
+
 namespace ParserConsts
 {
     const wxString space           (_T(" "));
@@ -59,7 +61,6 @@ namespace ParserConsts
     const wxString lt              (_T("<"));
     const wxString gt              (_T(">"));
     const wxString gtsemicolon     (_T(">;"));
-    const wxString unnamed         (_T("Unnamed"));
     const wxString quot            (_T("\""));
     const wxString kw_C            (_T("\"C\""));
     const wxString kw_CPP          (_T("\"C++\""));
@@ -1595,7 +1596,7 @@ void ParserThread::HandleClass(EClassType ct)
             {
                 wxString unnamedTmp;
                 unnamedTmp.Printf(_T("%s%s%d"),
-                                  ParserConsts::unnamed.wx_str(),
+                                  g_UnnamedSymbol.wx_str(),
                                   ct == ctClass ? _T("Class") :
                                   ct == ctUnion ? _T("Union") :
                                                   _T("Struct"), ++m_pTokensTree->m_StructUnionUnnamedCount);
@@ -1905,11 +1906,11 @@ void ParserThread::HandleEnum()
         // we have an un-named enum
         if (m_ParsingTypedef)
         {
-            token.Printf(_T("%sEnum%d"), ParserConsts::unnamed.wx_str(), ++m_pTokensTree->m_EnumUnnamedCount);
+            token.Printf(_T("%sEnum%d"), g_UnnamedSymbol.wx_str(), ++m_pTokensTree->m_EnumUnnamedCount);
             m_LastUnnamedTokenName = token;
         }
         else
-            token = ParserConsts::unnamed;
+            token = g_UnnamedSymbol;
         m_Tokenizer.UngetToken(); // return '{' back
         isUnnamed = true;
     }

@@ -382,6 +382,9 @@ private:
                              bool isPrefix = false,
                              short int kindMask = 0xFFFF);
 
+    /** Add all children tokens of unnamed union/struct/class */
+    bool AddChildrenOfUnnamed(Token* parent, TokenIdxSet& result);
+
     /** used in CodeCompletion suggestion list to boost the performance*/
     bool LastAISearchWasGlobal() const { return m_LastAISearchWasGlobal; }
     /** The same as above*/

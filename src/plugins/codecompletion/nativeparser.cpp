@@ -51,10 +51,6 @@ bool s_DebugSmartSense = false;
 const wxString g_StartHereTitle = _("Start here");
 const int g_EditorActivatedDelay = 100;
 
-const wxString s_UnnamedUnion  = _("UnnamedUnion");
-const wxString s_UnnamedClass  = _("UnnamedClass");
-const wxString s_UnnamedStruct = _("UnnamedStruct");
-
 BEGIN_EVENT_TABLE(NativeParser, wxEvtHandler)
 //    EVT_MENU(THREAD_START, NativeParser::OnThreadStart)
 //    EVT_MENU(THREAD_END, NativeParser::OnThreadEnd)
@@ -2826,67 +2822,35 @@ size_t NativeParser::GenerateResultSet(const wxString&    search,
         {
             size_t parentIdx = (*ptr);
             Token* parent = m_Parser->GetTokens()->at(parentIdx);
-            if (parent)
-            {
-                for (TokenIdxSet::iterator it = parent->m_Children.begin(); it != parent->m_Children.end(); ++it)
-                {
-                    Token* token = m_Parser->GetTokens()->at(*it);
-                    if (token)
-                    {
-                        if(  token->m_TokenKind == tkClass
-                               && (  token->m_Name.StartsWith(s_UnnamedClass)
-                                   ||token->m_Name.StartsWith(s_UnnamedStruct)
-                                   ||token->m_Name.StartsWith(s_UnnamedUnion))  )
-                        {
-                            // add all its children
-                            for (TokenIdxSet::iterator itChild = token->m_Children.begin(); itChild != token->m_Children.end(); ++itChild)
-                            {
-                                Token* tokenChild = m_Parser->GetTokens()->at(*itChild);
-                                if (tokenChild)
-                                {
-                                    result.insert(*itChild);
-                                }
-                            }
-                        }
-                        else
-                            result.insert(*it);
-                    }
+            if (!parent)
+                continue;
 
-                }
-                tree->RecalcInheritanceChain(parent);
-                for (TokenIdxSet::iterator it = parent->m_Ancestors.begin(); it != parent->m_Ancestors.end(); ++it)
+            for (TokenIdxSet::iterator it = parent->m_Children.begin(); it != parent->m_Children.end(); ++it)
+            {
+                Token* token = m_Parser->GetTokens()->at(*it);
+                if (!token)
+                    continue;
+                if (!AddChildrenOfUnnamed(token, result))
+                    result.insert(*it);
+            }
+
+            tree->RecalcInheritanceChain(parent);
+
+            for (TokenIdxSet::iterator it = parent->m_Ancestors.begin(); it != parent->m_Ancestors.end(); ++it)
+            {
+                Token* ancestor = m_Parser->GetTokens()->at(*it);
+                if (!ancestor)
+                    continue;
+                for (TokenIdxSet::iterator it2 = ancestor->m_Children.begin(); it2 != ancestor->m_Children.end(); ++it2)
                 {
-                    Token* ancestor = m_Parser->GetTokens()->at(*it);
-                    if (!ancestor)
+                    Token* token = m_Parser->GetTokens()->at(*it2);
+                    if (!token)
                         continue;
-                    for (TokenIdxSet::iterator it2 = ancestor->m_Children.begin(); it2 != ancestor->m_Children.end(); ++it2)
-                    {
-                        Token* token = m_Parser->GetTokens()->at(*it2);
-                        if (token)
-                        {
-                            if(  token->m_TokenKind == tkClass
-                               && (  token->m_Name.StartsWith(s_UnnamedClass)
-                                   ||token->m_Name.StartsWith(s_UnnamedStruct)
-                                   ||token->m_Name.StartsWith(s_UnnamedUnion))  )
-                            {
-                                // add all its children
-                                for (TokenIdxSet::iterator itChild = token->m_Children.begin(); itChild != token->m_Children.end(); ++itChild)
-                                {
-                                    Token* tokenChild = m_Parser->GetTokens()->at(*itChild);
-                                    if (tokenChild)
-                                    {
-                                        result.insert(*itChild);
-                                    }
-                                }
-                            }
-                            else
-                                result.insert(*it2);
-                        }
-                    }
+                    if (!AddChildrenOfUnnamed(token, result))
+                        result.insert(*it2);
                 }
             }
         }
-
     }
     else
     {
@@ -2925,7 +2889,6 @@ size_t NativeParser::GenerateResultSet(const wxString&    search,
                                 if (token->m_ParentIndex == (*it2)) //matched
                                     result.insert(*it);
                             }
-
                         }
                     }
                     else if (-1 == parentIdx)
@@ -2935,11 +2898,8 @@ size_t NativeParser::GenerateResultSet(const wxString&    search,
                         if (parentToken && parentToken->m_TokenKind == tkEnum)
                             result.insert(*it);
                     }
-
                 }
-
             }
-
         }
         else
         {
@@ -2967,6 +2927,24 @@ size_t NativeParser::GenerateResultSet(const wxString&    search,
     }
 
     return result.size();
+}
+
+bool NativeParser::AddChildrenOfUnnamed(Token* parent, TokenIdxSet& result)
+{
+    if (parent->m_TokenKind == tkClass && parent->m_Name.StartsWith(g_UnnamedSymbol))
+    {
+        // add all its children
+        for (TokenIdxSet::iterator it = parent->m_Children.begin(); it != parent->m_Children.end(); ++it)
+        {
+            Token* tokenChild = m_Parser->GetTokens()->at(*it);
+            if (tokenChild)
+                result.insert(*it);
+        }
+
+        return true;
+    }
+    else
+        return false;
 }
 
 // Decides if the token belongs to its parent or one of its ancestors
