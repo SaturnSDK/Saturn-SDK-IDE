@@ -51,6 +51,10 @@ bool s_DebugSmartSense = false;
 const wxString g_StartHereTitle = _("Start here");
 const int g_EditorActivatedDelay = 100;
 
+const wxString s_UnnamedUnion  = _("UnnamedUnion");
+const wxString s_UnnamedClass  = _("UnnamedClass");
+const wxString s_UnnamedStruct = _("UnnamedStruct");
+
 BEGIN_EVENT_TABLE(NativeParser, wxEvtHandler)
 //    EVT_MENU(THREAD_START, NativeParser::OnThreadStart)
 //    EVT_MENU(THREAD_END, NativeParser::OnThreadEnd)
@@ -2828,7 +2832,26 @@ size_t NativeParser::GenerateResultSet(const wxString&    search,
                 {
                     Token* token = m_Parser->GetTokens()->at(*it);
                     if (token)
-                        result.insert(*it);
+                    {
+                        if(  token->m_TokenKind == tkClass
+                               && (  token->m_Name.StartsWith(s_UnnamedClass)
+                                   ||token->m_Name.StartsWith(s_UnnamedStruct)
+                                   ||token->m_Name.StartsWith(s_UnnamedUnion))  )
+                        {
+                            // add all its children
+                            for (TokenIdxSet::iterator itChild = token->m_Children.begin(); itChild != token->m_Children.end(); ++itChild)
+                            {
+                                Token* tokenChild = m_Parser->GetTokens()->at(*itChild);
+                                if (tokenChild)
+                                {
+                                    result.insert(*itChild);
+                                }
+                            }
+                        }
+                        else
+                            result.insert(*it);
+                    }
+
                 }
                 tree->RecalcInheritanceChain(parent);
                 for (TokenIdxSet::iterator it = parent->m_Ancestors.begin(); it != parent->m_Ancestors.end(); ++it)
@@ -2841,7 +2864,23 @@ size_t NativeParser::GenerateResultSet(const wxString&    search,
                         Token* token = m_Parser->GetTokens()->at(*it2);
                         if (token)
                         {
-                            result.insert(*it2);
+                            if(  token->m_TokenKind == tkClass
+                               && (  token->m_Name.StartsWith(s_UnnamedClass)
+                                   ||token->m_Name.StartsWith(s_UnnamedStruct)
+                                   ||token->m_Name.StartsWith(s_UnnamedUnion))  )
+                            {
+                                // add all its children
+                                for (TokenIdxSet::iterator itChild = token->m_Children.begin(); itChild != token->m_Children.end(); ++itChild)
+                                {
+                                    Token* tokenChild = m_Parser->GetTokens()->at(*itChild);
+                                    if (tokenChild)
+                                    {
+                                        result.insert(*itChild);
+                                    }
+                                }
+                            }
+                            else
+                                result.insert(*it2);
                         }
                     }
                 }
