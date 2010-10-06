@@ -1092,7 +1092,11 @@ void Tokenizer::MacroReplace(wxString& str)
             {
                 bool replaced = false;
                 if (!tk->m_Args.IsEmpty())
-                    replaced = ReplaceBufferForReparse(GetActualContextForMacro(tk), false);
+                {
+                    const wxString actualContext = GetActualContextForMacro(tk);
+                    if (-1 == GetFirstTokenPosition(actualContext, str))
+                        replaced = ReplaceBufferForReparse(actualContext, false);
+                }
                 else if (tk->m_Type != str)
                     replaced = ReplaceBufferForReparse(tk->m_Type, false);
                 if (replaced)
@@ -1199,8 +1203,12 @@ bool Tokenizer::CalcConditionExpression()
                     }
                     else if (!tk->m_Args.IsEmpty())
                     {
-                        ReplaceBufferForReparse(GetActualContextForMacro(tk), false);
-                        continue;
+                        const wxString actualContext = GetActualContextForMacro(tk);
+                        if (-1 == GetFirstTokenPosition(actualContext, token))
+                        {
+                            ReplaceBufferForReparse(actualContext, false);
+                            continue;
+                        }
                     }
                     else if (wxIsdigit(tk->m_Type[0]))
                         token = tk->m_Type;
@@ -1766,6 +1774,7 @@ int Tokenizer::GetFirstTokenPosition(const wxString& buffer, const wxString& tok
             if (   ch > _T(' ')
                 && (ch == _T('_') || wxIsalnum(ch)) )
             {
+                p += token.Len();
                 continue;
             }
         }
