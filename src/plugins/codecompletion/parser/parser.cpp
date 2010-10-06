@@ -374,7 +374,8 @@ void Parser::MarkFileTokensAsLocal(const wxString& filename, bool local, void* u
     m_TokensTree->MarkFileTokensAsLocal(filename, local, userData);
 }
 
-bool Parser::ParseBuffer(const wxString& buffer, bool isLocal, bool bufferSkipBlocks, bool isTemp)
+bool Parser::ParseBuffer(const wxString& buffer, bool isLocal, bool bufferSkipBlocks, bool isTemp,
+                         const wxString& filename, Token* parent)
 {
     ParserThreadOptions opts;
     opts.wantPreprocessor     = m_Options.wantPreprocessor;
@@ -384,6 +385,8 @@ bool Parser::ParseBuffer(const wxString& buffer, bool isLocal, bool bufferSkipBl
     opts.isTemp               = isTemp;
     opts.bufferSkipBlocks     = bufferSkipBlocks;
     opts.handleFunctions      = false;
+    opts.fileOfBuffer         = filename;
+    opts.parentOfBuffer       = parent;
 
     return Parse(buffer, isLocal, opts);
 }

@@ -53,7 +53,7 @@ namespace TokenizerConsts
 
 // static
 wxStringHashMap Tokenizer::s_Replacements;
-static const size_t s_MaxReplacedCount = 100;
+static const size_t s_MaxRepeatReplaceCount = 100;
 
 Tokenizer::Tokenizer(TokensTree* tokensTree, const wxString& filename) :
     m_TokensTree(tokensTree),
@@ -76,7 +76,7 @@ Tokenizer::Tokenizer(TokensTree* tokensTree, const wxString& filename) :
     m_Loader(0),
     m_IsReplaceParsing(false),
     m_FirstRemainingLength(0),
-    m_ReplacedCount(0)
+    m_RepeatReplaceCount(0)
 {
     m_TokenizerOptions.wantPreprocessor = false;
     if (!m_Filename.IsEmpty())
@@ -127,7 +127,7 @@ bool Tokenizer::Init(const wxString& filename, LoaderBase* loader)
     return true;
 }
 
-bool Tokenizer::InitFromBuffer(const wxString& buffer)
+bool Tokenizer::InitFromBuffer(const wxString& buffer, const wxString& fileOfBuffer, size_t initLineNumber)
 {
     BaseInit();
     m_BufferLen = buffer.Length();
@@ -135,7 +135,8 @@ bool Tokenizer::InitFromBuffer(const wxString& buffer)
     m_Buffer = buffer;
     m_Buffer += _T(' ');
     m_IsOK = true;
-    m_Filename.Clear();
+    m_Filename = fileOfBuffer;
+    m_LineNumber = initLineNumber;
     return true;
 }
 
@@ -156,7 +157,7 @@ void Tokenizer::BaseInit()
     m_IsOperator           = false;
     m_IsReplaceParsing     = false;
     m_FirstRemainingLength = 0;
-    m_ReplacedCount        = 0;
+    m_RepeatReplaceCount   = 0;
     m_Buffer.Clear();
 }
 
@@ -1071,7 +1072,7 @@ wxString Tokenizer::DoGetToken()
     {
         m_FirstRemainingLength = 0;
         m_IsReplaceParsing = false;
-        m_ReplacedCount = 0;
+        m_RepeatReplaceCount = 0;
     }
 
     if (needReplace && m_State ^ tsReadRawExpression)
@@ -1536,7 +1537,7 @@ void Tokenizer::SpliteArguments(wxArrayString& results)
 
 bool Tokenizer::ReplaceBufferForReparse(const wxString& target, bool updatePeekToken)
 {
-    if (m_IsReplaceParsing && ++m_ReplacedCount > s_MaxReplacedCount)
+    if (m_IsReplaceParsing && ++m_RepeatReplaceCount > s_MaxRepeatReplaceCount)
         return false;
 
     wxString buffer(target);

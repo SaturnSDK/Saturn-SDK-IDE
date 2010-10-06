@@ -247,14 +247,16 @@ public:
     wxArrayString& GetProjectSearchDirs(cbProject* project);
 
     /** returns the editor's position where the current function starts.
-     * optionally, returns the function's namespace (ends in double-colon ::) and name
-     * @param editor cbEditor pointer
-     * @param nameSpace namespace modifier
-     * @param procName function name
+     * optionally, returns the function's namespace (ends in double-colon ::) and name and token
+     * @param searchData search data struct pointer
+     * @param nameSpace get the namespace modifier
+     * @param procName get the function name
+     * @param functionToken get the token of current function
      * @param caretPos caret position in cbeditor
-     * @return index?
+     * @return current function line number
      */
-    int FindCurrentFunctionStart(ccSearchData* searchData, wxString* nameSpace = 0L, wxString* procName = 0L, int caretPos = -1);
+    int FindCurrentFunctionStart(ccSearchData* searchData, wxString* nameSpace = 0L, wxString* procName = 0L,
+                                 Token** functionToken = 0L, int caretPos = -1);
 
     /** fills the result argument with all the tokens matching the current function (hopefully, just one)
      * @param editor editor pointer

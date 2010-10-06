@@ -454,7 +454,7 @@ void NativeParser::CreateClassBrowser()
         m_ClassBrowserIsFloating = isFloating;
 
         // Dreaded DDE-open bug related: do not touch unless for a good reason
-        // TODO by Loaden ? what's bug? I test it, it's works well now.
+        // TODO (Loaden) ? what's bug? I test it, it's works well now.
         m_ClassBrowser->SetParser(m_Parser);
     }
 }
@@ -1367,7 +1367,7 @@ bool NativeParser::ParseFunctionArguments(ccSearchData* searchData, int caretPos
                     Manager::Get()->GetLogManager()->DebugLog(F(_T("ParseFunctionArguments() Parsing arguments: \"%s\""), buffer.wx_str()));
                 }
 
-                if (!buffer.IsEmpty() && !m_Parser->ParseBuffer(buffer, false, false, true))
+                if (!buffer.IsEmpty() && !m_Parser->ParseBuffer(buffer, false, false, true, searchData->file, token))
                 {
                     if (s_DebugSmartSense)
                         Manager::Get()->GetLogManager()->DebugLog(_T("ParseFunctionArguments() Error parsing arguments."));
@@ -1389,11 +1389,14 @@ bool NativeParser::ParseLocalBlock(ccSearchData* searchData, int caretPos)
     if (s_DebugSmartSense)
         Manager::Get()->GetLogManager()->DebugLog(_T("ParseLocalBlock() Parse local block"));
 
-    int blockStart = FindCurrentFunctionStart(searchData, 0, 0, caretPos);
+    Token* parent = nullptr;
+    int blockStart = FindCurrentFunctionStart(searchData, nullptr, nullptr, &parent, caretPos);
     if (blockStart != -1)
     {
         ++blockStart; // skip {
-        int blockEnd = caretPos == -1 ? searchData->control->GetCurrentPos() : caretPos;
+        const int pos = caretPos == -1 ? searchData->control->GetCurrentPos() : caretPos;
+        const int line = searchData->control->LineFromPosition(pos);
+        const int blockEnd = searchData->control->GetLineEndPosition(line);
         if (blockEnd < 0 || blockEnd > searchData->control->GetLength())
         {
             if (s_DebugSmartSense)
@@ -1406,7 +1409,7 @@ bool NativeParser::ParseLocalBlock(ccSearchData* searchData, int caretPos)
 
         wxString buffer = searchData->control->GetTextRange(blockStart, blockEnd);
         buffer.Trim();
-        if (!buffer.IsEmpty() && !m_Parser->ParseBuffer(buffer, false, false, true))
+        if (!buffer.IsEmpty() && !m_Parser->ParseBuffer(buffer, false, false, true, searchData->file, parent))
         {
             if (s_DebugSmartSense)
                 Manager::Get()->GetLogManager()->DebugLog(_T("ParseLocalBlock() ERROR parsing block:\n") + buffer);
@@ -2895,8 +2898,12 @@ size_t NativeParser::GenerateResultSet(const wxString&    search,
                     {
                         //if the search scope is global,and the token's parent token kind is tkEnum ,we add them too.
                         Token* parentToken = tree->at(token->m_ParentIndex);
-                        if (parentToken && parentToken->m_TokenKind == tkEnum)
+                        if (   parentToken
+                            && (   parentToken->m_TokenKind == tkEnum
+                                || parentToken->m_TokenKind == tkFunction ) ) // TODO (Loaden) ?? for support local variables
+                        {
                             result.insert(*it);
+                        }
                     }
                 }
             }
@@ -3009,7 +3016,8 @@ bool NativeParser::SkipWhitespaceBackward(cbEditor* editor, int& pos)
 }
 
 // returns current function's position (not line) in the editor
-int NativeParser::FindCurrentFunctionStart(ccSearchData* searchData, wxString* nameSpace, wxString* procName, int caretPos)
+int NativeParser::FindCurrentFunctionStart(ccSearchData* searchData, wxString* nameSpace, wxString* procName,
+                                           Token** functionToken, int caretPos)
 {
     static cbStyledTextCtrl* s_LastControl =  0;
     static int               s_LastLine    = -1;
@@ -3017,6 +3025,7 @@ int NativeParser::FindCurrentFunctionStart(ccSearchData* searchData, wxString* n
     static wxString          s_LastFile;
     static wxString          s_LastNS;
     static wxString          s_LastPROC;
+    static Token*            s_LastFunction;
 
     // cache last result for optimization
     int pos = caretPos == -1 ? searchData->control->GetCurrentPos() : caretPos;
@@ -3033,8 +3042,9 @@ int NativeParser::FindCurrentFunctionStart(ccSearchData* searchData, wxString* n
         && ( (searchData->control == s_LastControl) && (!searchData->control->GetModify()) )
         && (searchData->file == s_LastFile) )
     {
-        if (nameSpace) *nameSpace = s_LastNS;
-        if (procName)  *procName  = s_LastPROC;
+        if (nameSpace)     *nameSpace     = s_LastNS;
+        if (procName)      *procName      = s_LastPROC;
+        if (functionToken) *functionToken = s_LastFunction;
 
         if (s_DebugSmartSense)
             Manager::Get()->GetLogManager()->DebugLog(F(_T("FindCurrentFunctionStart() Cached namespace='%s', cached proc='%s' (returning %d)"),
@@ -3057,46 +3067,48 @@ int NativeParser::FindCurrentFunctionStart(ccSearchData* searchData, wxString* n
     if (s_DebugSmartSense)
         Manager::Get()->GetLogManager()->DebugLog(F(_T("FindCurrentFunctionStart() Found %d results"), num_results));
 
-        Token* token = GetTokenFromCurrentLine(result, line);
-        if (token)
+    Token* token = GetTokenFromCurrentLine(result, line);
+    if (token)
+    {
+        // got it :)
+        if (s_DebugSmartSense)
+            Manager::Get()->GetLogManager()->DebugLog(F(_T("FindCurrentFunctionStart() Current function: '%s' (at line %d)"),
+                                                        token->DisplayName().wx_str(),
+                                                        token->m_ImplLine));
+
+        s_LastNS       = token->GetNamespace();
+        s_LastPROC     = token->m_Name;
+        s_LastFunction = token;
+        s_LastResult   = searchData->control->PositionFromLine(token->m_ImplLine - 1);
+
+        // locate function's opening brace
+        if (token->m_TokenKind & tkAnyFunction)
         {
-            // got it :)
-            if (s_DebugSmartSense)
-                Manager::Get()->GetLogManager()->DebugLog(F(_T("FindCurrentFunctionStart() Current function: '%s' (at line %d)"),
-                                                            token->DisplayName().wx_str(),
-                                                            token->m_ImplLine));
-
-            s_LastNS     = token->GetNamespace();
-            s_LastPROC   = token->m_Name;
-            s_LastResult = searchData->control->PositionFromLine(token->m_ImplLine - 1);
-
-            // locate function's opening brace
-            if(token->m_TokenKind & tkAnyFunction)
+            while (s_LastResult < searchData->control->GetTextLength())
             {
-                while (s_LastResult < searchData->control->GetTextLength())
+                wxChar ch = searchData->control->GetCharAt(s_LastResult);
+                if (ch == _T('{'))
+                    break;
+                else if (ch == 0)
                 {
-                    wxChar ch = searchData->control->GetCharAt(s_LastResult);
-                    if (ch == _T('{'))
-                        break;
-                    else if (ch == 0)
-                    {
-                        if (s_DebugSmartSense)
-                            Manager::Get()->GetLogManager()->DebugLog(_T("FindCurrentFunctionStart() Can't determine functions opening brace..."));
-                        return -1;
-                    }
-
-                    ++s_LastResult;
+                    if (s_DebugSmartSense)
+                        Manager::Get()->GetLogManager()->DebugLog(_T("FindCurrentFunctionStart() Can't determine functions opening brace..."));
+                    return -1;
                 }
+
+                ++s_LastResult;
             }
-
-            if (nameSpace) *nameSpace = s_LastNS;
-            if (procName)  *procName  = s_LastPROC;
-
-            if (s_DebugSmartSense)
-                Manager::Get()->GetLogManager()->DebugLog(F(_T("FindCurrentFunctionStart() Namespace='%s', proc='%s' (returning %d)"),
-                                                            s_LastNS.wx_str(), s_LastPROC.wx_str(), s_LastResult));
-            return s_LastResult;
         }
+
+        if (nameSpace)     *nameSpace     = s_LastNS;
+        if (procName)      *procName      = s_LastPROC;
+        if (functionToken) *functionToken = token;
+
+        if (s_DebugSmartSense)
+            Manager::Get()->GetLogManager()->DebugLog(F(_T("FindCurrentFunctionStart() Namespace='%s', proc='%s' (returning %d)"),
+                                                        s_LastNS.wx_str(), s_LastPROC.wx_str(), s_LastResult));
+        return s_LastResult;
+    }
 
     if (s_DebugSmartSense)
         Manager::Get()->GetLogManager()->DebugLog(_T("FindCurrentFunctionStart() Can't determine current function..."));
@@ -3113,7 +3125,7 @@ size_t NativeParser::FindCurrentFunctionToken(ccSearchData* searchData, TokenIdx
     TokenIdxSet scope_result;
     wxString procName;
     wxString scopeName;
-    FindCurrentFunctionStart(searchData, &scopeName, &procName, caretPos);
+    FindCurrentFunctionStart(searchData, &scopeName, &procName, nullptr, caretPos);
 
     if (procName.IsEmpty())
         return 0;

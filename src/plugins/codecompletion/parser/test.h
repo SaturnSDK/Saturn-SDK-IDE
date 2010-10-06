@@ -1,30 +1,19 @@
-template <typename T>
-class SmartPtr
+class A
 {
-public:
-    SmartPtr(T* p) : _p(p) {}
-    ~SmartPtr() { delete _p; }
-    T* operator->() { return _p; }
-    T& operator*() { return *_p; }
-
-private:
-    T* _p;
+    void good()
+    {
+        int flyGo;
+    }
 };
 
-class Dummy
-{
-public:
-    void Hello() {};
-    int m_dummy;
-};
-
-typedef SmartPtr<Dummy> DummyPtr; // value-tip shoud be SmartPtr<Dummy>
+int flyGo;
 
 int main()
 {
-    DummyPtr ptrDummy = DummyPtr(new Dummy());
-    SmartPtr<Dummy> test(new Dummy());
-    test->Hello();
-    ptrDummy-> // works well now!
+    int flyGo = 0;
+    int testLocal = ++flyGo;
+    testLocal += flyGo;
+    ++flyGo;
+    ++testLocal;
     return 0;
 }

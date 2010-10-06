@@ -180,7 +180,8 @@ public:
     static bool IsValidParser(Parser* parser)
     { return sm_ValidParserSet.find(parser) != sm_ValidParserSet.end(); }
 
-    bool ParseBuffer(const wxString& buffer, bool isLocal = true, bool bufferSkipBlocks = false, bool isTemp = false);
+    bool ParseBuffer(const wxString& buffer, bool isLocal, bool bufferSkipBlocks = false, bool isTemp = false,
+                     const wxString& filename = wxEmptyString, Token* parent = nullptr);
     bool ParseBufferForFunctions(const wxString& buffer);
     bool ParseBufferForNamespaces(const wxString& buffer, NameSpaceVec& result);
     bool ParseBufferForUsingNamespace(const wxString& buffer, wxArrayString& result);

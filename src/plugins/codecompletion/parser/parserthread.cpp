@@ -49,6 +49,7 @@ namespace ParserConsts
     const wxString equals          (_T("="));
     const wxString hash            (_T("#"));
     const wxString plus            (_T("+"));
+    const wxString asterisk        (_T("*"));
     const wxString comma           (_T(","));
     const wxString commaclbrace    (_T(",}"));
     const wxString dash            (_T("-"));
@@ -406,8 +407,21 @@ bool ParserThread::InitTokenizer()
             TRACE(_T("InitTokenizer() : Could not open file: '%s'."), m_Buffer.wx_str());
             return false;
         }
+        else
+        {
+            // record filename for buffer parsing
+            m_Filename = m_Options.fileOfBuffer;
+            m_FileIdx = m_pTokensTree->GetFileIndex(m_Filename);
 
-        return m_Tokenizer.InitFromBuffer(m_Buffer);
+            size_t initLineNumber = 0;
+            if (m_Options.parentOfBuffer)
+            {
+                initLineNumber = m_Options.parentOfBuffer->m_ImplLineStart;
+                m_Options.parentOfBuffer->m_Children.clear();
+            }
+
+            return m_Tokenizer.InitFromBuffer(m_Buffer, m_Filename, initLineNumber);
+        }
     }
 
     TRACE(_T("InitTokenizer() : Buffer is empty."));
@@ -550,8 +564,13 @@ void ParserThread::DoParse()
                 m_Str.Clear();
                 m_Tokenizer.SetState(oldState);
             }
-            else if (token == _T("*"))
+            else if (token == ParserConsts::asterisk)
                 m_PointerOrRef << token;
+            else if (token == ParserConsts::plus)
+            {
+                m_Str.Clear();
+                SkipToOneOfChars(ParserConsts::semicolonclbrace);
+            }
             else
                 switchHandled = false;
             break;
@@ -833,7 +852,7 @@ void ParserThread::DoParse()
                     else
                     {
                         wxString arg = m_Tokenizer.GetToken(); // eat args ()
-                        int pos = peek.find(_T("*"));
+                        int pos = peek.find(ParserConsts::asterisk);
                         if (pos != wxNOT_FOUND)
                         {
                             if (m_Tokenizer.PeekToken().GetChar(0) == '(')
@@ -1177,6 +1196,9 @@ Token* ParserThread::DoAddToken(TokenKind kind,
             --m_pTokensTree->m_TokenTicketCount;
             return 0;
         }
+
+        if (kind == tkVariable && m_Options.parentOfBuffer)
+            finalParent = m_Options.parentOfBuffer;
 
         newToken->m_ParentIndex  = finalParent ? finalParent->GetSelf() : -1;
         newToken->m_TokenKind    = kind;
@@ -2058,7 +2080,7 @@ void ParserThread::HandleTypedef()
             token = m_LastUnnamedTokenName;
             TRACE(_("HandleTypedef() : After HandleClass m_LastUnnamedTokenName='%s'"), m_LastUnnamedTokenName.wx_str());
         }
-        else if (token == _T("*"))
+        else if (token == ParserConsts::asterisk)
         {
             m_PointerOrRef << token;
             continue;
@@ -2246,7 +2268,7 @@ void ParserThread::ReadVarNames()
             m_PointerOrRef.Clear();
             break;
         }
-        else if (token == _T("*"))               // variable is a pointer
+        else if (token == ParserConsts::asterisk)// variable is a pointer
         {
             m_PointerOrRef << token;
         }
@@ -2287,7 +2309,7 @@ void ParserThread::ReadClsNames(wxString& ancestor)
             m_PointerOrRef.Clear();
             break;
         }
-        else if (token == _T("*"))               // variable is a pointer
+        else if (token == ParserConsts::asterisk)// variable is a pointer
         {
             m_PointerOrRef << token;
         }

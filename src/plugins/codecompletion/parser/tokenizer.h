@@ -101,7 +101,8 @@ public:
     /** Initialize the buffer by opening a file through a loader. */
     bool Init(const wxString& filename = wxEmptyString, LoaderBase* loader = 0);
     /** Initialize the buffer by directly use a wxString reference. */
-    bool InitFromBuffer(const wxString& buffer);
+    bool InitFromBuffer(const wxString& buffer, const wxString& fileOfBuffer = wxEmptyString,
+                        size_t initLineNumber = 0);
 
     /** Consume and return the current token string. */
     wxString GetToken();
@@ -475,8 +476,8 @@ private:
     /** save the remaining length, after the first replace buffer */
     size_t               m_FirstRemainingLength;
 
-    /** Save the replace buffer count if current is replace parsing */
-    size_t               m_ReplacedCount;
+    /** Save the repeat replace buffer count if current is replace parsing */
+    size_t               m_RepeatReplaceCount;
 
     /** Static member, this is a map to hold the replacement rules */
     static wxStringHashMap s_Replacements;

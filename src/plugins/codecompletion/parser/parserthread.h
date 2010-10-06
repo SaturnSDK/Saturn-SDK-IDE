@@ -52,7 +52,8 @@ struct ParserThreadOptions
         handleClasses(true),
         handleEnums(true),
         handleTypedefs(true),
-        loader(0)
+        parentOfBuffer(nullptr),
+        loader(nullptr)
         {}
 
     /* useBuffer specifies that we're not parsing a file,  but a temporary
@@ -72,6 +73,9 @@ struct ParserThreadOptions
     bool        handleClasses;
     bool        handleEnums;
     bool        handleTypedefs;
+
+    wxString    fileOfBuffer;
+    Token*      parentOfBuffer;
 
     LoaderBase* loader; // if not NULL, load through filemanager (using threads)
 };
