@@ -437,7 +437,9 @@ wxString Tokenizer::ReadToEOL(bool nestBraces, bool stripUnneeded)
 
         while (p > buffer && *(p - 1) <= _T(' '))
             --p;
-        str.Append(buffer, p - buffer);
+
+        if (p > buffer)
+            str.Append(buffer, p - buffer);
 
         TRACE(_T("ReadToEOL(): (END) We are now at line %d, CurrentChar='%c', PreviousChar='%c', NextChar='%c'"),
               m_LineNumber, CurrentChar(), PreviousChar(), NextChar());
@@ -523,6 +525,23 @@ void Tokenizer::ReadToEOL(wxArrayString& tokens)
     }
 
     m_State = oldState;
+}
+
+void Tokenizer::ReadParentheses(wxString& str, bool trimFirst)
+{
+    str.Clear();
+
+    // e.g. #define AAA  /*args*/ (x) x
+    // we want read "(x)", so, we need trim the unwanted before the "(x)"
+    if (trimFirst)
+    {
+        while (SkipWhiteSpace() && SkipComment())
+            ;
+        if (CurrentChar() != _T('('))
+            return;
+    }
+
+    ReadParentheses(str);
 }
 
 void Tokenizer::ReadParentheses(wxString& str)

@@ -1,19 +1,18 @@
-class A
-{
-    void good()
-    {
-        int flyGo;
-    }
-};
+#define AA
+#ifdef AA
+void fly() {}
+#endif
 
-int flyGo;
+#define BB a::b::c
+#define CC unsigned int
 
-int main()
-{
-    int flyGo = 0;
-    int testLocal = ++flyGo;
-    testLocal += flyGo;
-    ++flyGo;
-    ++testLocal;
-    return 0;
-}
+#define DD \
+    ABC
+
+#define EE(x)     void   hello(int x)
+#define FF /*comment*/ (x, y) \
+    void test(int x, int y)
+
+#define GG /*comment*/ \
+    (x, y) \
+    void line(int x, int y)

@@ -181,6 +181,7 @@ public:
     void ReadToEOL(wxArrayString& tokens);
 
     /** Read and format between (), stored in 'str' */
+    void ReadParentheses(wxString& str, bool trimFirst);
     void ReadParentheses(wxString& str);
 
     /** Skip fron the current position to the end of line.

@@ -497,7 +497,7 @@ void ParserThread::DoParse()
 
     while (m_Tokenizer.NotEOF())
     {
-        if (!m_pTokensTree || TestDestroy())
+        if (TestDestroy())
             break;
 
         wxString token = m_Tokenizer.GetToken();
@@ -1370,56 +1370,47 @@ void ParserThread::HandleDefines()
 {
     size_t lineNr = m_Tokenizer.GetLineNumber();
     TokenizerState oldState = m_Tokenizer.GetState();
-    m_Tokenizer.SetState(tsReadRawExpression);
+    m_Tokenizer.SetState(tsReadRawExpression); // do not use macro replace, we need raw token
     wxString token = m_Tokenizer.GetToken(); // read the token after #define
     m_Tokenizer.SetState(oldState);
+    if (token.IsEmpty())
+        return;
+
+    // do *NOT* use m_Tokenizer.GetToken()
+    // e.g.
+    // #define AAA
+    // #ifdef AAA
+    // void fly() {}
+    // #endif
+    // The AAA is not add to tokenstree, so, when call GetToken(), "#ifdef AAA" parse failed
     m_Str.Clear();
-    // now token holds something like:
-    // BLAH_BLAH
-    if (!token.IsEmpty())
+    wxString readToEOL = m_Tokenizer.ReadToEOL(false, true);
+    wxString para; // function-like macro's args
+    if (!readToEOL.IsEmpty())
     {
-        // skip the rest of the #define
-        //TokenKind type = tkUndefined;
-        //get the argument,if they are not in the same line,we think the define handle is over
-        //if the they are in the same line and the the first char is "(",we regard it as function-like macro.
-        wxString para = m_Tokenizer.GetToken();
-        while (para == _T('\\')) // eat backslash
+        if (readToEOL[0] == _T('(')) // function-like macro
         {
-            /*
-            #define AAA \
-               BBB
-            */
-            para = m_Tokenizer.GetToken();
-            ++lineNr;
-        }
-
-        if (lineNr == m_Tokenizer.GetLineNumber())
-        {
-            if (para.IsEmpty() || para.GetChar(0) != _T('('))
+            int level = 1;
+            size_t pos = 0;
+            while (level && pos < readToEOL.Len())
             {
-                m_Str = para;
-                para.Clear();
+                wxChar ch = readToEOL.GetChar(++pos);
+                if (ch == _T(')'))
+                    --level;
+                else if (ch == _T('('))
+                    ++level;
             }
-
-            wxString readToEOL = m_Tokenizer.ReadToEOL();
-            if (   (!m_Str.IsEmpty() && m_Str.Last() != _T(' '))        // #define AA unsigned int
-                && (!readToEOL.IsEmpty() && readToEOL[0] != _T(':')) )  // #define BB a::b::c
-                m_Str << _T(" ") << readToEOL;
-            else
-                m_Str << readToEOL;
+            para = readToEOL.Left(++pos);
+            m_Str << readToEOL.SubString(++pos, readToEOL.Len());
         }
         else
-        {
-            m_Tokenizer.UngetToken();
-            para.Clear();
-            m_Str << m_Tokenizer.ReadToEOL();
-        }
-
-        Token* oldParent = m_pLastParent;
-        m_pLastParent = 0L;
-        DoAddToken(tkPreprocessor, token, lineNr, lineNr, m_Tokenizer.GetLineNumber(), para, false, true);
-        m_pLastParent = oldParent;
+            m_Str << readToEOL;
     }
+
+    Token* oldParent = m_pLastParent;
+    m_pLastParent = 0L;
+    DoAddToken(tkPreprocessor, token, lineNr, lineNr, m_Tokenizer.GetLineNumber(), para, false, true);
+    m_pLastParent = oldParent;
 }
 
 void ParserThread::HandleUndefs()
