@@ -2520,11 +2520,17 @@ bool ParserThread::GetRealTypeIfTokenIsMacro(wxString& tokenName)
 {
     bool tokenIsMacro = false;
     Token* tk = nullptr;
-    while (!TestDestroy())
+    int count = 10;
+    while (!TestDestroy() && --count > 0)
     {
         tk = TokenExists(tokenName, NULL, tkPreprocessor);
-        if (!tk || tk->m_Type.IsEmpty() || (tk->m_Type[0] != _T('_') && !wxIsalpha(tk->m_Type[0])))
+        if (   !tk
+            || tk->m_Type.IsEmpty()
+            || tk->m_Type == tokenName
+            || (tk->m_Type[0] != _T('_') && !wxIsalpha(tk->m_Type[0])) )
+        {
             break;
+        }
         tokenName = tk->m_Type;
         tokenIsMacro = true;
     }
