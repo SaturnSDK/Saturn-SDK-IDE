@@ -15,14 +15,24 @@
 #include <wx/intl.h>
 #include <wx/tokenzr.h>
 
+bool g_EnableDebugTrace = false;
+const wxString g_DebugTraceFile = _T("");
+
 #define CC_TOKEN_DEBUG_OUTPUT 0
 
-#if CC_TOKEN_DEBUG_OUTPUT
-    #include <wx/stopwatch.h>
-    #define TRACE(format, args...)\
-    Manager::Get()->GetLogManager()->DebugLog(F( format , ## args))
+#if CC_TOKEN_DEBUG_OUTPUT == 1
+    #define TRACE(format, args...) \
+        Manager::Get()->GetLogManager()->DebugLog(F(format, ##args))
+    #define TRACE2(format, args...)
+#elif CC_TOKEN_DEBUG_OUTPUT == 2
+    #define TRACE(format, args...) \
+        if (g_EnableDebugTrace) \
+            Manager::Get()->GetLogManager()->DebugLog(F(format, ##args))
+    #define TRACE2(format, args...) \
+        Manager::Get()->GetLogManager()->DebugLog(F(format, ##args))
 #else
     #define TRACE(format, args...)
+    #define TRACE2(format, args...)
 #endif
 
 ProfileTimer::ProfileMap ProfileTimer::m_ProfileMap;

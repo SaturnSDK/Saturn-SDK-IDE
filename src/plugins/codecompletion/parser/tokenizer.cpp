@@ -24,14 +24,27 @@
 
 #ifdef CC_PARSER_TEST
     extern void ParserTrace(const wxChar* format, ...);
-    #define TRACE(format, args...)\
-    ParserTrace(format , ## args)
+    #define TRACE(format, args...) ParserTrace(format , ##args)
+    #define TRACE2(format, args...)
+    #define TRACE2_SET_FLAG(traceFile)
 #else
-    #if CC_TOKENIZER_DEBUG_OUTPUT
-        #define TRACE(format, args...)\
-        Manager::Get()->GetLogManager()->DebugLog(F( format , ## args))
+    #if CC_TOKENIZER_DEBUG_OUTPUT == 1
+        #define TRACE(format, args...) \
+            Manager::Get()->GetLogManager()->DebugLog(F(format, ##args))
+        #define TRACE2(format, args...)
+        #define TRACE2_SET_FLAG(traceFile)
+    #elif CC_TOKENIZER_DEBUG_OUTPUT == 2
+        #define TRACE(format, args...) \
+            if (g_EnableDebugTrace) \
+                Manager::Get()->GetLogManager()->DebugLog(F(format, ##args))
+        #define TRACE2(format, args...) \
+            Manager::Get()->GetLogManager()->DebugLog(F(format, ##args))
+        #define TRACE2_SET_FLAG(traceFile) \
+            g_EnableDebugTrace = !g_DebugTraceFile.IsEmpty() && traceFile.EndsWith(g_DebugTraceFile)
     #else
         #define TRACE(format, args...)
+        #define TRACE2(format, args...)
+        #define TRACE2_SET_FLAG(traceFile)
     #endif
 #endif
 
@@ -103,6 +116,8 @@ bool Tokenizer::Init(const wxString& filename, LoaderBase* loader)
     {
         m_Filename = filename;
         TRACE(_T("Init() : m_Filename='%s'"), m_Filename.wx_str());
+        TRACE2_SET_FLAG(filename);
+        TRACE2(filename);
     }
 
     if (!wxFileExists(m_Filename))

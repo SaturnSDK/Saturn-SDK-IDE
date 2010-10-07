@@ -18,6 +18,9 @@
 #include "searchtree.h"
 #include <deque>
 
+extern bool g_EnableDebugTrace;
+extern const wxString g_DebugTraceFile;
+
 #define CC_PARSER_PROFILE_TEST 0
 
 #if CC_PARSER_PROFILE_TEST

@@ -34,11 +34,19 @@
 
 #define CC_PARSER_DEBUG_OUTPUT 0
 
-#if CC_PARSER_DEBUG_OUTPUT
-    #define TRACE(format, args...)\
-    Manager::Get()->GetLogManager()->DebugLog(F( format , ## args))
+#if CC_PARSER_DEBUG_OUTPUT == 1
+    #define TRACE(format, args...) \
+        Manager::Get()->GetLogManager()->DebugLog(F(format, ##args))
+    #define TRACE2(format, args...)
+#elif CC_PARSER_DEBUG_OUTPUT == 2
+    #define TRACE(format, args...) \
+        if (g_EnableDebugTrace) \
+            Manager::Get()->GetLogManager()->DebugLog(F(format, ##args))
+    #define TRACE2(format, args...) \
+        Manager::Get()->GetLogManager()->DebugLog(F(format, ##args))
 #else
     #define TRACE(format, args...)
+    #define TRACE2(format, args...)
 #endif
 
 static const char CACHE_MAGIC[] = "CCCACHE_1_3";
