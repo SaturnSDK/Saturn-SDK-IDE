@@ -539,8 +539,9 @@ void NativeParser::RereadParserOptions()
                          _("Reparse?"), wxYES_NO | wxICON_QUESTION) == wxID_YES)
         {
             Manager::Get()->GetLogManager()->DebugLog(_T("RereadParserOptions() : Clear parsers!"));
+            cbProject* project = GetProjectByParser(m_Parser);
             ClearParsers();
-            ReparseCurrentProject();
+            CreateParser(project);
             return;
         }
     }
