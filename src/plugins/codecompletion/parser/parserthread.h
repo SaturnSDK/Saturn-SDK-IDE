@@ -73,6 +73,7 @@ struct ParserThreadOptions
     bool        handleClasses;
     bool        handleEnums;
     bool        handleTypedefs;
+    bool        parseComplexMacros;
 
     wxString    fileOfBuffer;
     Token*      parentOfBuffer;

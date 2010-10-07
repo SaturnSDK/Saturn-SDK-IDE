@@ -287,6 +287,13 @@
                       <border>8</border>
                     </object>
                     <object class="sizeritem">
+                      <object class="wxCheckBox" name="chkComplexMacros">
+                        <label>Parse complex macros (need more time)</label>
+                      </object>
+                      <flag>wxBOTTOM|wxLEFT|wxRIGHT|wxALIGN_LEFT|wxALIGN_TOP</flag>
+                      <border>8</border>
+                    </object>
+                    <object class="sizeritem">
                         <option>0</option>
                         <flag>wxTOP|wxRIGHT|wxLEFT</flag>
                         <border>8</border>

@@ -78,6 +78,7 @@ public:
         {
             ParserThreadOptions opts;
             opts.wantPreprocessor     = m_Parser.m_Options.wantPreprocessor;
+            opts.parseComplexMacros   = m_Parser.m_Options.parseComplexMacros;
             opts.followLocalIncludes  = m_Parser.m_Options.followLocalIncludes;
             opts.followGlobalIncludes = m_Parser.m_Options.followGlobalIncludes;
             opts.useBuffer            = true;
@@ -232,6 +233,7 @@ void Parser::ReadOptions()
         cfg->Write(_T("/parser_follow_local_includes"), true);
         cfg->Write(_T("/parser_follow_global_includes"), true);
         cfg->Write(_T("/want_preprocessor"), true);
+        cfg->Write(_T("/parse_complex_macros"), true);
     }
 
     //m_Pool.SetConcurrentThreads(cfg->ReadInt(_T("/max_threads"), 1)); // Ignore it in the meanwhile
@@ -242,6 +244,7 @@ void Parser::ReadOptions()
     m_Options.useSmartSense        = cfg->ReadBool(_T("/use_SmartSense"), true);
     m_Options.whileTyping          = cfg->ReadBool(_T("/while_typing"), true);
     m_Options.wantPreprocessor     = cfg->ReadBool(_T("/want_preprocessor"), true);
+    m_Options.parseComplexMacros   = cfg->ReadBool(_T("/parse_complex_macros"), true);
 
     m_BrowserOptions.showInheritance = cfg->ReadBool(_T("/browser_show_inheritance"), false);
     m_BrowserOptions.expandNS        = cfg->ReadBool(_T("/browser_expand_ns"), false);
@@ -261,6 +264,7 @@ void Parser::WriteOptions()
     cfg->Write(_T("/use_SmartSense"),                m_Options.useSmartSense);
     cfg->Write(_T("/while_typing"),                  m_Options.whileTyping);
     cfg->Write(_T("/want_preprocessor"),             m_Options.wantPreprocessor);
+    cfg->Write(_T("/parse_complex_macros"),          m_Options.parseComplexMacros);
 
     cfg->Write(_T("/browser_show_inheritance"),      m_BrowserOptions.showInheritance);
     cfg->Write(_T("/browser_expand_ns"),             m_BrowserOptions.expandNS);
@@ -389,6 +393,7 @@ bool Parser::ParseBuffer(const wxString& buffer, bool isLocal, bool bufferSkipBl
     opts.wantPreprocessor     = m_Options.wantPreprocessor;
     opts.followLocalIncludes  = m_Options.followLocalIncludes;
     opts.followGlobalIncludes = m_Options.followGlobalIncludes;
+    opts.parseComplexMacros   = false;
     opts.useBuffer            = true;
     opts.isTemp               = isTemp;
     opts.bufferSkipBlocks     = bufferSkipBlocks;
@@ -455,6 +460,7 @@ bool Parser::Parse(const wxString& filename, bool isLocal, LoaderBase* loader)
     opts.bufferSkipOuterBlocks = false;
     opts.followLocalIncludes   = m_Options.followLocalIncludes;
     opts.followGlobalIncludes  = m_Options.followGlobalIncludes;
+    opts.parseComplexMacros    = m_Options.parseComplexMacros;
     opts.loader                = loader; // maybe 0 at this point
 
     return Parse(UnixFilename(filename), isLocal, opts);

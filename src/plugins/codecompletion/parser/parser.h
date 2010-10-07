@@ -83,6 +83,7 @@ struct ParserOptions
     bool wantPreprocessor;
     bool useSmartSense;
     bool whileTyping;
+    bool parseComplexMacros;
 };
 
 enum BrowserDisplayFilter

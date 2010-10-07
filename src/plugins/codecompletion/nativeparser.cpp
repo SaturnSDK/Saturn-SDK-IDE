@@ -530,7 +530,8 @@ void NativeParser::RereadParserOptions()
     m_Parser->ReadOptions();
     if (   opts.followLocalIncludes  != m_Parser->Options().followLocalIncludes
         || opts.followGlobalIncludes != m_Parser->Options().followGlobalIncludes
-        || opts.wantPreprocessor     != m_Parser->Options().wantPreprocessor )
+        || opts.wantPreprocessor     != m_Parser->Options().wantPreprocessor
+        || opts.parseComplexMacros   != m_Parser->Options().parseComplexMacros )
     {
         // important options changed... flag for reparsing
         if (cbMessageBox(_("You changed some class parser options. Do you want to "

@@ -87,6 +87,7 @@ CCOptionsDlg::CCOptionsDlg(wxWindow* parent, NativeParser* np, CodeCompletion* c
     XRCCTRL(*this, "chkLocals", wxCheckBox)->SetValue(m_Parser.Options().followLocalIncludes);
     XRCCTRL(*this, "chkGlobals", wxCheckBox)->SetValue(m_Parser.Options().followGlobalIncludes);
     XRCCTRL(*this, "chkPreprocessor", wxCheckBox)->SetValue(m_Parser.Options().wantPreprocessor);
+    XRCCTRL(*this, "chkComplexMacros", wxCheckBox)->SetValue(m_Parser.Options().parseComplexMacros);
     XRCCTRL(*this, "txtUpFrontHeaders", wxTextCtrl)->SetValue(cfg->Read(_T("/up_front_headers"), _T("<cstddef>, <wx/defs.h>, <wx/dlimpexp.h>, <wx/toplevel.h>, <boost/config.hpp>, <boost/filesystem/config.hpp>, \"pch.h\", \"sdk.h\", \"stdafx.h\"")));
     XRCCTRL(*this, "chkNoCC", wxCheckBox)->SetValue(!cfg->ReadBool(_T("/use_code_completion"), true));
     XRCCTRL(*this, "chkSimpleMode", wxCheckBox)->SetValue(!m_Parser.Options().useSmartSense);
@@ -328,6 +329,7 @@ void CCOptionsDlg::OnApply()
     m_Parser.Options().followLocalIncludes = XRCCTRL(*this, "chkLocals", wxCheckBox)->GetValue();
     m_Parser.Options().followGlobalIncludes = XRCCTRL(*this, "chkGlobals", wxCheckBox)->GetValue();
     m_Parser.Options().wantPreprocessor = XRCCTRL(*this, "chkPreprocessor", wxCheckBox)->GetValue();
+    m_Parser.Options().parseComplexMacros = XRCCTRL(*this, "chkComplexMacros", wxCheckBox)->GetValue();
     cfg->Write(_T("/auto_select_one"), (bool)XRCCTRL(*this, "chkAutoSelectOne", wxCheckBox)->GetValue());
     cfg->Write(_T("/auto_add_parentheses"), (bool)XRCCTRL(*this, "chkAutoAddParentheses", wxCheckBox)->GetValue());
     cfg->Write(_T("/add_doxgen_comment"), (bool)XRCCTRL(*this, "chkAddDoxgenComment", wxCheckBox)->GetValue());

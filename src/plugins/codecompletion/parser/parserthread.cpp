@@ -2254,9 +2254,12 @@ void ParserThread::HandleMacro(int id, const wxString &peek)
         TRACE(_T("HandleMacro() : Adding token '%s' (peek='%s')"), tk->m_Name.wx_str(), peek.wx_str());
         DoAddToken(tkMacro, tk->m_Name, m_Tokenizer.GetLineNumber(), 0, 0, peek);
 
-        const wxString actualContext = m_Tokenizer.GetActualContextForMacro(tk);
-        if (-1 == m_Tokenizer.GetFirstTokenPosition(actualContext, tk->m_Name))
-            m_Tokenizer.ReplaceBufferForReparse(actualContext);
+        if (m_Options.parseComplexMacros)
+        {
+            const wxString actualContext = m_Tokenizer.GetActualContextForMacro(tk);
+            if (-1 == m_Tokenizer.GetFirstTokenPosition(actualContext, tk->m_Name))
+                m_Tokenizer.ReplaceBufferForReparse(actualContext);
+        }
     }
 }
 
