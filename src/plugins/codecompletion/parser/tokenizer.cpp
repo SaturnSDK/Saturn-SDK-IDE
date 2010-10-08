@@ -70,7 +70,7 @@ namespace TokenizerConsts
 
 // static
 wxStringHashMap Tokenizer::s_Replacements;
-static const size_t s_MaxRepeatReplaceCount = 100;
+static const size_t s_MaxRepeatReplaceCount = 50;
 
 Tokenizer::Tokenizer(TokensTree* tokensTree, const wxString& filename) :
     m_TokensTree(tokensTree),
@@ -387,7 +387,7 @@ wxString Tokenizer::ReadToEOL(bool nestBraces, bool stripUnneeded)
               wxString(__PRETTY_FUNCTION__, wxConvUTF8).wc_str(), m_LineNumber, CurrentChar(),
               PreviousChar(), NextChar(), nestBraces ? 1 : 0);
 
-        static const size_t maxBufferLen = 1024;
+        static const size_t maxBufferLen = 4096;
         wxChar buffer[maxBufferLen + 2];
         wxChar* p = buffer;
         wxString str;
@@ -550,7 +550,7 @@ void Tokenizer::ReadParentheses(wxString& str, bool trimFirst)
 
 void Tokenizer::ReadParentheses(wxString& str)
 {
-    static const size_t maxBufferLen = 1024;
+    static const size_t maxBufferLen = 4096;
     wxChar buffer[maxBufferLen + 3];
     buffer[0] = _T('$'); // avoid segfault error
     wxChar* realBuffer = buffer + 1;
@@ -728,7 +728,7 @@ void Tokenizer::ReadParentheses(wxString& str)
             break;
     }
 
-    if (p != realBuffer)
+    if (p > realBuffer)
         str.Append(realBuffer, p - realBuffer);
     TRACE(_T("ReadParentheses(): %s, line=%d"), str.wx_str(), m_LineNumber);
 }
@@ -773,9 +773,9 @@ bool Tokenizer::SkipToEOL(bool nestBraces)
 
 bool Tokenizer::SkipToInlineCommentEnd()
 {
-//    TRACE(_T("%s : line=%d, CurrentChar='%c', PreviousChar='%c', NextChar='%c'"),
-//          wxString(__PRETTY_FUNCTION__, wxConvUTF8).wc_str(), m_LineNumber, CurrentChar(),
-//          PreviousChar(), NextChar());
+    TRACE(_T("%s : line=%d, CurrentChar='%c', PreviousChar='%c', NextChar='%c'"),
+          wxString(__PRETTY_FUNCTION__, wxConvUTF8).wc_str(), m_LineNumber, CurrentChar(),
+          PreviousChar(), NextChar());
 
     // skip everything until we find EOL
     while (true)
@@ -787,9 +787,9 @@ bool Tokenizer::SkipToInlineCommentEnd()
             MoveToNextChar();
     }
 
-//    TRACE(_T("SkipToInlineCommentEnd(): (END) We are now at line %d, CurrentChar='%c', PreviousChar='%c',")
-//          _T(" NextChar='%c'"), m_LineNumber, CurrentChar(), PreviousChar(), NextChar());
-//
+    TRACE(_T("SkipToInlineCommentEnd(): (END) We are now at line %d, CurrentChar='%c', PreviousChar='%c',")
+          _T(" NextChar='%c'"), m_LineNumber, CurrentChar(), PreviousChar(), NextChar());
+
     return NotEOF();
 }
 
@@ -831,7 +831,7 @@ bool Tokenizer::SkipBlock(const wxChar& ch)
 // if we stay here, return false
 bool Tokenizer::SkipComment()
 {
-    //TRACE(_T(Tokenizer::SkipComment() Start from line = %d"), m_LineNumber);
+    TRACE(F(_T("Tokenizer::SkipComment() Start from line = %d"), m_LineNumber));
     if (IsEOF())
         return false;
 
@@ -868,8 +868,7 @@ bool Tokenizer::SkipComment()
         }
         else             // C++ style comment
         {
-//            TRACE(_T("Tokenizer::SkipComment() , Need to call SkipToEOL() here at line = %d"), m_LineNumber);
-//
+            TRACE(_T("Tokenizer::SkipComment() , Need to call SkipToEOL() here at line = %d"), m_LineNumber);
             SkipToInlineCommentEnd();
             break;
         }
@@ -1164,8 +1163,8 @@ void Tokenizer::MacroReplace(wxString& str)
         while (SkipWhiteSpace() || SkipComment())
             ;
         DoGetToken(); // eat (...)
-        ReplaceBufferForReparse(&it->second[1], false);
-        str = DoGetToken();
+        if (ReplaceBufferForReparse(&it->second[1], false))
+            str = DoGetToken();
     }
     else if (it->second[0] == _T('-'))
     {
@@ -1197,8 +1196,8 @@ void Tokenizer::MacroReplace(wxString& str)
     }
     else
     {
-        ReplaceBufferForReparse(it->second, false);
-        str = DoGetToken();
+        if (ReplaceBufferForReparse(it->second, false))
+            str = DoGetToken();
     }
 }
 
@@ -1235,26 +1234,31 @@ bool Tokenizer::CalcConditionExpression()
                     if (tk->m_Type.IsEmpty() || tk->m_Type == token)
                     {
                         if (tk->m_Args.IsEmpty())
+                        {
                             exp.AddToInfixExpression(_T("1"));
+                            continue;
+                        }
                         else if (tk->m_Args != token)
-                            ReplaceBufferForReparse(tk->m_Args, false);
-                        continue;
+                        {
+                            if (ReplaceBufferForReparse(tk->m_Args, false))
+                                continue;
+                        }
                     }
                     else if (!tk->m_Args.IsEmpty())
                     {
                         const wxString actualContext = GetActualContextForMacro(tk);
                         if (-1 == GetFirstTokenPosition(actualContext, token))
                         {
-                            ReplaceBufferForReparse(actualContext, false);
-                            continue;
+                            if (ReplaceBufferForReparse(actualContext, false))
+                                continue;
                         }
                     }
                     else if (wxIsdigit(tk->m_Type[0]))
                         token = tk->m_Type;
                     else
                     {
-                        ReplaceBufferForReparse(tk->m_Type, false);
-                        continue;
+                        if (ReplaceBufferForReparse(tk->m_Type, false))
+                            continue;
                     }
                 }
             }
@@ -1715,11 +1719,8 @@ wxString Tokenizer::GetActualContextForMacro(Token* tk)
 
     // 1. break the args into substring with "," and store them in normals
     wxArrayString normalArgs;
-    if (!tk->m_Args.IsEmpty())
-    {
-        ReplaceBufferForReparse(tk->m_Args, false);
+    if (!tk->m_Args.IsEmpty() && ReplaceBufferForReparse(tk->m_Args, false))
         SpliteArguments(normalArgs);
-    }
 
     // 2. splite the actual macro arguments
     wxArrayString actualArgs;

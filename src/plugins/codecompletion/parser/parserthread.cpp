@@ -1405,7 +1405,7 @@ void ParserThread::HandleDefines()
                     ++level;
             }
             para = readToEOL.Left(++pos);
-            m_Str << readToEOL.SubString(++pos, readToEOL.Len());
+            m_Str << readToEOL.Right(readToEOL.Len() - (++pos));
         }
         else
             m_Str << readToEOL;
@@ -1439,8 +1439,8 @@ void ParserThread::HandleNamespace()
     Token* tk = TokenExists(ns, nullptr, tkPreprocessor);
     if (tk)
     {
-        m_Tokenizer.ReplaceBufferForReparse(tk->m_Name);
-        ns = m_Tokenizer.GetToken();
+        if (m_Tokenizer.ReplaceBufferForReparse(tk->m_Name))
+            ns = m_Tokenizer.GetToken();
     }
 
     int line = m_Tokenizer.GetLineNumber();
