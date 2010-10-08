@@ -90,7 +90,7 @@
                         <object class="sizeritem">
                           <object class="wxSpinCtrl" name="spnAutoLaunchChars">
                             <value>4</value>
-                            <min>2</min>
+                            <min>1</min>
                             <max>8</max>
                           </object>
                           <flag>wxALL|wxALIGN_LEFT|wxALIGN_TOP</flag>
