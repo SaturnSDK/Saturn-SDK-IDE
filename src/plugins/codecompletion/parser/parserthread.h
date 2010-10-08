@@ -52,6 +52,7 @@ struct ParserThreadOptions
         handleClasses(true),
         handleEnums(true),
         handleTypedefs(true),
+        parseComplexMacros(true),
         parentOfBuffer(nullptr),
         loader(nullptr)
         {}

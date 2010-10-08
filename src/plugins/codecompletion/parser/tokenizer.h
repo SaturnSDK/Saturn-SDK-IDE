@@ -111,7 +111,7 @@ public:
     /** Undo the GetToken. */
     void     UngetToken();
 
-    /** doc me */
+    /** Handle condition preprocessor or not */
     void SetTokenizerOption(bool wantPreprocessor)
     {
         m_TokenizerOptions.wantPreprocessor = wantPreprocessor;

@@ -95,7 +95,7 @@ Tokenizer::Tokenizer(TokensTree* tokensTree, const wxString& filename) :
     m_FirstRemainingLength(0),
     m_RepeatReplaceCount(0)
 {
-    m_TokenizerOptions.wantPreprocessor = false;
+    m_TokenizerOptions.wantPreprocessor = true;
     if (!m_Filename.IsEmpty())
         Init(m_Filename);
 }
@@ -1437,7 +1437,15 @@ void Tokenizer::HandleConditionPreprocessor(const PreprocessorType type)
     case ptIf:
         {
             TRACE(_T("HandleConditionPreprocessor() : #if at line = %d"), m_LineNumber);
-            bool result = CalcConditionExpression();
+            bool result;
+            if (m_TokenizerOptions.wantPreprocessor)
+                result = CalcConditionExpression();
+            else
+            {
+                SkipToEOL(false);
+                result = true;
+            }
+
             m_ExpressionResult.push(result);
             if (!result)
                SkipToNextConditionPreprocessor();
@@ -1447,7 +1455,15 @@ void Tokenizer::HandleConditionPreprocessor(const PreprocessorType type)
     case ptIfdef:
         {
             TRACE(_T("HandleConditionPreprocessor() : #ifdef at line = %d"), m_LineNumber);
-            bool result = IsMacroDefined();
+            bool result;
+            if (m_TokenizerOptions.wantPreprocessor)
+                result = IsMacroDefined();
+            else
+            {
+                SkipToEOL(false);
+                result = true;
+            }
+
             m_ExpressionResult.push(result);
             if (!result)
                SkipToNextConditionPreprocessor();
@@ -1457,7 +1473,15 @@ void Tokenizer::HandleConditionPreprocessor(const PreprocessorType type)
     case ptIfndef:
         {
             TRACE(_T("HandleConditionPreprocessor() : #ifndef at line = %d"), m_LineNumber);
-            bool result = !IsMacroDefined();
+            bool result;
+            if (m_TokenizerOptions.wantPreprocessor)
+                result = !IsMacroDefined();
+            else
+            {
+                SkipToEOL(false);
+                result = true;
+            }
+
             m_ExpressionResult.push(result);
             if (!result)
                SkipToNextConditionPreprocessor();
