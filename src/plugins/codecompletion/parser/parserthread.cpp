@@ -19,7 +19,7 @@
 #include <cctype>
 #include <queue>
 
-#define CC_PARSERTHREAD_DEBUG_OUTPUT 0
+#define CC_PARSERTHREAD_DEBUG_OUTPUT 2
 
 #ifdef CC_PARSER_TEST
     extern void ParserTrace(const wxChar* format, ...);
@@ -31,9 +31,13 @@
             Manager::Get()->GetLogManager()->DebugLog(F(format, ##args))
         #define TRACE2(format, args...)
     #elif CC_PARSERTHREAD_DEBUG_OUTPUT == 2
-        #define TRACE(format, args...) \
-            if (g_EnableDebugTrace) \
-                Manager::Get()->GetLogManager()->DebugLog(F(format, ##args))
+        #define TRACE(format, args...)                                              \
+            do                                                                      \
+            {                                                                       \
+                if (g_EnableDebugTrace)                                             \
+                    Manager::Get()->GetLogManager()->DebugLog(F(format, ##args));   \
+            }                                                                       \
+            while (false)
         #define TRACE2(format, args...) \
             Manager::Get()->GetLogManager()->DebugLog(F(format, ##args))
     #else

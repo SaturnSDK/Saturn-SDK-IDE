@@ -47,9 +47,13 @@
         Manager::Get()->GetLogManager()->DebugLog(F(format, ##args))
     #define TRACE2(format, args...)
 #elif CC_CLASS_BROWSER_DEBUG_OUTPUT == 2
-    #define TRACE(format, args...) \
-        if (g_EnableDebugTrace) \
-            Manager::Get()->GetLogManager()->DebugLog(F(format, ##args))
+    #define TRACE(format, args...)                                              \
+        do                                                                      \
+        {                                                                       \
+            if (g_EnableDebugTrace)                                             \
+                Manager::Get()->GetLogManager()->DebugLog(F(format, ##args));   \
+        }                                                                       \
+        while (false)
     #define TRACE2(format, args...) \
         Manager::Get()->GetLogManager()->DebugLog(F(format, ##args))
 #else

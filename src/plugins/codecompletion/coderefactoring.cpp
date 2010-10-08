@@ -13,6 +13,27 @@
 
 #include <wx/progdlg.h>
 
+#define CC_CODEREFACTORING_DEBUG_OUTPUT 0
+
+#if CC_CODEREFACTORING_DEBUG_OUTPUT == 1
+    #define TRACE(format, args...) \
+        Manager::Get()->GetLogManager()->DebugLog(F(format, ##args))
+    #define TRACE2(format, args...)
+#elif CC_CODEREFACTORING_DEBUG_OUTPUT == 2
+    #define TRACE(format, args...)                                              \
+        do                                                                      \
+        {                                                                       \
+            if (g_EnableDebugTrace)                                             \
+                Manager::Get()->GetLogManager()->DebugLog(F(format, ##args));   \
+        }                                                                       \
+        while (false)
+    #define TRACE2(format, args...) \
+        Manager::Get()->GetLogManager()->DebugLog(F(format, ##args))
+#else
+    #define TRACE(format, args...)
+    #define TRACE2(format, args...)
+#endif
+
 CodeRefactoring::CodeRefactoring(NativeParser& np) :
     m_NativeParser(np)
 {

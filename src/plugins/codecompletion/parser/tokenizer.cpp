@@ -34,9 +34,13 @@
         #define TRACE2(format, args...)
         #define TRACE2_SET_FLAG(traceFile)
     #elif CC_TOKENIZER_DEBUG_OUTPUT == 2
-        #define TRACE(format, args...) \
-            if (g_EnableDebugTrace) \
-                Manager::Get()->GetLogManager()->DebugLog(F(format, ##args))
+        #define TRACE(format, args...)                                              \
+            do                                                                      \
+            {                                                                       \
+                if (g_EnableDebugTrace)                                             \
+                    Manager::Get()->GetLogManager()->DebugLog(F(format, ##args));   \
+            }                                                                       \
+            while (false)
         #define TRACE2(format, args...) \
             Manager::Get()->GetLogManager()->DebugLog(F(format, ##args))
         #define TRACE2_SET_FLAG(traceFile) \
