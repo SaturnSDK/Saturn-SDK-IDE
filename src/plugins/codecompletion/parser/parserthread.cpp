@@ -19,7 +19,7 @@
 #include <cctype>
 #include <queue>
 
-#define CC_PARSERTHREAD_DEBUG_OUTPUT 2
+#define CC_PARSERTHREAD_DEBUG_OUTPUT 0
 
 #ifdef CC_PARSER_TEST
     extern void ParserTrace(const wxChar* format, ...);
