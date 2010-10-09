@@ -82,7 +82,8 @@ NativeParser::NativeParser() :
     m_GettingCalltips(false),
     m_ClassBrowserIsFloating(false),
     m_LastAISearchWasGlobal(false),
-    m_ImageList(NULL)
+    m_ImageList(NULL),
+    m_LastFuncTokenIdx(-1)
 {
     m_TemplateMap.clear();
 
@@ -1405,6 +1406,8 @@ bool NativeParser::ParseLocalBlock(ccSearchData* searchData, int caretPos)
 
     Token* parent = nullptr;
     int blockStart = FindCurrentFunctionStart(searchData, nullptr, nullptr, &parent, caretPos);
+    if (parent)
+        m_LastFuncTokenIdx = parent->GetSelf();
     if (blockStart != -1)
     {
         ++blockStart; // skip {
@@ -1533,8 +1536,13 @@ size_t NativeParser::MarkItemsByAI(ccSearchData* searchData, TokenIdxSet& result
     else
     {
         // remove old temporaries
-        m_Parser->GetTokens()->FreeTemporaries();
         m_Parser->GetTempTokens()->Clear();
+        Token* token = m_Parser->GetTokens()->at(m_LastFuncTokenIdx);
+        if (token)
+        {
+            token->DeleteAllChildren();
+            m_LastFuncTokenIdx = -1;
+        }
 
         // find "using namespace" directives in the file
         TokenIdxSet search_scope;
@@ -1688,7 +1696,12 @@ const wxArrayString& NativeParser::GetCallTips(int chars_per_line)
 //        Manager::Get()->GetLogManager()->DebugLog(_T("Sending \"%s\" for call-tip"), lineText.c_str());
 
         TokensTree* tokens = m_Parser->GetTokens();
-        tokens->FreeTemporaries();
+        Token* token = tokens->at(m_LastFuncTokenIdx);
+        if (token)
+        {
+            token->DeleteAllChildren();
+            m_LastFuncTokenIdx = -1;
+        }
 
         TokenIdxSet search_scope;
         ParseUsingNamespace(&searchData, search_scope);
@@ -1702,7 +1715,7 @@ const wxArrayString& NativeParser::GetCallTips(int chars_per_line)
             lineText = tk->m_Type;
 
         TokenIdxSet result;
-        if (!AI(result, &searchData, lineText, true, true, &search_scope))
+        if (!AI(result, &searchData, lineText, false, true, &search_scope))
             break;
 
         for (TokenIdxSet::iterator it = result.begin(); it != result.end(); ++it)
@@ -2140,6 +2153,9 @@ size_t NativeParser::AI(TokenIdxSet& result,
             else
                 scope_result.insert(token->m_ParentIndex);
 
+            if (token->m_TokenKind == tkFunction && token->HasChildren()) // for local variable
+                scope_result.insert(*it);
+
             if (s_DebugSmartSense)
             {
                 Token* parent = m_Parser->GetTokens()->at(token->m_ParentIndex);
@@ -2171,7 +2187,7 @@ size_t NativeParser::AI(TokenIdxSet& result,
     for (TokenIdxSet::iterator it = search_scope->begin(); it != search_scope->end();)
     {
         Token* token = tree->at(*it);
-        if (!token || !(token->m_TokenKind & (tkNamespace | tkClass | tkTypedef)))
+        if (!token || !(token->m_TokenKind & (tkNamespace | tkClass | tkTypedef | tkFunction)))
             search_scope->erase(it++);
         else
             ++it;
@@ -2912,12 +2928,8 @@ size_t NativeParser::GenerateResultSet(const wxString&    search,
                     {
                         //if the search scope is global,and the token's parent token kind is tkEnum ,we add them too.
                         Token* parentToken = tree->at(token->m_ParentIndex);
-                        if (   parentToken
-                            && (   parentToken->m_TokenKind == tkEnum
-                                || parentToken->m_TokenKind == tkFunction ) ) // TODO (Loaden) ?? for support local variables
-                        {
+                        if (parentToken && parentToken->m_TokenKind == tkEnum)
                             result.insert(*it);
-                        }
                     }
                 }
             }

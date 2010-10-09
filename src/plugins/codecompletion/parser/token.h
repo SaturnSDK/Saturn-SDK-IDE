@@ -171,8 +171,9 @@ public:
     Token(const wxString& name, unsigned int file, unsigned int line, size_t ticket);
     ~Token();
 
-    void AddChild(int child);
-    void RemoveChild(int child);
+    bool AddChild(int childIdx);
+    bool DeleteAllChildren();
+    bool HasChildren() { return !m_Children.empty(); }
     wxString GetNamespace() const;
     bool InheritsFrom(int idx) const;
     wxString DisplayName() const;
@@ -208,7 +209,7 @@ public:
     TokenKind                    m_TokenKind;
     bool                         m_IsOperator;
     bool                         m_IsLocal;       // found in a local file?
-    bool                         m_IsTemp;        // if true, the tree deletes it in FreeTemporaries()
+    bool                         m_IsTemp;        // local variable
     bool                         m_IsConst;       // the member method is const (yes/no)
 
     int                          m_ParentIndex;
@@ -260,7 +261,6 @@ public:
     size_t FindTokensInFile(const wxString& file, TokenIdxSet& result, short int kindMask);
     void   RemoveFile(const wxString& filename);
     void   RemoveFile(int fileIndex);
-    void   FreeTemporaries();
 
     // Parsing related functions
     size_t         GetFileIndex(const wxString& filename);

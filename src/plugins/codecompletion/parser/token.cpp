@@ -291,10 +291,26 @@ wxString Token::GetNamespace() const
     return res;
 }
 
-void Token::AddChild(int child)
+bool Token::AddChild(int childIdx)
 {
-    if (child >= 0)
-        m_Children.insert(child);
+    if (childIdx < 0)
+        return false;
+    m_Children.insert(childIdx);
+    return true;
+}
+
+bool Token::DeleteAllChildren()
+{
+    if (!m_TokensTree)
+        return false;
+    for (;;)
+    {
+        TokenIdxSet::iterator it = m_Children.begin();
+        if (it == m_Children.end())
+            break;
+        m_TokensTree->erase(*it);
+    }
+    return true;
 }
 
 bool Token::InheritsFrom(int idx) const
@@ -918,20 +934,11 @@ bool TokensTree::CheckChildRemove(Token * token, int fileIndex)
     return true;                   // no children should be reserved, so we can safely remov the token
 
 }
-void TokensTree::FreeTemporaries()
-{
-    for (int i = m_Tokens.size() -1;i >= 0;i--)
-    {
-        Token* token = m_Tokens[i];
-        if (token && token->m_IsTemp)
-            RemoveToken(token);
-    }
-}
 
 void TokensTree::RecalcFreeList()
 {
     m_FreeTokens.clear();
-    for (int i = m_Tokens.size() -1;i >= 0;i--)
+    for (int i = m_Tokens.size() - 1; i >= 0; --i)
     {
         if (!m_Tokens[i])
             m_FreeTokens.push_back(i);

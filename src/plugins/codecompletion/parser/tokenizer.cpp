@@ -1838,7 +1838,7 @@ int Tokenizer::GetFirstTokenPosition(const wxString& buffer, const wxString& tok
             if (   ch > _T(' ')
                 && (ch == _T('_') || wxIsalnum(ch)) )
             {
-                p += token.Len();
+                p += token.Len() - 1;
                 continue;
             }
         }
@@ -1846,7 +1846,7 @@ int Tokenizer::GetFirstTokenPosition(const wxString& buffer, const wxString& tok
         // check next char
         if (ret + token.Len() < buffer.Len())
         {
-            p += token.Len();
+            p += token.Len() - 1;
             const wxChar ch = *p;
             if (   ch > _T(' ')
                 && (ch == _T('_') || wxIsalnum(ch)) )

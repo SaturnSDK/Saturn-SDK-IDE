@@ -553,6 +553,7 @@ private:
     wxString                     m_LastActivatedFile;
 
     std::map<wxString, wxString> m_TemplateMap;
+    int                          m_LastFuncTokenIdx; // saved the function token's index, for remove all local variable
 
     DECLARE_EVENT_TABLE()
 };

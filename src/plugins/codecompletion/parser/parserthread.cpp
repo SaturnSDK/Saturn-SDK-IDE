@@ -427,10 +427,7 @@ bool ParserThread::InitTokenizer()
 
             size_t initLineNumber = 0;
             if (m_Options.parentOfBuffer)
-            {
                 initLineNumber = m_Options.parentOfBuffer->m_ImplLineStart;
-                m_Options.parentOfBuffer->m_Children.clear();
-            }
 
             return m_Tokenizer.InitFromBuffer(m_Buffer, m_Filename, initLineNumber);
         }
