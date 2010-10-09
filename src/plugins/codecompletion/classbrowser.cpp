@@ -116,7 +116,7 @@ ClassBrowser::ClassBrowser(wxWindow* parent, NativeParser* np) :
     m_Parser(0L),
     m_ActiveProject(0),
     m_Semaphore(0, 1),
-    m_pBuilderThread(0)
+    m_BuilderThread(0)
 {
     ConfigManager* cfg = Manager::Get()->GetConfigManager(_T("code_completion"));
 
@@ -148,11 +148,11 @@ ClassBrowser::~ClassBrowser()
 
     SetParser(NULL);
 
-    if (m_pBuilderThread)
+    if (m_BuilderThread)
     {
         m_Semaphore.Post();
-        m_pBuilderThread->Delete();
-        m_pBuilderThread->Wait();
+        m_BuilderThread->Delete();
+        m_BuilderThread->Wait();
     }
 }
 
@@ -733,25 +733,25 @@ void ClassBrowser::BuildTree()
     bool create_tree = false;
 
     // create the thread if needed
-    if (!m_pBuilderThread)
+    if (!m_BuilderThread)
     {
-        m_pBuilderThread = new(std::nothrow) ClassBrowserBuilderThread(m_Semaphore, &m_pBuilderThread);
-        if (!m_pBuilderThread)
+        m_BuilderThread = new(std::nothrow) ClassBrowserBuilderThread(m_Semaphore, &m_BuilderThread);
+        if (!m_BuilderThread)
             return;
-        m_pBuilderThread->Create();
-        m_pBuilderThread->Run();
+        m_BuilderThread->Create();
+        m_BuilderThread->Run();
         create_tree = true; // new builder thread - need to create new tree
     }
 
     // initialise it
-    m_pBuilderThread->Init(m_NativeParser,
-                            m_Tree,
-                            m_TreeBottom,
-                            m_ActiveFilename,
-                            m_ActiveProject,
-                            m_Parser->ClassBrowserOptions(),
-                            m_Parser->GetTokens(),
-                            create_tree);
+    m_BuilderThread->Init(m_NativeParser,
+                          m_Tree,
+                          m_TreeBottom,
+                          m_ActiveFilename,
+                          m_ActiveProject,
+                          m_Parser->ClassBrowserOptions(),
+                          m_Parser->GetTokens(),
+                          create_tree);
 
     // and launch it
     if (!create_tree)
@@ -762,21 +762,21 @@ void ClassBrowser::BuildTree()
 
 void ClassBrowser::OnTreeItemExpanding(wxTreeEvent& event)
 {
-    if (m_pBuilderThread)
-        m_pBuilderThread->ExpandItem(event.GetItem());
+    if (m_BuilderThread)
+        m_BuilderThread->ExpandItem(event.GetItem());
     event.Allow();
 }
 
 void ClassBrowser::OnTreeItemCollapsing(wxTreeEvent& event)
 {
-    if (m_pBuilderThread)
-        m_pBuilderThread->CollapseItem(event.GetItem());
+    if (m_BuilderThread)
+        m_BuilderThread->CollapseItem(event.GetItem());
     event.Allow();
 }
 
 void ClassBrowser::OnTreeItemSelected(wxTreeEvent& event)
 {
-    if (m_pBuilderThread && m_Parser && m_Parser->ClassBrowserOptions().treeMembers)
-        m_pBuilderThread->SelectItem(event.GetItem());
+    if (m_BuilderThread && m_Parser && m_Parser->ClassBrowserOptions().treeMembers)
+        m_BuilderThread->SelectItem(event.GetItem());
     event.Allow();
 }

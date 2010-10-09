@@ -285,15 +285,15 @@ private:
     Tokenizer            m_Tokenizer;
 
     /** a pointer to its parent Parser object */
-    Parser*              m_pParent;
+    Parser*              m_Parent;
 
     /** a pointer to the token tree, all the tokens will be added to that tree structure */
-    TokensTree*          m_pTokensTree;
+    TokensTree*          m_TokensTree;
 
-    /** parent Token, for example, when you are parsing in the class member variables, m_pLastParent
+    /** parent Token, for example, when you are parsing in the class member variables, m_LastParent
       * holds a pointer to the current context, which is a token holding class name
       */
-    Token*               m_pLastParent;
+    Token*               m_LastParent;
 
     /** this member define the scope type of member variables, which is: public, private
       * protected or undefined

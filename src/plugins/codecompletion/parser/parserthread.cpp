@@ -117,14 +117,14 @@ namespace ParserConsts
 };
 
 ParserThread::ParserThread(Parser* parent,
-                            const wxString& bufferOrFilename,
-                            bool isLocal,
-                            ParserThreadOptions& parserThreadOptions,
-                            TokensTree* tokensTree) :
+                           const wxString& bufferOrFilename,
+                           bool isLocal,
+                           ParserThreadOptions& parserThreadOptions,
+                           TokensTree* tokensTree) :
     m_Tokenizer(tokensTree),
-    m_pParent(parent),
-    m_pTokensTree(tokensTree),
-    m_pLastParent(0),
+    m_Parent(parent),
+    m_TokensTree(tokensTree),
+    m_LastParent(0),
     m_LastScope(tsUndefined),
     m_FileSize(0),
     m_FileIdx(0),
@@ -154,13 +154,13 @@ void ParserThread::Log(const wxString& log)
     wxCommandEvent event(wxEVT_COMMAND_MENU_SELECTED, NEW_TOKEN);
     event.SetString(log);
     event.SetInt(m_Tokenizer.GetLineNumber());
-    wxPostEvent(m_pParent, event);
+    wxPostEvent(m_Parent, event);
 //    Manager::ProcessPendingEvents();
 }
 
 void ParserThread::SetTokens(TokensTree* tokensTree)
 {
-    m_pTokensTree = tokensTree;
+    m_TokensTree = tokensTree;
 }
 
 wxChar ParserThread::SkipToOneOfChars(const wxString& chars, bool supportNesting)
@@ -261,7 +261,7 @@ bool ParserThread::ParseBufferForNamespaces(const wxString& buffer, NameSpaceVec
 
 	while (m_Tokenizer.NotEOF())
 	{
-		if (!m_pTokensTree || TestDestroy())
+		if (!m_TokensTree || TestDestroy())
             return false;
 
         wxString token = m_Tokenizer.GetToken();
@@ -349,7 +349,7 @@ bool ParserThread::ParseBufferForUsingNamespace(const wxString& buffer, wxArrayS
 
     while (m_Tokenizer.NotEOF())
     {
-        if (!m_pTokensTree || TestDestroy())
+        if (!m_TokensTree || TestDestroy())
             return false;
 
         wxString token = m_Tokenizer.GetToken();
@@ -423,7 +423,7 @@ bool ParserThread::InitTokenizer()
         {
             // record filename for buffer parsing
             m_Filename = m_Options.fileOfBuffer;
-            m_FileIdx = m_pTokensTree->GetFileIndex(m_Filename);
+            m_FileIdx = m_TokensTree->GetFileIndex(m_Filename);
 
             size_t initLineNumber = 0;
             if (m_Options.parentOfBuffer)
@@ -451,13 +451,13 @@ bool ParserThread::Parse()
 
     do
     {
-        if (!m_pTokensTree || !m_Tokenizer.IsOK())
+        if (!m_TokensTree || !m_Tokenizer.IsOK())
             break;
 
         if (!m_Options.useBuffer) // Parse a file
         {
             wxCriticalSectionLocker locker(s_TokensTreeCritical);
-            m_FileIdx = m_pTokensTree->ReserveFileForParsing(m_Filename);
+            m_FileIdx = m_TokensTree->ReserveFileForParsing(m_Filename);
             if (!m_FileIdx)
                 break;
         }
@@ -467,7 +467,7 @@ bool ParserThread::Parse()
         if (!m_Options.useBuffer) // Parsing a file
         {
             wxCriticalSectionLocker locker(s_TokensTreeCritical);
-            m_pTokensTree->FlagFileAsParsed(m_Filename);
+            m_TokensTree->FlagFileAsParsed(m_Filename);
         }
 
         result = true;
@@ -534,7 +534,7 @@ void ParserThread::DoParse()
             }
             else if (token == ParserConsts::clbrace)
             {
-                m_pLastParent = 0L;
+                m_LastParent = 0L;
                 m_LastScope = tsUndefined;
                 m_Str.Clear();
                 // the only time we get to find a } is when recursively called by e.g. HandleClass
@@ -659,15 +659,15 @@ void ParserThread::DoParse()
                         else
                             break;
                     }
-                    if ((!m_Str.IsEmpty())
-                            && m_pLastParent != 0L
-                            && (m_pLastParent->GetSelf() != -1)
-                            && (m_pLastParent->m_TokenKind == tkNamespace ) )
+                    if (    !m_Str.IsEmpty()
+                         && m_LastParent != 0L
+                         && m_LastParent->GetSelf() != -1
+                         && m_LastParent->m_TokenKind == tkNamespace )
                     {
-                        if(m_pLastParent->m_AncestorsString.IsEmpty())
-                            m_pLastParent->m_AncestorsString<<m_Str;
+                        if (m_LastParent->m_AncestorsString.IsEmpty())
+                            m_LastParent->m_AncestorsString<<m_Str;
                         else
-                            m_pLastParent->m_AncestorsString<<_T(',')<<m_Str;
+                            m_LastParent->m_AncestorsString<<_T(',')<<m_Str;
                     }
                 }
                 else
@@ -849,9 +849,9 @@ void ParserThread::DoParse()
                     && m_Str.IsEmpty()
                     && m_EncounteredNamespaces.empty()
                     && m_EncounteredTypeNamespaces.empty()
-                    && (!m_pLastParent || m_pLastParent->m_Name != token) ) // if func has same name as current scope (class)
+                    && (!m_LastParent || m_LastParent->m_Name != token) ) // if func has same name as current scope (class)
                 {
-                    int id = m_pTokensTree->TokenExists(token, -1, tkPreprocessor);
+                    int id = m_TokensTree->TokenExists(token, -1, tkPreprocessor);
 
                     if (id != -1)
                     {
@@ -951,7 +951,7 @@ void ParserThread::DoParse()
                         m_EncounteredNamespaces.push(token);
                     m_Tokenizer.GetToken(); // eat ::
                 }
-                else if (   m_pTokensTree
+                else if (   m_TokensTree
                          && (   (peek==ParserConsts::semicolon)
                              || (   (m_Options.useBuffer && (peek.GetChar(0) == _T('(')))
                                  && (!m_Str.Contains(ParserConsts::dcolon)) ) ) )
@@ -995,12 +995,12 @@ void ParserThread::DoParse()
 Token* ParserThread::TokenExists(const wxString& name, Token* parent, short int kindMask)
 {
     Token* result;
-    if (!m_pTokensTree)
+    if (!m_TokensTree)
         return 0;
     int parentidx = !parent ? -1 : parent->GetSelf();
     // no critical section needed here:
     // all functions that call this, already entered a critical section.
-    result = m_pTokensTree->at(m_pTokensTree->TokenExists(name, parentidx, kindMask));
+    result = m_TokensTree->at(m_TokensTree->TokenExists(name, parentidx, kindMask));
     return result;
 }
 
@@ -1091,17 +1091,17 @@ Token* ParserThread::FindTokenFromQueue(std::queue<wxString>& q, Token* parent, 
 
     if (!result && createIfNotExist)
     {
-        result = new(std::nothrow) Token(ns, m_FileIdx, 0, ++m_pTokensTree->m_TokenTicketCount);
+        result = new(std::nothrow) Token(ns, m_FileIdx, 0, ++m_TokensTree->m_TokenTicketCount);
         if (!result)
         {
-            --m_pTokensTree->m_TokenTicketCount;
+            --m_TokensTree->m_TokenTicketCount;
             return NULL;
         }
 
         result->m_TokenKind = q.empty() ? tkClass : tkNamespace;
         result->m_IsLocal = m_IsLocal;
         result->m_ParentIndex = parentIfCreated ? parentIfCreated->GetSelf() : -1;
-        int newidx = m_pTokensTree->insert(result);
+        int newidx = m_TokensTree->insert(result);
         if (parentIfCreated)
             parentIfCreated->AddChild(newidx);
 
@@ -1156,7 +1156,7 @@ Token* ParserThread::DoAddToken(TokenKind kind,
     if ((kind == tkDestructor || kind == tkConstructor) && !q.empty())
     {
         // look in m_EncounteredTypeNamespaces
-        localParent = FindTokenFromQueue(q, 0, true, m_pLastParent);
+        localParent = FindTokenFromQueue(q, 0, true, m_LastParent);
         if (localParent)
             newToken = TokenExists(newname, localParent);
         if (newToken) TRACE(_T("DoAddToken() : Found token (ctor/dtor)."));
@@ -1165,7 +1165,7 @@ Token* ParserThread::DoAddToken(TokenKind kind,
     // check for implementation member function
     if (!newToken && !m_EncounteredNamespaces.empty())
     {
-        localParent = FindTokenFromQueue(m_EncounteredNamespaces, 0, true, m_pLastParent);
+        localParent = FindTokenFromQueue(m_EncounteredNamespaces, 0, true, m_LastParent);
         if (localParent)
             newToken = TokenExists(newname, localParent);
         if (newToken) TRACE(_T("DoAddToken() : Found token (member function)."));
@@ -1174,7 +1174,7 @@ Token* ParserThread::DoAddToken(TokenKind kind,
     // none of the above; check for token under parent (but not if we 're parsing a temp buffer)
     if (!newToken && !m_Options.isTemp)
     {
-        newToken = TokenExists(name, m_pLastParent, kind);
+        newToken = TokenExists(name, m_LastParent, kind);
         if (newToken) TRACE(_T("DoAddToken() : Found token (parent)."));
     }
 
@@ -1190,19 +1190,19 @@ Token* ParserThread::DoAddToken(TokenKind kind,
             || (   (kind & tkAnyFunction)
                 && (newToken->m_StrippedArgs == strippedArgs) ) ) )
     {
-        m_pTokensTree->m_Modified = true;
+        m_TokensTree->m_Modified = true;
     }
     else
     {
-        Token* finalParent = localParent ? localParent : m_pLastParent;
+        Token* finalParent = localParent ? localParent : m_LastParent;
 
-        newToken = new(std::nothrow) Token(newname, m_FileIdx, line, ++m_pTokensTree->m_TokenTicketCount);
+        newToken = new(std::nothrow) Token(newname, m_FileIdx, line, ++m_TokensTree->m_TokenTicketCount);
         if (newToken)
             TRACE(_T("DoAddToken() : Created token='%s', file_idx=%d, line=%d, ticket="), newname.wx_str(),
-                  m_FileIdx, line, m_pTokensTree->m_TokenTicketCount);
+                  m_FileIdx, line, m_TokensTree->m_TokenTicketCount);
         else
         {
-            --m_pTokensTree->m_TokenTicketCount;
+            --m_TokensTree->m_TokenTicketCount;
             return 0;
         }
 
@@ -1219,7 +1219,7 @@ Token* ParserThread::DoAddToken(TokenKind kind,
         else
             newToken->m_Args = args;
 
-        int newidx = m_pTokensTree->insert(newToken);
+        int newidx = m_TokensTree->insert(newToken);
 
         if (finalParent)
             finalParent->AddChild(newidx);
@@ -1271,7 +1271,7 @@ Token* ParserThread::DoAddToken(TokenKind kind,
         newToken->m_ImplLine      = line;
         newToken->m_ImplLineStart = implLineStart;
         newToken->m_ImplLineEnd   = implLineEnd;
-        m_pTokensTree->m_FilesMap[newToken->m_ImplFileIdx].insert(newToken->GetSelf());
+        m_TokensTree->m_FilesMap[newToken->m_ImplFileIdx].insert(newToken->GetSelf());
     }
 
     // Notice: clears the queue "m_EncounteredTypeNamespaces"
@@ -1342,7 +1342,7 @@ void ParserThread::HandleIncludes()
             if (!(isGlobal ? m_Options.followGlobalIncludes : m_Options.followLocalIncludes))
                 break; // Nothing to do!
 
-            wxString real_filename = m_pParent->GetFullFileName(m_Filename, filename, isGlobal);
+            wxString real_filename = m_Parent->GetFullFileName(m_Filename, filename, isGlobal);
             // Parser::GetFullFileName is thread-safe :)
 
             if (real_filename.IsEmpty())
@@ -1350,16 +1350,16 @@ void ParserThread::HandleIncludes()
 
             {
                 wxCriticalSectionLocker locker(s_TokensTreeCritical);
-                if (m_pTokensTree->IsFileParsed(real_filename))
+                if (m_TokensTree->IsFileParsed(real_filename))
                     break; // Already being parsed elsewhere
             }
 
             TRACE(F(_T("HandleIncludes() : Adding include file '%s'"), real_filename.wx_str()));
 
             wxCriticalSectionLocker* locker = NULL;
-            if (m_pParent->m_IsParsing)
+            if (m_Parent->m_IsParsing)
                 locker = new wxCriticalSectionLocker(s_ParserCritical);
-            m_pParent->DoParseFile(real_filename, isGlobal);
+            m_Parent->DoParseFile(real_filename, isGlobal);
             if (locker)
                 delete locker;
         }
@@ -1408,10 +1408,10 @@ void ParserThread::HandleDefines()
             m_Str << readToEOL;
     }
 
-    Token* oldParent = m_pLastParent;
-    m_pLastParent = 0L;
+    Token* oldParent = m_LastParent;
+    m_LastParent = 0L;
     DoAddToken(tkPreprocessor, token, lineNr, lineNr, m_Tokenizer.GetLineNumber(), para, false, true);
-    m_pLastParent = oldParent;
+    m_LastParent = oldParent;
 }
 
 void ParserThread::HandleUndefs()
@@ -1424,7 +1424,7 @@ void ParserThread::HandleUndefs()
     {
         Token* tk = TokenExists(token, NULL, tkPreprocessor);
         if (tk != NULL)
-            m_pTokensTree->erase(tk);
+            m_TokensTree->erase(tk);
     }
 
     m_Tokenizer.SkipToEOL(false);
@@ -1445,12 +1445,12 @@ void ParserThread::HandleNamespace()
     if (ns == ParserConsts::opbrace)
     {
         // parse inside anonymous namespace
-        Token*     lastParent = m_pLastParent;
+        Token*     lastParent = m_LastParent;
         TokenScope lastScope  = m_LastScope;
 
         DoParse();
 
-        m_pLastParent = lastParent;
+        m_LastParent = lastParent;
         m_LastScope   = lastScope;
     }
     else
@@ -1467,7 +1467,7 @@ void ParserThread::HandleNamespace()
             m_Tokenizer.SetState(tsSkipUnWanted);
 
             // use the existing copy (if any)
-            Token* newToken = TokenExists(ns, m_pLastParent, tkNamespace);
+            Token* newToken = TokenExists(ns, m_LastParent, tkNamespace);
             if (!newToken)
                 newToken = DoAddToken(tkNamespace, ns, line);
             if (!newToken)
@@ -1476,16 +1476,16 @@ void ParserThread::HandleNamespace()
             m_Tokenizer.GetToken(); // eat {
             int lineStart = m_Tokenizer.GetLineNumber();
 
-            Token*     lastParent = m_pLastParent;
+            Token*     lastParent = m_LastParent;
             TokenScope lastScope  = m_LastScope;
 
-            m_pLastParent = newToken;
+            m_LastParent = newToken;
             // default scope is: public for namespaces (actually no, but emulate it)
             m_LastScope   = tsPublic;
 
             DoParse();
 
-            m_pLastParent = lastParent;
+            m_LastParent = lastParent;
             m_LastScope   = lastScope;
 
             // update implementation file and lines of namespace.
@@ -1509,7 +1509,7 @@ void ParserThread::HandleNamespace()
 			m_Tokenizer.GetToken(); // eat '='
             m_Tokenizer.SetState(tsSkipUnWanted);
 
-            Token* lastParent = m_pLastParent;
+            Token* lastParent = m_LastParent;
             Token* aliasToken = NULL;
 
             while (!TestDestroy())
@@ -1517,7 +1517,7 @@ void ParserThread::HandleNamespace()
                 wxString aliasStr = m_Tokenizer.GetToken();
 
                 // use the existing copy (if any)
-                aliasToken = TokenExists(aliasStr, m_pLastParent, tkNamespace);
+                aliasToken = TokenExists(aliasStr, m_LastParent, tkNamespace);
                 if (!aliasToken)
                     aliasToken = DoAddToken(tkNamespace, aliasStr, line);
                 if (!aliasToken)
@@ -1526,14 +1526,14 @@ void ParserThread::HandleNamespace()
                 if (m_Tokenizer.PeekToken() == ParserConsts::dcolon)
                 {
                     m_Tokenizer.GetToken();
-                    m_pLastParent = aliasToken;
+                    m_LastParent = aliasToken;
                 }
                 else
                     break;
             }
 
             aliasToken->m_Aliases.Add(ns);
-            m_pLastParent = lastParent;
+            m_LastParent = lastParent;
         }
         else
         {
@@ -1622,7 +1622,7 @@ void ParserThread::HandleClass(EClassType ct)
                                   g_UnnamedSymbol.wx_str(),
                                   ct == ctClass ? _T("Class") :
                                   ct == ctUnion ? _T("Union") :
-                                  _T("Struct"), ++m_pTokensTree->m_StructUnionUnnamedCount);
+                                  _T("Struct"), ++m_TokensTree->m_StructUnionUnnamedCount);
                 Token* newToken = DoAddToken(tkClass, unnamedTmp, lineNr);
                 // maybe it is a bug here.I just fixed it.
                 if (!newToken)
@@ -1642,11 +1642,11 @@ void ParserThread::HandleClass(EClassType ct)
                 newToken->m_TemplateType = formals;
                 m_TemplateArgument.Clear();
 
-                Token* lastParent = m_pLastParent;
+                Token* lastParent = m_LastParent;
                 TokenScope lastScope = m_LastScope;
                 bool parsingTypedef = m_ParsingTypedef;
 
-                m_pLastParent = newToken;
+                m_LastParent = newToken;
                 // default scope is: private for classes, public for structs, public for unions
                 m_LastScope = ct == ctClass ? tsPrivate : tsPublic;
                 m_ParsingTypedef = false;
@@ -1657,7 +1657,7 @@ void ParserThread::HandleClass(EClassType ct)
                 DoParse();
 
                 m_ParsingTypedef = parsingTypedef;
-                m_pLastParent = lastParent;
+                m_LastParent = lastParent;
                 m_LastScope = lastScope;
 
                 m_LastUnnamedTokenName = unnamedTmp; // used for typedef'ing anonymous class/struct/union
@@ -1693,11 +1693,11 @@ void ParserThread::HandleClass(EClassType ct)
 
                 m_Tokenizer.GetToken(); // eat {
 
-                Token* lastParent = m_pLastParent;
+                Token* lastParent = m_LastParent;
                 TokenScope lastScope = m_LastScope;
                 bool parsingTypedef = m_ParsingTypedef;
 
-                m_pLastParent = newToken;
+                m_LastParent = newToken;
                 // default scope is: private for classes, public for structs, public for unions
                 m_LastScope = ct == ctClass ? tsPrivate : tsPublic;
                 m_ParsingTypedef = false;
@@ -1720,7 +1720,7 @@ void ParserThread::HandleClass(EClassType ct)
                 newToken->m_ImplLineEnd = m_Tokenizer.GetLineNumber();
 
                 m_ParsingTypedef = parsingTypedef;
-                m_pLastParent = lastParent;
+                m_LastParent = lastParent;
                 m_LastScope = lastScope;
 
                 // we should now be right after the closing brace
@@ -1743,8 +1743,8 @@ void ParserThread::HandleClass(EClassType ct)
             else if (next == ParserConsts::semicolon)
             {
                 // e.g. struct A {}; struct B { struct A a; };
-                if (   m_pLastParent
-                    && m_pLastParent->m_TokenKind == tkClass
+                if (   m_LastParent
+                    && m_LastParent->m_TokenKind == tkClass
                     && !lastCurrent.IsEmpty() )
                 {
                     m_Str << lastCurrent << _T(' ');
@@ -1774,9 +1774,9 @@ void ParserThread::HandleClass(EClassType ct)
                     m_Tokenizer.UngetToken();
                     break;
                 }
-                if (TokenExists(current, m_pLastParent, tkClass))
+                if (TokenExists(current, m_LastParent, tkClass))
                 {
-                    if (!TokenExists(next, m_pLastParent, tkVariable))
+                    if (!TokenExists(next, m_LastParent, tkVariable))
                     {
                         wxString farnext;
 
@@ -1849,7 +1849,7 @@ void ParserThread::HandleFunction(const wxString& name, bool isOperator)
                 localParent ? localParent->m_Name.wx_str() : _T("<none>"));
         }
 
-        bool isCtorOrDtor = m_pLastParent && name == m_pLastParent->m_Name;
+        bool isCtorOrDtor = m_LastParent && name == m_LastParent->m_Name;
 
         if (!isCtorOrDtor)
             isCtorOrDtor = localParent && name == localParent->m_Name;
@@ -1935,7 +1935,7 @@ void ParserThread::HandleEnum()
         // we have an un-named enum
         if (m_ParsingTypedef)
         {
-            token.Printf(_T("%sEnum%d"), g_UnnamedSymbol.wx_str(), ++m_pTokensTree->m_EnumUnnamedCount);
+            token.Printf(_T("%sEnum%d"), g_UnnamedSymbol.wx_str(), ++m_TokensTree->m_EnumUnnamedCount);
             m_LastUnnamedTokenName = token;
         }
         else
@@ -1950,9 +1950,9 @@ void ParserThread::HandleEnum()
     {
         if (m_Tokenizer.PeekToken().GetChar(0) != '{')
         {
-            if (TokenExists(token, m_pLastParent, tkEnum))
+            if (TokenExists(token, m_LastParent, tkEnum))
             {
-                if (!TokenExists(m_Tokenizer.PeekToken(), m_pLastParent, tkVariable) )
+                if (!TokenExists(m_Tokenizer.PeekToken(), m_LastParent, tkVariable) )
                 {
                     wxString ident = m_Tokenizer.GetToken(); // go ahead of identifier
 
@@ -1979,7 +1979,7 @@ void ParserThread::HandleEnum()
         {
             // for unnamed enums, look if we already have "Unnamed", so we don't
             // add a new one for every unnamed enum we encounter, in this scope...
-            newEnum = TokenExists(token, m_pLastParent, tkEnum);
+            newEnum = TokenExists(token, m_LastParent, tkEnum);
         }
 
         if (!newEnum) // either named or first unnamed enum
@@ -2013,10 +2013,10 @@ void ParserThread::HandleEnum()
             // like a comma (if no enumerators follow)
             if (wxIsalpha(token.GetChar(0)) || token.GetChar(0) == '_')
             {
-                Token* lastParent = m_pLastParent;
-                m_pLastParent = newEnum;
+                Token* lastParent = m_LastParent;
+                m_LastParent = newEnum;
                 DoAddToken(tkEnumerator, token, m_Tokenizer.GetLineNumber());
-                m_pLastParent = lastParent;
+                m_LastParent = lastParent;
             }
             if (peek==ParserConsts::colon)
             {
@@ -2189,11 +2189,11 @@ void ParserThread::HandleTypedef()
     wxString ancestor;
     wxString alias;
     if ( components.size() == 2
-        && m_pLastParent
-        && m_pLastParent->m_TokenKind == tkClass
-        && (!m_pLastParent->m_TemplateType.IsEmpty()) )
+        && m_LastParent
+        && m_LastParent->m_TokenKind == tkClass
+        && (!m_LastParent->m_TemplateType.IsEmpty()) )
     {
-        wxArrayString templateType = m_pLastParent->m_TemplateType;
+        wxArrayString templateType = m_LastParent->m_TemplateType;
         wxString type = components.front();
         components.pop();
         ancestor = components.front();
@@ -2247,7 +2247,7 @@ void ParserThread::HandleTypedef()
 
 void ParserThread::HandleMacro(int id, const wxString &peek)
 {
-    Token* tk = m_pTokensTree->at(id);
+    Token* tk = m_TokensTree->at(id);
     if (tk)
     {
         TRACE(_T("HandleMacro() : Adding token '%s' (peek='%s')"), tk->m_Name.wx_str(), peek.wx_str());
@@ -2288,7 +2288,7 @@ void ParserThread::ReadVarNames()
             TRACE(_T("ReadVarNames() : Adding variable '%s' as '%s' to '%s'"),
                   token.wx_str(),
                   m_Str.wx_str(),
-                  (m_pLastParent ? m_pLastParent->m_Name.wx_str() : _T("<no-parent>")));
+                  (m_LastParent ? m_LastParent->m_Name.wx_str() : _T("<no-parent>")));
 
             Token* newToken = DoAddToken(tkVariable, token, m_Tokenizer.GetLineNumber());
             if (!newToken)
@@ -2329,7 +2329,7 @@ void ParserThread::ReadClsNames(wxString& ancestor)
             TRACE(_T("ReadClsNames() : Adding variable '%s' as '%s' to '%s'"),
                   token.wx_str(),
                   m_Str.wx_str(),
-                  (m_pLastParent ? m_pLastParent->m_Name.wx_str() : _T("<no-parent>")));
+                  (m_LastParent ? m_LastParent->m_Name.wx_str() : _T("<no-parent>")));
 
             m_Str.clear();
             wxString tempAncestor = ancestor;
@@ -2692,13 +2692,13 @@ bool ParserThread::ResolveTemplateMap(const wxString& typeStr, const wxArrayStri
     parentType.Trim(true).Trim(false);
     //I add this for temporary support for template under std, I will write  better codes later.
     TokenIdxSet parentResult;
-    size_t tokenCounts = m_pTokensTree->FindMatches(parentType, parentResult, true, false, tkClass);
+    size_t tokenCounts = m_TokensTree->FindMatches(parentType, parentResult, true, false, tkClass);
     if (tokenCounts > 0)
     {
         for (TokenIdxSet::iterator it=parentResult.begin(); it!=parentResult.end(); ++it)
         {
             int id = (*it);
-            Token* normalToken = m_pTokensTree->at(id);
+            Token* normalToken = m_TokensTree->at(id);
             if (normalToken)
             {
                 wxArrayString normals =  normalToken->m_TemplateType;

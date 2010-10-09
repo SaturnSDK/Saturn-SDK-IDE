@@ -494,7 +494,7 @@ void ClassBrowserBuilderThread::RemoveInvalidNodes(CBTreeCtrl* tree, wxTreeItemI
                 CollapseItem(parent);
                 // tree->SetItemHasChildren(parent, false);
                 // existing is the last item an gets deleted in CollapseItem and at least on 64-bit linux it can
-                // lead to a crash, because we use it again some lines later, but m_pItem is not 0 in some rare cases,
+                // lead to a crash, because we use it again some lines later, but m_Item is not 0 in some rare cases,
                 // and therefore IsOk returns true !!
                 // so we leave the function here
                 return;
@@ -521,7 +521,7 @@ void ClassBrowserBuilderThread::RemoveInvalidNodes(CBTreeCtrl* tree, wxTreeItemI
         return;
 
     // recursively enters all existing nodes and deletes the node if the token it references
-    // is invalid (i.e. m_pTokensTree->at() != token_in_data)
+    // is invalid (i.e. m_TokensTree->at() != token_in_data)
 
     // we 'll loop backwards so we can delete nodes without problems
     wxTreeItemId existing = tree->GetLastChild(parent);
@@ -532,18 +532,18 @@ void ClassBrowserBuilderThread::RemoveInvalidNodes(CBTreeCtrl* tree, wxTreeItemI
             RemoveInvalidNodes(tree, existing);
 
         CBTreeData* data = (CBTreeData*)tree->GetItemData(existing);
-        if (data && data->m_pToken)
+        if (data && data->m_Token)
         {
-            if (m_pTokensTree->at(data->m_TokenIndex) != data->m_pToken ||
-                data->m_TokenKind != data->m_pToken->m_TokenKind || // need to compare kinds: the token index might have been reused...
-                data->m_TokenName != data->m_pToken->m_Name || // same for the token name
-                !TokenMatchesFilter(data->m_pToken))
+            if (m_TokensTree->at(data->m_TokenIndex) != data->m_Token ||
+                data->m_TokenKind != data->m_Token->m_TokenKind || // need to compare kinds: the token index might have been reused...
+                data->m_TokenName != data->m_Token->m_Name || // same for the token name
+                !TokenMatchesFilter(data->m_Token))
             {
                 // keep parent and set flag if this is the last child of parent
                 wxTreeItemId parent = tree->GetItemParent(existing);
                 bool isLastChild = tree->GetChildrenCount(parent) == 1;
                 // we have to do this in two steps: first collapse and then set haschildren to false
-                if (isLastChild && parent.IsOk() && tree == m_pTreeTop)
+                if (isLastChild && parent.IsOk() && tree == m_TreeTop)
                 {
                     CollapseItem(parent);
                     return;

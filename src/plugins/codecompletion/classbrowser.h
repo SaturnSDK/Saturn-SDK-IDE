@@ -79,7 +79,7 @@ private:
     cbProject*                 m_ActiveProject;
 
     wxSemaphore                m_Semaphore;
-    ClassBrowserBuilderThread* m_pBuilderThread;
+    ClassBrowserBuilderThread* m_BuilderThread;
 
     DECLARE_EVENT_TABLE()
 };

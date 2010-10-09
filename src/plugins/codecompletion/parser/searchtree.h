@@ -187,14 +187,6 @@ protected:
     /// Serializes given label into an XML-escaped string.
     wxString SerializeLabel(nSearchTreeLabel labelno);
 
-    /// Labels used by the nodes' edges
-    SearchTreeLabelsArray m_Labels;
-    /// Nodes and their edges
-    SearchTreeNodesArray m_pNodes;
-
-    /// Points defining the items' strings
-    SearchTreePointsArray m_Points;
-
 private:
     /// Creates the tree's root node.
     void CreateRootNode();
@@ -206,6 +198,14 @@ private:
         just return n.
      */
     nSearchTreeNode SplitBranch(nSearchTreeNode n, size_t depth);
+
+protected:
+    /// Labels used by the nodes' edges
+    SearchTreeLabelsArray m_Labels;
+    /// Nodes and their edges
+    SearchTreeNodesArray  m_Nodes;
+    /// Points defining the items' strings
+    SearchTreePointsArray m_Points;
 };
 
 template <class T>
@@ -371,11 +371,11 @@ wxString SearchTree<T>::Serialize()
     result << _T("<SearchTree>\n");
     result << SerializeLabels();
     result << _T("<nodes>\n");
-    for(i=0;i<m_pNodes.size();i++)
-        result << m_pNodes[i]->Serialize(this,i,false);
+    for (i = 0; i < m_Nodes.size(); ++i)
+        result << m_Nodes[i]->Serialize(this, i, false);
     result << _T("</nodes>\n");
     result << _T(" <items>\n");
-    for(i=1;i < m_Items.size();i++)
+    for (i = 1; i < m_Items.size(); ++i)
     {
         result << SerializeItem(i);
 
