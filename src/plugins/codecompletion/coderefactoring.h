@@ -33,8 +33,8 @@ public:
     void RenameSymbols();
 
 private:
-    size_t SearchInFiles(cbProject* project, const wxString& targetText, bool onlyOpenFiles);
-    size_t VerifyResult(cbProject* project, const TokenIdxSet& targetResult, const wxString& targetText);
+    size_t SearchInFiles(const wxArrayString& files, const wxString& targetText);
+    size_t VerifyResult(const TokenIdxSet& targetResult, const wxString& targetText, bool isLocalVariable);
     void Find(cbStyledTextCtrl* control, const wxString& file, const wxString& target);
     wxString GetSymbolUnderCursor();
 
@@ -42,6 +42,8 @@ private:
     void DoRenameSymbols(const wxString& targetText, const wxString& replaceText);
 
 private:
+    void GetAllProjectFiles(wxArrayString& files, cbProject* project);
+    void GetOpenedFiles(wxArrayString& files);
     bool Parse();
 
 private:

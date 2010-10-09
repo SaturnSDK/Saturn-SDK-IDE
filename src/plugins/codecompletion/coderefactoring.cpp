@@ -90,15 +90,39 @@ bool CodeRefactoring::Parse()
         return false;
     }
 
+    // handle local variables
+    bool isLocalVariable = false;
+    Token* token = m_NativeParser.GetParser().GetTokens()->at(*targetResult.begin());
+    if (token)
+    {
+        Token* parent = token->GetParentToken();
+        if (parent && parent->m_TokenKind == tkFunction)
+            isLocalVariable = true;
+    }
+
+    wxArrayString files;
     cbProject* project = m_NativeParser.GetProjectByFilename(editor->GetFilename());
-    const int ret = cbMessageBox(_("Only search open files? Select \"No\" search the project!"),
-                                 _("Code Refactoring"), wxICON_QUESTION | wxYES_NO);
-    if (ret == wxID_CANCEL)
+
+    if (isLocalVariable || !project)
+        files.Add(editor->GetFilename());
+    else
+    {
+        const int ret = cbMessageBox(_("Only search open files? Select \"No\" search the project!"),
+                                     _("Code Refactoring"), wxICON_QUESTION | wxYES_NO);
+        if (ret == wxID_YES)
+            GetOpenedFiles(files);
+        else if (ret == wxID_NO)
+            GetAllProjectFiles(files, project);
+        else
+            return false;
+    }
+
+    if (files.IsEmpty())
         return false;
 
-    size_t count = SearchInFiles(project, targetText, ret == wxID_YES);
+    size_t count = SearchInFiles(files, targetText);
     if (count)
-        count = VerifyResult(project, targetResult, targetText);
+        count = VerifyResult(targetResult, targetText, isLocalVariable);
 
     return count != 0;
 }
@@ -123,45 +147,14 @@ void CodeRefactoring::RenameSymbols()
         DoRenameSymbols(targetText, replaceText);
 }
 
-size_t CodeRefactoring::SearchInFiles(cbProject* project, const wxString& targetText, bool onlyOpenFiles)
+size_t CodeRefactoring::SearchInFiles(const wxArrayString& files, const wxString& targetText)
 {
     EditorManager* edMan = Manager::Get()->GetEditorManager();
-    cbEditor* editor = edMan->GetBuiltinActiveEditor();
-    if (!editor)
-        return 0;
-
     m_SearchDataMap.clear();
-    wxArrayString files;
-
-    if (onlyOpenFiles)
-    {
-        for (int i = 0; i < edMan->GetEditorsCount(); ++i)
-            files.Add(edMan->GetEditor(i)->GetFilename());
-    }
-    else
-    {
-        if (!project)
-            files.Add(editor->GetFilename());
-        else
-        {
-            // fill the search list with all the project files
-            for (int i = 0; i < project->GetFilesCount(); ++i)
-            {
-                ProjectFile* pf = project->GetFile(i);
-                if (!pf)
-                    continue;
-                FileType ft = CCFileTypeOf(pf->relativeFilename);
-                if (ft != ftOther)
-                    files.Add(pf->file.GetFullPath());
-            }
-        }
-    }
-
-    if (files.IsEmpty())
-        return 0;
 
     // now that list is filled, we'll search
-    cbStyledTextCtrl* control = new cbStyledTextCtrl(editor->GetParent(), wxID_ANY, wxDefaultPosition, wxSize(0, 0));
+    wxWindow* parent = edMan->GetBuiltinActiveEditor()->GetParent();
+    cbStyledTextCtrl* control = new cbStyledTextCtrl(parent, wxID_ANY, wxDefaultPosition, wxSize(0, 0));
     control->Show(false);
 
     // let's create a progress dialog because it might take some time depending on the files count
@@ -199,15 +192,24 @@ size_t CodeRefactoring::SearchInFiles(cbProject* project, const wxString& target
     return m_SearchDataMap.size();
 }
 
-size_t CodeRefactoring::VerifyResult(cbProject* project, const TokenIdxSet& targetResult, const wxString& targetText)
+size_t CodeRefactoring::VerifyResult(const TokenIdxSet& targetResult, const wxString& targetText,
+                                     bool isLocalVariable)
 {
     EditorManager* edMan = Manager::Get()->GetEditorManager();
     cbEditor* editor = edMan->GetBuiltinActiveEditor();
     if (!editor)
         return 0;
 
+    Token* parentOfLocalVariable = nullptr;
+    if (isLocalVariable)
+    {
+        Token* token = m_NativeParser.GetParser().GetTokens()->at(*targetResult.begin());
+        parentOfLocalVariable = token->GetParentToken();
+    }
+
     // now that list is filled, we'll search
-    cbStyledTextCtrl* control = new cbStyledTextCtrl(editor->GetParent(), wxID_ANY, wxDefaultPosition, wxSize(0, 0));
+    cbStyledTextCtrl* control = new cbStyledTextCtrl(editor->GetParent(), wxID_ANY, wxDefaultPosition,
+                                                     wxSize(0, 0));
     control->Show(false);
 
     // styled the text to support control->GetStyleAt()
@@ -280,10 +282,28 @@ size_t CodeRefactoring::VerifyResult(cbProject* project, const TokenIdxSet& targ
                 if (result.find(*findIter) != result.end())
                     break;
             }
+
             if (findIter == targetResult.end()) // not found
                 it->second.erase(itList++);
             else
+            {
+                // handle for local variable
+                if (isLocalVariable)
+                {
+                    Token* token = m_NativeParser.GetParser().GetTokens()->at(*findIter);
+                    if (token)
+                    {
+                        Token* parent = token->GetParentToken();
+                        if (parent != parentOfLocalVariable)
+                        {
+                            it->second.erase(itList++);
+                            continue;
+                        }
+                    }
+                }
+
                 ++itList;
+            }
         }
 
         if (it->second.empty())
@@ -401,5 +421,32 @@ void CodeRefactoring::DoRenameSymbols(const wxString& targetText, const wxString
         }
 
         control->EndUndoAction();
+    }
+}
+
+void CodeRefactoring::GetAllProjectFiles(wxArrayString& files, cbProject* project)
+{
+    if (!project)
+        return;
+
+    // fill the search list with all the project files
+    for (int i = 0; i < project->GetFilesCount(); ++i)
+    {
+        ProjectFile* pf = project->GetFile(i);
+        if (!pf)
+            continue;
+        FileType ft = CCFileTypeOf(pf->relativeFilename);
+        if (ft != ftOther)
+            files.Add(pf->file.GetFullPath());
+    }
+}
+
+void CodeRefactoring::GetOpenedFiles(wxArrayString& files)
+{
+    EditorManager* edMan = Manager::Get()->GetEditorManager();
+    if (edMan)
+    {
+        for (int i = 0; i < edMan->GetEditorsCount(); ++i)
+            files.Add(edMan->GetEditor(i)->GetFilename());
     }
 }
