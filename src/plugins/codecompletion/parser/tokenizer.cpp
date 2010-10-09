@@ -1132,7 +1132,7 @@ void Tokenizer::MacroReplace(wxString& str)
                 if (!tk->m_Args.IsEmpty())
                 {
                     const wxString actualContext = GetActualContextForMacro(tk);
-                    if (-1 == GetFirstTokenPosition(actualContext, str))
+                    if (actualContext != str)
                         replaced = ReplaceBufferForReparse(actualContext, false);
                 }
                 else if (tk->m_Type != str)
@@ -1247,7 +1247,7 @@ bool Tokenizer::CalcConditionExpression()
                     else if (!tk->m_Args.IsEmpty())
                     {
                         const wxString actualContext = GetActualContextForMacro(tk);
-                        if (-1 == GetFirstTokenPosition(actualContext, token))
+                        if (actualContext != token)
                         {
                             if (ReplaceBufferForReparse(actualContext, false))
                                 continue;
@@ -1604,7 +1604,11 @@ void Tokenizer::SpliteArguments(wxArrayString& results)
 bool Tokenizer::ReplaceBufferForReparse(const wxString& target, bool updatePeekToken)
 {
     if (m_IsReplaceParsing && ++m_RepeatReplaceCount > s_MaxRepeatReplaceCount)
+    {
+        m_TokenIndex = m_BufferLen - m_FirstRemainingLength;
+        m_PeekAvailable = false;
         return false;
+    }
 
     wxString buffer(target);
     if (buffer.IsEmpty())

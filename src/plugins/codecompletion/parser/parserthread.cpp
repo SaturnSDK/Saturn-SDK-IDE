@@ -2256,7 +2256,7 @@ void ParserThread::HandleMacro(int id, const wxString &peek)
         if (m_Options.parseComplexMacros)
         {
             const wxString actualContext = m_Tokenizer.GetActualContextForMacro(tk);
-            if (-1 == m_Tokenizer.GetFirstTokenPosition(actualContext, tk->m_Name))
+            if (actualContext != tk->m_Name)
                 m_Tokenizer.ReplaceBufferForReparse(actualContext);
         }
     }

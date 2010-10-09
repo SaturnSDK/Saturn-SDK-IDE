@@ -108,7 +108,7 @@ bool CodeRefactoring::Parse()
     else
     {
         const int ret = cbMessageBox(_("Only search open files? Select \"No\" search the project!"),
-                                     _("Code Refactoring"), wxICON_QUESTION | wxYES_NO);
+                                     _("Code Refactoring"), wxICON_QUESTION | wxYES_NO | wxCANCEL);
         if (ret == wxID_YES)
             GetOpenedFiles(files);
         else if (ret == wxID_NO)
