@@ -1407,7 +1407,12 @@ bool NativeParser::ParseLocalBlock(ccSearchData* searchData, int caretPos)
     Token* parent = nullptr;
     int blockStart = FindCurrentFunctionStart(searchData, nullptr, nullptr, &parent, caretPos);
     if (parent)
+    {
+        if (!(parent->m_TokenKind & tkAnyFunction))
+            return false;
         m_LastFuncTokenIdx = parent->GetSelf();
+    }
+
     if (blockStart != -1)
     {
         ++blockStart; // skip {
@@ -2151,10 +2156,11 @@ size_t NativeParser::AI(TokenIdxSet& result,
             if (token->m_TokenKind == tkClass)
                 scope_result.insert(*it);
             else
+            {
+                if (token->m_TokenKind & tkAnyFunction && token->HasChildren()) // for local variable
+                    scope_result.insert(*it);
                 scope_result.insert(token->m_ParentIndex);
-
-            if (token->m_TokenKind == tkFunction && token->HasChildren()) // for local variable
-                scope_result.insert(*it);
+            }
 
             if (s_DebugSmartSense)
             {
@@ -2187,7 +2193,7 @@ size_t NativeParser::AI(TokenIdxSet& result,
     for (TokenIdxSet::iterator it = search_scope->begin(); it != search_scope->end();)
     {
         Token* token = tree->at(*it);
-        if (!token || !(token->m_TokenKind & (tkNamespace | tkClass | tkTypedef | tkFunction)))
+        if (!token || !(token->m_TokenKind & (tkNamespace | tkClass | tkTypedef | tkAnyFunction)))
             search_scope->erase(it++);
         else
             ++it;
