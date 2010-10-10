@@ -279,6 +279,9 @@ private:
     bool ResolveTemplateMap(const wxString& typeStr, const wxArrayString& actuals,
                             std::map<wxString, wxString>& results);
 
+    /** Only for debug */
+    bool IsStillAlive(const wxString& funcInfo);
+
     /** if we regard the parserThread class as a syntax analyzer, then the Tokenizer class is
       * regard as the lexer, which always feeds a wxString by calling m_Tokenizer.GetToken()
       */
