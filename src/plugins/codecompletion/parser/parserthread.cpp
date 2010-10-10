@@ -1403,6 +1403,8 @@ void ParserThread::HandleDefines()
             para = readToEOL.Left(++pos);
             m_Str << readToEOL.Right(readToEOL.Len() - (++pos));
         }
+        else if (readToEOL == token) // e.g. #define AAA AAA
+            return;
         else
             m_Str << readToEOL;
     }
@@ -2253,11 +2255,7 @@ void ParserThread::HandleMacro(int id, const wxString &peek)
         DoAddToken(tkMacro, tk->m_Name, m_Tokenizer.GetLineNumber(), 0, 0, peek);
 
         if (m_Options.parseComplexMacros)
-        {
-            const wxString actualContext = m_Tokenizer.GetActualContextForMacro(tk);
-            if (actualContext != tk->m_Name)
-                m_Tokenizer.ReplaceBufferForReparse(actualContext);
-        }
+            m_Tokenizer.ReplaceBufferForReparse(m_Tokenizer.GetActualContextForMacro(tk));
     }
 }
 

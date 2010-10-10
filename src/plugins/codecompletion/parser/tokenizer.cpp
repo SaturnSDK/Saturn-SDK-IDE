@@ -403,7 +403,7 @@ wxString Tokenizer::ReadToEOL(bool nestBraces, bool stripUnneeded)
                 if (ch == _T('\n'))
                     break;
 
-                if (ch == _T(' ') && (p == buffer || *(p - 1) == ch))
+                if (ch <= _T(' ') && (p == buffer || *(p - 1) == ch))
                 {
                     MoveToNextChar();
                     continue;
@@ -480,7 +480,7 @@ void Tokenizer::ReadToEOL(wxArrayString& tokens)
         while (SkipComment())
             ;
         wxString token = DoGetToken();
-        if (token[0] < _T(' ') || token == _T("\\"))
+        if (token[0] <= _T(' ') || token == _T("\\"))
             continue;
 
         if (token[0] == _T('('))
@@ -587,7 +587,7 @@ void Tokenizer::ReadParentheses(wxString& str)
 
         case _T(')'):
             {
-                if (*(p - 1) == _T(' '))
+                if (*(p - 1) <= _T(' '))
                     --p;
                 --level;
                 *p = ch;
@@ -628,7 +628,7 @@ void Tokenizer::ReadParentheses(wxString& str)
 
         case _T(','):
             {
-                if (*(p - 1) == _T(' '))
+                if (*(p - 1) <= _T(' '))
                     --p;
 
                 *p = _T(',');
@@ -639,7 +639,7 @@ void Tokenizer::ReadParentheses(wxString& str)
 
         case _T('*'):
             {
-                if (*(p - 1) == _T(' '))
+                if (*(p - 1) <= _T(' '))
                     --p;
 
                 *p = _T('*');
@@ -650,7 +650,7 @@ void Tokenizer::ReadParentheses(wxString& str)
 
         case _T('&'):
             {
-                if (*(p - 1) == _T(' '))
+                if (*(p - 1) <= _T(' '))
                     --p;
 
                 *p = _T('&');
@@ -661,7 +661,7 @@ void Tokenizer::ReadParentheses(wxString& str)
 
         case _T('='):
             {
-                if (*(p - 1) == _T(' '))
+                if (*(p - 1) <= _T(' '))
                 {
                     *p = _T('=');
                     *++p = _T(' ');
@@ -1130,12 +1130,8 @@ void Tokenizer::MacroReplace(wxString& str)
             {
                 bool replaced = false;
                 if (!tk->m_Args.IsEmpty())
-                {
-                    const wxString actualContext = GetActualContextForMacro(tk);
-                    if (actualContext != str)
-                        replaced = ReplaceBufferForReparse(actualContext, false);
-                }
-                else if (tk->m_Type != str)
+                    replaced = ReplaceBufferForReparse(GetActualContextForMacro(tk), false);
+                else
                     replaced = ReplaceBufferForReparse(tk->m_Type, false);
                 if (replaced)
                 {
@@ -1246,12 +1242,8 @@ bool Tokenizer::CalcConditionExpression()
                     }
                     else if (!tk->m_Args.IsEmpty())
                     {
-                        const wxString actualContext = GetActualContextForMacro(tk);
-                        if (actualContext != token)
-                        {
-                            if (ReplaceBufferForReparse(actualContext, false))
-                                continue;
-                        }
+                        if (ReplaceBufferForReparse(GetActualContextForMacro(tk), false))
+                            continue;
                     }
                     else if (wxIsdigit(tk->m_Type[0]))
                         token = tk->m_Type;
@@ -1584,7 +1576,7 @@ void Tokenizer::SpliteArguments(wxArrayString& results)
         }
         else if (level != 0)
         {
-            if (!piece.IsEmpty() && piece.Last() != _T(' '))
+            if (!piece.IsEmpty() && piece.Last() > _T(' '))
                 piece << _T(" ");
             piece << token;
         }
@@ -1603,18 +1595,19 @@ void Tokenizer::SpliteArguments(wxArrayString& results)
 
 bool Tokenizer::ReplaceBufferForReparse(const wxString& target, bool updatePeekToken)
 {
+    if (target.IsEmpty())
+        return false;
+
     if (m_IsReplaceParsing && ++m_RepeatReplaceCount > s_MaxRepeatReplaceCount)
     {
         m_TokenIndex = m_BufferLen - m_FirstRemainingLength;
         m_PeekAvailable = false;
+        SkipToEOL(false);
         return false;
     }
 
-    wxString buffer(target);
-    if (buffer.IsEmpty())
-        return false;
-
     // Keep all in one line
+    wxString buffer(target);
     for (size_t i = 0; i < buffer.Len(); ++i)
     {
         switch (buffer.GetChar(i))
@@ -1718,9 +1711,6 @@ int Tokenizer::KMP_Find(const wxChar* text, const wxChar* pattern, const int pat
 
 wxString Tokenizer::GetActualContextForMacro(Token* tk)
 {
-    if (!tk)
-        return wxEmptyString;
-
     // 1. break the args into substring with "," and store them in normals
     wxArrayString normalArgs;
     if (!tk->m_Args.IsEmpty() && ReplaceBufferForReparse(tk->m_Args, false))
