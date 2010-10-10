@@ -1403,8 +1403,6 @@ void ParserThread::HandleDefines()
             para = readToEOL.Left(++pos);
             m_Str << readToEOL.Right(readToEOL.Len() - (++pos));
         }
-        else if (readToEOL == token) // e.g. #define AAA AAA
-            return;
         else
             m_Str << readToEOL;
     }
@@ -1435,9 +1433,9 @@ void ParserThread::HandleNamespace()
 {
     wxString ns = m_Tokenizer.GetToken();
     Token* tk = TokenExists(ns, nullptr, tkPreprocessor);
-    if (tk)
+    if (tk && tk->m_Name != tk->m_Type)
     {
-        if (m_Tokenizer.ReplaceBufferForReparse(tk->m_Name))
+        if (m_Tokenizer.ReplaceBufferForReparse(tk->m_Type))
             ns = m_Tokenizer.GetToken();
     }
 
@@ -2255,7 +2253,7 @@ void ParserThread::HandleMacro(int id, const wxString &peek)
         DoAddToken(tkMacro, tk->m_Name, m_Tokenizer.GetLineNumber(), 0, 0, peek);
 
         if (m_Options.parseComplexMacros)
-            m_Tokenizer.ReplaceBufferForReparse(m_Tokenizer.GetActualContextForMacro(tk));
+            m_Tokenizer.ReplaceMacroActualContext(tk);
     }
 }
 

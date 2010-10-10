@@ -239,11 +239,12 @@ public:
         return m_TokenIndex < m_BufferLen;
     };
 
-    /** Get the actual context for macro */
-    wxString GetActualContextForMacro(Token* tk);
+    /** Backward buffer replace for reparsing */
+    bool ReplaceBufferForReparse(wxString target, bool updatePeekToken = true);
 
-    /** Replace buffer for 'function-like macro' parse */
-    bool ReplaceBufferForReparse(const wxString& target, bool updatePeekToken = true);
+    /** Get actual context for macro first, then replace buffer to reparsing */
+    bool ReplaceMacroActualContext(Token* tk, bool updatePeekToken = true)
+    { return ReplaceBufferForReparse(GetActualContextForMacro(tk), updatePeekToken); }
 
     /** Get first token position in buffer */
     int GetFirstTokenPosition(const wxString& buffer, const wxString& token);
@@ -423,6 +424,9 @@ private:
 
     /** Splite the actual macro arguments, and store them in results*/
     void SpliteArguments(wxArrayString& results);
+
+    /** Get the actual context for macro */
+    wxString GetActualContextForMacro(Token* tk);
 
     /** Just for KMP find */
     void KMP_GetNextVal(const wxChar* pattern, int next[]);
