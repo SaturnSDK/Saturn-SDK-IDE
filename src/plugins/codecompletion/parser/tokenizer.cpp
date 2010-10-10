@@ -1715,21 +1715,21 @@ wxString Tokenizer::GetActualContextForMacro(Token* tk)
     if (!tk || tk->m_Name == tk->m_Type)
         return wxEmptyString;
 
-    // 1. break the args into substring with "," and store them in normals
-    wxArrayString normalArgs;
+    // 1. break the args into substring with ","
+    wxArrayString formalArgs;
     if (ReplaceBufferForReparse(tk->m_Args, false))
-        SpliteArguments(normalArgs);
+        SpliteArguments(formalArgs);
 
     // 2. splite the actual macro arguments
     wxArrayString actualArgs;
-    if (!normalArgs.IsEmpty())
+    if (!formalArgs.IsEmpty())
         SpliteArguments(actualArgs);
 
     // 3. get actual context
     wxString actualContext = tk->m_Type;
-    for (size_t i = 0; i < std::min(normalArgs.GetCount(), actualArgs.GetCount()); ++i)
+    for (size_t i = 0; i < std::min(formalArgs.GetCount(), actualArgs.GetCount()); ++i)
     {
-        TRACE(_T("The normal args are '%s' and the actual args are '%s'."), normalArgs[i].wx_str(),
+        TRACE(_T("The normal args are '%s' and the actual args are '%s'."), formalArgs[i].wx_str(),
               actualArgs[i].wx_str());
 
         static const int maxBufferLen = 4096;
@@ -1740,15 +1740,15 @@ wxString Tokenizer::GetActualContextForMacro(Token* tk)
 
         for (;;)
         {
-            const int pos = KMP_Find(data, normalArgs[i].GetData(), normalArgs[i].Len());
+            const int pos = KMP_Find(data, formalArgs[i].GetData(), formalArgs[i].Len());
             if (pos != -1)
             {
                 const wxChar left = *(data + pos - 1);
-                const wxChar right = *(data + pos + normalArgs[i].Len());
+                const wxChar right = *(data + pos + formalArgs[i].Len());
                 if (   (wxIsalpha(left) || left == _T('_'))
                     || (wxIsalpha(right) || right == _T('_')) )
                 {
-                    const int totalLen = pos + normalArgs[i].Len();
+                    const int totalLen = pos + formalArgs[i].Len();
                     if (p + totalLen >= buffer + maxBufferLen)
                     {
                         alreadyReplaced << wxString(buffer, p - buffer);
@@ -1775,7 +1775,7 @@ wxString Tokenizer::GetActualContextForMacro(Token* tk)
                         p += pos;
                     }
 
-                    data += pos + normalArgs[i].Len();
+                    data += pos + formalArgs[i].Len();
 
                     if (!actualArgs[i].IsEmpty())
                     {
