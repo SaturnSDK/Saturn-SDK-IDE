@@ -387,7 +387,7 @@ wxString Tokenizer::ReadToEOL(bool nestBraces, bool stripUnneeded)
               wxString(__PRETTY_FUNCTION__, wxConvUTF8).wc_str(), m_LineNumber, CurrentChar(),
               PreviousChar(), NextChar(), nestBraces ? 1 : 0);
 
-        static const size_t maxBufferLen = 4096;
+        static const size_t maxBufferLen = 4094;
         wxChar buffer[maxBufferLen + 2];
         wxChar* p = buffer;
         wxString str;
@@ -550,7 +550,7 @@ void Tokenizer::ReadParentheses(wxString& str, bool trimFirst)
 
 void Tokenizer::ReadParentheses(wxString& str)
 {
-    static const size_t maxBufferLen = 4096;
+    static const size_t maxBufferLen = 4093;
     wxChar buffer[maxBufferLen + 3];
     buffer[0] = _T('$'); // avoid segfault error
     wxChar* realBuffer = buffer + 1;
@@ -1133,7 +1133,7 @@ void Tokenizer::MacroReplace(wxString& str)
                     replaced = ReplaceMacroActualContext(tk, false);
                 else if (tk->m_Type != tk->m_Name)
                     replaced = ReplaceBufferForReparse(tk->m_Type, false);
-                if (replaced)
+                if (replaced || tk->m_Type.IsEmpty())
                 {
                     SkipUnwanted();
                     str = DoGetToken();
@@ -1722,85 +1722,38 @@ wxString Tokenizer::GetActualContextForMacro(Token* tk)
 
     // 2. splite the actual macro arguments
     wxArrayString actualArgs;
-    if (!formalArgs.IsEmpty())
+    if (!formalArgs.IsEmpty()) // e.g. #define AAA(x) x \n #define BBB AAA \n BBB(int) variable;
         SpliteArguments(actualArgs);
 
     // 3. get actual context
     wxString actualContext = tk->m_Type;
-    for (size_t i = 0; i < std::min(formalArgs.GetCount(), actualArgs.GetCount()); ++i)
+    const size_t totalCount = std::min(formalArgs.GetCount(), actualArgs.GetCount());
+    for (size_t i = 0; i < totalCount; ++i)
     {
         TRACE(_T("The normal args are '%s' and the actual args are '%s'."), formalArgs[i].wx_str(),
               actualArgs[i].wx_str());
 
-        static const int maxBufferLen = 4096;
-        wxChar buffer[maxBufferLen + 2];
-        wxChar* p = buffer;
         wxChar* data = const_cast<wxChar*>(actualContext.GetData());
-        wxString alreadyReplaced;
+        const wxChar* dataEnd = data + actualContext.Len();
+        const wxChar* target = formalArgs[i].GetData();
+        const int targetLen = formalArgs[i].Len();
 
-        for (;;)
+        wxString alreadyReplaced;
+        alreadyReplaced.Alloc(actualContext.Len() * 2);
+
+        while (true)
         {
-            const int pos = KMP_Find(data, formalArgs[i].GetData(), formalArgs[i].Len());
+            const int pos = GetFirstTokenPosition(data, dataEnd - data, target, targetLen);
             if (pos != -1)
             {
-                const wxChar left = *(data + pos - 1);
-                const wxChar right = *(data + pos + formalArgs[i].Len());
-                if (   (wxIsalpha(left) || left == _T('_'))
-                    || (wxIsalpha(right) || right == _T('_')) )
-                {
-                    const int totalLen = pos + formalArgs[i].Len();
-                    if (p + totalLen >= buffer + maxBufferLen)
-                    {
-                        alreadyReplaced << wxString(buffer, p - buffer);
-                        p = buffer;
-                    }
-
-                    memcpy(p, data, totalLen * sizeof(wxChar));
-                    p += totalLen;
-                    data += totalLen;
-                }
-                else
-                {
-                    if (p + (pos + actualArgs[i].Len())  >= buffer + maxBufferLen)
-                    {
-                        alreadyReplaced << wxString(buffer, p - buffer);
-                        p = buffer;
-                    }
-
-                    if (pos >= maxBufferLen)
-                        alreadyReplaced << wxString(data, pos);
-                    else if (pos)
-                    {
-                        memcpy(p, data, pos * sizeof(wxChar));
-                        p += pos;
-                    }
-
-                    data += pos + formalArgs[i].Len();
-
-                    if (!actualArgs[i].IsEmpty())
-                    {
-                        if (p + actualArgs[i].Len() < buffer + maxBufferLen)
-                        {
-                            memcpy(p, actualArgs[i].GetData(), actualArgs[i].Len() * sizeof(wxChar));
-                            p += actualArgs[i].Len();
-                        }
-                        else
-                        {
-                            alreadyReplaced << wxString(buffer, p - buffer) << actualArgs[i];
-                            p = buffer;
-                        }
-                    }
-                }
+                alreadyReplaced << wxString(data, pos) << actualArgs[i];
+                data += pos + targetLen;
+                if (data == dataEnd)
+                    break;
             }
             else
             {
-                if (p != buffer)
-                    alreadyReplaced << wxString(buffer, p - buffer);
-
-                const int lastLen = actualContext.Len() - (data - actualContext.GetData());
-                if (lastLen)
-                    alreadyReplaced << wxString(data, lastLen);
-
+                alreadyReplaced << data;
                 break;
             }
         }
@@ -1812,49 +1765,44 @@ wxString Tokenizer::GetActualContextForMacro(Token* tk)
     actualContext.Replace(_T("##"), wxEmptyString);
 
     TRACE(_T("The replaced actual context are '%s'."), actualContext.wx_str());
-
     return actualContext;
 }
 
-int Tokenizer::GetFirstTokenPosition(const wxString& buffer, const wxString& token)
+int Tokenizer::GetFirstTokenPosition(const wxChar* buffer, const size_t bufferLen,
+                                     const wxChar* target, const size_t targetLen)
 {
     int pos = -1;
-    wxChar* p = const_cast<wxChar*>(buffer.GetData());
+    wxChar* p = const_cast<wxChar*>(buffer);
+    const wxChar* endBuffer = buffer + bufferLen;
     for (;;)
     {
-        const int ret = KMP_Find(p, token.GetData(), token.Len());
+        const int ret = KMP_Find(p, target, targetLen);
         if (ret == -1)
             break;
 
-        // update the pointer
-        p += ret;
-
         // check previous char
-        if (ret > 0)
+        p += ret;
+        if (p > buffer)
         {
             const wxChar ch = *(p - 1);
-            if (   ch > _T(' ')
-                && (ch == _T('_') || wxIsalnum(ch)) )
+            if (ch == _T('_') || wxIsalnum(ch))
             {
-                p += token.Len() - 1;
+                p += targetLen;
                 continue;
             }
         }
 
         // check next char
-        if (ret + token.Len() < buffer.Len())
+        p += targetLen;
+        if (p < endBuffer)
         {
-            p += token.Len() - 1;
             const wxChar ch = *p;
-            if (   ch > _T(' ')
-                && (ch == _T('_') || wxIsalnum(ch)) )
-            {
+            if (ch == _T('_') || wxIsalnum(ch))
                 continue;
-            }
         }
 
         // got it
-        pos = ret;
+        pos = p - buffer - targetLen;
         break;
     }
 
