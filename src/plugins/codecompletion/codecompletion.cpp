@@ -259,7 +259,7 @@ public:
                 if (m_SystemHeadersMap.find(m_IncludeDirs[i]) == m_SystemHeadersMap.end())
                 {
                     dirs.Add(m_IncludeDirs[i]);
-                    m_SystemHeadersMap[m_IncludeDirs[i]] = std::list<wxString>();
+                    m_SystemHeadersMap[m_IncludeDirs[i]] = ListString();
                 }
             }
         }
@@ -366,7 +366,7 @@ private:
     private:
         const SystemHeadersMap&  m_SystemHeadersMap;
         const wxString&          m_SearchDir;
-        std::list<wxString>&     m_Headers;
+        ListString&              m_Headers;
         wxCriticalSectionLocker* m_Locker;
         size_t                   m_HeaderCount;
     };
@@ -1241,8 +1241,8 @@ void CodeCompletion::CodeCompleteIncludes()
             SystemHeadersMap::iterator it = m_SystemHeadersMap.find(incDirs[i]);
             if (it != m_SystemHeadersMap.end())
             {
-                const std::list<wxString>& headers = it->second;
-                for (std::list<wxString>::const_iterator it = headers.begin(); it != headers.end(); ++it)
+                const ListString& headers = it->second;
+                for (ListString::const_iterator it = headers.begin(); it != headers.end(); ++it)
                     files.insert(*it);
             }
         }

@@ -443,6 +443,9 @@ private:
      */
     void OnEditorActivatedTimer(wxTimerEvent& event);
 
+    /** Event handler when clear all parsers, and reparse current project */
+    void OnReparseAfterClearTimer(wxTimerEvent& event);
+
     /** Event handler when an editor activate, *NONE* project is handled here*/
     void OnEditorActivated(EditorBase* editor);
 
@@ -535,6 +538,7 @@ private:
     int                          m_EditorStartWord;
     int                          m_EditorEndWord;
     wxTimer                      m_TimerEditorActivated;
+    wxTimer                      m_TimerReparseAfterClear;
     wxString                     m_CCItems;
     wxArrayString                m_CallTips;
     int                          m_CallTipCommas;

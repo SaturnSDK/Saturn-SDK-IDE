@@ -65,6 +65,8 @@
 #define PARSER_IMG_MIN PARSER_IMG_CLASS_FOLDER
 #define PARSER_IMG_MAX PARSER_IMG_MACRO_FOLDER
 
+typedef std::list<wxString> ListString;
+
 class ClassTreeData : public wxTreeItemData
 {
 public:
@@ -125,7 +127,6 @@ enum ParsingType
 
 static wxCriticalSection s_ParserCritical;
 
-
 /** @brief Parser class holds all the tokens of a C::B project
   *
   * Parser class contains the TokensTree which is a Trie structure to recored Token information.
@@ -161,7 +162,7 @@ public:
      * @param filenames input files name array
      * @param delay true if it use predefined delay time, otherwise it use 1 ms delay.
      */
-    void AddBatchParse(const wxArrayString& filenames, bool delay = true);
+    void AddBatchParse(const ListString& filenames, bool delay = true);
 
     /** Add one file to Batch mode Parsing
      * @param filenames input file name
@@ -324,9 +325,9 @@ private:
     long                 m_LastStopWatchTime;
     bool                 m_IgnoreThreadEvents;
 
-    wxArrayString        m_UpFrontHeaders;        // All up-front headers
-    wxArrayString        m_SystemUpFrontHeaders;  // Only system up-front headers, for reparse
-    wxArrayString        m_BatchParseFiles;       // All other batch parse files
+    ListString           m_UpFrontHeaders;        // All up-front headers
+    ListString           m_SystemUpFrontHeaders;  // Only system up-front headers, for reparse
+    ListString           m_BatchParseFiles;       // All other batch parse files
     wxString             m_PredefinedMacros;      // Pre-defined macros
     /** used to measure Batch Parse time*/
     bool                 m_IsBatchParseDone;

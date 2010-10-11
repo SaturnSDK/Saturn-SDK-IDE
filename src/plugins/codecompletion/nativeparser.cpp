@@ -57,10 +57,10 @@
     #define TRACE2(format, args...)
 #endif
 
-int idTimerEditorActivated = wxNewId();
-
-bool s_DebugSmartSense = false;
-const wxString g_StartHereTitle = _("Start here");
+int idTimerEditorActivated       = wxNewId();
+int idTimerReparseAfterClear     = wxNewId();
+bool s_DebugSmartSense           = false;
+const wxString g_StartHereTitle  = _("Start here");
 const int g_EditorActivatedDelay = 100;
 
 BEGIN_EVENT_TABLE(NativeParser, wxEvtHandler)
@@ -69,6 +69,7 @@ BEGIN_EVENT_TABLE(NativeParser, wxEvtHandler)
     EVT_MENU(PARSER_START, NativeParser::OnParserStart)
     EVT_MENU(PARSER_END, NativeParser::OnParserEnd)
     EVT_TIMER(idTimerEditorActivated, NativeParser::OnEditorActivatedTimer)
+    EVT_TIMER(idTimerReparseAfterClear, NativeParser::OnReparseAfterClearTimer)
 END_EVENT_TABLE()
 
 NativeParser::NativeParser() :
@@ -77,6 +78,7 @@ NativeParser::NativeParser() :
     m_EditorStartWord(-1),
     m_EditorEndWord(-1),
     m_TimerEditorActivated(this, idTimerEditorActivated),
+    m_TimerReparseAfterClear(this, idTimerReparseAfterClear),
     m_CallTipCommas(0),
     m_ClassBrowser(NULL),
     m_GettingCalltips(false),
@@ -543,10 +545,7 @@ void NativeParser::RereadParserOptions()
                            "reparse your projects now, using the new options?"),
                          _("Reparse?"), wxYES_NO | wxICON_QUESTION) == wxID_YES)
         {
-            Manager::Get()->GetLogManager()->DebugLog(_T("RereadParserOptions() : Clear parsers!"));
-            cbProject* project = GetProjectByParser(m_Parser);
-            ClearParsers();
-            CreateParser(project);
+            m_TimerReparseAfterClear.Start(100, wxTIMER_ONE_SHOT);
             return;
         }
     }
@@ -1122,9 +1121,9 @@ bool NativeParser::StartCompleteParsing(cbProject* project, Parser* parser)
         }
     }
 
-    wxArrayString fronts;
-    wxArrayString headers;
-    wxArrayString sources;
+    ListString fronts;
+    ListString headers;
+    ListString sources;
 
     ConfigManager* cfg = Manager::Get()->GetConfigManager(_T("code_completion"));
     const wxString def_fronts = _T("<cstddef>, <w32api.h>, <wx/defs.h>, <wx/dlimpexp.h>, <wx/toplevel.h>, ")
@@ -1204,41 +1203,42 @@ bool NativeParser::StartCompleteParsing(cbProject* project, Parser* parser)
             }
 
             if (!isUpFrontFile)
-                headers.Add(pf->file.GetFullPath());
+                headers.push_back(pf->file.GetFullPath());
         }
         else if (ft == ftSource) // parse source files
         {
-            sources.Add(pf->file.GetFullPath());
+            sources.push_back(pf->file.GetFullPath());
         }
     }
 
     for (FrontMap::iterator it = frontMap.begin(); it != frontMap.end(); ++it)
-        fronts.Add(it->second);
+        fronts.push_back(it->second);
 
     Manager::Get()->GetLogManager()->DebugLog(_T("Passing list of files to batch-parser."));
 
     // parse up-front files
-    if (!fronts.IsEmpty())
+    if (!fronts.empty())
     {
-        for (size_t i = 0; i < fronts.GetCount(); ++i)
+        for (ListString::iterator it = fronts.begin(); it != fronts.end(); ++it)
         {
-            const bool systemHeaderFile = (fronts[i].Last() == _T('1'));
-            const int pos = fronts[i].Find(_T(','), true);
-            wxString file = fronts[i].SubString(0, pos - 1);
+            wxString& file = *it;
+            const bool systemHeaderFile = (file.Last() == _T('1'));
+            const int pos = file.Find(_T(','), true);
+            file = file.Left(pos);
             Manager::Get()->GetLogManager()->DebugLog(F(_T("Header to parse up-front: '%s'"),
                                                         file.wx_str()));
             parser->AddUpFrontHeaders(file, systemHeaderFile);
         }
 
         Manager::Get()->GetLogManager()->DebugLog(F(_T("Add up-front parsing %d file(s) for project '%s'..."),
-                                                    fronts.GetCount(), project ? project->GetTitle().wx_str()
-                                                                               : _T("*NONE*")));
+                                                    fronts.size(), project ? project->GetTitle().wx_str()
+                                                                           : _T("*NONE*")));
     }
 
-    if (!headers.IsEmpty() || !sources.IsEmpty())
+    if (!headers.empty() || !sources.empty())
     {
         Manager::Get()->GetLogManager()->DebugLog(F(_T("Add batch-parsing %d file(s) for project '%s'..."),
-                                                    headers.GetCount() + sources.GetCount(),
+                                                    headers.size() + sources.size(),
                                                     project->GetTitle().wx_str()));
         parser->AddBatchParse(headers);
         parser->AddBatchParse(sources, false);
@@ -3316,6 +3316,14 @@ void NativeParser::OnParserEnd(wxCommandEvent& event)
     UpdateClassBrowser();
 
     event.Skip();
+}
+
+void NativeParser::OnReparseAfterClearTimer(wxTimerEvent& event)
+{
+    Manager::Get()->GetLogManager()->DebugLog(_T("Clear all parsers, and reparsing current project."));
+    cbProject* project = GetProjectByParser(m_Parser);
+    ClearParsers();
+    CreateParser(project);
 }
 
 void NativeParser::OnEditorActivatedTimer(wxTimerEvent& event)

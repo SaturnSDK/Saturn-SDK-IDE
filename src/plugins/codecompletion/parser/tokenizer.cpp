@@ -831,7 +831,7 @@ bool Tokenizer::SkipBlock(const wxChar& ch)
 // if we stay here, return false
 bool Tokenizer::SkipComment()
 {
-    TRACE(F(_T("Tokenizer::SkipComment() Start from line = %d"), m_LineNumber));
+    TRACE(F(_T("SkipComment() : Start from line = %d"), m_LineNumber));
     if (IsEOF())
         return false;
 
@@ -868,7 +868,7 @@ bool Tokenizer::SkipComment()
         }
         else             // C++ style comment
         {
-            TRACE(_T("Tokenizer::SkipComment() , Need to call SkipToEOL() here at line = %d"), m_LineNumber);
+            TRACE(_T("SkipComment() : Need to call SkipToEOL() here at line = %d"), m_LineNumber);
             SkipToInlineCommentEnd();
             break;
         }
@@ -1739,8 +1739,8 @@ bool Tokenizer::GetActualContextForMacro(Token* tk, wxString& actualContext)
     const size_t totalCount = std::min(formalArgs.GetCount(), actualArgs.GetCount());
     for (size_t i = 0; i < totalCount; ++i)
     {
-        TRACE(_T("The normal args are '%s' and the actual args are '%s'."), formalArgs[i].wx_str(),
-              actualArgs[i].wx_str());
+        TRACE(_T("GetActualContextForMacro(): The formal args are '%s' and the actual args are '%s'."),
+              formalArgs[i].wx_str(), actualArgs[i].wx_str());
 
         wxChar* data = const_cast<wxChar*>(actualContext.GetData());
         const wxChar* dataEnd = data + actualContext.Len();

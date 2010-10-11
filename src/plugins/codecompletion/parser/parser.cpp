@@ -94,22 +94,24 @@ public:
         }
 
         // Add up-front headers
-        if (!m_Parser.m_UpFrontHeaders.IsEmpty())
+        if (!m_Parser.m_UpFrontHeaders.empty())
         {
             m_Parser.m_IsUpFront = true;
-            for (size_t i = 0; !TestDestroy() && i < m_Parser.m_UpFrontHeaders.GetCount(); ++i)
-                m_Parser.Parse(m_Parser.m_UpFrontHeaders[i]);
+            ListString::iterator it = m_Parser.m_UpFrontHeaders.begin();
+            for (; it != m_Parser.m_UpFrontHeaders.end(); ++it)
+                m_Parser.Parse(*it);
             m_Parser.m_IsUpFront = false;
-            m_Parser.m_UpFrontHeaders.Clear();
+            m_Parser.m_UpFrontHeaders.clear();
         }
 
         // Add all other files
-        if (!m_Parser.m_BatchParseFiles.IsEmpty())
+        if (!m_Parser.m_BatchParseFiles.empty())
         {
             m_Parser.m_IsFirstBatch = true;
-            for (size_t i = 0; !TestDestroy() && i < m_Parser.m_BatchParseFiles.GetCount(); ++i)
-                m_Parser.Parse(m_Parser.m_BatchParseFiles[i]);
-            m_Parser.m_BatchParseFiles.Clear();
+            ListString::iterator it = m_Parser.m_BatchParseFiles.begin();
+            for (; it != m_Parser.m_BatchParseFiles.end(); ++it)
+                m_Parser.Parse(*it);
+            m_Parser.m_BatchParseFiles.clear();
         }
 
         m_Parser.m_IsParsing = true;
@@ -296,9 +298,9 @@ unsigned int Parser::GetFilesCount()
 bool Parser::Done()
 {
     wxCriticalSectionLocker locker(s_ParserCritical);
-    bool done =    m_UpFrontHeaders.IsEmpty()
-                && m_SystemUpFrontHeaders.IsEmpty()
-                && m_BatchParseFiles.IsEmpty()
+    bool done =    m_UpFrontHeaders.empty()
+                && m_SystemUpFrontHeaders.empty()
+                && m_BatchParseFiles.empty()
                 && m_PredefinedMacros.IsEmpty()
                 && !m_NeedMarkFileAsLocal
                 && m_PoolTask.empty()
@@ -417,30 +419,26 @@ void Parser::AddUpFrontHeaders(const wxString& filename, bool systemHeaderFile, 
         m_BatchTimer.Stop();
 
     // Do up-front parse in sub thread
-    m_UpFrontHeaders.Add(filename);
+    m_UpFrontHeaders.push_back(filename);
 
     // Save system up-front headers, when all task is over, we need reparse it!
     if (systemHeaderFile)
-        m_SystemUpFrontHeaders.Add(filename);
+        m_SystemUpFrontHeaders.push_back(filename);
 
     m_BatchTimer.Start(delay ? batch_timer_delay : 1, wxTIMER_ONE_SHOT);
 }
 
-void Parser::AddBatchParse(const wxArrayString& filenames, bool delay)
+void Parser::AddBatchParse(const ListString& filenames, bool delay)
 {
     wxCriticalSectionLocker locker(s_ParserCritical);
 
     if (m_BatchTimer.IsRunning())
         m_BatchTimer.Stop();
 
-    if (m_BatchParseFiles.IsEmpty())
+    if (m_BatchParseFiles.empty())
         m_BatchParseFiles = filenames;
     else
-    {
-        m_BatchParseFiles.Alloc(m_BatchParseFiles.GetCount() + filenames.GetCount());
-        for (size_t i = 0; i < filenames.GetCount(); ++i)
-            m_BatchParseFiles.Add(filenames[i]);
-    }
+        std::copy(filenames.begin(), filenames.end(), std::back_inserter(m_BatchParseFiles));
 
     m_BatchTimer.Start(delay ? batch_timer_delay : 1, wxTIMER_ONE_SHOT);
 }
@@ -452,7 +450,7 @@ void Parser::AddParse(const wxString& filename, bool delay)
     if (m_BatchTimer.IsRunning())
         m_BatchTimer.Stop();
 
-    m_BatchParseFiles.Add(filename);
+    m_BatchParseFiles.push_back(filename);
     m_BatchTimer.Start(delay ? batch_timer_delay : 10, wxTIMER_ONE_SHOT);
 }
 
@@ -904,8 +902,8 @@ void Parser::OnAllThreadsDone(CodeBlocksEvent& event)
 
     // Do next task
     if (   !m_PoolTask.empty()
-        || !m_BatchParseFiles.IsEmpty()
-        || !m_UpFrontHeaders.IsEmpty()
+        || !m_BatchParseFiles.empty()
+        || !m_UpFrontHeaders.empty()
         || !m_PredefinedMacros.IsEmpty() )
     {
         m_BatchTimer.Start(1, wxTIMER_ONE_SHOT);
@@ -913,20 +911,20 @@ void Parser::OnAllThreadsDone(CodeBlocksEvent& event)
 
 #if !CC_PARSER_PROFILE_TEST
     // Reparse system up-front headers
-    else if (!m_SystemUpFrontHeaders.IsEmpty())
+    else if (!m_SystemUpFrontHeaders.empty())
     {
         // Part.1 Set m_IsParsing to false
         m_IsParsing = false;
 
         // Part.2 Remove all up-front headers in token tree
-        for (size_t i = 0; i < m_SystemUpFrontHeaders.GetCount(); ++i)
-            RemoveFile(m_SystemUpFrontHeaders[i]);
+        for (ListString::iterator it = m_SystemUpFrontHeaders.begin(); it != m_SystemUpFrontHeaders.end(); ++it)
+            RemoveFile(*it);
 
         // Part.3 Reparse system up-front headers
         AddBatchParse(m_SystemUpFrontHeaders, false);
 
         // Part.4 Clear
-        m_SystemUpFrontHeaders.Clear();
+        m_SystemUpFrontHeaders.clear();
     }
     else if (   (m_ParsingType == ptCreateParser || m_ParsingType == ptAddFileToParser)
              && m_NeedMarkFileAsLocal
@@ -1055,7 +1053,7 @@ void Parser::OnBatchTimer(wxTimerEvent& event)
         StartStopWatch();
 
     // Add parse by child thread
-    if (!m_UpFrontHeaders.IsEmpty() || !m_BatchParseFiles.IsEmpty() || !m_PredefinedMacros.IsEmpty())
+    if (!m_UpFrontHeaders.empty() || !m_BatchParseFiles.empty() || !m_PredefinedMacros.IsEmpty())
     {
         do
         {
@@ -1186,7 +1184,8 @@ bool Parser::IsFileParsed(const wxString& filename)
     if (!isParsed)
     {
         wxCriticalSectionLocker locker(s_ParserCritical);
-        isParsed = m_BatchParseFiles.Index(filename) != wxNOT_FOUND;
+        ListString::iterator it = std::find(m_BatchParseFiles.begin(), m_BatchParseFiles.end(), filename);
+        isParsed = it != m_BatchParseFiles.end();
     }
 
     return isParsed;

@@ -25,7 +25,7 @@ class wxScintillaEvent;
 class wxChoice;
 class SystemHeadersThread;
 
-typedef std::map<wxString, std::list<wxString> > SystemHeadersMap;
+typedef std::map<wxString, ListString> SystemHeadersMap;
 
 class CodeCompletion : public cbCodeCompletionPlugin
 {
