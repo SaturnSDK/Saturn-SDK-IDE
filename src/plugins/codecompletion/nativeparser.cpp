@@ -1121,9 +1121,9 @@ bool NativeParser::StartCompleteParsing(cbProject* project, Parser* parser)
         }
     }
 
-    ListString fronts;
-    ListString headers;
-    ListString sources;
+    StringList fronts;
+    StringList headers;
+    StringList sources;
 
     ConfigManager* cfg = Manager::Get()->GetConfigManager(_T("code_completion"));
     const wxString def_fronts = _T("<cstddef>, <w32api.h>, <wx/defs.h>, <wx/dlimpexp.h>, <wx/toplevel.h>, ")
@@ -1219,7 +1219,7 @@ bool NativeParser::StartCompleteParsing(cbProject* project, Parser* parser)
     // parse up-front files
     if (!fronts.empty())
     {
-        for (ListString::iterator it = fronts.begin(); it != fronts.end(); ++it)
+        for (StringList::iterator it = fronts.begin(); it != fronts.end(); ++it)
         {
             wxString& file = *it;
             const bool systemHeaderFile = (file.Last() == _T('1'));

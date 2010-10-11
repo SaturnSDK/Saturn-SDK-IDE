@@ -259,7 +259,7 @@ public:
                 if (m_SystemHeadersMap.find(m_IncludeDirs[i]) == m_SystemHeadersMap.end())
                 {
                     dirs.Add(m_IncludeDirs[i]);
-                    m_SystemHeadersMap[m_IncludeDirs[i]] = ListString();
+                    m_SystemHeadersMap[m_IncludeDirs[i]] = StringSet();
                 }
             }
         }
@@ -326,7 +326,7 @@ private:
                 fn.MakeRelativeTo(m_SearchDir);
                 wxString final(fn.GetFullPath());
                 final.Replace(_T("\\"), _T("/"), true);
-                m_Headers.push_back(final);
+                m_Headers.insert(final);
             }
 
             return wxDIR_CONTINUE;
@@ -366,7 +366,7 @@ private:
     private:
         const SystemHeadersMap&  m_SystemHeadersMap;
         const wxString&          m_SearchDir;
-        ListString&              m_Headers;
+        StringSet&              m_Headers;
         wxCriticalSectionLocker* m_Locker;
         size_t                   m_HeaderCount;
     };
@@ -1078,15 +1078,15 @@ int CompareStringLen(const wxString& first, const wxString& second)
     return second.Len() - first.Len();
 }
 
-wxString GetStringFromSet(const std::set<wxString>& s, const wxString& separator)
+wxString GetStringFromSet(const StringSet& s, const wxString& separator)
 {
-    wxString out;
     size_t len = separator.Len();
-    for (std::set<wxString>::iterator it = s.begin(); it != s.end(); ++it)
+    for (StringSet::iterator it = s.begin(); it != s.end(); ++it)
         len += (*it).Len() + separator.Len();
-    out.Alloc(len);
 
-    for (std::set<wxString>::iterator it = s.begin(); it != s.end(); ++it)
+    wxString out;
+    out.Alloc(len);
+    for (StringSet::iterator it = s.begin(); it != s.end(); ++it)
         out << *it << separator;
 
     return out;
@@ -1228,10 +1228,10 @@ void CodeCompletion::CodeCompleteIncludes()
     filename.Replace(_T("\\"), _T("/"), true);
 
     // fill a list of matching files
-    std::set<wxString> files;
+    StringSet files;
 
     // #include <|
-    if (m_CCSystemHeaderFiles)
+    if (m_CCSystemHeaderFiles && useSystemHeaders)
     {
         wxCriticalSectionLocker locker(s_HeadersCriticalSection);
         wxArrayString& incDirs = GetSystemIncludeDirs(&m_NativeParser.GetParser(),
@@ -1241,8 +1241,8 @@ void CodeCompletion::CodeCompleteIncludes()
             SystemHeadersMap::iterator it = m_SystemHeadersMap.find(incDirs[i]);
             if (it != m_SystemHeadersMap.end())
             {
-                const ListString& headers = it->second;
-                for (ListString::const_iterator it = headers.begin(); it != headers.end(); ++it)
+                const StringSet& headers = it->second;
+                for (StringSet::iterator it = headers.begin(); it != headers.end(); ++it)
                     files.insert(*it);
             }
         }

@@ -97,7 +97,7 @@ public:
         if (!m_Parser.m_UpFrontHeaders.empty())
         {
             m_Parser.m_IsUpFront = true;
-            ListString::iterator it = m_Parser.m_UpFrontHeaders.begin();
+            StringList::iterator it = m_Parser.m_UpFrontHeaders.begin();
             for (; it != m_Parser.m_UpFrontHeaders.end(); ++it)
                 m_Parser.Parse(*it);
             m_Parser.m_IsUpFront = false;
@@ -108,7 +108,7 @@ public:
         if (!m_Parser.m_BatchParseFiles.empty())
         {
             m_Parser.m_IsFirstBatch = true;
-            ListString::iterator it = m_Parser.m_BatchParseFiles.begin();
+            StringList::iterator it = m_Parser.m_BatchParseFiles.begin();
             for (; it != m_Parser.m_BatchParseFiles.end(); ++it)
                 m_Parser.Parse(*it);
             m_Parser.m_BatchParseFiles.clear();
@@ -428,7 +428,7 @@ void Parser::AddUpFrontHeaders(const wxString& filename, bool systemHeaderFile, 
     m_BatchTimer.Start(delay ? batch_timer_delay : 1, wxTIMER_ONE_SHOT);
 }
 
-void Parser::AddBatchParse(const ListString& filenames, bool delay)
+void Parser::AddBatchParse(const StringList& filenames, bool delay)
 {
     wxCriticalSectionLocker locker(s_ParserCritical);
 
@@ -917,7 +917,7 @@ void Parser::OnAllThreadsDone(CodeBlocksEvent& event)
         m_IsParsing = false;
 
         // Part.2 Remove all up-front headers in token tree
-        for (ListString::iterator it = m_SystemUpFrontHeaders.begin(); it != m_SystemUpFrontHeaders.end(); ++it)
+        for (StringList::iterator it = m_SystemUpFrontHeaders.begin(); it != m_SystemUpFrontHeaders.end(); ++it)
             RemoveFile(*it);
 
         // Part.3 Reparse system up-front headers
@@ -1184,7 +1184,7 @@ bool Parser::IsFileParsed(const wxString& filename)
     if (!isParsed)
     {
         wxCriticalSectionLocker locker(s_ParserCritical);
-        ListString::iterator it = std::find(m_BatchParseFiles.begin(), m_BatchParseFiles.end(), filename);
+        StringList::iterator it = std::find(m_BatchParseFiles.begin(), m_BatchParseFiles.end(), filename);
         isParsed = it != m_BatchParseFiles.end();
     }
 

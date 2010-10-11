@@ -1331,7 +1331,7 @@ void ParserThread::HandleIncludes()
 
     if (!filename.IsEmpty())
     {
-        TRACE(F(_T("HandleIncludes() : Found include file '%s'"), filename.wx_str()));
+        TRACE(_T("HandleIncludes() : Found include file '%s'"), filename.wx_str());
         do
         {
             // setting all #includes as global
@@ -1353,7 +1353,7 @@ void ParserThread::HandleIncludes()
                     break; // Already being parsed elsewhere
             }
 
-            TRACE(F(_T("HandleIncludes() : Adding include file '%s'"), real_filename.wx_str()));
+            TRACE(_T("HandleIncludes() : Adding include file '%s'"), real_filename.wx_str());
 
             wxCriticalSectionLocker* locker = NULL;
             if (m_Parent->m_IsParsing)

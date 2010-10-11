@@ -447,7 +447,7 @@ wxString Tokenizer::ReadToEOL(bool nestBraces, bool stripUnneeded)
 
         TRACE(_T("ReadToEOL(): (END) We are now at line %d, CurrentChar='%c', PreviousChar='%c', NextChar='%c'"),
               m_LineNumber, CurrentChar(), PreviousChar(), NextChar());
-        TRACE(F(_T("ReadToEOL(): %s"), str.wx_str()));
+        TRACE(_T("ReadToEOL(): %s"), str.wx_str());
 
         return str;
     }
@@ -831,7 +831,7 @@ bool Tokenizer::SkipBlock(const wxChar& ch)
 // if we stay here, return false
 bool Tokenizer::SkipComment()
 {
-    TRACE(F(_T("SkipComment() : Start from line = %d"), m_LineNumber));
+    TRACE(_T("SkipComment() : Start from line = %d"), m_LineNumber);
     if (IsEOF())
         return false;
 
