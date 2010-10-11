@@ -1594,7 +1594,7 @@ void Tokenizer::SpliteArguments(wxArrayString& results)
     }
 }
 
-bool Tokenizer::ReplaceBufferForReparse(wxString target, bool updatePeekToken)
+bool Tokenizer::ReplaceBufferForReparse(const wxString& target, bool updatePeekToken)
 {
     if (target.IsEmpty())
         return false;
@@ -1608,22 +1608,23 @@ bool Tokenizer::ReplaceBufferForReparse(wxString target, bool updatePeekToken)
     }
 
     // Keep all in one line
-    for (size_t i = 0; i < target.Len(); ++i)
+    wxString buffer(target);
+    for (size_t i = 0; i < buffer.Len(); ++i)
     {
-        switch (target.GetChar(i))
+        switch (buffer.GetChar(i))
         {
         case _T('\\'):
         case _T('\r'):
         case _T('\n'):
-            target.SetChar(i, _T(' '));
+            buffer.SetChar(i, _T(' '));
         }
     }
 
     // Increase memory
-    const size_t targetLen = target.Len();
-    if (m_TokenIndex < targetLen)
+    const size_t bufferLen = buffer.Len();
+    if (m_TokenIndex < bufferLen)
     {
-        const size_t diffLen = targetLen - m_TokenIndex;
+        const size_t diffLen = bufferLen - m_TokenIndex;
         m_Buffer.insert(0, wxString(_T(' '), diffLen));
         m_BufferLen += diffLen;
         m_TokenIndex += diffLen;
@@ -1637,12 +1638,12 @@ bool Tokenizer::ReplaceBufferForReparse(wxString target, bool updatePeekToken)
     }
 
     // Replacement back
-    wxChar* p = const_cast<wxChar*>(m_Buffer.GetData()) + m_TokenIndex - targetLen;
-    TRACE(_T("ReplacetargetForReparse() : <FROM>%s<TO>%s"), wxString(p, targetLen).wx_str(), target.wx_str());
-    memcpy(p, target.GetData(), targetLen * sizeof(wxChar));
+    wxChar* p = const_cast<wxChar*>(m_Buffer.GetData()) + m_TokenIndex - bufferLen;
+    TRACE(_T("ReplacetargetForReparse() : <FROM>%s<TO>%s"), wxString(p, bufferLen).wx_str(), buffer.wx_str());
+    memcpy(p, target.GetData(), bufferLen * sizeof(wxChar));
 
     // Fix token index
-    m_TokenIndex -= targetLen;
+    m_TokenIndex -= bufferLen;
 
     // Update the peek token
     if (m_PeekAvailable && updatePeekToken)
@@ -1652,6 +1653,14 @@ bool Tokenizer::ReplaceBufferForReparse(wxString target, bool updatePeekToken)
     }
 
     return true;
+}
+
+bool Tokenizer::ReplaceMacroActualContext(Token* tk, bool updatePeekToken)
+{
+    wxString actualContext;
+    if (GetActualContextForMacro(tk, actualContext))
+        return ReplaceBufferForReparse(actualContext, updatePeekToken);
+    return false;
 }
 
 void Tokenizer::KMP_GetNextVal(const wxChar* pattern, int next[])
@@ -1709,11 +1718,11 @@ int Tokenizer::KMP_Find(const wxChar* text, const wxChar* pattern, const int pat
         return -1;
 }
 
-wxString Tokenizer::GetActualContextForMacro(Token* tk)
+bool Tokenizer::GetActualContextForMacro(Token* tk, wxString& actualContext)
 {
     // e.g. "#define AAA AAA" and usage "AAA(x)"
     if (!tk || tk->m_Name == tk->m_Type)
-        return wxEmptyString;
+        return false;
 
     // 1. break the args into substring with ","
     wxArrayString formalArgs;
@@ -1726,7 +1735,7 @@ wxString Tokenizer::GetActualContextForMacro(Token* tk)
         SpliteArguments(actualArgs);
 
     // 3. get actual context
-    wxString actualContext = tk->m_Type;
+    actualContext = tk->m_Type;
     const size_t totalCount = std::min(formalArgs.GetCount(), actualArgs.GetCount());
     for (size_t i = 0; i < totalCount; ++i)
     {
@@ -1765,7 +1774,7 @@ wxString Tokenizer::GetActualContextForMacro(Token* tk)
     actualContext.Replace(_T("##"), wxEmptyString);
 
     TRACE(_T("The replaced actual context are '%s'."), actualContext.wx_str());
-    return actualContext;
+    return true;
 }
 
 int Tokenizer::GetFirstTokenPosition(const wxChar* buffer, const size_t bufferLen,
