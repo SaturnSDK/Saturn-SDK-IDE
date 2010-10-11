@@ -247,7 +247,7 @@ public:
     { return ReplaceBufferForReparse(GetActualContextForMacro(tk), updatePeekToken); }
 
     /** Get first token position in buffer */
-    int GetFirstTokenPosition(const wxString& buffer, const wxString& target);
+    int GetFirstTokenPosition(const wxString& buffer, const wxString& target)
     { return GetFirstTokenPosition(buffer.GetData(), buffer.Len(), target.GetData(), target.Len()); }
     int GetFirstTokenPosition(const wxChar* buffer, const size_t bufferLen,
                               const wxChar* target, const size_t targetLen);
