@@ -1084,7 +1084,7 @@ void GetStringFromSet(wxString& str, const StringSet& s, const wxString& separat
     for (StringSet::iterator it = s.begin(); it != s.end(); ++it)
         totalLen += (*it).Len();
     str.Clear();
-    str.Alloc(totalLen + s.size() * (separator.Len() + 1));
+    str.Alloc(totalLen + s.size() * separator.Len() + 1);
     for (StringSet::iterator it = s.begin(); it != s.end(); ++it)
         str << *it << separator;
 }
@@ -1288,13 +1288,19 @@ void CodeCompletion::CodeCompleteIncludes()
     // popup the auto completion window
     if (!files.empty())
     {
-        Manager::Get()->GetLogManager()->DebugLog(F(_T("Get include file count is %d, use time is %d"),
-                                                    files.size(), sw.Time()));
         ed->GetControl()->ClearRegisteredImages();
         ed->GetControl()->AutoCompSetIgnoreCase(false);
-        wxString items;
-        GetStringFromSet(items, files, _T(" "));
-        ed->GetControl()->AutoCompShow(pos - lineStartPos - keyPos, items);
+        ed->GetControl()->AutoCompSetCancelAtStart(true);
+        ed->GetControl()->AutoCompSetFillUps(m_CCFillupChars);
+        ed->GetControl()->AutoCompSetChooseSingle(false);
+        ed->GetControl()->AutoCompSetAutoHide(true);
+        ed->GetControl()->AutoCompSetDropRestOfWord(m_IsAutoPopup ? false : true);
+        wxString final;
+        GetStringFromSet(final, files, _T(" "));
+        final.RemoveLast(); // remove last space
+        Manager::Get()->GetLogManager()->DebugLog(F(_T("Get include file count is %d, use time is %d"),
+                                                    files.size(), sw.Time()));
+        ed->GetControl()->AutoCompShow(pos - lineStartPos - keyPos, final);
     }
 }
 
