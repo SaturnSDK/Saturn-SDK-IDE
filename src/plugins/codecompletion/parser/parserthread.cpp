@@ -925,7 +925,7 @@ void ParserThread::DoParse()
                 {
                     // a template, e.g. someclass<void>::memberfunc
                     // we have to skip <>, so we 're left with someclass::memberfunc
-                    if (m_Str.IsEmpty())
+                    if (m_Str.IsEmpty() || m_Str.StartsWith(ParserConsts::kw_const))
                         GetTemplateArgs();
                     else
                         SkipAngleBraces();
@@ -944,7 +944,7 @@ void ParserThread::DoParse()
                 }
                 else if (peek==ParserConsts::dcolon)
                 {
-                    if (m_Str.IsEmpty())
+                    if (m_Str.IsEmpty() || m_Str.StartsWith(ParserConsts::kw_const))
                         m_EncounteredTypeNamespaces.push(token); // it's a type's namespace
                     else
                         m_EncounteredNamespaces.push(token);
