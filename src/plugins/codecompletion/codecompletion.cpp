@@ -1078,18 +1078,15 @@ int CompareStringLen(const wxString& first, const wxString& second)
     return second.Len() - first.Len();
 }
 
-wxString GetStringFromSet(const StringSet& s, const wxString& separator)
+void GetStringFromSet(wxString& str, const StringSet& s, const wxString& separator)
 {
-    size_t len = separator.Len();
+    size_t totalLen = 0;
     for (StringSet::iterator it = s.begin(); it != s.end(); ++it)
-        len += (*it).Len() + separator.Len();
-
-    wxString out;
-    out.Alloc(len);
+        totalLen += (*it).Len();
+    str.Clear();
+    str.Alloc(totalLen + s.size() * (separator.Len() + 1));
     for (StringSet::iterator it = s.begin(); it != s.end(); ++it)
-        out << *it << separator;
-
-    return out;
+        str << *it << separator;
 }
 
 wxArrayString& CodeCompletion::GetSystemIncludeDirs(Parser* parser, bool force)
@@ -1295,7 +1292,9 @@ void CodeCompletion::CodeCompleteIncludes()
                                                     files.size(), sw.Time()));
         ed->GetControl()->ClearRegisteredImages();
         ed->GetControl()->AutoCompSetIgnoreCase(false);
-        ed->GetControl()->AutoCompShow(pos - lineStartPos - keyPos, GetStringFromSet(files, _T(" ")));
+        wxString items;
+        GetStringFromSet(items, files, _T(" "));
+        ed->GetControl()->AutoCompShow(pos - lineStartPos - keyPos, items);
     }
 }
 
