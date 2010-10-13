@@ -1200,33 +1200,30 @@ void CodeCompletion::CodeCompleteIncludes()
     if ( ft != ftHeader && ft != ftSource) // only parse source/header files
         return;
 
-    int pos = ed->GetControl()->GetCurrentPos();
-    int lineStartPos = ed->GetControl()->PositionFromLine(ed->GetControl()->GetCurrentLine());
+    const int pos = ed->GetControl()->GetCurrentPos();
+    const int lineStartPos = ed->GetControl()->PositionFromLine(ed->GetControl()->GetCurrentLine());
     wxString line = ed->GetControl()->GetLine(ed->GetControl()->GetCurrentLine());
     line.Trim();
     if (line.IsEmpty() || !TestIncludeLine(line))
         return;
 
-    bool useSystemHeaders = false;
     int keyPos = line.Find(_T('"'));
     if (keyPos == wxNOT_FOUND)
-    {
-        useSystemHeaders = true;
         keyPos = line.Find(_T('<'));
-    }
     if (keyPos == wxNOT_FOUND || keyPos > pos - lineStartPos)
         return;
     ++keyPos;
 
     // now, we are after the quote prompt
-    wxString filename = line.SubString(keyPos, pos - lineStartPos - keyPos);
+    wxString filename = line.SubString(keyPos, pos - lineStartPos - 1);
     filename.Replace(_T("\\"), _T("/"), true);
+    if (filename.Last() == _T('"') || filename.Last() == _T('>'))
+        filename.RemoveLast();
 
     // fill a list of matching files
     StringSet files;
 
-    // #include <|
-    if (useSystemHeaders)
+    // #include < or #include "
     {
         wxCriticalSectionLocker locker(s_HeadersCriticalSection);
         wxArrayString& incDirs = GetSystemIncludeDirs(&m_NativeParser.GetParser(),
@@ -1247,8 +1244,8 @@ void CodeCompletion::CodeCompleteIncludes()
         }
     }
 
-    // #include "|
-    if (!useSystemHeaders && project)
+    // #include "
+    if (project)
     {
         const wxArrayString localIncludeDirs = GetLocalIncludeDirs(project, buildTargets);
         for (int i = 0; i < project->GetFilesCount(); ++i)
@@ -2797,23 +2794,17 @@ void CodeCompletion::EditorEventHook(cbEditor* editor, wxScintillaEvent& event)
     {
         int curPos = control->GetCurrentPos();
         int startPos = control->WordStartPosition(curPos, true);
-        int endPos = control->WordEndPosition(curPos, true);
+        const int endPos = control->WordEndPosition(curPos, true);
 
         if (control->IsPreprocessor(control->GetStyleAt(curPos)))
         {
+            control->DelLineRight();
             int pos = startPos;
             wxChar ch = control->GetCharAt(pos);
             while (ch != _T('<') && ch != _T('"') && ch != _T('#'))
                 ch = control->GetCharAt(--pos);
             if (ch == _T('<') || ch == _T('"'))
                 startPos = pos + 1;
-
-            pos = endPos;
-            ch = control->GetCharAt(pos);
-            while (ch != _T('>') && ch != _T('"') && ch != _T('\r') && ch != _T('\n'))
-                ch = control->GetCharAt(++pos);
-            if (ch == _T('>') || ch == _T('"'))
-                endPos = pos;
         }
 
         wxString itemText = event.GetText();
@@ -2844,19 +2835,17 @@ void CodeCompletion::EditorEventHook(cbEditor* editor, wxScintillaEvent& event)
         }
         else
         {
-            bool alreadyMatched = false;
             if (control->IsPreprocessor(control->GetStyleAt(curPos)))
             {
                 const wxChar start = control->GetCharAt(startPos - 1);
-                const wxChar end = control->GetCharAt(endPos);
-                alreadyMatched = (end == _T('>') || end == _T('"'));
-                if ((start == _T('"') ||  start == _T('<')) && !alreadyMatched)
-                    itemText.Append((start == _T('<')) ? _T('>') : _T('"'));
+                if (start == _T('"'))
+                    itemText << _T('"');
+                else if (start == _T('<'))
+                    itemText << _T('>');
             }
 
             control->ReplaceTarget(itemText);
-            int mousePos = alreadyMatched ? startPos + itemText.Length() + 1 : startPos + itemText.Length();
-            control->GotoPos(mousePos);
+            control->GotoPos(startPos + itemText.Length());
         }
     }
 
