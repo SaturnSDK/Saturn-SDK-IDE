@@ -280,16 +280,7 @@ AC_CONFIG_FILES([Makefile
 	src/plugins/scriptedwizard/resources/empty/Makefile
 	src/plugins/scriptedwizard/resources/empty_file/Makefile
 	src/plugins/scriptedwizard/resources/fltk/Makefile
-	src/plugins/scriptedwizard/resources/fltk/files/Makefile
-	src/plugins/scriptedwizard/resources/fltk/fluid/Makefile
 	src/plugins/scriptedwizard/resources/fortran/Makefile
-	src/plugins/scriptedwizard/resources/fortran/app/Makefile
-	src/plugins/scriptedwizard/resources/fortran/app/files/Makefile
-	src/plugins/scriptedwizard/resources/fortran/dll/Makefile
-	src/plugins/scriptedwizard/resources/fortran/dll/files/Makefile
-	src/plugins/scriptedwizard/resources/fortran/file/Makefile
-	src/plugins/scriptedwizard/resources/fortran/lib/Makefile
-	src/plugins/scriptedwizard/resources/fortran/lib/files/Makefile
 	src/plugins/scriptedwizard/resources/glfw/Makefile
 	src/plugins/scriptedwizard/resources/glfw/files/Makefile
 	src/plugins/scriptedwizard/resources/glut/Makefile
