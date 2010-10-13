@@ -16,7 +16,7 @@
 #include <wx/tokenzr.h>
 
 bool g_EnableDebugTrace = false;
-const wxString g_DebugTraceFile = _T("");
+const wxString g_DebugTraceFile = wxEmptyString;
 
 #define CC_TOKEN_DEBUG_OUTPUT 0
 

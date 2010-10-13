@@ -184,7 +184,6 @@ private:
     bool                    m_CCAutoAddParentheses;
     wxString                m_CCFillupChars;
     bool                    m_CCAutoSelectOne;
-    bool                    m_CCSystemHeaderFiles;
 
     std::list<SystemHeadersThread*> m_SystemHeadersThread;
 

@@ -396,8 +396,7 @@ CodeCompletion::CodeCompletion() :
     m_CCLaunchDelay(300),
     m_CCMaxMatches(16384),
     m_CCAutoAddParentheses(true),
-    m_CCAutoSelectOne(false),
-    m_CCSystemHeaderFiles(true)
+    m_CCAutoSelectOne(false)
 {
     if (!Manager::LoadResource(_T("codecompletion.zip")))
         NotifyMissingFile(_T("codecompletion.zip"));
@@ -500,7 +499,6 @@ void CodeCompletion::RereadOptions()
     m_CCAutoAddParentheses = cfg->ReadBool(_T("/auto_add_parentheses"), true);
     m_CCFillupChars        = cfg->Read(_T("/fillup_chars"), wxEmptyString);
     m_CCAutoSelectOne      = cfg->ReadBool(_T("/auto_select_one"), false);
-    m_CCSystemHeaderFiles  = cfg->ReadBool(_T("/system_header_files"), true);
 
     if (m_ToolBar)
     {
@@ -1228,7 +1226,7 @@ void CodeCompletion::CodeCompleteIncludes()
     StringSet files;
 
     // #include <|
-    if (m_CCSystemHeaderFiles && useSystemHeaders)
+    if (useSystemHeaders)
     {
         wxCriticalSectionLocker locker(s_HeadersCriticalSection);
         wxArrayString& incDirs = GetSystemIncludeDirs(&m_NativeParser.GetParser(),
@@ -1240,7 +1238,11 @@ void CodeCompletion::CodeCompleteIncludes()
             {
                 const StringSet& headers = it->second;
                 for (StringSet::iterator it = headers.begin(); it != headers.end(); ++it)
-                    files.insert(*it);
+                {
+                    const wxString& file = *it;
+                    if (file.StartsWith(filename))
+                        files.insert(file);
+                }
             }
         }
     }
@@ -1255,29 +1257,29 @@ void CodeCompletion::CodeCompleteIncludes()
             if (pf && FileTypeOf(pf->relativeFilename) == ftHeader)
             {
                 wxString file = pf->file.GetFullPath();
-                if (file.Find(filename) != wxNOT_FOUND)
+                wxString header;
+                for (size_t j = 0; j < localIncludeDirs.GetCount(); ++j)
                 {
-                    wxString header;
-                    for (size_t j = 0; j < localIncludeDirs.GetCount(); ++j)
+                    const wxString& dir = localIncludeDirs[j];
+                    if (file.StartsWith(dir))
                     {
-                        const wxString& dir = localIncludeDirs[j];
-                        if (file.StartsWith(dir))
-                        {
-                            header = file.Mid(dir.Len());
-                            break;
-                        }
+                        header = file.Mid(dir.Len());
+                        break;
                     }
+                }
 
-                    if (header.IsEmpty())
-                    {
-                        if (pf->buildTargets != buildTargets)
-                            continue;
+                if (header.IsEmpty())
+                {
+                    if (pf->buildTargets != buildTargets)
+                        continue;
 
-                        wxFileName fn(file);
-                        fn.MakeRelativeTo(curPath);
-                        header = fn.GetFullPath();
-                    }
+                    wxFileName fn(file);
+                    fn.MakeRelativeTo(curPath);
+                    header = fn.GetFullPath();
+                }
 
+                if (header.StartsWith(filename))
+                {
                     header.Replace(_T("\\"), _T("/"), true);
                     files.insert(header);
                 }
@@ -1298,9 +1300,9 @@ void CodeCompletion::CodeCompleteIncludes()
         wxString final;
         GetStringFromSet(final, files, _T(" "));
         final.RemoveLast(); // remove last space
+        ed->GetControl()->AutoCompShow(pos - lineStartPos - keyPos, final);
         Manager::Get()->GetLogManager()->DebugLog(F(_T("Get include file count is %d, use time is %d"),
                                                     files.size(), sw.Time()));
-        ed->GetControl()->AutoCompShow(pos - lineStartPos - keyPos, final);
     }
 }
 
@@ -2862,12 +2864,15 @@ void CodeCompletion::EditorEventHook(cbEditor* editor, wxScintillaEvent& event)
     {
         // a character was just added in the editor
         m_TimerCodeCompletion.Stop();
-        wxChar ch = event.GetKey();
-        int pos = control->GetCurrentPos();
-        int wordstart = control->WordStartPosition(pos, true);
+        const wxChar ch = event.GetKey();
+        const int pos = control->GetCurrentPos();
+        const int wordStartPos = control->WordStartPosition(pos, true);
+
+        // -2 is used next because the char has already been added and Pos is ahead of it...
+        const wxChar prevChar = control->GetCharAt(pos - 2);
 
         // if more than two chars have been typed, invoke CC
-        const bool autoCC = m_CCAutoLaunch && (pos - wordstart >= m_CCAutoLaunchChars);
+        const bool autoCC = m_CCAutoLaunch && (pos - wordStartPos >= m_CCAutoLaunchChars);
 
         // update calltip highlight while we type
         if (control->CallTipActive())
@@ -2901,20 +2906,20 @@ void CodeCompletion::EditorEventHook(cbEditor* editor, wxScintillaEvent& event)
             }
         }
 
+        // code completion
         else if (   (autoCC && !control->AutoCompActive()) // not already active autocompletion
-                 || (ch == _T('"')) // this and the next one are for #include's completion
-                 || (ch == _T('<'))
+                 || (prevChar == _T('"')) // #include "
+                 || (prevChar == _T('<')) // #include <
                  || (ch == _T('.'))
                  || (ch == _T('#'))
-                 // -2 is used next because the char has already been added and Pos is ahead of it...
-                 || (   (ch == _T('>'))
-                     && (control->GetCharAt(pos - 2) == _T('-')) )
-                 || (   (ch == _T(':'))
-                     && (control->GetCharAt(pos - 2) == _T(':')) ) )
+                 || (   (ch == _T('>')) // ->
+                     && (prevChar == _T('-')) )
+                 || (   (ch == _T(':')) // ::
+                     && (prevChar == _T(':')) ) )
         {
             int style = control->GetStyleAt(pos);
             //Manager::Get()->GetLogManager()->DebugLog(_T("Style at %d is %d (char '%c')"), pos, style, ch);
-            if (ch == _T('"') || ch == _T('<'))
+            if (prevChar == _T('"') || prevChar == _T('<'))
             {
                 if (style != wxSCI_C_PREPROCESSOR)
                 {
