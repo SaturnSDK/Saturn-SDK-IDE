@@ -191,6 +191,8 @@ const wxCmdLineEntryDesc cmdLineDesc[] =
 #endif
     { wxCMD_LINE_SWITCH, CMD_ENTRY("ns"), CMD_ENTRY("no-splash-screen"),      CMD_ENTRY("don't display a splash screen while loading"),
       wxCMD_LINE_VAL_NONE, wxCMD_LINE_PARAM_OPTIONAL },
+    { wxCMD_LINE_SWITCH, CMD_ENTRY(""),   CMD_ENTRY("no-single-instance"),    CMD_ENTRY("allow running multiple instances"),
+      wxCMD_LINE_VAL_NONE, wxCMD_LINE_PARAM_OPTIONAL },
     { wxCMD_LINE_SWITCH, CMD_ENTRY("d"),  CMD_ENTRY("debug-log"),             CMD_ENTRY("display application's debug log"),
       wxCMD_LINE_VAL_NONE, wxCMD_LINE_PARAM_OPTIONAL },
     { wxCMD_LINE_SWITCH, CMD_ENTRY("nc"), CMD_ENTRY("no-crash-handler"),      CMD_ENTRY("don't use the crash handler (useful for debugging C::B)"),
@@ -600,7 +602,9 @@ bool CodeBlocksApp::OnInit()
             g_DDEServer->Create(DDE_SERVICE);
         }
         m_pSingleInstance = 0;
-        if(Manager::Get()->GetConfigManager(_T("app"))->ReadBool(_T("/environment/single_instance"), true))
+
+        if (   Manager::Get()->GetConfigManager(_T("app"))->ReadBool(_T("/environment/single_instance"), true)
+            && !parser.Found(_T("no-single-instance")) )
         {
             const wxString name = wxString::Format(_T("Code::Blocks-%s"), wxGetUserId().c_str());
 
