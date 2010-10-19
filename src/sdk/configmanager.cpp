@@ -63,17 +63,11 @@ bool ConfigManager::relo = 0;
 #ifdef __WINDOWS__
 wxString GetPortableConfigDir()
 {
-    DWORD bufLen = 32780;
-    TCHAR buffer[32780];
-    int ret = GetEnvironmentVariable(_T("APPDATA"), buffer, bufLen);
-    if (ret == 0)
-    {
-        return wxStandardPathsBase::Get().GetUserDataDir();
-    }
+    TCHAR buffer[MAX_PATH];
+    if (::GetEnvironmentVariable(_T("APPDATA"), buffer, MAX_PATH))
+        return wxString::Format(_T("%s\\CodeBlocks"), buffer);
     else
-    {
-        return wxString::Format(_T("%s\\codeblocks"), buffer);
-    }
+        return wxStandardPathsBase::Get().GetUserDataDir();
 }
 #endif
 
