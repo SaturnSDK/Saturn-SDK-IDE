@@ -602,17 +602,14 @@ bool CodeBlocksApp::OnInit()
             g_DDEServer->Create(DDE_SERVICE);
         }
         m_pSingleInstance = 0;
-
-        // Command line option should be preferred over Configuration.
-        if ( !parser.Found(_T("multiple-instance"))
-            || Manager::Get()->GetConfigManager(_T("app"))->ReadBool(_T("/environment/single_instance"), true) )
+        if (   Manager::Get()->GetConfigManager(_T("app"))->ReadBool(_T("/environment/single_instance"), true)
+            && !parser.Found(_T("multiple-instance")) )
         {
             const wxString name = wxString::Format(_T("Code::Blocks-%s"), wxGetUserId().c_str());
 
             m_pSingleInstance = new wxSingleInstanceChecker(name, ConfigManager::GetTempFolder());
             if (m_pSingleInstance->IsAnotherRunning())
             {
-
                 /* NOTE: Due to a recent change in logging code, this visual warning got disabled.
                    So the wxLogError() has been changed to a cbMessageBox(). */
                 cbMessageBox(_("Another program instance is already running.\nCode::Blocks is currently configured to only allow one running instance.\n\nYou can access this Setting under the menu item 'Environment'."),

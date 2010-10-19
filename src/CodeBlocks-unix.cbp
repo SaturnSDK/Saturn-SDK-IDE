@@ -127,7 +127,7 @@
 				<Option external_deps="base/tinyxml/libtxml.a;sdk/scripting/lib/libsquirrel.a;sdk/scripting/lib/libsqstdlib.a;sdk/scripting/lib/libsqplus.a;" />
 				<Option type="3" />
 				<Option compiler="gcc" />
-				<Option parameters="--debug-log --no-single-instance -ni" />
+				<Option parameters="--debug-log --multiple-instance -ni" />
 				<Option createStaticLib="1" />
 				<Option projectLinkerOptionsRelation="2" />
 				<Compiler>
@@ -160,7 +160,7 @@
 				<Option working_dir="devel" />
 				<Option type="0" />
 				<Option compiler="gcc" />
-				<Option parameters="--debug-log --no-single-instance -ns -ni" />
+				<Option parameters="--debug-log --multiple-instance -ns -ni" />
 				<Option projectLinkerOptionsRelation="2" />
 				<Compiler>
 					<Add option="-DENABLE_BINRELOC" />

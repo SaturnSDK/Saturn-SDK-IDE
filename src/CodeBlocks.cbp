@@ -155,7 +155,7 @@
 				<Option external_deps="base\tinyxml\libtxml.a;sdk\scripting\lib\libsquirrel.a;sdk\scripting\lib\libsqstdlib.a;sdk\scripting\lib\libsqplus.a;" />
 				<Option type="3" />
 				<Option compiler="gcc" />
-				<Option parameters="--debug-log --no-check-associations --no-single-instance -nd" />
+				<Option parameters="--debug-log --no-check-associations --multiple-instance -nd" />
 				<Option createStaticLib="1" />
 				<Option projectLinkerOptionsRelation="2" />
 				<Compiler>
@@ -197,7 +197,7 @@
 				<Option working_dir="devel" />
 				<Option type="0" />
 				<Option compiler="gcc" />
-				<Option parameters="--debug-log --no-check-associations --no-single-instance -ns -nd" />
+				<Option parameters="--debug-log --no-check-associations --multiple-instance -ns -nd" />
 				<Option projectLinkerOptionsRelation="2" />
 				<Compiler>
 					<Add option="-DBUILDING_PLUGIN" />
