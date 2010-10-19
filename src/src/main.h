@@ -257,6 +257,7 @@ class MainFrame : public wxFrame
 
         void DoAddPlugin(cbPlugin* plugin);
         void DoAddPluginToolbar(cbPlugin* plugin);
+        void DoAddPluginStatusField(cbPlugin* plugin);
         void AddPluginInPluginsMenu(cbPlugin* plugin);
         void AddPluginInSettingsMenu(cbPlugin* plugin);
         void AddPluginInHelpPluginsMenu(cbPlugin* plugin);
@@ -299,6 +300,9 @@ class MainFrame : public wxFrame
         void AddToRecentFilesHistory(const wxString& filename);
         void AddToRecentProjectsHistory(const wxString& filename);
         void TerminateRecentFilesHistory();
+        #if wxUSE_STATUSBAR
+        virtual wxStatusBar *OnCreateStatusBar(int number, long style, wxWindowID id, const wxString& name);
+        #endif
 
         wxFileHistory* m_pFilesHistory;
         wxFileHistory* m_pProjectsHistory;

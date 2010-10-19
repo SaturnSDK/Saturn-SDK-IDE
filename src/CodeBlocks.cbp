@@ -648,6 +648,9 @@
 		<Unit filename="include\cbproject.h">
 			<Option target="sdk" />
 		</Unit>
+		<Unit filename="include\cbstatusbar.h">
+			<Option target="sdk" />
+		</Unit>
 		<Unit filename="include\cbstyledtextctrl.h">
 			<Option target="sdk" />
 		</Unit>
@@ -2046,6 +2049,9 @@
 			<Option target="sdk" />
 		</Unit>
 		<Unit filename="sdk\cbproject.cpp">
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="sdk\cbstatusbar.cpp">
 			<Option target="sdk" />
 		</Unit>
 		<Unit filename="sdk\cbstyledtextctrl.cpp">
