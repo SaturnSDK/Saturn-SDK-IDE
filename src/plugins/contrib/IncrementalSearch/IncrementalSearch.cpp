@@ -319,12 +319,19 @@ void IncrementalSearch::OnKeyDown(wxKeyEvent& event)
 void IncrementalSearch::OnFocusToolbar(wxCommandEvent& /*event*/)
 {
     if (!m_IsAttached)
-    {
         return;
-    }
+
+    cbEditor* editor = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
+    if (!editor)
+        return;
+
     DoFocusToolbar();
 
-    if(Manager::Get()->GetConfigManager(_T("editor"))->ReadBool(_T("/incremental_search/select_text_on_focus"), false))
+    const wxString selText = editor->GetControl()->GetSelectedText();
+    if (!selText.IsEmpty())
+        m_pTextCtrl->SetValue(selText);
+
+    if (Manager::Get()->GetConfigManager(_T("editor"))->ReadBool(_T("/incremental_search/select_text_on_focus"), false))
     {
         m_pTextCtrl->SetSelection(-1,-1);
     }
