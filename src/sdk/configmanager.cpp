@@ -209,14 +209,14 @@ wxString CfgMgrBldr::FindConfigFile(const wxString& filename)
 #endif
     wxString e(::DetermineExecutablePath() + wxFILE_SEP_PATH +filename);
 
-    if(::wxFileExists(u))
-    {
-        return u;
-    }
-    if(::wxFileExists(e))
+    if (::wxFileExists(e))
     {
         ConfigManager::relo = true;
         return e;
+    }
+    if (::wxFileExists(u))
+    {
+        return u;
     }
     return wxEmptyString;
 }
