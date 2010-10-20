@@ -34,6 +34,7 @@ libcodeblocks_la_SOURCES = annoyingdialog.cpp \
 						cbexception.cpp \
 						cbplugin.cpp \
 						cbproject.cpp \
+						cbstatusbar.cpp \
 						cbstyledtextctrl.cpp \
 						cbthreadpool.cpp \
 						cbworkspace.cpp \
