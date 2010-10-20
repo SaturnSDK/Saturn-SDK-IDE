@@ -27,6 +27,9 @@
 #include "scriptingsettingsdlg.h"
 #include "startherepage.h"
 #include "switcherdlg.h"
+#if wxUSE_STATUSBAR
+    #include "cbstatusbar.h"
+#endif
 
 #include <wx/dnd.h>
 #include <wx/fileconf.h>
@@ -1419,7 +1422,16 @@ void MainFrame::DoSelectLayout(const wxString& name)
             Manager::Get()->GetConfigManager(_T("app"))->Write(_T("/main_frame/layout/default"), name);
     }
 }
-
+void MainFrame::DoAddPluginStatusField(cbPlugin* plugin)
+{
+#if wxUSE_STATUSBAR
+    cbStatusBar *sbar = (cbStatusBar *)GetStatusBar();
+    if (!sbar)
+        return;
+    plugin->CreateStatusField(sbar);
+    sbar->AdjustFieldsSize();
+#endif
+}
 void MainFrame::DoAddPluginToolbar(cbPlugin* plugin)
 {
     wxSize size = m_SmallToolBar ? wxSize(16, 16) : (platform::macosx ? wxSize(32, 32) : wxSize(22, 22));
@@ -1517,6 +1529,7 @@ void MainFrame::DoAddPlugin(cbPlugin* plugin)
         }
         // toolbar
         DoAddPluginToolbar(plugin);
+        DoAddPluginStatusField(plugin);
     }
 }
 
@@ -1728,7 +1741,11 @@ void MainFrame::DoUpdateStatusBar()
     else
     {
         int panel = 0;
-        SetStatusText(_("Welcome to ") + appglobals::AppName + _T("!"), panel++);
+        EditorBase *eb = Manager::Get()->GetEditorManager()->GetActiveEditor();
+        if ( eb )
+            SetStatusText(eb->GetFilename(), panel++);
+        else
+            SetStatusText(_("Welcome to ") + appglobals::AppName + _T("!"), panel++);
         SetStatusText(wxEmptyString, panel++);
         SetStatusText(wxEmptyString, panel++);
         SetStatusText(wxEmptyString, panel++);
@@ -2806,13 +2823,6 @@ void MainFrame::OnEraseBackground(wxEraseEvent& event)
 
 void MainFrame::OnSize(wxSizeEvent& event)
 {
-    if (m_pProgressBar)
-    {
-        wxRect r;
-        GetStatusBar()->GetFieldRect(1, r);
-        m_pProgressBar->SetPosition(r.GetPosition());
-        m_pProgressBar->SetSize(r.GetSize());
-    }
 
     // for flicker-free display
     event.Skip();
@@ -4077,16 +4087,15 @@ void MainFrame::OnToggleBar(wxCommandEvent& event)
 void MainFrame::OnToggleStatusBar(wxCommandEvent& /*event*/)
 {
     wxStatusBar* sb = GetStatusBar();
-    if (sb)
-    {
+    if (!sb) return;
+
+    if (sb->IsShown())
         sb->Hide();
-        SetStatusBar(0);
-        sb->Destroy();
-    }
     else
-        DoCreateStatusBar();
+        sb->Show();
 
     DoUpdateStatusBar();
+    DoUpdateLayout();
 }
 
 void MainFrame::OnFocusEditor(wxCommandEvent& /*event*/)
@@ -4227,6 +4236,12 @@ void MainFrame::OnPluginUnloaded(CodeBlocksEvent& event)
         return;
 
     cbPlugin* plugin = event.GetPlugin();
+
+#if wxUSE_STATUSBAR
+    cbStatusBar *sb = (cbStatusBar*)GetStatusBar();
+    if ( sb )
+        sb->RemoveField(plugin);
+#endif
 
     // remove toolbar, if any
     if (m_PluginsTools[plugin])
@@ -4519,3 +4534,13 @@ void MainFrame::StartupDone()
     m_StartupDone = true;
     DoUpdateLayout();
 }
+
+#if wxUSE_STATUSBAR
+wxStatusBar *MainFrame::OnCreateStatusBar(int number, long style, wxWindowID id, const wxString& name)
+{
+    cbStatusBar *statusBar = new cbStatusBar(this, id, style, name);
+    statusBar->SetFieldsCount(number);
+
+    return statusBar;
+}
+#endif

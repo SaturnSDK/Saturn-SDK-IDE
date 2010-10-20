@@ -46,7 +46,6 @@
 #include "compilerMINGW.h"
 #ifdef __WXGTK__
 // TODO (mandrav#1#): Find out which compilers exist for linux and adapt this
-    #include "compilerDMD.h"
     #include "compilerGNUARM.h"
     #include "compilerGNUAVR.h"
 #endif
@@ -57,7 +56,6 @@
     #include "compilerBCC.h"
     #include "compilerDMC.h"
     #include "compilerOW.h"
-    #include "compilerDMD.h"
     #include "compilerGNUARM.h"
     #include "compilerGNUAVR.h"
     #include "compilerGNUMSP430.h"
@@ -69,6 +67,7 @@
 #include "compilerTcc.h"
 #include "compilerGDC.h"
 #include "compilerLDC.h"
+#include "compilerDMD.h"
 #include "compilerGNUPOWERPC.h"
 #include "compilerGNUTRICORE.h"
 
