@@ -1095,6 +1095,12 @@
 		<Unit filename="plugins/codecompletion/codecompletion.h">
 			<Option target="Code-completion" />
 		</Unit>
+		<Unit filename="plugins/codecompletion/coderefactoring.cpp">
+			<Option target="Code-completion" />
+		</Unit>
+		<Unit filename="plugins/codecompletion/coderefactoring.h">
+			<Option target="Code-completion" />
+		</Unit>
 		<Unit filename="plugins/codecompletion/insertclassmethoddlg.cpp">
 			<Option target="Code-completion" />
 		</Unit>
@@ -1105,6 +1111,12 @@
 			<Option target="Code-completion" />
 		</Unit>
 		<Unit filename="plugins/codecompletion/nativeparser.h">
+			<Option target="Code-completion" />
+		</Unit>
+		<Unit filename="plugins/codecompletion/parser/expression.cpp">
+			<Option target="Code-completion" />
+		</Unit>
+		<Unit filename="plugins/codecompletion/parser/expression.h">
 			<Option target="Code-completion" />
 		</Unit>
 		<Unit filename="plugins/codecompletion/parser/parser.cpp">
@@ -2140,9 +2152,6 @@
 			<Option target="sdk" />
 		</Unit>
 		<Unit filename="sdk/newfromtemplatedlg.cpp">
-			<Option target="sdk" />
-		</Unit>
-		<Unit filename="sdk/nullptr.cpp">
 			<Option target="sdk" />
 		</Unit>
 		<Unit filename="sdk/personalitymanager.cpp">

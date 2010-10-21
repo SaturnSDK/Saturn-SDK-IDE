@@ -589,6 +589,7 @@ void MainFrame::RegisterEvents()
     pm->RegisterEventSink(cbEVT_PLUGIN_INSTALLED, new cbEventFunctor<MainFrame, CodeBlocksEvent>(this, &MainFrame::OnPluginInstalled));
     pm->RegisterEventSink(cbEVT_PLUGIN_UNINSTALLED, new cbEventFunctor<MainFrame, CodeBlocksEvent>(this, &MainFrame::OnPluginUninstalled));
 
+    pm->RegisterEventSink(cbEVT_UPDATE_VIEW_LAYOUT, new cbEventFunctor<MainFrame, CodeBlocksLayoutEvent>(this, &MainFrame::OnLayoutUpdate));
     pm->RegisterEventSink(cbEVT_QUERY_VIEW_LAYOUT, new cbEventFunctor<MainFrame, CodeBlocksLayoutEvent>(this, &MainFrame::OnLayoutQuery));
     pm->RegisterEventSink(cbEVT_SWITCH_VIEW_LAYOUT, new cbEventFunctor<MainFrame, CodeBlocksLayoutEvent>(this, &MainFrame::OnLayoutSwitch));
 
@@ -1836,6 +1837,8 @@ void MainFrame::DoUpdateLayout()
 {
     if (!m_StartupDone)
         return;
+
+    DoFixToolbarsLayout();
     m_LayoutManager.Update();
 }
 
@@ -2491,11 +2494,14 @@ bool MainFrame::OnDropFiles(wxCoord /*x*/, wxCoord /*y*/, const wxArrayString& f
         wxBusyCursor useless;
         wxPaintEvent e;
         ProcessEvent(e);
-
+#if !wxCHECK_VERSION(2, 8, 11)
         Freeze();
+#endif
         for (unsigned int i = 0; i < files.GetCount(); ++i)
           success &= OpenGeneric(files[i]);
+#if !wxCHECK_VERSION(2, 8, 11)
         Thaw();
+#endif
     }
     return success;
 }
@@ -3356,10 +3362,13 @@ void MainFrame::OnEditStreamCommentSelected(wxCommandEvent& /*event*/)
         {
             int startPos = stc->GetSelectionStart();
             int endPos   = stc->GetSelectionEnd();
-            if ( startPos == endPos )
-            {   // if nothing selected stream comment current line
-                startPos = stc->PositionFromLine  (stc->LineFromPosition(startPos));
-                endPos   = stc->GetLineEndPosition(stc->LineFromPosition(startPos));
+            if ( startPos == endPos ) { // if nothing selected stream comment current *word* first
+                startPos = stc->WordStartPosition(stc->GetCurrentPos(), true);
+                endPos   = stc->WordEndPosition  (stc->GetCurrentPos(), true);
+                if ( startPos == endPos ) { // if nothing selected stream comment current line
+                    startPos = stc->PositionFromLine  (stc->LineFromPosition(startPos));
+                    endPos   = stc->GetLineEndPosition(stc->LineFromPosition(startPos));
+                }
             }
             else {
                 /**
@@ -3376,11 +3385,33 @@ void MainFrame::OnEditStreamCommentSelected(wxCommandEvent& /*event*/)
                 }
             }
             // stream comment block
-            stc->InsertText( startPos, comment.streamCommentStart );
-             // we already inserted some characters so out endPos changed
-            endPos += comment.streamCommentStart.Length();
-            stc->InsertText( endPos, comment.streamCommentEnd );
-            stc->SetSelectionVoid(startPos,endPos);
+            int p1 = startPos - 1;
+            while (stc->GetCharAt(p1) == _T(' ') && p1 > 0)
+                --p1;
+            p1 -= 1;
+            int p2 = endPos;
+            while (stc->GetCharAt(p2) == _T(' ') && p2 < stc->GetLength())
+                ++p2;
+            const wxString start = stc->GetTextRange(p1, p1 + comment.streamCommentStart.Length());
+            const wxString end = stc->GetTextRange(p2, p2 + comment.streamCommentEnd.Length());
+            if (start == comment.streamCommentStart && end == comment.streamCommentEnd)
+            {
+                stc->SetTargetStart(p1);
+                stc->SetTargetEnd(p2 + 2);
+                wxString target = stc->GetTextRange(p1 + 2, p2);
+                stc->ReplaceTarget(target);
+                stc->GotoPos(p1 + target.Length());
+            }
+            else
+            {
+                stc->InsertText( startPos, comment.streamCommentStart );
+                // we already inserted some characters so out endPos changed
+                startPos += comment.streamCommentStart.Length();
+                endPos += comment.streamCommentStart.Length();
+                stc->InsertText( endPos, comment.streamCommentEnd );
+                stc->SetSelectionVoid(startPos,endPos);
+            }
+
         }
         stc->EndUndoAction();
     }
@@ -4407,6 +4438,12 @@ void MainFrame::OnDockWindowVisibility(CodeBlocksDockEvent& /*event*/)
 {
 //    if (m_ScriptConsoleID != -1 && event.GetId() == m_ScriptConsoleID)
 //        ShowHideScriptConsole();
+}
+
+void MainFrame::OnLayoutUpdate(CodeBlocksLayoutEvent& WXUNUSED(event))
+{
+    DoFixToolbarsLayout();
+    DoUpdateLayout();
 }
 
 void MainFrame::OnLayoutQuery(CodeBlocksLayoutEvent& event)

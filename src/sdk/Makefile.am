@@ -109,7 +109,6 @@ libcodeblocks_la_SOURCES = annoyingdialog.cpp \
 						virtualbuildtargetsdlg.cpp \
 						workspaceloader.cpp \
 						xtra_res.cpp  \
-						nullptr.cpp \
 						mozilla_chardet/src/CharDistribution.cpp \
 						mozilla_chardet/src/JpCntx.cpp \
 						mozilla_chardet/src/LangBulgarianModel.cpp \
