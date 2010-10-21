@@ -1226,8 +1226,8 @@ void cbEditor::InternalSetEditorStyleBeforeFileOpen(cbStyledTextCtrl* control)
 
     ConfigManager* mgr = Manager::Get()->GetConfigManager(_T("editor"));
 
-    // 8 point is not readable on Mac OS X, increase font size
-    wxFont font(platform::macosx ? 10 : 8, wxMODERN, wxNORMAL, wxNORMAL);
+    // setting the default editor font size to 10 point
+    wxFont font(10, wxMODERN, wxNORMAL, wxNORMAL);
 
     wxString fontstring = mgr->Read(_T("/font"), wxEmptyString);
 
