@@ -140,7 +140,6 @@
 					<Add directory="sdk/wxpropgrid/include" />
 				</Compiler>
 				<Linker>
-					<Add option="-z defs" />
 					<Add library="txml" />
 					<Add library="wxscintilla" />
 					<Add library="wxpropgrid" />
@@ -401,8 +400,8 @@
 				</Linker>
 			</Target>
 			<Environment>
-				<Variable name="WX_VERSION" value="28" />
 				<Variable name="WX_SUFFIX" value="u" />
+				<Variable name="WX_VERSION" value="28" />
 				<Variable name="WX_CFG" value="" />
 			</Environment>
 		</Build>
@@ -979,12 +978,13 @@
 			<Option target="sdk" />
 		</Unit>
 		<Unit filename="include/tinyxml/tinystr.h">
+			<Option target="tinyXML" />
 		</Unit>
 		<Unit filename="include/tinyxml/tinywxuni.h">
 			<Option target="sdk" />
 		</Unit>
 		<Unit filename="include/tinyxml/tinyxml.h">
-			<Option target="sdk" />
+			<Option target="tinyXML" />
 		</Unit>
 		<Unit filename="include/toolsmanager.h">
 			<Option target="sdk" />
@@ -1126,6 +1126,12 @@
 		<Unit filename="plugins/codecompletion/codecompletion.h">
 			<Option target="Code-completion" />
 		</Unit>
+		<Unit filename="plugins/codecompletion/coderefactoring.cpp">
+			<Option target="Code-completion" />
+		</Unit>
+		<Unit filename="plugins/codecompletion/coderefactoring.h">
+			<Option target="Code-completion" />
+		</Unit>
 		<Unit filename="plugins/codecompletion/insertclassmethoddlg.cpp">
 			<Option target="Code-completion" />
 		</Unit>
@@ -1136,6 +1142,12 @@
 			<Option target="Code-completion" />
 		</Unit>
 		<Unit filename="plugins/codecompletion/nativeparser.h">
+			<Option target="Code-completion" />
+		</Unit>
+		<Unit filename="plugins/codecompletion/parser/expression.cpp">
+			<Option target="Code-completion" />
+		</Unit>
+		<Unit filename="plugins/codecompletion/parser/expression.h">
 			<Option target="Code-completion" />
 		</Unit>
 		<Unit filename="plugins/codecompletion/parser/parser.cpp">

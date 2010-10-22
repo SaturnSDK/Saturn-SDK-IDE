@@ -24,7 +24,7 @@ function RegisterTypes(driver)
     // STL String
     driver.RegisterType(
         _T("STL String"),
-        _T("^std::basic_string<.*>$"),
+        _T("[^[:alnum:]_]*string[^[:alnum:]_]*"),
         _T("Evaluate_StlString"),
         _T("Parse_StlString")
     );
@@ -32,7 +32,7 @@ function RegisterTypes(driver)
     // STL Vector
     driver.RegisterType(
         _T("STL Vector"),
-        _T("^std::vector<(.*)>$"),
+        _T("[^[:alnum:]_]*vector<.*"),
         _T("Evaluate_StlVector"),
         _T("Parse_StlVector")
     );

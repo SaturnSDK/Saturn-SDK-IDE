@@ -2570,7 +2570,7 @@ void wxPGCellRenderer::DrawEditorValue( wxDC& dc, const wxRect& rect,
 
     if ( editor )
     {
-        wxRect rect2(rect); 
+        wxRect rect2(rect);
         rect2.x += xOffset;
         rect2.y += yOffset;
         rect2.height -= yOffset;
@@ -3304,7 +3304,7 @@ void wxPropertyGrid::Init2()
 #ifdef __WXMAC__
    // Smaller controls on Mac
    SetWindowVariant(wxWINDOW_VARIANT_SMALL);
-#endif 
+#endif
 
     // Now create state, if one didn't exist already
     // (wxPropertyGridManager might have created it for us).
@@ -5907,7 +5907,7 @@ int wxPropertyGrid::DoDrawItems( wxDC& dc,
                 cellX += state->m_colWidths[ci];
                 if ( ci < (state->m_colWidths.size()-1) )
                     nextCellWidth = state->m_colWidths[ci+1];
-                cellRect.x = cellX; 
+                cellRect.x = cellX;
                 dc.DestroyClippingRegion(); // Is this really necessary?
                 textXAdd = 0;
             }
@@ -6030,7 +6030,7 @@ void wxPropertyGrid::RefreshProperty( wxPGProperty* p )
 void wxPropertyGrid::RefreshEditor()
 {
     wxPGProperty* p = GetSelection();
-    if ( !p ) 
+    if ( !p )
         return;
 
     wxWindow* wnd = GetEditorControl();
@@ -7659,7 +7659,7 @@ bool wxPropertyGrid::DoSelectProperty( wxPGProperty* p, unsigned int flags )
                         editor->SetValueToUnspecified(p, primaryCtrl);
                         SetEditorAppearance(m_unspecifiedAppearance);
                     }
-    
+
                     // Focus and select all (wxTextCtrl, wxComboBox etc)
                     if ( flags & wxPG_SEL_FOCUS )
                     {
@@ -9045,7 +9045,7 @@ static void CopyTextToClipboard( const wxString& text )
 {
     if ( wxTheClipboard->Open() )
     {
-        // This data objects are held by the clipboard, 
+        // This data objects are held by the clipboard,
         // so do not delete them in the app.
         wxTheClipboard->SetData( new wxTextDataObject(text) );
         wxTheClipboard->Close();
@@ -10426,7 +10426,7 @@ wxArrayInt wxPGChoices::GetValuesForStrings( const wxArrayString& strings ) cons
 
 // -----------------------------------------------------------------------
 
-wxArrayInt wxPGChoices::GetIndicesForStrings( const wxArrayString& strings, 
+wxArrayInt wxPGChoices::GetIndicesForStrings( const wxArrayString& strings,
                                               wxArrayString* unmatched ) const
 {
     wxArrayInt arr;
@@ -11169,7 +11169,7 @@ wxString wxPropertyGridInterface::SaveEditableState( int includedStates ) const
         if ( includedStates & ExpandedState )
         {
             wxArrayPGProperty ptrs;
-            wxPropertyGridConstIterator it = 
+            wxPropertyGridConstIterator it =
                 wxPropertyGridConstIterator( pageState,
                                              wxPG_ITERATE_ALL_PARENTS_RECURSIVELY|wxPG_ITERATE_HIDDEN,
                                              wxNullProperty );
@@ -11273,7 +11273,7 @@ bool wxPropertyGridInterface::RestoreEditableState( const wxString& src, int res
                 {
                     if ( restoreStates & ExpandedState )
                     {
-                        wxPropertyGridIterator it = 
+                        wxPropertyGridIterator it =
                             wxPropertyGridIterator( pageState,
                                                     wxPG_ITERATE_ALL,
                                                     wxNullProperty );
