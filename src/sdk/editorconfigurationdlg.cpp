@@ -83,6 +83,7 @@ BEGIN_EVENT_TABLE(EditorConfigurationDlg, wxScrollingDialog)
     EVT_CHECKBOX(XRCID("chkHighlightOccurrences"),     EditorConfigurationDlg::OnHighlightOccurrences)
     EVT_CHECKBOX(XRCID("chkEnableMultipleSelections"), EditorConfigurationDlg::OnMultipleSelections)
     EVT_BUTTON(XRCID("btnHighlightColour"),            EditorConfigurationDlg::OnChooseColour)
+    EVT_CHOICE(XRCID("lstCaretStyle"),                 EditorConfigurationDlg::OnCaretStyle)
 
     EVT_LISTBOOK_PAGE_CHANGED(XRCID("nbMain"), EditorConfigurationDlg::OnPageChanged)
 END_EVENT_TABLE()
@@ -155,7 +156,10 @@ EditorConfigurationDlg::EditorConfigurationDlg(wxWindow* parent)
 
     //caret
     wxColour caretColour = cfg->ReadColour(_T("/caret/colour"), *wxBLACK);
+    int caretStyle = cfg->ReadInt(_T("/caret/style"), wxSCI_CARETSTYLE_LINE);
+    XRCCTRL(*this, "lstCaretStyle", wxChoice)->SetSelection(caretStyle);
     XRCCTRL(*this, "spnCaretWidth", wxSpinCtrl)->SetValue(cfg->ReadInt(_T("/caret/width"), 1));
+    XRCCTRL(*this, "spnCaretWidth", wxSpinCtrl)->Enable(caretStyle == wxSCI_CARETSTYLE_LINE);
     XRCCTRL(*this, "btnCaretColour", wxButton)->SetBackgroundColour(caretColour);
     XRCCTRL(*this, "slCaretPeriod", wxSlider)->SetValue(cfg->ReadInt(_T("/caret/period"), 500));
 
@@ -239,8 +243,8 @@ EditorConfigurationDlg::EditorConfigurationDlg(wxWindow* parent)
     key.Printf(_T("/default_code/set%d"), IdxToFileType[m_DefCodeFileType]);
     XRCCTRL(*this, "txtDefCode", wxTextCtrl)->SetValue(cfg->Read(key, wxEmptyString));
 
-    // 8 point is not readable on Mac OS X, increase font size:
-    wxFont tmpFont(platform::macosx ? 10 : 8, wxMODERN, wxNORMAL, wxNORMAL);
+    // setting the default editor font size to 10 point
+    wxFont tmpFont(10, wxMODERN, wxNORMAL, wxNORMAL);
 
     XRCCTRL(*this, "txtDefCode", wxTextCtrl)->SetFont(tmpFont);
     // read them all in the array
@@ -513,8 +517,8 @@ void EditorConfigurationDlg::WriteColours()
 
 void EditorConfigurationDlg::UpdateSampleFont(bool askForNewFont)
 {
-    // 8 point is not readable on Mac OS X, increase font size:
-    wxFont tmpFont(platform::macosx ? 10 : 8, wxMODERN, wxNORMAL, wxNORMAL);
+    // setting the default editor font size to 10 point
+    wxFont tmpFont(10, wxMODERN, wxNORMAL, wxNORMAL);
 
     if (!m_FontString.IsEmpty())
     {
@@ -539,6 +543,10 @@ void EditorConfigurationDlg::UpdateSampleFont(bool askForNewFont)
         m_FontString = font.GetNativeFontInfoDesc();
         ApplyColours();
     }
+}
+void EditorConfigurationDlg::OnCaretStyle(wxCommandEvent& event)
+{
+    XRCCTRL(*this, "spnCaretWidth", wxSpinCtrl)->Enable(XRCCTRL(*this, "lstCaretStyle", wxChoice)->GetSelection() == wxSCI_CARETSTYLE_LINE);
 }
 
 void EditorConfigurationDlg::LoadThemes()
@@ -907,6 +915,7 @@ void EditorConfigurationDlg::EndModal(int retCode)
         // find & replace, regex searches
 
         //caret
+        cfg->Write(_T("/caret/style"),                         XRCCTRL(*this, "lstCaretStyle", wxChoice)->GetSelection());
         cfg->Write(_T("/caret/width"),                         XRCCTRL(*this, "spnCaretWidth", wxSpinCtrl)->GetValue());
         cfg->Write(_T("/caret/colour"),                        XRCCTRL(*this, "btnCaretColour", wxButton)->GetBackgroundColour());
         cfg->Write(_T("/caret/period"),                        XRCCTRL(*this, "slCaretPeriod", wxSlider)->GetValue());
@@ -1014,6 +1023,17 @@ void EditorConfigurationDlg::EndModal(int retCode)
         // save any changes in auto-completion
         wxListBox* lstKeyword = XRCCTRL(*this, "lstAutoCompKeyword", wxListBox);
         AutoCompUpdate(lstKeyword->GetSelection());
+		const bool useTabs = Manager::Get()->GetConfigManager(_T("editor"))->ReadBool(_T("/use_tab"), false);
+		const int tabSize = Manager::Get()->GetConfigManager(_T("editor"))->ReadInt(_T("/tab_size"), 4);
+		const wxString tabSpace = wxString(_T(' '), tabSize);
+		for (AutoCompleteMap::iterator it = m_AutoCompMap.begin(); it != m_AutoCompMap.end(); ++it)
+		{
+			wxString& item = it->second;
+			if (useTabs)
+				item.Replace(tabSpace, _T("\t"), true);
+			else
+				item.Replace(_T("\t"), tabSpace, true);
+		}
         AutoCompleteMap& map = Manager::Get()->GetEditorManager()->GetAutoCompleteMap();
         map = m_AutoCompMap;
 
