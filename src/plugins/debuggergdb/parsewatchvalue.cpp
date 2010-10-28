@@ -194,6 +194,8 @@ GDBWatch* AddChild(GDBWatch &parent, wxString const &str_name)
     return child;
 }
 
+wxRegEx regexRepeatedChar(wxT(".+[ \\t](<repeats[ \\t][0-9]+[ \\t]times>)$"));
+
 bool ParseGDBWatchValue(GDBWatch &watch, wxString const &value, int &start, int length)
 {
     watch.SetDebugValue(value);
@@ -221,6 +223,28 @@ bool ParseGDBWatchValue(GDBWatch &watch, wxString const &value, int &start, int 
                     return false;
                 token.start += pos + 2;
                 token.Trim(value);
+            }
+        }
+
+        if (regexRepeatedChar.Matches(str))
+        {
+            Token expanded_token = token;
+            while (1)
+            {
+                if (value[expanded_token.end] == wxT(','))
+                {
+                    position = token.end + 1;
+                    token_real_end = position;
+                    if (GetNextToken(value, position, expanded_token))
+                    {
+                        token.end = expanded_token.end;
+                        const wxString &str = expanded_token.ExtractString(value);
+                        if (regexRepeatedChar.Matches(str))
+                            continue;
+                        token_real_end = expanded_token.end;
+                    }
+                }
+                break;
             }
         }
 
