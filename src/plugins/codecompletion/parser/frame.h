@@ -34,14 +34,6 @@ private:
 
 protected:
     //(*Identifiers(Frame)
-    static const long ID_LOGMAIN;
-    static const long ID_OPEN;
-    static const long ID_RELOAD;
-    static const long ID_SAVE;
-    static const long ID_QUIT;
-    static const long ID_FIND;
-    static const long ID_ABOUT;
-    static const long ID_STATUSBAR;
     //*)
 
 private:
@@ -57,21 +49,21 @@ private:
 
 private:
     //(*Declarations(Frame)
-    wxFileDialog* m_openFile;
-    wxFileDialog* m_saveFile;
-    wxStatusBar* m_statuBar;
-    wxTextCtrl* m_logCtrl;
+    wxFileDialog* m_SaveFile;
+    wxStatusBar* m_StatuBar;
+    wxTextCtrl* m_LogCtrl;
+    wxFileDialog* m_OpenFile;
     //*)
 
-    unsigned int m_logCnt;
-    wxString m_log;
+    size_t               m_LogCount;
+    wxString             m_Log;
 
-    wxFindReplaceData m_findData;
-    wxFindReplaceDialog* m_dlgFind;
-    int m_lastIndex;
-    wxString m_lastFile;
+    wxFindReplaceData    m_FindData;
+    wxFindReplaceDialog* m_DlgFind;
+    int                  m_LastIndex;
+    wxString             m_LastFile;
 
-    ParserTest m_parserTest;
+    ParserTest           m_ParserTest;
 
     DECLARE_EVENT_TABLE()
 };

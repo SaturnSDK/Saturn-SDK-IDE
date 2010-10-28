@@ -246,7 +246,7 @@ public:
         m_IncludeDirs(incDirs)
     {
         Create();
-        SetPriority(WXTHREAD_MIN_PRIORITY);
+        SetPriority(60u);
     }
 
     virtual void* Entry()
@@ -264,14 +264,16 @@ public:
             }
         }
 
-        for (size_t i = 0; i < dirs.GetCount() && !TestDestroy(); ++i)
+        for (size_t i = 0; i < dirs.GetCount(); ++i)
         {
             wxDir dir(dirs[i]);
             if (!dir.IsOpened())
                 continue;
 
-            HeaderDirTraverser traverser(m_SystemHeadersMap, dirs[i]);
+            HeaderDirTraverser traverser(this, m_SystemHeadersMap, dirs[i]);
             dir.Traverse(traverser, wxEmptyString, wxDIR_FILES | wxDIR_DIRS);
+            if (TestDestroy())
+                break;
 
             wxCommandEvent evt(wxEVT_COMMAND_MENU_SELECTED, THREAD_UPDATE);
             evt.SetClientData(this);
@@ -301,7 +303,8 @@ private:
     class HeaderDirTraverser : public wxDirTraverser
     {
     public:
-        HeaderDirTraverser(SystemHeadersMap& headersMap, const wxString& searchDir) :
+        HeaderDirTraverser(wxThread* thread, SystemHeadersMap& headersMap, const wxString& searchDir) :
+            m_Thread(thread),
             m_SystemHeadersMap(headersMap),
             m_SearchDir(searchDir),
             m_Headers(headersMap[searchDir]),
@@ -317,7 +320,7 @@ private:
 
         virtual wxDirTraverseResult OnFile(const wxString& filename)
         {
-            if (!AddLock())
+            if (m_Thread->TestDestroy() || !AddLock())
                 return wxDIR_STOP;
 
             wxFileName fn(filename);
@@ -334,7 +337,7 @@ private:
 
         virtual wxDirTraverseResult OnDir(const wxString& dirname)
         {
-            if (!AddLock())
+            if (m_Thread->TestDestroy() || !AddLock())
                 return wxDIR_STOP;
 
             wxString path(dirname);
@@ -364,9 +367,10 @@ private:
         }
 
     private:
+        wxThread*                m_Thread;
         const SystemHeadersMap&  m_SystemHeadersMap;
         const wxString&          m_SearchDir;
-        StringSet&              m_Headers;
+        StringSet&               m_Headers;
         wxCriticalSectionLocker* m_Locker;
         size_t                   m_HeaderCount;
     };
@@ -407,9 +411,9 @@ CodeCompletion::~CodeCompletion()
     while (!m_SystemHeadersThread.empty())
     {
         SystemHeadersThread* thread = m_SystemHeadersThread.front();
-        if (thread->IsRunning())
-            thread->Delete();
         m_SystemHeadersThread.pop_front();
+        if (thread->IsAlive() && thread->IsRunning())
+            thread->Delete();
     }
 }
 
@@ -1044,7 +1048,7 @@ int CodeCompletion::CodeComplete()
 
         if (!m_NativeParser.GetParser().Done())
         {
-            wxString msg = _("C++ Parser is still parsing files...");
+            wxString msg = _("The Parser is still parsing files...");
             ed->GetControl()->CallTipShow(ed->GetControl()->GetCurrentPos(), msg);
         }
     }
@@ -2068,10 +2072,10 @@ void CodeCompletion::ParseFunctionsAndFillToolbar(bool force)
 		NameSpaceVec& nameSpaces = funcdata->m_NameSpaces;
 
         m_NativeParser.GetParser().ParseBufferForNamespaces(ed->GetControl()->GetText(), nameSpaces);
-		sort(nameSpaces.begin(), nameSpaces.end(), LessNameSpace);
+		std::sort(nameSpaces.begin(), nameSpaces.end(), LessNameSpace);
 
-		copy(nameSpaces.begin(), nameSpaces.end(), back_inserter(functionsScopes));
-        sort(functionsScopes.begin(), functionsScopes.end(), LessFunctionScope);
+		std::copy(nameSpaces.begin(), nameSpaces.end(), back_inserter(functionsScopes));
+        std::sort(functionsScopes.begin(), functionsScopes.end(), LessFunctionScope);
 
         // remove consecutive duplicates
         FunctionsScopeVec::iterator it;
@@ -2613,24 +2617,18 @@ void CodeCompletion::OnGotoDeclaration(wxCommandEvent& event)
         if (isImpl)
         {
             if (cbEditor* ed = edMan->Open(token->GetImplFilename()))
-            {
-                ed->GotoLine(token->m_ImplLine - 1);
-            }
+                GotoTokenPosition(ed, target, token->m_ImplLine - 1);
             else
-            {
-                cbMessageBox(wxString::Format(_("Implementation not found: %s"), target.wx_str()), _("Warning"), wxICON_WARNING);
-            }
+                cbMessageBox(wxString::Format(_("Implementation not found: %s"), target.wx_str()),
+                             _("Warning"), wxICON_WARNING);
         }
         else
         {
             if (cbEditor* ed = edMan->Open(token->GetFilename()))
-            {
-                ed->GotoLine(token->m_Line - 1);
-            }
+                GotoTokenPosition(ed, target, token->m_Line - 1);
             else
-            {
-                cbMessageBox(wxString::Format(_("Declaration not found: %s"), target.wx_str()), _("Warning"), wxICON_WARNING);
-            }
+                cbMessageBox(wxString::Format(_("Declaration not found: %s"), target.wx_str()),
+                             _("Warning"), wxICON_WARNING);
         }
     }
     else
@@ -3055,4 +3053,18 @@ void CodeCompletion::OnRealtimeParsing(wxTimerEvent& event)
         return;
     if (m_NativeParser.ReparseFile(project, m_LastFile))
         Manager::Get()->GetLogManager()->DebugLog(_T("Reparsing when typing for editor ") + m_LastFile);
+}
+
+void CodeCompletion::GotoTokenPosition(cbEditor* editor, const wxString& target, size_t line)
+{
+    if (!editor)
+        return;
+    cbStyledTextCtrl* control = editor->GetControl();
+    control->GotoLine(line);
+    const int start = control->GetCurrentPos();
+    const int end = start + control->LineLength(line);
+    int tokenPos = control->FindText(start, end, target, wxSCI_FIND_WHOLEWORD | wxSCI_FIND_MATCHCASE, nullptr);
+    if (tokenPos == wxSCI_INVALID_POSITION)
+        tokenPos = start;
+    control->GotoPos(tokenPos);
 }

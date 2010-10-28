@@ -55,6 +55,7 @@ wxsItemResData::wxsItemResData(
     const wxString& ClassType,
     wxsCodingLang Language,
     bool UseForwardDeclarations,
+    bool WithTranslation,
     wxsResourceItemId TreeId,
     wxsItemEditor* Editor,
     wxsItemResFunctions* Functions):
@@ -62,6 +63,7 @@ wxsItemResData::wxsItemResData(
         m_SrcFileName(SrcFileName),
         m_HdrFileName(HdrFileName),
         m_XrcFileName(XrcFileName),
+        m_Translation(WithTranslation),
         m_ClassName(ClassName),
         m_ClassType(ClassType),
         m_Language(Language),
@@ -591,7 +593,8 @@ void wxsItemResData::RebuildSourceCode()
             }
 
             // Add some initial headers
-            Context.AddHeader(_T("<wx/intl.h>"),_T(""),hfLocal|hfInPCH);
+            if (m_Translation)
+                Context.AddHeader(_T("<wx/intl.h>"),_T(""),hfLocal|hfInPCH);
             Context.AddHeader(_T("<wx/string.h>"),_T(""),hfLocal|hfInPCH);
             if ( m_PropertiesFilter & flMixed )
             {

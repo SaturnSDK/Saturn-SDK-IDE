@@ -54,6 +54,8 @@
 #define IS_ALIVE !TestDestroy()
 #endif
 
+static wxCriticalSection g_ParserThreadCritical;
+
 int THREAD_START       = wxNewId();
 int THREAD_END         = wxNewId();
 int NEW_TOKEN          = wxNewId();
@@ -166,11 +168,6 @@ void ParserThread::Log(const wxString& log)
 //    Manager::ProcessPendingEvents();
 }
 
-void ParserThread::SetTokens(TokensTree* tokensTree)
-{
-    m_TokensTree = tokensTree;
-}
-
 wxChar ParserThread::SkipToOneOfChars(const wxString& chars, bool supportNesting)
 {
     unsigned int level = m_Tokenizer.GetNestingLevel();
@@ -255,6 +252,7 @@ void ParserThread::SkipAngleBraces()
 
 bool ParserThread::ParseBufferForNamespaces(const wxString& buffer, NameSpaceVec& result)
 {
+    wxCriticalSectionLocker locker(g_ParserThreadCritical);
 	m_Tokenizer.InitFromBuffer(buffer);
 	if (!m_Tokenizer.IsOK())
 		return false;
@@ -335,6 +333,7 @@ bool ParserThread::ParseBufferForNamespaces(const wxString& buffer, NameSpaceVec
 
 bool ParserThread::ParseBufferForUsingNamespace(const wxString& buffer, wxArrayString& result)
 {
+    wxCriticalSectionLocker locker(g_ParserThreadCritical);
     m_Tokenizer.InitFromBuffer(buffer);
     if (!m_Tokenizer.IsOK())
         return false;
@@ -426,12 +425,7 @@ bool ParserThread::InitTokenizer()
             // record filename for buffer parsing
             m_Filename = m_Options.fileOfBuffer;
             m_FileIdx = m_TokensTree->GetFileIndex(m_Filename);
-
-            size_t initLineNumber = 0;
-            if (m_Options.parentOfBuffer)
-                initLineNumber = m_Options.parentOfBuffer->m_ImplLineStart;
-
-            return m_Tokenizer.InitFromBuffer(m_Buffer, m_Filename, initLineNumber);
+            return m_Tokenizer.InitFromBuffer(m_Buffer, m_Filename, m_Options.initLineOfBuffer);
         }
     }
 
@@ -441,7 +435,7 @@ bool ParserThread::InitTokenizer()
 
 bool ParserThread::Parse()
 {
-    wxCriticalSectionLocker locker(s_ParserThreadCritical);
+    wxCriticalSectionLocker locker(g_ParserThreadCritical);
 
     if (!IS_ALIVE || !InitTokenizer())
         return false;
@@ -1927,8 +1921,11 @@ void ParserThread::HandleEnum()
     bool isUnnamed = false;
     int lineNr = m_Tokenizer.GetLineNumber();
     wxString token = m_Tokenizer.GetToken();
+    if (token == ParserConsts::kw_class)
+        token = m_Tokenizer.GetToken();
     if (token.IsEmpty())
         return;
+
     else if (token==ParserConsts::opbrace)
     {
         // we have an un-named enum

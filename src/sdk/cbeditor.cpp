@@ -231,12 +231,7 @@ struct cbEditorInternalData
         {
             wxChar c = control->GetCharAt(--position);
             int style = control->GetStyleAt(position);
-            bool inComment = style == wxSCI_C_COMMENT ||
-                            style == wxSCI_C_COMMENTDOC ||
-                            style == wxSCI_C_COMMENTDOCKEYWORD ||
-                            style == wxSCI_C_COMMENTDOCKEYWORDERROR ||
-                            style == wxSCI_C_COMMENTLINE ||
-                            style == wxSCI_C_COMMENTLINEDOC;
+            bool inComment = control->IsComment(style);
             if (c == _T('\n'))
             {
                 count++;
@@ -1017,6 +1012,8 @@ cbStyledTextCtrl* cbEditor::CreateEditor()
         wxEVT_SCI_AUTOCOMP_SELECTION,
 //        wxEVT_SCI_INDICATOR_CLICK,
 //        wxEVT_SCI_INDICATOR_RELEASE,
+        wxEVT_SCI_TAB,
+        wxEVT_SCI_ESC,
 
         -1 // to help enumeration of this array
     };
@@ -1242,8 +1239,12 @@ void cbEditor::InternalSetEditorStyleBeforeFileOpen(cbStyledTextCtrl* control)
 
     control->SetMouseDwellTime(1000);
 
-    control->SetCaretStyle(mgr->ReadInt(_T("/caret/style"), wxSCI_CARETSTYLE_LINE));
-    control->SetCaretWidth(mgr->ReadInt(_T("/caret/width"), 1));
+    int caretStyle = mgr->ReadInt(_T("/caret/style"), wxSCI_CARETSTYLE_LINE);
+    control->SetCaretStyle(caretStyle);
+    if(caretStyle == wxSCI_CARETSTYLE_LINE)
+        control->SetCaretWidth(mgr->ReadInt(_T("/caret/width"), 1));
+    else
+        control->SetCaretWidth(1);
     control->SetCaretForeground(GetOptionColour(_T("/caret/colour"), *wxBLACK));
     control->SetCaretPeriod(mgr->ReadInt(_T("/caret/period"), 500));
     control->SetCaretLineVisible(mgr->ReadBool(_T("/highlight_caret_line"), false));
@@ -1812,80 +1813,7 @@ bool cbEditor::FixFoldState()
 
 void cbEditor::AutoComplete()
 {
-    LogManager* msgMan = Manager::Get()->GetLogManager();
-    AutoCompleteMap& map = Manager::Get()->GetEditorManager()->GetAutoCompleteMap();
-    cbStyledTextCtrl* control = GetControl();
-    int curPos = control->GetCurrentPos();
-    int wordStartPos = control->WordStartPosition(curPos, true);
-    wxString keyword = control->GetTextRange(wordStartPos, curPos);
-    wxString lineIndent = GetLineIndentString(control->GetCurrentLine());
-    msgMan->DebugLog(_T("Auto-complete keyword: ") + keyword);
-
-    AutoCompleteMap::iterator it;
-    for (it = map.begin(); it != map.end(); ++it)
-    {
-        if (keyword == it->first)
-        {
-            // found; auto-complete it
-            msgMan->DebugLog(_T("Auto-complete match for keyword found."));
-
-            // indent code accordingly
-            wxString code = it->second;
-            code.Replace(_T("\n"), _T('\n') + lineIndent);
-
-            // look for and replace macros
-            bool canceled = false;
-            int macroPos = code.Find(_T("$("));
-            while (macroPos != -1)
-            {
-                // locate ending parenthesis
-                int macroPosEnd = macroPos + 2;
-                int len = (int)code.Length();
-                while (macroPosEnd < len && code.GetChar(macroPosEnd) != _T(')'))
-                    ++macroPosEnd;
-                if (macroPosEnd == len)
-                    break; // no ending parenthesis
-
-                wxString macroName = code.SubString(macroPos + 2, macroPosEnd - 1);
-                msgMan->DebugLog(_T("Found macro: ") + macroName);
-                wxString macro = wxGetTextFromUser(_("Please enter the text for \"") + macroName + _T("\":"), _("Macro substitution"));
-                if (macro.IsEmpty())
-                {
-                    canceled = true;
-                    break;
-                }
-                code.Replace(_T("$(") + macroName + _T(")"), macro);
-                macroPos = code.Find(_T("$("));
-            }
-
-            if (canceled)
-                break;
-
-            control->BeginUndoAction();
-
-            // delete keyword
-            control->SetSelectionVoid(wordStartPos, curPos);
-            control->ReplaceSelection(_T(""));
-            curPos = wordStartPos;
-
-            // replace any other macros in the generated code
-            Manager::Get()->GetMacrosManager()->ReplaceMacros(code);
-            // add the text
-            control->InsertText(curPos, code);
-
-            // put cursor where "|" appears in code (if it appears)
-            int caretPos = code.Find(_T('|'));
-            if (caretPos != -1)
-            {
-                control->SetCurrentPos(curPos + caretPos);
-                control->SetSelectionVoid(curPos + caretPos, curPos + caretPos + 1);
-                control->ReplaceSelection(_T(""));
-            }
-
-            control->EndUndoAction();
-            break;
-        }
-    }
+    Manager::Get()->GetLogManager()->Log(_T("cbEditor::AutoComplete() is obsolete.\nUse AutoComplete(cbEditor &ed) from the Abbreviations plugin instead."));
 }
 
 void cbEditor::DoFoldAll(int fold)
@@ -3116,6 +3044,20 @@ void cbEditor::OnEditorCharAdded(wxScintillaEvent& event)
                             if (!level)
                             {
                                 autoIndentStart = true;
+
+                                int nonblankpos;
+                                wxChar c = m_pData->GetNextNonWhitespaceCharOfLine(pos, &nonblankpos);
+                                if (c == _T('}') && currLine == control->LineFromPosition(nonblankpos))
+                                {
+                                    control->NewLine();
+                                    control->GotoPos(pos);
+
+                                    autoIndentStart = false;
+                                    autoIndentDone = true;
+                                    autoIndentLine = -1;
+                                    autoIndentLineIndent = -1;
+                                }
+
                                 control->SetLineIndentation(currLine, autoIndentLineIndent);
                                 control->Tab();
                             }
@@ -3344,7 +3286,18 @@ void cbEditor::OnEditorModified(wxScintillaEvent& event)
         }
 
     }
-
+    // If we remove the folding-point (the brace or whatever) from a folded block,
+    // we have to make the hidden lines visible, otherwise, they
+    // will no longer be reachable, until the editor is closed and reopened again
+    if ((event.GetModificationType() & wxSCI_MOD_CHANGEFOLD) &&
+        (event.GetFoldLevelPrev() & wxSCI_FOLDLEVELHEADERFLAG)) {
+        cbStyledTextCtrl* control = GetControl();
+        int line = event.GetLine();
+		if (! control->GetFoldExpanded(line)) {
+			control->SetFoldExpanded(line, true);
+            control->ShowLines(line, control->GetLastChild(line, -1));
+		}
+	}
     OnScintillaEvent(event);
 } // end of OnEditorModified
 

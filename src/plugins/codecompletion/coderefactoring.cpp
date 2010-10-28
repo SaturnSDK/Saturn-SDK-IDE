@@ -2,9 +2,9 @@
  * This file is part of the Code::Blocks IDE and licensed under the GNU General Public License, version 3
  * http://www.gnu.org/licenses/gpl-3.0.html
  *
- * $Revision: 6678 $
- * $Id: coderefactoring.cpp 6678 2010-10-08 05:07:32Z loaden $
- * $HeadURL: http://svn.berlios.de/svnroot/repos/codeblocks/branches/codecompletion_refactoring/src/plugins/codecompletion/coderefactoring.cpp $
+ * $Revision$
+ * $Id$
+ * $HeadURL$
  */
 
 #include <sdk.h>
@@ -38,6 +38,56 @@
     #define TRACE2(format, args...)
 #endif
 
+class ScopeDialog : public wxDialog
+{
+public:
+    ScopeDialog(wxWindow* parent, const wxString& title) :
+        wxDialog(parent, wxID_ANY, title)
+    {
+        wxBoxSizer* sizer = new wxBoxSizer(wxVERTICAL);
+        wxBoxSizer* infoSizer = new wxBoxSizer(wxHORIZONTAL);
+        wxString findImgFile = ConfigManager::GetDataFolder() + _T("/images/filefind.png");
+        wxStaticBitmap* findIco = new wxStaticBitmap(this, wxID_ANY, wxBitmap(wxImage(findImgFile)));
+        infoSizer->Add(findIco, 0, wxALL | wxALIGN_CENTER_HORIZONTAL | wxALIGN_CENTER_VERTICAL, 5);
+        wxStaticText* scopeText = new wxStaticText(this, wxID_ANY, _("Please choice the find scope for search tokens?"));
+        infoSizer->Add(scopeText, 1, wxALL | wxALIGN_CENTER_HORIZONTAL | wxALIGN_CENTER_VERTICAL,
+                       wxDLG_UNIT(this, wxSize(5, 0)).GetWidth());
+        sizer->Add(infoSizer, 1, wxALL | wxALIGN_CENTER_HORIZONTAL | wxALIGN_CENTER_VERTICAL, 5);
+        wxBoxSizer* btnSizer = new wxBoxSizer(wxHORIZONTAL);
+        m_OpenFiles = new wxButton(this, ID_OPEN_FILES, _("&Open files"), wxDefaultPosition, wxDefaultSize, 0,
+                                   wxDefaultValidator, _T("ID_OPEN_FILES"));
+        m_OpenFiles->SetDefault();
+        btnSizer->Add(m_OpenFiles, 1, wxALL | wxALIGN_CENTER_HORIZONTAL | wxALIGN_CENTER_VERTICAL, 5);
+        m_ProjectFiles = new wxButton(this, ID_PROJECT_FILES, _("&Project files"), wxDefaultPosition,
+                                      wxDefaultSize, 0, wxDefaultValidator, _T("ID_PROJECT_FILES"));
+        btnSizer->Add(m_ProjectFiles, 1, wxALL | wxALIGN_CENTER_HORIZONTAL | wxALIGN_CENTER_VERTICAL, 5);
+        sizer->Add(btnSizer, 1, wxBOTTOM | wxLEFT | wxRIGHT | wxALIGN_CENTER_HORIZONTAL | wxALIGN_CENTER_VERTICAL, 5);
+        SetSizer(sizer);
+        sizer->Fit(this);
+        sizer->SetSizeHints(this);
+        Center();
+
+        Connect(ID_OPEN_FILES, wxEVT_COMMAND_BUTTON_CLICKED, (wxObjectEventFunction)&ScopeDialog::OnOpenFilesClick);
+        Connect(ID_PROJECT_FILES, wxEVT_COMMAND_BUTTON_CLICKED, (wxObjectEventFunction)&ScopeDialog::OnProjectFilesClick);
+        Connect(wxID_ANY, wxEVT_CLOSE_WINDOW, (wxObjectEventFunction)&ScopeDialog::OnClose);
+    }
+
+public:
+    static const long ID_OPEN_FILES;
+    static const long ID_PROJECT_FILES;
+
+private:
+    void OnClose(wxCloseEvent& event) { EndDialog(wxID_CLOSE); }
+    void OnOpenFilesClick(wxCommandEvent& event) { EndDialog(ID_OPEN_FILES);}
+    void OnProjectFilesClick(wxCommandEvent& event) { EndDialog(ID_PROJECT_FILES); }
+
+    wxButton* m_OpenFiles;
+    wxButton* m_ProjectFiles;
+};
+
+const long ScopeDialog::ID_OPEN_FILES = wxNewId();
+const long ScopeDialog::ID_PROJECT_FILES = wxNewId();
+
 CodeRefactoring::CodeRefactoring(NativeParser& np) :
     m_NativeParser(np)
 {
@@ -61,7 +111,7 @@ wxString CodeRefactoring::GetSymbolUnderCursor()
 
     if (!m_NativeParser.GetParser().Done())
     {
-        cbMessageBox(_("C++ Parser is still parsing files..."), _("Code Refactoring"), wxOK | wxICON_WARNING);
+        cbMessageBox(_("The Parser is still parsing files..."), _("Code Refactoring"), wxOK | wxICON_WARNING);
         return wxEmptyString;
     }
 
@@ -107,11 +157,11 @@ bool CodeRefactoring::Parse()
         files.Add(editor->GetFilename());
     else
     {
-        const int ret = cbMessageBox(_("Only search open files? Select \"No\" search the project!"),
-                                     _("Code Refactoring"), wxICON_QUESTION | wxYES_NO | wxCANCEL);
-        if (ret == wxID_YES)
+        ScopeDialog scopeDlg(Manager::Get()->GetAppWindow(), _("Code Refactoring"));
+        const int ret = scopeDlg.ShowModal();
+        if (ret == ScopeDialog::ID_OPEN_FILES)
             GetOpenedFiles(files);
-        else if (ret == wxID_NO)
+        else if (ret == ScopeDialog::ID_PROJECT_FILES)
             GetAllProjectFiles(files, project);
         else
             return false;
@@ -272,8 +322,13 @@ size_t CodeRefactoring::VerifyResult(const TokenIdxSet& targetResult, const wxSt
 
             // do cc search
             const int endOfWord = itList->pos + targetText.Len();
-            control->GotoPos(endOfWord); // TODO (Loaden) why need goto the pos too?
+            control->GotoPos(endOfWord);
             m_NativeParser.MarkItemsByAI(&searchData, result, true, false, true, endOfWord);
+            if (result.empty())
+            {
+                it->second.erase(itList++);
+                continue;
+            }
 
             // verify result
             TokenIdxSet::iterator findIter = targetResult.begin();
@@ -336,7 +391,7 @@ void CodeRefactoring::Find(cbStyledTextCtrl* control, const wxString& file, cons
             start = pos + lengthFound;
             const int line = control->LineFromPosition(pos);
             wxString text = control->GetLine(line).Trim(true).Trim(false);
-            m_SearchDataMap[file].push_back(crSearchData(pos, line, text));
+            m_SearchDataMap[file].push_back(crSearchData(pos, line + 1, text));
         }
         else
             break;
@@ -352,7 +407,7 @@ void CodeRefactoring::DoFindReferences()
     SearchResultsLog* searchLog = Manager::Get()->GetEditorManager()->GetSearchResultLogger();
 
     const wxString focusFile = editor->GetFilename();
-    const int focusLine = editor->GetControl()->GetCurrentLine();
+    const int focusLine = editor->GetControl()->GetCurrentLine() + 1;
     wxFileName fn(focusFile);
     const wxString basePath(fn.GetPath());
     size_t index = 0;
@@ -372,7 +427,7 @@ void CodeRefactoring::DoFindReferences()
             wxFileName curFn(it->first);
             curFn.MakeRelativeTo(basePath);
             values.Add(curFn.GetFullPath());
-            values.Add(wxString::Format(_T("%d"), itList->line + 1));
+            values.Add(wxString::Format(_T("%d"), itList->line));
             values.Add(itList->text);
             searchLog->Append(values, Logger::info);
 
