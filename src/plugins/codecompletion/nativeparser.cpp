@@ -9,32 +9,38 @@
 
 #include <sdk.h>
 
+#ifndef CB_PRECOMP
+    #include <cctype>
+
+    #include <wx/dir.h>
+    #include <wx/log.h> // for wxSafeShowMessage()
+    #include <wx/regex.h>
+    #include <wx/wfstream.h>
+
+    #include <cbeditor.h>
+    #include <cbexception.h>
+    #include <cbproject.h>
+    #include <compilerfactory.h>
+    #include <configmanager.h>
+    #include <editormanager.h>
+    #include <logmanager.h>
+    #include <macrosmanager.h>
+    #include <manager.h>
+    #include <pluginmanager.h>
+    #include <projectmanager.h>
+    #include <tinyxml/tinyxml.h>
+
+    #include <cbauibook.h>
+#endif
+
+#include <wx/tokenzr.h>
+
+#include <cbstyledtextctrl.h>
+#include <projectloader_hooks.h>
+
 #include "nativeparser.h"
 #include "classbrowser.h"
 #include "parser/parser.h"
-
-#include <manager.h>
-#include <configmanager.h>
-#include <projectmanager.h>
-#include <pluginmanager.h>
-#include <logmanager.h>
-#include <editormanager.h>
-#include <macrosmanager.h>
-#include <cbeditor.h>
-#include <cbproject.h>
-#include <cbexception.h>
-#include <cbstyledtextctrl.h>
-#include <compilerfactory.h>
-#include <projectloader_hooks.h>
-#include <tinyxml/tinyxml.h>
-
-#include "cbauibook.h"
-#include <wx/log.h> // for wxSafeShowMessage()
-#include <wx/regex.h>
-#include <wx/wfstream.h>
-#include <wx/tokenzr.h>
-
-#include <cctype>
 
 #define CC_NATIVEPARSER_DEBUG_OUTPUT 0
 
@@ -991,19 +997,19 @@ wxArrayString& NativeParser::GetProjectSearchDirs(cbProject* project)
     return it->second;
 }
 
-bool NativeParser::CreateParser(cbProject* project)
+Parser* NativeParser::CreateParser(cbProject* project)
 {
     if (GetParserByProject(project))
     {
         Manager::Get()->GetLogManager()->DebugLog(_T("Parser has been in existence!"));
-        return false;
+        return nullptr;
     }
 
     Parser* parser = new(std::nothrow) Parser(this, project);
     if (!parser)
     {
         Manager::Get()->GetLogManager()->DebugLog(_T("Failed to create parser instances!"));
-        return false;
+        return nullptr;
     }
 
     if (m_Parser == &m_TempParser)
@@ -1020,7 +1026,7 @@ bool NativeParser::CreateParser(cbProject* project)
 
     RemoveObsoleteParsers();
 
-    return true;
+    return parser;
 }
 
 bool NativeParser::DeleteParser(cbProject* project)
@@ -1389,11 +1395,20 @@ bool NativeParser::ParseFunctionArguments(ccSearchData* searchData, int caretPos
                     Manager::Get()->GetLogManager()->DebugLog(F(_T("ParseFunctionArguments() Parsing arguments: \"%s\""), buffer.wx_str()));
                 }
 
-                if (   !buffer.IsEmpty()
-                    && !m_Parser->ParseBuffer(buffer, false, false, true, searchData->file, token, token->m_ImplLine) )
+                if (!buffer.IsEmpty())
                 {
-                    if (s_DebugSmartSense)
+                    const int textLength= searchData->control->GetLength();
+                    int paraPos = searchData->control->PositionFromLine(token->m_ImplLine - 1);
+                    while (paraPos < textLength && searchData->control->GetCharAt(paraPos++) != _T('('))
+                        ;
+                    while (paraPos < textLength && searchData->control->GetCharAt(paraPos++) < _T(' '))
+                        ;
+                    const int initLine = searchData->control->LineFromPosition(paraPos) + 1;
+                    if (   !m_Parser->ParseBuffer(buffer, false, false, true, searchData->file, token, initLine)
+                        && s_DebugSmartSense)
+                    {
                         Manager::Get()->GetLogManager()->DebugLog(_T("ParseFunctionArguments() Error parsing arguments."));
+                    }
                 }
             }
         }
@@ -1593,7 +1608,7 @@ const wxString& NativeParser::GetCodeCompletionItems()
                 continue;
             if (!m_CCItems.IsEmpty())
                 m_CCItems << _T(";");
-            m_CCItems << token->m_Name << token->m_Args;//" " << token->m_Filename << ":" << token->m_Line;
+            m_CCItems << token->m_Name << token->GetFormattedArgs();//" " << token->m_Filename << ":" << token->m_Line;
         }
     }
 
@@ -1665,36 +1680,45 @@ int NativeParser::CountCommas(const wxString& lineText, int start)
 const wxArrayString& NativeParser::GetCallTips(int chars_per_line)
 {
     m_CallTips.Clear();
-    int end = 0;
-    int commas = 0;
-    wxString lineText;
-    cbEditor* ed = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
+    m_CallTipCommas = 0;
 
     do
     {
+        cbEditor* ed = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
         if (!ed || !m_Parser->Done())
             break;
 
         ccSearchData searchData = { ed->GetControl(), ed->GetFilename() };
 
         int line = searchData.control->GetCurrentLine();
-        lineText = searchData.control->GetLine(line);
-        end = searchData.control->GetCurrentPos() - ed->GetControl()->PositionFromLine(line);
+        wxString lineText = searchData.control->GetLine(line);
+        const int lineStart = ed->GetControl()->PositionFromLine(line);
+        int end = searchData.control->GetCurrentPos() - lineStart;
         int nest = 0;
         while (end > 0)
         {
             --end;
-            if (lineText.GetChar(end) == ')')
+            const int style = searchData.control->GetStyleAt(lineStart + end);
+            if (   searchData.control->IsString(style)
+                || searchData.control->IsCharacter(style)
+                || searchData.control->IsComment(style) )
+            {
+                continue;
+            }
+
+            const wxChar ch = lineText.GetChar(end);
+            if (ch == _T(','))
+            {
+                if (nest == 0)
+                    ++m_CallTipCommas;
+            }
+            else if (ch == _T(')'))
                 --nest;
-            else if (lineText.GetChar(end) == '(')
+            else if (ch == _T('('))
             {
                 ++nest;
                 if (nest > 0)
-                {
-                    // count commas (nesting parentheses again) to see how far we 're in arguments
-                    commas = CountCommas(lineText, end + 1);
                     break;
-                }
             }
         }
         if (!end)
@@ -1702,7 +1726,7 @@ const wxArrayString& NativeParser::GetCallTips(int chars_per_line)
         lineText.Remove(end).Trim(false);
         if (lineText.StartsWith(_T("::")))
             lineText = lineText.Right(lineText.Length() - 2);
-//        Manager::Get()->GetLogManager()->DebugLog(_T("Sending \"%s\" for call-tip"), lineText.c_str());
+        TRACE(_T("Sending \"%s\" for call-tip"), lineText.c_str());
 
         TokensTree* tokens = m_Parser->GetTokens();
         RemoveLastFunctionChildren();
@@ -1712,9 +1736,14 @@ const wxArrayString& NativeParser::GetCallTips(int chars_per_line)
         ParseFunctionArguments(&searchData);
         ParseLocalBlock(&searchData);
 
-        Token* tk = tokens->at(tokens->TokenExists(lineText, -1, tkPreprocessor));
-        if (tk != NULL)
-            lineText = tk->m_Type;
+        while (true)
+        {
+            Token* tk = tokens->at(tokens->TokenExists(lineText, -1, tkPreprocessor));
+            if (tk != NULL && lineText != tk->m_Type)
+                lineText = tk->m_Type;
+            else
+                break;
+        }
 
         TokenIdxSet result;
         if (!AI(result, &searchData, lineText, false, true, &search_scope))
@@ -1725,10 +1754,10 @@ const wxArrayString& NativeParser::GetCallTips(int chars_per_line)
             Token* token = tokens->at(*it);
             if (!token)
                 continue;
-            if (token->m_Args != _T("()"))
+            if (token->GetFormattedArgs() != _T("()"))
             {
                 wxString s;
-                BreakUpInLines(s, token->m_Args, chars_per_line);
+                BreakUpInLines(s, token->GetFormattedArgs(), chars_per_line);
                 m_CallTips.Add(s);
             }
             else if (token->m_TokenKind == tkTypedef && token->m_ActualType.Contains(_T("(")))
@@ -1737,10 +1766,7 @@ const wxArrayString& NativeParser::GetCallTips(int chars_per_line)
     }
     while (false);
 
-    m_CallTipCommas = commas;
-
     TRACE(_T("GetCallTips() : m_CallTipCommas=%d"), m_CallTipCommas);
-
     return m_CallTips;
 }
 
@@ -3256,10 +3282,7 @@ void NativeParser::OnParserEnd(wxCommandEvent& event)
 
             std::pair<cbProject*, Parser*> prjParser = GetParserInfoByCurEditor();
             if (prjParser.first && prjParser.first != project && !prjParser.second)
-            {
-                if (CreateParser(prjParser.first))
-                    prjParser.second = GetParserByProject(prjParser.first);
-            }
+                prjParser.second = CreateParser(prjParser.first);
 
             if (prjParser.second && prjParser.second != m_Parser)
             {
@@ -3336,10 +3359,9 @@ void NativeParser::OnEditorActivatedTimer(wxTimerEvent& event)
     if (!parser)
     {
         FileType ft = CCFileTypeOf(m_LastActivatedFile);
-        if (ft != ftOther && CreateParser(project))
+        if (ft != ftOther && (parser = CreateParser(project)))
         {
-            parser = GetParserByProject(project);
-            if (parser && !project)
+            if (!project)
             {
                 wxFileName file(m_LastActivatedFile);
                 parser->AddIncludeDir(file.GetPath());
@@ -3352,7 +3374,7 @@ void NativeParser::OnEditorActivatedTimer(wxTimerEvent& event)
     }
     else if (!project)
     {
-        if (   parser && !parser->IsFileParsed(m_LastActivatedFile)
+        if (   !parser->IsFileParsed(m_LastActivatedFile)
             && m_StandaloneFiles.Index(m_LastActivatedFile) == wxNOT_FOUND )
         {
             wxFileName file(m_LastActivatedFile);
@@ -3368,7 +3390,7 @@ void NativeParser::OnEditorActivatedTimer(wxTimerEvent& event)
         SwitchParser(project, parser);
     }
 
-    if (m_ClassBrowser && parser && parser->ClassBrowserOptions().displayFilter == bdfFile)
+    if (m_ClassBrowser && m_Parser->ClassBrowserOptions().displayFilter == bdfFile)
     {
         // check header and implementation file swap, if yes, don't need to rebuild browser tree
         m_ClassBrowser->UpdateView(true);

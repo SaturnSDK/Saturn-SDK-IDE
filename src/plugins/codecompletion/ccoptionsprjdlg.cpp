@@ -2,21 +2,29 @@
  * This file is part of the Code::Blocks IDE and licensed under the GNU General Public License, version 3
  * http://www.gnu.org/licenses/gpl-3.0.html
  *
- * $Revision: 6678 $
- * $Id: ccoptionsprjdlg.cpp 6678 2010-10-08 05:07:32Z loaden $
- * $HeadURL: http://svn.berlios.de/svnroot/repos/codeblocks/branches/codecompletion_refactoring/src/plugins/codecompletion/ccoptionsprjdlg.cpp $
+ * $Revision$
+ * $Id$
+ * $HeadURL$
  */
 
 #include <sdk.h>
-#include "ccoptionsprjdlg.h"
-#include <wx/intl.h>
-#include <wx/xrc/xmlres.h>
-#include <wx/listbox.h>
-#include <wx/button.h>
-#include <cbproject.h>
+
+#ifndef CB_PRECOMP
+    #include <wx/button.h>
+    #include <wx/intl.h>
+    #include <wx/listbox.h>
+    #include <wx/xrc/xmlres.h>
+
+    #include <cbproject.h>
+    #include <cbstyledtextctrl.h>
+    #include <globals.h>
+    #include <logmanager.h>
+    #include <manager.h>
+#endif
+
 #include <editpathdlg.h>
-#include <manager.h>
-#include <globals.h>
+
+#include "ccoptionsprjdlg.h"
 
 BEGIN_EVENT_TABLE(CCOptionsProjectDlg, wxPanel)
     EVT_UPDATE_UI(-1, CCOptionsProjectDlg::OnUpdateUI)

@@ -1,18 +1,5 @@
-#define AA
-#ifdef AA
-void fly() {}
-#endif
+template<typename T> class A{};
+const A<int> var;
 
-#define BB a::b::c
-#define CC unsigned int
-
-#define DD \
-    ABC
-
-#define EE(x)     void   hello(int x)
-#define FF /*comment*/ (x, y) \
-    void test(int x, int y)
-
-#define GG /*comment*/ \
-    (x, y) \
-    void line(int x, int y)
+class A { const string Test(); };
+const string A::Test() {}

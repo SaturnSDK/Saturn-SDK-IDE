@@ -8,16 +8,22 @@
  */
 
 #include <sdk.h>
+
+#ifndef CB_PRECOMP
+    #include <cctype>
+    #include <queue>
+
+    #include <wx/app.h>
+    #include <wx/msgdlg.h>
+
+    #include <globals.h>
+    #include <logmanager.h>
+    #include <manager.h>
+#endif
+
 #include "parserthread.h"
 #include "parser.h"
-#include <wx/app.h>
-#include <wx/msgdlg.h>
-#include <manager.h>
-#include "logmanager.h"
-#include <globals.h>
 
-#include <cctype>
-#include <queue>
 
 #define CC_PARSERTHREAD_DEBUG_OUTPUT 0
 
@@ -919,6 +925,9 @@ void ParserThread::DoParse()
                 {
                     // a template, e.g. someclass<void>::memberfunc
                     // we have to skip <>, so we 're left with someclass::memberfunc
+                    // about 'const' handle, e.g.
+                    /* template<typename T> class A{};
+                       const A<int> var; */
                     if (m_Str.IsEmpty() || m_Str.StartsWith(ParserConsts::kw_const))
                         GetTemplateArgs();
                     else
@@ -938,7 +947,7 @@ void ParserThread::DoParse()
                 }
                 else if (peek==ParserConsts::dcolon)
                 {
-                    if (m_Str.IsEmpty() || m_Str.StartsWith(ParserConsts::kw_const))
+                    if (m_Str.IsEmpty())
                         m_EncounteredTypeNamespaces.push(token); // it's a type's namespace
                     else
                         m_EncounteredNamespaces.push(token);
@@ -1140,7 +1149,10 @@ Token* ParserThread::DoAddToken(TokenKind kind,
 
     wxString strippedArgs;
     if (kind & tkAnyFunction)
-        strippedArgs = GetStrippedArgs(args);
+    {
+        if (!GetStrippedArgs(args, strippedArgs))
+            kind = tkVariable;
+    }
 
     Token* localParent = 0;
 
@@ -2342,13 +2354,13 @@ void ParserThread::ReadClsNames(wxString& ancestor)
     }
 }
 
-wxString ParserThread::GetStrippedArgs(const wxString & args)
+bool ParserThread::GetStrippedArgs(const wxString & args, wxString& strippedArgs)
 {
-    const wxChar * ptr = args; // pointer to current char in args string
-    wxString stripped_args;    // compiled stripped args
+    const wxChar* ptr = args;  // pointer to current char in args string
     wxString word;             // compiled word of last arg
     bool skip = false;         // skip the next char (do not add to stripped args)
     bool sym  = false;         // current char symbol
+    bool one  = true;          // only one argument
 
     TRACE(_T("GetStrippedArgs() : args='%s'."), args.wx_str());
 
@@ -2357,6 +2369,10 @@ wxString ParserThread::GetStrippedArgs(const wxString & args)
     {
         switch (*ptr)
         {
+        case _T('\n'):
+            while (*ptr <= _T(' '))
+                ++ptr;
+            break;
         case _T(' '):
             // take care of args like:
             // - enum     my_enum the_enum_my_enum
@@ -2376,7 +2392,7 @@ wxString ParserThread::GetStrippedArgs(const wxString & args)
             // or ((int *, char ***))
             while (*(ptr+1) == _T('*'))
             {
-                stripped_args += *ptr; // append one more '*' to stripped_args
+                strippedArgs += *ptr; // append one more '*' to strippedArgs
                 ptr++; // next char
             }
             // ...and fall through:
@@ -2388,16 +2404,16 @@ wxString ParserThread::GetStrippedArgs(const wxString & args)
             // TODO (Morten#5#): Do comment the following even more. It's still not exactly clear to me...
             // verify completeness of last stripped argument (handle nested brackets correctly)
             {
-                // extract last stripped argument from stripped_args
-                wxString last_stripped_arg;
-                int last_arg_comma = stripped_args.Find(_T(','), true);
-                if (last_arg_comma) last_stripped_arg = stripped_args.Mid(1);
-                else                last_stripped_arg = stripped_args.Mid(last_arg_comma);
+                // extract last stripped argument from strippedArgs
+                wxString lastStrippedArg;
+                int lastArgComma = strippedArgs.Find(_T(','), true);
+                if (lastArgComma) lastStrippedArg = strippedArgs.Mid(1);
+                else              lastStrippedArg = strippedArgs.Mid(lastArgComma);
 
                 // No opening brackets in last stripped arg?
-                if ( last_stripped_arg.Find(_T('(')) == wxNOT_FOUND )
+                if ( lastStrippedArg.Find(_T('(')) == wxNOT_FOUND )
                 {
-                    stripped_args += *ptr; // append to stripped_args
+                    strippedArgs += *ptr; // append to strippedArgs
 
                     // find end
                     int brackets = 0;
@@ -2432,7 +2448,7 @@ wxString ParserThread::GetStrippedArgs(const wxString & args)
                    && *ptr != _T(']') )
             {
                 if (*ptr != _T(' '))
-                    stripped_args += *ptr; // append to stripped_args, skipping spaces
+                    strippedArgs += *ptr; // append to strippedArgs, skipping spaces
                 ptr++; // next char
             }
             skip = true;
@@ -2443,7 +2459,7 @@ wxString ParserThread::GetStrippedArgs(const wxString & args)
                    && *ptr != _T('>') )
             {
                 if (*ptr != _T(' '))
-                    stripped_args += *ptr; // append to stripped_args, skipping spaces
+                    strippedArgs += *ptr; // append to strippedArgs, skipping spaces
                 ptr++; // next char
             }
             skip = true;
@@ -2452,6 +2468,8 @@ wxString ParserThread::GetStrippedArgs(const wxString & args)
         case _T(','): // fall through
         case _T(')'): // fall through
         case _T('('):
+            if (skip && *ptr == _T(','))
+                one = false;
             word = _T(""); // reset
             sym  = true;
             skip = false;
@@ -2467,7 +2485,7 @@ wxString ParserThread::GetStrippedArgs(const wxString & args)
             // (it's probably a type specifier like 'const' or alike)
             if (*ptr != _T('\0'))
             {
-                stripped_args += *ptr; // append to stripped_args
+                strippedArgs += *ptr; // append to strippedArgs
                 if (wxIsalnum(*ptr) /*|| *ptr != _T('_')*/)
                     word += *ptr; // append to word
             }
@@ -2479,19 +2497,33 @@ wxString ParserThread::GetStrippedArgs(const wxString & args)
             while (   *ptr     != _T('\0')
                    && *(ptr+1) == _T(' ') )
             {
-                ptr++; // next char
+                ++ptr; // next char
             }
         }
 
         if (*ptr != _T('\0'))
         {
-            ptr++; // next char
+            ++ptr; // next char
         }
     }
 
-    TRACE(_T("GetStrippedArgs() : stripped_args='%s'."), stripped_args.wx_str());
+    if (one && strippedArgs.Len() > 2)
+    {
+        const wxChar ch = strippedArgs[1];
+        if (   (ch <= _T('9') && ch >= _T('0'))             // number, 0 ~ 9
+            || strippedArgs.Find(_T('"')) != wxNOT_FOUND    // string
+            || strippedArgs.Find(_T('\'')) != wxNOT_FOUND ) // character
+        {
+            return false; // not function, it should be variable
+        }
 
-    return stripped_args;
+        if (strippedArgs == _T("(void)"))
+            strippedArgs = _T("()");
+    }
+
+    TRACE(_T("GetStrippedArgs() : strippedArgs='%s'."), strippedArgs.wx_str());
+
+    return true;
 }
 
 wxString ParserThread::GetClassFromMacro(const wxString& macro)
@@ -2538,7 +2570,11 @@ void ParserThread::ResolveTemplateFormalArgs(const wxString& templateArgs, wxArr
     int n = args.size();
     for (int i = 0; i<n; ++i)
     {
+        #if wxCHECK_VERSION(2, 9, 0)
+        switch (args[i].GetValue())
+        #else
         switch (args[i])
+        #endif
         {
         case _T(' '):
             container.Add(word);
@@ -2626,7 +2662,11 @@ void ParserThread::ResolveTemplateActualArgs(const wxString& templateArgs, wxArr
     int n = args.size();
     for (int i = 0; i<n; ++i)
     {
+        #if wxCHECK_VERSION(2, 9, 0)
+        switch (args[i].GetValue())
+        #else
         switch (args[i])
+        #endif
         {
         case _T(' '):
             container.Add(word);

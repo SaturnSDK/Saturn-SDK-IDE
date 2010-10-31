@@ -8,19 +8,28 @@
  */
 
 #include <sdk.h>
+
+#ifndef CB_PRECOMP
+    #include <wx/object.h>
+    #include <wx/string.h>
+    #include <wx/choicdlg.h> // wxGetSingleChoiceIndex
+    #include <wx/file.h>
+    #include <wx/filedlg.h>
+    #include <wx/utils.h>    // wxWindowDisabler
+
+    //(*InternalHeaders(CCDebugInfo)
+    #include <wx/intl.h>
+    #include <wx/string.h>
+    //*)
+
+    #include <logmanager.h>
+#endif
+
+#include <wx/busyinfo.h>
+
 #include "ccdebuginfo.h"
 #include "parser/parser.h"
 
-#include <wx/busyinfo.h>
-#include <wx/choicdlg.h> // wxGetSingleChoiceIndex
-#include <wx/file.h>
-#include <wx/filedlg.h>
-#include <wx/utils.h>    // wxWindowDisabler
-
-//(*InternalHeaders(CCDebugInfo)
-#include <wx/intl.h>
-#include <wx/string.h>
-//*)
 
 //(*IdInit(CCDebugInfo)
 const long CCDebugInfo::ID_STATICTEXT29 = wxNewId();
@@ -334,7 +343,7 @@ void CCDebugInfo::DisplayTokenInfo()
     Token* parent = tokens->at(m_Token->m_ParentIndex);
     tokens->RecalcInheritanceChain(m_Token);
 
-    wxString args = m_Token->m_Args;
+    wxString args = m_Token->GetFormattedArgs();
     wxString argsStr = m_Token->m_StrippedArgs;
     wxString tmplArg = m_Token->m_TemplateArgument;
     wxString ttype = m_Token->m_Type;
@@ -672,7 +681,7 @@ void CCDebugInfo::OnSave(wxCommandEvent& /*event*/)
                                 Token* token = tokens->at(*it);
                                 fileTokens << token->GetTokenKindString() << _T(" ");
                                 if (token->m_TokenKind == tkFunction)
-                                    fileTokens << token->m_Name << token->m_Args << _T("\t");
+                                    fileTokens << token->m_Name << token->GetFormattedArgs() << _T("\t");
                                 else
                                     fileTokens << token->DisplayName() << _T("\t");
                                 fileTokens << _T("[") << token->m_Line << _T(",") << token->m_ImplLine << _T("]");

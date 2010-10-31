@@ -8,21 +8,45 @@
  */
 
 #include <sdk.h>
-#include "codecompletion.h"
 
-#include <manager.h>
-#include <configmanager.h>
-#include <logmanager.h>
-#include <projectmanager.h>
-#include <editormanager.h>
-#include <editorcolourset.h>
-#include <sdk_events.h>
-#include <incrementalselectlistdlg.h>
-#include <globals.h>
+#ifndef CB_PRECOMP
+    #include <algorithm>
+    #include <iterator>
+    #include <set> // for handling unique items in some places
+
+    #include <wx/choicdlg.h>
+    #include <wx/choice.h>
+    #include <wx/dir.h>
+    #include <wx/filename.h>
+    #include <wx/fs_zip.h>
+    #include <wx/mimetype.h>
+    #include <wx/regex.h>
+    #include <wx/msgdlg.h>
+    #include <wx/tipwin.h>
+    #include <wx/utils.h>
+    #include <wx/xrc/xmlres.h>
+    #include <wx/wxscintilla.h>
+
+    #include <cbeditor.h>
+    #include <configmanager.h>
+    #include <editorcolourset.h>
+    #include <editormanager.h>
+    #include <globals.h>
+    #include <logmanager.h>
+    #include <macrosmanager.h>
+    #include <manager.h>
+    #include <projectmanager.h>
+    #include <sdk_events.h>
+#endif
+
+#include <wx/tokenzr.h>
+
 #include <cbstyledtextctrl.h>
 #include <editor_hooks.h>
-#include <cbeditor.h>
+#include <incrementalselectlistdlg.h>
 #include <multiselectdlg.h>
+
+#include "codecompletion.h"
 
 #include "insertclassmethoddlg.h"
 #include "ccoptionsdlg.h"
@@ -31,22 +55,6 @@
 #include "parser/tokenizer.h"
 #include "selectincludefile.h"
 
-#include <wx/mimetype.h>
-#include <wx/filename.h>
-#include <wx/regex.h>
-#include <wx/xrc/xmlres.h>
-#include <wx/fs_zip.h>
-#include <wx/msgdlg.h>
-#include <wx/utils.h>
-#include <wx/choice.h>
-#include <wx/choicdlg.h>
-#include <wx/wxscintilla.h>
-#include <wx/tipwin.h>
-#include <wx/tokenzr.h>
-
-#include <set> // for handling unique items in some places
-#include <algorithm>
-#include <iterator>
 
 #define CC_CODECOMPLETION_DEBUG_OUTPUT 0
 
@@ -548,10 +556,10 @@ void CodeCompletion::BuildMenu(wxMenuBar* menuBar)
         m_EditMenu->AppendSeparator();
 
         const wxLanguageInfo* info = wxLocale::GetLanguageInfo(wxLANGUAGE_DEFAULT);
-        if (   (   info->Language >= wxLANGUAGE_CHINESE
+        if ( info && ( (   info->Language >= wxLANGUAGE_CHINESE
                 && info->Language <= wxLANGUAGE_CHINESE_TAIWAN )
             || info->Language == wxLANGUAGE_JAPANESE
-            || info->Language == wxLANGUAGE_KOREAN )
+            || info->Language == wxLANGUAGE_KOREAN ) )
         {
             m_EditMenu->Append(idMenuCodeComplete, _("Complete code\tShift-Space"));
         }
@@ -947,7 +955,7 @@ int CodeCompletion::CodeComplete()
                 items.Add(tmp);
                 if (m_CCAutoAddParentheses && token->m_TokenKind == tkFunction)
                 {
-                    m_SearchItem[token->m_Name] = token->m_Args.size() - 2;
+                    m_SearchItem[token->m_Name] = token->GetFormattedArgs().size() - 2;
                 }
                 if (token->m_TokenKind == tkNamespace && token->m_Aliases.size())
                 {
@@ -1367,6 +1375,14 @@ void CodeCompletion::ShowCallTip()
 
     // calculate the size of the calltips window
     int pos = ed->GetControl()->GetCurrentPos();
+    const int style = ed->GetControl()->GetStyleAt(pos);
+    if (   ed->GetControl()->IsString(style)
+        || ed->GetControl()->IsCharacter(style)
+        || ed->GetControl()->IsComment(style) )
+    {
+        return;
+    }
+
     wxPoint p = ed->GetControl()->PointFromPosition(pos); // relative point
     int pixelWidthPerChar = ed->GetControl()->TextWidth(wxSCI_STYLE_LINENUMBER, _T("W"));
     int maxCalltipLineSizeInChars = (ed->GetSize().x - p.x) / pixelWidthPerChar;
@@ -1556,7 +1572,7 @@ int CodeCompletion::DoAllMethodsImpl()
             }
             if (!type.IsEmpty())
                 str << type << _T(" ");
-            str << token->GetParentName() << _T("::") << token->m_Name << token->m_Args;
+            str << token->GetParentName() << _T("::") << token->m_Name << token->GetFormattedArgs();
             if (token->m_IsConst)
                 str << _T(" const");
             str << _T("\n{\n}\n");
@@ -2054,7 +2070,7 @@ void CodeCompletion::ParseFunctionsAndFillToolbar(bool force)
                     if (fs.Scope.IsEmpty())
                         fs.Scope = g_GlobalScope;
 					wxString result = token->m_Name;
-					result << token->m_Args;
+					result << token->GetFormattedArgs();
 					if (!token->m_Type.IsEmpty())
 						result << _T(" : ") << token->m_Type;
 					fs.Name = result;
@@ -2497,10 +2513,10 @@ void CodeCompletion::OnGotoFunction(wxCommandEvent& event)
     wxArrayString tokens;
     SearchTree<Token*> tmpsearch;
     tokens.Clear();
-    for(size_t i = 0; i < tmptree->size();i++)
+    for (size_t i = 0; i < tmptree->size(); i++)
     {
         Token* token = tmptree->at(i);
-        if (token && (token->m_TokenKind == tkFunction || token->m_TokenKind == tkConstructor || token->m_TokenKind == tkDestructor))
+        if (token && token->m_TokenKind & tkAnyFunction)
         {
             tokens.Add(token->DisplayName());
             tmpsearch.AddItem(token->DisplayName(), token);

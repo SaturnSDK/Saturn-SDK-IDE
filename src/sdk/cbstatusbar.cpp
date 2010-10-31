@@ -9,6 +9,7 @@
 #ifndef CB_PRECOMP
     #include <wx/frame.h> // wxFrame
     #include <wx/menu.h>
+    #include <wx/statusbr.h>
     #include "cbplugin.h"
     #include "compiler.h" // GetSwitches
     #include "sdk_events.h"
@@ -111,12 +112,15 @@ void cbStatusBar::UpdateWidths()
     wxStatusBar::SetStatusWidths(n, widths);
     delete[] widths;
 }
-void cbStatusBar::SetStatusWidths(int n, const int widths[])
+void cbStatusBar::SetStatusWidths(int n, const int* widths)
 {
-    m_mainswidths.clear();
-    for (int i = 0 ; i < n ; i++)
-        m_mainswidths.push_back(widths[i]);
-    UpdateWidths();
+    if (widths)
+    {
+        m_mainswidths.clear();
+        for (int i = 0 ; i < n ; i++)
+            m_mainswidths.push_back(widths[i]);
+        UpdateWidths();
+    }
 }
 int cbStatusBar::GetFieldNumberOfPlugin(cbPlugin *plugin) const
 {

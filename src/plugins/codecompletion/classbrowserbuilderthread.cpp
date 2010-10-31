@@ -8,19 +8,25 @@
  */
 
 #include <sdk.h>
-#include "classbrowserbuilderthread.h"
-#include <globals.h>
-#include <manager.h>
-#include <projectmanager.h>
-#include <cbproject.h>
 
-#include <wx/settings.h>
-#include <wx/utils.h>
+#ifndef CB_PRECOMP
+    #include <algorithm>
+
+    #include <wx/settings.h>
 #ifdef buildtree_measuring
     #include <wx/stopwatch.h>
 #endif
+    #include <wx/utils.h>
 
-#include <algorithm>
+    #include <cbproject.h>
+    #include <cbstyledtextctrl.h>
+    #include <globals.h>
+    #include <logmanager.h>
+    #include <manager.h>
+    #include <projectmanager.h>
+#endif
+
+#include "classbrowserbuilderthread.h"
 
 namespace compatibility { typedef TernaryCondTypedef<wxMinimumVersion<2,5>::eval, wxTreeItemIdValue, long int>::eval tree_cookie_t; };
 
@@ -700,7 +706,7 @@ bool ClassBrowserBuilderThread::AddNodes(CBTreeCtrl* tree, wxTreeItemId parent, 
                 || (token->m_TokenKind == tkDestructor)
                 || (token->m_TokenKind == tkMacro)
                 || (token->m_TokenKind == tkClass) )
-                str << token->m_Args;
+                str << token->GetFormattedArgs();
             // modification suggested by ollydbg in http://forums.codeblocks.org/index.php/topic,10242.msg70865.html#msg70865:
 //            if (!token->m_ActualType.IsEmpty())
 //                 str = str + _T(" : ") + token->m_ActualType;
