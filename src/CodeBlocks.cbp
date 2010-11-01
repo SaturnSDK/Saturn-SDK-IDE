@@ -2343,7 +2343,7 @@
 			<Option target="sdk" />
 		</Unit>
 		<Unit filename="sdk\nullptr.cpp">
-			<Option target="sdk" />
+			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
 		<Unit filename="sdk\personalitymanager.cpp">
 			<Option target="sdk" />

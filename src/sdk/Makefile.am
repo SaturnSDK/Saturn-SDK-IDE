@@ -88,7 +88,6 @@ libcodeblocks_la_SOURCES = annoyingdialog.cpp \
 						menuitemsmanager.cpp \
 						multiselectdlg.cpp \
 						newfromtemplatedlg.cpp \
-						nullptr.cpp \
 						personalitymanager.cpp \
 						pipedprocess.cpp \
 						pluginmanager.cpp \
