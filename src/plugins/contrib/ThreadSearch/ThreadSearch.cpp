@@ -604,10 +604,10 @@ bool ThreadSearch::BuildToolBar(wxToolBar* toolBar)
         prefix = ConfigManager::GetDataFolder() + _T("/images/ThreadSearch/22x22/");
         m_pToolbar->SetToolBitmapSize(wxSize(22,22));
     }
-    m_pCboSearchExpr               = new wxComboBox    (toolBar, idCboSearchExpr, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0, NULL, wxCB_DROPDOWN);
 
+    m_pCboSearchExpr = new wxComboBox(toolBar, idCboSearchExpr, wxEmptyString, wxDefaultPosition,
+                                      wxSize(120, -1), 0, NULL, wxCB_DROPDOWN);
     m_pCboSearchExpr->SetToolTip(_("Text to search"));
-
 
     toolBar->AddControl(m_pCboSearchExpr);
     toolBar->AddTool(idBtnSearch,_(""),wxBitmap(prefix + wxT("findf.png"), wxBITMAP_TYPE_PNG),wxBitmap(prefix + wxT("findfdisabled.png"), wxBITMAP_TYPE_PNG),wxITEM_NORMAL,_("Run search")); //Control(pBtnSearch);
@@ -740,10 +740,21 @@ bool ThreadSearch::GetCursorWord(wxString& sWord)
         int pos = control->GetCurrentPos();
         int ws  = control->WordStartPosition(pos, true);
         int we  = control->WordEndPosition(pos, true);
-        if ( ws < we ) // Avoid empty strings
+        const wxString word = control->GetTextRange(ws, we);
+        if (!word.IsEmpty()) // Avoid empty strings
         {
+            sWord.Clear();
+            while (--ws > 0)
+            {
+                const wxChar ch = control->GetCharAt(ws);
+                if (ch <= _T(' '))
+                    continue;
+                else if (ch == _T('~'))
+                    sWord << _T("~");
+                break;
+            }
             // m_SearchedWord will be used if 'Find occurrences' ctx menu is clicked
-            sWord = control->GetTextRange(ws, we);
+            sWord << word;
             wordFound = true;
         }
     }

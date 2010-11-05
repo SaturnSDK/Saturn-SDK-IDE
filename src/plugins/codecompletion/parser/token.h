@@ -118,7 +118,15 @@ enum FileParsingStatus
     fpsDone
 };
 
-FileType CCFileTypeOf(const wxString& filename);
+enum CCFileType
+{
+    ccftHeader,
+    ccftCSource,
+    ccftCppSource,
+    ccftOther
+};
+
+CCFileType CCFileTypeOf(const wxString& filename);
 
 WX_DEFINE_ARRAY(Token*, TokensArray);
 
@@ -181,7 +189,8 @@ public:
     wxString GetTokenScopeString() const;
     wxString GetFilename() const;
     wxString GetImplFilename() const;
-    wxString GetFormattedArgs() const; // replace '\n' to ''
+    wxString GetFormattedArgs() const; // remove all '\n'
+    wxString GetStrippedArgs() const; // remove all default value
     size_t GetTicket() const { return m_Ticket; }
     bool MatchesFiles(const TokenFilesSet& files);
 
@@ -197,7 +206,7 @@ public:
     wxString                     m_ActualType; // this is what the parser believes is the actual return value: e.g. wxString
     wxString                     m_Name;
     wxString                     m_Args;
-    wxString                     m_StrippedArgs;
+    wxString                     m_BaseArgs;
     wxString                     m_AncestorsString; // all ancestors comma-separated list
     wxString                     m_TemplateArgument;
     unsigned int                 m_FileIdx;
@@ -258,6 +267,7 @@ public:
     void   RecalcData();
     void   RecalcInheritanceChain(Token* token);
     int    TokenExists(const wxString& name, int parent, short int kindMask);
+    int    TokenExists(const wxString& name, const wxString& baseArgs, int parent, TokenKind kind);
     size_t FindMatches(const wxString& s, TokenIdxSet& result, bool caseSensitive, bool is_prefix, short int kindMask = tkUndefined);
     size_t FindTokensInFile(const wxString& file, TokenIdxSet& result, short int kindMask);
     void   RemoveFile(const wxString& filename);

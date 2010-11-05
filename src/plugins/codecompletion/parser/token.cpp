@@ -41,7 +41,7 @@ const wxString g_DebugTraceFile = wxEmptyString;
 
 ProfileTimer::ProfileMap ProfileTimer::m_ProfileMap;
 
-FileType CCFileTypeOf(const wxString& filename)
+CCFileType CCFileTypeOf(const wxString& filename)
 {
     const wxString file = filename.AfterLast(wxFILE_SEP_PATH).Lower();
     const int pos = file.Find(_T('.'), true);
@@ -54,13 +54,18 @@ FileType CCFileTypeOf(const wxString& filename)
         || ext == _T("hpp")
         || ext == _T("tcc")
         || ext == _T("xpm") )
-        return ftHeader;
-    else if (   ext ==_T("cpp")
-             || ext ==_T("c")
-             || ext ==_T("cxx") )
-        return ftSource;
+    {
+        return ccftHeader;
+    }
+    else if (   ext == _T("cpp")
+             || ext == _T("cxx") )
+    {
+        return ccftCppSource;
+    }
+    else if (ext == _T("c"))
+        return ccftCSource;
     else
-        return ftOther;
+        return ccftOther;
 }
 
 inline void SaveTokenIdxSetToFile(wxOutputStream* f,const TokenIdxSet& data)
@@ -149,7 +154,7 @@ wxString Token::DisplayName() const
 {
     wxString result;
     if      (m_TokenKind == tkClass)
-        return result << _T("class ")     << m_Name << m_StrippedArgs << _T(" {...}");
+        return result << _T("class ")     << m_Name << m_BaseArgs << _T(" {...}");
     else if (m_TokenKind == tkNamespace)
         return result << _T("namespace ") << m_Name << _T(" {...}");
     else if (m_TokenKind == tkEnum)
@@ -186,7 +191,7 @@ wxString Token::DisplayName() const
     if (m_TokenKind == tkEnumerator)
         return result << GetNamespace() << m_Name << _T("=") << GetFormattedArgs();
 
-    return result << GetNamespace() << m_Name << GetFormattedArgs();
+    return result << GetNamespace() << m_Name << GetStrippedArgs();
 }
 
 Token* Token::GetParentToken()
@@ -268,6 +273,34 @@ wxString Token::GetFormattedArgs() const
 {
     wxString args(m_Args);
     args.Replace(_T("\n"), wxEmptyString);
+    return args;
+}
+
+wxString Token::GetStrippedArgs() const
+{
+    wxString args;
+    args.Alloc(m_Args.Len() + 1);
+    bool skipDefaultValue = false;
+    for (size_t i = 0; i < m_Args.Len(); ++i)
+    {
+        const wxChar ch = m_Args[i];
+        if (ch == _T('\n'))
+            continue;
+        else if (ch == _T('='))
+        {
+            skipDefaultValue = true;
+            args.Trim();
+        }
+        else if (ch == _T(','))
+            skipDefaultValue = false;
+
+        if (!skipDefaultValue)
+            args << ch;
+    }
+
+    if (args.Last() != _T(')'))
+        args << _T(')');
+
     return args;
 }
 
@@ -615,6 +648,36 @@ int TokensTree::TokenExists(const wxString& name, int parent, short int kindMask
             continue;
 
         if ((curToken->m_ParentIndex == parent) && (curToken->m_TokenKind & kindMask))
+        {
+            return result;
+        }
+    }
+
+    return -1;
+}
+
+int TokensTree::TokenExists(const wxString& name, const wxString& baseArgs, int parent, TokenKind kind)
+{
+    int idx = m_Tree.GetItemNo(name);
+    if (!idx)
+        return -1;
+
+    TokenIdxSet::iterator it;
+    TokenIdxSet& curList = m_Tree.GetItemAtPos(idx);
+    int result = -1;
+    for (it = curList.begin(); it != curList.end(); ++it)
+    {
+        result = *it;
+        if (result < 0 || (size_t)result >= m_Tokens.size())
+            continue;
+
+        Token* curToken = m_Tokens[result];
+        if (!curToken)
+            continue;
+
+        if (   (curToken->m_ParentIndex == parent)
+            && (curToken->m_TokenKind   == kind)
+            && (curToken->m_BaseArgs    == baseArgs) )
         {
             return result;
         }

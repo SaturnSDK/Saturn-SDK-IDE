@@ -1075,7 +1075,7 @@ bool NativeParser::SwitchParser(cbProject* project, Parser* parser)
 
 bool NativeParser::ReparseFile(cbProject* project, const wxString& filename)
 {
-    if (CCFileTypeOf(filename) == ftOther)
+    if (CCFileTypeOf(filename) == ccftOther)
         return false;
 
     Parser* parser = GetParserByProject(project);
@@ -1087,7 +1087,7 @@ bool NativeParser::ReparseFile(cbProject* project, const wxString& filename)
 
 bool NativeParser::AddFileToParser(cbProject* project, const wxString& filename)
 {
-    if (CCFileTypeOf(filename) == ftOther)
+    if (CCFileTypeOf(filename) == ccftOther)
         return false;
 
     Parser* parser = GetParserByProject(project);
@@ -1194,14 +1194,14 @@ bool NativeParser::StartCompleteParsing(cbProject* project, Parser* parser)
         }
     }
 
-    // parse header files first
+    bool needDefineCppMacro = true;
     for (int i = 0; project && i < project->GetFilesCount(); ++i)
     {
         ProjectFile* pf = project->GetFile(i);
         if (!pf)
             continue;
-        FileType ft = CCFileTypeOf(pf->relativeFilename);
-        if (ft == ftHeader) // parse header files
+        CCFileType ft = CCFileTypeOf(pf->relativeFilename);
+        if (ft == ccftHeader) // parse header files
         {
             bool isUpFrontFile = false;
             for (FrontMap::iterator it = frontTempMap.begin(); it != frontTempMap.end(); ++it)
@@ -1218,10 +1218,17 @@ bool NativeParser::StartCompleteParsing(cbProject* project, Parser* parser)
             if (!isUpFrontFile)
                 headers.push_back(pf->file.GetFullPath());
         }
-        else if (ft == ftSource) // parse source files
+        else if (ft == ccftCppSource) // parse c++ source files
         {
             sources.push_back(pf->file.GetFullPath());
+            if (needDefineCppMacro)
+            {
+                needDefineCppMacro = false;
+                parser->AddPredefinedMacros(_T("#define ") _T("__cplusplus") _T("\n"));
+            }
         }
+        else if (ft == ccftCSource) // parse c source files
+            sources.push_back(pf->file.GetFullPath());
     }
 
     for (FrontMap::iterator it = frontMap.begin(); it != frontMap.end(); ++it)
@@ -1681,6 +1688,7 @@ const wxArrayString& NativeParser::GetCallTips(int chars_per_line)
 {
     m_CallTips.Clear();
     m_CallTipCommas = 0;
+    int commas = 0;
 
     do
     {
@@ -1689,16 +1697,11 @@ const wxArrayString& NativeParser::GetCallTips(int chars_per_line)
             break;
 
         ccSearchData searchData = { ed->GetControl(), ed->GetFilename() };
-
-        int line = searchData.control->GetCurrentLine();
-        wxString lineText = searchData.control->GetLine(line);
-        const int lineStart = ed->GetControl()->PositionFromLine(line);
-        int end = searchData.control->GetCurrentPos() - lineStart;
+        int pos = searchData.control->GetCurrentPos();
         int nest = 0;
-        while (end > 0)
+        while (--pos > 0)
         {
-            --end;
-            const int style = searchData.control->GetStyleAt(lineStart + end);
+            const int style = searchData.control->GetStyleAt(pos);
             if (   searchData.control->IsString(style)
                 || searchData.control->IsCharacter(style)
                 || searchData.control->IsComment(style) )
@@ -1706,11 +1709,13 @@ const wxArrayString& NativeParser::GetCallTips(int chars_per_line)
                 continue;
             }
 
-            const wxChar ch = lineText.GetChar(end);
-            if (ch == _T(','))
+            const wxChar ch = searchData.control->GetCharAt(pos);
+            if (ch == _T(';'))
+                return m_CallTips;
+            else if (ch == _T(','))
             {
                 if (nest == 0)
-                    ++m_CallTipCommas;
+                    ++commas;
             }
             else if (ch == _T(')'))
                 --nest;
@@ -1721,39 +1726,53 @@ const wxArrayString& NativeParser::GetCallTips(int chars_per_line)
                     break;
             }
         }
-        if (!end)
-            break;
-        lineText.Remove(end).Trim(false);
-        if (lineText.StartsWith(_T("::")))
-            lineText = lineText.Right(lineText.Length() - 2);
-        TRACE(_T("Sending \"%s\" for call-tip"), lineText.c_str());
 
-        TokensTree* tokens = m_Parser->GetTokens();
-        RemoveLastFunctionChildren();
-
-        TokenIdxSet search_scope;
-        ParseUsingNamespace(&searchData, search_scope);
-        ParseFunctionArguments(&searchData);
-        ParseLocalBlock(&searchData);
-
-        while (true)
+        // strip un-wanted
+        while (--pos > 0)
         {
-            Token* tk = tokens->at(tokens->TokenExists(lineText, -1, tkPreprocessor));
-            if (tk != NULL && lineText != tk->m_Type)
-                lineText = tk->m_Type;
-            else
-                break;
+            if (   searchData.control->GetCharAt(pos) <= _T(' ')
+                || searchData.control->IsComment(searchData.control->GetStyleAt(pos)) )
+            {
+                continue;
+            }
+            break;
         }
 
-        TokenIdxSet result;
-        if (!AI(result, &searchData, lineText, false, true, &search_scope))
-            break;
+        const int start = searchData.control->WordStartPosition(pos, true);
+        const int end = searchData.control->WordEndPosition(pos, true);
+        const wxString target = searchData.control->GetTextRange(start, end);
+        TRACE(_T("Sending \"%s\" for call-tip"), target.c_str());
+        if (target.IsEmpty())
+            return m_CallTips;
 
+        TokenIdxSet result;
+        MarkItemsByAI(result, true, false, true, end);
+
+        TokensTree* tokens = m_Parser->GetTokens();
         for (TokenIdxSet::iterator it = result.begin(); it != result.end(); ++it)
         {
             Token* token = tokens->at(*it);
             if (!token)
                 continue;
+
+            // support constructor call tips
+            if (token->m_TokenKind == tkClass)
+            {
+                Token* tk = tokens->at(tokens->TokenExists(token->m_Name, token->GetSelf(), tkConstructor));
+                if (tk)
+                    token = tk;
+            }
+
+            // support macro call tips
+            while (token->m_TokenKind == tkPreprocessor)
+            {
+                Token* tk = tokens->at(tokens->TokenExists(token->m_Type, -1, tkPreprocessor | tkFunction));
+                if (tk && tk->m_Type != token->m_Name)
+                    token = tk;
+                else
+                    break;
+            }
+
             if (token->GetFormattedArgs() != _T("()"))
             {
                 wxString s;
@@ -1766,6 +1785,7 @@ const wxArrayString& NativeParser::GetCallTips(int chars_per_line)
     }
     while (false);
 
+    m_CallTipCommas = commas;
     TRACE(_T("GetCallTips() : m_CallTipCommas=%d"), m_CallTipCommas);
     return m_CallTips;
 }
@@ -3358,8 +3378,8 @@ void NativeParser::OnEditorActivatedTimer(wxTimerEvent& event)
     Parser* parser = GetParserByProject(project);
     if (!parser)
     {
-        FileType ft = CCFileTypeOf(m_LastActivatedFile);
-        if (ft != ftOther && (parser = CreateParser(project)))
+        CCFileType ft = CCFileTypeOf(m_LastActivatedFile);
+        if (ft != ccftOther && (parser = CreateParser(project)))
         {
             if (!project)
             {
@@ -3499,7 +3519,7 @@ public:
 
     virtual wxDirTraverseResult OnFile(const wxString& filename)
     {
-        if (CCFileTypeOf(filename) != ftOther)
+        if (CCFileTypeOf(filename) != ccftOther)
             m_Files.Add(filename);
         return wxDIR_CONTINUE;
     }

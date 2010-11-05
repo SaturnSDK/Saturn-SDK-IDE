@@ -10,9 +10,9 @@
 #include "databreakpointdlg.h"
 
 //(*InternalHeaders(DataBreakpointDlg)
+#include <wx/intl.h>
 #include <wx/button.h>
 #include <wx/string.h>
-#include <wx/intl.h>
 //*)
 
 //(*IdInit(DataBreakpointDlg)
@@ -28,9 +28,8 @@ END_EVENT_TABLE()
 
 DataBreakpointDlg::DataBreakpointDlg(wxWindow *parent, const wxString& dataExpression, bool enabled, int selection)
 {
-    int id = wxID_ANY;
     //(*Initialize(DataBreakpointDlg)
-    Create(parent, id, _("Data breakpoint"), wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE, _T("id"));
+    Create(parent, wxID_ANY, _("Data breakpoint"), wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE, _T("wxID_ANY"));
     BoxSizer1 = new wxBoxSizer(wxVERTICAL);
     CheckBox1 = new wxCheckBox(this, ID_CHECKBOX1, _("Enabled"), wxDefaultPosition, wxDefaultSize, 0, wxDefaultValidator, _T("ID_CHECKBOX1"));
     CheckBox1->SetValue(false);
@@ -38,11 +37,11 @@ DataBreakpointDlg::DataBreakpointDlg(wxWindow *parent, const wxString& dataExpre
     m_dataExpressionCtrl = new wxTextCtrl(this, ID_TEXTCTRL_DATA_EXPRESION, _("Text"), wxDefaultPosition, wxSize(265,23), wxTE_PROCESS_ENTER, wxDefaultValidator, _T("ID_TEXTCTRL_DATA_EXPRESION"));
     m_dataExpressionCtrl->SetFocus();
     BoxSizer1->Add(m_dataExpressionCtrl, 1, wxLEFT|wxRIGHT|wxEXPAND|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL, 10);
-    wxString __wxRadioBoxChoices_1[3] = 
+    wxString __wxRadioBoxChoices_1[3] =
     {
-        _("Break on read"),
-        _("Break on write"),
-        _("Break on read or write")
+    	_("Break on read"),
+    	_("Break on write"),
+    	_("Break on read or write")
     };
     RadioBox1 = new wxRadioBox(this, ID_RADIOBOX1, _("Condition"), wxDefaultPosition, wxDefaultSize, 3, __wxRadioBoxChoices_1, 1, 0, wxDefaultValidator, _T("ID_RADIOBOX1"));
     BoxSizer1->Add(RadioBox1, 0, wxBOTTOM|wxLEFT|wxRIGHT|wxEXPAND|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 8);

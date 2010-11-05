@@ -582,6 +582,7 @@ const int idUpperCase = wxNewId();
 const int idLowerCase = wxNewId();
 const int idSelectAll = wxNewId();
 const int idSwapHeaderSource = wxNewId();
+const int idOpenContainingFolder = wxNewId();
 const int idBookmarks = wxNewId();
 const int idBookmarksToggle = wxNewId();
 const int idBookmarksPrevious = wxNewId();
@@ -626,6 +627,7 @@ BEGIN_EVENT_TABLE(cbEditor, EditorBase)
     EVT_MENU(idLowerCase, cbEditor::OnContextMenuEntry)
     EVT_MENU(idSelectAll, cbEditor::OnContextMenuEntry)
     EVT_MENU(idSwapHeaderSource, cbEditor::OnContextMenuEntry)
+    EVT_MENU(idOpenContainingFolder, cbEditor::OnContextMenuEntry)
     EVT_MENU(idBookmarksToggle, cbEditor::OnContextMenuEntry)
     EVT_MENU(idBookmarksPrevious, cbEditor::OnContextMenuEntry)
     EVT_MENU(idBookmarksNext, cbEditor::OnContextMenuEntry)
@@ -2488,6 +2490,7 @@ void cbEditor::AddToContextMenu(wxMenu* popup,ModuleType type,bool pluginsdone)
             popup->AppendSeparator();
         }
         popup->Append(idSwapHeaderSource, _("Swap header/source"));
+        popup->Append(idOpenContainingFolder, _("Open containing folder"));
         if(!noeditor)
             popup->AppendSeparator();
 
@@ -2725,6 +2728,8 @@ void cbEditor::OnContextMenuEntry(wxCommandEvent& event)
         control->SelectAll();
     else if (id == idSwapHeaderSource)
         Manager::Get()->GetEditorManager()->SwapActiveHeaderSource();
+    else if (id == idOpenContainingFolder)
+        Manager::Get()->GetEditorManager()->OpenContainingFolder();
     else if (id == idBookmarkAdd)
         control->MarkerAdd(m_pData->m_LastMarginMenuLine, BOOKMARK_MARKER);
     else if (id == idBookmarkRemove)
@@ -3096,17 +3101,24 @@ void cbEditor::OnEditorCharAdded(wxScintillaEvent& event)
         if (autoIndentStart)
         {
             bool valid = true;
-            int line = control->GetCurrentLine();
-            if (line < autoIndentLine)
+            const int start = control->PositionFromLine(autoIndentLine);
+            const wxString text = control->GetTextRange(start, pos);
+            if (text.Find(_T('{')) != int(text.Len() - 1))
                 valid = false;
             else
             {
-                while (--line > autoIndentLine)
+                int line = control->GetCurrentLine();
+                if (line < autoIndentLine)
+                    valid = false;
+                else
                 {
-                    if (control->GetLineIndentation(line) < autoIndentLineIndent)
+                    while (--line > autoIndentLine)
                     {
-                        valid = false;
-                        break;
+                        if (control->GetLineIndentation(line) < autoIndentLineIndent)
+                        {
+                            valid = false;
+                            break;
+                        }
                     }
                 }
             }

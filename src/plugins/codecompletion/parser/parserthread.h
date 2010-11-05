@@ -244,6 +244,9 @@ private:
       */
     Token* TokenExists(const wxString& name, Token* parent = 0, short int kindMask = 0xFFFF);
 
+    /** Support function overloading */
+    Token* TokenExists(const wxString& name, const wxString& baseArgs, Token* parent, TokenKind kind);
+
     /** Before call this function, *MUST* add a locker
       * e.g. wxCriticalSectionLocker locker(s_TokensTreeCritical);
       */
@@ -256,10 +259,10 @@ private:
       * eg: if the argument list is like "(const TheClass* the_class, int my_int)"
       * then, the returned argument list is "(const TheClass*,int)"
       * @param args Full argument list
-      * @param strippedArgs Stripped argument list (argument types only)
+      * @param baseArgs argument types only
       * @return if faild, will return false, so, it must be a variable
       */
-    bool GetStrippedArgs(const wxString & args, wxString& strippedArgs);
+    bool GetBaseArgs(const wxString & args, wxString& baseArgs);
 
     /** Get the class name from a macro */
     wxString GetClassFromMacro(const wxString& macro);
