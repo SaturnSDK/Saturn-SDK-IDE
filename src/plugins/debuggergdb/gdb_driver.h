@@ -84,6 +84,7 @@ class GDB_driver : public DebuggerDriver
         virtual wxString GetDisassemblyFlavour(void);
 
         wxString GetScriptedTypeCommand(const wxString& gdb_type, wxString& parse_func);
+        wxString AsmFlavour() {return flavour;}
     protected:
     private:
         void InitializeScripting();

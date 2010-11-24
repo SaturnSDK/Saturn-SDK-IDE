@@ -240,6 +240,10 @@ class DLLIMPORT DebuggerManager : public Mgr<DebuggerManager>
         RegisteredPlugins & GetAllDebuggers();
         cbDebuggerPlugin* GetActiveDebugger();
         void SetActiveDebugger(cbDebuggerPlugin* activeDebugger);
+
+        bool IsDisassemblyMixedMode();
+        void SetDisassemblyMixedMode(bool mixed);
+
     private:
         bool RebuildActiveDebuggersMenu();
     private:
@@ -261,6 +265,7 @@ class DLLIMPORT DebuggerManager : public Mgr<DebuggerManager>
         TextCtrlLogger* m_debugLogger;
         int m_loggerIndex;
         int m_debugLoggerIndex;
+        bool m_isDisassemblyMixedMode;
 };
 
 #endif // X_DEBUGGER_MANAGER_H

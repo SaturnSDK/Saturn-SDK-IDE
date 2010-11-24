@@ -33,6 +33,8 @@ const int DEBUG_STYLE = wxSCI_MARK_ARROW;
 BEGIN_EVENT_TABLE(cbDisassemblyDlg, wxPanel)
     EVT_BUTTON(XRCID("btnSave"), cbDisassemblyDlg::OnSave)
 //    EVT_BUTTON(XRCID("btnRefresh"), cbDisassemblyDlg::OnRefresh)
+    EVT_CHECKBOX(XRCID("chkMode"), cbDisassemblyDlg::OnMixedModeCB)
+    EVT_BUTTON(XRCID("btnAdjustLine"), cbDisassemblyDlg::OnAdjustLine)
 END_EVENT_TABLE()
 
 cbDisassemblyDlg::cbDisassemblyDlg(wxWindow* parent) :
@@ -70,6 +72,9 @@ cbDisassemblyDlg::cbDisassemblyDlg(wxWindow* parent) :
         set->Apply(lang, (cbStyledTextCtrl*)m_pCode);
     }
 
+    m_MixedModeCB = (wxCheckBox*)FindWindow(XRCID("chkMode"));
+    m_MixedModeCB->SetValue(Manager::Get()->GetDebuggerManager()->IsDisassemblyMixedMode());
+
     cbStackFrame sf;
     Clear(sf);
 }
@@ -80,6 +85,8 @@ void cbDisassemblyDlg::Clear(const cbStackFrame& frame)
     m_FrameAddress = _T("??");
     if (frame.IsValid())
         m_FrameAddress.Printf(_T("%p"), (void*)frame.GetAddress());
+
+    m_LineTypes.clear();
 
     XRCCTRL(*this, "lblFunction", wxStaticText)->SetLabel(m_FrameFunction);
     XRCCTRL(*this, "lblAddress", wxStaticText)->SetLabel(m_FrameAddress);
@@ -122,28 +129,96 @@ void cbDisassemblyDlg::AddAssemblerLine(unsigned long int addr, const wxString& 
     m_pCode->AppendText(fmt);
     SetActiveAddress(m_LastActiveAddr);
     m_pCode->SetReadOnly(true);
+    m_LineTypes.push_back('D') ;
 }
 
-void cbDisassemblyDlg::SetActiveAddress(unsigned long int addr)
+void cbDisassemblyDlg::AddSourceLine(unsigned long int lineno, const wxString& line)
+{
+    m_pCode->SetReadOnly(false);
+    if (m_ClearFlag)
+    {
+        m_ClearFlag = false;
+        m_pCode->ClearAll();
+    }
+    wxString fmt;
+    fmt.Printf(_T("%-3lu\t%s\n"), lineno, line.c_str());
+
+    m_pCode->AppendText(fmt);
+
+    m_pCode->SetReadOnly(true);
+    m_LineTypes.push_back('S') ;
+}
+
+void cbDisassemblyDlg::CenterLine(unsigned long int lineno)
+{
+    //make line middle of display window if reasonable
+    int firstdispline ;
+    unsigned int los = m_pCode->LinesOnScreen() ;
+    if (lineno > los / 2)
+        firstdispline = lineno - (los/2) ;
+    else
+        firstdispline = 0 ; //or is it zero?
+    m_pCode->SetFirstVisibleLine(firstdispline) ;
+}
+void cbDisassemblyDlg::CenterCurrentLine()
+{
+    int displine;
+    displine = m_pCode->GetCurrentLine() ;
+    CenterLine(displine);
+}
+bool cbDisassemblyDlg::SetActiveAddress(unsigned long int addr)
 {
     if (m_HasActiveAddr && addr == m_LastActiveAddr)
-        return;
+        return m_HasActiveAddr ;
     m_HasActiveAddr = false;
     m_LastActiveAddr = addr;
+    bool MixedAsmMode = Manager::Get()->GetDebuggerManager()->IsDisassemblyMixedMode();
     for (int i = 0; i < m_pCode->GetLineCount(); ++i)
     {
+        if(MixedAsmMode && m_LineTypes[i] == 'S')
+            continue;
+
         wxString str = m_pCode->GetLine(i).AfterFirst(_T('x')).BeforeFirst(_T('\t'));
         unsigned long int lineaddr;
-        if (str.ToULong(&lineaddr, 16) && lineaddr >= addr)
+        if (str.ToULong(&lineaddr, 16) && (lineaddr == addr))
         {
             m_pCode->MarkerDeleteAll(DEBUG_MARKER);
             m_pCode->MarkerAdd(i, DEBUG_MARKER);
             m_pCode->GotoLine(i);
-            m_pCode->EnsureVisible(i);
+
+            //check and shift window lines if needed
+            if (!m_pCode->GetLineVisible(i))
+            {
+                this->CenterLine(i);
+            }
+            //are we close to bottom line? if so shift display if possible
+            else if (i == (m_pCode->LinesOnScreen() + m_pCode->GetFirstVisibleLine() - 1))
+            {
+                this->CenterLine(i);
+            }
+
             m_HasActiveAddr = true;
             break;
         }
     }
+    return m_HasActiveAddr ;
+}
+
+void cbDisassemblyDlg::OnAdjustLine(wxCommandEvent& event)
+{
+    int los = m_pCode->LinesOnScreen();
+
+    int displine;
+    if (m_pCode->GetCurrentLine() == m_pCode->GetFirstVisibleLine())
+        displine = m_pCode->GetCurrentLine();
+    else if (m_pCode->GetCurrentLine() == m_pCode->GetFirstVisibleLine() + los/2)
+        displine = m_pCode->GetCurrentLine() - (los/2) + 1;
+    else
+        displine = m_pCode->GetCurrentLine() + (los/2);
+
+    if (displine < 0)
+        displine = 0;
+    CenterLine(displine);
 }
 
 void cbDisassemblyDlg::OnSave(wxCommandEvent& event)
@@ -178,6 +253,18 @@ void cbDisassemblyDlg::OnSave(wxCommandEvent& event)
 void cbDisassemblyDlg::OnRefresh(wxCommandEvent& event)
 {
     cbDebuggerPlugin *plugin = Manager::Get()->GetDebuggerManager()->GetActiveDebugger();
+    cbAssert(plugin);
+    plugin->RequestUpdate(cbDebuggerPlugin::Disassembly);
+}
+
+void cbDisassemblyDlg::OnMixedModeCB(wxCommandEvent &event)
+{
+    DebuggerManager &manager = *Manager::Get()->GetDebuggerManager();
+    bool newMode = !manager.IsDisassemblyMixedMode();
+    manager.SetDisassemblyMixedMode(newMode);
+    m_MixedModeCB->SetValue(newMode);
+
+    cbDebuggerPlugin *plugin = manager.GetActiveDebugger();
     cbAssert(plugin);
     plugin->RequestUpdate(cbDebuggerPlugin::Disassembly);
 }

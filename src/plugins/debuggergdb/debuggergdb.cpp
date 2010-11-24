@@ -1124,6 +1124,7 @@ void DebuggerGDB::RunCommand(int cmd)
             {
                 m_State.GetDriver()->StepInstruction();
                 m_State.GetDriver()->ResetCurrentFrame();
+                m_State.GetDriver()->NotifyCursorChanged();
             }
             break;
         }
@@ -1131,7 +1132,7 @@ void DebuggerGDB::RunCommand(int cmd)
         case CMD_STEP_INTO_INSTR:
         {
             ClearActiveMarkFromAllEditors();
-            if (!Manager::Get()->GetDebuggerManager()->UpdateBacktrace())
+            if (!Manager::Get()->GetDebuggerManager()->UpdateDisassembly())
             {
                 // first time users should have some help from us ;)
                 RunCommand(CMD_DISASSEMBLE);
@@ -1140,6 +1141,7 @@ void DebuggerGDB::RunCommand(int cmd)
             {
                 m_State.GetDriver()->StepIntoInstruction();
                 m_State.GetDriver()->ResetCurrentFrame();
+                m_State.GetDriver()->NotifyCursorChanged();
             }
             break;
         }
@@ -1977,8 +1979,9 @@ void DebuggerGDB::OnCursorChanged(wxCommandEvent& WXUNUSED(event))
             {
                 unsigned long int addrL;
                 cursor.address.ToULong(&addrL, 16);
-                dbg_manager->GetDisassemblyDialog()->SetActiveAddress(addrL);
-                RunCommand(CMD_DISASSEMBLE);
+                //if zero addr, don't attempt disassembly
+                if (addrL && !dbg_manager->GetDisassemblyDialog()->SetActiveAddress(addrL))
+                    RunCommand(CMD_DISASSEMBLE);
             }
 
             // update memory examiner

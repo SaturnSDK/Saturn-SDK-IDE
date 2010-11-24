@@ -609,7 +609,8 @@ DebuggerManager::DebuggerManager() :
     m_logger(NULL),
     m_debugLogger(NULL),
     m_loggerIndex(-1),
-    m_debugLoggerIndex(-1)
+    m_debugLoggerIndex(-1),
+    m_isDisassemblyMixedMode(false)
 {
     m_menuHandler->SetEvtHandlerEnabled(false);
     m_toolbarHandler->SetEvtHandlerEnabled(false);
@@ -1085,4 +1086,14 @@ void DebuggerManager::SetActiveDebugger(cbDebuggerPlugin* activeDebugger)
 
     m_activeDebugger = activeDebugger;
     m_menuHandler->SetActiveDebugger(activeDebugger);
+}
+
+bool DebuggerManager::IsDisassemblyMixedMode()
+{
+    return m_isDisassemblyMixedMode;
+}
+
+void DebuggerManager::SetDisassemblyMixedMode(bool mixed)
+{
+    m_isDisassemblyMixedMode = mixed;
 }

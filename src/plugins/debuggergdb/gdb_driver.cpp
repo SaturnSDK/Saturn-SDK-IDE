@@ -589,13 +589,13 @@ void GDB_driver::Step()
 void GDB_driver::StepInstruction()
 {
     ResetCursor();
-    QueueCommand(new DebuggerCmd(this, _T("nexti")));
+    QueueCommand(new GdbCmd_StepInstruction(this));
 }
 
 void GDB_driver::StepIntoInstruction()
 {
     ResetCursor();
-    QueueCommand(new DebuggerCmd(this, _T("stepi")));
+    QueueCommand(new GdbCmd_StepIntoInstruction(this));
 }
 
 void GDB_driver::StepIn()
@@ -856,6 +856,7 @@ void GDB_driver::ParseOutput(const wxString& output)
 
     m_ProgramIsStopped = true;
     m_QueueBusy = false;
+    int changeFrameAddr = 0 ;
     DebuggerCmd* cmd = CurrentCommand();
     if (cmd)
     {
@@ -869,6 +870,14 @@ void GDB_driver::ParseOutput(const wxString& output)
         if (buffer.Last() == _T('\n'))
             buffer.RemoveLast();
         cmd->ParseOutput(buffer.Left(idx));
+
+        //We do NOT want default output processing for a changed frame as it can result
+        //in disassembly being done for a non-current location, since some of the frame
+        //response lines are in the pattern of breakpoint output.
+        GdbCmd_ChangeFrame *changeFrameCmd = dynamic_cast<GdbCmd_ChangeFrame*>(cmd);
+        if (changeFrameCmd)
+            changeFrameAddr = changeFrameCmd->AddrChgMode();
+
         delete cmd;
         RunQueue();
     }
@@ -1061,6 +1070,15 @@ void GDB_driver::ParseOutput(const wxString& output)
             // the same code with different regular expressions - depending on
             // the platform.
 
+            //NOTE: This also winds up matching response to a frame command which is generated as
+            //part of a backtrace with autoswitch enabled, (from gdb7.2 mingw) as in:
+            //(win32, x86, mingw gdb 7.2)
+            //>>>>>>cb_gdb:
+            //> frame 1
+            //#1  0x6f826722 in wxInitAllImageHandlers () at ../../src/common/imagall.cpp:29
+            //^Z^ZC:\dev\wxwidgets\wxWidgets-2.8.10\build\msw/../../src/common/imagall.cpp:29:961:beg:0x6f826722
+            //>>>>>>cb_gdb:
+
             if(platform::windows && flavour == _T("set disassembly-flavor or32"))
             {
                 HandleMainBreakPoint(reBreak_or32, lines[i]);
@@ -1134,6 +1152,12 @@ void GDB_driver::ParseOutput(const wxString& output)
     // if program is stopped, update various states
     if (m_needsUpdate)
     {
+        if(1 == changeFrameAddr)
+        {
+            //clear to avoid change of disassembly address on (auto) frame change
+            //when NotifyCursorChanged() executes
+            m_Cursor.address.clear();
+        }
         if (m_Cursor.changed || m_forceUpdate)
             NotifyCursorChanged();
     }
