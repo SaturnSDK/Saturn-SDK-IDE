@@ -573,11 +573,11 @@ bool DebuggerGDB::IsStopped() const
 }
 
 
-int DebuggerGDB::Debug(bool breakOnEntry)
+bool DebuggerGDB::Debug(bool breakOnEntry)
 {
     // if already running, return
     if (m_pProcess || WaitingCompilerToFinish())
-        return 1;
+        return false;
 
     m_pProject = 0;
     m_NoDebugInfo = false;
@@ -592,7 +592,7 @@ int DebuggerGDB::Debug(bool breakOnEntry)
     ProjectManager* prjMan = Manager::Get()->GetProjectManager();
     cbProject* project = prjMan->GetActiveProject();
     if (!project && m_PidToAttach == 0)
-        return 2;
+        return false;
 
     m_pProject = project;
     if (m_pProject && m_ActiveBuildTarget.IsEmpty())
@@ -600,7 +600,7 @@ int DebuggerGDB::Debug(bool breakOnEntry)
 
     m_Canceled = false;
     if (!EnsureBuildUpToDate())
-        return -1;
+        return false;
 
     // if not waiting for the compiler, start debugging now
     // but first check if the driver has already been started:
@@ -613,10 +613,10 @@ int DebuggerGDB::Debug(bool breakOnEntry)
     // returned an error
     if (!WaitingCompilerToFinish() && !m_State.HasDriver() && !m_Canceled)
     {
-        return DoDebug(breakOnEntry);
+        return DoDebug(breakOnEntry) == 0;
     }
 
-    return 0;
+    return true;
 }
 
 int DebuggerGDB::DoDebug(bool breakOnEntry)
@@ -1175,6 +1175,7 @@ void DebuggerGDB::RunCommand(int cmd)
             {
                 m_State.GetDriver()->Stop();
                 m_State.GetDriver()->ResetCurrentFrame();
+                MarkAsStopped();
             }
             break;
         }
@@ -1521,18 +1522,19 @@ void DebuggerGDB::StepOut()
     RunCommand(CMD_STEPOUT);
 }
 
-void DebuggerGDB::RunToCursor(const wxString& filename, int line, const wxString& line_text)
+bool DebuggerGDB::RunToCursor(const wxString& filename, int line, const wxString& line_text)
 {
     if (m_pProcess)
     {
         m_State.AddBreakpoint(filename, line, true, line_text);
         Continue();
+        return true;
     }
     else
     {
         if (!Manager::Get()->GetConfigManager(_T("debugger"))->ReadBool(_T("do_not_run"), false))
             m_State.AddBreakpoint(filename, line, true, line_text);
-        Debug(false);
+        return Debug(false);
     }
 }
 
@@ -1798,6 +1800,7 @@ void DebuggerGDB::OnGDBTerminated(wxCommandEvent& event)
     // switch to the user-defined layout when finished debugging
     SwitchToPreviousLayout();
     KillConsole();
+    MarkAsStopped();
 
     ///killerbot : run there the post shell commands ?
 }
@@ -2121,9 +2124,16 @@ void DebuggerGDB::OnSettings(wxCommandEvent& event)
     Configure();
 }
 
-void DebuggerGDB::CompilerFinished()
+void DebuggerGDB::CompilerFinished(bool compilerFailed)
 {
-    DoDebug(false);
+    if (compilerFailed)
+        return;
+    if (DoDebug(false) != 0)
+    {
+        ProjectManager *manager = Manager::Get()->GetProjectManager();
+        if (manager->GetIsRunning() && manager->GetIsRunning() == this)
+            manager->SetIsRunning(NULL);
+    }
 }
 
 void DebuggerGDB::OnBuildTargetSelected(CodeBlocksEvent& event)

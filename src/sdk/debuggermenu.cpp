@@ -167,6 +167,14 @@ void DebuggerMenuHandler::OnUpdateUI(wxUpdateUIEvent& event)
     bool isRunning = m_activeDebugger->IsRunning();
 
     DebuggerManager *dbg_manager = Manager::Get()->GetDebuggerManager();
+    cbPlugin *runningPlugin = Manager::Get()->GetProjectManager()->GetIsRunning();
+
+    bool otherPlugin = false;
+    if (runningPlugin != NULL && runningPlugin != m_activeDebugger)
+    {
+        en = false;
+        otherPlugin = true;
+    }
 
     if (mbar)
     {
@@ -185,7 +193,7 @@ void DebuggerMenuHandler::OnUpdateUI(wxUpdateUIEvent& event)
         mbar->Enable(idMenuAddSymbolFile, isRunning && stopped);
         mbar->Enable(idMenuStop, isRunning && en);
         mbar->Enable(idMenuBreak, isRunning && !stopped && en);
-        mbar->Enable(idMenuAttachToProcess, !isRunning);
+        mbar->Enable(idMenuAttachToProcess, !isRunning && !otherPlugin);
         mbar->Enable(idMenuDetach, isRunning && stopped && m_activeDebugger->IsAttachedToProcess());
 
 //        mbar->Enable(idMenuInfoFrame, isRunning && stopped);
@@ -207,13 +215,22 @@ void DebuggerMenuHandler::OnUpdateUI(wxUpdateUIEvent& event)
     // *very* important! don't forget it...
     event.Skip();
 }
+
 void DebuggerMenuHandler::OnStart(wxCommandEvent& event)
 {
     cbAssert(m_activeDebugger);
     if (!m_activeDebugger->IsRunning())
     {
         m_disableContinue = true;
-        m_activeDebugger->Debug(false);
+
+        ProjectManager *manager = Manager::Get()->GetProjectManager();
+        if (manager->GetIsRunning() == NULL)
+        {
+            manager->SetIsRunning(m_activeDebugger);
+
+            if (!m_activeDebugger->Debug(false))
+                manager->SetIsRunning(NULL);
+        }
         m_disableContinue = false;
     }
     else if (m_activeDebugger->IsStopped() && !m_disableContinue)
@@ -268,7 +285,13 @@ void DebuggerMenuHandler::OnStep(wxCommandEvent& event)
     else
     {
         m_disableContinue = true;
-        m_activeDebugger->Debug(true);
+        ProjectManager *manager = Manager::Get()->GetProjectManager();
+        if (manager->GetIsRunning() == NULL)
+        {
+            manager->SetIsRunning(m_activeDebugger);
+            if (!m_activeDebugger->Debug(true))
+                manager->SetIsRunning(NULL);
+        }
         m_disableContinue = false;
     }
 }
@@ -286,7 +309,14 @@ void DebuggerMenuHandler::OnRunToCursor(wxCommandEvent& event)
     if (!ed)
         return;
     const wxString &line_text = ed->GetControl()->GetLine(ed->GetControl()->GetCurrentLine());
-    m_activeDebugger->RunToCursor(ed->GetFilename(), ed->GetControl()->GetCurrentLine() + 1, line_text);
+
+    ProjectManager *manager = Manager::Get()->GetProjectManager();
+    if (manager->GetIsRunning() == NULL || manager->GetIsRunning() == m_activeDebugger)
+    {
+        manager->SetIsRunning(m_activeDebugger);
+        if (!m_activeDebugger->RunToCursor(ed->GetFilename(), ed->GetControl()->GetCurrentLine() + 1, line_text))
+            manager->SetIsRunning(NULL);
+    }
 }
 
 void DebuggerMenuHandler::OnSetNextStatement(wxCommandEvent& event)
@@ -505,11 +535,17 @@ void DebuggerToolbarHandler::OnUpdateUI(wxUpdateUIEvent& event)
     if (!plugin)
         return;
 
-    cbProject* prj = Manager::Get()->GetProjectManager()->GetActiveProject();
+    ProjectManager *manager = Manager::Get()->GetProjectManager();
+
+    cbProject* prj = manager->GetActiveProject();
     bool en = (prj && !prj->GetCurrentlyCompilingTarget()) || plugin->IsAttachedToProcess();
     cbEditor* ed = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
     bool stopped = plugin->IsStopped();
     bool isRunning = plugin->IsRunning();
+
+    cbPlugin *runningPlugin = manager->GetIsRunning();
+    if (runningPlugin != NULL && runningPlugin != plugin)
+        en = false;
 
     m_Toolbar->EnableTool(idMenuDebug, (!isRunning || stopped) && en);
     m_Toolbar->EnableTool(idMenuRunToCursor, en && ed && stopped);

@@ -66,14 +66,14 @@ class DebuggerGDB : public cbDebuggerPlugin
         const cbThread& GetThread(int index) const;
         bool SwitchToThread(int thread_number);
 
-        int Debug(bool breakOnEntry);
+        bool Debug(bool breakOnEntry);
         void Continue();
         void Next();
         void NextInstruction();
         void StepIntoInstruction();
         void Step();
         void StepOut();
-        void RunToCursor(const wxString& filename, int line, const wxString& line_text);
+        bool RunToCursor(const wxString& filename, int line, const wxString& line_text);
         void SetNextStatement(const wxString& filename, int line);
         void Break();
         void Stop();
@@ -123,7 +123,7 @@ class DebuggerGDB : public cbDebuggerPlugin
         void ResetProject() { m_pProcess = NULL; }
         void ConvertDirectory(wxString& str, wxString base, bool relative);
         void CleanupWhenProjectClosed(cbProject *project);
-        void CompilerFinished();
+        void CompilerFinished(bool compilerFailed);
     protected:
         void AddSourceDir(const wxString& dir);
     private:

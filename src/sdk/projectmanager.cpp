@@ -225,7 +225,8 @@ ProjectManager::ProjectManager()
     m_IsClosingWorkspace(false),
     m_InitialDir(_T("")),
     m_isCheckingForExternallyModifiedProjects(false),
-    m_CanSendWorkspaceChanged(false)
+    m_CanSendWorkspaceChanged(false),
+    m_RunningPlugin(NULL)
 {
     m_pNotebook = new cbAuiNotebook(Manager::Get()->GetAppWindow(), idNB, wxDefaultPosition, wxDefaultSize, wxAUI_NB_WINDOWLIST_BUTTON);
     if (Manager::Get()->GetConfigManager(_T("app"))->ReadBool(_T("/environment/project_tabs_bottom"), false))
@@ -3005,4 +3006,14 @@ void ProjectManager::OnKeyDown(wxTreeEvent& event)
         wxCommandEvent command(0, idMenuRemoveFilePopup);
         OnRemoveFileFromProject(command);
     }
+}
+
+void ProjectManager::SetIsRunning(cbPlugin *plugin)
+{
+    m_RunningPlugin = plugin;
+}
+
+cbPlugin* ProjectManager::GetIsRunning() const
+{
+    return m_RunningPlugin;
 }

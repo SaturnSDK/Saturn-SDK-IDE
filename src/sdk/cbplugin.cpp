@@ -706,15 +706,21 @@ void cbDebuggerPlugin::OnCompilerFinished(CodeBlocksEvent& event)
     if (m_WaitingCompilerToFinish)
     {
         m_WaitingCompilerToFinish = false;
+        bool compilerFailed = false;
         // only proceed if build succeeeded
         if (m_pCompiler && m_pCompiler->GetExitCode() != 0)
         {
             AnnoyingDialog dlg(_("Debug anyway?"), _("Build failed, do you want to debug the program?"),
                                wxART_QUESTION, AnnoyingDialog::YES_NO, wxID_NO);
             if (dlg.ShowModal() != wxID_YES)
-                return;
+            {
+                ProjectManager *manager = Manager::Get()->GetProjectManager();
+                if (manager->GetIsRunning() && manager->GetIsRunning() == this)
+                    manager->SetIsRunning(NULL);
+                compilerFailed = true;
+            }
         }
-        CompilerFinished();
+        CompilerFinished(compilerFailed);
     }
 }
 
@@ -763,6 +769,11 @@ int cbDebuggerPlugin::RunNixConsole(wxString &consoleTty)
     consolePid = 0;
 #endif // !__WWXMSW__
     return -1;
+}
+
+void cbDebuggerPlugin::MarkAsStopped()
+{
+    Manager::Get()->GetProjectManager()->SetIsRunning(NULL);
 }
 
 wxString cbDebuggerPlugin::GetConsoleTty(int ConsolePid)

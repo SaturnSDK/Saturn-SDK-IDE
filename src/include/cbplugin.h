@@ -403,13 +403,13 @@ class PLUGIN_EXPORT cbDebuggerPlugin: public cbPlugin
 
 
 		/** @brief Start a new debugging process. */
-		virtual int Debug(bool breakOnEntry) = 0;
+		virtual bool Debug(bool breakOnEntry) = 0;
 
         /** @brief Continue running the debugged program. */
         virtual void Continue() = 0;
 
 		/** @brief Run the debugged program until it reaches the cursor at the current editor */
-		virtual void RunToCursor(const wxString& filename, int line, const wxString& line_text) = 0;
+		virtual bool RunToCursor(const wxString& filename, int line, const wxString& line_text) = 0;
 
 		/** @brief Sets the position of the Program counter to the specified filename:line */
 		virtual void SetNextStatement(const wxString& filename, int line) = 0;
@@ -497,7 +497,7 @@ class PLUGIN_EXPORT cbDebuggerPlugin: public cbPlugin
         virtual cbProject* GetProject() = 0;
         virtual void ResetProject() = 0;
         virtual void CleanupWhenProjectClosed(cbProject *project) = 0;
-        virtual void CompilerFinished() {}
+        virtual void CompilerFinished(bool compilerFailed) {}
     public:
         enum DebugWindows
         {
@@ -536,9 +536,9 @@ class PLUGIN_EXPORT cbDebuggerPlugin: public cbPlugin
         wxString FindDebuggerExecutable(Compiler* compiler);
         bool EnsureBuildUpToDate();
         bool WaitingCompilerToFinish() const { return m_WaitingCompilerToFinish; }
-//        bool CheckBuild();
 
         int RunNixConsole(wxString &consoleTty);
+        void MarkAsStopped();
 
     private:
         wxString GetConsoleTty(int ConsolePid);
