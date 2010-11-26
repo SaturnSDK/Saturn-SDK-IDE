@@ -43,7 +43,7 @@ cbDisassemblyDlg::cbDisassemblyDlg(wxWindow* parent) :
 {
     wxXmlResource::Get()->LoadPanel(this, parent, _T("dlgDisassembly"));
 
-    m_pCode = new wxScintilla(this, wxID_ANY);
+    m_pCode = new wxScintilla(this, wxID_ANY, wxDefaultPosition, wxSize(1,1));
     m_pCode->SetReadOnly(true);
     m_pCode->SetCaretWidth(0);
     m_pCode->SetMarginWidth(0, 0);
