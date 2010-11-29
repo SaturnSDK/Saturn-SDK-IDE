@@ -598,7 +598,7 @@ void DebuggerTree::ShowMenu(wxTreeItemId id, const wxPoint& pt)
             menu.AppendSeparator();
         }
     }
-    
+
     // add watch always visible
     menu.Append(idAddWatch, _("&Add watch"));
     menu.Append(idWatchThis, _("Watch '*&this'"));

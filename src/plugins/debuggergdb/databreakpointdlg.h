@@ -22,37 +22,37 @@
 
 class DataBreakpointDlg: public wxScrollingDialog
 {
-	public:
+    public:
 
-		DataBreakpointDlg(wxWindow *parent, const wxString& dataExpression, bool enabled, int selection);
-		virtual ~DataBreakpointDlg();
+        DataBreakpointDlg(wxWindow *parent, const wxString& dataExpression, bool enabled, int selection);
+        virtual ~DataBreakpointDlg();
 
-		//(*Identifiers(DataBreakpointDlg)
-		static const long ID_CHECKBOX1;
-		static const long ID_TEXTCTRL_DATA_EXPRESION;
-		static const long ID_RADIOBOX1;
+        //(*Identifiers(DataBreakpointDlg)
+        static const long ID_CHECKBOX1;
+        static const long ID_TEXTCTRL_DATA_EXPRESION;
+        static const long ID_RADIOBOX1;
 		//*)
 
 		bool IsBreakpointEnabled();
 		int GetSelection();
 		wxString GetDataExpression() const;
 
-	protected:
+    protected:
 
-		//(*Handlers(DataBreakpointDlg)
-		//*)
+        //(*Handlers(DataBreakpointDlg)
+        //*)
 
-		//(*Declarations(DataBreakpointDlg)
-		wxCheckBox* CheckBox1;
-		wxTextCtrl* m_dataExpressionCtrl;
+        //(*Declarations(DataBreakpointDlg)
+        wxCheckBox* CheckBox1;
+        wxTextCtrl* m_dataExpressionCtrl;
         wxBoxSizer* BoxSizer1;
-		wxRadioBox* RadioBox1;
-		wxStdDialogButtonSizer* StdDialogButtonSizer1;
-		//*)
+        wxRadioBox* RadioBox1;
+        wxStdDialogButtonSizer* StdDialogButtonSizer1;
+        //*)
 
-	private:
+    private:
 
-		DECLARE_EVENT_TABLE()
+        DECLARE_EVENT_TABLE()
 };
 
 #endif

@@ -371,29 +371,29 @@ class wxScintillaEvent;
   */
 class PLUGIN_EXPORT cbDebuggerPlugin: public cbPlugin
 {
-	public:
-		cbDebuggerPlugin();
+    public:
+        cbDebuggerPlugin();
 
     public:
-		/** @brief Returns the toolbar associated with this plugin. */
-		wxToolBar* GetToolbar();
+        /** @brief Returns the toolbar associated with this plugin. */
+        wxToolBar* GetToolbar();
 
-		virtual void OnAttach();
-		virtual void OnRelease(bool appShutDown);
+        virtual void OnAttach();
+        virtual void OnRelease(bool appShutDown);
 
         virtual void BuildMenu(wxMenuBar* menuBar);
         virtual void BuildModuleMenu(const ModuleType type, wxMenu* menu, const FileTreeData* data = 0);
         virtual bool BuildToolBar(wxToolBar* toolBar);
 
-		/** @brief Notify the debugger that lines were added or removed in an editor.
-		  * This causes the debugger to keep the breakpoints list in-sync with the
-		  * editors (i.e. what the user sees).
-		  * @param editor The editor in question.
-		  * @param startline The starting line this change took place.
-		  * @param lines The number of lines added or removed. If it's a positive number,
-		  *              lines were added. If it's a negative number, lines were removed.
-		  */
-		virtual void EditorLinesAddedOrRemoved(cbEditor* editor, int startline, int lines);
+        /** @brief Notify the debugger that lines were added or removed in an editor.
+          * This causes the debugger to keep the breakpoints list in-sync with the
+          * editors (i.e. what the user sees).
+          * @param editor The editor in question.
+          * @param startline The starting line this change took place.
+          * @param lines The number of lines added or removed. If it's a positive number,
+          *              lines were added. If it's a negative number, lines were removed.
+          */
+        virtual void EditorLinesAddedOrRemoved(cbEditor* editor, int startline, int lines);
     public:
         virtual void OnAttachReal() = 0;
         virtual void OnReleaseReal(bool appShutDown) = 0;
@@ -402,35 +402,35 @@ class PLUGIN_EXPORT cbDebuggerPlugin: public cbPlugin
         virtual bool ToolMenuEnabled() const;
 
 
-		/** @brief Start a new debugging process. */
-		virtual bool Debug(bool breakOnEntry) = 0;
+        /** @brief Start a new debugging process. */
+        virtual bool Debug(bool breakOnEntry) = 0;
 
         /** @brief Continue running the debugged program. */
         virtual void Continue() = 0;
 
-		/** @brief Run the debugged program until it reaches the cursor at the current editor */
-		virtual bool RunToCursor(const wxString& filename, int line, const wxString& line_text) = 0;
+        /** @brief Run the debugged program until it reaches the cursor at the current editor */
+        virtual bool RunToCursor(const wxString& filename, int line, const wxString& line_text) = 0;
 
-		/** @brief Sets the position of the Program counter to the specified filename:line */
-		virtual void SetNextStatement(const wxString& filename, int line) = 0;
+        /** @brief Sets the position of the Program counter to the specified filename:line */
+        virtual void SetNextStatement(const wxString& filename, int line) = 0;
 
-		/** @brief Execute the next instruction and return control to the debugger. */
-		virtual void Next() = 0;
+        /** @brief Execute the next instruction and return control to the debugger. */
+        virtual void Next() = 0;
 
-		/** @brief Execute the next instruction and return control to the debugger. */
-		virtual void NextInstruction() = 0;
+        /** @brief Execute the next instruction and return control to the debugger. */
+        virtual void NextInstruction() = 0;
 
-		/** @brief Execute the next instruction and return control to the debugger, if the instruction is a function call step into it. */
-		virtual void StepIntoInstruction() = 0;
+        /** @brief Execute the next instruction and return control to the debugger, if the instruction is a function call step into it. */
+        virtual void StepIntoInstruction() = 0;
 
-		/** @brief Execute the next instruction, stepping into function calls if needed, and return control to the debugger. */
-		virtual void Step() = 0;
+        /** @brief Execute the next instruction, stepping into function calls if needed, and return control to the debugger. */
+        virtual void Step() = 0;
 
-		/** @brief Execute the next instruction, stepping out of function calls if needed, and return control to the debugger. */
-		virtual void StepOut() = 0;
+        /** @brief Execute the next instruction, stepping out of function calls if needed, and return control to the debugger. */
+        virtual void StepOut() = 0;
 
-		/** @brief Break the debugging process (stop the debuggee for debugging). */
-		virtual void Break() = 0;
+        /** @brief Break the debugging process (stop the debuggee for debugging). */
+        virtual void Break() = 0;
 
         /** @brief Stop the debugging process (exit debugging). */
         virtual void Stop() = 0;
@@ -438,30 +438,30 @@ class PLUGIN_EXPORT cbDebuggerPlugin: public cbPlugin
         /** @brief Is the plugin currently debugging? */
         virtual bool IsRunning() const = 0;
 
-		/** @brief Is the plugin stopped on breakpoint? */
-		virtual bool IsStopped() const = 0;
+        /** @brief Is the plugin stopped on breakpoint? */
+        virtual bool IsStopped() const = 0;
 
         /** @brief Get the exit code of the last debug process. */
         virtual int GetExitCode() const = 0;
 
-		// stack frame calls;
-		virtual int GetStackFrameCount() const = 0;
-		virtual const cbStackFrame& GetStackFrame(int index) const = 0;
-		virtual void SwitchToFrame(int number) = 0;
-		virtual int GetActiveStackFrame() const = 0;
+        // stack frame calls;
+        virtual int GetStackFrameCount() const = 0;
+        virtual const cbStackFrame& GetStackFrame(int index) const = 0;
+        virtual void SwitchToFrame(int number) = 0;
+        virtual int GetActiveStackFrame() const = 0;
 
         // breakpoints calls
-		/** @brief Request to add a breakpoint.
-		  * @param file The file to add the breakpoint based on a file/line pair.
-		  * @param line The line number to put the breakpoint in @c file.
-		  * @return True if succeeded, false if not.
-		  */
+        /** @brief Request to add a breakpoint.
+          * @param file The file to add the breakpoint based on a file/line pair.
+          * @param line The line number to put the breakpoint in @c file.
+          * @return True if succeeded, false if not.
+          */
         virtual cbBreakpoint* AddBreakpoint(const wxString& filename, int line) = 0;
 
-		/** @brief Request to add a breakpoint based on a data expression.
-		  * @param dataExpression The data expression to add the breakpoint.
-		  * @return True if succeeded, false if not.
-		  */
+        /** @brief Request to add a breakpoint based on a data expression.
+          * @param dataExpression The data expression to add the breakpoint.
+          * @return True if succeeded, false if not.
+          */
         virtual cbBreakpoint* AddDataBreakpoint(const wxString& dataExpression) = 0;
         virtual int GetBreakpointsCount() const = 0;
         virtual cbBreakpoint* GetBreakpoint(int index) = 0;

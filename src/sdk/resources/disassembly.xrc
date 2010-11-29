@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8" ?>
+<?xml version="1.0" encoding="utf-8"?>
 <resource>
   <object class="wxPanel" name="dlgDisassembly">
     <object class="wxBoxSizer">
@@ -8,9 +8,9 @@
           <cols>2</cols>
           <vgap>2</vgap>
           <hgap>4</hgap>
-					<growablecols>1</growablecols>
+          <growablecols>1</growablecols>
           <object class="sizeritem">
-              <object class="wxStaticText" name="ID_STATICTEXT1">
+            <object class="wxStaticText" name="ID_STATICTEXT1">
               <label>Function:</label>
             </object>
             <flag>wxALIGN_LEFT|wxALIGN_TOP</flag>
@@ -22,7 +22,7 @@
             <flag>wxEXPAND|wxALIGN_LEFT|wxALIGN_TOP</flag>
           </object>
           <object class="sizeritem">
-              <object class="wxStaticText" name="ID_STATICTEXT2">
+            <object class="wxStaticText" name="ID_STATICTEXT2">
               <label>Frame start:</label>
             </object>
             <flag>wxALIGN_LEFT|wxALIGN_TOP</flag>
@@ -38,43 +38,42 @@
         <border>2</border>
       </object>
       <object class="sizeritem">
-				<object class="unknown" name="lcCode">
-					<style></style>
-					<style></style>
-				</object>
-				<flag>wxEXPAND|wxALIGN_LEFT|wxALIGN_TOP</flag>
+        <object class="unknown" name="lcCode">
+          <style/>
+        </object>
+        <flag>wxEXPAND|wxALIGN_LEFT|wxALIGN_TOP</flag>
         <option>1</option>
       </object>
       <object class="sizeritem">
         <object class="wxBoxSizer">
           <object class="sizeritem">
-          <object class="wxCheckBox" name="chkMode">
-          <label>Mixed Mode</label>
+            <object class="wxCheckBox" name="chkMode">
+              <label>Mixed Mode</label>
+            </object>
+            <flag>wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL</flag>
+            <border>5</border>
+            <option>1</option>
           </object>
-          <flag>wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL</flag>
-          <border>5</border>
-          <option>1</option>
+          <object class="sizeritem">
+            <object class="wxButton" name="btnAdjustLine">
+              <label>Adjust</label>
+              <tooltip>Move current line between top, middle, and bottom area of display window if disassembly document position allows.</tooltip>
+            </object>
+            <flag>wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL</flag>
+            <border>5</border>
+          </object>
+          <object class="sizeritem">
+            <object class="wxButton" name="btnSave">
+              <label>&amp;Save to text file</label>
+            </object>
+            <flag>wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL</flag>
+            <border>5</border>
+            <option>1</option>
+          </object>
         </object>
-        <object class="sizeritem">
-           <object class="wxButton" name="btnAdjustLine">
-           <label>Adjust</label>
-           <tooltip>Move current line between top, middle, and bottom area of display window if disassembly document position allows.</tooltip>
-        </object>
-        <flag>wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL</flag>
+        <flag>wxALL|wxALIGN_RIGHT|wxALIGN_BOTTOM</flag>
         <border>5</border>
-      </object>
-      <object class="sizeritem">
-        <object class="wxButton" name="btnSave">
-          <label>&amp;Save to text file</label>
-        </object>
-        <flag>wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL</flag>
-        <border>5</border>
-        <option>1</option>
       </object>
     </object>
-    <flag>wxALL|wxALIGN_RIGHT|wxALIGN_BOTTOM</flag>
-    <border>5</border>
   </object>
-		</object>
-	</object>
 </resource>

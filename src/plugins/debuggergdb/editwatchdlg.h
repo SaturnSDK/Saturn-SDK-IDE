@@ -7,6 +7,7 @@
 #define EDITWATCHDLG_H
 
 #include "scrollingdialog.h"
+
 class GDBWatch;
 
 class EditWatchDlg : public wxScrollingDialog
