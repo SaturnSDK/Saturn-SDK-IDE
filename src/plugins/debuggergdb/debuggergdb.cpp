@@ -1640,25 +1640,8 @@ void DebuggerGDB::Stop()
     if (m_pProcess && m_Pid)
     {
         if (!IsStopped())
-        {
             Break();
-/*            long pid = m_State.GetDriver()->GetChildPID();
-            if (pid <= 0) // look out for the "fake" PIDs (killall)
-            {
-                m_pProcess->CloseOutput();
-                m_pProcess->Kill(m_Pid, wxSIGKILL);
-//                cbMessageBox(_("Unable to stop the debug process!"), _("Error"), wxOK | wxICON_WARNING);
-                return;
-            }
-            else
-            {
-                m_pProcess->CloseOutput();
-                m_pProcess->Kill(pid, wxSIGKILL);
-            }
-*/
-        }
         RunCommand(CMD_STOP);
-        m_pProcess->CloseOutput();
     }
 }
 

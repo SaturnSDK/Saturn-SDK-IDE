@@ -74,7 +74,7 @@ static wxRegEx reChildPid2(_T("gdb: kernel event for pid=([0-9]+)"));
 // [Switching to Thread -1234655568 (LWP 18590)]
 // [New Thread -1234655568 (LWP 18590)]
 static wxRegEx reChildPid3(_T("Thread[ \t]+[xA-Fa-f0-9-]+[ \t]+\\(LWP ([0-9]+)\\)]"));
-
+static wxRegEx reAttachedChildPid(wxT("Attaching to process ([0-9]+)"));
 
 // scripting support
 DECLARE_INSTANCE_TYPE(GDB_driver);
@@ -88,7 +88,8 @@ GDB_driver::GDB_driver(DebuggerGDB* plugin)
     m_GDBVersionMajor(0),
     m_GDBVersionMinor(0),
     want_debug_events(true),
-    disable_debug_events(false)
+    disable_debug_events(false),
+    m_attachedToProcess(false)
 {
     //ctor
     m_needsUpdate = false;
@@ -501,6 +502,7 @@ wxString GDB_driver::GetDisassemblyFlavour(void)
 // breakOnEntry was always false.  Changed by HC.
 void GDB_driver::Start(bool breakOnEntry)
 {
+    m_attachedToProcess = false;
     ResetCursor();
 
     // reset other states
@@ -559,6 +561,7 @@ void GDB_driver::Stop()
         QueueCommand(new DebuggerCmd(this, wxT("kill")));
     QueueCommand(new DebuggerCmd(this, _T("quit")));
     m_IsStarted = false;
+    m_attachedToProcess = false;
 }
 
 void GDB_driver::Continue()
@@ -577,6 +580,7 @@ void GDB_driver::Continue()
             QueueCommand(new DebuggerCmd(this, m_ManualBreakOnEntry ? wxT("start") : wxT("run")));
         m_ManualBreakOnEntry = false;
         m_IsStarted = true;
+        m_attachedToProcess = false;
     }
 }
 
@@ -764,6 +768,7 @@ void GDB_driver::UpdateWatch(GDBWatch::Pointer const &watch)
 void GDB_driver::Attach(int /*pid*/)
 {
     m_IsStarted = true;
+    m_attachedToProcess = true;
 }
 
 void GDB_driver::Detach()
@@ -792,9 +797,9 @@ void GDB_driver::ParseOutput(const wxString& output)
             re = &reChildPid2;
         }
         else if (m_GDBVersionMajor <= 6 && output.Contains(_T("do_initial_child_stuff")))
-        {
             re = &reChildPid;
-        }
+        else if (m_attachedToProcess)
+            re = &reAttachedChildPid;
 
         if (re)
         {

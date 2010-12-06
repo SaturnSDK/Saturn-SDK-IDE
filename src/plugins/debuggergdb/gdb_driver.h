@@ -125,6 +125,7 @@ class GDB_driver : public DebuggerDriver
 
         bool want_debug_events;
         bool disable_debug_events;
+        bool m_attachedToProcess;
 
         // for remote debugging usage (mainly)
         ProjectBuildTarget* m_pTarget;
