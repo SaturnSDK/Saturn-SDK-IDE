@@ -89,9 +89,9 @@
 				</Compiler>
 			</Target>
 			<Target title="scintilla">
-				<Option output="devel/libwxscintilla.so" prefix_auto="0" extension_auto="0" />
-				<Option working_dir="devel" />
-				<Option type="3" />
+				<Option output="devel/libwxscintilla_cb.a" prefix_auto="0" extension_auto="0" />
+				<Option working_dir="" />
+				<Option type="2" />
 				<Option compiler="gcc" />
 				<Compiler>
 					<Add option="-D__WX__" />
@@ -141,7 +141,7 @@
 				</Compiler>
 				<Linker>
 					<Add library="txml" />
-					<Add library="wxscintilla" />
+					<Add library="wxscintilla_cb" />
 					<Add library="wxpropgrid" />
 					<Add library="sqplus" />
 					<Add library="sqstdlib" />
@@ -171,7 +171,6 @@
 				</Compiler>
 				<Linker>
 					<Add library="codeblocks" />
-					<Add library="wxscintilla" />
 					<Add library="wxpropgrid" />
 					<Add directory="devel" />
 				</Linker>
@@ -189,7 +188,6 @@
 				<Linker>
 					<Add option="`wx-config --libs`" />
 					<Add library="codeblocks" />
-					<Add library="wxscintilla" />
 					<Add directory="devel" />
 				</Linker>
 			</Target>
@@ -219,7 +217,6 @@
 				<Linker>
 					<Add option="`wx-config --libs`" />
 					<Add library="codeblocks" />
-					<Add library="wxscintilla" />
 					<Add library="depslib" />
 					<Add directory="devel" />
 					<Add directory="plugins/compilergcc/depslib" />
@@ -242,7 +239,6 @@
 					<Add option="-z defs" />
 					<Add option="`wx-config --libs`" />
 					<Add library="codeblocks" />
-					<Add library="wxscintilla" />
 					<Add directory="devel" />
 				</Linker>
 			</Target>
@@ -259,7 +255,6 @@
 				<Linker>
 					<Add option="`wx-config --libs`" />
 					<Add library="codeblocks" />
-					<Add library="wxscintilla" />
 					<Add directory="devel" />
 				</Linker>
 			</Target>
@@ -275,7 +270,6 @@
 				<Linker>
 					<Add option="`wx-config --libs`" />
 					<Add library="codeblocks" />
-					<Add library="wxscintilla" />
 					<Add directory="devel" />
 				</Linker>
 			</Target>
@@ -306,7 +300,6 @@
 				<Linker>
 					<Add option="`wx-config --libs`" />
 					<Add library="codeblocks" />
-					<Add library="wxscintilla" />
 					<Add directory="devel" />
 				</Linker>
 			</Target>
@@ -324,7 +317,6 @@
 				<Linker>
 					<Add option="`wx-config --libs`" />
 					<Add library="codeblocks" />
-					<Add library="wxscintilla" />
 					<Add directory="devel" />
 				</Linker>
 			</Target>
@@ -341,7 +333,6 @@
 				<Linker>
 					<Add option="`wx-config --libs`" />
 					<Add library="codeblocks" />
-					<Add library="wxscintilla" />
 					<Add directory="devel" />
 				</Linker>
 			</Target>
@@ -357,7 +348,6 @@
 				<Linker>
 					<Add option="`wx-config --libs`" />
 					<Add library="codeblocks" />
-					<Add library="wxscintilla" />
 					<Add directory="devel" />
 				</Linker>
 			</Target>
@@ -414,7 +404,6 @@
 				<Linker>
 					<Add option="`wx-config --libs`" />
 					<Add library="codeblocks" />
-					<Add library="wxscintilla" />
 					<Add directory="devel" />
 				</Linker>
 			</Target>
@@ -2726,6 +2715,9 @@
 			<Option target="scintilla" />
 		</Unit>
 		<Unit filename="sdk/wxscintilla/src/scintilla/include/ScintillaWidget.h">
+			<Option target="scintilla" />
+		</Unit>
+		<Unit filename="sdk/wxscintilla/src/scintilla/lexers/LexA68k.cxx">
 			<Option target="scintilla" />
 		</Unit>
 		<Unit filename="sdk/wxscintilla/src/scintilla/lexers/LexAPDL.cxx">
