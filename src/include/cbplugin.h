@@ -493,11 +493,18 @@ class PLUGIN_EXPORT cbDebuggerPlugin: public cbPlugin
         virtual void GetCurrentPosition(wxString &filename, int &line) = 0;
 
     protected:
+        enum StartType
+        {
+            StartTypeUnknown = 0,
+            StartTypeRun,
+            StartTypeStepInto
+        };
+    protected:
         virtual void ConvertDirectory(wxString& str, wxString base = _T(""), bool relative = true) = 0;
         virtual cbProject* GetProject() = 0;
         virtual void ResetProject() = 0;
         virtual void CleanupWhenProjectClosed(cbProject *project) = 0;
-        virtual void CompilerFinished(bool compilerFailed) {}
+        virtual void CompilerFinished(bool compilerFailed, StartType startType) {}
     public:
         enum DebugWindows
         {
@@ -511,7 +518,7 @@ class PLUGIN_EXPORT cbDebuggerPlugin: public cbPlugin
         virtual void RequestUpdate(DebugWindows window) = 0;
 
     public:
-        virtual wxString GetEditorWordAtCaret();
+        virtual wxString GetEditorWordAtCaret(const wxPoint *mousePosition = NULL);
         void ClearActiveMarkFromAllEditors();
 
         enum SyncEditorResult
@@ -534,7 +541,7 @@ class PLUGIN_EXPORT cbDebuggerPlugin: public cbPlugin
 
         bool GetDebuggee(wxString &pathToDebuggee, ProjectBuildTarget* target);
         wxString FindDebuggerExecutable(Compiler* compiler);
-        bool EnsureBuildUpToDate();
+        bool EnsureBuildUpToDate(StartType startType);
         bool WaitingCompilerToFinish() const { return m_WaitingCompilerToFinish; }
 
         int RunNixConsole(wxString &consoleTty);
@@ -556,6 +563,7 @@ class PLUGIN_EXPORT cbDebuggerPlugin: public cbPlugin
         bool m_WaitingCompilerToFinish;
 
         int m_EditorHookId;
+        StartType m_StartType;
         bool m_DragInProgress;
 };
 

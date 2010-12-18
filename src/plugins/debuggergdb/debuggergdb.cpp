@@ -599,7 +599,7 @@ bool DebuggerGDB::Debug(bool breakOnEntry)
         m_ActiveBuildTarget = m_pProject->GetActiveBuildTarget();
 
     m_Canceled = false;
-    if (!EnsureBuildUpToDate())
+    if (!EnsureBuildUpToDate(breakOnEntry ? StartTypeStepInto : StartTypeRun))
         return false;
 
     // if not waiting for the compiler, start debugging now
@@ -831,6 +831,10 @@ int DebuggerGDB::DoDebug(bool breakOnEntry)
         SetConsoleTitleA("Codeblocks debug console - DO NOT CLOSE!");
         SetConsoleCtrlHandler(HandlerRoutine, TRUE);
         m_bIsConsole = true;
+
+        HWND windowHandle = GetConsoleWindow();
+        if (windowHandle)
+            ShowWindow(windowHandle, SW_HIDE);
     }
     #endif
     // start the gdb process
@@ -1844,28 +1848,14 @@ void DebuggerGDB::OnValueTooltip(CodeBlocksEvent& event)
     wxPoint pt;
     pt.x = event.GetX();
     pt.y = event.GetY();
-    int pos = ed->GetControl()->PositionFromPoint(pt);
-    int start = ed->GetControl()->WordStartPosition(pos, true);
-    int end = ed->GetControl()->WordEndPosition(pos, true);
-    wxString token;
-    if (start >= ed->GetControl()->GetSelectionStart() &&
-        end <= ed->GetControl()->GetSelectionEnd())
-    {
-        token = ed->GetControl()->GetSelectedText();
-    }
-    else
-        token = ed->GetControl()->GetTextRange(start,end);
 
-    if (!token.IsEmpty())
+    const wxString &token = GetEditorWordAtCaret(&pt);
+    if (!token.empty())
     {
-        pt = ed->GetControl()->PointFromPosition(start);
         pt = ed->GetControl()->ClientToScreen(pt);
-        m_EvalRect.x = pt.x;
-        m_EvalRect.y = pt.y;
-        pt = ed->GetControl()->PointFromPosition(end);
-        pt = ed->GetControl()->ClientToScreen(pt);
-        m_EvalRect.width = pt.x - m_EvalRect.x;
-        m_EvalRect.height = (pt.y + ed->GetControl()->GetCharHeight()) - m_EvalRect.y;
+        m_EvalRect.x = pt.x - 5;
+        m_EvalRect.y = pt.y - 5;
+        m_EvalRect.height = m_EvalRect.width = 10;
         m_LastEval = token;
         m_State.GetDriver()->EvaluateSymbol(token, m_EvalRect);
     }
@@ -2107,11 +2097,11 @@ void DebuggerGDB::OnSettings(wxCommandEvent& event)
     Configure();
 }
 
-void DebuggerGDB::CompilerFinished(bool compilerFailed)
+void DebuggerGDB::CompilerFinished(bool compilerFailed, StartType startType)
 {
-    if (compilerFailed)
+    if (compilerFailed || startType == StartTypeUnknown)
         return;
-    if (DoDebug(false) != 0)
+    if (DoDebug(startType == StartTypeStepInto) != 0)
     {
         ProjectManager *manager = Manager::Get()->GetProjectManager();
         if (manager->GetIsRunning() && manager->GetIsRunning() == this)

@@ -180,4 +180,87 @@ TEST(TupleArray)
     CHECK_EQUAL(wxT("t= {[0]= {a=1,b=2},[1]= {a=3,b=5}}"), w);
 }
 
+TEST(StdStringWithCommas)
+{
+    GDBWatch w(wxT("t"));
+    CHECK(ParseGDBWatchValue(w, wxT("{\nb = 0x3e24e4 \"AAAA,BBBB,CCCC,DDDDD\"}")));
+    CHECK_EQUAL(wxT("t= {b=0x3e24e4 \"AAAA,BBBB,CCCC,DDDDD\"}"), w);
+}
+
+TEST(StringWithQuotes)
+{
+    GDBWatch w(wxT("t"));
+    CHECK(ParseGDBWatchValue(w, wxT("{\nb= 0x3e24e4 \"AAAA,\\\"BBBB\\\",CCCC,DDDDD\"}")));
+    CHECK_EQUAL(wxT("t= {b=0x3e24e4 \"AAAA,\\\"BBBB\\\",CCCC,DDDDD\"}"), w);
+}
+
+TEST(RepeatingChars0)
+{
+    GDBWatch w(wxT("t"));
+    CHECK(ParseGDBWatchValue(w, wxT("{\n\tc = 0x400d90 'A' <repeats 16 times>, \"aa\\\"a\"\n}")));
+    CHECK_EQUAL(wxT("t= {c=0x400d90 'A' <repeats 16 times>, \"aa\\\"a\"}"), w);
+}
+
+TEST(RepeatingChars1)
+{
+    GDBWatch w(wxT("t"));
+    CHECK(ParseGDBWatchValue(w, wxT("{\n\tc = 0x400d90 'A' <repeats 16 times>, ' ' <repeats 29 times>, \"aabba\"\n}")));
+    CHECK_EQUAL(wxT("t= {c=0x400d90 'A' <repeats 16 times>, ' ' <repeats 29 times>, \"aabba\"}"), w);
+}
+
+TEST(RepeatingChars2)
+{
+    GDBWatch w(wxT("t"));
+    CHECK(ParseGDBWatchValue(w, wxT("{\n\tc = 0x400d90 'A' <repeats 16 times>, ' ' <repeats 29 times>, \"aaa\",\n\ta = 5}")));
+    CHECK_EQUAL(wxT("t= {c=0x400d90 'A' <repeats 16 times>, ' ' <repeats 29 times>, \"aaa\",a=5}"), w);
+}
+
+TEST(RepeatingChars3)
+{
+    GDBWatch w(wxT("t"));
+    // c = 0x400dd8 "{\n\tc = 0x400d90 'A' <repeats 16 times>, ' ' <repeats 29 times>, \"aaa\"\n}"
+    CHECK(ParseGDBWatchValue(w, wxT("{\n\tc = 0x400dd8 \"{c = 0x400d90 'A' <repeats 16 times>,")
+                                wxT(" ' ' <repeats 29 times>, \\\"aaa\\\"}\"}")));
+    CHECK_EQUAL(wxT("t= {c=0x400dd8 \"{c = 0x400d90 'A' <repeats 16 times>, ' ' <repeats 29 times>, \\\"aaa\\\"}\"}"), w);
+}
+
+TEST(RepeatingChars4)
+{
+    GDBWatch w(wxT("t"));
+    CHECK(ParseGDBWatchValue(w, wxT("{\n  name = \"bb\", '\\000' <repeats 14 times>\n}")));
+    CHECK_EQUAL(wxT("t= {name=\"bb\", '\\000' <repeats 14 times>}"), w);
+}
+
+TEST(RepeatingChars5)
+{
+    GDBWatch w(wxT("t"));
+    CHECK(ParseGDBWatchValue(w, wxT("{\n  name = \"bb\", '\\000' <repeats 14 times>, \"aabbccddee\"\n}")));
+    CHECK_EQUAL(wxT("t= {name=\"bb\", '\\000' <repeats 14 times>, \"aabbccddee\"}"), w);
+}
+
+TEST(RepeatingChars6)
+{
+    GDBWatch w(wxT("t"));
+    CHECK(ParseGDBWatchValue(w, wxT("{\n  name1 = \"aa\", '\\000' <repeats 14 times>,\n")
+                                wxT("  name2 = \"bb\", '\\000' <repeats 12 times>, \"aabbccddee\"\n}")));
+    CHECK_EQUAL(wxT("t= {name1=\"aa\", '\\000' <repeats 14 times>,name2=\"bb\",")
+                wxT(" '\\000' <repeats 12 times>, \"aabbccddee\"}"), w);
+}
+
+TEST(RepeatingChars7)
+{
+    GDBWatch w(wxT("t"));
+    CHECK(ParseGDBWatchValue(w, wxT("{\n  name = \"bb\", '\\000' <repeats 14 times>, '\\000' <repeats 12 times>\n}")));
+    CHECK_EQUAL(wxT("t= {name=\"bb\", '\\000' <repeats 14 times>, '\\000' <repeats 12 times>}"), w);
+}
+
+TEST(RepeatingChars8)
+{
+    GDBWatch w(wxT("t"));
+    CHECK(ParseGDBWatchValue(w, wxT("{\n  name = \"bb\", '\\000' <repeats 14 times>, \"aabb\",")
+                                wxT(" '\\000' <repeats 12 times>, \"aabbccddee\"\n}")));
+    CHECK_EQUAL(wxT("t= {name=\"bb\", '\\000' <repeats 14 times>, \"aabb\",")
+                wxT(" '\\000' <repeats 12 times>, \"aabbccddee\"}"), w);
+}
+
 } // SUITE(GDBWatchParser)

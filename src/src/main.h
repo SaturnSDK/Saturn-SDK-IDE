@@ -225,7 +225,7 @@ class MainFrame : public wxFrame
         void OnAddLogWindow(CodeBlocksLogEvent& event);
         void OnRemoveLogWindow(CodeBlocksLogEvent& event);
         void OnSwitchToLogWindow(CodeBlocksLogEvent& event);
-        void OnGetAciveLogWindow(CodeBlocksLogEvent& event);
+        void OnGetActiveLogWindow(CodeBlocksLogEvent& event);
         void OnShowLogManager(CodeBlocksLogEvent& event);
         void OnHideLogManager(CodeBlocksLogEvent& event);
         void OnLockLogManager(CodeBlocksLogEvent& event);

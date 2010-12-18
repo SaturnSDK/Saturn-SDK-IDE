@@ -599,7 +599,7 @@ void MainFrame::RegisterEvents()
     pm->RegisterEventSink(cbEVT_ADD_LOG_WINDOW, new cbEventFunctor<MainFrame, CodeBlocksLogEvent>(this, &MainFrame::OnAddLogWindow));
     pm->RegisterEventSink(cbEVT_REMOVE_LOG_WINDOW, new cbEventFunctor<MainFrame, CodeBlocksLogEvent>(this, &MainFrame::OnRemoveLogWindow));
     pm->RegisterEventSink(cbEVT_SWITCH_TO_LOG_WINDOW, new cbEventFunctor<MainFrame, CodeBlocksLogEvent>(this, &MainFrame::OnSwitchToLogWindow));
-    pm->RegisterEventSink(cbEVT_GET_ACTIVE_LOG_WINDOW, new cbEventFunctor<MainFrame, CodeBlocksLogEvent>(this, &MainFrame::OnGetAciveLogWindow));
+    pm->RegisterEventSink(cbEVT_GET_ACTIVE_LOG_WINDOW, new cbEventFunctor<MainFrame, CodeBlocksLogEvent>(this, &MainFrame::OnGetActiveLogWindow));
     pm->RegisterEventSink(cbEVT_SHOW_LOG_MANAGER, new cbEventFunctor<MainFrame, CodeBlocksLogEvent>(this, &MainFrame::OnShowLogManager));
     pm->RegisterEventSink(cbEVT_HIDE_LOG_MANAGER, new cbEventFunctor<MainFrame, CodeBlocksLogEvent>(this, &MainFrame::OnHideLogManager));
     pm->RegisterEventSink(cbEVT_LOCK_LOG_MANAGER, new cbEventFunctor<MainFrame, CodeBlocksLogEvent>(this, &MainFrame::OnLockLogManager));
@@ -4498,7 +4498,7 @@ void MainFrame::OnSwitchToLogWindow(CodeBlocksLogEvent& event)
         m_pInfoPane->Show(event.logger);
 }
 
-void MainFrame::OnGetAciveLogWindow(CodeBlocksLogEvent& event)
+void MainFrame::OnGetActiveLogWindow(CodeBlocksLogEvent& event)
 {
     bool is_logger;
     int page_index = m_pInfoPane->GetCurrentPage(is_logger);

@@ -117,6 +117,7 @@ cbDebuggerPlugin::cbDebuggerPlugin() :
     m_pCompiler(NULL),
     m_WaitingCompilerToFinish(false),
     m_EditorHookId(-1),
+    m_StartType(StartTypeUnknown),
     m_DragInProgress(false)
 {
     m_Type = ptDebugger;
@@ -137,6 +138,7 @@ void cbDebuggerPlugin::OnAttach()
     EditorHooks::HookFunctorBase *editor_hook;
     editor_hook = new EditorHooks::HookFunctor<cbDebuggerPlugin>(this, &cbDebuggerPlugin::OnEditorHook);
     m_EditorHookId = EditorHooks::RegisterHook(editor_hook);
+    m_StartType = StartTypeUnknown;
 }
 
 void cbDebuggerPlugin::OnRelease(bool appShutDown)
@@ -153,7 +155,7 @@ void cbDebuggerPlugin::BuildMenu(wxMenuBar* menuBar)
     Manager::Get()->GetDebuggerManager()->GetMenu();
 }
 
-wxString cbDebuggerPlugin::GetEditorWordAtCaret()
+wxString cbDebuggerPlugin::GetEditorWordAtCaret(const wxPoint *mousePosition)
 {
     cbEditor* ed = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
     if (!ed)
@@ -178,9 +180,20 @@ wxString cbDebuggerPlugin::GetEditorWordAtCaret()
         return selected_text;
     }
 
-    int start = control->WordStartPosition(control->GetCurrentPos(), true);
-    int end = control->WordEndPosition(control->GetCurrentPos(), true);
-    return control->GetTextRange(start, end);
+    if (mousePosition)
+    {
+        int pos = control->PositionFromPoint(*mousePosition);
+        int start = control->WordStartPosition(pos, true);
+        int end = control->WordEndPosition(pos, true);
+        selected_text = control->GetTextRange(start, end);
+    }
+    else
+    {
+        int start = control->WordStartPosition(control->GetCurrentPos(), true);
+        int end = control->WordEndPosition(control->GetCurrentPos(), true);
+        selected_text = control->GetTextRange(start, end);
+    }
+    return selected_text;
 }
 
 void cbDebuggerPlugin::BuildModuleMenu(const ModuleType type, wxMenu* menu, const FileTreeData* data)
@@ -655,8 +668,9 @@ wxString cbDebuggerPlugin::FindDebuggerExecutable(Compiler* compiler)
     return binPath;
 }
 
-bool cbDebuggerPlugin::EnsureBuildUpToDate()
+bool cbDebuggerPlugin::EnsureBuildUpToDate(StartType startType)
 {
+    m_StartType = startType;
     m_WaitingCompilerToFinish = false;
 
     // compile project/target (if not attaching to a PID)
@@ -720,7 +734,7 @@ void cbDebuggerPlugin::OnCompilerFinished(CodeBlocksEvent& event)
                 compilerFailed = true;
             }
         }
-        CompilerFinished(compilerFailed);
+        CompilerFinished(compilerFailed, m_StartType);
     }
 }
 

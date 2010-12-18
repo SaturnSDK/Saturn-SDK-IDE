@@ -33,7 +33,8 @@ struct Token
     Token(int start_, int end_, Type type_) :
         start(start_),
         end(end_),
-        type(type_)
+        type(type_),
+        hasRepeatedChar(false)
     {
     }
 
@@ -59,10 +60,54 @@ struct Token
 
     int start, end;
     Type type;
+    bool hasRepeatedChar;
 };
+
+wxRegEx regexRepeatedChars(wxT("^'[\\\\A-z0-9]+'[ \\t](<repeats[ \\t][0-9]+[ \\t]times>)"));
+
+int DetectRepeatingSymbols(wxString const &str, int pos)
+{
+    int newPos = -1, currPos = pos;
+    while (1)
+    {
+        if (currPos + 4 >= static_cast<int>(str.length()))
+            break;
+        if (str[currPos + 1] != wxT(','))
+            break;
+        if (str[currPos + 3] == wxT('\''))
+        {
+            const wxString &s = str.substr(currPos + 3, str.length() - (currPos + 3));
+            if (regexRepeatedChars.Matches(s))
+            {
+                size_t start, length;
+                regexRepeatedChars.GetMatch(&start, &length, 0);
+                newPos = currPos + 3 + length;
+                if ((newPos + 4 < static_cast<int>(str.length()))
+                    && str[newPos] == wxT(',') && str[newPos + 2] == wxT('"'))
+                {
+                    newPos += 3;
+                    while (newPos < static_cast<int>(str.length()) && str[newPos] != wxT('"'))
+                        ++newPos;
+                    if (newPos + 1 < static_cast<int>(str.length()) && str[newPos] == wxT('"'))
+                        ++newPos;
+                }
+                currPos = newPos;
+            }
+            else
+                break;
+        }
+        else
+            break;
+
+        // move the current position to point at the '"' character
+        currPos--;
+    }
+    return newPos;
+}
 
 bool GetNextToken(wxString const &str, int pos, Token &token)
 {
+    token.hasRepeatedChar = false;
     while (pos < static_cast<int>(str.length())
            && (str[pos] == _T(' ') || str[pos] == _T('\t') || str[pos] == _T('\n')))
         ++pos;
@@ -109,9 +154,12 @@ bool GetNextToken(wxString const &str, int pos, Token &token)
     {
         if (open_angle_braces == 0)
         {
-            if ((str[pos] == _T(',') || str[pos] == _T('=') || str[pos] == _T('{')
-                || str[pos] == _T('}'))
-                && !in_quote)
+            if (str[pos] == _T(',') && !in_quote)
+            {
+                token.end = pos;
+                return true;
+            }
+            else if ((str[pos] == _T('=') || str[pos] == _T('{') || str[pos] == _T('}')) && !in_quote)
             {
                 token.end = pos;
                 return true;
@@ -122,8 +170,18 @@ bool GetNextToken(wxString const &str, int pos, Token &token)
                 {
                     if (!escape_next)
                     {
-                        token.end = pos + 1;
-                        return true;
+                        int newPos = DetectRepeatingSymbols(str, pos);
+                        if (newPos != -1)
+                        {
+                            token.hasRepeatedChar = true;
+                            token.end =  newPos;
+                            return true;
+                        }
+                        else
+                        {
+                            token.end = pos + 1;
+                            return true;
+                        }
                     }
                 }
                 else
@@ -226,7 +284,7 @@ bool ParseGDBWatchValue(GDBWatch &watch, wxString const &value, int &start, int 
             }
         }
 
-        if (regexRepeatedChar.Matches(str))
+        if (!token.hasRepeatedChar && regexRepeatedChar.Matches(str))
         {
             Token expanded_token = token;
             while (1)
@@ -243,6 +301,11 @@ bool ParseGDBWatchValue(GDBWatch &watch, wxString const &value, int &start, int 
                             continue;
                         token_real_end = expanded_token.end;
                     }
+                }
+                else if (expanded_token.end == static_cast<int>(value.length()))
+                {
+                    token.end = expanded_token.end;
+                    token_real_end = expanded_token.end;
                 }
                 break;
             }
