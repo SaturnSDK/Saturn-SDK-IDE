@@ -3,11 +3,13 @@
 	<FileVersion major="1" minor="6" />
 	<Project>
 		<Option title="wxSmith - Contrib Items" />
+		<Option platforms="Windows;" />
 		<Option pch_mode="2" />
 		<Option default_target="wxSmithContribItems" />
 		<Option compiler="gcc" />
 		<Build>
 			<Target title="wxFlatNotebook">
+				<Option platforms="Windows;" />
 				<Option output="..\..\..\devel\wxflatnotebook" prefix_auto="1" extension_auto="1" />
 				<Option working_dir="..\..\..\devel" />
 				<Option object_output="..\..\..\.objs\plugins\contrib\wxSmithContribItems\wxflatnotebook" />
@@ -19,6 +21,7 @@
 				</Compiler>
 			</Target>
 			<Target title="wxChartCtrl">
+				<Option platforms="Windows;" />
 				<Option output="..\..\..\devel\wxchartctrl" prefix_auto="1" extension_auto="1" />
 				<Option working_dir="..\..\..\devel" />
 				<Option object_output="..\..\..\.objs\plugins\contrib\wxSmithContribItems\wxchart" />
@@ -31,6 +34,7 @@
 				</Compiler>
 			</Target>
 			<Target title="wxCustomButton">
+				<Option platforms="Windows;" />
 				<Option output="..\..\..\devel\wxcustombutton" prefix_auto="1" extension_auto="1" />
 				<Option working_dir="..\..\..\devel" />
 				<Option object_output="..\..\..\.objs\plugins\contrib\wxSmithContribItems\wxthings" />
@@ -40,6 +44,18 @@
 				<Compiler>
 					<Add option="-DWXMAKINGDLL_THINGS" />
 					<Add directory="wxthings\wxthings\include" />
+				</Compiler>
+			</Target>
+			<Target title="wxImagePanel">
+				<Option platforms="Windows;" />
+				<Option output="..\..\..\devel\wximagepanel" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="..\..\..\devel" />
+				<Option object_output="..\..\..\.objs\plugins\contrib\wxSmithContribItems\wximagepanel" />
+				<Option type="3" />
+				<Option compiler="gcc" />
+				<Option createStaticLib="1" />
+				<Compiler>
+					<Add directory="wximagepanel\wxImagePanel\include" />
 				</Compiler>
 			</Target>
 			<Target title="wxSmithContribItems">
@@ -64,6 +80,7 @@
 					<Add directory="..\wxSmith" />
 					<Add directory="wxchart\wxchart-1.0\include" />
 					<Add directory="wxthings\wxthings\include" />
+					<Add directory="wximagepanel\wxImagePanel\include" />
 				</Compiler>
 				<Linker>
 					<Add option="-Wl,--enable-auto-import" />
@@ -72,6 +89,7 @@
 					<Add library="codeblocks" />
 					<Add library="wxchartctrl" />
 					<Add library="wxcustombutton" />
+					<Add library="wximagepanel" />
 					<Add directory="wxflatnotebook" />
 				</Linker>
 				<ExtraCommands>
@@ -85,9 +103,10 @@
 			</Environment>
 		</Build>
 		<VirtualTargets>
-			<Add alias="All" targets="wxFlatNotebook;wxChartCtrl;wxCustomButton;wxSmithContribItems;" />
+			<Add alias="All" targets="wxFlatNotebook;wxChartCtrl;wxCustomButton;wxImagePanel;wxSmithContribItems;" />
 		</VirtualTargets>
 		<Compiler>
+			<Add option="-Wall" />
 			<Add option="-g" />
 			<Add option="-pipe" />
 			<Add option="-mthreads" />
@@ -335,6 +354,38 @@
 			<Option target="wxSmithContribItems" />
 		</Unit>
 		<Unit filename="wxflatnotebook\wxsFlatNotebook.h">
+			<Option target="wxSmithContribItems" />
+		</Unit>
+		<Unit filename="wximagebutton\ImageButton16.xpm">
+			<Option target="wxSmithContribItems" />
+		</Unit>
+		<Unit filename="wximagebutton\ImageButton32.xpm">
+			<Option target="wxSmithContribItems" />
+		</Unit>
+		<Unit filename="wximagebutton\wxsImageButton.cpp">
+			<Option target="wxSmithContribItems" />
+		</Unit>
+		<Unit filename="wximagebutton\wxsImageButton.h">
+			<Option target="wxSmithContribItems" />
+		</Unit>
+		<Unit filename="wximagepanel\ImagePanel16.xpm">
+			<Option target="wxImagePanel" />
+			<Option target="wxSmithContribItems" />
+		</Unit>
+		<Unit filename="wximagepanel\ImagePanel32.xpm">
+			<Option target="wxImagePanel" />
+			<Option target="wxSmithContribItems" />
+		</Unit>
+		<Unit filename="wximagepanel\wxImagePanel\include\wx\wxImagePanel.h">
+			<Option target="wxImagePanel" />
+		</Unit>
+		<Unit filename="wximagepanel\wxImagePanel\src\wxImagePanel.cpp">
+			<Option target="wxImagePanel" />
+		</Unit>
+		<Unit filename="wximagepanel\wxsimagepanel.cpp">
+			<Option target="wxSmithContribItems" />
+		</Unit>
+		<Unit filename="wximagepanel\wxsimagepanel.h">
 			<Option target="wxSmithContribItems" />
 		</Unit>
 		<Unit filename="wxthings\wxcustombutton16.png">
