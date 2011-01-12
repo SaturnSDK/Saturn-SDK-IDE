@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_plugin_manifest_file>
+    <SdkVersion major="1" minor="11"  release="12" />
+    <Plugin name="wxSmithKWIC">
+        <Value title="wxSmith - KWIC" />
+        <Value version="0.9.851" />
+        <Value description="Koan WxIndustrialControls for wxSmith.
+
+wxSmithKWIC is based in part on the
+work of the KWIC project
+(http://www.koansoftware.com/kwic/index.htm).
+" />
+        <Value author="Gary Harris" />
+        <Value authorEmail="garyjharris@sourceforge.net" />
+        <Value authorWebsite="http://cryogen.66ghz.com/" />
+        <Value thanksTo="Andrea V. and Marco Cavallini at
+KOAN Software for the original controls." />
+        <Value license="KWIC Licence" />
+    </Plugin>
+</CodeBlocks_plugin_manifest_file>

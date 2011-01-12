@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<wxsmith>
+	<object class="wxFrame" name="TestTreeListFrame">
+		<size>380,420</size>
+		<object class="wxPanel" name="ID_PANEL1" variable="Panel1" member="yes">
+			<pos>120,128</pos>
+			<size>380,420</size>
+			<object class="wxTreeListCtrl" name="ID_TREELISTCTRL1" variable="TreeListCtrl1" member="yes">
+				<colcount>5</colcount>
+				<coltitles>
+					<item>!Define Column Titles</item>
+					<item>!Text lines that begin with &quot;!&quot; are ignored, but blank</item>
+					<item>!lines are significant (a blank line is a blank title for</item>
+					<item>!a column).</item>
+					<item>First</item>
+					<item>Second</item>
+					<item>Third</item>
+					<item>Fourth</item>
+					<item>Fifth</item>
+				</coltitles>
+				<treedata>
+					<node>! Define node data for a wxTreeCtrl.</node>
+					<node>! Note that all lines that start with a &quot;!&quot; are comment lines and ignored.</node>
+					<node>! Also, all empty lines are ignored (a line of spaces is not an empty line).</node>
+					<node>!</node>
+					<node>! The node data is organized similar to a Tabbed Hierarchical Values (THV) file,</node>
+					<node>! such that each line of text represents one label for a single tree node.</node>
+					<node>! The number of leading TAB characters indicate the indentation level of the</node>
+					<node>! tree node.</node>
+					<node>!</node>
+					<node>! Space (or blank) characters are not used the same as TAB characters; if your</node>
+					<node>! editor substitutes spaces for TABs, use the &quot;TAB Char&quot; attribute to change</node>
+					<node>! the character used to indicate the tree node level.</node>
+					<node>!</node>
+					<node>! Following is a sample tree data definition:</node>
+					<node></node>
+					<node>First level, no tabs&#x09;Second Column&#x09;Third Column&#x09;Fourth Column&#x09;Fifth Column</node>
+					<node>&#x09;Second level, 1 tab&#x09;Second Column&#x09;Third Column&#x09;Fourth Column&#x09;Fifth Column</node>
+					<node>&#x09;&#x09;Third level, 2 tabs&#x09;Second Column&#x09;Third Column&#x09;Fourth Column&#x09;Fifth Column</node>
+					<node>First level again, no tabs&#x09;Second Column&#x09;Third Column&#x09;Fourth Column&#x09;Fifth Column</node>
+					<node>&#x09;Second level again, 1 tab&#x09;Second Column&#x09;Third Column&#x09;Fourth Column&#x09;Fifth Column</node>
+					<node>&#x09;Another second level, 1 tab&#x09;Second Column&#x09;Third Column&#x09;Fourth Column&#x09;Fifth Column</node>
+					<node>&#x09;&#x09;Third level again, 2 tabs&#x09;Second Column&#x09;Third Column&#x09;Fourth Column&#x09;Fifth Column</node>
+					<node></node>
+				</treedata>
+				<pos>16,16</pos>
+				<size>352,392</size>
+				<style>wxTR_EDIT_LABELS|wxTR_FULL_ROW_HIGHLIGHT|wxTR_DEFAULT_STYLE|wxSUNKEN_BORDER</style>
+			</object>
+		</object>
+		<object class="wxMenuBar" variable="MenuBar1" member="no">
+			<object class="wxMenu" variable="Menu1" member="no">
+				<label>&amp;File</label>
+				<object class="wxMenuItem" name="idMenuQuit" variable="MenuItem1" member="no">
+					<label>Quit</label>
+					<accel>Alt-F4</accel>
+					<help>Quit the application</help>
+					<handler function="OnQuit" entry="EVT_MENU" />
+				</object>
+			</object>
+			<object class="wxMenu" variable="Menu2" member="no">
+				<label>Help</label>
+				<object class="wxMenuItem" name="idMenuAbout" variable="MenuItem2" member="no">
+					<label>About</label>
+					<accel>F1</accel>
+					<help>Show info about this application</help>
+					<handler function="OnAbout" entry="EVT_MENU" />
+				</object>
+			</object>
+		</object>
+		<object class="wxStatusBar" name="ID_STATUSBAR1" variable="StatusBar1" member="yes">
+			<fields>1</fields>
+			<widths>-1</widths>
+			<styles>wxSB_NORMAL</styles>
+		</object>
+	</object>
+</wxsmith>

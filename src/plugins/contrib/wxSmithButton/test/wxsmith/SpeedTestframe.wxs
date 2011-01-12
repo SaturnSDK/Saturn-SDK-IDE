@@ -1,0 +1,277 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<wxsmith>
+	<object class="wxFrame" name="SpeedTestFrame">
+		<size>443,600</size>
+		<object class="wxPanel" name="ID_PANEL1" variable="Panel1" member="yes">
+			<pos>88,128</pos>
+			<size>443,600</size>
+			<object class="wxStaticText" name="ID_STATICTEXT1" variable="StaticText1" member="yes">
+				<label>Description</label>
+				<pos>8,16</pos>
+				<size>424,13</size>
+			</object>
+			<object class="wxPanel" name="ID_PANEL2" variable="Panel2" member="yes">
+				<pos>8,48</pos>
+				<size>424,88</size>
+				<bg>#FFFF00</bg>
+				<object class="wxStaticText" name="ID_STATICTEXT2" variable="StaticText2" member="yes">
+					<label>These are simple buttons, all they do is click and they always&#x0A;appear UP</label>
+					<pos>8,8</pos>
+					<size>400,26</size>
+				</object>
+				<object class="wxSpeedButton" name="ID_SPEEDBUTTON1" variable="SpeedButton1" member="yes">
+					<label>Simple-1</label>
+					<glyph>..\images\ARROW1R.xpm</glyph>
+					<buttontype>Simple Button</buttontype>
+					<pos>16,48</pos>
+					<handler function="OnSpeedButton1LeftClick" entry="EVT_COMMAND_LEFT_CLICK" />
+					<handler function="OnSpeedButton1LeftClick" entry="EVT_COMMAND_RIGHT_CLICK" />
+				</object>
+				<object class="wxSpeedButton" name="ID_SPEEDBUTTON2" variable="SpeedButton2" member="yes">
+					<label>Simple-2</label>
+					<glyph>..\images\ARROW1L.xpm</glyph>
+					<buttontype>Simple Button</buttontype>
+					<pos>112,48</pos>
+					<style>wxBU_RIGHT|wxTAB_TRAVERSAL</style>
+					<handler function="OnSpeedButton1LeftClick" entry="EVT_COMMAND_LEFT_CLICK" />
+					<handler function="OnSpeedButton1LeftClick" entry="EVT_COMMAND_RIGHT_CLICK" />
+				</object>
+				<object class="wxSpeedButton" name="ID_SPEEDBUTTON3" variable="SpeedButton3" member="yes">
+					<label>Simple-3</label>
+					<glyph>..\images\ARROW1U.xpm</glyph>
+					<buttontype>Simple Button</buttontype>
+					<pos>216,32</pos>
+					<size>72,40</size>
+					<style>wxBU_BOTTOM|wxTAB_TRAVERSAL</style>
+					<handler function="OnSpeedButton1LeftClick" entry="EVT_COMMAND_LEFT_CLICK" />
+					<handler function="OnSpeedButton1LeftClick" entry="EVT_COMMAND_RIGHT_CLICK" />
+				</object>
+				<object class="wxSpeedButton" name="ID_SPEEDBUTTON4" variable="SpeedButton4" member="yes">
+					<label>Simple-4</label>
+					<glyph>..\images\ARROW1D.xpm</glyph>
+					<buttontype>Simple Button</buttontype>
+					<pos>304,32</pos>
+					<size>72,40</size>
+					<style>wxBU_TOP|wxTAB_TRAVERSAL</style>
+					<handler function="OnSpeedButton1LeftClick" entry="EVT_COMMAND_LEFT_CLICK" />
+					<handler function="OnSpeedButton1LeftClick" entry="EVT_COMMAND_RIGHT_CLICK" />
+				</object>
+			</object>
+			<object class="wxPanel" name="ID_PANEL3" variable="Panel3" member="yes">
+				<pos>8,146</pos>
+				<size>424,102</size>
+				<bg>#00FFFF</bg>
+				<object class="wxStaticText" name="ID_STATICTEXT3" variable="StaticText3" member="yes">
+					<label>These are toggle buttons, they can be UP or DOWN without effecting &#x0A;any other button</label>
+					<pos>8,8</pos>
+					<size>420,24</size>
+				</object>
+				<object class="wxSpeedButton" name="ID_SPEEDBUTTON5" variable="SpeedButton5" member="yes">
+					<label>Toggle-1</label>
+					<glyph>..\images\ARROW2R.xpm</glyph>
+					<pos>16,64</pos>
+					<style>wxBU_LEFT|wxTAB_TRAVERSAL</style>
+					<handler function="OnSpeedButton1LeftClick" entry="EVT_COMMAND_LEFT_CLICK" />
+					<handler function="OnSpeedButton1LeftClick" entry="EVT_COMMAND_RIGHT_CLICK" />
+				</object>
+				<object class="wxSpeedButton" name="ID_SPEEDBUTTON6" variable="SpeedButton6" member="yes">
+					<label>Toggle-2</label>
+					<glyph>..\images\ARROW2L.xpm</glyph>
+					<pos>112,64</pos>
+					<style>wxBU_RIGHT|wxTAB_TRAVERSAL</style>
+					<handler function="OnSpeedButton1LeftClick" entry="EVT_COMMAND_LEFT_CLICK" />
+					<handler function="OnSpeedButton1LeftClick" entry="EVT_COMMAND_RIGHT_CLICK" />
+				</object>
+				<object class="wxSpeedButton" name="ID_SPEEDBUTTON7" variable="SpeedButton7" member="yes">
+					<label>Toggle-3</label>
+					<glyph>..\images\ARROW2U.xpm</glyph>
+					<pos>216,48</pos>
+					<size>72,40</size>
+					<style>wxBU_BOTTOM|wxTAB_TRAVERSAL</style>
+					<handler function="OnSpeedButton1LeftClick" entry="EVT_COMMAND_LEFT_CLICK" />
+					<handler function="OnSpeedButton1LeftClick" entry="EVT_COMMAND_RIGHT_CLICK" />
+				</object>
+				<object class="wxSpeedButton" name="ID_SPEEDBUTTON8" variable="SpeedButton8" member="yes">
+					<label>Toggle-4</label>
+					<glyph>..\images\ARROW2D.xpm</glyph>
+					<pos>312,48</pos>
+					<size>72,40</size>
+					<style>wxBU_TOP|wxTAB_TRAVERSAL</style>
+					<handler function="OnSpeedButton1LeftClick" entry="EVT_COMMAND_LEFT_CLICK" />
+					<handler function="OnSpeedButton1LeftClick" entry="EVT_COMMAND_RIGHT_CLICK" />
+				</object>
+			</object>
+			<object class="wxPanel" name="ID_PANEL4" variable="Panel4" member="yes">
+				<pos>8,256</pos>
+				<size>424,112</size>
+				<bg>#00FF00</bg>
+				<object class="wxStaticText" name="ID_STATICTEXT4" variable="StaticText4" member="yes">
+					<label>These are group toggle buttons; the single group is defined by the&#x0A;panel they are placed on; only one button may be DOWN at a time,&#x0A;and there must always be a DOWN button</label>
+					<pos>8,8</pos>
+					<size>420,40</size>
+				</object>
+				<object class="wxSpeedButton" name="ID_SPEEDBUTTON9" variable="SpeedButton9" member="yes">
+					<label>Group-1</label>
+					<glyph>..\images\ARROW3R.xpm</glyph>
+					<buttontype>Group By Parent</buttontype>
+					<allowallup>0</allowallup>
+					<pos>16,72</pos>
+					<style>wxBU_LEFT|wxTAB_TRAVERSAL</style>
+					<handler function="OnSpeedButton1LeftClick" entry="EVT_COMMAND_LEFT_CLICK" />
+					<handler function="OnSpeedButton1LeftClick" entry="EVT_COMMAND_RIGHT_CLICK" />
+				</object>
+				<object class="wxSpeedButton" name="ID_SPEEDBUTTON10" variable="SpeedButton10" member="yes">
+					<label>Group-2</label>
+					<glyph>..\images\ARROW3L.xpm</glyph>
+					<buttondown>1</buttondown>
+					<buttontype>Group By Parent</buttontype>
+					<allowallup>0</allowallup>
+					<pos>112,72</pos>
+					<style>wxBU_RIGHT|wxTAB_TRAVERSAL</style>
+					<handler function="OnSpeedButton1LeftClick" entry="EVT_COMMAND_LEFT_CLICK" />
+					<handler function="OnSpeedButton1LeftClick" entry="EVT_COMMAND_RIGHT_CLICK" />
+				</object>
+				<object class="wxSpeedButton" name="ID_SPEEDBUTTON11" variable="SpeedButton11" member="yes">
+					<label>Group-3</label>
+					<glyph>..\images\ARROW3U.xpm</glyph>
+					<buttontype>Group By Parent</buttontype>
+					<allowallup>0</allowallup>
+					<pos>216,56</pos>
+					<size>72,40</size>
+					<style>wxBU_BOTTOM|wxTAB_TRAVERSAL</style>
+					<handler function="OnSpeedButton1LeftClick" entry="EVT_COMMAND_LEFT_CLICK" />
+					<handler function="OnSpeedButton1LeftClick" entry="EVT_COMMAND_RIGHT_CLICK" />
+				</object>
+				<object class="wxSpeedButton" name="ID_SPEEDBUTTON12" variable="SpeedButton12" member="yes">
+					<label>Group-4</label>
+					<glyph>..\images\ARROW3D.xpm</glyph>
+					<buttontype>Group By Parent</buttontype>
+					<allowallup>0</allowallup>
+					<pos>312,56</pos>
+					<size>72,40</size>
+					<style>wxBU_TOP|wxTAB_TRAVERSAL</style>
+					<handler function="OnSpeedButton1LeftClick" entry="EVT_COMMAND_LEFT_CLICK" />
+					<handler function="OnSpeedButton1LeftClick" entry="EVT_COMMAND_RIGHT_CLICK" />
+				</object>
+			</object>
+			<object class="wxPanel" name="ID_PANEL5" variable="Panel5" member="yes">
+				<pos>8,376</pos>
+				<size>424,184</size>
+				<bg>#FF00FF</bg>
+				<object class="wxStaticText" name="ID_STATICTEXT5" variable="StaticText5" member="yes">
+					<label>These are group buttons, defined by indexes 10 and 20; the group&#x0A;index numbers and the button groups are totaly independant of each&#x0A;other. Group-10 buttons must always have one button DOWN, while&#x0A;group-20 buttons may have all buttons UP.</label>
+					<pos>8,8</pos>
+					<size>408,64</size>
+				</object>
+				<object class="wxSpeedButton" name="ID_SPEEDBUTTON13" variable="SpeedButton13" member="yes">
+					<label>X-10-1</label>
+					<glyph>..\images\FILECLOS.xpm</glyph>
+					<buttontype>Group By Index</buttontype>
+					<groupindex>10</groupindex>
+					<allowallup>0</allowallup>
+					<pos>16,96</pos>
+					<style>wxBU_LEFT|wxTAB_TRAVERSAL</style>
+					<handler function="OnSpeedButton1LeftClick" entry="EVT_COMMAND_LEFT_CLICK" />
+					<handler function="OnSpeedButton1LeftClick" entry="EVT_COMMAND_RIGHT_CLICK" />
+				</object>
+				<object class="wxSpeedButton" name="ID_SPEEDBUTTON14" variable="SpeedButton14" member="yes">
+					<label>X-10-2</label>
+					<glyph>..\images\FILENEW.xpm</glyph>
+					<buttontype>Group By Index</buttontype>
+					<groupindex>10</groupindex>
+					<allowallup>0</allowallup>
+					<pos>112,96</pos>
+					<style>wxBU_RIGHT|wxTAB_TRAVERSAL</style>
+					<handler function="OnSpeedButton1LeftClick" entry="EVT_COMMAND_LEFT_CLICK" />
+					<handler function="OnSpeedButton1LeftClick" entry="EVT_COMMAND_RIGHT_CLICK" />
+				</object>
+				<object class="wxSpeedButton" name="ID_SPEEDBUTTON15" variable="SpeedButton15" member="yes">
+					<label>X-10-3</label>
+					<glyph>..\images\FILEOPEN.xpm</glyph>
+					<buttontype>Group By Index</buttontype>
+					<groupindex>10</groupindex>
+					<allowallup>0</allowallup>
+					<pos>224,72</pos>
+					<size>72,48</size>
+					<style>wxBU_BOTTOM|wxTAB_TRAVERSAL</style>
+					<handler function="OnSpeedButton1LeftClick" entry="EVT_COMMAND_LEFT_CLICK" />
+					<handler function="OnSpeedButton1LeftClick" entry="EVT_COMMAND_RIGHT_CLICK" />
+				</object>
+				<object class="wxSpeedButton" name="ID_SPEEDBUTTON16" variable="SpeedButton16" member="yes">
+					<label>X-10-4</label>
+					<glyph>..\images\FILESAVE.xpm</glyph>
+					<buttontype>Group By Index</buttontype>
+					<groupindex>10</groupindex>
+					<allowallup>0</allowallup>
+					<pos>320,72</pos>
+					<size>72,48</size>
+					<style>wxBU_TOP|wxTAB_TRAVERSAL</style>
+					<handler function="OnSpeedButton1LeftClick" entry="EVT_COMMAND_LEFT_CLICK" />
+					<handler function="OnSpeedButton1LeftClick" entry="EVT_COMMAND_RIGHT_CLICK" />
+				</object>
+				<object class="wxSpeedButton" name="ID_SPEEDBUTTON17" variable="SpeedButton17" member="yes">
+					<label>X-20-1</label>
+					<glyph>..\images\CDDRIVE.xpm</glyph>
+					<buttontype>Group By Index</buttontype>
+					<groupindex>20</groupindex>
+					<pos>16,152</pos>
+					<style>wxBU_LEFT|wxTAB_TRAVERSAL</style>
+					<handler function="OnSpeedButton1LeftClick" entry="EVT_COMMAND_LEFT_CLICK" />
+					<handler function="OnSpeedButton1LeftClick" entry="EVT_COMMAND_RIGHT_CLICK" />
+				</object>
+				<object class="wxSpeedButton" name="ID_SPEEDBUTTON18" variable="SpeedButton18" member="yes">
+					<label>X-20-2</label>
+					<glyph>..\images\COMPMAC.xpm</glyph>
+					<buttontype>Group By Index</buttontype>
+					<groupindex>20</groupindex>
+					<pos>112,152</pos>
+					<style>wxBU_RIGHT|wxTAB_TRAVERSAL</style>
+					<handler function="OnSpeedButton1LeftClick" entry="EVT_COMMAND_LEFT_CLICK" />
+					<handler function="OnSpeedButton1LeftClick" entry="EVT_COMMAND_RIGHT_CLICK" />
+				</object>
+				<object class="wxSpeedButton" name="ID_SPEEDBUTTON19" variable="SpeedButton19" member="yes">
+					<label>X-20-3</label>
+					<glyph>..\images\COMPPC1.xpm</glyph>
+					<buttontype>Group By Index</buttontype>
+					<groupindex>20</groupindex>
+					<pos>224,128</pos>
+					<size>72,48</size>
+					<style>wxBU_BOTTOM|wxTAB_TRAVERSAL</style>
+					<handler function="OnSpeedButton1LeftClick" entry="EVT_COMMAND_LEFT_CLICK" />
+					<handler function="OnSpeedButton1LeftClick" entry="EVT_COMMAND_RIGHT_CLICK" />
+				</object>
+				<object class="wxSpeedButton" name="ID_SPEEDBUTTON20" variable="SpeedButton20" member="yes">
+					<label>X-20-4</label>
+					<glyph>..\images\COMPPC2.xpm</glyph>
+					<buttontype>Group By Index</buttontype>
+					<groupindex>20</groupindex>
+					<pos>320,128</pos>
+					<size>72,48</size>
+					<style>wxBU_TOP|wxTAB_TRAVERSAL</style>
+					<handler function="OnSpeedButton1LeftClick" entry="EVT_COMMAND_LEFT_CLICK" />
+					<handler function="OnSpeedButton1LeftClick" entry="EVT_COMMAND_RIGHT_CLICK" />
+				</object>
+			</object>
+		</object>
+		<object class="wxMenuBar" variable="MenuBar1" member="no">
+			<object class="wxMenu" variable="Menu1" member="no">
+				<label>&amp;File</label>
+				<object class="wxMenuItem" name="idMenuQuit" variable="MenuItem1" member="no">
+					<label>Quit</label>
+					<accel>Alt-F4</accel>
+					<help>Quit the application</help>
+					<handler function="OnQuit" entry="EVT_MENU" />
+				</object>
+			</object>
+			<object class="wxMenu" variable="Menu2" member="no">
+				<label>Help</label>
+				<object class="wxMenuItem" name="idMenuAbout" variable="MenuItem2" member="no">
+					<label>About</label>
+					<accel>F1</accel>
+					<help>Show info about this application</help>
+					<handler function="OnAbout" entry="EVT_MENU" />
+				</object>
+			</object>
+		</object>
+	</object>
+</wxsmith>

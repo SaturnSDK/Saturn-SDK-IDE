@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="wxsSmithIExplore - Internet Explorer for MSW" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="IExplore">
+				<Option output="..\..\..\devel\libIExplore" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="" />
+				<Option object_output="..\..\..\.objs\plugins\contrib\wxSmithIExplore\IExplore" />
+				<Option type="2" />
+				<Option compiler="gcc" />
+				<Option createDefFile="1" />
+			</Target>
+			<Target title="wxsSmithIExplore">
+				<Option output="..\..\..\devel\share\codeblocks\plugins\wxsSmithIExplore" prefix_auto="0" extension_auto="1" />
+				<Option working_dir="..\..\..\devel" />
+				<Option object_output="..\..\..\.objs\plugins\contrib\wxSmithIExplore" />
+				<Option type="3" />
+				<Option compiler="gcc" />
+				<Option parameters="--debug-log -na -ns -nd" />
+				<Option host_application="codeblocks.exe" />
+				<Option createDefFile="1" />
+				<Option createStaticLib="1" />
+				<Option projectLinkerOptionsRelation="2" />
+				<Compiler>
+					<Add option="-include sdk.h" />
+					<Add option="-DBUILDING_PLUGIN" />
+					<Add option="-DcbDEBUG" />
+					<Add option="-DCB_PRECOMP" />
+					<Add option="-DWXMAKINGDLL_PROPGRID" />
+					<Add option="-DwxPG_USE_WXMODULE=0" />
+					<Add directory="$(#cb.include)" />
+					<Add directory="$(#cb)\sdk\wxscintilla\include" />
+					<Add directory="$(#cb)\sdk\wxpropgrid\include" />
+					<Add directory="..\wxSmith\properties" />
+					<Add directory="..\wxSmith\wxwidgets" />
+					<Add directory="..\wxSmith\wxwidgets\properties" />
+					<Add directory="images" />
+				</Compiler>
+				<Linker>
+					<Add library="IExplore" />
+					<Add library="wxsmithlib" />
+					<Add library="codeblocks" />
+					<Add library="uuid" />
+					<Add library="ole32" />
+					<Add library="oleaut32" />
+					<Add library="gdi32" />
+					<Add directory="..\..\..\devel" />
+				</Linker>
+				<ExtraCommands>
+					<Add after="zip -j9 ..\..\..\devel\share\CodeBlocks\wxsSmithIExplore.zip manifest.xml" />
+					<Mode after="always" />
+				</ExtraCommands>
+			</Target>
+			<Environment>
+				<Variable name="WX_SUFFIX" value="u" />
+				<Variable name="WX_CFG" value="" />
+			</Environment>
+		</Build>
+		<VirtualTargets>
+			<Add alias="All" targets="IExplore;wxsSmithIExplore;" />
+		</VirtualTargets>
+		<Compiler>
+			<Add option="-Wall" />
+			<Add option="-g" />
+			<Add option="-pipe" />
+			<Add option="-mthreads" />
+			<Add option="-fmessage-length=0" />
+			<Add option="-fexceptions" />
+			<Add option="-Winvalid-pch" />
+			<Add option="-DHAVE_W32API_H" />
+			<Add option="-D__WXMSW__" />
+			<Add option="-DWXUSINGDLL" />
+			<Add option="-DWX_PRECOMP" />
+			<Add option="-DwxUSE_UNICODE" />
+			<Add directory="$(#wx.include)" />
+			<Add directory="$(#wx.lib)\gcc_dll$(WX_CFG)\msw$(WX_SUFFIX)" />
+		</Compiler>
+		<Linker>
+			<Add option="-Wl,--enable-auto-image-base" />
+			<Add option="-Wl,--export-all-symbols" />
+			<Add option="-Wl,--enable-auto-import" />
+			<Add library="wxmsw28$(WX_SUFFIX)" />
+			<Add directory="$(#wx.lib)\gcc_dll$(WX_CFG)" />
+		</Linker>
+		<Unit filename="IEHtmlWin.cpp">
+			<Option target="IExplore" />
+		</Unit>
+		<Unit filename="IEHtmlWin.h">
+			<Option target="IExplore" />
+		</Unit>
+		<Unit filename="cguid.cpp">
+			<Option target="IExplore" />
+		</Unit>
+		<Unit filename="images\IE16.xpm">
+			<Option target="wxsSmithIExplore" />
+		</Unit>
+		<Unit filename="images\IE32.xpm">
+			<Option target="wxsSmithIExplore" />
+		</Unit>
+		<Unit filename="manifest.xml">
+			<Option target="wxsSmithIExplore" />
+		</Unit>
+		<Unit filename="wxactivex.cpp">
+			<Option target="IExplore" />
+		</Unit>
+		<Unit filename="wxactivex.h">
+			<Option target="IExplore" />
+		</Unit>
+		<Unit filename="wxsIExplore.cpp">
+			<Option target="wxsSmithIExplore" />
+		</Unit>
+		<Unit filename="wxsIExplore.h">
+			<Option target="wxsSmithIExplore" />
+		</Unit>
+		<Unit filename="wxsSmithIExplore.cpp">
+			<Option target="wxsSmithIExplore" />
+		</Unit>
+		<Unit filename="wxsSmithIExplore.h">
+			<Option target="wxsSmithIExplore" />
+		</Unit>
+		<Extensions>
+			<code_completion />
+			<envvars />
+			<debugger />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>

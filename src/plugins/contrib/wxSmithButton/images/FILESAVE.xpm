@@ -1,0 +1,39 @@
+/* XPM */
+static const char *FILESAVE_xpm[] = {
+/* width height num_colors chars_per_pixel */
+"    32    16       16            1",
+/* colors */
+"` c #000000",
+". c #800000",
+"# c #008000",
+"a c #808000",
+"b c #000080",
+"c c #800080",
+"d c #008080",
+"e c #7f7f7f",
+"f c #bfbfbf",
+"g c #ff0000",
+"h c #00ff00",
+"i c #ffff00",
+"j c #0000ff",
+"k c #ff00ff",
+"l c #00ffff",
+"m c #ffffff",
+/* pixels */
+"``````aaaaaaaaaaeeeeeeaaaaaaaaaa",
+"`mmmm``agggggaaaemmmmeeaeeeeeaaa",
+"`m`fm`m`aaegggaaemeeaemeameeeeaa",
+"`mmmm`mm`aagggaaemammemaeaaeeema",
+"`m``m`````agggaaemeeaeeeeeaeeema",
+"`mmmmmmmmgggggggemammammmeeeeeee",
+"`m````m`m`gggggaemeeeeaeaeeeeeem",
+"`mmmmmmmm`agggaaemammmmamemeeema",
+"`m``m``f`jjjgjj`emeeaeeaeeeeeeee",
+"`mmmmmmm`mmmmmm`emammammemmmmmme",
+"`mmmmmmm`mmmmmm`emaaaaaaemaaaaae",
+"````````````````eeeeeeeeeeeeeeee",
+"aaaaaaaa````````ammmmmmmeeeeeeee",
+"aaaaaaaa``ffff``aaaaaaaaeemmmmee",
+"aaaaaaaa``f`ff``aaaaaaaaeemeaaee",
+"aaaaaaaa``e`ee``aaaaaaaaeeeeeeee"
+};

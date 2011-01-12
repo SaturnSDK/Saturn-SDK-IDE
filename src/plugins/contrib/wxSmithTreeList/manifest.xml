@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_plugin_manifest_file>
+    <SdkVersion major="1" minor="0"  release="0" />
+    <Plugin name="wxsSmithTreeList">
+        <Value title="wxsSmithTreeList - A Tree Control With Columns" />
+        <Value version="1.0" />
+        <Value description="A Tree Control With Multiple Columns Of Data" />
+        <Value author="" />
+        <Value authorEmail="" />
+        <Value authorWebsite="" />
+        <Value thanksTo="" />
+        <Value license="GPL" />
+    </Plugin>
+</CodeBlocks_plugin_manifest_file>

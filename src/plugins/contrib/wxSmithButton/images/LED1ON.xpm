@@ -1,0 +1,39 @@
+/* XPM */
+static const char *LED1ON_xpm[] = {
+/* width height num_colors chars_per_pixel */
+"    32    16       16            1",
+/* colors */
+"` c #000000",
+". c #800000",
+"# c #008000",
+"a c #808000",
+"b c #000080",
+"c c #800080",
+"d c #008080",
+"e c #7f7f7f",
+"f c #bfbfbf",
+"g c #ff0000",
+"h c #00ff00",
+"i c #ffff00",
+"j c #0000ff",
+"k c #ff00ff",
+"l c #00ffff",
+"m c #ffffff",
+/* pixels */
+"aaaaa`````aaaaaaaaaaaeeeeeaaaaaa",
+"aaa``mmmff``aaaaaaaeeammmmeeaaaa",
+"aa`mfe```eff`aaaaaeammeeeaameaaa",
+"a`mf`mgmgm`ff`aaaeameeaaaeeaaeaa",
+"a`f`m`````m`f`aaaemeaaeeeaaeaema",
+"`mem``mmg``mef`aeameaemmmeaemaea",
+"`m`g`mgg.g`g`f`aemeaemmaaaeaeaem",
+"`m`m`gggg.`m`e`aemeaemaaaaeaemem",
+"`f`g`g.g..`g`e`aemeaemaaaaeaemem",
+"`fem``g..``mee`aemaeaeaaaeaemmem",
+"a`f`m`````m`e`aaaeaeaaeeeaaemeam",
+"a`ff`mgmgm`ee`aaaemaeeaaaeemmema",
+"aa`ffe```eee`aaaaaeaameeemmmeama",
+"aaa``ffeee``aaaaaaaeeaammmeeamaa",
+"aaaaa`````aaaaaaaaaameeeeeammaaa",
+"aaaaaaaaaaaaaaaaaaaaaammmmmaaaaa"
+};

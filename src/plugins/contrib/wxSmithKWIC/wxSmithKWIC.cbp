@@ -1,0 +1,406 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="wxSmith - KWIC" />
+		<Option platforms="Windows;" />
+		<Option pch_mode="2" />
+		<Option default_target="wxSmithKWIC" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="kwxAngularMeter">
+				<Option platforms="Windows;" />
+				<Option output="..\..\..\devel\kwxAngularMeter" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="..\..\..\devel" />
+				<Option object_output="..\..\..\.objs\plugins\contrib\wxSmithKWIC\kwxAngularMeter" />
+				<Option type="3" />
+				<Option compiler="gcc" />
+				<Option createDefFile="1" />
+				<Option createStaticLib="1" />
+				<Compiler>
+					<Add option="-g" />
+				</Compiler>
+			</Target>
+			<Target title="kwxAngularRegulator">
+				<Option platforms="Windows;" />
+				<Option output="..\..\..\devel\kwxAngularRegulator" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="..\..\..\devel" />
+				<Option object_output="..\..\..\.objs\plugins\contrib\wxSmithKWIC\kwxAngularRegulator" />
+				<Option type="3" />
+				<Option compiler="gcc" />
+				<Option createDefFile="1" />
+				<Option createStaticLib="1" />
+				<Compiler>
+					<Add option="-g" />
+				</Compiler>
+			</Target>
+			<Target title="kwxBmpCheckbox">
+				<Option platforms="Windows;" />
+				<Option output="..\..\..\devel\kwxBmpCheckbox" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="..\..\..\devel" />
+				<Option object_output="..\..\..\.objs\plugins\contrib\wxSmithKWIC\kwxBmpCheckbox" />
+				<Option type="3" />
+				<Option compiler="gcc" />
+				<Option createDefFile="1" />
+				<Option createStaticLib="1" />
+				<Compiler>
+					<Add option="-g" />
+				</Compiler>
+			</Target>
+			<Target title="kwxBmpSwitcher">
+				<Option platforms="Windows;" />
+				<Option output="..\..\..\devel\kwxBmpSwitcher" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="..\..\..\devel" />
+				<Option object_output="..\..\..\.objs\plugins\contrib\wxSmithKWIC\kwxBmpSwitcher" />
+				<Option type="3" />
+				<Option compiler="gcc" />
+				<Option createDefFile="1" />
+				<Option createStaticLib="1" />
+				<Compiler>
+					<Add option="-g" />
+				</Compiler>
+			</Target>
+			<Target title="kwxLCDDisplay">
+				<Option platforms="Windows;" />
+				<Option output="..\..\..\devel\kwxLCDDisplay" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="..\..\..\devel" />
+				<Option object_output="..\..\..\.objs\plugins\contrib\wxSmithKWIC\kwxLCDDisplay" />
+				<Option type="3" />
+				<Option compiler="gcc" />
+				<Option createDefFile="1" />
+				<Option createStaticLib="1" />
+				<Compiler>
+					<Add option="-g" />
+				</Compiler>
+			</Target>
+			<Target title="kwxLCDClock">
+				<Option platforms="Windows;" />
+				<Option output="..\..\..\devel\kwxLCDClock" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="..\..\..\devel" />
+				<Option object_output="..\..\..\.objs\plugins\contrib\wxSmithKWIC\kwxLCDClock" />
+				<Option external_deps="..\..\..\devel\kwxLCDDisplay.dll;" />
+				<Option type="3" />
+				<Option compiler="gcc" />
+				<Option createDefFile="1" />
+				<Option createStaticLib="1" />
+				<Compiler>
+					<Add option="-g" />
+				</Compiler>
+				<Linker>
+					<Add library="kwxLCDDisplay" />
+				</Linker>
+			</Target>
+			<Target title="kwxLinearMeter">
+				<Option platforms="Windows;" />
+				<Option output="..\..\..\devel\kwxLinearMeter" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="..\..\..\devel" />
+				<Option object_output="..\..\..\.objs\plugins\contrib\wxSmithKWIC\kwxLinearMeter" />
+				<Option type="3" />
+				<Option compiler="gcc" />
+				<Option createDefFile="1" />
+				<Option createStaticLib="1" />
+				<Compiler>
+					<Add option="-g" />
+				</Compiler>
+			</Target>
+			<Target title="kwxLinearRegulator">
+				<Option platforms="Windows;" />
+				<Option output="..\..\..\devel\kwxLinearRegulator" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="..\..\..\devel" />
+				<Option object_output="..\..\..\.objs\plugins\contrib\wxSmithKWIC\kwxLinearRegulator" />
+				<Option type="3" />
+				<Option compiler="gcc" />
+				<Option createDefFile="1" />
+				<Option createStaticLib="1" />
+				<Compiler>
+					<Add option="-g" />
+				</Compiler>
+			</Target>
+			<Target title="wxSmithKWIC">
+				<Option platforms="Windows;" />
+				<Option output="..\..\..\devel\share\CodeBlocks\plugins\wxSmithKWIC" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="..\..\..\devel" />
+				<Option object_output="..\..\..\.objs\plugins\contrib\wxSmithKWIC" />
+				<Option external_deps="..\..\..\devel\kwxAngularMeter.dll;..\..\..\devel\kwxAngularRegulator.dll;..\..\..\devel\kwxBmpCheckbox.dll;..\..\..\devel\kwxBmpSwitcher.dll;..\..\..\devel\kwxLCDClock.dll;..\..\..\devel\kwxLCDDisplay.dll;..\..\..\devel\kwxLinearMeter.dll;..\..\..\devel\kwxLinearRegulator.dll;..\..\..\devel\wxsmithlib.dll;" />
+				<Option type="3" />
+				<Option compiler="gcc" />
+				<Option parameters="--debug-log -na -ns -nd" />
+				<Option host_application=".\codeblocks.exe" />
+				<Option run_host_application_in_terminal="0" />
+				<Option createDefFile="1" />
+				<Option createStaticLib="1" />
+				<Compiler>
+					<Add option="-g" />
+				</Compiler>
+				<Linker>
+					<Add library="kwxAngularMeter" />
+					<Add library="kwxAngularRegulator" />
+					<Add library="kwxBmpCheckbox" />
+					<Add library="kwxBmpSwitcher" />
+					<Add library="kwxLCDClock" />
+					<Add library="kwxLCDDisplay" />
+					<Add library="kwxLinearMeter" />
+					<Add library="kwxLinearRegulator" />
+				</Linker>
+			</Target>
+			<Environment>
+				<Variable name="WX_SUFFIX" value="u" />
+				<Variable name="WX_CFG" value="" />
+			</Environment>
+		</Build>
+		<VirtualTargets>
+			<Add alias="All" targets="kwxAngularMeter;kwxAngularRegulator;kwxBmpCheckbox;kwxBmpSwitcher;kwxLCDDisplay;kwxLCDClock;kwxLinearMeter;kwxLinearRegulator;wxSmithKWIC;" />
+		</VirtualTargets>
+		<Compiler>
+			<Add option="-Wall" />
+			<Add option="-pipe" />
+			<Add option="-mthreads" />
+			<Add option="-fmessage-length=0" />
+			<Add option="-fexceptions" />
+			<Add option="-Winvalid-pch" />
+			<Add option='-include &quot;wx_pch.h&quot;' />
+			<Add option="-DBUILDING_PLUGIN" />
+			<Add option="-DHAVE_W32API_H" />
+			<Add option="-D__WXMSW__" />
+			<Add option="-DWXUSINGDLL" />
+			<Add option="-DcbDEBUG" />
+			<Add option="-DCB_PRECOMP" />
+			<Add option="-DWXMAKINGDLL_PROPGRID" />
+			<Add option="-DwxPG_USE_WXMODULE=0" />
+			<Add option="-DWX_PRECOMP" />
+			<Add option="-DwxUSE_UNICODE" />
+			<Add directory="$(#wx.lib)\gcc_dll$(WX_CFG)\msw$(WX_SUFFIX)" />
+			<Add directory="$(#wx.include)" />
+			<Add directory="..\..\..\include" />
+			<Add directory="..\..\..\sdk\wxscintilla\include" />
+			<Add directory="..\..\..\sdk\wxpropgrid\include" />
+			<Add directory="..\wxSmith" />
+			<Add directory="..\wxSmith\wxwidgets\properties" />
+			<Add directory="KWIC\contrib\include" />
+		</Compiler>
+		<Linker>
+			<Add option="-mthreads" />
+			<Add option="-Wl,--enable-auto-image-base" />
+			<Add option="-Wl,--export-all-symbols" />
+			<Add option="-Wl,--enable-auto-import" />
+			<Add library="wxsmithlib" />
+			<Add library="wxpropgrid" />
+			<Add library="codeblocks" />
+			<Add library="wxmsw28$(WX_SUFFIX)" />
+			<Add directory="..\..\..\devel" />
+			<Add directory="$(#wx.lib)\gcc_dll" />
+		</Linker>
+		<ExtraCommands>
+			<Add after="zip -j9 ..\..\..\devel\share\CodeBlocks\wxSmithKWIC.zip manifest.xml" />
+		</ExtraCommands>
+		<Unit filename="KWIC\contrib\include\wx\KWIC\AngularMeter.h">
+			<Option target="kwxAngularMeter" />
+		</Unit>
+		<Unit filename="KWIC\contrib\include\wx\KWIC\AngularRegulator.h">
+			<Option target="kwxAngularRegulator" />
+		</Unit>
+		<Unit filename="KWIC\contrib\include\wx\KWIC\BmpCheckBox.h">
+			<Option target="kwxBmpCheckbox" />
+		</Unit>
+		<Unit filename="KWIC\contrib\include\wx\KWIC\BmpSwitcher.h">
+			<Option target="kwxBmpSwitcher" />
+		</Unit>
+		<Unit filename="KWIC\contrib\include\wx\KWIC\LCDClock.h">
+			<Option target="kwxLCDClock" />
+		</Unit>
+		<Unit filename="KWIC\contrib\include\wx\KWIC\LCDWindow.h">
+			<Option target="kwxLCDDisplay" />
+		</Unit>
+		<Unit filename="KWIC\contrib\include\wx\KWIC\LinearMeter.h">
+			<Option target="kwxLinearMeter" />
+		</Unit>
+		<Unit filename="KWIC\contrib\include\wx\KWIC\LinearRegulator.h">
+			<Option target="kwxLinearRegulator" />
+		</Unit>
+		<Unit filename="KWIC\contrib\include\wx\KWIC\TimeAlarm.h">
+			<Option target="kwxLCDClock" />
+		</Unit>
+		<Unit filename="KWIC\contrib\include\wx\xrc\xh_kwxangularmeterhandler.h">
+			<Option target="wxSmithKWIC" />
+		</Unit>
+		<Unit filename="KWIC\contrib\include\wx\xrc\xh_kwxangularregulatorhandler.h">
+			<Option target="wxSmithKWIC" />
+		</Unit>
+		<Unit filename="KWIC\contrib\include\wx\xrc\xh_kwxlcdclockhandler.h">
+			<Option target="wxSmithKWIC" />
+		</Unit>
+		<Unit filename="KWIC\contrib\include\wx\xrc\xh_kwxlcddisplayhandler.h">
+			<Option target="wxSmithKWIC" />
+		</Unit>
+		<Unit filename="KWIC\contrib\include\wx\xrc\xh_kwxlinearmeterhandler.h">
+			<Option target="wxSmithKWIC" />
+		</Unit>
+		<Unit filename="KWIC\contrib\include\wx\xrc\xh_kwxlinearregulatorhandler.h">
+			<Option target="wxSmithKWIC" />
+		</Unit>
+		<Unit filename="KWIC\contrib\src\wx\KWIC\AngularMeter.cpp">
+			<Option target="kwxAngularMeter" />
+		</Unit>
+		<Unit filename="KWIC\contrib\src\wx\KWIC\AngularRegulator.cpp">
+			<Option target="kwxAngularRegulator" />
+		</Unit>
+		<Unit filename="KWIC\contrib\src\wx\KWIC\BmpCheckBox.cpp">
+			<Option target="kwxBmpCheckbox" />
+		</Unit>
+		<Unit filename="KWIC\contrib\src\wx\KWIC\BmpSwitcher.cpp">
+			<Option target="kwxBmpSwitcher" />
+		</Unit>
+		<Unit filename="KWIC\contrib\src\wx\KWIC\LCDClock.cpp">
+			<Option target="kwxLCDClock" />
+		</Unit>
+		<Unit filename="KWIC\contrib\src\wx\KWIC\LCDWindow.cpp">
+			<Option target="kwxLCDDisplay" />
+		</Unit>
+		<Unit filename="KWIC\contrib\src\wx\KWIC\LinearMeter.cpp">
+			<Option target="kwxLinearMeter" />
+		</Unit>
+		<Unit filename="KWIC\contrib\src\wx\KWIC\LinearRegulator.cpp">
+			<Option target="kwxLinearRegulator" />
+		</Unit>
+		<Unit filename="KWIC\contrib\src\wx\KWIC\TimeAlarm.cpp">
+			<Option target="kwxLCDClock" />
+		</Unit>
+		<Unit filename="KWIC\contrib\src\wx\xrc\xh_kwxangularmeterhandler.cpp">
+			<Option target="wxSmithKWIC" />
+		</Unit>
+		<Unit filename="KWIC\contrib\src\wx\xrc\xh_kwxangularregulatorhandler.cpp">
+			<Option target="wxSmithKWIC" />
+		</Unit>
+		<Unit filename="KWIC\contrib\src\wx\xrc\xh_kwxlcdclockhandler.cpp">
+			<Option target="wxSmithKWIC" />
+		</Unit>
+		<Unit filename="KWIC\contrib\src\wx\xrc\xh_kwxlcddisplayhandler.cpp">
+			<Option target="wxSmithKWIC" />
+		</Unit>
+		<Unit filename="KWIC\contrib\src\wx\xrc\xh_kwxlinearmeterhandler.cpp">
+			<Option target="wxSmithKWIC" />
+		</Unit>
+		<Unit filename="KWIC\contrib\src\wx\xrc\xh_kwxlinearregulatorhandler.cpp">
+			<Option target="wxSmithKWIC" />
+		</Unit>
+		<Unit filename="images\angmet16.xpm">
+			<Option target="wxSmithKWIC" />
+		</Unit>
+		<Unit filename="images\angmet32.xpm">
+			<Option target="wxSmithKWIC" />
+		</Unit>
+		<Unit filename="images\angreg16.xpm">
+			<Option target="wxSmithKWIC" />
+		</Unit>
+		<Unit filename="images\angreg32.xpm">
+			<Option target="wxSmithKWIC" />
+		</Unit>
+		<Unit filename="images\bmpchk16.xpm">
+			<Option target="wxSmithKWIC" />
+		</Unit>
+		<Unit filename="images\bmpchk32.xpm">
+			<Option target="wxSmithKWIC" />
+		</Unit>
+		<Unit filename="images\lcd16.xpm">
+			<Option target="wxSmithKWIC" />
+		</Unit>
+		<Unit filename="images\lcd32.xpm">
+			<Option target="wxSmithKWIC" />
+		</Unit>
+		<Unit filename="images\linmet16.xpm">
+			<Option target="wxSmithKWIC" />
+		</Unit>
+		<Unit filename="images\linmet32.xpm">
+			<Option target="wxSmithKWIC" />
+		</Unit>
+		<Unit filename="images\linreg16.xpm">
+			<Option target="wxSmithKWIC" />
+		</Unit>
+		<Unit filename="images\linreg32.xpm">
+			<Option target="wxSmithKWIC" />
+		</Unit>
+		<Unit filename="manifest.xml">
+			<Option target="wxSmithKWIC" />
+		</Unit>
+		<Unit filename="version.h">
+			<Option target="wxSmithKWIC" />
+		</Unit>
+		<Unit filename="wxSmithKWIC.cpp">
+			<Option target="wxSmithKWIC" />
+		</Unit>
+		<Unit filename="wxSmithKWIC.h">
+			<Option target="wxSmithKWIC" />
+		</Unit>
+		<Unit filename="wx_pch.h">
+			<Option target="wxSmithKWIC" />
+		</Unit>
+		<Unit filename="wxsangularmeter.cpp">
+			<Option target="wxSmithKWIC" />
+		</Unit>
+		<Unit filename="wxsangularmeter.h">
+			<Option target="wxSmithKWIC" />
+		</Unit>
+		<Unit filename="wxsangularregulator.cpp">
+			<Option target="wxSmithKWIC" />
+		</Unit>
+		<Unit filename="wxsangularregulator.h">
+			<Option target="wxSmithKWIC" />
+		</Unit>
+		<Unit filename="wxsbmpcheckbox.cpp">
+			<Option target="wxSmithKWIC" />
+		</Unit>
+		<Unit filename="wxsbmpcheckbox.h">
+			<Option target="wxSmithKWIC" />
+		</Unit>
+		<Unit filename="wxsbmpswitcher.cpp">
+			<Option target="wxSmithKWIC" />
+		</Unit>
+		<Unit filename="wxsbmpswitcher.h">
+			<Option target="wxSmithKWIC" />
+		</Unit>
+		<Unit filename="wxslcdclock.cpp">
+			<Option target="wxSmithKWIC" />
+		</Unit>
+		<Unit filename="wxslcdclock.h">
+			<Option target="wxSmithKWIC" />
+		</Unit>
+		<Unit filename="wxslcddisplay.cpp">
+			<Option target="wxSmithKWIC" />
+		</Unit>
+		<Unit filename="wxslcddisplay.h">
+			<Option target="wxSmithKWIC" />
+		</Unit>
+		<Unit filename="wxslinearmeter.cpp">
+			<Option target="wxSmithKWIC" />
+		</Unit>
+		<Unit filename="wxslinearmeter.h">
+			<Option target="wxSmithKWIC" />
+		</Unit>
+		<Unit filename="wxslinearregulator.cpp">
+			<Option target="wxSmithKWIC" />
+		</Unit>
+		<Unit filename="wxslinearregulator.h">
+			<Option target="wxSmithKWIC" />
+		</Unit>
+		<Extensions>
+			<code_completion />
+			<envvars />
+			<debugger />
+			<AutoVersioning>
+				<Scheme minor_max="10" build_max="0" rev_max="0" rev_rand_max="10" build_times_to_increment_minor="100" />
+				<Settings autoincrement="1" date_declarations="1" update_manifest="1" do_auto_increment="1" ask_to_increment="0" language="C++" svn="0" svn_directory="" header_path="version.h" />
+				<Changes_Log show_changes_editor="0" app_title="released version %M.%m.%b of %p" changeslog_path="ChangeLog.txt" />
+				<Code header_guard="VERSION_H" namespace="AutoVersion" prefix="" />
+			</AutoVersioning>
+			<DoxyBlocks>
+				<comment_style block="3" line="1" />
+				<doxyfile_project project_number="0.9.843" use_auto_version="1" />
+				<doxyfile_build />
+				<doxyfile_warnings />
+				<doxyfile_output html_help="1" />
+				<doxyfile_dot class_diagrams="1" have_dot="1" />
+				<general />
+			</DoxyBlocks>
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>
