@@ -356,7 +356,7 @@
 			<Option target="wxImagePanel" />
 		</Unit>
 		<Unit filename="wximagepanel/wxImagePanel16.xpm">
-			<Option target="&lt;{~None~}&gt;" />
+			<Option target="wxSmithContribItems" />
 		</Unit>
 		<Unit filename="wximagepanel/wxImagePanel32.xpm">
 			<Option target="wxSmithContribItems" />
