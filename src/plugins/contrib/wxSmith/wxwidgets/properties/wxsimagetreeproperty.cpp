@@ -1,4 +1,4 @@
-/** \file wxsimagelistproperty.cpp
+/** \file wxsimagetreeproperty.cpp
 *
 * This file is part of wxSmith plugin for Code::Blocks Studio
 * Copyright (C) 2010 Gary Harris
@@ -21,35 +21,28 @@
 *
 */
 
-#include "wxsimagelistproperty.h"
-#include "wxsimagelisteditordlg.h"
+#include "wxsimagetreeproperty.h"
+#include "wxsimagetreeeditordlg.h"
 
 #include <globals.h>
 
 // Helper macro for fetching variable
 #define VALUE   wxsVARIABLE(Object,Offset,wxArrayString)
 
-wxsImageListProperty::wxsImageListProperty(const wxString& PGName,const wxString& _DataName,const wxString& _DataSubName,long _Offset,int Priority):
+wxsImageTreeProperty::wxsImageTreeProperty(const wxString& PGName,const wxString& _DataName,const wxString& _DataSubName,long _Offset,int Priority):
     wxsCustomEditorProperty(PGName,_DataName,Priority),
     Offset(_Offset),
     DataSubName(_DataSubName),
     DataName(_DataName)
 {}
 
-bool wxsImageListProperty::ShowEditor(wxsPropertyContainer* Object)
+bool wxsImageTreeProperty::ShowEditor(wxsPropertyContainer* Object)
 {
-    wxsImageListEditorDlg Dlg(0);
-    return Dlg.Execute(DataName, VALUE);
+    wxsImageTreeEditorDlg Dlg(0);
+    return Dlg.Execute(VALUE);
 }
 
-/*! \brief Read XML data.
- *
- * \param Object wxsPropertyContainer*	A pointer to a wxsPropertyContainer object.
- * \param Element TiXmlElement*				A pointer to a TiXmlElement object.
- * \return bool	True on succes, otherwise false.
- *
- */
-bool wxsImageListProperty::XmlRead(wxsPropertyContainer* Object,TiXmlElement* Element)
+bool wxsImageTreeProperty::XmlRead(wxsPropertyContainer* Object,TiXmlElement* Element)
 {
     VALUE.Clear();
 
@@ -75,14 +68,7 @@ bool wxsImageListProperty::XmlRead(wxsPropertyContainer* Object,TiXmlElement* El
     return true;
 }
 
-/*! \brief Write XML data.
- *
- * \param Object wxsPropertyContainer*	A pointer to a wxsPropertyContainer object.
- * \param Element TiXmlElement*				A pointer to a TiXmlElement object.
- * \return bool	True if count != 0, false otherwise.
- *
- */
-bool wxsImageListProperty::XmlWrite(wxsPropertyContainer* Object,TiXmlElement* Element)
+bool wxsImageTreeProperty::XmlWrite(wxsPropertyContainer* Object,TiXmlElement* Element)
 {
     size_t Count = VALUE.Count();
     for ( size_t i = 0; i < Count; i++ )
@@ -92,14 +78,7 @@ bool wxsImageListProperty::XmlWrite(wxsPropertyContainer* Object,TiXmlElement* E
     return Count != 0;
 }
 
-/*! \brief Read from a property stream.
- *
- * \param Object wxsPropertyContainer*	A pointer to a wxsPropertyContainer object.
- * \param Stream wxsPropertyStream*		A pointer to a wxsPropertyStream object.
- * \return bool	Always returns true.
- *
- */
-bool wxsImageListProperty::PropStreamRead(wxsPropertyContainer* Object,wxsPropertyStream* Stream)
+bool wxsImageTreeProperty::PropStreamRead(wxsPropertyContainer* Object,wxsPropertyStream* Stream)
 {
     VALUE.Clear();
     Stream->SubCategory(GetDataName());
@@ -113,14 +92,7 @@ bool wxsImageListProperty::PropStreamRead(wxsPropertyContainer* Object,wxsProper
     return true;
 }
 
-/*! \brief Write to the property stream.
- *
- * \param Object wxsPropertyContainer*	A pointer to a wxsPropertyContainer object.
- * \param Stream wxsPropertyStream*		A pointer to a wxsPropertyStream object.
- * \return bool	Always returns true.
- *
- */
-bool wxsImageListProperty::PropStreamWrite(wxsPropertyContainer* Object,wxsPropertyStream* Stream)
+bool wxsImageTreeProperty::PropStreamWrite(wxsPropertyContainer* Object,wxsPropertyStream* Stream)
 {
     Stream->SubCategory(GetDataName());
     size_t Count = VALUE.GetCount();
@@ -132,13 +104,7 @@ bool wxsImageListProperty::PropStreamWrite(wxsPropertyContainer* Object,wxsPrope
     return true;
 }
 
-/*! \brief Get a string to display in the text field..
- *
- * \param Object wxsPropertyContainer*	A pointer to a wxsPropertyContainer object.
- * \return wxString	The image string.
- *
- */
-wxString wxsImageListProperty::GetStr(wxsPropertyContainer* Object)
+wxString wxsImageTreeProperty::GetStr(wxsPropertyContainer* Object)
 {
     wxString Result;
     size_t Count = VALUE.Count();

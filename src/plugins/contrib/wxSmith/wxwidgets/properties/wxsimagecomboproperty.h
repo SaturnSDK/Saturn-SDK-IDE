@@ -1,4 +1,4 @@
-/** \file wxsimagelistproperty.h
+/** \file wxsimagecomboproperty.h
 *
 * This file is part of wxSmith plugin for Code::Blocks Studio
 * Copyright (C) 2010 Gary Harris
@@ -21,40 +21,41 @@
 *
 */
 
-#ifndef WXSIMAGELISTPROPERTY_H
-#define WXSIMAGELISTPROPERTY_H
+#ifndef WXSIMAGECOMBOPROPERTY_H
+#define WXSIMAGECOMBOPROPERTY_H
 
+#include "../../properties/wxscustomeditorproperty.h"
 #include "../../properties/wxsproperties.h"
 #include "../wxscodercontext.h"
 
-/** \brief Property for wxsImageListProperty class
+/** \brief Property for wxBitmapComboBox class
  *
  * \note This property doesn't take any default value.
- *       By default, the array is cleared.
+ *       By default array is cleared.
  */
-class wxsImageListProperty: public wxsCustomEditorProperty
+class wxsImageComboProperty: public wxsCustomEditorProperty
 {
 	public:
 
         /** \brief Ctor
-         *  \param PGName       		The name of this property in the Property Grid.
-         *  \param DataName     	The name of this property in data structures.
-         *  \param DataSubName  The name applied for each array element.
-         *  \param Offset       			The offset of the value (returned from wxsOFFSET macro).
-		 *  \param Priority int			The item's priority.
+         *  \param PGName       name of property in Property Grid
+         *  \param DataName     name of property in data structures
+         *  \param DataSubName  name of name applied for each array element
+         *  \param Offset       offset of value (returned from wxsOFFSET macro)
          */
-		wxsImageListProperty(const wxString& PGName,const wxString& DataName,const wxString& DataSubName,long Offset,int Priority=100);
+		wxsImageComboProperty(const wxString& PGName,const wxString& DataName,const wxString& DataSubName,long Offset,int Priority=100);
 
 		/** \brief Returning type name */
 		virtual const wxString GetTypeName() { return _T("wxArrayString"); }
 
-        /** \brief Showing editor for this property
-		 *
-		 * \param Object wxsPropertyContainer*	A pointer to a wxsPropertyContainer object.
-		 * \return bool	True on succes, otherwise false.
-		 *
-		 */
+        /** \brief Showing editor for this property */
         virtual bool ShowEditor(wxsPropertyContainer* Object);
+
+		/** \brief Function giving string representation of property
+		* \param Object wxsPropertyContainer*
+		* \return wxString
+		*/
+        virtual wxString GetStr(wxsPropertyContainer* Object);
 
     protected:
 
@@ -62,36 +63,35 @@ class wxsImageListProperty: public wxsCustomEditorProperty
         virtual bool XmlWrite(wxsPropertyContainer* Object,TiXmlElement* Element);
         virtual bool PropStreamRead(wxsPropertyContainer* Object,wxsPropertyStream* Stream);
         virtual bool PropStreamWrite(wxsPropertyContainer* Object,wxsPropertyStream* Stream);
-        virtual wxString GetStr(wxsPropertyContainer* Object);
 
 	private:
-        long Offset;								//!< The offset of a variable in this class.
-        wxString DataSubName;		//!< The name to use for sub-item entries in XML
-        wxString DataName;				//!< The name to use for item entries in XML.
+        long Offset;							//!< The offset of a variable in this class.
+        wxString DataSubName;	//!< The name to use for sub-item entries in XML.
+        wxString DataName;			//!< The name to use for item entries in XML.
 };
 
 /** \addtogroup ext_properties_macros
  *  \{ */
 
-/** \brief Macro automatically declaring wxImageList property
+/** \brief Macro automatically declaring wxsImageComboProperty property
  *  \param ClassName name of class holding this property
  *  \param VarName name of variable inside class
  *  \param PGName name used in property grid
  *  \param DataName name used in Xml / Data Streams
  */
-#define WXS_IMAGELIST(ClassName,VarName,PGName,DataName) \
-    { static wxsImageListProperty _Property(PGName,DataName,_("item"),wxsOFFSET(ClassName,VarName)); \
+#define WXS_IMAGECOMBO(ClassName,VarName,PGName,DataName) \
+    { static wxsImageComboProperty _Property(PGName,DataName,_("item"),wxsOFFSET(ClassName,VarName)); \
       Property(_Property); }
 
-/** \brief Macro automatically declaring wxImageList property with custom priority
+/** \brief Macro automatically declaring wxsImageComboProperty property with custom priority
  *  \param ClassName name of class holding this property
  *  \param VarName name of variable inside class
  *  \param PGName name used in property grid
  *  \param DataName name used in Xml / Data Streams
  *  \param Priority priority of property
  */
-#define WXS_IMAGELIST_P(ClassName,VarName,PGName,DataName,Priority) \
-    { static wxsImageListProperty _Property(PGName,DataName,_("item"),wxsOFFSET(ClassName,VarName),Priority); \
+#define WXS_IMAGECOMBO_P(ClassName,VarName,PGName,DataName,Priority) \
+    { static wxsImageComboProperty _Property(PGName,DataName,_("item"),wxsOFFSET(ClassName,VarName),Priority); \
       Property(_Property); }
 
 /** \} */

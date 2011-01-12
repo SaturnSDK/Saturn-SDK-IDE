@@ -25,7 +25,8 @@ libwxsmith_properties_la_SOURCES = \
 ./wxsproperty.cpp \
 ./wxspropertygridmanager.cpp \
 ./wxscustomeditorproperty.cpp \
-./wxspropertycontainer.cpp
+./wxspropertycontainer.cpp \
+./wxseditenumproperty.cpp
 
 sdkdir=$(includedir)/wxsmith/properties
 
@@ -44,4 +45,5 @@ sdk_HEADERS = \
 ./wxsquickpropspanel.h \
 ./wxsproperty.h \
 ./wxspropertygridmanager.h \
-./wxscustomeditorproperty.h
+./wxscustomeditorproperty.h \
+./wxseditenumproperty.h

@@ -20,3 +20,4 @@
 #include "wxsflagsproperty.h"
 #include "wxslongproperty.h"
 #include "wxsstringproperty.h"
+#include "wxseditenumproperty.h"

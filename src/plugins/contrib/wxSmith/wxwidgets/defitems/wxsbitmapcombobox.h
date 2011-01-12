@@ -38,12 +38,13 @@ class wxsBitmapComboBox: public wxsWidget
         virtual void OnBuildCreatingCode();
         virtual wxObject* OnBuildPreview(wxWindow* Parent,long Flags);
         virtual void OnEnumWidgetProperties(long Flags);
+		void FindAllImageLists(wxArrayString &aNames);
+		void UpdateComboItemList(void);
+		void ParseComboItem(wxString inSource, wxString &outItem, int &outIndex);
 
-        wxArrayString 	m_arrChoices;											//!< Array of entries for the choice list.
         long 					m_defaultSelection;									//!< The item selected by default.
 		wxString    		m_sImageList;                     						//!< The selected image list .
-		wxString    		m_arrImageListNames[128];					//!< Array of image list names.
-
+		wxArrayString	m_arrItems;                     							//!< The combo items.
 };
 
 #endif

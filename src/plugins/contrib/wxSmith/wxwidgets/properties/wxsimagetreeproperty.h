@@ -1,4 +1,4 @@
-/** \file wxsimagelistproperty.h
+/** \file wxsimagetreeproperty.h
 *
 * This file is part of wxSmith plugin for Code::Blocks Studio
 * Copyright (C) 2010 Gary Harris
@@ -21,39 +21,32 @@
 *
 */
 
-#ifndef WXSIMAGELISTPROPERTY_H
-#define WXSIMAGELISTPROPERTY_H
+#ifndef WXSIMAGETREEPROPERTY_H
+#define WXSIMAGETREEPROPERTY_H
 
-#include "../../properties/wxsproperties.h"
-#include "../wxscodercontext.h"
+#include "../../properties/wxscustomeditorproperty.h"
 
-/** \brief Property for wxsImageListProperty class
+/** \brief Property for wxArrayString class
  *
  * \note This property doesn't take any default value.
- *       By default, the array is cleared.
+ *       By default array is cleared.
  */
-class wxsImageListProperty: public wxsCustomEditorProperty
+class wxsImageTreeProperty: public wxsCustomEditorProperty
 {
 	public:
 
         /** \brief Ctor
-         *  \param PGName       		The name of this property in the Property Grid.
-         *  \param DataName     	The name of this property in data structures.
-         *  \param DataSubName  The name applied for each array element.
-         *  \param Offset       			The offset of the value (returned from wxsOFFSET macro).
-		 *  \param Priority int			The item's priority.
+         *  \param PGName       name of property in Property Grid
+         *  \param DataName     name of property in data stuctures
+         *  \param DataSubName  name of name applied for each array element
+         *  \param Offset       offset of value (returned from wxsOFFSET macro)
          */
-		wxsImageListProperty(const wxString& PGName,const wxString& DataName,const wxString& DataSubName,long Offset,int Priority=100);
+		wxsImageTreeProperty(const wxString& PGName,const wxString& DataName,const wxString& DataSubName,long Offset,int Priority=100);
 
 		/** \brief Returning type name */
 		virtual const wxString GetTypeName() { return _T("wxArrayString"); }
 
-        /** \brief Showing editor for this property
-		 *
-		 * \param Object wxsPropertyContainer*	A pointer to a wxsPropertyContainer object.
-		 * \return bool	True on succes, otherwise false.
-		 *
-		 */
+        /** \brief Showing editor for this property */
         virtual bool ShowEditor(wxsPropertyContainer* Object);
 
     protected:
@@ -65,33 +58,35 @@ class wxsImageListProperty: public wxsCustomEditorProperty
         virtual wxString GetStr(wxsPropertyContainer* Object);
 
 	private:
-        long Offset;								//!< The offset of a variable in this class.
-        wxString DataSubName;		//!< The name to use for sub-item entries in XML
-        wxString DataName;				//!< The name to use for item entries in XML.
+        long Offset;
+        wxString DataSubName;
+        wxString DataName;
 };
 
 /** \addtogroup ext_properties_macros
  *  \{ */
 
-/** \brief Macro automatically declaring wxImageList property
+/** \brief Macro automatically declaring wxArrayString property
  *  \param ClassName name of class holding this property
  *  \param VarName name of variable inside class
  *  \param PGName name used in property grid
  *  \param DataName name used in Xml / Data Streams
+ *  \param DataSubName name for subelement used in Xml / Data Streams
  */
-#define WXS_IMAGELIST(ClassName,VarName,PGName,DataName) \
-    { static wxsImageListProperty _Property(PGName,DataName,_("item"),wxsOFFSET(ClassName,VarName)); \
+#define WXS_IMAGETREE(ClassName,VarName,PGName,DataName) \
+    { static wxsImageTreeProperty _Property(PGName,DataName,_("item"),wxsOFFSET(ClassName,VarName)); \
       Property(_Property); }
 
-/** \brief Macro automatically declaring wxImageList property with custom priority
+/** \brief Macro automatically declaring wxArrayString property with custom priority
  *  \param ClassName name of class holding this property
  *  \param VarName name of variable inside class
  *  \param PGName name used in property grid
  *  \param DataName name used in Xml / Data Streams
+ *  \param DataSubName name for subelement used in Xml / Data Streams
  *  \param Priority priority of property
  */
-#define WXS_IMAGELIST_P(ClassName,VarName,PGName,DataName,Priority) \
-    { static wxsImageListProperty _Property(PGName,DataName,_("item"),wxsOFFSET(ClassName,VarName),Priority); \
+#define WXS_IMAGETREE_P(ClassName,VarName,PGName,DataName,Priority) \
+    { static wxsImageTreeProperty _Property(PGName,DataName,_("item"),wxsOFFSET(ClassName,VarName),Priority); \
       Property(_Property); }
 
 /** \} */
