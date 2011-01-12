@@ -356,16 +356,16 @@
 			<Option target="wxImagePanel" />
 		</Unit>
 		<Unit filename="wximagepanel/wxImagePanel16.xpm">
-			<Option target="wxImagePanel" />
+			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
 		<Unit filename="wximagepanel/wxImagePanel32.xpm">
-			<Option target="wxImagePanel" />
+			<Option target="wxSmithContribItems" />
 		</Unit>
 		<Unit filename="wximagepanel/wxsimagepanel.cpp">
-			<Option target="wxImagePanel" />
+			<Option target="wxSmithContribItems" />
 		</Unit>
 		<Unit filename="wximagepanel/wxsimagepanel.h">
-			<Option target="wxImagePanel" />
+			<Option target="wxSmithContribItems" />
 		</Unit>
 		<Unit filename="wxthings/wxcustombutton16.png">
 			<Option target="wxSmithContribItems" />

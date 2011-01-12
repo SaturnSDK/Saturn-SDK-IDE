@@ -1,4 +1,4 @@
-SUBDIRS = wxchart/wxchart-1.0 wxflatnotebook/wxFlatNotebook wxthings/wxthings .
+SUBDIRS = wxchart/wxchart-1.0 wxflatnotebook/wxFlatNotebook wxthings/wxthings wximagepanel/wxImagePanel .
 
 AM_CPPFLAGS = -DWXMAKINGDLL_PROPGRID -DwxPG_USE_WXMODULE=0
 
@@ -9,6 +9,7 @@ INCLUDES = $(WX_CXXFLAGS) \
 		-I$(top_srcdir)/src/plugins/contrib/wxSmith \
 		-I$(srcdir)/wxchart/wxchart-1.0/include \
 		-I$(srcdir)/wxflatnotebook/wxFlatNotebook/include \
+		-I$(srcdir)/wximagepanel/wxImagePanel/include \
 		-I$(srcdir)/wxthings/wxthings/include
 
 pluginlibdir = $(pkglibdir)/plugins
@@ -21,12 +22,15 @@ libwxsmithcontribitems_la_LIBADD = $(PLUGIN_WX_LIBS) ../../../sdk/libcodeblocks.
 		       ../wxSmith/libwxsmithlib.la \
 			wxchart/wxchart-1.0/libwxchartctrl.la \
 			wxflatnotebook/wxFlatNotebook/libwxflatnotebook.la \
+			wximagepanel/wxImagePanel/libwximagepanel.la \
 			wxthings/wxthings/libwxcustombutton.la
 
 EXTRA_DIST = $(srcdir)/wxchart/wxchart-1.0/include/wx/chartart/*.xpm \
 		$(srcdir)/wxchart/wxchart-1.0/include/wx/chartart/*.bmp \
 		$(srcdir)/wxchart/*.xpm \
 		$(srcdir)/wxchart/*.png \
+		$(srcdir)/wximagebutton/*.xpm \
+		$(srcdir)/wximagepanel/*.xpm \
 		$(srcdir)/wxthings/*.xpm \
 		$(srcdir)/wxthings/*.png \
 		$(srcdir)/wxflatnotebook/images/*.xpm \
@@ -44,6 +48,8 @@ libwxsmithcontribitems_la_SOURCES = \
 ./wxflatnotebook/wxsFlatNotebook.cpp \
 ./wxchart/wxschart.cpp \
 ./wxthings/wxscustombutton.cpp \
+./wximagebutton/wxsimagebutton.cpp \
+./wximagepanel/wxsimagepanel.cpp \
 ./wxSmithContribItems.cpp
 
 pkgconfigdir = $(libdir)/pkgconfig
@@ -53,4 +59,6 @@ noinst_HEADERS = \
 ./wxflatnotebook/wxsFlatNotebook.h \
 ./wxchart/wxschart.h \
 ./wxthings/wxscustombutton.h \
+./wximagebutton/wxsimagebutton.h \
+./wximagepanel/wxsimagepanel.h \
 ./wxSmithContribItems.h

@@ -377,6 +377,7 @@ AC_CONFIG_FILES([Makefile
 	src/plugins/contrib/wxSmithContribItems/wxsmith-contrib.pc
 	src/plugins/contrib/wxSmithContribItems/wxchart/wxchart-1.0/Makefile
 	src/plugins/contrib/wxSmithContribItems/wxflatnotebook/wxFlatNotebook/Makefile
+	src/plugins/contrib/wxSmithContribItems/wximagepanel/wxImagePanel/Makefile
 	src/plugins/contrib/wxSmithContribItems/wxthings/wxthings/Makefile
 	src/plugins/contrib/wxSmithAui/Makefile
 	src/plugins/contrib/wxSmithAui/wxsmithaui.pc
