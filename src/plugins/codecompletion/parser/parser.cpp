@@ -745,7 +745,7 @@ bool Parser::ReadFromCache(wxInputStream* f)
                 break;
                 if (nonempty_token != 0)
                 {
-                    token = new(std::nothrow) Token(wxEmptyString, 0, 0, ++m_TokensTree->m_TokenTicketCount);
+                    token = new Token(wxEmptyString, 0, 0, ++m_TokensTree->m_TokenTicketCount);
                     if (!token)
                     {
                         --m_TokensTree->m_TokenTicketCount;
@@ -841,9 +841,12 @@ void Parser::TerminateAllThreads()
     }
 }
 
-void Parser::AddIncludeDir(const wxString& file)
+void Parser::AddIncludeDir(const wxString& dir)
 {
-    wxString base = file;
+    if (dir.IsEmpty())
+        return;
+
+    wxString base = dir;
     if (base.Last() == wxFILE_SEP_PATH)
         base.RemoveLast();
 
