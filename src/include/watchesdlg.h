@@ -24,6 +24,7 @@ class DLLIMPORT WatchesDlg : public wxPanel
 
         void UpdateWatches();
         void AddWatch(cbWatch *watch);
+        void RenameWatch(wxObject *prop, const wxString &newSymbol);
     private:
         void OnExpand(wxPropertyGridEvent &event);
         void OnCollapse(wxPropertyGridEvent &event);

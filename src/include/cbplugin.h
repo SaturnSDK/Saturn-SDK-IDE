@@ -484,6 +484,8 @@ class PLUGIN_EXPORT cbDebuggerPlugin: public cbPlugin
         virtual void ExpandWatch(cbWatch *watch) = 0;
         virtual void CollapseWatch(cbWatch *watch) = 0;
 
+        virtual void OnWatchesContextMenu(wxMenu &menu, const cbWatch &watch, wxObject *property) {};
+
         virtual void SendCommand(const wxString& cmd, bool debugLog) = 0;
 
         virtual void AttachToProcess(const wxString& pid) = 0;
@@ -513,6 +515,7 @@ class PLUGIN_EXPORT cbDebuggerPlugin: public cbPlugin
             Disassembly,
             ExamineMemory,
             Threads,
+            Watches
         };
 
         virtual void RequestUpdate(DebugWindows window) = 0;

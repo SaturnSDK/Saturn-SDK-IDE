@@ -127,6 +127,8 @@ int idGDBProcess = wxNewId();
 int idTimerPollDebugger = wxNewId();
 int idMenuSettings = wxNewId();
 
+int idMenuWatchDereference = wxNewId();
+
 // this auto-registers the plugin
 namespace
 {
@@ -139,6 +141,8 @@ BEGIN_EVENT_TABLE(DebuggerGDB, cbDebuggerPlugin)
     EVT_MENU(idMenuInfoFiles, DebuggerGDB::OnInfoFiles)
     EVT_MENU(idMenuInfoFPU, DebuggerGDB::OnInfoFPU)
     EVT_MENU(idMenuInfoSignals, DebuggerGDB::OnInfoSignals)
+
+    EVT_MENU(idMenuWatchDereference, DebuggerGDB::OnMenuWatchDereference)
 
     EVT_PIPEDPROCESS_STDOUT(idGDBProcess, DebuggerGDB::OnGDBOutput)
     EVT_PIPEDPROCESS_STDERR(idGDBProcess, DebuggerGDB::OnGDBError)
@@ -162,7 +166,6 @@ DebuggerGDB::DebuggerGDB()
     m_Pid(0),
     m_PidToAttach(0),
     m_NoDebugInfo(false),
-    m_HaltAtLine(0),
     m_HasDebugLog(false),
     m_StoppedOnSignal(false),
     m_pProject(0),
@@ -1082,6 +1085,10 @@ void DebuggerGDB::RequestUpdate(DebugWindows window)
         case Threads:
             RunCommand(CMD_RUNNINGTHREADS);
             break;
+        case Watches:
+            if (IsWindowReallyShown(Manager::Get()->GetDebuggerManager()->GetWatchesDialog()))
+                DoWatches();
+            break;
     }
 }
 
@@ -1856,7 +1863,6 @@ void DebuggerGDB::OnValueTooltip(CodeBlocksEvent& event)
         m_EvalRect.x = pt.x - 5;
         m_EvalRect.y = pt.y - 5;
         m_EvalRect.height = m_EvalRect.width = 10;
-        m_LastEval = token;
         m_State.GetDriver()->EvaluateSymbol(token, m_EvalRect);
     }
 }
@@ -1924,7 +1930,6 @@ void DebuggerGDB::OnCursorChanged(wxCommandEvent& WXUNUSED(event))
             if (!autoSwitch || cursor.line != -1)
                 SyncEditor(cursor.file, cursor.line);
 
-            m_HaltAtLine = cursor.line - 1;
             BringCBToFront();
             if (cursor.line != -1)
                 Log(wxString::Format(_("At %s:%d"), cursor.file.c_str(), cursor.line));
@@ -2069,6 +2074,35 @@ void DebuggerGDB::MarkAllWatchesAsUnchanged()
 {
     for(WatchesContainer::iterator it = m_watches.begin(); it != m_watches.end(); ++it)
         (*it)->MarkAsChangedRecursive(false);
+}
+
+void DebuggerGDB::OnWatchesContextMenu(wxMenu &menu, const cbWatch &watch, wxObject *property)
+{
+    wxString type, symbol;
+    watch.GetType(type);
+    watch.GetSymbol(symbol);
+
+    type.Trim(true);
+    type.Trim(false);
+
+    if (type.EndsWith(wxT("*")))
+    {
+        menu.InsertSeparator(0);
+        menu.Insert(0, idMenuWatchDereference, _("Dereference ") + symbol);
+        m_watchToDereferenceSymbol = symbol;
+        m_watchToDereferenceProperty = property;
+    }
+}
+
+void DebuggerGDB::OnMenuWatchDereference(wxCommandEvent& event)
+{
+    WatchesDlg *watches = Manager::Get()->GetDebuggerManager()->GetWatchesDialog();
+    if (!watches)
+        return;
+
+    watches->RenameWatch(m_watchToDereferenceProperty, wxT("*") + m_watchToDereferenceSymbol);
+    m_watchToDereferenceProperty = NULL;
+    m_watchToDereferenceSymbol = wxEmptyString;
 }
 
 void DebuggerGDB::AttachToProcess(const wxString& pid)

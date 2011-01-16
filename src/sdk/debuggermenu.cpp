@@ -474,6 +474,10 @@ void DebuggerMenuHandler::OnWatches(wxCommandEvent& event)
     CodeBlocksDockEvent evt(event.IsChecked() ? cbEVT_SHOW_DOCK_WINDOW : cbEVT_HIDE_DOCK_WINDOW);
     evt.pWindow = Manager::Get()->GetDebuggerManager()->GetWatchesDialog();
     Manager::Get()->ProcessEvent(evt);
+
+    cbDebuggerPlugin *activeDebugger = Manager::Get()->GetDebuggerManager()->GetActiveDebugger();
+    if (activeDebugger && event.IsChecked())
+        activeDebugger->RequestUpdate(cbDebuggerPlugin::Watches);
 }
 
 void DebuggerMenuHandler::OnActiveDebuggerClick(wxCommandEvent& event)

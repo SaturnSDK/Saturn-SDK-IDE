@@ -469,43 +469,7 @@ void WatchesDlg::OnPropertyLableEditBegin(wxPropertyGridEvent &event)
 void WatchesDlg::OnPropertyLableEditEnd(wxPropertyGridEvent &event)
 {
     const wxString& label = m_grid->GetLabelEditor()->GetValue();
-    cbDebuggerPlugin *plugin = Manager::Get()->GetDebuggerManager()->GetActiveDebugger();
-    WatchesProperty *prop = static_cast<WatchesProperty*>(event.GetProperty());
-
-    if (label == wxEmptyString)
-        return;
-
-    if (plugin && prop)
-    {
-        // if the user have edited existing watch, we replace it.
-        if (prop->GetWatch())
-        {
-            cbWatch *old_watch = prop->GetWatch();
-            prop->SetWatch(nullptr);
-            plugin->DeleteWatch(old_watch);
-            cbWatch *new_watch = plugin->AddWatch(label);
-            prop->SetWatch(new_watch);
-
-            for (WatchItems::iterator it = m_watches.begin(); it != m_watches.end(); ++it)
-            {
-                if (it->property == prop)
-                    it->watch = new_watch;
-            }
-            prop->SetExpanded(new_watch->IsExpanded());
-            m_grid->Refresh();
-        }
-        else
-        {
-            WatchItem item;
-            item.property = prop;
-            item.watch = plugin->AddWatch(label);
-            prop->SetWatch(item.watch);
-            m_watches.push_back(item);
-            prop->SetExpanded(item.watch->IsExpanded());
-
-            m_append_empty_watch = true;
-        }
-    }
+    RenameWatch(event.GetProperty(), label);
 }
 
 void WatchesDlg::OnIdle(wxIdleEvent &event)
@@ -586,6 +550,15 @@ void WatchesDlg::OnPropertyRightClick(wxPropertyGridEvent &event)
     m.Append(idMenuDelete, _("Delete"), _("Delete the currently selected watch"));
     m.Append(idMenuDeleteAll, _("Delete All"), _("Delete all watches"));
 
+    WatchesProperty *prop = dynamic_cast<WatchesProperty*>(event.GetProperty());
+    cbDebuggerPlugin *activeDebugger = Manager::Get()->GetDebuggerManager()->GetActiveDebugger();
+    if (activeDebugger && prop)
+    {
+        cbWatch *watch = prop->GetWatch();
+        if (watch)
+            activeDebugger->OnWatchesContextMenu(m, *watch, event.GetProperty());
+    }
+
     PopupMenu(&m);
 }
 
@@ -633,4 +606,45 @@ void WatchesDlg::OnMenuDeleteAll(wxCommandEvent &event)
         m_grid->DeleteProperty(it->property);
     }
     m_watches.clear();
+}
+
+void WatchesDlg::RenameWatch(wxObject *prop, const wxString &newSymbol)
+{
+    cbDebuggerPlugin *plugin = Manager::Get()->GetDebuggerManager()->GetActiveDebugger();
+    WatchesProperty *watchesProp = static_cast<WatchesProperty*>(prop);
+
+    if (newSymbol == wxEmptyString)
+        return;
+
+    if (plugin && watchesProp)
+    {
+        // if the user have edited existing watch, we replace it.
+        if (watchesProp->GetWatch())
+        {
+            cbWatch *old_watch = watchesProp->GetWatch();
+            watchesProp->SetWatch(nullptr);
+            plugin->DeleteWatch(old_watch);
+            cbWatch *new_watch = plugin->AddWatch(newSymbol);
+            watchesProp->SetWatch(new_watch);
+
+            for (WatchItems::iterator it = m_watches.begin(); it != m_watches.end(); ++it)
+            {
+                if (it->property == watchesProp)
+                    it->watch = new_watch;
+            }
+            watchesProp->SetExpanded(new_watch->IsExpanded());
+            m_grid->Refresh();
+        }
+        else
+        {
+            WatchItem item;
+            item.property = watchesProp;
+            item.watch = plugin->AddWatch(newSymbol);
+            watchesProp->SetWatch(item.watch);
+            m_watches.push_back(item);
+            watchesProp->SetExpanded(item.watch->IsExpanded());
+
+            m_append_empty_watch = true;
+        }
+    }
 }

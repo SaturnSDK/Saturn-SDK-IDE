@@ -90,6 +90,8 @@ class DebuggerGDB : public cbDebuggerPlugin
         void ExpandWatch(cbWatch *watch);
         void CollapseWatch(cbWatch *watch);
 
+        void OnWatchesContextMenu(wxMenu &menu, const cbWatch &watch, wxObject *property);
+
         void GetCurrentPosition(wxString &filename, int &line);
         void RequestUpdate(DebugWindows window);
 
@@ -156,22 +158,18 @@ class DebuggerGDB : public cbDebuggerPlugin
         void OnInfoFPU(wxCommandEvent& event);
         void OnInfoSignals(wxCommandEvent& event);
 
+        void OnMenuWatchDereference(wxCommandEvent& event);
     private:
         PipedProcess* m_pProcess;
         int m_PageIndex;
         int m_DbgPageIndex;
-        wxRegEx reSource;
-        wxString m_LastCmd;
-        wxString m_Variable;
         bool m_LastExitCode;
         int m_Pid;
         int m_PidToAttach; // for "attach to process"
-        wxString m_LastEval;
         wxRect m_EvalRect;
         wxTimer m_TimerPollDebugger;
         bool m_NoDebugInfo;
 
-        int m_HaltAtLine;
         bool m_HasDebugLog;
         bool m_StoppedOnSignal;
 
@@ -197,6 +195,8 @@ class DebuggerGDB : public cbDebuggerPlugin
         bool m_TemporaryBreak;
 
         WatchesContainer m_watches;
+        wxString m_watchToDereferenceSymbol;
+        wxObject *m_watchToDereferenceProperty;
 
         struct BreakItem
         {
