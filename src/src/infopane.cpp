@@ -41,7 +41,7 @@ BEGIN_EVENT_TABLE(InfoPane, cbAuiNotebook)
     EVT_MENU(idNB_TabTop, InfoPane::OnTabPosition)
     EVT_MENU(idNB_TabBottom, InfoPane::OnTabPosition)
     EVT_AUINOTEBOOK_PAGE_CLOSE(idNB, InfoPane::OnCloseClicked)
- END_EVENT_TABLE()
+END_EVENT_TABLE()
 
 
 InfoPane::InfoPane(wxWindow* parent) : cbAuiNotebook(parent, idNB, wxDefaultPosition, wxDefaultSize, infopane_flags)
@@ -210,6 +210,7 @@ Logger* InfoPane::GetLogger(int index)
         return NULL;
     return page.Item(index)->islogger ? page.Item(index)->logger : NULL;
 }
+
 wxWindow* InfoPane::GetWindow(int index)
 {
     if (index < 0 || (size_t)index > page.GetCount())
@@ -222,13 +223,28 @@ void InfoPane::Show(size_t i)
     if(page.Item(i)->window == 0)
         return;
 
-    if(page.Item(i)->indexInNB == -1)
+    if(page.Item(i)->indexInNB < 0)
     {
         Toggle(i);
     }
     else
     {
         SetSelection(GetPageIndex(page.Item(i)->window));
+    }
+}
+
+void InfoPane::Hide(Logger* logger)
+{
+    for(size_t i = 0; i < page.GetCount(); ++i)
+    {
+        if(page.Item(i)->logger == logger)
+        {
+            if(page.Item(i)->indexInNB >= 0)
+            {
+                Toggle(i);
+            }
+            return;
+        }
     }
 }
 
@@ -251,13 +267,28 @@ void InfoPane::Show(Logger* logger)
     }
 }
 
+void InfoPane::HideNonLogger(wxWindow* p)
+{
+    for(size_t i = 0; i < page.GetCount(); ++i)
+    {
+        if(page.Item(i)->window == p)
+        {
+            if(page.Item(i)->indexInNB >= 0)
+            {
+                Toggle(i);
+            }
+            return;
+        }
+    }
+}
+
 void InfoPane::ShowNonLogger(wxWindow* p)
 {
     for(size_t i = 0; i < page.GetCount(); ++i)
     {
         if(page.Item(i)->window == p)
         {
-            if(page.Item(i)->indexInNB == -1)
+            if(page.Item(i)->indexInNB < 0)
             {
                 Toggle(i);
             }
@@ -455,7 +486,6 @@ bool InfoPane::RemoveNonLogger(wxWindow* p)
             }
 
             RemovePage(GetPageIndex(page.Item(i)->window));
-            delete(page.Item(i));
             page.RemoveAt(i);
             return true;
         }

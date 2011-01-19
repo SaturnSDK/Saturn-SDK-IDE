@@ -50,7 +50,7 @@ class EVTIMPORT CodeBlocksEvent : public wxCommandEvent, public BlockAllocated<C
 		void SetPlugin(cbPlugin* plugin){ m_pPlugin = plugin; }
 
 		int GetX() const { return m_X; }
-		void SetX(int x){ m_X = x; }
+		void SetX(int x) { m_X = x; }
 
 		int GetY() const { return m_Y; }
 		void SetY(int y){ m_Y = y; }
@@ -373,6 +373,9 @@ extern EVTIMPORT const wxEventType cbEVT_ADD_LOG_WINDOW;
 // remove a log window
 extern EVTIMPORT const wxEventType cbEVT_REMOVE_LOG_WINDOW;
 #define EVT_REMOVE_LOG_WINDOW(fn) DECLARE_EVENT_TABLE_ENTRY( cbEVT_REMOVE_LOG_WINDOW, -1, -1, (wxObjectEventFunction)(wxEventFunction)(CodeBlocksLogEventFunction)&fn, (wxObject *) NULL ),
+// switch to a log window (make it visible)
+extern EVTIMPORT const wxEventType cbEVT_HIDE_LOG_WINDOW;
+#define EVT_HIIDE_LOG_WINDOW(fn) DECLARE_EVENT_TABLE_ENTRY( cbEVT_HIDE_LOG_WINDOW, -1, -1, (wxObjectEventFunction)(wxEventFunction)(CodeBlocksLogEventFunction)&fn, (wxObject *) NULL ),
 // switch to a log window (make it visible)
 extern EVTIMPORT const wxEventType cbEVT_SWITCH_TO_LOG_WINDOW;
 #define EVT_SWITCH_TO_LOG_WINDOW(fn) DECLARE_EVENT_TABLE_ENTRY( cbEVT_SWITCH_TO_LOG_WINDOW, -1, -1, (wxObjectEventFunction)(wxEventFunction)(CodeBlocksLogEventFunction)&fn, (wxObject *) NULL ),

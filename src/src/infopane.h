@@ -71,7 +71,9 @@ public:
     */
     void Show(size_t index);
     void Show(Logger* logger);
+    void Hide(Logger* logger);
     void ShowNonLogger(wxWindow* p);
+    void HideNonLogger(wxWindow* p);
 
     int GetPageIndexByWindow(wxWindow* win);
     int GetCurrentPage(bool &is_logger);
