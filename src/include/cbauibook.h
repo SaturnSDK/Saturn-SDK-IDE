@@ -56,7 +56,7 @@ class cbAuiNotebook : public wxAuiNotebook
          * @remarks Not implemented. Don't use it.
          *
          */
-        bool LoadPerspective(const wxString& layout){return false;};
+        bool LoadPerspective(const wxString& layout){return false;}
         /** \brief Get the tab position
          *
          * Returns the position of the tab as it is visible.
@@ -86,7 +86,68 @@ class cbAuiNotebook : public wxAuiNotebook
          *
          */
         void AllowToolTips(bool allow = true);
-
+        /** \brief Enable or disable tabtooltips globally
+         *
+         * \param use If true tooltips are allowed
+         * \return void
+         *
+         */
+        void UseToolTips(bool use = true);
+        /** \brief Set the time before a tab-tooltip kicks in
+         *
+         * \param time The dwell time
+         * \return void
+         *
+         */
+        void SetDwellTime(long time = 1000){m_DwellTime = time;}
+        /** \brief Minmize free horizontal page
+         *
+         * Moves the active tab to the rightmost place,
+         * to show as many tabs as possible.
+         * \return void
+         *
+         */
+        void MinimizeFreeSpace();
+        /** \brief Delete Page
+         *
+         * Calls the base-class function and after that
+         * MinmizeFreeSpace(), needed to hook into the close-events.
+         * The system generated close event has to be veto'd, and Close()
+         * has to be called manually, so we can handle it ourselves.
+         * \param The index of the tab to be closed
+         * \return true if successfull
+         *
+         */
+        bool DeletePage(size_t page);
+        /** \brief Remove Page
+         *
+         * Calls the base-class function and after that
+         * MinmizeFreeSpace(), needed to hook into the close-events.
+         * The system generated close event has to be veto'd, and Close()
+         * has to be called manually, so we can handle it ourselves.
+         * \param The index of the tab to be closed
+         * \return true if successfull
+         *
+         */
+        bool RemovePage(size_t page);
+        /** \brief Move page
+         *
+         * Moves the tab containing page to new_idx
+         * \param page The page to move (e.g. cbEditor*)
+         * \param new_idx The index the page should be moved to
+         * \return true if successfull
+         *
+         */
+        bool MovePage(wxWindow* page, size_t new_idx);
+        /** \brief Set zoomfactor for builtin editors
+         *
+         * Sets the zoomfactor for all visible builtin
+         * editors.
+         * \param zoom zoomfactor to use
+         * \return void
+         *
+         */
+        void SetZoom(int zoom);
     protected:
         /** \brief Handle the navigation key event
          *
@@ -101,12 +162,13 @@ class cbAuiNotebook : public wxAuiNotebook
 #else
         void OnNavigationKey(wxNavigationKeyEvent& event);
 #endif
-        /** \brief Updates the array, that holds the wxTabCtrls
+        /** \brief OnIdle
          *
+         * \param event unused
          * \return void
          *
          */
-        void UpdateTabControlsArray();
+        void OnIdle(wxIdleEvent& /*event*/);
         /** \brief Check whether the mouse is over a tab
          *
          * \param event unused
@@ -114,6 +176,84 @@ class cbAuiNotebook : public wxAuiNotebook
          *
          */
         void OnDwellTimerTrigger(wxTimerEvent& /*event*/);
+        /** \brief Catch doubleclick-events from wxTabCtrl
+         *
+         * Sends cbEVT_CBAUIBOOK_LEFT_DCLICK, if doubleclick was on a tab,
+         * event-Id is the notebook-Id, event-object is the pointer to the window the
+         * tab belongs to.
+         * \param event holds the wxTabCtrl, that sends the event
+         * \return void
+         *
+         */
+        void OnTabCtrlDblClick(wxMouseEvent& event);
+        /** \brief Catch mousewheel-events from wxTabCtrl
+         *
+         * Sends cbEVT_CBAUIBOOK_MOUSEWHEEL, if doubleclick was on a tab,
+         * event-Id is the notebook-Id, event-object is the pointer to the window the
+         * tab belongs to.
+         * \param event holds the wxTabCtrl, that sends the event
+         * \return void
+         *
+         */
+        void OnTabCtrlMouseWheel(wxMouseEvent& event);
+        /** \brief Catch resize-events and call MinimizeFreeSpace()
+         *
+         * \param event unused
+         * \return void
+         *
+         */
+        void OnResize(wxSizeEvent& event);
+#ifdef __WXMSW__
+        // hack needed on wxMSW, because only focused windows get mousewheel-events
+        /** \brief Catch mouseenter-events from wxTabCtrl
+         *
+         * Set focus on wxTabCtrl
+         * \param event holds the wxTabCtrl, that sends the event
+         * \return void
+         *
+         */
+        void OnEnterTabCtrl(wxMouseEvent& event);
+        /** \brief Catch mouseleave-events from wxTabCtrl
+         *
+         * \param event holds the wxTabCtrl, that sends the event
+         * \return void
+         *
+         */
+        void OnLeaveTabCtrl(wxMouseEvent& event);
+        /** \brief Checks the old focus
+         *
+         * Checks whether the old focused window or one of it's
+         * parents is the same as page.
+         * If they are equal, we have to reset the stored pointer,
+         * because we get a crash otherwise.
+         * \param page The page to check against
+         * \return bool
+         *
+         */
+        bool IsFocusStored(wxWindow* page);
+        /** \brief Save old focus
+         *
+         * Save old focus and tab-selection,
+         * \param event holds the wxTabCtrl, that sends the event
+         * \return void
+         *
+         */
+        void StoreFocus();
+        /** \brief Restore old focus
+         *
+         * Restore old focus or set the focus on the activated tab
+         * \param event holds the wxTabCtrl, that sends the event
+         * \return void
+         *
+         */
+        void RestoreFocus();
+#endif // #ifdef __WXMSW__
+        /** \brief Updates the array, that holds the wxTabCtrls
+         *
+         * \return void
+         *
+         */
+        void UpdateTabControlsArray();
         /** \brief Shows tooltip for win
          *
          * \param win
@@ -127,6 +267,15 @@ class cbAuiNotebook : public wxAuiNotebook
          *
          */
         void CancelToolTip();
+        /** \brief Check for pressed modifier-keys
+         *
+         * Check whether all modifier keys in keyModifier are pressed
+         * or not
+         * \param keyModifier wxSTring containing the modifier(s) to check for
+         * \return true If all modifier-keys are pressed
+         *
+         */
+        bool CheckKeyModifier(const wxString &keyModifier);
         /** \brief Holds the wxTabCtrls used by the notebook
          * @remarks Should be updated with UpdateTabControlsArray(),
          * before it's used
@@ -155,15 +304,41 @@ class cbAuiNotebook : public wxAuiNotebook
         wxPoint m_LastShownAt;
         /** \brief Last time the dwell timer triggered an event
          *
-         * Used to determione how long the mouse has not been moved over a tab .
+         * Used to determine how long the mouse has not been moved over a tab .
          */
         long m_LastTime;
-        /** \brief If false, tooltips are forbidden
+        /** \brief Enable or disable tab tooltips
+         *
+         */
+        bool m_UseTabTooltips;
+        /** \brief Tab tooltip dwell time
+         *
+         */
+        long m_DwellTime;
+#ifdef __WXMSW__
+        // needed for wxMSW-hack, see above
+        /** \brief Last selected tab
+         *
+         * Used to determine whether the tab-selection has changed btween mouseenter
+         * and mouseleave-event.
+         */
+        int m_LastSelected;
+        /** \brief Last focused window
+         *
+         * Used to restore the focus after a mouseleave-event on wxTabCtrl.
+         */
+        wxWindow* m_pLastFocused;
+#endif // #ifdef __WXMSW__
+        /** \brief If false, tooltips are temporary forbidden
          *
          * Needed to not interfere with context-menus etc.
          */
         bool m_AllowToolTips;
-
+        /** \brief If true, zoom for all editors
+         * is set in next OnIdle-call
+         *
+         */
+        bool m_SetZoomOnIdle;
         /** \brief Holds the id of the dwell timer
          */
         static const long idNoteBookTimer;

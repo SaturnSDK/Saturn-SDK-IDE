@@ -77,6 +77,9 @@ private:
 const static wxString gDefaultLayout = _T("Code::Blocks default");
 static wxString gDefaultLayoutData; // this will keep the "hardcoded" default layout
 static wxString gDefaultMessagePaneLayoutData; // this will keep default layout
+const static wxString gMinimalLayout = _T("Code::Blocks minimal");
+static wxString gMinimalLayoutData; // this will keep the "hardcoded" default layout
+static wxString gMinimalMessagePaneLayoutData; // this will keep default layout
 
 // In <wx/defs.h> wxFILE_ID[X] exists only from 1..9, so add another few here
 // Index starts with "1"
@@ -457,6 +460,7 @@ BEGIN_EVENT_TABLE(MainFrame, wxFrame)
     EVT_MENU(idStartHerePageLink, MainFrame::OnStartHereLink)
     EVT_MENU(idStartHerePageVarSubst, MainFrame::OnStartHereVarSubst)
 
+    EVT_CBAUIBOOK_LEFT_DCLICK(ID_NBEditorManager, MainFrame::OnNotebookDoubleClick)
     EVT_NOTEBOOK_PAGE_CHANGED(ID_NBEditorManager, MainFrame::OnPageChanged)
 
     /// CloseFullScreen event handling
@@ -522,6 +526,15 @@ MainFrame::MainFrame(wxWindow* parent)
     SetIcon(wxIcon(app));
 #endif // __WXMSW__
 
+#if wxUSE_STATUSBAR
+    // even it is possible that the statusbar is not visible at the moment, create the statusbar so the plugins can create their own fields on the it:
+    DoCreateStatusBar();
+    SetStatusText(_("Welcome to ")+ appglobals::AppName + _T("!"));
+
+    wxStatusBar *sb = GetStatusBar();
+    if (sb)
+        sb->Show(cfg->ReadBool(_T("/main_frame/statusbar"), true));
+#endif // wxUSE_STATUSBAR
     SetTitle(appglobals::AppName + _T(" v") + appglobals::AppVersion);
 
     ScanForPlugins();
@@ -534,6 +547,21 @@ MainFrame::MainFrame(wxWindow* parent)
     gDefaultLayoutData = m_LayoutManager.SavePerspective(); // keep the "hardcoded" layout handy
     gDefaultMessagePaneLayoutData = m_pInfoPane->SaveTabOrder();
     SaveViewLayout(gDefaultLayout, gDefaultLayoutData, gDefaultMessagePaneLayoutData);
+
+    // generate default minimal layout
+    wxAuiPaneInfoArray& panes = m_LayoutManager.GetAllPanes();
+    for (size_t i = 0; i < panes.GetCount(); ++i)
+    {
+        wxAuiPaneInfo& info = panes[i];
+        if (!(info.name == _T("MainPane")))
+        {
+            info.Hide();
+        }
+    }
+    gMinimalLayoutData = m_LayoutManager.SavePerspective(); // keep the "hardcoded" layout handy
+    gMinimalMessagePaneLayoutData = m_pInfoPane->SaveTabOrder();
+    SaveViewLayout(gMinimalLayout, gMinimalLayoutData, gMinimalMessagePaneLayoutData);
+
     LoadWindowState();
 
     ShowHideStartPage();
@@ -541,44 +569,15 @@ MainFrame::MainFrame(wxWindow* parent)
     RegisterScriptFunctions();
     RunStartupScripts();
 
-//    m_StartupDone = true;
-//    DoUpdateLayout();
-
-//    if (Manager::Get()->GetLogManager()->HasErrors())
-//    {
-//        InfoWindow::Display(_("Errors logged!"), _("Some errors have been logged during\n"
-//                                                    "the Code::Blocks startup process.\n\n"
-//                                                    "Please review them in the logs...\n\n"), 8000, 1000);
-//    }
-//    else if (Manager::Get()->GetLogManager()->HasWarnings())
-//    {
-//        InfoWindow::Display(_("Warnings logged!"), _("Some warnings have been logged during\n"
-//                                                    "the Code::Blocks startup process.\n\n"
-//                                                    "Please review them in the logs...\n\n"), 8000, 1000);
-//    }
-
-    if (cfg->ReadBool(_T("/main_frame/statusbar"), true))
-    {
-        DoCreateStatusBar();
-#if wxUSE_STATUSBAR
-    SetStatusText(_("Welcome to ") + appglobals::AppName + _T("!"));
-#endif // wxUSE_STATUSBAR
-    }
-
     Manager::Get()->GetLogManager()->DebugLog(_T("Initializing plugins..."));
 }
 
 MainFrame::~MainFrame()
 {
-//    if (m_pBatchBuildDialog)
-//        m_pBatchBuildDialog->Destroy();
-//    m_pBatchBuildDialog = 0;
-
     this->SetAcceleratorTable(wxNullAcceleratorTable);
     delete m_pAccel;
 
     DeInitPrinting();
-    //Manager::Get()->Free();
 }
 
 void MainFrame::RegisterEvents()
@@ -893,11 +892,11 @@ void MainFrame::CreateMenubar()
         }
     }
 
-    tmpidx=mbar->FindMenu(_("&Tools"));
+    tmpidx = mbar->FindMenu(_("&Tools"));
     if (tmpidx!=wxNOT_FOUND)
         tools = mbar->GetMenu(tmpidx);
 
-    tmpidx=mbar->FindMenu(_("P&lugins"));
+    tmpidx = mbar->FindMenu(_("P&lugins"));
     if (tmpidx!=wxNOT_FOUND)
         plugs = mbar->GetMenu(tmpidx);
 
@@ -911,7 +910,6 @@ void MainFrame::CreateMenubar()
     // core modules: create menus
     Manager::Get()->GetProjectManager()->CreateMenu(mbar);
     Manager::Get()->GetEditorManager()->CreateMenu(mbar);
-//    Manager::Get()->GetLogManager()->CreateMenu(mbar);
 
     // ask all plugins to rebuild their menus
     PluginElementsArray plugins = Manager::Get()->GetPluginManager()->GetPlugins();
@@ -977,7 +975,6 @@ void MainFrame::CreateToolbars()
     if (m_pToolbar)
     {
         SetToolBar(0L);
-//        delete m_pToolbar;
         m_pToolbar = 0L;
     }
 
@@ -1111,12 +1108,6 @@ void MainFrame::AddPluginInPluginsMenu(cbPlugin* plugin)
 
 void MainFrame::AddPluginInSettingsMenu(cbPlugin* /*plugin*/)
 {
-//    if (!plugin)
-//        return;
-//    if (!plugin->GetInfo()->hasConfigure)
-//        return;
-//    AddPluginInMenus(m_SettingsMenu, plugin,
-//                    (wxObjectEventFunction)(wxEventFunction)(wxCommandEventFunction)&MainFrame::OnPluginSettingsMenu);
 }
 
 void MainFrame::AddPluginInHelpPluginsMenu(cbPlugin* plugin)
@@ -1259,7 +1250,8 @@ void MainFrame::LoadViewLayout(const wxString& name, bool isTemp)
     if (layout.IsEmpty())
     {
         layout = m_LayoutViews[gDefaultLayout];
-        DoSelectLayout(gDefaultLayout);
+        SaveViewLayout(name, layout, layoutMP, false);
+        DoSelectLayout(name);
     }
     else
         DoSelectLayout(name);
@@ -1270,6 +1262,7 @@ void MainFrame::LoadViewLayout(const wxString& name, bool isTemp)
     DoFixToolbarsLayout();
     DoUpdateLayout();
 
+    m_PreviousLayoutName = m_LastLayoutName;
     m_LastLayoutName = name;
     m_LastLayoutData = layout;
     m_LastMessagePaneLayoutData = layoutMP;
@@ -1597,25 +1590,29 @@ bool MainFrame::OpenGeneric(const wxString& filename, bool addToHistory)
         //
         case ftCodeBlocksWorkspace:
             // verify that it's not the same as the one already open
-            if (filename != Manager::Get()->GetProjectManager()->GetWorkspace()->GetFilename() &&
-                DoCloseCurrentWorkspace())
-            {
-                wxBusyCursor wait; // loading a worspace can take some time -> showhourglass
-                ShowHideStartPage(true); // hide startherepage, so we can use full tab-range
-                bool ret = Manager::Get()->GetProjectManager()->LoadWorkspace(filename);
-                if (!ret)
-                {
-                    ShowHideStartPage(); // show/hide startherepage, dependant of settings, if loading failed
-                }
-                else if (addToHistory)
-                {
-                    AddToRecentProjectsHistory(Manager::Get()->GetProjectManager()->GetWorkspace()->GetFilename());
-                }
-                return ret;
-            }
+            if (filename == Manager::Get()->GetProjectManager()->GetWorkspace()->GetFilename())
+                return true;
             else
             {
-                return false;
+                if(DoCloseCurrentWorkspace())
+                {
+                    wxBusyCursor wait; // loading a worspace can take some time -> showhourglass
+                    ShowHideStartPage(true); // hide startherepage, so we can use full tab-range
+                    bool ret = Manager::Get()->GetProjectManager()->LoadWorkspace(filename);
+                    if (!ret)
+                    {
+                        ShowHideStartPage(); // show/hide startherepage, dependant of settings, if loading failed
+                    }
+                    else if (addToHistory)
+                    {
+                        AddToRecentProjectsHistory(Manager::Get()->GetProjectManager()->GetWorkspace()->GetFilename());
+                    }
+                    return ret;
+                }
+                else
+                {
+                    return false;
+                }
             }
             break;
 
@@ -1685,6 +1682,7 @@ bool MainFrame::DoOpenProject(const wxString& filename, bool addToHistory)
     {
         if (addToHistory)
             AddToRecentProjectsHistory(prj->GetFilename());
+        Manager::Get()->GetEditorManager()->GetNotebook()->MinimizeFreeSpace();
         return true;
     }
     ShowHideStartPage(); // show/hide startherepage, dependant of settings, if loading failed
@@ -3679,6 +3677,22 @@ void MainFrame::OnViewLayoutDelete(wxCommandEvent& /*event*/)
         return;
     }
 
+    if (m_LastLayoutName == gMinimalLayout)
+    {
+        if (cbMessageBox(_("The minimal layout cannot be deleted. It can always be reverted to "
+                        "a predefined state though.\nDo you want to revert it now?"),
+                        _("Confirmation"),
+                        wxICON_QUESTION | wxYES_NO | wxNO_DEFAULT) == wxID_YES)
+        {
+            wxString tempLayout = m_PreviousLayoutName;
+            m_LayoutViews[gMinimalLayout] = gMinimalLayoutData;
+            m_LayoutMessagePane[gMinimalLayout] = gMinimalMessagePaneLayoutData;
+            LoadViewLayout(gMinimalLayout);
+            m_PreviousLayoutName = tempLayout;
+        }
+        return;
+    }
+
     if (cbMessageBox(wxString::Format(_("Are you really sure you want to delete the perspective '%s'?"), m_LastLayoutName.c_str()),
                     _("Confirmation"),
                     wxICON_QUESTION | wxYES_NO | wxNO_DEFAULT) == wxID_YES)
@@ -3711,6 +3725,22 @@ void MainFrame::OnViewLayoutDelete(wxCommandEvent& /*event*/)
         // finally, revert to the default layout
         m_LastLayoutName = gDefaultLayout; // do not ask to save old layout ;)
         LoadViewLayout(gDefaultLayout);
+    }
+}
+
+void MainFrame::OnNotebookDoubleClick(CodeBlocksEvent& /*event*/)
+{
+    if(m_LastLayoutName == gMinimalLayout)
+    {
+        LoadViewLayout(m_PreviousLayoutName.IsEmpty()?Manager::Get()->GetConfigManager(_T("app"))->Read(_T("/environment/view/layout_to_toggle"),gDefaultLayout):m_PreviousLayoutName);
+    }
+    else
+    {
+        ConfigManager *cfg = Manager::Get()->GetConfigManager(_T("app"));
+        if(cfg->ReadBool(_T("/environment/view/dbl_clk_maximize"), true))
+        {
+            LoadViewLayout(gMinimalLayout);
+        }
     }
 }
 
@@ -4106,14 +4136,8 @@ void MainFrame::OnToggleBar(wxCommandEvent& event)
 
 void MainFrame::OnToggleStatusBar(wxCommandEvent& /*event*/)
 {
-    wxStatusBar* sb = GetStatusBar();
-    if (!sb)
-    {
-        DoCreateStatusBar();
-        sb = GetStatusBar();
-        if (!sb)
-            return;
-    }
+    cbStatusBar* sb = (cbStatusBar*)GetStatusBar();
+    if (!sb) return;
 
     ConfigManager* cfg = Manager::Get()->GetConfigManager(_T("app"));
     const bool show = !cfg->ReadBool(_T("/main_frame/statusbar"), true);
@@ -4121,7 +4145,7 @@ void MainFrame::OnToggleStatusBar(wxCommandEvent& /*event*/)
 
     DoUpdateStatusBar();
     sb->Show(show);
-
+    if ( show ) SendSizeEvent();
     DoUpdateLayout();
 }
 

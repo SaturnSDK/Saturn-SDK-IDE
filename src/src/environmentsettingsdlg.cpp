@@ -73,7 +73,8 @@ BEGIN_EVENT_TABLE(EnvironmentSettingsDlg, wxScrollingDialog)
     EVT_CHECKBOX(XRCID("chkAutoHideMessages"), EnvironmentSettingsDlg::OnAutoHide)
     EVT_CHECKBOX(XRCID("chkI18N"), EnvironmentSettingsDlg::OnI18NCheck)
     EVT_RADIOBOX(XRCID("rbSettingsIconsSize"), EnvironmentSettingsDlg::OnSettingsIconsSize)
-
+    EVT_CHECKBOX(XRCID("chkDblClkMaximizes"), EnvironmentSettingsDlg::OnDblClickMaximizes)
+    EVT_CHECKBOX(XRCID("chkNBUseToolTips"), EnvironmentSettingsDlg::OnUseTabToolTips)
     EVT_LISTBOOK_PAGE_CHANGING(XRCID("nbMain"), EnvironmentSettingsDlg::OnPageChanging)
     EVT_LISTBOOK_PAGE_CHANGED(XRCID("nbMain"), EnvironmentSettingsDlg::OnPageChanged)
 END_EVENT_TABLE()
@@ -148,6 +149,35 @@ EnvironmentSettingsDlg::EnvironmentSettingsDlg(wxWindow* parent, wxAuiDockArt* a
 
     XRCCTRL(*this, "chkSaveSelectionChangeInMP", wxCheckBox)->SetValue(mcfg->ReadBool(_T("/save_selection_change_in_mp"), true));
 
+    en = cfg->ReadBool(_T("/environment/view/dbl_clk_maximize"), true);
+     XRCCTRL(*this, "chkDblClkMaximizes", wxCheckBox)->SetValue(en);
+    int idx = Manager::Get()->GetAppFrame()->GetMenuBar()->FindMenu(_("&View"));
+    if (idx != wxNOT_FOUND)
+    {
+        wxMenu* menuView = Manager::Get()->GetAppFrame()->GetMenuBar()->GetMenu(idx);
+        int sub_idx = menuView->FindItem(_("Perspectives"));
+        if (sub_idx != wxNOT_FOUND)
+        {
+            wxMenu* menuLayouts = menuView->FindItem(sub_idx)->GetSubMenu();
+            if(menuLayouts)
+            {
+                wxMenuItemList& items = menuLayouts->GetMenuItems();
+                for (size_t i = 0; i < items.GetCount() && ! items[i]->IsSeparator() ; ++i)
+                {
+#if wxCHECK_VERSION(2,8,5)
+                    XRCCTRL(*this, "choLayoutToToggle", wxChoice)->Append(items[i]->GetLabelText(items[i]->GetItemLabelText()));
+#else
+                    XRCCTRL(*this, "choLayoutToToggle", wxChoice)->Append(items[i]->GetLabelFromText(items[i]->GetLabel()));
+#endif
+                }
+            }
+        }
+    }
+
+    sel = XRCCTRL(*this, "choLayoutToToggle", wxChoice)->FindString( cfg->Read(_T("/environment/view/layout_to_toggle"),cfg->Read(_T("/main_frame/layout/default"))));
+    XRCCTRL(*this, "choLayoutToToggle", wxChoice)->SetSelection(sel != wxNOT_FOUND ? sel : 0);
+    XRCCTRL(*this, "choLayoutToToggle", wxChoice)->Enable(en);
+
     bool i18n=cfg->ReadBool(_T("/locale/enable"), false);
         XRCCTRL(*this, "chkI18N", wxCheckBox)->SetValue(i18n);
 
@@ -176,6 +206,15 @@ EnvironmentSettingsDlg::EnvironmentSettingsDlg(wxWindow* parent, wxAuiDockArt* a
     XRCCTRL(*this, "chkCloseOnAll",               wxCheckBox)->SetValue(cfg->ReadBool(_T("/environment/tabs_close_on_all"), 0));
     XRCCTRL(*this, "chkListTabs",                 wxCheckBox)->SetValue(cfg->ReadBool(_T("/environment/tabs_list"), 0));
     XRCCTRL(*this, "chkStackedBasedTabSwitching", wxCheckBox)->SetValue(cfg->ReadBool(_T("/environment/tabs_stacked_based_switching"), 0));
+    XRCCTRL(*this, "txtMousewheelModifier",       wxTextCtrl)->SetValue(cfg->Read(_T("/environment/tabs_mousewheel_modifier"),_T("Ctrl")));
+    XRCCTRL(*this, "txtMousewheelModifier",       wxTextCtrl)->Connect(wxEVT_KEY_DOWN, wxKeyEventHandler(EnvironmentSettingsDlg::OnMousewheelModifier));
+    bool modToAdvance = cfg->ReadBool(_T("/environment/tabs_mousewheel_advance"),false);
+    XRCCTRL(*this, "rbNBModToAdvance",            wxRadioButton)->SetValue(modToAdvance);
+    XRCCTRL(*this, "rbNBModToMove",              wxRadioButton)->SetValue(!modToAdvance);
+    bool useToolTips = cfg->ReadBool(_T("/environment/tabs_use_tooltips"),true);
+    XRCCTRL(*this, "chkNBUseToolTips",            wxCheckBox)->SetValue(useToolTips);
+    XRCCTRL(*this, "spnNBDwellTime",              wxSpinCtrl)->SetValue(cfg->ReadInt(_T("/environment/tabs_dwell_time"), 1000));
+    XRCCTRL(*this, "spnNBDwellTime",              wxSpinCtrl)->Enable(useToolTips);
 
     // tab "Docking"
     XRCCTRL(*this, "spnAuiBorder",                        wxSpinCtrl)->SetValue(cfg->ReadInt(_T("/environment/aui/border_size"), m_pArt->GetMetric(wxAUI_DOCKART_PANE_BORDER_SIZE)));
@@ -368,6 +407,40 @@ void EnvironmentSettingsDlg::OnUseIpcCheck(wxCommandEvent& event)
     XRCCTRL(*this, "chkRaiseViaIPC", wxCheckBox)->Enable(event.IsChecked());
 }
 
+void EnvironmentSettingsDlg::OnDblClickMaximizes(wxCommandEvent& event)
+{
+    bool en = XRCCTRL(*this, "chkDblClkMaximizes", wxCheckBox)->GetValue();
+    XRCCTRL(*this, "choLayoutToToggle", wxCheckBox)->Enable(en);
+}
+
+void EnvironmentSettingsDlg::OnMousewheelModifier(wxKeyEvent& event)
+{
+    wxString keys;
+
+    if (wxGetKeyState(WXK_SHIFT))
+        keys += keys.IsEmpty()?wxT("Shift"):wxT("+Shift");
+
+    if (wxGetKeyState(WXK_CONTROL))
+        keys += keys.IsEmpty()?wxT("Ctrl"):wxT("+Ctrl");
+
+#if defined(__WXMAC__) || defined(__WXCOCOA__)
+    if (wxGetKeyState(WXK_COMMAND))
+        keys += keys.IsEmpty()?wxT("XCtrl"):wxT("+XCtrl");
+#endif
+
+    if (wxGetKeyState(WXK_ALT))
+        keys += keys.IsEmpty()?wxT("Alt"):wxT("+Alt");
+
+    if(!keys.IsEmpty())
+        XRCCTRL(*this, "txtMousewheelModifier", wxTextCtrl)->SetValue(keys);
+}
+
+void EnvironmentSettingsDlg::OnUseTabToolTips(wxCommandEvent& event)
+{
+    bool en = (bool)XRCCTRL(*this, "chkNBUseToolTips", wxCheckBox)->GetValue();
+    XRCCTRL(*this, "spnNBDwellTime", wxSpinCtrl)->Enable(en);
+}
+
 void EnvironmentSettingsDlg::OnPlaceCheck(wxCommandEvent& event)
 {
     XRCCTRL(*this, "chkPlaceHead", wxCheckBox)->Enable(event.IsChecked());
@@ -388,6 +461,7 @@ void EnvironmentSettingsDlg::OnSettingsIconsSize(wxCommandEvent& event)
     wxListbook* lb = XRCCTRL(*this, "nbMain", wxListbook);
     SetSettingsIconsStyle(lb->GetListView(), (SettingsIconsStyle)event.GetSelection());
 }
+
 
 void EnvironmentSettingsDlg::EndModal(int retCode)
 {
@@ -422,6 +496,9 @@ void EnvironmentSettingsDlg::EndModal(int retCode)
 
         cfg->Write(_T("/environment/start_here_page"),       (bool) XRCCTRL(*this, "chkShowStartPage", wxCheckBox)->GetValue());
 
+        cfg->Write(_T("/environment/view/dbl_clk_maximize"),    (bool)XRCCTRL(*this, "chkDblClkMaximizes", wxCheckBox)->GetValue());
+        cfg->Write(_T("/environment/view/layout_to_toggle"),    XRCCTRL(*this, "choLayoutToToggle", wxChoice)->GetStringSelection());
+
         cfg->Write(_T("/locale/enable"),                     (bool) XRCCTRL(*this, "chkI18N", wxCheckBox)->GetValue());
         const wxLanguageInfo *info = wxLocale::FindLanguageInfo(XRCCTRL(*this, "cbxLanguage", wxComboBox)->GetStringSelection());
         if(info)
@@ -446,9 +523,24 @@ void EnvironmentSettingsDlg::EndModal(int retCode)
                 Manager::Get()->GetEditorManager()->DeleteNotebookStack();
         }
         cfg->Write(_T("/environment/tabs_stacked_based_switching"),          tab_switcher_mode);
-        cfg->Write(_T("/environment/aui/border_size"),                  (int)XRCCTRL(*this, "spnAuiBorder", wxSpinCtrl)->GetValue());
-        cfg->Write(_T("/environment/aui/sash_size"),                    (int)XRCCTRL(*this, "spnAuiSash", wxSpinCtrl)->GetValue());
-        cfg->Write(_T("/environment/aui/caption_size"),                 (int)XRCCTRL(*this, "spnAuiCaption", wxSpinCtrl)->GetValue());
+
+        wxString key = XRCCTRL(*this, "txtMousewheelModifier", wxTextCtrl)->GetValue();
+        cfg->Write(_T("/environment/tabs_mousewheel_modifier"),             key.IsEmpty()?_T("Ctrl"):key);
+        cfg->Write(_T("/environment/tabs_mousewheel_advance"),        (bool) XRCCTRL(*this, "rbNBModToAdvance", wxRadioButton)->GetValue());
+
+        bool useToolTips = (bool)XRCCTRL(*this, "chkNBUseToolTips", wxCheckBox)->GetValue();
+        cfg->Write(_T("/environment/tabs_use_tooltips"),useToolTips);
+        cfg->Write(_T("/environment/tabs_dwell_time"),                (int)  XRCCTRL(*this, "spnNBDwellTime", wxSpinCtrl)->GetValue());
+        cbAuiNotebook* nb = Manager::Get()->GetEditorManager()->GetNotebook();
+        if(nb)
+        {
+            nb->UseToolTips(useToolTips);
+            nb->SetDwellTime(cfg->ReadInt(_T("/environment/tabs_dwell_time"), 1000));
+        }
+
+        cfg->Write(_T("/environment/aui/border_size"),                (int)  XRCCTRL(*this, "spnAuiBorder", wxSpinCtrl)->GetValue());
+        cfg->Write(_T("/environment/aui/sash_size"),                  (int)  XRCCTRL(*this, "spnAuiSash", wxSpinCtrl)->GetValue());
+        cfg->Write(_T("/environment/aui/caption_size"),               (int)  XRCCTRL(*this, "spnAuiCaption", wxSpinCtrl)->GetValue());
         cfg->Write(_T("/environment/aui/active_caption_colour"),             XRCCTRL(*this, "btnAuiActiveCaptionColour", wxButton)->GetBackgroundColour());
         cfg->Write(_T("/environment/aui/active_caption_gradient_colour"),    XRCCTRL(*this, "btnAuiActiveCaptionGradientColour", wxButton)->GetBackgroundColour());
         cfg->Write(_T("/environment/aui/active_caption_text_colour"),        XRCCTRL(*this, "btnAuiActiveCaptionTextColour", wxButton)->GetBackgroundColour());

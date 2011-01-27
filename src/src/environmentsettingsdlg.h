@@ -32,6 +32,9 @@ class EnvironmentSettingsDlg : public wxScrollingDialog
         void OnAutoHide(wxCommandEvent& event);
         void OnI18NCheck(wxCommandEvent& event);
         void OnSettingsIconsSize(wxCommandEvent& event);
+        void OnDblClickMaximizes(wxCommandEvent& event);
+        void OnMousewheelModifier(wxKeyEvent& event);
+        void OnUseTabToolTips(wxCommandEvent& event);
 	private:
         void AddPluginPanels();
         void LoadListbookImages();
