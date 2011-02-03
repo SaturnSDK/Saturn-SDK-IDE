@@ -20,6 +20,7 @@
 #include "disassemblydlg.h"
 #include "parsewatchvalue.h"
 
+static wxRegEx reProcessInf(_T("id:[ \t]+([A-Fa-f0-9]+)[ \t]+create"));
 static wxRegEx reWatch(_T("(\\+0x[A-Fa-f0-9]+ )"));
 static wxRegEx reBT1(_T("([0-9]+) ([A-Fa-f0-9]+) ([A-Fa-f0-9]+) ([^[]*)"));
 static wxRegEx reBT2(_T("\\[([A-z]:)(.*) @ ([0-9]+)\\]"));
@@ -128,14 +129,50 @@ class CdbCmd_SetArguments : public DebuggerCmd
 };
 
 /**
+ * Command to find the PID of the active child
+ */
+class CdbCmd_GetPID : public DebuggerCmd
+{
+    public:
+        /** @param file The file to debug. */
+        CdbCmd_GetPID(DebuggerDriver* driver)
+            : DebuggerCmd(driver)
+        {
+            m_Cmd << _T("|.");
+        }
+        void ParseOutput(const wxString& output)
+        {
+            // Output:
+            // <decimal process num> id: <hex PID> create name: <process name>
+            wxArrayString lines = GetArrayFromString(output, _T('\n'));
+            for (unsigned int i = 0; i < lines.GetCount(); ++i)
+            {
+            	if (reProcessInf.Matches(lines[i]))
+				{
+					wxString hexID = reProcessInf.GetMatch(lines[i],1);
+
+					long pid;
+					if (hexID.ToLong(&pid,16))
+					{
+						m_pDriver->SetChildPID(pid);
+					}
+				}
+            }
+        }
+};
+
+/**
   * Command to the attach to a process.
   */
 class CdbCmd_AttachToProcess : public DebuggerCmd
 {
+	private:
+		int m_pid;
     public:
         /** @param file The file to debug. */
         CdbCmd_AttachToProcess(DebuggerDriver* driver, int pid)
-            : DebuggerCmd(driver)
+            : DebuggerCmd(driver),
+            m_pid(pid)
         {
             m_Cmd << _T("attach ") << wxString::Format(_T("%d"), pid);
         }
@@ -149,7 +186,10 @@ class CdbCmd_AttachToProcess : public DebuggerCmd
             for (unsigned int i = 0; i < lines.GetCount(); ++i)
             {
                 if (lines[i].StartsWith(_T("Attaching")))
+				{
                     m_pDriver->Log(lines[i]);
+                    m_pDriver->SetChildPID(m_pid);
+				}
                 else if (lines[i].StartsWith(_T("Can't ")))
                 {
                     // log this and quit debugging
@@ -177,6 +217,23 @@ class CdbCmd_Detach : public DebuggerCmd
         {
             // output any return, usually "Detached"
             m_pDriver->Log(output);
+        }
+};
+
+/**
+  * Command to continue execution and notify the debugger plugin.
+  */
+class CdbCmd_Continue : public DebuggerCmd
+{
+    public:
+        /** @param bp The breakpoint to set. */
+        CdbCmd_Continue(DebuggerDriver* driver)
+            : DebuggerCmd(driver,_T("g"))
+        {
+        }
+        virtual void Action()
+        {
+            m_pDriver->NotifyDebuggeeContinued();
         }
 };
 

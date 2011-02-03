@@ -42,6 +42,7 @@ bool DebuggerState::StartDriver(ProjectBuildTarget* target)
         m_pDriver = new CDB_driver(m_pPlugin);
     else
         m_pDriver = new GDB_driver(m_pPlugin);
+    m_pDriver->SetTarget(target);
     return true;
 }
 

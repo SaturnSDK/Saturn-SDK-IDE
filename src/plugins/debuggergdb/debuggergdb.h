@@ -80,6 +80,7 @@ class DebuggerGDB : public cbDebuggerPlugin
         bool Validate(const wxString& line, const char cb);
         bool IsRunning() const { return m_pProcess; }
         bool IsStopped() const;
+        bool IsTemporaryBreak() const {return m_TemporaryBreak;}
         int GetExitCode() const { return m_LastExitCode; }
 
         cbWatch* AddWatch(const wxString& symbol);

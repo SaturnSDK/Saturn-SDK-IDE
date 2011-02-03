@@ -799,7 +799,6 @@ int DebuggerGDB::DoDebug(bool breakOnEntry)
     }
     else // m_PidToAttach != 0
         cmdline = m_State.GetDriver()->GetCommandLine(cmdexe, m_PidToAttach);
-    m_State.GetDriver()->SetTarget(target);
 
     RemoteDebuggingMap& rdprj = GetRemoteDebuggingMap();
     RemoteDebugging rd = rdprj[0]; // project settings
@@ -841,7 +840,9 @@ int DebuggerGDB::DoDebug(bool breakOnEntry)
     }
     #endif
     // start the gdb process
-    wxString wdir = m_pProject ? m_pProject->GetBasePath() : _T(".");
+    wxString wdir = m_State.GetDriver()->GetDebuggersWorkingDirectory();
+    if (wdir.empty())
+        wdir = m_pProject ? m_pProject->GetBasePath() : _T(".");
     DebugLog(_T("Command-line: ") + cmdline);
     DebugLog(_T("Working dir : ") + wdir);
     int ret = LaunchProcess(cmdline, wdir);

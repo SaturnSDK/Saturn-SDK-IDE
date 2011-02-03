@@ -22,9 +22,7 @@
 #include <globals.h>
 #include <infowindow.h>
 
-#define CDB_PROMPT0 _T("0:000>")
-#define CDB_PROMPT1 _T("0:001>")
-
+static wxRegEx rePrompt(_T("([0-9]+:){1,2}[0-9]+>"));
 static wxRegEx reBP(_T("Breakpoint ([0-9]+) hit"));
 // one stack frame (to access current file; is there another way???)
 //  # ChildEBP RetAddr
@@ -33,6 +31,7 @@ static wxRegEx reFile(_T("[ \t]([A-z]+.*)[ \t]+\\[([A-z]:)(.*) @ ([0-9]+)\\]"));
 
 CDB_driver::CDB_driver(DebuggerGDB* plugin)
     : DebuggerDriver(plugin),
+    m_Target(nullptr),
     m_IsStarted(false)
 {
     //ctor
@@ -43,7 +42,7 @@ CDB_driver::~CDB_driver()
     //dtor
 }
 
-wxString CDB_driver::GetCommandLine(const wxString& debugger, const wxString& debuggee)
+wxString CDB_driver::GetCommonCommandLine(const wxString& debugger)
 {
     wxString cmd;
     cmd << debugger;
@@ -51,72 +50,71 @@ wxString CDB_driver::GetCommandLine(const wxString& debugger, const wxString& de
     cmd << _T(" -G"); // ignore ending breakpoint
     cmd << _T(" -lines"); // line info
 
+    if (m_Target->GetTargetType() == ttConsoleOnly)
+        cmd << wxT(" -2"); // tell the debugger to launch a console for us
+
     if (m_Dirs.GetCount() > 0)
     {
         // add symbols dirs
         cmd << _T(" -y ");
         for (unsigned int i = 0; i < m_Dirs.GetCount(); ++i)
-        {
             cmd << m_Dirs[i] << wxPATH_SEP;
-        }
 
         // add source dirs
         cmd << _T(" -srcpath ");
         for (unsigned int i = 0; i < m_Dirs.GetCount(); ++i)
-        {
             cmd << m_Dirs[i] << wxPATH_SEP;
-        }
     }
+    return cmd;
+}
+
+wxString CDB_driver::GetCommandLine(const wxString& debugger, const wxString& debuggee)
+{
+    wxString cmd = GetCommonCommandLine(debugger);
+    cmd << _T(' ');
 
     // finally, add the program to debug
-    cmd << _T(' ') << debuggee;
-
-    if (!m_WorkingDir.IsEmpty())
-        wxSetWorkingDirectory(m_WorkingDir);
+    wxFileName debuggeeFileName(debuggee);
+    if (debuggeeFileName.IsAbsolute())
+        cmd << debuggee;
+    else
+        cmd << m_Target->GetParentProject()->GetBasePath() << wxT("/") << debuggee;
 
     return cmd;
 }
 
 wxString CDB_driver::GetCommandLine(const wxString& debugger, int pid)
 {
-    wxString cmd;
-    cmd << debugger;
-//    cmd << _T(" -g"); // ignore starting breakpoint
-    cmd << _T(" -G"); // ignore ending breakpoint
-    cmd << _T(" -lines"); // line info
-
-    if (m_Dirs.GetCount() > 0)
-    {
-        // add symbols dirs
-        cmd << _T(" -y ");
-        for (unsigned int i = 0; i < m_Dirs.GetCount(); ++i)
-        {
-            cmd << m_Dirs[i] << wxPATH_SEP;
-        }
-
-        // add source dirs
-        cmd << _T(" -srcpath ");
-        for (unsigned int i = 0; i < m_Dirs.GetCount(); ++i)
-        {
-            cmd << m_Dirs[i] << wxPATH_SEP;
-        }
-    }
-
+    wxString cmd = GetCommonCommandLine(debugger);
     // finally, add the PID
     cmd << _T(" -p ") << wxString::Format(_T("%d"), pid);
-
-    if (!m_WorkingDir.IsEmpty())
-        wxSetWorkingDirectory(m_WorkingDir);
-
     return cmd;
 }
-void CDB_driver::SetTarget(ProjectBuildTarget* /*target*/)
+void CDB_driver::SetTarget(ProjectBuildTarget* target)
 {
+    m_Target = target;
 }
 
 void CDB_driver::Prepare(bool /*isConsole*/)
 {
-    // default initialization
+	// The very first command won't get the right output back due to the spam on CDB launch.
+	// Throw in a dummy command to flush the output buffer.
+	m_QueueBusy = true;
+	QueueCommand(new DebuggerCmd(this,_T(".echo Clear buffer")),High);
+
+	// Either way, get the PID of the child
+	QueueCommand(new CdbCmd_GetPID(this));
+}
+
+// There is no way to set the working directory of the debuggee 
+// and we workaround it by launching CDB at the desired directory.
+wxString CDB_driver::GetDebuggersWorkingDirectory() const
+{
+    wxString oldDir = wxGetCwd();
+    wxSetWorkingDirectory(m_WorkingDir);
+    wxString newDir = wxGetCwd();
+    wxSetWorkingDirectory(oldDir);
+    return newDir;
 }
 
 void CDB_driver::Start(bool /*breakOnEntry*/)
@@ -143,7 +141,7 @@ void CDB_driver::Stop()
 void CDB_driver::Continue()
 {
     ResetCursor();
-    QueueCommand(new DebuggerCmd(this, _T("g")));
+    QueueCommand(new CdbCmd_Continue(this));
     m_IsStarted = true;
 }
 
@@ -315,17 +313,15 @@ void CDB_driver::ParseOutput(const wxString& output)
 
     m_pDBG->DebugLog(output);
 
-    int idx = buffer.First(CDB_PROMPT0);
-    if (idx == wxNOT_FOUND)
-        idx = buffer.First(CDB_PROMPT1);
-    if (idx != wxNOT_FOUND)
-    {
+    if (rePrompt.Matches(buffer))
+	{
+		int idx = buffer.First(rePrompt.GetMatch(buffer));
+		cbAssert(idx != wxNOT_FOUND);
         m_ProgramIsStopped = true;
         m_QueueBusy = false;
         DebuggerCmd* cmd = CurrentCommand();
         if (cmd)
         {
-//            Log(_T("Command parsing output: ") + buffer.Left(idx));
             RemoveTopCommand(false);
             buffer.Remove(idx);
             if (buffer[buffer.Length() - 1] == _T('\n'))
@@ -373,25 +369,19 @@ void CDB_driver::ParseOutput(const wxString& output)
         else if (reBP.Matches(lines[i]))
         {
             Log(lines[i]);
-
-            long int bpNum;
-            reBP.GetMatch(lines[i], 1).ToLong(&bpNum);
-            DebuggerBreakpoint* bp = m_pDBG->GetState().GetBreakpointByNumber(bpNum);
-            if (bp)
-            {
-                // force cursor notification because we don't have an actual address
-                // available...
-                m_Cursor.address = _T("deadbeef");
-
-                m_Cursor.file = bp->filename;
-                m_Cursor.line = bp->line + 1;
-//                if (bp->temporary)
-//                    m_pDBG->GetState().RemoveBreakpoint(bp->index);
-            }
-            else
-                Log(wxString::Format(_T("Breakpoints inconsistency detected!\nNothing known about breakpoint %ld"), bpNum));
-            m_Cursor.changed = true;
-            notifyChange = true;
+            // Code breakpoint / assert
+            m_pDBG->BringCBToFront();
+            Manager::Get()->GetDebuggerManager()->ShowBacktraceDialog();
+            DoBacktrace(true);
+            break;
+        }
+        else if (lines[i].Contains(_T("Break instruction exception")) && !m_pDBG->IsTemporaryBreak())
+        {
+        	// Code breakpoint / assert
+            m_pDBG->BringCBToFront();
+            Manager::Get()->GetDebuggerManager()->ShowBacktraceDialog();
+            DoBacktrace(true);
+            break;
         }
     }
 
