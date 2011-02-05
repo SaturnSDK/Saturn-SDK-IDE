@@ -10,6 +10,9 @@
 #include <sdk.h>
 #include <wx/aui/aui.h>
 #include <wx/button.h>
+#include <wx/menu.h>
+#include <wx/choice.h>
+#include <wx/radiobut.h>
 #include <wx/xrc/xmlres.h>
 #include <manager.h>
 #include <configmanager.h>
@@ -31,6 +34,7 @@
 #include "appglobals.h"
 #include "globals.h"
 #include "associations.h"
+#include "cbauibook.h"
 
 #include "configurationpanel.h"
 #include "environmentsettingsdlg.h"
@@ -160,7 +164,7 @@ EnvironmentSettingsDlg::EnvironmentSettingsDlg(wxWindow* parent, wxAuiDockArt* a
         if (sub_idx != wxNOT_FOUND)
         {
             wxMenu* menuLayouts = menuView->FindItem(sub_idx)->GetSubMenu();
-            if(menuLayouts)
+            if (menuLayouts)
             {
                 wxMenuItemList& items = menuLayouts->GetMenuItems();
                 for (size_t i = 0; i < items.GetCount() && ! items[i]->IsSeparator() ; ++i)
@@ -436,7 +440,7 @@ void EnvironmentSettingsDlg::OnMousewheelModifier(wxKeyEvent& event)
     if (wxGetKeyState(WXK_ALT))
         keys += keys.IsEmpty()?wxT("Alt"):wxT("+Alt");
 
-    if(!keys.IsEmpty())
+    if (!keys.IsEmpty())
         XRCCTRL(*this, "txtMousewheelModifier", wxTextCtrl)->SetValue(keys);
 }
 
@@ -473,7 +477,6 @@ void EnvironmentSettingsDlg::OnSettingsIconsSize(wxCommandEvent& event)
     wxListbook* lb = XRCCTRL(*this, "nbMain", wxListbook);
     SetSettingsIconsStyle(lb->GetListView(), (SettingsIconsStyle)event.GetSelection());
 }
-
 
 void EnvironmentSettingsDlg::EndModal(int retCode)
 {
