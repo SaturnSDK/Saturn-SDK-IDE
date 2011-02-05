@@ -19,6 +19,7 @@
     #include "pluginmanager.h"
     #include "editormanager.h"
     #include "cbeditor.h"
+    #include "cbauibook.h"
     #include "cbplugin.h" // cgEditor
     #include "globals.h"
     #include <wx/listbook.h>
@@ -510,6 +511,7 @@ void EditorConfigurationDlg::UpdateSampleFont(bool askForNewFont)
         ApplyColours();
     }
 }
+
 void EditorConfigurationDlg::OnCaretStyle(wxCommandEvent& event)
 {
     XRCCTRL(*this, "spnCaretWidth", wxSpinCtrl)->Enable(XRCCTRL(*this, "lstCaretStyle", wxChoice)->GetSelection() == wxSCI_CARETSTYLE_LINE);
