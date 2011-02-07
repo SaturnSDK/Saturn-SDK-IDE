@@ -3,7 +3,7 @@ Section: devel
 Priority: optional
 Maintainer: Jens Lody <jens@codeblocks.org>
 Homepage: http://www.codeblocks.org
-Build-Depends: debhelper (>= 7.4.11~), cdbs, automake (>= 1.9), libtool (>= 1.4), libwxgtk2.8-dev, wx-common, zip, libbz2-dev, zlib1g-dev, libgtk2.0-dev, libstdc++6-4.3-dev | libstdc++6-4.4-dev | libstdc++6-4.5-dev, libboost1.40-dev | libboost-dev (>= 1.40)
+Build-Depends: debhelper (>= 7.4.11~), cdbs, automake (>= 1.9), libtool (>= 1.4), libwxgtk2.8-dev, wx-common, zip, libbz2-dev, zlib1g-dev, libgtk2.0-dev, libgamin-dev, libstdc++6-4.3-dev | libstdc++6-4.4-dev | libstdc++6-4.5-dev, libboost1.40-dev | libboost-dev (>= 1.40)
 Standards-Version: 3.9.1
 
 Package: codeblocks
@@ -88,7 +88,7 @@ Description: Code::Blocks debugging libraries
     * Extensible wizard based on scripts
     * Autosave (saves your work in the unfortunate case of a crash)
  .
- This package contains the debugging libraries for the 'codeblocks' and the 
+ This package contains the debugging libraries for the 'codeblocks' and the
  'libcodeblockso' package.
 
 Package: codeblocks-contrib
@@ -98,38 +98,40 @@ Pre-Depends: codeblocks-contrib-common (= ${source:Version})
 Description: contrib plugins for Code::Blocks IDE
  This package extends Code::Blocks functionality a great deal with the included
  plugins. These are:
+    * Autoversioning
+    * BrowseTracker
+    * Cccc
     * Code profiler (based on gprof)
     * Code statistics (SLOCs etc)
+    * Codesnippets
     * Copy strings
+    * CppCheck
     * Cscope
     * DoxyBlocks
     * DragScroll (enhances mouse operations)
     * EditorTweaks
+    * Selection of small games for relaxing between coding sessions! (BYOGames)
     * Setting of environment variables
     * Source exporter to PDF/HTML/ODT/RTF
+    * FileManager
     * Header fixup
     * Help
+    * HexEditor
+    * IncrementalSearch
     * Keyboard shortcuts configuration
+    * CB koders
+    * Library finder
+    * MouseSap
+    * NassiShneiderman
+    * Regular expression testbed
+    * Reopen last closed editor(s) via menu or hotkey
+    * Symbol table plugin
+    * ThreadSearch
+    * ToolsPlus
+    * Valgrind
     * RAD gui-builder for wxWidgets (wxSmith)
     * wxSmith contrib items
     * wxSmith AUI
-    * Selection of small games for relaxing between coding sessions! (BYOGames)
-    * Autoversioning
-    * ThreadSearch
-    * BrowseTracker
-    * Valgrind
-    * HexEditor
-    * IncrementalSearch
-    * Codesnippets
-    * Library finder
-    * Regular expression testbed
-    * Symbol table plugin
-    * CB koders
-    * MouseSap
-    * Reopen last closed editor(s) via menu or hotkey
-    * Cccc
-    * CppCheck
-    * NassiShneiderman
 
 Package: codeblocks-contrib-common
 Architecture: all
@@ -254,7 +256,7 @@ Description: wxSmith shared library (Code::Blocks plugin for RAD GUI editing)
     * Extensible wizard based on scripts
     * Autosave (saves your work in the unfortunate case of a crash)
  .
- This package contains the wxSmith shared library. 
+ This package contains the wxSmith shared library.
  wxSmith is included in the codeblocks-contrib package.
 
 Package: libwxsmithlib0-dev
