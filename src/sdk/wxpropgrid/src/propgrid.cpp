@@ -629,7 +629,8 @@ wxPGGlobalVarsClass::~wxPGGlobalVarsClass()
     // iterate over all the elements in the class
     for( vt_it = m_mapEditorClasses.begin(); vt_it != m_mapEditorClasses.end(); ++vt_it )
     {
-        delete ((wxPGEditor*)vt_it->second);
+        wxPGEditor* editor = (wxPGEditor*) vt_it->second;
+        delete editor;
     }
 }
 
@@ -3245,12 +3246,6 @@ void wxPropertyGrid::Init1()
     AddActionTrigger( wxPG_ACTION_EXPAND_PROPERTY, WXK_RIGHT);
     AddActionTrigger( wxPG_ACTION_COLLAPSE_PROPERTY, WXK_LEFT);
     AddActionTrigger( wxPG_ACTION_CANCEL_EDIT, WXK_ESCAPE );
-    AddActionTrigger( wxPG_ACTION_CUT, 'X', wxMOD_CONTROL );
-    AddActionTrigger( wxPG_ACTION_CUT, WXK_DELETE, wxMOD_SHIFT );
-    AddActionTrigger( wxPG_ACTION_COPY, 'C', wxMOD_CONTROL);
-    AddActionTrigger( wxPG_ACTION_COPY, WXK_INSERT, wxMOD_CONTROL );
-    AddActionTrigger( wxPG_ACTION_PASTE, 'V', wxMOD_CONTROL );
-    AddActionTrigger( wxPG_ACTION_PASTE, WXK_INSERT, wxMOD_SHIFT );
     AddActionTrigger( wxPG_ACTION_SELECT_ALL, 'A', wxMOD_CONTROL );
 
     m_coloursCustomized = 0;
@@ -7005,12 +7000,14 @@ bool wxPropertyGrid::ProcessEvent(wxEvent& event)
     {
         wxWindow* parent = wnd->GetParent();
 
-        if ( parent &&
+         // JACS: only look at command events
+        if ( event.IsCommandEvent() && parent &&
              (parent == m_canvas ||
               parent->GetParent() == m_canvas) )
         {
-            OnCustomEditorEvent((wxCommandEvent&)event);
-            return true;
+            // JACS: don't return here, fall through to ProcessEvent
+            if ( HandleCustomEditorEvent((wxCommandEvent&)event) )
+                return true;
         }
     }
     return wxPanel::ProcessEvent(event);
@@ -7018,15 +7015,22 @@ bool wxPropertyGrid::ProcessEvent(wxEvent& event)
 
 // -----------------------------------------------------------------------
 
+void wxPropertyGrid::OnCustomEditorEvent( wxCommandEvent &event )
+{
+    HandleCustomEditorEvent(event);
+}
+
+// -----------------------------------------------------------------------
+
 // NB: It may really not be wxCommandEvent - must check if necessary
 //     (usually not).
-void wxPropertyGrid::OnCustomEditorEvent( wxCommandEvent &event )
+bool wxPropertyGrid::HandleCustomEditorEvent( wxCommandEvent &event )
 {
     // It is possible that this handler receives event even before
     // the control has been properly initialized. Let's skip the
     // handling in that case.
     if ( !m_pState )
-        return;
+        return false;
 
     // Don't care about the event if it originated from the
     // 'label editor'. In this function we only care about the
@@ -7034,7 +7038,7 @@ void wxPropertyGrid::OnCustomEditorEvent( wxCommandEvent &event )
     if ( m_labelEditor && event.GetId() == m_labelEditor->GetId() )
     {
         event.Skip();
-        return;
+        return false;
     }
 
     wxPGProperty* selected = GetSelection();
@@ -7043,7 +7047,7 @@ void wxPropertyGrid::OnCustomEditorEvent( wxCommandEvent &event )
     // Somehow, event is handled after property has been deselected.
     // Possibly, but very rare.
     if ( !selected || selected->HasFlag(wxPG_PROP_BEING_DELETED) )
-        return;
+        return false;
 
     if ( m_iFlags & wxPG_FL_IN_ONCUSTOMEDITOREVENT ||
          m_inDoSelectProperty ||
@@ -7052,7 +7056,7 @@ void wxPropertyGrid::OnCustomEditorEvent( wxCommandEvent &event )
          // similar is currently doing something (showing a
          // message box, for instance).
          m_processedEvent )
-        return;
+        return false;
 
     wxVariant pendingValue(selected->GetValueRef());
     wxWindow* wnd = GetEditorControl();
@@ -7077,7 +7081,7 @@ void wxPropertyGrid::OnCustomEditorEvent( wxCommandEvent &event )
 
             wxString newTcValue = tc->GetValue();
             if ( m_prevTcValue == newTcValue )
-                return;
+                return false;
             m_prevTcValue = newTcValue;
         }
         else if ( wnd->IsKindOf(CLASSINFO(wxPGComboCtrl)) )
@@ -7086,7 +7090,7 @@ void wxPropertyGrid::OnCustomEditorEvent( wxCommandEvent &event )
 
             wxString newTcValue = cc->GetTextCtrl()->GetValue();
             if ( m_prevTcValue == newTcValue )
-                return;
+                return false;
             m_prevTcValue = newTcValue;
         }
     }
@@ -7189,10 +7193,12 @@ void wxPropertyGrid::OnCustomEditorEvent( wxCommandEvent &event )
         {
             wxCommandEvent evt(wxEVT_COMMAND_BUTTON_CLICKED,GetId());
             GetEventHandler()->AddPendingEvent(evt);
+            buttonWasHandled = true;
         }
     }
 
     ClearInternalFlag(wxPG_FL_IN_ONCUSTOMEDITOREVENT);
+    return buttonWasHandled;
 }
 
 // -----------------------------------------------------------------------
@@ -9096,7 +9102,11 @@ void wxPropertyGrid::HandleKeyEvent(wxKeyEvent &event)
 
         wxPGProperty* p = selected;
 
-        if ( action == wxPG_ACTION_COPY )
+        if ( action == wxPG_ACTION_EDIT )
+        {
+            DoSelectAndEdit(p, 1, wxPG_SEL_FOCUS);
+        }
+        else if ( action == wxPG_ACTION_COPY )
         {
             CopyTextToClipboard(p->GetDisplayedString());
         }
