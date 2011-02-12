@@ -52,16 +52,20 @@ class DLLIMPORT ProjectManager : public Mgr<ProjectManager>, public wxEvtHandler
         friend class Mgr<ProjectManager>;
         friend class Manager; // give Manager access to our private members
 
+#ifndef CB_FOR_CONSOLE
         cbAuiNotebook* GetNotebook() { return m_pNotebook; }
+#endif // #ifndef CB_FOR_CONSOLE
 
         const FilesGroupsAndMasks* GetFilesGroupsAndMasks() const { return m_pFileGroups; }
 
         /// Can the app shutdown? (actually: is ProjectManager busy at the moment?)
         static bool CanShutdown(){ return s_CanShutdown; }
+#ifndef CB_FOR_CONSOLE
         /// Application menu creation. Called by the application only.
         static void CreateMenu(wxMenuBar* menuBar);
         /// Application menu removal. Called by the application only.
         void ReleaseMenu(wxMenuBar* menuBar);
+#endif // #ifndef CB_FOR_CONSOLE
         /** Retrieve the default path for new projects.
           * @return The default path for new projects. Contains trailing path separator.
           * @note This might be empty if not configured before...
@@ -106,6 +110,7 @@ class DLLIMPORT ProjectManager : public Mgr<ProjectManager>, public wxEvtHandler
           * is returned. Else the return value is NULL.
           */
         cbProject* LoadProject(const wxString& filename, bool activateIt = true);
+#ifndef CB_FOR_CONSOLE
         /** Save a project to disk.
           * @param project A pointer to the project to save.
           * @return True if saving was succesful, false if not.
@@ -133,6 +138,7 @@ class DLLIMPORT ProjectManager : public Mgr<ProjectManager>, public wxEvtHandler
           * @return True if all projects were saved, false if even one save operation failed.
           */
         bool SaveAllProjects();
+#endif // #ifndef CB_FOR_CONSOLE
         /** Close a project.
           * @param project A pointer to the project to close.
           * @param dontsave Force not (!) saving the project on close.
@@ -148,6 +154,7 @@ class DLLIMPORT ProjectManager : public Mgr<ProjectManager>, public wxEvtHandler
           * @return True if all projects were closed, false if even one close operation failed.
           */
         bool CloseAllProjects(bool dontsave = false);
+#ifndef CB_FOR_CONSOLE
         /** Checks whether all projects are saved. If not, asks
           *  the user to save and saves accordingly.
           *  @return False if the user pressed cancel.
@@ -177,6 +184,7 @@ class DLLIMPORT ProjectManager : public Mgr<ProjectManager>, public wxEvtHandler
           * then it wraps and goes to the top of the list.
           */
         void MoveProjectDown(cbProject* project, bool warpAround = false);
+#endif // #ifndef CB_FOR_CONSOLE
         /** Create a new empty project.
           * @param filename the project's filename
           * @return A pointer to the new project if succesful, or NULL if not.
@@ -185,6 +193,7 @@ class DLLIMPORT ProjectManager : public Mgr<ProjectManager>, public wxEvtHandler
           * If the user cancels the Save dialog, then NULL is returned from this function.
           */
         cbProject* NewProject(const wxString& filename = wxEmptyString);
+#ifndef CB_FOR_CONSOLE
         /** Add a file to a project. This function comes in two versions. This version,
           * expects a single build target index for the added file to belong to.
           * @param filename The file to add to the project.
@@ -255,11 +264,13 @@ class DLLIMPORT ProjectManager : public Mgr<ProjectManager>, public wxEvtHandler
           * This array will be empty if no build targets were selected.
           */
         wxArrayInt AskForMultiBuildTargetIndex(cbProject* project = 0L);
+#endif // #ifndef CB_FOR_CONSOLE
         /** Load a workspace.
           * @param filename The workspace to open.
           * @return True if the workspace loads succefully, false if not.
           */
         bool LoadWorkspace(const wxString& filename = DEFAULT_WORKSPACE);
+#ifndef CB_FOR_CONSOLE
         /** Save the open workspace.
           * @return True if the workspace is saved succefully, false if not.
           */
@@ -274,6 +285,7 @@ class DLLIMPORT ProjectManager : public Mgr<ProjectManager>, public wxEvtHandler
           * the workspace, if it is modified)
           */
         bool CloseWorkspace();
+#endif // #ifndef CB_FOR_CONSOLE
 
         /** Check if the project manager is loading a project.
           * @return True if it's loading a project, false otherwise
@@ -339,15 +351,18 @@ class DLLIMPORT ProjectManager : public Mgr<ProjectManager>, public wxEvtHandler
           * @return An array of project dependencies, or NULL if no dependencies are set for @c base.
           */
         const ProjectsArray* GetDependenciesForProject(cbProject* base);
+#ifndef CB_FOR_CONSOLE
         /** Displays a dialog to setup project dependencies.
           * @param base The project to setup its dependencies. Can be NULL (default) because there's a project selection combo in the dialog.
           */
         void ConfigureProjectDependencies(cbProject* base = 0);
+#endif // #ifndef CB_FOR_CONSOLE
         /** Checks for circular dependencies between @c base and @c dependsOn.
           * @return True if circular dependency is detected, false if it isn't.
           */
         bool CausesCircularDependency(cbProject* base, cbProject* dependsOn);
 
+#ifndef CB_FOR_CONSOLE
         /// Rebuild the project manager's tree.
         void RebuildTree();
         /** Stop the tree control from updating.
@@ -390,12 +405,15 @@ class DLLIMPORT ProjectManager : public Mgr<ProjectManager>, public wxEvtHandler
         int FolderIconIndex();
         /** @return The virtual folder icon index in the image list. */
         int VirtualFolderIconIndex();
+#endif // #ifndef CB_FOR_CONSOLE
 
         /** Check if one of the open projects has been modified outside the IDE. If so, ask to reload it. */
         void CheckForExternallyModifiedProjects();
 
+#ifndef CB_FOR_CONSOLE
         /** Sends message to the plugins that the workspace has been changed */
         void WorkspaceChanged();
+#endif // #ifndef CB_FOR_CONSOLE
 
         /** Begins the project loading process. Only to be used by code that needs it (e.g. project importers).
           * @return True on success, false on failure.
@@ -431,6 +449,7 @@ class DLLIMPORT ProjectManager : public Mgr<ProjectManager>, public wxEvtHandler
         ProjectManager();
         ~ProjectManager();
 
+#ifndef CB_FOR_CONSOLE
         /** Asks user to save the workspace, projects and files
           * (Yes/No/cancel). If user pressed Yes, it saves accordingly.
           * @return False if the user pressed cancel; true otherwise.
@@ -481,7 +500,9 @@ class DLLIMPORT ProjectManager : public Mgr<ProjectManager>, public wxEvtHandler
         void OnDeleteVirtualFolder(wxCommandEvent& event);
         void OnUpdateUI(wxUpdateUIEvent& event);
         void OnIdle(wxIdleEvent& event);
+#endif // #ifndef CB_FOR_CONSOLE
         void OnAppDoneStartup(CodeBlocksEvent& event);
+#ifndef CB_FOR_CONSOLE
         void OnKeyDown(wxTreeEvent& event);
 
         void DoOpenSelectedFile();
@@ -493,9 +514,12 @@ class DLLIMPORT ProjectManager : public Mgr<ProjectManager>, public wxEvtHandler
         cbAuiNotebook* m_pNotebook;
         wxTreeCtrl* m_pTree;
         wxTreeItemId m_TreeRoot;
+#endif // #ifndef CB_FOR_CONSOLE
         cbProject* m_pActiveProject;
         cbProject* m_pProjectToActivate;
+#ifndef CB_FOR_CONSOLE
         wxImageList* m_pImages;
+#endif // #ifndef CB_FOR_CONSOLE
         ProjectsArray* m_pProjects;
         DepsMap m_ProjectDeps;
         cbWorkspace* m_pWorkspace;
@@ -508,7 +532,9 @@ class DLLIMPORT ProjectManager : public Mgr<ProjectManager>, public wxEvtHandler
         bool m_IsClosingProject;
         bool m_IsClosingWorkspace;
         wxString m_InitialDir;
+#ifndef CB_FOR_CONSOLE
         wxTreeItemId m_DraggingItem;
+#endif // #ifndef CB_FOR_CONSOLE
         bool m_isCheckingForExternallyModifiedProjects;
         bool m_CanSendWorkspaceChanged;
 

@@ -18,10 +18,14 @@
     #include "sdk_events.h"
     #include "cbexception.h"
     #include "projectmanager.h"
+#ifndef CB_FOR_CONSOLE
     #include "editormanager.h"
+#endif // #ifndef CB_FOR_CONSOLE
     #include "logmanager.h"
     #include "pluginmanager.h"
+#ifndef CB_FOR_CONSOLE
     #include "toolsmanager.h"
+#endif // #ifndef CB_FOR_CONSOLE
     #include "macrosmanager.h"
     #include "configmanager.h"
     #include "scriptingmanager.h"
@@ -97,6 +101,7 @@ Manager::~Manager()
 }
 
 
+#ifndef CB_FOR_CONSOLE
 Manager* Manager::Get(wxFrame *appWindow)
 {
     if(appWindow)
@@ -114,6 +119,7 @@ Manager* Manager::Get(wxFrame *appWindow)
     }
     return Get();
 }
+#endif // #ifndef CB_FOR_CONSOLE
 
 Manager* Manager::Get()
 {
@@ -154,12 +160,16 @@ void Manager::Shutdown()
 {
     appShuttingDown = true;
 
+#ifndef CB_FOR_CONSOLE
     ToolsManager::Free();
     TemplateManager::Free();
+#endif // #ifndef CB_FOR_CONSOLE
     PluginManager::Free();
     ScriptingManager::Free();
     ProjectManager::Free();
+#ifndef CB_FOR_CONSOLE
     EditorManager::Free();
+#endif // #ifndef CB_FOR_CONSOLE
     PersonalityManager::Free();
     MacrosManager::Free();
     UserVariableManager::Free();
@@ -237,6 +247,7 @@ bool Manager::IsAppShuttingDown()
 }
 
 
+#ifndef CB_FOR_CONSOLE
 void Manager::Initxrc(bool force)
 {
     static bool xrcok = false;
@@ -311,6 +322,7 @@ wxWindow* Manager::GetAppWindow() const
 {
     return (wxWindow*)m_pAppWindow;
 }
+#endif // #ifndef CB_FOR_CONSOLE
 
 ProjectManager* Manager::GetProjectManager() const
 {
@@ -321,10 +333,12 @@ ProjectManager* Manager::GetProjectManager() const
     return ProjectManager::Get();
 }
 
+#ifndef CB_FOR_CONSOLE
 EditorManager* Manager::GetEditorManager() const
 {
     return EditorManager::Get();
 }
+#endif // #ifndef CB_FOR_CONSOLE
 
 LogManager* Manager::GetLogManager() const
 {
@@ -336,10 +350,12 @@ PluginManager* Manager::GetPluginManager() const
     return PluginManager::Get();
 }
 
+#ifndef CB_FOR_CONSOLE
 ToolsManager* Manager::GetToolsManager() const
 {
     return ToolsManager::Get();
 }
+#endif // #ifndef CB_FOR_CONSOLE
 
 MacrosManager* Manager::GetMacrosManager() const
 {

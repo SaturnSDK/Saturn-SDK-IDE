@@ -33,7 +33,9 @@ class DLLIMPORT UserVariableManager : public Mgr<UserVariableManager>
         void Arrogate();
         bool Exists(const wxString& variable) const;
 
+#ifndef CB_FOR_CONSOLE
         void Configure();
+#endif // #ifndef CB_FOR_CONSOLE
         void Migrate();
 
         UserVariableManager& operator=(const UserVariableManager& /*rhs*/) // prevent assignment operator

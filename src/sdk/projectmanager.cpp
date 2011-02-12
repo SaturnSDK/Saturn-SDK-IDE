@@ -41,23 +41,32 @@
 #include <wx/busyinfo.h>
 #include <wx/choicdlg.h>
 #include <wx/filedlg.h>
-#include <wx/progdlg.h>
-#include <wx/textdlg.h>
+#ifndef CB_FOR_CONSOLE
+    #include <wx/progdlg.h>
+    #include <wx/textdlg.h>
+#endif // #ifndef CB_FOR_CONSOLE
 #include <wx/tokenzr.h>
 #include <wx/utils.h>
 
-#include "incrementalselectlistdlg.h"
+#ifndef CB_FOR_CONSOLE
+    #include "incrementalselectlistdlg.h"
+#endif // #ifndef CB_FOR_CONSOLE
 #include "filegroupsandmasks.h"
-#include "projectsfilemasksdlg.h"
-#include "projectdepsdlg.h"
-#include "multiselectdlg.h"
+#ifndef CB_FOR_CONSOLE
+    #include "projectsfilemasksdlg.h"
+    #include "projectdepsdlg.h"
+    #include "multiselectdlg.h"
+#endif // #ifndef CB_FOR_CONSOLE
 #include "filefilters.h"
-#include "confirmreplacedlg.h"
-#include "projectfileoptionsdlg.h"
+#ifndef CB_FOR_CONSOLE
+    #include "confirmreplacedlg.h"
+    #include "projectfileoptionsdlg.h"
+#endif // #ifndef CB_FOR_CONSOLE
 
 template<> ProjectManager* Mgr<ProjectManager>::instance = 0;
 template<> bool  Mgr<ProjectManager>::isShutdown = false;
 
+#ifndef CB_FOR_CONSOLE
 // maximum number of items in "Open with" context menu
 static const unsigned int MAX_OPEN_WITH_ITEMS = 20; // keep it in sync with below array!
 static const int idOpenWith[] =
@@ -69,6 +78,7 @@ static const int idOpenWith[] =
 };
 // special entry: force open with internal editor
 static const int idOpenWithInternal = wxNewId();
+#endif // #ifndef CB_FOR_CONSOLE
 
 // static
 bool ProjectManager::s_CanShutdown = true;
@@ -114,6 +124,7 @@ int idMenuTreeCloseWorkspace = wxNewId();
 int idMenuAddVirtualFolder = wxNewId();
 int idMenuDeleteVirtualFolder = wxNewId();
 
+#ifndef CB_FOR_CONSOLE
 static const int idMenuFindFile = wxNewId();
 static const int idNB = wxNewId();
 static const int idNB_TabTop = wxNewId();
@@ -152,8 +163,10 @@ BEGIN_EVENT_TABLE(PrjTree, wxTreeCtrl)
     EVT_RIGHT_DOWN(PrjTree::OnRightClick)
 END_EVENT_TABLE()
 #endif // !__WXMSW__
+#endif // #ifndef CB_FOR_CONSOLE
 
 BEGIN_EVENT_TABLE(ProjectManager, wxEvtHandler)
+#ifndef CB_FOR_CONSOLE
     EVT_TREE_BEGIN_DRAG(ID_ProjectManager, ProjectManager::OnTreeBeginDrag)
     EVT_TREE_END_DRAG(ID_ProjectManager, ProjectManager::OnTreeEndDrag)
 
@@ -210,11 +223,16 @@ BEGIN_EVENT_TABLE(ProjectManager, wxEvtHandler)
     EVT_MENU(idMenuViewFileMasks, ProjectManager::OnViewFileMasks)
     EVT_MENU(idMenuFindFile, ProjectManager::OnFindFile)
     EVT_IDLE(ProjectManager::OnIdle)
+#endif // #ifndef CB_FOR_CONSOLE
 END_EVENT_TABLE()
 
 // class constructor
 ProjectManager::ProjectManager()
+#ifndef CB_FOR_CONSOLE
     : m_pTree(0),
+#else // #ifndef CB_FOR_CONSOLE
+    :
+#endif // #ifndef CB_FOR_CONSOLE
     m_pWorkspace(0),
     m_TreeCategorize(false),
     m_TreeUseFolders(true),
@@ -227,9 +245,11 @@ ProjectManager::ProjectManager()
     m_isCheckingForExternallyModifiedProjects(false),
     m_CanSendWorkspaceChanged(false)
 {
+#ifndef CB_FOR_CONSOLE
     m_pNotebook = new cbAuiNotebook(Manager::Get()->GetAppWindow(), idNB, wxDefaultPosition, wxDefaultSize, wxAUI_NB_WINDOWLIST_BUTTON);
     if (Manager::Get()->GetConfigManager(_T("app"))->ReadBool(_T("/environment/project_tabs_bottom"), false))
         m_pNotebook->SetWindowStyleFlag(m_pNotebook->GetWindowStyleFlag() | wxAUI_NB_BOTTOM);
+#endif // #ifndef CB_FOR_CONSOLE
 
     m_InitialDir=wxFileName::GetCwd();
     m_pActiveProject = 0L;
@@ -237,7 +257,9 @@ ProjectManager::ProjectManager()
     m_pProjects = new ProjectsArray;
     m_pProjects->Clear();
     // m_pPanel = new wxPanel(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL | wxCLIP_CHILDREN);
+#ifndef CB_FOR_CONSOLE
     InitPane();
+#endif // #ifndef CB_FOR_CONSOLE
 
     m_pFileGroups = new FilesGroupsAndMasks;
 
@@ -245,7 +267,9 @@ ProjectManager::ProjectManager()
     m_TreeCategorize = cfg->ReadBool(_T("/categorize_tree"), true);
     m_TreeUseFolders = cfg->ReadBool(_T("/use_folders"), true);
 
+#ifndef CB_FOR_CONSOLE
     RebuildTree();
+#endif // #ifndef CB_FOR_CONSOLE
 
     // register event sinks
     Manager::Get()->RegisterEventSink(cbEVT_APP_STARTUP_DONE, new cbEventFunctor<ProjectManager, CodeBlocksEvent>(this, &ProjectManager::OnAppDoneStartup));
@@ -253,7 +277,10 @@ ProjectManager::ProjectManager()
     // Event handling. This must be THE LAST THING activated on startup.
     // Constructors and destructors must always follow the LIFO rule:
     // Last in, first out.
+#ifndef CB_FOR_CONSOLE
     Manager::Get()->GetAppWindow()->PushEventHandler(this);
+#endif // #ifndef CB_FOR_CONSOLE
+
 }
 
 // class destructor
@@ -276,12 +303,17 @@ ProjectManager::~ProjectManager()
     m_pProjects->Clear();
 
     delete m_pProjects;m_pProjects = 0;
+#ifndef CB_FOR_CONSOLE
     delete m_pImages;m_pImages = 0;
+#endif // #ifndef CB_FOR_CONSOLE
     delete m_pFileGroups;m_pFileGroups = 0;
 
+#ifndef CB_FOR_CONSOLE
     m_pNotebook->Destroy();
+#endif // #ifndef CB_FOR_CONSOLE
 }
 
+#ifndef CB_FOR_CONSOLE
 void ProjectManager::InitPane()
 {
     if (Manager::isappShuttingDown())
@@ -436,6 +468,7 @@ It is duplicated in ShowMenu() */
 void ProjectManager::ReleaseMenu(wxMenuBar* /*menuBar*/)
 {
 }
+#endif // #ifndef CB_FOR_CONSOLE
 
 wxString ProjectManager::GetDefaultPath()
 {
@@ -465,17 +498,22 @@ void ProjectManager::SetProject(cbProject* project, bool refresh)
 {
     if (project != m_pActiveProject)
     {
+#ifndef CB_FOR_CONSOLE
         // Only set worksapce as modified, if there was an active project before
         if (m_pWorkspace && m_pActiveProject)
             m_pWorkspace->SetModified(true);
+#endif // #ifndef CB_FOR_CONSOLE
     }
     else
         return; // already active
 
+#ifndef CB_FOR_CONSOLE
     if (m_pActiveProject)
         m_pTree->SetItemBold(m_pActiveProject->GetProjectNode(), false);
+#endif // #ifndef CB_FOR_CONSOLE
 
     m_pActiveProject = project;
+#ifndef CB_FOR_CONSOLE
     if (m_pActiveProject)
     {
         wxTreeItemId tid = m_pActiveProject->GetProjectNode();
@@ -488,11 +526,13 @@ void ProjectManager::SetProject(cbProject* project, bool refresh)
     if (m_pActiveProject)
         m_pTree->EnsureVisible(m_pActiveProject->GetProjectNode());
 
+#endif // #ifndef CB_FOR_CONSOLE
     CodeBlocksEvent event(cbEVT_PROJECT_ACTIVATE);
     event.SetProject(m_pActiveProject);
     Manager::Get()->GetPluginManager()->NotifyPlugins(event);
 }
 
+#ifndef CB_FOR_CONSOLE
 void ProjectManager::ShowMenu(wxTreeItemId id, const wxPoint& pt)
 {
     if ( !id.IsOk() )
@@ -704,6 +744,7 @@ it differs from the block currently in CreateMenu() by the following two IDs */
     if (menu.GetMenuItemCount() != 0)
         m_pTree->PopupMenu(&menu, pt);
 }
+#endif // #ifndef CB_FOR_CONSOLE
 
 cbProject* ProjectManager::IsOpen(const wxString& filename)
 {
@@ -731,6 +772,7 @@ cbProject* ProjectManager::IsOpen(const wxString& filename)
     return 0L;
 }
 
+#ifndef CB_FOR_CONSOLE
 wxMenu* ProjectManager::GetProjectMenu()
 {
     wxMenu* result = 0L;
@@ -747,6 +789,7 @@ wxMenu* ProjectManager::GetProjectMenu()
     } while (false);
     return result;
 }
+#endif // #ifndef CB_FOR_CONSOLE
 
 cbProject* ProjectManager::LoadProject(const wxString& filename, bool activateIt)
 {
@@ -847,6 +890,7 @@ cbProject* ProjectManager::NewProject(const wxString& filename)
     return prj;
 }
 
+#ifndef CB_FOR_CONSOLE
 bool ProjectManager::QueryCloseAllProjects()
 {
     unsigned int i;
@@ -886,54 +930,61 @@ bool ProjectManager::QueryCloseProject(cbProject *proj,bool dontsavefiles)
             case wxID_NO:      break;
             case wxID_CANCEL:  return false;
         }
-    }
-    return true;
-} // end of QueryCloseProject
+     }
+     return true;
+ } // end of QueryCloseProject
+#endif // #ifndef CB_FOR_CONSOLE
 
-bool ProjectManager::CloseAllProjects(bool dontsave)
-{
-    if (!dontsave)
-    {
-        if (!QueryCloseAllProjects())
-            return false;
-    }
-    FreezeTree();
-    m_IsClosingProject = true;
-    while (m_pProjects->GetCount() != 0)
-    {
+ bool ProjectManager::CloseAllProjects(bool dontsave)
+ {
+#ifndef CB_FOR_CONSOLE
+     if(!dontsave)
+         if(!QueryCloseAllProjects())
+             return false;
+     FreezeTree();
+#endif // #ifndef CB_FOR_CONSOLE
+     m_IsClosingProject = true;
+     while (m_pProjects->GetCount() != 0)
+     {
 // Commented it by Heromyth
-//        if (!CloseActiveProject(true))
-        if (!CloseProject(m_pProjects->Item(0), true, false))
-        {
-            UnfreezeTree(true);
-            m_IsClosingProject = false;
-            return false;
-        }
-    }
-    if (!Manager::IsAppShuttingDown())
-        RebuildTree();
-    UnfreezeTree(true);
-    if (!m_InitialDir.IsEmpty())
-        wxFileName::SetCwd(m_InitialDir);
-    m_IsClosingProject = false;
-    WorkspaceChanged();
-    return true;
-}
+ //        if (!CloseActiveProject(true))
+         if (!CloseProject(m_pProjects->Item(0), true, false))
+         {
+#ifndef CB_FOR_CONSOLE
+             UnfreezeTree(true);
+#endif // #ifndef CB_FOR_CONSOLE
+             m_IsClosingProject = false;
+             return false;
+         }
+     }
+#ifndef CB_FOR_CONSOLE
+     if (!Manager::IsAppShuttingDown())
+         RebuildTree();
+     UnfreezeTree(true);
+#endif // #ifndef CB_FOR_CONSOLE
+     if(!m_InitialDir.IsEmpty())
+         wxFileName::SetCwd(m_InitialDir);
+     m_IsClosingProject = false;
+#ifndef CB_FOR_CONSOLE
+     WorkspaceChanged();
+#endif // #ifndef CB_FOR_CONSOLE
+     return true;
+ }
 
 bool ProjectManager::CloseProject(cbProject* project, bool dontsave, bool refresh)
 {
     if (!project)
-        return true;
-    if (project->GetCurrentlyCompilingTarget())
-        return false;
-    if (!dontsave)
-    {
-         if (!QueryCloseProject(project))
-            return false;
-    }
+         return true;
+     if(project->GetCurrentlyCompilingTarget())
+         return false;
+#ifndef CB_FOR_CONSOLE
+     if(!dontsave)
+          if(!QueryCloseProject(project))
+             return false;
+#endif // #ifndef CB_FOR_CONSOLE
 
-    bool wasActive = project == m_pActiveProject;
-    if (wasActive)
+     bool wasActive = project == m_pActiveProject;
+     if (wasActive)
         m_pActiveProject = 0L;
 
     int index = m_pProjects->Index(project);
@@ -944,12 +995,14 @@ bool ProjectManager::CloseProject(cbProject* project, bool dontsave, bool refres
     // the state of m_IsClosingProject.
     bool isClosingOtherProjects = m_IsClosingProject;
     m_IsClosingProject = true;
+#ifndef CB_FOR_CONSOLE
     Manager::Get()->GetEditorManager()->UpdateProjectFiles(project);
 //    project->SaveTreeState(m_pTree);
     project->SaveLayout();
 
     if (m_pWorkspace)
         m_pWorkspace->SetModified(true);
+#endif // #ifndef CB_FOR_CONSOLE
 
     RemoveProjectFromAllDependencies(project);
     m_pProjects->Remove(project);
@@ -960,9 +1013,11 @@ bool ProjectManager::CloseProject(cbProject* project, bool dontsave, bool refres
     event.SetProject(project);
     Manager::Get()->GetPluginManager()->NotifyPlugins(event);
 
+#ifndef CB_FOR_CONSOLE
     project->CloseAllFiles(true);
     if (refresh)
         m_pTree->Delete(project->GetProjectNode());
+#endif // #ifndef CB_FOR_CONSOLE
     if (wasActive && m_pProjects->GetCount())
         SetProject(m_pProjects->Item(0), refresh);
     delete project;
@@ -971,7 +1026,9 @@ bool ProjectManager::CloseProject(cbProject* project, bool dontsave, bool refres
     if (!m_InitialDir.IsEmpty()) // Restore the working directory
         wxFileName::SetCwd(m_InitialDir);
     m_IsClosingProject = isClosingOtherProjects;
+#ifndef CB_FOR_CONSOLE
     WorkspaceChanged();
+#endif // #ifndef CB_FOR_CONSOLE
     return true;
 }
 
@@ -984,6 +1041,7 @@ bool ProjectManager::CloseActiveProject(bool dontsave)
     return true;
 }
 
+#ifndef CB_FOR_CONSOLE
 bool ProjectManager::SaveProject(cbProject* project)
 {
     if (!project)
@@ -1093,6 +1151,7 @@ void ProjectManager::MoveProjectDown(cbProject* project, bool warpAround)
     cbAssert(node.IsOk());
     m_pTree->SelectItem(node, true);
 }
+#endif // #ifndef CB_FOR_CONSOLE
 
 cbWorkspace* ProjectManager::GetWorkspace()
 {
@@ -1100,7 +1159,9 @@ cbWorkspace* ProjectManager::GetWorkspace()
     {
         m_pWorkspace = new cbWorkspace(_T(""));
         m_pWorkspace->SetTitle(_("Workspace"));
+#ifndef CB_FOR_CONSOLE
         m_pWorkspace->SetModified(false);
+#endif // #ifndef CB_FOR_CONSOLE
     }
     return m_pWorkspace;
 }
@@ -1119,6 +1180,7 @@ bool ProjectManager::LoadWorkspace(const wxString& filename)
     return m_pWorkspace && m_pWorkspace->IsOK();
 }
 
+#ifndef CB_FOR_CONSOLE
 bool ProjectManager::SaveWorkspace()
 {
     return GetWorkspace()->Save();
@@ -1192,6 +1254,7 @@ bool ProjectManager::CloseWorkspace()
     WorkspaceChanged();
     return result;
 }
+#endif // #ifndef CB_FOR_CONSOLE
 
 // This function is static for your convenience :)
 bool ProjectManager::IsBusy()
@@ -1236,6 +1299,7 @@ bool ProjectManager::IsClosingWorkspace()
     return m_IsClosingWorkspace;
 }
 
+#ifndef CB_FOR_CONSOLE
 void ProjectManager::FreezeTree()
 {
     if (!m_pTree)
@@ -1532,6 +1596,7 @@ void ProjectManager::DoOpenSelectedFile()
         }
     }
 }
+#endif // #ifndef CB_FOR_CONSOLE
 
 bool ProjectManager::CausesCircularDependency(cbProject* base, cbProject* dependsOn)
 {
@@ -1581,8 +1646,10 @@ bool ProjectManager::AddProjectDependency(cbProject* base, cbProject* dependsOn)
     if (arr->Index(dependsOn) == wxNOT_FOUND)
     {
         arr->Add(dependsOn);
+#ifndef CB_FOR_CONSOLE
         if (m_pWorkspace)
             m_pWorkspace->SetModified(true);
+#endif // #ifndef CB_FOR_CONSOLE
         #if wxCHECK_VERSION(2, 9, 0)
         Manager::Get()->GetLogManager()->DebugLog(F(_T("%s now depends on %s (%d deps)"), base->GetTitle().wx_str(), dependsOn->GetTitle().wx_str(), arr->GetCount()));
         #else
@@ -1615,8 +1682,10 @@ void ProjectManager::RemoveProjectDependency(cbProject* base, cbProject* doesNot
         m_ProjectDeps.erase(it);
         delete arr;
     }
+#ifndef CB_FOR_CONSOLE
     if (m_pWorkspace)
         m_pWorkspace->SetModified(true);
+#endif // #ifndef CB_FOR_CONSOLE
 }
 
 void ProjectManager::ClearProjectDependencies(cbProject* base)
@@ -1629,8 +1698,10 @@ void ProjectManager::ClearProjectDependencies(cbProject* base)
 
     delete it->second;
     m_ProjectDeps.erase(it);
+#ifndef CB_FOR_CONSOLE
     if (m_pWorkspace)
         m_pWorkspace->SetModified(true);
+#endif // #ifndef CB_FOR_CONSOLE
 
     Manager::Get()->GetLogManager()->DebugLog(_T("Removed all deps from ") + base->GetTitle());
 }
@@ -1660,8 +1731,10 @@ void ProjectManager::RemoveProjectFromAllDependencies(cbProject* base)
         if (index != wxNOT_FOUND)
             arr->RemoveAt(index);
 
+#ifndef CB_FOR_CONSOLE
         if (m_pWorkspace)
             m_pWorkspace->SetModified(true);
+#endif // #ifndef CB_FOR_CONSOLE
 
         // if it was the last dependency, delete the array
         if (!arr->GetCount())
@@ -1688,6 +1761,7 @@ const ProjectsArray* ProjectManager::GetDependenciesForProject(cbProject* base)
     return 0;
 }
 
+#ifndef CB_FOR_CONSOLE
 void ProjectManager::ConfigureProjectDependencies(cbProject* base)
 {
     ProjectDepsDlg dlg(Manager::Get()->GetAppWindow(), base);
@@ -2616,6 +2690,7 @@ void ProjectManager::OnIdle(wxIdleEvent& event)
 {
     event.Skip();
 }
+#endif // #ifndef CB_FOR_CONSOLE
 
 void ProjectManager::OnAppDoneStartup(CodeBlocksEvent& event)
 {
@@ -2626,6 +2701,7 @@ void ProjectManager::OnAppDoneStartup(CodeBlocksEvent& event)
     event.Skip();
 }
 
+#ifndef CB_FOR_CONSOLE
 void ProjectManager::OnRenameFile(wxCommandEvent& /*event*/)
 {
     wxTreeItemId sel = m_pTree->GetSelection();
@@ -2838,6 +2914,7 @@ void ProjectManager::OpenFilesRecursively(wxTreeItemId& sel_id)
             break;
     }
 }
+#endif // #ifndef CB_FOR_CONSOLE
 
 bool ProjectManager::BeginLoadingProject()
 {
@@ -2870,9 +2947,12 @@ void ProjectManager::EndLoadingProject(cbProject* project)
         if (newAddition)
         {
             m_pProjects->Add(project);
+#ifndef CB_FOR_CONSOLE
             project->LoadLayout();
+#endif // #ifndef CB_FOR_CONSOLE
         }
 
+#ifndef CB_FOR_CONSOLE
         if (!m_IsLoadingWorkspace)
         {
             if (newAddition)
@@ -2885,6 +2965,7 @@ void ProjectManager::EndLoadingProject(cbProject* project)
 
         if (m_pWorkspace)
             m_pWorkspace->SetModified(true);
+#endif // #ifndef CB_FOR_CONSOLE
 
         // if loading a workspace, avoid sending the event now
         // we 'll send them after all projects have been loaded
@@ -2898,9 +2979,11 @@ void ProjectManager::EndLoadingProject(cbProject* project)
             event.SetProject(project);
             Manager::Get()->ProcessEvent(event);
 
+#ifndef CB_FOR_CONSOLE
             // finally, display project notes (if appropriate)
             if (project->GetShowNotesOnLoad())
                 project->ShowNotes(true);
+#endif // #ifndef CB_FOR_CONSOLE
         }
     }
 
@@ -2914,7 +2997,9 @@ void ProjectManager::EndLoadingProject(cbProject* project)
     {
         Manager::Get()->GetUserVariableManager()->Arrogate();
     }
+#ifndef CB_FOR_CONSOLE
     WorkspaceChanged();
+#endif // #ifndef CB_FOR_CONSOLE
 }
 
 bool ProjectManager::BeginLoadingWorkspace()
@@ -2923,6 +3008,7 @@ bool ProjectManager::BeginLoadingWorkspace()
         return false;
 
     m_IsLoadingWorkspace = true;
+#ifndef CB_FOR_CONSOLE
     if (!CloseWorkspace())
     {
         m_IsLoadingWorkspace = false;
@@ -2933,6 +3019,7 @@ bool ProjectManager::BeginLoadingWorkspace()
     m_pTree->AppendItem(m_pTree->GetRootItem(), _("Loading workspace..."));
     m_pTree->Expand(m_pTree->GetRootItem());
     UnfreezeTree();
+#endif // #ifndef CB_FOR_CONSOLE
 
     return true;
 }
@@ -2948,6 +3035,7 @@ void ProjectManager::EndLoadingWorkspace()
 
     if (m_pWorkspace->IsOK())
     {
+#ifndef CB_FOR_CONSOLE
         RebuildTree();
         if (m_pActiveProject || m_pProjectToActivate)
         {
@@ -2962,10 +3050,13 @@ void ProjectManager::EndLoadingWorkspace()
         m_pTree->SetItemText(m_TreeRoot, m_pWorkspace->GetTitle());
 
         UnfreezeTree(true);
+#endif // #ifndef CB_FOR_CONSOLE
         // sort out any global user vars that need to be defined now (in a batch) :)
         Manager::Get()->GetUserVariableManager()->Arrogate();
 
+#ifndef CB_FOR_CONSOLE
         int numNotes = 0;
+#endif // #ifndef CB_FOR_CONSOLE
 
         // and now send the project loaded events
         // since we were loading a workspace, these events were not sent before
@@ -2980,11 +3071,14 @@ void ProjectManager::EndLoadingWorkspace()
             event.SetProject(project);
             Manager::Get()->GetPluginManager()->NotifyPlugins(event);
 
+#ifndef CB_FOR_CONSOLE
             // since we 're iterating anyway, let's count the project notes that should be displayed
             if (project->GetShowNotesOnLoad() && !project->GetNotes().IsEmpty())
                 ++numNotes;
+#endif // #ifndef CB_FOR_CONSOLE
         }
 
+#ifndef CB_FOR_CONSOLE
         // finally, display projects notes (if appropriate)
         if (numNotes)
         {
@@ -3009,9 +3103,11 @@ void ProjectManager::EndLoadingWorkspace()
     else
     {
         CloseWorkspace();
+#endif // #ifndef CB_FOR_CONSOLE
     }
 }
 
+#ifndef CB_FOR_CONSOLE
 void ProjectManager::OnKeyDown(wxTreeEvent& event)
 {
     const wxKeyEvent& key_event = event.GetKeyEvent();
@@ -3026,3 +3122,4 @@ void ProjectManager::OnKeyDown(wxTreeEvent& event)
         OnRemoveFileFromProject(command);
     }
 }
+#endif // #ifndef CB_FOR_CONSOLE

@@ -3,26 +3,28 @@
  * http://www.gnu.org/licenses/lgpl-3.0.html
  */
 
-#ifndef SCRIPTINGMANAGER_H
-#define SCRIPTINGMANAGER_H
-
-#include "scriptingmanager_base.h"
-
-#ifndef CB_FOR_CONSOLE
+#ifndef SCRIPTINGMANAGER_BASE_H
+#define SCRIPTINGMANAGER_BASE_H
 
 #include <map>
 #include <set>
 
 #ifndef CB_PRECOMP
-    #include "scriptingmanager_base.h"
     #include "cbexception.h" // cbThrow
     #include "globals.h" // cbC2U
 #endif
 
 #include "settings.h"
 #include "manager.h"
-#include "menuitemsmanager.h"
+//#include "menuitemsmanager.h"
 #include <wx/intl.h>
+
+#ifdef CB_FOR_CONSOLE
+    #define SCRIPTING_MANAGER_BASE ScriptingManager
+#else // #ifdef CB_FOR_CONSOLE
+    #define SCRIPTING_MANAGER_BASE ScriptingManagerBase
+#endif //#ifdef CB_FOR_CONSOLE
+
 
 class SquirrelError;
 
@@ -52,29 +54,34 @@ class SquirrelError;
   * The templated type denotes the function's return type. Also note that the
   * function name is not unicode (we 're not using Squirrel in unicode mode).
   */
-class DLLIMPORT ScriptingManager : public ScriptingManagerBase,  public Mgr<ScriptingManager>, wxEvtHandler
+class DLLIMPORT SCRIPTING_MANAGER_BASE
+#ifdef CB_FOR_CONSOLE
+    : public Mgr<SCRIPTING_MANAGER_BASE>
+#endif //#ifdef CB_FOR_CONSOLE
+//    public wxEvtHandler
 {
-        friend class Mgr<ScriptingManager>;
-        friend class ScriptingManagerBase;
-//        wxCriticalSection cs;
+#ifdef CB_FOR_CONSOLE
+        friend class Mgr<SCRIPTING_MANAGER_BASE>;
+#endif //#ifdef CB_FOR_CONSOLE
+        wxCriticalSection cs;
     public:
-//        /// Script trusts container struct
-//        struct TrustedScriptProps
-//        {
-//            bool permanent; // store trust in config (permanent trust)
-//            wxUint32 crc; // script's contents crc32
-//        };
-//
-//        // script filename -> props
-//        /// Script trusts container struct
-//        typedef std::map<wxString, TrustedScriptProps> TrustedScripts;
+        /// Script trusts container struct
+        struct TrustedScriptProps
+        {
+            bool permanent; // store trust in config (permanent trust)
+            wxUint32 crc; // script's contents crc32
+        };
+
+        // script filename -> props
+        /// Script trusts container struct
+        typedef std::map<wxString, TrustedScriptProps> TrustedScripts;
 
         /** @brief Loads a script.
           *
           * @param filename The filename of the script to run.
           * @return True if the script loaded and compiled, false if not.
           */
-//        virtual bool LoadScript(const wxString& filename);
+        virtual bool LoadScript(const wxString& filename);
 
         /** @brief Loads a string buffer.
           *
@@ -82,14 +89,14 @@ class DLLIMPORT ScriptingManager : public ScriptingManagerBase,  public Mgr<Scri
           * @param debugName A debug name. This will appear in any errors displayed.
           * @return True if the script compiled, false if not.
           */
-//        virtual bool LoadBuffer(const wxString& buffer, const wxString& debugName = _T("CommandLine"));
+        virtual bool LoadBuffer(const wxString& buffer, const wxString& debugName = _T("CommandLine"));
 
         /** @brief Loads a string buffer and captures its output.
           *
           * @param buffer The script buffer to compile and run.
           * @return The script's output (if any).
           */
-//        virtual wxString LoadBufferRedirectOutput(const wxString& buffer);
+        virtual wxString LoadBufferRedirectOutput(const wxString& buffer);
 
         /** @brief Returns an accumulated error string.
           *
@@ -100,7 +107,7 @@ class DLLIMPORT ScriptingManager : public ScriptingManagerBase,  public Mgr<Scri
           *        accumulated error messages are cleared.
           * @return The error string. If empty, it means "no errors".
           */
-//        virtual wxString GetErrorString(SquirrelError* exception = 0, bool clearErrors = true);
+        virtual wxString GetErrorString(SquirrelError* exception = 0, bool clearErrors = true);
 
         /** @brief Display error dialog.
           *
@@ -122,52 +129,52 @@ class DLLIMPORT ScriptingManager : public ScriptingManagerBase,  public Mgr<Scri
           * use this function to "forward" all script output to ScriptingManager.
           * @param output The engine's output to inject.
           */
-//        virtual void InjectScriptOutput(const wxString& output);
+        virtual void InjectScriptOutput(const wxString& output);
 
         /** @brief Configure scripting in Code::Blocks.
           *
           * @return 0 on success or a negative value on error.
           */
-//        virtual int Configure();
+        virtual int Configure();
 
 //#ifndef CB_FOR_CONSOLE
-        /** @brief Registers a script plugin menu IDs with the callback function.
-          *
-          * @param name The script plugin's name.
-          * @param ids The menu IDs to bind.
-          * @return True on success, false on failure.
-          */
-        virtual bool RegisterScriptPlugin(const wxString& name, const wxArrayInt& ids);
-
-        /** @brief Script-bound function to register a script with a menu item.
-          *
-          * @param menuPath The full menu path. This can be separated by slashes (/)
-          *                 to create submenus (e.g. "MyScripts/ASubMenu/MyItem").
-          *                 If the last part of the string ("MyItem" in the example)
-          *                 starts with a dash (-) (e.g. "-MyItem") then a menu
-          *                 separator is prepended before the actual menu item.
-          * @param scriptOrFunc The script's filename or a script's function name.
-          * @param isFunction If true, the @c scriptOrFunc parameter is considered
-          *       to be a script filename. If false, it is considered to be a
-          *       script's function name.
-          * @return True on success, false on failure.
-          */
-        virtual bool RegisterScriptMenu(const wxString& menuPath, const wxString& scriptOrFunc, bool isFunction);
-
-        /** @brief Script-bound function to unregister a script's menu item.
-          *
-          * @param menuPath The full menu path to unregister.
-          * @return True on success, false on failure.
-          */
-        virtual bool UnRegisterScriptMenu(const wxString& menuPath);
-
-        /** @brief Unregister all scripts' menu items.
-          *
-          * @return True on success, false on failure.
-          */
-        virtual bool UnRegisterAllScriptMenus();
-//#endif // #ifndef CB_FOR_CONSOLE
+//        /** @brief Registers a script plugin menu IDs with the callback function.
+//          *
+//          * @param name The script plugin's name.
+//          * @param ids The menu IDs to bind.
+//          * @return True on success, false on failure.
+//          */
+//        bool RegisterScriptPlugin(const wxString& name, const wxArrayInt& ids);
 //
+//        /** @brief Script-bound function to register a script with a menu item.
+//          *
+//          * @param menuPath The full menu path. This can be separated by slashes (/)
+//          *                 to create submenus (e.g. "MyScripts/ASubMenu/MyItem").
+//          *                 If the last part of the string ("MyItem" in the example)
+//          *                 starts with a dash (-) (e.g. "-MyItem") then a menu
+//          *                 separator is prepended before the actual menu item.
+//          * @param scriptOrFunc The script's filename or a script's function name.
+//          * @param isFunction If true, the @c scriptOrFunc parameter is considered
+//          *       to be a script filename. If false, it is considered to be a
+//          *       script's function name.
+//          * @return True on success, false on failure.
+//          */
+//        bool RegisterScriptMenu(const wxString& menuPath, const wxString& scriptOrFunc, bool isFunction);
+//
+//        /** @brief Script-bound function to unregister a script's menu item.
+//          *
+//          * @param menuPath The full menu path to unregister.
+//          * @return True on success, false on failure.
+//          */
+//        bool UnRegisterScriptMenu(const wxString& menuPath);
+//
+//        /** @brief Unregister all scripts' menu items.
+//          *
+//          * @return True on success, false on failure.
+//          */
+//        bool UnRegisterAllScriptMenus();
+//#endif // #ifndef CB_FOR_CONSOLE
+
         /** @brief Security function.
           *
           * @param script The script's full filename.
@@ -175,7 +182,7 @@ class DLLIMPORT ScriptingManager : public ScriptingManagerBase,  public Mgr<Scri
           *
           * @see TrustScript(), TrustCurrentlyRunningScript(), IsCurrentlyRunningScriptTrusted().
           */
-//        virtual bool IsScriptTrusted(const wxString& script);
+        virtual bool IsScriptTrusted(const wxString& script);
 
         /** @brief Security function.
           *
@@ -183,7 +190,7 @@ class DLLIMPORT ScriptingManager : public ScriptingManagerBase,  public Mgr<Scri
           *
           * @see TrustScript(), TrustCurrentlyRunningScript(), IsScriptTrusted().
           */
-//        virtual bool IsCurrentlyRunningScriptTrusted();
+        virtual bool IsCurrentlyRunningScriptTrusted();
 
         /** @brief Security function to trust a script.
           *
@@ -198,7 +205,7 @@ class DLLIMPORT ScriptingManager : public ScriptingManagerBase,  public Mgr<Scri
           *       script is not trusted anymore (the user is notified too).
           * @see TrustCurrentlyRunningScript()
           */
-//        virtual void TrustScript(const wxString& script, bool permanently);
+        virtual void TrustScript(const wxString& script, bool permanently);
 
         /** @brief Security function to trust a script.
           *
@@ -206,68 +213,77 @@ class DLLIMPORT ScriptingManager : public ScriptingManagerBase,  public Mgr<Scri
           *                    If false, it will be trusted for this session only.
           * @see TrustScript()
           */
-//        virtual void TrustCurrentlyRunningScript(bool permanently);
+        virtual void TrustCurrentlyRunningScript(bool permanently);
 
         /** @brief Remove a script trust.
           *
           * @return True if the trust existed and was removed, false if not.
           */
-//        virtual bool RemoveTrust(const wxString& script);
+        virtual bool RemoveTrust(const wxString& script);
 
         /** @brief Force refresh of script trusts. */
-//        virtual void RefreshTrusts();
+        virtual void RefreshTrusts();
 
         /** @brief Access the script trusts container (const).
           *
           * @return The script trusts container.
           */
-//        virtual const TrustedScripts& GetTrustedScripts();
-//
+        virtual const TrustedScripts& GetTrustedScripts()
+        {
+            return m_TrustedScripts;
+        }
+
+
         // needed for SqPlus bindings
-        ScriptingManager& operator=(const ScriptingManager& /*rhs*/) // prevent assignment operator
+#ifdef CB_FOR_CONSOLE
+        virtual SCRIPTING_MANAGER_BASE& operator=(const SCRIPTING_MANAGER_BASE& /*rhs*/) // prevent assignment operator
         {
         	cbThrow(_T("Can't assign a ScriptingManager* !!!"));
         	return *this;
 		}
+
     private:
         // needed for SqPlus bindings
-        ScriptingManager(const ScriptingManager& /*rhs*/); // prevent copy construction
+        SCRIPTING_MANAGER_BASE(const SCRIPTING_MANAGER_BASE& /*rhs*/); // prevent copy construction
+#else
+    private:
+#endif // #ifdef CB_FOR_CONSOLE
 
 //#ifndef CB_FOR_CONSOLE
-        virtual void OnScriptMenu(wxCommandEvent& event);
-        virtual void OnScriptPluginMenu(wxCommandEvent& event);
+//        void OnScriptMenu(wxCommandEvent& event);
+//        void OnScriptPluginMenu(wxCommandEvent& event);
 //#endif // #ifndef CB_FOR_CONSOLE
-//        virtual void RegisterScriptFunctions();
+        virtual void RegisterScriptFunctions();
 
-        ScriptingManager();
-        virtual ~ScriptingManager(){};
-//
-//        TrustedScripts m_TrustedScripts;
-//
-//        // container for script menus
-//        // script menuitem_ID -> script_filename
-//        struct MenuBoundScript
-//        {
-//            wxString scriptOrFunc;
-//            bool isFunc;
-//        };
-//        typedef std::map<int, MenuBoundScript> MenuIDToScript;
-//        MenuIDToScript m_MenuIDToScript;
-//
+    protected:
+        SCRIPTING_MANAGER_BASE();
+        virtual ~SCRIPTING_MANAGER_BASE();
+
+        TrustedScripts m_TrustedScripts;
+
+        // container for script menus
+        // script menuitem_ID -> script_filename
+        struct MenuBoundScript
+        {
+            wxString scriptOrFunc;
+            bool isFunc;
+        };
+        typedef std::map<int, MenuBoundScript> MenuIDToScript;
+        MenuIDToScript m_MenuIDToScript;
+
 //#ifndef CB_FOR_CONSOLE
-        bool m_AttachedToMainWindow;
+//        bool m_AttachedToMainWindow;
 //#endif // #ifndef CB_FOR_CONSOLE
-//        wxString m_CurrentlyRunningScriptFile;
-//
-//        typedef std::set<wxString> IncludeSet;
-//        IncludeSet m_IncludeSet;
-//
+        wxString m_CurrentlyRunningScriptFile;
+
+        typedef std::set<wxString> IncludeSet;
+        IncludeSet m_IncludeSet;
+
 //#ifndef CB_FOR_CONSOLE
-        MenuItemsManager m_MenuItemsManager;
+//        MenuItemsManager m_MenuItemsManager;
 //#endif // #ifndef CB_FOR_CONSOLE
 
-        DECLARE_EVENT_TABLE()
+//        DECLARE_EVENT_TABLE()
 };
 
-#endif // #ifndef CB_FOR_CONSOLE
-#endif // SCRIPTINGMANAGER_H
+#endif // SCRIPTINGMANAGER_BASE_H

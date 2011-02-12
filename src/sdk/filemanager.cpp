@@ -16,7 +16,9 @@
     #include "editormanager.h"
     #include "infowindow.h"
 #endif
-#include "cbstyledtextctrl.h"
+#ifndef CB_FOR_CONSOLE
+    #include "cbstyledtextctrl.h"
+#endif // #ifndef CB_FOR_CONSOLE
 
 #include <wx/url.h>
 #include <wx/encconv.h>
@@ -125,6 +127,7 @@ FileManager::~FileManager()
 //  urlLoaderThread.Die();
 }
 
+#ifndef CB_FOR_CONSOLE
 LoaderBase* FileManager::Load(const wxString& file, bool reuseEditors)
 {
     if(reuseEditors)
@@ -165,6 +168,7 @@ LoaderBase* FileManager::Load(const wxString& file, bool reuseEditors)
     fileLoaderThread.Queue(fl);
     return fl;
 }
+#endif // #ifndef CB_FOR_CONSOLE
 
 bool FileManager::Save(const wxString& name, const char* data, size_t len)
 {
@@ -436,11 +440,19 @@ bool FileManager::WriteWxStringToFile(wxFile& f, const wxString& data, wxFontEnc
         }
         else
         {
+#ifndef CB_FOR_CONSOLE
             InfoWindow::Display(_("Encoding Changed"),
                                 _("The saved document contained characters\n"
                                   "which were illegal in the selected encoding.\n\n"
                                   "The file's encoding has been changed to UTF-8\n"
                                   "to prevent you from losing data."), 8000);
+#else // #ifndef CB_FOR_CONSOLE
+            cbMessageBox(_("The saved document contained characters\n"
+                           "which were illegal in the selected encoding.\n\n"
+                           "The file's encoding has been changed to UTF-8\n"
+                           "to prevent you from losing data."),
+                           _("Encoding Changed"));
+#endif // #ifndef CB_FOR_CONSOLE
 		}
     }
 
@@ -450,6 +462,6 @@ bool FileManager::WriteWxStringToFile(wxFile& f, const wxString& data, wxFontEnc
 
     // For ANSI builds, dump the char* to file.
     return f.Write(data.c_str(), data.Length()) == data.Length();
-    
-#endif    
+
+#endif
 }

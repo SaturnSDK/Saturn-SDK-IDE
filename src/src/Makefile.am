@@ -11,7 +11,13 @@ if CODEBLOCKS_LINUX
 AM_CPPFLAGS = -DENABLE_BINRELOC -DAPP_PREFIX="\"@prefix@\""
 endif
 
-bin_PROGRAMS = codeblocks
+bin_PROGRAMS = codeblocks codeblocks_con
+
+codeblocks_con_CXXFLAGS = @CXXFLAGS@ -U CB_PRECOMP -DCB_FOR_CONSOLE -Wno-invalid-pch
+
+codeblocks_CXXFLAGS = @CXXFLAGS@
+
+CXXFLAGS =
 
 # wxMac resource fork/unbundled app
 install-exec-hook:
@@ -23,6 +29,9 @@ install-exec-hook:
 # codeblocks_LDFLAGS = $(WX_GTK2_LIBS)
 
 codeblocks_LDADD =  -L../sdk -lcodeblocks \
+			$(WX_LIBS)
+
+codeblocks_con_LDADD =  -L../sdk -lcodeblocks_con \
 			$(WX_LIBS)
 
 codeblocks_SOURCES = app.cpp \
@@ -42,6 +51,10 @@ codeblocks_SOURCES = app.cpp \
 			splashscreen.cpp \
 			startherepage.cpp \
 			switcherdlg.cpp
+
+codeblocks_con_SOURCES = app.cpp \
+			appglobals.cpp \
+			prefix.cpp
 
 noinst_HEADERS = app.h \
 			appglobals.h \

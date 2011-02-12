@@ -36,6 +36,7 @@ class cbWorkspace
         /** @brief Destructor */
         virtual ~cbWorkspace();
 
+#ifndef CB_FOR_CONSOLE
         /** @brief Save the workspace
           *
           * @param force If false (the default), the workspace will not be written to disk,
@@ -52,6 +53,7 @@ class cbWorkspace
           * the filename to save will be displayed.
           */
         virtual bool SaveAs(const wxString& filename);
+#endif // #ifndef CB_FOR_CONSOLE
 
         /** @brief Get the workspace file's name
           *
@@ -92,6 +94,7 @@ class cbWorkspace
           */
         virtual bool IsDefault() const { return m_IsDefault; }
 
+#ifndef CB_FOR_CONSOLE
         /** @brief Is this workspace modified?
           *
           * @return True if the workspace is modified, false if not.
@@ -107,6 +110,7 @@ class cbWorkspace
           * false, the workspace will be marked as unmodified.
           */
         virtual void SetModified(bool modified);
+#endif // #ifndef CB_FOR_CONSOLE
     private:
         bool m_IsOK; // succeeded loading?
         bool m_IsDefault; // is this the Code::Blocks default workspace?

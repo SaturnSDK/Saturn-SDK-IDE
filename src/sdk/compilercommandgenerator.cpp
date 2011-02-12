@@ -418,7 +418,9 @@ void CompilerCommandGenerator::DoBuildScripts(cbProject* project, CompileTargetB
         }
         catch (SquirrelError& e)
         {
+#ifndef CB_FOR_CONSOLE
             Manager::Get()->GetScriptingManager()->DisplayErrors(&e);
+#endif // #ifndef CB_FOR_CONSOLE
             m_ScriptsWithErrors.Add(script_nomacro);
         }
     }
@@ -948,11 +950,13 @@ wxString CompilerCommandGenerator::ExpandBackticks(wxString& str)
         }
         else
         {
+#ifndef CB_FOR_CONSOLE
             #if wxCHECK_VERSION(2, 9, 0)
             Manager::Get()->GetLogManager()->DebugLog(F(_T("Caching result of `%s`"), cmd.wx_str()));
             #else
             Manager::Get()->GetLogManager()->DebugLog(F(_T("Caching result of `%s`"), cmd.c_str()));
             #endif
+#endif // #ifndef CB_FOR_CONSOLE
             wxArrayString output;
             if (platform::WindowsVersion() >= platform::winver_WindowsNT2000)
                 wxExecute(_T("cmd /c ") + cmd, output, wxEXEC_NODISABLE);
@@ -961,7 +965,9 @@ wxString CompilerCommandGenerator::ExpandBackticks(wxString& str)
             bt = GetStringFromArray(output, _T(" "));
             // add it in the cache
             m_Backticks[cmd] = bt;
+#ifndef CB_FOR_CONSOLE
             Manager::Get()->GetLogManager()->DebugLog(_T("Cached"));
+#endif // #ifndef CB_FOR_CONSOLE
         }
         ret << bt << _T(' ');
         str = str.substr(0, start) + bt + str.substr(end + 1, wxString::npos);

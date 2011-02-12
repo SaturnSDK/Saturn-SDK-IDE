@@ -74,6 +74,7 @@ ALLHEADERS = annoyingdialog.h \
 				findreplacebase.h \
 				genericmultilinenotesdlg.h \
 				globals.h \
+				globals_base.h \
 				ibaseloader.h \
 				ibaseworkspaceloader.h \
 				id.h \
@@ -94,6 +95,7 @@ ALLHEADERS = annoyingdialog.h \
 				personalitymanager.h \
 				pipedprocess.h \
 				pluginmanager.h \
+				pluginmanager_base.h \
 				pluginsconfigurationdlg.h \
 				prep.h \
 				printing_types.h \
@@ -111,6 +113,7 @@ ALLHEADERS = annoyingdialog.h \
 				replacedlg.h \
 				safedelete.h \
 				scriptingmanager.h \
+				scriptingmanager_base.h \
 				scriptsecuritywarningdlg.h \
 				scrollingdialog.h \
 				sdk.h \
@@ -166,4 +169,5 @@ clean-local:
 	-rm -f $(top_srcdir)/src/include/sdk.h.gch
 	-rm -f $(top_srcdir)/src/include/sdk_precomp.h.gch
 
-EXTRA_DIST = autorevision.h
+EXTRA_DIST = autorevision.h \
+		annoyingdialog_base.h

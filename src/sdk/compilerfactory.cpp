@@ -264,6 +264,7 @@ void CompilerFactory::LoadSettings()
             needAutoDetection = true;
     }
 
+#ifndef CB_FOR_CONSOLE
     // auto-detect missing compilers
     if (needAutoDetection)
     {
@@ -271,6 +272,7 @@ void CompilerFactory::LoadSettings()
         PlaceWindow(&adc);
         adc.ShowModal();
     }
+#endif // #ifndef CB_FOR_CONSOLE
 }
 
 Compiler* CompilerFactory::SelectCompilerUI(const wxString& message, const wxString& preselectedID)
@@ -297,6 +299,7 @@ Compiler* CompilerFactory::SelectCompilerUI(const wxString& message, const wxStr
             }
         }
     }
+#ifndef CB_FOR_CONSOLE
     // now display a choice dialog
     wxSingleChoiceDialog dlg(0,
                         message,
@@ -308,6 +311,9 @@ Compiler* CompilerFactory::SelectCompilerUI(const wxString& message, const wxStr
     if (dlg.ShowModal() == wxID_OK)
         return Compilers[dlg.GetSelection()];
     return 0;
+#else // #ifndef CB_FOR_CONSOLE
+    return Compilers[selected];
+#endif // #ifndef CB_FOR_CONSOLE
 }
 
 wxString CompilerFactory::GetCompilerVersionString(const wxString& Id)

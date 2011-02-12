@@ -21,18 +21,26 @@
 #include "cbfunctor.h"
 
 // forward decls
+#ifndef CB_FOR_CONSOLE
 class wxFrame;
 class wxWindow;
+#endif // #ifndef CB_FOR_CONSOLE
 class ProjectManager;
+#ifndef CB_FOR_CONSOLE
 class EditorManager;
+#endif // #ifndef CB_FOR_CONSOLE
 class LogManager;
 class PluginManager;
+#ifndef CB_FOR_CONSOLE
 class ToolsManager;
+#endif // #ifndef CB_FOR_CONSOLE
 class MacrosManager;
 class PersonalityManager;
+#ifndef CB_FOR_CONSOLE
 class wxMenu;
 class wxMenuBar;
 class wxToolBar;
+#endif // #ifndef CB_FOR_CONSOLE
 class UserVariableManager;
 class ScriptingManager;
 class ConfigManager;
@@ -74,8 +82,10 @@ public:
     /** Never, EVER, call this function! It is the last function called on shutdown.... */
     static void Free();
 
+#ifndef CB_FOR_CONSOLE
     wxFrame* GetAppFrame() const;
     wxWindow* GetAppWindow() const;
+#endif // #ifndef CB_FOR_CONSOLE
 
     static bool IsAppShuttingDown();
     static bool isappShuttingDown(){return Manager::IsAppShuttingDown();};
@@ -101,10 +111,14 @@ public:
      */
 
     ProjectManager* GetProjectManager() const;
+#ifndef CB_FOR_CONSOLE
     EditorManager* GetEditorManager() const;
+#endif // #ifndef CB_FOR_CONSOLE
     LogManager* GetLogManager() const;
     PluginManager* GetPluginManager() const;
+#ifndef CB_FOR_CONSOLE
     ToolsManager* GetToolsManager() const;
+#endif // #ifndef CB_FOR_CONSOLE
     MacrosManager* GetMacrosManager() const;
     PersonalityManager* GetPersonalityManager() const;
     UserVariableManager* GetUserVariableManager() const;
@@ -121,6 +135,7 @@ public:
     static void Loadxrc(wxString relpath);
     static bool LoadResource(const wxString& file);
 
+#ifndef CB_FOR_CONSOLE
     /// Loads Menubar from XRC
     static wxMenuBar* LoadMenuBar(wxString resid,bool createonfailure=false);
     /// Loads Menu from XRC
@@ -134,6 +149,7 @@ public:
 
     static void AddonToolBar(wxToolBar* toolBar,wxString resid);
     static bool isToolBar16x16(wxToolBar* toolBar);
+#endif // #ifndef CB_FOR_CONSOLE
 
     static wxCmdLineParser* GetCmdLineParser();
 

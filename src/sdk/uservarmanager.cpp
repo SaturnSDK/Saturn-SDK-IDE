@@ -17,18 +17,24 @@
     #include "macrosmanager.h"
     #include "manager.h"
     #include "cbexception.h"
-    #include "infowindow.h"
+    #ifndef CB_FOR_CONSOLE
+        #include "infowindow.h"
 
-    #include <wx/button.h>
-    #include "scrollingdialog.h"
+        #include <wx/button.h>
+        #include "scrollingdialog.h"
+    #endif // #ifndef CB_FOR_CONSOLE
     #include <wx/intl.h>
     #include <wx/xrc/xmlres.h>
-    #include <wx/textctrl.h>
+    #ifndef CB_FOR_CONSOLE
+        #include <wx/textctrl.h>
+    #endif // #ifndef CB_FOR_CONSOLE
 #endif
 
 #include "annoyingdialog.h"
-#include <wx/choice.h>
-#include <wx/textdlg.h> //wxTextEntryDialog
+#ifndef CB_FOR_CONSOLE
+        #include <wx/choice.h>
+    #include <wx/textdlg.h> //wxTextEntryDialog
+#endif // #ifndef CB_FOR_CONSOLE
 
 #if wxCHECK_VERSION(2, 9, 0)
 #include <wx/unichar.h>
@@ -61,6 +67,7 @@ const wxChar *bim[] =
 };
 const wxArrayString builtinMembers((size_t) 6, bim);
 
+#ifndef CB_FOR_CONSOLE
 class UsrGlblMgrEditDialog : public wxScrollingDialog
 {
     wxString currentSet;
@@ -142,6 +149,7 @@ void UserVariableManager::Configure()
     d.ShowModal();
     activeSet = Manager::Get()->GetConfigManager(_T("gcv"))->Read(_T("/active"));
 }
+#endif // #ifndef CB_FOR_CONSOLE
 
 
 wxString UserVariableManager::Replace(const wxString& variable)
@@ -167,11 +175,15 @@ wxString UserVariableManager::Replace(const wxString& variable)
         {
             wxString msg;
             msg.Printf(_("In the currently active Set, Code::Blocks does not know\nthe global compiler variable \"%s\".\n\nPlease define it."), package.c_str());
+#ifndef CB_FOR_CONSOLE
             InfoWindow::Display(_("Global Compiler Variables"), msg , 8000, 1000);
             UsrGlblMgrEditDialog d;
             d.AddVar(package);
             PlaceWindow(&d);
             d.ShowModal();
+#else // #ifndef CB_FOR_CONSOLE
+            cbMessageBox(msg,_("Global Compiler Variables"));
+#endif // #ifndef CB_FOR_CONSOLE
         }
     }
 
@@ -222,11 +234,15 @@ void UserVariableManager::Arrogate()
 
     wxString peList;
 
+#ifndef CB_FOR_CONSOLE
     UsrGlblMgrEditDialog d;
+#endif // #ifndef CB_FOR_CONSOLE
 
     for (unsigned int i = 0; i < preempted.GetCount(); ++i)
     {
+#ifndef CB_FOR_CONSOLE
         d.AddVar(preempted[i]);
+#endif // #ifndef CB_FOR_CONSOLE
         peList << preempted[i] << _T('\n');
     }
     peList = peList.BeforeLast('\n'); // remove trailing newline
@@ -237,11 +253,15 @@ void UserVariableManager::Arrogate()
     else
         msg.Printf(_("In the currently active Set, Code::Blocks does not know\nthe following global compiler variables:\n%s\n\nPlease define them."), peList.c_str());
 
+#ifndef CB_FOR_CONSOLE
     PlaceWindow(&d);
     preempted.Clear();
     InfoWindow::Display(_("Global Compiler Variables"), msg , 8000 + 800*preempted.GetCount(), 100);
 
     d.ShowModal();
+#else // #ifndef CB_FOR_CONSOLE
+    cbMessageBox(msg,_("Global Compiler Variables"));
+#endif // #ifndef CB_FOR_CONSOLE
 }
 
 UserVariableManager::UserVariableManager()
@@ -284,6 +304,7 @@ void UserVariableManager::Migrate()
     old->Delete();
 }
 
+#ifndef CB_FOR_CONSOLE
 BEGIN_EVENT_TABLE(UsrGlblMgrEditDialog, wxScrollingDialog)
     EVT_BUTTON(XRCID("cloneVar"), UsrGlblMgrEditDialog::CloneVar)
     EVT_BUTTON(XRCID("newVar"), UsrGlblMgrEditDialog::NewVar)
@@ -649,3 +670,4 @@ void UsrGlblMgrEditDialog::Help(wxCommandEvent& /*event*/)
 {
     wxLaunchDefaultBrowser(_T("http://wiki.codeblocks.org/index.php?title=Global_compiler_variables"));
 }
+#endif // #ifndef CB_FOR_CONSOLE

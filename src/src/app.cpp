@@ -17,16 +17,20 @@
 #include <wx/regex.h>
 #include <wx/filefn.h>
 #include <wx/log.h> // for wxSafeShowMessage()
-#include <wx/msgdlg.h>
-#include <wx/choicdlg.h>
-#include <wx/notebook.h>
-#include <wx/clipbrd.h>
+#ifndef CB_FOR_CONSOLE
+    #include <wx/msgdlg.h>
+    #include <wx/choicdlg.h>
+    #include <wx/notebook.h>
+    #include <wx/clipbrd.h>
 
-#include "cbauibook.h"
+    #include "cbauibook.h"
+#endif // #ifndef CB_FOR_CONSOLE
 #include <cbexception.h>
 #include <wx/debugrpt.h>
 #include <configmanager.h>
-#include <editormanager.h>
+#ifndef CB_FOR_CONSOLE
+    #include <editormanager.h>
+#endif // #ifndef CB_FOR_CONSOLE
 #include <projectmanager.h>
 #include <personalitymanager.h>
 #include <pluginmanager.h>
@@ -36,17 +40,21 @@
 #include <globals.h>
 #include <logmanager.h>
 #include <loggers.h>
-#include "splashscreen.h"
-#include "crashhandler.h"
-#include "cbstyledtextctrl.h"
-#include <wx/ipc.h>
+#ifndef CB_FOR_CONSOLE
+    #include "splashscreen.h"
+    #include "crashhandler.h"
+    #include "cbstyledtextctrl.h"
+    #include <wx/ipc.h>
+#endif // #ifndef CB_FOR_CONSOLE
 
 #include <sqplus.h>
 
 #ifndef __WXMSW__
     #include "prefix.h" // binreloc
 #endif
-#include "associations.h"
+#ifndef CB_FOR_CONSOLE
+    #include "associations.h"
+#endif // #ifndef CB_FOR_CONSOLE
 
 #if defined(__APPLE__) && defined(__MACH__)
 #include <sys/param.h>
@@ -71,13 +79,16 @@ wxString GetResourcesDir(){ return wxEmptyString; };
 
 namespace
 {
+#ifndef CB_FOR_CONSOLE
 // this list will be filled with files
 // (received through DDE or command line)
 // to be loaded after the app has started up
 wxArrayString s_DelayedFilesToOpen;
+#endif // #ifndef CB_FOR_CONSOLE
 bool s_Loading = false;
 
 
+#ifndef CB_FOR_CONSOLE
 class DDEServer : public wxServer
 {
     public:
@@ -164,6 +175,7 @@ class DDEClient: public wxClient {
         DDEClient(void) {}
         wxConnectionBase *OnMakeConnection(void) { return new DDEConnection(0l); }
 };
+#endif // #ifndef CB_FOR_CONSOLE
 
 #if wxUSE_CMDLINE_PARSER
 #if wxCHECK_VERSION(2, 9, 0)
@@ -177,6 +189,7 @@ const wxCmdLineEntryDesc cmdLineDesc[] =
       wxCMD_LINE_VAL_NONE, wxCMD_LINE_OPTION_HELP },
     { wxCMD_LINE_SWITCH, CMD_ENTRY("?"),  CMD_ENTRY("?"),                     CMD_ENTRY("show this help message (alias for help)"),
       wxCMD_LINE_VAL_NONE, wxCMD_LINE_OPTION_HELP },
+#ifndef CB_FOR_CONSOLE
     { wxCMD_LINE_SWITCH, CMD_ENTRY(""),   CMD_ENTRY("safe-mode"),             CMD_ENTRY("load in safe mode (all plugins will be disabled)"),
       wxCMD_LINE_VAL_NONE, wxCMD_LINE_PARAM_OPTIONAL },
 #ifdef __WXMSW__
@@ -197,16 +210,23 @@ const wxCmdLineEntryDesc cmdLineDesc[] =
       wxCMD_LINE_VAL_NONE, wxCMD_LINE_PARAM_OPTIONAL },
     { wxCMD_LINE_SWITCH, CMD_ENTRY("nc"), CMD_ENTRY("no-crash-handler"),      CMD_ENTRY("don't use the crash handler (useful for debugging C::B)"),
       wxCMD_LINE_VAL_NONE, wxCMD_LINE_PARAM_OPTIONAL },
+#endif // #ifndef CB_FOR_CONSOLE
     { wxCMD_LINE_OPTION, CMD_ENTRY(""),   CMD_ENTRY("prefix"),                CMD_ENTRY("the shared data dir prefix"),
       wxCMD_LINE_VAL_STRING, wxCMD_LINE_NEEDS_SEPARATOR },
+#ifndef CB_FOR_CONSOLE
     { wxCMD_LINE_OPTION, CMD_ENTRY("p"),  CMD_ENTRY("personality"),           CMD_ENTRY("the personality to use: \"ask\" or <personality-name>"),
+#else // #ifndef CB_FOR_CONSOLE
+    { wxCMD_LINE_OPTION, CMD_ENTRY("p"),  CMD_ENTRY("personality"),           CMD_ENTRY("the personality to use: <personality-name>"),
+#endif // #ifndef CB_FOR_CONSOLE
       wxCMD_LINE_VAL_STRING, wxCMD_LINE_NEEDS_SEPARATOR },
+#ifndef CB_FOR_CONSOLE
     { wxCMD_LINE_SWITCH, CMD_ENTRY(""),   CMD_ENTRY("no-log"),                CMD_ENTRY("turn off the application log"),
       wxCMD_LINE_VAL_NONE, wxCMD_LINE_PARAM_OPTIONAL },
     { wxCMD_LINE_SWITCH, CMD_ENTRY(""),   CMD_ENTRY("log-to-file"),           CMD_ENTRY("redirect application log to a file"),
       wxCMD_LINE_VAL_NONE, wxCMD_LINE_PARAM_OPTIONAL },
     { wxCMD_LINE_SWITCH, CMD_ENTRY(""),   CMD_ENTRY("debug-log-to-file"),     CMD_ENTRY("redirect application debug log to a file"),
       wxCMD_LINE_VAL_NONE, wxCMD_LINE_PARAM_OPTIONAL },
+#endif // #ifndef CB_FOR_CONSOLE
     { wxCMD_LINE_OPTION, CMD_ENTRY(""),   CMD_ENTRY("profile"),               CMD_ENTRY("synonym to personality"),
       wxCMD_LINE_VAL_STRING, wxCMD_LINE_NEEDS_SEPARATOR },
     { wxCMD_LINE_SWITCH, CMD_ENTRY(""),   CMD_ENTRY("rebuild"),               CMD_ENTRY("clean and then build the project/workspace"),
@@ -217,6 +237,7 @@ const wxCmdLineEntryDesc cmdLineDesc[] =
       wxCMD_LINE_VAL_NONE, wxCMD_LINE_PARAM_OPTIONAL },
     { wxCMD_LINE_OPTION, CMD_ENTRY(""),   CMD_ENTRY("target"),                CMD_ENTRY("the target for the batch build"),
       wxCMD_LINE_VAL_STRING, wxCMD_LINE_NEEDS_SEPARATOR },
+#ifndef CB_FOR_CONSOLE
     { wxCMD_LINE_SWITCH, CMD_ENTRY(""),   CMD_ENTRY("no-batch-window-close"), CMD_ENTRY("do not auto-close log window when batch build is done"),
       wxCMD_LINE_VAL_NONE, wxCMD_LINE_PARAM_OPTIONAL },
     { wxCMD_LINE_SWITCH, CMD_ENTRY(""),   CMD_ENTRY("batch-build-notify"),    CMD_ENTRY("show message when batch build is done"),
@@ -225,12 +246,14 @@ const wxCmdLineEntryDesc cmdLineDesc[] =
       wxCMD_LINE_VAL_STRING, wxCMD_LINE_NEEDS_SEPARATOR },
     { wxCMD_LINE_OPTION, CMD_ENTRY(""),   CMD_ENTRY("file"),                  CMD_ENTRY("open file and optionally jump to specific line (file[:line])"),
       wxCMD_LINE_VAL_STRING, wxCMD_LINE_NEEDS_SEPARATOR },
+#endif // #ifndef CB_FOR_CONSOLE
     { wxCMD_LINE_PARAM,  CMD_ENTRY(""),   CMD_ENTRY(""),                      CMD_ENTRY("filename(s)"),
       wxCMD_LINE_VAL_STRING, wxCMD_LINE_PARAM_OPTIONAL | wxCMD_LINE_PARAM_MULTIPLE },
     { wxCMD_LINE_NONE }
 };
 #endif // wxUSE_CMDLINE_PARSER
 
+#ifndef CB_FOR_CONSOLE
 class Splash
 {
     public:
@@ -263,6 +286,14 @@ BEGIN_EVENT_TABLE(CodeBlocksApp, wxApp)
     EVT_ACTIVATE_APP(CodeBlocksApp::OnAppActivate)
     EVT_TASKBAR_LEFT_DOWN(CodeBlocksApp::OnTBIconLeftDown)
 END_EVENT_TABLE()
+#else // #ifndef CB_FOR_CONSOLE
+}; // namespace
+IMPLEMENT_APP_CONSOLE(CodeBlocksApp)
+
+BEGIN_EVENT_TABLE(CodeBlocksApp, wxAppConsole)
+    EVT_ACTIVATE_APP(CodeBlocksApp::OnAppActivate)
+END_EVENT_TABLE()
+#endif // #ifndef CB_FOR_CONSOLE
 
 #ifdef __WXMAC__
 #include "wx/mac/corefoundation/cfstring.h"
@@ -286,7 +317,11 @@ static wxString GetResourcesDir()
 
 bool CodeBlocksApp::LoadConfig()
 {
+#ifndef CB_FOR_CONSOLE
     if (ParseCmdLine(0L) == -1) // only abort if '--help' was passed in the command line
+#else // #ifndef CB_FOR_CONSOLE
+    if (ParseCmdLine() == -1) // only abort if '--help' was passed in the command line
+#endif // #ifndef CB_FOR_CONSOLE
         return false;
 
     ConfigManager *cfg = Manager::Get()->GetConfigManager(_T("app"));
@@ -398,6 +433,7 @@ bool CodeBlocksApp::InitXRCStuff()
     return true;
 }
 
+#ifndef CB_FOR_CONSOLE
 MainFrame* CodeBlocksApp::InitFrame()
 {
     CompileTimeAssertion<wxMinimumVersion<2,6>::eval>::Assert();
@@ -418,6 +454,7 @@ MainFrame* CodeBlocksApp::InitFrame()
     }
     return frame;
 }
+#endif // #ifndef CB_FOR_CONSOLE
 
 void CodeBlocksApp::CheckVersion()
 {
@@ -474,14 +511,18 @@ void CodeBlocksApp::InitLocale()
 
 bool CodeBlocksApp::OnInit()
 {
-    wxLog::EnableLogging(false);
+    wxLog::EnableLogging(true);
 
     SetAppName(_T("codeblocks"));
     s_Loading = true;
+#ifndef CB_FOR_CONSOLE
     m_pBatchBuildDialog = 0;
+#endif // #ifndef CB_FOR_CONSOLE
     m_BatchExitCode = 0;
     m_Batch = false;
+#ifndef CB_FOR_CONSOLE
     m_BatchNotify = false;
+#endif // #ifndef CB_FOR_CONSOLE
     m_Build = false;
     m_ReBuild = false;
     m_Clean = false;
@@ -489,9 +530,11 @@ bool CodeBlocksApp::OnInit()
     m_HasWorkSpace = false;
     m_SafeMode = false;
 
+#ifndef CB_FOR_CONSOLE
     m_BatchWindowAutoClose = true;
 
     wxTheClipboard->Flush();
+#endif // #ifndef CB_FOR_CONSOLE
 
     wxCmdLineParser& parser = *Manager::GetCmdLineParser();
     parser.SetDesc(cmdLineDesc);
@@ -504,9 +547,11 @@ bool CodeBlocksApp::OnInit()
     // we'll do this once and for all at startup
     wxFileSystem::AddHandler(new wxZipFSHandler);
     wxFileSystem::AddHandler(new wxMemoryFSHandler);
+#ifndef CB_FOR_CONSOLE
     wxXmlResource::Get()->InsertHandler(new wxToolBarAddOnXmlHandler);
     wxXmlResource::Get()->InsertHandler(new wxScrollingDialogXmlHandler);
     wxInitAllImageHandlers();
+#endif // #ifndef CB_FOR_CONSOLE
     wxXmlResource::Get()->InitAllHandlers();
 
     try
@@ -523,7 +568,11 @@ bool CodeBlocksApp::OnInit()
         // set safe-mode appropriately
         PluginManager::SetSafeMode(m_SafeMode);
 
+#ifndef CB_FOR_CONSOLE
         if(!m_Batch && m_Script.IsEmpty() && !InitXRCStuff())
+#else // #ifndef CB_FOR_CONSOLE
+        if(!m_Batch)
+#endif // #ifndef CB_FOR_CONSOLE
         {
            // wsSafeShowMessage(_T("Fatal error"), _T("Initialisation of resources failed."));
             return false;
@@ -531,6 +580,7 @@ bool CodeBlocksApp::OnInit()
 
         InitLocale();
 
+#ifndef CB_FOR_CONSOLE
         if(m_DDE && !m_Batch && Manager::Get()->GetConfigManager(_T("app"))->ReadBool(_T("/environment/use_ipc"), true))
         {
             // Create a new client
@@ -631,13 +681,16 @@ bool CodeBlocksApp::OnInit()
         // we also don't need it, if only a single instance is allowed
         Splash splash(!m_Batch && m_Script.IsEmpty() && m_Splash &&
                       Manager::Get()->GetConfigManager(_T("app"))->ReadBool(_T("/environment/show_splash"), true));
+#endif // #ifndef CB_FOR_CONSOLE
         InitDebugConsole();
 
         Manager::SetBatchBuild(m_Batch || !m_Script.IsEmpty());
         Manager::Get()->GetScriptingManager();
+#ifndef CB_FOR_CONSOLE
         MainFrame* frame = 0;
         frame = InitFrame();
         m_Frame = frame;
+#endif // #ifndef CB_FOR_CONSOLE
 
         if (m_SafeMode) wxLog::EnableLogging(true); // re-enable logging in safe-mode
 
@@ -649,13 +702,18 @@ bool CodeBlocksApp::OnInit()
 
             Manager::Get()->RegisterEventSink(cbEVT_COMPILER_FINISHED, new cbEventFunctor<CodeBlocksApp, CodeBlocksEvent>(this, &CodeBlocksApp::OnBatchBuildDone));
             s_Loading = false;
+#ifndef CB_FOR_CONSOLE
             LoadDelayedFiles(frame);
+#endif // #ifndef CB_FOR_CONSOLE
 
             BatchJob();
+#ifndef CB_FOR_CONSOLE
             frame->Close();
+#endif // #ifndef CB_FOR_CONSOLE
             return true;
         }
 
+#ifndef CB_FOR_CONSOLE
         if (!m_Script.IsEmpty())
         {
             s_Loading = false;
@@ -711,6 +769,7 @@ bool CodeBlocksApp::OnInit()
         Manager::Get()->ProcessEvent(event);
 
         return true;
+#endif // #ifndef CB_FOR_CONSOLE
     }
     catch (cbException& exception)
     {
@@ -734,6 +793,7 @@ bool CodeBlocksApp::OnInit()
 
 int CodeBlocksApp::OnExit()
 {
+#ifndef CB_FOR_CONSOLE
     wxTheClipboard->Flush();
 
     if (g_DDEServer) delete g_DDEServer;
@@ -743,8 +803,9 @@ int CodeBlocksApp::OnExit()
 #endif
     if (m_pSingleInstance)
         delete m_pSingleInstance;
+#endif // #ifndef CB_FOR_CONSOLE
 
-    // ultimate shutdown...
+    // ultimate shutdown..
     Manager::Free();
 
     // WX docs say that this function's return value is ignored,
@@ -785,9 +846,13 @@ int CodeBlocksApp::OnRun()
     EnableLFH();
     try
     {
+#ifndef CB_FOR_CONSOLE
         int retval = wxApp::OnRun();
         // wx 2.6.3 docs says that OnRun() function's return value is used as exit code
         return m_Batch ? m_BatchExitCode : retval;
+#else // #ifndef CB_FOR_CONSOLE
+        return m_Batch ? m_BatchExitCode : 0;
+#endif // #ifndef CB_FOR_CONSOLE
     }
     catch (cbException& exception)
     {
@@ -811,18 +876,31 @@ int CodeBlocksApp::OnRun()
 
 bool CodeBlocksApp::OnCmdLineParsed(wxCmdLineParser& parser)
 {
+#ifndef CB_FOR_CONSOLE
     return wxApp::OnCmdLineParsed(parser);
+#else // #ifndef CB_FOR_CONSOLE
+    return wxAppConsole::OnCmdLineParsed(parser);
+#endif // #ifndef CB_FOR_CONSOLE
 }
 
 void CodeBlocksApp::OnFatalException()
 {
 #if wxUSE_DEBUGREPORT && wxUSE_XML && wxUSE_ON_FATAL_EXCEPTION
     wxDebugReport report;
+#ifndef CB_FOR_CONSOLE
     wxDebugReportPreviewStd preview;
+#endif // #ifndef CB_FOR_CONSOLE
 
     report.AddAll();
+#ifndef CB_FOR_CONSOLE
     if ( preview.Show(report) )
         report.Process();
+#else // #ifndef CB_FOR_CONSOLE
+    cbMessageBox(wxString::Format(_("Something has gone wrong inside %s and it "
+                                    "will terminate immediately.\n"
+                                    "We are sorry for the inconvenience...\n\n"
+                                    "A bug report was generated in %s."), appglobals::AppName.c_str(), report.GetDirectory().c_str()));
+#endif // #ifndef CB_FOR_CONSOLE
 #else
     cbMessageBox(wxString::Format(_("Something has gone wrong inside %s and it "
                                     "will terminate immediately.\n"
@@ -836,6 +914,49 @@ int CodeBlocksApp::BatchJob()
         return -1;
 
     // find compiler plugin
+
+#ifdef CB_FOR_CONSOLE // code "stolen" from ScanForPlugins and OpenGeneric in MainFrame
+    ConfigManager *bbcfg = Manager::Get()->GetConfigManager(_T("plugins"));
+    wxArrayString bbplugins = bbcfg->ReadArrayString(_T("/batch_build_plugins"));
+    if(bbplugins.GetCount())
+        bbcfg->UnSet(_T("/batch_build_plugins")); // hack to make compiler-plugin, the only one that's found
+
+    PluginManager* m_PluginManager = Manager::Get()->GetPluginManager();
+
+    // user paths first
+    wxString path = ConfigManager::GetPluginsFolder(false);
+    Manager::Get()->GetLogManager()->Log(_("Scanning for plugins in ") + path);
+    int count = m_PluginManager->ScanForPlugins(path);
+
+    // global paths
+    path = ConfigManager::GetPluginsFolder(true);
+    Manager::Get()->GetLogManager()->Log(_("Scanning for plugins in ") + path);
+    count += m_PluginManager->ScanForPlugins(path);
+
+    // actually load plugins
+    if (count > 0)
+    {
+        Manager::Get()->GetLogManager()->Log(_("Loading:"));
+        m_PluginManager->LoadAllPlugins();
+    }
+
+    bbcfg->Write(_T("/batch_build_plugins"), bbplugins); // write back the saved batch-build-plugins
+
+    // load project or workspace
+    if(m_HasProject)
+    {
+        if (!wxFileExists(m_AutoFile))
+        {
+            cbMessageBox(_("The project file does not exist..."), _("Error"), wxICON_ERROR);
+            return -1;
+        }
+        Manager::Get()->GetProjectManager()->LoadProject(m_AutoFile, true);
+    }
+    else if(m_HasWorkSpace)
+    {
+        Manager::Get()->GetProjectManager()->LoadWorkspace(m_AutoFile);
+    }
+#endif // #ifdef CB_FOR_CONSOLE
     PluginsArray arr = Manager::Get()->GetPluginManager()->GetCompilerOffers();
     if (arr.GetCount() == 0)
         return -2;
@@ -863,13 +984,16 @@ int CodeBlocksApp::BatchJob()
                     break;
                 }
             }
+#ifndef CB_FOR_CONSOLE
             idx = prj->SelectTarget(idx, false);
+#endif // #ifndef CB_FOR_CONSOLE
             if (idx == -1)
                 return 0; // no target selected: just abort
             m_BatchTarget = prj->GetBuildTarget(idx)->GetTitle();
         }
     }
 
+#ifndef CB_FOR_CONSOLE
     wxTaskBarIcon* tbIcon = 0;
     m_pBatchBuildDialog = m_Frame->GetBatchBuildDialog();
     PlaceWindow(m_pBatchBuildDialog);
@@ -883,6 +1007,7 @@ int CodeBlocksApp::BatchJob()
                 _("Building ") + wxFileNameFromPath(wxString(argv[argc-1])));
 
     m_pBatchBuildDialog->Show();
+#endif // #ifndef CB_FOR_CONSOLE
 
     if (m_ReBuild)
     {
@@ -918,6 +1043,7 @@ int CodeBlocksApp::BatchJob()
         }
     }
 
+#ifndef CB_FOR_CONSOLE
     // the batch build log might have been deleted in
     // CodeBlocksApp::OnBatchBuildDone().
     // if it hasn't, it's still compiling
@@ -936,6 +1062,7 @@ int CodeBlocksApp::BatchJob()
     if (m_pBatchBuildDialog)
         m_pBatchBuildDialog->Destroy();
     m_pBatchBuildDialog = 0;
+#endif // #ifndef CB_FOR_CONSOLE
 
     return 0;
 }
@@ -962,6 +1089,7 @@ void CodeBlocksApp::OnBatchBuildDone(CodeBlocksEvent& event)
         msg << wxString::Format(_("Process exited with status code %d."), m_BatchExitCode);
         cbMessageBox(msg, appglobals::AppName, m_BatchExitCode == 0 ? wxICON_INFORMATION : wxICON_WARNING);
     }
+#ifndef CB_FOR_CONSOLE
     else
         wxBell();
 
@@ -975,8 +1103,10 @@ void CodeBlocksApp::OnBatchBuildDone(CodeBlocksEvent& event)
             m_pBatchBuildDialog = 0;
         }
     }
+#endif // #ifndef CB_FOR_CONSOLE
 }
 
+#ifndef CB_FOR_CONSOLE
 void CodeBlocksApp::OnTBIconLeftDown(wxTaskBarIconEvent& event)
 {
     event.Skip();
@@ -986,6 +1116,7 @@ void CodeBlocksApp::OnTBIconLeftDown(wxTaskBarIconEvent& event)
         m_pBatchBuildDialog->Refresh();
     }
 }
+#endif // #ifndef CB_FOR_CONSOLE
 
 void CodeBlocksApp::ComplainBadInstall()
 {
@@ -1044,7 +1175,11 @@ void CodeBlocksApp::SetAutoFile(wxString& file)
     m_AutoFile = file;
 }
 
+#ifndef CB_FOR_CONSOLE
 int CodeBlocksApp::ParseCmdLine(MainFrame* handlerFrame)
+#else // #ifndef CB_FOR_CONSOLE
+int CodeBlocksApp::ParseCmdLine()
+#endif // #ifndef CB_FOR_CONSOLE
 {
     // code shamelessely taken from the console wxWindows sample :)
     bool filesInCmdLine = false;
@@ -1064,8 +1199,10 @@ int CodeBlocksApp::ParseCmdLine(MainFrame* handlerFrame)
 
         case 0:
             {
+#ifndef CB_FOR_CONSOLE
                 if (handlerFrame)
                 {
+#endif // #ifndef CB_FOR_CONSOLE
                     int count = parser.GetParamCount();
                     filesInCmdLine = count != 0;
                     m_HasProject = false;
@@ -1077,30 +1214,54 @@ int CodeBlocksApp::ParseCmdLine(MainFrame* handlerFrame)
                         if (ft == ftCodeBlocksProject)
                         {
                             m_HasProject = true;
+#ifndef CB_FOR_CONSOLE
                             s_DelayedFilesToOpen.Add(parser.GetParam(param));
+#else // #ifndef CB_FOR_CONSOLE
+                            m_AutoFile = parser.GetParam(param);
+                            wxFileName fn(m_AutoFile);
+                            fn.Normalize(); // really important so that two same files with different names are not loaded twice
+                            m_AutoFile = fn.GetFullPath();
+#endif // #ifndef CB_FOR_CONSOLE
                         }
                         else if (ft == ftSource || ft == ftHeader || ft == ftResource)
                         {
+#ifndef CB_FOR_CONSOLE
                             s_DelayedFilesToOpen.Add(parser.GetParam(param));
+#else // #ifndef CB_FOR_CONSOLE
+                            m_AutoFile = parser.GetParam(param);
+                            wxFileName fn(m_AutoFile);
+                            fn.Normalize(); // really important so that two same files with different names are not loaded twice
+                            m_AutoFile = fn.GetFullPath();
+#endif // #ifndef CB_FOR_CONSOLE
                         }
                         else if (ft == ftCodeBlocksWorkspace)
                         {
                             // only one workspace can be opened
                             m_HasWorkSpace = true;
+#ifndef CB_FOR_CONSOLE
                             s_DelayedFilesToOpen.Clear(); // remove all other files
                             s_DelayedFilesToOpen.Add(parser.GetParam(param)); // and add only the workspace
+#else // #ifndef CB_FOR_CONSOLE
+                            m_AutoFile = parser.GetParam(param);
+                            wxFileName fn(m_AutoFile);
+                            fn.Normalize(); // really important so that two same files with different names are not loaded twice
+                            m_AutoFile = fn.GetFullPath();
+#endif // #ifndef CB_FOR_CONSOLE
                             break; // and stop processing any more files
                         }
                     }
 
+#ifndef CB_FOR_CONSOLE
                     // batch jobs
                     m_Batch = m_HasProject || m_HasWorkSpace;
                     m_Batch = m_Batch && (m_Build || m_ReBuild || m_Clean);
                 }
                 else
                 {
+#endif // #ifndef CB_FOR_CONSOLE
                     wxString val;
                     parser.Found(_T("prefix"), &m_Prefix);
+#ifndef CB_FOR_CONSOLE
 #ifdef __WXMSW__
                     m_DDE = !parser.Found(_T("no-dde"));
                     m_Assocs = !parser.Found(_T("no-check-associations"));
@@ -1111,6 +1272,7 @@ int CodeBlocksApp::ParseCmdLine(MainFrame* handlerFrame)
                     m_Splash = !parser.Found(_T("no-splash-screen"));
                     m_HasDebugLog = parser.Found(_T("debug-log"));
                     m_CrashHandler = !parser.Found(_T("no-crash-handler"));
+#endif // #ifndef CB_FOR_CONSOLE
                     if (parser.Found(_T("personality"), &val) ||
                         parser.Found(_T("profile"), &val))
                     {
@@ -1118,18 +1280,23 @@ int CodeBlocksApp::ParseCmdLine(MainFrame* handlerFrame)
                     }
 
                     // batch jobs
+#ifndef CB_FOR_CONSOLE
                     m_BatchNotify = parser.Found(_T("batch-build-notify"));
                     m_BatchWindowAutoClose = !parser.Found(_T("no-batch-window-close"));
+#endif // #ifndef CB_FOR_CONSOLE
                     m_Build = parser.Found(_T("build"));
                     m_ReBuild = parser.Found(_T("rebuild"));
                     m_Clean = parser.Found(_T("clean"));
                     parser.Found(_T("target"), &m_BatchTarget);
+#ifndef CB_FOR_CONSOLE
                     parser.Found(_T("script"), &m_Script);
                     parser.Found(_T("file"), &m_AutoFile);
+#endif // #ifndef CB_FOR_CONSOLE
                     // initial setting for batch flag (will be reset when ParseCmdLine() is called again).
                     m_Batch = m_Build || m_ReBuild || m_Clean;
 
 
+#ifndef CB_FOR_CONSOLE
                     if(parser.Found(_T("no-log")) == false)
                         Manager::Get()->GetLogManager()->SetLog(new TextCtrlLogger, LogManager::app_log);
                     if(parser.Found(_T("log-to-file")))
@@ -1139,6 +1306,10 @@ int CodeBlocksApp::ParseCmdLine(MainFrame* handlerFrame)
                     if(parser.Found(_T("debug-log-to-file")))
                         Manager::Get()->GetLogManager()->SetLog(new FileLogger(_T("codeblocks-debug.log")), LogManager::debug_log);
                 }
+#else // #ifndef CB_FOR_CONSOLE
+                    m_Batch = m_HasProject || m_HasWorkSpace;
+                    m_Batch = m_Batch && (m_Build || m_ReBuild || m_Clean);
+#endif // #ifndef CB_FOR_CONSOLE
             }
             break;
 
@@ -1151,6 +1322,7 @@ int CodeBlocksApp::ParseCmdLine(MainFrame* handlerFrame)
 
 void CodeBlocksApp::SetupPersonality(const wxString& personality)
 {
+#ifndef CB_FOR_CONSOLE
     if (personality.CmpNoCase(_T("ask")) == 0)
     {
         CompileTimeAssertion<wxMinimumVersion<2,5>::eval>::Assert(); // just to make sure: wxWidgets 2.4 is dead
@@ -1165,11 +1337,13 @@ void CodeBlocksApp::SetupPersonality(const wxString& personality)
             Manager::Get()->GetPersonalityManager()->SetPersonality(dlg.GetStringSelection());
     }
     else
+#endif // #ifndef CB_FOR_CONSOLE
     {
         Manager::Get()->GetPersonalityManager()->SetPersonality(personality, true);
     }
 }
 
+#ifndef CB_FOR_CONSOLE
 void CodeBlocksApp::LoadDelayedFiles(MainFrame *const frame)
 {
     for (size_t i = 0; i < s_DelayedFilesToOpen.GetCount(); ++i)
@@ -1206,12 +1380,14 @@ void CodeBlocksApp::LoadDelayedFiles(MainFrame *const frame)
         }
     }
 }
+#endif // #ifndef CB_FOR_CONSOLE
 
 
 #ifdef __WXMAC__
 
 void CodeBlocksApp::MacOpenFile(const wxString & fileName )
 {
+#ifndef CB_FOR_CONSOLE
     if (s_Loading)
     {
         s_DelayedFilesToOpen.Add(fileName);
@@ -1220,6 +1396,7 @@ void CodeBlocksApp::MacOpenFile(const wxString & fileName )
     {
         m_Frame->Open(fileName, true);
     }
+#endif // #ifndef CB_FOR_CONSOLE
 }
 
 void CodeBlocksApp::MacPrintFile(const wxString & fileName )
@@ -1244,6 +1421,7 @@ void CodeBlocksApp::OnAppActivate(wxActivateEvent& event)
     if (!Manager::Get())
         return;
 
+#ifndef CB_FOR_CONSOLE
     if (Manager::Get()->GetEditorManager() && Manager::Get()->GetConfigManager(_T("app"))->ReadBool(_T("/environment/check_modified_files"), true))
     {
         // for some reason a mouse up event doen's make it into scintilla (scintilla bug)
@@ -1268,4 +1446,5 @@ void CodeBlocksApp::OnAppActivate(wxActivateEvent& event)
 
         ed->GetControl()->SetFocus();
     }
+#endif // #ifndef CB_FOR_CONSOLE
 }
