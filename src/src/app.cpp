@@ -1416,6 +1416,15 @@ void CodeBlocksApp::OnAppActivate(wxActivateEvent& event)
 
     if (s_Loading)
         return; // still loading; we can't possibly be interested for this event ;)
+
+    // Activation & De-Activation event
+    CodeBlocksEvent cbEvent;
+    if (event.GetActive())
+        cbEvent.SetEventType(cbEVT_APP_ACTIVATED);
+    else
+        cbEvent.SetEventType(cbEVT_APP_DEACTIVATED);
+    Manager::Get()->ProcessEvent(cbEvent);
+
     if (!event.GetActive())
         return;
     if (!Manager::Get())
