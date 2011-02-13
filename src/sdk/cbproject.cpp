@@ -40,6 +40,8 @@
     #include "projectfile.h"
     #ifndef CB_FOR_CONSOLE
         #include "infowindow.h"
+    #else // #ifndef CB_FOR_CONSOLE
+        #include "infowindow_base.h"
     #endif // #ifndef CB_FOR_CONSOLE
 #endif
 
@@ -312,20 +314,11 @@ void cbProject::Open()
 
             if (fileUpgraded)
             {
-#ifndef CB_FOR_CONSOLE
                 InfoWindow::Display(m_Title,
-#else // #ifndef CB_FOR_CONSOLE
-                cbMessageBox(
-#endif // #ifndef CB_FOR_CONSOLE
                   _("The loaded project file was generated\n"
                     "with an older version of Code::Blocks.\n\n"
                     "Code::Blocks can import older project files,\n"
-                    "but will always save in the current format."),
-#ifndef CB_FOR_CONSOLE
-                    12000, 2000);
-#else // #ifndef CB_FOR_CONSOLE
-                    m_Title);
-#endif // #ifndef CB_FOR_CONSOLE
+                    "but will always save in the current format."), 12000, 2000);
             }
             m_LastModified = fname.GetModificationTime();
         }

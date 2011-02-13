@@ -86,6 +86,8 @@ class DLLIMPORT PLUGIN_MANAGER_BASE
     public:
 #ifdef CB_FOR_CONSOLE
         friend class Mgr<PLUGIN_MANAGER_BASE>;
+#else //#ifdef CB_FOR_CONSOLE
+        friend class PluginManager; // give Manager access to our private members
 #endif //#ifdef CB_FOR_CONSOLE
         friend class Manager; // give Manager access to our private members
 //        void CreateMenu(wxMenuBar* menuBar);
@@ -107,9 +109,9 @@ class DLLIMPORT PLUGIN_MANAGER_BASE
         bool AttachPlugin(cbPlugin* plugin, bool ignoreSafeMode = false);
         bool DetachPlugin(cbPlugin* plugin);
 
-        bool InstallPlugin(const wxString& pluginName, bool forAllUsers = true, bool askForConfirmation = true);
-        bool UninstallPlugin(cbPlugin* plugin, bool removeFiles = true);
-        bool ExportPlugin(cbPlugin* plugin, const wxString& filename);
+//        bool InstallPlugin(const wxString& pluginName, bool forAllUsers = true, bool askForConfirmation = true);
+//        bool UninstallPlugin(cbPlugin* plugin, bool removeFiles = true);
+//        bool ExportPlugin(cbPlugin* plugin, const wxString& filename);
 
         const PluginInfo* GetPluginInfo(const wxString& pluginName);
         const PluginInfo* GetPluginInfo(cbPlugin* plugin);
@@ -140,8 +142,9 @@ class DLLIMPORT PLUGIN_MANAGER_BASE
         static void SetSafeMode(bool on){ s_SafeMode = on; }
         static bool GetSafeMode(){ return s_SafeMode; }
     private:
+//    protected:
         PLUGIN_MANAGER_BASE();
-        ~PLUGIN_MANAGER_BASE();
+        virtual ~PLUGIN_MANAGER_BASE();
 
 //        void OnScriptMenu(wxCommandEvent& event);
 //        void OnScriptModuleMenu(wxCommandEvent& event);
@@ -152,10 +155,10 @@ class DLLIMPORT PLUGIN_MANAGER_BASE
                                 PluginInfo* infoOut = 0);
         void ReadExtraFilesFromManifestFile(const wxString& pluginFilename,
                                             wxArrayString& extraFiles);
-        bool ExtractFile(const wxString& bundlename,
-                        const wxString& src_filename,
-                        const wxString& dst_filename,
-                        bool isMandatory = true);
+//        bool ExtractFile(const wxString& bundlename,
+//                        const wxString& src_filename,
+//                        const wxString& dst_filename,
+//                        bool isMandatory = true);
 
         PluginElementsArray m_Plugins;
         wxString m_CurrentlyLoadingFilename;

@@ -22,6 +22,8 @@
 
         #include <wx/button.h>
         #include "scrollingdialog.h"
+    #else // #ifndef CB_FOR_CONSOLE
+        #include "infowindow_base.h"
     #endif // #ifndef CB_FOR_CONSOLE
     #include <wx/intl.h>
     #include <wx/xrc/xmlres.h>
@@ -175,14 +177,12 @@ wxString UserVariableManager::Replace(const wxString& variable)
         {
             wxString msg;
             msg.Printf(_("In the currently active Set, Code::Blocks does not know\nthe global compiler variable \"%s\".\n\nPlease define it."), package.c_str());
-#ifndef CB_FOR_CONSOLE
             InfoWindow::Display(_("Global Compiler Variables"), msg , 8000, 1000);
+#ifndef CB_FOR_CONSOLE
             UsrGlblMgrEditDialog d;
             d.AddVar(package);
             PlaceWindow(&d);
             d.ShowModal();
-#else // #ifndef CB_FOR_CONSOLE
-            cbMessageBox(msg,_("Global Compiler Variables"));
 #endif // #ifndef CB_FOR_CONSOLE
         }
     }
@@ -256,11 +256,10 @@ void UserVariableManager::Arrogate()
 #ifndef CB_FOR_CONSOLE
     PlaceWindow(&d);
     preempted.Clear();
+#endif // #ifndef CB_FOR_CONSOLE
     InfoWindow::Display(_("Global Compiler Variables"), msg , 8000 + 800*preempted.GetCount(), 100);
-
+#ifndef CB_FOR_CONSOLE
     d.ShowModal();
-#else // #ifndef CB_FOR_CONSOLE
-    cbMessageBox(msg,_("Global Compiler Variables"));
 #endif // #ifndef CB_FOR_CONSOLE
 }
 

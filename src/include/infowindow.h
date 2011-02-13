@@ -18,7 +18,9 @@
 #ifndef INFOWINDOW_H
 #define INFOWINDOW_H
 
-#ifndef CB_FOR_CONSOLE
+#ifdef CB_FOR_CONSOLE
+    #include "infowindow_base.h"
+#else // #ifdef CB_FOR_CONSOLE
 
 #include <wx/event.h>
 #include <wx/timer.h>
@@ -90,6 +92,6 @@ class InfoWindow : public wxInfoWindowBase
 
     static void Display(const wxString& title, const wxString& message, unsigned int delay = 5000, unsigned int hysteresis = 1);
 };
-#endif // #ifndef CB_FOR_CONSOLE
+#endif // #ifdef CB_FOR_CONSOLE
 
 #endif

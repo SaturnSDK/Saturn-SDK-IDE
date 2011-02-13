@@ -47,6 +47,8 @@
 #include "annoyingdialog.h"
 #ifndef CB_FOR_CONSOLE
     #include "pluginsconfigurationdlg.h"
+#else
+    #include "infowindow_base.h"
 #endif // #ifndef CB_FOR_CONSOLE
 
 #include "scripting/bindings/sc_plugin.h"
@@ -56,40 +58,40 @@
     template<> bool  Mgr<PLUGIN_MANAGER_BASE>::isShutdown = false;
 #endif //#ifdef CB_FOR_CONSOLE
 
-void VersionStringToNumbers(const wxString& version, long* major, long* minor, long* release)
-{
-    wxString majorS = version.BeforeFirst(_T('.')); // 6.3.2 -> 6
-    wxString minorS = version.AfterFirst(_T('.')); // 6.3.2 -> 3.2
-    wxString releaseS = version.AfterLast(_T('.')); // 6.3.2 -> 2
-    minorS = minorS.BeforeFirst(_T('.')); // 3.2 -> 3
-    if (major)
-        majorS.ToLong(major);
-    if (minor)
-        minorS.ToLong(minor);
-    if (release)
-        releaseS.ToLong(release);
-}
+//void VersionStringToNumbers(const wxString& version, long* major, long* minor, long* release)
+//{
+//    wxString majorS = version.BeforeFirst(_T('.')); // 6.3.2 -> 6
+//    wxString minorS = version.AfterFirst(_T('.')); // 6.3.2 -> 3.2
+//    wxString releaseS = version.AfterLast(_T('.')); // 6.3.2 -> 2
+//    minorS = minorS.BeforeFirst(_T('.')); // 3.2 -> 3
+//    if (major)
+//        majorS.ToLong(major);
+//    if (minor)
+//        minorS.ToLong(minor);
+//    if (release)
+//        releaseS.ToLong(release);
+//}
 
 // returns -1 if new is less then old, 0 if equal and 1 if new is greater than old
-int CompareVersions(const wxString& new_version, const wxString& old_version)
-{
-    long new_major, new_minor, new_release;
-    long old_major, old_minor, old_release;
-
-    VersionStringToNumbers(new_version, &new_major, &new_minor, &new_release);
-    VersionStringToNumbers(old_version, &old_major, &old_minor, &old_release);
-
-#define SIGN(a) (a>0?1:(a<0?-1:0))
-    int result = 0;
-    result += SIGN(new_major - old_major) << 2;
-    result += SIGN(new_minor - old_minor) << 1;
-    result += SIGN(new_release - old_release) << 0;
-#undef SIGN
-
-    if (result < 0) return -1;
-    else if (result > 0) return 1;
-    return 0;
-}
+//int CompareVersions(const wxString& new_version, const wxString& old_version)
+//{
+//    long new_major, new_minor, new_release;
+//    long old_major, old_minor, old_release;
+//
+//    VersionStringToNumbers(new_version, &new_major, &new_minor, &new_release);
+//    VersionStringToNumbers(old_version, &old_major, &old_minor, &old_release);
+//
+//#define SIGN(a) (a>0?1:(a<0?-1:0))
+//    int result = 0;
+//    result += SIGN(new_major - old_major) << 2;
+//    result += SIGN(new_minor - old_minor) << 1;
+//    result += SIGN(new_release - old_release) << 0;
+//#undef SIGN
+//
+//    if (result < 0) return -1;
+//    else if (result > 0) return 1;
+//    return 0;
+//}
 
 namespace LibLoader
 {
@@ -182,11 +184,11 @@ PLUGIN_MANAGER_BASE::~PLUGIN_MANAGER_BASE()
     UnloadAllPlugins();
 }
 
-//void PluginManager::CreateMenu(wxMenuBar* /*menuBar*/)
+//void PLUGIN_MANAGER_BASE::CreateMenu(wxMenuBar* /*menuBar*/)
 //{
 //}
 //
-//void PluginManager::ReleaseMenu(wxMenuBar* /*menuBar*/)
+//void PLUGIN_MANAGER_BASE::ReleaseMenu(wxMenuBar* /*menuBar*/)
 //{
 //}
 
@@ -362,7 +364,7 @@ bool PLUGIN_MANAGER_BASE::DetachPlugin(cbPlugin* plugin)
 //    return true;
 //}
 //
-//bool PluginManager::UninstallPlugin(cbPlugin* plugin, bool removeFiles)
+//bool PLUGIN_MANAGER_BASE::UninstallPlugin(cbPlugin* plugin, bool removeFiles)
 //{
 //    if (!plugin)
 //        return false;
@@ -498,7 +500,7 @@ bool PLUGIN_MANAGER_BASE::DetachPlugin(cbPlugin* plugin)
 //    return false;
 //}
 //
-//bool PluginManager::ExportPlugin(cbPlugin* plugin, const wxString& filename)
+//bool PLUGIN_MANAGER_BASE::ExportPlugin(cbPlugin* plugin, const wxString& filename)
 //{
 //    if (!plugin)
 //        return false;
@@ -598,7 +600,7 @@ bool PLUGIN_MANAGER_BASE::DetachPlugin(cbPlugin* plugin)
 //    return true;
 //}
 //
-//bool PluginManager::ExtractFile(const wxString& bundlename,
+//bool PLUGIN_MANAGER_BASE::ExtractFile(const wxString& bundlename,
 //                                const wxString& src_filename,
 //                                const wxString& dst_filename,
 //                                bool isMandatory)
@@ -1014,7 +1016,7 @@ int PLUGIN_MANAGER_BASE::ScanForPlugins(const wxString& path)
     Manager::Get()->GetLogManager()->Log(F(_("Loaded %d plugins"), count));
     if (!failed.IsEmpty())
     {
-#ifndef CB_FOR_CONSOLE
+//#ifndef CB_FOR_CONSOLE
         InfoWindow::Display(_("Warning"),
                             _("One or more plugins were not loaded.\n"
                             "This usually happens when a plugin is built for\n"
@@ -1022,19 +1024,19 @@ int PLUGIN_MANAGER_BASE::ScanForPlugins(const wxString& path)
                             "Check the application log for more info.\n\n"
                             "List of failed plugins:\n") + failed,
                             15000, 3000);
-#else // #ifndef CB_FOR_CONSOLE
-        cbMessageBox(_("One or more plugins were not loaded.\n"
-                       "This usually happens when a plugin is built for\n"
-                       "a different version of the Code::Blocks SDK.\n"
-                       "Check the application log for more info.\n\n"
-                       "List of failed plugins:\n") + failed,
-                       _("Warning"));
-#endif // #ifndef CB_FOR_CONSOLE
+//#else // #ifndef CB_FOR_CONSOLE
+//        cbMessageBox(_("One or more plugins were not loaded.\n"
+//                       "This usually happens when a plugin is built for\n"
+//                       "a different version of the Code::Blocks SDK.\n"
+//                       "Check the application log for more info.\n\n"
+//                       "List of failed plugins:\n") + failed,
+//                       _("Warning"));
+//#endif // #ifndef CB_FOR_CONSOLE
     }
     return count;
 }
 
-bool PluginManager::LoadPlugin(const wxString& pluginName)
+bool PLUGIN_MANAGER_BASE::LoadPlugin(const wxString& pluginName)
 {
 #ifndef CB_FOR_CONSOLE
         if(pluginName.EndsWith(_T("libcon_compiler.so")))
@@ -1107,7 +1109,7 @@ bool PluginManager::LoadPlugin(const wxString& pluginName)
     return true;
 }
 
-void PluginManager::LoadAllPlugins()
+void PLUGIN_MANAGER_BASE::LoadAllPlugins()
 {
     // check if a plugin crashed the app last time
     wxString probPlugin = Manager::Get()->GetConfigManager(_T("plugins"))->Read(_T("/try_to_activate"), wxEmptyString);
@@ -1167,7 +1169,7 @@ void PluginManager::LoadAllPlugins()
     Manager::Get()->GetConfigManager(_T("plugins"))->Write(_T("/try_to_activate"), wxEmptyString, false);
 }
 
-void PluginManager::UnloadAllPlugins()
+void PLUGIN_MANAGER_BASE::UnloadAllPlugins()
 {
 //    Manager::Get()->GetLogManager()->DebugLog("Count %d", m_Plugins.GetCount());
 
@@ -1179,7 +1181,7 @@ void PluginManager::UnloadAllPlugins()
     LibLoader::Cleanup();
 }
 
-void PluginManager::UnloadPlugin(cbPlugin* plugin)
+void PLUGIN_MANAGER_BASE::UnloadPlugin(cbPlugin* plugin)
 {
     if (!plugin)
         return;
@@ -1210,7 +1212,7 @@ void PluginManager::UnloadPlugin(cbPlugin* plugin)
     }
 }
 
-PluginElement* PluginManager::FindElementByName(const wxString& pluginName)
+PluginElement* PLUGIN_MANAGER_BASE::FindElementByName(const wxString& pluginName)
 {
     for (unsigned int i = 0; i < m_Plugins.GetCount(); ++i)
     {
@@ -1222,7 +1224,7 @@ PluginElement* PluginManager::FindElementByName(const wxString& pluginName)
     return 0;
 }
 
-cbPlugin* PluginManager::FindPluginByName(const wxString& pluginName)
+cbPlugin* PLUGIN_MANAGER_BASE::FindPluginByName(const wxString& pluginName)
 {
     for (unsigned int i = 0; i < m_Plugins.GetCount(); ++i)
     {
@@ -1234,7 +1236,7 @@ cbPlugin* PluginManager::FindPluginByName(const wxString& pluginName)
     return 0;
 }
 
-cbPlugin* PluginManager::FindPluginByFileName(const wxString& pluginFileName)
+cbPlugin* PLUGIN_MANAGER_BASE::FindPluginByFileName(const wxString& pluginFileName)
 {
     for (unsigned int i = 0; i < m_Plugins.GetCount(); ++i)
     {
@@ -1246,7 +1248,7 @@ cbPlugin* PluginManager::FindPluginByFileName(const wxString& pluginFileName)
     return 0;
 }
 
-const PluginInfo* PluginManager::GetPluginInfo(const wxString& pluginName)
+const PluginInfo* PLUGIN_MANAGER_BASE::GetPluginInfo(const wxString& pluginName)
 {
     PluginElement* plugElem = FindElementByName(pluginName);
     if (plugElem && plugElem->info.name == pluginName)
@@ -1255,7 +1257,7 @@ const PluginInfo* PluginManager::GetPluginInfo(const wxString& pluginName)
     return 0;
 }
 
-const PluginInfo* PluginManager::GetPluginInfo(cbPlugin* plugin)
+const PluginInfo* PLUGIN_MANAGER_BASE::GetPluginInfo(cbPlugin* plugin)
 {
     for (unsigned int i = 0; i < m_Plugins.GetCount(); ++i)
     {
@@ -1267,7 +1269,7 @@ const PluginInfo* PluginManager::GetPluginInfo(cbPlugin* plugin)
     return 0;
 }
 
-int PluginManager::ExecutePlugin(const wxString& pluginName)
+int PLUGIN_MANAGER_BASE::ExecutePlugin(const wxString& pluginName)
 {
     PluginElement* elem = FindElementByName(pluginName);
     cbPlugin* plug = elem ? elem->plugin : 0;
@@ -1304,7 +1306,7 @@ int PluginManager::ExecutePlugin(const wxString& pluginName)
     return 0;
 }
 
-//int PluginManager::ConfigurePlugin(const wxString& pluginName)
+//int PLUGIN_MANAGER_BASE::ConfigurePlugin(const wxString& pluginName)
 //{
 //    cbPlugin* plug = FindPluginByName(pluginName);
 //    if (plug)
@@ -1326,7 +1328,7 @@ int PluginManager::ExecutePlugin(const wxString& pluginName)
 //    return (*first)->GetConfigurationPriority() - (*second)->GetConfigurationPriority();
 //}
 
-//void PluginManager::GetConfigurationPanels(int group, wxWindow* parent, ConfigurationPanelsArray& arrayToFill)
+//void PLUGIN_MANAGER_BASE::GetConfigurationPanels(int group, wxWindow* parent, ConfigurationPanelsArray& arrayToFill)
 //{
 //    // build an array of Plugins* because we need to order it by configuration priority
 //    PluginsArray arr;
@@ -1352,7 +1354,7 @@ int PluginManager::ExecutePlugin(const wxString& pluginName)
 //    }
 //}
 //
-//void PluginManager::GetProjectConfigurationPanels(wxWindow* parent, cbProject* project, ConfigurationPanelsArray& arrayToFill)
+//void PLUGIN_MANAGER_BASE::GetProjectConfigurationPanels(wxWindow* parent, cbProject* project, ConfigurationPanelsArray& arrayToFill)
 //{
 //    for (unsigned int i = 0; i < m_Plugins.GetCount(); ++i)
 //    {
@@ -1366,32 +1368,32 @@ int PluginManager::ExecutePlugin(const wxString& pluginName)
 //    }
 //}
 
-PluginsArray PluginManager::GetToolOffers()
+PluginsArray PLUGIN_MANAGER_BASE::GetToolOffers()
 {
     return GetOffersFor(ptTool);
 }
 
-PluginsArray PluginManager::GetMimeOffers()
+PluginsArray PLUGIN_MANAGER_BASE::GetMimeOffers()
 {
     return GetOffersFor(ptMime);
 }
 
-PluginsArray PluginManager::GetCompilerOffers()
+PluginsArray PLUGIN_MANAGER_BASE::GetCompilerOffers()
 {
     return GetOffersFor(ptCompiler);
 }
 
-PluginsArray PluginManager::GetDebuggerOffers()
+PluginsArray PLUGIN_MANAGER_BASE::GetDebuggerOffers()
 {
     return GetOffersFor(ptDebugger);
 }
 
-PluginsArray PluginManager::GetCodeCompletionOffers()
+PluginsArray PLUGIN_MANAGER_BASE::GetCodeCompletionOffers()
 {
     return GetOffersFor(ptCodeCompletion);
 }
 
-PluginsArray PluginManager::GetOffersFor(PluginType type)
+PluginsArray PLUGIN_MANAGER_BASE::GetOffersFor(PluginType type)
 {
     PluginsArray arr;
 
@@ -1424,7 +1426,7 @@ PluginsArray PluginManager::GetOffersFor(PluginType type)
     return arr;
 }
 
-//void PluginManager::AskPluginsForModuleMenu(const ModuleType type, wxMenu* menu, const FileTreeData* data)
+//void PLUGIN_MANAGER_BASE::AskPluginsForModuleMenu(const ModuleType type, wxMenu* menu, const FileTreeData* data)
 //{
 //    for (unsigned int i = 0; i < m_Plugins.GetCount(); ++i)
 //    {
@@ -1449,24 +1451,24 @@ PluginsArray PluginManager::GetOffersFor(PluginType type)
 //    {
 //        Connect(ids[i], -1, wxEVT_COMMAND_MENU_SELECTED,
 //                (wxObjectEventFunction) (wxEventFunction) (wxCommandEventFunction)
-//                &PluginManager::OnScriptModuleMenu);
+//                &PLUGIN_MANAGER_BASE::OnScriptModuleMenu);
 //    }
 //#endif // #ifndef CB_FOR_CONSOLE
 //}
 
 //#ifndef CB_FOR_CONSOLE
-//void PluginManager::OnScriptMenu(wxCommandEvent& event)
+//void PLUGIN_MANAGER_BASE::OnScriptMenu(wxCommandEvent& event)
 //{
 //    ScriptBindings::ScriptPluginWrapper::OnScriptMenu(event.GetId());
 //}
 //
-//void PluginManager::OnScriptModuleMenu(wxCommandEvent& event)
+//void PLUGIN_MANAGER_BASE::OnScriptModuleMenu(wxCommandEvent& event)
 //{
 //    ScriptBindings::ScriptPluginWrapper::OnScriptModuleMenu(event.GetId());
 //}
 //#endif // #ifndef CB_FOR_CONSOLE
 
-cbMimePlugin* PluginManager::GetMIMEHandlerForFile(const wxString& filename)
+cbMimePlugin* PLUGIN_MANAGER_BASE::GetMIMEHandlerForFile(const wxString& filename)
 {
     PluginsArray mimes = GetMimeOffers();
     for (unsigned int i = 0; i < mimes.GetCount(); ++i)
@@ -1479,7 +1481,7 @@ cbMimePlugin* PluginManager::GetMIMEHandlerForFile(const wxString& filename)
 }
 
 //#ifndef CB_FOR_CONSOLE
-//int PluginManager::Configure()
+//int PLUGIN_MANAGER_BASE::Configure()
 //{
 //    PluginsConfigurationDlg dlg(Manager::Get()->GetAppWindow());
 //    PlaceWindow(&dlg);
@@ -1487,7 +1489,7 @@ cbMimePlugin* PluginManager::GetMIMEHandlerForFile(const wxString& filename)
 //}
 //#endif // #ifndef CB_FOR_CONSOLE
 
-void PluginManager::SetupLocaleDomain(const wxString& DomainName)
+void PLUGIN_MANAGER_BASE::SetupLocaleDomain(const wxString& DomainName)
 {
     int catalogNum=Manager::Get()->GetConfigManager(_T("app"))->ReadInt(_T("/locale/catalogNum"),(int)0);
     int i = 1;
@@ -1505,17 +1507,17 @@ void PluginManager::SetupLocaleDomain(const wxString& DomainName)
     }
 }
 
-void PluginManager::NotifyPlugins(CodeBlocksEvent& event)
+void PLUGIN_MANAGER_BASE::NotifyPlugins(CodeBlocksEvent& event)
 {
     Manager::Get()->ProcessEvent(event);
 }
 
-void PluginManager::NotifyPlugins(CodeBlocksDockEvent& event)
+void PLUGIN_MANAGER_BASE::NotifyPlugins(CodeBlocksDockEvent& event)
 {
     Manager::Get()->ProcessEvent(event);
 }
 
-void PluginManager::NotifyPlugins(CodeBlocksLayoutEvent& event)
+void PLUGIN_MANAGER_BASE::NotifyPlugins(CodeBlocksLayoutEvent& event)
 {
     Manager::Get()->ProcessEvent(event);
 }

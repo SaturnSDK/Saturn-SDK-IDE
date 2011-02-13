@@ -221,7 +221,8 @@ class PLUGIN_EXPORT cbPlugin : public wxEvtHandler
         bool m_IsAttached;
 
     private:
-        friend class PluginManager; // only the plugin manager has access here
+        friend class PluginManager; // the plugin manager has access here
+        friend class PluginManagerBase; // the base part of it also
 
         /** Attach is <b>not</b> a virtual function, so you can't override it.
           * The default implementation hooks the plugin to Code::Block's

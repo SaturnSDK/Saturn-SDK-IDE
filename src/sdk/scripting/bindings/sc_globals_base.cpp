@@ -76,24 +76,24 @@ namespace ScriptBindings
     {
         return Manager::Get()->GetScriptingManager();
     }
-    bool InstallPlugin(const wxString& pluginName, bool allUsers, bool confirm)
-    {
-        if (cbMessageBox(_("A script is trying to install a Code::Blocks plugin.\n"
-                            "Do you wish to allow this?\n\n") + pluginName,
-                            _("Security warning"), wxICON_WARNING | wxYES_NO) == wxID_NO)
-        {
-            return false;
-        }
-        return Manager::Get()->GetPluginManager()->InstallPlugin(pluginName, allUsers, confirm);
-    }
+//    bool InstallPlugin(const wxString& pluginName, bool allUsers, bool confirm)
+//    {
+//        if (cbMessageBox(_("A script is trying to install a Code::Blocks plugin.\n"
+//                            "Do you wish to allow this?\n\n") + pluginName,
+//                            _("Security warning"), wxICON_WARNING | wxYES_NO) == wxID_NO)
+//        {
+//            return false;
+//        }
+//        return Manager::Get()->GetPluginManager()->InstallPlugin(pluginName, allUsers, confirm);
+//    }
     int ExecutePlugin(const wxString& pluginName)
     {
         return Manager::Get()->GetPluginManager()->ExecutePlugin(pluginName);
     }
-    int ConfigurePlugin(const wxString& pluginName)
-    {
-        return Manager::Get()->GetPluginManager()->ConfigurePlugin(pluginName);
-    }
+//    int ConfigurePlugin(const wxString& pluginName)
+//    {
+//        return Manager::Get()->GetPluginManager()->ConfigurePlugin(pluginName);
+//    }
 //#ifndef CB_FOR_CONSOLE
 //    // locate and call a menu from string (e.g. "/Valgrind/Run Valgrind::MemCheck")
 //	void CallMenu(const wxString& menuPath)
@@ -240,8 +240,8 @@ namespace ScriptBindings
         SqPlus::RegisterGlobal(ConfigManager::LocateDataFile, "LocateDataFile");
 
         SqPlus::RegisterGlobal(ExecutePlugin, "ExecuteToolPlugin");
-        SqPlus::RegisterGlobal(ConfigurePlugin, "ConfigureToolPlugin");
-        SqPlus::RegisterGlobal(InstallPlugin, "InstallPlugin");
+//        SqPlus::RegisterGlobal(ConfigurePlugin, "ConfigureToolPlugin");
+//        SqPlus::RegisterGlobal(InstallPlugin, "InstallPlugin");
 
 //#ifndef CB_FOR_CONSOLE
 //        SqPlus::RegisterGlobal(CallMenu, "CallMenu");

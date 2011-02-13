@@ -770,6 +770,9 @@
 		<Unit filename="include/infowindow.h">
 			<Option target="sdk" />
 		</Unit>
+		<Unit filename="include/infowindow_base.h">
+			<Option target="sdk_con" />
+		</Unit>
 		<Unit filename="include/licenses.h">
 			<Option target="sdk" />
 			<Option target="sdk_con" />
@@ -888,6 +891,10 @@
 			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="include/pluginmanager.h">
+			<Option target="sdk" />
+			<Option target="sdk_con" />
+		</Unit>
+		<Unit filename="include/pluginmanager_base.h">
 			<Option target="sdk" />
 			<Option target="sdk_con" />
 		</Unit>
@@ -2304,6 +2311,9 @@
 		<Unit filename="sdk/infowindow.cpp">
 			<Option target="sdk" />
 		</Unit>
+		<Unit filename="sdk/infowindow_base.cpp">
+			<Option target="sdk_con" />
+		</Unit>
 		<Unit filename="sdk/loggers.cpp">
 			<Option target="sdk" />
 			<Option target="sdk_con" />
@@ -2432,6 +2442,9 @@
 			<Option target="sdk_con" />
 		</Unit>
 		<Unit filename="sdk/pluginmanager.cpp">
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="sdk/pluginmanager_base.cpp">
 			<Option target="sdk" />
 			<Option target="sdk_con" />
 		</Unit>

@@ -18,6 +18,8 @@
 #endif
 #ifndef CB_FOR_CONSOLE
     #include "cbstyledtextctrl.h"
+#else // #ifndef CB_FOR_CONSOLE
+    #include "infowindow_base.h"
 #endif // #ifndef CB_FOR_CONSOLE
 
 #include <wx/url.h>
@@ -440,19 +442,11 @@ bool FileManager::WriteWxStringToFile(wxFile& f, const wxString& data, wxFontEnc
         }
         else
         {
-#ifndef CB_FOR_CONSOLE
             InfoWindow::Display(_("Encoding Changed"),
                                 _("The saved document contained characters\n"
                                   "which were illegal in the selected encoding.\n\n"
                                   "The file's encoding has been changed to UTF-8\n"
                                   "to prevent you from losing data."), 8000);
-#else // #ifndef CB_FOR_CONSOLE
-            cbMessageBox(_("The saved document contained characters\n"
-                           "which were illegal in the selected encoding.\n\n"
-                           "The file's encoding has been changed to UTF-8\n"
-                           "to prevent you from losing data."),
-                           _("Encoding Changed"));
-#endif // #ifndef CB_FOR_CONSOLE
 		}
     }
 
