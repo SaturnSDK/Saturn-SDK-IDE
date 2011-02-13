@@ -170,4 +170,5 @@ clean-local:
 	-rm -f $(top_srcdir)/src/include/sdk_precomp.h.gch
 
 EXTRA_DIST = autorevision.h \
-		annoyingdialog_base.h
+		annoyingdialog_base.h \
+		infowindow_base.h

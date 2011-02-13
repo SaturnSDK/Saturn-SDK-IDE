@@ -176,6 +176,7 @@ libcodeblocks_con_la_SOURCES = annoyingdialog_base.cpp \
 						filemanager.cpp \
 						globals_base.cpp \
 						importers_globals.cpp \
+						infowindow_base.cpp \
 						loggers.cpp \
 						logmanager.cpp \
 						macrosmanager.cpp \
