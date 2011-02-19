@@ -641,25 +641,25 @@ bool NativeParser::AddCompilerDirs(cbProject* project, Parser* parser)
     if (!project)
     {
         Compiler* compiler = CompilerFactory::GetDefaultCompiler();
-        if (!compiler)
-            cbThrow(_T("Default compiler is invalid!"));
-
-        const wxArrayString& dirs = compiler->GetIncludeDirs();
-        for (size_t i = 0; i < dirs.GetCount(); ++i)
+        if (compiler)
         {
-            wxString path = dirs[i];
-            Manager::Get()->GetMacrosManager()->ReplaceMacros(path);
-            parser->AddIncludeDir(path);
-        }
-
-        if (compiler->GetID() == _T("gcc"))
-        {
-            const wxArrayString& gccDirs = GetGCCCompilerDirs(compiler->GetPrograms().CPP);
-            TRACE(_T("Adding %d cached gcc dirs to parser..."), gccDirs.GetCount());
-            for (size_t i = 0; i < gccDirs.GetCount(); ++i)
+            const wxArrayString& dirs = compiler->GetIncludeDirs();
+            for (size_t i = 0; i < dirs.GetCount(); ++i)
             {
-                parser->AddIncludeDir(gccDirs[i]);
-                TRACE(_T("AddCompilerDirs() : Adding cached compiler dir to parser: ") + gccDirs[i]);
+                wxString path = dirs[i];
+                Manager::Get()->GetMacrosManager()->ReplaceMacros(path);
+                parser->AddIncludeDir(path);
+            }
+
+            if (compiler->GetID() == _T("gcc"))
+            {
+                const wxArrayString& gccDirs = GetGCCCompilerDirs(compiler->GetPrograms().CPP);
+                TRACE(_T("Adding %d cached gcc dirs to parser..."), gccDirs.GetCount());
+                for (size_t i = 0; i < gccDirs.GetCount(); ++i)
+                {
+                    parser->AddIncludeDir(gccDirs[i]);
+                    TRACE(_T("AddCompilerDirs() : Adding cached compiler dir to parser: ") + gccDirs[i]);
+                }
             }
         }
 
@@ -1725,6 +1725,39 @@ int NativeParser::CountCommas(const wxString& lineText, int start)
     return commas;
 }
 
+bool PrettyPrintToken(wxString &result, Token const &token, TokensTree const &tokens, bool root = true)
+{
+    if (token.m_ParentIndex != -1)
+    {
+        if (!PrettyPrintToken(result, *tokens.at(token.m_ParentIndex), tokens, false))
+            return false;
+    }
+
+    switch (token.m_TokenKind)
+    {
+    case tkConstructor:
+        result = result + token.m_Name + token.m_Args;
+        return true;
+
+    case tkFunction:
+        result = token.m_Type + wxT(" ") + result + token.m_Name + token.m_Args;
+        if (token.m_IsConst)
+            result += wxT(" const");
+        return true;
+
+    case tkClass:
+    case tkNamespace:
+        if (root)
+            result += token.m_Name;
+        else
+            result += token.m_Name + wxT("::");
+        return true;
+    default:
+        ;
+    }
+    return true;
+}
+
 const wxArrayString& NativeParser::GetCallTips(int chars_per_line)
 {
     m_CallTips.Clear();
@@ -1814,14 +1847,17 @@ const wxArrayString& NativeParser::GetCallTips(int chars_per_line)
                     break;
             }
 
-            if (token->GetFormattedArgs() != _T("()"))
+            if (token->m_TokenKind == tkTypedef && token->m_ActualType.Contains(_T("(")))
+                m_CallTips.Add(token->m_ActualType); // typedef'd function pointer
+            else
             {
                 wxString s;
-                BreakUpInLines(s, token->GetFormattedArgs(), chars_per_line);
+                wxString full;
+                if(!PrettyPrintToken(full, *token, *tokens))
+                    full = wxT("Error while pretty printing token!");
+                BreakUpInLines(s, full, chars_per_line);
                 m_CallTips.Add(s);
             }
-            else if (token->m_TokenKind == tkTypedef && token->m_ActualType.Contains(_T("(")))
-                m_CallTips.Add(token->m_ActualType); // typedef'd function pointer
         }
     }
     while (false);

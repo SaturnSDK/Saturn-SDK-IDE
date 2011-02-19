@@ -152,6 +152,7 @@ static const int idNBTabBottom = wxNewId();
 static const int idNBProperties = wxNewId();
 static const int idNBAddFileToProject = wxNewId();
 static const int idNBRemoveFileFromProject = wxNewId();
+static const int idNBShowFileInTree = wxNewId();
 
 /** *******************************************************
   * struct EditorManagerInternalData                      *
@@ -198,6 +199,7 @@ BEGIN_EVENT_TABLE(EditorManager, wxEvtHandler)
     EVT_MENU(idNBProperties, EditorManager::OnProperties)
     EVT_MENU(idNBAddFileToProject, EditorManager::OnAddFileToProject)
     EVT_MENU(idNBRemoveFileFromProject, EditorManager::OnRemoveFileFromProject)
+    EVT_MENU(idNBShowFileInTree, EditorManager::OnShowFileInTree)
     EVT_MENU(idEditorManagerCheckFiles, EditorManager::OnCheckForModifiedFiles)
 END_EVENT_TABLE()
 
@@ -259,7 +261,7 @@ cbNotebookStack* EditorManager::GetNotebookStack()
                 found = false;
                 for (body = m_pNotebookStackHead->next; body != NULL; body = body->next)
                 {
-                    if(wnd == body->window)
+                    if (wnd == body->window)
                     {
                         found = true;
                         break;
@@ -277,7 +279,7 @@ cbNotebookStack* EditorManager::GetNotebookStack()
         {
             for (prev_body = m_pNotebookStackHead, body = prev_body->next; body != NULL; prev_body = body, body = body->next)
             {
-                if(m_pNotebook->GetPageIndex(body->window) == wxNOT_FOUND)
+                if (m_pNotebook->GetPageIndex(body->window) == wxNOT_FOUND)
                 {
                     prev_body->next = body->next;
                     delete body;
@@ -307,7 +309,7 @@ void EditorManager::DeleteNotebookStack()
 void EditorManager::RebuildNotebookStack()
 {
     DeleteNotebookStack();
-    for(size_t i = 0; i < m_pNotebook->GetPageCount(); ++i)
+    for (size_t i = 0; i < m_pNotebook->GetPageCount(); ++i)
     {
         m_pNotebookStackTail->next = new cbNotebookStack(m_pNotebook->GetPage(i));
         m_pNotebookStackTail = m_pNotebookStackTail->next;
@@ -509,7 +511,6 @@ cbEditor* EditorManager::Open(LoaderBase* fileLdr, const wxString& filename, int
         if (fileLdr)
         {
             ed = new cbEditor(m_pNotebook, fileLdr, fname, m_Theme);
-
             if (ed->IsOK())
                 AddEditorBase(ed);
             else
@@ -984,7 +985,7 @@ void EditorManager::CheckForExternallyModifiedFiles()
                 // Find the window, that actually has the mouse-focus and force a release
                 // prevents crash on windows or hang on wxGTK
                 wxWindow* win = wxWindow::GetCapture();
-                if(win)
+                if (win)
                     win->ReleaseMouse();
 
                 ret = dlg.ShowModal();
@@ -1028,6 +1029,19 @@ bool EditorManager::IsHeaderSource(const wxFileName& candidateFile, const wxFile
         if (    ((ftActive == ftHeader) && (ftTested == ftSource))
              || ((ftActive == ftSource) && (ftTested == ftHeader)) )
         {
+            // Handle the case where two files (in different directories) have the same name:
+            // Example: A project file with three files dir1/file.h dir1/file.cpp dir2/file.h
+            // If you are in dir2/file.h and you want to swap Code::Blocks will first look if there
+            // isn't a file.h in that directory, which is in this case and would then ask the user
+            // to create a new file.cpp in dir2
+            if (candidateFile.GetPath() != activeFile.GetPath()) // Check if we are not in the same Directory
+            {
+                wxArrayString fileArray;
+                wxDir::GetAllFiles(candidateFile.GetPath(wxPATH_GET_VOLUME), &fileArray, candidateFile.GetName() + _T(".*"), wxDIR_FILES | wxDIR_HIDDEN);
+                for (unsigned i=0; i<fileArray.GetCount(); i++)                             // if in this directory there is already
+                    if (wxFileName(fileArray[i]).GetFullName() == activeFile.GetFullName()) // a header file (or source file) for our candidate
+                        return false;                                                       // file it can't be our candidate file
+            }
             if (candidateFile.FileExists())
                 return true;
         }
@@ -2267,7 +2281,7 @@ int EditorManager::Find(cbStyledTextCtrl* control, cbFindReplaceData* data)
             int onScreen = control->LinesOnScreen() >> 1;
             int l1 = line - onScreen;
             int l2 = line + onScreen;
-            for(int l=l1; l<=l2;l+=2)       // unfold visible lines on screen
+            for (int l=l1; l<=l2;l+=2)       // unfold visible lines on screen
                 control->EnsureVisible(l);
             control->GotoLine(l1);          // center selection on screen
             control->GotoLine(l2);
@@ -2756,10 +2770,8 @@ void EditorManager::OnPageClose(wxAuiNotebookEvent& event)
         }
     }
 
-    if(doClose && eb != nullptr)
-    {
+    if (doClose && eb != nullptr)
         Close(eb);
-    }
     else
         event.Skip(); // allow others to process it too
 }
@@ -2816,8 +2828,12 @@ void EditorManager::OnPageContextMenu(wxAuiNotebookEvent& event)
         {
             pop->AppendSeparator();
 
-            if (ed->GetProjectFile())
+            ProjectFile *projectFile = ed->GetProjectFile();
+            if (projectFile)
+            {
                 pop->Append(idNBRemoveFileFromProject, _("Remove file from project"));
+                pop->Append(idNBShowFileInTree, _("Show file in the project tree"));
+            }
             else
                 pop->Append(idNBAddFileToProject, _("Add file to active project"));
         }
@@ -2825,7 +2841,7 @@ void EditorManager::OnPageContextMenu(wxAuiNotebookEvent& event)
 
     bool any_modified = false;
 
-    for(int i = 0; i < GetEditorsCount(); ++i)
+    for (int i = 0; i < GetEditorsCount(); ++i)
     {
         EditorBase* ed = GetEditor(i);
         if (ed && ed->GetModified())
@@ -2837,6 +2853,9 @@ void EditorManager::OnPageContextMenu(wxAuiNotebookEvent& event)
 
     pop->Enable(idNBTabSave, GetEditor(event.GetSelection())->GetModified());
     pop->Enable(idNBTabSaveAll, any_modified );
+
+    // allow plugins to use this menu
+    Manager::Get()->GetPluginManager()->AskPluginsForModuleMenu(mtEditorTab, pop);
 
     m_pNotebook->PopupMenu(pop);
     // allow tab tooltips again
@@ -2931,6 +2950,21 @@ void EditorManager::OnRemoveFileFromProject(wxCommandEvent& /*event*/)
         cbProject *project = pf->GetParentProject();
         Manager::Get()->GetProjectManager()->RemoveFileFromProject(pf, project);
         Manager::Get()->GetProjectManager()->RebuildTree();
+    }
+}
+
+void EditorManager::OnShowFileInTree(wxCommandEvent& event)
+{
+    ProjectFile* pf = GetBuiltinActiveEditor()->GetProjectFile();
+    wxTreeCtrl* tree = Manager::Get()->GetProjectManager()->GetTree();
+    if (pf && tree) // should be in any case, otherwise something went wrong between popup menu creation and here
+    {
+        const wxTreeItemId &itemId = pf->GetTreeItemId();
+        if (itemId.IsOk())
+        {
+            tree->EnsureVisible(itemId);
+            tree->SelectItem(itemId, true);
+        }
     }
 }
 
