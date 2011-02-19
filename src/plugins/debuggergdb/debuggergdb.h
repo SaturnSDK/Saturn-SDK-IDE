@@ -126,7 +126,7 @@ class DebuggerGDB : public cbDebuggerPlugin
         void ResetProject() { m_pProcess = NULL; }
         void ConvertDirectory(wxString& str, wxString base, bool relative);
         void CleanupWhenProjectClosed(cbProject *project);
-        void CompilerFinished(bool compilerFailed, StartType startType);
+        bool CompilerFinished(bool compilerFailed, StartType startType);
     protected:
         void AddSourceDir(const wxString& dir);
     private:

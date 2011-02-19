@@ -1086,6 +1086,16 @@ void DebuggerManager::SetActiveDebugger(cbDebuggerPlugin* activeDebugger)
 
     m_activeDebugger = activeDebugger;
     m_menuHandler->SetActiveDebugger(activeDebugger);
+
+    EditorManager *editorManager = Manager::Get()->GetEditorManager();
+    int count = editorManager->GetEditorsCount();
+    for (int ii = 0; ii < count; ++ii)
+    {
+        EditorBase *editor = editorManager->GetEditor(ii);
+        if (!editor->IsBuiltinEditor())
+            continue;
+        editor->RefreshBreakpointMarkers(m_activeDebugger);
+    }
 }
 
 bool DebuggerManager::IsDisassemblyMixedMode()

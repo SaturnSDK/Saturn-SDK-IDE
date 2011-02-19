@@ -2148,6 +2148,22 @@ void cbEditor::ToggleBookmark(int line)
     MarkerToggle(BOOKMARK_MARKER, line);
 }
 
+void cbEditor::RefreshBreakpointMarkers(const cbDebuggerPlugin *debugger)
+{
+    // First remove all breakpoint markers, then add the markers for the active debugger
+    cbStyledTextCtrl *c = GetControl();
+    int line = -1;
+    while ((line = c->MarkerNext(line, (1 << BREAKPOINT_MARKER))) != -1)
+        ToggleBreakpoint(line, false);
+
+    for (int ii = 0; ii < debugger->GetBreakpointsCount(); ++ii)
+    {
+        const cbBreakpoint *b = debugger->GetBreakpoint(ii);
+        if (b->GetFilename() == GetFilename())
+            ToggleBreakpoint(b->GetLine() - 1, false);
+    }
+}
+
 bool cbEditor::HasBookmark(int line) const
 {
     return LineHasMarker(BOOKMARK_MARKER, line);

@@ -1570,15 +1570,30 @@ void DebuggerGDB::DoBreak(bool temporary)
     // m_Process is PipedProcess I/O; m_Pid is debugger pid
     if (m_pProcess && m_Pid && !IsStopped())
     {
-        long pid = m_State.GetDriver()->GetChildPID();
+        long childPid = m_State.GetDriver()->GetChildPID();
+        long pid = childPid;
     #ifndef __WXMSW__
+        if (pid > 0 && !wxProcess::Exists(pid))
+        {
+            DebugLog(wxString::Format(_("Child process (pid:%ld) doesn't exists"), pid));
+            pid = 0;
+        }
         if (pid <= 0)
             pid = m_Pid; // try poking gdb directly
         // non-windows gdb can interrupt the running process. yay!
         if (pid <= 0) // look out for the "fake" PIDs (killall)
             cbMessageBox(_("Unable to stop the debug process!"), _("Error"), wxOK | wxICON_WARNING);
         else
-            wxKill(pid, wxSIGINT);
+        {
+            if (!wxProcess::Exists(pid))
+                DebugLog(wxString::Format(_("GDB process (pid:%ld) doesn't exists"), pid));
+
+            DebugLog(wxString::Format(_("Code::Blocks is trying to interrupt process with pid: %ld; child pid: %ld gdb pid: %ld"),
+                                      pid, childPid, m_Pid));
+            wxKillError error;
+            if (wxKill(pid, wxSIGINT, &error) != 0)
+                DebugLog(wxString::Format(_("Can't kill process (%ld) %d"), pid, (int)(error)));
+        }
     #else
         // windows gdb can interrupt the running process too. yay!
         if (   (pid <=0)
@@ -2132,16 +2147,13 @@ void DebuggerGDB::OnSettings(wxCommandEvent& event)
     Configure();
 }
 
-void DebuggerGDB::CompilerFinished(bool compilerFailed, StartType startType)
+bool DebuggerGDB::CompilerFinished(bool compilerFailed, StartType startType)
 {
     if (compilerFailed || startType == StartTypeUnknown)
-        return;
+        return false;
     if (DoDebug(startType == StartTypeStepInto) != 0)
-    {
-        ProjectManager *manager = Manager::Get()->GetProjectManager();
-        if (manager->GetIsRunning() && manager->GetIsRunning() == this)
-            manager->SetIsRunning(NULL);
-    }
+        return false;
+    return true;
 }
 
 void DebuggerGDB::OnBuildTargetSelected(CodeBlocksEvent& event)

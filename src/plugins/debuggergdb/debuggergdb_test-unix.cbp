@@ -46,11 +46,11 @@
 		</ExtraCommands>
 		<Unit filename="debugger_defs.cpp" />
 		<Unit filename="debugger_defs.h" />
+		<Unit filename="debuggergdb_test_main.cpp" />
+		<Unit filename="debuggergdb_test_parser.cpp" />
 		<Unit filename="debuggeroptionsprjdlg.h" />
 		<Unit filename="parsewatchvalue.cpp" />
 		<Unit filename="parsewatchvalue.h" />
-		<Unit filename="debuggergdb_test_main.cpp" />
-		<Unit filename="debuggergdb_test_parser.cpp" />
 		<Extensions>
 			<envvars />
 			<code_completion />

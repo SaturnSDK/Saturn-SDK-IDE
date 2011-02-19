@@ -734,7 +734,12 @@ void cbDebuggerPlugin::OnCompilerFinished(CodeBlocksEvent& event)
                 compilerFailed = true;
             }
         }
-        CompilerFinished(compilerFailed, m_StartType);
+        if (!CompilerFinished(compilerFailed, m_StartType))
+        {
+            ProjectManager *manager = Manager::Get()->GetProjectManager();
+            if (manager->GetIsRunning() && manager->GetIsRunning() == this)
+                manager->SetIsRunning(NULL);
+        }
     }
 }
 

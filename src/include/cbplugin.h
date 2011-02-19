@@ -506,7 +506,13 @@ class PLUGIN_EXPORT cbDebuggerPlugin: public cbPlugin
         virtual cbProject* GetProject() = 0;
         virtual void ResetProject() = 0;
         virtual void CleanupWhenProjectClosed(cbProject *project) = 0;
-        virtual void CompilerFinished(bool compilerFailed, StartType startType) {}
+
+        /** @brief Called when the compilation has finished. The compilation is started when EnsureBuildUpToDate is called.
+          * @param compilerFailed the compilation failed for some reason.
+          * @param startType it is the same value given to the Debug method, when the debugger session was started.
+          * @return True if debug session is start, false if there are any errors or the users canceled the session.
+        */
+        virtual bool CompilerFinished(bool compilerFailed, StartType startType) { return false; }
     public:
         enum DebugWindows
         {
