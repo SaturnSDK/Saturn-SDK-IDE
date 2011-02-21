@@ -56,7 +56,6 @@ namespace
     const int idMenuThreads = XRCID("idDebuggerMenuThreads");
     const int idMenuMemory = XRCID("idDebuggerMenuMemory");
     const int idMenuBreakpoints = XRCID("idDebuggerMenuBreakpoints");
-    const int idMenuEditWatches = XRCID("idDebuggerMenuEditWatches");
     const int idMenuAttachToProcess = XRCID("idDebuggerMenuAttachToProcess");
     const int idMenuDetach = XRCID("idDebuggerMenuDetach");
 
@@ -156,15 +155,19 @@ void DebuggerMenuHandler::BuildContextMenu(wxMenu &menu, const wxString& word_at
 
 void DebuggerMenuHandler::OnUpdateUI(wxUpdateUIEvent& event)
 {
-    if(!m_activeDebugger)
-        return;
-
     cbProject* prj = Manager::Get()->GetProjectManager()->GetActiveProject();
-    bool en = (prj && !prj->GetCurrentlyCompilingTarget()) || m_activeDebugger->IsAttachedToProcess();
+    bool en = false, stopped = false, isRunning = false, isAttached = false;
+
+    if (m_activeDebugger)
+    {
+        isAttached = m_activeDebugger->IsAttachedToProcess();
+        en = (prj && !prj->GetCurrentlyCompilingTarget()) || isAttached;
+        stopped = m_activeDebugger->IsStopped();
+        isRunning = m_activeDebugger->IsRunning();
+    }
+
     cbEditor* ed = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
     wxMenuBar* mbar = Manager::Get()->GetAppFrame()->GetMenuBar();
-    bool stopped = m_activeDebugger->IsStopped();
-    bool isRunning = m_activeDebugger->IsRunning();
 
     DebuggerManager *dbg_manager = Manager::Get()->GetDebuggerManager();
     cbPlugin *runningPlugin = Manager::Get()->GetProjectManager()->GetIsRunning();
@@ -193,14 +196,8 @@ void DebuggerMenuHandler::OnUpdateUI(wxUpdateUIEvent& event)
         mbar->Enable(idMenuAddSymbolFile, isRunning && stopped);
         mbar->Enable(idMenuStop, isRunning && en);
         mbar->Enable(idMenuBreak, isRunning && !stopped && en);
-        mbar->Enable(idMenuAttachToProcess, !isRunning && !otherPlugin);
-        mbar->Enable(idMenuDetach, isRunning && stopped && m_activeDebugger->IsAttachedToProcess());
-
-//        mbar->Enable(idMenuInfoFrame, isRunning && stopped);
-//        mbar->Enable(idMenuInfoDLL, isRunning && stopped);
-//        mbar->Enable(idMenuInfoFiles, isRunning && stopped);
-//        mbar->Enable(idMenuInfoFPU, isRunning && stopped);
-//        mbar->Enable(idMenuInfoSignals, isRunning && stopped);
+        mbar->Enable(idMenuAttachToProcess, !isRunning && !otherPlugin && m_activeDebugger);
+        mbar->Enable(idMenuDetach, isRunning && stopped && isAttached);
 
         mbar->Check(idMenuBreakpoints,  IsWindowReallyShown(dbg_manager->GetBreakpointDialog()));
         mbar->Check(idMenuBacktrace,    IsWindowReallyShown(dbg_manager->GetBacktraceDialog()));
@@ -536,16 +533,19 @@ wxToolBar* DebuggerToolbarHandler::GetToolbar(bool create)
 void DebuggerToolbarHandler::OnUpdateUI(wxUpdateUIEvent& event)
 {
     cbDebuggerPlugin *plugin = Manager::Get()->GetDebuggerManager()->GetActiveDebugger();
-    if (!plugin)
-        return;
-
     ProjectManager *manager = Manager::Get()->GetProjectManager();
 
-    cbProject* prj = manager->GetActiveProject();
-    bool en = (prj && !prj->GetCurrentlyCompilingTarget()) || plugin->IsAttachedToProcess();
+    bool en = false;
+    bool stopped = false, isRunning = false;
+
+    if (plugin)
+    {
+        cbProject* prj = manager->GetActiveProject();
+        en = (prj && !prj->GetCurrentlyCompilingTarget()) || plugin->IsAttachedToProcess();
+        stopped = plugin->IsStopped();
+        isRunning = plugin->IsRunning();
+    }
     cbEditor* ed = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
-    bool stopped = plugin->IsStopped();
-    bool isRunning = plugin->IsRunning();
 
     cbPlugin *runningPlugin = manager->GetIsRunning();
     if (runningPlugin != NULL && runningPlugin != plugin)
@@ -560,7 +560,7 @@ void DebuggerToolbarHandler::OnUpdateUI(wxUpdateUIEvent& event)
     m_Toolbar->EnableTool(idMenuStepOut, isRunning && en && stopped);
     m_Toolbar->EnableTool(idToolbarStop, isRunning && en);
     m_Toolbar->EnableTool(idMenuBreak, isRunning && !stopped && en);
-    m_Toolbar->EnableTool(idDebuggerToolInfo, plugin->ToolMenuEnabled());
+    m_Toolbar->EnableTool(idDebuggerToolInfo, plugin && plugin->ToolMenuEnabled());
 
     // allow other UpdateUI handlers to process this event
     // *very* important! don't forget it...
