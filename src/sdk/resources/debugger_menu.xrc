@@ -139,10 +139,6 @@
         <help>Displays how the debugger handles various signals</help>
       </object>
     </object>
-    <object class="wxMenuItem" name="idDebuggerMenuEditWatches">
-      <label>Edit &amp;watches...</label>
-      <help>Edit watches</help>
-    </object>
     <object class="separator"/>
     <object class="wxMenuItem" name="idDebuggerMenuAttachToProcess">
       <label>Attach to process...</label>
