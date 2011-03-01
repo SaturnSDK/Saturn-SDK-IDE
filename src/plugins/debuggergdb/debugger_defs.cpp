@@ -18,7 +18,6 @@
 #endif
 #include "debugger_defs.h"
 #include "debuggerdriver.h"
-#include "debuggertree.h"
 #include "watchesdlg.h"
 
 #include <wx/arrimpl.cpp>

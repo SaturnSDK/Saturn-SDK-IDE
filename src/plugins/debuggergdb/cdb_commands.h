@@ -14,7 +14,6 @@
 #include "debugger_defs.h"
 #include "debuggergdb.h"
 #include "debuggermanager.h"
-//#include "debuggertree.h"
 #include "backtracedlg.h"
 #include "cpuregistersdlg.h"
 #include "disassemblydlg.h"
@@ -307,34 +306,6 @@ class CdbCmd_RemoveBreakpoint : public DebuggerCmd
 
         DebuggerBreakpoint* m_BP;
 };
-
-///**
-//  * Command to get info about local frame variables.
-//  */
-//class CdbCmd_InfoLocals : public DebuggerCmd
-//{
-//        DebuggerTree* m_pDTree;
-//    public:
-//        /** @param tree The tree to display the locals. */
-//        CdbCmd_InfoLocals(DebuggerDriver* driver, DebuggerTree* dtree)
-//            : DebuggerCmd(driver),
-//            m_pDTree(dtree)
-//        {
-//            m_Cmd << _T("dv");
-//        }
-//        void ParseOutput(const wxString& output)
-//        {
-//            if (output.StartsWith(_T("Unable to enumerate locals")))
-//                return;
-//            wxString locals;
-//            locals << _T("Local variables\n");
-//            wxArrayString lines = GetArrayFromString(output, _T('\n'));
-//            for (unsigned int i = 0; i < lines.GetCount(); ++i)
-//                locals << _T(' ') << lines[i].Strip(wxString::both) << _T('\n');
-//// FIXME (obfuscated#): Should reimplement
-////            m_pDTree->BuildTree(0, locals, wsfCDB);
-//        }
-//};
 
 /**
   * Command to get info about a watched variable.

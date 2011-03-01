@@ -22,7 +22,6 @@ libdebugger_la_SOURCES = cdb_driver.cpp \
 			debuggeroptionsdlg.cpp \
 			debuggeroptionsprjdlg.cpp \
 			debuggerstate.cpp \
-			debuggertree.cpp \
 			editwatchdlg.cpp \
 			editwatchesdlg.cpp \
 			gdb_driver.cpp \
@@ -38,7 +37,6 @@ noinst_HEADERS = cdb_commands.h \
 			debuggeroptionsdlg.h \
 			debuggeroptionsprjdlg.h \
 			debuggerstate.h \
-			debuggertree.h \
 			editwatchdlg.h \
 			editwatchesdlg.h \
 			gdb_commands.h \

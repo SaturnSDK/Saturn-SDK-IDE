@@ -616,58 +616,6 @@ class DebuggerContinueCommand : public DebuggerCmd
         }
 };
 
-///**
-//  * Command to get info about local frame variables.
-//  */
-//class GdbCmd_InfoLocals : public DebuggerCmd
-//{
-//        DebuggerTree* m_pDTree;
-//    public:
-//        /** @param tree The tree to display the locals. */
-//        GdbCmd_InfoLocals(DebuggerDriver* driver, DebuggerTree* dtree)
-//            : DebuggerCmd(driver),
-//            m_pDTree(dtree)
-//        {
-//            m_Cmd << _T("info locals");
-//        }
-//        void ParseOutput(const wxString& output)
-//        {
-//            wxArrayString lines = GetArrayFromString(output, _T('\n'));
-//            wxString locals;
-//            locals << _T("Local variables = {");
-//            for (unsigned int i = 0; i < lines.GetCount(); ++i)
-//                locals << lines[i] << _T(',');
-//            locals << _T("}") << _T('\n');
-//            m_pDTree->BuildTree(0, locals, wsfGDB);
-//        }
-//};
-//
-///**
-//  * Command to get info about current function arguments.
-//  */
-//class GdbCmd_InfoArguments : public DebuggerCmd
-//{
-//        DebuggerTree* m_pDTree;
-//    public:
-//        /** @param tree The tree to display the args. */
-//        GdbCmd_InfoArguments(DebuggerDriver* driver, DebuggerTree* dtree)
-//            : DebuggerCmd(driver),
-//            m_pDTree(dtree)
-//        {
-//            m_Cmd << _T("info args");
-//        }
-//        void ParseOutput(const wxString& output)
-//        {
-//            wxArrayString lines = GetArrayFromString(output, _T('\n'));
-//            wxString args;
-//            args << _T("Function Arguments = {");
-//            for (unsigned int i = 0; i < lines.GetCount(); ++i)
-//                args << lines[i] << _T(',');
-//            args << _T("}") << _T('\n');
-//            m_pDTree->BuildTree(0, args, wsfGDB);
-//        }
-//};
-
 /**
   * Command to get info about current program and state.
   */
@@ -838,19 +786,14 @@ class GdbCmd_Watch : public DebuggerCmd
   */
 class GdbCmd_FindWatchType : public DebuggerCmd
 {
-//        DebuggerTree* m_pDTree;
-//        Watch* m_pWatch;
         GDBWatch::Pointer m_watch;
     public:
         /** @param tree The tree to display the watch. */
         GdbCmd_FindWatchType(DebuggerDriver* driver, GDBWatch::Pointer watch) :
             DebuggerCmd(driver),
-//            m_pDTree(dtree),
-//            m_pWatch(watch)
             m_watch(watch)
         {
             m_Cmd << _T("whatis &");
-//            m_Cmd << m_pWatch->keyword;
             wxString symbol;
             m_watch->GetSymbol(symbol);
             m_Cmd << symbol;
@@ -865,8 +808,6 @@ class GdbCmd_FindWatchType : public DebuggerCmd
 
             wxString tmp = output.AfterFirst(_T('='));
             tmp = tmp.substr(0, tmp.length() - 1);
-            // actually add this watch with high priority
-//            m_pDriver->QueueCommand(new GdbCmd_Watch(m_pDriver, m_pDTree, m_pWatch, tmp), DebuggerDriver::High);
             wxString old_type;
             m_watch->GetType(old_type);
             if(old_type != tmp)

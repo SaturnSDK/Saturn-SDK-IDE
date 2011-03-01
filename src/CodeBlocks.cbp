@@ -1163,9 +1163,6 @@
 		<Unit filename="include\xtra_res.h">
 			<Option target="sdk" />
 		</Unit>
-		<Unit filename="plugins\Abbreviations\abbreviationsconfigpanel.h">
-			<Option target="Abbreviations" />
-		</Unit>
 		<Unit filename="plugins\abbreviations\abbreviations.cpp">
 			<Option target="Abbreviations" />
 		</Unit>
@@ -1173,6 +1170,9 @@
 			<Option target="Abbreviations" />
 		</Unit>
 		<Unit filename="plugins\abbreviations\abbreviationsconfigpanel.cpp">
+			<Option target="Abbreviations" />
+		</Unit>
+		<Unit filename="plugins\abbreviations\abbreviationsconfigpanel.h">
 			<Option target="Abbreviations" />
 		</Unit>
 		<Unit filename="plugins\astyle\asstreamiterator.cpp">
@@ -1717,12 +1717,6 @@
 			<Option target="Debugger" />
 		</Unit>
 		<Unit filename="plugins\debuggergdb\debuggerstate.h">
-			<Option target="Debugger" />
-		</Unit>
-		<Unit filename="plugins\debuggergdb\debuggertree.cpp">
-			<Option target="Debugger" />
-		</Unit>
-		<Unit filename="plugins\debuggergdb\debuggertree.h">
 			<Option target="Debugger" />
 		</Unit>
 		<Unit filename="plugins\debuggergdb\editwatchdlg.cpp">

@@ -1560,12 +1560,6 @@
 		<Unit filename="plugins/debuggergdb/debuggerstate.h">
 			<Option target="Debugger" />
 		</Unit>
-		<Unit filename="plugins/debuggergdb/debuggertree.cpp">
-			<Option target="Debugger" />
-		</Unit>
-		<Unit filename="plugins/debuggergdb/debuggertree.h">
-			<Option target="Debugger" />
-		</Unit>
 		<Unit filename="plugins/debuggergdb/editwatchdlg.cpp">
 			<Option target="Debugger" />
 		</Unit>
