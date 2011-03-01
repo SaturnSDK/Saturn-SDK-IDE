@@ -1022,6 +1022,9 @@
 		<Unit filename="plugins/abbreviations/abbreviationsconfigpanel.h">
 			<Option target="Abbreviations" />
 		</Unit>
+		<Unit filename="plugins/abbreviations/resources/abbreviationsconfigpanel.xrc">
+			<Option target="Abbreviations" />
+		</Unit>
 		<Unit filename="plugins/astyle/asstreamiterator.cpp">
 			<Option target="AStyle" />
 		</Unit>
@@ -1085,6 +1088,9 @@
 			<Option target="Autosave" />
 		</Unit>
 		<Unit filename="plugins/autosave/autosave.h">
+			<Option target="Autosave" />
+		</Unit>
+		<Unit filename="plugins/autosave/autosave.xrc">
 			<Option target="Autosave" />
 		</Unit>
 		<Unit filename="plugins/autosave/manifest.xml">

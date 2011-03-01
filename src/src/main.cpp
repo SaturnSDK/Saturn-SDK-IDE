@@ -1198,6 +1198,11 @@ void MainFrame::LoadWindowState()
     Manager::Get()->GetProjectManager()->GetNotebook()->SetSelection(Manager::Get()->GetConfigManager(_T("app"))->ReadInt(_T("/main_frame/layout/left_block_selection"), 0));
     m_pInfoPane->SetSelection(Manager::Get()->GetConfigManager(_T("app"))->ReadInt(_T("/main_frame/layout/bottom_block_selection"), 0));
 
+    // Cryogen 23/3/10 wxAuiNotebook can't set it's own tab position once instantiated, for some reason. This code fails in InfoPane::InfoPane().
+    // Moved here as this seems like a resonable place to do UI setup. Feel free to move it elsewhere.
+    if (Manager::Get()->GetConfigManager(_T("app"))->ReadBool(_T("/environment/infopane_tabs_bottom"), false))
+        m_pInfoPane->SetWindowStyleFlag(m_pInfoPane->GetWindowStyleFlag() | wxAUI_NB_BOTTOM);
+
 #ifndef __WXMAC__
     int x = 0;
     int y = 0;
@@ -1716,6 +1721,8 @@ bool MainFrame::DoOpenFile(const wxString& filename, bool addToHistory)
     cbEditor* ed = Manager::Get()->GetEditorManager()->Open(filename);
     if (ed)
     {
+        // Cryogen 24/3/10 Activate the editor after opening. Partial fix for bug #14087.
+        ed->Activate();
         if (addToHistory)
             AddToRecentFilesHistory(ed->GetFilename());
         return true;
