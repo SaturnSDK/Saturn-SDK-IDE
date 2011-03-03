@@ -1,16 +1,5 @@
-#include <UnitTest++.h>
+#include "debuggergdb_test_common.h"
 #include "parsewatchvalue.h"
-
-
-inline std::ostream& operator<<(std::ostream &stream, wxString const &s)
-{
-    return stream << s.utf8_str().data();
-}
-
-inline std::ostream& operator<<(std::ostream &stream, wxChar const *s)
-{
-    return stream << wxString(s).utf8_str().data();
-}
 
 wxString WatchToString(cbWatch const &watch)
 {

@@ -126,11 +126,13 @@ namespace
 //#30 0x00403c0a in WinMain (hInstance=0x400000, hPrevInstance=0x0, lpCmdLine=0x241ef9 "", nCmdShow=10) at C:/Devel/wxSmithTest/app.cpp:297
 //#31 0x004076ca in main () at C:/Devel/wxWidgets-2.6.1/include/wx/intl.h:555
 //#50  0x00410c8c in one::~one() (this=0x3d24c8) at main.cpp:14
+//#11  0x00406810 in main ()
 static wxRegEx reBT0(_T("#([0-9]+)[ \t]+(.+)[ \t]at[ \t](.+):([0-9]+)")); // case #0
 static wxRegEx reBT1(_T("#([0-9]+)[ \t]+0x([A-Fa-f0-9]+)[ \t]+in[ \t]+(.+)[ \t]+(\\([^)]*\\))[ \t]")); // all other cases (gdb 6.3)
 static wxRegEx reBTX(_T("#([0-9]+)[ \t]+0x([A-Fa-f0-9]+)[ \t]+in[ \t]+([^(]+)[ \t]*(\\([^)]*\\)[ \t]*\\([^)]*\\))")); // all other cases (gdb 5.2)
 static wxRegEx reBT2(_T("\\)[ \t]+[atfrom]+[ \t]+(.*):([0-9]+)"));
 static wxRegEx reBT3(_T("\\)[ \t]+[atfrom]+[ \t]+(.*)"));
+static wxRegEx reBT4(_T("#([0-9]+)[ \\t]+(.+)[ \\t]in[ \\t](.+)")); // case #11
 // Breakpoint 1 at 0x4013d6: file main.cpp, line 8.
 static wxRegEx reBreakpoint(_T("Breakpoint ([0-9]+) at (0x[0-9A-Fa-f]+)"));
 // Breakpoint 1 ("/home/jens/codeblocks-build/codeblocks-1.0svn/src/plugins/debuggergdb/gdb_commands.h:125) pending.
@@ -1056,58 +1058,16 @@ class GdbCmd_Backtrace : public DebuggerCmd
             wxArrayString lines = GetArrayFromString(output, _T('\n'));
             for (unsigned int i = 0; i < lines.GetCount(); ++i)
             {
-                // reBT1 matches frame number, address, function and args (common to all formats)
-                // reBT2 matches filename and line (optional)
-                // reBT3 matches filename only (for DLLs) (optional)
-
                 cbStackFrame sf;
-                bool matched = false;
-                // #0  main (argc=1, argv=0x3e2440) at my main.cpp:15
-                if (reBTX.Matches(lines[i]))
-                {
-                    unsigned long number, address;
-                    reBTX.GetMatch(lines[i], 1).ToULong(&number);
-                    reBTX.GetMatch(lines[i], 2).ToULong(&address, 16);
-
-                    sf.SetNumber(number);
-                    sf.SetAddress(address);
-                    sf.SetSymbol(reBTX.GetMatch(lines[i], 3) + reBTX.GetMatch(lines[i], 4));
-                    matched = true;
-                }
-                else if (reBT1.Matches(lines[i]))
-                {
-                    unsigned long number, address;
-                    reBT1.GetMatch(lines[i], 1).ToULong(&number);
-                    reBT1.GetMatch(lines[i], 2).ToULong(&address, 16);
-                    sf.SetNumber(number);
-                    sf.SetAddress(address);
-                    sf.SetSymbol(reBT1.GetMatch(lines[i], 3) + reBT1.GetMatch(lines[i], 4));
-                    matched = true;
-                }
-                else if (reBT0.Matches(lines[i]))
-                {
-                    unsigned long number;
-                    reBT0.GetMatch(lines[i], 1).ToULong(&number);
-                    sf.SetNumber(number);
-                    sf.SetAddress(0);
-                    sf.SetSymbol(reBT0.GetMatch(lines[i], 2) + reBT0.GetMatch(lines[i], 3));
-                    matched = true;
-                }
-
+                bool hasLineInfo;
+                bool matched = MatchLine(sf, hasLineInfo, lines[i]);
                 if (matched)
                 {
-                    sf.MakeValid(true);
-                    if (reBT2.Matches(lines[i]))
+                    if (hasLineInfo && validFrameNumber == -1)
                     {
-                        sf.SetFile(reBT2.GetMatch(lines[i], 1), reBT2.GetMatch(lines[i], 2));
-                        if (validFrameNumber == -1)
-                        {
-                            validSF = sf;
-                            validFrameNumber = sf.GetNumber();
-                        }
+                        validSF = sf;
+                        validFrameNumber = sf.GetNumber();
                     }
-                    else if (reBT3.Matches(lines[i]))
-                        sf.SetFile(reBT3.GetMatch(lines[i], 1), wxEmptyString);
                     m_pDriver->GetStackFrames().push_back(sf);
                 }
             }
@@ -1159,7 +1119,65 @@ class GdbCmd_Backtrace : public DebuggerCmd
                 }
             }
             Manager::Get()->GetDebuggerManager()->GetBacktraceDialog()->Reload();
-//            m_pDriver->DebugLog(output);
+        }
+
+        static bool MatchLine(cbStackFrame &sf, bool &hasLineInfo, const wxString &line)
+        {
+            hasLineInfo = false;
+            // reBT1 matches frame number, address, function and args (common to all formats)
+            // reBT2 matches filename and line (optional)
+            // reBT3 matches filename only (for DLLs) (optional)
+
+            // #0  main (argc=1, argv=0x3e2440) at my main.cpp:15
+            if (reBTX.Matches(line))
+            {
+                unsigned long number, address;
+                reBTX.GetMatch(line, 1).ToULong(&number);
+                reBTX.GetMatch(line, 2).ToULong(&address, 16);
+
+                sf.SetNumber(number);
+                sf.SetAddress(address);
+                sf.SetSymbol(reBTX.GetMatch(line, 3) + reBTX.GetMatch(line, 4));
+            }
+            else if (reBT1.Matches(line))
+            {
+                unsigned long number, address;
+                reBT1.GetMatch(line, 1).ToULong(&number);
+                reBT1.GetMatch(line, 2).ToULong(&address, 16);
+                sf.SetNumber(number);
+                sf.SetAddress(address);
+                sf.SetSymbol(reBT1.GetMatch(line, 3) + reBT1.GetMatch(line, 4));
+            }
+            else if (reBT0.Matches(line))
+            {
+                unsigned long number;
+                reBT0.GetMatch(line, 1).ToULong(&number);
+                sf.SetNumber(number);
+                sf.SetAddress(0);
+                sf.SetSymbol(reBT0.GetMatch(line, 2));
+                sf.SetFile(reBT0.GetMatch(line, 3), wxEmptyString);
+            }
+            else if (reBT4.Matches(line))
+            {
+                unsigned long number, address;
+                reBT4.GetMatch(line, 1).ToULong(&number);
+                reBT4.GetMatch(line, 2).ToULong(&address, 16);
+                sf.SetNumber(number);
+                sf.SetAddress(address);
+                sf.SetSymbol(reBT4.GetMatch(line, 3));
+            }
+            else
+                return false;
+
+            sf.MakeValid(true);
+            if (reBT2.Matches(line))
+            {
+                sf.SetFile(reBT2.GetMatch(line, 1), reBT2.GetMatch(line, 2));
+                hasLineInfo = true;
+            }
+            else if (reBT3.Matches(line))
+                sf.SetFile(reBT3.GetMatch(line, 1), wxEmptyString);
+            return true;
         }
 };
 
