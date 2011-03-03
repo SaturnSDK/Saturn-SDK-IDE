@@ -516,41 +516,22 @@ void GDB_driver::Start(bool breakOnEntry)
     // if performing remote debugging, use "continue" command
     RemoteDebugging* rd = GetRemoteDebuggingInfo();
     bool remoteDebugging = rd && rd->IsOk();
-//    m_pDBG->Log(wxString::Format(_T("RD: %s"), remoteDebugging ? _T("yes") : _T("no")));
 
-    // under windows, 'start' segfaults with wx projects...
-    if(platform::windows || platform::macosx)
+    m_BreakOnEntry = breakOnEntry && !remoteDebugging;
+
+    if (!Manager::Get()->GetConfigManager(_T("debugger"))->ReadBool(_T("do_not_run"), false))
     {
-        m_BreakOnEntry = false;
-        m_ManualBreakOnEntry = false;
-
-        if (!Manager::Get()->GetConfigManager(_T("debugger"))->ReadBool(_T("do_not_run"), false))
+        m_ManualBreakOnEntry = !remoteDebugging;
+        // start the process
+        if(breakOnEntry)
+            QueueCommand(new DebuggerCmd(this, remoteDebugging ? _T("continue") : _T("start")));
+        else
         {
-            // start the process
+            // if breakOnEntry is not set, we need to use 'run' to make gdb stop at a breakpoint at first instruction
+            m_ManualBreakOnEntry=false;  // must be reset or gdb does not stop at first breakpoint
             QueueCommand(new DebuggerCmd(this, remoteDebugging ? _T("continue") : _T("run")));
-            m_IsStarted = true;
         }
-    }
-    else
-    {
-        m_BreakOnEntry = breakOnEntry && !remoteDebugging;
-
-        if (!Manager::Get()->GetConfigManager(_T("debugger"))->ReadBool(_T("do_not_run"), false))
-        {
-            m_ManualBreakOnEntry = !remoteDebugging;
-            // start the process
-            if(breakOnEntry)
-            {
-                QueueCommand(new DebuggerCmd(this, remoteDebugging ? _T("continue") : _T("start")));
-            }
-            else
-            {
-                // if breakOnEntry is not set, we need to use 'run' to make gdb stop at a breakpoint at first instruction
-                m_ManualBreakOnEntry=false;  // must be reset or gdb does not stop at first breakpoint
-                QueueCommand(new DebuggerCmd(this, remoteDebugging ? _T("continue") : _T("run")));
-            }
-            m_IsStarted = true;
-        }
+        m_IsStarted = true;
     }
 } // Start
 
