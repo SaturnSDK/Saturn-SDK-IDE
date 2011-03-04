@@ -31,7 +31,8 @@
 			<Add directory="$(#unittest_pp)/src" />
 			<Add directory="." />
 			<Add directory="../../include" />
-			<Add directory="../../devel" />
+			<Add directory="../../include/scripting/include" />
+			<Add directory="../../include/scripting/sqplus" />
 		</Compiler>
 		<Linker>
 			<Add option="`wx-config --libs`" />
@@ -46,6 +47,8 @@
 		</ExtraCommands>
 		<Unit filename="debugger_defs.cpp" />
 		<Unit filename="debugger_defs.h" />
+		<Unit filename="debuggergdb_test_backtrace.cpp" />
+		<Unit filename="debuggergdb_test_common.h" />
 		<Unit filename="debuggergdb_test_main.cpp" />
 		<Unit filename="debuggergdb_test_parser.cpp" />
 		<Unit filename="debuggeroptionsprjdlg.h" />
