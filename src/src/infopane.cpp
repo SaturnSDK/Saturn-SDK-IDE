@@ -41,14 +41,12 @@ BEGIN_EVENT_TABLE(InfoPane, cbAuiNotebook)
     EVT_MENU(idNB_TabTop, InfoPane::OnTabPosition)
     EVT_MENU(idNB_TabBottom, InfoPane::OnTabPosition)
     EVT_AUINOTEBOOK_PAGE_CLOSE(idNB, InfoPane::OnCloseClicked)
- END_EVENT_TABLE()
+END_EVENT_TABLE()
 
 
 InfoPane::InfoPane(wxWindow* parent) : cbAuiNotebook(parent, idNB, wxDefaultPosition, wxDefaultSize, infopane_flags)
 {
     defaultBitmap = cbLoadBitmap(ConfigManager::GetDataFolder() + _T("/images/edit_16x16.png"), wxBITMAP_TYPE_PNG);
-    if (Manager::Get()->GetConfigManager(_T("app"))->ReadBool(_T("/environment/infopane_tabs_bottom"), false))
-        SetWindowStyleFlag(GetWindowStyleFlag() | wxAUI_NB_BOTTOM);
 }
 
 InfoPane::~InfoPane()

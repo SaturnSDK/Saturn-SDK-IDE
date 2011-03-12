@@ -162,9 +162,7 @@ void cbAuiNotebook::ResetTabCtrlEvents()
         m_TabCtrls[i]->Connect(wxEVT_ENTER_WINDOW, wxMouseEventHandler(cbAuiNotebook::OnEnterTabCtrl));
         m_TabCtrls[i]->Connect(wxEVT_LEAVE_WINDOW, wxMouseEventHandler(cbAuiNotebook::OnLeaveTabCtrl));
         if (s_AllowMousewheel)
-        {
             m_TabCtrls[i]->Connect(wxEVT_MOUSEWHEEL, wxMouseEventHandler(cbAuiNotebook::OnTabCtrlMouseWheel));
-        }
     }
 }
 
@@ -227,7 +225,7 @@ void cbAuiNotebook::OnDwellTimerTrigger(wxTimerEvent& /*event*/)
 
     UpdateTabControlsArray();
 
-    if((m_pToolTip == nullptr) && !m_OverTabCtrl)
+    if ((m_pToolTip == nullptr) && !m_OverTabCtrl)
         return;
 
     if (!s_UseTabTooltips || !m_AllowToolTips)
@@ -320,6 +318,8 @@ void cbAuiNotebook::OnLeaveTabCtrl(wxMouseEvent& event)
         if (nb)
         {
             nb->m_OverTabCtrl = false;
+            if (tabCtrl->HasCapture() && !tabCtrl->IsDragging())
+                tabCtrl->ReleaseMouse();
 #ifdef __WXMSW__
             if (nb->m_pToolTip == nullptr)
                 nb->RestoreFocus();
@@ -842,7 +842,10 @@ void cbAuiNotebook::AllowScrolling(bool allow)
 {
     s_AllowMousewheel = allow;
     for (size_t i = 0; i < s_cbAuiNotebookArray.GetCount(); ++i)
+    {
+        s_cbAuiNotebookArray[i]->UpdateTabControlsArray();
         s_cbAuiNotebookArray[i]->ResetTabCtrlEvents();
+    }
 }
 
 void cbAuiNotebook::SetModKeys(wxString keys)

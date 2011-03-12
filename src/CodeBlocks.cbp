@@ -553,7 +553,7 @@
 			</Environment>
 		</Build>
 		<VirtualTargets>
-			<Add alias="All" targets="tinyXML;AutoRevision;ConsoleRunner;Squirrel;Squirrel std lib;SqPlus;scintilla;wxpropgrid;sdk;src;AStyle;Compiler depslib;Compiler;Debugger;Code-completion;Class wizard;Default MIME handler;Open files list;Scripted wizard;To-do;Autosave;XP look &amp; feel;Projects-workspaces importer;Abbreviations;" />
+			<Add alias="All" targets="tinyXML;AutoRevision;ConsoleRunner;Squirrel;Squirrel std lib;SqPlus;scintilla;wxpropgrid;sdk;src;Abbreviations;AStyle;Compiler depslib;Compiler;Debugger;Code-completion;Class wizard;Default MIME handler;Open files list;Scripted wizard;To-do;Autosave;XP look &amp; feel;Projects-workspaces importer;" />
 			<Add alias="Core app &amp; plugins" targets="sdk;src;AStyle;Autosave;Compiler depslib;Compiler;Debugger;Code-completion;Class wizard;Default MIME handler;Projects-workspaces importer;Scripted wizard;Open files list;To-do;XP look &amp; feel;" />
 			<Add alias="Third-party libs" targets="tinyXML;AutoRevision;ConsoleRunner;Squirrel;Squirrel std lib;SqPlus;scintilla;wxpropgrid;Compiler depslib;" />
 		</VirtualTargets>
@@ -573,7 +573,7 @@
 			<Add option="-DWX_PRECOMP" />
 			<Add option="-DwxUSE_UNICODE" />
 			<Add directory="$(#WX.include)" />
-			<Add directory="$(#wx)\contrib\include" />
+			<Add directory="$(#WX)\contrib\include" />
 			<Add directory="$(#WX.lib)\gcc_dll$(WX_CFG)\msw$(WX_SUFFIX)" />
 			<Add directory="sdk\wxscintilla\include" />
 			<Add directory="sdk\wxpropgrid\include" />
@@ -581,8 +581,8 @@
 		</Compiler>
 		<ResourceCompiler>
 			<Add directory="$(#WX.include)" />
-			<Add directory="$(#wx)\contrib\include" />
-			<Add directory="$(#wx)\lib\gcc_dll$(WX_CFG)\msw$(WX_SUFFIX)" />
+			<Add directory="$(#WX)\contrib\include" />
+			<Add directory="$(#WX)\lib\gcc_dll$(WX_CFG)\msw$(WX_SUFFIX)" />
 		</ResourceCompiler>
 		<Linker>
 			<Add option="-mthreads" />
@@ -1133,9 +1133,6 @@
 		<Unit filename="include\xtra_res.h">
 			<Option target="sdk" />
 		</Unit>
-		<Unit filename="plugins\Abbreviations\abbreviationsconfigpanel.h">
-			<Option target="Abbreviations" />
-		</Unit>
 		<Unit filename="plugins\abbreviations\abbreviations.cpp">
 			<Option target="Abbreviations" />
 		</Unit>
@@ -1143,6 +1140,12 @@
 			<Option target="Abbreviations" />
 		</Unit>
 		<Unit filename="plugins\abbreviations\abbreviationsconfigpanel.cpp">
+			<Option target="Abbreviations" />
+		</Unit>
+		<Unit filename="plugins\abbreviations\abbreviationsconfigpanel.h">
+			<Option target="Abbreviations" />
+		</Unit>
+		<Unit filename="plugins\abbreviations\resources\abbreviationsconfigpanel.xrc">
 			<Option target="Abbreviations" />
 		</Unit>
 		<Unit filename="plugins\astyle\asstreamiterator.cpp">
@@ -1208,6 +1211,9 @@
 			<Option target="Autosave" />
 		</Unit>
 		<Unit filename="plugins\autosave\autosave.h">
+			<Option target="Autosave" />
+		</Unit>
+		<Unit filename="plugins\autosave\autosave.xrc">
 			<Option target="Autosave" />
 		</Unit>
 		<Unit filename="plugins\autosave\manifest.xml">

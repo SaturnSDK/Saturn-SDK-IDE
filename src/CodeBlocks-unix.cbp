@@ -411,7 +411,7 @@
 			</Environment>
 		</Build>
 		<VirtualTargets>
-			<Add alias="All" targets="tinyXML;AutoRevision;ConsoleRunner;Squirrel;Squirrel std lib;SqPlus;scintilla;wxpropgrid;sdk;src;AStyle;Compiler depslib;Compiler;Debugger;Code-completion;Class wizard;Default MIME handler;Projects-workspaces importer;Scripted wizard;Open files list;To-do;Autosave;Abbreviations;" />
+			<Add alias="All" targets="tinyXML;AutoRevision;ConsoleRunner;Squirrel;Squirrel std lib;SqPlus;scintilla;wxpropgrid;sdk;src;Abbreviations;AStyle;Autosave;Compiler depslib;Compiler;Debugger;Code-completion;Class wizard;Default MIME handler;Projects-workspaces importer;Scripted wizard;Open files list;To-do;" />
 			<Add alias="Core app &amp; plugins" targets="sdk;src;AStyle;Autosave;Compiler depslib;Compiler;Debugger;Code-completion;Class wizard;Default MIME handler;Projects-workspaces importer;Scripted wizard;Open files list;To-do;" />
 			<Add alias="Third-party libs" targets="tinyXML;AutoRevision;ConsoleRunner;Squirrel;Squirrel std lib;SqPlus;scintilla;wxpropgrid;Compiler depslib;" />
 		</VirtualTargets>
@@ -991,6 +991,9 @@
 		<Unit filename="plugins/abbreviations/abbreviationsconfigpanel.h">
 			<Option target="Abbreviations" />
 		</Unit>
+		<Unit filename="plugins/abbreviations/resources/abbreviationsconfigpanel.xrc">
+			<Option target="Abbreviations" />
+		</Unit>
 		<Unit filename="plugins/astyle/asstreamiterator.cpp">
 			<Option target="AStyle" />
 		</Unit>
@@ -1054,6 +1057,9 @@
 			<Option target="Autosave" />
 		</Unit>
 		<Unit filename="plugins/autosave/autosave.h">
+			<Option target="Autosave" />
+		</Unit>
+		<Unit filename="plugins/autosave/autosave.xrc">
 			<Option target="Autosave" />
 		</Unit>
 		<Unit filename="plugins/autosave/manifest.xml">
@@ -3258,6 +3264,8 @@
 		</Unit>
 		<Unit filename="src/resources/resources.rc">
 			<Option compilerVar="WINDRES" />
+			<Option compile="0" />
+			<Option link="0" />
 			<Option target="src" />
 		</Unit>
 		<Unit filename="src/resources/scripting_settings.xrc">
@@ -3322,15 +3330,6 @@
 				</resources>
 			</wxsmith>
 			<debugger />
-			<DoxyBlocks>
-				<comment_style block="0" line="0" />
-				<doxyfile_project />
-				<doxyfile_build />
-				<doxyfile_warnings />
-				<doxyfile_output />
-				<doxyfile_dot />
-				<general />
-			</DoxyBlocks>
 		</Extensions>
 	</Project>
 </CodeBlocks_project_file>
