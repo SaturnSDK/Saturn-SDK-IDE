@@ -480,3 +480,4 @@ bool InfoPane::DeleteNonLogger(wxWindow* p)
 
    return false;
 }
+
