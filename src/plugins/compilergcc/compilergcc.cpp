@@ -26,6 +26,7 @@
 #include <sdk_events.h>
 #include <pipedprocess.h>
 #include <configmanager.h>
+#include <debuggermanager.h>
 #include <logmanager.h>
 #include <macrosmanager.h>
 #include <projectmanager.h>

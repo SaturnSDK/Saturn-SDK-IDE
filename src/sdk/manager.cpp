@@ -29,7 +29,6 @@
     #include "personalitymanager.h"
     #include "uservarmanager.h"
     #include "filemanager.h"
-    #include "debuggermanager.h"
     #include "globals.h"
     #include "xtra_res.h" // our new ToolBarAddOn handler
 #endif
@@ -37,6 +36,8 @@
 #include <wx/app.h>    // wxTheApp
 #include <wx/toolbar.h>
 #include <wx/fs_mem.h>
+
+#include "debuggermanager.h"
 
 //    #include "buildsystem/buildsystemmanager.h"
 

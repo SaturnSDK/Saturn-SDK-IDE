@@ -24,6 +24,8 @@
 
 #include "watchesdlg.h"
 
+#include "debuggermanager.h"
+
 namespace
 {
     const int idGrid = wxNewId();

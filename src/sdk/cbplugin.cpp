@@ -31,6 +31,7 @@
 #include "annoyingdialog.h"
 #include "breakpointsdlg.h"
 #include "cbstyledtextctrl.h"
+#include "debuggermanager.h"
 #include "editor_hooks.h"
 #include "loggers.h"
 

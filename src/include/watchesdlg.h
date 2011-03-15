@@ -8,9 +8,6 @@
 
 #include <vector>
 #include <wx/panel.h>
-//#include <wx/propgrid/propgrid.h>
-
-#include "debuggermanager.h"
 
 class wxPropertyGrid;
 class wxPropertyGridEvent;

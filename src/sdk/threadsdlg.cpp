@@ -17,6 +17,7 @@
 #endif
 
 #include "threadsdlg.h"
+#include "debuggermanager.h"
 
 namespace
 {

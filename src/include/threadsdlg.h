@@ -17,8 +17,6 @@ class cbThreadsDlg : public wxPanel
     public:
         cbThreadsDlg(wxWindow* parent);
 
-//        void Clear();
-//        void AddThread(const wxString& active_mark, const wxString& thread_num, const wxString& thread_info);
         void Reload();
     protected:
         void OnListRightClick(wxListEvent& event);

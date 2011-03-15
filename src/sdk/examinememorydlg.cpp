@@ -9,15 +9,17 @@
 
 #include "sdk_precomp.h"
 #ifndef CB_PRECOMP
+    #include <wx/intl.h>
+    #include <wx/xrc/xmlres.h>
+    #include <wx/textctrl.h>
+    #include <wx/combobox.h>
+    #include <wx/button.h>
+
     #include "cbplugin.h"
 #endif
 
 #include "examinememorydlg.h"
-#include <wx/intl.h>
-#include <wx/xrc/xmlres.h>
-#include <wx/textctrl.h>
-#include <wx/combobox.h>
-#include <wx/button.h>
+#include "debuggermanager.h"
 
 BEGIN_EVENT_TABLE(cbExamineMemoryDlg, wxPanel)
     EVT_BUTTON(XRCID("btnGo"), cbExamineMemoryDlg::OnGo)

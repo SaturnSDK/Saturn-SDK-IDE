@@ -137,7 +137,6 @@
     #include "personalitymanager.h"
     #include "uservarmanager.h"
     #include "filemanager.h"
-    #include "debuggermanager.h"
 
     // other base files
     #include "xtra_res.h"

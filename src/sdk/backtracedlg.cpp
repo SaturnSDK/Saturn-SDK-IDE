@@ -23,6 +23,7 @@
 #include "filefilters.h"
 
 #include "backtracedlg.h"
+#include "debuggermanager.h"
 
 namespace
 {

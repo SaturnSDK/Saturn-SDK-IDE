@@ -10,7 +10,10 @@
 #include <sdk.h>
 
 #ifndef CB_PRECOMP
+    #include "cbexception.h"
+    #include "cbproject.h"
     #include "logmanager.h"
+    #include "projectbuildtarget.h"
 #endif
 
 #include "cdb_driver.h"
@@ -106,7 +109,7 @@ void CDB_driver::Prepare(bool /*isConsole*/)
 	QueueCommand(new CdbCmd_GetPID(this));
 }
 
-// There is no way to set the working directory of the debuggee 
+// There is no way to set the working directory of the debuggee
 // and we workaround it by launching CDB at the desired directory.
 wxString CDB_driver::GetDebuggersWorkingDirectory() const
 {

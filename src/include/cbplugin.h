@@ -16,8 +16,6 @@
 #include "manager.h"
 #include "pluginmanager.h"
 
-#include "debuggermanager.h"
-
 #ifdef __WXMSW__
     #ifndef PLUGIN_EXPORT
         #ifdef EXPORT_LIB
@@ -46,8 +44,13 @@ class wxMenu;
 class wxToolBar;
 class wxPanel;
 class wxWindow;
+
+class cbBreakpoint;
 class cbEditor;
 class cbProject;
+class cbStackFrame;
+class cbThread;
+class cbWatch;
 class ProjectBuildTarget;
 class CompileTargetBase;
 class Compiler;

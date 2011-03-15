@@ -47,6 +47,7 @@
 #include <cbproject.h>
 #include <cbworkspace.h>
 #include <configmanager.h>
+#include <debuggermanager.h>
 #include <editorcolourset.h>
 #include <editormanager.h>
 #include <filefilters.h>

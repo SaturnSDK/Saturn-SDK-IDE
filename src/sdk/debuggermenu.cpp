@@ -25,6 +25,7 @@
 #include "breakpointsdlg.h"
 #include "cbstyledtextctrl.h"
 #include "cpuregistersdlg.h"
+#include "debuggermanager.h"
 #include "disassemblydlg.h"
 #include "examinememorydlg.h"
 #include "threadsdlg.h"
