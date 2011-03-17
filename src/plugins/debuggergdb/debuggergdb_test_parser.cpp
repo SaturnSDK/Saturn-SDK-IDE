@@ -28,12 +28,12 @@ wxString WatchToString(cbWatch const &watch)
     return s;
 }
 
-inline std::ostream& operator<<(std::ostream &stream, cbWatch const &w)
+std::ostream& operator<<(std::ostream &stream, cbWatch const &w)
 {
     return stream << WatchToString(w);
 }
 
-inline bool operator == (wxString const &s, cbWatch const &w)
+bool operator == (wxString const &s, cbWatch const &w)
 {
     return s == WatchToString(w);
 }

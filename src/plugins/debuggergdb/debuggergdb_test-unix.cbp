@@ -51,6 +51,7 @@
 		<Unit filename="debuggergdb_test_common.h" />
 		<Unit filename="debuggergdb_test_main.cpp" />
 		<Unit filename="debuggergdb_test_parser.cpp" />
+		<Unit filename="debuggergdb_test_parser_cdb.cpp" />
 		<Unit filename="debuggeroptionsprjdlg.h" />
 		<Unit filename="parsewatchvalue.cpp" />
 		<Unit filename="parsewatchvalue.h" />

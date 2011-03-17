@@ -552,7 +552,7 @@ bool ParseCDBWatchValue(GDBWatch &watch, wxString const &value)
             return false;
 
         int type_token = 0;
-        if (tokens[0] == wxT("class") || tokens[0] == wxT("class"))
+        if (tokens[0] == wxT("class") || tokens[0] == wxT("struct"))
             type_token = 1;
 
         if (static_cast<int>(tokens.GetCount()) < type_token + 2)
