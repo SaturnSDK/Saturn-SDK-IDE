@@ -789,19 +789,30 @@ class GdbCmd_Watch : public DebuggerCmd
 class GdbCmd_FindWatchType : public DebuggerCmd
 {
         GDBWatch::Pointer m_watch;
+        bool m_firstTry;
     public:
-        /** @param tree The tree to display the watch. */
-        GdbCmd_FindWatchType(DebuggerDriver* driver, GDBWatch::Pointer watch) :
+        GdbCmd_FindWatchType(DebuggerDriver* driver, GDBWatch::Pointer watch, bool firstTry = true) :
             DebuggerCmd(driver),
-            m_watch(watch)
+            m_watch(watch),
+            m_firstTry(firstTry)
         {
-            m_Cmd << _T("whatis &");
+            if (m_firstTry)
+                m_Cmd << wxT("whatis ");
+            else
+                m_Cmd << wxT("whatis &");
             wxString symbol;
             m_watch->GetSymbol(symbol);
             m_Cmd << symbol;
         }
         void ParseOutput(const wxString& output)
         {
+            // happens, when wxString is passed as const reference parameter
+            if (m_firstTry && output == wxT("Attempt to take contents of a non-pointer value."))
+            {
+                m_pDriver->QueueCommand(new GdbCmd_FindWatchType(m_pDriver, m_watch, false), DebuggerDriver::High);
+                return;
+            }
+
             // examples:
             // type = wxString
             // type = const wxChar
@@ -809,7 +820,9 @@ class GdbCmd_FindWatchType : public DebuggerCmd
             // type = bool
 
             wxString tmp = output.AfterFirst(_T('='));
-            tmp = tmp.substr(0, tmp.length() - 1);
+            if (!m_firstTry && !tmp.empty())
+                tmp = tmp.substr(0, tmp.length() - 1);
+
             wxString old_type;
             m_watch->GetType(old_type);
             if(old_type != tmp)
