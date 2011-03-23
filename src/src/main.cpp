@@ -1808,7 +1808,7 @@ void MainFrame::DoUpdateEditorStyle(cbAuiNotebook* target, const wxString& prefi
         return;
 
     ConfigManager* cfg = Manager::Get()->GetConfigManager(_T("app"));
-    target->SetTabCtrlHeight(-1);
+    target->SetTabCtrlHeight(0);
 
     long nbstyle = cfg->ReadInt(_T("/environment/tabs_style"), 0);
     switch (nbstyle)
@@ -1829,6 +1829,8 @@ void MainFrame::DoUpdateEditorStyle(cbAuiNotebook* target, const wxString& prefi
             target->SetArtProvider(new wxAuiDefaultTabArt());
             break;
     }
+
+    target->SetTabCtrlHeight(-1);
 
     nbstyle = defaultStyle;
     if (cfg->ReadBool(_T("/environment/") + prefix + _T("_tabs_bottom")))
@@ -2020,8 +2022,9 @@ void MainFrame::AskToRemoveFileFromHistory(wxFileHistory* hist, int id, bool can
         query << question;
     }
 
-
-    if (cbMessageBox(query, _("Question"), wxYES_NO | wxICON_QUESTION) == wxID_YES)
+    AnnoyingDialog dialog(_("Question"), query, wxART_QUESTION);
+    PlaceWindow(&dialog);
+    if (dialog.ShowModal() == wxID_YES)
     {
         hist->RemoveFileFromHistory(id);
         // update start here page
@@ -4196,40 +4199,22 @@ void MainFrame::OnToggleStatusBar(wxCommandEvent& /*event*/)
 void MainFrame::OnFocusEditor(wxCommandEvent& /*event*/)
 {
     EditorManager* edman = Manager::Get()->GetEditorManager();
-    cbEditor* ed = edman ? edman->GetBuiltinEditor(edman->GetActiveEditor()) : 0;
-    if (ed)
-        ed->GetControl()->SetFocus();
+    cbAuiNotebook* nb = edman?edman->GetNotebook():nullptr;
+    if (nb)
+        nb->FocusActiveTabCtrl();
 }
 
 void MainFrame::OnFocusManagement(wxCommandEvent& /*event*/)
 {
-    if (m_pPrjMan && m_pPrjMan->GetNotebook())
-    {
-        cbAuiNotebook* nb = m_pPrjMan->GetNotebook();
-        int sel = nb->GetSelection();
-        if (sel >= 0)
-        {
-            nb->GetPage(static_cast<size_t>(sel));
-            wxWindow* win = nb->GetPage(static_cast<size_t>(sel));
-            if (win)
-                win->SetFocus();
-        }
-    }
+    cbAuiNotebook* nb = m_pPrjMan ? m_pPrjMan->GetNotebook():nullptr;
+    if (nb)
+        nb->FocusActiveTabCtrl();
 }
 
 void MainFrame::OnFocusLogsAndOthers(wxCommandEvent& /*event*/)
 {
     if (m_pInfoPane)
-    {
-        int sel = m_pInfoPane->GetSelection();
-        if (sel >= 0)
-        {
-            m_pInfoPane->GetPage(static_cast<size_t>(sel));
-            wxWindow* win = m_pInfoPane->GetPage(static_cast<size_t>(sel));
-            if (win)
-                win->SetFocus();
-        }
-    }
+        m_pInfoPane->FocusActiveTabCtrl();
 }
 
 void MainFrame::OnSwitchTabs(wxCommandEvent& /*event*/)
