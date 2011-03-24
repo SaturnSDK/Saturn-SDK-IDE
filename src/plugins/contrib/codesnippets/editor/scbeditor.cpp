@@ -45,12 +45,13 @@
 #include <wx/fontutil.h>
 #include <wx/splitter.h>
 
-#include "cbeditorprintout.h"
-#include "editor_hooks.h"
-#include "filefilters.h"
-#include "encodingdetector.h"
-#include "projectfileoptionsdlg.h"
-#include "breakpointsdlg.h"
+#include <breakpointsdlg.h>
+#include <cbeditorprintout.h>
+#include <debuggermanager.h>
+#include <editor_hooks.h>
+#include <encodingdetector.h>
+#include <filefilters.h>
+#include <projectfileoptionsdlg.h>
 
 const wxString g_EditorModified = _T("*");
 
