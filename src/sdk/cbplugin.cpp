@@ -757,6 +757,16 @@ void cbDebuggerPlugin::OnCompilerFinished(CodeBlocksEvent& event)
     }
 }
 
+#ifndef __WXMSW__
+namespace
+{
+wxString MakeSleepCommand()
+{
+    return wxString::Format(wxT("sleep %d"), 80000000 + ::wxGetProcessId());
+}
+}
+#endif
+
 int cbDebuggerPlugin::RunNixConsole(wxString &consoleTty)
 {
     consoleTty = wxEmptyString;
@@ -773,8 +783,7 @@ int cbDebuggerPlugin::RunNixConsole(wxString &consoleTty)
     wxString term = Manager::Get()->GetConfigManager(_T("app"))->Read(_T("/console_terminal"), DEFAULT_CONSOLE_TERM);
     term.Replace(_T("$TITLE"), _T("'") + title + _T("'"));
     cmd << term << _T(" ");
-    cmd << wxT("sleep ");
-    cmd << wxString::Format(wxT("%d"),80000 + ::wxGetProcessId());
+    cmd << MakeSleepCommand();
 
     Manager::Get()->GetMacrosManager()->ReplaceEnvVars(cmd);
 //    DebugLog(wxString::Format( _("Executing: %s"), cmd.c_str()) );
@@ -835,8 +844,7 @@ wxString cbDebuggerPlugin::GetConsoleTty(int ConsolePid)
     wxString ConsPidStr;
     ConsPidStr << ConsPid;
     //find task with our unique sleep time
-    wxString uniqueSleepTimeStr;
-    uniqueSleepTimeStr << wxT("sleep ") << wxString::Format(wxT("%d"),80000 + ::wxGetProcessId());
+    const wxString &uniqueSleepTimeStr = MakeSleepCommand();
     // search the output of "ps pid" command
     int knt = psOutput.GetCount();
     for (int i=knt-1; i>-1; --i)
