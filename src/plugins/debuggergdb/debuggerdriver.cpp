@@ -59,6 +59,15 @@ void DebuggerDriver::SetWorkingDirectory(const wxString& dir)
     m_WorkingDir = dir;
 }
 
+wxString DebuggerDriver::GetDebuggersWorkingDirectory() const
+{
+    wxString oldDir = wxGetCwd();
+    wxSetWorkingDirectory(m_WorkingDir);
+    wxString newDir = wxGetCwd();
+    wxSetWorkingDirectory(oldDir);
+    return newDir;
+}
+
 void DebuggerDriver::SetArguments(const wxString& args)
 {
     m_Args = args;

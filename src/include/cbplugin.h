@@ -36,7 +36,7 @@
 // it will change when the SDK interface breaks
 #define PLUGIN_SDK_VERSION_MAJOR 1
 #define PLUGIN_SDK_VERSION_MINOR 12
-#define PLUGIN_SDK_VERSION_RELEASE 0
+#define PLUGIN_SDK_VERSION_RELEASE 1
 
 // class decls
 class wxMenuBar;
@@ -551,7 +551,7 @@ class PLUGIN_EXPORT cbDebuggerPlugin: public cbPlugin
         void SwitchToPreviousLayout();
         void ShowLog(bool clear);
 
-        bool GetDebuggee(wxString &pathToDebuggee, ProjectBuildTarget* target);
+        bool GetDebuggee(wxString &pathToDebuggee, wxString &workingDirectory, ProjectBuildTarget* target);
         wxString FindDebuggerExecutable(Compiler* compiler);
         bool EnsureBuildUpToDate(StartType startType);
         bool WaitingCompilerToFinish() const { return m_WaitingCompilerToFinish; }

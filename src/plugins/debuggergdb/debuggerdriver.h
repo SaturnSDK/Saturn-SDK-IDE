@@ -159,7 +159,7 @@ class DebuggerDriver
         /** Ask the driver if the debugger should be interrupted with DebugBreakProcess or Ctrl+C event */
         virtual bool UseDebugBreakProcess() = 0;
 #endif
-        virtual wxString GetDebuggersWorkingDirectory() const { return wxEmptyString; }
+        wxString GetDebuggersWorkingDirectory() const;
 
         /** Show a file/line without changing the cursor */
         void ShowFile(const wxString& file, int line);

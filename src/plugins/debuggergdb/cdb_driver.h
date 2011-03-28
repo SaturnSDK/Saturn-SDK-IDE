@@ -56,7 +56,6 @@ class CDB_driver : public DebuggerDriver
 #ifdef __WXMSW__
         virtual bool UseDebugBreakProcess() { return true; }
 #endif
-        virtual wxString GetDebuggersWorkingDirectory() const;
     protected:
     private:
         void DoBacktrace(bool switchToFirst);

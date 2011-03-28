@@ -573,7 +573,7 @@ void cbDebuggerPlugin::SwitchToPreviousLayout()
 }
 
 
-bool cbDebuggerPlugin::GetDebuggee(wxString &pathToDebuggee, ProjectBuildTarget* target)
+bool cbDebuggerPlugin::GetDebuggee(wxString &pathToDebuggee, wxString &workingDirectory, ProjectBuildTarget* target)
 {
     if (!target)
         return wxEmptyString;
@@ -587,10 +587,15 @@ bool cbDebuggerPlugin::GetDebuggee(wxString &pathToDebuggee, ProjectBuildTarget*
         case ttExecutable:
         case ttConsoleOnly:
         case ttNative:
-            out = UnixFilename(target->GetOutputFilename());
-            Manager::Get()->GetMacrosManager()->ReplaceEnvVars(out); // apply env vars
-            Manager::Get()->GetLogManager()->Log(_("Adding file: ") + out, log_index);
-            ConvertDirectory(out);
+            {
+                out = UnixFilename(target->GetOutputFilename());
+                Manager::Get()->GetMacrosManager()->ReplaceEnvVars(out); // apply env vars
+                wxFileName f(out);
+                f.MakeAbsolute(target->GetParentProject()->GetBasePath());
+                out = f.GetFullPath();
+                Manager::Get()->GetLogManager()->Log(_("Adding file: ") + out, log_index);
+                ConvertDirectory(out);
+            }
             break;
 
         case ttStaticLib:
@@ -616,6 +621,14 @@ bool cbDebuggerPlugin::GetDebuggee(wxString &pathToDebuggee, ProjectBuildTarget*
         Manager::Get()->GetLogManager()->LogError(_("Couldn't find the path to the debuggee!"), log_index);
         return false;
     }
+
+    workingDirectory = target->GetWorkingDir();
+    Manager::Get()->GetMacrosManager()->ReplaceEnvVars(workingDirectory);
+    wxFileName cd(workingDirectory);
+    if (cd.IsRelative())
+        cd.MakeAbsolute(target->GetParentProject()->GetBasePath());
+    workingDirectory = cd.GetFullPath();
+
     pathToDebuggee = out;
     return true;
 }

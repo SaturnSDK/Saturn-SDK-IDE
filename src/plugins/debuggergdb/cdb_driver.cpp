@@ -109,17 +109,6 @@ void CDB_driver::Prepare(bool /*isConsole*/)
 	QueueCommand(new CdbCmd_GetPID(this));
 }
 
-// There is no way to set the working directory of the debuggee
-// and we workaround it by launching CDB at the desired directory.
-wxString CDB_driver::GetDebuggersWorkingDirectory() const
-{
-    wxString oldDir = wxGetCwd();
-    wxSetWorkingDirectory(m_WorkingDir);
-    wxString newDir = wxGetCwd();
-    wxSetWorkingDirectory(oldDir);
-    return newDir;
-}
-
 void CDB_driver::Start(bool /*breakOnEntry*/)
 {
     // start the process

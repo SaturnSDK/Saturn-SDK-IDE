@@ -770,12 +770,16 @@ int DebuggerGDB::DoDebug(bool breakOnEntry)
         AddSourceDir(m_pProject->GetBasePath());
         AddSourceDir(m_pProject->GetCommonTopLevelPath());
 
-        // switch to output dir
-        wxString path = UnixFilename(target->GetWorkingDir());
-        if (!path.IsEmpty())
+        // set the file to debug (depends on the target type)
+        wxString debuggee, path;
+        if (!GetDebuggee(debuggee, path, target))
         {
-            Manager::Get()->GetMacrosManager()->ReplaceEnvVars(path); // apply env vars
-            cmd.Clear();
+            m_Canceled = true;
+            return -3;
+        }
+
+        if (!path.empty())
+        {
             ConvertToGDBDirectory(path);
             if (path != _T(".")) // avoid silly message "changing to ."
             {
@@ -787,14 +791,6 @@ int DebuggerGDB::DoDebug(bool breakOnEntry)
         if (target && !target->GetExecutionParameters().IsEmpty())
             m_State.GetDriver()->SetArguments(target->GetExecutionParameters());
 
-        // set the file to debug
-        // (depends on the target type)
-        wxString debuggee;
-        if (!GetDebuggee(debuggee, target))
-        {
-            m_Canceled = true;
-            return -3;
-        }
         cmdline = m_State.GetDriver()->GetCommandLine(cmdexe, debuggee);
     }
     else // m_PidToAttach != 0
