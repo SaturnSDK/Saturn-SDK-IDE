@@ -252,4 +252,12 @@ TEST(RepeatingChars8)
                 wxT(" '\\000' <repeats 12 times>, \"aabbccddee\"}"), w);
 }
 
+// parsing the output of "const char *[]"
+TEST(RepeatingChars9)
+{
+    GDBWatch w(wxT("t"));
+    CHECK(ParseGDBWatchValue(w, wxT("{0x400e90 \"1st\", 0x400e94 '.' <repeats 16 times>, 0x400ea5 \"3th\"}")));
+    CHECK_EQUAL(wxT("t= {[0]=0x400e90 \"1st\",[1]=0x400e94 '.' <repeats 16 times>,[2]=0x400ea5 \"3th\"}"), w);
+}
+
 } // SUITE(GDBWatchParser)

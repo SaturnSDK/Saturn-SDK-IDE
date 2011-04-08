@@ -293,11 +293,19 @@ bool ParseGDBWatchValue(GDBWatch &watch, wxString const &value, int &start, int 
                 {
                     position = token.end + 1;
                     token_real_end = position;
+                    int comma_end = expanded_token.end;
                     if (GetNextToken(value, position, expanded_token))
                     {
+                        const wxString &expanded_str = expanded_token.ExtractString(value);
+                        if (!expanded_str.empty() && (expanded_str[0] != wxT('"') && expanded_str[0] != wxT('\'')))
+                        {
+                            token.end = comma_end;
+                            position = comma_end;
+                            token_real_end = comma_end;
+                            break;
+                        }
                         token.end = expanded_token.end;
-                        const wxString &str = expanded_token.ExtractString(value);
-                        if (regexRepeatedChar.Matches(str))
+                        if (regexRepeatedChar.Matches(expanded_str))
                             continue;
                         token_real_end = expanded_token.end;
                     }
