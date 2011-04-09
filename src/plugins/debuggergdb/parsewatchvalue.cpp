@@ -63,7 +63,8 @@ struct Token
     bool hasRepeatedChar;
 };
 
-wxRegEx regexRepeatedChars(wxT("^'[\\\\A-z0-9]+'[ \\t](<repeats[ \\t][0-9]+[ \\t]times>)"));
+wxRegEx regexRepeatedChars(wxT("^((\\\\'.{1,6}\\\\')|('.{1,6}'))[ \\t](<repeats[ \\t][0-9]+[ \\t]times>)"),
+                           wxRE_ADVANCED);
 
 int DetectRepeatingSymbols(wxString const &str, int pos)
 {

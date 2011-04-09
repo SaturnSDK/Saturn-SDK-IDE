@@ -260,4 +260,22 @@ TEST(RepeatingChars9)
     CHECK_EQUAL(wxT("t= {[0]=0x400e90 \"1st\",[1]=0x400e94 '.' <repeats 16 times>,[2]=0x400ea5 \"3th\"}"), w);
 }
 
+// parsing the output of "const char *[]"
+TEST(RepeatingChars10)
+{
+    GDBWatch w(wxT("t"));
+    CHECK(ParseGDBWatchValue(w, wxT("{0x4080d8 \"1st\", 0x4080dc \"2nd\", '.' <repeats 48 times>, 0x408110 \"3th\"}")));
+    CHECK_EQUAL(wxT("t= {[0]=0x4080d8 \"1st\",[1]=0x4080dc \"2nd\", '.' <repeats 48 times>,[2]=0x408110 \"3th\"}"), w);
+}
+
+// parsing the output of "const char *[]"
+TEST(RepeatingChars11)
+{
+    GDBWatch w(wxT("t"));
+    CHECK(ParseGDBWatchValue(w, wxT("{0x4080d8 \"1st\", 0x4080dc '.' <repeats 14 times>,")
+                                wxT(" \"#\", '&' <repeats 16 times>, 0x4080fc \"3th\"}")));
+    CHECK_EQUAL(wxT("t= {[0]=0x4080d8 \"1st\",[1]=0x4080dc '.' <repeats 14 times>, \"#\", '&' <repeats 16 times>,")
+                wxT("[2]=0x4080fc \"3th\"}"), w);
+}
+
 } // SUITE(GDBWatchParser)
