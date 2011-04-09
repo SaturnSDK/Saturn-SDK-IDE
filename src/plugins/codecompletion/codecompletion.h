@@ -65,7 +65,9 @@ public:
     virtual void BuildMenu(wxMenuBar* menuBar); // offer for menu space by host
     virtual void BuildModuleMenu(const ModuleType type, wxMenu* menu, const FileTreeData* data = 0);
     virtual bool BuildToolBar(wxToolBar* toolBar);
-    virtual wxArrayString GetCallTips();
+
+    // unused, should be removed probably
+    virtual wxArrayString GetCallTips() { return wxArrayString(); }
     virtual int CodeComplete();
     virtual void ShowCallTip();
 
@@ -181,7 +183,7 @@ private:
     bool                    m_UseCodeCompletion;
     int                     m_CCAutoLaunchChars;
     bool                    m_CCAutoLaunch;
-    bool                    m_CCLaunchDelay;
+    int                     m_CCLaunchDelay;
     size_t                  m_CCMaxMatches;
     bool                    m_CCAutoAddParentheses;
     wxString                m_CCFillupChars;
