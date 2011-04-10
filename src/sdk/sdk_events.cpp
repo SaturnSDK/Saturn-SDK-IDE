@@ -162,3 +162,4 @@ const wxEventType cbEVT_UNLOCK_LOG_MANAGER = wxNewEventType();
 //cbAUiNotebook related events
 const wxEventType cbEVT_CBAUIBOOK_LEFT_DCLICK = wxNewEventType();
 
+const wxEventType cbEVT_SETTINGS_CHANGED = wxNewEventType();

@@ -6,24 +6,37 @@
 #ifndef DEBUGGEROPTIONSDLG_H
 #define DEBUGGEROPTIONSDLG_H
 
-#include <wx/intl.h>
 #include "configurationpanel.h"
 
-class DebuggerGDB;
+#include <debuggermanager.h>
 
-class DebuggerOptionsDlg : public cbConfigurationPanel
+class ConfigManagerWrapper;
+
+class DebuggerConfiguration : public cbDebuggerConfiguration
 {
     public:
-        DebuggerOptionsDlg(wxWindow* parent, DebuggerGDB* plugin);
-        virtual ~DebuggerOptionsDlg();
+        explicit DebuggerConfiguration(const ConfigManagerWrapper &config);
 
-        virtual wxString GetTitle() const { return _("Debugger settings"); }
-        virtual wxString GetBitmapBaseName() const { return _T("debugger"); }
-        virtual void OnApply();
-        virtual void OnCancel(){}
-    protected:
-        DebuggerGDB* m_pPlugin;
-    private:
+        virtual cbDebuggerConfiguration* Clone() const;
+        virtual wxPanel* MakePanel(wxWindow *parent);
+        virtual bool SaveChanges(wxPanel *panel);
+    public:
+        enum Flags
+        {
+            WatchFuncArgs,
+            WatchLocals,
+            CatchExceptions,
+            EvalExpression,
+            AddOtherProjectDirs,
+            DoNotRun
+        };
+
+        bool GetFlag(Flags flag);
+        bool IsGDB();
+        wxString GetDebuggerExecutable();
+        wxString GetDisassemblyFlavorCommand();
+        wxString GetInitCommands();
+
 };
 
 #endif // DEBUGGEROPTIONSDLG_H

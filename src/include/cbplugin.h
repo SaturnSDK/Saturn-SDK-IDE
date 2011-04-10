@@ -36,7 +36,7 @@
 // it will change when the SDK interface breaks
 #define PLUGIN_SDK_VERSION_MAJOR 1
 #define PLUGIN_SDK_VERSION_MINOR 12
-#define PLUGIN_SDK_VERSION_RELEASE 1
+#define PLUGIN_SDK_VERSION_RELEASE 2
 
 // class decls
 class wxMenuBar;
@@ -58,6 +58,13 @@ class FileTreeData;
 class cbConfigurationPanel;
 struct PluginInfo;
 class cbStatusBar;
+
+class cbBreakpoint;
+class cbDebuggerConfiguration;
+class cbStackFrame;
+class cbThread;
+class cbWatch;
+class ConfigManagerWrapper;
 
 // Define basic groups for plugins' configuration.
 static const int cgCompiler         = 0x01; ///< Compiler related.
@@ -404,6 +411,14 @@ class PLUGIN_EXPORT cbDebuggerPlugin: public cbPlugin
         virtual void ShowToolMenu() = 0;
         virtual bool ToolMenuEnabled() const;
 
+        virtual cbDebuggerConfiguration* LoadConfig(const ConfigManagerWrapper &config) = 0;
+
+        cbDebuggerConfiguration& GetActiveConfig();
+        void SetActiveConfig(int index);
+        int GetIndexOfActiveConfig() const;
+
+        /** @brief Called when the Uesr clicks OK in Settings -> Debugger... */
+        virtual void OnConfigurationChange(bool isActive) {}
 
         /** @brief Start a new debugging process. */
         virtual bool Debug(bool breakOnEntry) = 0;
@@ -546,13 +561,12 @@ class PLUGIN_EXPORT cbDebuggerPlugin: public cbPlugin
 
         bool DragInProgress() const;
 
+        void ShowLog(bool clear);
     protected:
         void SwitchToDebuggingLayout();
         void SwitchToPreviousLayout();
-        void ShowLog(bool clear);
 
         bool GetDebuggee(wxString &pathToDebuggee, wxString &workingDirectory, ProjectBuildTarget* target);
-        wxString FindDebuggerExecutable(Compiler* compiler);
         bool EnsureBuildUpToDate(StartType startType);
         bool WaitingCompilerToFinish() const { return m_WaitingCompilerToFinish; }
 
@@ -577,6 +591,8 @@ class PLUGIN_EXPORT cbDebuggerPlugin: public cbPlugin
         int m_EditorHookId;
         StartType m_StartType;
         bool m_DragInProgress;
+
+        int m_ActiveConfig;
 };
 
 /** @brief Base class for tool plugins

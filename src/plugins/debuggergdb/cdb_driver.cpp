@@ -10,20 +10,22 @@
 #include <sdk.h>
 
 #ifndef CB_PRECOMP
-    #include "cbexception.h"
-    #include "cbproject.h"
-    #include "logmanager.h"
-    #include "projectbuildtarget.h"
+    #include <cbproject.h>
+    #include <cbexception.h>
+    #include <configmanager.h>
+    #include <debuggermanager.h>
+    #include <globals.h>
+    #include <infowindow.h>
+    #include <logmanager.h>
+    #include <manager.h>
+    #include <projectbuildtarget.h>
 #endif
 
 #include "cdb_driver.h"
 #include "cdb_commands.h"
+#include "debuggeroptionsdlg.h"
 
 #include <backtracedlg.h>
-#include <manager.h>
-#include <configmanager.h>
-#include <globals.h>
-#include <infowindow.h>
 
 static wxRegEx rePrompt(_T("([0-9]+:){1,2}[0-9]+>"));
 static wxRegEx reBP(_T("Breakpoint ([0-9]+) hit"));
@@ -116,7 +118,7 @@ void CDB_driver::Start(bool /*breakOnEntry*/)
     QueueCommand(new DebuggerCmd(this, _T("l+s"))); // show source lines
     QueueCommand(new DebuggerCmd(this, _T("l+o"))); // only source lines
 
-    if (!Manager::Get()->GetConfigManager(_T("debugger"))->ReadBool(_T("do_not_run"), false))
+    if (!m_pDBG->GetActiveConfigEx().GetFlag(DebuggerConfiguration::DoNotRun))
     {
         QueueCommand(new DebuggerCmd(this, _T("g")));
         m_IsStarted = true;

@@ -28,6 +28,7 @@ class DebuggerDriver;
 class DebuggerCmd;
 class Compiler;
 struct TestIfBelogToProject;
+class DebuggerConfiguration;
 
 class DebuggerGDB : public cbDebuggerPlugin
 {
@@ -35,13 +36,14 @@ class DebuggerGDB : public cbDebuggerPlugin
     public:
         DebuggerGDB();
         ~DebuggerGDB();
-        int Configure();
-        int GetConfigurationPriority() const { return 0; }
-        int GetConfigurationGroup() const { return cgDebugger; }
-        cbConfigurationPanel* GetConfigurationPanel(wxWindow* parent);
+
         cbConfigurationPanel* GetProjectConfigurationPanel(wxWindow* parent, cbProject* project);
         void OnAttachReal(); // fires when the plugin is attached to the application
         void OnReleaseReal(bool appShutDown); // fires when the plugin is released from the application
+
+        cbDebuggerConfiguration* LoadConfig(const ConfigManagerWrapper &config);
+
+        DebuggerConfiguration& GetActiveConfigEx();
 
         void RunCommand(int cmd);
 
@@ -107,7 +109,7 @@ class DebuggerGDB : public cbDebuggerPlugin
 
         DebuggerState& GetState(){ return m_State; }
 
-        void RefreshConfiguration();
+        void OnConfigurationChange(bool isActive);
 
         wxArrayString& GetSearchDirs(cbProject* prj);
         RemoteDebuggingMap& GetRemoteDebuggingMap(cbProject* project = 0);

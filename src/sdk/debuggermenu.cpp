@@ -6,13 +6,15 @@
  * $Id$
  * $HeadURL$
  */
-#include "sdk_precomp.h"
+#include "sdk.h"
+
 #ifndef CB_PRECOMP
     #include <wx/xrc/xmlres.h>
 
     #include "cbeditor.h"
     #include "cbproject.h"
     #include "editormanager.h"
+    #include "logmanager.h"
     #include "projectmanager.h"
 #endif
 
@@ -34,6 +36,8 @@
 namespace
 {
     const int idMenuDebug = XRCID("idDebuggerMenuDebug");
+    const int idMenuDebugActive = XRCID("idDebuggerMenuActive");
+    const int idMenuDebugActiveTargetsDefault = wxNewId();
     const int idMenuRunToCursor = XRCID("idDebuggerMenuRunToCursor");
     const int idMenuSetNextStatement = XRCID("idDebuggerMenuSetNextStatement");
     const int idMenuNext = XRCID("idDebuggerMenuNext");
@@ -107,7 +111,6 @@ BEGIN_EVENT_TABLE(DebuggerMenuHandler, wxEvtHandler)
     EVT_MENU(idMenuRemoveAllBreakpoints, DebuggerMenuHandler::OnRemoveAllBreakpoints)
     EVT_MENU(idMenuAddDataBreakpoint, DebuggerMenuHandler::OnAddDataBreakpoint)
     EVT_MENU(idMenuSendCommand, DebuggerMenuHandler::OnSendCommand)
-//    EVT_MENU(idMenuAddSymbolFile, DebuggerMenuHandler::OnAddSymbolFile)
     EVT_MENU(idMenuBacktrace, DebuggerMenuHandler::OnBacktrace)
     EVT_MENU(idMenuThreads, DebuggerMenuHandler::OnThreads)
     EVT_MENU(idMenuMemory, DebuggerMenuHandler::OnExamineMemory)
@@ -115,11 +118,10 @@ BEGIN_EVENT_TABLE(DebuggerMenuHandler, wxEvtHandler)
     EVT_MENU(idMenuRegisters, DebuggerMenuHandler::OnCPURegisters)
     EVT_MENU(idMenuWatches, DebuggerMenuHandler::OnWatches)
     EVT_MENU(idMenuBreakpoints, DebuggerMenuHandler::OnBreakpoints)
-//    EVT_MENU(idMenuEditWatches, DebuggerMenuHandler::OnEditWatches)
     EVT_MENU(idMenuDebuggerAddWatch, DebuggerMenuHandler::OnAddWatch)
     EVT_MENU(idMenuAttachToProcess, DebuggerMenuHandler::OnAttachToProcess)
     EVT_MENU(idMenuDetach, DebuggerMenuHandler::OnDetachFromProcess)
-//    EVT_MENU(idMenuSettings, DebuggerMenuHandler::OnSettings)
+    EVT_MENU(idMenuDebugActiveTargetsDefault, DebuggerMenuHandler::OnActiveDebuggerTargetsDefaultClick)
 END_EVENT_TABLE()
 
 
@@ -132,6 +134,69 @@ DebuggerMenuHandler::DebuggerMenuHandler() :
 void DebuggerMenuHandler::SetActiveDebugger(cbDebuggerPlugin *active)
 {
     m_activeDebugger = active;
+}
+
+void DebuggerMenuHandler::RebuildActiveDebuggersMenu()
+{
+    DebuggerManager *dbgManager = Manager::Get()->GetDebuggerManager();
+    wxMenu* debug_menu = dbgManager->GetMenu();
+    if (!debug_menu)
+        return;
+    int item_id = debug_menu->FindItem(_("&Active debuggers"));
+    wxMenuItem *menuitem = debug_menu->FindItem(item_id, NULL);
+    if (!menuitem)
+        return;
+
+    wxMenu *menu = menuitem->GetSubMenu();
+    if (!menu)
+        return;
+    while (menu->GetMenuItemCount() > 0)
+    {
+        wxMenuItem *item = menu->FindItemByPosition(0);
+        menu->Destroy(item);
+    }
+    menu->AppendRadioItem(idMenuDebugActiveTargetsDefault, _("Target's default"),
+                          _("Use the debugger associated with the compiler for the active target"));
+
+    DebuggerManager::RegisteredPlugins &allDebugger = dbgManager->GetAllDebuggers();
+    for (DebuggerManager::RegisteredPlugins::iterator it = allDebugger.begin(); it != allDebugger.end(); ++it)
+    {
+        menu->AppendSeparator();
+
+        DebuggerManager::ConfigurationVector &configs = it->second.GetConfigurations();
+        for (DebuggerManager::ConfigurationVector::iterator itConf = configs.begin(); itConf != configs.end(); ++itConf)
+        {
+            long id = (*itConf)->GetMenuId();
+            if (id == wxID_ANY)
+            {
+                id = wxNewId();
+                (*itConf)->SetMenuId(id);
+            }
+
+            menu->AppendRadioItem(id, it->second.GetGUIName() + wxT(": ") + (*itConf)->GetName());
+            Connect(id, -1, wxEVT_COMMAND_MENU_SELECTED,
+                    (wxObjectEventFunction) (wxEventFunction) (wxCommandEventFunction)
+                    &DebuggerMenuHandler::OnActiveDebuggerClick);
+        }
+    }
+
+    if (m_activeDebugger && !dbgManager->IsActiveDebuggerTargetsDefault())
+    {
+        DebuggerManager::RegisteredPlugins::const_iterator it = allDebugger.find(m_activeDebugger);
+        cbAssert(it != allDebugger.end());
+
+        const DebuggerManager::ConfigurationVector &configs = it->second.GetConfigurations();
+
+        DebuggerManager::ConfigurationVector::const_iterator itConf = configs.begin();
+        std::advance(itConf, m_activeDebugger->GetIndexOfActiveConfig());
+
+        if (itConf != configs.end())
+            menu->Check((*itConf)->GetMenuId(), true);
+        else
+            menu->Check(configs.front()->GetMenuId(), true);
+    }
+    else
+        menu->Check(idMenuDebugActiveTargetsDefault, true);
 }
 
 void DebuggerMenuHandler::BuildContextMenu(wxMenu &menu, const wxString& word_at_caret, bool is_running)
@@ -200,6 +265,14 @@ void DebuggerMenuHandler::OnUpdateUI(wxUpdateUIEvent& event)
         mbar->Enable(idMenuAttachToProcess, !isRunning && !otherPlugin && m_activeDebugger);
         mbar->Enable(idMenuDetach, isRunning && stopped && isAttached);
 
+        wxMenuItem *item = mbar->FindItem(idMenuDebugActive);
+        wxMenu *activeMenu = item ? item->GetSubMenu() : NULL;
+        if (activeMenu)
+        {
+            for (size_t ii = 0; ii < activeMenu->GetMenuItemCount(); ++ii)
+                activeMenu->Enable(activeMenu->FindItemByPosition(ii)->GetId(), !isRunning);
+        }
+
         mbar->Check(idMenuBreakpoints,  IsWindowReallyShown(dbg_manager->GetBreakpointDialog()));
         mbar->Check(idMenuBacktrace,    IsWindowReallyShown(dbg_manager->GetBacktraceDialog()));
         mbar->Check(idMenuRegisters,    IsWindowReallyShown(dbg_manager->GetCPURegistersDialog()));
@@ -226,6 +299,22 @@ void DebuggerMenuHandler::OnStart(wxCommandEvent& event)
         {
             manager->SetIsRunning(m_activeDebugger);
 
+            int pageIndex;
+            DebuggerManager *dbgManager = Manager::Get()->GetDebuggerManager();
+            dbgManager->GetLogger(false, pageIndex);
+            if (pageIndex != -1)
+            {
+                const DebuggerManager::RegisteredPlugins &allDebuggers = dbgManager->GetAllDebuggers();
+                DebuggerManager::RegisteredPlugins::const_iterator it = allDebuggers.find(m_activeDebugger);
+                wxString configName;
+                if (it != allDebuggers.end())
+                {
+                    cbDebuggerConfiguration &config = m_activeDebugger->GetActiveConfig();
+                    configName = it->second.GetGUIName() + wxT(":") + config.GetName();
+                }
+                m_activeDebugger->ShowLog(true);
+                Manager::Get()->GetLogManager()->Log(_("Active debugger config: ") + configName, pageIndex);
+            }
             if (!m_activeDebugger->Debug(false))
                 manager->SetIsRunning(NULL);
         }
@@ -480,16 +569,26 @@ void DebuggerMenuHandler::OnWatches(wxCommandEvent& event)
 
 void DebuggerMenuHandler::OnActiveDebuggerClick(wxCommandEvent& event)
 {
-    DebuggerManager::RegisteredPlugins &plugins = Manager::Get()->GetDebuggerManager()->GetAllDebuggers();
+    DebuggerManager *manager = Manager::Get()->GetDebuggerManager();
+    DebuggerManager::RegisteredPlugins &plugins = manager->GetAllDebuggers();
 
     for(DebuggerManager::RegisteredPlugins::iterator it = plugins.begin(); it != plugins.end(); ++it)
     {
-        if(it->second.menu_id == event.GetId())
+        DebuggerManager::ConfigurationVector &configs = it->second.GetConfigurations();
+        for (DebuggerManager::ConfigurationVector::iterator itConf = configs.begin(); itConf != configs.end(); ++itConf)
         {
-            Manager::Get()->GetDebuggerManager()->SetActiveDebugger(it->first);
-            break;
+            if((*itConf)->GetMenuId() == event.GetId())
+            {
+                manager->SetActiveDebugger(it->first, itConf);
+                return;
+            }
         }
     }
+}
+
+void  DebuggerMenuHandler::OnActiveDebuggerTargetsDefaultClick(wxCommandEvent& event)
+{
+    Manager::Get()->GetDebuggerManager()->SetTargetsDefaultAsActiveDebugger();
 }
 
 

@@ -176,7 +176,8 @@ class MainFrame : public wxFrame
         void OnSettingsKeyBindings(wxCommandEvent& event);
         void OnGlobalUserVars(wxCommandEvent& event);
         void OnSettingsEditor(wxCommandEvent& event);
-        void OnSettingsCompilerDebugger(wxCommandEvent& event);
+        void OnSettingsCompiler(wxCommandEvent& event);
+        void OnSettingsDebugger(wxCommandEvent& event);
         void OnSettingsPlugins(wxCommandEvent& event);
         void OnPluginSettingsMenu(wxCommandEvent& event);
         void OnSettingsScripting(wxCommandEvent& event);

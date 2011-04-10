@@ -17,11 +17,13 @@
     #include <wx/menu.h>
     #include <wx/sizer.h>
     #include <wx/stattext.h>
+    #include <wx/regex.h>
 
     #include "cbeditor.h"
     #include "cbexception.h"
     #include "cbplugin.h"
     #include "cbproject.h"
+    #include "compilerfactory.h"
     #include "configmanager.h"
     #include "editormanager.h"
     #include "logmanager.h"
@@ -418,6 +420,87 @@ const wxString& cbThread::GetInfo() const
     return m_info;
 }
 
+cbDebuggerConfiguration::cbDebuggerConfiguration(const ConfigManagerWrapper &config) :
+    m_config(config),
+    m_menuId(wxID_ANY)
+{
+}
+
+cbDebuggerConfiguration::cbDebuggerConfiguration(const cbDebuggerConfiguration &o) :
+    m_config(o.m_config),
+    m_name(o.m_name)
+{
+}
+
+void cbDebuggerConfiguration::SetName(const wxString &name)
+{
+    m_name = name;
+}
+const wxString& cbDebuggerConfiguration::GetName() const
+{
+    return m_name;
+}
+
+const ConfigManagerWrapper& cbDebuggerConfiguration::GetConfig() const
+{
+    return m_config;
+}
+
+void cbDebuggerConfiguration::SetConfig(const ConfigManagerWrapper &config)
+{
+    m_config = config;
+}
+
+void cbDebuggerConfiguration::SetMenuId(long id)
+{
+    m_menuId = id;
+}
+
+long cbDebuggerConfiguration::GetMenuId() const
+{
+    return m_menuId;
+}
+
+bool cbDebuggerCommonConfig::GetFlag(Flags flag)
+{
+    ConfigManager *c = Manager::Get()->GetConfigManager(wxT("debugger_common"));
+    switch (flag)
+    {
+        case AutoBuild:
+            return c->ReadBool(wxT("/common/auto_build"), true);
+        case AutoSwitchFrame:
+            return c->ReadBool(wxT("/common/auto_switch_frame"), true);
+        case ShowDebuggersLog:
+            return c->ReadBool(wxT("/common/debug_log"), false);
+        case JumpOnDoubleClick:
+            return c->ReadBool(wxT("/common/jump_on_double_click"), false);
+        default:
+            return false;
+    }
+}
+
+void cbDebuggerCommonConfig::SetFlag(Flags flag, bool value)
+{
+    ConfigManager *c = Manager::Get()->GetConfigManager(wxT("debugger_common"));
+    switch (flag)
+    {
+        case AutoBuild:
+            c->Write(wxT("/common/auto_build"), value);
+            break;
+        case AutoSwitchFrame:
+            c->Write(wxT("/common/auto_switch_frame"), value);
+            break;
+        case ShowDebuggersLog:
+            c->Write(wxT("/common/debug_log"), value);
+            break;
+        case JumpOnDoubleClick:
+            c->Write(wxT("/common/jump_on_double_click"), value);
+            break;
+        default:
+            ;
+    }
+}
+
 
 class DebugTextCtrlLogger : public TextCtrlLogger
 {
@@ -595,6 +678,33 @@ wxWindow* DebugTextCtrlLogger::CreateControl(wxWindow* parent)
 template<> DebuggerManager* Mgr<DebuggerManager>::instance = 0;
 template<> bool  Mgr<DebuggerManager>::isShutdown = false;
 
+void ReadActiveDebuggerConfig(wxString &name, int &configIndex)
+{
+    ConfigManager &config = *Manager::Get()->GetConfigManager(_T("debugger_common"));
+    name = config.Read(wxT("active_debugger"), wxEmptyString);
+    if (name.empty())
+        configIndex = -1;
+    else
+        configIndex = std::max(0, config.ReadInt(wxT("active_debugger_config"), 0));
+}
+
+void WriteActiveDebuggerConfig(const wxString &name, int configIndex)
+{
+    ConfigManager &configMgr = *Manager::Get()->GetConfigManager(_T("debugger_common"));
+    configMgr.Write(wxT("active_debugger"), name);
+    configMgr.Write(wxT("active_debugger_config"), configIndex);
+}
+
+cbDebuggerConfiguration* DebuggerManager::PluginData::GetConfiguration(int index)
+{
+    if (m_configurations.empty())
+        cbAssert(false);
+    if (index >= static_cast<int>(m_configurations.size()))
+        return nullptr;
+    else
+        return m_configurations[index];
+}
+
 DebuggerManager::DebuggerManager() :
     m_activeDebugger(NULL),
     m_menuHandler(new DebuggerMenuHandler),
@@ -610,7 +720,8 @@ DebuggerManager::DebuggerManager() :
     m_debugLogger(NULL),
     m_loggerIndex(-1),
     m_debugLoggerIndex(-1),
-    m_isDisassemblyMixedMode(false)
+    m_isDisassemblyMixedMode(false),
+    m_useTargetsDefault(false)
 {
     m_menuHandler->SetEvtHandlerEnabled(false);
     m_toolbarHandler->SetEvtHandlerEnabled(false);
@@ -622,33 +733,79 @@ DebuggerManager::DebuggerManager() :
     }
     m_menuHandler->SetEvtHandlerEnabled(true);
     m_toolbarHandler->SetEvtHandlerEnabled(true);
+
+    typedef cbEventFunctor<DebuggerManager, CodeBlocksEvent> Event;
+    Manager::Get()->RegisterEventSink(cbEVT_PROJECT_ACTIVATE, new Event(this, &DebuggerManager::OnProjectActivated));
+    Manager::Get()->RegisterEventSink(cbEVT_BUILDTARGET_SELECTED, new Event(this, &DebuggerManager::OnTargetSelected));
+    Manager::Get()->RegisterEventSink(cbEVT_SETTINGS_CHANGED, new Event(this, &DebuggerManager::OnSettingsChanged));
+
+    wxString activeDebuggerName;
+    int activeConfig;
+    ReadActiveDebuggerConfig(activeDebuggerName, activeConfig);
+    if (activeDebuggerName.empty() && activeConfig == -1)
+        m_useTargetsDefault = true;
 }
 
 DebuggerManager::~DebuggerManager()
 {
+    for (RegisteredPlugins::iterator it = m_registered.begin(); it != m_registered.end(); ++it)
+        it->second.ClearConfigurations();
+
+    Manager::Get()->RemoveAllEventSinksFor(this);
 }
 
-bool DebuggerManager::RegisterDebugger(cbDebuggerPlugin *plugin, wxString const &name)
+bool DebuggerManager::RegisterDebugger(cbDebuggerPlugin *plugin, const wxString &guiName, const wxString &settingsName)
 {
-    RegisteredPlugins::const_iterator it = m_registered.find(plugin);
+    RegisteredPlugins::iterator it = m_registered.find(plugin);
     if (it != m_registered.end())
         return false;
 
+    wxRegEx regExSettingsName(wxT("^[a-z_][a-z0-9_]+$"));
+    if (!regExSettingsName.Matches(settingsName))
+    {
+        wxString s;
+        s = wxString::Format(_("The settings name for the debugger plugin \"%s\" - \"%s\" contains invalid characters"),
+                             guiName.c_str(), settingsName.c_str());
+        Manager::Get()->GetLogManager()->LogError(s);
+        return false;
+    }
+
+
     PluginData data;
-    data.name = name;
-    data.menu_id = wxNewId();
+    data.m_guiName = guiName;
+    data.m_settingsName = settingsName;
 
     m_registered[plugin] = data;
 
-    ConfigManager &config = *Manager::Get()->GetConfigManager(_T("debugger_common"));
-    wxString active_debugger_name = config.Read(wxT("active_debugger"), wxEmptyString);
+    it = m_registered.find(plugin);
+    if (it == m_registered.end())
+        return false;
+    ProcessSettings(it);
 
-    if (!m_activeDebugger || active_debugger_name == name)
+    // There should at least one configuration for every plugin.
+    // If this is not the case, something is wrong and should be fixed.
+    cbAssert(!it->second.GetConfigurations().empty());
+
+    wxString activeDebuggerName;
+    int activeConfig;
+    ReadActiveDebuggerConfig(activeDebuggerName, activeConfig);
+
+    if (!m_activeDebugger)
     {
-        m_activeDebugger = plugin;
-        m_menuHandler->SetActiveDebugger(m_activeDebugger);
+        if (activeDebuggerName == settingsName)
+        {
+            if (activeConfig > static_cast<int>(it->second.GetConfigurations().size()))
+                activeConfig = 0;
+
+            m_activeDebugger = plugin;
+            m_activeDebugger->SetActiveConfig(activeConfig);
+
+            m_menuHandler->SetActiveDebugger(m_activeDebugger);
+        }
     }
-    RebuildActiveDebuggersMenu();
+
+    m_menuHandler->RebuildActiveDebuggersMenu();
+
     return true;
 }
 
@@ -676,8 +833,9 @@ bool DebuggerManager::UnregisterDebugger(cbDebuggerPlugin *plugin)
             m_activeDebugger = NULL;
         else
             m_activeDebugger = m_registered.begin()->first;
+        m_menuHandler->SetActiveDebugger(m_activeDebugger);
     }
-    RebuildActiveDebuggersMenu();
+    m_menuHandler->RebuildActiveDebuggersMenu();
 
     if (m_registered.empty())
     {
@@ -704,6 +862,72 @@ bool DebuggerManager::UnregisterDebugger(cbDebuggerPlugin *plugin)
     }
 
     return true;
+}
+
+void DebuggerManager::ProcessSettings(RegisteredPlugins::iterator it)
+{
+    cbDebuggerPlugin *plugin = it->first;
+    PluginData &data = it->second;
+    ConfigManager *config = Manager::Get()->GetConfigManager(wxT("debugger_common"));
+    wxString path = wxT("/sets/") + data.GetSettingsName();
+    wxArrayString configs = config->EnumerateSubPaths(path);
+    configs.Sort();
+
+    if (configs.empty())
+    {
+        config->Write(path + wxT("/conf1/name"), wxString(wxT("Default")));
+        configs = config->EnumerateSubPaths(path);
+        configs.Sort();
+    }
+
+    data.ClearConfigurations();
+    data.m_lastConfigID = -1;
+
+    for (size_t jj = 0; jj < configs.Count(); ++jj)
+    {
+        wxString configPath = path + wxT("/") + configs[jj];
+        wxString name = config->Read(configPath + wxT("/name"));
+
+        cbDebuggerConfiguration *pluginConfig;
+        pluginConfig = plugin->LoadConfig(ConfigManagerWrapper(wxT("debugger_common"), configPath + wxT("/values")));
+        if (pluginConfig)
+        {
+            pluginConfig->SetName(name);
+            data.GetConfigurations().push_back(pluginConfig);
+        }
+    }
+}
+
+ConfigManagerWrapper DebuggerManager::NewConfig(cbDebuggerPlugin *plugin, const wxString &name)
+{
+    RegisteredPlugins::iterator it = m_registered.find(plugin);
+    if (it == m_registered.end())
+        return ConfigManagerWrapper();
+
+    wxString path = wxT("/sets/") + it->second.GetSettingsName();
+
+    if (it->second.m_lastConfigID == -1)
+    {
+        ConfigManager *config = Manager::Get()->GetConfigManager(wxT("debugger_common"));
+        wxArrayString configs = config->EnumerateSubPaths(path);
+        for (size_t ii = 0; ii < configs.GetCount(); ++ii)
+        {
+            long id;
+            if (configs[ii].Remove(0, 4).ToLong(&id))
+                it->second.m_lastConfigID = std::max<long>(it->second.m_lastConfigID, id);
+        }
+    }
+
+    path << wxT("/conf") << ++it->second.m_lastConfigID;
+
+    return ConfigManagerWrapper(wxT("debugger_common"), path +  wxT("/values"));
+}
+
+void DebuggerManager::RebuildAllConfigs()
+{
+    for (RegisteredPlugins::iterator it = m_registered.begin(); it != m_registered.end(); ++it)
+        ProcessSettings(it);
+    m_menuHandler->RebuildActiveDebuggersMenu();
 }
 
 wxMenu* DebuggerManager::GetMenu()
@@ -741,8 +965,7 @@ wxMenu* DebuggerManager::GetMenu()
         }
         menuBar->Insert(finalPos, menu, _("&Debug"));
 
-        RebuildActiveDebuggersMenu();
-//        m_menu->Insert(0,
+        m_menuHandler->RebuildActiveDebuggersMenu();
     }
     return menu;
 }
@@ -825,46 +1048,6 @@ void DebuggerManager::HideLogger(bool for_debug)
         m_logger = NULL;
         m_loggerIndex = -1;
     }
-}
-
-bool DebuggerManager::RebuildActiveDebuggersMenu()
-{
-    wxMenu* debug_menu = GetMenu();
-    if (!debug_menu)
-        return true;
-    int item_id = debug_menu->FindItem(_("&Active debuggers"));
-    wxMenuItem *menuitem = debug_menu->FindItem(item_id, NULL);
-    if (!menuitem)
-        return false;
-
-    wxMenu *menu = menuitem->GetSubMenu();
-    if (!menu)
-        return false;
-    while (menu->GetMenuItemCount() > 0)
-    {
-        wxMenuItem *item = menu->FindItemByPosition(0);
-        menu->Destroy(item);
-    }
-
-    for (RegisteredPlugins::const_iterator it = m_registered.begin(); it != m_registered.end(); ++it)
-    {
-        PluginData const &data = it->second;
-        menu->AppendRadioItem(data.menu_id, data.name);
-
-        m_menuHandler->Connect(data.menu_id, -1, wxEVT_COMMAND_MENU_SELECTED,
-                               (wxObjectEventFunction) (wxEventFunction) (wxCommandEventFunction)
-                               &DebuggerMenuHandler::OnActiveDebuggerClick);
-    }
-
-    if (m_activeDebugger)
-    {
-        RegisteredPlugins::const_iterator it = m_registered.find(m_activeDebugger);
-        cbAssert(it != m_registered.end());
-
-        menu->Check(it->second.menu_id, true);
-    }
-
-    return true;
 }
 
 cbBacktraceDlg* DebuggerManager::GetBacktraceDialog()
@@ -1067,26 +1250,8 @@ cbDebuggerPlugin* DebuggerManager::GetActiveDebugger()
     return m_activeDebugger;
 }
 
-void DebuggerManager::SetActiveDebugger(cbDebuggerPlugin* activeDebugger)
+void RefreshBreakpoints(const cbDebuggerPlugin *plugin)
 {
-    if (m_activeDebugger && m_activeDebugger->IsRunning())
-    {
-        AnnoyingDialog dlg(_("Debugger is running"),
-                           _("Can't change the active debugger while it is running!"),
-                           wxART_WARNING, AnnoyingDialog::OK, wxID_OK);
-        dlg.ShowModal();
-        return;
-    }
-
-    RegisteredPlugins::const_iterator it = m_registered.find(activeDebugger);
-    cbAssert(it != m_registered.end());
-
-    ConfigManager &config = *Manager::Get()->GetConfigManager(_T("debugger_common"));
-    config.Write(wxT("active_debugger"), it->second.name);
-
-    m_activeDebugger = activeDebugger;
-    m_menuHandler->SetActiveDebugger(activeDebugger);
-
     EditorManager *editorManager = Manager::Get()->GetEditorManager();
     int count = editorManager->GetEditorsCount();
     for (int ii = 0; ii < count; ++ii)
@@ -1094,7 +1259,110 @@ void DebuggerManager::SetActiveDebugger(cbDebuggerPlugin* activeDebugger)
         EditorBase *editor = editorManager->GetEditor(ii);
         if (!editor->IsBuiltinEditor())
             continue;
-        editor->RefreshBreakpointMarkers(m_activeDebugger);
+        editor->RefreshBreakpointMarkers(plugin);
+    }
+}
+
+void DebuggerManager::SetActiveDebugger(cbDebuggerPlugin* activeDebugger, ConfigurationVector::iterator config)
+{
+    RegisteredPlugins::const_iterator it = m_registered.find(activeDebugger);
+    cbAssert(it != m_registered.end());
+
+    m_useTargetsDefault = false;
+    m_activeDebugger = activeDebugger;
+    int index = std::distance<ConfigurationVector::const_iterator>(it->second.GetConfigurations().begin(), config);
+    m_activeDebugger->SetActiveConfig(index);
+
+    m_menuHandler->SetActiveDebugger(activeDebugger);
+    WriteActiveDebuggerConfig(it->second.GetSettingsName(), index);
+    RefreshBreakpoints(activeDebugger);
+}
+
+bool DebuggerManager::IsActiveDebuggerTargetsDefault() const
+{
+    return m_activeDebugger && m_useTargetsDefault;
+}
+
+void DebuggerManager::SetTargetsDefaultAsActiveDebugger()
+{
+    m_activeDebugger = nullptr;
+    m_menuHandler->SetActiveDebugger(nullptr);
+    FindTargetsDebugger();
+}
+
+void DebuggerManager::FindTargetsDebugger()
+{
+    m_activeDebugger = nullptr;
+    m_menuHandler->SetActiveDebugger(nullptr);
+
+    ProjectManager* projectMgr = Manager::Get()->GetProjectManager();
+    cbProject* project = projectMgr->GetActiveProject();
+    ProjectBuildTarget *target = nullptr;
+    if (project)
+    {
+        const wxString &targetName = project->GetActiveBuildTarget();
+        if (project->BuildTargetValid(targetName))
+            target = project->GetBuildTarget(targetName);
+    }
+
+
+    Compiler *compiler = nullptr;
+    if (!target)
+    {
+        compiler = CompilerFactory::GetDefaultCompiler();
+        if (!compiler)
+        {
+            Manager::Get()->GetLogManager()->LogError(_("Can't get the active target, nor default compiler!"));
+            return;
+        }
+    }
+    else
+    {
+        compiler = CompilerFactory::GetCompiler(target->GetCompilerID());
+        if (!compiler)
+        {
+            Manager::Get()->GetLogManager()->LogError(_("Current target doesn't have valid compiler!"));
+            return;
+        }
+    }
+    wxString dbgString = compiler->GetPrograms().DBGconfig;
+    wxString::size_type pos = dbgString.find(wxT(':'));
+
+    wxString name, config;
+    if (pos != wxString::npos)
+    {
+        name = dbgString.substr(0, pos);
+        config = dbgString.substr(pos + 1, dbgString.length() - pos - 1);
+    }
+
+    if (name.empty() || config.empty())
+    {
+        Manager::Get()->GetLogManager()->LogError(_("Current compiler doesn't have correctly defined debugger!"));
+        return;
+    }
+
+    for (RegisteredPlugins::iterator it = m_registered.begin(); it != m_registered.end(); ++it)
+    {
+        PluginData &data = it->second;
+        if (data.GetSettingsName() == name)
+        {
+            ConfigurationVector &configs = data.GetConfigurations();
+            int index = 0;
+            for (ConfigurationVector::iterator itConf = configs.begin(); itConf != configs.end(); ++itConf, ++index)
+            {
+                if ((*itConf)->GetName() == config)
+                {
+                    m_activeDebugger = it->first;
+                    m_activeDebugger->SetActiveConfig(index);
+                    m_useTargetsDefault = true;
+
+                    m_menuHandler->SetActiveDebugger(m_activeDebugger);
+                    WriteActiveDebuggerConfig(wxEmptyString, -1);
+                    RefreshBreakpoints(m_activeDebugger);
+                    return;
+                }
+            }
+        }
     }
 }
 
@@ -1106,4 +1374,25 @@ bool DebuggerManager::IsDisassemblyMixedMode()
 void DebuggerManager::SetDisassemblyMixedMode(bool mixed)
 {
     m_isDisassemblyMixedMode = mixed;
+}
+
+void DebuggerManager::OnProjectActivated(CodeBlocksEvent& event)
+{
+    if (m_useTargetsDefault)
+        FindTargetsDebugger();
+}
+
+void DebuggerManager::OnTargetSelected(CodeBlocksEvent& event)
+{
+    if (m_useTargetsDefault)
+        FindTargetsDebugger();
+}
+
+void DebuggerManager::OnSettingsChanged(CodeBlocksEvent& event)
+{
+    if (event.GetInt() == cbSettingsType::Compiler || event.GetInt() == cbSettingsType::Debugger)
+    {
+        if (m_useTargetsDefault)
+            FindTargetsDebugger();
+    }
 }

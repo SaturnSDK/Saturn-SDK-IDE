@@ -14,6 +14,7 @@
     #include <wx/sizer.h>
 
     #include "cbplugin.h"
+    #include "debuggermanager.h"
 #endif
 
 #include "threadsdlg.h"

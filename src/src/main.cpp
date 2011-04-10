@@ -15,6 +15,7 @@
 #include "cbauibook.h"
 #include "cbstyledtextctrl.h"
 #include "compilersettingsdlg.h"
+#include "debuggersettingsdlg.h"
 #include "dlgabout.h"
 #include "dlgaboutplugin.h"
 #include "environmentsettingsdlg.h"
@@ -263,7 +264,8 @@ int idSearchGotoPreviousChanged = XRCID("idSearchGotoPreviousChanged");
 int idSettingsEnvironment = XRCID("idSettingsEnvironment");
 int idSettingsGlobalUserVars = XRCID("idSettingsGlobalUserVars");
 int idSettingsEditor = XRCID("idSettingsEditor");
-int idSettingsCompilerDebugger = XRCID("idSettingsCompilerDebugger");
+int idSettingsCompiler = XRCID("idSettingsCompiler");
+int idSettingsDebugger = XRCID("idSettingsDebugger");
 int idPluginsManagePlugins = XRCID("idPluginsManagePlugins");
 int idSettingsScripting = XRCID("idSettingsScripting");
 
@@ -479,7 +481,8 @@ BEGIN_EVENT_TABLE(MainFrame, wxFrame)
     EVT_MENU(idSettingsEnvironment, MainFrame::OnSettingsEnvironment)
     EVT_MENU(idSettingsGlobalUserVars, MainFrame::OnGlobalUserVars)
     EVT_MENU(idSettingsEditor, MainFrame::OnSettingsEditor)
-    EVT_MENU(idSettingsCompilerDebugger, MainFrame::OnSettingsCompilerDebugger)
+    EVT_MENU(idSettingsCompiler, MainFrame::OnSettingsCompiler)
+    EVT_MENU(idSettingsDebugger, MainFrame::OnSettingsDebugger)
     EVT_MENU(idPluginsManagePlugins, MainFrame::OnSettingsPlugins)
     EVT_MENU(idSettingsScripting, MainFrame::OnSettingsScripting)
 
@@ -4405,11 +4408,28 @@ void MainFrame::OnSettingsEditor(wxCommandEvent& /*event*/)
     Manager::Get()->GetEditorManager()->Configure();
 }
 
-void MainFrame::OnSettingsCompilerDebugger(wxCommandEvent& /*event*/)
+void MainFrame::OnSettingsCompiler(wxCommandEvent& /*event*/)
 {
     CompilerSettingsDlg dlg(this);
     PlaceWindow(&dlg);
-    dlg.ShowModal();
+    if (dlg.ShowModal() == wxID_OK)
+    {
+        CodeBlocksEvent event(cbEVT_SETTINGS_CHANGED);
+        event.SetInt(cbSettingsType::Compiler);
+        Manager::Get()->ProcessEvent(event);
+    }
+}
+
+void MainFrame::OnSettingsDebugger(wxCommandEvent& /*event*/)
+{
+    DebuggerSettingsDlg dlg(this);
+    PlaceWindow(&dlg);
+    if (dlg.ShowModal() == wxID_OK)
+    {
+        CodeBlocksEvent event(cbEVT_SETTINGS_CHANGED);
+        event.SetInt(cbSettingsType::Debugger);
+        Manager::Get()->ProcessEvent(event);
+    }
 }
 
 void MainFrame::OnSettingsPlugins(wxCommandEvent& /*event*/)

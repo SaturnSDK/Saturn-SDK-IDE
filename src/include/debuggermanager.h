@@ -12,6 +12,8 @@
 #   include <manager.h>
 #   include <settings.h>
 #   include <wx/string.h>
+
+#   include "configmanager.h"
 #endif
 
 class wxMenu;
@@ -176,6 +178,57 @@ class DLLIMPORT cbThread
         wxString m_info;
 };
 
+/**
+  *
+  */
+class DLLIMPORT cbDebuggerConfiguration
+{
+    protected:
+        cbDebuggerConfiguration(const cbDebuggerConfiguration &o);
+        cbDebuggerConfiguration& operator =(const cbDebuggerConfiguration &);
+
+    public:
+        cbDebuggerConfiguration(const ConfigManagerWrapper &config);
+        virtual ~cbDebuggerConfiguration() {}
+
+        virtual cbDebuggerConfiguration* Clone() const = 0;
+
+        virtual wxPanel* MakePanel(wxWindow *parent) = 0;
+        virtual bool SaveChanges(wxPanel *panel) = 0;
+
+        void SetName(const wxString &name);
+        const wxString& GetName() const;
+
+        const ConfigManagerWrapper& GetConfig() const;
+        void SetConfig(const ConfigManagerWrapper &config);
+
+        void SetMenuId(long id);
+        long GetMenuId() const;
+
+    protected:
+        ConfigManagerWrapper m_config;
+    private:
+        wxString m_name;
+        long m_menuId;
+};
+
+/**
+  *
+  */
+struct DLLIMPORT cbDebuggerCommonConfig
+{
+    enum Flags
+    {
+        AutoBuild = 0,
+        AutoSwitchFrame,
+        ShowDebuggersLog,
+        JumpOnDoubleClick
+    };
+
+    static bool GetFlag(Flags flag);
+    static void SetFlag(Flags flag, bool value);
+};
+
 class DLLIMPORT DebuggerManager : public Mgr<DebuggerManager>
 {
     private:
@@ -185,27 +238,41 @@ class DLLIMPORT DebuggerManager : public Mgr<DebuggerManager>
         friend class Mgr<DebuggerManager>;
         friend class Manager;
     public:
+        typedef std::vector<cbDebuggerConfiguration*> ConfigurationVector;
         struct PluginData
         {
-            PluginData() :
-                menu_id(-1)
-            {
-            }
+            friend class DebuggerManager;
 
-            wxString name;
-            int menu_id;
+            PluginData() :  m_lastConfigID(-1) {}
+
+            const wxString &GetGUIName() const { return m_guiName; }
+            const wxString &GetSettingsName() const { return m_settingsName; }
+
+            ConfigurationVector& GetConfigurations() { return m_configurations; }
+            const ConfigurationVector& GetConfigurations() const { return m_configurations; }
+
+            cbDebuggerConfiguration* GetConfiguration(int index);
+
+            void ClearConfigurations()
+            {
+                for (ConfigurationVector::iterator it = m_configurations.begin(); it != m_configurations.end(); ++it)
+                    delete *it;
+                m_configurations.clear();
+            }
+        private:
+            ConfigurationVector m_configurations;
+            wxString m_guiName;
+            wxString m_settingsName;
+            int m_lastConfigID;
         };
         typedef std::map<cbDebuggerPlugin*, PluginData> RegisteredPlugins;
 
-//        enum SyncEditorResult
-//        {
-//            SyncOk = 0,
-//            SyncFileNotFound,
-//            SyncFileUnknown
-//        };
     public:
-        bool RegisterDebugger(cbDebuggerPlugin *plugin, wxString const &name);
+        bool RegisterDebugger(cbDebuggerPlugin *plugin, const wxString &guiName, const wxString &settingsName);
         bool UnregisterDebugger(cbDebuggerPlugin *plugin);
+
+        ConfigManagerWrapper NewConfig(cbDebuggerPlugin *plugin, const wxString &name);
+        void RebuildAllConfigs();
 
         wxMenu* GetMenu();
         void BuildContextMenu(wxMenu &menu, const wxString& word_at_caret, bool is_running);
@@ -239,13 +306,20 @@ class DLLIMPORT DebuggerManager : public Mgr<DebuggerManager>
         RegisteredPlugins const & GetAllDebuggers() const;
         RegisteredPlugins & GetAllDebuggers();
         cbDebuggerPlugin* GetActiveDebugger();
-        void SetActiveDebugger(cbDebuggerPlugin* activeDebugger);
+        void SetActiveDebugger(cbDebuggerPlugin* activeDebugger, ConfigurationVector::iterator config);
+        void SetTargetsDefaultAsActiveDebugger();
+        bool IsActiveDebuggerTargetsDefault() const;
 
         bool IsDisassemblyMixedMode();
         void SetDisassemblyMixedMode(bool mixed);
 
     private:
-        bool RebuildActiveDebuggersMenu();
+        void ProcessSettings(RegisteredPlugins::iterator it);
+        void FindTargetsDebugger();
+
+        void OnProjectActivated(CodeBlocksEvent& event);
+        void OnTargetSelected(CodeBlocksEvent& event);
+        void OnSettingsChanged(CodeBlocksEvent& event);
     private:
 
         RegisteredPlugins m_registered;
@@ -266,6 +340,7 @@ class DLLIMPORT DebuggerManager : public Mgr<DebuggerManager>
         int m_loggerIndex;
         int m_debugLoggerIndex;
         bool m_isDisassemblyMixedMode;
+        bool m_useTargetsDefault;
 };
 
 #endif // X_DEBUGGER_MANAGER_H

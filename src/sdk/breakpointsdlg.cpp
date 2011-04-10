@@ -101,7 +101,7 @@ void cbBreakpointsDlg::Reload()
         for (int ii = 0; ii < count; ++ii)
         {
             cbBreakpoint *bp = dbg->first->GetBreakpoint(ii);
-            m_breakpoints.push_back(Item(bp, dbg->first, dbg->second.name));
+            m_breakpoints.push_back(Item(bp, dbg->first, dbg->second.GetGUIName()));
         }
     }
 

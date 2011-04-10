@@ -8,12 +8,13 @@
  */
 
 #include "sdk_precomp.h"
+
 #ifndef CB_PRECOMP
-    #include <wx/intl.h>
-    #include <wx/xrc/xmlres.h>
-    #include <wx/textctrl.h>
-    #include <wx/combobox.h>
     #include <wx/button.h>
+    #include <wx/combobox.h>
+    #include <wx/intl.h>
+    #include <wx/textctrl.h>
+    #include <wx/xrc/xmlres.h>
 
     #include "cbplugin.h"
 #endif

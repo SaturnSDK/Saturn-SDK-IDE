@@ -24,6 +24,7 @@
     #include "editorcolourset.h"
     #include "manager.h"
     #include "configmanager.h"
+    #include "debuggermanager.h"
     #include "projectmanager.h"
     #include "pluginmanager.h"
     #include "editormanager.h"

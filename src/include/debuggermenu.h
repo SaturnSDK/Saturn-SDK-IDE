@@ -13,10 +13,10 @@ class wxToolBar;
 
 class DebuggerMenuHandler : public wxEvtHandler
 {
-        friend class DebuggerManager;
     public:
         DebuggerMenuHandler();
         void SetActiveDebugger(cbDebuggerPlugin *active);
+        void RebuildActiveDebuggersMenu();
         void BuildContextMenu(wxMenu &menu, const wxString& word_at_caret, bool is_running);
     private:
         void OnUpdateUI(wxUpdateUIEvent& event);
@@ -50,6 +50,7 @@ class DebuggerMenuHandler : public wxEvtHandler
         void OnWatches(wxCommandEvent& event);
 
         void OnActiveDebuggerClick(wxCommandEvent& event);
+        void OnActiveDebuggerTargetsDefaultClick(wxCommandEvent& event);
 
         DECLARE_EVENT_TABLE();
     private:

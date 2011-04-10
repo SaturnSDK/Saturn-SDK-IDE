@@ -25,6 +25,7 @@
     #include "infowindow.h"
     #include "macrosmanager.h"
     #include "configmanager.h"
+    #include "debuggermanager.h"
 #endif
 
 #include <wx/toolbar.h>
@@ -119,7 +120,8 @@ cbDebuggerPlugin::cbDebuggerPlugin() :
     m_WaitingCompilerToFinish(false),
     m_EditorHookId(-1),
     m_StartType(StartTypeUnknown),
-    m_DragInProgress(false)
+    m_DragInProgress(false),
+    m_ActiveConfig(0)
 {
     m_Type = ptDebugger;
 }
@@ -145,6 +147,7 @@ void cbDebuggerPlugin::OnAttach()
 void cbDebuggerPlugin::OnRelease(bool appShutDown)
 {
     EditorHooks::UnregisterHook(m_EditorHookId, true);
+    Manager::Get()->RemoveAllEventSinksFor(this);
 
     OnReleaseReal(appShutDown);
 }
@@ -242,6 +245,30 @@ bool cbDebuggerPlugin::ToolMenuEnabled() const
 
     bool en = (prj && !prj->GetCurrentlyCompilingTarget()) || IsAttachedToProcess();
     return IsRunning() && en;
+}
+
+cbDebuggerConfiguration& cbDebuggerPlugin::GetActiveConfig()
+{
+    DebuggerManager::RegisteredPlugins &allPlugins = Manager::Get()->GetDebuggerManager()->GetAllDebuggers();
+
+    DebuggerManager::RegisteredPlugins::iterator it = allPlugins.find(this);
+    if (it == allPlugins.end())
+        cbAssert(false);
+    cbDebuggerConfiguration *config = it->second.GetConfiguration(m_ActiveConfig);
+    if (!config)
+        return *it->second.GetConfigurations().front();
+    else
+        return *config;
+}
+
+void cbDebuggerPlugin::SetActiveConfig(int index)
+{
+    m_ActiveConfig = index;
+}
+
+int cbDebuggerPlugin::GetIndexOfActiveConfig() const
+{
+    return m_ActiveConfig;
 }
 
 void cbDebuggerPlugin::ClearActiveMarkFromAllEditors()
@@ -633,55 +660,6 @@ bool cbDebuggerPlugin::GetDebuggee(wxString &pathToDebuggee, wxString &workingDi
     return true;
 }
 
-wxString cbDebuggerPlugin::FindDebuggerExecutable(Compiler* compiler)
-{
-    if (compiler->GetPrograms().DBG.IsEmpty())
-        return wxEmptyString;
-//    if (!wxFileExists(compiler->GetMasterPath() + wxFILE_SEP_PATH + _T("bin") + wxFILE_SEP_PATH + compiler->GetPrograms().DBG))
-//        return wxEmptyString;
-
-    wxString masterPath = compiler->GetMasterPath();
-    while (masterPath.Last() == '\\' || masterPath.Last() == '/')
-        masterPath.RemoveLast();
-    wxString gdb = compiler->GetPrograms().DBG;
-    const wxArrayString& extraPaths = compiler->GetExtraPaths();
-
-    wxPathList pathList;
-    pathList.Add(masterPath + wxFILE_SEP_PATH + _T("bin"));
-    for (unsigned int i = 0; i < extraPaths.GetCount(); ++i)
-    {
-        if (!extraPaths[i].IsEmpty())
-            pathList.Add(extraPaths[i]);
-    }
-    pathList.AddEnvList(_T("PATH"));
-    wxString binPath = pathList.FindAbsoluteValidPath(gdb);
-    // it seems, under Win32, the above command doesn't search in paths with spaces...
-    // look directly for the file in question in masterPath
-    if (binPath.IsEmpty() || !(pathList.Index(wxPathOnly(binPath)) != wxNOT_FOUND))
-    {
-        if (wxFileExists(masterPath + wxFILE_SEP_PATH + _T("bin") + wxFILE_SEP_PATH + gdb))
-            binPath = masterPath + wxFILE_SEP_PATH + _T("bin");
-        else if (wxFileExists(masterPath + wxFILE_SEP_PATH + gdb))
-            binPath = masterPath;
-        else
-        {
-            for (unsigned int i = 0; i < extraPaths.GetCount(); ++i)
-            {
-                if (!extraPaths[i].IsEmpty())
-                {
-                    if (wxFileExists(extraPaths[i] + wxFILE_SEP_PATH + gdb))
-                    {
-                        binPath = extraPaths[i];
-                        break;
-                    }
-                }
-            }
-        }
-    }
-
-    return binPath;
-}
-
 bool cbDebuggerPlugin::EnsureBuildUpToDate(StartType startType)
 {
     m_StartType = startType;
@@ -691,7 +669,7 @@ bool cbDebuggerPlugin::EnsureBuildUpToDate(StartType startType)
     if (!IsAttachedToProcess())
     {
         // should we build to make sure project is up-to-date?
-        if (!Manager::Get()->GetConfigManager(_T("debugger"))->ReadBool(_T("auto_build"), true))
+        if (!cbDebuggerCommonConfig::GetFlag(cbDebuggerCommonConfig::AutoBuild))
         {
             m_WaitingCompilerToFinish = false;
             m_pCompiler = NULL;

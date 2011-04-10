@@ -203,15 +203,13 @@ void DebuggerGDB::OnAttachReal()
     m_TimerPollDebugger.SetOwner(this, idTimerPollDebugger);
 
     DebuggerManager *dbg_manager = Manager::Get()->GetDebuggerManager();
-    dbg_manager->RegisterDebugger(this, _T("gdb_debugger"));
+    dbg_manager->RegisterDebugger(this, wxT("GDB debugger"), wxT("gdb_debugger"));
 
     dbg_manager->GetLogger(false, m_PageIndex);
 
-    m_HasDebugLog = Manager::Get()->GetConfigManager(_T("debugger"))->ReadBool(_T("debug_log"), false);
+    m_HasDebugLog = cbDebuggerCommonConfig::GetFlag(cbDebuggerCommonConfig::ShowDebuggersLog);
     if (m_HasDebugLog)
-    {
         dbg_manager->GetLogger(true, m_DbgPageIndex);
-    }
 
     {
         DebuggerManager *manager = Manager::Get()->GetDebuggerManager();
@@ -259,21 +257,14 @@ void DebuggerGDB::OnReleaseReal(bool /*appShutDown*/)
     dbg_manager->UnregisterDebugger(this);
 }
 
-int DebuggerGDB::Configure()
+cbDebuggerConfiguration* DebuggerGDB::LoadConfig(const ConfigManagerWrapper &config)
 {
-//    DebuggerOptionsDlg dlg(Manager::Get()->GetAppWindow());
-//    int ret = dlg.ShowModal();
-//
-//    bool needsRestart = Manager::Get()->GetConfigManager(_T("debugger"))->ReadBool(_T("debug_log"), false) != m_HasDebugLog;
-//    if (needsRestart)
-//        cbMessageBox(_("Code::Blocks needs to be restarted for the changes to take effect."), _("Information"), wxICON_INFORMATION);
-    return 0;
+    return new DebuggerConfiguration(config);
 }
 
-cbConfigurationPanel* DebuggerGDB::GetConfigurationPanel(wxWindow* parent)
+DebuggerConfiguration& DebuggerGDB::GetActiveConfigEx()
 {
-    DebuggerOptionsDlg* dlg = new DebuggerOptionsDlg(parent, this);
-    return dlg;
+    return static_cast<DebuggerConfiguration&>(GetActiveConfig());
 }
 
 cbConfigurationPanel* DebuggerGDB::GetProjectConfigurationPanel(wxWindow* parent, cbProject* project)
@@ -282,11 +273,13 @@ cbConfigurationPanel* DebuggerGDB::GetProjectConfigurationPanel(wxWindow* parent
     return dlg;
 }
 
-void DebuggerGDB::RefreshConfiguration()
+void DebuggerGDB::OnConfigurationChange(bool isActive)
 {
-    // the only thing that we need to change on the fly, is the debugger's debug log
-    bool log_visible = Manager::Get()->GetConfigManager(_T("debugger"))->ReadBool(_T("debug_log"), false);
+    if (!isActive)
+        return;
 
+    // the only thing that we need to change on the fly, is the debugger's debug log
+    bool log_visible = cbDebuggerCommonConfig::GetFlag(cbDebuggerCommonConfig::ShowDebuggersLog);
     if (!log_visible && m_HasDebugLog)
     {
         Manager::Get()->GetDebuggerManager()->HideLogger(true);
@@ -481,9 +474,9 @@ void DebuggerGDB::DoWatches()
     if (!m_pProcess)
         return;
 
-    ConfigManager *config_manager = Manager::Get()->GetConfigManager(_T("debugger"));
-    m_State.GetDriver()->UpdateWatches(config_manager->ReadBool(_T("watch_locals"), true),
-                                       config_manager->ReadBool(_T("watch_args"), true),
+    DebuggerConfiguration &config = GetActiveConfigEx();
+    m_State.GetDriver()->UpdateWatches(config.GetFlag(DebuggerConfiguration::WatchLocals),
+                                       config.GetFlag(DebuggerConfiguration::WatchFuncArgs),
                                        m_watches);
 }
 
@@ -589,7 +582,7 @@ bool DebuggerGDB::Debug(bool breakOnEntry)
     if (m_HasDebugLog)
         Manager::Get()->GetDebuggerManager()->GetLogger(true)->Clear();
 
-    ShowLog(true);
+    ShowLog(false);
 
     // can only debug projects or attach to processes
     ProjectManager* prjMan = Manager::Get()->GetProjectManager();
@@ -682,12 +675,12 @@ int DebuggerGDB::DoDebug(bool breakOnEntry)
 
     // is gdb accessible, i.e. can we find it?
     wxString cmdexe;
-    cmdexe = actualCompiler->GetPrograms().DBG;
+    cmdexe = GetActiveConfigEx().GetDebuggerExecutable();
     cmdexe.Trim();
     cmdexe.Trim(true);
     if(cmdexe.IsEmpty())
     {
-        msgMan->Log(_("ERROR: You need to specify a debugger program in the compiler's settings."), m_PageIndex);
+        msgMan->Log(_("ERROR: You need to specify a debugger program in the debuggers's settings."), m_PageIndex);
 
         if(platform::windows)
         {
@@ -701,18 +694,6 @@ int DebuggerGDB::DoDebug(bool breakOnEntry)
 
         m_Canceled = true;
         return -1;
-    }
-
-    // access the gdb executable name
-    cmdexe = FindDebuggerExecutable(actualCompiler);
-    if (cmdexe.IsEmpty())
-    {
-        cbMessageBox(_("The debugger executable is not set.\n"
-                       "To set it, go to \"Settings/Compiler and debugger\", switch to the\n"
-                       "\"Toolchain executables\" tab, and select the debugger program."), _("Error"), wxICON_ERROR);
-        msgMan->Log(_("Aborted"), m_PageIndex);
-        m_Canceled = true;
-        return 4;
     }
 
     // start debugger driver based on target compiler, or default compiler if no target
@@ -746,7 +727,7 @@ int DebuggerGDB::DoDebug(bool breakOnEntry)
     {
         m_State.GetDriver()->ClearDirectories();
         // add other open projects dirs as search dirs (only if option is enabled)
-        if (Manager::Get()->GetConfigManager(_T("debugger"))->ReadBool(_T("add_other_search_dirs"), false))
+        if (GetActiveConfigEx().GetFlag(DebuggerConfiguration::AddOtherProjectDirs))
         {
             // add as include dirs all open project base dirs
             ProjectsArray* projects = prjMan->GetProjects();
@@ -1540,7 +1521,7 @@ bool DebuggerGDB::RunToCursor(const wxString& filename, int line, const wxString
     }
     else
     {
-        if (!Manager::Get()->GetConfigManager(_T("debugger"))->ReadBool(_T("do_not_run"), false))
+        if (!GetActiveConfigEx().GetFlag(DebuggerConfiguration::DoNotRun))
             m_State.AddBreakpoint(filename, line, true, line_text);
         return Debug(false);
     }
@@ -1841,7 +1822,7 @@ void DebuggerGDB::OnValueTooltip(CodeBlocksEvent& event)
     if (!m_State.HasDriver() || !m_State.GetDriver()->IsDebuggingStarted())
         return;
 
-    if (!Manager::Get()->GetConfigManager(_T("debugger"))->ReadBool(_T("eval_tooltip"), false))
+    if (!GetActiveConfigEx().GetFlag(DebuggerConfiguration::EvalExpression))
         return;
 
     if (DragInProgress())
@@ -1932,7 +1913,7 @@ void DebuggerGDB::OnCursorChanged(wxCommandEvent& WXUNUSED(event))
         // send us this event if it was stopped anyway
         if (/*m_State.GetDriver()->IsStopped() &&*/ cursor.changed)
         {
-            bool autoSwitch = Manager::Get()->GetConfigManager(_T("debugger"))->ReadBool(_T("auto_switch_frame"), true);
+            bool autoSwitch = cbDebuggerCommonConfig::GetFlag(cbDebuggerCommonConfig::AutoSwitchFrame);
 
             MarkAllWatchesAsUnchanged();
 

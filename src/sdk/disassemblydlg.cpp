@@ -7,7 +7,7 @@
  * $HeadURL$
  */
 
-#include "sdk_precomp.h"
+#include "sdk.h"
 
 #include "disassemblydlg.h"
 #ifndef CB_PRECOMP

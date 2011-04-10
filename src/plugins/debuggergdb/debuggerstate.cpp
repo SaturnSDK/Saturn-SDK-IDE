@@ -12,6 +12,7 @@
 #include "debuggerstate.h"
 #include <compilerfactory.h>
 #include "debuggergdb.h"
+#include "debuggeroptionsdlg.h"
 #include "projectbuildtarget.h"
 #include "cdb_driver.h"
 #include "gdb_driver.h"
@@ -37,11 +38,11 @@ bool DebuggerState::StartDriver(ProjectBuildTarget* target)
 {
     StopDriver();
     SetupBreakpointIndices();
-    wxString idx = target ? target->GetCompilerID() : CompilerFactory::GetDefaultCompilerID();
-    if (CompilerFactory::CompilerInheritsFrom(idx, _T("msvc*"))) // MSVC
-        m_pDriver = new CDB_driver(m_pPlugin);
-    else
+
+    if (m_pPlugin->GetActiveConfigEx().IsGDB())
         m_pDriver = new GDB_driver(m_pPlugin);
+    else
+        m_pDriver = new CDB_driver(m_pPlugin);
     m_pDriver->SetTarget(target);
     return true;
 }

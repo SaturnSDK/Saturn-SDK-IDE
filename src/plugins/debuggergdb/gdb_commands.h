@@ -1086,7 +1086,7 @@ class GdbCmd_Backtrace : public DebuggerCmd
             }
             if (validFrameNumber > 0) // if it's 0, then the driver already synced the editor
             {
-                bool autoSwitch = Manager::Get()->GetConfigManager(_T("debugger"))->ReadBool(_T("auto_switch_frame"), true);
+                bool autoSwitch = cbDebuggerCommonConfig::GetFlag(cbDebuggerCommonConfig::AutoSwitchFrame);
                 if (!autoSwitch)
                 {
                     long line;

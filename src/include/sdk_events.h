@@ -407,4 +407,18 @@ extern EVTIMPORT const wxEventType cbEVT_UNLOCK_LOG_MANAGER;
 extern EVTIMPORT const wxEventType cbEVT_CBAUIBOOK_LEFT_DCLICK;
 #define EVT_CBAUIBOOK_LEFT_DCLICK(winid, fn) DECLARE_EVENT_TABLE_ENTRY( cbEVT_CBAUIBOOK_LEFT_DCLICK, winid, -1, (wxObjectEventFunction)(wxEventFunction)(wxMouseEventFunction)&fn, (wxObject *) NULL ),
 
+// settings events
+
+// event.GetInt() returns value of type cbSettingsType::Type indicating which setting group was changed
+struct cbSettingsType
+{
+    enum Type
+    {
+        Compiler,
+        Debugger
+    };
+};
+extern EVTIMPORT const wxEventType cbEVT_SETTINGS_CHANGED;
+#define EVT_SETTINGS_CHANGED(fn) DECLARE_EVENT_TABLE_ENTRY( cbEVT_DEBUGGER_FINISHED, -1, -1, (wxObjectEventFunction)(wxEventFunction)(CodeBlocksEventFunction)&fn, (wxObject *) NULL ),
+
 #endif // SDK_EVENTS_H

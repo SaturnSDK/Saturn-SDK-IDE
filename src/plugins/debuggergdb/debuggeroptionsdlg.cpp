@@ -9,59 +9,185 @@
 
 #include <sdk.h>
 #include "debuggeroptionsdlg.h"
-#include <configmanager.h>
-#include <wx/intl.h>
-#include <wx/xrc/xmlres.h>
-#include <wx/spinctrl.h>
-#include <wx/textctrl.h>
-#include <wx/checkbox.h>
-#include <wx/choice.h>
+#ifndef CB_PRECOMP
+    #include <wx/checkbox.h>
+    #include <wx/choice.h>
+    #include <wx/filedlg.h>
+    #include <wx/intl.h>
+    #include <wx/radiobox.h>
+    #include <wx/spinctrl.h>
+    #include <wx/textctrl.h>
+    #include <wx/xrc/xmlres.h>
+
+    #include <configmanager.h>
+#endif
 
 #include "debuggergdb.h"
 
-DebuggerOptionsDlg::DebuggerOptionsDlg(wxWindow* parent, DebuggerGDB* plugin)
-    : m_pPlugin(plugin)
+class DebuggerConfigurationPanel : public wxPanel
 {
-    //ctor
-    wxXmlResource::Get()->LoadPanel(this, parent, _T("dlgDebuggerOptions"));
+    public:
+        void ValidateExecutablePath()
+        {
+            wxTextCtrl *pathCtrl = XRCCTRL(*this, "txtExecutablePath", wxTextCtrl);
+            wxString path = pathCtrl->GetValue();
+            if (!wxFileExists(path))
+            {
+                pathCtrl->SetForegroundColour(*wxWHITE);
+                pathCtrl->SetBackgroundColour(*wxRED);
+                pathCtrl->SetToolTip(_("Full path to the debugger's executable. Executable can't be found on the filesystem!"));
+            }
+            else
+            {
+                pathCtrl->SetForegroundColour(wxNullColour);
+                pathCtrl->SetBackgroundColour(wxNullColour);
+                pathCtrl->SetToolTip(_("Full path to the debugger's executable."));
+            }
+        }
+    private:
+        void OnBrowse(wxCommandEvent &event)
+        {
+            wxString oldPath = XRCCTRL(*this, "txtExecutablePath", wxTextCtrl)->GetValue();
+            wxFileDialog dlg(this, _("Select executable file"), wxEmptyString, oldPath,
+                             wxFileSelectorDefaultWildcardStr, wxFD_OPEN | wxFD_FILE_MUST_EXIST);
+            PlaceWindow(&dlg);
+            if (dlg.ShowModal() == wxID_OK)
+            {
+                wxString newPath = dlg.GetPath();
+                XRCCTRL(*this, "txtExecutablePath", wxTextCtrl)->ChangeValue(newPath);
+            }
+        }
 
-    ConfigManager* cfg = Manager::Get()->GetConfigManager(_T("debugger"));
-    XRCCTRL(*this, "txtInit",           wxTextCtrl)->SetValue(cfg->Read(_T("init_commands"), wxEmptyString));
-    XRCCTRL(*this, "chkAutoBuild",      wxCheckBox)->SetValue(cfg->ReadBool(_T("auto_build"),            true));
-    XRCCTRL(*this, "chkWatchArgs",      wxCheckBox)->SetValue(cfg->ReadBool(_T("watch_args"),            true));
-    XRCCTRL(*this, "chkWatchLocals",    wxCheckBox)->SetValue(cfg->ReadBool(_T("watch_locals"),          true));
-    XRCCTRL(*this, "chkCatchExceptions",wxCheckBox)->SetValue(cfg->ReadBool(_T("catch_exceptions"),      true));
-    XRCCTRL(*this, "chkAutoSwitchFrame",wxCheckBox)->SetValue(cfg->ReadBool(_T("auto_switch_frame"),     true));
-    XRCCTRL(*this, "chkTooltipEval",    wxCheckBox)->SetValue(cfg->ReadBool(_T("eval_tooltip"),          false));
-    XRCCTRL(*this, "chkDebugLog",       wxCheckBox)->SetValue(cfg->ReadBool(_T("debug_log"),             false));
-    XRCCTRL(*this, "chkAddForeignDirs", wxCheckBox)->SetValue(cfg->ReadBool(_T("add_other_search_dirs"), false));
-    XRCCTRL(*this, "chkDoNotRun",       wxCheckBox)->SetValue(cfg->ReadBool(_T("do_not_run"),            false));
-    XRCCTRL(*this, "choDisassemblyFlavor", wxChoice)->SetSelection(cfg->ReadInt(_T("disassembly_flavor"), 0));
-    XRCCTRL(*this, "txtInstructionSet", wxTextCtrl)->SetValue(cfg->Read(_T("instruction_set"), wxEmptyString));
-    XRCCTRL(*this, "spnArrayElems",     wxSpinCtrl)->SetValue(cfg->ReadInt(_T("single_line_array_elem_count"), 8));
+        void OnTextChange(wxCommandEvent &event)
+        {
+            ValidateExecutablePath();
+        }
+    private:
+        DECLARE_EVENT_TABLE()
+};
+
+BEGIN_EVENT_TABLE(DebuggerConfigurationPanel, wxPanel)
+    EVT_BUTTON(XRCID("btnBrowse"), DebuggerConfigurationPanel::OnBrowse)
+    EVT_TEXT(XRCID("txtExecutablePath"), DebuggerConfigurationPanel::OnTextChange)
+END_EVENT_TABLE()
+
+DebuggerConfiguration::DebuggerConfiguration(const ConfigManagerWrapper &config) : cbDebuggerConfiguration(config)
+{
 }
 
-DebuggerOptionsDlg::~DebuggerOptionsDlg()
+cbDebuggerConfiguration* DebuggerConfiguration::Clone() const
 {
-    //dtor
+    return new DebuggerConfiguration(*this);
 }
 
-void DebuggerOptionsDlg::OnApply()
+wxPanel* DebuggerConfiguration::MakePanel(wxWindow *parent)
 {
-    ConfigManager* cfg = Manager::Get()->GetConfigManager(_T("debugger"));
-    cfg->Write(_T("init_commands"),         XRCCTRL(*this, "txtInit",           wxTextCtrl)->GetValue());
-    cfg->Write(_T("auto_build"),            XRCCTRL(*this, "chkAutoBuild",      wxCheckBox)->GetValue());
-    cfg->Write(_T("watch_args"),            XRCCTRL(*this, "chkWatchArgs",      wxCheckBox)->GetValue());
-    cfg->Write(_T("watch_locals"),          XRCCTRL(*this, "chkWatchLocals",    wxCheckBox)->GetValue());
-    cfg->Write(_T("catch_exceptions"),      XRCCTRL(*this, "chkCatchExceptions",wxCheckBox)->GetValue());
-    cfg->Write(_T("auto_switch_frame"),     XRCCTRL(*this, "chkAutoSwitchFrame",wxCheckBox)->GetValue());
-    cfg->Write(_T("eval_tooltip"),          XRCCTRL(*this, "chkTooltipEval",    wxCheckBox)->GetValue());
-    cfg->Write(_T("debug_log"),             XRCCTRL(*this, "chkDebugLog",       wxCheckBox)->GetValue());
-    cfg->Write(_T("add_other_search_dirs"), XRCCTRL(*this, "chkAddForeignDirs", wxCheckBox)->GetValue());
-    cfg->Write(_T("do_not_run"),            XRCCTRL(*this, "chkDoNotRun",       wxCheckBox)->GetValue());
-    cfg->Write(_T("disassembly_flavor"),    XRCCTRL(*this, "choDisassemblyFlavor", wxChoice)->GetSelection());
-    cfg->Write(_T("instruction_set"),       XRCCTRL(*this, "txtInstructionSet", wxTextCtrl)->GetValue());
-    cfg->Write(_T("single_line_array_elem_count"), XRCCTRL(*this, "spnArrayElems", wxSpinCtrl)->GetValue());
+    DebuggerConfigurationPanel *panel = new DebuggerConfigurationPanel;
+    if (!wxXmlResource::Get()->LoadPanel(panel, parent, wxT("dlgDebuggerOptions")))
+        return panel;
 
-    m_pPlugin->RefreshConfiguration();
+    XRCCTRL(*panel, "txtExecutablePath", wxTextCtrl)->ChangeValue(GetDebuggerExecutable());
+    panel->ValidateExecutablePath();
+
+    XRCCTRL(*panel, "rbType",            wxRadioBox)->SetSelection(IsGDB() ? 0 : 1);
+    XRCCTRL(*panel, "txtInit",           wxTextCtrl)->ChangeValue(GetInitCommands());
+    XRCCTRL(*panel, "chkWatchArgs",      wxCheckBox)->SetValue(GetFlag(WatchFuncArgs));
+    XRCCTRL(*panel, "chkWatchLocals",    wxCheckBox)->SetValue(GetFlag(WatchLocals));
+    XRCCTRL(*panel, "chkCatchExceptions",wxCheckBox)->SetValue(GetFlag(CatchExceptions));
+    XRCCTRL(*panel, "chkTooltipEval",    wxCheckBox)->SetValue(GetFlag(CatchExceptions));
+    XRCCTRL(*panel, "chkAddForeignDirs", wxCheckBox)->SetValue(GetFlag(AddOtherProjectDirs));
+    XRCCTRL(*panel, "chkDoNotRun",       wxCheckBox)->SetValue(GetFlag(DoNotRun));
+    XRCCTRL(*panel, "choDisassemblyFlavor", wxChoice)->SetSelection(m_config.ReadInt(wxT("disassembly_flavor"), 0));
+    XRCCTRL(*panel, "txtInstructionSet", wxTextCtrl)->ChangeValue(m_config.Read(wxT("instruction_set"), wxEmptyString));
+
+    return panel;
+}
+
+bool DebuggerConfiguration::SaveChanges(wxPanel *panel)
+{
+    m_config.Write(wxT("executable_path"),       XRCCTRL(*panel, "txtExecutablePath", wxTextCtrl)->GetValue());
+    m_config.Write(wxT("type"),                  XRCCTRL(*panel, "rbType",            wxRadioBox)->GetSelection());
+    m_config.Write(wxT("init_commands"),         XRCCTRL(*panel, "txtInit",           wxTextCtrl)->GetValue());
+    m_config.Write(wxT("watch_args"),            XRCCTRL(*panel, "chkWatchArgs",      wxCheckBox)->GetValue());
+    m_config.Write(wxT("watch_locals"),          XRCCTRL(*panel, "chkWatchLocals",    wxCheckBox)->GetValue());
+    m_config.Write(wxT("catch_exceptions"),      XRCCTRL(*panel, "chkCatchExceptions",wxCheckBox)->GetValue());
+    m_config.Write(wxT("eval_tooltip"),          XRCCTRL(*panel, "chkTooltipEval",    wxCheckBox)->GetValue());
+    m_config.Write(wxT("add_other_search_dirs"), XRCCTRL(*panel, "chkAddForeignDirs", wxCheckBox)->GetValue());
+    m_config.Write(wxT("do_not_run"),            XRCCTRL(*panel, "chkDoNotRun",       wxCheckBox)->GetValue());
+    m_config.Write(wxT("disassembly_flavor"),    XRCCTRL(*panel, "choDisassemblyFlavor", wxChoice)->GetSelection());
+    m_config.Write(wxT("instruction_set"),       XRCCTRL(*panel, "txtInstructionSet", wxTextCtrl)->GetValue());
+
+    return true;
+}
+
+bool DebuggerConfiguration::GetFlag(Flags flag)
+{
+    switch (flag)
+    {
+        case WatchFuncArgs:
+            return m_config.ReadBool(wxT("watch_args"), true);
+        case WatchLocals:
+            return m_config.ReadBool(wxT("watch_locals"), true);
+        case CatchExceptions:
+            return m_config.ReadBool(wxT("catch_exceptions"), true);
+        case EvalExpression:
+            return m_config.ReadBool(wxT("eval_tooltip"), false);
+        case AddOtherProjectDirs:
+            return m_config.ReadBool(wxT("add_other_search_dirs"), false);
+        case DoNotRun:
+            return m_config.ReadBool(wxT("do_not_run"), false);
+        default:
+            return false;
+    }
+}
+
+bool DebuggerConfiguration::IsGDB()
+{
+    return m_config.ReadInt(wxT("type"), 0) == 0;
+}
+
+wxString DebuggerConfiguration::GetDebuggerExecutable()
+{
+    if (platform::unix)
+        return m_config.Read(wxT("executable_path"), wxT("/usr/bin/gdb"));
+    else
+        return m_config.Read(wxT("executable_path"), wxEmptyString);
+}
+
+wxString DebuggerConfiguration::GetDisassemblyFlavorCommand()
+{
+    int disassembly_flavour = m_config.ReadInt(wxT("disassembly_flavor"), 0);
+
+    wxString flavour = wxT("set disassembly-flavor ");
+    switch (disassembly_flavour)
+    {
+        case 1: // AT & T
+        {
+            flavour << wxT("att");
+            break;
+        }
+        case 2: // Intel
+        {
+            flavour << wxT("intel");
+            break;
+        }
+        case 3: // Custom
+        {
+            wxString instruction_set = m_config.Read(wxT("instruction_set"), wxEmptyString);
+            flavour << instruction_set;
+            break;
+        }
+        default: // including case 0: // System default
+
+        if(platform::windows)
+            flavour << wxT("att");
+        else
+            flavour << wxT("intel");
+    }// switch
+    return flavour;
+}
+
+wxString DebuggerConfiguration::GetInitCommands()
+{
+    return m_config.Read(wxT("init_commands"), wxEmptyString);
 }

@@ -10,6 +10,7 @@
 #include <sdk.h>
 #include "gdb_driver.h"
 #include "gdb_commands.h"
+#include "debuggeroptionsdlg.h"
 #include "debuggerstate.h"
 #include <backtracedlg.h>
 #include <manager.h>
@@ -239,47 +240,13 @@ void GDB_driver::Prepare(bool isConsole)
         disable_debug_events = false;
     }
 
-    int disassembly_flavour = Manager::Get()->GetConfigManager(_T("debugger"))->ReadInt(_T("disassembly_flavor"), 0);
-
-//    Manager::Get()->GetLogManager()->Log(_("Flavor is: %d"), disassembly_flavour);
-
-    flavour = _T("set disassembly-flavor ");
-    switch (disassembly_flavour)
-    {
-        case 1: // AT & T
-        {
-            flavour << _T("att");
-            break;
-        }
-        case 2: // Intel
-        {
-            flavour << _T("intel");
-            break;
-        }
-        case 3: // Custom
-        {
-            wxString instruction_set = Manager::Get()->GetConfigManager(_T("debugger"))->Read(_T("instruction_set"), wxEmptyString);
-            flavour << instruction_set;
-            break;
-        }
-        default: // including case 0: // System default
-
-        if(platform::windows)
-        {
-            flavour << _T("att");
-        }
-        else
-        {
-            flavour << _T("intel");
-        }
-    }// switch
-
     if (platform::windows && isConsole)
         QueueCommand(new DebuggerCmd(this, _T("set new-console on")));
 
+    flavour = m_pDBG->GetActiveConfigEx().GetDisassemblyFlavorCommand();
     QueueCommand(new DebuggerCmd(this, flavour));
 
-    if (Manager::Get()->GetConfigManager(_T("debugger"))->ReadBool(_T("catch_exceptions"), true))
+    if (m_pDBG->GetActiveConfigEx().GetFlag(DebuggerConfiguration::CatchExceptions))
     {
         // catch exceptions
         QueueCommand(new DebuggerCmd(this, _T("catch throw")));
@@ -294,7 +261,7 @@ void GDB_driver::Prepare(bool isConsole)
     QueueCommand(new DebuggerCmd(this, StlDebugCommand));
 
     // pass user init-commands
-    wxString init = Manager::Get()->GetConfigManager(_T("debugger"))->Read(_T("init_commands"), wxEmptyString);
+    wxString init = m_pDBG->GetActiveConfigEx().GetInitCommands();
     Manager::Get()->GetMacrosManager()->ReplaceMacros(init);
     // commands are passed in one go, in case the user defines functions in there
     // or else it would lock up...
@@ -515,7 +482,7 @@ void GDB_driver::Start(bool breakOnEntry)
 
     m_BreakOnEntry = breakOnEntry && !remoteDebugging;
 
-    if (!Manager::Get()->GetConfigManager(_T("debugger"))->ReadBool(_T("do_not_run"), false))
+    if (!m_pDBG->GetActiveConfigEx().GetFlag(DebuggerConfiguration::DoNotRun))
     {
         m_ManualBreakOnEntry = !remoteDebugging;
         // start the process

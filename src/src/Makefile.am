@@ -29,6 +29,9 @@ codeblocks_SOURCES = app.cpp \
 			appglobals.cpp \
 			compilersettingsdlg.cpp \
 			crashhandler.cpp \
+			debuggersettingscommonpanel.cpp \
+			debuggersettingsdlg.cpp \
+			debuggersettingspanel.cpp \
 			dlgabout.cpp \
 			dlgaboutplugin.cpp \
 			environmentsettingsdlg.cpp \
@@ -48,6 +51,9 @@ noinst_HEADERS = app.h \
 			batchbuild.h \
 			compilersettingsdlg.h \
 			crashhandler.h \
+			debuggersettingscommonpanel.h \
+			debuggersettingsdlg.h \
+			debuggersettingspanel.h \
 			dlgabout.h \
 			dlgaboutplugin.h \
 			environmentsettingsdlg.h \

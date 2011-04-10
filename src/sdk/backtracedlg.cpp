@@ -17,6 +17,7 @@
     #include <wx/dataobj.h>
     #include "cbplugin.h"
     #include "configmanager.h"
+    #include "debuggermanager.h"
 #endif
 
 #include <wx/clipbrd.h>
@@ -120,8 +121,7 @@ void cbBacktraceDlg::OnListRightClick(wxListEvent& event)
     m.AppendRadioItem(idSettingJumpDefault, _("Jump on double-click"));
     m.AppendRadioItem(idSettingSwitchDefault, _("Switch on double-click"));
 
-    bool jump_on_double_click;
-    jump_on_double_click = Manager::Get()->GetConfigManager(_T("debugger"))->ReadBool(_T("jump_on_double_click"), true);
+    bool jump_on_double_click = cbDebuggerCommonConfig::GetFlag(cbDebuggerCommonConfig::JumpOnDoubleClick);
 
     m.Check(idSettingJumpDefault, jump_on_double_click);
     m.Check(idSettingSwitchDefault, !jump_on_double_click);
@@ -178,7 +178,7 @@ void cbBacktraceDlg::OnSwitchFrame(wxCommandEvent& event)
 
 void cbBacktraceDlg::OnDoubleClick(wxListEvent& event)
 {
-    bool jump = Manager::Get()->GetConfigManager(_T("debugger"))->ReadBool(_T("jump_on_double_click"), true);
+    bool jump = cbDebuggerCommonConfig::GetFlag(cbDebuggerCommonConfig::JumpOnDoubleClick);
     wxCommandEvent evt;
     if (jump)
         OnJump(evt);
@@ -254,11 +254,11 @@ void cbBacktraceDlg::OnCopyToClipboard(wxCommandEvent& event)
 void cbBacktraceDlg::OnSettingJumpDefault(wxCommandEvent& event)
 {
     bool checked = event.IsChecked();
-    Manager::Get()->GetConfigManager(_T("debugger"))->Write(_T("jump_on_double_click"), checked);
+    cbDebuggerCommonConfig::SetFlag(cbDebuggerCommonConfig::JumpOnDoubleClick, checked);
 }
 
 void cbBacktraceDlg::OnSettingSwitchDefault(wxCommandEvent& event)
 {
     bool checked = event.IsChecked();
-    Manager::Get()->GetConfigManager(_T("debugger"))->Write(_T("jump_on_double_click"), !checked);
+    cbDebuggerCommonConfig::SetFlag(cbDebuggerCommonConfig::JumpOnDoubleClick, checked);
 }
