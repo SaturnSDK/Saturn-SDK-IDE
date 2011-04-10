@@ -42,7 +42,7 @@ DebuggerSettingsDlg::DebuggerSettingsDlg(wxWindow* parent)
 	wxStdDialogButtonSizer* stdDialogButtons;
 	wxPanel* header;
 
-	Create(parent, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxCAPTION|wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER|wxCLOSE_BOX|wxMAXIMIZE_BOX|wxMINIMIZE_BOX, _T("wxID_ANY"));
+	Create(parent, wxID_ANY, _("Debugger settings"), wxDefaultPosition, wxDefaultSize, wxCAPTION|wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER|wxCLOSE_BOX|wxMAXIMIZE_BOX|wxMINIMIZE_BOX, _T("wxID_ANY"));
 	mainSizer = new wxBoxSizer(wxVERTICAL);
 	header = new wxPanel(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxNO_BORDER|wxTRANSPARENT_WINDOW, _T("wxID_ANY"));
 	header->SetBackgroundColour(wxColour(0,64,128));
@@ -103,6 +103,7 @@ DebuggerSettingsDlg::DebuggerSettingsDlg(wxWindow* parent)
         m_treebook->ExpandNode(ii);
 
 	SetMinSize(wxSize(600, 600));
+	SetSize(wxSize(600, 600));
 }
 
 DebuggerSettingsDlg::~DebuggerSettingsDlg()
