@@ -263,6 +263,7 @@ void wxsBitmapIconEditorDlg::WriteData(wxsBitmapIconData& Data)
     {
         Data.Id.Clear();
         Data.Client.Clear();
+        Data.CodeText.Clear();
         Data.FileName.Clear();
     }
     else if ( ImageFile->GetValue() )
@@ -276,15 +277,15 @@ void wxsBitmapIconEditorDlg::WriteData(wxsBitmapIconData& Data)
     {
         Data.Id.Clear();
         Data.Client.Clear();
-        Data.FileName.Clear();
         Data.CodeText = CodeText->GetValue();
+        Data.FileName.Clear();
     }
     else
     {
         Data.Id = ArtId->GetValue();
         Data.Client = Data.Id.empty() ? _T("") : ArtClient->GetValue();
-        Data.FileName.Clear();
         Data.CodeText.Clear();
+        Data.FileName.Clear();
     }
 }
 
