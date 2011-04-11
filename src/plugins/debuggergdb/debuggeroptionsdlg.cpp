@@ -43,6 +43,7 @@ class DebuggerConfigurationPanel : public wxPanel
                 pathCtrl->SetBackgroundColour(wxNullColour);
                 pathCtrl->SetToolTip(_("Full path to the debugger's executable."));
             }
+            pathCtrl->Refresh();
         }
     private:
         void OnBrowse(wxCommandEvent &event)
