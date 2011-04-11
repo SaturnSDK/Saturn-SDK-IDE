@@ -136,33 +136,35 @@ void DebuggerMenuHandler::SetActiveDebugger(cbDebuggerPlugin *active)
     m_activeDebugger = active;
 }
 
+wxMenu* GetActiveDebuggersMenu(bool recreate = false)
+{
+    wxMenuBar* mbar = Manager::Get()->GetAppFrame()->GetMenuBar();
+    wxMenuItem *item = mbar->FindItem(idMenuDebugActive);
+    if (!item)
+        return nullptr;
+    if (recreate)
+    {
+        wxMenu *debugMenu = item->GetMenu();
+        wxString label = item->GetLabel();
+        debugMenu->Destroy(item);
+        item = debugMenu->Insert(0, idMenuDebugActive, label, new wxMenu);
+    }
+    return item ? item->GetSubMenu() : nullptr;
+}
+
 void DebuggerMenuHandler::RebuildActiveDebuggersMenu()
 {
     DebuggerManager *dbgManager = Manager::Get()->GetDebuggerManager();
-    wxMenu* debug_menu = dbgManager->GetMenu();
-    if (!debug_menu)
-        return;
-    int item_id = debug_menu->FindItem(_("&Active debuggers"));
-    wxMenuItem *menuitem = debug_menu->FindItem(item_id, NULL);
-    if (!menuitem)
-        return;
-
-    wxMenu *menu = menuitem->GetSubMenu();
+    wxMenu *menu = GetActiveDebuggersMenu(true);
     if (!menu)
         return;
-    while (menu->GetMenuItemCount() > 0)
-    {
-        wxMenuItem *item = menu->FindItemByPosition(0);
-        menu->Destroy(item);
-    }
+    
     menu->AppendRadioItem(idMenuDebugActiveTargetsDefault, _("Target's default"),
                           _("Use the debugger associated with the compiler for the active target"));
 
     DebuggerManager::RegisteredPlugins &allDebugger = dbgManager->GetAllDebuggers();
     for (DebuggerManager::RegisteredPlugins::iterator it = allDebugger.begin(); it != allDebugger.end(); ++it)
     {
-        menu->AppendSeparator();
-
         DebuggerManager::ConfigurationVector &configs = it->second.GetConfigurations();
         for (DebuggerManager::ConfigurationVector::iterator itConf = configs.begin(); itConf != configs.end(); ++itConf)
         {
@@ -265,8 +267,7 @@ void DebuggerMenuHandler::OnUpdateUI(wxUpdateUIEvent& event)
         mbar->Enable(idMenuAttachToProcess, !isRunning && !otherPlugin && m_activeDebugger);
         mbar->Enable(idMenuDetach, isRunning && stopped && isAttached);
 
-        wxMenuItem *item = mbar->FindItem(idMenuDebugActive);
-        wxMenu *activeMenu = item ? item->GetSubMenu() : NULL;
+        wxMenu *activeMenu = GetActiveDebuggersMenu();
         if (activeMenu)
         {
             for (size_t ii = 0; ii < activeMenu->GetMenuItemCount(); ++ii)
