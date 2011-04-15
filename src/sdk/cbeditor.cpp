@@ -3157,7 +3157,6 @@ void cbEditor::OnEditorCharAdded(wxScintillaEvent& event)
                                     autoIndentLineIndent = -1;
                                 }
 
-                                control->SetLineIndentation(currLine, autoIndentLineIndent);
                                 control->Tab();
                             }
 

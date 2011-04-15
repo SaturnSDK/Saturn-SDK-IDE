@@ -39,12 +39,8 @@
 
 #include "debuggermanager.h"
 
-//    #include "buildsystem/buildsystemmanager.h"
-
-
 static Manager* instance = 0;
 static Manager* isShutdown = false;
-
 
 Manager::Manager() : m_pAppWindow(0)
 {
@@ -102,12 +98,10 @@ Manager::~Manager()
 
 Manager* Manager::Get(wxFrame *appWindow)
 {
-    if(appWindow)
+    if (appWindow)
     {
-        if(Get()->m_pAppWindow)
-        {
+        if (Get()->m_pAppWindow)
             cbThrow(_T("Illegal argument to Manager::Get()"));
-        }
         else
         {
             Get()->m_pAppWindow = appWindow;
@@ -178,9 +172,7 @@ bool Manager::ProcessEvent(CodeBlocksEvent& event)
     if (mit != m_EventSinks.end())
     {
         for (EventSinksArray::iterator it = mit->second.begin(); it != mit->second.end(); ++it)
-        {
             (*it)->Call(event);
-        }
     }
     return true;
 }
@@ -194,9 +186,7 @@ bool Manager::ProcessEvent(CodeBlocksDockEvent& event)
     if (mit != m_DockEventSinks.end())
     {
         for (DockEventSinksArray::iterator it = mit->second.begin(); it != mit->second.end(); ++it)
-        {
             (*it)->Call(event);
-        }
     }
     return true;
 }
@@ -210,9 +200,7 @@ bool Manager::ProcessEvent(CodeBlocksLayoutEvent& event)
     if (mit != m_LayoutEventSinks.end())
     {
         for (LayoutEventSinksArray::iterator it = mit->second.begin(); it != mit->second.end(); ++it)
-        {
             (*it)->Call(event);
-        }
     }
     return true;
 }
@@ -226,9 +214,7 @@ bool Manager::ProcessEvent(CodeBlocksLogEvent& event)
     if (mit != m_LogEventSinks.end())
     {
         for (LogEventSinksArray::iterator it = mit->second.begin(); it != mit->second.end(); ++it)
-        {
             (*it)->Call(event);
-        }
     }
     return true;
 }
@@ -243,7 +229,7 @@ bool Manager::IsAppShuttingDown()
 void Manager::Initxrc(bool force)
 {
     static bool xrcok = false;
-    if(!xrcok || force)
+    if (!xrcok || force)
     {
         wxFileSystem::AddHandler(new wxZipFSHandler);
         wxXmlResource::Get()->InsertHandler(new wxToolBarAddOnXmlHandler);
@@ -261,23 +247,23 @@ void Manager::Loadxrc(wxString relpath)
 wxMenuBar *Manager::LoadMenuBar(wxString resid,bool createonfailure)
 {
     wxMenuBar *m = wxXmlResource::Get()->LoadMenuBar(resid);
-    if(!m && createonfailure) m=new wxMenuBar();
+    if (!m && createonfailure) m = new wxMenuBar();
     return m;
 }
 
 wxMenu *Manager::LoadMenu(wxString menu_id,bool createonfailure)
 {
     wxMenu *m = wxXmlResource::Get()->LoadMenu(menu_id);
-    if(!m && createonfailure) m=new wxMenu(_T(""));
+    if (!m && createonfailure) m = new wxMenu(_T(""));
     return m;
 }
 
 wxToolBar *Manager::LoadToolBar(wxFrame *parent,wxString resid,bool defaultsmall)
 {
-    if(!parent)
+    if (!parent)
         return 0L;
     wxToolBar *tb = wxXmlResource::Get()->LoadToolBar(parent,resid);
-    if(!tb)
+    if (!tb)
     {
         int flags = wxTB_HORIZONTAL;
 
@@ -304,14 +290,14 @@ wxToolBar* Manager::CreateEmptyToolbar()
 
 void Manager::AddonToolBar(wxToolBar* toolBar,wxString resid)
 {
-    if(!toolBar)
+    if (!toolBar)
         return;
     wxXmlResource::Get()->LoadObject(toolBar,NULL,resid,_T("wxToolBarAddOn"));
 }
 
 bool Manager::isToolBar16x16(wxToolBar* toolBar)
 {
-    if(!toolBar) return true; // Small by default
+    if (!toolBar) return true; // Small by default
     wxSize mysize=toolBar->GetToolBitmapSize();
     return (mysize.GetWidth()<=16 && mysize.GetHeight()<=16);
 }
@@ -328,10 +314,6 @@ wxWindow* Manager::GetAppWindow() const
 
 ProjectManager* Manager::GetProjectManager() const
 {
-//#############################################################################################################
-//BuildSystemManager::Get(); // FIXME: Remove this ##############################################################
-//#############################################################################################################
-
     return ProjectManager::Get();
 }
 
@@ -395,7 +377,7 @@ bool Manager::LoadResource(const wxString& file)
     wxString resourceFile = ConfigManager::LocateDataFile(file, sdDataGlobal | sdDataUser);
     wxString memoryFile = _T("memory:") + file;
 
-    if(wxFile::Access(resourceFile, wxFile::read) == false)
+    if (wxFile::Access(resourceFile, wxFile::read) == false)
         return false;
 
     // The code below forces a reload of the resource
