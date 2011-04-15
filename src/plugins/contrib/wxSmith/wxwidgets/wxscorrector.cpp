@@ -99,7 +99,10 @@ bool wxsCorrector::FixAfterLoadCheckNames(wxsItem* Item)
         if ( m_Ids.find(IdName)!=m_Ids.end() )
         {
             Ret = true;
-            Item->SetIdName(wxEmptyString);
+			if (Manager::Get()->GetConfigManager(_T("wxsmith"))->ReadBool(_T("/uniqueids"),true))
+			{
+				Item->SetIdName(wxEmptyString);
+			}
         }
         else
         {
@@ -196,10 +199,13 @@ void wxsCorrector::AfterChange(wxsItem* Item)
             Item->SetIdName(IdName);
         }
 
-        if ( m_Ids.empty() || (m_Ids.find(IdName) != m_Ids.end()) )
-        {
-            SetNewIdName(Item);
-        }
+		if (Manager::Get()->GetConfigManager(_T("wxsmith"))->ReadBool(_T("/uniqueids"),true))
+		{
+			if ( m_Ids.find(IdName) != m_Ids.end() )
+			{
+				SetNewIdName(Item);
+			}
+		}
 
         if (!IsWxWidgetsIdPrefix(Item->GetIdName()))
         {
@@ -213,7 +219,7 @@ void wxsCorrector::AfterChange(wxsItem* Item)
         wxString prefix = s_IdPrefix;
         prefix << Item->GetInfo().DefaultVarName.Upper();
         wxString curIdName = Item->GetIdName();
-        if (curIdName.Length() > prefix.Length() && curIdName.Left(prefix.Length()) == prefix)
+        if (curIdName.StartsWith(prefix))
         {
             Item->SetIdName(_T("wxID_ANY"));
             if (m_Ids.find(curIdName) != m_Ids.end())
@@ -419,11 +425,7 @@ bool wxsCorrector::FixIdName(wxString& Id)
 
 bool wxsCorrector::IsWxWidgetsIdPrefix(const wxString& Id)
 {
-    wxString wxIdPrefix = _T("wxID_");
-    if (Id.Length() < wxIdPrefix.Length())
-        return false;
-
-    return Id.Left(wxIdPrefix.Length()) == wxIdPrefix;
+    return Id.StartsWith(_T("wxID_"));
 }
 
 void wxsCorrector::ClearCache()
