@@ -769,17 +769,19 @@ bool DebuggerManager::RegisterDebugger(cbDebuggerPlugin *plugin, const wxString 
         Manager::Get()->GetLogManager()->LogError(s);
         return false;
     }
-
-
+    
+    int normalIndex = -1, debugIndex = -1;
+    GetLogger(false, normalIndex);
+    if (cbDebuggerCommonConfig::GetFlag(cbDebuggerCommonConfig::ShowDebuggersLog))
+        GetLogger(true, debugIndex);
+    plugin->SetupLogs(normalIndex, debugIndex);
+    
     PluginData data;
     data.m_guiName = guiName;
     data.m_settingsName = settingsName;
 
     m_registered[plugin] = data;
-
     it = m_registered.find(plugin);
-    if (it == m_registered.end())
-        return false;
     ProcessSettings(it);
 
     // There should at least one configuration for every plugin.
@@ -859,6 +861,12 @@ bool DebuggerManager::UnregisterDebugger(cbDebuggerPlugin *plugin)
 
         RemoveDockWindow(m_watchesDialog);
         m_watchesDialog = NULL;
+        
+        if (Manager::Get()->GetLogManager())
+        {
+            Manager::Get()->GetDebuggerManager()->HideLogger(true);
+            Manager::Get()->GetDebuggerManager()->HideLogger(false);
+        }          
     }
 
     return true;

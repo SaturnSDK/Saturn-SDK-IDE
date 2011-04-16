@@ -157,10 +157,20 @@ void DebuggerSettingsDlg::OnOK(wxCommandEvent &event)
                 break;
         }
     }
-
+    
+    int normalIndex = -1, debugIndex = -1;
+    dbgManager->GetLogger(false, normalIndex);
+    if (cbDebuggerCommonConfig::GetFlag(cbDebuggerCommonConfig::ShowDebuggersLog))
+        dbgManager->GetLogger(true, debugIndex);
+    else
+        dbgManager->HideLogger(true);
+    
     cbDebuggerPlugin *activePlugin = dbgManager->GetActiveDebugger();
     for (DebuggerManager::RegisteredPlugins::iterator it = plugins.begin(); it != plugins.end(); ++it)
+    {
+        it->first->SetupLogs(normalIndex, debugIndex);
         it->first->OnConfigurationChange(activePlugin == it->first);
+    }
 
     dbgManager->RebuildAllConfigs();
 

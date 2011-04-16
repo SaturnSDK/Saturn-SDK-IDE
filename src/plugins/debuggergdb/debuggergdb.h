@@ -102,8 +102,6 @@ class DebuggerGDB : public cbDebuggerPlugin
         void DetachFromProcess();
         bool IsAttachedToProcess() const;
 
-        void Log(const wxString& msg);
-        void DebugLog(const wxString& msg);
         void SendCommand(const wxString& cmd, bool debugLog);
         void DoSendCommand(const wxString& cmd);
 
@@ -164,8 +162,6 @@ class DebuggerGDB : public cbDebuggerPlugin
         void OnMenuWatchDereference(wxCommandEvent& event);
     private:
         PipedProcess* m_pProcess;
-        int m_PageIndex;
-        int m_DbgPageIndex;
         bool m_LastExitCode;
         int m_Pid;
         int m_PidToAttach; // for "attach to process"
@@ -173,7 +169,6 @@ class DebuggerGDB : public cbDebuggerPlugin
         wxTimer m_TimerPollDebugger;
         bool m_NoDebugInfo;
 
-        bool m_HasDebugLog;
         bool m_StoppedOnSignal;
 
         // extra dialogs

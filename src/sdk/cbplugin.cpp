@@ -121,7 +121,10 @@ cbDebuggerPlugin::cbDebuggerPlugin() :
     m_EditorHookId(-1),
     m_StartType(StartTypeUnknown),
     m_DragInProgress(false),
-    m_ActiveConfig(0)
+    m_ActiveConfig(0),
+    m_LogPageIndex(-1),
+    m_DebugLogPageIndex(-1),
+    m_ActiveLogAtStart(nullptr)
 {
     m_Type = ptDebugger;
 }
@@ -130,6 +133,7 @@ cbDebuggerPlugin::cbDebuggerPlugin() :
 void cbDebuggerPlugin::OnAttach()
 {
     OnAttachReal();
+
     typedef cbEventFunctor<cbDebuggerPlugin, CodeBlocksEvent> Event;
 
     Manager::Get()->RegisterEventSink(cbEVT_EDITOR_OPEN, new Event(this, &cbDebuggerPlugin::OnEditorOpened));
@@ -284,9 +288,6 @@ void cbDebuggerPlugin::ClearActiveMarkFromAllEditors()
 
 cbDebuggerPlugin::SyncEditorResult cbDebuggerPlugin::SyncEditor(const wxString& filename, int line, bool setMarker)
 {
-    int log_index;
-    Manager::Get()->GetDebuggerManager()->GetLogger(false, log_index);
-
     if (setMarker)
     {
         EditorManager* edMan = Manager::Get()->GetEditorManager();
@@ -303,12 +304,8 @@ cbDebuggerPlugin::SyncEditorResult cbDebuggerPlugin::SyncEditor(const wxString& 
         // if the line is >= 0 and ft == ftOther assume, that we are in header without extension
         if (line < 0 || ft != ftOther)
         {
-            if(log_index != -1)
-            {
-                ShowLog(false);
-                Manager::Get()->GetLogManager()->LogError(_("Unknown file: ") + filename, log_index);
-            }
-
+            ShowLog(false, true);
+            Log(_("Unknown file: ") + filename, Logger::error);
             InfoWindow::Display(_("Unknown file"), _("File: ") + filename, 5000);
 
             return SyncFileUnknown; // don't try to open unknown files
@@ -340,12 +337,8 @@ cbDebuggerPlugin::SyncEditorResult cbDebuggerPlugin::SyncEditor(const wxString& 
     }
     else
     {
-        if(log_index != -1)
-        {
-            ShowLog(false);
-            Manager::Get()->GetLogManager()->LogError(_("Cannot open file: ") + filename, log_index);
-        }
-
+        ShowLog(false, true);
+        Log(_("Cannot open file: ") + filename, Logger::error);
         InfoWindow::Display(_("Cannot open file"), _("File: ") + filename, 5000);
 
         return SyncFileNotFound;
@@ -542,27 +535,78 @@ bool cbDebuggerPlugin::DragInProgress() const
     return m_DragInProgress;
 }
 
-void cbDebuggerPlugin::ShowLog(bool clear)
+void DoShowLog(void *activeLog, bool forceNormal)
 {
-    TextCtrlLogger *log = Manager::Get()->GetDebuggerManager()->GetLogger(false);
-    TextCtrlLogger *debug_log = Manager::Get()->GetDebuggerManager()->GetLogger(true);
-
-    CodeBlocksLogEvent event_get_active(cbEVT_GET_ACTIVE_LOG_WINDOW);
-    Manager::Get()->ProcessEvent(event_get_active);
-
-    if (event_get_active.logger != debug_log || !debug_log)
+    TextCtrlLogger *debugLog = nullptr;
+    if (cbDebuggerCommonConfig::GetFlag(cbDebuggerCommonConfig::ShowDebuggersLog))
+        debugLog = Manager::Get()->GetDebuggerManager()->GetLogger(true);
+    if (debugLog && activeLog == debugLog && !forceNormal)
     {
-        // switch to the debugging log and clear it
-        CodeBlocksLogEvent event_switch_log(cbEVT_SWITCH_TO_LOG_WINDOW, log);
-        CodeBlocksLogEvent event_show_log(cbEVT_SHOW_LOG_MANAGER);
-        Manager::Get()->ProcessEvent(event_switch_log);
-        Manager::Get()->ProcessEvent(event_show_log);
+        // switch to the debugger (debug) log
+        CodeBlocksLogEvent eventSwitchLog(cbEVT_SWITCH_TO_LOG_WINDOW, debugLog);
+        Manager::Get()->ProcessEvent(eventSwitchLog);
     }
+    else
+    {
+        TextCtrlLogger *log = Manager::Get()->GetDebuggerManager()->GetLogger(false);
+        // switch to the debugger log
+        CodeBlocksLogEvent eventSwitchLog(cbEVT_SWITCH_TO_LOG_WINDOW, log);
+        Manager::Get()->ProcessEvent(eventSwitchLog);
+    }
+    CodeBlocksLogEvent eventShowLog(cbEVT_SHOW_LOG_MANAGER);
+    Manager::Get()->ProcessEvent(eventShowLog);
+}
 
+void cbDebuggerPlugin::ShowLog(bool clear, bool forceNormal)
+{
+    DoShowLog(m_ActiveLogAtStart, forceNormal);
+
+    TextCtrlLogger *log = Manager::Get()->GetDebuggerManager()->GetLogger(false);
     if (clear && log)
         log->Clear();
 }
 
+void cbDebuggerPlugin::Log(const wxString& msg, Logger::level level)
+{
+    if (IsAttached())
+        Manager::Get()->GetLogManager()->Log(msg, m_LogPageIndex, level);
+}
+
+void cbDebuggerPlugin::DebugLog(const wxString& msg, Logger::level level)
+{
+    // gdb debug messages
+    if (IsAttached() && HasDebugLog())
+        Manager::Get()->GetLogManager()->Log(msg, m_DebugLogPageIndex);
+}
+
+bool cbDebuggerPlugin::HasDebugLog() const
+{
+    return m_DebugLogPageIndex != -1;
+}
+
+void cbDebuggerPlugin::ClearLog(bool debug)
+{
+    if (debug)
+    {
+        if (HasDebugLog())
+            Manager::Get()->GetDebuggerManager()->GetLogger(true)->Clear();
+    }
+    else
+        Manager::Get()->GetDebuggerManager()->GetLogger(false)->Clear();
+}
+
+void cbDebuggerPlugin::SetupLogs(int normalIndex, int debugIndex)
+{
+    m_LogPageIndex = normalIndex;
+    m_DebugLogPageIndex = debugIndex;
+}
+
+void cbDebuggerPlugin::SaveActiveLog()
+{
+    CodeBlocksLogEvent event(cbEVT_GET_ACTIVE_LOG_WINDOW);
+    Manager::Get()->ProcessEvent(event);    
+    m_ActiveLogAtStart = event.logger;
+}
 
 void cbDebuggerPlugin::SwitchToDebuggingLayout()
 {
@@ -581,6 +625,8 @@ void cbDebuggerPlugin::SwitchToDebuggingLayout()
 
     // switch to debugging layout
     Manager::Get()->ProcessEvent(switchEvent);
+    
+    DoShowLog(m_ActiveLogAtStart, false);
 }
 
 void cbDebuggerPlugin::SwitchToPreviousLayout()
@@ -605,9 +651,6 @@ bool cbDebuggerPlugin::GetDebuggee(wxString &pathToDebuggee, wxString &workingDi
     if (!target)
         return wxEmptyString;
 
-    int log_index;
-    Manager::Get()->GetDebuggerManager()->GetLogger(false, log_index);
-
     wxString out;
     switch (target->GetTargetType())
     {
@@ -620,7 +663,7 @@ bool cbDebuggerPlugin::GetDebuggee(wxString &pathToDebuggee, wxString &workingDi
                 wxFileName f(out);
                 f.MakeAbsolute(target->GetParentProject()->GetBasePath());
                 out = f.GetFullPath();
-                Manager::Get()->GetLogManager()->Log(_("Adding file: ") + out, log_index);
+                Log(_("Adding file: ") + out);
                 ConvertDirectory(out);
             }
             break;
@@ -635,17 +678,17 @@ bool cbDebuggerPlugin::GetDebuggee(wxString &pathToDebuggee, wxString &workingDi
             }
             out = UnixFilename(target->GetHostApplication());
             Manager::Get()->GetMacrosManager()->ReplaceEnvVars(out); // apply env vars
-            Manager::Get()->GetLogManager()->Log(_("Adding file: ") + out, log_index);
+            Log(_("Adding file: ") + out);
             ConvertDirectory(out);
             break;
 
         default:
-            Manager::Get()->GetLogManager()->LogError(_("Unsupported target type (Project -> Properties -> Build Targets -> Type)"), log_index);
+            Log(_("Unsupported target type (Project -> Properties -> Build Targets -> Type)"), Logger::error);
             return false;
     }
     if (out.empty())
     {
-        Manager::Get()->GetLogManager()->LogError(_("Couldn't find the path to the debuggee!"), log_index);
+        Log(_("Couldn't find the path to the debuggee!"), Logger::error);
         return false;
     }
 
@@ -676,8 +719,6 @@ bool cbDebuggerPlugin::EnsureBuildUpToDate(StartType startType)
             return true;
         }
 
-        LogManager* msgMan = Manager::Get()->GetLogManager();
-
         // make sure the target is compiled
         PluginsArray plugins = Manager::Get()->GetPluginManager()->GetCompilerOffers();
         if (plugins.GetCount())
@@ -686,19 +727,17 @@ bool cbDebuggerPlugin::EnsureBuildUpToDate(StartType startType)
             m_pCompiler = NULL;
         if (m_pCompiler)
         {
-            int page_index;
-            Manager::Get()->GetDebuggerManager()->GetLogger(false, page_index);
             // is the compiler already running?
             if (m_pCompiler->IsRunning())
             {
-                msgMan->Log(_("Compiler in use..."), page_index);
-                msgMan->Log(_("Aborting debugging session"), page_index);
+                Log(_("Compiler in use..."));
+                Log(_("Aborting debugging session"));
                 cbMessageBox(_("The compiler is currently in use. Aborting debugging session..."),
                              _("Compiler running"), wxICON_WARNING);
                 return false;
             }
 
-            msgMan->Log(_("Building to ensure sources are up-to-date"), page_index);
+            Log(_("Building to ensure sources are up-to-date"));
             m_WaitingCompilerToFinish = true;
             m_pCompiler->Build();
             // now, when the build is finished, DoDebug will be launched in OnCompilerFinished()
@@ -726,6 +765,7 @@ void cbDebuggerPlugin::OnCompilerFinished(CodeBlocksEvent& event)
                 compilerFailed = true;
             }
         }
+        ShowLog(false, false);
         if (!CompilerFinished(compilerFailed, m_StartType))
         {
             ProjectManager *manager = Manager::Get()->GetProjectManager();

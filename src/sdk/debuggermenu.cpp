@@ -313,7 +313,8 @@ void DebuggerMenuHandler::OnStart(wxCommandEvent& event)
                     cbDebuggerConfiguration &config = m_activeDebugger->GetActiveConfig();
                     configName = it->second.GetGUIName() + wxT(":") + config.GetName();
                 }
-                m_activeDebugger->ShowLog(true);
+                m_activeDebugger->SaveActiveLog();
+                m_activeDebugger->ClearLog(false);
                 Manager::Get()->GetLogManager()->Log(_("Active debugger config: ") + configName, pageIndex);
             }
             if (!m_activeDebugger->Debug(false))
@@ -377,6 +378,8 @@ void DebuggerMenuHandler::OnStep(wxCommandEvent& event)
         if (manager->GetIsRunning() == NULL)
         {
             manager->SetIsRunning(m_activeDebugger);
+            m_activeDebugger->SaveActiveLog();
+            m_activeDebugger->ClearLog(false);
             if (!m_activeDebugger->Debug(true))
                 manager->SetIsRunning(NULL);
         }
@@ -402,6 +405,11 @@ void DebuggerMenuHandler::OnRunToCursor(wxCommandEvent& event)
     if (manager->GetIsRunning() == NULL || manager->GetIsRunning() == m_activeDebugger)
     {
         manager->SetIsRunning(m_activeDebugger);
+        if (!m_activeDebugger->IsRunning())
+        {
+            m_activeDebugger->SaveActiveLog();
+            m_activeDebugger->ClearLog(false);
+        }
         if (!m_activeDebugger->RunToCursor(ed->GetFilename(), ed->GetControl()->GetCurrentLine() + 1, line_text))
             manager->SetIsRunning(NULL);
     }
