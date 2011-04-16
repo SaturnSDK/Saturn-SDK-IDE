@@ -784,7 +784,7 @@ bool DebuggerManager::RegisterDebugger(cbDebuggerPlugin *plugin, const wxString 
     it = m_registered.find(plugin);
     ProcessSettings(it);
 
-    // There should at least one configuration for every plugin.
+    // There should be at least one configuration for every plugin.
     // If this is not the case, something is wrong and should be fixed.
     cbAssert(!it->second.GetConfigurations().empty());
 

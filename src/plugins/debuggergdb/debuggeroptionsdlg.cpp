@@ -147,12 +147,55 @@ bool DebuggerConfiguration::IsGDB()
     return m_config.ReadInt(wxT("type"), 0) == 0;
 }
 
+// TODO(tpetrov#): move this to the SDK and use it in the compiler plugin
+wxString cbFindFileInPATH(const wxString &filename)
+{
+    wxString pathValues;
+    wxGetEnv(_T("PATH"), &pathValues);
+    if (pathValues.empty())
+        return wxEmptyString;
+    
+    const wxString &sep = platform::windows ? _T(";") : _T(":");
+    wxChar pathSep = wxFileName::GetPathSeparator();
+    const wxArrayString &pathArray = GetArrayFromString(pathValues, sep);
+    for (size_t i = 0; i < pathArray.GetCount(); ++i)
+    {
+        if (wxFileExists(pathArray[i] + pathSep + filename))
+        {
+            if (pathArray[i].AfterLast(pathSep).IsSameAs(_T("bin")))
+                return pathArray[i];
+        }
+    }
+    return wxEmptyString;
+}
+
+wxString DetectDebuggerExecutable()
+{
+    wxString exeName(platform::windows ? wxT("gdb.exe") : wxT("gdb"));
+    wxString exePath = cbFindFileInPATH(exeName);
+    wxChar sep = wxFileName::GetPathSeparator();
+    
+    if (exePath.empty())
+    {
+        if (!platform::windows)
+            exePath = wxT("/usr/bin/gdb");
+        else
+        {
+            const wxString &cbInstallFolder = ConfigManager::GetExecutableFolder();            
+            if (wxFileExists(cbInstallFolder + sep + wxT("MINGW") + sep + wxT("bin") + sep + exeName))
+                exePath = cbInstallFolder + sep + wxT("MINGW") + sep + wxT("bin");
+            else
+                exePath = wxT("C:\\MinGW\bin\\");
+        }        
+    }       
+        
+    return exePath + wxFileName::GetPathSeparator() + exeName;
+}
+
 wxString DebuggerConfiguration::GetDebuggerExecutable()
 {
-    if (platform::unix)
-        return m_config.Read(wxT("executable_path"), wxT("/usr/bin/gdb"));
-    else
-        return m_config.Read(wxT("executable_path"), wxEmptyString);
+    const wxString &result = m_config.Read(wxT("executable_path"), wxEmptyString);
+    return !result.empty() ? result : DetectDebuggerExecutable();
 }
 
 wxString DebuggerConfiguration::GetDisassemblyFlavorCommand()
