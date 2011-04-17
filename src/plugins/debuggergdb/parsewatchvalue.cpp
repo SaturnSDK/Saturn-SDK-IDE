@@ -480,6 +480,9 @@ bool ParseGDBWatchValue(GDBWatch &watch, wxString const &inputValue)
 
     if (start != wxString::npos && value[value.length() - 1] == wxT('}'))
     {
+        // make sure the value is correct, even when the type has changed
+        watch.SetValue(wxEmptyString);
+
         int t_start = start + 1;
         bool result = ParseGDBWatchValue(watch, value, t_start, value.length() - 2);
         if (result)

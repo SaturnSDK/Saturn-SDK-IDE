@@ -278,4 +278,21 @@ TEST(RepeatingChars11)
                 wxT("[2]=0x4080fc \"3th\"}"), w);
 }
 
+TEST(ChangeType0)
+{
+    GDBWatch w(wxT("*s"));
+    CHECK(ParseGDBWatchValue(w, wxT("Cannot access memory at address 0x0")));
+    CHECK(ParseGDBWatchValue(w, wxT("{\n  number = 29,\n  real = 36\n}")));
+    CHECK_EQUAL(wxT("*s= {number=29,real=36}"), w);
+}
+
+TEST(ChangeType1)
+{
+    GDBWatch w(wxT("s"));
+    CHECK(ParseGDBWatchValue(w, wxT("10")));
+    CHECK(ParseGDBWatchValue(w, wxT("{\n  number = 29,\n  real = 36\n}")));
+    CHECK_EQUAL(wxT("s= {number=29,real=36}"), w);
+}
+
+
 } // SUITE(GDBWatchParser)
