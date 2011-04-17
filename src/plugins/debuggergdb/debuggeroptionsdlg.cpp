@@ -94,6 +94,7 @@ wxPanel* DebuggerConfiguration::MakePanel(wxWindow *parent)
     XRCCTRL(*panel, "txtInit",           wxTextCtrl)->ChangeValue(GetInitCommands());
     XRCCTRL(*panel, "chkWatchArgs",      wxCheckBox)->SetValue(GetFlag(WatchFuncArgs));
     XRCCTRL(*panel, "chkWatchLocals",    wxCheckBox)->SetValue(GetFlag(WatchLocals));
+    XRCCTRL(*panel, "chkWatchScriptPrinters", wxCheckBox)->SetValue(GetFlag(WatchScriptPrinters));
     XRCCTRL(*panel, "chkCatchExceptions",wxCheckBox)->SetValue(GetFlag(CatchExceptions));
     XRCCTRL(*panel, "chkTooltipEval",    wxCheckBox)->SetValue(GetFlag(CatchExceptions));
     XRCCTRL(*panel, "chkAddForeignDirs", wxCheckBox)->SetValue(GetFlag(AddOtherProjectDirs));
@@ -111,6 +112,7 @@ bool DebuggerConfiguration::SaveChanges(wxPanel *panel)
     m_config.Write(wxT("init_commands"),         XRCCTRL(*panel, "txtInit",           wxTextCtrl)->GetValue());
     m_config.Write(wxT("watch_args"),            XRCCTRL(*panel, "chkWatchArgs",      wxCheckBox)->GetValue());
     m_config.Write(wxT("watch_locals"),          XRCCTRL(*panel, "chkWatchLocals",    wxCheckBox)->GetValue());
+    m_config.Write(wxT("watch_script_printers"), XRCCTRL(*panel, "chkWatchScriptPrinters", wxCheckBox)->GetValue());
     m_config.Write(wxT("catch_exceptions"),      XRCCTRL(*panel, "chkCatchExceptions",wxCheckBox)->GetValue());
     m_config.Write(wxT("eval_tooltip"),          XRCCTRL(*panel, "chkTooltipEval",    wxCheckBox)->GetValue());
     m_config.Write(wxT("add_other_search_dirs"), XRCCTRL(*panel, "chkAddForeignDirs", wxCheckBox)->GetValue());
@@ -129,6 +131,8 @@ bool DebuggerConfiguration::GetFlag(Flags flag)
             return m_config.ReadBool(wxT("watch_args"), true);
         case WatchLocals:
             return m_config.ReadBool(wxT("watch_locals"), true);
+        case WatchScriptPrinters:
+            return m_config.ReadBool(wxT("watch_script_printers"), true);
         case CatchExceptions:
             return m_config.ReadBool(wxT("catch_exceptions"), true);
         case EvalExpression:
@@ -154,7 +158,7 @@ wxString cbFindFileInPATH(const wxString &filename)
     wxGetEnv(_T("PATH"), &pathValues);
     if (pathValues.empty())
         return wxEmptyString;
-    
+
     const wxString &sep = platform::windows ? _T(";") : _T(":");
     wxChar pathSep = wxFileName::GetPathSeparator();
     const wxArrayString &pathArray = GetArrayFromString(pathValues, sep);
@@ -174,21 +178,21 @@ wxString DetectDebuggerExecutable()
     wxString exeName(platform::windows ? wxT("gdb.exe") : wxT("gdb"));
     wxString exePath = cbFindFileInPATH(exeName);
     wxChar sep = wxFileName::GetPathSeparator();
-    
+
     if (exePath.empty())
     {
         if (!platform::windows)
             exePath = wxT("/usr/bin/gdb");
         else
         {
-            const wxString &cbInstallFolder = ConfigManager::GetExecutableFolder();            
+            const wxString &cbInstallFolder = ConfigManager::GetExecutableFolder();
             if (wxFileExists(cbInstallFolder + sep + wxT("MINGW") + sep + wxT("bin") + sep + exeName))
                 exePath = cbInstallFolder + sep + wxT("MINGW") + sep + wxT("bin");
             else
                 exePath = wxT("C:\\MinGW\bin\\");
-        }        
-    }       
-        
+        }
+    }
+
     return exePath + wxFileName::GetPathSeparator() + exeName;
 }
 

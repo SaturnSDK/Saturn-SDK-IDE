@@ -25,6 +25,7 @@ class DebuggerConfiguration : public cbDebuggerConfiguration
         {
             WatchFuncArgs,
             WatchLocals,
+            WatchScriptPrinters,
             CatchExceptions,
             EvalExpression,
             AddOtherProjectDirs,

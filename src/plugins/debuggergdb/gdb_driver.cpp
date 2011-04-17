@@ -104,6 +104,12 @@ GDB_driver::~GDB_driver()
 
 void GDB_driver::InitializeScripting()
 {
+    if (!m_pDBG->GetActiveConfigEx().GetFlag(DebuggerConfiguration::WatchScriptPrinters))
+    {
+        m_pDBG->DebugLog(_("Skip initializing the scripting!"));
+        return;
+    }
+
     // get a pointer to scripting engine
     if (!SquirrelVM::GetVMPtr())
     {
@@ -133,6 +139,10 @@ void GDB_driver::InitializeScripting()
             Manager::Get()->GetScriptingManager()->DisplayErrors(&e);
         }
     }
+
+    wxString StlDebugCommand(_T("source $DATAPATH/scripts/stl-views-1.0.3.gdb"));
+    Manager::Get()->GetMacrosManager()->ReplaceMacros(StlDebugCommand);
+    QueueCommand(new DebuggerCmd(this, StlDebugCommand));
 }
 
 void GDB_driver::RegisterType(const wxString& name, const wxString& regex, const wxString& eval_func, const wxString& parse_func)
@@ -255,10 +265,6 @@ void GDB_driver::Prepare(bool isConsole)
     // define all scripted types
     m_Types.Clear();
     InitializeScripting();
-
-    wxString StlDebugCommand(_T("source $DATAPATH/scripts/stl-views-1.0.3.gdb"));
-    Manager::Get()->GetMacrosManager()->ReplaceMacros(StlDebugCommand);
-    QueueCommand(new DebuggerCmd(this, StlDebugCommand));
 
     // pass user init-commands
     wxString init = m_pDBG->GetActiveConfigEx().GetInitCommands();
