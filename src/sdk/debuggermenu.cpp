@@ -152,13 +152,23 @@ wxMenu* GetActiveDebuggersMenu(bool recreate = false)
     return item ? item->GetSubMenu() : nullptr;
 }
 
+void DebuggerMenuHandler::MarkActiveTargetAsValid(bool valid)
+{
+    wxMenu *menu = GetActiveDebuggersMenu();
+    if (!menu)
+        return;
+    wxMenuItem *item = menu->FindItem(idMenuDebugActiveTargetsDefault);
+    if (item)
+        item->SetText(valid ? _("Target's default") : _("Target's default (invalid)"));
+}
+
 void DebuggerMenuHandler::RebuildActiveDebuggersMenu()
 {
     DebuggerManager *dbgManager = Manager::Get()->GetDebuggerManager();
     wxMenu *menu = GetActiveDebuggersMenu(true);
     if (!menu)
         return;
-    
+
     menu->AppendRadioItem(idMenuDebugActiveTargetsDefault, _("Target's default"),
                           _("Use the debugger associated with the compiler for the active target"));
 
@@ -288,6 +298,20 @@ void DebuggerMenuHandler::OnUpdateUI(wxUpdateUIEvent& event)
     event.Skip();
 }
 
+void DebuggerMenuHandler::LogActiveConfig()
+{
+    DebuggerManager *dbgManager = Manager::Get()->GetDebuggerManager();
+    const DebuggerManager::RegisteredPlugins &allDebuggers = dbgManager->GetAllDebuggers();
+    DebuggerManager::RegisteredPlugins::const_iterator it = allDebuggers.find(m_activeDebugger);
+    wxString configName;
+    if (it != allDebuggers.end())
+    {
+        cbDebuggerConfiguration &config = m_activeDebugger->GetActiveConfig();
+        configName = it->second.GetGUIName() + wxT(":") + config.GetName();
+    }
+    m_activeDebugger->Log(_("Active debugger config: ") + configName);
+}
+
 void DebuggerMenuHandler::OnStart(wxCommandEvent& event)
 {
     cbAssert(m_activeDebugger);
@@ -300,23 +324,10 @@ void DebuggerMenuHandler::OnStart(wxCommandEvent& event)
         {
             manager->SetIsRunning(m_activeDebugger);
 
-            int pageIndex;
-            DebuggerManager *dbgManager = Manager::Get()->GetDebuggerManager();
-            dbgManager->GetLogger(false, pageIndex);
-            if (pageIndex != -1)
-            {
-                const DebuggerManager::RegisteredPlugins &allDebuggers = dbgManager->GetAllDebuggers();
-                DebuggerManager::RegisteredPlugins::const_iterator it = allDebuggers.find(m_activeDebugger);
-                wxString configName;
-                if (it != allDebuggers.end())
-                {
-                    cbDebuggerConfiguration &config = m_activeDebugger->GetActiveConfig();
-                    configName = it->second.GetGUIName() + wxT(":") + config.GetName();
-                }
-                m_activeDebugger->SaveActiveLog();
-                m_activeDebugger->ClearLog(false);
-                Manager::Get()->GetLogManager()->Log(_("Active debugger config: ") + configName, pageIndex);
-            }
+            m_activeDebugger->SaveActiveLog();
+            m_activeDebugger->ClearLog(false);
+            LogActiveConfig();
+
             if (!m_activeDebugger->Debug(false))
                 manager->SetIsRunning(NULL);
         }
@@ -380,6 +391,8 @@ void DebuggerMenuHandler::OnStep(wxCommandEvent& event)
             manager->SetIsRunning(m_activeDebugger);
             m_activeDebugger->SaveActiveLog();
             m_activeDebugger->ClearLog(false);
+            LogActiveConfig();
+
             if (!m_activeDebugger->Debug(true))
                 manager->SetIsRunning(NULL);
         }
@@ -409,6 +422,7 @@ void DebuggerMenuHandler::OnRunToCursor(wxCommandEvent& event)
         {
             m_activeDebugger->SaveActiveLog();
             m_activeDebugger->ClearLog(false);
+            LogActiveConfig();
         }
         if (!m_activeDebugger->RunToCursor(ed->GetFilename(), ed->GetControl()->GetCurrentLine() + 1, line_text))
             manager->SetIsRunning(NULL);

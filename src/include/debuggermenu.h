@@ -16,6 +16,7 @@ class DebuggerMenuHandler : public wxEvtHandler
     public:
         DebuggerMenuHandler();
         void SetActiveDebugger(cbDebuggerPlugin *active);
+        void MarkActiveTargetAsValid(bool valid);
         void RebuildActiveDebuggersMenu();
         void BuildContextMenu(wxMenu &menu, const wxString& word_at_caret, bool is_running);
     private:
@@ -51,6 +52,8 @@ class DebuggerMenuHandler : public wxEvtHandler
 
         void OnActiveDebuggerClick(wxCommandEvent& event);
         void OnActiveDebuggerTargetsDefaultClick(wxCommandEvent& event);
+
+        void LogActiveConfig();
 
         DECLARE_EVENT_TABLE();
     private:

@@ -320,6 +320,7 @@ class DLLIMPORT DebuggerManager : public Mgr<DebuggerManager>
         void OnProjectActivated(CodeBlocksEvent& event);
         void OnTargetSelected(CodeBlocksEvent& event);
         void OnSettingsChanged(CodeBlocksEvent& event);
+        void OnPluginLoadingComplete(CodeBlocksEvent& event);
     private:
 
         RegisteredPlugins m_registered;

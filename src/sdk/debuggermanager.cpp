@@ -738,6 +738,8 @@ DebuggerManager::DebuggerManager() :
     Manager::Get()->RegisterEventSink(cbEVT_PROJECT_ACTIVATE, new Event(this, &DebuggerManager::OnProjectActivated));
     Manager::Get()->RegisterEventSink(cbEVT_BUILDTARGET_SELECTED, new Event(this, &DebuggerManager::OnTargetSelected));
     Manager::Get()->RegisterEventSink(cbEVT_SETTINGS_CHANGED, new Event(this, &DebuggerManager::OnSettingsChanged));
+    Manager::Get()->RegisterEventSink(cbEVT_PLUGIN_LOADING_COMPLETE,
+                                      new Event(this, &DebuggerManager::OnPluginLoadingComplete));
 
     wxString activeDebuggerName;
     int activeConfig;
@@ -769,13 +771,13 @@ bool DebuggerManager::RegisterDebugger(cbDebuggerPlugin *plugin, const wxString 
         Manager::Get()->GetLogManager()->LogError(s);
         return false;
     }
-    
+
     int normalIndex = -1, debugIndex = -1;
     GetLogger(false, normalIndex);
     if (cbDebuggerCommonConfig::GetFlag(cbDebuggerCommonConfig::ShowDebuggersLog))
         GetLogger(true, debugIndex);
     plugin->SetupLogs(normalIndex, debugIndex);
-    
+
     PluginData data;
     data.m_guiName = guiName;
     data.m_settingsName = settingsName;
@@ -792,18 +794,15 @@ bool DebuggerManager::RegisterDebugger(cbDebuggerPlugin *plugin, const wxString 
     int activeConfig;
     ReadActiveDebuggerConfig(activeDebuggerName, activeConfig);
 
-    if (!m_activeDebugger)
+    if (activeDebuggerName == settingsName)
     {
-        if (activeDebuggerName == settingsName)
-        {
-            if (activeConfig > static_cast<int>(it->second.GetConfigurations().size()))
-                activeConfig = 0;
+        if (activeConfig > static_cast<int>(it->second.GetConfigurations().size()))
+            activeConfig = 0;
 
-            m_activeDebugger = plugin;
-            m_activeDebugger->SetActiveConfig(activeConfig);
+        m_activeDebugger = plugin;
+        m_activeDebugger->SetActiveConfig(activeConfig);
 
-            m_menuHandler->SetActiveDebugger(m_activeDebugger);
-        }
+        m_menuHandler->SetActiveDebugger(m_activeDebugger);
     }
 
     m_menuHandler->RebuildActiveDebuggersMenu();
@@ -861,12 +860,12 @@ bool DebuggerManager::UnregisterDebugger(cbDebuggerPlugin *plugin)
 
         RemoveDockWindow(m_watchesDialog);
         m_watchesDialog = NULL;
-        
+
         if (Manager::Get()->GetLogManager())
         {
             Manager::Get()->GetDebuggerManager()->HideLogger(true);
             Manager::Get()->GetDebuggerManager()->HideLogger(false);
-        }          
+        }
     }
 
     return true;
@@ -1303,7 +1302,14 @@ void DebuggerManager::FindTargetsDebugger()
     m_activeDebugger = nullptr;
     m_menuHandler->SetActiveDebugger(nullptr);
 
+    if (m_registered.empty())
+    {
+        m_menuHandler->MarkActiveTargetAsValid(false);
+        return;
+    }
+
     ProjectManager* projectMgr = Manager::Get()->GetProjectManager();
+    LogManager* log = Manager::Get()->GetLogManager();
     cbProject* project = projectMgr->GetActiveProject();
     ProjectBuildTarget *target = nullptr;
     if (project)
@@ -1320,7 +1326,8 @@ void DebuggerManager::FindTargetsDebugger()
         compiler = CompilerFactory::GetDefaultCompiler();
         if (!compiler)
         {
-            Manager::Get()->GetLogManager()->LogError(_("Can't get the active target, nor default compiler!"));
+            log->LogError(_("Can't get the active target, nor default compiler!"));
+            m_menuHandler->MarkActiveTargetAsValid(false);
             return;
         }
     }
@@ -1329,7 +1336,8 @@ void DebuggerManager::FindTargetsDebugger()
         compiler = CompilerFactory::GetCompiler(target->GetCompilerID());
         if (!compiler)
         {
-            Manager::Get()->GetLogManager()->LogError(_("Current target doesn't have valid compiler!"));
+            log->LogError(_("Current target doesn't have valid compiler!"));
+            m_menuHandler->MarkActiveTargetAsValid(false);
             return;
         }
     }
@@ -1345,7 +1353,8 @@ void DebuggerManager::FindTargetsDebugger()
 
     if (name.empty() || config.empty())
     {
-        Manager::Get()->GetLogManager()->LogError(_("Current compiler doesn't have correctly defined debugger!"));
+        log->LogError(_("Current compiler doesn't have correctly defined debugger!"));
+        m_menuHandler->MarkActiveTargetAsValid(false);
         return;
     }
 
@@ -1367,11 +1376,16 @@ void DebuggerManager::FindTargetsDebugger()
                     m_menuHandler->SetActiveDebugger(m_activeDebugger);
                     WriteActiveDebuggerConfig(wxEmptyString, -1);
                     RefreshBreakpoints(m_activeDebugger);
+                    m_menuHandler->MarkActiveTargetAsValid(true);
                     return;
                 }
             }
         }
     }
+
+    log->LogError(wxString::Format(_("Can't find the debugger config: '%s:%s' for the current target!"),
+                                   name.c_str(), config.c_str()));
+    m_menuHandler->MarkActiveTargetAsValid(false);
 }
 
 bool DebuggerManager::IsDisassemblyMixedMode()
@@ -1402,5 +1416,14 @@ void DebuggerManager::OnSettingsChanged(CodeBlocksEvent& event)
     {
         if (m_useTargetsDefault)
             FindTargetsDebugger();
+    }
+}
+
+void DebuggerManager::OnPluginLoadingComplete(CodeBlocksEvent& event)
+{
+    if (!m_activeDebugger)
+    {
+        m_useTargetsDefault = true;
+        FindTargetsDebugger();
     }
 }

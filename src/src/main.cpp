@@ -1079,6 +1079,9 @@ void MainFrame::ScanForPlugins()
         Manager::Get()->GetLogManager()->Log(_("Loading:"));
         m_PluginManager->LoadAllPlugins();
     }
+
+    CodeBlocksEvent event(cbEVT_PLUGIN_LOADING_COMPLETE);
+    Manager::Get()->GetPluginManager()->NotifyPlugins(event);
 }
 
 wxMenuItem* MainFrame::AddPluginInMenus(wxMenu* menu, cbPlugin* plugin, wxObjectEventFunction callback, int pos, bool checkable)
@@ -4422,6 +4425,14 @@ void MainFrame::OnSettingsCompiler(wxCommandEvent& /*event*/)
 
 void MainFrame::OnSettingsDebugger(wxCommandEvent& /*event*/)
 {
+    cbDebuggerPlugin *plugin = Manager::Get()->GetDebuggerManager()->GetActiveDebugger();
+    if (plugin && plugin->IsRunning())
+    {
+        cbMessageBox(_("A debugger plugin is running. You have to stop it in order to modify the settings!"),
+                     _("Error"), wxICON_ERROR, this);
+        return;
+    }
+
     DebuggerSettingsDlg dlg(this);
     PlaceWindow(&dlg);
     if (dlg.ShowModal() == wxID_OK)
