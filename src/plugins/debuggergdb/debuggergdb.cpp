@@ -1706,7 +1706,7 @@ void DebuggerGDB::OnGDBTerminated(wxCommandEvent& event)
 
     ClearActiveMarkFromAllEditors();
     m_State.StopDriver();
-    Log(F(_("Debugger finished with status %d"), m_LastExitCode));
+    Log(wxString::Format(_("Debugger finished with status %d"), m_LastExitCode));
 
     if (m_NoDebugInfo)
     {
