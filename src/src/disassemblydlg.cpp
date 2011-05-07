@@ -35,14 +35,14 @@
 const int DEBUG_MARKER = 4;
 const int DEBUG_STYLE = wxSCI_MARK_ARROW;
 
-BEGIN_EVENT_TABLE(cbDisassemblyDlg, wxPanel)
-    EVT_BUTTON(XRCID("btnSave"), cbDisassemblyDlg::OnSave)
-//    EVT_BUTTON(XRCID("btnRefresh"), cbDisassemblyDlg::OnRefresh)
-    EVT_CHECKBOX(XRCID("chkMode"), cbDisassemblyDlg::OnMixedModeCB)
-    EVT_BUTTON(XRCID("btnAdjustLine"), cbDisassemblyDlg::OnAdjustLine)
+BEGIN_EVENT_TABLE(DisassemblyDlg, wxPanel)
+    EVT_BUTTON(XRCID("btnSave"), DisassemblyDlg::OnSave)
+//    EVT_BUTTON(XRCID("btnRefresh"), DisassemblyDlg::OnRefresh)
+    EVT_CHECKBOX(XRCID("chkMode"), DisassemblyDlg::OnMixedModeCB)
+    EVT_BUTTON(XRCID("btnAdjustLine"), DisassemblyDlg::OnAdjustLine)
 END_EVENT_TABLE()
 
-cbDisassemblyDlg::cbDisassemblyDlg(wxWindow* parent) :
+DisassemblyDlg::DisassemblyDlg(wxWindow* parent) :
     m_LastActiveAddr(0),
     m_ClearFlag(false)
 {
@@ -84,7 +84,7 @@ cbDisassemblyDlg::cbDisassemblyDlg(wxWindow* parent) :
     Clear(sf);
 }
 
-void cbDisassemblyDlg::Clear(const cbStackFrame& frame)
+void DisassemblyDlg::Clear(const cbStackFrame& frame)
 {
     m_FrameFunction = frame.IsValid() ? frame.GetSymbol() : _T("??");
     m_FrameAddress = _T("??");
@@ -118,7 +118,7 @@ void cbDisassemblyDlg::Clear(const cbStackFrame& frame)
     m_pCode->MarkerDeleteAll(DEBUG_MARKER);
 }
 
-void cbDisassemblyDlg::AddAssemblerLine(unsigned long int addr, const wxString& line)
+void DisassemblyDlg::AddAssemblerLine(unsigned long int addr, const wxString& line)
 {
     m_pCode->SetReadOnly(false);
     if (m_ClearFlag)
@@ -137,7 +137,7 @@ void cbDisassemblyDlg::AddAssemblerLine(unsigned long int addr, const wxString& 
     m_LineTypes.push_back('D') ;
 }
 
-void cbDisassemblyDlg::AddSourceLine(unsigned long int lineno, const wxString& line)
+void DisassemblyDlg::AddSourceLine(unsigned long int lineno, const wxString& line)
 {
     m_pCode->SetReadOnly(false);
     if (m_ClearFlag)
@@ -154,7 +154,7 @@ void cbDisassemblyDlg::AddSourceLine(unsigned long int lineno, const wxString& l
     m_LineTypes.push_back('S') ;
 }
 
-void cbDisassemblyDlg::CenterLine(unsigned long int lineno)
+void DisassemblyDlg::CenterLine(unsigned long int lineno)
 {
     //make line middle of display window if reasonable
     int firstdispline ;
@@ -165,13 +165,13 @@ void cbDisassemblyDlg::CenterLine(unsigned long int lineno)
         firstdispline = 0 ; //or is it zero?
     m_pCode->SetFirstVisibleLine(firstdispline) ;
 }
-void cbDisassemblyDlg::CenterCurrentLine()
+void DisassemblyDlg::CenterCurrentLine()
 {
     int displine;
     displine = m_pCode->GetCurrentLine() ;
     CenterLine(displine);
 }
-bool cbDisassemblyDlg::SetActiveAddress(unsigned long int addr)
+bool DisassemblyDlg::SetActiveAddress(unsigned long int addr)
 {
     if (m_HasActiveAddr && addr == m_LastActiveAddr)
         return m_HasActiveAddr ;
@@ -209,7 +209,7 @@ bool cbDisassemblyDlg::SetActiveAddress(unsigned long int addr)
     return m_HasActiveAddr ;
 }
 
-void cbDisassemblyDlg::OnAdjustLine(wxCommandEvent& event)
+void DisassemblyDlg::OnAdjustLine(wxCommandEvent& event)
 {
     int los = m_pCode->LinesOnScreen();
 
@@ -226,7 +226,7 @@ void cbDisassemblyDlg::OnAdjustLine(wxCommandEvent& event)
     CenterLine(displine);
 }
 
-void cbDisassemblyDlg::OnSave(wxCommandEvent& event)
+void DisassemblyDlg::OnSave(wxCommandEvent& event)
 {
     wxFileDialog dlg(this,
                      _("Save as text file"),
@@ -255,14 +255,14 @@ void cbDisassemblyDlg::OnSave(wxCommandEvent& event)
         cbMessageBox(_("Could not save file..."), _("Error"), wxICON_ERROR);
 }
 
-void cbDisassemblyDlg::OnRefresh(wxCommandEvent& event)
+void DisassemblyDlg::OnRefresh(wxCommandEvent& event)
 {
     cbDebuggerPlugin *plugin = Manager::Get()->GetDebuggerManager()->GetActiveDebugger();
     cbAssert(plugin);
     plugin->RequestUpdate(cbDebuggerPlugin::Disassembly);
 }
 
-void cbDisassemblyDlg::OnMixedModeCB(wxCommandEvent &event)
+void DisassemblyDlg::OnMixedModeCB(wxCommandEvent &event)
 {
     DebuggerManager &manager = *Manager::Get()->GetDebuggerManager();
     bool newMode = !manager.IsDisassemblyMixedMode();

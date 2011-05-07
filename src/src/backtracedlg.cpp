@@ -37,19 +37,19 @@ namespace
     const int idSettingSwitchDefault = wxNewId();
 }
 
-BEGIN_EVENT_TABLE(cbBacktraceDlg, wxPanel)
-    EVT_LIST_ITEM_RIGHT_CLICK(idList, cbBacktraceDlg::OnListRightClick)
-    EVT_LIST_ITEM_ACTIVATED(idList, cbBacktraceDlg::OnDoubleClick)
-    EVT_MENU(idSwitch, cbBacktraceDlg::OnSwitchFrame)
-    EVT_MENU(idSave, cbBacktraceDlg::OnSave)
-    EVT_MENU(idJump, cbBacktraceDlg::OnJump)
-    EVT_MENU(idCopyToClipboard, cbBacktraceDlg::OnCopyToClipboard)
+BEGIN_EVENT_TABLE(BacktraceDlg, wxPanel)
+    EVT_LIST_ITEM_RIGHT_CLICK(idList, BacktraceDlg::OnListRightClick)
+    EVT_LIST_ITEM_ACTIVATED(idList, BacktraceDlg::OnDoubleClick)
+    EVT_MENU(idSwitch, BacktraceDlg::OnSwitchFrame)
+    EVT_MENU(idSave, BacktraceDlg::OnSave)
+    EVT_MENU(idJump, BacktraceDlg::OnJump)
+    EVT_MENU(idCopyToClipboard, BacktraceDlg::OnCopyToClipboard)
 
-    EVT_MENU(idSettingJumpDefault, cbBacktraceDlg::OnSettingJumpDefault)
-    EVT_MENU(idSettingSwitchDefault, cbBacktraceDlg::OnSettingSwitchDefault)
+    EVT_MENU(idSettingJumpDefault, BacktraceDlg::OnSettingJumpDefault)
+    EVT_MENU(idSettingSwitchDefault, BacktraceDlg::OnSettingSwitchDefault)
 END_EVENT_TABLE()
 
-cbBacktraceDlg::cbBacktraceDlg(wxWindow* parent) :
+BacktraceDlg::BacktraceDlg(wxWindow* parent) :
     wxPanel(parent)
 {
     m_list = new wxListCtrl(this, idList, wxDefaultPosition, wxDefaultSize,
@@ -66,7 +66,7 @@ cbBacktraceDlg::cbBacktraceDlg(wxWindow* parent) :
     m_list->InsertColumn(4, _("Line"), wxLIST_FORMAT_RIGHT, 64);
 }
 
-void cbBacktraceDlg::Reload()
+void BacktraceDlg::Reload()
 {
     cbDebuggerPlugin *plugin = Manager::Get()->GetDebuggerManager()->GetActiveDebugger();
     if (!plugin)
@@ -109,7 +109,7 @@ void cbBacktraceDlg::Reload()
 }
 
 
-void cbBacktraceDlg::OnListRightClick(wxListEvent& event)
+void BacktraceDlg::OnListRightClick(wxListEvent& event)
 {
     wxMenu m;
     m.Append(idJump, _("Jump to this file/line"));
@@ -129,7 +129,7 @@ void cbBacktraceDlg::OnListRightClick(wxListEvent& event)
     m_list->PopupMenu(&m);
 }
 
-void cbBacktraceDlg::OnJump(wxCommandEvent& event)
+void BacktraceDlg::OnJump(wxCommandEvent& event)
 {
     if (m_list->GetSelectedItemCount() == 0)
         return;
@@ -156,7 +156,7 @@ void cbBacktraceDlg::OnJump(wxCommandEvent& event)
     }
 }
 
-void cbBacktraceDlg::OnSwitchFrame(wxCommandEvent& event)
+void BacktraceDlg::OnSwitchFrame(wxCommandEvent& event)
 {
     if (m_list->GetSelectedItemCount() == 0)
         return;
@@ -176,7 +176,7 @@ void cbBacktraceDlg::OnSwitchFrame(wxCommandEvent& event)
         cbMessageBox(_("Couldn't find out the frame number!"), _("Error"), wxICON_ERROR);
 }
 
-void cbBacktraceDlg::OnDoubleClick(wxListEvent& event)
+void BacktraceDlg::OnDoubleClick(wxListEvent& event)
 {
     bool jump = cbDebuggerCommonConfig::GetFlag(cbDebuggerCommonConfig::JumpOnDoubleClick);
     wxCommandEvent evt;
@@ -186,7 +186,7 @@ void cbBacktraceDlg::OnDoubleClick(wxListEvent& event)
         OnSwitchFrame(evt);
 }
 
-void cbBacktraceDlg::OnSave(wxCommandEvent& event)
+void BacktraceDlg::OnSave(wxCommandEvent& event)
 {
     wxFileDialog dlg(this, _("Save as text file"), wxEmptyString, wxEmptyString,
                      FileFilters::GetFilterAll(), wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
@@ -220,7 +220,7 @@ void cbBacktraceDlg::OnSave(wxCommandEvent& event)
     cbMessageBox(_("File saved"), _("Result"), wxICON_INFORMATION);
 }
 
-void cbBacktraceDlg::OnCopyToClipboard(wxCommandEvent& event)
+void BacktraceDlg::OnCopyToClipboard(wxCommandEvent& event)
 {
     wxString text;
     for (int ii = 0; ii < m_list->GetItemCount(); ++ii)
@@ -251,13 +251,13 @@ void cbBacktraceDlg::OnCopyToClipboard(wxCommandEvent& event)
     }
 }
 
-void cbBacktraceDlg::OnSettingJumpDefault(wxCommandEvent& event)
+void BacktraceDlg::OnSettingJumpDefault(wxCommandEvent& event)
 {
     bool checked = event.IsChecked();
     cbDebuggerCommonConfig::SetFlag(cbDebuggerCommonConfig::JumpOnDoubleClick, checked);
 }
 
-void cbBacktraceDlg::OnSettingSwitchDefault(wxCommandEvent& event)
+void BacktraceDlg::OnSettingSwitchDefault(wxCommandEvent& event)
 {
     bool checked = event.IsChecked();
     cbDebuggerCommonConfig::SetFlag(cbDebuggerCommonConfig::JumpOnDoubleClick, checked);

@@ -36,16 +36,9 @@
 #include "debuggermanager.h"
 
 #include "annoyingdialog.h"
-#include "backtracedlg.h"
-#include "breakpointsdlg.h"
-#include "cpuregistersdlg.h"
-#include "debuggermenu.h"
-#include "disassemblydlg.h"
-#include "examinememorydlg.h"
+#include "cbdebugger_interfaces.h"
 #include "loggers.h"
 #include "manager.h"
-#include "threadsdlg.h"
-#include "watchesdlg.h"
 
 cbBreakpoint::cbBreakpoint() :
     m_line(0),
@@ -706,9 +699,9 @@ cbDebuggerConfiguration* DebuggerManager::PluginData::GetConfiguration(int index
 }
 
 DebuggerManager::DebuggerManager() :
+    m_interfaceFactory(nullptr),
     m_activeDebugger(NULL),
-    m_menuHandler(new DebuggerMenuHandler),
-    m_toolbarHandler(new DebuggerToolbarHandler),
+    m_menuHandler(nullptr),
     m_backtraceDialog(NULL),
     m_breakPointsDialog(NULL),
     m_cpuRegistersDialog(NULL),
@@ -723,17 +716,6 @@ DebuggerManager::DebuggerManager() :
     m_isDisassemblyMixedMode(false),
     m_useTargetsDefault(false)
 {
-    m_menuHandler->SetEvtHandlerEnabled(false);
-    m_toolbarHandler->SetEvtHandlerEnabled(false);
-    wxWindow* window = Manager::Get()->GetAppWindow();
-    if (window)
-    {
-        window->PushEventHandler(m_menuHandler);
-        window->PushEventHandler(m_toolbarHandler);
-    }
-    m_menuHandler->SetEvtHandlerEnabled(true);
-    m_toolbarHandler->SetEvtHandlerEnabled(true);
-
     typedef cbEventFunctor<DebuggerManager, CodeBlocksEvent> Event;
     Manager::Get()->RegisterEventSink(cbEVT_PROJECT_ACTIVATE, new Event(this, &DebuggerManager::OnProjectActivated));
     Manager::Get()->RegisterEventSink(cbEVT_BUILDTARGET_SELECTED, new Event(this, &DebuggerManager::OnTargetSelected));
@@ -754,6 +736,7 @@ DebuggerManager::~DebuggerManager()
         it->second.ClearConfigurations();
 
     Manager::Get()->RemoveAllEventSinksFor(this);
+    delete m_interfaceFactory;
 }
 
 bool DebuggerManager::RegisterDebugger(cbDebuggerPlugin *plugin, const wxString &guiName, const wxString &settingsName)
@@ -810,17 +793,6 @@ bool DebuggerManager::RegisterDebugger(cbDebuggerPlugin *plugin, const wxString 
     return true;
 }
 
-void RemoveDockWindow(wxWindow *window)
-{
-    if (window)
-    {
-        CodeBlocksDockEvent evt(cbEVT_REMOVE_DOCK_WINDOW);
-        evt.pWindow = window;
-        Manager::Get()->ProcessEvent(evt);
-        window->Destroy();
-    }
-}
-
 bool DebuggerManager::UnregisterDebugger(cbDebuggerPlugin *plugin)
 {
     RegisteredPlugins::iterator it = m_registered.find(plugin);
@@ -840,25 +812,25 @@ bool DebuggerManager::UnregisterDebugger(cbDebuggerPlugin *plugin)
 
     if (m_registered.empty())
     {
-        RemoveDockWindow(m_backtraceDialog);
+        m_interfaceFactory->DeleteBacktrace(m_backtraceDialog);
         m_backtraceDialog = NULL;
 
-        RemoveDockWindow(m_breakPointsDialog);
+        m_interfaceFactory->DeleteBreakpoints(m_breakPointsDialog);
         m_breakPointsDialog = NULL;
 
-        RemoveDockWindow(m_cpuRegistersDialog);
+        m_interfaceFactory->DeleteCPURegisters(m_cpuRegistersDialog);
         m_cpuRegistersDialog = NULL;
 
-        RemoveDockWindow(m_disassemblyDialog);
+        m_interfaceFactory->DeleteDisassembly(m_disassemblyDialog);
         m_disassemblyDialog = NULL;
 
-        RemoveDockWindow(m_examineMemoryDialog);
+        m_interfaceFactory->DeleteMemory(m_examineMemoryDialog);
         m_examineMemoryDialog = NULL;
 
-        RemoveDockWindow(m_threadsDialog);
+        m_interfaceFactory->DeleteThreads(m_threadsDialog);
         m_threadsDialog = NULL;
 
-        RemoveDockWindow(m_watchesDialog);
+        m_interfaceFactory->DeleteWatches(m_watchesDialog);
         m_watchesDialog = NULL;
 
         if (Manager::Get()->GetLogManager())
@@ -982,11 +954,6 @@ void DebuggerManager::BuildContextMenu(wxMenu &menu, const wxString& word_at_car
     m_menuHandler->BuildContextMenu(menu, word_at_caret, is_running);
 }
 
-wxToolBar* DebuggerManager::GetToolbar(bool create)
-{
-    return m_toolbarHandler->GetToolbar(create);
-}
-
 TextCtrlLogger* DebuggerManager::GetLogger(bool for_debug, int &index)
 {
     LogManager* msgMan = Manager::Get()->GetLogManager();
@@ -1057,138 +1024,63 @@ void DebuggerManager::HideLogger(bool for_debug)
     }
 }
 
+void DebuggerManager::SetInterfaceFactory(cbDebugInterfaceFactory *factory)
+{
+    delete m_interfaceFactory;
+    m_interfaceFactory = factory;
+}
+
+void DebuggerManager::SetMenuHandler(cbDebuggerMenuHandler *handler)
+{
+    m_menuHandler = handler;
+}
+
 cbBacktraceDlg* DebuggerManager::GetBacktraceDialog()
 {
     if (!m_backtraceDialog)
-    {
-        m_backtraceDialog = new cbBacktraceDlg(Manager::Get()->GetAppWindow());
-
-        CodeBlocksDockEvent evt(cbEVT_ADD_DOCK_WINDOW);
-        evt.name = _T("CallStackPane");
-        evt.title = _("Call stack");
-        evt.pWindow = m_backtraceDialog;
-        evt.dockSide = CodeBlocksDockEvent::dsFloating;
-        evt.desiredSize.Set(150, 150);
-        evt.floatingSize.Set(450, 150);
-        evt.minimumSize.Set(150, 150);
-        Manager::Get()->ProcessEvent(evt);
-    }
+        m_backtraceDialog = m_interfaceFactory->CreateBacktrace();
     return m_backtraceDialog;
 }
 
 cbBreakpointsDlg* DebuggerManager::GetBreakpointDialog()
 {
     if (!m_breakPointsDialog)
-    {
-        m_breakPointsDialog = new cbBreakpointsDlg;
-
-        CodeBlocksDockEvent evt(cbEVT_ADD_DOCK_WINDOW);
-        evt.name = _T("BreakpointsPane");
-        evt.title = _("Breakpoints");
-        evt.pWindow = m_breakPointsDialog;
-        evt.dockSide = CodeBlocksDockEvent::dsFloating;
-        evt.desiredSize.Set(350, 250);
-        evt.floatingSize.Set(350, 250);
-        evt.minimumSize.Set(150, 150);
-        Manager::Get()->ProcessEvent(evt);
-    }
+        m_breakPointsDialog = m_interfaceFactory->CreateBreapoints();
     return m_breakPointsDialog;
 }
 
 cbCPURegistersDlg* DebuggerManager::GetCPURegistersDialog()
 {
     if (!m_cpuRegistersDialog)
-    {
-        m_cpuRegistersDialog = new cbCPURegistersDlg(Manager::Get()->GetAppWindow());
-
-        CodeBlocksDockEvent evt(cbEVT_ADD_DOCK_WINDOW);
-        evt.name = _T("CPURegistersPane");
-        evt.title = _("CPU Registers");
-        evt.pWindow = m_cpuRegistersDialog;
-        evt.dockSide = CodeBlocksDockEvent::dsFloating;
-        evt.desiredSize.Set(350, 250);
-        evt.floatingSize.Set(350, 250);
-        evt.minimumSize.Set(150, 150);
-        Manager::Get()->ProcessEvent(evt);
-    }
+        m_cpuRegistersDialog = m_interfaceFactory->CreateCPURegisters();
     return m_cpuRegistersDialog;
 }
 
 cbDisassemblyDlg* DebuggerManager::GetDisassemblyDialog()
 {
     if (!m_disassemblyDialog)
-    {
-        m_disassemblyDialog = new cbDisassemblyDlg(Manager::Get()->GetAppWindow());
-        CodeBlocksDockEvent evt(cbEVT_ADD_DOCK_WINDOW);
-
-        evt.name = _T("DisassemblyPane");
-        evt.title = _("Disassembly");
-        evt.pWindow = m_disassemblyDialog;
-        evt.dockSide = CodeBlocksDockEvent::dsFloating;
-        evt.desiredSize.Set(350, 250);
-        evt.floatingSize.Set(350, 250);
-        evt.minimumSize.Set(150, 150);
-        Manager::Get()->ProcessEvent(evt);
-    }
-
+        m_disassemblyDialog = m_interfaceFactory->CreateDisassembly();
     return m_disassemblyDialog;
 }
 
 cbExamineMemoryDlg* DebuggerManager::GetExamineMemoryDialog()
 {
     if (!m_examineMemoryDialog)
-    {
-        m_examineMemoryDialog = new cbExamineMemoryDlg(Manager::Get()->GetAppWindow());
-
-        CodeBlocksDockEvent evt(cbEVT_ADD_DOCK_WINDOW);
-        evt.name = _T("ExamineMemoryPane");
-        evt.title = _("Memory");
-        evt.pWindow = m_examineMemoryDialog;
-        evt.dockSide = CodeBlocksDockEvent::dsFloating;
-        evt.desiredSize.Set(450, 250);
-        evt.floatingSize.Set(450, 250);
-        evt.minimumSize.Set(350, 150);
-        Manager::Get()->ProcessEvent(evt);
-    }
+        m_examineMemoryDialog = m_interfaceFactory->CreateMemory();
     return m_examineMemoryDialog;
 }
 
 cbThreadsDlg* DebuggerManager::GetThreadsDialog()
 {
     if (!m_threadsDialog)
-    {
-        m_threadsDialog = new cbThreadsDlg(Manager::Get()->GetAppWindow());
-
-        CodeBlocksDockEvent evt(cbEVT_ADD_DOCK_WINDOW);
-        evt.name = _T("ThreadsPane");
-        evt.title = _("Running threads");
-        evt.pWindow = m_threadsDialog;
-        evt.dockSide = CodeBlocksDockEvent::dsFloating;
-        evt.desiredSize.Set(350, 75);
-        evt.floatingSize.Set(450, 75);
-        evt.minimumSize.Set(250, 75);
-        Manager::Get()->ProcessEvent(evt);
-    }
-
+        m_threadsDialog = m_interfaceFactory->CreateThreads();
     return m_threadsDialog;
 }
 
-WatchesDlg* DebuggerManager::GetWatchesDialog()
+cbWatchesDlg* DebuggerManager::GetWatchesDialog()
 {
     if (!m_watchesDialog)
-    {
-        m_watchesDialog = new WatchesDlg;
-        CodeBlocksDockEvent evt(cbEVT_ADD_DOCK_WINDOW);
-        evt.name = _T("WatchesPane");
-        evt.title = _("Watches (new)");
-        evt.pWindow = m_watchesDialog;
-        evt.dockSide = CodeBlocksDockEvent::dsFloating;
-        evt.desiredSize.Set(150, 250);
-        evt.floatingSize.Set(150, 250);
-        evt.minimumSize.Set(150, 150);
-        Manager::Get()->ProcessEvent(evt);
-    }
-
+        m_watchesDialog = m_interfaceFactory->CreateWatches();
     return m_watchesDialog;
 }
 
@@ -1196,11 +1088,11 @@ bool DebuggerManager::ShowBacktraceDialog()
 {
     cbBacktraceDlg *dialog = GetBacktraceDialog();
 
-    if (!IsWindowReallyShown(dialog))
+    if (!IsWindowReallyShown(dialog->GetWindow()))
     {
         // show the backtrace window
         CodeBlocksDockEvent evt(cbEVT_SHOW_DOCK_WINDOW);
-        evt.pWindow = dialog;
+        evt.pWindow = dialog->GetWindow();
         Manager::Get()->ProcessEvent(evt);
         return true;
     }
@@ -1210,27 +1102,27 @@ bool DebuggerManager::ShowBacktraceDialog()
 
 bool DebuggerManager::UpdateBacktrace()
 {
-    return m_backtraceDialog && IsWindowReallyShown(m_backtraceDialog);
+    return m_backtraceDialog && IsWindowReallyShown(m_backtraceDialog->GetWindow());
 }
 
 bool DebuggerManager::UpdateCPURegisters()
 {
-    return m_cpuRegistersDialog && IsWindowReallyShown(m_cpuRegistersDialog);
+    return m_cpuRegistersDialog && IsWindowReallyShown(m_cpuRegistersDialog->GetWindow());
 }
 
 bool DebuggerManager::UpdateDisassembly()
 {
-    return m_disassemblyDialog && IsWindowReallyShown(m_disassemblyDialog);
+    return m_disassemblyDialog && IsWindowReallyShown(m_disassemblyDialog->GetWindow());
 }
 
 bool DebuggerManager::UpdateExamineMemory()
 {
-    return m_examineMemoryDialog && IsWindowReallyShown(m_examineMemoryDialog);
+    return m_examineMemoryDialog && IsWindowReallyShown(m_examineMemoryDialog->GetWindow());
 }
 
 bool DebuggerManager::UpdateThreads()
 {
-    return m_threadsDialog && IsWindowReallyShown(m_threadsDialog);
+    return m_threadsDialog && IsWindowReallyShown(m_threadsDialog->GetWindow());
 }
 
 cbDebuggerPlugin* DebuggerManager::GetDebuggerHavingWatch(cbWatch *watch)

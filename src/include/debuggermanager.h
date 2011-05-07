@@ -22,13 +22,13 @@ class cbBacktraceDlg;
 class cbBreakpointsDlg;
 class cbCPURegistersDlg;
 class cbDebuggerPlugin;
+class cbDebugInterfaceFactory;
 class cbDisassemblyDlg;
 class cbExamineMemoryDlg;
 class cbThreadsDlg;
-class DebuggerMenuHandler;
-class DebuggerToolbarHandler;
+class cbWatchesDlg;
+class cbDebuggerMenuHandler;
 class TextCtrlLogger;
-class WatchesDlg;
 
 class DLLIMPORT cbBreakpoint
 {
@@ -276,20 +276,22 @@ class DLLIMPORT DebuggerManager : public Mgr<DebuggerManager>
 
         wxMenu* GetMenu();
         void BuildContextMenu(wxMenu &menu, const wxString& word_at_caret, bool is_running);
-        wxToolBar* GetToolbar(bool create = true);
 
         TextCtrlLogger* GetLogger(bool for_debug, int &index);
         TextCtrlLogger* GetLogger(bool for_debug);
         void HideLogger(bool for_debug);
 
     public: // debugger windows
+        void SetInterfaceFactory(cbDebugInterfaceFactory *factory);
+        void SetMenuHandler(cbDebuggerMenuHandler *handler);
+
         cbBacktraceDlg* GetBacktraceDialog();
         cbBreakpointsDlg* GetBreakpointDialog();
         cbCPURegistersDlg* GetCPURegistersDialog();
         cbDisassemblyDlg* GetDisassemblyDialog();
         cbExamineMemoryDlg* GetExamineMemoryDialog();
         cbThreadsDlg* GetThreadsDialog();
-        WatchesDlg* GetWatchesDialog();
+        cbWatchesDlg* GetWatchesDialog();
 
         bool ShowBacktraceDialog();
 
@@ -323,10 +325,11 @@ class DLLIMPORT DebuggerManager : public Mgr<DebuggerManager>
         void OnPluginLoadingComplete(CodeBlocksEvent& event);
     private:
 
+        cbDebugInterfaceFactory *m_interfaceFactory;
+
         RegisteredPlugins m_registered;
         cbDebuggerPlugin* m_activeDebugger;
-        DebuggerMenuHandler* m_menuHandler;
-        DebuggerToolbarHandler* m_toolbarHandler;
+        cbDebuggerMenuHandler* m_menuHandler;
 
         cbBacktraceDlg* m_backtraceDialog;
         cbBreakpointsDlg* m_breakPointsDialog;
@@ -334,7 +337,7 @@ class DLLIMPORT DebuggerManager : public Mgr<DebuggerManager>
         cbDisassemblyDlg* m_disassemblyDialog;
         cbExamineMemoryDlg* m_examineMemoryDialog;
         cbThreadsDlg* m_threadsDialog;
-        WatchesDlg* m_watchesDialog;
+        cbWatchesDlg* m_watchesDialog;
 
         TextCtrlLogger* m_logger;
         TextCtrlLogger* m_debugLogger;

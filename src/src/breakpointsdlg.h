@@ -7,8 +7,8 @@
 #define BREAKPOINTSDLG_H
 
 #include <vector>
-
 #include <wx/panel.h>
+#include <cbdebugger_interfaces.h>
 
 class cbBreakpoint;
 class CodeBlocksEvent;
@@ -17,10 +17,12 @@ class wxCommandEvent;
 class wxListCtrl;
 class wxListEvent;
 
-class cbBreakpointsDlg : public wxPanel
+class BreakpointsDlg : public wxPanel, public cbBreakpointsDlg
 {
     public:
-        cbBreakpointsDlg();
+        BreakpointsDlg();
+
+        wxWindow* GetWindow() { return this; }
 
         bool AddBreakpoint(const wxString& filename, int line);
         bool RemoveBreakpoint(const wxString& filename, int line);

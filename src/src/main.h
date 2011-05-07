@@ -29,6 +29,8 @@ extern int idStartHerePageLink;
 extern int idStartHerePageVarSubst;
 
 class cbAuiNotebook;
+class DebuggerMenuHandler;
+class DebuggerToolbarHandler;
 class InfoPane;
 class wxGauge;
 
@@ -257,6 +259,7 @@ class MainFrame : public wxFrame
         void RecreateMenuBar();
         void RegisterEvents();
         void SetupGUILogging();
+        void SetupDebuggerHandlers();
 
         void RegisterScriptFunctions();
         void RunStartupScripts();
@@ -352,6 +355,9 @@ class MainFrame : public wxFrame
 
         wxScrollingDialog* m_pBatchBuildDialog;
         wxGauge* m_pProgressBar;
+
+        DebuggerMenuHandler *m_debuggerMenuHandler;
+        DebuggerToolbarHandler *m_debuggerToolbarHandler;
 
         DECLARE_EVENT_TABLE()
 };

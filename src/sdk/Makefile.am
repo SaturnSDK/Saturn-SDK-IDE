@@ -24,11 +24,10 @@ libcodeblocks_la_LIBADD =  $(WX_LIBS) \
 
 libcodeblocks_la_SOURCES = annoyingdialog.cpp \
 						autodetectcompilers.cpp \
-						backtracedlg.cpp \
 						base64.cpp \
 						blockallocated.cpp \
-						breakpointsdlg.cpp \
 						cbauibook.cpp \
+						cbdebugger_interfaces.cpp \
 						cbeditor.cpp \
 						cbeditorprintout.cpp \
 						cbexception.cpp \
@@ -49,11 +48,8 @@ libcodeblocks_la_SOURCES = annoyingdialog.cpp \
 						configurationpanel.cpp \
 						configuretoolsdlg.cpp \
 						confirmreplacedlg.cpp \
-						cpuregistersdlg.cpp \
 						crc32.cpp \
 						debuggermanager.cpp \
-						debuggermenu.cpp \
-						disassemblydlg.cpp \
 						editarrayfiledlg.cpp \
 						editarrayorderdlg.cpp \
 						editarraystringdlg.cpp \
@@ -70,7 +66,6 @@ libcodeblocks_la_SOURCES = annoyingdialog.cpp \
 						edittooldlg.cpp \
 						encodingdetector.cpp \
 						externaldepsdlg.cpp \
-						examinememorydlg.cpp \
 						filefilters.cpp \
 						filegroupsandmasks.cpp \
 						filemanager.cpp \
@@ -112,11 +107,9 @@ libcodeblocks_la_SOURCES = annoyingdialog.cpp \
 						searchresultslog.cpp \
 						selecttargetdlg.cpp \
 						templatemanager.cpp \
-						threadsdlg.cpp \
 						toolsmanager.cpp \
 						uservarmanager.cpp \
 						virtualbuildtargetsdlg.cpp \
-						watchesdlg.cpp \
 						workspaceloader.cpp \
 						xtra_res.cpp  \
 						mozilla_chardet/src/CharDistribution.cpp \

@@ -8,15 +8,20 @@
 
 #include <wx/panel.h>
 
+#include <cbdebugger_interfaces.h>
+#include <manager.h>
+
 class wxCommandEvent;
 class wxListCtrl;
 class wxListEvent;
 class wxWindow;
 
-class cbBacktraceDlg : public wxPanel
+class BacktraceDlg : public wxPanel, public cbBacktraceDlg
 {
     public:
-        cbBacktraceDlg(wxWindow* parent);
+        BacktraceDlg(wxWindow* parent);
+
+        wxWindow* GetWindow() { return this; }
 
         void Reload();
     private:

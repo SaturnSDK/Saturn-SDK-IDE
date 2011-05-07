@@ -16,9 +16,9 @@
 #include <wx/frame.h>
 #include "manager.h"
 #endif
+#include <cbdebugger_interfaces.h>
 #include "debugger_defs.h"
 #include "debuggerdriver.h"
-#include "watchesdlg.h"
 
 #include <wx/arrimpl.cpp>
 WX_DEFINE_OBJARRAY(WatchesArray);

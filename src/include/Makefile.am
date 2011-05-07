@@ -25,12 +25,11 @@ sdkdir=$(includedir)/codeblocks
 
 ALLHEADERS = annoyingdialog.h \
 				autodetectcompilers.h \
-				backtracedlg.h \
 				backgroundthread.h \
 				base64.h \
 				blockallocated.h \
-				breakpointsdlg.h \
 				cbauibook.h \
+				cbdebugger_interfaces.h \
 				cbeditor.h \
 				cbeditorprintout.h \
 				cbexception.h \
@@ -53,11 +52,8 @@ ALLHEADERS = annoyingdialog.h \
 				configurationpanel.h \
 				configuretoolsdlg.h \
 				confirmreplacedlg.h \
-				cpuregistersdlg.h \
 				crc32.h \
 				debuggermanager.h \
-				debuggermenu.h \
-				disassemblydlg.h \
 				editarrayfiledlg.h \
 				editarrayorderdlg.h \
 				editarraystringdlg.h \
@@ -73,7 +69,6 @@ ALLHEADERS = annoyingdialog.h \
 				editpathdlg.h \
 				edittooldlg.h \
 				encodingdetector.h \
-				examinememorydlg.h \
 				externaldepsdlg.h \
 				filefilters.h \
 				filegroupsandmasks.h \
@@ -129,11 +124,9 @@ ALLHEADERS = annoyingdialog.h \
 				selecttargetdlg.h \
 				settings.h \
 				templatemanager.h \
-				threadsdlg.h \
 				toolsmanager.h \
 				uservarmanager.h \
 				virtualbuildtargetsdlg.h \
-				watchesdlg.h \
 				workspaceloader.h \
 				xtra_res.h \
 				mozilla_chardet/CharDistribution.h \

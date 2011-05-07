@@ -30,7 +30,7 @@
 
 #include <wx/toolbar.h>
 #include "annoyingdialog.h"
-#include "breakpointsdlg.h"
+#include "cbdebugger_interfaces.h"
 #include "cbstyledtextctrl.h"
 #include "debuggermanager.h"
 #include "editor_hooks.h"
@@ -231,16 +231,7 @@ void cbDebuggerPlugin::BuildModuleMenu(const ModuleType type, wxMenu* menu, cons
 
 bool cbDebuggerPlugin::BuildToolBar(wxToolBar* toolBar)
 {
-    if (!IsAttached() || !toolBar)
-        return false;
-
-    m_toolbar = Manager::Get()->GetDebuggerManager()->GetToolbar();
     return false;
-}
-
-wxToolBar* cbDebuggerPlugin::GetToolbar()
-{
-    return m_toolbar;
 }
 
 bool cbDebuggerPlugin::ToolMenuEnabled() const
@@ -604,7 +595,7 @@ void cbDebuggerPlugin::SetupLogs(int normalIndex, int debugIndex)
 void cbDebuggerPlugin::SaveActiveLog()
 {
     CodeBlocksLogEvent event(cbEVT_GET_ACTIVE_LOG_WINDOW);
-    Manager::Get()->ProcessEvent(event);    
+    Manager::Get()->ProcessEvent(event);
     m_ActiveLogAtStart = event.logger;
 }
 
@@ -625,7 +616,7 @@ void cbDebuggerPlugin::SwitchToDebuggingLayout()
 
     // switch to debugging layout
     Manager::Get()->ProcessEvent(switchEvent);
-    
+
     DoShowLog(m_ActiveLogAtStart, false);
 }
 

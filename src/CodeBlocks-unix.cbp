@@ -422,9 +422,9 @@
 				</Linker>
 			</Target>
 			<Environment>
-				<Variable name="WX_VERSION" value="28" />
-				<Variable name="WX_SUFFIX" value="u" />
 				<Variable name="WX_CFG" value="" />
+				<Variable name="WX_SUFFIX" value="u" />
+				<Variable name="WX_VERSION" value="28" />
 			</Environment>
 		</Build>
 		<VirtualTargets>
@@ -497,19 +497,16 @@
 		<Unit filename="include/backgroundthread.h">
 			<Option target="sdk" />
 		</Unit>
-		<Unit filename="include/backtracedlg.h">
-			<Option target="sdk" />
-		</Unit>
 		<Unit filename="include/base64.h">
 			<Option target="sdk" />
 		</Unit>
 		<Unit filename="include/blockallocated.h">
 			<Option target="sdk" />
 		</Unit>
-		<Unit filename="include/breakpointsdlg.h">
+		<Unit filename="include/cbauibook.h">
 			<Option target="sdk" />
 		</Unit>
-		<Unit filename="include/cbauibook.h">
+		<Unit filename="include/cbdebugger_interfaces.h">
 			<Option target="sdk" />
 		</Unit>
 		<Unit filename="include/cbeditor.h">
@@ -581,19 +578,10 @@
 		<Unit filename="include/confirmreplacedlg.h">
 			<Option target="sdk" />
 		</Unit>
-		<Unit filename="include/cpuregistersdlg.h">
-			<Option target="sdk" />
-		</Unit>
 		<Unit filename="include/crc32.h">
 			<Option target="sdk" />
 		</Unit>
 		<Unit filename="include/debuggermanager.h">
-			<Option target="sdk" />
-		</Unit>
-		<Unit filename="include/debuggermenu.h">
-			<Option target="sdk" />
-		</Unit>
-		<Unit filename="include/disassemblydlg.h">
 			<Option target="sdk" />
 		</Unit>
 		<Unit filename="include/editarrayfiledlg.h">
@@ -639,9 +627,6 @@
 			<Option target="sdk" />
 		</Unit>
 		<Unit filename="include/encodingdetector.h">
-			<Option target="sdk" />
-		</Unit>
-		<Unit filename="include/examinememorydlg.h">
 			<Option target="sdk" />
 		</Unit>
 		<Unit filename="include/externaldepsdlg.h">
@@ -993,9 +978,6 @@
 		<Unit filename="include/templatemanager.h">
 			<Option target="sdk" />
 		</Unit>
-		<Unit filename="include/threadsdlg.h">
-			<Option target="sdk" />
-		</Unit>
 		<Unit filename="include/tinyxml/tinystr.h">
 			<Option target="tinyXML" />
 		</Unit>
@@ -1012,9 +994,6 @@
 			<Option target="sdk" />
 		</Unit>
 		<Unit filename="include/virtualbuildtargetsdlg.h">
-			<Option target="sdk" />
-		</Unit>
-		<Unit filename="include/watchesdlg.h">
 			<Option target="sdk" />
 		</Unit>
 		<Unit filename="include/workspaceloader.h">
@@ -1903,19 +1882,16 @@
 		<Unit filename="sdk/autodetectcompilers.cpp">
 			<Option target="sdk" />
 		</Unit>
-		<Unit filename="sdk/backtracedlg.cpp">
-			<Option target="sdk" />
-		</Unit>
 		<Unit filename="sdk/base64.cpp">
 			<Option target="sdk" />
 		</Unit>
 		<Unit filename="sdk/blockallocated.cpp">
 			<Option target="sdk" />
 		</Unit>
-		<Unit filename="sdk/breakpointsdlg.cpp">
+		<Unit filename="sdk/cbauibook.cpp">
 			<Option target="sdk" />
 		</Unit>
-		<Unit filename="sdk/cbauibook.cpp">
+		<Unit filename="sdk/cbdebugger_interfaces.cpp">
 			<Option target="sdk" />
 		</Unit>
 		<Unit filename="sdk/cbeditor.cpp">
@@ -1979,19 +1955,10 @@
 		<Unit filename="sdk/confirmreplacedlg.cpp">
 			<Option target="sdk" />
 		</Unit>
-		<Unit filename="sdk/cpuregistersdlg.cpp">
-			<Option target="sdk" />
-		</Unit>
 		<Unit filename="sdk/crc32.cpp">
 			<Option target="sdk" />
 		</Unit>
 		<Unit filename="sdk/debuggermanager.cpp">
-			<Option target="sdk" />
-		</Unit>
-		<Unit filename="sdk/debuggermenu.cpp">
-			<Option target="sdk" />
-		</Unit>
-		<Unit filename="sdk/disassemblydlg.cpp">
 			<Option target="sdk" />
 		</Unit>
 		<Unit filename="sdk/editarrayfiledlg.cpp">
@@ -2037,9 +2004,6 @@
 			<Option target="sdk" />
 		</Unit>
 		<Unit filename="sdk/encodingdetector.cpp">
-			<Option target="sdk" />
-		</Unit>
-		<Unit filename="sdk/examinememorydlg.cpp">
 			<Option target="sdk" />
 		</Unit>
 		<Unit filename="sdk/externaldepsdlg.cpp">
@@ -2243,9 +2207,6 @@
 		<Unit filename="sdk/resources/auto_detect_compilers.xrc">
 			<Option target="sdk" />
 		</Unit>
-		<Unit filename="sdk/resources/breakpoints.xrc">
-			<Option target="sdk" />
-		</Unit>
 		<Unit filename="sdk/resources/configure_tools.xrc">
 			<Option target="sdk" />
 		</Unit>
@@ -2253,18 +2214,6 @@
 			<Option target="sdk" />
 		</Unit>
 		<Unit filename="sdk/resources/confirm_replace_multiple.xrc">
-			<Option target="sdk" />
-		</Unit>
-		<Unit filename="sdk/resources/debugger_menu.xrc">
-			<Option target="sdk" />
-		</Unit>
-		<Unit filename="sdk/resources/debugger_toolbar.xrc">
-			<Option target="sdk" />
-		</Unit>
-		<Unit filename="sdk/resources/debugger_toolbar_16x16.xrc">
-			<Option target="sdk" />
-		</Unit>
-		<Unit filename="sdk/resources/disassembly.xrc">
 			<Option target="sdk" />
 		</Unit>
 		<Unit filename="sdk/resources/edit_array_order.xrc">
@@ -2471,9 +2420,6 @@
 		<Unit filename="sdk/resources/lexers/lexer_xml.xml">
 			<Option target="scintilla" />
 		</Unit>
-		<Unit filename="sdk/resources/memdump.xrc">
-			<Option target="sdk" />
-		</Unit>
 		<Unit filename="sdk/resources/new_from_template.xrc">
 			<Option target="sdk" />
 		</Unit>
@@ -2629,9 +2575,6 @@
 		<Unit filename="sdk/templatemanager.cpp">
 			<Option target="sdk" />
 		</Unit>
-		<Unit filename="sdk/threadsdlg.cpp">
-			<Option target="sdk" />
-		</Unit>
 		<Unit filename="sdk/toolsmanager.cpp">
 			<Option target="sdk" />
 		</Unit>
@@ -2639,9 +2582,6 @@
 			<Option target="sdk" />
 		</Unit>
 		<Unit filename="sdk/virtualbuildtargetsdlg.cpp">
-			<Option target="sdk" />
-		</Unit>
-		<Unit filename="sdk/watchesdlg.cpp">
 			<Option target="sdk" />
 		</Unit>
 		<Unit filename="sdk/workspaceloader.cpp">
@@ -3210,7 +3150,19 @@
 		<Unit filename="src/associations.h">
 			<Option target="src" />
 		</Unit>
+		<Unit filename="src/backtracedlg.cpp">
+			<Option target="src" />
+		</Unit>
+		<Unit filename="src/backtracedlg.h">
+			<Option target="src" />
+		</Unit>
 		<Unit filename="src/batchbuild.h">
+			<Option target="src" />
+		</Unit>
+		<Unit filename="src/breakpointsdlg.cpp">
+			<Option target="src" />
+		</Unit>
+		<Unit filename="src/breakpointsdlg.h">
 			<Option target="src" />
 		</Unit>
 		<Unit filename="src/compilersettingsdlg.cpp">
@@ -3219,10 +3171,28 @@
 		<Unit filename="src/compilersettingsdlg.h">
 			<Option target="src" />
 		</Unit>
+		<Unit filename="src/cpuregistersdlg.cpp">
+			<Option target="src" />
+		</Unit>
+		<Unit filename="src/cpuregistersdlg.h">
+			<Option target="src" />
+		</Unit>
 		<Unit filename="src/crashhandler.cpp">
 			<Option target="src" />
 		</Unit>
 		<Unit filename="src/crashhandler.h">
+			<Option target="src" />
+		</Unit>
+		<Unit filename="src/debugger_interface_creator.cpp">
+			<Option target="src" />
+		</Unit>
+		<Unit filename="src/debugger_interface_creator.h">
+			<Option target="src" />
+		</Unit>
+		<Unit filename="src/debuggermenu.cpp">
+			<Option target="src" />
+		</Unit>
+		<Unit filename="src/debuggermenu.h">
 			<Option target="src" />
 		</Unit>
 		<Unit filename="src/debuggersettingscommonpanel.cpp">
@@ -3243,6 +3213,12 @@
 		<Unit filename="src/debuggersettingspanel.h">
 			<Option target="src" />
 		</Unit>
+		<Unit filename="src/disassemblydlg.cpp">
+			<Option target="src" />
+		</Unit>
+		<Unit filename="src/disassemblydlg.h">
+			<Option target="src" />
+		</Unit>
 		<Unit filename="src/dlgabout.cpp">
 			<Option target="src" />
 		</Unit>
@@ -3259,6 +3235,12 @@
 			<Option target="src" />
 		</Unit>
 		<Unit filename="src/environmentsettingsdlg.h">
+			<Option target="src" />
+		</Unit>
+		<Unit filename="src/examinememorydlg.cpp">
+			<Option target="src" />
+		</Unit>
+		<Unit filename="src/examinememorydlg.h">
 			<Option target="src" />
 		</Unit>
 		<Unit filename="src/infopane.cpp">
@@ -3295,6 +3277,15 @@
 			<Option target="src" />
 		</Unit>
 		<Unit filename="src/resources/ask_assocs.xrc">
+			<Option target="src" />
+		</Unit>
+		<Unit filename="src/resources/debugger_menu.xrc">
+			<Option target="src" />
+		</Unit>
+		<Unit filename="src/resources/debugger_toolbar.xrc">
+			<Option target="src" />
+		</Unit>
+		<Unit filename="src/resources/debugger_toolbar_16x16.xrc">
 			<Option target="src" />
 		</Unit>
 		<Unit filename="src/resources/dlg_about.xrc">
@@ -3361,6 +3352,18 @@
 			<Option target="src" />
 		</Unit>
 		<Unit filename="src/switcherdlg.h">
+			<Option target="src" />
+		</Unit>
+		<Unit filename="src/threadsdlg.cpp">
+			<Option target="src" />
+		</Unit>
+		<Unit filename="src/threadsdlg.h">
+			<Option target="src" />
+		</Unit>
+		<Unit filename="src/watchesdlg.cpp">
+			<Option target="src" />
+		</Unit>
+		<Unit filename="src/watchesdlg.h">
 			<Option target="src" />
 		</Unit>
 		<Unit filename="tips.txt">

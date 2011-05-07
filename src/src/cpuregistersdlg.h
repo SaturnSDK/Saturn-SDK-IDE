@@ -7,13 +7,16 @@
 #define CPUREGISTERSDLG_H
 
 #include <wx/panel.h>
+#include <cbdebugger_interfaces.h>
 
 class wxListCtrl;
 
-class cbCPURegistersDlg : public wxPanel
+class CPURegistersDlg : public wxPanel, public cbCPURegistersDlg
 {
     public:
-        cbCPURegistersDlg(wxWindow* parent);
+        CPURegistersDlg(wxWindow* parent);
+
+        wxWindow* GetWindow() { return this; }
 
         void Clear();
         void SetRegisterValue(const wxString& reg_name, unsigned long int value);

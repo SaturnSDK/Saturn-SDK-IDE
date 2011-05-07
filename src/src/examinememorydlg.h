@@ -7,13 +7,16 @@
 #define EXAMINEMEMORYDLG_H
 
 #include <wx/panel.h>
+#include <cbdebugger_interfaces.h>
 
 class wxTextCtrl;
 
-class cbExamineMemoryDlg : public wxPanel
+class ExamineMemoryDlg : public wxPanel, public cbExamineMemoryDlg
 {
     public:
-        cbExamineMemoryDlg(wxWindow* parent);
+        ExamineMemoryDlg(wxWindow* parent);
+
+        wxWindow* GetWindow() { return this; }
 
         // used for Freeze()/Thaw() calls
         void Begin();

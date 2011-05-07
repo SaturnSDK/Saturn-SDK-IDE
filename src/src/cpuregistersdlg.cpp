@@ -14,11 +14,11 @@
 #include <wx/sizer.h>
 #include <wx/listctrl.h>
 
-BEGIN_EVENT_TABLE(cbCPURegistersDlg, wxPanel)
+BEGIN_EVENT_TABLE(CPURegistersDlg, wxPanel)
 //    EVT_BUTTON(XRCID("btnRefresh"), CPURegistersDlg::OnRefresh)
 END_EVENT_TABLE()
 
-cbCPURegistersDlg::cbCPURegistersDlg(wxWindow* parent) :
+CPURegistersDlg::CPURegistersDlg(wxWindow* parent) :
     wxPanel(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize)
 {
     wxBoxSizer* sizer = new wxBoxSizer(wxVERTICAL);
@@ -33,7 +33,7 @@ cbCPURegistersDlg::cbCPURegistersDlg(wxWindow* parent) :
     Clear();
 }
 
-void cbCPURegistersDlg::Clear()
+void CPURegistersDlg::Clear()
 {
     m_pList->ClearAll();
     m_pList->Freeze();
@@ -44,7 +44,7 @@ void cbCPURegistersDlg::Clear()
     m_pList->Thaw();
 }
 
-int cbCPURegistersDlg::RegisterIndex(const wxString& reg_name)
+int CPURegistersDlg::RegisterIndex(const wxString& reg_name)
 {
     for (int i = 0; i < m_pList->GetItemCount(); ++i)
     {
@@ -54,7 +54,7 @@ int cbCPURegistersDlg::RegisterIndex(const wxString& reg_name)
     return -1;
 }
 
-void cbCPURegistersDlg::SetRegisterValue(const wxString& reg_name, unsigned long int value)
+void CPURegistersDlg::SetRegisterValue(const wxString& reg_name, unsigned long int value)
 {
     // find existing register
     int idx = RegisterIndex(reg_name);

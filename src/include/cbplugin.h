@@ -37,7 +37,7 @@
 // it will change when the SDK interface breaks
 #define PLUGIN_SDK_VERSION_MAJOR 1
 #define PLUGIN_SDK_VERSION_MINOR 12
-#define PLUGIN_SDK_VERSION_RELEASE 3
+#define PLUGIN_SDK_VERSION_RELEASE 4
 
 // class decls
 class wxMenuBar;
@@ -386,9 +386,6 @@ class PLUGIN_EXPORT cbDebuggerPlugin: public cbPlugin
         cbDebuggerPlugin();
 
     public:
-        /** @brief Returns the toolbar associated with this plugin. */
-        wxToolBar* GetToolbar();
-
         virtual void OnAttach();
         virtual void OnRelease(bool appShutDown);
 
@@ -567,12 +564,12 @@ class PLUGIN_EXPORT cbDebuggerPlugin: public cbPlugin
         void DebugLog(const wxString& msg, Logger::level level = Logger::info);
         bool HasDebugLog() const;
         void ClearLog(bool debug);
-        
+
         // Called only by DebuggerManager, when registering plugin or changing settings
         void SetupLogs(int normalIndex, int debugIndex);
         // Called only by DebuggerMenu
         void SaveActiveLog();
-        
+
     protected:
         void SwitchToDebuggingLayout();
         void SwitchToPreviousLayout();
@@ -604,10 +601,10 @@ class PLUGIN_EXPORT cbDebuggerPlugin: public cbPlugin
         bool m_DragInProgress;
 
         int m_ActiveConfig;
-        
+
         int m_LogPageIndex;
-        int m_DebugLogPageIndex;        
-        void *m_ActiveLogAtStart; 
+        int m_DebugLogPageIndex;
+        void *m_ActiveLogAtStart;
 };
 
 /** @brief Base class for tool plugins

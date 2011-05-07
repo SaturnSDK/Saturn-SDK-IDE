@@ -11,7 +11,7 @@
 #include "debuggerdriver.h"
 #include "debuggergdb.h"
 
-#include <backtracedlg.h>
+#include <cbdebugger_interfaces.h>
 
 DebuggerDriver::DebuggerDriver(DebuggerGDB* plugin)
     : m_pDBG(plugin),

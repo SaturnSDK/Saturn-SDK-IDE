@@ -26,14 +26,14 @@ namespace
     const int idSwitch = wxNewId();
 }
 
-BEGIN_EVENT_TABLE(cbThreadsDlg, wxPanel)
-    EVT_LIST_ITEM_RIGHT_CLICK(idList, cbThreadsDlg::OnListRightClick)
-    EVT_LIST_ITEM_ACTIVATED(idList, cbThreadsDlg::OnListDoubleClick)
-    EVT_MENU(idSwitch, cbThreadsDlg::OnSwitchThread)
+BEGIN_EVENT_TABLE(ThreadsDlg, wxPanel)
+    EVT_LIST_ITEM_RIGHT_CLICK(idList, ThreadsDlg::OnListRightClick)
+    EVT_LIST_ITEM_ACTIVATED(idList, ThreadsDlg::OnListDoubleClick)
+    EVT_MENU(idSwitch, ThreadsDlg::OnSwitchThread)
 END_EVENT_TABLE()
 
 
-cbThreadsDlg::cbThreadsDlg(wxWindow* parent) : wxPanel(parent)
+ThreadsDlg::ThreadsDlg(wxWindow* parent) : wxPanel(parent)
 {
     m_list = new wxListCtrl(this, idList, wxDefaultPosition, wxDefaultSize,
                             wxLC_REPORT | wxLC_SINGLE_SEL | wxLC_HRULES | wxLC_VRULES);
@@ -49,7 +49,7 @@ cbThreadsDlg::cbThreadsDlg(wxWindow* parent) : wxPanel(parent)
     m_list->InsertColumn(2, _("Info"), wxLIST_FORMAT_LEFT);
 }
 
-void cbThreadsDlg::Reload()
+void ThreadsDlg::Reload()
 {
     cbDebuggerPlugin *plugin = Manager::Get()->GetDebuggerManager()->GetActiveDebugger();
     if (!plugin)
@@ -81,7 +81,7 @@ void cbThreadsDlg::Reload()
     }
 }
 
-//void cbThreadsDlg::AddThread(const wxString& active_mark, const wxString& thread_num, const wxString& thread_info)
+//void ThreadsDlg::AddThread(const wxString& active_mark, const wxString& thread_num, const wxString& thread_info)
 //{
 //    m_list->Freeze();
 //    m_list->InsertItem(m_list->GetItemCount(), active_mark);
@@ -93,7 +93,7 @@ void cbThreadsDlg::Reload()
 //    m_list->Thaw();
 //}
 
-void cbThreadsDlg::OnListRightClick(wxListEvent& event)
+void ThreadsDlg::OnListRightClick(wxListEvent& event)
 {
     if (m_list->GetSelectedItemCount() == 0)
         return;
@@ -102,13 +102,13 @@ void cbThreadsDlg::OnListRightClick(wxListEvent& event)
     m_list->PopupMenu(&m);
 }
 
-void cbThreadsDlg::OnListDoubleClick(wxListEvent& /*event*/)
+void ThreadsDlg::OnListDoubleClick(wxListEvent& /*event*/)
 {
     wxCommandEvent event;
     OnSwitchThread(event);
 }
 
-void cbThreadsDlg::OnSwitchThread(wxCommandEvent& event)
+void ThreadsDlg::OnSwitchThread(wxCommandEvent& event)
 {
     if (m_list->GetSelectedItemCount() == 0)
         return;

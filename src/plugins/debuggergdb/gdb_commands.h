@@ -27,16 +27,12 @@
 #include <infowindow.h>
 #include "logmanager.h"
 
-#include "backtracedlg.h"
-#include "cpuregistersdlg.h"
+#include <cbdebugger_interfaces.h>
 #include "debugger_defs.h"
 #include "debuggergdb.h"
-#include "disassemblydlg.h"
 #include "gdb_driver.h"
 #include "gdb_tipwindow.h"
-#include "examinememorydlg.h"
 #include "remotedebugging.h"
-#include "threadsdlg.h"
 #include "parsewatchvalue.h"
 
 namespace

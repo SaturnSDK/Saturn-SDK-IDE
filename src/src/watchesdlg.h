@@ -9,15 +9,19 @@
 #include <vector>
 #include <wx/panel.h>
 
+#include <cbdebugger_interfaces.h>
+
 class wxPropertyGrid;
 class wxPropertyGridEvent;
 class wxPGProperty;
 class WatchesProperty;
 
-class DLLIMPORT WatchesDlg : public wxPanel
+class DLLIMPORT WatchesDlg : public wxPanel, public cbWatchesDlg
 {
     public:
         WatchesDlg();
+
+        wxWindow* GetWindow() { return this; }
 
         void UpdateWatches();
         void AddWatch(cbWatch *watch);

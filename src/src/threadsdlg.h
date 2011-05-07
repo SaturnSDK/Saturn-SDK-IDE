@@ -7,15 +7,18 @@
 #define THREADSDLG_H
 
 #include <wx/panel.h>
+#include <cbdebugger_interfaces.h>
 
 class wxCommandEvent;
 class wxListCtrl;
 class wxListEvent;
 
-class cbThreadsDlg : public wxPanel
+class ThreadsDlg : public wxPanel, public cbThreadsDlg
 {
     public:
-        cbThreadsDlg(wxWindow* parent);
+        ThreadsDlg(wxWindow* parent);
+
+        wxWindow* GetWindow() { return this; }
 
         void Reload();
     protected:

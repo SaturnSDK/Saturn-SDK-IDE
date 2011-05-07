@@ -63,6 +63,9 @@
 #include <toolsmanager.h>
 #include <uservarmanager.h>
 
+#include "debugger_interface_creator.h"
+#include "debuggermenu.h"
+
 class wxMyFileDropTarget : public wxFileDropTarget
 {
 public:
@@ -689,12 +692,14 @@ void MainFrame::CreateIDE()
 
     // logs manager
     SetupGUILogging();
+    SetupDebuggerHandlers();
 
     CreateMenubar();
 
     m_pEdMan  = Manager::Get()->GetEditorManager();
     m_pPrjMan = Manager::Get()->GetProjectManager();
     m_pLogMan = Manager::Get()->GetLogManager();
+    Manager::Get()->GetDebuggerManager()->SetInterfaceFactory(new DebugInterfaceFactory);
 
     CreateToolbars();
     SetToolBar(0);
@@ -760,6 +765,21 @@ void MainFrame::SetupGUILogging()
     m_pInfoPane->SetDropTarget(new wxMyFileDropTarget(this));
 }
 
+void MainFrame::SetupDebuggerHandlers()
+{
+    m_debuggerMenuHandler = new DebuggerMenuHandler;
+    m_debuggerToolbarHandler = new DebuggerToolbarHandler;
+    m_debuggerMenuHandler->SetEvtHandlerEnabled(false);
+    m_debuggerToolbarHandler->SetEvtHandlerEnabled(false);
+    wxWindow* window = Manager::Get()->GetAppWindow();
+    if (window)
+    {
+        window->PushEventHandler(m_debuggerMenuHandler);
+        window->PushEventHandler(m_debuggerToolbarHandler);
+    }
+    m_debuggerMenuHandler->SetEvtHandlerEnabled(true);
+    m_debuggerToolbarHandler->SetEvtHandlerEnabled(true);
+}
 
 DECLARE_INSTANCE_TYPE(MainFrame);
 
@@ -943,6 +963,7 @@ void MainFrame::CreateMenubar()
     // core modules: create menus
     Manager::Get()->GetProjectManager()->CreateMenu(mbar);
     Manager::Get()->GetEditorManager()->CreateMenu(mbar);
+    Manager::Get()->GetDebuggerManager()->SetMenuHandler(m_debuggerMenuHandler);
 
     // ask all plugins to rebuild their menus
     PluginElementsArray plugins = Manager::Get()->GetPluginManager()->GetPlugins();
@@ -1025,13 +1046,11 @@ void MainFrame::CreateToolbars()
 
     m_pToolbar->SetInitialSize();
 
-    wxToolBar *debugger_toolbar = Manager::Get()->GetDebuggerManager()->GetToolbar();
-
     // add toolbars in docking system
     m_LayoutManager.AddPane(m_pToolbar, wxAuiPaneInfo().
                           Name(wxT("MainToolbar")).Caption(_("Main Toolbar")).
                           ToolbarPane().Top());
-    m_LayoutManager.AddPane(debugger_toolbar, wxAuiPaneInfo().
+    m_LayoutManager.AddPane(m_debuggerToolbarHandler->GetToolbar(), wxAuiPaneInfo().
                           Name(wxT("DebuggerToolbar")).Caption(_("Debugger Toolbar")).
                           ToolbarPane().Top());
     DoUpdateLayout();
@@ -4070,7 +4089,7 @@ void MainFrame::OnViewMenuUpdateUI(wxUpdateUIEvent& event)
 
     // toolbars
     mbar->Check(idViewToolMain, m_LayoutManager.GetPane(m_pToolbar).IsShown());
-    mbar->Check(idViewToolDebugger, m_LayoutManager.GetPane(Manager::Get()->GetDebuggerManager()->GetToolbar(false)).IsShown());
+    mbar->Check(idViewToolDebugger, m_LayoutManager.GetPane(m_debuggerToolbarHandler->GetToolbar(false)).IsShown());
     wxMenu* viewToolbars = 0;
     GetMenuBar()->FindItem(idViewToolMain, &viewToolbars);
     if (viewToolbars)
@@ -4171,7 +4190,7 @@ void MainFrame::OnToggleBar(wxCommandEvent& event)
     else if (event.GetId() == idViewToolMain)
         win = m_pToolbar;
     else if (event.GetId() == idViewToolDebugger)
-        win = Manager::Get()->GetDebuggerManager()->GetToolbar();
+        win = m_debuggerToolbarHandler->GetToolbar();
     else
     {
         wxString pluginName = m_PluginIDsMap[event.GetId()];

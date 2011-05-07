@@ -11,12 +11,10 @@
 #include <wx/tipwin.h>
 #include <globals.h>
 #include <manager.h>
+#include <cbdebugger_interfaces.h>
 #include "debugger_defs.h"
 #include "debuggergdb.h"
 #include "debuggermanager.h"
-#include "backtracedlg.h"
-#include "cpuregistersdlg.h"
-#include "disassemblydlg.h"
 #include "parsewatchvalue.h"
 
 static wxRegEx reProcessInf(_T("id:[ \t]+([A-Fa-f0-9]+)[ \t]+create"));

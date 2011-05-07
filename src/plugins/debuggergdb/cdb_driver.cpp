@@ -25,7 +25,7 @@
 #include "cdb_commands.h"
 #include "debuggeroptionsdlg.h"
 
-#include <backtracedlg.h>
+#include <cbdebugger_interfaces.h>
 
 static wxRegEx rePrompt(_T("([0-9]+:){1,2}[0-9]+>"));
 static wxRegEx reBP(_T("Breakpoint ([0-9]+) hit"));

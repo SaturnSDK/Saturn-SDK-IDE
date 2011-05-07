@@ -10,14 +10,17 @@
 
 #include <wx/panel.h>
 #include <wx/checkbox.h>
+#include <cbdebugger_interfaces.h>
 
 class wxScintilla;
 class cbStackFrame;
 
-class cbDisassemblyDlg : public wxPanel
+class DisassemblyDlg : public wxPanel, public cbDisassemblyDlg
 {
     public:
-        cbDisassemblyDlg(wxWindow* parent);
+        DisassemblyDlg(wxWindow* parent);
+
+        wxWindow* GetWindow() { return this; }
 
         void Clear(const cbStackFrame& frame);
         void AddAssemblerLine(unsigned long int addr, const wxString& line);

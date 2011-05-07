@@ -43,16 +43,16 @@ namespace
 	const int idOpen = wxNewId();
 };
 
-BEGIN_EVENT_TABLE(cbBreakpointsDlg, wxPanel)
-    EVT_MENU(idRemove, cbBreakpointsDlg::OnRemove)
-    EVT_MENU(idRemoveAll, cbBreakpointsDlg::OnRemoveAll)
-    EVT_MENU(idProperties, cbBreakpointsDlg::OnProperties)
-    EVT_MENU(idOpen, cbBreakpointsDlg::OnOpen)
+BEGIN_EVENT_TABLE(BreakpointsDlg, wxPanel)
+    EVT_MENU(idRemove, BreakpointsDlg::OnRemove)
+    EVT_MENU(idRemoveAll, BreakpointsDlg::OnRemoveAll)
+    EVT_MENU(idProperties, BreakpointsDlg::OnProperties)
+    EVT_MENU(idOpen, BreakpointsDlg::OnOpen)
 
-    EVT_KEY_UP(cbBreakpointsDlg::OnKeyUp)
+    EVT_KEY_UP(BreakpointsDlg::OnKeyUp)
 END_EVENT_TABLE()
 
-cbBreakpointsDlg::cbBreakpointsDlg() :
+BreakpointsDlg::BreakpointsDlg() :
     wxPanel(Manager::Get()->GetAppWindow(), -1)
 {
     wxBoxSizer* bs = new wxBoxSizer(wxVERTICAL);
@@ -69,26 +69,26 @@ cbBreakpointsDlg::cbBreakpointsDlg() :
 
     Connect(idList, -1, wxEVT_COMMAND_LIST_ITEM_ACTIVATED,
             (wxObjectEventFunction) (wxEventFunction) (wxListEventFunction)
-            &cbBreakpointsDlg::OnDoubleClick);
+            &BreakpointsDlg::OnDoubleClick);
 
     Connect(idList, -1, wxEVT_COMMAND_LIST_ITEM_RIGHT_CLICK,
             (wxObjectEventFunction) (wxEventFunction) (wxListEventFunction)
-            &cbBreakpointsDlg::OnRightClick);
+            &BreakpointsDlg::OnRightClick);
 
-    typedef cbEventFunctor<cbBreakpointsDlg, CodeBlocksEvent> CBEvent;
+    typedef cbEventFunctor<BreakpointsDlg, CodeBlocksEvent> CBEvent;
 
     Manager::Get()->RegisterEventSink(cbEVT_EDITOR_BREAKPOINT_ADD,
-                                      new CBEvent(this, &cbBreakpointsDlg::OnBreakpointAdd));
+                                      new CBEvent(this, &BreakpointsDlg::OnBreakpointAdd));
     Manager::Get()->RegisterEventSink(cbEVT_EDITOR_BREAKPOINT_EDIT,
-                                      new CBEvent(this, &cbBreakpointsDlg::OnBreakpointEdit));
+                                      new CBEvent(this, &BreakpointsDlg::OnBreakpointEdit));
     Manager::Get()->RegisterEventSink(cbEVT_EDITOR_BREAKPOINT_DELETE,
-                                      new CBEvent(this, &cbBreakpointsDlg::OnBreakpointDelete));
+                                      new CBEvent(this, &BreakpointsDlg::OnBreakpointDelete));
 
 
     Reload();
 }
 
-void cbBreakpointsDlg::Reload()
+void BreakpointsDlg::Reload()
 {
     m_pList->Freeze();
     m_pList->DeleteAllItems();
@@ -140,7 +140,7 @@ void cbBreakpointsDlg::Reload()
     m_pList->Thaw();
 }
 
-bool cbBreakpointsDlg::AddBreakpoint(const wxString& filename, int line)
+bool BreakpointsDlg::AddBreakpoint(const wxString& filename, int line)
 {
     cbDebuggerPlugin *plugin = Manager::Get()->GetDebuggerManager()->GetActiveDebugger();
     if (!plugin)
@@ -155,7 +155,7 @@ bool cbBreakpointsDlg::AddBreakpoint(const wxString& filename, int line)
         return false;
 }
 
-bool cbBreakpointsDlg::RemoveBreakpoint(const wxString& filename, int line)
+bool BreakpointsDlg::RemoveBreakpoint(const wxString& filename, int line)
 {
     bool found = false;
     for (Items::const_iterator it = m_breakpoints.begin(); it != m_breakpoints.end(); ++it)
@@ -174,7 +174,7 @@ bool cbBreakpointsDlg::RemoveBreakpoint(const wxString& filename, int line)
     return found;
 }
 
-void cbBreakpointsDlg::RemoveBreakpoint(int sel)
+void BreakpointsDlg::RemoveBreakpoint(int sel)
 {
     if(sel < 0 || sel >= static_cast<int>(m_breakpoints.size()))
         return;
@@ -190,7 +190,7 @@ void cbBreakpointsDlg::RemoveBreakpoint(int sel)
     item.plugin->DeleteBreakpoint(item.breakpoint);
 }
 
-void cbBreakpointsDlg::OnRemove(wxCommandEvent& event)
+void BreakpointsDlg::OnRemove(wxCommandEvent& event)
 {
     long item = m_pList->GetNextItem(-1, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED);
     if (item == -1)
@@ -199,7 +199,7 @@ void cbBreakpointsDlg::OnRemove(wxCommandEvent& event)
     Reload();
 }
 
-void cbBreakpointsDlg::OnRemoveAll(wxCommandEvent& event)
+void BreakpointsDlg::OnRemoveAll(wxCommandEvent& event)
 {
     std::set<cbDebuggerPlugin*> plugins;
 
@@ -228,7 +228,7 @@ void cbBreakpointsDlg::OnRemoveAll(wxCommandEvent& event)
     Reload();
 }
 
-void cbBreakpointsDlg::OnProperties(wxCommandEvent& event)
+void BreakpointsDlg::OnProperties(wxCommandEvent& event)
 {
     int sel = m_pList->GetNextItem(-1, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED);
     if (sel < 0 || sel >= static_cast<int>(m_breakpoints.size()))
@@ -238,7 +238,7 @@ void cbBreakpointsDlg::OnProperties(wxCommandEvent& event)
     Reload();
 }
 
-void cbBreakpointsDlg::OnOpen(wxCommandEvent& event)
+void BreakpointsDlg::OnOpen(wxCommandEvent& event)
 {
     long item_index = m_pList->GetNextItem(-1, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED);
     if (item_index < 0 || item_index >= static_cast<int>(m_breakpoints.size()))
@@ -257,7 +257,7 @@ void cbBreakpointsDlg::OnOpen(wxCommandEvent& event)
     }
 }
 
-void cbBreakpointsDlg::OnRightClick(wxListEvent& event)
+void BreakpointsDlg::OnRightClick(wxListEvent& event)
 {
     wxMenu menu;
     menu.Append(idOpen, _("Open in editor"));
@@ -268,13 +268,13 @@ void cbBreakpointsDlg::OnRightClick(wxListEvent& event)
     PopupMenu(&menu);
 }
 
-void cbBreakpointsDlg::OnDoubleClick(wxListEvent& event)
+void BreakpointsDlg::OnDoubleClick(wxListEvent& event)
 {
     wxCommandEvent evt;
     OnOpen(evt);
 }
 
-void cbBreakpointsDlg::OnKeyUp(wxKeyEvent& event)
+void BreakpointsDlg::OnKeyUp(wxKeyEvent& event)
 {
     if (event.GetKeyCode() == WXK_DELETE || event.GetKeyCode() == WXK_NUMPAD_DELETE)
     {
@@ -286,7 +286,7 @@ void cbBreakpointsDlg::OnKeyUp(wxKeyEvent& event)
     }
 }
 
-void cbBreakpointsDlg::OnBreakpointAdd(CodeBlocksEvent& event)
+void BreakpointsDlg::OnBreakpointAdd(CodeBlocksEvent& event)
 {
 // TODO (obfuscated#) add the line text to the breakpoint
     DebuggerManager *manager = Manager::Get()->GetDebuggerManager();
@@ -296,7 +296,7 @@ void cbBreakpointsDlg::OnBreakpointAdd(CodeBlocksEvent& event)
     Reload();
 }
 
-void cbBreakpointsDlg::OnBreakpointEdit(CodeBlocksEvent& event)
+void BreakpointsDlg::OnBreakpointEdit(CodeBlocksEvent& event)
 {
     const wxString& filename = event.GetString();
     int line = event.GetInt();
@@ -311,7 +311,7 @@ void cbBreakpointsDlg::OnBreakpointEdit(CodeBlocksEvent& event)
     }
 }
 
-void cbBreakpointsDlg::OnBreakpointDelete(CodeBlocksEvent& event)
+void BreakpointsDlg::OnBreakpointDelete(CodeBlocksEvent& event)
 {
     RemoveBreakpoint(event.GetString(), event.GetInt());
 }

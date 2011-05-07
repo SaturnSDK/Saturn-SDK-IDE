@@ -12,7 +12,7 @@
 #include "gdb_commands.h"
 #include "debuggeroptionsdlg.h"
 #include "debuggerstate.h"
-#include <backtracedlg.h>
+#include <cbdebugger_interfaces.h>
 #include <manager.h>
 #include <macrosmanager.h>
 #include <configmanager.h>

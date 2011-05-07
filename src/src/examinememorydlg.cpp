@@ -22,13 +22,13 @@
 #include "examinememorydlg.h"
 #include "debuggermanager.h"
 
-BEGIN_EVENT_TABLE(cbExamineMemoryDlg, wxPanel)
-    EVT_BUTTON(XRCID("btnGo"), cbExamineMemoryDlg::OnGo)
-    EVT_COMBOBOX(XRCID("cmbBytes"), cbExamineMemoryDlg::OnGo)
-    EVT_TEXT_ENTER(XRCID("txtAddress"), cbExamineMemoryDlg::OnGo)
+BEGIN_EVENT_TABLE(ExamineMemoryDlg, wxPanel)
+    EVT_BUTTON(XRCID("btnGo"), ExamineMemoryDlg::OnGo)
+    EVT_COMBOBOX(XRCID("cmbBytes"), ExamineMemoryDlg::OnGo)
+    EVT_TEXT_ENTER(XRCID("txtAddress"), ExamineMemoryDlg::OnGo)
 END_EVENT_TABLE()
 
-cbExamineMemoryDlg::cbExamineMemoryDlg(wxWindow* parent) :
+ExamineMemoryDlg::ExamineMemoryDlg(wxWindow* parent) :
     m_LastRowStartingAddress(0)
 {
     //ctor
@@ -41,17 +41,17 @@ cbExamineMemoryDlg::cbExamineMemoryDlg(wxWindow* parent) :
     Clear();
 }
 
-void cbExamineMemoryDlg::Begin()
+void ExamineMemoryDlg::Begin()
 {
     m_pText->Freeze();
 }
 
-void cbExamineMemoryDlg::End()
+void ExamineMemoryDlg::End()
 {
     m_pText->Thaw();
 }
 
-void cbExamineMemoryDlg::Clear()
+void ExamineMemoryDlg::Clear()
 {
     m_pText->Clear();
     m_LastRowStartingAddress = 0;
@@ -60,24 +60,24 @@ void cbExamineMemoryDlg::Clear()
         m_LineText[i] = _T(' ');
 }
 
-wxString cbExamineMemoryDlg::GetBaseAddress()
+wxString ExamineMemoryDlg::GetBaseAddress()
 {
     return XRCCTRL(*this, "txtAddress", wxTextCtrl)->GetValue();
 }
 
-int cbExamineMemoryDlg::GetBytes()
+int ExamineMemoryDlg::GetBytes()
 {
     long a;
     XRCCTRL(*this, "cmbBytes", wxComboBox)->GetValue().ToLong(&a);
     return a;
 }
 
-void cbExamineMemoryDlg::AddError(const wxString& err)
+void ExamineMemoryDlg::AddError(const wxString& err)
 {
     m_pText->AppendText(err + _T('\n'));
 }
 
-void cbExamineMemoryDlg::AddHexByte(const wxString& addr, const wxString& hexbyte)
+void ExamineMemoryDlg::AddHexByte(const wxString& addr, const wxString& hexbyte)
 {
 //    m_pDbg->Log(_T("AddHexByte(") + addr + _T(", ") + hexbyte + _T(')'));
     int bcmod = m_ByteCounter % 16;
@@ -124,7 +124,7 @@ void cbExamineMemoryDlg::AddHexByte(const wxString& addr, const wxString& hexbyt
     }
 }
 
-void cbExamineMemoryDlg::OnGo(wxCommandEvent& event)
+void ExamineMemoryDlg::OnGo(wxCommandEvent& event)
 {
     cbDebuggerPlugin *plugin = Manager::Get()->GetDebuggerManager()->GetActiveDebugger();
     if (plugin)

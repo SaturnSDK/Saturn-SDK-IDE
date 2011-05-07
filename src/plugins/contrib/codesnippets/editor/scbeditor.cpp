@@ -45,8 +45,8 @@
 #include <wx/fontutil.h>
 #include <wx/splitter.h>
 
-#include <breakpointsdlg.h>
 #include <cbeditorprintout.h>
+#include <cbdebugger_interfaces.h>
 #include <debuggermanager.h>
 #include <editor_hooks.h>
 #include <encodingdetector.h>

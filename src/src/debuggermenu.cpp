@@ -1,6 +1,6 @@
 /*
- * This file is part of the Code::Blocks IDE and licensed under the GNU Lesser General Public License, version 3
- * http://www.gnu.org/licenses/lgpl-3.0.html
+ * This file is part of the Code::Blocks IDE and licensed under the GNU General Public License, version 3
+ * http://www.gnu.org/licenses/gpl-3.0.html
  *
  * $Revision$
  * $Id$
@@ -23,15 +23,9 @@
 #include <algorithm>
 #include <wx/aui/aui.h> // wxAuiManager
 
-#include "backtracedlg.h"
-#include "breakpointsdlg.h"
+#include "cbdebugger_interfaces.h"
 #include "cbstyledtextctrl.h"
-#include "cpuregistersdlg.h"
 #include "debuggermanager.h"
-#include "disassemblydlg.h"
-#include "examinememorydlg.h"
-#include "threadsdlg.h"
-#include "watchesdlg.h"
 
 namespace
 {
@@ -284,13 +278,13 @@ void DebuggerMenuHandler::OnUpdateUI(wxUpdateUIEvent& event)
                 activeMenu->Enable(activeMenu->FindItemByPosition(ii)->GetId(), !isRunning);
         }
 
-        mbar->Check(idMenuBreakpoints,  IsWindowReallyShown(dbg_manager->GetBreakpointDialog()));
-        mbar->Check(idMenuBacktrace,    IsWindowReallyShown(dbg_manager->GetBacktraceDialog()));
-        mbar->Check(idMenuRegisters,    IsWindowReallyShown(dbg_manager->GetCPURegistersDialog()));
-        mbar->Check(idMenuCPU,          IsWindowReallyShown(dbg_manager->GetDisassemblyDialog()));
-        mbar->Check(idMenuMemory,       IsWindowReallyShown(dbg_manager->GetExamineMemoryDialog()));
-        mbar->Check(idMenuThreads,      IsWindowReallyShown(dbg_manager->GetThreadsDialog()));
-        mbar->Check(idMenuWatches,      IsWindowReallyShown(dbg_manager->GetWatchesDialog()));
+        mbar->Check(idMenuBreakpoints,  IsWindowReallyShown(dbg_manager->GetBreakpointDialog()->GetWindow()));
+        mbar->Check(idMenuBacktrace,    IsWindowReallyShown(dbg_manager->GetBacktraceDialog()->GetWindow()));
+        mbar->Check(idMenuRegisters,    IsWindowReallyShown(dbg_manager->GetCPURegistersDialog()->GetWindow()));
+        mbar->Check(idMenuCPU,          IsWindowReallyShown(dbg_manager->GetDisassemblyDialog()->GetWindow()));
+        mbar->Check(idMenuMemory,       IsWindowReallyShown(dbg_manager->GetExamineMemoryDialog()->GetWindow()));
+        mbar->Check(idMenuThreads,      IsWindowReallyShown(dbg_manager->GetThreadsDialog()->GetWindow()));
+        mbar->Check(idMenuWatches,      IsWindowReallyShown(dbg_manager->GetWatchesDialog()->GetWindow()));
     }
 
     // allow other UpdateUI handlers to process this event
@@ -521,7 +515,7 @@ void DebuggerMenuHandler::OnBacktrace(wxCommandEvent& event)
 {
     DebuggerManager *manager = Manager::Get()->GetDebuggerManager();
     CodeBlocksDockEvent evt(event.IsChecked() ? cbEVT_SHOW_DOCK_WINDOW : cbEVT_HIDE_DOCK_WINDOW);
-    evt.pWindow = manager->GetBacktraceDialog();
+    evt.pWindow = manager->GetBacktraceDialog()->GetWindow();
     Manager::Get()->ProcessEvent(evt);
 
     if (event.IsChecked() && manager->GetActiveDebugger())
@@ -531,7 +525,7 @@ void DebuggerMenuHandler::OnBacktrace(wxCommandEvent& event)
 void DebuggerMenuHandler::OnBreakpoints(wxCommandEvent& event)
 {
     CodeBlocksDockEvent evt(event.IsChecked() ? cbEVT_SHOW_DOCK_WINDOW : cbEVT_HIDE_DOCK_WINDOW);
-    evt.pWindow = Manager::Get()->GetDebuggerManager()->GetBreakpointDialog();
+    evt.pWindow = Manager::Get()->GetDebuggerManager()->GetBreakpointDialog()->GetWindow();
     Manager::Get()->ProcessEvent(evt);
 }
 
@@ -539,7 +533,7 @@ void DebuggerMenuHandler::OnCPURegisters(wxCommandEvent& event)
 {
     DebuggerManager *manager = Manager::Get()->GetDebuggerManager();
     CodeBlocksDockEvent evt(event.IsChecked() ? cbEVT_SHOW_DOCK_WINDOW : cbEVT_HIDE_DOCK_WINDOW);
-    evt.pWindow = manager->GetCPURegistersDialog();
+    evt.pWindow = manager->GetCPURegistersDialog()->GetWindow();
     Manager::Get()->ProcessEvent(evt);
 
     if (event.IsChecked() && manager->GetActiveDebugger())
@@ -550,7 +544,7 @@ void DebuggerMenuHandler::OnDisassembly(wxCommandEvent& event)
 {
     DebuggerManager *manager = Manager::Get()->GetDebuggerManager();
     CodeBlocksDockEvent evt(event.IsChecked() ? cbEVT_SHOW_DOCK_WINDOW : cbEVT_HIDE_DOCK_WINDOW);
-    evt.pWindow = manager->GetDisassemblyDialog();
+    evt.pWindow = manager->GetDisassemblyDialog()->GetWindow();
     Manager::Get()->ProcessEvent(evt);
 
     if (event.IsChecked() && manager->GetActiveDebugger())
@@ -561,7 +555,7 @@ void DebuggerMenuHandler::OnExamineMemory(wxCommandEvent& event)
 {
     DebuggerManager *manager = Manager::Get()->GetDebuggerManager();
     CodeBlocksDockEvent evt(event.IsChecked() ? cbEVT_SHOW_DOCK_WINDOW : cbEVT_HIDE_DOCK_WINDOW);
-    evt.pWindow = manager->GetExamineMemoryDialog();
+    evt.pWindow = manager->GetExamineMemoryDialog()->GetWindow();
     Manager::Get()->ProcessEvent(evt);
 
     if (event.IsChecked() && manager->GetActiveDebugger())
@@ -572,7 +566,7 @@ void DebuggerMenuHandler::OnThreads(wxCommandEvent& event)
 {
     DebuggerManager *manager = Manager::Get()->GetDebuggerManager();
     CodeBlocksDockEvent evt(event.IsChecked() ? cbEVT_SHOW_DOCK_WINDOW : cbEVT_HIDE_DOCK_WINDOW);
-    evt.pWindow = manager->GetThreadsDialog();
+    evt.pWindow = manager->GetThreadsDialog()->GetWindow();
     Manager::Get()->ProcessEvent(evt);
 
     if (event.IsChecked() && manager->GetActiveDebugger())
@@ -582,7 +576,7 @@ void DebuggerMenuHandler::OnThreads(wxCommandEvent& event)
 void DebuggerMenuHandler::OnWatches(wxCommandEvent& event)
 {
     CodeBlocksDockEvent evt(event.IsChecked() ? cbEVT_SHOW_DOCK_WINDOW : cbEVT_HIDE_DOCK_WINDOW);
-    evt.pWindow = Manager::Get()->GetDebuggerManager()->GetWatchesDialog();
+    evt.pWindow = Manager::Get()->GetDebuggerManager()->GetWatchesDialog()->GetWindow();
     Manager::Get()->ProcessEvent(evt);
 
     cbDebuggerPlugin *activeDebugger = Manager::Get()->GetDebuggerManager()->GetActiveDebugger();
@@ -712,13 +706,13 @@ void DebuggerToolbarHandler::OnDebugWindows(wxCommandEvent& event)
 
     DebuggerManager *dbg_manager = Manager::Get()->GetDebuggerManager();
 
-    m.Check(idMenuBreakpoints,  IsWindowReallyShown(dbg_manager->GetBreakpointDialog()));
-    m.Check(idMenuBacktrace,    IsWindowReallyShown(dbg_manager->GetBacktraceDialog()));
-    m.Check(idMenuRegisters,    IsWindowReallyShown(dbg_manager->GetCPURegistersDialog()));
-    m.Check(idMenuCPU,          IsWindowReallyShown(dbg_manager->GetDisassemblyDialog()));
-    m.Check(idMenuMemory,       IsWindowReallyShown(dbg_manager->GetExamineMemoryDialog()));
-    m.Check(idMenuThreads,      IsWindowReallyShown(dbg_manager->GetThreadsDialog()));
-    m.Check(idMenuWatches,      IsWindowReallyShown(dbg_manager->GetWatchesDialog()));
+    m.Check(idMenuBreakpoints,  IsWindowReallyShown(dbg_manager->GetBreakpointDialog()->GetWindow()));
+    m.Check(idMenuBacktrace,    IsWindowReallyShown(dbg_manager->GetBacktraceDialog()->GetWindow()));
+    m.Check(idMenuRegisters,    IsWindowReallyShown(dbg_manager->GetCPURegistersDialog()->GetWindow()));
+    m.Check(idMenuCPU,          IsWindowReallyShown(dbg_manager->GetDisassemblyDialog()->GetWindow()));
+    m.Check(idMenuMemory,       IsWindowReallyShown(dbg_manager->GetExamineMemoryDialog()->GetWindow()));
+    m.Check(idMenuThreads,      IsWindowReallyShown(dbg_manager->GetThreadsDialog()->GetWindow()));
+    m.Check(idMenuWatches,      IsWindowReallyShown(dbg_manager->GetWatchesDialog()->GetWindow()));
 
     Manager::Get()->GetAppWindow()->PopupMenu(&m);
 }

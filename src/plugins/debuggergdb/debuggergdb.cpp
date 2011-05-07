@@ -45,13 +45,8 @@
 #include "annoyingdialog.h"
 #include "cbstyledtextctrl.h"
 
-#include "backtracedlg.h"
-#include "breakpointsdlg.h"
-#include "disassemblydlg.h"
+#include <cbdebugger_interfaces.h>
 #include "editbreakpointdlg.h"
-#include "examinememorydlg.h"
-#include "threadsdlg.h"
-#include "watchesdlg.h"
 
 #include "databreakpointdlg.h"
 #include "debuggerdriver.h"
@@ -1006,7 +1001,7 @@ void DebuggerGDB::RequestUpdate(DebugWindows window)
             RunCommand(CMD_RUNNINGTHREADS);
             break;
         case Watches:
-            if (IsWindowReallyShown(Manager::Get()->GetDebuggerManager()->GetWatchesDialog()))
+            if (IsWindowReallyShown(Manager::Get()->GetDebuggerManager()->GetWatchesDialog()->GetWindow()))
                 DoWatches();
             break;
     }
@@ -1869,7 +1864,7 @@ void DebuggerGDB::OnCursorChanged(wxCommandEvent& WXUNUSED(event))
             // update watches
             DebuggerManager *dbg_manager = Manager::Get()->GetDebuggerManager();
 
-            if (IsWindowReallyShown(dbg_manager->GetWatchesDialog()))
+            if (IsWindowReallyShown(dbg_manager->GetWatchesDialog()->GetWindow()))
                 DoWatches();
 
             // update CPU registers
@@ -2026,7 +2021,7 @@ void DebuggerGDB::OnWatchesContextMenu(wxMenu &menu, const cbWatch &watch, wxObj
 
 void DebuggerGDB::OnMenuWatchDereference(wxCommandEvent& event)
 {
-    WatchesDlg *watches = Manager::Get()->GetDebuggerManager()->GetWatchesDialog();
+    cbWatchesDlg *watches = Manager::Get()->GetDebuggerManager()->GetWatchesDialog();
     if (!watches)
         return;
 
