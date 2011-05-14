@@ -615,8 +615,12 @@ public:
         {
             plugin->SendCommand(cmd, m_debug_log);
 
-            if (m_command_entry->FindString(cmd) == wxNOT_FOUND)
-                m_command_entry->Insert(cmd, 0);
+            //If it already exists in the list, remove it and add it back at the end
+            int index = m_command_entry->FindString(cmd);
+            if (index != wxNOT_FOUND)
+                m_command_entry->Delete(index);
+            m_command_entry->Append(cmd);
+
             m_command_entry->SetValue(wxEmptyString);
         }
     }
