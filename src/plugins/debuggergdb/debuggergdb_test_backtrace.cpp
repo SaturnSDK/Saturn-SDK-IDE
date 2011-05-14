@@ -226,4 +226,53 @@ TEST(match5_file)
     CHECK_EQUAL(wxT("14"), sf.GetLine());
 }
 
+// #0  Foo::Bar::(anonymous namespace)::apply (this=0xbaf6cf0, stmt=0xb9d7160, stmtSubsts=...) at Foo/Bar/apply.cpp:219
+TEST(match6_flag)
+{
+    cbStackFrame sf;
+    bool hasLineInfo;
+    CHECK(GdbCmd_Backtrace::MatchLine(sf, hasLineInfo, wxT("#0  Foo::Bar::(anonymous namespace)::apply (this=0xbaf6cf0")
+                                                       wxT(", stmt=0xb9d7160, stmtSubsts=...) ")
+                                                       wxT("at Foo/Bar/apply.cpp:219")));
+    CHECK(hasLineInfo);
+}
+TEST(match6_number)
+{
+    cbStackFrame sf;
+    bool hasLineInfo;
+    CHECK(GdbCmd_Backtrace::MatchLine(sf, hasLineInfo, wxT("#0  Foo::Bar::(anonymous namespace)::apply (this=0xbaf6cf0")
+                                                       wxT(", stmt=0xb9d7160, stmtSubsts=...) ")
+                                                       wxT("at Foo/Bar/apply.cpp:219")));
+    CHECK_EQUAL(0, sf.GetNumber());
+}
+TEST(match6_address)
+{
+    cbStackFrame sf;
+    bool hasLineInfo;
+    CHECK(GdbCmd_Backtrace::MatchLine(sf, hasLineInfo, wxT("#0  Foo::Bar::(anonymous namespace)::apply (this=0xbaf6cf0")
+                                                       wxT(", stmt=0xb9d7160, stmtSubsts=...) ")
+                                                       wxT("at Foo/Bar/apply.cpp:219")));
+    CHECK_EQUAL(0x0, sf.GetAddress());
+}
+TEST(match6_symbol)
+{
+    cbStackFrame sf;
+    bool hasLineInfo;
+    CHECK(GdbCmd_Backtrace::MatchLine(sf, hasLineInfo, wxT("#0  Foo::Bar::(anonymous namespace)::apply (this=0xbaf6cf0")
+                                                       wxT(", stmt=0xb9d7160, stmtSubsts=...) ")
+                                                       wxT("at Foo/Bar/apply.cpp:219")));
+    CHECK_EQUAL(wxT("Foo::Bar::(anonymous namespace)::apply (this=0xbaf6cf0, stmt=0xb9d7160, stmtSubsts=...)"),
+                sf.GetSymbol());
+}
+TEST(match6_file)
+{
+    cbStackFrame sf;
+    bool hasLineInfo;
+    CHECK(GdbCmd_Backtrace::MatchLine(sf, hasLineInfo, wxT("#0  Foo::Bar::(anonymous namespace)::apply (this=0xbaf6cf0")
+                                                       wxT(", stmt=0xb9d7160, stmtSubsts=...) ")
+                                                       wxT("at Foo/Bar/apply.cpp:219")));
+    CHECK_EQUAL(wxT("Foo/Bar/apply.cpp"), sf.GetFilename());
+    CHECK_EQUAL(wxT("219"), sf.GetLine());
+}
+
 } // SUITE(GDBStackFrameParser)
