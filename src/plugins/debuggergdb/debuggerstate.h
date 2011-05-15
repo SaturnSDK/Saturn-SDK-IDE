@@ -64,7 +64,6 @@ class DebuggerState
 
         DebuggerGDB* m_pPlugin;
         DebuggerDriver* m_pDriver;
-        WatchesArray m_Watches;
         BreakpointsList m_Breakpoints;
         size_t m_BpAutoIndex;
 };

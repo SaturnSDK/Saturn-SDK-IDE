@@ -21,7 +21,6 @@
 #include "debuggerdriver.h"
 
 #include <wx/arrimpl.cpp>
-WX_DEFINE_OBJARRAY(WatchesArray);
 
 #if !defined(CB_TEST_PROJECT)
 

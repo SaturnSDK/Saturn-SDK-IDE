@@ -1564,12 +1564,6 @@
 		<Unit filename="plugins/debuggergdb/editwatchdlg.h">
 			<Option target="Debugger" />
 		</Unit>
-		<Unit filename="plugins/debuggergdb/editwatchesdlg.cpp">
-			<Option target="Debugger" />
-		</Unit>
-		<Unit filename="plugins/debuggergdb/editwatchesdlg.h">
-			<Option target="Debugger" />
-		</Unit>
 		<Unit filename="plugins/debuggergdb/gdb_commands.h">
 			<Option target="Debugger" />
 		</Unit>

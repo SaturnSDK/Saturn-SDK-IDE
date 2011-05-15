@@ -53,7 +53,6 @@
 #include "debuggergdb.h"
 #include "debuggeroptionsdlg.h"
 #include "debuggeroptionsprjdlg.h"
-#include "editwatchesdlg.h"
 #include "editwatchdlg.h"
 
 
