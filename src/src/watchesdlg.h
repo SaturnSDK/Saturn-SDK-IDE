@@ -16,7 +16,7 @@ class wxPropertyGridEvent;
 class wxPGProperty;
 class WatchesProperty;
 
-class DLLIMPORT WatchesDlg : public wxPanel, public cbWatchesDlg
+class WatchesDlg : public wxPanel, public cbWatchesDlg
 {
     public:
         WatchesDlg();
