@@ -23,7 +23,6 @@ libdebugger_la_SOURCES = cdb_driver.cpp \
 			debuggeroptionsprjdlg.cpp \
 			debuggerstate.cpp \
 			editwatchdlg.cpp \
-			editwatchesdlg.cpp \
 			gdb_driver.cpp \
 			gdb_tipwindow.cpp \
 			parsewatchvalue.cpp
@@ -38,7 +37,6 @@ noinst_HEADERS = cdb_commands.h \
 			debuggeroptionsprjdlg.h \
 			debuggerstate.h \
 			editwatchdlg.h \
-			editwatchesdlg.h \
 			gdb_commands.h \
 			gdb_driver.h \
 			gdb_tipwindow.h \
