@@ -55,8 +55,12 @@
 #include "parser/tokenizer.h"
 #include "selectincludefile.h"
 
-
 #define CC_CODECOMPLETION_DEBUG_OUTPUT 0
+
+#if (CC_GLOBAL_DEBUG_OUTPUT)
+    #undef CC_CODECOMPLETION_DEBUG_OUTPUT
+    #define CC_CODECOMPLETION_DEBUG_OUTPUT 1
+#endif
 
 #if CC_CODECOMPLETION_DEBUG_OUTPUT == 1
     #define TRACE(format, args...) \
@@ -1922,14 +1926,14 @@ void CodeCompletion::OnThreadCompletion(wxCommandEvent& event)
 // compare method for the sort algorithm for our FunctionScope struct
 bool LessFunctionScope(const CodeCompletion::FunctionScope& fs1, const CodeCompletion::FunctionScope& fs2)
 {
-	int result = wxStricmp(fs1.Scope, fs2.Scope);
-	if (result == 0)
+    int result = wxStricmp(fs1.Scope, fs2.Scope);
+    if (result == 0)
     {
-		result = wxStricmp(fs1.Name, fs2.Name);
-		if (result == 0)
-		{
-			result = fs1.StartLine - fs2.StartLine;
-		}
+        result = wxStricmp(fs1.Name, fs2.Name);
+        if (result == 0)
+        {
+            result = fs1.StartLine - fs2.StartLine;
+        }
     }
 
     return result < 0;
@@ -1948,12 +1952,12 @@ bool EqualFunctionScope(const CodeCompletion::FunctionScope& fs1, const CodeComp
 
 bool LessNameSpace(const NameSpace& ns1, const NameSpace& ns2)
 {
-	return ns1.Name < ns2.Name;
+    return ns1.Name < ns2.Name;
 }
 
 bool EqualNameSpace(const NameSpace& ns1, const NameSpace& ns2)
 {
-	return ns1.Name == ns2.Name;
+    return ns1.Name == ns2.Name;
 }
 
 // help method in finding the namespace position in the vector for the namespace containing the current line
@@ -1963,14 +1967,14 @@ int CodeCompletion::NameSpacePosition() const
     int startLine = wxNOT_FOUND;
     for (unsigned int idxNs = 0; idxNs < m_NameSpaces.size(); ++idxNs)
     {
-		const NameSpace& Ns = m_NameSpaces[idxNs];
-		if (m_CurrentLine >= Ns.StartLine && m_CurrentLine <= Ns.EndLine && Ns.StartLine > startLine)
-		{
-		    // got one, maybe there might be a btter fitting namespace (embedded namespaces)
-			// so keep on looking
-			retValue = static_cast<int>(idxNs);
-			startLine = Ns.StartLine;
-		}
+        const NameSpace& Ns = m_NameSpaces[idxNs];
+        if (m_CurrentLine >= Ns.StartLine && m_CurrentLine <= Ns.EndLine && Ns.StartLine > startLine)
+        {
+            // got one, maybe there might be a btter fitting namespace (embedded namespaces)
+            // so keep on looking
+            retValue = static_cast<int>(idxNs);
+            startLine = Ns.StartLine;
+        }
     }
 
     return retValue;
@@ -1984,17 +1988,17 @@ void CodeCompletion::FunctionPosition(int &scopeItem, int &functionItem) const
 
     for (unsigned int idxSc = 0; idxSc < m_ScopeMarks.size(); ++idxSc)
     {
-		unsigned int start = m_ScopeMarks[idxSc];
-		unsigned int end = (idxSc + 1 < m_ScopeMarks.size()) ? m_ScopeMarks[idxSc + 1] : m_FunctionsScope.size();
-		for (int idxFn = 0; start + idxFn < end; ++idxFn)
-		{
-			const FunctionScope fs = m_FunctionsScope[start + idxFn];
-			if (m_CurrentLine >= fs.StartLine && m_CurrentLine <= fs.EndLine)
-			{
-				scopeItem = idxSc;
-				functionItem = idxFn;
-			}
-		}
+        unsigned int start = m_ScopeMarks[idxSc];
+        unsigned int end = (idxSc + 1 < m_ScopeMarks.size()) ? m_ScopeMarks[idxSc + 1] : m_FunctionsScope.size();
+        for (int idxFn = 0; start + idxFn < end; ++idxFn)
+        {
+            const FunctionScope fs = m_FunctionsScope[start + idxFn];
+            if (m_CurrentLine >= fs.StartLine && m_CurrentLine <= fs.EndLine)
+            {
+                scopeItem = idxSc;
+                functionItem = idxFn;
+            }
+        }
     }
 }
 
@@ -2109,31 +2113,31 @@ void CodeCompletion::ParseFunctionsAndFillToolbar(bool force)
                 fs.EndLine = token->m_ImplLineEnd - 1;
                 if (token->m_TokenKind & tkAnyFunction && fileIdx == token->m_ImplFileIdx)
                 {
-					fs.Scope = token->GetNamespace();
+                    fs.Scope = token->GetNamespace();
                     if (fs.Scope.IsEmpty())
                         fs.Scope = g_GlobalScope;
-					wxString result = token->m_Name;
-					result << token->GetFormattedArgs();
-					if (!token->m_Type.IsEmpty())
-						result << _T(" : ") << token->m_Type;
-					fs.Name = result;
-					funcdata->m_FunctionsScope.push_back(fs);
+                    wxString result = token->m_Name;
+                    result << token->GetFormattedArgs();
+                    if (!token->m_Type.IsEmpty())
+                        result << _T(" : ") << token->m_Type;
+                    fs.Name = result;
+                    funcdata->m_FunctionsScope.push_back(fs);
                 }
-				else if (token->m_TokenKind & (tkEnum | tkClass | tkNamespace))
-				{
-					fs.Scope = token->GetNamespace() + token->m_Name + _T("::");
-					funcdata->m_FunctionsScope.push_back(fs);
-				}
+                else if (token->m_TokenKind & (tkEnum | tkClass | tkNamespace))
+                {
+                    fs.Scope = token->GetNamespace() + token->m_Name + _T("::");
+                    funcdata->m_FunctionsScope.push_back(fs);
+                }
             }
-		}
+        }
 
-		FunctionsScopeVec& functionsScopes = funcdata->m_FunctionsScope;
-		NameSpaceVec& nameSpaces = funcdata->m_NameSpaces;
+        FunctionsScopeVec& functionsScopes = funcdata->m_FunctionsScope;
+        NameSpaceVec& nameSpaces = funcdata->m_NameSpaces;
 
         m_NativeParser.GetParser().ParseBufferForNamespaces(ed->GetControl()->GetText(), nameSpaces);
-		std::sort(nameSpaces.begin(), nameSpaces.end(), LessNameSpace);
+        std::sort(nameSpaces.begin(), nameSpaces.end(), LessNameSpace);
 
-		std::copy(nameSpaces.begin(), nameSpaces.end(), back_inserter(functionsScopes));
+        std::copy(nameSpaces.begin(), nameSpaces.end(), back_inserter(functionsScopes));
         std::sort(functionsScopes.begin(), functionsScopes.end(), LessFunctionScope);
 
         // remove consecutive duplicates
@@ -2141,12 +2145,12 @@ void CodeCompletion::ParseFunctionsAndFillToolbar(bool force)
         it = unique(functionsScopes.begin(), functionsScopes.end(), EqualFunctionScope);
         functionsScopes.resize(it - functionsScopes.begin());
 
-		/*
-		Manager::Get()->GetLogManager()->DebugLog(F(_T("Found %d namespace locations"), nameSpaces.size()));
-		for (unsigned int i = 0; i < nameSpaces.size(); ++i)
-			Manager::Get()->GetLogManager()->DebugLog(F(_T("\t%s (%d:%d)"),
-				nameSpaces[i].Name.wx_str(), nameSpaces[i].StartLine, nameSpaces[i].EndLine));
-		*/
+        /*
+        Manager::Get()->GetLogManager()->DebugLog(F(_T("Found %d namespace locations"), nameSpaces.size()));
+        for (unsigned int i = 0; i < nameSpaces.size(); ++i)
+            Manager::Get()->GetLogManager()->DebugLog(F(_T("\t%s (%d:%d)"),
+                nameSpaces[i].Name.wx_str(), nameSpaces[i].StartLine, nameSpaces[i].EndLine));
+        */
 
        m_ToolbarChanged = true;
     }
@@ -2155,13 +2159,13 @@ void CodeCompletion::ParseFunctionsAndFillToolbar(bool force)
     m_FunctionsScope = funcdata->m_FunctionsScope;
     m_NameSpaces     = funcdata->m_NameSpaces;
 
-	m_ScopeMarks.clear();
-	unsigned int fsSize = m_FunctionsScope.size();
-	if (!m_FunctionsScope.empty())
-	{
-		m_ScopeMarks.push_back(0);
-		if (m_Scope)
-		{
+    m_ScopeMarks.clear();
+    unsigned int fsSize = m_FunctionsScope.size();
+    if (!m_FunctionsScope.empty())
+    {
+        m_ScopeMarks.push_back(0);
+        if (m_Scope)
+        {
             wxString lastScope = m_FunctionsScope[0].Scope;
             for (unsigned int idx = 1; idx < fsSize; ++idx)
             {
@@ -2172,15 +2176,15 @@ void CodeCompletion::ParseFunctionsAndFillToolbar(bool force)
                     lastScope = currentScope;
                 }
             }
-		}
-	}
+        }
+    }
 
     /*
-	Manager::Get()->GetLogManager()->DebugLog(F(_T("Parsed %d functionscope items"), m_FunctionsScope.size()));
-	for (unsigned int i = 0; i < m_FunctionsScope.size(); ++i)
-		Manager::Get()->GetLogManager()->DebugLog(F(_T("\t%s%s (%d:%d)"),
-			m_FunctionsScope[i].Scope.wx_str(), m_FunctionsScope[i].Name.wx_str(),
-			m_FunctionsScope[i].StartLine, m_FunctionsScope[i].EndLine));
+    Manager::Get()->GetLogManager()->DebugLog(F(_T("Parsed %d functionscope items"), m_FunctionsScope.size()));
+    for (unsigned int i = 0; i < m_FunctionsScope.size(); ++i)
+        Manager::Get()->GetLogManager()->DebugLog(F(_T("\t%s%s (%d:%d)"),
+            m_FunctionsScope[i].Scope.wx_str(), m_FunctionsScope[i].Name.wx_str(),
+            m_FunctionsScope[i].StartLine, m_FunctionsScope[i].EndLine));
     */
 
     // Does the toolbar need a refresh?
@@ -2193,9 +2197,9 @@ void CodeCompletion::ParseFunctionsAndFillToolbar(bool force)
         // ...and refresh the toolbars.
         m_Function->Clear();
 
-		if (m_Scope)
-		{
-		    m_Scope->Freeze();
+        if (m_Scope)
+        {
+            m_Scope->Freeze();
             m_Scope->Clear();
 
             // add to the choice controls
@@ -2207,9 +2211,9 @@ void CodeCompletion::ParseFunctionsAndFillToolbar(bool force)
             }
 
             m_Scope->Thaw();
-		}
-		else
-		{
+        }
+        else
+        {
             m_Function->Freeze();
 
             for (unsigned int idxFn = 0; idxFn < m_FunctionsScope.size(); ++idxFn)
@@ -2219,7 +2223,7 @@ void CodeCompletion::ParseFunctionsAndFillToolbar(bool force)
             }
 
             m_Function->Thaw();
-		}
+        }
     }
 
     // Find the current function and update
@@ -2236,8 +2240,8 @@ void CodeCompletion::FindFunctionAndUpdate(int currentLine)
     int selSc, selFn;
     FunctionPosition(selSc, selFn);
 
-	if (m_Scope)
-	{
+    if (m_Scope)
+    {
         if (selSc != wxNOT_FOUND && selSc != m_Scope->GetSelection())
         {
             m_Scope->SetSelection(selSc);
@@ -2247,7 +2251,7 @@ void CodeCompletion::FindFunctionAndUpdate(int currentLine)
         {
             m_Scope->SetSelection(wxNOT_FOUND);
         }
-	}
+    }
 
     if (selFn != wxNOT_FOUND && selFn != m_Function->GetSelection())
     {
@@ -2275,17 +2279,17 @@ void CodeCompletion::FindFunctionAndUpdate(int currentLine)
 
 void CodeCompletion::UpdateFunctions(unsigned int scopeItem)
 {
-	m_Function->Freeze();
-	m_Function->Clear();
+    m_Function->Freeze();
+    m_Function->Clear();
 
-	unsigned int idxEnd = (scopeItem + 1 < m_ScopeMarks.size()) ? m_ScopeMarks[scopeItem + 1] : m_FunctionsScope.size();
-	for (unsigned int idxFn = m_ScopeMarks[scopeItem]; idxFn < idxEnd; ++idxFn)
-	{
-		const wxString &name = m_FunctionsScope[idxFn].Name;
-		m_Function->Append(name);
-	}
+    unsigned int idxEnd = (scopeItem + 1 < m_ScopeMarks.size()) ? m_ScopeMarks[scopeItem + 1] : m_FunctionsScope.size();
+    for (unsigned int idxFn = m_ScopeMarks[scopeItem]; idxFn < idxEnd; ++idxFn)
+    {
+        const wxString &name = m_FunctionsScope[idxFn].Name;
+        m_Function->Append(name);
+    }
 
-	m_Function->Thaw();
+    m_Function->Thaw();
 }
 
 void CodeCompletion::OnEditorOpen(CodeBlocksEvent& event)
@@ -3129,11 +3133,11 @@ void CodeCompletion::EditorEventHook(cbEditor* editor, wxScintillaEvent& event)
 
 void CodeCompletion::OnScope(wxCommandEvent&)
 {
-	int sel = m_Scope->GetSelection();
-	if (sel != wxNOT_FOUND && sel < static_cast<int>(m_ScopeMarks.size()))
-	{
-		UpdateFunctions(sel);
-	}
+    int sel = m_Scope->GetSelection();
+    if (sel != wxNOT_FOUND && sel < static_cast<int>(m_ScopeMarks.size()))
+    {
+        UpdateFunctions(sel);
+    }
 }
 
 void CodeCompletion::OnFunction(wxCommandEvent& /*event*/)
@@ -3141,16 +3145,16 @@ void CodeCompletion::OnFunction(wxCommandEvent& /*event*/)
     int selSc = (m_Scope) ? m_Scope->GetSelection() : 0;
     if (selSc != wxNOT_FOUND && selSc < static_cast<int>(m_ScopeMarks.size()))
     {
-		int idxFn = m_ScopeMarks[selSc] + m_Function->GetSelection();
-		if (idxFn != wxNOT_FOUND && idxFn < static_cast<int>(m_FunctionsScope.size()))
-		{
-			int Line = m_FunctionsScope[idxFn].StartLine;
-			cbEditor* ed = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
-			if (!ed)
-				return;
-			ed->GotoLine(Line);
-			ed->SetFocus();
-		}
+        int idxFn = m_ScopeMarks[selSc] + m_Function->GetSelection();
+        if (idxFn != wxNOT_FOUND && idxFn < static_cast<int>(m_FunctionsScope.size()))
+        {
+            int Line = m_FunctionsScope[idxFn].StartLine;
+            cbEditor* ed = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
+            if (!ed)
+                return;
+            ed->GotoLine(Line);
+            ed->SetFocus();
+        }
     }
 }
 

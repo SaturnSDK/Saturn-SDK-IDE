@@ -28,6 +28,11 @@
 
 #define CC_CODEREFACTORING_DEBUG_OUTPUT 0
 
+#if (CC_GLOBAL_DEBUG_OUTPUT)
+    #undef CC_CODEREFACTORING_DEBUG_OUTPUT
+    #define CC_CODEREFACTORING_DEBUG_OUTPUT 1
+#endif
+
 #if CC_CODEREFACTORING_DEBUG_OUTPUT == 1
     #define TRACE(format, args...) \
         Manager::Get()->GetLogManager()->DebugLog(F(format, ##args))

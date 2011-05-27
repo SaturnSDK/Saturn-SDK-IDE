@@ -21,6 +21,11 @@
 
 #define CC_EXPRESSION_DEBUG_OUTPUT 0
 
+#if (CC_GLOBAL_DEBUG_OUTPUT)
+    #undef CC_EXPRESSION_DEBUG_OUTPUT
+    #define CC_EXPRESSION_DEBUG_OUTPUT 1
+#endif
+
 #ifdef CC_PARSER_TEST
     extern void ParserTrace(const wxChar* format, ...);
     #define TRACE(format, args...) ParserTrace(format , ##args)
