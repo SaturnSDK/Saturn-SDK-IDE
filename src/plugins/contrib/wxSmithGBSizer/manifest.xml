@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_plugin_manifest_file>
+    <SdkVersion major="1" minor="11"  release="13" />
+    <Plugin name="wxSmithGBSizer">
+        <Value title="wxSmithGBSizer" />
+        <Value version="0.1" />
+        <Value description="wxGrigBagSizer implementation for wxSmith" />
+        <Value author="Sun Wu kong" />
+        <Value authorEmail="sun.wu.kong@free.fr" />
+        <Value authorWebsite="http://sun.wu.kong.free.fr" />
+        <Value thanksTo="" />
+        <Value license="GPL" />
+    </Plugin>
+</CodeBlocks_plugin_manifest_file>
