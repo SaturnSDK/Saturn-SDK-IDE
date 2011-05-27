@@ -50,8 +50,8 @@
 				</ExtraCommands>
 			</Target>
 			<Environment>
-				<Variable name="WX_SUFFIX" value="u" />
 				<Variable name="WX_CFG" value="" />
+				<Variable name="WX_SUFFIX" value="u" />
 			</Environment>
 		</Build>
 		<VirtualTargets>
@@ -72,6 +72,7 @@
 			<Add option="-DwxUSE_UNICODE" />
 			<Add directory="$(#wx.include)" />
 			<Add directory="$(#wx.lib)\gcc_dll$(WX_CFG)\msw$(WX_SUFFIX)" />
+			<Add directory="include" />
 		</Compiler>
 		<Linker>
 			<Add option="-Wl,--enable-auto-image-base" />
@@ -86,20 +87,32 @@
 		<Unit filename="DateTimePicker.h">
 			<Option target="wxSmithDateTimePicker" />
 		</Unit>
-		<Unit filename="TimeCtrl.cpp">
-			<Option target="TimeCtrl" />
-		</Unit>
-		<Unit filename="TimeCtrl.h">
-			<Option target="TimeCtrl" />
-		</Unit>
-		<Unit filename="images\wxTimePickCtrl16.xpm">
+		<Unit filename="Images\DateTime.xpm">
 			<Option target="wxSmithDateTimePicker" />
 		</Unit>
-		<Unit filename="images\wxTimePickCtrl32.xpm">
+		<Unit filename="Images\DateTime16.xpm">
+			<Option target="wxSmithDateTimePicker" />
+		</Unit>
+		<Unit filename="Images\wxTimePickCtrl16.xpm">
+			<Option target="wxSmithDateTimePicker" />
+		</Unit>
+		<Unit filename="Images\wxTimePickCtrl32.xpm">
+			<Option target="wxSmithDateTimePicker" />
+		</Unit>
+		<Unit filename="include\DateTimeCtrl.h">
+			<Option target="TimeCtrl" />
+		</Unit>
+		<Unit filename="include\TimeCtrl.h">
 			<Option target="wxSmithDateTimePicker" />
 		</Unit>
 		<Unit filename="manifest.xml">
 			<Option target="wxSmithDateTimePicker" />
+		</Unit>
+		<Unit filename="src\DateTimeCtrl.cpp">
+			<Option target="TimeCtrl" />
+		</Unit>
+		<Unit filename="src\TimeCtrl.cpp">
+			<Option target="TimeCtrl" />
 		</Unit>
 		<Unit filename="wxsTimePickerCtrl.cpp">
 			<Option target="wxSmithDateTimePicker" />

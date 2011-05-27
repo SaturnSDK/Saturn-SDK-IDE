@@ -140,6 +140,12 @@
 		<Unit filename="properties\wxsflagsproperty.h">
 			<Option target="wxSmithLib" />
 		</Unit>
+		<Unit filename="properties\wxsfloatproperty.cpp">
+			<Option target="wxSmithLib" />
+		</Unit>
+		<Unit filename="properties\wxsfloatproperty.h">
+			<Option target="wxSmithLib" />
+		</Unit>
 		<Unit filename="properties\wxslongproperty.cpp">
 			<Option target="wxSmithLib" />
 		</Unit>
