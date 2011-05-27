@@ -2,9 +2,9 @@
  * This file is part of the Code::Blocks IDE and licensed under the GNU Lesser General Public License, version 3
  * http://www.gnu.org/licenses/lgpl-3.0.html
  *
- * $Revision: 5033 $
- * $Id: cbeditor.cpp 5033 2008-05-07 11:41:24Z mandrav $
- * $HeadURL: https://svn.berlios.de/svnroot/repos/codeblocks/trunk/src/sdk/cbeditor.cpp $
+ * $Revision$
+ * $Id$
+ * $HeadURL$
  */
 
 // Stop following warning:
@@ -17,8 +17,12 @@
 
 #ifndef CB_PRECOMP
     #include <wx/filename.h>
+    #include <wx/filedlg.h>
+    #include <wx/textdlg.h> // wxGetTextFromUser
+    #include <wx/menu.h>
     #include <wx/notebook.h>
     #include <wx/wfstream.h>
+    #include <wx/sizer.h>
 
     #include "scbeditor.h" // class's header file
     #include "globals.h"

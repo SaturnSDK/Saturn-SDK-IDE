@@ -43,8 +43,12 @@
 
 #include "ccdebuginfo.h"
 
-
 #define CC_CLASS_BROWSER_DEBUG_OUTPUT 0
+
+#if (CC_GLOBAL_DEBUG_OUTPUT)
+    #undef CC_CLASS_BROWSER_DEBUG_OUTPUT
+    #define CC_CLASS_BROWSER_DEBUG_OUTPUT 1
+#endif
 
 #if CC_CLASS_BROWSER_DEBUG_OUTPUT == 1
     #define TRACE(format, args...) \

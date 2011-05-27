@@ -20,6 +20,11 @@ const wxString g_DebugTraceFile = wxEmptyString;
 
 #define CC_TOKEN_DEBUG_OUTPUT 0
 
+#if (CC_GLOBAL_DEBUG_OUTPUT)
+    #undef CC_TOKEN_DEBUG_OUTPUT
+    #define CC_TOKEN_DEBUG_OUTPUT 1
+#endif
+
 #if CC_TOKEN_DEBUG_OUTPUT == 1
     #define TRACE(format, args...) \
         Manager::Get()->GetLogManager()->DebugLog(F(format, ##args))
@@ -1040,6 +1045,13 @@ void TokensTree::RecalcInheritanceChain(Token* token)
     TRACE(_T("RecalcInheritanceChain() : Token %s, Ancestors %s"), token->m_Name.wx_str(),
           token->m_AncestorsString.wx_str());
 
+    // TODO (MortenMacFly#5#): Can we safely ignore local tokens here?
+//    if (!token->m_IsLocal) // global symbols are linked once
+//    {
+        TRACE(_T("RecalcInheritanceChain() : Removing ancestor string from %s"), token->m_Name.wx_str());
+        token->m_AncestorsString.Clear();
+//    }
+
     wxStringTokenizer tkz(token->m_AncestorsString, _T(","));
     while (tkz.HasMoreTokens())
     {
@@ -1110,12 +1122,6 @@ void TokensTree::RecalcInheritanceChain(Token* token)
         // Now, we have calc all the direct ancestors
 
         token->m_DirectAncestors = token->m_Ancestors;
-
-        if (!token->m_IsLocal) // global symbols are linked once
-        {
-            TRACE(_T("RecalcInheritanceChain() : Removing ancestor string from %s"), token->m_Name.wx_str());
-            token->m_AncestorsString.Clear();
-        }
     }
 
 #if CC_TOKEN_DEBUG_OUTPUT
