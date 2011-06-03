@@ -1,3 +1,5 @@
-#if 1 || 1 && 0
-int main();
-#endif
+struct A
+{
+    int a:1;
+    int b:1;
+};
