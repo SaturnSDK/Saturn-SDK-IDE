@@ -1286,7 +1286,7 @@ void DebuggerGDB::UpdateBreakpoint(cbBreakpoint *breakpoint)
                         DebuggerBreakpoint *bp = it->debugger_breakpoint;
                         bp->enabled = temp.IsEnabled();
                         bp->filename = temp.GetFilename();
-                        bp->line = temp.GetLine() - 1;
+                        bp->line = temp.GetLine();
                         bp->ignoreCount = temp.GetIgnoreCount();
                         bp->useIgnoreCount = temp.UseIgnoreCount();
                         bp->condition = temp.GetCondition();
