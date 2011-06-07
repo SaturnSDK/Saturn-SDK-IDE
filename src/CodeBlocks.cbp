@@ -2358,6 +2358,9 @@
 		<Unit filename="sdk\resources\auto_detect_compilers.xrc">
 			<Option target="sdk" />
 		</Unit>
+		<Unit filename="sdk\resources\breakpoints.xrc">
+			<Option target="sdk" />
+		</Unit>
 		<Unit filename="sdk\resources\configure_tools.xrc">
 			<Option target="sdk" />
 		</Unit>
