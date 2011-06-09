@@ -3069,18 +3069,36 @@ protected:
     {
         wxPropertyGrid* pg = wxStaticCast(GetParent(), wxPropertyGrid);
         pg->OnKey( event );
+        // CB change start
+        int id = event.GetId();
+        event.SetId(pg->GetId());
+        pg->ProcessEvent(event);
+        event.SetId(id);
+        // CB change end
     }
 
     void OnKeyUp( wxKeyEvent& event )
     {
         wxPropertyGrid* pg = wxStaticCast(GetParent(), wxPropertyGrid);
         pg->OnKeyUp( event );
+        // CB change start
+        int id = event.GetId();
+        event.SetId(pg->GetId());
+        pg->ProcessEvent(event);
+        event.SetId(id);
+        // CB change end
     }
 
     void OnNavigationKey( wxNavigationKeyEvent& event )
     {
         wxPropertyGrid* pg = wxStaticCast(GetParent(), wxPropertyGrid);
         pg->OnNavigationKey( event );
+        // CB change start
+        int id = event.GetId();
+        event.SetId(pg->GetId());
+        pg->ProcessEvent(event);
+        event.SetId(id);
+        // CB change end
     }
 
     void OnPaint( wxPaintEvent& event );

@@ -28,12 +28,12 @@
 
 namespace
 {
-    const int idGrid = wxNewId();
+    const long idGrid = wxNewId();
 
-    const int idMenuRename = wxNewId();
-    const int idMenuProperties = wxNewId();
-    const int idMenuDelete = wxNewId();
-    const int idMenuDeleteAll = wxNewId();
+    const long idMenuRename = wxNewId();
+    const long idMenuProperties = wxNewId();
+    const long idMenuDelete = wxNewId();
+    const long idMenuDeleteAll = wxNewId();
 }
 
 BEGIN_EVENT_TABLE(WatchesDlg, wxPanel)
@@ -45,8 +45,6 @@ BEGIN_EVENT_TABLE(WatchesDlg, wxPanel)
     EVT_PG_LABEL_EDIT_BEGIN(idGrid, WatchesDlg::OnPropertyLableEditBegin)
     EVT_PG_LABEL_EDIT_ENDING(idGrid, WatchesDlg::OnPropertyLableEditEnd)
     EVT_PG_RIGHT_CLICK(idGrid, WatchesDlg::OnPropertyRightClick)
-    EVT_KEY_DOWN(WatchesDlg::OnKeyDown)
-    EVT_KEY_UP(WatchesDlg::OnKeyDown)
     EVT_IDLE(WatchesDlg::OnIdle)
 
     EVT_MENU(idMenuRename, WatchesDlg::OnMenuRename)
@@ -289,7 +287,7 @@ WatchesDlg::WatchesDlg() :
 {
     wxBoxSizer *bs = new wxBoxSizer(wxVERTICAL);
     m_grid = new wxPropertyGrid(this, idGrid, wxDefaultPosition, wxDefaultSize,
-                                wxPG_SPLITTER_AUTO_CENTER | wxTAB_TRAVERSAL);
+                                wxPG_SPLITTER_AUTO_CENTER | wxTAB_TRAVERSAL /*| wxWANTS_CHARS*/);
 
     m_grid->SetExtraStyle(wxPG_EX_DISABLE_TLP_TRACKING | wxPG_EX_HELP_AS_TOOLTIPS);
     m_grid->SetDropTarget(new WatchesDropTarget);
@@ -306,6 +304,8 @@ WatchesDlg::WatchesDlg() :
 
     wxPGProperty *prop = m_grid->Append(new WatchesProperty(wxEmptyString, wxEmptyString, NULL));
     m_grid->SetPropertyAttribute(prop, wxT("Units"), wxEmptyString);
+
+    m_grid->Connect(idGrid, wxEVT_KEY_DOWN, wxKeyEventHandler(WatchesDlg::OnKeyDown), NULL, this);
 }
 
 void AppendChildren(wxPropertyGrid &grid, wxPGProperty &property, cbWatch &watch)
@@ -523,7 +523,11 @@ void WatchesDlg::OnKeyDown(wxKeyEvent &event)
     wxPGProperty *prop = m_grid->GetSelection();
     WatchesProperty *watches_prop = static_cast<WatchesProperty*>(prop);
 
-    if (!prop || !prop->GetParent() || !prop->GetParent()->IsRoot() || m_grid->GetLabelEditor())
+    // don't delete the watch when editing the value or the label
+    if (m_grid->IsEditorFocused() || m_grid->GetLabelEditor())
+        return;
+
+    if (!prop || !prop->GetParent() || !prop->GetParent()->IsRoot())
         return;
 
     switch (event.GetKeyCode())
