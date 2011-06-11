@@ -106,11 +106,15 @@ public:
     /** ParserThread destructor.*/
     virtual ~ParserThread();
 
-    /** Do the main job (syntax analysis) here */
+    /** Do the main job (syntax analysis) here
+      * No critical section needed here:
+      * All functions that call this, already entered a critical section.
+      */
     bool Parse();
 
     /** Get the context "namespace XXX { ... }" directive. It is used to find the initial search scope
       * before CC prompt a suggestion list.
+      * Need a critical section locker before call this funtion!
       * @param buffer  wxString to be parsed.
       * @param result  vector containing all the namespace names.
       */
@@ -118,6 +122,7 @@ public:
 
     /** Get the context "using namespace XXX" directive. It is used to find the initial search scope
       * before CC prompt a suggestion list.
+      * Need a critical section locker before call this funtion!
       * @param buffer  wxString to be parsed.
       * @param result the wxArrayString contains all the namespace names.
       */
@@ -132,7 +137,11 @@ protected:
       * often happens when user open a project. Every parserthread task will firstly be added to the thread pool, later
       * called automatically from the thread pool.
       */
-    int Execute() { return Parse() ? 0 : 1; }
+    int Execute()
+    {
+        wxCriticalSectionLocker locker(s_TokensTreeCritical);
+        return Parse() ? 0 : 1;
+    }
 
     /** skip until we meet one of the characters in the wxString
       * @param chars wxString specifies all the ending characters
@@ -242,8 +251,7 @@ private:
     /** Support function overloading */
     Token* TokenExists(const wxString& name, const wxString& baseArgs, Token* parent, TokenKind kind);
 
-    /** Before call this function, *MUST* add a locker
-      * e.g. wxCriticalSectionLocker locker(s_TokensTreeCritical);
+    /** TODO comment here?
       */
     Token* FindTokenFromQueue(std::queue<wxString>& q,
                               Token* parent = 0,
