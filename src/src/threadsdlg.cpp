@@ -7,7 +7,8 @@
  * $HeadURL$
  */
 
-#include "sdk_precomp.h"
+#include "sdk.h"
+
 #ifndef CB_PRECOMP
     #include <wx/listctrl.h>
     #include <wx/menu.h>

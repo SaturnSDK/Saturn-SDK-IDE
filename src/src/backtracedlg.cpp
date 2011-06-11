@@ -6,7 +6,8 @@
  * $Id$
  * $HeadURL$
  */
-#include "sdk_precomp.h"
+#include "sdk.h"
+
 #ifndef CB_PRECOMP
     #include <wx/filedlg.h>
     #include <wx/listctrl.h>

@@ -7,7 +7,7 @@
  * $HeadURL$
  */
 
-#include "sdk_precomp.h"
+#include "sdk.h"
 
 #include "cpuregistersdlg.h"
 #include <wx/intl.h>
