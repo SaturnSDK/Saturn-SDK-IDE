@@ -189,7 +189,7 @@ wxString DetectDebuggerExecutable()
             if (wxFileExists(cbInstallFolder + sep + wxT("MINGW") + sep + wxT("bin") + sep + exeName))
                 exePath = cbInstallFolder + sep + wxT("MINGW") + sep + wxT("bin");
             else
-                exePath = wxT("C:\\MinGW\bin\\");
+                exePath = wxT("C:\\MinGW\\bin");
         }
     }
 
