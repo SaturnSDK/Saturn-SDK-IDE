@@ -11,7 +11,7 @@
 
 struct FileGroups
 {
-    wxString groupName;
+    wxString      groupName;
     wxArrayString fileMasks;
 };
 
@@ -70,6 +70,7 @@ class DLLIMPORT FilesGroupsAndMasks
     private:
         /** Load groups/masks from config */
         void Load();
+
         FileGroupsArray m_Groups; //!< Internal storage for file groups ans masks
 };
 

@@ -1345,6 +1345,9 @@ void ProjectManager::UnfreezeTree(bool /*force*/)
 
 void ProjectManager::RebuildTree()
 {
+    if (Manager::isappShuttingDown())
+        return;
+
     FreezeTree();
     int count = m_pProjects->GetCount();
     for (int i = 0; i < count; ++i)
@@ -1609,8 +1612,10 @@ void ProjectManager::DoOpenFile(ProjectFile* pf, const wxString& filename)
 void ProjectManager::DoOpenSelectedFile()
 {
     wxTreeItemId sel = m_pTree->GetSelection();
-    FileTreeData* ftd = (FileTreeData*)m_pTree->GetItemData(sel);
+    if (!sel.IsOk())
+        return;
 
+    FileTreeData* ftd = (FileTreeData*)m_pTree->GetItemData(sel);
     if (ftd)
     {
         ProjectFile* f = ftd->GetProjectFile();
@@ -1975,6 +1980,8 @@ void ProjectManager::OnSetActiveProject(wxCommandEvent& event)
     if (event.GetId() == idMenuSetActiveProject)
     {
         wxTreeItemId sel = m_pTree->GetSelection();
+        if (!sel.IsOk())
+            return;
         FileTreeData* ftd = (FileTreeData*)m_pTree->GetItemData(sel);
         if (!ftd)
             return;
@@ -2004,6 +2011,8 @@ void ProjectManager::OnSetActiveProject(wxCommandEvent& event)
     else if (event.GetId() == idMenuProjectUp)
     {
         wxTreeItemId sel = m_pTree->GetSelection();
+        if (!sel.IsOk())
+            return;
         FileTreeData* ftd = (FileTreeData*)m_pTree->GetItemData(sel);
         if (ftd)
             MoveProjectUp(ftd->GetProject());
@@ -2011,6 +2020,8 @@ void ProjectManager::OnSetActiveProject(wxCommandEvent& event)
     else if (event.GetId() == idMenuProjectDown)
     {
         wxTreeItemId sel = m_pTree->GetSelection();
+        if (!sel.IsOk())
+            return;
         FileTreeData* ftd = (FileTreeData*)m_pTree->GetItemData(sel);
         if (ftd)
             MoveProjectDown(ftd->GetProject());
@@ -2031,6 +2042,8 @@ void ProjectManager::OnAddFilesToProjectRecursively(wxCommandEvent& event)
     else
     {
         wxTreeItemId sel = m_pTree->GetSelection();
+        if (!sel.IsOk())
+            return;
         FileTreeData* ftd = (FileTreeData*)m_pTree->GetItemData(sel);
         if (ftd)
         {
@@ -2114,6 +2127,8 @@ void ProjectManager::OnAddFileToProject(wxCommandEvent& event)
     else
     {
         wxTreeItemId sel = m_pTree->GetSelection();
+        if (!sel.IsOk())
+            return;
         FileTreeData* ftd = (FileTreeData*)m_pTree->GetItemData(sel);
         if (ftd)
         {
@@ -2155,6 +2170,8 @@ void ProjectManager::OnAddFileToProject(wxCommandEvent& event)
 void ProjectManager::OnRemoveFileFromProject(wxCommandEvent& event)
 {
     wxTreeItemId sel = m_pTree->GetSelection();
+    if (!sel.IsOk())
+        return;
     FileTreeData* ftd = (FileTreeData*)m_pTree->GetItemData(sel);
     if (!ftd)
         return;
@@ -2249,6 +2266,8 @@ void ProjectManager::OnRemoveFileFromProject(wxCommandEvent& event)
 void ProjectManager::OnSaveProject(wxCommandEvent& WXUNUSED(event))
 {
     wxTreeItemId sel = m_pTree->GetSelection();
+    if (!sel.IsOk())
+        return;
     if (FileTreeData* ftd = (FileTreeData*)m_pTree->GetItemData(sel))
     {
         if (cbProject* Project = ftd->GetProject())
@@ -2265,6 +2284,8 @@ void ProjectManager::OnSaveProject(wxCommandEvent& WXUNUSED(event))
 void ProjectManager::OnCloseProject(wxCommandEvent& WXUNUSED(event))
 {
     wxTreeItemId sel = m_pTree->GetSelection();
+    if (!sel.IsOk())
+        return;
     FileTreeData* ftd = (FileTreeData*)m_pTree->GetItemData(sel);
     cbProject *proj = 0;
     if (ftd)
@@ -2284,6 +2305,8 @@ void ProjectManager::OnCloseProject(wxCommandEvent& WXUNUSED(event))
 void ProjectManager::OnSaveFile(wxCommandEvent& WXUNUSED(event))
 {
     wxTreeItemId sel = m_pTree->GetSelection();
+    if (!sel.IsOk())
+        return;
     if (FileTreeData* ftd = (FileTreeData*)m_pTree->GetItemData(sel))
     {
         if (cbProject* Project = ftd->GetProject())
@@ -2297,6 +2320,8 @@ void ProjectManager::OnSaveFile(wxCommandEvent& WXUNUSED(event))
 void ProjectManager::OnCloseFile(wxCommandEvent& WXUNUSED(event))
 {
     wxTreeItemId sel = m_pTree->GetSelection();
+    if (!sel.IsOk())
+        return;
     if (FileTreeData* ftd = (FileTreeData*)m_pTree->GetItemData(sel))
     {
         if (cbProject* Project = ftd->GetProject())
@@ -2339,8 +2364,10 @@ void ProjectManager::OnOpenFolderFiles(wxCommandEvent& event)
 void ProjectManager::OnOpenWith(wxCommandEvent& event)
 {
     wxTreeItemId sel = m_pTree->GetSelection();
-    FileTreeData* ftd = (FileTreeData*)m_pTree->GetItemData(sel);
+    if (!sel.IsOk())
+        return;
 
+    FileTreeData* ftd = (FileTreeData*)m_pTree->GetItemData(sel);
     if (ftd)
     {
         cbProject* project = ftd->GetProject();
@@ -2395,6 +2422,8 @@ void ProjectManager::OnProperties(wxCommandEvent& event)
     else if (event.GetId() == idMenuTreeProjectProperties)
     {
         wxTreeItemId sel = m_pTree->GetSelection();
+        if (!sel.IsOk())
+            return;
         FileTreeData* ftd = (FileTreeData*)m_pTree->GetItemData(sel);
 
         cbProject* project = ftd ? ftd->GetProject() : m_pActiveProject;
@@ -2430,6 +2459,8 @@ void ProjectManager::OnProperties(wxCommandEvent& event)
     else if (event.GetId() == idMenuTreeFileProperties)
     {
         wxTreeItemId sel = m_pTree->GetSelection();
+        if (!sel.IsOk())
+            return;
         FileTreeData* ftd = (FileTreeData*)m_pTree->GetItemData(sel);
 
         cbProject* project = ftd ? ftd->GetProject() : m_pActiveProject;
@@ -2643,6 +2674,8 @@ void ProjectManager::OnFindFile(wxCommandEvent& /*event*/)
     if ( !text.IsEmpty() )
     {
         wxTreeItemId sel = m_pTree->GetSelection();
+        if (!sel.IsOk())
+            return;
 
         wxTreeItemId found = FindItem( sel, text );
 
@@ -2663,6 +2696,8 @@ void ProjectManager::OnAddVirtualFolder(wxCommandEvent& /*event*/)
         return;
 
     wxTreeItemId sel = m_pTree->GetSelection();
+    if (!sel.IsOk())
+        return;
     FileTreeData* ftd = (FileTreeData*)m_pTree->GetItemData(sel);
     if (!ftd)
         return;
@@ -2677,6 +2712,8 @@ void ProjectManager::OnAddVirtualFolder(wxCommandEvent& /*event*/)
 void ProjectManager::OnDeleteVirtualFolder(wxCommandEvent& /*event*/)
 {
     wxTreeItemId sel = m_pTree->GetSelection();
+    if (!sel.IsOk())
+        return;
     FileTreeData* ftd = (FileTreeData*)m_pTree->GetItemData(sel);
     if (!ftd)
         return;
@@ -2753,6 +2790,8 @@ void ProjectManager::OnAppDoneStartup(CodeBlocksEvent& event)
 void ProjectManager::OnRenameFile(wxCommandEvent& /*event*/)
 {
     wxTreeItemId sel = m_pTree->GetSelection();
+    if (!sel.IsOk())
+        return;
     FileTreeData* ftd = (FileTreeData*)m_pTree->GetItemData(sel);
     if (!ftd)
         return;

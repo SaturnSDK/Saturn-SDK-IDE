@@ -973,9 +973,7 @@ void MainFrame::CreateMenubar()
         if (plug && plug->IsAttached())
         {
             if (plug->GetType() == ptTool)
-            {
                 DoAddPlugin(plug);
-            }
             else
             {
                 AddPluginInSettingsMenu(plug);

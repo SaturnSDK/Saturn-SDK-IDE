@@ -89,7 +89,7 @@ public:
 
     int Execute()
     {
-        wxCriticalSectionLocker locker(s_TokensTreeCritical);
+        wxCriticalSectionLocker locker1(s_TokensTreeCritical);
         wxCriticalSectionLocker locker2(s_ParserCritical);
 
         // Pre-defined macros
@@ -172,7 +172,7 @@ Parser::Parser(wxEvtHandler* parent, cbProject* project) :
     m_Parent(parent),
     m_Project(project),
     m_UsingCache(false),
-    m_Pool(this, wxNewId(), 1), // in the meanwhile it'll have to be forced to 1
+    m_Pool(this, wxNewId(), 1, 2 * 1024 * 1024), // in the meanwhile it'll have to be forced to 1
     m_IsPriority(false),
     m_NeedsReparse(false),
     m_IsFirstBatch(false),
@@ -203,16 +203,13 @@ Parser::~Parser()
     // 3. Abort all thread
     TerminateAllThreads();
 
-    // 4. Lock tokens tree
-    wxCriticalSectionLocker locker(s_TokensTreeCritical);
-
-    // 5. Free memory
+    // 4. Free memory
     delete m_TempTokensTree;
     m_TempTokensTree = nullptr;
     delete m_TokensTree;
     m_TokensTree = nullptr;
 
-    // 6. Reset current parser
+    // 5. Reset current parser
     if (s_CurrentParser == this)
         s_CurrentParser = nullptr;
 }
@@ -345,7 +342,7 @@ Token* Parser::FindChildTokenByName(Token* parent, const wxString& name, bool us
     if (!parent)
         return FindTokenByName(name, false, kindMask);
 
-    wxCriticalSectionLocker* locker = new wxCriticalSectionLocker(s_TokensTreeCritical);
+    s_TokensTreeCritical.Enter();
     Token* result = m_TokensTree->at(m_TokensTree->TokenExists(name, parent->GetSelf(), kindMask));
     if (!result && useInheritance)
     {
@@ -354,19 +351,14 @@ Token* Parser::FindChildTokenByName(Token* parent, const wxString& name, bool us
         for (it = parent->m_DirectAncestors.begin(); it != parent->m_DirectAncestors.end(); ++it)
         {
             Token* ancestor = m_TokensTree->at(*it);
-            if (locker)
-            {
-                delete locker;
-                locker = nullptr;
-            }
+            s_TokensTreeCritical.Leave();
             result = FindChildTokenByName(ancestor, name, true, kindMask);
-            locker = new wxCriticalSectionLocker(s_TokensTreeCritical);
+            s_TokensTreeCritical.Enter();
             if (result)
                 break;
         }
     }
-    if (locker)
-        delete locker;
+    s_TokensTreeCritical.Leave();
     return result;
 }
 
@@ -1045,12 +1037,15 @@ void Parser::DoParseFile(const wxString& filename, bool isGlobal)
     if (filename.IsEmpty())
         return;
 
-    wxCriticalSectionLocker* locker = nullptr;
+    bool locked = false;
     if (m_IsParsing)
-        locker = new wxCriticalSectionLocker(s_ParserCritical);
+    {
+        s_ParserCritical.Enter();
+        locked = true;
+    }
     Parse(filename, !isGlobal);
-    if (locker)
-        delete locker;
+    if (locked)
+        s_ParserCritical.Leave();
 }
 
 void Parser::StartStopWatch()
