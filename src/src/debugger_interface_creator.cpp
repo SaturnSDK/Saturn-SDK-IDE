@@ -39,7 +39,8 @@ cbBacktraceDlg* DebugInterfaceFactory::CreateBacktrace()
 
 void DebugInterfaceFactory::DeleteBacktrace(cbBacktraceDlg *dialog)
 {
-    RemoveDockWindow(dialog->GetWindow());
+    if (dialog)
+        RemoveDockWindow(dialog->GetWindow());
 }
 
 cbBreakpointsDlg* DebugInterfaceFactory::CreateBreapoints()
@@ -60,7 +61,8 @@ cbBreakpointsDlg* DebugInterfaceFactory::CreateBreapoints()
 
 void DebugInterfaceFactory::DeleteBreakpoints(cbBreakpointsDlg *dialog)
 {
-    RemoveDockWindow(dialog->GetWindow());
+    if (dialog)
+        RemoveDockWindow(dialog->GetWindow());
 }
 
 cbCPURegistersDlg* DebugInterfaceFactory::CreateCPURegisters()
@@ -81,7 +83,8 @@ cbCPURegistersDlg* DebugInterfaceFactory::CreateCPURegisters()
 
 void DebugInterfaceFactory::DeleteCPURegisters(cbCPURegistersDlg *dialog)
 {
-    RemoveDockWindow(dialog->GetWindow());
+    if (dialog)
+        RemoveDockWindow(dialog->GetWindow());
 }
 
 cbDisassemblyDlg* DebugInterfaceFactory::CreateDisassembly()
@@ -102,7 +105,8 @@ cbDisassemblyDlg* DebugInterfaceFactory::CreateDisassembly()
 
 void DebugInterfaceFactory::DeleteDisassembly(cbDisassemblyDlg *dialog)
 {
-    RemoveDockWindow(dialog->GetWindow());
+    if (dialog)
+        RemoveDockWindow(dialog->GetWindow());
 }
 
 cbExamineMemoryDlg* DebugInterfaceFactory::CreateMemory()
@@ -122,7 +126,8 @@ cbExamineMemoryDlg* DebugInterfaceFactory::CreateMemory()
 
 void DebugInterfaceFactory::DeleteMemory(cbExamineMemoryDlg *dialog)
 {
-    RemoveDockWindow(dialog->GetWindow());
+    if (dialog)
+        RemoveDockWindow(dialog->GetWindow());
 }
 
 cbThreadsDlg* DebugInterfaceFactory::CreateThreads()
@@ -143,7 +148,8 @@ cbThreadsDlg* DebugInterfaceFactory::CreateThreads()
 
 void DebugInterfaceFactory::DeleteThreads(cbThreadsDlg *dialog)
 {
-    RemoveDockWindow(dialog->GetWindow());
+    if (dialog)
+        RemoveDockWindow(dialog->GetWindow());
 }
 
 cbWatchesDlg* DebugInterfaceFactory::CreateWatches()
@@ -163,5 +169,6 @@ cbWatchesDlg* DebugInterfaceFactory::CreateWatches()
 
 void DebugInterfaceFactory::DeleteWatches(cbWatchesDlg *dialog)
 {
-    RemoveDockWindow(dialog->GetWindow());
+    if (dialog)
+        RemoveDockWindow(dialog->GetWindow());
 }
