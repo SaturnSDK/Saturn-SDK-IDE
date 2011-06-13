@@ -55,41 +55,42 @@ void CompilerMINGW::Reset()
 {
     if (platform::windows)
     {
-        m_Programs.C = _T("mingw32-gcc.exe");
-        m_Programs.CPP = _T("mingw32-g++.exe");
-        m_Programs.LD = _T("mingw32-g++.exe");
-        m_Programs.DBG = _T("gdb.exe");
-        m_Programs.LIB = _T("ar.exe");
-        m_Programs.WINDRES = _T("windres.exe");
-        m_Programs.MAKE = _T("mingw32-make.exe");
+        m_Programs.C         = _T("mingw32-gcc.exe");
+        m_Programs.CPP       = _T("mingw32-g++.exe");
+        m_Programs.LD        = _T("mingw32-g++.exe");
+        m_Programs.DBG       = _T("gdb.exe");
+        m_Programs.LIB       = _T("ar.exe");
+        m_Programs.WINDRES   = _T("windres.exe");
+        m_Programs.MAKE      = _T("mingw32-make.exe");
     }
     else
     {
-        m_Programs.C = _T("gcc");
-        m_Programs.CPP = _T("g++");
-        m_Programs.LD = _T("g++");
-        m_Programs.DBG = _T("gdb");
-        m_Programs.LIB = _T("ar");
-        m_Programs.WINDRES = _T("");
-        m_Programs.MAKE = _T("make");
+        m_Programs.C         = _T("gcc");
+        m_Programs.CPP       = _T("g++");
+        m_Programs.LD        = _T("g++");
+        m_Programs.DBG       = _T("gdb");
+        m_Programs.LIB       = _T("ar");
+        m_Programs.WINDRES   = _T("");
+        m_Programs.MAKE      = _T("make");
     }
-    m_Switches.includeDirs = _T("-I");
-    m_Switches.libDirs = _T("-L");
-    m_Switches.linkLibs = _T("-l");
-    m_Switches.defines = _T("-D");
-    m_Switches.genericSwitch = _T("-");
-    m_Switches.objectExtension = _T("o");
-    m_Switches.needDependencies = true;
-    m_Switches.forceCompilerUseQuotes = false;
-    m_Switches.forceLinkerUseQuotes = false;
-    m_Switches.logging = clogSimple;
-    m_Switches.libPrefix = _T("lib");
-    m_Switches.libExtension = _T("a");
-    m_Switches.linkerNeedsLibPrefix = false;
+    m_Switches.includeDirs             = _T("-I");
+    m_Switches.libDirs                 = _T("-L");
+    m_Switches.linkLibs                = _T("-l");
+    m_Switches.defines                 = _T("-D");
+    m_Switches.genericSwitch           = _T("-");
+    m_Switches.objectExtension         = _T("o");
+    m_Switches.needDependencies        = true;
+    m_Switches.forceCompilerUseQuotes  = false;
+    m_Switches.forceLinkerUseQuotes    = false;
+    m_Switches.logging                 = clogSimple;
+    m_Switches.libPrefix               = _T("lib");
+    m_Switches.libExtension            = _T("a");
+    m_Switches.linkerNeedsLibPrefix    = false;
     m_Switches.linkerNeedsLibExtension = false;
-    m_Switches.supportsPCH = true;
-    m_Switches.PCHExtension = _T("h.gch");
-    m_Switches.UseFullSourcePaths = true; // use the GDB workaround !!!!!!!!
+    m_Switches.supportsPCH             = true;
+    m_Switches.PCHExtension            = _T("h.gch");
+    m_Switches.UseFullSourcePaths      = true; // use the GDB workaround !!!!!!!!
+    m_Switches.Use83Paths              = true; // use the windres workaround !!!!!!!!
 
     // Summary of GCC options: http://gcc.gnu.org/onlinedocs/gcc/Option-Summary.html
 
@@ -211,6 +212,7 @@ void CompilerMINGW::LoadDefaultRegExArray()
     m_RegExes.Add(RegExStruct(_("Compiler note"), cltInfo, _T("(") + FilePathWithSpaces + _T("):([0-9]+):[ \t]([Nn]ote:[ \t].*)"), 3, 1, 2));
     m_RegExes.Add(RegExStruct(_("General note"), cltInfo, _T("([Nn]ote:[ \t].*)"), 1));
     m_RegExes.Add(RegExStruct(_("Compiler warning"), cltWarning, _T("(") + FilePathWithSpaces + _T("):([0-9]+):[ \t]([Ww]arning:[ \t].*)"), 3, 1, 2));
+    m_RegExes.Add(RegExStruct(_("Undefined reference (2)"), cltError, FilePathWithSpaces + _T("\\.o:(") + FilePathWithSpaces + _T("):([0-9]+):[ \t](undefined reference.*)"), 3, 1, 2));
     m_RegExes.Add(RegExStruct(_("Compiler error"), cltError, _T("(") + FilePathWithSpaces + _T("):([0-9]+):[ \t](.*)"), 3, 1, 2));
     m_RegExes.Add(RegExStruct(_("Linker warning"), cltWarning, _T("(") + FilePathWithSpaces + _T("):\\(\\.text\\+[0-9a-fA-FxX]+\\):[ \t]([Ww]arning:[ \t].*)"), 2, 1));
     m_RegExes.Add(RegExStruct(_("Linker error"), cltError, _T("(") + FilePathWithSpaces + _T("):([0-9]+):[0-9]+:[ \t](.*)"), 3, 1, 2));
