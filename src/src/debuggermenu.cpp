@@ -262,8 +262,8 @@ void DebuggerMenuHandler::OnUpdateUI(wxUpdateUIEvent& event)
         mbar->Enable(idMenuStepOut, isRunning && en && stopped);
         mbar->Enable(idMenuRunToCursor, en && ed && stopped);
         mbar->Enable(idMenuSetNextStatement, en && ed && stopped && isRunning);
-        mbar->Enable(idMenuToggleBreakpoint, en && ed);
-        mbar->Enable(idMenuRemoveAllBreakpoints, en && ed);
+        mbar->Enable(idMenuToggleBreakpoint, ed && m_activeDebugger);
+        mbar->Enable(idMenuRemoveAllBreakpoints, m_activeDebugger);
         mbar->Enable(idMenuSendCommand, isRunning && stopped);
         mbar->Enable(idMenuAddSymbolFile, isRunning && stopped);
         mbar->Enable(idMenuStop, isRunning && en);
