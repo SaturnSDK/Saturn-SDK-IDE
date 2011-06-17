@@ -7,7 +7,7 @@
 		<Option compiler="gcc" />
 		<Build>
 			<Target title="wxSmithDemo">
-				<Option output="..\..\..\devel\wxSmithDemo" prefix_auto="1" extension_auto="1" />
+				<Option output="..\..\..\devel\wxSmithDemo" prefix_auto="0" extension_auto="1" />
 				<Option working_dir="..\..\..\devel" />
 				<Option object_output="..\..\..\.objs\plugins\contrib\wxSmithDemo" />
 				<Option type="0" />
@@ -43,8 +43,8 @@
 				</Linker>
 			</Target>
 			<Environment>
-				<Variable name="WX_SUFFIX" value="u" />
 				<Variable name="WX_CFG" value="" />
+				<Variable name="WX_SUFFIX" value="u" />
 			</Environment>
 		</Build>
 		<VirtualTargets>
@@ -93,7 +93,7 @@
 			<wxsmith version="1">
 				<gui name="wxWidgets" src="wxSmithDemoApp.cpp" main="wxSmithDemoFrame" init_handlers="necessary" language="CPP" />
 				<resources>
-					<wxFrame wxs="wxsmith/wxSmithDemoframe.wxs" src="wxSmithDemoMain.cpp" hdr="wxSmithDemoMain.h" name="wxSmithDemoFrame" language="CPP" />
+					<wxFrame wxs="wxsmith/wxSmithDemoframe.wxs" src="wxSmithDemoMain.cpp" hdr="wxSmithDemoMain.h" fwddecl="0" i18n="1" name="wxSmithDemoFrame" language="CPP" />
 				</resources>
 			</wxsmith>
 			<DoxyBlocks>

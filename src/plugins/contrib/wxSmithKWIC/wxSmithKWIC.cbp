@@ -2,7 +2,7 @@
 <CodeBlocks_project_file>
 	<FileVersion major="1" minor="6" />
 	<Project>
-		<Option title="wxSmith - KWIC" />
+		<Option title="wxSmithKWIC" />
 		<Option platforms="Windows;" />
 		<Option pch_mode="2" />
 		<Option default_target="wxSmithKWIC" />
@@ -10,12 +10,11 @@
 		<Build>
 			<Target title="kwxAngularMeter">
 				<Option platforms="Windows;" />
-				<Option output="..\..\..\devel\kwxAngularMeter" prefix_auto="1" extension_auto="1" />
+				<Option output="..\..\..\devel\kwxAngularMeter" prefix_auto="0" extension_auto="1" />
 				<Option working_dir="..\..\..\devel" />
 				<Option object_output="..\..\..\.objs\plugins\contrib\wxSmithKWIC\kwxAngularMeter" />
 				<Option type="3" />
 				<Option compiler="gcc" />
-				<Option createDefFile="1" />
 				<Option createStaticLib="1" />
 				<Compiler>
 					<Add option="-g" />
@@ -23,12 +22,11 @@
 			</Target>
 			<Target title="kwxAngularRegulator">
 				<Option platforms="Windows;" />
-				<Option output="..\..\..\devel\kwxAngularRegulator" prefix_auto="1" extension_auto="1" />
+				<Option output="..\..\..\devel\kwxAngularRegulator" prefix_auto="0" extension_auto="1" />
 				<Option working_dir="..\..\..\devel" />
 				<Option object_output="..\..\..\.objs\plugins\contrib\wxSmithKWIC\kwxAngularRegulator" />
 				<Option type="3" />
 				<Option compiler="gcc" />
-				<Option createDefFile="1" />
 				<Option createStaticLib="1" />
 				<Compiler>
 					<Add option="-g" />
@@ -36,12 +34,11 @@
 			</Target>
 			<Target title="kwxBmpCheckbox">
 				<Option platforms="Windows;" />
-				<Option output="..\..\..\devel\kwxBmpCheckbox" prefix_auto="1" extension_auto="1" />
+				<Option output="..\..\..\devel\kwxBmpCheckbox" prefix_auto="0" extension_auto="1" />
 				<Option working_dir="..\..\..\devel" />
 				<Option object_output="..\..\..\.objs\plugins\contrib\wxSmithKWIC\kwxBmpCheckbox" />
 				<Option type="3" />
 				<Option compiler="gcc" />
-				<Option createDefFile="1" />
 				<Option createStaticLib="1" />
 				<Compiler>
 					<Add option="-g" />
@@ -49,12 +46,11 @@
 			</Target>
 			<Target title="kwxBmpSwitcher">
 				<Option platforms="Windows;" />
-				<Option output="..\..\..\devel\kwxBmpSwitcher" prefix_auto="1" extension_auto="1" />
+				<Option output="..\..\..\devel\kwxBmpSwitcher" prefix_auto="0" extension_auto="1" />
 				<Option working_dir="..\..\..\devel" />
 				<Option object_output="..\..\..\.objs\plugins\contrib\wxSmithKWIC\kwxBmpSwitcher" />
 				<Option type="3" />
 				<Option compiler="gcc" />
-				<Option createDefFile="1" />
 				<Option createStaticLib="1" />
 				<Compiler>
 					<Add option="-g" />
@@ -62,12 +58,11 @@
 			</Target>
 			<Target title="kwxLCDDisplay">
 				<Option platforms="Windows;" />
-				<Option output="..\..\..\devel\kwxLCDDisplay" prefix_auto="1" extension_auto="1" />
+				<Option output="..\..\..\devel\kwxLCDDisplay" prefix_auto="0" extension_auto="1" />
 				<Option working_dir="..\..\..\devel" />
 				<Option object_output="..\..\..\.objs\plugins\contrib\wxSmithKWIC\kwxLCDDisplay" />
 				<Option type="3" />
 				<Option compiler="gcc" />
-				<Option createDefFile="1" />
 				<Option createStaticLib="1" />
 				<Compiler>
 					<Add option="-g" />
@@ -75,13 +70,12 @@
 			</Target>
 			<Target title="kwxLCDClock">
 				<Option platforms="Windows;" />
-				<Option output="..\..\..\devel\kwxLCDClock" prefix_auto="1" extension_auto="1" />
+				<Option output="..\..\..\devel\kwxLCDClock" prefix_auto="0" extension_auto="1" />
 				<Option working_dir="..\..\..\devel" />
 				<Option object_output="..\..\..\.objs\plugins\contrib\wxSmithKWIC\kwxLCDClock" />
 				<Option external_deps="..\..\..\devel\kwxLCDDisplay.dll;" />
 				<Option type="3" />
 				<Option compiler="gcc" />
-				<Option createDefFile="1" />
 				<Option createStaticLib="1" />
 				<Compiler>
 					<Add option="-g" />
@@ -92,12 +86,11 @@
 			</Target>
 			<Target title="kwxLinearMeter">
 				<Option platforms="Windows;" />
-				<Option output="..\..\..\devel\kwxLinearMeter" prefix_auto="1" extension_auto="1" />
+				<Option output="..\..\..\devel\kwxLinearMeter" prefix_auto="0" extension_auto="1" />
 				<Option working_dir="..\..\..\devel" />
 				<Option object_output="..\..\..\.objs\plugins\contrib\wxSmithKWIC\kwxLinearMeter" />
 				<Option type="3" />
 				<Option compiler="gcc" />
-				<Option createDefFile="1" />
 				<Option createStaticLib="1" />
 				<Compiler>
 					<Add option="-g" />
@@ -105,12 +98,11 @@
 			</Target>
 			<Target title="kwxLinearRegulator">
 				<Option platforms="Windows;" />
-				<Option output="..\..\..\devel\kwxLinearRegulator" prefix_auto="1" extension_auto="1" />
+				<Option output="..\..\..\devel\kwxLinearRegulator" prefix_auto="0" extension_auto="1" />
 				<Option working_dir="..\..\..\devel" />
 				<Option object_output="..\..\..\.objs\plugins\contrib\wxSmithKWIC\kwxLinearRegulator" />
 				<Option type="3" />
 				<Option compiler="gcc" />
-				<Option createDefFile="1" />
 				<Option createStaticLib="1" />
 				<Compiler>
 					<Add option="-g" />
@@ -118,7 +110,7 @@
 			</Target>
 			<Target title="wxSmithKWIC">
 				<Option platforms="Windows;" />
-				<Option output="..\..\..\devel\share\CodeBlocks\plugins\wxSmithKWIC" prefix_auto="1" extension_auto="1" />
+				<Option output="..\..\..\devel\share\CodeBlocks\plugins\wxSmithKWIC" prefix_auto="0" extension_auto="1" />
 				<Option working_dir="..\..\..\devel" />
 				<Option object_output="..\..\..\.objs\plugins\contrib\wxSmithKWIC" />
 				<Option external_deps="..\..\..\devel\kwxAngularMeter.dll;..\..\..\devel\kwxAngularRegulator.dll;..\..\..\devel\kwxBmpCheckbox.dll;..\..\..\devel\kwxBmpSwitcher.dll;..\..\..\devel\kwxLCDClock.dll;..\..\..\devel\kwxLCDDisplay.dll;..\..\..\devel\kwxLinearMeter.dll;..\..\..\devel\kwxLinearRegulator.dll;..\..\..\devel\wxsmithlib.dll;" />
@@ -127,8 +119,6 @@
 				<Option parameters="--debug-log -na -ns -nd" />
 				<Option host_application=".\codeblocks.exe" />
 				<Option run_host_application_in_terminal="0" />
-				<Option createDefFile="1" />
-				<Option createStaticLib="1" />
 				<Compiler>
 					<Add option="-g" />
 				</Compiler>
@@ -144,8 +134,8 @@
 				</Linker>
 			</Target>
 			<Environment>
-				<Variable name="WX_SUFFIX" value="u" />
 				<Variable name="WX_CFG" value="" />
+				<Variable name="WX_SUFFIX" value="u" />
 			</Environment>
 		</Build>
 		<VirtualTargets>

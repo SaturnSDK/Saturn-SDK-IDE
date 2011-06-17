@@ -68,7 +68,6 @@
 				<Option parameters="--debug-log --multiple-instance -na -ns -nd" />
 				<Option host_application="..\..\..\devel\codeblocks.exe" />
 				<Option run_host_application_in_terminal="0" />
-				<Option createStaticLib="1" />
 				<Option projectLinkerOptionsRelation="2" />
 				<Compiler>
 					<Add option="-DBUILDING_PLUGIN" />
@@ -98,8 +97,8 @@
 				</ExtraCommands>
 			</Target>
 			<Environment>
-				<Variable name="WX_SUFFIX" value="u" />
 				<Variable name="WX_CFG" value="" />
+				<Variable name="WX_SUFFIX" value="u" />
 			</Environment>
 		</Build>
 		<VirtualTargets>

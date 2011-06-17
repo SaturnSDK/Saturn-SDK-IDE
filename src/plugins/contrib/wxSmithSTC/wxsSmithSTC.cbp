@@ -2,15 +2,15 @@
 <CodeBlocks_project_file>
 	<FileVersion major="1" minor="6" />
 	<Project>
-		<Option title="wxsSmithSTC - Styled Text Control" />
+		<Option title="wxSmithSTC - Styled Text Control" />
 		<Option pch_mode="2" />
 		<Option compiler="gcc" />
 		<Build>
 			<Target title="wxSTC">
 				<Option platforms="Windows;" />
-				<Option output="..\..\..\devel\wxSTC" prefix_auto="1" extension_auto="1" />
+				<Option output="..\..\..\devel\wxSTC" prefix_auto="0" extension_auto="1" />
 				<Option working_dir="..\..\..\devel" />
-				<Option object_output="..\..\..\.objs\plugins\contrib\wxsSmithSTC\wxSTC" />
+				<Option object_output="..\..\..\.objs\plugins\contrib\wxSmithSTC\wxSTC" />
 				<Option type="3" />
 				<Option compiler="gcc" />
 				<Option parameters="--debug-log -na -ns -nd" />
@@ -34,9 +34,9 @@
 			</Target>
 			<Target title="wxSTEdit">
 				<Option platforms="Windows;" />
-				<Option output="..\..\..\devel\wxSTEdit" prefix_auto="1" extension_auto="1" />
+				<Option output="..\..\..\devel\wxSTEdit" prefix_auto="0" extension_auto="1" />
 				<Option working_dir="..\..\..\devel" />
-				<Option object_output="..\..\..\.objs\plugins\contrib\wxsSmithSTC\wxSTEdit" />
+				<Option object_output="..\..\..\.objs\plugins\contrib\wxSmithSTC\wxSTEdit" />
 				<Option type="3" />
 				<Option compiler="gcc" />
 				<Option parameters="--debug-log -na -ns -nd" />
@@ -58,17 +58,16 @@
 					<Add directory="..\..\..\devel" />
 				</Linker>
 			</Target>
-			<Target title="wxsSmithSTC">
+			<Target title="wxSmithSTC">
 				<Option platforms="Windows;" />
-				<Option output="..\..\..\devel\share\codeblocks\plugins\wxsSmithSTC" prefix_auto="0" extension_auto="1" />
+				<Option output="..\..\..\devel\share\codeblocks\plugins\wxSmithSTC" prefix_auto="0" extension_auto="1" />
 				<Option working_dir="..\..\..\devel" />
-				<Option object_output="..\..\..\.objs\plugins\contrib\wxsSmithSTC" />
+				<Option object_output="..\..\..\.objs\plugins\contrib\wxSmithSTC" />
 				<Option type="3" />
 				<Option compiler="gcc" />
 				<Option parameters="--debug-log -na -ns -nd" />
 				<Option host_application="codeblocks.exe" />
 				<Option run_host_application_in_terminal="0" />
-				<Option createStaticLib="1" />
 				<Option projectLinkerOptionsRelation="2" />
 				<Compiler>
 					<Add option="-DBUILDING_PLUGIN" />
@@ -95,7 +94,7 @@
 					<Add directory="..\..\..\devel" />
 				</Linker>
 				<ExtraCommands>
-					<Add after="zip -j9 ..\..\..\devel\share\CodeBlocks\wxsSmithSTC.zip manifest.xml" />
+					<Add after="zip -j9 ..\..\..\devel\share\CodeBlocks\wxSmithSTC.zip manifest.xml" />
 					<Mode after="always" />
 				</ExtraCommands>
 			</Target>
@@ -105,7 +104,7 @@
 			</Environment>
 		</Build>
 		<VirtualTargets>
-			<Add alias="All" targets="wxSTC;wxsSmithSTC;wxSTEdit;" />
+			<Add alias="All" targets="wxSTC;wxSTEdit;wxSmithSTC;" />
 		</VirtualTargets>
 		<Compiler>
 			<Add option="-Wall" />
@@ -132,25 +131,25 @@
 			<Add directory="$(#wx.lib)\gcc_dll$(WX_CFG)" />
 		</Linker>
 		<Unit filename="images\RTF16.xpm">
-			<Option target="wxsSmithSTC" />
+			<Option target="wxSmithSTC" />
 		</Unit>
 		<Unit filename="images\RTF32.xpm">
-			<Option target="wxsSmithSTC" />
+			<Option target="wxSmithSTC" />
 		</Unit>
 		<Unit filename="images\STC16.xpm">
-			<Option target="wxsSmithSTC" />
+			<Option target="wxSmithSTC" />
 		</Unit>
 		<Unit filename="images\STC32.xpm">
-			<Option target="wxsSmithSTC" />
+			<Option target="wxSmithSTC" />
 		</Unit>
 		<Unit filename="images\STE16.xpm">
-			<Option target="wxsSmithSTC" />
+			<Option target="wxSmithSTC" />
 		</Unit>
 		<Unit filename="images\STE32.xpm">
-			<Option target="wxsSmithSTC" />
+			<Option target="wxSmithSTC" />
 		</Unit>
 		<Unit filename="manifest.xml">
-			<Option target="wxsSmithSTC" />
+			<Option target="wxSmithSTC" />
 		</Unit>
 		<Unit filename="stc\PlatWX.cpp">
 			<Option target="wxSTC" />
@@ -651,28 +650,28 @@
 			<Option target="wxSTEdit" />
 		</Unit>
 		<Unit filename="wxsRichTextCtrl.cpp">
-			<Option target="wxsSmithSTC" />
+			<Option target="wxSmithSTC" />
 		</Unit>
 		<Unit filename="wxsRichTextCtrl.h">
-			<Option target="wxsSmithSTC" />
+			<Option target="wxSmithSTC" />
 		</Unit>
 		<Unit filename="wxsSTEditor.cpp">
-			<Option target="wxsSmithSTC" />
+			<Option target="wxSmithSTC" />
 		</Unit>
 		<Unit filename="wxsSTEditor.h">
-			<Option target="wxsSmithSTC" />
+			<Option target="wxSmithSTC" />
 		</Unit>
 		<Unit filename="wxsScintilla.cpp">
-			<Option target="wxsSmithSTC" />
+			<Option target="wxSmithSTC" />
 		</Unit>
 		<Unit filename="wxsScintilla.h">
-			<Option target="wxsSmithSTC" />
+			<Option target="wxSmithSTC" />
 		</Unit>
 		<Unit filename="wxsSmithSTC.cpp">
-			<Option target="wxsSmithSTC" />
+			<Option target="wxSmithSTC" />
 		</Unit>
 		<Unit filename="wxsSmithSTC.h">
-			<Option target="wxsSmithSTC" />
+			<Option target="wxSmithSTC" />
 		</Unit>
 		<Extensions>
 			<code_completion />

@@ -2,7 +2,7 @@
 <CodeBlocks_project_file>
 	<FileVersion major="1" minor="6" />
 	<Project>
-		<Option title="wxsSmithTreeList - A Tree Control With Columns" />
+		<Option title="wxSmithTreeList - A Tree Control With Columns" />
 		<Option pch_mode="2" />
 		<Option compiler="gcc" />
 		<Build>
@@ -14,16 +14,14 @@
 				<Option compiler="gcc" />
 				<Option createDefFile="1" />
 			</Target>
-			<Target title="wxsSmithTreeList">
-				<Option output="..\..\..\devel\share\codeblocks\plugins\wxsSmithTreeList" prefix_auto="0" extension_auto="1" />
+			<Target title="wxSmithTreeList">
+				<Option output="..\..\..\devel\share\codeblocks\plugins\wxSmithTreeList" prefix_auto="0" extension_auto="1" />
 				<Option working_dir="..\..\..\devel" />
 				<Option object_output="..\..\..\.objs\plugins\contrib\wxSmithTreeList" />
 				<Option type="3" />
 				<Option compiler="gcc" />
 				<Option parameters="--debug-log -na -ns -nd" />
 				<Option host_application="codeblocks.exe" />
-				<Option createDefFile="1" />
-				<Option createStaticLib="1" />
 				<Option projectLinkerOptionsRelation="2" />
 				<Compiler>
 					<Add option="-DBUILDING_PLUGIN" />
@@ -46,17 +44,17 @@
 					<Add directory="..\..\..\devel" />
 				</Linker>
 				<ExtraCommands>
-					<Add after="zip -j9 ..\..\..\devel\share\CodeBlocks\wxsSmithTreeList.zip manifest.xml" />
+					<Add after="zip -j9 ..\..\..\devel\share\CodeBlocks\wxSmithTreeList.zip manifest.xml" />
 					<Mode after="always" />
 				</ExtraCommands>
 			</Target>
 			<Environment>
-				<Variable name="WX_SUFFIX" value="u" />
 				<Variable name="WX_CFG" value="" />
+				<Variable name="WX_SUFFIX" value="u" />
 			</Environment>
 		</Build>
 		<VirtualTargets>
-			<Add alias="All" targets="TreeList;wxsSmithTreeList;" />
+			<Add alias="All" targets="TreeList;wxSmithTreeList;" />
 		</VirtualTargets>
 		<Compiler>
 			<Add option="-Wall" />
@@ -82,13 +80,13 @@
 			<Add directory="$(#wx.lib)\gcc_dll$(WX_CFG)" />
 		</Linker>
 		<Unit filename="images\TreeList16.xpm">
-			<Option target="wxsSmithTreeList" />
+			<Option target="wxSmithTreeList" />
 		</Unit>
 		<Unit filename="images\TreeList32.xpm">
-			<Option target="wxsSmithTreeList" />
+			<Option target="wxSmithTreeList" />
 		</Unit>
 		<Unit filename="manifest.xml">
-			<Option target="wxsSmithTreeList" />
+			<Option target="wxSmithTreeList" />
 		</Unit>
 		<Unit filename="treelistctrl.cpp">
 			<Option target="TreeList" />
@@ -97,16 +95,16 @@
 			<Option target="TreeList" />
 		</Unit>
 		<Unit filename="wxsSmithTreeList.cpp">
-			<Option target="wxsSmithTreeList" />
+			<Option target="wxSmithTreeList" />
 		</Unit>
 		<Unit filename="wxsSmithTreeList.h">
-			<Option target="wxsSmithTreeList" />
+			<Option target="wxSmithTreeList" />
 		</Unit>
 		<Unit filename="wxsTreeListCtrl.cpp">
-			<Option target="wxsSmithTreeList" />
+			<Option target="wxSmithTreeList" />
 		</Unit>
 		<Unit filename="wxsTreeListCtrl.h">
-			<Option target="wxsSmithTreeList" />
+			<Option target="wxSmithTreeList" />
 		</Unit>
 		<Extensions>
 			<code_completion />

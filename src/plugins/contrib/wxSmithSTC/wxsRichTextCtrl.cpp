@@ -92,7 +92,6 @@ wxsRichTextCtrl::wxsRichTextCtrl(wxsItemResData* Data):
 //------------------------------------------------------------------------------
 
 void wxsRichTextCtrl::OnBuildCreatingCode() {
-int                 i;
 wxString            vname;
 wxString            aname;
 wxString            ss, tt;

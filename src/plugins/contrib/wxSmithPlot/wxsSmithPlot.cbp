@@ -2,7 +2,7 @@
 <CodeBlocks_project_file>
 	<FileVersion major="1" minor="6" />
 	<Project>
-		<Option title="wxsSmithPlot - Curve Plotting" />
+		<Option title="wxSmithPlot - Curve Plotting" />
 		<Option pch_mode="2" />
 		<Option compiler="gcc" />
 		<Build>
@@ -14,17 +14,15 @@
 				<Option compiler="gcc" />
 				<Option createDefFile="1" />
 			</Target>
-			<Target title="wxsSmithPlot">
+			<Target title="wxSmithPlot">
 				<Option platforms="Windows;" />
-				<Option output="..\..\..\devel\share\codeblocks\plugins\wxsSmithPlot" prefix_auto="0" extension_auto="1" />
+				<Option output="..\..\..\devel\share\codeblocks\plugins\wxSmithPlot" prefix_auto="0" extension_auto="1" />
 				<Option working_dir="..\..\..\devel" />
 				<Option object_output="..\..\..\.objs\plugins\contrib\wxSmithPlot" />
 				<Option type="3" />
 				<Option compiler="gcc" />
 				<Option parameters="--debug-log -na -ns -nd" />
 				<Option host_application="codeblocks.exe" />
-				<Option createDefFile="1" />
-				<Option createStaticLib="1" />
 				<Option projectLinkerOptionsRelation="2" />
 				<Compiler>
 					<Add option="-DBUILDING_PLUGIN" />
@@ -48,17 +46,17 @@
 					<Add directory="..\..\..\devel" />
 				</Linker>
 				<ExtraCommands>
-					<Add after="zip -j9 ..\..\..\devel\share\CodeBlocks\wxsSmithPlot.zip manifest.xml" />
+					<Add after="zip -j9 ..\..\..\devel\share\CodeBlocks\wxSmithPlot.zip manifest.xml" />
 					<Mode after="always" />
 				</ExtraCommands>
 			</Target>
 			<Environment>
-				<Variable name="WX_SUFFIX" value="u" />
 				<Variable name="WX_CFG" value="" />
+				<Variable name="WX_SUFFIX" value="u" />
 			</Environment>
 		</Build>
 		<VirtualTargets>
-			<Add alias="All" targets="MathPlot;wxsSmithPlot;" />
+			<Add alias="All" targets="MathPlot;wxSmithPlot;" />
 		</VirtualTargets>
 		<Compiler>
 			<Add option="-Wall" />
@@ -85,31 +83,31 @@
 			<Add directory="$(#wx.lib)\gcc_dll$(WX_CFG)" />
 		</Linker>
 		<Unit filename="images\axis16.xpm">
-			<Option target="wxsSmithPlot" />
+			<Option target="wxSmithPlot" />
 		</Unit>
 		<Unit filename="images\axis32.xpm">
-			<Option target="wxsSmithPlot" />
+			<Option target="wxSmithPlot" />
 		</Unit>
 		<Unit filename="images\marker16.xpm">
-			<Option target="wxsSmithPlot" />
+			<Option target="wxSmithPlot" />
 		</Unit>
 		<Unit filename="images\marker32.xpm">
-			<Option target="wxsSmithPlot" />
+			<Option target="wxSmithPlot" />
 		</Unit>
 		<Unit filename="images\plot16.xpm">
-			<Option target="wxsSmithPlot" />
+			<Option target="wxSmithPlot" />
 		</Unit>
 		<Unit filename="images\plot32.xpm">
-			<Option target="wxsSmithPlot" />
+			<Option target="wxSmithPlot" />
 		</Unit>
 		<Unit filename="images\vector16.xpm">
-			<Option target="wxsSmithPlot" />
+			<Option target="wxSmithPlot" />
 		</Unit>
 		<Unit filename="images\vector32.xpm">
-			<Option target="wxsSmithPlot" />
+			<Option target="wxSmithPlot" />
 		</Unit>
 		<Unit filename="manifest.xml">
-			<Option target="wxsSmithPlot" />
+			<Option target="wxSmithPlot" />
 		</Unit>
 		<Unit filename="mathplot.cpp">
 			<Option target="MathPlot" />
@@ -124,34 +122,34 @@
 			<Option target="MathPlot" />
 		</Unit>
 		<Unit filename="wxsAxis.cpp">
-			<Option target="wxsSmithPlot" />
+			<Option target="wxSmithPlot" />
 		</Unit>
 		<Unit filename="wxsAxis.h">
-			<Option target="wxsSmithPlot" />
+			<Option target="wxSmithPlot" />
 		</Unit>
 		<Unit filename="wxsMarker.cpp">
-			<Option target="wxsSmithPlot" />
+			<Option target="wxSmithPlot" />
 		</Unit>
 		<Unit filename="wxsMarker.h">
-			<Option target="wxsSmithPlot" />
+			<Option target="wxSmithPlot" />
 		</Unit>
 		<Unit filename="wxsMathPlot.cpp">
-			<Option target="wxsSmithPlot" />
+			<Option target="wxSmithPlot" />
 		</Unit>
 		<Unit filename="wxsMathPlot.h">
-			<Option target="wxsSmithPlot" />
+			<Option target="wxSmithPlot" />
 		</Unit>
 		<Unit filename="wxsSmithPlot.cpp">
-			<Option target="wxsSmithPlot" />
+			<Option target="wxSmithPlot" />
 		</Unit>
 		<Unit filename="wxsSmithPlot.h">
-			<Option target="wxsSmithPlot" />
+			<Option target="wxSmithPlot" />
 		</Unit>
 		<Unit filename="wxsVector.cpp">
-			<Option target="wxsSmithPlot" />
+			<Option target="wxSmithPlot" />
 		</Unit>
 		<Unit filename="wxsVector.h">
-			<Option target="wxsSmithPlot" />
+			<Option target="wxSmithPlot" />
 		</Unit>
 		<Extensions>
 			<code_completion />

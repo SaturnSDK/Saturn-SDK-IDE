@@ -24,15 +24,13 @@
 				<Option compiler="gcc" />
 				<Option parameters="--debug-log --multiple-instance -na -ns -nd" />
 				<Option host_application="..\..\..\devel\codeblocks.exe" />
-				<Option createDefFile="1" />
-				<Option createStaticLib="1" />
 				<Linker>
 					<Add library="wxsmithlib" />
 				</Linker>
 			</Target>
 			<Environment>
-				<Variable name="WX_SUFFIX" value="u" />
 				<Variable name="WX_CFG" value="" />
+				<Variable name="WX_SUFFIX" value="u" />
 			</Environment>
 		</Build>
 		<VirtualTargets>

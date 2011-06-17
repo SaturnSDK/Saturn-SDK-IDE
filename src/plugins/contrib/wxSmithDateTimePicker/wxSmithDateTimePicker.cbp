@@ -23,8 +23,6 @@
 				<Option parameters="--debug-log -na -ns -nd" />
 				<Option host_application="codeblocks.exe" />
 				<Option run_host_application_in_terminal="0" />
-				<Option createDefFile="1" />
-				<Option createStaticLib="1" />
 				<Option projectLinkerOptionsRelation="2" />
 				<Compiler>
 					<Add option="-DBUILDING_PLUGIN" />
@@ -81,12 +79,6 @@
 			<Add library="wxmsw28$(WX_SUFFIX)" />
 			<Add directory="$(#wx.lib)\gcc_dll$(WX_CFG)" />
 		</Linker>
-		<Unit filename="DateTimePicker.cpp">
-			<Option target="wxSmithDateTimePicker" />
-		</Unit>
-		<Unit filename="DateTimePicker.h">
-			<Option target="wxSmithDateTimePicker" />
-		</Unit>
 		<Unit filename="Images\DateTime.xpm">
 			<Option target="wxSmithDateTimePicker" />
 		</Unit>
@@ -113,6 +105,12 @@
 		</Unit>
 		<Unit filename="src\TimeCtrl.cpp">
 			<Option target="TimeCtrl" />
+		</Unit>
+		<Unit filename="wxSmithDateTimePicker.cpp">
+			<Option target="wxSmithDateTimePicker" />
+		</Unit>
+		<Unit filename="wxSmithDateTimePicker.h">
+			<Option target="wxSmithDateTimePicker" />
 		</Unit>
 		<Unit filename="wxsTimePickerCtrl.cpp">
 			<Option target="wxSmithDateTimePicker" />
