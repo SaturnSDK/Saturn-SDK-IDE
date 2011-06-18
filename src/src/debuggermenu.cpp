@@ -208,21 +208,23 @@ void DebuggerMenuHandler::RebuildActiveDebuggersMenu()
 void DebuggerMenuHandler::BuildContextMenu(wxMenu &menu, const wxString& word_at_caret, bool is_running)
 {
     int item = 0;
-    // Insert toggle breakpoint
-    menu.Insert(item++, idMenuToggleBreakpoint, _("Toggle breakpoint"));
     // Insert Run to Cursor
     menu.Insert(item++, idMenuRunToCursor, _("Run to cursor"));
     if (is_running)
+    {
         menu.Insert(item++, idMenuSetNextStatement, _("Set next statement"));
-    menu.Insert(item++, wxID_SEPARATOR, _T("-"));
-
-    if (!is_running && word_at_caret.empty())
-        return;
-
-    // data breakpoint
-    menu.Insert(item++, idMenuAddDataBreakpoint,
-                wxString::Format(_("Add data breakpoint for '%s'"), word_at_caret.c_str()));
-    menu.Insert(item++, idMenuDebuggerAddWatch, wxString::Format(_("Watch '%s'"), word_at_caret.c_str()));
+        menu.InsertSeparator(item++);
+        if (!word_at_caret.empty())
+        {
+            menu.Insert(item++, idMenuDebuggerAddWatch, wxString::Format(_("Watch '%s'"), word_at_caret.c_str()));
+            // data breakpoint
+            menu.Insert(item++, idMenuAddDataBreakpoint,
+                        wxString::Format(_("Add data breakpoint for '%s'"), word_at_caret.c_str()));
+        }
+    }
+    // Insert toggle breakpoint
+    menu.Insert(item++, idMenuToggleBreakpoint, _("Toggle breakpoint"));
+    menu.InsertSeparator(item++);
 }
 
 void DebuggerMenuHandler::OnUpdateUI(wxUpdateUIEvent& event)
