@@ -2625,7 +2625,7 @@ void MainFrame::DoOnFileOpen(bool bProject)
         }
         else
         {
-            FileFilters::GetFilterIndexFromName(Filters, _("Code::Blocks project files"), StoredIndex);
+            FileFilters::GetFilterIndexFromName(Filters, _("Code::Blocks project/workspace files"), StoredIndex);
         }
     }
     wxFileDialog dlg(this,
