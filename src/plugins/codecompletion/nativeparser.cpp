@@ -847,9 +847,9 @@ bool NativeParser::AddCompilerPredefinedMacros(cbProject* project, Parser* parse
         if (defsMap[cpp_compiler].IsEmpty())
         {
 #ifdef __WXMSW__
-            const wxString args(_T(" -dM -E nul"));
+            const wxString args(_T(" -dM -E -< nul"));
 #else
-            const wxString args(_T(" -dM -E /dev/null"));
+            const wxString args(_T(" -dM -E -< /dev/null"));
 #endif
 
             // wxExecute can be a long action and C::B might have been shutdown in the meantime...
@@ -1039,8 +1039,8 @@ const wxArrayString& NativeParser::GetGCCCompilerDirs(const wxString &cpp_compil
     // for starters , only do this for gnu compiler
     //Manager::Get()->GetLogManager()->DebugLog(_T("CompilerID ") + CompilerID);
     //
-    //   windows: mingw32-g++ -v -E -x c++ nul
-    //   linux  : g++ -v -E -x c++ /dev/null
+    //   windows: mingw32-g++ -v -E -x c++ -< nul
+    //   linux  : g++ -v -E -x c++ -< /dev/null
     // do the trick only for c++, not needed then for C (since this is a subset of C++)
 
 
@@ -1049,9 +1049,9 @@ const wxArrayString& NativeParser::GetGCCCompilerDirs(const wxString &cpp_compil
     // both works fine in Windows and linux
 
 #ifdef __WXMSW__
-    wxString Command = cpp_compiler + _T(" -v -E -x c++ nul");
+    wxString Command = cpp_compiler + _T(" -v -E -x c++ -< nul");
 #else
-    wxString Command = cpp_compiler + _T(" -v -E -x c++ /dev/null");
+    wxString Command = cpp_compiler + _T(" -v -E -x c++ -< /dev/null");
 #endif
 
     // wxExecute can be a long action and C::B might have been shutdown in the meantime...
@@ -1248,22 +1248,13 @@ bool NativeParser::DoFullParsing(cbProject* project, Parser* parser)
         return false;
 
     if (!AddCompilerDirs(project, parser))
-    {
         Manager::Get()->GetLogManager()->DebugLog(_T("AddCompilerDirs failed!"));
-        return false;
-    }
 
     if (!AddCompilerPredefinedMacros(project, parser))
-    {
         Manager::Get()->GetLogManager()->DebugLog(_T("AddCompilerPredefinedMacros failed!"));
-        return false;
-    }
 
     if (!AddProjectDefinedMacros(project, parser))
-    {
         Manager::Get()->GetLogManager()->DebugLog(_T("AddProjectDefinedMacros failed!"));
-        return false;
-    }
 
     // add per-project dirs
     if (project)
