@@ -665,7 +665,7 @@ bool cbDebuggerPlugin::GetDebuggee(wxString &pathToDebuggee, wxString &workingDi
             if (target->GetHostApplication().IsEmpty())
             {
                 cbMessageBox(_("You must select a host application to \"run\" a library..."));
-                return wxEmptyString;
+                return false;
             }
             out = UnixFilename(target->GetHostApplication());
             Manager::Get()->GetMacrosManager()->ReplaceEnvVars(out); // apply env vars
