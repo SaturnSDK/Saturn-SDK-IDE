@@ -36,6 +36,14 @@
 #include "editor_hooks.h"
 #include "loggers.h"
 
+#ifndef __WXMSW__
+    #include <errno.h>
+    #ifndef CB_PRECOMP
+        #include <signal.h>
+        #include <sys/types.h>
+    #endif
+#endif
+
 
 
 cbPlugin::cbPlugin()
@@ -806,6 +814,14 @@ int cbDebuggerPlugin::RunNixConsole(wxString &consoleTty)
     {
         Manager::Yield();
         ::wxMilliSleep(200);
+
+        // For some reason wxExecute returns PID>0.
+        // Here we check if the process is alive and the PID is really a valid one.
+        if (kill(consolePid, 0) == -1 && errno == ESRCH) {
+            Log(wxString::Format(_("Can't launch console (%s)"), cmd.c_str()), Logger::error);
+            break;
+        }
+
         int localConsolePid = consolePid;
         consoleTty = GetConsoleTty(localConsolePid);
         if (!consoleTty.IsEmpty() )
