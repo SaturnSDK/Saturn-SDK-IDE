@@ -815,7 +815,7 @@ int cbDebuggerPlugin::RunNixConsole(wxString &consoleTty)
         Manager::Yield();
         ::wxMilliSleep(200);
 
-        // For some reason wxExecute returns PID>0.
+        // For some reason wxExecute returns PID>0, when the command cannot be launched.
         // Here we check if the process is alive and the PID is really a valid one.
         if (kill(consolePid, 0) == -1 && errno == ESRCH) {
             Log(wxString::Format(_("Can't launch console (%s)"), cmd.c_str()), Logger::error);
