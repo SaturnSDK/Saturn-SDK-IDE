@@ -38,10 +38,9 @@
 
 #ifndef __WXMSW__
     #include <errno.h>
-    #ifndef CB_PRECOMP
-        #include <signal.h>
-        #include <sys/types.h>
-    #endif
+	// needed for the kill system call
+	#include <signal.h>
+	#include <sys/types.h>
 #endif
 
 
