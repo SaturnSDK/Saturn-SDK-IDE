@@ -200,7 +200,7 @@ public:
      * @param project C::B project
      * @param filename filename with full path in the C::B project
      */
-    bool AddFileToParser(cbProject* project, const wxString& filename);
+    bool AddFileToParser(cbProject* project, const wxString& filename, Parser* parser = nullptr);
 
     /** remove a file from C::B project and Parser
      * @param project C::B project
@@ -462,12 +462,6 @@ private:
 
     /** Collect the default compiler include file search paths. called by AddCompilerDirs() function*/
     const wxArrayString& GetGCCCompilerDirs(const wxString &cpp_compiler);
-
-    /** Load the cashed Tokenstree data from hard disk*/
-    bool LoadCachedData(cbProject* project);
-
-    /** save the Tokenstree data to hard disk*/
-    bool SaveCachedData(const wxString& projectFilename);
 
     // event handliers
     /** do nothing*/

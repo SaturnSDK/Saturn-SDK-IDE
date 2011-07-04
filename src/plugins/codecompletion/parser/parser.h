@@ -170,10 +170,22 @@ public:
      */
     void AddParse(const wxString& filename, bool delay = true);
 
-    /** verify (return) the associated C::B project pointer.
+    /** get (return) the associated C::B project pointer.
      * @return C::B project pointer
      */
     cbProject* GetParsingProject() const { return m_Project; }
+
+    /** set the associated C::B project pointer. (only used by one parser for whole workspace) */
+    bool SetParsingProject(cbProject* project)
+    {
+        if (m_IsParsing)
+            return false;
+        else
+        {
+            m_Project = project;
+            return true;
+        }
+    }
 
     /** Must add a locker before call all named ParseBufferXXX fuctions
      * e.g. wxCriticalSectionLocker locker(s_TokensTreeCritical);
@@ -217,7 +229,9 @@ public:
     TokensTree* GetTokens() { return m_TokensTree; }
     TokensTree* GetTempTokens() { return m_TempTokensTree; }
     unsigned int GetFilesCount();
-    bool Done();
+
+    bool     Done();
+    wxString NotDoneReason();
 
     /** Node: Currently, the max. concurrent ParserThread number should be ONE, CC does not support
      * multiply threads parsing.
