@@ -391,27 +391,10 @@ Token* Parser::FindChildTokenByName(Token* parent, const wxString& name, bool us
     return result;
 }
 
-size_t Parser::FindMatches(const wxString& s, TokenList& result, bool caseSensitive, bool is_prefix)
-{
-    wxCriticalSectionLocker locker(s_TokensTreeCritical);
-    result.clear();
-    TokenIdxSet tmpresult;
-    if (!m_TokensTree->FindMatches(s, tmpresult, caseSensitive, is_prefix))
-        return 0;
-
-    TokenIdxSet::iterator it;
-    for (it = tmpresult.begin(); it != tmpresult.end(); ++it)
-    {
-        Token* token = m_TokensTree->at(*it);
-        if (token)
-        result.push_back(token);
-    }
-    return result.size();
-}
-
+// No critical section needed here:
+// All functions that call this, already entered a critical section.
 size_t Parser::FindMatches(const wxString& s, TokenIdxSet& result, bool caseSensitive, bool is_prefix)
 {
-    wxCriticalSectionLocker locker(s_TokensTreeCritical);
     result.clear();
     TokenIdxSet tmpresult;
     if (!m_TokensTree->FindMatches(s, tmpresult, caseSensitive, is_prefix))
@@ -1220,13 +1203,14 @@ bool Parser::ReparseModifiedFiles()
     return true;
 }
 
+// No critical section needed here:
+// All functions that call this, already entered a critical section.
 size_t Parser::FindTokensInFile(const wxString& fileName, TokenIdxSet& result, short int kindMask)
 {
     result.clear();
     wxString file = UnixFilename(fileName);
     TokenIdxSet tmpresult;
 
-    wxCriticalSectionLocker locker(s_TokensTreeCritical);
     TRACE(_T("Parser::FindTokensInFile() : Searching for file '%s' in tokens tree..."), file.wx_str());
     if ( !m_TokensTree->FindTokensInFile(file, tmpresult, kindMask) )
         return 0;
