@@ -19,6 +19,8 @@
     #include <wx/listctrl.h>
     #include <wx/wfstream.h>
     #include <wx/fontutil.h>
+    #include <wx/stattext.h>
+    #include <wx/filedlg.h>
 
     #include "cbproject.h"
     #include "configmanager.h"

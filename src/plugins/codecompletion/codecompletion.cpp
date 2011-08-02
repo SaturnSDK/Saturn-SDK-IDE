@@ -19,10 +19,12 @@
     #include <wx/dir.h>
     #include <wx/filename.h>
     #include <wx/fs_zip.h>
+    #include <wx/menu.h>
     #include <wx/mimetype.h>
-    #include <wx/regex.h>
     #include <wx/msgdlg.h>
+    #include <wx/regex.h>
     #include <wx/tipwin.h>
+    #include <wx/toolbar.h>
     #include <wx/utils.h>
     #include <wx/xrc/xmlres.h>
     #include <wx/wxscintilla.h>
@@ -424,7 +426,8 @@ CodeCompletion::CodeCompletion() :
     m_CCLaunchDelay(300),
     m_CCMaxMatches(16384),
     m_CCAutoAddParentheses(true),
-    m_CCAutoSelectOne(false)
+    m_CCAutoSelectOne(false),
+    m_CCEnableHeaders(false)
 {
     if (!Manager::LoadResource(_T("codecompletion.zip")))
         NotifyMissingFile(_T("codecompletion.zip"));
@@ -527,6 +530,7 @@ void CodeCompletion::RereadOptions()
     m_CCAutoAddParentheses = cfg->ReadBool(_T("/auto_add_parentheses"), true);
     m_CCFillupChars        = cfg->Read(_T("/fillup_chars"), wxEmptyString);
     m_CCAutoSelectOne      = cfg->ReadBool(_T("/auto_select_one"), false);
+    m_CCEnableHeaders      = cfg->ReadBool(_T("/enable_headers"), false);
 
     if (m_ToolBar)
     {
@@ -1006,7 +1010,7 @@ int CodeCompletion::CodeComplete()
             m_SearchItem.clear();
             {
                 wxCriticalSectionLocker locker(s_TokensTreeCritical);
-                TokensTree* tokens = m_NativeParser.GetParser().GetTokens();
+                TokensTree* tokens = m_NativeParser.GetParser().GetTokensTree();
                 for (TokenIdxSet::iterator it = result.begin(); it != result.end(); ++it)
                 {
                     Token* token = tokens->at(*it);
@@ -1271,10 +1275,10 @@ wxArrayString CodeCompletion::GetLocalIncludeDirs(cbProject* project, const wxAr
 // #include "| or #include <|
 void CodeCompletion::CodeCompleteIncludes()
 {
-    wxStopWatch sw;
-
-    if (!IsAttached() || !m_InitDone)
+    if (!m_CCEnableHeaders || !IsAttached() || !m_InitDone)
         return;
+
+    wxStopWatch sw;
 
     cbEditor* editor = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
     if (!editor)
@@ -1550,7 +1554,7 @@ int CodeCompletion::DoAllMethodsImpl()
         return -4;
 
     wxCriticalSectionLocker locker(s_TokensTreeCritical);
-    TokensTree* tree = m_NativeParser.GetParser().GetTokens();
+    TokensTree* tree = m_NativeParser.GetParser().GetTokensTree();
 
     // get all filenames' indices matching our mask
     TokenFilesSet result;
@@ -1942,7 +1946,8 @@ void CodeCompletion::OnThreadCompletion(wxCommandEvent& event)
             m_SystemHeadersThread.pop_front();
         }
 
-        if (   !m_SystemHeadersThread.empty()
+        if (   m_CCEnableHeaders
+            && !m_SystemHeadersThread.empty()
             && !m_SystemHeadersThread.front()->IsRunning()
             && m_NativeParser.Done() )
         {
@@ -2133,7 +2138,7 @@ void CodeCompletion::ParseFunctionsAndFillToolbar(bool force)
 
         TokenIdxSet result;
         wxCriticalSectionLocker locker(s_TokensTreeCritical);
-        TokensTree* tmptree = m_NativeParser.GetParser().GetTokens();
+        TokensTree* tmptree = m_NativeParser.GetParser().GetTokensTree();
         m_NativeParser.GetParser().FindTokensInFile(filename, result, tkAnyFunction | tkEnum | tkClass | tkNamespace);
 
         if (!result.empty())
@@ -2143,7 +2148,7 @@ void CodeCompletion::ParseFunctionsAndFillToolbar(bool force)
 
         for (TokenIdxSet::iterator it = result.begin(); it != result.end(); ++it)
         {
-            unsigned int fileIdx = m_NativeParser.GetParser().GetTokens()->GetFileIndex(filename);
+            unsigned int fileIdx = m_NativeParser.GetParser().GetTokensTree()->GetFileIndex(filename);
             const Token* token = tmptree->at(*it);
             if (token && token->m_ImplLine != 0)
             {
@@ -2502,7 +2507,7 @@ void CodeCompletion::OnValueTooltip(CodeBlocksEvent& event)
             int count = 0;
             for (TokenIdxSet::iterator it = result.begin(); it != result.end(); ++it)
             {
-                Token* token = m_NativeParser.GetParser().GetTokens()->at(*it);
+                Token* token = m_NativeParser.GetParser().GetTokensTree()->at(*it);
                 if (token)
                 {
                     msg << token->DisplayName() << _T("\n");
@@ -2597,7 +2602,7 @@ void CodeCompletion::OnGotoFunction(wxCommandEvent& event)
     m_NativeParser.GetTempParser().ParseBufferForFunctions(ed->GetControl()->GetText());
 
     wxArrayString funcs;
-    TokensTree* tmptree = m_NativeParser.GetTempParser().GetTempTokens();
+    TokensTree* tmptree = m_NativeParser.GetTempParser().GetTempTokensTree();
     if (tmptree->empty())
     {
         cbMessageBox(_("No functions parsed in this file..."));
@@ -2681,7 +2686,7 @@ void CodeCompletion::OnGotoDeclaration(wxCommandEvent& event)
     m_NativeParser.MarkItemsByAI(result, true, false, true, end);
 
     wxCriticalSectionLocker locker(s_TokensTreeCritical);
-    TokensTree* tokens = m_NativeParser.GetParser().GetTokens();
+    TokensTree* tokens = m_NativeParser.GetParser().GetTokensTree();
 
     // special handle destructor function
     if (target[0] == _T('~'))
@@ -3207,9 +3212,12 @@ void CodeCompletion::OnParserStart(wxCommandEvent& event)
 
     if (type == ptCreateParser)
     {
-        wxArrayString& dirs = GetSystemIncludeDirs(project, true);
-        SystemHeadersThread* thread = new SystemHeadersThread(this, m_SystemHeadersMap, dirs);
-        m_SystemHeadersThread.push_back(thread);
+        if (m_CCEnableHeaders)
+        {
+            wxArrayString& dirs = GetSystemIncludeDirs(project, true);
+            SystemHeadersThread* thread = new SystemHeadersThread(this, m_SystemHeadersMap, dirs);
+            m_SystemHeadersThread.push_back(thread);
+        }
 
         cbEditor* editor = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
         if (m_NativeParser.GetProjectByEditor(editor) == project)
@@ -3225,7 +3233,8 @@ void CodeCompletion::OnParserEnd(wxCommandEvent& event)
     ParsingType type = static_cast<ParsingType>(event.GetInt());
     if (type == ptCreateParser)
     {
-        if (   !m_SystemHeadersThread.empty()
+        if (   m_CCEnableHeaders
+            && !m_SystemHeadersThread.empty()
             && !m_SystemHeadersThread.front()->IsRunning()
             && m_NativeParser.Done() )
         {

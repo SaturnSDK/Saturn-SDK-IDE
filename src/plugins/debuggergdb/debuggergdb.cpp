@@ -11,10 +11,13 @@
 #include <algorithm> // std::remove_if
 
 #ifndef CB_PRECOMP
+    #include <wx/app.h>
     #include <wx/txtstrm.h>
     #include <wx/regex.h>
     #include <wx/msgdlg.h>
     #include <wx/frame.h> // GetMenuBar
+    #include <wx/menu.h>
+    #include <wx/filedlg.h>
 
     #include "cbproject.h"
     #include "manager.h"

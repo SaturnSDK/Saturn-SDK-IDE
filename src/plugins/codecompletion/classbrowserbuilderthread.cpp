@@ -67,7 +67,6 @@ void CBTreeCtrl::SetCompareFunction(const BrowserSortType type)
 int CBTreeCtrl::OnCompareItems(const wxTreeItemId& item1, const wxTreeItemId& item2)
 {
     return Compare((CBTreeData*)GetItemData(item1), (CBTreeData*)GetItemData(item2));
-
 }
 
 int CBTreeCtrl::CBAlphabetCompare (CBTreeData* lhs, CBTreeData* rhs)
@@ -159,7 +158,8 @@ ClassBrowserBuilderThread::ClassBrowserBuilderThread(wxSemaphore& sem, ClassBrow
     m_UserData(0),
     m_Options(),
     m_TokensTree(0),
-    m_ThreadVar(threadVar)
+    m_ThreadVar(threadVar),
+    m_initDone(false)
 {
     //ctor
 }
@@ -179,20 +179,20 @@ void ClassBrowserBuilderThread::Init(NativeParser* nativeParser,
                                     bool build_tree)
 {
     wxMutexLocker lock(m_BuildMutex);
-    m_NativeParser  = nativeParser;
-    m_TreeTop       = treeTop;
-    m_TreeBottom    = treeBottom;
+    m_NativeParser   = nativeParser;
+    m_TreeTop        = treeTop;
+    m_TreeBottom     = treeBottom;
     m_ActiveFilename = active_filename;
-    m_UserData      = user_data;
+    m_UserData       = user_data;
     m_Options        = options;
-    m_TokensTree    = pTokensTree;
+    m_TokensTree     = pTokensTree;
 
     m_CurrentFileSet.clear();
     m_CurrentTokenSet.clear();
 
     s_TokensTreeCritical.Enter();
 
-    TokensTree* tree = m_NativeParser->GetParser().GetTokens();
+    TokensTree* tree = m_NativeParser->GetParser().GetTokensTree();
     // fill filter set for current-file-filter
     if (m_Options.displayFilter == bdfFile && !m_ActiveFilename.IsEmpty())
     {
@@ -249,9 +249,9 @@ void ClassBrowserBuilderThread::Init(NativeParser* nativeParser,
     s_TokensTreeCritical.Leave();
 
     if (build_tree)
-    {
-        BuildTree(false);
-    }
+        BuildTree();
+
+    m_initDone = true;
 }
 
 void* ClassBrowserBuilderThread::Entry()
@@ -321,7 +321,7 @@ void ClassBrowserBuilderThread::ExpandNamespaces(wxTreeItemId node)
     }
 }
 
-void ClassBrowserBuilderThread::BuildTree(bool useLock)
+void ClassBrowserBuilderThread::BuildTree()
 {
     if ((!::wxIsMainThread() && TestDestroy()) || Manager::IsAppShuttingDown())
         return;
@@ -339,7 +339,6 @@ void ClassBrowserBuilderThread::BuildTree(bool useLock)
         root = m_TreeTop->AddRoot(_("Symbols"), PARSER_IMG_SYMBOLS_FOLDER, PARSER_IMG_SYMBOLS_FOLDER, new CBTreeData(sfRoot));
         m_TreeTop->SetItemHasChildren(root);
     }
-
 
     m_TreeTop->SetCompareFunction(m_Options.sortType);
     m_TreeBottom->SetCompareFunction(m_Options.sortType);
@@ -398,7 +397,7 @@ void ClassBrowserBuilderThread::BuildTree(bool useLock)
     // has very minimum memory overhead since it contains as few items as possible.
     // plus, it doesn't flicker because we 're not emptying it and re-creating it each time ;)
 
-    CollapseItem(root, useLock);
+    CollapseItem(root);
 #ifdef CC_BUILDTREE_MEASURING
     Manager::Get()->GetLogManager()->DebugLog(F(_T("Collapsing root item took : %ld ms"),sw.Time()));
     sw.Start();
@@ -486,11 +485,8 @@ void ClassBrowserBuilderThread::RemoveInvalidNodes(CBTreeCtrl* tree, wxTreeItemI
         }
         else if (data && data->m_Token)
         {
-            Token *token = nullptr;
-            {
-                wxCriticalSectionLocker locker(s_TokensTreeCritical);
-                token = m_TokensTree->at(data->m_TokenIndex);
-            }
+            wxCriticalSectionLocker locker(s_TokensTreeCritical);
+            Token* token = m_TokensTree->at(data->m_TokenIndex);
             if (token != data->m_Token ||
                 (data->m_Ticket && data->m_Ticket != data->m_Token->GetTicket()) ||
                 !TokenMatchesFilter(data->m_Token))
@@ -612,6 +608,8 @@ wxTreeItemId ClassBrowserBuilderThread::AddNodeIfNotThere(CBTreeCtrl* tree, wxTr
         return tree->AppendItem(parent, name, imgIndex, imgIndex, data);
 }
 
+// No critical section needed here:
+// All functions that call this, already entered a critical section.
 bool ClassBrowserBuilderThread::AddChildrenOf(CBTreeCtrl* tree, wxTreeItemId parent, int parentTokenIdx, short int tokenKindMask, int tokenScopeMask)
 {
     if ((!::wxIsMainThread() && TestDestroy()) || Manager::IsAppShuttingDown())
@@ -622,7 +620,6 @@ bool ClassBrowserBuilderThread::AddChildrenOf(CBTreeCtrl* tree, wxTreeItemId par
 
     if (parentTokenIdx == -1)
     {
-        wxCriticalSectionLocker locker(s_TokensTreeCritical);
         if (m_Options.displayFilter == bdfWorkspace || m_Options.displayFilter == bdfEverything)
             tokens = &m_TokensTree->m_GlobalNameSpace;
         else
@@ -630,7 +627,6 @@ bool ClassBrowserBuilderThread::AddChildrenOf(CBTreeCtrl* tree, wxTreeItemId par
     }
     else
     {
-        wxCriticalSectionLocker locker(s_TokensTreeCritical);
         parentToken = m_TokensTree->at(parentTokenIdx);
         if (!parentToken)
         {
@@ -643,36 +639,34 @@ bool ClassBrowserBuilderThread::AddChildrenOf(CBTreeCtrl* tree, wxTreeItemId par
     return AddNodes(tree, parent, *tokens, tokenKindMask, tokenScopeMask, m_Options.displayFilter == bdfEverything);
 }
 
+// No critical section needed here:
+// All functions that call this, already entered a critical section.
 bool ClassBrowserBuilderThread::AddAncestorsOf(CBTreeCtrl* tree, wxTreeItemId parent, int tokenIdx)
 {
     if ((!::wxIsMainThread() && TestDestroy()) || Manager::IsAppShuttingDown())
         return false;
 
-    Token* token = nullptr;
-    {
-        wxCriticalSectionLocker locker(s_TokensTreeCritical);
-        Token* token = m_TokensTree->at(tokenIdx);
-        if (!token)
-            return false;
+    Token* token = m_TokensTree->at(tokenIdx);
+    if (!token)
+        return false;
+    else
         m_TokensTree->RecalcInheritanceChain(token);
-    }
 
     return AddNodes(tree, parent, token->m_DirectAncestors, tkClass | tkTypedef, 0, true);
 }
 
+// No critical section needed here:
+// All functions that call this, already entered a critical section.
 bool ClassBrowserBuilderThread::AddDescendantsOf(CBTreeCtrl* tree, wxTreeItemId parent, int tokenIdx, bool allowInheritance)
 {
     if ((!::wxIsMainThread() && TestDestroy()) || Manager::IsAppShuttingDown())
         return false;
 
-    Token* token = nullptr;
-    {
-        wxCriticalSectionLocker locker(s_TokensTreeCritical);
-        m_TokensTree->at(tokenIdx);
-        if (!token)
-            return false;
+    Token* token = m_TokensTree->at(tokenIdx);
+    if (!token)
+        return false;
+    else
         m_TokensTree->RecalcInheritanceChain(token);
-    }
 
     bool inh = m_Options.showInheritance;
     m_Options.showInheritance = allowInheritance;
@@ -683,9 +677,10 @@ bool ClassBrowserBuilderThread::AddDescendantsOf(CBTreeCtrl* tree, wxTreeItemId 
     return ret;
 }
 
+// No critical section needed here:
+// All functions that call this, already entered a critical section.
 bool ClassBrowserBuilderThread::AddNodes(CBTreeCtrl* tree, wxTreeItemId parent, const TokenIdxSet& tokens, short int tokenKindMask, int tokenScopeMask, bool allowGlobals)
 {
-    wxCriticalSectionLocker locker(s_TokensTreeCritical);
     int count = 0;
     std::set<unsigned long, std::less<unsigned long> > tickets;
 
@@ -704,10 +699,8 @@ bool ClassBrowserBuilderThread::AddNodes(CBTreeCtrl* tree, wxTreeItemId parent, 
         }
     }
 
-    TokenIdxSet::iterator start = tokens.begin();
     TokenIdxSet::iterator end = tokens.end();
-
-    for ( ; start != end; ++start)
+    for (TokenIdxSet::iterator start = tokens.begin(); start != end; ++start)
     {
         Token* token = m_TokensTree->at(*start);
         if (token &&
@@ -761,6 +754,8 @@ bool ClassBrowserBuilderThread::AddNodes(CBTreeCtrl* tree, wxTreeItemId parent, 
     return count != 0;
 }
 
+// No critical section needed here:
+// All functions that call this, already entered a critical section.
 bool ClassBrowserBuilderThread::TokenMatchesFilter(Token* token)
 {
     if (token->m_IsTemp)
@@ -779,13 +774,9 @@ bool ClassBrowserBuilderThread::TokenMatchesFilter(Token* token)
         // to see if any of them matches the filter...
         for (TokenIdxSet::iterator it = token->m_Children.begin(); it != token->m_Children.end(); ++it)
         {
-            Token* token = nullptr;
-            {
-                wxCriticalSectionLocker locker(s_TokensTreeCritical);
-                token = m_TokensTree->at(*it);
-                if (!token)
-                    break;
-            }
+            Token* token = m_TokensTree->at(*it);
+            if (!token)
+                break;
             if (TokenMatchesFilter(token))
                 return true;
         }
@@ -798,6 +789,8 @@ bool ClassBrowserBuilderThread::TokenMatchesFilter(Token* token)
     return false;
 }
 
+// No critical section needed here:
+// All functions that call this, already entered a critical section.
 bool ClassBrowserBuilderThread::TokenContainsChildrenOfKind(Token* token, int kind)
 {
     if (!token)
@@ -812,6 +805,8 @@ bool ClassBrowserBuilderThread::TokenContainsChildrenOfKind(Token* token, int ki
     return false;
 }
 
+// No critical section needed here:
+// All functions that call this, already entered a critical section.
 void ClassBrowserBuilderThread::AddMembersOf(CBTreeCtrl* tree, wxTreeItemId node)
 {
    if ((!::wxIsMainThread() && TestDestroy()) || Manager::IsAppShuttingDown() || !node.IsOk())
@@ -938,6 +933,8 @@ void ClassBrowserBuilderThread::AddMembersOf(CBTreeCtrl* tree, wxTreeItemId node
 }
 
 // checks if there are respective children and colors the nodes
+// No critical section needed here:
+// All functions that call this, already entered a critical section.
 bool ClassBrowserBuilderThread::CreateSpecialFolders(CBTreeCtrl* tree, wxTreeItemId parent)
 {
     bool hasGF = false;
@@ -947,7 +944,7 @@ bool ClassBrowserBuilderThread::CreateSpecialFolders(CBTreeCtrl* tree, wxTreeIte
     bool hasGM = false;
 
     // loop all tokens in global namespace and see if we have matches
-    TokensTree* tt = m_NativeParser->GetParser().GetTokens();
+    TokensTree* tt = m_NativeParser->GetParser().GetTokensTree();
     for (TokenIdxSet::iterator it = tt->m_GlobalNameSpace.begin(); it != tt->m_GlobalNameSpace.end(); ++it)
     {
         Token* token = tt->at(*it);
@@ -999,16 +996,17 @@ void ClassBrowserBuilderThread::ExpandItem(wxTreeItemId item)
     if ((!::wxIsMainThread() && TestDestroy()) || Manager::IsAppShuttingDown())
         return;
 
+    if (m_initDone)
+        m_BuildMutex.Lock();
+
+    wxCriticalSectionLocker locker(s_TokensTreeCritical);
+
 #ifdef CC_BUILDTREE_MEASURING
     wxStopWatch sw;
 #endif
-//    wxMutexLocker lock(m_BuildMutex);
-    CBTreeData* data = (CBTreeData*)m_TreeTop->GetItemData(item);
 
-    {
-        wxCriticalSectionLocker locker(s_TokensTreeCritical);
-        m_TokensTree->RecalcInheritanceChain(data->m_Token);
-    }
+    CBTreeData* data = (CBTreeData*)m_TreeTop->GetItemData(item);
+    m_TokensTree->RecalcInheritanceChain(data->m_Token);
 
     if (data)
     {
@@ -1064,16 +1062,19 @@ void ClassBrowserBuilderThread::ExpandItem(wxTreeItemId item)
     Manager::Get()->GetLogManager()->DebugLog(F(_T("ExpandItems (internally) took : %ld ms"),sw.Time()));
 #endif
 //    Manager::Get()->GetLogManager()->DebugLog(F(_("E: %d items"), m_TreeTop->GetCount()));
+
+    if (m_initDone)
+        m_BuildMutex.Unlock();
 }
 
 #ifndef CC_NO_COLLAPSE_ITEM
-void ClassBrowserBuilderThread::CollapseItem(wxTreeItemId item, bool useLock)
+void ClassBrowserBuilderThread::CollapseItem(wxTreeItemId item)
 {
     if ((!::wxIsMainThread() && TestDestroy()) || Manager::IsAppShuttingDown())
         return;
 
-    if (useLock)
-        wxMutexLocker lock(m_BuildMutex);
+    if (m_initDone)
+        m_BuildMutex.Lock();
 #ifndef __WXGTK__
     m_TreeTop->CollapseAndReset(item); // this freezes gtk
 #else
@@ -1081,6 +1082,8 @@ void ClassBrowserBuilderThread::CollapseItem(wxTreeItemId item, bool useLock)
 #endif
     m_TreeTop->SetItemHasChildren(item);
 //    Manager::Get()->GetLogManager()->DebugLog(F(_("C: %d items"), m_TreeTop->GetCount()));
+    if (m_initDone)
+        m_BuildMutex.Unlock();
 }
 #endif // CC_NO_COLLAPSE_ITEM
 
@@ -1088,10 +1091,13 @@ void ClassBrowserBuilderThread::SelectItem(wxTreeItemId item)
 {
     if ((!::wxIsMainThread() && TestDestroy()) || Manager::IsAppShuttingDown())
         return;
+
+    wxMutexLocker lock(m_BuildMutex);
+    wxCriticalSectionLocker locker(s_TokensTreeCritical);
+
 #ifdef CC_BUILDTREE_MEASURING
     wxStopWatch sw;
 #endif
-    wxMutexLocker lock(m_BuildMutex);
 
     CBTreeCtrl* tree = (m_Options.treeMembers) ? m_TreeBottom : m_TreeTop;
     if ( !(m_Options.displayFilter == bdfFile && m_ActiveFilename.IsEmpty()))

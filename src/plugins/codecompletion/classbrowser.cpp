@@ -12,12 +12,14 @@
 #ifndef CB_PRECOMP
     #include <wx/button.h>
     #include <wx/choice.h>
+    #include <wx/choicdlg.h>
     #include <wx/intl.h>
     #include <wx/listctrl.h>
     #include <wx/menu.h>
     #include <wx/sizer.h>
     #include <wx/stattext.h>
     #include <wx/treectrl.h>
+    #include <wx/settings.h>
     #include <wx/splitter.h>
     #include <wx/utils.h> // wxBusyCursor
     #include <wx/tipwin.h>
@@ -654,43 +656,47 @@ void ClassBrowser::OnSearch(wxCommandEvent& event)
     if (search.IsEmpty() || !m_Parser)
         return;
 
-    wxCriticalSectionLocker locker(s_TokensTreeCritical);
-    Token* token = 0;
     TokenIdxSet result;
-    size_t count = m_Parser->GetTokens()->FindMatches(search, result, false, true);
-    if (count == 0)
+    Token* token = 0;
     {
-        cbMessageBox(_("No matches were found: ") + search, _("Search failed"));
-        return;
-    }
-    else if (count == 1)
-    {
-        token = m_Parser->GetTokens()->at(*result.begin());
-    }
-    else if (count > 1)
-    {
-        wxArrayString selections;
-        wxArrayInt int_selections;
-        for (TokenIdxSet::iterator it = result.begin(); it != result.end(); ++it)
+        wxCriticalSectionLocker locker(s_TokensTreeCritical);
+        TokensTree* tokensTree = m_Parser->GetTokensTree();
+        const size_t count = tokensTree->FindMatches(search, result, false, true);
+        if (count == 0)
         {
-            Token* sel = m_Parser->GetTokens()->at(*it);
-            if (sel)
+            cbMessageBox(_("No matches were found: ") + search, _("Search failed"));
+            return;
+        }
+        else if (count == 1)
+        {
+            token = tokensTree->at(*result.begin());
+        }
+        else if (count > 1)
+        {
+            wxArrayString selections;
+            wxArrayInt int_selections;
+            for (TokenIdxSet::iterator it = result.begin(); it != result.end(); ++it)
             {
-                selections.Add(sel->DisplayName());
-                int_selections.Add(*it);
+                Token* sel = tokensTree->at(*it);
+                if (sel)
+                {
+                    selections.Add(sel->DisplayName());
+                    int_selections.Add(*it);
+                }
             }
-        }
-        if (selections.GetCount() > 1)
-        {
-            int sel = wxGetSingleChoiceIndex(_("Please make a selection:"), _("Multiple matches"), selections);
-            if (sel == -1)
-                return;
-            token = m_Parser->GetTokens()->at(int_selections[sel]);
-        }
-        else if (selections.GetCount() == 1)
-        {   // number of selections can be < result.size() due to the if tests, so in case we fall
-            // back on 1 entry no need to show a selection
-            token = m_Parser->GetTokens()->at(int_selections[0]);
+            if (selections.GetCount() > 1)
+            {
+                int sel = wxGetSingleChoiceIndex(_("Please make a selection:"), _("Multiple matches"), selections);
+                if (sel == -1)
+                    return;
+                token = tokensTree->at(int_selections[sel]);
+            }
+            else if (selections.GetCount() == 1)
+            {
+                // number of selections can be < result.size() due to the if tests, so in case we fall
+                // back on 1 entry no need to show a selection
+                token = tokensTree->at(int_selections[0]);
+            }
         }
     }
 
@@ -782,7 +788,7 @@ void ClassBrowser::BuildTree()
                           m_ActiveFilename,
                           m_ActiveProject,
                           m_Parser->ClassBrowserOptions(),
-                          m_Parser->GetTokens(),
+                          m_Parser->GetTokensTree(),
                           create_tree);
 
     // and launch it

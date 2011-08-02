@@ -6,7 +6,7 @@
 # Author:       Robin Dunn
 #
 # Created:      5-Sept-2000
-# RCS-ID:       $Id: gen_iface.py 64940 2010-07-13 13:29:13Z VZ $
+# RCS-ID:       $Id$
 # Copyright:    (c) 2000 by Total Control Software
 # Licence:      wxWindows licence
 #----------------------------------------------------------------------------
@@ -191,9 +191,9 @@ methodOverrideMap = {
                 const wxColour& background) {
 
                 SendMsg(%s, markerNumber, markerSymbol);
-                if (foreground.Ok())
+                if (foreground.IsOk())
                     MarkerSetForeground(markerNumber, foreground);
-                if (background.Ok())
+                if (background.IsOk())
                     MarkerSetBackground(markerNumber, background);''',
 
      ('Set the symbol used for a particular marker number,',

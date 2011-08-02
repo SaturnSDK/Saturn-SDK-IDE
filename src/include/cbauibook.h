@@ -324,12 +324,22 @@ class cbAuiNotebook : public wxAuiNotebook
          * \param allow If true scrolling is allowed
          */
         static void AllowScrolling(bool allow = true);
-        /** \brief Setss the modifier keys for scrolling
+        /** \brief Sets the modifier keys for scrolling
          */
         static void SetModKeys(wxString keys = _T("Strg"));
         /** \brief Use modkey to advance through tabs with mousewheel
          */
         static void UseModToAdvance(bool use = false);
+        /** \brief Change direction of tab-advancing with mousewheel
+         *
+         * \param invert If true advance direction is inverted
+         */
+        static void InvertAdvanceDirection(bool invert = false);
+        /** \brief Change direction of tab-moving with mousewheel
+         *
+         * \param invert If true move direction is inverted
+         */
+        static void InvertMoveDirection(bool invert = false);
     protected:
         /** \brief Enable or disable tab tooltips
          */
@@ -349,6 +359,12 @@ class cbAuiNotebook : public wxAuiNotebook
         /** \brief Use modkey to advance through tabs with mousewheel
          */
         static bool s_modToAdvance;
+        /** \brief Mousewheel move direction: negative => invert
+         */
+        static int s_moveDirection;
+        /** \brief Mouseweheel advance direction: negative => invert
+         */
+        static int s_advanceDirection;
 
         DECLARE_EVENT_TABLE()
 };
