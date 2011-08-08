@@ -453,6 +453,7 @@ void CompilerOptionsDlg::DoFillCompilerPrograms()
     wxChoice *cmbDebugger = XRCCTRL(*this, "cmbDebugger", wxChoice);
     if (cmbDebugger)
     {
+        cmbDebugger->Clear();
         // Add an invalid debugger entry and store the old value in the client data, so no user settings are changed.
         cmbDebugger->Append(_("--- Invalid debugger ---"), new DebuggerClientData(progs.DBGconfig));
         cmbDebugger->SetSelection(0);
