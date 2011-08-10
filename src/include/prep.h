@@ -352,5 +352,12 @@ template<typename whatever> inline ID GetID()
 inline ID GetID() { return GetID<void>(); };
 inline ID ConstructID(unsigned int i) { return ID(i); };
 
+#include <tr1/memory>
 
+// Add std::shared_ptr in a namespace, so different implementations can be used with different compilers
+namespace cb
+{
+using std::tr1::shared_ptr;
+using std::tr1::static_pointer_cast;
+}
 #endif

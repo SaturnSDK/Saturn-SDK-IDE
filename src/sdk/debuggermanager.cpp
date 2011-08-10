@@ -318,7 +318,7 @@ void cbWatch::Expand(bool expand)
     m_expanded = expand;
 }
 
-cbWatch* DLLIMPORT GetRootWatch(cbWatch *watch)
+cbWatch* DLLIMPORT cbGetRootWatch(cbWatch *watch)
 {
     cbWatch *root = watch;
     while(root && root->GetParent())
@@ -1131,7 +1131,7 @@ bool DebuggerManager::UpdateThreads()
 
 cbDebuggerPlugin* DebuggerManager::GetDebuggerHavingWatch(cbWatch *watch)
 {
-    watch = GetRootWatch(watch);
+    watch = cbGetRootWatch(watch);
     for (RegisteredPlugins::iterator it = m_registered.begin(); it != m_registered.end(); ++it)
     {
         if (it->first->HasWatch(watch))

@@ -16,6 +16,7 @@
 #include "logger.h"
 #include "manager.h"
 #include "pluginmanager.h"
+#include "prep.h"
 
 #ifdef __WXMSW__
     #ifndef PLUGIN_EXPORT
@@ -47,25 +48,20 @@ class wxPanel;
 class wxWindow;
 
 class cbBreakpoint;
+class cbConfigurationPanel;
+class cbDebuggerConfiguration;
 class cbEditor;
 class cbProject;
 class cbStackFrame;
-class cbThread;
-class cbWatch;
-class ProjectBuildTarget;
-class CompileTargetBase;
-class Compiler;
-class FileTreeData;
-class cbConfigurationPanel;
-struct PluginInfo;
 class cbStatusBar;
-
-class cbBreakpoint;
-class cbDebuggerConfiguration;
-class cbStackFrame;
 class cbThread;
 class cbWatch;
+class Compiler;
+class CompileTargetBase;
 class ConfigManagerWrapper;
+class FileTreeData;
+struct PluginInfo;
+class ProjectBuildTarget;
 
 // Define basic groups for plugins' configuration.
 static const int cgCompiler         = 0x01; ///< Compiler related.
@@ -492,7 +488,7 @@ class PLUGIN_EXPORT cbDebuggerPlugin: public cbPlugin
         virtual bool SwitchToThread(int thread_number) = 0;
 
         // watches
-        virtual cbWatch* AddWatch(const wxString& symbol) = 0;
+        virtual cb::shared_ptr<cbWatch> AddWatch(const wxString& symbol) = 0;
         virtual void DeleteWatch(cbWatch *watch) = 0;
         virtual bool HasWatch(cbWatch *watch) = 0;
         virtual void ShowWatchProperties(cbWatch *watch) = 0;

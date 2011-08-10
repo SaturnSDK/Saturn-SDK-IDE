@@ -10,29 +10,27 @@
 
 class DebugInterfaceFactory : public cbDebugInterfaceFactory
 {
-public:
+    public:
+        virtual cbBacktraceDlg* CreateBacktrace();
+        virtual void DeleteBacktrace(cbBacktraceDlg *dialog);
 
-    virtual cbBacktraceDlg* CreateBacktrace();
-    virtual void DeleteBacktrace(cbBacktraceDlg *dialog);
+        virtual cbBreakpointsDlg* CreateBreapoints();
+        virtual void DeleteBreakpoints(cbBreakpointsDlg *dialog);
 
-    virtual cbBreakpointsDlg* CreateBreapoints();
-    virtual void DeleteBreakpoints(cbBreakpointsDlg *dialog);
+        virtual cbCPURegistersDlg* CreateCPURegisters();
+        virtual void DeleteCPURegisters(cbCPURegistersDlg *dialog);
 
-    virtual cbCPURegistersDlg* CreateCPURegisters();
-    virtual void DeleteCPURegisters(cbCPURegistersDlg *dialog);
+        virtual cbDisassemblyDlg* CreateDisassembly();
+        virtual void DeleteDisassembly(cbDisassemblyDlg *dialog);
 
-    virtual cbDisassemblyDlg* CreateDisassembly();
-    virtual void DeleteDisassembly(cbDisassemblyDlg *dialog);
+        virtual cbExamineMemoryDlg* CreateMemory();
+        virtual void DeleteMemory(cbExamineMemoryDlg *dialog);
 
-    virtual cbExamineMemoryDlg* CreateMemory();
-    virtual void DeleteMemory(cbExamineMemoryDlg *dialog);
+        virtual cbThreadsDlg* CreateThreads();
+        virtual void DeleteThreads(cbThreadsDlg *dialog);
 
-    virtual cbThreadsDlg* CreateThreads();
-    virtual void DeleteThreads(cbThreadsDlg *dialog);
-
-    virtual cbWatchesDlg* CreateWatches();
-    virtual void DeleteWatches(cbWatchesDlg *dialog);
-
+        virtual cbWatchesDlg* CreateWatches();
+        virtual void DeleteWatches(cbWatchesDlg *dialog);
 };
 
 #endif // _DEBUGGER_INTERFACE_CREATOR_H_

@@ -271,9 +271,9 @@ public:
     virtual bool OnDropText(wxCoord x, wxCoord y, const wxString& text)
     {
         cbDebuggerPlugin *activeDebugger = Manager::Get()->GetDebuggerManager()->GetActiveDebugger();
-        cbWatch *watch = activeDebugger->AddWatch(text);
-        if (watch)
-            Manager::Get()->GetDebuggerManager()->GetWatchesDialog()->AddWatch(watch);
+        cbWatch::Pointer watch = activeDebugger->AddWatch(text);
+        if (watch.get())
+            Manager::Get()->GetDebuggerManager()->GetWatchesDialog()->AddWatch(watch.get());
         // we return false here to veto the operation, otherwise the dragged text might get cut,
         // because we use wxDrag_DefaultMove in ScintillaWX::StartDrag (seems to happen only on windows)
         return false;
@@ -630,13 +630,13 @@ void WatchesDlg::RenameWatch(wxObject *prop, const wxString &newSymbol)
             cbWatch *old_watch = watchesProp->GetWatch();
             watchesProp->SetWatch(nullptr);
             plugin->DeleteWatch(old_watch);
-            cbWatch *new_watch = plugin->AddWatch(newSymbol);
-            watchesProp->SetWatch(new_watch);
+            cbWatch::Pointer new_watch = plugin->AddWatch(newSymbol);
+            watchesProp->SetWatch(new_watch.get());
 
             for (WatchItems::iterator it = m_watches.begin(); it != m_watches.end(); ++it)
             {
                 if (it->property == watchesProp)
-                    it->watch = new_watch;
+                    it->watch = new_watch.get();
             }
             watchesProp->SetExpanded(new_watch->IsExpanded());
             m_grid->Refresh();
@@ -645,7 +645,7 @@ void WatchesDlg::RenameWatch(wxObject *prop, const wxString &newSymbol)
         {
             WatchItem item;
             item.property = watchesProp;
-            item.watch = plugin->AddWatch(newSymbol);
+            item.watch = plugin->AddWatch(newSymbol).get();
             watchesProp->SetWatch(item.watch);
             m_watches.push_back(item);
             watchesProp->SetExpanded(item.watch->IsExpanded());

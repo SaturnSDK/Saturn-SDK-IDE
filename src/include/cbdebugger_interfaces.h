@@ -119,29 +119,29 @@ class DLLIMPORT cbDebuggerMenuHandler
 
 class DLLIMPORT cbDebugInterfaceFactory
 {
-public:
-    virtual ~cbDebugInterfaceFactory();
+    public:
+        virtual ~cbDebugInterfaceFactory();
 
-    virtual cbBacktraceDlg* CreateBacktrace() = 0;
-    virtual void DeleteBacktrace(cbBacktraceDlg *dialog) = 0;
+        virtual cbBacktraceDlg* CreateBacktrace() = 0;
+        virtual void DeleteBacktrace(cbBacktraceDlg *dialog) = 0;
 
-    virtual cbBreakpointsDlg* CreateBreapoints() = 0;
-    virtual void DeleteBreakpoints(cbBreakpointsDlg *dialog) = 0;
+        virtual cbBreakpointsDlg* CreateBreapoints() = 0;
+        virtual void DeleteBreakpoints(cbBreakpointsDlg *dialog) = 0;
 
-    virtual cbCPURegistersDlg* CreateCPURegisters() = 0;
-    virtual void DeleteCPURegisters(cbCPURegistersDlg *dialog) = 0;
+        virtual cbCPURegistersDlg* CreateCPURegisters() = 0;
+        virtual void DeleteCPURegisters(cbCPURegistersDlg *dialog) = 0;
 
-    virtual cbDisassemblyDlg* CreateDisassembly() = 0;
-    virtual void DeleteDisassembly(cbDisassemblyDlg *dialog) = 0;
+        virtual cbDisassemblyDlg* CreateDisassembly() = 0;
+        virtual void DeleteDisassembly(cbDisassemblyDlg *dialog) = 0;
 
-    virtual cbExamineMemoryDlg* CreateMemory() = 0;
-    virtual void DeleteMemory(cbExamineMemoryDlg *dialog) = 0;
+        virtual cbExamineMemoryDlg* CreateMemory() = 0;
+        virtual void DeleteMemory(cbExamineMemoryDlg *dialog) = 0;
 
-    virtual cbThreadsDlg* CreateThreads() = 0;
-    virtual void DeleteThreads(cbThreadsDlg *dialog) = 0;
+        virtual cbThreadsDlg* CreateThreads() = 0;
+        virtual void DeleteThreads(cbThreadsDlg *dialog) = 0;
 
-    virtual cbWatchesDlg* CreateWatches() = 0;
-    virtual void DeleteWatches(cbWatchesDlg *dialog) = 0;
+        virtual cbWatchesDlg* CreateWatches() = 0;
+        virtual void DeleteWatches(cbWatchesDlg *dialog) = 0;
 };
 
 #endif // _CB_DEBUGGER_INTERFACES_H_

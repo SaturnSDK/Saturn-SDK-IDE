@@ -1220,7 +1220,7 @@ cbBreakpoint* DebuggerGDB::AddBreakpoint(const wxString& filename, int line)
         Continue();
 
     BreakItem item;
-    item.cb_break = std::tr1::shared_ptr<cbBreakpoint>(new cbBreakpoint(filename, line));
+    item.cb_break = cb::shared_ptr<cbBreakpoint>(new cbBreakpoint(filename, line));
     item.debugger_breakpoint = bp;
     m_breakpoints.push_back(item);
 
@@ -1244,7 +1244,7 @@ cbBreakpoint* DebuggerGDB::AddDataBreakpoint(const wxString& dataExpression)
 
         BreakItem item;
         cbBreakpoint *temp = new cbBreakpoint(bp->breakAddress, bp->breakOnRead, bp->breakOnWrite);
-        item.cb_break = std::tr1::shared_ptr<cbBreakpoint>(temp);
+        item.cb_break = cb::shared_ptr<cbBreakpoint>(temp);
         item.debugger_breakpoint = bp;
         m_breakpoints.push_back(item);
 
@@ -1903,10 +1903,10 @@ void DebuggerGDB::OnCursorChanged(wxCommandEvent& WXUNUSED(event))
     }
 }
 
-cbWatch* DebuggerGDB::AddWatch(const wxString& symbol)
+cb::shared_ptr<cbWatch> DebuggerGDB::AddWatch(const wxString& symbol)
 {
-    GDBWatch *watch = new GDBWatch(symbol);
-    m_watches.push_back(std::tr1::shared_ptr<GDBWatch>(watch));
+    GDBWatch::Pointer watch(new GDBWatch(symbol));
+    m_watches.push_back(watch);
 
     if(m_pProcess)
         m_State.GetDriver()->UpdateWatch(m_watches.back());
@@ -1950,7 +1950,7 @@ void DebuggerGDB::ShowWatchProperties(cbWatch *watch)
 
 bool DebuggerGDB::SetWatchValue(cbWatch *watch, const wxString &value)
 {
-    cbWatch *root_watch = GetRootWatch(watch);
+    cbWatch *root_watch = cbGetRootWatch(watch);
     bool found = false;
     for (WatchesContainer::iterator it = m_watches.begin(); it != m_watches.end(); ++it)
     {

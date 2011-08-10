@@ -9,7 +9,6 @@
 #include <wx/string.h>
 #include <wx/dynarray.h>
 #include <vector>
-#include <tr1/memory>
 
 #include "debuggermanager.h"
 
@@ -182,7 +181,7 @@ enum WatchFormat
 class GDBWatch : public cbWatch
 {
     public:
-        typedef std::tr1::shared_ptr<GDBWatch> Pointer;
+        typedef cb::shared_ptr<GDBWatch> Pointer;
     public:
         GDBWatch(wxString const &symbol);
     public:
@@ -222,7 +221,7 @@ class GDBWatch : public cbWatch
         bool m_is_array;
     };
 
-typedef std::vector<std::tr1::shared_ptr<GDBWatch> > WatchesContainer;
+typedef std::vector<GDBWatch::Pointer> WatchesContainer;
 
 /** Stack frame.
   *

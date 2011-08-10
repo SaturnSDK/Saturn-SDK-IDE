@@ -510,9 +510,9 @@ void DebuggerMenuHandler::OnAddWatch(wxCommandEvent& event)
     wxString const &src = m_activeDebugger->GetEditorWordAtCaret();
     if (!src.empty())
     {
-        cbWatch *watch = m_activeDebugger->AddWatch(src);
-        if (watch)
-            Manager::Get()->GetDebuggerManager()->GetWatchesDialog()->AddWatch(watch);
+        cbWatch::Pointer watch = m_activeDebugger->AddWatch(src);
+        if (watch.get())
+            Manager::Get()->GetDebuggerManager()->GetWatchesDialog()->AddWatch(watch.get());
     }
 }
 

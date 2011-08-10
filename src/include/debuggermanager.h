@@ -82,8 +82,10 @@ class DLLIMPORT cbWatch
 {
         cbWatch& operator =(cbWatch &);
         cbWatch(cbWatch &);
-	public:
-        typedef std::vector<cbWatch*> PtrContainer;
+
+	    typedef std::vector<cbWatch*> PtrContainer;
+    public:
+        typedef cb::shared_ptr<cbWatch> Pointer;
 	public:
         cbWatch();
         void Destroy();
@@ -134,7 +136,7 @@ class DLLIMPORT cbWatch
         bool            m_expanded;
 };
 
-cbWatch* DLLIMPORT GetRootWatch(cbWatch *watch);
+cbWatch* DLLIMPORT cbGetRootWatch(cbWatch *watch);
 
 class DLLIMPORT cbStackFrame
 {

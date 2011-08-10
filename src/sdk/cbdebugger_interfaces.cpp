@@ -3,7 +3,7 @@
  * http://www.gnu.org/licenses/lgpl-3.0.html
  */
 
-#include "sdk.h"
+#include "sdk_precomp.h"
 #include "cbdebugger_interfaces.h"
 
 cbBacktraceDlg::~cbBacktraceDlg() {}

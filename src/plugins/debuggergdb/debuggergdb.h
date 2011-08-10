@@ -7,7 +7,6 @@
 #define DEBUGGERGDB_H
 
 #include <map>
-#include <tr1/memory>
 
 #include <settings.h> // much of the SDK is here
 #include <sdk_events.h>
@@ -85,7 +84,7 @@ class DebuggerGDB : public cbDebuggerPlugin
         bool IsTemporaryBreak() const {return m_TemporaryBreak;}
         int GetExitCode() const { return m_LastExitCode; }
 
-        cbWatch* AddWatch(const wxString& symbol);
+        cb::shared_ptr<cbWatch> AddWatch(const wxString& symbol);
         void DeleteWatch(cbWatch *watch);
         bool HasWatch(cbWatch *watch);
         void ShowWatchProperties(cbWatch *watch);
@@ -198,7 +197,7 @@ class DebuggerGDB : public cbDebuggerPlugin
 
         struct BreakItem
         {
-            std::tr1::shared_ptr<cbBreakpoint> cb_break;
+            cb::shared_ptr<cbBreakpoint> cb_break;
             DebuggerBreakpoint* debugger_breakpoint;
         };
         typedef std::vector<BreakItem> BreakpointsContainer;
