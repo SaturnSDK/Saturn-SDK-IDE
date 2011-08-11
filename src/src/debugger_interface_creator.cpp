@@ -4,6 +4,11 @@
  */
 #include "debugger_interface_creator.h"
 
+#ifndef CB_PRECOMP
+    #include "cbeditor.h"
+    #include "editormanager.h"
+#endif
+
 #include "backtracedlg.h"
 #include "breakpointsdlg.h"
 #include "cbstyledtextctrl.h"
