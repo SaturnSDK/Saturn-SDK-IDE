@@ -8,8 +8,14 @@
 
 #include <cbdebugger_interfaces.h>
 
+class ValueTooltip;
+
 class DebugInterfaceFactory : public cbDebugInterfaceFactory
 {
+    public:
+        DebugInterfaceFactory();
+        ~DebugInterfaceFactory();
+
     public:
         virtual cbBacktraceDlg* CreateBacktrace();
         virtual void DeleteBacktrace(cbBacktraceDlg *dialog);
@@ -31,6 +37,13 @@ class DebugInterfaceFactory : public cbDebugInterfaceFactory
 
         virtual cbWatchesDlg* CreateWatches();
         virtual void DeleteWatches(cbWatchesDlg *dialog);
+   
+        bool ShowValueTooltip(const cbWatch::Pointer &watch, const wxRect &rect);
+        void HideValueTooltip();
+    private:
+        void OnEditorDeactivate(CodeBlocksEvent &event);
+    private:
+        ValueTooltip *m_tooltip;
 };
 
 #endif // _DEBUGGER_INTERFACE_CREATOR_H_

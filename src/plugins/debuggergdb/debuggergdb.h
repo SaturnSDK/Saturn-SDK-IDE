@@ -92,6 +92,8 @@ class DebuggerGDB : public cbDebuggerPlugin
         void ExpandWatch(cbWatch *watch);
         void CollapseWatch(cbWatch *watch);
 
+        void AddWatchNoUpdate(const GDBWatch::Pointer &watch);
+
         void OnWatchesContextMenu(wxMenu &menu, const cbWatch &watch, wxObject *property);
 
         void GetCurrentPosition(wxString &filename, int &line);
@@ -112,6 +114,9 @@ class DebuggerGDB : public cbDebuggerPlugin
         RemoteDebuggingMap& GetRemoteDebuggingMap(cbProject* project = 0);
 
         void OnProjectLoadingHook(cbProject* project, TiXmlElement* elem, bool loading);
+
+        void OnValueTooltip(const wxString &token, const wxRect &evalRect);
+        bool ShowValueTooltip(int style);
 
         static void ConvertToGDBFriendly(wxString& str);
         static void ConvertToGDBFile(wxString& str);
@@ -137,7 +142,6 @@ class DebuggerGDB : public cbDebuggerPlugin
         void DoBreak(bool temporary);
 
         void OnAddSymbolFile(wxCommandEvent& event);
-        void OnValueTooltip(CodeBlocksEvent& event);
         void DeleteAllProjectBreakpoints(cbProject* project);
         void OnBuildTargetSelected(CodeBlocksEvent& event);
         void OnGDBOutput(wxCommandEvent& event);

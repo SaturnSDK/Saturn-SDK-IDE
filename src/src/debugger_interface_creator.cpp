@@ -3,8 +3,10 @@
  * http://www.gnu.org/licenses/gpl-3.0.html
  */
 #include "debugger_interface_creator.h"
+
 #include "backtracedlg.h"
 #include "breakpointsdlg.h"
+#include "cbstyledtextctrl.h"
 #include "cpuregistersdlg.h"
 #include "disassemblydlg.h"
 #include "examinememorydlg.h"
@@ -20,6 +22,18 @@ void RemoveDockWindow(wxWindow *window)
         Manager::Get()->ProcessEvent(evt);
         window->Destroy();
     }
+}
+
+DebugInterfaceFactory::DebugInterfaceFactory() : m_tooltip(nullptr)
+{
+    typedef cbEventFunctor<DebugInterfaceFactory, CodeBlocksEvent> Event;
+    Manager::Get()->RegisterEventSink(cbEVT_EDITOR_DEACTIVATED,
+                                      new Event(this, &DebugInterfaceFactory::OnEditorDeactivate));
+}
+
+DebugInterfaceFactory::~DebugInterfaceFactory()
+{
+    Manager::Get()->RemoveAllEventSinksFor(this);
 }
 
 cbBacktraceDlg* DebugInterfaceFactory::CreateBacktrace()
@@ -171,4 +185,41 @@ void DebugInterfaceFactory::DeleteWatches(cbWatchesDlg *dialog)
 {
     if (dialog)
         RemoveDockWindow(dialog->GetWindow());
+}
+
+bool DebugInterfaceFactory::ShowValueTooltip(const cbWatch::Pointer &watch, const wxRect &rect)
+{
+    delete m_tooltip;
+    wxPoint pt = wxGetMousePosition();
+    if (!rect.Contains(pt))
+    {
+        m_tooltip = nullptr;
+        return false;
+    }
+    else
+    {
+        m_tooltip = new ValueTooltip(watch, Manager::Get()->GetAppWindow());
+
+        m_tooltip->Position(pt, wxSize(0, 0));
+
+		// hide any other tooltips
+        EditorBase *base = Manager::Get()->GetEditorManager()->GetActiveEditor();
+        cbEditor *ed = base && base->IsBuiltinEditor() ? static_cast<cbEditor*>(base) : nullptr;
+        if (ed && ed->GetControl()->CallTipActive())
+            ed->GetControl()->CallTipCancel();
+
+        m_tooltip->Show();
+        return true;
+    }
+}
+
+void DebugInterfaceFactory::HideValueTooltip()
+{
+    if (m_tooltip)
+        m_tooltip->Dismiss();
+}
+
+void DebugInterfaceFactory::OnEditorDeactivate(CodeBlocksEvent &event)
+{
+    HideValueTooltip();
 }

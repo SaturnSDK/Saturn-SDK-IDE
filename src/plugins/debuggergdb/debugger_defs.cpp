@@ -84,7 +84,11 @@ GDBWatch::GDBWatch(wxString const &symbol) :
     m_format(Undefined),
     m_array_start(0),
     m_array_count(0),
-    m_is_array(false)
+    m_is_array(false),
+    m_forTooltip(false)
+{
+}
+GDBWatch::~GDBWatch()
 {
 }
 void GDBWatch::GetSymbol(wxString &symbol) const
@@ -178,4 +182,14 @@ int GDBWatch::GetArrayStart() const
 int GDBWatch::GetArrayCount() const
 {
     return m_array_count;
+}
+
+void GDBWatch::SetForTooltip(bool flag)
+{
+    m_forTooltip = flag;
+}
+
+bool GDBWatch::GetForTooltip() const
+{
+    return m_forTooltip;
 }

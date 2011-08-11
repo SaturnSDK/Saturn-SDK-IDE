@@ -24,6 +24,7 @@ class DebuggerSettingsCommonPanel: public wxPanel
 
 		//(*Declarations(DebuggerSettingsCommonPanel)
 		wxCheckBox* m_autoBuild;
+		wxCheckBox* m_requireCtrlForTooltips;
 		wxCheckBox* m_jumpOnDoubleClick;
 		wxCheckBox* m_autoSwitch;
 		wxCheckBox* m_debuggersLog;
@@ -34,6 +35,7 @@ class DebuggerSettingsCommonPanel: public wxPanel
 		static const long ID_AUTOSWITCH;
 		static const long ID_DEBUGGERS_LOG;
 		static const long ID_JUMP_ON_DOUBLE_CLICK;
+		static const long ID_REQUIRE_CTRL_FOR_TOOLTIPS;
 		//*)
 
 		//(*Handlers(DebuggerSettingsCommonPanel)

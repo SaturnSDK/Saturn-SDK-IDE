@@ -184,6 +184,7 @@ class GDBWatch : public cbWatch
         typedef cb::shared_ptr<GDBWatch> Pointer;
     public:
         GDBWatch(wxString const &symbol);
+        virtual ~GDBWatch();
     public:
 
         virtual void GetSymbol(wxString &symbol) const;
@@ -207,6 +208,9 @@ class GDBWatch : public cbWatch
         int GetArrayStart() const;
         int GetArrayCount() const;
 
+        void SetForTooltip(bool flag = true);
+        bool GetForTooltip() const;
+
     protected:
         virtual void DoDestroy();
 
@@ -219,6 +223,7 @@ class GDBWatch : public cbWatch
         int m_array_start;
         int m_array_count;
         bool m_is_array;
+        bool m_forTooltip;
     };
 
 typedef std::vector<GDBWatch::Pointer> WatchesContainer;

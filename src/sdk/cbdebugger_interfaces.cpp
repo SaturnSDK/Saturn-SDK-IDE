@@ -22,4 +22,5 @@ cbWatchesDlg::~cbWatchesDlg() {}
 
 cbDebuggerMenuHandler::~cbDebuggerMenuHandler() {}
 
+cbDebugInterfaceFactory::cbDebugInterfaceFactory() {}
 cbDebugInterfaceFactory::~cbDebugInterfaceFactory() {}

@@ -467,6 +467,8 @@ bool cbDebuggerCommonConfig::GetFlag(Flags flag)
             return c->ReadBool(wxT("/common/debug_log"), false);
         case JumpOnDoubleClick:
             return c->ReadBool(wxT("/common/jump_on_double_click"), false);
+        case RequireCtrlForTooltips:
+            return c->ReadBool(wxT("/common/require_ctrl_for_tooltips"), false);
         default:
             return false;
     }
@@ -488,6 +490,9 @@ void cbDebuggerCommonConfig::SetFlag(Flags flag, bool value)
             break;
         case JumpOnDoubleClick:
             c->Write(wxT("/common/jump_on_double_click"), value);
+            break;
+        case RequireCtrlForTooltips:
+            c->Write(wxT("/common/require_ctrl_for_tooltips"), value);
             break;
         default:
             ;
@@ -1034,6 +1039,11 @@ void DebuggerManager::SetInterfaceFactory(cbDebugInterfaceFactory *factory)
     m_interfaceFactory = factory;
 }
 
+cbDebugInterfaceFactory* DebuggerManager::GetInterfaceFactory()
+{
+    return m_interfaceFactory;
+}
+
 void DebuggerManager::SetMenuHandler(cbDebuggerMenuHandler *handler)
 {
     m_menuHandler = handler;
@@ -1138,6 +1148,11 @@ cbDebuggerPlugin* DebuggerManager::GetDebuggerHavingWatch(cbWatch *watch)
             return it->first;
     }
     return NULL;
+}
+
+bool DebuggerManager::ShowValueTooltip(const cbWatch::Pointer &watch, const wxRect &rect)
+{
+    return m_interfaceFactory->ShowValueTooltip(watch, rect);
 }
 
 DebuggerManager::RegisteredPlugins const & DebuggerManager::GetAllDebuggers() const

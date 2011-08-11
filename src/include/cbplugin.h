@@ -38,7 +38,7 @@
 // it will change when the SDK interface breaks
 #define PLUGIN_SDK_VERSION_MAJOR 1
 #define PLUGIN_SDK_VERSION_MINOR 12
-#define PLUGIN_SDK_VERSION_RELEASE 4
+#define PLUGIN_SDK_VERSION_RELEASE 5
 
 // class decls
 class wxMenuBar;
@@ -505,6 +505,13 @@ class PLUGIN_EXPORT cbDebuggerPlugin: public cbPlugin
         virtual bool IsAttachedToProcess() const = 0;
 
         virtual void GetCurrentPosition(wxString &filename, int &line) = 0;
+
+
+        void RegisterValueTooltip();
+        virtual void OnValueTooltip(const wxString &token, const wxRect &evalRect);
+        virtual bool ShowValueTooltip(int style);
+    private:
+        void ProcessValueTooltip(CodeBlocksEvent& event);
 
     protected:
         enum StartType

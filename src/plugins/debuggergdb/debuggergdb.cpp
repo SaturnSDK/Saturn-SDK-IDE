@@ -212,8 +212,9 @@ void DebuggerGDB::OnAttachReal()
     m_HookId = ProjectLoaderHooks::RegisterHook(myhook);
 
     // register event sink
-    Manager::Get()->RegisterEventSink(cbEVT_EDITOR_TOOLTIP, new cbEventFunctor<DebuggerGDB, CodeBlocksEvent>(this, &DebuggerGDB::OnValueTooltip));
     Manager::Get()->RegisterEventSink(cbEVT_BUILDTARGET_SELECTED, new cbEventFunctor<DebuggerGDB, CodeBlocksEvent>(this, &DebuggerGDB::OnBuildTargetSelected));
+
+    RegisterValueTooltip();
 }
 
 void DebuggerGDB::OnReleaseReal(bool /*appShutDown*/)
@@ -1747,51 +1748,24 @@ void DebuggerGDB::KillConsole()
 #endif
 }
 
-void DebuggerGDB::OnValueTooltip(CodeBlocksEvent& event)
+bool DebuggerGDB::ShowValueTooltip(int style)
 {
-    event.Skip();
     if (!m_pProcess || !IsStopped())
-        return;
+        return false;
 
     if (!m_State.HasDriver() || !m_State.GetDriver()->IsDebuggingStarted())
-        return;
+        return false;
 
     if (!GetActiveConfigEx().GetFlag(DebuggerConfiguration::EvalExpression))
-        return;
-
-    if (DragInProgress())
-        return;
-
-    EditorBase* base = event.GetEditor();
-    cbEditor* ed = base && base->IsBuiltinEditor() ? static_cast<cbEditor*>(base) : 0;
-    if (!ed)
-        return;
-
-    if (ed->IsContextMenuOpened())
-        return;
-
-    // get rid of other calltips (if any) [for example the code completion one, at this time we
-    // want the debugger value call/tool-tip to win and be shown]
-    if (ed->GetControl()->CallTipActive())
-        ed->GetControl()->CallTipCancel();
-
-    const int style = event.GetInt();
+        return false;
     if (style != wxSCI_C_DEFAULT && style != wxSCI_C_OPERATOR && style != wxSCI_C_IDENTIFIER)
-        return;
+        return false;
+    return true;
+}
 
-    wxPoint pt;
-    pt.x = event.GetX();
-    pt.y = event.GetY();
-
-    const wxString &token = GetEditorWordAtCaret(&pt);
-    if (!token.empty())
-    {
-        pt = ed->GetControl()->ClientToScreen(pt);
-        m_EvalRect.x = pt.x - 5;
-        m_EvalRect.y = pt.y - 5;
-        m_EvalRect.height = m_EvalRect.width = 10;
-        m_State.GetDriver()->EvaluateSymbol(token, m_EvalRect);
-    }
+void DebuggerGDB::OnValueTooltip(const wxString &token, const wxRect &evalRect)
+{
+    m_State.GetDriver()->EvaluateSymbol(token, evalRect);
 }
 
 void DebuggerGDB::CleanupWhenProjectClosed(cbProject *project)
@@ -1912,6 +1886,11 @@ cb::shared_ptr<cbWatch> DebuggerGDB::AddWatch(const wxString& symbol)
         m_State.GetDriver()->UpdateWatch(m_watches.back());
 
     return watch;
+}
+
+void DebuggerGDB::AddWatchNoUpdate(const GDBWatch::Pointer &watch)
+{
+    m_watches.push_back(watch);
 }
 
 void DebuggerGDB::DeleteWatch(cbWatch *watch)

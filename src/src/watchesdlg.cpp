@@ -29,6 +29,8 @@
 namespace
 {
     const long idGrid = wxNewId();
+    const long idTooltipGrid = wxNewId();
+    const long idTooltipTimer = wxNewId();
 
     const long idMenuRename = wxNewId();
     const long idMenuProperties = wxNewId();
@@ -79,16 +81,17 @@ WX_PG_IMPLEMENT_EDITOR_CLASS(cbTextCtrlAndButtonTooltip, cbTextCtrlAndButtonTool
 class WatchesProperty : public wxStringProperty
 {
     public:
-        WatchesProperty(const wxString& label, const wxString& value, cbWatch *watch) :
+        WatchesProperty(const wxString& label, const wxString& value, cbWatch *watch, bool readonly) :
             wxStringProperty(label, wxPG_LABEL, value),
-            m_watch(watch)
+            m_watch(watch),
+            m_readonly(readonly)
         {
         }
 
         // Set editor to have button
         virtual const wxPGEditor* DoGetEditorClass() const
         {
-            return wxPG_EDITOR(cbTextCtrlAndButtonTooltip);
+            return m_readonly ? nullptr : wxPG_EDITOR(cbTextCtrlAndButtonTooltip);
         }
 
         // Set what happens on button click
@@ -100,6 +103,7 @@ class WatchesProperty : public wxStringProperty
 
     protected:
         cbWatch *m_watch;
+        bool m_readonly;
 };
 
 class WatchRawDialogAdapter : public wxPGEditorDialogAdapter
@@ -302,13 +306,13 @@ WatchesDlg::WatchesDlg() :
     m_grid->SetColumnProportion(1, 40);
     m_grid->SetColumnProportion(2, 20);
 
-    wxPGProperty *prop = m_grid->Append(new WatchesProperty(wxEmptyString, wxEmptyString, NULL));
+    wxPGProperty *prop = m_grid->Append(new WatchesProperty(wxEmptyString, wxEmptyString, NULL, false));
     m_grid->SetPropertyAttribute(prop, wxT("Units"), wxEmptyString);
 
     m_grid->Connect(idGrid, wxEVT_KEY_DOWN, wxKeyEventHandler(WatchesDlg::OnKeyDown), NULL, this);
 }
 
-void AppendChildren(wxPropertyGrid &grid, wxPGProperty &property, cbWatch &watch)
+void AppendChildren(wxPropertyGrid &grid, wxPGProperty &property, cbWatch &watch, bool readonly)
 {
     for(int ii = 0; ii < watch.GetChildCount(); ++ii)
     {
@@ -319,7 +323,7 @@ void AppendChildren(wxPropertyGrid &grid, wxPGProperty &property, cbWatch &watch
         child.GetValue(value);
         child.GetType(type);
 
-        wxPGProperty *prop = new WatchesProperty(symbol, value, &child);
+        wxPGProperty *prop = new WatchesProperty(symbol, value, &child, readonly);
         prop->SetExpanded(child.IsExpanded());
         wxPGProperty *new_prop = grid.AppendIn(&property, prop);
         grid.SetPropertyAttribute(new_prop, wxT("Units"), type);
@@ -336,45 +340,62 @@ void AppendChildren(wxPropertyGrid &grid, wxPGProperty &property, cbWatch &watch
         else
             grid.SetPropertyColourToDefault(prop);
 
-        AppendChildren(grid, *prop, child);
+        AppendChildren(grid, *prop, child, readonly);
+    }
+}
+
+void UpdateWatch(wxPropertyGrid *grid, wxPGProperty *property, cbWatch *watch, bool readonly)
+{
+    if (!property)
+        return;
+
+    wxString value, symbol, type;
+    watch->GetSymbol(symbol);
+    watch->GetValue(value);
+    property->SetValue(value);
+    property->SetExpanded(watch->IsExpanded());
+    watch->GetType(type);
+    if(watch->IsChanged())
+        grid->SetPropertyTextColour(property, wxColor(255, 0, 0));
+    else
+        grid->SetPropertyColourToDefault(property);
+    grid->SetPropertyAttribute(property, wxT("Units"), type);
+    if (value.empty())
+        grid->SetPropertyHelpString(property, wxEmptyString);
+    else
+        grid->SetPropertyHelpString(property, symbol + wxT("=") + value);
+
+    property->DeleteChildren();
+
+    if (property->GetName() != symbol)
+    {
+        grid->SetPropertyName(property, symbol);
+        grid->SetPropertyLabel(property, symbol);
+    }
+
+    AppendChildren(*grid, *property, *watch, readonly);
+
+    WatchRawDialog::UpdateValue(static_cast<const WatchesProperty*>(property));
+}
+
+void SetValue(WatchesProperty *prop)
+{
+    if (prop)
+    {
+        cbWatch *watch = prop->GetWatch();
+        if (watch)
+        {
+            cbDebuggerPlugin *plugin = Manager::Get()->GetDebuggerManager()->GetDebuggerHavingWatch(watch);
+            if (plugin)
+                plugin->SetWatchValue(watch, prop->GetValue());
+        }
     }
 }
 
 void WatchesDlg::UpdateWatches()
 {
     for(WatchItems::iterator it = m_watches.begin(); it != m_watches.end(); ++it)
-    {
-        if(!it->property)
-            continue;
-
-        wxString value, symbol, type;
-        it->watch->GetSymbol(symbol);
-        it->watch->GetValue(value);
-        it->property->SetValue(value);
-        it->property->SetExpanded(it->watch->IsExpanded());
-        it->watch->GetType(type);
-        if(it->watch->IsChanged())
-            m_grid->SetPropertyTextColour(it->property, wxColor(255, 0, 0));
-        else
-            m_grid->SetPropertyColourToDefault(it->property);
-        m_grid->SetPropertyAttribute(it->property, wxT("Units"), type);
-        if (value.empty())
-            m_grid->SetPropertyHelpString(it->property, wxEmptyString);
-        else
-            m_grid->SetPropertyHelpString(it->property, symbol + wxT("=") + value);
-
-        it->property->DeleteChildren();
-
-        if(it->property->GetName() != symbol)
-        {
-            m_grid->SetPropertyName(it->property, symbol);
-            m_grid->SetPropertyLabel(it->property, symbol);
-        }
-
-        AppendChildren(*m_grid, *it->property, *it->watch);
-
-        WatchRawDialog::UpdateValue(static_cast<const WatchesProperty*>(it->property));
-    }
+         UpdateWatch(m_grid, it->property, it->watch, false);
     m_grid->Refresh();
 }
 
@@ -399,11 +420,11 @@ void WatchesDlg::AddWatch(cbWatch *watch)
 
         WatchesProperty *watches_prop = static_cast<WatchesProperty*>(last_prop);
         watches_prop->SetWatch(watch);
-        m_grid->Append(new WatchesProperty(wxEmptyString, wxEmptyString, NULL));
+        m_grid->Append(new WatchesProperty(wxEmptyString, wxEmptyString, NULL, false));
     }
     else
     {
-        item.property = m_grid->Append(new WatchesProperty(symbol, value, watch));
+        item.property = m_grid->Append(new WatchesProperty(symbol, value, watch, false));
     }
 
     item.property->SetExpanded(watch->IsExpanded());
@@ -435,18 +456,7 @@ void WatchesDlg::OnCollapse(wxPropertyGridEvent &event)
 void WatchesDlg::OnPropertyChanged(wxPropertyGridEvent &event)
 {
     WatchesProperty *prop = static_cast<WatchesProperty*>(event.GetProperty());
-    if (prop)
-    {
-        cbWatch *watch = prop->GetWatch();
-        if (watch)
-        {
-            cbDebuggerPlugin *plugin = Manager::Get()->GetDebuggerManager()->GetDebuggerHavingWatch(watch);
-            if (plugin)
-            {
-                plugin->SetWatchValue(watch, prop->GetValue());
-            }
-        }
-    }
+    SetValue(prop);
 }
 
 void WatchesDlg::OnPropertyChanging(wxPropertyGridEvent &event)
@@ -457,7 +467,6 @@ void WatchesDlg::OnPropertyChanging(wxPropertyGridEvent &event)
 
 void WatchesDlg::OnPropertyLableEditBegin(wxPropertyGridEvent &event)
 {
-    Manager::Get()->GetLogManager()->DebugLog(wxT("OnPropertyLableEditBegin"));
     wxPGProperty *prop = event.GetProperty();
 
     if(prop)
@@ -478,7 +487,7 @@ void WatchesDlg::OnIdle(wxIdleEvent &event)
 {
     if (m_append_empty_watch)
     {
-        wxPGProperty *new_prop = m_grid->Append(new WatchesProperty(wxEmptyString, wxEmptyString, NULL));
+        wxPGProperty *new_prop = m_grid->Append(new WatchesProperty(wxEmptyString, wxEmptyString, NULL, false));
         m_grid->SelectProperty(new_prop, true);
         m_grid->Refresh();
         m_append_empty_watch = false;
@@ -653,4 +662,144 @@ void WatchesDlg::RenameWatch(wxObject *prop, const wxString &newSymbol)
             m_append_empty_watch = true;
         }
     }
+}
+
+//////////////////////////////////////////////////////////////////
+//////////// ValueTooltip implementation /////////////////////////
+//////////////////////////////////////////////////////////////////
+
+IMPLEMENT_CLASS(ValueTooltip, wxPopupWindow)
+
+BEGIN_EVENT_TABLE(ValueTooltip, wxPopupWindow)
+    EVT_PG_ITEM_COLLAPSED(idTooltipGrid, ValueTooltip::OnCollapsed)
+    EVT_PG_ITEM_EXPANDED(idTooltipGrid, ValueTooltip::OnExpanded)
+    EVT_TIMER(idTooltipTimer, ValueTooltip::OnTimer)
+END_EVENT_TABLE()
+
+wxPGProperty* GetRealRoot(wxPropertyGrid *grid)
+{
+    wxPGProperty *property = grid->GetRoot();
+    return property ? grid->GetFirstChild(property) : nullptr;
+}
+
+void SetMinSize(wxPropertyGrid *grid)
+{
+    wxPGProperty *p = GetRealRoot(grid);
+    wxPGProperty *first = grid->GetFirstProperty();
+    wxPGProperty *last = grid->GetLastProperty();
+    wxRect rect = grid->GetPropertyRect(first, last);
+    int height = rect.height + 2 * grid->GetVerticalSpacing();
+
+    // add some height when the root item is collapsed,
+    // this is needed to prevent the vertical scroll from showing
+    if (!grid->IsPropertyExpanded(p))
+        height += 2 * grid->GetVerticalSpacing();
+    rect.width = grid->GetRect().width;
+    wxSize size(std::min(500, rect.width), std::min(500, height));
+    grid->SetMinSize(size);
+}
+
+ValueTooltip::ValueTooltip(const cbWatch::Pointer &watch, wxWindow *parent) :
+    wxPopupWindow(parent, wxBORDER_NONE|wxWANTS_CHARS),
+    m_timer(this, idTooltipTimer),
+    m_outsideCount(0),
+    m_watch(watch)
+{
+    m_panel = new wxScrolledWindow(this, wxID_ANY, wxDefaultPosition, wxSize(200, 200));
+    m_grid = new wxPropertyGrid(m_panel, idTooltipGrid, wxDefaultPosition, wxSize(400,400), wxPG_SPLITTER_AUTO_CENTER);
+
+    m_grid->SetExtraStyle(wxPG_EX_DISABLE_TLP_TRACKING /*| wxPG_EX_HELP_AS_TOOLTIPS*/);
+    m_grid->SetDropTarget(new WatchesDropTarget);
+    wxFont font = m_grid->GetFont();
+    font.SetPointSize(std::max(font.GetPointSize() - 3, 7));
+    m_grid->SetFont(font);
+
+    m_grid->SetColumnCount(3);
+    m_grid->SetColumnProportion(0, 40);
+    m_grid->SetColumnProportion(1, 40);
+    m_grid->SetColumnProportion(2, 20);
+
+    wxString symbol;
+    m_watch->GetSymbol(symbol);
+    m_watch->Expand(true);
+    wxPGProperty *root = m_grid->Append(new WatchesProperty(symbol, wxEmptyString, m_watch.get(), true));
+    m_watch->MarkAsChangedRecursive(false);
+    ::UpdateWatch(m_grid, root, m_watch.get(), true);
+
+    ::SetMinSize(m_grid);
+
+    m_sizer = new wxBoxSizer( wxVERTICAL );
+    m_sizer->Add(m_grid, 0, wxALL | wxEXPAND, 0);
+
+    m_panel->SetAutoLayout(true);
+    m_panel->SetSizer(m_sizer);
+    m_sizer->Fit(m_panel);
+    m_sizer->Fit(this);
+
+    m_timer.Start(100);
+}
+
+ValueTooltip::~ValueTooltip()
+{
+    ClearWatch();
+}
+
+void ValueTooltip::ClearWatch()
+{
+    if (m_watch)
+    {
+        cbDebuggerPlugin *plugin = Manager::Get()->GetDebuggerManager()->GetDebuggerHavingWatch(m_watch.get());
+        if (plugin)
+            plugin->DeleteWatch(m_watch.get());
+        m_watch.reset();
+    }
+}
+
+void ValueTooltip::Dismiss()
+{
+    Hide();
+    m_timer.Stop();
+    ClearWatch();
+}
+
+void ValueTooltip::OnDismiss()
+{
+    ClearWatch();
+}
+
+void ValueTooltip::Fit()
+{
+    ::SetMinSize(m_grid);
+    m_sizer->Fit(m_panel);
+    wxPoint pos = GetScreenPosition();
+    wxSize size = m_panel->GetScreenRect().GetSize();
+    SetSize(pos.x, pos.y, size.x, size.y);
+}
+
+void ValueTooltip::OnCollapsed(wxPropertyGridEvent &event)
+{
+    Fit();
+}
+
+void ValueTooltip::OnExpanded(wxPropertyGridEvent &event)
+{
+    Fit();
+}
+
+void ValueTooltip::OnTimer(wxTimerEvent &event)
+{
+    if (!wxTheApp->IsActive())
+        Dismiss();
+
+    wxPoint mouse = wxGetMousePosition();
+    wxRect rect = GetScreenRect();
+    rect.Inflate(5);
+
+    if (!rect.Contains(mouse))
+    {
+        if (++m_outsideCount > 5)
+            Dismiss();
+    }
+    else
+        m_outsideCount = 0;
 }

@@ -65,6 +65,8 @@ namespace
     const int idDebuggerToolWindows = XRCID("idDebuggerToolWindows");
 
     const int idMenuDebuggerAddWatch = wxNewId();
+
+    inline void HideValueTooltip() { Manager::Get()->GetDebuggerManager()->GetInterfaceFactory()->HideValueTooltip(); }
 }
 
 BEGIN_EVENT_TABLE(DebuggerMenuHandler, wxEvtHandler)
@@ -333,18 +335,23 @@ void DebuggerMenuHandler::OnStart(wxCommandEvent& event)
         m_disableContinue = false;
     }
     else if (m_activeDebugger->IsStopped() && !m_disableContinue)
+    {
+        HideValueTooltip();
         m_activeDebugger->Continue();
+    }
 }
 
 void DebuggerMenuHandler::OnBreak(wxCommandEvent& event)
 {
     cbAssert(m_activeDebugger);
+    HideValueTooltip();
     m_activeDebugger->Break();
 }
 
 void DebuggerMenuHandler::OnStop(wxCommandEvent& event)
 {
     cbAssert(m_activeDebugger);
+    HideValueTooltip();
     m_activeDebugger->Stop();
 }
 
@@ -352,24 +359,30 @@ void DebuggerMenuHandler::OnContinue(wxCommandEvent& event)
 {
     cbAssert(m_activeDebugger);
     if(!m_disableContinue)
+    {
+        HideValueTooltip();
         m_activeDebugger->Continue();
+    }
 }
 
 void DebuggerMenuHandler::OnNext(wxCommandEvent& event)
 {
     cbAssert(m_activeDebugger);
+    HideValueTooltip();
     m_activeDebugger->Next();
 }
 
 void DebuggerMenuHandler::OnNextInstr(wxCommandEvent& event)
 {
     cbAssert(m_activeDebugger);
+    HideValueTooltip();
     m_activeDebugger->NextInstruction();
 }
 
 void DebuggerMenuHandler::OnStepIntoInstr(wxCommandEvent& event)
 {
     cbAssert(m_activeDebugger);
+    HideValueTooltip();
     m_activeDebugger->StepIntoInstruction();
 }
 
@@ -379,7 +392,10 @@ void DebuggerMenuHandler::OnStep(wxCommandEvent& event)
     if (m_activeDebugger->IsRunning())
     {
         if(!m_disableContinue)
+        {
+            HideValueTooltip();
             m_activeDebugger->Step();
+    	}
     }
     else
     {
@@ -402,6 +418,7 @@ void DebuggerMenuHandler::OnStep(wxCommandEvent& event)
 void DebuggerMenuHandler::OnStepOut(wxCommandEvent& event)
 {
     cbAssert(m_activeDebugger);
+    HideValueTooltip();
     m_activeDebugger->StepOut();
 }
 
@@ -423,6 +440,7 @@ void DebuggerMenuHandler::OnRunToCursor(wxCommandEvent& event)
             m_activeDebugger->ClearLog(false);
             LogActiveConfig();
         }
+        HideValueTooltip();
         if (!m_activeDebugger->RunToCursor(ed->GetFilename(), ed->GetControl()->GetCurrentLine() + 1, line_text))
             manager->SetIsRunning(NULL);
     }
@@ -434,6 +452,7 @@ void DebuggerMenuHandler::OnSetNextStatement(wxCommandEvent& event)
     cbEditor* ed = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
     if (!ed)
         return;
+    HideValueTooltip();
     m_activeDebugger->SetNextStatement(ed->GetFilename(), ed->GetControl()->GetCurrentLine() + 1);
 }
 

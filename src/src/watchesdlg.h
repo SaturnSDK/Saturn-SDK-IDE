@@ -8,9 +8,12 @@
 
 #include <vector>
 #include <wx/panel.h>
+#include <wx/popupwin.h>
+#include <wx/timer.h>
 
 #include <cbdebugger_interfaces.h>
 
+class wxBoxSizer;
 class wxPropertyGrid;
 class wxPropertyGridEvent;
 class wxPGProperty;
@@ -57,6 +60,38 @@ class WatchesDlg : public wxPanel, public cbWatchesDlg
         wxPropertyGrid *m_grid;
         WatchItems m_watches;
         bool m_append_empty_watch;
+};
+
+
+class ValueTooltip : public wxPopupWindow
+{
+    public:
+        ValueTooltip(const cbWatch::Pointer &watch, wxWindow *parent);
+        ~ValueTooltip();
+
+        void Dismiss();
+    protected:
+        virtual void OnDismiss();
+    private:
+        void Fit();
+        void ClearWatch();
+    private:
+
+        void OnCollapsed(wxPropertyGridEvent &event);
+        void OnExpanded(wxPropertyGridEvent &event);
+        void OnTimer(wxTimerEvent &event);
+    private:
+        wxPropertyGrid *m_grid;
+        wxBoxSizer *m_sizer;
+        wxPanel *m_panel;
+
+        wxTimer m_timer;
+        int m_outsideCount;
+
+        cbWatch::Pointer m_watch;
+    private:
+        DECLARE_CLASS(ValueTooltip)
+        DECLARE_EVENT_TABLE()
 };
 
 #endif // WATCHESDLG_H

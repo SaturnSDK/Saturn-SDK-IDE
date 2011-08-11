@@ -6,9 +6,12 @@
 #ifndef X_DEBUGGER_MANAGER_H
 #define X_DEBUGGER_MANAGER_H
 
-#include <map>
+#include "sdk.h"
 
 #ifndef CB_PRECOMP
+#   include <map>
+#   include <vector>
+
 #   include <manager.h>
 #   include <settings.h>
 #   include <wx/string.h>
@@ -224,7 +227,8 @@ struct DLLIMPORT cbDebuggerCommonConfig
         AutoBuild = 0,
         AutoSwitchFrame,
         ShowDebuggersLog,
-        JumpOnDoubleClick
+        JumpOnDoubleClick,
+        RequireCtrlForTooltips
     };
 
     static bool GetFlag(Flags flag);
@@ -285,6 +289,7 @@ class DLLIMPORT DebuggerManager : public Mgr<DebuggerManager>
 
     public: // debugger windows
         void SetInterfaceFactory(cbDebugInterfaceFactory *factory);
+        cbDebugInterfaceFactory* GetInterfaceFactory();
         void SetMenuHandler(cbDebuggerMenuHandler *handler);
 
         cbBacktraceDlg* GetBacktraceDialog();
@@ -304,8 +309,9 @@ class DLLIMPORT DebuggerManager : public Mgr<DebuggerManager>
         bool UpdateExamineMemory();
         bool UpdateThreads();
 
-    public:
+    public: // watches
         cbDebuggerPlugin* GetDebuggerHavingWatch(cbWatch *watch);
+        bool ShowValueTooltip(const cbWatch::Pointer &watch, const wxRect &rect);
 
         RegisteredPlugins const & GetAllDebuggers() const;
         RegisteredPlugins & GetAllDebuggers();

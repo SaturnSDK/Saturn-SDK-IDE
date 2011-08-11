@@ -8,10 +8,9 @@
 
 #include <wx/string.h>
 #include "settings.h"
+#include "debuggermanager.h"
 
 class cbDebuggerPlugin;
-class cbStackFrame;
-class cbWatch;
 class wxMenu;
 class wxObject;
 class wxWindow;
@@ -119,7 +118,11 @@ class DLLIMPORT cbDebuggerMenuHandler
 
 class DLLIMPORT cbDebugInterfaceFactory
 {
+        // make class non copyable
+        cbDebugInterfaceFactory(cbDebugInterfaceFactory &);
+        cbDebugInterfaceFactory& operator=(cbDebugInterfaceFactory &);
     public:
+        cbDebugInterfaceFactory();
         virtual ~cbDebugInterfaceFactory();
 
         virtual cbBacktraceDlg* CreateBacktrace() = 0;
@@ -142,6 +145,12 @@ class DLLIMPORT cbDebugInterfaceFactory
 
         virtual cbWatchesDlg* CreateWatches() = 0;
         virtual void DeleteWatches(cbWatchesDlg *dialog) = 0;
+
+        /** @brief Show new value tooltip
+          * @return Return True only if new tooltip was shown, else return False.
+          */
+        virtual bool ShowValueTooltip(const cbWatch::Pointer &watch, const wxRect &rect) = 0;
+        virtual void HideValueTooltip() = 0;
 };
 
 #endif // _CB_DEBUGGER_INTERFACES_H_

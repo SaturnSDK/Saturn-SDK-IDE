@@ -20,9 +20,6 @@
 #include <globals.h>
 #include <infowindow.h>
 
-// static
-GDBTipWindow* GdbCmd_TooltipEvaluation::s_pWin = 0;
-
 #ifdef __WXMSW__
 // for Registry detection of Cygwin
 #include <windows.h>

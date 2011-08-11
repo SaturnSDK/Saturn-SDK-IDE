@@ -752,19 +752,8 @@ class GdbCmd_Watch : public DebuggerCmd
                 }
             }
             else
-            {
-//                wxArrayString lines = GetArrayFromString(output, _T('\n'));
-//                if(lines.GetCount() > 1)
-//                {
-//                    for (unsigned int i = 0; i < lines.GetCount(); ++i)
-//                    {
-//                        w << lines[i] << _T(',');
-//                    }
-//                }
-//                else if(lines.GetCount() == 1)
-//                    w << lines[0];
                 w = output;
-            }
+
             w.Trim(true);
             w.Trim(false);
 
@@ -836,7 +825,6 @@ class GdbCmd_FindWatchType : public DebuggerCmd
   */
 class GdbCmd_TooltipEvaluation : public DebuggerCmd
 {
-        static GDBTipWindow* s_pWin;
         wxRect m_WinRect;
         wxString m_What;
         wxString m_Type;
@@ -860,17 +848,16 @@ class GdbCmd_TooltipEvaluation : public DebuggerCmd
             if (m_Cmd.IsEmpty())
             {
                 // if it's a pointer, automatically dereference it
-                wxString deref;
                 if (w_type.Length() > 2 && // at least 2 chars
                     w_type.Last() == _T('*') && // last is *
                     w_type.GetChar(w_type.Length() - 2) != _T('*') && // second last is not * (i.e. doesn't end with **)
                     !w_type.Contains(_T("char "))) // not char* (special case)
                 {
-                    deref = _T("*");
+                    m_What = wxT("*") + m_What;
                 }
 
-                m_Cmd << _T("output ");
-                m_Cmd << deref << what;
+                m_Cmd << wxT("output ");
+                m_Cmd << m_What;
             }
             else
             {
@@ -890,10 +877,7 @@ class GdbCmd_TooltipEvaluation : public DebuggerCmd
         {
             wxString contents;
             if (output.StartsWith(_T("No symbol ")) || output.StartsWith(_T("Attempt to ")))
-            {
-                m_What = _("Error");
                 contents = output;
-            }
             else
             {
                 if (!m_ParseFunc.IsEmpty())
@@ -920,21 +904,18 @@ class GdbCmd_TooltipEvaluation : public DebuggerCmd
 //                    }
                 }
             }
+            contents.Trim(true);
+            contents.Trim(false);
 
-            if (s_pWin)
+            GDBWatch::Pointer watch(new GDBWatch(m_What));
+            watch->SetType(m_Type);
+
+            ParseGDBWatchValue(*watch, contents);
+
+            if (Manager::Get()->GetDebuggerManager()->ShowValueTooltip(watch, m_WinRect))
             {
-                s_pWin->Close();
-                s_pWin = NULL;
-            }
-
-            wxPoint mouse_position;
-            ::wxGetMousePosition(&mouse_position.x, &mouse_position.y);
-
-            // We show the tooltip only if the user hasn't moved the mouse.
-            if (m_WinRect.Contains(mouse_position))
-            {
-                s_pWin = new GDBTipWindow((wxWindow*)Manager::Get()->GetAppWindow(), m_What, m_Type, m_Address,
-                                          contents, 640, &s_pWin, &m_WinRect);
+                watch->SetForTooltip(true);
+                m_pDriver->GetDebugger()->AddWatchNoUpdate(watch);
             }
         }
 };

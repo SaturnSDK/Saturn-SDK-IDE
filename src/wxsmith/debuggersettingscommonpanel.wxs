@@ -35,6 +35,14 @@
 						<object class="wxCheckBox" name="ID_JUMP_ON_DOUBLE_CLICK" variable="m_jumpOnDoubleClick" member="yes">
 							<label>Jump on Double-click in Stack trace window</label>
 						</object>
+						<flag>wxTOP|wxLEFT|wxRIGHT|wxALIGN_LEFT|wxALIGN_TOP</flag>
+						<border>5</border>
+						<option>1</option>
+					</object>
+					<object class="sizeritem">
+						<object class="wxCheckBox" name="ID_REQUIRE_CTRL_FOR_TOOLTIPS" variable="m_requireCtrlForTooltips" member="yes">
+							<label>Require Control key to show the &apos;Evaluate expression&apos; tooltips</label>
+						</object>
 						<flag>wxALL|wxALIGN_LEFT|wxALIGN_TOP</flag>
 						<border>5</border>
 						<option>1</option>

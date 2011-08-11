@@ -49,6 +49,8 @@ class DebuggerDriver
         void Log(const wxString& msg);
         void DebugLog(const wxString& msg);
 
+        DebuggerGDB* GetDebugger() { return m_pDBG; }
+
         ////////////////////////////////
         // BEFORE PROCESS STARTS - BEGIN
         ////////////////////////////////

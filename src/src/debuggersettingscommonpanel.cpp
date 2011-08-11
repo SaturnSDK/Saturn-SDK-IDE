@@ -20,6 +20,7 @@ const long DebuggerSettingsCommonPanel::ID_AUTOBUILD = wxNewId();
 const long DebuggerSettingsCommonPanel::ID_AUTOSWITCH = wxNewId();
 const long DebuggerSettingsCommonPanel::ID_DEBUGGERS_LOG = wxNewId();
 const long DebuggerSettingsCommonPanel::ID_JUMP_ON_DOUBLE_CLICK = wxNewId();
+const long DebuggerSettingsCommonPanel::ID_REQUIRE_CTRL_FOR_TOOLTIPS = wxNewId();
 //*)
 
 BEGIN_EVENT_TABLE(DebuggerSettingsCommonPanel,wxPanel)
@@ -47,7 +48,10 @@ DebuggerSettingsCommonPanel::DebuggerSettingsCommonPanel(wxWindow* parent)
 	flexSizer->Add(m_debuggersLog, 1, wxTOP|wxLEFT|wxRIGHT|wxALIGN_LEFT|wxALIGN_TOP, 5);
 	m_jumpOnDoubleClick = new wxCheckBox(this, ID_JUMP_ON_DOUBLE_CLICK, _("Jump on Double-click in Stack trace window"), wxDefaultPosition, wxDefaultSize, 0, wxDefaultValidator, _T("ID_JUMP_ON_DOUBLE_CLICK"));
 	m_jumpOnDoubleClick->SetValue(false);
-	flexSizer->Add(m_jumpOnDoubleClick, 1, wxALL|wxALIGN_LEFT|wxALIGN_TOP, 5);
+	flexSizer->Add(m_jumpOnDoubleClick, 1, wxTOP|wxLEFT|wxRIGHT|wxALIGN_LEFT|wxALIGN_TOP, 5);
+	m_requireCtrlForTooltips = new wxCheckBox(this, ID_REQUIRE_CTRL_FOR_TOOLTIPS, _("Require Control key to show the \'Evaluate expression\' tooltips"), wxDefaultPosition, wxDefaultSize, 0, wxDefaultValidator, _T("ID_REQUIRE_CTRL_FOR_TOOLTIPS"));
+	m_requireCtrlForTooltips->SetValue(false);
+	flexSizer->Add(m_requireCtrlForTooltips, 1, wxALL|wxALIGN_LEFT|wxALIGN_TOP, 5);
 	mainSizer->Add(flexSizer, 1, wxALL|wxALIGN_LEFT|wxALIGN_TOP, 0);
 	SetSizer(mainSizer);
 	mainSizer->Fit(this);
@@ -55,15 +59,18 @@ DebuggerSettingsCommonPanel::DebuggerSettingsCommonPanel(wxWindow* parent)
 	//*)
 
     m_autoBuild->SetValue(cbDebuggerCommonConfig::GetFlag(cbDebuggerCommonConfig::AutoBuild));
-    m_autoBuild->SetToolTip(_("Automatic project build before debug session is started"));
+    m_autoBuild->SetToolTip(_("Automatic project build before debug session is started."));
 
     m_autoSwitch->SetValue(cbDebuggerCommonConfig::GetFlag(cbDebuggerCommonConfig::AutoSwitchFrame));
-    m_autoSwitch->SetToolTip(_("When stopping, auto-switch to first frame with valid source info"));
+    m_autoSwitch->SetToolTip(_("When stopping, auto-switch to first frame with valid source info."));
 
     m_debuggersLog->SetValue(cbDebuggerCommonConfig::GetFlag(cbDebuggerCommonConfig::ShowDebuggersLog));
-    m_debuggersLog->SetToolTip(_("If enabled, the debugger&apos;s raw input/output will be logged in a separate log page"));
+    m_debuggersLog->SetToolTip(_("If enabled, the debugger&apos;s raw input/output will be logged in a separate log page."));
 
     m_jumpOnDoubleClick->SetValue(cbDebuggerCommonConfig::GetFlag(cbDebuggerCommonConfig::JumpOnDoubleClick));
+
+    m_requireCtrlForTooltips->SetValue(cbDebuggerCommonConfig::GetFlag(cbDebuggerCommonConfig::RequireCtrlForTooltips));
+    m_requireCtrlForTooltips->SetToolTip(_("If enabled, show 'Evaluate expression' tooltips only if the Control key is pressed."));
 }
 
 DebuggerSettingsCommonPanel::~DebuggerSettingsCommonPanel()
@@ -78,5 +85,7 @@ void DebuggerSettingsCommonPanel::SaveChanges()
     cbDebuggerCommonConfig::SetFlag(cbDebuggerCommonConfig::AutoSwitchFrame, m_autoSwitch->GetValue());
     cbDebuggerCommonConfig::SetFlag(cbDebuggerCommonConfig::ShowDebuggersLog, m_debuggersLog->GetValue());
     cbDebuggerCommonConfig::SetFlag(cbDebuggerCommonConfig::JumpOnDoubleClick, m_jumpOnDoubleClick->GetValue());
+    cbDebuggerCommonConfig::SetFlag(cbDebuggerCommonConfig::RequireCtrlForTooltips,
+                                    m_requireCtrlForTooltips->GetValue());
 }
 

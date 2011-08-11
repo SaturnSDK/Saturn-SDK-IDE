@@ -192,7 +192,23 @@ wxString cbDebuggerPlugin::GetEditorWordAtCaret(const wxPoint *mousePosition)
             selected_text.Trim(true);
             selected_text.Trim(false);
         }
-        return selected_text;
+		// check if the mouse is over the selected text
+        if (mousePosition)
+        {
+            int startPos = control->GetSelectionStart();
+            int endPos = control->GetSelectionEnd();
+            wxPoint startPoint = control->PointFromPosition(startPos);
+            wxPoint endPoint = control->PointFromPosition(endPos);
+            int endLine = control->LineFromPosition(endPos);
+            int textHeight = control->TextHeight(endLine);
+            endPoint.y+=textHeight;
+            if (wxRect(startPoint, endPoint).Contains(*mousePosition))
+                return selected_text;
+            else
+                return wxEmptyString;
+        }
+        else
+            return selected_text;
     }
 
     if (mousePosition)
@@ -913,6 +929,59 @@ void cbDebuggerPlugin::BringCBToFront()
     wxWindow* app = Manager::Get()->GetAppWindow();
     if (app)
         app->Raise();
+}
+
+void cbDebuggerPlugin::RegisterValueTooltip()
+{
+    typedef cbEventFunctor<cbDebuggerPlugin, CodeBlocksEvent> Event;
+    Manager::Get()->RegisterEventSink(cbEVT_EDITOR_TOOLTIP, new Event(this, &cbDebuggerPlugin::ProcessValueTooltip));
+}
+
+bool cbDebuggerPlugin::ShowValueTooltip(int /*style*/)
+{
+    return false;
+}
+
+// Default implementation does nothing
+void cbDebuggerPlugin::OnValueTooltip(const wxString &/*token*/, const wxRect &/*evalRect*/)
+{
+}
+
+void cbDebuggerPlugin::ProcessValueTooltip(CodeBlocksEvent& event)
+{
+    event.Skip();
+    if (cbDebuggerCommonConfig::GetFlag(cbDebuggerCommonConfig::RequireCtrlForTooltips))
+    {
+        if (!wxGetKeyState(WXK_CONTROL))
+            return;
+    }
+
+    if (!ShowValueTooltip(event.GetInt()))
+        return;
+
+    EditorBase* base = event.GetEditor();
+    cbEditor* ed = base && base->IsBuiltinEditor() ? static_cast<cbEditor*>(base) : 0;
+    if (!ed)
+        return;
+
+    if (ed->IsContextMenuOpened())
+        return;
+
+    // get rid of other calltips (if any) [for example the code completion one, at this time we
+    // want the debugger value call/tool-tip to win and be shown]
+    if (ed->GetControl()->CallTipActive())
+        ed->GetControl()->CallTipCancel();
+
+    wxPoint pt;
+    pt.x = event.GetX();
+    pt.y = event.GetY();
+
+    const wxString &token = GetEditorWordAtCaret(&pt);
+    if (!token.empty())
+    {
+        pt = ed->GetControl()->ClientToScreen(pt);
+        OnValueTooltip(token, wxRect(pt.x - 5, pt.y, 10, 10));
+    }
 }
 
 
