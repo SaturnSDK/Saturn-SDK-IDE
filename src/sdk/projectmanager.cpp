@@ -1343,7 +1343,7 @@ void ProjectManager::UnfreezeTree(bool /*force*/)
 
 void ProjectManager::RebuildTree()
 {
-    if (Manager::isappShuttingDown())
+    if (Manager::isappShuttingDown() || Manager::IsBatchBuild()) // saves a lot of time at startup for large projects
         return;
 
     FreezeTree();
@@ -1480,7 +1480,7 @@ int ProjectManager::AddMultipleFilesToProject(const wxArrayString& filelist, cbP
     {
         project->BeginAddFiles();
 
-        wxArrayString addedFiles; // to know which files were added succesfully
+        wxArrayString addedFiles; // to know which files were added successfully
         for (unsigned int i = 0; i < filelist.GetCount(); ++i)
         {
             if (DoAddFileToProject(filelist[i], project, targets) != 0)

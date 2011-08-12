@@ -54,18 +54,18 @@
 
 #if CC_CLASS_BROWSER_DEBUG_OUTPUT == 1
     #define TRACE(format, args...) \
-        Manager::Get()->GetLogManager()->DebugLog(F(format, ##args))
+        CCLogger::Get()->DebugLog(F(format, ##args))
     #define TRACE2(format, args...)
 #elif CC_CLASS_BROWSER_DEBUG_OUTPUT == 2
     #define TRACE(format, args...)                                              \
         do                                                                      \
         {                                                                       \
             if (g_EnableDebugTrace)                                             \
-                Manager::Get()->GetLogManager()->DebugLog(F(format, ##args));   \
+                CCLogger::Get()->DebugLog(F(format, ##args));                   \
         }                                                                       \
         while (false)
     #define TRACE2(format, args...) \
-        Manager::Get()->GetLogManager()->DebugLog(F(format, ##args))
+        CCLogger::Get()->DebugLog(F(format, ##args))
 #else
     #define TRACE(format, args...)
     #define TRACE2(format, args...)
@@ -85,7 +85,6 @@ int idCBSortByAlpabet          = wxNewId();
 int idCBSortByKind             = wxNewId();
 int idCBSortByScope            = wxNewId();
 int idCBBottomTree             = wxNewId();
-
 
 BEGIN_EVENT_TABLE(ClassBrowser, wxPanel)
     EVT_TREE_ITEM_ACTIVATED  (XRCID("treeMembers"), ClassBrowser::OnTreeItemDoubleClick)
@@ -167,7 +166,7 @@ ClassBrowser::~ClassBrowser()
     }
 }
 
-void ClassBrowser::SetParser(Parser* parser)
+void ClassBrowser::SetParser(ParserBase* parser)
 {
     if (m_Parser == parser)
         return;
@@ -175,8 +174,10 @@ void ClassBrowser::SetParser(Parser* parser)
     m_Parser = parser;
     if (m_Parser)
     {
-        m_Parser->ClassBrowserOptions().displayFilter =
-            (BrowserDisplayFilter)XRCCTRL(*this, "cmbView", wxChoice)->GetSelection();
+        BrowserDisplayFilter filter = (BrowserDisplayFilter)XRCCTRL(*this, "cmbView", wxChoice)->GetSelection();
+        if (!m_NativeParser->IsParserPerWorkspace() && filter == bdfWorkspace)
+            filter = bdfProject;
+        m_Parser->ClassBrowserOptions().displayFilter = filter;
         m_Parser->WriteOptions();
     }
 
@@ -616,7 +617,17 @@ void ClassBrowser::OnViewScope(wxCommandEvent& event)
 {
     if (m_Parser)
     {
-        m_Parser->ClassBrowserOptions().displayFilter = (BrowserDisplayFilter)event.GetSelection();
+        BrowserDisplayFilter filter = (BrowserDisplayFilter)event.GetSelection();
+        if (!m_NativeParser->IsParserPerWorkspace() && filter == bdfWorkspace)
+        {
+            cbMessageBox(_("This feature is not supported in combination with\n"
+                           "the option \"one parser per whole worspace\"."),
+                         _("Information"), wxICON_INFORMATION);
+            filter = bdfProject;
+            XRCCTRL(*this, "cmbView", wxChoice)->SetSelection(filter);
+        }
+
+        m_Parser->ClassBrowserOptions().displayFilter = filter;
         m_Parser->WriteOptions();
         UpdateView();
     }
@@ -664,7 +675,8 @@ void ClassBrowser::OnSearch(wxCommandEvent& event)
         const size_t count = tokensTree->FindMatches(search, result, false, true);
         if (count == 0)
         {
-            cbMessageBox(_("No matches were found: ") + search, _("Search failed"));
+            cbMessageBox(_("No matches were found: ") + search,
+                         _("Search failed"), wxICON_INFORMATION);
             return;
         }
         else if (count == 1)

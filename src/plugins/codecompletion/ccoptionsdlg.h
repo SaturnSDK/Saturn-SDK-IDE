@@ -26,8 +26,6 @@ public:
     virtual void OnCancel()                    { ; }
 
 protected:
-    void OnParserPerWorkspace(wxCommandEvent& event);
-    void OnParserPerProject(wxCommandEvent& event);
     void OnAddRepl(wxCommandEvent& event);
     void OnEditRepl(wxCommandEvent& event);
     void OnDelRepl(wxCommandEvent& event);
@@ -42,7 +40,7 @@ private:
 
     NativeParser*   m_NativeParsers;
     CodeCompletion* m_CodeCompletion;
-    Parser&         m_Parser;
+    ParserBase&     m_Parser;
 
     DECLARE_EVENT_TABLE()
 };

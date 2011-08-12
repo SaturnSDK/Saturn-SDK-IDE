@@ -49,18 +49,18 @@
 
 #if CC_PARSER_DEBUG_OUTPUT == 1
     #define TRACE(format, args...) \
-        Manager::Get()->GetLogManager()->DebugLog(F(format, ##args))
+        CCLogger::Get()->DebugLog(F(format, ##args))
     #define TRACE2(format, args...)
 #elif CC_PARSER_DEBUG_OUTPUT == 2
     #define TRACE(format, args...)                                              \
         do                                                                      \
         {                                                                       \
             if (g_EnableDebugTrace)                                             \
-                Manager::Get()->GetLogManager()->DebugLog(F(format, ##args));   \
+                CCLogger::Get()->DebugLog(F(format, ##args));                   \
         }                                                                       \
         while (false)
     #define TRACE2(format, args...) \
-        Manager::Get()->GetLogManager()->DebugLog(F(format, ##args))
+        CCLogger::Get()->DebugLog(F(format, ##args))
 #else
     #define TRACE(format, args...)
     #define TRACE2(format, args...)
@@ -70,16 +70,11 @@ static const char CACHE_MAGIC[]      = "CCCACHE_1_4";
 static const int batch_timer_delay   = 300;
 static const int reparse_timer_delay = 100;
 
-int PARSER_START   = wxNewId();
-int PARSER_END     = wxNewId();
-int TIMER_ID       = wxNewId();
-int BATCH_TIMER_ID = wxNewId();
+int idParserStart = wxNewId();
+int idParserEnd   = wxNewId();
 
 static volatile Parser* s_CurrentParser = nullptr;
 static wxCriticalSection s_ParserCritical;
-
-BEGIN_EVENT_TABLE(Parser, wxEvtHandler)
-END_EVENT_TABLE()
 
 class AddParseThread : public cbThreadedTask
 {
@@ -89,49 +84,66 @@ public:
 
     int Execute()
     {
-        wxCriticalSectionLocker locker1(s_TokensTreeCritical);
-        wxCriticalSectionLocker locker2(s_ParserCritical);
-
-        m_Parser.m_IsParsing = false;
-
         // Pre-defined macros
-        if (!m_Parser.m_PredefinedMacros.IsEmpty())
         {
-            ParserThreadOptions opts;
-            opts.wantPreprocessor     = m_Parser.m_Options.wantPreprocessor;
-            opts.parseComplexMacros   = m_Parser.m_Options.parseComplexMacros;
-            opts.followLocalIncludes  = m_Parser.m_Options.followLocalIncludes;
-            opts.followGlobalIncludes = m_Parser.m_Options.followGlobalIncludes;
-            opts.useBuffer            = true;
-            opts.isTemp               = false;
-            opts.bufferSkipBlocks     = false;
-            opts.handleFunctions      = false;
-            m_Parser.Parse(m_Parser.m_PredefinedMacros, false, opts);
-            m_Parser.m_PredefinedMacros.Clear();
+            wxCriticalSectionLocker locker(s_ParserCritical);
+            if (!m_Parser.m_PredefinedMacros.IsEmpty())
+            {
+                ParserThreadOptions opts;
+                opts.wantPreprocessor     = m_Parser.m_Options.wantPreprocessor;
+                opts.parseComplexMacros   = m_Parser.m_Options.parseComplexMacros;
+                opts.followLocalIncludes  = m_Parser.m_Options.followLocalIncludes;
+                opts.followGlobalIncludes = m_Parser.m_Options.followGlobalIncludes;
+                opts.useBuffer            = true;
+                opts.isTemp               = false;
+                opts.bufferSkipBlocks     = false;
+                opts.handleFunctions      = false;
+                wxCriticalSectionLocker locker(s_TokensTreeCritical);
+                m_Parser.Parse(m_Parser.m_PredefinedMacros, false, opts);
+                m_Parser.m_PredefinedMacros.Clear();
+            }
         }
 
         // Add priority headers
-        if (!m_Parser.m_PriorityHeaders.empty())
         {
+            s_ParserCritical.Enter();
             m_Parser.m_IsPriority = true;
-            StringList::iterator it = m_Parser.m_PriorityHeaders.begin();
-            for (; it != m_Parser.m_PriorityHeaders.end(); ++it)
-                m_Parser.Parse(*it);
+            while (!m_Parser.m_PriorityHeaders.empty())
+            {
+                wxCriticalSectionLocker locker(s_TokensTreeCritical);
+                m_Parser.Parse(m_Parser.m_PriorityHeaders.front());
+                m_Parser.m_PriorityHeaders.pop_front();
+                s_ParserCritical.Leave();
+                wxMilliSleep(1);
+                s_ParserCritical.Enter();
+            }
             m_Parser.m_IsPriority = false;
-            m_Parser.m_PriorityHeaders.clear();
+            s_ParserCritical.Leave();
         }
 
         // Add all other files
-        if (!m_Parser.m_BatchParseFiles.empty())
         {
-            m_Parser.m_IsFirstBatch = true;
-            StringList::iterator it = m_Parser.m_BatchParseFiles.begin();
-            for (; it != m_Parser.m_BatchParseFiles.end(); ++it)
-                m_Parser.Parse(*it);
-            m_Parser.m_BatchParseFiles.clear();
+            s_ParserCritical.Enter();
+            if (m_Parser.m_IgnoreThreadEvents)
+                m_Parser.m_IsFirstBatch = true;
+            while (!m_Parser.m_BatchParseFiles.empty())
+            {
+                wxCriticalSectionLocker locker(s_TokensTreeCritical);
+                m_Parser.Parse(m_Parser.m_BatchParseFiles.front());
+                m_Parser.m_BatchParseFiles.pop_front();
+                s_ParserCritical.Leave();
+                wxMilliSleep(1);
+                s_ParserCritical.Enter();
+            }
+            s_ParserCritical.Leave();
         }
 
-        m_Parser.m_IsParsing = true;
+        wxCriticalSectionLocker locker(s_ParserCritical);
+        if (m_Parser.m_IgnoreThreadEvents)
+        {
+            m_Parser.m_IgnoreThreadEvents = false;
+            m_Parser.m_IsParsing = true;
+        }
 
         return 0;
     }
@@ -150,16 +162,18 @@ public:
 
     int Execute()
     {
-        wxCriticalSectionLocker locker(s_TokensTreeCritical);
-
         // mark all project files as local
         for (int i = 0; i < m_Project.GetFilesCount(); ++i)
         {
             ProjectFile* pf = m_Project.GetFile(i);
             if (!pf)
                 continue;
+
             if (CCFileTypeOf(pf->relativeFilename) != ccftOther)
+            {
+                wxCriticalSectionLocker locker(s_TokensTreeCritical);
                 m_Parser.GetTokensTree()->MarkFileTokensAsLocal(pf->file.GetFullPath(), true, &m_Project);
+            }
         }
 
         return 0;
@@ -170,77 +184,27 @@ private:
     cbProject& m_Project;
 };
 
-Parser::Parser(wxEvtHandler* parent, cbProject* project) :
-    m_Parent(parent),
-    m_Project(project),
-    m_UsingCache(false),
-    m_Pool(this, wxNewId(), 1, 2 * 1024 * 1024), // in the meanwhile it'll have to be forced to 1
-    m_IsPriority(false),
-    m_NeedsReparse(false),
-    m_IsFirstBatch(false),
-    m_IsParsing(false),
-    m_Timer(this, TIMER_ID),
-    m_BatchTimer(this, BATCH_TIMER_ID),
-    m_StopWatchRunning(false),
-    m_LastStopWatchTime(0),
-    m_IgnoreThreadEvents(true),
-    m_IsBatchParseDone(false),
-    m_ParsingType(ptCreateParser),
-    m_NeedMarkFileAsLocal(true)
+ParserBase::ParserBase()
 {
     m_TokensTree = new TokensTree;
     m_TempTokensTree = new TokensTree;
     ReadOptions();
-    ConnectEvents();
 }
 
-Parser::~Parser()
+ParserBase::~ParserBase()
 {
-    // 1. Stop all timers
-    m_Timer.Stop();
-    m_BatchTimer.Stop();
-
-    // 2. Let's OnAllThreadsDone can not process event
-    m_IgnoreThreadEvents = true;
-
-    // 3. Disconnect events
-    DisconnectEvents();
-
-    // 4. Abort all thread
-    TerminateAllThreads();
-
-    // 5. Free memory
-    delete m_TempTokensTree;
-    m_TempTokensTree = nullptr;
-    delete m_TokensTree;
-    m_TokensTree = nullptr;
-
-    // 6. Reset current parser
-    if (s_CurrentParser == this)
-        s_CurrentParser = nullptr;
+    wxCriticalSectionLocker locker(s_TokensTreeCritical);
+    Delete(m_TokensTree);
+    Delete(m_TempTokensTree);
 }
 
-void Parser::ConnectEvents()
+size_t ParserBase::GetFilesCount()
 {
-    Connect(-1, -1, cbEVT_THREADTASK_ALLDONE,
-            (wxObjectEventFunction)(wxEventFunction)(wxCommandEventFunction)
-            &Parser::OnAllThreadsDone);
-    Connect(TIMER_ID, -1, wxEVT_TIMER,
-            (wxObjectEventFunction)(wxEventFunction)(wxTimerEventFunction)
-            &Parser::OnTimer);
-    Connect(BATCH_TIMER_ID, -1, wxEVT_TIMER,
-            (wxObjectEventFunction)(wxEventFunction)(wxTimerEventFunction)
-            &Parser::OnBatchTimer);
+    wxCriticalSectionLocker locker(s_TokensTreeCritical);
+    return m_TokensTree->m_FilesMap.size();
 }
 
-void Parser::DisconnectEvents()
-{
-    Disconnect(-1, BATCH_TIMER_ID, wxEVT_TIMER);
-    Disconnect(-1, TIMER_ID,       wxEVT_TIMER);
-    Disconnect(-1, -1,             cbEVT_THREADTASK_ALLDONE);
-}
-
-void Parser::ReadOptions()
+void ParserBase::ReadOptions()
 {
     ConfigManager* cfg = Manager::Get()->GetConfigManager(_T("code_completion"));
 
@@ -255,8 +219,6 @@ void Parser::ReadOptions()
         cfg->Write(_T("/want_preprocessor"),             true);
         cfg->Write(_T("/parse_complex_macros"),          true);
     }
-
-    //m_Pool.SetConcurrentThreads(cfg->ReadInt(_T("/max_threads"), 1)); // Ignore it in the meanwhile
 
     // Page "Code Completion"
     m_Options.useSmartSense        = cfg->ReadBool(_T("/use_SmartSense"),                true);
@@ -279,7 +241,7 @@ void Parser::ReadOptions()
     m_BrowserOptions.sortType        = (BrowserSortType)cfg->ReadInt(_T("/browser_sort_type"),           bstKind);
 }
 
-void Parser::WriteOptions()
+void ParserBase::WriteOptions()
 {
     ConfigManager* cfg = Manager::Get()->GetConfigManager(_T("code_completion"));
 
@@ -293,7 +255,6 @@ void Parser::WriteOptions()
     cfg->Write(_T("/parser_follow_global_includes"), m_Options.followGlobalIncludes);
     cfg->Write(_T("/want_preprocessor"),             m_Options.wantPreprocessor);
     cfg->Write(_T("/parse_complex_macros"),          m_Options.parseComplexMacros);
-    cfg->Write(_T("/max_threads"),              (int)GetMaxThreads());
 
     // Page "Symbol browser"
     cfg->Write(_T("/browser_show_inheritance"),      m_BrowserOptions.showInheritance);
@@ -305,68 +266,112 @@ void Parser::WriteOptions()
     cfg->Write(_T("/browser_sort_type"),             m_BrowserOptions.sortType);
 }
 
-bool Parser::CacheNeedsUpdate()
+void ParserBase::AddIncludeDir(const wxString& dir)
 {
-    if (m_UsingCache)
+    if (dir.IsEmpty())
+        return;
+
+    wxString base = dir;
+    if (base.Last() == wxFILE_SEP_PATH)
+        base.RemoveLast();
+    if (!wxDir::Exists(base))
     {
-        wxCriticalSectionLocker locker(s_TokensTreeCritical);
-        return m_TokensTree->m_Modified;
+        TRACE(_T("AddIncludeDir() : Directory %s does not exist?!"), base.wx_str());
+        return;
     }
-    return true;
+
+    if (m_IncludeDirs.Index(base) == wxNOT_FOUND)
+    {
+        TRACE(_T("AddIncludeDir() : Adding %s"), base.wx_str());
+        m_IncludeDirs.Add(base);
+    }
 }
 
-unsigned int Parser::GetFilesCount()
+wxString ParserBase::FindFirstFileInIncludeDirs(const wxString& file)
 {
-    wxCriticalSectionLocker locker(s_TokensTreeCritical);
-    return m_TokensTree->m_FilesMap.size();
+    wxString FirstFound = m_GlobalIncludes.GetItem(file);
+    if (FirstFound.IsEmpty())
+    {
+        wxArrayString FoundSet = FindFileInIncludeDirs(file,true);
+        if (FoundSet.GetCount())
+        {
+            FirstFound = UnixFilename(FoundSet[0]);
+            m_GlobalIncludes.AddItem(file, FirstFound);
+        }
+    }
+    return FirstFound;
 }
 
-bool Parser::Done()
+wxArrayString ParserBase::FindFileInIncludeDirs(const wxString& file, bool firstonly)
 {
-    wxCriticalSectionLocker locker(s_ParserCritical);
+    wxArrayString FoundSet;
+    for (size_t idxSearch = 0; idxSearch < m_IncludeDirs.GetCount(); ++idxSearch)
+    {
+        wxString base = m_IncludeDirs[idxSearch];
+        wxFileName tmp = file;
+        NormalizePath(tmp,base);
+        wxString fullname = tmp.GetFullPath();
+        if (wxFileExists(fullname))
+        {
+            FoundSet.Add(fullname);
+            if (firstonly)
+                break;
+        }
+    }
 
-    bool done =    m_PriorityHeaders.empty()
-                && m_SystemPriorityHeaders.empty()
-                && m_BatchParseFiles.empty()
-                && m_PredefinedMacros.IsEmpty()
-                && !m_NeedMarkFileAsLocal
-                && m_PoolTask.empty()
-                && m_Pool.Done();
+    TRACE(_T("FindFileInIncludeDirs() : Searching %s"), file.wx_str());
+    TRACE(_T("FindFileInIncludeDirs() : Found %d"), FoundSet.GetCount());
 
-    return done;
+    return FoundSet;
 }
 
-wxString Parser::NotDoneReason()
+wxString ParserBase::GetFullFileName(const wxString& src, const wxString& tgt, bool isGlobal)
 {
-    wxCriticalSectionLocker locker(s_ParserCritical);
+    wxString fullname;
+    if (isGlobal)
+    {
+        fullname = FindFirstFileInIncludeDirs(tgt);
+        if (fullname.IsEmpty())
+        {
+            // not found; check this case:
+            //
+            // we had entered the previous file like this: #include <gl/gl.h>
+            // and it now does this: #include "glext.h"
+            // glext.h was correctly not found above but we can now search
+            // for gl/glext.h.
+            // if we still not find it, it's not there. A compilation error
+            // is imminent (well, almost - I guess the compiler knows a little better ;).
+            wxString base = wxFileName(src).GetPath(wxPATH_GET_VOLUME | wxPATH_GET_SEPARATOR);
+            fullname = FindFirstFileInIncludeDirs(base + tgt);
+        }
+    }
 
-    wxString reason = _T(" > Reasons:");
-    if (!m_PriorityHeaders.empty())
-      reason += _T("\n- still priority headers to parse");
-    if (!m_SystemPriorityHeaders.empty())
-      reason += _T("\n- still system priority headers to parse");
-    if (!m_BatchParseFiles.empty())
-      reason += _T("\n- still batch parse files to parse");
-    if (!m_PredefinedMacros.IsEmpty())
-      reason += _T("\n- still pre-defined macros to operate");
-    if (m_NeedMarkFileAsLocal)
-      reason += _T("\n- still need to mark files as local");
-    if (!m_PoolTask.empty())
-      reason += _T("\n- still parser threads (tasks) in the pool");
-    if (!m_Pool.Done())
-      reason += _T("\n- thread pool is not done yet");
+    // NOTE: isGlobal is always true. The following code never executes...
 
-    return reason;
+    else // local files are more tricky, since they depend on two filenames
+    {
+        wxFileName fname(tgt);
+        wxFileName source(src);
+        if (NormalizePath(fname,source.GetPath(wxPATH_GET_VOLUME)))
+        {
+            fullname = fname.GetFullPath();
+            if (!wxFileExists(fullname))
+                fullname.Clear();
+        }
+    }
+
+    return fullname;
 }
 
-Token* Parser::FindTokenByName(const wxString& name, bool globalsOnly, short int kindMask)
+
+Token* ParserBase::FindTokenByName(const wxString& name, bool globalsOnly, short int kindMask)
 {
     wxCriticalSectionLocker locker(s_TokensTreeCritical);
     int result = m_TokensTree->TokenExists(name, -1, kindMask);
     return m_TokensTree->at(result);
 }
 
-Token* Parser::FindChildTokenByName(Token* parent, const wxString& name, bool useInheritance, short int kindMask)
+Token* ParserBase::FindChildTokenByName(Token* parent, const wxString& name, bool useInheritance, short int kindMask)
 {
     if (!parent)
         return FindTokenByName(name, false, kindMask);
@@ -393,7 +398,7 @@ Token* Parser::FindChildTokenByName(Token* parent, const wxString& name, bool us
 
 // No critical section needed here:
 // All functions that call this, already entered a critical section.
-size_t Parser::FindMatches(const wxString& s, TokenIdxSet& result, bool caseSensitive, bool is_prefix)
+size_t ParserBase::FindMatches(const wxString& s, TokenIdxSet& result, bool caseSensitive, bool is_prefix)
 {
     result.clear();
     TokenIdxSet tmpresult;
@@ -413,9 +418,127 @@ size_t Parser::FindMatches(const wxString& s, TokenIdxSet& result, bool caseSens
 
 // No critical section needed here:
 // All functions that call this, already entered a critical section.
+size_t ParserBase::FindTokensInFile(const wxString& fileName, TokenIdxSet& result, short int kindMask)
+{
+    result.clear();
+    wxString file = UnixFilename(fileName);
+    TokenIdxSet tmpresult;
+
+    TRACE(_T("Parser::FindTokensInFile() : Searching for file '%s' in tokens tree..."), file.wx_str());
+    if ( !m_TokensTree->FindTokensInFile(file, tmpresult, kindMask) )
+        return 0;
+
+    for (TokenIdxSet::iterator it = tmpresult.begin(); it != tmpresult.end(); ++it)
+    {
+        Token* token = m_TokensTree->at(*it);
+        if (token)
+            result.insert(*it);
+    }
+    return result.size();
+}
+
+Parser::Parser(wxEvtHandler* parent, cbProject* project) :
+    m_Parent(parent),
+    m_Project(project),
+    m_UsingCache(false),
+    m_Pool(this, wxNewId(), 1, 2 * 1024 * 1024), // in the meanwhile it'll have to be forced to 1
+    m_IsParsing(false),
+    m_IsPriority(false),
+    m_NeedsReparse(false),
+    m_IsFirstBatch(false),
+    m_ReparseTimer(this, wxNewId()),
+    m_BatchTimer(this, wxNewId()),
+    m_StopWatchRunning(false),
+    m_LastStopWatchTime(0),
+    m_IgnoreThreadEvents(true),
+    m_IsBatchParseDone(false),
+    m_ParsingType(ptCreateParser),
+    m_NeedMarkFileAsLocal(true)
+{
+    ConnectEvents();
+}
+
+Parser::~Parser()
+{
+    wxCriticalSectionLocker locker(s_ParserCritical);
+
+    DisconnectEvents();
+    TerminateAllThreads();
+
+    if (s_CurrentParser == this)
+        s_CurrentParser = nullptr;
+}
+
+void Parser::ConnectEvents()
+{
+    Connect(m_Pool.GetId(), cbEVT_THREADTASK_ALLDONE,
+            (wxObjectEventFunction)(wxEventFunction)(wxCommandEventFunction)&Parser::OnAllThreadsDone);
+    Connect(m_ReparseTimer.GetId(), wxEVT_TIMER, wxTimerEventHandler(Parser::OnReparseTimer));
+    Connect(m_BatchTimer.GetId(), wxEVT_TIMER, wxTimerEventHandler(Parser::OnBatchTimer));
+}
+
+void Parser::DisconnectEvents()
+{
+    Disconnect(m_Pool.GetId(), cbEVT_THREADTASK_ALLDONE,
+               (wxObjectEventFunction)(wxEventFunction)(wxCommandEventFunction)&Parser::OnAllThreadsDone);
+    Disconnect(m_ReparseTimer.GetId(), wxEVT_TIMER, wxTimerEventHandler(Parser::OnReparseTimer));
+    Disconnect(m_BatchTimer.GetId(), wxEVT_TIMER, wxTimerEventHandler(Parser::OnBatchTimer));
+}
+
+bool Parser::CacheNeedsUpdate()
+{
+    if (m_UsingCache)
+    {
+        wxCriticalSectionLocker locker(s_TokensTreeCritical);
+        return m_TokensTree->m_Modified;
+    }
+    return true;
+}
+
+bool Parser::Done()
+{
+    wxCriticalSectionLocker locker(s_ParserCritical);
+
+    bool done =    m_PriorityHeaders.empty()
+                && m_SystemPriorityHeaders.empty()
+                && m_BatchParseFiles.empty()
+                && m_PredefinedMacros.IsEmpty()
+                && !m_NeedMarkFileAsLocal
+                && m_PoolTask.empty()
+                && m_Pool.Done();
+
+    return done;
+}
+
+wxString Parser::NotDoneReason()
+{
+    wxCriticalSectionLocker locker(s_ParserCritical);
+
+    wxString reason = _T(" > Reasons:");
+    if (!m_PriorityHeaders.empty())
+        reason += _T("\n- still priority headers to parse");
+    if (!m_SystemPriorityHeaders.empty())
+        reason += _T("\n- still system priority headers to parse");
+    if (!m_BatchParseFiles.empty())
+        reason += _T("\n- still batch parse files to parse");
+    if (!m_PredefinedMacros.IsEmpty())
+        reason += _T("\n- still pre-defined macros to operate");
+    if (m_NeedMarkFileAsLocal)
+        reason += _T("\n- still need to mark files as local");
+    if (!m_PoolTask.empty())
+        reason += _T("\n- still parser threads (tasks) in the pool");
+    if (!m_Pool.Done())
+        reason += _T("\n- thread pool is not done yet");
+
+    return reason;
+}
+
+// No critical section needed here:
+// All functions that call this, already entered a critical section.
 bool Parser::ParseBuffer(const wxString& buffer, bool isLocal, bool bufferSkipBlocks, bool isTemp,
                          const wxString& filename, Token* parent, int initLine)
 {
+    wxCriticalSectionLocker locker(s_ParserCritical);
     ParserThreadOptions opts;
 
     opts.wantPreprocessor     = m_Options.wantPreprocessor;
@@ -433,12 +556,12 @@ bool Parser::ParseBuffer(const wxString& buffer, bool isLocal, bool bufferSkipBl
     return Parse(buffer, isLocal, opts);
 }
 
-void Parser::AddPriorityHeaders(const wxString& filename, bool systemHeaderFile, bool delay)
+void Parser::AddPriorityHeaders(const wxString& filename, bool systemHeaderFile)
 {
-    wxCriticalSectionLocker locker(s_ParserCritical);
-
-    if (!m_IsParsing && m_BatchTimer.IsRunning())
+    if (m_BatchTimer.IsRunning())
         m_BatchTimer.Stop();
+
+    wxCriticalSectionLocker locker(s_ParserCritical);
 
     // Do priority parse in sub thread
     m_PriorityHeaders.push_back(filename);
@@ -448,15 +571,15 @@ void Parser::AddPriorityHeaders(const wxString& filename, bool systemHeaderFile,
         m_SystemPriorityHeaders.push_back(filename);
 
     if (!m_IsParsing)
-        m_BatchTimer.Start(delay ? batch_timer_delay : 1, wxTIMER_ONE_SHOT);
+        m_BatchTimer.Start(batch_timer_delay, wxTIMER_ONE_SHOT);
 }
 
-void Parser::AddBatchParse(const StringList& filenames, bool delay)
+void Parser::AddBatchParse(const StringList& filenames)
 {
-    wxCriticalSectionLocker locker(s_ParserCritical);
-
-    if (!m_IsParsing && m_BatchTimer.IsRunning())
+    if (m_BatchTimer.IsRunning())
         m_BatchTimer.Stop();
+
+    wxCriticalSectionLocker locker(s_ParserCritical);
 
     if (m_BatchParseFiles.empty())
         m_BatchParseFiles = filenames;
@@ -464,20 +587,19 @@ void Parser::AddBatchParse(const StringList& filenames, bool delay)
         std::copy(filenames.begin(), filenames.end(), std::back_inserter(m_BatchParseFiles));
 
     if (!m_IsParsing)
-        m_BatchTimer.Start(delay ? batch_timer_delay : 1, wxTIMER_ONE_SHOT);
+        m_BatchTimer.Start(batch_timer_delay, wxTIMER_ONE_SHOT);
 }
 
-void Parser::AddParse(const wxString& filename, bool delay)
+void Parser::AddParse(const wxString& filename)
 {
-    wxCriticalSectionLocker locker(s_ParserCritical);
-
-    if (!m_IsParsing && m_BatchTimer.IsRunning())
+    if (m_BatchTimer.IsRunning())
         m_BatchTimer.Stop();
 
+    wxCriticalSectionLocker locker(s_ParserCritical);
     m_BatchParseFiles.push_back(filename);
 
     if (!m_IsParsing)
-        m_BatchTimer.Start(delay ? batch_timer_delay : 10, wxTIMER_ONE_SHOT);
+        m_BatchTimer.Start(batch_timer_delay, wxTIMER_ONE_SHOT);
 }
 
 bool Parser::Parse(const wxString& filename, bool isLocal, LoaderBase* loader)
@@ -511,7 +633,7 @@ bool Parser::Parse(const wxString& bufferOrFilename, bool isLocal, ParserThreadO
             if (!canparse)
             {
                if (opts.loader) // if a loader is already open at this point, the caller must clean it up
-                   Manager::Get()->GetLogManager()->DebugLog(_T("Parse() : CodeCompletion Plugin: FileLoader memory leak likely while loading file ")+bufferOrFilename);
+                   CCLogger::Get()->DebugLog(_T("Parse() : CodeCompletion Plugin: FileLoader memory leak likely while loading file ")+bufferOrFilename);
                break;
             }
 
@@ -534,7 +656,6 @@ bool Parser::Parse(const wxString& bufferOrFilename, bool isLocal, ParserThreadO
         if (doParseNow)
         {
             result = thread->Parse();
-            m_TempTokensTree->RecalcData();
             delete thread;
             break;
         }
@@ -571,7 +692,15 @@ bool Parser::Parse(const wxString& bufferOrFilename, bool isLocal, ParserThreadO
             if (m_IsParsing)
                 m_Pool.AddTask(thread, true);
             else
-                m_PoolTask.back().push_back(thread);
+            {
+                if (!m_PoolTask.empty())
+                    m_PoolTask.back().push_back(thread);
+                else
+                {
+                    Manager::Get()->GetLogManager()->DebugLog(_T("Why m_PoolTask is empty?"));
+                    return false;
+                }
+            }
         }
 
         result = true;
@@ -586,11 +715,13 @@ bool Parser::Parse(const wxString& bufferOrFilename, bool isLocal, ParserThreadO
 bool Parser::ParseBufferForFunctions(const wxString& buffer)
 {
     ParserThreadOptions opts;
-    opts.wantPreprocessor   = m_Options.wantPreprocessor;
-    opts.parseComplexMacros = m_Options.parseComplexMacros;
-    opts.useBuffer          = true;
-    opts.bufferSkipBlocks   = true;
-    opts.handleFunctions    = true;
+    opts.wantPreprocessor     = m_Options.wantPreprocessor;
+    opts.parseComplexMacros   = m_Options.parseComplexMacros;
+    opts.followLocalIncludes  = false;
+    opts.followGlobalIncludes = false;
+    opts.useBuffer            = true;
+    opts.bufferSkipBlocks     = true;
+    opts.handleFunctions      = true;
 
     ParserThread thread(this,
                         buffer,
@@ -606,9 +737,11 @@ bool Parser::ParseBufferForFunctions(const wxString& buffer)
 bool Parser::ParseBufferForNamespaces(const wxString& buffer, NameSpaceVec& result)
 {
     ParserThreadOptions opts;
-    opts.useBuffer          = true;
-    opts.wantPreprocessor   = m_Options.wantPreprocessor;
-    opts.parseComplexMacros = false;
+    opts.useBuffer            = true;
+    opts.wantPreprocessor     = m_Options.wantPreprocessor;
+    opts.parseComplexMacros   = false;
+    opts.followLocalIncludes  = false;
+    opts.followGlobalIncludes = false;
 
     ParserThread thread(this,
                         wxEmptyString,
@@ -624,9 +757,11 @@ bool Parser::ParseBufferForNamespaces(const wxString& buffer, NameSpaceVec& resu
 bool Parser::ParseBufferForUsingNamespace(const wxString& buffer, wxArrayString& result)
 {
     ParserThreadOptions opts;
-    opts.useBuffer          = true;
-    opts.wantPreprocessor   = m_Options.wantPreprocessor;
-    opts.parseComplexMacros = false;
+    opts.useBuffer            = true;
+    opts.wantPreprocessor     = m_Options.wantPreprocessor;
+    opts.parseComplexMacros   = false;
+    opts.followLocalIncludes  = false;
+    opts.followGlobalIncludes = false;
 
     ParserThread thread(this,
                         wxEmptyString,
@@ -639,9 +774,6 @@ bool Parser::ParseBufferForUsingNamespace(const wxString& buffer, wxArrayString&
 
 bool Parser::RemoveFile(const wxString& filename)
 {
-    if (!Done())
-        return false; // Can't alter the tokens tree if parsing has not finished
-
     wxCriticalSectionLocker locker(s_TokensTreeCritical);
     size_t index = m_TokensTree->GetFileIndex(UnixFilename(filename));
     const bool result = m_TokensTree->m_FilesStatus.count(index);
@@ -679,8 +811,8 @@ bool Parser::Reparse(const wxString& filename, bool isLocal)
     if (!Done())
         return false; // if still parsing, exit with error
 
-    if (m_Timer.IsRunning())
-        m_Timer.Stop();
+    if (m_ReparseTimer.IsRunning())
+        m_ReparseTimer.Stop();
 
     wxString file = UnixFilename(filename);
     if (isLocal)
@@ -694,7 +826,7 @@ bool Parser::Reparse(const wxString& filename, bool isLocal)
     }
 
     m_NeedsReparse = true;
-    m_Timer.Start(reparse_timer_delay, wxTIMER_ONE_SHOT);
+    m_ReparseTimer.Start(reparse_timer_delay, wxTIMER_ONE_SHOT);
 
     return true;
 }
@@ -848,102 +980,71 @@ bool Parser::WriteToCache(wxOutputStream* f)
 
 void Parser::TerminateAllThreads()
 {
-    m_Pool.AbortAllTasks();
-    wxMilliSleep(10);
-
-    while (!m_Pool.Done())
-        wxMilliSleep(10);
-
-    wxMilliSleep(10);
     while (!m_PoolTask.empty())
     {
         PTVector& v = m_PoolTask.front();
-        for (PTVector::const_iterator it = v.begin(); it != v.end(); ++it)
+        for (PTVector::iterator it = v.begin(); it != v.end(); ++it)
             delete *it;
         m_PoolTask.pop();
     }
-}
 
-void Parser::AddIncludeDir(const wxString& dir)
-{
-    if (dir.IsEmpty())
-        return;
-
-    wxString base = dir;
-    if (base.Last() == wxFILE_SEP_PATH)
-        base.RemoveLast();
-    if (!wxDir::Exists(base))
-    {
-        TRACE(_T("AddIncludeDir() : Directory %s does not exist?!"), base.wx_str());
-        return;
-    }
-
-    if (m_IncludeDirs.Index(base) == wxNOT_FOUND)
-    {
-        TRACE(_T("AddIncludeDir() : Adding %s"), base.wx_str());
-        m_IncludeDirs.Add(base);
-    }
+    m_Pool.AbortAllTasks();
+    while (!m_Pool.Done())
+        wxMilliSleep(1);
 }
 
 void Parser::AddPredefinedMacros(const wxString& defs)
 {
+    wxCriticalSectionLocker locker(s_ParserCritical);
     m_PredefinedMacros << defs;
 }
 
-wxString Parser::FindFirstFileInIncludeDirs(const wxString& file)
+bool Parser::ForceStartParsing()
 {
-    wxString FirstFound = m_GlobalIncludes.GetItem(file);
-    if (FirstFound.IsEmpty())
+    if (!m_IsParsing && !m_BatchTimer.IsRunning() && !Done())
     {
-        wxArrayString FoundSet = FindFileInIncludeDirs(file,true);
-        if (FoundSet.GetCount())
+        if (m_ParsingType == ptUndefined)
         {
-            FirstFound = UnixFilename(FoundSet[0]);
-            m_GlobalIncludes.AddItem(file, FirstFound);
+            wxCriticalSectionLocker locker(s_ParserCritical);
+            m_ParsingType = ptAddFileToParser;
         }
+        m_BatchTimer.Start(100, wxTIMER_ONE_SHOT);
+        return true;
     }
-    return FirstFound;
+    else
+        return false;
 }
 
-wxArrayString Parser::FindFileInIncludeDirs(const wxString& file, bool firstonly)
+bool Parser::SetParsingProject(cbProject* project)
 {
-    wxArrayString FoundSet;
-    for (size_t idxSearch = 0; idxSearch < m_IncludeDirs.GetCount(); ++idxSearch)
+    if (!Done())
+        return false;
+    else
     {
-        wxString base = m_IncludeDirs[idxSearch];
-        wxFileName tmp = file;
-        NormalizePath(tmp,base);
-        wxString fullname = tmp.GetFullPath();
-        if (wxFileExists(fullname))
-        {
-            FoundSet.Add(fullname);
-            if (firstonly)
-                break;
-        }
+        m_Project = project;
+        return true;
     }
-
-    TRACE(_T("FindFileInIncludeDirs() : Searching %s"), file.wx_str());
-    TRACE(_T("FindFileInIncludeDirs() : Found %d"), FoundSet.GetCount());
-
-    return FoundSet;
 }
 
 void Parser::OnAllThreadsDone(CodeBlocksEvent& event)
 {
-    if (m_IgnoreThreadEvents)
+    if (m_IgnoreThreadEvents || Manager::IsAppShuttingDown())
         return;
 
-    if (Manager::IsAppShuttingDown())
-        return;
-
-    if (!m_IsParsing)
+    if (event.GetId() != m_Pool.GetId())
     {
-        Manager::Get()->GetLogManager()->DebugLog(_T("m_IsParsing is false?"));
+        CCLogger::Get()->DebugLog(_T("Why event.GetId() not equal m_Pool.GetId()?"));
         return;
     }
 
     if (!m_TokensTree)
         cbThrow(_T("m_TokensTree is a nullptr?!"));
+
+    if (!m_IsParsing)
+    {
+        CCLogger::Get()->DebugLog(_T("Why m_IsParsing is false?"));
+        return;
+    }
 
     // Do next task
     if (   !m_PoolTask.empty()
@@ -951,25 +1052,25 @@ void Parser::OnAllThreadsDone(CodeBlocksEvent& event)
         || !m_PriorityHeaders.empty()
         || !m_PredefinedMacros.IsEmpty() )
     {
-        m_BatchTimer.Start(1, wxTIMER_ONE_SHOT);
+        m_BatchTimer.Start(10, wxTIMER_ONE_SHOT);
     }
 
 #if !CC_PARSER_PROFILE_TEST
     // Reparse system priority headers
     else if (!m_SystemPriorityHeaders.empty())
     {
-        // Part.1 Set m_IsParsing to false
-        m_IsParsing = false;
-
-        // Part.2 Remove all priority headers in token tree
+        // 1. Remove all priority headers in token tree
         for (StringList::iterator it = m_SystemPriorityHeaders.begin(); it != m_SystemPriorityHeaders.end(); ++it)
             RemoveFile(*it);
 
-        // Part.3 Reparse system priority headers
-        AddBatchParse(m_SystemPriorityHeaders, false);
+        // 2. Reparse system priority headers
+        AddBatchParse(m_SystemPriorityHeaders);
 
-        // Part.4 Clear
+        // 3. Clear
         m_SystemPriorityHeaders.clear();
+
+        // 4. Begin batch parsing
+        m_BatchTimer.Start(10, wxTIMER_ONE_SHOT);
     }
     else if (   (m_ParsingType == ptCreateParser || m_ParsingType == ptAddFileToParser)
              && m_NeedMarkFileAsLocal
@@ -987,9 +1088,10 @@ void Parser::OnAllThreadsDone(CodeBlocksEvent& event)
         if (!m_Project)
             m_NeedMarkFileAsLocal = false;
 
-        m_NeedsReparse     = false;
-        m_IsParsing        = false;
-        m_IsBatchParseDone = true;
+        m_IgnoreThreadEvents = true;
+        m_NeedsReparse       = false;
+        m_IsParsing          = false;
+        m_IsBatchParseDone   = true;
 
         EndStopWatch();
 
@@ -1006,55 +1108,14 @@ void Parser::OnAllThreadsDone(CodeBlocksEvent& event)
                                (m_LastStopWatchTime % 1000) );
         }
 
-        PostParserEvent(m_ParsingType, PARSER_END, parseEndLog);
+        ProcessParserEvent(m_ParsingType, idParserEnd, parseEndLog);
         m_ParsingType = ptUndefined;
         s_CurrentParser = nullptr;
     }
 }
 
-wxString Parser::GetFullFileName(const wxString& src, const wxString& tgt, bool isGlobal)
-{
-    wxString fullname;
-    if (isGlobal)
-    {
-        fullname = FindFirstFileInIncludeDirs(tgt);
-        if (fullname.IsEmpty())
-        {
-            // not found; check this case:
-            //
-            // we had entered the previous file like this: #include <gl/gl.h>
-            // and it now does this: #include "glext.h"
-            // glext.h was correctly not found above but we can now search
-            // for gl/glext.h.
-            // if we still not find it, it's not there. A compilation error
-            // is imminent (well, almost - I guess the compiler knows a little better ;).
-            wxString base = wxFileName(src).GetPath(wxPATH_GET_VOLUME | wxPATH_GET_SEPARATOR);
-            fullname = FindFirstFileInIncludeDirs(base + tgt);
-        }
-    }
-
-    // NOTE: isGlobal is always true. The following code never executes...
-
-    else // local files are more tricky, since they depend on two filenames
-    {
-        wxFileName fname(tgt);
-        wxFileName source(src);
-        if (NormalizePath(fname,source.GetPath(wxPATH_GET_VOLUME)))
-        {
-            fullname = fname.GetFullPath();
-            if (!wxFileExists(fullname))
-                fullname.Clear();
-        }
-    }
-
-    return fullname;
-}
-
 void Parser::DoParseFile(const wxString& filename, bool isGlobal)
 {
-    if (m_IgnoreThreadEvents)
-        return;
-
     if (   (!isGlobal && !m_Options.followLocalIncludes)
         || ( isGlobal && !m_Options.followGlobalIncludes) )
         return;
@@ -1095,7 +1156,7 @@ void Parser::EndStopWatch()
     }
 }
 
-void Parser::OnTimer(wxTimerEvent& event)
+void Parser::OnReparseTimer(wxTimerEvent& event)
 {
     ReparseModifiedFiles();
     event.Skip();
@@ -1103,6 +1164,15 @@ void Parser::OnTimer(wxTimerEvent& event)
 
 void Parser::OnBatchTimer(wxTimerEvent& event)
 {
+    wxCriticalSectionLocker locker(s_ParserCritical);
+
+    // Current batch parser is already exists
+    if (s_CurrentParser && s_CurrentParser != this)
+    {
+        m_BatchTimer.Start(1000, wxTIMER_ONE_SHOT);
+        return;
+    }
+
     if (Manager::IsAppShuttingDown())
         return;
 
@@ -1125,44 +1195,35 @@ void Parser::OnBatchTimer(wxTimerEvent& event)
              || !m_BatchParseFiles.empty()
              || !m_PredefinedMacros.IsEmpty() )
     {
-        do
+        // Have not done any batch parsing
+        if (!s_CurrentParser)
         {
-            // Current batch parser is already exists
-            if (s_CurrentParser && s_CurrentParser != this)
-                break;
-
-            // Have not done any batch parsing
-            if (!s_CurrentParser)
-            {
-                s_CurrentParser = this;
-                m_StopWatch.Start(); // reset timer
-                PostParserEvent(m_ParsingType, PARSER_START);
-            }
-
-            m_IgnoreThreadEvents = false;
-            AddParseThread* thread = new AddParseThread(*this);
-            m_Pool.AddTask(thread, true);
-            return;
+            s_CurrentParser = this;
+            m_StopWatch.Start(); // reset timer
+            ProcessParserEvent(m_ParsingType, idParserStart);
         }
-        while (false);
 
-        m_BatchTimer.Start(1000, wxTIMER_ONE_SHOT);
+        AddParseThread* thread = new AddParseThread(*this);
+        m_Pool.AddTask(thread, true);
         return;
     }
 
-    PostParserEvent(ptUndefined, PARSER_START, _T("No files for batch parsing"));
+    ProcessParserEvent(ptUndefined, idParserStart, _T("No files for batch parsing"));
     CodeBlocksEvent evt;
     evt.SetEventObject(this);
     OnAllThreadsDone(evt);
 }
 
-bool Parser::ReparseModifiedFiles()
+void Parser::ReparseModifiedFiles()
 {
-    if (!m_NeedsReparse || !Done())
+    if (!Done())
     {
-        m_NeedsReparse = false;
-        return false;
+        m_ReparseTimer.Start(reparse_timer_delay, wxTIMER_ONE_SHOT);
+        return;
     }
+
+    if (!m_NeedsReparse)
+        m_NeedsReparse = true;
 
     std::queue<wxString> files_list;
     {
@@ -1190,38 +1251,16 @@ bool Parser::ReparseModifiedFiles()
         }
     }
 
+    if (!files_list.empty() && m_ParsingType == ptUndefined)
+        m_ParsingType = ptReparseFile;
+    else
+        m_NeedsReparse = false;
+
     while (!files_list.empty())
     {
-        wxString& filename = files_list.front();
-        AddParse(filename, false);
+        AddParse(files_list.front());
         files_list.pop();
     }
-
-    if (m_ParsingType == ptUndefined)
-        m_ParsingType = ptReparseFile;
-
-    return true;
-}
-
-// No critical section needed here:
-// All functions that call this, already entered a critical section.
-size_t Parser::FindTokensInFile(const wxString& fileName, TokenIdxSet& result, short int kindMask)
-{
-    result.clear();
-    wxString file = UnixFilename(fileName);
-    TokenIdxSet tmpresult;
-
-    TRACE(_T("Parser::FindTokensInFile() : Searching for file '%s' in tokens tree..."), file.wx_str());
-    if ( !m_TokensTree->FindTokensInFile(file, tmpresult, kindMask) )
-        return 0;
-
-    for (TokenIdxSet::iterator it = tmpresult.begin(); it != tmpresult.end(); ++it)
-    {
-        Token* token = m_TokensTree->at(*it);
-        if (token)
-            result.insert(*it);
-    }
-    return result.size();
 }
 
 bool Parser::IsFileParsed(const wxString& filename)
@@ -1242,12 +1281,12 @@ bool Parser::IsFileParsed(const wxString& filename)
     return isParsed;
 }
 
-void Parser::PostParserEvent(ParsingType type, int id, const wxString& info)
+void Parser::ProcessParserEvent(ParsingType type, int id, const wxString& info)
 {
     wxCommandEvent evt(wxEVT_COMMAND_MENU_SELECTED, id);
     evt.SetEventObject(this);       // Parser*
     evt.SetClientData(m_Project);   // cbProject*
     evt.SetInt(type);
     evt.SetString(info);
-    wxPostEvent(m_Parent, evt);
+    m_Parent->ProcessEvent(evt);
 }
