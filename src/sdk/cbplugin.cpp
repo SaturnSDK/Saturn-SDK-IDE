@@ -935,6 +935,8 @@ void cbDebuggerPlugin::RegisterValueTooltip()
 {
     typedef cbEventFunctor<cbDebuggerPlugin, CodeBlocksEvent> Event;
     Manager::Get()->RegisterEventSink(cbEVT_EDITOR_TOOLTIP, new Event(this, &cbDebuggerPlugin::ProcessValueTooltip));
+    Manager::Get()->RegisterEventSink(cbEVT_EDITOR_TOOLTIP_CANCEL,
+                                      new Event(this, &cbDebuggerPlugin::CancelValueTooltip));
 }
 
 bool cbDebuggerPlugin::ShowValueTooltip(int /*style*/)
@@ -984,7 +986,10 @@ void cbDebuggerPlugin::ProcessValueTooltip(CodeBlocksEvent& event)
     }
 }
 
-
+void cbDebuggerPlugin::CancelValueTooltip(CodeBlocksEvent& event)
+{
+    Manager::Get()->GetDebuggerManager()->GetInterfaceFactory()->HideValueTooltip();
+}
 /////
 ///// cbToolPlugin
 /////

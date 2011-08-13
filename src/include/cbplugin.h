@@ -512,6 +512,7 @@ class PLUGIN_EXPORT cbDebuggerPlugin: public cbPlugin
         virtual bool ShowValueTooltip(int style);
     private:
         void ProcessValueTooltip(CodeBlocksEvent& event);
+        void CancelValueTooltip(CodeBlocksEvent& event);
 
     protected:
         enum StartType
