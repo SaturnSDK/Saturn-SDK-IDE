@@ -74,6 +74,8 @@ static wxRegEx reChildPid2(_T("gdb: kernel event for pid=([0-9]+)"));
 static wxRegEx reChildPid3(_T("Thread[ \t]+[xA-Fa-f0-9-]+[ \t]+\\(LWP ([0-9]+)\\)]"));
 static wxRegEx reAttachedChildPid(wxT("Attaching to process ([0-9]+)"));
 
+static wxRegEx reInferiorExited(wxT("^\\[Inferior[ \\t].+[ \\t]exited normally\\]$"), wxRE_EXTENDED);
+
 // scripting support
 DECLARE_INSTANCE_TYPE(GDB_driver);
 
@@ -884,8 +886,9 @@ void GDB_driver::ParseOutput(const wxString& output)
 
         // Is the program exited?
         else if (lines[i].StartsWith(_T("Program exited")) ||
-                lines[i].Contains(_T("The program is not being run")) ||
-                lines[i].Contains(_T("Target detached")))
+                 lines[i].Contains(_T("The program is not being run")) ||
+                 lines[i].Contains(_T("Target detached")) ||
+                 reInferiorExited.Matches(lines[i]))
         {
             m_pDBG->Log(lines[i]);
             QueueCommand(new DebuggerCmd(this, _T("quit")));
