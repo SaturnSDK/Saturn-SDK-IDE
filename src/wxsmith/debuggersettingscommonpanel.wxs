@@ -47,6 +47,30 @@
 						<border>5</border>
 						<option>1</option>
 					</object>
+					<object class="sizeritem">
+						<object class="wxStaticBoxSizer" variable="valueTooltipSizer" member="no">
+							<label>Value Tooltip Font</label>
+							<object class="sizeritem">
+								<object class="wxStaticText" name="ID_VALUE_TOOLTIP_LABEL" variable="m_valueTooltipLabel" member="yes">
+									<label>This is a sample text</label>
+								</object>
+								<flag>wxLEFT|wxRIGHT|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL</flag>
+								<border>5</border>
+								<option>1</option>
+							</object>
+							<object class="sizeritem">
+								<object class="wxButton" name="ID_BUTTON_CHOOSE_FONT" variable="chooseFont" member="no">
+									<label>Choose</label>
+									<handler function="OnChooseFontClick" entry="EVT_BUTTON" />
+								</object>
+								<flag>wxLEFT|wxRIGHT|wxALIGN_LEFT|wxALIGN_BOTTOM</flag>
+								<border>5</border>
+							</object>
+						</object>
+						<flag>wxBOTTOM|wxLEFT|wxRIGHT|wxEXPAND|wxALIGN_LEFT|wxALIGN_BOTTOM</flag>
+						<border>5</border>
+						<option>1</option>
+					</object>
 				</object>
 				<flag>wxALL|wxALIGN_LEFT|wxALIGN_TOP</flag>
 				<option>1</option>

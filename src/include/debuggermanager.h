@@ -233,6 +233,9 @@ struct DLLIMPORT cbDebuggerCommonConfig
 
     static bool GetFlag(Flags flag);
     static void SetFlag(Flags flag, bool value);
+
+    static wxString GetValueTooltipFont();
+    static void SetValueTooltipFont(const wxString &font);
 };
 
 class DLLIMPORT DebuggerManager : public Mgr<DebuggerManager>

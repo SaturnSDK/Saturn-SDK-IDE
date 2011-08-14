@@ -5,7 +5,9 @@
 	//(*HeadersPCH(DebuggerSettingsCommonPanel)
 	#include <wx/checkbox.h>
 	#include <wx/sizer.h>
+	#include <wx/button.h>
 	#include <wx/panel.h>
+	#include <wx/stattext.h>
 	//*)
 #endif
 //(*Headers(DebuggerSettingsCommonPanel)
@@ -21,14 +23,20 @@ class DebuggerSettingsCommonPanel: public wxPanel
 		void SaveChanges();
 
 	private:
+	    void UpdateValueTooltipFont();
+	private:
 
 		//(*Declarations(DebuggerSettingsCommonPanel)
+		wxStaticText* m_valueTooltipLabel;
 		wxCheckBox* m_autoBuild;
 		wxCheckBox* m_requireCtrlForTooltips;
 		wxCheckBox* m_jumpOnDoubleClick;
 		wxCheckBox* m_autoSwitch;
 		wxCheckBox* m_debuggersLog;
 		//*)
+    private:
+        wxString m_valueTooltipFontInfo;
+    private:
 
 		//(*Identifiers(DebuggerSettingsCommonPanel)
 		static const long ID_AUTOBUILD;
@@ -36,9 +44,12 @@ class DebuggerSettingsCommonPanel: public wxPanel
 		static const long ID_DEBUGGERS_LOG;
 		static const long ID_JUMP_ON_DOUBLE_CLICK;
 		static const long ID_REQUIRE_CTRL_FOR_TOOLTIPS;
+		static const long ID_VALUE_TOOLTIP_LABEL;
+		static const long ID_BUTTON_CHOOSE_FONT;
 		//*)
 
 		//(*Handlers(DebuggerSettingsCommonPanel)
+		void OnChooseFontClick(wxCommandEvent& event);
 		//*)
 
 		DECLARE_EVENT_TABLE()

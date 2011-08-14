@@ -10,6 +10,8 @@
 	#include <wx/textdlg.h>
 #endif
 
+#include <wx/fontdlg.h>
+
 #include "debuggermanager.h"
 
 //(*InternalHeaders(DebuggerSettingsCommonPanel)
@@ -21,6 +23,8 @@ const long DebuggerSettingsCommonPanel::ID_AUTOSWITCH = wxNewId();
 const long DebuggerSettingsCommonPanel::ID_DEBUGGERS_LOG = wxNewId();
 const long DebuggerSettingsCommonPanel::ID_JUMP_ON_DOUBLE_CLICK = wxNewId();
 const long DebuggerSettingsCommonPanel::ID_REQUIRE_CTRL_FOR_TOOLTIPS = wxNewId();
+const long DebuggerSettingsCommonPanel::ID_VALUE_TOOLTIP_LABEL = wxNewId();
+const long DebuggerSettingsCommonPanel::ID_BUTTON_CHOOSE_FONT = wxNewId();
 //*)
 
 BEGIN_EVENT_TABLE(DebuggerSettingsCommonPanel,wxPanel)
@@ -33,6 +37,8 @@ DebuggerSettingsCommonPanel::DebuggerSettingsCommonPanel(wxWindow* parent)
 	//(*Initialize(DebuggerSettingsCommonPanel)
 	wxFlexGridSizer* flexSizer;
 	wxBoxSizer* mainSizer;
+	wxButton* chooseFont;
+	wxStaticBoxSizer* valueTooltipSizer;
 
 	Create(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL, _T("wxID_ANY"));
 	mainSizer = new wxBoxSizer(wxVERTICAL);
@@ -52,10 +58,18 @@ DebuggerSettingsCommonPanel::DebuggerSettingsCommonPanel(wxWindow* parent)
 	m_requireCtrlForTooltips = new wxCheckBox(this, ID_REQUIRE_CTRL_FOR_TOOLTIPS, _("Require Control key to show the \'Evaluate expression\' tooltips"), wxDefaultPosition, wxDefaultSize, 0, wxDefaultValidator, _T("ID_REQUIRE_CTRL_FOR_TOOLTIPS"));
 	m_requireCtrlForTooltips->SetValue(false);
 	flexSizer->Add(m_requireCtrlForTooltips, 1, wxALL|wxALIGN_LEFT|wxALIGN_TOP, 5);
+	valueTooltipSizer = new wxStaticBoxSizer(wxHORIZONTAL, this, _("Value Tooltip Font"));
+	m_valueTooltipLabel = new wxStaticText(this, ID_VALUE_TOOLTIP_LABEL, _("This is a sample text"), wxDefaultPosition, wxDefaultSize, 0, _T("ID_VALUE_TOOLTIP_LABEL"));
+	valueTooltipSizer->Add(m_valueTooltipLabel, 1, wxLEFT|wxRIGHT|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL, 5);
+	chooseFont = new wxButton(this, ID_BUTTON_CHOOSE_FONT, _("Choose"), wxDefaultPosition, wxDefaultSize, 0, wxDefaultValidator, _T("ID_BUTTON_CHOOSE_FONT"));
+	valueTooltipSizer->Add(chooseFont, 0, wxLEFT|wxRIGHT|wxALIGN_LEFT|wxALIGN_BOTTOM, 5);
+	flexSizer->Add(valueTooltipSizer, 1, wxBOTTOM|wxLEFT|wxRIGHT|wxEXPAND|wxALIGN_LEFT|wxALIGN_BOTTOM, 5);
 	mainSizer->Add(flexSizer, 1, wxALL|wxALIGN_LEFT|wxALIGN_TOP, 0);
 	SetSizer(mainSizer);
 	mainSizer->Fit(this);
 	mainSizer->SetSizeHints(this);
+
+	Connect(ID_BUTTON_CHOOSE_FONT,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&DebuggerSettingsCommonPanel::OnChooseFontClick);
 	//*)
 
     m_autoBuild->SetValue(cbDebuggerCommonConfig::GetFlag(cbDebuggerCommonConfig::AutoBuild));
@@ -71,6 +85,9 @@ DebuggerSettingsCommonPanel::DebuggerSettingsCommonPanel(wxWindow* parent)
 
     m_requireCtrlForTooltips->SetValue(cbDebuggerCommonConfig::GetFlag(cbDebuggerCommonConfig::RequireCtrlForTooltips));
     m_requireCtrlForTooltips->SetToolTip(_("If enabled, show 'Evaluate expression' tooltips only if the Control key is pressed."));
+
+    m_valueTooltipFontInfo = cbDebuggerCommonConfig::GetValueTooltipFont();
+    UpdateValueTooltipFont();
 }
 
 DebuggerSettingsCommonPanel::~DebuggerSettingsCommonPanel()
@@ -87,5 +104,28 @@ void DebuggerSettingsCommonPanel::SaveChanges()
     cbDebuggerCommonConfig::SetFlag(cbDebuggerCommonConfig::JumpOnDoubleClick, m_jumpOnDoubleClick->GetValue());
     cbDebuggerCommonConfig::SetFlag(cbDebuggerCommonConfig::RequireCtrlForTooltips,
                                     m_requireCtrlForTooltips->GetValue());
+    cbDebuggerCommonConfig::SetValueTooltipFont(m_valueTooltipFontInfo);
 }
 
+void DebuggerSettingsCommonPanel::OnChooseFontClick(wxCommandEvent& event)
+{
+    wxNativeFontInfo fontInfo;
+    fontInfo.FromString(m_valueTooltipFontInfo);
+
+    wxFontData data;
+    data.SetInitialFont(wxFont(fontInfo));
+    wxFontDialog dlg(this, data);
+    PlaceWindow(&dlg);
+    if (dlg.ShowModal() == wxID_OK)
+    {
+        m_valueTooltipFontInfo = dlg.GetFontData().GetChosenFont().GetNativeFontInfo()->ToString();
+        UpdateValueTooltipFont();
+    }
+}
+
+void DebuggerSettingsCommonPanel::UpdateValueTooltipFont()
+{
+    wxNativeFontInfo fontInfo;
+    fontInfo.FromString(m_valueTooltipFontInfo);
+    m_valueTooltipLabel->SetFont(wxFont(fontInfo));
+}

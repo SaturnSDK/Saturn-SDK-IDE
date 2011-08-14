@@ -499,6 +499,29 @@ void cbDebuggerCommonConfig::SetFlag(Flags flag, bool value)
     }
 }
 
+wxString cbDebuggerCommonConfig::GetValueTooltipFont()
+{
+    wxFont system = wxSystemSettings::GetFont(wxSYS_SYSTEM_FONT);
+    system.SetPointSize(std::max(system.GetPointSize() - 3, 7));
+    wxString defaultFont = system.GetNativeFontInfo()->ToString();
+
+    ConfigManager *c = Manager::Get()->GetConfigManager(wxT("debugger_common"));
+    wxString configFont = c->Read(wxT("/common/tooltip_font"));
+
+    return configFont.empty() ? defaultFont : configFont;
+}
+
+void cbDebuggerCommonConfig::SetValueTooltipFont(const wxString &font)
+{
+    const wxString &oldFont = GetValueTooltipFont();
+
+    if (font != oldFont && !font.empty())
+    {
+        ConfigManager *c = Manager::Get()->GetConfigManager(wxT("debugger_common"));
+        c->Write(wxT("/common/tooltip_font"), font);
+    }
+}
+
 
 class DebugTextCtrlLogger : public TextCtrlLogger
 {

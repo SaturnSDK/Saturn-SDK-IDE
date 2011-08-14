@@ -711,8 +711,10 @@ ValueTooltip::ValueTooltip(const cbWatch::Pointer &watch, wxWindow *parent) :
 
     m_grid->SetExtraStyle(wxPG_EX_DISABLE_TLP_TRACKING /*| wxPG_EX_HELP_AS_TOOLTIPS*/);
     m_grid->SetDropTarget(new WatchesDropTarget);
-    wxFont font = m_grid->GetFont();
-    font.SetPointSize(std::max(font.GetPointSize() - 3, 7));
+
+    wxNativeFontInfo fontInfo;
+    fontInfo.FromString(cbDebuggerCommonConfig::GetValueTooltipFont());
+    wxFont font(fontInfo);
     m_grid->SetFont(font);
 
     m_grid->SetColumnCount(3);
