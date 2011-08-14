@@ -193,3 +193,19 @@ bool GDBWatch::GetForTooltip() const
 {
     return m_forTooltip;
 }
+
+bool IsPointerType(wxString type)
+{
+    type.Trim(true);
+    type.Trim(false);
+
+    if (type.Contains(wxT("char *")) || type.Contains(wxT("char const *")))
+        return false;
+    else if (type.EndsWith(wxT("*")))
+        return true;
+    else if (type.EndsWith(wxT("* const")))
+        return true;
+    else if (type.EndsWith(wxT("* volatile")))
+        return true;
+    return false;
+}

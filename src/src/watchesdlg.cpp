@@ -720,10 +720,11 @@ ValueTooltip::ValueTooltip(const cbWatch::Pointer &watch, wxWindow *parent) :
     m_grid->SetColumnProportion(1, 40);
     m_grid->SetColumnProportion(2, 20);
 
-    wxString symbol;
+    wxString symbol, value;
     m_watch->GetSymbol(symbol);
+    m_watch->GetValue(value);
     m_watch->Expand(true);
-    wxPGProperty *root = m_grid->Append(new WatchesProperty(symbol, wxEmptyString, m_watch.get(), true));
+    wxPGProperty *root = m_grid->Append(new WatchesProperty(symbol, value, m_watch.get(), true));
     m_watch->MarkAsChangedRecursive(false);
     ::UpdateWatch(m_grid, root, m_watch.get(), true);
 

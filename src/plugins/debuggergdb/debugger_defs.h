@@ -253,4 +253,6 @@ struct oldStackFrame
     wxString line; ///< Current line in file.
 };
 
+bool IsPointerType(wxString type);
+
 #endif // DEBUGGER_DEFS_H

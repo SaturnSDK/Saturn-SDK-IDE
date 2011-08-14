@@ -1988,10 +1988,7 @@ void DebuggerGDB::OnWatchesContextMenu(wxMenu &menu, const cbWatch &watch, wxObj
     watch.GetType(type);
     watch.GetSymbol(symbol);
 
-    type.Trim(true);
-    type.Trim(false);
-
-    if (type.EndsWith(wxT("*")))
+    if (IsPointerType(type))
     {
         menu.InsertSeparator(0);
         menu.Insert(0, idMenuWatchDereference, _("Dereference ") + symbol);

@@ -830,23 +830,27 @@ class GdbCmd_TooltipEvaluation : public DebuggerCmd
         wxString m_Type;
         wxString m_Address;
         wxString m_ParseFunc;
+        bool m_autoDereferenced;
     public:
         /** @param what The variable to evaluate.
             @param win A pointer to the tip window pointer.
             @param tiprect The tip window's rect.
         */
-        GdbCmd_TooltipEvaluation(DebuggerDriver* driver, const wxString& what, const wxRect& tiprect, const wxString& w_type = wxEmptyString, const wxString& address = wxEmptyString)
+        GdbCmd_TooltipEvaluation(DebuggerDriver* driver, const wxString& what, const wxRect& tiprect,
+                                 const wxString& w_type = wxEmptyString, const wxString& address = wxEmptyString)
             : DebuggerCmd(driver),
             m_WinRect(tiprect),
             m_What(what),
             m_Type(w_type),
-            m_Address(address)
+            m_Address(address),
+            m_autoDereferenced(false)
         {
             m_Type.Trim(true);
             m_Type.Trim(false);
             m_Cmd = static_cast<GDB_driver*>(m_pDriver)->GetScriptedTypeCommand(w_type, m_ParseFunc);
             if (m_Cmd.IsEmpty())
             {
+                /*
                 // if it's a pointer, automatically dereference it
                 if (w_type.Length() > 2 && // at least 2 chars
                     w_type.Last() == _T('*') && // last is *
@@ -854,6 +858,11 @@ class GdbCmd_TooltipEvaluation : public DebuggerCmd
                     !w_type.Contains(_T("char "))) // not char* (special case)
                 {
                     m_What = wxT("*") + m_What;
+                }*/
+                if (IsPointerType(w_type))
+                {
+                    m_What = wxT("*") + m_What;
+                    m_autoDereferenced = true;
                 }
 
                 m_Cmd << wxT("output ");
@@ -911,6 +920,8 @@ class GdbCmd_TooltipEvaluation : public DebuggerCmd
             watch->SetType(m_Type);
 
             ParseGDBWatchValue(*watch, contents);
+            if (!m_Address.empty() && m_autoDereferenced)
+                watch->SetValue(m_Address);
 
             if (Manager::Get()->GetDebuggerManager()->ShowValueTooltip(watch, m_WinRect))
             {
