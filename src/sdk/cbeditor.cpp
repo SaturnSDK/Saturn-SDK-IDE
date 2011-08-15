@@ -10,7 +10,10 @@
 #include "sdk_precomp.h"
 
 #ifndef CB_PRECOMP
+    #include <wx/app.h>
+    #include <wx/filedlg.h>
     #include <wx/filename.h>
+    #include <wx/menu.h>
     #include <wx/notebook.h>
     #include <wx/wfstream.h>
 
@@ -3378,20 +3381,22 @@ void cbEditor::OnEditorDwellStart(wxScintillaEvent& event)
 {
     if (!wxTheApp->IsActive())
         return;
-        
+
     cbStyledTextCtrl* control = GetControl();
-    
+    if (!control)
+        return;
+
     wxRect screenRect = control->GetScreenRect();
     wxPoint ptEvent(event.GetX(), event.GetY());
     ptEvent = control->ClientToScreen(ptEvent);
     wxPoint ptScreen = wxGetMousePosition();
     wxPoint ptClient = control->ScreenToClient(ptScreen);
 
-    double distance = sqrt((ptScreen.x - ptEvent.x) * (ptScreen.x - ptEvent.x) 
-                           + (ptScreen.y - ptEvent.y) * (ptScreen.y - ptEvent.y));
+    double distance = sqrt(  (ptScreen.x - ptEvent.x) * (ptScreen.x - ptEvent.x)
+                           + (ptScreen.y - ptEvent.y) * (ptScreen.y - ptEvent.y) );
     if (!screenRect.Contains(ptScreen) || distance > 10)
         return;
-    
+
     int pos = control->PositionFromPoint(ptClient);
     int style = control->GetStyleAt(pos);
     NotifyPlugins(cbEVT_EDITOR_TOOLTIP, style, wxEmptyString, ptClient.x, ptClient.y);

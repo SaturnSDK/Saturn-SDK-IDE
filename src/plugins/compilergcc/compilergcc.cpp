@@ -21,6 +21,12 @@
 #include <wx/utils.h>
 #include <wx/uri.h>
 
+#ifndef CB_PRECOMP
+    #include <wx/app.h>
+    #include <wx/textdlg.h>
+    #include <wx/toolbar.h>
+#endif
+
 #include <prep.h>
 #include <manager.h>
 #include <sdk_events.h>
@@ -2034,6 +2040,7 @@ int CompilerGCC::DistClean(ProjectBuildTarget* target)
 
     if (m_Project)
         wxSetWorkingDirectory(m_Project->GetBasePath());
+
     Compiler* compiler = CompilerFactory::GetCompiler(m_CompilerId);
     if (compiler)
         compiler->Init(m_Project);
@@ -2928,6 +2935,7 @@ int CompilerGCC::CompileFile(const wxString& file)
         SwitchCompiler(CompilerFactory::GetDefaultCompilerID());
 //        Manager::Get()->GetMessageManager()->DebugLog("-----CompileFile [if (!pf)]-----"));
         Manager::Get()->GetMacrosManager()->Reset();
+
         Compiler* compiler = CompilerFactory::GetCompiler(m_CompilerId);
         if (compiler)
             compiler->Init(0);
@@ -2962,11 +2970,11 @@ int CompilerGCC::CompileFile(const wxString& file)
     }
     else
     {
-        Compiler* compiler = CompilerFactory::GetCompiler(m_CompilerId);
+        Compiler* compiler = CompilerFactory::GetCompiler(bt->GetCompilerID());
         if (compiler)
             compiler->Init(m_Project);
 
-        DirectCommands dc(this, CompilerFactory::GetCompiler(bt->GetCompilerID()), m_Project, m_PageIndex);
+        DirectCommands dc(this, compiler, m_Project, m_PageIndex);
         wxArrayString compile = dc.CompileFile(bt, pf);
         AddToCommandQueue(compile);
     }
@@ -3432,7 +3440,7 @@ void CompilerGCC::AddOutputLine(const wxString& output, bool forceErrorColour)
                     AskForActiveProject();
                     project = m_Project;
                 }
-                last_error_file = project->GetExecutionDir() + last_error_file.GetFullPath();
+                last_error_file = project->GetExecutionDir() + wxFileName::GetPathSeparator() + last_error_file.GetFullPath();
                 last_error_file.MakeRelativeTo(project->GetBasePath());
                 last_error_filename = last_error_file.GetFullPath();
             }

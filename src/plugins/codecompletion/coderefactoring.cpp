@@ -10,6 +10,13 @@
 #include <sdk.h>
 
 #ifndef CB_PRECOMP
+    #include <wx/button.h>
+    #include <wx/image.h>
+    #include <wx/sizer.h>
+    #include <wx/statbmp.h>
+    #include <wx/stattext.h>
+    #include <wx/textdlg.h>
+
     #include <cbeditor.h>
     #include <cbproject.h>
     #include <editorcolourset.h>
@@ -35,18 +42,18 @@
 
 #if CC_CODEREFACTORING_DEBUG_OUTPUT == 1
     #define TRACE(format, args...) \
-        Manager::Get()->GetLogManager()->DebugLog(F(format, ##args))
+        CCLogger::Get()->DebugLog(F(format, ##args))
     #define TRACE2(format, args...)
 #elif CC_CODEREFACTORING_DEBUG_OUTPUT == 2
     #define TRACE(format, args...)                                              \
         do                                                                      \
         {                                                                       \
             if (g_EnableDebugTrace)                                             \
-                Manager::Get()->GetLogManager()->DebugLog(F(format, ##args));   \
+                CCLogger::Get()->DebugLog(F(format, ##args));                   \
         }                                                                       \
         while (false)
     #define TRACE2(format, args...) \
-        Manager::Get()->GetLogManager()->DebugLog(F(format, ##args))
+        CCLogger::Get()->DebugLog(F(format, ##args))
 #else
     #define TRACE(format, args...)
     #define TRACE2(format, args...)
@@ -128,7 +135,7 @@ wxString CodeRefactoring::GetSymbolUnderCursor()
         wxString msg(_("The Parser is still parsing files."));
         cbMessageBox(msg, _("Code Refactoring"), wxOK | wxICON_WARNING);
         msg += m_NativeParser.GetParser().NotDoneReason();
-        Manager::Get()->GetLogManager()->DebugLog(msg);
+        CCLogger::Get()->DebugLog(msg);
 
         return wxEmptyString;
     }
@@ -163,7 +170,7 @@ bool CodeRefactoring::Parse()
     Token* token = nullptr;
     {
         wxCriticalSectionLocker locker(s_TokensTreeCritical);
-        token = m_NativeParser.GetParser().GetTokens()->at(*targetResult.begin());
+        token = m_NativeParser.GetParser().GetTokensTree()->at(*targetResult.begin());
         if (token)
         {
             Token* parent = token->GetParentToken();
@@ -278,7 +285,7 @@ size_t CodeRefactoring::VerifyResult(const TokenIdxSet& targetResult, const wxSt
     if (isLocalVariable)
     {
         wxCriticalSectionLocker locker(s_TokensTreeCritical);
-        Token* token = m_NativeParser.GetParser().GetTokens()->at(*targetResult.begin());
+        Token* token = m_NativeParser.GetParser().GetTokensTree()->at(*targetResult.begin());
         parentOfLocalVariable = token->GetParentToken();
     }
 
@@ -371,7 +378,7 @@ size_t CodeRefactoring::VerifyResult(const TokenIdxSet& targetResult, const wxSt
                 if (isLocalVariable)
                 {
                     wxCriticalSectionLocker locker(s_TokensTreeCritical);
-                    Token* token = m_NativeParser.GetParser().GetTokens()->at(*findIter);
+                    Token* token = m_NativeParser.GetParser().GetTokensTree()->at(*findIter);
                     if (token)
                     {
                         Token* parent = token->GetParentToken();

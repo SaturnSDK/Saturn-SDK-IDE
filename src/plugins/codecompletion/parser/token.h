@@ -17,9 +17,10 @@
 #include <globals.h>
 #include "searchtree.h"
 #include <deque>
+#include <memory>
 
 // Make sure already entered a critical section if TokensTree related!
-static wxCriticalSection s_TokensTreeCritical;
+extern wxCriticalSection s_TokensTreeCritical;
 
 extern bool g_EnableDebugTrace;
 extern const wxString g_DebugTraceFile;
@@ -108,6 +109,59 @@ private:
     static ProfileMap m_ProfileMap;
 };
 
+class CCLogger
+{
+public:
+    static CCLogger* Get()
+    {
+        if (!s_Inst.get())
+            s_Inst.reset(new CCLogger);
+        return s_Inst.get();
+    }
+
+    void Init(wxEvtHandler* parent, int logId, int debugLogId)
+    {
+        m_Parent     = parent;
+        m_LogId      = logId;
+        m_debugLogId = debugLogId;
+    }
+
+    void Log(const wxString& msg)
+    {
+        wxCommandEvent evt(wxEVT_COMMAND_MENU_SELECTED, m_LogId);
+        evt.SetString(msg);
+#ifndef CC_PARSER_TEST
+        wxPostEvent(m_Parent, evt);
+#else
+        m_Parent->ProcessEvent(evt);
+#endif
+    }
+
+    void DebugLog(const wxString& msg)
+    {
+        wxCommandEvent evt(wxEVT_COMMAND_MENU_SELECTED, m_debugLogId);
+        evt.SetString(msg);
+#ifndef CC_PARSER_TEST
+        wxPostEvent(m_Parent, evt);
+#else
+        m_Parent->ProcessEvent(evt);
+#endif
+    }
+
+protected:
+    CCLogger() : m_Parent(nullptr), m_LogId(0) {}
+    virtual ~CCLogger() {}
+    CCLogger(const CCLogger&) {}
+    CCLogger& operator= (const CCLogger&) { return *this; }
+    friend class std::auto_ptr<CCLogger>;
+    static std::auto_ptr<CCLogger> s_Inst;
+
+private:
+    wxEvtHandler* m_Parent;
+    int m_LogId;
+    int m_debugLogId;
+};
+
 class Token;
 class TokensTree;
 
@@ -122,8 +176,7 @@ enum FileParsingStatus
 enum CCFileType
 {
     ccftHeader,
-    ccftCSource,
-    ccftCppSource,
+    ccftSource,
     ccftOther
 };
 
@@ -266,7 +319,6 @@ public:
 
     // Token specific functions
     void   RecalcFreeList();
-    void   RecalcData();
     void   RecalcInheritanceChain(Token* token);
     int    TokenExists(const wxString& name, int parent, short int kindMask);
     int    TokenExists(const wxString& name, const wxString& baseArgs, int parent, TokenKind kind);

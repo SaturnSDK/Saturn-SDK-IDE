@@ -500,6 +500,20 @@
 											<border>20</border>
 										</object>
 										<object class="sizeritem">
+											<object class="wxCheckBox" name="chkNBInvertAdvance">
+												<label>Invert advance direction</label>
+											</object>
+											<flag>wxLEFT|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL</flag>
+											<border>40</border>
+										</object>
+										<object class="sizeritem">
+											<object class="wxCheckBox" name="chkNBInvertMove">
+												<label>Invert move direction</label>
+											</object>
+											<flag>wxLEFT|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL</flag>
+											<border>40</border>
+										</object>
+										<object class="sizeritem">
 											<object class="wxBoxSizer">
 												<object class="sizeritem">
 													<object class="wxStaticText" name="ID_STATICTEXT2">

@@ -739,7 +739,7 @@ void MainFrame::SetupGUILogging()
     }
     else
     {
-        m_pBatchBuildDialog = new BatchLogWindow(this, _("Batch build"));
+        m_pBatchBuildDialog = new BatchLogWindow(this, _("Code::Blocks - Batch build"));
         wxSizer* s = new wxBoxSizer(wxVERTICAL);
         m_pInfoPane = new InfoPane(m_pBatchBuildDialog);
         s->Add(m_pInfoPane, 1, wxEXPAND);
@@ -2592,15 +2592,11 @@ void MainFrame::DoOnFileOpen(bool bProject)
         {
             wxString Filter = mgr->Read(_T("/file_dialogs/file_new_open/filter"));
             if (!Filter.IsEmpty())
-            {
                 FileFilters::GetFilterIndexFromName(Filters, Filter, StoredIndex);
-            }
             Path = mgr->Read(_T("/file_dialogs/file_new_open/directory"), Path);
         }
         else
-        {
             FileFilters::GetFilterIndexFromName(Filters, _("Code::Blocks project/workspace files"), StoredIndex);
-        }
     }
     wxFileDialog dlg(this,
                             _("Open file"),

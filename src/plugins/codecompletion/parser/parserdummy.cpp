@@ -21,21 +21,16 @@
 #include <wx/filename.h>
 #include <wx/string.h>
 
-BEGIN_EVENT_TABLE(Parser, wxEvtHandler)
-END_EVENT_TABLE()
-
 extern wxArrayString     s_includeDirs;
 extern wxArrayString     s_filesParsed;
 extern wxBusyInfo*       s_busyInfo;
 
-extern void ParserTrace(const wxChar* format, ...);
-
-wxString Parser::GetFullFileName(const wxString& src, const wxString& tgt, bool isGlobal)
+wxString ParserBase::GetFullFileName(const wxString& src, const wxString& tgt, bool isGlobal)
 {
     wxString log;
     log.Printf(wxT("ParserDummy() : GetFullFileName() : Querying full file name for source '%s', target '%s' (isGlobal=%s)."),
                src.wx_str(), tgt.wx_str(), (isGlobal ? wxT("true") : wxT("false")));
-    ParserTrace(log);
+    CCLogger::Get()->Log(log);
 
     // first, try local include file
     wxFileName fn(src);
@@ -47,39 +42,27 @@ wxString Parser::GetFullFileName(const wxString& src, const wxString& tgt, bool 
     for (size_t i=0; i<s_includeDirs.GetCount(); i++)
     {
         wxString include_dir = s_includeDirs.Item(i);
-        ParserTrace(wxT("ParserDummy() : GetFullFileName() : Checking existence of ")+include_dir);
+        CCLogger::Get()->Log(wxT("ParserDummy() : GetFullFileName() : Checking existence of ")+include_dir);
         if ( ::wxDirExists(include_dir) )
         {
             full_file_name = include_dir + fn.GetPathSeparator() + tgt;
-            ParserTrace(wxT("ParserDummy() : GetFullFileName() : Checking existence of ")+full_file_name);
+            CCLogger::Get()->Log(wxT("ParserDummy() : GetFullFileName() : Checking existence of ")+full_file_name);
             if ( ::wxFileExists(full_file_name) )
                 return full_file_name;
         }
     }
 
-    ParserTrace(wxT("ParserDummy() : GetFullFileName() : File not found"));
+    CCLogger::Get()->Log(wxT("ParserDummy() : GetFullFileName() : File not found"));
     return wxEmptyString;
 }
 
-void Parser::DoParseFile(const wxString& filename, bool isGlobal)
-{
-    wxString log;
-    log.Printf(wxT("ParserDummy() : DoParseFile() : Parse file request for file name '%s' (isGlobal=%s)"),
-               filename.wx_str(), (isGlobal ? wxT("true") : wxT("false")));
-    ParserTrace(log);
 
-    if (filename.IsEmpty())
-        return;
-
-    Parse(filename, !isGlobal);
-}
-
-bool Parser::Parse(const wxString& filename, bool isLocal, LoaderBase* loader)
+bool Parse(const wxString& filename, bool isLocal)
 {
     wxString log;
     log.Printf(wxT("ParserDummy() : Parse() : Parsing file '%s' (isLocal=%s)."),
                filename.wx_str(), (isLocal ? wxT("true") : wxT("false")));
-    ParserTrace(log);
+    CCLogger::Get()->Log(log);
 
     // avoid parsing the same file(s) over and over again
     for (size_t i=0; i<s_filesParsed.GetCount(); i++)
@@ -88,7 +71,7 @@ bool Parser::Parse(const wxString& filename, bool isLocal, LoaderBase* loader)
         {
             log.Printf(wxT("ParserDummy() : Parse() : File '%s' has already been parsed"),
                        filename.wx_str());
-            ParserTrace(log);
+            CCLogger::Get()->Log(log);
             return true;
         }
     }
@@ -100,26 +83,39 @@ bool Parser::Parse(const wxString& filename, bool isLocal, LoaderBase* loader)
 
     log.Printf(wxT("ParserDummy() : Parse() : Creating new parser thread for '%s'"),
        filename.wx_str());
-    ParserTrace(log);
+    CCLogger::Get()->Log(log);
 
     ParserTest pt; pt.Clear();
-    ParserTrace(_T("-----------I-n-t-e-r-i-m--L-o-g-----------"));
+    CCLogger::Get()->Log(_T("-----------I-n-t-e-r-i-m--L-o-g-----------"));
     pt.Start(filename);
     // TODO: The following lines cause a crash in
-//    ParserTrace(_T("--------------T-r-e-e--L-o-g--------------"));
+//    CCLogger::Get()->Log(_T("--------------T-r-e-e--L-o-g--------------"));
 //    pt.PrintTree();
-//    ParserTrace(_T("--------------L-i-s-t--L-o-g--------------"));
+//    CCLogger::Get()->Log(_T("--------------L-i-s-t--L-o-g--------------"));
 //    pt.PrintList();
 
     return true;
 }
 
-Parser::Parser(wxEvtHandler* pEvt, cbProject* project) : m_Pool(NULL, 0, 0)
+bool ParserBase::ParseFile(const wxString& filename, bool isGlobal)
 {
-    ParserTrace(wxT("ParserDummy() : Parser() : Instantiation of Parser object."));
+    wxString log;
+    log.Printf(wxT("ParserDummy() : DoParseFile() : Parse file request for file name '%s' (isGlobal=%s)"),
+               filename.wx_str(), (isGlobal ? wxT("true") : wxT("false")));
+    CCLogger::Get()->Log(log);
+
+    if (filename.IsEmpty())
+        return false;
+
+    return Parse(filename, !isGlobal);
 }
 
-Parser::~Parser()
+ParserBase::ParserBase()
 {
-    ParserTrace(wxT("ParserDummy() : ~Parser() : Destruction of Parser object."));
+    CCLogger::Get()->Log(wxT("ParserDummy() : ParserBase() : Instantiation of Parser object."));
+}
+
+ParserBase::~ParserBase()
+{
+    CCLogger::Get()->Log(wxT("ParserDummy() : ~ParserBase() : Destruction of Parser object."));
 }
