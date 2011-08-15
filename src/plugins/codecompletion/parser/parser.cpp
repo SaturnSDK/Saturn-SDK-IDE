@@ -198,6 +198,11 @@ ParserBase::~ParserBase()
     Delete(m_TempTokensTree);
 }
 
+bool ParserBase::ParseFile(const wxString& filename, bool isGlobal)
+{
+    return false;
+}
+
 size_t ParserBase::GetFilesCount()
 {
     wxCriticalSectionLocker locker(s_TokensTreeCritical);
@@ -556,6 +561,21 @@ bool Parser::ParseBuffer(const wxString& buffer, bool isLocal, bool bufferSkipBl
     return Parse(buffer, isLocal, opts);
 }
 
+void Parser::AddPredefinedMacros(const wxString& defs)
+{
+    if (m_BatchTimer.IsRunning())
+        m_BatchTimer.Stop();
+
+    wxCriticalSectionLocker locker(s_ParserCritical);
+    m_PredefinedMacros << defs;
+
+    if (m_ParsingType == ptUndefined)
+        m_ParsingType = ptCreateParser;
+
+    if (!m_IsParsing)
+        m_BatchTimer.Start(batch_timer_delay, wxTIMER_ONE_SHOT);
+}
+
 void Parser::AddPriorityHeaders(const wxString& filename, bool systemHeaderFile)
 {
     if (m_BatchTimer.IsRunning())
@@ -569,6 +589,9 @@ void Parser::AddPriorityHeaders(const wxString& filename, bool systemHeaderFile)
     // Save system priority headers, when all task is over, we need reparse it!
     if (systemHeaderFile)
         m_SystemPriorityHeaders.push_back(filename);
+
+    if (m_ParsingType == ptUndefined)
+        m_ParsingType = ptCreateParser;
 
     if (!m_IsParsing)
         m_BatchTimer.Start(batch_timer_delay, wxTIMER_ONE_SHOT);
@@ -585,6 +608,9 @@ void Parser::AddBatchParse(const StringList& filenames)
         m_BatchParseFiles = filenames;
     else
         std::copy(filenames.begin(), filenames.end(), std::back_inserter(m_BatchParseFiles));
+
+    if (m_ParsingType == ptUndefined)
+        m_ParsingType = ptCreateParser;
 
     if (!m_IsParsing)
         m_BatchTimer.Start(batch_timer_delay, wxTIMER_ONE_SHOT);
@@ -993,12 +1019,6 @@ void Parser::TerminateAllThreads()
         wxMilliSleep(1);
 }
 
-void Parser::AddPredefinedMacros(const wxString& defs)
-{
-    wxCriticalSectionLocker locker(s_ParserCritical);
-    m_PredefinedMacros << defs;
-}
-
 bool Parser::ForceStartParsing()
 {
     if (!m_IsParsing && !m_BatchTimer.IsRunning() && !Done())
@@ -1114,14 +1134,14 @@ void Parser::OnAllThreadsDone(CodeBlocksEvent& event)
     }
 }
 
-void Parser::DoParseFile(const wxString& filename, bool isGlobal)
+bool Parser::ParseFile(const wxString& filename, bool isGlobal)
 {
     if (   (!isGlobal && !m_Options.followLocalIncludes)
         || ( isGlobal && !m_Options.followGlobalIncludes) )
-        return;
+        return false;
 
     if (filename.IsEmpty())
-        return;
+        return false;
 
     bool locked = false;
     if (m_IsParsing)
@@ -1129,9 +1149,10 @@ void Parser::DoParseFile(const wxString& filename, bool isGlobal)
         s_ParserCritical.Enter();
         locked = true;
     }
-    Parse(filename, !isGlobal);
+    const bool ret = Parse(filename, !isGlobal);
     if (locked)
         s_ParserCritical.Leave();
+    return ret;
 }
 
 void Parser::StartStopWatch()

@@ -147,6 +147,7 @@ public:
     virtual bool ParseBufferForFunctions(const wxString& buffer) { return false; }
     virtual bool ParseBufferForNamespaces(const wxString& buffer, NameSpaceVec& result) { return false; }
     virtual bool ParseBufferForUsingNamespace(const wxString& buffer, wxArrayString& result) { return false; }
+    virtual bool ParseFile(const wxString& filename, bool isGlobal);
 
     virtual bool Reparse(const wxString& filename, bool isLocal = true) { return false; }
     virtual bool AddFile(const wxString& filename, cbProject* project, bool isLocal = true) { return false; }
@@ -209,7 +210,6 @@ private:
   */
 class Parser : public ParserBase
 {
-    friend class ParserThread;
     friend class AddParseThread;
 
 public:
@@ -256,6 +256,7 @@ public:
     virtual bool ParseBufferForFunctions(const wxString& buffer);
     virtual bool ParseBufferForNamespaces(const wxString& buffer, NameSpaceVec& result);
     virtual bool ParseBufferForUsingNamespace(const wxString& buffer, wxArrayString& result);
+    virtual bool ParseFile(const wxString& filename, bool isGlobal);
 
     virtual bool Reparse(const wxString& filename, bool isLocal = true);
     virtual bool AddFile(const wxString& filename, cbProject* project, bool isLocal = true);
@@ -280,12 +281,8 @@ protected:
     /** Not used, because the ThreadPool only support running ONE ParserThread concurrently */
     void SetMaxThreads(unsigned int max) { m_Pool.SetConcurrentThreads(max); }
 
-    // *MUST* called from child thread-->
     bool Parse(const wxString& filename, bool isLocal = true, LoaderBase* loader = NULL);
     bool Parse(const wxString& bufferOrFilename, bool isLocal, ParserThreadOptions& opts);
-    void DoParseFile(const wxString& filename, bool isGlobal);
-    // *MUST* end--<
-
     void ReparseModifiedFiles();
     void TerminateAllThreads();
 
