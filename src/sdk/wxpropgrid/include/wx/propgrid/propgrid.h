@@ -4599,7 +4599,9 @@ public:
         Used by SetSplitterLeft() and DoFitColumns().
     */
     int GetColumnFitWidth(wxClientDC& dc, wxPGProperty* pwc, unsigned int col, bool subProps) const;
-
+/* C::B begin */
+    int GetColumnFullWidth( wxClientDC &dc, wxPGProperty *p, unsigned int col );
+/* C::B end */
     /**
         Returns currently selected property.
     */

@@ -20,7 +20,9 @@
     #include "scrollingdialog.h"
 #endif
 
+#include <numeric>
 #include <map>
+
 #include <wx/propgrid/propgrid.h>
 
 #include "watchesdlg.h"
@@ -683,6 +685,47 @@ wxPGProperty* GetRealRoot(wxPropertyGrid *grid)
     return property ? grid->GetFirstChild(property) : nullptr;
 }
 
+void GetColumnWidths(wxClientDC &dc, wxPropertyGrid *grid, wxPGProperty *root, int width[3])
+{
+    width[0] = width[1] = width[2] = 0;
+    int minWidths[3] = { grid->GetState()->GetColumnMinWidth(0),
+                         grid->GetState()->GetColumnMinWidth(1),
+                         grid->GetState()->GetColumnMinWidth(2) };
+
+    wxPropertyGridState *state = grid->GetState();
+    for (unsigned ii = 0; ii < root->GetCount(); ++ii)
+    {
+        wxPGProperty* p = root->Item(ii);
+
+        width[0] = std::max(width[0], state->GetColumnFullWidth(dc, p, 0));
+        width[1] = std::max(width[1], state->GetColumnFullWidth(dc, p, 1));
+        width[2] = std::max(width[2], state->GetColumnFullWidth(dc, p, 2));
+    }
+    for (unsigned ii = 0; ii < root->GetCount(); ++ii)
+    {
+        wxPGProperty* p = root->Item(ii);
+        if (p->IsExpanded())
+        {
+            int w[3];
+            GetColumnWidths(dc, grid, p, w);
+            width[0] = std::max(width[0], w[0]);
+            width[1] = std::max(width[1], w[1]);
+            width[2] = std::max(width[2], w[2]);
+        }
+    }
+
+    width[0] = std::max(width[0], minWidths[0]);
+    width[1] = std::max(width[1], minWidths[1]);
+    width[2] = std::max(width[2], minWidths[2]);
+}
+
+void GetColumnWidths(wxPropertyGrid *grid, wxPGProperty *root, int width[3])
+{
+    wxClientDC dc(grid);
+    dc.SetFont(grid->GetFont());
+    GetColumnWidths(dc, grid, root, width);
+}
+
 void SetMinSize(wxPropertyGrid *grid)
 {
     wxPGProperty *p = GetRealRoot(grid);
@@ -695,9 +738,22 @@ void SetMinSize(wxPropertyGrid *grid)
     // this is needed to prevent the vertical scroll from showing
     if (!grid->IsPropertyExpanded(p))
         height += 2 * grid->GetVerticalSpacing();
-    rect.width = grid->GetRect().width;
+
+    int width[3];
+    GetColumnWidths(grid, grid->GetRoot(), width);
+    rect.width = std::accumulate(width, width+3, 0);
+
     wxSize size(std::min(500, rect.width), std::min(500, height));
     grid->SetMinSize(size);
+
+    int proportions[3];
+    proportions[0] = static_cast<int>(floor((double)width[0]/rect.width*100.0+0.5));
+    proportions[1] = static_cast<int>(floor((double)width[1]/rect.width*100.0+0.5));
+    proportions[2]= std::max(100 - proportions[0] - proportions[1], 0);
+    grid->SetColumnProportion(0, proportions[0]);
+    grid->SetColumnProportion(1, proportions[1]);
+    grid->SetColumnProportion(2, proportions[2]);
+    grid->ResetColumnSizes(true);
 }
 
 ValueTooltip::ValueTooltip(const cbWatch::Pointer &watch, wxWindow *parent) :
@@ -718,9 +774,6 @@ ValueTooltip::ValueTooltip(const cbWatch::Pointer &watch, wxWindow *parent) :
     m_grid->SetFont(font);
 
     m_grid->SetColumnCount(3);
-    m_grid->SetColumnProportion(0, 40);
-    m_grid->SetColumnProportion(1, 40);
-    m_grid->SetColumnProportion(2, 20);
 
     wxString symbol, value;
     m_watch->GetSymbol(symbol);
