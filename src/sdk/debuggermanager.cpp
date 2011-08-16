@@ -15,6 +15,7 @@
     #include <wx/filedlg.h>
     #include <wx/frame.h>
     #include <wx/menu.h>
+    #include <wx/settings.h>
     #include <wx/sizer.h>
     #include <wx/stattext.h>
     #include <wx/regex.h>

@@ -7,6 +7,7 @@
 	#include <wx/intl.h>
 	//*)
 
+    #include <wx/fontutil.h>
 	#include <wx/textdlg.h>
 #endif
 

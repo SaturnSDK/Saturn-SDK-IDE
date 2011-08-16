@@ -11,6 +11,7 @@
 #ifndef CB_PRECOMP
     #include <wx/app.h>
     #include <wx/dnd.h>
+    #include <wx/fontutil.h>
     #include <wx/menu.h>
     #include <wx/sizer.h>
 
