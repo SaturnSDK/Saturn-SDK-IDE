@@ -712,16 +712,18 @@ class GdbCmd_Watch : public DebuggerCmd
                     case Float:         m_Cmd << _T("/f "); break;
                     default:            break;
                 }
-                m_Cmd << symbol;
 
                 // auto-set array types
                 if (!m_watch->IsArray() &&  m_watch->GetFormat() == Undefined && type.Contains(_T('[')))
-                {
                     m_watch->SetArray(true);
-                }
 
                 if (m_watch->IsArray() && m_watch->GetArrayCount() > 0)
+                {
+                    m_Cmd << wxT("(") << symbol << wxT(")");
                     m_Cmd << wxString::Format(_T("[%d]@%d"), m_watch->GetArrayStart(), m_watch->GetArrayCount());
+                }
+                else
+                    m_Cmd << symbol;
             }
             else
             {
