@@ -5580,7 +5580,10 @@ int Editor::KeyDefault(int, int) {
 }
 
 int Editor::KeyDownWithModifiers(int key, int modifiers, bool *consumed) {
-	DwellEnd(false);
+/* C::B begin */
+    if (modifiers==0)
+        DwellEnd(false);
+/* C::B end */
 	int msg = kmap.Find(key, modifiers);
 	if (msg) {
 		if (consumed)
