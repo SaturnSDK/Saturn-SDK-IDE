@@ -94,7 +94,7 @@ class DebuggerGDB : public cbDebuggerPlugin
 
         void AddWatchNoUpdate(const GDBWatch::Pointer &watch);
 
-        void OnWatchesContextMenu(wxMenu &menu, const cbWatch &watch, wxObject *property);
+        void OnWatchesContextMenu(wxMenu &menu, const cbWatch &watch, wxObject *property, int &disabledMenus);
 
         void GetCurrentPosition(wxString &filename, int &line);
         void RequestUpdate(DebugWindows window);

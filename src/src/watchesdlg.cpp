@@ -575,7 +575,19 @@ void WatchesDlg::OnPropertyRightClick(wxPropertyGridEvent &event)
     {
         cbWatch *watch = prop->GetWatch();
         if (watch)
-            activeDebugger->OnWatchesContextMenu(m, *watch, event.GetProperty());
+        {
+            int disabled = cbDebuggerPlugin::WatchesDisabledMenuItems::Empty;
+            activeDebugger->OnWatchesContextMenu(m, *watch, event.GetProperty(), disabled);
+
+            if (disabled & cbDebuggerPlugin::WatchesDisabledMenuItems::Rename)
+                m.Enable(idMenuRename, false);
+            if (disabled & cbDebuggerPlugin::WatchesDisabledMenuItems::Properties)
+                m.Enable(idMenuProperties, false);
+            if (disabled & cbDebuggerPlugin::WatchesDisabledMenuItems::Delete)
+                m.Enable(idMenuDelete, false);
+            if (disabled & cbDebuggerPlugin::WatchesDisabledMenuItems::DeleteAll)
+                m.Enable(idMenuDeleteAll, false);
+        }
     }
 
     PopupMenu(&m);

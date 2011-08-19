@@ -38,7 +38,7 @@
 // it will change when the SDK interface breaks
 #define PLUGIN_SDK_VERSION_MAJOR 1
 #define PLUGIN_SDK_VERSION_MINOR 12
-#define PLUGIN_SDK_VERSION_RELEASE 6
+#define PLUGIN_SDK_VERSION_RELEASE 7
 
 // class decls
 class wxMenuBar;
@@ -496,7 +496,22 @@ class PLUGIN_EXPORT cbDebuggerPlugin: public cbPlugin
         virtual void ExpandWatch(cbWatch *watch) = 0;
         virtual void CollapseWatch(cbWatch *watch) = 0;
 
-        virtual void OnWatchesContextMenu(wxMenu &menu, const cbWatch &watch, wxObject *property) {};
+        struct WatchesDisabledMenuItems
+        {
+            enum
+            {
+                Empty      = 0,
+                Rename     = 1 << 0,
+                Properties = 1 << 1,
+                Delete     = 1 << 2,
+                DeleteAll  = 1 << 3
+            };
+        };
+
+        /**
+          * @param[out] disabledMenus A combination of WatchesDisabledMenuItems, which controls which of the default menu items are disabled
+          */
+        virtual void OnWatchesContextMenu(wxMenu &menu, const cbWatch &watch, wxObject *property, int &disabledMenus) {};
 
         virtual void SendCommand(const wxString& cmd, bool debugLog) = 0;
 

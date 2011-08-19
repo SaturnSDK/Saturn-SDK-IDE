@@ -1982,7 +1982,7 @@ void DebuggerGDB::MarkAllWatchesAsUnchanged()
         (*it)->MarkAsChangedRecursive(false);
 }
 
-void DebuggerGDB::OnWatchesContextMenu(wxMenu &menu, const cbWatch &watch, wxObject *property)
+void DebuggerGDB::OnWatchesContextMenu(wxMenu &menu, const cbWatch &watch, wxObject *property, int &disabledMenus)
 {
     wxString type, symbol;
     watch.GetType(type);
@@ -1994,6 +1994,13 @@ void DebuggerGDB::OnWatchesContextMenu(wxMenu &menu, const cbWatch &watch, wxObj
         menu.Insert(0, idMenuWatchDereference, _("Dereference ") + symbol);
         m_watchToDereferenceSymbol = symbol;
         m_watchToDereferenceProperty = property;
+    }
+
+    if (watch.GetParent())
+    {
+        disabledMenus = WatchesDisabledMenuItems::Rename;
+        disabledMenus |= WatchesDisabledMenuItems::Properties;
+        disabledMenus |= WatchesDisabledMenuItems::Delete;
     }
 }
 
