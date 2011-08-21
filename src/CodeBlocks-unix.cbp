@@ -1573,12 +1573,6 @@
 		<Unit filename="plugins/debuggergdb/gdb_driver.h">
 			<Option target="Debugger" />
 		</Unit>
-		<Unit filename="plugins/debuggergdb/gdb_tipwindow.cpp">
-			<Option target="Debugger" />
-		</Unit>
-		<Unit filename="plugins/debuggergdb/gdb_tipwindow.h">
-			<Option target="Debugger" />
-		</Unit>
 		<Unit filename="plugins/debuggergdb/parsewatchvalue.cpp">
 			<Option target="Debugger" />
 		</Unit>

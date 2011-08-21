@@ -31,7 +31,6 @@
 #include "debugger_defs.h"
 #include "debuggergdb.h"
 #include "gdb_driver.h"
-#include "gdb_tipwindow.h"
 #include "remotedebugging.h"
 #include "parsewatchvalue.h"
 

@@ -24,7 +24,6 @@ libdebugger_la_SOURCES = cdb_driver.cpp \
 			debuggerstate.cpp \
 			editwatchdlg.cpp \
 			gdb_driver.cpp \
-			gdb_tipwindow.cpp \
 			parsewatchvalue.cpp
 
 noinst_HEADERS = cdb_commands.h \
@@ -39,6 +38,5 @@ noinst_HEADERS = cdb_commands.h \
 			editwatchdlg.h \
 			gdb_commands.h \
 			gdb_driver.h \
-			gdb_tipwindow.h \
 			parsewatchvalue.h \
 			remotedebugging.h
