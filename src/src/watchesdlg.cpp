@@ -756,12 +756,15 @@ void SetMinSize(wxPropertyGrid *grid)
     GetColumnWidths(grid, grid->GetRoot(), width);
     rect.width = std::accumulate(width, width+3, 0);
 
-    wxSize size(std::min(500, rect.width), std::min(500, height));
+    int minWidth = (wxSystemSettings::GetMetric(wxSYS_SCREEN_X, grid->GetParent())*3)/2;
+    int minHeight = (wxSystemSettings::GetMetric(wxSYS_SCREEN_Y, grid->GetParent())*3)/2;
+
+    wxSize size(std::min(minWidth, rect.width), std::min(minHeight, height));
     grid->SetMinSize(size);
 
     int proportions[3];
-    proportions[0] = static_cast<int>(floor((double)width[0]/rect.width*100.0+0.5));
-    proportions[1] = static_cast<int>(floor((double)width[1]/rect.width*100.0+0.5));
+    proportions[0] = static_cast<int>(floor((double)width[0]/size.x*100.0+0.5));
+    proportions[1] = static_cast<int>(floor((double)width[1]/size.x*100.0+0.5));
     proportions[2]= std::max(100 - proportions[0] - proportions[1], 0);
     grid->SetColumnProportion(0, proportions[0]);
     grid->SetColumnProportion(1, proportions[1]);
