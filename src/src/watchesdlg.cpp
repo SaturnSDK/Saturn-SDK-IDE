@@ -13,6 +13,7 @@
     #include <wx/dnd.h>
     #include <wx/fontutil.h>
     #include <wx/menu.h>
+    #include <wx/settings.h>
     #include <wx/sizer.h>
 
     #include "cbexception.h"
