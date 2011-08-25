@@ -53,7 +53,7 @@ void SpellCheckerConfig::SetEnableOnlineChecker(bool val)
 {
     m_EnableOnlineChecker = val;
 }
-wxString SpellCheckerConfig::GetDictionaryName()
+const wxString SpellCheckerConfig::GetDictionaryName()const
 {
     return m_strDictionaryName;
 }
@@ -95,19 +95,49 @@ void SpellCheckerConfig::ScanForDictionaries(const wxString &path)
             cont = dir.GetNext(&strfilename);
         }
     }
+    // disable online checker if there are no dictionaries found
+    if (m_dictionaries.empty())
+    {
+      m_EnableOnlineChecker = false;
+    }
 }
 const std::vector<wxString> &SpellCheckerConfig::GetPossibleDictionaries()const
 {
     return m_dictionaries;
 }
+const wxString SpellCheckerConfig::GetDictionaryPath()const
+{
+    wxString dictPath = m_DictPath;
+    Manager::Get()->GetMacrosManager()->ReplaceEnvVars(dictPath);
+    return dictPath;
+}
+const wxString SpellCheckerConfig::GetThesaurusPath()const
+{
+    wxString thesPath = m_ThesPath;
+    Manager::Get()->GetMacrosManager()->ReplaceEnvVars(thesPath);
+    return thesPath;
+}
+const wxString SpellCheckerConfig::GetBitmapPath()const
+{
+    wxString bitmPath = m_BitmPath;
+    Manager::Get()->GetMacrosManager()->ReplaceEnvVars(bitmPath);
+    return bitmPath;
+}
 
-const wxString SpellCheckerConfig::GetDictionaryPath()const{return m_DictPath;}
-const wxString SpellCheckerConfig::GetThesaurusPath()const{return m_ThesPath;}
-const wxString SpellCheckerConfig::GetBitmapPath()const{return m_BitmPath;}
+const wxString SpellCheckerConfig::GetRawDictionaryPath()const{return m_DictPath;}
+const wxString SpellCheckerConfig::GetRawThesaurusPath()const{return m_ThesPath;}
+const wxString SpellCheckerConfig::GetRawBitmapPath()const{return m_BitmPath;}
 void SpellCheckerConfig::SetDictionaryPath(const wxString &path){m_DictPath = path;}
 void SpellCheckerConfig::SetThesaurusPath(const wxString &path){m_ThesPath = path;}
 void SpellCheckerConfig::SetBitmapPath(const wxString &path){m_BitmPath = path;}
 
+const wxString SpellCheckerConfig::GetPersonalDictionaryFilename()const
+{
+    wxString dfile = ConfigManager::LocateDataFile(GetDictionaryName() + _T("_personaldictionary.dic"), sdConfig );
+    if (dfile == _T(""))
+        dfile = ConfigManager::GetFolder(sdConfig) + wxFILE_SEP_PATH + GetDictionaryName() + _T("_personaldictionary.dic");
+    return dfile;
+}
 void SpellCheckerConfig::Load()
 {
     m_EnableOnlineChecker = true;

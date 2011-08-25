@@ -35,9 +35,12 @@
 
 #define CC_CODEREFACTORING_DEBUG_OUTPUT 0
 
-#if (CC_GLOBAL_DEBUG_OUTPUT)
+#if CC_GLOBAL_DEBUG_OUTPUT == 1
     #undef CC_CODEREFACTORING_DEBUG_OUTPUT
     #define CC_CODEREFACTORING_DEBUG_OUTPUT 1
+#elif CC_GLOBAL_DEBUG_OUTPUT == 2
+    #undef CC_CODEREFACTORING_DEBUG_OUTPUT
+    #define CC_CODEREFACTORING_DEBUG_OUTPUT 2
 #endif
 
 #if CC_CODEREFACTORING_DEBUG_OUTPUT == 1
@@ -169,7 +172,10 @@ bool CodeRefactoring::Parse()
     bool isLocalVariable = false;
     Token* token = nullptr;
     {
+        TRACK_THREAD_LOCKER(s_TokensTreeCritical);
         wxCriticalSectionLocker locker(s_TokensTreeCritical);
+        THREAD_LOCKER_SUCCESS(s_TokensTreeCritical);
+
         token = m_NativeParser.GetParser().GetTokensTree()->at(*targetResult.begin());
         if (token)
         {
@@ -284,7 +290,10 @@ size_t CodeRefactoring::VerifyResult(const TokenIdxSet& targetResult, const wxSt
     Token* parentOfLocalVariable = nullptr;
     if (isLocalVariable)
     {
+        TRACK_THREAD_LOCKER(s_TokensTreeCritical);
         wxCriticalSectionLocker locker(s_TokensTreeCritical);
+        THREAD_LOCKER_SUCCESS(s_TokensTreeCritical);
+
         Token* token = m_NativeParser.GetParser().GetTokensTree()->at(*targetResult.begin());
         parentOfLocalVariable = token->GetParentToken();
     }
@@ -377,7 +386,10 @@ size_t CodeRefactoring::VerifyResult(const TokenIdxSet& targetResult, const wxSt
                 // handle for local variable
                 if (isLocalVariable)
                 {
+                    TRACK_THREAD_LOCKER(s_TokensTreeCritical);
                     wxCriticalSectionLocker locker(s_TokensTreeCritical);
+                    THREAD_LOCKER_SUCCESS(s_TokensTreeCritical);
+
                     Token* token = m_NativeParser.GetParser().GetTokensTree()->at(*findIter);
                     if (token)
                     {

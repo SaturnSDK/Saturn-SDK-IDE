@@ -79,7 +79,10 @@ void InsertClassMethodDlg::FillClasses()
     lb->Freeze();
     lb->Clear();
 
+    TRACK_THREAD_LOCKER(s_TokensTreeCritical);
     wxCriticalSectionLocker locker(s_TokensTreeCritical);
+    THREAD_LOCKER_SUCCESS(s_TokensTreeCritical);
+
     TokensTree* tree = m_Parser->GetTokensTree();
     for (size_t i = 0; i < tree->size(); ++i)
     {

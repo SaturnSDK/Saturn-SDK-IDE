@@ -44,9 +44,12 @@
 
 #define CC_NATIVEPARSER_DEBUG_OUTPUT 0
 
-#if (CC_GLOBAL_DEBUG_OUTPUT)
+#if CC_GLOBAL_DEBUG_OUTPUT == 1
     #undef CC_NATIVEPARSER_DEBUG_OUTPUT
     #define CC_NATIVEPARSER_DEBUG_OUTPUT 1
+#elif CC_GLOBAL_DEBUG_OUTPUT == 2
+    #undef CC_NATIVEPARSER_DEBUG_OUTPUT
+    #define CC_NATIVEPARSER_DEBUG_OUTPUT 2
 #endif
 
 #if CC_NATIVEPARSER_DEBUG_OUTPUT == 1
@@ -207,7 +210,10 @@ void NativeParser::SetParser(ParserBase* parser)
         return;
 
     {
+        TRACK_THREAD_LOCKER(s_TokensTreeCritical);
         wxCriticalSectionLocker locker(s_TokensTreeCritical);
+        THREAD_LOCKER_SUCCESS(s_TokensTreeCritical);
+
         RemoveLastFunctionChildren();
     }
 
@@ -238,7 +244,7 @@ ParserBase* NativeParser::GetParserByProject(cbProject* project)
         }
     }
 
-    TRACE2(_T("GetProjectByParser() : Returning nullptr."));
+    TRACE(_T("GetProjectByParser() : Returning nullptr."));
     return nullptr;
 }
 
@@ -256,13 +262,13 @@ cbProject* NativeParser::GetProjectByParser(ParserBase* parser)
             return it->first;
     }
 
-    TRACE2(_T("GetProjectByParser() : Returning NULL."));
+    TRACE(_T("GetProjectByParser() : Returning NULL."));
     return NULL;
 }
 
 cbProject* NativeParser::GetProjectByFilename(const wxString& filename)
 {
-    TRACE2(_T("GetProjectByFilename() : %s"), filename.wx_str());
+    TRACE(_T("GetProjectByFilename() : %s"), filename.wx_str());
     cbProject* activeProject = Manager::Get()->GetProjectManager()->GetActiveProject();
     if (activeProject)
     {
@@ -1656,7 +1662,10 @@ size_t NativeParser::MarkItemsByAI(TokenIdxSet& result, bool reallyUseAI, bool i
 size_t NativeParser::MarkItemsByAI(ccSearchData* searchData, TokenIdxSet& result, bool reallyUseAI, bool isPrefix,
                                    bool caseSensitive, int caretPos)
 {
+    TRACK_THREAD_LOCKER(s_TokensTreeCritical);
     wxCriticalSectionLocker locker(s_TokensTreeCritical);
+    THREAD_LOCKER_SUCCESS(s_TokensTreeCritical);
+
     result.clear();
 
     if (!m_Parser->Done())
@@ -1879,7 +1888,10 @@ void NativeParser::GetCallTips(int chars_per_line, wxArrayString &items, int &ty
         TokenIdxSet result;
         MarkItemsByAI(result, true, false, true, end);
 
+        TRACK_THREAD_LOCKER(s_TokensTreeCritical);
         wxCriticalSectionLocker locker(s_TokensTreeCritical);
+        THREAD_LOCKER_SUCCESS(s_TokensTreeCritical);
+
         TokensTree* tokens = m_Parser->GetTokensTree();
         for (TokenIdxSet::iterator it = result.begin(); it != result.end(); ++it)
         {
@@ -3908,7 +3920,7 @@ Token* NativeParser::GetTokenFromCurrentLine(const TokenIdxSet& tokens, size_t c
                 && token->m_ImplLine <= curLine
                 && token->m_ImplLineEnd >= curLine)
             {
-                TRACE2(_T("GetTokenFromCurrentLine() tkAnyFunction : tN='%s', tF='%s', tStart=%d, tEnd=%d"),
+                TRACE(_T("GetTokenFromCurrentLine() tkAnyFunction : tN='%s', tF='%s', tStart=%d, tEnd=%d"),
                        token->DisplayName().wx_str(), token->GetFilename().wx_str(),
                        token->m_ImplLineStart, token->m_ImplLineEnd);
                 return token;
@@ -3918,18 +3930,18 @@ Token* NativeParser::GetTokenFromCurrentLine(const TokenIdxSet& tokens, size_t c
                      && token->m_ImplLine <= curLine
                      && token->m_ImplLineStart >= curLine)
             {
-                TRACE2(_T("GetTokenFromCurrentLine() tkConstructor : tN='%s', tF='%s', tStart=%d, tEnd=%d"),
-                       token->DisplayName().wx_str(), token->GetFilename().wx_str(),
-                       token->m_ImplLineStart, token->m_ImplLineEnd);
+                TRACE(_T("GetTokenFromCurrentLine() tkConstructor : tN='%s', tF='%s', tStart=%d, tEnd=%d"),
+                      token->DisplayName().wx_str(), token->GetFilename().wx_str(),
+                      token->m_ImplLineStart, token->m_ImplLineEnd);
                 return token;
             }
             else if (   token->m_TokenKind == tkClass
                      && token->m_ImplLineStart <= curLine
                      && token->m_ImplLineEnd >= curLine)
             {
-                TRACE2(_T("GetTokenFromCurrentLine() tkClass : tN='%s', tF='%s', tStart=%d, tEnd=%d"),
-                       token->DisplayName().wx_str(), token->GetFilename().wx_str(),
-                       token->m_ImplLineStart, token->m_ImplLineEnd);
+                TRACE(_T("GetTokenFromCurrentLine() tkClass : tN='%s', tF='%s', tStart=%d, tEnd=%d"),
+                      token->DisplayName().wx_str(), token->GetFilename().wx_str(),
+                      token->m_ImplLineStart, token->m_ImplLineEnd);
                 classToken = token;
                 continue;
             }

@@ -157,6 +157,8 @@ ThreadSearchView::~ThreadSearchView()
 BEGIN_EVENT_TABLE(ThreadSearchView, wxPanel)
     // begin wxGlade: ThreadSearchView::event_table
     EVT_TEXT_ENTER(idCboSearchExpr, ThreadSearchView::OnCboSearchExprEnter)
+    EVT_TEXT_ENTER(idTxtSearchDirPath, ThreadSearchView::OnCboSearchExprEnter)
+    EVT_TEXT_ENTER(idTxtSearchMask, ThreadSearchView::OnCboSearchExprEnter)
     EVT_BUTTON(idBtnSearch, ThreadSearchView::OnBtnSearchClick)
     EVT_BUTTON(idBtnOptions, ThreadSearchView::OnBtnOptionsClick)
     EVT_BUTTON(idBtnShowDirItemsClick, ThreadSearchView::OnBtnShowDirItemsClick)
@@ -791,6 +793,8 @@ void ThreadSearchView::OnTmrListCtrlUpdate(wxTimerEvent& event)
             // is empty (m_ThreadSearchEventsArray.GetCount() == 0).
             // We stop the timer to spare resources
             m_Timer.Stop();
+
+            m_pLogger->OnSearchEnd();
 
             // Restores label and enables all search params graphical widgets.
             UpdateSearchButtons(true, search);

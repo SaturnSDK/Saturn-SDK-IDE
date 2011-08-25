@@ -59,9 +59,12 @@
 
 #define CC_CODECOMPLETION_DEBUG_OUTPUT 0
 
-#if (CC_GLOBAL_DEBUG_OUTPUT)
+#if CC_GLOBAL_DEBUG_OUTPUT == 1
     #undef CC_CODECOMPLETION_DEBUG_OUTPUT
     #define CC_CODECOMPLETION_DEBUG_OUTPUT 1
+#elif CC_GLOBAL_DEBUG_OUTPUT == 2
+    #undef CC_CODECOMPLETION_DEBUG_OUTPUT
+    #define CC_CODECOMPLETION_DEBUG_OUTPUT 2
 #endif
 
 #if CC_CODECOMPLETION_DEBUG_OUTPUT == 1
@@ -402,6 +405,21 @@ private:
         size_t                  m_Count;
     };
 };
+
+void GotoTokenPosition(cbEditor* editor, const wxString& target, size_t line)
+{
+    if (!editor)
+        return;
+    cbStyledTextCtrl* control = editor->GetControl();
+    control->GotoLine(line);
+    const int start = control->GetCurrentPos();
+    const int end = start + control->LineLength(line);
+    int tokenPos = control->FindText(start, end, target, wxSCI_FIND_WHOLEWORD | wxSCI_FIND_MATCHCASE, nullptr);
+    if (tokenPos != wxSCI_INVALID_POSITION)
+        control->SetSelectionInt(tokenPos, tokenPos + target.Len());
+    else
+        control->GotoPos(start);
+}
 
 CodeCompletion::CodeCompletion() :
     m_InitDone(false),
@@ -1026,7 +1044,10 @@ int CodeCompletion::CodeComplete()
 
             m_SearchItem.clear();
             {
+                TRACK_THREAD_LOCKER(s_TokensTreeCritical);
                 wxCriticalSectionLocker locker(s_TokensTreeCritical);
+                THREAD_LOCKER_SUCCESS(s_TokensTreeCritical);
+
                 TokensTree* tokens = m_NativeParser.GetParser().GetTokensTree();
                 for (TokenIdxSet::iterator it = result.begin(); it != result.end(); ++it)
                 {
@@ -1570,7 +1591,10 @@ int CodeCompletion::DoAllMethodsImpl()
     if ( ft != ftHeader && ft != ftSource) // only parse source/header files
         return -4;
 
+    TRACK_THREAD_LOCKER(s_TokensTreeCritical);
     wxCriticalSectionLocker locker(s_TokensTreeCritical);
+    THREAD_LOCKER_SUCCESS(s_TokensTreeCritical);
+
     TokensTree* tree = m_NativeParser.GetParser().GetTokensTree();
 
     // get all filenames' indices matching our mask
@@ -2164,7 +2188,9 @@ void CodeCompletion::ParseFunctionsAndFillToolbar()
         funcdata->m_FunctionsScope.clear();
         funcdata->m_NameSpaces.clear();
 
+        TRACK_THREAD_LOCKER(s_TokensTreeCritical);
         wxCriticalSectionLocker locker(s_TokensTreeCritical);
+        THREAD_LOCKER_SUCCESS(s_TokensTreeCritical);
 
         TokensTree* tree = m_NativeParser.GetParser().GetTokensTree();
         TokenIdxSet result;
@@ -2190,6 +2216,7 @@ void CodeCompletion::ParseFunctionsAndFillToolbar()
                     if (fs.Scope.IsEmpty())
                         fs.Scope = g_GlobalScope;
                     wxString result = token->m_Name;
+                    fs.ShortName = result;
                     result << token->GetFormattedArgs();
                     if (!token->m_Type.IsEmpty())
                         result << _T(" : ") << token->m_Type;
@@ -2512,17 +2539,22 @@ void CodeCompletion::OnToolbarTimer(wxTimerEvent& event)
 
 void CodeCompletion::OnValueTooltip(CodeBlocksEvent& event)
 {
-    event.Skip();
 
     if (IsAttached() && m_InitDone)
     {
         if (!Manager::Get()->GetConfigManager(_T("code_completion"))->ReadBool(_T("eval_tooltip"), true))
+        {
+            event.Skip();
             return;
+        }
 
         EditorBase* base = event.GetEditor();
         cbEditor* ed = base && base->IsBuiltinEditor() ? static_cast<cbEditor*>(base) : 0;
         if (!ed || ed->IsContextMenuOpened())
+        {
+            event.Skip();
             return;
+        }
 
         if (ed->GetControl()->CallTipActive())
             ed->GetControl()->CallTipCancel();
@@ -2531,24 +2563,36 @@ void CodeCompletion::OnValueTooltip(CodeBlocksEvent& event)
         *       The solution may not the best one and it requires the editor
         *       to have the focus (even if C::B has the focus) in order to pop-up the tooltip. */
         if (wxWindow::FindFocus() != static_cast<wxWindow*>(ed->GetControl()))
+        {
+            event.Skip();
             return;
+        }
 
         // ignore comments, strings, preprocesor, etc
         int style = event.GetInt();
         if (   (style != wxSCI_C_DEFAULT)
             && (style != wxSCI_C_OPERATOR)
             && (style != wxSCI_C_IDENTIFIER) )
+        {
+            event.Skip();
             return;
+        }
 
         int pos = ed->GetControl()->PositionFromPointClose(event.GetX(), event.GetY());
         if (pos < 0 || pos >= ed->GetControl()->GetLength())
+        {
+            event.Skip();
             return;
+        }
 
         TokenIdxSet result;
         int endOfWord = ed->GetControl()->WordEndPosition(pos, true);
         if (m_NativeParser.MarkItemsByAI(result, true, false, true, endOfWord))
         {
+            TRACK_THREAD_LOCKER(s_TokensTreeCritical);
             wxCriticalSectionLocker locker(s_TokensTreeCritical);
+            THREAD_LOCKER_SUCCESS(s_TokensTreeCritical);
+
             wxString msg;
             int count = 0;
             for (TokenIdxSet::iterator it = result.begin(); it != result.end(); ++it)
@@ -2569,10 +2613,12 @@ void CodeCompletion::OnValueTooltip(CodeBlocksEvent& event)
             {
                 msg.RemoveLast(); // last \n
                 ed->GetControl()->CallTipShow(pos, msg);
-//                    CCLogger::Get()->DebugLog(F(msg));
+                TRACE(msg);
             }
         }
     }
+
+    event.Skip();
 }
 
 void CodeCompletion::OnUpdateUI(wxUpdateUIEvent& event)
@@ -2644,11 +2690,14 @@ void CodeCompletion::OnGotoFunction(wxCommandEvent& event)
     if (!ed)
         return;
 
+    TRACK_THREAD_LOCKER(s_TokensTreeCritical);
     wxCriticalSectionLocker locker(s_TokensTreeCritical);
-    m_NativeParser.GetTempParser().ParseBufferForFunctions(ed->GetControl()->GetText());
+    THREAD_LOCKER_SUCCESS(s_TokensTreeCritical);
+
+    m_NativeParser.GetParser().ParseBufferForFunctions(ed->GetControl()->GetText());
 
     wxArrayString funcs;
-    TokensTree* tmptree = m_NativeParser.GetTempParser().GetTempTokensTree();
+    TokensTree* tmptree = m_NativeParser.GetParser().GetTempTokensTree();
     if (tmptree->empty())
     {
         cbMessageBox(_("No functions parsed in this file..."));
@@ -2678,8 +2727,8 @@ void CodeCompletion::OnGotoFunction(wxCommandEvent& event)
         Token* token = tmpsearch.GetItem(sel);
         if (token)
         {
-            CCLogger::Get()->DebugLog(F(_T("Token found at line %d"), token->m_Line));
-            ed->GotoLine(token->m_Line - 1);
+            TRACE(F(_T("Token found at line %d"), token->m_Line));
+            GotoTokenPosition(ed, token->m_Name, token->m_Line - 1);
         }
     }
 
@@ -2731,7 +2780,10 @@ void CodeCompletion::OnGotoDeclaration(wxCommandEvent& event)
     TokenIdxSet result;
     m_NativeParser.MarkItemsByAI(result, true, false, true, end);
 
+    TRACK_THREAD_LOCKER(s_TokensTreeCritical);
     wxCriticalSectionLocker locker(s_TokensTreeCritical);
+    THREAD_LOCKER_SUCCESS(s_TokensTreeCritical);
+
     TokensTree* tokens = m_NativeParser.GetParser().GetTokensTree();
 
     // special handle destructor function
@@ -3239,12 +3291,10 @@ void CodeCompletion::OnFunction(wxCommandEvent& /*event*/)
         int idxFn = m_ScopeMarks[selSc] + m_Function->GetSelection();
         if (idxFn != -1 && idxFn < static_cast<int>(m_FunctionsScope.size()))
         {
-            int Line = m_FunctionsScope[idxFn].StartLine;
             cbEditor* ed = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
             if (!ed)
                 return;
-            ed->GotoLine(Line);
-            ed->SetFocus();
+            GotoTokenPosition(ed, m_FunctionsScope[idxFn].ShortName, m_FunctionsScope[idxFn].StartLine);
         }
     }
 }
@@ -3331,18 +3381,4 @@ void CodeCompletion::OnRealtimeParsingTimer(wxTimerEvent& event)
         return;
     if (m_NativeParser.ReparseFile(project, m_LastFile))
         CCLogger::Get()->DebugLog(_T("Reparsing when typing for editor ") + m_LastFile);
-}
-
-void CodeCompletion::GotoTokenPosition(cbEditor* editor, const wxString& target, size_t line)
-{
-    if (!editor)
-        return;
-    cbStyledTextCtrl* control = editor->GetControl();
-    control->GotoLine(line);
-    const int start = control->GetCurrentPos();
-    const int end = start + control->LineLength(line);
-    int tokenPos = control->FindText(start, end, target, wxSCI_FIND_WHOLEWORD | wxSCI_FIND_MATCHCASE, nullptr);
-    if (tokenPos == wxSCI_INVALID_POSITION)
-        tokenPos = start;
-    control->GotoPos(tokenPos);
 }

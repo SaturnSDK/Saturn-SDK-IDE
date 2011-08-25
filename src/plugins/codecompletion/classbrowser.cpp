@@ -47,9 +47,12 @@
 
 #define CC_CLASS_BROWSER_DEBUG_OUTPUT 0
 
-#if (CC_GLOBAL_DEBUG_OUTPUT)
+#if CC_GLOBAL_DEBUG_OUTPUT == 1
     #undef CC_CLASS_BROWSER_DEBUG_OUTPUT
     #define CC_CLASS_BROWSER_DEBUG_OUTPUT 1
+#elif CC_GLOBAL_DEBUG_OUTPUT == 2
+    #undef CC_CLASS_BROWSER_DEBUG_OUTPUT
+    #define CC_CLASS_BROWSER_DEBUG_OUTPUT 2
 #endif
 
 #if CC_CLASS_BROWSER_DEBUG_OUTPUT == 1
@@ -70,6 +73,8 @@
     #define TRACE(format, args...)
     #define TRACE2(format, args...)
 #endif
+
+extern void GotoTokenPosition(cbEditor* editor, const wxString& target, size_t line);
 
 int idMenuJumpToDeclaration    = wxNewId();
 int idMenuJumpToImplementation = wxNewId();
@@ -488,7 +493,8 @@ void ClassBrowser::OnJumpTo(wxCommandEvent& event)
                 line = ctd->m_Token->m_ImplLine - 1;
             else
                 line = ctd->m_Token->m_Line - 1;
-            ed->GotoLine(line);
+
+            GotoTokenPosition(ed, ctd->m_Token->m_Name, line);
         }
     }
 }
@@ -559,7 +565,8 @@ void ClassBrowser::OnTreeItemDoubleClick(wxTreeEvent& event)
                 line = ctd->m_Token->m_ImplLine - 1;
             else
                 line = ctd->m_Token->m_Line - 1;
-            ed->GotoLine(line);
+
+            GotoTokenPosition(ed, ctd->m_Token->m_Name, line);
 
             wxFocusEvent ev(wxEVT_SET_FOCUS);
             ev.SetWindow(this);

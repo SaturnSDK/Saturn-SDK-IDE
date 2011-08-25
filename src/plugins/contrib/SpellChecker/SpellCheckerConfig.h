@@ -32,13 +32,12 @@ class SpellCheckerConfig
 
         bool GetEnableOnlineChecker();
         void SetEnableOnlineChecker(bool val);
-        wxString GetDictionaryName();
+        const wxString GetDictionaryName()const;
         void SetDictionaryName(wxString val);
         void Load();
         void Save();
 
         void ScanForDictionaries();
-        void ScanForDictionaries(const wxString &path);
 
         const std::vector<wxString> &GetPossibleDictionaries()const;
         int GetSelectedDictionaryNumber()const;
@@ -49,6 +48,13 @@ class SpellCheckerConfig
         void SetDictionaryPath(const wxString &path);
         void SetThesaurusPath(const wxString &path);
         void SetBitmapPath(const wxString &path);
+        const wxString GetPersonalDictionaryFilename()const;
+    private:
+        friend class SpellCheckSettingsPanel;
+        const wxString GetRawDictionaryPath()const;
+        const wxString GetRawThesaurusPath()const;
+        const wxString GetRawBitmapPath()const;
+        void ScanForDictionaries(const wxString &path);
     protected:
     private:
         wxString m_DictPath;
