@@ -107,8 +107,6 @@ public:
     virtual ~ParserThread();
 
     /** Do the main job (syntax analysis) here
-      * No critical section needed here:
-      * All functions that call this, already entered a critical section.
       */
     bool Parse();
 
@@ -139,7 +137,10 @@ protected:
       */
     int Execute()
     {
+        TRACK_THREAD_LOCKER(s_TokensTreeCritical);
         wxCriticalSectionLocker locker(s_TokensTreeCritical);
+        THREAD_LOCKER_SUCCESS(s_TokensTreeCritical);
+
         return Parse() ? 0 : 1;
     }
 

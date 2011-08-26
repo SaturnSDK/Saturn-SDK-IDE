@@ -47,9 +47,12 @@
 
 #define CC_CLASS_BROWSER_DEBUG_OUTPUT 0
 
-#if (CC_GLOBAL_DEBUG_OUTPUT)
+#if CC_GLOBAL_DEBUG_OUTPUT == 1
     #undef CC_CLASS_BROWSER_DEBUG_OUTPUT
     #define CC_CLASS_BROWSER_DEBUG_OUTPUT 1
+#elif CC_GLOBAL_DEBUG_OUTPUT == 2
+    #undef CC_CLASS_BROWSER_DEBUG_OUTPUT
+    #define CC_CLASS_BROWSER_DEBUG_OUTPUT 2
 #endif
 
 #if CC_CLASS_BROWSER_DEBUG_OUTPUT == 1
@@ -70,6 +73,8 @@
     #define TRACE(format, args...)
     #define TRACE2(format, args...)
 #endif
+
+extern void GotoTokenPosition(cbEditor* editor, const wxString& target, size_t line);
 
 int idMenuJumpToDeclaration    = wxNewId();
 int idMenuJumpToImplementation = wxNewId();
@@ -488,7 +493,8 @@ void ClassBrowser::OnJumpTo(wxCommandEvent& event)
                 line = ctd->m_Token->m_ImplLine - 1;
             else
                 line = ctd->m_Token->m_Line - 1;
-            ed->GotoLine(line);
+
+            GotoTokenPosition(ed, ctd->m_Token->m_Name, line);
         }
     }
 }
@@ -559,7 +565,8 @@ void ClassBrowser::OnTreeItemDoubleClick(wxTreeEvent& event)
                 line = ctd->m_Token->m_ImplLine - 1;
             else
                 line = ctd->m_Token->m_Line - 1;
-            ed->GotoLine(line);
+
+            GotoTokenPosition(ed, ctd->m_Token->m_Name, line);
 
             wxFocusEvent ev(wxEVT_SET_FOCUS);
             ev.SetWindow(this);
@@ -670,9 +677,16 @@ void ClassBrowser::OnSearch(wxCommandEvent& event)
     TokenIdxSet result;
     Token* token = 0;
     {
-        wxCriticalSectionLocker locker(s_TokensTreeCritical);
         TokensTree* tokensTree = m_Parser->GetTokensTree();
-        const size_t count = tokensTree->FindMatches(search, result, false, true);
+        size_t count = 0;
+        {
+            TRACK_THREAD_LOCKER(s_TokensTreeCritical);
+            wxCriticalSectionLocker locker(s_TokensTreeCritical);
+            THREAD_LOCKER_SUCCESS(s_TokensTreeCritical);
+
+            count = tokensTree->FindMatches(search, result, false, true);
+        }
+
         if (count == 0)
         {
             cbMessageBox(_("No matches were found: ") + search,
@@ -681,6 +695,10 @@ void ClassBrowser::OnSearch(wxCommandEvent& event)
         }
         else if (count == 1)
         {
+            TRACK_THREAD_LOCKER(s_TokensTreeCritical);
+            wxCriticalSectionLocker locker(s_TokensTreeCritical);
+            THREAD_LOCKER_SUCCESS(s_TokensTreeCritical);
+
             token = tokensTree->at(*result.begin());
         }
         else if (count > 1)
@@ -689,6 +707,10 @@ void ClassBrowser::OnSearch(wxCommandEvent& event)
             wxArrayInt int_selections;
             for (TokenIdxSet::iterator it = result.begin(); it != result.end(); ++it)
             {
+                TRACK_THREAD_LOCKER(s_TokensTreeCritical);
+                wxCriticalSectionLocker locker(s_TokensTreeCritical);
+                THREAD_LOCKER_SUCCESS(s_TokensTreeCritical);
+
                 Token* sel = tokensTree->at(*it);
                 if (sel)
                 {
@@ -701,10 +723,19 @@ void ClassBrowser::OnSearch(wxCommandEvent& event)
                 int sel = wxGetSingleChoiceIndex(_("Please make a selection:"), _("Multiple matches"), selections);
                 if (sel == -1)
                     return;
+
+                TRACK_THREAD_LOCKER(s_TokensTreeCritical);
+                wxCriticalSectionLocker locker(s_TokensTreeCritical);
+                THREAD_LOCKER_SUCCESS(s_TokensTreeCritical);
+
                 token = tokensTree->at(int_selections[sel]);
             }
             else if (selections.GetCount() == 1)
             {
+                TRACK_THREAD_LOCKER(s_TokensTreeCritical);
+                wxCriticalSectionLocker locker(s_TokensTreeCritical);
+                THREAD_LOCKER_SUCCESS(s_TokensTreeCritical);
+
                 // number of selections can be < result.size() due to the if tests, so in case we fall
                 // back on 1 entry no need to show a selection
                 token = tokensTree->at(int_selections[0]);

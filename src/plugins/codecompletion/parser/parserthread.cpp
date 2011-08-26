@@ -27,9 +27,12 @@
 
 #define CC_PARSERTHREAD_DEBUG_OUTPUT 0
 
-#if (CC_GLOBAL_DEBUG_OUTPUT)
+#if CC_GLOBAL_DEBUG_OUTPUT == 1
     #undef CC_PARSERTHREAD_DEBUG_OUTPUT
     #define CC_PARSERTHREAD_DEBUG_OUTPUT 1
+#elif CC_GLOBAL_DEBUG_OUTPUT == 2
+    #undef CC_PARSERTHREAD_DEBUG_OUTPUT
+    #define CC_PARSERTHREAD_DEBUG_OUTPUT 2
 #endif
 
 #ifdef CC_PARSER_TEST
@@ -1416,7 +1419,7 @@ void ParserThread::HandleIncludes()
             }
 
             TRACE(_T("HandleIncludes() : Adding include file '%s'"), real_filename.wx_str());
-            m_Parent->ParseFile(real_filename, isGlobal);
+            m_Parent->ParseFile(real_filename, isGlobal, true);
         }
         while (false);
     }

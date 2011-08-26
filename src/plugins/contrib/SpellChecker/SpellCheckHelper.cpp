@@ -20,10 +20,14 @@
 
 #include <sdk.h> // Code::Blocks SDK
 #ifndef CB_PRECOMP
+    #include <wx/wxscintilla.h>
+
     #include <configmanager.h>
     #include <logmanager.h>
 #endif
+
 #include "SpellCheckerPlugin.h"
+
 SpellCheckHelper::SpellCheckHelper()
 {
     //ctor
@@ -83,6 +87,15 @@ bool SpellCheckHelper::HasStyleToBeChecked(wxString langname, int style)const
     if ( it != m_LanguageIndices.end())
     {
         return it->second.find(style) != it->second.end();
+    }
+    return false;
+}
+bool SpellCheckHelper::IsEscapeSequenceStart(wxChar ch, wxString langname, int style)
+{
+    //Manager::Get()->GetLogManager()->Log(wxString(_T("check if '")) + ch +_T("' is an escape in \"")+langname + wxString::Format(_T("\" at style %d"), style));
+    if (langname == _T("C/C++") && (style == wxSCI_C_STRING || style == wxSCI_C_CHARACTER || style == wxSCI_C_STRINGEOL))
+    {
+        return ch == _T('\\');
     }
     return false;
 }
