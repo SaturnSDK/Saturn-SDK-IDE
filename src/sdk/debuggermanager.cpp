@@ -523,6 +523,34 @@ void cbDebuggerCommonConfig::SetValueTooltipFont(const wxString &font)
     }
 }
 
+wxString cbDetectDebuggerExecutable(const wxString &exeName)
+{
+    wxString exeExt(platform::windows ? wxT(".exe") : wxEmptyString);
+    wxString exePath = cbFindFileInPATH(exeName);
+    wxChar sep = wxFileName::GetPathSeparator();
+
+    if (exePath.empty())
+    {
+        if (!platform::windows)
+            exePath = wxT("/usr/bin/") + exeName + exeExt;
+        else
+        {
+            const wxString &cbInstallFolder = ConfigManager::GetExecutableFolder();
+            if (wxFileExists(cbInstallFolder + sep + wxT("MINGW") + sep + wxT("bin") + sep + exeName + exeExt))
+                exePath = cbInstallFolder + sep + wxT("MINGW") + sep + wxT("bin");
+            else
+            {
+                exePath = wxT("C:\\MinGW\\bin");
+                if (!wxDirExists(exePath))
+                    exePath = wxT("C:\\MinGW32\\bin");
+            }
+        }
+    }
+    if (!wxDirExists(exePath))
+        return wxEmptyString;
+    return exePath + wxFileName::GetPathSeparator() + exeName + exeExt;
+}
+
 
 class DebugTextCtrlLogger : public TextCtrlLogger
 {

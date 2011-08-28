@@ -238,6 +238,11 @@ struct DLLIMPORT cbDebuggerCommonConfig
     static void SetValueTooltipFont(const wxString &font);
 };
 
+/**
+  * Tries to detect the path to the debugger's executable.
+  */
+DLLIMPORT wxString cbDetectDebuggerExecutable(const wxString &exeName);
+
 class DLLIMPORT DebuggerManager : public Mgr<DebuggerManager>
 {
     private:
