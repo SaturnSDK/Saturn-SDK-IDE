@@ -502,7 +502,7 @@ void cbDebuggerCommonConfig::SetFlag(Flags flag, bool value)
 
 wxString cbDebuggerCommonConfig::GetValueTooltipFont()
 {
-    wxFont system = wxSystemSettings::GetFont(wxSYS_SYSTEM_FONT);
+    wxFont system = wxSystemSettings::GetFont(wxSYS_DEFAULT_GUI_FONT);
     system.SetPointSize(std::max(system.GetPointSize() - 3, 7));
     wxString defaultFont = system.GetNativeFontInfo()->ToString();
 
