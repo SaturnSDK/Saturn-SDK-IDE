@@ -72,36 +72,75 @@ wxArrayString InsertClassMethodDlg::GetCode() const
 
 void InsertClassMethodDlg::FillClasses()
 {
-    if (!m_Parser || !m_Parser->Done())
-        return;
-
     wxListBox* lb = XRCCTRL(*this, "lstClasses", wxListBox);
     lb->Freeze();
     lb->Clear();
-
-    TRACK_THREAD_LOCKER(s_TokensTreeCritical);
-    wxCriticalSectionLocker locker(s_TokensTreeCritical);
-    THREAD_LOCKER_SUCCESS(s_TokensTreeCritical);
 
     TokensTree* tree = m_Parser->GetTokensTree();
     for (size_t i = 0; i < tree->size(); ++i)
     {
         Token* token = tree->at(i);
         //CCLogger::Get()->DebugLog("m_Filename=%s, token=%s", m_Filename.c_str(), token->m_Filename.c_str());
-        if (token && (token->m_TokenKind & (tkClass | tkTypedef))) //&&
+        if (token && (token->m_TokenKind & (tkClass | tkTypedef)))
+        {
             //token->m_Filename == UnixFilename(m_Filename))
             // TODO: check against file's pair too
             lb->Append(token->m_Name, token);
+        }
     }
+
     lb->Thaw();
     FillMethods();
 }
 
-void InsertClassMethodDlg::FillMethods()
+void DoFillMethodsFor(wxCheckListBox* clb, Token* parentToken, const wxString& ns, bool includePrivate,
+                      bool includeProtected, bool includePublic)
 {
-    if (!m_Parser || !m_Parser->Done())
+    if (!parentToken)
+        return;
+    TokensTree* tree = parentToken->GetTree();
+    if (!tree)
         return;
 
+    // loop ascending the inheritance tree
+    tree->RecalcInheritanceChain(parentToken);
+
+    for (TokenIdxSet::iterator it = parentToken->m_Children.begin(); it != parentToken->m_Children.end(); ++it)
+    {
+        int idx = *it;
+        Token* token = tree->at(idx);
+        if (!token)
+            continue;
+
+        const bool valid =    token->m_TokenKind & (tkFunction | tkConstructor | tkDestructor)
+                           && (   (includePrivate && token->m_Scope == tsPrivate)
+                               || (includeProtected && token->m_Scope == tsProtected)
+                               || (includePublic && token->m_Scope == tsPublic) );
+        if (valid)
+        {
+            wxString str;
+            str << token->m_Type << _T(" ") << ns << token->m_Name << token->GetFormattedArgs();
+            str.Replace(_T("&"), _T("&&"));
+            if (clb->FindString(str) == wxNOT_FOUND)
+                clb->Append(str);
+        }
+    }
+
+    // inheritance
+    for (TokenIdxSet::iterator it = parentToken->m_DirectAncestors.begin();
+         it != parentToken->m_DirectAncestors.end();
+         ++it)
+    {
+        int idx = *it;
+        Token* token = tree->at(idx);
+        if (!token)
+            continue;
+        DoFillMethodsFor(clb, token, ns, includePrivate, includeProtected, includePublic);
+    }
+}
+
+void InsertClassMethodDlg::FillMethods()
+{
     wxListBox* lb = XRCCTRL(*this, "lstClasses", wxListBox);
     wxCheckListBox* clb = XRCCTRL(*this, "chklstMethods", wxCheckListBox);
     clb->Clear();
@@ -117,69 +156,15 @@ void InsertClassMethodDlg::FillMethods()
 
     clb->Freeze();
     DoFillMethodsFor(clb,
-                    parentToken,
-                    parentToken ? parentToken->m_Name + _T("::") : _T(""),
-                    includePrivate,
-                    includeProtected,
-                    includePublic);
+                     parentToken,
+                     parentToken ? parentToken->m_Name + _T("::") : _T(""),
+                     includePrivate,
+                     includeProtected,
+                     includePublic);
     clb->Thaw();
 }
 
-void InsertClassMethodDlg::DoFillMethodsFor(wxCheckListBox* clb,
-                                            Token* parentToken,
-                                            const wxString& ns,
-                                            bool includePrivate,
-                                            bool includeProtected,
-                                            bool includePublic)
-{
-    if (!parentToken)
-        return;
-    TokensTree* tree = parentToken->GetTree();
-    if (!tree)
-        return;
-    //CCLogger::Get()->DebugLog("Fill methods for %s", parentToken->m_DisplayName.c_str());
-
-    // loop ascending the inheritance tree
-    tree->RecalcInheritanceChain(parentToken);
-
-    for (TokenIdxSet::iterator it = parentToken->m_Children.begin(); it != parentToken->m_Children.end(); ++it)
-    {
-        int idx = *it;
-        Token* token = tree->at(idx);
-        if (!token)
-            continue;
-
-        //CCLogger::Get()->DebugLog("Evaluating %s", token->m_DisplayName.c_str());
-        bool valid = token->m_TokenKind & (tkFunction | tkConstructor | tkDestructor) &&
-                ((includePrivate && token->m_Scope == tsPrivate) ||
-                (includeProtected && token->m_Scope == tsProtected) ||
-                (includePublic && token->m_Scope == tsPublic));
-        if (valid)
-        {
-            //CCLogger::Get()->DebugLog("Adding %s", token->m_DisplayName.c_str());
-            // BUG IN WXWIDGETS: wxCheckListBox::Append(string, data) crashes...
-            //                   wxCheckListBox::Append(string) does not...
-            wxString str;
-            str << token->m_Type << _T(" ") << ns << token->m_Name << token->GetFormattedArgs();
-            str.Replace(_T("&"), _T("&&"));
-            if (clb->FindString(str) == wxNOT_FOUND)
-                clb->Append(str);
-        }
-    }
-
-    // inheritance
-    for (TokenIdxSet::iterator it = parentToken->m_DirectAncestors.begin();it!=parentToken->m_DirectAncestors.end(); ++it)
-    {
-        int idx = *it;
-        Token* token = tree->at(idx);
-        if (!token)
-            continue;
-        DoFillMethodsFor(clb, token, ns, includePrivate, includeProtected, includePublic);
-    }
-} // end of DoFillMethodsFor
-
 // events
-
 void InsertClassMethodDlg::OnClassesChange(wxCommandEvent& /*event*/)
 {
     FillMethods();

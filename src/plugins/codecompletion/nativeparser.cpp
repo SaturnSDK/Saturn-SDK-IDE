@@ -81,7 +81,7 @@ NativeParser::NativeParser() :
     m_EditorEndWord(-1),
     m_LastFuncTokenIdx(-1),
     m_LastControl(nullptr),
-    m_LastFunction(nullptr),
+    m_LastFunctionIndex(-1),
     m_LastLine(-1),
     m_LastResult(-1),
     m_LastAISearchWasGlobal(false),
@@ -209,14 +209,7 @@ void NativeParser::SetParser(ParserBase* parser)
     if (m_Parser == parser)
         return;
 
-    {
-        TRACK_THREAD_LOCKER(s_TokensTreeCritical);
-        wxCriticalSectionLocker locker(s_TokensTreeCritical);
-        THREAD_LOCKER_SUCCESS(s_TokensTreeCritical);
-
-        RemoveLastFunctionChildren();
-    }
-
+    RemoveLastFunctionChildren();
     InitCCSearchVariables();
     m_Parser = parser;
 
@@ -1452,8 +1445,6 @@ void NativeParser::ReparseSelectedProject()
     }
 }
 
-// No critical section needed here:
-// All functions that call this, already entered a critical section.
 bool NativeParser::ParseFunctionArguments(ccSearchData* searchData, int caretPos)
 {
     if (s_DebugSmartSense)
@@ -1467,48 +1458,68 @@ bool NativeParser::ParseFunctionArguments(ccSearchData* searchData, int caretPos
 
         for (TokenIdxSet::iterator it = proc_result.begin(); it != proc_result.end(); ++it)
         {
-            Token* token = m_Parser->GetTokensTree()->at(*it);
-            if (!token)
-                continue;
-            if (curLine < token->m_ImplLineStart || curLine > token->m_ImplLineEnd)
-                continue;
+            wxString buffer;
+            int initLine = -1;
+            int tokenIdx = -1;
 
-            if (s_DebugSmartSense)
-                CCLogger::Get()->DebugLog(_T("ParseFunctionArguments() + Function match: ") + token->m_Name);
-
-            if (!token->m_Args.IsEmpty() && !token->m_Args.Matches(_T("()")))
             {
-                wxString buffer = token->m_Args;
-                // Now we have something like "(int my_int, const TheClass* my_class, float f)"
-                buffer.Remove(0, 1);              // remove (
-                buffer.RemoveLast();              // remove )
-                // Now we have                "int my_int, const TheClass* my_class, float f"
-                buffer.Replace(_T(","), _T(";")); // replace commas with semi-colons
-                // Now we have                "int my_int; const TheClass* my_class; float f"
-                buffer << _T(';');                // aid parser ;)
-                // Finally we have            "int my_int; const TheClass* my_class; float f;"
-                buffer.Trim();
+                TRACK_THREAD_LOCKER(s_TokensTreeCritical);
+                wxCriticalSectionLocker locker(s_TokensTreeCritical);
+                THREAD_LOCKER_SUCCESS(s_TokensTreeCritical);
+
+                Token* token = m_Parser->GetTokensTree()->at(*it);
+
+                if (!token)
+                    continue;
+                if (curLine < token->m_ImplLineStart || curLine > token->m_ImplLineEnd)
+                    continue;
 
                 if (s_DebugSmartSense)
-                {
-                    CCLogger::Get()->DebugLog(F(_T("ParseFunctionArguments() Parsing arguments: \"%s\""), buffer.wx_str()));
-                }
+                    CCLogger::Get()->DebugLog(_T("ParseFunctionArguments() + Function match: ") + token->m_Name);
 
-                if (!buffer.IsEmpty())
+                if (!token->m_Args.IsEmpty() && !token->m_Args.Matches(_T("()")))
                 {
-                    const int textLength= searchData->control->GetLength();
-                    int paraPos = searchData->control->PositionFromLine(token->m_ImplLine - 1);
-                    while (paraPos < textLength && searchData->control->GetCharAt(paraPos++) != _T('('))
-                        ;
-                    while (paraPos < textLength && searchData->control->GetCharAt(paraPos++) < _T(' '))
-                        ;
-                    const int initLine = searchData->control->LineFromPosition(paraPos) + 1;
-                    if (   !m_Parser->ParseBuffer(buffer, false, false, true, searchData->file, token, initLine)
-                        && s_DebugSmartSense)
+                    buffer = token->m_Args;
+                    // Now we have something like "(int my_int, const TheClass* my_class, float f)"
+                    buffer.Remove(0, 1);              // remove (
+                    buffer.RemoveLast();              // remove )
+                    // Now we have                "int my_int, const TheClass* my_class, float f"
+                    buffer.Replace(_T(","), _T(";")); // replace commas with semi-colons
+                    // Now we have                "int my_int; const TheClass* my_class; float f"
+                    buffer << _T(';');                // aid parser ;)
+                    // Finally we have            "int my_int; const TheClass* my_class; float f;"
+                    buffer.Trim();
+
+                    if (s_DebugSmartSense)
                     {
-                        CCLogger::Get()->DebugLog(_T("ParseFunctionArguments() Error parsing arguments."));
+                        CCLogger::Get()->DebugLog(F(_T("ParseFunctionArguments() Parsing arguments: \"%s\""), buffer.wx_str()));
+                    }
+
+                    if (!buffer.IsEmpty())
+                    {
+                        const int textLength= searchData->control->GetLength();
+                        if (textLength == -1)
+                            continue;
+                        int paraPos = searchData->control->PositionFromLine(token->m_ImplLine - 1);
+                        if (paraPos == -1)
+                            continue;
+                        while (paraPos < textLength && searchData->control->GetCharAt(paraPos++) != _T('('))
+                            ;
+                        while (paraPos < textLength && searchData->control->GetCharAt(paraPos++) < _T(' '))
+                            ;
+                        initLine = searchData->control->LineFromPosition(paraPos) + 1;
+                        if (initLine == -1)
+                            continue;
+                        tokenIdx = token->m_Index;
                     }
                 }
+            }
+
+            if (   !buffer.IsEmpty()
+                && !m_Parser->ParseBuffer(buffer, false, false, true, searchData->file, tokenIdx, initLine)
+                && s_DebugSmartSense)
+            {
+                CCLogger::Get()->DebugLog(_T("ParseFunctionArguments() Error parsing arguments."));
             }
         }
         return true;
@@ -1521,20 +1532,28 @@ bool NativeParser::ParseFunctionArguments(ccSearchData* searchData, int caretPos
     return false;
 }
 
-// No critical section needed here:
-// All functions that call this, already entered a critical section.
 bool NativeParser::ParseLocalBlock(ccSearchData* searchData, int caretPos)
 {
     if (s_DebugSmartSense)
         CCLogger::Get()->DebugLog(_T("ParseLocalBlock() Parse local block"));
 
-    Token* parent = nullptr;
-    int blockStart = FindCurrentFunctionStart(searchData, nullptr, nullptr, &parent, caretPos);
-    if (parent)
+    int parentIdx = -1;
+    int blockStart = FindCurrentFunctionStart(searchData, nullptr, nullptr, &parentIdx, caretPos);
+    int initLine = 0;
+    if (parentIdx != -1)
     {
-        if (!(parent->m_TokenKind & tkAnyFunction))
-            return false;
-        m_LastFuncTokenIdx = parent->GetSelf();
+        TRACK_THREAD_LOCKER(s_TokensTreeCritical);
+        wxCriticalSectionLocker locker(s_TokensTreeCritical);
+        THREAD_LOCKER_SUCCESS(s_TokensTreeCritical);
+
+        Token* parent = m_Parser->GetTokensTree()->at(parentIdx);
+        if (parent)
+        {
+            if (!(parent->m_TokenKind & tkAnyFunction))
+                return false;
+            m_LastFuncTokenIdx = parent->m_Index;
+            initLine = parent->m_ImplLineStart;
+        }
     }
 
     if (blockStart != -1)
@@ -1559,7 +1578,7 @@ bool NativeParser::ParseLocalBlock(ccSearchData* searchData, int caretPos)
         wxString buffer = searchData->control->GetTextRange(blockStart, blockEnd);
         buffer.Trim();
         if (   !buffer.IsEmpty()
-            && !m_Parser->ParseBuffer(buffer, false, false, true, searchData->file, parent, parent->m_ImplLineStart) )
+            && !m_Parser->ParseBuffer(buffer, false, false, true, searchData->file, m_LastFuncTokenIdx, initLine) )
         {
             if (s_DebugSmartSense)
                 CCLogger::Get()->DebugLog(_T("ParseLocalBlock() ERROR parsing block:\n") + buffer);
@@ -1570,13 +1589,22 @@ bool NativeParser::ParseLocalBlock(ccSearchData* searchData, int caretPos)
             {
                 CCLogger::Get()->DebugLog(F(_T("ParseLocalBlock() Block:\n%s"), buffer.wx_str()));
                 CCLogger::Get()->DebugLog(_T("ParseLocalBlock() Local tokens:"));
-                for (size_t i = 0; i < m_Parser->GetTokensTree()->size(); ++i)
+
+                TRACK_THREAD_LOCKER(s_TokensTreeCritical);
+                wxCriticalSectionLocker locker(s_TokensTreeCritical);
+                THREAD_LOCKER_SUCCESS(s_TokensTreeCritical);
+
+                TokensTree* tree = m_Parser->GetTokensTree();
+                for (size_t i = 0; i < tree->size(); ++i)
                 {
-                    Token* t = m_Parser->GetTokensTree()->at(i);
-                    if (t && t->m_IsTemp)
+                    Token* token = tree->at(i);
+                    if (token && token->m_IsTemp)
                     {
-                       CCLogger::Get()->DebugLog(_T("ParseLocalBlock() + ") + t->DisplayName() +
-                                                 _T(" parent = ") + t->GetParentName());
+                        wxString log(_T("ParseLocalBlock() + ") + token->DisplayName());
+                        Token* parent = tree->at(token->m_ParentIndex);
+                        if (parent)
+                            log += _T(" Parent = ") + parent->m_Name;
+                        CCLogger::Get()->DebugLog(log);
                     }
                 }
             }
@@ -1591,12 +1619,8 @@ bool NativeParser::ParseLocalBlock(ccSearchData* searchData, int caretPos)
     return false;
 }
 
-// No critical section needed here:
-// All functions that call this, already entered a critical section.
 bool NativeParser::ParseUsingNamespace(ccSearchData* searchData, TokenIdxSet& search_scope, int caretPos)
 {
-    TokensTree* tree = m_Parser->GetTokensTree();
-
     if (s_DebugSmartSense)
         CCLogger::Get()->DebugLog(_T("ParseUsingNamespace() Parse file scope for \"using namespace\""));
 
@@ -1609,6 +1633,10 @@ bool NativeParser::ParseUsingNamespace(ccSearchData* searchData, TokenIdxSet& se
     wxString buffer = searchData->control->GetTextRange(0, pos);
     m_Parser->ParseBufferForUsingNamespace(buffer, ns);
 
+    TRACK_THREAD_LOCKER(s_TokensTreeCritical);
+    wxCriticalSectionLocker locker(s_TokensTreeCritical);
+    THREAD_LOCKER_SUCCESS(s_TokensTreeCritical);
+
     for (size_t i = 0; i < ns.GetCount(); ++i)
     {
         std::queue<ParserComponent> components;
@@ -1620,7 +1648,7 @@ bool NativeParser::ParseUsingNamespace(ccSearchData* searchData, TokenIdxSet& se
             ParserComponent pc = components.front();
             components.pop();
 
-            int id = tree->TokenExists(pc.component, parentIdx, tkNamespace);
+            int id = m_Parser->GetTokensTree()->TokenExists(pc.component, parentIdx, tkNamespace);
             if (id == -1)
             {
                 parentIdx = -1;
@@ -1631,8 +1659,12 @@ bool NativeParser::ParseUsingNamespace(ccSearchData* searchData, TokenIdxSet& se
 
         if (s_DebugSmartSense && parentIdx != -1)
         {
-            Token* token = tree->at(parentIdx);
-            CCLogger::Get()->DebugLog(F(_T("ParseUsingNamespace() Found %s%s"), token->GetNamespace().wx_str(), token->m_Name.wx_str()));
+            Token* token = m_Parser->GetTokensTree()->at(parentIdx);
+            if (token)
+            {
+                CCLogger::Get()->DebugLog(F(_T("ParseUsingNamespace() Found %s%s"),
+                                            token->GetNamespace().wx_str(), token->m_Name.wx_str()));
+            }
         }
         search_scope.insert(parentIdx);
     }
@@ -1662,10 +1694,6 @@ size_t NativeParser::MarkItemsByAI(TokenIdxSet& result, bool reallyUseAI, bool i
 size_t NativeParser::MarkItemsByAI(ccSearchData* searchData, TokenIdxSet& result, bool reallyUseAI, bool isPrefix,
                                    bool caseSensitive, int caretPos)
 {
-    TRACK_THREAD_LOCKER(s_TokensTreeCritical);
-    wxCriticalSectionLocker locker(s_TokensTreeCritical);
-    THREAD_LOCKER_SUCCESS(s_TokensTreeCritical);
-
     result.clear();
 
     if (!m_Parser->Done())
@@ -1678,7 +1706,14 @@ size_t NativeParser::MarkItemsByAI(ccSearchData* searchData, TokenIdxSet& result
     else
     {
         // remove old temporaries
-        m_Parser->GetTempTokensTree()->Clear();
+        {
+            TRACK_THREAD_LOCKER(s_TokensTreeCritical);
+            wxCriticalSectionLocker locker(s_TokensTreeCritical);
+            THREAD_LOCKER_SUCCESS(s_TokensTreeCritical);
+
+            m_Parser->GetTempTokensTree()->Clear();
+        }
+
         RemoveLastFunctionChildren();
 
         // find "using namespace" directives in the file
@@ -1693,6 +1728,10 @@ size_t NativeParser::MarkItemsByAI(ccSearchData* searchData, TokenIdxSet& result
 
         if (!reallyUseAI)
         {
+            TRACK_THREAD_LOCKER(s_TokensTreeCritical);
+            wxCriticalSectionLocker locker(s_TokensTreeCritical);
+            THREAD_LOCKER_SUCCESS(s_TokensTreeCritical);
+
             // all tokens, no AI whatsoever
             TokensTree* tokens = m_Parser->GetTokensTree();
             for (size_t i = 0; i < tokens->size(); ++i)
@@ -1785,6 +1824,10 @@ int NativeParser::CountCommas(const wxString& lineText, int start)
     return commas;
 }
 
+// No critical section needed in this recursive function!
+// All functions that call this recursive function, should already entered a critical section.
+// Like this: wxCriticalSectionLocker locker(s_TokensTreeCritical);
+//
 bool PrettyPrintToken(wxString &result, Token const &token, TokensTree const &tokens, bool root = true)
 {
     // if the token has parents and the token is a container or a function,
@@ -1792,7 +1835,8 @@ bool PrettyPrintToken(wxString &result, Token const &token, TokensTree const &to
     if (   (token.m_ParentIndex != -1)
         && (token.m_TokenKind & (tkAnyContainer | tkAnyFunction)) )
     {
-        if (!PrettyPrintToken(result, *tokens.at(token.m_ParentIndex), tokens, false))
+        const Token* parentToken = tokens.at(token.m_ParentIndex);
+        if (!parentToken || !PrettyPrintToken(result, *parentToken, tokens, false))
             return false;
     }
 
@@ -1893,6 +1937,7 @@ void NativeParser::GetCallTips(int chars_per_line, wxArrayString &items, int &ty
         THREAD_LOCKER_SUCCESS(s_TokensTreeCritical);
 
         TokensTree* tokens = m_Parser->GetTokensTree();
+
         for (TokenIdxSet::iterator it = result.begin(); it != result.end(); ++it)
         {
             Token* token = tokens->at(*it);
@@ -1902,7 +1947,7 @@ void NativeParser::GetCallTips(int chars_per_line, wxArrayString &items, int &ty
             // support constructor call tips
             if (token->m_TokenKind == tkClass)
             {
-                Token* tk = tokens->at(tokens->TokenExists(token->m_Name, token->GetSelf(), tkConstructor));
+                Token* tk = tokens->at(tokens->TokenExists(token->m_Name, token->m_Index, tkConstructor));
                 if (tk)
                     token = tk;
             }
@@ -2284,8 +2329,6 @@ wxString NativeParser::GetCCToken(wxString& line, ParserTokenType& tokenType, Op
 
 // Start an Artificial Intelligence (!) sequence to gather all the matching tokens..
 // The actual AI is in FindAIMatches() below...
-// No critical section needed here:
-// All functions that call this, already entered a critical section.
 size_t NativeParser::AI(TokenIdxSet& result,
                         ccSearchData* searchData,
                         const wxString& lineText,
@@ -2327,6 +2370,10 @@ size_t NativeParser::AI(TokenIdxSet& result,
     TokenIdxSet proc_result;
     if (FindCurrentFunctionToken(searchData, proc_result) != 0)
     {
+        TRACK_THREAD_LOCKER(s_TokensTreeCritical);
+        wxCriticalSectionLocker locker(s_TokensTreeCritical);
+        THREAD_LOCKER_SUCCESS(s_TokensTreeCritical);
+
         for (TokenIdxSet::iterator it = proc_result.begin(); it != proc_result.end(); ++it)
         {
             Token* token = m_Parser->GetTokensTree()->at(*it);
@@ -2345,7 +2392,8 @@ size_t NativeParser::AI(TokenIdxSet& result,
             if (s_DebugSmartSense)
             {
                 Token* parent = m_Parser->GetTokensTree()->at(token->m_ParentIndex);
-                CCLogger::Get()->DebugLog(_T("AI() Adding search namespace: ") + (parent ? parent->m_Name : _T("Global namespace")));
+                CCLogger::Get()->DebugLog(_T("AI() Adding search namespace: ") +
+                                          (parent ? parent->m_Name : _T("Global namespace")));
             }
         }
     }
@@ -2369,14 +2417,19 @@ size_t NativeParser::AI(TokenIdxSet& result,
     }
 
     // remove non-namespace/class tokens
-    TokensTree* tree = m_Parser->GetTokensTree();
-    for (TokenIdxSet::iterator it = search_scope->begin(); it != search_scope->end();)
     {
-        Token* token = tree->at(*it);
-        if (!token || !(token->m_TokenKind & (tkNamespace | tkClass | tkTypedef | tkAnyFunction)))
-            search_scope->erase(it++);
-        else
-            ++it;
+        TRACK_THREAD_LOCKER(s_TokensTreeCritical);
+        wxCriticalSectionLocker locker(s_TokensTreeCritical);
+        THREAD_LOCKER_SUCCESS(s_TokensTreeCritical);
+
+        for (TokenIdxSet::iterator it = search_scope->begin(); it != search_scope->end();)
+        {
+            Token* token = m_Parser->GetTokensTree()->at(*it);
+            if (!token || !(token->m_TokenKind & (tkNamespace | tkClass | tkTypedef | tkAnyFunction)))
+                search_scope->erase(it++);
+            else
+                ++it;
+        }
     }
 
     //alwayser search the global scope.
@@ -2473,8 +2526,11 @@ size_t NativeParser::BreakUpComponents(const wxString& actual, std::queue<Parser
 // It's called recursively for each component of the std::queue argument.
 // for example: objA.objB.function()
 // components is a queue of:  'objA'  'objB' 'function'. we deal with objA firstly.
-// No critical section needed here:
-// All functions that call this, already entered a critical section.
+//
+// No critical section needed in this recursive function!
+// All functions that call this recursive function, should already entered a critical section.
+// Like this: wxCriticalSectionLocker locker(s_TokensTreeCritical);
+//
 size_t NativeParser::FindAIMatches(std::queue<ParserComponent> components,
                                    TokenIdxSet& result,
                                    int parentTokenIdx,
@@ -2489,8 +2545,6 @@ size_t NativeParser::FindAIMatches(std::queue<ParserComponent> components,
 
     if (s_DebugSmartSense)
         CCLogger::Get()->DebugLog(_T("FindAIMatches() ----- FindAIMatches - enter -----"));
-
-    TokensTree* tree = m_Parser->GetTokensTree();
 
     // pop top component
     ParserComponent parser_component = components.front();
@@ -2512,6 +2566,8 @@ size_t NativeParser::FindAIMatches(std::queue<ParserComponent> components,
     if (s_DebugSmartSense)
         CCLogger::Get()->DebugLog(F(_T("FindAIMatches() Search for %s, isLast = %d"),
                                     searchtext.wx_str(), isLastComponent?1:0));
+
+    TokensTree* tree = m_Parser->GetTokensTree();
 
     // get a set of matches for the current token
     TokenIdxSet local_result;
@@ -2588,12 +2644,16 @@ size_t NativeParser::FindAIMatches(std::queue<ParserComponent> components,
             // the parent's namespace too
             if (parentTokenIdx != -1)
             {
-                Token* parent = tree->at(parentTokenIdx);
-                if (parent && parent->GetParentToken())
+                Token* token = tree->at(parentTokenIdx);
+                if (token)
                 {
-                    temp_search_scope.insert(parent->GetParentToken()->GetSelf());
-                    if (s_DebugSmartSense)
-                        CCLogger::Get()->DebugLog(_T("FindAIMatches() Implicit search scope added:") + parent->GetParentToken()->m_Name);
+                    Token* parent = tree->at(token->m_ParentIndex);
+                    if (parent)
+                    {
+                        temp_search_scope.insert(parent->m_Index);
+                        if (s_DebugSmartSense)
+                            CCLogger::Get()->DebugLog(_T("FindAIMatches() Implicit search scope added:") + parent->m_Name);
+                    }
                 }
             }
 
@@ -2616,7 +2676,7 @@ size_t NativeParser::FindAIMatches(std::queue<ParserComponent> components,
                     // types are searched as whole words, case sensitive and only classes/namespaces
                     if (FindAIMatches(type_components,
                                       type_result,
-                                      parent ? parent->GetSelf() : -1,
+                                      parent ? parent->m_Index : -1,
                                       true,
                                       false,
                                       false,
@@ -2675,16 +2735,16 @@ size_t NativeParser::FindAIMatches(std::queue<ParserComponent> components,
     return result.size();
 }
 
-inline bool MatchText(const wxString& text, const wxString& search, bool caseSens, bool isPrefix)
+inline bool MatchText(const wxString& text, const wxString& target, bool caseSens, bool isPrefix)
 {
-    if (isPrefix && search.IsEmpty())
+    if (isPrefix && target.IsEmpty())
         return true;
     if (!isPrefix)
-        return text.CompareTo(search, caseSens ? wxString::exact : wxString::ignoreCase) == 0;
+        return text.CompareTo(target, caseSens ? wxString::exact : wxString::ignoreCase) == 0;
     // isPrefix == true
     if (caseSens)
-        return text.StartsWith(search);
-    return text.Upper().StartsWith(search.Upper());
+        return text.StartsWith(target);
+    return text.Upper().StartsWith(target.Upper());
 }
 
 inline bool MatchType(TokenKind kind, short int kindMask)
@@ -2692,29 +2752,28 @@ inline bool MatchType(TokenKind kind, short int kindMask)
     return kind & kindMask;
 }
 
-// No critical section needed here:
-// All functions that call this, already entered a critical section.
+// No critical section needed in this recursive function!
+// All functions that call this recursive function, should already entered a critical section.
+// Like this: wxCriticalSectionLocker locker(s_TokensTreeCritical);
+//
 size_t NativeParser::GenerateResultSet(TokensTree*     tree,
-                                       const wxString& search,
+                                       const wxString& target,
                                        int             parentIdx,
                                        TokenIdxSet&    result,
                                        bool            caseSens,
                                        bool            isPrefix,
                                        short int       kindMask)
 {
-    if (!tree)
-        return 0;
-
     Token* parent = tree->at(parentIdx);
     if (s_DebugSmartSense)
         CCLogger::Get()->DebugLog(F(_("GenerateResultSet() search '%s', parent='%s (id:%d, type:%s), isPrefix=%d'"),
-                                    search.wx_str(),
+                                    target.wx_str(),
 #if wxCHECK_VERSION(2, 9, 0)
                                     parent ? parent->m_Name.wx_str() : _("Global namespace").wx_str(),
 #else
                                     parent ? parent->m_Name.wx_str() : _("Global namespace"),
 #endif
-                                    parent ? parent->GetSelf() : 0,
+                                    parent ? parent->m_Index : 0,
                                     parent ? parent->GetTokenKindString().wx_str():0,
                                     isPrefix ? 1 : 0));
 
@@ -2727,13 +2786,13 @@ size_t NativeParser::GenerateResultSet(TokensTree*     tree,
             Token* token = tree->at(*it);
             if (token && MatchType(token->m_TokenKind, kindMask))
             {
-                if (MatchText(token->m_Name, search, caseSens, isPrefix))
+                if (MatchText(token->m_Name, target, caseSens, isPrefix))
                     result.insert(*it);
                 else if (token && token->m_TokenKind == tkNamespace && token->m_Aliases.size()) // handle namespace aliases
                 {
                     for (size_t i = 0; i < token->m_Aliases.size(); ++i)
                     {
-                        if (MatchText(token->m_Aliases[i], search, caseSens, isPrefix))
+                        if (MatchText(token->m_Aliases[i], target, caseSens, isPrefix))
                         {
                             result.insert(*it);
                             // break; ?
@@ -2741,7 +2800,7 @@ size_t NativeParser::GenerateResultSet(TokensTree*     tree,
                     }
                 }
                 else if (token && token->m_TokenKind == tkEnum) // check enumerators for match too
-                    GenerateResultSet(tree, search, *it, result, caseSens, isPrefix, kindMask);
+                    GenerateResultSet(tree, target, *it, result, caseSens, isPrefix, kindMask);
             }
         }
         // now go up the inheritance chain and add all ancestors' children too
@@ -2756,13 +2815,13 @@ size_t NativeParser::GenerateResultSet(TokensTree*     tree,
                 Token* token = tree->at(*it2);
                 if (token && MatchType(token->m_TokenKind, kindMask))
                 {
-                    if (MatchText(token->m_Name, search, caseSens, isPrefix))
+                    if (MatchText(token->m_Name, target, caseSens, isPrefix))
                         result.insert(*it2);
                     else if (token && token->m_TokenKind == tkNamespace && token->m_Aliases.size()) // handle namespace aliases
                     {
                         for (size_t i = 0; i < token->m_Aliases.size(); ++i)
                         {
-                            if (MatchText(token->m_Aliases[i], search, caseSens, isPrefix))
+                            if (MatchText(token->m_Aliases[i], target, caseSens, isPrefix))
                             {
                                 result.insert(*it2);
                                 // break; ?
@@ -2770,7 +2829,7 @@ size_t NativeParser::GenerateResultSet(TokensTree*     tree,
                         }
                     }
                     else if (token && token->m_TokenKind == tkEnum) // check enumerators for match too
-                        GenerateResultSet(tree, search, *it2, result, caseSens, isPrefix, kindMask);
+                        GenerateResultSet(tree, target, *it2, result, caseSens, isPrefix, kindMask);
                 }
             }
         }
@@ -2785,21 +2844,21 @@ size_t NativeParser::GenerateResultSet(TokensTree*     tree,
             {
                 if (token && MatchType(token->m_TokenKind, kindMask))
                 {
-                    if (MatchText(token->m_Name, search, caseSens, isPrefix))
-                        result.insert(token->GetSelf());
+                    if (MatchText(token->m_Name, target, caseSens, isPrefix))
+                        result.insert(token->m_Index);
                     else if (token && token->m_TokenKind == tkNamespace && token->m_Aliases.size()) // handle namespace aliases
                     {
                         for (size_t i = 0; i < token->m_Aliases.size(); ++i)
                         {
-                            if (MatchText(token->m_Aliases[i], search, caseSens, isPrefix))
+                            if (MatchText(token->m_Aliases[i], target, caseSens, isPrefix))
                             {
-                                result.insert(token->GetSelf());
+                                result.insert(token->m_Index);
                                 // break; ?
                             }
                         }
                     }
                     else if (token && token->m_TokenKind == tkEnum) // check enumerators for match too
-                        GenerateResultSet(tree, search, token->GetSelf(), result, caseSens, isPrefix, kindMask);
+                        GenerateResultSet(tree, target, token->m_Index, result, caseSens, isPrefix, kindMask);
                 }
             }
         }
@@ -2809,8 +2868,6 @@ size_t NativeParser::GenerateResultSet(TokensTree*     tree,
     return result.size();
 }
 
-// No critical section needed here:
-// All functions that call this, already entered a critical section.
 size_t NativeParser::ResolveActualType(wxString searchText, const TokenIdxSet& searchScope, TokenIdxSet& result)
 {
     // break up the search text for next analysis.
@@ -2824,13 +2881,20 @@ size_t NativeParser::ResolveActualType(wxString searchText, const TokenIdxSet& s
         else
             initialScope.insert(-1);
 
+        TRACK_THREAD_LOCKER(s_TokensTreeCritical);
+        wxCriticalSectionLocker locker(s_TokensTreeCritical);
+        THREAD_LOCKER_SUCCESS(s_TokensTreeCritical);
+
         while (!typeComponents.empty())
         {
             TokenIdxSet initialResult;
             ParserComponent component = typeComponents.front();
             typeComponents.pop();
             wxString actualTypeStr = component.component;
+
+            // All functions that call this recursive function, should already entered a critical section.
             GenerateResultSet(actualTypeStr, initialScope, initialResult, true, false, 0xFFFF);
+
             if (!initialResult.empty())
             {
                 initialScope.clear();
@@ -2845,7 +2909,6 @@ size_t NativeParser::ResolveActualType(wxString searchText, const TokenIdxSet& s
                 initialScope.clear();
                 break;
             }
-
         }
 
         if (!initialScope.empty())
@@ -2855,8 +2918,6 @@ size_t NativeParser::ResolveActualType(wxString searchText, const TokenIdxSet& s
     return result.size();
 }
 
-// No critical section needed here:
-// All functions that call this, already entered a critical section.
 size_t NativeParser::ResolveExpression(std::queue<ParserComponent> components, const TokenIdxSet& searchScope,
                                        TokenIdxSet& result, bool caseSense, bool isPrefix)
 {
@@ -2865,8 +2926,6 @@ size_t NativeParser::ResolveExpression(std::queue<ParserComponent> components, c
         return 0;
 
     TokensTree* tree = m_Parser->GetTokensTree();
-    if (!tree)
-        return 0;
 
     TokenIdxSet initialScope;
     if (!searchScope.empty())
@@ -2884,13 +2943,16 @@ size_t NativeParser::ResolveExpression(std::queue<ParserComponent> components, c
         {
             initialScope.erase(-1);
             TokenIdxSet tempInitialScope = initialScope;
-            for (TokenIdxSet::iterator it=tempInitialScope.begin(); it!=tempInitialScope.end(); ++it)
+
+            TRACK_THREAD_LOCKER(s_TokensTreeCritical);
+            wxCriticalSectionLocker locker(s_TokensTreeCritical);
+            THREAD_LOCKER_SUCCESS(s_TokensTreeCritical);
+
+            for (TokenIdxSet::iterator it = tempInitialScope.begin(); it != tempInitialScope.end(); ++it)
             {
                 Token* token = tree->at(*it);
                 if (token && (token->m_TokenKind !=tkClass))
-                {
                     initialScope.erase(*it);
-                }
             }
             if (!initialScope.empty())
                 continue;
@@ -2901,15 +2963,31 @@ size_t NativeParser::ResolveExpression(std::queue<ParserComponent> components, c
         if (s_DebugSmartSense)
         {
             CCLogger::Get()->DebugLog(F(_T("ResolveExpression() search scope is %d result."), initialScope.size()));
-            for (TokenIdxSet::iterator tt=initialScope.begin(); tt != initialScope.end(); ++tt)
-            CCLogger::Get()->DebugLog(F(_T("search scope: %d"), (*tt)));
+            for (TokenIdxSet::iterator tt = initialScope.begin(); tt != initialScope.end(); ++tt)
+                CCLogger::Get()->DebugLog(F(_T("search scope: %d"), (*tt)));
         }
 
         // e.g. A.BB.CCC.DDDD|
         if (components.empty()) // is the last component (DDDD)
+        {
+            TRACK_THREAD_LOCKER(s_TokensTreeCritical);
+            wxCriticalSectionLocker locker(s_TokensTreeCritical);
+            THREAD_LOCKER_SUCCESS(s_TokensTreeCritical);
+
+            // All functions that call this recursive function, should already entered a critical section.
             GenerateResultSet(searchText, initialScope, initialResult, caseSense, isPrefix);
+        }
+
         else // case sensitive and full-match always (A / BB / CCC)
+        {
+            TRACK_THREAD_LOCKER(s_TokensTreeCritical);
+            wxCriticalSectionLocker locker(s_TokensTreeCritical);
+            THREAD_LOCKER_SUCCESS(s_TokensTreeCritical);
+
+            // All functions that call this recursive function, should already entered a critical section.
             GenerateResultSet(searchText, initialScope, initialResult, true, false);
+        }
+
 
         // now we should clear the initialScope.
         initialScope.clear();
@@ -2923,59 +3001,76 @@ size_t NativeParser::ResolveExpression(std::queue<ParserComponent> components, c
         if (!initialResult.empty())
         {
             //loop all matches.
-            for (TokenIdxSet::iterator it=initialResult.begin(); it!=initialResult.end(); ++it)
+            for (TokenIdxSet::iterator it = initialResult.begin(); it != initialResult.end(); ++it)
             {
-                size_t id = (*it);
-                Token* token = tree->at(id);
-
-                if (!token)
+                const size_t id = (*it);
+                wxString actualTypeStr;
+                int parentIndex = -1;
+                bool isFuncOrVar = false;
                 {
-                    if (s_DebugSmartSense)
-                        CCLogger::Get()->DebugLog(F(_T("ResolveExpression() token is NULL?!")));
+                    TRACK_THREAD_LOCKER(s_TokensTreeCritical);
+                    wxCriticalSectionLocker locker(s_TokensTreeCritical);
+                    THREAD_LOCKER_SUCCESS(s_TokensTreeCritical);
 
-                    continue;
+                    Token* token = tree->at(id);
+                    if (!token)
+                    {
+                        if (s_DebugSmartSense)
+                            CCLogger::Get()->DebugLog(F(_T("ResolveExpression() token is NULL?!")));
+
+                        continue;
+                    }
+
+                    // TODO: we should deal with operators carefully.
+                    // it should work for class::/namespace::
+                    if (token->m_IsOperator && (m_LastComponent.tokenType != pttNamespace))
+                        continue;
+
+                    if (s_DebugSmartSense)
+                        CCLogger::Get()->DebugLog(F(_T("ResolvExpression() Match:'%s(ID=%d) : type='%s'"),
+                                                    token->m_Name.wx_str(), id, token->m_ActualType.wx_str()));
+
+                    // recond the template map message here. hope it will work.
+                    // wxString tkname = token->m_Name;
+                    // wxArrayString tks = token->m_TemplateType;
+                    if (!token->m_TemplateMap.empty())
+                        m_TemplateMap = token->m_TemplateMap;
+
+                    // if the token is a function/variable(i.e. is not a type)
+                    isFuncOrVar =   !searchText.IsEmpty()
+                                 && (subComponent.tokenType != pttSearchText)
+                                 && !token->m_ActualType.IsEmpty();
+                    if (isFuncOrVar)
+                    {
+                        actualTypeStr = token->m_ActualType;
+                        parentIndex = token->m_Index;
+                    }
                 }
 
-                // TODO: we should deal with operators carefully.
-                // it should work for class::/namespace::
-                if (token->m_IsOperator && (m_LastComponent.tokenType != pttNamespace))
-                    continue;
-
-                //------------------------------
-
-                if (s_DebugSmartSense)
-                    CCLogger::Get()->DebugLog(F(_T("ResolvExpression() Match:'%s(ID=%d) : type='%s'"), token->m_Name.wx_str(), id, token->m_ActualType.wx_str()));
-
-                //------------------------------
-                // recond the template map message here. hope it will work.
-                // wxString tkname = token->m_Name;
-                // wxArrayString tks = token->m_TemplateType;
-                if (!token->m_TemplateMap.empty())
-                    m_TemplateMap = token->m_TemplateMap;
                 // handle it if the token is a function/variable(i.e. is not a type)
-                if (   !searchText.IsEmpty()
-                    && (subComponent.tokenType != pttSearchText)
-                    && !token->m_ActualType.IsEmpty())
+                if (isFuncOrVar)
                 {
                     TokenIdxSet autualTypeResult;
-                    wxString actualTypeStr = token->m_ActualType;
-
                     TokenIdxSet actualTypeScope;
                     if (searchScope.empty())
                         actualTypeScope.insert(-1);
                     else
                     {
-                        //now collect the search scope for actual type of function/variable.
+                        // now collect the search scope for actual type of function/variable.
                         CollectSS(searchScope, actualTypeScope, tree);
-                        //now add the current token's parent scope;
-                        Token* currentTokenParent = token->GetParentToken();
+
+                        TRACK_THREAD_LOCKER(s_TokensTreeCritical);
+                        wxCriticalSectionLocker locker(s_TokensTreeCritical);
+                        THREAD_LOCKER_SUCCESS(s_TokensTreeCritical);
+
+                        // now add the current token's parent scope;
+                        Token* currentTokenParent = tree->at(parentIndex);
                         while(true)
                         {
                             if (!currentTokenParent)
                                 break;
-                            actualTypeScope.insert(currentTokenParent->GetSelf());
-                            currentTokenParent = currentTokenParent->GetParentToken();
-
+                            actualTypeScope.insert(currentTokenParent->m_Index);
+                            currentTokenParent = tree->at(currentTokenParent->m_ParentIndex);
                         }
                     }
 
@@ -2984,12 +3079,19 @@ size_t NativeParser::ResolveExpression(std::queue<ParserComponent> components, c
                     ResolveActualType(actualTypeStr, actualTypeScope, actualTypeResult);
                     if (!actualTypeResult.empty())
                     {
-                        for (TokenIdxSet::iterator it2=actualTypeResult.begin(); it2!=actualTypeResult.end(); ++it2)
+                        for (TokenIdxSet::iterator it2 = actualTypeResult.begin(); it2 != actualTypeResult.end(); ++it2)
                         {
                             initialScope.insert(*it2);
-                            Token* typeToken = tree->at(*it2);
-                            if (typeToken && !typeToken->m_TemplateMap.empty())
-                                m_TemplateMap = typeToken->m_TemplateMap;
+                            {
+                                TRACK_THREAD_LOCKER(s_TokensTreeCritical);
+                                wxCriticalSectionLocker locker(s_TokensTreeCritical);
+                                THREAD_LOCKER_SUCCESS(s_TokensTreeCritical);
+
+                                Token* typeToken = tree->at(*it2);
+                                if (typeToken && !typeToken->m_TemplateMap.empty())
+                                    m_TemplateMap = typeToken->m_TemplateMap;
+                            }
+
                             //and we need to add the template argument alias too.
                             AddTemplateAlias(*it2, actualTypeScope, initialScope, tree);
                         }
@@ -2999,7 +3101,6 @@ size_t NativeParser::ResolveExpression(std::queue<ParserComponent> components, c
                         ResolveTemplateMap(actualTypeStr, actualTypeScope, initialScope);
                     }
                     continue;
-
                 }
 
                 initialScope.insert(id);
@@ -3022,13 +3123,37 @@ size_t NativeParser::ResolveExpression(std::queue<ParserComponent> components, c
             m_LastComponent = subComponent;
     }
 
-
     if (!initialScope.empty())
         result = initialScope;
     return result.size();
 }
 
-size_t NativeParser::GenerateResultSet(const wxString&    search,
+// No critical section needed in this function!
+// Called only by GenerateResultSet!
+//
+inline bool AddChildrenOfUnnamed(Token* parent, TokenIdxSet& result, TokensTree* tree)
+{
+    if (parent->m_TokenKind == tkClass && parent->m_Name.StartsWith(g_UnnamedSymbol))
+    {
+        // add all its children
+        for (TokenIdxSet::iterator it = parent->m_Children.begin(); it != parent->m_Children.end(); ++it)
+        {
+            Token* tokenChild = tree->at(*it);
+            if (tokenChild)
+                result.insert(*it);
+        }
+
+        return true;
+    }
+    else
+        return false;
+}
+
+// No critical section needed in this recursive function!
+// All functions that call this recursive function, should already entered a critical section.
+// Like this: wxCriticalSectionLocker locker(s_TokensTreeCritical);
+//
+size_t NativeParser::GenerateResultSet(const wxString&    target,
                                        const TokenIdxSet& ptrParentID,
                                        TokenIdxSet&       result,
                                        bool               caseSens,
@@ -3039,21 +3164,21 @@ size_t NativeParser::GenerateResultSet(const wxString&    search,
     if (!tree)
         return 0;
 
-    if (search.IsEmpty())
+    if (target.IsEmpty())
     {
         for (TokenIdxSet::iterator ptr = ptrParentID.begin(); ptr != ptrParentID.end(); ++ptr)
         {
             size_t parentIdx = (*ptr);
-            Token* parent = m_Parser->GetTokensTree()->at(parentIdx);
+            Token* parent = tree->at(parentIdx);
             if (!parent)
                 continue;
 
             for (TokenIdxSet::iterator it = parent->m_Children.begin(); it != parent->m_Children.end(); ++it)
             {
-                Token* token = m_Parser->GetTokensTree()->at(*it);
+                Token* token = tree->at(*it);
                 if (!token)
                     continue;
-                if (!AddChildrenOfUnnamed(token, result))
+                if (!AddChildrenOfUnnamed(token, result, tree))
                     result.insert(*it);
             }
 
@@ -3061,15 +3186,15 @@ size_t NativeParser::GenerateResultSet(const wxString&    search,
 
             for (TokenIdxSet::iterator it = parent->m_Ancestors.begin(); it != parent->m_Ancestors.end(); ++it)
             {
-                Token* ancestor = m_Parser->GetTokensTree()->at(*it);
+                Token* ancestor = tree->at(*it);
                 if (!ancestor)
                     continue;
                 for (TokenIdxSet::iterator it2 = ancestor->m_Children.begin(); it2 != ancestor->m_Children.end(); ++it2)
                 {
-                    Token* token = m_Parser->GetTokensTree()->at(*it2);
+                    Token* token = tree->at(*it2);
                     if (!token)
                         continue;
-                    if (!AddChildrenOfUnnamed(token, result))
+                    if (!AddChildrenOfUnnamed(token, result, tree))
                         result.insert(*it2);
                 }
             }
@@ -3077,20 +3202,30 @@ size_t NativeParser::GenerateResultSet(const wxString&    search,
     }
     else
     {
-        TokenIdxSet tempResult;
         // we use FindMatches to get the items from tree directly and eclimate the
-        //items which are not under the search scope.
-        size_t resultCount = m_Parser->FindMatches(search, tempResult, caseSens, isPrefix);
-        if (resultCount > 0)
+        // items which are not under the search scope.
+        TokenIdxSet finalResult, tmpResult;
+        if (tree->FindMatches(target, tmpResult, caseSens, isPrefix))
         {
-//            CCLogger::Get()->DebugLog(F(_T("Find %d result from the tree."), resultCount));
+            TokenIdxSet::iterator it;
+            for (it = tmpResult.begin(); it != tmpResult.end(); ++it)
+            {
+                Token* token = tree->at(*it);
+                if (token)
+                    finalResult.insert(*it);
+            }
+        }
+
+        if (!finalResult.empty())
+        {
+            TRACE(_T("Find %d result from the tree."), finalResult.size());
             //get the tokens under the search scope.
             for (TokenIdxSet::iterator ptr = ptrParentID.begin(); ptr != ptrParentID.end(); ++ptr)
             {
                 //to make it clear, parentIdx stand for search scope.
                 // (*it) stand for matched item id.
                 int parentIdx = (*ptr);
-                for (TokenIdxSet::iterator it = tempResult.begin(); it != tempResult.end(); ++it)
+                for (TokenIdxSet::iterator it = finalResult.begin(); it != finalResult.end(); ++it)
                 {
                     Token* token = tree->at(*it);
                     if (token && (token->m_ParentIndex == parentIdx))
@@ -3107,7 +3242,9 @@ size_t NativeParser::GenerateResultSet(const wxString&    search,
 
                             //match the ancestor scope,add them
                             //(*it2) should be the search scope ancestor's id(search scope)
-                            for (TokenIdxSet::iterator it2=tokenParent->m_Ancestors.begin(); it2!=tokenParent->m_Ancestors.end(); ++it2)
+                            for (TokenIdxSet::iterator it2=tokenParent->m_Ancestors.begin();
+                                 it2!=tokenParent->m_Ancestors.end();
+                                 ++it2)
                             {
                                 if (token->m_ParentIndex == (*it2)) //matched
                                     result.insert(*it);
@@ -3137,9 +3274,9 @@ size_t NativeParser::GenerateResultSet(const wxString&    search,
                     {
                         for (size_t i = 0; i < token->m_Aliases.size(); ++i)
                         {
-                            if (token->m_Aliases[i] == search)
+                            if (token->m_Aliases[i] == target)
                             {
-                                result.insert(token->GetSelf());
+                                result.insert(token->m_Index);
                                 // break; ?
                             }
                         }
@@ -3150,24 +3287,6 @@ size_t NativeParser::GenerateResultSet(const wxString&    search,
     }
 
     return result.size();
-}
-
-bool NativeParser::AddChildrenOfUnnamed(Token* parent, TokenIdxSet& result)
-{
-    if (parent->m_TokenKind == tkClass && parent->m_Name.StartsWith(g_UnnamedSymbol))
-    {
-        // add all its children
-        for (TokenIdxSet::iterator it = parent->m_Children.begin(); it != parent->m_Children.end(); ++it)
-        {
-            Token* tokenChild = m_Parser->GetTokensTree()->at(*it);
-            if (tokenChild)
-                result.insert(*it);
-        }
-
-        return true;
-    }
-    else
-        return false;
 }
 
 // Decides if the token belongs to its parent or one of its ancestors
@@ -3186,12 +3305,15 @@ bool NativeParser::BelongsToParentOrItsAncestors(TokensTree* tree, Token* token,
     if (!use_inheritance)
         return false;
 
+    TRACK_THREAD_LOCKER(s_TokensTreeCritical);
+    wxCriticalSectionLocker locker(s_TokensTreeCritical);
+    THREAD_LOCKER_SUCCESS(s_TokensTreeCritical);
+
     // no parent token? no ancestors...
     Token* parentToken = tree->at(parentIdx);
     if (!parentToken)
         return false;
 
-    // now search up the ancestors list
     tree->RecalcInheritanceChain(parentToken);
     return parentToken->m_Ancestors.find(token->m_ParentIndex) != parentToken->m_Ancestors.end();
 }
@@ -3232,10 +3354,8 @@ bool NativeParser::SkipWhitespaceBackward(cbEditor* editor, int& pos)
 }
 
 // returns current function's position (not line) in the editor
-// No critical section needed here:
-// All functions that call this, already entered a critical section.
 int NativeParser::FindCurrentFunctionStart(ccSearchData* searchData, wxString* nameSpace, wxString* procName,
-                                           Token** functionToken, int caretPos)
+                                           int* functionIndex, int caretPos)
 {
     // cache last result for optimization
     int pos = caretPos == -1 ? searchData->control->GetCurrentPos() : caretPos;
@@ -3254,7 +3374,7 @@ int NativeParser::FindCurrentFunctionStart(ccSearchData* searchData, wxString* n
     {
         if (nameSpace)     *nameSpace     = m_LastNamespace;
         if (procName)      *procName      = m_LastPROC;
-        if (functionToken) *functionToken = m_LastFunction;
+        if (functionIndex) *functionIndex = m_LastFunctionIndex;
 
         if (s_DebugSmartSense)
             CCLogger::Get()->DebugLog(F(_T("FindCurrentFunctionStart() Cached namespace='%s', cached proc='%s' (returning %d)"),
@@ -3277,8 +3397,23 @@ int NativeParser::FindCurrentFunctionStart(ccSearchData* searchData, wxString* n
     if (s_DebugSmartSense)
         CCLogger::Get()->DebugLog(F(_T("FindCurrentFunctionStart() Found %d results"), num_results));
 
-    size_t fileIdx = m_Parser->GetTokensTree()->GetFileIndex(searchData->file);
-    Token* token = GetTokenFromCurrentLine(result, curLine, fileIdx);
+    TokensTree* tree = m_Parser->GetTokensTree();
+    size_t fileIdx = -1;
+    {
+        TRACK_THREAD_LOCKER(s_TokensTreeCritical);
+        wxCriticalSectionLocker locker(s_TokensTreeCritical);
+        THREAD_LOCKER_SUCCESS(s_TokensTreeCritical);
+
+        fileIdx = tree->GetFileIndex(searchData->file);
+    }
+
+    const int idx = GetTokenFromCurrentLine(result, curLine, fileIdx);
+
+    TRACK_THREAD_LOCKER(s_TokensTreeCritical);
+    wxCriticalSectionLocker locker(s_TokensTreeCritical);
+    THREAD_LOCKER_SUCCESS(s_TokensTreeCritical);
+
+    Token* token = tree->at(idx);
     if (token)
     {
         // got it :)
@@ -3287,10 +3422,10 @@ int NativeParser::FindCurrentFunctionStart(ccSearchData* searchData, wxString* n
                                         token->DisplayName().wx_str(),
                                         token->m_ImplLine));
 
-        m_LastNamespace = token->GetNamespace();
-        m_LastPROC      = token->m_Name;
-        m_LastFunction  = token;
-        m_LastResult    = searchData->control->PositionFromLine(token->m_ImplLine - 1);
+        m_LastNamespace      = token->GetNamespace();
+        m_LastPROC           = token->m_Name;
+        m_LastFunctionIndex  = token->m_Index;
+        m_LastResult         = searchData->control->PositionFromLine(token->m_ImplLine - 1);
 
         // locate function's opening brace
         if (token->m_TokenKind & tkAnyFunction)
@@ -3313,7 +3448,7 @@ int NativeParser::FindCurrentFunctionStart(ccSearchData* searchData, wxString* n
 
         if (nameSpace)     *nameSpace     = m_LastNamespace;
         if (procName)      *procName      = m_LastPROC;
-        if (functionToken) *functionToken = token;
+        if (functionIndex) *functionIndex = token->m_Index;
 
         if (s_DebugSmartSense)
             CCLogger::Get()->DebugLog(F(_T("FindCurrentFunctionStart() Namespace='%s', proc='%s' (returning %d)"),
@@ -3330,8 +3465,6 @@ int NativeParser::FindCurrentFunctionStart(ccSearchData* searchData, wxString* n
 
 // find a function where current caret located.
 // We need to find extra class scope, otherwise, we will failed do the cc in a class declaration
-// No critical section needed here:
-// All functions that call this, already entered a critical section.
 size_t NativeParser::FindCurrentFunctionToken(ccSearchData* searchData, TokenIdxSet& result, int caretPos)
 {
     TokenIdxSet scope_result;
@@ -3352,16 +3485,32 @@ size_t NativeParser::FindCurrentFunctionToken(ccSearchData* searchData, TokenIdx
         // search for namespace
         std::queue<ParserComponent> ns;
         BreakUpComponents(scopeName, ns);
-        FindAIMatches(ns, scope_result, -1, true, true, false, tkNamespace | tkClass | tkTypedef);
+
+        {
+            TRACK_THREAD_LOCKER(s_TokensTreeCritical);
+            wxCriticalSectionLocker locker(s_TokensTreeCritical);
+            THREAD_LOCKER_SUCCESS(s_TokensTreeCritical);
+
+            // All functions that call this recursive function, should already entered a critical section.
+            FindAIMatches(ns, scope_result, -1, true, true, false, tkNamespace | tkClass | tkTypedef);
+        }
     }
 
     // if no scope, use global scope
     if (scope_result.empty())
         scope_result.insert(-1);
 
-    for (TokenIdxSet::iterator it = scope_result.begin(); it != scope_result.end(); ++it)
     {
-        GenerateResultSet(m_Parser->GetTokensTree(), procName, *it, result, true, false, tkAnyFunction | tkClass);
+        TRACK_THREAD_LOCKER(s_TokensTreeCritical);
+        wxCriticalSectionLocker locker(s_TokensTreeCritical);
+        THREAD_LOCKER_SUCCESS(s_TokensTreeCritical);
+
+        for (TokenIdxSet::iterator it = scope_result.begin(); it != scope_result.end(); ++it)
+        {
+            // All functions that call this recursive function, should already entered a critical section.
+            GenerateResultSet(m_Parser->GetTokensTree(), procName, *it, result, true, false,
+                              tkAnyFunction | tkClass);
+        }
     }
 
     return result.size();
@@ -3751,59 +3900,67 @@ void NativeParser::AddPaths(wxArrayString& dirs, const wxString& path, bool hasE
         dirs.Add(s);
 }
 
-// No critical section needed here:
-// All functions that call this, already entered a critical section.
 void NativeParser::CollectSS(const TokenIdxSet& searchScope, TokenIdxSet& actualTypeScope, TokensTree* tree)
 {
+    TRACK_THREAD_LOCKER(s_TokensTreeCritical);
+    wxCriticalSectionLocker locker(s_TokensTreeCritical);
+    THREAD_LOCKER_SUCCESS(s_TokensTreeCritical);
+
     for (TokenIdxSet::iterator pScope=searchScope.begin(); pScope!=searchScope.end(); ++pScope)
     {
         actualTypeScope.insert(*pScope);
         //we need to pScope's parent scope too.
         if ((*pScope) != -1)
         {
-            Token* parent = tree->at(*pScope)->GetParentToken();
+            Token* token = tree->at(*pScope);
+            if (!token)
+                continue;
+            Token* parent = tree->at(token->m_ParentIndex);
             while(true)
             {
                 if (!parent)
                     break;
-                actualTypeScope.insert(parent->GetSelf());
-                parent = parent->GetParentToken();
-
+                actualTypeScope.insert(parent->m_Index);
+                parent = tree->at(parent->m_ParentIndex);
             }
         }
     }
 }
 
-// No critical section needed here:
-// All functions that call this, already entered a critical section.
-void NativeParser::AddTemplateAlias(const int& id, const TokenIdxSet& actualTypeScope, TokenIdxSet& initialScope, TokensTree* tree)
+void NativeParser::AddTemplateAlias(const int& id, const TokenIdxSet& actualTypeScope,
+                                    TokenIdxSet& initialScope, TokensTree* tree)
 {
     if (!tree)
         return;
     if (actualTypeScope.empty())
         return;
+
     //and we need to add the template argument alias too.
-    Token* typeToken = tree->at(id);
-    if (typeToken && typeToken->m_TokenKind == tkTypedef && !typeToken->m_TemplateAlias.IsEmpty())
+    wxString actualTypeStr;
     {
-        wxString actualTypeStr = typeToken->m_TemplateAlias;
-        std::map<wxString, wxString>::iterator it = m_TemplateMap.find(actualTypeStr);
-        if (it != m_TemplateMap.end())
+        TRACK_THREAD_LOCKER(s_TokensTreeCritical);
+        wxCriticalSectionLocker locker(s_TokensTreeCritical);
+        THREAD_LOCKER_SUCCESS(s_TokensTreeCritical);
+
+        Token* typeToken = tree->at(id);
+        if (typeToken && typeToken->m_TokenKind == tkTypedef && !typeToken->m_TemplateAlias.IsEmpty())
+            actualTypeStr = typeToken->m_TemplateAlias;
+    }
+
+    std::map<wxString, wxString>::iterator it = m_TemplateMap.find(actualTypeStr);
+    if (it != m_TemplateMap.end())
+    {
+        actualTypeStr = it->second;
+        TokenIdxSet actualTypeResult;
+        ResolveActualType(actualTypeStr, actualTypeScope, actualTypeResult);
+        if (!actualTypeResult.empty())
         {
-            actualTypeStr = it->second;
-            TokenIdxSet actualTypeResult;
-            ResolveActualType(actualTypeStr, actualTypeScope, actualTypeResult);
-            if (!actualTypeResult.empty())
-            {
-                for (TokenIdxSet::iterator it3=actualTypeResult.begin(); it3!=actualTypeResult.end(); ++it3)
-                    initialScope.insert(*it3);
-            }
+            for (TokenIdxSet::iterator it2 = actualTypeResult.begin(); it2 != actualTypeResult.end(); ++it2)
+                initialScope.insert(*it2);
         }
     }
 }
 
-// No critical section needed here:
-// All functions that call this, already entered a critical section.
 void NativeParser::ResolveTemplateMap(const wxString& searchStr, const TokenIdxSet& actualTypeScope, TokenIdxSet& initialScope)
 {
     if (actualTypeScope.empty())
@@ -3823,24 +3980,30 @@ void NativeParser::ResolveTemplateMap(const wxString& searchStr, const TokenIdxS
     }
 }
 
-// No critical section needed here:
-// All functions that call this, already entered a critical section.
-void NativeParser::ResolveOpeartor(const OperatorType& tokenOperatorType, const TokenIdxSet& tokens, TokensTree* tree, const TokenIdxSet& searchScope, TokenIdxSet& result)
+void NativeParser::ResolveOpeartor(const OperatorType& tokenOperatorType, const TokenIdxSet& tokens,
+                                   TokensTree* tree, const TokenIdxSet& searchScope, TokenIdxSet& result)
 {
     TokenIdxSet opInitialScope;
     if (!tree)
         return;
     if (searchScope.empty())
         return;
-    //first,we need to eliminate the tokens which are not tokens.
-    for (TokenIdxSet::iterator it=tokens.begin(); it!=tokens.end(); ++it)
-    {
-        int id = (*it);
-        Token* token = tree->at(id);
-        if (token && (token->m_TokenKind == tkClass || token->m_TokenKind == tkTypedef))
-            opInitialScope.insert(id);
 
+    //first,we need to eliminate the tokens which are not tokens.
+    {
+        TRACK_THREAD_LOCKER(s_TokensTreeCritical);
+        wxCriticalSectionLocker locker(s_TokensTreeCritical);
+        THREAD_LOCKER_SUCCESS(s_TokensTreeCritical);
+
+        for (TokenIdxSet::iterator it=tokens.begin(); it!=tokens.end(); ++it)
+        {
+            int id = (*it);
+            Token* token = tree->at(id);
+            if (token && (token->m_TokenKind == tkClass || token->m_TokenKind == tkTypedef))
+                opInitialScope.insert(id);
+        }
     }
+
     //if we get nothing,should return.
     if (opInitialScope.empty())
         return;
@@ -3864,51 +4027,64 @@ void NativeParser::ResolveOpeartor(const OperatorType& tokenOperatorType, const 
 
     //start to parse the opeartor overload actual type.
     TokenIdxSet opInitialResult;
-    GenerateResultSet(operatorStr, opInitialScope, opInitialResult);
+
+    {
+        TRACK_THREAD_LOCKER(s_TokensTreeCritical);
+        wxCriticalSectionLocker locker(s_TokensTreeCritical);
+        THREAD_LOCKER_SUCCESS(s_TokensTreeCritical);
+
+        // All functions that call this recursive function, should already entered a critical section.
+        GenerateResultSet(operatorStr, opInitialScope, opInitialResult);
+    }
+
     CollectSS(searchScope, opInitialScope, tree);
+
     if (!opInitialResult.empty())
     {
         for (TokenIdxSet::iterator it=opInitialResult.begin(); it!=opInitialResult.end(); ++it)
         {
-            int id = (*it);
-            Token* token = tree->at(id);
-            if (token)
+            wxString type;
             {
-                wxString type = token->m_ActualType;
-                if (type.IsEmpty())
-                    continue;
+                TRACK_THREAD_LOCKER(s_TokensTreeCritical);
+                wxCriticalSectionLocker locker(s_TokensTreeCritical);
+                THREAD_LOCKER_SUCCESS(s_TokensTreeCritical);
 
+                Token* token = tree->at((*it));
+                if (token)
+                    type = token->m_ActualType;
+            }
+
+            if (!type.IsEmpty())
+            {
                 TokenIdxSet typeResult;
                 ResolveActualType(type, opInitialScope, typeResult);
                 if (!typeResult.empty())
                 {
-                    for (TokenIdxSet::iterator pTypeResult=typeResult.begin(); pTypeResult!=typeResult.end(); ++pTypeResult)
+                    for (TokenIdxSet::iterator pTypeResult = typeResult.begin();
+                         pTypeResult!=typeResult.end();
+                         ++pTypeResult)
                     {
                         result.insert(*pTypeResult);
                         AddTemplateAlias(*pTypeResult, opInitialScope, result, tree);
                     }
                 }
                 else
-                {
                     ResolveTemplateMap(type, opInitialScope, result);
-                }
             }
         }
     }
 }
 
-// No critical section needed here:
-// All functions that call this, already entered a critical section.
-Token* NativeParser::GetTokenFromCurrentLine(const TokenIdxSet& tokens, size_t curLine, size_t fileIdx)
+int NativeParser::GetTokenFromCurrentLine(const TokenIdxSet& tokens, size_t curLine, size_t fileIdx)
 {
-    TokensTree* tree = m_Parser->GetTokensTree();
-    if (!tree)
-        return nullptr;
+    TRACK_THREAD_LOCKER(s_TokensTreeCritical);
+    wxCriticalSectionLocker locker(s_TokensTreeCritical);
+    THREAD_LOCKER_SUCCESS(s_TokensTreeCritical);
 
     Token* classToken = nullptr;
     for (TokenIdxSet::iterator it = tokens.begin(); it != tokens.end(); ++it)
     {
-        Token* token = tree->at(*it);
+        Token* token = m_Parser->GetTokensTree()->at(*it);
         if (token)
         {
             TRACE(_T("GetTokenFromCurrentLine() Iterating: tN='%s', tF='%s', tStart=%d, tEnd=%d"),
@@ -3923,7 +4099,7 @@ Token* NativeParser::GetTokenFromCurrentLine(const TokenIdxSet& tokens, size_t c
                 TRACE(_T("GetTokenFromCurrentLine() tkAnyFunction : tN='%s', tF='%s', tStart=%d, tEnd=%d"),
                        token->DisplayName().wx_str(), token->GetFilename().wx_str(),
                        token->m_ImplLineStart, token->m_ImplLineEnd);
-                return token;
+                return token->m_Index;
             }
             else if (   token->m_TokenKind == tkConstructor
                      && token->m_ImplFileIdx == fileIdx
@@ -3933,7 +4109,7 @@ Token* NativeParser::GetTokenFromCurrentLine(const TokenIdxSet& tokens, size_t c
                 TRACE(_T("GetTokenFromCurrentLine() tkConstructor : tN='%s', tF='%s', tStart=%d, tEnd=%d"),
                       token->DisplayName().wx_str(), token->GetFilename().wx_str(),
                       token->m_ImplLineStart, token->m_ImplLineEnd);
-                return token;
+                return token->m_Index;
             }
             else if (   token->m_TokenKind == tkClass
                      && token->m_ImplLineStart <= curLine
@@ -3953,17 +4129,20 @@ Token* NativeParser::GetTokenFromCurrentLine(const TokenIdxSet& tokens, size_t c
         }
     }
 
-    return classToken;
+    if (classToken)
+        return classToken->m_Index;
+    else
+        return -1;
 }
 
 void NativeParser::InitCCSearchVariables()
 {
-    m_LastControl     = nullptr;
-    m_LastFunction    = nullptr;
-    m_EditorStartWord = -1;
-    m_EditorEndWord   = -1;
-    m_LastLine        = -1;
-    m_LastResult      = -1;
+    m_LastControl       = nullptr;
+    m_LastFunctionIndex = -1;
+    m_EditorStartWord   = -1;
+    m_EditorEndWord     = -1;
+    m_LastLine          = -1;
+    m_LastResult        = -1;
     m_LastComponent.Clear();
     m_LastFile.Clear();
     m_LastNamespace.Clear();
@@ -3971,10 +4150,12 @@ void NativeParser::InitCCSearchVariables()
     m_CCItems.Clear();
 }
 
-// No critical section needed here:
-// All functions that call this, already entered a critical section.
 void NativeParser::RemoveLastFunctionChildren()
 {
+    TRACK_THREAD_LOCKER(s_TokensTreeCritical);
+    wxCriticalSectionLocker locker(s_TokensTreeCritical);
+    THREAD_LOCKER_SUCCESS(s_TokensTreeCritical);
+
     Token* token = m_Parser->GetTokensTree()->at(m_LastFuncTokenIdx);
     if (token)
     {

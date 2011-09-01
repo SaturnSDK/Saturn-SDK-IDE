@@ -318,7 +318,7 @@ protected:
      * @return current function line number
      */
     int FindCurrentFunctionStart(ccSearchData* searchData, wxString* nameSpace = 0L, wxString* procName = 0L,
-                                 Token** functionToken = 0L, int caretPos = -1);
+                                 int* functionIndex = 0L, int caretPos = -1);
 
     /** return all the tokens matching the current function(hopefully, just one)
      * @param editor editor pointer
@@ -358,6 +358,9 @@ private:
 
     /**@brief Artificial Intelligence Matching
     *
+    * All functions that call this recursive function, should already entered a critical section.
+    * Like this: wxCriticalSectionLocker locker(s_TokensTreeCritical);
+    *
     * match (consume) the ParserComponent queue from left to right,
     * the output result becomes the search scope of the next match.
     * finally, give the result matching the last ParserComponent.
@@ -386,15 +389,19 @@ private:
     bool BelongsToParentOrItsAncestors(TokensTree* tree, Token* token, int parentIdx, bool use_inheritance = true);
 
     /** Generate the matching results under the Parent Token index set
+     *
+     * All functions that call this recursive function, should already entered a critical section.
+     * Like this: wxCriticalSectionLocker locker(s_TokensTreeCritical);
+     *
      * @param tree TokensTree pointer
-     * @param Search Scope (defined in TokenIdxSet)
+     * @param target Scope (defined in TokenIdxSet)
      * @param result result token index set
      * @param isPrefix whether a full match is used or only do a prefix match
      * @param kindMask define the result tokens filter, such as only class type is OK
      * @return result token set number
      */
     size_t GenerateResultSet(TokensTree* tree,
-                             const wxString& search,
+                             const wxString& target,
                              int parentIdx,
                              TokenIdxSet& result,
                              bool caseSens = true,
@@ -403,16 +410,17 @@ private:
 
     /** This function is just like the one above, especially that no Tokentree information is used
      * So, it use the current parser's Tokenstree.
+     *
+     * All functions that call this recursive function, should already entered a critical section.
+     * Like this: wxCriticalSectionLocker locker(s_TokensTreeCritical);
+     *
      */
-    size_t GenerateResultSet(const wxString& search,
+    size_t GenerateResultSet(const wxString& target,
                              const TokenIdxSet& ptrParentID,
                              TokenIdxSet& result,
                              bool caseSens = true,
                              bool isPrefix = false,
                              short int kindMask = 0xFFFF);
-
-    /** Add all children tokens of unnamed union/struct/class */
-    bool AddChildrenOfUnnamed(Token* parent, TokenIdxSet& result);
 
     /** used in CodeCompletion suggestion list to boost the performance, we use a caches*/
     bool LastAISearchWasGlobal() const { return m_LastAISearchWasGlobal; }
@@ -552,11 +560,11 @@ private:
                          const TokenIdxSet& searchScope,
                          TokenIdxSet& result);
 
-    /** used to get the correct token in current line, e.g. class A { void test() { | } };
+    /** used to get the correct token index in current line, e.g. class A { void test() { | } };
      * @param tokens all current file's function and class
      * @param curLine the line of the current position
      */
-    Token* GetTokenFromCurrentLine(const TokenIdxSet& tokens, size_t curLine, size_t fileIdx);
+    int GetTokenFromCurrentLine(const TokenIdxSet& tokens, size_t curLine, size_t fileIdx);
 
     /** Init cc search member variables */
     void InitCCSearchVariables();
@@ -585,7 +593,7 @@ private:
     int                          m_LastFuncTokenIdx;      /// saved the function token's index, for remove all local variable
     ParserComponent              m_LastComponent;
     cbStyledTextCtrl*            m_LastControl;
-    Token*                       m_LastFunction;
+    int                          m_LastFunctionIndex;
     int                          m_LastLine;
     int                          m_LastResult;
     wxString                     m_LastFile;
