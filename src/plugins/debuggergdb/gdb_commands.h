@@ -923,12 +923,12 @@ class GdbCmd_TooltipEvaluation : public DebuggerCmd
             ParseGDBWatchValue(*watch, contents);
             if (!m_Address.empty() && m_autoDereferenced)
                 watch->SetValue(m_Address);
+            watch->SetForTooltip(true);
+            if (watch->GetChildCount() > 0)
+                watch->Expand(true);
 
             if (Manager::Get()->GetDebuggerManager()->ShowValueTooltip(watch, m_WinRect))
-            {
-                watch->SetForTooltip(true);
                 m_pDriver->GetDebugger()->AddWatchNoUpdate(watch);
-            }
         }
 };
 

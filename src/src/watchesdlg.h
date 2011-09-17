@@ -70,6 +70,7 @@ class ValueTooltip : public wxPopupWindow
         ~ValueTooltip();
 
         void Dismiss();
+        void UpdateWatch();
     protected:
         virtual void OnDismiss();
     private:
@@ -77,8 +78,8 @@ class ValueTooltip : public wxPopupWindow
         void ClearWatch();
     private:
 
-        void OnCollapsed(wxPropertyGridEvent &event);
-        void OnExpanded(wxPropertyGridEvent &event);
+        void OnCollapse(wxPropertyGridEvent &event);
+        void OnExpand(wxPropertyGridEvent &event);
         void OnTimer(wxTimerEvent &event);
     private:
         wxPropertyGrid *m_grid;

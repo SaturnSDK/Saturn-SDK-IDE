@@ -41,6 +41,7 @@ class DebugInterfaceFactory : public cbDebugInterfaceFactory
         virtual bool ShowValueTooltip(const cbWatch::Pointer &watch, const wxRect &rect);
         virtual void HideValueTooltip();
         virtual bool IsValueTooltipShown();
+        virtual void UpdateValueTooltip();
     private:
         void OnEditorDeactivate(CodeBlocksEvent &event);
     private:

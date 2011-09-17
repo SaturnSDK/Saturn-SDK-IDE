@@ -688,8 +688,8 @@ void WatchesDlg::RenameWatch(wxObject *prop, const wxString &newSymbol)
 IMPLEMENT_CLASS(ValueTooltip, wxPopupWindow)
 
 BEGIN_EVENT_TABLE(ValueTooltip, wxPopupWindow)
-    EVT_PG_ITEM_COLLAPSED(idTooltipGrid, ValueTooltip::OnCollapsed)
-    EVT_PG_ITEM_EXPANDED(idTooltipGrid, ValueTooltip::OnExpanded)
+    EVT_PG_ITEM_COLLAPSED(idTooltipGrid, ValueTooltip::OnCollapse)
+    EVT_PG_ITEM_EXPANDED(idTooltipGrid, ValueTooltip::OnExpand)
     EVT_TIMER(idTooltipTimer, ValueTooltip::OnTimer)
 END_EVENT_TABLE()
 
@@ -795,7 +795,6 @@ ValueTooltip::ValueTooltip(const cbWatch::Pointer &watch, wxWindow *parent) :
     wxString symbol, value;
     m_watch->GetSymbol(symbol);
     m_watch->GetValue(value);
-    m_watch->Expand(true);
     wxPGProperty *root = m_grid->Append(new WatchesProperty(symbol, value, m_watch.get(), true));
     m_watch->MarkAsChangedRecursive(false);
     ::UpdateWatch(m_grid, root, m_watch.get(), true);
@@ -816,6 +815,14 @@ ValueTooltip::ValueTooltip(const cbWatch::Pointer &watch, wxWindow *parent) :
 ValueTooltip::~ValueTooltip()
 {
     ClearWatch();
+}
+
+void ValueTooltip::UpdateWatch()
+{
+    m_watch->MarkAsChangedRecursive(false);
+    ::UpdateWatch(m_grid, GetRealRoot(m_grid), m_watch.get(), true);
+    m_grid->Refresh();
+    Fit();
 }
 
 void ValueTooltip::ClearWatch()
@@ -850,13 +857,25 @@ void ValueTooltip::Fit()
     SetSize(pos.x, pos.y, size.x, size.y);
 }
 
-void ValueTooltip::OnCollapsed(wxPropertyGridEvent &event)
+void ValueTooltip::OnCollapse(wxPropertyGridEvent &event)
 {
+    WatchesProperty *prop = static_cast<WatchesProperty*>(event.GetProperty());
+    prop->GetWatch()->Expand(false);
+
+    cbDebuggerPlugin *plugin = Manager::Get()->GetDebuggerManager()->GetActiveDebugger();
+    if (plugin)
+        plugin->CollapseWatch(prop->GetWatch());
     Fit();
 }
 
-void ValueTooltip::OnExpanded(wxPropertyGridEvent &event)
+void ValueTooltip::OnExpand(wxPropertyGridEvent &event)
 {
+    WatchesProperty *prop = static_cast<WatchesProperty*>(event.GetProperty());
+    prop->GetWatch()->Expand(true);
+
+    cbDebuggerPlugin *plugin = Manager::Get()->GetDebuggerManager()->GetActiveDebugger();
+    if (plugin)
+        plugin->ExpandWatch(prop->GetWatch());
     Fit();
 }
 

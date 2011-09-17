@@ -152,6 +152,7 @@ class DLLIMPORT cbDebugInterfaceFactory
         virtual bool ShowValueTooltip(const cbWatch::Pointer &watch, const wxRect &rect) = 0;
         virtual void HideValueTooltip() = 0;
         virtual bool IsValueTooltipShown() = 0;
+        virtual void UpdateValueTooltip() = 0;
 };
 
 #endif // _CB_DEBUGGER_INTERFACES_H_

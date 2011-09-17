@@ -195,12 +195,11 @@ void DebugInterfaceFactory::DeleteWatches(cbWatchesDlg *dialog)
 bool DebugInterfaceFactory::ShowValueTooltip(const cbWatch::Pointer &watch, const wxRect &rect)
 {
     delete m_tooltip;
+    m_tooltip = nullptr;
+
     wxPoint pt = wxGetMousePosition();
     if (!rect.Contains(pt))
-    {
-        m_tooltip = nullptr;
         return false;
-    }
     else
     {
         m_tooltip = new ValueTooltip(watch, Manager::Get()->GetAppWindow());
@@ -222,6 +221,12 @@ void DebugInterfaceFactory::HideValueTooltip()
 {
     if (m_tooltip)
         m_tooltip->Dismiss();
+}
+
+void DebugInterfaceFactory::UpdateValueTooltip()
+{
+    if (m_tooltip)
+        m_tooltip->UpdateWatch();
 }
 
 bool DebugInterfaceFactory::IsValueTooltipShown()
