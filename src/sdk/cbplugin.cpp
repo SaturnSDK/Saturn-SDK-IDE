@@ -958,6 +958,9 @@ void cbDebuggerPlugin::ProcessValueTooltip(CodeBlocksEvent& event)
             return;
     }
 
+    if (Manager::Get()->GetDebuggerManager()->GetInterfaceFactory()->IsValueTooltipShown())
+        return;
+
     if (!ShowValueTooltip(event.GetInt()))
         return;
 

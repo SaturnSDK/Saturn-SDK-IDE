@@ -46,6 +46,7 @@ class cbStyledTextCtrl : public wxScintilla
 
         bool AllowTabSmartJump();
         void HighlightRightBrace();
+        void EmulateDwellStart();
 
         wxWindow* m_pParent;
         wxLongLong m_lastFocusTime;

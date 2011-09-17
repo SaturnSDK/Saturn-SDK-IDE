@@ -37,9 +37,10 @@ class DebugInterfaceFactory : public cbDebugInterfaceFactory
 
         virtual cbWatchesDlg* CreateWatches();
         virtual void DeleteWatches(cbWatchesDlg *dialog);
-   
-        bool ShowValueTooltip(const cbWatch::Pointer &watch, const wxRect &rect);
-        void HideValueTooltip();
+
+        virtual bool ShowValueTooltip(const cbWatch::Pointer &watch, const wxRect &rect);
+        virtual void HideValueTooltip();
+        virtual bool IsValueTooltipShown();
     private:
         void OnEditorDeactivate(CodeBlocksEvent &event);
     private:

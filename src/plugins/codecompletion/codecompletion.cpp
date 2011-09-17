@@ -2575,6 +2575,11 @@ void CodeCompletion::OnToolbarTimer(wxTimerEvent& event)
 
 void CodeCompletion::OnValueTooltip(CodeBlocksEvent& event)
 {
+    if (wxGetKeyState(WXK_CONTROL))
+    {
+         event.Skip();
+        return;
+    }
     if (IsAttached() && m_InitDone)
     {
         if (!Manager::Get()->GetConfigManager(_T("code_completion"))->ReadBool(_T("eval_tooltip"), true))

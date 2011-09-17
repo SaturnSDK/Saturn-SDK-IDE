@@ -224,6 +224,11 @@ void DebugInterfaceFactory::HideValueTooltip()
         m_tooltip->Dismiss();
 }
 
+bool DebugInterfaceFactory::IsValueTooltipShown()
+{
+    return m_tooltip && m_tooltip->IsShown();
+}
+
 void DebugInterfaceFactory::OnEditorDeactivate(CodeBlocksEvent &event)
 {
     HideValueTooltip();
