@@ -7475,6 +7475,15 @@ bool wxPropertyGrid::DoSelectProperty( wxPGProperty* p, unsigned int flags )
         return true;
 
     m_inDoSelectProperty = true;
+/* C::B begin */
+    struct UnsetValue
+    {
+        UnsetValue(bool &value) : value(value) {}
+        ~UnsetValue() { value=false; }
+        bool &value;
+    };
+    UnsetValue unsetValue(m_inDoSelectProperty);
+/* C::B end */
 
 #if !wxCHECK_VERSION(2,8,0)
     //
@@ -7491,10 +7500,7 @@ bool wxPropertyGrid::DoSelectProperty( wxPGProperty* p, unsigned int flags )
 #endif
 
     if ( !m_pState )
-    {
-        m_inDoSelectProperty = false;
         return false;
-    }
 
     wxArrayPGProperty prevSelection = m_pState->m_selection;
     wxPGProperty* prevFirstSel;
@@ -7551,8 +7557,6 @@ bool wxPropertyGrid::DoSelectProperty( wxPGProperty* p, unsigned int flags )
                     SetFocusOnCanvas();
                 }
             }
-
-            m_inDoSelectProperty = 0;
             return true;
         }
 
@@ -7568,7 +7572,6 @@ bool wxPropertyGrid::DoSelectProperty( wxPGProperty* p, unsigned int flags )
                     // Validation has failed, so we can't exit the previous editor
                     //::wxMessageBox(_("Please correct the value or press ESC to cancel the edit."),
                     //               _("Invalid Value"),wxOK|wxICON_ERROR);
-                    m_inDoSelectProperty = 0;
                     return false;
                 }
             }
@@ -7829,8 +7832,6 @@ bool wxPropertyGrid::DoSelectProperty( wxPGProperty* p, unsigned int flags )
         }
 #endif
     }
-
-    m_inDoSelectProperty = 0;
 
     // call wx event handler (here so that it also occurs on deselection)
     SendEvent( wxEVT_PG_SELECTED, p, NULL );
