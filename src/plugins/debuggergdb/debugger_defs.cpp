@@ -209,3 +209,4 @@ bool IsPointerType(wxString type)
         return true;
     return false;
 }
+

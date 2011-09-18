@@ -206,7 +206,7 @@ bool DebugInterfaceFactory::ShowValueTooltip(const cbWatch::Pointer &watch, cons
 
         m_tooltip->Position(pt, wxSize(0, 0));
 
-		// hide any other tooltips
+        // hide any other tooltips
         EditorBase *base = Manager::Get()->GetEditorManager()->GetActiveEditor();
         cbEditor *ed = base && base->IsBuiltinEditor() ? static_cast<cbEditor*>(base) : nullptr;
         if (ed && ed->GetControl()->CallTipActive())

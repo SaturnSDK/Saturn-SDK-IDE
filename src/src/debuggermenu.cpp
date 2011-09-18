@@ -395,7 +395,7 @@ void DebuggerMenuHandler::OnStep(wxCommandEvent& event)
         {
             HideValueTooltip();
             m_activeDebugger->Step();
-    	}
+        }
     }
     else
     {

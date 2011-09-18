@@ -360,4 +360,6 @@ namespace cb
 using std::tr1::shared_ptr;
 using std::tr1::static_pointer_cast;
 }
+
 #endif
+

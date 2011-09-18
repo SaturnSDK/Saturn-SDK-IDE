@@ -2,13 +2,13 @@
 #include "debuggersettingscommonpanel.h"
 
 #ifndef CB_PRECOMP
-	//(*InternalHeadersPCH(DebuggerSettingsCommonPanel)
-	#include <wx/string.h>
-	#include <wx/intl.h>
-	//*)
+    //(*InternalHeadersPCH(DebuggerSettingsCommonPanel)
+    #include <wx/string.h>
+    #include <wx/intl.h>
+    //*)
 
     #include <wx/fontutil.h>
-	#include <wx/textdlg.h>
+    #include <wx/textdlg.h>
 #endif
 
 #include <wx/fontdlg.h>
@@ -130,3 +130,4 @@ void DebuggerSettingsCommonPanel::UpdateValueTooltipFont()
     fontInfo.FromString(m_valueTooltipFontInfo);
     m_valueTooltipLabel->SetFont(wxFont(fontInfo));
 }
+

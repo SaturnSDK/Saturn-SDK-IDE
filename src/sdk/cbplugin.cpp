@@ -192,7 +192,7 @@ wxString cbDebuggerPlugin::GetEditorWordAtCaret(const wxPoint *mousePosition)
             selected_text.Trim(true);
             selected_text.Trim(false);
         }
-		// check if the mouse is over the selected text
+        // check if the mouse is over the selected text
         if (mousePosition)
         {
             int startPos = control->GetSelectionStart();
