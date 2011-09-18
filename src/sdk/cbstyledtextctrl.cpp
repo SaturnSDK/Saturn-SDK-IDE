@@ -20,6 +20,7 @@
 
     #include "editorbase.h" // DisplayContextMenu
     #include "prep.h" // platform::gtk
+    #include "pluginmanager.h"
 #endif
 
 #include "cbdebugger_interfaces.h"
