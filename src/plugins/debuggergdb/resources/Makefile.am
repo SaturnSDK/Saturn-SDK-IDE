@@ -1,12 +1,11 @@
 pkgdata_DATA = debugger.zip
 CLEANFILES = $(pkgdata_DATA)
 
-DEBUG_RESOURCES = backtrace.xrc \
+DEBUG_RESOURCES = breakpoints.xrc \
 	debugger_options_dlg.xrc \
 	debugger_project_options_dlg.xrc \
 	edit_watches_dlg.xrc \
 	manifest.xml \
-	threads.xrc
 
 EXTRA_DIST = $(DEBUG_RESOURCES)
 
