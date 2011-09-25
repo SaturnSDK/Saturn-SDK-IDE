@@ -1742,7 +1742,7 @@
 		<Unit filename="plugins\debuggergdb\remotedebugging.h">
 			<Option target="Debugger" />
 		</Unit>
-		<Unit filename="plugins\debuggergdb\resources\backtrace.xrc">
+		<Unit filename="plugins\debuggergdb\resources\breakpoints.xrc">
 			<Option target="Debugger" />
 		</Unit>
 		<Unit filename="plugins\debuggergdb\resources\debugger_options_dlg.xrc">
@@ -1752,9 +1752,6 @@
 			<Option target="Debugger" />
 		</Unit>
 		<Unit filename="plugins\debuggergdb\resources\edit_watches_dlg.xrc">
-			<Option target="Debugger" />
-		</Unit>
-		<Unit filename="plugins\debuggergdb\resources\threads.xrc">
 			<Option target="Debugger" />
 		</Unit>
 		<Unit filename="plugins\defaultmimehandler\EmbeddedHtmlPanel.cpp">
@@ -2407,9 +2404,6 @@
 			<Option target="sdk" />
 		</Unit>
 		<Unit filename="sdk\resources\auto_detect_compilers.xrc">
-			<Option target="sdk" />
-		</Unit>
-		<Unit filename="sdk\resources\breakpoints.xrc">
 			<Option target="sdk" />
 		</Unit>
 		<Unit filename="sdk\resources\configure_tools.xrc">
