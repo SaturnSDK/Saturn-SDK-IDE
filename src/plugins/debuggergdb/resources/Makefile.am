@@ -5,7 +5,7 @@ DEBUG_RESOURCES = breakpoints.xrc \
 	debugger_options_dlg.xrc \
 	debugger_project_options_dlg.xrc \
 	edit_watches_dlg.xrc \
-	manifest.xml \
+	manifest.xml
 
 EXTRA_DIST = $(DEBUG_RESOURCES)
 
