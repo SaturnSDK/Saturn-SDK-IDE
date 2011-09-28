@@ -453,6 +453,9 @@ class PLUGIN_EXPORT cbDebuggerPlugin: public cbPlugin
         /** @brief Is the plugin stopped on breakpoint? */
         virtual bool IsStopped() const = 0;
 
+        /** @brief Is the plugin processing something? */
+        virtual bool IsBusy() const = 0;
+
         /** @brief Get the exit code of the last debug process. */
         virtual int GetExitCode() const = 0;
 

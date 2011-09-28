@@ -93,6 +93,7 @@ void DebuggerDriver::NotifyCursorChanged()
 void DebuggerDriver::NotifyDebuggeeContinued()
 {
     m_pDBG->DebuggeeContinued();
+    ResetCursor();
 }
 
 void DebuggerDriver::ResetCursor()
@@ -125,22 +126,25 @@ void DebuggerDriver::RunQueue()
     if (m_QueueBusy || !m_DCmds.GetCount())
         return;
 
+    DebuggerCmd *command = CurrentCommand();
+
 //    Log(_T("Running command: ") + CurrentCommand()->m_Cmd);
     // don't send a command if empty; most debuggers repeat the last command this way...
-    if (!CurrentCommand()->m_Cmd.IsEmpty())
+    if (!command->m_Cmd.IsEmpty())
     {
         m_QueueBusy = true;
-        m_pDBG->DoSendCommand(CurrentCommand()->m_Cmd);
-        m_ProgramIsStopped = false;
+        m_pDBG->DoSendCommand(command->m_Cmd);
+        if (command->IsContinueCommand())
+            m_ProgramIsStopped = false;
     }
 
     // Call Action()
-    CurrentCommand()->Action();
+    command->Action();
 
     // If the command was an action (i.e. no command specified,
     // remove it from the queue and run the next command.
     // For other commands, this happens in driver's ParseOutput().
-    if (CurrentCommand()->m_Cmd.IsEmpty())
+    if (command->m_Cmd.IsEmpty())
     {
         RemoveTopCommand(true);
         RunQueue();

@@ -492,12 +492,12 @@ void GDB_driver::Start(bool breakOnEntry)
         m_ManualBreakOnEntry = !remoteDebugging;
         // start the process
         if(breakOnEntry)
-            QueueCommand(new DebuggerCmd(this, remoteDebugging ? _T("continue") : _T("start")));
+            QueueCommand(new DebuggerContinueBaseCmd(this, remoteDebugging ? _T("continue") : _T("start")));
         else
         {
             // if breakOnEntry is not set, we need to use 'run' to make gdb stop at a breakpoint at first instruction
             m_ManualBreakOnEntry=false;  // must be reset or gdb does not stop at first breakpoint
-            QueueCommand(new DebuggerCmd(this, remoteDebugging ? _T("continue") : _T("run")));
+            QueueCommand(new DebuggerContinueBaseCmd(this, remoteDebugging ? _T("continue") : _T("run")));
         }
         m_IsStarted = true;
     }
@@ -526,7 +526,7 @@ void GDB_driver::Continue()
         if (remoteDebugging)
             QueueCommand(new DebuggerContinueCommand(this));
         else
-            QueueCommand(new DebuggerCmd(this, m_ManualBreakOnEntry ? wxT("start") : wxT("run")));
+            QueueCommand(new DebuggerContinueBaseCmd(this, m_ManualBreakOnEntry ? wxT("start") : wxT("run")));
         m_ManualBreakOnEntry = false;
         m_IsStarted = true;
         m_attachedToProcess = false;
@@ -536,7 +536,7 @@ void GDB_driver::Continue()
 void GDB_driver::Step()
 {
     ResetCursor();
-    QueueCommand(new DebuggerCmd(this, _T("next")));
+    QueueCommand(new DebuggerContinueBaseCmd(this, _T("next")));
 }
 
 void GDB_driver::StepInstruction()
@@ -554,20 +554,20 @@ void GDB_driver::StepIntoInstruction()
 void GDB_driver::StepIn()
 {
     ResetCursor();
-    QueueCommand(new DebuggerCmd(this, _T("step")));
+    QueueCommand(new DebuggerContinueBaseCmd(this, _T("step")));
 }
 
 void GDB_driver::StepOut()
 {
     ResetCursor();
-    QueueCommand(new DebuggerCmd(this, _T("finish")));
+    QueueCommand(new DebuggerContinueBaseCmd(this, _T("finish")));
 }
 
 void GDB_driver::SetNextStatement(const wxString& filename, int line)
 {
     ResetCursor();
     QueueCommand(new DebuggerCmd(this, wxString::Format(wxT("tbreak %s:%d"), filename.c_str(), line)));
-    QueueCommand(new DebuggerCmd(this, wxString::Format(wxT("jump %s:%d"), filename.c_str(), line)));
+    QueueCommand(new DebuggerContinueBaseCmd(this, wxString::Format(wxT("jump %s:%d"), filename.c_str(), line)));
 }
 
 void GDB_driver::Backtrace()
@@ -808,7 +808,6 @@ void GDB_driver::ParseOutput(const wxString& output)
         disable_debug_events = false;
     }
 
-    m_ProgramIsStopped = true;
     m_QueueBusy = false;
     int changeFrameAddr = 0 ;
     DebuggerCmd* cmd = CurrentCommand();
@@ -888,9 +887,11 @@ void GDB_driver::ParseOutput(const wxString& output)
         else if (lines[i].StartsWith(_T("Program exited")) ||
                  lines[i].Contains(_T("The program is not being run")) ||
                  lines[i].Contains(_T("Target detached")) ||
+                 lines[i].StartsWith(wxT("Program terminated with signal")) ||
                  reInferiorExited.Matches(lines[i]))
         {
             m_pDBG->Log(lines[i]);
+            m_ProgramIsStopped = true;
             QueueCommand(new DebuggerCmd(this, _T("quit")));
             m_IsStarted = false;
         }
@@ -904,6 +905,9 @@ void GDB_driver::ParseOutput(const wxString& output)
         // signal
         else if (lines[i].StartsWith(_T("Program received signal SIG")))
         {
+            m_ProgramIsStopped = true;
+            m_QueueBusy = false;
+
             if (lines[i].StartsWith(_T("Program received signal SIGINT")) ||
                 lines[i].StartsWith(_T("Program received signal SIGTRAP")) ||
                 lines[i].StartsWith(_T("Program received signal SIGSTOP")))
@@ -1113,9 +1117,17 @@ void GDB_driver::ParseOutput(const wxString& output)
             //when NotifyCursorChanged() executes
             m_Cursor.address.clear();
         }
+        if (m_Cursor.changed)
+        {
+            m_ProgramIsStopped = true;
+            m_QueueBusy = false;
+        }
         if (m_Cursor.changed || m_forceUpdate)
             NotifyCursorChanged();
     }
+
+    if (m_ProgramIsStopped)
+        RunQueue();
 }
 
 

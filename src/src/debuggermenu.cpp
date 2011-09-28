@@ -241,7 +241,7 @@ void DebuggerMenuHandler::OnUpdateUI(wxUpdateUIEvent& event)
     {
         isAttached = m_activeDebugger->IsAttachedToProcess();
         en = (prj && !prj->GetCurrentlyCompilingTarget()) || isAttached;
-        stopped = m_activeDebugger->IsStopped();
+        stopped = m_activeDebugger->IsStopped() && !m_activeDebugger->IsBusy();
         isRunning = m_activeDebugger->IsRunning();
     }
 

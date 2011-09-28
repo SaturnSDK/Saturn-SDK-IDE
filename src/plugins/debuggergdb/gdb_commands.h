@@ -599,11 +599,11 @@ class GdbCmd_RemoveBreakpoint : public DebuggerCmd
 /**
   * Command that notifies the debugger plugin that the debuggee has been continued
   */
-class DebuggerContinueCommand : public DebuggerCmd
+class DebuggerContinueCommand : public DebuggerContinueBaseCmd
 {
     public:
         DebuggerContinueCommand(DebuggerDriver* driver) :
-            DebuggerCmd(driver, wxT("cont"))
+            DebuggerContinueBaseCmd(driver, wxT("cont"))
         {
         }
 
@@ -1692,12 +1692,12 @@ class GdbCmd_RemoteTarget : public DebuggerCmd
         }
 };
 
-class GdbCmd_StepOrNextInstruction : public DebuggerCmd
+class GdbCmd_StepOrNextInstruction : public DebuggerContinueBaseCmd
 {
 
     public:
         GdbCmd_StepOrNextInstruction(GDB_driver* driver, const wxChar *command)
-            : DebuggerCmd(driver)
+            : DebuggerContinueBaseCmd(driver)
         {
             m_Cmd << command;
         }

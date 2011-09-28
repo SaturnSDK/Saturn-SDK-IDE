@@ -150,6 +150,8 @@ class DebuggerDriver
         virtual bool IsDebuggingStarted() const = 0;
         /** Is the program stopped? */
         virtual bool IsProgramStopped() const { return m_ProgramIsStopped; }
+        /** Is the driver processing some commands? */
+        bool IsQueueBusy() const { return m_QueueBusy; }
         /** Set child PID (debuggee's). Usually set by debugger commands. */
         virtual void SetChildPID(long pid) { m_ChildPID = pid; }
         /** Get the child's (debuggee's) PID. */

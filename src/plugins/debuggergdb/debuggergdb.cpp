@@ -517,6 +517,11 @@ bool DebuggerGDB::IsStopped() const
     return !m_State.HasDriver() || m_State.GetDriver()->IsProgramStopped();
 }
 
+bool DebuggerGDB::IsBusy() const
+{
+    return m_State.HasDriver() && m_State.GetDriver()->IsQueueBusy();
+}
+
 
 bool DebuggerGDB::Debug(bool breakOnEntry)
 {

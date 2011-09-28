@@ -67,6 +67,12 @@ class DebuggerCmd
           */
         virtual void ParseOutput(const wxString& output);
 
+        /** Tells if the command is a continue type command (continue, step, next and run to cursor
+          * commands should be marked as such)
+          * @return true if the command is continue type command
+          */
+        virtual bool IsContinueCommand() const { return false; }
+
         wxString m_Cmd;         ///< the actual command
     protected:
         DebuggerDriver* m_pDriver; ///< the driver
@@ -90,6 +96,18 @@ class DebuggerInfoCmd : public DebuggerCmd
 
         virtual void ParseOutput(const wxString& output);
         wxString m_Title;
+};
+
+/** Base class for all Continue type of commands */
+class DebuggerContinueBaseCmd : public DebuggerCmd
+{
+    public:
+        DebuggerContinueBaseCmd(DebuggerDriver* driver, const wxString& cmd = _T(""), bool logToNormalLog = false) :
+            DebuggerCmd(driver, cmd, logToNormalLog)
+        {
+        }
+
+        bool IsContinueCommand() const { return true; }
 };
 
 /** Action-only debugger comand to signal the watches tree to update. */
