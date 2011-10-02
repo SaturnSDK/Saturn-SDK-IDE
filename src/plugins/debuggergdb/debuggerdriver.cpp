@@ -123,7 +123,7 @@ DebuggerCmd* DebuggerDriver::CurrentCommand()
 
 void DebuggerDriver::RunQueue()
 {
-    if (m_QueueBusy || !m_DCmds.GetCount())
+    if (m_QueueBusy || !m_DCmds.GetCount() || !IsProgramStopped())
         return;
 
     DebuggerCmd *command = CurrentCommand();
