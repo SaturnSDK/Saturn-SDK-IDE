@@ -142,7 +142,7 @@ void CDB_driver::Continue()
 void CDB_driver::Step()
 {
     ResetCursor();
-    QueueCommand(new DebuggerCmd(this, _T("p")));
+    QueueCommand(new DebuggerContinueBaseCmd(this, _T("p")));
     // print a stack frame to find out about the file we 've stopped
     QueueCommand(new CdbCmd_SwitchFrame(this, -1));
 }
@@ -160,14 +160,14 @@ void CDB_driver::StepIntoInstruction()
 void CDB_driver::StepIn()
 {
     ResetCursor();
-    QueueCommand(new DebuggerCmd(this, _T("t")));
+    QueueCommand(new DebuggerContinueBaseCmd(this, _T("t")));
     Step();
 }
 
 void CDB_driver::StepOut()
 {
     ResetCursor();
-    QueueCommand(new DebuggerCmd(this, _T("gu")));
+    QueueCommand(new DebuggerContinueBaseCmd(this, _T("gu")));
     Step();
 }
 
@@ -326,10 +326,7 @@ void CDB_driver::ParseOutput(const wxString& output)
         }
     }
     else
-    {
-        m_ProgramIsStopped = false;
         return; // come back later
-    }
 
     bool notifyChange = false;
 
@@ -347,6 +344,7 @@ void CDB_driver::ParseOutput(const wxString& output)
 
         else if (lines[i].Contains(_T("Access violation")))
         {
+            m_ProgramIsStopped = true;
             Log(lines[i]);
             m_pDBG->BringCBToFront();
 
@@ -362,6 +360,7 @@ void CDB_driver::ParseOutput(const wxString& output)
         // >   38:     if (!RegisterClassEx (&wincl))
         else if (reBP.Matches(lines[i]))
         {
+            m_ProgramIsStopped = true;
             Log(lines[i]);
             // Code breakpoint / assert
             m_pDBG->BringCBToFront();
@@ -371,6 +370,7 @@ void CDB_driver::ParseOutput(const wxString& output)
         }
         else if (lines[i].Contains(_T("Break instruction exception")) && !m_pDBG->IsTemporaryBreak())
         {
+            m_ProgramIsStopped = true;
         	// Code breakpoint / assert
             m_pDBG->BringCBToFront();
             Manager::Get()->GetDebuggerManager()->ShowBacktraceDialog();

@@ -220,12 +220,12 @@ class CdbCmd_Detach : public DebuggerCmd
 /**
   * Command to continue execution and notify the debugger plugin.
   */
-class CdbCmd_Continue : public DebuggerCmd
+class CdbCmd_Continue : public DebuggerContinueBaseCmd
 {
     public:
         /** @param bp The breakpoint to set. */
         CdbCmd_Continue(DebuggerDriver* driver)
-            : DebuggerCmd(driver,_T("g"))
+            : DebuggerContinueBaseCmd(driver,_T("g"))
         {
         }
         virtual void Action()
