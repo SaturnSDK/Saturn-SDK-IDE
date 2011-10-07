@@ -50,17 +50,20 @@
 
 const wxString g_EditorModified = _T("*");
 
-#define ERROR_MARKER          1
+#define ERROR_MARKER          4
 #define ERROR_STYLE           wxSCI_MARK_SMALLRECT
 
-#define BOOKMARK_MARKER       2
+#define BOOKMARK_MARKER       3
 #define BOOKMARK_STYLE        wxSCI_MARK_ARROW
 
-#define BREAKPOINT_MARKER     3
+#define BREAKPOINT_MARKER     2
 #define BREAKPOINT_STYLE      wxSCI_MARK_CIRCLE
 
-#define DEBUG_MARKER          4
+#define BREAKPOINT_DISABLED_MARKER     1
+
+#define DEBUG_MARKER          5
 #define DEBUG_STYLE           wxSCI_MARK_ARROW
+
 
 static const int lineMargin      = 0; // Line numbers
 static const int markerMargin    = 1; // Bookmarks, Breakpoints...
@@ -618,6 +621,8 @@ const int idBookmarkRemoveAll = wxNewId();
 const int idBreakpointAdd = wxNewId();
 const int idBreakpointEdit = wxNewId();
 const int idBreakpointRemove = wxNewId();
+const long idBreakpointEnable = wxNewId();
+const long idBreakpointDisable = wxNewId();
 
 BEGIN_EVENT_TABLE(cbEditor, EditorBase)
     EVT_CLOSE(cbEditor::OnClose)
@@ -655,6 +660,8 @@ BEGIN_EVENT_TABLE(cbEditor, EditorBase)
     EVT_MENU(idBreakpointAdd, cbEditor::OnContextMenuEntry)
     EVT_MENU(idBreakpointEdit, cbEditor::OnContextMenuEntry)
     EVT_MENU(idBreakpointRemove, cbEditor::OnContextMenuEntry)
+    EVT_MENU(idBreakpointEnable, cbEditor::OnContextMenuEntry)
+    EVT_MENU(idBreakpointDisable, cbEditor::OnContextMenuEntry)
     EVT_MENU(idSplitHorz, cbEditor::OnContextMenuEntry)
     EVT_MENU(idSplitVert, cbEditor::OnContextMenuEntry)
     EVT_MENU(idUnsplit, cbEditor::OnContextMenuEntry)
@@ -1378,12 +1385,29 @@ void cbEditor::InternalSetEditorStyleBeforeFileOpen(cbStyledTextCtrl* control)
     control->SetMarginMask(markerMargin, control->GetMarginMask(markerMargin) |
                                          (1 << BOOKMARK_MARKER) |
                                          (1 << BREAKPOINT_MARKER) |
+                                         (1 << BREAKPOINT_DISABLED_MARKER) |
                                          (1 << DEBUG_MARKER) |
                                          (1 << ERROR_MARKER));
     control->MarkerDefine(BOOKMARK_MARKER, BOOKMARK_STYLE);
     control->MarkerSetBackground(BOOKMARK_MARKER, wxColour(0xA0, 0xA0, 0xFF));
-    control->MarkerDefine(BREAKPOINT_MARKER, BREAKPOINT_STYLE);
-    control->MarkerSetBackground(BREAKPOINT_MARKER, wxColour(0xFF, 0x00, 0x00));
+    wxBitmap icon = cbLoadBitmap(ConfigManager::GetDataFolder() + _T("/images/12x12/breakpoint.png"),
+                                 wxBITMAP_TYPE_PNG);
+    if (icon.IsOk())
+        control->MarkerDefineBitmap(BREAKPOINT_MARKER, icon);
+    else
+    {
+        control->MarkerDefine(BREAKPOINT_MARKER, BREAKPOINT_STYLE);
+        control->MarkerSetBackground(BREAKPOINT_MARKER, wxColour(0xFF, 0x00, 0x00));
+    }
+    icon = cbLoadBitmap(ConfigManager::GetDataFolder() + _T("/images/12x12/breakpoint_disabled.png"),
+                        wxBITMAP_TYPE_PNG);
+    if (icon.IsOk())
+        control->MarkerDefineBitmap(BREAKPOINT_DISABLED_MARKER, icon);
+    else
+    {
+        control->MarkerDefine(BREAKPOINT_DISABLED_MARKER, BREAKPOINT_STYLE);
+        control->MarkerSetBackground(BREAKPOINT_DISABLED_MARKER, wxColour(0x90, 0x90, 0x90));
+    }
     control->MarkerDefine(DEBUG_MARKER, DEBUG_STYLE);
     control->MarkerSetBackground(DEBUG_MARKER, wxColour(0xFF, 0xFF, 0x00));
     control->MarkerDefine(ERROR_MARKER, ERROR_STYLE);
@@ -2157,7 +2181,7 @@ bool cbEditor::HasBreakpoint(int line) const
 {
     if (line == -1)
         line = GetControl()->GetCurrentLine();
-    return LineHasMarker(BREAKPOINT_MARKER, line);
+    return LineHasMarker(BREAKPOINT_MARKER, line) || LineHasMarker(BREAKPOINT_DISABLED_MARKER, line);
 }
 
 void cbEditor::GotoNextBreakpoint()
@@ -2181,13 +2205,21 @@ void cbEditor::RefreshBreakpointMarkers(const cbDebuggerPlugin *debugger)
     cbStyledTextCtrl *c = GetControl();
     int line = -1;
     while ((line = c->MarkerNext(line, (1 << BREAKPOINT_MARKER))) != -1)
-        ToggleBreakpoint(line, false);
+        MarkerToggle(BREAKPOINT_MARKER, line);
+    line = -1;
+    while ((line = c->MarkerNext(line, (1 << BREAKPOINT_DISABLED_MARKER))) != -1)
+        MarkerToggle(BREAKPOINT_DISABLED_MARKER, line);
 
     for (int ii = 0; ii < debugger->GetBreakpointsCount(); ++ii)
     {
-        const cbBreakpoint *b = debugger->GetBreakpoint(ii);
-        if (b->GetFilename() == GetFilename())
-            ToggleBreakpoint(b->GetLine() - 1, false);
+        cbBreakpoint::ConstPointer bp = debugger->GetBreakpoint(ii);
+        if (bp->GetLocation() == GetFilename())
+        {
+            if (bp->IsEnabled())
+                MarkerToggle(BREAKPOINT_MARKER, bp->GetLine() - 1);
+            else
+                MarkerToggle(BREAKPOINT_DISABLED_MARKER, bp->GetLine() - 1);
+        }
     }
 }
 
@@ -2663,10 +2695,17 @@ bool cbEditor::OnBeforeBuildContextMenu(const wxPoint& position, ModuleType type
             // create special menu
             wxMenu* popup = new wxMenu;
 
-            if (LineHasMarker(BREAKPOINT_MARKER, m_pData->m_LastMarginMenuLine))
+            bool hasBreak = LineHasMarker(BREAKPOINT_MARKER, m_pData->m_LastMarginMenuLine);
+            bool hasBreakDisabled = LineHasMarker(BREAKPOINT_DISABLED_MARKER, m_pData->m_LastMarginMenuLine);
+
+            if (hasBreak || hasBreakDisabled)
             {
                 popup->Append(idBreakpointEdit, _("Edit breakpoint"));
                 popup->Append(idBreakpointRemove, _("Remove breakpoint"));
+                if (hasBreak)
+                    popup->Append(idBreakpointDisable, _("Disable breakpoint"));
+                if (hasBreakDisabled)
+                    popup->Append(idBreakpointEnable, _("Enable breakpoint"));
             }
             else
             {
@@ -2893,9 +2932,22 @@ void cbEditor::OnContextMenuEntry(wxCommandEvent& event)
     else if (id == idBreakpointAdd)
         AddBreakpoint(m_pData->m_LastMarginMenuLine);
     else if (id == idBreakpointEdit)
-        NotifyPlugins(cbEVT_EDITOR_BREAKPOINT_EDIT, m_pData->m_LastMarginMenuLine + 1, m_Filename);
+    {
+        cbBreakpointsDlg *dialog = Manager::Get()->GetDebuggerManager()->GetBreakpointDialog();
+        dialog->EditBreakpoint(m_Filename, m_pData->m_LastMarginMenuLine + 1);
+    }
     else if (id == idBreakpointRemove)
         RemoveBreakpoint(m_pData->m_LastMarginMenuLine);
+    else if (id == idBreakpointEnable)
+    {
+        cbBreakpointsDlg *dialog = Manager::Get()->GetDebuggerManager()->GetBreakpointDialog();
+        dialog->EnableBreakpoint(m_Filename, m_pData->m_LastMarginMenuLine + 1, true);
+    }
+    else if (id == idBreakpointDisable)
+    {
+        cbBreakpointsDlg *dialog = Manager::Get()->GetDebuggerManager()->GetBreakpointDialog();
+        dialog->EnableBreakpoint(m_Filename, m_pData->m_LastMarginMenuLine + 1, false);
+    }
     else
         event.Skip();
     //Manager::Get()->GetLogManager()->DebugLog(_T("Leaving OnContextMenuEntry"));

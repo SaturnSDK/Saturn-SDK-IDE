@@ -364,9 +364,9 @@ bool HasBreakpoint(cbDebuggerPlugin &plugin, wxString const &filename, int line)
     int count = plugin.GetBreakpointsCount();
     for (int ii = 0; ii < count; ++ii)
     {
-        const cbBreakpoint* b = plugin.GetBreakpoint(ii);
+        const cbBreakpoint::Pointer &b = plugin.GetBreakpoint(ii);
 
-        if (b->GetFilename() == filename && b->GetLine() == line)
+        if (b->GetLocation() == filename && b->GetLine() == line)
             return true;
     }
     return false;
@@ -385,9 +385,9 @@ void cbDebuggerPlugin::EditorLinesAddedOrRemoved(cbEditor* editor, int startline
     int count = GetBreakpointsCount();
     for (int ii = 0; ii < count; ++ii)
     {
-        const cbBreakpoint* b = GetBreakpoint(ii);
+        const cbBreakpoint::Pointer &b = GetBreakpoint(ii);
 
-        if (b->GetFilename() == filename)
+        if (b->GetLocation() == filename)
         {
             breakpoints_for_file.push_back(ii);
         }
@@ -400,18 +400,18 @@ void cbDebuggerPlugin::EditorLinesAddedOrRemoved(cbEditor* editor, int startline
         lines = -lines;
         int endline = startline + lines - 1;
 
-        std::vector<cbBreakpoint*> to_remove;
+        std::vector<cbBreakpoint::Pointer> to_remove;
 
         for (std::vector<int>::iterator it = breakpoints_for_file.begin(); it != breakpoints_for_file.end(); ++it)
         {
-            cbBreakpoint* b = GetBreakpoint(*it);
+            const cbBreakpoint::Pointer &b = GetBreakpoint(*it);
             if (b->GetLine() > endline)
                 ShiftBreakpoint(*it, -lines);
             else if (b->GetLine() >= startline && b->GetLine() <= endline)
                 to_remove.push_back(b);
         }
 
-        for (std::vector<cbBreakpoint*>::iterator it = to_remove.begin(); it != to_remove.end(); ++it)
+        for (std::vector<cbBreakpoint::Pointer>::iterator it = to_remove.begin(); it != to_remove.end(); ++it)
             DeleteBreakpoint(*it);
 
         // special case:
@@ -430,7 +430,7 @@ void cbDebuggerPlugin::EditorLinesAddedOrRemoved(cbEditor* editor, int startline
     {
         for (std::vector<int>::iterator it = breakpoints_for_file.begin(); it != breakpoints_for_file.end(); ++it)
         {
-            cbBreakpoint* b = GetBreakpoint(*it);
+            const cbBreakpoint::Pointer &b = GetBreakpoint(*it);
             if (b->GetLine() > startline)
                 ShiftBreakpoint(*it, lines);
         }
@@ -454,9 +454,9 @@ void cbDebuggerPlugin::OnEditorOpened(CodeBlocksEvent& event)
         int count = GetBreakpointsCount();
         for (int ii = 0; ii < count; ++ii)
         {
-            const cbBreakpoint* breakpoint = GetBreakpoint(ii);
+            const cbBreakpoint::Pointer &breakpoint = GetBreakpoint(ii);
 
-            bpFileName.Assign(breakpoint->GetFilename());
+            bpFileName.Assign(breakpoint->GetLocation());
             bpFileName.Normalize();
 
             if (bpFileName.GetFullPath().Matches(edFileName.GetFullPath()))

@@ -242,12 +242,12 @@ void CDB_driver::InfoSignals()
     NOT_IMPLEMENTED();
 }
 
-void CDB_driver::AddBreakpoint(DebuggerBreakpoint* bp)
+void CDB_driver::AddBreakpoint(DebuggerBreakpoint::Pointer bp)
 {
     QueueCommand(new CdbCmd_AddBreakpoint(this, bp));
 }
 
-void CDB_driver::RemoveBreakpoint(DebuggerBreakpoint* bp)
+void CDB_driver::RemoveBreakpoint(DebuggerBreakpoint::Pointer bp)
 {
     QueueCommand(new CdbCmd_RemoveBreakpoint(this, bp));
 }

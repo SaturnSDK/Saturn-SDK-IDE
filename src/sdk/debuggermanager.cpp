@@ -41,119 +41,6 @@
 #include "loggers.h"
 #include "manager.h"
 
-cbBreakpoint::cbBreakpoint() :
-    m_line(0),
-    m_ignoreCount(0),
-    m_type(Code),
-    m_enabled(true),
-    m_useIgnoreCount(false),
-    m_useCondition(false)
-{
-}
-cbBreakpoint::cbBreakpoint(const wxString &filename, int line) :
-    m_filename(filename),
-    m_line(line),
-    m_ignoreCount(0),
-    m_type(Code),
-    m_enabled(true),
-    m_useIgnoreCount(false),
-    m_useCondition(false)
-{
-}
-
-cbBreakpoint::cbBreakpoint(const wxString &dataExpression, bool breakOnRead, bool breakOnWrite) :
-    m_type(Data),
-    m_dataExpression(dataExpression),
-    m_breakOnRead(breakOnRead),
-    m_breakOnWrite(breakOnWrite)
-{
-}
-
-void cbBreakpoint::SetLine(int line)
-{
-    m_line = line;
-}
-
-void cbBreakpoint::SetCondition(wxString const &condition)
-{
-    m_condition = condition;
-}
-
-void cbBreakpoint::SetIgnoreCount(int count)
-{
-    m_ignoreCount = count;
-}
-
-void cbBreakpoint::SetEnabled(bool flag)
-{
-    m_enabled = flag;
-}
-
-void cbBreakpoint::SetUseIgnoreCount(bool flag)
-{
-    m_useIgnoreCount = flag;
-}
-
-void cbBreakpoint::SetUseCondition(bool flag)
-{
-    m_useCondition = flag;
-}
-
-const wxString & cbBreakpoint::GetFilename() const
-{
-    return m_filename;
-}
-
-const wxString & cbBreakpoint::GetCondition() const
-{
-    return m_condition;
-}
-
-int cbBreakpoint::GetLine() const
-{
-    return m_line;
-}
-
-int cbBreakpoint::GetIgnoreCount() const
-{
-    return m_ignoreCount;
-}
-
-cbBreakpoint::Type cbBreakpoint::GetType() const
-{
-    return m_type;
-}
-
-bool cbBreakpoint::IsEnabled() const
-{
-    return m_enabled;
-}
-
-bool cbBreakpoint::UseIgnoreCount() const
-{
-    return m_useIgnoreCount;
-}
-
-bool cbBreakpoint::UseCondition() const
-{
-    return m_useCondition;
-}
-
-const wxString& cbBreakpoint::GetDataExpression() const
-{
-    return m_dataExpression;
-}
-
-bool cbBreakpoint::GetBreakOnRead() const
-{
-    return m_breakOnRead;
-}
-
-bool cbBreakpoint::GetBreakOnWrite() const
-{
-    return m_breakOnWrite;
-}
-
 cbWatch::cbWatch() :
     m_parent(NULL),
     m_changed(true),
@@ -470,6 +357,8 @@ bool cbDebuggerCommonConfig::GetFlag(Flags flag)
             return c->ReadBool(wxT("/common/jump_on_double_click"), false);
         case RequireCtrlForTooltips:
             return c->ReadBool(wxT("/common/require_ctrl_for_tooltips"), false);
+        case ShowTemporaryBreakpoints:
+            return c->ReadBool(wxT("/common/show_temporary_breakpoints"), false);
         default:
             return false;
     }
@@ -495,6 +384,8 @@ void cbDebuggerCommonConfig::SetFlag(Flags flag, bool value)
         case RequireCtrlForTooltips:
             c->Write(wxT("/common/require_ctrl_for_tooltips"), value);
             break;
+        case ShowTemporaryBreakpoints:
+            c->Write(wxT("/common/show_temporary_breakpoints"), value);
         default:
             ;
     }

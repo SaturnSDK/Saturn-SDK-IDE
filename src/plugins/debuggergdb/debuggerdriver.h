@@ -117,12 +117,12 @@ class DebuggerDriver
             @param bp The breakpoint to add.
             @param editor The editor this breakpoint is set (might be NULL).
         */
-        virtual void AddBreakpoint(DebuggerBreakpoint* bp) = 0;
+        virtual void AddBreakpoint(DebuggerBreakpoint::Pointer bp) = 0;
 
         /** Remove a breakpoint.
             @param bp The breakpoint to remove. If NULL, all reakpoints are removed.
         */
-        virtual void RemoveBreakpoint(DebuggerBreakpoint* bp) = 0;
+        virtual void RemoveBreakpoint(DebuggerBreakpoint::Pointer bp) = 0;
 
         /** Evaluate a symbol.
             @param symbol The symbol to evaluate.

@@ -8,6 +8,7 @@
 
 #include <wx/string.h>
 #include <wx/dynarray.h>
+#include <deque>
 #include <vector>
 
 #include "debuggermanager.h"
@@ -124,8 +125,10 @@ class DbgCmd_UpdateWatchesTree : public DebuggerCmd
   * This is the struct used for debugger breakpoints.
   */
 ////////////////////////////////////////////////////////////////////////////////
-struct DebuggerBreakpoint
+struct DebuggerBreakpoint : cbBreakpoint
 {
+    typedef cb::shared_ptr<DebuggerBreakpoint> Pointer;
+
     enum BreakpointType
     {
         bptCode = 0,    ///< Normal file/line breakpoint
@@ -153,6 +156,18 @@ struct DebuggerBreakpoint
         breakOnWrite(true),
         userData(0)
     {}
+
+    // from cbBreakpoint
+    virtual void SetEnabled(bool flag);
+    virtual wxString GetLocation() const;
+    virtual int GetLine() const;
+    virtual wxString GetLineString() const;
+    virtual wxString GetType() const;
+    virtual wxString GetInfo() const;
+    virtual bool IsEnabled() const;
+    virtual bool IsVisibleInEditor() const;
+    virtual bool IsTemporary() const;
+
     BreakpointType type; ///< The type of this breakpoint.
     wxString filename; ///< The filename for the breakpoint (kept as relative).
     wxString filenameAsPassed; ///< The filename for the breakpoint as passed to the debugger (i.e. full filename).
@@ -175,7 +190,7 @@ struct DebuggerBreakpoint
     bool breakOnWrite; ///< Valid only for type==bptData: break when memory is written to.
     void* userData; ///< Custom user data.
 };
-WX_DEFINE_ARRAY(DebuggerBreakpoint*, BreakpointsList);
+typedef std::deque<DebuggerBreakpoint::Pointer> BreakpointsList;
 
 /** Watch variable format.
   *

@@ -53,7 +53,6 @@ libcodeblocks_la_SOURCES = annoyingdialog.cpp \
 						editarrayfiledlg.cpp \
 						editarrayorderdlg.cpp \
 						editarraystringdlg.cpp \
-						editbreakpointdlg.cpp \
 						editkeywordsdlg.cpp \
 						editor_hooks.cpp \
 						editorbase.cpp \

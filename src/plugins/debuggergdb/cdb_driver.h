@@ -46,8 +46,8 @@ class CDB_driver : public DebuggerDriver
 
         virtual void SwitchThread(size_t /*threadIndex*/){} // not implemented
 
-        virtual void AddBreakpoint(DebuggerBreakpoint* bp);
-        virtual void RemoveBreakpoint(DebuggerBreakpoint* bp);
+        virtual void AddBreakpoint(DebuggerBreakpoint::Pointer bp);
+        virtual void RemoveBreakpoint(DebuggerBreakpoint::Pointer bp);
         virtual void EvaluateSymbol(const wxString& symbol, const wxRect& tipRect);
         virtual void UpdateWatches(bool doLocals, bool doArgs, WatchesContainer &watches);
         virtual void UpdateWatch(GDBWatch::Pointer const &watch);

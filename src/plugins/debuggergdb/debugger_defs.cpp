@@ -78,6 +78,105 @@ void DebuggerInfoCmd::ParseOutput(const wxString& output)
 
 #endif // !defined(CB_TEST_PROJECT)
 
+void DebuggerBreakpoint::SetEnabled(bool flag)
+{
+    enabled = flag;
+}
+
+wxString DebuggerBreakpoint::GetLocation() const
+{
+    switch (type)
+    {
+        case bptData:
+            return breakAddress;
+        case bptCode:
+            return filename;
+        case bptFunction:
+            return func;
+        default:
+            return _("Unknown");
+    }
+}
+
+int DebuggerBreakpoint::GetLine() const
+{
+    return line;
+}
+
+wxString DebuggerBreakpoint::GetLineString() const
+{
+    return (type == bptCode) ? wxString::Format(wxT("%d"), line) : wxString(wxEmptyString);
+}
+
+wxString DebuggerBreakpoint::GetType() const
+{
+    switch (type)
+    {
+        case bptData:
+            return _("Data");
+        case bptCode:
+            return _("Code");
+        case bptFunction:
+            return _("Function");
+        default:
+            return _("Unknown");
+    }
+}
+
+wxString DebuggerBreakpoint::GetInfo() const
+{
+    switch (type)
+    {
+        case bptData:
+            if (breakOnRead && breakOnWrite)
+                return  _("type: read-write");
+            else if (breakOnRead)
+                return _("type: read");
+            else if (breakOnWrite)
+                return _("type: write");
+            else
+                return _("type: unknown");
+        case bptCode:
+        {
+            wxString s;
+            if (useCondition)
+                s += _("condition: ") + condition;
+            if (useIgnoreCount)
+            {
+                if (!s.empty())
+                    s += wxT(" ");
+                s += wxString::Format(_("ignore count: %d"), ignoreCount);
+            }
+            if (temporary)
+            {
+                if (!s.empty())
+                    s += wxT(" ");
+                s += _("temporary");
+            }
+            s += wxString::Format(wxT(" (index: %d)"), index);
+            return s;
+        }
+        case bptFunction:
+        default:
+            return wxEmptyString;
+    }
+}
+
+bool DebuggerBreakpoint::IsEnabled() const
+{
+    return enabled;
+}
+
+bool DebuggerBreakpoint::IsVisibleInEditor() const
+{
+    return type == bptCode;
+}
+
+bool DebuggerBreakpoint::IsTemporary() const
+{
+    return temporary;
+}
+
 
 GDBWatch::GDBWatch(wxString const &symbol) :
     m_symbol(symbol),

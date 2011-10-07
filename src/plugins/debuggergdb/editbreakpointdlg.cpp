@@ -25,17 +25,17 @@ BEGIN_EVENT_TABLE(EditBreakpointDlg, wxScrollingDialog)
     EVT_UPDATE_UI(-1, EditBreakpointDlg::OnUpdateUI)
 END_EVENT_TABLE()
 
-EditBreakpointDlg::EditBreakpointDlg(cbBreakpoint* breakpoint, wxWindow* parent)
+EditBreakpointDlg::EditBreakpointDlg(const DebuggerBreakpoint &breakpoint, wxWindow* parent)
     : m_breakpoint(breakpoint)
 {
     //ctor
     wxXmlResource::Get()->LoadObject(this, parent, _T("dlgEditBreakpoint"),_T("wxScrollingDialog"));
 
-    XRCCTRL(*this, "chkEnabled", wxCheckBox)->SetValue(breakpoint->IsEnabled());
-    XRCCTRL(*this, "chkIgnore", wxCheckBox)->SetValue(breakpoint->UseIgnoreCount());
-    XRCCTRL(*this, "spnIgnoreCount", wxSpinCtrl)->SetValue(breakpoint->GetIgnoreCount());
-    XRCCTRL(*this, "chkExpr", wxCheckBox)->SetValue(breakpoint->UseCondition());
-    XRCCTRL(*this, "txtExpr", wxTextCtrl)->SetValue(breakpoint->GetCondition());
+    XRCCTRL(*this, "chkEnabled", wxCheckBox)->SetValue(m_breakpoint.enabled);
+    XRCCTRL(*this, "chkIgnore", wxCheckBox)->SetValue(m_breakpoint.useIgnoreCount);
+    XRCCTRL(*this, "spnIgnoreCount", wxSpinCtrl)->SetValue(m_breakpoint.ignoreCount);
+    XRCCTRL(*this, "chkExpr", wxCheckBox)->SetValue(m_breakpoint.useCondition);
+    XRCCTRL(*this, "txtExpr", wxTextCtrl)->SetValue(m_breakpoint.condition);
 }
 
 EditBreakpointDlg::~EditBreakpointDlg()
@@ -47,11 +47,11 @@ void EditBreakpointDlg::EndModal(int retCode)
 {
     if (retCode == wxID_OK)
     {
-        m_breakpoint->SetEnabled(XRCCTRL(*this, "chkEnabled", wxCheckBox)->GetValue());
-        m_breakpoint->SetUseIgnoreCount(XRCCTRL(*this, "chkIgnore", wxCheckBox)->IsChecked());
-        m_breakpoint->SetIgnoreCount(XRCCTRL(*this, "spnIgnoreCount", wxSpinCtrl)->GetValue());
-        m_breakpoint->SetUseCondition(XRCCTRL(*this, "chkExpr", wxCheckBox)->IsChecked());
-        m_breakpoint->SetCondition(XRCCTRL(*this, "txtExpr", wxTextCtrl)->GetValue());
+        m_breakpoint.enabled = XRCCTRL(*this, "chkEnabled", wxCheckBox)->GetValue();
+        m_breakpoint.useIgnoreCount = XRCCTRL(*this, "chkIgnore", wxCheckBox)->IsChecked();
+        m_breakpoint.ignoreCount = XRCCTRL(*this, "spnIgnoreCount", wxSpinCtrl)->GetValue();
+        m_breakpoint.useCondition = XRCCTRL(*this, "chkExpr", wxCheckBox)->IsChecked();
+        m_breakpoint.condition = XRCCTRL(*this, "txtExpr", wxTextCtrl)->GetValue();
     }
     wxScrollingDialog::EndModal(retCode);
 }

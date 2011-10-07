@@ -65,6 +65,9 @@ static wxRegEx rePendingFound(_T("^Pending[ \t]+breakpoint[ \t]+[\"]+([^:]+):([0
 // Breakpoint 2, irr::scene::CSceneManager::getSceneNodeFromName (this=0x3fa878, name=0x3fbed8 "MainLevel", start=0x3fa87c) at CSceneManager.cpp:1077
 static wxRegEx rePendingFound1(_T("^Breakpoint[ \t]+([0-9]+),.*"));
 
+// Temporary breakpoint 2, main () at /path/projects/tests/main.cpp:136
+static wxRegEx reTempBreakFound(wxT("^[Tt]emporary[ \t]breakpoint[ \t]([0-9]+),.*"));
+
 // gdb: do_initial_child_stuff: process 1392
 static wxRegEx reChildPid(_T("gdb: do_initial_child_stuff: process ([0-9]+)"));
 // same as above but for gdb >= 6.7 (TODO: need to check the exact version it was changed)
@@ -651,7 +654,7 @@ void GDB_driver::SwitchThread(size_t threadIndex)
         QueueCommand(new GdbCmd_Backtrace(this));
 }
 
-void GDB_driver::AddBreakpoint(DebuggerBreakpoint* bp)
+void GDB_driver::AddBreakpoint(DebuggerBreakpoint::Pointer bp)
 {
     if (bp->type == DebuggerBreakpoint::bptData)
     {
@@ -686,7 +689,7 @@ void GDB_driver::AddBreakpoint(DebuggerBreakpoint* bp)
     }
 }
 
-void GDB_driver::RemoveBreakpoint(DebuggerBreakpoint* bp)
+void GDB_driver::RemoveBreakpoint(DebuggerBreakpoint::Pointer bp)
 {
     if (bp && bp->index != -1)
         QueueCommand(new GdbCmd_RemoveBreakpoint(this, bp));
@@ -993,7 +996,7 @@ void GDB_driver::ParseOutput(const wxString& output)
                     lineStr.ToLong(&line);
                     DebuggerState& state = m_pDBG->GetState();
                     int bpindex = state.HasBreakpoint(file, line - 1);
-                    DebuggerBreakpoint* bp = state.GetBreakpoint(bpindex);
+                    DebuggerBreakpoint::Pointer bp = state.GetBreakpoint(bpindex);
                     if (bp)
                     {
     //                    m_pDBG->Log(_T("Found BP!!! Updating index..."));
@@ -1007,19 +1010,32 @@ void GDB_driver::ParseOutput(const wxString& output)
             }
         }
 
-        else if (lines[i].StartsWith(_("Breakpoint ")))
+        else if (lines[i].StartsWith(wxT("Breakpoint ")))
         {
-            if (rePendingFound1.Matches(lines[i])){
+            if (rePendingFound1.Matches(lines[i]))
+            {
                 long index;
                 rePendingFound1.GetMatch(lines[i],1).ToLong(&index);
                 DebuggerState& state = m_pDBG->GetState();
-                DebuggerBreakpoint* bp = state.GetBreakpointByNumber(index);
+                DebuggerBreakpoint::Pointer bp = state.GetBreakpointByNumber(index);
                 if(bp && bp->wantsCondition)
                 {
                     bp->wantsCondition = false;
                     QueueCommand(new GdbCmd_AddBreakpointCondition(this, bp));
                     m_needsUpdate = true;
                 }
+            }
+        }
+        else if (lines[i].StartsWith(wxT("Temporary breakpoint")))
+        {
+            if (reTempBreakFound.Matches(lines[i]))
+            {
+                long index;
+                reTempBreakFound.GetMatch(lines[i],1).ToLong(&index);
+                DebuggerState& state = m_pDBG->GetState();
+                DebuggerBreakpoint::Pointer bp = state.GetBreakpointByNumber(index);
+                state.RemoveBreakpoint(bp, false);
+                Manager::Get()->GetDebuggerManager()->GetBreakpointDialog()->Reload();
             }
         }
         // cursor change

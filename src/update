@@ -1,4 +1,3 @@
-#!/bin/sh
 
 if [ "x$MSYSTEM" != "x" ] ; then
   EXEEXT=".exe"
@@ -13,6 +12,7 @@ echo Creating output directory tree
 mkdir -p output/share/codeblocks/lexers
 mkdir -p output/share/codeblocks/images/settings
 mkdir -p output/share/codeblocks/images/codecompletion
+mkdir -p output/share/codeblocks/images/12x12
 mkdir -p output/share/codeblocks/images/16x16
 mkdir -p output/share/codeblocks/plugins
 mkdir -p output/share/codeblocks/templates
@@ -21,6 +21,7 @@ mkdir -p output/share/codeblocks/scripts
 mkdir -p devel/share/codeblocks/lexers
 mkdir -p devel/share/codeblocks/images/settings
 mkdir -p devel/share/codeblocks/images/codecompletion
+mkdir -p devel/share/codeblocks/images/12x12
 mkdir -p devel/share/codeblocks/images/16x16
 mkdir -p devel/share/codeblocks/plugins
 mkdir -p devel/share/codeblocks/templates
@@ -64,17 +65,24 @@ echo .svn > excludes.txt
 echo Makefile >> excludes.txt
 echo Makefile.am >> excludes.txt
 echo Makefile.in >> excludes.txt
-cp -fu ${RESDIR}/*.zip output/share/codeblocks > /dev/null
 cp -fu sdk/resources/lexers/lexer_* ${RESDIR}/lexers > /dev/null
-cp -fu sdk/resources/lexers/lexer_* output/share/codeblocks/lexers > /dev/null
 cp -fu src/resources/images/*.png ${RESDIR}/images > /dev/null
+cp -fu sdk/resources/images/16x16/*.png ${RESDIR}/images/16x16/ > /dev/null
+cp -fu sdk/resources/images/12x12/*.png ${RESDIR}/images/12x12/ > /dev/null
 cp -fu src/resources/images/settings/*.png ${RESDIR}/images/settings > /dev/null
+cp -fu src/resources/images/16x16/*.png ${RESDIR}/images/16x16 > /dev/null
+cp -fu plugins/codecompletion/resources/images/*.png ${RESDIR}/images/codecompletion > /dev/null
+
+cp -fu ${RESDIR}/*.zip output/share/codeblocks > /dev/null
+cp -fu sdk/resources/lexers/lexer_* output/share/codeblocks/lexers > /dev/null
+cp -fu src/resources/images/*.png output/share/codeblocks/images > /dev/null
+cp -fu sdk/resources/images/16x16/*.png output/share/codeblocks/images/16x16/ > /dev/null
+cp -fu sdk/resources/images/12x12/*.png output/share/codeblocks/images/12x12/ > /dev/null
 cp -fu src/resources/images/*.png output/share/codeblocks/images > /dev/null
 cp -fu src/resources/images/settings/*.png output/share/codeblocks/images/settings > /dev/null
-cp -fu src/resources/images/16x16/*.png ${RESDIR}/images/16x16 > /dev/null
 cp -fu src/resources/images/16x16/*.png output/share/codeblocks/images/16x16 > /dev/null
-cp -fu plugins/codecompletion/resources/images/*.png ${RESDIR}/images/codecompletion > /dev/null
 cp -f plugins/codecompletion/resources/images/*.png output/share/codeblocks/images/codecompletion > /dev/null
+
 rsync -au --exclude-from=excludes.txt plugins/scriptedwizard/resources/ ${RESDIR}/templates/wizard > /dev/null
 rsync -au --exclude-from=excludes.txt plugins/scriptedwizard/resources/ output/share/codeblocks/templates/wizard > /dev/null
 rsync -au --exclude-from=excludes.txt templates/common/ output/share/codeblocks/templates > /dev/null

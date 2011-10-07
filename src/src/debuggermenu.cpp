@@ -474,7 +474,7 @@ void DebuggerMenuHandler::OnRemoveAllBreakpoints(wxCommandEvent& event)
     {
         cbBreakpoint const &breakpoint = *m_activeDebugger->GetBreakpoint(i);
 
-        cbEditor* editor = Manager::Get()->GetEditorManager()->GetBuiltinEditor(breakpoint.GetFilename());
+        cbEditor* editor = Manager::Get()->GetEditorManager()->GetBuiltinEditor(breakpoint.GetLocation());
         if (editor)
             editor->RemoveBreakpoint(breakpoint.GetLine() - 1, false);
     }

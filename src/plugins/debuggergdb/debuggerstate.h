@@ -34,38 +34,31 @@ class DebuggerState
 
         void CleanUp();
 
-        int AddBreakpoint(DebuggerBreakpoint* bp); // returns -1 if not found
-        DebuggerBreakpoint* AddBreakpoint(const wxString& file, int line, bool temp = false,
+        int AddBreakpoint(DebuggerBreakpoint::Pointer bp); // returns -1 if not found
+        DebuggerBreakpoint::Pointer AddBreakpoint(const wxString& file, int line, bool temp = false,
                                           const wxString& lineText = wxEmptyString);
-        DebuggerBreakpoint* AddBreakpoint(const wxString& dataAddr, bool onRead = false, bool onWrite = true);
-        DebuggerBreakpoint* RemoveBreakpoint(const wxString& file, int line, bool deleteit = true);
-        DebuggerBreakpoint* RemoveBreakpoint(int idx, bool deleteit = true);
-        DebuggerBreakpoint* RemoveBreakpoint(DebuggerBreakpoint* bp, bool deleteit = true);
-        void RemoveAllBreakpoints(const wxString& file, bool deleteit = true);
+        DebuggerBreakpoint::Pointer AddBreakpoint(const wxString& dataAddr, bool onRead = false, bool onWrite = true);
+        void RemoveBreakpoint(int idx, bool removeFromDriver = true);
+        void RemoveBreakpoint(DebuggerBreakpoint::Pointer bp, bool removeFromDriver = true);
+        void RemoveAllBreakpoints();
         void RemoveAllProjectBreakpoints(cbProject* prj);
 
         // helpers to keep in sync with the editors
-        int RemoveBreakpointsRange(const wxString& file, int startline, int endline);
-        void ShiftBreakpoints(const wxString& file, int startline, int nroflines);
-        void ShiftBreakpoint(DebuggerBreakpoint* bp, int nroflines);
+        void ShiftBreakpoint(DebuggerBreakpoint::Pointer bp, int nroflines);
 
         int HasBreakpoint(const wxString& file, int line); // returns -1 if not found
-        int HasBreakpoint(const wxString& dataAddr);
-        DebuggerBreakpoint* GetBreakpoint(int idx);
-        DebuggerBreakpoint* GetBreakpointByNumber(int num);
-        const DebuggerBreakpoint* GetBreakpointByNumber(int num) const;
-        void ResetBreakpoint(int idx);
-        void ResetBreakpoint(DebuggerBreakpoint* bp);
+        DebuggerBreakpoint::Pointer GetBreakpoint(int idx);
+        DebuggerBreakpoint::Pointer GetBreakpointByNumber(int num);
+        const DebuggerBreakpoint::Pointer GetBreakpointByNumber(int num) const;
+        void ResetBreakpoint(DebuggerBreakpoint::Pointer bp);
         void ApplyBreakpoints();
     protected:
-        void SetupBreakpointIndices();
         wxString ConvertToValidFilename(const wxString& filename);
         cbProject* FindProjectForFile(const wxString& file);
 
         DebuggerGDB* m_pPlugin;
         DebuggerDriver* m_pDriver;
         BreakpointsList m_Breakpoints;
-        size_t m_BpAutoIndex;
 };
 
 #endif // DEBUGGERSTATE_H

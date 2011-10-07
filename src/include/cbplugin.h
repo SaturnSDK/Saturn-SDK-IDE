@@ -38,7 +38,7 @@
 // it will change when the SDK interface breaks
 #define PLUGIN_SDK_VERSION_MAJOR 1
 #define PLUGIN_SDK_VERSION_MINOR 12
-#define PLUGIN_SDK_VERSION_RELEASE 7
+#define PLUGIN_SDK_VERSION_RELEASE 8
 
 // class decls
 class wxMenuBar;
@@ -471,20 +471,21 @@ class PLUGIN_EXPORT cbDebuggerPlugin: public cbPlugin
           * @param line The line number to put the breakpoint in @c file.
           * @return True if succeeded, false if not.
           */
-        virtual cbBreakpoint* AddBreakpoint(const wxString& filename, int line) = 0;
+        virtual cb::shared_ptr<cbBreakpoint> AddBreakpoint(const wxString& filename, int line) = 0;
 
         /** @brief Request to add a breakpoint based on a data expression.
           * @param dataExpression The data expression to add the breakpoint.
           * @return True if succeeded, false if not.
           */
-        virtual cbBreakpoint* AddDataBreakpoint(const wxString& dataExpression) = 0;
+        virtual cb::shared_ptr<cbBreakpoint> AddDataBreakpoint(const wxString& dataExpression) = 0;
         virtual int GetBreakpointsCount() const = 0;
-        virtual cbBreakpoint* GetBreakpoint(int index) = 0;
-        virtual const cbBreakpoint* GetBreakpoint(int index) const = 0;
-        virtual void UpdateBreakpoint(cbBreakpoint *breakpoint) = 0;
-        virtual void DeleteBreakpoint(cbBreakpoint* breakpoint) = 0;
+        virtual cb::shared_ptr<cbBreakpoint> GetBreakpoint(int index) = 0;
+        virtual cb::shared_ptr<const cbBreakpoint> GetBreakpoint(int index) const = 0;
+        virtual void UpdateBreakpoint(cb::shared_ptr<cbBreakpoint> breakpoint) = 0;
+        virtual void DeleteBreakpoint(cb::shared_ptr<cbBreakpoint> breakpoint) = 0;
         virtual void DeleteAllBreakpoints() = 0;
         virtual void ShiftBreakpoint(int index, int lines_to_shift) = 0;
+        virtual void EnableBreakpoint(cb::shared_ptr<cbBreakpoint> breakpoint, bool enable) = 0;
         // threads
         virtual int GetThreadsCount() const = 0;
         virtual const cbThread& GetThread(int index) const = 0;

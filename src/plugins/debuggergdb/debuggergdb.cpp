@@ -1214,31 +1214,21 @@ bool DebuggerGDB::SwitchToThread(int thread_number)
     return false;
 }
 
-cbBreakpoint* DebuggerGDB::AddBreakpoint(const wxString& filename, int line)
+cbBreakpoint::Pointer DebuggerGDB::AddBreakpoint(const wxString& filename, int line)
 {
     bool debuggerIsRunning = !IsStopped();
     if (debuggerIsRunning)
         DoBreak(true);
 
-    DebuggerBreakpoint *bp = m_State.AddBreakpoint(filename, line, false);
+    DebuggerBreakpoint::Pointer bp = m_State.AddBreakpoint(filename, line, false);
 
     if (debuggerIsRunning)
         Continue();
 
-    BreakItem item;
-    item.cb_break = cb::shared_ptr<cbBreakpoint>(new cbBreakpoint(filename, line));
-    item.debugger_breakpoint = bp;
-    m_breakpoints.push_back(item);
-
-    item.cb_break->SetCondition(bp->condition);
-    item.cb_break->SetIgnoreCount(bp->ignoreCount);
-    item.cb_break->SetEnabled(bp->enabled);
-    item.cb_break->SetUseCondition(bp->useCondition);
-    item.cb_break->SetUseIgnoreCount(bp->useIgnoreCount);
-    return item.cb_break.get();
+    return bp;
 }
 
-cbBreakpoint* DebuggerGDB::AddDataBreakpoint(const wxString& dataExpression)
+cbBreakpoint::Pointer DebuggerGDB::AddDataBreakpoint(const wxString& dataExpression)
 {
     DataBreakpointDlg dlg(Manager::Get()->GetAppWindow(), dataExpression, true, 1);
     PlaceWindow(&dlg);
@@ -1246,116 +1236,101 @@ cbBreakpoint* DebuggerGDB::AddDataBreakpoint(const wxString& dataExpression)
     {
         const wxString& newDataExpression = dlg.GetDataExpression();
         int sel = dlg.GetSelection();
-        DebuggerBreakpoint *bp = m_State.AddBreakpoint(newDataExpression, sel != 1, sel != 0);
-
-        BreakItem item;
-        cbBreakpoint *temp = new cbBreakpoint(bp->breakAddress, bp->breakOnRead, bp->breakOnWrite);
-        item.cb_break = cb::shared_ptr<cbBreakpoint>(temp);
-        item.debugger_breakpoint = bp;
-        m_breakpoints.push_back(item);
-
-        item.cb_break->SetEnabled(bp->enabled);
-        return item.cb_break.get();
+        DebuggerBreakpoint::Pointer bp = m_State.AddBreakpoint(newDataExpression, sel != 1, sel != 0);
+        return bp;
     }
     else
-        return NULL;
+        return cbBreakpoint::Pointer();
 }
 
 int DebuggerGDB::GetBreakpointsCount() const
 {
-    return m_breakpoints.size();
+    return m_State.GetBreakpoints().size();
 }
 
-cbBreakpoint* DebuggerGDB::GetBreakpoint(int index)
+cbBreakpoint::Pointer DebuggerGDB::GetBreakpoint(int index)
 {
-    return m_breakpoints[index].cb_break.get();
+    BreakpointsList::const_iterator it = m_State.GetBreakpoints().begin();
+    std::advance(it, index);
+    cbAssert(it != m_State.GetBreakpoints().end());
+    return *it;
 }
 
-const cbBreakpoint* DebuggerGDB::GetBreakpoint(int index) const
+cbBreakpoint::ConstPointer DebuggerGDB::GetBreakpoint(int index) const
 {
-    return m_breakpoints[index].cb_break.get();
+    BreakpointsList::const_iterator it = m_State.GetBreakpoints().begin();
+    std::advance(it, index);
+    cbAssert(it != m_State.GetBreakpoints().end());
+    return *it;
 }
 
-void DebuggerGDB::UpdateBreakpoint(cbBreakpoint *breakpoint)
+void DebuggerGDB::UpdateBreakpoint(cbBreakpoint::Pointer breakpoint)
 {
-    int index = 0;
-    for (BreakpointsContainer::iterator it = m_breakpoints.begin(); it != m_breakpoints.end(); ++it, ++index)
+    const BreakpointsList &breakpoints = m_State.GetBreakpoints();
+    BreakpointsList::const_iterator it = std::find(breakpoints.begin(), breakpoints.end(), breakpoint);
+    if (it == breakpoints.end())
+        return;
+    DebuggerBreakpoint::Pointer bp = cb::static_pointer_cast<DebuggerBreakpoint>(breakpoint);
+    bool reset = false;
+    switch (bp->type)
     {
-        if (it->cb_break.get() == breakpoint)
+        case DebuggerBreakpoint::bptCode:
         {
-            switch (breakpoint->GetType())
+            EditBreakpointDlg dlg(*bp, Manager::Get()->GetAppWindow());
+            PlaceWindow(&dlg);
+            if (dlg.ShowModal() == wxID_OK)
             {
-                case cbBreakpoint::Code:
-                {
-                    cbBreakpoint temp(*breakpoint);
-                    EditBreakpointDlg dlg(&temp, Manager::Get()->GetAppWindow());
-                    PlaceWindow(&dlg);
-                    if (dlg.ShowModal() == wxID_OK)
-                    {
-                        DebuggerBreakpoint *bp = it->debugger_breakpoint;
-                        bp->enabled = temp.IsEnabled();
-                        bp->filename = temp.GetFilename();
-                        bp->line = temp.GetLine();
-                        bp->ignoreCount = temp.GetIgnoreCount();
-                        bp->useIgnoreCount = temp.UseIgnoreCount();
-                        bp->condition = temp.GetCondition();
-                        bp->useCondition = temp.UseCondition();
-                        *breakpoint = temp;
-
-                        m_State.ResetBreakpoint(index);
-                    }
-                    break;
-                }
-                case cbBreakpoint::Data:
-                {
-                    DebuggerBreakpoint *bp = it->debugger_breakpoint;
-                    int old_sel = 0;
-                    if (bp->breakOnRead && bp->breakOnWrite)
-                        old_sel = 2;
-                    else if (!bp->breakOnRead && bp->breakOnWrite)
-                        old_sel = 1;
-                    DataBreakpointDlg dlg(Manager::Get()->GetAppWindow(),
-                                          it->cb_break->GetDataExpression(),
-                                          bp->enabled, old_sel);
-                    PlaceWindow(&dlg);
-                    if (dlg.ShowModal() == wxID_OK)
-                    {
-                        bp->enabled = dlg.IsEnabled();
-                        bp->breakOnRead = dlg.GetSelection() != 1;
-                        bp->breakOnWrite = dlg.GetSelection() != 0;
-
-                        *it->cb_break = cbBreakpoint(it->cb_break->GetDataExpression(),
-                                                     bp->breakOnRead, bp->breakOnWrite);
-                        it->cb_break->SetEnabled(bp->enabled);
-
-                        m_State.ResetBreakpoint(index);
-                    }
-                    break;
-                }
+                *bp = dlg.GetBreakpoint();
+                reset = true;
             }
-            return;
+            break;
         }
+        case DebuggerBreakpoint::bptData:
+        {
+            int old_sel = 0;
+            if (bp->breakOnRead && bp->breakOnWrite)
+                old_sel = 2;
+            else if (!bp->breakOnRead && bp->breakOnWrite)
+                old_sel = 1;
+            DataBreakpointDlg dlg(Manager::Get()->GetAppWindow(), bp->breakAddress, bp->enabled, old_sel);
+            PlaceWindow(&dlg);
+            if (dlg.ShowModal() == wxID_OK)
+            {
+                bp->enabled = dlg.IsEnabled();
+                bp->breakOnRead = dlg.GetSelection() != 1;
+                bp->breakOnWrite = dlg.GetSelection() != 0;
+                bp->breakAddress = dlg.GetDataExpression();
+                reset = true;
+            }
+            break;
+        }
+        default:
+            return;
+    }
+
+    if (reset)
+    {
+        bool debuggerIsRunning = !IsStopped();
+        if (debuggerIsRunning)
+            DoBreak(true);
+
+        m_State.ResetBreakpoint(bp);
+
+        if (debuggerIsRunning)
+            Continue();
     }
 }
 
-void DebuggerGDB::DeleteBreakpoint(cbBreakpoint* breakpoint)
+void DebuggerGDB::DeleteBreakpoint(cbBreakpoint::Pointer breakpoint)
 {
-    for (BreakpointsContainer::iterator it = m_breakpoints.begin(); it != m_breakpoints.end(); ++it)
-    {
-        if (it->cb_break.get() == breakpoint)
-        {
-            bool debuggerIsRunning = !IsStopped();
-            if (debuggerIsRunning)
-                DoBreak(true);
+    bool debuggerIsRunning = !IsStopped();
+    if (debuggerIsRunning)
+        DoBreak(true);
 
-            m_State.RemoveBreakpoint(it->debugger_breakpoint, true);
-            m_breakpoints.erase(it);
+    m_State.RemoveBreakpoint(cb::static_pointer_cast<DebuggerBreakpoint>(breakpoint));
 
-            if (debuggerIsRunning)
-                Continue();
-            return;
-        }
-    }
+    if (debuggerIsRunning)
+        Continue();
 }
 
 void DebuggerGDB::DeleteAllBreakpoints()
@@ -1363,8 +1338,7 @@ void DebuggerGDB::DeleteAllBreakpoints()
     bool debuggerIsRunning = !IsStopped();
     if (debuggerIsRunning)
         DoBreak(true);
-    m_State.RemoveAllBreakpoints(wxEmptyString, true);
-    m_breakpoints.clear();
+    m_State.RemoveAllBreakpoints();
 
     if (debuggerIsRunning)
         Continue();
@@ -1372,36 +1346,30 @@ void DebuggerGDB::DeleteAllBreakpoints()
 
 void DebuggerGDB::ShiftBreakpoint(int index, int lines_to_shift)
 {
-    BreakpointsContainer::iterator it = m_breakpoints.begin();
+    BreakpointsList breakpoints = m_State.GetBreakpoints();
+    BreakpointsList::iterator it = breakpoints.begin();
     std::advance(it, index);
-    if(it != m_breakpoints.end())
-    {
-        m_State.ShiftBreakpoint(it->debugger_breakpoint, lines_to_shift);
-        it->cb_break->SetLine(it->cb_break->GetLine() + lines_to_shift);
-    }
+    if(it != breakpoints.end())
+        m_State.ShiftBreakpoint(*it, lines_to_shift);
 }
 
-struct TestIfBelongToProject
+void DebuggerGDB::EnableBreakpoint(cb::shared_ptr<cbBreakpoint> breakpoint, bool enable)
 {
-    TestIfBelongToProject(cbProject *project) :
-        m_project(project)
-    {
-    }
+    bool debuggerIsRunning = !IsStopped();
+    DebugLog(wxString::Format(wxT("DebuggerGDB::EnableBreakpoint(running=%d);"), (int)debuggerIsRunning));
+    if (debuggerIsRunning)
+        DoBreak(true);
 
-    bool operator()(DebuggerGDB::BreakItem const &item) const
-    {
-        return item.debugger_breakpoint->userData == m_project;
-    }
+    DebuggerBreakpoint::Pointer bp = cb::static_pointer_cast<DebuggerBreakpoint>(breakpoint);
+    bp->enabled = enable;
+    m_State.ResetBreakpoint(bp);
 
-    cbProject* m_project;
-};
+    if (debuggerIsRunning)
+        Continue();
+}
 
 void DebuggerGDB::DeleteAllProjectBreakpoints(cbProject* project)
 {
-    BreakpointsContainer::iterator new_last = std::remove_if(m_breakpoints.begin(),
-                                                             m_breakpoints.end(),
-                                                             TestIfBelongToProject(project));
-    m_breakpoints.erase(new_last, m_breakpoints.end());
     m_State.RemoveAllProjectBreakpoints(project);
 }
 
@@ -1461,13 +1429,17 @@ bool DebuggerGDB::RunToCursor(const wxString& filename, int line, const wxString
     if (m_pProcess)
     {
         m_State.AddBreakpoint(filename, line, true, line_text);
+        Manager::Get()->GetDebuggerManager()->GetBreakpointDialog()->Reload();
         Continue();
         return true;
     }
     else
     {
         if (!GetActiveConfigEx().GetFlag(DebuggerConfiguration::DoNotRun))
+        {
             m_State.AddBreakpoint(filename, line, true, line_text);
+            Manager::Get()->GetDebuggerManager()->GetBreakpointDialog()->Reload();
+        }
         return Debug(false);
     }
 }
@@ -1709,6 +1681,7 @@ void DebuggerGDB::OnGDBTerminated(wxCommandEvent& event)
 
     ClearActiveMarkFromAllEditors();
     m_State.StopDriver();
+    Manager::Get()->GetDebuggerManager()->GetBreakpointDialog()->Reload();
     Log(wxString::Format(_("Debugger finished with status %d"), m_LastExitCode));
 
     if (m_NoDebugInfo)

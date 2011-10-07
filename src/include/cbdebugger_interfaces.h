@@ -34,6 +34,8 @@ class DLLIMPORT cbBreakpointsDlg
 
         virtual bool AddBreakpoint(const wxString& filename, int line) = 0;
         virtual bool RemoveBreakpoint(const wxString& filename, int line) = 0;
+        virtual void EditBreakpoint(const wxString& filename, int line) = 0;
+        virtual void EnableBreakpoint(const wxString& filename, int line, bool enable) = 0;
 
         virtual void Reload() = 0;
 };

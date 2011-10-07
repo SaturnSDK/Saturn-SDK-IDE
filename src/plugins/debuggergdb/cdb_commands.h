@@ -241,7 +241,7 @@ class CdbCmd_AddBreakpoint : public DebuggerCmd
 {
     public:
         /** @param bp The breakpoint to set. */
-        CdbCmd_AddBreakpoint(DebuggerDriver* driver, DebuggerBreakpoint* bp)
+        CdbCmd_AddBreakpoint(DebuggerDriver* driver, DebuggerBreakpoint::Pointer bp)
             : DebuggerCmd(driver),
             m_BP(bp)
         {
@@ -276,7 +276,7 @@ class CdbCmd_AddBreakpoint : public DebuggerCmd
             }
         }
 
-        DebuggerBreakpoint* m_BP;
+        DebuggerBreakpoint::Pointer m_BP;
 };
 
 /**
@@ -286,7 +286,7 @@ class CdbCmd_RemoveBreakpoint : public DebuggerCmd
 {
     public:
         /** @param bp The breakpoint to remove. If NULL, all breakpoints are removed. */
-        CdbCmd_RemoveBreakpoint(DebuggerDriver* driver, DebuggerBreakpoint* bp)
+        CdbCmd_RemoveBreakpoint(DebuggerDriver* driver, DebuggerBreakpoint::Pointer bp)
             : DebuggerCmd(driver),
             m_BP(bp)
         {
@@ -302,7 +302,7 @@ class CdbCmd_RemoveBreakpoint : public DebuggerCmd
                 m_pDriver->Log(output);
         }
 
-        DebuggerBreakpoint* m_BP;
+        DebuggerBreakpoint::Pointer m_BP;
 };
 
 /**

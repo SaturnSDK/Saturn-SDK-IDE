@@ -58,7 +58,6 @@ ALLHEADERS = annoyingdialog.h \
 				editarrayfiledlg.h \
 				editarrayorderdlg.h \
 				editarraystringdlg.h \
-				editbreakpointdlg.h \
 				editkeywordsdlg.h \
 				editorbase.h \
 				editorcolourset.h \

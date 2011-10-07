@@ -36,49 +36,21 @@ class TextCtrlLogger;
 class DLLIMPORT cbBreakpoint
 {
     public:
-        enum Type
-        {
-            Code,
-            Data
-        };
+        typedef cb::shared_ptr<cbBreakpoint> Pointer;
+        typedef cb::shared_ptr<const cbBreakpoint> ConstPointer;
 
     public:
-        cbBreakpoint();
-        cbBreakpoint(const wxString &filename, int line);
-        cbBreakpoint(const wxString &dataExpression, bool breakOnRead, bool breakOnWrite);
+        virtual ~cbBreakpoint() {}
 
-        void SetLine(int line);
-        void SetCondition(wxString const &condition);
-        void SetIgnoreCount(int count);
-        void SetEnabled(bool flag);
-        void SetUseIgnoreCount(bool flag);
-        void SetUseCondition(bool flag);
-
-        const wxString & GetFilename() const;
-        const wxString & GetCondition() const;
-        int GetLine() const;
-        int GetIgnoreCount() const;
-        Type GetType() const;
-        bool IsEnabled() const;
-        bool UseIgnoreCount() const;
-        bool UseCondition() const;
-
-        const wxString& GetDataExpression() const;
-        bool GetBreakOnRead() const;
-        bool GetBreakOnWrite() const;
-
-    private:
-        wxString m_filename;
-        wxString m_condition;
-        int m_line;
-        int m_ignoreCount;
-        Type m_type;
-        bool m_enabled;
-        bool m_useIgnoreCount;
-        bool m_useCondition;
-        wxString m_dataExpression;
-        bool m_breakOnRead;
-        bool m_breakOnWrite;
+        virtual void SetEnabled(bool flag) = 0;
+        virtual wxString GetLocation() const = 0;
+        virtual int GetLine() const = 0;
+        virtual wxString GetLineString() const = 0;
+        virtual wxString GetType() const = 0;
+        virtual wxString GetInfo() const = 0;
+        virtual bool IsEnabled() const = 0;
+        virtual bool IsVisibleInEditor() const = 0;
+        virtual bool IsTemporary() const = 0;
 };
 
 class DLLIMPORT cbWatch
@@ -228,7 +200,8 @@ struct DLLIMPORT cbDebuggerCommonConfig
         AutoSwitchFrame,
         ShowDebuggersLog,
         JumpOnDoubleClick,
-        RequireCtrlForTooltips
+        RequireCtrlForTooltips,
+        ShowTemporaryBreakpoints
     };
 
     static bool GetFlag(Flags flag);

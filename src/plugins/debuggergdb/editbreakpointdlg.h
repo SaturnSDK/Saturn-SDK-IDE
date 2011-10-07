@@ -7,19 +7,20 @@
 #define EDITBREAKPOINT_H
 
 #include "scrollingdialog.h"
-
-class cbBreakpoint;
+#include "debugger_defs.h"
 
 class EditBreakpointDlg : public wxScrollingDialog
 {
     public:
-        EditBreakpointDlg(cbBreakpoint* breakpoint, wxWindow* parent = 0);
+        EditBreakpointDlg(const DebuggerBreakpoint &breakpoint, wxWindow* parent = 0);
         virtual ~EditBreakpointDlg();
+
+        const DebuggerBreakpoint& GetBreakpoint() const { return m_breakpoint; }
     protected:
         void OnUpdateUI(wxUpdateUIEvent& event);
         void EndModal(int retCode);
 
-        cbBreakpoint* m_breakpoint;
+        DebuggerBreakpoint m_breakpoint;
     private:
         DECLARE_EVENT_TABLE()
 };

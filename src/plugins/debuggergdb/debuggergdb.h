@@ -46,15 +46,16 @@ class DebuggerGDB : public cbDebuggerPlugin
 
         void RunCommand(int cmd);
 
-        cbBreakpoint* AddBreakpoint(const wxString& filename, int line);
-        cbBreakpoint* AddDataBreakpoint(const wxString& dataExpression);
+        cb::shared_ptr<cbBreakpoint> AddBreakpoint(const wxString& filename, int line);
+        cb::shared_ptr<cbBreakpoint> AddDataBreakpoint(const wxString& dataExpression);
         int GetBreakpointsCount() const;
-        cbBreakpoint* GetBreakpoint(int index);
-        const cbBreakpoint* GetBreakpoint(int index) const;
-        void UpdateBreakpoint(cbBreakpoint *breakpoint);
-        void DeleteBreakpoint(cbBreakpoint* breakpoint);
+        cb::shared_ptr<cbBreakpoint> GetBreakpoint(int index);
+        cb::shared_ptr<const cbBreakpoint> GetBreakpoint(int index) const;
+        void UpdateBreakpoint(cb::shared_ptr<cbBreakpoint> breakpoint);
+        void DeleteBreakpoint(cb::shared_ptr<cbBreakpoint> breakpoint);
         void DeleteAllBreakpoints();
         void ShiftBreakpoint(int index, int lines_to_shift);
+        void EnableBreakpoint(cb::shared_ptr<cbBreakpoint> breakpoint, bool enable);
 
         // stack frame calls;
         int GetStackFrameCount() const;
@@ -199,14 +200,6 @@ class DebuggerGDB : public cbDebuggerPlugin
         WatchesContainer m_watches;
         wxString m_watchToDereferenceSymbol;
         wxObject *m_watchToDereferenceProperty;
-
-        struct BreakItem
-        {
-            cb::shared_ptr<cbBreakpoint> cb_break;
-            DebuggerBreakpoint* debugger_breakpoint;
-        };
-        typedef std::vector<BreakItem> BreakpointsContainer;
-        BreakpointsContainer m_breakpoints;
 
         friend struct TestIfBelongToProject;
 

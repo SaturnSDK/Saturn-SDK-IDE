@@ -136,6 +136,8 @@ static wxRegEx rePendingBreakpoint(_T("Breakpoint ([0-9]+)[ \t]\\(\\\"(.+):([0-9
 static wxRegEx reHWBreakpoint(_T("Hardware assisted breakpoint ([0-9]+) at (0x[0-9A-Fa-f]+)"));
 // Hardware watchpoint 1: expr
 static wxRegEx reDataBreakpoint(_T("Hardware watchpoint ([0-9]+):.*"));
+// Temporary breakpoint 2 at 0x401203: file /home/obfuscated/projects/tests/_cb_dbg/watches/main.cpp, line 115.
+static wxRegEx reTemporaryBreakpoint(wxT("^[Tt]emporary[ \t]breakpoint[ \t]([0-9]+)[ \t]at.*"));
 // eax            0x40e66666       1088841318
 static wxRegEx reRegisters(_T("([A-z0-9]+)[ \t]+(0x[0-9A-Fa-f]+)[ \t]+(.*)"));
 // wayne registers
@@ -362,10 +364,10 @@ class GdbCmd_Detach : public DebuggerCmd
   */
 class GdbCmd_AddBreakpointCondition : public DebuggerCmd
 {
-        DebuggerBreakpoint* m_BP;
+        DebuggerBreakpoint::Pointer m_BP;
     public:
         /** @param bp The breakpoint to set its condition. */
-        GdbCmd_AddBreakpointCondition(DebuggerDriver* driver, DebuggerBreakpoint* bp)
+        GdbCmd_AddBreakpointCondition(DebuggerDriver* driver, DebuggerBreakpoint::Pointer bp)
             : DebuggerCmd(driver),
             m_BP(bp)
         {
@@ -407,10 +409,10 @@ class GdbCmd_AddBreakpointCondition : public DebuggerCmd
   */
 class GdbCmd_AddBreakpoint : public DebuggerCmd
 {
-        DebuggerBreakpoint* m_BP;
+        DebuggerBreakpoint::Pointer m_BP;
     public:
         /** @param bp The breakpoint to set. */
-        GdbCmd_AddBreakpoint(DebuggerDriver* driver, DebuggerBreakpoint* bp)
+        GdbCmd_AddBreakpoint(DebuggerDriver* driver, DebuggerBreakpoint::Pointer bp)
             : DebuggerCmd(driver),
             m_BP(bp)
         {
@@ -516,8 +518,12 @@ class GdbCmd_AddBreakpoint : public DebuggerCmd
                 reHWBreakpoint.GetMatch(output, 1).ToLong(&m_BP->index);
                 reHWBreakpoint.GetMatch(output, 2).ToULong(&m_BP->address, 16);
             }
+            else if (reTemporaryBreakpoint.Matches(output))
+                reTemporaryBreakpoint.GetMatch(output, 1).ToLong(&m_BP->index);
             else
                 m_pDriver->Log(output); // one of the error responses
+
+            Manager::Get()->GetDebuggerManager()->GetBacktraceDialog()->Reload();
         }
 };
 
@@ -526,10 +532,10 @@ class GdbCmd_AddBreakpoint : public DebuggerCmd
   */
 class GdbCmd_AddDataBreakpoint : public DebuggerCmd
 {
-        DebuggerBreakpoint* m_BP;
+        DebuggerBreakpoint::Pointer m_BP;
     public:
         /** @param bp The breakpoint to set. */
-        GdbCmd_AddDataBreakpoint(DebuggerDriver* driver, DebuggerBreakpoint* bp)
+        GdbCmd_AddDataBreakpoint(DebuggerDriver* driver, DebuggerBreakpoint::Pointer bp)
             : DebuggerCmd(driver),
             m_BP(bp)
         {
@@ -547,6 +553,9 @@ class GdbCmd_AddDataBreakpoint : public DebuggerCmd
                 {
                     wxString contents = reGenericHexAddress.GetMatch(output, 1);
                     m_BP->breakAddress = _T("*") + contents;
+                    DebuggerManager *dbgManager = Manager::Get()->GetDebuggerManager();
+                    dbgManager->GetBreakpointDialog()->Reload();
+
                     m_pDriver->QueueCommand(new GdbCmd_AddBreakpoint(m_pDriver, m_BP), DebuggerDriver::High);
                 }
             }
@@ -560,7 +569,7 @@ class GdbCmd_RemoveBreakpoint : public DebuggerCmd
 {
     public:
         /** @param bp The breakpoint to remove. If NULL, all breakpoints are removed. */
-        GdbCmd_RemoveBreakpoint(DebuggerDriver* driver, DebuggerBreakpoint* bp)
+        GdbCmd_RemoveBreakpoint(DebuggerDriver* driver, DebuggerBreakpoint::Pointer bp)
             : DebuggerCmd(driver),
             m_BP(bp)
         {
@@ -569,8 +578,7 @@ class GdbCmd_RemoveBreakpoint : public DebuggerCmd
                 m_Cmd << _T("delete breakpoints");
                 return;
             }
-
-            if (bp->enabled && bp->index >= 0)
+            if (bp->index >= 0)
             {
                 m_Cmd << _T("delete breakpoints ") << wxString::Format(_T("%d"), (int) bp->index);
             }
@@ -592,7 +600,7 @@ class GdbCmd_RemoveBreakpoint : public DebuggerCmd
 //            m_pDriver->DebugLog(wxString::Format(_("Breakpoint removed: file %s, line %d"), m_BP->filename.c_str(), m_BP->line + 1));
         }
 
-        DebuggerBreakpoint* m_BP;
+        DebuggerBreakpoint::Pointer m_BP;
 };
 
 
