@@ -75,6 +75,8 @@ static wxRegEx reChildPid3(_T("Thread[ \t]+[xA-Fa-f0-9-]+[ \t]+\\(LWP ([0-9]+)\\
 static wxRegEx reAttachedChildPid(wxT("Attaching to process ([0-9]+)"));
 
 static wxRegEx reInferiorExited(wxT("^\\[Inferior[ \\t].+[ \\t]exited normally\\]$"), wxRE_EXTENDED);
+static wxRegEx reInferiorExited2(wxT("^\\[[Ii]nferior[ \\t].+[ \\t]exited[ \\t]with[ \\t]code[ \\t]([0-9]+)\\]$"),
+                                 wxRE_EXTENDED);
 
 // scripting support
 DECLARE_INSTANCE_TYPE(GDB_driver);
@@ -888,7 +890,8 @@ void GDB_driver::ParseOutput(const wxString& output)
                  lines[i].Contains(_T("The program is not being run")) ||
                  lines[i].Contains(_T("Target detached")) ||
                  lines[i].StartsWith(wxT("Program terminated with signal")) ||
-                 reInferiorExited.Matches(lines[i]))
+                 reInferiorExited.Matches(lines[i]) ||
+                 reInferiorExited2.Matches(lines[i]))
         {
             m_pDBG->Log(lines[i]);
             m_ProgramIsStopped = true;
