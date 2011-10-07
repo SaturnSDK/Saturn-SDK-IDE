@@ -593,9 +593,6 @@
 		<Unit filename="include/editarraystringdlg.h">
 			<Option target="sdk" />
 		</Unit>
-		<Unit filename="include/editbreakpointdlg.h">
-			<Option target="sdk" />
-		</Unit>
 		<Unit filename="include/editkeywordsdlg.h">
 			<Option target="sdk" />
 		</Unit>
@@ -1558,6 +1555,12 @@
 		<Unit filename="plugins/debuggergdb/debuggerstate.h">
 			<Option target="Debugger" />
 		</Unit>
+		<Unit filename="plugins/debuggergdb/editbreakpointdlg.cpp">
+			<Option target="Debugger" />
+		</Unit>
+		<Unit filename="plugins/debuggergdb/editbreakpointdlg.h">
+			<Option target="Debugger" />
+		</Unit>
 		<Unit filename="plugins/debuggergdb/editwatchdlg.cpp">
 			<Option target="Debugger" />
 		</Unit>
@@ -1953,9 +1956,6 @@
 			<Option target="sdk" />
 		</Unit>
 		<Unit filename="sdk/editarraystringdlg.cpp">
-			<Option target="sdk" />
-		</Unit>
-		<Unit filename="sdk/editbreakpointdlg.cpp">
 			<Option target="sdk" />
 		</Unit>
 		<Unit filename="sdk/editkeywordsdlg.cpp">
