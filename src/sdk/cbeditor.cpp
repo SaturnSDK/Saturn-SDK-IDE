@@ -2103,6 +2103,17 @@ void cbEditor::GotoLine(int line, bool centerOnScreen)
     control->GotoLine(line);
 }
 
+void cbEditor::BreakpointMarkerToggle(int line)
+{
+    int marker = m_pControl->MarkerGet(line);
+    if (marker & (1 << BREAKPOINT_MARKER))
+        m_pControl->MarkerDelete(line, BREAKPOINT_MARKER);
+    else if (marker & (1 << BREAKPOINT_DISABLED_MARKER))
+        m_pControl->MarkerDelete(line, BREAKPOINT_DISABLED_MARKER);
+    else
+        m_pControl->MarkerAdd(line, BREAKPOINT_MARKER);
+}
+
 bool cbEditor::AddBreakpoint(int line, bool notifyDebugger)
 {
     if (HasBreakpoint(line))
@@ -2113,13 +2124,13 @@ bool cbEditor::AddBreakpoint(int line, bool notifyDebugger)
 
     if (!notifyDebugger)
     {
-        MarkerToggle(BREAKPOINT_MARKER, line);
+        BreakpointMarkerToggle(line);
         return false;
     }
 
     if (Manager::Get()->GetDebuggerManager()->GetBreakpointDialog()->AddBreakpoint(m_Filename, line + 1))
     {
-        MarkerToggle(BREAKPOINT_MARKER, line);
+        BreakpointMarkerToggle(line);
         return true;
     }
     return false;
@@ -2135,13 +2146,13 @@ bool cbEditor::RemoveBreakpoint(int line, bool notifyDebugger)
 
     if (!notifyDebugger)
     {
-        MarkerToggle(BREAKPOINT_MARKER, line);
+        BreakpointMarkerToggle(line);
         return false;
     }
 
     if (Manager::Get()->GetDebuggerManager()->GetBreakpointDialog()->RemoveBreakpoint(m_Filename, line + 1))
     {
-        MarkerToggle(BREAKPOINT_MARKER, line);
+        BreakpointMarkerToggle(line);
         return true;
     }
     return false;
@@ -2153,7 +2164,7 @@ void cbEditor::ToggleBreakpoint(int line, bool notifyDebugger)
         line = GetControl()->GetCurrentLine();
     if (!notifyDebugger)
     {
-        MarkerToggle(BREAKPOINT_MARKER, line);
+        BreakpointMarkerToggle(line);
         return;
     }
 
@@ -2172,7 +2183,7 @@ void cbEditor::ToggleBreakpoint(int line, bool notifyDebugger)
 
     if(toggle)
     {
-        MarkerToggle(BREAKPOINT_MARKER, line);
+        BreakpointMarkerToggle(line);
         dialog->Reload();
     }
 }

@@ -342,6 +342,8 @@ class DLLIMPORT cbEditor : public EditorBase
 
         void DoInitializations(const wxString& filename, LoaderBase* fileLdr = 0);
 
+        void BreakpointMarkerToggle(int line);
+
         // variables
         bool m_IsOK;
         wxSplitterWindow* m_pSplitter;
