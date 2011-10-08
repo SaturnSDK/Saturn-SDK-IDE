@@ -446,28 +446,16 @@ void cbDebuggerPlugin::OnEditorOpened(CodeBlocksEvent& event)
     EditorBase* ed = event.GetEditor();
     if (ed)
     {
-        wxFileName bpFileName, edFileName;
-
-        edFileName.Assign(ed->GetFilename());
-        edFileName.Normalize();
-
-        int count = GetBreakpointsCount();
-        for (int ii = 0; ii < count; ++ii)
-        {
-            const cbBreakpoint::Pointer &breakpoint = GetBreakpoint(ii);
-
-            bpFileName.Assign(breakpoint->GetLocation());
-            bpFileName.Normalize();
-
-            if (bpFileName.GetFullPath().Matches(edFileName.GetFullPath()))
-                ed->ToggleBreakpoint(breakpoint->GetLine() - 1, false);
-        }
+        ed->RefreshBreakpointMarkers(this);
 
         if (IsRunning())
         {
             wxString filename;
             int line;
             GetCurrentPosition(filename, line);
+
+            wxFileName edFileName(ed->GetFilename());
+            edFileName.Normalize();
 
             wxFileName dbgFileName(filename);
             dbgFileName.Normalize();
