@@ -51,7 +51,7 @@ echo Packing core UI bitmaps
 cd src/resources
 ${ZIPCMD} -0 -qu ../../${RESDIR}/resources.zip images/*.png images/16x16/*.png > /dev/null
 cd ../../sdk/resources
-${ZIPCMD} -0 -qu ../../${RESDIR}/manager_resources.zip images/*.png images/16x16/*.png > /dev/null
+${ZIPCMD} -0 -qu ../../${RESDIR}/manager_resources.zip images/*.png images/16x16/*.png images/12x12/*.png > /dev/null
 echo Packing plugins UI bitmaps
 cd ../../plugins/compilergcc/resources
 ${ZIPCMD} -0 -qu ../../../${RESDIR}/compiler.zip images/*.png images/16x16/*.png > /dev/null
@@ -67,8 +67,6 @@ echo Makefile.am >> excludes.txt
 echo Makefile.in >> excludes.txt
 cp -fu sdk/resources/lexers/lexer_* ${RESDIR}/lexers > /dev/null
 cp -fu src/resources/images/*.png ${RESDIR}/images > /dev/null
-cp -fu sdk/resources/images/16x16/*.png ${RESDIR}/images/16x16/ > /dev/null
-cp -fu sdk/resources/images/12x12/*.png ${RESDIR}/images/12x12/ > /dev/null
 cp -fu src/resources/images/settings/*.png ${RESDIR}/images/settings > /dev/null
 cp -fu src/resources/images/16x16/*.png ${RESDIR}/images/16x16 > /dev/null
 cp -fu plugins/codecompletion/resources/images/*.png ${RESDIR}/images/codecompletion > /dev/null
@@ -76,8 +74,6 @@ cp -fu plugins/codecompletion/resources/images/*.png ${RESDIR}/images/codecomple
 cp -fu ${RESDIR}/*.zip output/share/codeblocks > /dev/null
 cp -fu sdk/resources/lexers/lexer_* output/share/codeblocks/lexers > /dev/null
 cp -fu src/resources/images/*.png output/share/codeblocks/images > /dev/null
-cp -fu sdk/resources/images/16x16/*.png output/share/codeblocks/images/16x16/ > /dev/null
-cp -fu sdk/resources/images/12x12/*.png output/share/codeblocks/images/12x12/ > /dev/null
 cp -fu src/resources/images/*.png output/share/codeblocks/images > /dev/null
 cp -fu src/resources/images/settings/*.png output/share/codeblocks/images/settings > /dev/null
 cp -fu src/resources/images/16x16/*.png output/share/codeblocks/images/16x16 > /dev/null

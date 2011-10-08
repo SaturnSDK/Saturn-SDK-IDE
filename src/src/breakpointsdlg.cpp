@@ -77,12 +77,11 @@ BreakpointsDlg::BreakpointsDlg() :
     SetSizer(bs);
 
     // Setup the image list for the enabled/disabled icons.
-    wxBitmap icon = cbLoadBitmap(ConfigManager::GetDataFolder() + _T("/images/16x16/breakpoint.png"),
-                                 wxBITMAP_TYPE_PNG);
+    const wxString &basepath = ConfigManager::GetDataFolder() + wxT("/manager_resources.zip#zip:/images/16x16/");
+    wxBitmap icon = cbLoadBitmap(basepath + wxT("breakpoint.png"), wxBITMAP_TYPE_PNG);
     if (icon.IsOk())
         m_icons.Add(icon);
-    icon = cbLoadBitmap(ConfigManager::GetDataFolder() + _T("/images/16x16/breakpoint_disabled.png"),
-                        wxBITMAP_TYPE_PNG);
+    icon = cbLoadBitmap(basepath + wxT("breakpoint_disabled.png"), wxBITMAP_TYPE_PNG);
     if (icon.IsOk())
         m_icons.Add(icon);
     m_pList->SetImageList(&m_icons, wxIMAGE_LIST_SMALL);

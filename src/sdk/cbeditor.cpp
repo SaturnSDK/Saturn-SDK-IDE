@@ -1390,8 +1390,9 @@ void cbEditor::InternalSetEditorStyleBeforeFileOpen(cbStyledTextCtrl* control)
                                          (1 << ERROR_MARKER));
     control->MarkerDefine(BOOKMARK_MARKER, BOOKMARK_STYLE);
     control->MarkerSetBackground(BOOKMARK_MARKER, wxColour(0xA0, 0xA0, 0xFF));
-    wxBitmap icon = cbLoadBitmap(ConfigManager::GetDataFolder() + _T("/images/12x12/breakpoint.png"),
-                                 wxBITMAP_TYPE_PNG);
+
+    const wxString &basepath = ConfigManager::GetDataFolder() + wxT("/manager_resources.zip#zip:/images/12x12/");
+    wxBitmap icon = cbLoadBitmap(basepath + wxT("breakpoint.png"), wxBITMAP_TYPE_PNG);
     if (icon.IsOk())
         control->MarkerDefineBitmap(BREAKPOINT_MARKER, icon);
     else
@@ -1399,8 +1400,7 @@ void cbEditor::InternalSetEditorStyleBeforeFileOpen(cbStyledTextCtrl* control)
         control->MarkerDefine(BREAKPOINT_MARKER, BREAKPOINT_STYLE);
         control->MarkerSetBackground(BREAKPOINT_MARKER, wxColour(0xFF, 0x00, 0x00));
     }
-    icon = cbLoadBitmap(ConfigManager::GetDataFolder() + _T("/images/12x12/breakpoint_disabled.png"),
-                        wxBITMAP_TYPE_PNG);
+    icon = cbLoadBitmap(basepath + wxT("breakpoint_disabled.png"), wxBITMAP_TYPE_PNG);
     if (icon.IsOk())
         control->MarkerDefineBitmap(BREAKPOINT_DISABLED_MARKER, icon);
     else
