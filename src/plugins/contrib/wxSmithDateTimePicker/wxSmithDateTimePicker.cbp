@@ -38,6 +38,7 @@
 				</Compiler>
 				<Linker>
 					<Add library="TimeCtrl" />
+					<Add library="wxpropgrid" />
 					<Add library="wxsmithlib" />
 					<Add library="codeblocks" />
 					<Add directory="..\..\..\devel" />

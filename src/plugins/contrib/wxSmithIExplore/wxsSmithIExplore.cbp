@@ -24,7 +24,6 @@
 				<Option host_application="codeblocks.exe" />
 				<Option projectLinkerOptionsRelation="2" />
 				<Compiler>
-					<Add option="-include sdk.h" />
 					<Add option="-DBUILDING_PLUGIN" />
 					<Add option="-DcbDEBUG" />
 					<Add option="-DCB_PRECOMP" />
@@ -40,6 +39,7 @@
 				</Compiler>
 				<Linker>
 					<Add library="IExplore" />
+					<Add library="wxpropgrid" />
 					<Add library="wxsmithlib" />
 					<Add library="codeblocks" />
 					<Add library="uuid" />
