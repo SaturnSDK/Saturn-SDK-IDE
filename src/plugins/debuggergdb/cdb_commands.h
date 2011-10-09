@@ -437,7 +437,7 @@ class CdbCmd_Backtrace : public DebuggerCmd
                         sf.SetFile(reBT2.GetMatch(lines[i], 1) + reBT2.GetMatch(lines[i], 2),
                                    reBT2.GetMatch(lines[i], 3));
                     }
-                    m_pDriver->GetStackFrames().push_back(sf);
+                    m_pDriver->GetStackFrames().push_back(cbStackFrame::Pointer(new cbStackFrame(sf)));
 
                     if (m_SwitchToFirst && sf.IsValid() && firstValid)
                     {

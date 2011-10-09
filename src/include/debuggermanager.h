@@ -116,6 +116,9 @@ cbWatch* DLLIMPORT cbGetRootWatch(cbWatch *watch);
 class DLLIMPORT cbStackFrame
 {
     public:
+        typedef cb::shared_ptr<cbStackFrame> Pointer;
+        typedef cb::shared_ptr<const cbStackFrame> ConstPointer;
+    public:
         cbStackFrame();
 
         void SetNumber(int number);
@@ -141,6 +144,9 @@ class DLLIMPORT cbStackFrame
 
 class DLLIMPORT cbThread
 {
+    public:
+        typedef cb::shared_ptr<cbThread> Pointer;
+        typedef cb::shared_ptr<const cbThread> ConstPointer;
     public:
         cbThread();
         cbThread(bool active, int number, const wxString& info);

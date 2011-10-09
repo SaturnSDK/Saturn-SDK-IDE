@@ -59,13 +59,13 @@ class DebuggerGDB : public cbDebuggerPlugin
 
         // stack frame calls;
         int GetStackFrameCount() const;
-        const cbStackFrame& GetStackFrame(int index) const;
+        cbStackFrame::ConstPointer GetStackFrame(int index) const;
         void SwitchToFrame(int number);
         int GetActiveStackFrame() const;
 
         // threads
         int GetThreadsCount() const;
-        const cbThread& GetThread(int index) const;
+        cbThread::ConstPointer GetThread(int index) const;
         bool SwitchToThread(int thread_number);
 
         bool Debug(bool breakOnEntry);

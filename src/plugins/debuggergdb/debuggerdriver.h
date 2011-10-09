@@ -40,8 +40,8 @@ class DebuggerDriver
             Low = 0,
             High
         };
-        typedef std::vector<cbStackFrame> StackFrameContainer;
-        typedef std::vector<cbThread> ThreadsContainer;
+        typedef std::vector<cbStackFrame::Pointer> StackFrameContainer;
+        typedef std::vector<cbThread::Pointer> ThreadsContainer;
 
         DebuggerDriver(DebuggerGDB* plugin);
         virtual ~DebuggerDriver();

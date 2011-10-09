@@ -38,7 +38,7 @@
 // it will change when the SDK interface breaks
 #define PLUGIN_SDK_VERSION_MAJOR 1
 #define PLUGIN_SDK_VERSION_MINOR 12
-#define PLUGIN_SDK_VERSION_RELEASE 8
+#define PLUGIN_SDK_VERSION_RELEASE 9
 
 // class decls
 class wxMenuBar;
@@ -461,7 +461,7 @@ class PLUGIN_EXPORT cbDebuggerPlugin: public cbPlugin
 
         // stack frame calls;
         virtual int GetStackFrameCount() const = 0;
-        virtual const cbStackFrame& GetStackFrame(int index) const = 0;
+        virtual cb::shared_ptr<const cbStackFrame> GetStackFrame(int index) const = 0;
         virtual void SwitchToFrame(int number) = 0;
         virtual int GetActiveStackFrame() const = 0;
 
@@ -488,7 +488,7 @@ class PLUGIN_EXPORT cbDebuggerPlugin: public cbPlugin
         virtual void EnableBreakpoint(cb::shared_ptr<cbBreakpoint> breakpoint, bool enable) = 0;
         // threads
         virtual int GetThreadsCount() const = 0;
-        virtual const cbThread& GetThread(int index) const = 0;
+        virtual cb::shared_ptr<const cbThread> GetThread(int index) const = 0;
         virtual bool SwitchToThread(int thread_number) = 0;
 
         // watches

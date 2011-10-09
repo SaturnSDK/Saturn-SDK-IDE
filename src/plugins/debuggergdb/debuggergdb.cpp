@@ -1158,7 +1158,7 @@ int DebuggerGDB::GetStackFrameCount() const
     return m_State.GetDriver()->GetStackFrames().size();
 }
 
-const cbStackFrame& DebuggerGDB::GetStackFrame(int index) const
+cbStackFrame::ConstPointer DebuggerGDB::GetStackFrame(int index) const
 {
     return m_State.GetDriver()->GetStackFrames()[index];
 }
@@ -1188,7 +1188,7 @@ int DebuggerGDB::GetThreadsCount() const
         return m_State.GetDriver()->GetThreads().size();
 }
 
-const cbThread& DebuggerGDB::GetThread(int index) const
+cbThread::ConstPointer DebuggerGDB::GetThread(int index) const
 {
     return m_State.GetDriver()->GetThreads()[index];
 }
@@ -1202,12 +1202,10 @@ bool DebuggerGDB::SwitchToThread(int thread_number)
 
     for (DebuggerDriver::ThreadsContainer::const_iterator it = threads.begin(); it != threads.end(); ++it)
     {
-        if (it->GetNumber() == thread_number)
+        if ((*it)->GetNumber() == thread_number)
         {
-            if(!it->IsActive())
-            {
+            if (!(*it)->IsActive())
                 driver->SwitchThread(thread_number);
-            }
             return true;
         }
     }

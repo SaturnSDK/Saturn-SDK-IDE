@@ -80,21 +80,21 @@ void BacktraceDlg::Reload()
     int active_frame_index;
     for (int ii = 0; ii < plugin->GetStackFrameCount(); ++ii)
     {
-        const cbStackFrame& frame = plugin->GetStackFrame(ii);
+        cbStackFrame::ConstPointer frame = plugin->GetStackFrame(ii);
         wxString addr, num;
 
-        if(frame.GetAddress())
-            addr.Printf(wxT("%p"), reinterpret_cast<void*>(frame.GetAddress()));
+        if(frame->GetAddress())
+            addr.Printf(wxT("%p"), reinterpret_cast<void*>(frame->GetAddress()));
         else
             addr = wxT("");
-        num.Printf(wxT("%d"), frame.GetNumber());
+        num.Printf(wxT("%d"), frame->GetNumber());
         int idx = m_list->InsertItem(m_list->GetItemCount(), num);
         m_list->SetItem(idx, 1, addr);
-        m_list->SetItem(idx, 2, frame.GetSymbol());
-        m_list->SetItem(idx, 3, frame.GetFilename());
-        m_list->SetItem(idx, 4, frame.GetLine());
+        m_list->SetItem(idx, 2, frame->GetSymbol());
+        m_list->SetItem(idx, 3, frame->GetFilename());
+        m_list->SetItem(idx, 4, frame->GetLine());
 
-        if (active_frame == frame.GetNumber())
+        if (active_frame == frame->GetNumber())
         {
             active_frame_index = ii;
             m_list->SetItemBackgroundColour(ii, wxColor(255, 0, 0));

@@ -679,7 +679,7 @@ class GdbCmd_Threads : public DebuggerCmd
 
                     long number;
                     num.ToLong(&number, 10);
-                    m_pDriver->GetThreads().push_back(cbThread(!active.empty(), number, info));
+                    m_pDriver->GetThreads().push_back(cbThread::Pointer(new cbThread(!active.empty(), number, info)));
                 }
             }
             Manager::Get()->GetDebuggerManager()->GetThreadsDialog()->Reload();
@@ -1078,7 +1078,7 @@ class GdbCmd_Backtrace : public DebuggerCmd
                         validSF = sf;
                         validFrameNumber = sf.GetNumber();
                     }
-                    m_pDriver->GetStackFrames().push_back(sf);
+                    m_pDriver->GetStackFrames().push_back(cbStackFrame::Pointer(new cbStackFrame(sf)));
                 }
             }
             if (validFrameNumber > 0) // if it's 0, then the driver already synced the editor
@@ -1097,9 +1097,9 @@ class GdbCmd_Backtrace : public DebuggerCmd
                             DebuggerDriver::StackFrameContainer const &frames = m_pDriver->GetStackFrames();
 
                             if (validFrameNumber >= 0 && validFrameNumber <= static_cast<int>(frames.size()))
-                                validSF = frames[validFrameNumber];
+                                validSF = *frames[validFrameNumber];
                             else if (!frames.empty())
-                                validSF = frames.front();
+                                validSF = *frames.front();
                         }
                     }
                     if (validSF.GetLine().ToLong(&line))
