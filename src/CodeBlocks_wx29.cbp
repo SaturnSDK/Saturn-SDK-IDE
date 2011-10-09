@@ -536,9 +536,9 @@
 				</Linker>
 			</Target>
 			<Environment>
+				<Variable name="WX_CFG" value="" />
 				<Variable name="WX_SUFFIX" value="u" />
 				<Variable name="WX_VERSION" value="29" />
-				<Variable name="WX_CFG" value="" />
 			</Environment>
 		</Build>
 		<VirtualTargets>
@@ -631,6 +631,9 @@
 		<Unit filename="include\cbauibook.h">
 			<Option target="sdk" />
 		</Unit>
+		<Unit filename="include\cbdebugger_interfaces.h">
+			<Option target="sdk" />
+		</Unit>
 		<Unit filename="include\cbeditor.h">
 			<Option target="sdk" />
 		</Unit>
@@ -701,6 +704,9 @@
 			<Option target="sdk" />
 		</Unit>
 		<Unit filename="include\crc32.h">
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="include\debuggermanager.h">
 			<Option target="sdk" />
 		</Unit>
 		<Unit filename="include\editarrayfiledlg.h">
@@ -1068,7 +1074,7 @@
 		</Unit>
 		<Unit filename="include\sdk.h">
 			<Option compile="1" />
-			<Option weight="0" />
+			<Option weight="1" />
 			<Option target="src" />
 		</Unit>
 		<Unit filename="include\sdk_common.h">
@@ -1172,6 +1178,9 @@
 			<Option target="AStyle" />
 		</Unit>
 		<Unit filename="plugins\astyle\astyleplugin.h">
+			<Option target="AStyle" />
+		</Unit>
+		<Unit filename="plugins\astyle\astylepredefinedstyles.h">
 			<Option target="AStyle" />
 		</Unit>
 		<Unit filename="plugins\astyle\dlgformattersettings.cpp">
@@ -1629,18 +1638,6 @@
 		<Unit filename="plugins\compilergcc\resources\compiler_toolbar_16x16.xrc">
 			<Option target="Compiler" />
 		</Unit>
-		<Unit filename="plugins\debuggergdb\backtracedlg.cpp">
-			<Option target="Debugger" />
-		</Unit>
-		<Unit filename="plugins\debuggergdb\backtracedlg.h">
-			<Option target="Debugger" />
-		</Unit>
-		<Unit filename="plugins\debuggergdb\breakpointsdlg.cpp">
-			<Option target="Debugger" />
-		</Unit>
-		<Unit filename="plugins\debuggergdb\breakpointsdlg.h">
-			<Option target="Debugger" />
-		</Unit>
 		<Unit filename="plugins\debuggergdb\cdb_commands.h">
 			<Option target="Debugger" />
 		</Unit>
@@ -1648,12 +1645,6 @@
 			<Option target="Debugger" />
 		</Unit>
 		<Unit filename="plugins\debuggergdb\cdb_driver.h">
-			<Option target="Debugger" />
-		</Unit>
-		<Unit filename="plugins\debuggergdb\cpuregistersdlg.cpp">
-			<Option target="Debugger" />
-		</Unit>
-		<Unit filename="plugins\debuggergdb\cpuregistersdlg.h">
 			<Option target="Debugger" />
 		</Unit>
 		<Unit filename="plugins\debuggergdb\databreakpointdlg.cpp">
@@ -1698,18 +1689,6 @@
 		<Unit filename="plugins\debuggergdb\debuggerstate.h">
 			<Option target="Debugger" />
 		</Unit>
-		<Unit filename="plugins\debuggergdb\debuggertree.cpp">
-			<Option target="Debugger" />
-		</Unit>
-		<Unit filename="plugins\debuggergdb\debuggertree.h">
-			<Option target="Debugger" />
-		</Unit>
-		<Unit filename="plugins\debuggergdb\disassemblydlg.cpp">
-			<Option target="Debugger" />
-		</Unit>
-		<Unit filename="plugins\debuggergdb\disassemblydlg.h">
-			<Option target="Debugger" />
-		</Unit>
 		<Unit filename="plugins\debuggergdb\editbreakpointdlg.cpp">
 			<Option target="Debugger" />
 		</Unit>
@@ -1722,18 +1701,6 @@
 		<Unit filename="plugins\debuggergdb\editwatchdlg.h">
 			<Option target="Debugger" />
 		</Unit>
-		<Unit filename="plugins\debuggergdb\editwatchesdlg.cpp">
-			<Option target="Debugger" />
-		</Unit>
-		<Unit filename="plugins\debuggergdb\editwatchesdlg.h">
-			<Option target="Debugger" />
-		</Unit>
-		<Unit filename="plugins\debuggergdb\examinememorydlg.cpp">
-			<Option target="Debugger" />
-		</Unit>
-		<Unit filename="plugins\debuggergdb\examinememorydlg.h">
-			<Option target="Debugger" />
-		</Unit>
 		<Unit filename="plugins\debuggergdb\gdb_commands.h">
 			<Option target="Debugger" />
 		</Unit>
@@ -1743,16 +1710,16 @@
 		<Unit filename="plugins\debuggergdb\gdb_driver.h">
 			<Option target="Debugger" />
 		</Unit>
+		<Unit filename="plugins\debuggergdb\parsewatchvalue.cpp">
+			<Option target="Debugger" />
+		</Unit>
+		<Unit filename="plugins\debuggergdb\parsewatchvalue.h">
+			<Option target="Debugger" />
+		</Unit>
 		<Unit filename="plugins\debuggergdb\remotedebugging.h">
 			<Option target="Debugger" />
 		</Unit>
-		<Unit filename="plugins\debuggergdb\resources\backtrace.xrc">
-			<Option target="Debugger" />
-		</Unit>
 		<Unit filename="plugins\debuggergdb\resources\breakpoints.xrc">
-			<Option target="Debugger" />
-		</Unit>
-		<Unit filename="plugins\debuggergdb\resources\debugger_menu.xrc">
 			<Option target="Debugger" />
 		</Unit>
 		<Unit filename="plugins\debuggergdb\resources\debugger_options_dlg.xrc">
@@ -1761,28 +1728,7 @@
 		<Unit filename="plugins\debuggergdb\resources\debugger_project_options_dlg.xrc">
 			<Option target="Debugger" />
 		</Unit>
-		<Unit filename="plugins\debuggergdb\resources\debugger_toolbar.xrc">
-			<Option target="Debugger" />
-		</Unit>
-		<Unit filename="plugins\debuggergdb\resources\debugger_toolbar_16x16.xrc">
-			<Option target="Debugger" />
-		</Unit>
-		<Unit filename="plugins\debuggergdb\resources\disassembly.xrc">
-			<Option target="Debugger" />
-		</Unit>
 		<Unit filename="plugins\debuggergdb\resources\edit_watches_dlg.xrc">
-			<Option target="Debugger" />
-		</Unit>
-		<Unit filename="plugins\debuggergdb\resources\memdump.xrc">
-			<Option target="Debugger" />
-		</Unit>
-		<Unit filename="plugins\debuggergdb\resources\threads.xrc">
-			<Option target="Debugger" />
-		</Unit>
-		<Unit filename="plugins\debuggergdb\threadsdlg.cpp">
-			<Option target="Debugger" />
-		</Unit>
-		<Unit filename="plugins\debuggergdb\threadsdlg.h">
 			<Option target="Debugger" />
 		</Unit>
 		<Unit filename="plugins\defaultmimehandler\EmbeddedHtmlPanel.cpp">
@@ -1905,6 +1851,15 @@
 		<Unit filename="plugins\scriptedwizard\projectpathpanel.h">
 			<Option target="Scripted wizard" />
 		</Unit>
+		<Unit filename="plugins\scriptedwizard\resources\arm\wizard.script">
+			<Option target="Scripted wizard" />
+		</Unit>
+		<Unit filename="plugins\scriptedwizard\resources\avr\wizard.script">
+			<Option target="Scripted wizard" />
+		</Unit>
+		<Unit filename="plugins\scriptedwizard\resources\avr\wizard.xrc">
+			<Option target="Scripted wizard" />
+		</Unit>
 		<Unit filename="plugins\scriptedwizard\resources\c_file\wizard.script">
 			<Option target="Scripted wizard" />
 		</Unit>
@@ -1935,6 +1890,18 @@
 		<Unit filename="plugins\scriptedwizard\resources\fltk\wizard.script">
 			<Option target="Scripted wizard" />
 		</Unit>
+		<Unit filename="plugins\scriptedwizard\resources\fortran\app\wizard.script">
+			<Option target="Scripted wizard" />
+		</Unit>
+		<Unit filename="plugins\scriptedwizard\resources\fortran\dll\wizard.script">
+			<Option target="Scripted wizard" />
+		</Unit>
+		<Unit filename="plugins\scriptedwizard\resources\fortran\file\wizard.script">
+			<Option target="Scripted wizard" />
+		</Unit>
+		<Unit filename="plugins\scriptedwizard\resources\fortran\lib\wizard.script">
+			<Option target="Scripted wizard" />
+		</Unit>
 		<Unit filename="plugins\scriptedwizard\resources\glfw\wizard.script">
 			<Option target="Scripted wizard" />
 		</Unit>
@@ -1950,22 +1917,43 @@
 		<Unit filename="plugins\scriptedwizard\resources\irrlicht\wizard.script">
 			<Option target="Scripted wizard" />
 		</Unit>
+		<Unit filename="plugins\scriptedwizard\resources\lf\wizard.script">
+			<Option target="Scripted wizard" />
+		</Unit>
+		<Unit filename="plugins\scriptedwizard\resources\lf\wizard.xrc">
+			<Option target="Scripted wizard" />
+		</Unit>
 		<Unit filename="plugins\scriptedwizard\resources\manifest.xml">
 			<Option target="Scripted wizard" />
 		</Unit>
 		<Unit filename="plugins\scriptedwizard\resources\matlab_csf\wizard.script">
 			<Option target="Scripted wizard" />
 		</Unit>
+		<Unit filename="plugins\scriptedwizard\resources\matlab_csf\wizard.xrc">
+			<Option target="Scripted wizard" />
+		</Unit>
 		<Unit filename="plugins\scriptedwizard\resources\ogre\wizard.script">
 			<Option target="Scripted wizard" />
 		</Unit>
+		<Unit filename="plugins\scriptedwizard\resources\opengl\wizard.script">
+			<Option target="Scripted wizard" />
+		</Unit>
 		<Unit filename="plugins\scriptedwizard\resources\plugins\wizard.script">
+			<Option target="Scripted wizard" />
+		</Unit>
+		<Unit filename="plugins\scriptedwizard\resources\plugins\wizard.xrc">
+			<Option target="Scripted wizard" />
+		</Unit>
+		<Unit filename="plugins\scriptedwizard\resources\ppc\wizard.script">
 			<Option target="Scripted wizard" />
 		</Unit>
 		<Unit filename="plugins\scriptedwizard\resources\qt4\wizard.script">
 			<Option target="Scripted wizard" />
 		</Unit>
 		<Unit filename="plugins\scriptedwizard\resources\sdl\wizard.script">
+			<Option target="Scripted wizard" />
+		</Unit>
+		<Unit filename="plugins\scriptedwizard\resources\sfml\wizard.script">
 			<Option target="Scripted wizard" />
 		</Unit>
 		<Unit filename="plugins\scriptedwizard\resources\sharedlib\wizard.script">
@@ -1975,6 +1963,18 @@
 			<Option target="Scripted wizard" />
 		</Unit>
 		<Unit filename="plugins\scriptedwizard\resources\staticlib\wizard.script">
+			<Option target="Scripted wizard" />
+		</Unit>
+		<Unit filename="plugins\scriptedwizard\resources\stlport\wizard.script">
+			<Option target="Scripted wizard" />
+		</Unit>
+		<Unit filename="plugins\scriptedwizard\resources\sys\wizard.script">
+			<Option target="Scripted wizard" />
+		</Unit>
+		<Unit filename="plugins\scriptedwizard\resources\tricore\wizard.script">
+			<Option target="Scripted wizard" />
+		</Unit>
+		<Unit filename="plugins\scriptedwizard\resources\tricore\wizard.xrc">
 			<Option target="Scripted wizard" />
 		</Unit>
 		<Unit filename="plugins\scriptedwizard\resources\win32gui\wizard.script">
@@ -2067,6 +2067,9 @@
 		<Unit filename="sdk\cbauibook.cpp">
 			<Option target="sdk" />
 		</Unit>
+		<Unit filename="sdk\cbdebugger_interfaces.cpp">
+			<Option target="sdk" />
+		</Unit>
 		<Unit filename="sdk\cbeditor.cpp">
 			<Option target="sdk" />
 		</Unit>
@@ -2129,6 +2132,9 @@
 			<Option target="sdk" />
 		</Unit>
 		<Unit filename="sdk\crc32.cpp">
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="sdk\debuggermanager.cpp">
 			<Option target="sdk" />
 		</Unit>
 		<Unit filename="sdk\editarrayfiledlg.cpp">
@@ -2316,6 +2322,9 @@
 		</Unit>
 		<Unit filename="sdk\newfromtemplatedlg.cpp">
 			<Option target="sdk" />
+		</Unit>
+		<Unit filename="sdk\nullptr.cpp">
+			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
 		<Unit filename="sdk\personalitymanager.cpp">
 			<Option target="sdk" />
@@ -2748,6 +2757,60 @@
 		</Unit>
 		<Unit filename="sdk\workspaceloader.cpp">
 			<Option target="sdk" />
+		</Unit>
+		<Unit filename="sdk\wxpropgrid\include\wx\propgrid\advprops.h">
+			<Option target="wxpropgrid" />
+		</Unit>
+		<Unit filename="sdk\wxpropgrid\include\wx\propgrid\editors.h">
+			<Option target="wxpropgrid" />
+		</Unit>
+		<Unit filename="sdk\wxpropgrid\include\wx\propgrid\extras.h">
+			<Option target="wxpropgrid" />
+		</Unit>
+		<Unit filename="sdk\wxpropgrid\include\wx\propgrid\manager.h">
+			<Option target="wxpropgrid" />
+		</Unit>
+		<Unit filename="sdk\wxpropgrid\include\wx\propgrid\odcombo.h">
+			<Option target="wxpropgrid" />
+		</Unit>
+		<Unit filename="sdk\wxpropgrid\include\wx\propgrid\propdev.h">
+			<Option target="wxpropgrid" />
+		</Unit>
+		<Unit filename="sdk\wxpropgrid\include\wx\propgrid\propgrid.h">
+			<Option target="wxpropgrid" />
+		</Unit>
+		<Unit filename="sdk\wxpropgrid\include\wx\propgrid\props.h">
+			<Option target="wxpropgrid" />
+		</Unit>
+		<Unit filename="sdk\wxpropgrid\include\wx\propgrid\xh_propgrid.h">
+			<Option target="wxpropgrid" />
+		</Unit>
+		<Unit filename="sdk\wxpropgrid\samples\sample.xrc">
+			<Option target="sdk" />
+		</Unit>
+		<Unit filename="sdk\wxpropgrid\src\advprops.cpp">
+			<Option target="wxpropgrid" />
+		</Unit>
+		<Unit filename="sdk\wxpropgrid\src\editors.cpp">
+			<Option target="wxpropgrid" />
+		</Unit>
+		<Unit filename="sdk\wxpropgrid\src\extras.cpp">
+			<Option target="wxpropgrid" />
+		</Unit>
+		<Unit filename="sdk\wxpropgrid\src\manager.cpp">
+			<Option target="wxpropgrid" />
+		</Unit>
+		<Unit filename="sdk\wxpropgrid\src\odcombo.cpp">
+			<Option target="wxpropgrid" />
+		</Unit>
+		<Unit filename="sdk\wxpropgrid\src\propgrid.cpp">
+			<Option target="wxpropgrid" />
+		</Unit>
+		<Unit filename="sdk\wxpropgrid\src\props.cpp">
+			<Option target="wxpropgrid" />
+		</Unit>
+		<Unit filename="sdk\wxpropgrid\src\xh_propgrid.cpp">
+			<Option target="wxpropgrid" />
 		</Unit>
 		<Unit filename="sdk\wxscintilla\include\wx\wxscintilla.h">
 			<Option target="scintilla" />
@@ -3259,7 +3322,19 @@
 		<Unit filename="src\associations.h">
 			<Option target="src" />
 		</Unit>
+		<Unit filename="src\backtracedlg.cpp">
+			<Option target="src" />
+		</Unit>
+		<Unit filename="src\backtracedlg.h">
+			<Option target="src" />
+		</Unit>
 		<Unit filename="src\batchbuild.h">
+			<Option target="src" />
+		</Unit>
+		<Unit filename="src\breakpointsdlg.cpp">
+			<Option target="src" />
+		</Unit>
+		<Unit filename="src\breakpointsdlg.h">
 			<Option target="src" />
 		</Unit>
 		<Unit filename="src\compilersettingsdlg.cpp">
@@ -3268,10 +3343,52 @@
 		<Unit filename="src\compilersettingsdlg.h">
 			<Option target="src" />
 		</Unit>
+		<Unit filename="src\cpuregistersdlg.cpp">
+			<Option target="src" />
+		</Unit>
+		<Unit filename="src\cpuregistersdlg.h">
+			<Option target="src" />
+		</Unit>
 		<Unit filename="src\crashhandler.cpp">
 			<Option target="src" />
 		</Unit>
 		<Unit filename="src\crashhandler.h">
+			<Option target="src" />
+		</Unit>
+		<Unit filename="src\debugger_interface_creator.cpp">
+			<Option target="src" />
+		</Unit>
+		<Unit filename="src\debugger_interface_creator.h">
+			<Option target="src" />
+		</Unit>
+		<Unit filename="src\debuggermenu.cpp">
+			<Option target="src" />
+		</Unit>
+		<Unit filename="src\debuggermenu.h">
+			<Option target="src" />
+		</Unit>
+		<Unit filename="src\debuggersettingscommonpanel.cpp">
+			<Option target="src" />
+		</Unit>
+		<Unit filename="src\debuggersettingscommonpanel.h">
+			<Option target="src" />
+		</Unit>
+		<Unit filename="src\debuggersettingsdlg.cpp">
+			<Option target="src" />
+		</Unit>
+		<Unit filename="src\debuggersettingsdlg.h">
+			<Option target="src" />
+		</Unit>
+		<Unit filename="src\debuggersettingspanel.cpp">
+			<Option target="src" />
+		</Unit>
+		<Unit filename="src\debuggersettingspanel.h">
+			<Option target="src" />
+		</Unit>
+		<Unit filename="src\disassemblydlg.cpp">
+			<Option target="src" />
+		</Unit>
+		<Unit filename="src\disassemblydlg.h">
 			<Option target="src" />
 		</Unit>
 		<Unit filename="src\dlgabout.cpp">
@@ -3290,6 +3407,12 @@
 			<Option target="src" />
 		</Unit>
 		<Unit filename="src\environmentsettingsdlg.h">
+			<Option target="src" />
+		</Unit>
+		<Unit filename="src\examinememorydlg.cpp">
+			<Option target="src" />
+		</Unit>
+		<Unit filename="src\examinememorydlg.h">
 			<Option target="src" />
 		</Unit>
 		<Unit filename="src\infopane.cpp">
@@ -3330,6 +3453,18 @@
 		<Unit filename="src\resources\ask_assocs.xrc">
 			<Option target="src" />
 		</Unit>
+		<Unit filename="src\resources\debugger_menu.xrc">
+			<Option target="src" />
+		</Unit>
+		<Unit filename="src\resources\debugger_toolbar.xrc">
+			<Option target="src" />
+		</Unit>
+		<Unit filename="src\resources\debugger_toolbar_16x16.xrc">
+			<Option target="src" />
+		</Unit>
+		<Unit filename="src\resources\disassembly.xrc">
+			<Option target="src" />
+		</Unit>
 		<Unit filename="src\resources\dlg_about.xrc">
 			<Option target="src" />
 		</Unit>
@@ -3349,6 +3484,9 @@
 			<Option target="src" />
 		</Unit>
 		<Unit filename="src\resources\manage_assocs.xrc">
+			<Option target="src" />
+		</Unit>
+		<Unit filename="src\resources\memdump.xrc">
 			<Option target="src" />
 		</Unit>
 		<Unit filename="src\resources\print_dialog.xrc">
@@ -3394,11 +3532,32 @@
 		<Unit filename="src\switcherdlg.h">
 			<Option target="src" />
 		</Unit>
+		<Unit filename="src\threadsdlg.cpp">
+			<Option target="src" />
+		</Unit>
+		<Unit filename="src\threadsdlg.h">
+			<Option target="src" />
+		</Unit>
+		<Unit filename="src\watchesdlg.cpp">
+			<Option target="src" />
+		</Unit>
+		<Unit filename="src\watchesdlg.h">
+			<Option target="src" />
+		</Unit>
 		<Unit filename="tips.txt">
 			<Option target="src" />
 		</Unit>
 		<Unit filename="tools\ConsoleRunner\main.cpp">
 			<Option target="ConsoleRunner" />
+		</Unit>
+		<Unit filename="wxsmith\debuggersettingscommonpanel.wxs">
+			<Option target="src" />
+		</Unit>
+		<Unit filename="wxsmith\debuggersettingsdlg.wxs">
+			<Option target="src" />
+		</Unit>
+		<Unit filename="wxsmith\debuggersettingspanel.wxs">
+			<Option target="src" />
 		</Unit>
 		<Extensions>
 			<code_completion />
@@ -3417,6 +3576,9 @@
 					<wxPanel wxs="wxsmith/InfoPanel.wxs" src="plugins/scriptedwizard/infopanel.cpp" hdr="plugins/scriptedwizard/infopanel.h" fwddecl="0" i18n="1" name="InfoPanel" language="CPP" />
 					<wxPanel wxs="wxsmith/ProjectPathPanel.wxs" src="plugins/scriptedwizard/projectpathpanel.cpp" hdr="plugins/scriptedwizard/projectpathpanel.h" fwddecl="0" i18n="1" name="ProjectPathPanel" language="CPP" />
 					<wxPanel wxs="wxsmith/EmbeddedHtmlPanel.wxs" src="plugins/defaultmimehandler/EmbeddedHtmlPanel.cpp" hdr="plugins/defaultmimehandler/EmbeddedHtmlPanel.h" fwddecl="1" i18n="1" name="EmbeddedHtmlPanel" language="CPP" />
+					<wxScrollingDialog wxs="wxsmith/debuggersettingsdlg.wxs" src="src/debuggersettingsdlg.cpp" hdr="src/debuggersettingsdlg.h" fwddecl="0" i18n="1" name="DebuggerSettingsDlg" language="CPP" />
+					<wxPanel wxs="wxsmith/debuggersettingspanel.wxs" src="src/debuggersettingspanel.cpp" hdr="src/debuggersettingspanel.h" fwddecl="0" i18n="1" name="DebuggerSettingsPanel" language="CPP" />
+					<wxPanel wxs="wxsmith/debuggersettingscommonpanel.wxs" src="src/debuggersettingscommonpanel.cpp" hdr="src/debuggersettingscommonpanel.h" fwddecl="0" i18n="1" name="DebuggerSettingsCommonPanel" language="CPP" />
 				</resources>
 			</wxsmith>
 			<debugger />
