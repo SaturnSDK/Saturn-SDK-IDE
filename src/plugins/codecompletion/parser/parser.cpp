@@ -209,15 +209,6 @@ bool ParserBase::ParseFile(const wxString& filename, bool isGlobal, bool locked)
     return false;
 }
 
-size_t ParserBase::GetFilesCount()
-{
-    TRACK_THREAD_LOCKER(s_TokensTreeCritical);
-    wxCriticalSectionLocker locker(s_TokensTreeCritical);
-    THREAD_LOCKER_SUCCESS(s_TokensTreeCritical);
-
-    return m_TokensTree->m_FilesMap.size();
-}
-
 void ParserBase::ReadOptions()
 {
     ConfigManager* cfg = Manager::Get()->GetConfigManager(_T("code_completion"));
@@ -375,49 +366,6 @@ wxString ParserBase::GetFullFileName(const wxString& src, const wxString& tgt, b
     }
 
     return fullname;
-}
-
-
-Token* ParserBase::FindTokenByName(const wxString& name, bool globalsOnly, short int kindMask)
-{
-    TRACK_THREAD_LOCKER(s_TokensTreeCritical);
-    wxCriticalSectionLocker locker(s_TokensTreeCritical);
-    THREAD_LOCKER_SUCCESS(s_TokensTreeCritical);
-
-    int result = m_TokensTree->TokenExists(name, -1, kindMask);
-    return m_TokensTree->at(result);
-}
-
-Token* ParserBase::FindChildTokenByName(Token* parent, const wxString& name, bool useInheritance, short int kindMask)
-{
-    if (!parent)
-        return FindTokenByName(name, false, kindMask);
-
-    TRACK_THREAD_LOCKER(s_TokensTreeCritical);
-    s_TokensTreeCritical.Enter();
-    THREAD_LOCKER_SUCCESS(s_TokensTreeCritical);
-
-    Token* result = m_TokensTree->at(m_TokensTree->TokenExists(name, parent->GetSelf(), kindMask));
-    if (!result && useInheritance)
-    {
-        TokenIdxSet::iterator it;
-        m_TokensTree->RecalcInheritanceChain(parent);
-        for (it = parent->m_DirectAncestors.begin(); it != parent->m_DirectAncestors.end(); ++it)
-        {
-            Token* ancestor = m_TokensTree->at(*it);
-            s_TokensTreeCritical.Leave();
-            result = FindChildTokenByName(ancestor, name, true, kindMask);
-
-            TRACK_THREAD_LOCKER(s_TokensTreeCritical);
-            s_TokensTreeCritical.Enter();
-            THREAD_LOCKER_SUCCESS(s_TokensTreeCritical);
-
-            if (result)
-                break;
-        }
-    }
-    s_TokensTreeCritical.Leave();
-    return result;
 }
 
 size_t ParserBase::FindTokensInFile(const wxString& fileName, TokenIdxSet& result, short int kindMask)
@@ -742,7 +690,7 @@ bool Parser::Parse(const wxString& filename, bool isLocal, bool locked, LoaderBa
 }
 
 bool Parser::ParseBuffer(const wxString& buffer, bool isLocal, bool bufferSkipBlocks, bool isTemp,
-                         const wxString& filename, Token* parent, int initLine)
+                         const wxString& filename, int parentIdx, int initLine)
 {
     ParserThreadOptions opts;
 
@@ -755,7 +703,7 @@ bool Parser::ParseBuffer(const wxString& buffer, bool isLocal, bool bufferSkipBl
     opts.bufferSkipBlocks     = bufferSkipBlocks;
     opts.handleFunctions      = false;
     opts.fileOfBuffer         = filename;
-    opts.parentOfBuffer       = parent;
+    opts.parentIdxOfBuffer    = parentIdx;
     opts.initLineOfBuffer     = initLine;
 
     ParserThread thread(this,

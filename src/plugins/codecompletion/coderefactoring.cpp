@@ -170,16 +170,16 @@ bool CodeRefactoring::Parse()
 
     // handle local variables
     bool isLocalVariable = false;
-    Token* token = nullptr;
     {
         TRACK_THREAD_LOCKER(s_TokensTreeCritical);
         wxCriticalSectionLocker locker(s_TokensTreeCritical);
         THREAD_LOCKER_SUCCESS(s_TokensTreeCritical);
 
-        token = m_NativeParser.GetParser().GetTokensTree()->at(*targetResult.begin());
+        TokensTree* tree = m_NativeParser.GetParser().GetTokensTree();
+        Token* token = tree->at(*targetResult.begin());
         if (token)
         {
-            Token* parent = token->GetParentToken();
+            Token* parent = tree->at(token->m_ParentIndex);
             if (parent && parent->m_TokenKind == tkFunction)
                 isLocalVariable = true;
         }
@@ -294,8 +294,9 @@ size_t CodeRefactoring::VerifyResult(const TokenIdxSet& targetResult, const wxSt
         wxCriticalSectionLocker locker(s_TokensTreeCritical);
         THREAD_LOCKER_SUCCESS(s_TokensTreeCritical);
 
-        Token* token = m_NativeParser.GetParser().GetTokensTree()->at(*targetResult.begin());
-        parentOfLocalVariable = token->GetParentToken();
+        TokensTree* tree = m_NativeParser.GetParser().GetTokensTree();
+        Token* token = tree->at(*targetResult.begin());
+        parentOfLocalVariable = tree->at(token->m_ParentIndex);
     }
 
     // now that list is filled, we'll search
@@ -390,10 +391,11 @@ size_t CodeRefactoring::VerifyResult(const TokenIdxSet& targetResult, const wxSt
                     wxCriticalSectionLocker locker(s_TokensTreeCritical);
                     THREAD_LOCKER_SUCCESS(s_TokensTreeCritical);
 
-                    Token* token = m_NativeParser.GetParser().GetTokensTree()->at(*findIter);
+                    TokensTree* tree = m_NativeParser.GetParser().GetTokensTree();
+                    Token* token = tree->at(*findIter);
                     if (token)
                     {
-                        Token* parent = token->GetParentToken();
+                        Token* parent = tree->at(token->m_ParentIndex);
                         if (parent != parentOfLocalVariable)
                         {
                             it->second.erase(itList++);

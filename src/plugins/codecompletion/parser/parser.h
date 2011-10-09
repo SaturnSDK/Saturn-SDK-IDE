@@ -143,7 +143,7 @@ public:
 
     virtual bool ParseBuffer(const wxString& buffer, bool isLocal, bool bufferSkipBlocks = false,
                              bool isTemp = false, const wxString& filename = wxEmptyString,
-                             Token* parent = nullptr, int initLine = 0) { return false; }
+                             int parentIdx = -1, int initLine = 0) { return false; }
     virtual bool ParseBufferForFunctions(const wxString& buffer) { return false; }
     virtual bool ParseBufferForNamespaces(const wxString& buffer, NameSpaceVec& result) { return false; }
     virtual bool ParseBufferForUsingNamespace(const wxString& buffer, wxArrayString& result) { return false; }
@@ -163,16 +163,12 @@ public:
     const wxArrayString& GetIncludeDirs() const { return m_IncludeDirs; }
     wxString GetFullFileName(const wxString& src, const wxString& tgt, bool isGlobal);
     wxArrayString FindFileInIncludeDirs(const wxString& file, bool firstonly = false);
-    size_t GetFilesCount();
 
     void ReadOptions();
     void WriteOptions();
     ParserOptions& Options() { return m_Options; }
     BrowserOptions& ClassBrowserOptions() { return m_BrowserOptions; }
 
-    Token* FindTokenByName(const wxString& name, bool globalsOnly = true, short int kindMask = 0xFFFF);
-    Token* FindChildTokenByName(Token* parent, const wxString& name, bool useInheritance = false,
-                                short int kindMask = 0xFFFF);
     size_t FindTokensInFile(const wxString& fileName, TokenIdxSet& result, short int kindMask);
 
 private:
@@ -248,7 +244,7 @@ public:
      */
     virtual bool ParseBuffer(const wxString& buffer, bool isLocal, bool bufferSkipBlocks = false,
                              bool isTemp = false, const wxString& filename = wxEmptyString,
-                             Token* parent = nullptr, int initLine = 0);
+                             int parentIdx = -1, int initLine = 0);
     virtual bool ParseBufferForFunctions(const wxString& buffer);
     virtual bool ParseBufferForNamespaces(const wxString& buffer, NameSpaceVec& result);
     virtual bool ParseBufferForUsingNamespace(const wxString& buffer, wxArrayString& result);

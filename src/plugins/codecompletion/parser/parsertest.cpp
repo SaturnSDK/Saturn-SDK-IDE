@@ -42,6 +42,11 @@ ParserTest::ParserTest()
     Tokenizer::SetReplacementString(_T("_GLIBCXX_END_NAMESPACE_TR1"),       _T("}"));
     Tokenizer::SetReplacementString(_T("_GLIBCXX_BEGIN_NAMESPACE_TR1"),     _T("namespace tr1 {"));
 
+    // for GCC 4.6.x
+    Tokenizer::SetReplacementString(_T("_GLIBCXX_VISIBILITY"),              _T("+"));
+    Tokenizer::SetReplacementString(_T("_GLIBCXX_BEGIN_NAMESPACE_VERSION"), _T(""));
+    Tokenizer::SetReplacementString(_T("_GLIBCXX_END_NAMESPACE_VERSION"),   _T(""));
+
     // for VC
     Tokenizer::SetReplacementString(_T("_STD_BEGIN"),                       _T("namespace std {"));
     Tokenizer::SetReplacementString(_T("_STD_END"),                         _T("}"));
@@ -92,7 +97,8 @@ void ParserTest::PrintTree()
     TokenList& tokens = m_tokensTree->m_Tokens;
     for (TokenList::iterator it = tokens.begin(); it != tokens.end(); it++)
     {
-        if ((*it)->GetParentToken() == 0)
+        Token* parent = m_tokensTree->at((*it)->m_ParentIndex);
+        if (!parent)
             PrintTokenTree(*it);
     }
 }
