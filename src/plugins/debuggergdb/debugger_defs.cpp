@@ -90,7 +90,7 @@ wxString DebuggerBreakpoint::GetLocation() const
         case bptData:
             return breakAddress;
         case bptCode:
-            return filename;
+            return filenameAsPassed;
         case bptFunction:
             return func;
         default:

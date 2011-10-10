@@ -7,7 +7,7 @@
  * $HeadURL$
  */
 
-#include "sdk_precomp.h"
+#include <sdk.h>
 #ifndef CB_PRECOMP
     #include <wx/checkbox.h>
     #include <wx/intl.h>
@@ -16,10 +16,11 @@
     #include <wx/spinctrl.h>
     #include <wx/textctrl.h>
     #include <wx/xrc/xmlres.h>
+
+    #include <debuggermanager.h>
 #endif
 
 #include "editbreakpointdlg.h"
-#include "debuggermanager.h"
 
 BEGIN_EVENT_TABLE(EditBreakpointDlg, wxScrollingDialog)
     EVT_UPDATE_UI(-1, EditBreakpointDlg::OnUpdateUI)
