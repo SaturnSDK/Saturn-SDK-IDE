@@ -164,9 +164,10 @@
 				<Option external_deps="devel/libcodeblocks.so;" />
 				<Option type="0" />
 				<Option compiler="gcc" />
-				<Option parameters="--debug-log --multiple-instance -ns -ni" />
+				<Option parameters="--debug-log --multiple-instance -ns -ni -v" />
 				<Option projectLinkerOptionsRelation="2" />
 				<Compiler>
+					<Add option="`pkg-config gtk+-2.0 --cflags`" />
 					<Add option="-DENABLE_BINRELOC" />
 					<Add directory="include" />
 					<Add directory="include/scripting/include" />
@@ -174,6 +175,7 @@
 					<Add directory="include/mozilla_chardet" />
 				</Compiler>
 				<Linker>
+					<Add option="`pkg-config gtk+-2.0 --libs`" />
 					<Add library="codeblocks" />
 					<Add library="wxpropgrid" />
 					<Add directory="devel" />
@@ -1317,6 +1319,12 @@
 			<Option target="Compiler" />
 		</Unit>
 		<Unit filename="plugins/compilergcc/compilerMSVC.h">
+			<Option target="Compiler" />
+		</Unit>
+		<Unit filename="plugins/compilergcc/compilerMSVC10.cpp">
+			<Option target="Compiler" />
+		</Unit>
+		<Unit filename="plugins/compilergcc/compilerMSVC10.h">
 			<Option target="Compiler" />
 		</Unit>
 		<Unit filename="plugins/compilergcc/compilerMSVC8.cpp">

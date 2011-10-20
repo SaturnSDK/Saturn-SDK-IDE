@@ -2959,7 +2959,7 @@ void CodeCompletion::OnGotoDeclaration(wxCommandEvent& event)
                 if (sel)
                 {
                     GotoDeclarationItem item;
-                    
+
                     if (isImpl)
                     {
                         item.filename = sel->GetImplFilename();
@@ -2970,7 +2970,7 @@ void CodeCompletion::OnGotoDeclaration(wxCommandEvent& event)
                         item.filename = sel->GetFilename();
                         item.line = sel->m_Line - 1;
                     }
-                    
+
                     // only match tokens that have filename info
                     if (!item.filename.empty())
                     {
@@ -2979,9 +2979,9 @@ void CodeCompletion::OnGotoDeclaration(wxCommandEvent& event)
                     }
                 }
             }
-        }        
+        }
     }
-    
+
     if (selections.GetCount() > 1)
     {
         int sel = wxGetSingleChoiceIndex(_("Please make a selection:"), _("Multiple matches"), selections);
