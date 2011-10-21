@@ -2210,8 +2210,13 @@ void cbEditor::ToggleBookmark(int line)
     MarkerToggle(BOOKMARK_MARKER, line);
 }
 
+// TODO (obfuscated#): remove the parameter and implement inactive breakpoint markers
 void cbEditor::RefreshBreakpointMarkers(const cbDebuggerPlugin *debugger)
 {
+    if (!debugger)
+        return;
+    if (debugger != Manager::Get()->GetDebuggerManager()->GetActiveDebugger())
+        return;
     // First remove all breakpoint markers, then add the markers for the active debugger
     cbStyledTextCtrl *c = GetControl();
     int line = -1;
