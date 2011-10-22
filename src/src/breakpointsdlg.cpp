@@ -335,6 +335,15 @@ void BreakpointsDlg::OnRightClick(wxListEvent& event)
     menu.Append(idRemoveAll, _("Remove all"));
     menu.AppendSeparator();
     menu.AppendCheckItem(idShowTemp, _("Show temporary"));
+
+    if (!found)
+    {
+        menu.Enable(idOpen, false);
+        menu.Enable(idProperties, false);
+        menu.Enable(idRemove, false);
+    }
+    if (m_pList->GetItemCount() == 0)
+        menu.Enable(idRemoveAll, false);
     PopupMenu(&menu);
 }
 
