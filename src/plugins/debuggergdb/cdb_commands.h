@@ -323,7 +323,7 @@ class CdbCmd_Watch : public DebuggerCmd
 
         void ParseOutput(const wxString& output)
         {
-            if(!ParseCDBWatchValue(*m_watch, output))
+            if(!ParseCDBWatchValue(m_watch, output))
             {
                 wxString symbol;
                 m_watch->GetSymbol(symbol);

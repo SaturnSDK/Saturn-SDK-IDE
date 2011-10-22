@@ -1869,60 +1869,38 @@ void DebuggerGDB::AddWatchNoUpdate(const GDBWatch::Pointer &watch)
     m_watches.push_back(watch);
 }
 
-void DebuggerGDB::DeleteWatch(cbWatch *watch)
+void DebuggerGDB::DeleteWatch(cbWatch::Pointer watch)
 {
-    for(WatchesContainer::iterator it = m_watches.begin(); it != m_watches.end(); ++it)
-    {
-        if(it->get() == watch)
-        {
-            m_watches.erase(it);
-            return;
-        }
-    }
+    m_watches.erase(std::find(m_watches.begin(), m_watches.end(), watch));
 }
 
-bool DebuggerGDB::HasWatch(cbWatch *watch)
+bool DebuggerGDB::HasWatch(cbWatch::Pointer watch)
 {
-    for(WatchesContainer::iterator it = m_watches.begin(); it != m_watches.end(); ++it)
-    {
-        if(it->get() == watch)
-            return true;
-    }
-    return false;
+    return std::find(m_watches.begin(), m_watches.end(), watch) != m_watches.end();
 }
 
-void DebuggerGDB::ShowWatchProperties(cbWatch *watch)
+void DebuggerGDB::ShowWatchProperties(cbWatch::Pointer watch)
 {
     // not supported for child nodes!
     if(watch->GetParent())
         return;
 
-    GDBWatch *real_watch = static_cast<GDBWatch*>(watch);
-    EditWatchDlg dlg(real_watch);
+    GDBWatch::Pointer real_watch = cb::static_pointer_cast<GDBWatch>(watch);
+    EditWatchDlg dlg(real_watch, nullptr);
     if(dlg.ShowModal() == wxID_OK)
         DoWatches();
 }
 
-bool DebuggerGDB::SetWatchValue(cbWatch *watch, const wxString &value)
+bool DebuggerGDB::SetWatchValue(cbWatch::Pointer watch, const wxString &value)
 {
-    cbWatch *root_watch = cbGetRootWatch(watch);
-    bool found = false;
-    for (WatchesContainer::iterator it = m_watches.begin(); it != m_watches.end(); ++it)
-    {
-        if (it->get() == root_watch)
-        {
-            found = true;
-            break;
-        }
-    }
-    if(!found)
+    if (!HasWatch(cbGetRootWatch(watch)))
         return false;
 
     if (!m_State.HasDriver())
         return false;
 
     wxString full_symbol;
-    cbWatch *temp_watch = watch;
+    cbWatch::Pointer temp_watch = watch;
     while(temp_watch)
     {
         wxString symbol;
@@ -1944,11 +1922,11 @@ bool DebuggerGDB::SetWatchValue(cbWatch *watch, const wxString &value)
     return true;
 }
 
-void DebuggerGDB::ExpandWatch(cbWatch *watch)
+void DebuggerGDB::ExpandWatch(cbWatch::Pointer watch)
 {
 }
 
-void DebuggerGDB::CollapseWatch(cbWatch *watch)
+void DebuggerGDB::CollapseWatch(cbWatch::Pointer watch)
 {
 }
 

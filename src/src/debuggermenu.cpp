@@ -531,7 +531,7 @@ void DebuggerMenuHandler::OnAddWatch(wxCommandEvent& event)
     {
         cbWatch::Pointer watch = m_activeDebugger->AddWatch(src);
         if (watch.get())
-            Manager::Get()->GetDebuggerManager()->GetWatchesDialog()->AddWatch(watch.get());
+            Manager::Get()->GetDebuggerManager()->GetWatchesDialog()->AddWatch(watch);
     }
 }
 

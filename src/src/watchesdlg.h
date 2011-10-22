@@ -27,7 +27,7 @@ class WatchesDlg : public wxPanel, public cbWatchesDlg
         wxWindow* GetWindow() { return this; }
 
         void UpdateWatches();
-        void AddWatch(cbWatch *watch);
+        void AddWatch(cbWatch::Pointer watch);
         void RenameWatch(wxObject *prop, const wxString &newSymbol);
     private:
         void OnExpand(wxPropertyGridEvent &event);
@@ -52,7 +52,7 @@ class WatchesDlg : public wxPanel, public cbWatchesDlg
 
         struct WatchItem
         {
-            cbWatch      *watch;
+            cbWatch::Pointer watch;
             wxPGProperty *property;
         };
         typedef std::vector<WatchItem> WatchItems;

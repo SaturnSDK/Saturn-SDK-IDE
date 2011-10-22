@@ -87,12 +87,12 @@ class DebuggerGDB : public cbDebuggerPlugin
         int GetExitCode() const { return m_LastExitCode; }
 
         cb::shared_ptr<cbWatch> AddWatch(const wxString& symbol);
-        void DeleteWatch(cbWatch *watch);
-        bool HasWatch(cbWatch *watch);
-        void ShowWatchProperties(cbWatch *watch);
-        bool SetWatchValue(cbWatch *watch, const wxString &value);
-        void ExpandWatch(cbWatch *watch);
-        void CollapseWatch(cbWatch *watch);
+        void DeleteWatch(cbWatch::Pointer watch);
+        bool HasWatch(cbWatch::Pointer watch);
+        void ShowWatchProperties(cbWatch::Pointer watch);
+        bool SetWatchValue(cbWatch::Pointer watch, const wxString &value);
+        void ExpandWatch(cbWatch::Pointer watch);
+        void CollapseWatch(cbWatch::Pointer watch);
 
         void AddWatchNoUpdate(const GDBWatch::Pointer &watch);
 

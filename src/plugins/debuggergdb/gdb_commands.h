@@ -766,7 +766,7 @@ class GdbCmd_Watch : public DebuggerCmd
             w.Trim(true);
             w.Trim(false);
 
-            if(!ParseGDBWatchValue(*m_watch, w))
+            if(!ParseGDBWatchValue(m_watch, w))
             {
                 wxString symbol;
                 m_watch->GetSymbol(symbol);
@@ -928,7 +928,7 @@ class GdbCmd_TooltipEvaluation : public DebuggerCmd
             GDBWatch::Pointer watch(new GDBWatch(m_What));
             watch->SetType(m_Type);
 
-            ParseGDBWatchValue(*watch, contents);
+            ParseGDBWatchValue(watch, contents);
             if (!m_Address.empty() && m_autoDereferenced)
                 watch->SetValue(m_Address);
             watch->SetForTooltip(true);

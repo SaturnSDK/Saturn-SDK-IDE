@@ -58,12 +58,13 @@ class DLLIMPORT cbWatch
         cbWatch& operator =(cbWatch &);
         cbWatch(cbWatch &);
 
-        typedef std::vector<cbWatch*> PtrContainer;
     public:
         typedef cb::shared_ptr<cbWatch> Pointer;
+        typedef cb::shared_ptr<const cbWatch> ConstPointer;
+    private:
+        typedef std::vector<Pointer> PtrContainer;
     public:
         cbWatch();
-        void Destroy();
     public:
         virtual void GetSymbol(wxString &symbol) const = 0;
         virtual void GetValue(wxString &value) const = 0;
@@ -73,24 +74,22 @@ class DLLIMPORT cbWatch
         virtual void SetType(const wxString &type) = 0;
 
         virtual wxString const & GetDebugString() const = 0;
-	protected:
+    protected:
         virtual ~cbWatch();
-        virtual void DoDestroy() = 0;
-	public:
-        void AddChild(cbWatch *watch);
+    public:
+        static void AddChild(cbWatch::Pointer parent, cbWatch::Pointer watch);
         void RemoveChild(int index);
         void RemoveChildren();
         bool RemoveMarkedChildren();
         int GetChildCount() const;
-        cbWatch* GetChild(int index);
-        const cbWatch* GetChild(int index) const;
+        Pointer GetChild(int index);
+        ConstPointer GetChild(int index) const;
 
-        cbWatch* FindChild(const wxString& name);
+        Pointer FindChild(const wxString& name);
         int FindChildIndex(const wxString& symbol) const;
 
-        void SetParent(cbWatch *parent);
-        const cbWatch* GetParent() const;
-        cbWatch* GetParent();
+        ConstPointer GetParent() const;
+        Pointer GetParent();
 
         bool IsRemoved() const;
         bool IsChanged() const;
@@ -104,14 +103,14 @@ class DLLIMPORT cbWatch
         void Expand(bool expand);
 
     private:
-        cbWatch*        m_parent;
+        cb::weak_ptr<cbWatch> m_parent;
         PtrContainer    m_children;
         bool            m_changed;
         bool            m_removed;
         bool            m_expanded;
 };
 
-cbWatch* DLLIMPORT cbGetRootWatch(cbWatch *watch);
+cbWatch::Pointer DLLIMPORT cbGetRootWatch(cbWatch::Pointer watch);
 
 class DLLIMPORT cbStackFrame
 {
@@ -297,7 +296,7 @@ class DLLIMPORT DebuggerManager : public Mgr<DebuggerManager>
         bool UpdateThreads();
 
     public: // watches
-        cbDebuggerPlugin* GetDebuggerHavingWatch(cbWatch *watch);
+        cbDebuggerPlugin* GetDebuggerHavingWatch(cbWatch::Pointer watch);
         bool ShowValueTooltip(const cbWatch::Pointer &watch, const wxRect &rect);
 
         RegisteredPlugins const & GetAllDebuggers() const;

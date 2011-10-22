@@ -103,7 +103,7 @@ class DLLIMPORT cbWatchesDlg
         virtual wxWindow* GetWindow() = 0;
 
         virtual void UpdateWatches() = 0;
-        virtual void AddWatch(cbWatch *watch) = 0;
+        virtual void AddWatch(cbWatch::Pointer watch) = 0;
         virtual void RenameWatch(wxObject *prop, const wxString &newSymbol) = 0;
 };
 

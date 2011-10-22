@@ -18,7 +18,7 @@
 
 #include "debugger_defs.h"
 
-EditWatchDlg::EditWatchDlg(GDBWatch* w, wxWindow* parent)
+EditWatchDlg::EditWatchDlg(GDBWatch::Pointer w, wxWindow* parent)
     : m_watch(w)
 {
     //ctor

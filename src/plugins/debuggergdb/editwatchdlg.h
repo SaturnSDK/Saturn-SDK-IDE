@@ -8,19 +8,19 @@
 
 #include "scrollingdialog.h"
 
-class GDBWatch;
+#include "debugger_defs.h"
 
 class EditWatchDlg : public wxScrollingDialog
 {
     public:
-        EditWatchDlg(GDBWatch* w = nullptr, wxWindow* parent = nullptr);
+        EditWatchDlg(GDBWatch::Pointer w, wxWindow* parent);
         virtual ~EditWatchDlg();
 
 //        virtual const GDBWatch& GetWatch(){ return m_watch; }
     protected:
         void EndModal(int retCode);
 
-        GDBWatch *m_watch;
+        GDBWatch::Pointer m_watch;
 };
 
 #endif // EDITWATCHDLG_H

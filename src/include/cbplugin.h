@@ -38,7 +38,7 @@
 // it will change when the SDK interface breaks
 #define PLUGIN_SDK_VERSION_MAJOR 1
 #define PLUGIN_SDK_VERSION_MINOR 12
-#define PLUGIN_SDK_VERSION_RELEASE 9
+#define PLUGIN_SDK_VERSION_RELEASE 10
 
 // class decls
 class wxMenuBar;
@@ -493,12 +493,12 @@ class PLUGIN_EXPORT cbDebuggerPlugin: public cbPlugin
 
         // watches
         virtual cb::shared_ptr<cbWatch> AddWatch(const wxString& symbol) = 0;
-        virtual void DeleteWatch(cbWatch *watch) = 0;
-        virtual bool HasWatch(cbWatch *watch) = 0;
-        virtual void ShowWatchProperties(cbWatch *watch) = 0;
-        virtual bool SetWatchValue(cbWatch *watch, const wxString &value) = 0;
-        virtual void ExpandWatch(cbWatch *watch) = 0;
-        virtual void CollapseWatch(cbWatch *watch) = 0;
+        virtual void DeleteWatch(cb::shared_ptr<cbWatch> watch) = 0;
+        virtual bool HasWatch(cb::shared_ptr<cbWatch> watch) = 0;
+        virtual void ShowWatchProperties(cb::shared_ptr<cbWatch> watch) = 0;
+        virtual bool SetWatchValue(cb::shared_ptr<cbWatch> watch, const wxString &value) = 0;
+        virtual void ExpandWatch(cb::shared_ptr<cbWatch> watch) = 0;
+        virtual void CollapseWatch(cb::shared_ptr<cbWatch> watch) = 0;
 
         struct WatchesDisabledMenuItems
         {
