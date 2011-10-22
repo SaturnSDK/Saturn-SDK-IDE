@@ -411,7 +411,7 @@ class PLUGIN_EXPORT cbDebuggerPlugin: public cbPlugin
         void SetActiveConfig(int index);
         int GetIndexOfActiveConfig() const;
 
-        /** @brief Called when the Uesr clicks OK in Settings -> Debugger... */
+        /** @brief Called when the user clicks OK in Settings -> Debugger... */
         virtual void OnConfigurationChange(bool isActive) {}
 
         /** @brief Start a new debugging process. */
