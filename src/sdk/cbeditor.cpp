@@ -2219,10 +2219,10 @@ void cbEditor::RefreshBreakpointMarkers(const cbDebuggerPlugin *debugger)
         return;
     // First remove all breakpoint markers, then add the markers for the active debugger
     cbStyledTextCtrl *c = GetControl();
-    int line = -1;
+    int line = 0;
     while ((line = c->MarkerNext(line, (1 << BREAKPOINT_MARKER))) != -1)
         MarkerToggle(BREAKPOINT_MARKER, line);
-    line = -1;
+    line = 0;
     while ((line = c->MarkerNext(line, (1 << BREAKPOINT_DISABLED_MARKER))) != -1)
         MarkerToggle(BREAKPOINT_DISABLED_MARKER, line);
 
