@@ -1559,7 +1559,19 @@ void DebuggerGDB::Stop()
     if (m_pProcess && m_Pid)
     {
         if (!IsStopped())
+        {
+            // TODO (obfuscated#): Check if this can be implemented on Windows
+#ifdef __WXGTK__
+            int childPID=m_State.GetDriver()->GetChildPID();
+            if (childPID == 0)
+            {
+                DebugLog(_("Child pid is 0, so we will terminate GDB directly"));
+                wxKill(m_Pid, wxSIGTERM);
+                return;
+            }
+#endif
             Break();
+        }
         RunCommand(CMD_STOP);
     }
 }
