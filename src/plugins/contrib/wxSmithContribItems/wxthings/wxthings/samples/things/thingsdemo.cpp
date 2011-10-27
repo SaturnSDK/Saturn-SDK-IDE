@@ -36,7 +36,7 @@
 #include "wx/things/range.h"
 
 /* XPM */
-static char *mondrian_xpm[] = {
+static const char *mondrian_xpm[] = {
 /* columns rows colors chars-per-pixel */
 "32 32 6 1",
 "  c Black",
@@ -470,7 +470,7 @@ void MyFrame::OnFileBrowser(wxFileBrowserEvent &event)
 
 int bad_matrix_tests = 0;
 
-void DisplayMatrix(wxTextCtrl* textCtrl, const wxMatrix2D& matrix, const wxString& prepend, const wxString& test)
+void DisplayMatrix(wxTextCtrl* textCtrl, const wxthings::wxMatrix2D& matrix, const wxString& prepend, const wxString& test)
 {
     wxString t(wxT(" : No test\n"));
     if (!test.IsEmpty())
@@ -499,7 +499,7 @@ void MyFrame::OnTestMatrix(wxCommandEvent& WXUNUSED(event))
     textCtrl->SetSize(dlg.GetClientSize());
 
     double test_data[] = { 1, 2, 3, 4,  5, 6, 7, 8 };
-    wxMatrix2D matrix4x2(4, 2, test_data);
+    wxthings::wxMatrix2D matrix4x2(4, 2, test_data);
     DisplayMatrix(textCtrl, matrix4x2, wxT("Initial matrix4x2 = [1 2 3 4; 5 6 7 8]"), wxT("1 2 3 4\n5 6 7 8"));
 
     DisplayMatrix(textCtrl, matrix4x2.Transpose(), wxT("matrix4x2.Transpose()"), wxT("1 5\n2 6\n3 7\n4 8"));
@@ -521,10 +521,10 @@ void MyFrame::OnTestMatrix(wxCommandEvent& WXUNUSED(event))
     DisplayMatrix(textCtrl, matrix4x2.SubCols(1, 1), wxT("matrix4x2.SubCols(1, 1)"), wxT("2\n6"));
     DisplayMatrix(textCtrl, matrix4x2.SubCols(2, 3), wxT("matrix4x2.SubCols(2, 3)"), wxT("3 4\n7 8"));
 
-    wxMatrix2D matrix2x4(matrix4x2, true); matrix2x4.Reshape(2, 4);
+    wxthings::wxMatrix2D matrix2x4(matrix4x2, true); matrix2x4.Reshape(2, 4);
     DisplayMatrix(textCtrl, matrix2x4, wxT("matrix4x2.Reshape(2, 4)"), wxT("1 2\n3 4\n5 6\n7 8"));
 
-    wxMatrix2D matrix4x2neg(matrix4x2.Mult(-1), true);
+    wxthings::wxMatrix2D matrix4x2neg(matrix4x2.Mult(-1), true);
     DisplayMatrix(textCtrl, matrix4x2.AppendRows(matrix4x2neg), wxT("matrix4x2.AppendRows(matrix4x2neg) (insert at -1)"), wxT("1 2 3 4\n5 6 7 8\n-1 -2 -3 -4\n-5 -6 -7 -8"));
     DisplayMatrix(textCtrl, matrix4x2.InsertRows(0, matrix4x2neg), wxT("matrix4x2.InsertRows(0, matrix4x2neg)"), wxT("-1 -2 -3 -4\n-5 -6 -7 -8\n1 2 3 4\n5 6 7 8"));
     DisplayMatrix(textCtrl, matrix4x2.InsertRows(1, matrix4x2neg), wxT("matrix4x2.InsertRows(1, matrix4x2neg)"), wxT("1 2 3 4\n-1 -2 -3 -4\n-5 -6 -7 -8\n5 6 7 8"));
@@ -541,18 +541,18 @@ void MyFrame::OnTestMatrix(wxCommandEvent& WXUNUSED(event))
     DisplayMatrix(textCtrl, matrix4x2.Pow(2), wxT("matrix4x2.Pow(2)"), wxT("1 4 9 16\n25 36 49 64"));
 
     double square3[] = { 1, 2, 3,  4, 5, 6,  7, 8, 9 };
-    wxMatrix2D matrix3x3(3, 3, square3);
+    wxthings::wxMatrix2D matrix3x3(3, 3, square3);
     DisplayMatrix(textCtrl, matrix3x3, wxT("Initial square matrix3x3"), wxT("1 2 3\n4 5 6\n7 8 9"));
     DisplayMatrix(textCtrl, matrix3x3.RotateSquare45(true), wxT("matrix3x3.RotateSquare45(true)"), wxT("4 1 2\n7 5 3\n8 9 6"));
     DisplayMatrix(textCtrl, matrix3x3.RotateSquare45(false), wxT("matrix3x3.RotateSquare45(false)"), wxT("2 3 6\n1 5 9\n4 7 8"));
 
     double square5[] = { 1, 2, 3, 4, 5,  6, 7, 8, 9, 10,  11, 12, 13, 14, 15,  16, 17, 18, 19, 20,  21, 22, 23, 24, 25 };
-    wxMatrix2D matrix5x5(5, 5, square5);
+    wxthings::wxMatrix2D matrix5x5(5, 5, square5);
     DisplayMatrix(textCtrl, matrix5x5, wxT("Initial square matrix5x5"), wxT("1 2 3 4 5\n6 7 8 9 10\n11 12 13 14 15\n16 17 18 19 20\n21 22 23 24 25"));
     DisplayMatrix(textCtrl, matrix5x5.RotateSquare45(true), wxT("matrix5x5.RotateSquare45(true)"), wxT("11 6 1 2 3\n16 12 7 8 4\n21 17 13 9 5\n22 18 19 14 10\n23 24 25 20 15"));
     DisplayMatrix(textCtrl, matrix5x5.RotateSquare45(false), wxT("matrix5x5.RotateSquare45(false)"), wxT("3 4 5 10 15\n2 8 9 14 20\n1 7 13 19 25\n6 12 17 18 24\n11 16 21 22 23"));
 
-    wxMatrix2D identMatrix5x5; identMatrix5x5.CreateIdentity(5);
+    wxthings::wxMatrix2D identMatrix5x5; identMatrix5x5.CreateIdentity(5);
     DisplayMatrix(textCtrl, matrix5x5.Mult(identMatrix5x5), wxT("matrix5x5.Mult(identMatrix5x5 from CreateIdentity(5))"), wxT("1 2 3 4 5\n6 7 8 9 10\n11 12 13 14 15\n16 17 18 19 20\n21 22 23 24 25"));
 
     textCtrl->AppendText(wxString::Format(wxT("\n\nTests that Failed : %d\n"), bad_matrix_tests));

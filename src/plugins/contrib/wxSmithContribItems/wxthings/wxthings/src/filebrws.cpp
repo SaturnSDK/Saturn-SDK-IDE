@@ -6,6 +6,10 @@
 // License:     wxWidgets
 /////////////////////////////////////////////////////////////////////////////
 
+#include "precomp.h"
+
+#include "wx/things/thingdef.h"
+
 // For compilers that support precompilation, includes "wx/wx.h".
 #include "wx/wxprec.h"
 
@@ -40,8 +44,10 @@ WX_DEFINE_OBJARRAY(wxArrayFileData);
 
 // #include "wx/stedit/stedit.h"
 
-// defined in src/generic/dirctrlg.cpp
-extern size_t wxGetAvailableDrives(wxArrayString &paths, wxArrayString &names, wxArrayInt &icon_ids);
+#if defined(__WINDOWS__) || defined(__DOS__) || defined(__WXMAC__) || defined(__OS2__)
+    // defined in src/generic/dirctrlg.cpp
+    extern size_t wxGetAvailableDrives(wxArrayString &paths, wxArrayString &names, wxArrayInt &icon_ids);
+#endif
 
 #define BORDER    5
 #define MIN_SPLIT 8
@@ -986,11 +992,18 @@ bool wxFileBrowser::Create( wxWindow *parent, const wxWindowID id,
 
     m_dirCtrl->Show(true);
 
+#if wxCHECK_VERSION(2, 9, 0)
+    m_fileCtrl = new wxFileListCtrl(m_splitterWin, wxID_ANY, GetWild(), false,
+                                wxDefaultPosition, wxSize(50,50),
+                                wxNO_BORDER|wxLC_SINGLE_SEL|FBStyleToLCStyle(style));
+#else
     m_fileCtrl = new wxFileCtrl(m_splitterWin, wxID_ANY, GetWild(), false,
                                 wxDefaultPosition, wxSize(50,50),
                                 wxNO_BORDER|wxLC_SINGLE_SEL|FBStyleToLCStyle(style));
-    m_fileCtrl->Show(true);
+#endif // wxCHECK_VERSION(2, 9, 0)
+
     m_fileCtrl->GoToDir(m_path);
+    m_fileCtrl->Show(true);
 
     // ------------------------------------------------------------------------
 
@@ -1026,7 +1039,7 @@ void wxFileBrowser::OnSize( wxSizeEvent &event )
     DoSize();
 
     // The m_pathCombo disappears for horiz resizing, just send another event
-#if !wxCHECK_VERSION(2, 7, 0) && __WXMSW__
+#if !wxCHECK_VERSION(2, 7, 0) && defined(__WXMSW__)
     if (event.GetId() == GetId())
     {
         wxSizeEvent newEvent(event);
@@ -1041,7 +1054,11 @@ void wxFileBrowser::OnSize( wxSizeEvent &event )
 // The code in src/gtk/window.cpp wxWindow::DoSetSize fails since
 //  m_parent->m_wxwindow == NULL so nothing is done
 #ifdef __WXGTK__
+#if defined(__WXGTK20__)
+    #include <gtk-2.0/gtk/gtk.h>
+#else
     #include <gtk/gtk.h>
+#endif
     void GtkToolbarResizeWindow(wxWindow* win, const wxSize& size)
     {
         // don't take the x,y values, they're wrong because toolbar sets them
@@ -1051,6 +1068,8 @@ void wxFileBrowser::OnSize( wxSizeEvent &event )
         if (GTK_WIDGET_VISIBLE(widget))
             gtk_widget_queue_resize(widget);
     }
+#else
+    void GtkToolbarResizeWindow(wxWindow* , const wxSize& ) {}
 #endif //__WXGTK__
 
 void wxFileBrowser::DoSize()
@@ -1076,7 +1095,9 @@ void wxFileBrowser::DoSize()
         GtkToolbarResizeWindow(m_filterCombo, comboSize);
 #else
         m_filterCombo->SetSize(comboSize);
+    #if !wxCHECK_VERSION(2, 9, 0)
         m_viewToolBar->Realize();
+    #endif // !wxCHECK_VERSION(2, 9, 0)
 #endif
 
         //wxPrintf(wxT("FilterCombo %d %d - %d\n"), comboSize.x, comboSize.y, m_filterCombo->GetSize().y);
@@ -1099,7 +1120,9 @@ void wxFileBrowser::DoSize()
 #else
         //wxPrintf(wxT("Do Size %d %d - %d %d %d\n"), clientSize.x, clientSize.y, clientSize.x, comboRect.width, clientSize.x - comboRect.x - toolSize.x - marginSize.x);
         m_pathCombo->SetSize(comboSize);
+    #if !wxCHECK_VERSION(2, 9, 0)
         m_pathToolBar->Realize();
+    #endif // !wxCHECK_VERSION(2, 9, 0)
 #endif
 
         //wxPrintf(wxT("PathCombo %d %d - %d\n"), clientSize.x - comboRect.x - toolSize.x - marginSize.x, comboRect.height, m_pathCombo->GetSize().y);

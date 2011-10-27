@@ -6,6 +6,8 @@
 // License:     wxWidgets v2
 /////////////////////////////////////////////////////////////////////////////
 
+#include "precomp.h"
+
 // For compilers that support precompilation, includes "wx/wx.h".
 #include "wx/wxprec.h"
 
@@ -31,6 +33,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+
+namespace wxthings {
 
 //----------------------------------------------------------------------------
 //  wxMatrix2DRefData
@@ -963,3 +967,5 @@ wxString wxMatrix2D::ToString(const wxString& colSep, const wxString& rowSep) co
 
     return str;
 }
+
+} // end namespace wxthings

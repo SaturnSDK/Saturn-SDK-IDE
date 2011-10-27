@@ -24,13 +24,13 @@
 
 #include "wxsIExplore.h"
 
+#include "IEHtmlWin.h"
+
 //------------------------------------------------------------------------------
 
 namespace
 {
-
 // Loading images from xpm files
-
     #include "IE16.xpm"
     #include "IE32.xpm"
 
@@ -74,83 +74,63 @@ wxsIExplore::wxsIExplore(wxsItemResData* Data):
         wxsIExploreEvents,
         wxsIExploreStyles)
 {
-
 // start with a clean slate
-
-    mStartPage = _("");
+    mStartPage = _T("");
 }
 
 //------------------------------------------------------------------------------
 
-void wxsIExplore::OnBuildCreatingCode() {
-int         i;
-wxString    inc;
-wxString    vname;                  // name of this var
-wxString    bname;                  // name of wxBitmap for the button
-wxString    ss, tt;
-
+void wxsIExplore::OnBuildCreatingCode()
+{
 // valid language?
-
     if (GetLanguage() != wxsCPP) wxsCodeMarks::Unknown(_T("wxsIExplore::OnBuildCreatingCode"),GetLanguage());
 
 // who we are
-
-    vname = GetVarName();
+    wxString vname = GetVarName(); // name of this var
 
 // include files
-
     AddHeader(_("<IEHtmlWin.h>"), GetInfo().ClassName, 0);
 
 // create the explorer
-
     Codef(_T("%C(%W, %I, %P, %S, %T, %N);\n"));
     BuildSetupWindowCode();
 
 // start page (if given) must have a protocol
 // if none given, use "http://"
-
-    if (! mStartPage.IsEmpty()) {
-        i = mStartPage.Find(_T("//"));
+    if ( !mStartPage.IsEmpty())
+    {
+        int i = mStartPage.Find(_T("//"));
         if (i == wxNOT_FOUND) mStartPage = _T("http://") + mStartPage;
         Codef(_T("%s->LoadUrl(%t);\n"), vname.c_str(), mStartPage.c_str());
-    };
-
+    }
 }
 
 
 
 //------------------------------------------------------------------------------
 
-wxObject* wxsIExplore::OnBuildPreview(wxWindow* Parent, long Flags) {
-int             i;
-wxIEHtmlWin     *ie;
-
+wxObject* wxsIExplore::OnBuildPreview(wxWindow* Parent, long Flags)
+{
 // make it
-
-    ie = new wxIEHtmlWin(Parent, GetId(), Pos(Parent), Size(Parent), Style(), _T("IExplore"));
+    wxIEHtmlWin *ie = new wxIEHtmlWin(Parent, GetId(), Pos(Parent), Size(Parent), Style(), _T("IExplore"));
     SetupWindow(ie, Flags);
 
 // start page
-
-
     if (! mStartPage.IsEmpty()) {
-        i = mStartPage.Find(_T("//"));
+        int i = mStartPage.Find(_T("//"));
         if (i == wxNOT_FOUND) mStartPage = _T("http://") + mStartPage;
         if ((Flags & pfExact) != 0) ie->LoadUrl(mStartPage);
     };
 
-
 // done
-
     return ie;
 }
 
 //------------------------------------------------------------------------------
 
-void wxsIExplore::OnEnumWidgetProperties(long Flags) {
-
+void wxsIExplore::OnEnumWidgetProperties(long Flags)
+{
     WXS_STRING(wxsIExplore, mStartPage,      _("Start Page"),               _T("startpage"),      _T(""), false);
-
 };
 
 

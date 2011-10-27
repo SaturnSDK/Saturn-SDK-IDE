@@ -273,7 +273,7 @@ public :
             m_sort = source.GetSortType();
         }
 
-    inline int GetCount() const { return m_blocks.GetCount(); }
+    inline size_t GetCount() const { return m_blocks.GetCount(); }
 
     inline void Clear() { m_blocks.Clear(); }
 
@@ -357,7 +357,7 @@ public :
             m_sort = source.GetSortType();
         }
 
-    inline int GetCount() const { return m_blocks.GetCount(); }
+    inline size_t GetCount() const { return m_blocks.GetCount(); }
 
     inline void Clear() { m_blocks.Clear(); }
 

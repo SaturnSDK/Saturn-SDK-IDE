@@ -7,7 +7,6 @@
  * License:
  **************************************************************/
 
-#include "wx_pch.h"
 #include "wxSmithDemoMain.h"
 #include <wx/msgdlg.h>
 
@@ -18,6 +17,8 @@
 //*)
 #include <wx/paper.h>					// wxPrintPaperDatabase.
 #include <wx/aboutdlg.h>
+#include <wx/log.h>
+#include <wx/dcmemory.h>
 #include "version.h"
 
 #include "media/smiley.xpm"
@@ -1396,4 +1397,3 @@ void wxSmithDemoFrame::OnMediaCtrl1Finished(wxMediaEvent& event)
 {
 	LogString(wxString::Format(_("wxMediaCtrl: Playback finished.")));
 }
-

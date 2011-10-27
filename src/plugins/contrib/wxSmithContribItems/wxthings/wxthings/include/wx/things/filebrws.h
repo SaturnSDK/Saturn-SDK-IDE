@@ -10,12 +10,13 @@
 #ifndef __WX_FILEBROWSER_H__
 #define __WX_FILEBROWSER_H__
 
+#include "wx/things/thingdef.h"
+
 #include "wx/listctrl.h"
 #include "wx/dirctrl.h"
 #include "wx/filedlg.h"
 #include "wx/textdlg.h"
 #include "wx/generic/filedlgg.h"
-#include "wx/things/thingdef.h"
 
 class WXDLLEXPORT wxCheckBox;
 class WXDLLEXPORT wxComboBox;
@@ -318,7 +319,11 @@ protected :
 
     wxSplitterWindow *m_splitterWin;
     wxGenericDirCtrl *m_dirCtrl;
+#if wxCHECK_VERSION(2, 9, 0)
+    wxFileListCtrl   *m_fileCtrl;
+#else
     wxFileCtrl       *m_fileCtrl;
+#endif //wxCHECK_VERSION(2, 9, 0)
 
     wxMenu           *m_listMenu;   // popup menu in listctrl
     wxMenu           *m_treeMenu;   // popup menu in treectrl

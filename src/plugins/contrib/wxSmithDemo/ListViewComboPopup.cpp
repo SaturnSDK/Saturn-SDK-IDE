@@ -1,4 +1,3 @@
-#include "wx_pch.h"
 #include "ListViewComboPopup.h"
 
 #ifndef WX_PRECOMP
@@ -27,4 +26,3 @@ ListViewComboPopup::~ListViewComboPopup()
 	//(*Destroy(ListViewComboPopup)
 	//*)
 }
-

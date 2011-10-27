@@ -64,7 +64,7 @@
 			<Add directory="$(#wx.include)" />
 		</Compiler>
 		<ResourceCompiler>
-			<Add directory="$(#wx)\include" />
+			<Add directory="$(#wx.include)" />
 		</ResourceCompiler>
 		<Linker>
 			<Add option="-mthreads" />
@@ -81,10 +81,6 @@
 		<Unit filename="wxSmithDemoApp.h" />
 		<Unit filename="wxSmithDemoMain.cpp" />
 		<Unit filename="wxSmithDemoMain.h" />
-		<Unit filename="wx_pch.h">
-			<Option compile="1" />
-			<Option weight="0" />
-		</Unit>
 		<Unit filename="wxsmith\wxSmithDemoframe.wxs" />
 		<Extensions>
 			<code_completion />

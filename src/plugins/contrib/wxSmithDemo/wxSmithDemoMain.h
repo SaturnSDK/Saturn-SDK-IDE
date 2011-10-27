@@ -24,7 +24,7 @@
 #include <wx/menu.h>
 #include <wx/htmllbox.h>
 #include <wx/filepicker.h>
-#include "./wximages/wxSmithDemoMain_ImageList1.xpm"
+#include "wximages/wxSmithDemoMain_ImageList1.xpm"
 #include <wx/listbox.h>
 #include <wx/bitmap.h>
 #include <wx/textdlg.h>
@@ -40,7 +40,7 @@
 #include <wx/imaglist.h>
 #include <wx/statbmp.h>
 #include <wx/button.h>
-#include "./wximages/wxSmithDemoMain_Image1_XPM.xpm"
+#include "wximages/wxSmithDemoMain_Image1_XPM.xpm"
 #include  <wx/richtext/richtextstyledlg.h>
 #include <wx/image.h>
 #include <wx/animate.h>
@@ -49,6 +49,8 @@
 #include <wx/clrpicker.h>
 #include <wx/statusbr.h>
 //*)
+
+#include <wx/msgdlg.h>
 
 class wxSmithDemoFrame: public wxFrame
 {

@@ -135,7 +135,7 @@ public :
         }
 
     // Get the number of individual ranges
-    inline int GetCount() const { return m_ranges.GetCount(); }
+    inline size_t GetCount() const { return m_ranges.GetCount(); }
     // Get total number of items selected in all ranges, ie. sum of all wxRange::GetWidths
     int GetItemCount() const;
     // Get the ranges themselves to iterate though for example
@@ -281,7 +281,7 @@ public :
         }
 
     // Get the number of individual ranges
-    inline int GetCount() const { return m_ranges.GetCount(); }
+    inline size_t GetCount() const { return m_ranges.GetCount(); }
     // Get the ranges themselves to iterate though for example
     const wxArrayRangeDouble& GetRangeArray() const { return m_ranges; }
     // Get a single range

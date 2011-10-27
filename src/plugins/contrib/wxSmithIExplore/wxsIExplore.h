@@ -25,44 +25,26 @@
 #ifndef wxsIExplore_H
 #define wxsIExplore_H
 
-#include    <stdio.h>
-#include    <stdlib.h>
-#include    <time.h>
-#include    <cmath>
-#include    <iostream>
-
-#include    <windef.h>
-#include    <wx/settings.h>
-#include    <wx/utils.h>
 #include    <wx/string.h>
-#include    <wx/filename.h>
-
 
 #include    <wxswidget.h>
 #include    <wxsitemresdata.h>
-#include    <wxsarraystringproperty.h>
-#include    <wxsenumproperty.h>
-#include    <wxslongproperty.h>
-#include    <wxsbitmapiconproperty.h>
-#include    <wxsboolproperty.h>
 
-#include    "IEHtmlWin.h"
+class wxsItemResData;
+class wxObject;
+class wxWindow;
 
 class wxsIExplore : public wxsWidget
 {
     public:
-
         wxsIExplore(wxsItemResData* Data);
 
-
     protected:
-
         virtual wxObject*   OnBuildPreview(wxWindow* Parent,long Flags);
         virtual void        OnBuildCreatingCode();
         virtual void        OnEnumWidgetProperties(long Flags);
 
         wxString            mStartPage;
-
 };
 
 #endif      // wxsIExplore_H

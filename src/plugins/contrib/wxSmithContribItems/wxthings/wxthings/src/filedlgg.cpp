@@ -16,6 +16,9 @@
 // different place. By #including the source from this file we can avoid this
 // and use the $(WXWIN) environment var in the -I include path.
 
+#include "precomp.h"
+
+#include "wx/things/thingdef.h"
 
 #include "wx/defs.h"
 #include "wx/filedlg.h"
@@ -30,5 +33,10 @@
     // Typically we have $(WXWIN)/include in the search path so this should
     // find the path to filedlgg correctly.
     #include "../src/generic/filedlgg.cpp"
+
+// --------------------------------------------------------------------------
+// DO NOT DELETE : Cmake will configure this file and replace the marker below.
+// @CMAKE_CONFIGURE_WXTHINGS_FILEDLGG@
+
 
 #endif //_WX_FILEDLGG_H_

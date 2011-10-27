@@ -7,6 +7,8 @@
 // Licence:     wxWidgets
 /////////////////////////////////////////////////////////////////////////////
 
+#include "precomp.h"
+
 // For compilers that support precompilation, includes "wx.h".
 #include "wx/wxprec.h"
 

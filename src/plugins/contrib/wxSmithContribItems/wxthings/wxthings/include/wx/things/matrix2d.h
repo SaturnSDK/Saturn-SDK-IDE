@@ -16,10 +16,12 @@
 
 class WXDLLEXPORT wxArrayInt;
 
+namespace wxthings {
+
 //----------------------------------------------------------------------------
 //  wxMatrix2D - a generic double valued 2D ref counted matrix class
 //----------------------------------------------------------------------------
-class wxMatrix2D : public wxObject
+class WXDLLIMPEXP_THINGS wxMatrix2D : public wxObject
 {
 public:
     wxMatrix2D() : wxObject() {}
@@ -167,5 +169,7 @@ public:
 private:
     DECLARE_DYNAMIC_CLASS(wxMatrix2D)
 };
+
+} // end namespace wxthings
 
 #endif // __WXTHINGS_MATRIX2D_H__

@@ -7,7 +7,6 @@
  * License:
  **************************************************************/
 
-#include "wx_pch.h"
 #include "wxSmithDemoApp.h"
 
 //(*AppHeaders

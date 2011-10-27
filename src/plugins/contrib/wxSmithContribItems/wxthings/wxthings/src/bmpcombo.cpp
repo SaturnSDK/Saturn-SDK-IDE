@@ -9,6 +9,8 @@
 // Licence:     wxWidgets licence
 /////////////////////////////////////////////////////////////////////////////
 
+#include "precomp.h"
+
 // For compilers that support precompilation, includes "wx/wx.h".
 #include "wx/wxprec.h"
 
@@ -65,7 +67,7 @@ void wxBmpComboPopupChild::OnPaint( wxPaintEvent &WXUNUSED(event) )
     wxPoint origin = dc.GetDeviceOrigin();
     wxSize clientSize = GetClientSize();
 
-    for (int n=0; n<m_bmpCombo->GetCount(); n++)
+    for (size_t n = 0; n < m_bmpCombo->GetCount(); n++)
     {
         if (y + dy > -origin.y)
         {
@@ -101,7 +103,7 @@ void wxBmpComboPopupChild::OnMouse( wxMouseEvent &event )
     int sel = m_bmpCombo->GetItemSize().y != 0 ? mouse.y/m_bmpCombo->GetItemSize().y : -1;
     if (sel < 0)
         sel = 0;
-    else if (sel >= m_bmpCombo->GetCount())
+    else if (sel >= (int)m_bmpCombo->GetCount())
         sel = m_bmpCombo->GetCount()-1;
 
     if (event.LeftDown())
@@ -149,7 +151,7 @@ void wxBmpComboPopupChild::OnKeyDown( wxKeyEvent &event )
 
     if (sel < 0)
         sel = 0;
-    if (sel >= m_bmpCombo->GetCount())
+    if (sel >= (int)m_bmpCombo->GetCount())
         sel = m_bmpCombo->GetCount()-1;
 
     if (sel != m_last_selection)
@@ -207,7 +209,7 @@ void wxBmpComboLabel::OnPaint( wxPaintEvent &WXUNUSED(event) )
     dc.DrawRectangle(wxRect(wxPoint(0,0), GetClientSize()));
 
     const int sel = m_bmpCombo->GetSelection();
-    if ((sel >= 0) && (sel < m_bmpCombo->GetCount()))
+    if ((sel >= 0) && (sel < (int)m_bmpCombo->GetCount()))
         m_bmpCombo->DrawItem(dc, sel);
 }
 
@@ -499,19 +501,19 @@ void wxBmpComboBox::Delete( unsigned int n, unsigned int count )
 
 wxString wxBmpComboBox::GetLabel( int n ) const
 {
-    wxCHECK_MSG((n>=0) && (n < GetCount()), wxEmptyString, wxT("invalid index"));
+    wxCHECK_MSG((n>=0) && (n < (int)GetCount()), wxEmptyString, wxT("invalid index"));
     return m_labels[n];
 }
 
 wxBitmap wxBmpComboBox::GetItemBitmap( int n ) const
 {
-    wxCHECK_MSG((n>=0) && (n < GetCount()), wxNullBitmap, wxT("invalid index"));
+    wxCHECK_MSG((n>=0) && (n < (int)GetCount()), wxNullBitmap, wxT("invalid index"));
     return *(wxBitmap *)m_bitmaps.Item(n);
 }
 
 void wxBmpComboBox::SetSelection( int n, bool send_event )
 {
-    wxCHECK_RET((n>=0) && (n < GetCount()), wxT("invalid index"));
+    wxCHECK_RET((n>=0) && (n < (int)GetCount()), wxT("invalid index"));
     m_selection = n;
     m_labelWin->Refresh(true);
 
@@ -551,7 +553,7 @@ void wxBmpComboBox::SetNextSelection(bool foward, bool send_event)
 
 void wxBmpComboBox::SetLabel(int n, const wxString &label)
 {
-    wxCHECK_RET( (n>=0) && (n < GetCount()), wxT("invalid index"));
+    wxCHECK_RET( (n>=0) && (n < (int)GetCount()), wxT("invalid index"));
     m_labels[n] = label;
     CalcLayout();
 
@@ -560,7 +562,7 @@ void wxBmpComboBox::SetLabel(int n, const wxString &label)
 
 void wxBmpComboBox::SetItemBitmap(int n, const wxBitmap &bitmap)
 {
-    wxCHECK_RET((n>=0) && (n < GetCount()), wxT("invalid index"));
+    wxCHECK_RET((n>=0) && (n < (int)GetCount()), wxT("invalid index"));
     *((wxBitmap*)m_bitmaps.Item(n)) = bitmap;
     CalcLayout();
 

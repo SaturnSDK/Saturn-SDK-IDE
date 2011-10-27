@@ -117,7 +117,7 @@ public:
     void Clear();
     void Delete( unsigned int n, unsigned int count = 1 );
 
-    int GetCount() const { return m_labels.GetCount(); }
+    size_t GetCount() const { return m_labels.GetCount(); }
 
     int  GetSelection() const { return m_selection; }
     void SetSelection( int n, bool send_event = false );
