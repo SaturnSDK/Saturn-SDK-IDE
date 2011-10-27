@@ -474,8 +474,6 @@ void cbAuiNotebook::OnResize(wxSizeEvent& event)
         {
             if(nb->m_TabCtrlSize == wxDefaultSize)
                 nb->m_TabCtrlSize = event.GetSize();
-            if(nb->m_TabCtrlSize == event.GetSize())
-                return;
             nb->m_TabCtrlSize = event.GetSize();
             nb->MinimizeFreeSpace(tabCtrl);
         }
@@ -551,7 +549,7 @@ void cbAuiNotebook::MinimizeFreeSpace(wxAuiTabCtrl* tabCtrl)
         // So we force a paint event here to render the tabCtrl
         // a little hacky, but it works
         wxPaintEvent event;
-        tabCtrl->ProcessEvent(event);
+        tabCtrl->GetEventHandler()->ProcessEvent(event);
         int tabOffset = tabCtrl->GetTabOffset();
 
         wxClientDC dc(win);
