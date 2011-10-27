@@ -153,9 +153,9 @@ class DebuggerDriver
         /** Is the driver processing some commands? */
         bool IsQueueBusy() const { return m_QueueBusy; }
         /** Set child PID (debuggee's). Usually set by debugger commands. */
-        virtual void SetChildPID(long pid) { m_ChildPID = pid; }
+        void SetChildPID(long pid) { m_ChildPID = pid; }
         /** Get the child's (debuggee's) PID. */
-        virtual long GetChildPID() const { return m_ChildPID; }
+        long GetChildPID() const { return m_ChildPID; }
         /** Request to switch to another thread. */
         virtual void SwitchThread(size_t threadIndex) = 0;
 
