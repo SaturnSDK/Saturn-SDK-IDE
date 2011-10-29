@@ -307,7 +307,6 @@ extern EVTIMPORT const wxEventType cbEVT_PIPEDPROCESS_STDERR;
 #define EVT_PIPEDPROCESS_STDERR(id, fn) DECLARE_EVENT_TABLE_ENTRY( cbEVT_PIPEDPROCESS_STDERR, id, wxID_ANY, (wxObjectEventFunction) (wxEventFunction) (wxCommandEventFunction) & fn, (wxObject *) NULL ),
 #define EVT_PIPEDPROCESS_STDERR_RANGE(id, id1, fn) DECLARE_EVENT_TABLE_ENTRY( cbEVT_PIPEDPROCESS_STDERR, id, id1, (wxObjectEventFunction) (wxEventFunction) (wxCommandEventFunction) & fn, (wxObject *) NULL ),
 extern EVTIMPORT const wxEventType cbEVT_PIPEDPROCESS_TERMINATED;
-//#define EVT_PIPEDPROCESS_TERMINATED(id, fn) DECLARE_EVENT_TABLE_ENTRY( cbEVT_PIPEDPROCESS_TERMINATED, id, wxID_ANY, (wxObjectEventFunction) (wxEventFunction) (wxCommandEventFunction) & fn, (wxObject *) NULL ),
 #define EVT_PIPEDPROCESS_TERMINATED(id, fn) DECLARE_EVENT_TABLE_ENTRY( cbEVT_PIPEDPROCESS_TERMINATED, id, wxID_ANY, (wxObjectEventFunction) (wxEventFunction) (wxCommandEventFunction) (wxNotifyEventFunction) (CodeBlocksEventFunction)&fn, (wxObject *) NULL ),
 #define EVT_PIPEDPROCESS_TERMINATED_RANGE(id, id1, fn) DECLARE_EVENT_TABLE_ENTRY( cbEVT_PIPEDPROCESS_TERMINATED, id, id1, (wxObjectEventFunction) (wxEventFunction) (wxCommandEventFunction) & fn, (wxObject *) NULL ),
 
@@ -366,6 +365,10 @@ extern EVTIMPORT const wxEventType cbEVT_CLEAN_PROJECT_STARTED;
 extern EVTIMPORT const wxEventType cbEVT_CLEAN_WORKSPACE_STARTED;
 #define EVT_CLEAN_WORKSPACE_STARTED(fn) DECLARE_EVENT_TABLE_ENTRY( cbEVT_CLEAN_WORKSPACE_STARTED, -1, -1, (wxObjectEventFunction)(wxEventFunction)(CodeBlocksEventFunction)&fn, (wxObject *) NULL ),
 
+// request app to compile a single file
+extern EVTIMPORT const wxEventType cbEVT_COMPILE_FILE_REQUEST;
+#define EVT_COMPILE_FILE_REQUEST(fn) DECLARE_EVENT_TABLE_ENTRY( cbEVT_COMPILE_FILE_REQUEST, -1, -1, (wxObjectEventFunction)(wxEventFunction)(CodeBlocksEventFunction)&fn, (wxObject *) NULL ),
+
 // debugger-related events (debugger plugins must fire them)
 extern EVTIMPORT const wxEventType cbEVT_DEBUGGER_STARTED;
 #define EVT_DEBUGGER_STARTED(fn) DECLARE_EVENT_TABLE_ENTRY( cbEVT_DEBUGGER_STARTED, -1, -1, (wxObjectEventFunction)(wxEventFunction)(CodeBlocksEventFunction)&fn, (wxObject *) NULL ),
@@ -408,5 +411,11 @@ extern EVTIMPORT const wxEventType cbEVT_UNLOCK_LOG_MANAGER;
 // left doubleclick on a tab
 extern EVTIMPORT const wxEventType cbEVT_CBAUIBOOK_LEFT_DCLICK;
 #define EVT_CBAUIBOOK_LEFT_DCLICK(winid, fn) DECLARE_EVENT_TABLE_ENTRY( cbEVT_CBAUIBOOK_LEFT_DCLICK, winid, -1, (wxObjectEventFunction)(wxEventFunction)(wxMouseEventFunction)&fn, (wxObject *) NULL ),
+
+// code-completion related events (CodeCompletion plugin usually fires them)
+extern EVTIMPORT const wxEventType cbEVT_COMPLETE_CODE;
+#define EVT_COMPLETE_CODE(fn) DECLARE_EVENT_TABLE_ENTRY( cbEVT_COMPLETE_CODE, -1, -1, (wxObjectEventFunction)(wxEventFunction)(CodeBlocksEventFunction)&fn, (wxObject *) NULL ),
+extern EVTIMPORT const wxEventType cbEVT_SHOW_CALL_TIP;
+#define EVT_SHOW_CALL_TIP(fn) DECLARE_EVENT_TABLE_ENTRY( cbEVT_SHOW_CALL_TIP, -1, -1, (wxObjectEventFunction)(wxEventFunction)(CodeBlocksEventFunction)&fn, (wxObject *) NULL ),
 
 #endif // SDK_EVENTS_H

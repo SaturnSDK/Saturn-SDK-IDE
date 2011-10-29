@@ -144,6 +144,8 @@ const wxEventType cbEVT_COMPILER_FINISHED = wxNewEventType();
 const wxEventType cbEVT_COMPILER_SET_BUILD_OPTIONS = wxNewEventType();
 const wxEventType cbEVT_CLEAN_PROJECT_STARTED = wxNewEventType();
 const wxEventType cbEVT_CLEAN_WORKSPACE_STARTED = wxNewEventType();
+// request app to compile a single file
+const wxEventType cbEVT_COMPILE_FILE_REQUEST = wxNewEventType();
 // debugger-related events
 const wxEventType cbEVT_DEBUGGER_STARTED = wxNewEventType();
 const wxEventType cbEVT_DEBUGGER_PAUSED = wxNewEventType();
@@ -163,3 +165,6 @@ const wxEventType cbEVT_UNLOCK_LOG_MANAGER = wxNewEventType();
 //cbAUiNotebook related events
 const wxEventType cbEVT_CBAUIBOOK_LEFT_DCLICK = wxNewEventType();
 
+// code-completion related events
+const wxEventType cbEVT_COMPLETE_CODE = wxNewEventType();
+const wxEventType cbEVT_SHOW_CALL_TIP = wxNewEventType();
