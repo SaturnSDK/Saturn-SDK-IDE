@@ -638,7 +638,7 @@ void cbDebuggerPlugin::SwitchToPreviousLayout()
     wxString const &name = !switchEvent.layout.IsEmpty() ? switchEvent.layout : wxString(_("Code::Blocks default"));
 
     #if wxCHECK_VERSION(2, 9, 0)
-    Manager::Get()->GetLogManager()->DebugLog(F(_("Switching layout to \"%s\""), name.wx_str());
+    Manager::Get()->GetLogManager()->DebugLog(F(_("Switching layout to \"%s\""), name.wx_str()));
     #else
     Manager::Get()->GetLogManager()->DebugLog(F(_("Switching layout to \"%s\""), name.c_str()));
     #endif
