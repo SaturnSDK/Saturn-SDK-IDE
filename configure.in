@@ -429,6 +429,16 @@ AC_CONFIG_FILES([Makefile
 	src/plugins/contrib/ToolsPlus/Resources/Makefile
 	src/plugins/contrib/Valgrind/Makefile
 	src/plugins/contrib/Valgrind/resources/Makefile
+	src/plugins/contrib/wxContribItems/Makefile
+	src/plugins/contrib/wxContribItems/wxsmith-contrib.pc
+	src/plugins/contrib/wxContribItems/wxchartctrl.pc
+	src/plugins/contrib/wxContribItems/wxcustombutton.pc
+	src/plugins/contrib/wxContribItems/wximagepanel.pc
+	src/plugins/contrib/wxContribItems/wxflatnotebook.pc
+	src/plugins/contrib/wxContribItems/wxchart-1.0/Makefile
+	src/plugins/contrib/wxContribItems/wxFlatNotebook/Makefile
+	src/plugins/contrib/wxContribItems/wxImagePanel/Makefile
+	src/plugins/contrib/wxContribItems/wxthings/Makefile
 	src/plugins/contrib/wxSmith/Makefile
 	src/plugins/contrib/wxSmith/wxsmith.pc
 	src/plugins/contrib/wxSmith/plugin/Makefile
@@ -438,11 +448,6 @@ AC_CONFIG_FILES([Makefile
 	src/plugins/contrib/wxSmith/wxwidgets/defitems/Makefile
 	src/plugins/contrib/wxSmith/wxwidgets/icons/Makefile
 	src/plugins/contrib/wxSmithContribItems/Makefile
-	src/plugins/contrib/wxSmithContribItems/wxsmith-contrib.pc
-	src/plugins/contrib/wxSmithContribItems/wxchart/wxchart-1.0/Makefile
-	src/plugins/contrib/wxSmithContribItems/wxflatnotebook/wxFlatNotebook/Makefile
-	src/plugins/contrib/wxSmithContribItems/wximagepanel/wxImagePanel/Makefile
-	src/plugins/contrib/wxSmithContribItems/wxthings/wxthings/Makefile
 	src/plugins/contrib/wxSmithAui/Makefile
 	src/plugins/contrib/wxSmithAui/wxsmithaui.pc
 	src/plugins/contrib/lib_finder/Makefile

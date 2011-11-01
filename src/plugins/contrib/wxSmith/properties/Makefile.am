@@ -16,6 +16,7 @@ libwxsmith_properties_la_SOURCES = \
 ./wxsboolproperty.cpp \
 ./wxspropertystream.cpp \
 ./wxsflagsproperty.cpp \
+./wxsfloatproperty.cpp \
 ./wxsemptyproperty.cpp \
 ./wxsstringproperty.cpp \
 ./wxslongproperty.cpp \
@@ -36,6 +37,7 @@ sdk_HEADERS = \
 ./wxsboolproperty.h \
 ./wxspropertystream.h \
 ./wxsflagsproperty.h \
+./wxsfloatproperty.h \
 ./wxsemptyproperty.h \
 ./wxslongproperty.h \
 ./wxsarraystringeditordlg.h \

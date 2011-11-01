@@ -1,0 +1,13 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@/wxContribItems
+includedir=@includedir@/wxContribItems
+datarootdir = @datarootdir@
+sharedir=@datadir@
+
+Name: wxFlatNotebook
+Description: Flatnotebook for wxWidgets also used by wxSmith
+Version: @VERSION@
+Libs: -L${libdir} -lwxflatnotebook
+Cflags: -fPIC -I${includedir} \
+		-I${includedir}/wxFlatNotebook/include
