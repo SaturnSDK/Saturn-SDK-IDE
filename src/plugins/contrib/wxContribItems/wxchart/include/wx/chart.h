@@ -5,7 +5,7 @@
 // Modified by:
 // Created:
 // Copyright:   (C) 2006, Paolo Gava
-// RCS-ID:      $Id: chart.h 7109 2011-04-15 11:53:16Z mortenmacfly $
+// RCS-ID:      $Id$
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
 
@@ -43,11 +43,13 @@ WX_DECLARE_OBJARRAY(wxChartPoints*, ListChartPoints);
 
 //+++-S-cd-------------------------------------------------------------------
 //	NAME:		wxChart
-//	DESC:		
+//	DESC:
 //	INTERFACE:
 //
 //----------------------------------------------------------------------E-+++
+/* C::B begin */
 class WXDLLIMPEXP_CHART wxChart
+/* C::B end */
 {
 public:
 	wxChart();

@@ -5,7 +5,7 @@
 // Modified by:
 // Created:
 // Copyright:   (C) 2006, Paolo Gava
-// RCS-ID:      $Id: bar3dchartpoints.h 7109 2011-04-15 11:53:16Z mortenmacfly $
+// RCS-ID:      $Id$
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
 
@@ -33,7 +33,9 @@ class wxChartSizes;
 //  INTERFACE:
 //
 //----------------------------------------------------------------------E-+++
+/* C::B begin */
 class WXDLLIMPEXP_CHART wxBar3DChartPoints : public wxChartPoints
+/* C::B end */
 {
 public:
 
@@ -48,15 +50,15 @@ public:
     // If this is allow after the bcp is out of scope the list has
     // a pointer which has been deallocated!
     //------------------------------------------------------------
-    static wxBar3DChartPoints* CreateWxBar3DChartPoints(wxString name, 
-        ChartColor c = wxCHART_NOCOLOR, bool showlabel = false); 
+    static wxBar3DChartPoints* CreateWxBar3DChartPoints(wxString name,
+        ChartColor c = wxCHART_NOCOLOR, bool showlabel = false);
 
     virtual ~wxBar3DChartPoints() {};
 
     // Draw the series of points
     //--------------------------
     void Draw(CHART_HPAINT hp, CHART_HRECT hr);
-    
+
     // Get n-th point information
     //---------------------------
     ChartValue GetXVal(int n) const;
@@ -109,14 +111,14 @@ private:
     ChartColor m_Color;
     double m_Zoom;
     wxDISPLAY_LABEL m_BarTag;
-    bool m_ShowLabel;   
+    bool m_ShowLabel;
     wxChartSizes *m_Sizes;
 
     // ctor
     // has to be created on the heap!
     //-------------------------------
     wxBar3DChartPoints(wxString name, ChartColor c, bool showlabel);
-    
+
     // copy ctor & op= NOT allow
     //--------------------------
     wxBar3DChartPoints(const wxBar3DChartPoints&);

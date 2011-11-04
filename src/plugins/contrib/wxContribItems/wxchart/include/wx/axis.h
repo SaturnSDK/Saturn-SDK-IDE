@@ -5,7 +5,7 @@
 // Modified by:
 // Created:
 // Copyright:   (C) 2006, Paolo Gava
-// RCS-ID:      $Id: axis.h 7109 2011-04-15 11:53:16Z mortenmacfly $
+// RCS-ID:      $Id$
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
 
@@ -23,11 +23,13 @@ class wxChartSizes;
 
 //+++-S-cd-------------------------------------------------------------------
 //	NAME:		wxAxis
-//	DESC:		
+//	DESC:
 //	INTERFACE:
 //
 //----------------------------------------------------------------------E-+++
+/* C::B begin */
 class WXDLLIMPEXP_CHART wxAxis
+/* C::B end */
 {
 public:
 	wxAxis(ChartValue max = 0, ChartValue min = 0);

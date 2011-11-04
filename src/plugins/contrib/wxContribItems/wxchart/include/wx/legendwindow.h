@@ -5,7 +5,7 @@
 // Modified by:
 // Created:
 // Copyright:   (C) 2006, Paolo Gava
-// RCS-ID:      $Id: legendwindow.h 7109 2011-04-15 11:53:16Z mortenmacfly $
+// RCS-ID:      $Id$
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
 
@@ -32,11 +32,13 @@ const int LEGEND_HEIGHT	= 60;	// height in pixels
 
 //+++-S-cd-------------------------------------------------------------------
 //	NAME:		wxLegendWindow
-//	DESC:		
+//	DESC:
 //	INTERFACE:
 //
 //----------------------------------------------------------------------E-+++
+/* C::B begin */
 class WXDLLIMPEXP_CHART wxLegendWindow : public wxWindow
+/* C::B end */
 {
 public:
 	wxLegendWindow() {};	// for IMPLEMENT_DYNAMIC_CLASS
@@ -64,7 +66,7 @@ private:
     void OnPaint(wxPaintEvent &event);
     void OnMouse(wxMouseEvent &event);
     void OnMouseMove(wxMouseEvent &event);
-    
+
     DECLARE_CLASS(wxLegendWindow)
     DECLARE_EVENT_TABLE()
 };

@@ -5,7 +5,7 @@
 // Modified by:
 // Created:
 // Copyright:   (C) 2006, Paolo Gava
-// RCS-ID:      $Id: chartsizes.h 7109 2011-04-15 11:53:16Z mortenmacfly $
+// RCS-ID:      $Id$
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
 
@@ -36,11 +36,13 @@ const int MIN_GAP_WIDTH				= 3;		// pixels
 
 //+++-S-cd-------------------------------------------------------------------
 //  NAME:       wxChartSizes
-//  DESC:       
+//  DESC:
 //  INTERFACE:
 //
 //----------------------------------------------------------------------E-+++
+/* C::B begin */
 class WXDLLIMPEXP_CHART wxChartSizes
+/* C::B end */
 {
 private:
     int m_numBar;
@@ -55,17 +57,17 @@ private:
     ChartValue m_maxX;
     ChartValue m_minX;
     ChartValue m_xZoom;
-    
+
 public:
-    
+
     // Inline Ctor
     //------------
-    wxChartSizes() : 
-        m_numBar(0), 
-        m_numBar3d(0), 
-        m_widthBar(DEFAULT_BAR_WIDTH), 
+    wxChartSizes() :
+        m_numBar(0),
+        m_numBar3d(0),
+        m_widthBar(DEFAULT_BAR_WIDTH),
         m_widthBar3d(DEFAULT_BAR3D_WIDTH),
-        m_gap(DEFAULT_GAP_WIDTH), 
+        m_gap(DEFAULT_GAP_WIDTH),
         m_scroll(DEFAULT_SCROLL_STEP),
         m_sizeHeight(DEFAULT_SIZE_HEIGHT),
         m_maxY(0),
@@ -74,7 +76,7 @@ public:
         m_minX(0),
         m_xZoom(1)
     {}; // for singleton
-    
+
     //------------------------------------------------------------------------
     // inlines: access properties
     //------------------------------------------------------------------------
@@ -102,7 +104,7 @@ public:
     inline void SetMinX(ChartValue n);
     inline ChartValue GetXZoom();
     inline void SetXZoom(ChartValue n);
-    
+
 };
 
 //----------------------------------------------------------------------------
@@ -112,7 +114,7 @@ public:
 
 //+++-S-cf-------------------------------------------------------------------
 //	NAME:		GetNumBar()
-//	DESC:		
+//	DESC:
 //	PARAMETERS:	none
 //	RETURN:		int
 //----------------------------------------------------------------------E-+++
@@ -123,7 +125,7 @@ int wxChartSizes::GetNumBar()
 
 //+++-S-cf-------------------------------------------------------------------
 //	NAME:		SetNumBar()
-//	DESC:		
+//	DESC:
 //	PARAMETERS:	n : new value
 //	RETURN:		none
 //----------------------------------------------------------------------E-+++
@@ -134,7 +136,7 @@ void wxChartSizes::SetNumBar(int n)
 
 //+++-S-cf-------------------------------------------------------------------
 //	NAME:		GetNumBar3d()
-//	DESC:		
+//	DESC:
 //	PARAMETERS:	none
 //	RETURN:		int
 //----------------------------------------------------------------------E-+++
@@ -145,7 +147,7 @@ int wxChartSizes::GetNumBar3d()
 
 //+++-S-cf-------------------------------------------------------------------
 //	NAME:		SetNumBar3d()
-//	DESC:		
+//	DESC:
 //	PARAMETERS:	n : new value
 //	RETURN:		none
 //----------------------------------------------------------------------E-+++
@@ -156,7 +158,7 @@ void wxChartSizes::SetNumBar3d(int n)
 
 //+++-S-cf-------------------------------------------------------------------
 //	NAME:		GetWidthBar()
-//	DESC:		
+//	DESC:
 //	PARAMETERS:	none
 //	RETURN:		int
 //----------------------------------------------------------------------E-+++
@@ -167,7 +169,7 @@ int wxChartSizes::GetWidthBar()
 
 //+++-S-cf-------------------------------------------------------------------
 //	NAME:		SetWidthBar()
-//	DESC:		
+//	DESC:
 //	PARAMETERS:	n : new value
 //	RETURN:		none
 //----------------------------------------------------------------------E-+++
@@ -178,7 +180,7 @@ void wxChartSizes::SetWidthBar(int n)
 
 //+++-S-cf-------------------------------------------------------------------
 //	NAME:		GetWidthBar3d()
-//	DESC:		
+//	DESC:
 //	PARAMETERS:	none
 //	RETURN:		int
 //----------------------------------------------------------------------E-+++
@@ -189,7 +191,7 @@ int wxChartSizes::GetWidthBar3d()
 
 //+++-S-cf-------------------------------------------------------------------
 //	NAME:		SetWidthBar3d()
-//	DESC:		
+//	DESC:
 //	PARAMETERS:	n : new value
 //	RETURN:		none
 //----------------------------------------------------------------------E-+++
@@ -200,7 +202,7 @@ void wxChartSizes::SetWidthBar3d(int n)
 
 //+++-S-cf-------------------------------------------------------------------
 //	NAME:		GetGap()
-//	DESC:		
+//	DESC:
 //	PARAMETERS:	none
 //	RETURN:		int
 //----------------------------------------------------------------------E-+++
@@ -211,7 +213,7 @@ int wxChartSizes::GetGap()
 
 //+++-S-cf-------------------------------------------------------------------
 //	NAME:		SetGap()
-//	DESC:		
+//	DESC:
 //	PARAMETERS:	n : new value
 //	RETURN:		none
 //----------------------------------------------------------------------E-+++
@@ -222,7 +224,7 @@ void wxChartSizes::SetGap(int n)
 
 //+++-S-cf-------------------------------------------------------------------
 //	NAME:		GetScroll()
-//	DESC:		
+//	DESC:
 //	PARAMETERS:	none
 //	RETURN:		int
 //----------------------------------------------------------------------E-+++
@@ -233,7 +235,7 @@ int wxChartSizes::GetScroll()
 
 //+++-S-cf-------------------------------------------------------------------
 //	NAME:		SetScroll()
-//	DESC:		
+//	DESC:
 //	PARAMETERS:	n : new value
 //	RETURN:		none
 //----------------------------------------------------------------------E-+++
@@ -244,7 +246,7 @@ void wxChartSizes::SetScroll(int n)
 
 //+++-S-cf-------------------------------------------------------------------
 //	NAME:		GetSizeHeight()
-//	DESC:		
+//	DESC:
 //	PARAMETERS:	none
 //	RETURN:		int
 //----------------------------------------------------------------------E-+++
@@ -255,7 +257,7 @@ int wxChartSizes::GetSizeHeight()
 
 //+++-S-cf-------------------------------------------------------------------
 //	NAME:		SetSizeHeight()
-//	DESC:		
+//	DESC:
 //	PARAMETERS:	n : new value
 //	RETURN:		none
 //----------------------------------------------------------------------E-+++
@@ -266,7 +268,7 @@ void wxChartSizes::SetSizeHeight(int n)
 
 //+++-S-cf-------------------------------------------------------------------
 //	NAME:		GetMaxY()
-//	DESC:		
+//	DESC:
 //	PARAMETERS:	none
 //	RETURN:		ChartValue
 //----------------------------------------------------------------------E-+++
@@ -277,7 +279,7 @@ ChartValue wxChartSizes::GetMaxY()
 
 //+++-S-cf-------------------------------------------------------------------
 //	NAME:		SetMaxY()
-//	DESC:		
+//	DESC:
 //	PARAMETERS:	n : new value
 //	RETURN:		none
 //----------------------------------------------------------------------E-+++
@@ -288,7 +290,7 @@ void wxChartSizes::SetMaxY(ChartValue n)
 
 //+++-S-cf-------------------------------------------------------------------
 //	NAME:		GetMinY()
-//	DESC:		
+//	DESC:
 //	PARAMETERS:	none
 //	RETURN:		ChartValue
 //----------------------------------------------------------------------E-+++
@@ -299,7 +301,7 @@ ChartValue wxChartSizes::GetMinY()
 
 //+++-S-cf-------------------------------------------------------------------
 //	NAME:		SetMinY()
-//	DESC:		
+//	DESC:
 //	PARAMETERS:	n : new value
 //	RETURN:		none
 //----------------------------------------------------------------------E-+++
@@ -310,7 +312,7 @@ void wxChartSizes::SetMinY(ChartValue n)
 
 //+++-S-cf-------------------------------------------------------------------
 //	NAME:		GetMaxX()
-//	DESC:		
+//	DESC:
 //	PARAMETERS:	none
 //	RETURN:		ChartValue
 //----------------------------------------------------------------------E-+++
@@ -321,7 +323,7 @@ ChartValue wxChartSizes::GetMaxX()
 
 //+++-S-cf-------------------------------------------------------------------
 //	NAME:		SetMaxX()
-//	DESC:		
+//	DESC:
 //	PARAMETERS:	n : new value
 //	RETURN:		none
 //----------------------------------------------------------------------E-+++
@@ -332,7 +334,7 @@ void wxChartSizes::SetMaxX(ChartValue n)
 
 //+++-S-cf-------------------------------------------------------------------
 //	NAME:		GetMinX()
-//	DESC:		
+//	DESC:
 //	PARAMETERS:	none
 //	RETURN:		ChartValue
 //----------------------------------------------------------------------E-+++
@@ -343,7 +345,7 @@ ChartValue wxChartSizes::GetMinX()
 
 //+++-S-cf-------------------------------------------------------------------
 //	NAME:		SetMinX()
-//	DESC:		
+//	DESC:
 //	PARAMETERS:	n : new value
 //	RETURN:		none
 //----------------------------------------------------------------------E-+++
@@ -354,7 +356,7 @@ void wxChartSizes::SetMinX(ChartValue n)
 
 //+++-S-cf-------------------------------------------------------------------
 //	NAME:		GetXZoom()
-//	DESC:		
+//	DESC:
 //	PARAMETERS:	none
 //	RETURN:		ChartValue
 //----------------------------------------------------------------------E-+++
@@ -365,7 +367,7 @@ ChartValue wxChartSizes::GetXZoom()
 
 //+++-S-cf-------------------------------------------------------------------
 //	NAME:		SetXZoom()
-//	DESC:		
+//	DESC:
 //	PARAMETERS:	n : new value
 //	RETURN:		none
 //----------------------------------------------------------------------E-+++

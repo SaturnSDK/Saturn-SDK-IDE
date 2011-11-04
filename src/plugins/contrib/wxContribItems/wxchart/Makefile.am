@@ -31,7 +31,7 @@ libwxchartctrl_la_SOURCES = \
 ./src/yaxis.cpp
 
 
-sdkdir=$(includedir)/wxContribItems/wxchart-1.0/include/wx
+sdkdir=$(includedir)/wxContribItems/wxchart/include/wx
 
 sdk_HEADERS = \
 ./include/wx/axis.h \

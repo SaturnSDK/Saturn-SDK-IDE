@@ -5,7 +5,7 @@
 // Modified by:
 // Created:
 // Copyright:   (C) 2006, Paolo Gava
-// RCS-ID:      $Id: piechartpoints.h 7109 2011-04-15 11:53:16Z mortenmacfly $
+// RCS-ID:      $Id$
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
 
@@ -33,7 +33,9 @@ class wxChartSizes;
 //	INTERFACE:
 //
 //----------------------------------------------------------------------E-+++
+/* C::B begin */
 class WXDLLIMPEXP_CHART wxPieChartPoints : public wxChartPoints
+/* C::B end */
 {
 public:
 
@@ -48,8 +50,8 @@ public:
     // If this is allow after the bcp is out of scope the list has
     // a pointer which has been deallocated!
     //------------------------------------------------------------
-    static wxPieChartPoints* CreateWxPieChartPoints(wxString name, 
-            ChartColor c = wxCHART_NOCOLOR, bool showlabel = false); 
+    static wxPieChartPoints* CreateWxPieChartPoints(wxString name,
+            ChartColor c = wxCHART_NOCOLOR, bool showlabel = false);
 
 	virtual ~wxPieChartPoints() {};
 
@@ -95,7 +97,7 @@ public:
 	// Add point
 	//----------
 	void Add(wxString name, ChartValue x, ChartValue y);
-	void Add(wxString name, ChartValue x, ChartValue y, 
+	void Add(wxString name, ChartValue x, ChartValue y,
 			 ChartColor c);
 
 	// Set/Get Display option
@@ -109,9 +111,9 @@ private:
 	ChartColor m_Color;
 	double m_Zoom;
 	wxDISPLAY_LABEL m_PieTag;
-    bool m_ShowLabel;   
+    bool m_ShowLabel;
 	wxChartSizes *m_Sizes;
-    
+
     // ctor
     // has to be created on the heap!
     //-------------------------------

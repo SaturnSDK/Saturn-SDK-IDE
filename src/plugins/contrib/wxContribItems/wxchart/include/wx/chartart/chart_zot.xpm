@@ -1,5 +1,7 @@
 /* XPM */
+/* C::B begin */
 static const char * chart_zot_xpm[] = {
+/* C::B end */
 "20 18 8 1",
 " 	c None",
 ".	c #C0C0C0",

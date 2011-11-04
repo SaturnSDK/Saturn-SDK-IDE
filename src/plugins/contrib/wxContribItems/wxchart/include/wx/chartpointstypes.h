@@ -5,7 +5,7 @@
 // Modified by:
 // Created:
 // Copyright:   (C) 2006, Paolo Gava
-// RCS-ID:      $Id: chartpointstypes.h 7109 2011-04-15 11:53:16Z mortenmacfly $
+// RCS-ID:      $Id$
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
 
@@ -23,11 +23,13 @@
 
 //+++-S-cd-------------------------------------------------------------------
 //	NAME:		wxChartPointsTypes
-//	DESC:		
+//	DESC:
 //	INTERFACE:
 //
 //----------------------------------------------------------------------E-+++
+/* C::B begin */
 class WXDLLIMPEXP_CHART wxChartPointsTypes
+/* C::B end */
 {
 private:
 	enum CHART_POINTS_TYPES
@@ -65,23 +67,23 @@ public:
 
 private:
 	const CHART_POINTS_TYPES m_Type;
-	
+
 	wxChartPointsTypes(CHART_POINTS_TYPES t) : m_Type(t) {};
 
 	// Wrong. Only for MSW compiler
-    wxChartPointsTypes& operator=(const wxChartPointsTypes& UNUSED_ARG(rhs)) 
+    wxChartPointsTypes& operator=(const wxChartPointsTypes& UNUSED_ARG(rhs))
         { return *this;}
 };
 
 //+++-S-cf-------------------------------------------------------------------
 //	NAME:		op==()
-//	DESC:		
-//	PARAMETERS:	const CChartPointsTypes& lhs, 
+//	DESC:
+//	PARAMETERS:	const CChartPointsTypes& lhs,
 //				const CChartPointsTypes& rhs
 //	RETURN:		bool
 //----------------------------------------------------------------------E-+++
 inline bool operator==(
-	const wxChartPointsTypes& lhs, 
+	const wxChartPointsTypes& lhs,
 	const wxChartPointsTypes& rhs
 )
 {

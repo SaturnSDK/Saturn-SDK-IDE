@@ -5,7 +5,7 @@
 // Modified by:
 // Created:
 // Copyright:   (C) 2006, Paolo Gava
-// RCS-ID:      $Id: xaxiswindow.h 7109 2011-04-15 11:53:16Z mortenmacfly $
+// RCS-ID:      $Id$
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
 
@@ -36,11 +36,13 @@ const int XAXIS_HEIGHT	= 60;	// height in pixels
 
 //+++-S-cd-------------------------------------------------------------------
 //	NAME:		wxXAxisWindow
-//	DESC:		
+//	DESC:
 //	INTERFACE:
 //
 //----------------------------------------------------------------------E-+++
+/* C::B begin */
 class WXDLLIMPEXP_CHART wxXAxisWindow : public wxWindow
+/* C::B end */
 {
 public:
 	wxXAxisWindow() {};	// for IMPLEMENT_DYNAMIC_CLASS

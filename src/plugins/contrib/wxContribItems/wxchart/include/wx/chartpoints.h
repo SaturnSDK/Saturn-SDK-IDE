@@ -5,7 +5,7 @@
 // Modified by:
 // Created:
 // Copyright:   (C) 2006, Paolo Gava
-// RCS-ID:      $Id: chartpoints.h 7109 2011-04-15 11:53:16Z mortenmacfly $
+// RCS-ID:      $Id$
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
 
@@ -45,7 +45,9 @@ enum wxDISPLAY_LABEL
 //	INTERFACE:
 //
 //----------------------------------------------------------------------E-+++
+/* C::B begin */
 class WXDLLIMPEXP_CHART wxChartPoints
+/* C::B end */
 {
 
 public:
@@ -129,13 +131,13 @@ private:
 
 //+++-S-cf-------------------------------------------------------------------
 //	NAME:		op==()
-//	DESC:		
-//	PARAMETERS:	const wxChartPoints& c, 
+//	DESC:
+//	PARAMETERS:	const wxChartPoints& c,
 //				const wxChartPointsTypes& t
 //	RETURN:		bool
 //----------------------------------------------------------------------E-+++
 inline bool operator==(
-	const wxChartPoints& c, 
+	const wxChartPoints& c,
 	const wxChartPointsTypes& t
 )
 {

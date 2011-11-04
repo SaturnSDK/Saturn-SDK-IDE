@@ -5,7 +5,7 @@
 // Modified by:
 // Created:
 // Copyright:   (C) 2006, Paolo Gava
-// RCS-ID:      $Id: points.h 7109 2011-04-15 11:53:16Z mortenmacfly $
+// RCS-ID:      $Id$
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
 
@@ -45,7 +45,7 @@ struct Point
     ChartValue m_xval;
     ChartValue m_yval;
     ChartColor m_col;
-    Point(wxString name=wxEmptyString, ChartValue x=0, ChartValue y=0, 
+    Point(wxString name=wxEmptyString, ChartValue x=0, ChartValue y=0,
             ChartColor c = 0);
 };
 
@@ -60,8 +60,10 @@ WX_DECLARE_OBJARRAY(Point, ListPoints);
 //	INTERFACE:
 //
 //----------------------------------------------------------------------E-+++
+/* C::B begin */
 class WXDLLIMPEXP_CHART wxPoints
-{	
+/* C::B end */
+{
 public:
 	wxPoints();
 	~wxPoints();

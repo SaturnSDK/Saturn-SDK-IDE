@@ -5,7 +5,7 @@
 // Modified by:
 // Created:
 // Copyright:   (C) 2006, Paolo Gava
-// RCS-ID:      $Id: label.h 7109 2011-04-15 11:53:16Z mortenmacfly $
+// RCS-ID:      $Id$
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
 
@@ -34,11 +34,13 @@ enum LABEL_POSITION
 
 //+++-S-cd-------------------------------------------------------------------
 //  NAME:       wxLabel
-//  DESC:       
+//  DESC:
 //  INTERFACE:
 //
 //----------------------------------------------------------------------E-+++
+/* C::B begin */
 class WXDLLIMPEXP_CHART wxLabel
+/* C::B end */
 {
 public:
     void Draw(CHART_HPAINT hp, int x, int y, ChartColor c,

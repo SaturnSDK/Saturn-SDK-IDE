@@ -5,7 +5,7 @@
 // Modified by:
 // Created:
 // Copyright:   (C) 2006, Paolo Gava
-// RCS-ID:      $Id: chartwindow.h 7109 2011-04-15 11:53:16Z mortenmacfly $
+// RCS-ID:      $Id$
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
 
@@ -37,11 +37,13 @@ class wxChartSizes;
 
 //+++-S-cd-------------------------------------------------------------------
 //	NAME:		CWxChartWindow
-//	DESC:		
+//	DESC:
 //	INTERFACE:
 //
 //----------------------------------------------------------------------E-+++
+/* C::B begin */
 class WXDLLIMPEXP_CHART wxChartWindow : public wxWindow
+/* C::B end */
 {
 public:
 
@@ -88,12 +90,12 @@ public:
 private:
 	wxChart m_Chart;
 	wxScrolledWindow *m_WinParent;
-    bool m_UseGrid;   
-       
+    bool m_UseGrid;
+
     // Draw helper function
     //-----------------
     void DrawHLines(CHART_HPAINT hp, CHART_HRECT hr);
-    
+
 	// wxWindows events
 	//-----------------
     void OnPaint(wxPaintEvent &event);
@@ -110,25 +112,25 @@ private:
 
 //+++-S-cf-------------------------------------------------------------------
 //	NAME:		Add()
-//	DESC:		
+//	DESC:
 //	PARAMETERS:	CChartPoints* cp
 //	RETURN:		None
 //----------------------------------------------------------------------E-+++
 inline void wxChartWindow::Add(
 	wxChartPoints* cp
-) 
-{ 
-	m_Chart.Add( cp ); 
+)
+{
+	m_Chart.Add( cp );
 }
 
 //+++-S-cf-------------------------------------------------------------------
 //	NAME:		Clear()
-//	DESC:		
+//	DESC:
 //	PARAMETERS:	None
 //	RETURN:		None
 //----------------------------------------------------------------------E-+++
-inline void wxChartWindow::Clear() 
-{ 
+inline void wxChartWindow::Clear()
+{
 	m_Chart.Clear();
 }
 

@@ -5,7 +5,7 @@
 // Modified by:
 // Created:
 // Copyright:   (C) 2006, Paolo Gava
-// RCS-ID:      $Id: legend.h 7109 2011-04-15 11:53:16Z mortenmacfly $
+// RCS-ID:      $Id$
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
 
@@ -60,7 +60,7 @@ struct ArrowDescriptor
     int m_x;
     int m_y;
     int m_d;
-    bool m_sel;       
+    bool m_sel;
     ArrowDescriptor() : m_x(0), m_y(0), m_d(0), m_sel(false) {};
 };
 
@@ -71,14 +71,16 @@ WX_DECLARE_OBJARRAY(DescLegend, ListLegendDesc);
 
 //+++-S-cd-------------------------------------------------------------------
 //	NAME:		wxLegend
-//	DESC:		
+//	DESC:
 //	INTERFACE:
 //
 //----------------------------------------------------------------------E-+++
+/* C::B begin */
 class WXDLLIMPEXP_CHART wxLegend
+/* C::B end */
 {
 public:
-    
+
     // ctor
     //-----
     wxLegend();
@@ -91,7 +93,7 @@ public:
     // Redraw arraw whne mouse over
     //-----------------------------
     void DrawArrow(CHART_HPAINT hp, int pos, bool over);
-    
+
     // Dec/Inc page
     //-------------
     void IncPage();
@@ -117,14 +119,14 @@ private:
 
     // Drawing Utilities
     //------------------
-    void DrawArrow(CHART_HPAINT hp, int x, int y, int size, 
+    void DrawArrow(CHART_HPAINT hp, int x, int y, int size,
                    int pos, bool over);
     void WriteLabel(CHART_HPAINT hp, int x, int y, int page);
 
     // Get number of pages
     //--------------------
     int NumPages() const;
-   
+
 };
 
 #endif // __LEGEND_H__

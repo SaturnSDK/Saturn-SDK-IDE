@@ -5,7 +5,7 @@
 // Modified by:
 // Created:
 // Copyright:   (C) 2006, Paolo Gava
-// RCS-ID:      $Id: chartctrl.h 7109 2011-04-15 11:53:16Z mortenmacfly $
+// RCS-ID:      $Id$
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
 
@@ -30,7 +30,7 @@
 //----------------------------------------------------------------------------
 // Headers
 //----------------------------------------------------------------------------
-    
+
 // ChartCtrl styles
 //-----------------
 
@@ -43,7 +43,7 @@ enum wxChartStyle
     USE_ZOOM_BUT    = 0x08,
     USE_DEPTH_BUT   = 0x10,
     USE_GRID        = 0x20,
-    DEFAULT_STYLE   = USE_AXIS_X | USE_AXIS_Y | USE_LEGEND | 
+    DEFAULT_STYLE   = USE_AXIS_X | USE_AXIS_Y | USE_LEGEND |
                         USE_ZOOM_BUT | USE_DEPTH_BUT | USE_GRID
 };
 
@@ -65,19 +65,21 @@ class wxChartSizes;
 
 //+++-S-cd-------------------------------------------------------------------
 //	NAME:		wxChartCtrl
-//	DESC:		
+//	DESC:
 //	INTERFACE:
 //
 //----------------------------------------------------------------------E-+++
+/* C::B begin */
 class WXDLLIMPEXP_CHART wxChartCtrl : public wxScrolledWindow
+/* C::B end */
 {
 public:
 
 	wxChartCtrl() {};	// for IMPLEMENT_DYNAMIC_CLASS
-    wxChartCtrl(wxWindow *parent, wxWindowID id, 
+    wxChartCtrl(wxWindow *parent, wxWindowID id,
 				 wxChartStyle style = DEFAULT_STYLE,
-				 const wxPoint &pos = wxDefaultPosition, 
-			     const wxSize &size = wxDefaultSize, 
+				 const wxPoint &pos = wxDefaultPosition,
+			     const wxSize &size = wxDefaultSize,
 				 int flags = wxSIMPLE_BORDER);
 
 	~wxChartCtrl();
@@ -115,7 +117,7 @@ private:
 
 	// Calculate width
 	//----------------
-	int CalWidth(int n, int nbar, int nbar3d, 
+	int CalWidth(int n, int nbar, int nbar3d,
 				 int wbar, int wbar3d, int gap);
 
 	// Zoom utility
@@ -128,7 +130,7 @@ private:
 
     // Set Image Type
     void LoadImageHandler(wxChartImageType type);
-    
+
 	// scroll bar utility
 	//-------------------
 	void ResetScrollbar();
