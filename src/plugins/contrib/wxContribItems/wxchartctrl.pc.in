@@ -10,4 +10,4 @@ Description: Chartcontrol item for wxWidgets also used by wxSmith
 Version: @VERSION@
 Libs: -L${libdir} -lwxchartctrl
 Cflags: -fPIC -I${includedir} \
-		-I${includedir}/wxchart-1.0/include
+		-I${includedir}/wxchart/include

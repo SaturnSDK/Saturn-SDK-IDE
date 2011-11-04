@@ -24,7 +24,7 @@
 					<Add directory="../../../sdk/wxpropgrid/include" />
 					<Add directory="../../../sdk/wxscintilla/include" />
 					<Add directory="../wxContribItems/wxthings/include" />
-					<Add directory="../wxContribItems/wxchart-1.0/include" />
+					<Add directory="../wxContribItems/wxchart/include" />
 					<Add directory="../wxContribItems/wxFlatNotebook/include" />
 					<Add directory="../wxContribItems/wxImagePanel/include" />
 				</Compiler>

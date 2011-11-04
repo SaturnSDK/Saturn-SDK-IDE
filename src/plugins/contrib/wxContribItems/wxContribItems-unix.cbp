@@ -23,7 +23,7 @@
 				<Option compiler="gcc" />
 				<Option createStaticLib="1" />
 				<Compiler>
-					<Add directory="wxchart-1.0/include" />
+					<Add directory="wxchart/include" />
 				</Compiler>
 			</Target>
 			<Target title="wxCustomButton">
@@ -124,136 +124,136 @@
 		<Unit filename="wxImagePanel/src/wxImagePanel.cpp">
 			<Option target="wxImagePanel" />
 		</Unit>
-		<Unit filename="wxchart-1.0/include/wx/axis.h">
+		<Unit filename="wxchart/include/wx/axis.h">
 			<Option target="wxChartCtrl" />
 		</Unit>
-		<Unit filename="wxchart-1.0/include/wx/bar3dchartpoints.h">
+		<Unit filename="wxchart/include/wx/bar3dchartpoints.h">
 			<Option target="wxChartCtrl" />
 		</Unit>
-		<Unit filename="wxchart-1.0/include/wx/barchartpoints.h">
+		<Unit filename="wxchart/include/wx/barchartpoints.h">
 			<Option target="wxChartCtrl" />
 		</Unit>
-		<Unit filename="wxchart-1.0/include/wx/chart.h">
+		<Unit filename="wxchart/include/wx/chart.h">
 			<Option target="wxChartCtrl" />
 		</Unit>
-		<Unit filename="wxchart-1.0/include/wx/chartart/chart_zin.bmp">
+		<Unit filename="wxchart/include/wx/chartart/chart_zin.bmp">
 			<Option target="wxChartCtrl" />
 		</Unit>
-		<Unit filename="wxchart-1.0/include/wx/chartart/chart_zin.xpm">
+		<Unit filename="wxchart/include/wx/chartart/chart_zin.xpm">
 			<Option target="wxChartCtrl" />
 		</Unit>
-		<Unit filename="wxchart-1.0/include/wx/chartart/chart_zot.bmp">
+		<Unit filename="wxchart/include/wx/chartart/chart_zot.bmp">
 			<Option target="wxChartCtrl" />
 		</Unit>
-		<Unit filename="wxchart-1.0/include/wx/chartart/chart_zot.xpm">
+		<Unit filename="wxchart/include/wx/chartart/chart_zot.xpm">
 			<Option target="wxChartCtrl" />
 		</Unit>
-		<Unit filename="wxchart-1.0/include/wx/chartcolors.h">
+		<Unit filename="wxchart/include/wx/chartcolors.h">
 			<Option target="wxChartCtrl" />
 		</Unit>
-		<Unit filename="wxchart-1.0/include/wx/chartctrl.h">
+		<Unit filename="wxchart/include/wx/chartctrl.h">
 			<Option target="wxChartCtrl" />
 		</Unit>
-		<Unit filename="wxchart-1.0/include/wx/chartdef.h">
+		<Unit filename="wxchart/include/wx/chartdef.h">
 			<Option target="wxChartCtrl" />
 		</Unit>
-		<Unit filename="wxchart-1.0/include/wx/chartpoints.h">
+		<Unit filename="wxchart/include/wx/chartpoints.h">
 			<Option target="wxChartCtrl" />
 		</Unit>
-		<Unit filename="wxchart-1.0/include/wx/chartpointstypes.h">
+		<Unit filename="wxchart/include/wx/chartpointstypes.h">
 			<Option target="wxChartCtrl" />
 		</Unit>
-		<Unit filename="wxchart-1.0/include/wx/chartsizes.h">
+		<Unit filename="wxchart/include/wx/chartsizes.h">
 			<Option target="wxChartCtrl" />
 		</Unit>
-		<Unit filename="wxchart-1.0/include/wx/charttypes.h">
+		<Unit filename="wxchart/include/wx/charttypes.h">
 			<Option target="wxChartCtrl" />
 		</Unit>
-		<Unit filename="wxchart-1.0/include/wx/chartwindow.h">
+		<Unit filename="wxchart/include/wx/chartwindow.h">
 			<Option target="wxChartCtrl" />
 		</Unit>
-		<Unit filename="wxchart-1.0/include/wx/label.h">
+		<Unit filename="wxchart/include/wx/label.h">
 			<Option target="wxChartCtrl" />
 		</Unit>
-		<Unit filename="wxchart-1.0/include/wx/legend.h">
+		<Unit filename="wxchart/include/wx/legend.h">
 			<Option target="wxChartCtrl" />
 		</Unit>
-		<Unit filename="wxchart-1.0/include/wx/legendwindow.h">
+		<Unit filename="wxchart/include/wx/legendwindow.h">
 			<Option target="wxChartCtrl" />
 		</Unit>
-		<Unit filename="wxchart-1.0/include/wx/pie3dchartpoints.h">
+		<Unit filename="wxchart/include/wx/pie3dchartpoints.h">
 			<Option target="wxChartCtrl" />
 		</Unit>
-		<Unit filename="wxchart-1.0/include/wx/piechartpoints.h">
+		<Unit filename="wxchart/include/wx/piechartpoints.h">
 			<Option target="wxChartCtrl" />
 		</Unit>
-		<Unit filename="wxchart-1.0/include/wx/points.h">
+		<Unit filename="wxchart/include/wx/points.h">
 			<Option target="wxChartCtrl" />
 		</Unit>
-		<Unit filename="wxchart-1.0/include/wx/xaxis.h">
+		<Unit filename="wxchart/include/wx/xaxis.h">
 			<Option target="wxChartCtrl" />
 		</Unit>
-		<Unit filename="wxchart-1.0/include/wx/xaxiswindow.h">
+		<Unit filename="wxchart/include/wx/xaxiswindow.h">
 			<Option target="wxChartCtrl" />
 		</Unit>
-		<Unit filename="wxchart-1.0/include/wx/yaxis.h">
+		<Unit filename="wxchart/include/wx/yaxis.h">
 			<Option target="wxChartCtrl" />
 		</Unit>
-		<Unit filename="wxchart-1.0/include/wx/yaxiswindow.h">
+		<Unit filename="wxchart/include/wx/yaxiswindow.h">
 			<Option target="wxChartCtrl" />
 		</Unit>
-		<Unit filename="wxchart-1.0/src/axis.cpp">
+		<Unit filename="wxchart/src/axis.cpp">
 			<Option target="wxChartCtrl" />
 		</Unit>
-		<Unit filename="wxchart-1.0/src/bar3dchartpoints.cpp">
+		<Unit filename="wxchart/src/bar3dchartpoints.cpp">
 			<Option target="wxChartCtrl" />
 		</Unit>
-		<Unit filename="wxchart-1.0/src/barchartpoints.cpp">
+		<Unit filename="wxchart/src/barchartpoints.cpp">
 			<Option target="wxChartCtrl" />
 		</Unit>
-		<Unit filename="wxchart-1.0/src/chart.cpp">
+		<Unit filename="wxchart/src/chart.cpp">
 			<Option target="wxChartCtrl" />
 		</Unit>
-		<Unit filename="wxchart-1.0/src/chartcolors.cpp">
+		<Unit filename="wxchart/src/chartcolors.cpp">
 			<Option target="wxChartCtrl" />
 		</Unit>
-		<Unit filename="wxchart-1.0/src/chartctrl.cpp">
+		<Unit filename="wxchart/src/chartctrl.cpp">
 			<Option target="wxChartCtrl" />
 		</Unit>
-		<Unit filename="wxchart-1.0/src/chartsizes.cpp">
+		<Unit filename="wxchart/src/chartsizes.cpp">
 			<Option target="wxChartCtrl" />
 		</Unit>
-		<Unit filename="wxchart-1.0/src/chartwindow.cpp">
+		<Unit filename="wxchart/src/chartwindow.cpp">
 			<Option target="wxChartCtrl" />
 		</Unit>
-		<Unit filename="wxchart-1.0/src/label.cpp">
+		<Unit filename="wxchart/src/label.cpp">
 			<Option target="wxChartCtrl" />
 		</Unit>
-		<Unit filename="wxchart-1.0/src/legend.cpp">
+		<Unit filename="wxchart/src/legend.cpp">
 			<Option target="wxChartCtrl" />
 		</Unit>
-		<Unit filename="wxchart-1.0/src/legendwindow.cpp">
+		<Unit filename="wxchart/src/legendwindow.cpp">
 			<Option target="wxChartCtrl" />
 		</Unit>
-		<Unit filename="wxchart-1.0/src/pie3dchartpoints.cpp">
+		<Unit filename="wxchart/src/pie3dchartpoints.cpp">
 			<Option target="wxChartCtrl" />
 		</Unit>
-		<Unit filename="wxchart-1.0/src/piechartpoints.cpp">
+		<Unit filename="wxchart/src/piechartpoints.cpp">
 			<Option target="wxChartCtrl" />
 		</Unit>
-		<Unit filename="wxchart-1.0/src/points.cpp">
+		<Unit filename="wxchart/src/points.cpp">
 			<Option target="wxChartCtrl" />
 		</Unit>
-		<Unit filename="wxchart-1.0/src/xaxis.cpp">
+		<Unit filename="wxchart/src/xaxis.cpp">
 			<Option target="wxChartCtrl" />
 		</Unit>
-		<Unit filename="wxchart-1.0/src/xaxiswindow.cpp">
+		<Unit filename="wxchart/src/xaxiswindow.cpp">
 			<Option target="wxChartCtrl" />
 		</Unit>
-		<Unit filename="wxchart-1.0/src/yaxis.cpp">
+		<Unit filename="wxchart/src/yaxis.cpp">
 			<Option target="wxChartCtrl" />
 		</Unit>
-		<Unit filename="wxchart-1.0/src/yaxiswindow.cpp">
+		<Unit filename="wxchart/src/yaxiswindow.cpp">
 			<Option target="wxChartCtrl" />
 		</Unit>
 		<Unit filename="wxthings/include/wx/things/toggle.h">

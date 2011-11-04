@@ -11,6 +11,6 @@ Version: @VERSION@
 Libs: -L${libdir} -lwxflatnotebook -lwxchartctrl -lwxcustombutton -lwximagepanel
 Cflags: -fPIC -I${includedir} \
 		-I${includedir}/wxFlatNotebook/include \
-		-I${includedir}/wxchart-1.0/include \
+		-I${includedir}/wxchart/include \
 		-I${includedir}/wxthings/include \
 		-I${includedir}/wxImagePanel/include
