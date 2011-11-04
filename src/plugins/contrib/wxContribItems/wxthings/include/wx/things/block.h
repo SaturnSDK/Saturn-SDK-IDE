@@ -71,7 +71,7 @@ extern void wxArrayBlockDoubleSort(wxArrayBlockDouble &blocks,
 class WXDLLIMPEXP_THINGS wxBlockInt
 {
 public:
-    inline wxBlockInt(wxInt32 x1=0, wxInt32 y1=0, wxInt32 x2=0, wxInt32 y2=0) : m_x1(x1), m_y1(y1), m_x2(x2), m_y2(y2) {}
+    wxBlockInt(wxInt32 x1=0, wxInt32 y1=0, wxInt32 x2=0, wxInt32 y2=0) : m_x1(x1), m_y1(y1), m_x2(x2), m_y2(y2) {}
     inline wxBlockInt(const wxRect2DInt &rect) : m_x1(rect.m_x), m_y1(rect.m_y), m_x2(rect.GetRight()), m_y2(rect.GetBottom()) {}
 
     inline wxInt32 GetLeft() const   { return m_x1; }

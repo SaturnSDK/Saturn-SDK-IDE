@@ -25,7 +25,7 @@ class WXDLLIMPEXP_THINGS wxRay2DDouble : public wxPoint2DDouble
 {
 public :
 
-    inline wxRay2DDouble(wxDouble x=0, wxDouble y=0, wxDouble slope=0) : wxPoint2DDouble(x, y), m_slope(slope) {}
+    wxRay2DDouble(wxDouble x=0, wxDouble y=0, wxDouble slope=0) : wxPoint2DDouble(x, y), m_slope(slope) {}
     inline wxRay2DDouble(const wxPoint2DDouble &pt, wxDouble slope) : wxPoint2DDouble(pt), m_slope(slope) {}
     inline wxRay2DDouble(wxDouble x1, wxDouble y1, wxDouble x2, wxDouble y2) : wxPoint2DDouble(x1, y1)
         { m_slope = GetSlope(x1, y1, x2, y2); }
