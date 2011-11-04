@@ -1019,6 +1019,8 @@ bool wxFileBrowser::Create( wxWindow *parent, const wxWindowID id,
 
 wxFileBrowser::~wxFileBrowser()
 {
+    m_ignore_tree_event = true;
+
     // delete all the attached data
     int n, count = m_filterCombo->GetCount();
     for ( n = 0; n < count; n++ )
@@ -1036,10 +1038,9 @@ void wxFileBrowser::OnSize( wxSizeEvent &event )
 {
     //wxPrintf(wxT("OnSize GetSize(%d %d) Event(%d %d)\n"), GetSize().x, GetSize().y, event.GetSize().x, event.GetSize().y); fflush(stdout);
     event.Skip();
-    DoSize();
 
     // The m_pathCombo disappears for horiz resizing, just send another event
-#if !wxCHECK_VERSION(2, 7, 0) && defined(__WXMSW__)
+#if !wxCHECK_VERSION(2, 9, 0) && defined(__WXMSW__)
     if (event.GetId() == GetId())
     {
         wxSizeEvent newEvent(event);
@@ -1047,8 +1048,13 @@ void wxFileBrowser::OnSize( wxSizeEvent &event )
         AddPendingEvent(newEvent);
     }
     else
+    {
+        DoSize();           // resize second time around
         event.Skip(false);
-#endif // !wxCHECK_VERSION(2, 7, 0) && __WXMSW__
+    }
+#else
+    DoSize();
+#endif // !wxCHECK_VERSION(2, 9, 0) && __WXMSW__
 }
 
 // The code in src/gtk/window.cpp wxWindow::DoSetSize fails since
@@ -2216,7 +2222,8 @@ void wxFileBrowser::OnListMenu(wxCommandEvent &event)
 
                 wxFrame* frame = new wxFrame(this, wxID_ANY, wxT("Text Viewer"));
                 wxTextCtrl* textCtrl = new wxTextCtrl(frame, wxID_ANY, wxT(""),
-                                             wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE|wxTE_RICH|wxTE_READONLY);
+                                             wxDefaultPosition, wxDefaultSize, 
+                                             wxTE_MULTILINE|wxTE_RICH|wxTE_READONLY|wxTE_DONTWRAP);
 
                 wxString s;
                 wxFileInputStream inputStream(fd->GetFilePath());
@@ -2374,7 +2381,9 @@ bool wxFileBrowser::OpenFilePath(const wxString &filePath)
 
     wxFileName filename(path);
 
-    if (filename.DirExists())
+    // Use static DirExists() since member functions doesn't use GetFullPath(), 
+    // but only the GetPath() part of the filename.
+    if (wxFileName::DirExists(filename.GetFullPath()))
     {
         SetPath(path);
         return true;
