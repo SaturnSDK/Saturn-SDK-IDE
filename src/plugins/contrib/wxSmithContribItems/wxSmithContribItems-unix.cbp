@@ -8,7 +8,7 @@
 		<Option compiler="gcc" />
 		<Build>
 			<Target title="wxFlatNoteBook">
-				<Option output="../../../devel/libwxflatnotebook.so" prefix_auto="0" extension_auto="0" />
+				<Option output="../../../devel/wxflatnotebook" prefix_auto="1" extension_auto="1" />
 				<Option object_output="../../../.objs/plugins/contrib/wxSmithContribItems" />
 				<Option type="3" />
 				<Option compiler="gcc" />
@@ -38,7 +38,7 @@
 				</Compiler>
 			</Target>
 			<Target title="wxSmithContribItems">
-				<Option output="../../../devel/share/codeblocks/plugins/libwxSmithContribItems.so" prefix_auto="0" extension_auto="0" />
+				<Option output="../../../devel/share/codeblocks/plugins/wxSmithContribItems" prefix_auto="1" extension_auto="1" />
 				<Option object_output="../../../.objs/plugins/contrib/wxSmithContribItems" />
 				<Option external_deps="../../../devel/libwxsmithlib.so;" />
 				<Option type="3" />
@@ -60,6 +60,7 @@
 					<Add library="wxflatnotebook" />
 					<Add library="wxchartctrl" />
 					<Add library="wxcustombutton" />
+					<Add library="wxpropgrid" />
 					<Add directory="../../../devel" />
 				</Linker>
 				<ExtraCommands>
@@ -68,8 +69,8 @@
 				</ExtraCommands>
 			</Target>
 			<Environment>
-				<Variable name="WX_SUFFIX" value="u" />
 				<Variable name="WX_CFG" value="" />
+				<Variable name="WX_SUFFIX" value="u" />
 			</Environment>
 		</Build>
 		<VirtualTargets>
