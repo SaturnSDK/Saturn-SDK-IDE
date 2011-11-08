@@ -688,9 +688,13 @@ void WatchesDlg::RenameWatch(wxObject *prop, const wxString &newSymbol)
 //////////// ValueTooltip implementation /////////////////////////
 //////////////////////////////////////////////////////////////////
 
+#ifndef __WXMAC__
 IMPLEMENT_CLASS(ValueTooltip, wxPopupWindow)
-
 BEGIN_EVENT_TABLE(ValueTooltip, wxPopupWindow)
+#else
+IMPLEMENT_CLASS(ValueTooltip, wxWindow)
+BEGIN_EVENT_TABLE(ValueTooltip, wxWindow)
+#endif
     EVT_PG_ITEM_COLLAPSED(idTooltipGrid, ValueTooltip::OnCollapse)
     EVT_PG_ITEM_EXPANDED(idTooltipGrid, ValueTooltip::OnExpand)
     EVT_TIMER(idTooltipTimer, ValueTooltip::OnTimer)
@@ -777,7 +781,11 @@ void SetMinSize(wxPropertyGrid *grid)
 }
 
 ValueTooltip::ValueTooltip(const cbWatch::Pointer &watch, wxWindow *parent) :
+#ifndef __WXMAC__
     wxPopupWindow(parent, wxBORDER_NONE|wxWANTS_CHARS),
+#else
+    wxWindow(parent, -1),
+#endif
     m_timer(this, idTooltipTimer),
     m_outsideCount(0),
     m_watch(watch)

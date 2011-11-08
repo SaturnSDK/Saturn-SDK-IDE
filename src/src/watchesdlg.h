@@ -63,7 +63,12 @@ class WatchesDlg : public wxPanel, public cbWatchesDlg
 };
 
 
-class ValueTooltip : public wxPopupWindow
+class ValueTooltip :
+#ifndef __WXMAC__
+    public wxPopupWindow
+#else
+    public wxWindow
+#endif
 {
     public:
         ValueTooltip(const cbWatch::Pointer &watch, wxWindow *parent);

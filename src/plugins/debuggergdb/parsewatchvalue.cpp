@@ -64,7 +64,11 @@ struct Token
 };
 
 wxRegEx regexRepeatedChars(wxT("^((\\\\'.{1,6}\\\\')|('.{1,6}'))[ \\t](<repeats[ \\t][0-9]+[ \\t]times>)"),
+#ifndef __WXMAC__
                            wxRE_ADVANCED);
+#else
+                           wxRE_EXTENDED);
+#endif
 
 int DetectRepeatingSymbols(wxString const &str, int pos)
 {

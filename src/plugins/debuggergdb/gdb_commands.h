@@ -195,12 +195,27 @@ static wxRegEx reExamineMemoryLine(wxT("[ \t]*(0x[0-9a-f]+)[ \t]<.+>:[ \t]+(.+)"
 //"\x1a\x1a(([a-zA-Z]:)?.*?):([0-9]*):([0-9]*):(middle|beg|):(.*)"
 //static wxRegEx reStepI(_T("\x1a\x1a.*?:([0-9]*):([0-9]*):(.*?):(.*)"));
 //static wxRegEx reStepI(_T("\x1a\x1a(([a-zA-Z]:)?.*?):([0-9]*):([0-9]*):(middle|beg):(.*)"));
-static wxRegEx reStepI(wxT("(((.*)[a-zA-Z]:)?.*)?:(\\d+):(middle|beg):(.*)"), wxRE_ADVANCED);
-static wxRegEx reStepI2(_T("\\A(0x[A-Fa-f0-9]+)\\s+(\\d+)\\s+in (.*)"),wxRE_ADVANCED); //needed in gdb_commands.h
+static wxRegEx reStepI(wxT("(((.*)[a-zA-Z]:)?.*)?:(\\d+):(middle|beg):(.*)"),
+#ifndef __WXMAC__
+                       wxRE_ADVANCED);
+#else
+                       wxRE_EXTENDED);
+#endif
+static wxRegEx reStepI2(_T("\\A(0x[A-Fa-f0-9]+)\\s+(\\d+)\\s+in (.*)"),
+#ifndef __WXMAC__
+                       wxRE_ADVANCED);
+#else
+                       wxRE_EXTENDED);
+#endif
 static wxRegEx reStepI3(_T("^(0x[A-Fa-f0-9]+) in (.*)? from (.*)"));
 static wxRegEx reStepI4(_T("^(0x[A-Fa-f0-9]+) in (.*)? at (.*)"));
 
-static wxRegEx reNextI(_T("\x1a\x1a(([a-zA-Z]:)?.*?):([0-9]*):([0-9]*):(middle|beg):(.*)"), wxRE_ADVANCED);
+static wxRegEx reNextI(_T("\x1a\x1a(([a-zA-Z]:)?.*?):([0-9]*):([0-9]*):(middle|beg):(.*)"),
+#ifndef __WXMAC__
+                       wxRE_ADVANCED);
+#else
+                       wxRE_EXTENDED);
+#endif
 
 DECLARE_INSTANCE_TYPE(wxString);
 
