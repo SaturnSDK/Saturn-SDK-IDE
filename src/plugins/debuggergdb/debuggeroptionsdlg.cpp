@@ -20,6 +20,7 @@
     #include <wx/xrc/xmlres.h>
 
     #include <configmanager.h>
+    #include <macrosmanager.h>
 #endif
 
 #include "debuggergdb.h"
@@ -31,6 +32,7 @@ class DebuggerConfigurationPanel : public wxPanel
         {
             wxTextCtrl *pathCtrl = XRCCTRL(*this, "txtExecutablePath", wxTextCtrl);
             wxString path = pathCtrl->GetValue();
+            Manager::Get()->GetMacrosManager()->ReplaceEnvVars(path);
             if (!wxFileExists(path))
             {
                 pathCtrl->SetForegroundColour(*wxWHITE);
@@ -49,6 +51,7 @@ class DebuggerConfigurationPanel : public wxPanel
         void OnBrowse(wxCommandEvent &event)
         {
             wxString oldPath = XRCCTRL(*this, "txtExecutablePath", wxTextCtrl)->GetValue();
+            Manager::Get()->GetMacrosManager()->ReplaceEnvVars(oldPath);
             wxFileDialog dlg(this, _("Select executable file"), wxEmptyString, oldPath,
                              wxFileSelectorDefaultWildcardStr, wxFD_OPEN | wxFD_FILE_MUST_EXIST);
             PlaceWindow(&dlg);
@@ -87,7 +90,7 @@ wxPanel* DebuggerConfiguration::MakePanel(wxWindow *parent)
     if (!wxXmlResource::Get()->LoadPanel(panel, parent, wxT("dlgDebuggerOptions")))
         return panel;
 
-    XRCCTRL(*panel, "txtExecutablePath", wxTextCtrl)->ChangeValue(GetDebuggerExecutable());
+    XRCCTRL(*panel, "txtExecutablePath", wxTextCtrl)->ChangeValue(GetDebuggerExecutable(false));
     panel->ValidateExecutablePath();
 
     XRCCTRL(*panel, "rbType",            wxRadioBox)->SetSelection(IsGDB() ? 0 : 1);
@@ -151,9 +154,11 @@ bool DebuggerConfiguration::IsGDB()
     return m_config.ReadInt(wxT("type"), 0) == 0;
 }
 
-wxString DebuggerConfiguration::GetDebuggerExecutable()
+wxString DebuggerConfiguration::GetDebuggerExecutable(bool expandMarco)
 {
-    const wxString &result = m_config.Read(wxT("executable_path"), wxEmptyString);
+    wxString result = m_config.Read(wxT("executable_path"), wxEmptyString);
+    if (expandMarco)
+        Manager::Get()->GetMacrosManager()->ReplaceEnvVars(result);
     return !result.empty() ? result : cbDetectDebuggerExecutable(wxT("gdb"));
 }
 
