@@ -322,6 +322,7 @@ class GdbCmd_AttachToProcess : public DebuggerCmd
             : DebuggerCmd(driver)
         {
             m_Cmd << _T("attach ") << wxString::Format(_T("%d"), pid);
+            m_pDriver->Log(wxString::Format(_("Attaching to program with pid: %d"), pid));
         }
         void ParseOutput(const wxString& output)
         {
@@ -334,10 +335,12 @@ class GdbCmd_AttachToProcess : public DebuggerCmd
             {
                 if (lines[i].StartsWith(_T("Attaching")))
                     m_pDriver->Log(lines[i]);
-                else if (lines[i].StartsWith(_T("Can't ")))
+                else if (lines[i].StartsWith(wxT("Can't "))
+                         || lines[i].StartsWith(wxT("Could not attach to process"))
+                         || lines[i].StartsWith(wxT("ptrace: No such process")))
                 {
                     // log this and quit debugging
-                    m_pDriver->Log(lines[i]);
+                    m_pDriver->Log(_("Attaching failed: ")+lines[i]);
                     m_pDriver->QueueCommand(new DebuggerCmd(m_pDriver, _T("quit")));
                 }
 //                m_pDriver->DebugLog(lines[i]);

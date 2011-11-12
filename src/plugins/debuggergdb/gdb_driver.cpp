@@ -203,7 +203,6 @@ wxString GDB_driver::GetCommandLine(const wxString& debugger, int pid)
     cmd << _T(" -nx");          // don't run .gdbinit
     cmd << _T(" -fullname ");   // report full-path filenames when breaking
     cmd << _T(" -quiet");       // don't display version on startup
-    cmd << _T(" -pid=") << wxString::Format(_T("%d"), pid);
     return cmd;
 }
 
@@ -719,10 +718,12 @@ void GDB_driver::UpdateWatch(GDBWatch::Pointer const &watch)
     QueueCommand(new DbgCmd_UpdateWatchesTree(this));
 }
 
-void GDB_driver::Attach(int /*pid*/)
+void GDB_driver::Attach(int pid)
 {
     m_IsStarted = true;
     m_attachedToProcess = true;
+    SetChildPID(pid);
+    QueueCommand(new GdbCmd_AttachToProcess(this, pid));
 }
 
 void GDB_driver::Detach()
