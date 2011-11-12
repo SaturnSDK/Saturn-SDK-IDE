@@ -625,10 +625,10 @@ class GdbCmd_RemoveBreakpoint : public DebuggerCmd
 /**
   * Command that notifies the debugger plugin that the debuggee has been continued
   */
-class DebuggerContinueCommand : public DebuggerContinueBaseCmd
+class GdbCmd_Continue : public DebuggerContinueBaseCmd
 {
     public:
-        DebuggerContinueCommand(DebuggerDriver* driver) :
+        GdbCmd_Continue(DebuggerDriver* driver) :
             DebuggerContinueBaseCmd(driver, wxT("cont"))
         {
         }
@@ -636,6 +636,32 @@ class DebuggerContinueCommand : public DebuggerContinueBaseCmd
         virtual void Action()
         {
             m_pDriver->NotifyDebuggeeContinued();
+        }
+};
+
+class GdbCmd_Start : public DebuggerContinueBaseCmd
+{
+    public:
+        GdbCmd_Start(DebuggerDriver* driver, const wxString &cmd) :
+            DebuggerContinueBaseCmd(driver, cmd)
+        {
+        }
+
+        virtual void ParseOutput(const wxString &output)
+        {
+            const wxArrayString &lines = GetArrayFromString(output, _T('\n'));
+            for (size_t ii = 0; ii < lines.GetCount(); ++ii)
+            {
+                if (lines[ii].StartsWith(wxT("No symbol table loaded."))
+                    || lines[ii].StartsWith(wxT("No executable file specified."))
+                    || lines[ii].StartsWith(wxT("No executable specified.")))
+                {
+                    // log this and quit debugging
+                    m_pDriver->Log(_("Starting the debuggee failed: ")+lines[ii]);
+                    m_pDriver->MarkProgramStopped(true);
+                    m_pDriver->QueueCommand(new DebuggerCmd(m_pDriver, _T("quit")));
+                }
+            }
         }
 };
 

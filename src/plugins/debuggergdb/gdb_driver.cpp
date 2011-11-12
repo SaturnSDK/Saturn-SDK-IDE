@@ -496,12 +496,12 @@ void GDB_driver::Start(bool breakOnEntry)
         m_ManualBreakOnEntry = !remoteDebugging;
         // start the process
         if(breakOnEntry)
-            QueueCommand(new DebuggerContinueBaseCmd(this, remoteDebugging ? _T("continue") : _T("start")));
+            QueueCommand(new GdbCmd_Start(this, remoteDebugging ? _T("continue") : _T("start")));
         else
         {
             // if breakOnEntry is not set, we need to use 'run' to make gdb stop at a breakpoint at first instruction
             m_ManualBreakOnEntry=false;  // must be reset or gdb does not stop at first breakpoint
-            QueueCommand(new DebuggerContinueBaseCmd(this, remoteDebugging ? _T("continue") : _T("run")));
+            QueueCommand(new GdbCmd_Start(this, remoteDebugging ? _T("continue") : _T("run")));
         }
         m_IsStarted = true;
     }
@@ -521,16 +521,16 @@ void GDB_driver::Continue()
 {
     ResetCursor();
     if (m_IsStarted)
-        QueueCommand(new DebuggerContinueCommand(this));
+        QueueCommand(new GdbCmd_Continue(this));
     else
     {
         // if performing remote debugging, use "continue" command
         RemoteDebugging* rd = GetRemoteDebuggingInfo();
         bool remoteDebugging = rd && rd->IsOk();
         if (remoteDebugging)
-            QueueCommand(new DebuggerContinueCommand(this));
+            QueueCommand(new GdbCmd_Continue(this));
         else
-            QueueCommand(new DebuggerContinueBaseCmd(this, m_ManualBreakOnEntry ? wxT("start") : wxT("run")));
+            QueueCommand(new GdbCmd_Start(this, m_ManualBreakOnEntry ? wxT("start") : wxT("run")));
         m_ManualBreakOnEntry = false;
         m_IsStarted = true;
         m_attachedToProcess = false;
