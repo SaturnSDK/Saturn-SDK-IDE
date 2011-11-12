@@ -52,6 +52,7 @@
 						<flag>wxALL|wxEXPAND|wxALIGN_LEFT|wxALIGN_TOP</flag>
 						<border>4</border>
 						<option>1</option>
+						<minsize>200,100</minsize>
 					</object>
 					<object class="sizeritem">
 						<object class="wxStaticText" name="ID_STATICTEXT1">

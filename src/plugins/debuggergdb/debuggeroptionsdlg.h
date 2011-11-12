@@ -6,8 +6,6 @@
 #ifndef DEBUGGEROPTIONSDLG_H
 #define DEBUGGEROPTIONSDLG_H
 
-#include "configurationpanel.h"
-
 #include <debuggermanager.h>
 
 class ConfigManagerWrapper;
