@@ -205,10 +205,9 @@ int CppCheck::Execute()
     }
 
     cbProject* Project = Manager::Get()->GetProjectManager()->GetActiveProject();
-    const long Files = Project->GetFilesCount();
-    if(!Files)
+    if (Project->GetFilesCount() < 1)
     {
-    	return 0;
+        return 0;
     }
     const wxString Basepath = Project->GetBasePath();
     ::wxSetWorkingDirectory(Basepath);
@@ -217,11 +216,11 @@ int CppCheck::Execute()
     const wxString InputFileName = _T("CppCheckInput.txt");
     if(!Input.Create(InputFileName, true))
     {
-    	return -1;
+        return -1;
     }
-    for (int File = 0; File < Files; ++File)
+    for (FilesList::iterator it = Project->GetFilesList().begin(); it != Project->GetFilesList().end(); ++it)
     {
-        ProjectFile* pf = Project->GetFile(File);
+        ProjectFile* pf = *it;
         Input.Write(pf->relativeFilename + _T("\n"));
     }
     Input.Close();
@@ -252,7 +251,7 @@ int CppCheck::Execute()
     wxString CommandLine = m_CppCheckApp + _T(" --verbose --all --style --xml --file-list=") + InputFileName;
     if(!IncludeList.IsEmpty())
     {
-		CommandLine += _T(" ") + IncludeList.Trim();
+        CommandLine += _T(" ") + IncludeList.Trim();
     }
     AppendToLog(CommandLine);
     wxArrayString Output, Errors;

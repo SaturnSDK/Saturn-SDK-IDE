@@ -50,7 +50,6 @@ Manager::~Manager()
     // remove all event sinks
     for (EventSinksMap::iterator mit = m_EventSinks.begin(); mit != m_EventSinks.end(); ++mit)
     {
-        EventSinksArray::iterator it = mit->second.begin();
         while (mit->second.size())
         {
             delete (*(mit->second.begin()));
@@ -60,7 +59,6 @@ Manager::~Manager()
 
     for (DockEventSinksMap::iterator mit = m_DockEventSinks.begin(); mit != m_DockEventSinks.end(); ++mit)
     {
-        DockEventSinksArray::iterator it = mit->second.begin();
         while (mit->second.size())
         {
             delete (*(mit->second.begin()));
@@ -70,7 +68,6 @@ Manager::~Manager()
 
     for (LayoutEventSinksMap::iterator mit = m_LayoutEventSinks.begin(); mit != m_LayoutEventSinks.end(); ++mit)
     {
-        LayoutEventSinksArray::iterator it = mit->second.begin();
         while (mit->second.size())
         {
             delete (*(mit->second.begin()));
@@ -80,7 +77,6 @@ Manager::~Manager()
 
     for (LogEventSinksMap::iterator mit = m_LogEventSinks.begin(); mit != m_LogEventSinks.end(); ++mit)
     {
-        LogEventSinksArray::iterator it = mit->second.begin();
         while (mit->second.size())
         {
             delete (*(mit->second.begin()));
