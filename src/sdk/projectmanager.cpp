@@ -73,7 +73,6 @@ static const int idOpenWithInternal = wxNewId();
 // static
 bool ProjectManager::s_CanShutdown = true;
 
-
 int ID_ProjectManager = wxNewId();
 int idMenuSetActiveProject = wxNewId();
 int idMenuOpenFile = wxNewId();
@@ -121,42 +120,73 @@ static const int idNB = wxNewId();
 static const int idNB_TabTop = wxNewId();
 static const int idNB_TabBottom = wxNewId();
 
+cbTreeCtrl::cbTreeCtrl() : wxTreeCtrl()
+{
+    Compare = &filesSort;
+}
+
+cbTreeCtrl::cbTreeCtrl(wxWindow* parent, int id) :
+    wxTreeCtrl(parent, id, wxDefaultPosition, wxDefaultSize,
+                wxTR_EDIT_LABELS | wxTR_DEFAULT_STYLE | wxTR_MULTIPLE | wxNO_BORDER)
+{
+    Compare = &filesSort;
+}
+
+void cbTreeCtrl::SetCompareFunction(const int ptvs)
+{
+    // sort list of files
+    if ( !(ptvs & ptvsUseFolders) && (ptvs & ptvsHideFolderName) )
+        Compare = &filesSortNameOnly;
+    else
+        Compare = &filesSort;
+}
+
 #ifndef __WXMSW__
 /*
-    Under wxGTK, I have noticed that wxTreeCtrl is not sending a EVT_COMMAND_RIGHT_CLICK
+    Under wxGTK, wxTreeCtrl is not sending an EVT_COMMAND_RIGHT_CLICK
     event when right-clicking on the client area.
-    This is a "proxy" wxTreeCtrl descendant that handles this for us...
 */
-
-class PrjTree : public wxTreeCtrl
+void cbTreeCtrl::OnRightClick(wxMouseEvent& event)
 {
-    public:
-        PrjTree(wxWindow* parent, int id) :
-            wxTreeCtrl(parent, id, wxDefaultPosition, wxDefaultSize,
-                       wxTR_EDIT_LABELS|wxTR_DEFAULT_STYLE|wxTR_MULTIPLE|wxNO_BORDER)
-        { ; }
-    protected:
-        void OnRightClick(wxMouseEvent& event)
-        {
-            if (!this) return;
+    if (!this) return;
 
-            int flags;
-            HitTest(wxPoint(event.GetX(), event.GetY()), flags);
-            if (flags & (wxTREE_HITTEST_ABOVE | wxTREE_HITTEST_BELOW | wxTREE_HITTEST_NOWHERE))
-            {
-                // "proxy" the call
-                wxCommandEvent e(wxEVT_COMMAND_RIGHT_CLICK, ID_ProjectManager);
-                wxPostEvent(GetParent(), e);
-            }
-            else
-                event.Skip();
-        }
-        DECLARE_EVENT_TABLE();
-};
-BEGIN_EVENT_TABLE(PrjTree, wxTreeCtrl)
-    EVT_RIGHT_DOWN(PrjTree::OnRightClick)
-END_EVENT_TABLE()
+    int flags;
+    HitTest(wxPoint(event.GetX(), event.GetY()), flags);
+    if (flags & (wxTREE_HITTEST_ABOVE | wxTREE_HITTEST_BELOW | wxTREE_HITTEST_NOWHERE))
+    {
+        // "proxy" the call
+        wxCommandEvent e(wxEVT_COMMAND_RIGHT_CLICK, ID_ProjectManager);
+        wxPostEvent(GetParent(), e);
+    }
+    else
+        event.Skip();
+}
 #endif // !__WXMSW__
+
+int cbTreeCtrl::filesSort(const ProjectFile* arg1, const ProjectFile* arg2)
+{
+    if (arg1 && arg2)
+        return wxStricmp(arg1->file.GetFullPath(), arg2->file.GetFullPath());
+    return 0;
+}
+
+int cbTreeCtrl::filesSortNameOnly(const ProjectFile* arg1, const ProjectFile* arg2)
+{
+    if (arg1 && arg2)
+        return wxStricmp(arg1->file.GetFullName(), arg2->file.GetFullName());
+    return 0;
+}
+
+int cbTreeCtrl::OnCompareItems(const wxTreeItemId& item1, const wxTreeItemId& item2)
+{
+    return Compare(((FileTreeData*)GetItemData(item1))->GetProjectFile(), ((FileTreeData*)GetItemData(item2))->GetProjectFile());
+}
+IMPLEMENT_DYNAMIC_CLASS(cbTreeCtrl, wxTreeCtrl)
+BEGIN_EVENT_TABLE(cbTreeCtrl, wxTreeCtrl)
+#ifndef __WXMSW__
+    EVT_RIGHT_DOWN(cbTreeCtrl::OnRightClick)
+#endif // !__WXMSW__
+END_EVENT_TABLE()
 
 BEGIN_EVENT_TABLE(ProjectManager, wxEvtHandler)
     EVT_TREE_BEGIN_DRAG(ID_ProjectManager, ProjectManager::OnTreeBeginDrag)
@@ -241,7 +271,6 @@ ProjectManager::ProjectManager()
     m_pProjectToActivate = 0L;
     m_pProjects = new ProjectsArray;
     m_pProjects->Clear();
-    // m_pPanel = new wxPanel(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL | wxCLIP_CHILDREN);
     InitPane();
 
     m_pFileGroups = new FilesGroupsAndMasks;
@@ -333,11 +362,7 @@ int ProjectManager::VirtualFolderIconIndex()
 
 void ProjectManager::BuildTree()
 {
-    #ifndef __WXMSW__
-        m_pTree = new PrjTree(m_pNotebook, ID_ProjectManager);
-    #else
-        m_pTree = new wxTreeCtrl(m_pNotebook, ID_ProjectManager, wxDefaultPosition, wxDefaultSize, wxTR_EDIT_LABELS | wxTR_DEFAULT_STYLE | wxTR_MULTIPLE | wxNO_BORDER);
-    #endif
+    m_pTree = new cbTreeCtrl(m_pNotebook, ID_ProjectManager);
 
     static const wxString imgs[] =
     {
@@ -516,6 +541,7 @@ void ProjectManager::SetProject(cbProject* project, bool refresh)
         if (tid)
             m_pTree->SetItemBold(m_pActiveProject->GetProjectNode(), true);
     }
+
     if (refresh)
         RebuildTree();
 
@@ -523,7 +549,7 @@ void ProjectManager::SetProject(cbProject* project, bool refresh)
         m_pTree->EnsureVisible(m_pActiveProject->GetProjectNode());
 
     m_pTree->Refresh();
-    
+
     CodeBlocksEvent event(cbEVT_PROJECT_ACTIVATE);
     event.SetProject(m_pActiveProject);
     Manager::Get()->GetPluginManager()->NotifyPlugins(event);
@@ -1197,8 +1223,9 @@ cbWorkspace* ProjectManager::GetWorkspace()
 
 bool ProjectManager::LoadWorkspace(const wxString& filename)
 {
-    if (!BeginLoadingWorkspace())
+    if ( !BeginLoadingWorkspace() )
         return false;
+
     m_pWorkspace = new cbWorkspace(filename);
     EndLoadingWorkspace();
 
@@ -1900,6 +1927,7 @@ void ProjectManager::OnProjectFileActivated(wxTreeEvent& event)
     {
         if (ftd->GetProject() != m_pActiveProject)
             SetProject(ftd->GetProject(), false);
+
         // prevent item expand state toggle when project is activated
         // toggle it one time so that it is toggled back by wx
         m_pTree->IsExpanded(id) ? m_pTree->Collapse(id) : m_pTree->Expand(id);
@@ -2030,6 +2058,7 @@ void ProjectManager::OnSetActiveProject(wxCommandEvent& event)
         wxTreeItemId sel = GetTreeSelection();
         if (!sel.IsOk())
             return;
+
         FileTreeData* ftd = (FileTreeData*)m_pTree->GetItemData(sel);
         if (!ftd)
             return;
@@ -2070,6 +2099,7 @@ void ProjectManager::OnSetActiveProject(wxCommandEvent& event)
         wxTreeItemId sel = GetTreeSelection();
         if (!sel.IsOk())
             return;
+
         FileTreeData* ftd = (FileTreeData*)m_pTree->GetItemData(sel);
         if (ftd)
             MoveProjectDown(ftd->GetProject());
@@ -2177,6 +2207,7 @@ void ProjectManager::OnAddFileToProject(wxCommandEvent& event)
         wxTreeItemId sel = GetTreeSelection();
         if (!sel.IsOk())
             return;
+
         FileTreeData* ftd = (FileTreeData*)m_pTree->GetItemData(sel);
         if (ftd)
         {
@@ -2237,8 +2268,8 @@ void FindFiles(wxArrayString &resultFiles, wxTreeCtrl &tree, wxTreeItemId item)
             }
             break;
         default:
-            for (int i = 0; i < ftd->GetProject()->GetFilesCount(); ++i)
-                resultFiles.Add(ftd->GetProject()->GetFile(i)->relativeFilename);
+            for (FilesList::iterator it = ftd->GetProject()->GetFilesList().begin(); it != ftd->GetProject()->GetFilesList().end(); ++it)
+                resultFiles.Add(((ProjectFile*)*it)->relativeFilename);
     }
 }
 } // namespace
@@ -2248,12 +2279,15 @@ void ProjectManager::OnRemoveFileFromProject(wxCommandEvent& event)
     wxTreeItemId sel = GetTreeSelection();
     if (!sel.IsOk())
         return;
+
     FileTreeData* ftd = (FileTreeData*)m_pTree->GetItemData(sel);
     if (!ftd)
         return;
+
     cbProject* prj = ftd->GetProject();
     if (!prj)
         return;
+
     wxString oldpath = prj->GetCommonTopLevelPath();
 
     if (event.GetId() == idMenuRemoveFile)
@@ -2290,7 +2324,7 @@ void ProjectManager::OnRemoveFileFromProject(wxCommandEvent& event)
             {
                 Manager::Get()->GetLogManager()->DebugLog(F(_T("Removing index %d"), indices[i]));
 
-                ProjectFile* pf = prj->GetFile(indices[i]);
+                ProjectFile* pf = prj->GetFileByFilename(files[indices[i]]);
                 RemoveFileFromProject(pf, prj);
             }
             prj->CalculateCommonTopLevelPath();
@@ -2343,6 +2377,7 @@ void ProjectManager::OnSaveProject(wxCommandEvent& WXUNUSED(event))
     wxTreeItemId sel = GetTreeSelection();
     if (!sel.IsOk())
         return;
+
     if (FileTreeData* ftd = (FileTreeData*)m_pTree->GetItemData(sel))
     {
         if (cbProject* Project = ftd->GetProject())
@@ -2361,10 +2396,12 @@ void ProjectManager::OnCloseProject(wxCommandEvent& WXUNUSED(event))
     wxTreeItemId sel = GetTreeSelection();
     if (!sel.IsOk())
         return;
+
     FileTreeData* ftd = (FileTreeData*)m_pTree->GetItemData(sel);
     cbProject *proj = 0;
     if (ftd)
         proj = ftd->GetProject();
+
     if (proj)
     {
         if (m_IsLoadingProject || proj->GetCurrentlyCompilingTarget())
@@ -2372,8 +2409,10 @@ void ProjectManager::OnCloseProject(wxCommandEvent& WXUNUSED(event))
         else
             CloseProject(proj);
     }
+
     if (m_pProjects->GetCount() > 0 && !m_pActiveProject)
         SetProject(m_pProjects->Item(0), false);
+
     Manager::Get()->GetAppWindow()->Refresh();
 }
 
@@ -2382,13 +2421,11 @@ void ProjectManager::OnSaveFile(wxCommandEvent& WXUNUSED(event))
     wxTreeItemId sel = GetTreeSelection();
     if (!sel.IsOk())
         return;
+
     if (FileTreeData* ftd = (FileTreeData*)m_pTree->GetItemData(sel))
     {
-        if (cbProject* Project = ftd->GetProject())
-        {
-            if (ProjectFile* File = Project->GetFile(ftd->GetFileIndex()))
-                Manager::Get()->GetEditorManager()->Save(File->file.GetFullPath());
-        }
+        if (ProjectFile* File = ftd->GetProjectFile())
+            Manager::Get()->GetEditorManager()->Save(File->file.GetFullPath());
     }
 }
 
@@ -2400,11 +2437,8 @@ void ProjectManager::OnCloseFile(wxCommandEvent& WXUNUSED(event))
 
     if (FileTreeData* ftd = (FileTreeData*)m_pTree->GetItemData(sel))
     {
-        if (cbProject* Project = ftd->GetProject())
-        {
-            if (ProjectFile* File = Project->GetFile(ftd->GetFileIndex()))
-                Manager::Get()->GetEditorManager()->Close(File->file.GetFullPath());
-        }
+        if (ProjectFile* File = ftd->GetProjectFile())
+            Manager::Get()->GetEditorManager()->Close(File->file.GetFullPath());
     }
 }
 
@@ -2446,8 +2480,7 @@ void ProjectManager::OnOpenWith(wxCommandEvent& event)
     FileTreeData* ftd = (FileTreeData*)m_pTree->GetItemData(sel);
     if (ftd)
     {
-        cbProject* project = ftd->GetProject();
-        ProjectFile* f = project->GetFile(ftd->GetFileIndex());
+        ProjectFile* f = ftd->GetProjectFile();
         if (f)
         {
             wxString filename = f->file.GetFullPath();
@@ -2500,6 +2533,7 @@ void ProjectManager::OnProperties(wxCommandEvent& event)
         wxTreeItemId sel = GetTreeSelection();
         if (!sel.IsOk())
             return;
+
         FileTreeData* ftd = (FileTreeData*)m_pTree->GetItemData(sel);
 
         cbProject* project = ftd ? ftd->GetProject() : m_pActiveProject;
@@ -2537,6 +2571,7 @@ void ProjectManager::OnProperties(wxCommandEvent& event)
         wxTreeItemId sel = GetTreeSelection();
         if (!sel.IsOk())
             return;
+
         FileTreeData* ftd = (FileTreeData*)m_pTree->GetItemData(sel);
 
         cbProject* project = ftd ? ftd->GetProject() : m_pActiveProject;
@@ -2544,7 +2579,7 @@ void ProjectManager::OnProperties(wxCommandEvent& event)
         {
             if (ftd && ftd->GetFileIndex() != -1)
             {
-                ProjectFile* pf = project->GetFile(ftd->GetFileIndex());
+                ProjectFile* pf = ftd->GetProjectFile();
                 if (pf)
                     pf->ShowOptions(Manager::Get()->GetAppWindow());
             }
@@ -2610,8 +2645,9 @@ void ProjectManager::OnGotoFile(wxCommandEvent& /*event*/)
     for (size_t proj_index = 0; proj_index < m_pProjects->GetCount(); ++proj_index)
     {
         cbProject *project = (*m_pProjects)[proj_index];
-        for (int i = 0; i < project->GetFilesCount(); ++i)
-            files.push_back(project->GetFile(i));
+
+        for (FilesList::iterator it = project->GetFilesList().begin(); it != project->GetFilesList().end(); ++it)
+            files.push_back(*it);
     }
 
     if (!files.empty())
@@ -2760,7 +2796,7 @@ wxTreeItemId ProjectManager::FindItem( wxTreeItemId Node, const wxString& Search
 
 void ProjectManager::OnFindFile(wxCommandEvent& /*event*/)
 {
-    wxString text = wxGetTextFromUser(_("Please enter the name of the file you are searching:"), _("Find file..."));
+    const wxString text = wxGetTextFromUser(_("Please enter the name of the file you are searching:"), _("Find file..."));
     if ( !text.IsEmpty() )
     {
         wxTreeItemId sel = GetTreeSelection();
@@ -2788,9 +2824,11 @@ void ProjectManager::OnAddVirtualFolder(wxCommandEvent& /*event*/)
     wxTreeItemId sel = GetTreeSelection();
     if (!sel.IsOk())
         return;
+
     FileTreeData* ftd = (FileTreeData*)m_pTree->GetItemData(sel);
     if (!ftd)
         return;
+
     cbProject* prj = ftd->GetProject();
     if (!prj)
         return;
@@ -2804,9 +2842,11 @@ void ProjectManager::OnDeleteVirtualFolder(wxCommandEvent& /*event*/)
     wxTreeItemId sel = GetTreeSelection();
     if (!sel.IsOk())
         return;
+
     FileTreeData* ftd = (FileTreeData*)m_pTree->GetItemData(sel);
     if (!ftd)
         return;
+
     cbProject* prj = ftd->GetProject();
     if (!prj)
         return;
@@ -2882,14 +2922,15 @@ void ProjectManager::OnRenameFile(wxCommandEvent& /*event*/)
     wxTreeItemId sel = GetTreeSelection();
     if (!sel.IsOk())
         return;
+
     FileTreeData* ftd = (FileTreeData*)m_pTree->GetItemData(sel);
     if (!ftd)
         return;
+
     cbProject* prj = ftd->GetProject();
     if (!prj)
-    {
         return;
-    }
+
     if (ftd->GetProjectFile()->AutoGeneratedBy())
     {
         cbMessageBox(_("Can't rename file because it is auto-generated..."), _("Error"));
