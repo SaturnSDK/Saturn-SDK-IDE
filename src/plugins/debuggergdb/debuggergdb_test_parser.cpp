@@ -294,5 +294,11 @@ TEST(ChangeType1)
     CHECK_EQUAL(wxT("s= {number=29,real=36}"), *w);
 }
 
+TEST(PythonSTLMap)
+{
+    GDBWatch::Pointer w(new GDBWatch(wxT("s")));
+    CHECK(ParseGDBWatchValue(w, wxT("std::map with 20 elements = {[\"BEGIN_EVENT_TABLE\"] = \"-END_EVENT_TABLE\"}")));
+    CHECK_EQUAL(wxT("s=std::map with 20 elements = {[\"BEGIN_EVENT_TABLE\"]=\"-END_EVENT_TABLE\"}"), *w);
+}
 
 } // SUITE(GDBWatchParser)

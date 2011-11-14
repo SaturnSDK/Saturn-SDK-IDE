@@ -122,7 +122,9 @@ bool GetNextToken(wxString const &str, int pos, Token &token)
 
     token.start = -1;
     bool in_quote = false;
-    int open_angle_braces = 0;
+    int open_braces = 0;
+    struct BraceType { enum Enum { None, Angle, Square }; };
+    BraceType::Enum brace_type = BraceType::None;
 
     switch (str[pos])
     {
@@ -147,7 +149,15 @@ bool GetNextToken(wxString const &str, int pos, Token &token)
     case _T('<'):
         token.type = Token::String;
         token.start = pos;
-        open_angle_braces = 1;
+        open_braces = 1;
+        brace_type = BraceType::Angle;
+        break;
+    case wxT('['):
+        token.type = Token::String;
+        token.start = pos;
+        open_braces = 1;
+        brace_type = BraceType::Square;
+        break;
     default:
         token.type = Token::String;
         token.start = pos;
@@ -157,7 +167,7 @@ bool GetNextToken(wxString const &str, int pos, Token &token)
     bool escape_next = false;
     while (pos < static_cast<int>(str.length()))
     {
-        if (open_angle_braces == 0)
+        if (open_braces == 0)
         {
             if (str[pos] == _T(',') && !in_quote)
             {
@@ -201,15 +211,39 @@ bool GetNextToken(wxString const &str, int pos, Token &token)
             else
                 escape_next = false;
 
-            if (str[pos] == wxT('<'))
-                open_angle_braces++;
+            switch (brace_type)
+            {
+                case BraceType::Angle:
+                    if (str[pos] == wxT('<'))
+                        open_braces++;
+                    break;
+                case BraceType::Square:
+                    if (str[pos] == wxT('['))
+                        open_braces++;
+                    break;
+                default:
+                    ;
+            }
         }
         else
         {
-            if (str[pos] == wxT('<'))
-                open_angle_braces++;
-            else if (str[pos] == wxT('>'))
-                --open_angle_braces;
+            switch (brace_type)
+            {
+                case BraceType::Angle:
+                    if (str[pos] == wxT('<'))
+                        open_braces++;
+                    else if (str[pos] == wxT('>'))
+                        --open_braces;
+                    break;
+                case BraceType::Square:
+                    if (str[pos] == wxT('['))
+                        open_braces++;
+                    else if (str[pos] == wxT(']'))
+                        --open_braces;
+                    break;
+                default:
+                    ;
+            }
         }
         ++pos;
     }
