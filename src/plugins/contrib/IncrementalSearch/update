@@ -5,9 +5,15 @@
 #
 # Copyright: 2008 Jens Lody
 #
-# $Revision$
-# $Id$
-# $HeadURL$
+<<<<<<< .working
+# $Revision: 5277 $
+# $Id: update 5277 2008-10-19 19:08:32Z jenslody $
+# $HeadURL: https://svn.berlios.de/svnroot/repos/codeblocks/branches/wxpropgrid_debugger/src/plugins/contrib/IncrementalSearch/update $
+=======
+# $Revision: 5277 $
+# $Id: update 5277 2008-10-19 19:08:32Z jenslody $
+# $HeadURL: https://mortenmacfly@svn.berlios.de/svnroot/repos/codeblocks/trunk/src/plugins/contrib/IncrementalSearch/update $
+>>>>>>> .merge-right.r7600
 #
 
 mkdir -p ../../../devel/share/codeblocks/images/settings > /dev/null 2> /dev/null
