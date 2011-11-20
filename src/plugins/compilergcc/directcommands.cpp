@@ -567,8 +567,7 @@ wxArrayString DirectCommands::GetTargetLinkCommands(ProjectBuildTarget* target, 
     if (!outputtime)
         force = true;
     wxArrayString fileMissing;
-    if ( AreExternalDepsOutdated(out.GetFullPath(), target->GetAdditionalOutputFiles(),
-                                 target->GetExternalDeps(), &fileMissing) )
+    if ( AreExternalDepsOutdated(target, out.GetFullPath(), &fileMissing) )
     {
         force = true;
     }
@@ -831,14 +830,83 @@ wxArrayString DirectCommands::GetTargetCleanCommands(ProjectBuildTarget* target,
   * e.g. a static library linked to the project is an external dep (if set as such by the user)
   * so that a re-linking is forced if the static lib is updated
   */
-bool DirectCommands::AreExternalDepsOutdated(const wxString& buildOutput,
-                                             const wxString& additionalFiles,
-                                             const wxString& externalDeps,
+bool DirectCommands::AreExternalDepsOutdated(ProjectBuildTarget* target,
+											 const wxString& buildOutput,
                                              wxArrayString*  filesMissing)
 {
+    Compiler* compiler = CompilerFactory::GetCompiler(target->GetCompilerID());
+
+	// if no output, probably a commands-only target; nothing to relink
+	// but we have to check other dependencies
+	time_t timeOutput = 0;
+	if (!buildOutput.IsEmpty())
+	{
+		wxString output = buildOutput;
+		Manager::Get()->GetMacrosManager()->ReplaceMacros(output);
+		depsTimeStamp(output.mb_str(), &timeOutput);
+		// if build output exists, check for updated static libraries
+		if (timeOutput)
+		{
+			// look for static libraries in target/project library dirs
+			const wxArrayString& libs = target->GetLinkLibs();
+			const wxArrayString& prjLibDirs = target->GetParentProject()->GetLibDirs();
+			const wxArrayString& cmpLibDirs = compiler->GetLibDirs();
+			wxArrayString libDirs = target->GetLibDirs();
+			AppendArray(prjLibDirs, libDirs);
+			AppendArray(cmpLibDirs, libDirs);
+			for (size_t i = 0; i < libs.GetCount(); ++i)
+			{
+				wxString lib = libs[i];
+
+				// if user manually pointed to a library, without using the lib dirs,
+				// then just check the file directly w/out involving the search dirs...
+				if (lib.Contains(_T("/")) || lib.Contains(_T("\\")))
+				{
+					Manager::Get()->GetMacrosManager()->ReplaceMacros(lib, target);
+					lib = UnixFilename(lib);
+					time_t timeExtDep;
+					depsTimeStamp(lib.mb_str(), &timeExtDep);
+					if (timeExtDep > timeOutput)
+					{
+						// force re-link
+						Manager::Get()->GetLogManager()->DebugLog(F(_T("Forcing re-link of '%s/%s' because '%s' is newer"),
+																		target->GetParentProject()->GetTitle().wx_str(),
+																		target->GetTitle().wx_str(),
+																		lib.wx_str()));
+						return true;
+					}
+					continue;
+				}
+
+				if (!lib.StartsWith(compiler->GetSwitches().libPrefix))
+					lib = compiler->GetSwitches().libPrefix + lib;
+				if (!lib.EndsWith(_T(".") + compiler->GetSwitches().libExtension))
+					lib += _T(".") + compiler->GetSwitches().libExtension;
+
+				for (size_t l = 0; l < libDirs.GetCount(); ++l)
+				{
+					wxString dir = libDirs[l] + wxFILE_SEP_PATH + lib;
+					Manager::Get()->GetMacrosManager()->ReplaceMacros(dir, target);
+					dir = UnixFilename(dir);
+					time_t timeExtDep;
+					depsTimeStamp(dir.mb_str(), &timeExtDep);
+					if (timeExtDep > timeOutput)
+					{
+						// force re-link
+						Manager::Get()->GetLogManager()->DebugLog(F(_T("Forcing re-link of '%s/%s' because '%s' is newer"),
+																		target->GetParentProject()->GetTitle().wx_str(),
+																		target->GetTitle().wx_str(),
+																		dir.wx_str()));
+						return true;
+					}
+				}
+			}
+		}
+	}
+
     // array is separated by ;
-    wxArrayString extDeps  = GetArrayFromString(externalDeps, _T(";"));
-    wxArrayString addFiles = GetArrayFromString(additionalFiles, _T(";"));
+    wxArrayString extDeps  = GetArrayFromString(target->GetExternalDeps(), _T(";"));
+    wxArrayString addFiles = GetArrayFromString(target->GetAdditionalOutputFiles(), _T(";"));
     for (size_t i = 0; i < extDeps.GetCount(); ++i)
     {
         if (extDeps[i].IsEmpty())
@@ -885,10 +953,7 @@ bool DirectCommands::AreExternalDepsOutdated(const wxString& buildOutput,
         // this is moved last because, for "commands only" targets,
         // it would return before we had a chance to check the
         // additional output files (above)
-        wxString output = buildOutput;
-        Manager::Get()->GetMacrosManager()->ReplaceMacros(output);
-        time_t timeOutput;
-        depsTimeStamp(output.mb_str(), &timeOutput);
+
         // if build output doesn't exist, relink
         if (!timeOutput)
             return true;
