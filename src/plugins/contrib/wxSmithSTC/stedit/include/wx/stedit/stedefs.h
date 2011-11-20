@@ -3,7 +3,7 @@
 // Purpose:     wxSTEditor definitions, constants and globals
 // Maintainer:
 // Created:     2003-04-04
-// RCS-ID:      $Id: stedefs.h,v 1.49 2007/11/12 05:16:50 jrl1 Exp $
+// RCS-ID:      $Id$
 // Copyright:   (c) John Labenski, Otto Wyss
 // Licence:     wxWidgets licence
 ///////////////////////////////////////////////////////////////////////////////

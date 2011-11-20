@@ -15,9 +15,9 @@
 * You should have received a copy of the GNU General Public License
 * along with wxSmith. If not, see <http://www.gnu.org/licenses/>.
 *
-* $Revision: 4850 $
-* $Id: wxsfloatproperty.h 4850 2008-01-29 21:45:49Z byo $
-* $HeadURL: svn+ssh://tpetrov@svn.berlios.de/svnroot/repos/codeblocks/trunk/src/plugins/contrib/wxSmith/properties/wxsfloatproperty.h $
+* $Revision$
+* $Id$
+* $HeadURL$
 */
 
 #ifndef WXSFLOATPROPERTY_H

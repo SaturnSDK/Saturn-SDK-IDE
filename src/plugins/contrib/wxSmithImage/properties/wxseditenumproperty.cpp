@@ -15,9 +15,9 @@
 * You should have received a copy of the GNU General Public License
 * along with wxSmith. If not, see <http://www.gnu.org/licenses/>.
 *
-* $Revision: 5218 $
-* $Id: wxsenumproperty.cpp 5218 2008-09-24 11:08:58Z mortenmacfly $
-* $HeadURL: svn://svn.berlios.de/codeblocks/trunk/src/plugins/contrib/wxSmith/properties/wxsenumproperty.cpp $
+* $Revision$
+* $Id$
+* $HeadURL$
 */
 
 #include "wxseditenumproperty.h"

@@ -3,7 +3,7 @@
 // Purpose:     wxSTEditor Preferences/Styles/Languages initialization
 // Maintainer:
 // Created:     2003-04-04
-// RCS-ID:      $Id: steprefs.cpp,v 1.23 2008/01/24 17:34:02 jrl1 Exp $
+// RCS-ID:      $Id$
 // Copyright:   (c) John Labenski, Otto Wyss
 // Licence:     wxWidgets licence
 ///////////////////////////////////////////////////////////////////////////////

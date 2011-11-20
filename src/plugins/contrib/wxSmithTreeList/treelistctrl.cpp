@@ -2,9 +2,9 @@
 // Name:        treelistctrl.cpp
 // Purpose:     multi column tree control implementation
 // Author:      Robert Roebling
-// Maintainer:  $Author: pgriddev $
+// Maintainer:  $Author$
 // Created:     01/02/97
-// RCS-ID:      $Id: treelistctrl.cpp,v 1.107 2009/03/19 07:51:49 pgriddev Exp $
+// RCS-ID:      $Id$
 // Copyright:   (c) 2004-2008 Robert Roebling, Julian Smart, Alberto Griggio,
 //              Vadim Zeitlin, Otto Wyss, Ronan Chartois
 // Licence:     wxWindows

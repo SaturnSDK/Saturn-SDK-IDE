@@ -3,7 +3,7 @@
 // Purpose:     wxSTEditor Languages initialization
 // Maintainer:
 // Created:     2003-04-04
-// RCS-ID:      $Id: stelangs.h,v 1.15 2007/10/12 02:40:25 jrl1 Exp $
+// RCS-ID:      $Id$
 // Copyright:   (c) John Labenski, Otto Wyss
 // Licence:     wxWidgets licence
 ///////////////////////////////////////////////////////////////////////////////

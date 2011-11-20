@@ -3,7 +3,7 @@
 // Purpose:     wxSTEditor Styles initialization
 // Maintainer:
 // Created:     2003-04-04
-// RCS-ID:      $Id: stestyls.cpp,v 1.31 2007/11/09 23:22:01 jrl1 Exp $
+// RCS-ID:      $Id$
 // Copyright:   (c) John Labenski, Otto Wyss
 // Licence:     wxWidgets licence
 ///////////////////////////////////////////////////////////////////////////////

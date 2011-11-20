@@ -15,9 +15,9 @@
 * You should have received a copy of the GNU General Public License
 * along with wxSmith. If not, see <http://www.gnu.org/licenses/>.
 *
-* $Revision: 4850 $
-* $Id: wxsarraystringproperty.h 4850 2008-01-29 21:45:49Z byo $
-* $HeadURL: svn://svn.berlios.de/codeblocks/trunk/src/plugins/contrib/wxSmith/properties/wxsarraystringproperty.h $
+* $Revision$
+* $Id$
+* $HeadURL$
 */
 
 #ifndef WXSIMAGETREEPROPERTY_H
