@@ -127,7 +127,12 @@ class DbgCmd_UpdateWatchesTree : public DebuggerCmd
 ////////////////////////////////////////////////////////////////////////////////
 struct DebuggerBreakpoint : cbBreakpoint
 {
-    typedef cb::shared_ptr<DebuggerBreakpoint> Pointer;
+    enum BreakpointType
+    {
+        bptCode = 0,    ///< Normal file/line breakpoint
+        bptFunction,    ///< Function signature breakpoint
+        bptData            ///< Data breakpoint
+    };
 
     enum BreakpointType
     {

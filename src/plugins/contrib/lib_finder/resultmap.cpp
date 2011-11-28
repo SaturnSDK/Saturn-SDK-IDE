@@ -16,13 +16,15 @@
 * along with wxSmith; if not, write to the Free Software
 * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA
 *
-* $Revision: 4504 $
-* $Id: wxsmithpluginregistrants.cpp 4504 2007-10-02 21:52:30Z byo $
-* $HeadURL: svn+ssh://byo@svn.berlios.de/svnroot/repos/codeblocks/trunk/src/plugins/contrib/wxSmith/plugin/wxsmithpluginregistrants.cpp $
+* $Revision$
+* $Id$
+* $HeadURL$
 */
 
 #include <wx/arrstr.h>
 #include <wx/dir.h>
+#include <wx/filefn.h>
+
 #include <manager.h>
 #include <configmanager.h>
 #include <logmanager.h>
@@ -181,9 +183,12 @@ void ResultMap::ReadPredefinedResults()
     for ( size_t i=0; i<DirsCnt; i++ )
     {
         wxString Path = ConfigManager::GetFolder(Dirs[i]) + wxFileName::GetPathSeparator() + _T("lib_finder/predefined");
+        if ( !::wxDirExists(Path) ) continue;
+
         wxDir Dir(Path);
         wxString Name;
         if ( !Dir.IsOpened() ) continue;
+
         if ( Dir.GetFirst(&Name,wxEmptyString,wxDIR_FILES|wxDIR_HIDDEN) )
         {
             do
