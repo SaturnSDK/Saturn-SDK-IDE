@@ -152,8 +152,9 @@ BEGIN_EVENT_TABLE(DebuggerGDB, cbDebuggerPlugin)
     EVT_COMMAND(-1, DEBUGGER_SHOW_FILE_LINE, DebuggerGDB::OnShowFile)
 END_EVENT_TABLE()
 
-DebuggerGDB::DebuggerGDB()
-    : m_State(this),
+DebuggerGDB::DebuggerGDB() :
+    cbDebuggerPlugin(wxT("GDB debugger"), wxT("gdb_debugger")),
+    m_State(this),
     m_pProcess(0L),
     m_LastExitCode(0),
     m_Pid(0),
@@ -195,7 +196,7 @@ void DebuggerGDB::OnAttachReal()
     m_TimerPollDebugger.SetOwner(this, idTimerPollDebugger);
 
     DebuggerManager *dbg_manager = Manager::Get()->GetDebuggerManager();
-    dbg_manager->RegisterDebugger(this, wxT("GDB debugger"), wxT("gdb_debugger"));
+    dbg_manager->RegisterDebugger(this/*, wxT("GDB debugger"), wxT("gdb_debugger")*/);
 
     {
         DebuggerManager *manager = Manager::Get()->GetDebuggerManager();

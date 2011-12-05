@@ -400,6 +400,23 @@ void cbDebuggerCommonConfig::SetValueTooltipFont(const wxString &font)
     }
 }
 
+cbDebuggerCommonConfig::Perspective cbDebuggerCommonConfig::GetPerspective()
+{
+    ConfigManager *c = Manager::Get()->GetConfigManager(wxT("debugger_common"));
+    int v = c->ReadInt(wxT("/common/perspective"), static_cast<int>(OnePerDebuggerConfig));
+    if (v < OnlyOne || v > OnePerDebuggerConfig)
+        return OnePerDebuggerConfig;
+    return static_cast<Perspective>(v);
+}
+
+void cbDebuggerCommonConfig::SetPerspective(int perspective)
+{
+    ConfigManager *c = Manager::Get()->GetConfigManager(wxT("debugger_common"));
+    if (perspective < OnlyOne || perspective > OnePerDebuggerConfig)
+        perspective = OnePerDebuggerConfig;
+    c->Write(wxT("/common/perspective"), perspective);
+}
+
 wxString cbDetectDebuggerExecutable(const wxString &exeName)
 {
     wxString exeExt(platform::windows ? wxT(".exe") : wxEmptyString);
@@ -677,11 +694,13 @@ DebuggerManager::~DebuggerManager()
     delete m_interfaceFactory;
 }
 
-bool DebuggerManager::RegisterDebugger(cbDebuggerPlugin *plugin, const wxString &guiName, const wxString &settingsName)
+bool DebuggerManager::RegisterDebugger(cbDebuggerPlugin *plugin/*, const wxString &guiName, const wxString &settingsName*/)
 {
     RegisteredPlugins::iterator it = m_registered.find(plugin);
     if (it != m_registered.end())
         return false;
+    const wxString &guiName=plugin->GetGUIName();
+    const wxString &settingsName=plugin->GetSettingsName();
 
     wxRegEx regExSettingsName(wxT("^[a-z_][a-z0-9_]+$"));
     if (!regExSettingsName.Matches(settingsName))
@@ -700,8 +719,6 @@ bool DebuggerManager::RegisterDebugger(cbDebuggerPlugin *plugin, const wxString 
     plugin->SetupLogs(normalIndex, debugIndex);
 
     PluginData data;
-    data.m_guiName = guiName;
-    data.m_settingsName = settingsName;
 
     m_registered[plugin] = data;
     it = m_registered.find(plugin);
@@ -786,7 +803,7 @@ void DebuggerManager::ProcessSettings(RegisteredPlugins::iterator it)
     cbDebuggerPlugin *plugin = it->first;
     PluginData &data = it->second;
     ConfigManager *config = Manager::Get()->GetConfigManager(wxT("debugger_common"));
-    wxString path = wxT("/sets/") + data.GetSettingsName();
+    wxString path = wxT("/sets/") + plugin->GetSettingsName();
     wxArrayString configs = config->EnumerateSubPaths(path);
     configs.Sort();
 
@@ -821,7 +838,7 @@ ConfigManagerWrapper DebuggerManager::NewConfig(cbDebuggerPlugin *plugin, const 
     if (it == m_registered.end())
         return ConfigManagerWrapper();
 
-    wxString path = wxT("/sets/") + it->second.GetSettingsName();
+    wxString path = wxT("/sets/") + it->first->GetSettingsName();
 
     if (it->second.m_lastConfigID == -1)
     {
@@ -1121,7 +1138,7 @@ void DebuggerManager::SetActiveDebugger(cbDebuggerPlugin* activeDebugger, Config
     m_activeDebugger->SetActiveConfig(index);
 
     m_menuHandler->SetActiveDebugger(activeDebugger);
-    WriteActiveDebuggerConfig(it->second.GetSettingsName(), index);
+    WriteActiveDebuggerConfig(it->first->GetSettingsName(), index);
     RefreshBreakpoints(activeDebugger);
 }
 
@@ -1201,7 +1218,7 @@ void DebuggerManager::FindTargetsDebugger()
     for (RegisteredPlugins::iterator it = m_registered.begin(); it != m_registered.end(); ++it)
     {
         PluginData &data = it->second;
-        if (data.GetSettingsName() == name)
+        if (it->first->GetSettingsName() == name)
         {
             ConfigurationVector &configs = data.GetConfigurations();
             int index = 0;

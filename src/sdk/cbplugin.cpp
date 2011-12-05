@@ -121,7 +121,7 @@ cbCompilerPlugin::cbCompilerPlugin()
 ///// cbDebuggerPlugin
 /////
 
-cbDebuggerPlugin::cbDebuggerPlugin() :
+cbDebuggerPlugin::cbDebuggerPlugin(const wxString &guiName, const wxString &settingsName) :
     m_toolbar(NULL),
     m_pCompiler(NULL),
     m_WaitingCompilerToFinish(false),
@@ -131,7 +131,9 @@ cbDebuggerPlugin::cbDebuggerPlugin() :
     m_ActiveConfig(0),
     m_LogPageIndex(-1),
     m_DebugLogPageIndex(-1),
-    m_ActiveLogAtStart(nullptr)
+    m_ActiveLogAtStart(nullptr),
+    m_guiName(guiName),
+    m_settingsName(settingsName)
 {
     m_Type = ptDebugger;
 }
@@ -613,7 +615,25 @@ void cbDebuggerPlugin::SaveActiveLog()
 void cbDebuggerPlugin::SwitchToDebuggingLayout()
 {
     CodeBlocksLayoutEvent queryEvent(cbEVT_QUERY_VIEW_LAYOUT);
-    CodeBlocksLayoutEvent switchEvent(cbEVT_SWITCH_VIEW_LAYOUT, _("Debugging"));
+
+    const cbDebuggerConfiguration &config = GetActiveConfig();
+
+    wxString perspectiveName;
+    switch (cbDebuggerCommonConfig::GetPerspective())
+    {
+    case cbDebuggerCommonConfig::OnePerDebugger:
+        perspectiveName = GetGUIName();
+        break;
+    case cbDebuggerCommonConfig::OnePerDebuggerConfig:
+        perspectiveName = GetGUIName() + wxT(":") + config.GetName();
+        break;
+    case cbDebuggerCommonConfig::OnlyOne:
+    default:
+        perspectiveName = _("Debugging");
+    }
+
+    CodeBlocksLayoutEvent switchEvent(cbEVT_SWITCH_VIEW_LAYOUT, perspectiveName);
+
 
     #if wxCHECK_VERSION(2, 9, 0)
     Manager::Get()->GetLogManager()->DebugLog(F(_("Switching layout to \"%s\""), switchEvent.layout.wx_str()));

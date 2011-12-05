@@ -465,8 +465,8 @@ void CompilerOptionsDlg::DoFillCompilerPrograms()
                  itConf != data.GetConfigurations().end();
                  ++itConf)
             {
-                const wxString &def = data.GetSettingsName() + wxT(":") + (*itConf)->GetName();
-                int index = cmbDebugger->Append(data.GetGUIName() + wxT(" : ") + (*itConf)->GetName(),
+                const wxString &def = it->first->GetSettingsName() + wxT(":") + (*itConf)->GetName();
+                int index = cmbDebugger->Append(it->first->GetGUIName() + wxT(" : ") + (*itConf)->GetName(),
                                                 new DebuggerClientData(def));
                 if (def == progs.DBGconfig)
                     cmbDebugger->SetSelection(index);

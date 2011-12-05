@@ -38,7 +38,7 @@
 // it will change when the SDK interface breaks
 #define PLUGIN_SDK_VERSION_MAJOR 1
 #define PLUGIN_SDK_VERSION_MINOR 12
-#define PLUGIN_SDK_VERSION_RELEASE 10
+#define PLUGIN_SDK_VERSION_RELEASE 11
 
 // class decls
 class wxMenuBar;
@@ -379,7 +379,7 @@ class wxScintillaEvent;
 class PLUGIN_EXPORT cbDebuggerPlugin: public cbPlugin
 {
     public:
-        cbDebuggerPlugin();
+        cbDebuggerPlugin(const wxString &guiName, const wxString &settingsName);
 
     public:
         virtual void OnAttach();
@@ -593,6 +593,9 @@ class PLUGIN_EXPORT cbDebuggerPlugin: public cbPlugin
         // Called only by DebuggerMenu
         void SaveActiveLog();
 
+        wxString GetGUIName() const { return m_guiName; }
+        wxString GetSettingsName() const { return m_settingsName; }
+
     protected:
         void SwitchToDebuggingLayout();
         void SwitchToPreviousLayout();
@@ -628,6 +631,7 @@ class PLUGIN_EXPORT cbDebuggerPlugin: public cbPlugin
         int m_LogPageIndex;
         int m_DebugLogPageIndex;
         void *m_ActiveLogAtStart;
+        wxString m_guiName, m_settingsName;
 };
 
 /** @brief Base class for tool plugins

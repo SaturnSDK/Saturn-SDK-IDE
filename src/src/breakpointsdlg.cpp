@@ -121,7 +121,7 @@ void BreakpointsDlg::Reload()
         {
             cbBreakpoint::Pointer bp = dbg->first->GetBreakpoint(ii);
             if (showTemp || (!showTemp && !bp->IsTemporary()))
-                m_breakpoints.push_back(Item(bp, dbg->first, dbg->second.GetGUIName()));
+                m_breakpoints.push_back(Item(bp, dbg->first, dbg->first->GetGUIName()));
         }
     }
 

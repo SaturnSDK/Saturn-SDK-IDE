@@ -43,7 +43,7 @@
 						<object class="wxCheckBox" name="ID_REQUIRE_CTRL_FOR_TOOLTIPS" variable="m_requireCtrlForTooltips" member="yes">
 							<label>Require Control key to show the &apos;Evaluate expression&apos; tooltips</label>
 						</object>
-						<flag>wxALL|wxALIGN_LEFT|wxALIGN_TOP</flag>
+						<flag>wxTOP|wxLEFT|wxRIGHT|wxALIGN_LEFT|wxALIGN_TOP</flag>
 						<border>5</border>
 						<option>1</option>
 					</object>
@@ -67,7 +67,34 @@
 								<border>5</border>
 							</object>
 						</object>
-						<flag>wxBOTTOM|wxLEFT|wxRIGHT|wxEXPAND|wxALIGN_LEFT|wxALIGN_BOTTOM</flag>
+						<flag>wxTOP|wxLEFT|wxRIGHT|wxEXPAND|wxALIGN_LEFT|wxALIGN_BOTTOM</flag>
+						<border>5</border>
+						<option>1</option>
+					</object>
+					<object class="sizeritem">
+						<object class="wxBoxSizer" variable="BoxSizer1" member="no">
+							<object class="sizeritem">
+								<object class="wxStaticText" name="wxID_ANY" variable="labelPerspective" member="no">
+									<label>Perspective:</label>
+								</object>
+								<flag>wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL</flag>
+								<border>5</border>
+							</object>
+							<object class="sizeritem">
+								<object class="wxChoice" name="ID_CHOICE_PERSPECTIVE" variable="m_perspective" member="yes">
+									<content>
+										<item>Only one perspective</item>
+										<item>One perspective per Debugger</item>
+										<item>One perspective per Debugger configuration</item>
+									</content>
+									<selection>2</selection>
+								</object>
+								<flag>wxALL|wxEXPAND|wxALIGN_LEFT|wxALIGN_BOTTOM</flag>
+								<border>5</border>
+								<option>1</option>
+							</object>
+						</object>
+						<flag>wxTOP|wxLEFT|wxRIGHT|wxEXPAND|wxALIGN_LEFT|wxALIGN_BOTTOM</flag>
 						<border>5</border>
 						<option>1</option>
 					</object>

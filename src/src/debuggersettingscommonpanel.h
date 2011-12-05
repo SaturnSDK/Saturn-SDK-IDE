@@ -8,6 +8,7 @@
 	#include <wx/button.h>
 	#include <wx/panel.h>
 	#include <wx/stattext.h>
+	#include <wx/choice.h>
 	//*)
 #endif
 //(*Headers(DebuggerSettingsCommonPanel)
@@ -29,6 +30,7 @@ class DebuggerSettingsCommonPanel: public wxPanel
 		//(*Declarations(DebuggerSettingsCommonPanel)
 		wxStaticText* m_valueTooltipLabel;
 		wxCheckBox* m_autoBuild;
+		wxChoice* m_perspective;
 		wxCheckBox* m_requireCtrlForTooltips;
 		wxCheckBox* m_jumpOnDoubleClick;
 		wxCheckBox* m_autoSwitch;
@@ -46,6 +48,7 @@ class DebuggerSettingsCommonPanel: public wxPanel
 		static const long ID_REQUIRE_CTRL_FOR_TOOLTIPS;
 		static const long ID_VALUE_TOOLTIP_LABEL;
 		static const long ID_BUTTON_CHOOSE_FONT;
+		static const long ID_CHOICE_PERSPECTIVE;
 		//*)
 
 		//(*Handlers(DebuggerSettingsCommonPanel)

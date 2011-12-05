@@ -209,11 +209,21 @@ struct DLLIMPORT cbDebuggerCommonConfig
         ShowTemporaryBreakpoints
     };
 
+    enum Perspective
+    {
+        OnlyOne = 0,
+        OnePerDebugger,
+        OnePerDebuggerConfig
+    };
+
     static bool GetFlag(Flags flag);
     static void SetFlag(Flags flag, bool value);
 
     static wxString GetValueTooltipFont();
     static void SetValueTooltipFont(const wxString &font);
+
+    static Perspective GetPerspective();
+    static void SetPerspective(int perspective);
 };
 
 /**
@@ -237,9 +247,6 @@ class DLLIMPORT DebuggerManager : public Mgr<DebuggerManager>
 
             PluginData() :  m_lastConfigID(-1) {}
 
-            const wxString &GetGUIName() const { return m_guiName; }
-            const wxString &GetSettingsName() const { return m_settingsName; }
-
             ConfigurationVector& GetConfigurations() { return m_configurations; }
             const ConfigurationVector& GetConfigurations() const { return m_configurations; }
 
@@ -253,14 +260,12 @@ class DLLIMPORT DebuggerManager : public Mgr<DebuggerManager>
             }
         private:
             ConfigurationVector m_configurations;
-            wxString m_guiName;
-            wxString m_settingsName;
             int m_lastConfigID;
         };
         typedef std::map<cbDebuggerPlugin*, PluginData> RegisteredPlugins;
 
     public:
-        bool RegisterDebugger(cbDebuggerPlugin *plugin, const wxString &guiName, const wxString &settingsName);
+        bool RegisterDebugger(cbDebuggerPlugin *plugin/*, const wxString &guiName, const wxString &settingsName*/);
         bool UnregisterDebugger(cbDebuggerPlugin *plugin);
 
         ConfigManagerWrapper NewConfig(cbDebuggerPlugin *plugin, const wxString &name);

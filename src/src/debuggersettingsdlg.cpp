@@ -82,7 +82,7 @@ DebuggerSettingsDlg::DebuggerSettingsDlg(wxWindow* parent)
     for (DebuggerManager::RegisteredPlugins::iterator it = plugins.begin(); it != plugins.end(); ++it)
     {
         DebuggerManager::PluginData &data = it->second;
-        m_treebook->AddPage(new DebuggerSettingsPanel(m_treebook, this, it->first), data.GetGUIName());
+        m_treebook->AddPage(new DebuggerSettingsPanel(m_treebook, this, it->first), it->first->GetGUIName());
 
         for (DebuggerManager::ConfigurationVector::iterator itConfig = data.GetConfigurations().begin();
              itConfig != data.GetConfigurations().end();
@@ -93,7 +93,7 @@ DebuggerSettingsDlg::DebuggerSettingsDlg(wxWindow* parent)
 
             Config conf;
             conf.plugin = it->first;
-            conf.pluginGUIName = data.GetGUIName();
+            conf.pluginGUIName = it->first->GetGUIName();
             conf.config = (*itConfig)->Clone();
             m_mapPanelToConfig[panel] = conf;
         }
@@ -130,7 +130,7 @@ void DebuggerSettingsDlg::OnOK(wxCommandEvent &event)
     for (DebuggerManager::RegisteredPlugins::iterator it = plugins.begin(); it != plugins.end(); ++it)
     {
         wxString path(wxT("/sets/"));
-        path << it->second.GetSettingsName();
+        path << it->first->GetSettingsName();
 
         mainConfig->DeleteSubPath(path);
     }
@@ -157,14 +157,14 @@ void DebuggerSettingsDlg::OnOK(wxCommandEvent &event)
                 break;
         }
     }
-    
+
     int normalIndex = -1, debugIndex = -1;
     dbgManager->GetLogger(false, normalIndex);
     if (cbDebuggerCommonConfig::GetFlag(cbDebuggerCommonConfig::ShowDebuggersLog))
         dbgManager->GetLogger(true, debugIndex);
     else
         dbgManager->HideLogger(true);
-    
+
     cbDebuggerPlugin *activePlugin = dbgManager->GetActiveDebugger();
     for (DebuggerManager::RegisteredPlugins::iterator it = plugins.begin(); it != plugins.end(); ++it)
     {
@@ -212,11 +212,9 @@ bool DebuggerSettingsDlg::CreateConfig(wxWindow *panel, cbDebuggerPlugin *plugin
     wxPanel *subPanel = pluginConfig->MakePanel(m_treebook);
     m_treebook->InsertSubPage(pageIndex, subPanel, pluginConfig->GetName());
 
-    DebuggerManager::RegisteredPlugins &plugins = Manager::Get()->GetDebuggerManager()->GetAllDebuggers();
-
     Config conf;
     conf.plugin = plugin;
-    conf.pluginGUIName = plugins.find(plugin)->second.GetGUIName();
+    conf.pluginGUIName = plugin->GetGUIName();
     conf.config = pluginConfig;
     m_mapPanelToConfig[subPanel] = conf;
     return true;

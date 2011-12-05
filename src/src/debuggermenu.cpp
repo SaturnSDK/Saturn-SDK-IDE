@@ -184,7 +184,7 @@ void DebuggerMenuHandler::RebuildActiveDebuggersMenu()
                 (*itConf)->SetMenuId(id);
             }
 
-            menu->AppendRadioItem(id, it->second.GetGUIName() + wxT(": ") + (*itConf)->GetName());
+            menu->AppendRadioItem(id, it->first->GetGUIName() + wxT(": ") + (*itConf)->GetName());
             Connect(id, -1, wxEVT_COMMAND_MENU_SELECTED,
                     (wxObjectEventFunction) (wxEventFunction) (wxCommandEventFunction)
                     &DebuggerMenuHandler::OnActiveDebuggerClick);
@@ -308,7 +308,7 @@ void DebuggerMenuHandler::LogActiveConfig()
     if (it != allDebuggers.end())
     {
         cbDebuggerConfiguration &config = m_activeDebugger->GetActiveConfig();
-        configName = it->second.GetGUIName() + wxT(":") + config.GetName();
+        configName = it->first->GetGUIName() + wxT(":") + config.GetName();
     }
     m_activeDebugger->Log(_("Active debugger config: ") + configName);
 }

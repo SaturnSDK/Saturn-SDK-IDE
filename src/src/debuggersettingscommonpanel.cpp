@@ -26,6 +26,7 @@ const long DebuggerSettingsCommonPanel::ID_JUMP_ON_DOUBLE_CLICK = wxNewId();
 const long DebuggerSettingsCommonPanel::ID_REQUIRE_CTRL_FOR_TOOLTIPS = wxNewId();
 const long DebuggerSettingsCommonPanel::ID_VALUE_TOOLTIP_LABEL = wxNewId();
 const long DebuggerSettingsCommonPanel::ID_BUTTON_CHOOSE_FONT = wxNewId();
+const long DebuggerSettingsCommonPanel::ID_CHOICE_PERSPECTIVE = wxNewId();
 //*)
 
 BEGIN_EVENT_TABLE(DebuggerSettingsCommonPanel,wxPanel)
@@ -40,6 +41,8 @@ DebuggerSettingsCommonPanel::DebuggerSettingsCommonPanel(wxWindow* parent)
 	wxBoxSizer* mainSizer;
 	wxButton* chooseFont;
 	wxStaticBoxSizer* valueTooltipSizer;
+	wxBoxSizer* BoxSizer1;
+	wxStaticText* labelPerspective;
 
 	Create(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL, _T("wxID_ANY"));
 	mainSizer = new wxBoxSizer(wxVERTICAL);
@@ -58,13 +61,22 @@ DebuggerSettingsCommonPanel::DebuggerSettingsCommonPanel(wxWindow* parent)
 	flexSizer->Add(m_jumpOnDoubleClick, 1, wxTOP|wxLEFT|wxRIGHT|wxALIGN_LEFT|wxALIGN_TOP, 5);
 	m_requireCtrlForTooltips = new wxCheckBox(this, ID_REQUIRE_CTRL_FOR_TOOLTIPS, _("Require Control key to show the \'Evaluate expression\' tooltips"), wxDefaultPosition, wxDefaultSize, 0, wxDefaultValidator, _T("ID_REQUIRE_CTRL_FOR_TOOLTIPS"));
 	m_requireCtrlForTooltips->SetValue(false);
-	flexSizer->Add(m_requireCtrlForTooltips, 1, wxALL|wxALIGN_LEFT|wxALIGN_TOP, 5);
+	flexSizer->Add(m_requireCtrlForTooltips, 1, wxTOP|wxLEFT|wxRIGHT|wxALIGN_LEFT|wxALIGN_TOP, 5);
 	valueTooltipSizer = new wxStaticBoxSizer(wxHORIZONTAL, this, _("Value Tooltip Font"));
 	m_valueTooltipLabel = new wxStaticText(this, ID_VALUE_TOOLTIP_LABEL, _("This is a sample text"), wxDefaultPosition, wxDefaultSize, 0, _T("ID_VALUE_TOOLTIP_LABEL"));
 	valueTooltipSizer->Add(m_valueTooltipLabel, 1, wxLEFT|wxRIGHT|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL, 5);
 	chooseFont = new wxButton(this, ID_BUTTON_CHOOSE_FONT, _("Choose"), wxDefaultPosition, wxDefaultSize, 0, wxDefaultValidator, _T("ID_BUTTON_CHOOSE_FONT"));
 	valueTooltipSizer->Add(chooseFont, 0, wxLEFT|wxRIGHT|wxALIGN_LEFT|wxALIGN_BOTTOM, 5);
-	flexSizer->Add(valueTooltipSizer, 1, wxBOTTOM|wxLEFT|wxRIGHT|wxEXPAND|wxALIGN_LEFT|wxALIGN_BOTTOM, 5);
+	flexSizer->Add(valueTooltipSizer, 1, wxTOP|wxLEFT|wxRIGHT|wxEXPAND|wxALIGN_LEFT|wxALIGN_BOTTOM, 5);
+	BoxSizer1 = new wxBoxSizer(wxHORIZONTAL);
+	labelPerspective = new wxStaticText(this, wxID_ANY, _("Perspective:"), wxDefaultPosition, wxDefaultSize, 0, _T("wxID_ANY"));
+	BoxSizer1->Add(labelPerspective, 0, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
+	m_perspective = new wxChoice(this, ID_CHOICE_PERSPECTIVE, wxDefaultPosition, wxDefaultSize, 0, 0, 0, wxDefaultValidator, _T("ID_CHOICE_PERSPECTIVE"));
+	m_perspective->Append(_("Only one perspective"));
+	m_perspective->Append(_("One perspective per Debugger"));
+	m_perspective->SetSelection( m_perspective->Append(_("One perspective per Debugger configuration")) );
+	BoxSizer1->Add(m_perspective, 1, wxALL|wxEXPAND|wxALIGN_LEFT|wxALIGN_BOTTOM, 5);
+	flexSizer->Add(BoxSizer1, 1, wxTOP|wxLEFT|wxRIGHT|wxEXPAND|wxALIGN_LEFT|wxALIGN_BOTTOM, 5);
 	mainSizer->Add(flexSizer, 1, wxALL|wxALIGN_LEFT|wxALIGN_TOP, 0);
 	SetSizer(mainSizer);
 	mainSizer->Fit(this);
@@ -89,6 +101,8 @@ DebuggerSettingsCommonPanel::DebuggerSettingsCommonPanel(wxWindow* parent)
 
     m_valueTooltipFontInfo = cbDebuggerCommonConfig::GetValueTooltipFont();
     UpdateValueTooltipFont();
+
+    m_perspective->Select(cbDebuggerCommonConfig::GetPerspective());
 }
 
 DebuggerSettingsCommonPanel::~DebuggerSettingsCommonPanel()
@@ -106,6 +120,7 @@ void DebuggerSettingsCommonPanel::SaveChanges()
     cbDebuggerCommonConfig::SetFlag(cbDebuggerCommonConfig::RequireCtrlForTooltips,
                                     m_requireCtrlForTooltips->GetValue());
     cbDebuggerCommonConfig::SetValueTooltipFont(m_valueTooltipFontInfo);
+    cbDebuggerCommonConfig::SetPerspective(m_perspective->GetSelection());
 }
 
 void DebuggerSettingsCommonPanel::OnChooseFontClick(wxCommandEvent& event)
