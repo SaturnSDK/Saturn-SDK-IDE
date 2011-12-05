@@ -442,21 +442,23 @@ void WatchesDlg::AddWatch(cbWatch::Pointer watch)
 void WatchesDlg::OnExpand(wxPropertyGridEvent &event)
 {
     WatchesProperty *prop = static_cast<WatchesProperty*>(event.GetProperty());
-    prop->GetWatch()->Expand(true);
+    cbWatch::Pointer watch = prop->GetWatch();
+    watch->Expand(true);
 
-    cbDebuggerPlugin *plugin = Manager::Get()->GetDebuggerManager()->GetActiveDebugger();
-    cbAssert(plugin);
-    plugin->ExpandWatch(prop->GetWatch());
+    cbDebuggerPlugin *plugin = Manager::Get()->GetDebuggerManager()->GetDebuggerHavingWatch(watch);
+    if (plugin)
+        plugin->ExpandWatch(watch);
 }
 
 void WatchesDlg::OnCollapse(wxPropertyGridEvent &event)
 {
     WatchesProperty *prop = static_cast<WatchesProperty*>(event.GetProperty());
-    prop->GetWatch()->Expand(false);
+    cbWatch::Pointer watch = prop->GetWatch();
+    watch->Expand(false);
 
-    cbDebuggerPlugin *plugin = Manager::Get()->GetDebuggerManager()->GetActiveDebugger();
-    cbAssert(plugin);
-    plugin->CollapseWatch(prop->GetWatch());
+    cbDebuggerPlugin *plugin = Manager::Get()->GetDebuggerManager()->GetDebuggerHavingWatch(watch);
+    if (plugin)
+        plugin->CollapseWatch(watch);
 }
 
 void WatchesDlg::OnPropertyChanged(wxPropertyGridEvent &event)
