@@ -51,7 +51,7 @@ namespace
     const int idMenuAddDataBreakpoint = XRCID("idMenuAddDataBreakpoint");
     const int idMenuSendCommand = XRCID("idDebuggerMenuSendCommand");
     const int idMenuAddSymbolFile = XRCID("idDebuggerMenuAddSymbolFile");
-    const int idMenuCPU = XRCID("idDebuggerMenuCPU");
+    const int idMenuDisassembly = XRCID("idMenuDisassembly");
     const int idMenuRegisters = XRCID("idDebuggerMenuRegisters");
     const int idMenuWatches = XRCID("idDebuggerMenuWatches");
     const int idMenuBacktrace = XRCID("idDebuggerMenuBacktrace");
@@ -113,7 +113,7 @@ BEGIN_EVENT_TABLE(DebuggerMenuHandler, wxEvtHandler)
     EVT_MENU(idMenuBacktrace, DebuggerMenuHandler::OnBacktrace)
     EVT_MENU(idMenuThreads, DebuggerMenuHandler::OnThreads)
     EVT_MENU(idMenuMemory, DebuggerMenuHandler::OnExamineMemory)
-    EVT_MENU(idMenuCPU, DebuggerMenuHandler::OnDisassembly)
+    EVT_MENU(idMenuDisassembly, DebuggerMenuHandler::OnDisassembly)
     EVT_MENU(idMenuRegisters, DebuggerMenuHandler::OnCPURegisters)
     EVT_MENU(idMenuWatches, DebuggerMenuHandler::OnWatches)
     EVT_MENU(idMenuBreakpoints, DebuggerMenuHandler::OnBreakpoints)
@@ -288,7 +288,7 @@ void DebuggerMenuHandler::OnUpdateUI(wxUpdateUIEvent& event)
         mbar->Check(idMenuBreakpoints,  IsWindowReallyShown(dbg_manager->GetBreakpointDialog()->GetWindow()));
         mbar->Check(idMenuBacktrace,    IsWindowReallyShown(dbg_manager->GetBacktraceDialog()->GetWindow()));
         mbar->Check(idMenuRegisters,    IsWindowReallyShown(dbg_manager->GetCPURegistersDialog()->GetWindow()));
-        mbar->Check(idMenuCPU,          IsWindowReallyShown(dbg_manager->GetDisassemblyDialog()->GetWindow()));
+        mbar->Check(idMenuDisassembly,  IsWindowReallyShown(dbg_manager->GetDisassemblyDialog()->GetWindow()));
         mbar->Check(idMenuMemory,       IsWindowReallyShown(dbg_manager->GetExamineMemoryDialog()->GetWindow()));
         mbar->Check(idMenuThreads,      IsWindowReallyShown(dbg_manager->GetThreadsDialog()->GetWindow()));
         mbar->Check(idMenuWatches,      IsWindowReallyShown(dbg_manager->GetWatchesDialog()->GetWindow()));
@@ -722,7 +722,7 @@ void DebuggerToolbarHandler::OnDebugWindows(wxCommandEvent& event)
     m.AppendCheckItem(idMenuBreakpoints,    _("Breakpoints"));
     m.AppendCheckItem(idMenuBacktrace,      _("Call stack"));
     m.AppendCheckItem(idMenuRegisters,      _("CPU Registers"));
-    m.AppendCheckItem(idMenuCPU,            _("Disassembly"));
+    m.AppendCheckItem(idMenuDisassembly,    _("Disassembly"));
     m.AppendCheckItem(idMenuMemory,         _("Memory dump"));
     m.AppendCheckItem(idMenuThreads,        _("Running threads"));
     m.AppendCheckItem(idMenuWatches,        _("Watches"));
@@ -733,7 +733,7 @@ void DebuggerToolbarHandler::OnDebugWindows(wxCommandEvent& event)
     m.Check(idMenuBreakpoints,  IsWindowReallyShown(dbg_manager->GetBreakpointDialog()->GetWindow()));
     m.Check(idMenuBacktrace,    IsWindowReallyShown(dbg_manager->GetBacktraceDialog()->GetWindow()));
     m.Check(idMenuRegisters,    IsWindowReallyShown(dbg_manager->GetCPURegistersDialog()->GetWindow()));
-    m.Check(idMenuCPU,          IsWindowReallyShown(dbg_manager->GetDisassemblyDialog()->GetWindow()));
+    m.Check(idMenuDisassembly,  IsWindowReallyShown(dbg_manager->GetDisassemblyDialog()->GetWindow()));
     m.Check(idMenuMemory,       IsWindowReallyShown(dbg_manager->GetExamineMemoryDialog()->GetWindow()));
     m.Check(idMenuThreads,      IsWindowReallyShown(dbg_manager->GetThreadsDialog()->GetWindow()));
     m.Check(idMenuWatches,      IsWindowReallyShown(dbg_manager->GetWatchesDialog()->GetWindow()));
