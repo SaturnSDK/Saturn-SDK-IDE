@@ -95,7 +95,7 @@
         <help>Display the CPU registers</help>
         <checkable>1</checkable>
       </object>
-      <object class="wxMenuItem" name="idMenuDisassembly">
+      <object class="wxMenuItem" name="idDebuggerMenuDisassembly">
         <label>Disassembly</label>
         <help>Disassembles the current stack frame</help>
         <checkable>1</checkable>

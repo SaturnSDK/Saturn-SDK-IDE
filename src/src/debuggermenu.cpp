@@ -51,7 +51,7 @@ namespace
     const int idMenuAddDataBreakpoint = XRCID("idMenuAddDataBreakpoint");
     const int idMenuSendCommand = XRCID("idDebuggerMenuSendCommand");
     const int idMenuAddSymbolFile = XRCID("idDebuggerMenuAddSymbolFile");
-    const int idMenuDisassembly = XRCID("idMenuDisassembly");
+    const int idMenuDisassembly = XRCID("idDebuggerMenuDisassembly");
     const int idMenuRegisters = XRCID("idDebuggerMenuRegisters");
     const int idMenuWatches = XRCID("idDebuggerMenuWatches");
     const int idMenuBacktrace = XRCID("idDebuggerMenuBacktrace");
