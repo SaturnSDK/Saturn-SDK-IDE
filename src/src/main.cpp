@@ -692,14 +692,13 @@ void MainFrame::CreateIDE()
 
     // logs manager
     SetupGUILogging();
-    SetupDebuggerHandlers();
+    SetupDebuggerUI();
 
     CreateMenubar();
 
     m_pEdMan  = Manager::Get()->GetEditorManager();
     m_pPrjMan = Manager::Get()->GetProjectManager();
     m_pLogMan = Manager::Get()->GetLogManager();
-    Manager::Get()->GetDebuggerManager()->SetInterfaceFactory(new DebugInterfaceFactory);
 
     CreateToolbars();
     SetToolBar(0);
@@ -765,7 +764,7 @@ void MainFrame::SetupGUILogging()
     m_pInfoPane->SetDropTarget(new wxMyFileDropTarget(this));
 }
 
-void MainFrame::SetupDebuggerHandlers()
+void MainFrame::SetupDebuggerUI()
 {
     m_debuggerMenuHandler = new DebuggerMenuHandler;
     m_debuggerToolbarHandler = new DebuggerToolbarHandler;
@@ -779,6 +778,17 @@ void MainFrame::SetupDebuggerHandlers()
     }
     m_debuggerMenuHandler->SetEvtHandlerEnabled(true);
     m_debuggerToolbarHandler->SetEvtHandlerEnabled(true);
+
+    {
+        DebuggerManager *manager = Manager::Get()->GetDebuggerManager();
+        manager->SetInterfaceFactory(new DebugInterfaceFactory);
+        manager->GetBacktraceDialog();
+        manager->GetBreakpointDialog();
+        manager->GetCPURegistersDialog();
+        manager->GetExamineMemoryDialog();
+        manager->GetWatchesDialog();
+        manager->GetThreadsDialog();
+    }
 }
 
 DECLARE_INSTANCE_TYPE(MainFrame);

@@ -259,7 +259,7 @@ class MainFrame : public wxFrame
         void RecreateMenuBar();
         void RegisterEvents();
         void SetupGUILogging();
-        void SetupDebuggerHandlers();
+        void SetupDebuggerUI();
 
         void RegisterScriptFunctions();
         void RunStartupScripts();

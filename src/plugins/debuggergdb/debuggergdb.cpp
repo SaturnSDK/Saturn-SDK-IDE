@@ -195,16 +195,6 @@ void DebuggerGDB::OnAttachReal()
 {
     m_TimerPollDebugger.SetOwner(this, idTimerPollDebugger);
 
-    {
-        DebuggerManager *manager = Manager::Get()->GetDebuggerManager();
-        manager->GetBacktraceDialog();
-        manager->GetBreakpointDialog();
-        manager->GetCPURegistersDialog();
-        manager->GetExamineMemoryDialog();
-        manager->GetWatchesDialog();
-        manager->GetThreadsDialog();
-    }
-
     // hook to project loading procedure
     ProjectLoaderHooks::HookFunctorBase* myhook = new ProjectLoaderHooks::HookFunctor<DebuggerGDB>(this, &DebuggerGDB::OnProjectLoadingHook);
     m_HookId = ProjectLoaderHooks::RegisterHook(myhook);
