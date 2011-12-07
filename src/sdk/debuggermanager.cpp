@@ -694,7 +694,7 @@ DebuggerManager::~DebuggerManager()
     delete m_interfaceFactory;
 }
 
-bool DebuggerManager::RegisterDebugger(cbDebuggerPlugin *plugin/*, const wxString &guiName, const wxString &settingsName*/)
+bool DebuggerManager::RegisterDebugger(cbDebuggerPlugin *plugin)
 {
     RegisteredPlugins::iterator it = m_registered.find(plugin);
     if (it != m_registered.end())

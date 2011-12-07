@@ -195,9 +195,6 @@ void DebuggerGDB::OnAttachReal()
 {
     m_TimerPollDebugger.SetOwner(this, idTimerPollDebugger);
 
-    DebuggerManager *dbg_manager = Manager::Get()->GetDebuggerManager();
-    dbg_manager->RegisterDebugger(this/*, wxT("GDB debugger"), wxT("gdb_debugger")*/);
-
     {
         DebuggerManager *manager = Manager::Get()->GetDebuggerManager();
         manager->GetBacktraceDialog();
@@ -222,8 +219,6 @@ void DebuggerGDB::OnReleaseReal(bool /*appShutDown*/)
 {
     ProjectLoaderHooks::UnregisterHook(m_HookId, true);
 
-    DebuggerManager *dbg_manager = Manager::Get()->GetDebuggerManager();
-
     //Close debug session when appShutDown
     if (m_State.HasDriver())
     {
@@ -233,8 +228,6 @@ void DebuggerGDB::OnReleaseReal(bool /*appShutDown*/)
 
     m_State.CleanUp();
     KillConsole();
-
-    dbg_manager->UnregisterDebugger(this);
 }
 
 cbDebuggerConfiguration* DebuggerGDB::LoadConfig(const ConfigManagerWrapper &config)

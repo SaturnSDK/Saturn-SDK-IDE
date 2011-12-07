@@ -265,7 +265,11 @@ class DLLIMPORT DebuggerManager : public Mgr<DebuggerManager>
         typedef std::map<cbDebuggerPlugin*, PluginData> RegisteredPlugins;
 
     public:
-        bool RegisterDebugger(cbDebuggerPlugin *plugin/*, const wxString &guiName, const wxString &settingsName*/);
+        /** Called to register a debugger plugin. It is called by cbDebuggerPlugin::OnAttach and it should not be called
+          *  by the debugger plugins explicitly in their OnAttachReal methods. */
+        bool RegisterDebugger(cbDebuggerPlugin *plugin);
+        /** Called to unregister a debugger plugin. It is called by cbDebuggerPlugin::OnRelease and it should not be
+          * called by the debugger plugins explicitly in their OnReleaseReal methods. */
         bool UnregisterDebugger(cbDebuggerPlugin *plugin);
 
         ConfigManagerWrapper NewConfig(cbDebuggerPlugin *plugin, const wxString &name);

@@ -141,6 +141,8 @@ cbDebuggerPlugin::cbDebuggerPlugin(const wxString &guiName, const wxString &sett
 
 void cbDebuggerPlugin::OnAttach()
 {
+    Manager::Get()->GetDebuggerManager()->RegisterDebugger(this);
+
     OnAttachReal();
 
     typedef cbEventFunctor<cbDebuggerPlugin, CodeBlocksEvent> Event;
@@ -163,6 +165,8 @@ void cbDebuggerPlugin::OnRelease(bool appShutDown)
     Manager::Get()->RemoveAllEventSinksFor(this);
 
     OnReleaseReal(appShutDown);
+
+    Manager::Get()->GetDebuggerManager()->UnregisterDebugger(this);
 }
 
 void cbDebuggerPlugin::BuildMenu(wxMenuBar* menuBar)
