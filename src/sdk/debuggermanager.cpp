@@ -981,8 +981,16 @@ void DebuggerManager::HideLogger(bool for_debug)
 
 void DebuggerManager::SetInterfaceFactory(cbDebugInterfaceFactory *factory)
 {
-    delete m_interfaceFactory;
+    cbAssert(!m_interfaceFactory);
     m_interfaceFactory = factory;
+
+    m_backtraceDialog = m_interfaceFactory->CreateBacktrace();
+    m_breakPointsDialog = m_interfaceFactory->CreateBreapoints();
+    m_cpuRegistersDialog = m_interfaceFactory->CreateCPURegisters();
+    m_disassemblyDialog = m_interfaceFactory->CreateDisassembly();
+    m_examineMemoryDialog = m_interfaceFactory->CreateMemory();
+    m_threadsDialog = m_interfaceFactory->CreateThreads();
+    m_watchesDialog = m_interfaceFactory->CreateWatches();
 }
 
 cbDebugInterfaceFactory* DebuggerManager::GetInterfaceFactory()
@@ -997,50 +1005,36 @@ void DebuggerManager::SetMenuHandler(cbDebuggerMenuHandler *handler)
 
 cbBacktraceDlg* DebuggerManager::GetBacktraceDialog()
 {
-    if (!m_backtraceDialog)
-        m_backtraceDialog = m_interfaceFactory->CreateBacktrace();
     return m_backtraceDialog;
 }
 
 cbBreakpointsDlg* DebuggerManager::GetBreakpointDialog()
 {
-    if (!m_breakPointsDialog)
-        m_breakPointsDialog = m_interfaceFactory->CreateBreapoints();
     return m_breakPointsDialog;
 }
 
 cbCPURegistersDlg* DebuggerManager::GetCPURegistersDialog()
 {
-    if (!m_cpuRegistersDialog)
-        m_cpuRegistersDialog = m_interfaceFactory->CreateCPURegisters();
     return m_cpuRegistersDialog;
 }
 
 cbDisassemblyDlg* DebuggerManager::GetDisassemblyDialog()
 {
-    if (!m_disassemblyDialog)
-        m_disassemblyDialog = m_interfaceFactory->CreateDisassembly();
     return m_disassemblyDialog;
 }
 
 cbExamineMemoryDlg* DebuggerManager::GetExamineMemoryDialog()
 {
-    if (!m_examineMemoryDialog)
-        m_examineMemoryDialog = m_interfaceFactory->CreateMemory();
     return m_examineMemoryDialog;
 }
 
 cbThreadsDlg* DebuggerManager::GetThreadsDialog()
 {
-    if (!m_threadsDialog)
-        m_threadsDialog = m_interfaceFactory->CreateThreads();
     return m_threadsDialog;
 }
 
 cbWatchesDlg* DebuggerManager::GetWatchesDialog()
 {
-    if (!m_watchesDialog)
-        m_watchesDialog = m_interfaceFactory->CreateWatches();
     return m_watchesDialog;
 }
 

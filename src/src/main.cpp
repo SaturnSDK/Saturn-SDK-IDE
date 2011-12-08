@@ -779,16 +779,7 @@ void MainFrame::SetupDebuggerUI()
     m_debuggerMenuHandler->SetEvtHandlerEnabled(true);
     m_debuggerToolbarHandler->SetEvtHandlerEnabled(true);
 
-    {
-        DebuggerManager *manager = Manager::Get()->GetDebuggerManager();
-        manager->SetInterfaceFactory(new DebugInterfaceFactory);
-        manager->GetBacktraceDialog();
-        manager->GetBreakpointDialog();
-        manager->GetCPURegistersDialog();
-        manager->GetExamineMemoryDialog();
-        manager->GetWatchesDialog();
-        manager->GetThreadsDialog();
-    }
+    Manager::Get()->GetDebuggerManager()->SetInterfaceFactory(new DebugInterfaceFactory);
 }
 
 DECLARE_INSTANCE_TYPE(MainFrame);
