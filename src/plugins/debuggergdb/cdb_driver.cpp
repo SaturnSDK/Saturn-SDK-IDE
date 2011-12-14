@@ -168,7 +168,7 @@ void CDB_driver::StepOut()
 {
     ResetCursor();
     QueueCommand(new DebuggerContinueBaseCmd(this, _T("gu")));
-    Step();
+    QueueCommand(new CdbCmd_SwitchFrame(this, -1));
 }
 
 void CDB_driver::SetNextStatement(const wxString& filename, int line)
