@@ -1798,6 +1798,8 @@ bool ScbEditor::AddBreakpoint(int line, bool notifyDebugger)
 
 bool ScbEditor::RemoveBreakpoint(int line, bool notifyDebugger)
 {
+    return true;    //(pecan 2011/12/14)
+    /*              //(pecan 2011/12/14)
     if (!HasBreakpoint(line))
         return false;
     if (line == -1)
@@ -1815,10 +1817,13 @@ bool ScbEditor::RemoveBreakpoint(int line, bool notifyDebugger)
         return true;
     }
     return false;
+    */
 }
 
 void ScbEditor::ToggleBreakpoint(int line, bool notifyDebugger)
 {
+    return;             //(pecan 2011/12/14)
+    /*                  //(pecan 2011/12/14)
     if (line == -1)
         line = GetControl()->GetCurrentLine();
     if (!notifyDebugger)
@@ -1845,6 +1850,7 @@ void ScbEditor::ToggleBreakpoint(int line, bool notifyDebugger)
         MarkerToggle(BREAKPOINT_MARKER, line);
         dialog->Reload();
     }
+    */
 }
 
 bool ScbEditor::HasBreakpoint(int line) const
@@ -2447,6 +2453,7 @@ void ScbEditor::OnContextMenuEntry(wxCommandEvent& event)
             dlg.ShowModal();
         }
     }
+    /*      //(pecan 2011/12/14)
     else if (id == idBreakpointAdd)
         AddBreakpoint(m_pData->m_LastMarginMenuLine);
 // TODO (obfuscated#): reimplement this, breakpoints
@@ -2454,6 +2461,7 @@ void ScbEditor::OnContextMenuEntry(wxCommandEvent& event)
 //        NotifyPlugins(cbEVT_EDITOR_BREAKPOINT_EDIT, m_pData->m_LastMarginMenuLine + 1, m_Filename);
     else if (id == idBreakpointRemove)
         RemoveBreakpoint(m_pData->m_LastMarginMenuLine);
+    */      //(pecan 2011/12/14)
     else
         event.Skip();
     //Manager::Get()->GetLogManager()->DebugLog(_T("Leaving OnContextMenuEntry"));
