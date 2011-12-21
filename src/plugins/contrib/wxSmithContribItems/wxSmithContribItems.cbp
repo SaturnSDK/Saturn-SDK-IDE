@@ -17,7 +17,6 @@
 				<Option compiler="gcc" />
 				<Option parameters="--debug-log --multiple-instance -na -ns -nd" />
 				<Option host_application="..\..\..\devel\codeblocks.exe" />
-				<Option run_host_application_in_terminal="0" />
 				<Option projectLinkerOptionsRelation="2" />
 				<Compiler>
 					<Add option="-DBUILDING_PLUGIN" />
@@ -27,20 +26,27 @@
 					<Add directory="..\..\..\sdk\wxscintilla\include" />
 					<Add directory="..\..\..\sdk\wxpropgrid\include" />
 					<Add directory="..\wxSmith" />
+					<Add directory="..\wxSmith\wxwidgets" />
+					<Add directory="..\wxSmith\wxwidgets\properties" />
+					<Add directory="..\wxSmith\properties" />
 					<Add directory="..\wxContribItems\wxchart\include" />
-					<Add directory="..\wxContribItems\wxthings\include" />
 					<Add directory="..\wxContribItems\wxFlatNotebook\include" />
 					<Add directory="..\wxContribItems\wxImagePanel\include" />
+					<Add directory="..\wxContribItems\wxthings\include" />
+					<Add directory="..\wxContribItems\KWIC\include" />
+					<Add directory="..\wxContribItems\wxSpeedButton" />
 				</Compiler>
 				<Linker>
-					<Add option="-Wl,--enable-auto-import" />
-					<Add library="wxflatnotebook" />
+					<Add library="wxpropgrid" />
 					<Add library="wxsmithlib" />
 					<Add library="codeblocks" />
+					<Add library="wxkwic" />
+					<Add library="wxflatnotebook" />
 					<Add library="wxchartctrl" />
 					<Add library="wxcustombutton" />
 					<Add library="wximagepanel" />
-					<Add directory="wxflatnotebook" />
+					<Add library="wxspeedbutton" />
+					<Add directory="..\..\..\devel" />
 				</Linker>
 				<ExtraCommands>
 					<Add after="zip -j9 ..\..\..\devel\share\CodeBlocks\wxSmithContribItems.zip manifest.xml" />
@@ -84,6 +90,37 @@
 		<Unit filename="manifest.xml" />
 		<Unit filename="wxSmithContribItems.cpp" />
 		<Unit filename="wxSmithContribItems.h" />
+		<Unit filename="wxSmithKWIC\images\angmet16.xpm" />
+		<Unit filename="wxSmithKWIC\images\angmet32.xpm" />
+		<Unit filename="wxSmithKWIC\images\angreg16.xpm" />
+		<Unit filename="wxSmithKWIC\images\angreg32.xpm" />
+		<Unit filename="wxSmithKWIC\images\bmpchk16.xpm" />
+		<Unit filename="wxSmithKWIC\images\bmpchk32.xpm" />
+		<Unit filename="wxSmithKWIC\images\bmpswi16.xpm" />
+		<Unit filename="wxSmithKWIC\images\bmpswi32.xpm" />
+		<Unit filename="wxSmithKWIC\images\lcd16.xpm" />
+		<Unit filename="wxSmithKWIC\images\lcd32.xpm" />
+		<Unit filename="wxSmithKWIC\images\linmet16.xpm" />
+		<Unit filename="wxSmithKWIC\images\linmet32.xpm" />
+		<Unit filename="wxSmithKWIC\images\linreg16.xpm" />
+		<Unit filename="wxSmithKWIC\images\linreg32.xpm" />
+		<Unit filename="wxSmithKWIC\wxSmithKWIC.h" />
+		<Unit filename="wxSmithKWIC\wxsangularmeter.cpp" />
+		<Unit filename="wxSmithKWIC\wxsangularmeter.h" />
+		<Unit filename="wxSmithKWIC\wxsangularregulator.cpp" />
+		<Unit filename="wxSmithKWIC\wxsangularregulator.h" />
+		<Unit filename="wxSmithKWIC\wxsbmpcheckbox.cpp" />
+		<Unit filename="wxSmithKWIC\wxsbmpcheckbox.h" />
+		<Unit filename="wxSmithKWIC\wxsbmpswitcher.cpp" />
+		<Unit filename="wxSmithKWIC\wxsbmpswitcher.h" />
+		<Unit filename="wxSmithKWIC\wxslcdclock.cpp" />
+		<Unit filename="wxSmithKWIC\wxslcdclock.h" />
+		<Unit filename="wxSmithKWIC\wxslcddisplay.cpp" />
+		<Unit filename="wxSmithKWIC\wxslcddisplay.h" />
+		<Unit filename="wxSmithKWIC\wxslinearmeter.cpp" />
+		<Unit filename="wxSmithKWIC\wxslinearmeter.h" />
+		<Unit filename="wxSmithKWIC\wxslinearregulator.cpp" />
+		<Unit filename="wxSmithKWIC\wxslinearregulator.h" />
 		<Unit filename="wxchart\wxchart16.png" />
 		<Unit filename="wxchart\wxchart16.xpm" />
 		<Unit filename="wxchart\wxchart32.png" />
@@ -104,6 +141,10 @@
 		<Unit filename="wximagepanel\ImagePanel32.xpm" />
 		<Unit filename="wximagepanel\wxsimagepanel.cpp" />
 		<Unit filename="wximagepanel\wxsimagepanel.h" />
+		<Unit filename="wxspeedbutton\SpeedButton16.xpm" />
+		<Unit filename="wxspeedbutton\SpeedButton32.xpm" />
+		<Unit filename="wxspeedbutton\wxsSpeedButton.cpp" />
+		<Unit filename="wxspeedbutton\wxsSpeedButton.h" />
 		<Unit filename="wxthings\wxcustombutton16.png" />
 		<Unit filename="wxthings\wxcustombutton16.xpm" />
 		<Unit filename="wxthings\wxcustombutton32.png" />

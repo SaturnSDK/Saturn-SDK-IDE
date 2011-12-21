@@ -1,7 +1,7 @@
 INCLUDES = $(WX_CXXFLAGS) \
 		-I$(srcdir)/include
 
-wxcontribitemsdir=$(libdir)/wxContribItems
+wxcontribitemsdir=$(libdir)/codeblocks/wxContribItems
 
 wxcontribitems_LTLIBRARIES = libwxflatnotebook.la
 
@@ -17,7 +17,7 @@ libwxflatnotebook_la_SOURCES = \
 ./src/wxFlatNotebook/wxFlatNotebook.cpp \
 ./src/wxFlatNotebook/xh_fnb.cpp
 
-sdkdir=$(includedir)/wxContribItems/wxFlatNotebook/include/wx/wxFlatNotebook
+sdkdir=$(includedir)/codeblocks/wxContribItems/wxFlatNotebook/include/wx/wxFlatNotebook
 
 sdk_HEADERS = \
 ./include/wx/wxFlatNotebook/wxFlatNotebook.h \
@@ -33,3 +33,5 @@ noinst_HEADERS = \
 ./include/wx/wxFlatNotebook/fnb_resources.h \
 ./include/wx/wxFlatNotebook/popup_dlg.h \
 ./include/wx/wxFlatNotebook/xh_fnb.h
+
+EXTRA_DIST = README

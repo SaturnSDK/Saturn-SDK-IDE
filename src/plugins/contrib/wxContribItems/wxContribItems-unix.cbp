@@ -3,10 +3,12 @@
 	<FileVersion major="1" minor="6" />
 	<Project>
 		<Option title="wxWidgets - Contrib Items (Unix)" />
+		<Option platforms="Unix;Mac;" />
 		<Option pch_mode="2" />
 		<Option compiler="gcc" />
 		<Build>
 			<Target title="wxFlatNoteBook">
+				<Option platforms="Unix;Mac;" />
 				<Option output="../../../devel/libwxflatnotebook.so" prefix_auto="0" extension_auto="0" />
 				<Option object_output="../../../.objs/plugins/contrib/wxContribItems" />
 				<Option type="3" />
@@ -17,6 +19,7 @@
 				</Compiler>
 			</Target>
 			<Target title="wxChartCtrl">
+				<Option platforms="Unix;Mac;" />
 				<Option output="../../../devel/libwxchartctrl" prefix_auto="1" extension_auto="1" />
 				<Option object_output="../../../.objs/plugins/contrib/wxContribItems" />
 				<Option type="3" />
@@ -47,13 +50,32 @@
 					<Add directory="wxImagePanel/include" />
 				</Compiler>
 			</Target>
+			<Target title="wxSpeedButton">
+				<Option platforms="Unix;Mac;" />
+				<Option output="../../../devel/libwxspeedbutton" prefix_auto="1" extension_auto="1" />
+				<Option object_output="../../../.objs/plugins/contrib/wxSmithContribItems" />
+				<Option type="3" />
+				<Option compiler="gcc" />
+				<Option createStaticLib="1" />
+			</Target>
+			<Target title="wxKWIC">
+				<Option platforms="Unix;Mac;" />
+				<Option output="../../../devel/libwxkwic" prefix_auto="1" extension_auto="1" />
+				<Option object_output="../../../.objs/plugins/contrib/wxSmithContribItems" />
+				<Option type="3" />
+				<Option compiler="gcc" />
+				<Option createStaticLib="1" />
+				<Compiler>
+					<Add directory="KWIC/include" />
+				</Compiler>
+			</Target>
 			<Environment>
 				<Variable name="WX_CFG" value="" />
 				<Variable name="WX_SUFFIX" value="u" />
 			</Environment>
 		</Build>
 		<VirtualTargets>
-			<Add alias="All" targets="wxFlatNoteBook;wxChartCtrl;wxCustomButton;wxImagePanel;" />
+			<Add alias="All" targets="wxFlatNoteBook;wxChartCtrl;wxCustomButton;wxImagePanel;wxSpeedButton;wxKWIC;" />
 		</VirtualTargets>
 		<Compiler>
 			<Add option="-g" />
@@ -70,6 +92,96 @@
 		<Linker>
 			<Add option="`wx-config --libs`" />
 		</Linker>
+		<Unit filename="KWIC/include/wx/KWIC/AngularMeter.h">
+			<Option target="wxKWIC" />
+		</Unit>
+		<Unit filename="KWIC/include/wx/KWIC/AngularRegulator.h">
+			<Option target="wxKWIC" />
+		</Unit>
+		<Unit filename="KWIC/include/wx/KWIC/BmpCheckBox.h">
+			<Option target="wxKWIC" />
+		</Unit>
+		<Unit filename="KWIC/include/wx/KWIC/BmpSwitcher.h">
+			<Option target="wxKWIC" />
+		</Unit>
+		<Unit filename="KWIC/include/wx/KWIC/LCDClock.h">
+			<Option target="wxKWIC" />
+		</Unit>
+		<Unit filename="KWIC/include/wx/KWIC/LCDWindow.h">
+			<Option target="wxKWIC" />
+		</Unit>
+		<Unit filename="KWIC/include/wx/KWIC/LinearMeter.h">
+			<Option target="wxKWIC" />
+		</Unit>
+		<Unit filename="KWIC/include/wx/KWIC/LinearRegulator.h">
+			<Option target="wxKWIC" />
+		</Unit>
+		<Unit filename="KWIC/include/wx/KWIC/TimeAlarm.h">
+			<Option target="wxKWIC" />
+		</Unit>
+		<Unit filename="KWIC/include/wx/xrc/xh_kwxangularmeterhandler.h">
+			<Option target="wxKWIC" />
+		</Unit>
+		<Unit filename="KWIC/include/wx/xrc/xh_kwxangularregulatorhandler.h">
+			<Option target="wxKWIC" />
+		</Unit>
+		<Unit filename="KWIC/include/wx/xrc/xh_kwxlcdclockhandler.h">
+			<Option target="wxKWIC" />
+		</Unit>
+		<Unit filename="KWIC/include/wx/xrc/xh_kwxlcddisplayhandler.h">
+			<Option target="wxKWIC" />
+		</Unit>
+		<Unit filename="KWIC/include/wx/xrc/xh_kwxlinearmeterhandler.h">
+			<Option target="wxKWIC" />
+		</Unit>
+		<Unit filename="KWIC/include/wx/xrc/xh_kwxlinearregulatorhandler.h">
+			<Option target="wxKWIC" />
+		</Unit>
+		<Unit filename="KWIC/src/wx/KWIC/AngularMeter.cpp">
+			<Option target="wxKWIC" />
+		</Unit>
+		<Unit filename="KWIC/src/wx/KWIC/AngularRegulator.cpp">
+			<Option target="wxKWIC" />
+		</Unit>
+		<Unit filename="KWIC/src/wx/KWIC/BmpCheckBox.cpp">
+			<Option target="wxKWIC" />
+		</Unit>
+		<Unit filename="KWIC/src/wx/KWIC/BmpSwitcher.cpp">
+			<Option target="wxKWIC" />
+		</Unit>
+		<Unit filename="KWIC/src/wx/KWIC/LCDClock.cpp">
+			<Option target="wxKWIC" />
+		</Unit>
+		<Unit filename="KWIC/src/wx/KWIC/LCDWindow.cpp">
+			<Option target="wxKWIC" />
+		</Unit>
+		<Unit filename="KWIC/src/wx/KWIC/LinearMeter.cpp">
+			<Option target="wxKWIC" />
+		</Unit>
+		<Unit filename="KWIC/src/wx/KWIC/LinearRegulator.cpp">
+			<Option target="wxKWIC" />
+		</Unit>
+		<Unit filename="KWIC/src/wx/KWIC/TimeAlarm.cpp">
+			<Option target="wxKWIC" />
+		</Unit>
+		<Unit filename="KWIC/src/wx/xrc/xh_kwxangularmeterhandler.cpp">
+			<Option target="wxKWIC" />
+		</Unit>
+		<Unit filename="KWIC/src/wx/xrc/xh_kwxangularregulatorhandler.cpp">
+			<Option target="wxKWIC" />
+		</Unit>
+		<Unit filename="KWIC/src/wx/xrc/xh_kwxlcdclockhandler.cpp">
+			<Option target="wxKWIC" />
+		</Unit>
+		<Unit filename="KWIC/src/wx/xrc/xh_kwxlcddisplayhandler.cpp">
+			<Option target="wxKWIC" />
+		</Unit>
+		<Unit filename="KWIC/src/wx/xrc/xh_kwxlinearmeterhandler.cpp">
+			<Option target="wxKWIC" />
+		</Unit>
+		<Unit filename="KWIC/src/wx/xrc/xh_kwxlinearregulatorhandler.cpp">
+			<Option target="wxKWIC" />
+		</Unit>
 		<Unit filename="wxFlatNotebook/include/wx/wxFlatNotebook/fnb_customize_dlg.h">
 			<Option target="wxFlatNoteBook" />
 		</Unit>
@@ -123,6 +235,12 @@
 		</Unit>
 		<Unit filename="wxImagePanel/src/wxImagePanel.cpp">
 			<Option target="wxImagePanel" />
+		</Unit>
+		<Unit filename="wxSpeedButton/wxSpeedButton.cpp">
+			<Option target="wxSpeedButton" />
+		</Unit>
+		<Unit filename="wxSpeedButton/wxSpeedButton.h">
+			<Option target="wxSpeedButton" />
 		</Unit>
 		<Unit filename="wxchart/include/wx/axis.h">
 			<Option target="wxChartCtrl" />

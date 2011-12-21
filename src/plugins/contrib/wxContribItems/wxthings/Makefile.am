@@ -1,7 +1,7 @@
 INCLUDES = $(WX_CXXFLAGS) \
 		-I$(srcdir)/include
 
-wxcontribitemsdir=$(libdir)/wxContribItems
+wxcontribitemsdir=$(libdir)/codeblocks/wxContribItems
 
 wxcontribitems_LTLIBRARIES = libwxcustombutton.la
 
@@ -12,7 +12,7 @@ libwxcustombutton_la_LIBADD = $(WX_LIBS)
 libwxcustombutton_la_SOURCES = \
 ./src/toggle.cpp
 
-sdkdir=$(includedir)/wxContribItems/wxthings/include/wx/things
+sdkdir=$(includedir)/codeblocks/wxContribItems/wxthings/include/wx/things
 
 sdk_HEADERS = \
 ./include/wx/things/toggle.h \

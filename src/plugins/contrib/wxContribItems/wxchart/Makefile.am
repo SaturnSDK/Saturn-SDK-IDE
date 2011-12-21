@@ -2,7 +2,7 @@ INCLUDES = $(WX_CXXFLAGS) \
 		-I$(srcdir)/include
 
 
-wxcontribitemsdir=$(libdir)/wxContribItems
+wxcontribitemsdir=$(libdir)/codeblocks/wxContribItems
 
 wxcontribitems_LTLIBRARIES = libwxchartctrl.la
 
@@ -31,7 +31,7 @@ libwxchartctrl_la_SOURCES = \
 ./src/yaxis.cpp
 
 
-sdkdir=$(includedir)/wxContribItems/wxchart/include/wx
+sdkdir=$(includedir)/codeblocks/wxContribItems/wxchart/include/wx
 
 sdk_HEADERS = \
 ./include/wx/axis.h \
@@ -59,3 +59,7 @@ sdk_HEADERS = \
 
 noinst_HEADERS = \
 ./include/wx/label.h
+
+EXTRA_DIST = $(srcdir)/include/wx/chartart/*.xpm \
+		$(srcdir)/include/wx/chartart/*.bmp
+

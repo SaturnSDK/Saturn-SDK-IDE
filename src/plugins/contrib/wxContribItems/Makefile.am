@@ -1,10 +1,7 @@
-SUBDIRS = wxchart wxFlatNotebook wxthings wxImagePanel .
+SUBDIRS = wxchart wxFlatNotebook wxthings wxImagePanel wxSpeedButton KWIC .
 
-EXTRA_DIST = $(srcdir)/wxchart/include/wx/chartart/*.xpm \
-		$(srcdir)/wxchart/include/wx/chartart/*.bmp
-		$(srcdir)/*.cbp
+EXTRA_DIST = $(srcdir)/*.cbp
 
 pkgconfigdir = $(libdir)/pkgconfig
-pkgconfig_DATA = wxsmith-contrib.pc wxchartctrl.pc wxcustombutton.pc wxflatnotebook.pc wximagepanel.pc
-
+pkgconfig_DATA = wxsmith-contrib.pc cb_wxcontrib.pc cb_wxchartctrl.pc cb_wxcustombutton.pc cb_wxflatnotebook.pc cb_wximagepanel.pc cb_wxspeedbutton.pc cb_wxKWIC.pc
 
