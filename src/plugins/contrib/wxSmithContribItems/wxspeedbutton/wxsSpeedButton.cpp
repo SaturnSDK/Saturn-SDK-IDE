@@ -152,7 +152,7 @@ wxString    s,v;
 // no image
 
     if ((mGlyph.Id.IsEmpty()) && (mGlyph.FileName.IsEmpty())) {
-        Codef(_T("wxBitmap %s = wxNullBitmap"), v.c_str());
+        Codef(_T("wxBitmap %s = wxNullBitmap;\n"), v.c_str());
     }
 
 // art-provider image
@@ -185,7 +185,7 @@ wxString    s,v;
 // an unknown and unexpected set of conditions
 
     else {
-        Codef(_T("wxBitmap %s = wxNullBitmap"), v.c_str());
+        Codef(_T("wxBitmap %s = wxNullBitmap;\n"), v.c_str());
     };
 }
 
