@@ -34,7 +34,7 @@
 #include <wx/bmpbuttn.h>
 #include <wx/imaglist.h>
 #include <wx/button.h>
-#include <wx/dialog.h>
+#include <scrollingdialog.h>
 //*)
 
 #include <wx/imaglist.h>
@@ -42,7 +42,7 @@
 
 #include "../defitems/wxsimagelist.h"
 
-class wxsImageTreeEditorDlg: public wxDialog
+class wxsImageTreeEditorDlg: public wxScrollingDialog
 {
 	public:
 
@@ -55,37 +55,37 @@ class wxsImageTreeEditorDlg: public wxDialog
 
 
 		//(*Declarations(wxsImageTreeEditorDlg)
-		wxStaticText* StaticText10;
-		wxStaticText* StaticText9;
-		wxButton* bOK;
-		wxBitmapComboBox* cbSelected;
-		wxBitmapComboBox* cbExpanded;
-		wxBitmapButton        *bAddSubItem;
-		wxStaticText* StaticText13;
-		wxButton* bCancel;
-		wxStaticText* StaticText2;
-		wxStaticText* StaticText6;
-		wxTreeCtrl* Tree1;
-		wxStaticText* StaticText8;
-		wxStaticText* StaticText11;
-		wxImageList* ImageList1;
-		wxBitmapButton        *bEditItem;
 		wxPanel* Panel1;
-		wxStaticText* StaticText1;
-		wxStaticText* StaticText3;
-		wxStaticBox* StaticBox1;
-		wxBitmapButton        *bDelAllItems;
-		wxBitmapButton        *bDelItem;
-		wxStaticBox* StaticBox2;
+		wxStaticText* StaticText13;
+		wxBitmapComboBox* cbSelected;
 		wxCheckBox* cxItemBold;
-		wxStaticText* StaticText5;
-		wxStaticText* StaticText7;
-		wxStaticText* StaticText12;
-		wxBitmapComboBox* cbSelExpanded;
-		wxStaticText* StaticText4;
-		wxButton* bItemColor;
+		wxButton* bCancel;
+		wxBitmapButton        *bDelAllItems;
 		wxBitmapButton        *bAddItem;
 		wxBitmapComboBox* cbNormal;
+		wxBitmapButton        *bEditItem;
+		wxStaticText* StaticText1;
+		wxStaticText* StaticText10;
+		wxStaticBox* StaticBox2;
+		wxStaticText* StaticText3;
+		wxBitmapButton        *bDelItem;
+		wxBitmapComboBox* cbSelExpanded;
+		wxStaticText* StaticText8;
+		wxStaticText* StaticText12;
+		wxStaticBox* StaticBox1;
+		wxBitmapButton        *bAddSubItem;
+		wxStaticText* StaticText7;
+		wxImageList* ImageList1;
+		wxStaticText* StaticText4;
+		wxStaticText* StaticText5;
+		wxStaticText* StaticText2;
+		wxButton* bItemColor;
+		wxStaticText* StaticText6;
+		wxTreeCtrl* Tree1;
+		wxButton* bOK;
+		wxStaticText* StaticText9;
+		wxStaticText* StaticText11;
+		wxBitmapComboBox* cbExpanded;
 		//*)
 
 

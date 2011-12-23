@@ -79,7 +79,6 @@ wxsImageTreeEditorDlg::wxsImageTreeEditorDlg(wxWindow *parent, wxWindowID id, co
     wxFont thisFont(8,wxSWISS,wxFONTSTYLE_NORMAL,wxNORMAL,false,_T("Arial"),wxFONTENCODING_DEFAULT);
     SetFont(thisFont);
     Panel1 = new wxPanel(this, ID_PANEL1, wxPoint(0,0), wxSize(400,480), wxTAB_TRAVERSAL, _T("ID_PANEL1"));
-    Panel1->SetMaxSize(wxSize(0,0));
     bOK = new wxButton(Panel1, ID_BUTTON1, _("OK"), wxPoint(48,440), wxDefaultSize, 0, wxDefaultValidator, _T("ID_BUTTON1"));
     bOK->SetDefault();
     bCancel = new wxButton(Panel1, ID_BUTTON2, _("Cancel"), wxPoint(280,440), wxDefaultSize, 0, wxDefaultValidator, _T("ID_BUTTON2"));
@@ -258,30 +257,34 @@ wxsImageTreeEditorDlg::wxsImageTreeEditorDlg(wxWindow *parent, wxWindowID id, co
     ImageList1->Add(wxBitmap(ImageList1_2_XPM));
     ImageList1->Add(wxBitmap(ImageList1_3_XPM));
     ImageList1->Add(wxBitmap(ImageList1_4_XPM));
-    
+
     Connect(ID_BUTTON1,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&wxsImageTreeEditorDlg::OnbOKClick);
     Connect(ID_BUTTON2,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&wxsImageTreeEditorDlg::OnbCancelClick);
     Connect(ID_TREECTRL1,wxEVT_COMMAND_TREE_SEL_CHANGED,(wxObjectEventFunction)&wxsImageTreeEditorDlg::OnTreeCtrl1SelectionChanged);
     Connect(ID_BUTTON3,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&wxsImageTreeEditorDlg::OnbItemColorClick);
     Connect(ID_CHECKBOX1,wxEVT_COMMAND_CHECKBOX_CLICKED,(wxObjectEventFunction)&wxsImageTreeEditorDlg::OncxItemBoldClick);
+    // Set the bitmaps for cbNormal.
     Connect(ID_COMBOBOX1,wxEVT_COMMAND_COMBOBOX_SELECTED,(wxObjectEventFunction)&wxsImageTreeEditorDlg::OncbNormalSelect);
+    // Set the bitmaps for cbSelected.
     Connect(ID_COMBOBOX2,wxEVT_COMMAND_COMBOBOX_SELECTED,(wxObjectEventFunction)&wxsImageTreeEditorDlg::OncbSelectedSelect);
+    // Set the bitmaps for cbExpanded.
     Connect(ID_COMBOBOX3,wxEVT_COMMAND_COMBOBOX_SELECTED,(wxObjectEventFunction)&wxsImageTreeEditorDlg::OncbExpandedSelect);
+    // Set the bitmaps for cbSelExpanded.
     Connect(ID_COMBOBOX4,wxEVT_COMMAND_COMBOBOX_SELECTED,(wxObjectEventFunction)&wxsImageTreeEditorDlg::OncbSelExpandedSelect);
+    // Set the bitmaps for bAddItem.
     bAddItem->SetBitmapLabel(ImageList1->GetBitmap(0));
-    
     Connect(ID_IMAGEBUTTON1,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&wxsImageTreeEditorDlg::OnbAddItemClick);
+    // Set the bitmaps for bAddSubItem.
     bAddSubItem->SetBitmapLabel(ImageList1->GetBitmap(1));
-    
     Connect(ID_IMAGEBUTTON2,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&wxsImageTreeEditorDlg::OnbAddSubItemClick);
+    // Set the bitmaps for bDelItem.
     bDelItem->SetBitmapLabel(ImageList1->GetBitmap(2));
-    
     Connect(ID_IMAGEBUTTON3,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&wxsImageTreeEditorDlg::OnbDelItemClick);
+    // Set the bitmaps for bDelAllItems.
     bDelAllItems->SetBitmapLabel(ImageList1->GetBitmap(3));
-    
     Connect(ID_IMAGEBUTTON4,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&wxsImageTreeEditorDlg::OnbDelAllItemsClick);
+    // Set the bitmaps for bEditItem.
     bEditItem->SetBitmapLabel(ImageList1->GetBitmap(4));
-    
     Connect(ID_IMAGEBUTTON5,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&wxsImageTreeEditorDlg::OnbEditItemClick);
     //*)
 }
