@@ -321,6 +321,7 @@ class DLLIMPORT DebuggerManager : public Mgr<DebuggerManager>
     private:
         void ProcessSettings(RegisteredPlugins::iterator it);
         void FindTargetsDebugger();
+        void RefreshUI();
 
         void OnProjectActivated(CodeBlocksEvent& event);
         void OnTargetSelected(CodeBlocksEvent& event);

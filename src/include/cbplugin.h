@@ -38,7 +38,7 @@
 // it will change when the SDK interface breaks
 #define PLUGIN_SDK_VERSION_MAJOR 1
 #define PLUGIN_SDK_VERSION_MINOR 12
-#define PLUGIN_SDK_VERSION_RELEASE 12
+#define PLUGIN_SDK_VERSION_RELEASE 13
 
 // class decls
 class wxMenuBar;
@@ -371,6 +371,23 @@ class PLUGIN_EXPORT cbCompilerPlugin: public cbPlugin
 
 class wxScintillaEvent;
 
+struct cbDebuggerFeature
+{
+    enum Flags
+    {
+        Breakpoints,
+        Callstack,
+        CPURegisters,
+        Disassembly,
+        ExamineMemory,
+        Threads,
+        Watches,
+        ValueTooltips,
+        RunToCursor,
+        SetNextStatement
+    };
+};
+
 /** @brief Base class for debugger plugins
   *
   * This plugin type must offer some pre-defined debug facilities, on top
@@ -404,6 +421,8 @@ class PLUGIN_EXPORT cbDebuggerPlugin: public cbPlugin
 
         virtual void ShowToolMenu() = 0;
         virtual bool ToolMenuEnabled() const;
+
+        virtual bool SupportsFeature(cbDebuggerFeature::Flags flag) = 0;
 
         virtual cbDebuggerConfiguration* LoadConfig(const ConfigManagerWrapper &config) = 0;
 
@@ -526,10 +545,10 @@ class PLUGIN_EXPORT cbDebuggerPlugin: public cbPlugin
         virtual void GetCurrentPosition(wxString &filename, int &line) = 0;
 
 
-        void RegisterValueTooltip();
         virtual void OnValueTooltip(const wxString &token, const wxRect &evalRect);
         virtual bool ShowValueTooltip(int style);
     private:
+        void RegisterValueTooltip();
         void ProcessValueTooltip(CodeBlocksEvent& event);
         void CancelValueTooltip(CodeBlocksEvent& event);
 

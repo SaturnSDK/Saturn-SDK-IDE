@@ -29,6 +29,7 @@ class DisassemblyDlg : public wxPanel, public cbDisassemblyDlg
         void CenterLine(unsigned long int lineno);
         void CenterCurrentLine();
         bool HasActiveAddr() { return m_HasActiveAddr; }
+        void EnableWindow(bool enable);
 
     protected:
         void OnSave(wxCommandEvent& event);

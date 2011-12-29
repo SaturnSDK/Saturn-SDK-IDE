@@ -130,3 +130,8 @@ void ExamineMemoryDlg::OnGo(wxCommandEvent& event)
     if (plugin)
         plugin->RequestUpdate(cbDebuggerPlugin::ExamineMemory);
 }
+
+void ExamineMemoryDlg::EnableWindow(bool enable)
+{
+    Enable(enable);
+}

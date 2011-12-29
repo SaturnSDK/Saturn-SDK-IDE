@@ -275,3 +275,8 @@ void DisassemblyDlg::OnMixedModeCB(wxCommandEvent &event)
     cbAssert(plugin);
     plugin->RequestUpdate(cbDebuggerPlugin::Disassembly);
 }
+
+void DisassemblyDlg::EnableWindow(bool enable)
+{
+    Enable(enable);
+}

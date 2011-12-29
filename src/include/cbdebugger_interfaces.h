@@ -23,6 +23,7 @@ class DLLIMPORT cbBacktraceDlg
         virtual wxWindow* GetWindow() = 0;
 
         virtual void Reload() = 0;
+        virtual void EnableWindow(bool enable) = 0;
 };
 
 class DLLIMPORT cbBreakpointsDlg
@@ -49,6 +50,7 @@ class DLLIMPORT cbCPURegistersDlg
 
         virtual void Clear() = 0;
         virtual void SetRegisterValue(const wxString& reg_name, unsigned long int value) = 0;
+        virtual void EnableWindow(bool enable) = 0;
 };
 
 class DLLIMPORT cbDisassemblyDlg
@@ -65,6 +67,7 @@ class DLLIMPORT cbDisassemblyDlg
         virtual void CenterLine(unsigned long int lineno) = 0;
         virtual void CenterCurrentLine() = 0;
         virtual bool HasActiveAddr() = 0;
+        virtual void EnableWindow(bool enable) = 0;
 };
 
 class DLLIMPORT cbExamineMemoryDlg
@@ -83,6 +86,7 @@ class DLLIMPORT cbExamineMemoryDlg
         virtual int GetBytes() = 0;
         virtual void AddError(const wxString& err) = 0;
         virtual void AddHexByte(const wxString& addr, const wxString& hexbyte) = 0;
+        virtual void EnableWindow(bool enable) = 0;
 };
 
 class DLLIMPORT cbThreadsDlg
@@ -93,6 +97,7 @@ class DLLIMPORT cbThreadsDlg
         virtual wxWindow* GetWindow() = 0;
 
         virtual void Reload() = 0;
+        virtual void EnableWindow(bool enable) = 0;
 };
 
 class DLLIMPORT cbWatchesDlg
@@ -105,6 +110,7 @@ class DLLIMPORT cbWatchesDlg
         virtual void UpdateWatches() = 0;
         virtual void AddWatch(cbWatch::Pointer watch) = 0;
         virtual void RenameWatch(wxObject *prop, const wxString &newSymbol) = 0;
+        virtual void RefreshUI() = 0;
 };
 
 class DLLIMPORT cbDebuggerMenuHandler

@@ -212,24 +212,61 @@ void DebuggerMenuHandler::RebuildActiveDebuggersMenu()
 
 void DebuggerMenuHandler::BuildContextMenu(wxMenu &menu, const wxString& word_at_caret, bool is_running)
 {
+    cbDebuggerPlugin *plugin = Manager::Get()->GetDebuggerManager()->GetActiveDebugger();
+    if (!plugin)
+        return;
+
     int item = 0;
     // Insert Run to Cursor
-    menu.Insert(item++, idMenuRunToCursor, _("Run to cursor"));
+    if (plugin->SupportsFeature(cbDebuggerFeature::RunToCursor))
+        menu.Insert(item++, idMenuRunToCursor, _("Run to cursor"));
     if (is_running)
     {
-        menu.Insert(item++, idMenuSetNextStatement, _("Set next statement"));
-        menu.InsertSeparator(item++);
+        if (plugin->SupportsFeature(cbDebuggerFeature::SetNextStatement))
+            menu.Insert(item++, idMenuSetNextStatement, _("Set next statement"));
+        if (item > 0)
+            menu.InsertSeparator(item++);
         if (!word_at_caret.empty())
         {
-            menu.Insert(item++, idMenuDebuggerAddWatch, wxString::Format(_("Watch '%s'"), word_at_caret.c_str()));
+            if (plugin->SupportsFeature(cbDebuggerFeature::Watches))
+                menu.Insert(item++, idMenuDebuggerAddWatch, wxString::Format(_("Watch '%s'"), word_at_caret.c_str()));
             // data breakpoint
-            menu.Insert(item++, idMenuAddDataBreakpoint,
-                        wxString::Format(_("Add data breakpoint for '%s'"), word_at_caret.c_str()));
+            if (plugin->SupportsFeature(cbDebuggerFeature::Breakpoints))
+            {
+                menu.Insert(item++, idMenuAddDataBreakpoint,
+                            wxString::Format(_("Add data breakpoint for '%s'"), word_at_caret.c_str()));
+            }
         }
     }
     // Insert toggle breakpoint
-    menu.Insert(item++, idMenuToggleBreakpoint, _("Toggle breakpoint"));
-    menu.InsertSeparator(item++);
+    if (plugin->SupportsFeature(cbDebuggerFeature::Breakpoints))
+        menu.Insert(item++, idMenuToggleBreakpoint, _("Toggle breakpoint"));
+    if (item > 0)
+        menu.InsertSeparator(item++);
+}
+
+bool Support(cbDebuggerPlugin *plugin, cbDebuggerFeature::Flags flag)
+{
+    return plugin && plugin->SupportsFeature(flag);
+}
+
+template <typename Menu>
+void SetupDebugWindows(Menu &menu, DebuggerManager *dbg_manager)
+{
+    menu.Check(idMenuBreakpoints,  IsWindowReallyShown(dbg_manager->GetBreakpointDialog()->GetWindow()));
+    menu.Check(idMenuBacktrace,    IsWindowReallyShown(dbg_manager->GetBacktraceDialog()->GetWindow()));
+    menu.Check(idMenuRegisters,    IsWindowReallyShown(dbg_manager->GetCPURegistersDialog()->GetWindow()));
+    menu.Check(idMenuDisassembly,  IsWindowReallyShown(dbg_manager->GetDisassemblyDialog()->GetWindow()));
+    menu.Check(idMenuMemory,       IsWindowReallyShown(dbg_manager->GetExamineMemoryDialog()->GetWindow()));
+    menu.Check(idMenuThreads,      IsWindowReallyShown(dbg_manager->GetThreadsDialog()->GetWindow()));
+    menu.Check(idMenuWatches,      IsWindowReallyShown(dbg_manager->GetWatchesDialog()->GetWindow()));
+
+    cbDebuggerPlugin *plugin = dbg_manager->GetActiveDebugger();
+    menu.Enable(idMenuBacktrace,    Support(plugin, cbDebuggerFeature::Callstack));
+    menu.Enable(idMenuRegisters,    Support(plugin, cbDebuggerFeature::CPURegisters));
+    menu.Enable(idMenuDisassembly,  Support(plugin, cbDebuggerFeature::Disassembly));
+    menu.Enable(idMenuMemory,       Support(plugin, cbDebuggerFeature::ExamineMemory));
+    menu.Enable(idMenuThreads,      Support(plugin, cbDebuggerFeature::Threads));
 }
 
 void DebuggerMenuHandler::OnUpdateUI(wxUpdateUIEvent& event)
@@ -260,6 +297,8 @@ void DebuggerMenuHandler::OnUpdateUI(wxUpdateUIEvent& event)
 
     if (mbar)
     {
+        bool hasBreaks = Support(m_activeDebugger, cbDebuggerFeature::Breakpoints);
+
         mbar->Enable(idMenuDebug, (!isRunning || stopped) && en);
         mbar->Enable(idMenuContinue, isRunning && en && stopped);
         mbar->Enable(idMenuNext, isRunning && en && stopped);
@@ -267,10 +306,12 @@ void DebuggerMenuHandler::OnUpdateUI(wxUpdateUIEvent& event)
         mbar->Enable(idMenuStepIntoInstr, isRunning && en && stopped);
         mbar->Enable(idMenuStep, en && stopped);
         mbar->Enable(idMenuStepOut, isRunning && en && stopped);
-        mbar->Enable(idMenuRunToCursor, en && ed && stopped);
-        mbar->Enable(idMenuSetNextStatement, en && ed && stopped && isRunning);
-        mbar->Enable(idMenuToggleBreakpoint, ed && m_activeDebugger);
-        mbar->Enable(idMenuRemoveAllBreakpoints, m_activeDebugger);
+        mbar->Enable(idMenuRunToCursor,
+                     en && ed && stopped && Support(m_activeDebugger, cbDebuggerFeature::RunToCursor));
+        mbar->Enable(idMenuSetNextStatement,
+                     en && ed && stopped && isRunning && Support(m_activeDebugger, cbDebuggerFeature::SetNextStatement));
+        mbar->Enable(idMenuToggleBreakpoint, ed && m_activeDebugger && hasBreaks);
+        mbar->Enable(idMenuRemoveAllBreakpoints, m_activeDebugger && hasBreaks);
         mbar->Enable(idMenuSendCommand, isRunning && stopped);
         mbar->Enable(idMenuAddSymbolFile, isRunning && stopped);
         mbar->Enable(idMenuStop, isRunning && en);
@@ -285,13 +326,7 @@ void DebuggerMenuHandler::OnUpdateUI(wxUpdateUIEvent& event)
                 activeMenu->Enable(activeMenu->FindItemByPosition(ii)->GetId(), !isRunning);
         }
 
-        mbar->Check(idMenuBreakpoints,  IsWindowReallyShown(dbg_manager->GetBreakpointDialog()->GetWindow()));
-        mbar->Check(idMenuBacktrace,    IsWindowReallyShown(dbg_manager->GetBacktraceDialog()->GetWindow()));
-        mbar->Check(idMenuRegisters,    IsWindowReallyShown(dbg_manager->GetCPURegistersDialog()->GetWindow()));
-        mbar->Check(idMenuDisassembly,  IsWindowReallyShown(dbg_manager->GetDisassemblyDialog()->GetWindow()));
-        mbar->Check(idMenuMemory,       IsWindowReallyShown(dbg_manager->GetExamineMemoryDialog()->GetWindow()));
-        mbar->Check(idMenuThreads,      IsWindowReallyShown(dbg_manager->GetThreadsDialog()->GetWindow()));
-        mbar->Check(idMenuWatches,      IsWindowReallyShown(dbg_manager->GetWatchesDialog()->GetWindow()));
+        SetupDebugWindows(*mbar, dbg_manager);
     }
 
     // allow other UpdateUI handlers to process this event
@@ -729,14 +764,7 @@ void DebuggerToolbarHandler::OnDebugWindows(wxCommandEvent& event)
 
 
     DebuggerManager *dbg_manager = Manager::Get()->GetDebuggerManager();
-
-    m.Check(idMenuBreakpoints,  IsWindowReallyShown(dbg_manager->GetBreakpointDialog()->GetWindow()));
-    m.Check(idMenuBacktrace,    IsWindowReallyShown(dbg_manager->GetBacktraceDialog()->GetWindow()));
-    m.Check(idMenuRegisters,    IsWindowReallyShown(dbg_manager->GetCPURegistersDialog()->GetWindow()));
-    m.Check(idMenuDisassembly,  IsWindowReallyShown(dbg_manager->GetDisassemblyDialog()->GetWindow()));
-    m.Check(idMenuMemory,       IsWindowReallyShown(dbg_manager->GetExamineMemoryDialog()->GetWindow()));
-    m.Check(idMenuThreads,      IsWindowReallyShown(dbg_manager->GetThreadsDialog()->GetWindow()));
-    m.Check(idMenuWatches,      IsWindowReallyShown(dbg_manager->GetWatchesDialog()->GetWindow()));
+    SetupDebugWindows(m, dbg_manager);
 
     Manager::Get()->GetAppWindow()->PopupMenu(&m);
 }

@@ -27,6 +27,7 @@ class ExamineMemoryDlg : public wxPanel, public cbExamineMemoryDlg
         int GetBytes();
         void AddError(const wxString& err);
         void AddHexByte(const wxString& addr, const wxString& hexbyte);
+        void EnableWindow(bool enable);
     protected:
         void OnGo(wxCommandEvent& event);
 

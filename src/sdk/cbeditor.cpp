@@ -2144,7 +2144,12 @@ void cbEditor::ToggleBreakpoint(int line, bool notifyDebugger)
         return;
     }
 
-    cbBreakpointsDlg *dialog = Manager::Get()->GetDebuggerManager()->GetBreakpointDialog();
+    DebuggerManager *dbgManager = Manager::Get()->GetDebuggerManager();
+    cbBreakpointsDlg *dialog = dbgManager->GetBreakpointDialog();
+    cbDebuggerPlugin *plugin = dbgManager->GetActiveDebugger();
+    if (!plugin || !plugin->SupportsFeature(cbDebuggerFeature::Breakpoints))
+        return;
+
     bool toggle = false;
     if (HasBreakpoint(line))
     {
@@ -2673,24 +2678,25 @@ bool cbEditor::OnBeforeBuildContextMenu(const wxPoint& position, ModuleType type
             // create special menu
             wxMenu* popup = new wxMenu;
 
-            bool hasBreak = LineHasMarker(BREAKPOINT_MARKER, m_pData->m_LastMarginMenuLine);
-            bool hasBreakDisabled = LineHasMarker(BREAKPOINT_DISABLED_MARKER, m_pData->m_LastMarginMenuLine);
-
-            if (hasBreak || hasBreakDisabled)
+            cbDebuggerPlugin *plugin = Manager::Get()->GetDebuggerManager()->GetActiveDebugger();
+            if (plugin && plugin->SupportsFeature(cbDebuggerFeature::Breakpoints))
             {
-                popup->Append(idBreakpointEdit, _("Edit breakpoint"));
-                popup->Append(idBreakpointRemove, _("Remove breakpoint"));
-                if (hasBreak)
-                    popup->Append(idBreakpointDisable, _("Disable breakpoint"));
-                if (hasBreakDisabled)
-                    popup->Append(idBreakpointEnable, _("Enable breakpoint"));
-            }
-            else
-            {
-                popup->Append(idBreakpointAdd, _("Add breakpoint"));
-            }
+                bool hasBreak = LineHasMarker(BREAKPOINT_MARKER, m_pData->m_LastMarginMenuLine);
+                bool hasBreakDisabled = LineHasMarker(BREAKPOINT_DISABLED_MARKER, m_pData->m_LastMarginMenuLine);
 
-            popup->AppendSeparator();
+                if (hasBreak || hasBreakDisabled)
+                {
+                    popup->Append(idBreakpointEdit, _("Edit breakpoint"));
+                    popup->Append(idBreakpointRemove, _("Remove breakpoint"));
+                    if (hasBreak)
+                        popup->Append(idBreakpointDisable, _("Disable breakpoint"));
+                    if (hasBreakDisabled)
+                        popup->Append(idBreakpointEnable, _("Enable breakpoint"));
+                }
+                else
+                    popup->Append(idBreakpointAdd, _("Add breakpoint"));
+                popup->AppendSeparator();
+            }
 
             if (LineHasMarker(BOOKMARK_MARKER, m_pData->m_LastMarginMenuLine))
             {

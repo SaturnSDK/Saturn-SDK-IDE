@@ -109,6 +109,12 @@ void BacktraceDlg::Reload()
         m_list->SetColumnWidth(i, wxLIST_AUTOSIZE);
 }
 
+void BacktraceDlg::EnableWindow(bool enable)
+{
+    Enable(enable);
+    m_list->Enable(enable);
+}
+
 
 void BacktraceDlg::OnListRightClick(wxListEvent& event)
 {

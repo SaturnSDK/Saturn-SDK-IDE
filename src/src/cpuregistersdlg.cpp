@@ -76,3 +76,8 @@ void CPURegistersDlg::SetRegisterValue(const wxString& reg_name, unsigned long i
         m_pList->SetColumnWidth(i, wxLIST_AUTOSIZE);
     }
 }
+
+void CPURegistersDlg::EnableWindow(bool enable)
+{
+    m_pList->Enable(enable);
+}

@@ -764,6 +764,7 @@ bool DebuggerManager::UnregisterDebugger(cbDebuggerPlugin *plugin)
         m_menuHandler->SetActiveDebugger(m_activeDebugger);
     }
     m_menuHandler->RebuildActiveDebuggersMenu();
+    RefreshUI();
 
     if (m_registered.empty())
     {
@@ -991,6 +992,12 @@ void DebuggerManager::SetInterfaceFactory(cbDebugInterfaceFactory *factory)
     m_examineMemoryDialog = m_interfaceFactory->CreateMemory();
     m_threadsDialog = m_interfaceFactory->CreateThreads();
     m_watchesDialog = m_interfaceFactory->CreateWatches();
+
+    m_backtraceDialog->EnableWindow(false);
+    m_cpuRegistersDialog->EnableWindow(false);
+    m_disassemblyDialog->EnableWindow(false);
+    m_examineMemoryDialog->EnableWindow(false);
+    m_threadsDialog->EnableWindow(false);
 }
 
 cbDebugInterfaceFactory* DebuggerManager::GetInterfaceFactory()
@@ -1131,9 +1138,30 @@ void DebuggerManager::SetActiveDebugger(cbDebuggerPlugin* activeDebugger, Config
     int index = std::distance<ConfigurationVector::const_iterator>(it->second.GetConfigurations().begin(), config);
     m_activeDebugger->SetActiveConfig(index);
 
-    m_menuHandler->SetActiveDebugger(activeDebugger);
     WriteActiveDebuggerConfig(it->first->GetSettingsName(), index);
-    RefreshBreakpoints(activeDebugger);
+    RefreshUI();
+}
+
+void DebuggerManager::RefreshUI()
+{
+    m_menuHandler->SetActiveDebugger(m_activeDebugger);
+    RefreshBreakpoints(m_activeDebugger);
+
+    if (m_activeDebugger)
+    {
+        if (m_backtraceDialog)
+            m_backtraceDialog->EnableWindow(m_activeDebugger->SupportsFeature(cbDebuggerFeature::Callstack));
+        if (m_cpuRegistersDialog)
+            m_cpuRegistersDialog->EnableWindow(m_activeDebugger->SupportsFeature(cbDebuggerFeature::CPURegisters));
+        if (m_disassemblyDialog)
+            m_disassemblyDialog->EnableWindow(m_activeDebugger->SupportsFeature(cbDebuggerFeature::Disassembly));
+        if (m_examineMemoryDialog)
+            m_examineMemoryDialog->EnableWindow(m_activeDebugger->SupportsFeature(cbDebuggerFeature::ExamineMemory));
+        if (m_threadsDialog)
+            m_threadsDialog->EnableWindow(m_activeDebugger->SupportsFeature(cbDebuggerFeature::Threads));
+    }
+    if (m_watchesDialog)
+        m_watchesDialog->RefreshUI();
 }
 
 bool DebuggerManager::IsActiveDebuggerTargetsDefault() const
@@ -1224,9 +1252,8 @@ void DebuggerManager::FindTargetsDebugger()
                     m_activeDebugger->SetActiveConfig(index);
                     m_useTargetsDefault = true;
 
-                    m_menuHandler->SetActiveDebugger(m_activeDebugger);
                     WriteActiveDebuggerConfig(wxEmptyString, -1);
-                    RefreshBreakpoints(m_activeDebugger);
+                    RefreshUI();
                     m_menuHandler->MarkActiveTargetAsValid(true);
                     return;
                 }
@@ -1272,6 +1299,7 @@ void DebuggerManager::OnSettingsChanged(CodeBlocksEvent& event)
 
 void DebuggerManager::OnPluginLoadingComplete(CodeBlocksEvent& event)
 {
+    RefreshUI();
     if (!m_activeDebugger)
     {
         m_useTargetsDefault = true;

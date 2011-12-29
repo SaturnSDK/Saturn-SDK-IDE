@@ -157,6 +157,9 @@ void cbDebuggerPlugin::OnAttach()
     editor_hook = new EditorHooks::HookFunctor<cbDebuggerPlugin>(this, &cbDebuggerPlugin::OnEditorHook);
     m_EditorHookId = EditorHooks::RegisterHook(editor_hook);
     m_StartType = StartTypeUnknown;
+
+    if (SupportsFeature(cbDebuggerFeature::ValueTooltips))
+        RegisterValueTooltip();
 }
 
 void cbDebuggerPlugin::OnRelease(bool appShutDown)

@@ -136,3 +136,7 @@ void ThreadsDlg::OnSwitchThread(wxCommandEvent& event)
     }
 }
 
+void ThreadsDlg::EnableWindow(bool enable)
+{
+    m_list->Enable(enable);
+}

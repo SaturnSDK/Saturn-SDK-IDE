@@ -29,6 +29,7 @@ class WatchesDlg : public wxPanel, public cbWatchesDlg
         void UpdateWatches();
         void AddWatch(cbWatch::Pointer watch);
         void RenameWatch(wxObject *prop, const wxString &newSymbol);
+        void RefreshUI();
     private:
         void OnExpand(wxPropertyGridEvent &event);
         void OnCollapse(wxPropertyGridEvent &event);

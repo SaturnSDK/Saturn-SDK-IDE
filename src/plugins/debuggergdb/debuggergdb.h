@@ -40,6 +40,8 @@ class DebuggerGDB : public cbDebuggerPlugin
         void OnAttachReal(); // fires when the plugin is attached to the application
         void OnReleaseReal(bool appShutDown); // fires when the plugin is released from the application
 
+        bool SupportsFeature(cbDebuggerFeature::Flags flag);
+
         cbDebuggerConfiguration* LoadConfig(const ConfigManagerWrapper &config);
 
         DebuggerConfiguration& GetActiveConfigEx();

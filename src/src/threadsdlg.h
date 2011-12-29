@@ -21,6 +21,7 @@ class ThreadsDlg : public wxPanel, public cbThreadsDlg
         wxWindow* GetWindow() { return this; }
 
         void Reload();
+        void EnableWindow(bool enable);
     protected:
         void OnListRightClick(wxListEvent& event);
         void OnListDoubleClick(wxListEvent& event);

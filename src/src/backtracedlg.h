@@ -24,6 +24,7 @@ class BacktraceDlg : public wxPanel, public cbBacktraceDlg
         wxWindow* GetWindow() { return this; }
 
         void Reload();
+        void EnableWindow(bool enable);
     private:
         void OnListRightClick(wxListEvent& event);
         void OnDoubleClick(wxListEvent& event);
