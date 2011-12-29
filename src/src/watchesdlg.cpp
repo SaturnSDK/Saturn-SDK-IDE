@@ -647,42 +647,42 @@ void WatchesDlg::OnMenuDeleteAll(wxCommandEvent &event)
 
 void WatchesDlg::RenameWatch(wxObject *prop, const wxString &newSymbol)
 {
-    cbDebuggerPlugin *plugin = Manager::Get()->GetDebuggerManager()->GetActiveDebugger();
+    cbDebuggerPlugin *active_plugin = Manager::Get()->GetDebuggerManager()->GetActiveDebugger();
+    if (!active_plugin)
+        return;
     WatchesProperty *watchesProp = static_cast<WatchesProperty*>(prop);
-
-    if (newSymbol == wxEmptyString)
+    if (newSymbol == wxEmptyString || !watchesProp)
         return;
 
-    if (plugin && watchesProp)
+    // if the user have edited existing watch, we replace it. The new watch is added to the active plugin.
+    if (watchesProp->GetWatch())
     {
-        // if the user have edited existing watch, we replace it.
-        if (watchesProp->GetWatch())
-        {
-            cbWatch::Pointer old_watch = watchesProp->GetWatch();
-            watchesProp->SetWatch(cbWatch::Pointer());
-            plugin->DeleteWatch(old_watch);
-            cbWatch::Pointer new_watch = plugin->AddWatch(newSymbol);
-            watchesProp->SetWatch(new_watch);
+        cbWatch::Pointer old_watch = watchesProp->GetWatch();
+        cbDebuggerPlugin *old_plugin = Manager::Get()->GetDebuggerManager()->GetDebuggerHavingWatch(old_watch);
+        watchesProp->SetWatch(cbWatch::Pointer());
+        old_plugin->DeleteWatch(old_watch);
+        cbWatch::Pointer new_watch = active_plugin->AddWatch(newSymbol);
+        watchesProp->SetWatch(new_watch);
 
-            for (WatchItems::iterator it = m_watches.begin(); it != m_watches.end(); ++it)
-            {
-                if (it->property == watchesProp)
-                    it->watch = new_watch;
-            }
-            watchesProp->SetExpanded(new_watch->IsExpanded());
-            m_grid->Refresh();
-        }
-        else
+        for (WatchItems::iterator it = m_watches.begin(); it != m_watches.end(); ++it)
         {
-            WatchItem item;
-            item.property = watchesProp;
-            item.watch = plugin->AddWatch(newSymbol);
-            watchesProp->SetWatch(item.watch);
-            m_watches.push_back(item);
-            watchesProp->SetExpanded(item.watch->IsExpanded());
-
-            m_append_empty_watch = true;
+            if (it->property == watchesProp)
+                it->watch = new_watch;
         }
+        watchesProp->SetExpanded(new_watch->IsExpanded());
+        ::UpdateWatch(m_grid, watchesProp, new_watch, false);
+        m_grid->Refresh();
+    }
+    else
+    {
+        WatchItem item;
+        item.property = watchesProp;
+        item.watch = active_plugin->AddWatch(newSymbol);
+        watchesProp->SetWatch(item.watch);
+        m_watches.push_back(item);
+        watchesProp->SetExpanded(item.watch->IsExpanded());
+
+        m_append_empty_watch = true;
     }
 }
 
