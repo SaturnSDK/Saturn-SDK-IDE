@@ -60,12 +60,18 @@ BEGIN_EVENT_TABLE(WatchesDlg, wxPanel)
     EVT_MENU(idMenuDeleteAll, WatchesDlg::OnMenuDeleteAll)
 END_EVENT_TABLE()
 
+#if wxCHECK_VERSION(2,9,0)
+typedef wxString wxPG_CONST_WXCHAR_PTR;
+#endif
 
 class cbTextCtrlAndButtonTooltipEditor : public wxPGTextCtrlAndButtonEditor
 {
-    DECLARE_DYNAMIC_CLASS(wxTextCtrlAndButtonTooltipEditor)
+    DECLARE_DYNAMIC_CLASS(cbTextCtrlAndButtonTooltipEditor)
 public:
-    virtual wxPG_CONST_WXCHAR_PTR GetName() const;
+    virtual wxPG_CONST_WXCHAR_PTR GetName() const
+    {
+        return wxT("cbTextCtrlAndButtonTooltipEditor");
+    }
 
     virtual wxPGWindowList CreateControls(wxPropertyGrid* propgrid, wxPGProperty* property,
                                           const wxPoint& pos, const wxSize& sz) const
@@ -80,12 +86,12 @@ public:
 
 };
 
-WX_PG_DECLARE_EDITOR(cbTextCtrlAndButtonTooltip);
-WX_PG_IMPLEMENT_EDITOR_CLASS(cbTextCtrlAndButtonTooltip, cbTextCtrlAndButtonTooltipEditor, wxPGTextCtrlAndButtonEditor);
+IMPLEMENT_DYNAMIC_CLASS(cbTextCtrlAndButtonTooltipEditor, wxPGTextCtrlAndButtonEditor);
+static wxPGEditor *watchesPropertyEditor = nullptr;
 
 class WatchesProperty : public wxStringProperty
 {
-        WX_PG_DECLARE_DERIVED_PROPERTY_CLASS(WatchesProperty)
+        DECLARE_DYNAMIC_CLASS(WatchesProperty)
 
         WatchesProperty(){}
     public:
@@ -99,7 +105,7 @@ class WatchesProperty : public wxStringProperty
         // Set editor to have button
         virtual const wxPGEditor* DoGetEditorClass() const
         {
-            return m_readonly ? nullptr : wxPG_EDITOR(cbTextCtrlAndButtonTooltip);
+            return m_readonly ? nullptr : watchesPropertyEditor;
         }
 
         // Set what happens on button click
@@ -127,7 +133,7 @@ class WatchRawDialogAdapter : public wxPGEditorDialogAdapter
     protected:
 };
 
-WX_PG_IMPLEMENT_DERIVED_PROPERTY_CLASS(WatchesProperty, wxStringProperty, const wxString&);
+IMPLEMENT_DYNAMIC_CLASS(WatchesProperty, wxStringProperty);
 
 /// @breif dialog to show the value of a watch
 class WatchRawDialog : public wxScrollingDialog
@@ -313,7 +319,16 @@ WatchesDlg::WatchesDlg() :
     SetAutoLayout(TRUE);
     SetSizer(bs);
 
-    wxPGRegisterEditorClass(cbTextCtrlAndButtonTooltip);
+    if (!watchesPropertyEditor)
+    {
+#if !wxCHECK_VERSION(2,9,0)
+        watchesPropertyEditor = wxPropertyGrid::RegisterEditorClass(new cbTextCtrlAndButtonTooltipEditor,
+                                                                    wxT("cbTextCtrlAndButtonTooltipEditor"),
+                                                                    true);
+#else
+        watchesPropertyEditor = wxPropertyGrid::RegisterEditorClass(new cbTextCtrlAndButtonTooltipEditor, true);
+#endif
+    }
 
     m_grid->SetColumnProportion(0, 40);
     m_grid->SetColumnProportion(1, 40);
@@ -351,8 +366,10 @@ void AppendChildren(wxPropertyGrid &grid, wxPGProperty &property, cbWatch &watch
             grid.SetPropertyTextColour(prop, wxColor(255, 0, 0));
             WatchRawDialog::UpdateValue(static_cast<const WatchesProperty*>(prop));
         }
+#if !wxCHECK_VERSION(2,9,0)
         else
             grid.SetPropertyColourToDefault(prop);
+#endif
 
         AppendChildren(grid, *prop, *child.get(), readonly);
     }
@@ -371,8 +388,10 @@ void UpdateWatch(wxPropertyGrid *grid, wxPGProperty *property, cbWatch::Pointer 
     watch->GetType(type);
     if(watch->IsChanged())
         grid->SetPropertyTextColour(property, wxColor(255, 0, 0));
+#if !wxCHECK_VERSION(2,9,0)
     else
         grid->SetPropertyColourToDefault(property);
+#endif
     grid->SetPropertyAttribute(property, wxT("Units"), type);
     if (value.empty())
         grid->SetPropertyHelpString(property, wxEmptyString);
@@ -415,7 +434,7 @@ void WatchesDlg::UpdateWatches()
 
 void WatchesDlg::AddWatch(cbWatch::Pointer watch)
 {
-    wxPGProperty *last_prop = m_grid->GetLastProperty();
+    wxPGProperty *last_prop = m_grid->GetLastItem(wxPG_ITERATE_DEFAULT);
 
     WatchItem item;
     wxString symbol, value;
@@ -477,7 +496,7 @@ void WatchesDlg::OnPropertyChanged(wxPropertyGridEvent &event)
 
 void WatchesDlg::OnPropertyChanging(wxPropertyGridEvent &event)
 {
-    if(event.GetProperty()->GetCount() > 0)
+    if(event.GetProperty()->GetChildCount() > 0)
         event.Veto(true);
 }
 
@@ -517,7 +536,8 @@ void WatchesDlg::OnPropertySelected(wxPropertyGridEvent &event)
     if (plugin && !plugin->SupportsFeature(cbDebuggerFeature::Watches))
         return;
 
-    if (event.GetProperty() && event.GetPropertyLabel() == wxEmptyString)
+    wxPGProperty *property = event.GetProperty();
+    if (property && property->GetLabel() == wxEmptyString)
         m_grid->BeginLabelEdit(0);
 }
 
@@ -569,10 +589,15 @@ void WatchesDlg::OnKeyDown(wxKeyEvent &event)
                 cbDebuggerPlugin *plugin = Manager::Get()->GetDebuggerManager()->GetDebuggerHavingWatch(watch);
                 if (plugin && plugin->SupportsFeature(cbDebuggerFeature::Watches))
                 {
-                    wxPGProperty *prop_to_select = m_grid->GetNextSiblingProperty(watches_prop);
+                    unsigned int index = watches_prop->GetIndexInParent();
+
                     DeleteProperty(*watches_prop);
-                    if (prop_to_select)
-                        m_grid->SelectProperty(prop_to_select, false);
+
+                    wxPGProperty *root = m_grid->GetRoot();
+                    if (index < root->GetChildCount())
+                        m_grid->SelectProperty(root->Item(index), false);
+                    else if (root->GetChildCount() > 0)
+                        m_grid->SelectProperty(root->Item(root->GetChildCount() - 1), false);
                 }
             }
             break;
@@ -778,13 +803,19 @@ wxPGProperty* GetRealRoot(wxPropertyGrid *grid)
 
 void GetColumnWidths(wxClientDC &dc, wxPropertyGrid *grid, wxPGProperty *root, int width[3])
 {
-    width[0] = width[1] = width[2] = 0;
-    int minWidths[3] = { grid->GetState()->GetColumnMinWidth(0),
-                         grid->GetState()->GetColumnMinWidth(1),
-                         grid->GetState()->GetColumnMinWidth(2) };
-
+#if !wxCHECK_VERSION(2,9,0)
     wxPropertyGridState *state = grid->GetState();
-    for (unsigned ii = 0; ii < root->GetCount(); ++ii)
+#else
+    wxPropertyGridPageState *state = grid->GetState();
+#endif
+
+    width[0] = width[1] = width[2] = 0;
+    int minWidths[3] = { state->GetColumnMinWidth(0),
+                         state->GetColumnMinWidth(1),
+                         state->GetColumnMinWidth(2) };
+
+#if !wxCHECK_VERSION(2,9,0)
+    for (unsigned ii = 0; ii < root->GetChildCount(); ++ii)
     {
         wxPGProperty* p = root->Item(ii);
 
@@ -804,6 +835,7 @@ void GetColumnWidths(wxClientDC &dc, wxPropertyGrid *grid, wxPGProperty *root, i
             width[2] = std::max(width[2], w[2]);
         }
     }
+#endif
 
     width[0] = std::max(width[0], minWidths[0]);
     width[1] = std::max(width[1], minWidths[1]);
@@ -820,8 +852,8 @@ void GetColumnWidths(wxPropertyGrid *grid, wxPGProperty *root, int width[3])
 void SetMinSize(wxPropertyGrid *grid)
 {
     wxPGProperty *p = GetRealRoot(grid);
-    wxPGProperty *first = grid->GetFirstProperty();
-    wxPGProperty *last = grid->GetLastProperty();
+    wxPGProperty *first = grid->wxPropertyGridInterface::GetFirst(wxPG_ITERATE_ALL);
+    wxPGProperty *last = grid->GetLastItem(wxPG_ITERATE_DEFAULT);
     wxRect rect = grid->GetPropertyRect(first, last);
     int height = rect.height + 2 * grid->GetVerticalSpacing();
 
