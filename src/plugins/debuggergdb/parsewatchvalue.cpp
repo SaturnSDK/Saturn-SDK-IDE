@@ -126,7 +126,7 @@ bool GetNextToken(wxString const &str, int pos, Token &token)
     struct BraceType { enum Enum { None, Angle, Square }; };
     BraceType::Enum brace_type = BraceType::None;
 
-    switch (str[pos])
+    switch (static_cast<wxChar>(str[pos]))
     {
     case _T('='):
         token = Token(pos, pos + 1, Token::Equal);
