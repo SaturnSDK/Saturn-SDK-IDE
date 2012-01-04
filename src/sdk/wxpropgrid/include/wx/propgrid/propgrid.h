@@ -54,7 +54,7 @@
     #define wxUSE_TOOLTIPS          1
     #define wxUSE_SPINBTN           1
     #define wxUSE_DATEPICKCTRL      1
-    #define wxPG_COMPATIBILITY_1_2_0    1
+    #define wxPG_COMPATIBILITY_1_2_0    0
 #endif
 
 
@@ -273,7 +273,7 @@
 // -----------------------------------------------------------------------
 
 #ifndef wxPG_COMPATIBILITY_1_2_0
-    #define wxPG_COMPATIBILITY_1_2_0    1
+    #define wxPG_COMPATIBILITY_1_2_0    0
 #endif
 
 

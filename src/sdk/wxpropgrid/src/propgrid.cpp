@@ -2068,9 +2068,9 @@ int wxPGProperty::GetY2( int lh ) const
     for ( parent = GetParent(); parent != NULL; parent = child->GetParent() )
     {
         if ( !parent->IsExpanded() )
-// CB change start
+/* C::B begin */
             return parent->GetY2(lh);
-// CB change end
+/* C::B end */
         y += parent->GetChildrenHeight(lh, child->GetIndexInParent());
         y += lh;
         child = parent;
@@ -3071,36 +3071,36 @@ protected:
     {
         wxPropertyGrid* pg = wxStaticCast(GetParent(), wxPropertyGrid);
         pg->OnKey( event );
-        // CB change start
+/* C::B begin */
         int id = event.GetId();
         event.SetId(pg->GetId());
         pg->ProcessEvent(event);
         event.SetId(id);
-        // CB change end
+/* C::B end */
     }
 
     void OnKeyUp( wxKeyEvent& event )
     {
         wxPropertyGrid* pg = wxStaticCast(GetParent(), wxPropertyGrid);
         pg->OnKeyUp( event );
-        // CB change start
+/* C::B begin */
         int id = event.GetId();
         event.SetId(pg->GetId());
         pg->ProcessEvent(event);
         event.SetId(id);
-        // CB change end
+/* C::B end */
     }
 
     void OnNavigationKey( wxNavigationKeyEvent& event )
     {
         wxPropertyGrid* pg = wxStaticCast(GetParent(), wxPropertyGrid);
         pg->OnNavigationKey( event );
-        // CB change start
+/* C::B begin */
         int id = event.GetId();
         event.SetId(pg->GetId());
         pg->ProcessEvent(event);
         event.SetId(id);
-        // CB change end
+/* C::B end */
     }
 
     void OnPaint( wxPaintEvent& event );
@@ -7479,7 +7479,7 @@ bool wxPropertyGrid::DoSelectProperty( wxPGProperty* p, unsigned int flags )
     struct UnsetValue
     {
         UnsetValue(bool &value) : value(value) {}
-        ~UnsetValue() { value=false; }
+        ~UnsetValue() { value = false; }
         bool &value;
     };
     UnsetValue unsetValue(m_inDoSelectProperty);
@@ -10452,7 +10452,7 @@ wxArrayString wxPGChoices::GetLabels() const
 }
 
 // -----------------------------------------------------------------------
-
+#if wxPG_COMPATIBILITY_1_2_0
 bool wxPGChoices::HasValue( unsigned int WXUNUSED(i) ) const
 {
     return true;
@@ -10464,6 +10464,7 @@ bool wxPGChoices::HasValues() const
 {
     return true;
 }
+#endif
 
 // -----------------------------------------------------------------------
 

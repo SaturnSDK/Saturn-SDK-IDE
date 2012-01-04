@@ -312,6 +312,9 @@ WatchesDlg::WatchesDlg() :
     m_grid = new wxPropertyGrid(this, idGrid, wxDefaultPosition, wxDefaultSize,
                                 wxPG_SPLITTER_AUTO_CENTER | wxTAB_TRAVERSAL /*| wxWANTS_CHARS*/);
 
+#if wxCHECK_VERSION(2, 9, 0)
+    #define wxPG_EX_DISABLE_TLP_TRACKING 0x00000000
+#endif
     m_grid->SetExtraStyle(wxPG_EX_DISABLE_TLP_TRACKING | wxPG_EX_HELP_AS_TOOLTIPS);
     m_grid->SetDropTarget(new WatchesDropTarget);
     m_grid->SetColumnCount(3);
@@ -321,12 +324,12 @@ WatchesDlg::WatchesDlg() :
 
     if (!watchesPropertyEditor)
     {
-#if !wxCHECK_VERSION(2,9,0)
+#if wxCHECK_VERSION(2, 9, 0)
+        watchesPropertyEditor = wxPropertyGrid::RegisterEditorClass(new cbTextCtrlAndButtonTooltipEditor, true);
+#else
         watchesPropertyEditor = wxPropertyGrid::RegisterEditorClass(new cbTextCtrlAndButtonTooltipEditor,
                                                                     wxT("cbTextCtrlAndButtonTooltipEditor"),
                                                                     true);
-#else
-        watchesPropertyEditor = wxPropertyGrid::RegisterEditorClass(new cbTextCtrlAndButtonTooltipEditor, true);
 #endif
     }
 
@@ -361,12 +364,12 @@ void AppendChildren(wxPropertyGrid &grid, wxPGProperty &property, cbWatch &watch
             grid.SetPropertyHelpString(new_prop, symbol + wxT("=") + value);
         grid.EnableProperty(new_prop, grid.IsPropertyEnabled(&property));
 
-        if(child->IsChanged())
+        if (child->IsChanged())
         {
             grid.SetPropertyTextColour(prop, wxColor(255, 0, 0));
             WatchRawDialog::UpdateValue(static_cast<const WatchesProperty*>(prop));
         }
-#if !wxCHECK_VERSION(2,9,0)
+#if !wxCHECK_VERSION(2, 9, 0)
         else
             grid.SetPropertyColourToDefault(prop);
 #endif
@@ -386,9 +389,9 @@ void UpdateWatch(wxPropertyGrid *grid, wxPGProperty *property, cbWatch::Pointer 
     property->SetValue(value);
     property->SetExpanded(watch->IsExpanded());
     watch->GetType(type);
-    if(watch->IsChanged())
+    if (watch->IsChanged())
         grid->SetPropertyTextColour(property, wxColor(255, 0, 0));
-#if !wxCHECK_VERSION(2,9,0)
+#if !wxCHECK_VERSION(2, 9, 0)
     else
         grid->SetPropertyColourToDefault(property);
 #endif
@@ -440,13 +443,13 @@ void WatchesDlg::AddWatch(cbWatch::Pointer watch)
     wxString symbol, value;
     watch->GetSymbol(symbol);
 
-    if(last_prop && last_prop->GetLabel() == wxEmptyString)
+    if (last_prop && last_prop->GetLabel() == wxEmptyString)
     {
         item.property = last_prop;
 
         // if we are editing the label the calls SetPropertyLabel and SetPropertyName don't work,
         // so we stop the edit operationś
-        if(m_grid->GetLabelEditor())
+        if (m_grid->GetLabelEditor())
             m_grid->EndLabelEdit(0);
         m_grid->SetPropertyLabel(item.property, symbol);
         m_grid->SetPropertyName(item.property, symbol);
@@ -496,7 +499,7 @@ void WatchesDlg::OnPropertyChanged(wxPropertyGridEvent &event)
 
 void WatchesDlg::OnPropertyChanging(wxPropertyGridEvent &event)
 {
-    if(event.GetProperty()->GetChildCount() > 0)
+    if (event.GetProperty()->GetChildCount() > 0)
         event.Veto(true);
 }
 
@@ -504,10 +507,10 @@ void WatchesDlg::OnPropertyLableEditBegin(wxPropertyGridEvent &event)
 {
     wxPGProperty *prop = event.GetProperty();
 
-    if(prop)
+    if (prop)
     {
         wxPGProperty *prop_parent = prop->GetParent();
-        if(prop_parent && !prop_parent->IsRoot())
+        if (prop_parent && !prop_parent->IsRoot())
             event.Veto(true);
     }
 }
@@ -552,7 +555,7 @@ void WatchesDlg::DeleteProperty(WatchesProperty &prop)
         debugger->DeleteWatch(watch);
 
     wxPGProperty *parent = prop.GetParent();
-    if(parent && parent->IsRoot())
+    if (parent && parent->IsRoot())
     {
         for (WatchItems::iterator it = m_watches.begin(); it != m_watches.end(); ++it)
         {
@@ -803,10 +806,10 @@ wxPGProperty* GetRealRoot(wxPropertyGrid *grid)
 
 void GetColumnWidths(wxClientDC &dc, wxPropertyGrid *grid, wxPGProperty *root, int width[3])
 {
-#if !wxCHECK_VERSION(2,9,0)
-    wxPropertyGridState *state = grid->GetState();
-#else
+#if wxCHECK_VERSION(2, 9, 0)
     wxPropertyGridPageState *state = grid->GetState();
+#else
+    wxPropertyGridState *state = grid->GetState();
 #endif
 
     width[0] = width[1] = width[2] = 0;

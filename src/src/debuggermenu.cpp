@@ -144,7 +144,11 @@ wxMenu* GetActiveDebuggersMenu(bool recreate = false)
     if (recreate)
     {
         wxMenu *debugMenu = item->GetMenu();
+#if wxCHECK_VERSION(2, 9, 0)
+        wxString label = item->GetItemLabelText();
+#else
         wxString label = item->GetLabel();
+#endif
         debugMenu->Destroy(item);
         item = debugMenu->Insert(0, idMenuDebugActive, label, new wxMenu);
     }
@@ -158,7 +162,11 @@ void DebuggerMenuHandler::MarkActiveTargetAsValid(bool valid)
         return;
     wxMenuItem *item = menu->FindItem(idMenuDebugActiveTargetsDefault);
     if (item)
+#if wxCHECK_VERSION(2, 9, 0)
+        item->SetItemLabel(valid ? _("Target's default") : _("Target's default (invalid)"));
+#else
         item->SetText(valid ? _("Target's default") : _("Target's default (invalid)"));
+#endif
 }
 
 void DebuggerMenuHandler::RebuildActiveDebuggersMenu()
