@@ -80,64 +80,9 @@
     </object>
     <object class="wxMenu" name="idDebuggingWindows">
       <label>Debugging windows</label>
-      <object class="wxMenuItem" name="idDebuggerMenuBreakpoints">
-        <label>&amp;Breakpoints</label>
-        <help>Edit breakpoints</help>
-        <checkable>1</checkable>
-      </object>
-      <object class="wxMenuItem" name="idDebuggerMenuBacktrace">
-        <label>Call stack</label>
-        <help>Displays the current call stack</help>
-        <checkable>1</checkable>
-      </object>
-      <object class="wxMenuItem" name="idDebuggerMenuRegisters">
-        <label>CPU Registers</label>
-        <help>Display the CPU registers</help>
-        <checkable>1</checkable>
-      </object>
-      <object class="wxMenuItem" name="idDebuggerMenuDisassembly">
-        <label>Disassembly</label>
-        <help>Disassembles the current stack frame</help>
-        <checkable>1</checkable>
-      </object>
-      <object class="wxMenuItem" name="idDebuggerMenuMemory">
-        <label>Examine memory</label>
-        <help>Displays the contents of a memory location</help>
-        <checkable>1</checkable>
-      </object>
-      <object class="wxMenuItem" name="idDebuggerMenuThreads">
-        <label>Running threads</label>
-        <help>Displays the currently running threads and allows switching between them</help>
-        <checkable>1</checkable>
-      </object>
-      <object class="wxMenuItem" name="idDebuggerMenuWatches">
-        <label>Watches</label>
-        <help>Watch variables</help>
-        <checkable>1</checkable>
-      </object>
     </object>
     <object class="wxMenu" name="idDebuggerInfo">
       <label>Information</label>
-      <object class="wxMenuItem" name="idDebuggerCurrentFrame">
-        <label>Current stack frame</label>
-        <help>Displays info about the current (selected) stack frame</help>
-      </object>
-      <object class="wxMenuItem" name="idDebuggerLoadedDLLs">
-        <label>Loaded libraries</label>
-        <help>List dynamically loaded libraries (DLL/SO)</help>
-      </object>
-      <object class="wxMenuItem" name="idDebuggerFiles">
-        <label>Targets and files</label>
-        <help>Displays info on the targets and files being debugged</help>
-      </object>
-      <object class="wxMenuItem" name="idDebuggerFPU">
-        <label>FPU status</label>
-        <help>Displays the status of the floating point unit</help>
-      </object>
-      <object class="wxMenuItem" name="idDebuggerSignals">
-        <label>Signal handling</label>
-        <help>Displays how the debugger handles various signals</help>
-      </object>
     </object>
     <object class="separator"/>
     <object class="wxMenuItem" name="idDebuggerMenuAttachToProcess">

@@ -113,6 +113,16 @@ class DLLIMPORT cbWatchesDlg
         virtual void RefreshUI() = 0;
 };
 
+class DLLIMPORT cbDebuggerWindowMenuItem
+{
+    public:
+        virtual ~cbDebuggerWindowMenuItem() {}
+
+        virtual void OnClick(bool enable) = 0;
+        virtual bool IsEnabled() = 0;
+        virtual bool IsChecked() = 0;
+};
+
 class DLLIMPORT cbDebuggerMenuHandler
 {
     public:
@@ -120,8 +130,11 @@ class DLLIMPORT cbDebuggerMenuHandler
 
         virtual void SetActiveDebugger(cbDebuggerPlugin *active) = 0;
         virtual void MarkActiveTargetAsValid(bool valid) = 0;
-        virtual void RebuildActiveDebuggersMenu() = 0;
+        virtual void RebuildMenus() = 0;
         virtual void BuildContextMenu(wxMenu &menu, const wxString& word_at_caret, bool is_running) = 0;
+
+        virtual bool RegisterWindowMenu(const wxString &name, const wxString &help, cbDebuggerWindowMenuItem *item) = 0;
+        virtual void UnregisterWindowMenu(const wxString &name) = 0;
 };
 
 class DLLIMPORT cbDebugInterfaceFactory

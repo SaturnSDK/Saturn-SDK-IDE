@@ -38,7 +38,7 @@
 // it will change when the SDK interface breaks
 #define PLUGIN_SDK_VERSION_MAJOR 1
 #define PLUGIN_SDK_VERSION_MINOR 12
-#define PLUGIN_SDK_VERSION_RELEASE 13
+#define PLUGIN_SDK_VERSION_RELEASE 14
 
 // class decls
 class wxMenuBar;
@@ -419,7 +419,7 @@ class PLUGIN_EXPORT cbDebuggerPlugin: public cbPlugin
         virtual void OnAttachReal() = 0;
         virtual void OnReleaseReal(bool appShutDown) = 0;
 
-        virtual void ShowToolMenu() = 0;
+        virtual void SetupToolsMenu(wxMenu &menu) = 0;
         virtual bool ToolMenuEnabled() const;
 
         virtual bool SupportsFeature(cbDebuggerFeature::Flags flag) = 0;

@@ -157,7 +157,7 @@ class DebuggerGDB : public cbDebuggerPlugin
         void OnCursorChanged(wxCommandEvent& event);
         void OnSettings(wxCommandEvent& event);
 
-        void ShowToolMenu();
+        void SetupToolsMenu(wxMenu &menu);
         void KillConsole();
 
         void OnInfoFrame(wxCommandEvent& event);

@@ -743,7 +743,7 @@ bool DebuggerManager::RegisterDebugger(cbDebuggerPlugin *plugin)
         m_menuHandler->SetActiveDebugger(m_activeDebugger);
     }
 
-    m_menuHandler->RebuildActiveDebuggersMenu();
+    m_menuHandler->RebuildMenus();
 
     return true;
 }
@@ -763,7 +763,7 @@ bool DebuggerManager::UnregisterDebugger(cbDebuggerPlugin *plugin)
             m_activeDebugger = m_registered.begin()->first;
         m_menuHandler->SetActiveDebugger(m_activeDebugger);
     }
-    m_menuHandler->RebuildActiveDebuggersMenu();
+    m_menuHandler->RebuildMenus();
     RefreshUI();
 
     if (m_registered.empty())
@@ -862,7 +862,7 @@ void DebuggerManager::RebuildAllConfigs()
 {
     for (RegisteredPlugins::iterator it = m_registered.begin(); it != m_registered.end(); ++it)
         ProcessSettings(it);
-    m_menuHandler->RebuildActiveDebuggersMenu();
+    m_menuHandler->RebuildMenus();
 }
 
 wxMenu* DebuggerManager::GetMenu()
@@ -900,7 +900,7 @@ wxMenu* DebuggerManager::GetMenu()
         }
         menuBar->Insert(finalPos, menu, _("&Debug"));
 
-        m_menuHandler->RebuildActiveDebuggersMenu();
+        m_menuHandler->RebuildMenus();
     }
     return menu;
 }
@@ -1008,6 +1008,11 @@ cbDebugInterfaceFactory* DebuggerManager::GetInterfaceFactory()
 void DebuggerManager::SetMenuHandler(cbDebuggerMenuHandler *handler)
 {
     m_menuHandler = handler;
+}
+
+cbDebuggerMenuHandler* DebuggerManager::GetMenuHandler()
+{
+    return m_menuHandler;
 }
 
 cbBacktraceDlg* DebuggerManager::GetBacktraceDialog()
@@ -1145,6 +1150,7 @@ void DebuggerManager::SetActiveDebugger(cbDebuggerPlugin* activeDebugger, Config
 void DebuggerManager::RefreshUI()
 {
     m_menuHandler->SetActiveDebugger(m_activeDebugger);
+    m_menuHandler->RebuildMenus();
     RefreshBreakpoints(m_activeDebugger);
 
     if (m_activeDebugger)

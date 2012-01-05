@@ -113,11 +113,13 @@ enum DebugCommandConst
 
 const wxString g_EscapeChar = wxChar(26);
 
-int idMenuInfoFrame = XRCID("idDebuggerCurrentFrame");
-int idMenuInfoDLL = XRCID("idDebuggerLoadedDLLs");
-int idMenuInfoFiles = XRCID("idDebuggerFiles");
-int idMenuInfoFPU = XRCID("idDebuggerFPU");
-int idMenuInfoSignals = XRCID("idDebuggerSignals");
+namespace
+{
+int idMenuInfoFrame = wxNewId();
+int idMenuInfoDLL = wxNewId();
+int idMenuInfoFiles = wxNewId();
+int idMenuInfoFPU = wxNewId();
+int idMenuInfoSignals = wxNewId();
 
 int idGDBProcess = wxNewId();
 int idTimerPollDebugger = wxNewId();
@@ -126,9 +128,7 @@ int idMenuSettings = wxNewId();
 int idMenuWatchDereference = wxNewId();
 
 // this auto-registers the plugin
-namespace
-{
-    PluginRegistrant<DebuggerGDB> reg(_T("Debugger"));
+PluginRegistrant<DebuggerGDB> reg(_T("Debugger"));
 }
 
 BEGIN_EVENT_TABLE(DebuggerGDB, cbDebuggerPlugin)
@@ -1643,15 +1643,13 @@ void DebuggerGDB::OnAddSymbolFile(wxCommandEvent& WXUNUSED(event))
 //    QueueCommand(new DbgCmd_AddSymbolFile(this, file));
 }
 
-void DebuggerGDB::ShowToolMenu()
+void DebuggerGDB::SetupToolsMenu(wxMenu &menu)
 {
-    wxMenu m;
-    m.Append(idMenuInfoFrame,   _("Current stack frame"));
-    m.Append(idMenuInfoDLL,     _("Loaded libraries"));
-    m.Append(idMenuInfoFiles,   _("Targets and files"));
-    m.Append(idMenuInfoFPU,     _("FPU status"));
-    m.Append(idMenuInfoSignals, _("Signal handling"));
-    Manager::Get()->GetAppWindow()->PopupMenu(&m);
+    menu.Append(idMenuInfoFrame,   _("Current stack frame"), _("Displays info about the current (selected) stack frame"));
+    menu.Append(idMenuInfoDLL,     _("Loaded libraries"), _("List dynamically loaded libraries (DLL/SO)"));
+    menu.Append(idMenuInfoFiles,   _("Targets and files"), _("Displays info on the targets and files being debugged"));
+    menu.Append(idMenuInfoFPU,     _("FPU status"), _("Displays the status of the floating point unit"));
+    menu.Append(idMenuInfoSignals, _("Signal handling"), _("Displays how the debugger handles various signals"));
 }
 
 void DebuggerGDB::OnInfoFrame(wxCommandEvent& WXUNUSED(event))

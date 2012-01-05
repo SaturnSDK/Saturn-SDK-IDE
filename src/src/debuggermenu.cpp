@@ -51,15 +51,11 @@ namespace
     const int idMenuAddDataBreakpoint = XRCID("idMenuAddDataBreakpoint");
     const int idMenuSendCommand = XRCID("idDebuggerMenuSendCommand");
     const int idMenuAddSymbolFile = XRCID("idDebuggerMenuAddSymbolFile");
-    const int idMenuDisassembly = XRCID("idDebuggerMenuDisassembly");
-    const int idMenuRegisters = XRCID("idDebuggerMenuRegisters");
-    const int idMenuWatches = XRCID("idDebuggerMenuWatches");
-    const int idMenuBacktrace = XRCID("idDebuggerMenuBacktrace");
-    const int idMenuThreads = XRCID("idDebuggerMenuThreads");
-    const int idMenuMemory = XRCID("idDebuggerMenuMemory");
-    const int idMenuBreakpoints = XRCID("idDebuggerMenuBreakpoints");
     const int idMenuAttachToProcess = XRCID("idDebuggerMenuAttachToProcess");
     const int idMenuDetach = XRCID("idDebuggerMenuDetach");
+
+    const long idMenuDebuggingWindows = XRCID("idDebuggingWindows");
+    const long idMenuTools = XRCID("idDebuggerInfo");
 
     const int idDebuggerToolInfo = XRCID("idDebuggerToolInfo");
     const int idDebuggerToolWindows = XRCID("idDebuggerToolWindows");
@@ -67,6 +63,31 @@ namespace
     const int idMenuDebuggerAddWatch = wxNewId();
 
     inline void HideValueTooltip() { Manager::Get()->GetDebuggerManager()->GetInterfaceFactory()->HideValueTooltip(); }
+
+    bool Support(cbDebuggerPlugin *plugin, cbDebuggerFeature::Flags flag)
+    {
+        return plugin && plugin->SupportsFeature(flag);
+    }
+
+    wxMenu* GetMenuById(long menuId, bool recreate = false)
+    {
+        wxMenuBar* mbar = Manager::Get()->GetAppFrame()->GetMenuBar();
+        if (!mbar)
+            return nullptr;
+        wxMenuItem *item = mbar->FindItem(menuId);
+        if (!item)
+            return nullptr;
+        if (recreate)
+        {
+            wxMenu *subMenu = item->GetSubMenu();
+            while (subMenu->GetMenuItemCount() > 0)
+            {
+                wxMenuItemList& list=subMenu->GetMenuItems();
+                subMenu->Remove(list.GetFirst()->GetData());
+            }
+        }
+        return item ? item->GetSubMenu() : nullptr;
+    }
 }
 
 BEGIN_EVENT_TABLE(DebuggerMenuHandler, wxEvtHandler)
@@ -86,14 +107,7 @@ BEGIN_EVENT_TABLE(DebuggerMenuHandler, wxEvtHandler)
     EVT_UPDATE_UI(idMenuAttachToProcess, DebuggerMenuHandler::OnUpdateUI)
     EVT_UPDATE_UI(idMenuDetach, DebuggerMenuHandler::OnUpdateUI)
 
-    EVT_UPDATE_UI(XRCID("idDebuggerCurrentFrame"), DebuggerMenuHandler::OnUpdateUI)
-    EVT_UPDATE_UI(XRCID("idDebuggerLoadedDLLs"), DebuggerMenuHandler::OnUpdateUI)
-    EVT_UPDATE_UI(XRCID("idDebuggerFiles"), DebuggerMenuHandler::OnUpdateUI)
-    EVT_UPDATE_UI(XRCID("idDebuggerFPU"), DebuggerMenuHandler::OnUpdateUI)
-    EVT_UPDATE_UI(XRCID("idDebuggerSignals"), DebuggerMenuHandler::OnUpdateUI)
-    EVT_UPDATE_UI(XRCID("idDebuggerThreads"), DebuggerMenuHandler::OnUpdateUI)
-
-    EVT_UPDATE_UI(XRCID("idDebuggerToolInfo"), DebuggerMenuHandler::OnUpdateUI)
+    EVT_UPDATE_UI(idMenuTools, DebuggerMenuHandler::OnUpdateUI)
 
     EVT_MENU(idMenuDebug, DebuggerMenuHandler::OnStart)
     EVT_MENU(idMenuBreak, DebuggerMenuHandler::OnBreak)
@@ -110,13 +124,7 @@ BEGIN_EVENT_TABLE(DebuggerMenuHandler, wxEvtHandler)
     EVT_MENU(idMenuRemoveAllBreakpoints, DebuggerMenuHandler::OnRemoveAllBreakpoints)
     EVT_MENU(idMenuAddDataBreakpoint, DebuggerMenuHandler::OnAddDataBreakpoint)
     EVT_MENU(idMenuSendCommand, DebuggerMenuHandler::OnSendCommand)
-    EVT_MENU(idMenuBacktrace, DebuggerMenuHandler::OnBacktrace)
-    EVT_MENU(idMenuThreads, DebuggerMenuHandler::OnThreads)
-    EVT_MENU(idMenuMemory, DebuggerMenuHandler::OnExamineMemory)
-    EVT_MENU(idMenuDisassembly, DebuggerMenuHandler::OnDisassembly)
-    EVT_MENU(idMenuRegisters, DebuggerMenuHandler::OnCPURegisters)
-    EVT_MENU(idMenuWatches, DebuggerMenuHandler::OnWatches)
-    EVT_MENU(idMenuBreakpoints, DebuggerMenuHandler::OnBreakpoints)
+
     EVT_MENU(idMenuDebuggerAddWatch, DebuggerMenuHandler::OnAddWatch)
     EVT_MENU(idMenuAttachToProcess, DebuggerMenuHandler::OnAttachToProcess)
     EVT_MENU(idMenuDetach, DebuggerMenuHandler::OnDetachFromProcess)
@@ -130,34 +138,181 @@ DebuggerMenuHandler::DebuggerMenuHandler() :
 {
 }
 
+namespace
+{
+template<typename DlgType>
+struct CommonItem : cbDebuggerWindowMenuItem
+{
+    typedef DlgType* (DebuggerManager::*GetWindowFunc)();
+    CommonItem(cbDebuggerFeature::Flags enableFeature, cbDebuggerPlugin::DebugWindows requestUpdate, GetWindowFunc func) :
+        m_enableFeature(enableFeature),
+        m_requestUpdate(requestUpdate),
+        m_getWindowFunc(func)
+    {}
+
+    void OnClick(bool enable)
+    {
+        DebuggerManager *manager = Manager::Get()->GetDebuggerManager();
+        CodeBlocksDockEvent evt(enable ? cbEVT_SHOW_DOCK_WINDOW : cbEVT_HIDE_DOCK_WINDOW);
+        evt.pWindow = (manager->*(m_getWindowFunc))()->GetWindow();
+        Manager::Get()->ProcessEvent(evt);
+
+        if (enable && manager->GetActiveDebugger())
+            manager->GetActiveDebugger()->RequestUpdate(m_requestUpdate);
+    }
+    virtual bool IsEnabled()
+    {
+        return Support(Manager::Get()->GetDebuggerManager()->GetActiveDebugger(), m_enableFeature);
+    }
+    virtual bool IsChecked()
+    {
+        DebuggerManager *manager = Manager::Get()->GetDebuggerManager();
+        return IsWindowReallyShown((manager->*(m_getWindowFunc))()->GetWindow());
+    }
+private:
+    cbDebuggerFeature::Flags m_enableFeature;
+    cbDebuggerPlugin::DebugWindows m_requestUpdate;
+    GetWindowFunc m_getWindowFunc;
+};
+
+template<typename DlgType>
+CommonItem<DlgType>* MakeItem(cbDebuggerFeature::Flags enableFeature,
+                              cbDebuggerPlugin::DebugWindows requestUpdate,
+                              DlgType* (DebuggerManager::*func)())
+{
+    return new CommonItem<DlgType>(enableFeature, requestUpdate, func);
+}
+
+}
+
+void DebuggerMenuHandler::RegisterDefaultWindowItems()
+{
+    struct Breakpoints : cbDebuggerWindowMenuItem
+    {
+        virtual void OnClick(bool enable)
+        {
+            CodeBlocksDockEvent evt(enable ? cbEVT_SHOW_DOCK_WINDOW : cbEVT_HIDE_DOCK_WINDOW);
+            evt.pWindow = Manager::Get()->GetDebuggerManager()->GetBreakpointDialog()->GetWindow();
+            Manager::Get()->ProcessEvent(evt);
+        }
+        virtual bool IsEnabled()
+        {
+            return true;
+        }
+        virtual bool IsChecked()
+        {
+            return IsWindowReallyShown(Manager::Get()->GetDebuggerManager()->GetBreakpointDialog()->GetWindow());
+        }
+    };
+    struct Watches : CommonItem<cbWatchesDlg>
+    {
+        Watches() :
+            CommonItem(cbDebuggerFeature::Watches, cbDebuggerPlugin::Watches, &DebuggerManager::GetWatchesDialog)
+        {
+        }
+        virtual bool IsEnabled()
+        {
+            return true;
+        }
+    };
+
+    RegisterWindowMenu(_("Breakpoints"), _("Edit breakpoints"), new Breakpoints);
+    RegisterWindowMenu(_("Watches"), _("Watch variables"), new Watches);
+    RegisterWindowMenu(_("Call stack"), _("Displays the current call stack"),
+                       MakeItem(cbDebuggerFeature::Callstack, cbDebuggerPlugin::Backtrace,
+                                &DebuggerManager::GetBacktraceDialog));
+    RegisterWindowMenu(_("CPU Registers"), _("Display the CPU registers"),
+                       MakeItem(cbDebuggerFeature::CPURegisters, cbDebuggerPlugin::CPURegisters,
+                                &DebuggerManager::GetCPURegistersDialog));
+    RegisterWindowMenu(_("Disassembly"), _("Disassembles the current stack frame"),
+                       MakeItem(cbDebuggerFeature::Disassembly, cbDebuggerPlugin::Disassembly,
+                                &DebuggerManager::GetDisassemblyDialog));
+    RegisterWindowMenu(_("Memory dump"), _("Displays the contents of a memory location"),
+                       MakeItem(cbDebuggerFeature::ExamineMemory, cbDebuggerPlugin::ExamineMemory,
+                                &DebuggerManager::GetExamineMemoryDialog));
+    RegisterWindowMenu(_("Running threads"),
+                       _("Displays the currently running threads and allows switching between them"),
+                       MakeItem(cbDebuggerFeature::Threads, cbDebuggerPlugin::Threads,
+                                &DebuggerManager::GetThreadsDialog));
+}
+
+bool DebuggerMenuHandler::RegisterWindowMenu(const wxString &name, const wxString &help, cbDebuggerWindowMenuItem *item)
+{
+    for (WindowMenuItemsMap::iterator it = m_windowMenuItems.begin(); it != m_windowMenuItems.end(); ++it)
+    {
+        if (it->second.name == name)
+        {
+            wxString msg = wxString::Format(_("Duplicate debugger window name '%s'. Igrnoring it."), name.wx_str());
+            Manager::Get()->GetLogManager()->DebugLog(msg, Logger::error);
+            delete item;
+            return false;
+        }
+    }
+
+    WindowMenuItem i;
+    i.item = cb::shared_ptr<cbDebuggerWindowMenuItem>(item);
+    i.name = name;
+    i.help = help;
+    long id = wxNewId();
+
+    m_windowMenuItems[id] = i;
+
+    Connect(id, wxEVT_UPDATE_UI, wxObjectEventFunction(&DebuggerMenuHandler::OnWindowMenuItemUpdateUI));
+    Connect(id, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(DebuggerMenuHandler::OnWindowMenuItemClicked));
+    return true;
+}
+
+void DebuggerMenuHandler::UnregisterWindowMenu(const wxString &name)
+{
+    for (WindowMenuItemsMap::iterator it = m_windowMenuItems.begin(); it != m_windowMenuItems.end(); ++it)
+    {
+        if (it->second.name == name)
+        {
+            Disconnect(it->first, wxEVT_UPDATE_UI);
+            Disconnect(it->first, wxEVT_COMMAND_MENU_SELECTED);
+
+            m_windowMenuItems.erase(it);
+            return;
+        }
+    }
+}
+
+void DebuggerMenuHandler::OnWindowMenuItemUpdateUI(wxUpdateUIEvent& event)
+{
+    WindowMenuItemsMap::iterator it = m_windowMenuItems.find(event.GetId());
+    if (it != m_windowMenuItems.end())
+    {
+        event.Check(it->second.item->IsChecked());
+        event.Enable(it->second.item->IsEnabled());
+    }
+}
+
+void DebuggerMenuHandler::OnWindowMenuItemClicked(wxCommandEvent &event)
+{
+    WindowMenuItemsMap::iterator it = m_windowMenuItems.find(event.GetId());
+    if (it != m_windowMenuItems.end())
+        it->second.item->OnClick(event.IsChecked());
+}
+
+void DebuggerMenuHandler::AppendWindowMenuItems(wxMenu &menu)
+{
+    std::map<wxString, long> sortedNames;
+
+    for (WindowMenuItemsMap::iterator it = m_windowMenuItems.begin(); it != m_windowMenuItems.end(); ++it)
+        sortedNames[it->second.name] = it->first;
+
+    for (std::map<wxString, long>::iterator it = sortedNames.begin(); it != sortedNames.end(); ++it)
+        menu.AppendCheckItem(it->second, it->first, m_windowMenuItems[it->second].help);
+}
+
 void DebuggerMenuHandler::SetActiveDebugger(cbDebuggerPlugin *active)
 {
     m_activeDebugger = active;
 }
 
-wxMenu* GetActiveDebuggersMenu(bool recreate = false)
-{
-    wxMenuBar* mbar = Manager::Get()->GetAppFrame()->GetMenuBar();
-    wxMenuItem *item = mbar->FindItem(idMenuDebugActive);
-    if (!item)
-        return nullptr;
-    if (recreate)
-    {
-        wxMenu *debugMenu = item->GetMenu();
-#if wxCHECK_VERSION(2, 9, 0)
-        wxString label = item->GetItemLabelText();
-#else
-        wxString label = item->GetLabel();
-#endif
-        debugMenu->Destroy(item);
-        item = debugMenu->Insert(0, idMenuDebugActive, label, new wxMenu);
-    }
-    return item ? item->GetSubMenu() : nullptr;
-}
-
 void DebuggerMenuHandler::MarkActiveTargetAsValid(bool valid)
 {
-    wxMenu *menu = GetActiveDebuggersMenu();
+    wxMenu *menu = GetMenuById(idMenuDebugActive);
     if (!menu)
         return;
     wxMenuItem *item = menu->FindItem(idMenuDebugActiveTargetsDefault);
@@ -169,10 +324,20 @@ void DebuggerMenuHandler::MarkActiveTargetAsValid(bool valid)
 #endif
 }
 
-void DebuggerMenuHandler::RebuildActiveDebuggersMenu()
+void DebuggerMenuHandler::RebuildMenus()
 {
+    wxMenu *menuWindows = GetMenuById(idMenuDebuggingWindows, true);
+    if (menuWindows)
+        AppendWindowMenuItems(*menuWindows);
+    if (m_activeDebugger)
+    {
+        wxMenu *menuTools = GetMenuById(idMenuTools, true);
+        if (menuTools)
+            m_activeDebugger->SetupToolsMenu(*menuTools);
+    }
+
     DebuggerManager *dbgManager = Manager::Get()->GetDebuggerManager();
-    wxMenu *menu = GetActiveDebuggersMenu(true);
+    wxMenu *menu = GetMenuById(idMenuDebugActive, true);
     if (!menu)
         return;
 
@@ -253,29 +418,6 @@ void DebuggerMenuHandler::BuildContextMenu(wxMenu &menu, const wxString& word_at
         menu.InsertSeparator(item++);
 }
 
-bool Support(cbDebuggerPlugin *plugin, cbDebuggerFeature::Flags flag)
-{
-    return plugin && plugin->SupportsFeature(flag);
-}
-
-template <typename Menu>
-void SetupDebugWindows(Menu &menu, DebuggerManager *dbg_manager)
-{
-    menu.Check(idMenuBreakpoints,  IsWindowReallyShown(dbg_manager->GetBreakpointDialog()->GetWindow()));
-    menu.Check(idMenuBacktrace,    IsWindowReallyShown(dbg_manager->GetBacktraceDialog()->GetWindow()));
-    menu.Check(idMenuRegisters,    IsWindowReallyShown(dbg_manager->GetCPURegistersDialog()->GetWindow()));
-    menu.Check(idMenuDisassembly,  IsWindowReallyShown(dbg_manager->GetDisassemblyDialog()->GetWindow()));
-    menu.Check(idMenuMemory,       IsWindowReallyShown(dbg_manager->GetExamineMemoryDialog()->GetWindow()));
-    menu.Check(idMenuThreads,      IsWindowReallyShown(dbg_manager->GetThreadsDialog()->GetWindow()));
-    menu.Check(idMenuWatches,      IsWindowReallyShown(dbg_manager->GetWatchesDialog()->GetWindow()));
-
-    cbDebuggerPlugin *plugin = dbg_manager->GetActiveDebugger();
-    menu.Enable(idMenuBacktrace,    Support(plugin, cbDebuggerFeature::Callstack));
-    menu.Enable(idMenuRegisters,    Support(plugin, cbDebuggerFeature::CPURegisters));
-    menu.Enable(idMenuDisassembly,  Support(plugin, cbDebuggerFeature::Disassembly));
-    menu.Enable(idMenuMemory,       Support(plugin, cbDebuggerFeature::ExamineMemory));
-    menu.Enable(idMenuThreads,      Support(plugin, cbDebuggerFeature::Threads));
-}
 
 void DebuggerMenuHandler::OnUpdateUI(wxUpdateUIEvent& event)
 {
@@ -292,8 +434,6 @@ void DebuggerMenuHandler::OnUpdateUI(wxUpdateUIEvent& event)
 
     cbEditor* ed = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
     wxMenuBar* mbar = Manager::Get()->GetAppFrame()->GetMenuBar();
-
-    DebuggerManager *dbg_manager = Manager::Get()->GetDebuggerManager();
     cbPlugin *runningPlugin = Manager::Get()->GetProjectManager()->GetIsRunning();
 
     bool otherPlugin = false;
@@ -327,14 +467,14 @@ void DebuggerMenuHandler::OnUpdateUI(wxUpdateUIEvent& event)
         mbar->Enable(idMenuAttachToProcess, !isRunning && !otherPlugin && m_activeDebugger);
         mbar->Enable(idMenuDetach, isRunning && stopped && isAttached);
 
-        wxMenu *activeMenu = GetActiveDebuggersMenu();
+        wxMenu *activeMenu = GetMenuById(idMenuDebugActive);
         if (activeMenu)
         {
             for (size_t ii = 0; ii < activeMenu->GetMenuItemCount(); ++ii)
                 activeMenu->Enable(activeMenu->FindItemByPosition(ii)->GetId(), !isRunning);
         }
 
-        SetupDebugWindows(*mbar, dbg_manager);
+        mbar->Enable(idMenuTools, m_activeDebugger && m_activeDebugger->ToolMenuEnabled());
     }
 
     // allow other UpdateUI handlers to process this event
@@ -693,7 +833,9 @@ BEGIN_EVENT_TABLE(DebuggerToolbarHandler, wxEvtHandler)
     EVT_MENU(idToolbarStop, DebuggerToolbarHandler::OnStop)
 END_EVENT_TABLE()
 
-DebuggerToolbarHandler::DebuggerToolbarHandler() : m_Toolbar(NULL)
+DebuggerToolbarHandler::DebuggerToolbarHandler(DebuggerMenuHandler *menuHandler) :
+    m_Toolbar(NULL),
+    m_menuHandler(menuHandler)
 {
 }
 
@@ -755,25 +897,17 @@ void DebuggerToolbarHandler::OnToolInfo(wxCommandEvent& event)
 {
     cbDebuggerPlugin *plugin = Manager::Get()->GetDebuggerManager()->GetActiveDebugger();
     if (plugin)
-        plugin->ShowToolMenu();
+    {
+        wxMenu menu;
+        plugin->SetupToolsMenu(menu);
+        Manager::Get()->GetAppWindow()->PopupMenu(&menu);
+    }
 }
 
 void DebuggerToolbarHandler::OnDebugWindows(wxCommandEvent& event)
 {
     wxMenu m;
-
-    m.AppendCheckItem(idMenuBreakpoints,    _("Breakpoints"));
-    m.AppendCheckItem(idMenuBacktrace,      _("Call stack"));
-    m.AppendCheckItem(idMenuRegisters,      _("CPU Registers"));
-    m.AppendCheckItem(idMenuDisassembly,    _("Disassembly"));
-    m.AppendCheckItem(idMenuMemory,         _("Memory dump"));
-    m.AppendCheckItem(idMenuThreads,        _("Running threads"));
-    m.AppendCheckItem(idMenuWatches,        _("Watches"));
-
-
-    DebuggerManager *dbg_manager = Manager::Get()->GetDebuggerManager();
-    SetupDebugWindows(m, dbg_manager);
-
+    m_menuHandler->AppendWindowMenuItems(m);
     Manager::Get()->GetAppWindow()->PopupMenu(&m);
 }
 

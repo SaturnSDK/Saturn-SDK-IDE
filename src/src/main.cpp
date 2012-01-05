@@ -767,7 +767,7 @@ void MainFrame::SetupGUILogging()
 void MainFrame::SetupDebuggerUI()
 {
     m_debuggerMenuHandler = new DebuggerMenuHandler;
-    m_debuggerToolbarHandler = new DebuggerToolbarHandler;
+    m_debuggerToolbarHandler = new DebuggerToolbarHandler(m_debuggerMenuHandler);
     m_debuggerMenuHandler->SetEvtHandlerEnabled(false);
     m_debuggerToolbarHandler->SetEvtHandlerEnabled(false);
     wxWindow* window = Manager::Get()->GetAppWindow();
@@ -780,6 +780,7 @@ void MainFrame::SetupDebuggerUI()
     m_debuggerToolbarHandler->SetEvtHandlerEnabled(true);
 
     Manager::Get()->GetDebuggerManager()->SetInterfaceFactory(new DebugInterfaceFactory);
+    m_debuggerMenuHandler->RegisterDefaultWindowItems();
 }
 
 DECLARE_INSTANCE_TYPE(MainFrame);

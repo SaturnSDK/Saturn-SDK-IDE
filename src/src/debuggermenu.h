@@ -16,10 +16,18 @@ class DebuggerMenuHandler : public wxEvtHandler, public cbDebuggerMenuHandler
 {
     public:
         DebuggerMenuHandler();
-        void SetActiveDebugger(cbDebuggerPlugin *active);
-        void MarkActiveTargetAsValid(bool valid);
-        void RebuildActiveDebuggersMenu();
-        void BuildContextMenu(wxMenu &menu, const wxString& word_at_caret, bool is_running);
+
+        void RegisterDefaultWindowItems();
+        void AppendWindowMenuItems(wxMenu &menu);
+
+    public: // derived from cbDebuggerMenuHandler
+        virtual void SetActiveDebugger(cbDebuggerPlugin *active);
+        virtual void MarkActiveTargetAsValid(bool valid);
+        virtual void RebuildMenus();
+        virtual void BuildContextMenu(wxMenu &menu, const wxString& word_at_caret, bool is_running);
+
+        virtual bool RegisterWindowMenu(const wxString &name, const wxString &help, cbDebuggerWindowMenuItem *item);
+        virtual void UnregisterWindowMenu(const wxString &name);
     private:
         void OnUpdateUI(wxUpdateUIEvent& event);
         void OnStart(wxCommandEvent& event);
@@ -56,8 +64,19 @@ class DebuggerMenuHandler : public wxEvtHandler, public cbDebuggerMenuHandler
 
         void LogActiveConfig();
 
+        void OnWindowMenuItemUpdateUI(wxUpdateUIEvent &event);
+        void OnWindowMenuItemClicked(wxCommandEvent &event);
+
         DECLARE_EVENT_TABLE();
     private:
+        struct WindowMenuItem
+        {
+            cb::shared_ptr<cbDebuggerWindowMenuItem> item;
+            wxString name, help;
+        };
+        typedef std::map<long, WindowMenuItem> WindowMenuItemsMap;
+    private:
+        WindowMenuItemsMap m_windowMenuItems;
         cbDebuggerPlugin* m_activeDebugger;
         wxString m_lastCommand;
         bool m_disableContinue;
@@ -67,7 +86,7 @@ class DebuggerToolbarHandler : public wxEvtHandler
 {
         friend class DebuggerManager;
     public:
-        DebuggerToolbarHandler();
+        DebuggerToolbarHandler(DebuggerMenuHandler *menuHandler);
         wxToolBar* GetToolbar(bool create = true);
     private:
         void OnUpdateUI(wxUpdateUIEvent& event);
@@ -76,6 +95,7 @@ class DebuggerToolbarHandler : public wxEvtHandler
         void OnStop(wxCommandEvent& event);
 
         wxToolBar *m_Toolbar;
+        DebuggerMenuHandler *m_menuHandler;
 
         DECLARE_EVENT_TABLE();
 };

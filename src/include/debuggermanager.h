@@ -286,6 +286,7 @@ class DLLIMPORT DebuggerManager : public Mgr<DebuggerManager>
         void SetInterfaceFactory(cbDebugInterfaceFactory *factory);
         cbDebugInterfaceFactory* GetInterfaceFactory();
         void SetMenuHandler(cbDebuggerMenuHandler *handler);
+        cbDebuggerMenuHandler* GetMenuHandler();
 
         cbBacktraceDlg* GetBacktraceDialog();
         cbBreakpointsDlg* GetBreakpointDialog();
