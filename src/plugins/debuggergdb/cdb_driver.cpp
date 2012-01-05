@@ -100,7 +100,7 @@ void CDB_driver::SetTarget(ProjectBuildTarget* target)
     m_Target = target;
 }
 
-void CDB_driver::Prepare(bool /*isConsole*/)
+void CDB_driver::Prepare(bool /*isConsole*/, int /*printElements*/)
 {
 	// The very first command won't get the right output back due to the spam on CDB launch.
 	// Throw in a dummy command to flush the output buffer.

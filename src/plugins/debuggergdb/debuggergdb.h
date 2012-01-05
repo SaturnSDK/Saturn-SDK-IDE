@@ -167,6 +167,9 @@ class DebuggerGDB : public cbDebuggerPlugin
         void OnInfoSignals(wxCommandEvent& event);
 
         void OnMenuWatchDereference(wxCommandEvent& event);
+
+        void OnUpdateTools(wxUpdateUIEvent &event);
+        void OnPrintElements(wxCommandEvent &event);
     private:
         PipedProcess* m_pProcess;
         bool m_LastExitCode;
@@ -204,6 +207,8 @@ class DebuggerGDB : public cbDebuggerPlugin
         wxObject *m_watchToDereferenceProperty;
 
         friend struct TestIfBelongToProject;
+
+        int m_printElements;
 
         DECLARE_EVENT_TABLE()
 };

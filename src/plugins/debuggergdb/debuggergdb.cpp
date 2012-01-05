@@ -115,17 +115,22 @@ const wxString g_EscapeChar = wxChar(26);
 
 namespace
 {
-int idMenuInfoFrame = wxNewId();
-int idMenuInfoDLL = wxNewId();
-int idMenuInfoFiles = wxNewId();
-int idMenuInfoFPU = wxNewId();
-int idMenuInfoSignals = wxNewId();
+long idMenuInfoFrame = wxNewId();
+long idMenuInfoDLL = wxNewId();
+long idMenuInfoFiles = wxNewId();
+long idMenuInfoFPU = wxNewId();
+long idMenuInfoSignals = wxNewId();
 
-int idGDBProcess = wxNewId();
-int idTimerPollDebugger = wxNewId();
-int idMenuSettings = wxNewId();
+long idMenuInfoPrintElementsUnlimited = wxNewId();
+long idMenuInfoPrintElements20 = wxNewId();
+long idMenuInfoPrintElements50 = wxNewId();
+long idMenuInfoPrintElements100 = wxNewId();
 
-int idMenuWatchDereference = wxNewId();
+long idGDBProcess = wxNewId();
+long idTimerPollDebugger = wxNewId();
+long idMenuSettings = wxNewId();
+
+long idMenuWatchDereference = wxNewId();
 
 // this auto-registers the plugin
 PluginRegistrant<DebuggerGDB> reg(_T("Debugger"));
@@ -147,9 +152,18 @@ BEGIN_EVENT_TABLE(DebuggerGDB, cbDebuggerPlugin)
     EVT_IDLE(DebuggerGDB::OnIdle)
     EVT_TIMER(idTimerPollDebugger, DebuggerGDB::OnTimer)
 
-//    EVT_COMMAND(-1, cbCustom_WATCHES_CHANGED, DebuggerGDB::OnWatchesChanged)
     EVT_COMMAND(-1, DEBUGGER_CURSOR_CHANGED, DebuggerGDB::OnCursorChanged)
     EVT_COMMAND(-1, DEBUGGER_SHOW_FILE_LINE, DebuggerGDB::OnShowFile)
+
+    EVT_UPDATE_UI(idMenuInfoPrintElementsUnlimited, DebuggerGDB::OnUpdateTools)
+    EVT_UPDATE_UI(idMenuInfoPrintElements20, DebuggerGDB::OnUpdateTools)
+    EVT_UPDATE_UI(idMenuInfoPrintElements50, DebuggerGDB::OnUpdateTools)
+    EVT_UPDATE_UI(idMenuInfoPrintElements100, DebuggerGDB::OnUpdateTools)
+
+    EVT_MENU(idMenuInfoPrintElementsUnlimited, DebuggerGDB::OnPrintElements)
+    EVT_MENU(idMenuInfoPrintElements20, DebuggerGDB::OnPrintElements)
+    EVT_MENU(idMenuInfoPrintElements50, DebuggerGDB::OnPrintElements)
+    EVT_MENU(idMenuInfoPrintElements100, DebuggerGDB::OnPrintElements)
 END_EVENT_TABLE()
 
 DebuggerGDB::DebuggerGDB() :
@@ -162,7 +176,8 @@ DebuggerGDB::DebuggerGDB() :
     m_NoDebugInfo(false),
     m_StoppedOnSignal(false),
     m_pProject(0),
-    m_TemporaryBreak(false)
+    m_TemporaryBreak(false),
+    m_printElements(0)
 {
     if(!Manager::LoadResource(_T("debugger.zip")))
     {
@@ -827,7 +842,8 @@ int DebuggerGDB::DoDebug(bool breakOnEntry)
     if (!m_State.HasDriver())
         return -1;
 
-    m_State.GetDriver()->Prepare(target && target->GetTargetType() == ttConsoleOnly);
+    bool isConsole = (target && target->GetTargetType() == ttConsoleOnly);
+    m_State.GetDriver()->Prepare(isConsole, m_printElements);
     m_State.ApplyBreakpoints();
 
    #ifndef __WXMSW__
@@ -1645,11 +1661,50 @@ void DebuggerGDB::OnAddSymbolFile(wxCommandEvent& WXUNUSED(event))
 
 void DebuggerGDB::SetupToolsMenu(wxMenu &menu)
 {
+    if (!GetActiveConfigEx().IsGDB())
+        return;
     menu.Append(idMenuInfoFrame,   _("Current stack frame"), _("Displays info about the current (selected) stack frame"));
     menu.Append(idMenuInfoDLL,     _("Loaded libraries"), _("List dynamically loaded libraries (DLL/SO)"));
     menu.Append(idMenuInfoFiles,   _("Targets and files"), _("Displays info on the targets and files being debugged"));
     menu.Append(idMenuInfoFPU,     _("FPU status"), _("Displays the status of the floating point unit"));
     menu.Append(idMenuInfoSignals, _("Signal handling"), _("Displays how the debugger handles various signals"));
+    menu.AppendSeparator();
+
+    wxMenu *menuPrint = new wxMenu;
+    menuPrint->AppendRadioItem(idMenuInfoPrintElementsUnlimited, _("Unlimited"),
+                               _("The full arrays are printed, using this should be most reliable"));
+    menuPrint->AppendRadioItem(idMenuInfoPrintElements20, _("20"));
+    menuPrint->AppendRadioItem(idMenuInfoPrintElements50, _("50"));
+    menuPrint->AppendRadioItem(idMenuInfoPrintElements100, _("100"));
+    menu.AppendSubMenu(menuPrint, _("Print Elements"), _("Set limit on string chars or array elements to print"));
+}
+
+void DebuggerGDB::OnUpdateTools(wxUpdateUIEvent &event)
+{
+    bool checked = (event.GetId() == idMenuInfoPrintElementsUnlimited && m_printElements==0) ||
+                   (event.GetId() == idMenuInfoPrintElements20 && m_printElements==20) ||
+                   (event.GetId() == idMenuInfoPrintElements50 && m_printElements==50) ||
+                   (event.GetId() == idMenuInfoPrintElements100 && m_printElements==100);
+    event.Check(checked);
+    event.Enable(IsRunning() && IsStopped());
+}
+
+void DebuggerGDB::OnPrintElements(wxCommandEvent &event)
+{
+    if (event.GetId() == idMenuInfoPrintElementsUnlimited)
+        m_printElements = 0;
+    else if (event.GetId() == idMenuInfoPrintElements20)
+        m_printElements = 20;
+    else if (event.GetId() == idMenuInfoPrintElements50)
+        m_printElements = 50;
+    else if (event.GetId() == idMenuInfoPrintElements100)
+        m_printElements = 100;
+    else
+        return;
+
+    wxString cmd = wxString::Format(wxT("set print elements %d"), m_printElements);
+    m_State.GetDriver()->QueueCommand(new DebuggerCmd(m_State.GetDriver(), cmd));
+    RequestUpdate(Watches);
 }
 
 void DebuggerGDB::OnInfoFrame(wxCommandEvent& WXUNUSED(event))

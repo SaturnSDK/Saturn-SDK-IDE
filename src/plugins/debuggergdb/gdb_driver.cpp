@@ -212,7 +212,7 @@ void GDB_driver::SetTarget(ProjectBuildTarget* target)
     m_pTarget = target;
 }
 
-void GDB_driver::Prepare(bool isConsole)
+void GDB_driver::Prepare(bool isConsole, int printElements)
 {
     // default initialization
 
@@ -238,7 +238,7 @@ void GDB_driver::Prepare(bool isConsole)
     // unwind stack on signal
     QueueCommand(new DebuggerCmd(this, _T("set unwindonsignal on")));
     // disalbe result string truncations
-    QueueCommand(new DebuggerCmd(this, wxT("set print elements -1")));
+    QueueCommand(new DebuggerCmd(this, wxString::Format(wxT("set print elements %d"), printElements)));
 
     // want debug events
     if(platform::windows)

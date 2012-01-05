@@ -77,10 +77,9 @@ class DebuggerDriver
         virtual void SetTarget(ProjectBuildTarget* target) = 0;
 
         /** Prepares the debugging process by setting up search dirs etc.
-            @param target The build target to debug.
             @param isConsole If true, the debuggee is a console executable.
         */
-        virtual void Prepare(bool isConsole) = 0;
+        virtual void Prepare(bool isConsole, int printElements) = 0;
 
         /** Begin the debugging process by launching a program. */
         virtual void Start(bool breakOnEntry) = 0;
