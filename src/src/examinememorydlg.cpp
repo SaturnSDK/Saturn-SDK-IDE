@@ -32,7 +32,8 @@ ExamineMemoryDlg::ExamineMemoryDlg(wxWindow* parent) :
     m_LastRowStartingAddress(0)
 {
     //ctor
-    wxXmlResource::Get()->LoadPanel(this, parent, _T("MemoryDumpPanel"));
+    if (!wxXmlResource::Get()->LoadPanel(this, parent, _T("MemoryDumpPanel")))
+        return;
     m_pText = XRCCTRL(*this, "txtDump", wxTextCtrl);
 
     wxFont font(8, wxMODERN, wxNORMAL, wxNORMAL);

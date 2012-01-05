@@ -48,7 +48,8 @@ DisassemblyDlg::DisassemblyDlg(wxWindow* parent) :
     m_LastActiveAddr(0),
     m_ClearFlag(false)
 {
-    wxXmlResource::Get()->LoadPanel(this, parent, _T("dlgDisassembly"));
+    if (!wxXmlResource::Get()->LoadPanel(this, parent, _T("dlgDisassembly")))
+        return;
 
     m_pCode = new wxScintilla(this, wxID_ANY, wxDefaultPosition, wxSize(1,1));
     m_pCode->SetReadOnly(true);
