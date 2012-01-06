@@ -207,7 +207,7 @@ void DebuggerMenuHandler::RegisterDefaultWindowItems()
     struct Watches : CommonItem<cbWatchesDlg>
     {
         Watches() :
-            CommonItem(cbDebuggerFeature::Watches, cbDebuggerPlugin::Watches, &DebuggerManager::GetWatchesDialog)
+            CommonItem<cbWatchesDlg>(cbDebuggerFeature::Watches, cbDebuggerPlugin::Watches, &DebuggerManager::GetWatchesDialog)
         {
         }
         virtual bool IsEnabled()
