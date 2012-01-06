@@ -94,7 +94,8 @@ GDB_driver::GDB_driver(DebuggerGDB* plugin)
     m_GDBVersionMinor(0),
     want_debug_events(true),
     disable_debug_events(false),
-    m_attachedToProcess(false)
+    m_attachedToProcess(false),
+    m_catchThrowIndex(-1)
 {
     //ctor
     m_needsUpdate = false;
@@ -261,8 +262,9 @@ void GDB_driver::Prepare(bool isConsole, int printElements)
 
     if (m_pDBG->GetActiveConfigEx().GetFlag(DebuggerConfiguration::CatchExceptions))
     {
+        m_catchThrowIndex = -1;
         // catch exceptions
-        QueueCommand(new DebuggerCmd(this, _T("catch throw")));
+        QueueCommand(new GdbCmd_SetCatch(this, wxT("throw"), &m_catchThrowIndex));
     }
 
     // define all scripted types
@@ -643,6 +645,17 @@ void GDB_driver::InfoFPU()
 void GDB_driver::InfoSignals()
 {
     QueueCommand(new DebuggerInfoCmd(this, _T("info signals"), _("Signals handling")));
+}
+
+void GDB_driver::EnableCatchingThrow(bool enable)
+{
+    if (enable)
+        QueueCommand(new GdbCmd_SetCatch(this, wxT("throw"), &m_catchThrowIndex));
+    else if (m_catchThrowIndex != -1)
+    {
+        QueueCommand(new DebuggerCmd(this, wxString::Format(wxT("delete %d"), m_catchThrowIndex)));
+        m_catchThrowIndex = -1;
+    }
 }
 
 void GDB_driver::SwitchThread(size_t threadIndex)

@@ -69,6 +69,8 @@ class GDB_driver : public DebuggerDriver
         void InfoFPU();
         void InfoSignals();
 
+        void EnableCatchingThrow(bool enable);
+
         virtual void SwitchThread(size_t threadIndex);
 
         virtual void AddBreakpoint(DebuggerBreakpoint::Pointer bp);
@@ -132,6 +134,8 @@ class GDB_driver : public DebuggerDriver
 
         // merged remote debugging (project-level + target-level)
         RemoteDebugging m_MergedRDInfo;
+
+        int m_catchThrowIndex;
 
 }; // GDB_driver
 

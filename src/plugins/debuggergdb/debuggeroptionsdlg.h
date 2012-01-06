@@ -31,6 +31,7 @@ class DebuggerConfiguration : public cbDebuggerConfiguration
         };
 
         bool GetFlag(Flags flag);
+        void SetFlag(Flags flag, bool value);
         bool IsGDB();
         wxString GetDebuggerExecutable(bool expandMarco = true);
         wxString GetDisassemblyFlavorCommand();

@@ -170,6 +170,9 @@ class DebuggerGDB : public cbDebuggerPlugin
 
         void OnUpdateTools(wxUpdateUIEvent &event);
         void OnPrintElements(wxCommandEvent &event);
+
+        void OnUpdateCatchThrow(wxUpdateUIEvent &event);
+        void OnCatchThrow(wxCommandEvent &event);
     private:
         PipedProcess* m_pProcess;
         bool m_LastExitCode;

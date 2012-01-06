@@ -112,6 +112,8 @@ class DebuggerDriver
         virtual void InfoFPU() = 0;
         virtual void InfoSignals() = 0;
 
+        virtual void EnableCatchingThrow(bool enable) = 0;
+
         /** Add a breakpoint.
             @param bp The breakpoint to add.
             @param editor The editor this breakpoint is set (might be NULL).

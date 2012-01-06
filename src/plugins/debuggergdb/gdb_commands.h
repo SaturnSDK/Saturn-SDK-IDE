@@ -621,6 +621,35 @@ class GdbCmd_RemoveBreakpoint : public DebuggerCmd
         DebuggerBreakpoint::Pointer m_BP;
 };
 
+/**
+  * Command to setup an exception breakpoint (for a throw or a catch).
+  */
+class GdbCmd_SetCatch : public DebuggerCmd
+{
+        wxString m_type;
+        int *m_resultIndex;
+        wxRegEx m_regExp;
+    public:
+        GdbCmd_SetCatch(DebuggerDriver *driver, const wxString &type, int *resultIndex) :
+            DebuggerCmd(driver),
+            m_type(type),
+            m_resultIndex(resultIndex),
+            m_regExp(wxT("^Catchpoint[ \\t]([0-9]+)[ \\t]\\(") + type + wxT("\\)$"), wxRE_ADVANCED)
+        {
+            m_Cmd = wxT("catch ") + type;
+        }
+
+        void ParseOutput(const wxString& output)
+        {
+            if (m_regExp.Matches(output))
+            {
+                long index;
+                m_regExp.GetMatch(output, 1).ToLong(&index);
+                *m_resultIndex = index;
+            }
+        }
+};
+
 
 /**
   * Command that notifies the debugger plugin that the debuggee has been continued

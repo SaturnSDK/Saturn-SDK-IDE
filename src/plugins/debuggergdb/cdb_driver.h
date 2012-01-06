@@ -44,6 +44,8 @@ class CDB_driver : public DebuggerDriver
         void InfoFPU();
         void InfoSignals();
 
+        void EnableCatchingThrow(bool enable);
+
         virtual void SwitchThread(size_t /*threadIndex*/){} // not implemented
 
         virtual void AddBreakpoint(DebuggerBreakpoint::Pointer bp);

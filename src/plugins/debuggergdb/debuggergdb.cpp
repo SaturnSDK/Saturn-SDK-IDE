@@ -126,6 +126,8 @@ long idMenuInfoPrintElements20 = wxNewId();
 long idMenuInfoPrintElements50 = wxNewId();
 long idMenuInfoPrintElements100 = wxNewId();
 
+long idMenuInfoCatchThrow = wxNewId();
+
 long idGDBProcess = wxNewId();
 long idTimerPollDebugger = wxNewId();
 long idMenuSettings = wxNewId();
@@ -164,6 +166,9 @@ BEGIN_EVENT_TABLE(DebuggerGDB, cbDebuggerPlugin)
     EVT_MENU(idMenuInfoPrintElements20, DebuggerGDB::OnPrintElements)
     EVT_MENU(idMenuInfoPrintElements50, DebuggerGDB::OnPrintElements)
     EVT_MENU(idMenuInfoPrintElements100, DebuggerGDB::OnPrintElements)
+
+    EVT_UPDATE_UI(idMenuInfoCatchThrow, DebuggerGDB::OnUpdateCatchThrow)
+    EVT_MENU(idMenuInfoCatchThrow, DebuggerGDB::OnCatchThrow)
 END_EVENT_TABLE()
 
 DebuggerGDB::DebuggerGDB() :
@@ -1677,6 +1682,8 @@ void DebuggerGDB::SetupToolsMenu(wxMenu &menu)
     menuPrint->AppendRadioItem(idMenuInfoPrintElements50, _("50"));
     menuPrint->AppendRadioItem(idMenuInfoPrintElements100, _("100"));
     menu.AppendSubMenu(menuPrint, _("Print Elements"), _("Set limit on string chars or array elements to print"));
+    menu.AppendCheckItem(idMenuInfoCatchThrow, _("Catch throw"),
+                         _("If enabled the debugger will break when an exception is thronw"));
 }
 
 void DebuggerGDB::OnUpdateTools(wxUpdateUIEvent &event)
@@ -1705,6 +1712,20 @@ void DebuggerGDB::OnPrintElements(wxCommandEvent &event)
     wxString cmd = wxString::Format(wxT("set print elements %d"), m_printElements);
     m_State.GetDriver()->QueueCommand(new DebuggerCmd(m_State.GetDriver(), cmd));
     RequestUpdate(Watches);
+}
+
+void DebuggerGDB::OnUpdateCatchThrow(wxUpdateUIEvent &event)
+{
+    DebuggerConfiguration &config = GetActiveConfigEx();
+    event.Enable(config.IsGDB() && IsStopped());
+    event.Check(config.GetFlag(DebuggerConfiguration::CatchExceptions));
+}
+
+void DebuggerGDB::OnCatchThrow(wxCommandEvent &event)
+{
+    bool flag = event.IsChecked();
+    GetActiveConfigEx().SetFlag(DebuggerConfiguration::CatchExceptions, flag);
+    m_State.GetDriver()->EnableCatchingThrow(flag);
 }
 
 void DebuggerGDB::OnInfoFrame(wxCommandEvent& WXUNUSED(event))

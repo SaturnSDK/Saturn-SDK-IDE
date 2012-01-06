@@ -148,6 +148,35 @@ bool DebuggerConfiguration::GetFlag(Flags flag)
             return false;
     }
 }
+void DebuggerConfiguration::SetFlag(Flags flag, bool value)
+{
+    switch (flag)
+    {
+        case WatchFuncArgs:
+            m_config.Write(wxT("watch_args"), value);
+            break;
+        case WatchLocals:
+            m_config.Write(wxT("watch_locals"), value);
+            break;
+        case WatchScriptPrinters:
+            m_config.Write(wxT("watch_script_printers"), value);
+            break;
+        case CatchExceptions:
+            m_config.Write(wxT("catch_exceptions"), value);
+            break;
+        case EvalExpression:
+            m_config.Write(wxT("eval_tooltip"), value);
+            break;
+        case AddOtherProjectDirs:
+            m_config.Write(wxT("add_other_search_dirs"), value);
+            break;
+        case DoNotRun:
+            m_config.Write(wxT("do_not_run"), value);
+            break;
+        default:
+            ;
+    }
+}
 
 bool DebuggerConfiguration::IsGDB()
 {

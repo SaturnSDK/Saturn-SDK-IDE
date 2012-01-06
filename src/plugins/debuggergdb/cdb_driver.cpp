@@ -242,6 +242,11 @@ void CDB_driver::InfoSignals()
     NOT_IMPLEMENTED();
 }
 
+void CDB_driver::EnableCatchingThrow(bool enable)
+{
+    NOT_IMPLEMENTED();
+}
+
 void CDB_driver::AddBreakpoint(DebuggerBreakpoint::Pointer bp)
 {
     QueueCommand(new CdbCmd_AddBreakpoint(this, bp));
