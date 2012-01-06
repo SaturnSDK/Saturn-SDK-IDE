@@ -872,7 +872,11 @@ void SetMinSize(wxPropertyGrid *grid)
     int minWidth = (wxSystemSettings::GetMetric(wxSYS_SCREEN_X, grid->GetParent())*3)/2;
     int minHeight = (wxSystemSettings::GetMetric(wxSYS_SCREEN_Y, grid->GetParent())*3)/2;
 
+#if wxCHECK_VERSION(2, 9, 0)
     wxSize size(std::min(minWidth, rect.width), std::min(minHeight, height));
+#else
+    wxSize size(std::min(minWidth, rect.width + grid->GetMarginWidth()), std::min(minHeight, height));
+#endif
     grid->SetMinSize(size);
 
     int proportions[3];
