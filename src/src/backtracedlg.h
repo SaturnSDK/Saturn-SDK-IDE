@@ -36,6 +36,8 @@ class BacktraceDlg : public wxPanel, public cbBacktraceDlg
         void OnSettingJumpDefault(wxCommandEvent& event);
         void OnSettingSwitchDefault(wxCommandEvent& event);
 
+        void OnUpdateUI(wxUpdateUIEvent &event);
+
     private:
         DECLARE_EVENT_TABLE();
     private:

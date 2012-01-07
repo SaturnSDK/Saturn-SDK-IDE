@@ -48,6 +48,8 @@ BEGIN_EVENT_TABLE(BacktraceDlg, wxPanel)
 
     EVT_MENU(idSettingJumpDefault, BacktraceDlg::OnSettingJumpDefault)
     EVT_MENU(idSettingSwitchDefault, BacktraceDlg::OnSettingSwitchDefault)
+
+    EVT_UPDATE_UI(idSwitch, BacktraceDlg::OnUpdateUI)
 END_EVENT_TABLE()
 
 BacktraceDlg::BacktraceDlg(wxWindow* parent) :
@@ -165,6 +167,12 @@ void BacktraceDlg::OnJump(wxCommandEvent& event)
 
 void BacktraceDlg::OnSwitchFrame(wxCommandEvent& event)
 {
+    cbDebuggerPlugin *plugin = Manager::Get()->GetDebuggerManager()->GetActiveDebugger();
+    if (!plugin)
+        return;
+    else if (!plugin->IsRunning() || !plugin->IsStopped())
+        return;
+
     if (m_list->GetSelectedItemCount() == 0)
         return;
 
@@ -268,4 +276,11 @@ void BacktraceDlg::OnSettingSwitchDefault(wxCommandEvent& event)
 {
     bool checked = event.IsChecked();
     cbDebuggerCommonConfig::SetFlag(cbDebuggerCommonConfig::JumpOnDoubleClick, checked);
+}
+
+void BacktraceDlg::OnUpdateUI(wxUpdateUIEvent &event)
+{
+    cbDebuggerPlugin *plugin = Manager::Get()->GetDebuggerManager()->GetActiveDebugger();
+
+    event.Enable(plugin && plugin->IsRunning() && plugin->IsStopped());
 }
