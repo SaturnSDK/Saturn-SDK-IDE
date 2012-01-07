@@ -63,6 +63,15 @@ DebuggerSettingsPanel::DebuggerSettingsPanel(wxWindow* parent, DebuggerSettingsD
 	Connect(ID_BUTTON_DELETE,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&DebuggerSettingsPanel::OnButtonDelete);
 	Connect(ID_BUTTON_RESET,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&DebuggerSettingsPanel::OnButtonReset);
 	//*)
+
+	// If this debugger plugin is used to debug some program at the moment
+	// - disable the buttons for managing its configurations.
+	if (plugin && plugin->IsRunning())
+    {
+        butCreate->Disable();
+        butDelete->Disable();
+        butReset->Disable();
+    }
 }
 
 DebuggerSettingsPanel::~DebuggerSettingsPanel()

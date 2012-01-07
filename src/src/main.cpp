@@ -4444,14 +4444,6 @@ void MainFrame::OnSettingsCompiler(wxCommandEvent& /*event*/)
 
 void MainFrame::OnSettingsDebugger(wxCommandEvent& /*event*/)
 {
-    cbDebuggerPlugin *plugin = Manager::Get()->GetDebuggerManager()->GetActiveDebugger();
-    if (plugin && plugin->IsRunning())
-    {
-        cbMessageBox(_("A debugger plugin is running. You have to stop it in order to modify the settings!"),
-                     _("Error"), wxICON_ERROR, this);
-        return;
-    }
-
     DebuggerSettingsDlg dlg(this);
     PlaceWindow(&dlg);
     if (dlg.ShowModal() == wxID_OK)
