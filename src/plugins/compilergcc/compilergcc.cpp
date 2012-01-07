@@ -3312,7 +3312,7 @@ void CompilerGCC::OnUpdateUI(wxUpdateUIEvent& event)
 //        mbar->Enable(idMenuCleanFromProjectManager, !running && prj);
         mbar->Enable(idMenuCompileAndRun, !running && (prj || ed) && !otherRunning);
         mbar->Enable(idMenuRun, !running && (prj || ed) && !otherRunning);
-        mbar->Enable(idMenuKillProcess, running && !otherRunning);
+        mbar->Enable(idMenuKillProcess, running);
         mbar->Enable(idMenuSelectTarget, !running && prj && !otherRunning);
 
         mbar->Enable(idMenuNextError, !running && (prj || ed) && m_Errors.HasNextError() && !otherRunning);
@@ -3334,7 +3334,7 @@ void CompilerGCC::OnUpdateUI(wxUpdateUIEvent& event)
         tbar->EnableTool(idMenuRun, !running && (prj || ed) && !otherRunning);
         tbar->EnableTool(idMenuCompileAndRun, !running && (prj || ed) && !otherRunning);
         tbar->EnableTool(idMenuRebuild, !running && prj && !otherRunning);
-        tbar->EnableTool(idMenuKillProcess, running && prj && !otherRunning);
+        tbar->EnableTool(idMenuKillProcess, running && prj);
 
         m_ToolTarget = XRCCTRL(*tbar, "idToolTarget", wxChoice);
         if (m_ToolTarget)
