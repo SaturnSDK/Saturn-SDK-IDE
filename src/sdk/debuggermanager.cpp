@@ -665,9 +665,7 @@ DebuggerManager::DebuggerManager() :
     m_threadsDialog(NULL),
     m_watchesDialog(NULL),
     m_logger(NULL),
-    m_debugLogger(NULL),
     m_loggerIndex(-1),
-    m_debugLoggerIndex(-1),
     m_isDisassemblyMixedMode(false),
     m_useTargetsDefault(false)
 {
@@ -712,11 +710,9 @@ bool DebuggerManager::RegisterDebugger(cbDebuggerPlugin *plugin)
         return false;
     }
 
-    int normalIndex = -1, debugIndex = -1;
-    GetLogger(false, normalIndex);
-    if (cbDebuggerCommonConfig::GetFlag(cbDebuggerCommonConfig::ShowDebuggersLog))
-        GetLogger(true, debugIndex);
-    plugin->SetupLogs(normalIndex, debugIndex);
+    int normalIndex = -1;
+    GetLogger(normalIndex);
+    plugin->SetupLog(normalIndex);
 
     PluginData data;
 
@@ -790,10 +786,7 @@ bool DebuggerManager::UnregisterDebugger(cbDebuggerPlugin *plugin)
         m_watchesDialog = NULL;
 
         if (Manager::Get()->GetLogManager())
-        {
-            Manager::Get()->GetDebuggerManager()->HideLogger(true);
-            Manager::Get()->GetDebuggerManager()->HideLogger(false);
-        }
+            Manager::Get()->GetDebuggerManager()->HideLogger();
     }
 
     return true;
@@ -910,74 +903,42 @@ void DebuggerManager::BuildContextMenu(wxMenu &menu, const wxString& word_at_car
     m_menuHandler->BuildContextMenu(menu, word_at_caret, is_running);
 }
 
-TextCtrlLogger* DebuggerManager::GetLogger(bool for_debug, int &index)
+TextCtrlLogger* DebuggerManager::GetLogger(int &index)
 {
     LogManager* msgMan = Manager::Get()->GetLogManager();
 
-    if (for_debug)
+    if (!m_logger)
     {
-        if (!m_debugLogger)
-        {
-            m_debugLogger = new DebugTextCtrlLogger(true, true);
-            m_debugLoggerIndex = msgMan->SetLog(m_debugLogger);
-            LogSlot &slot = msgMan->Slot(m_debugLoggerIndex);
+        m_logger = new DebugTextCtrlLogger(true, false);
+        m_loggerIndex = msgMan->SetLog(m_logger);
+        LogSlot &slot = msgMan->Slot(m_loggerIndex);
+        slot.title = _("Debugger");
+        // set log image
+        wxString prefix = ConfigManager::GetDataFolder() + _T("/images/");
+        wxBitmap* bmp = new wxBitmap(cbLoadBitmap(prefix + _T("misc_16x16.png"), wxBITMAP_TYPE_PNG));
+        slot.icon = bmp;
 
-            slot.title = _("Debugger (debug)");
-            // set log image
-            wxString prefix = ConfigManager::GetDataFolder() + _T("/images/");
-            wxBitmap* bmp = new wxBitmap(cbLoadBitmap(prefix + _T("contents_16x16.png"), wxBITMAP_TYPE_PNG));
-            slot.icon = bmp;
-
-            CodeBlocksLogEvent evtAdd(cbEVT_ADD_LOG_WINDOW, m_debugLogger, slot.title, slot.icon);
-            Manager::Get()->ProcessEvent(evtAdd);
-        }
-        index = m_debugLoggerIndex;
-        return m_debugLogger;
+        CodeBlocksLogEvent evtAdd(cbEVT_ADD_LOG_WINDOW, m_logger, slot.title, slot.icon);
+        Manager::Get()->ProcessEvent(evtAdd);
     }
-    else
-    {
-        if (!m_logger)
-        {
-            m_logger = new DebugTextCtrlLogger(true, false);
-            m_loggerIndex = msgMan->SetLog(m_logger);
-            LogSlot &slot = msgMan->Slot(m_loggerIndex);
-            slot.title = _("Debugger");
-            // set log image
-            wxString prefix = ConfigManager::GetDataFolder() + _T("/images/");
-            wxBitmap* bmp = new wxBitmap(cbLoadBitmap(prefix + _T("misc_16x16.png"), wxBITMAP_TYPE_PNG));
-            slot.icon = bmp;
 
-            CodeBlocksLogEvent evtAdd(cbEVT_ADD_LOG_WINDOW, m_logger, slot.title, slot.icon);
-            Manager::Get()->ProcessEvent(evtAdd);
-        }
-
-        index = m_loggerIndex;
-        return m_logger;
-    }
+    index = m_loggerIndex;
+    return m_logger;
 }
 
-TextCtrlLogger* DebuggerManager::GetLogger(bool for_debug)
+TextCtrlLogger* DebuggerManager::GetLogger()
 {
     int index;
-    return GetLogger(for_debug, index);
+    return GetLogger(index);
 }
 
-void DebuggerManager::HideLogger(bool for_debug)
+void DebuggerManager::HideLogger()
 {
-    if (for_debug)
-    {
-        CodeBlocksLogEvent evt(cbEVT_REMOVE_LOG_WINDOW, m_debugLogger);
-        Manager::Get()->ProcessEvent(evt);
-        m_debugLogger = NULL;
-        m_debugLoggerIndex = -1;
-    }
-    else
-    {
-        CodeBlocksLogEvent evt(cbEVT_REMOVE_LOG_WINDOW, m_logger);
-        Manager::Get()->ProcessEvent(evt);
-        m_logger = NULL;
-        m_loggerIndex = -1;
-    }
+
+    CodeBlocksLogEvent evt(cbEVT_REMOVE_LOG_WINDOW, m_logger);
+    Manager::Get()->ProcessEvent(evt);
+    m_logger = NULL;
+    m_loggerIndex = -1;
 }
 
 void DebuggerManager::SetInterfaceFactory(cbDebugInterfaceFactory *factory)

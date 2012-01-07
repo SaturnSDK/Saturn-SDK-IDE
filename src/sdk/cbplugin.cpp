@@ -130,8 +130,7 @@ cbDebuggerPlugin::cbDebuggerPlugin(const wxString &guiName, const wxString &sett
     m_DragInProgress(false),
     m_ActiveConfig(0),
     m_LogPageIndex(-1),
-    m_DebugLogPageIndex(-1),
-    m_ActiveLogAtStart(nullptr),
+    m_lastLineWasNormal(true),
     m_guiName(guiName),
     m_settingsName(settingsName)
 {
@@ -327,7 +326,7 @@ cbDebuggerPlugin::SyncEditorResult cbDebuggerPlugin::SyncEditor(const wxString& 
         // if the line is >= 0 and ft == ftOther assume, that we are in header without extension
         if (line < 0 || ft != ftOther)
         {
-            ShowLog(false, true);
+            ShowLog(false);
             Log(_("Unknown file: ") + filename, Logger::error);
             InfoWindow::Display(_("Unknown file"), _("File: ") + filename, 5000);
 
@@ -360,7 +359,7 @@ cbDebuggerPlugin::SyncEditorResult cbDebuggerPlugin::SyncEditor(const wxString& 
     }
     else
     {
-        ShowLog(false, true);
+        ShowLog(false);
         Log(_("Cannot open file: ") + filename, Logger::error);
         InfoWindow::Display(_("Cannot open file"), _("File: ") + filename, 5000);
 
@@ -546,77 +545,56 @@ bool cbDebuggerPlugin::DragInProgress() const
     return m_DragInProgress;
 }
 
-void DoShowLog(void *activeLog, bool forceNormal)
+void cbDebuggerPlugin::ShowLog(bool clear)
 {
-    TextCtrlLogger *debugLog = nullptr;
-    if (cbDebuggerCommonConfig::GetFlag(cbDebuggerCommonConfig::ShowDebuggersLog))
-        debugLog = Manager::Get()->GetDebuggerManager()->GetLogger(true);
-    if (debugLog && activeLog == debugLog && !forceNormal)
+    TextCtrlLogger *log = Manager::Get()->GetDebuggerManager()->GetLogger();
+    if (log)
     {
-        // switch to the debugger (debug) log
-        CodeBlocksLogEvent eventSwitchLog(cbEVT_SWITCH_TO_LOG_WINDOW, debugLog);
-        Manager::Get()->ProcessEvent(eventSwitchLog);
-    }
-    else
-    {
-        TextCtrlLogger *log = Manager::Get()->GetDebuggerManager()->GetLogger(false);
         // switch to the debugger log
         CodeBlocksLogEvent eventSwitchLog(cbEVT_SWITCH_TO_LOG_WINDOW, log);
         Manager::Get()->ProcessEvent(eventSwitchLog);
+        CodeBlocksLogEvent eventShowLog(cbEVT_SHOW_LOG_MANAGER);
+        Manager::Get()->ProcessEvent(eventShowLog);
+
+        if (clear)
+            log->Clear();
     }
-    CodeBlocksLogEvent eventShowLog(cbEVT_SHOW_LOG_MANAGER);
-    Manager::Get()->ProcessEvent(eventShowLog);
-}
-
-void cbDebuggerPlugin::ShowLog(bool clear, bool forceNormal)
-{
-    DoShowLog(m_ActiveLogAtStart, forceNormal);
-
-    TextCtrlLogger *log = Manager::Get()->GetDebuggerManager()->GetLogger(false);
-    if (clear && log)
-        log->Clear();
 }
 
 void cbDebuggerPlugin::Log(const wxString& msg, Logger::level level)
 {
     if (IsAttached())
-        Manager::Get()->GetLogManager()->Log(msg, m_LogPageIndex, level);
+    {
+        Manager::Get()->GetLogManager()->Log((m_lastLineWasNormal ? wxEmptyString : wxT("\n")) + msg, m_LogPageIndex,
+                                             level);
+        m_lastLineWasNormal = true;
+    }
 }
 
 void cbDebuggerPlugin::DebugLog(const wxString& msg, Logger::level level)
 {
     // gdb debug messages
     if (IsAttached() && HasDebugLog())
-        Manager::Get()->GetLogManager()->Log(msg, m_DebugLogPageIndex);
+    {
+        Manager::Get()->GetLogManager()->Log((!m_lastLineWasNormal ? wxT("[debug]") : wxT("\n[debug]")) + msg,
+                                             m_LogPageIndex, level);
+        m_lastLineWasNormal = false;
+    }
 }
 
 bool cbDebuggerPlugin::HasDebugLog() const
 {
-    return m_DebugLogPageIndex != -1;
+    return cbDebuggerCommonConfig::GetFlag(cbDebuggerCommonConfig::ShowDebuggersLog);
 }
 
-void cbDebuggerPlugin::ClearLog(bool debug)
+void cbDebuggerPlugin::ClearLog()
 {
-    if (debug)
-    {
-        if (HasDebugLog())
-            Manager::Get()->GetDebuggerManager()->GetLogger(true)->Clear();
-    }
-    else
-        Manager::Get()->GetDebuggerManager()->GetLogger(false)->Clear();
+    Manager::Get()->GetDebuggerManager()->GetLogger()->Clear();
 }
 
-void cbDebuggerPlugin::SetupLogs(int normalIndex, int debugIndex)
+void cbDebuggerPlugin::SetupLog(int normalIndex)
 {
     m_LogPageIndex = normalIndex;
-    m_DebugLogPageIndex = debugIndex;
-}
-
-void cbDebuggerPlugin::SaveActiveLog()
-{
-    CodeBlocksLogEvent event(cbEVT_GET_ACTIVE_LOG_WINDOW);
-    Manager::Get()->ProcessEvent(event);
-    m_ActiveLogAtStart = event.logger;
 }
 
 void cbDebuggerPlugin::SwitchToDebuggingLayout()
@@ -655,7 +633,7 @@ void cbDebuggerPlugin::SwitchToDebuggingLayout()
     // switch to debugging layout
     Manager::Get()->ProcessEvent(switchEvent);
 
-    DoShowLog(m_ActiveLogAtStart, false);
+    ShowLog(false);
 }
 
 void cbDebuggerPlugin::SwitchToPreviousLayout()
@@ -794,7 +772,7 @@ void cbDebuggerPlugin::OnCompilerFinished(CodeBlocksEvent& event)
                 compilerFailed = true;
             }
         }
-        ShowLog(false, false);
+        ShowLog(false);
         if (!CompilerFinished(compilerFailed, m_StartType))
         {
             ProjectManager *manager = Manager::Get()->GetProjectManager();

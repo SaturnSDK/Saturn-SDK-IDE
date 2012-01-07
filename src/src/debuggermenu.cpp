@@ -508,8 +508,7 @@ void DebuggerMenuHandler::OnStart(wxCommandEvent& event)
         {
             manager->SetIsRunning(m_activeDebugger);
 
-            m_activeDebugger->SaveActiveLog();
-            m_activeDebugger->ClearLog(false);
+            m_activeDebugger->ClearLog();
             LogActiveConfig();
 
             if (!m_activeDebugger->Debug(false))
@@ -587,8 +586,7 @@ void DebuggerMenuHandler::OnStep(wxCommandEvent& event)
         if (manager->GetIsRunning() == NULL)
         {
             manager->SetIsRunning(m_activeDebugger);
-            m_activeDebugger->SaveActiveLog();
-            m_activeDebugger->ClearLog(false);
+            m_activeDebugger->ClearLog();
             LogActiveConfig();
 
             if (!m_activeDebugger->Debug(true))
@@ -619,8 +617,7 @@ void DebuggerMenuHandler::OnRunToCursor(wxCommandEvent& event)
         manager->SetIsRunning(m_activeDebugger);
         if (!m_activeDebugger->IsRunning())
         {
-            m_activeDebugger->SaveActiveLog();
-            m_activeDebugger->ClearLog(false);
+            m_activeDebugger->ClearLog();
             LogActiveConfig();
         }
         HideValueTooltip();

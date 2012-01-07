@@ -38,7 +38,7 @@
 // it will change when the SDK interface breaks
 #define PLUGIN_SDK_VERSION_MAJOR 1
 #define PLUGIN_SDK_VERSION_MINOR 12
-#define PLUGIN_SDK_VERSION_RELEASE 14
+#define PLUGIN_SDK_VERSION_RELEASE 15
 
 // class decls
 class wxMenuBar;
@@ -601,16 +601,14 @@ class PLUGIN_EXPORT cbDebuggerPlugin: public cbPlugin
 
         bool DragInProgress() const;
 
-        void ShowLog(bool clear, bool forceNormal);
+        void ShowLog(bool clear);
         void Log(const wxString& msg, Logger::level level = Logger::info);
         void DebugLog(const wxString& msg, Logger::level level = Logger::info);
         bool HasDebugLog() const;
-        void ClearLog(bool debug);
+        void ClearLog();
 
         // Called only by DebuggerManager, when registering plugin or changing settings
-        void SetupLogs(int normalIndex, int debugIndex);
-        // Called only by DebuggerMenu
-        void SaveActiveLog();
+        void SetupLog(int normalIndex);
 
         wxString GetGUIName() const { return m_guiName; }
         wxString GetSettingsName() const { return m_settingsName; }
@@ -648,8 +646,7 @@ class PLUGIN_EXPORT cbDebuggerPlugin: public cbPlugin
         int m_ActiveConfig;
 
         int m_LogPageIndex;
-        int m_DebugLogPageIndex;
-        void *m_ActiveLogAtStart;
+        bool m_lastLineWasNormal;
         wxString m_guiName, m_settingsName;
 };
 

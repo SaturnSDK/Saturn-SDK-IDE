@@ -278,9 +278,9 @@ class DLLIMPORT DebuggerManager : public Mgr<DebuggerManager>
         wxMenu* GetMenu();
         void BuildContextMenu(wxMenu &menu, const wxString& word_at_caret, bool is_running);
 
-        TextCtrlLogger* GetLogger(bool for_debug, int &index);
-        TextCtrlLogger* GetLogger(bool for_debug);
-        void HideLogger(bool for_debug);
+        TextCtrlLogger* GetLogger(int &index);
+        TextCtrlLogger* GetLogger();
+        void HideLogger();
 
     public: // debugger windows
         void SetInterfaceFactory(cbDebugInterfaceFactory *factory);
@@ -345,9 +345,7 @@ class DLLIMPORT DebuggerManager : public Mgr<DebuggerManager>
         cbWatchesDlg* m_watchesDialog;
 
         TextCtrlLogger* m_logger;
-        TextCtrlLogger* m_debugLogger;
         int m_loggerIndex;
-        int m_debugLoggerIndex;
         bool m_isDisassemblyMixedMode;
         bool m_useTargetsDefault;
 };
