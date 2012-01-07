@@ -38,7 +38,7 @@
 // it will change when the SDK interface breaks
 #define PLUGIN_SDK_VERSION_MAJOR 1
 #define PLUGIN_SDK_VERSION_MINOR 12
-#define PLUGIN_SDK_VERSION_RELEASE 15
+#define PLUGIN_SDK_VERSION_RELEASE 16
 
 // class decls
 class wxMenuBar;
@@ -65,11 +65,10 @@ class ProjectBuildTarget;
 
 // Define basic groups for plugins' configuration.
 static const int cgCompiler         = 0x01; ///< Compiler related.
-static const int cgDebugger         = 0x02; ///< Debugger related.
-static const int cgEditor           = 0x04; ///< Editor related.
-static const int cgCorePlugin       = 0x08; ///< One of the core plugins.
-static const int cgContribPlugin    = 0x10; ///< One of the contrib plugins (or any third-party plugin for that matter).
-static const int cgUnknown          = 0x20; ///< Unknown. This will be probably grouped with cgContribPlugin.
+static const int cgEditor           = 0x02; ///< Editor related.
+static const int cgCorePlugin       = 0x04; ///< One of the core plugins.
+static const int cgContribPlugin    = 0x08; ///< One of the contrib plugins (or any third-party plugin for that matter).
+static const int cgUnknown          = 0x10; ///< Unknown. This will be probably grouped with cgContribPlugin.
 
 /** @brief Base class for plugins
   * This is the most basic class a plugin must descend

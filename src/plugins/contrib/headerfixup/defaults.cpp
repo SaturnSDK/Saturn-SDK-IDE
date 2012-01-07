@@ -70,7 +70,6 @@ void Bindings::SetDefaultsCodeBlocks()
   AddBinding(_T("CodeBlocks"),_T("cgCompiler"),                   _T("cbplugin.h"));
   AddBinding(_T("CodeBlocks"),_T("cgContribPlugin"),              _T("cbplugin.h"));
   AddBinding(_T("CodeBlocks"),_T("cgCorePlugin"),                 _T("cbplugin.h"));
-  AddBinding(_T("CodeBlocks"),_T("cgDebugger"),                   _T("cbplugin.h"));
   AddBinding(_T("CodeBlocks"),_T("cgEditor"),                     _T("cbplugin.h"));
   AddBinding(_T("CodeBlocks"),_T("cgUnknown"),                    _T("cbplugin.h"));
   AddBinding(_T("CodeBlocks"),_T("ChooseDirectory"),              _T("globals.h"));
