@@ -1090,7 +1090,7 @@ void RefreshBreakpoints(const cbDebuggerPlugin *plugin)
         EditorBase *editor = editorManager->GetEditor(ii);
         if (!editor->IsBuiltinEditor())
             continue;
-        editor->RefreshBreakpointMarkers(plugin);
+        editor->RefreshBreakpointMarkers();
     }
 }
 
@@ -1129,6 +1129,8 @@ void DebuggerManager::RefreshUI()
     }
     if (m_watchesDialog)
         m_watchesDialog->RefreshUI();
+    if (m_breakPointsDialog)
+        m_breakPointsDialog->Reload();
 }
 
 bool DebuggerManager::IsActiveDebuggerTargetsDefault() const

@@ -224,7 +224,7 @@ class DLLIMPORT cbEditor : public EditorBase
         void GotoPreviousBreakpoint();
 
         /** Refresh all markers for the breakpoints (only the markers for the current debugger will be shown) */
-        void RefreshBreakpointMarkers(const cbDebuggerPlugin *debugger);
+        void RefreshBreakpointMarkers();
 
         /** Toggle bookmark at specified line. If @c line is -1, use current line. */
         void ToggleBookmark(int line = -1);

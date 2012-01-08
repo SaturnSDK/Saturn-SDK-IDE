@@ -454,7 +454,7 @@ void cbDebuggerPlugin::OnEditorOpened(CodeBlocksEvent& event)
     EditorBase* ed = event.GetEditor();
     if (ed)
     {
-        ed->RefreshBreakpointMarkers(this);
+        ed->RefreshBreakpointMarkers();
 
         if (IsRunning())
         {

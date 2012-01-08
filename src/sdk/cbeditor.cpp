@@ -50,19 +50,20 @@
 
 const wxString g_EditorModified = _T("*");
 
-#define ERROR_MARKER          4
 #define ERROR_STYLE           wxSCI_MARK_SMALLRECT
-
-#define BOOKMARK_MARKER       3
 #define BOOKMARK_STYLE        wxSCI_MARK_ARROW
-
-#define BREAKPOINT_MARKER     2
 #define BREAKPOINT_STYLE      wxSCI_MARK_CIRCLE
-
-#define BREAKPOINT_DISABLED_MARKER     1
-
-#define DEBUG_MARKER          5
 #define DEBUG_STYLE           wxSCI_MARK_ARROW
+
+enum
+{
+    BREAKPOINT_OTHER_MARKER = 1,
+    BREAKPOINT_DISABLED_MARKER,
+    BREAKPOINT_MARKER,
+    BOOKMARK_MARKER,
+    ERROR_MARKER,
+    DEBUG_MARKER
+};
 
 
 static const int lineMargin      = 0; // Line numbers
@@ -1386,6 +1387,7 @@ void cbEditor::InternalSetEditorStyleBeforeFileOpen(cbStyledTextCtrl* control)
                                          (1 << BOOKMARK_MARKER) |
                                          (1 << BREAKPOINT_MARKER) |
                                          (1 << BREAKPOINT_DISABLED_MARKER) |
+                                         (1 << BREAKPOINT_OTHER_MARKER) |
                                          (1 << DEBUG_MARKER) |
                                          (1 << ERROR_MARKER));
     control->MarkerDefine(BOOKMARK_MARKER, BOOKMARK_STYLE);
@@ -1407,6 +1409,14 @@ void cbEditor::InternalSetEditorStyleBeforeFileOpen(cbStyledTextCtrl* control)
     {
         control->MarkerDefine(BREAKPOINT_DISABLED_MARKER, BREAKPOINT_STYLE);
         control->MarkerSetBackground(BREAKPOINT_DISABLED_MARKER, wxColour(0x90, 0x90, 0x90));
+    }
+    icon = cbLoadBitmap(basepath + wxT("breakpoint_other.png"), wxBITMAP_TYPE_PNG);
+    if (icon.IsOk())
+        control->MarkerDefineBitmap(BREAKPOINT_OTHER_MARKER, icon);
+    else
+    {
+        control->MarkerDefine(BREAKPOINT_OTHER_MARKER, BREAKPOINT_STYLE);
+        control->MarkerSetBackground(BREAKPOINT_OTHER_MARKER, wxColour(0x59, 0x74, 0x8e));
     }
     control->MarkerDefine(DEBUG_MARKER, DEBUG_STYLE);
     control->MarkerSetBackground(DEBUG_MARKER, wxColour(0xFF, 0xFF, 0x00));
@@ -2191,13 +2201,8 @@ void cbEditor::ToggleBookmark(int line)
     MarkerToggle(BOOKMARK_MARKER, line);
 }
 
-// TODO (obfuscated#): remove the parameter and implement inactive breakpoint markers
-void cbEditor::RefreshBreakpointMarkers(const cbDebuggerPlugin *debugger)
+void cbEditor::RefreshBreakpointMarkers()
 {
-    if (!debugger)
-        return;
-    if (debugger != Manager::Get()->GetDebuggerManager()->GetActiveDebugger())
-        return;
     // First remove all breakpoint markers, then add the markers for the active debugger
     cbStyledTextCtrl *c = GetControl();
     int line = 0;
@@ -2206,16 +2211,37 @@ void cbEditor::RefreshBreakpointMarkers(const cbDebuggerPlugin *debugger)
     line = 0;
     while ((line = c->MarkerNext(line, (1 << BREAKPOINT_DISABLED_MARKER))) != -1)
         MarkerToggle(BREAKPOINT_DISABLED_MARKER, line);
+    line = 0;
+    while ((line = c->MarkerNext(line, (1 << BREAKPOINT_OTHER_MARKER))) != -1)
+        MarkerToggle(BREAKPOINT_OTHER_MARKER, line);
 
-    for (int ii = 0; ii < debugger->GetBreakpointsCount(); ++ii)
+    DebuggerManager::RegisteredPlugins &plugins = Manager::Get()->GetDebuggerManager()->GetAllDebuggers();
+    for (DebuggerManager::RegisteredPlugins::iterator it = plugins.begin(); it != plugins.end(); ++it)
     {
-        cbBreakpoint::ConstPointer bp = debugger->GetBreakpoint(ii);
-        if (bp->GetLocation() == GetFilename())
+        cbDebuggerPlugin *debugger = it->first;
+        if (debugger == Manager::Get()->GetDebuggerManager()->GetActiveDebugger())
         {
-            if (bp->IsEnabled())
-                MarkerToggle(BREAKPOINT_MARKER, bp->GetLine() - 1);
-            else
-                MarkerToggle(BREAKPOINT_DISABLED_MARKER, bp->GetLine() - 1);
+            for (int ii = 0; ii < debugger->GetBreakpointsCount(); ++ii)
+            {
+                cbBreakpoint::ConstPointer bp = debugger->GetBreakpoint(ii);
+                if (bp->GetLocation() == GetFilename())
+                {
+                    if (bp->IsEnabled())
+                        MarkerToggle(BREAKPOINT_MARKER, bp->GetLine() - 1);
+                    else
+                        MarkerToggle(BREAKPOINT_DISABLED_MARKER, bp->GetLine() - 1);
+                }
+            }
+        }
+        else
+        {
+            // all breakpoints for the non active debugger use the other breakpoint marker
+            for (int ii = 0; ii < debugger->GetBreakpointsCount(); ++ii)
+            {
+                cbBreakpoint::ConstPointer bp = debugger->GetBreakpoint(ii);
+                if (bp->GetLocation() == GetFilename())
+                    MarkerToggle(BREAKPOINT_OTHER_MARKER, bp->GetLine() - 1);
+            }
         }
     }
 }
