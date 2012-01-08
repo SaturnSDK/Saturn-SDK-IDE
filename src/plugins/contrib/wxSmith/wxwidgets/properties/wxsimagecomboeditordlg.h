@@ -25,12 +25,13 @@
 #define WXSIMAGECOMBOEDITORDLG_H
 
 //(*Headers(wxsImageComboEditorDlg)
-#include <wx/treectrl.h>
-#include <wx/stattext.h>
 #include <wx/bmpbuttn.h>
+#include <wx/combobox.h>
+#include <wx/sizer.h>
 #include <wx/button.h>
 #include "scrollingdialog.h"
-#include <wx/combobox.h>
+#include <wx/stattext.h>
+#include <wx/treectrl.h>
 //*)
 
 #include "../defitems/wxsimagelist.h"
@@ -61,71 +62,71 @@ class wxsImageComboEditorDlg: public wxScrollingDialog
 
 
 		//(*Declarations(wxsImageComboEditorDlg)
-		wxStaticText* StaticText10;
-		wxStaticText* StaticText9;
-		wxBitmapButton* bDeleteAll;
-		wxButton* bOK;
-		wxButton* bCancel;
-		wxStaticText* StaticText2;
-		wxStaticText* StaticText6;
-		wxTreeCtrl* Tree1;
-		wxStaticText* StaticText8;
-		wxBitmapButton* bAddItem;
+		wxBitmapComboBox* m_pCmbImage;
+		wxButton* m_pBtnOK;
+		wxBitmapButton* m_pBtnAddItem;
+		wxTreeCtrl* m_pTree;
+		wxBitmapButton* m_pBtnMoveUp;
+		wxButton* m_pBtnCancel;
 		wxStaticText* StaticText1;
-		wxBitmapButton* bDeleteItem;
+		wxStaticText* StaticText10;
 		wxStaticText* StaticText3;
-		wxBitmapComboBox* cbImage;
-		wxBitmapButton* bEditItem;
-		wxStaticText* StaticText5;
+		wxStaticText* StaticText8;
 		wxStaticText* StaticText7;
-		wxBitmapButton* bMoveUp;
-		wxBitmapButton* bMoveDown;
+		wxBitmapButton* m_pBtnEditItem;
 		wxStaticText* StaticText4;
+		wxStaticText* StaticText5;
+		wxStaticText* StaticText2;
+		wxBitmapButton* m_pBtnDeleteAll;
+		wxStaticText* StaticText6;
+		wxBitmapButton* m_pBtnDeleteItem;
+		wxBitmapButton* m_pBtnMoveDown;
+		wxStaticText* StaticText9;
 		//*)
 
 	protected:
 
 		//(*Identifiers(wxsImageComboEditorDlg)
-		static const long ID_BUTTON1;
-		static const long ID_BUTTON2;
-		static const long ID_TREECTRL1;
 		static const long ID_STATICTEXT1;
-		static const long ID_BITMAPBUTTON1;
-		static const long ID_BITMAPBUTTON2;
-		static const long ID_BITMAPBUTTON3;
-		static const long ID_BITMAPBUTTON4;
-		static const long ID_BITMAPBUTTON5;
+		static const long ID_TREECTRL1;
 		static const long ID_STATICTEXT2;
-		static const long ID_BITMAPBUTTON6;
+		static const long ID_BITMAPBUTTON1;
 		static const long ID_STATICTEXT3;
+		static const long ID_BITMAPBUTTON2;
 		static const long ID_STATICTEXT4;
+		static const long ID_BITMAPBUTTON3;
 		static const long ID_STATICTEXT5;
+		static const long ID_BITMAPBUTTON4;
 		static const long ID_STATICTEXT6;
+		static const long ID_BITMAPBUTTON5;
 		static const long ID_STATICTEXT7;
+		static const long ID_BITMAPBUTTON6;
 		static const long ID_STATICTEXT8;
 		static const long ID_STATICTEXT9;
 		static const long ID_COMBOBOX1;
 		static const long ID_STATICTEXT10;
+		static const long ID_BUTTON1;
+		static const long ID_BUTTON2;
 		//*)
 
 	private:
 
 		//(*Handlers(wxsImageComboEditorDlg)
-		void OnbDeleteAllClick(wxCommandEvent& event);
-		void OnbAddItemClick(wxCommandEvent& event);
-		void OnbMoveUpClick(wxCommandEvent& event);
-		void OnbMoveDownClick(wxCommandEvent& event);
-		void OnbDeleteItemClick(wxCommandEvent& event);
-		void OnbEditItemClick(wxCommandEvent& event);
-		void OnbOKClick(wxCommandEvent& event);
-		void OnbCancelClick(wxCommandEvent& event);
-		void OncbImageSelect(wxCommandEvent& event);
-		void OnTree1SelectionChanged(wxTreeEvent& event);
+		void OnBtnDeleteAllClick(wxCommandEvent& event);
+		void OnBtnAddItemClick(wxCommandEvent& event);
+		void OnBtnMoveUpClick(wxCommandEvent& event);
+		void OnBtnMoveDownClick(wxCommandEvent& event);
+		void OnBtnDeleteItemClick(wxCommandEvent& event);
+		void OnBtnEditItemClick(wxCommandEvent& event);
+		void OnBtnOKClick(wxCommandEvent& event);
+		void OnBtnCancelClick(wxCommandEvent& event);
+		void OnCmbImageSelect(wxCommandEvent& event);
+		void OnTreeSelectionChanged(wxTreeEvent& event);
 		//*)
 
-        wxString			m_sComboName;		//!< The name of the base combobox.
-        wxString			m_sImageName;		//!< The name of the image list.
-        wxImageList		m_imageList;         		//!< Local copy of an image list
+        wxString			m_ComboName;		//!< The name of the base combobox.
+        wxString			m_ImageName;		//!< The name of the image list.
+        wxImageList		m_ImageList;         		//!< Local copy of an image list
 
 		DECLARE_EVENT_TABLE()
 };

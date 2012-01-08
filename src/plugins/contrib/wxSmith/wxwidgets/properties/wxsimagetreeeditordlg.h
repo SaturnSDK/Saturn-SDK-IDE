@@ -55,9 +55,9 @@ class wxsImageTreeEditorDlg: public wxScrollingDialog
 
 
 		//(*Declarations(wxsImageTreeEditorDlg)
-		wxPanel* Panel1;
-		wxStaticText* StaticText13;
+		wxStaticBoxSizer* StaticBoxSizer2;
 		wxBitmapComboBox* cbSelected;
+		wxStaticText* StaticText13;
 		wxCheckBox* cxItemBold;
 		wxButton* bCancel;
 		wxBitmapButton        *bDelAllItems;
@@ -66,15 +66,14 @@ class wxsImageTreeEditorDlg: public wxScrollingDialog
 		wxBitmapButton        *bEditItem;
 		wxStaticText* StaticText1;
 		wxStaticText* StaticText10;
-		wxStaticBox* StaticBox2;
+		wxPanel* Panel2;
 		wxStaticText* StaticText3;
 		wxBitmapButton        *bDelItem;
 		wxBitmapComboBox* cbSelExpanded;
 		wxStaticText* StaticText8;
 		wxStaticText* StaticText12;
-		wxStaticBox* StaticBox1;
-		wxBitmapButton        *bAddSubItem;
 		wxStaticText* StaticText7;
+		wxBitmapButton        *bAddSubItem;
 		wxImageList* ImageList1;
 		wxStaticText* StaticText4;
 		wxStaticText* StaticText5;
@@ -85,6 +84,7 @@ class wxsImageTreeEditorDlg: public wxScrollingDialog
 		wxButton* bOK;
 		wxStaticText* StaticText9;
 		wxStaticText* StaticText11;
+		wxStaticBoxSizer* StaticBoxSizer1;
 		wxBitmapComboBox* cbExpanded;
 		//*)
 
@@ -93,36 +93,33 @@ class wxsImageTreeEditorDlg: public wxScrollingDialog
 	protected:
 
 		//(*Identifiers(wxsImageTreeEditorDlg)
-		static const long ID_BUTTON1;
-		static const long ID_BUTTON2;
 		static const long ID_STATICTEXT1;
-		static const long ID_STATICBOX1;
 		static const long ID_TREECTRL1;
-		static const long ID_STATICBOX2;
-		static const long ID_STATICTEXT2;
+		static const long ID_IMAGEBUTTON1;
+		static const long ID_IMAGEBUTTON2;
 		static const long ID_STATICTEXT3;
+		static const long ID_IMAGEBUTTON3;
 		static const long ID_STATICTEXT4;
+		static const long ID_IMAGEBUTTON4;
 		static const long ID_STATICTEXT5;
 		static const long ID_BUTTON3;
 		static const long ID_STATICTEXT6;
 		static const long ID_CHECKBOX1;
-		static const long ID_STATICTEXT7;
-		static const long ID_STATICTEXT8;
-		static const long ID_STATICTEXT9;
-		static const long ID_STATICTEXT10;
-		static const long ID_COMBOBOX1;
-		static const long ID_COMBOBOX2;
-		static const long ID_COMBOBOX3;
-		static const long ID_COMBOBOX4;
-		static const long ID_STATICTEXT11;
-		static const long ID_IMAGEBUTTON1;
-		static const long ID_IMAGEBUTTON2;
-		static const long ID_IMAGEBUTTON3;
-		static const long ID_IMAGEBUTTON4;
 		static const long ID_IMAGEBUTTON5;
+		static const long ID_STATICTEXT11;
 		static const long ID_STATICTEXT12;
 		static const long ID_STATICTEXT13;
-		static const long ID_PANEL1;
+		static const long ID_COMBOBOX1;
+		static const long ID_STATICTEXT7;
+		static const long ID_COMBOBOX2;
+		static const long ID_STATICTEXT8;
+		static const long ID_COMBOBOX3;
+		static const long ID_STATICTEXT9;
+		static const long ID_COMBOBOX4;
+		static const long ID_STATICTEXT10;
+		static const long ID_BUTTON1;
+		static const long ID_BUTTON2;
+		static const long ID_PANEL2;
 		//*)
 
 	private:

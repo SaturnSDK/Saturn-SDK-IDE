@@ -125,10 +125,11 @@ wxsImageList    *ilist;
         ss = ilist->GetVarName();
 		// Locator comment.
 		#if wxCHECK_VERSION(2, 9, 0)
-		AddEventCode(wxString::Format(_("// Set the bitmaps for %s.\n"), vv.wx_str()));
+		tt.Printf(_("// Set the bitmaps for %s.\n"), vv.wx_str());
 		#else
-		AddEventCode(wxString::Format(_("// Set the bitmaps for %s.\n"), vv.c_str()));
+		tt.Printf(_("// Set the bitmaps for %s.\n"), vv.c_str());
 		#endif
+        AddEventCode(tt);
 
         if (mLabelIndex.ToLong(&ll)) {
 			#if wxCHECK_VERSION(2, 9, 0)

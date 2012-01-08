@@ -126,10 +126,11 @@ wxString    tt;
     if (iname.Length() > 0) {
 		// Locator comment.
 		#if wxCHECK_VERSION(2, 9, 0)
-		AddEventCode(wxString::Format(_("// Set the bitmap for %s.\n"), vname.wx_str()));
+		tt.Printf(_("// Set the bitmap for %s.\n"), vname.wx_str());
 		#else
-		AddEventCode(wxString::Format(_("// Set the bitmap for %s.\n"), vname.c_str()));
+		tt.Printf(_("// Set the bitmap for %s.\n"), vname.c_str());
 		#endif
+        AddEventCode(tt);
 
 		#if wxCHECK_VERSION(2, 9, 0)
         tt.Printf(_T("%s->SetBitmap(*%s);\n"), vname.wx_str(), iname.wx_str());

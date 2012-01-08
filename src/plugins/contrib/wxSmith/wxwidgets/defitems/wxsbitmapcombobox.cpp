@@ -1,7 +1,6 @@
-/** \file wxsbitmapcombobox.cpp
-*
+/*
 * This file is part of wxSmith plugin for Code::Blocks Studio
-* Copyright (C) 2010 Gary Harris
+* Copyright (C) 2006-2007  Bartlomiej Swiecki
 *
 * wxSmith is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -16,299 +15,303 @@
 * You should have received a copy of the GNU General Public License
 * along with wxSmith. If not, see <http://www.gnu.org/licenses/>.
 *
-* This code is based in part on wxsimagecombobox from the wxSmithImage plug-in,
-* copyright Ron Collins and released under the GPL.
-*
+* $Revision$
+* $Id$
+* $HeadURL$
 */
 
-#include <wx/bmpcbox.h>
+
+#include <wx/bmpbuttn.h>
 #include "wxsbitmapcombobox.h"
-#include "wxsimagelist.h"
-#include "../properties/wxsimagelisteditordlg.h"
+
+
+//------------------------------------------------------------------------------
 
 
 namespace
 {
-    wxsRegisterItem<wxsBitmapComboBox> Reg(_T("BitmapComboBox"), wxsTWidget, _T("Standard"), 350);
 
-    WXS_ST_BEGIN(wxsBitmapComboBoxStyles, wxEmptyString)
-    WXS_ST_CATEGORY("wxBitmapComboBox")
-    WXS_ST(wxCB_READONLY)
-    WXS_ST(wxCB_SORT)
-    WXS_ST(wxTE_PROCESS_ENTER)
-    WXS_ST_DEFAULTS()
+
+    wxsRegisterItem<wxsBitmapComboBox> Reg(_T("BitmapComboBox"),wxsTWidget,_T("Standard"),50);
+//    wxsRegisterItem<wxsBitmapComboBox> Reg(
+//        _T("wxBitmapComboBox"),         // Class name
+//        wxsTWidget,                     // Item type
+//        _T("wxWindows"),                // License
+//        _T("Ron Collins"),              // Author
+//        _T("rcoll@theriver.com"),       // Author's email
+//        _T(""),                         // Item's homepage
+//        _T("Standard"),                 // Category in palette
+//        50,                             // Priority in palette
+//        _T("ComboBox"),                 // Base part of names for new items
+//        wxsCPP,                         // List of coding languages supported by this item
+//        1, 0,                           // Version
+//        _T("wxBitmapCombo32.png"),    // 32x32 bitmap
+//        _T("wxBitmapCombo16.png"),    // 16x16 bitmap
+//        false);                         // We do not allow this item inside XRC files
+
+
+    WXS_ST_BEGIN(wxsBitmapComboBoxStyles,_T("wxBU_AUTODRAW"))
+        WXS_ST_CATEGORY("wxBitmapComboBox")
+        WXS_ST(wxCB_SIMPLE)
+        WXS_ST(wxCB_SORT)
+        WXS_ST(wxCB_READONLY)
+        WXS_ST(wxCB_DROPDOWN)
+        WXS_ST(wxTE_PROCESS_ENTER)
+        WXS_ST_DEFAULTS()
     WXS_ST_END()
 
+
     WXS_EV_BEGIN(wxsBitmapComboBoxEvents)
-		WXS_EVI(EVT_COMBOBOX, wxEVT_COMMAND_COMBOBOX_SELECTED, wxCommandEvent, Selected)
-		WXS_EVI(EVT_TEXT, wxEVT_COMMAND_TEXT_UPDATED, wxCommandEvent, TextUpdated)
-		WXS_EVI(EVT_TEXT_ENTER, wxEVT_COMMAND_TEXT_ENTER, wxCommandEvent, TextEnter)
+        WXS_EVI(EVT_COMBOBOX,wxEVT_COMMAND_COMBOBOX_SELECTED,wxCommandEvent,Select)
+        WXS_EVI(EVT_TEXT,wxEVT_COMMAND_TEXT_UPDATED,wxCommandEvent,Text)
+        WXS_EVI(EVT_TEXT_ENTER,wxEVT_COMMAND_TEXT_ENTER,wxCommandEvent,TextEnter)
     WXS_EV_END()
 }
 
-/*! \brief Ctor
- *
- * \param Data wxsItemResData*	The control's resource data.
- *
- */
-wxsBitmapComboBox::wxsBitmapComboBox(wxsItemResData *Data):
+//------------------------------------------------------------------------------
+
+wxsBitmapComboBox::wxsBitmapComboBox(wxsItemResData* Data):
     wxsWidget(
         Data,
         &Reg.Info,
         wxsBitmapComboBoxEvents,
-        wxsBitmapComboBoxStyles),
-    m_defaultSelection(-1),
-    m_sImageList(_("<none>"))
+        wxsBitmapComboBoxStyles)
 {
+int         i,n;
+wxString    ss;
+
+// default values
+
+    mImageList = _("<none>");
+    mItems.Clear();
+
 }
 
-/*! \brief Create the initial control.
- *
- * \return void
- *
- */
-void wxsBitmapComboBox::OnBuildCreatingCode()
-{
-    switch(GetLanguage())
-    {
-        case wxsCPP:
-            {
-                AddHeader(_T("<wx/bmpcbox.h>"), GetInfo().ClassName, hfInPCH);
-                Codef(_T("%C(%W, %I, wxEmptyString, %P, %S, 0, 0, %T, %V, %N);\n"));
+//------------------------------------------------------------------------------
 
-				// Find the image list.
-				wxsImageList *imageList = (wxsImageList *) wxsImageListEditorDlg::FindTool(this, m_sImageList);
+void wxsBitmapComboBox::OnBuildCreatingCode() {
+int         i,n;
+wxString    ss, tt, vv;
+bool        ilist;
 
-				wxString sItem, sText;
-				int iPos;
-				wxString vv = GetVarName();
-				int iItemcount = m_arrItems.GetCount();
-					// Locator comment.
-					if(iItemcount > 0){
-#if wxCHECK_VERSION(2, 9, 0)
-						AddEventCode(wxString::Format(_("// Set the bitmaps for %s.\n"), vv.wx_str()));
-#else
-						AddEventCode(wxString::Format(_("// Set the bitmaps for %s.\n"), vv.c_str()));
-#endif
-					}
-				for(int i = 2;i < iItemcount; i++) {
-					sItem = m_arrItems.Item(i);
-					ParseComboItem(sItem, sText, iPos);
-					// Add the text item.
-#if wxCHECK_VERSION(2, 9, 0)
-					Codef(_T("%s->Append(_(\"%s\"));\n"), vv.wx_str(), sText.wx_str());
-#else
-					Codef(_T("%s->Append(_(\"%s\"));\n"), vv.c_str(), sText.c_str());
-#endif
+// we only handle C++ constructs here
 
-					if((imageList) && (iPos >= 0)){
-#if wxCHECK_VERSION(2, 9, 0)
-						sText.Printf(_T("%s->SetItemBitmap(%d, %s->GetBitmap(%d));\n"), vv.wx_str(), i - 2, m_sImageList.wx_str(), iPos);
-#else
-						sText.Printf(_T("%s->SetItemBitmap(%d, %s->GetBitmap(%d));\n"), vv.c_str(), i - 2, m_sImageList.c_str(), iPos);
-#endif
-						// Add all the bitmaps at the bottom of the code... after the wxsImages and wxsImageLists have been coded
-						AddEventCode(sText);
-					}
-				}
+    if (GetLanguage() != wxsCPP) wxsCodeMarks::Unknown(_T("wxsBitmapComboBox"),GetLanguage());
 
-				if(m_defaultSelection > -1){
-					Codef(_T("%ASetSelection(%d);\n"), m_defaultSelection);
-				}
+// header files
 
-				BuildSetupWindowCode();
-				return;
-            }
+    AddHeader(_T("<wx/bmpcbox.h>"),GetInfo().ClassName,hfInPCH);
 
-        default:
-            {
-                wxsCodeMarks::Unknown(_T("wxsBitmapComboBox::OnBuildCreatingCode"), GetLanguage());
-            }
-    }
+// the basic constructor
+
+    vv = GetVarName();
+    Codef(_T("%C(%W, %I, wxEmptyString, %P, %S, 0, NULL, %T, %V, %N);\n"));
+
+// was a valid image-list specified?
+
+    ilist = (wxsImageListEditorDlg::FindTool(this, mImageList) != NULL);
+
+// add all text items, and the bitmaps at the bottom of the code
+// bitmaps have to added after the wxsImages' and wxsImageList's were added
+// note: first 2 items in mItems are used only in the dialog
+
+    for(i=2; i<mItems.GetCount(); i++) {
+        ss = mItems.Item(i);
+        ParseComboItem(ss, tt, n);
+
+// add the text item
+
+        Codef(_T("%s->Append(_T(\"%s\"));\n"), vv.c_str(), tt.c_str());
+
+// add the bitmap at the bottom of the code
+
+        if ((ilist) && (n >= 0)) {
+            tt.Printf(_T("%s->SetItemBitmap(%d, %s->GetBitmap(%d));\n"), vv.c_str(), i-2, mImageList.c_str(), n);
+            AddEventCode(tt);
+        };
+    };
+
+    AddEventCode(_T("\n"));
+
+// finish setup
+
+    BuildSetupWindowCode();
+
 }
 
-/*! \brief	Build the control preview.
- *
- * \param parent wxWindow*	The parent window.
- * \param flags long					The control flags.
- * \return wxObject* 					The constructed control.
- *
- */
-wxObject *wxsBitmapComboBox::OnBuildPreview(wxWindow *Parent, long Flags)
-{
-    wxBitmapComboBox *preview = new wxBitmapComboBox(Parent, GetId(), wxEmptyString, Pos(Parent), Size(Parent), m_arrItems, Style());
+//------------------------------------------------------------------------------
 
-	// Find the image list.
-	wxsImageList *imageList = (wxsImageList *) wxsImageListEditorDlg::FindTool(this, m_sImageList);
+wxObject* wxsBitmapComboBox::OnBuildPreview(wxWindow* Parent,long Flags) {
+int                 i,n;
+wxBitmapComboBox    *combo;
+wxsImageList        *ilist;
+wxString            ss, tt;
+wxBitmap            bmp;
 
-	int				i, n;
-	wxString	sItem, sText;
-	wxBitmap	bmp;
-	// make sure there is no random junk
-    preview->Clear();
+// the basic button
 
-	// add items to combo-box
-	// note: first 2 items are used only in the dialog
-    for(i = 2;i < (int)m_arrItems.GetCount();i++){
-        sItem = m_arrItems.Item(i);
-        ParseComboItem(sItem, sText, n);
+    combo = new wxBitmapComboBox(Parent, GetId(), _T(""), Pos(Parent),Size(Parent),0, NULL, Style());
 
-        preview->Append(sText);
+// a valid image-list specified?
 
-        if((imageList != NULL) && (n >= 0)){
-        	preview->SetItemBitmap(i - 2, imageList->GetPreview(n));
-        }
-    }
+    ilist = (wxsImageList *) wxsImageListEditorDlg::FindTool(this, mImageList);
 
-    if(m_defaultSelection > -1){
-		preview->SetSelection(m_defaultSelection);
-    }
+// make sure there is no random junk
 
-    return SetupWindow(preview, Flags);
+    combo->Clear();
+
+// add items to combo-box
+// note: first 2 items are used only in the dialog
+
+    for(i=2; i<mItems.GetCount(); i++) {
+        ss = mItems.Item(i);
+        ParseComboItem(ss, tt, n);
+
+        combo->Append(tt);
+
+        if ((ilist != NULL) && (n >= 0)) combo->SetItemBitmap(i-2, ilist->GetPreview(n));
+    };
+
+// done
+
+    return SetupWindow(combo, Flags);
 }
 
-/*! \brief Enumerate the control's properties.
- *
- * \param flags long	The control flags.
- * \return void
- *
- */
-void wxsBitmapComboBox::OnEnumWidgetProperties(long Flags)
-{
-	static wxString         	sImageNames[128];
-	static const wxChar    *pImageNames[128];
+//------------------------------------------------------------------------------
 
-	int                     		i, n;
-	wxString                ss;
-	wxArrayString       aa;
+void wxsBitmapComboBox::OnEnumWidgetProperties(long Flags) {
+static wxString         sImageNames[128];
+static const wxChar    *pImageNames[128];
 
-	// find available image lists and store them in our local static arrays
+int                     i,n;
+wxString                ss, tt;
+wxArrayString           aa;
+
+// find available image lists and store them in our local static arrays
+
     FindAllImageLists(aa);
     n = aa.GetCount();
-    if(n > 127){
-    	n = 127;
-    }
+    if (n > 127) n = 127;
 
-    for(i=0;i < n;i++){
+    for(i=0; i<n; i++) {
         ss = aa.Item(i);
         sImageNames[i] = ss;
         pImageNames[i] = (const wxChar *) sImageNames[i];
-    }
+    };
     pImageNames[n] = NULL;
 
-    WXS_EDITENUM(wxsBitmapComboBox, m_sImageList, _("Image List"), _T("image_list"), pImageNames, _("<none>"))
+    WXS_EDITENUM(wxsBitmapComboBox, mImageList, _("Image List"), _("mImageList"), pImageNames, _("<none>"))
 
-	// The list of items to appear in the combo box.
+// the list of items to appear in the combo box
+
     UpdateComboItemList();
 
-    WXS_IMAGECOMBO(wxsBitmapComboBox, m_arrItems, _("Combo Items"), _T("items"));
-    WXS_ARRAYSTRING(wxsBitmapComboBox, m_arrItems, _("Items as Text"), _T("items_text"), _T("item2"));
-    WXS_LONG(wxsBitmapComboBox, m_defaultSelection, _("Selection"), _T("selection"), -1)
+    WXS_IMAGECOMBO(wxsBitmapComboBox, mItems, _("Combo Items"), _("mItems"));
+    WXS_ARRAYSTRING(wxsBitmapComboBox, mItems, _("Items as Text"), _("mItemsText"), _("item2"));
 }
 
-/*! \brief Find all tools that are image lists and return their names.
- *
- * \param aNames wxArrayString&
- * \return void
- *
- */
-void wxsBitmapComboBox::FindAllImageLists(wxArrayString &aNames)
-{
-	int             					i, n;
-	wxsItemResData  	*res;
-	wxsTool         			*tool;
-	wxString        			ss;
+//------------------------------------------------------------------------------
+// find all tools that are image lists and return their names
 
-	// start the list with a chance to de-select any old list
+void wxsBitmapComboBox::FindAllImageLists(wxArrayString &aNames) {
+int             i,n;
+wxsItemResData  *res;
+wxsTool         *tool;
+wxsImageList    *ilist;
+wxString        ss, tt;
+
+// start the list with a chance to de-select any old list
+
     aNames.Clear();
     aNames.Add(_("<none>"));
 
-	// find all tools that are "wxImageList"
+// find all tools that are "wxImageList"
+
     res = GetResourceData();
     n   = res->GetToolsCount();
-    for(i = 0;i < n;i++){
+    for(i=0; i<n; i++) {
         tool = res->GetTool(i);
         ss   = tool->GetUserClass();
 
-        if((ss == _T("wxImageList")) && (n < 127)){
+        if ((ss == _("wxImageList")) && (n < 127)) {
             ss = tool->GetVarName();
             aNames.Add(ss);
-        }
-    }
+        };
+    };
 }
 
-/*! \brief Update the list of combo items to send to the wsxImageComboEditDialog
- *
- * \param void
- * \return void
- *
- */
-void wxsBitmapComboBox::UpdateComboItemList(void)
-{
-	int             			i, n;
-	wxString        	sItem;
-	wxArrayString	aa;
+//------------------------------------------------------------------------------
+// update the list of combo items to send to the wsxImageComboEditDialog
 
-	// first 2 items are always our var name and the name of the image list
+void wxsBitmapComboBox::UpdateComboItemList(void) {
+int             i,n;
+wxString        ss, tt;
+wxArrayString   aa;
+
+// first 2 items are always our var name and the name of the image list
+
     aa.Clear();
-    sItem = GetVarName();
-    aa.Add(sItem);
-    sItem = m_sImageList;
-    aa.Add(sItem);
+    ss = GetVarName();
+    aa.Add(ss);
+    ss = mImageList;
+    aa.Add(ss);
 
-	// then copy over everything else the user entered last time
-    n = m_arrItems.GetCount();
-    for(i = 2;i < n; i++){
-        sItem = m_arrItems.Item(i);
-        aa.Add(sItem);
-    }
+// then copy over everything else the user entered last time
 
-	// then put back in original list
-    m_arrItems.Clear();
+    n = mItems.GetCount();
+    for(i=2; i<n; i++) {
+        ss = mItems.Item(i);
+        aa.Add(ss);
+    };
+
+// then put back in original list
+
+    mItems.Clear();
     n = aa.GetCount();
-    for(i = 0;i < n;i++){
-        sItem = aa.Item(i);
-        m_arrItems.Add(sItem);
-    }
+    for(i=0; i<n; i++) {
+        ss = aa.Item(i);
+        mItems.Add(ss);
+    };
 
-	// make sure that FindTool has a valid wxsItem* to work from in the dialog
-    wxsImageListEditorDlg::FindTool(this, m_sImageList);
+// make sure that FindTool has a valid wxsItem* to work from in the dialog
+
+    wxsImageListEditorDlg::FindTool(this, mImageList);
 }
 
-/*! \brief Parse a combo item string.
- *
- * \param inSource wxString
- * \param outItem wxString&
- * \param outIndex int&
- * \return void
- *
- */
-void wxsBitmapComboBox::ParseComboItem(wxString inSource, wxString &outItem, int &outIndex)
-{
-	int         		i;
-	long        	iLong;
-	wxString 	sSource, sText;
+//------------------------------------------------------------------------------
 
-	// working copy
-    sSource = inSource;
+void wxsBitmapComboBox::ParseComboItem(wxString inSource, wxString &outItem, int &outIndex) {
+int         i,n;
+long        ll;
+wxString    ss, tt;
 
-	// a "," separates the image index from the text of the item
-    i = sSource.Find(_(","));
+// working copy
 
-	// if a "," was found, parse the index from the text
-	// if no ",", then no index and the entire string is text
-    if(i != wxNOT_FOUND){
-        sText = sSource.Left(i);
-        sSource.erase(0, i+1);
-        outItem = sSource;
+    ss = inSource;
+
+// a "," separates the image index from the text of the item
+
+    i = ss.Find(_(","));
+
+// if a "," was found, parse the index from the text
+// if no ",", then no index and the entire string is text
+
+    if (i != wxNOT_FOUND) {
+        tt = ss.Left(i);
+        ss.erase(0, i+1);
+        outItem = ss;
         outIndex = -1;
-        if (sText.ToLong(&iLong)){
-        	outIndex = iLong;
-        }
+        if (tt.ToLong(&ll)) outIndex = ll;
     }
-    else{
+    else {
         outIndex = -1;
-        outItem = sSource;
-    }
+        outItem = ss;
+    };
 }
+
+
+
+
+
+
 

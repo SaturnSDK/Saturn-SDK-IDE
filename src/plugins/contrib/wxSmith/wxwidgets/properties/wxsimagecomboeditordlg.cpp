@@ -23,12 +23,11 @@
 
 
 //(*InternalHeaders(wxsImageComboEditorDlg)
-#include <wx/artprov.h>
-#include <wx/bitmap.h>
-#include <wx/font.h>
-#include <wx/intl.h>
-#include <wx/image.h>
 #include <wx/string.h>
+#include <wx/intl.h>
+#include <wx/bitmap.h>
+#include <wx/image.h>
+#include <wx/artprov.h>
 //*)
 #include "../wxsitemresdata.h"
 #include "../wxsitem.h"
@@ -36,26 +35,26 @@
 #include "wxsimagecomboeditordlg.h"
 
 //(*IdInit(wxsImageComboEditorDlg)
-const long wxsImageComboEditorDlg::ID_BUTTON1 = wxNewId();
-const long wxsImageComboEditorDlg::ID_BUTTON2 = wxNewId();
-const long wxsImageComboEditorDlg::ID_TREECTRL1 = wxNewId();
 const long wxsImageComboEditorDlg::ID_STATICTEXT1 = wxNewId();
-const long wxsImageComboEditorDlg::ID_BITMAPBUTTON1 = wxNewId();
-const long wxsImageComboEditorDlg::ID_BITMAPBUTTON2 = wxNewId();
-const long wxsImageComboEditorDlg::ID_BITMAPBUTTON3 = wxNewId();
-const long wxsImageComboEditorDlg::ID_BITMAPBUTTON4 = wxNewId();
-const long wxsImageComboEditorDlg::ID_BITMAPBUTTON5 = wxNewId();
+const long wxsImageComboEditorDlg::ID_TREECTRL1 = wxNewId();
 const long wxsImageComboEditorDlg::ID_STATICTEXT2 = wxNewId();
-const long wxsImageComboEditorDlg::ID_BITMAPBUTTON6 = wxNewId();
+const long wxsImageComboEditorDlg::ID_BITMAPBUTTON1 = wxNewId();
 const long wxsImageComboEditorDlg::ID_STATICTEXT3 = wxNewId();
+const long wxsImageComboEditorDlg::ID_BITMAPBUTTON2 = wxNewId();
 const long wxsImageComboEditorDlg::ID_STATICTEXT4 = wxNewId();
+const long wxsImageComboEditorDlg::ID_BITMAPBUTTON3 = wxNewId();
 const long wxsImageComboEditorDlg::ID_STATICTEXT5 = wxNewId();
+const long wxsImageComboEditorDlg::ID_BITMAPBUTTON4 = wxNewId();
 const long wxsImageComboEditorDlg::ID_STATICTEXT6 = wxNewId();
+const long wxsImageComboEditorDlg::ID_BITMAPBUTTON5 = wxNewId();
 const long wxsImageComboEditorDlg::ID_STATICTEXT7 = wxNewId();
+const long wxsImageComboEditorDlg::ID_BITMAPBUTTON6 = wxNewId();
 const long wxsImageComboEditorDlg::ID_STATICTEXT8 = wxNewId();
 const long wxsImageComboEditorDlg::ID_STATICTEXT9 = wxNewId();
 const long wxsImageComboEditorDlg::ID_COMBOBOX1 = wxNewId();
 const long wxsImageComboEditorDlg::ID_STATICTEXT10 = wxNewId();
+const long wxsImageComboEditorDlg::ID_BUTTON1 = wxNewId();
+const long wxsImageComboEditorDlg::ID_BUTTON2 = wxNewId();
 //*)
 
 BEGIN_EVENT_TABLE(wxsImageComboEditorDlg,wxScrollingDialog)
@@ -66,48 +65,111 @@ END_EVENT_TABLE()
 	wxsImageComboEditorDlg::wxsImageComboEditorDlg(wxWindow* parent,wxWindowID id,const wxPoint& pos,const wxSize& size)
 	{
 		//(*Initialize(wxsImageComboEditorDlg)
+		wxBoxSizer* BoxSizer3;
+		wxBoxSizer* BoxSizer10;
+		wxBoxSizer* BoxSizer7;
+		wxBoxSizer* BoxSizer11;
+		wxBoxSizer* BoxSizer13;
+		wxBoxSizer* BoxSizer2;
+		wxBoxSizer* BoxSizer9;
+		wxBoxSizer* BoxSizer4;
+		wxBoxSizer* BoxSizer8;
+		wxBoxSizer* BoxSizer1;
+		wxBoxSizer* BoxSizer12;
+		wxBoxSizer* BoxSizer14;
+		wxBoxSizer* BoxSizer6;
+		wxBoxSizer* BoxSizer5;
+
 		Create(parent, wxID_ANY, _("wxBitmapComboBox Editor"), wxDefaultPosition, wxDefaultSize, wxCAPTION|wxDEFAULT_DIALOG_STYLE, _T("wxID_ANY"));
-		SetClientSize(wxSize(414,350));
 		SetMinSize(wxSize(-1,-1));
 		SetMaxSize(wxSize(-1,-1));
-		wxFont thisFont(8,wxSWISS,wxFONTSTYLE_NORMAL,wxNORMAL,false,_T("Arial"),wxFONTENCODING_DEFAULT);
-		SetFont(thisFont);
-		bOK = new wxButton(this, ID_BUTTON1, _("OK"), wxPoint(64,320), wxDefaultSize, 0, wxDefaultValidator, _T("ID_BUTTON1"));
-		bOK->SetDefault();
-		bCancel = new wxButton(this, ID_BUTTON2, _("Cancel"), wxPoint(272,320), wxDefaultSize, 0, wxDefaultValidator, _T("ID_BUTTON2"));
-		Tree1 = new wxTreeCtrl(this, ID_TREECTRL1, wxPoint(0,32), wxSize(240,272), wxTR_EDIT_LABELS|wxTR_NO_BUTTONS|wxTR_NO_LINES|wxTR_HIDE_ROOT|wxRAISED_BORDER, wxDefaultValidator, _T("ID_TREECTRL1"));
-		StaticText1 = new wxStaticText(this, ID_STATICTEXT1, _("Combo-Box"), wxPoint(8,8), wxSize(224,14), wxST_NO_AUTORESIZE|wxALIGN_CENTRE, _T("ID_STATICTEXT1"));
-		bAddItem = new wxBitmapButton(this, ID_BITMAPBUTTON1, wxArtProvider::GetBitmap(wxART_MAKE_ART_ID_FROM_STR(_T("wxART_ADD_BOOKMARK")),wxART_BUTTON), wxPoint(256,32), wxDefaultSize, wxBU_AUTODRAW, wxDefaultValidator, _T("ID_BITMAPBUTTON1"));
-		bAddItem->SetDefault();
-		bMoveUp = new wxBitmapButton(this, ID_BITMAPBUTTON2, wxArtProvider::GetBitmap(wxART_MAKE_ART_ID_FROM_STR(_T("wxART_GO_UP")),wxART_BUTTON), wxPoint(256,64), wxDefaultSize, wxBU_AUTODRAW, wxDefaultValidator, _T("ID_BITMAPBUTTON2"));
-		bMoveUp->SetDefault();
-		bMoveDown = new wxBitmapButton(this, ID_BITMAPBUTTON3, wxArtProvider::GetBitmap(wxART_MAKE_ART_ID_FROM_STR(_T("wxART_GO_DOWN")),wxART_BUTTON), wxPoint(256,96), wxDefaultSize, wxBU_AUTODRAW, wxDefaultValidator, _T("ID_BITMAPBUTTON3"));
-		bMoveDown->SetDefault();
-		bDeleteItem = new wxBitmapButton(this, ID_BITMAPBUTTON4, wxArtProvider::GetBitmap(wxART_MAKE_ART_ID_FROM_STR(_T("wxART_DEL_BOOKMARK")),wxART_BUTTON), wxPoint(256,128), wxDefaultSize, wxBU_AUTODRAW, wxDefaultValidator, _T("ID_BITMAPBUTTON4"));
-		bDeleteAll = new wxBitmapButton(this, ID_BITMAPBUTTON5, wxArtProvider::GetBitmap(wxART_MAKE_ART_ID_FROM_STR(_T("wxART_DELETE")),wxART_BUTTON), wxPoint(256,160), wxDefaultSize, wxBU_AUTODRAW, wxDefaultValidator, _T("ID_BITMAPBUTTON5"));
-		StaticText2 = new wxStaticText(this, ID_STATICTEXT2, _("Edit Items"), wxPoint(264,8), wxSize(136,14), wxST_NO_AUTORESIZE|wxALIGN_CENTRE, _T("ID_STATICTEXT2"));
-		bEditItem = new wxBitmapButton(this, ID_BITMAPBUTTON6, wxArtProvider::GetBitmap(wxART_MAKE_ART_ID_FROM_STR(_T("wxART_HELP_SETTINGS")),wxART_BUTTON), wxPoint(256,200), wxDefaultSize, wxBU_AUTODRAW, wxDefaultValidator, _T("ID_BITMAPBUTTON6"));
-		bEditItem->SetDefault();
-		StaticText3 = new wxStaticText(this, ID_STATICTEXT3, _("Add Item"), wxPoint(288,36), wxDefaultSize, 0, _T("ID_STATICTEXT3"));
-		StaticText4 = new wxStaticText(this, ID_STATICTEXT4, _("Move Item Up"), wxPoint(288,68), wxDefaultSize, 0, _T("ID_STATICTEXT4"));
-		StaticText5 = new wxStaticText(this, ID_STATICTEXT5, _("Move Item Down"), wxPoint(288,100), wxDefaultSize, 0, _T("ID_STATICTEXT5"));
-		StaticText6 = new wxStaticText(this, ID_STATICTEXT6, _("Delete Item"), wxPoint(288,132), wxDefaultSize, 0, _T("ID_STATICTEXT6"));
-		StaticText7 = new wxStaticText(this, ID_STATICTEXT7, _("Delete All Items"), wxPoint(288,164), wxDefaultSize, 0, _T("ID_STATICTEXT7"));
-		StaticText8 = new wxStaticText(this, ID_STATICTEXT8, _("Edit Item Text"), wxPoint(288,204), wxDefaultSize, 0, _T("ID_STATICTEXT8"));
-		StaticText9 = new wxStaticText(this, ID_STATICTEXT9, _("Image-List"), wxPoint(256,240), wxSize(144,14), wxST_NO_AUTORESIZE, _T("ID_STATICTEXT9"));
-		cbImage = new wxBitmapComboBox(this, ID_COMBOBOX1, wxEmptyString, wxPoint(256,272), wxSize(88,22), 0, 0, wxCB_READONLY, wxDefaultValidator, _T("ID_COMBOBOX1"));
+		BoxSizer1 = new wxBoxSizer(wxVERTICAL);
+		BoxSizer13 = new wxBoxSizer(wxHORIZONTAL);
+		BoxSizer2 = new wxBoxSizer(wxVERTICAL);
+		StaticText1 = new wxStaticText(this, ID_STATICTEXT1, _("Combo-Box"), wxDefaultPosition, wxDefaultSize, wxST_NO_AUTORESIZE|wxALIGN_CENTRE, _T("ID_STATICTEXT1"));
+		BoxSizer2->Add(StaticText1, 0, wxALL|wxALIGN_LEFT|wxALIGN_BOTTOM, 5);
+		m_pTree = new wxTreeCtrl(this, ID_TREECTRL1, wxPoint(0,32), wxSize(240,272), wxTR_EDIT_LABELS|wxTR_NO_BUTTONS|wxTR_NO_LINES|wxTR_HIDE_ROOT|wxRAISED_BORDER, wxDefaultValidator, _T("ID_TREECTRL1"));
+		BoxSizer2->Add(m_pTree, 0, wxALL|wxEXPAND|wxALIGN_LEFT|wxALIGN_BOTTOM, 0);
+		BoxSizer13->Add(BoxSizer2, 0, wxALL|wxALIGN_LEFT|wxALIGN_TOP, 5);
+		BoxSizer3 = new wxBoxSizer(wxVERTICAL);
+		StaticText2 = new wxStaticText(this, ID_STATICTEXT2, _("Edit Items"), wxPoint(264,8), wxDefaultSize, wxST_NO_AUTORESIZE|wxALIGN_CENTRE, _T("ID_STATICTEXT2"));
+		BoxSizer3->Add(StaticText2, 0, wxALL|wxALIGN_LEFT|wxALIGN_TOP, 5);
+		BoxSizer4 = new wxBoxSizer(wxHORIZONTAL);
+		m_pBtnAddItem = new wxBitmapButton(this, ID_BITMAPBUTTON1, wxArtProvider::GetBitmap(wxART_MAKE_ART_ID_FROM_STR(_T("wxART_ADD_BOOKMARK")),wxART_BUTTON), wxDefaultPosition, wxSize(32,32), wxBU_AUTODRAW, wxDefaultValidator, _T("ID_BITMAPBUTTON1"));
+		m_pBtnAddItem->SetDefault();
+		BoxSizer4->Add(m_pBtnAddItem, 0, wxALL|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL, 0);
+		StaticText3 = new wxStaticText(this, ID_STATICTEXT3, _("Add Item"), wxDefaultPosition, wxDefaultSize, 0, _T("ID_STATICTEXT3"));
+		BoxSizer4->Add(StaticText3, 0, wxALL|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL, 5);
+		BoxSizer3->Add(BoxSizer4, 0, wxALL|wxEXPAND|wxALIGN_LEFT|wxALIGN_TOP, 0);
+		BoxSizer5 = new wxBoxSizer(wxHORIZONTAL);
+		m_pBtnMoveUp = new wxBitmapButton(this, ID_BITMAPBUTTON2, wxArtProvider::GetBitmap(wxART_MAKE_ART_ID_FROM_STR(_T("wxART_GO_UP")),wxART_BUTTON), wxDefaultPosition, wxSize(32,32), wxBU_AUTODRAW, wxDefaultValidator, _T("ID_BITMAPBUTTON2"));
+		m_pBtnMoveUp->SetDefault();
+		BoxSizer5->Add(m_pBtnMoveUp, 0, wxALL|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL, 0);
+		StaticText4 = new wxStaticText(this, ID_STATICTEXT4, _("Move Item Up"), wxDefaultPosition, wxDefaultSize, 0, _T("ID_STATICTEXT4"));
+		BoxSizer5->Add(StaticText4, 0, wxALL|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL, 5);
+		BoxSizer3->Add(BoxSizer5, 0, wxALL|wxEXPAND|wxALIGN_LEFT|wxALIGN_TOP, 0);
+		BoxSizer6 = new wxBoxSizer(wxHORIZONTAL);
+		m_pBtnMoveDown = new wxBitmapButton(this, ID_BITMAPBUTTON3, wxArtProvider::GetBitmap(wxART_MAKE_ART_ID_FROM_STR(_T("wxART_GO_DOWN")),wxART_BUTTON), wxDefaultPosition, wxSize(32,32), wxBU_AUTODRAW, wxDefaultValidator, _T("ID_BITMAPBUTTON3"));
+		m_pBtnMoveDown->SetDefault();
+		BoxSizer6->Add(m_pBtnMoveDown, 0, wxALL|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL, 0);
+		StaticText5 = new wxStaticText(this, ID_STATICTEXT5, _("Move Item Down"), wxDefaultPosition, wxDefaultSize, 0, _T("ID_STATICTEXT5"));
+		BoxSizer6->Add(StaticText5, 0, wxALL|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL, 5);
+		BoxSizer3->Add(BoxSizer6, 0, wxALL|wxEXPAND|wxALIGN_LEFT|wxALIGN_TOP, 0);
+		BoxSizer7 = new wxBoxSizer(wxHORIZONTAL);
+		m_pBtnDeleteItem = new wxBitmapButton(this, ID_BITMAPBUTTON4, wxArtProvider::GetBitmap(wxART_MAKE_ART_ID_FROM_STR(_T("wxART_DEL_BOOKMARK")),wxART_BUTTON), wxDefaultPosition, wxSize(32,32), wxBU_AUTODRAW, wxDefaultValidator, _T("ID_BITMAPBUTTON4"));
+		BoxSizer7->Add(m_pBtnDeleteItem, 0, wxALL|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL, 0);
+		StaticText6 = new wxStaticText(this, ID_STATICTEXT6, _("Delete Item"), wxDefaultPosition, wxDefaultSize, 0, _T("ID_STATICTEXT6"));
+		BoxSizer7->Add(StaticText6, 0, wxALL|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL, 5);
+		BoxSizer3->Add(BoxSizer7, 0, wxALL|wxEXPAND|wxALIGN_LEFT|wxALIGN_TOP, 0);
+		BoxSizer8 = new wxBoxSizer(wxHORIZONTAL);
+		m_pBtnDeleteAll = new wxBitmapButton(this, ID_BITMAPBUTTON5, wxArtProvider::GetBitmap(wxART_MAKE_ART_ID_FROM_STR(_T("wxART_DELETE")),wxART_BUTTON), wxDefaultPosition, wxSize(32,32), wxBU_AUTODRAW, wxDefaultValidator, _T("ID_BITMAPBUTTON5"));
+		BoxSizer8->Add(m_pBtnDeleteAll, 0, wxALL|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL, 0);
+		StaticText7 = new wxStaticText(this, ID_STATICTEXT7, _("Delete All Items"), wxDefaultPosition, wxDefaultSize, 0, _T("ID_STATICTEXT7"));
+		BoxSizer8->Add(StaticText7, 0, wxALL|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL, 5);
+		BoxSizer3->Add(BoxSizer8, 0, wxALL|wxEXPAND|wxALIGN_LEFT|wxALIGN_TOP, 0);
+		BoxSizer9 = new wxBoxSizer(wxHORIZONTAL);
+		m_pBtnEditItem = new wxBitmapButton(this, ID_BITMAPBUTTON6, wxArtProvider::GetBitmap(wxART_MAKE_ART_ID_FROM_STR(_T("wxART_HELP_SETTINGS")),wxART_BUTTON), wxDefaultPosition, wxSize(32,32), wxBU_AUTODRAW, wxDefaultValidator, _T("ID_BITMAPBUTTON6"));
+		m_pBtnEditItem->SetDefault();
+		BoxSizer9->Add(m_pBtnEditItem, 0, wxALL|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL, 0);
+		StaticText8 = new wxStaticText(this, ID_STATICTEXT8, _("Edit Item Text"), wxDefaultPosition, wxDefaultSize, 0, _T("ID_STATICTEXT8"));
+		BoxSizer9->Add(StaticText8, 0, wxALL|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL, 5);
+		BoxSizer3->Add(BoxSizer9, 0, wxALL|wxEXPAND|wxALIGN_LEFT|wxALIGN_TOP, 0);
+		BoxSizer10 = new wxBoxSizer(wxVERTICAL);
+		BoxSizer11 = new wxBoxSizer(wxHORIZONTAL);
+		StaticText9 = new wxStaticText(this, ID_STATICTEXT9, _("Image-List"), wxPoint(256,240), wxDefaultSize, wxST_NO_AUTORESIZE, _T("ID_STATICTEXT9"));
+		BoxSizer11->Add(StaticText9, 0, wxALL|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL, 5);
+		BoxSizer10->Add(BoxSizer11, 0, wxALL|wxALIGN_LEFT|wxALIGN_BOTTOM, 0);
+		BoxSizer12 = new wxBoxSizer(wxHORIZONTAL);
+		m_pCmbImage = new wxBitmapComboBox(this, ID_COMBOBOX1, wxEmptyString, wxPoint(256,272), wxSize(100,22), 0, 0, wxCB_READONLY, wxDefaultValidator, _T("ID_COMBOBOX1"));
+		BoxSizer12->Add(m_pCmbImage, 0, wxTOP|wxBOTTOM|wxRIGHT|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL, 5);
 		StaticText10 = new wxStaticText(this, ID_STATICTEXT10, _("Item Image"), wxPoint(352,276), wxDefaultSize, 0, _T("ID_STATICTEXT10"));
+		BoxSizer12->Add(StaticText10, 0, wxALL|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL, 5);
+		BoxSizer10->Add(BoxSizer12, 0, wxALL|wxALIGN_LEFT|wxALIGN_BOTTOM, 0);
+		BoxSizer3->Add(BoxSizer10, 1, wxTOP|wxBOTTOM|wxRIGHT|wxEXPAND|wxALIGN_LEFT|wxALIGN_TOP, 5);
+		BoxSizer13->Add(BoxSizer3, 0, wxALL|wxALIGN_LEFT|wxALIGN_TOP, 5);
+		BoxSizer1->Add(BoxSizer13, 0, wxALL|wxALIGN_LEFT|wxALIGN_BOTTOM, 5);
+		BoxSizer14 = new wxBoxSizer(wxHORIZONTAL);
+		m_pBtnOK = new wxButton(this, ID_BUTTON1, _("OK"), wxPoint(64,320), wxDefaultSize, 0, wxDefaultValidator, _T("ID_BUTTON1"));
+		m_pBtnOK->SetDefault();
+		BoxSizer14->Add(m_pBtnOK, 0, wxALL|wxALIGN_LEFT|wxALIGN_BOTTOM, 5);
+		BoxSizer14->Add(-1,-1,1, wxALL|wxALIGN_LEFT|wxALIGN_BOTTOM, 5);
+		m_pBtnCancel = new wxButton(this, ID_BUTTON2, _("Cancel"), wxPoint(272,320), wxDefaultSize, 0, wxDefaultValidator, _T("ID_BUTTON2"));
+		BoxSizer14->Add(m_pBtnCancel, 0, wxALL|wxALIGN_LEFT|wxALIGN_BOTTOM, 5);
+		BoxSizer1->Add(BoxSizer14, 0, wxALL|wxEXPAND|wxALIGN_LEFT|wxALIGN_BOTTOM, 5);
+		SetSizer(BoxSizer1);
+		BoxSizer1->Fit(this);
+		BoxSizer1->SetSizeHints(this);
 
-		Connect(ID_BUTTON1,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&wxsImageComboEditorDlg::OnbOKClick);
-		Connect(ID_BUTTON2,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&wxsImageComboEditorDlg::OnbCancelClick);
-		Connect(ID_TREECTRL1,wxEVT_COMMAND_TREE_SEL_CHANGED,(wxObjectEventFunction)&wxsImageComboEditorDlg::OnTree1SelectionChanged);
-		Connect(ID_BITMAPBUTTON1,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&wxsImageComboEditorDlg::OnbAddItemClick);
-		Connect(ID_BITMAPBUTTON2,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&wxsImageComboEditorDlg::OnbMoveUpClick);
-		Connect(ID_BITMAPBUTTON3,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&wxsImageComboEditorDlg::OnbMoveDownClick);
-		Connect(ID_BITMAPBUTTON4,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&wxsImageComboEditorDlg::OnbDeleteItemClick);
-		Connect(ID_BITMAPBUTTON5,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&wxsImageComboEditorDlg::OnbDeleteAllClick);
-		Connect(ID_BITMAPBUTTON6,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&wxsImageComboEditorDlg::OnbEditItemClick);
-		Connect(ID_COMBOBOX1,wxEVT_COMMAND_COMBOBOX_SELECTED,(wxObjectEventFunction)&wxsImageComboEditorDlg::OncbImageSelect);
+		Connect(ID_TREECTRL1,wxEVT_COMMAND_TREE_SEL_CHANGED,(wxObjectEventFunction)&wxsImageComboEditorDlg::OnTreeSelectionChanged);
+		Connect(ID_BITMAPBUTTON1,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&wxsImageComboEditorDlg::OnBtnAddItemClick);
+		Connect(ID_BITMAPBUTTON2,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&wxsImageComboEditorDlg::OnBtnMoveUpClick);
+		Connect(ID_BITMAPBUTTON3,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&wxsImageComboEditorDlg::OnBtnMoveDownClick);
+		Connect(ID_BITMAPBUTTON4,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&wxsImageComboEditorDlg::OnBtnDeleteItemClick);
+		Connect(ID_BITMAPBUTTON5,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&wxsImageComboEditorDlg::OnBtnDeleteAllClick);
+		Connect(ID_BITMAPBUTTON6,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&wxsImageComboEditorDlg::OnBtnEditItemClick);
+		Connect(ID_COMBOBOX1,wxEVT_COMMAND_COMBOBOX_SELECTED,(wxObjectEventFunction)&wxsImageComboEditorDlg::OnCmbImageSelect);
+		Connect(ID_BUTTON1,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&wxsImageComboEditorDlg::OnBtnOKClick);
+		Connect(ID_BUTTON2,wxEVT_COMMAND_BUTTON_CLICKED,(wxObjectEventFunction)&wxsImageComboEditorDlg::OnBtnCancelClick);
 		//*)
 	}
 
@@ -139,58 +201,58 @@ END_EVENT_TABLE()
 		// get name of combo-box and image-list
 		n = aItems.GetCount();
 		if(n == 0){
-			m_sComboName = _("<unknown>");
-			m_sImageName = _("<none>");
+			m_ComboName = _("<unknown>");
+			m_ImageName = _("<none>");
 		}
 		else if(n == 1){
-			m_sComboName = aItems.Item(0);
-			m_sImageName = _("<none>");
+			m_ComboName = aItems.Item(0);
+			m_ImageName = _("<none>");
 		}
 		else{
-			m_sComboName = aItems.Item(0);
-			m_sImageName = aItems.Item(1);
+			m_ComboName = aItems.Item(0);
+			m_ImageName = aItems.Item(1);
 		}
 
 		// show the names
-		ss = _("Combo Box: ") + m_sComboName;
+		ss = _("Combo Box: ") + m_ComboName;
 		StaticText1->SetLabel(ss);
 
-		ss = _("Image List: ") + m_sImageName;
+		ss = _("Image List: ") + m_ImageName;
 		StaticText9->SetLabel(ss);
 
 		// a valid image-list given?
-		m_imageList.RemoveAll();
-		ilist = (wxsImageList *) wxsImageListEditorDlg::FindTool(NULL, m_sImageName);
+		m_ImageList.RemoveAll();
+		ilist = (wxsImageList *) wxsImageListEditorDlg::FindTool(NULL, m_ImageName);
 		if(ilist == NULL){
-			cbImage->Enable(false);
+			m_pCmbImage->Enable(false);
 		}
 		else{
-			cbImage->Enable(true);
-			ilist->GetImageList(m_imageList);
+			m_pCmbImage->Enable(true);
+			ilist->GetImageList(m_ImageList);
 		}
 
 		// setup the combo-box image selector
-		cbImage->Clear();
-		cbImage->Append(_("<none>"));
+		m_pCmbImage->Clear();
+		m_pCmbImage->Append(_("<none>"));
 
-		n = m_imageList.GetImageCount();
+		n = m_ImageList.GetImageCount();
 		for(i=0; i<n; i++){
 			ss.Printf(_T("%3d"), i);
-			bmp = m_imageList.GetBitmap(i);
+			bmp = m_ImageList.GetBitmap(i);
 
-			cbImage->Append(ss, bmp);
+			m_pCmbImage->Append(ss, bmp);
 		}
 
-		cbImage->SetSelection(0);
+		m_pCmbImage->SetSelection(0);
 
 		// clear old junk
-		Tree1->DeleteAllItems();
+		m_pTree->DeleteAllItems();
 
 		// make a root item
-		root = Tree1->AddRoot(_("root"));
+		root = m_pTree->AddRoot(_("root"));
 
 		// make sure we are using the image list -- even if it is empty
-		Tree1->SetImageList(&m_imageList);
+		m_pTree->SetImageList(&m_ImageList);
 
 		// add all the new items
 		n = aItems.GetCount();
@@ -203,7 +265,7 @@ END_EVENT_TABLE()
 				ss.erase(0, j + 1);
 				if(tt.ToLong(&ll)) k = ll;
 			}
-			item = Tree1->AppendItem(root, ss, k);
+			item = m_pTree->AppendItem(root, ss, k);
 		}
 
 		// show the dialog and wait for a response
@@ -213,23 +275,29 @@ END_EVENT_TABLE()
 		if(n == wxOK){
 			// must save combo-box name and image-list name
 			aItems.Clear();
-			aItems.Add(m_sComboName);
-			aItems.Add(m_sImageName);
+			aItems.Add(m_ComboName);
+			aItems.Add(m_ImageName);
 
-			// save text of all children of the root item
-			// these are actually the only things seen by the user
-			item = Tree1->GetFirstChild(root, cookie);
-			while(item.IsOk()){
-				ss = Tree1->GetItemText(item);
-				k  = Tree1->GetItemImage(item, wxTreeItemIcon_Normal);
+            // fetch the actual root item, it might have been recreated or
+            // even deleted while executing the dialog
+            root = m_pTree->GetRootItem();
+            if (root.IsOk())
+            {
+                // save text of all children of the root item
+                // these are actually the only things seen by the user
+                item = m_pTree->GetFirstChild(root, cookie);
+                while(item.IsOk()){
+                    ss = m_pTree->GetItemText(item);
+                    k  = m_pTree->GetItemImage(item, wxTreeItemIcon_Normal);
 
-				tt.Printf(_T("%d,"), k);
-				ss = tt + ss;
+                    tt.Printf(_T("%d,"), k);
+                    ss = tt + ss;
 
-				aItems.Add(ss);
+                    aItems.Add(ss);
 
-				item = Tree1->GetNextChild(root, cookie);
-			}
+                    item = m_pTree->GetNextChild(root, cookie);
+                }
+            }
 		}
 
 		// done
@@ -242,13 +310,13 @@ END_EVENT_TABLE()
      * \return void
      *
      */
-	void wxsImageComboEditorDlg::OnbDeleteAllClick(wxCommandEvent& event)
+	void wxsImageComboEditorDlg::OnBtnDeleteAllClick(wxCommandEvent& event)
 	{
 		int         n;
 
 		n = wxMessageBox(_("Delete All Items?"), _("Confirm"), wxYES_NO );
 		if(n == wxYES){
-			Tree1->DeleteAllItems();
+			m_pTree->DeleteAllItems();
 		}
 	}
 
@@ -258,41 +326,36 @@ END_EVENT_TABLE()
      * \return void
      *
      */
-	void wxsImageComboEditorDlg::OnbAddItemClick(wxCommandEvent& event)
+	void wxsImageComboEditorDlg::OnBtnAddItemClick(wxCommandEvent& event)
 	{
 		int             n;
-		wxTreeItemId    root;
+		wxTreeItemId    root = m_pTree->GetRootItem();
 		wxTreeItemId    item;
 		wxString        ss;
 
 		// must have a root item, even though it is hidden
-		n = Tree1->GetCount();
-		if(n == 0){
-			root = Tree1->AddRoot(_("root"));
-		}
-		else{
-			root = Tree1->GetRootItem();
-		}
+		n = m_pTree->GetCount();
+
+		if (!root.IsOk())
+			root = m_pTree->AddRoot(_("root"));
 
 		// add a new child under the root
-		ss.Printf(_("new item %d"), n);
-		item = Tree1->AppendItem(root, ss);
+		ss.Printf(_("new item %d"), ++n);
+		item = m_pTree->AppendItem(root, ss);
 
 		// new image index
-		n = cbImage->GetSelection();
-		if(n == wxNOT_FOUND){
+		n = m_pCmbImage->GetSelection();
+		if(n == wxNOT_FOUND)
 			n  = -1;
-		}
-		else{
+		else
 			n -=  1;
-		}
 
 		// assign image
-		Tree1->SetItemImage(item, n, wxTreeItemIcon_Normal);
+		m_pTree->SetItemImage(item, n, wxTreeItemIcon_Normal);
 
 		// done
-		Tree1->SelectItem(item);
-		Tree1->EditLabel(item);
+		m_pTree->SelectItem(item);
+		m_pTree->EditLabel(item);
 	}
 
     /*! \brief The Move Up button was clicked.
@@ -301,7 +364,7 @@ END_EVENT_TABLE()
      * \return void
      *
      */
-	void wxsImageComboEditorDlg::OnbMoveUpClick(wxCommandEvent& event)
+	void wxsImageComboEditorDlg::OnBtnMoveUpClick(wxCommandEvent& event)
 	{
 		int         xi, xp;
 		wxString    si, sp;
@@ -309,34 +372,33 @@ END_EVENT_TABLE()
 		wxTreeItemId    item;
 
 		// current item and the one directly above
-		item = Tree1->GetSelection();
-		prev = Tree1->GetPrevSibling(item);
+		item = m_pTree->GetSelection();
+		prev = m_pTree->GetPrevSibling(item);
 
 		// no such thing?
-		if(! item.IsOk()){
+		if(! item.IsOk())
 			return;
-		}
-		if(! prev.IsOk()){
+
+		if(! prev.IsOk())
 			return;
-		}
 
 		// swap strings and image indices
-		si = Tree1->GetItemText(item);
-		xi = Tree1->GetItemImage(item, wxTreeItemIcon_Normal);
+		si = m_pTree->GetItemText(item);
+		xi = m_pTree->GetItemImage(item, wxTreeItemIcon_Normal);
 
-		sp = Tree1->GetItemText(prev);
-		xp = Tree1->GetItemImage(prev, wxTreeItemIcon_Normal);
+		sp = m_pTree->GetItemText(prev);
+		xp = m_pTree->GetItemImage(prev, wxTreeItemIcon_Normal);
 
 		// and swap them
-		Tree1->SetItemText(item, sp);
-		Tree1->SetItemImage(item, xp);
+		m_pTree->SetItemText(item, sp);
+		m_pTree->SetItemImage(item, xp);
 
-		Tree1->SetItemText(prev, si);
-		Tree1->SetItemImage(prev, xi);
+		m_pTree->SetItemText(prev, si);
+		m_pTree->SetItemImage(prev, xi);
 
 		// done
-		Tree1->SelectItem(prev);
-		Tree1->Refresh();
+		m_pTree->SelectItem(prev);
+		m_pTree->Refresh();
 	}
 
     /*! \brief The Move Down button was clicked.
@@ -345,7 +407,7 @@ END_EVENT_TABLE()
      * \return void
      *
      */
-	void wxsImageComboEditorDlg::OnbMoveDownClick(wxCommandEvent& event)
+	void wxsImageComboEditorDlg::OnBtnMoveDownClick(wxCommandEvent& event)
 	{
 		int         xi, xp;
 		wxString    si, sp;
@@ -353,34 +415,33 @@ END_EVENT_TABLE()
 		wxTreeItemId    item;
 
 		// current item and the one directly above
-		item = Tree1->GetSelection();
-		next = Tree1->GetNextSibling(item);
+		item = m_pTree->GetSelection();
+		next = m_pTree->GetNextSibling(item);
 
 		// no such thing?
-		if(!item.IsOk()){
+		if(!item.IsOk())
 			return;
-		}
-		if(!next.IsOk()){
+
+		if(!next.IsOk())
 			return;
-		}
 
 		// swap strings and image indices
-		si = Tree1->GetItemText(item);
-		xi = Tree1->GetItemImage(item, wxTreeItemIcon_Normal);
+		si = m_pTree->GetItemText(item);
+		xi = m_pTree->GetItemImage(item, wxTreeItemIcon_Normal);
 
-		sp = Tree1->GetItemText(next);
-		xp = Tree1->GetItemImage(next, wxTreeItemIcon_Normal);
+		sp = m_pTree->GetItemText(next);
+		xp = m_pTree->GetItemImage(next, wxTreeItemIcon_Normal);
 
 		// and swap them
-		Tree1->SetItemText(item, sp);
-		Tree1->SetItemImage(item, xp);
+		m_pTree->SetItemText(item, sp);
+		m_pTree->SetItemImage(item, xp);
 
-		Tree1->SetItemText(next, si);
-		Tree1->SetItemImage(next, xi);
+		m_pTree->SetItemText(next, si);
+		m_pTree->SetItemImage(next, xi);
 
 		// done
-		Tree1->SelectItem(next);
-		Tree1->Refresh();
+		m_pTree->SelectItem(next);
+		m_pTree->Refresh();
 	}
 
     /*! \brief The Delete Item button was clicked.
@@ -389,18 +450,18 @@ END_EVENT_TABLE()
      * \return void
      *
      */
-	void wxsImageComboEditorDlg::OnbDeleteItemClick(wxCommandEvent& event)
+	void wxsImageComboEditorDlg::OnBtnDeleteItemClick(wxCommandEvent& event)
 	{
 		wxTreeItemId    item;
 
 		// delete only current item
-		item = Tree1->GetSelection();
-		if(item.IsOk()){
-			Tree1->Delete(item);
-		}
+		item = m_pTree->GetSelection();
+		if(item.IsOk())
+			m_pTree->Delete(item);
+
 
 		// done
-		Tree1->Refresh();
+		m_pTree->Refresh();
 	}
 
     /*! \brief The Edit Item button was clicked.
@@ -409,18 +470,18 @@ END_EVENT_TABLE()
      * \return void
      *
      */
-	void wxsImageComboEditorDlg::OnbEditItemClick(wxCommandEvent& event)
+	void wxsImageComboEditorDlg::OnBtnEditItemClick(wxCommandEvent& event)
 	{
 		wxTreeItemId    item;
 
 		// delete only current item
-		item = Tree1->GetSelection();
-		if(item.IsOk()){
-			Tree1->EditLabel(item);
-		}
+		item = m_pTree->GetSelection();
+		if(item.IsOk())
+			m_pTree->EditLabel(item);
+
 
 		// done
-		Tree1->Refresh();
+		m_pTree->Refresh();
 	}
 
     /*! \brief The OK button was clicked.
@@ -429,7 +490,7 @@ END_EVENT_TABLE()
      * \return void
      *
      */
-	void wxsImageComboEditorDlg::OnbOKClick(wxCommandEvent& event)
+	void wxsImageComboEditorDlg::OnBtnOKClick(wxCommandEvent& event)
 	{
 		EndModal(wxOK);
 	}
@@ -440,7 +501,7 @@ END_EVENT_TABLE()
      * \return void
      *
      */
-	void wxsImageComboEditorDlg::OnbCancelClick(wxCommandEvent& event)
+	void wxsImageComboEditorDlg::OnBtnCancelClick(wxCommandEvent& event)
 	{
 		EndModal(wxCANCEL);
 	}
@@ -451,28 +512,26 @@ END_EVENT_TABLE()
      * \return void
      *
      */
-	void wxsImageComboEditorDlg::OncbImageSelect(wxCommandEvent& event)
+	void wxsImageComboEditorDlg::OnCmbImageSelect(wxCommandEvent& event)
 	{
 		int             n;
 		wxTreeItemId    item;
 
 		// current item
-		item = Tree1->GetSelection();
-		if(! item.IsOk()){
+		item = m_pTree->GetSelection();
+		if(! item.IsOk())
 			return;
-		}
+
 
 		// new image index
-		n = cbImage->GetSelection();
-		if(n == wxNOT_FOUND){
+		n = m_pCmbImage->GetSelection();
+		if(n == wxNOT_FOUND)
 			n  = -1;
-		}
-		else{
+		else
 			n -=  1;
-		}
 
 		// assign image
-		Tree1->SetItemImage(item, n, wxTreeItemIcon_Normal);
+		m_pTree->SetItemImage(item, n, wxTreeItemIcon_Normal);
 	}
 
 /*! \brief A list item was clicked in the item list.
@@ -482,13 +541,13 @@ END_EVENT_TABLE()
  *
  * Sets the image combo to display the correct image for the item selected.
  */
-void wxsImageComboEditorDlg::OnTree1SelectionChanged(wxTreeEvent& event)
+void wxsImageComboEditorDlg::OnTreeSelectionChanged(wxTreeEvent& event)
 {
 	wxTreeItemId item = event.GetItem();
 	if(item.IsOk()){
 			// Set the combo box to display 1 position higher than the number returned by GetItemImage() as the first item is "<none>" .
 			// i.e. image 0 in the imagelist is at position 1 in the combo box, etc.
-			cbImage->SetSelection(Tree1->GetItemImage(item) + 1);
+			m_pCmbImage->SetSelection(m_pTree->GetItemImage(item) + 1);
 	}
 
 }
