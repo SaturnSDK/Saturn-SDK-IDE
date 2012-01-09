@@ -4,6 +4,7 @@ usr/lib/codeblocks/wxContribItems/libwximagepanel.so
 usr/lib/codeblocks/wxContribItems/libwxflatnotebook.so
 usr/lib/codeblocks/wxContribItems/libwxcustombutton.so
 usr/lib/codeblocks/wxContribItems/libwxchartctrl.so
+usr/lib/codeblocks/wxContribItems/libwxtreelist.so
 
 usr/lib/pkgconfig/wxsmith-contrib.pc usr/lib/pkgconfig/
 usr/lib/pkgconfig/cb_wxcontrib.pc usr/lib/pkgconfig/
@@ -12,4 +13,5 @@ usr/lib/pkgconfig/cb_wxcustombutton.pc usr/lib/pkgconfig/
 usr/lib/pkgconfig/cb_wxflatnotebook.pc usr/lib/pkgconfig/
 usr/lib/pkgconfig/cb_wximagepanel.pc usr/lib/pkgconfig/
 usr/lib/pkgconfig/cb_wxKWIC.pc usr/lib/pkgconfig/
+usr/lib/pkgconfig/cb_wxtreelist.pc usr/lib/pkgconfig/
 usr/lib/pkgconfig/cb_wxspeedbutton.pc usr/lib/pkgconfig/

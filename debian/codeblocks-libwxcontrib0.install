@@ -3,5 +3,6 @@ usr/lib/codeblocks/wxContribItems/libwxkwic.so.*
 usr/lib/codeblocks/wxContribItems/libwximagepanel.so.*
 usr/lib/codeblocks/wxContribItems/libwxflatnotebook.so.*
 usr/lib/codeblocks/wxContribItems/libwxcustombutton.so.*
+usr/lib/codeblocks/wxContribItems/libwxtreelist.so.*
 usr/lib/codeblocks/wxContribItems/libwxchartctrl.so.*
 

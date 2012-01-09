@@ -13,6 +13,7 @@ INCLUDES = $(WX_CXXFLAGS) \
 		-I$(srcdir)/../wxContribItems/wxImagePanel/include \
 		-I$(srcdir)/../wxContribItems/wxthings/include \
 		-I$(srcdir)/../wxContribItems/KWIC/include \
+		-I$(srcdir)/../wxContribItems/wxTreeList/include \
 		-I$(srcdir)/../wxContribItems/wxSpeedButton
 
 pluginlibdir = $(pkglibdir)/plugins
@@ -28,6 +29,7 @@ libwxsmithcontribitems_la_LIBADD = $(PLUGIN_WX_LIBS) ../../../sdk/libcodeblocks.
 			../wxContribItems/wxImagePanel/libwximagepanel.la \
 			../wxContribItems/wxSpeedButton/libwxspeedbutton.la \
 			../wxContribItems/KWIC/libwxkwic.la \
+			../wxContribItems/wxTreeList/libwxtreelist.la \
 			../wxContribItems/wxthings/libwxcustombutton.la
 
 EXTRA_DIST = $(srcdir)/wxchart/*.xpm \
@@ -40,6 +42,7 @@ EXTRA_DIST = $(srcdir)/wxchart/*.xpm \
 		$(srcdir)/wxflatnotebook/images/*.xpm \
 		$(srcdir)/wxflatnotebook/images/*.png \
 		$(srcdir)/wxSmithKWIC/images/*.xpm \
+		$(srcdir)/wxtreelist/images/*.xpm \
 		$(srcdir)/*.cbp \
 		manifest.xml
 
@@ -64,6 +67,7 @@ libwxsmithcontribitems_la_SOURCES = \
 ./wxSmithKWIC/wxslcddisplay.cpp \
 ./wxSmithKWIC/wxslinearmeter.cpp \
 ./wxSmithKWIC/wxslinearregulator.cpp \
+./wxtreelist/wxsTreeListCtrl.cpp \
 ./wxSmithContribItems.cpp
 
 noinst_HEADERS = \
@@ -81,4 +85,5 @@ noinst_HEADERS = \
 ./wxSmithKWIC/wxslcddisplay.h \
 ./wxSmithKWIC/wxslinearmeter.h \
 ./wxSmithKWIC/wxslinearregulator.h \
+./wxtreelist/wxsTreeListCtrl.h \
 ./wxSmithContribItems.h

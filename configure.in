@@ -436,6 +436,7 @@ AC_CONFIG_FILES([Makefile
 	src/plugins/contrib/wxContribItems/cb_wxflatnotebook.pc
 	src/plugins/contrib/wxContribItems/cb_wxspeedbutton.pc
 	src/plugins/contrib/wxContribItems/cb_wxKWIC.pc
+	src/plugins/contrib/wxContribItems/cb_wxtreelist.pc
 	src/plugins/contrib/wxContribItems/wxchart/Makefile
 	src/plugins/contrib/wxContribItems/wxFlatNotebook/Makefile
 	src/plugins/contrib/wxContribItems/wxImagePanel/Makefile
@@ -444,6 +445,7 @@ AC_CONFIG_FILES([Makefile
 	src/plugins/contrib/wxContribItems/KWIC/Makefile
 	src/plugins/contrib/wxContribItems/KWIC/include/wx/KWIC/Makefile
 	src/plugins/contrib/wxContribItems/KWIC/include/wx/xrc/Makefile
+	src/plugins/contrib/wxContribItems/wxTreeList/Makefile
 	src/plugins/contrib/wxSmith/Makefile
 	src/plugins/contrib/wxSmith/wxsmith.pc
 	src/plugins/contrib/wxSmith/plugin/Makefile
