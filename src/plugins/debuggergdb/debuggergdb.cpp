@@ -181,6 +181,7 @@ DebuggerGDB::DebuggerGDB() :
     m_NoDebugInfo(false),
     m_StoppedOnSignal(false),
     m_pProject(0),
+    m_stopDebuggerConsoleClosed(false),
     m_TemporaryBreak(false),
     m_printElements(0)
 {
@@ -860,7 +861,9 @@ int DebuggerGDB::DoDebug(bool breakOnEntry)
         wxString consoleTty;
         m_nConsolePid = RunNixConsole(consoleTty);
         if (m_nConsolePid > 0)
-        {   wxString gdbTtyCmd;
+        {
+            m_stopDebuggerConsoleClosed = true;
+            wxString gdbTtyCmd;
             gdbTtyCmd << wxT("tty ") << consoleTty;
             m_State.GetDriver()->QueueCommand(new DebuggerCmd(m_State.GetDriver(), gdbTtyCmd, true));
             DebugLog(wxString::Format( _("Queued:[%s]"), gdbTtyCmd.c_str()) );
@@ -1842,10 +1845,21 @@ void DebuggerGDB::CheckIfConsoleIsClosed()
 {
 #ifndef __WXMSW__
     // Detect if the console is closed by the user and if it is stop the session.
-    if (m_nConsolePid > 0 && wxKill(m_nConsolePid, wxSIGNONE) != 0)
+    if (m_stopDebuggerConsoleClosed && m_nConsolePid > 0 && wxKill(m_nConsolePid, wxSIGNONE) != 0)
     {
-        Stop();
-        m_nConsolePid = 0;
+        AnnoyingDialog dialog(_("Terminal/Console closed"),
+                              _("Detected that the Terminal/Console has been closed. "
+                                "Do you want to stop the debugging session?"),
+                              wxART_QUESTION,
+                              AnnoyingDialog::YES_NO,
+                              wxID_YES);
+        if (dialog.ShowModal() == wxID_NO)
+            m_stopDebuggerConsoleClosed = false;
+        else
+        {
+            Stop();
+            m_nConsolePid = 0;
+        }
     }
 #endif
 }

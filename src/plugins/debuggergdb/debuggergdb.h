@@ -200,6 +200,7 @@ class DebuggerGDB : public cbDebuggerPlugin
 
         // Linux console support
         bool     m_bIsConsole;
+        bool     m_stopDebuggerConsoleClosed;
         int      m_nConsolePid;
 
         bool m_Canceled; // flag to avoid re-entering DoDebug when we shouldn't
