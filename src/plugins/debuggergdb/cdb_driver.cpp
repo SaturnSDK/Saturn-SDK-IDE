@@ -73,7 +73,8 @@ wxString CDB_driver::GetCommonCommandLine(const wxString& debugger)
     return cmd;
 }
 
-wxString CDB_driver::GetCommandLine(const wxString& debugger, const wxString& debuggee)
+// FIXME (obfuscated#): Implement user arguments
+wxString CDB_driver::GetCommandLine(const wxString& debugger, const wxString& debuggee, const wxString &userArguments)
 {
     wxString cmd = GetCommonCommandLine(debugger);
     cmd << _T(' ');
@@ -88,7 +89,8 @@ wxString CDB_driver::GetCommandLine(const wxString& debugger, const wxString& de
     return cmd;
 }
 
-wxString CDB_driver::GetCommandLine(const wxString& debugger, int pid)
+// FIXME (obfuscated#): Implement user arguments
+wxString CDB_driver::GetCommandLine(const wxString& debugger, int pid, const wxString &userArguments)
 {
     wxString cmd = GetCommonCommandLine(debugger);
     // finally, add the PID

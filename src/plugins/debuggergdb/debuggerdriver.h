@@ -68,10 +68,12 @@ class DebuggerDriver
         virtual void SetArguments(const wxString& args);
 
         /** Get the command-line to launch the debugger. */
-        virtual wxString GetCommandLine(const wxString& debugger, const wxString& debuggee) = 0;
+        virtual wxString GetCommandLine(const wxString& debugger,
+                                        const wxString& debuggee,
+                                        const wxString &userArguments) = 0;
 
         /** Get the command-line to launch the debugger. */
-        virtual wxString GetCommandLine(const wxString& debugger, int pid) = 0;
+        virtual wxString GetCommandLine(const wxString& debugger, int pid, const wxString &userArguments) = 0;
 
         /** Sets the target */
         virtual void SetTarget(ProjectBuildTarget* target) = 0;

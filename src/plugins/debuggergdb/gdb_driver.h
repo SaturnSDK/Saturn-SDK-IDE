@@ -39,8 +39,10 @@ class GDB_driver : public DebuggerDriver
         GDB_driver(DebuggerGDB* plugin);
         virtual ~GDB_driver();
 
-        virtual wxString GetCommandLine(const wxString& debugger, const wxString& debuggee);
-        virtual wxString GetCommandLine(const wxString& debugger, int pid);
+        virtual wxString GetCommandLine(const wxString& debugger,
+                                        const wxString& debuggee,
+                                        const wxString &userArguments);
+        virtual wxString GetCommandLine(const wxString& debugger, int pid, const wxString &userArguments);
         virtual void SetTarget(ProjectBuildTarget* target);
         virtual void Prepare(bool isConsole, int printElements);
         virtual void Start(bool breakOnEntry);

@@ -92,6 +92,7 @@ wxPanel* DebuggerConfiguration::MakePanel(wxWindow *parent)
 
     XRCCTRL(*panel, "txtExecutablePath", wxTextCtrl)->ChangeValue(GetDebuggerExecutable(false));
     panel->ValidateExecutablePath();
+    XRCCTRL(*panel, "txtArguments", wxTextCtrl)->ChangeValue(GetUserArguments(false));
 
     XRCCTRL(*panel, "rbType",            wxRadioBox)->SetSelection(IsGDB() ? 0 : 1);
     XRCCTRL(*panel, "txtInit",           wxTextCtrl)->ChangeValue(GetInitCommands());
@@ -104,13 +105,13 @@ wxPanel* DebuggerConfiguration::MakePanel(wxWindow *parent)
     XRCCTRL(*panel, "chkDoNotRun",       wxCheckBox)->SetValue(GetFlag(DoNotRun));
     XRCCTRL(*panel, "choDisassemblyFlavor", wxChoice)->SetSelection(m_config.ReadInt(wxT("disassembly_flavor"), 0));
     XRCCTRL(*panel, "txtInstructionSet", wxTextCtrl)->ChangeValue(m_config.Read(wxT("instruction_set"), wxEmptyString));
-
     return panel;
 }
 
 bool DebuggerConfiguration::SaveChanges(wxPanel *panel)
 {
     m_config.Write(wxT("executable_path"),       XRCCTRL(*panel, "txtExecutablePath", wxTextCtrl)->GetValue());
+    m_config.Write(wxT("user_arguments"),       XRCCTRL(*panel, "txtArguments", wxTextCtrl)->GetValue());
     m_config.Write(wxT("type"),                  XRCCTRL(*panel, "rbType",            wxRadioBox)->GetSelection());
     m_config.Write(wxT("init_commands"),         XRCCTRL(*panel, "txtInit",           wxTextCtrl)->GetValue());
     m_config.Write(wxT("watch_args"),            XRCCTRL(*panel, "chkWatchArgs",      wxCheckBox)->GetValue());
@@ -183,12 +184,20 @@ bool DebuggerConfiguration::IsGDB()
     return m_config.ReadInt(wxT("type"), 0) == 0;
 }
 
-wxString DebuggerConfiguration::GetDebuggerExecutable(bool expandMarco)
+wxString DebuggerConfiguration::GetDebuggerExecutable(bool expandMacro)
 {
     wxString result = m_config.Read(wxT("executable_path"), wxEmptyString);
-    if (expandMarco)
+    if (expandMacro)
         Manager::Get()->GetMacrosManager()->ReplaceEnvVars(result);
     return !result.empty() ? result : cbDetectDebuggerExecutable(wxT("gdb"));
+}
+
+wxString DebuggerConfiguration::GetUserArguments(bool expandMacro)
+{
+    wxString result = m_config.Read(wxT("user_arguments"), wxEmptyString);
+    if (expandMacro)
+        Manager::Get()->GetMacrosManager()->ReplaceEnvVars(result);
+    return result;
 }
 
 wxString DebuggerConfiguration::GetDisassemblyFlavorCommand()

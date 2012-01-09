@@ -766,10 +766,10 @@ int DebuggerGDB::DoDebug(bool breakOnEntry)
         if (target && !target->GetExecutionParameters().IsEmpty())
             m_State.GetDriver()->SetArguments(target->GetExecutionParameters());
 
-        cmdline = m_State.GetDriver()->GetCommandLine(cmdexe, debuggee);
+        cmdline = m_State.GetDriver()->GetCommandLine(cmdexe, debuggee, GetActiveConfigEx().GetUserArguments());
     }
     else // m_PidToAttach != 0
-        cmdline = m_State.GetDriver()->GetCommandLine(cmdexe, m_PidToAttach);
+        cmdline = m_State.GetDriver()->GetCommandLine(cmdexe, m_PidToAttach, GetActiveConfigEx().GetUserArguments());
 
     RemoteDebuggingMap& rdprj = GetRemoteDebuggingMap();
     RemoteDebugging rd = rdprj[0]; // project settings

@@ -186,24 +186,26 @@ wxString GDB_driver::GetScriptedTypeCommand(const wxString& gdb_type, wxString& 
     return _T("");
 }
 
-wxString GDB_driver::GetCommandLine(const wxString& debugger, const wxString& debuggee)
+wxString GDB_driver::GetCommandLine(const wxString& debugger, const wxString& debuggee, const wxString &userArguments)
 {
     wxString cmd;
     cmd << debugger;
     cmd << _T(" -nx");          // don't run .gdbinit
     cmd << _T(" -fullname ");   // report full-path filenames when breaking
     cmd << _T(" -quiet");       // don't display version on startup
+    cmd << wxT(" ") << userArguments;
     cmd << _T(" -args ") << debuggee;
     return cmd;
 }
 
-wxString GDB_driver::GetCommandLine(const wxString& debugger, int pid)
+wxString GDB_driver::GetCommandLine(const wxString& debugger, int pid, const wxString &userArguments)
 {
     wxString cmd;
     cmd << debugger;
     cmd << _T(" -nx");          // don't run .gdbinit
     cmd << _T(" -fullname ");   // report full-path filenames when breaking
     cmd << _T(" -quiet");       // don't display version on startup
+    cmd << wxT(" ") << userArguments;
     return cmd;
 }
 
