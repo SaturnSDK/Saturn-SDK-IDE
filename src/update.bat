@@ -66,8 +66,8 @@ cd ..\..\..\plugins\debuggergdb\resources
 cd ..\..\..
 
 echo Copying external exception handler
-xcopy /D /y exchndl.dll output > nul
-xcopy /D /y exchndl.dll devel > nul
+if exist devel\exchndl.dll xcopy /D /y devel\exchndl.dll output > nul
+if exist devel\exchndl.dll xcopy /D /y devel\exchndl.dll devel > nul
 echo Copying files
 xcopy /D /y %CB_DEVEL_RESDIR%\*.zip %CB_OUTPUT_RESDIR% > nul
 xcopy /D /y sdk\resources\lexers\lexer_* %CB_DEVEL_RESDIR%\lexers > nul
@@ -90,13 +90,14 @@ xcopy /D /y templates\common\* %CB_OUTPUT_RESDIR%\templates /EXCLUDE:excludes.tx
 xcopy /D /y templates\win32\* %CB_OUTPUT_RESDIR%\templates /EXCLUDE:excludes.txt > nul
 xcopy /D /y templates\common\* %CB_DEVEL_RESDIR%\templates /EXCLUDE:excludes.txt > nul
 xcopy /D /y templates\win32\* %CB_DEVEL_RESDIR%\templates /EXCLUDE:excludes.txt > nul
+xcopy /D /y scripts\*.gdb %CB_OUTPUT_RESDIR% > nul
 xcopy /D /y scripts\* %CB_DEVEL_RESDIR%\scripts /EXCLUDE:excludes.txt > nul
 xcopy /D /y scripts\* %CB_OUTPUT_RESDIR%\scripts /EXCLUDE:excludes.txt > nul
 del excludes.txt
 xcopy /D /y tips.txt %CB_DEVEL_RESDIR% > nul
 xcopy /D /y tips.txt %CB_OUTPUT_RESDIR% > nul
-xcopy /D /y tools\ConsoleRunner\cb_console_runner*.exe output > nul
-xcopy /D /y tools\ConsoleRunner\cb_console_runner*.exe devel > nul
+xcopy /D /y tools\ConsoleRunner\cb_console_runner.exe output > nul
+xcopy /D /y tools\ConsoleRunner\cb_console_runner.exe devel > nul
 xcopy /D /y devel\*.exe output > nul
 xcopy /D /y devel\*.dll output > nul
 xcopy /D /y %CB_DEVEL_RESDIR%\plugins\*.dll %CB_OUTPUT_RESDIR%\plugins > nul

@@ -1362,6 +1362,9 @@
 		<Unit filename="plugins\codecompletion\resources\classbrowser.xrc">
 			<Option target="Code-completion" />
 		</Unit>
+		<Unit filename="plugins\codecompletion\resources\codecompletion_toolbar.xrc">
+			<Option target="Code-completion" />
+		</Unit>
 		<Unit filename="plugins\codecompletion\resources\insert_class_method.xrc">
 			<Option target="Code-completion" />
 		</Unit>
@@ -1413,6 +1416,12 @@
 		<Unit filename="plugins\compilergcc\compilerDMD.h">
 			<Option target="Compiler" />
 		</Unit>
+		<Unit filename="plugins\compilergcc\compilerG95.cpp">
+			<Option target="Compiler" />
+		</Unit>
+		<Unit filename="plugins\compilergcc\compilerG95.h">
+			<Option target="Compiler" />
+		</Unit>
 		<Unit filename="plugins\compilergcc\compilerGDC.cpp">
 			<Option target="Compiler" />
 		</Unit>
@@ -1429,6 +1438,12 @@
 			<Option target="Compiler" />
 		</Unit>
 		<Unit filename="plugins\compilergcc\compilerGNUAVR.h">
+			<Option target="Compiler" />
+		</Unit>
+		<Unit filename="plugins\compilergcc\compilerGNUFortran.cpp">
+			<Option target="Compiler" />
+		</Unit>
+		<Unit filename="plugins\compilergcc\compilerGNUFortran.h">
 			<Option target="Compiler" />
 		</Unit>
 		<Unit filename="plugins\compilergcc\compilerGNUMSP430.cpp">
@@ -2039,6 +2054,12 @@
 		<Unit filename="plugins\scriptedwizard\resources\matlab_csf\wizard.xrc">
 			<Option target="Scripted wizard" />
 		</Unit>
+		<Unit filename="plugins\scriptedwizard\resources\mcs51\wizard.script">
+			<Option target="Scripted wizard" />
+		</Unit>
+		<Unit filename="plugins\scriptedwizard\resources\mcs51\wizard.xrc">
+			<Option target="Scripted wizard" />
+		</Unit>
 		<Unit filename="plugins\scriptedwizard\resources\ogre\wizard.script">
 			<Option target="Scripted wizard" />
 		</Unit>
@@ -2156,8 +2177,20 @@
 		<Unit filename="scripts\gdb_types.script">
 			<Option target="Debugger" />
 		</Unit>
+		<Unit filename="scripts\make_dist.script">
+			<Option target="src" />
+		</Unit>
+		<Unit filename="scripts\plugin_find_broken_files.script">
+			<Option target="src" />
+		</Unit>
+		<Unit filename="scripts\sample_plugin.script">
+			<Option target="src" />
+		</Unit>
 		<Unit filename="scripts\startup.script">
 			<Option target="sdk" />
+		</Unit>
+		<Unit filename="scripts\wx_help.script">
+			<Option target="src" />
 		</Unit>
 		<Unit filename="sdk\annoyingdialog.cpp">
 			<Option target="sdk" />

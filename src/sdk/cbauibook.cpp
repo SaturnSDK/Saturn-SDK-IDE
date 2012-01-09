@@ -262,7 +262,7 @@ void cbAuiNotebook::OnDwellTimerTrigger(wxTimerEvent& /*event*/)
 
     long curTime = m_StopWatch.Time();
     wxPoint screenPosition = wxGetMousePosition();
-	wxPoint thePoint;
+    wxPoint thePoint;
     wxWindow* win = 0;
     bool tabHit = false;
 
@@ -755,7 +755,11 @@ wxString cbAuiNotebook::SavePerspective()
                 if (p)
                     tabs += wxT(",");
 
+#if wxCHECK_VERSION(2, 9, 3)
+                if ((int)page_idx == m_curPage)
+#else
                 if ((int)page_idx == m_curpage)
+#endif
                     tabs += wxT("*");
                 else if ((int)p == tabCtrl->GetActivePage())
                     tabs += wxT("+");

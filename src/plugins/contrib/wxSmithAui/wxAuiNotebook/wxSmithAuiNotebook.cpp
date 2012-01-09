@@ -34,7 +34,7 @@ int wxSmithAuiNotebook::HitTest(const wxPoint& pt)
     wxAuiTabCtrl* TabCtrl = GetTabCtrlFromPoint(pt);
     wxWindow* HitTab;
 
-    if (TabCtrl && TabCtrl->TabHitTest(pt.x,pt.y,&HitTab))
+    if (TabCtrl && HitTab && TabCtrl->TabHitTest(pt.x,pt.y,&HitTab))
         return TabCtrl->GetIdxFromWindow(HitTab);
 
     return wxNOT_FOUND;
