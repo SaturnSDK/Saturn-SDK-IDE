@@ -1838,6 +1838,18 @@ void DebuggerGDB::KillConsole()
 #endif
 }
 
+void DebuggerGDB::CheckIfConsoleIsClosed()
+{
+#ifndef __WXMSW__
+    // Detect if the console is closed by the user and if it is stop the session.
+    if (m_nConsolePid > 0 && wxKill(m_nConsolePid, wxSIGNONE) != 0)
+    {
+        Stop();
+        m_nConsolePid = 0;
+    }
+#endif
+}
+
 bool DebuggerGDB::ShowValueTooltip(int style)
 {
     if (!m_pProcess || !IsStopped())
@@ -1885,6 +1897,8 @@ void DebuggerGDB::OnTimer(wxTimerEvent& event)
 {
     // send any buffered (previous) output
     ParseOutput(wxEmptyString);
+
+    CheckIfConsoleIsClosed();
 
     wxWakeUpIdle();
 }

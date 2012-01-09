@@ -159,6 +159,7 @@ class DebuggerGDB : public cbDebuggerPlugin
 
         void SetupToolsMenu(wxMenu &menu);
         void KillConsole();
+        void CheckIfConsoleIsClosed();
 
         void OnInfoFrame(wxCommandEvent& event);
         void OnInfoDLL(wxCommandEvent& event);
