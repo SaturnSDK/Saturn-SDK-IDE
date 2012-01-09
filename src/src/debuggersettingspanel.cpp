@@ -9,6 +9,7 @@
 
 	#include <wx/textdlg.h>
 
+	#include "cbplugin.h"
 	#include "debuggermanager.h"
 #endif
 //(*InternalHeaders(DebuggerSettingsPanel)
