@@ -275,7 +275,7 @@ void BacktraceDlg::OnSettingJumpDefault(wxCommandEvent& event)
 void BacktraceDlg::OnSettingSwitchDefault(wxCommandEvent& event)
 {
     bool checked = event.IsChecked();
-    cbDebuggerCommonConfig::SetFlag(cbDebuggerCommonConfig::JumpOnDoubleClick, checked);
+    cbDebuggerCommonConfig::SetFlag(cbDebuggerCommonConfig::JumpOnDoubleClick, !checked);
 }
 
 void BacktraceDlg::OnUpdateUI(wxUpdateUIEvent &event)
