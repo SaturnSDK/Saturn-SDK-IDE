@@ -235,7 +235,7 @@ void wxsTreeListCtrl::BuildItemCode (void)
 // add all the col info
 
     n = 0;
-    for (i=0; i<m_ColTitles.GetCount(); i++)
+    for (i=0; i < (int)m_ColTitles.GetCount(); i++)
     {
         if (n >= m_ColCount) { break; }
 
@@ -251,7 +251,7 @@ void wxsTreeListCtrl::BuildItemCode (void)
 // count number of nodes, add 1 for the root
 
     n = 0;
-    for (i=0; i<m_TreeData.GetCount(); i++)
+    for (i=0; i < (int)m_TreeData.GetCount(); i++)
     {
         ss = m_TreeData.Item (i);
         if (ss.Len() == 0) { continue; }
@@ -283,7 +283,7 @@ void wxsTreeListCtrl::BuildItemCode (void)
 // and now each item in the tree data list
 
     k = 0;
-    for (i=0; i<m_TreeData.GetCount(); i++)
+    for (i=0; i < (int)m_TreeData.GetCount(); i++)
     {
 
 // the string
@@ -322,7 +322,7 @@ void wxsTreeListCtrl::BuildItemCode (void)
 
 // now each of the sub-items
 
-        for (j=1; j<items.GetCount(); j++)
+        for (j=1; j < (int)items.GetCount(); j++)
         {
             if (j >= m_ColCount) { break; }
             tt = items.Item (j);
@@ -361,7 +361,7 @@ void wxsTreeListCtrl::PreviewItemCode (wxTreeListCtrl* inPreview)
 // add all the col info
 
     n = 0;
-    for (i=0; i<m_ColTitles.GetCount(); i++)
+    for (i=0; i < (int)m_ColTitles.GetCount(); i++)
     {
         if (n >= m_ColCount) { break; }
 
@@ -384,7 +384,7 @@ void wxsTreeListCtrl::PreviewItemCode (wxTreeListCtrl* inPreview)
 
 // and now each item in the tree data list
 
-    for (i=0; i<m_TreeData.GetCount(); i++)
+    for (i=0; i < (int)m_TreeData.GetCount(); i++)
     {
 
 // the string
@@ -412,7 +412,7 @@ void wxsTreeListCtrl::PreviewItemCode (wxTreeListCtrl* inPreview)
 
 // then all the sub-items
 
-        for (j=1; j<items.GetCount(); j++)
+        for (j=1; j < (int)items.GetCount(); j++)
         {
             if (j >= m_ColCount) { break; }
             tt = items.Item (j);
@@ -469,12 +469,12 @@ void wxsTreeListCtrl::ParseItems (wxString inSource, int& outLevel, wxArrayStrin
 // copy over labels
 
     i = 0;
-    while (i < ss.Len() )
+    while (i < (int)ss.Len() )
     {
         tt = _ ("");
-        while ( (i < ss.Len() ) && (ss[i] != tab) ) { tt += ss[i++]; }
+        while ( (i < (int)ss.Len() ) && (ss[i] != tab) ) { tt += ss[i++]; }
         outItems.Add (tt);
-        if (i < ss.Len() ) { i += 1; }
+        if (i < (int)ss.Len() ) { i += 1; }
     };
 
 // and the last item

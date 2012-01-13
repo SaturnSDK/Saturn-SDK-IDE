@@ -15,6 +15,7 @@
 				<Option compiler="gcc" />
 				<Option createStaticLib="1" />
 				<Compiler>
+					<Add option="-DWXMAKINGDLL_FNB" />
 					<Add directory="wxFlatNotebook\include" />
 				</Compiler>
 			</Target>
@@ -52,6 +53,9 @@
 				<Compiler>
 					<Add directory="wxImagePanel\include" />
 				</Compiler>
+				<Linker>
+					<Add option="-Wl,--export-all-symbols" />
+				</Linker>
 			</Target>
 			<Target title="wxSpeedButton">
 				<Option platforms="Windows;" />
@@ -60,6 +64,9 @@
 				<Option type="3" />
 				<Option compiler="gcc" />
 				<Option createStaticLib="1" />
+				<Linker>
+					<Add option="-Wl,--export-all-symbols" />
+				</Linker>
 			</Target>
 			<Target title="wxKWIC">
 				<Option platforms="Windows;" />
@@ -71,6 +78,9 @@
 				<Compiler>
 					<Add directory="KWIC\include" />
 				</Compiler>
+				<Linker>
+					<Add option="-Wl,--export-all-symbols" />
+				</Linker>
 			</Target>
 			<Target title="wxTreeList">
 				<Option platforms="Windows;" />
@@ -94,7 +104,11 @@
 					<Add directory="wxled\ledpanel\include" />
 					<Add directory="wxled\lcdWindow\include" />
 					<Add directory="wxled\led\include" />
+					<Add directory="wxled\gizmosled\include" />
 				</Compiler>
+				<Linker>
+					<Add option="-Wl,--export-all-symbols" />
+				</Linker>
 			</Target>
 			<Environment>
 				<Variable name="WX_CFG" value="" />
@@ -113,15 +127,15 @@
 			<Add option="-Winvalid-pch" />
 			<Add option="-DHAVE_W32API_H" />
 			<Add option="-D__WXMSW__" />
-			<Add option="-DWXUSINGDLL" />
+			<Add option="-DWXMAKINGDLL" />
 			<Add option="-DwxUSE_UNICODE" />
-			<Add option="-DWXMAKINGDLL_PROPGRID" />
 			<Add option="-DwxPG_USE_WXMODULE=0" />
 			<Add directory="$(#wx.include)" />
 			<Add directory="$(#wx.lib)\gcc_dll$(WX_CFG)\msw$(WX_SUFFIX)" />
 			<Add directory="wxFlatNotebook\include" />
 		</Compiler>
 		<Linker>
+			<Add option="-Wl,--enable-auto-import" />
 			<Add option="-mthreads" />
 			<Add library="wxpropgrid" />
 			<Add library="wxmsw28$(WX_SUFFIX)" />
@@ -278,7 +292,7 @@
 		<Unit filename="wxSpeedButton\wxSpeedButton.h">
 			<Option target="wxSpeedButton" />
 		</Unit>
-		<Unit filename="wxTreeList\include\wx/treelistctrl.h">
+		<Unit filename="wxTreeList\include\wx\treelistctrl.h">
 			<Option target="wxTreeList" />
 		</Unit>
 		<Unit filename="wxTreeList\src\treelistctrl.cpp">
@@ -416,10 +430,10 @@
 		<Unit filename="wxchart\src\yaxiswindow.cpp">
 			<Option target="wxChartCtrl" />
 		</Unit>
-		<Unit filename="wxled/gizmosled\include\wx\gizmos\gizmos.h">
+		<Unit filename="wxled\gizmosled\include\wx\gizmos\gizmos.h">
 			<Option target="wxLED" />
 		</Unit>
-		<Unit filename="wxled\gizmosled\include\wx\gizmos/ledctrl.h">
+		<Unit filename="wxled\gizmosled\include\wx\gizmos\ledctrl.h">
 			<Option target="wxLED" />
 		</Unit>
 		<Unit filename="wxled\gizmosled\src\ledctrl.cpp">
