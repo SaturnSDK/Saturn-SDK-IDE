@@ -133,6 +133,10 @@
 		<Unit filename="wxflatnotebook\images\flatnote32.xpm" />
 		<Unit filename="wxflatnotebook\wxsFlatNotebook.cpp" />
 		<Unit filename="wxflatnotebook\wxsFlatNotebook.h" />
+		<Unit filename="wxgbsizer\images\wxGridBagSizer16.xpm" />
+		<Unit filename="wxgbsizer\images\wxGridBagSizer32.xpm" />
+		<Unit filename="wxgbsizer\wxsGridBagSizer.cpp" />
+		<Unit filename="wxgbsizer\wxsGridBagSizer.h" />
 		<Unit filename="wximagebutton\ImageButton16.xpm" />
 		<Unit filename="wximagebutton\ImageButton32.xpm" />
 		<Unit filename="wximagebutton\wxsImageButton.cpp" />

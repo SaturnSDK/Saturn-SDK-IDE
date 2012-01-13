@@ -43,6 +43,7 @@ EXTRA_DIST = $(srcdir)/wxchart/*.xpm \
 		$(srcdir)/wxflatnotebook/images/*.png \
 		$(srcdir)/wxSmithKWIC/images/*.xpm \
 		$(srcdir)/wxtreelist/images/*.xpm \
+		$(srcdir)/wxgbsizer/images/*.xpm \
 		$(srcdir)/*.cbp \
 		manifest.xml
 
@@ -68,6 +69,7 @@ libwxsmithcontribitems_la_SOURCES = \
 ./wxSmithKWIC/wxslinearmeter.cpp \
 ./wxSmithKWIC/wxslinearregulator.cpp \
 ./wxtreelist/wxsTreeListCtrl.cpp \
+./wxgbsizer/wxsGridBagSizer.cpp \
 ./wxSmithContribItems.cpp
 
 noinst_HEADERS = \
@@ -86,4 +88,5 @@ noinst_HEADERS = \
 ./wxSmithKWIC/wxslinearmeter.h \
 ./wxSmithKWIC/wxslinearregulator.h \
 ./wxtreelist/wxsTreeListCtrl.h \
+./wxgbsizer/wxsGridBagSizer.h \
 ./wxSmithContribItems.h
