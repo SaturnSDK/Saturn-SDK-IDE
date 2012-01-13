@@ -160,6 +160,7 @@ Description: Code::Blocks shared libraries for wxContribItems
     * wxSpeedButton
     * wxTreeList
     * wxCustomButton
+    * wxLED
 
 Package: codeblocks-contrib-common
 Architecture: all
