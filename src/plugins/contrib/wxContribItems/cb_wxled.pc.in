@@ -9,5 +9,8 @@ Name: wxSmithLed
 Description: LedCtrl(s) also used for the wxSmith Contrib Items
 Version: @VERSION@
 Libs: -L${libdir} -lwxled
-Cflags: -fPIC -I${includedir}/ledpanel/include -I${includedir}/lcdWindow/include -I${includedir}/led/include -I${includedir}/gizmosled/include/
+Cflags: -fPIC -I${includedir}/gizmosled/include/ \
+		-I${includedir}/lcdwindow/include \
+		-I${includedir}/led/include \
+		-I${includedir}/ledpanel/include
 

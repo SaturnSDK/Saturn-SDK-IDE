@@ -8,11 +8,15 @@ sharedir=@datadir@
 Name: wxSmithContribItems
 Description: wxWidgets contrib items also used for the wxSmith
 Version: @VERSION@
-Libs: -L${libdir} -lwxkwic -lwxchartctrl -lwxflatnotebook -lwximagepanel -lwxspeedbutton -lwxcustombutton
+Libs: -L${libdir} -lwxchartctrl -lwxcustombutton -lwxflatnotebook -lwximagepanel -lwxkwic -lwxled -lwxspeedbutton -lwxtreelist
 Cflags: -fPIC -I${includedir}/KWIC/include \
 		-I${includedir}/wxchart/include \
 		-I${includedir}/wxFlatNotebook/include \
 		-I${includedir}/wxImagePanel/include \
+		-I${includedir}/wxled/lcdwindow/include \
+		-I${includedir}/wxled/led/include \
+		-I${includedir}/wxled/ledpanel/include \
 		-I${includedir}/wxSpeedButton \
-		-I${includedir}/wxthings/include
+		-I${includedir}/wxthings/include \
+		-I${includedir}/wxTreeList/include
 
