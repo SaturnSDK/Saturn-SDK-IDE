@@ -14,7 +14,12 @@ INCLUDES = $(WX_CXXFLAGS) \
 		-I$(srcdir)/../wxContribItems/wxthings/include \
 		-I$(srcdir)/../wxContribItems/KWIC/include \
 		-I$(srcdir)/../wxContribItems/wxTreeList/include \
-		-I$(srcdir)/../wxContribItems/wxSpeedButton
+		-I$(srcdir)/../wxContribItems/wxSpeedButton \
+		-I$(srcdir)/../wxContribItems/wxled/gizmosled/include \
+		-I$(srcdir)/../wxContribItems/wxled/lcdWindow/include \
+		-I$(srcdir)/../wxContribItems/wxled/led/include \
+		-I$(srcdir)/../wxContribItems/wxled/ledpanel/include
+
 
 pluginlibdir = $(pkglibdir)/plugins
 
@@ -30,7 +35,8 @@ libwxsmithcontribitems_la_LIBADD = $(PLUGIN_WX_LIBS) ../../../sdk/libcodeblocks.
 			../wxContribItems/wxSpeedButton/libwxspeedbutton.la \
 			../wxContribItems/KWIC/libwxkwic.la \
 			../wxContribItems/wxTreeList/libwxtreelist.la \
-			../wxContribItems/wxthings/libwxcustombutton.la
+			../wxContribItems/wxthings/libwxcustombutton.la \
+			../wxContribItems/wxled/libwxled.la
 
 EXTRA_DIST = $(srcdir)/wxchart/*.xpm \
 		$(srcdir)/wxchart/*.png \
@@ -44,6 +50,7 @@ EXTRA_DIST = $(srcdir)/wxchart/*.xpm \
 		$(srcdir)/wxSmithKWIC/images/*.xpm \
 		$(srcdir)/wxtreelist/images/*.xpm \
 		$(srcdir)/wxgbsizer/images/*.xpm \
+		$(srcdir)/wxled/images/*.xpm \
 		$(srcdir)/*.cbp \
 		manifest.xml
 
@@ -70,6 +77,10 @@ libwxsmithcontribitems_la_SOURCES = \
 ./wxSmithKWIC/wxslinearregulator.cpp \
 ./wxtreelist/wxsTreeListCtrl.cpp \
 ./wxgbsizer/wxsGridBagSizer.cpp \
+./wxled/wxsLcdWindow.cpp \
+./wxled/wxsLed.cpp \
+./wxled/wxsLedNumber.cpp \
+./wxled/wxsLedPanel.cpp \
 ./wxSmithContribItems.cpp
 
 noinst_HEADERS = \
@@ -89,4 +100,8 @@ noinst_HEADERS = \
 ./wxSmithKWIC/wxslinearregulator.h \
 ./wxtreelist/wxsTreeListCtrl.h \
 ./wxgbsizer/wxsGridBagSizer.h \
+./wxled/wxsLcdWindow.h \
+./wxled/wxsLed.h \
+./wxled/wxsLedNumber.h \
+./wxled/wxsLedPanel.h \
 ./wxSmithContribItems.h

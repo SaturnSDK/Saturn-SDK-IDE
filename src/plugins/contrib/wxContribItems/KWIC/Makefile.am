@@ -28,25 +28,6 @@ libwxkwic_la_SOURCES = \
 ./src/wx/xrc/xh_kwxlinearmeterhandler.cpp \
 ./src/wx/xrc/xh_kwxlinearregulatorhandler.cpp
 
-sdkdir=$(includedir)/codeblocks/wxContribItems/KWIC/include
-
-sdk_HEADERS = \
-./include/wx/KWIC/AngularMeter.h \
-./include/wx/KWIC/AngularRegulator.h \
-./include/wx/KWIC/BmpCheckBox.h \
-./include/wx/KWIC/BmpSwitcher.h \
-./include/wx/KWIC/LCDClock.h \
-./include/wx/KWIC/LCDWindow.h \
-./include/wx/KWIC/LinearMeter.h \
-./include/wx/KWIC/LinearRegulator.h \
-./include/wx/KWIC/TimeAlarm.h \
-./include/wx/xrc/xh_kwxangularmeterhandler.h \
-./include/wx/xrc/xh_kwxangularregulatorhandler.h \
-./include/wx/xrc/xh_kwxlcdclockhandler.h \
-./include/wx/xrc/xh_kwxlcddisplayhandler.h \
-./include/wx/xrc/xh_kwxlinearmeterhandler.h \
-./include/wx/xrc/xh_kwxlinearregulatorhandler.h
-
 EXTRA_DIST = \
 ./CREDITS \
 ./KWIC-LICENSE

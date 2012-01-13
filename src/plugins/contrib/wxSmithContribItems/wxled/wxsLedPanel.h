@@ -1,9 +1,9 @@
 #ifndef WXSLEDPANEL_H
 #define WXSLEDPANEL_H
 
-#include <wxWidgets/wxsWidget.h>
+#include "wxswidget.h"
 
-#include <wx/wxLEDPanel.h>
+#include <wx/wxledpanel.h>
 
 
 class wxsLedPanel : public wxsWidget

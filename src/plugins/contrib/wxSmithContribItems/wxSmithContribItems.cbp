@@ -35,6 +35,11 @@
 					<Add directory="..\wxContribItems\wxthings\include" />
 					<Add directory="..\wxContribItems\KWIC\include" />
 					<Add directory="..\wxContribItems\wxSpeedButton" />
+					<Add directory="..\wxContribItems\wxTreeList\include" />
+					<Add directory="..\wxContribItems\wxled\gizmosled\include" />
+					<Add directory="..\wxContribItems\wxled\lcdWindow\include" />
+					<Add directory="..\wxContribItems\wxled\led\include" />
+					<Add directory="..\wxContribItems\wxled\ledpanel\include" />
 				</Compiler>
 				<Linker>
 					<Add library="wxpropgrid" />
@@ -46,6 +51,8 @@
 					<Add library="wxcustombutton" />
 					<Add library="wximagepanel" />
 					<Add library="wxspeedbutton" />
+					<Add library="wxtreelist" />
+					<Add library="wxled" />
 					<Add directory="..\..\..\devel" />
 				</Linker>
 				<ExtraCommands>
@@ -78,7 +85,6 @@
 			<Add option="-DwxPG_USE_WXMODULE=0" />
 			<Add directory="$(#wx.include)" />
 			<Add directory="$(#wx.lib)\gcc_dll$(WX_CFG)\msw$(WX_SUFFIX)" />
-			<Add directory="wxflatnotebook\wxFlatNotebook\include" />
 		</Compiler>
 		<Linker>
 			<Add option="-mthreads" />
@@ -145,6 +151,22 @@
 		<Unit filename="wximagepanel\ImagePanel32.xpm" />
 		<Unit filename="wximagepanel\wxsimagepanel.cpp" />
 		<Unit filename="wximagepanel\wxsimagepanel.h" />
+		<Unit filename="wxled\images\LedNumber16.xpm" />
+		<Unit filename="wxled\images\LedNumber32.xpm" />
+		<Unit filename="wxled\images\wxLcdWindow16.xpm" />
+		<Unit filename="wxled\images\wxLcdWindow32.xpm" />
+		<Unit filename="wxled\images\wxLedPanel16.xpm" />
+		<Unit filename="wxled\images\wxLedPanel32.xpm" />
+		<Unit filename="wxled\images\wxled16.xpm" />
+		<Unit filename="wxled\images\wxled32.xpm" />
+		<Unit filename="wxled\wxsLcdWindow.cpp" />
+		<Unit filename="wxled\wxsLcdWindow.h" />
+		<Unit filename="wxled\wxsLed.cpp" />
+		<Unit filename="wxled\wxsLed.h" />
+		<Unit filename="wxled\wxsLedNumber.cpp" />
+		<Unit filename="wxled\wxsLedNumber.h" />
+		<Unit filename="wxled\wxsLedPanel.cpp" />
+		<Unit filename="wxled\wxsLedPanel.h" />
 		<Unit filename="wxspeedbutton\SpeedButton16.xpm" />
 		<Unit filename="wxspeedbutton\SpeedButton32.xpm" />
 		<Unit filename="wxspeedbutton\wxsSpeedButton.cpp" />
@@ -155,6 +177,10 @@
 		<Unit filename="wxthings\wxcustombutton32.xpm" />
 		<Unit filename="wxthings\wxscustombutton.cpp" />
 		<Unit filename="wxthings\wxscustombutton.h" />
+		<Unit filename="wxtreelist\images\TreeList16.xpm" />
+		<Unit filename="wxtreelist\images\TreeList32.xpm" />
+		<Unit filename="wxtreelist\wxsTreeListCtrl.cpp" />
+		<Unit filename="wxtreelist\wxsTreeListCtrl.h" />
 		<Extensions>
 			<code_completion />
 			<envvars />

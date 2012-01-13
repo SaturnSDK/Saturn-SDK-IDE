@@ -1,7 +1,7 @@
 #ifndef WXSLED_H
 #define WXSLED_H
 
-#include <wxWidgets/wxsWidget.h>
+#include "wxswidget.h"
 
 
 class wxsLed : public wxsWidget

@@ -1,7 +1,7 @@
 #ifndef __LCDWINDOW_H__
 #define __LCDWINDOW_H__
 
-#include <wx\wx.h>
+#include <wx/wx.h>
 
 // This structure is used internally by the window.
 struct wxDigitData

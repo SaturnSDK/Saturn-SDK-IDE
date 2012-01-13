@@ -1,7 +1,7 @@
 #ifndef WXSLCDWINDOW_H
 #define WXSLCDWINDOW_H
 
-#include <wxWidgets/wxsWidget.h>
+#include "wxswidget.h"
 
 
 class wxsLcdWindow : public wxsWidget
