@@ -169,7 +169,7 @@ bool GetNextToken(wxString const &str, int pos, Token &token)
     {
         if (open_braces == 0)
         {
-            if (str[pos] == _T(',') && !in_quote)
+            if (str[pos] == _T(',') && !in_quote && brace_type!=BraceType::Angle)
             {
                 token.end = pos;
                 return true;
@@ -313,9 +313,21 @@ bool ParseGDBWatchValue(GDBWatch::Pointer watch, wxString const &value, int &sta
         {
             wxString::size_type pos = str.find(wxT('\n'));
             if (pos == wxString::npos)
-                return false;
+            {
+                // If the token has no '\n' character, then we have to search the whole value
+                // for the token and then we skip this token completely.
+                wxString::size_type pos = value.find(wxT('\n'), token_real_end);
+                if (pos == wxString::npos)
+                    return false;
+                position = pos+1;
+                if (length > 0 && position >= start + length)
+                    break;
+                continue;
+            }
             else
             {
+                // If we have the '\n' in the token, then we have the next valid token, too,
+                // so we correct the current token to be the correct one.
                 if (str.find_last_of(wxT(':'), pos) == wxString::npos)
                     return false;
                 token.start += pos + 2;

@@ -129,6 +129,13 @@ TEST(MultipleInheritance)
     CHECK_EQUAL(wxT("t= {<BaseA>= {a=15,b=20},<BaseB>= {a=25,b=30},e=5,f=10}"), *w);
 }
 
+TEST(TemplatedInheritance)
+{
+    GDBWatch::Pointer w(new GDBWatch(wxT("s")));
+    CHECK(ParseGDBWatchValue(w, wxT("{\nmembers of A<Value,Al<Value> >::Impl:\nVV = 0x72dc440 }")));
+    CHECK_EQUAL(wxT("s= {VV=0x72dc440}"), *w);
+}
+
 TEST(IgnoreWarnings)
 {
     GDBWatch::Pointer w(new GDBWatch(wxT("t")));
@@ -302,3 +309,4 @@ TEST(PythonSTLMap)
 }
 
 } // SUITE(GDBWatchParser)
+
