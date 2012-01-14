@@ -92,6 +92,25 @@ TEST(ComplexChildren)
     CHECK_EQUAL(wxT("a= {b= {b1=\"5\",b2=\"6\"},c= {c1=\"5\",c2=\"6\"}}"), *w);
 }
 
+TEST(ComplexChildrenValue)
+{
+    GDBWatch::Pointer w(new GDBWatch(wxT("a")));
+    w->SetValue(wxT("\"valueA\""));
+    GDBWatch::Pointer c(new GDBWatch(wxT("b")));
+    c->SetValue(wxT("\"valueB\""));
+    cbWatch::AddChild(c, MakeWatch(wxT("b1"), wxT("\"5\"")));
+    cbWatch::AddChild(c, MakeWatch(wxT("b2"), wxT("\"6\"")));
+    cbWatch::AddChild(w, c);
+
+    c = GDBWatch::Pointer(new GDBWatch(wxT("c")));
+    c->SetValue(wxT("\"valueC\""));
+    cbWatch::AddChild(c, MakeWatch(wxT("c1"), wxT("\"5\"")));
+    cbWatch::AddChild(c, MakeWatch(wxT("c2"), wxT("\"6\"")));
+    cbWatch::AddChild(w, c);
+
+    CHECK_EQUAL(wxT("a=\"valueA\" {b=\"valueB\" {b1=\"5\",b2=\"6\"},c=\"valueC\" {c1=\"5\",c2=\"6\"}}"), *w);
+}
+
 }
 
 
@@ -301,12 +320,47 @@ TEST(ChangeType1)
     CHECK_EQUAL(wxT("s= {number=29,real=36}"), *w);
 }
 
+TEST(StructSummarySimple)
+{
+    GDBWatch::Pointer w(new GDBWatch(wxT("s")));
+    CHECK(ParseGDBWatchValue(w, wxT("test = {a=5}")));
+    CHECK_EQUAL(wxT("s=test {a=5}"), *w);
+}
+
+/*
+This one is highly unparsable :(
+TEST(StructSummaryComplex)
+{
+    GDBWatch::Pointer w(new GDBWatch(wxT("s")));
+    CHECK(ParseGDBWatchValue(w, wxT("{a= test2, test3 ={b = 5}}")));
+    CHECK_EQUAL(wxT("s= {a=test2, test3 {b=5}"), *w);
+}
+*/
+
+TEST(PythonSTLVector)
+{
+    GDBWatch::Pointer w(new GDBWatch(wxT("s")));
+    CHECK(ParseGDBWatchValue(w, wxT("std::vector of length 4, capacity 4 = {0, 1, 2, 3}")));
+    CHECK_EQUAL(wxT("s=length 4, capacity 4 {[0]=0,[1]=1,[2]=2,[3]=3}"), *w);
+}
+
 TEST(PythonSTLMap)
 {
     GDBWatch::Pointer w(new GDBWatch(wxT("s")));
     CHECK(ParseGDBWatchValue(w, wxT("std::map with 20 elements = {[\"BEGIN_EVENT_TABLE\"] = \"-END_EVENT_TABLE\"}")));
-    CHECK_EQUAL(wxT("s=std::map with 20 elements = {[\"BEGIN_EVENT_TABLE\"]=\"-END_EVENT_TABLE\"}"), *w);
+    CHECK_EQUAL(wxT("s=20 elements {[\"BEGIN_EVENT_TABLE\"]=\"-END_EVENT_TABLE\"}"), *w);
 }
+/*
+TEST(PythonSTLMapVector)
+{
+    GDBWatch::Pointer w(new GDBWatch(wxT("s")));
+    CHECK(ParseGDBWatchValue(w, wxT("std::map with 3 elements = {")
+                                wxT("[\"test1\"] = std::vector of length 4, capacity 4 = {0, 1, 2, 3}, ")
+                                wxT("[\"test2\"] = std::vector of length 4, capacity 4 = {0, 1, 2, 3}, ")
+                                wxT("[\"test3\"] = std::vector of length 4, capacity 4 = {0, 1, 2, 3}}")));
+    CHECK_EQUAL(wxT("s=3 elements {}"), *w);
+}
+*/
 
 } // SUITE(GDBWatchParser)
 

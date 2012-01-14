@@ -514,6 +514,16 @@ wxString RemoveWarnings(wxString const &input)
     return result;
 }
 
+void RemoveBefore(wxString &str, const wxString &s)
+{
+    wxString::size_type pos = str.find(s);
+    if (pos != wxString::npos)
+    {
+        str.Remove(0, pos+s.length());
+        str.Trim(false);
+    }
+}
+
 bool ParseGDBWatchValue(GDBWatch::Pointer watch, wxString const &inputValue)
 {
     if(inputValue.empty())
@@ -542,6 +552,13 @@ bool ParseGDBWatchValue(GDBWatch::Pointer watch, wxString const &inputValue)
                 wxString referenceValue = value.substr(0, start);
                 referenceValue.Trim(true);
                 referenceValue.Trim(false);
+                if (referenceValue.EndsWith(wxT("=")))
+                {
+                    referenceValue.RemoveLast(1);
+                    referenceValue.Trim(true);
+                }
+                RemoveBefore(referenceValue, wxT("of"));
+                RemoveBefore(referenceValue, wxT("with"));
                 watch->SetValue(referenceValue);
             }
             watch->RemoveMarkedChildren();
