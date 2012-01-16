@@ -177,7 +177,7 @@ void DebuggerState::RemoveBreakpoint(DebuggerBreakpoint::Pointer bp, bool remove
     {
         if (*it == bp)
         {
-            RemoveBreakpoint(index);
+            RemoveBreakpoint(index, removeFromDriver);
             return;
         }
     }
