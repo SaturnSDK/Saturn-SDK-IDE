@@ -36,12 +36,6 @@
     #include "globals.h"
 #endif
 
-#ifdef __WXMSW__
-    #include <winbase.h>
-#else
-    int GetShortPathName(const void*, void*, int){/* bogus */ return 0; };
-#endif
-
 #include <wx/tokenzr.h>
 #include "editarraystringdlg.h"
 #include "projectloader_hooks.h"
@@ -946,34 +940,42 @@ void DebuggerGDB::ConvertToGDBDirectory(wxString& str, wxString base, bool relat
 
     if(platform::windows)
     {
-        int ColonLocation = str.Find(_T(':'));
-        wxChar buf[255];
-        if(ColonLocation != -1)
+        int  ColonLocation   = str.Find(_T(':'));
+        bool convert_path_83 = false;
+        if (ColonLocation != wxNOT_FOUND)
+            convert_path_83 = true;
+        else if (!base.IsEmpty() && str.GetChar(0) != _T('/'))
         {
-            //If can, get 8.3 name for path (Windows only)
-            if (str.Contains(_T(' '))) // only if has spaces
-            {
-                GetShortPathName(str.c_str(), buf, 255);
-                str = buf;
-            }
-        }
-        else if(!base.IsEmpty() && str.GetChar(0) != _T('/'))
-        {
-            if(base.GetChar(base.Length()) == _T('/')) base = base.Mid(0, base.Length() - 2);
-            while(!str.IsEmpty())
+            if (base.GetChar(base.Length()) == _T('/'))
+                base = base.Mid(0, base.Length() - 2);
+
+            while (!str.IsEmpty())
             {
                 base += _T("/") + str.BeforeFirst(_T('/'));
-                if(str.Find(_T('/')) != -1) str = str.AfterFirst(_T('/'));
-                else str.Clear();
+                if (str.Find(_T('/')) != wxNOT_FOUND) str = str.AfterFirst(_T('/'));
+                else                                  str.Clear();
             }
-            if (base.Contains(_T(' '))) // only if has spaces
-            {
-                GetShortPathName(base.c_str(), buf, 255);
-                str = buf;
-            }
+            convert_path_83 = true;
         }
 
-        if(ColonLocation == -1 || base.IsEmpty())
+        // If can, get 8.3 name for path (Windows only)
+        if (convert_path_83 && str.Contains(_T(' '))) // only if has spaces
+        {
+            wxFileName fn(str); // might contain a file name, too
+            // -> explicitly assign as path now, so GetShortPath works properly
+            wxString d = fn.GetPath(wxPATH_GET_VOLUME|wxPATH_GET_SEPARATOR);
+            wxFileName dn(d, wxEmptyString);
+            if (dn.IsDir() && dn.DirExists())
+            {
+              wxString path_83 = dn.GetShortPath();
+              if (!path_83.IsEmpty())
+                  str = path_83;
+            }
+            // else: something went wrong or the file does not exist
+            //       (i.e. was not compiled yet) -> leave it as it is
+        }
+
+        if (ColonLocation == wxNOT_FOUND || base.IsEmpty())
             relative = false;        //Can't do it
     }
     else
