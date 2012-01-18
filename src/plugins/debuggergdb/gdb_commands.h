@@ -681,9 +681,9 @@ class GdbCmd_Start : public DebuggerContinueBaseCmd
             const wxArrayString &lines = GetArrayFromString(output, _T('\n'));
             for (size_t ii = 0; ii < lines.GetCount(); ++ii)
             {
-                if (lines[ii].StartsWith(wxT("No symbol table loaded."))
-                    || lines[ii].StartsWith(wxT("No executable file specified."))
-                    || lines[ii].StartsWith(wxT("No executable specified.")))
+                if (lines[ii].StartsWith(wxT("No symbol table loaded"))
+                    || lines[ii].StartsWith(wxT("No executable file specified"))
+                    || lines[ii].StartsWith(wxT("No executable specified")))
                 {
                     // log this and quit debugging
                     m_pDriver->Log(_("Starting the debuggee failed: ")+lines[ii]);
