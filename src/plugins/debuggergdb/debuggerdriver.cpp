@@ -17,9 +17,6 @@ DebuggerDriver::DebuggerDriver(DebuggerGDB* plugin)
     : m_pDBG(plugin),
     m_ProgramIsStopped(true),
     m_ChildPID(0),
-//    m_pBacktrace(0),
-//    m_pDisassembly(0),
-//    m_pExamineMemory(0),
     m_QueueBusy(false),
     m_currentFrameNo(0),
     m_userSelectedFrameNo(-1)
@@ -30,7 +27,9 @@ DebuggerDriver::DebuggerDriver(DebuggerGDB* plugin)
 DebuggerDriver::~DebuggerDriver()
 {
     //dtor
-    ClearQueue();
+    for (size_t ii = 0; ii < m_DCmds.GetCount(); ++ii)
+        delete m_DCmds[ii];
+    m_DCmds.Clear();
 }
 
 void DebuggerDriver::Log(const wxString& msg)
@@ -160,20 +159,6 @@ void DebuggerDriver::RemoveTopCommand(bool deleteIt)
     if (deleteIt)
         delete m_DCmds[0];
     m_DCmds.RemoveAt(0);
-}
-
-void DebuggerDriver::ClearQueue()
-{
-    int idx = 0;
-    // if the first command in the queue is running, delete all others
-    // (this will be deleted when done)
-    if (m_QueueBusy && !m_DCmds.GetCount())
-        idx = 1;
-    for (int i = idx; i < (int)m_DCmds.GetCount(); ++i)
-    {
-        delete m_DCmds[i];
-        m_DCmds.RemoveAt(i);
-    }
 }
 
 DebuggerDriver::StackFrameContainer const & DebuggerDriver::GetStackFrames() const

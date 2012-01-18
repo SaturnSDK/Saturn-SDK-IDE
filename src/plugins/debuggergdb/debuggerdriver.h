@@ -176,7 +176,6 @@ class DebuggerDriver
         DebuggerCmd* CurrentCommand(); ///< returns the currently executing command
         void RunQueue(); ///< runs the next command in the queue, if it is idle
         void RemoveTopCommand(bool deleteIt = true); ///< removes the top command (it has finished)
-        void ClearQueue(); ///< clears the queue
 
         const StackFrameContainer & GetStackFrames() const; ///< returns the container with the current backtrace
         StackFrameContainer & GetStackFrames(); ///< returns the container with the current backtrace
