@@ -961,21 +961,13 @@ void DebuggerGDB::ConvertToGDBDirectory(wxString& str, wxString base, bool relat
         if (convert_path_83 && str.Contains(_T(' '))) // only if has spaces
         {
             wxFileName fn(str); // might contain a file name, too
-            // -> explicitly assign as path now, so GetShortPath works properly
-            wxString d = fn.GetPath(wxPATH_GET_VOLUME|wxPATH_GET_SEPARATOR);
-            wxFileName dn(d, wxEmptyString);
-            if (dn.IsDir() && dn.DirExists())
-            {
-              wxString path_83 = dn.GetShortPath();
-              if (!path_83.IsEmpty())
-                  str = path_83;
-            }
-            // else: something went wrong or the file does not exist
-            //       (i.e. was not compiled yet) -> leave it as it is
+            wxString path_83 = fn.GetShortPath();
+            if (!path_83.IsEmpty())
+                str = path_83; // construct filename again
         }
 
         if (ColonLocation == wxNOT_FOUND || base.IsEmpty())
-            relative = false;        //Can't do it
+            relative = false; // Can't do it
     }
     else
     {
