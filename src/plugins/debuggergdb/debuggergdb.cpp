@@ -185,7 +185,7 @@ DebuggerGDB::DebuggerGDB() :
     m_TemporaryBreak(false),
     m_printElements(0)
 {
-    if (!Manager::LoadResource(_T("debugger.zip")))
+    if(!Manager::LoadResource(_T("debugger.zip")))
     {
         NotifyMissingFile(_T("debugger.zip"));
     }
@@ -672,11 +672,11 @@ int DebuggerGDB::DoDebug(bool breakOnEntry)
     cmdexe = GetActiveConfigEx().GetDebuggerExecutable();
     cmdexe.Trim();
     cmdexe.Trim(true);
-    if (cmdexe.IsEmpty())
+    if(cmdexe.IsEmpty())
     {
         Log(_("ERROR: You need to specify a debugger program in the debuggers's settings."), Logger::error);
 
-        if (platform::windows)
+        if(platform::windows)
         {
             Log(_("(For MinGW compilers, it's 'gdb.exe' (without the quotes))"), Logger::error);
             Log(_("(For MSVC compilers, it's 'cdb.exe' (without the quotes))"), Logger::error);
@@ -747,7 +747,7 @@ int DebuggerGDB::DoDebug(bool breakOnEntry)
 
         // set the file to debug (depends on the target type)
         wxString debuggee, path;
-        if ( !GetDebuggee(debuggee, path, target) )
+        if (!GetDebuggee(debuggee, path, target))
         {
             m_Canceled = true;
             return -3;
@@ -913,12 +913,9 @@ void DebuggerGDB::ConvertToGDBFriendly(wxString& str)
         ;
     while (str.Replace(_T("//"), _T("/")))
         ;
-
-    wxString probably_quoted_str(str);
+//    str.Replace("/", "//");
     if (str.Find(_T(' ')) != -1 && str.GetChar(0) != _T('"'))
-        probably_quoted_str = _T("\"") + str + _T("\"");
-
-    str = probably_quoted_str;
+        str = _T("\"") + str + _T("\"");
 }
 
 // static
@@ -947,11 +944,11 @@ void DebuggerGDB::ConvertToGDBDirectory(wxString& str, wxString base, bool relat
     StripQuotes(str);
     StripQuotes(base);
 
-    if (platform::windows)
+    if(platform::windows)
     {
         int ColonLocation = str.Find(_T(':'));
         wxChar buf[255];
-        if (ColonLocation != -1)
+        if(ColonLocation != -1)
         {
             //If can, get 8.3 name for path (Windows only)
             if (str.Contains(_T(' '))) // only if has spaces
@@ -960,13 +957,13 @@ void DebuggerGDB::ConvertToGDBDirectory(wxString& str, wxString base, bool relat
                 str = buf;
             }
         }
-        else if (!base.IsEmpty() && str.GetChar(0) != _T('/'))
+        else if(!base.IsEmpty() && str.GetChar(0) != _T('/'))
         {
-            if (base.GetChar(base.Length()) == _T('/')) base = base.Mid(0, base.Length() - 2);
-            while (!str.IsEmpty())
+            if(base.GetChar(base.Length()) == _T('/')) base = base.Mid(0, base.Length() - 2);
+            while(!str.IsEmpty())
             {
                 base += _T("/") + str.BeforeFirst(_T('/'));
-                if (str.Find(_T('/')) != -1) str = str.AfterFirst(_T('/'));
+                if(str.Find(_T('/')) != -1) str = str.AfterFirst(_T('/'));
                 else str.Clear();
             }
             if (base.Contains(_T(' '))) // only if has spaces
@@ -976,38 +973,38 @@ void DebuggerGDB::ConvertToGDBDirectory(wxString& str, wxString base, bool relat
             }
         }
 
-        if (ColonLocation == -1 || base.IsEmpty())
+        if(ColonLocation == -1 || base.IsEmpty())
             relative = false;        //Can't do it
     }
     else
     {
-        if ((str.GetChar(0) != _T('/') && str.GetChar(0) != _T('~')) || base.IsEmpty())
+        if((str.GetChar(0) != _T('/') && str.GetChar(0) != _T('~')) || base.IsEmpty())
             relative = false;
     }
 
-    if (relative)
+    if(relative)
     {
-        if (platform::windows)
+        if(platform::windows)
         {
-            if (str.Find(_T(':')) != -1) str = str.Mid(str.Find(_T(':')) + 2, str.Length());
-            if (base.Find(_T(':')) != -1) base = base.Mid(base.Find(_T(':')) + 2, base.Length());
+            if(str.Find(_T(':')) != -1) str = str.Mid(str.Find(_T(':')) + 2, str.Length());
+            if(base.Find(_T(':')) != -1) base = base.Mid(base.Find(_T(':')) + 2, base.Length());
         }
         else
         {
-            if (str.GetChar(0) == _T('/')) str = str.Mid(1, str.Length());
-            else if (str.GetChar(0) == _T('~')) str = str.Mid(2, str.Length());
-            if (base.GetChar(0) == _T('/')) base = base.Mid(1, base.Length());
-            else if (base.GetChar(0) == _T('~')) base = base.Mid(2, base.Length());
+            if(str.GetChar(0) == _T('/')) str = str.Mid(1, str.Length());
+            else if(str.GetChar(0) == _T('~')) str = str.Mid(2, str.Length());
+            if(base.GetChar(0) == _T('/')) base = base.Mid(1, base.Length());
+            else if(base.GetChar(0) == _T('~')) base = base.Mid(2, base.Length());
         }
 
-        while (!base.IsEmpty() && !str.IsEmpty())
+        while(!base.IsEmpty() && !str.IsEmpty())
         {
-            if (str.BeforeFirst(_T('/')) == base.BeforeFirst(_T('/')))
+            if(str.BeforeFirst(_T('/')) == base.BeforeFirst(_T('/')))
             {
-                if (str.Find(_T('/')) == -1) str.Clear();
+                if(str.Find(_T('/')) == -1) str.Clear();
                 else str = str.AfterFirst(_T('/'));
 
-                if (base.Find(_T('/')) == -1) base.Clear();
+                if(base.Find(_T('/')) == -1) base.Clear();
                 else base = base.AfterFirst(_T('/'));
             }
             else break;
@@ -1015,7 +1012,7 @@ void DebuggerGDB::ConvertToGDBDirectory(wxString& str, wxString base, bool relat
         while (!base.IsEmpty())
         {
             str = _T("../") + str;
-            if (base.Find(_T('/')) == -1) base.Clear();
+            if(base.Find(_T('/')) == -1) base.Clear();
             else base = base.AfterFirst(_T('/'));
         }
     }
@@ -1225,7 +1222,7 @@ void DebuggerGDB::SwitchToFrame(int number)
         m_State.GetDriver()->SetCurrentFrame(number, true);
         m_State.GetDriver()->SwitchToFrame(number);
 
-        if (Manager::Get()->GetDebuggerManager()->UpdateBacktrace())
+        if(Manager::Get()->GetDebuggerManager()->UpdateBacktrace())
            Manager::Get()->GetDebuggerManager()->GetBacktraceDialog()->Reload();
     }
 }
@@ -1402,7 +1399,7 @@ void DebuggerGDB::ShiftBreakpoint(int index, int lines_to_shift)
     BreakpointsList breakpoints = m_State.GetBreakpoints();
     BreakpointsList::iterator it = breakpoints.begin();
     std::advance(it, index);
-    if (it != breakpoints.end())
+    if(it != breakpoints.end())
         m_State.ShiftBreakpoint(*it, lines_to_shift);
 }
 
@@ -1461,13 +1458,13 @@ bool DebuggerGDB::Validate(const wxString& line, const char cb)
     int dcs = line.Find(_T('"'))+1;
     int dce = line.Find(_T('"'),true)+1;
     //No single and double quote
-    if (!scs && !sce && !dcs && !dce) bResult = true;
+    if(!scs && !sce && !dcs && !dce) bResult = true;
     //No single/double quote in pair
-    if (!(sce-scs) && !(dce-dcs)) bResult = true;
+    if(!(sce-scs) && !(dce-dcs)) bResult = true;
     //Outside of single quote
-    if ((sce-scs) && ((bep < scs)||(bep >sce))) bResult = true;
+    if((sce-scs) && ((bep < scs)||(bep >sce))) bResult = true;
     //Outside of double quote
-    if ((dce-dcs) && ((bep < dcs)||(bep >dce))) bResult = true;
+    if((dce-dcs) && ((bep < dcs)||(bep >dce))) bResult = true;
 
     return bResult;
 }
@@ -1569,6 +1566,7 @@ void DebuggerGDB::DoBreak(bool temporary)
                 Log(_("No handle created. Trying to pause directly with cbd.exe..."));
         }
 
+        bool done = false;
         if (m_State.GetDriver()->UseDebugBreakProcess())
         {
             if (!DebugBreakProcessFunc)
@@ -1581,6 +1579,7 @@ void DebuggerGDB::DoBreak(bool temporary)
                 {
                     DebugBreakProcessFunc(proc); // yay!
                     CloseHandle(proc);
+                    done = true;
                 }
                 else
                     Log(_("Failed."));
@@ -1930,7 +1929,7 @@ void DebuggerGDB::DebuggeeContinued()
 
 void DebuggerGDB::OnCursorChanged(wxCommandEvent& WXUNUSED(event))
 {
-    if (m_TemporaryBreak)
+    if(m_TemporaryBreak)
         return;
 
     if (m_State.HasDriver())
@@ -2001,7 +2000,7 @@ cb::shared_ptr<cbWatch> DebuggerGDB::AddWatch(const wxString& symbol)
     GDBWatch::Pointer watch(new GDBWatch(symbol));
     m_watches.push_back(watch);
 
-    if (m_pProcess)
+    if(m_pProcess)
         m_State.GetDriver()->UpdateWatch(m_watches.back());
 
     return watch;
@@ -2025,12 +2024,12 @@ bool DebuggerGDB::HasWatch(cbWatch::Pointer watch)
 void DebuggerGDB::ShowWatchProperties(cbWatch::Pointer watch)
 {
     // not supported for child nodes!
-    if (watch->GetParent())
+    if(watch->GetParent())
         return;
 
     GDBWatch::Pointer real_watch = cb::static_pointer_cast<GDBWatch>(watch);
     EditWatchDlg dlg(real_watch, nullptr);
-    if (dlg.ShowModal() == wxID_OK)
+    if(dlg.ShowModal() == wxID_OK)
         DoWatches();
 }
 
@@ -2044,16 +2043,16 @@ bool DebuggerGDB::SetWatchValue(cbWatch::Pointer watch, const wxString &value)
 
     wxString full_symbol;
     cbWatch::Pointer temp_watch = watch;
-    while (temp_watch)
+    while(temp_watch)
     {
         wxString symbol;
         temp_watch->GetSymbol(symbol);
         temp_watch = temp_watch->GetParent();
 
-        if (symbol.find(wxT('*')) != wxString::npos || symbol.find(wxT('&')) != wxString::npos)
+        if(symbol.find(wxT('*')) != wxString::npos || symbol.find(wxT('&')) != wxString::npos)
             symbol = wxT('(') + symbol + wxT(')');
 
-        if (full_symbol.empty())
+        if(full_symbol.empty())
             full_symbol = symbol;
         else
             full_symbol = symbol + wxT('.') + full_symbol;
@@ -2075,7 +2074,7 @@ void DebuggerGDB::CollapseWatch(cbWatch::Pointer watch)
 
 void DebuggerGDB::MarkAllWatchesAsUnchanged()
 {
-    for (WatchesContainer::iterator it = m_watches.begin(); it != m_watches.end(); ++it)
+    for(WatchesContainer::iterator it = m_watches.begin(); it != m_watches.end(); ++it)
         (*it)->MarkAsChangedRecursive(false);
 }
 
