@@ -541,7 +541,7 @@ class GdbCmd_AddBreakpoint : public DebuggerCmd
             else
                 m_pDriver->Log(output); // one of the error responses
 
-            Manager::Get()->GetDebuggerManager()->GetBacktraceDialog()->Reload();
+            Manager::Get()->GetDebuggerManager()->GetBreakpointDialog()->Reload();
         }
 };
 
