@@ -289,7 +289,7 @@ wxPGEditorDialogAdapter* WatchesProperty::GetEditorDialog() const
 class WatchesDropTarget : public wxTextDropTarget
 {
 public:
-    virtual bool OnDropText(wxCoord x, wxCoord y, const wxString& text)
+    virtual bool OnDropText(wxCoord WXUNUSED(x), wxCoord WXUNUSED(y), const wxString& text)
     {
         cbDebuggerPlugin *activeDebugger = Manager::Get()->GetDebuggerManager()->GetActiveDebugger();
         if (!activeDebugger->SupportsFeature(cbDebuggerFeature::Watches))
@@ -300,6 +300,10 @@ public:
         // we return false here to veto the operation, otherwise the dragged text might get cut,
         // because we use wxDrag_DefaultMove in ScintillaWX::StartDrag (seems to happen only on windows)
         return false;
+    }
+    virtual wxDragResult OnDragOver(wxCoord WXUNUSED(x), wxCoord WXUNUSED(y), wxDragResult WXUNUSED(def))
+    {
+        return wxDragCopy;
     }
 private:
 };
