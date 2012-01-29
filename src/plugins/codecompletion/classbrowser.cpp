@@ -43,7 +43,7 @@
 #include "classbrowser.h" // class's header file
 #include "nativeparser.h"
 
-#include "ccdebuginfo.h"
+#include "parser/ccdebuginfo.h"
 
 #define CC_CLASS_BROWSER_DEBUG_OUTPUT 0
 
@@ -73,8 +73,6 @@
     #define TRACE(format, args...)
     #define TRACE2(format, args...)
 #endif
-
-extern bool GotoTokenPosition(cbEditor* editor, const wxString& target, int line);
 
 int idMenuJumpToDeclaration    = wxNewId();
 int idMenuJumpToImplementation = wxNewId();
@@ -496,7 +494,7 @@ void ClassBrowser::OnJumpTo(wxCommandEvent& event)
             else
                 line = ctd->m_Token->m_Line - 1;
 
-            GotoTokenPosition(ed, ctd->m_Token->m_Name, line);
+            ed->GotoTokenPosition(line, ctd->m_Token->m_Name);
         }
     }
 }
@@ -573,15 +571,7 @@ void ClassBrowser::OnTreeItemDoubleClick(wxTreeEvent& event)
             else
                 line = ctd->m_Token->m_Line - 1;
 
-            GotoTokenPosition(ed, ctd->m_Token->m_Name, line);
-
-            wxFocusEvent ev(wxEVT_SET_FOCUS);
-            ev.SetWindow(this);
-            #if wxCHECK_VERSION(2, 9, 0)
-            ed->GetControl()->GetEventHandler()->AddPendingEvent(ev);
-            #else
-            ed->GetControl()->AddPendingEvent(ev);
-            #endif
+            ed->GotoTokenPosition(line, ctd->m_Token->m_Name);
         }
     }
 }
@@ -844,9 +834,7 @@ void ClassBrowser::BuildTree()
 
     // and launch it
     if (!create_tree)
-    {
         m_Semaphore.Post();
-    }
 }
 
 void ClassBrowser::OnTreeItemExpanding(wxTreeEvent& event)

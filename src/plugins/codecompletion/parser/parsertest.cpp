@@ -26,12 +26,11 @@
 #include "tokenizer.h"
 #include "parser.h"
 
-wxCriticalSection g_ParserCritical;
+wxCriticalSection         g_ParserCritical;
+std::auto_ptr<ParserTest> ParserTest::s_Inst;
 
-ParserTest::ParserTest()
+void ParserTest::Init()
 {
-    m_pTokensTree = new TokensTree();
-
     // for GCC
     Tokenizer::SetReplacementString(_T("_GLIBCXX_STD"),                     _T("std"));
     Tokenizer::SetReplacementString(_T("_GLIBCXX_STD_D"),                   _T("std"));
@@ -60,40 +59,58 @@ ParserTest::ParserTest()
     Tokenizer::SetReplacementString(_T("WXIMPORT"),                         _T(""));
 }
 
-ParserTest::~ParserTest()
+TokensTree* ParserBase::GetTokensTree()
 {
-    delete m_pTokensTree;
+    return ParserTest::Get()->GetTokensTree();
 }
 
 bool ParserTest::Start(const wxString& file)
 {
-    ParserBase client;
+    if (!m_pClient)     m_pClient     = new ParserBase();
+    if (!m_pTokensTree) m_pTokensTree = new TokensTree();
+
     FileLoader* loader = new FileLoader(file);
     (*loader)();
 
     ParserThreadOptions opts;
-    opts.wantPreprocessor      = true;
-    opts.useBuffer             = false;
-    opts.bufferSkipBlocks      = false;
-    opts.bufferSkipOuterBlocks = false;
-    opts.followLocalIncludes   = true;
-    opts.followGlobalIncludes  = true;
+
+    opts.useBuffer             = false; // default
+    opts.parentIdxOfBuffer     = -1;    // default
+    opts.initLineOfBuffer      = -1;    // default
+    opts.bufferSkipBlocks      = false; // default
+    opts.bufferSkipOuterBlocks = false; // default
+    opts.isTemp                = false; // default
+
+    opts.followLocalIncludes   = true;  // default
+    opts.followGlobalIncludes  = true;  // default
+    opts.wantPreprocessor      = true;  // default
+    opts.parseComplexMacros    = true;  // default
+
+    opts.handleFunctions       = true;  // default
+    opts.handleVars            = true;  // default
+    opts.handleClasses         = true;  // default
+    opts.handleEnums           = true;  // default
+    opts.handleTypedefs        = true;  // default
+
     opts.loader                = loader;
 
-    ParserThread* ph = new ParserThread(&client, file, true, opts, m_pTokensTree);
-    bool b = ph->Parse();
-    delete ph;
+    ParserThread* pt = new ParserThread(m_pClient, file, true, opts, m_pTokensTree);
+    bool success = pt->Parse();
+    delete pt;
 
-    return b;
+    return success;
 }
 
 void ParserTest::Clear()
 {
+    if (!m_pTokensTree) m_pTokensTree = new TokensTree();
     m_pTokensTree->clear();
 }
 
 void ParserTest::PrintTree()
 {
+    if (!m_pTokensTree) return;
+
     TokenList& tokens = m_pTokensTree->m_Tokens;
     for (TokenList::iterator it = tokens.begin(); it != tokens.end(); it++)
     {
@@ -105,6 +122,8 @@ void ParserTest::PrintTree()
 
 void ParserTest::PrintTokenTree(Token* token)
 {
+    if (!token || !m_pTokensTree) return;
+
     wxString log;
     if (!token->m_Children.empty()) log << _T("+");
     if (token->m_TokenKind == tkFunction)
@@ -124,6 +143,8 @@ void ParserTest::PrintTokenTree(Token* token)
 
 void ParserTest::PrintList()
 {
+    if (!m_pTokensTree) return;
+
     TokenList& tokens = m_pTokensTree->m_Tokens;
     for (TokenList::iterator it = tokens.begin(); it != tokens.end(); it++)
     {
@@ -136,5 +157,7 @@ void ParserTest::PrintList()
 
 wxString ParserTest::SerializeTree()
 {
+  if (!m_pTokensTree) return wxEmptyString;
+
   return m_pTokensTree->m_Tree.Serialize();
 }
