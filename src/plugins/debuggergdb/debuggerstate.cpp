@@ -123,7 +123,7 @@ DebuggerBreakpoint::Pointer DebuggerState::AddBreakpoint(const wxString& file, i
     wxString bpfile = ConvertToValidFilename(file);
 
     // do we have a bp there?
-    int idx = HasBreakpoint(bpfile, line);
+    int idx = HasBreakpoint(bpfile, line, temp);
     // if yes, remove old breakpoint first
     if (idx != -1)
         RemoveBreakpoint(idx);
@@ -245,14 +245,14 @@ void DebuggerState::ShiftBreakpoint(DebuggerBreakpoint::Pointer bp, int nrofline
         bp->line += nroflines;
 }
 
-int DebuggerState::HasBreakpoint(const wxString& file, int line)
+int DebuggerState::HasBreakpoint(const wxString& file, int line, bool temp)
 {
     wxString bpfile = ConvertToValidFilename(file);
     int index = 0;
     for (BreakpointsList::iterator it = m_Breakpoints.begin(); it != m_Breakpoints.end(); ++it, ++index)
     {
         DebuggerBreakpoint* bp = (*it).get();
-        if ((bp->filename == bpfile || bp->filenameAsPassed == file) && bp->line == line)
+        if ((bp->filename == bpfile || bp->filenameAsPassed == file) && bp->line == line && bp->temporary == temp)
             return index;
     }
     return -1;

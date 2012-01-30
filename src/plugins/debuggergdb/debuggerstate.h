@@ -46,7 +46,7 @@ class DebuggerState
         // helpers to keep in sync with the editors
         void ShiftBreakpoint(DebuggerBreakpoint::Pointer bp, int nroflines);
 
-        int HasBreakpoint(const wxString& file, int line); // returns -1 if not found
+        int HasBreakpoint(const wxString& file, int line, bool temp); // returns -1 if not found
         DebuggerBreakpoint::Pointer GetBreakpoint(int idx);
         DebuggerBreakpoint::Pointer GetBreakpointByNumber(int num);
         const DebuggerBreakpoint::Pointer GetBreakpointByNumber(int num) const;

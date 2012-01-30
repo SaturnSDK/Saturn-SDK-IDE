@@ -1011,7 +1011,7 @@ void GDB_driver::ParseOutput(const wxString& output)
                     long line;
                     lineStr.ToLong(&line);
                     DebuggerState& state = m_pDBG->GetState();
-                    int bpindex = state.HasBreakpoint(file, line - 1);
+                    int bpindex = state.HasBreakpoint(file, line - 1, false);
                     DebuggerBreakpoint::Pointer bp = state.GetBreakpoint(bpindex);
                     if (bp)
                     {
