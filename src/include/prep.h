@@ -362,5 +362,13 @@ using std::tr1::static_pointer_cast;
 using std::tr1::weak_ptr;
 }
 
+#if defined(__APPLE__) && defined(__MACH__)
+    #define CB_LIBRARY_ENVVAR _T("DYLD_LIBRARY_PATH")
+#elif !defined(__WXMSW__)
+    #define CB_LIBRARY_ENVVAR _T("LD_LIBRARY_PATH")
+#else
+    #define CB_LIBRARY_ENVVAR _T("PATH")
+#endif
+
 #endif
 

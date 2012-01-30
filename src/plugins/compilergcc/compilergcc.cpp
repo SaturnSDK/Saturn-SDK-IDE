@@ -85,14 +85,6 @@
 
 #include <scripting/bindings/sc_base_types.h>
 
-#if defined(__APPLE__) && defined(__MACH__)
-    #define LIBRARY_ENVVAR _T("DYLD_LIBRARY_PATH")
-#elif !defined(__WXMSW__)
-    #define LIBRARY_ENVVAR _T("LD_LIBRARY_PATH")
-#else
-    #define LIBRARY_ENVVAR _T("PATH")
-#endif
-
 namespace ScriptBindings
 {
     static int gBuildLogId = -1;
@@ -1284,7 +1276,7 @@ int CompilerGCC::DoRunQueue()
     }
 
     wxString oldLibPath; // keep old PATH/LD_LIBRARY_PATH contents
-    wxGetEnv(LIBRARY_ENVVAR, &oldLibPath);
+    wxGetEnv(CB_LIBRARY_ENVVAR, &oldLibPath);
 
     bool pipe = true;
     int flags = wxEXEC_ASYNC;
@@ -1300,7 +1292,7 @@ int CompilerGCC::DoRunQueue()
         if (!newLibPath.IsEmpty() && newLibPath.Mid(newLibPath.Length() - 1, 1) != libPathSep)
             newLibPath << libPathSep;
         newLibPath << oldLibPath;
-        wxSetEnv(LIBRARY_ENVVAR, newLibPath);
+        wxSetEnv(CB_LIBRARY_ENVVAR, newLibPath);
     }
 
     // special shell used only for build commands
@@ -1337,7 +1329,7 @@ int CompilerGCC::DoRunQueue()
         m_timerIdleWakeUp.Start(100);
 
     // restore dynamic linker path
-    wxSetEnv(LIBRARY_ENVVAR, oldLibPath);
+    wxSetEnv(CB_LIBRARY_ENVVAR, oldLibPath);
 
     delete cmd;
     return DoRunQueue();
@@ -1900,7 +1892,7 @@ int CompilerGCC::Run(ProjectBuildTarget* target)
             if (!platform::windows)
             {
                 // set LD_LIBRARY_PATH
-                command << LIBRARY_ENVVAR << _T("=$") << LIBRARY_ENVVAR << _T(':');
+                command << CB_LIBRARY_ENVVAR << _T("=$") << CB_LIBRARY_ENVVAR << _T(':');
                 // we have to quote the string, just escape the spaces does not work
                 wxString strLinkerPath=GetDynamicLinkerPathForTarget(target);
                 QuoteStringIfNeeded(strLinkerPath);

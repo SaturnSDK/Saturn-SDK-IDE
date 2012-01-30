@@ -53,14 +53,6 @@
 #include "editwatchdlg.h"
 
 
-#if defined(__APPLE__) && defined(__MACH__)
-    #define LIBRARY_ENVVAR _T("DYLD_LIBRARY_PATH")
-#elif !defined(__WXMSW__)
-    #define LIBRARY_ENVVAR _T("LD_LIBRARY_PATH")
-#else
-    #define LIBRARY_ENVVAR _T("PATH")
-#endif
-
 #define implement_debugger_toolbar
 
 // function pointer to DebugBreakProcess under windows (XP+)
@@ -774,7 +766,7 @@ int DebuggerGDB::DoDebug(bool breakOnEntry)
     wxString oldLibPath; // keep old PATH/LD_LIBRARY_PATH contents
     if (!rd.skipLDpath)
     {
-        wxGetEnv(LIBRARY_ENVVAR, &oldLibPath);
+        wxGetEnv(CB_LIBRARY_ENVVAR, &oldLibPath);
 
         // setup dynamic linker path
         if (actualCompiler && target)
@@ -786,8 +778,8 @@ int DebuggerGDB::DoDebug(bool breakOnEntry)
             if (newLibPath.Mid(newLibPath.Length() - 1, 1) != libPathSep)
                 newLibPath << libPathSep;
             newLibPath << oldLibPath;
-            wxSetEnv(LIBRARY_ENVVAR, newLibPath);
-            DebugLog(LIBRARY_ENVVAR _T("=") + newLibPath);
+            wxSetEnv(CB_LIBRARY_ENVVAR, newLibPath);
+            DebugLog(CB_LIBRARY_ENVVAR _T("=") + newLibPath);
         }
     }
 
@@ -815,7 +807,7 @@ int DebuggerGDB::DoDebug(bool breakOnEntry)
     if (!rd.skipLDpath)
     {
         // restore dynamic linker path
-        wxSetEnv(LIBRARY_ENVVAR, oldLibPath);
+        wxSetEnv(CB_LIBRARY_ENVVAR, oldLibPath);
     }
 
     if (ret != 0)
