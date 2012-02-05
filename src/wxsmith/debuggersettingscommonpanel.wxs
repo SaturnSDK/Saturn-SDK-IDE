@@ -25,7 +25,7 @@
 					</object>
 					<object class="sizeritem">
 						<object class="wxCheckBox" name="ID_DEBUGGERS_LOG" variable="m_debuggersLog" member="yes">
-							<label>Display Debugger&apos;s log</label>
+							<label>Full (Debug) log</label>
 						</object>
 						<flag>wxTOP|wxLEFT|wxRIGHT|wxALIGN_LEFT|wxALIGN_TOP</flag>
 						<border>5</border>

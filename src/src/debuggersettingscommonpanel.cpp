@@ -53,7 +53,7 @@ DebuggerSettingsCommonPanel::DebuggerSettingsCommonPanel(wxWindow* parent)
 	m_autoSwitch = new wxCheckBox(this, ID_AUTOSWITCH, _("When stopping, auto-switch to the first frame with valid source info"), wxDefaultPosition, wxDefaultSize, 0, wxDefaultValidator, _T("ID_AUTOSWITCH"));
 	m_autoSwitch->SetValue(false);
 	flexSizer->Add(m_autoSwitch, 1, wxTOP|wxLEFT|wxRIGHT|wxALIGN_LEFT|wxALIGN_TOP, 5);
-	m_debuggersLog = new wxCheckBox(this, ID_DEBUGGERS_LOG, _("Display Debugger\'s log"), wxDefaultPosition, wxDefaultSize, 0, wxDefaultValidator, _T("ID_DEBUGGERS_LOG"));
+	m_debuggersLog = new wxCheckBox(this, ID_DEBUGGERS_LOG, _("Full (Debug) log"), wxDefaultPosition, wxDefaultSize, 0, wxDefaultValidator, _T("ID_DEBUGGERS_LOG"));
 	m_debuggersLog->SetValue(false);
 	flexSizer->Add(m_debuggersLog, 1, wxTOP|wxLEFT|wxRIGHT|wxALIGN_LEFT|wxALIGN_TOP, 5);
 	m_jumpOnDoubleClick = new wxCheckBox(this, ID_JUMP_ON_DOUBLE_CLICK, _("Jump on Double-click in Stack trace window"), wxDefaultPosition, wxDefaultSize, 0, wxDefaultValidator, _T("ID_JUMP_ON_DOUBLE_CLICK"));
