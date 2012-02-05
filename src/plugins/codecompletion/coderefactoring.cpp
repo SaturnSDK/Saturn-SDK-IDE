@@ -170,20 +170,20 @@ bool CodeRefactoring::Parse()
 
     // handle local variables
     bool isLocalVariable = false;
-    {
-        TRACK_THREAD_LOCKER(s_TokensTreeCritical);
-        wxCriticalSectionLocker locker(s_TokensTreeCritical);
-        THREAD_LOCKER_SUCCESS(s_TokensTreeCritical);
 
-        TokensTree* tree = m_NativeParser.GetParser().GetTokensTree();
-        Token* token = tree->at(*targetResult.begin());
-        if (token)
-        {
-            Token* parent = tree->at(token->m_ParentIndex);
-            if (parent && parent->m_TokenKind == tkFunction)
-                isLocalVariable = true;
-        }
+    TokensTree* tree = m_NativeParser.GetParser().GetTokensTree();
+
+    CC_LOCKER_TRACK_TT_MTX_LOCK(s_TokensTreeMutex)
+
+    Token* token = tree->at(*targetResult.begin());
+    if (token)
+    {
+        Token* parent = tree->at(token->m_ParentIndex);
+        if (parent && parent->m_TokenKind == tkFunction)
+            isLocalVariable = true;
     }
+
+    CC_LOCKER_TRACK_TT_MTX_UNLOCK(s_TokensTreeMutex)
 
     wxArrayString files;
     cbProject* project = m_NativeParser.GetProjectByEditor(editor);
@@ -290,13 +290,14 @@ size_t CodeRefactoring::VerifyResult(const TokenIdxSet& targetResult, const wxSt
     Token* parentOfLocalVariable = nullptr;
     if (isLocalVariable)
     {
-        TRACK_THREAD_LOCKER(s_TokensTreeCritical);
-        wxCriticalSectionLocker locker(s_TokensTreeCritical);
-        THREAD_LOCKER_SUCCESS(s_TokensTreeCritical);
-
         TokensTree* tree = m_NativeParser.GetParser().GetTokensTree();
+
+        CC_LOCKER_TRACK_TT_MTX_LOCK(s_TokensTreeMutex)
+
         Token* token = tree->at(*targetResult.begin());
         parentOfLocalVariable = tree->at(token->m_ParentIndex);
+
+        CC_LOCKER_TRACK_TT_MTX_UNLOCK(s_TokensTreeMutex)
     }
 
     // now that list is filled, we'll search
@@ -387,11 +388,12 @@ size_t CodeRefactoring::VerifyResult(const TokenIdxSet& targetResult, const wxSt
                 // handle for local variable
                 if (isLocalVariable)
                 {
-                    TRACK_THREAD_LOCKER(s_TokensTreeCritical);
-                    wxCriticalSectionLocker locker(s_TokensTreeCritical);
-                    THREAD_LOCKER_SUCCESS(s_TokensTreeCritical);
+                    bool do_continue = false;
 
                     TokensTree* tree = m_NativeParser.GetParser().GetTokensTree();
+
+                    CC_LOCKER_TRACK_TT_MTX_LOCK(s_TokensTreeMutex)
+
                     Token* token = tree->at(*findIter);
                     if (token)
                     {
@@ -399,9 +401,13 @@ size_t CodeRefactoring::VerifyResult(const TokenIdxSet& targetResult, const wxSt
                         if (parent != parentOfLocalVariable)
                         {
                             it->second.erase(itList++);
-                            continue;
+                            do_continue = true;
                         }
                     }
+
+                    CC_LOCKER_TRACK_TT_MTX_UNLOCK(s_TokensTreeMutex)
+
+                    if (do_continue) continue;
                 }
 
                 ++itList;

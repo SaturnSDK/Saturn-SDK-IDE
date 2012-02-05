@@ -51,8 +51,6 @@
 #include "annoyingdialog.h"
 #include "genericmultilinenotesdlg.h"
 
-namespace compatibility { typedef TernaryCondTypedef<wxMinimumVersion<2,5>::eval, wxTreeItemIdValue, long int>::eval tree_cookie_t; };
-
 // class constructor
 cbProject::cbProject(const wxString& filename)
     : m_CustomMakefile(false),
@@ -827,7 +825,7 @@ bool cbProject::RemoveFile(ProjectFile* pf)
 
 void cbProject::SortChildrenRecursive(cbTreeCtrl* tree, const wxTreeItemId& parent)
 {
-    compatibility::tree_cookie_t cookie = 0;
+    wxTreeItemIdValue cookie = 0;
 
     tree->SortChildren(parent);
 
@@ -1039,7 +1037,7 @@ wxTreeItemId cbProject::AddTreeNode(wxTreeCtrl* tree,
             ++pos;
         path = path.Right(path.Length() - pos - 1);
 
-        compatibility::tree_cookie_t cookie = 0;
+        wxTreeItemIdValue cookie = 0;
 
         wxTreeItemId newparent = tree->GetFirstChild(parent, cookie);
         while (newparent)
@@ -1086,7 +1084,7 @@ wxTreeItemId cbProject::FindNodeToInsertAfter(wxTreeCtrl* tree, const wxString& 
 
     if (tree && parent.IsOk())
     {
-        compatibility::tree_cookie_t cookie = 0;
+        wxTreeItemIdValue cookie = 0;
 
         int fldIdx = Manager::Get()->GetProjectManager()->FolderIconIndex();
         int vfldIdx = Manager::Get()->GetProjectManager()->VirtualFolderIconIndex();
@@ -1678,19 +1676,15 @@ bool cbProject::CloseAllFiles(bool dontsave)
 
     // now free the rest of the project files
     Manager::Get()->GetEditorManager()->HideNotebook();
-    FilesList::iterator it = m_Files.begin();
-    while (it != m_Files.end())
+    for (FilesList::iterator it = m_Files.begin(); it != m_Files.end(); ++it)
     {
         ProjectFile* f = *it;
         if (f)
-        {
             Manager::Get()->GetEditorManager()->Close(f->file.GetFullPath(),true);
-            delete f;
-        }
-        m_Files.erase(it);
-        m_FileArray.Remove(*it);
-        it = m_Files.begin();
+        delete f;
     }
+    m_FileArray.Clear();
+    m_Files.clear();
     Manager::Get()->GetEditorManager()->ShowNotebook();
 
     return true;

@@ -16,6 +16,7 @@
 
 #include <cbthreadpool.h>
 #include <filemanager.h>
+#include <logmanager.h> // F()
 
 #include "cclogger.h"
 #include "tokenizer.h"
@@ -144,19 +145,22 @@ protected:
       */
     int Execute()
     {
-        TRACK_THREAD_LOCKER(s_TokensTreeCritical);
-        wxCriticalSectionLocker locker(s_TokensTreeCritical);
-        THREAD_LOCKER_SUCCESS(s_TokensTreeCritical);
+        CC_LOCKER_TRACK_TT_MTX_LOCK(s_TokensTreeMutex)
 
-        return Parse() ? 0 : 1;
+        bool success = Parse();
+
+        CC_LOCKER_TRACK_TT_MTX_UNLOCK(s_TokensTreeMutex)
+
+        return success ? 0 : 1;
     }
 
     /** Continuously eat the tokens until we meet one of the matching characters
       * @param chars wxString includes all the matching characters
       * @param supportNesting if true, we need to consider the "{" and "}" nesting levels when skipping,
+      * @param singleCharToken if true, only single char tokens (like semicolon, brace etc.) are considered (speeds up parsing for queries like this)
       * in this case, the function returned on a match by nesting/brace level preserved.
       */
-    wxChar SkipToOneOfChars(const wxString& chars, bool supportNesting = false);
+    wxChar SkipToOneOfChars(const wxString& chars, bool supportNesting = false, bool singleCharToken = true);
 
     /** actually run the syntax analysis*/
     void DoParse();
