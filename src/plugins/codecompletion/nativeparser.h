@@ -360,7 +360,6 @@ private:
     /**@brief Artificial Intelligence Matching
     *
     * All functions that call this recursive function, should already entered a critical section.
-    * Like this: wxCriticalSectionLocker locker(s_TokensTreeCritical);
     *
     * match (consume) the ParserComponent queue from left to right,
     * the output result becomes the search scope of the next match.
@@ -392,7 +391,6 @@ private:
     /** Generate the matching results under the Parent Token index set
      *
      * All functions that call this recursive function, should already entered a critical section.
-     * Like this: wxCriticalSectionLocker locker(s_TokensTreeCritical);
      *
      * @param tree TokensTree pointer
      * @param target Scope (defined in TokenIdxSet)
@@ -401,27 +399,26 @@ private:
      * @param kindMask define the result tokens filter, such as only class type is OK
      * @return result token set number
      */
-    size_t GenerateResultSet(TokensTree* tree,
+    size_t GenerateResultSet(TokensTree*     tree,
                              const wxString& target,
-                             int parentIdx,
-                             TokenIdxSet& result,
-                             bool caseSens = true,
-                             bool isPrefix = false,
-                             short int kindMask = 0xFFFF);
+                             int             parentIdx,
+                             TokenIdxSet&    result,
+                             bool            caseSens = true,
+                             bool            isPrefix = false,
+                             short int       kindMask = 0xFFFF);
 
     /** This function is just like the one above, especially that no Tokenstree information is used
      * So, it use the current parser's Tokenstree.
      *
      * All functions that call this recursive function, should already entered a critical section.
-     * Like this: wxCriticalSectionLocker locker(s_TokensTreeCritical);
      *
      */
-    size_t GenerateResultSet(const wxString& target,
+    size_t GenerateResultSet(const wxString&    target,
                              const TokenIdxSet& ptrParentID,
-                             TokenIdxSet& result,
-                             bool caseSens = true,
-                             bool isPrefix = false,
-                             short int kindMask = 0xFFFF);
+                             TokenIdxSet&       result,
+                             bool               caseSens = true,
+                             bool               isPrefix = false,
+                             short int          kindMask = 0xFFFF);
 
     /** used in CodeCompletion suggestion list to boost the performance, we use a caches*/
     bool LastAISearchWasGlobal() const { return m_LastAISearchWasGlobal; }
@@ -558,7 +555,7 @@ private:
      * @param searchScope search scope
      * @param result output result
      */
-    void ResolveOpeartor(const OperatorType& tokenOperatorType,
+    void ResolveOperator(const OperatorType& tokenOperatorType,
                          const TokenIdxSet& tokens,
                          TokensTree* tree,
                          const TokenIdxSet& searchScope,
@@ -569,6 +566,11 @@ private:
      * @param curLine the line of the current position
      */
     int GetTokenFromCurrentLine(const TokenIdxSet& tokens, size_t curLine, size_t fileIdx);
+
+    /** For GetCallTips()
+     * No critical section needed in this recursive function!
+     * All functions that call this recursive function, should already entered a critical section. */
+    bool PrettyPrintToken(wxString &result, Token const &token, TokensTree const &tokens, bool root = true);
 
     /** Init cc search member variables */
     void InitCCSearchVariables();
@@ -584,7 +586,7 @@ private:
 
 private:
     typedef std::pair<cbProject*, ParserBase*> ProjectParserPair;
-    typedef std::list<ProjectParserPair> ParserList;
+    typedef std::list<ProjectParserPair>       ParserList;
 
     ParserList                   m_ParserList;
     ParserBase*                  m_TempParser;

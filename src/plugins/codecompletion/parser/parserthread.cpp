@@ -201,24 +201,31 @@ ParserThread::~ParserThread()
     }
 }
 
-wxChar ParserThread::SkipToOneOfChars(const wxString& chars, bool supportNesting)
+wxChar ParserThread::SkipToOneOfChars(const wxString& chars, bool supportNesting, bool singleCharToken)
 {
     unsigned int level = m_Tokenizer.GetNestingLevel();
     while (IS_ALIVE)
     {
-        wxString token = m_Tokenizer.GetToken();
+        wxString token = m_Tokenizer.GetToken(); // grab next token...
         if (token.IsEmpty())
             return ParserConsts::null; // eof
 
+        // if supportNesting==true, we only do a match in the same brace/nesting level,
+        // thus we preserve the brace level when the function returned. But if
+        // supportNesting==false, we do not consider the brace level on matching.
         if (!supportNesting || m_Tokenizer.GetNestingLevel() == level)
         {
+            // only consider tokens of length one, if requested
+            if (singleCharToken && token.length() > 1)
+                continue;
+
             wxChar ch = token.GetChar(0);
-            if (chars.Find(ch) != wxNOT_FOUND)
+            if (chars.Find(ch) != wxNOT_FOUND) // match one char
                 return ch;
         }
     }
 
-    return ParserConsts::null;
+    return ParserConsts::null; // not found
 }
 
 void ParserThread::SkipBlock()
@@ -302,20 +309,14 @@ bool ParserThread::ParseBufferForNamespaces(const wxString& buffer, NameSpaceVec
             continue;
 
         if (token == ParserConsts::kw_using)
-        {
             SkipToOneOfChars(ParserConsts::semicolonclbrace);
-        }
         else if (token == ParserConsts::opbrace)
-        {
             SkipBlock();
-        }
         else if (token == ParserConsts::kw_namespace)
         {
             wxString name = m_Tokenizer.GetToken();
             if (name == ParserConsts::opbrace)
-            {
                 name = wxEmptyString; // anonymous namespace
-            }
             else
             {
                 m_Tokenizer.SetState(tsSkipNone);
@@ -326,7 +327,8 @@ bool ParserThread::ParseBufferForNamespaces(const wxString& buffer, NameSpaceVec
                     SkipToOneOfChars(ParserConsts::semicolonclbrace);
                     continue;
                 }
-                else if (next == ParserConsts::opbrace) {
+                else if (next == ParserConsts::opbrace)
+                {
                     m_Tokenizer.GetToken();
                     name += ParserConsts::dcolon;
                 }
@@ -343,8 +345,8 @@ bool ParserThread::ParseBufferForNamespaces(const wxString& buffer, NameSpaceVec
         }
         else if (token == ParserConsts::clbrace)
         {
-            NameSpaceVec::reverse_iterator it = result.rbegin();
-            for ( ; it != result.rend(); ++it)
+            NameSpaceVec::reverse_iterator it;
+            for (it = result.rbegin(); it != result.rend(); ++it)
             {
                 NameSpace& ns = *it;
                 if (ns.EndLine == -1)
@@ -653,7 +655,7 @@ void ParserThread::DoParse()
             if (token == ParserConsts::kw_if || token == ParserConsts::kw_do)
             {
                 if (!m_Options.useBuffer || m_Options.bufferSkipBlocks)
-                    SkipToOneOfChars(ParserConsts::semicolonclbrace, true);
+                    SkipToOneOfChars(ParserConsts::semicolonclbrace, true, true);
                 else
                     m_Tokenizer.GetToken(); // skip arguments
                 m_Str.Clear();
@@ -669,7 +671,7 @@ void ParserThread::DoParse()
             if (token == ParserConsts::kw_for)
             {
                 if (!m_Options.useBuffer || m_Options.bufferSkipBlocks)
-                    SkipToOneOfChars(ParserConsts::semicolonclbrace, true);
+                    SkipToOneOfChars(ParserConsts::semicolonclbrace, true, true);
                 else
                     m_Tokenizer.GetToken(); // skip arguments
                 m_Str.Clear();
@@ -685,7 +687,7 @@ void ParserThread::DoParse()
             if (token == ParserConsts::kw_else)
             {
                 if (!m_Options.useBuffer || m_Options.bufferSkipBlocks)
-                    SkipToOneOfChars(ParserConsts::semicolonclbrace, true);
+                    SkipToOneOfChars(ParserConsts::semicolonclbrace, true, true);
                 else
                     m_Tokenizer.GetToken(); // skip arguments
                 m_Str.Clear();
@@ -696,12 +698,12 @@ void ParserThread::DoParse()
                 if (m_Options.handleEnums)
                     HandleEnum();
                 else
-                    SkipToOneOfChars(ParserConsts::semicolonclbrace, true);
+                    SkipToOneOfChars(ParserConsts::semicolonclbrace, true, true);
             }
             else if (token == ParserConsts::kw_case)
             {
                 m_Str.Clear();
-                SkipToOneOfChars(ParserConsts::colon, true);
+                SkipToOneOfChars(ParserConsts::colon, true, true);
             }
             else
                 switchHandled = false;
@@ -714,7 +716,7 @@ void ParserThread::DoParse()
             if (token == ParserConsts::kw_while)
             {
                 if (!m_Options.useBuffer || m_Options.bufferSkipBlocks)
-                    SkipToOneOfChars(ParserConsts::semicolonclbrace, true);
+                    SkipToOneOfChars(ParserConsts::semicolonclbrace, true, true);
                 else
                     m_Tokenizer.GetToken(); // skip arguments
                 m_Str.Clear();
@@ -760,7 +762,7 @@ void ParserThread::DoParse()
                 if (m_Options.handleClasses)
                     HandleClass(ctClass);
                 else
-                    SkipToOneOfChars(ParserConsts::semicolonclbrace, true);
+                    SkipToOneOfChars(ParserConsts::semicolonclbrace, true, true);
             }
             else if (token == ParserConsts::kw_union)
             {
@@ -768,7 +770,7 @@ void ParserThread::DoParse()
                 if (m_Options.handleClasses)
                     HandleClass(ctUnion);
                 else
-                    SkipToOneOfChars(ParserConsts::semicolonclbrace, true);
+                    SkipToOneOfChars(ParserConsts::semicolonclbrace, true, true);
             }
             else
                 switchHandled = false;
@@ -786,14 +788,14 @@ void ParserThread::DoParse()
             else if (token == ParserConsts::kw_switch)
             {
                 if (!m_Options.useBuffer || m_Options.bufferSkipBlocks)
-                    SkipToOneOfChars(ParserConsts::semicolonclbrace, true);
+                    SkipToOneOfChars(ParserConsts::semicolonclbrace, true, true);
                 else
                     m_Tokenizer.GetToken(); // skip arguments
                 m_Str.Clear();
             }
             else if (token == ParserConsts::kw_return)
             {
-                SkipToOneOfChars(ParserConsts::semicolonclbrace, true);
+                SkipToOneOfChars(ParserConsts::semicolonclbrace, true, true);
                 m_Str.Clear();
             }
             else if (token == ParserConsts::kw_extern)
@@ -824,7 +826,7 @@ void ParserThread::DoParse()
             else if (token == ParserConsts::kw_friend)
             {
                 // friend methods can be either the decl only or an inline implementation
-                SkipToOneOfChars(ParserConsts::semicolonclbrace, true);
+                SkipToOneOfChars(ParserConsts::semicolonclbrace, true, true);
                 m_Str.Clear();
             }
             else if (token == ParserConsts::kw_struct)
@@ -833,7 +835,7 @@ void ParserThread::DoParse()
                 if (m_Options.handleClasses)
                     HandleClass(ctStructure);
                 else
-                    SkipToOneOfChars(ParserConsts::semicolonclbrace, true);
+                    SkipToOneOfChars(ParserConsts::semicolonclbrace, true, true);
             }
             else
                 switchHandled = false;
@@ -848,7 +850,7 @@ void ParserThread::DoParse()
                 if (m_Options.handleTypedefs)
                     HandleTypedef();
                 else
-                    SkipToOneOfChars(ParserConsts::semicolonclbrace, true);
+                    SkipToOneOfChars(ParserConsts::semicolonclbrace, true, true);
                 m_Str.Clear();
             }
             else if (token == ParserConsts::kw_virtual)
@@ -941,7 +943,7 @@ void ParserThread::DoParse()
             //       __asm mov al, 2
             //       __asm mov dx, 0xD007
             // OR:   __asm mov al, 2   __asm mov dx, 0xD007
-            SkipToOneOfChars(ParserConsts::semicolon, true);
+            SkipToOneOfChars(ParserConsts::semicolon, true, true);
         }
         else if (!switchHandled)
         {
@@ -1069,7 +1071,7 @@ void ParserThread::DoParse()
                                 ResolveTemplateArgs(newToken);
                         }
                         else
-                            SkipToOneOfChars(ParserConsts::semicolonclbrace, true);
+                            SkipToOneOfChars(ParserConsts::semicolonclbrace, true, true);
                     }
                 }
                 else if (!m_EncounteredNamespaces.empty())
@@ -1636,7 +1638,8 @@ void ParserThread::HandleNamespace()
         else
         {
             m_Tokenizer.SetState(tsSkipUnWanted);
-            SkipToOneOfChars(ParserConsts::semicolonopbrace); // some kind of error in code ?
+            // probably some kind of error in code ?
+            SkipToOneOfChars(ParserConsts::semicolonopbrace);
         }
     }
 }
@@ -2002,7 +2005,7 @@ void ParserThread::HandleFunction(const wxString& name, bool isOperator)
         {
             if (peek == ParserConsts::colon) // probably a ctor with member initializers
             {
-                SkipToOneOfChars(ParserConsts::opbrace, false);
+                SkipToOneOfChars(ParserConsts::opbrace);
                 m_Tokenizer.UngetToken(); // leave brace there
                 peek = m_Tokenizer.PeekToken();
                 continue;
@@ -2157,15 +2160,15 @@ void ParserThread::HandleEnum()
             if (peek==ParserConsts::colon)
             {
                 // bit specifier (eg, xxx:1)
-                //walk to , or }
+                // -> walk to , or }
                 SkipToOneOfChars(ParserConsts::commaclbrace);
             }
         }
     }
 
-    newEnum->m_ImplLine = lineNr;
+    newEnum->m_ImplLine      = lineNr;
     newEnum->m_ImplLineStart = lineStart;
-    newEnum->m_ImplLineEnd = m_Tokenizer.GetLineNumber();
+    newEnum->m_ImplLineEnd   = m_Tokenizer.GetLineNumber();
 //    // skip to ;
 //    SkipToOneOfChars(ParserConsts::semicolon);
 }

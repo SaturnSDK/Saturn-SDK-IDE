@@ -51,8 +51,6 @@
 #include "annoyingdialog.h"
 #include "genericmultilinenotesdlg.h"
 
-namespace compatibility { typedef TernaryCondTypedef<wxMinimumVersion<2,5>::eval, wxTreeItemIdValue, long int>::eval tree_cookie_t; };
-
 // class constructor
 cbProject::cbProject(const wxString& filename)
     : m_CustomMakefile(false),
@@ -725,7 +723,7 @@ ProjectFile* cbProject::AddFile(int targetIndex, const wxString& filename, bool 
     m_Files.insert(pf);
     if (!m_CurrentlyLoading)
     {
-        // Onbly add the file, if we are not currently loading the project and
+        // Only add the file, if we are not currently loading the project and
         // m_FileArray is already initialised.
         // Initialising is done in the getter-function (GetFile(index), to save time,
         // because in many cases m_FileArray is not needed
@@ -827,7 +825,7 @@ bool cbProject::RemoveFile(ProjectFile* pf)
 
 void cbProject::SortChildrenRecursive(cbTreeCtrl* tree, const wxTreeItemId& parent)
 {
-    compatibility::tree_cookie_t cookie = 0;
+    wxTreeItemIdValue cookie = 0;
 
     tree->SortChildren(parent);
 
@@ -1039,7 +1037,7 @@ wxTreeItemId cbProject::AddTreeNode(wxTreeCtrl* tree,
             ++pos;
         path = path.Right(path.Length() - pos - 1);
 
-        compatibility::tree_cookie_t cookie = 0;
+        wxTreeItemIdValue cookie = 0;
 
         wxTreeItemId newparent = tree->GetFirstChild(parent, cookie);
         while (newparent)
@@ -1086,7 +1084,7 @@ wxTreeItemId cbProject::FindNodeToInsertAfter(wxTreeCtrl* tree, const wxString& 
 
     if (tree && parent.IsOk())
     {
-        compatibility::tree_cookie_t cookie = 0;
+        wxTreeItemIdValue cookie = 0;
 
         int fldIdx = Manager::Get()->GetProjectManager()->FolderIconIndex();
         int vfldIdx = Manager::Get()->GetProjectManager()->VirtualFolderIconIndex();
@@ -1620,6 +1618,7 @@ ProjectFile* cbProject::GetFile(int index)
 
     if (index < 0 || index >= m_Files.size())
         return NULL;
+
     return m_FileArray.Item(index);
 }
 
@@ -1672,23 +1671,22 @@ bool cbProject::CloseAllFiles(bool dontsave)
 {
     // first try to close modified editors
 
-    if (!dontsave)
-        if (!QueryCloseAllFiles())
+    if (!dontsave && !QueryCloseAllFiles())
             return false;
 
     // now free the rest of the project files
     Manager::Get()->GetEditorManager()->HideNotebook();
-    FilesList::iterator it = m_Files.begin();
-    while (it != m_Files.end())
+    for (FilesList::iterator it = m_Files.begin(); it != m_Files.end(); ++it)
     {
         ProjectFile* f = *it;
-        Manager::Get()->GetEditorManager()->Close(f->file.GetFullPath(),true);
+        if (f)
+            Manager::Get()->GetEditorManager()->Close(f->file.GetFullPath(),true);
         delete f;
-        m_Files.erase(it);
-        m_FileArray.Remove(*it);
-        it = m_Files.begin();
     }
+    m_FileArray.Clear();
+    m_Files.clear();
     Manager::Get()->GetEditorManager()->ShowNotebook();
+
     return true;
 }
 
