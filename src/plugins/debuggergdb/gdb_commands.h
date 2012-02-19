@@ -683,7 +683,8 @@ class GdbCmd_Start : public DebuggerContinueBaseCmd
             {
                 if (lines[ii].StartsWith(wxT("No symbol table loaded"))
                     || lines[ii].StartsWith(wxT("No executable file specified"))
-                    || lines[ii].StartsWith(wxT("No executable specified")))
+                    || lines[ii].StartsWith(wxT("No executable specified"))
+                    || lines[ii].StartsWith(wxT("Don't know how to run")))
                 {
                     // log this and quit debugging
                     m_pDriver->Log(_("Starting the debuggee failed: ")+lines[ii]);
