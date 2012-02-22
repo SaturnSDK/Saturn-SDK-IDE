@@ -848,7 +848,7 @@ bool CompilerGCC::StopRunningDebugger()
             {
                 case wxID_YES:
                 {
-                    m_Log->Clear();
+                    m_pLog->Clear();
                     Manager::Get()->GetLogManager()->Log(_("Stopping debugger..."), m_PageIndex);
                     dbg->Stop();
                     break;
