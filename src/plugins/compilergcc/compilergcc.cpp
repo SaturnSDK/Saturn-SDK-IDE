@@ -3067,46 +3067,44 @@ void CompilerGCC::OnUpdateUI(wxUpdateUIEvent& event)
     bool otherRunning = runningPlugin && runningPlugin != this;
     if (mbar)
     {
-        mbar->Enable(idMenuCompile, !running && (prj || ed) && !otherRunning);
-        mbar->Enable(idMenuBuildWorkspace, !running && prj && !otherRunning);
+        mbar->Enable(idMenuCompile,          !running && (prj || ed) && !otherRunning);
+        mbar->Enable(idMenuBuildWorkspace,   !running && prj &&         !otherRunning);
 //        mbar->Enable(idMenuCompileFromProjectManager, !running && prj);
-        mbar->Enable(idMenuCompileFile, !running && ed && !otherRunning);
+        mbar->Enable(idMenuCompileFile,      !running && ed &&          !otherRunning);
 //        mbar->Enable(idMenuCompileFileFromProjectManager, !running && prj);
-        mbar->Enable(idMenuRebuild, !running && prj && !otherRunning);
-        mbar->Enable(idMenuRebuildWorkspace, !running && prj && !otherRunning);
+        mbar->Enable(idMenuRebuild,          !running && prj &&         !otherRunning);
+        mbar->Enable(idMenuRebuildWorkspace, !running && prj &&         !otherRunning);
 //        mbar->Enable(idMenuRebuildFromProjectManager, !running && prj);
-        mbar->Enable(idMenuClean, !running && prj && !otherRunning);
-        mbar->Enable(idMenuCleanWorkspace, !running && prj && !otherRunning);
+        mbar->Enable(idMenuClean,            !running && prj &&         !otherRunning);
+        mbar->Enable(idMenuCleanWorkspace,   !running && prj &&         !otherRunning);
 //        mbar->Enable(idMenuCleanFromProjectManager, !running && prj);
-        mbar->Enable(idMenuCompileAndRun, !running && (prj || ed) && !otherRunning);
-        mbar->Enable(idMenuRun, !running && (prj || ed) && !otherRunning);
-        mbar->Enable(idMenuKillProcess, running);
-        mbar->Enable(idMenuSelectTarget, !running && prj && !otherRunning);
+        mbar->Enable(idMenuCompileAndRun,    !running && (prj || ed) && !otherRunning);
+        mbar->Enable(idMenuRun, !running && (prj || ed) &&              !otherRunning);
+        mbar->Enable(idMenuKillProcess,       running);
+        mbar->Enable(idMenuSelectTarget,     !running && prj &&         !otherRunning);
 
-        mbar->Enable(idMenuNextError, !running && (prj || ed) && m_Errors.HasNextError() && !otherRunning);
+        mbar->Enable(idMenuNextError,     !running && (prj || ed) && m_Errors.HasNextError()     && !otherRunning);
         mbar->Enable(idMenuPreviousError, !running && (prj || ed) && m_Errors.HasPreviousError() && !otherRunning);
-        mbar->Enable(idMenuClearErrors, !otherRunning);
-
-        mbar->Enable(idMenuExportMakefile, false);// !running && prj);
+        mbar->Enable(idMenuClearErrors,                                                             !otherRunning);
 
         // Project menu
         mbar->Enable(idMenuProjectCompilerOptions, !running && prj && !otherRunning);
-        mbar->Enable(idMenuProjectProperties, !running && prj && !otherRunning);
+        mbar->Enable(idMenuProjectProperties,      !running && prj && !otherRunning);
     }
 
     // enable/disable compiler toolbar buttons
     wxToolBar* tbar = m_pTbar;//Manager::Get()->GetAppWindow()->GetToolBar();
     if (tbar)
     {
-        tbar->EnableTool(idMenuCompile, !running && (prj || ed) && !otherRunning);
-        tbar->EnableTool(idMenuRun, !running && (prj || ed) && !otherRunning);
+        tbar->EnableTool(idMenuCompile,       !running && (prj || ed) && !otherRunning);
+        tbar->EnableTool(idMenuRun,           !running && (prj || ed) && !otherRunning);
         tbar->EnableTool(idMenuCompileAndRun, !running && (prj || ed) && !otherRunning);
-        tbar->EnableTool(idMenuRebuild, !running && prj && !otherRunning);
-        tbar->EnableTool(idMenuKillProcess, running && prj);
+        tbar->EnableTool(idMenuRebuild,       !running && prj         && !otherRunning);
+        tbar->EnableTool(idMenuKillProcess,    running && prj);
 
-        m_ToolTarget = XRCCTRL(*tbar, "idToolTarget", wxChoice);
-        if (m_ToolTarget)
-            m_ToolTarget->Enable(!running && prj && !otherRunning);
+        m_pToolTarget = XRCCTRL(*tbar, "idToolTarget", wxChoice);
+        if (m_pToolTarget)
+            m_pToolTarget->Enable(!running && prj && !otherRunning);
     }
 
     // allow other UpdateUI handlers to process this event
@@ -3641,7 +3639,7 @@ void CompilerGCC::NotifyJobDone(bool showNothingToBeDone)
         if (manager->GetIsRunning() == this)
             manager->SetIsRunning(NULL);
 
-        CodeBlocksEvent evt(cbEVT_COMPILER_FINISHED, 0, m_Project, 0, this);
+        CodeBlocksEvent evt(cbEVT_COMPILER_FINISHED, 0, m_pProject, 0, this);
         evt.SetInt(m_LastExitCode);
         Manager::Get()->ProcessEvent(evt);
     }

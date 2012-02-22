@@ -244,7 +244,7 @@ int idViewLayoutDelete       = XRCID("idViewLayoutDelete");
 int idViewLayoutSave         = XRCID("idViewLayoutSave");
 int idViewToolbars           = XRCID("idViewToolbars");
 int idViewToolMain           = XRCID("idViewToolMain");
-int idViewToolDebugger = XRCID("idViewToolDebugger");
+int idViewToolDebugger       = XRCID("idViewToolDebugger");
 int idViewManager            = XRCID("idViewManager");
 int idViewLogManager         = XRCID("idViewLogManager");
 int idViewStatusbar          = XRCID("idViewStatusbar");
@@ -268,8 +268,8 @@ int idSearchGotoPreviousChanged = XRCID("idSearchGotoPreviousChanged");
 int idSettingsEnvironment    = XRCID("idSettingsEnvironment");
 int idSettingsGlobalUserVars = XRCID("idSettingsGlobalUserVars");
 int idSettingsEditor         = XRCID("idSettingsEditor");
-int idSettingsCompiler = XRCID("idSettingsCompiler");
-int idSettingsDebugger = XRCID("idSettingsDebugger");
+int idSettingsCompiler       = XRCID("idSettingsCompiler");
+int idSettingsDebugger       = XRCID("idSettingsDebugger");
 int idPluginsManagePlugins   = XRCID("idPluginsManagePlugins");
 int idSettingsScripting      = XRCID("idSettingsScripting");
 
@@ -485,8 +485,8 @@ BEGIN_EVENT_TABLE(MainFrame, wxFrame)
     EVT_MENU(idSettingsEnvironment,    MainFrame::OnSettingsEnvironment)
     EVT_MENU(idSettingsGlobalUserVars, MainFrame::OnGlobalUserVars)
     EVT_MENU(idSettingsEditor,         MainFrame::OnSettingsEditor)
-    EVT_MENU(idSettingsCompiler, MainFrame::OnSettingsCompiler)
-    EVT_MENU(idSettingsDebugger, MainFrame::OnSettingsDebugger)
+    EVT_MENU(idSettingsCompiler,       MainFrame::OnSettingsCompiler)
+    EVT_MENU(idSettingsDebugger,       MainFrame::OnSettingsDebugger)
     EVT_MENU(idPluginsManagePlugins,   MainFrame::OnSettingsPlugins)
     EVT_MENU(idSettingsScripting,      MainFrame::OnSettingsScripting)
 
@@ -1032,7 +1032,7 @@ void MainFrame::CreateToolbars()
     Manager::Get()->GetLogManager()->DebugLog(_T("Loading toolbar..."));
 
     m_pToolbar = Manager::Get()->CreateEmptyToolbar();
-    Manager::Get()->AddonToolBar(m_pToolbar,xrcToolbarName);
+    Manager::Get()->AddonToolBar(m_pToolbar, xrcToolbarName);
 
     m_pToolbar->Realize();
 
