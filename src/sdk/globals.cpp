@@ -266,6 +266,9 @@ FileType FileTypeOf(const wxString& filename)
     else if (ext.IsSameAs(FileFilters::MSVC7_EXT))
         return ftMSVC7Project;
 
+    else if (ext.IsSameAs(FileFilters::MSVC10_EXT))
+        return ftMSVC10Project;
+
     else if (ext.IsSameAs(FileFilters::MSVC6_WORKSPACE_EXT))
         return ftMSVC6Workspace;
 
@@ -334,34 +337,24 @@ FileType FileTypeOf(const wxString& filename)
     return ftOther;
 }
 
-wxString cbFindFileInPATH(const wxString &filename)
+void DoRememberSelectedNodes(wxTreeCtrl* tree, wxArrayString& selectedItemPaths)
 {
-    wxString pathValues;
-    wxGetEnv(_T("PATH"), &pathValues);
-    if (pathValues.empty())
-        return wxEmptyString;
+    wxArrayTreeItemIds items;
 
-    const wxString &sep = platform::windows ? _T(";") : _T(":");
-    wxChar pathSep = wxFileName::GetPathSeparator();
-    const wxArrayString &pathArray = GetArrayFromString(pathValues, sep);
-    for (size_t i = 0; i < pathArray.GetCount(); ++i)
+    if (tree->GetSelections(items) < 1 )
+        return;
+
+    for (size_t i=0; i < items.GetCount(); ++i)
     {
-        if (wxFileExists(pathArray[i] + pathSep + filename))
+        wxString path = wxEmptyString;
+        wxTreeItemId item = items[i];
+        while(item.IsOk())
         {
-            if (pathArray[i].AfterLast(pathSep).IsSameAs(_T("bin")))
-                return pathArray[i];
+            path = _T("/") + tree->GetItemText(item) + path;
+            item = tree->GetItemParent(item);
         }
-    }
-    return wxEmptyString;
-}
-
-void DoRememberSelectedNode(wxTreeCtrl* tree, wxString& selectedItemPath)
-{
-    wxTreeItemId item = tree->GetSelection();
-    while(item.IsOk())
-    {
-        selectedItemPath = _T("/") + tree->GetItemText(item) + selectedItemPath;
-        item = tree->GetItemParent(item);
+        if (path != wxEmptyString)
+            selectedItemPaths.Add(path);
     }
 }
 
@@ -478,7 +471,7 @@ void DoExpandRememberedNode(wxTreeCtrl* tree, const wxTreeItemId& parent, const 
     }
 }
 
-void SaveTreeState(wxTreeCtrl* tree, const wxTreeItemId& parent, wxArrayString& nodePaths, wxString& selectedItemPath)
+void SaveTreeState(wxTreeCtrl* tree, const wxTreeItemId& parent, wxArrayString& nodePaths, wxArrayString& selectedItemPaths)
 {
     nodePaths.Clear();
     if (!parent.IsOk() || !tree || !tree->ItemHasChildren(parent) || !tree->IsExpanded(parent))
@@ -487,11 +480,11 @@ void SaveTreeState(wxTreeCtrl* tree, const wxTreeItemId& parent, wxArrayString& 
     if (!DoRememberExpandedNodes(tree, parent, nodePaths, tmp))
         nodePaths.Add(tmp); // just the tree root
 
-    selectedItemPath.clear();
-    DoRememberSelectedNode(tree, selectedItemPath);
+    selectedItemPaths.Clear();
+    DoRememberSelectedNodes(tree, selectedItemPaths);
 }
 
-void RestoreTreeState(wxTreeCtrl* tree, const wxTreeItemId& parent, wxArrayString& nodePaths, wxString& selectedItemPath)
+void RestoreTreeState(wxTreeCtrl* tree, const wxTreeItemId& parent, wxArrayString& nodePaths, wxArrayString& selectedItemPaths)
 {
     if (!parent.IsOk() || !tree)
         return;
@@ -503,8 +496,9 @@ void RestoreTreeState(wxTreeCtrl* tree, const wxTreeItemId& parent, wxArrayStrin
     for (unsigned int i = 0; i < nodePaths.GetCount(); ++i)
         DoExpandRememberedNode(tree, parent, nodePaths[i]);
     nodePaths.Clear();
-    DoSelectRememberedNode(tree, tree->GetRootItem(), selectedItemPath);
-    selectedItemPath.clear();
+    for (unsigned int i = 0; i < selectedItemPaths.GetCount(); ++i)
+        DoSelectRememberedNode(tree, tree->GetRootItem(), selectedItemPaths[i]);
+    selectedItemPaths.Clear();
 }
 
 bool CreateDirRecursively(const wxString& full_path, int perms)
@@ -817,7 +811,6 @@ bool UsesCommonControls6()
 {
     bool result = false;
     HINSTANCE hinstDll;
-    DWORD dwVersion = 0;
     hinstDll = LoadLibrary(_T("comctl32.dll"));
     if (hinstDll)
     {
@@ -835,10 +828,7 @@ bool UsesCommonControls6()
             hr = (*pDllGetVersion)(&dvi);
 
             if (SUCCEEDED(hr))
-            {
-               dwVersion = MAKELONG(dvi.dwMinorVersion, dvi.dwMajorVersion);
                result = dvi.dwMajorVersion == 6;
-            }
         }
 
         FreeLibrary(hinstDll);

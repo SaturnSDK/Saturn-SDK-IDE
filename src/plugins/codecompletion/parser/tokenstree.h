@@ -11,6 +11,9 @@
 #include <vector>
 #include <deque>
 
+#include <vector>
+#include <deque>
+
 #include "token.h"
 #include "searchtree.h"
 
