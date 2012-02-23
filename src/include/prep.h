@@ -370,13 +370,4 @@ using std::tr1::weak_ptr;
     #define CB_LIBRARY_ENVVAR _T("PATH")
 #endif
 
-#if defined(__APPLE__) && defined(__MACH__)
-    #define CB_LIBRARY_ENVVAR _T("DYLD_LIBRARY_PATH")
-#elif !defined(__WXMSW__)
-    #define CB_LIBRARY_ENVVAR _T("LD_LIBRARY_PATH")
-#else
-    #define CB_LIBRARY_ENVVAR _T("PATH")
 #endif
-
-#endif
-
