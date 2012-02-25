@@ -74,6 +74,8 @@ DebuggerSettingsDlg::DebuggerSettingsDlg(wxWindow* parent)
 
 	Connect(ID_TREEBOOK,wxEVT_COMMAND_TREEBOOK_PAGE_CHANGED,(wxObjectEventFunction)&DebuggerSettingsDlg::OnPageChanged);
 	//*)
+	SetMinSize(wxSize(600, 600));
+	SetSize(wxSize(600, 600));
 
     m_commonPanel = new DebuggerSettingsCommonPanel(m_treebook);
 	m_treebook->AddPage(m_commonPanel, _("Common"));
@@ -101,9 +103,6 @@ DebuggerSettingsDlg::DebuggerSettingsDlg(wxWindow* parent)
 
     for (size_t ii = 0; ii < m_treebook->GetPageCount(); ++ii)
         m_treebook->ExpandNode(ii);
-
-	SetMinSize(wxSize(600, 600));
-	SetSize(wxSize(600, 600));
 }
 
 DebuggerSettingsDlg::~DebuggerSettingsDlg()
