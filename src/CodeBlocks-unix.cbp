@@ -168,6 +168,7 @@
 				<Compiler>
 					<Add option="`pkg-config gtk+-2.0 --cflags`" />
 					<Add option="-DENABLE_BINRELOC" />
+					<Add option="-DUSE_GTK_NOTEBOOK" />
 					<Add directory="include" />
 					<Add directory="include/scripting/include" />
 					<Add directory="include/scripting/sqplus" />
@@ -1159,6 +1160,12 @@
 			<Option target="Code-completion" />
 		</Unit>
 		<Unit filename="plugins/codecompletion/nativeparser.h">
+			<Option target="Code-completion" />
+		</Unit>
+		<Unit filename="plugins/codecompletion/nativeparser_base.cpp">
+			<Option target="Code-completion" />
+		</Unit>
+		<Unit filename="plugins/codecompletion/nativeparser_base.h">
 			<Option target="Code-completion" />
 		</Unit>
 		<Unit filename="plugins/codecompletion/parser/ccdebuginfo.cpp">

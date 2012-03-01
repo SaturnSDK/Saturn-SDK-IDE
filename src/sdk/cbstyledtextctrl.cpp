@@ -54,6 +54,7 @@ cbStyledTextCtrl::cbStyledTextCtrl(wxWindow* pParent, int id, const wxPoint& pos
     m_tabSmartJump(false)
 {
     //ctor
+    m_braceShortcutState = false;
 }
 
 cbStyledTextCtrl::~cbStyledTextCtrl()
@@ -127,8 +128,17 @@ void cbStyledTextCtrl::OnKeyDown(wxKeyEvent& event)
 {
     bool emulateDwellStart = false;
 
+    m_lastSelectedText = GetSelectedText();
+
     switch (event.GetKeyCode())
     {
+        case _T('I'):
+        {
+            if (event.GetModifiers() == wxMOD_ALT)
+                m_braceShortcutState = true;
+            break;
+        }
+
         case WXK_TAB:
         {
             if (m_tabSmartJump && !(event.ControlDown() || event.ShiftDown() || event.AltDown()))
@@ -286,6 +296,13 @@ void cbStyledTextCtrl::CallTipCancel()
 {
     if (!m_tabSmartJump)
         wxScintilla::CallTipCancel();
+}
+
+bool cbStyledTextCtrl::IsBraceShortcutActive()
+{
+    bool state = m_braceShortcutState;
+    m_braceShortcutState = false;
+    return state;
 }
 
 bool cbStyledTextCtrl::AllowTabSmartJump()
