@@ -188,7 +188,7 @@
 					<Add directory="sdk/scripting/lib" />
 				</Linker>
 				<ExtraCommands>
-					<Add before="build_tools/autorevision/auto_revision +wx +int +t . include/autorevision.h" />
+					<Add before="build_tools/autorevision/autorevision +wx +int +t . include/autorevision.h" />
 					<Mode after="always" />
 				</ExtraCommands>
 			</Target>
@@ -514,7 +514,7 @@
 			</Environment>
 		</Build>
 		<VirtualTargets>
-			<Add alias="All" targets="tinyXML;AutoRevision;ConsoleRunner;Squirrel;Squirrel std lib;SqPlus;scintilla;wxpropgrid;sdk;src;Abbreviations;AStyle;Autosave;Compiler depslib;Compiler;Debugger;Code-completion;Class wizard;Default MIME handler;Open files list;Projects-workspaces importer;Scripted wizard;To-do;" />
+			<Add alias="All" targets="tinyXML;AutoRevision;ConsoleRunner;Squirrel;Squirrel std lib;SqPlus;scintilla;wxpropgrid;sdk;sdk_con;src;src_con;Abbreviations;AStyle;Autosave;Compiler depslib;Compiler;Compiler_con;Debugger;Code-completion;Class wizard;Default MIME handler;Open files list;Projects-workspaces importer;Scripted wizard;To-do;" />
 			<Add alias="Core app &amp; plugins" targets="sdk;src;AStyle;Autosave;Compiler depslib;Compiler;Debugger;Code-completion;Class wizard;Default MIME handler;Open files list;Projects-workspaces importer;Scripted wizard;To-do;" />
 			<Add alias="Third-party libs" targets="tinyXML;AutoRevision;ConsoleRunner;Squirrel;Squirrel std lib;SqPlus;scintilla;wxpropgrid;Compiler depslib;" />
 			<Add alias="console-app" targets="tinyXML;AutoRevision;Squirrel;Squirrel std lib;SqPlus;sdk_con;src_con;Compiler depslib;Compiler_con;" />
@@ -1466,9 +1466,11 @@
 		</Unit>
 		<Unit filename="plugins/compilergcc/compilerG95.cpp">
 			<Option target="Compiler" />
+			<Option target="Compiler_con" />
 		</Unit>
 		<Unit filename="plugins/compilergcc/compilerG95.h">
 			<Option target="Compiler" />
+			<Option target="Compiler_con" />
 		</Unit>
 		<Unit filename="plugins/compilergcc/compilerGDC.cpp">
 			<Option target="Compiler" />
@@ -1496,9 +1498,11 @@
 		</Unit>
 		<Unit filename="plugins/compilergcc/compilerGNUFortran.cpp">
 			<Option target="Compiler" />
+			<Option target="Compiler_con" />
 		</Unit>
 		<Unit filename="plugins/compilergcc/compilerGNUFortran.h">
 			<Option target="Compiler" />
+			<Option target="Compiler_con" />
 		</Unit>
 		<Unit filename="plugins/compilergcc/compilerGNUMSP430.cpp">
 			<Option target="Compiler" />

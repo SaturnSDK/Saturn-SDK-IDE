@@ -24,14 +24,10 @@
 struct PluginInfo;
 class cbPlugin;
 class cbMimePlugin;
-//class cbConfigurationPanel;
 class cbProject;
 class wxDynamicLibrary;
-//class wxMenuBar;
-//class wxMenu;
 class CodeBlocksEvent;
 class TiXmlDocument;
-//class FileTreeData;
 
 // typedefs for plugins' function pointers
 typedef void(*PluginSDKVersionProc)(int*,int*,int*);
@@ -81,7 +77,6 @@ class DLLIMPORT PLUGIN_MANAGER_BASE
 #ifdef CB_FOR_CONSOLE
     : public Mgr<PLUGIN_MANAGER_BASE>
 #endif //#ifdef CB_FOR_CONSOLE
-//, public wxEvtHandler
 {
     public:
 #ifdef CB_FOR_CONSOLE
@@ -90,8 +85,6 @@ class DLLIMPORT PLUGIN_MANAGER_BASE
         friend class PluginManager; // give Manager access to our private members
 #endif //#ifdef CB_FOR_CONSOLE
         friend class Manager; // give Manager access to our private members
-//        void CreateMenu(wxMenuBar* menuBar);
-//        void ReleaseMenu(wxMenuBar* menuBar);
 
         void RegisterPlugin(const wxString& name,
                             CreatePluginProc createProc,
@@ -104,14 +97,9 @@ class DLLIMPORT PLUGIN_MANAGER_BASE
         void UnloadAllPlugins();
         void UnloadPlugin(cbPlugin* plugin);
         int ExecutePlugin(const wxString& pluginName);
-//        int ConfigurePlugin(const wxString& pluginName);
 
         bool AttachPlugin(cbPlugin* plugin, bool ignoreSafeMode = false);
         bool DetachPlugin(cbPlugin* plugin);
-
-//        bool InstallPlugin(const wxString& pluginName, bool forAllUsers = true, bool askForConfirmation = true);
-//        bool UninstallPlugin(cbPlugin* plugin, bool removeFiles = true);
-//        bool ExportPlugin(cbPlugin* plugin, const wxString& filename);
 
         const PluginInfo* GetPluginInfo(const wxString& pluginName);
         const PluginInfo* GetPluginInfo(cbPlugin* plugin);
@@ -128,11 +116,7 @@ class DLLIMPORT PLUGIN_MANAGER_BASE
         PluginsArray GetDebuggerOffers();
         PluginsArray GetCodeCompletionOffers();
         PluginsArray GetOffersFor(PluginType type);
-//        void AskPluginsForModuleMenu(const ModuleType type, wxMenu* menu, const FileTreeData* data = 0);
         cbMimePlugin* GetMIMEHandlerForFile(const wxString& filename);
-//        void GetConfigurationPanels(int group, wxWindow* parent, ConfigurationPanelsArray& arrayToFill);
-//        void GetProjectConfigurationPanels(wxWindow* parent, cbProject* project, ConfigurationPanelsArray& arrayToFill);
-//        int Configure();
         void SetupLocaleDomain(const wxString& DomainName);
 
         void NotifyPlugins(CodeBlocksEvent& event);
@@ -142,12 +126,8 @@ class DLLIMPORT PLUGIN_MANAGER_BASE
         static void SetSafeMode(bool on){ s_SafeMode = on; }
         static bool GetSafeMode(){ return s_SafeMode; }
     private:
-//    protected:
         PLUGIN_MANAGER_BASE();
         virtual ~PLUGIN_MANAGER_BASE();
-
-//        void OnScriptMenu(wxCommandEvent& event);
-//        void OnScriptModuleMenu(wxCommandEvent& event);
 
         /// @return True if the plugin should be loaded, false if not.
         bool ReadManifestFile(const wxString& pluginFilename,
@@ -155,11 +135,6 @@ class DLLIMPORT PLUGIN_MANAGER_BASE
                                 PluginInfo* infoOut = 0);
         void ReadExtraFilesFromManifestFile(const wxString& pluginFilename,
                                             wxArrayString& extraFiles);
-//        bool ExtractFile(const wxString& bundlename,
-//                        const wxString& src_filename,
-//                        const wxString& dst_filename,
-//                        bool isMandatory = true);
-
         PluginElementsArray m_Plugins;
         wxString m_CurrentlyLoadingFilename;
         wxDynamicLibrary* m_pCurrentlyLoadingLib;
@@ -193,7 +168,6 @@ class DLLIMPORT PLUGIN_MANAGER_BASE
 
         static bool s_SafeMode;
 
-//        DECLARE_EVENT_TABLE()
 };
 
 #endif // PLUGINMANAGER_BASE_H

@@ -143,12 +143,12 @@ class DLLIMPORT ProjectManager : public Mgr<ProjectManager>, public wxEvtHandler
           */
         cbProject* LoadProject(const wxString& filename, bool activateIt = true);
 
+#ifndef CB_FOR_CONSOLE
         /** Reloads a project and tries to keep everything the same (project order, dependencies, active project)
           * @param project the project that will be reloaded, the pointer will be invalid after the call.
           */
         void ReloadProject(cbProject *project);
 
-#ifndef CB_FOR_CONSOLE
         /** Save a project to disk.
           * @param project A pointer to the project to save.
           * @return True if saving was succesful, false if not.

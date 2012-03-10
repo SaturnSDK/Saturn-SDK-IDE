@@ -32,18 +32,9 @@
 namespace ScriptBindings
 {
     extern void Register_Constants();
-//    extern void Register_Globals();
     extern void Register_Base_Globals();
     extern void Register_wxTypes();
-//#ifndef CB_FOR_CONSOLE
-//    extern void Register_Dialog();
-//    extern void Register_ProgressDialog();
-//    extern void Register_UtilDialogs();
-//#endif // #ifndef CB_FOR_CONSOLE
     extern void Register_Base_IO();
-//#ifndef CB_FOR_CONSOLE
-//    extern void Register_ScriptPlugin();
-//#endif // #ifndef CB_FOR_CONSOLE
 
     SQInteger ConfigManager_Read(HSQUIRRELVM v)
     {
@@ -107,62 +98,6 @@ namespace ScriptBindings
         }
         return sa.ThrowError("Invalid arguments to \"ConfigManager::Write\"");
     }
-//#ifndef CB_FOR_CONSOLE
-//    SQInteger EditorManager_GetBuiltinEditor(HSQUIRRELVM v)
-//    {
-//        StackHandler sa(v);
-//        int paramCount = sa.GetParamCount();
-//        if (paramCount == 2)
-//        {
-//            cbEditor* ed = 0;
-//            if (sa.GetType(2) == OT_INTEGER)
-//                ed = Manager::Get()->GetEditorManager()->GetBuiltinEditor(sa.GetInt(2));
-//            else
-//                ed = Manager::Get()->GetEditorManager()->GetBuiltinEditor(*SqPlus::GetInstance<wxString,false>(v, 2));
-//            SqPlus::Push(v, ed);
-//            return 1;
-//        }
-//        return sa.ThrowError("Invalid arguments to \"EditorManager::GetBuiltinEditor\"");
-//    }
-//    SQInteger EditorManager_Open(HSQUIRRELVM v)
-//    {
-//        StackHandler sa(v);
-//        int paramCount = sa.GetParamCount();
-//        if (paramCount == 2)
-//        {
-//            cbEditor* ed = Manager::Get()->GetEditorManager()->Open(*SqPlus::GetInstance<wxString,false>(v, 2));
-//            SqPlus::Push(v, ed);
-//            return 1;
-//        }
-//        return sa.ThrowError("Invalid arguments to \"EditorManager::Open\"");
-//    }
-//    SQInteger EditorManager_Close(HSQUIRRELVM v)
-//    {
-//        StackHandler sa(v);
-//        int paramCount = sa.GetParamCount();
-//        if (paramCount == 2)
-//        {
-//            if (sa.GetType(2) == OT_INTEGER)
-//                return sa.Return(Manager::Get()->GetEditorManager()->Close(sa.GetInt(2)));
-//            else
-//                return sa.Return(Manager::Get()->GetEditorManager()->Close(*SqPlus::GetInstance<wxString,false>(v, 2)));
-//        }
-//        return sa.ThrowError("Invalid arguments to \"EditorManager::Close\"");
-//    }
-//    SQInteger EditorManager_Save(HSQUIRRELVM v)
-//    {
-//        StackHandler sa(v);
-//        int paramCount = sa.GetParamCount();
-//        if (paramCount == 2)
-//        {
-//            if (sa.GetType(2) == OT_INTEGER)
-//                return sa.Return(Manager::Get()->GetEditorManager()->Save(sa.GetInt(2)));
-//            else
-//                return sa.Return(Manager::Get()->GetEditorManager()->Save(*SqPlus::GetInstance<wxString,false>(v, 2)));
-//        }
-//        return sa.ThrowError("Invalid arguments to \"EditorManager::Save\"");
-//    }
-//#endif // #ifndef CB_FOR_CONSOLE
     SQInteger cbProject_RemoveFile(HSQUIRRELVM v)
     {
         StackHandler sa(v);
@@ -171,7 +106,7 @@ namespace ScriptBindings
         {
             cbProject* prj = SqPlus::GetInstance<cbProject,false>(v, 1);
             if (sa.GetType(2) == OT_INTEGER)
-                return sa.Return(prj->RemoveFile(sa.GetInt(2)));
+                return sa.ThrowError("Invalid arguments to \"cbProject::RemoveFile\"");
             else
                 return sa.Return(prj->RemoveFile(SqPlus::GetInstance<ProjectFile,false>(v, 2)));
         }
@@ -215,83 +150,6 @@ namespace ScriptBindings
         }
         return sa.ThrowError("Invalid arguments to \"cbProject::GetBuildTarget\"");
     }
-//#ifndef CB_FOR_CONSOLE
-//    SQInteger cbProject_RenameBuildTarget(HSQUIRRELVM v)
-//    {
-//        StackHandler sa(v);
-//        int paramCount = sa.GetParamCount();
-//        if (paramCount == 3)
-//        {
-//            cbProject* prj = SqPlus::GetInstance<cbProject,false>(v, 1);
-//            if (sa.GetType(2) == OT_INTEGER)
-//                return sa.Return(prj->RenameBuildTarget(sa.GetInt(2), *SqPlus::GetInstance<wxString,false>(v, 3)));
-//            else
-//                return sa.Return(prj->RenameBuildTarget(*SqPlus::GetInstance<wxString,false>(v, 2), *SqPlus::GetInstance<wxString,false>(v, 3)));
-//        }
-//        return sa.ThrowError("Invalid arguments to \"cbProject::RenameBuildTarget\"");
-//    }
-//    SQInteger cbProject_DuplicateBuildTarget(HSQUIRRELVM v)
-//    {
-//        StackHandler sa(v);
-//        int paramCount = sa.GetParamCount();
-//        if (paramCount == 3)
-//        {
-//            cbProject* prj = SqPlus::GetInstance<cbProject,false>(v, 1);
-//            ProjectBuildTarget* bt = 0;
-//            if (sa.GetType(2) == OT_INTEGER)
-//                bt = prj->DuplicateBuildTarget(sa.GetInt(2), *SqPlus::GetInstance<wxString,false>(v, 3));
-//            else
-//                bt = prj->DuplicateBuildTarget(*SqPlus::GetInstance<wxString,false>(v, 2), *SqPlus::GetInstance<wxString,false>(v, 3));
-//            SqPlus::Push(v, bt);
-//            return 1;
-//        }
-//        return sa.ThrowError("Invalid arguments to \"cbProject::DuplicateBuildTarget\"");
-//    }
-//    SQInteger cbProject_RemoveBuildTarget(HSQUIRRELVM v)
-//    {
-//        StackHandler sa(v);
-//        int paramCount = sa.GetParamCount();
-//        if (paramCount == 2)
-//        {
-//            cbProject* prj = SqPlus::GetInstance<cbProject,false>(v, 1);
-//            if (sa.GetType(2) == OT_INTEGER)
-//                return sa.Return(prj->RemoveBuildTarget(sa.GetInt(2)));
-//            else
-//                return sa.Return(prj->RemoveBuildTarget(*SqPlus::GetInstance<wxString,false>(v, 2)));
-//        }
-//        return sa.ThrowError("Invalid arguments to \"cbProject::RemoveBuildTarget\"");
-//    }
-//    SQInteger cbProject_ExportTargetAsProject(HSQUIRRELVM v)
-//    {
-//        StackHandler sa(v);
-//        int paramCount = sa.GetParamCount();
-//        if (paramCount == 2)
-//        {
-//            cbProject* prj = SqPlus::GetInstance<cbProject,false>(v, 1);
-//            if (sa.GetType(2) == OT_INTEGER)
-//                return sa.Return(prj->ExportTargetAsProject(sa.GetInt(2)));
-//            else
-//                return sa.Return(prj->ExportTargetAsProject(*SqPlus::GetInstance<wxString,false>(v, 2)));
-//        }
-//        return sa.ThrowError("Invalid arguments to \"cbProject::ExportTargetAsProject\"");
-//    }
-//    SQInteger ProjectManager_AddFileToProject(HSQUIRRELVM v)
-//    {
-//        StackHandler sa(v);
-//        int paramCount = sa.GetParamCount();
-//        if (paramCount == 4)
-//        {
-//            if (sa.GetType(4) == OT_INTEGER)
-//            {
-//                wxString fname = *SqPlus::GetInstance<wxString,false>(v, 2);
-//                cbProject* prj = SqPlus::GetInstance<cbProject,false>(v, 3);
-//                int idx = sa.GetInt(4);
-//                return sa.Return((SQInteger)Manager::Get()->GetProjectManager()->AddFileToProject(fname, prj, idx));
-//            }
-//        }
-//        return sa.ThrowError("Invalid arguments to \"ProjectManager::AddFileToProject\"");
-//    }
-//#endif // #ifndef CB_FOR_CONSOLE
 
     SQInteger ProjectManager_GetProjectCount(HSQUIRRELVM v)
     {
@@ -329,40 +187,6 @@ namespace ScriptBindings
         }
     }
 
-//#ifndef CB_FOR_CONSOLE
-//    SQInteger cbEditor_SetText(HSQUIRRELVM v)
-//    {
-//        StackHandler sa(v);
-//        int paramCount = sa.GetParamCount();
-//        if (paramCount == 2)
-//        {
-//            cbEditor* self = SqPlus::GetInstance<cbEditor,false>(v, 1);
-//            if (self)
-//            {
-//                self->GetControl()->SetText(*SqPlus::GetInstance<wxString,false>(v, 2));
-//                return sa.Return();
-//            }
-//            return sa.ThrowError("'this' is NULL!?! (type of cbEditor*)");
-//        }
-//        return sa.ThrowError("Invalid arguments to \"cbEditor::SetText\"");
-//    }
-//    SQInteger cbEditor_GetText(HSQUIRRELVM v)
-//    {
-//        StackHandler sa(v);
-//        int paramCount = sa.GetParamCount();
-//        if (paramCount == 1)
-//        {
-//            cbEditor* self = SqPlus::GetInstance<cbEditor,false>(v, 1);
-//            if (self)
-//            {
-//                wxString str = self->GetControl()->GetText();
-//                return SqPlus::ReturnCopy(v, str);
-//            }
-//            return sa.ThrowError("'this' is NULL!?! (type of cbEditor*)");
-//        }
-//        return sa.ThrowError("Invalid arguments to \"cbEditor::GetText\"");
-//    }
-//#endif // #ifndef CB_FOR_CONSOLE
     SQInteger CompilerFactory_GetCompilerIndex(HSQUIRRELVM v)
     {
         StackHandler sa(v);
@@ -377,18 +201,10 @@ namespace ScriptBindings
         if (!SquirrelVM::GetVMPtr())
             cbThrow(_T("Scripting engine not initialized!?"));
 
-
         Register_wxTypes();
         Register_Constants();
-//        Register_Globals();
         Register_Base_Globals();
-//        Register_IO(); // IO is enabled, but just for harmless functions
         Register_Base_IO(); // IO is enabled, but just for harmless functions
-//#ifndef CB_FOR_CONSOLE
-//        Register_Dialog();
-//        Register_ProgressDialog();
-//        Register_UtilDialogs();
-//#endif // #ifndef CB_FOR_CONSOLE
 
         SqPlus::SQClassDef<ConfigManager>("ConfigManager").
                 staticFuncVarArgs(&ConfigManager_Read, "Read", "*").
@@ -412,7 +228,8 @@ namespace ScriptBindings
                 var(&ProjectFile::compile, "compile").
                 var(&ProjectFile::link, "link").
                 var(&ProjectFile::weight, "weight").
-                var(&ProjectFile::compilerVar, "compilerVar");
+                var(&ProjectFile::compilerVar, "compilerVar").
+                var(&ProjectFile::buildTargets, "buildTargets");
 
         SqPlus::SQClassDef<CompileOptionsBase>("CompileOptionsBase").
                 func(&CompileOptionsBase::AddPlatform, "AddPlatform").
@@ -513,7 +330,9 @@ namespace ScriptBindings
                 func(&ProjectBuildTarget::GetCreateStaticLib, "GetCreateStaticLib").
                 func(&ProjectBuildTarget::SetCreateStaticLib, "SetCreateStaticLib").
                 func(&ProjectBuildTarget::GetUseConsoleRunner, "GetUseConsoleRunner").
-                func(&ProjectBuildTarget::SetUseConsoleRunner, "SetUseConsoleRunner");
+                func(&ProjectBuildTarget::SetUseConsoleRunner, "SetUseConsoleRunner").
+                func(&ProjectBuildTarget::GetFilesCount, "GetFilesCount").
+                func(&ProjectBuildTarget::GetFile, "GetFile");
 
         SqPlus::SQClassDef<cbProject>("cbProject", "CompileTargetBase").
                 func(&cbProject::GetModified, "GetModified").
@@ -522,15 +341,6 @@ namespace ScriptBindings
                 func(&cbProject::SetMakefile, "SetMakefile").
                 func(&cbProject::IsMakefileCustom, "IsMakefileCustom").
                 func(&cbProject::SetMakefileCustom, "SetMakefileCustom").
-//#ifndef CB_FOR_CONSOLE
-//                func(&cbProject::CloseAllFiles, "CloseAllFiles").
-//                func(&cbProject::SaveAllFiles, "SaveAllFiles").
-//                func(&cbProject::Save, "Save").
-////                func(&cbProject::SaveAs, "SaveAs"). // *UNSAFE*
-//                func(&cbProject::SaveLayout, "SaveLayout").
-//                func(&cbProject::LoadLayout, "LoadLayout").
-//                func(&cbProject::ShowOptions, "ShowOptions").
-//#endif // #ifndef CB_FOR_CONSOLE
                 func(&cbProject::GetCommonTopLevelPath, "GetCommonTopLevelPath").
                 func(&cbProject::GetFilesCount, "GetFilesCount").
                 func(&cbProject::GetFile, "GetFile").
@@ -540,34 +350,18 @@ namespace ScriptBindings
                 func(&cbProject::GetBuildTargetsCount, "GetBuildTargetsCount").
                 staticFuncVarArgs(&cbProject_GetBuildTarget, "GetBuildTarget", "*").
                 func(&cbProject::AddBuildTarget, "AddBuildTarget").
-//#ifndef CB_FOR_CONSOLE
-//                staticFuncVarArgs(&cbProject_RenameBuildTarget, "RenameBuildTarget", "*").
-//                staticFuncVarArgs(&cbProject_DuplicateBuildTarget, "DuplicateBuildTarget", "*").
-//                staticFuncVarArgs(&cbProject_RemoveBuildTarget, "RemoveBuildTarget", "*").
-//                staticFuncVarArgs(&cbProject_ExportTargetAsProject, "ExportTargetAsProject", "*").
-//#endif // #ifndef CB_FOR_CONSOLE
                 func(&cbProject::BuildTargetValid, "BuildTargetValid").
                 func(&cbProject::GetFirstValidBuildTargetName, "GetFirstValidBuildTargetName").
                 func(&cbProject::SetDefaultExecuteTarget, "SetDefaultExecuteTarget").
                 func(&cbProject::GetDefaultExecuteTarget, "GetDefaultExecuteTarget").
                 func(&cbProject::SetActiveBuildTarget, "SetActiveBuildTarget").
                 func(&cbProject::GetActiveBuildTarget, "GetActiveBuildTarget").
-//#ifndef CB_FOR_CONSOLE
-//                func(&cbProject::SelectTarget, "SelectTarget").
-//#endif // #ifndef CB_FOR_CONSOLE
                 func(&cbProject::GetCurrentlyCompilingTarget, "GetCurrentlyCompilingTarget").
                 func(&cbProject::SetCurrentlyCompilingTarget, "SetCurrentlyCompilingTarget").
                 func(&cbProject::GetModeForPCH, "GetModeForPCH").
                 func(&cbProject::SetModeForPCH, "SetModeForPCH").
                 func(&cbProject::SetExtendedObjectNamesGeneration, "SetExtendedObjectNamesGeneration").
                 func(&cbProject::GetExtendedObjectNamesGeneration, "GetExtendedObjectNamesGeneration").
-//#ifndef CB_FOR_CONSOLE
-//                func(&cbProject::SetNotes, "SetNotes").
-//                func(&cbProject::GetNotes, "GetNotes").
-//                func(&cbProject::SetShowNotesOnLoad, "SetShowNotesOnLoad").
-//                func(&cbProject::GetShowNotesOnLoad, "GetShowNotesOnLoad").
-//                func(&cbProject::ShowNotes, "ShowNotes").
-//#endif // #ifndef CB_FOR_CONSOLE
                 func(&cbProject::AddToExtensions, "AddToExtensions").
                 func(&cbProject::DefineVirtualBuildTarget, "DefineVirtualBuildTarget").
                 func(&cbProject::HasVirtualBuildTarget, "HasVirtualBuildTarget").
@@ -587,126 +381,20 @@ namespace ScriptBindings
                 staticFuncVarArgs(&ProjectManager_GetProject, "GetProject", "*").
                 func(&ProjectManager::SetProject, "SetProject").
                 func(&ProjectManager::LoadWorkspace, "LoadWorkspace").
-//#ifndef CB_FOR_CONSOLE
-//                func(&ProjectManager::SaveWorkspace, "SaveWorkspace").
-//                func(&ProjectManager::SaveWorkspaceAs, "SaveWorkspaceAs").
-//                func(&ProjectManager::CloseWorkspace, "CloseWorkspace").
-//#endif // #ifndef CB_FOR_CONSOLE
                 func(&ProjectManager::IsOpen, "IsOpen").
                 func(&ProjectManager::LoadProject, "LoadProject").
-//#ifndef CB_FOR_CONSOLE
-//                func(&ProjectManager::SaveProject, "SaveProject").
-//                func(&ProjectManager::SaveProjectAs, "SaveProjectAs").
-//                func(&ProjectManager::SaveActiveProject, "SaveActiveProject").
-//                func(&ProjectManager::SaveActiveProjectAs, "SaveActiveProjectAs").
-//                func(&ProjectManager::SaveAllProjects, "SaveAllProjects").
-//#endif // #ifndef CB_FOR_CONSOLE
                 func(&ProjectManager::CloseProject, "CloseProject").
                 func(&ProjectManager::CloseActiveProject, "CloseActiveProject").
                 func(&ProjectManager::CloseAllProjects, "CloseAllProjects").
                 func(&ProjectManager::NewProject, "NewProject").
-//#ifndef CB_FOR_CONSOLE
-//                staticFuncVarArgs(&ProjectManager_AddFileToProject, "AddFileToProject", "*").
-//                func(&ProjectManager::AskForBuildTargetIndex, "AskForBuildTargetIndex").
-//                func(&ProjectManager::RebuildTree, "RebuildTree").
-//#endif // #ifndef CB_FOR_CONSOLE
                 func(&ProjectManager::AddProjectDependency, "AddProjectDependency").
                 func(&ProjectManager::RemoveProjectDependency, "RemoveProjectDependency").
                 func(&ProjectManager::ClearProjectDependencies, "ClearProjectDependencies").
-                func(&ProjectManager::RemoveProjectFromAllDependencies, "RemoveProjectFromAllDependencies").
-//#ifndef CB_FOR_CONSOLE
-//                func(&ProjectManager::GetDependenciesForProject, "GetDependenciesForProject").
-//#else // #ifndef CB_FOR_CONSOLE
-                func(&ProjectManager::GetDependenciesForProject, "GetDependenciesForProject");
-//#endif // #ifndef CB_FOR_CONSOLE
-//#ifndef CB_FOR_CONSOLE
-//                func(&ProjectManager::ConfigureProjectDependencies, "ConfigureProjectDependencies");
-//
-//        SqPlus::SQClassDef<EditorBase>("EditorBase").
-//                func(&EditorBase::GetFilename, "GetFilename").
-//                func(&EditorBase::SetFilename, "SetFilename").
-//                func(&EditorBase::GetShortName, "GetShortName").
-//                func(&EditorBase::GetModified, "GetModified").
-//                func(&EditorBase::SetModified, "SetModified").
-//                func(&EditorBase::GetTitle, "GetTitle").
-//                func(&EditorBase::SetTitle, "SetTitle").
-//                func(&EditorBase::Activate, "Activate").
-//                func(&EditorBase::Close, "Close").
-//                func(&EditorBase::Save, "Save").
-//                func(&EditorBase::IsBuiltinEditor, "IsBuiltinEditor").
-//                func(&EditorBase::ThereAreOthers, "ThereAreOthers").
-//                func(&EditorBase::GotoLine, "GotoLine").
-//                func(&EditorBase::ToggleBreakpoint, "ToggleBreakpoint").
-//                func(&EditorBase::HasBreakpoint, "HasBreakpoint").
-//                func(&EditorBase::GotoNextBreakpoint, "GotoNextBreakpoint").
-//                func(&EditorBase::GotoPreviousBreakpoint, "GotoPreviousBreakpoint").
-//                func(&EditorBase::ToggleBookmark, "ToggleBookmark").
-//                func(&EditorBase::HasBookmark, "HasBookmark").
-//                func(&EditorBase::GotoNextBookmark, "GotoNextBookmark").
-//                func(&EditorBase::GotoPreviousBookmark, "GotoPreviousBookmark").
-//                func(&EditorBase::Undo, "Undo").
-//                func(&EditorBase::Redo, "Redo").
-//                func(&EditorBase::Cut, "Cut").
-//                func(&EditorBase::Copy, "Copy").
-//                func(&EditorBase::Paste, "Paste").
-//                func(&EditorBase::CanUndo, "CanUndo").
-//                func(&EditorBase::CanRedo, "CanRedo").
-//                func(&EditorBase::CanPaste, "CanPaste").
-//                func(&EditorBase::IsReadOnly, "IsReadOnly").
-//                func(&EditorBase::HasSelection, "HasSelection");
-//
-//        SqPlus::SQClassDef<cbEditor>("cbEditor", "EditorBase").
-//                func(&cbEditor::SetEditorTitle, "SetEditorTitle").
-//                func(&cbEditor::GetProjectFile, "GetProjectFile").
-//                func(&cbEditor::Save, "Save").
-//                func(&cbEditor::SaveAs, "SaveAs").
-//                func(&cbEditor::FoldAll, "FoldAll").
-//                func(&cbEditor::UnfoldAll, "UnfoldAll").
-//                func(&cbEditor::ToggleAllFolds, "ToggleAllFolds").
-//                func(&cbEditor::FoldBlockFromLine, "FoldBlockFromLine").
-//                func(&cbEditor::UnfoldBlockFromLine, "UnfoldBlockFromLine").
-//                func(&cbEditor::ToggleFoldBlockFromLine, "ToggleFoldBlockFromLine").
-//                func(&cbEditor::GetLineIndentInSpaces, "GetLineIndentInSpaces").
-//                func(&cbEditor::GetLineIndentString, "GetLineIndentString").
-//                func(&cbEditor::Touch, "Touch").
-//                func(&cbEditor::Reload, "Reload").
-//                func(&cbEditor::Print, "Print").
-//                func(&cbEditor::AutoComplete, "AutoComplete").
-//                func(&cbEditor::AddBreakpoint, "AddBreakpoint").
-//                func(&cbEditor::RemoveBreakpoint, "RemoveBreakpoint").
-//                // these are not present in cbEditor; included to help scripts edit text
-//                staticFuncVarArgs(&cbEditor_SetText, "SetText", "*").
-//                staticFuncVarArgs(&cbEditor_GetText, "GetText", "*");
-//
-//        SqPlus::SQClassDef<EditorManager>("EditorManager").
-//                func(&EditorManager::Configure, "Configure").
-//                func(&EditorManager::New, "New").
-//                staticFuncVarArgs(&EditorManager_Open, "Open").
-//                func(&EditorManager::IsBuiltinOpen, "IsBuiltinOpen").
-//                staticFuncVarArgs(&EditorManager_GetBuiltinEditor, "GetBuiltinEditor", "*").
-//                func(&EditorManager::GetBuiltinActiveEditor, "GetBuiltinActiveEditor").
-//                func(&EditorManager::GetActiveEditor, "GetActiveEditor").
-//                func(&EditorManager::ActivateNext, "ActivateNext").
-//                func(&EditorManager::ActivatePrevious, "ActivatePrevious").
-//                func(&EditorManager::SwapActiveHeaderSource, "SwapActiveHeaderSource").
-//                func(&EditorManager::CloseActive, "CloseActive").
-//                staticFuncVarArgs(&EditorManager_Close, "Close", "*").
-//                func(&EditorManager::CloseAll, "CloseAll").
-//                staticFuncVarArgs(&EditorManager_Save, "Save", "*").
-//                func(&EditorManager::SaveActive, "SaveActive").
-//                func(&EditorManager::SaveAs, "SaveAs").
-//                func(&EditorManager::SaveActiveAs, "SaveActiveAs").
-//                func(&EditorManager::SaveAll, "SaveAll").
-//                func(&EditorManager::ShowFindDialog, "ShowFindDialog");
-//#endif // #ifndef CB_FOR_CONSOLE
+                func(&ProjectManager::RemoveProjectFromAllDependencies, "RemoveProjectFromAllDependencies");
 
         SqPlus::SQClassDef<UserVariableManager>("UserVariableManager").
                 func(&UserVariableManager::Exists, "Exists");
 
-//#ifndef CB_FOR_CONSOLE
-//        SqPlus::SQClassDef<ScriptingManager>("ScriptingManager").
-//                func(&ScriptingManager::RegisterScriptMenu, "RegisterScriptMenu");
-//#endif // #ifndef CB_FOR_CONSOLE
 
         typedef bool(*CF_INHERITSFROM)(const wxString&, const wxString&); // CompilerInheritsFrom
 
@@ -741,9 +429,5 @@ namespace ScriptBindings
             func(&FileTreeData::SetProjectFile, "SetProjectFile").
             func(&FileTreeData::SetFolder, "SetFolder");
 
-//        // called last because it needs a few previously registered types
-//#ifndef CB_FOR_CONSOLE
-//        Register_ScriptPlugin();
-//#endif // #ifndef CB_FOR_CONSOLE
     }
 } // namespace ScriptBindings

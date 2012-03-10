@@ -210,7 +210,6 @@ const wxCmdLineEntryDesc cmdLineDesc[] =
 #endif // #ifndef CB_FOR_CONSOLE
     { wxCMD_LINE_SWITCH, CMD_ENTRY("v"),  CMD_ENTRY("verbose"),               CMD_ENTRY("show more debugging messages"),
       wxCMD_LINE_VAL_NONE, wxCMD_LINE_PARAM_OPTIONAL },
-#endif // #ifndef CB_FOR_CONSOLE
     { wxCMD_LINE_OPTION, CMD_ENTRY(""),   CMD_ENTRY("prefix"),                CMD_ENTRY("the shared data dir prefix"),
       wxCMD_LINE_VAL_STRING, wxCMD_LINE_NEEDS_SEPARATOR },
 #ifndef CB_FOR_CONSOLE

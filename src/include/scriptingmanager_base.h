@@ -16,7 +16,6 @@
 
 #include "settings.h"
 #include "manager.h"
-//#include "menuitemsmanager.h"
 #include <wx/intl.h>
 
 #ifdef CB_FOR_CONSOLE
@@ -58,7 +57,6 @@ class DLLIMPORT SCRIPTING_MANAGER_BASE
 #ifdef CB_FOR_CONSOLE
     : public Mgr<SCRIPTING_MANAGER_BASE>
 #endif //#ifdef CB_FOR_CONSOLE
-//    public wxEvtHandler
 {
 #ifdef CB_FOR_CONSOLE
         friend class Mgr<SCRIPTING_MANAGER_BASE>;
@@ -137,44 +135,6 @@ class DLLIMPORT SCRIPTING_MANAGER_BASE
           */
         virtual int Configure();
 
-//#ifndef CB_FOR_CONSOLE
-//        /** @brief Registers a script plugin menu IDs with the callback function.
-//          *
-//          * @param name The script plugin's name.
-//          * @param ids The menu IDs to bind.
-//          * @return True on success, false on failure.
-//          */
-//        bool RegisterScriptPlugin(const wxString& name, const wxArrayInt& ids);
-//
-//        /** @brief Script-bound function to register a script with a menu item.
-//          *
-//          * @param menuPath The full menu path. This can be separated by slashes (/)
-//          *                 to create submenus (e.g. "MyScripts/ASubMenu/MyItem").
-//          *                 If the last part of the string ("MyItem" in the example)
-//          *                 starts with a dash (-) (e.g. "-MyItem") then a menu
-//          *                 separator is prepended before the actual menu item.
-//          * @param scriptOrFunc The script's filename or a script's function name.
-//          * @param isFunction If true, the @c scriptOrFunc parameter is considered
-//          *       to be a script filename. If false, it is considered to be a
-//          *       script's function name.
-//          * @return True on success, false on failure.
-//          */
-//        bool RegisterScriptMenu(const wxString& menuPath, const wxString& scriptOrFunc, bool isFunction);
-//
-//        /** @brief Script-bound function to unregister a script's menu item.
-//          *
-//          * @param menuPath The full menu path to unregister.
-//          * @return True on success, false on failure.
-//          */
-//        bool UnRegisterScriptMenu(const wxString& menuPath);
-//
-//        /** @brief Unregister all scripts' menu items.
-//          *
-//          * @return True on success, false on failure.
-//          */
-//        bool UnRegisterAllScriptMenus();
-//#endif // #ifndef CB_FOR_CONSOLE
-
         /** @brief Security function.
           *
           * @param script The script's full filename.
@@ -249,10 +209,6 @@ class DLLIMPORT SCRIPTING_MANAGER_BASE
     private:
 #endif // #ifdef CB_FOR_CONSOLE
 
-//#ifndef CB_FOR_CONSOLE
-//        void OnScriptMenu(wxCommandEvent& event);
-//        void OnScriptPluginMenu(wxCommandEvent& event);
-//#endif // #ifndef CB_FOR_CONSOLE
         virtual void RegisterScriptFunctions();
 
     protected:
@@ -271,19 +227,11 @@ class DLLIMPORT SCRIPTING_MANAGER_BASE
         typedef std::map<int, MenuBoundScript> MenuIDToScript;
         MenuIDToScript m_MenuIDToScript;
 
-//#ifndef CB_FOR_CONSOLE
-//        bool m_AttachedToMainWindow;
-//#endif // #ifndef CB_FOR_CONSOLE
         wxString m_CurrentlyRunningScriptFile;
 
         typedef std::set<wxString> IncludeSet;
         IncludeSet m_IncludeSet;
 
-//#ifndef CB_FOR_CONSOLE
-//        MenuItemsManager m_MenuItemsManager;
-//#endif // #ifndef CB_FOR_CONSOLE
-
-//        DECLARE_EVENT_TABLE()
 };
 
 #endif // SCRIPTINGMANAGER_BASE_H

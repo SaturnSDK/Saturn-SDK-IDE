@@ -9,36 +9,28 @@
 
 #include "sdk_precomp.h"
 #ifndef CB_PRECOMP
-//    #ifndef CB_FOR_CONSOLE
-        #include <wx/button.h>
-        #include <wx/checkbox.h>
-        #include <wx/intl.h>
-        #include <wx/sizer.h>
-        #include <wx/stattext.h>
-//    #endif // #ifndef CB_FOR_CONSOLE
-    #include "cbexception.h"
-    #include "configmanager.h"
-    #include "manager.h"
-    #include "globals.h"
+#include <wx/button.h>
+#include <wx/checkbox.h>
+#include <wx/intl.h>
+#include <wx/sizer.h>
+#include <wx/stattext.h>
+#include "cbexception.h"
+#include "configmanager.h"
+#include "manager.h"
+#include "globals.h"
 #endif
-#include "annoyingdialog.h"
-//#ifndef CB_FOR_CONSOLE
 #include <wx/statbmp.h>
+#include "annoyingdialog.h"
 
 BEGIN_EVENT_TABLE(AnnoyingDialog, wxScrollingDialog)
     EVT_BUTTON(-1, AnnoyingDialog::OnButton)
 END_EVENT_TABLE()
-//#endif // #ifndef CB_FOR_CONSOLE
 
 AnnoyingDialog::AnnoyingDialog(const wxString& caption, const wxString& message, const wxArtID icon,
                                dStyle style, int defaultReturn, bool /*separate*/,
                                const wxString& b1, const wxString& b2, const wxString& b3)
-//#ifndef CB_FOR_CONSOLE
         : wxScrollingDialog(NULL, -1, caption, wxDefaultPosition, wxDefaultSize, wxCAPTION),
         cb(0),
-//#else // #ifndef CB_FOR_CONSOLE
-//        :
-//#endif // #ifndef CB_FOR_CONSOLE
         dontAnnoy(false),
         defRet(defaultReturn)
 {
@@ -52,7 +44,6 @@ AnnoyingDialog::AnnoyingDialog(const wxString& caption, const wxString& message,
         return;
     }
 
-//#ifndef CB_FOR_CONSOLE
     wxBoxSizer *outerSizer = new wxBoxSizer( wxVERTICAL );
 
     wxFlexGridSizer *mainArea = new wxFlexGridSizer(2, 0, 0);
@@ -157,13 +148,8 @@ AnnoyingDialog::AnnoyingDialog(const wxString& caption, const wxString& message,
     outerSizer->SetSizeHints(this);
 
     Centre();
-//#else // #ifndef CB_FOR_CONSOLE
-//    m_Message = message;
-//    m_Caption = caption;
-//#endif // #ifndef CB_FOR_CONSOLE
 }
 
-//#ifndef CB_FOR_CONSOLE
 void AnnoyingDialog::OnButton(wxCommandEvent& event)
 {
     if(!cb)
@@ -177,17 +163,11 @@ void AnnoyingDialog::OnButton(wxCommandEvent& event)
     }
     EndModal(event.GetId());
 }
-//#endif // #ifndef CB_FOR_CONSOLE
 
 int AnnoyingDialog::ShowModal()
 {
     if(dontAnnoy)
         return defRet;
-//#ifndef CB_FOR_CONSOLE
     PlaceWindow(this);
     return wxScrollingDialog::ShowModal();
-//#else // #ifndef CB_FOR_CONSOLE
-//    cbMessageBox(m_Message, m_Caption);
-//    return wxID_OK;
-//#endif // #ifndef CB_FOR_CONSOLE
 };

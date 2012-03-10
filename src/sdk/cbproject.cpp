@@ -845,6 +845,7 @@ bool cbProject::RemoveFile(ProjectFile* pf)
     return true;
 }
 
+#ifndef CB_FOR_CONSOLE
 void cbProject::SortChildrenRecursive(cbTreeCtrl* tree, const wxTreeItemId& parent)
 {
     wxTreeItemIdValue cookie = 0;
@@ -859,7 +860,6 @@ void cbProject::SortChildrenRecursive(cbTreeCtrl* tree, const wxTreeItemId& pare
     }
 }
 
-#ifndef CB_FOR_CONSOLE
 void cbProject::BuildTree(cbTreeCtrl* tree, const wxTreeItemId& root, int ptvs, FilesGroupsAndMasks* fgam)
 {
     if (!tree)
@@ -1757,8 +1757,8 @@ int cbProject::SelectTarget(int initial, bool evenIfOne)
     PlaceWindow(&dlg);
     if (dlg.ShowModal() == wxID_OK)
         return dlg.GetSelection();
-#endif // #ifndef CB_FOR_CONSOLE
 
+#endif // #ifndef CB_FOR_CONSOLE
     return -1;
 }
 

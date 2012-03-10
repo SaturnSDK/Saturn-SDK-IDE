@@ -11,9 +11,7 @@
 #else // #ifdef CB_FOR_CONSOLE
 
 #include "settings.h"
-
 #include "scrollingdialog.h"
-//#endif // #ifndef CB_FOR_CONSOLE
 #include <wx/string.h>
 #include <wx/artprov.h>
 
@@ -25,11 +23,7 @@ Dialog that contains a "Don't annoy me" checkbox.
 Using this dialog, the user can select not to display this dialog again.
 The dialog can be then re-enabled in "Settings->Environment->Dialogs"...
 */
-//#ifndef CB_FOR_CONSOLE
 class DLLIMPORT AnnoyingDialog : public wxScrollingDialog
-//#else// #ifndef CB_FOR_CONSOLE
-//class DLLIMPORT AnnoyingDialog
-//#endif // #ifndef CB_FOR_CONSOLE
 {
     public:
         enum dStyle
@@ -49,20 +43,11 @@ class DLLIMPORT AnnoyingDialog : public wxScrollingDialog
         virtual ~AnnoyingDialog(){}
         virtual int ShowModal();
     private:
-//#ifndef CB_FOR_CONSOLE
         void OnButton(wxCommandEvent& event);
         wxCheckBox *cb;
-//#endif // #ifndef CB_FOR_CONSOLE
         bool dontAnnoy;
         int defRet;
-//#ifndef CB_FOR_CONSOLE
         DECLARE_EVENT_TABLE()
-//#else // #ifndef CB_FOR_CONSOLE
-//        wxString m_Message;
-//        wxString m_Caption;
-//#endif // #ifndef CB_FOR_CONSOLE
-
-
 };
 
 #endif // #ifdef CB_FOR_CONSOLE

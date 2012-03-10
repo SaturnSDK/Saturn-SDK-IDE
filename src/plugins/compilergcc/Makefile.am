@@ -77,14 +77,15 @@ libcon_compiler_la_SOURCES = compilerBCC.cpp \
 			compilerOW.cpp \
 			compilerOWgenerator.cpp \
 			compilerSDCC.cpp \
+			compilerG95.cpp \
 			compilerGNUARM.cpp \
 			compilerGNUAVR.cpp \
+			compilerGNUFortran.cpp \
 			compilerGNUMSP430.cpp \
 			compilerGNUPOWERPC.cpp \
 			compilerGNUTRICORE.cpp \
 			compilerTcc.cpp \
-			directcommands.cpp \
-			makefilegenerator.cpp
+			directcommands.cpp
 
 noinst_HEADERS = advancedcompileroptionsdlg.h \
 			compilerBCC.h \

@@ -933,6 +933,7 @@ void CompilerGCC::SwitchCompiler(const wxString& id)
     SetupEnvironment();
 }
 
+#ifndef CB_FOR_CONSOLE
 void CompilerGCC::PrepareCompileFilePM(wxFileName& file)
 {
     // we 're called from a menu in ProjectManager
@@ -968,6 +969,7 @@ void CompilerGCC::PrepareCompileFile(wxFileName& file)
         }
     }
 }
+#endif // #ifndef CB_FOR_CONSOLE
 
 bool CompilerGCC::CheckProject()
 {
@@ -990,6 +992,7 @@ void CompilerGCC::AskForActiveProject()
                 : Manager::Get()->GetProjectManager()->GetActiveProject();
 }
 
+#ifndef CB_FOR_CONSOLE
 void CompilerGCC::StartCompileFile(wxFileName file)
 {
     if (m_pProject)
@@ -1004,6 +1007,7 @@ void CompilerGCC::StartCompileFile(wxFileName file)
     if (!fname.IsEmpty())
         CompileFile( UnixFilename(fname) );
 }
+#endif // #ifndef CB_FOR_CONSOLE
 
 wxString CompilerGCC::ProjectMakefile()
 {
@@ -1330,21 +1334,20 @@ int CompilerGCC::DoRunQueue()
     // we need to use wxExecute here, even if the returned exitcode has to be treaten as if
     // we run system() directly, because we need to be able to write the (error)output to a
     // possibly used html-log.
-    m_Pid[procIndex] = wxExecute(cmd->command, output, error, flags);
+    m_CompilerProcessList.at(procIndex).PID = wxExecute(cmd->command, output, error, flags);
     // The returned value can be too large and therefore can not be used directly as returnvalue
     // of the app (it seems that values larger than 255 are treated as zero).
-    if(WIFEXITED(m_Pid[procIndex]))
+    if(WIFEXITED(m_CompilerProcessList.at(procIndex).PID))
     {
-        m_Pid[procIndex] = WEXITSTATUS(m_Pid[procIndex]);
+        m_CompilerProcessList.at(procIndex).PID = WEXITSTATUS(m_CompilerProcessList.at(procIndex).PID);
     }
     else
     {
-        m_Pid[procIndex] = -1;
+        m_CompilerProcessList.at(procIndex).PID = -1;
     }
-    if ( m_Pid[procIndex] == -1 )
+    if ( m_CompilerProcessList.at(procIndex).PID == -1 )
     {
-        delete m_Processes[procIndex];
-        m_Processes[procIndex] = 0;
+        Delete(m_CompilerProcessList.at(procIndex).pProcess);
         m_CommandQueue.Clear();
         ResetBuildState();
     }
@@ -1361,7 +1364,7 @@ int CompilerGCC::DoRunQueue()
     {
         AddOutputLine(error[i]);
     }
-    OnJobEnd(procIndex, m_Pid[procIndex]);
+    OnJobEnd(procIndex, m_CompilerProcessList.at(procIndex).PID);
 #endif // #ifndef CB_FOR_CONSOLE
 
     // restore dynamic linker path
@@ -2903,8 +2906,10 @@ int CompilerGCC::CompileFile(const wxString& file)
 
 int CompilerGCC::CompileFileWithoutProject(const wxString& file)
 {
+#ifndef CB_FOR_CONSOLE
     // compile single file not belonging to a project
     Manager::Get()->GetEditorManager()->Save(file);
+#endif // #ifndef CB_FOR_CONSOLE
 
     // switch to the default compiler
     SwitchCompiler(CompilerFactory::GetDefaultCompilerID());

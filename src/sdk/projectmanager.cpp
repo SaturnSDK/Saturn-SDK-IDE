@@ -1013,6 +1013,7 @@ cbProject* ProjectManager::LoadProject(const wxString& filename, bool activateIt
     return result;
 }
 
+#ifndef CB_FOR_CONSOLE
 void ProjectManager::ReloadProject(cbProject *project)
 {
     FreezeTree();
@@ -1085,6 +1086,7 @@ void ProjectManager::ReloadProject(cbProject *project)
 
     UnfreezeTree();
 }
+#endif // #ifndef CB_FOR_CONSOLE
 
 cbProject* ProjectManager::NewProject(const wxString& filename)
 {
@@ -1185,9 +1187,9 @@ bool ProjectManager::CloseAllProjects(bool dontsave)
         }
     }
 
+#ifndef CB_FOR_CONSOLE
     if (!Manager::IsAppShuttingDown())
         RebuildTree();
-#ifndef CB_FOR_CONSOLE
     UnfreezeTree(true);
 #endif // #ifndef CB_FOR_CONSOLE
 
@@ -3509,7 +3511,9 @@ void ProjectManager::EndLoadingWorkspace()
         }
 
         WorkspaceChanged();
+#endif // #ifndef CB_FOR_CONSOLE
     }
+#ifndef CB_FOR_CONSOLE
     else
         CloseWorkspace();
 #endif // #ifndef CB_FOR_CONSOLE

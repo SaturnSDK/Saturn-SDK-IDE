@@ -34,9 +34,9 @@
 
 // this is the plugins SDK version number
 // it will change when the SDK interface breaks
-#define PLUGIN_SDK_VERSION_MAJOR 1
-#define PLUGIN_SDK_VERSION_MINOR 11
-#define PLUGIN_SDK_VERSION_RELEASE 13
+#define PLUGIN_SDK_VERSION_MAJOR   1
+#define PLUGIN_SDK_VERSION_MINOR   11
+#define PLUGIN_SDK_VERSION_RELEASE 18
 
 #ifdef CB_FOR_CONSOLE
     #define CB_PLUGIN_BASE cbPlugin
@@ -46,26 +46,13 @@
 
 
 // class decls
-//class wxMenuBar;
-//class wxMenu;
-//class wxToolBar;
-//class wxPanel;
-//class wxWindow;
-//class cbEditor;
 class cbProject;
 class ProjectBuildTarget;
 class CompileTargetBase;
-//class FileTreeData;
-//class cbConfigurationPanel;
 struct PluginInfo;
-//class cbStatusBar;
 
 // Define basic groups for plugins' configuration.
 static const int cgCompiler         = 0x01; ///< Compiler related.
-//static const int cgDebugger         = 0x02; ///< Debugger related.
-//static const int cgEditor           = 0x04; ///< Editor related.
-//static const int cgCorePlugin       = 0x08; ///< One of the core plugins.
-//static const int cgContribPlugin    = 0x10; ///< One of the contrib plugins (or any third-party plugin for that matter).
 static const int cgUnknown          = 0x20; ///< Unknown. This will be probably grouped with cgContribPlugin.
 
 /** @brief Base class for plugins
@@ -91,89 +78,6 @@ class PLUGIN_EXPORT CB_PLUGIN_BASE : public wxEvtHandler
 
         /** The plugin must return its type on request. */
         virtual PluginType GetType() const { return m_Type; }
-
-//        /** If a plugin provides some sort of configuration dialog,
-//          * this is the place to invoke it.
-//          */
-//        virtual int Configure(){ return 0; }
-//
-//        /** Return the plugin's configuration priority.
-//          * This is a number (default is 50) that is used to sort plugins
-//          * in configuration dialogs. Lower numbers mean the plugin's
-//          * configuration is put higher in the list.
-//          */
-//        virtual int GetConfigurationPriority() const { return 50; }
-//
-//        /** Return the configuration group for this plugin. Default is cgUnknown.
-//          * Notice that you can logically AND more than one configuration groups,
-//          * so you could set it, for example, as "cgCompiler | cgContribPlugin".
-//          */
-//        virtual int GetConfigurationGroup() const { return cgUnknown; }
-//
-//        /** Return plugin's configuration panel.
-//          * @param parent The parent window.
-//          * @return A pointer to the plugin's cbConfigurationPanel. It is deleted by the caller.
-//          */
-//        virtual cbConfigurationPanel* GetConfigurationPanel(wxWindow* /*parent*/){ return 0; }
-//
-//        /** Return plugin's configuration panel for projects.
-//          * The panel returned from this function will be added in the project's
-//          * configuration dialog.
-//          * @param parent The parent window.
-//          * @param project The project that is being edited.
-//          * @return A pointer to the plugin's cbConfigurationPanel. It is deleted by the caller.
-//          */
-//        virtual cbConfigurationPanel* GetProjectConfigurationPanel(wxWindow* /*parent*/, cbProject* /*project*/){ return 0; }
-//
-//        /** This method is called by Code::Blocks and is used by the plugin
-//          * to add any menu items it needs on Code::Blocks's menu bar.\n
-//          * It is a pure virtual method that needs to be implemented by all
-//          * plugins. If the plugin does not need to add items on the menu,
-//          * just do nothing ;)
-//          *
-//          * @note This function may be called more than one time. This can happen,
-//          * for example, when a plugin is installed or uninstalled.
-//          *
-//          * @param menuBar the wxMenuBar to create items in
-//          */
-//        virtual void BuildMenu(wxMenuBar* menuBar) = 0;
-//
-//        /** This method is called by Code::Blocks core modules (EditorManager,
-//          * ProjectManager etc) and is used by the plugin to add any menu
-//          * items it needs in the module's popup menu. For example, when
-//          * the user right-clicks on a project file in the project tree,
-//          * ProjectManager prepares a popup menu to display with context
-//          * sensitive options for that file. Before it displays this popup
-//          * menu, it asks all attached plugins (by asking PluginManager to call
-//          * this method), if they need to add any entries
-//          * in that menu. This method is called.\n
-//          * If the plugin does not need to add items in the menu,
-//          * just do nothing ;)
-//          * @param type the module that's preparing a popup menu
-//          * @param menu pointer to the popup menu
-//          * @param data pointer to FileTreeData object (to access/modify the file tree)
-//          */
-//        virtual void BuildModuleMenu(const ModuleType type, wxMenu* menu, const FileTreeData* data = 0) = 0;
-//
-//        /** This method is called by Code::Blocks and is used by the plugin
-//          * to add any toolbar items it needs on Code::Blocks's toolbar.\n
-//          * It is a pure virtual method that needs to be implemented by all
-//          * plugins. If the plugin does not need to add items on the toolbar,
-//          * just do nothing ;)
-//          * @param toolBar the wxToolBar to create items on
-//          * @return The plugin should return true if it needed the toolbar, false if not
-//          */
-//        virtual bool BuildToolBar(wxToolBar* toolBar) = 0;
-//
-//#if wxUSE_STATUSBAR
-//        /** This method is called by Code::Blocks and is used by the plugin
-//          * to add a field on Code::Blocks's statusbar.\n
-//          * If the plugin does not need to add items on the statusbar, just
-//          * do nothing ;)
-//          * @param statusBar the cbStatusBar to create items on
-//          */
-//        virtual void CreateStatusField(cbStatusBar *statusBar) { wxUnusedVar(statusBar); return; }
-//#endif
 
         /** See whether this plugin is attached or not. A plugin should not perform
           * any of its tasks, if not attached...
@@ -356,6 +260,7 @@ class PLUGIN_EXPORT cbCompilerPlugin: public cbPlugin
         /** @brief Get the exit code of the last build process. */
         virtual int GetExitCode() const = 0;
 
+        virtual int Configure() { return 0; }
         /** @brief Display configuration dialog.
           *
           * @param project The selected project (can be NULL).
@@ -364,83 +269,6 @@ class PLUGIN_EXPORT cbCompilerPlugin: public cbPlugin
         virtual int Configure(cbProject* project, ProjectBuildTarget* target = 0L) = 0;
     private:
 };
-
-///** @brief Base class for debugger plugins
-//  *
-//  * This plugin type must offer some pre-defined debug facilities, on top
-//  * of the generic plugin's.
-//  */
-//class PLUGIN_EXPORT cbDebuggerPlugin: public cbPlugin
-//{
-//    public:
-//        cbDebuggerPlugin();
-//
-//        /** @brief Request to add a breakpoint.
-//          * @param file The file to add the breakpoint based on a file/line pair.
-//          * @param line The line number to put the breakpoint in @c file.
-//          * @return True if succeeded, false if not.
-//          */
-//        virtual bool AddBreakpoint(const wxString& file, int line) = 0;
-//
-//        /** @brief Request to add a breakpoint based on a function signature.
-//          * @param functionSignature The function signature to add the breakpoint.
-//          * @return True if succeeded, false if not.
-//          */
-//        virtual bool AddBreakpoint(const wxString& functionSignature) = 0;
-//
-//        /** @brief Request to remove a breakpoint based on a file/line pair.
-//          * @param file The file to remove the breakpoint.
-//          * @param line The line number the breakpoint is in @c file.
-//          * @return True if succeeded, false if not.
-//          */
-//        virtual bool RemoveBreakpoint(const wxString& file, int line) = 0;
-//
-//        /** @brief Request to remove a breakpoint based on a function signature.
-//          * @param functionSignature The function signature to remove the breakpoint.
-//          * @return True if succeeded, false if not.
-//          */
-//        virtual bool RemoveBreakpoint(const wxString& functionSignature) = 0;
-//
-//        /** @brief Request to remove all breakpoints from a file.
-//          * @param file The file to remove all breakpoints in. If the argument is empty, all breakpoints are removed from all files.
-//          * @return True if succeeded, false if not.
-//          */
-//        virtual bool RemoveAllBreakpoints(const wxString& file = wxEmptyString) = 0;
-//
-//        /** @brief Notify the debugger that lines were added or removed in an editor.
-//          * This causes the debugger to keep the breakpoints list in-sync with the
-//          * editors (i.e. what the user sees).
-//          * @param editor The editor in question.
-//          * @param startline The starting line this change took place.
-//          * @param lines The number of lines added or removed. If it's a positive number,
-//          *              lines were added. If it's a negative number, lines were removed.
-//          */
-//        virtual void EditorLinesAddedOrRemoved(cbEditor* editor, int startline, int lines) = 0;
-//
-//        /** @brief Start a new debugging process. */
-//        virtual int Debug() = 0;
-//
-//        /** @brief Continue running the debugged program. */
-//        virtual void Continue() = 0;
-//
-//        /** @brief Execute the next instruction and return control to the debugger. */
-//        virtual void Next() = 0;
-//
-//        /** @brief Execute the next instruction, stepping into function calls if needed, and return control to the debugger. */
-//        virtual void Step() = 0;
-//
-//        /** @brief Break the debugging process (stop the debuggee for debugging). */
-//        virtual void Break() = 0;
-//
-//        /** @brief Stop the debugging process (exit debugging). */
-//        virtual void Stop() = 0;
-//
-//        /** @brief Is the plugin currently debugging? */
-//        virtual bool IsRunning() const = 0;
-//
-//        /** @brief Get the exit code of the last debug process. */
-//        virtual int GetExitCode() const = 0;
-//};
 
 /** @brief Base class for tool plugins
   *
@@ -461,133 +289,7 @@ class PLUGIN_EXPORT cbToolPlugin : public cbPlugin
           * menu.
           */
         virtual int Execute() = 0;
-//    private:
-//        // "Hide" some virtual members, that are not needed in cbToolPlugin
-//        void BuildMenu(wxMenuBar* /*menuBar*/){}
-//        void RemoveMenu(wxMenuBar* /*menuBar*/){}
-//        void BuildModuleMenu(const ModuleType /*type*/, wxMenu* /*menu*/, const FileTreeData* /*data*/ = 0){}
-//        bool BuildToolBar(wxToolBar* /*toolBar*/){ return false; }
-//        void RemoveToolBar(wxToolBar* /*toolBar*/){}
 };
-
-///** @brief Base class for mime plugins
-//  *
-//  * Mime plugins are called by Code::Blocks to operate on files that Code::Blocks
-//  * wouldn't know how to handle on itself.
-//  */
-//class PLUGIN_EXPORT cbMimePlugin : public cbPlugin
-//{
-//    public:
-//        cbMimePlugin();
-//
-//        /** @brief Can a file be handled by this plugin?
-//          *
-//          * @param filename The file in question.
-//          * @return The plugin should return true if it can handle this file,
-//          * false if not.
-//          */
-//        virtual bool CanHandleFile(const wxString& filename) const = 0;
-//
-//        /** @brief Open the file.
-//          *
-//          * @param filename The file to open.
-//          * @return The plugin should return zero on success, other value on error.
-//          */
-//        virtual int OpenFile(const wxString& filename) = 0;
-//
-//        /** @brief Is this a default handler?
-//          *
-//          * This is a flag notifying the main app that this plugin can handle
-//          * every file passed to it. Usually you 'll want to return false in
-//          * this function, because you usually create specialized handler
-//          * plugins (for specific MIME types)...
-//          *
-//          * @return True if this plugin can handle every possible MIME type,
-//          * false if not.
-//          */
-//        virtual bool HandlesEverything() const = 0;
-//    private:
-//        // "Hide" some virtual members, that are not needed in cbMimePlugin
-//        void BuildMenu(wxMenuBar* /*menuBar*/){}
-//        void RemoveMenu(wxMenuBar* /*menuBar*/){}
-//        void BuildModuleMenu(const ModuleType /*type*/, wxMenu* /*menu*/, const FileTreeData* /*data*/ = 0){}
-//        bool BuildToolBar(wxToolBar* /*toolBar*/){ return false; }
-//        void RemoveToolBar(wxToolBar* /*toolBar*/){}
-//};
-
-///** @brief Base class for code-completion plugins
-//  *
-//  * This interface is subject to change, so not much info here...
-//  */
-//class PLUGIN_EXPORT cbCodeCompletionPlugin : public cbPlugin
-//{
-//    public:
-//        cbCodeCompletionPlugin();
-//        virtual wxArrayString GetCallTips() = 0;
-//        virtual int CodeComplete() = 0;
-//        virtual void ShowCallTip() = 0;
-//};
-//
-///** @brief Base class for wizard plugins
-//  *
-//  * Wizard plugins are called by Code::Blocks when the user selects
-//  * "File->New...".
-//  *
-//  * A plugin of this type can support more than one wizard. Additionally,
-//  * each wizard can support new workspaces, new projects, new targets or new files.
-//  * The @c index used as a parameter to most of the functions, denotes 0-based index
-//  * of the project wizard to run.
-//  */
-//class PLUGIN_EXPORT cbWizardPlugin : public cbPlugin
-//{
-//    public:
-//        cbWizardPlugin();
-//
-//        /** @return the number of template wizards this plugin contains */
-//        virtual int GetCount() const = 0;
-//
-//        /** @param index the wizard index.
-//          * @return the output type of the specified wizard at @c index */
-//        virtual TemplateOutputType GetOutputType(int index) const = 0;
-//
-//        /** @param index the wizard index.
-//          * @return the template's title */
-//        virtual wxString GetTitle(int index) const = 0;
-//
-//        /** @param index the wizard index.
-//          * @return the template's description */
-//        virtual wxString GetDescription(int index) const = 0;
-//
-//        /** @param index the wizard index.
-//          * @return the template's category (GUI, Console, etc; free-form text). Try to adhere to standard category names... */
-//        virtual wxString GetCategory(int index) const = 0;
-//
-//        /** @param index the wizard index.
-//          * @return the template's bitmap */
-//        virtual const wxBitmap& GetBitmap(int index) const = 0;
-//
-//        /** @param index the wizard index.
-//          * @return this wizard's script filename (if this wizard is scripted). */
-//        virtual wxString GetScriptFilename(int index) const = 0;
-//
-//        /** When this is called, the wizard must get to work ;).
-//          * @param index the wizard index.
-//          * @param createdFilename if provided, on return it should contain the main filename
-//          *                         this wizard created. If the user created a project, that
-//          *                         would be the project's filename.
-//          *                         If the wizard created a build target, that would be an empty string.
-//          *                         If the wizard created a file, that would be the file's name.
-//          * @return a pointer to the generated cbProject or ProjectBuildTarget. NULL for everything else (failure too).
-//          * You should dynamic-cast this to the correct type based on GetOutputType() 's value. */
-//        virtual CompileTargetBase* Launch(int index, wxString* createdFilename = 0) = 0; // do your work ;)
-//    private:
-//        // "Hide" some virtual members, that are not needed in cbCreateWizardPlugin
-//        void BuildMenu(wxMenuBar* /*menuBar*/){}
-//        void RemoveMenu(wxMenuBar* /*menuBar*/){}
-//        void BuildModuleMenu(const ModuleType /*type*/, wxMenu* /*menu*/, const FileTreeData* /*data*/ = 0){}
-//        bool BuildToolBar(wxToolBar* /*toolBar*/){ return false; }
-//        void RemoveToolBar(wxToolBar* /*toolBar*/){}
-//};
 
 /** @brief Plugin registration object.
   *

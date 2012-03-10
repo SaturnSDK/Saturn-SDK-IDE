@@ -50,6 +50,7 @@ enum FileType
     ftDevCppProject,
     ftMSVC6Project,
     ftMSVC7Project,
+    ftMSVC10Project,
     ftMSVC6Workspace,
     ftMSVC7Workspace,
     ftXcode1Project,
@@ -105,6 +106,18 @@ enum FileVisualState
     fvsLast
 };
 
+/** These are valid values for the visual style of the project tree.
+    They can be OR'ed to modify the representation of the project tree.
+*/
+enum ProjectTreeVisualState
+{
+    ptvsNone           = 0x00, //!< The default style: All "off"
+    ptvsCategorize     = 0x01, //!< If true, use virtual folders like "Sources", "Headers", etc.
+    ptvsUseFolders     = 0x02, //!< If true, create folders as needed. If false, the list is flat (not compatible with "hie folder name")
+    ptvsHideFolderName = 0x04, //!< If true, the folder name will be hidden and only the file name will be shown (not compatible with "use folders")
+    ptvsDefault        = 0x03  //!< Just here for convenience, "categorise" + "use folders" ON
+};
+
 /** Template output types. */
 enum TemplateOutputType
 {
@@ -157,12 +170,15 @@ extern DLLIMPORT const wxWX2MBbuf cbU2C(const wxString& str);
 /// Returns the final encoding detected.
 extern DLLIMPORT wxFontEncoding DetectEncodingAndConvert(const char* strIn, wxString& strOut, wxFontEncoding possibleEncoding = wxFONTENCODING_SYSTEM);
 
+/// Return an integer representation of a platform string
 extern DLLIMPORT int GetPlatformsFromString(const wxString& platforms);
+/// Return a string representation of a platform / multiple platforms
 extern DLLIMPORT wxString GetStringFromPlatforms(int platforms, bool forceSeparate = false);
 
 // see globals.cpp for info on the third argument (bool SeparatorAtEnd)
 extern DLLIMPORT wxString GetStringFromArray(const wxArrayString& array, const wxString& separator = DEFAULT_ARRAY_SEP, bool SeparatorAtEnd = true);
 extern DLLIMPORT wxArrayString GetArrayFromString(const wxString& text, const wxString& separator = DEFAULT_ARRAY_SEP, bool trimSpaces = true);
+extern DLLIMPORT wxArrayString MakeUniqueArray(const wxArrayString& array, bool caseSens);
 extern DLLIMPORT void AppendArray(const wxArrayString& from, wxArrayString& to);
 
 extern DLLIMPORT wxString UnixFilename(const wxString& filename);
@@ -173,19 +189,8 @@ extern DLLIMPORT wxString EscapeSpaces(const wxString& str);
 
 extern DLLIMPORT FileType FileTypeOf(const wxString& filename);
 
-//extern DLLIMPORT void SaveTreeState(wxTreeCtrl* tree, const wxTreeItemId& parent, wxArrayString& nodePaths, wxString& selectedItemPath);
-//extern DLLIMPORT void RestoreTreeState(wxTreeCtrl* tree, const wxTreeItemId& parent, wxArrayString& nodePaths, wxString& selectedItemPath);
-
 extern DLLIMPORT bool CreateDirRecursively(const wxString& full_path, int perms = 0755);
 extern DLLIMPORT bool CreateDir(const wxString& full_path, int perms = 0755);
-//#ifndef CB_FOR_CONSOLE
-//extern DLLIMPORT wxString ChooseDirectory(wxWindow* parent,
-//                                          const wxString& message = _("Select directory"),
-//                                          const wxString& initialPath = _T(""),
-//                                          const wxString& basePath = _T(""),
-//                                          bool askToMakeRelative = false, // relative to basePath
-//                                          bool showCreateDirButton = false); // where supported
-//#endif // #ifndef CB_FOR_CONSOLE
 
 extern DLLIMPORT bool NormalizePath(wxFileName& f,const wxString& base);
 extern DLLIMPORT bool IsSuffixOfPath(wxFileName const & suffix, wxFileName const & path);
@@ -195,62 +200,6 @@ extern DLLIMPORT wxString URLEncode(const wxString &str);
 /// Check if CommonControls version is at least 6 (XP and up)
 extern DLLIMPORT bool UsesCommonControls6();
 
-//#ifndef CB_FOR_CONSOLE
-///** This function loads a bitmap from disk.
-//  * Always use this to load bitmaps because it takes care of various
-//  * issues with pre-XP windows (actually common controls < 6.00).
-//  */
-//extern DLLIMPORT wxBitmap cbLoadBitmap(const wxString& filename, wxBitmapType bitmapType = wxBITMAP_TYPE_PNG);
-//
-//// compatibility function
-//inline wxBitmap LoadPNGWindows2000Hack(const wxString& filename){ return cbLoadBitmap(filename); }
-//
-///** Finds out if a window is really shown.
-//  *
-//  * win->IsShown() is not that good because we don't know if the
-//  * window's container (parent) is actually shown or not...
-//  *
-//  * This is usually used to find out if docked windows are shown.
-//  *
-//  * @param win The window in question.
-//  * @return True if @c win is shown, false if not.
-//  */
-//extern DLLIMPORT bool IsWindowReallyShown(wxWindow* win);
-//
-///** Icons styles for settings dialogs.
-//  */
-//enum SettingsIconsStyle
-//{
-//    sisLargeIcons    = 0, ///< Large icons (default)
-//    sisNoIcons       = 1, ///< No icons, just text
-//};
-//
-//class wxListCtrl;
-//
-///** Set the icons style for the supplied list control.
-//  * @param lc The wxListCtrl.
-//  * @param style The style to use.
-//  */
-//extern DLLIMPORT void SetSettingsIconsStyle(wxListCtrl* lc, SettingsIconsStyle style);
-///** Get the icons style for the supplied list control.
-//  * @return The icons style.
-//  */
-//extern DLLIMPORT SettingsIconsStyle GetSettingsIconsStyle(wxListCtrl* lc);
-//
-//class wxWindow;
-//
-//enum cbPlaceDialogMode
-//{
-//    pdlDont = 0,
-//    pdlBest,
-//    pdlCentre,
-//    pdlHead,
-//    pdlConstrain,
-//    pdlClip
-//};
-//
-//extern DLLIMPORT void PlaceWindow(wxTopLevelWindow *w, cbPlaceDialogMode mode = pdlBest, bool enforce = false);
-//#endif // #ifndef CB_FOR_CONSOLE
 
 /** wxMessageBox wrapper.
   *
@@ -292,7 +241,9 @@ namespace platform
         winver_Windows9598ME,
         winver_WindowsNT2000,
         winver_WindowsXP,
-        winver_Vista, // untested!
+        winver_WindowsServer2003,
+        winver_WindowsVista,
+        winver_Windows7
     }windows_version_t;
 
     extern DLLIMPORT windows_version_t WindowsVersion();

@@ -200,7 +200,9 @@ class CompilerGCC : public cbCompilerPlugin
         int DoGUIAskForTarget();
         void ClearLog();
         void PrepareCompileFile(wxFileName& file);
+#ifndef CB_FOR_CONSOLE
         void PrepareCompileFilePM(wxFileName& file);
+#endif // #ifndef CB_FOR_CONSOLE
         bool CheckProject();
         void AskForActiveProject();
         void StartCompileFile(wxFileName file);
