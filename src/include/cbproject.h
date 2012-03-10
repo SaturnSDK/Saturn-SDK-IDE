@@ -16,6 +16,7 @@
 #include "compiletargetbase.h"
 #include "cbplugin.h"
 #include "projectbuildtarget.h"
+#include "projectmanager.h"
 
 #include <map>
 
@@ -106,11 +107,10 @@ class DLLIMPORT cbProject : public CompileTargetBase
         /** (Re)build the project tree.
           * @param tree The wxTreeCtrl to use.
           * @param root The tree item to use as root. The project is built as a child of this item.
-          * @param categorize If true, use virtual folders like "Sources", "Headers", etc.
-          * @param useFolders If true, create folders as needed. If false, the list is flat.
+          * @param ptvs The visual style of the project tree
           * @param fgam If not NULL, use these file groups and masks for virtual folders.
           */
-        void BuildTree(wxTreeCtrl* tree, const wxTreeItemId& root, bool categorize, bool useFolders, FilesGroupsAndMasks* fgam = 0L);
+        void BuildTree(cbTreeCtrl* tree, const wxTreeItemId& root, int ptvs, FilesGroupsAndMasks* fgam = 0L);
 #endif // #ifndef CB_FOR_CONSOLE
 
         /** This resets the project to a clear state. Like it's just been new'ed. */
@@ -148,7 +148,7 @@ class DLLIMPORT cbProject : public CompileTargetBase
         ProjectFile* GetFileByFilename(const wxString& filename, bool isRelative = true, bool isUnixFilename = false);
 
         /** @return The number of files in the project. */
-        int GetFilesCount(){ return m_Files.GetCount(); }
+        int GetFilesCount(){ return m_Files.size(); }
 
         /** Set the Makefile filename used when exporting a Makefile for the project,
           * or when using a custom Makefile to build the project.
@@ -206,7 +206,7 @@ class DLLIMPORT cbProject : public CompileTargetBase
         void SetDefaultExecuteTarget(const wxString& name);
 
         /** @return The number of build targets this project contains. */
-        int GetBuildTargetsCount(){ return m_Targets.GetCount(); }
+        int GetBuildTargetsCount() { return m_Targets.GetCount(); }
 
         /** Access a build target.
           * @param index The build target index. Must be greater or equal to zero and less than GetBuildTargetsCount().
@@ -373,7 +373,7 @@ class DLLIMPORT cbProject : public CompileTargetBase
           * This sequence of function calls ensures proper events dispatching.
           * This function broadcasts the cbEVT_PROJECT_BEGIN_ADD_FILES event.
           */
-		void BeginAddFiles();
+        void BeginAddFiles();
 
         /** Notify that file(s) addition finished.
           * This function should be called when done calling AddFile() as many times as needed.
@@ -382,7 +382,7 @@ class DLLIMPORT cbProject : public CompileTargetBase
           * This function broadcasts the cbEVT_PROJECT_END_ADD_FILES event.
           * @see BeginAddFiles().
           */
-		void EndAddFiles();
+        void EndAddFiles();
 
         /** Notify that file(s) will be removed shortly.
           * This function should be called before calling RemoveFile().
@@ -392,7 +392,7 @@ class DLLIMPORT cbProject : public CompileTargetBase
           * This sequence of function calls ensures proper events dispatching.
           * This function broadcasts the cbEVT_PROJECT_BEGIN_REMOVE_FILES event.
           */
-		void BeginRemoveFiles();
+        void BeginRemoveFiles();
 
         /** Notify that file(s) removal finished.
           * This function should be called when done calling RemoveFile() as many times as needed.
@@ -401,7 +401,7 @@ class DLLIMPORT cbProject : public CompileTargetBase
           * This function broadcasts the cbEVT_PROJECT_END_REMOVE_FILES event.
           * @see BeginRemoveFiles().
           */
-		void EndRemoveFiles();
+        void EndRemoveFiles();
 
         /** Add a file to the project.
           * This variation, takes a target name as first parameter.
@@ -424,12 +424,6 @@ class DLLIMPORT cbProject : public CompileTargetBase
           * @return The newly added file or NULL if something went wrong.
           */
         ProjectFile* AddFile(int targetIndex, const wxString& filename, bool compile = true, bool link = true, unsigned short int weight = 50);
-
-        /** Remove a file from the project.
-          * @param index The index of the file.
-          * @return True if @c index was valid, false if not.
-          */
-        bool RemoveFile(int index);
 
         /** Remove a file from the project.
           * @param pf The pointer to ProjectFile.
@@ -488,7 +482,7 @@ class DLLIMPORT cbProject : public CompileTargetBase
           * @return While the project is being built, this function returns the currently building
           * target. For all other times, NULL is returned.
           */
-        ProjectBuildTarget* GetCurrentlyCompilingTarget(){ return m_CurrentlyCompilingTarget; }
+        ProjectBuildTarget* GetCurrentlyCompilingTarget() { return m_CurrentlyCompilingTarget; }
 
         /** Set the currently compiling target.
           * @note This function is for internal use by compilers only.
@@ -569,12 +563,12 @@ class DLLIMPORT cbProject : public CompileTargetBase
           */
         bool CanDragNode(wxTreeCtrl* tree, wxTreeItemId node);
 
-        /** Notify that a specific tree node has been dragged.
+        /** Notify that an array of tree nodes has been dragged.
           *
           * @note Called by ProjectManager.
           * @return True if succeeded, false if not.
           */
-        bool NodeDragged(wxTreeCtrl* tree, wxTreeItemId from, wxTreeItemId to);
+        bool NodeDragged(wxTreeCtrl* tree, wxArrayTreeItemIds& fromArray, wxTreeItemId to);
 
         /** Notify that a virtual folder has been added.
           * @return True if it is allowed, false if not. */
@@ -698,6 +692,11 @@ class DLLIMPORT cbProject : public CompileTargetBase
           */
         virtual void ProjectFileRenamed(ProjectFile* pf);
 
+        /** Provides an easy way to iterate all the files belonging in this target.
+          * @return A list of files belonging in this target.
+          */
+        virtual FilesList& GetFilesList(){ return m_Files; }
+
     private:
         void Open();
         void ExpandVirtualBuildTargetGroup(const wxString& alias, wxArrayString& result) const;
@@ -714,43 +713,45 @@ class DLLIMPORT cbProject : public CompileTargetBase
 #ifndef CB_FOR_CONSOLE
         void CopyTreeNodeRecursively(wxTreeCtrl* tree, const wxTreeItemId& item, const wxTreeItemId& new_parent);
         bool VirtualFolderDragged(wxTreeCtrl* tree, wxTreeItemId from, wxTreeItemId to);
+        void SortChildrenRecursive(cbTreeCtrl* tree, const wxTreeItemId& parent);
 #endif // #ifndef CB_FOR_CONSOLE
 
         // properties
         VirtualBuildTargetsMap m_VirtualTargets;
-        BuildTargets m_Targets;
-        wxString m_ActiveTarget;
-        wxString  m_LastSavedActiveTarget;
-        wxString m_DefaultExecuteTarget;
-        wxString m_Makefile;
-        bool m_CustomMakefile;
-        mutable wxString m_MakefileExecutionDir;
+        BuildTargets           m_Targets;
+        wxString               m_ActiveTarget;
+        wxString               m_LastSavedActiveTarget;
+        wxString               m_DefaultExecuteTarget;
+        wxString               m_Makefile;
+        bool                   m_CustomMakefile;
+        mutable wxString       m_MakefileExecutionDir;
 
-        FilesList m_Files;
-        wxArrayString m_ExpandedNodes;
-        wxString m_SelectedNode;
-        bool m_Loaded;
+        FilesList        m_Files;
+        ProjectFileArray m_FileArray;
+        wxArrayString    m_ExpandedNodes;
+        wxArrayString    m_SelectedNodes;
+        bool             m_Loaded;
 #ifndef CB_FOR_CONSOLE
-        wxTreeItemId m_ProjectNode;
+        wxTreeItemId     m_ProjectNode;
 #endif // #ifndef CB_FOR_CONSOLE
 
         wxArrayString m_VirtualFolders; // not saved, just used throughout cbProject's lifetime
 
-        bool m_CurrentlyLoading;
+        bool     m_CurrentlyLoading;
         wxString m_CommonTopLevelPath;
         wxString m_BasePath;
 
         PCHMode m_PCHMode;
 
         // hashmap for fast searches in cbProject::GetFileByFilename()
-        ProjectFiles m_ProjectFilesMap; // keeps UnixFilename(ProjectFile::relativeFilename)
+        ProjectFiles        m_ProjectFilesMap; // keeps UnixFilename(ProjectFile::relativeFilename)
         ProjectBuildTarget* m_CurrentlyCompilingTarget;
 
         wxDateTime m_LastModified;
 
-        bool m_ExtendedObjectNamesGeneration;
+        bool     m_ExtendedObjectNamesGeneration;
         wxString m_Notes;
-        bool m_AutoShowNotesOnLoad;
+        bool     m_AutoShowNotesOnLoad;
 
         // copy of <Extensions> element, in case certain plugins are disabled
         // so that the contents are not lost

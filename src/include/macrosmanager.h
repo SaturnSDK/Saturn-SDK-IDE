@@ -67,6 +67,9 @@ protected:
     wxRegEx             m_RE_If;
     wxRegEx             m_RE_IfSp;
     wxRegEx             m_RE_Script;
+    wxRegEx             m_RE_ToAbsolutePath;
+    wxRegEx             m_RE_To83Path;
+    wxRegEx             m_RE_RemoveQuotes;
     UserVariableManager *m_UserVarMan;
 
 private:

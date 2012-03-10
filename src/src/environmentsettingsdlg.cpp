@@ -183,26 +183,24 @@ EnvironmentSettingsDlg::EnvironmentSettingsDlg(wxWindow* parent, wxAuiDockArt* a
     XRCCTRL(*this, "choLayoutToToggle", wxChoice)->SetSelection(sel != wxNOT_FOUND ? sel : 0);
     XRCCTRL(*this, "choLayoutToToggle", wxChoice)->Enable(en);
 
-    bool i18n=cfg->ReadBool(_T("/locale/enable"), false);
+    bool i18n = cfg->ReadBool(_T("/locale/enable"), false);
         XRCCTRL(*this, "chkI18N", wxCheckBox)->SetValue(i18n);
 
-    wxDir locDir(ConfigManager::GetDataFolder() + _T("/locale"));
+    wxString locPath = ConfigManager::GetDataFolder() + _T("/locale");
+    wxDir    locDir(locPath);
     wxString locFName;
-
-    if(locDir.IsOpened() && locDir.GetFirst(&locFName/*, wxEmptyString, wxDIR_DIRS*/))
+    if (wxDirExists(locPath) && locDir.IsOpened() && locDir.GetFirst(&locFName/*, wxEmptyString, wxDIR_DIRS*/))
     do
     {
-        const wxLanguageInfo *info = wxLocale::FindLanguageInfo(locFName);
-        if(info)
-        {
+        const wxLanguageInfo* info = wxLocale::FindLanguageInfo(locFName);
+        if (info)
             XRCCTRL(*this, "cbxLanguage", wxComboBox)->Append(info->Description);
-        }
-    }while(locDir.GetNext(&locFName));
+    } while ( locDir.GetNext(&locFName) );
 
     XRCCTRL(*this, "cbxLanguage", wxComboBox)->Enable(i18n);
 
-    const wxLanguageInfo *info = wxLocale::FindLanguageInfo(cfg->Read(_T("/locale/language")));
-    if(info)
+    const wxLanguageInfo* info = wxLocale::FindLanguageInfo(cfg->Read(_T("/locale/language")));
+    if (info)
         XRCCTRL(*this, "cbxLanguage", wxComboBox)->SetStringSelection(info->Description);
 
 
@@ -211,15 +209,21 @@ EnvironmentSettingsDlg::EnvironmentSettingsDlg(wxWindow* parent, wxAuiDockArt* a
     XRCCTRL(*this, "chkCloseOnAll",               wxCheckBox)->SetValue(cfg->ReadBool(_T("/environment/tabs_close_on_all"), 0));
     XRCCTRL(*this, "chkListTabs",                 wxCheckBox)->SetValue(cfg->ReadBool(_T("/environment/tabs_list"), 0));
     XRCCTRL(*this, "chkStackedBasedTabSwitching", wxCheckBox)->SetValue(cfg->ReadBool(_T("/environment/tabs_stacked_based_switching"), 0));
-    XRCCTRL(*this, "txtMousewheelModifier",       wxTextCtrl)->SetValue(cfg->Read(_T("/environment/tabs_mousewheel_modifier"),_T("Ctrl")));
-    XRCCTRL(*this, "txtMousewheelModifier",       wxTextCtrl)->Connect(wxEVT_KEY_DOWN, wxKeyEventHandler(EnvironmentSettingsDlg::OnMousewheelModifier));
     bool enableTabMousewheel = cfg->ReadBool(_T("/environment/tabs_use_mousewheel"),true);
     bool modToAdvance = cfg->ReadBool(_T("/environment/tabs_mousewheel_advance"),false);
     XRCCTRL(*this, "chkNBUseMousewheel",          wxCheckBox)->SetValue(enableTabMousewheel);
     XRCCTRL(*this, "rbNBModToAdvance",            wxRadioButton)->SetValue(modToAdvance);
     XRCCTRL(*this, "rbNBModToMove",               wxRadioButton)->SetValue(!modToAdvance);
+    XRCCTRL(*this, "chkNBInvertAdvance",          wxCheckBox)->SetValue(cfg->ReadBool(_T("/environment/tabs_invert_advance"),false));
+    XRCCTRL(*this, "chkNBInvertMove",             wxCheckBox)->SetValue(cfg->ReadBool(_T("/environment/tabs_invert_move"),false));
+    XRCCTRL(*this, "txtMousewheelModifier",       wxTextCtrl)->SetValue(cfg->Read(_T("/environment/tabs_mousewheel_modifier"),_T("Ctrl")));
+    XRCCTRL(*this, "txtMousewheelModifier",       wxTextCtrl)->Connect(wxEVT_KEY_DOWN, wxKeyEventHandler(EnvironmentSettingsDlg::OnMousewheelModifier));
     XRCCTRL(*this, "rbNBModToAdvance",            wxRadioButton)->Enable(enableTabMousewheel);
     XRCCTRL(*this, "rbNBModToMove",               wxRadioButton)->Enable(enableTabMousewheel);
+    XRCCTRL(*this, "chkNBInvertAdvance",          wxCheckBox)->Enable(enableTabMousewheel);
+    XRCCTRL(*this, "chkNBInvertMove",             wxCheckBox)->Enable(enableTabMousewheel);
+    XRCCTRL(*this, "txtMousewheelModifier",       wxTextCtrl)->Enable(enableTabMousewheel);
+
     bool useToolTips = cfg->ReadBool(_T("/environment/tabs_use_tooltips"),true);
     XRCCTRL(*this, "chkNBUseToolTips",            wxCheckBox)->SetValue(useToolTips);
     XRCCTRL(*this, "spnNBDwellTime",              wxSpinCtrl)->SetValue(cfg->ReadInt(_T("/environment/tabs_dwell_time"), 1000));
@@ -322,9 +326,7 @@ void EnvironmentSettingsDlg::UpdateListbookImages()
     int sel = lb->GetSelection();
     // set page images according to their on/off status
     for (size_t i = 0; i < IMAGES_COUNT + m_PluginPanels.GetCount(); ++i)
-    {
         lb->SetPageImage(i, (i * 2) + (sel == (int)i ? 0 : 1));
-    }
 
     // the selection colour is ruining the on/off effect,
     // so make sure no item is selected ;)
@@ -349,9 +351,7 @@ void EnvironmentSettingsDlg::OnPageChanged(wxListbookEvent& event)
 {
     // update only on real change, not on dialog creation
     if (event.GetOldSelection() != -1 && event.GetSelection() != -1)
-    {
         UpdateListbookImages();
-    }
 }
 
 void EnvironmentSettingsDlg::OnSetAssocs(wxCommandEvent& /*event*/)
@@ -455,6 +455,8 @@ void EnvironmentSettingsDlg::OnUseTabMousewheel(wxCommandEvent& event)
     bool en = (bool)XRCCTRL(*this, "chkNBUseMousewheel",wxCheckBox)->GetValue();
     XRCCTRL(*this, "rbNBModToAdvance", wxRadioButton)->Enable(en);
     XRCCTRL(*this, "rbNBModToMove", wxRadioButton)->Enable(en);
+    XRCCTRL(*this, "chkNBInvertAdvance", wxCheckBox)->Enable(en);
+    XRCCTRL(*this, "chkNBInvertMove", wxCheckBox)->Enable(en);
 }
 
 void EnvironmentSettingsDlg::OnPlaceCheck(wxCommandEvent& event)
@@ -516,7 +518,7 @@ void EnvironmentSettingsDlg::EndModal(int retCode)
 
         cfg->Write(_T("/locale/enable"),                     (bool) XRCCTRL(*this, "chkI18N", wxCheckBox)->GetValue());
         const wxLanguageInfo *info = wxLocale::FindLanguageInfo(XRCCTRL(*this, "cbxLanguage", wxComboBox)->GetStringSelection());
-        if(info)
+        if (info)
             cfg->Write(_T("/locale/language"), info->CanonicalName);
         else
             cfg->Write(_T("/locale/language"), wxEmptyString);
@@ -544,15 +546,20 @@ void EnvironmentSettingsDlg::EndModal(int retCode)
         wxString key = XRCCTRL(*this, "txtMousewheelModifier", wxTextCtrl)->GetValue();
         cfg->Write(_T("/environment/tabs_mousewheel_modifier"),      key.IsEmpty()?_T("Ctrl"):key);
         cfg->Write(_T("/environment/tabs_mousewheel_advance"),       (bool) XRCCTRL(*this, "rbNBModToAdvance", wxRadioButton)->GetValue());
+        cfg->Write(_T("/environment/tabs_invert_advance"),           (bool) XRCCTRL(*this, "chkNBInvertAdvance", wxCheckBox)->GetValue());
+        cfg->Write(_T("/environment/tabs_invert_move"),              (bool) XRCCTRL(*this, "chkNBInvertMove", wxCheckBox)->GetValue());
 
         bool useToolTips = (bool)XRCCTRL(*this, "chkNBUseToolTips", wxCheckBox)->GetValue();
         cfg->Write(_T("/environment/tabs_use_tooltips"),useToolTips);
         cfg->Write(_T("/environment/tabs_dwell_time"),                (int)  XRCCTRL(*this, "spnNBDwellTime", wxSpinCtrl)->GetValue());
+
         cbAuiNotebook::AllowScrolling(enableMousewheel);
         cbAuiNotebook::UseToolTips(useToolTips);
         cbAuiNotebook::SetDwellTime(cfg->ReadInt(_T("/environment/tabs_dwell_time"), 1000));
         cbAuiNotebook::SetModKeys(cfg->Read(_T("/environment/tabs_mousewheel_modifier"),_T("Ctrl")));
         cbAuiNotebook::UseModToAdvance(cfg->ReadBool(_T("/environment/tabs_mousewheel_advance"),false));
+        cbAuiNotebook::InvertAdvanceDirection(cfg->ReadBool(_T("/environment/tabs_invert_advance"),false));
+        cbAuiNotebook::InvertMoveDirection(cfg->ReadBool(_T("/environment/tabs_invert_move"),false));
 
         cfg->Write(_T("/environment/aui/border_size"),                (int)  XRCCTRL(*this, "spnAuiBorder", wxSpinCtrl)->GetValue());
         cfg->Write(_T("/environment/aui/sash_size"),                  (int)  XRCCTRL(*this, "spnAuiSash", wxSpinCtrl)->GetValue());

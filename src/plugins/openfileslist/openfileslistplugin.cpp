@@ -7,27 +7,26 @@
  * $HeadURL$
  */
 
+#include "sdk.h"
+
+#ifndef CB_PRECOMP
+    #include <manager.h>
+    #include <configmanager.h>
+    #include <editormanager.h>
+    #include <projectmanager.h>
+    #include <logmanager.h>
+    #include <editorbase.h>
+    #include <sdk_events.h>
+    #include <misctreeitemdata.h>
+
+    #include <wx/window.h>
+    #include <wx/treectrl.h>
+    #include <wx/bitmap.h>
+    #include <wx/imaglist.h>
+    #include <wx/menu.h>
+#endif
+
 #include "openfileslistplugin.h"
-
-#include <manager.h>
-#include <configmanager.h>
-#include <editormanager.h>
-#include <projectmanager.h>
-#include <logmanager.h>
-#include <editorbase.h>
-#include <sdk_events.h>
-#include <misctreeitemdata.h>
-
-#include <wx/window.h>
-#include <wx/treectrl.h>
-#include <wx/bitmap.h>
-#include <wx/imaglist.h>
-#include <wx/menu.h>
-
-namespace compatibility
-{
-    typedef TernaryCondTypedef<wxMinimumVersion<2,5>::eval, wxTreeItemIdValue, long int>::eval tree_cookie_t;
-}
 
 namespace
 {
@@ -123,8 +122,10 @@ void OpenFilesListPlugin::OnAttach()
     pm->RegisterEventSink(cbEVT_PROJECT_OPEN, new cbEventFunctor<OpenFilesListPlugin, CodeBlocksEvent>(this, &OpenFilesListPlugin::OnProjectOpened));
 }
 
-void OpenFilesListPlugin::OnRelease()
+void OpenFilesListPlugin::OnRelease(bool appShutDown)
 {
+    if (appShutDown)
+        return;
     // remove registered event sinks
     Manager::Get()->RemoveAllEventSinksFor(this);
 
@@ -135,6 +136,7 @@ void OpenFilesListPlugin::OnRelease()
 
     // finally destroy the tree
     m_pTree->Destroy();
+    m_pTree = nullptr;
 }
 
 void OpenFilesListPlugin::BuildMenu(wxMenuBar* menuBar)
@@ -217,7 +219,7 @@ void OpenFilesListPlugin::RefreshOpenFilesTree(EditorBase* ed, bool remove)
 
     m_pTree->Freeze();
 
-    compatibility::tree_cookie_t cookie = 0;
+    wxTreeItemIdValue cookie = 0;
     wxTreeItemId item = m_pTree->GetFirstChild(m_pTree->GetRootItem(), cookie);
     wxString shortname = ed->GetShortName();
     bool found = false;

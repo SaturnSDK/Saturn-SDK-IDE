@@ -1,4 +1,9 @@
-SUBDIRS = scripting wxscintilla wxpropgrid resources
+if ! HAVE_WX29
+WXPROPGRID_DIR=wxpropgrid
+WXPROPGRID_LIB=wxpropgrid/libwxpropgrid.la
+endif
+
+SUBDIRS = scripting wxscintilla $(WXPROPGRID_DIR) resources
 
 INCLUDES = $(WX_CXXFLAGS) \
 			-I$(top_srcdir)/src/include \
@@ -28,7 +33,7 @@ libcodeblocks_la_LIBADD =  $(WX_LIBS) \
 			scripting/squirrel/libsquirrel.la \
 			../base/tinyxml/libtinyxml.la \
 			wxscintilla/libwxscintilla.la \
-			wxpropgrid/libwxpropgrid.la
+			$(WXPROPGRID_LIB)
 
 libcodeblocks_con_la_LIBADD =  $(WX_LIBS) \
 			scripting/bindings/libsqbindings_con.la \

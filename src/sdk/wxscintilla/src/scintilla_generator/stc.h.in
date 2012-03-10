@@ -12,7 +12,7 @@
 // Author:      Robin Dunn
 //
 // Created:     13-Jan-2000
-// RCS-ID:      $Id: stc.h.in 65840 2010-10-17 18:17:30Z VZ $
+// RCS-ID:      $Id$
 // Copyright:   (c) 2000 by Total Control Software
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
@@ -240,7 +240,7 @@ public:
 
 
 
-    // The following methods are nearly equivallent to their similarly named
+    // The following methods are nearly equivalent to their similarly named
     // cousins above.  The difference is that these methods bypass wxString
     // and always use a char* even if used in a unicode build of wxWidgets.
     // In that case the character data will be utf-8 encoded since that is

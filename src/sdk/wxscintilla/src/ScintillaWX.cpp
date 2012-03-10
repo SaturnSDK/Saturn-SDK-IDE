@@ -180,8 +180,9 @@ public:
             GetParent()->ClientToScreen(NULL, &y);
         }
         wxSCICallTipBase::DoSetSize(x, y, width, height, sizeFlags);
-
+/* C::B begin */
         m_content->SetSize(0, 0, width, height, sizeFlags);
+/* C::B end */
     }
 
 #if wxUSE_POPUPWIN
@@ -243,6 +244,7 @@ static wxTextFileType wxConvertEOLMode(int scintillaMode)
 #endif // wxUSE_DATAOBJ
 
 
+/* C::B begin */
 static int wxCountLines(const char* text, int scintillaMode)
 {
     char eolchar;
@@ -270,6 +272,7 @@ static int wxCountLines(const char* text, int scintillaMode)
 
     return count;
 }
+/* C::B end */
 
 //----------------------------------------------------------------------
 // Constructor/Destructor
@@ -377,17 +380,17 @@ bool ScintillaWX::SetIdle(bool on) {
 
 
 void ScintillaWX::SetTicking(bool on) {
-    wxSCITimer* stiTimer;
+    wxSCITimer* sciTimer;
     if (timer.ticking != on) {
         timer.ticking = on;
         if (timer.ticking) {
-            stiTimer = new wxSCITimer(this);
-            stiTimer->Start(timer.tickSize);
-            timer.tickerID = stiTimer;
+            sciTimer = new wxSCITimer(this);
+            sciTimer->Start(timer.tickSize);
+            timer.tickerID = sciTimer;
         } else {
-            stiTimer = (wxSCITimer*)timer.tickerID;
-            stiTimer->Stop();
-            delete stiTimer;
+            sciTimer = (wxSCITimer*)timer.tickerID;
+            sciTimer->Stop();
+            delete sciTimer;
             timer.tickerID = 0;
         }
     }
@@ -540,7 +543,7 @@ void ScintillaWX::Copy() {
         CopySelectionRange(&st);
 /* C::B begin */
 #ifdef __WXGTK__
-		for(int i=0; i<5; i++) {
+		for (int i=0; i<5; i++) {
 			//wxPrintf(wxT("Copying to clipboard %ld\n"), i);
         	CopyToClipboard(st);
 		}
@@ -557,10 +560,10 @@ void ScintillaWX::Paste() {
     UndoGroup ug(pdoc);
 	// Selection::First
     SelectionPosition firstPosition = SelectionStart();
-    if(sel.IsRectangular() && !sel.Empty()) {
+    if (sel.IsRectangular() && !sel.Empty()) {
         for (size_t i=0; i<sel.Count()-1; i++) {
             sel.RotateMain();
-            if(firstPosition > SelectionStart())
+            if (firstPosition > SelectionStart())
                 firstPosition = SelectionStart();
         }
     }
@@ -625,7 +628,7 @@ void ScintillaWX::Paste() {
 }
 
 
-void ScintillaWX::CopyToClipboard (const SelectionText& st) {
+void ScintillaWX::CopyToClipboard(const SelectionText& st) {
 #if wxUSE_CLIPBOARD
     if ( !st.len )
         return;

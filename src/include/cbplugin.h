@@ -34,9 +34,9 @@
 
 // this is the plugins SDK version number
 // it will change when the SDK interface breaks
-#define PLUGIN_SDK_VERSION_MAJOR 1
-#define PLUGIN_SDK_VERSION_MINOR 11
-#define PLUGIN_SDK_VERSION_RELEASE 13
+#define PLUGIN_SDK_VERSION_MAJOR   1
+#define PLUGIN_SDK_VERSION_MINOR   11
+#define PLUGIN_SDK_VERSION_RELEASE 18
 
 // class decls
 class wxMenuBar;
@@ -350,6 +350,7 @@ class PLUGIN_EXPORT cbCompilerPlugin: public cbPlugin
         /** @brief Get the exit code of the last build process. */
         virtual int GetExitCode() const = 0;
 
+        virtual int Configure() { return 0; }
         /** @brief Display configuration dialog.
           *
           * @param project The selected project (can be NULL).

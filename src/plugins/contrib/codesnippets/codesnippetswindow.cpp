@@ -17,7 +17,7 @@
 	along with this program; if not, write to the Free Software
 	Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-// RCS-ID: $Id: codesnippetswindow.cpp 113 2008-01-14 18:31:17Z Pecan $
+// RCS-ID: $Id$
 
 #ifdef WX_PRECOMP //
     #include "wx_pch.h"
@@ -953,7 +953,8 @@ void CodeSnippetsWindow::OnMnuFileBackup(wxCommandEvent& event)
     // append the next number onto the XML file name
     // copy the XML Index to the new file name
 
-    if (GetFileChanged() ) OnMnuSaveSnippets(event);
+    if (GetFileChanged() )
+        OnMnuSaveSnippets(event);
     const wxString IndexFile = GetConfig()->SettingsSnippetsXmlPath;
     wxString bkupName = wxEmptyString;
     unsigned i = 0;

@@ -18,6 +18,7 @@
     #include <wx/string.h>
     #include <wx/utils.h>
     #include <wx/xrc/xmlres.h>
+
     #include "manager.h"
     #include "configmanager.h"
     #include "pluginmanager.h"
@@ -60,7 +61,7 @@ END_EVENT_TABLE()
 // class constructor
 PluginsConfigurationDlg::PluginsConfigurationDlg(wxWindow* parent)
 {
-	wxXmlResource::Get()->LoadObject(this, parent, _T("dlgConfigurePlugins"),_T("wxScrollingDialog"));
+    wxXmlResource::Get()->LoadObject(this, parent, _T("dlgConfigurePlugins"),_T("wxScrollingDialog"));
     FillList();
 
     // install options
@@ -86,11 +87,11 @@ PluginsConfigurationDlg::PluginsConfigurationDlg(wxWindow* parent)
     My tests (under linux at least) have showed that it actually
     expects real point sizes. */
 
-	wxFont systemFont = wxSystemSettings::GetFont(wxSYS_DEFAULT_GUI_FONT);
-	int sizes[7] = {};
-	for (int i = 0; i < 7; ++i)
+    wxFont systemFont = wxSystemSettings::GetFont(wxSYS_DEFAULT_GUI_FONT);
+    int sizes[7] = {};
+    for (int i = 0; i < 7; ++i)
         sizes[i] = systemFont.GetPointSize();
-	XRCCTRL(*this, "htmlInfo", wxHtmlWindow)->SetFonts(wxEmptyString, wxEmptyString, &sizes[0]);
+    XRCCTRL(*this, "htmlInfo", wxHtmlWindow)->SetFonts(wxEmptyString, wxEmptyString, &sizes[0]);
 #endif
 
     wxString initialInfo;
@@ -102,14 +103,14 @@ PluginsConfigurationDlg::PluginsConfigurationDlg(wxWindow* parent)
     initialInfo << _("If a plugin is not well-written, it could cause Code::Blocks to crash ");
     initialInfo << _("when performing any operation on it...");
 
-	if (PluginManager::GetSafeMode())
-	{
-		initialInfo << _T("</font></i><br /><br /><b><font color=\"red\">");
-		initialInfo << _("Code::Blocks started up in \"safe-mode\"");
-		initialInfo << _T("</font></b><br /><i><font color=\"black\">\n");
-		initialInfo << _("All plugins were disabled on startup so that you can troubleshoot ");
-		initialInfo << _("problematic plugins. Enable plugins at will now...");
-	}
+    if (PluginManager::GetSafeMode())
+    {
+        initialInfo << _T("</font></i><br /><br /><b><font color=\"red\">");
+        initialInfo << _("Code::Blocks started up in \"safe-mode\"");
+        initialInfo << _T("</font></b><br /><i><font color=\"black\">\n");
+        initialInfo << _("All plugins were disabled on startup so that you can troubleshoot ");
+        initialInfo << _("problematic plugins. Enable plugins at will now...");
+    }
 
     initialInfo << _T("</font></i><br /></body></html>\n");
 
@@ -159,7 +160,7 @@ void PluginsConfigurationDlg::FillList()
 // class destructor
 PluginsConfigurationDlg::~PluginsConfigurationDlg()
 {
-	// insert your code here
+    // insert your code here
 }
 
 void PluginsConfigurationDlg::OnToggle(wxCommandEvent& event)
@@ -250,7 +251,7 @@ void PluginsConfigurationDlg::OnInstall(wxCommandEvent& /*event*/)
 
     FillList();
     if (!failure.IsEmpty())
-        cbMessageBox(_("One or more plugins were not installed succesfully:\n\n") + failure, _("Warning"), wxICON_WARNING, this);
+        cbMessageBox(_("One or more plugins were not installed successfully:\n\n") + failure, _("Warning"), wxICON_WARNING, this);
 }
 
 void PluginsConfigurationDlg::OnUninstall(wxCommandEvent& /*event*/)
@@ -279,7 +280,7 @@ void PluginsConfigurationDlg::OnUninstall(wxCommandEvent& /*event*/)
 
     FillList();
     if (!failure.IsEmpty())
-        cbMessageBox(_("One or more plugins were not uninstalled succesfully:\n\n") + failure, _("Warning"), wxICON_WARNING, this);
+        cbMessageBox(_("One or more plugins were not un-installed successfully:\n\n") + failure, _("Warning"), wxICON_WARNING, this);
 }
 
 void PluginsConfigurationDlg::OnExport(wxCommandEvent& /*event*/)
@@ -412,7 +413,7 @@ void PluginsConfigurationDlg::OnSelect(wxListEvent& /*event*/)
 
 void PluginsConfigurationDlg::OnUpdateUI(wxUpdateUIEvent& event)
 {
-    static bool lastSelection = -2;
+    static long lastSelection = -2;
     static bool lastSelectionMultiple = false;
     event.Skip();
 

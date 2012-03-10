@@ -234,18 +234,16 @@ bool CscopePlugin::CreateListFile(wxString &list_file)
     std::vector< wxFileName > files;
 	m_view->GetWindow()->SetMessage(_T("Creating file list..."), 5);
 
-    for ( unsigned int k = 0 ; k < static_cast<unsigned int>(prj->GetFilesCount()) ; ++k )
+    for (FilesList::iterator it = prj->GetFilesList().begin(); it != prj->GetFilesList().end(); ++it)
     {
-        wxFileName fn( prj->GetFile(k)->file.GetFullPath() );
+        wxFileName fn( (*it)->file.GetFullPath() );
         files.push_back(fn);
     }
 
 	//create temporary file and save the file-list there
 	wxFileName projectfilename(prj->GetFilename());
 
-	list_file = prj->GetBasePath() +
-                projectfilename.GetName() +
-                _T(".cscope_file_list");
+	list_file = prj->GetBasePath() + projectfilename.GetName() + _T(".cscope_file_list");
 
 	wxFFile file(list_file, _T("w+b"));
 	if (!file.IsOpened())
@@ -380,7 +378,7 @@ void CscopePlugin::OnFind(wxCommandEvent &event)
 //        endMsg += _T("find C symbol '") + WordAtCaret + _T("'");
 //    }
 
-    cmd += WordAtCaret + _T(" -i ") + list_file;
+    cmd += WordAtCaret + _T(" -i \"") + list_file + _T("\"");
     DoCscopeCommand(cmd, endMsg);
 }
 wxString CscopePlugin::GetCscopeBinaryName()

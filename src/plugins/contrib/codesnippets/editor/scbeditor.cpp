@@ -2,9 +2,9 @@
  * This file is part of the Code::Blocks IDE and licensed under the GNU Lesser General Public License, version 3
  * http://www.gnu.org/licenses/lgpl-3.0.html
  *
- * $Revision: 5033 $
- * $Id: cbeditor.cpp 5033 2008-05-07 11:41:24Z mandrav $
- * $HeadURL: https://svn.berlios.de/svnroot/repos/codeblocks/trunk/src/sdk/cbeditor.cpp $
+ * $Revision$
+ * $Id$
+ * $HeadURL$
  */
 
 // Stop following warning:
@@ -17,8 +17,12 @@
 
 #ifndef CB_PRECOMP
     #include <wx/filename.h>
+    #include <wx/filedlg.h>
+    #include <wx/textdlg.h> // wxGetTextFromUser
+    #include <wx/menu.h>
     #include <wx/notebook.h>
     #include <wx/wfstream.h>
+    #include <wx/sizer.h>
 
     #include "scbeditor.h" // class's header file
     #include "globals.h"
@@ -1792,6 +1796,8 @@ bool ScbEditor::AddBreakpoint(int line, bool notifyDebugger)
 
 bool ScbEditor::RemoveBreakpoint(int line, bool notifyDebugger)
 {
+    return true;    //(pecan 2011/12/14)
+    /*              //(pecan 2011/12/14)
     if (!HasBreakpoint(line))
         return false;
     if (line == -1)
@@ -1823,10 +1829,13 @@ bool ScbEditor::RemoveBreakpoint(int line, bool notifyDebugger)
         return true;
     }
     return false;
+    */
 }
 
 void ScbEditor::ToggleBreakpoint(int line, bool notifyDebugger)
 {
+    return;             //(pecan 2011/12/14)
+    /*                  //(pecan 2011/12/14)
     if (line == -1)
         line = GetControl()->GetCurrentLine();
     if (!notifyDebugger)
@@ -1839,7 +1848,7 @@ void ScbEditor::ToggleBreakpoint(int line, bool notifyDebugger)
     if (!arr.GetCount())
         return;
     bool toggle=false;
-    for(size_t i=0;i<arr.GetCount();i++)
+    for (size_t i=0;i<arr.GetCount();i++)
     {
         cbDebuggerPlugin* debugger = (cbDebuggerPlugin*)arr[i];
         if (HasBreakpoint(line))
@@ -1855,6 +1864,7 @@ void ScbEditor::ToggleBreakpoint(int line, bool notifyDebugger)
     }
     if(toggle)
         MarkerToggle(BREAKPOINT_MARKER, line);
+    */
 }
 
 bool ScbEditor::HasBreakpoint(int line) const
@@ -2457,12 +2467,14 @@ void ScbEditor::OnContextMenuEntry(wxCommandEvent& event)
             dlg.ShowModal();
         }
     }
+    /*      //(pecan 2011/12/14)
     else if (id == idBreakpointAdd)
         AddBreakpoint(m_pData->m_LastMarginMenuLine);
     else if (id == idBreakpointEdit)
         NotifyPlugins(cbEVT_EDITOR_BREAKPOINT_EDIT, m_pData->m_LastMarginMenuLine, m_Filename);
     else if (id == idBreakpointRemove)
         RemoveBreakpoint(m_pData->m_LastMarginMenuLine);
+    */      //(pecan 2011/12/14)
     else
         event.Skip();
     //Manager::Get()->GetLogManager()->DebugLog(_T("Leaving OnContextMenuEntry"));

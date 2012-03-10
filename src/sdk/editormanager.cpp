@@ -774,6 +774,9 @@ bool EditorManager::QueryClose(EditorBase *ed)
 
 int EditorManager::FindPageFromEditor(EditorBase* eb)
 {
+    if (!m_pNotebook || !eb)
+        return -1;
+
     for (size_t i = 0; i < m_pNotebook->GetPageCount(); ++i)
     {
         if (m_pNotebook->GetPage(i) == eb)
@@ -1199,9 +1202,9 @@ bool EditorManager::SwapActiveHeaderSource()
 
         // build a list of project files
         fileArray.Clear();
-        for (int i = 0; i < project->GetFilesCount(); ++i)
+        for (FilesList::iterator it = project->GetFilesList().begin(); it != project->GetFilesList().end(); ++it)
         {
-            ProjectFile* pf = project->GetFile(i);
+            ProjectFile* pf = *it;
             if (!pf)
                 continue;
 
@@ -1622,6 +1625,7 @@ int EditorManager::Replace(cbStyledTextCtrl* control, cbFindReplaceData* data)
     bool HaveLastDlgPosition = false;
     bool wrapAround = false;
     int  data_start_initial = data->start;
+    bool wrapAroundNotification = false;
 
     while (!stop)
     {
@@ -1678,7 +1682,7 @@ int EditorManager::Replace(cbStyledTextCtrl* control, cbFindReplaceData* data)
 
                 bool auto_wrap_around = data->autoWrapSearch;
                 if (auto_wrap_around)
-                    wxBell();
+                    wrapAroundNotification = true;
                 if (auto_wrap_around || cbMessageBox(msg, _("Result"), wxOK | wxCANCEL | wxICON_QUESTION) == wxID_OK)
                 {
                     data->end = data_start_initial;
@@ -1694,6 +1698,13 @@ int EditorManager::Replace(cbStyledTextCtrl* control, cbFindReplaceData* data)
         }
         else
             break; // done - already wrapped around once
+
+        if (wrapAroundNotification)
+        {
+            wxBell();
+            InfoWindow::Display(_("Find action"), _("Reached the end of the document"), 1000);
+            wrapAroundNotification = false;
+        }
 
         foundcount++;
 
@@ -1754,7 +1765,7 @@ int EditorManager::Replace(cbStyledTextCtrl* control, cbFindReplaceData* data)
                         lengthReplace=text.Len();
                         control->ReplaceSelection(text);
                     }
-					else
+                    else
                     {
                         // replace with regEx support
                         lengthReplace = control->ReplaceTargetRE(data->replaceText);
@@ -1782,12 +1793,12 @@ int EditorManager::Replace(cbStyledTextCtrl* control, cbFindReplaceData* data)
                 }
             }
             else
-			{
+            {
                 if (data->directionDown)
                     data->start += lengthFound;
                 else
                     data->start -= lengthFound;
-			}
+            }
         }
     }
     control->EndUndoAction();
@@ -1832,9 +1843,9 @@ int EditorManager::ReplaceInFiles(cbFindReplaceData* data)
             return 0;
 
         wxString fullpath = _T("");
-        for (int i = 0; i < prj->GetFilesCount(); ++i)
+        for (FilesList::iterator it = prj->GetFilesList().begin(); it != prj->GetFilesList().end(); ++it)
         {
-            ProjectFile* pf = prj->GetFile(i);
+            ProjectFile* pf = *it;
             if (pf)
             {
                 fullpath = pf->file.GetFullPath();
@@ -1859,9 +1870,10 @@ int EditorManager::ReplaceInFiles(cbFindReplaceData* data)
                 if (pProject)
                 {
                     wxString fullpath = _T("");
-                    for (int idxFile = 0; idxFile < pProject->GetFilesCount(); ++idxFile)
+
+                    for (FilesList::iterator it = pProject->GetFilesList().begin(); it != pProject->GetFilesList().end(); ++it)
                     {
-                        ProjectFile* pf = pProject->GetFile(idxFile);
+                        ProjectFile* pf = *it;
                         if (pf)
                         {
                             fullpath = pf->file.GetFullPath();
@@ -2244,6 +2256,7 @@ int EditorManager::Find(cbStyledTextCtrl* control, cbFindReplaceData* data)
         StartPos = data->SearchInSelectionStart;
         EndPos = data->SearchInSelectionEnd;
     }
+    bool wrapAroundNotification = false;
     while (true) // loop while not found and user selects to start again from the top
     {
         int lengthFound = 0;
@@ -2268,11 +2281,11 @@ int EditorManager::Find(cbStyledTextCtrl* control, cbFindReplaceData* data)
                         pos=start+data->start+1;
                         lengthFound=len;
                     }
-					else
+                    else
                         pos=-1;
                 }
             }
-			else
+            else
                 pos=-1;
         }
         if (pos != -1 && data->start!=data->end)
@@ -2314,7 +2327,8 @@ int EditorManager::Find(cbStyledTextCtrl* control, cbFindReplaceData* data)
 
                 bool auto_wrap_around = data->autoWrapSearch;
                 if (auto_wrap_around)
-                    wxBell();
+                    wrapAroundNotification = true;
+
                 if (auto_wrap_around || cbMessageBox(msg, _("Result"), wxOK | wxCANCEL | wxICON_QUESTION) == wxID_OK)
                 {
                     wrapAround = true; // signal the wrap-around
@@ -2354,6 +2368,7 @@ int EditorManager::Find(cbStyledTextCtrl* control, cbFindReplaceData* data)
                 msg.Printf(_("Not found: %s"), data->findText.c_str());
                 cbMessageBox(msg, _("Result"), wxICON_INFORMATION);
                 control->SetSCIFocus(true);
+                wrapAroundNotification = false;
                 break; // done
             }
         }
@@ -2362,11 +2377,19 @@ int EditorManager::Find(cbStyledTextCtrl* control, cbFindReplaceData* data)
             wxString msg;
             msg.Printf(_("Not found: %s"), data->findText.c_str());
             cbMessageBox(msg, _("Result"), wxICON_INFORMATION);
+            wrapAroundNotification = false;
             break; // done
         }
         else
             break; // done
     }
+
+    if (wrapAroundNotification)
+    {
+        wxBell();
+        InfoWindow::Display(_("Find action"), _("Reached the end of the document"), 1000);
+    }
+
     return pos;
 }
 
@@ -2406,9 +2429,9 @@ int EditorManager::FindInFiles(cbFindReplaceData* data)
         }
 
         wxString fullpath = _T("");
-        for (int i = 0; i < prj->GetFilesCount(); ++i)
+        for (FilesList::iterator it = prj->GetFilesList().begin(); it != prj->GetFilesList().end(); ++it)
         {
-            ProjectFile* pf = prj->GetFile(i);
+            ProjectFile* pf = *it;
             if (pf)
             {
                 fullpath = pf->file.GetFullPath();
@@ -2438,9 +2461,9 @@ int EditorManager::FindInFiles(cbFindReplaceData* data)
             if (pProject)
             {
                 wxString fullpath = _T("");
-                for (int idxFile = 0; idxFile < pProject->GetFilesCount(); ++idxFile)
+                for (FilesList::iterator it = pProject->GetFilesList().begin(); it != pProject->GetFilesList().end(); ++it)
                 {
-                    ProjectFile* pf = pProject->GetFile(idxFile);
+                    ProjectFile* pf = *it;
                     if (pf)
                     {
                         fullpath = pf->file.GetFullPath();
@@ -2802,9 +2825,9 @@ void EditorManager::OnPageContextMenu(wxAuiNotebookEvent& event)
     pop->Append(idNBTabTop, _("Tabs at top"));
     pop->Append(idNBTabBottom, _("Tabs at bottom"));
     if (Manager::Get()->GetConfigManager(_T("app"))->ReadBool(_T("/environment/editor_tabs_bottom"), false))
-    	pop->FindItem(idNBTabBottom)->Enable(false);
+        pop->FindItem(idNBTabBottom)->Enable(false);
     else
-    	pop->FindItem(idNBTabTop)->Enable(false);
+        pop->FindItem(idNBTabTop)->Enable(false);
 
     cbEditor* ed = GetBuiltinEditor(event.GetSelection());
     if (ed)
@@ -2959,6 +2982,11 @@ void EditorManager::OnShowFileInTree(wxCommandEvent& event)
     wxTreeCtrl* tree = Manager::Get()->GetProjectManager()->GetTree();
     if (pf && tree) // should be in any case, otherwise something went wrong between popup menu creation and here
     {
+        // first unselect previous selected item if any, needed because of wxTR_MULTIPLE flag
+        wxTreeItemId sel = Manager::Get()->GetProjectManager()->GetTreeSelection();
+        if (sel.IsOk())
+            tree->SelectItem(sel, false);
+
         const wxTreeItemId &itemId = pf->GetTreeItemId();
         if (itemId.IsOk())
         {
@@ -2985,23 +3013,14 @@ void EditorManager::OnCheckForModifiedFiles(wxCommandEvent& /*event*/)
 
 void EditorManager::HideNotebook()
 {
-    //    if (!this)
-    //        return;
-    //    if (m_pNotebook)
-    //        m_pNotebook->Hide();
-    //    m_pData->m_NeedsRefresh = false;
-    //    return;
+    if (m_pNotebook)
+        m_pNotebook->Hide();
 }
 
 void EditorManager::ShowNotebook()
 {
-    //    if (!this)
-    //        return;
-    //    if (m_pNotebook)
-    //        m_pNotebook->Show();
-    //    m_pData->m_NeedsRefresh = true;
-    //    m_pData->InvalidateTree();
-    //    return;
+    if (m_pNotebook)
+        m_pNotebook->Show();
 }
 
 void EditorManager::OnUpdateUI(wxUpdateUIEvent& event)

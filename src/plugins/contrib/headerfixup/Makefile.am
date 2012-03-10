@@ -33,6 +33,7 @@ EXTRA_DIST = $(srcdir)/*.cbp \
              wxsmith/configuration.wxs \
              wxsmith/execution.wxs \
              wxsmith/protocol.wxs \
+             todo.txt \
              manifest.xml
 
 pkgdata_DATA = headerfixup.zip

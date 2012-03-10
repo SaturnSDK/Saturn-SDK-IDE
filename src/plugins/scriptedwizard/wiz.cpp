@@ -21,6 +21,7 @@
 #include <wx/panel.h>
 #include <wx/checkbox.h>
 #include <wx/combobox.h>
+#include <wx/wxscintilla.h>
 
 #include <globals.h>
 #include <cbexception.h>
@@ -32,6 +33,7 @@
 #include <compiler.h>
 #include <cbproject.h>
 #include <projectbuildtarget.h>
+#include <prep.h>
 #include <filefilters.h>
 #include <infowindow.h>
 
@@ -452,12 +454,12 @@ CompileTargetBase* Wiz::RunProjectWizard(wxString* pFilename)
 
             if (files.GetCount() != 0 && contents.GetCount() == files.GetCount())
             {
-            	// prepare the list of targets to add this file to (i.e. all of them)
-            	wxArrayInt targetIndices;
-				for (int x = 0; x < theproject->GetBuildTargetsCount(); ++x)
-					targetIndices.Add(x);
+                // prepare the list of targets to add this file to (i.e. all of them)
+                wxArrayInt targetIndices;
+                for (int x = 0; x < theproject->GetBuildTargetsCount(); ++x)
+                    targetIndices.Add(x);
 
-            	theproject->BeginAddFiles();
+                theproject->BeginAddFiles();
 
                 // ok, we have to generate some files here
                 size_t count = files.GetCount();
@@ -486,7 +488,7 @@ CompileTargetBase* Wiz::RunProjectWizard(wxString* pFilename)
                     }
                 }
 
-            	theproject->EndAddFiles();
+                theproject->EndAddFiles();
             }
         }
     }
@@ -573,9 +575,9 @@ CompileTargetBase* Wiz::RunTargetWizard(wxString* /*pFilename*/)
     target->SetObjectOutput(GetTargetObjectOutputDir());
     target->SetWorkingDir(GetTargetOutputDir());
     // Assign this target to all project files
-    for (int i = 0; i < theproject->GetFilesCount(); ++i)
+    for (FilesList::iterator it = theproject->GetFilesList().begin(); it != theproject->GetFilesList().end(); ++it)
     {
-        ProjectFile* pf = theproject->GetFile(i);
+        ProjectFile* pf = *it;
         if (pf)
             pf->AddBuildTarget(GetTargetName());
     }
@@ -667,22 +669,6 @@ wxString Wiz::GenerateFile(const wxString& basePath, const wxString& filename, c
 {
     wxFileName fname(filename);
 
-    if ( fname.FileExists() )
-    {
-        wxString query_overwrite;
-        query_overwrite.Printf(
-          _T("Warning:\n")
-          _T("The wizard is about OVERWRITE the following existing file:\n")+
-          fname.GetFullPath()+_T("\n\n")+
-          _T("Are you sure that you want to OVERWRITE the file?\n\n")+
-          _T("(If you answer 'No' the existing file will be kept.)"));
-        if (cbMessageBox(query_overwrite, _T("Confirmation"),
-                         wxICON_QUESTION | wxYES_NO | wxNO_DEFAULT) == wxID_NO)
-        {
-            return fname.GetFullPath();
-        }
-    }
-
     // extension sanity check
     FileType ft = FileTypeOf(fname.GetFullPath());
     switch (ft)
@@ -725,18 +711,43 @@ wxString Wiz::GenerateFile(const wxString& basePath, const wxString& filename, c
             }
         }
         else if ( Dirs[i] != _T(".") )
-        {
             IntDirCount++;
-        }
     }
 
     fname = basePath + wxFILE_SEP_PATH + fname.GetFullPath();
+    if ( fname.FileExists() )
+    {
+        wxString query_overwrite;
+        query_overwrite.Printf(
+          _T("Warning:\n")
+          _T("The wizard is about OVERWRITE the following existing file:\n")+
+          fname.GetFullPath()+_T("\n\n") +
+          _T("Are you sure that you want to OVERWRITE the file?\n\n")+
+          _T("(If you answer 'No' the existing file will be kept.)"));
+        if (cbMessageBox(query_overwrite, _T("Confirmation"),
+                         wxICON_QUESTION | wxYES_NO | wxNO_DEFAULT) == wxID_NO)
+        {
+            return fname.GetFullPath();
+        }
+    }
 
     // create the file with the passed contents
     wxFileName::Mkdir(fname.GetPath(),0777,wxPATH_MKDIR_FULL);
     wxFile f(fname.GetFullPath(), wxFile::write);
-    if (cbWrite(f, contents + _T('\n'), wxFONTENCODING_UTF8))
+    // read EOL mode
+    static const int default_eol = platform::windows ? wxSCI_EOL_CRLF : wxSCI_EOL_LF; // Windows takes CR+LF, other platforms LF only
+    int eolmode = Manager::Get()->GetConfigManager(_T("editor"))->ReadInt(_T("/eol/eolmode"), default_eol);
+    wxString eol_str;
+    switch (eolmode)
+    {
+      case wxSCI_EOL_CR:  eol_str = _T("\r"); break;
+      case wxSCI_EOL_LF:  eol_str = _T("\n"); break;
+      default:            eol_str = _T("\r\n"); // means wxSCI_EOL_CRLF
+    }
+
+    if ( cbWrite(f, contents + eol_str, wxFONTENCODING_UTF8) )
         return fname.GetFullPath(); // success
+
     return wxEmptyString; // failed
 }
 
@@ -752,12 +763,12 @@ void Wiz::CopyFiles(cbProject* theproject, const wxString&  prjdir, const wxStri
     // recursively enumerate all files under srcdir
     wxDir::GetAllFiles(enumdirs, &filesList);
 
-	// prepare the list of targets to add this file to (i.e. all of them)
-	wxArrayInt targetIndices;
-	for (int x = 0; x < theproject->GetBuildTargetsCount(); ++x)
-		targetIndices.Add(x);
+    // prepare the list of targets to add this file to (i.e. all of them)
+    wxArrayInt targetIndices;
+    for (int x = 0; x < theproject->GetBuildTargetsCount(); ++x)
+        targetIndices.Add(x);
 
-	theproject->BeginAddFiles();
+    theproject->BeginAddFiles();
 
     // now get each file and copy it to the destination directory,
     // adding it to all targets in the project
@@ -795,7 +806,7 @@ void Wiz::CopyFiles(cbProject* theproject, const wxString&  prjdir, const wxStri
 
         // and add it to the project
         fname.MakeRelativeTo(prjdir);
-		Manager::Get()->GetProjectManager()->AddFileToProject(fname.GetFullPath(), theproject, targetIndices);
+        Manager::Get()->GetProjectManager()->AddFileToProject(fname.GetFullPath(), theproject, targetIndices);
     }
 
     theproject->EndAddFiles();

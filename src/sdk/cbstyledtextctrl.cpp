@@ -46,6 +46,7 @@ cbStyledTextCtrl::cbStyledTextCtrl(wxWindow* pParent, int id, const wxPoint& pos
     m_tabSmartJump(false)
 {
     //ctor
+    m_braceShortcutState = false;
 }
 
 cbStyledTextCtrl::~cbStyledTextCtrl()
@@ -58,15 +59,11 @@ cbStyledTextCtrl::~cbStyledTextCtrl()
 void cbStyledTextCtrl::OnKillFocus(wxFocusEvent& event)
 {
     // cancel auto-completion list when losing focus
-    if (AutoCompActive())
-    {
+    if ( AutoCompActive() )
         AutoCompCancel();
-    }
 
-    if (CallTipActive())
-    {
+    if ( CallTipActive() )
         CallTipCancel();
-    }
 
     event.Skip();
 }
@@ -90,9 +87,7 @@ void cbStyledTextCtrl::OnContextMenu(wxContextMenuEvent& event)
             pParent->DisplayContextMenu(mp, mtEditorManager);
         }
         else
-        {
             event.Skip();
-        }
     }
 }
 
@@ -110,7 +105,7 @@ void cbStyledTextCtrl::OnMouseMiddleDown(wxMouseEvent& event)
 
         const wxString s = GetSelectedText();
 
-        if(pos < GetCurrentPos())
+        if (pos < GetCurrentPos())
         {
             start += s.length();
             end += s.length();
@@ -123,8 +118,17 @@ void cbStyledTextCtrl::OnMouseMiddleDown(wxMouseEvent& event)
 
 void cbStyledTextCtrl::OnKeyDown(wxKeyEvent& event)
 {
+    m_lastSelectedText = GetSelectedText();
+
     switch (event.GetKeyCode())
     {
+        case _T('I'):
+        {
+            if (event.GetModifiers() == wxMOD_ALT)
+                m_braceShortcutState = true;
+            break;
+        }
+
         case WXK_TAB:
         {
             if (m_tabSmartJump && !(event.ControlDown() || event.ShiftDown() || event.AltDown()))
@@ -218,9 +222,7 @@ void cbStyledTextCtrl::OnKeyUp(wxKeyEvent& event)
                 }
             }
             else if (keyCode == _T('\'')) // ' "
-            {
                 m_tabSmartJump = false;
-            }
         }
         break;
 
@@ -274,6 +276,13 @@ void cbStyledTextCtrl::CallTipCancel()
 {
     if (!m_tabSmartJump)
         wxScintilla::CallTipCancel();
+}
+
+bool cbStyledTextCtrl::IsBraceShortcutActive()
+{
+    bool state = m_braceShortcutState;
+    m_braceShortcutState = false;
+    return state;
 }
 
 bool cbStyledTextCtrl::AllowTabSmartJump()

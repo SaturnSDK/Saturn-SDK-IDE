@@ -97,7 +97,7 @@ class DLLIMPORT EditorBase : public wxPanel
         /** @brief Close this editor.
           *
           * The default implementation closes (destroys) the editor and returns true.
-          * @return True if editor closed succesfully
+          * @return True if editor closed successfully
           */
         virtual bool Close();
 
@@ -289,7 +289,7 @@ class DLLIMPORT EditorBase : public wxPanel
           * @param id An event handler's ID.
           * @return The created submenu or NULL if not applicable.
           */
-        virtual wxMenu* CreateContextSubMenu(int id); // For context menus
+        virtual wxMenu* CreateContextSubMenu(long id); // For context menus
 
         /** Creates context menu items, both before and after creating plugins menu items.
           * @param popup The popup menu.

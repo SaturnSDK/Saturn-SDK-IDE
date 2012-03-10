@@ -2,7 +2,7 @@
 /** @file Document.h
  ** Text document that handles notifications, DBCS, styling, words and end of line.
  **/
-// Copyright 1998-2003 by Neil Hodgson <neilh@scintilla.org>
+// Copyright 1998-2011 by Neil Hodgson <neilh@scintilla.org>
 // The License.txt file describes the conditions under which this software may be distributed.
 
 #ifndef DOCUMENT_H
@@ -117,6 +117,46 @@ struct StyledText {
 	size_t StyleAt(size_t i) const {
 		return multipleStyles ? styles[i] : style;
 	}
+};
+
+class HighlightDelimiter {
+public:
+	HighlightDelimiter() : isEnabled(false) {
+		Clear();
+	}
+
+	void Clear() {
+		beginFoldBlock = -1;
+		endFoldBlock = -1;
+		firstChangeableLineBefore = -1;
+		firstChangeableLineAfter = -1;
+	}
+
+	bool NeedsDrawing(int line) {
+		return isEnabled && (line <= firstChangeableLineBefore || line >= firstChangeableLineAfter);
+	}
+
+	bool IsFoldBlockHighlighted(int line) {
+		return isEnabled && beginFoldBlock != -1 && beginFoldBlock <= line && line <= endFoldBlock;
+	}
+
+	bool IsHeadOfFoldBlock(int line) {
+		return beginFoldBlock == line && line < endFoldBlock;
+	}
+
+	bool IsBodyOfFoldBlock(int line) {
+		return beginFoldBlock != -1 && beginFoldBlock < line && line < endFoldBlock;
+	}
+
+	bool IsTailOfFoldBlock(int line) {
+		return beginFoldBlock != -1 && beginFoldBlock < line && line == endFoldBlock;
+	}
+
+	int beginFoldBlock;	// Begin of current fold block
+	int endFoldBlock;	// End of current fold block
+	int firstChangeableLineBefore;	// First line that triggers repaint before starting line that determined current fold block
+	int firstChangeableLineAfter;	// First line that triggers repaint after starting line that determined current fold block
+	bool isEnabled;
 };
 
 class CaseFolder {
@@ -238,6 +278,7 @@ public:
 	bool NextCharacter(int &pos, int moveDir);	// Returns true if pos changed
 	int SCI_METHOD CodePage() const;
 	bool SCI_METHOD IsDBCSLeadByte(char ch) const;
+	int SafeSegment(const char *text, int length, int lengthSegment);
 
 	// Gateways to modifying document
 	void ModifiedAt(int pos);
@@ -274,7 +315,7 @@ public:
 	int GetColumn(int position);
 	int FindColumn(int line, int column);
 	void Indent(bool forwards, int lineBottom, int lineTop);
-	static char *TransformLineEnds(int *pLenOut, const char *s, size_t len, int eolMode);
+	static char *TransformLineEnds(int *pLenOut, const char *s, size_t len, int eolModeWanted);
 	void ConvertLineEnds(int eolModeSet);
 	void SetReadOnly(bool set) { cb.SetReadOnly(set); }
 	bool IsReadOnly() { return cb.IsReadOnly(); }
@@ -309,8 +350,9 @@ public:
 	int SCI_METHOD SetLevel(int line, int level);
 	int SCI_METHOD GetLevel(int line) const;
 	void ClearLevels();
-	int GetLastChild(int lineParent, int level=-1);
+	int GetLastChild(int lineParent, int level=-1, int lastLine=-1);
 	int GetFoldParent(int line);
+	void GetHighlightDelimiters(HighlightDelimiter &hDelimiter, int line, int lastLine);
 /* CHANGEBAR begin */
 	int GetChanged(int line) { return cb.GetChanged(line); }
 /* CHANGEBAR end */
@@ -372,6 +414,7 @@ public:
 	const WatcherWithUserData *GetWatchers() const { return watchers; }
 	int GetLenWatchers() const { return lenWatchers; }
 
+	CharClassify::cc WordCharClass(unsigned char ch);
 	bool IsWordPartSeparator(char ch);
 	int WordPartLeft(int pos);
 	int WordPartRight(int pos);
@@ -383,7 +426,6 @@ public:
 	int BraceMatch(int position, int maxReStyle);
 
 private:
-	CharClassify::cc WordCharClass(unsigned char ch);
 	bool IsWordStartAt(int pos);
 	bool IsWordEndAt(int pos);
 	bool IsWordAt(int start, int end);

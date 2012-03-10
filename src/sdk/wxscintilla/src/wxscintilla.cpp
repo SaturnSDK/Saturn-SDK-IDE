@@ -14,21 +14,20 @@
 // Copyright:   (c) 2004 wxCode
 // Licence:     wxWindows
 /////////////////////////////////////////////////////////////////////////////
-#include <limits>
+
 #include <ctype.h>
+#include <limits>
 
-#include "ScintillaWX.h"
-#include "wx/wxscintilla.h"
-
-#include <wx/wx.h>
 #include <wx/tokenzr.h>
 #include <wx/mstream.h>
 #include <wx/image.h>
 #include <wx/file.h>
-
 #ifdef __WXGTK__
     #include <wx/dcbuffer.h>
 #endif
+
+#include "ScintillaWX.h"
+#include "wx/wxscintilla.h"
 
 //----------------------------------------------------------------------
 
@@ -110,7 +109,7 @@ DEFINE_EVENT_TYPE( wxEVT_SCI_AUTOCOMP_SELECTION )
 DEFINE_EVENT_TYPE( wxEVT_SCI_INDICATOR_CLICK )
 DEFINE_EVENT_TYPE( wxEVT_SCI_INDICATOR_RELEASE )
 DEFINE_EVENT_TYPE( wxEVT_SCI_AUTOCOMP_CANCELLED )
-DEFINE_EVENT_TYPE( wxEVT_SCI_AUTOCOMP_CHARDELETED )
+DEFINE_EVENT_TYPE( wxEVT_SCI_AUTOCOMP_CHAR_DELETED )
 /* C::B begin */
 DEFINE_EVENT_TYPE( wxEVT_SCI_SETFOCUS )
 DEFINE_EVENT_TYPE( wxEVT_SCI_KILLFOCUS )
@@ -241,7 +240,9 @@ wxScintilla::~wxScintilla()
 
 //----------------------------------------------------------------------
 // Send message to Scintilla
+/* C::B begin */
 wxIntPtr wxScintilla::SendMsg (unsigned int msg, wxUIntPtr wp, wxIntPtr lp) const
+/* C::B end */
 {
     return m_swx->WndProc(msg, wp, lp);
 }
@@ -270,9 +271,8 @@ void wxScintilla::SetHScrollBar (wxScrollBar* bar)
 }
 
 //----------------------------------------------------------------------
-// BEGIN generated section.  The following code is automatically generated
-//       by gen_iface.py from the contents of Scintilla.iface.  Do not edit
-//       this file.  Edit wxscintilla.cpp.in or gen_iface.py instead and regenerate.
+// Generated methods implementation section {{{
+
 
 // Add text to the document at current position.
 void wxScintilla::AddText (const wxString& text)
@@ -597,6 +597,18 @@ void wxScintilla::MarkerSetBackground (int markerNumber, const wxColour& back)
     SendMsg(SCI_MARKERSETBACK, markerNumber, wxColourAsLong(back));
 }
 
+// Set the background colour used for a particular marker number when its folding block is selected.
+void wxScintilla::MarkerSetBackSelected(int markerNumber, const wxColour& back)
+{
+    SendMsg(SCI_MARKERSETBACKSELECTED, markerNumber, wxColourAsLong(back));
+}
+
+// Enable/disable highlight for current folding bloc (smallest one that contains the caret)
+void wxScintilla::MarkerEnableHighlight(bool enabled)
+{
+    SendMsg(SCI_MARKERENABLEHIGHLIGHT, enabled, 0);
+}
+
 // Add a marker to a line, returning an ID which can be used to find or delete the marker.
 int wxScintilla::MarkerAdd (int line, int markerNumber)
 {
@@ -621,7 +633,8 @@ int wxScintilla::MarkerGet (int line)
     return SendMsg(SCI_MARKERGET, line, 0);
 }
 
-// Find the next line after lineStart that includes a marker in mask.
+// Find the next line at or after lineStart that includes a marker in mask.
+// Return -1 when no more lines.
 int wxScintilla::MarkerNext (int lineStart, int markerMask)
 {
     return SendMsg(SCI_MARKERNEXT, lineStart, markerMask);
@@ -643,11 +656,12 @@ void wxScintilla::MarkerDefineBitmap (int markerNumber, const wxBitmap& bmp)
         img.ConvertAlphaToMask();
     img.SaveFile(strm, wxBITMAP_TYPE_XPM);
     size_t len = strm.GetSize();
-    char* buf = new char[len+1];
-    strm.CopyTo(buf, len);
-    buf[len] = 0;
-    SendMsg(SCI_MARKERDEFINEPIXMAP, markerNumber, (uptr_t)buf);
-    delete [] buf;
+    char* buff = new char[len+1];
+    strm.CopyTo(buff, len);
+    buff[len] = 0;
+    SendMsg(SCI_MARKERDEFINEPIXMAP, markerNumber, (uptr_t)buff);
+    delete [] buff;
+
 }
 
 // Add a set of markers to a line.
@@ -708,6 +722,18 @@ void wxScintilla::SetMarginSensitive (int margin, bool sensitive)
 bool wxScintilla::GetMarginSensitive (int margin) const
 {
     return SendMsg(SCI_GETMARGINSENSITIVEN, margin, 0) != 0;
+}
+
+// Set the cursor shown when the mouse is inside a margin.
+void wxScintilla::SetMarginCursorN(int margin, int cursor)
+{
+    SendMsg(SCI_SETMARGINCURSORN, margin, cursor);
+}
+
+// Retrieve the cursor shown in a margin.
+int wxScintilla::GetMarginCursorN(int margin) const
+{
+    return SendMsg(SCI_GETMARGINCURSORN, margin, 0);
 }
 
 // Clear all the styles and make equivalent to the global default style.
@@ -1242,11 +1268,12 @@ void wxScintilla::RegisterImage (int type, const wxBitmap& bmp)
         img.ConvertAlphaToMask();
     img.SaveFile(strm, wxBITMAP_TYPE_XPM);
     size_t len = strm.GetSize();
-    char* buf = new char[len+1];
-    strm.CopyTo(buf, len);
-    buf[len] = 0;
-    SendMsg(SCI_REGISTERIMAGE, type, (uptr_t)buf);
-    delete [] buf;
+    char* buff = new char[len+1];
+    strm.CopyTo(buff, len);
+    buff[len] = 0;
+    SendMsg(SCI_REGISTERIMAGE, type, (uptr_t)buff);
+    delete [] buff;
+
 }
 
 // Clear all the registered images.
@@ -1435,6 +1462,12 @@ void wxScintilla::SetSelectionEnd(int pos)
 int wxScintilla::GetSelectionEnd() const
 {
     return SendMsg(SCI_GETSELECTIONEND, 0, 0);
+}
+
+// Set caret to a position, while removing any existing selection.
+void wxScintilla::SetEmptySelection(int pos)
+{
+    SendMsg(SCI_SETEMPTYSELECTION, pos, 0);
 }
 
 // Sets the print magnification added to the point size of each style for printing.
@@ -2626,10 +2659,22 @@ void wxScintilla::BraceHighlight (int pos1, int pos2)
     SendMsg(SCI_BRACEHIGHLIGHT, pos1, pos2);
 }
 
+// Use specified indicator to highlight matching braces instead of changing their style.
+void wxScintilla::BraceHighlightIndicator(bool useBraceHighlightIndicator, int indicator)
+{
+    SendMsg(SCI_BRACEHIGHLIGHTINDICATOR, useBraceHighlightIndicator, indicator);
+}
+
 // Highlight the character at a position indicating there is no matching brace.
 void wxScintilla::BraceBadLight (int pos)
 {
     SendMsg(SCI_BRACEBADLIGHT, pos, 0);
+}
+
+// Use specified indicator to highlight non matching brace instead of changing its style.
+void wxScintilla::BraceBadLightIndicator(bool useBraceBadLightIndicator, int indicator)
+{
+    SendMsg(SCI_BRACEBADLIGHTINDICATOR, useBraceBadLightIndicator, indicator);
 }
 
 // Find the position of a matching brace or INVALID_POSITION if no match.
@@ -3355,12 +3400,10 @@ void wxScintilla::CopyAllowLine()
 // characters in the document.
 /* C::B begin */
 // defined later as wxUIntPtr wxScintilla::GetCharacterPointer() const;
-/*
-int wxScintilla::GetCharacterPointer() const
+const char* wxScintilla::GetCharacterPointer()
 {
-    return SendMsg(SCI_GETCHARACTERPOINTER, 0, 0);
+    return (const char*)SendMsg(SCI_GETCHARACTERPOINTER, 0, 0);
 }
-*/
 /* C::B end */
 
 // Always interpret keyboard input as Unicode
@@ -3385,6 +3428,18 @@ void wxScintilla::IndicSetAlpha(int indicator, int alpha)
 int wxScintilla::IndicGetAlpha(int indicator) const
 {
     return SendMsg(SCI_INDICGETALPHA, indicator, 0);
+}
+
+// Set the alpha outline colour of the given indicator.
+void wxScintilla::IndicSetOutlineAlpha(int indicator, int alpha)
+{
+    SendMsg(SCI_INDICSETOUTLINEALPHA, indicator, alpha);
+}
+
+// Get the alpha outline colour of the given indicator.
+int wxScintilla::IndicGetOutlineAlpha(int indicator) const
+{
+    return SendMsg(SCI_INDICGETOUTLINEALPHA, indicator, 0);
 }
 
 // Set extra ascent for each line
@@ -3485,6 +3540,18 @@ void wxScintilla::MarginSetStyleOffset(int style)
 int wxScintilla::MarginGetStyleOffset() const
 {
     return SendMsg(SCI_MARGINGETSTYLEOFFSET, 0, 0);
+}
+
+// Set the margin options.
+void wxScintilla::SetMarginOptions(int marginOptions)
+{
+    SendMsg(SCI_SETMARGINOPTIONS, marginOptions, 0);
+}
+
+// Get the margin options.
+int wxScintilla::GetMarginOptions() const
+{
+    return SendMsg(SCI_GETMARGINOPTIONS, 0, 0);
 }
 
 // Set the annotation text for a line
@@ -3868,6 +3935,68 @@ void wxScintilla::VerticalCentreCaret()
     SendMsg(SCI_VERTICALCENTRECARET, 0, 0);
 }
 
+// Move the selected lines up one line, shifting the line above after the selection
+void wxScintilla::MoveSelectedLinesUp()
+{
+    SendMsg(SCI_MOVESELECTEDLINESUP, 0, 0);
+}
+
+// Move the selected lines down one line, shifting the line below before the selection
+void wxScintilla::MoveSelectedLinesDown()
+{
+    SendMsg(SCI_MOVESELECTEDLINESDOWN, 0, 0);
+}
+
+// Set the identifier reported as idFrom in notification messages.
+void wxScintilla::SetIdentifier(int identifier)
+{
+    SendMsg(SCI_SETIDENTIFIER, identifier, 0);
+}
+
+// Get the identifier.
+int wxScintilla::GetIdentifier() const
+{
+    return SendMsg(SCI_GETIDENTIFIER, 0, 0);
+}
+
+// Set the width for future RGBA image data.
+void wxScintilla::RGBAImageSetWidth(int width)
+{
+    SendMsg(SCI_RGBAIMAGESETWIDTH, width, 0);
+}
+
+// Set the height for future RGBA image data.
+void wxScintilla::RGBAImageSetHeight(int height)
+{
+    SendMsg(SCI_RGBAIMAGESETHEIGHT, height, 0);
+}
+
+// Define a marker from RGBA data.
+// It has the width and height from RGBAImageSetWidth/Height
+void wxScintilla::MarkerDefineRGBAImage(int markerNumber, const wxString& pixels)
+{
+    SendMsg(SCI_MARKERDEFINERGBAIMAGE, markerNumber, (uptr_t)(const char*)wx2sci(pixels));
+}
+
+// Register an RGBA image for use in autocompletion lists.
+// It has the width and height from RGBAImageSetWidth/Height
+void wxScintilla::RegisterRGBAImage(int type, const wxString& pixels)
+{
+    SendMsg(SCI_REGISTERRGBAIMAGE, type, (uptr_t)(const char*)wx2sci(pixels));
+}
+
+// Scroll to start of document.
+void wxScintilla::ScrollToStart()
+{
+    SendMsg(SCI_SCROLLTOSTART, 0, 0);
+}
+
+// Scroll to end of document.
+void wxScintilla::ScrollToEnd()
+{
+    SendMsg(SCI_SCROLLTOEND, 0, 0);
+}
+
 // Start notifying the container of all key presses and commands.
 void wxScintilla::StartRecord ()
 {
@@ -4066,7 +4195,6 @@ wxString wxScintilla::GetLexerLanguage() const
 }
 /* C::B end */
 
-// END of generated section
 //----------------------------------------------------------------------
 
 
@@ -4316,28 +4444,6 @@ wxPoint wxScintilla::PointFromPosition(int pos)
     return wxPoint(x, y);
 }
 
-/* C::B begin */
-// Retrieve the start and end positions of the current selection.
-void wxScintilla::GetSelection (long *from, long *to)
-{
-    if ( from )
-        *from = GetSelectionStart();
-    if ( to )
-        *to = GetSelectionEnd();
-}
-
-// kept for compatibility only
-//void wxScintilla::GetSelection(int *from, int *to)
-//{
-//    long f, t;
-//    GetSelection(&f, &t);
-//    if ( from )
-//        *from = f;
-//    if ( to )
-//        *to = t;
-//}
-/* C::B end */
-
 // Scroll enough to make the given line visible
 void wxScintilla::ScrollToLine (int line)
 {
@@ -4359,19 +4465,20 @@ bool wxScintilla::SaveFile (const wxString& filename)
     if (!file.IsOpened())
         return false;
 
-    bool success = file.Write(GetText(), *wxConvCurrent);
+    bool ok = file.Write(GetText(), *wxConvCurrent);
 
     file.Close();
 
-    if (success)
+    if (ok)
+    {
         SetSavePoint();
-
-    return success;
+    }
+    return ok;
 }
 
 bool wxScintilla::LoadFile (const wxString& filename)
 {
-    bool success = false;
+    bool ok = false;
     wxFile file(filename, wxFile::read);
 
     if (file.IsOpened())
@@ -4384,28 +4491,28 @@ bool wxScintilla::LoadFile (const wxString& filename)
         {
 #if wxUSE_UNICODE
             wxMemoryBuffer buffer(len+1);
-            success = (file.Read(buffer.GetData(), len) == len);
-            if (success) {
+            ok = (file.Read(buffer.GetData(), len) == len);
+            if (ok) {
                 ((char*)buffer.GetData())[len] = 0;
                 contents = wxString(buffer, *wxConvCurrent, len);
             }
 #else
             wxString buffer;
-            success = (file.Read(wxStringBuffer(buffer, len), len) == len);
+            ok = (file.Read(wxStringBuffer(buffer, len), len) == len);
             contents = buffer;
 #endif
         }
         else
         {
             if (len == 0)
-                success = true;  // empty file is ok
+                ok = true;  // empty file is ok
             else
-                success = false; // len == wxInvalidOffset
+                ok = false; // len == wxInvalidOffset
         }
 
         file.Close();
 
-        if (success)
+        if (ok)
         {
             SetText(contents);
             EmptyUndoBuffer();
@@ -4413,7 +4520,7 @@ bool wxScintilla::LoadFile (const wxString& filename)
         }
     }
 
-    return success;
+    return ok;
 }
 
 
@@ -4429,6 +4536,7 @@ bool wxScintilla::DoDropText (long x, long y, const wxString& data)
     return m_swx->DoDropText(x, y, data);
 }
 
+/* C::B begin */
 wxDragResult wxScintilla::DoDragEnter (wxCoord x, wxCoord y, wxDragResult def)
 {
     return m_swx->DoDragOver (x, y, def);
@@ -4438,6 +4546,7 @@ void wxScintilla::DoDragLeave ()
 {
     m_swx->DoDragLeave ();
 }
+/* C::B end */
 #endif
 
 
@@ -4868,6 +4977,9 @@ void wxScintilla::NotifyParent (SCNotification* _scn)
 
     case SCN_UPDATEUI:
         evt.SetEventType (wxEVT_SCI_UPDATEUI);
+/* C::B begin */
+        evt.SetUpdateType(scn.updated);
+/* C::B end */
         break;
 
     case SCN_MODIFIED:
@@ -4962,7 +5074,7 @@ void wxScintilla::NotifyParent (SCNotification* _scn)
         break;
 
     case SCN_AUTOCCHARDELETED:
-        evt.SetEventType(wxEVT_SCI_AUTOCOMP_CHARDELETED);
+        evt.SetEventType(wxEVT_SCI_AUTOCOMP_CHAR_DELETED);
         break;
 
     default:
@@ -5045,7 +5157,7 @@ wxScintillaEvent::wxScintillaEvent (const wxScintillaEvent& event):
 #if wxCHECK_VERSION(2, 9, 2)
 /*static*/ wxVersionInfo wxScintilla::GetLibraryVersionInfo()
 {
-    return wxVersionInfo("Scintilla", 2, 2, 3, "Scintilla 2.23");
+    return wxVersionInfo("Scintilla", 2, 2, 9, "Scintilla 2.29");
 }
 #endif
 /* C::B end */

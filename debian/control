@@ -1,18 +1,38 @@
 Source: codeblocks
-Section: devel
+Section: x11
 Priority: optional
 Maintainer: Jens Lody <jens@codeblocks.org>
 Homepage: http://www.codeblocks.org
-Build-Depends: debhelper (>= 7.4.11~), cdbs, automake (>= 1.9), libtool (>= 1.4), libwxgtk2.8-dev, wx-common, zip, libbz2-dev, zlib1g-dev, libgtk2.0-dev, libgamin-dev, libstdc++6-4.3-dev | libstdc++6-4.4-dev | libstdc++6-4.5-dev, libboost1.40-dev | libboost-dev (>= 1.40)
+Build-Depends: debhelper (>= 7.4.11~)
+ , cdbs
+ , automake (>= 1.9)
+ , libtool (>= 1.4)
+ , libwxgtk2.8-dev
+ , wx-common
+ , zip
+ , libbz2-dev
+ , zlib1g-dev
+ , libgtk2.0-dev
+ , libgamin-dev
+ , libstdc++6-4.3-dev | libstdc++6-4.4-dev | libstdc++6-4.5-dev | libstdc++6-4.6-dev
+ , libboost1.40-dev | libboost-dev (>= 1.40)
+ , libhunspell-dev
 Standards-Version: 3.9.1
 
 Package: codeblocks
 Architecture: any
-Section: devel
-Depends: ${shlibs:Depends}, ${misc:Depends}, libcodeblocks0 (= ${binary:Version})
-Pre-Depends: codeblocks-common (= ${source:Version})
-Recommends: gcc | g++, gdb, xterm
-Suggests: libwxgtk2.8-dev, wx-common, codeblocks-contrib
+Depends: ${shlibs:Depends}
+ , ${misc:Depends}
+ , codeblocks-common (= ${source:Version})
+ , libcodeblocks0 (= ${binary:Version})
+Recommends:
+ gcc | g++
+ , gdb
+ , xterm
+Suggests:
+ libwxgtk2.8-dev
+ , wx-common
+ , codeblocks-contrib
 Description: Code::Blocks integrated development environment (IDE)
  Code::Blocks is the open-source, cross-platform Integrated Development
  Environment (IDE).
@@ -46,7 +66,11 @@ Description: common files for Code::Blocks IDE
 Package: libcodeblocks0
 Architecture: any
 Section: libs
-Depends: ${shlibs:Depends}, ${misc:Depends}, binutils (>= 2.14.90.0.7), file, libmagic1, libncurses5, zlib1g
+Depends: ${shlibs:Depends}
+ , ${misc:Depends}
+ , binutils (>= 2.14.90.0.7)
+ , file
+Recommends: codeblocks
 Description: Code::Blocks shared libraries
  Code::Blocks is the open-source, cross-platform Integrated Development
  Environment (IDE).
@@ -70,7 +94,8 @@ Package: codeblocks-dbg
 Priority: extra
 Architecture: any
 Section: debug
-Depends: ${misc:Depends}, codeblocks (= ${binary:Version})
+Depends: ${misc:Depends}
+ , codeblocks (= ${binary:Version})
 Description: Code::Blocks debugging libraries
  Code::Blocks is the open-source, cross-platform Integrated Development
  Environment (IDE).
@@ -93,8 +118,17 @@ Description: Code::Blocks debugging libraries
 
 Package: codeblocks-contrib
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, codeblocks (= ${binary:Version}), libwxsmithlib0 (= ${binary:Version})
-Pre-Depends: codeblocks-contrib-common (= ${source:Version})
+Depends: ${shlibs:Depends}
+ , ${misc:Depends}
+ , codeblocks (= ${binary:Version})
+ , libwxsmithlib0 (= ${binary:Version})
+ , codeblocks-libwxcontrib0 (= ${binary:Version})
+ , codeblocks-contrib-common (= ${source:Version})
+Recommends:
+ valgrind
+ , cppcheck
+ , cscope
+ , cccc
 Description: contrib plugins for Code::Blocks IDE
  This package extends Code::Blocks functionality a great deal with the included
  plugins. These are:
@@ -125,6 +159,7 @@ Description: contrib plugins for Code::Blocks IDE
     * NassiShneiderman
     * Regular expression testbed
     * Reopen last closed editor(s) via menu or hotkey
+    * Spellchecker plugin
     * Symbol table plugin
     * ThreadSearch
     * ToolsPlus
@@ -132,6 +167,25 @@ Description: contrib plugins for Code::Blocks IDE
     * RAD gui-builder for wxWidgets (wxSmith)
     * wxSmith contrib items
     * wxSmith AUI
+
+Package: codeblocks-libwxcontrib0
+Architecture: any
+Section: libs
+Depends: ${shlibs:Depends}
+ , ${misc:Depends}
+ , binutils (>= 2.14.90.0.7)
+ , file
+Description: Code::Blocks shared libraries for wxContribItems
+ This package contains the shared libraries for the wxContribItems used by wxSmith .
+ Contrib items included in this package are:
+    * KWIC
+    * wxChartCtrl
+    * wxFlatNotebook
+    * wxImagePanel
+    * wxSpeedButton
+    * wxTreeList
+    * wxCustomButton
+    * wxLED
 
 Package: codeblocks-contrib-common
 Architecture: all
@@ -147,7 +201,9 @@ Package: codeblocks-contrib-dbg
 Priority: extra
 Architecture: any
 Section: debug
-Depends: ${misc:Depends}, codeblocks-contrib (= ${binary:Version}), codeblocks-dbg (= ${binary:Version})
+Depends: ${misc:Depends}
+ , codeblocks-contrib (= ${binary:Version})
+ , codeblocks-dbg (= ${binary:Version})
 Description: Debugging libraries for the Code::Blocks contrib plugins
  This package extends Code::Blocks functionality a great deal with the included
  plugins. These are:
@@ -176,6 +232,8 @@ Description: Debugging libraries for the Code::Blocks contrib plugins
     * Codesnippets
     * Library finder
     * Regular expression testbed
+    * Reopen last closed editor(s) via menu or hotkey
+    * Spellchecker plugin
     * Symbol table plugin
     * CB koders
     * MouseSap
@@ -189,7 +247,9 @@ Description: Debugging libraries for the Code::Blocks contrib plugins
 Package: codeblocks-dev
 Architecture: any
 Section: libdevel
-Depends: ${misc:Depends}, libcodeblocks0 (= ${binary:Version}), codeblocks-headers (= ${source:Version})
+Depends: ${misc:Depends}
+ , libcodeblocks0 (= ${binary:Version})
+ , codeblocks-headers (= ${source:Version})
 Description: Code::Blocks development libraries (SDK)
  Code::Blocks is the open-source, cross-platform Integrated Development
  Environment (IDE).
@@ -213,6 +273,8 @@ Description: Code::Blocks development libraries (SDK)
 Package: codeblocks-headers
 Architecture: all
 Depends: ${misc:Depends}
+ , codeblocks-dev (>= ${source:Version})
+ , codeblocks-dev (<< ${source:Version}.1~)
 Conflicts: codeblocks-dev (<< ${source:Version})
 Description: Code::Blocks development headers (SDK)
  Code::Blocks is the open-source, cross-platform Integrated Development
@@ -231,13 +293,54 @@ Description: Code::Blocks development headers (SDK)
     * Extensible wizard based on scripts
     * Autosave (saves your work in the unfortunate case of a crash)
  .
- This package contains the development heasders for creating plugins
+ This package contains the development headers for creating plugins
  for the Code::Blocks IDE.
+
+Package: codeblocks-wxcontrib-dev
+Architecture: any
+Section: libdevel
+Depends: ${misc:Depends}
+ , codeblocks-libwxcontrib0 (= ${binary:Version})
+Description: Code::Blocks development libraries for wxContribItems
+ This package contains the development libraries for the wxContribItems used by wxSmith .
+ Items included in this package are:
+    * KWIC
+    * wxChartCtrl
+    * wxFlatNotebook
+    * wxImagePanel
+    * wxSpeedButton
+    * wxCustomButton
+    * wxLED
+ .
+ This package contains the development libraries needed to use the wxContribItems in own
+ programs.
+
+Package: codeblocks-wxcontrib-headers
+Architecture: all
+Depends: ${misc:Depends}
+ , codeblocks-wxcontrib-dev (>= ${source:Version})
+ , codeblocks-wxcontrib-dev (<< ${source:Version}.1~)
+Conflicts: codeblocks-wxcontrib-dev (<< ${source:Version})
+Description: Code::Blocks development headers for wxContribItems
+ This package contains the development headers for the wxContribItems used by wxSmith .
+ Items included in this package are:
+    * KWIC
+    * wxChartCtrl
+    * wxFlatNotebook
+    * wxImagePanel
+    * wxSpeedButton
+    * wxCustomButton
+    * wxLED
+ .
+ This package contains the development headers needed to use the wxContribItems in own
+ programs.
 
 Package: libwxsmithlib0
 Architecture: any
 Section: libs
-Depends: ${shlibs:Depends}, ${misc:Depends}, libcodeblocks0 (= ${binary:Version})
+Depends: ${shlibs:Depends}
+ , ${misc:Depends}
+ , libcodeblocks0 (= ${binary:Version})
 Recommends: codeblocks-contrib (= ${binary:Version})
 Description: wxSmith shared library (Code::Blocks plugin for RAD GUI editing)
  Code::Blocks is the open-source, cross-platform Integrated Development
@@ -262,7 +365,8 @@ Description: wxSmith shared library (Code::Blocks plugin for RAD GUI editing)
 Package: libwxsmithlib0-dev
 Architecture: any
 Section: libdevel
-Depends: ${misc:Depends}, wxsmith-dev (= ${binary:Version})
+Depends: ${misc:Depends}
+ , wxsmith-dev (= ${binary:Version})
 Conflicts: libwxsmithlib0-dev (<< ${source:Version})
 Description: wxSmith development metapackage
  This is a transitional dummy package to ensure clean upgrades to new
@@ -272,7 +376,8 @@ Description: wxSmith development metapackage
 Package: wxsmith-dev
 Architecture: any
 Section: libdevel
-Depends: ${misc:Depends}, libcodeblocks0 (= ${binary:Version}), wxsmith-headers (= ${source:Version})
+Depends: ${misc:Depends}
+ , libcodeblocks0 (= ${binary:Version})
 Replaces: libwxsmithlib0-dev
 Description: wxSmith development files (libraries)
  Code::Blocks is the open-source, cross-platform Integrated Development
@@ -297,6 +402,8 @@ Description: wxSmith development files (libraries)
 Package: wxsmith-headers
 Architecture: all
 Depends: ${misc:Depends}
+ , wxsmith-dev (>= ${source:Version})
+ , wxsmith-dev (<< ${source:Version}.1~)
 Conflicts: wxsmith-dev (<< ${source:Version})
 Description: wxSmith development files (headers)
  Code::Blocks is the open-source, cross-platform Integrated Development

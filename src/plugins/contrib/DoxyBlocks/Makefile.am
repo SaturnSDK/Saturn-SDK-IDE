@@ -25,12 +25,13 @@ noinst_HEADERS = Config.h \
 		DoxyBlocks.h \
 		Expressions.h \
 		DoxyBlocksLogger.h \
-		pch.h
+		version.h
 
-EXTRA_DIST = 	$(srcdir)/*.cbp \
-		$(srcdir)/wxsmith/ConfigPanel.wxs \
+EXTRA_DIST = $(srcdir)/*.cbp \
+		wxsmith/ConfigPanel.wxs \
 		manifest.xml \
 		ChangeLog.txt \
+		DoxyBlocks.rc \
 		update \
 		update.bat \
 		$(srcdir)/images/*.png \

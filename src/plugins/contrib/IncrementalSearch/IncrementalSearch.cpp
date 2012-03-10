@@ -12,7 +12,11 @@
 #include "sdk.h"
 
 #ifndef CB_PRECOMP
+    #include <wx/menu.h>
+    #include <wx/settings.h>
+    #include <wx/toolbar.h>
     #include <wx/xrc/xmlres.h>
+
     #include <configmanager.h>
     #include <editormanager.h>
     #include <cbeditor.h>
@@ -324,7 +328,7 @@ void IncrementalSearch::OnFocusToolbar(wxCommandEvent& /*event*/)
     }
     DoFocusToolbar();
 
-    if(Manager::Get()->GetConfigManager(_T("editor"))->ReadBool(_T("/incremental_search/select_text_on_focus"), false))
+    if (Manager::Get()->GetConfigManager(_T("editor"))->ReadBool(_T("/incremental_search/select_text_on_focus"), false))
     {
         m_pTextCtrl->SetSelection(-1,-1);
     }

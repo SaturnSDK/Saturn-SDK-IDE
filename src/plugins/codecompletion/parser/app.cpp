@@ -6,7 +6,57 @@
  * $HeadURL$
  */
 
-#include <wx/wxprec.h>
+/**
+ * Purpose: Simulate a CC parsing run.
+ * <CALL_GRAPH>
+ * ParserTestApp():
+ * - Creates the Frame
+ * -> Frame(): holds dummy parser "ParserTest m_ParserTest;"
+ *   - Provided an initial dummy file, can be set by the user later.
+ *   -> Frame::Start():
+ *      - Reads all UI values into global vars (includes, headers)
+ *      - compiles initial global file queue
+ *      - Creates global "Busy" dialog
+ *      - Calls ParserTest::Clear()
+ *      - Iterates over global file queue and calls ParserTest::Start(file)
+ *      - Prints results to UI
+ *      - destroys "Busy" dialog
+ * -> ParserTest(): holds dummy tree "TokensTree* m_pTokensTree;"
+ *   -> ParserTest::Start(file)
+ *      - Note: In ParserTest::ParserTest() the macro replacements are setup
+ *      - Creates and initialises FileLoader for provided file
+ *      - Sets up ParserThreadOptions (like follow local/global includes etc...)
+ *      - Creates a ParserBase instance "client"
+ *      - Creates a new ParserThread
+ *      - Calls ParserThread::Parse() and provides:
+ *        ParserBase, file, ParserThreadOptions, TokensTree
+ *      - Allows to access the results, like tokens tree
+ * -> ParserThread(): same as in Code::Blocks implementation
+ *    -> ParserThread::Parse():
+ *       - Calls ParserThread::InitTokenizer()
+ *       - Reserves file for parsing in TokensTree
+ *       - Calls ParserThread::DoParse() (if file is not flagged as assigned already)
+ *       - Flags file as parsed.
+ *    -> ParserThread::InitTokenizer():
+ *       - Read the file or buffer and tokenises it into elements
+ *    -> ParserThread::DoParse():
+ *       - Recursive function that handles all the dirty stuff
+ *       - Calls ParserDummy::ParserCommon::FileType() in ParserThread::HandleIncludes()
+ *         to parse additionally encountered files (#includes)
+ *       - Calls ParserDummy::ParserBase::ParseFile() in ParserThread::HandleIncludes()
+ *         to parse additionally encountered files (#includes)
+ * -> ParserDummy(): provides the implementation to "Parser", namely:
+ *      - ParserDummy::ParserCommon::FileType:
+ *        - determines file type as source/header according extension
+ *      - ParserDummy::ParserBase::GetFullFileName:
+ *        - uses includes provided to compute full file name
+ *      - ParserDummy::ParserBase::ParseFile():
+ *        - Monitors the parsing of files to avoid re-parsing the same file
+ *        - Appends new files to file global file queue
+ * </CALL_GRAPH>
+ */
+
+#include <sdk.h>
 
 #ifdef __BORLANDC__
 #pragma hdrstop
@@ -20,58 +70,38 @@
 #include <wx/image.h>
 //*)
 
+#include <wx/arrstr.h>
+
 #include "frame.h"
 
-class TestApp : public wxApp
+namespace ParserTestAppGlobal
+{
+    // global variable to ease handling of include directories and header files
+    wxArrayString s_includeDirs;
+    wxArrayString s_fileQueue;
+    wxArrayString s_filesParsed;
+}// ParserTestAppGlobal
+
+class ParserTestApp : public wxApp
 {
 public:
     virtual bool OnInit();
-    Frame* GetFrame() const { return m_frame; }
-
-private:
-    Frame* m_frame;
 };
 
-IMPLEMENT_APP(TestApp)
-DECLARE_APP(TestApp)
+IMPLEMENT_APP(ParserTestApp)
+DECLARE_APP(ParserTestApp)
 
-bool TestApp::OnInit()
+bool ParserTestApp::OnInit()
 {
     //(*AppInitialize
     bool wxsOK = true;
     wxInitAllImageHandlers();
     //*)
 
-    m_frame = new Frame;
-    m_frame->Center();
-    m_frame->Show();
-    m_frame->Start(_T("test.h"));
+    Frame* frame = new Frame(_T("test.h"));
+    frame->Center();
+    frame->Show();
+    frame->Start();
 
     return wxsOK;
 }
-
-void ParserTrace(const wxChar* format, ...)
-{
-    va_list ap;
-    va_start(ap, format);
-    wxString log = wxString::FormatV(format, ap);
-    va_end(ap);
-
-    // Convert '\r' to "\r", '\n' to "\n"
-    for (size_t i = 0; i < log.Len(); ++i)
-    {
-        if (log.GetChar(i) == _T('\r'))
-        {
-            log.SetChar(i, _T('\\'));
-            log.insert(++i, 1, _T('r'));
-        }
-        else if (log.GetChar(i) == _T('\n'))
-        {
-            log.SetChar(i, _T('\\'));
-            log.insert(++i, 1, _T('n'));
-        }
-    }
-
-    wxGetApp().GetFrame()->Log(log);
-}
-

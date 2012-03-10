@@ -30,13 +30,12 @@
 #include <depslib.h>
 
 DirectCommands::DirectCommands(CompilerGCC* compilerPlugin,
-                                Compiler* compiler,
-                                cbProject* project,
-                                int logPageIndex)
+                               Compiler* compiler,
+                               cbProject* project,
+                               int logPageIndex)
     : m_doYield(false),
     m_PageIndex(logPageIndex),
     m_pCompilerPlugin(compilerPlugin),
-//    m_pGenerator(generator),
     m_pCompiler(compiler),
     m_pProject(project),
     m_pCurrTarget(0)
@@ -109,9 +108,9 @@ static int MySortProjectFilesByWeight(ProjectFile** one, ProjectFile** two)
 MyFilesArray DirectCommands::GetProjectFilesSortedByWeight(ProjectBuildTarget* target, bool compile, bool link)
 {
     MyFilesArray files;
-    for (int i = 0; i < m_pProject->GetFilesCount(); ++i)
+    for (FilesList::iterator it = m_pProject->GetFilesList().begin(); it != m_pProject->GetFilesList().end(); ++it)
     {
-        ProjectFile* pf = m_pProject->GetFile(i);
+        ProjectFile* pf = *it;
         // require compile
         if (compile && !pf->compile)
             continue;
@@ -122,10 +121,6 @@ MyFilesArray DirectCommands::GetProjectFilesSortedByWeight(ProjectBuildTarget* t
         if (target && (pf->buildTargets.Index(target->GetTitle()) == wxNOT_FOUND))
             continue;
         files.Add(pf);
-
-        // Why was this here?!?
-//        if(m_doYield)
-//            Manager::Yield();
     }
     files.Sort(MySortProjectFilesByWeight);
     return files;
@@ -162,117 +157,138 @@ wxArrayString DirectCommands::CompileFile(ProjectBuildTarget* target, ProjectFil
 wxArrayString DirectCommands::GetCompileFileCommand(ProjectBuildTarget* target, ProjectFile* pf)
 {
     wxArrayString ret;
-    wxArrayString retGenerated;
+    wxArrayString ret_generated;
 
     // is it compilable?
     if (!pf->compile || pf->compilerVar.IsEmpty())
         return ret;
 
-    const pfDetails& pfd = pf->GetFileDetails(target);
-    Compiler* compiler = target ? CompilerFactory::GetCompiler(target->GetCompilerID()) : m_pCompiler;
+    Compiler* compiler = target
+                       ? CompilerFactory::GetCompiler(target->GetCompilerID())
+                       : m_pCompiler;
     if (!compiler)
         return ret;
-    wxString Object = (compiler->GetSwitches().UseFlatObjects)?pfd.object_file_flat:pfd.object_file;
-    wxString ObjectDir = (compiler->GetSwitches().UseFlatObjects)?pfd.object_dir_flat_native:pfd.object_dir_native;
+
+    const pfDetails& pfd = pf->GetFileDetails(target);
+    wxString object     = (compiler->GetSwitches().UseFlatObjects)
+                        ? pfd.object_file_flat : pfd.object_file;
+    wxString object_dir = (compiler->GetSwitches().UseFlatObjects)
+                        ? pfd.object_dir_flat_native : pfd.object_dir_native;
+    // create output dir
+    if (!object_dir.IsEmpty() && !CreateDirRecursively(object_dir, 0755))
+        cbMessageBox(_("Can't create object output directory:\n") + object_dir);
 
     // lookup file's type
     FileType ft = FileTypeOf(pf->relativeFilename);
 
     // create output dir
-    if (!ObjectDir.IsEmpty() && !CreateDirRecursively(ObjectDir, 0755))
-    {
-        cbMessageBox(_("Can't create object output directory ") + ObjectDir);
-    }
+    if (!object_dir.IsEmpty() && !CreateDirRecursively(object_dir, 0755))
+        cbMessageBox(_("Can't create object output directory:\n") + object_dir);
 
-    bool isResource = ft == ftResource;
-    bool isHeader = ft == ftHeader;
+    bool is_resource = ft == ftResource;
+    bool is_header   = ft == ftHeader;
 
     // allowed resources under all platforms: makes sense when cross-compiling for
     // windows under linux.
     // and anyway, if the user is dumb enough to try to compile resources without
     // having a resource compiler, (s)he deserves the upcoming build error ;)
 
-//#ifndef __WXMSW__
-//    // not supported under non-win32 platforms
-//    if (isResource)
-//        return ret;
-//#endif
-
-    wxString compilerCmd;
-    if (!isHeader || compiler->GetSwitches().supportsPCH)
+    wxString compiler_cmd;
+    if (!is_header || compiler->GetSwitches().supportsPCH)
     {
-        const CompilerTool& tool = compiler->GetCompilerTool(isResource ? ctCompileResourceCmd : ctCompileObjectCmd, pf->file.GetExt());
+        const CompilerTool& tool = compiler->GetCompilerTool(is_resource ? ctCompileResourceCmd : ctCompileObjectCmd, pf->file.GetExt());
 
         // does it generate other files to compile?
         for (size_t i = 0; i < pf->generatedFiles.size(); ++i)
-        {
-            AppendArray(GetCompileFileCommand(target, pf->generatedFiles[i]), retGenerated); // recurse
-        }
+            AppendArray(GetCompileFileCommand(target, pf->generatedFiles[i]), ret_generated); // recurse
 
         pfCustomBuild& pcfb = pf->customBuild[compiler->GetID()];
-        compilerCmd = pcfb.useCustomBuildCommand
-                        ? pcfb.buildCommand
-                        : tool.command;
+        compiler_cmd = pcfb.useCustomBuildCommand
+                     ? pcfb.buildCommand : tool.command;
+
         wxString source_file;
         if (compiler->GetSwitches().UseFullSourcePaths)
-        {
             source_file = UnixFilename(pfd.source_file_absolute_native);
-            // for resource files, use short from if path because if windres bug with spaces-in-paths
-            if (isResource)
-                source_file = pf->file.GetShortPath();
-        }
         else
             source_file = pfd.source_file;
+
+#ifdef command_line_generation
+    Manager::Get()->GetLogManager()->DebugLog(F(_T("GetCompileFileCommand[1]: compiler_cmd='%s', source_file='%s', object='%s', object_dir='%s'."),
+                                                compiler_cmd.wx_str(), source_file.wx_str(), object.wx_str(), object_dir.wx_str()));
+#endif
+
+        // for resource files, use short from if path because if windres bug with spaces-in-paths
+        if (is_resource && compiler->GetSwitches().UseFullSourcePaths)
+            source_file = pf->file.GetShortPath();
+
         QuoteStringIfNeeded(source_file);
-        compiler->GenerateCommandLine(compilerCmd,
-                                         target,
-                                         pf,
-                                         source_file,
-                                         Object,
-                                         pfd.object_file_flat,
-                                         pfd.dep_file);
+
+#ifdef command_line_generation
+    Manager::Get()->GetLogManager()->DebugLog(F(_T("GetCompileFileCommand[1]: source_file='%s'."),
+                                                source_file.wx_str()));
+#endif
+
+        compiler->GenerateCommandLine(compiler_cmd,
+                                      target,
+                                      pf,
+                                      source_file,
+                                      object,
+                                      pfd.object_file_flat,
+                                      pfd.dep_file);
     }
 
-    if (!compilerCmd.IsEmpty())
+    if (!compiler_cmd.IsEmpty())
     {
         switch (compiler->GetSwitches().logging)
         {
             case clogFull:
-                ret.Add(wxString(COMPILER_SIMPLE_LOG) + compilerCmd);
+                ret.Add(wxString(COMPILER_SIMPLE_LOG) + compiler_cmd);
                 break;
 
             case clogSimple:
-                if (isHeader)
-                    ret.Add(wxString(COMPILER_SIMPLE_LOG) + _("Precompiling header: ") + pfd.source_file_native);
+                if (is_header)
+                    ret.Add(  wxString(COMPILER_SIMPLE_LOG)
+                            + _("Precompiling header: ")
+                            + pfd.source_file_native );
                 else
-                    ret.Add(wxString(COMPILER_SIMPLE_LOG) + _("Compiling: ") + pfd.source_file_native);
+                    ret.Add(  wxString(COMPILER_SIMPLE_LOG)
+                            + _("Compiling: ")
+                            + pfd.source_file_native );
                 break;
 
             default:
                 break;
         }
-        AddCommandsToArray(compilerCmd, ret);
-        if (isHeader)
+
+        AddCommandsToArray(compiler_cmd, ret);
+
+        if (is_header)
             ret.Add(wxString(COMPILER_WAIT));
-        if (retGenerated.GetCount())
+
+        if (ret_generated.GetCount())
         {
             // not only append commands for (any) generated files to be compiled
             // but also insert a "pause" to allow this file to generate its files first
-            if (!isHeader) // if isHeader, the "pause" has already been added
+            if (!is_header) // if is_header, the "pause" has already been added
                 ret.Add(wxString(COMPILER_WAIT));
-            AppendArray(retGenerated, ret);
+            AppendArray(ret_generated, ret);
         }
 
         // if it's a PCH, delete the previously generated PCH to avoid problems
         // (it 'll be recreated anyway)
         if (FileTypeOf(pf->relativeFilename) == ftHeader && pf->compile)
         {
-            wxString ObjectAbs = (compiler->GetSwitches().UseFlatObjects)?pfd.object_file_flat_absolute_native:pfd.object_file_absolute_native;
-            wxRemoveFile(ObjectAbs);
+            wxString object_abs = (compiler->GetSwitches().UseFlatObjects)
+                                ? pfd.object_file_flat_absolute_native
+                                : pfd.object_file_absolute_native;
+            wxRemoveFile(object_abs);
         }
     }
     else
-        ret.Add(wxString(COMPILER_SIMPLE_LOG) + _("Skipping file (no compiler program set): ") + pfd.source_file_native);
+        ret.Add(  wxString(COMPILER_SIMPLE_LOG)
+                + _("Skipping file (no compiler program set): ")
+                + pfd.source_file_native );
+
     return ret;
 }
 
@@ -408,15 +424,6 @@ wxArrayString DirectCommands::GetTargetCompileCommands(ProjectBuildTarget* targe
 {
 //    Manager::Get()->GetLogManager()->DebugLog(wxString("-----GetTargetCompileCommands-----"));
     wxArrayString ret;
-//    ret.Add(wxString(COMPILER_SIMPLE_LOG) + _("Switching to target: ") + target->GetTitle());
-    // NOTE: added this to notify compiler about the active target.
-    // this is needed when targets use different compiler each
-    // and C::B tries to parse the compiler's output.
-    // previous behaviour, used the project's compiler for parsing
-    // all targets output, which failed when a target's compiler
-    // was different than the project's...
-//    ret.Add(wxString(COMPILER_TARGET_CHANGE) + target->GetTitle());
-
     m_pCurrTarget = target;
 
     // set list of #include directories
@@ -431,9 +438,8 @@ wxArrayString DirectCommands::GetTargetCompileCommands(ProjectBuildTarget* targe
         ProjectFile* pf = files[i];
         // auto-generated files are handled automatically in GetCompileFileCommand()
         if (pf->AutoGeneratedBy())
-        {
             continue;
-        }
+
         const pfDetails& pfd = pf->GetFileDetails(target);
         wxString err;
         if (force || IsObjectOutdated(target, pfd, &err))
@@ -447,18 +453,13 @@ wxArrayString DirectCommands::GetTargetCompileCommands(ProjectBuildTarget* targe
             if (!err.IsEmpty())
                 ret.Add(wxString(COMPILER_SIMPLE_LOG) + err);
         }
-        if(m_doYield)
+        if (m_doYield)
             Manager::Yield();
     }
 
     // add link command
     wxArrayString link = GetLinkCommands(target, ret.GetCount() != counter);
     AppendArray(link, ret);
-
-    // remove "switching to target" message if no compile needed
-//    bool needPost = ret.GetCount() != counter;
-//    if (!needPost)
-//        ret.Clear();
 
     return ret;
 }
@@ -567,8 +568,19 @@ wxArrayString DirectCommands::GetTargetLinkCommands(ProjectBuildTarget* target, 
     depsTimeStamp(output.mb_str(), &outputtime);
     if (!outputtime)
         force = true;
-    if (AreExternalDepsOutdated(out.GetFullPath(), target->GetAdditionalOutputFiles(), target->GetExternalDeps()))
+    wxArrayString fileMissing;
+    if ( AreExternalDepsOutdated(target, out.GetFullPath(), &fileMissing) )
         force = true;
+
+    if (!fileMissing.IsEmpty())
+    {
+        wxString warn;
+        warn.Printf(_("WARNING: Target '%s': Unable to resolve %d external dependencies:"),
+                    target->GetFullTitle().wx_str(), fileMissing.Count());
+        ret.Add(wxString(COMPILER_SIMPLE_LOG) + warn);
+        for (size_t i=0; i<fileMissing.Count(); i++)
+            ret.Add(wxString(COMPILER_SIMPLE_LOG) + fileMissing[i]);
+    }
 
     Compiler* compiler = target ? CompilerFactory::GetCompiler(target->GetCompilerID()) : m_pCompiler;
 
@@ -648,13 +660,11 @@ wxArrayString DirectCommands::GetTargetLinkCommands(ProjectBuildTarget* target, 
         {
             time_t objtime;
             depsTimeStamp(pfd.object_file_native.mb_str(), &objtime);
+            if (!objtime)
+                force = true;
             if (objtime > outputtime)
                 force = true;
         }
-
-        // Why was this here?
-//        if(m_doYield)
-//            Manager::Yield();
     }
     if (IsOpenWatcom)
     {
@@ -672,7 +682,7 @@ wxArrayString DirectCommands::GetTargetLinkCommands(ProjectBuildTarget* target, 
     Manager::Get()->GetMacrosManager()->ReplaceMacros(dstname, target);
     if (!dstname.IsEmpty() && !CreateDirRecursively(dstname, 0755))
     {
-            cbMessageBox(_("Can't create output directory ") + dstname);
+        cbMessageBox(_("Can't create output directory ") + dstname);
     }
 
     // add actual link command
@@ -719,12 +729,12 @@ wxArrayString DirectCommands::GetTargetLinkCommands(ProjectBuildTarget* target, 
     }
     wxString compilerCmd = compiler->GetCommand(ct);
     compiler->GenerateCommandLine(compilerCmd,
-                                             target,
-                                             0,
-                                             _T(""),
-                                             linkfiles,
-                                             FlatLinkFiles,
-                                             resfiles);
+                                  target,
+                                  0,
+                                  _T(""),
+                                  linkfiles,
+                                  FlatLinkFiles,
+                                  resfiles);
     if (!compilerCmd.IsEmpty())
     {
         switch (compiler->GetSwitches().logging)
@@ -748,6 +758,7 @@ wxArrayString DirectCommands::GetTargetLinkCommands(ProjectBuildTarget* target, 
     }
     else
         ret.Add(wxString(COMPILER_SIMPLE_LOG) + _("Skipping linking (no linker program set): ") + output);
+
     return ret;
 }
 
@@ -787,13 +798,10 @@ wxArrayString DirectCommands::GetTargetCleanCommands(ProjectBuildTarget* target,
             ret.Add(ObjectAbs);
             // if this is an auto-generated file, delete it
             if (pf->AutoGeneratedBy())
-            {
                 ret.Add(pf->file.GetFullPath());
-            }
+
             if (distclean)
-            {
                 ret.Add(pfd.dep_file_absolute_native);
-            }
         }
     }
 
@@ -819,43 +827,121 @@ wxArrayString DirectCommands::GetTargetCleanCommands(ProjectBuildTarget* target,
     return ret;
 }
 
-/** external deps are manualy set by the user
+/** external deps are manually set by the user
   * e.g. a static library linked to the project is an external dep (if set as such by the user)
   * so that a re-linking is forced if the static lib is updated
   */
-bool DirectCommands::AreExternalDepsOutdated(const wxString& buildOutput, const wxString& additionalFiles, const wxString& externalDeps)
+bool DirectCommands::AreExternalDepsOutdated(ProjectBuildTarget* target,
+											 const wxString& buildOutput,
+                                             wxArrayString*  filesMissing)
 {
+    Compiler* compiler = CompilerFactory::GetCompiler(target->GetCompilerID());
+
+	// if no output, probably a commands-only target; nothing to relink
+	// but we have to check other dependencies
+	time_t timeOutput = 0;
+	if (!buildOutput.IsEmpty())
+	{
+		wxString output = buildOutput;
+		Manager::Get()->GetMacrosManager()->ReplaceMacros(output);
+		depsTimeStamp(output.mb_str(), &timeOutput);
+		// if build output exists, check for updated static libraries
+		if (timeOutput)
+		{
+			// look for static libraries in target/project library dirs
+			const wxArrayString& libs = target->GetLinkLibs();
+			const wxArrayString& prjLibDirs = target->GetParentProject()->GetLibDirs();
+			const wxArrayString& cmpLibDirs = compiler->GetLibDirs();
+			wxArrayString libDirs = target->GetLibDirs();
+			AppendArray(prjLibDirs, libDirs);
+			AppendArray(cmpLibDirs, libDirs);
+			for (size_t i = 0; i < libs.GetCount(); ++i)
+			{
+				wxString lib = libs[i];
+
+				// if user manually pointed to a library, without using the lib dirs,
+				// then just check the file directly w/out involving the search dirs...
+				if (lib.Contains(_T("/")) || lib.Contains(_T("\\")))
+				{
+					Manager::Get()->GetMacrosManager()->ReplaceMacros(lib, target);
+					lib = UnixFilename(lib);
+					time_t timeExtDep;
+					depsTimeStamp(lib.mb_str(), &timeExtDep);
+					if (timeExtDep > timeOutput)
+					{
+						// force re-link
+						Manager::Get()->GetLogManager()->DebugLog(F(_T("Forcing re-link of '%s/%s' because '%s' is newer"),
+																		target->GetParentProject()->GetTitle().wx_str(),
+																		target->GetTitle().wx_str(),
+																		lib.wx_str()));
+						return true;
+					}
+					continue;
+				}
+
+				if (!lib.StartsWith(compiler->GetSwitches().libPrefix))
+					lib = compiler->GetSwitches().libPrefix + lib;
+				if (!lib.EndsWith(_T(".") + compiler->GetSwitches().libExtension))
+					lib += _T(".") + compiler->GetSwitches().libExtension;
+
+				for (size_t l = 0; l < libDirs.GetCount(); ++l)
+				{
+					wxString dir = libDirs[l] + wxFILE_SEP_PATH + lib;
+					Manager::Get()->GetMacrosManager()->ReplaceMacros(dir, target);
+					dir = UnixFilename(dir);
+					time_t timeExtDep;
+					depsTimeStamp(dir.mb_str(), &timeExtDep);
+					if (timeExtDep > timeOutput)
+					{
+						// force re-link
+						Manager::Get()->GetLogManager()->DebugLog(F(_T("Forcing re-link of '%s/%s' because '%s' is newer"),
+																		target->GetParentProject()->GetTitle().wx_str(),
+																		target->GetTitle().wx_str(),
+																		dir.wx_str()));
+						return true;
+					}
+				}
+			}
+		}
+	}
+
     // array is separated by ;
-    wxArrayString deps = GetArrayFromString(externalDeps, _T(";"));
-    wxArrayString files = GetArrayFromString(additionalFiles, _T(";"));
-    for (size_t i = 0; i < deps.GetCount(); ++i)
+    wxArrayString extDeps  = GetArrayFromString(target->GetExternalDeps(), _T(";"));
+    wxArrayString addFiles = GetArrayFromString(target->GetAdditionalOutputFiles(), _T(";"));
+    for (size_t i = 0; i < extDeps.GetCount(); ++i)
     {
-        if (deps[i].IsEmpty())
+        if (extDeps[i].IsEmpty())
             continue;
 
-        Manager::Get()->GetMacrosManager()->ReplaceMacros(deps[i]);
-        time_t timeSrc;
-        depsTimeStamp(deps[i].mb_str(), &timeSrc);
+        Manager::Get()->GetMacrosManager()->ReplaceMacros(extDeps[i]);
+        time_t timeExtDep;
+        depsTimeStamp(extDeps[i].mb_str(), &timeExtDep);
         // if external dep doesn't exist, no need to relink
         // but we have to check other dependencies
-        if (!timeSrc)
+        if (!timeExtDep)
+        {
+            if (filesMissing) filesMissing->Add(extDeps[i]);
             continue;
+        }
 
         // let's check the additional output files
-        for (size_t x = 0; x < files.GetCount(); ++x)
+        for (size_t j = 0; j < addFiles.GetCount(); ++j)
         {
-            if (files[x].IsEmpty())
+            if (addFiles[j].IsEmpty())
                 continue;
 
-            Manager::Get()->GetMacrosManager()->ReplaceMacros(files[x]);
-            time_t addT;
-            depsTimeStamp(files[x].mb_str(), &addT);
+            Manager::Get()->GetMacrosManager()->ReplaceMacros(addFiles[j]);
+            time_t timeAddFile;
+            depsTimeStamp(addFiles[j].mb_str(), &timeAddFile);
             // if additional file doesn't exist, we can skip it
-            if (!addT)
+            if (!timeAddFile)
+            {
+                if (filesMissing) filesMissing->Add(addFiles[j]);
                 continue;
+            }
 
             // if external dep is newer than additional file, relink
-            if (timeSrc > addT)
+            if (timeExtDep > timeAddFile)
                 return true;
         }
 
@@ -868,16 +954,13 @@ bool DirectCommands::AreExternalDepsOutdated(const wxString& buildOutput, const 
         // this is moved last because, for "commands only" targets,
         // it would return before we had a chance to check the
         // additional output files (above)
-        wxString output = buildOutput;
-        Manager::Get()->GetMacrosManager()->ReplaceMacros(output);
-        time_t timeExe;
-        depsTimeStamp(output.mb_str(), &timeExe);
+
         // if build output doesn't exist, relink
-        if (!timeExe)
+        if (!timeOutput)
             return true;
 
         // if external dep is newer than build output, relink
-        if (timeSrc > timeExe)
+        if (timeExtDep > timeOutput)
             return true;
     }
     return false; // no force relink
@@ -894,9 +977,7 @@ bool DirectCommands::IsObjectOutdated(ProjectBuildTarget* target, const pfDetail
             *errorStr = _("WARNING: Can't read file's timestamp: ") + pfd.source_file_absolute_native;
 
         if (wxFileExists(pfd.source_file_absolute_native))
-        {
             return true;
-        }
 
         return false;
     }

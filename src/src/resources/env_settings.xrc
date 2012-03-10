@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<resource>
+<resource xmlns="http://www.wxwidgets.org/wxxrc">
 	<object class="wxScrollingDialog" name="dlgEnvironmentSettings">
 		<title>Environment settings</title>
 		<centered>1</centered>
@@ -498,6 +498,20 @@
 											</object>
 											<flag>wxLEFT|wxALIGN_LEFT|wxALIGN_BOTTOM</flag>
 											<border>20</border>
+										</object>
+										<object class="sizeritem">
+											<object class="wxCheckBox" name="chkNBInvertAdvance">
+												<label>Invert advance direction</label>
+											</object>
+											<flag>wxLEFT|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL</flag>
+											<border>40</border>
+										</object>
+										<object class="sizeritem">
+											<object class="wxCheckBox" name="chkNBInvertMove">
+												<label>Invert move direction</label>
+											</object>
+											<flag>wxLEFT|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL</flag>
+											<border>40</border>
 										</object>
 										<object class="sizeritem">
 											<object class="wxBoxSizer">

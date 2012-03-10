@@ -113,7 +113,7 @@ namespace ScriptBindings
         BIND_INT_CONSTANT(ttStaticLib);
         BIND_INT_CONSTANT(ttDynamicLib);
         BIND_INT_CONSTANT(ttCommandsOnly);
-	BIND_INT_CONSTANT(ttNative);
+        BIND_INT_CONSTANT(ttNative);
 
         // MakeCommand
         BIND_INT_CONSTANT(mcClean);
@@ -168,7 +168,7 @@ namespace ScriptBindings
         BIND_INT_CONSTANT(spMac);
         BIND_INT_CONSTANT(spAll);
 
-		// TargetFilenameGenerationPolicy
+        // TargetFilenameGenerationPolicy
         BIND_INT_CONSTANT(tgfpPlatformDefault);
         BIND_INT_CONSTANT(tgfpNone);
 
@@ -195,12 +195,17 @@ namespace ScriptBindings
         BIND_WXSTR_CONSTANT_NAMED(FileFilters::MSVC6_WORKSPACE_EXT, "EXT_MSVC6_WORKSPACE");
         BIND_WXSTR_CONSTANT_NAMED(FileFilters::MSVC7_EXT, "EXT_MSVC7");
         BIND_WXSTR_CONSTANT_NAMED(FileFilters::MSVC7_WORKSPACE_EXT, "EXT_MSVC7_WORKSPACE");
+        BIND_WXSTR_CONSTANT_NAMED(FileFilters::MSVC10_EXT, "EXT_MSVC10");
         BIND_WXSTR_CONSTANT_NAMED(FileFilters::ASM_EXT, "EXT_ASM");
         BIND_WXSTR_CONSTANT_NAMED(FileFilters::D_EXT, "EXT_D");
         BIND_WXSTR_CONSTANT_NAMED(FileFilters::F_EXT, "EXT_F");
         BIND_WXSTR_CONSTANT_NAMED(FileFilters::F77_EXT, "EXT_F77");
         BIND_WXSTR_CONSTANT_NAMED(FileFilters::F90_EXT, "EXT_F90");
         BIND_WXSTR_CONSTANT_NAMED(FileFilters::F95_EXT, "EXT_F95");
+        BIND_WXSTR_CONSTANT_NAMED(FileFilters::FOR_EXT, "EXT_FOR");
+        BIND_WXSTR_CONSTANT_NAMED(FileFilters::FPP_EXT, "EXT_FPP");
+        BIND_WXSTR_CONSTANT_NAMED(FileFilters::F03_EXT, "EXT_F03");
+        BIND_WXSTR_CONSTANT_NAMED(FileFilters::F08_EXT, "EXT_F08");
         BIND_WXSTR_CONSTANT_NAMED(FileFilters::JAVA_EXT, "EXT_JAVA");
         BIND_WXSTR_CONSTANT_NAMED(FileFilters::C_EXT, "EXT_C");
         BIND_WXSTR_CONSTANT_NAMED(FileFilters::CC_EXT, "EXT_CC");
@@ -231,12 +236,17 @@ namespace ScriptBindings
         BIND_WXSTR_CONSTANT_NAMED(FileFilters::MSVC6_WORKSPACE_DOT_EXT, "DOT_EXT_MSVC6_WORKSPACE");
         BIND_WXSTR_CONSTANT_NAMED(FileFilters::MSVC7_DOT_EXT, "DOT_EXT_MSVC7");
         BIND_WXSTR_CONSTANT_NAMED(FileFilters::MSVC7_WORKSPACE_DOT_EXT, "DOT_EXT_MSVC7_WORKSPACE");
+        BIND_WXSTR_CONSTANT_NAMED(FileFilters::MSVC10_DOT_EXT, "DOT_EXT_MSVC10");
         BIND_WXSTR_CONSTANT_NAMED(FileFilters::ASM_DOT_EXT, "DOT_EXT_ASM");
         BIND_WXSTR_CONSTANT_NAMED(FileFilters::D_DOT_EXT, "DOT_EXT_D");
         BIND_WXSTR_CONSTANT_NAMED(FileFilters::F_DOT_EXT, "DOT_EXT_F");
         BIND_WXSTR_CONSTANT_NAMED(FileFilters::F77_DOT_EXT, "DOT_EXT_F77");
         BIND_WXSTR_CONSTANT_NAMED(FileFilters::F90_DOT_EXT, "DOT_EXT_F90");
         BIND_WXSTR_CONSTANT_NAMED(FileFilters::F95_DOT_EXT, "DOT_EXT_F95");
+        BIND_WXSTR_CONSTANT_NAMED(FileFilters::FOR_DOT_EXT, "DOT_EXT_FOR");
+        BIND_WXSTR_CONSTANT_NAMED(FileFilters::FPP_DOT_EXT, "DOT_EXT_FPP");
+        BIND_WXSTR_CONSTANT_NAMED(FileFilters::F03_DOT_EXT, "DOT_EXT_F03");
+        BIND_WXSTR_CONSTANT_NAMED(FileFilters::F08_DOT_EXT, "DOT_EXT_F08");
         BIND_WXSTR_CONSTANT_NAMED(FileFilters::JAVA_DOT_EXT, "DOT_EXT_JAVA");
         BIND_WXSTR_CONSTANT_NAMED(FileFilters::C_DOT_EXT, "DOT_EXT_C");
         BIND_WXSTR_CONSTANT_NAMED(FileFilters::CC_DOT_EXT, "DOT_EXT_CC");

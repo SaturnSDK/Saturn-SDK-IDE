@@ -3,7 +3,7 @@ SUBDIRS = lib_finder
 INCLUDES = $(WX_CXXFLAGS) \
 		-I$(top_srcdir)/src/include \
 		-I$(top_srcdir)/src/sdk/wxscintilla/include \
-		-I$(srcdir)/../wxSmithContribItems/wxflatnotebook/wxFlatNotebook/include \
+		-I$(srcdir)/../wxContribItems/wxFlatNotebook/include \
 		-I$(top_srcdir)/src/include/scripting/include \
 		-I$(top_srcdir)/src/include/scripting/sqplus \
 		-I$(top_srcdir)/src/include/scripting/squirrel \
@@ -18,7 +18,7 @@ liblib_finder_la_LDFLAGS = -module -version-info 0:1:0 -shared -no-undefined -av
 
 liblib_finder_la_LIBADD = $(PLUGIN_WX_LIBS) \
 		../../../sdk/libcodeblocks.la \
-		../wxSmithContribItems/wxflatnotebook/wxFlatNotebook/libwxflatnotebook.la
+		../wxContribItems/wxFlatNotebook/libwxflatnotebook.la
 
 liblib_finder_la_SOURCES = \
 		librariesdlg.cpp \
@@ -56,14 +56,12 @@ noinst_HEADERS = \
 		projectconfigurationpanel.h
 
 EXTRA_DIST = \
-	lib_finder.cbp \
-	lib_finder-unix.cbp \
+	$(srcdir)/*.cbp \
 	update \
 	update.bat \
 	readme.txt \
 	manifest.xml \
 	$(srcdir)/wxsmith/*.wxs
-#	license.txt
 
 pkgdata_DATA = lib_finder.zip
 CLEANFILES = $(pkgdata_DATA)

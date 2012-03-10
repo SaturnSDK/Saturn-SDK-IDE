@@ -14,23 +14,35 @@
 #include <wx/file.h>
 #include <wx/msgdlg.h>
 
-#include "expression.h"
 #include "globals.h"
 #include "logmanager.h"
 #include "manager.h"
+
+#include "cclogger.h"
+#include "expression.h"
 #include "tokenizer.h"
+#include "tokenstree.h"
 
 #define CC_TOKENIZER_DEBUG_OUTPUT 0
 
+#if CC_GLOBAL_DEBUG_OUTPUT == 1
+    #undef CC_TOKENIZER_DEBUG_OUTPUT
+    #define CC_TOKENIZER_DEBUG_OUTPUT 1
+#elif CC_GLOBAL_DEBUG_OUTPUT == 2
+    #undef CC_TOKENIZER_DEBUG_OUTPUT
+    #define CC_TOKENIZER_DEBUG_OUTPUT 2
+#endif
+
 #ifdef CC_PARSER_TEST
-    extern void ParserTrace(const wxChar* format, ...);
-    #define TRACE(format, args...) ParserTrace(format , ##args)
-    #define TRACE2(format, args...)
+    #define TRACE(format, args...) \
+            CCLogger::Get()->DebugLog(F(format, ##args))
+    #define TRACE2(format, args...) \
+            CCLogger::Get()->DebugLog(F(format, ##args))
     #define TRACE2_SET_FLAG(traceFile)
 #else
     #if CC_TOKENIZER_DEBUG_OUTPUT == 1
         #define TRACE(format, args...) \
-            Manager::Get()->GetLogManager()->DebugLog(F(format, ##args))
+            CCLogger::Get()->DebugLog(F(format, ##args))
         #define TRACE2(format, args...)
         #define TRACE2_SET_FLAG(traceFile)
     #elif CC_TOKENIZER_DEBUG_OUTPUT == 2
@@ -38,11 +50,11 @@
             do                                                                      \
             {                                                                       \
                 if (g_EnableDebugTrace)                                             \
-                    Manager::Get()->GetLogManager()->DebugLog(F(format, ##args));   \
+                    CCLogger::Get()->DebugLog(F(format, ##args));                   \
             }                                                                       \
             while (false)
         #define TRACE2(format, args...) \
-            Manager::Get()->GetLogManager()->DebugLog(F(format, ##args))
+            CCLogger::Get()->DebugLog(F(format, ##args))
         #define TRACE2_SET_FLAG(traceFile) \
             g_EnableDebugTrace = !g_DebugTraceFile.IsEmpty() && traceFile.EndsWith(g_DebugTraceFile)
     #else
@@ -66,10 +78,10 @@ namespace TokenizerConsts
     const wxString kw_endif     (_T("endif"));
     const wxString hash         (_T("#"));
     const wxString tabcrlf      (_T("\t\n\r"));
-};
+}// namespace TokenizerConsts
 
 // static
-wxStringHashMap Tokenizer::s_Replacements;
+wxStringHashMap     Tokenizer::s_Replacements;
 static const size_t s_MaxRepeatReplaceCount = 50;
 
 Tokenizer::Tokenizer(TokensTree* tokensTree, const wxString& filename) :
@@ -88,7 +100,6 @@ Tokenizer::Tokenizer(TokensTree* tokensTree, const wxString& filename) :
     m_PeekLineNumber(0),
     m_PeekNestLevel(0),
     m_IsOK(false),
-    m_IsOperator(false),
     m_State(tsSkipUnWanted),
     m_Loader(0),
     m_IsReplaceParsing(false),
@@ -120,8 +131,10 @@ bool Tokenizer::Init(const wxString& filename, LoaderBase* loader)
     {
         m_Filename = filename;
         TRACE(_T("Init() : m_Filename='%s'"), m_Filename.wx_str());
+#ifdef CC_PARSER_TEST
         TRACE2_SET_FLAG(filename);
         TRACE2(filename);
+#endif
     }
 
     if (!wxFileExists(m_Filename))
@@ -149,13 +162,13 @@ bool Tokenizer::Init(const wxString& filename, LoaderBase* loader)
 bool Tokenizer::InitFromBuffer(const wxString& buffer, const wxString& fileOfBuffer, size_t initLineNumber)
 {
     BaseInit();
-    m_BufferLen = buffer.Length();
-    m_Buffer.Alloc(m_BufferLen + 1); // + 1 => sentinel
-    m_Buffer = buffer;
-    m_Buffer += _T(' ');
-    m_IsOK = true;
-    m_Filename = fileOfBuffer;
+
+    m_BufferLen  = buffer.Length();
+    m_Buffer     = buffer + _T(" "); // + 1 => sentinel
+    m_IsOK       = true;
+    m_Filename   = fileOfBuffer;
     m_LineNumber = initLineNumber;
+
     return true;
 }
 
@@ -173,7 +186,6 @@ void Tokenizer::BaseInit()
     m_PeekLineNumber       = 0;
     m_PeekNestLevel        = 0;
     m_IsOK                 = false;
-    m_IsOperator           = false;
     m_IsReplaceParsing     = false;
     m_FirstRemainingLength = 0;
     m_RepeatReplaceCount   = 0;
@@ -222,18 +234,6 @@ bool Tokenizer::ReadFile()
         fileName = m_Filename;
         success = true;
     }
-
-//    size_t replacements  = m_Buffer.Replace(_T("_GLIBCXX_BEGIN_NESTED_NAMESPACE(std, _GLIBCXX_STD_D)"), _T("namespace std {"),       true);
-//           replacements += m_Buffer.Replace(_T("_GLIBCXX_BEGIN_NESTED_NAMESPACE(std, _GLIBCXX_STD_P)"), _T("namespace std {"),       true);
-//           replacements += m_Buffer.Replace(_T("_GLIBCXX_END_NESTED_NAMESPACE"),                        _T("}"),                     true);
-//           replacements += m_Buffer.Replace(_T("_GLIBCXX_BEGIN_NAMESPACE_TR1"),                         _T("namespace tr1 {"),       true);
-//           // The following must be before replacing "_GLIBCXX_END_NAMESPACE"!!!
-//           replacements += m_Buffer.Replace(_T("_GLIBCXX_END_NAMESPACE_TR1"),                           _T("}"),                     true);
-//           replacements += m_Buffer.Replace(_T("_GLIBCXX_BEGIN_NAMESPACE(__gnu_cxx)"),                  _T("namespace __gnu_cxx {"), true);
-//           replacements += m_Buffer.Replace(_T("_GLIBCXX_BEGIN_NAMESPACE(std)"),                        _T("namespace std {"),       true);
-//           replacements += m_Buffer.Replace(_T("_GLIBCXX_END_NAMESPACE"),                               _T("}"),                     true);
-//
-//    if (replacements) TRACE(_T("Did %d replacements in buffer of '%s'."), replacements, fileName.wx_str());
 
     m_BufferLen = m_Buffer.Length();
 
@@ -313,6 +313,37 @@ bool Tokenizer::SkipToStringEnd(const wxChar& ch)
     return true;
 }
 
+bool Tokenizer::MoveToNextChar(const unsigned int amount)
+{
+    assert(amount);
+    if(amount == 1) // compiler will dead-strip this
+    {
+        ++m_TokenIndex;
+        if (IsEOF())
+        {
+            m_TokenIndex = m_BufferLen;
+            return false;
+        }
+
+        if (PreviousChar() == _T('\n'))
+            ++m_LineNumber;
+        return true;
+    }
+    else
+    {
+        m_TokenIndex += amount;
+        if (IsEOF())
+        {
+            m_TokenIndex = m_BufferLen;
+            return false;
+        }
+
+        if (PreviousChar() == _T('\n'))
+            ++m_LineNumber;
+        return true;
+    }
+}
+
 // return true if we really skip a string, that means m_TokenIndex has changed.
 bool Tokenizer::SkipString()
 {
@@ -352,11 +383,11 @@ bool Tokenizer::SkipToOneOfChars(const wxChar* chars, bool supportNesting, bool 
             switch (CurrentChar())
             {
                 case '#':
-					if (skipPreprocessor)
-						SkipToEOL(true);
-					else
-						done = true;
-					break;
+                    if (skipPreprocessor)
+                        SkipToEOL(true);
+                    else
+                        done = true;
+                    break;
                 case '{': SkipBlock('{'); break;
                 case '(': SkipBlock('('); break;
                 case '[': SkipBlock('['); break;
@@ -606,7 +637,10 @@ void Tokenizer::ReadParentheses(wxString& str)
                 if (usedLen + writeLen > maxBufferLen)
                 {
                     if (writeLen > maxBufferLen)
+                    {
+                        TRACE(_T("ReadParentheses(): Catched exception 1: %d"), writeLen);
                         return;
+                    }
 
                     if (p != realBuffer)
                     {
@@ -740,6 +774,8 @@ void Tokenizer::ReadParentheses(wxString& str)
     if (p > realBuffer)
         str.Append(realBuffer, p - realBuffer);
     TRACE(_T("ReadParentheses(): %s, line=%d"), str.wx_str(), m_LineNumber);
+    if (str.Len() > 512)
+        TRACE(_T("ReadParentheses(): Catched exception 2: %d"), str.Len());
 }
 
 bool Tokenizer::SkipToEOL(bool nestBraces)
@@ -1051,7 +1087,6 @@ wxString Tokenizer::DoGetToken()
             return wxEmptyString;
 
         str = m_Buffer.Mid(start, m_TokenIndex - start);
-        m_IsOperator = false;
     }
     else if ( (c == '"') || (c == '\'') )
     {
@@ -1091,8 +1126,6 @@ wxString Tokenizer::DoGetToken()
     }
     else if (c == '(')
     {
-        m_IsOperator = false;
-
         if (m_State & tsReadRawExpression)
         {
             str = c;
@@ -1140,9 +1173,9 @@ void Tokenizer::MacroReplace(wxString& str)
                 bool replaced = false;
                 if (!tk->m_Args.IsEmpty())
                     replaced = ReplaceMacroActualContext(tk, false);
-                else if (tk->m_Type != tk->m_Name)
-                    replaced = ReplaceBufferForReparse(tk->m_Type, false);
-                if (replaced || tk->m_Type.IsEmpty())
+                else if (tk->m_FullType != tk->m_Name)
+                    replaced = ReplaceBufferForReparse(tk->m_FullType, false);
+                if (replaced || tk->m_FullType.IsEmpty())
                 {
                     SkipUnwanted();
                     str = DoGetToken();
@@ -1169,7 +1202,13 @@ void Tokenizer::MacroReplace(wxString& str)
             ;
         DoGetToken(); // eat (...)
         wxString target = (const wxChar*)it->second + 1;
-        if (target != str && ReplaceBufferForReparse(target, false))
+        if (target.IsEmpty())
+        {
+            while (SkipWhiteSpace() || SkipComment())
+                ;
+            str = DoGetToken();
+        }
+        else if (target != str && ReplaceBufferForReparse(target, false))
             str = DoGetToken();
     }
     else if (it->second[0] == _T('-'))
@@ -1237,7 +1276,7 @@ bool Tokenizer::CalcConditionExpression()
                 Token* tk = m_TokensTree->at(id);
                 if (tk)
                 {
-                    if (tk->m_Type.IsEmpty() || tk->m_Type == token)
+                    if (tk->m_FullType.IsEmpty() || tk->m_FullType == token)
                     {
                         if (tk->m_Args.IsEmpty())
                         {
@@ -1255,11 +1294,11 @@ bool Tokenizer::CalcConditionExpression()
                         if (ReplaceMacroActualContext(tk, false))
                             continue;
                     }
-                    else if (wxIsdigit(tk->m_Type[0]))
-                        token = tk->m_Type;
-                    else if (tk->m_Type != tk->m_Name)
+                    else if (wxIsdigit(tk->m_FullType[0]))
+                        token = tk->m_FullType;
+                    else if (tk->m_FullType != tk->m_Name)
                     {
-                        if (ReplaceBufferForReparse(tk->m_Type, false))
+                        if (ReplaceBufferForReparse(tk->m_FullType, false))
                             continue;
                     }
                 }
@@ -1557,7 +1596,7 @@ void Tokenizer::HandleConditionPreprocessor(const PreprocessorType type)
     }
 }
 
-void Tokenizer::SpliteArguments(wxArrayString& results)
+void Tokenizer::SplitArguments(wxArrayString& results)
 {
     while (SkipWhiteSpace() || SkipComment())
         ;
@@ -1648,7 +1687,7 @@ bool Tokenizer::ReplaceBufferForReparse(const wxString& target, bool updatePeekT
 
     // Replacement back
     wxChar* p = const_cast<wxChar*>((const wxChar*)m_Buffer) + m_TokenIndex - bufferLen;
-    TRACE(_T("ReplacetargetForReparse() : <FROM>%s<TO>%s"), wxString(p, bufferLen).wx_str(), buffer.wx_str());
+    TRACE(_T("ReplaceBufferForReparse() : <FROM>%s<TO>%s"), wxString(p, bufferLen).wx_str(), buffer.wx_str());
     memcpy(p, (const wxChar*)target, bufferLen * sizeof(wxChar));
 
     // Fix token index
@@ -1697,6 +1736,17 @@ int Tokenizer::KMP_Find(const wxChar* text, const wxChar* pattern, const int pat
     if (!text || !pattern || pattern[0] == _T('\0') || text[0] == _T('\0'))
         return -1;
 
+    if (patternLen > 1024)
+    {
+        if (patternLen < 5012)
+            TRACE(_T("KMP_Find() : %s - %s"), text, pattern);
+        else
+        {
+            TRACE(_T("KMP_Find: The plan buffer is too big, %d"), patternLen);
+            return -2;
+        }
+    }
+
     int next[patternLen];
     KMP_GetNextVal(pattern, next);
 
@@ -1730,21 +1780,21 @@ int Tokenizer::KMP_Find(const wxChar* text, const wxChar* pattern, const int pat
 bool Tokenizer::GetActualContextForMacro(Token* tk, wxString& actualContext)
 {
     // e.g. "#define AAA AAA" and usage "AAA(x)"
-    if (!tk || tk->m_Name == tk->m_Type)
+    if (!tk || tk->m_Name == tk->m_FullType)
         return false;
 
     // 1. break the args into substring with ","
     wxArrayString formalArgs;
     if (ReplaceBufferForReparse(tk->m_Args, false))
-        SpliteArguments(formalArgs);
+        SplitArguments(formalArgs);
 
-    // 2. splite the actual macro arguments
+    // 2. split the actual macro arguments
     wxArrayString actualArgs;
     if (!formalArgs.IsEmpty()) // e.g. #define AAA(x) x \n #define BBB AAA \n BBB(int) variable;
-        SpliteArguments(actualArgs);
+        SplitArguments(actualArgs);
 
     // 3. get actual context
-    actualContext = tk->m_Type;
+    actualContext = tk->m_FullType;
     const size_t totalCount = std::min(formalArgs.GetCount(), actualArgs.GetCount());
     for (size_t i = 0; i < totalCount; ++i)
     {

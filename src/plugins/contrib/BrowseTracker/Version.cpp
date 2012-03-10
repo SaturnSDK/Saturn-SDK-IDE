@@ -16,7 +16,7 @@
 	along with this program; if not, write to the Free Software
 	Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-// RCS-ID: $Id: version.cpp 26 2008-01-03 17:34:18Z Pecan $
+// RCS-ID: $Id$
 
 #ifdef WX_PRECOMP
     #include "wx_pch.h"
@@ -241,6 +241,11 @@ AppVersion::~AppVersion()
 //       94) Apply patch 2886 by techy
 //  Commit 1.2.95 2010/06/30
 //       95) Do not record firt source line in JumpTracker
+//  Commit 1.2.96 2011/12/13
+//       96) Remove wrap on JumpTracker jump back/forward
+//  Commit 1.2.97 2012/01/11
+//       96) Record last position for deactivated editor
+//           Remove recording position for activated editor
 // ----------------------------------------------------------------------------
 //  //FIXME: Bugs
 //      01) Requires CB to be restarted after Install before Alt-Left/Right work.

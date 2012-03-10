@@ -49,14 +49,15 @@ libcompiler_la_SOURCES = advancedcompileroptionsdlg.cpp \
 			compilerOW.cpp \
 			compilerOWgenerator.cpp \
 			compilerSDCC.cpp \
+			compilerG95.cpp \
 			compilerGNUARM.cpp \
 			compilerGNUAVR.cpp \
+			compilerGNUFortran.cpp \
 			compilerGNUMSP430.cpp \
 			compilerGNUPOWERPC.cpp \
 			compilerGNUTRICORE.cpp \
 			compilerTcc.cpp \
-			directcommands.cpp \
-			makefilegenerator.cpp
+			directcommands.cpp
 
 libcon_compiler_la_SOURCES = compilerBCC.cpp \
 			compiler_defs.cpp \
@@ -93,6 +94,7 @@ noinst_HEADERS = advancedcompileroptionsdlg.h \
 			compilerDMD.h \
 			compilererrors.h \
 			compilergcc.h \
+			compilerG95.h \
 			compilerGDC.h \
 			compilerLDC.h \
 			compilerICC.h \
@@ -107,12 +109,14 @@ noinst_HEADERS = advancedcompileroptionsdlg.h \
 			compilerSDCC.h \
 			compilerGNUARM.h \
 			compilerGNUAVR.h \
+			compilerGNUFortran.h \
 			compilerGNUMSP430.h \
 			compilerGNUPOWERPC.h \
 			compilerGNUTRICORE.h \
 			compilerTcc.h \
-			directcommands.h \
-			makefilegenerator.h
+			directcommands.h
 
 EXTRA_DIST = compilerMSVC8.h \
-			compilerMSVC8.cpp
+			compilerMSVC10.h \
+			compilerMSVC8.cpp \
+			compilerMSVC10.cpp

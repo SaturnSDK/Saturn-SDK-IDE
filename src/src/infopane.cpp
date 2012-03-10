@@ -41,14 +41,12 @@ BEGIN_EVENT_TABLE(InfoPane, cbAuiNotebook)
     EVT_MENU(idNB_TabTop, InfoPane::OnTabPosition)
     EVT_MENU(idNB_TabBottom, InfoPane::OnTabPosition)
     EVT_AUINOTEBOOK_PAGE_CLOSE(idNB, InfoPane::OnCloseClicked)
- END_EVENT_TABLE()
+END_EVENT_TABLE()
 
 
 InfoPane::InfoPane(wxWindow* parent) : cbAuiNotebook(parent, idNB, wxDefaultPosition, wxDefaultSize, infopane_flags)
 {
     defaultBitmap = cbLoadBitmap(ConfigManager::GetDataFolder() + _T("/images/edit_16x16.png"), wxBITMAP_TYPE_PNG);
-    if (Manager::Get()->GetConfigManager(_T("app"))->ReadBool(_T("/environment/infopane_tabs_bottom"), false))
-        SetWindowStyleFlag(GetWindowStyleFlag() | wxAUI_NB_BOTTOM);
 }
 
 InfoPane::~InfoPane()
@@ -110,22 +108,31 @@ int InfoPane::CompareIndexes(Page **p1, Page **p2)
 
 void InfoPane::ReorderTabs(CompareFunction cmp_f)
 {
-    page.Sort(cmp_f);
     if (page.GetCount() == 0)
         return;
+    page.Sort(cmp_f);
 
-    wxWindowUpdateLocker noUpdates(GetParent());
+    cbAuiNotebook::Hide();
+    int index = 0;
     for (size_t i = 0 ; i < page.GetCount(); ++i)
     {
-        RemovePage(GetPageIndex(page.Item(i)->window));
+        int pageIndex = GetPageIndex(page.Item(i)->window);
         if (page.Item(i)->indexInNB < 0)
         {
+            if (pageIndex >= 0)
+                RemovePage(pageIndex);
             if (page.Item(i)->window)
                 page.Item(i)->window->Hide();
         }
         else
-            AddPagePrivate(page.Item(i)->window, page.Item(i)->title, page.Item(i)->icon);
+        {
+            if (pageIndex < 0)
+                AddPagePrivate(page.Item(i)->window, page.Item(i)->title, page.Item(i)->icon);
+            if (index++ != pageIndex)
+                MovePage(page.Item(i)->window, index );
+        }
     }
+    cbAuiNotebook::Show();
 }
 
 int InfoPane::AddPagePrivate(wxWindow* p, const wxString& title, wxBitmap* icon)
@@ -327,6 +334,9 @@ void InfoPane::OnCloseClicked(wxAuiNotebookEvent& event)
 {
     if (event.GetSelection() == -1)
         return;
+    // veto the close-event, because we don't want to remove the page (just toggle it)
+    // this avoids an assert-message in debug-build (and wx2.9)
+    event.Veto();
     // toggle the notebook, that sends the event
     Toggle(GetPageIndexByWindow(GetPage(event.GetSelection())));
 }
@@ -344,7 +354,10 @@ void InfoPane::DoShowContextMenu()
     else
     	menu.FindItem(idNB_TabTop)->Enable(false);
 
-    if (page.Item(GetPageIndexByWindow(GetPage(GetSelection())))->islogger)
+    int selection = GetSelection();
+    if (selection >= 0 &&
+        selection < GetPageCount() &&
+        page.Item(GetPageIndexByWindow(GetPage(GetSelection())))->islogger)
     {
         menu.AppendSeparator();
         menu.Append(idCopyAllToClipboard, _("Copy contents to clipboard"));

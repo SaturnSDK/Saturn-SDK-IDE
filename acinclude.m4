@@ -59,8 +59,8 @@ AM_CONDITIONAL(CODEBLOCKS_LINUX, test x$linux = xtrue)
 AM_CONDITIONAL(CODEBLOCKS_DARWIN, test x$darwin = xtrue )
 ])
 
-dnl check what settings to enable
-AC_DEFUN([CODEBLOCKS_ENABLE_SETTINGS],
+dnl check whether to enable debugging
+AC_DEFUN([CODEBLOCKS_CHECK_DEBUG],
 [
 AC_MSG_CHECKING(whether to enable debugging)
 debug_default="no"
@@ -75,7 +75,11 @@ else
 	CXXFLAGS="-O2 -ffast-math -DCB_AUTOCONF $CXXFLAGS"
 	AC_MSG_RESULT(no)
 fi
+])
 
+dnl check what settings to enable
+AC_DEFUN([CODEBLOCKS_ENABLE_SETTINGS],
+[
 AC_MSG_CHECKING(whether to build the source formatter plugin)
 astyle_default="yes"
 AC_ARG_ENABLE(source-formatter, [AC_HELP_STRING([--enable-source-formatter], [build the source formatter plugin (default YES)])],,
@@ -219,6 +223,17 @@ else
 	AC_MSG_RESULT(no)
 fi
 
+AC_MSG_CHECKING(whether to use gtk-notebook as default notebook)
+gtk_notebook_default="yes"
+AC_ARG_ENABLE(gtk-notebook, [AC_HELP_STRING([--enable-gtk-notebook], [use gtk-notebook as default notebook (default YES)])],,
+                       enable_gtk_notebook=$gtk_notebook_default)
+AM_CONDITIONAL([GTK_NOTEBOOK], [test "x$enable_gtk_notebook" = "xyes"])
+if test "x$enable_gtk_notebook" = "xyes"; then
+	AC_MSG_RESULT(yes)
+else
+	AC_MSG_RESULT(no)
+fi
+
 
 case $host in
 	*-*-cygwin* | *-*-mingw*)
@@ -261,10 +276,12 @@ AC_DEFUN([BUILD_CONTRIB_NONE], [
 	AM_CONDITIONAL([BUILD_REGEX], [false])
 	AM_CONDITIONAL([BUILD_REOPENEDITOR], [false])
 	AM_CONDITIONAL([BUILD_EXPORTER], [false])
+	AM_CONDITIONAL([BUILD_SPELLCHECKER], [false])
 	AM_CONDITIONAL([BUILD_SYMTAB], [false])
 	AM_CONDITIONAL([BUILD_THREADSEARCH], [false])
 	AM_CONDITIONAL([BUILD_TOOLSPLUS], [false])
 	AM_CONDITIONAL([BUILD_VALGRIND], [false])
+	AM_CONDITIONAL([BUILD_WXCONTRIB], [false])
 	AM_CONDITIONAL([BUILD_WXSMITH], [false])
 	AM_CONDITIONAL([BUILD_WXSMITHCONTRIB], [false])
 	AM_CONDITIONAL([BUILD_WXSMITHAUI], [false])
@@ -298,10 +315,12 @@ AC_DEFUN([BUILD_CONTRIB_ALL], [
 	AM_CONDITIONAL([BUILD_REGEX], [true])
 	AM_CONDITIONAL([BUILD_REOPENEDITOR], [true])
 	AM_CONDITIONAL([BUILD_EXPORTER], [true])
+	AM_CONDITIONAL([BUILD_SPELLCHECKER], [true])
 	AM_CONDITIONAL([BUILD_SYMTAB], [true])
 	AM_CONDITIONAL([BUILD_THREADSEARCH], [true])
 	AM_CONDITIONAL([BUILD_TOOLSPLUS], [true])
 	AM_CONDITIONAL([BUILD_VALGRIND], [true])
+	AM_CONDITIONAL([BUILD_WXCONTRIB], [true])
 	AM_CONDITIONAL([BUILD_WXSMITH], [true])
 	AM_CONDITIONAL([BUILD_WXSMITHCONTRIB], [true])
 	AM_CONDITIONAL([BUILD_WXSMITHAUI], [true])
@@ -325,8 +344,8 @@ AC_ARG_WITH(contrib-plugins,
   [                        Plugin names are: AutoVersioning, BrowseTracker,byogames,Cccc,CppCheck,cbkoders,codesnippets, ]
   [                        		     codestat, copystrings, Cscope, DoxyBlocks, dragscroll, EditorTweaks, envvars, ]
   [                        		     FileManager, headerfixup, help, hexeditor, incsearch, keybinder, libfinder, MouseSap, ]
-  [                        		     NassiShneiderman, profiler, regex, ReopenEditor, exporter, symtab, ThreadSearch, ]
-  [                        		     ToolsPlus, Valgrind, wxsmith, wxsmithcontrib,wxsmithaui ],
+  [                        		     NassiShneiderman, profiler, regex, ReopenEditor, exporter, spellchecker, symtab, ]
+  [                        		     ThreadSearch, ToolsPlus, Valgrind, wxcontrib, wxsmith, wxsmithcontrib, wxsmithaui ],
   plugins="$withval", plugins="none")
 
 plugins=`echo $plugins | sed 's/,/ /g'`
@@ -402,6 +421,9 @@ do
 	exporter)
 		AM_CONDITIONAL([BUILD_EXPORTER], [true])
 		;;
+	spellchecker)
+		AM_CONDITIONAL([BUILD_SPELLCHECKER], [true])
+		;;
 	symtab)
 		AM_CONDITIONAL([BUILD_SYMTAB], [true])
 		;;
@@ -413,6 +435,9 @@ do
 		;;
 	Valgrind)
 		AM_CONDITIONAL([BUILD_VALGRIND], [true])
+		;;
+	wxcontrib)
+		AM_CONDITIONAL([BUILD_WXCONTRIB], [true])
 		;;
 	wxsmith)
 		AM_CONDITIONAL([BUILD_WXSMITH], [true])
@@ -504,17 +529,23 @@ do
 	-exporter)
 		AM_CONDITIONAL([BUILD_EXPORTER], [false])
 		;;
+	-spellchecker)
+		AM_CONDITIONAL([BUILD_SPELLCHECKER], [false])
+		;;
 	-symtab)
 		AM_CONDITIONAL([BUILD_SYMTAB], [false])
 		;;
 	-ThreadSearch)
 		AM_CONDITIONAL([BUILD_THREADSEARCH], [false])
 		;;
-	-ToolPlus)
+	-ToolsPlus)
 		AM_CONDITIONAL([BUILD_TOOLSPLUS], [false])
 		;;
 	-Valgrind)
 		AM_CONDITIONAL([BUILD_VALGRIND], [false])
+		;;
+	-wxcontrib)
+		AM_CONDITIONAL([BUILD_WXCONTRIB], [false])
 		;;
 	-wxsmith)
 		AM_CONDITIONAL([BUILD_WXSMITH], [false])
@@ -576,9 +607,11 @@ AC_SUBST(BUILD_REGEX)
 AC_SUBST(BUILD_REOPENEDITOR)
 AC_SUBST(BUILD_EXPORTER)
 AC_SUBST(BUILD_SYMTAB)
+AC_SUBST(BUILD_SPELLCHECKER)
 AC_SUBST(BUILD_THREADSEARCH)
 AC_SUBST(BUILD_TOOLSPLUS)
 AC_SUBST(BUILD_VALGRIND)
+AC_SUBST(BUILD_WXCONTRIB)
 AC_SUBST(BUILD_WXSMITH)
 AC_SUBST(BUILD_WXSMITHCONTRIB)
 AC_SUBST(BUILD_WXSMITHAUI)

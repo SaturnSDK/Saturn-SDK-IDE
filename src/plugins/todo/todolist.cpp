@@ -9,6 +9,7 @@
 
 #include "sdk.h"
 #ifndef CB_PRECOMP
+  #include <wx/checklst.h>
   #include <wx/event.h>
   #include <wx/frame.h> // GetMenuBar
   #include <wx/fs_zip.h>
@@ -74,25 +75,17 @@ void ToDoList::OnAttach()
     // create ToDo in bottom view
     wxArrayString titles;
     wxArrayInt widths;
-    titles.Add(_("Type"));
-    titles.Add(_("Text"));
-    titles.Add(_("User"));
-    titles.Add(_("Prio"));
-    titles.Add(_("Line"));
-    titles.Add(_("File"));
-    widths.Add(64);
-    widths.Add(320);
-    widths.Add(64);
-    widths.Add(48);
-    widths.Add(48);
-    widths.Add(640);
+    titles.Add(_("Type")); widths.Add(64);
+    titles.Add(_("Text")); widths.Add(320);
+    titles.Add(_("User")); widths.Add(64);
+    titles.Add(_("Prio")); widths.Add(48);
+    titles.Add(_("Line")); widths.Add(48);
+    titles.Add(_("File")); widths.Add(640);
 
     m_pListLog = new ToDoListView(titles, widths, m_Types);
 
-    bool standalone = Manager::Get()->GetConfigManager(_T("todo_list"))->ReadBool(_T("stand_alone"), true);
-    m_StandAlone = standalone;
-
-    if (!standalone)
+    m_StandAlone = Manager::Get()->GetConfigManager(_T("todo_list"))->ReadBool(_T("stand_alone"), true);
+    if (!m_StandAlone)
     {
         LogManager* msgMan = Manager::Get()->GetLogManager();
         m_ListPageIndex = msgMan->SetLog(m_pListLog);
@@ -210,11 +203,6 @@ cbConfigurationPanel* ToDoList::GetConfigurationPanel(wxWindow* parent)
 int ToDoList::Configure()
 {
     return 0;
-//    ToDoSettingsDlg dlg;
-//    PlaceWindow(&dlg);
-//    if (dlg.ShowModal() == wxID_OK)
-//        m_AutoRefresh = Manager::Get()->GetConfigManager(_T("todo_list"))->ReadBool(_T("auto_refresh"), true);
-//    return 0;
 }
 
 void ToDoList::LoadUsers()
@@ -259,6 +247,13 @@ void ToDoList::LoadTypes()
 
     wxArrayString selectedTypes;
     Manager::Get()->GetConfigManager(_T("todo_list"))->Read(_T("types_selected"), &selectedTypes);
+
+    if (selectedTypes.GetCount()==0)
+    {
+      // initially, all types are selected
+      for (size_t i=0; i<m_Types.GetCount(); i++)
+        selectedTypes.Add(m_Types[i]);
+    }
 
     m_pListLog->m_pAllowedTypesDlg->SetChecked(selectedTypes);
     SaveTypes();
@@ -371,7 +366,7 @@ void ToDoList::OnAddItem(wxCommandEvent& event)
     }
     else
     {
-        if (dlg.GetPosition() == tdpAbove)
+        if      (dlg.GetPosition() == tdpAbove)
             idx = control->GetLineEndPosition(line - 1); // get previous line's end
         else if (dlg.GetPosition() == tdpBelow)
             idx = control->GetLineEndPosition(line); // get current line's end
@@ -379,7 +374,7 @@ void ToDoList::OnAddItem(wxCommandEvent& event)
         switch (control->GetEOLMode())
         {
             case wxSCI_EOL_CR:
-            case wxSCI_EOL_LF: crlfLen = 1; break;
+            case wxSCI_EOL_LF:   crlfLen = 1; break;
             case wxSCI_EOL_CRLF: crlfLen = 2; break;
         }
         if (idx > 0)
@@ -396,11 +391,14 @@ void ToDoList::OnAddItem(wxCommandEvent& event)
     // start with the comment
     switch(CmtType)
     {
+        case tdctFortran:
+            buffer << _T("!// ");
+            break;
         case tdctCpp:
             buffer << _T("// ");
             break;
         case tdctDoxygenC:
-            buffer << _T(" * ");
+            buffer << _T("/** ");
             break;
         case tdctDoxygenCPP:
             buffer << _T("/// ");
@@ -424,7 +422,7 @@ void ToDoList::OnAddItem(wxCommandEvent& event)
     buffer << _T("(") << dlg.GetUser() << _T("#") << priority << _T("#): ");
 
     wxString text = dlg.GetText();
-    if (CmtType != tdctC)
+    if ( (CmtType != tdctC) && (CmtType != tdctDoxygenC) )
     {
         // make sure that multi-line notes, don't break the todo
         if (text.Replace(_T("\r\n"), _T("\\\r\n")) == 0)
@@ -437,10 +435,10 @@ void ToDoList::OnAddItem(wxCommandEvent& event)
     // add the actual text
     buffer << text;
 
-    if (CmtType == tdctWarning || CmtType == tdctError)
+    if ( (CmtType == tdctWarning) || (CmtType == tdctError) )
         buffer << _T("");
 
-    else if (CmtType == tdctC)
+    else if ( (CmtType == tdctC) || (CmtType == tdctDoxygenC) )
         buffer << _T(" */");
 
     // add newline char(s), only if dlg.GetPosition() != tdpCurrent
@@ -449,9 +447,9 @@ void ToDoList::OnAddItem(wxCommandEvent& event)
         switch (control->GetEOLMode())
         {
             // NOTE: maybe this switch, should make it in the SDK (maybe as cbStyledTextCtrl::GetEOLString())???
-            case wxSCI_EOL_CR: buffer << _T("\n"); break;
+            case wxSCI_EOL_CR: buffer << _T("\r"); break;
             case wxSCI_EOL_CRLF: buffer << _T("\r\n"); break;
-            case wxSCI_EOL_LF: buffer << _T("\r"); break;
+            case wxSCI_EOL_LF: buffer << _T("\n"); break;
         }
     }
 
@@ -468,9 +466,7 @@ void ToDoList::OnAddItem(wxCommandEvent& event)
 void ToDoList::OnReparse(CodeBlocksEvent& event)
 {
     if (m_InitDone && m_AutoRefresh && !(ProjectManager::IsBusy()))
-    {
         Parse();
-    }
     else
     {
         m_ParsePending = true;
@@ -490,9 +486,7 @@ void ToDoList::OnReparseCurrent(CodeBlocksEvent& event)
             Parse();
         }
         else
-        {
             ParseCurrent(forced);
-        }
     }
     event.Skip();
 }

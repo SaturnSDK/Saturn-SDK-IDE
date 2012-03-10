@@ -10,13 +10,15 @@
 #include "sdk_precomp.h"
 
 #ifndef CB_PRECOMP
+    #include <wx/dir.h>
+    #include <wx/settings.h>
+
     #include "globals.h"
     #include "cbeditor.h"
     #include "configmanager.h"
     #include "logmanager.h"
     #include "filemanager.h"
     #include "manager.h"
-    #include <wx/dir.h>
 #endif
 #include "cbstyledtextctrl.h"
 
@@ -104,7 +106,7 @@ void EditorColourSet::LoadAvailableSets()
 
     // user paths first
     wxString path = ConfigManager::GetFolder(sdDataUser) + _T("/lexers/");
-    if (dir.Open(path))
+    if (wxDirExists(path) && dir.Open(path))
     {
         #if wxCHECK_VERSION(2, 9, 0)
         Manager::Get()->GetLogManager()->Log(F(_("Scanning for lexers in %s..."), path.wx_str()));
@@ -124,7 +126,7 @@ void EditorColourSet::LoadAvailableSets()
 
     // global paths next
     path = ConfigManager::GetFolder(sdDataGlobal) + _T("/lexers/");
-    if (dir.Open(path))
+    if (wxDirExists(path) && dir.Open(path))
     {
         #if wxCHECK_VERSION(2, 9, 0)
         Manager::Get()->GetLogManager()->Log(F(_("Scanning for lexers in %s..."), path.wx_str()));
@@ -794,12 +796,12 @@ wxString EditorColourSet::GetSampleCode(HighlightLanguage lang, int* breakLine, 
     // user path first
     wxString path = ConfigManager::GetFolder(sdDataUser) + _T("/lexers/");
     wxFileName fullname( path + shortname );
-    if ( ! fullname.FileExists(path + shortname) )
+    if ( !fullname.FileExists(path + shortname) )
     {
         // global path next
         path = ConfigManager::GetFolder(sdDataGlobal) + _T("/lexers/");
     }
-    if (!mset.m_SampleCode.IsEmpty())
+    if ( !mset.m_SampleCode.IsEmpty() )
         return path + mset.m_SampleCode;
     return wxEmptyString;
 }

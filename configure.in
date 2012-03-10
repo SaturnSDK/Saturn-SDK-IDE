@@ -9,6 +9,8 @@ AC_CANONICAL_TARGET
 AM_INIT_AUTOMAKE([dist-bzip2 no-dist-gzip])
 AC_CONFIG_HEADER([src/include/config.h])
 
+CODEBLOCKS_CHECK_DEBUG
+
 dnl Checks for programs.
 AC_PROG_CXX
 AC_PROG_CPP
@@ -75,7 +77,7 @@ CODEBLOCKS_GET_PLATFORM
 CODEBLOCKS_ENABLE_SETTINGS
 
 AM_OPTIONS_WXCONFIG
-AM_PATH_WXCONFIG(2.8.0, wxWin=1)
+AM_PATH_WXCONFIG(2.8.8, wxWin=1)
         if test "$wxWin" != 1; then
         AC_MSG_ERROR([
                 wxWidgets must be installed on your system.
@@ -123,16 +125,18 @@ case $WX_BASENAME in
         AC_MSG_RESULT(wxGTK)
 		dnl
 		dnl pkg-config no longer needed by debugger plugin
-		dnl but seems to be needed by codesnippets...
+		dnl but is needed by others
 		dnl
 		dnl only do this if it is really needed
 		dnl AM_CONDITIONAL adds _TRUE and _FALSE to the appropriate variables
 		dnl if the condition is true, the *_TRUE variable is empty (!)
-		if test "x$BUILD_CODESNIPPETS_TRUE" = "x" -o \
-				"x$BUILD_FILEMANAGER_TRUE" = "x" -o \
-				"x$BUILD_MOUSESAP_TRUE" = "x" ; then
+		if test "x$BUILD_FILEMANAGER_TRUE" = "x" -o \
+				"x$BUILD_SPELLCHECKER_TRUE" = "x" -o \
+				"x$BUILD_MOUSESAP_TRUE" = "x" -o \
+				"x$GTK_NOTEBOOK_TRUE" = "x" ; then
 
 			AC_CHECK_PROG(HAVE_PKG_CONFIG, pkg-config, yes, no)
+
 			ifdef([PKG_CHECK_MODULES],[],[
 				define([PKG_CHECK_MODULES],
 				[ echo "You don't have pkg.m4 properly installed" >&2
@@ -140,19 +144,34 @@ case $WX_BASENAME in
 				])
 			])
 
-			if test "x$BUILD_CODESNIPPETS_TRUE" = "x" -o \
-					"x$BUILD_MOUSESAP_TRUE" = "x" ; then
+            dnl acoording to pkg-config's manpage this call is bsolutely needed:
+            dnl
+            dnl "Note that if there is a possibility the first call to
+            dnl PKG_CHECK_MODULES might not happen, you should be sure
+            dnl to include an explicit call to PKG_PROG_PKG_CONFIG"
+			PKG_PROG_PKG_CONFIG
+
+			if test "x$BUILD_SPELLCHECKER_TRUE" = "x" ; then
+				if test "x$HAVE_PKG_CONFIG" = "xyes"; then
+					PKG_CHECK_MODULES([HUNSPELL], [hunspell])
+				fi
+			fi
+
+			if test "x$BUILD_MOUSESAP_TRUE" = "x"  -o \
+					"x$GTK_NOTEBOOK_TRUE" = "x" ; then
 				if test "x$HAVE_PKG_CONFIG" = "xyes"; then
 					PKG_CHECK_MODULES([GTK2], [gtk+-2.0 >= 2.0.0])
 				fi
 			fi
+
 			if test "x$BUILD_FILEMANAGER_TRUE" = "x" ; then
 				if test "x$HAVE_PKG_CONFIG" = "xyes"; then
 					PKG_CHECK_MODULES([GAMIN], [gamin])
 				fi
 			fi
+
     	fi
-		
+
 		dnl
 		dnl Check whether the necessary boost-headers are installed
 		dnl a little hacky, but it seems there is no common macro-library
@@ -167,6 +186,8 @@ case $WX_BASENAME in
 
 		CB_GAMIN_CFLAGS="$GAMIN_CFLAGS"
 		CB_GAMIN_LIBS="$GAMIN_LIBS"
+		CB_HUNSPELL_CFLAGS="$HUNSPELL_CFLAGS"
+		CB_HUNSPELL_LIBS="$HUNSPELL_LIBS"
         WX_GTK2_CFLAGS="$GTK2_CFLAGS"
         WX_GTK2_LIBS="$GTK2_LIBS"
         AC_PATH_XTRA
@@ -191,10 +212,23 @@ case $WX_BASENAME in
     ;;
 esac
 
+AC_MSG_CHECKING([for wxWidgets >= 2.9.0])
+AM_CONDITIONAL([HAVE_WX29], [test $WX_VERSION_MAJOR -gt 2 || test $WX_VERSION_MAJOR -eq 2 && test $WX_VERSION_MINOR -ge 9])
+
+if test "x$HAVE_WX29_TRUE" = "x" ; then
+    AC_MSG_RESULT(yes (version $WX_VERSION))
+    AC_MSG_NOTICE([(Re)setting libs for wxWidgets $WX_VERSION])
+    WX_LIBS=`$WX_CONFIG_WITH_ARGS --libs std,aui,propgrid`
+else
+    AC_MSG_RESULT(no)
+fi
+
 AC_SUBST(WX_GTK2_CFLAGS)
 AC_SUBST(WX_GTK2_LIBS)
 AC_SUBST(CB_GAMIN_CFLAGS)
 AC_SUBST(CB_GAMIN_LIBS)
+AC_SUBST(CB_HUNSPELL_CFLAGS)
+AC_SUBST(CB_HUNSPELL_LIBS)
 AC_SUBST(WX_X11_CFLAGS)
 AC_SUBST(WX_X11_LIBS)
 
@@ -389,6 +423,8 @@ AC_CONFIG_FILES([Makefile
 	src/plugins/contrib/profiler/resources/Makefile
 	src/plugins/contrib/source_exporter/Makefile
 	src/plugins/contrib/source_exporter/wxPdfDocument/Makefile
+	src/plugins/contrib/SpellChecker/Makefile
+	src/plugins/contrib/SpellChecker/wxspellchecker/Makefile
 	src/plugins/contrib/symtab/Makefile
 	src/plugins/contrib/symtab/resources/Makefile
 	src/plugins/contrib/regex_testbed/Makefile
@@ -402,6 +438,31 @@ AC_CONFIG_FILES([Makefile
 	src/plugins/contrib/ToolsPlus/Resources/Makefile
 	src/plugins/contrib/Valgrind/Makefile
 	src/plugins/contrib/Valgrind/resources/Makefile
+	src/plugins/contrib/wxContribItems/Makefile
+	src/plugins/contrib/wxContribItems/wxsmith-contrib.pc
+	src/plugins/contrib/wxContribItems/cb_wxcontrib.pc
+	src/plugins/contrib/wxContribItems/cb_wxchartctrl.pc
+	src/plugins/contrib/wxContribItems/cb_wxcustombutton.pc
+	src/plugins/contrib/wxContribItems/cb_wximagepanel.pc
+	src/plugins/contrib/wxContribItems/cb_wxflatnotebook.pc
+	src/plugins/contrib/wxContribItems/cb_wxspeedbutton.pc
+	src/plugins/contrib/wxContribItems/cb_wxKWIC.pc
+	src/plugins/contrib/wxContribItems/cb_wxtreelist.pc
+	src/plugins/contrib/wxContribItems/cb_wxled.pc
+	src/plugins/contrib/wxContribItems/wxchart/Makefile
+	src/plugins/contrib/wxContribItems/wxFlatNotebook/Makefile
+	src/plugins/contrib/wxContribItems/wxImagePanel/Makefile
+	src/plugins/contrib/wxContribItems/wxthings/Makefile
+	src/plugins/contrib/wxContribItems/wxSpeedButton/Makefile
+	src/plugins/contrib/wxContribItems/KWIC/Makefile
+	src/plugins/contrib/wxContribItems/KWIC/include/wx/KWIC/Makefile
+	src/plugins/contrib/wxContribItems/KWIC/include/wx/xrc/Makefile
+	src/plugins/contrib/wxContribItems/wxTreeList/Makefile
+	src/plugins/contrib/wxContribItems/wxled/Makefile
+	src/plugins/contrib/wxContribItems/wxled/gizmosled/include/wx/gizmos/Makefile
+	src/plugins/contrib/wxContribItems/wxled/lcdWindow/include/wx/Makefile
+	src/plugins/contrib/wxContribItems/wxled/led/include/wx/Makefile
+	src/plugins/contrib/wxContribItems/wxled/ledpanel/include/wx/Makefile
 	src/plugins/contrib/wxSmith/Makefile
 	src/plugins/contrib/wxSmith/wxsmith.pc
 	src/plugins/contrib/wxSmith/plugin/Makefile
@@ -411,10 +472,6 @@ AC_CONFIG_FILES([Makefile
 	src/plugins/contrib/wxSmith/wxwidgets/defitems/Makefile
 	src/plugins/contrib/wxSmith/wxwidgets/icons/Makefile
 	src/plugins/contrib/wxSmithContribItems/Makefile
-	src/plugins/contrib/wxSmithContribItems/wxsmith-contrib.pc
-	src/plugins/contrib/wxSmithContribItems/wxchart/wxchart-1.0/Makefile
-	src/plugins/contrib/wxSmithContribItems/wxflatnotebook/wxFlatNotebook/Makefile
-	src/plugins/contrib/wxSmithContribItems/wxthings/wxthings/Makefile
 	src/plugins/contrib/wxSmithAui/Makefile
 	src/plugins/contrib/wxSmithAui/wxsmithaui.pc
 	src/plugins/contrib/lib_finder/Makefile
@@ -427,6 +484,7 @@ AC_CONFIG_FILES([Makefile
 	src/tools/Makefile
 	src/tools/cb_share_config/Makefile
 	src/tools/ConsoleRunner/Makefile
+	src/tools/CBLauncher/Makefile
 	src/templates/Makefile
 	src/templates/common/Makefile
 	src/templates/unix/Makefile

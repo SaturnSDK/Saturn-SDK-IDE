@@ -28,6 +28,7 @@
     #include "compiler.h"
 #endif
 
+#include <wx/stdpaths.h> // wxStandardPaths
 #include <cstdlib>
 
 #include "scripting/sqplus/sqplus.h"
@@ -84,6 +85,24 @@ void MacrosManager::Reset()
     m_RE_If.Compile(_T("\\$if\\(([^)]*)\\)[::space::]*(\\{([^}]*)\\})(\\{([^}]*)\\})?"), wxRE_EXTENDED | wxRE_NEWLINE);
     m_RE_IfSp.Compile(_T("[^=!<>]+|(([^=!<>]+)[ ]*(=|==|!=|>|<|>=|<=)[ ]*([^=!<>]+))"), wxRE_EXTENDED | wxRE_NEWLINE);
     m_RE_Script.Compile(_T("(\\[\\[(.*)\\]\\])"), wxRE_EXTENDED | wxRE_NEWLINE);
+    m_RE_ToAbsolutePath.Compile(_T("\\$TO_ABSOLUTE_PATH{([^}]*)}"),
+#ifndef __WXMAC__
+                                wxRE_ADVANCED);
+#else
+                                wxRE_EXTENDED);
+#endif
+    m_RE_To83Path.Compile(_T("\\$TO_83_PATH{([^}]*)}"),
+#ifndef __WXMAC__
+                                wxRE_ADVANCED);
+#else
+                                wxRE_EXTENDED);
+#endif
+    m_RE_RemoveQuotes.Compile(_T("\\$REMOVE_QUOTES{([^}]*)}"),
+#ifndef __WXMAC__
+                                wxRE_ADVANCED);
+#else
+                                wxRE_EXTENDED);
+#endif
     m_UserVarMan = Manager::Get()->GetUserVariableManager();
     srand(time(0));
     assert(m_RE_Unix.IsValid());
@@ -219,21 +238,21 @@ void MacrosManager::RecalcVars(cbProject* project, EditorBase* editor, ProjectBu
         m_Makefile        = wxEmptyString;
         m_LastProject     = 0;
         ClearProjectKeys();
+        m_Macros[_T("PROJECTFILE")]          = wxEmptyString;
         m_Macros[_T("PROJECT_FILE")]         = wxEmptyString;
+        m_Macros[_T("PROJECTFILENAME")]      = wxEmptyString;
         m_Macros[_T("PROJECT_FILENAME")]     = wxEmptyString;
         m_Macros[_T("PROJECT_FILE_NAME")]    = wxEmptyString;
-        m_Macros[_T("PROJECTFILE")]          = wxEmptyString;
-        m_Macros[_T("PROJECTFILENAME")]      = wxEmptyString;
-        m_Macros[_T("PROJECT_NAME")]         = wxEmptyString;
         m_Macros[_T("PROJECTNAME")]          = wxEmptyString;
-        m_Macros[_T("PROJECT_DIR")]          = wxEmptyString;
-        m_Macros[_T("PROJECT_DIRECTORY")]    = wxEmptyString;
+        m_Macros[_T("PROJECT_NAME")]         = wxEmptyString;
         m_Macros[_T("PROJECTDIR")]           = wxEmptyString;
+        m_Macros[_T("PROJECT_DIR")]          = wxEmptyString;
         m_Macros[_T("PROJECTDIRECTORY")]     = wxEmptyString;
-        m_Macros[_T("PROJECT_TOPDIR")]       = wxEmptyString;
-        m_Macros[_T("PROJECT_TOPDIRECTORY")] = wxEmptyString;
+        m_Macros[_T("PROJECT_DIRECTORY")]    = wxEmptyString;
         m_Macros[_T("PROJECTTOPDIR")]        = wxEmptyString;
+        m_Macros[_T("PROJECT_TOPDIR")]       = wxEmptyString;
         m_Macros[_T("PROJECTTOPDIRECTORY")]  = wxEmptyString;
+        m_Macros[_T("PROJECT_TOPDIRECTORY")] = wxEmptyString;
         m_Macros[_T("MAKEFILE")]             = wxEmptyString;
         m_Macros[_T("ALL_PROJECT_FILES")]    = wxEmptyString;
     }
@@ -248,30 +267,30 @@ void MacrosManager::RecalcVars(cbProject* project, EditorBase* editor, ProjectBu
         m_ProjectTopDir   = UnixFilename(project->GetCommonTopLevelPath());
         m_Makefile        = UnixFilename(project->GetMakefile());
         m_ProjectFiles    = wxEmptyString;
-        for (int i = 0; i < project->GetFilesCount(); ++i)
+        for (FilesList::iterator it = project->GetFilesList().begin(); it != project->GetFilesList().end(); ++it)
         {
             // quote filenames, if they contain spaces
-            wxString out = UnixFilename(project->GetFile(i)->relativeFilename);
+            wxString out = UnixFilename(((ProjectFile*)*it)->relativeFilename);
             QuoteStringIfNeeded(out);
             m_ProjectFiles << out << _T(' ');
         }
 
         ClearProjectKeys();
+        m_Macros[_T("PROJECTFILE")]          = m_ProjectFilename;
         m_Macros[_T("PROJECT_FILE")]         = m_ProjectFilename;
+        m_Macros[_T("PROJECTFILENAME")]      = m_ProjectFilename;
         m_Macros[_T("PROJECT_FILENAME")]     = m_ProjectFilename;
         m_Macros[_T("PROJECT_FILE_NAME")]    = m_ProjectFilename;
-        m_Macros[_T("PROJECTFILE")]          = m_ProjectFilename;
-        m_Macros[_T("PROJECTFILENAME")]      = m_ProjectFilename;
         m_Macros[_T("PROJECTNAME")]          = m_ProjectName;
         m_Macros[_T("PROJECT_NAME")]         = m_ProjectName;
-        m_Macros[_T("PROJECT_DIR")]          = m_ProjectDir;
-        m_Macros[_T("PROJECT_DIRECTORY")]    = m_ProjectDir;
         m_Macros[_T("PROJECTDIR")]           = m_ProjectDir;
+        m_Macros[_T("PROJECT_DIR")]          = m_ProjectDir;
         m_Macros[_T("PROJECTDIRECTORY")]     = m_ProjectDir;
-        m_Macros[_T("PROJECT_TOPDIR")]       = m_ProjectTopDir;
-        m_Macros[_T("PROJECT_TOPDIRECTORY")] = m_ProjectTopDir;
+        m_Macros[_T("PROJECT_DIRECTORY")]    = m_ProjectDir;
         m_Macros[_T("PROJECTTOPDIR")]        = m_ProjectTopDir;
+        m_Macros[_T("PROJECT_TOPDIR")]       = m_ProjectTopDir;
         m_Macros[_T("PROJECTTOPDIRECTORY")]  = m_ProjectTopDir;
+        m_Macros[_T("PROJECT_TOPDIRECTORY")] = m_ProjectTopDir;
         m_Macros[_T("MAKEFILE")]             = m_Makefile;
         m_Macros[_T("ALL_PROJECT_FILES")]    = m_ProjectFiles;
 
@@ -370,6 +389,25 @@ void MacrosManager::RecalcVars(cbProject* project, EditorBase* editor, ProjectBu
     m_Macros[_T("ACTIVE_EDITOR_COLUMN_0")] = temp_str;
     m_Macros[_T("ACTIVE_EDITOR_SELECTION")] = GetSelectedText();
 
+    // Wrapper for WX standard path's methods:
+
+    // Unix: prefix/share/appname   Windows: EXE path
+    m_Macros[_T("GET_DATA_DIR")]            = ((const wxStandardPaths&)wxStandardPaths::Get()).GetDataDir();
+    // Unix: /etc/appname   Windows: EXE path
+    m_Macros[_T("GET_LOCAL_DATA_DIR")]      = ((const wxStandardPaths&)wxStandardPaths::Get()).GetLocalDataDir();
+    // Unix: ~   Windows: C:\Documents and Settings\username\Documents
+    m_Macros[_T("GET_DOCUMENTS_DIR")]       = ((const wxStandardPaths&)wxStandardPaths::Get()).GetDocumentsDir();
+    // Unix: /etc   Windows: C:\Documents and Settings\All Users\Application Data
+    m_Macros[_T("GET_CONFIG_DIR")]          = ((const wxStandardPaths&)wxStandardPaths::Get()).GetConfigDir();
+    // Unix: ~   Windows: C:\Documents and Settings\username\Application Data\appname
+    m_Macros[_T("GET_USER_CONFIG_DIR")]     = ((const wxStandardPaths&)wxStandardPaths::Get()).GetUserConfigDir();
+    // Unix: ~/.appname   Windows: C:\Documents and Settings\username\Application Data
+    m_Macros[_T("GET_USER_DATA_DIR")]       = ((const wxStandardPaths&)wxStandardPaths::Get()).GetUserDataDir();
+    // Unix: ~/.appname   Windows: C:\Documents and Settings\username\Local Settings\Application Data\appname
+    m_Macros[_T("GET_USER_LOCAL_DATA_DIR")] = ((const wxStandardPaths&)wxStandardPaths::Get()).GetUserLocalDataDir();
+    // ALl platforms: A writable, temporary directory
+    m_Macros[_T("GET_TEMP_DIR")]            = ((const wxStandardPaths&)wxStandardPaths::Get()).GetTempDir();
+
     wxDateTime now(wxDateTime::Now());
     m_Macros[_T("TDAY")]        = now.Format(_T("%Y%m%d"));
     m_Macros[_T("TODAY")]       = now.Format(_T("%Y-%m-%d"));
@@ -440,6 +478,37 @@ void MacrosManager::ReplaceMacros(wxString& buffer, ProjectBuildTarget* target, 
         buffer.Replace(search, replace, false);
     }
 
+    while (m_RE_ToAbsolutePath.Matches(buffer))
+    {
+        search = m_RE_ToAbsolutePath.GetMatch(buffer, 0);
+        const wxString relativePath = m_RE_ToAbsolutePath.GetMatch(buffer, 1);
+        wxFileName fn(relativePath);
+        fn.MakeAbsolute();
+        replace = fn.GetFullPath();
+        buffer.Replace(search, replace, false);
+    }
+
+    while (m_RE_To83Path.Matches(buffer))
+    {
+        search = m_RE_To83Path.GetMatch(buffer, 0);
+        const wxString path = m_RE_To83Path.GetMatch(buffer, 1);
+        wxFileName fn(path);
+        fn.MakeAbsolute(); // make absolute before translating to 8.3 notation
+        replace = fn.GetShortPath();
+        buffer.Replace(search, replace, false);
+    }
+
+    while (m_RE_RemoveQuotes.Matches(buffer))
+    {
+        search = m_RE_RemoveQuotes.GetMatch(buffer, 0);
+        const wxString content = m_RE_RemoveQuotes.GetMatch(buffer, 1);
+        if (content.Len()>2 && content.StartsWith(wxT("\"")) && content.EndsWith(wxT("\"")))
+        {
+            replace = content.Mid(1,content.Len()-2); // with first and last char (the quotes) removed
+            buffer.Replace(search, replace, false);
+        }
+    }
+
     while (m_RE_Unix.Matches(buffer))
     {
         replace.Empty();
@@ -501,7 +570,6 @@ void MacrosManager::ReplaceMacros(wxString& buffer, ProjectBuildTarget* target, 
 
         buffer.Replace(search, replace, false);
     }
-
 
     if (!subrequest)
     {

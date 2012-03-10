@@ -7,11 +7,10 @@
 #define PREP_H
 
 #ifndef wxMAJOR_VERSION
-#include <wx/version.h>
+    #include <wx/version.h>
 #endif
 
-#if (  __GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 6) ) \
-    && !defined __GXX_EXPERIMENTAL_CXX0X__
+#if !(__GNUC__ == 4 && __GNUC_MINOR__ >= 6 && defined __GXX_EXPERIMENTAL_CXX0X__)
 // it is a const object...
 const class nullptr_t
 {
@@ -32,8 +31,8 @@ private:
     const nullptr_t& operator=(const nullptr_t&);
 } nullptr;
 
-template<typename T> inline bool operator==(const nullptr_t& lhs, T const& rhs) { return lhs.equals(rhs); }
-template<typename T> inline bool operator==(T const& lhs, const nullptr_t& rhs) { return rhs.equals(lhs); }
+template<typename T> inline bool operator==(const nullptr_t& lhs, T const& rhs) { return  lhs.equals(rhs); }
+template<typename T> inline bool operator==(T const& lhs, const nullptr_t& rhs) { return  rhs.equals(lhs); }
 template<typename T> inline bool operator!=(const nullptr_t& lhs, T const& rhs) { return !lhs.equals(rhs); }
 template<typename T> inline bool operator!=(T const& lhs, const nullptr_t& rhs) { return !rhs.equals(lhs); }
 #endif
@@ -169,7 +168,7 @@ namespace platform
     const bool unicode = false;
     #endif
 
-    #if   defined ( __WIN32__ )
+    #if   defined ( __WIN32__ ) || defined ( _WIN64 )
     const identifier id = platform_windows;
     #elif defined ( __WXMAC__ )  || defined ( __WXCOCOA__ )
     const identifier id = platform_macosx;
@@ -353,5 +352,13 @@ template<typename whatever> inline ID GetID()
 inline ID GetID() { return GetID<void>(); };
 inline ID ConstructID(unsigned int i) { return ID(i); };
 
+
+#if defined(__APPLE__) && defined(__MACH__)
+    #define CB_LIBRARY_ENVVAR _T("DYLD_LIBRARY_PATH")
+#elif !defined(__WXMSW__)
+    #define CB_LIBRARY_ENVVAR _T("LD_LIBRARY_PATH")
+#else
+    #define CB_LIBRARY_ENVVAR _T("PATH")
+#endif
 
 #endif

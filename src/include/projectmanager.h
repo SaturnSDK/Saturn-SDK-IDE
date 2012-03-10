@@ -30,6 +30,38 @@ class cbWorkspace;
 class cbAuiNotebook;
 class wxAuiNotebookEvent;
 
+/*
+    This is a "proxy" wxTreeCtrl descendant handles several usage limitations.
+*/
+class cbTreeCtrl : public wxTreeCtrl
+{
+    public:
+        cbTreeCtrl();
+        cbTreeCtrl(wxWindow* parent, int id);
+        void SetCompareFunction(const int ptvs);
+    protected:
+#ifndef __WXMSW__
+/*
+        Under wxGTK, wxTreeCtrl is not sending an EVT_COMMAND_RIGHT_CLICK
+        event when right-clicking on the client area.
+*/
+        void OnRightClick(wxMouseEvent& event);
+#endif // !__WXMSW__
+/*
+        Under all platforms there is no reaction when pressing "ENTER".
+        Expected would be e.g. to open the file in an editor.
+*/
+        void OnKeyDown(wxKeyEvent& event);
+
+        static int filesSort(const ProjectFile* arg1, const ProjectFile* arg2);
+        static int filesSortNameOnly(const ProjectFile* arg1, const ProjectFile* arg2);
+        int OnCompareItems(const wxTreeItemId& item1, const wxTreeItemId& item2);
+        int (*Compare)(const ProjectFile* arg1, const ProjectFile* arg2);
+
+        DECLARE_DYNAMIC_CLASS(cbTreeCtrl)
+        DECLARE_EVENT_TABLE();
+};
+
 DLLIMPORT extern int ID_ProjectManager; /* Used by both Project and Editor Managers */
 WX_DEFINE_ARRAY(cbProject*, ProjectsArray);
 WX_DECLARE_HASH_MAP(cbProject*, ProjectsArray*, wxPointerHash, wxPointerEqual, DepsMap); // for project dependencies
@@ -59,10 +91,10 @@ class DLLIMPORT ProjectManager : public Mgr<ProjectManager>, public wxEvtHandler
         const FilesGroupsAndMasks* GetFilesGroupsAndMasks() const { return m_pFileGroups; }
 
         /// Can the app shutdown? (actually: is ProjectManager busy at the moment?)
-        static bool CanShutdown(){ return s_CanShutdown; }
+        static bool CanShutdown() { return s_CanShutdown; }
 #ifndef CB_FOR_CONSOLE
         /// Application menu creation. Called by the application only.
-        static void CreateMenu(wxMenuBar* menuBar);
+        void CreateMenu(wxMenuBar* menuBar);
         /// Application menu removal. Called by the application only.
         void ReleaseMenu(wxMenuBar* menuBar);
 #endif // #ifndef CB_FOR_CONSOLE
@@ -110,6 +142,12 @@ class DLLIMPORT ProjectManager : public Mgr<ProjectManager>, public wxEvtHandler
           * is returned. Else the return value is NULL.
           */
         cbProject* LoadProject(const wxString& filename, bool activateIt = true);
+
+        /** Reloads a project and tries to keep everything the same (project order, dependencies, active project)
+          * @param project the project that will be reloaded, the pointer will be invalid after the call.
+          */
+        void ReloadProject(cbProject *project);
+
 #ifndef CB_FOR_CONSOLE
         /** Save a project to disk.
           * @param project A pointer to the project to save.
@@ -382,7 +420,18 @@ class DLLIMPORT ProjectManager : public Mgr<ProjectManager>, public wxEvtHandler
         /** Retrieve a pointer to the project manager's tree (GUI).
           * @return A pointer to a wxTreeCtrl window.
           */
-        wxTreeCtrl* GetTree(){ return m_pTree; }
+        cbTreeCtrl* GetTree(){ return m_pTree; }
+        /** Get the selection of the project manager's tree (GUI).
+          * This must be used instead of tree->GetSelection() because the tree
+          * has the wxTR_MULTIPLE style.
+          * This usually returns the first item in the selection list, but
+          * if there is a right-click popup menu then the user may have
+          * selected several items and right-clicked on one, so return the
+          * right-click item instead.
+          * of the first
+          * @return A wxTreeItemId of the selected tree item.
+          */
+        wxTreeItemId GetTreeSelection();
         /** Retrieve a pointer to the project manager's panel (GUI). This panel
           * is the parent of the project manager's tree obtained through GetTree().
           * @return A pointer to a wxPanel window.
@@ -440,9 +489,10 @@ class DLLIMPORT ProjectManager : public Mgr<ProjectManager>, public wxEvtHandler
 
         ProjectManager& operator=(const ProjectManager& /*rhs*/) // prevent assignment operator
         {
-        	cbThrow(_T("Can't assign a ProjectManager* !!!"));
-        	return *this;
-		}
+            cbThrow(_T("Can't assign a ProjectManager* !!!"));
+            return *this;
+        }
+
     private:
         ProjectManager(const ProjectManager& /*rhs*/); // prevent copy construction
 
@@ -461,7 +511,9 @@ class DLLIMPORT ProjectManager : public Mgr<ProjectManager>, public wxEvtHandler
 
         void InitPane();
         void BuildTree();
+        void CreateMenuTreeProps(wxMenu* menu, bool popup);
         void ShowMenu(wxTreeItemId id, const wxPoint& pt);
+
         void OnTabContextMenu(wxAuiNotebookEvent& event);
         void OnTabPosition(wxCommandEvent& event);
         void OnProjectFileActivated(wxTreeEvent& event);
@@ -491,6 +543,7 @@ class DLLIMPORT ProjectManager : public Mgr<ProjectManager>, public wxEvtHandler
         void OnGotoFile(wxCommandEvent& event);
         void OnViewCategorize(wxCommandEvent& event);
         void OnViewUseFolders(wxCommandEvent& event);
+        void OnViewHideFolderName(wxCommandEvent& event);
         void OnViewFileMasks(wxCommandEvent& event);
         void OnFindFile(wxCommandEvent& event);
         wxTreeItemId FindItem(wxTreeItemId Node, const wxString& Search) const;
@@ -507,36 +560,36 @@ class DLLIMPORT ProjectManager : public Mgr<ProjectManager>, public wxEvtHandler
 
         void DoOpenSelectedFile();
         void DoOpenFile(ProjectFile* pf, const wxString& filename);
-        int DoAddFileToProject(const wxString& filename, cbProject* project, wxArrayInt& targets);
+        int  DoAddFileToProject(const wxString& filename, cbProject* project, wxArrayInt& targets);
         void RemoveFilesRecursively(wxTreeItemId& sel_id);
         void OpenFilesRecursively(wxTreeItemId& sel_id);
 
-        cbAuiNotebook* m_pNotebook;
-        wxTreeCtrl* m_pTree;
-        wxTreeItemId m_TreeRoot;
+        cbAuiNotebook*       m_pNotebook;
+        cbTreeCtrl*          m_pTree;
+        wxTreeItemId         m_TreeRoot;
 #endif // #ifndef CB_FOR_CONSOLE
-        cbProject* m_pActiveProject;
-        cbProject* m_pProjectToActivate;
+        cbProject*           m_pActiveProject;
+        cbProject*           m_pProjectToActivate;
 #ifndef CB_FOR_CONSOLE
-        wxImageList* m_pImages;
+        wxImageList*         m_pImages;
 #endif // #ifndef CB_FOR_CONSOLE
-        ProjectsArray* m_pProjects;
-        DepsMap m_ProjectDeps;
-        cbWorkspace* m_pWorkspace;
-        bool m_TreeCategorize;
-        bool m_TreeUseFolders;
+        ProjectsArray*       m_pProjects;
+        DepsMap              m_ProjectDeps;
+        cbWorkspace*         m_pWorkspace;
+        int                  m_TreeVisualState;
         FilesGroupsAndMasks* m_pFileGroups;
-        int m_TreeFreezeCounter;
-        bool m_IsLoadingProject;
-        bool m_IsLoadingWorkspace;
-        bool m_IsClosingProject;
-        bool m_IsClosingWorkspace;
-        wxString m_InitialDir;
+        int                  m_TreeFreezeCounter;
+        bool                 m_IsLoadingProject;
+        bool                 m_IsLoadingWorkspace;
+        bool                 m_IsClosingProject;
+        bool                 m_IsClosingWorkspace;
+        wxString             m_InitialDir;
 #ifndef CB_FOR_CONSOLE
-        wxTreeItemId m_DraggingItem;
+        wxArrayTreeItemIds   m_DraggingSelection;
+        wxTreeItemId         m_RightClickItem;
 #endif // #ifndef CB_FOR_CONSOLE
-        bool m_isCheckingForExternallyModifiedProjects;
-        bool m_CanSendWorkspaceChanged;
+        bool                 m_isCheckingForExternallyModifiedProjects;
+        bool                 m_CanSendWorkspaceChanged;
 
         DECLARE_EVENT_TABLE()
 };

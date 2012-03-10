@@ -7,13 +7,14 @@
 		<Option compiler="gcc" />
 		<Build>
 			<Target title="default">
-				<Option output="../../../devel/share/codeblocks/plugins/ThreadSearch.so" prefix_auto="0" extension_auto="0" />
+				<Option output="../../../devel/share/codeblocks/plugins/ThreadSearch" prefix_auto="1" extension_auto="1" />
 				<Option object_output="../../../.objs/plugins/contrib/ThreadSearch" />
 				<Option external_deps="../../../devel/libwxcustombutton.so;" />
 				<Option type="3" />
 				<Option compiler="gcc" />
 				<Option parameters="--debug-log --multiple-instance -ns -ni" />
 				<Option host_application="../../../devel/codeblocks" />
+				<Option run_host_application_in_terminal="0" />
 			</Target>
 		</Build>
 		<VirtualTargets>
@@ -34,10 +35,11 @@
 			<Add directory="../../../include" />
 			<Add directory="../../../sdk/wxscintilla/include" />
 			<Add directory="../../../include/mozilla_chardet" />
-			<Add directory="../wxSmithContribItems/wxthings/wxthings/include" />
+			<Add directory="../wxContribItems/wxthings/include" />
 		</Compiler>
 		<Linker>
 			<Add option="`wx-config --libs`" />
+			<Add option="-z defs" />
 			<Add library="codeblocks" />
 			<Add library="wxcustombutton" />
 			<Add directory="../../../devel" />

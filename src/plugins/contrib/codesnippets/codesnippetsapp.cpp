@@ -24,7 +24,7 @@
 	along with this program; if not, write to the Free Software
 	Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-// RCS-ID: $Id: codesnippetsapp.cpp 103 2007-10-30 19:17:39Z Pecan $
+// RCS-ID: $Id$
 
 #ifdef WX_PRECOMP //
 #include "wx_pch.h"
@@ -49,6 +49,8 @@
 #include <mach-o/dyld.h>
 #endif
 
+#include "prep.h"
+#include "xtra_res.h"
 #include "configmanager.h"
 #include "seditormanager.h"
 
@@ -832,7 +834,7 @@ void CodeSnippetsAppFrame::OnActivate(wxActivateEvent& event)
     if ( m_bOnActivateBusy ) {event.Skip();return;}
     ++m_bOnActivateBusy;
     #if defined(LOGGING)
-    LOGIT( _T("CodeSnippetsAppFrame::OnActivate[%d]"), m_bOnActivateBusy);
+    //LOGIT( _T("CodeSnippetsAppFrame::OnActivate[%d]"), m_bOnActivateBusy);
     #endif
     do{ //only once
         // Check that it's us that got activated
@@ -1157,6 +1159,7 @@ bool CodeSnippetsAppFrame::InitializeSDK()
     //-wxXmlResource::Get()->InsertHandler(new wxToolBarAddOnXmlHandler);
     wxInitAllImageHandlers();
     wxXmlResource::Get()->InitAllHandlers();
+    wxXmlResource::Get()->InsertHandler(new wxScrollingDialogXmlHandler);
 
     // ---------------------
     // sdk initialization
@@ -1290,6 +1293,8 @@ wxString CodeSnippetsAppFrame::GetAppPath()
 bool CodeSnippetsAppFrame::InitXRCStuff()
 // ----------------------------------------------------------------------------
 {
+    // This seems to be loaded by Manager::Get(this)-> above
+    //-Manager::LoadResource(_T("manager_resources.zip"));
     if (!Manager::LoadResource(_T("resources.zip")))
 	{
 		ComplainBadInstall();
@@ -1415,8 +1420,7 @@ void CodeSnippetsAppFrame::ImportCBResources()
         //.ini must be in .exe folder to receive .conf
         if (appConfigFolder == appExeFolder)
         if (not wxFileExists(appExeFolder + _T("/default.conf")) )
-        {   bool copied = false;
-            copied = wxCopyFile( fileToCopy, appExeFolder+_T("/default.conf") );
+        {   bool copied = wxCopyFile( fileToCopy, appExeFolder+_T("/default.conf") );
             #if defined(LOGGING)
             LOGIT( _T("Copy [%s][%s][%s]"), fileToCopy.c_str(), cbConfigFolder.c_str(), copied?_T("OK"):_T("FAILED"));
             #endif

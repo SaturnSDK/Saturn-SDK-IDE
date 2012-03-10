@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<resource>
+<resource xmlns="http://www.wxwidgets.org/wxxrc">
 	<object class="wxPanel" name="dlgCompilerOptions">
 		<object class="wxBoxSizer">
 			<orient>wxVERTICAL</orient>
@@ -87,7 +87,7 @@
 							<object class="sizeritem">
 								<object class="wxNotebook" name="nbMain">
 									<size>600,-1</size>
-									<style>wxNB_DEFAULT|wxHSCROLL</style>
+									<style>wxNB_DEFAULT</style>
 									<object class="notebookpage">
 										<object class="wxPanel" name="tabCompiler">
 											<object class="wxBoxSizer">
@@ -382,7 +382,7 @@
 																			</object>
 																			<object class="sizeritem">
 																				<object class="wxListBox" name="lstIncludeDirs">
-																					<style>wxLB_SINGLE|wxLB_HSCROLL|wxLB_NEEDED_SB</style>
+																					<style>wxLB_MULTIPLE|wxLB_HSCROLL|wxLB_NEEDED_SB</style>
 																				</object>
 																				<flag>wxALL|wxEXPAND|wxALIGN_LEFT|wxALIGN_TOP</flag>
 																				<border>8</border>
@@ -432,7 +432,7 @@
 																			</object>
 																			<object class="sizeritem">
 																				<object class="wxListBox" name="lstLibDirs">
-																					<style>wxLB_SINGLE|wxLB_HSCROLL|wxLB_NEEDED_SB</style>
+																					<style>wxLB_MULTIPLE|wxLB_HSCROLL|wxLB_NEEDED_SB</style>
 																				</object>
 																				<flag>wxALL|wxEXPAND|wxALIGN_LEFT|wxALIGN_TOP</flag>
 																				<border>8</border>
@@ -482,7 +482,7 @@
 																			</object>
 																			<object class="sizeritem">
 																				<object class="wxListBox" name="lstResDirs">
-																					<style>wxLB_SINGLE|wxLB_HSCROLL|wxLB_NEEDED_SB</style>
+																					<style>wxLB_MULTIPLE|wxLB_HSCROLL|wxLB_NEEDED_SB</style>
 																				</object>
 																				<flag>wxALL|wxEXPAND|wxALIGN_LEFT|wxALIGN_TOP</flag>
 																				<border>8</border>
@@ -540,7 +540,7 @@
 														</object>
 														<object class="sizeritem">
 															<object class="wxButton" name="btnCopyDirs">
-																<label>Copy all to...</label>
+																<label>Copy to...</label>
 															</object>
 															<flag>wxALIGN_LEFT|wxALIGN_TOP</flag>
 														</object>

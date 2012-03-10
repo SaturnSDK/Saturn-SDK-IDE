@@ -168,7 +168,7 @@ namespace ScriptBindings
 //        {
 //            cbProject* prj = SqPlus::GetInstance<cbProject,false>(v, 1);
 //            if (sa.GetType(2) == OT_INTEGER)
-//                return sa.Return(prj->RemoveFile(sa.GetInt(2)));
+//                return sa.ThrowError("Invalid arguments to \"cbProject::RemoveFile\"");
 //            else
 //                return sa.Return(prj->RemoveFile(SqPlus::GetInstance<ProjectFile,false>(v, 2)));
 //        }
@@ -408,7 +408,8 @@ namespace ScriptBindings
 //                var(&ProjectFile::compile, "compile").
 //                var(&ProjectFile::link, "link").
 //                var(&ProjectFile::weight, "weight").
-//                var(&ProjectFile::compilerVar, "compilerVar");
+//                var(&ProjectFile::compilerVar, "compilerVar").
+//                var(&ProjectFile::buildTargets, "buildTargets");
 //
 //        SqPlus::SQClassDef<CompileOptionsBase>("CompileOptionsBase").
 //                func(&CompileOptionsBase::AddPlatform, "AddPlatform").
@@ -509,7 +510,9 @@ namespace ScriptBindings
 //                func(&ProjectBuildTarget::GetCreateStaticLib, "GetCreateStaticLib").
 //                func(&ProjectBuildTarget::SetCreateStaticLib, "SetCreateStaticLib").
 //                func(&ProjectBuildTarget::GetUseConsoleRunner, "GetUseConsoleRunner").
-//                func(&ProjectBuildTarget::SetUseConsoleRunner, "SetUseConsoleRunner");
+//                func(&ProjectBuildTarget::SetUseConsoleRunner, "SetUseConsoleRunner").
+                func(&ProjectBuildTarget::GetFilesCount, "GetFilesCount").
+                func(&ProjectBuildTarget::GetFile, "GetFile");
 
         SqPlus::SQClassDef<cbProject>("cbProject", "CompileTargetBase").
 //                func(&cbProject::GetModified, "GetModified").

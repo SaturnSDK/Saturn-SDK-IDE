@@ -9,23 +9,34 @@
 		<Build>
 			<Target title="wxSmithLib">
 				<Option platforms="Unix;Mac;" />
-				<Option output="../../../devel/libwxsmithlib" prefix_auto="1" extension_auto="1" />
+				<Option output="../../../devel/wxsmithlib" prefix_auto="1" extension_auto="1" />
 				<Option object_output="../../../.objs/plugins/contrib/wxSmith" />
 				<Option type="3" />
 				<Option compiler="gcc" />
 				<Option parameters="--debug-log --multiple-instance -ns" />
 				<Option createStaticLib="1" />
+				<Compiler>
+					<Add option="`wx-config --cflags`" />
+				</Compiler>
+				<Linker>
+					<Add option="`wx-config --libs`" />
+				</Linker>
 			</Target>
 			<Target title="wxSmith">
 				<Option platforms="Unix;Mac;" />
-				<Option output="../../../devel/share/codeblocks/plugins/libwxsmith.so" prefix_auto="0" extension_auto="0" />
+				<Option output="../../../devel/share/codeblocks/plugins/wxsmith" prefix_auto="1" extension_auto="1" />
 				<Option object_output="../../../.objs/plugins/contrib/wxSmith" />
 				<Option type="3" />
 				<Option compiler="gcc" />
 				<Option parameters="--debug-log --multiple-instance -ns -ni" />
 				<Option host_application="../../../devel/codeblocks" />
+				<Compiler>
+					<Add option="`wx-config --cflags`" />
+				</Compiler>
 				<Linker>
+					<Add option="`wx-config --libs`" />
 					<Add library="wxsmithlib" />
+					<Add library="wxpropgrid" />
 				</Linker>
 			</Target>
 		</Build>
@@ -108,6 +119,12 @@
 			<Option target="wxSmithLib" />
 		</Unit>
 		<Unit filename="properties/wxsflagsproperty.h">
+			<Option target="wxSmithLib" />
+		</Unit>
+		<Unit filename="properties/wxsfloatproperty.cpp">
+			<Option target="wxSmithLib" />
+		</Unit>
+		<Unit filename="properties/wxsfloatproperty.h">
 			<Option target="wxSmithLib" />
 		</Unit>
 		<Unit filename="properties/wxslongproperty.cpp">
@@ -381,6 +398,12 @@
 			<Option target="wxSmithLib" />
 		</Unit>
 		<Unit filename="wxwidgets/defitems/wxsdirdialog.h">
+			<Option target="wxSmithLib" />
+		</Unit>
+		<Unit filename="wxwidgets/defitems/wxsdirpickerctrl.cpp">
+			<Option target="wxSmithLib" />
+		</Unit>
+		<Unit filename="wxwidgets/defitems/wxsdirpickerctrl.h">
 			<Option target="wxSmithLib" />
 		</Unit>
 		<Unit filename="wxwidgets/defitems/wxsfiledialog.cpp">
@@ -887,10 +910,22 @@
 		<Unit filename="wxwidgets/properties/wxsfontproperty.h">
 			<Option target="wxSmithLib" />
 		</Unit>
-		<Unit filename="wxwidgets/properties/wxsimagelistdlg.cpp">
+		<Unit filename="wxwidgets/properties/wxsimagecomboeditordlg.cpp">
 			<Option target="wxSmithLib" />
 		</Unit>
-		<Unit filename="wxwidgets/properties/wxsimagelistdlg.h">
+		<Unit filename="wxwidgets/properties/wxsimagecomboeditordlg.h">
+			<Option target="wxSmithLib" />
+		</Unit>
+		<Unit filename="wxwidgets/properties/wxsimagecomboproperty.cpp">
+			<Option target="wxSmithLib" />
+		</Unit>
+		<Unit filename="wxwidgets/properties/wxsimagecomboproperty.h">
+			<Option target="wxSmithLib" />
+		</Unit>
+		<Unit filename="wxwidgets/properties/wxsimagelisteditordlg.cpp">
+			<Option target="wxSmithLib" />
+		</Unit>
+		<Unit filename="wxwidgets/properties/wxsimagelisteditordlg.h">
 			<Option target="wxSmithLib" />
 		</Unit>
 		<Unit filename="wxwidgets/properties/wxsimagelistproperty.cpp">
@@ -903,6 +938,18 @@
 			<Option target="wxSmithLib" />
 		</Unit>
 		<Unit filename="wxwidgets/properties/wxsimageproperty.h">
+			<Option target="wxSmithLib" />
+		</Unit>
+		<Unit filename="wxwidgets/properties/wxsimagetreeeditordlg.cpp">
+			<Option target="wxSmithLib" />
+		</Unit>
+		<Unit filename="wxwidgets/properties/wxsimagetreeeditordlg.h">
+			<Option target="wxSmithLib" />
+		</Unit>
+		<Unit filename="wxwidgets/properties/wxsimagetreeproperty.cpp">
+			<Option target="wxSmithLib" />
+		</Unit>
+		<Unit filename="wxwidgets/properties/wxsimagetreeproperty.h">
 			<Option target="wxSmithLib" />
 		</Unit>
 		<Unit filename="wxwidgets/properties/wxspositionsizeproperty.cpp">
@@ -1179,7 +1226,9 @@
 					<wxScrollingDialog wxs="wxsmith/wxsFontEditorDlg.wxs" src="wxwidgets/properties/wxsfonteditordlg.cpp" hdr="wxwidgets/properties/wxsfonteditordlg.h" fwddecl="0" i18n="1" name="wxsFontEditorDlg" language="CPP" />
 					<wxScrollingDialog wxs="wxsmith/wxsFontFaceEditorDlg.wxs" src="wxwidgets/properties/wxsfontfaceeditordlg.cpp" hdr="wxwidgets/properties/wxsfontfaceeditordlg.h" fwddecl="0" i18n="1" name="wxsFontFaceEditorDlg" language="CPP" />
 					<wxScrollingDialog wxs="wxsmith/wxsSimpleFontEditorDlg.wxs" src="wxwidgets/properties/wxssimplefonteditordlg.cpp" hdr="wxwidgets/properties/wxssimplefonteditordlg.h" fwddecl="0" i18n="1" name="wxsSimpleFontEditorDlg" language="CPP" />
-					<wxScrollingDialog wxs="wxsmith/wxsImageListDlg.wxs" src="wxwidgets/properties/wxsimagelistdlg.cpp" hdr="wxwidgets/properties/wxsimagelistdlg.h" fwddecl="0" i18n="1" name="wxsImageListDlg" language="CPP" />
+					<wxScrollingDialog wxs="wxsmith/wxsImageListEditorDlg.wxs" src="wxwidgets/properties/wxsimagelisteditordlg.cpp" hdr="wxwidgets/properties/wxsimagelisteditordlg.h" fwddecl="0" i18n="1" name="wxsImageListEditorDlg" language="CPP" />
+					<wxScrollingDialog wxs="wxsmith/wxsImageComboEditorDlg.wxs" src="wxwidgets/properties/wxsimagecomboeditordlg.cpp" hdr="wxwidgets/properties/wxsimagecomboeditordlg.h" fwddecl="0" i18n="1" name="wxsImageComboEditorDlg" language="CPP" />
+					<wxScrollingDialog wxs="wxsmith/wxsImageTreeEditorDlg.wxs" src="wxwidgets/properties/wxsimagetreeeditordlg.cpp" hdr="wxwidgets/properties/wxsimagetreeeditordlg.h" fwddecl="0" i18n="1" name="wxsImageTreeEditorDlg" language="CPP" />
 					<wxPanel wxs="wxsmith/wxWidgetsGUIConfigPanel.wxs" src="wxwidgets/wxwidgetsguiconfigpanel.cpp" hdr="wxwidgets/wxwidgetsguiconfigpanel.h" fwddecl="0" i18n="1" name="wxWidgetsGUIConfigPanel" language="CPP" />
 					<wxPanel wxs="wxsmith/wxsSizerParentQP.wxs" src="wxwidgets/wxssizerparentqp.cpp" hdr="wxwidgets/wxssizerparentqp.h" fwddecl="0" i18n="1" name="wxsSizerParentQP" language="CPP" />
 					<wxPanel wxs="wxsmith/wxsNotebookParentQP.wxs" src="wxwidgets/defitems/wxsnotebook.cpp" hdr="wxwidgets/defitems/wxsnotebook.cpp" fwddecl="0" i18n="1" name="wxsNotebookParentQP" language="CPP" />

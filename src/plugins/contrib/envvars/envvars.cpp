@@ -25,6 +25,8 @@
 #endif
 
 #include "projectloader_hooks.h"
+#include <sqplus.h>
+#include <sc_base_types.h>
 
 #include "envvars_common.h"
 #include "envvars_cfgdlg.h"
@@ -67,18 +69,18 @@ EnvVars::~EnvVars()
 
 void EnvVars::SetProjectEnvvarSet(cbProject* project, const wxString& envvar_set)
 {
-#if TRACE_ENVVARS
+#if defined(TRACE_ENVVARS)
   Manager::Get()->GetLogManager()->DebugLog(F(_T("SetProjectEnvvarSet")));
 #endif
 
   m_ProjectSets[project] = envvar_set;
   EV_DBGLOG(_T("EnvVars: Discarding envvars set '")+nsEnvVars::GetActiveSetName()+_T("'."));
-  nsEnvVars::EnvvarSetDiscard(); // remove currently active envvars
+  nsEnvVars::EnvvarSetDiscard(wxEmptyString); // remove currently active envvars
   if (envvar_set.IsEmpty())
     EV_DBGLOG(_T("EnvVars: Setting up default envvars set."));
   else
     EV_DBGLOG(_T("EnvVars: Setting up envvars set '")+envvar_set+_T("' for activated project."));
-  nsEnvVars::EnvvarSetApply(envvar_set); // apply currently active envvar set for wxEmptyString
+  nsEnvVars::EnvvarSetApply(envvar_set, true); // apply currently active envvar set for wxEmptyString
 }// SetProjectEnvvarSet
 
 // ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- -----
@@ -86,7 +88,7 @@ void EnvVars::SetProjectEnvvarSet(cbProject* project, const wxString& envvar_set
 void EnvVars::OnProjectLoadingHook(cbProject* project, TiXmlElement* elem,
                                    bool loading)
 {
-#if TRACE_ENVVARS
+#if defined(TRACE_ENVVARS)
   Manager::Get()->GetLogManager()->DebugLog(F(_T("OnProjectLoadingHook")));
 #endif
 
@@ -125,7 +127,7 @@ void EnvVars::OnProjectLoadingHook(cbProject* project, TiXmlElement* elem,
 
 void EnvVars::OnProjectActivated(CodeBlocksEvent& event)
 {
-#if TRACE_ENVVARS
+#if defined(TRACE_ENVVARS)
   Manager::Get()->GetLogManager()->DebugLog(F(_T("OnProjectActivated")));
 #endif
 
@@ -141,14 +143,14 @@ void EnvVars::OnProjectActivated(CodeBlocksEvent& event)
       {
         EV_DBGLOG(_T("EnvVars: Discarding envvars set '")
                  +nsEnvVars::GetActiveSetName()+_T("'."));
-        nsEnvVars::EnvvarSetDiscard(); // Remove currently active envvars
+        nsEnvVars::EnvvarSetDiscard(wxEmptyString); // Remove currently active envvars
         if (prj_envvar_set.IsEmpty())
           EV_DBGLOG(_T("EnvVars: Setting up default envvars set."));
         else
           EV_DBGLOG(_T("EnvVars: Setting up envvars set '")+prj_envvar_set
                    +_T("' for activated project."));
         // Apply envvar set always (as the old one has been discarded above)
-        nsEnvVars::EnvvarSetApply(prj_envvar_set);
+        nsEnvVars::EnvvarSetApply(prj_envvar_set, true);
       }
       else
         EnvvarSetWarning(prj_envvar_set);
@@ -162,7 +164,7 @@ void EnvVars::OnProjectActivated(CodeBlocksEvent& event)
 
 void EnvVars::OnProjectClosed(CodeBlocksEvent& event)
 {
-#if TRACE_ENVVARS
+#if defined(TRACE_ENVVARS)
   Manager::Get()->GetLogManager()->DebugLog(F(_T("OnProjectClosed")));
 #endif
 
@@ -191,39 +193,97 @@ void EnvVars::OnProjectClosed(CodeBlocksEvent& event)
 
 void EnvVars::OnAttach()
 {
-#if TRACE_ENVVARS
+#if defined(TRACE_ENVVARS)
   Manager::Get()->GetLogManager()->DebugLog(F(_T("OnAttach")));
 #endif
 
-  if(!Manager::LoadResource(_T("envvars.zip")))
-  {
+  if (!Manager::LoadResource(_T("envvars.zip")))
     NotifyMissingFile(_T("envvars.zip"));
-  }
 
   // load and apply configuration (to application only)
   ConfigManager *cfg = Manager::Get()->GetConfigManager(_T("envvars"));
   if (!cfg)
     return;
 
-  nsEnvVars::EnvvarSetApply(); // will apply the currently active envvar set
+  // will apply the currently active envvar set
+  nsEnvVars::EnvvarSetApply(wxEmptyString, true);
 
   // register event sink
   Manager::Get()->RegisterEventSink(cbEVT_PROJECT_ACTIVATE, new cbEventFunctor<EnvVars, CodeBlocksEvent>(this, &EnvVars::OnProjectActivated));
   Manager::Get()->RegisterEventSink(cbEVT_PROJECT_CLOSE,    new cbEventFunctor<EnvVars, CodeBlocksEvent>(this, &EnvVars::OnProjectClosed));
+
+  // Register scripting
+  Manager::Get()->GetScriptingManager(); // make sure the VM is initialised
+  if (SquirrelVM::GetVMPtr())
+  {
+    SqPlus::RegisterGlobal(&nsEnvVars::GetEnvvarSetNames,   "EnvvarGetEnvvarSetNames"  );
+    SqPlus::RegisterGlobal(&nsEnvVars::GetEnvvarSetNames,   "EnvvarGetActiveSetName"   );
+    SqPlus::RegisterGlobal(&nsEnvVars::GetEnvvarsBySetPath, "EnvVarGetEnvvarsBySetPath");
+    SqPlus::RegisterGlobal(&nsEnvVars::EnvvarSetExists,     "EnvvarSetExists"          );
+    SqPlus::RegisterGlobal(&nsEnvVars::EnvvarSetApply,      "EnvvarSetApply"           );
+    SqPlus::RegisterGlobal(&nsEnvVars::EnvvarSetDiscard,    "EnvvarSetDiscard"         );
+    SqPlus::RegisterGlobal(&nsEnvVars::EnvvarApply,         "EnvvarApply"              );
+    SqPlus::RegisterGlobal(&nsEnvVars::EnvvarDiscard,       "EnvvarDiscard"            );
+  }
 }// OnAttach
 
 // ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- -----
 
 void EnvVars::OnRelease(bool /*appShutDown*/)
 {
-  // Nothing to do (so far...)
+  // Unregister scripting
+  Manager::Get()->GetScriptingManager(); // make sure the VM is initialised
+  HSQUIRRELVM v = SquirrelVM::GetVMPtr();
+  if (v)
+  {
+    // TODO (Morten#5#): Is that the correct way of un-registering? (Seems so weird...)
+    sq_pushroottable(v);
+    sq_pushstring(v, "EnvvarDiscard", -1);
+    sq_deleteslot(v, -2, false);
+    sq_poptop(v);
+
+    sq_pushroottable(v);
+    sq_pushstring(v, "EnvvarApply", -1);
+    sq_deleteslot(v, -2, false);
+    sq_poptop(v);
+
+    sq_pushroottable(v);
+    sq_pushstring(v, "EnvvarSetDiscard", -1);
+    sq_deleteslot(v, -2, false);
+    sq_poptop(v);
+
+    sq_pushroottable(v);
+    sq_pushstring(v, "EnvvarSetApply", -1);
+    sq_deleteslot(v, -2, false);
+    sq_poptop(v);
+
+    sq_pushroottable(v);
+    sq_pushstring(v, "EnvvarSetExists", -1);
+    sq_deleteslot(v, -2, false);
+    sq_poptop(v);
+
+    sq_pushroottable(v);
+    sq_pushstring(v, "EnvVarGetEnvvarsBySetPath", -1);
+    sq_deleteslot(v, -2, false);
+    sq_poptop(v);
+
+    sq_pushroottable(v);
+    sq_pushstring(v, "EnvvarGetActiveSetName", -1);
+    sq_deleteslot(v, -2, false);
+    sq_poptop(v);
+
+    sq_pushroottable(v);
+    sq_pushstring(v, "EnvvarGetEnvvarSetNames", -1);
+    sq_deleteslot(v, -2, false);
+    sq_poptop(v);
+  }
 }// OnRelease
 
 // ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- -----
 
 int EnvVars::Configure()
 {
-#if TRACE_ENVVARS
+#if defined(TRACE_ENVVARS)
   Manager::Get()->GetLogManager()->DebugLog(F(_T("Configure")));
 #endif
 
@@ -256,12 +316,12 @@ cbConfigurationPanel* EnvVars::GetProjectConfigurationPanel(wxWindow* parent,
 
 void EnvVars::EnvvarSetWarning(const wxString& envvar_set)
 {
-#if TRACE_ENVVARS
+#if defined(TRACE_ENVVARS)
   Manager::Get()->GetLogManager()->DebugLog(F(_T("EnvvarSetWarning")));
 #endif
 
   wxString warning_msg;
   warning_msg.Printf(_("Warning: The project contained a reference to an envvar set\n"
-                       "('%s') that could not be found."), envvar_set.c_str());
+                       "('%s') that could not be found."), envvar_set.wx_str());
   cbMessageBox(warning_msg, _("EnvVars Plugin Warning"), wxICON_WARNING);
 }// EnvvarSetWarning

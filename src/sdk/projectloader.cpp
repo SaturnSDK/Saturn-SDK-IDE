@@ -539,6 +539,7 @@ void ProjectLoader::DoBuildTargetOptions(TiXmlElement* parentNode, ProjectBuildT
     wxString compilerId = m_pProject->GetCompilerID();
     wxString parameters;
     wxString hostApplication;
+    bool runHostApplicationInTerminal = false;
     bool includeInTargetAll = m_IsPre_1_2 ? true : false;
     bool createStaticLib = false;
     bool createDefFile = false;
@@ -593,6 +594,12 @@ void ProjectLoader::DoBuildTargetOptions(TiXmlElement* parentNode, ProjectBuildT
 
         if (node->Attribute("host_application"))
             hostApplication = UnixFilename(cbC2U(node->Attribute("host_application")));
+
+        if (node->Attribute("run_host_application_in_terminal"))
+        {
+            wxString runInTerminal = cbC2U(node->Attribute("run_host_application_in_terminal"));
+            runHostApplicationInTerminal = (runInTerminal == wxT("1"));
+        }
 
         // used in versions prior to 1.5
         if (node->Attribute("includeInTargetAll"))
@@ -655,6 +662,7 @@ void ProjectLoader::DoBuildTargetOptions(TiXmlElement* parentNode, ProjectBuildT
         target->SetAdditionalOutputFiles(added);
         target->SetExecutionParameters(parameters);
         target->SetHostApplication(hostApplication);
+        target->SetRunHostApplicationInTerminal(runHostApplicationInTerminal);
         target->SetIncludeInTargetAll(includeInTargetAll); // used in versions prior to 1.5
         target->SetCreateDefFile(createDefFile);
         target->SetCreateStaticLib(createStaticLib);
@@ -993,9 +1001,7 @@ TiXmlElement* ProjectLoader::AddElement(TiXmlElement* parent, const char* name, 
     TiXmlElement elem(name);
 
     if (attr)
-    {
         elem.SetAttribute(attr, cbU2C(attribute));
-    }
 
     return parent->InsertEndChild(elem)->ToElement();
 }
@@ -1006,9 +1012,7 @@ TiXmlElement* ProjectLoader::AddElement(TiXmlElement* parent, const char* name, 
     TiXmlElement elem(name);
 
     if (attr)
-    {
         elem.SetAttribute(attr, attribute);
-    }
 
     return parent->InsertEndChild(elem)->ToElement();
 }
@@ -1035,8 +1039,15 @@ void ProjectLoader::SaveEnvironment(TiXmlElement* parent, CompileOptionsBase* ba
     const StringHash& v = base->GetAllVars();
     if (v.empty())
         return;
-    TiXmlElement* node = AddElement(parent, "Environment");
+
+    // explicitly sort the keys
+    typedef std::map<wxString, wxString> SortedMap;
+    SortedMap map;
     for (StringHash::const_iterator it = v.begin(); it != v.end(); ++it)
+        map[it->first] = it->second;
+
+    TiXmlElement* node = AddElement(parent, "Environment");
+    for (SortedMap::const_iterator it = map.begin(); it != map.end(); ++it)
     {
         TiXmlElement* elem = AddElement(node, "Variable", "name", it->first);
         elem->SetAttribute("value", cbU2C(it->second));
@@ -1126,9 +1137,7 @@ bool ProjectLoader::ExportTargetAsProject(const wxString& filename, const wxStri
     TiXmlElement* buildnode = prjnode->FirstChildElement("Build");
 
     for (size_t x = 0; x < m_pProject->GetBuildScripts().GetCount(); ++x)
-    {
         AddElement(buildnode, "Script", "file", m_pProject->GetBuildScripts().Item(x));
-    }
 
     // now decide which target we 're exporting.
     // remember that if onlyTarget is empty, we export all targets (i.e. normal save).
@@ -1163,6 +1172,31 @@ bool ProjectLoader::ExportTargetAsProject(const wxString& filename, const wxStri
                 fname.ClearExt();
                 outputFileName = fname.GetFullPath();
             }
+            if (   (prefixPolicy == tgfpPlatformDefault)
+                && (   (!platform::windows && target->GetTargetType() == ttDynamicLib)
+                    || (target->GetTargetType() == ttStaticLib) ) )
+            {
+                wxString compilerId = target->GetCompilerID();
+                Compiler* compiler = CompilerFactory::GetCompiler(compilerId);
+                if (compiler)
+                {
+                    wxFileName fname(outputFileName);
+                    wxString outputFileNameFile(fname.GetFullName());
+
+                    wxString compilerLibPrefix(compiler->GetSwitches().libPrefix);
+                    wxString outputFileNameWOPrefix;
+                    if (outputFileNameFile.StartsWith(compilerLibPrefix))
+                    {
+                        outputFileNameWOPrefix = outputFileNameFile.Mid(compilerLibPrefix.Len());
+                        if (!outputFileNameWOPrefix.IsEmpty())
+                        {
+                            fname.SetFullName(outputFileNameWOPrefix);
+                            outputFileName = fname.GetFullPath();
+                        }
+                    }
+                }
+            }
+
             TiXmlElement* outnode = AddElement(tgtnode, "Option", "output", outputFileName);
             outnode->SetAttribute("prefix_auto", prefixPolicy == tgfpPlatformDefault ? "1" : "0");
             outnode->SetAttribute("extension_auto", extensionPolicy == tgfpPlatformDefault ? "1" : "0");
@@ -1185,7 +1219,14 @@ bool ProjectLoader::ExportTargetAsProject(const wxString& filename, const wxStri
         if (!target->GetExecutionParameters().IsEmpty())
             AddElement(tgtnode, "Option", "parameters", target->GetExecutionParameters());
         if (!target->GetHostApplication().IsEmpty())
+        {
             AddElement(tgtnode, "Option", "host_application", target->GetHostApplication());
+            if (target->GetRunHostApplicationInTerminal())
+                AddElement(tgtnode, "Option", "run_host_application_in_terminal", 1);
+            else
+                AddElement(tgtnode, "Option", "run_host_application_in_terminal", 0);
+        }
+
         // used in versions prior to 1.5
 //        if (target->GetIncludeInTargetAll())
 //            AddElement(tgtnode, "Option", "includeInTargetAll", 1);
@@ -1302,21 +1343,25 @@ bool ProjectLoader::ExportTargetAsProject(const wxString& filename, const wxStri
             AddElement(node, "Mode", "after", wxString(_T("always")));
     }
 
-    int count = m_pProject->GetFilesCount();
-    for (int i = 0; i < count; ++i)
+    ProjectFileArray pfa(ProjectFile::CompareProjectFiles);
+
+    for (FilesList::iterator it = m_pProject->GetFilesList().begin(); it != m_pProject->GetFilesList().end(); ++it)
     {
-        ProjectFile* f = m_pProject->GetFile(i);
+        ProjectFile* f = *it;
 
         // do not save auto-generated files
         if (f->AutoGeneratedBy())
-        {
             continue;
-        }
+
         // do not save project files that do not belong in the target we 're exporting
-        if (onlytgt && !onlytgt->GetFilesList().Find(f))
-        {
+        if (onlytgt && (onlytgt->GetFilesList().find(f) == onlytgt->GetFilesList().end()))
             continue;
-        }
+
+        pfa.Add(f);
+    }
+    for (size_t i=0; i<pfa.GetCount(); ++i)
+    {
+        ProjectFile* f = pfa[i];
         FileType ft = FileTypeOf(f->relativeFilename);
 
         TiXmlElement* unitnode = AddElement(prjnode, "Unit", "filename", f->relativeFilename);
@@ -1334,20 +1379,17 @@ bool ProjectLoader::ExportTargetAsProject(const wxString& filename, const wxStri
         }
 
         if (f->compile != (ft == ftSource || ft == ftResource))
-        {
             AddElement(unitnode, "Option", "compile", f->compile ? 1 : 0);
-        }
-        if (f->link !=
-                (ft == ftSource ||
-                ft == ftResource ||
-                ft == ftObject ||
-                ft == ftResourceBin ||
-                ft == ftStaticLib))
+
+        if (f->link != (   ft == ftSource || ft == ftResource
+                        || ft == ftObject || ft == ftResourceBin
+                        || ft == ftStaticLib ) )
         {
             AddElement(unitnode, "Option", "link", f->link ? 1 : 0);
         }
         if (f->weight != 50)
             AddElement(unitnode, "Option", "weight", f->weight);
+
         if (!f->virtual_path.IsEmpty())
             AddElement(unitnode, "Option", "virtualFolder", f->virtual_path);
 
@@ -1374,9 +1416,7 @@ bool ProjectLoader::ExportTargetAsProject(const wxString& filename, const wxStri
         /* Add a target with a weird name if no targets are present. *
          * This will help us detecting a file with no targets.       */
         if ((int)f->buildTargets.GetCount() == 0)
-        {
             AddElement(unitnode, "Option", "target", _T("<{~None~}>"));
-        }
     }
 
     // as a last step, run all hooked callbacks
@@ -1384,9 +1424,7 @@ bool ProjectLoader::ExportTargetAsProject(const wxString& filename, const wxStri
                             ? prjnode->InsertEndChild(*pExtensions)->ToElement()
                             : AddElement(prjnode, "Extensions");
     if (ProjectLoaderHooks::HasRegisteredHooks() && extnode)
-    {
         ProjectLoaderHooks::CallHooks(m_pProject, extnode, false);
-    }
 
     return cbSaveTinyXMLDocument(&doc, filename);
 }

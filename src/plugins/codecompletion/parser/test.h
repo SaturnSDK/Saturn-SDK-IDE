@@ -1,7 +1,9 @@
-namespace AAA
+#include <stdio.h>
+namespace std _GLIBCXX_VISIBILITY(default)
 {
-    extern "C" void function();
-    int a;
-};
-
-void test();
+    _GLIBCXX_BEGIN_NAMESPACE_VERSION
+    void test()
+    {
+    }
+    _GLIBCXX_END_NAMESPACE_VERSION
+} // namespace

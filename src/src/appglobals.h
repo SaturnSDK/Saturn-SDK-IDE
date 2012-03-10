@@ -16,8 +16,6 @@
     #define SVN_BUILD 1
 #endif
 
-
-
 namespace appglobals
 {
     typedef struct { int locale_code; wxString name; } Localisation;
@@ -27,6 +25,7 @@ namespace appglobals
     extern const wxString AppVersion;
     extern const wxString AppActualVersionVerb;
     extern const wxString AppActualVersion;
+    extern const wxString AppSDKVersion;
     extern const wxString AppUrl;
     extern const wxString AppContactEmail;
     extern const wxString AppPlatform;
@@ -34,7 +33,6 @@ namespace appglobals
     extern const wxString AppBuildTimestamp;
 
     extern const wxString DefaultBatchBuildArgs;
-
 };
 
 #endif // APPGLOBALS_H

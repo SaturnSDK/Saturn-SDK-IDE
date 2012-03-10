@@ -40,7 +40,8 @@ class TiXmlDocument;
 //    mtProjectManager = 1,
 //    mtEditorManager,
 //    mtLogManager,
-//    mtOpenFilesList,                //pecan 2006/03/22
+//    mtOpenFilesList,
+//    mtEditorTab,
 //    mtUnknown
 //};
 //
@@ -52,6 +53,7 @@ class TiXmlDocument;
 //    ftDevCppProject,
 //    ftMSVC6Project,
 //    ftMSVC7Project,
+//    ftMSVC10Project,
 //    ftMSVC6Workspace,
 //    ftMSVC7Workspace,
 //    ftXcode1Project,
@@ -107,6 +109,18 @@ class TiXmlDocument;
 //    fvsLast
 //};
 //
+///** These are valid values for the visual style of the project tree.
+//    They can be OR'ed to modify the representation of the project tree.
+//*/
+//enum ProjectTreeVisualState
+//{
+//    ptvsNone           = 0x00, //!< The default style: All "off"
+//    ptvsCategorize     = 0x01, //!< If true, use virtual folders like "Sources", "Headers", etc.
+//    ptvsUseFolders     = 0x02, //!< If true, create folders as needed. If false, the list is flat (not compatible with "hie folder name")
+//    ptvsHideFolderName = 0x04, //!< If true, the folder name will be hidden and only the file name will be shown (not compatible with "use folders")
+//    ptvsDefault        = 0x03  //!< Just here for convenience, "categorise" + "use folders" ON
+//};
+//
 ///** Template output types. */
 //enum TemplateOutputType
 //{
@@ -159,12 +173,15 @@ class TiXmlDocument;
 ///// Returns the final encoding detected.
 //extern DLLIMPORT wxFontEncoding DetectEncodingAndConvert(const char* strIn, wxString& strOut, wxFontEncoding possibleEncoding = wxFONTENCODING_SYSTEM);
 //
+///// Return an integer representation of a platform string
 //extern DLLIMPORT int GetPlatformsFromString(const wxString& platforms);
+///// Return a string representation of a platform / multiple platforms
 //extern DLLIMPORT wxString GetStringFromPlatforms(int platforms, bool forceSeparate = false);
 //
 //// see globals.cpp for info on the third argument (bool SeparatorAtEnd)
 //extern DLLIMPORT wxString GetStringFromArray(const wxArrayString& array, const wxString& separator = DEFAULT_ARRAY_SEP, bool SeparatorAtEnd = true);
 //extern DLLIMPORT wxArrayString GetArrayFromString(const wxString& text, const wxString& separator = DEFAULT_ARRAY_SEP, bool trimSpaces = true);
+//extern DLLIMPORT wxArrayString MakeUniqueArray(const wxArrayString& array, bool caseSens);
 //extern DLLIMPORT void AppendArray(const wxArrayString& from, wxArrayString& to);
 //
 //extern DLLIMPORT wxString UnixFilename(const wxString& filename);
@@ -175,8 +192,8 @@ class TiXmlDocument;
 //
 //extern DLLIMPORT FileType FileTypeOf(const wxString& filename);
 //
-extern DLLIMPORT void SaveTreeState(wxTreeCtrl* tree, const wxTreeItemId& parent, wxArrayString& nodePaths, wxString& selectedItemPath);
-extern DLLIMPORT void RestoreTreeState(wxTreeCtrl* tree, const wxTreeItemId& parent, wxArrayString& nodePaths, wxString& selectedItemPath);
+extern DLLIMPORT void SaveTreeState(wxTreeCtrl* tree, const wxTreeItemId& parent, wxArrayString& nodePaths, wxArrayString& selectedItemPaths);
+extern DLLIMPORT void RestoreTreeState(wxTreeCtrl* tree, const wxTreeItemId& parent, wxArrayString& nodePaths, wxArrayString& selectedItemPaths);
 //
 //extern DLLIMPORT bool CreateDirRecursively(const wxString& full_path, int perms = 0755);
 //extern DLLIMPORT bool CreateDir(const wxString& full_path, int perms = 0755);
@@ -253,7 +270,6 @@ enum cbPlaceDialogMode
 
 extern DLLIMPORT void PlaceWindow(wxTopLevelWindow *w, cbPlaceDialogMode mode = pdlBest, bool enforce = false);
 //#endif // #ifndef CB_FOR_CONSOLE
-//
 ///** wxMessageBox wrapper.
 //  *
 //  * Use this instead of wxMessageBox(), as this uses PlaceWindow() to show it in the correct monitor.
@@ -294,7 +310,9 @@ extern DLLIMPORT void PlaceWindow(wxTopLevelWindow *w, cbPlaceDialogMode mode = 
 //        winver_Windows9598ME,
 //        winver_WindowsNT2000,
 //        winver_WindowsXP,
-//        winver_Vista, // untested!
+//        winver_WindowsServer2003,
+//        winver_WindowsVista,
+//        winver_Windows7
 //    }windows_version_t;
 //
 //    extern DLLIMPORT windows_version_t WindowsVersion();

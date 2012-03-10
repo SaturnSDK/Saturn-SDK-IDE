@@ -88,7 +88,6 @@ class CodeBlocksApp : public wxAppConsole
         int BatchJob();
         wxLocale m_locale; // locale we'll be using
     private:
-        void ComplainBadInstall();
         void SetupPersonality(const wxString& personality);
 
 

@@ -10,6 +10,13 @@
 #include <sdk.h>
 
 #ifndef CB_PRECOMP
+    #include <wx/button.h>
+    #include <wx/image.h>
+    #include <wx/sizer.h>
+    #include <wx/statbmp.h>
+    #include <wx/stattext.h>
+    #include <wx/textdlg.h>
+
     #include <cbeditor.h>
     #include <cbproject.h>
     #include <editorcolourset.h>
@@ -28,20 +35,28 @@
 
 #define CC_CODEREFACTORING_DEBUG_OUTPUT 0
 
+#if CC_GLOBAL_DEBUG_OUTPUT == 1
+    #undef CC_CODEREFACTORING_DEBUG_OUTPUT
+    #define CC_CODEREFACTORING_DEBUG_OUTPUT 1
+#elif CC_GLOBAL_DEBUG_OUTPUT == 2
+    #undef CC_CODEREFACTORING_DEBUG_OUTPUT
+    #define CC_CODEREFACTORING_DEBUG_OUTPUT 2
+#endif
+
 #if CC_CODEREFACTORING_DEBUG_OUTPUT == 1
     #define TRACE(format, args...) \
-        Manager::Get()->GetLogManager()->DebugLog(F(format, ##args))
+        CCLogger::Get()->DebugLog(F(format, ##args))
     #define TRACE2(format, args...)
 #elif CC_CODEREFACTORING_DEBUG_OUTPUT == 2
     #define TRACE(format, args...)                                              \
         do                                                                      \
         {                                                                       \
             if (g_EnableDebugTrace)                                             \
-                Manager::Get()->GetLogManager()->DebugLog(F(format, ##args));   \
+                CCLogger::Get()->DebugLog(F(format, ##args));                   \
         }                                                                       \
         while (false)
     #define TRACE2(format, args...) \
-        Manager::Get()->GetLogManager()->DebugLog(F(format, ##args))
+        CCLogger::Get()->DebugLog(F(format, ##args))
 #else
     #define TRACE(format, args...)
     #define TRACE2(format, args...)
@@ -120,7 +135,11 @@ wxString CodeRefactoring::GetSymbolUnderCursor()
 
     if (!m_NativeParser.GetParser().Done())
     {
-        cbMessageBox(_("The Parser is still parsing files..."), _("Code Refactoring"), wxOK | wxICON_WARNING);
+        wxString msg(_("The Parser is still parsing files."));
+        cbMessageBox(msg, _("Code Refactoring"), wxOK | wxICON_WARNING);
+        msg += m_NativeParser.GetParser().NotDoneReason();
+        CCLogger::Get()->DebugLog(msg);
+
         return wxEmptyString;
     }
 
@@ -151,13 +170,20 @@ bool CodeRefactoring::Parse()
 
     // handle local variables
     bool isLocalVariable = false;
-    Token* token = m_NativeParser.GetParser().GetTokens()->at(*targetResult.begin());
+
+    TokensTree* tree = m_NativeParser.GetParser().GetTokensTree();
+
+    CC_LOCKER_TRACK_TT_MTX_LOCK(s_TokensTreeMutex)
+
+    Token* token = tree->at(*targetResult.begin());
     if (token)
     {
-        Token* parent = token->GetParentToken();
+        Token* parent = tree->at(token->m_ParentIndex);
         if (parent && parent->m_TokenKind == tkFunction)
             isLocalVariable = true;
     }
+
+    CC_LOCKER_TRACK_TT_MTX_UNLOCK(s_TokensTreeMutex)
 
     wxArrayString files;
     cbProject* project = m_NativeParser.GetProjectByEditor(editor);
@@ -264,8 +290,14 @@ size_t CodeRefactoring::VerifyResult(const TokenIdxSet& targetResult, const wxSt
     Token* parentOfLocalVariable = nullptr;
     if (isLocalVariable)
     {
-        Token* token = m_NativeParser.GetParser().GetTokens()->at(*targetResult.begin());
-        parentOfLocalVariable = token->GetParentToken();
+        TokensTree* tree = m_NativeParser.GetParser().GetTokensTree();
+
+        CC_LOCKER_TRACK_TT_MTX_LOCK(s_TokensTreeMutex)
+
+        Token* token = tree->at(*targetResult.begin());
+        parentOfLocalVariable = tree->at(token->m_ParentIndex);
+
+        CC_LOCKER_TRACK_TT_MTX_UNLOCK(s_TokensTreeMutex)
     }
 
     // now that list is filled, we'll search
@@ -356,16 +388,26 @@ size_t CodeRefactoring::VerifyResult(const TokenIdxSet& targetResult, const wxSt
                 // handle for local variable
                 if (isLocalVariable)
                 {
-                    Token* token = m_NativeParser.GetParser().GetTokens()->at(*findIter);
+                    bool do_continue = false;
+
+                    TokensTree* tree = m_NativeParser.GetParser().GetTokensTree();
+
+                    CC_LOCKER_TRACK_TT_MTX_LOCK(s_TokensTreeMutex)
+
+                    Token* token = tree->at(*findIter);
                     if (token)
                     {
-                        Token* parent = token->GetParentToken();
+                        Token* parent = tree->at(token->m_ParentIndex);
                         if (parent != parentOfLocalVariable)
                         {
                             it->second.erase(itList++);
-                            continue;
+                            do_continue = true;
                         }
                     }
+
+                    CC_LOCKER_TRACK_TT_MTX_UNLOCK(s_TokensTreeMutex)
+
+                    if (do_continue) continue;
                 }
 
                 ++itList;
@@ -497,13 +539,14 @@ void CodeRefactoring::GetAllProjectFiles(wxArrayString& files, cbProject* projec
         return;
 
     // fill the search list with all the project files
-    for (int i = 0; i < project->GetFilesCount(); ++i)
+    for (FilesList::iterator it = project->GetFilesList().begin(); it != project->GetFilesList().end(); ++it)
     {
-        ProjectFile* pf = project->GetFile(i);
+        ProjectFile* pf = *it;
         if (!pf)
             continue;
-        CCFileType ft = CCFileTypeOf(pf->relativeFilename);
-        if (ft != ccftOther)
+
+        ParserCommon::EFileType ft = ParserCommon::FileType(pf->relativeFilename);
+        if (ft != ParserCommon::ftOther)
             files.Add(pf->file.GetFullPath());
     }
 }

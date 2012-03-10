@@ -42,7 +42,7 @@
 					<Add directory="$(#WX.lib)\gcc_dll$(WX_CFG)" />
 				</Linker>
 				<ExtraCommands>
-					<Add after="zip -j9 $(#cb)\devel\share\CodeBlocks\ModPoller.zip manifest.xml" />
+					<Add after="zip -j9 ..\..\devel\share\CodeBlocks\ModPoller.zip manifest.xml" />
 					<Mode after="always" />
 				</ExtraCommands>
 			</Target>
@@ -55,7 +55,7 @@
 			<Add alias="All" targets="default;" />
 		</VirtualTargets>
 		<Linker>
-			<Add option="--enable-auto-image-base" />
+			<Add option="-Wl,--enable-auto-image-base" />
 		</Linker>
 		<Unit filename="ModPoller.cpp" />
 		<Unit filename="ModPoller.h" />

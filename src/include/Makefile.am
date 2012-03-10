@@ -35,6 +35,7 @@ ALLHEADERS = annoyingdialog.h \
 				cbfunctor.h \
 				cbplugin.h \
 				cbproject.h \
+				cbstatusbar.h \
 				cbstyledtextctrl.h \
 				cbthreadedtask.h \
 				cbthreadpool.h \
@@ -157,7 +158,7 @@ ALLHEADERS = annoyingdialog.h \
 
 sdk_HEADERS = $(ALLHEADERS)
 
-$(top_srcdir)/src/include/sdk.h.gch: $(ALLHEADERS)
+$(top_srcdir)/src/include/sdk.h.gch: $(top_srcdir)/src/include/sdk_precomp.h.gch $(ALLHEADERS)
 	-rm -f $(top_srcdir)/src/include/sdk.h.gch
 	$(CXXCOMPILE) -o $(top_srcdir)/src/include/sdk.h.gch -xc++-header $(srcdir)/sdk.h
 

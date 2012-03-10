@@ -16,7 +16,7 @@
 	along with this program; if not, write to the Free Software
 	Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-// RCS-ID: $Id: version.cpp 113 2008-01-14 18:31:17Z Pecan $
+// RCS-ID: $Id$
 
 #ifdef WX_PRECOMP
     #include "wx_pch.h"
@@ -519,7 +519,7 @@ AppVersion::~AppVersion()
 //          117) Fix erroneous double entry into "Save Index As" routine
 //          118) Fix crash in SEditorManager::CheckForExternallyModifiedFiles();
 // ----------------------------------------------------------------------------
-//  Commit 1.3.120 2010/02/11
+//  Commit 1.3.120 2011/02/11
 //          119) Fix crash when double clicking previously opened snippet
 //          120) Copy fixes 5995 & 6000 from CB EditorManager to SEditormanager
 // ----------------------------------------------------------------------------

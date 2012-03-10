@@ -95,7 +95,7 @@ class DLLIMPORT cbEditor : public EditorBase
         SplitType GetSplitType() const { return m_SplitType; }
 
         /** Returns true if editor is OK, i.e. constructor was called with a filename
-          * parameter and file was opened succesfully. If it returns false, you
+          * parameter and file was opened successfully. If it returns false, you
           * should delete the editor...
           */
         bool IsOK() const { return m_IsOK; }
@@ -205,6 +205,12 @@ class DLLIMPORT cbEditor : public EditorBase
           * @param centerOnScreen If true (default), tries to bring the specified line to the centre of the editor.*/
         void GotoLine(int line, bool centerOnScreen = true);
 
+        /** Move the caret at the specified line.
+          * @param line      Line to move caret to (where the token is).
+          * @param tokenName Token name (string) to highlight, if found
+          * @return Editor found, position set and token highlighted? */
+        bool GotoTokenPosition(int line, const wxString& tokenName);
+
         /** Add debugger breakpoint at specified line. If @c line is -1, use current line. */
         bool AddBreakpoint(int line = -1, bool notifyDebugger = true);
 
@@ -305,7 +311,7 @@ class DLLIMPORT cbEditor : public EditorBase
         bool DoFoldLine(int line, int fold); // 0=unfold, 1=fold, 2=toggle
         void SetMarkerStyle(int marker, int markerType, wxColor fore, wxColor back);
         void UnderlineFoldedLines(bool underline);
-        cbStyledTextCtrl* CreateEditor();
+        cbStyledTextCtrl* CreateEditor(bool connectEvents = true);
         void SetEditorStyle();
         void SetEditorStyleBeforeFileOpen();
         void SetEditorStyleAfterFileOpen();

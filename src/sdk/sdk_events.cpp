@@ -25,40 +25,40 @@ IMPLEMENT_DYNAMIC_CLASS(CodeBlocksLogEvent, wxEvent)
 
 
 CodeBlocksLogEvent::CodeBlocksLogEvent(wxEventType commandType, Logger* logger, const wxString& title, wxBitmap *icon)
-	: wxEvent(wxID_ANY, commandType),
-	logger(logger), logIndex(-1), icon(icon), title(title), window(0)
+    : wxEvent(wxID_ANY, commandType),
+    logger(logger), logIndex(-1), icon(icon), title(title), window(0)
 {
-	// special case for add
-	if (commandType == cbEVT_ADD_LOG_WINDOW && logger)
-	{
-		if (Manager::Get()->GetLogManager()->FindIndex(logger) == LogManager::invalid_log)
-		{
-			logIndex = Manager::Get()->GetLogManager()->SetLog(logger);
-			cbAssert(logIndex != LogManager::invalid_log);
-			Manager::Get()->GetLogManager()->Slot(logIndex).title = title;
-			Manager::Get()->GetLogManager()->Slot(logIndex).icon = icon;
-			return;
-		}
-	}
+    // special case for add
+    if (commandType == cbEVT_ADD_LOG_WINDOW && logger)
+    {
+        if (Manager::Get()->GetLogManager()->FindIndex(logger) == LogManager::invalid_log)
+        {
+            logIndex = Manager::Get()->GetLogManager()->SetLog(logger);
+            cbAssert(logIndex != LogManager::invalid_log);
+            Manager::Get()->GetLogManager()->Slot(logIndex).title = title;
+            Manager::Get()->GetLogManager()->Slot(logIndex).icon = icon;
+            return;
+        }
+    }
 
-	logIndex = Manager::Get()->GetLogManager()->FindIndex(logger);
+    logIndex = Manager::Get()->GetLogManager()->FindIndex(logger);
 }
 
 CodeBlocksLogEvent::CodeBlocksLogEvent(wxEventType commandType, int logIndex, const wxString& title, wxBitmap *icon)
-	: wxEvent(wxID_ANY, commandType),
-	logger(0), logIndex(logIndex), icon(icon), title(title), window(0)
+    : wxEvent(wxID_ANY, commandType),
+    logger(0), logIndex(logIndex), icon(icon), title(title), window(0)
 {
-	logger = Manager::Get()->GetLogManager()->Slot(logIndex).GetLogger();
+    logger = Manager::Get()->GetLogManager()->Slot(logIndex).GetLogger();
 }
 
 CodeBlocksLogEvent::CodeBlocksLogEvent(wxEventType commandType, wxWindow* window, const wxString& title, wxBitmap *icon)
-	: wxEvent(wxID_ANY, commandType),
-	logger(0), logIndex(-1), icon(icon), title(title), window(window)
+    : wxEvent(wxID_ANY, commandType),
+    logger(0), logIndex(-1), icon(icon), title(title), window(window)
 {
 }
 
 CodeBlocksLogEvent::CodeBlocksLogEvent(const CodeBlocksLogEvent& rhs)
-	: logger(rhs.logger), logIndex(rhs.logIndex), icon(rhs.icon), title(rhs.title), window(rhs.window)
+    : logger(rhs.logger), logIndex(rhs.logIndex), icon(rhs.icon), title(rhs.title), window(rhs.window)
 {
 }
 
@@ -73,6 +73,7 @@ const wxEventType cbEVT_PLUGIN_ATTACHED = wxNewEventType();
 const wxEventType cbEVT_PLUGIN_RELEASED = wxNewEventType();
 const wxEventType cbEVT_PLUGIN_INSTALLED = wxNewEventType();
 const wxEventType cbEVT_PLUGIN_UNINSTALLED = wxNewEventType();
+const wxEventType cbEVT_PLUGIN_LOADING_COMPLETE = wxNewEventType();
 // editor events
 const wxEventType cbEVT_EDITOR_CLOSE = wxNewEventType();
 const wxEventType cbEVT_EDITOR_OPEN = wxNewEventType();
@@ -105,6 +106,7 @@ const wxEventType cbEVT_PROJECT_POPUP_MENU = wxNewEventType();
 const wxEventType cbEVT_PROJECT_TARGETS_MODIFIED = wxNewEventType();
 const wxEventType cbEVT_PROJECT_RENAMED = wxNewEventType();
 const wxEventType cbEVT_WORKSPACE_CHANGED = wxNewEventType();
+const wxEventType cbEVT_WORKSPACE_LOADING_COMPLETE = wxNewEventType();
 // build targets events
 const wxEventType cbEVT_BUILDTARGET_ADDED = wxNewEventType();
 const wxEventType cbEVT_BUILDTARGET_REMOVED = wxNewEventType();
@@ -143,6 +145,8 @@ const wxEventType cbEVT_COMPILER_FINISHED = wxNewEventType();
 const wxEventType cbEVT_COMPILER_SET_BUILD_OPTIONS = wxNewEventType();
 const wxEventType cbEVT_CLEAN_PROJECT_STARTED = wxNewEventType();
 const wxEventType cbEVT_CLEAN_WORKSPACE_STARTED = wxNewEventType();
+// request app to compile a single file
+const wxEventType cbEVT_COMPILE_FILE_REQUEST = wxNewEventType();
 // debugger-related events
 const wxEventType cbEVT_DEBUGGER_STARTED = wxNewEventType();
 const wxEventType cbEVT_DEBUGGER_PAUSED = wxNewEventType();
@@ -162,3 +166,6 @@ const wxEventType cbEVT_UNLOCK_LOG_MANAGER = wxNewEventType();
 //cbAUiNotebook related events
 const wxEventType cbEVT_CBAUIBOOK_LEFT_DCLICK = wxNewEventType();
 
+// code-completion related events
+const wxEventType cbEVT_COMPLETE_CODE = wxNewEventType();
+const wxEventType cbEVT_SHOW_CALL_TIP = wxNewEventType();

@@ -56,7 +56,7 @@ class cbAuiNotebook : public wxAuiNotebook
          * @remarks Not implemented. Don't use it.
          *
          */
-        bool LoadPerspective(const wxString& layout) {return false;};
+        bool LoadPerspective(const wxString& /*layout*/) {return false;};
         /** \brief Get the tab position
          *
          * Returns the position of the tab as it is visible.
@@ -122,6 +122,9 @@ class cbAuiNotebook : public wxAuiNotebook
          * \param zoom zoomfactor to use
          */
         void SetZoom(int zoom);
+        /** \brief Set Focus on the tabCtrl belonging to the active tab
+         */
+        void FocusActiveTabCtrl();
     protected:
         /** \brief Minmize free horizontal page of tabCtrl
          *
@@ -275,11 +278,11 @@ class cbAuiNotebook : public wxAuiNotebook
          * and mouseleave-event.
          */
         int m_LastSelected;
-        /** \brief Last focused window
+        /** \brief Id of last focused window
          *
          * Used to restore the focus after a mouseleave-event on wxTabCtrl.
          */
-        wxWindow* m_pLastFocused;
+        long m_LastId;
 #endif // #ifdef __WXMSW__
         /** \brief If false, tooltips are temporary forbidden
          *
@@ -291,9 +294,12 @@ class cbAuiNotebook : public wxAuiNotebook
         bool m_OverTabCtrl;
         /** \brief If true, zoom for all editors
          * is set in next OnIdle-call
-         *
          */
         bool m_SetZoomOnIdle;
+        /** \brief If true, MinimizeFreeSpace is called
+         * in next OnIdle-call
+         */
+        bool m_MinimizeFreeSpaceOnIdle;
         /** \brief Holds the id of the dwell timer
          */
         long m_IdNoteBookTimer;
@@ -321,12 +327,22 @@ class cbAuiNotebook : public wxAuiNotebook
          * \param allow If true scrolling is allowed
          */
         static void AllowScrolling(bool allow = true);
-        /** \brief Setss the modifier keys for scrolling
+        /** \brief Sets the modifier keys for scrolling
          */
         static void SetModKeys(wxString keys = _T("Strg"));
         /** \brief Use modkey to advance through tabs with mousewheel
          */
         static void UseModToAdvance(bool use = false);
+        /** \brief Change direction of tab-advancing with mousewheel
+         *
+         * \param invert If true advance direction is inverted
+         */
+        static void InvertAdvanceDirection(bool invert = false);
+        /** \brief Change direction of tab-moving with mousewheel
+         *
+         * \param invert If true move direction is inverted
+         */
+        static void InvertMoveDirection(bool invert = false);
     protected:
         /** \brief Enable or disable tab tooltips
          */
@@ -346,6 +362,12 @@ class cbAuiNotebook : public wxAuiNotebook
         /** \brief Use modkey to advance through tabs with mousewheel
          */
         static bool s_modToAdvance;
+        /** \brief Mousewheel move direction: negative => invert
+         */
+        static int s_moveDirection;
+        /** \brief Mouseweheel advance direction: negative => invert
+         */
+        static int s_advanceDirection;
 
         DECLARE_EVENT_TABLE()
 };

@@ -2,9 +2,9 @@
  * This file is part of the Code::Blocks IDE and licensed under the GNU Lesser General Public License, version 3
  * http://www.gnu.org/licenses/lgpl-3.0.html
  *
- * $Revision: 4909 $
- * $Id: editorbase.cpp 4909 2008-02-27 13:15:26Z mortenmacfly $
- * $HeadURL: https://svn.berlios.de/svnroot/repos/codeblocks/trunk/src/sdk/editorbase.cpp $
+ * $Revision$
+ * $Id$
+ * $HeadURL$
  */
 
 // Get rid of some precompile warnings when using sdk
@@ -20,22 +20,24 @@
     #include <wx/filename.h>
     #include <wx/notebook.h>
     #include <wx/menu.h>
+    #include <wx/textdlg.h> // wxGetTextFromUser
+    #include <wx/wfstream.h>
+
     #include "manager.h"
     #include "seditorbase.h"
     #include "scbeditor.h"
     #include "seditormanager.h"
     #include "pluginmanager.h"
     #include "cbproject.h" // FileTreeData
-    #include <wx/wfstream.h>
 #endif
 
-    #include <wx/xrc/xmlres.h>
-    #include "scbeditor.h"
-    #include "seditorbase.h"
-    #include "seditormanager.h"
+#include <wx/xrc/xmlres.h>
 
+#include "prep.h"
+#include "scbeditor.h"
+#include "seditorbase.h"
+#include "seditormanager.h"
 #include "cbstyledtextctrl.h"
-
 #include "cbauibook.h"
 #include "snippetsconfig.h"
 // ----------------------------------------------------------------------------

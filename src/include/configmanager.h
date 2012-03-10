@@ -111,9 +111,9 @@ class DLLIMPORT ConfigManager
     static wxString home_folder;
     static wxString data_path_user;
     static wxString data_path_global;
-#ifdef CB_AUTOCONF 
-    static wxString plugin_path_global; 
-#endif 
+#ifdef CB_AUTOCONF
+    static wxString plugin_path_global;
+#endif
     static wxString app_path;
     static wxString temp_folder;
     static bool relo;
@@ -201,6 +201,7 @@ public:
     void Clear();
     void Delete();
     void DeleteAll();
+    void Flush();
 
     /* -----------------------------------------------------------------------------------------------------
     *  Standard primitives
@@ -272,7 +273,6 @@ public:
     /* -----------------------------------------------------------------------------------------------------
     *  Maps of serialized objects. You are responsible for deleting the objects in the map/set.
     *
-    *
     *  Usage:
     *  ------
     *  typedef std::map<wxString, MySerializableClass *> MyMap;
@@ -330,6 +330,7 @@ class DLLIMPORT CfgMgrBldr : public Mgr<CfgMgrBldr>
     bool r;
     wxString cfg;
 
+    void Flush();
     void Close();
     void SwitchTo(const wxString& absFN);
     void SwitchToR(const wxString& absFN);

@@ -820,7 +820,7 @@ bool PluginManager::ExtractFile(const wxString& bundlename,
 ////        return false;
 ////    }
 //
-//    // if no plugin name specified, we 're done here (succesfully)
+//    // if no plugin name specified, we 're done here (successfully)
 //    if (pluginName.IsEmpty() || !infoOut)
 //        return true;
 //
@@ -929,7 +929,7 @@ bool PluginManager::ExtractFile(const wxString& bundlename,
 //        extra = extra->NextSiblingElement("Extra");
 //    }
 //}
-
+//
 //int PluginManager::ScanForPlugins(const wxString& path)
 //{
 //    static const wxString PluginsMask = platform::windows ? _T("*.dll") : _T("*.so");
@@ -1207,7 +1207,7 @@ bool PluginManager::ExtractFile(const wxString& bundlename,
 //        }
 //    }
 //}
-
+//
 //PluginElement* PluginManager::FindElementByName(const wxString& pluginName)
 //{
 //    for (unsigned int i = 0; i < m_Plugins.GetCount(); ++i)
@@ -1219,7 +1219,7 @@ bool PluginManager::ExtractFile(const wxString& bundlename,
 //
 //    return 0;
 //}
-
+//
 //cbPlugin* PluginManager::FindPluginByName(const wxString& pluginName)
 //{
 //    for (unsigned int i = 0; i < m_Plugins.GetCount(); ++i)
@@ -1231,7 +1231,7 @@ bool PluginManager::ExtractFile(const wxString& bundlename,
 //
 //    return 0;
 //}
-
+//
 //cbPlugin* PluginManager::FindPluginByFileName(const wxString& pluginFileName)
 //{
 //    for (unsigned int i = 0; i < m_Plugins.GetCount(); ++i)
@@ -1243,7 +1243,7 @@ bool PluginManager::ExtractFile(const wxString& bundlename,
 //
 //    return 0;
 //}
-
+//
 //const PluginInfo* PluginManager::GetPluginInfo(const wxString& pluginName)
 //{
 //    PluginElement* plugElem = FindElementByName(pluginName);
@@ -1293,11 +1293,11 @@ bool PluginManager::ExtractFile(const wxString& bundlename,
 //    }
 //    else
 //    {
-//		#if wxCHECK_VERSION(2, 9, 0)
-//		Manager::Get()->GetLogManager()->LogError(F(_T("No plugin registered by this name: %s"), pluginName.wx_str()));
-//		#else
-//		Manager::Get()->GetLogManager()->LogError(F(_T("No plugin registered by this name: %s"), pluginName.c_str()));
-//		#endif
+//        #if wxCHECK_VERSION(2, 9, 0)
+//        Manager::Get()->GetLogManager()->LogError(F(_T("No plugin registered by this name: %s"), pluginName.wx_str()));
+//        #else
+//        Manager::Get()->GetLogManager()->LogError(F(_T("No plugin registered by this name: %s"), pluginName.c_str()));
+//        #endif
 //    }
 //    return 0;
 //}

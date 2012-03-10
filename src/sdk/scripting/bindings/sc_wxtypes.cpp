@@ -247,8 +247,11 @@ namespace ScriptBindings
                 func(&wxArrayString::Clear, "Clear").
 //                func(&wxArrayString::Index, "Index").
                 staticFuncVarArgs(&wxArrayString_Index, "Index", "*").
-                func(&wxArrayString::GetCount, "GetCount").
-                func(&wxArrayString::Item, "Item");
+                func(&wxArrayString::GetCount, "GetCount")
+                #if !wxCHECK_VERSION(2, 9, 0) // Strange that this does not work with wx 2.9.x?!
+                .func(&wxArrayString::Item, "Item")
+                #endif
+                ;
 
         //////////////
         // wxColour //
@@ -276,7 +279,7 @@ namespace ScriptBindings
 #else
         typedef bool(wxFileName::*WXFN_SETCWD)();
 #endif
-	typedef bool(wxFileName::*WXFN_ISFILEWRITEABLE)()const;
+        typedef bool(wxFileName::*WXFN_ISFILEWRITEABLE)()const;
 
         SqPlus::SQClassDef<wxFileName>("wxFileName").
                 emptyCtor().

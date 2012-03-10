@@ -21,12 +21,15 @@
 
 
 // class constructor
-ProjectBuildTarget::ProjectBuildTarget(cbProject* parentProject) : m_Project(parentProject)
+ProjectBuildTarget::ProjectBuildTarget(cbProject* parentProject)
+    : m_Project(parentProject),
+    m_FileArray(ProjectFile::CompareProjectFiles)
 {
     m_BuildWithAll = false;
     m_CreateStaticLib = true;
     m_CreateDefFile = true;
     m_UseConsoleRunner = true;
+    m_FileArray.Clear();
 }
 
 // class destructor
@@ -74,16 +77,16 @@ void ProjectBuildTarget::SetAdditionalOutputFiles(const wxString& files)
 
 bool ProjectBuildTarget::GetIncludeInTargetAll() const
 {
-	return m_BuildWithAll;
+    return m_BuildWithAll;
 }
 
 void ProjectBuildTarget::SetIncludeInTargetAll(bool buildIt)
 {
-	if (m_BuildWithAll != buildIt)
-	{
+    if (m_BuildWithAll != buildIt)
+    {
         m_BuildWithAll = buildIt;
         SetModified(true);
-	}
+    }
 }
 
 bool ProjectBuildTarget::GetCreateDefFile() const
@@ -116,7 +119,10 @@ void ProjectBuildTarget::SetCreateStaticLib(bool createIt)
 
 bool ProjectBuildTarget::GetUseConsoleRunner() const
 {
-    return GetTargetType() == ttConsoleOnly ? m_UseConsoleRunner : false;
+    if (GetTargetType() == ttConsoleOnly || GetRunHostApplicationInTerminal())
+        return m_UseConsoleRunner;
+
+    return false;
 }
 
 void ProjectBuildTarget::SetUseConsoleRunner(bool useIt)
@@ -128,21 +134,51 @@ void ProjectBuildTarget::SetUseConsoleRunner(bool useIt)
     }
 }
 
-void ProjectBuildTarget::SetTargetType(const TargetType& pt)
+void ProjectBuildTarget::SetTargetType(TargetType pt)
 {
-	TargetType ttold = GetTargetType();
-	CompileTargetBase::SetTargetType(pt);
-	if (ttold != GetTargetType() && GetTargetType() == ttConsoleOnly)
+    TargetType ttold = GetTargetType();
+    CompileTargetBase::SetTargetType(pt);
+    if (ttold != GetTargetType() && GetTargetType() == ttConsoleOnly)
         SetUseConsoleRunner(true); // by default, use console runner
 }
 
 // target dependencies: targets to be compiled (if necessary) before this one
-void ProjectBuildTarget::AddTargetDep(ProjectBuildTarget* target) {
-	m_TargetDeps.Add(target);
+void ProjectBuildTarget::AddTargetDep(ProjectBuildTarget* target)
+{
+    m_TargetDeps.Add(target);
 }
 
 // get the list of dependency targets of this target
-BuildTargets& ProjectBuildTarget::GetTargetDeps() {
-	return m_TargetDeps;
+BuildTargets& ProjectBuildTarget::GetTargetDeps()
+{
+    return m_TargetDeps;
 }
 
+ProjectFile* ProjectBuildTarget::GetFile(int index)
+{
+    if (m_FileArray.GetCount() == 0)
+    {
+        for (FilesList::iterator it = m_Files.begin(); it != m_Files.end(); ++it)
+        {
+            if (!*it)
+                continue;
+            m_FileArray.Add(*it);
+        }
+    }
+
+    if (index < 0 || index >= m_FileArray.GetCount())
+        return NULL;
+
+    return m_FileArray.Item(index);
+}
+
+bool ProjectBuildTarget::RemoveFile(ProjectFile* pf)
+{
+    if (!pf)
+        return false;
+    m_Files.erase(pf);
+    if (m_FileArray.GetCount() > 0)
+        m_FileArray.Remove(pf);
+
+    return true;
+}

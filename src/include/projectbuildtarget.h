@@ -15,15 +15,13 @@
 #include <wx/list.h>
 #include <wx/treectrl.h>
 
-#include "blockallocated.h"
-
 class cbProject;
 class ProjectBuildTarget;
 
 WX_DEFINE_ARRAY(ProjectBuildTarget*, BuildTargets);
 
 /** Represents a Code::Blocks project build target. */
-class DLLIMPORT ProjectBuildTarget : public BlockAllocated<ProjectBuildTarget, 1000>, public CompileTargetBase
+class DLLIMPORT ProjectBuildTarget : public CompileTargetBase
 {
 	public:
 		/// Constructor
@@ -102,7 +100,7 @@ class DLLIMPORT ProjectBuildTarget : public BlockAllocated<ProjectBuildTarget, 1
           * @param useIt If true, ConsoleRunner is used else it is not. */
         virtual void SetUseConsoleRunner(bool useIt);
 
-        virtual void SetTargetType(const TargetType& pt); // overriden
+        virtual void SetTargetType(TargetType pt); // overriden
 
         /** Targets to be compiled (if necessary) before this one.
           * Add a target to the list of dependencies of this target. Be careful
@@ -117,17 +115,35 @@ class DLLIMPORT ProjectBuildTarget : public BlockAllocated<ProjectBuildTarget, 1
         /** Provides an easy way to iterate all the files belonging in this target.
           * @return A list of files belonging in this target. */
         virtual FilesList& GetFilesList(){ return m_Files; }
+
+        /** @return The number of files in the target. */
+        int GetFilesCount(){ return m_Files.size(); }
+
+        /** Access a file of the target.
+          * @param index The index of the file. Must be greater or equal than zero and less than GetFilesCount().
+          * @return A pointer to the file or NULL if not found.
+          */
+        ProjectFile* GetFile(int index);
+
+        /** Remove a file from the target.
+          * @param pf The pointer to ProjectFile.
+          * @return True if @c pf was a valid project file, false if not.
+          */
+        bool RemoveFile(ProjectFile* pf);
+
     private:
         friend class ProjectFile; // to allow it to add/remove files in FilesList
-        cbProject* m_Project;
-        wxString m_ExternalDeps;
-        wxString m_AdditionalOutputFiles;
-        BuildTargets m_TargetDeps;
-        FilesList m_Files;
-        bool m_BuildWithAll; // obsolete: left just to convert old projects to use virtual targets
-        bool m_CreateStaticLib;
-        bool m_CreateDefFile;
-        bool m_UseConsoleRunner;
+
+        cbProject*       m_Project;
+        wxString         m_ExternalDeps;
+        wxString         m_AdditionalOutputFiles;
+        BuildTargets     m_TargetDeps;
+        FilesList        m_Files;
+        ProjectFileArray m_FileArray;
+        bool             m_BuildWithAll; // obsolete: left just to convert old projects to use virtual targets
+        bool             m_CreateStaticLib;
+        bool             m_CreateDefFile;
+        bool             m_UseConsoleRunner;
 };
 
 #endif // PROJECTBUILDTARGET_H

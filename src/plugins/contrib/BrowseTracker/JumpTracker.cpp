@@ -101,8 +101,8 @@ void JumpTracker::OnAttach()
     //    #endif
 
     //    // Set current plugin version
-    //	PluginInfo* pInfo = (PluginInfo*)(Manager::Get()->GetPluginManager()->GetPluginInfo(this));
-    //	pInfo->version = plgnVersion.GetVersion();
+    //    PluginInfo* pInfo = (PluginInfo*)(Manager::Get()->GetPluginManager()->GetPluginInfo(this));
+    //    pInfo->version = plgnVersion.GetVersion();
 
     m_bJumpInProgress = false;
 
@@ -123,7 +123,8 @@ void JumpTracker::OnAttach()
 
     // Codeblocks Events registration
     Manager::Get()->RegisterEventSink(cbEVT_EDITOR_UPDATE_UI   , new cbEventFunctor<JumpTracker, CodeBlocksEvent>(this, &JumpTracker::OnEditorUpdateEvent));
-    Manager::Get()->RegisterEventSink(cbEVT_EDITOR_ACTIVATED, new cbEventFunctor<JumpTracker, CodeBlocksEvent>(this, &JumpTracker::OnEditorActivated));
+   //-Manager::Get()->RegisterEventSink(cbEVT_EDITOR_ACTIVATED, new cbEventFunctor<JumpTracker, CodeBlocksEvent>(this, &JumpTracker::OnEditorActivated));
+    Manager::Get()->RegisterEventSink(cbEVT_EDITOR_DEACTIVATED, new cbEventFunctor<JumpTracker, CodeBlocksEvent>(this, &JumpTracker::OnEditorDeactivated));
     Manager::Get()->RegisterEventSink(cbEVT_APP_START_SHUTDOWN, new cbEventFunctor<JumpTracker, CodeBlocksEvent>(this, &JumpTracker::OnStartShutdown));
     // -- Project events
     Manager::Get()->RegisterEventSink(cbEVT_PROJECT_ACTIVATE, new cbEventFunctor<JumpTracker, CodeBlocksEvent>(this, &JumpTracker::OnProjectActivatedEvent));
@@ -315,6 +316,47 @@ void JumpTracker::OnEditorActivated(CodeBlocksEvent& event)
     return;
 }//OnEditorActivated
 // ----------------------------------------------------------------------------
+void JumpTracker::OnEditorDeactivated(CodeBlocksEvent& event)
+// ----------------------------------------------------------------------------
+{
+    // Record this deactivation event and place deactivation location in history
+    event.Skip();
+
+    if (m_bShuttingDown) return;
+    if (not IsAttached()) return;
+
+    // Don't record closing editor deactivations
+    if (m_bProjectClosing)
+        return;
+
+    EditorBase* eb = event.GetEditor();
+    wxString edFilename = eb->GetFilename();
+    cbEditor* cbed = Manager::Get()->GetEditorManager()->GetBuiltinEditor(eb);
+
+    if (not cbed)
+    {
+        // We ignore events with no associated editor
+        #if defined(LOGGING)
+        LOGIT( _T("JT [OnEditorDeactivated ignored:no cbEditor[%s]"), edFilename.c_str());
+        #endif
+        return;
+    }
+
+    #if defined(LOGGING)
+    LOGIT( _T("JT Editor DeActivated[%s]"), eb->GetShortName().c_str() );
+    #endif
+
+    cbStyledTextCtrl* edstc = cbed->GetControl();
+    if(edstc->GetCurrentLine() == wxSCI_INVALID_POSITION)
+        return;
+
+    long edPosn = edstc->GetCurrentPos();
+    //if ( m_Cursor not_eq JumpDataContains(edFilename, edPosn) )
+        JumpDataAdd(edFilename, edPosn, edstc->GetCurrentLine());
+    return;
+}//OnEditorDeactivated
+
+// ----------------------------------------------------------------------------
 void JumpTracker::OnStartShutdown(CodeBlocksEvent& /*event*/)
 // ----------------------------------------------------------------------------
 {
@@ -448,24 +490,32 @@ void JumpTracker::OnMenuJumpBack(wxCommandEvent &/*event*/)
     m_bJumpInProgress = true;
 
     do {
-        int count = m_ArrayOfJumpData.GetCount();
-        if (not count) break;
+        int knt = m_ArrayOfJumpData.GetCount();
+        if (not knt) break;
 
-        if ( count > 1 )
+        if ( knt > 1 )
             m_Cursor -= 1;
         if (m_Cursor < 0)
-            m_Cursor = maxJumpEntries-1;
-        if (m_Cursor > (int)count-1)
-            m_Cursor = count-1;
+        {
+            //m_Cursor = maxJumpEntries-1;  //(remove wrap code)-
+            m_Cursor = 0;
+            return;
+        }
+        if (m_Cursor > (int)knt-1)
+        {
+            //-m_Cursor = knt-1;          //(remove wrap code)-
+            m_Cursor = (int)knt-1;
+            return;
+        }
 
         EditorManager* edmgr = Manager::Get()->GetEditorManager();
         int cursor = m_Cursor;
         wxString edFilename;
         long edPosn;
         bool found = false;
-        for (int i = 0; i<count; ++i, --cursor)
+        for (int i = 0; i<knt; ++i, --cursor)
         {
-            if (cursor < 0) cursor = count-1;
+            if (cursor < 0) cursor = knt-1;
             JumpData& jumpBack = m_ArrayOfJumpData.Item(cursor);
             edFilename = jumpBack.GetFilename();
             edPosn = jumpBack.GetPosition();
@@ -512,22 +562,24 @@ void JumpTracker::OnMenuJumpNext(wxCommandEvent &/*event*/)
 
     m_bJumpInProgress = true;
     do {
-        int count = m_ArrayOfJumpData.GetCount();
-        if (not count) break;
+        int knt = m_ArrayOfJumpData.GetCount();
+        if (not knt) break;
 
-        if ( count > 1 )
+        if ( knt > 1 )
             m_Cursor += 1;
-        if (m_Cursor > (int)count-1)
-            m_Cursor = 0;
+        //-if (m_Cursor > (int)knt-1) (remove wrap code)
+        //-   m_Cursor = 0;             (remove wrap code)
+        if (m_Cursor > (int)knt-1)
+            m_Cursor = (int)knt-1;
 
         EditorManager* edmgr = Manager::Get()->GetEditorManager();
         int cursor = m_Cursor;
         wxString edFilename;
         long edPosn;
         bool found = false;
-        for (int i = 0; i<count; ++i, ++cursor)
+        for (int i = 0; i<knt; ++i, ++cursor)
         {
-            if (cursor > count-1) cursor = 0;
+            if (cursor > knt-1) cursor = 0;
             JumpData& jumpNext = m_ArrayOfJumpData.Item(cursor);
             edFilename = jumpNext.GetFilename();
             edPosn = jumpNext.GetPosition();

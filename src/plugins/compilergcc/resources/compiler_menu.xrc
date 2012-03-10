@@ -1,5 +1,5 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resource>
+<?xml version="1.0" encoding="utf-8" ?>
+<resource xmlns="http://www.wxwidgets.org/wxxrc">
   <object class="wxMenu" name="compiler_menu">
     <object class="wxMenuItem" name="idCompilerMenuCompile">
       <label>&amp;Build</label>
@@ -35,15 +35,15 @@
       <help>Clean current project</help>
     </object>
     <object class="separator"/>
-    <object class="wxMenuItem" name="idCompilerMenuCompileAll">
+    <object class="wxMenuItem" name="idCompilerMenuBuildWorkspace">
       <label>Build &amp;workspace</label>
       <help>Build all projects in workspace</help>
     </object>
-    <object class="wxMenuItem" name="idCompilerMenuRebuildAll">
+    <object class="wxMenuItem" name="idCompilerMenuRebuildWorkspace">
       <label>Reb&amp;uild workspace</label>
       <help>Rebuild all projects in workspace</help>
     </object>
-    <object class="wxMenuItem" name="idCompilerMenuCleanAll">
+    <object class="wxMenuItem" name="idCompilerMenuCleanWorkspace">
       <label>Clean workspace</label>
       <help>Clean current project (dependencies too)</help>
     </object>

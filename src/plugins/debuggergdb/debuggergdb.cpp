@@ -54,16 +54,15 @@
 #endif
 
 #ifndef CB_PRECOMP
+    #include <wx/app.h>
+    #include <wx/bmpbuttn.h>
+    #include <wx/combobox.h>
+    #include <wx/filedlg.h>
     #include <wx/frame.h> // GetMenuBar
+    #include <wx/menu.h>
+    #include <wx/stattext.h>
+    #include <wx/textdlg.h>
     #include "cbproject.h"
-#endif
-
-#if defined(__APPLE__) && defined(__MACH__)
-    #define LIBRARY_ENVVAR _T("DYLD_LIBRARY_PATH")
-#elif !defined(__WXMSW__)
-    #define LIBRARY_ENVVAR _T("LD_LIBRARY_PATH")
-#else
-    #define LIBRARY_ENVVAR _T("PATH")
 #endif
 
 #define implement_debugger_toolbar
@@ -1035,7 +1034,7 @@ int DebuggerGDB::LaunchProcess(const wxString& cmd, const wxString& cwd)
         return -1;
 
     // start the gdb process
-    m_pProcess = new PipedProcess((void**)&m_pProcess, this, idGDBProcess, true, cwd);
+    m_pProcess = new PipedProcess(&m_pProcess, this, idGDBProcess, true, cwd);
     Manager::Get()->GetLogManager()->Log(_("Starting debugger: "), m_PageIndex);
     m_Pid = wxExecute(cmd, wxEXEC_ASYNC, m_pProcess);
 
@@ -1474,7 +1473,7 @@ int DebuggerGDB::DoDebug()
     wxString oldLibPath; // keep old PATH/LD_LIBRARY_PATH contents
     if (!rd.skipLDpath)
     {
-        wxGetEnv(LIBRARY_ENVVAR, &oldLibPath);
+        wxGetEnv(CB_LIBRARY_ENVVAR, &oldLibPath);
 
         // setup dynamic linker path
         if (actualCompiler && target)
@@ -1486,8 +1485,8 @@ int DebuggerGDB::DoDebug()
             if (newLibPath.Mid(newLibPath.Length() - 1, 1) != libPathSep)
                 newLibPath << libPathSep;
             newLibPath << oldLibPath;
-            wxSetEnv(LIBRARY_ENVVAR, newLibPath);
-            DebugLog(LIBRARY_ENVVAR _T("=") + newLibPath);
+            wxSetEnv(CB_LIBRARY_ENVVAR, newLibPath);
+            DebugLog(CB_LIBRARY_ENVVAR _T("=") + newLibPath);
         }
     }
 
@@ -1500,7 +1499,7 @@ int DebuggerGDB::DoDebug()
     if (!rd.skipLDpath)
     {
         // restore dynamic linker path
-        wxSetEnv(LIBRARY_ENVVAR, oldLibPath);
+        wxSetEnv(CB_LIBRARY_ENVVAR, oldLibPath);
     }
 
     if (ret != 0)

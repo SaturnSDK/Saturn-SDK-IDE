@@ -2,9 +2,9 @@
  * This file is part of the Code::Blocks IDE and licensed under the GNU General Public License, version 3
  * http://www.gnu.org/licenses/gpl-3.0.html
  *
- * $Revision: 5929 $
- * $Id: compilerLDC.cpp $
- * $HeadURL: svn://svn.berlios.de/codeblocks/trunk/src/plugins/compilergcc/compilerLDC.cpp $
+ * $Revision$
+ * $Id$
+ * $HeadURL$
  */
 
 #include <sdk.h>
@@ -84,7 +84,7 @@ void CompilerLDC::Reset()
     m_Options.AddOption(_("enable contracts"), _T("-enable-contracts"), category);
     m_Options.AddOption(_("enable assertions"), _T("-enable-asserts"), category);
     m_Options.AddOption(_("enable invariants"), _T("-enable-invariants"), category);
- 
+
     // optimization
     category = _("Optimization");
     m_Options.AddOption(_("No optimization"), _T("-O0"), category);
@@ -134,7 +134,7 @@ AutoDetectResult CompilerLDC::AutoDetectInstallationDir()
 {
     wxString sep = wxFileName::GetPathSeparator();
     m_MasterPath = wxFileExists(_T("/usr/local/bin/ldc")) ? _T("/usr/local") : _T("/usr");
-    
+
     AddIncludeDir(m_MasterPath + sep + _T("import"));
     AddLibDir(m_MasterPath + sep + _T("lib"));
 

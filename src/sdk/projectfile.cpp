@@ -23,9 +23,6 @@
 #include "projectfileoptionsdlg.h"
 #include "filefilters.h"
 
-#include <wx/listimpl.cpp>
-WX_DEFINE_LIST(FilesList);
-
 ProjectFile::ProjectFile(cbProject* prj) :
     compile(false),
     link(false),
@@ -87,8 +84,14 @@ void ProjectFile::AddBuildTarget(const wxString& targetName)
     if (project)
     {
         ProjectBuildTarget* target = project->GetBuildTarget(targetName);
-        if (target && !target->m_Files.Find(this))
-            target->m_Files.Append(this);
+        if (target && (target->m_Files.find(this) == target->m_Files.end()))
+        {
+            target->m_Files.insert(this);
+            // Only add the file, if we are not currently loading the project and m_FileArray is already initialised
+            // initialising is done in the getter-function (GetFile(index), to save time, if it is not needed
+            if ( target->m_FileArray.GetCount() > 0 )
+                target->m_FileArray.Add(this);
+        }
     }
 
     // also do this for auto-generated files
@@ -119,9 +122,12 @@ void ProjectFile::RemoveBuildTarget(const wxString& targetName)
         ProjectBuildTarget* target = project->GetBuildTarget(targetName);
         if (target)
         {
-            wxFilesListNode* node = target->m_Files.Find(this);
-            if (node)
-                target->m_Files.Erase(node);
+            FilesList::iterator it = target->m_Files.find(this);
+            if (it != target->m_Files.end())
+            {
+                target->m_Files.erase(it);
+                target->m_FileArray.Remove(*it);
+            }
         }
     }
 
@@ -278,7 +284,6 @@ const pfDetails& ProjectFile::GetFileDetails(ProjectBuildTarget* target)
     return *pfd;
 }
 
-#ifndef CB_FOR_CONSOLE
 FileVisualState ProjectFile::GetFileState() const
 {
     return m_VisualState;
@@ -297,7 +302,6 @@ void ProjectFile::SetFileState(FileVisualState state)
         }
     }
 }
-#endif // #ifndef CB_FOR_CONSOLE
 
 void ProjectFile::SetUseCustomBuildCommand(const wxString& compilerId, bool useCustomBuildCommand)
 {
@@ -317,6 +321,11 @@ bool ProjectFile::GetUseCustomBuildCommand(const wxString& compilerId)
 wxString ProjectFile::GetCustomBuildCommand(const wxString& compilerId)
 {
     return customBuild[compilerId].buildCommand;
+}
+
+int ProjectFile::CompareProjectFiles(ProjectFile* item1, ProjectFile* item2)
+{
+    return wxStrcmp(item1->relativeFilename, item2->relativeFilename);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

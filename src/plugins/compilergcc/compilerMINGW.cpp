@@ -55,41 +55,41 @@ void CompilerMINGW::Reset()
 {
     if (platform::windows)
     {
-        m_Programs.C = _T("mingw32-gcc.exe");
-        m_Programs.CPP = _T("mingw32-g++.exe");
-        m_Programs.LD = _T("mingw32-g++.exe");
-        m_Programs.DBG = _T("gdb.exe");
-        m_Programs.LIB = _T("ar.exe");
-        m_Programs.WINDRES = _T("windres.exe");
-        m_Programs.MAKE = _T("mingw32-make.exe");
+        m_Programs.C         = _T("mingw32-gcc.exe");
+        m_Programs.CPP       = _T("mingw32-g++.exe");
+        m_Programs.LD        = _T("mingw32-g++.exe");
+        m_Programs.DBG       = _T("gdb.exe");
+        m_Programs.LIB       = _T("ar.exe");
+        m_Programs.WINDRES   = _T("windres.exe");
+        m_Programs.MAKE      = _T("mingw32-make.exe");
     }
     else
     {
-        m_Programs.C = _T("gcc");
-        m_Programs.CPP = _T("g++");
-        m_Programs.LD = _T("g++");
-        m_Programs.DBG = _T("gdb");
-        m_Programs.LIB = _T("ar");
-        m_Programs.WINDRES = _T("");
-        m_Programs.MAKE = _T("make");
+        m_Programs.C         = _T("gcc");
+        m_Programs.CPP       = _T("g++");
+        m_Programs.LD        = _T("g++");
+        m_Programs.DBG       = _T("gdb");
+        m_Programs.LIB       = _T("ar");
+        m_Programs.WINDRES   = _T("");
+        m_Programs.MAKE      = _T("make");
     }
-    m_Switches.includeDirs = _T("-I");
-    m_Switches.libDirs = _T("-L");
-    m_Switches.linkLibs = _T("-l");
-    m_Switches.defines = _T("-D");
-    m_Switches.genericSwitch = _T("-");
-    m_Switches.objectExtension = _T("o");
-    m_Switches.needDependencies = true;
-    m_Switches.forceCompilerUseQuotes = false;
-    m_Switches.forceLinkerUseQuotes = false;
-    m_Switches.logging = clogSimple;
-    m_Switches.libPrefix = _T("lib");
-    m_Switches.libExtension = _T("a");
-    m_Switches.linkerNeedsLibPrefix = false;
+    m_Switches.includeDirs             = _T("-I");
+    m_Switches.libDirs                 = _T("-L");
+    m_Switches.linkLibs                = _T("-l");
+    m_Switches.defines                 = _T("-D");
+    m_Switches.genericSwitch           = _T("-");
+    m_Switches.objectExtension         = _T("o");
+    m_Switches.needDependencies        = true;
+    m_Switches.forceCompilerUseQuotes  = false;
+    m_Switches.forceLinkerUseQuotes    = false;
+    m_Switches.logging                 = clogSimple;
+    m_Switches.libPrefix               = _T("lib");
+    m_Switches.libExtension            = _T("a");
+    m_Switches.linkerNeedsLibPrefix    = false;
     m_Switches.linkerNeedsLibExtension = false;
-    m_Switches.supportsPCH = true;
-    m_Switches.PCHExtension = _T("h.gch");
-    m_Switches.UseFullSourcePaths = true; // use the GDB workaround !!!!!!!!
+    m_Switches.supportsPCH             = true;
+    m_Switches.PCHExtension            = _T("h.gch");
+    m_Switches.UseFullSourcePaths      = true; // use the GDB workaround !!!!!!!!
 
     // Summary of GCC options: http://gcc.gnu.org/onlinedocs/gcc/Option-Summary.html
 
@@ -172,7 +172,7 @@ void CompilerMINGW::Reset()
 
     m_Commands[(int)ctCompileObjectCmd].push_back(CompilerTool(_T("$compiler $options $includes -c $file -o $object")));
     m_Commands[(int)ctGenDependenciesCmd].push_back(CompilerTool(_T("$compiler -MM $options -MF $dep_object -MT $object $includes $file")));
-    m_Commands[(int)ctCompileResourceCmd].push_back(CompilerTool(_T("$rescomp -i $file -J rc -o $resource_output -O coff $res_includes")));
+    m_Commands[(int)ctCompileResourceCmd].push_back(CompilerTool(_T("$rescomp $res_includes -J rc -O coff -i $file -o $resource_output")));
     m_Commands[(int)ctLinkConsoleExeCmd].push_back(CompilerTool(_T("$linker $libdirs -o $exe_output $link_objects $link_resobjects $link_options $libs")));
     if (platform::windows)
     {
@@ -203,14 +203,21 @@ void CompilerMINGW::LoadDefaultRegExArray()
     m_RegExes.Clear();
     m_RegExes.Add(RegExStruct(_("Fatal error"), cltError, _T("FATAL:[ \t]*(.*)"), 1));
     m_RegExes.Add(RegExStruct(_("'In function...' info"), cltInfo, _T("(") + FilePathWithSpaces + _T("):[ \t]+") + _T("([iI]n ([cC]lass|[cC]onstructor|[dD]estructor|[fF]unction|[mM]ember [fF]unction).*)"), 2, 1));
+    m_RegExes.Add(RegExStruct(_("'Skipping N instantiation contexts' info (2)"), cltInfo, _T("(") + FilePathWithSpaces + _T("):([0-9]+):[0-9]+:[ \t]+(\\[[ \t]+[Ss]kipping [0-9]+ instantiation contexts[ \t]+\\])"), 3, 1, 2));
+    m_RegExes.Add(RegExStruct(_("'Skipping N instantiation contexts' info"), cltInfo, _T("(") + FilePathWithSpaces + _T("):([0-9]+):[ \t]+(\\[[ \t]+[Ss]kipping [0-9]+ instantiation contexts[ \t]+\\])"), 3, 1, 2));
+    m_RegExes.Add(RegExStruct(_("'Instantiated from' info (2)"), cltInfo, _T("(") + FilePathWithSpaces + _T("):([0-9]+):[0-9]+:[ \t]+([iI]nstantiated from .*)"), 3, 1, 2));
     m_RegExes.Add(RegExStruct(_("'Instantiated from' info"), cltInfo, _T("(") + FilePathWithSpaces + _T("):([0-9]+):[ \t]+([iI]nstantiated from .*)"), 3, 1, 2));
     m_RegExes.Add(RegExStruct(_("Resource compiler error"), cltError, _T("windres.exe:[ \t](") + FilePathWithSpaces + _T("):([0-9]+):[ \t](.*)"), 3, 1, 2));
     m_RegExes.Add(RegExStruct(_("Resource compiler error (2)"), cltError, _T("windres.exe:[ \t](.*)"), 1));
     m_RegExes.Add(RegExStruct(_("Preprocessor warning"), cltWarning, _T("(") + FilePathWithSpaces + _T("):([0-9]+):([0-9]+):[ \t]([Ww]arning:[ \t].*)"), 4, 1, 2));
-    m_RegExes.Add(RegExStruct(_("Preprocessor error"), cltError, _T("(") + FilePathWithSpaces + _T("):([0-9]+):[0-9]+:[ \t](.*)"), 3, 1, 2));
+    m_RegExes.Add(RegExStruct(_("Compiler note (2)"), cltInfo, _T("(") + FilePathWithSpaces + _T("):([0-9]+):[0-9]+:[ \t]([Nn]ote:[ \t].*)"), 3, 1, 2));
     m_RegExes.Add(RegExStruct(_("Compiler note"), cltInfo, _T("(") + FilePathWithSpaces + _T("):([0-9]+):[ \t]([Nn]ote:[ \t].*)"), 3, 1, 2));
     m_RegExes.Add(RegExStruct(_("General note"), cltInfo, _T("([Nn]ote:[ \t].*)"), 1));
+    m_RegExes.Add(RegExStruct(_("Preprocessor error"), cltError, _T("(") + FilePathWithSpaces + _T("):([0-9]+):[0-9]+:[ \t](.*)"), 3, 1, 2));
+    m_RegExes.Add(RegExStruct(_("Compiler warning (2)"), cltWarning, _T("(") + FilePathWithSpaces + _T("):([0-9]+):[0-9]+:[ \t]([Ww]arning:[ \t].*)"), 3, 1, 2));
     m_RegExes.Add(RegExStruct(_("Compiler warning"), cltWarning, _T("(") + FilePathWithSpaces + _T("):([0-9]+):[ \t]([Ww]arning:[ \t].*)"), 3, 1, 2));
+    m_RegExes.Add(RegExStruct(_("Undefined reference (2)"), cltError, FilePathWithSpaces + _T("\\.o:(") + FilePathWithSpaces + _T("):([0-9]+):[ \t](undefined reference.*)"), 3, 1, 2));
+    m_RegExes.Add(RegExStruct(_("Compiler error (2)"), cltError, _T("(") + FilePathWithSpaces + _T("):([0-9]+):[0-9]+:[ \t](.*)"), 3, 1, 2));
     m_RegExes.Add(RegExStruct(_("Compiler error"), cltError, _T("(") + FilePathWithSpaces + _T("):([0-9]+):[ \t](.*)"), 3, 1, 2));
     m_RegExes.Add(RegExStruct(_("Linker warning"), cltWarning, _T("(") + FilePathWithSpaces + _T("):\\(\\.text\\+[0-9a-fA-FxX]+\\):[ \t]([Ww]arning:[ \t].*)"), 2, 1));
     m_RegExes.Add(RegExStruct(_("Linker error"), cltError, _T("(") + FilePathWithSpaces + _T("):([0-9]+):[0-9]+:[ \t](.*)"), 3, 1, 2));
@@ -313,9 +320,6 @@ AutoDetectResult CompilerMINGW::AutoDetectInstallationDir()
 
 void CompilerMINGW::SetVersionString()
 {
-    /*  NOTE (Biplab#9#): There is a critical bug which blocks C::B from starting up.
-        So we'll disable version string checking till we fix the bug. */
-    #if !wxCHECK_VERSION(2, 9, 0)
 //    Manager::Get()->GetLogManager()->DebugLog(_T("Compiler detection for compiler ID: '") + GetID() + _T("' (parent ID= '") + GetParentID() + _T("')"));
 
     wxArrayString output, errors;
@@ -367,7 +371,16 @@ void CompilerMINGW::SetVersionString()
     }
 
 //    Manager::Get()->GetLogManager()->DebugLog(_T("Compiler version detection: Issuing command: ") + gcc_command);
-    long result = wxExecute(gcc_command + _T(" --version"), output, errors, wxEXEC_NODISABLE);
+
+    int flags = wxEXEC_SYNC;
+#if wxCHECK_VERSION(2, 9, 0)
+    // Stop event-loop while wxExecute runs, to avoid a deadlock on startup,
+    // that occurs from time to time on wx2.9
+    flags |= wxEXEC_NOEVENTS;
+#else
+    flags |= wxEXEC_NODISABLE;
+#endif
+    long result = wxExecute(gcc_command + _T(" --version"), output, errors, flags );
     if(result != 0)
     {
 //        Manager::Get()->GetLogManager()->DebugLog(_T("Compiler version detection: Error executing command."));
@@ -392,5 +405,4 @@ void CompilerMINGW::SetVersionString()
             }
         }
     }
-    #endif
 }

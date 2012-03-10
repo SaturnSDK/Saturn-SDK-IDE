@@ -40,12 +40,9 @@
     #include <sys/stat.h> // lstat
 #endif
 
-namespace compatibility { typedef TernaryCondTypedef<wxMinimumVersion<2,5>::eval, wxTreeItemIdValue, long int>::eval tree_cookie_t; };
-
-
 //const wxString DEFAULT_WORKSPACE     = _T("default.workspace");
 //const wxString DEFAULT_ARRAY_SEP     = _T(";");
-//
+
 //#ifndef __WXMAC__
 //const wxString DEFAULT_CONSOLE_TERM  = _T("xterm -T $TITLE -e");
 //#else
@@ -98,7 +95,7 @@ namespace compatibility { typedef TernaryCondTypedef<wxMinimumVersion<2,5>::eval
 //    The method has been extended with a bool to specify if the seperator should be appended at the end.
 //    Ultimate goal : every client gives as a value : false.
 //    Why : well a seperator should separate, there's nothing to separate at the end (like nothing to separate
-//    at the begining, we don't put one there ...), but some client code is having problems when the separator is
+//    at the beginning, we don't put one there ...), but some client code is having problems when the separator is
 //    not present at the end. So for compatibility issues we have as default value for the new argument true, so the
 //    old code has the same behaviour as before [TODO: make those clients no longer dependent on this stupid final separator behaviour]
 //    New code will specify false as the bool value, so hoping rather soon a search on this method will have all hits showing
@@ -111,13 +108,11 @@ namespace compatibility { typedef TernaryCondTypedef<wxMinimumVersion<2,5>::eval
 //    for (unsigned int i = 0; i < array.GetCount(); ++i)
 //    {
 //        out << array[i];
-//        if(i < array.GetCount() - 1 || SeparatorAtEnd)
-//        {
+//        if (i < array.GetCount() - 1 || SeparatorAtEnd)
 //            out << separator;
-//        }
 //    }
 //    return out;
-//} // end of GetStringFromArray
+//}
 //
 //wxArrayString GetArrayFromString(const wxString& text, const wxString& separator, bool trimSpaces)
 //{
@@ -151,19 +146,36 @@ namespace compatibility { typedef TernaryCondTypedef<wxMinimumVersion<2,5>::eval
 //    return out;
 //}
 //
+//wxArrayString MakeUniqueArray(const wxArrayString& array, bool caseSens)
+//{
+//    wxArrayString out;
+//    for (unsigned int i = 0; i < array.GetCount(); ++i)
+//    {
+//        if (caseSens)
+//        {
+//          if (out.Index(array[i]) == wxNOT_FOUND)
+//              out.Add(array[i]);
+//        }
+//        else
+//        {
+//          if (out.Index(array[i].Lower()) == wxNOT_FOUND)
+//              out.Add(array[i].Lower()); // append only lower-case for the moment
+//        }
+//    }
+//    return out;
+//}
+//
 //void AppendArray(const wxArrayString& from, wxArrayString& to)
 //{
 //    for (unsigned int i = 0; i < from.GetCount(); ++i)
-//    {
 //        to.Add(from[i]);
-//    }
 //}
 //
 //wxString UnixFilename(const wxString& filename)
 //{
 //    wxString result = filename;
 //
-//    if(platform::windows)
+//    if (platform::windows)
 //    {
 //        bool unc_name = result.StartsWith(_T("\\\\"));
 //
@@ -223,6 +235,10 @@ namespace compatibility { typedef TernaryCondTypedef<wxMinimumVersion<2,5>::eval
 //        ext.IsSameAs(FileFilters::F77_EXT) ||
 //        ext.IsSameAs(FileFilters::F90_EXT) ||
 //        ext.IsSameAs(FileFilters::F95_EXT) ||
+//        ext.IsSameAs(FileFilters::FOR_EXT) ||
+//        ext.IsSameAs(FileFilters::FPP_EXT) ||
+//        ext.IsSameAs(FileFilters::F03_EXT) ||
+//        ext.IsSameAs(FileFilters::F08_EXT) ||
 //        ext.IsSameAs(FileFilters::JAVA_EXT)
 //       )
 //        return ftSource;
@@ -249,6 +265,9 @@ namespace compatibility { typedef TernaryCondTypedef<wxMinimumVersion<2,5>::eval
 //
 //    else if (ext.IsSameAs(FileFilters::MSVC7_EXT))
 //        return ftMSVC7Project;
+//
+//    else if (ext.IsSameAs(FileFilters::MSVC10_EXT))
+//        return ftMSVC10Project;
 //
 //    else if (ext.IsSameAs(FileFilters::MSVC6_WORKSPACE_EXT))
 //        return ftMSVC6Workspace;
@@ -317,14 +336,25 @@ namespace compatibility { typedef TernaryCondTypedef<wxMinimumVersion<2,5>::eval
 //
 //    return ftOther;
 //}
-
-void DoRememberSelectedNode(wxTreeCtrl* tree, wxString& selectedItemPath)
+//
+void DoRememberSelectedNodes(wxTreeCtrl* tree, wxArrayString& selectedItemPaths)
 {
-    wxTreeItemId item = tree->GetSelection();
-    while(item.IsOk())
+    wxArrayTreeItemIds items;
+
+    if (tree->GetSelections(items) < 1 )
+        return;
+
+    for (size_t i=0; i < items.GetCount(); ++i)
     {
-        selectedItemPath = _T("/") + tree->GetItemText(item) + selectedItemPath;
-        item = tree->GetItemParent(item);
+        wxString path = wxEmptyString;
+        wxTreeItemId item = items[i];
+        while(item.IsOk())
+        {
+            path = _T("/") + tree->GetItemText(item) + path;
+            item = tree->GetItemParent(item);
+        }
+        if (path != wxEmptyString)
+            selectedItemPaths.Add(path);
     }
 }
 
@@ -345,15 +375,15 @@ void DoSelectRememberedNode(wxTreeCtrl* tree, const wxTreeItemId& parent, wxStri
         folder = tmpPath.Left(pos);
         tmpPath = tmpPath.Right(tmpPath.Length() - pos - 1);
         wxTreeItemId item = parent;
-        compatibility::tree_cookie_t cookie = 0;
+        wxTreeItemIdValue cookie = 0;
 
         while (item.IsOk())
         {
-            if(tree->GetItemText(item) != folder)
+            if (tree->GetItemText(item) != folder)
                 item = tree->GetNextSibling(item);
             else
             {
-                if(pos < 0)
+                if (pos < 0)
                 {
                     tree->SelectItem(item);
                     break;
@@ -378,7 +408,7 @@ bool DoRememberExpandedNodes(wxTreeCtrl* tree, const wxTreeItemId& parent, wxArr
     wxString originalPath = path;
     bool found = false;
 
-    compatibility::tree_cookie_t cookie = 0;
+    wxTreeItemIdValue cookie = 0;
 
     wxTreeItemId child = tree->GetFirstChild(parent, cookie);
     while (child.IsOk())
@@ -424,7 +454,7 @@ void DoExpandRememberedNode(wxTreeCtrl* tree, const wxTreeItemId& parent, const 
 
         //Manager::Get()->GetLogManager()->Log(mltDevDebug, "%s, %s", folder.c_str(), tmpPath.c_str());
 
-        compatibility::tree_cookie_t cookie = 0;
+        wxTreeItemIdValue cookie = 0;
 
         wxTreeItemId child = tree->GetFirstChild(parent, cookie);
         while (child.IsOk())
@@ -441,7 +471,7 @@ void DoExpandRememberedNode(wxTreeCtrl* tree, const wxTreeItemId& parent, const 
     }
 }
 
-void SaveTreeState(wxTreeCtrl* tree, const wxTreeItemId& parent, wxArrayString& nodePaths, wxString& selectedItemPath)
+void SaveTreeState(wxTreeCtrl* tree, const wxTreeItemId& parent, wxArrayString& nodePaths, wxArrayString& selectedItemPaths)
 {
     nodePaths.Clear();
     if (!parent.IsOk() || !tree || !tree->ItemHasChildren(parent) || !tree->IsExpanded(parent))
@@ -450,11 +480,11 @@ void SaveTreeState(wxTreeCtrl* tree, const wxTreeItemId& parent, wxArrayString& 
     if (!DoRememberExpandedNodes(tree, parent, nodePaths, tmp))
         nodePaths.Add(tmp); // just the tree root
 
-    selectedItemPath.clear();
-    DoRememberSelectedNode(tree, selectedItemPath);
+    selectedItemPaths.Clear();
+    DoRememberSelectedNodes(tree, selectedItemPaths);
 }
 
-void RestoreTreeState(wxTreeCtrl* tree, const wxTreeItemId& parent, wxArrayString& nodePaths, wxString& selectedItemPath)
+void RestoreTreeState(wxTreeCtrl* tree, const wxTreeItemId& parent, wxArrayString& nodePaths, wxArrayString& selectedItemPaths)
 {
     if (!parent.IsOk() || !tree)
         return;
@@ -466,13 +496,14 @@ void RestoreTreeState(wxTreeCtrl* tree, const wxTreeItemId& parent, wxArrayStrin
     for (unsigned int i = 0; i < nodePaths.GetCount(); ++i)
         DoExpandRememberedNode(tree, parent, nodePaths[i]);
     nodePaths.Clear();
-    DoSelectRememberedNode(tree, tree->GetRootItem(), selectedItemPath);
-    selectedItemPath.clear();
+    for (unsigned int i = 0; i < selectedItemPaths.GetCount(); ++i)
+        DoSelectRememberedNode(tree, tree->GetRootItem(), selectedItemPaths[i]);
+    selectedItemPaths.Clear();
 }
 
 //bool CreateDirRecursively(const wxString& full_path, int perms)
 //{
-//    if(wxDirExists(full_path)) // early out
+//    if (wxDirExists(full_path)) // early out
 //        return true;
 //
 //    wxArrayString dirs;
@@ -540,7 +571,7 @@ wxString ChooseDirectory(wxWindow* parent,
 //    if (!file.IsOpened())
 //        return false;
 //    int len = file.Length();
-//    if(!len)
+//    if (!len)
 //    {
 //        file.Close();
 //        return true;
@@ -560,7 +591,7 @@ wxString ChooseDirectory(wxWindow* parent,
 //    delete [] buff;
 //
 //    return true;
-//} // end of cbRead
+//}
 //
 //wxString cbReadFileContents(wxFile& file, wxFontEncoding encoding)
 //{
@@ -577,7 +608,7 @@ wxString ChooseDirectory(wxWindow* parent,
 //    {
 //        wxCSConv conv(encoding);
 //        result = file.Write(buff,conv);
-//        if(result)
+//        if (result)
 //            file.Flush();
 //        file.Close();
 //    }
@@ -610,7 +641,7 @@ wxString ChooseDirectory(wxWindow* parent,
 //// Return multibyte (C string) representation of the string
 //const wxWX2MBbuf cbU2C(const wxString& str)
 //{
-//    if(platform::unicode)
+//    if (platform::unicode)
 //        return str.mb_str(wxConvUTF8);
 //    else
 //        return str.mb_str();
@@ -624,7 +655,7 @@ wxString ChooseDirectory(wxWindow* parent,
 //    wxFontEncoding encoding = possibleEncoding;
 //    strOut.Clear();
 //
-//    if(platform::unicode)
+//    if (platform::unicode)
 //    {
 //        if (possibleEncoding != wxFONTENCODING_UTF16 &&
 //            possibleEncoding != wxFONTENCODING_UTF16LE &&
@@ -684,13 +715,15 @@ wxString ChooseDirectory(wxWindow* parent,
 //    for(unsigned int i = 0; i < str.length(); ++i)
 //    {
 //        wxChar c = str[i];
-//        if(   (c >= _T('A') && c <= _T('Z'))
+//        if (  (c >= _T('A') && c <= _T('Z'))
 //           || (c >= _T('a') && c <= _T('z'))
 //           || (c >= _T('0') && c <= _T('9'))
-//           ||  c == _T('.') || c == _T('-') || c == _T('_') )
+//           || (c == _T('.'))
+//           || (c == _T('-'))
+//           || (c == _T('_')) )
 //
 //            ret.Append(c);
-//        else if(c == _T(' '))
+//        else if (c == _T(' '))
 //            ret.Append(_T('+'));
 //        else
 //        {
@@ -715,7 +748,7 @@ wxString ChooseDirectory(wxWindow* parent,
 //bool NormalizePath(wxFileName& f,const wxString& base)
 //{
 //    bool result = true;
-////    if(!f.IsAbsolute())
+////    if (!f.IsAbsolute())
 //    {
 //        f.Normalize(wxPATH_NORM_ALL & ~wxPATH_NORM_CASE, base);
 //        result = f.IsOk();
@@ -745,37 +778,27 @@ wxString ChooseDirectory(wxWindow* parent,
 //    int j = pathDirArray.GetCount() - 1;
 //    for (int i = suffixDirArray.GetCount() - 1; i >= 0; i--)
 //    {
+//        // skip paths like /./././ and ////
 //        if (suffixDirArray[i] == _T(".") || suffixDirArray[i] == _T(""))
-//        {
-//            // skip paths like /./././ and ////
 //            continue;
-//        }
 //
+//        // suffix has more directories than path - cannot represent the same path
 //        if (j < 0)
-//        {
-//            // suffix has more directories than path - cannot represent the same path
 //            return false;
-//        }
 //
+//        // suffix contains ".." - from now on we cannot precisely determine
+//        // whether suffix and path match - we assume that they do
 //        if (suffixDirArray[i] == _T(".."))
-//        {
-//            // suffix contains ".." - from now on we cannot precisely determine
-//            // whether suffix and path match - we assume that they do
 //            return true;
-//        }
+//        // the corresponding directories of the two paths differ
 //        else if (suffixDirArray[i] != pathDirArray[j])
-//        {
-//            // the corresponding directories of the two paths differ
 //            return false;
-//        }
 //
 //        j--;
 //    }
 //
 //    if (suffix.IsAbsolute() && (j >= 0 || suffix.GetVolume() != path.GetVolume()))
-//    {
 //        return false;
-//    }
 //
 //    // 'suffix' is a suffix of 'path'
 //    return true;
@@ -790,9 +813,8 @@ wxString ChooseDirectory(wxWindow* parent,
 //{
 //    bool result = false;
 //    HINSTANCE hinstDll;
-//    DWORD dwVersion = 0;
 //    hinstDll = LoadLibrary(_T("comctl32.dll"));
-//    if(hinstDll)
+//    if (hinstDll)
 //    {
 //        DLLGETVERSIONPROC pDllGetVersion;
 //        pDllGetVersion = (DLLGETVERSIONPROC)GetProcAddress(hinstDll, "DllGetVersion");
@@ -808,10 +830,7 @@ wxString ChooseDirectory(wxWindow* parent,
 //            hr = (*pDllGetVersion)(&dvi);
 //
 //            if (SUCCEEDED(hr))
-//            {
-//               dwVersion = MAKELONG(dvi.dwMinorVersion, dvi.dwMajorVersion);
 //               result = dvi.dwMajorVersion == 6;
-//            }
 //        }
 //
 //        FreeLibrary(hinstDll);
@@ -887,21 +906,21 @@ void PlaceWindow(wxTopLevelWindow *w, cbPlaceDialogMode mode, bool enforce)
 
     int the_mode;
 
-    if(!w)
+    if (!w)
         cbThrow(_T("Passed NULL pointer to PlaceWindow."));
 
     wxWindow* referenceWindow = Manager::Get()->GetAppWindow();
 
-    if(!referenceWindow)    // no application window available, so this is as good as we can get
+    if (!referenceWindow)    // no application window available, so this is as good as we can get
         referenceWindow = w;
 
     wxRect windowRect = w->GetRect();
 
     ConfigManager *cfg = Manager::Get()->GetConfigManager(_T("app"));
-    if(!enforce && cfg->ReadBool(_T("/dialog_placement/do_place")) == false)
+    if (!enforce && cfg->ReadBool(_T("/dialog_placement/do_place")) == false)
         return;
 
-    if(mode == pdlBest)
+    if (mode == pdlBest)
         the_mode = cfg->ReadInt(_T("/dialog_placement/dialog_position"), (int) pdlCentre);
     else
         the_mode = (int) mode;
@@ -955,7 +974,7 @@ void PlaceWindow(wxTopLevelWindow *w, cbPlaceDialogMode mode, bool enforce)
             int y1 = windowRect.y;
             int y2 = windowRect.y + windowRect.height;
 
-            if(windowRect.width > monitorWidth) // cannot place without clipping, so centre it
+            if (windowRect.width > monitorWidth) // cannot place without clipping, so centre it
             {
                 x1 = r.left + (monitorWidth  - windowRect.width)/2;
                 x2 = x1 + windowRect.width;
@@ -966,7 +985,7 @@ void PlaceWindow(wxTopLevelWindow *w, cbPlaceDialogMode mode, bool enforce)
                 x1 = std::max(x2 - windowRect.width, (int) r.left);
                 x2 = x1 + windowRect.width;
             }
-            if(windowRect.height > monitorHeight) // cannot place without clipping, so centre it
+            if (windowRect.height > monitorHeight) // cannot place without clipping, so centre it
             {
                 y1 = r.top + (monitorHeight  - windowRect.height)/2;
                 y2 = y1 + windowRect.height;
@@ -1014,24 +1033,24 @@ void PlaceWindow(wxTopLevelWindow *w, cbPlaceDialogMode mode, bool enforce)
     int the_mode;
 
     wxWindow* referenceWindow = Manager::Get()->GetAppWindow();
-    if(!referenceWindow) // let's not crash on shutdown
+    if (!referenceWindow) // let's not crash on shutdown
         return;
 
-    if(!w)
+    if (!w)
         cbThrow(_T("Passed NULL pointer to PlaceWindow."));
 
 
     ConfigManager *cfg = Manager::Get()->GetConfigManager(_T("app"));
-    if(!enforce && cfg->ReadBool(_T("/dialog_placement/do_place")) == false)
+    if (!enforce && cfg->ReadBool(_T("/dialog_placement/do_place")) == false)
         return;
 
-    if(mode == pdlBest)
+    if (mode == pdlBest)
         the_mode = cfg->ReadInt(_T("/dialog_placement/dialog_position"), (int) pdlCentre);
     else
         the_mode = (int) mode;
 
 
-    if(the_mode == pdlCentre || the_mode == pdlHead)
+    if (the_mode == pdlCentre || the_mode == pdlHead)
     {
         w->CentreOnScreen();
         return;
@@ -1086,7 +1105,7 @@ void PlaceWindow(wxTopLevelWindow *w, cbPlaceDialogMode mode, bool enforce)
 //{
 //    windows_version_t cb_get_os()
 //    {
-//        if(!platform::windows)
+//        if (!platform::windows)
 //        {
 //            return winver_NotWindows;
 //        }
@@ -1097,20 +1116,28 @@ void PlaceWindow(wxTopLevelWindow *w, cbPlaceDialogMode mode, bool enforce)
 //            int famWinNT = wxOS_WINDOWS_NT;
 //
 //            int Major = 0;
-//            int family = wxGetOsVersion(&Major, NULL);
+//            int Minor = 0;
+//            int family = wxGetOsVersion(&Major, &Minor);
 //
-//            if(family == famWin95)
+//            if (family == famWin95)
 //                 return winver_Windows9598ME;
 //
-//            if(family == famWinNT)
+//            if (family == famWinNT)
 //            {
-//                if(Major == 5)
+//                if (Major == 5 && Minor == 0)
+//                    return winver_WindowsNT2000;
+//
+//                if (Major == 5 && Minor == 1)
 //                    return winver_WindowsXP;
 //
-//                if(Major == 6) // just guessing here, not sure if this is right
-//                    return winver_Vista;
+//                if (Major == 5 && Minor == 2)
+//                    return winver_WindowsServer2003;
 //
-//                return winver_WindowsNT2000;
+//                if (Major == 6 && Minor == 0)
+//                    return winver_WindowsVista;
+//
+//                if (Major == 6 && Minor == 1)
+//                    return winver_Windows7;
 //            }
 //
 //            return winver_UnknownWindows;

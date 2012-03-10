@@ -13,36 +13,50 @@ libcodecompletion_la_LDFLAGS = -module -version-info 0:1:0 -shared -no-undefined
 
 libcodecompletion_la_LIBADD = $(PLUGIN_WX_LIBS) ../../sdk/libcodeblocks.la
 
-libcodecompletion_la_SOURCES = ccdebuginfo.cpp \
-			ccoptionsdlg.cpp \
+libcodecompletion_la_SOURCES = ccoptionsdlg.cpp \
 			ccoptionsprjdlg.cpp \
+			cctreectrl.cpp \
 			classbrowser.cpp \
 			classbrowserbuilderthread.cpp \
 			codecompletion.cpp \
 			coderefactoring.cpp \
 			insertclassmethoddlg.cpp \
 			nativeparser.cpp \
+			nativeparser_base.cpp \
 			selectincludefile.cpp \
+			systemheadersthread.cpp \
+			parser/ccdebuginfo.cpp \
+			parser/cclogger.cpp \
 			parser/parser.cpp \
 			parser/parserthread.cpp \
+			parser/parserthreadedtask.cpp \
+			parser/profiletimer.cpp \
 			parser/token.cpp \
 			parser/tokenizer.cpp \
+			parser/tokenstree.cpp \
 			parser/searchtree.cpp \
 			parser/expression.cpp
 
-noinst_HEADERS = ccdebuginfo.h \
-			ccoptionsdlg.h \
+noinst_HEADERS = ccoptionsdlg.h \
 			ccoptionsprjdlg.h \
+			cctreectrl.h \
 			classbrowser.h \
 			classbrowserbuilderthread.h \
 			codecompletion.h \
 			coderefactoring.h \
 			insertclassmethoddlg.h \
 			nativeparser.h \
+			nativeparser_base.h \
 			selectincludefile.h \
+			systemheadersthread.h \
+			parser/ccdebuginfo.h \
+			parser/cclogger.h \
 			parser/parser.h \
 			parser/parserthread.h \
+			parser/parserthreadedtask.h \
+			parser/profiletimer.h \
 			parser/token.h \
 			parser/tokenizer.h \
+			parser/tokenstree.h \
 			parser/searchtree.h \
 			parser/expression.h

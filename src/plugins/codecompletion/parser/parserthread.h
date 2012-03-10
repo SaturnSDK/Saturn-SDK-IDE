@@ -10,49 +10,55 @@
 #include <wx/event.h>
 #include <wx/string.h>
 #include <wx/dynarray.h>
-#include "tokenizer.h"
-#include "token.h"
-#include <cbthreadpool.h>
-#include <filemanager.h>
 
 #include <queue>
 #include <vector>
 
-//extern int THREAD_START;
-//extern int THREAD_END;
-extern int NEW_TOKEN;
-extern int FILE_NEEDS_PARSING;
+#include <cbthreadpool.h>
+#include <filemanager.h>
+#include <logmanager.h> // F()
+
+#include "cclogger.h"
+#include "tokenizer.h"
+#include "token.h"
+#include "tokenstree.h"
+
 extern const wxString g_UnnamedSymbol;
 
 struct NameSpace
 {
-	wxString Name;
-	int StartLine;
-	int EndLine;
+    wxString Name;
+    int StartLine;
+    int EndLine;
 };
 
 typedef std::vector<NameSpace> NameSpaceVec;
 
-class Parser;
+class ParserBase;
 
 struct ParserThreadOptions
 {
     ParserThreadOptions() :
+
         useBuffer(false),
+        fileOfBuffer(),
+        parentIdxOfBuffer(-1),
+        initLineOfBuffer(1),
         bufferSkipBlocks(false),
         bufferSkipOuterBlocks(false),
-        wantPreprocessor(true),
+        isTemp(false),
+
         followLocalIncludes(true),
         followGlobalIncludes(true),
-        isTemp(false),
+        wantPreprocessor(true),
+        parseComplexMacros(true),
+
         handleFunctions(true),
         handleVars(true),
         handleClasses(true),
         handleEnums(true),
         handleTypedefs(true),
-        parseComplexMacros(true),
-        parentOfBuffer(nullptr),
-        initLineOfBuffer(1),
+
         loader(nullptr)
         {}
 
@@ -61,23 +67,23 @@ struct ParserThreadOptions
      * and will be deleted before the next file is parsed.
      */
     bool        useBuffer;
+    wxString    fileOfBuffer;
+    int         parentIdxOfBuffer;
+    int         initLineOfBuffer;
     bool        bufferSkipBlocks;
     bool        bufferSkipOuterBlocks; // classes, namespaces and functions
-    bool        wantPreprocessor;
+    bool        isTemp;
+
     bool        followLocalIncludes;
     bool        followGlobalIncludes;
-    bool        isTemp;
+    bool        wantPreprocessor;
+    bool        parseComplexMacros;
 
     bool        handleFunctions;
     bool        handleVars;
     bool        handleClasses;
     bool        handleEnums;
     bool        handleTypedefs;
-    bool        parseComplexMacros;
-
-    wxString    fileOfBuffer;
-    Token*      parentOfBuffer;
-    int         initLineOfBuffer;
 
     LoaderBase* loader; // if not NULL, load through filemanager (using threads)
 };
@@ -99,20 +105,22 @@ public:
       * @param parserThreadOptions parser thread options, see ParserThreadOptions Class for details.
       * @param tokensTree it is the tree structure holding all the tokens, ParserThread will add every token when it parsed.
       */
-    ParserThread(Parser* parent,
-                 const wxString& bufferOrFilename,
-                 bool isLocal,
+    ParserThread(ParserBase*          parent,
+                 const wxString&      bufferOrFilename,
+                 bool                 isLocal,
                  ParserThreadOptions& parserThreadOptions,
-                 TokensTree* tokensTree);
+                 TokensTree*          tokensTree);
 
     /** ParserThread destructor.*/
     virtual ~ParserThread();
 
-    /** Do the main job (syntax analysis) here */
+    /** Do the main job (syntax analysis) here
+      */
     bool Parse();
 
     /** Get the context "namespace XXX { ... }" directive. It is used to find the initial search scope
       * before CC prompt a suggestion list.
+      * Need a critical section locker before call this function!
       * @param buffer  wxString to be parsed.
       * @param result  vector containing all the namespace names.
       */
@@ -120,6 +128,7 @@ public:
 
     /** Get the context "using namespace XXX" directive. It is used to find the initial search scope
       * before CC prompt a suggestion list.
+      * Need a critical section locker before call this function!
       * @param buffer  wxString to be parsed.
       * @param result the wxArrayString contains all the namespace names.
       */
@@ -134,13 +143,24 @@ protected:
       * often happens when user open a project. Every parserthread task will firstly be added to the thread pool, later
       * called automatically from the thread pool.
       */
-    int Execute() { return Parse() ? 0 : 1; }
+    int Execute()
+    {
+        CC_LOCKER_TRACK_TT_MTX_LOCK(s_TokensTreeMutex)
 
-    /** skip until we meet one of the characters in the wxString
-      * @param chars wxString specifies all the ending characters
-      * @param supportNesting if true, we need to record the "{" and "}" nesting levels when skipping.
+        bool success = Parse();
+
+        CC_LOCKER_TRACK_TT_MTX_UNLOCK(s_TokensTreeMutex)
+
+        return success ? 0 : 1;
+    }
+
+    /** Continuously eat the tokens until we meet one of the matching characters
+      * @param chars wxString includes all the matching characters
+      * @param supportNesting if true, we need to consider the "{" and "}" nesting levels when skipping,
+      * @param singleCharToken if true, only single char tokens (like semicolon, brace etc.) are considered (speeds up parsing for queries like this)
+      * in this case, the function returned on a match by nesting/brace level preserved.
       */
-    wxChar SkipToOneOfChars(const wxString& chars, bool supportNesting = false);
+    wxChar SkipToOneOfChars(const wxString& chars, bool supportNesting = false, bool singleCharToken = true);
 
     /** actually run the syntax analysis*/
     void DoParse();
@@ -224,18 +244,15 @@ protected:
                       bool isOperator = false,
                       bool isImpl = false);
 
-    /** return the actual token type.
+    /** return the actual token's base type.
       * e.g.: if the token type string is: "const wxString &"
-      * then, the actual token type is : "wxString"
+      * then, the actual token base type is : "wxString"
       */
-    wxString GetActualTokenType();
+    wxString GetTokenBaseType();
 
 private:
     /** initialize the m_Buffer, load from local file or use a buffer in memory */
     bool InitTokenizer();
-
-    /** no usage atm */
-    void Log(const wxString& log);
 
     /** if parent is 0, then global namespace will be used, all tokens under parent scope are searched
       * @param name the search key string
@@ -247,8 +264,7 @@ private:
     /** Support function overloading */
     Token* TokenExists(const wxString& name, const wxString& baseArgs, Token* parent, TokenKind kind);
 
-    /** Before call this function, *MUST* add a locker
-      * e.g. wxCriticalSectionLocker locker(s_TokensTreeCritical);
+    /** TODO comment here?
       */
     Token* FindTokenFromQueue(std::queue<wxString>& q,
                               Token* parent = 0,
@@ -260,7 +276,7 @@ private:
       * then, the returned argument list is "(const TheClass*,int)"
       * @param args Full argument list
       * @param baseArgs argument types only
-      * @return if faild, will return false, so, it must be a variable
+      * @return if failed, will return false, so, it must be a variable
       */
     bool GetBaseArgs(const wxString & args, wxString& baseArgs);
 
@@ -272,6 +288,7 @@ private:
 
     void GetTemplateArgs();
     void ResolveTemplateArgs(Token* newToken);
+    wxArrayString GetTemplateArgArray(const wxString& templateArgs, bool remove_gt_lt, bool add_last);
     void ResolveTemplateFormalArgs(const wxString& templateArgs, wxArrayString& formals);
     void ResolveTemplateActualArgs(const wxString& templateArgs, wxArrayString& actuals);
     bool ResolveTemplateMap(const wxString& typeStr, const wxArrayString& actuals,
@@ -286,7 +303,7 @@ private:
     Tokenizer            m_Tokenizer;
 
     /** a pointer to its parent Parser object */
-    Parser*              m_Parent;
+    ParserBase*          m_Parent;
 
     /** a pointer to the token tree, all the tokens will be added to that tree structure */
     TokensTree*          m_TokensTree;
@@ -313,7 +330,7 @@ private:
     /** determine whether we are parsing the local files or buffer already in memory */
     bool                 m_IsLocal;
 
-    /** this is a very important member variables! It serves as a type stack,
+    /** This is a very important member variables! It serves as a type stack,
       * eg: parsing the statement: "int wxString const varA;"
       * we determine 'varA' is a token variable, until we searching to the last semicolon.
       * every token before 'varA' will be pushed to m_Str, at this time
@@ -321,7 +338,7 @@ private:
       */
     wxString             m_Str;
 
-    /**  hold the previous token string */
+    /** hold the previous token string */
     wxString             m_LastToken;
 
     /** parser options, see the ParserThreadOptions structure */

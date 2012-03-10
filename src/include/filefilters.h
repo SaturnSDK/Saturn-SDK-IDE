@@ -70,6 +70,7 @@ namespace FileFilters
     extern const DLLIMPORT wxString MSVC6_WORKSPACE_EXT;
     extern const DLLIMPORT wxString MSVC7_EXT;
     extern const DLLIMPORT wxString MSVC7_WORKSPACE_EXT;
+    extern const DLLIMPORT wxString MSVC10_EXT;
     extern const DLLIMPORT wxString XCODE1_EXT;
     extern const DLLIMPORT wxString XCODE2_EXT;
     extern const DLLIMPORT wxString ASM_EXT;
@@ -78,6 +79,10 @@ namespace FileFilters
     extern const DLLIMPORT wxString F77_EXT;
     extern const DLLIMPORT wxString F90_EXT;
     extern const DLLIMPORT wxString F95_EXT;
+    extern const DLLIMPORT wxString FOR_EXT;
+    extern const DLLIMPORT wxString FPP_EXT;
+    extern const DLLIMPORT wxString F03_EXT;
+    extern const DLLIMPORT wxString F08_EXT;
     extern const DLLIMPORT wxString JAVA_EXT;
     extern const DLLIMPORT wxString C_EXT;
     extern const DLLIMPORT wxString CC_EXT;
@@ -110,6 +115,7 @@ namespace FileFilters
     extern const DLLIMPORT wxString MSVC6_WORKSPACE_DOT_EXT;
     extern const DLLIMPORT wxString MSVC7_DOT_EXT;
     extern const DLLIMPORT wxString MSVC7_WORKSPACE_DOT_EXT;
+    extern const DLLIMPORT wxString MSVC10_DOT_EXT;
     extern const DLLIMPORT wxString XCODE1_DOT_EXT;
     extern const DLLIMPORT wxString XCODE2_DOT_EXT;
     extern const DLLIMPORT wxString ASM_DOT_EXT;
@@ -118,6 +124,10 @@ namespace FileFilters
     extern const DLLIMPORT wxString F77_DOT_EXT;
     extern const DLLIMPORT wxString F90_DOT_EXT;
     extern const DLLIMPORT wxString F95_DOT_EXT;
+    extern const DLLIMPORT wxString FOR_DOT_EXT;
+    extern const DLLIMPORT wxString FPP_DOT_EXT;
+    extern const DLLIMPORT wxString F03_DOT_EXT;
+    extern const DLLIMPORT wxString F08_DOT_EXT;
     extern const DLLIMPORT wxString JAVA_DOT_EXT;
     extern const DLLIMPORT wxString C_DOT_EXT;
     extern const DLLIMPORT wxString CC_DOT_EXT;

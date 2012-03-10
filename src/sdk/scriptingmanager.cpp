@@ -98,60 +98,58 @@ ScriptingManager::ScriptingManager()
 
 //ScriptingManager::~ScriptingManager()
 //{
-////    //dtor
-////    // save trusted scripts set
-////    ConfigManagerContainer::StringToStringMap myMap;
-////    int i = 0;
-////    TrustedScripts::iterator it;
-////    for (it = m_TrustedScripts.begin(); it != m_TrustedScripts.end(); ++it)
-////    {
-////        if (!it->second.permanent)
-////            continue;
-////        wxString key = wxString::Format(_T("trust%d"), i++);
-////        wxString value = wxString::Format(_T("%s?%x"), it->first.c_str(), it->second.crc);
-////        myMap.insert(myMap.end(), std::make_pair(key, value));
-////    }
-////    Manager::Get()->GetConfigManager(_T("security"))->Write(_T("/trusted_scripts"), myMap);
-////
-////    SquirrelVM::Shutdown();
+//    //dtor
+//    // save trusted scripts set
+//    ConfigManagerContainer::StringToStringMap myMap;
+//    int i = 0;
+//    TrustedScripts::iterator it;
+//    for (it = m_TrustedScripts.begin(); it != m_TrustedScripts.end(); ++it)
+//    {
+//        if (!it->second.permanent)
+//            continue;
+//        wxString key = wxString::Format(_T("trust%d"), i++);
+//        wxString value = wxString::Format(_T("%s?%x"), it->first.c_str(), it->second.crc);
+//        myMap.insert(myMap.end(), std::make_pair(key, value));
+//    }
+//    Manager::Get()->GetConfigManager(_T("security"))->Write(_T("/trusted_scripts"), myMap);
+
+//    SquirrelVM::Shutdown();
 //}
 
 //void ScriptingManager::RegisterScriptFunctions()
 //{
 //    // done in scriptbindings.cpp
 //}
-//
+
 //bool ScriptingManager::LoadScript(const wxString& filename)
 //{
 ////    wxCriticalSectionLocker c(cs);
-//
-//    wxString fname = filename;
-//    wxFile f;
-//    // try open
-//    f.Open(fname);
+
+//    wxString fname(filename);
+//    wxFile f(fname); // try to open
 //    if (!f.IsOpened())
 //    {
-//    	bool found = false;
-//
-//    	// check in same dir as currently running script (if any)
-//    	if (!m_CurrentlyRunningScriptFile.IsEmpty())
-//    	{
-//    		fname = wxFileName(m_CurrentlyRunningScriptFile).GetPath() + _T('/') + filename;
-//			f.Open(fname);
-//			found = f.IsOpened();
-//    	}
-//
-//		if (!found)
-//		{
-//			// check in standard script dirs
-//			fname = ConfigManager::LocateDataFile(filename, sdScriptsUser | sdScriptsGlobal);
-//			f.Open(fname);
-//			if (!f.IsOpened())
-//			{
-//				Manager::Get()->GetLogManager()->DebugLog(_T("Can't open script ") + filename);
-//				return false;
-//			}
-//		}
+//        bool found = false;
+
+//        // check in same dir as currently running script (if any)
+//        if (!m_CurrentlyRunningScriptFile.IsEmpty())
+//        {
+//            fname = wxFileName(m_CurrentlyRunningScriptFile).GetPath() + _T('/') + filename;
+//            f.Open(fname);
+//            found = f.IsOpened();
+//        }
+
+//        if (!found)
+//        {
+//            // check in standard script dirs
+//            fname = ConfigManager::LocateDataFile(filename, sdScriptsUser | sdScriptsGlobal);
+//            f.Open(fname);
+//            if (!f.IsOpened())
+//            {
+//                Manager::Get()->GetLogManager()->DebugLog(_T("Can't open script ") + filename);
+//                return false;
+//            }
+//        }
 //    }
 //    // read file
 //    wxString contents = cbReadFileContents(f);
@@ -160,7 +158,7 @@ ScriptingManager::ScriptingManager()
 //    m_CurrentlyRunningScriptFile.Clear();
 //    return ret;
 //}
-//
+
 //bool ScriptingManager::LoadBuffer(const wxString& buffer, const wxString& debugName)
 //{
 //    // includes guard to avoid recursion
@@ -175,11 +173,11 @@ ScriptingManager::ScriptingManager()
 //        return true;
 //    }
 //    m_IncludeSet.insert(incName);
-//
+
 ////    wxCriticalSectionLocker c(cs);
-//
+
 //    s_ScriptErrors.Clear();
-//
+
 //    // compile script
 //    SquirrelObject script;
 //    try
@@ -192,7 +190,7 @@ ScriptingManager::ScriptingManager()
 //        m_IncludeSet.erase(incName);
 //        return false;
 //    }
-//
+
 //    // run script
 //    try
 //    {
@@ -207,32 +205,32 @@ ScriptingManager::ScriptingManager()
 //    m_IncludeSet.erase(incName);
 //    return true;
 //}
-//
-//
+
+
 //wxString ScriptingManager::LoadBufferRedirectOutput(const wxString& buffer)
 //{
 ////    wxCriticalSectionLocker c(cs);
-//
+
 //    s_ScriptErrors.Clear();
 //    ::capture.Clear();
-//
+
 //    sq_setprintfunc(SquirrelVM::GetVMPtr(), CaptureScriptOutput);
 //    bool res = LoadBuffer(buffer);
 //    sq_setprintfunc(SquirrelVM::GetVMPtr(), ScriptsPrintFunc);
-//
+
 //    return res ? ::capture : (wxString) wxEmptyString;
 //}
-//
+
 //wxString ScriptingManager::GetErrorString(SquirrelError* exception, bool clearErrors)
 //{
 //    wxString msg;
 //    if (exception)
 //        msg << cbC2U(exception->desc);
 //    msg << s_ScriptErrors;
-//
+
 //    if (clearErrors)
 //        s_ScriptErrors.Clear();
-//
+
 //    return msg;
 //}
 
@@ -241,20 +239,16 @@ void ScriptingManager::DisplayErrors(SquirrelError* exception, bool clearErrors)
     wxString msg = GetErrorString(exception, clearErrors);
     if (!msg.IsEmpty())
     {
-//#ifndef CB_FOR_CONSOLE
-		if (cbMessageBox(_("Script errors have occured...\nPress 'Yes' to see the exact errors."),
-							_("Script errors"),
-							wxICON_ERROR | wxYES_NO | wxNO_DEFAULT) == wxID_YES)
-		{
-			GenericMultiLineNotesDlg dlg(Manager::Get()->GetAppWindow(),
-										_("Script errors"),
-										msg,
-										true);
-			dlg.ShowModal();
-		}
-//#else // #ifndef CB_FOR_CONSOLE
-//        cbMessageBox(msg, _("Script errors"));
-//#endif // #ifndef CB_FOR_CONSOLE
+        if (cbMessageBox(_("Script errors have occured...\nPress 'Yes' to see the exact errors."),
+                            _("Script errors"),
+                            wxICON_ERROR | wxYES_NO | wxNO_DEFAULT) == wxID_YES)
+        {
+            GenericMultiLineNotesDlg dlg(Manager::Get()->GetAppWindow(),
+                                        _("Script errors"),
+                                        msg,
+                                        true);
+            dlg.ShowModal();
+        }
     }
 }
 

@@ -12,6 +12,7 @@
 #ifndef CB_PRECOMP
     #include "cbproject.h"
     #include "compilerfactory.h"
+    #include "editormanager.h"
     #include "logmanager.h"
     #include "projectmanager.h"
     #include <wx/xrc/xmlres.h>
@@ -222,7 +223,7 @@ void ProjectFileOptionsDlg::OnReadOnlyCheck(wxCommandEvent& event)
     if (event.IsChecked())
     {
         // make read-only
-        if (!ToggleFileReadOnly(true))
+        if ( !ToggleFileReadOnly(true) )
             #if wxCHECK_VERSION(2, 9, 0)
             Manager::Get()->GetLogManager()->DebugLog(F(_T("Unable to set file '%s' read-only (probably missing access rights)."), m_FileNameStr.wx_str()));
             #else
@@ -232,7 +233,7 @@ void ProjectFileOptionsDlg::OnReadOnlyCheck(wxCommandEvent& event)
     else
     {
         // make writeable
-        if (!ToggleFileReadOnly(false))
+        if ( !ToggleFileReadOnly(false) )
             #if wxCHECK_VERSION(2, 9, 0)
             Manager::Get()->GetLogManager()->DebugLog(F(_T("Unable to set file '%s' writeable (probably missing access rights)."), m_FileNameStr.wx_str()));
             #else
@@ -283,12 +284,13 @@ void ProjectFileOptionsDlg::EndModal(int retCode)
 {
     if (retCode == wxID_OK && m_ProjectFile)
     {
-        m_ProjectFile->buildTargets.Clear();
         wxCheckListBox *list = XRCCTRL(*this, "lstTargets", wxCheckListBox);
         for (int i = 0; i < (int)list->GetCount(); i++)
         {
             if (list->IsChecked(i))
                 m_ProjectFile->AddBuildTarget(list->GetString(i));
+            else
+                m_ProjectFile->RemoveBuildTarget(list->GetString(i));
         }
 
         m_ProjectFile->compile = XRCCTRL(*this, "chkCompile",   wxCheckBox)->GetValue();
@@ -378,9 +380,9 @@ void ProjectFileOptionsDlg::FillCompilers()
     cmb->Clear();
     for (unsigned int i = 0; i < CompilerFactory::GetCompilersCount(); ++i)
     {
-		Compiler* compiler = CompilerFactory::GetCompiler(i);
-		if (compiler)
-			cmb->Append(compiler->GetName());
+        Compiler* compiler = CompilerFactory::GetCompiler(i);
+        if (compiler)
+            cmb->Append(compiler->GetName());
     }
     // select project default compiler
     m_LastBuildStageCompilerSel = CompilerFactory::GetCompilerIndex(m_ProjectFile->GetParentProject()->GetCompilerID());
@@ -411,11 +413,11 @@ void ProjectFileOptionsDlg::UpdateBuildCommand()
 void ProjectFileOptionsDlg::SaveBuildCommandSelection()
 {
     Compiler* compiler = CompilerFactory::GetCompiler(m_LastBuildStageCompilerSel);
-	if (compiler)
-	{
-		m_ProjectFile->customBuild[compiler->GetID()].useCustomBuildCommand = XRCCTRL(*this, "chkBuildStage", wxCheckBox)->GetValue();
-		m_ProjectFile->customBuild[compiler->GetID()].buildCommand          = XRCCTRL(*this, "txtBuildStage", wxTextCtrl)->GetValue();
-	}
+    if (compiler)
+    {
+        m_ProjectFile->customBuild[compiler->GetID()].useCustomBuildCommand = XRCCTRL(*this, "chkBuildStage", wxCheckBox)->GetValue();
+        m_ProjectFile->customBuild[compiler->GetID()].buildCommand          = XRCCTRL(*this, "txtBuildStage", wxTextCtrl)->GetValue();
+    }
 }
 
 bool ProjectFileOptionsDlg::ToggleFileReadOnly(bool setReadOnly)

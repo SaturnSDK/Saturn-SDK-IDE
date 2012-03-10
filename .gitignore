@@ -1,0 +1,16 @@
+.objs
+devel
+output
+debug
+release
+*.gch
+*.layout
+*.depend
+*.patch
+lib
+autorevision.h
+*.a
+*.exe
+autorevision
+cb_console_runner
+*.bmarks

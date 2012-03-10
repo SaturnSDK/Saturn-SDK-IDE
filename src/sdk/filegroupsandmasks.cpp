@@ -11,15 +11,14 @@
 
 #ifndef CB_PRECOMP
     #include <wx/intl.h>
-    #include "globals.h"
+
+    #include "globals.h" // GetArrayFromString
     #include "configmanager.h"
     #include "manager.h"
     #include "logmanager.h"
 #endif
 
 #include "filegroupsandmasks.h"
-
-
 
 FilesGroupsAndMasks::FilesGroupsAndMasks()
 {
@@ -48,7 +47,7 @@ void FilesGroupsAndMasks::CopyFrom(const FilesGroupsAndMasks& rhs)
     Clear();
     for (unsigned int i = 0; i < rhs.m_Groups.GetCount(); ++i)
     {
-        FileGroups* fg = new FileGroups;
+        FileGroups* fg      = new FileGroups;
         FileGroups* otherfg = rhs.m_Groups[i];
         fg->groupName = otherfg->groupName;
         fg->fileMasks = otherfg->fileMasks;
@@ -63,20 +62,29 @@ void FilesGroupsAndMasks::SetDefault(bool do_clear)
         Clear();
 
     // only add default groups if none were loaded...
-    unsigned int group = AddGroup(_("Sources"));
+    unsigned int group;
+
+    group = AddGroup(_("Sources"));
     SetFileMasks(group, _T("*.c;*.cpp;*.cc;*.cxx") );
+
     group = AddGroup(_("D Sources"));
     SetFileMasks(group, _T("*.d") );
+
     group = AddGroup(_("Fortran Sources"));
-    SetFileMasks(group, _T("*.f;*.f77;*.f90;*.f95") );
+    SetFileMasks(group, _T("*.f;*.f77;*.for;*.fpp;*.f90;*.f95;*.f03;*.f08") );
+
     group = AddGroup(_("Java Sources"));
     SetFileMasks(group, _T("*.java") );
+
     group = AddGroup(_("Headers"));
     SetFileMasks(group, _T("*.h;*.hpp;*.hh;*.hxx") );
+
     group = AddGroup(_("ASM Sources"));
     SetFileMasks(group, _T("*.asm;*.s;*.ss;*.s62") );
+
     group = AddGroup(_("Resources"));
-    SetFileMasks(group, _T("*.res;*.xrc;*.rc") );
+    SetFileMasks(group, _T("*.res;*.xrc;*.rc;*.wxs") );
+
     group = AddGroup(_("Scripts"));
     SetFileMasks(group, _T("*.script") );
 }
@@ -105,9 +113,11 @@ void FilesGroupsAndMasks::Save()
         wxString key;
         key << _T("/file_groups/group") << wxString::Format(_T("%d"), i) << _T("/") << _T("name");
         conf->Write(key, fg->groupName);
+
         key.Clear();
         key << _T("/file_groups/group") << wxString::Format(_T("%d"), i) << _T("/") << _T("mask");
-        conf->Write(key, GetStringFromArray(fg->fileMasks, _T(";")));
+        // Clean-up file masks that appear twice or more
+        conf->Write(key, GetStringFromArray( MakeUniqueArray(fg->fileMasks, false), _T(";") ));
     }
 }
 
@@ -155,7 +165,8 @@ void FilesGroupsAndMasks::SetFileMasks(unsigned int group, const wxString& masks
         return;
 
     FileGroups* fg = m_Groups[group];
-    fg->fileMasks = GetArrayFromString(masks, _T(";"));
+    // Clean-up file masks that appear twice or more
+    fg->fileMasks = MakeUniqueArray( GetArrayFromString(masks, _T(";")), false );
 }
 
 unsigned int FilesGroupsAndMasks::GetGroupsCount() const
@@ -176,7 +187,9 @@ wxString FilesGroupsAndMasks::GetFileMasks(unsigned int group) const
     if (group >= m_Groups.GetCount())
         return wxEmptyString;
     const FileGroups* fg = m_Groups[group];
-    return GetStringFromArray(fg->fileMasks);
+
+    // Clean-up file masks that appear twice or more
+    return GetStringFromArray( MakeUniqueArray(fg->fileMasks, false) );
 }
 
 bool FilesGroupsAndMasks::MatchesMask(const wxString& ext, unsigned int group) const

@@ -54,7 +54,7 @@
     #define wxUSE_TOOLTIPS          1
     #define wxUSE_SPINBTN           1
     #define wxUSE_DATEPICKCTRL      1
-    #define wxPG_COMPATIBILITY_1_2_0    1
+    #define wxPG_COMPATIBILITY_1_2_0    0
 #endif
 
 
@@ -84,7 +84,7 @@
 // for "configure" scripts under unix, use them.
 #define wxPROPGRID_MAJOR          1
 #define wxPROPGRID_MINOR          4
-#define wxPROPGRID_RELEASE        15
+#define wxPROPGRID_RELEASE        16
 
 // For non-Unix systems (i.e. when building without a configure script),
 // users of this component can use the following macro to check if the
@@ -273,7 +273,7 @@
 // -----------------------------------------------------------------------
 
 #ifndef wxPG_COMPATIBILITY_1_2_0
-    #define wxPG_COMPATIBILITY_1_2_0    1
+    #define wxPG_COMPATIBILITY_1_2_0    0
 #endif
 
 
@@ -3272,6 +3272,13 @@ protected:
     /** Deletes all sub-properties. */
     void DoEmpty();
 
+    /**
+        Returns true if child property is selected.
+        If recursive == true, test sub-childs too (returns true if at least
+        one sub-child is selected).
+    */
+    bool IsChildSelected( const bool recursive = false ) const;
+
     // Call for after sub-properties added with AddChild
     void PrepareSubProperties();
 
@@ -4592,7 +4599,9 @@ public:
         Used by SetSplitterLeft() and DoFitColumns().
     */
     int GetColumnFitWidth(wxClientDC& dc, wxPGProperty* pwc, unsigned int col, bool subProps) const;
-
+/* C::B begin */
+    int GetColumnFullWidth( wxClientDC &dc, wxPGProperty *p, unsigned int col );
+/* C::B end */
     /**
         Returns currently selected property.
     */

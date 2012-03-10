@@ -7,9 +7,14 @@ INCLUDES = $(WX_CXXFLAGS) \
 			-I$(top_srcdir)/src/include/scripting/sqplus \
 			-I$(top_srcdir)/src/include/mozilla_chardet
 
-if CODEBLOCKS_LINUX
-AM_CPPFLAGS = -DENABLE_BINRELOC -DAPP_PREFIX="\"@prefix@\""
+if GTK_NOTEBOOK
+GTK_NOTEBOOK_FLAGS = -DUSE_GTK_NOTEBOOK
 endif
+
+if CODEBLOCKS_LINUX
+AM_CPPFLAGS = -DENABLE_BINRELOC -DAPP_PREFIX="\"@prefix@\"" $(WX_GTK2_CFLAGS) $(GTK_NOTEBOOK_FLAGS)
+endif
+
 
 bin_PROGRAMS = codeblocks codeblocks_con
 
@@ -29,7 +34,8 @@ install-exec-hook:
 # codeblocks_LDFLAGS = $(WX_GTK2_LIBS)
 
 codeblocks_LDADD =  -L../sdk -lcodeblocks \
-			$(WX_LIBS)
+			$(WX_LIBS) \
+			$(WX_GTK2_LIBS)
 
 codeblocks_con_LDADD =  -L../sdk -lcodeblocks_con \
 			$(WX_LIBS)

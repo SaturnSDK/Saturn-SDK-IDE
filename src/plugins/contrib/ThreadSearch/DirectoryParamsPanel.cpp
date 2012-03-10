@@ -33,11 +33,11 @@ DirectoryParamsPanel::DirectoryParamsPanel(wxWindow* parent, int id, const wxPoi
     wxPanel(parent, id, pos, size, wxTAB_TRAVERSAL)
 {
     // begin wxGlade: DirectoryParamsPanel::DirectoryParamsPanel
-    m_pTxtSearchDirPath = new wxTextCtrl(this, idTxtSearchDirPath, wxEmptyString);
+    m_pTxtSearchDirPath = new wxTextCtrl(this, idTxtSearchDirPath, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_PROCESS_ENTER);
     m_pBtnSelectDir = new wxButton(this, idBtnDirSelectClick, _("..."));
     m_pChkSearchDirRecursively = new wxCheckBox(this, idChkSearchDirRecurse, _("Recurse"));
     m_pChkSearchDirHiddenFiles = new wxCheckBox(this, idChkSearchDirHidden, _("Hidden"));
-    m_pTxtMask = new wxTextCtrl(this, idTxtSearchMask, wxT("*.*"));
+    m_pTxtMask = new wxTextCtrl(this, idTxtSearchMask, wxT("*.*"), wxDefaultPosition, wxDefaultSize, wxTE_PROCESS_ENTER);
 
     set_properties();
     do_layout();
@@ -64,7 +64,10 @@ void DirectoryParamsPanel::OnTxtTextEvent(wxCommandEvent &event)
 
 void DirectoryParamsPanel::OnBtnDirSelectClick(wxCommandEvent &event)
 {
-    wxDirDialog DlgDir(this, _("Select directory"), wxGetCwd());
+    wxString dir = m_pTxtSearchDirPath->GetValue();
+    if (dir.empty())
+        dir = wxGetCwd();
+    wxDirDialog DlgDir(this, _("Select directory"), dir);
     if ( DlgDir.ShowModal() == wxID_OK )
     {
         m_pTxtSearchDirPath->SetValue(DlgDir.GetPath());

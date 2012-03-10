@@ -63,7 +63,7 @@ MAYBE_KEYBINDER=keybinder
 endif
 
 if BUILD_LIBFINDER
-MAYBE_LIBFINDER=wxSmith wxSmithContribItems lib_finder
+MAYBE_LIBFINDER=wxContribItems lib_finder
 endif
 
 if BUILD_PROFILER
@@ -82,12 +82,16 @@ if BUILD_EXPORTER
 MAYBE_EXPORTER=source_exporter
 endif
 
+if BUILD_SPELLCHECKER
+MAYBE_SPELLCHECKER=SpellChecker
+endif
+
 if BUILD_SYMTAB
 MAYBE_SYMTAB=symtab
 endif
 
 if BUILD_THREADSEARCH
-MAYBE_THREADSEARCH=wxSmith wxSmithContribItems ThreadSearch
+MAYBE_THREADSEARCH=wxContribItems ThreadSearch
 endif
 
 if BUILD_TOOLSPLUS
@@ -98,16 +102,20 @@ if BUILD_VALGRIND
 MAYBE_VALGRIND=Valgrind
 endif
 
+if BUILD_WXCONTRIB
+MAYBE_WXCONTRIB=wxContribItems
+endif
+
 if BUILD_WXSMITH
 MAYBE_WXSMITH=wxSmith
 endif
 
 if BUILD_WXSMITHCONTRIB
-MAYBE_WXSMITHCONTRIB=wxSmith  wxSmithContribItems
+MAYBE_WXSMITHCONTRIB=wxSmith wxContribItems wxSmithContribItems
 endif
 
 if BUILD_WXSMITHAUI
-MAYBE_WXSMITHAUI=wxSmith wxSmithContribItems  wxSmithAui
+MAYBE_WXSMITHAUI=wxSmith wxSmithAui
 endif
 
 if BUILD_HEXEDITOR
@@ -160,11 +168,13 @@ SUBDIRS = $(MAYBE_AUTOVERSIONING) \
 		$(MAYBE_PROFILER) \
 		$(MAYBE_EXPORTER) \
 		$(MAYBE_SYMTAB) \
+		$(MAYBE_SPELLCHECKER) \
 		$(MAYBE_REGEX) \
 		$(MAYBE_REOPENEDITOR) \
 		$(MAYBE_THREADSEARCH) \
 		$(MAYBE_TOOLSPLUS) \
 		$(MAYBE_VALGRIND) \
+		$(MAYBE_WXCONTRIB) \
 		$(MAYBE_WXSMITH) \
 		$(MAYBE_WXSMITHCONTRIB) \
 		$(MAYBE_WXSMITHAUI)
@@ -195,12 +205,14 @@ DIST_SUBDIRS = AutoVersioning \
 		NassiShneiderman \
 		profiler \
 		source_exporter \
+		SpellChecker \
 		symtab \
 		regex_testbed \
 		ReopenEditor \
 		ThreadSearch \
 		ToolsPlus \
 		Valgrind \
+		wxContribItems \
 		wxSmith \
 		wxSmithContribItems \
 		wxSmithAui

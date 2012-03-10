@@ -12,10 +12,8 @@
 #include "globals.h"
 #include <wx/dynarray.h>
 #include <wx/filename.h>
-#include <wx/list.h>
 #include <wx/treectrl.h>
-
-#include "blockallocated.h"
+#include <wx/hashset.h>
 
 class cbProject;
 class ProjectBuildTarget;
@@ -35,7 +33,7 @@ class ProjectFile;
 typedef std::vector<ProjectFile*> ProjectFilesVector;
 
 /** Represents a file in a Code::Blocks project. */
-class ProjectFile  : public BlockAllocated<ProjectFile, 1000>
+class ProjectFile
 {
     public:
         /// Constructor
@@ -203,6 +201,15 @@ class ProjectFile  : public BlockAllocated<ProjectFile, 1000>
 
         /** Returns the wxTreeItemId for the file */
         const wxTreeItemId& GetTreeItemId() const { return m_TreeItemId; }
+
+        /** Compare relative names of rojectfiles.
+          * Static helper function to sort array of projectfiles.
+          * Needed because the order of files in a hashset is not guaranteed.
+          * @param item1 first projectfile.
+          * @param item2 second projectfile.
+          * @return A negative value, 0, or positive value if the relative
+          * filename of item1 is less than, equal to or greater than the one of item2. */
+        static int CompareProjectFiles(ProjectFile* item1, ProjectFile* item2);
     protected:
         friend class cbProject;
 
@@ -213,14 +220,15 @@ class ProjectFile  : public BlockAllocated<ProjectFile, 1000>
         wxString m_ObjName;
         PFDMap m_PFDMap;
 };
-WX_DECLARE_LIST(ProjectFile, FilesList);
+WX_DECLARE_HASH_SET   ( ProjectFile*, wxPointerHash, wxPointerEqual, FilesList );
+WX_DEFINE_SORTED_ARRAY( ProjectFile*, ProjectFileArray                         );
 
 /** This is a helper class that caches various filenames for one ProjectFile.
   * These include the source filename, the generated object filename,
   * relative and absolute versions of the above, etc.
   * Mainly used by the compiler...
   */
-class pfDetails : public BlockAllocated<pfDetails, 1000>
+class pfDetails
 {
     public:
         pfDetails(ProjectBuildTarget* target, ProjectFile* pf);
