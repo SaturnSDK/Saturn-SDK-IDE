@@ -334,6 +334,9 @@ void InfoPane::OnCloseClicked(wxAuiNotebookEvent& event)
 {
     if (event.GetSelection() == -1)
         return;
+    // veto the close-event, because we don't want to remove the page (just toggle it)
+    // this avoids an assert-message in debug-build (and wx2.9)
+    event.Veto();
     // toggle the notebook, that sends the event
     Toggle(GetPageIndexByWindow(GetPage(event.GetSelection())));
 }
@@ -351,7 +354,10 @@ void InfoPane::DoShowContextMenu()
     else
     	menu.FindItem(idNB_TabTop)->Enable(false);
 
-    if (page.Item(GetPageIndexByWindow(GetPage(GetSelection())))->islogger)
+    int selection = GetSelection();
+    if (selection >= 0 &&
+        selection < GetPageCount() &&
+        page.Item(GetPageIndexByWindow(GetPage(GetSelection())))->islogger)
     {
         menu.AppendSeparator();
         menu.Append(idCopyAllToClipboard, _("Copy contents to clipboard"));
