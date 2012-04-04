@@ -105,7 +105,7 @@ void SpellCheckSettingsPanel::InitDictionaryChoice()
 
     m_choiceDictionary->Clear();
     for ( unsigned int i = 0 ; i < dics.size(); i++ )
-        m_choiceDictionary->AppendString(dics[i]);
+        m_choiceDictionary->AppendString(m_sccfg->GetLanguageName(dics[i]));
 
     if ( sel != -1 )
         m_choiceDictionary->Select(sel);
@@ -120,10 +120,14 @@ wxString SpellCheckSettingsPanel::GetBitmapBaseName() const {return _T("SpellChe
 void SpellCheckSettingsPanel::PostConfig()
 {
     m_sccfg->SetEnableOnlineChecker(m_checkEnableOnlineSpellChecker->GetValue());
-    wxString dic = m_choiceDictionary->GetStringSelection();
-    if ( !dic.IsEmpty() )
+    std::vector<wxString> dics = m_sccfg->GetPossibleDictionaries();
+    if ( !dics.empty() )
     {
-        m_sccfg->SetDictionaryName( dic );
+        wxString dic = dics[m_choiceDictionary->GetSelection()];
+        if ( !dic.IsEmpty() )
+        {
+            m_sccfg->SetDictionaryName( dic );
+        }
     }
 
     wxString path;
