@@ -2,9 +2,9 @@
  * This file is part of the Code::Blocks IDE and licensed under the GNU General Public License, version 3
  * http://www.gnu.org/licenses/gpl-3.0.html
  *
- * $Revision: 7799 $
- * $Id: nativeparser.cpp 7799 2012-02-14 15:14:30Z mortenmacfly $
- * $HeadURL: https://svn.berlios.de/svnroot/repos/codeblocks/trunk/src/plugins/codecompletion/nativeparser.cpp $
+ * $Revision$
+ * $Id$
+ * $HeadURL$
  */
 
 #include <sdk.h>
@@ -1578,7 +1578,7 @@ bool NativeParserBase::PrettyPrintToken(const TokensTree* tree,
             return true;
 
         case tkFunction:
-            result = token->m_BaseType + wxT(" ") + result + token->m_Name + token->m_Args;
+            result = token->m_FullType + wxT(" ") + result + token->m_Name + token->m_Args;
             if (token->m_IsConst)
                 result += wxT(" const");
             return true;

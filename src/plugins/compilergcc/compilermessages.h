@@ -13,7 +13,7 @@ class CompilerErrors;
 class wxArrayString;
 class wxCommandEvent;
 
-class CompilerMessages : public ListCtrlLogger, public wxEvtHandler
+class CompilerMessages : public wxEvtHandler, public ListCtrlLogger
 {
     public:
         CompilerMessages(const wxArrayString& titles, const wxArrayInt& widths);
@@ -22,6 +22,7 @@ class CompilerMessages : public ListCtrlLogger, public wxEvtHandler
         virtual void FocusError(int nr);
 
         virtual wxWindow* CreateControl(wxWindow* parent);
+        void DestroyControls();
     private:
         void OnClick(wxCommandEvent& event);
         void OnDoubleClick(wxCommandEvent& event);

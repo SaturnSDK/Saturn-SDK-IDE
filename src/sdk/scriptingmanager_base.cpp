@@ -24,10 +24,10 @@
 #endif
 
 #include "crc32.h"
-#include "scripting/sqplus/sqplus.h"
-#include "scripting/bindings/scriptbindings_base.h"
-#include "scripting/bindings/sc_plugin.h"
-#include "scripting/include/sqstdstring.h"
+#include "sqplus.h"
+#include "scriptbindings.h"
+#include "sc_plugin.h"
+#include "sqstdstring.h"
 
 #ifdef CB_FOR_CONSOLE
     template<> SCRIPTING_MANAGER_BASE* Mgr<SCRIPTING_MANAGER_BASE>::instance = 0;
@@ -108,6 +108,7 @@ bool SCRIPTING_MANAGER_BASE::LoadScript(const wxString& filename)
 {
 //    wxCriticalSectionLocker c(cs);
 
+    wxLogNull ln; // own error checking implemented -> avoid debug warnings
     wxString fname(filename);
     wxFile f(fname); // try to open
     if (!f.IsOpened())
@@ -310,3 +311,4 @@ void SCRIPTING_MANAGER_BASE::RefreshTrusts()
         m_TrustedScripts.insert(m_TrustedScripts.end(), std::make_pair(key, props));
     }
 }
+

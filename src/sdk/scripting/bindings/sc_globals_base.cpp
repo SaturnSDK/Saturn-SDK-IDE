@@ -15,17 +15,12 @@
     #include <manager.h>
     #include <logmanager.h>
     #include <configmanager.h>
-//    #include <editormanager.h>
     #include <projectmanager.h>
     #include <pluginmanager.h>
 #endif
 
 #include "sc_base_types.h"
 
-//#include <wx/colordlg.h>
-//#include <wx/numdlg.h>
-//#include <wx/textdlg.h>
-//#include <infowindow.h>
 
 namespace ScriptBindings
 {
@@ -53,12 +48,6 @@ namespace ScriptBindings
     {
         return Manager::Get()->GetProjectManager();
     }
-//#ifndef CB_FOR_CONSOLE
-//    EditorManager* getEM()
-//    {
-//        return Manager::Get()->GetEditorManager();
-//    }
-//#endif // #ifndef CB_FOR_CONSOLE
     ConfigManager* getCM()
     {
         return Manager::Get()->GetConfigManager(_T("scripts"));
@@ -76,86 +65,10 @@ namespace ScriptBindings
     {
         return Manager::Get()->GetScriptingManager();
     }
-//    bool InstallPlugin(const wxString& pluginName, bool allUsers, bool confirm)
-//    {
-//        if (cbMessageBox(_("A script is trying to install a Code::Blocks plugin.\n"
-//                            "Do you wish to allow this?\n\n") + pluginName,
-//                            _("Security warning"), wxICON_WARNING | wxYES_NO) == wxID_NO)
-//        {
-//            return false;
-//        }
-//        return Manager::Get()->GetPluginManager()->InstallPlugin(pluginName, allUsers, confirm);
-//    }
     int ExecutePlugin(const wxString& pluginName)
     {
         return Manager::Get()->GetPluginManager()->ExecutePlugin(pluginName);
     }
-//    int ConfigurePlugin(const wxString& pluginName)
-//    {
-//        return Manager::Get()->GetPluginManager()->ConfigurePlugin(pluginName);
-//    }
-//#ifndef CB_FOR_CONSOLE
-//    // locate and call a menu from string (e.g. "/Valgrind/Run Valgrind::MemCheck")
-//	void CallMenu(const wxString& menuPath)
-//	{
-//		// this code is partially based on MenuItemsManager::CreateFromString()
-//		wxMenuBar* mbar = Manager::Get()->GetAppFrame()->GetMenuBar();
-//		wxMenu* menu = 0;
-//		size_t pos = 0;
-//		while (true)
-//		{
-//			// ignore consecutive slashes
-//			while (pos < menuPath.Length() && menuPath.GetChar(pos) == _T('/'))
-//			{
-//				++pos;
-//			}
-//
-//			// find next slash
-//			size_t nextPos = pos;
-//			while (nextPos < menuPath.Length() && menuPath.GetChar(++nextPos) != _T('/'))
-//				;
-//
-//			wxString current = menuPath.Mid(pos, nextPos - pos);
-//			if (current.IsEmpty())
-//				break;
-//			bool isLast = nextPos >= menuPath.Length();
-//			// current holds the current search string
-//
-//			if (!menu) // no menu yet? look in menubar
-//			{
-//				int menuPos = mbar->FindMenu(current);
-//				if (menuPos == wxNOT_FOUND)
-//					break; // failed
-//				else
-//					menu = mbar->GetMenu(menuPos);
-//			}
-//			else
-//			{
-//				if (isLast)
-//				{
-//					int id = menu->FindItem(current);
-//					if (id != wxNOT_FOUND)
-//					{
-//						wxCommandEvent evt(wxEVT_COMMAND_MENU_SELECTED, id);
-//						#if wxCHECK_VERSION(2, 9, 0)
-//						mbar->GetEventHandler()->ProcessEvent(evt);
-//						#else
-//						mbar->ProcessEvent(evt);
-//						#endif
-//						// done
-//					}
-//					break;
-//				}
-//				int existing = menu->FindItem(current);
-//				if (existing != wxNOT_FOUND)
-//					menu = menu->GetMenuItems()[existing]->GetSubMenu();
-//				else
-//					break; // failed
-//			}
-//			pos = nextPos; // prepare for next loop
-//		}
-//	}
-//#endif // #ifndef CB_FOR_CONSOLE
     void Include(const wxString& filename)
     {
         getSM()->LoadScript(filename);
@@ -171,26 +84,6 @@ namespace ScriptBindings
         }
         return sa.Return(static_cast<SQInteger>(0));
     }
-//#ifndef CB_FOR_CONSOLE
-//    SQInteger wx_GetColourFromUser(HSQUIRRELVM v)
-//    {
-//        StackHandler sa(v);
-//        const wxColour& c = sa.GetParamCount() == 2 ? *SqPlus::GetInstance<wxColour,false>(v, 2) : *wxBLACK;
-//        return SqPlus::ReturnCopy(v, wxGetColourFromUser(Manager::Get()->GetAppWindow(), c));
-//    }
-//    long wx_GetNumberFromUser(const wxString& message, const wxString& prompt, const wxString& caption, long value)
-//    {
-//        return wxGetNumberFromUser(message, prompt, caption, value);
-//    }
-//    wxString wx_GetPasswordFromUser(const wxString& message, const wxString& caption, const wxString& default_value)
-//    {
-//        return wxGetPasswordFromUser(message, caption, default_value);
-//    }
-//    wxString wx_GetTextFromUser(const wxString& message, const wxString& caption, const wxString& default_value)
-//    {
-//        return wxGetTextFromUser(message, caption, default_value);
-//    }
-//#endif // #ifndef CB_FOR_CONSOLE
 
     long wxString_ToLong(wxString const &str)
     {
@@ -217,9 +110,6 @@ namespace ScriptBindings
         SqPlus::RegisterGlobal(gReplaceMacros, "ReplaceMacros");
 
         SqPlus::RegisterGlobal(getPM, "GetProjectManager");
-//#ifndef CB_FOR_CONSOLE
-//        SqPlus::RegisterGlobal(getEM, "GetEditorManager");
-//#endif // #ifndef CB_FOR_CONSOLE
         SqPlus::RegisterGlobal(getCM, "GetConfigManager");
         SqPlus::RegisterGlobal(getUVM, "GetUserVariableManager");
         SqPlus::RegisterGlobal(getSM, "GetScriptingManager");
@@ -240,30 +130,15 @@ namespace ScriptBindings
         SqPlus::RegisterGlobal(ConfigManager::LocateDataFile, "LocateDataFile");
 
         SqPlus::RegisterGlobal(ExecutePlugin, "ExecuteToolPlugin");
-//        SqPlus::RegisterGlobal(ConfigurePlugin, "ConfigureToolPlugin");
-//        SqPlus::RegisterGlobal(InstallPlugin, "InstallPlugin");
-
-//#ifndef CB_FOR_CONSOLE
-//        SqPlus::RegisterGlobal(CallMenu, "CallMenu");
-//#endif // #ifndef CB_FOR_CONSOLE
 
         SqPlus::RegisterGlobal(Include, "Include");
         SquirrelVM::CreateFunctionGlobal(Require, "Require", "*");
 
-//#ifndef CB_FOR_CONSOLE
-//        SqPlus::RegisterGlobal(InfoWindow::Display, "InfoWindow");
-//#endif // #ifndef CB_FOR_CONSOLE
 
         SquirrelVM::CreateFunctionGlobal(IsNull, "IsNull", "*");
 
         // now for some wx globals (utility) functions
         SqPlus::RegisterGlobal(wxLaunchDefaultBrowser, "wxLaunchDefaultBrowser");
-//#ifndef CB_FOR_CONSOLE
-//        SquirrelVM::CreateFunctionGlobal(wx_GetColourFromUser, "wxGetColourFromUser", "*");
-//        SqPlus::RegisterGlobal(wx_GetNumberFromUser, "wxGetNumberFromUser");
-//        SqPlus::RegisterGlobal(wx_GetPasswordFromUser, "wxGetPasswordFromUser");
-//        SqPlus::RegisterGlobal(wx_GetTextFromUser, "wxGetTextFromUser");
-//#endif // #ifndef CB_FOR_CONSOLE
 
         SqPlus::RegisterGlobal(wxString_ToLong, "wxString_ToLong");
     }

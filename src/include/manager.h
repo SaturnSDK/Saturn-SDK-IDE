@@ -29,6 +29,7 @@ class wxWindow;
 class ProjectManager;
 #ifndef CB_FOR_CONSOLE
 class EditorManager;
+class DebuggerManager;
 #endif // #ifndef CB_FOR_CONSOLE
 class LogManager;
 class PluginManager;
@@ -128,6 +129,9 @@ public:
     ScriptingManager*    GetScriptingManager() const;
     ConfigManager*       GetConfigManager(const wxString& name_space) const;
     FileManager*         GetFileManager() const;
+#ifndef CB_FOR_CONSOLE
+    DebuggerManager*     GetDebuggerManager() const;
+#endif // #ifndef CB_FOR_CONSOLE
 
 
     /////// XML Resource functions ///////
@@ -143,11 +147,12 @@ public:
     /// Loads Menu from XRC
     static wxMenu*    LoadMenu(wxString menu_id, bool createonfailure = false);
     /// Loads ToolBar from XRC
-    static wxToolBar *LoadToolBar(wxFrame *parent, wxString resid, bool defaultsmall = true);
+    static wxToolBar* LoadToolBar(wxFrame *parent, wxString resid, bool defaultsmall = true);
 
     // Do not use this, use Get()
     static Manager* Get(wxFrame* appWindow);
 
+    wxToolBar* CreateEmptyToolbar();
     static void AddonToolBar(wxToolBar* toolBar,wxString resid);
     static bool isToolBar16x16(wxToolBar* toolBar);
 #endif // #ifndef CB_FOR_CONSOLE

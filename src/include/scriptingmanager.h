@@ -14,7 +14,6 @@
 #include <set>
 
 #ifndef CB_PRECOMP
-    #include "scriptingmanager_base.h"
     #include "cbexception.h" // cbThrow
     #include "globals.h" // cbC2U
 #endif

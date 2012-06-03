@@ -969,7 +969,7 @@ void ParserThread::DoParse()
 
                     if (id != -1)
                     {
-                        HandleMacro(id, peek);
+                        HandleMacroExpansion(id, peek);
                         m_Str.Clear();
                     }
                     else
@@ -1055,9 +1055,10 @@ void ParserThread::DoParse()
                 }
                 else if (peek==ParserConsts::dcolon)
                 {
-                    if (   m_Str.IsEmpty()
-                        || m_Str.Trim(true).Trim(false).IsSameAs(ParserConsts::kw_const)
-                        || m_Str.Trim(true).Trim(false).IsSameAs(ParserConsts::kw_volatile) ) // what else?!
+                    wxString str_stripped(m_Str); str_stripped.Trim(true).Trim(false);
+                    if (   str_stripped.IsEmpty()
+                        || str_stripped.IsSameAs(ParserConsts::kw_const)
+                        || str_stripped.IsSameAs(ParserConsts::kw_volatile) ) // what else?!
                         m_EncounteredTypeNamespaces.push(token); // it's a type's namespace
                     else
                         m_EncounteredNamespaces.push(token);
@@ -2402,12 +2403,12 @@ void ParserThread::HandleTypedef()
     }
 }
 
-void ParserThread::HandleMacro(int id, const wxString &peek)
+void ParserThread::HandleMacroExpansion(int id, const wxString &peek)
 {
     Token* tk = m_TokensTree->at(id);
     if (tk)
     {
-        TRACE(_T("HandleMacro() : Adding token '%s' (peek='%s')"), tk->m_Name.wx_str(), peek.wx_str());
+        TRACE(_T("HandleMacroExpansion() : Adding token '%s' (peek='%s')"), tk->m_Name.wx_str(), peek.wx_str());
         DoAddToken(tkMacro, tk->m_Name, m_Tokenizer.GetLineNumber(), 0, 0, peek);
 
         if (m_Options.parseComplexMacros)

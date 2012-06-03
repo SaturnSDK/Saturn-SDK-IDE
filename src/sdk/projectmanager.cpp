@@ -42,25 +42,25 @@
 #include <wx/choicdlg.h>
 #include <wx/filedlg.h>
 #ifndef CB_FOR_CONSOLE
-    #include <wx/progdlg.h>
-    #include <wx/textdlg.h>
+#include <wx/progdlg.h>
+#include <wx/textdlg.h>
 #endif // #ifndef CB_FOR_CONSOLE
 #include <wx/tokenzr.h>
 #include <wx/utils.h>
 
 #ifndef CB_FOR_CONSOLE
-    #include "incrementalselectlistdlg.h"
+#include "incrementalselectlistdlg.h"
 #endif // #ifndef CB_FOR_CONSOLE
 #include "filegroupsandmasks.h"
 #ifndef CB_FOR_CONSOLE
-    #include "projectsfilemasksdlg.h"
-    #include "projectdepsdlg.h"
-    #include "multiselectdlg.h"
+#include "projectsfilemasksdlg.h"
+#include "projectdepsdlg.h"
+#include "multiselectdlg.h"
 #endif // #ifndef CB_FOR_CONSOLE
 #include "filefilters.h"
 #ifndef CB_FOR_CONSOLE
-    #include "confirmreplacedlg.h"
-    #include "projectfileoptionsdlg.h"
+#include "confirmreplacedlg.h"
+#include "projectfileoptionsdlg.h"
 #endif // #ifndef CB_FOR_CONSOLE
 
 template<> ProjectManager* Mgr<ProjectManager>::instance = 0;
@@ -388,7 +388,8 @@ ProjectManager::ProjectManager()
     m_IsClosingWorkspace(false),
     m_InitialDir(_T("")),
     m_isCheckingForExternallyModifiedProjects(false),
-    m_CanSendWorkspaceChanged(false)
+    m_CanSendWorkspaceChanged(false),
+    m_RunningPlugin(NULL)
 {
 #ifndef CB_FOR_CONSOLE
     m_pNotebook = new cbAuiNotebook(Manager::Get()->GetAppWindow(), idNB, wxDefaultPosition, wxDefaultSize, wxAUI_NB_WINDOWLIST_BUTTON);
@@ -665,12 +666,15 @@ bool ProjectManager::IsProjectStillOpen(cbProject* project)
 
 void ProjectManager::SetProject(cbProject* project, bool refresh)
 {
+    bool activeProjectChanged = false;
     if (project != m_pActiveProject)
     {
 #ifndef CB_FOR_CONSOLE
-        // Only set worksapce as modified, if there was an active project before
+        // Only set workspace as modified, if there was an active project before
         if (m_pWorkspace && m_pActiveProject)
-            m_pWorkspace->SetModified(true);
+        {
+            activeProjectChanged = true;
+        }
 #endif // #ifndef CB_FOR_CONSOLE
     }
     else
@@ -690,6 +694,10 @@ void ProjectManager::SetProject(cbProject* project, bool refresh)
             m_pTree->SetItemBold(m_pActiveProject->GetProjectNode(), true);
     }
 
+    if(activeProjectChanged)
+    {
+        m_pWorkspace->ActiveProjectChanged();
+    }
     if (refresh)
         RebuildTree();
 
@@ -1205,17 +1213,19 @@ bool ProjectManager::CloseAllProjects(bool dontsave)
 bool ProjectManager::CloseProject(cbProject* project, bool dontsave, bool refresh)
 {
     if (!project)
-         return true;
-     if(project->GetCurrentlyCompilingTarget())
-         return false;
+        return true;
+    if (project->GetCurrentlyCompilingTarget())
+        return false;
 #ifndef CB_FOR_CONSOLE
-     if(!dontsave)
-          if(!QueryCloseProject(project))
-             return false;
+    if (!dontsave)
+    {
+         if (!QueryCloseProject(project))
+            return false;
+    }
 #endif // #ifndef CB_FOR_CONSOLE
 
-     bool wasActive = project == m_pActiveProject;
-     if (wasActive)
+    bool wasActive = project == m_pActiveProject;
+    if (wasActive)
         m_pActiveProject = 0L;
 
     int index = m_pProjects->Index(project);
@@ -1870,7 +1880,7 @@ bool ProjectManager::AddProjectDependency(cbProject* base, cbProject* dependsOn)
         return false;
 
     // avoid circular dependencies
-    if (CausesCircularDependency(base, dependsOn))
+    if ( CausesCircularDependency(base, dependsOn) )
         return false;
 
     ProjectsArray* arr = 0;
@@ -1885,7 +1895,7 @@ bool ProjectManager::AddProjectDependency(cbProject* base, cbProject* dependsOn)
         arr = it->second;
 
     // add dependency only if not already there
-    if (arr->Index(dependsOn) == wxNOT_FOUND)
+    if (arr && arr->Index(dependsOn) == wxNOT_FOUND)
     {
         arr->Add(dependsOn);
 #ifndef CB_FOR_CONSOLE
@@ -3537,3 +3547,32 @@ void ProjectManager::OnKeyDown(wxTreeEvent& event)
         event.Skip();
 }
 #endif // #ifndef CB_FOR_CONSOLE
+
+void ProjectManager::SetIsRunning(cbPlugin *plugin)
+{
+    m_RunningPlugin = plugin;
+}
+
+cbPlugin* ProjectManager::GetIsRunning() const
+{
+    return m_RunningPlugin;
+}
+
+cbProject* ProjectManager::FindProjectForFile(const wxString& file, ProjectFile **resultFile,
+                                              bool isRelative, bool isUnixFilename)
+{
+    for (size_t i = 0; i < m_pProjects->GetCount(); ++i)
+    {
+        cbProject* prj = m_pProjects->Item(i);
+        ProjectFile *temp = prj->GetFileByFilename(file, isRelative, isUnixFilename);
+        if (temp)
+        {
+            if (resultFile)
+                *resultFile = temp;
+            return prj;
+        }
+    }
+    if (resultFile)
+        *resultFile = nullptr;
+    return nullptr;
+}

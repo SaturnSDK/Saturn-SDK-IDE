@@ -40,7 +40,8 @@ void CompilerDMD::Reset()
         m_Programs.CPP = _T("dmd.exe");
         m_Programs.LD = _T("dmd.exe");
         m_Programs.LIB = _T("lib.exe");
-        m_Programs.DBG = _T("windbg.exe");
+        m_Programs.DBG = _T("windbg.exe"); // this won't work
+        m_Programs.DBGconfig = wxEmptyString;
         m_Programs.WINDRES = _T("rcc.exe");
         m_Programs.MAKE = _T("make.exe");
 
@@ -55,7 +56,7 @@ void CompilerDMD::Reset()
         m_Switches.needDependencies = false;
         m_Switches.forceCompilerUseQuotes = false;
         m_Switches.forceLinkerUseQuotes = true;
-        m_Switches.logging = clogSimple;
+        m_Switches.logging = CompilerSwitches::defaultLogging;
         m_Switches.linkerNeedsLibPrefix = false;
         m_Switches.linkerNeedsLibExtension = true;
 
@@ -71,6 +72,7 @@ void CompilerDMD::Reset()
         m_Programs.LD = _T("gcc");
         m_Programs.LIB = _T("ar");
         m_Programs.DBG = _T("gdb");
+        m_Programs.DBGconfig = _T("gdb_debugger:Default");
         m_Programs.WINDRES = _T("");
         m_Programs.MAKE = _T("make");
 
@@ -85,7 +87,7 @@ void CompilerDMD::Reset()
         m_Switches.needDependencies = false;
         m_Switches.forceCompilerUseQuotes = false;
         m_Switches.forceLinkerUseQuotes = false;
-        m_Switches.logging = clogSimple;
+        m_Switches.logging = CompilerSwitches::defaultLogging;
         m_Switches.linkerNeedsLibPrefix = false;
         m_Switches.linkerNeedsLibExtension = false;
 

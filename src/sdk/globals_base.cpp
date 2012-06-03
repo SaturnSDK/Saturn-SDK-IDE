@@ -223,6 +223,7 @@ FileType FileTypeOf(const wxString& filename)
         ext.IsSameAs(FileFilters::CC_EXT) ||
         ext.IsSameAs(FileFilters::CPP_EXT) ||
         ext.IsSameAs(FileFilters::CXX_EXT) ||
+        ext.IsSameAs(FileFilters::CPLPL_EXT) ||
         ext.IsSameAs(FileFilters::S_EXT) ||
         ext.IsSameAs(FileFilters::SS_EXT) ||
         ext.IsSameAs(FileFilters::S62_EXT) ||
@@ -243,6 +244,7 @@ FileType FileTypeOf(const wxString& filename)
              ext.IsSameAs(FileFilters::HH_EXT) ||
              ext.IsSameAs(FileFilters::HPP_EXT) ||
              ext.IsSameAs(FileFilters::HXX_EXT) ||
+             ext.IsSameAs(FileFilters::HPLPL_EXT) ||
              ext.IsSameAs(FileFilters::INL_EXT)
             )
         return ftHeader;
@@ -333,6 +335,27 @@ FileType FileTypeOf(const wxString& filename)
     return ftOther;
 }
 
+
+wxString cbFindFileInPATH(const wxString &filename)
+{
+    wxString pathValues;
+    wxGetEnv(_T("PATH"), &pathValues);
+    if (pathValues.empty())
+        return wxEmptyString;
+
+    const wxString &sep = platform::windows ? _T(";") : _T(":");
+    wxChar pathSep = wxFileName::GetPathSeparator();
+    const wxArrayString &pathArray = GetArrayFromString(pathValues, sep);
+    for (size_t i = 0; i < pathArray.GetCount(); ++i)
+    {
+        if (wxFileExists(pathArray[i] + pathSep + filename))
+        {
+            if (pathArray[i].AfterLast(pathSep).IsSameAs(_T("bin")))
+                return pathArray[i];
+        }
+    }
+    return wxEmptyString;
+}
 
 bool CreateDirRecursively(const wxString& full_path, int perms)
 {

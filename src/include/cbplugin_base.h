@@ -15,6 +15,7 @@
 #include "globals_base.h"
 #include "manager.h"
 #include "pluginmanager.h"
+#include "prep.h"
 
 #ifdef __WXMSW__
     #ifndef PLUGIN_EXPORT
@@ -34,9 +35,9 @@
 
 // this is the plugins SDK version number
 // it will change when the SDK interface breaks
-#define PLUGIN_SDK_VERSION_MAJOR   1
-#define PLUGIN_SDK_VERSION_MINOR   11
-#define PLUGIN_SDK_VERSION_RELEASE 18
+#define PLUGIN_SDK_VERSION_MAJOR 1
+#define PLUGIN_SDK_VERSION_MINOR 13
+#define PLUGIN_SDK_VERSION_RELEASE 3
 
 #ifdef CB_FOR_CONSOLE
     #define CB_PLUGIN_BASE cbPlugin
@@ -47,13 +48,14 @@
 
 // class decls
 class cbProject;
-class ProjectBuildTarget;
+class Compiler;
 class CompileTargetBase;
 struct PluginInfo;
+class ProjectBuildTarget;
 
 // Define basic groups for plugins' configuration.
 static const int cgCompiler         = 0x01; ///< Compiler related.
-static const int cgUnknown          = 0x20; ///< Unknown. This will be probably grouped with cgContribPlugin.
+static const int cgUnknown          = 0x10; ///< Unknown. This will be probably grouped with cgContribPlugin.
 
 /** @brief Base class for plugins
   * This is the most basic class a plugin must descend

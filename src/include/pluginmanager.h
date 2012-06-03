@@ -46,6 +46,7 @@ class DLLIMPORT PluginManager : public PluginManagerBase, public Mgr<PluginManag
         void GetConfigurationPanels(int group, wxWindow* parent, ConfigurationPanelsArray& arrayToFill);
         void GetProjectConfigurationPanels(wxWindow* parent, cbProject* project, ConfigurationPanelsArray& arrayToFill);
         int Configure();
+        void RegisterCCFileExts(const wxString& pluginName, const std::set<wxString>& fileExts);
     private:
         PluginManager();
         virtual ~PluginManager(){};
@@ -57,6 +58,7 @@ class DLLIMPORT PluginManager : public PluginManagerBase, public Mgr<PluginManag
                         const wxString& src_filename,
                         const wxString& dst_filename,
                         bool isMandatory = true);
+
 
         DECLARE_EVENT_TABLE()
 };

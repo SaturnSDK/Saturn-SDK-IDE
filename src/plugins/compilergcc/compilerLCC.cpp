@@ -49,6 +49,7 @@ void CompilerLCC::Reset()
     m_Programs.CPP     = _T("lcc.exe");
     m_Programs.LD      = _T("lcclnk.exe");
     m_Programs.DBG     = _T("cdb.exe");
+    m_Programs.DBGconfig = wxEmptyString;
     m_Programs.LIB     = _T("lcclib.exe");
     m_Programs.WINDRES = _T("lrc.exe");
     m_Programs.MAKE    = _T("make.exe");
@@ -63,7 +64,7 @@ void CompilerLCC::Reset()
     m_Switches.needDependencies        = true;
     m_Switches.forceCompilerUseQuotes  = false;
     m_Switches.forceLinkerUseQuotes    = false;
-    m_Switches.logging                 = clogSimple; // clogFull;
+    m_Switches.logging                 = CompilerSwitches::defaultLogging;
     m_Switches.libPrefix               = _T("");
     m_Switches.libExtension            = _T("lib");
     m_Switches.linkerNeedsLibPrefix    = false;

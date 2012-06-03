@@ -188,7 +188,7 @@ class DLLIMPORT SCRIPTING_MANAGER_BASE
           *
           * @return The script trusts container.
           */
-        virtual const TrustedScripts& GetTrustedScripts()
+        const TrustedScripts& GetTrustedScripts()
         {
             return m_TrustedScripts;
         }

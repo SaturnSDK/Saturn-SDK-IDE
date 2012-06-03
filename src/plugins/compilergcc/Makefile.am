@@ -7,11 +7,11 @@ INCLUDES = $(WX_CXXFLAGS) \
 		-I$(top_srcdir)/src/include/scripting/sqplus \
 		-I$(top_srcdir)/src/plugins/compilergcc/depslib/src
 
+AM_CXXFLAGS = -DDEPSLIB_UNIX
+
 pluginlibdir = $(pkglibdir)/plugins
 
 pluginlib_LTLIBRARIES = libcompiler.la libcon_compiler.la
-
-AM_CXXFLAGS = -DDEPSLIB_UNIX
 
 libcon_compiler_la_CXXFLAGS = @CXXFLAGS@ -U CB_PRECOMP -DCB_FOR_CONSOLE -Wno-invalid-pch
 
@@ -73,7 +73,6 @@ libcon_compiler_la_SOURCES = compilerBCC.cpp \
 			compilerMINGW.cpp \
 			compilerMINGWgenerator.cpp \
 			compilerMSVC.cpp \
-			compilerMSVC8.cpp \
 			compilerOW.cpp \
 			compilerOWgenerator.cpp \
 			compilerSDCC.cpp \

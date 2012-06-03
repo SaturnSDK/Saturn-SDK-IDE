@@ -74,6 +74,7 @@ struct cbFindReplaceData
     bool initialreplacing;
     bool findInFiles;
     bool delOldSearches;
+    bool sortSearchResult;
     bool matchWord;
     bool startWord;
     bool startFile; //!< To be implemented.
@@ -521,41 +522,26 @@ cbEditor* EditorManager::Open(LoaderBase* fileLdr, const wxString& filename, int
         }
     }
 
-    if (can_updateui)
-    {
-        if (ed)
-        {
-            SetActiveEditor(ed);
-            ed->GetControl()->SetFocus();
-        }
-    }
-
     // check for ProjectFile
     if (ed && !ed->GetProjectFile())
     {
-        // First checks if we're already being passed a ProjectFile
-        // as a parameter
+        // First checks if we're already being passed a ProjectFile as a parameter
         if (data)
-            Manager::Get()->GetLogManager()->DebugLog(_T("project data set for ") + data->file.GetFullPath());
+            Manager::Get()->GetLogManager()->DebugLog(_T("Project data set for ") + data->file.GetFullPath());
         else
-        {
-            ProjectsArray* projects = Manager::Get()->GetProjectManager()->GetProjects();
-            for (unsigned int i = 0; i < projects->GetCount(); ++i)
-            {
-                cbProject* prj = projects->Item(i);
-                ProjectFile* pf = prj->GetFileByFilename(ed->GetFilename(), false);
-                if (pf)
-                {
-//                    Manager::Get()->GetLogManager()->DebugLog(_T("Found ") + pf->file.GetFullPath());
-                    data = pf;
-                    break;
-                }
-            }
-        }
+            Manager::Get()->GetProjectManager()->FindProjectForFile(ed->GetFilename(), &data, false, false);
         if (data)
             ed->SetProjectFile(data,true);
     }
 
+    if (can_updateui)
+    {
+        if (ed)
+        {
+            SetActiveEditor(ed); // fires the cbEVT_EDITOR_ACTIVATED event
+            ed->GetControl()->SetFocus();
+        }
+    }
 
     // we 're done
     s_CanShutdown = true;
@@ -642,8 +628,10 @@ cbEditor* EditorManager::New(const wxString& newFileName)
 
     ed->Show(true);
     SetActiveEditor(ed);
+
     CodeBlocksEvent evt(cbEVT_EDITOR_OPEN, -1, 0, ed);
     Manager::Get()->GetPluginManager()->NotifyPlugins(evt);
+
     return ed;
 }
 
@@ -1404,6 +1392,7 @@ int EditorManager::ShowFindDialog(bool replace, bool explicitly_find_in_files)
             m_LastFindReplaceData->findUsesSelectedText = dlg->GetFindUsesSelectedText();
     }
     m_LastFindReplaceData->delOldSearches = dlg->GetDeleteOldSearches();
+    m_LastFindReplaceData->sortSearchResult = dlg->GetSortSearchResult();
     m_LastFindReplaceData->matchWord = dlg->GetMatchWord();
     m_LastFindReplaceData->startWord = dlg->GetStartWord();
     m_LastFindReplaceData->matchCase = dlg->GetMatchCase();
@@ -2508,6 +2497,10 @@ int EditorManager::FindInFiles(cbFindReplaceData* data)
         cbMessageBox(_("No files to search in!"), _("Error"), wxICON_WARNING);
         return 0;
     }
+
+    // sort search results alphabetically if option is on
+    if (m_LastFindReplaceData->sortSearchResult)
+        filesList.Sort();
 
     // now that list is filled, we'll search
     // but first we'll create a hidden cbStyledTextCtrl to do the search for us ;)

@@ -111,14 +111,26 @@ class cbWorkspace
           */
         virtual void SetModified(bool modified);
 #endif // #ifndef CB_FOR_CONSOLE
+        /** @brief Set the preferred target for this workspace
+          */
+        void PreferredTarget(const wxString &target);
+
+        /** @brief Get the preferred target for this workspace
+          */
+        wxString PreferredTarget() const;
+
+        void ActiveProjectChanged();
     private:
         bool m_IsOK; // succeeded loading?
         bool m_IsDefault; // is this the Code::Blocks default workspace?
         bool m_Modified; // is it modified?
         wxFileName m_Filename; // filename
         wxString m_Title; // title
+        wxString m_PreferredTargetName;
 
         void Load(); // utility function
+        bool SaveLayout();
+        bool LoadLayout();
 };
 
 #endif // CBWORKSPACE_H

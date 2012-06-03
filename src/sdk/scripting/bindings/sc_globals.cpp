@@ -29,53 +29,10 @@
 
 namespace ScriptBindings
 {
-//    // global funcs
-//    void gDebugLog(const wxString& msg){ Manager::Get()->GetLogManager()->DebugLog(msg); }
-//    void gErrorLog(const wxString& msg){ Manager::Get()->GetLogManager()->LogError(msg); }
-//    void gWarningLog(const wxString& msg){ Manager::Get()->GetLogManager()->LogWarning(msg); }
-//    void gLog(const wxString& msg){ Manager::Get()->GetLogManager()->Log(msg); }
-//    int gMessage(const wxString& msg, const wxString& caption, int buttons){ return cbMessageBox(msg, caption, buttons); }
-//    void gShowMessage(const wxString& msg){ cbMessageBox(msg, _("Script message")); }
-//    void gShowMessageWarn(const wxString& msg){ cbMessageBox(msg, _("Script warning"), wxICON_WARNING); }
-//    void gShowMessageError(const wxString& msg){ cbMessageBox(msg, _("Script error"), wxICON_ERROR); }
-//    void gShowMessageInfo(const wxString& msg){ cbMessageBox(msg, _("Script information"), wxICON_INFORMATION); }
-//    wxString gReplaceMacros(const wxString& buffer){ return Manager::Get()->GetMacrosManager()->ReplaceMacros(buffer); }
-//
-//    SQInteger IsNull(HSQUIRRELVM v)
-//    {
-//        StackHandler sa(v);
-//        SQUserPointer up = 0;
-//        sq_getinstanceup(v, 2, &up, 0);
-//        return sa.Return(up == 0L);
-//    }
-//
-//    ProjectManager* getPM()
-//    {
-//        return Manager::Get()->GetProjectManager();
-//    }
-//#ifndef CB_FOR_CONSOLE
     EditorManager* getEM()
     {
         return Manager::Get()->GetEditorManager();
     }
-//#endif // #ifndef CB_FOR_CONSOLE
-//    ConfigManager* getCM()
-//    {
-//        return Manager::Get()->GetConfigManager(_T("scripts"));
-//    }
-//    CompilerFactory* getCF()
-//    {
-//        static CompilerFactory cf; // all its members are static functions anyway
-//        return &cf;
-//    }
-//    UserVariableManager* getUVM()
-//    {
-//        return Manager::Get()->GetUserVariableManager();
-//    }
-//    ScriptingManager* getSM()
-//    {
-//        return Manager::Get()->GetScriptingManager();
-//    }
     bool InstallPlugin(const wxString& pluginName, bool allUsers, bool confirm)
     {
         if (cbMessageBox(_("A script is trying to install a Code::Blocks plugin.\n"
@@ -86,15 +43,10 @@ namespace ScriptBindings
         }
         return Manager::Get()->GetPluginManager()->InstallPlugin(pluginName, allUsers, confirm);
     }
-//    int ExecutePlugin(const wxString& pluginName)
-//    {
-//        return Manager::Get()->GetPluginManager()->ExecutePlugin(pluginName);
-//    }
     int ConfigurePlugin(const wxString& pluginName)
     {
         return Manager::Get()->GetPluginManager()->ConfigurePlugin(pluginName);
     }
-//#ifndef CB_FOR_CONSOLE
     // locate and call a menu from string (e.g. "/Valgrind/Run Valgrind::MemCheck")
     void CallMenu(const wxString& menuPath)
     {
@@ -157,23 +109,6 @@ namespace ScriptBindings
             pos = nextPos; // prepare for next loop
         }
     }
-//#endif // #ifndef CB_FOR_CONSOLE
-//    void Include(const wxString& filename)
-//    {
-//        getSM()->LoadScript(filename);
-//    }
-//    SQInteger Require(HSQUIRRELVM v)
-//    {
-//        StackHandler sa(v);
-//        const wxString& filename = *SqPlus::GetInstance<wxString,false>(v, 2);
-//        if (!getSM()->LoadScript(filename))
-//        {
-//            wxString msg = wxString::Format(_("Failed to load required script: %s"), filename.c_str());
-//            return sa.ThrowError(cbU2C(msg));
-//        }
-//        return sa.Return(static_cast<SQInteger>(0));
-//    }
-//#ifndef CB_FOR_CONSOLE
     SQInteger wx_GetColourFromUser(HSQUIRRELVM v)
     {
         StackHandler sa(v);
@@ -192,81 +127,19 @@ namespace ScriptBindings
     {
         return wxGetTextFromUser(message, caption, default_value);
     }
-//#endif // #ifndef CB_FOR_CONSOLE
-//
-//    long wxString_ToLong(wxString const &str)
-//    {
-//        long value;
-//        if(!str.ToLong(&value))
-//            return -1;
-//        return value;
-//    }
 
 
     void Register_Globals()
     {
         // global funcs
-//        SqPlus::RegisterGlobal(gLog, "Log");
-//        SqPlus::RegisterGlobal(gDebugLog, "LogDebug");
-//        SqPlus::RegisterGlobal(gWarningLog, "LogWarning");
-//        SqPlus::RegisterGlobal(gErrorLog, "LogError");
-//
-//        SqPlus::RegisterGlobal(gMessage, "Message");
-//        SqPlus::RegisterGlobal(gShowMessage, "ShowMessage");
-//        SqPlus::RegisterGlobal(gShowMessageWarn, "ShowWarning");
-//        SqPlus::RegisterGlobal(gShowMessageError, "ShowError");
-//        SqPlus::RegisterGlobal(gShowMessageInfo, "ShowInfo");
-//        SqPlus::RegisterGlobal(gReplaceMacros, "ReplaceMacros");
-//
-//        SqPlus::RegisterGlobal(getPM, "GetProjectManager");
-//#ifndef CB_FOR_CONSOLE
         SqPlus::RegisterGlobal(getEM, "GetEditorManager");
-//#endif // #ifndef CB_FOR_CONSOLE
-//        SqPlus::RegisterGlobal(getCM, "GetConfigManager");
-//        SqPlus::RegisterGlobal(getUVM, "GetUserVariableManager");
-//        SqPlus::RegisterGlobal(getSM, "GetScriptingManager");
-//        SqPlus::RegisterGlobal(getCF, "GetCompilerFactory");
-//
-//        // from globals.h
-//        SqPlus::RegisterGlobal(GetArrayFromString, "GetArrayFromString");
-//        SqPlus::RegisterGlobal(GetStringFromArray, "GetStringFromArray");
-//        SqPlus::RegisterGlobal(EscapeSpaces, "EscapeSpaces");
-//        SqPlus::RegisterGlobal(UnixFilename, "UnixFilename");
-//        SqPlus::RegisterGlobal(FileTypeOf, "FileTypeOf");
-//        SqPlus::RegisterGlobal(URLEncode, "URLEncode");
-//        SqPlus::RegisterGlobal(NotifyMissingFile, "NotifyMissingFile");
-//        SqPlus::RegisterGlobal(GetPlatformsFromString, "GetPlatformsFromString");
-//        SqPlus::RegisterGlobal(GetStringFromPlatforms, "GetStringFromPlatforms");
-//
-//        SqPlus::RegisterGlobal(ConfigManager::GetFolder, "GetFolder");
-//        SqPlus::RegisterGlobal(ConfigManager::LocateDataFile, "LocateDataFile");
-//
-//        SqPlus::RegisterGlobal(ExecutePlugin, "ExecuteToolPlugin");
         SqPlus::RegisterGlobal(ConfigurePlugin, "ConfigureToolPlugin");
         SqPlus::RegisterGlobal(InstallPlugin, "InstallPlugin");
-//
-//#ifndef CB_FOR_CONSOLE
         SqPlus::RegisterGlobal(CallMenu, "CallMenu");
-//#endif // #ifndef CB_FOR_CONSOLE
-//
-//        SqPlus::RegisterGlobal(Include, "Include");
-//        SquirrelVM::CreateFunctionGlobal(Require, "Require", "*");
-//
-//#ifndef CB_FOR_CONSOLE
         SqPlus::RegisterGlobal(InfoWindow::Display, "InfoWindow");
-//#endif // #ifndef CB_FOR_CONSOLE
-//
-//        SquirrelVM::CreateFunctionGlobal(IsNull, "IsNull", "*");
-//
-//        // now for some wx globals (utility) functions
-//        SqPlus::RegisterGlobal(wxLaunchDefaultBrowser, "wxLaunchDefaultBrowser");
-//#ifndef CB_FOR_CONSOLE
         SquirrelVM::CreateFunctionGlobal(wx_GetColourFromUser, "wxGetColourFromUser", "*");
         SqPlus::RegisterGlobal(wx_GetNumberFromUser, "wxGetNumberFromUser");
         SqPlus::RegisterGlobal(wx_GetPasswordFromUser, "wxGetPasswordFromUser");
         SqPlus::RegisterGlobal(wx_GetTextFromUser, "wxGetTextFromUser");
-//#endif // #ifndef CB_FOR_CONSOLE
-//
-//        SqPlus::RegisterGlobal(wxString_ToLong, "wxString_ToLong");
     }
 }

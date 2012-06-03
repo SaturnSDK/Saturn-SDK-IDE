@@ -24,16 +24,19 @@ CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
 sdkdir=$(includedir)/codeblocks
 
 ALLHEADERS = annoyingdialog.h \
+				annoyingdialog_base.h \
 				autodetectcompilers.h \
 				backgroundthread.h \
 				base64.h \
 				blockallocated.h \
 				cbauibook.h \
+				cbdebugger_interfaces.h \
 				cbeditor.h \
 				cbeditorprintout.h \
 				cbexception.h \
 				cbfunctor.h \
 				cbplugin.h \
+				cbplugin_base.h \
 				cbproject.h \
 				cbstatusbar.h \
 				cbstyledtextctrl.h \
@@ -53,6 +56,7 @@ ALLHEADERS = annoyingdialog.h \
 				configuretoolsdlg.h \
 				confirmreplacedlg.h \
 				crc32.h \
+				debuggermanager.h \
 				editarrayfiledlg.h \
 				editarrayorderdlg.h \
 				editarraystringdlg.h \
@@ -82,6 +86,7 @@ ALLHEADERS = annoyingdialog.h \
 				importers_globals.h \
 				incrementalselectlistdlg.h \
 				infowindow.h \
+				infowindow_base.h \
 				licenses.h \
 				logger.h \
 				loggers.h \
@@ -170,6 +175,4 @@ clean-local:
 	-rm -f $(top_srcdir)/src/include/sdk.h.gch
 	-rm -f $(top_srcdir)/src/include/sdk_precomp.h.gch
 
-EXTRA_DIST = autorevision.h \
-		annoyingdialog_base.h \
-		infowindow_base.h
+EXTRA_DIST = autorevision.h

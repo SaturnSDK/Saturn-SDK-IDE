@@ -23,21 +23,21 @@
 #endif
 
 #ifndef CB_FOR_CONSOLE
-    #if defined(__WXGTK__) || defined(__WXMOTIF__) || defined(__WXMAC__) || defined(__WXMGL__) || defined(__WXX11__)
+#if defined(__WXGTK__) || defined(__WXMOTIF__) || defined(__WXMAC__) || defined(__WXMGL__) || defined(__WXX11__)
     #include "resources/icons/app.xpm"
-    #endif
+#endif
 
-    #include <wx/taskbar.h>
-    #include <wx/splash.h>
+#include <wx/taskbar.h>
+#include <wx/splash.h>
 #endif // #ifndef CB_FOR_CONSOLE
 
 #include <wx/snglinst.h>
 #include "manager.h"
 #ifndef CB_FOR_CONSOLE
-    #include "main.h"
+#include "main.h"
 #else // #ifndef CB_FOR_CONSOLE
-    #include "cbplugin.h"
-    #include "cbproject.h"
+#include "cbplugin.h"
+#include "cbproject.h"
 #endif // #ifndef CB_FOR_CONSOLE
 
 #ifndef CB_FOR_CONSOLE

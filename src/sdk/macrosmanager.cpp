@@ -458,6 +458,9 @@ void MacrosManager::ReplaceMacros(wxString& buffer, ProjectBuildTarget* target, 
 #ifndef CB_FOR_CONSOLE
     if (project != m_LastProject || target != m_LastTarget || (editor && (editor->GetFilename() != m_ActiveEditorFilename)) )
         RecalcVars(project, editor, target);
+#else // #ifndef CB_FOR_CONSOLE
+    if (project != m_LastProject || target != m_LastTarget )
+        RecalcVars(project, 0l, target);
 #endif // #ifndef CB_FOR_CONSOLE
 
     wxString search;

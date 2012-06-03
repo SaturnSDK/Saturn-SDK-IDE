@@ -18,18 +18,18 @@
 #include <wx/filefn.h>
 #include <wx/log.h> // for wxSafeShowMessage()
 #ifndef CB_FOR_CONSOLE
-    #include <wx/msgdlg.h>
-    #include <wx/choicdlg.h>
-    #include <wx/notebook.h>
-    #include <wx/clipbrd.h>
+#include <wx/msgdlg.h>
+#include <wx/choicdlg.h>
+#include <wx/notebook.h>
+#include <wx/clipbrd.h>
 
-    #include "cbauibook.h"
+#include "cbauibook.h"
 #endif // #ifndef CB_FOR_CONSOLE
 #include <cbexception.h>
 #include <wx/debugrpt.h>
 #include <configmanager.h>
 #ifndef CB_FOR_CONSOLE
-    #include <editormanager.h>
+#include <editormanager.h>
 #endif // #ifndef CB_FOR_CONSOLE
 #include <projectmanager.h>
 #include <personalitymanager.h>
@@ -41,10 +41,10 @@
 #include <logmanager.h>
 #include <loggers.h>
 #ifndef CB_FOR_CONSOLE
-    #include "splashscreen.h"
-    #include "crashhandler.h"
-    #include "cbstyledtextctrl.h"
-    #include <wx/ipc.h>
+#include "splashscreen.h"
+#include "crashhandler.h"
+#include "cbstyledtextctrl.h"
+#include <wx/ipc.h>
 #endif // #ifndef CB_FOR_CONSOLE
 
 #include <sqplus.h>
@@ -53,7 +53,7 @@
     #include "prefix.h" // binreloc
 #endif
 #ifndef CB_FOR_CONSOLE
-    #include "associations.h"
+#include "associations.h"
 #endif // #ifndef CB_FOR_CONSOLE
 
 #if defined(__APPLE__) && defined(__MACH__)
@@ -146,7 +146,11 @@ bool DDEConnection::OnExecute(const wxString& /*topic*/, wxChar *data, int /*siz
     else if (strData.StartsWith(_T("[Raise]")))
     {
         if (m_Frame)
+        {
+            if (m_Frame->IsIconized())
+                m_Frame->Iconize(false);
             m_Frame->Raise();
+        }
         return true;
     }
     wxSafeShowMessage(wxT("Warning"),wxString::Format(wxT("DDE topic %s not handled."),strData.wx_str()));
@@ -574,9 +578,10 @@ bool CodeBlocksApp::OnInit()
         PluginManager::SetSafeMode(m_SafeMode);
 
 #ifndef CB_FOR_CONSOLE
+        // If not in batch mode, and no startup-script defined, initialise XRC
         if(!m_Batch && m_Script.IsEmpty() && !InitXRCStuff())
 #else // #ifndef CB_FOR_CONSOLE
-        if(!m_Batch)
+        if(!m_Batch && m_Script.IsEmpty())
 #endif // #ifndef CB_FOR_CONSOLE
             return false;
 
@@ -588,6 +593,7 @@ bool CodeBlocksApp::OnInit()
             // Create a new client
             DDEClient *client = new DDEClient;
             DDEConnection* connection = 0l;
+            wxLogNull ln; // own error checking implemented -> avoid debug warnings
             connection = (DDEConnection *)client->MakeConnection(_T("localhost"), F(DDE_SERVICE, wxGetUserId().wx_str()), DDE_TOPIC);
 
             if (connection)
@@ -788,7 +794,7 @@ int CodeBlocksApp::OnExit()
         delete m_pSingleInstance;
 #endif // #ifndef CB_FOR_CONSOLE
 
-    // ultimate shutdown..
+    // ultimate shutdown...
     Manager::Free();
 
     // WX docs say that this function's return value is ignored,
@@ -1325,8 +1331,7 @@ void CodeBlocksApp::LoadDelayedFiles(MainFrame *const frame)
             long line;
             if (linePart.ToLong(&line))
             {
-                EditorBase* eb = Manager::Get()->GetEditorManager()->GetEditor(Manager::Get()->GetEditorManager()->GetEditorsCount() - 1);
-//                Manager::Get()->GetLogManager()->Log(F(_T("%p"), eb));
+                EditorBase* eb = Manager::Get()->GetEditorManager()->GetEditor(m_AutoFile);
                 if (eb)
                     eb->GotoLine(line - 1, true);
             }

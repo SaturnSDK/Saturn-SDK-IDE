@@ -43,9 +43,9 @@
 
 #include "annoyingdialog.h"
 #ifndef CB_FOR_CONSOLE
-    #include "pluginsconfigurationdlg.h"
+#include "pluginsconfigurationdlg.h"
 #else
-    #include "infowindow_base.h"
+#include "infowindow_base.h"
 #endif // #ifndef CB_FOR_CONSOLE
 
 #include "scripting/bindings/sc_plugin.h"
@@ -319,7 +319,7 @@ bool PLUGIN_MANAGER_BASE::ReadManifestFile(const wxString& pluginFilename,
 //        return false;
 //    }
 
-    // if no plugin name specified, we 're done here (succesfully)
+    // if no plugin name specified, we 're done here (successfully)
     if (pluginName.IsEmpty() || !infoOut)
         return true;
 
@@ -786,11 +786,11 @@ int PLUGIN_MANAGER_BASE::ExecutePlugin(const wxString& pluginName)
     }
     else
     {
-		#if wxCHECK_VERSION(2, 9, 0)
-		Manager::Get()->GetLogManager()->LogError(F(_T("No plugin registered by this name: %s"), pluginName.wx_str()));
-		#else
-		Manager::Get()->GetLogManager()->LogError(F(_T("No plugin registered by this name: %s"), pluginName.c_str()));
-		#endif
+        #if wxCHECK_VERSION(2, 9, 0)
+        Manager::Get()->GetLogManager()->LogError(F(_T("No plugin registered by this name: %s"), pluginName.wx_str()));
+        #else
+        Manager::Get()->GetLogManager()->LogError(F(_T("No plugin registered by this name: %s"), pluginName.c_str()));
+        #endif
     }
     return 0;
 }
@@ -896,4 +896,31 @@ void PLUGIN_MANAGER_BASE::NotifyPlugins(CodeBlocksDockEvent& event)
 void PLUGIN_MANAGER_BASE::NotifyPlugins(CodeBlocksLayoutEvent& event)
 {
     Manager::Get()->ProcessEvent(event);
+}
+
+bool PLUGIN_MANAGER_BASE::IsFileExtRegistered(const wxString& filename)
+{
+    if (filename.IsEmpty())
+        return false;
+
+    const wxString file = filename.AfterLast(wxFILE_SEP_PATH).Lower();
+    const int      pos  = file.Find(_T('.'), true);
+    wxString       ext;
+    if (pos != wxNOT_FOUND)
+        ext = file.Mid(pos+1);
+
+    if (ext.IsEmpty())
+        return false;
+
+    bool found = false;
+    std::map<wxString, std::set<wxString> >::iterator it;
+    for (it=m_CCFileExts.begin(); it != m_CCFileExts.end(); ++it)
+    {
+        if ((*it).second.count(ext) != 0)
+        {
+            found = true;
+            break;
+        }
+    }
+    return found;
 }

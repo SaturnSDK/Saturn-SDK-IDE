@@ -746,7 +746,9 @@ void CodeCompletion::BuildModuleMenu(const ModuleType type, wxMenu* menu, const 
     {
         if (cbEditor* ed = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor())
         {
-            if (ParserCommon::FileType(ed->GetShortName()) == ParserCommon::ftOther)
+            wxString filename = ed->GetShortName();
+            if (   ParserCommon::FileType(filename) == ParserCommon::ftOther
+                && Manager::Get()->GetPluginManager()->IsFileExtRegistered(filename) )
                 return;
         }
 
@@ -1379,7 +1381,9 @@ void CodeCompletion::ShowCallTip()
     if (!ed)
         return;
 
-    if (ParserCommon::FileType(ed->GetShortName()) == ParserCommon::ftOther)
+    wxString filename = ed->GetShortName();
+    if (   ParserCommon::FileType(filename) == ParserCommon::ftOther
+        && Manager::Get()->GetPluginManager()->IsFileExtRegistered(filename) )
         return;
 
     // calculate the size of the calltips window
@@ -1631,7 +1635,9 @@ void CodeCompletion::DoCodeComplete()
     if (!ed)
         return;
 
-    if (ParserCommon::FileType(ed->GetShortName()) == ParserCommon::ftOther)
+    wxString filename = ed->GetShortName();
+    if (   ParserCommon::FileType(filename) == ParserCommon::ftOther
+        && Manager::Get()->GetPluginManager()->IsFileExtRegistered(filename) )
         return;
 
     TRACE(_T("DoCodeComplete"));
@@ -2449,7 +2455,7 @@ void CodeCompletion::OnToolbarTimer(wxTimerEvent& event)
 
 void CodeCompletion::OnEditorTooltip(CodeBlocksEvent& event)
 {
-    if (!IsAttached() || !m_InitDone)
+    if (!IsAttached() || !m_InitDone || wxGetKeyState(WXK_CONTROL))
     {
         event.Skip();
         return;
@@ -2469,7 +2475,9 @@ void CodeCompletion::OnEditorTooltip(CodeBlocksEvent& event)
         return;
     }
 
-    if (ParserCommon::FileType(ed->GetShortName()) == ParserCommon::ftOther)
+    wxString filename = ed->GetShortName();
+    if (   ParserCommon::FileType(filename) == ParserCommon::ftOther
+        && Manager::Get()->GetPluginManager()->IsFileExtRegistered(filename) )
     {
         event.Skip();
         return;
@@ -2620,6 +2628,7 @@ void CodeCompletion::OnShowCallTip(wxCommandEvent& event)
 
     if (IsAttached() && m_InitDone)
         ShowCallTip();
+
     event.Skip();
 }
 
@@ -3054,7 +3063,9 @@ void CodeCompletion::EditorEventHook(cbEditor* editor, wxScintillaEvent& event)
         return;
     }
 
-    if (ParserCommon::FileType(editor->GetShortName()) == ParserCommon::ftOther)
+    wxString filename = editor->GetShortName();
+    if (   ParserCommon::FileType(filename) == ParserCommon::ftOther
+        && Manager::Get()->GetPluginManager()->IsFileExtRegistered(filename) )
     {
         event.Skip();
         return;
@@ -3062,7 +3073,7 @@ void CodeCompletion::EditorEventHook(cbEditor* editor, wxScintillaEvent& event)
 
     cbStyledTextCtrl* control = editor->GetControl();
 
-    if (event.GetEventType() == wxEVT_SCI_CHARADDED)
+    if      (event.GetEventType() == wxEVT_SCI_CHARADDED)
         TRACE(_T("wxEVT_SCI_CHARADDED"));
     else if (event.GetEventType() == wxEVT_SCI_CHANGE)
         TRACE(_T("wxEVT_SCI_CHANGE"));

@@ -41,6 +41,10 @@
 #include <wx/toolbar.h>
 #include <wx/fs_mem.h>
 
+#ifndef CB_FOR_CONSOLE
+#include "debuggermanager.h"
+#endif // #ifndef CB_FOR_CONSOLE
+
 static Manager* instance = 0;
 
 Manager::Manager() : m_pAppWindow(0)
@@ -281,6 +285,16 @@ wxToolBar *Manager::LoadToolBar(wxFrame *parent,wxString resid,bool defaultsmall
     return tb;
 }
 
+wxToolBar* Manager::CreateEmptyToolbar()
+{
+    bool smallToolBar = Manager::Get()->GetConfigManager(_T("app"))->ReadBool(_T("/environment/toolbar_size"), true);
+
+    wxSize size = smallToolBar ? wxSize(16, 16) : (platform::macosx ? wxSize(32, 32) : wxSize(22, 22));
+    wxToolBar* toolbar = new wxToolBar(GetAppFrame(), -1, wxDefaultPosition, size, wxTB_FLAT | wxTB_NODIVIDER);
+    toolbar->SetToolBitmapSize(size);
+
+    return toolbar;
+}
 void Manager::AddonToolBar(wxToolBar* toolBar,wxString resid)
 {
     if (!toolBar)
@@ -364,6 +378,13 @@ FileManager* Manager::GetFileManager() const
 {
     return FileManager::Get();
 }
+
+#ifndef CB_FOR_CONSOLE
+DebuggerManager* Manager::GetDebuggerManager() const
+{
+    return DebuggerManager::Get();
+}
+#endif // #ifndef CB_FOR_CONSOLE
 
 bool Manager::LoadResource(const wxString& file)
 {

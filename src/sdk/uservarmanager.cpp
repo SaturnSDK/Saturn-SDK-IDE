@@ -17,25 +17,25 @@
     #include "macrosmanager.h"
     #include "manager.h"
     #include "cbexception.h"
-    #ifndef CB_FOR_CONSOLE
-        #include "infowindow.h"
+#ifndef CB_FOR_CONSOLE
+    #include "infowindow.h"
 
-        #include <wx/button.h>
-        #include "scrollingdialog.h"
-    #else // #ifndef CB_FOR_CONSOLE
-        #include "infowindow_base.h"
-    #endif // #ifndef CB_FOR_CONSOLE
+    #include <wx/button.h>
+    #include "scrollingdialog.h"
+#else // #ifndef CB_FOR_CONSOLE
+    #include "infowindow_base.h"
+#endif // #ifndef CB_FOR_CONSOLE
     #include <wx/intl.h>
     #include <wx/xrc/xmlres.h>
-    #ifndef CB_FOR_CONSOLE
-        #include <wx/textctrl.h>
-    #endif // #ifndef CB_FOR_CONSOLE
+#ifndef CB_FOR_CONSOLE
+    #include <wx/textctrl.h>
+#endif // #ifndef CB_FOR_CONSOLE
 #endif
 
 #include "annoyingdialog.h"
 #ifndef CB_FOR_CONSOLE
-        #include <wx/choice.h>
-    #include <wx/textdlg.h> //wxTextEntryDialog
+#include <wx/choice.h>
+#include <wx/textdlg.h> //wxTextEntryDialog
 #endif // #ifndef CB_FOR_CONSOLE
 
 #if wxCHECK_VERSION(2, 9, 0)

@@ -97,21 +97,24 @@ SpellCheckSettingsPanel::~SpellCheckSettingsPanel()
 }
 
 
-void SpellCheckSettingsPanel::InitDictionaryChoice()
+void SpellCheckSettingsPanel::InitDictionaryChoice(const wxString &path)
 {
-    m_sccfg->ScanForDictionaries();
+    if ( path.IsEmpty() )
+        m_sccfg->ScanForDictionaries();
+    else
+        m_sccfg->ScanForDictionaries(path);
     std::vector<wxString> dics = m_sccfg->GetPossibleDictionaries();
     int sel = m_sccfg->GetSelectedDictionaryNumber();
 
     m_choiceDictionary->Clear();
     for ( unsigned int i = 0 ; i < dics.size(); i++ )
-        m_choiceDictionary->AppendString(dics[i]);
+        m_choiceDictionary->AppendString(m_sccfg->GetLanguageName(dics[i]));
 
     if ( sel != -1 )
         m_choiceDictionary->Select(sel);
 
-    m_checkEnableOnlineSpellChecker->SetValue( m_sccfg->GetEnableOnlineChecker() );
     m_checkEnableOnlineSpellChecker->Enable(!dics.empty());
+    m_checkEnableOnlineSpellChecker->SetValue( m_sccfg->GetEnableOnlineChecker() && (!dics.empty()) );
 }
 wxString SpellCheckSettingsPanel::GetTitle() const {return _T("SpellChecker");}
 
@@ -120,10 +123,15 @@ wxString SpellCheckSettingsPanel::GetBitmapBaseName() const {return _T("SpellChe
 void SpellCheckSettingsPanel::PostConfig()
 {
     m_sccfg->SetEnableOnlineChecker(m_checkEnableOnlineSpellChecker->GetValue());
-    wxString dic = m_choiceDictionary->GetStringSelection();
-    if ( !dic.IsEmpty() )
+    std::vector<wxString> dics = m_sccfg->GetPossibleDictionaries();
+    int sel = m_choiceDictionary->GetSelection();
+    if ( sel < dics.size() && sel != wxNOT_FOUND )
     {
-        m_sccfg->SetDictionaryName( dic );
+        wxString dic = dics[sel];
+        if ( !dic.IsEmpty() )
+        {
+            m_sccfg->SetDictionaryName( dic );
+        }
     }
 
     wxString path;
@@ -183,20 +191,7 @@ void SpellCheckSettingsPanel::OnChooseDirectory(wxCommandEvent& event)
         textctrl->SetValue( dlg.GetPath() );
         if ( event.GetId() == XRCID("ID_BUTTON_DICTIONARIES") )
         {
-            m_sccfg->ScanForDictionaries(dlg.GetPath());
-            std::vector<wxString> dics = m_sccfg->GetPossibleDictionaries();
-            int sel = m_sccfg->GetSelectedDictionaryNumber();
-
-            m_choiceDictionary->Clear();
-            for ( unsigned int i = 0 ; i < dics.size(); i++ )
-                m_choiceDictionary->AppendString(dics[i]);
-
-            if ( sel != -1 )
-                m_choiceDictionary->Select(sel);
-
-            m_checkEnableOnlineSpellChecker->Enable(!dics.empty());
-            if ( dics.empty() ) m_checkEnableOnlineSpellChecker->SetValue(false);
-
+            InitDictionaryChoice();
         }
     }
 }
@@ -207,19 +202,7 @@ void SpellCheckSettingsPanel::OnChangeDictPathText( wxCommandEvent &event)
     Manager::Get()->GetMacrosManager()->ReplaceEnvVars(path);
     if ( wxDir::Exists( path ) )
     {
-        m_sccfg->ScanForDictionaries( path );
-        std::vector<wxString> dics = m_sccfg->GetPossibleDictionaries();
-        int sel = m_sccfg->GetSelectedDictionaryNumber();
-
-        m_choiceDictionary->Clear();
-        for ( unsigned int i = 0 ; i < dics.size(); i++ )
-            m_choiceDictionary->AppendString(dics[i]);
-
-        if ( sel != -1 )
-            m_choiceDictionary->Select(sel);
-
-        m_checkEnableOnlineSpellChecker->Enable(!dics.empty());
-        if ( dics.empty() ) m_checkEnableOnlineSpellChecker->SetValue(false);
+        InitDictionaryChoice( path );
     }
     else
     {

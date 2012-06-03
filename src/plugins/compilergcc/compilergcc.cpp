@@ -10,16 +10,16 @@
 #include <sdk.h>
 
 #ifndef CB_FOR_CONSOLE
-    #include <wx/frame.h> // GetMenuBar
-    #include <wx/gauge.h> // Needs to be before compilergcc.h if NOPCH on wxMSW
-    #include <wx/listctrl.h>
+#include <wx/frame.h> // GetMenuBar
+#include <wx/gauge.h> // Needs to be before compilergcc.h if NOPCH on wxMSW
+#include <wx/listctrl.h>
 #endif // #ifndef CB_FOR_CONSOLE
 #include <wx/xrc/xmlres.h>
 #ifndef CB_FOR_CONSOLE
-    #include <wx/sizer.h>
-    #include <wx/button.h>
-    #include <wx/stattext.h>
-    #include <wx/statline.h>
+#include <wx/sizer.h>
+#include <wx/button.h>
+#include <wx/stattext.h>
+#include <wx/statline.h>
 #endif // #ifndef CB_FOR_CONSOLE
 #include <wx/ffile.h>
 #include <wx/utils.h>
@@ -36,19 +36,22 @@
 #include <sdk_events.h>
 #include <pipedprocess.h>
 #include <configmanager.h>
+#ifndef CB_FOR_CONSOLE
+#include <debuggermanager.h>
+#endif // #ifndef CB_FOR_CONSOLE
 #include <logmanager.h>
 #include <macrosmanager.h>
 #include <projectmanager.h>
 #ifndef CB_FOR_CONSOLE
-    #include <editormanager.h>
+#include <editormanager.h>
 #endif // #ifndef CB_FOR_CONSOLE
 #include <scriptingmanager.h>
 #ifndef CB_FOR_CONSOLE
-    #include <configurationpanel.h>
+#include <configurationpanel.h>
 #endif // #ifndef CB_FOR_CONSOLE
 #include <pluginmanager.h>
 #ifndef CB_FOR_CONSOLE
-    #include <cbeditor.h>
+#include <cbeditor.h>
 #endif // #ifndef CB_FOR_CONSOLE
 #include <annoyingdialog.h>
 #include <filefilters.h>
@@ -56,17 +59,17 @@
 
 #include "compilergcc.h"
 #ifndef CB_FOR_CONSOLE
-    #include "compileroptionsdlg.h"
+#include "compileroptionsdlg.h"
 #endif // #ifndef CB_FOR_CONSOLE
 #include "directcommands.h"
 #include "globals.h"
 #include "cbworkspace.h"
 #ifndef CB_FOR_CONSOLE
-    #include "cbstyledtextctrl.h"
+#include "cbstyledtextctrl.h"
 #endif // #ifndef CB_FOR_CONSOLE
 
 #ifdef CB_FOR_CONSOLE
-    #include <wx/app.h>
+#include <wx/app.h>
 #endif // #ifdef CB_FOR_CONSOLE
 
 
@@ -526,6 +529,7 @@ void CompilerGCC::OnRelease(bool appShutDown)
         m_pLog = 0;
 
         CodeBlocksLogEvent evt(cbEVT_REMOVE_LOG_WINDOW, m_pListLog);
+        m_pListLog->DestroyControls();
         Manager::Get()->ProcessEvent(evt);
         m_pListLog = 0;
     }
@@ -657,6 +661,14 @@ void CompilerGCC::BuildModuleMenu(const ModuleType type, wxMenu* menu, const Fil
         menu->Append(idMenuCleanFromProjectManager,   _("Clean"));
         menu->AppendSeparator();
         menu->Append(idMenuProjectCompilerOptionsFromProjectManager, _("Build options..."));
+        cbPlugin *otherRunning = Manager::Get()->GetProjectManager()->GetIsRunning();
+        if (otherRunning && otherRunning != this)
+        {
+            menu->Enable(idMenuCompileFromProjectManager, false);
+            menu->Enable(idMenuRebuildFromProjectManager, false);
+            menu->Enable(idMenuCleanFromProjectManager, false);
+            menu->Enable(idMenuProjectCompilerOptionsFromProjectManager, false);
+        }
     }
     else if (data && data->GetKind() == FileTreeData::ftdkFile)
     {
@@ -871,36 +883,30 @@ void CompilerGCC::SetupEnvironment()
 bool CompilerGCC::StopRunningDebugger()
 {
 #ifndef CB_FOR_CONSOLE
-    PluginsArray plugins = Manager::Get()->GetPluginManager()->GetDebuggerOffers();
-    if (plugins.GetCount())
+    cbDebuggerPlugin *dbg = Manager::Get()->GetDebuggerManager()->GetActiveDebugger();
+    // is the debugger running?
+    if (dbg && dbg->IsRunning())
     {
-        cbDebuggerPlugin* dbg = (cbDebuggerPlugin*)plugins[0];
-        if (dbg)
+        int ret = cbMessageBox(_("The debugger must be stopped to do a (re-)build.\n"
+                                 "Do you want to stop the debugger now?"),
+                                 _("Information"),
+                                wxYES_NO | wxCANCEL | wxICON_QUESTION);
+        switch (ret)
         {
-            // is the debugger running?
-            if (dbg->IsRunning())
+            case wxID_YES:
             {
-                int ret = cbMessageBox(_("The debugger must be stopped to do a (re-)build.\n"
-                                         "Do you want to stop the debugger now?"),
-                                         _("Information"),
-                                        wxYES_NO | wxCANCEL | wxICON_QUESTION);
-                switch (ret)
-                {
-                    case wxID_YES:
-                    {
-                        m_pLog->Clear();
-                        Manager::Get()->GetLogManager()->Log(_("Stopping debugger..."), m_PageIndex);
-                        dbg->Stop();
-                        break;
-                    }
-                    case wxID_NO: // fallthrough
-                    default:
-                        Manager::Get()->GetLogManager()->Log(_("Aborting (re-)build."), m_PageIndex);
-                        return false;
-                }
+                m_pLog->Clear();
+                Manager::Get()->GetLogManager()->Log(_("Stopping debugger..."), m_PageIndex);
+                dbg->Stop();
+                break;
             }
+            case wxID_NO: // fallthrough
+            default:
+                Manager::Get()->GetLogManager()->Log(_("Aborting (re-)build."), m_PageIndex);
+                return false;
         }
     }
+
 #endif // #ifndef CB_FOR_CONSOLE
     return true;
 }
@@ -1400,6 +1406,24 @@ void CompilerGCC::DoClearTargetMenu()
 #endif // #ifndef CB_FOR_CONSOLE
 }
 
+bool CompilerGCC::IsValidTarget(const wxString &target) const
+{
+    if ( target.IsEmpty() )
+    {
+        return false;
+    }
+    if ( m_Targets.Index(target) == -1 )
+    {
+        return false;
+    }
+    const ProjectBuildTarget* tgt = Manager::Get()->GetProjectManager()->GetActiveProject()->GetBuildTarget(target);
+    if ( tgt && ! tgt->SupportsCurrentPlatform() )
+    {
+        return false;
+    }
+    return true;
+}
+
 void CompilerGCC::DoRecreateTargetMenu()
 {
     if (!IsAttached())
@@ -1429,9 +1453,20 @@ void CompilerGCC::DoRecreateTargetMenu()
             break;
 
         // find out the should-be-selected target
-        wxString tgtStr = m_pProject->GetActiveBuildTarget();
-        if (tgtStr.IsEmpty())
-            tgtStr = m_pProject->GetFirstValidBuildTargetName(); // a default value
+        const wxString preferredTarget = Manager::Get()->GetProjectManager()->GetWorkspace()->PreferredTarget();
+        wxString tgtStr = preferredTarget;
+        if ( ! IsValidTarget(tgtStr) )
+        {
+            tgtStr = m_pProject->GetActiveBuildTarget();
+        }
+        if ( ! IsValidTarget(tgtStr) )
+        {
+            tgtStr = m_pProject->GetFirstValidBuildTargetName(); // last-chance default
+        }
+        if ( preferredTarget.IsEmpty() )
+        {
+            Manager::Get()->GetProjectManager()->GetWorkspace()->PreferredTarget(tgtStr);
+        }
 
 #ifndef CB_FOR_CONSOLE
         // fill the menu and combo
@@ -1444,7 +1479,9 @@ void CompilerGCC::DoRecreateTargetMenu()
                 m_TargetMenu->AppendCheckItem(idMenuSelectTargetOther[x], GetTargetString(x), help);
             }
             if (m_pToolTarget)
+            {
                 m_pToolTarget->Append(GetTargetString(x));
+            }
         }
 
         // connect menu events
@@ -1468,7 +1505,8 @@ void CompilerGCC::DoRecreateTargetMenu()
 
         // finally, make sure we 're using the correct compiler for the project
         SwitchCompiler(m_pProject->GetCompilerID());
-    } while (false);
+    }
+    while (false);
 
 #ifndef CB_FOR_CONSOLE
     if (mbar)
@@ -1521,10 +1559,18 @@ void CompilerGCC::UpdateProjectTargets(cbProject* project)
     // update the list of targets (virtual + real)
     wxArrayString virtuals = project->GetVirtualBuildTargets();
     for (size_t i = 0; i < virtuals.GetCount(); ++i)
+    {
         m_Targets.Add(virtuals[i]);
+    }
 
     for (int i = 0; i < project->GetBuildTargetsCount(); ++i)
-        m_Targets.Add(project->GetBuildTarget(i)->GetTitle());
+    {
+        ProjectBuildTarget *tgt = project->GetBuildTarget(i);
+        if ( tgt->SupportsCurrentPlatform() )
+        {
+            m_Targets.Add( tgt->GetTitle() );
+        }
+    }
 
     // keep the index for the first real target
     m_RealTargetsStartIndex = virtuals.GetCount();
@@ -1951,6 +1997,7 @@ int CompilerGCC::Run(ProjectBuildTarget* target)
     m_CommandQueue.Add(new CompilerCommand(cmd, wxEmptyString, m_pProject, target, true));
 
     m_pProject->SetCurrentlyCompilingTarget(0);
+    Manager::Get()->GetProjectManager()->SetIsRunning(this);
 #endif // #ifndef CB_FOR_CONSOLE
     return 0;
 }
@@ -2020,7 +2067,7 @@ bool CompilerGCC::DoCleanWithMake(const wxString& cmd, bool showOutput)
     if (showOutput)
     {
         for(size_t i = 0; i < output.GetCount(); i++)
-            Manager::Get()->GetLogManager()->Log(F(_("%s"), output[i].wx_str(), m_PageIndex));
+            Manager::Get()->GetLogManager()->Log(F(_("%s"), output[i].wx_str()), m_PageIndex);
         for(size_t i = 0; i < errors.GetCount(); i++)
             Manager::Get()->GetLogManager()->Log(F(_("%s"), errors[i].wx_str()), m_PageIndex);
     }
@@ -2826,16 +2873,19 @@ int CompilerGCC::KillProcess()
             }
             else switch (ret)
             {
-//                case wxKILL_ACCESS_DENIED: cbMessageBox(_("Access denied")); break;
-//                case wxKILL_NO_PROCESS: cbMessageBox(_("No process")); break;
-//                case wxKILL_BAD_SIGNAL: cbMessageBox(_("Bad signal")); break;
-//                case wxKILL_ERROR: cbMessageBox(_("Unspecified error")); break;
+//                case wxKILL_ACCESS_DENIED: cbMessageBox(_("Access denied"));     break;
+//                case wxKILL_NO_PROCESS:    cbMessageBox(_("No process"));        break;
+//                case wxKILL_BAD_SIGNAL:    cbMessageBox(_("Bad signal"));        break;
+//                case wxKILL_ERROR:         cbMessageBox(_("Unspecified error")); break;
                 case wxKILL_OK:
                 default: break;
                 // Manager::Get()->GetMessageManager()->Log(m_PageIndex, _("Process killed...")));
             }
         }
     }
+    ProjectManager *projectManager = Manager::Get()->GetProjectManager();
+    if (projectManager->GetIsRunning() == this)
+        projectManager->SetIsRunning(NULL);
     return ret;
 }
 
@@ -3176,15 +3226,18 @@ void CompilerGCC::OnKillProcess(wxCommandEvent& /*event*/)
 
 void CompilerGCC::OnSelectTarget(wxCommandEvent& event)
 {
-    int sel = event.GetSelection();
     if (event.GetId() == idToolTarget)
     {   // through the toolbar
+        const int sel = event.GetSelection();
+        Manager::Get()->GetProjectManager()->GetWorkspace()->PreferredTarget(GetTargetString(sel));
         DoUpdateTargetMenu(sel);
     }
     else
     {   // through Build->SelectTarget
-        DoUpdateTargetMenu(event.GetId() - idMenuSelectTargetOther[0]);
-        m_pToolTarget->SetSelection(event.GetId() - idMenuSelectTargetOther[0]);
+        const int i = event.GetId() - idMenuSelectTargetOther[0];
+        Manager::Get()->GetProjectManager()->GetWorkspace()->PreferredTarget(GetTargetString(i));
+        DoUpdateTargetMenu(i);
+        m_pToolTarget->SetSelection(i);
     }
 } // end of OnSelectTarget
 
@@ -3212,46 +3265,48 @@ void CompilerGCC::OnUpdateUI(wxUpdateUIEvent& event)
     cbEditor* ed = Manager::Get()->GetEditorManager()->GetBuiltinActiveEditor();
     wxMenuBar* mbar = Manager::Get()->GetAppFrame()->GetMenuBar();
     bool running = IsRunning();
+    cbPlugin *runningPlugin = Manager::Get()->GetProjectManager()->GetIsRunning();
+    bool otherRunning = runningPlugin && runningPlugin != this;
     if (mbar)
     {
-        mbar->Enable(idMenuCompile,          !running && (prj || ed));
-        mbar->Enable(idMenuBuildWorkspace,   !running && prj);
+        mbar->Enable(idMenuCompile,          !running && (prj || ed) && !otherRunning);
+        mbar->Enable(idMenuBuildWorkspace,   !running && prj &&         !otherRunning);
 //        mbar->Enable(idMenuCompileFromProjectManager, !running && prj);
-        mbar->Enable(idMenuCompileFile,      !running && ed);
+        mbar->Enable(idMenuCompileFile,      !running && ed &&          !otherRunning);
 //        mbar->Enable(idMenuCompileFileFromProjectManager, !running && prj);
-        mbar->Enable(idMenuRebuild,          !running && prj);
-        mbar->Enable(idMenuRebuildWorkspace, !running && prj);
+        mbar->Enable(idMenuRebuild,          !running && prj &&         !otherRunning);
+        mbar->Enable(idMenuRebuildWorkspace, !running && prj &&         !otherRunning);
 //        mbar->Enable(idMenuRebuildFromProjectManager, !running && prj);
-        mbar->Enable(idMenuClean,            !running && prj);
-        mbar->Enable(idMenuCleanWorkspace,   !running && prj);
+        mbar->Enable(idMenuClean,            !running && prj &&         !otherRunning);
+        mbar->Enable(idMenuCleanWorkspace,   !running && prj &&         !otherRunning);
 //        mbar->Enable(idMenuCleanFromProjectManager, !running && prj);
-        mbar->Enable(idMenuCompileAndRun,    !running && (prj || ed));
-        mbar->Enable(idMenuRun,              !running && (prj || ed));
+        mbar->Enable(idMenuCompileAndRun,    !running && (prj || ed) && !otherRunning);
+        mbar->Enable(idMenuRun, !running && (prj || ed) &&              !otherRunning);
         mbar->Enable(idMenuKillProcess,       running);
-        mbar->Enable(idMenuSelectTarget,     !running && prj);
+        mbar->Enable(idMenuSelectTarget,     !running && prj &&         !otherRunning);
 
-        mbar->Enable(idMenuNextError,        !running && (prj || ed) && m_Errors.HasNextError());
-        mbar->Enable(idMenuPreviousError,    !running && (prj || ed) && m_Errors.HasPreviousError());
-//        mbar->Enable(idMenuClearErrors, cnt);
+        mbar->Enable(idMenuNextError,     !running && (prj || ed) && m_Errors.HasNextError()     && !otherRunning);
+        mbar->Enable(idMenuPreviousError, !running && (prj || ed) && m_Errors.HasPreviousError() && !otherRunning);
+        mbar->Enable(idMenuClearErrors,                                                             !otherRunning);
 
         // Project menu
-        mbar->Enable(idMenuProjectCompilerOptions, !running && prj);
-        mbar->Enable(idMenuProjectProperties,      !running && prj);
+        mbar->Enable(idMenuProjectCompilerOptions, !running && prj && !otherRunning);
+        mbar->Enable(idMenuProjectProperties,      !running && prj && !otherRunning);
     }
 
     // enable/disable compiler toolbar buttons
     wxToolBar* tbar = m_pTbar;//Manager::Get()->GetAppWindow()->GetToolBar();
     if (tbar)
     {
-        tbar->EnableTool(idMenuCompile,       !running && (prj || ed));
-        tbar->EnableTool(idMenuRun,           !running && (prj || ed));
-        tbar->EnableTool(idMenuCompileAndRun, !running && (prj || ed));
-        tbar->EnableTool(idMenuRebuild,       !running && prj);
+        tbar->EnableTool(idMenuCompile,       !running && (prj || ed) && !otherRunning);
+        tbar->EnableTool(idMenuRun,           !running && (prj || ed) && !otherRunning);
+        tbar->EnableTool(idMenuCompileAndRun, !running && (prj || ed) && !otherRunning);
+        tbar->EnableTool(idMenuRebuild,       !running && prj         && !otherRunning);
         tbar->EnableTool(idMenuKillProcess,    running && prj);
 
         m_pToolTarget = XRCCTRL(*tbar, "idToolTarget", wxChoice);
         if (m_pToolTarget)
-            m_pToolTarget->Enable(!running && prj);
+            m_pToolTarget->Enable(!running && prj && !otherRunning);
     }
 
     // allow other UpdateUI handlers to process this event
@@ -3807,6 +3862,9 @@ void CompilerGCC::NotifyJobDone(bool showNothingToBeDone)
 
     if (!IsProcessRunning())
     {
+        ProjectManager *manager = Manager::Get()->GetProjectManager();
+        if (manager->GetIsRunning() == this)
+            manager->SetIsRunning(NULL);
         CodeBlocksEvent evt(cbEVT_COMPILER_FINISHED, 0, m_pProject, 0, this);
         evt.SetInt(m_LastExitCode);
         Manager::Get()->ProcessEvent(evt);

@@ -45,6 +45,7 @@ void CompilerMSVC::Reset()
     m_Programs.WINDRES = _T("rc.exe"); // platform SDK is needed for this
     m_Programs.MAKE = _T("nmake.exe");
     m_Programs.DBG = _T("cdb.exe");
+    m_Programs.DBGconfig = wxEmptyString;
 
     m_Switches.includeDirs = _T("/I");
     m_Switches.libDirs = _T("/LIBPATH:");
@@ -55,7 +56,7 @@ void CompilerMSVC::Reset()
     m_Switches.needDependencies = false;
     m_Switches.forceCompilerUseQuotes = false;
     m_Switches.forceLinkerUseQuotes = false;
-    m_Switches.logging = clogNone;
+    m_Switches.logging = CompilerSwitches::defaultLogging;
     m_Switches.libPrefix = _T("");
     m_Switches.libExtension = _T("lib");
     m_Switches.linkerNeedsLibPrefix = false;

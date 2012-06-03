@@ -7063,6 +7063,11 @@ public:
     /** Returns height of a single grid row (in pixels). */
     int GetRowHeight() const { return m_lineHeight; }
 
+/* C::B begin */
+    /** Returns the width of the margin. */
+    int GetMarginWidth() const { return m_marginWidth; }
+/* C::B end */
+
     wxPGProperty* GetSelectedProperty () const { return GetSelection(); }
 
     /** Returns current selection background colour. */
@@ -8211,9 +8216,9 @@ protected:
     void DestroyEditorWnd( wxWindow* wnd );
     void FreeEditors();
 
-    virtual bool DoExpand( wxPGProperty* p, bool sendEvent = false );
+    virtual bool DoExpand( wxPGProperty* p, bool sendEvent /* CB modification = false*/);
 
-    virtual bool DoCollapse( wxPGProperty* p, bool sendEvent = false );
+    virtual bool DoCollapse( wxPGProperty* p, bool sendEvent /* CB modification = false*/);
 
     // Returns nearest paint visible property (such that will be painted unless
     // window is scrolled or resized). If given property is paint visible, then

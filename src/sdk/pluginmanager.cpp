@@ -46,7 +46,7 @@
 
 #include "annoyingdialog.h"
 #ifndef CB_FOR_CONSOLE
-    #include "pluginsconfigurationdlg.h"
+#include "pluginsconfigurationdlg.h"
 #endif // #ifndef CB_FOR_CONSOLE
 
 #include "scripting/bindings/sc_plugin.h"
@@ -666,3 +666,14 @@ int PluginManager::Configure()
     PlaceWindow(&dlg);
     return dlg.ShowModal();
 }
+
+void PluginManager::RegisterCCFileExts(const wxString& pluginName, const std::set<wxString>& fileExts)
+{
+    std::set<wxString> exts;
+    std::set<wxString>::iterator it;
+    for (it=fileExts.begin(); it != fileExts.end(); ++it)
+        exts.insert((*it).Lower());
+
+    m_CCFileExts[pluginName] = exts;
+}
+

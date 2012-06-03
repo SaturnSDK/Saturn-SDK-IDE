@@ -38,7 +38,8 @@ CompileTargetBase::CompileTargetBase()
     m_MakeCommands[mcClean]             = _T("$make -f $makefile clean$target");
     m_MakeCommands[mcDistClean]         = _T("$make -f $makefile distclean$target");
     m_MakeCommands[mcAskRebuildNeeded]  = _T("$make -q -f $makefile $target");
-    m_MakeCommands[mcSilentBuild]       = _T("$make -s -f $makefile $target");
+//    m_MakeCommands[mcSilentBuild]       = _T("$make -s -f $makefile $target");
+    m_MakeCommands[mcSilentBuild]       = m_MakeCommands[mcBuild] + _T(" > $(CMD_NULL)");
     m_MakeCommandsModified = false;
 }
 
@@ -60,7 +61,7 @@ void CompileTargetBase::GetTargetFilenameGenerationPolicy(TargetFilenameGenerati
 {
     prefixOut = m_PrefixGenerationPolicy;
     extensionOut = m_ExtensionGenerationPolicy;
-} // end of GetTargetFilenameGenerationPolicy
+}
 
 const wxString& CompileTargetBase::GetFilename() const
 {
@@ -99,7 +100,7 @@ void CompileTargetBase::SetImportLibraryFilename(const wxString& filename)
 {
     if (filename.IsEmpty())
     {
-        m_ImportLibraryFilename = _T("$(TARGET_NAME)");
+        m_ImportLibraryFilename = _T("$(TARGET_OUTPUT_DIR)$(TARGET_OUTPUT_BASENAME)");
         SetModified(true);
         return;
     }
@@ -113,7 +114,7 @@ void CompileTargetBase::SetDefinitionFileFilename(const wxString& filename)
 {
     if (filename.IsEmpty())
     {
-        m_DefinitionFileFilename = _T("$(TARGET_NAME)");
+        m_DefinitionFileFilename = _T("$(TARGET_OUTPUT_DIR)$(TARGET_OUTPUT_BASENAME)");
         SetModified(true);
         return;
     }
@@ -263,7 +264,7 @@ void CompileTargetBase::GenerateTargetFilename(wxString& filename) const
             if (m_PrefixGenerationPolicy == tgfpPlatformDefault)
             {
                 wxString prefix = wxEmptyString;
-                // On linux, "lib" is th common prefix for this platform
+                // On linux, "lib" is the common prefix for this platform
                 if (platform::linux)
                     prefix = wxT("lib");
                 // FIXME (mortenmacfly#5#): What about Mac (Windows is OK)?!

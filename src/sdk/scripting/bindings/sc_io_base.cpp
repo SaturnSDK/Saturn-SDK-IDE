@@ -16,13 +16,11 @@
 #ifndef CB_PRECOMP
     #include <globals.h>
     #include <wx/string.h>
-//    #include <wx/filedlg.h>
 #endif
 
 #include <wx/filename.h>
 #include <wx/utils.h>
 
-//#include "scriptsecuritywarningdlg.h"
 #include "sc_base_types.h"
 
 namespace ScriptBindings
@@ -38,30 +36,6 @@ namespace ScriptBindings
             if (Manager::Get()->GetConfigManager(_T("security"))->ReadBool(operation, false))
                 return true;
 
-//#ifndef CB_FOR_CONSOLE
-//            ScriptSecurityWarningDlg dlg(Manager::Get()->GetAppWindow(), operation, descr);
-//            if (dlg.ShowModal() != wxID_OK)
-//                return false;
-//
-//            ScriptSecurityResponse response = dlg.GetResponse();
-//            switch (response)
-//            {
-//                case ssrAllow:
-//                    return true;
-//
-//                case ssrAllowAll:
-//                    Manager::Get()->GetConfigManager(_T("security"))->Write(operation, true);
-//                    return true;
-//
-//                case ssrTrust: // purposely fall through
-//                case ssrTrustPermanently:
-//                    Manager::Get()->GetScriptingManager()->TrustCurrentlyRunningScript(response == ssrTrustPermanently);
-//                    return true;
-//
-//                default:
-//                    return false;
-//            }
-//#endif // #ifndef CB_FOR_CONSOLE
             return false;
         }
 
@@ -84,12 +58,6 @@ namespace ScriptBindings
             return ::CreateDirRecursively(fname.GetFullPath(), perms);
         }
 
-//#ifndef CB_FOR_CONSOLE
-//        wxString ChooseDir(const wxString& message, const wxString& initialPath, bool showCreateDirButton)
-//        {
-//            return ChooseDirectory(0, message, Manager::Get()->GetMacrosManager()->ReplaceMacros(initialPath), wxEmptyString, false, showCreateDirButton);
-//        }
-//#endif // #ifndef CB_FOR_CONSOLE
 
         bool RemoveDir(const wxString& src)
         {
@@ -152,21 +120,6 @@ namespace ScriptBindings
             return wxFileExists(fname.GetFullPath());
         }
 
-//#ifndef CB_FOR_CONSOLE
-//        wxString ChooseFile(const wxString& title, const wxString& defaultFile, const wxString& filter)
-//        {
-//            wxFileDialog dlg(0,
-//                            title,
-//                            wxEmptyString,
-//                            Manager::Get()->GetMacrosManager()->ReplaceMacros(defaultFile),
-//                            filter,
-//                            wxFD_OPEN | compatibility::wxHideReadonly);
-//            PlaceWindow(&dlg);
-//            if (dlg.ShowModal() == wxID_OK)
-//                return dlg.GetPath();
-//            return wxEmptyString;
-//        }
-//#endif // #ifndef CB_FOR_CONSOLE
 
         wxString ReadFileContents(const wxString& filename)
         {
@@ -229,13 +182,7 @@ namespace ScriptBindings
                 staticFunc(&IOLib::SetCwd, "SetCwd").
 
                 staticFunc(&IOLib::DirectoryExists, "DirectoryExists").
-//#ifndef CB_FOR_CONSOLE
-//                staticFunc(&IOLib::ChooseDir, "SelectDirectory").
-//#endif // #ifndef CB_FOR_CONSOLE
                 staticFunc(&IOLib::FileExists, "FileExists").
-//#ifndef CB_FOR_CONSOLE
-//                staticFunc(&IOLib::ChooseFile, "SelectFile").
-//#endif // #ifndef CB_FOR_CONSOLE
                 staticFunc(&IOLib::ReadFileContents, "ReadFileContents");
 
         #ifndef NO_INSECURE_SCRIPTS

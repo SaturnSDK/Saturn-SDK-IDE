@@ -17,9 +17,9 @@
     #include "infowindow.h"
 #endif
 #ifndef CB_FOR_CONSOLE
-    #include "cbstyledtextctrl.h"
+#include "cbstyledtextctrl.h"
 #else // #ifndef CB_FOR_CONSOLE
-    #include "infowindow_base.h"
+#include "infowindow_base.h"
 #endif // #ifndef CB_FOR_CONSOLE
 
 #include <wx/url.h>

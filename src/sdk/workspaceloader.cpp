@@ -15,12 +15,14 @@
     #include <wx/intl.h>
     #include <wx/string.h>
 
+    #include "workspaceloader.h"
+
     #include "manager.h"
     #include "projectmanager.h"
     #include "logmanager.h"
     #include "cbproject.h"
     #include "globals.h"
-    #include "workspaceloader.h"
+    #include "cbworkspace.h"
 #endif
 
 
@@ -103,33 +105,11 @@ bool WorkspaceLoader::Open(const wxString& filename, wxString& Title)
             wxFileName fname(projectFilename);
             wxFileName wfname(filename);
             fname.MakeAbsolute(wfname.GetPath(wxPATH_GET_VOLUME | wxPATH_GET_SEPARATOR));
-            int active = 0;
-            int ret = proj->QueryIntAttribute("active", &active);
-            switch (ret)
+            cbProject* pProject = GetpMan()->LoadProject(fname.GetFullPath(), false); // don't activate it
+            if (!pProject)
             {
-                case TIXML_SUCCESS:
-                    if (active == 1)
-                    {
-                        cbProject* pProject = GetpMan()->LoadProject(fname.GetFullPath(), true); // activate it
-                        if(!pProject)
-                        {
-                            cbMessageBox(_("Unable to open ") + projectFilename,
-                             _("Opening WorkSpace") + filename, wxICON_WARNING);
-                        }
-                    }
-                    break;
-                case TIXML_WRONG_TYPE:
-                    GetpMsg()->DebugLog(F(_T("Error %s: %s"), doc.Value(), doc.ErrorDesc()));
-                    GetpMsg()->DebugLog(_T("Wrong attribute type (expected 'int')"));
-                    break;
-                default:
-                    cbProject* pProject = GetpMan()->LoadProject(fname.GetFullPath(), false); // don't activate it
-                    if(!pProject)
-                    {
-                        cbMessageBox(_("Unable to open ") + projectFilename,
-                         _("Opening WorkSpace") + filename, wxICON_WARNING);
-                    }
-                    break;
+                cbMessageBox(_("Unable to open ") + projectFilename,
+                 _("Opening WorkSpace") + filename, wxICON_WARNING);
             }
         }
         proj = proj->NextSiblingElement("Project");
@@ -206,8 +186,6 @@ bool WorkspaceLoader::Save(const wxString& title, const wxString& filename)
 
         TiXmlElement* node = static_cast<TiXmlElement*>(wksp->InsertEndChild(TiXmlElement("Project")));
         node->SetAttribute("filename", cbU2C( ExportFilename(fname) ) );
-        if (prj == Manager::Get()->GetProjectManager()->GetActiveProject())
-            node->SetAttribute("active", 1);
 
         const ProjectsArray* deps = Manager::Get()->GetProjectManager()->GetDependenciesForProject(prj);
         if (deps && deps->GetCount())
@@ -223,4 +201,105 @@ bool WorkspaceLoader::Save(const wxString& title, const wxString& filename)
         }
     }
     return cbSaveTinyXMLDocument(&doc, filename);
+}
+
+
+bool WorkspaceLoader::SaveLayout(const wxString& filename)
+{
+    const char* ROOT_TAG = "CodeBlocks_workspace_layout_file";
+
+    TiXmlDocument doc;
+    doc.SetCondenseWhiteSpace(false);
+    doc.InsertEndChild(TiXmlDeclaration("1.0", "UTF-8", "yes"));
+    TiXmlElement* rootnode = static_cast<TiXmlElement*>(doc.InsertEndChild(TiXmlElement(ROOT_TAG)));
+    if (!rootnode)
+    {
+        return false; // Failed creating the root node of the workspace layout XML file?!
+    }
+
+    // active project
+    ProjectManager *pm = Manager::Get()->GetProjectManager();
+    if (!pm)
+    {
+        return false; // Could not access ProjectManager?!
+    }
+
+    if (const cbProject *project = pm->GetActiveProject())
+    {
+        TiXmlElement *el =
+            static_cast<TiXmlElement*>(
+                rootnode->InsertEndChild( TiXmlElement("ActiveProject") ) );
+        wxFileName wfname(filename);
+        wxFileName fname( project->GetFilename() );
+        fname.MakeRelativeTo(wfname.GetPath(wxPATH_GET_VOLUME | wxPATH_GET_SEPARATOR));
+        el->SetAttribute("path", cbU2C( ExportFilename(fname) ) );
+    }
+    // else Workspace has no active project?!
+
+    // preferred build target
+    if (const cbWorkspace* wsp = pm->GetWorkspace() )
+    {
+        const wxString preferredTarget = wsp->PreferredTarget();
+        if ( ! preferredTarget.IsEmpty() )
+        {
+            TiXmlElement* el =
+                static_cast<TiXmlElement*>(
+                    rootnode->InsertEndChild( TiXmlElement("PreferredTarget") ) );
+            el->SetAttribute("name", cbU2C(preferredTarget) );
+        }
+        // else Project has not preferred target.
+    }
+    // else No workspace present to save.
+
+    return cbSaveTinyXMLDocument(&doc, filename);
+}
+
+bool WorkspaceLoader::LoadLayout(const wxString& filename)
+{
+    TiXmlDocument doc;
+    if ( ! TinyXML::LoadDocument(filename, &doc) )
+    {
+        return false; // Can't load XML file?!
+    }
+
+    if ( ! GetpMan() || ! GetpMsg() )
+    {
+        return false; // GetpMan or GetpMsg returns NULL?!
+    }
+
+    TiXmlElement* root = doc.FirstChildElement("CodeBlocks_workspace_layout_file");
+    if (!root)
+    {
+        GetpMsg()->DebugLog(_T("Unable to load Code::Blocks workspace layout file: File is invalid."));
+        return false;
+    }
+
+    // active project
+    if (TiXmlElement* el = root->FirstChildElement("ActiveProject"))
+    {
+        wxFileName fname = cbC2U( el->Attribute("path") );
+        wxFileName wfname(filename);
+        fname.MakeAbsolute( wfname.GetPath(wxPATH_GET_VOLUME | wxPATH_GET_SEPARATOR) );
+        cbProject *project = GetpMan()->IsOpen( fname.GetFullPath() );
+        if (project)
+        {
+            GetpMan()->SetProject(project);
+            Manager::Get()->GetLogManager()->DebugLog(F(_T("Project %s has been activated."), fname.GetFullPath().wx_str()));
+        }
+        else
+            Manager::Get()->GetLogManager()->DebugLog(F(_T("Could not activate project: %s"), fname.GetFullPath().wx_str()));
+    }
+
+    // preferred build target
+    if (TiXmlElement* el = root->FirstChildElement("PreferredTarget"))
+    {
+        const wxString name = cbC2U(el->Attribute("name"));
+        cbWorkspace *wsp = GetpMan()->GetWorkspace();
+        if (wsp)
+        {
+            wsp->PreferredTarget(name);
+        }
+    }
+
+    return true;
 }

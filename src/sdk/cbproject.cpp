@@ -33,7 +33,7 @@
     #include "macrosmanager.h"
     #include "logmanager.h"
     #ifndef CB_FOR_CONSOLE
-        #include "editormanager.h"
+    #include "editormanager.h"
     #endif // #ifndef CB_FOR_CONSOLE
     #include "filemanager.h"
     #include "configmanager.h"
@@ -41,26 +41,26 @@
     #include "projectbuildtarget.h"
     #include "projectfile.h"
     #ifndef CB_FOR_CONSOLE
-        #include "infowindow.h"
+    #include "infowindow.h"
     #else // #ifndef CB_FOR_CONSOLE
-        #include "infowindow_base.h"
+    #include "infowindow_base.h"
     #endif // #ifndef CB_FOR_CONSOLE
 #endif
 
 #include <map>
 #ifndef CB_FOR_CONSOLE
-    #include "projectoptionsdlg.h"
+#include "projectoptionsdlg.h"
 #endif // #ifndef CB_FOR_CONSOLE
 #include "projectloader.h"
 #ifndef CB_FOR_CONSOLE
-    #include "projectlayoutloader.h"
-    #include "selecttargetdlg.h"
+#include "projectlayoutloader.h"
+#include "selecttargetdlg.h"
 #endif // #ifndef CB_FOR_CONSOLE
 #include "filegroupsandmasks.h"
 #include "filefilters.h"
 #include "annoyingdialog.h"
 #ifndef CB_FOR_CONSOLE
-    #include "genericmultilinenotesdlg.h"
+#include "genericmultilinenotesdlg.h"
 #endif // #ifndef CB_FOR_CONSOLE
 
 // class constructor
@@ -357,13 +357,7 @@ void cbProject::CalculateCommonTopLevelPath()
             ++pos;
         }
         if ( (pos > 0) && (pos < tmp.Length()) )
-        {
             tmpbase << sep << tmp.Left(pos) << sep;
-            f->relativeToCommonTopLevelPath = tmp.Right(tmp.Length() - pos);
-        }
-        else
-            f->relativeToCommonTopLevelPath = tmp;
-        f->SetObjName(f->relativeToCommonTopLevelPath);
 
         wxFileName tmpbaseF(tmpbase);
         tmpbaseF.Normalize(wxPATH_NORM_DOTS);
@@ -374,6 +368,17 @@ void cbProject::CalculateCommonTopLevelPath()
 
     m_CommonTopLevelPath = base.GetFullPath();
     Manager::Get()->GetLogManager()->DebugLog(_T("Project's common toplevel path: ") + m_CommonTopLevelPath);
+    for (FilesList::iterator it = m_Files.begin(); it != m_Files.end(); ++it)
+    {
+        ProjectFile* f = (*it);
+
+        if (!f)
+            continue;
+
+        wxString fileName = f->file.GetFullPath();
+        f->relativeToCommonTopLevelPath = fileName.Right(fileName.Length() - m_CommonTopLevelPath.Length());
+        f->SetObjName(f->relativeToCommonTopLevelPath);
+    }
 }
 
 wxString cbProject::GetCommonTopLevelPath() const
@@ -1640,7 +1645,7 @@ ProjectFile* cbProject::GetFile(int index)
         }
     }
 
-    if (index < 0 || index >= m_Files.size())
+    if (index < 0 || index >= static_cast<int>(m_Files.size()))
         return NULL;
 
     return m_FileArray.Item(index);

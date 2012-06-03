@@ -8,12 +8,9 @@
 
 #include "settings.h"
 #include <wx/string.h>
-//#include <wx/treectrl.h>
 #include <wx/file.h>
 #include <wx/filename.h>
 #include <wx/intl.h>
-//#include <wx/msgdlg.h>
-//#include <wx/bitmap.h>
 
 class TiXmlDocument;
 class wxWindow;
@@ -188,6 +185,7 @@ extern DLLIMPORT void QuoteStringIfNeeded(wxString& str);
 extern DLLIMPORT wxString EscapeSpaces(const wxString& str);
 
 extern DLLIMPORT FileType FileTypeOf(const wxString& filename);
+extern DLLIMPORT wxString cbFindFileInPATH(const wxString &filename);
 
 extern DLLIMPORT bool CreateDirRecursively(const wxString& full_path, int perms = 0755);
 extern DLLIMPORT bool CreateDir(const wxString& full_path, int perms = 0755);

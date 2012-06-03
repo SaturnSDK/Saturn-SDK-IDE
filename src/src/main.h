@@ -29,8 +29,30 @@ extern int idStartHerePageLink;
 extern int idStartHerePageVarSubst;
 
 class cbAuiNotebook;
+class DebuggerMenuHandler;
+class DebuggerToolbarHandler;
 class InfoPane;
 class wxGauge;
+
+struct ToolbarInfo
+{
+    ToolbarInfo() {}
+    ToolbarInfo(wxToolBar *toolbar, const wxAuiPaneInfo &paneInfo, int priority) :
+        paneInfo(paneInfo),
+        toolbar(toolbar),
+        priority(priority)
+    {
+    }
+
+    bool operator<(const ToolbarInfo& b) const
+    {
+        return priority < b.priority;
+    }
+
+    wxAuiPaneInfo paneInfo;
+    wxToolBar *toolbar;
+    int priority;
+};
 
 class MainFrame : public wxFrame
 {
@@ -176,7 +198,8 @@ class MainFrame : public wxFrame
         void OnSettingsKeyBindings(wxCommandEvent& event);
         void OnGlobalUserVars(wxCommandEvent& event);
         void OnSettingsEditor(wxCommandEvent& event);
-        void OnSettingsCompilerDebugger(wxCommandEvent& event);
+        void OnSettingsCompiler(wxCommandEvent& event);
+        void OnSettingsDebugger(wxCommandEvent& event);
         void OnSettingsPlugins(wxCommandEvent& event);
         void OnPluginSettingsMenu(wxCommandEvent& event);
         void OnSettingsScripting(wxCommandEvent& event);
@@ -256,6 +279,7 @@ class MainFrame : public wxFrame
         void RecreateMenuBar();
         void RegisterEvents();
         void SetupGUILogging();
+        void SetupDebuggerUI();
 
         void RegisterScriptFunctions();
         void RunStartupScripts();
@@ -264,7 +288,7 @@ class MainFrame : public wxFrame
         void PluginsUpdated(cbPlugin* plugin, int status);
 
         void DoAddPlugin(cbPlugin* plugin);
-        void DoAddPluginToolbar(cbPlugin* plugin);
+        ToolbarInfo DoAddPluginToolbar(cbPlugin* plugin);
         void DoAddPluginStatusField(cbPlugin* plugin);
         void AddPluginInPluginsMenu(cbPlugin* plugin);
         void AddPluginInSettingsMenu(cbPlugin* plugin);
@@ -303,6 +327,7 @@ class MainFrame : public wxFrame
 
         void LoadWindowState();
         void SaveWindowState();
+        void LoadWindowSize();
 
         void InitializeRecentFilesHistory();
         void AddToRecentFilesHistory(const wxString& filename);
@@ -330,6 +355,7 @@ class MainFrame : public wxFrame
         wxMenu* m_ToolsMenu;
         wxMenu* m_PluginsMenu;
         wxMenu* m_HelpPluginsMenu;
+        bool    m_ScanningForPlugins;
 
         bool m_SmallToolBar;
         bool m_StartupDone;
@@ -350,7 +376,9 @@ class MainFrame : public wxFrame
         MenuIDToScript m_MenuIDToScript;
 
         wxScrollingDialog* m_pBatchBuildDialog;
-        wxGauge* m_pProgressBar;
+
+        DebuggerMenuHandler *m_debuggerMenuHandler;
+        DebuggerToolbarHandler *m_debuggerToolbarHandler;
 
         DECLARE_EVENT_TABLE()
 };

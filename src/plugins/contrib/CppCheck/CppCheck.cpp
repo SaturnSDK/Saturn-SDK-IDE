@@ -31,6 +31,7 @@
 #include <wx/utils.h>
 
 #include "tinyxml/tinyxml.h"
+#include "filefilters.h"
 #include "loggers.h"
 
 #include "CppCheck.h"
@@ -215,12 +216,12 @@ int CppCheck::Execute()
     {
         ProjectFile* pf = *it;
         // filter to avoid including non C/C++ files
-        if (pf->relativeFilename.Mid(2).Lower() == wxT(".c")   ||
-            pf->relativeFilename.Mid(4).Lower() == wxT(".cpp") ||
-            pf->relativeFilename.Mid(3).Lower() == wxT(".cc")  ||
-            pf->relativeFilename.Mid(3).Lower() == wxT(".c++") ||
-            pf->relativeFilename.Mid(4).Lower() == wxT(".cxx") ||
-            FileTypeOf(pf->relativeFilename) == ftHeader)
+        if (   pf->relativeFilename.EndsWith(FileFilters::C_DOT_EXT)
+            || pf->relativeFilename.EndsWith(FileFilters::CPP_DOT_EXT)
+            || pf->relativeFilename.EndsWith(FileFilters::CC_DOT_EXT)
+            || pf->relativeFilename.EndsWith(FileFilters::CXX_DOT_EXT)
+            || pf->relativeFilename.EndsWith(FileFilters::CPLPL_DOT_EXT)
+            || (FileTypeOf(pf->relativeFilename) == ftHeader) )
         {
             Input.Write(pf->relativeFilename + _T("\n"));
         }
@@ -236,6 +237,8 @@ int CppCheck::Execute()
         wxString IncludeDir(IncludeDirs[Dir]);
         if (target)
             MacrosMgr->ReplaceMacros(IncludeDir, target);
+        else
+            MacrosMgr->ReplaceMacros(IncludeDir);
         IncludeList += _T("-I\"") + IncludeDir + _T("\" ");
     }
     if (target)
@@ -336,6 +339,7 @@ int CppCheck::Execute()
                 }
             }
         }
+        Doc.SaveFile("CppCheckResults.xml");
     }
 
     return 0;

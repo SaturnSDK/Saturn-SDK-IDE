@@ -44,6 +44,7 @@ void CompilerGNUARM::Reset()
         m_Programs.CPP = _T("arm-elf-g++.exe");
         m_Programs.LD = _T("arm-elf-g++.exe");
         m_Programs.DBG = _T("arm-elf-gdb.exe");
+        m_Programs.DBGconfig = wxEmptyString;
         m_Programs.LIB = _T("arm-elf-ar.exe");
         m_Programs.WINDRES = _T("");
         m_Programs.MAKE = _T("make.exe");
@@ -54,6 +55,7 @@ void CompilerGNUARM::Reset()
         m_Programs.CPP = _T("arm-elf-g++");
         m_Programs.LD = _T("arm-elf-g++");
         m_Programs.DBG = _T("arm-elf-gdb");
+        m_Programs.DBGconfig = wxEmptyString;
         m_Programs.LIB = _T("arm-elf-ar");
         m_Programs.WINDRES = _T("");
         m_Programs.MAKE = _T("make");
@@ -67,7 +69,7 @@ void CompilerGNUARM::Reset()
     m_Switches.needDependencies = true;
     m_Switches.forceCompilerUseQuotes = false;
     m_Switches.forceLinkerUseQuotes = false;
-    m_Switches.logging = clogSimple;
+    m_Switches.logging = CompilerSwitches::defaultLogging;
     m_Switches.libPrefix = _T("lib");
     m_Switches.libExtension = _T("a");
     m_Switches.linkerNeedsLibPrefix = false;

@@ -296,6 +296,9 @@ void PlaceWindow(wxTopLevelWindow *w, cbPlaceDialogMode mode, bool enforce)
     if (!w)
         cbThrow(_T("Passed NULL pointer to PlaceWindow."));
 
+    ConfigManager *cfg = Manager::Get()->GetConfigManager(_T("app"));
+    if (!enforce && cfg->ReadBool(_T("/dialog_placement/do_place")) == false)
+        return;
     wxWindow* referenceWindow = Manager::Get()->GetAppWindow();
 
     if (!referenceWindow)    // no application window available, so this is as good as we can get
@@ -303,9 +306,6 @@ void PlaceWindow(wxTopLevelWindow *w, cbPlaceDialogMode mode, bool enforce)
 
     wxRect windowRect = w->GetRect();
 
-    ConfigManager *cfg = Manager::Get()->GetConfigManager(_T("app"));
-    if (!enforce && cfg->ReadBool(_T("/dialog_placement/do_place")) == false)
-        return;
 
     if (mode == pdlBest)
         the_mode = cfg->ReadInt(_T("/dialog_placement/dialog_position"), (int) pdlCentre);
