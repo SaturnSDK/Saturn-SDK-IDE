@@ -25,6 +25,7 @@ libcompiler_la_SOURCES = advancedcompileroptionsdlg.cpp \
 			compilerDMC.cpp \
 			compilerDMD.cpp \
 			compilererrors.cpp \
+			compilerflagdlg.cpp \
 			compilergcc.cpp \
 			compilerGDC.cpp \
 			compilerLDC.cpp \
@@ -46,6 +47,7 @@ libcompiler_la_SOURCES = advancedcompileroptionsdlg.cpp \
 			compilerGNUPOWERPC.cpp \
 			compilerGNUTRICORE.cpp \
 			compilerTcc.cpp \
+			compilerXML.cpp \
 			directcommands.cpp
 
 noinst_HEADERS = advancedcompileroptionsdlg.h \
@@ -55,6 +57,7 @@ noinst_HEADERS = advancedcompileroptionsdlg.h \
 			compilerDMC.h \
 			compilerDMD.h \
 			compilererrors.h \
+			compilerflagdlg.h \
 			compilergcc.h \
 			compilerG95.h \
 			compilerGDC.h \
@@ -76,6 +79,7 @@ noinst_HEADERS = advancedcompileroptionsdlg.h \
 			compilerGNUPOWERPC.h \
 			compilerGNUTRICORE.h \
 			compilerTcc.h \
+			compilerXML.h \
 			directcommands.h
 
 EXTRA_DIST = compilerMSVC8.h \

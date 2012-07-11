@@ -33,23 +33,17 @@ Compiler * CompilerCYGWIN::CreateCopy()
 
 void CompilerCYGWIN::Reset()
 {
-    CompilerMINGW::Reset();
+    m_Options.ClearOptions();
+    LoadDefaultOptions(GetID());
 
-    // NOTE: Cygwin's gcc.exe maybe a file link and
-    // is not a good default name for running via cmd.exe
-    // TODO: May also be gcc-4.exe!!!
-    m_Programs.C = _T("gcc-3.exe");
-    m_Programs.CPP = _T("g++-3.exe");
-    m_Programs.LD = _T("g++-3.exe");
-    m_Programs.DBG = _T("gdb.exe");
-    m_Programs.DBGconfig = _T("gdb_debugger:Default");
-    m_Programs.LIB = _T("ar.exe");
-    m_Programs.WINDRES = _T("windres.exe");
-    m_Programs.MAKE = _T("make.exe");
+    LoadDefaultRegExArray();
 
-    m_Switches.forceFwdSlashes = true;
-
-    m_Options.AddOption(_("Do not use cygwin specific functionality"), _T("-mno-cygwin"), _("General"));
+    m_CompilerOptions.Clear();
+    m_LinkerOptions.Clear();
+    m_LinkLibs.Clear();
+    m_CmdsBefore.Clear();
+    m_CmdsAfter.Clear();
+    SetVersionString();
 }
 
 AutoDetectResult CompilerCYGWIN::AutoDetectInstallationDir()

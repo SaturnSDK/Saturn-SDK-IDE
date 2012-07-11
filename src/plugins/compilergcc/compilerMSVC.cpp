@@ -38,83 +38,8 @@ Compiler * CompilerMSVC::CreateCopy()
 
 void CompilerMSVC::Reset()
 {
-    m_Programs.C = _T("cl.exe");
-    m_Programs.CPP = _T("cl.exe");
-    m_Programs.LD = _T("link.exe");
-    m_Programs.LIB = _T("link.exe");
-    m_Programs.WINDRES = _T("rc.exe"); // platform SDK is needed for this
-    m_Programs.MAKE = _T("nmake.exe");
-    m_Programs.DBG = _T("cdb.exe");
-    m_Programs.DBGconfig = wxEmptyString;
-
-    m_Switches.includeDirs = _T("/I");
-    m_Switches.libDirs = _T("/LIBPATH:");
-    m_Switches.linkLibs = _T("");
-    m_Switches.defines = _T("/D");
-    m_Switches.genericSwitch = _T("/");
-    m_Switches.objectExtension = _T("obj");
-    m_Switches.needDependencies = false;
-    m_Switches.forceCompilerUseQuotes = false;
-    m_Switches.forceLinkerUseQuotes = false;
-    m_Switches.logging = CompilerSwitches::defaultLogging;
-    m_Switches.libPrefix = _T("");
-    m_Switches.libExtension = _T("lib");
-    m_Switches.linkerNeedsLibPrefix = false;
-    m_Switches.linkerNeedsLibExtension = true;
-
     m_Options.ClearOptions();
-    m_Options.AddOption(_("Produce debugging symbols"),
-                _T("/Zi"),
-                _("Debugging"),
-                _T("/DEBUG"),
-                true,
-                _T("/Og /O1 /O2 /Os /Ot /Ox /NDEBUG"),
-                _("You have optimizations enabled. This is Not A Good Thing(tm) when producing debugging symbols..."));
-    m_Options.AddOption(_("Enable all compiler warnings"), _T("/Wall"), _("Warnings"));
-    m_Options.AddOption(_("Enable warnings level 1"), _T("/W1"), _("Warnings"));
-    m_Options.AddOption(_("Enable warnings level 2"), _T("/W2"), _("Warnings"));
-    m_Options.AddOption(_("Enable warnings level 3"), _T("/W3"), _("Warnings"));
-    m_Options.AddOption(_("Enable warnings level 4"), _T("/W4"), _("Warnings"));
-    m_Options.AddOption(_("Enable 64bit porting warnings"), _T("/Wp64"), _("Warnings"));
-    m_Options.AddOption(_("Treat warnings as errors"), _T("/WX"), _("Warnings"));
-    m_Options.AddOption(_("Enable global optimization"), _T("/Og"), _("Optimization"));
-    m_Options.AddOption(_("Maximum optimization (no need for other options)"), _T("/Ox"), _("Optimization"));
-    m_Options.AddOption(_("Disable optimizations"), _T("/Od"), _("Optimization")); //added no optimization
-    m_Options.AddOption(_("Minimize space"), _T("/O1"), _("Optimization"));
-    m_Options.AddOption(_("Maximize speed"), _T("/O2"), _("Optimization"));
-    m_Options.AddOption(_("Favor code space"), _T("/Os"), _("Optimization"));
-    m_Options.AddOption(_("Favor code speed"), _T("/Ot"), _("Optimization"));
-    m_Options.AddOption(_("Enable C++ RTTI"), _T("/GR"), _("C++ Features"));
-    m_Options.AddOption(_("Enable C++ exception handling"), _T("/GX"), _("C++ Features"));
-    m_Options.AddOption(_("Optimize for 80386"), _T("/G3"), _("Architecture"));
-    m_Options.AddOption(_("Optimize for 80486"), _T("/G4"), _("Architecture"));
-    m_Options.AddOption(_("Optimize for Pentium"), _T("/G5"), _("Architecture"));
-    m_Options.AddOption(_("Optimize for Pentium Pro, Pentium II, Pentium III"), _T("/G6"), _("Architecture"));
-    m_Options.AddOption(_("Optimize for Pentium 4 or Athlon"), _T("/G7"), _("Architecture"));
-    m_Options.AddOption(_("Enable SSE instruction set"), _T("/arch:SSE"), _("Architecture"));
-    m_Options.AddOption(_("Enable SSE2 instruction set"), _T("/arch:SSE2"), _("Architecture"));
-    m_Options.AddOption(_("Enable minimal rebuild"), _T("/Gm"), _("Others"));
-    m_Options.AddOption(_("Enable link-time code generation"), _T("/GL"), _("Others"), _T(""), true, _T("/Zi /ZI"), _("Link-time code generation is incompatible with debugging info"));
-    m_Options.AddOption(_("Optimize for windows application"), _T("/GA"), _("Others"));
-    m_Options.AddOption(_("__cdecl calling convention"), _T("/Gd"), _("Others"));
-    m_Options.AddOption(_("__fastcall calling convention"), _T("/Gr"), _("Others"));
-    m_Options.AddOption(_("__stdcall calling convention"), _T("/Gz"), _("Others"));
-    // Added Runtime options for cl.exe, that is the runtime library selection
-    m_Options.AddOption(_("Single-threaded Runtime Library"), _T("/ML"), _("Runtime"));
-    m_Options.AddOption(_("Single-threaded Debug Runtime Library"), _T("/MLd"), _("Runtime"));
-    m_Options.AddOption(_("Multi-threaded Runtime Library"), _T("/MT"), _("Runtime"), _T(""), true);
-    m_Options.AddOption(_("Multi-threaded Debug Runtime Library"), _T("/MTd"), _("Runtime"));
-    m_Options.AddOption(_("Multi-threaded DLL Runtime Library"), _T("/MD"), _("Runtime"));
-    m_Options.AddOption(_("Multi-threaded DLL Debug Runtime Library"), _T("/MDd"), _("Runtime"));
-
-
-    m_Commands[(int)ctCompileObjectCmd].push_back( CompilerTool(_T("$compiler /nologo $options $includes /c $file /Fo$object")) );
-    m_Commands[(int)ctCompileResourceCmd].push_back( CompilerTool(_T("$rescomp $res_includes -fo$resource_output $file")) );
-    m_Commands[(int)ctLinkExeCmd].push_back( CompilerTool(_T("$linker /nologo /subsystem:windows $libdirs /out:$exe_output $libs $link_objects $link_resobjects $link_options")) );
-    m_Commands[(int)ctLinkConsoleExeCmd].push_back( CompilerTool(_T("$linker /nologo $libdirs /out:$exe_output $libs $link_objects $link_resobjects $link_options")) );
-    m_Commands[(int)ctLinkDynamicCmd].push_back( CompilerTool(_T("$linker /dll /nologo $libdirs /out:$exe_output $libs $link_objects $link_resobjects $link_options")) );
-    m_Commands[(int)ctLinkStaticCmd].push_back( CompilerTool(_T("$lib_linker /lib /nologo $libdirs /out:$static_output $libs $link_objects $link_resobjects $link_options")) );
-    m_Commands[(int)ctLinkNativeCmd].push_back( CompilerTool(_T("$linker /nologo /subsystem:native $libdirs /out:$exe_output $libs $link_objects $link_resobjects $link_options")) );
+    LoadDefaultOptions(GetID());
 
     LoadDefaultRegExArray();
 
@@ -128,10 +53,7 @@ void CompilerMSVC::Reset()
 void CompilerMSVC::LoadDefaultRegExArray()
 {
     m_RegExes.Clear();
-    m_RegExes.Add(RegExStruct(_("Compiler warning"), cltWarning, _T("(") + FilePathWithSpaces + _T(")\\(([0-9]+)\\) :[ \t]([Ww]arning[ \t].*)"), 3, 1, 2));
-    m_RegExes.Add(RegExStruct(_("Compiler error"), cltError, _T("(") + FilePathWithSpaces + _T(")\\(([0-9]+)\\) :[ \t](.*[Ee]rror[ \t].*)"), 3, 1, 2));
-    m_RegExes.Add(RegExStruct(_("Linker warning"), cltWarning, _T("(") + FilePathWithSpaces + _T(")[ \t]+:[ \t]+(.*warning LNK[0-9]+.*)"), 2, 1, 0));
-    m_RegExes.Add(RegExStruct(_("Linker error"), cltError, _T("(") + FilePathWithSpaces + _T(")[ \t]+:[ \t]+(.*error LNK[0-9]+.*)"), 2, 1, 0));
+    LoadRegExArray(GetID());
 }
 
 AutoDetectResult CompilerMSVC::AutoDetectInstallationDir()

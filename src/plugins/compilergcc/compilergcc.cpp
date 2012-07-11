@@ -1294,18 +1294,12 @@ void CompilerGCC::DoClearTargetMenu()
 bool CompilerGCC::IsValidTarget(const wxString &target) const
 {
     if ( target.IsEmpty() )
-    {
         return false;
-    }
     if ( m_Targets.Index(target) == -1 )
-    {
         return false;
-    }
     const ProjectBuildTarget* tgt = Manager::Get()->GetProjectManager()->GetActiveProject()->GetBuildTarget(target);
     if ( tgt && ! tgt->SupportsCurrentPlatform() )
-    {
         return false;
-    }
     return true;
 }
 
@@ -1360,9 +1354,7 @@ void CompilerGCC::DoRecreateTargetMenu()
                 m_TargetMenu->AppendCheckItem(idMenuSelectTargetOther[x], GetTargetString(x), help);
             }
             if (m_pToolTarget)
-            {
                 m_pToolTarget->Append(GetTargetString(x));
-            }
         }
 
         // connect menu events
@@ -1435,17 +1427,13 @@ void CompilerGCC::UpdateProjectTargets(cbProject* project)
     // update the list of targets (virtual + real)
     wxArrayString virtuals = project->GetVirtualBuildTargets();
     for (size_t i = 0; i < virtuals.GetCount(); ++i)
-    {
         m_Targets.Add(virtuals[i]);
-    }
 
     for (int i = 0; i < project->GetBuildTargetsCount(); ++i)
     {
         ProjectBuildTarget *tgt = project->GetBuildTarget(i);
         if ( tgt->SupportsCurrentPlatform() )
-        {
             m_Targets.Add( tgt->GetTitle() );
-        }
     }
 
     // keep the index for the first real target

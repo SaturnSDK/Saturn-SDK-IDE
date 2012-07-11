@@ -68,6 +68,7 @@ DirectCommands::~DirectCommands()
         fname.SetExt(_T("depend"));
         depsCacheWrite(fname.GetFullPath().mb_str());
     }
+
     Manager::Get()->GetLogManager()->DebugLog(
         F(_("Scanned %ld files for #includes, cache used %ld, cache updated %ld"),
         stats.scanned, stats.cache_used, stats.cache_updated));
@@ -290,6 +291,7 @@ wxArrayString DirectCommands::GetCompileFileCommand(ProjectBuildTarget* target, 
         wxString object_abs = (compiler->GetSwitches().UseFlatObjects)
                             ? pfd.object_file_flat_absolute_native
                             : pfd.object_file_absolute_native;
+
         if ( !wxRemoveFile(object_abs) )
             Manager::Get()->GetLogManager()->DebugLog(_("Cannot remove old PCH file:\n") + object_abs);
     }
@@ -427,7 +429,6 @@ wxArrayString DirectCommands::GetCompileCommands(ProjectBuildTarget* target, boo
 
 wxArrayString DirectCommands::GetTargetCompileCommands(ProjectBuildTarget* target, bool force)
 {
-//    Manager::Get()->GetLogManager()->DebugLog(wxString("-----GetTargetCompileCommands-----"));
     wxArrayString ret;
     m_pCurrTarget = target;
 

@@ -207,10 +207,8 @@ void AdvancedCompilerOptionsDlg::DisplayCommand(int cmd, int ext)
 void AdvancedCompilerOptionsDlg::CheckForChanges()
 {
     // changes can only happen after constructor : aka no longer (-1, -1)
-    if(m_LastCmdIndex != -1 && m_LastExtIndex != -1)
-    {
+    if (m_LastCmdIndex != -1 && m_LastExtIndex != -1)
         SaveCommands(m_LastCmdIndex, m_LastExtIndex);
-    }
 }
 
 void AdvancedCompilerOptionsDlg::SaveCommands(int cmd, int ext)

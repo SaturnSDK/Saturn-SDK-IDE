@@ -45,9 +45,7 @@ Compiler* CompilerFactory::GetCompiler(const wxString& id)
     for (size_t i = 0; i < Compilers.GetCount(); ++i)
     {
         if (Compilers[i]->GetID().IsSameAs(lid))
-        {
             return Compilers[i];
-        }
     }
     return 0;
 }
@@ -57,9 +55,7 @@ Compiler* CompilerFactory::GetCompilerByName(const wxString& title)
     for (size_t i = 0; i < Compilers.GetCount(); ++i)
     {
         if (Compilers[i]->GetName().IsSameAs(title))
-        {
             return Compilers[i];
-        }
     }
     return 0;
 }
@@ -70,9 +66,7 @@ int CompilerFactory::GetCompilerIndex(const wxString& id)
     for (size_t i = 0; i < Compilers.GetCount(); ++i)
     {
         if (Compilers[i]->GetID().IsSameAs(lid))
-        {
             return i;
-        }
     }
     return -1;
 }
@@ -82,9 +76,7 @@ int CompilerFactory::GetCompilerIndex(Compiler* compiler)
     for (size_t i = 0; i < Compilers.GetCount(); ++i)
     {
         if (Compilers[i] == compiler)
-        {
             return i;
-        }
     }
     return -1;
 }
@@ -157,9 +149,7 @@ Compiler* CompilerFactory::CreateCompilerCopy(Compiler* compiler, const wxString
     for (size_t i = 0; i < Compilers.GetCount(); ++i)
     {
         if (Compilers[i]->GetName() == newName)
-        {
             return 0;
-        }
     }
 
     Compiler* newC = compiler->CreateCopy();
@@ -299,10 +289,10 @@ Compiler* CompilerFactory::SelectCompilerUI(const wxString& message, const wxStr
     }
     // now display a choice dialog
     wxSingleChoiceDialog dlg(0,
-                        message,
-                        _("Compiler selection"),
-                        CompilerFactory::Compilers.GetCount(),
-                        comps);
+                             message,
+                             _("Compiler selection"),
+                             CompilerFactory::Compilers.GetCount(),
+                             comps);
     dlg.SetSelection(selected);
     PlaceWindow(&dlg);
     if (dlg.ShowModal() == wxID_OK)

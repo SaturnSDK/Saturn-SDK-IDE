@@ -2,6 +2,7 @@ pkgdata_DATA = compiler.zip
 CLEANFILES = $(pkgdata_DATA)
 
 EXTRA_DIST = advanced_compiler_options.xrc \
+	compiler_flag.xrc \
 	compiler_menu.xrc \
 	compiler_options.xrc \
 	compiler_toolbar_16x16.xrc \
