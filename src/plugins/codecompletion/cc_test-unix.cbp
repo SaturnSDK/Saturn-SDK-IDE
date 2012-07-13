@@ -2,12 +2,12 @@
 <CodeBlocks_project_file>
 	<FileVersion major="1" minor="6" />
 	<Project>
-		<Option title="CC ParserTest (unix)" />
+		<Option title="CC Test (unix)" />
 		<Option compiler="gcc" />
 		<Build>
-			<Target title="parsertest">
-				<Option output="../../../devel/parsertest" prefix_auto="1" extension_auto="1" />
-				<Option object_output="../../../.objs/plugins/codecompletion/parsertest" />
+			<Target title="cc_test">
+				<Option output="../../devel/cc_test" prefix_auto="1" extension_auto="1" />
+				<Option object_output="../../.objs/plugins/codecompletion/cc_test" />
 				<Option type="0" />
 				<Option compiler="gcc" />
 				<Option projectLinkerOptionsRelation="2" />
@@ -17,7 +17,7 @@
 			</Environment>
 		</Build>
 		<VirtualTargets>
-			<Add alias="All" targets="parsertest;" />
+			<Add alias="All" targets="cc_test;" />
 		</VirtualTargets>
 		<Compiler>
 			<Add option="-Wall" />
@@ -31,48 +31,51 @@
 			<Add option="-fPIC" />
 			<Add option="-DcbDEBUG" />
 			<Add option="-DCC_PARSER_TEST" />
+			<Add directory="." />
+			<Add directory="cc_test" />
+			<Add directory="parser" />
 			<Add directory="../../../include" />
 		</Compiler>
 		<Linker>
 			<Add option="`wx-config --libs`" />
 			<Add library="codeblocks" />
 			<Add library="wxpropgrid" />
-			<Add directory="../../../devel" />
+			<Add directory="../../devel" />
 		</Linker>
-		<Unit filename="app.cpp" />
-		<Unit filename="ccdebuginfo.cpp" />
-		<Unit filename="ccdebuginfo.h" />
-		<Unit filename="cclogger.cpp" />
-		<Unit filename="cclogger.h" />
-		<Unit filename="expression.cpp" />
-		<Unit filename="expression.h" />
-		<Unit filename="frame.cpp" />
-		<Unit filename="frame.h" />
-		<Unit filename="parser.h" />
-		<Unit filename="parserdummy.cpp" />
-		<Unit filename="parsertest.cpp" />
-		<Unit filename="parsertest.h" />
-		<Unit filename="parserthread.cpp" />
-		<Unit filename="parserthread.h" />
-		<Unit filename="searchtree.cpp" />
-		<Unit filename="searchtree.h" />
-		<Unit filename="test.h">
+		<Unit filename="cc_test/app.cpp" />
+		<Unit filename="cc_test/cc_test.cpp" />
+		<Unit filename="cc_test/cc_test.h" />
+		<Unit filename="cc_test/frame.cpp" />
+		<Unit filename="cc_test/frame.h" />
+		<Unit filename="cc_test/parserdummy.cpp" />
+		<Unit filename="cc_test/test.h">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
-		<Unit filename="token.cpp" />
-		<Unit filename="token.h" />
-		<Unit filename="tokenizer.cpp" />
-		<Unit filename="tokenizer.h" />
-		<Unit filename="tokenstree.cpp" />
-		<Unit filename="tokenstree.h" />
+		<Unit filename="parser/ccdebuginfo.cpp" />
+		<Unit filename="parser/ccdebuginfo.h" />
+		<Unit filename="parser/cclogger.cpp" />
+		<Unit filename="parser/cclogger.h" />
+		<Unit filename="parser/expression.cpp" />
+		<Unit filename="parser/expression.h" />
+		<Unit filename="parser/parser.h" />
+		<Unit filename="parser/parserthread.cpp" />
+		<Unit filename="parser/parserthread.h" />
+		<Unit filename="parser/searchtree.cpp" />
+		<Unit filename="parser/searchtree.h" />
+		<Unit filename="parser/token.cpp" />
+		<Unit filename="parser/token.h" />
+		<Unit filename="parser/tokenizer.cpp" />
+		<Unit filename="parser/tokenizer.h" />
+		<Unit filename="parser/tokenstree.cpp" />
+		<Unit filename="parser/tokenstree.h" />
 		<Extensions>
 			<code_completion />
 			<debugger />
 			<envvars />
 			<wxsmith version="1">
-				<gui name="wxWidgets" src="app.cpp" main="-- None --" init_handlers="never" language="CPP" />
+				<gui name="wxWidgets" src="cc_test/app.cpp" main="-- None --" init_handlers="never" language="CPP" />
 				<resources>
-					<wxFrame wxs="wxsmith/Frame.wxs" src="frame.cpp" hdr="frame.h" fwddecl="0" i18n="1" name="Frame" language="CPP" />
+					<wxFrame wxs="wxsmith/Frame.wxs" src="cc_test/frame.cpp" hdr="cc_test/frame.h" fwddecl="0" i18n="1" name="Frame" language="CPP" />
 				</resources>
 			</wxsmith>
 		</Extensions>

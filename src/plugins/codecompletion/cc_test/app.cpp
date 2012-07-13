@@ -74,13 +74,13 @@
 
 #include "frame.h"
 
-namespace ParserTestAppGlobal
+namespace CCTestAppGlobal
 {
     // global variable to ease handling of include directories and header files
     wxArrayString s_includeDirs;
     wxArrayString s_fileQueue;
     wxArrayString s_filesParsed;
-}// ParserTestAppGlobal
+}// CCTestAppGlobal
 
 class ParserTestApp : public wxApp
 {
