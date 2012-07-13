@@ -25,6 +25,8 @@
 #include "token.h"
 #include "tokenstree.h"
 
+#include "nativeparser_test.h"
+
 //(*InternalHeaders(Frame)
 #include <wx/settings.h>
 #include <wx/intl.h>
@@ -314,6 +316,42 @@ void Frame::Start()
       m_TreeCtrl->SetValue( CCTest::Get()->SerializeTree() );
       Thaw();
     }
+
+    // Here we are going to test the expression solving algorithm
+
+    NativeParserTest nativeParserTest;
+
+    wxString exp = _T("obj.m_Member1");
+
+    TokenIdxSet searchScope;
+    searchScope.insert(-1);
+
+    TokenIdxSet result;
+
+    TokensTree *tree = CCTest::Get()->GetTokensTree();
+
+    nativeParserTest.TestExpression(exp,
+                                    tree,
+                                    searchScope,
+                                    result );
+
+    wxLogMessage(_T("Result have %d matches"), result.size());
+
+
+    for (TokenIdxSet::iterator it=result.begin(); it!=result.end(); ++it)
+    {
+        Token* token = tree->at(*it);
+        if (token)
+        {
+            wxString log;
+            log << token->GetTokenKindString() << _T(" ")
+                << token->DisplayName()        << _T("\t[")
+                << token->m_Line               << _T(",")
+                << token->m_ImplLine           << _T("]");
+            CCLogger::Get()->Log(log);
+        }
+    }
+
 
     if (m_ProgDlg) { delete m_ProgDlg; m_ProgDlg = 0; }
 

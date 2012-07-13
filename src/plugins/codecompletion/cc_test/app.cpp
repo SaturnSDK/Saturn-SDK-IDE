@@ -82,6 +82,8 @@ namespace CCTestAppGlobal
     wxArrayString s_filesParsed;
 }// CCTestAppGlobal
 
+bool s_DebugSmartSense = true;
+
 class ParserTestApp : public wxApp
 {
 public:
@@ -97,6 +99,8 @@ bool ParserTestApp::OnInit()
     bool wxsOK = true;
     wxInitAllImageHandlers();
     //*)
+
+    wxLog::SetActiveTarget(new wxLogStderr());
 
     Frame* frame = new Frame(_T("test.h"));
     frame->Center();

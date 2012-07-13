@@ -47,10 +47,14 @@
 		<Unit filename="cc_test/cc_test.h" />
 		<Unit filename="cc_test/frame.cpp" />
 		<Unit filename="cc_test/frame.h" />
+		<Unit filename="cc_test/nativeparser_test.cpp" />
+		<Unit filename="cc_test/nativeparser_test.h" />
 		<Unit filename="cc_test/parserdummy.cpp" />
 		<Unit filename="cc_test/test.h">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
+		<Unit filename="nativeparser_base.cpp" />
+		<Unit filename="nativeparser_base.h" />
 		<Unit filename="parser/ccdebuginfo.cpp" />
 		<Unit filename="parser/ccdebuginfo.h" />
 		<Unit filename="parser/cclogger.cpp" />
