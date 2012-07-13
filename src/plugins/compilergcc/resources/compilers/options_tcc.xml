@@ -5,7 +5,6 @@
         <Program name="C"         value="tcc.exe"/>
         <Program name="CPP"       value=""/>
         <Program name="LD"        value="tcc.exe"/>
-        <Program name="DBG"       value="gdb.exe"/>
         <Program name="DBGconfig" value="gdb_debugger:Default"/>
         <Program name="LIB"       value="tcc.exe"/>
         <Program name="WINDRES"   value="windres.exe"/>
@@ -15,7 +14,6 @@
         <Program name="C"         value="tcc"/>
         <Program name="CPP"       value=""/>
         <Program name="LD"        value="tcc"/>
-        <Program name="DBG"       value="gdb"/>
         <Program name="DBGconfig" value="gdb_debugger:Default"/>
         <Program name="LIB"       value="tcc"/>
         <Program name="WINDRES"   value=""/>

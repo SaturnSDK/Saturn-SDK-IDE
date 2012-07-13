@@ -354,7 +354,7 @@ void InfoPane::DoShowContextMenu()
 
     int selection = GetSelection();
     if (selection >= 0 &&
-        selection < GetPageCount() &&
+        selection < (int)GetPageCount() &&
         page.Item(GetPageIndexByWindow(GetPage(GetSelection())))->islogger)
     {
         menu.AppendSeparator();

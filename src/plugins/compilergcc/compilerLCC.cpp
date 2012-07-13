@@ -57,12 +57,6 @@ void CompilerLCC::Reset()
     m_CmdsAfter.Clear();
 }
 
-void CompilerLCC::LoadDefaultRegExArray()
-{
-    m_RegExes.Clear();
-    LoadRegExArray(GetID());
-}
-
 AutoDetectResult CompilerLCC::AutoDetectInstallationDir()
 {
     wxRegKey key; // defaults to HKCR

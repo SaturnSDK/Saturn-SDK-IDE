@@ -36,26 +36,6 @@ Compiler * CompilerMSVC8::CreateCopy()
     return c;
 }
 
-void CompilerMSVC8::Reset()
-{
-    m_Options.ClearOptions();
-    LoadDefaultOptions(GetID());
-
-    LoadDefaultRegExArray();
-
-    m_CompilerOptions.Clear();
-    m_LinkerOptions.Clear();
-    m_LinkLibs.Clear();
-    m_CmdsBefore.Clear();
-    m_CmdsAfter.Clear();
-}
-
-void CompilerMSVC8::LoadDefaultRegExArray()
-{
-    m_RegExes.Clear();
-    LoadRegExArray(GetID());
-}
-
 AutoDetectResult CompilerMSVC8::AutoDetectInstallationDir()
 {
     wxString sep = wxFileName::GetPathSeparator();

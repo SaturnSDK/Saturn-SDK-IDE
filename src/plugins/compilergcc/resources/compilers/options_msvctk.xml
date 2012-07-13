@@ -4,7 +4,6 @@
     <Program name="C"         value="cl.exe"/>
     <Program name="CPP"       value="cl.exe"/>
     <Program name="LD"        value="link.exe"/>
-    <Program name="DBG"       value="cdb.exe"/>
     <Program name="DBGconfig" value=""/>
     <Program name="LIB"       value="link.exe"/>
     <Program name="WINDRES"   value="rc.exe"/> <!-- platform SDK is needed for this -->

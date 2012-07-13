@@ -5,7 +5,6 @@
         <Program name="C"         value="ppc-gcc.exe"/>
         <Program name="CPP"       value="ppc-g++.exe"/>
         <Program name="LD"        value="ppc-g++.exe"/>
-        <Program name="DBG"       value="ppc-insight.exe"/>
         <Program name="DBGconfig" value=""/>
         <Program name="LIB"       value="ppc-ar.exe"/>
         <Program name="WINDRES"   value=""/>
@@ -15,7 +14,6 @@
         <Program name="C"         value="ppc-gcc"/>
         <Program name="CPP"       value="ppc-g++"/>
         <Program name="LD"        value="ppc-g++"/>
-        <Program name="DBG"       value="ppc-insight"/>
         <Program name="DBGconfig" value=""/>
         <Program name="LIB"       value="ppc-ar"/>
         <Program name="WINDRES"   value=""/>

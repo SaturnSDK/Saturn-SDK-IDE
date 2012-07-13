@@ -51,27 +51,6 @@ CompilerCommandGenerator* CompilerMINGW::GetCommandGenerator()
     return new CompilerMINGWGenerator;
 }
 
-void CompilerMINGW::Reset()
-{
-    m_Options.ClearOptions();
-    LoadDefaultOptions(GetID());
-
-    LoadDefaultRegExArray();
-
-    m_CompilerOptions.Clear();
-    m_LinkerOptions.Clear();
-    m_LinkLibs.Clear();
-    m_CmdsBefore.Clear();
-    m_CmdsAfter.Clear();
-    SetVersionString();
-}
-
-void CompilerMINGW::LoadDefaultRegExArray()
-{
-    m_RegExes.Clear();
-    LoadRegExArray(GetID());
-}
-
 AutoDetectResult CompilerMINGW::AutoDetectInstallationDir()
 {
     // try to find MinGW in environment variable PATH first

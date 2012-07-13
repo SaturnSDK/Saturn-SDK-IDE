@@ -38,26 +38,6 @@ Compiler * CompilerSDCC::CreateCopy()
     return c;
 }
 
-void CompilerSDCC::Reset()
-{
-    m_Options.ClearOptions();
-    LoadDefaultOptions(GetID());
-
-    LoadDefaultRegExArray();
-
-    m_CompilerOptions.Clear();
-    m_LinkerOptions.Clear();
-    m_LinkLibs.Clear();
-    m_CmdsBefore.Clear();
-    m_CmdsAfter.Clear();
-}
-
-void CompilerSDCC::LoadDefaultRegExArray()
-{
-    m_RegExes.Clear();
-    LoadRegExArray(GetID());
-}
-
 AutoDetectResult CompilerSDCC::AutoDetectInstallationDir()
 {
     if (platform::windows)

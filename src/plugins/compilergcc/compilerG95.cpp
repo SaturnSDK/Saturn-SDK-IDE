@@ -39,26 +39,6 @@ Compiler * CompilerG95::CreateCopy()
     return c;
 }
 
-void CompilerG95::Reset()
-{
-    m_Options.ClearOptions();
-    LoadDefaultOptions(GetID());
-
-    LoadDefaultRegExArray();
-
-    m_CompilerOptions.Clear();
-    m_LinkerOptions.Clear();
-    m_LinkLibs.Clear();
-    m_CmdsBefore.Clear();
-    m_CmdsAfter.Clear();
-}
-
-void CompilerG95::LoadDefaultRegExArray()
-{
-    m_RegExes.Clear();
-    LoadRegExArray(GetID());
-}
-
 AutoDetectResult CompilerG95::AutoDetectInstallationDir()
 {
     // try to find MinGW in environment variable PATH first

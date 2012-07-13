@@ -39,26 +39,6 @@ Compiler * CompilerGNUPOWERPC::CreateCopy()
     return c;
 }
 
-void CompilerGNUPOWERPC::Reset()
-{
-    m_Options.ClearOptions();
-    LoadDefaultOptions(wxT("ppc-gcc"));
-
-    LoadDefaultRegExArray();
-
-    m_CompilerOptions.Clear();
-    m_LinkerOptions.Clear();
-    m_LinkLibs.Clear();
-    m_CmdsBefore.Clear();
-    m_CmdsAfter.Clear();
-}
-
-void CompilerGNUPOWERPC::LoadDefaultRegExArray()
-{
-    m_RegExes.Clear();
-    LoadRegExArray(wxT("ppc-gcc"));
-}
-
 AutoDetectResult CompilerGNUPOWERPC::AutoDetectInstallationDir()
 {
     wxString sep = wxFileName::GetPathSeparator();

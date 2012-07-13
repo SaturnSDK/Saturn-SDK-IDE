@@ -13,8 +13,6 @@ class CompilerLDC : public Compiler
     public:
         CompilerLDC();
         virtual ~CompilerLDC();
-        virtual void Reset();
-        virtual void LoadDefaultRegExArray();
         virtual AutoDetectResult AutoDetectInstallationDir();
     protected:
         virtual Compiler* CreateCopy();

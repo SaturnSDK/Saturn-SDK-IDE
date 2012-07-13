@@ -7,7 +7,6 @@
     <Program name="C"         value="gcc-3.exe"/>
     <Program name="CPP"       value="g++-3.exe"/>
     <Program name="LD"        value="g++-3.exe"/>
-    <Program name="DBG"       value="gdb.exe"/>
     <Program name="DBGconfig" value="gdb_debugger:Default"/>
     <Program name="LIB"       value="ar.exe"/>
     <Program name="WINDRES"   value="windres.exe"/>

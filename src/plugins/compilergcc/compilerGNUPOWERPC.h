@@ -11,8 +11,6 @@ class CompilerGNUPOWERPC : public Compiler
     public:
         CompilerGNUPOWERPC();
         virtual ~CompilerGNUPOWERPC();
-        virtual void Reset();
-        virtual void LoadDefaultRegExArray();
         virtual AutoDetectResult AutoDetectInstallationDir();
     protected:
         virtual Compiler* CreateCopy();

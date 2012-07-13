@@ -58,7 +58,7 @@ class MainFrame : public wxFrame
 {
 	public:
         // needed for binding with SqPlus
-        MainFrame& operator=(const MainFrame& /*rhs*/) // prevent assignement operator
+        MainFrame& operator=(const MainFrame& /*rhs*/) // prevent assignment operator
         {
         	cbThrow(_T("Can't use MainFrame's operator="));
         	return *this;

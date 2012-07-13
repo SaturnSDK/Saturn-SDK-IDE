@@ -25,14 +25,11 @@
 #endif
 
 #include "tinyxml/tinyxml.h"
-
 #include <wx/dirdlg.h>
 #include <wx/filefn.h>
 #include <wx/fontmap.h>
 #include <wx/msgdlg.h>
 #include <wx/tokenzr.h>
-#include <wx/xml/xml.h>
-
 #include <algorithm>
 #include <string>
 
@@ -1256,29 +1253,4 @@ int cbMessageBox(const wxString& message, const wxString& caption, int style, wx
     PlaceWindow(&dlg);
     // wxMessage*Dialog* returns any of wxID_OK, wxID_CANCEL, wxID_YES, wxID_NO
     return dlg.ShowModal();
-}
-
-bool EvalXMLCondition(const wxXmlNode* node)
-{
-    wxString plat = node->GetAttribute(wxT("platform"), wxEmptyString);
-    bool val = false;
-    if      (plat == wxT("windows"))
-        val = platform::windows;
-    else if (plat == wxT("macosx"))
-        val = platform::macosx;
-    else if (plat == wxT("linux"))
-        val = platform::linux;
-    else if (plat == wxT("freebsd"))
-        val = platform::freebsd;
-    else if (plat == wxT("netbsd"))
-        val = platform::netbsd;
-    else if (plat == wxT("openbsd"))
-        val = platform::openbsd;
-    else if (plat == wxT("darwin"))
-        val = platform::darwin;
-    else if (plat == wxT("solaris"))
-        val = platform::solaris;
-    else if (plat == wxT("unix"))
-        val = platform::unix;
-    return val;
 }

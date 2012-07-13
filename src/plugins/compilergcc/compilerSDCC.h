@@ -13,8 +13,6 @@ class CompilerSDCC : public Compiler
 	public:
 		CompilerSDCC();
 		virtual ~CompilerSDCC();
-        virtual void Reset();
-		virtual void LoadDefaultRegExArray();
         virtual AutoDetectResult AutoDetectInstallationDir();
     protected:
         virtual Compiler* CreateCopy();

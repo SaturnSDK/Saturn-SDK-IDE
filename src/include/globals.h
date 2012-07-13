@@ -16,7 +16,6 @@
 #include <wx/bitmap.h>
 
 class TiXmlDocument;
-class wxXmlNode;
 
 /// Known plugin types
 enum PluginType
@@ -169,8 +168,6 @@ extern DLLIMPORT const wxWX2MBbuf cbU2C(const wxString& str);
 /// utf8, system, default and iso8859-1 to iso8859-15.
 /// Returns the final encoding detected.
 extern DLLIMPORT wxFontEncoding DetectEncodingAndConvert(const char* strIn, wxString& strOut, wxFontEncoding possibleEncoding = wxFONTENCODING_SYSTEM);
-
-extern DLLIMPORT bool EvalXMLCondition(const wxXmlNode* node);
 
 /// Return an integer representation of a platform string
 extern DLLIMPORT int GetPlatformsFromString(const wxString& platforms);

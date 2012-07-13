@@ -55,21 +55,20 @@ AutoDetectCompilers::AutoDetectCompilers(wxWindow* parent)
             Manager::Get()->GetMacrosManager()->ReplaceMacros(path_no_macros);
 
             int idx = list->GetItemCount() - 1;
+            int highlight = 0;
             if (path.IsEmpty())
             {
                 // Here, some user-interaction is required not to show this
                 // dialog again on each new start-up of C::B.
-                list->SetItem(idx, 1, _("Invalid (not set!)"));
+                list->SetItem(idx, 1, _("Invalid"));
                 // So we better clearly HIGHLIGHT this entry:
-                wxListItem li; li.SetId(idx);
-                if ( list->GetItem(li) ) // Why shouldn't this work?!
-                {
-                    li.SetBackgroundColour(*wxRED);
-                    list->SetItem(li);
-                }
+                highlight = 1;
             }
             else // The compiler is *probably* invalid, but at least a master-path is set
-                list->SetItem(idx, 1, _("Invalid"));
+            {
+                list->SetItem(idx, 1, _("Not found"));
+                highlight = -1;
+            }
 
             // Inspect deeper and probably try to auto-detect invalid compilers:
             if (compiler->GetParentID().IsEmpty()) // built-in compiler
@@ -86,13 +85,17 @@ AutoDetectCompilers::AutoDetectCompilers(wxWindow* parent)
                         list->SetItem(idx, 1, _("Detected")); // OK
                     else
                         list->SetItem(idx, 1, _("User-defined")); // OK
+                    highlight = 0;
                 }
                 // In case auto-detection failed but a path was setup before:
                 else if ( !path.IsEmpty() )
                 {
                     // Check, if the master path is valid:
                     if ( wxFileName::DirExists(path_no_macros) )
+                    {
                         list->SetItem(idx, 1, _("User-defined")); // OK
+                        highlight = 0;
+                    }
 
                     // Assume the user did the setup on purpose, so reset the old settings anyways:
                     compiler->SetMasterPath(path);
@@ -102,8 +105,16 @@ AutoDetectCompilers::AutoDetectCompilers(wxWindow* parent)
             {
                 // Check, if the master path is valid:
                 if ( !path.IsEmpty() && wxFileName::DirExists(path_no_macros) )
+                {
                     list->SetItem(idx, 1, _("User-defined")); // OK
+                    highlight = 0;
+                }
             }
+
+            if (highlight == 1)
+                list->SetItemBackgroundColour(idx, *wxRED);
+            else if (highlight == -1)
+                list->SetItemTextColour(idx, *wxLIGHT_GREY);
         }
         // Resize columns so one can read the whole stuff:
         list->SetColumnWidth(0, wxLIST_AUTOSIZE);

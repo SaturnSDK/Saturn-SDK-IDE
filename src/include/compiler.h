@@ -19,6 +19,7 @@ class CompilerCommandGenerator;
 class cbProject;
 class ProjectBuildTarget;
 class ProjectFile;
+class wxXmlNode;
 
 /*
     Macros used in command specs:
@@ -260,7 +261,7 @@ class DLLIMPORT Compiler : public CompileOptionsBase
         /** @brief Get the array of regexes used in errors/warnings recognition */
         virtual const RegExArray& GetRegExArray(){ return m_RegExes; }
         /** @brief Load the default (preset) array of regexes used in errors/warnings recognition */
-        virtual void LoadDefaultRegExArray() = 0;
+        virtual void LoadDefaultRegExArray(bool globalPrecedence = false);
 
         /** @brief Set the compiler's name */
         virtual void SetName(const wxString& name){ m_Name = name; }
@@ -316,9 +317,10 @@ class DLLIMPORT Compiler : public CompileOptionsBase
         /** @brief Load settings */
         virtual void LoadSettings(const wxString& baseKey);
         /** @brief Reset settings to defaults.
-          * Put initialization code here and call this from the default constructor.
+          * Put initialization code here or leave blank for standard XML loading
+          * Call this from the default constructor.
           */
-        virtual void Reset() = 0;
+        virtual void Reset();
         /** @brief Try to auto-detect the compiler's installation directory */
         virtual AutoDetectResult AutoDetectInstallationDir() = 0;
 
@@ -359,6 +361,8 @@ class DLLIMPORT Compiler : public CompileOptionsBase
         void LoadDefaultOptions(const wxString& name, int recursion = 0);
         // load array of regexes from the corresponding options_<name>.xml
         void LoadRegExArray(const wxString& name, bool globalPrecedence = false, int recursion = 0);
+
+        bool EvalXMLCondition(const wxXmlNode* node);
 
         // keeps a copy of current settings (works only the first time it's called)
         void MirrorCurrentSettings();

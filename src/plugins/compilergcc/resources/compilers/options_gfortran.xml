@@ -5,7 +5,6 @@
         <Program name="C"       value="mingw32-gfortran.exe"/>
         <Program name="CPP"     value="mingw32-gfortran.exe"/>
         <Program name="LD"      value="mingw32-gfortran.exe"/>
-        <Program name="DBG"     value="gdb.exe"/>
         <Program name="LIB"     value="ar.exe"/>
         <Program name="WINDRES" value="windres.exe"/>
         <Program name="MAKE"    value="mingw32-make.exe"/>
@@ -14,7 +13,6 @@
         <Program name="C"       value="gfortran"/>
         <Program name="CPP"     value="gfortran"/>
         <Program name="LD"      value="gfortran"/>
-        <Program name="DBG"     value="gdb"/>
         <Program name="LIB"     value="ar"/>
         <Program name="WINDRES" value=""/>
         <Program name="MAKE"    value="make"/>

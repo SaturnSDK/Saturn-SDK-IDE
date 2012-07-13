@@ -5,7 +5,6 @@
         <Program name="C"         value="tricore-gcc.exe"/>
         <Program name="CPP"       value="tricore-g++.exe"/>
         <Program name="LD"        value="tricore-g++.exe"/>
-        <Program name="DBG"       value="tricore-insight.exe"/>
         <Program name="DBGconfig" value=""/>
         <Program name="LIB"       value="tricore-ar.exe"/>
         <Program name="WINDRES"   value=""/>
@@ -15,7 +14,6 @@
         <Program name="C"         value="tricore-gcc"/>
         <Program name="CPP"       value="tricore-g++"/>
         <Program name="LD"        value="tricore-g++"/>
-        <Program name="DBG"       value="tricore-insight"/>
         <Program name="DBGconfig" value=""/>
         <Program name="LIB"       value="tricore-ar"/>
         <Program name="WINDRES"   value=""/>

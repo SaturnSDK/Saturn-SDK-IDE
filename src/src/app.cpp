@@ -430,7 +430,7 @@ MainFrame* CodeBlocksApp::InitFrame()
 
 void CodeBlocksApp::CheckVersion()
 {
-    // This is a rudiment from early 2006 (Windows only), but keep the revision tag for possible future use
+    // This is a remnant from early 2006 (Windows only), but keep the revision tag for possible future use
     ConfigManager *cfg = Manager::Get()->GetConfigManager(_T("app"));
 
     if (cfg->Read(_T("version")) != appglobals::AppActualVersion)

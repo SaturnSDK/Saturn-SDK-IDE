@@ -21,14 +21,12 @@
 
     #include <wx/intl.h>
     #include <wx/regex.h>
+    #include <wx/xml/xml.h>
 #endif
 
 #include "compilercommandgenerator.h"
-
 #include <wx/arrimpl.cpp>
 #include <wx/filefn.h>
-#include <wx/xml/xml.h>
-
 WX_DEFINE_OBJARRAY(RegExArray);
 
 // static
@@ -150,6 +148,27 @@ Compiler::~Compiler()
     delete m_pGenerator;
 }
 
+void Compiler::Reset()
+{
+    m_Options.ClearOptions();
+    LoadDefaultOptions(GetID());
+
+    LoadDefaultRegExArray();
+
+    m_CompilerOptions.Clear();
+    m_LinkerOptions.Clear();
+    m_LinkLibs.Clear();
+    m_CmdsBefore.Clear();
+    m_CmdsAfter.Clear();
+    SetVersionString(); // Does nothing unless reimplemented
+}
+
+void Compiler::LoadDefaultRegExArray(bool globalPrecedence)
+{
+    m_RegExes.Clear();
+    LoadRegExArray(GetID(), globalPrecedence);
+}
+
 bool Compiler::IsValid()
 {
     if (!m_NeedValidityCheck)
@@ -193,7 +212,7 @@ bool Compiler::IsValid()
 void Compiler::MakeValidID()
 {
     // basically, make it XML-element compatible
-    // only allow a-z, 0-9 and _
+    // only allow a-z, 0-9, _, and -
     // (it is already lowercase)
     // any non-conformant character will be removed
 
@@ -205,16 +224,16 @@ void Compiler::MakeValidID()
     while (pos < m_ID.Length())
     {
         wxChar ch = m_ID[pos];
-        if (wxIsalnum(ch) || ch == _T('_')) // valid character
+        if (wxIsalnum(ch) || ch == _T('_') || ch == _T('-')) // valid character
             newID.Append(ch);
         else if (wxIsspace(ch)) // convert spaces to underscores
             newID.Append(_T('_'));
         ++pos;
     }
 
-    // make sure it's not starting with a number.
+    // make sure it's not starting with a number or a '-'.
     // if it is, prepend "cb"
-    if (wxIsdigit(newID.GetChar(0)))
+    if (wxIsdigit(newID.GetChar(0)) || newID.GetChar(0) == _T('-'))
         newID.Prepend(_T("cb"));
 
     if (newID.IsEmpty()) // empty? wtf?
@@ -933,7 +952,7 @@ void Compiler::LoadRegExArray(const wxString& name, bool globalPrecedence, int r
     wxXmlDocument options;
     wxString doc;
     const wxString fn = wxT("compilers/options_") + name + wxT(".xml");
-    if (globalPrecedence) // In preparation for reseting only regexes (not used yet)...
+    if (globalPrecedence)
     {
         doc = ConfigManager::LocateDataFile(fn, sdDataGlobal);
         if (doc.IsEmpty())
@@ -1011,4 +1030,75 @@ void Compiler::LoadRegExArray(const wxString& name, bool globalPrecedence, int r
         }
         node = node->GetNext();
     }
+}
+
+bool Compiler::EvalXMLCondition(const wxXmlNode* node)
+{
+    bool val = false;
+    wxString test;
+    if (node->GetAttribute(wxT("platform"), &test))
+    {
+        if (test == wxT("windows"))
+            val = platform::windows;
+        else if (test == wxT("macosx"))
+            val = platform::macosx;
+        else if (test == wxT("linux"))
+            val = platform::linux;
+        else if (test == wxT("freebsd"))
+            val = platform::freebsd;
+        else if (test == wxT("netbsd"))
+            val = platform::netbsd;
+        else if (test == wxT("openbsd"))
+            val = platform::openbsd;
+        else if (test == wxT("darwin"))
+            val = platform::darwin;
+        else if (test == wxT("solaris"))
+            val = platform::solaris;
+        else if (test == wxT("unix"))
+            val = platform::unix;
+    }
+    else if (node->GetAttribute(wxT("exec"), &test))
+    {
+        wxArrayString cmd = GetArrayFromString(test, wxT(" "));
+        if (cmd.IsEmpty())
+            ;
+        else if (cmd[0] == wxT("C"))
+            cmd[0] = m_Programs.C;
+        else if (cmd[0] == wxT("CPP"))
+            cmd[0] = m_Programs.CPP;
+        else if (cmd[0] == wxT("LD"))
+            cmd[0] = m_Programs.LD;
+        else if (cmd[0] == wxT("LIB"))
+            cmd[0] = m_Programs.LIB;
+        else if (cmd[0] == wxT("WINDRES"))
+            cmd[0] = m_Programs.WINDRES;
+        else if (cmd[0] == wxT("MAKE"))
+            cmd[0] = m_Programs.MAKE;
+        if (node->GetAttribute(wxT("regex"), &test))
+        {
+            long ret = wxExecute(GetStringFromArray(cmd, wxT(" "), false), cmd);
+            wxRegEx re;
+            if (ret != 0)
+            {
+                val = (node->GetAttribute(wxT("default"), wxEmptyString) == wxT("true"));
+            }
+            else if (re.Compile(test))
+            {
+                for (size_t i = 0; i < cmd.GetCount(); i++)
+                {
+                    if (re.Matches(cmd[i]))
+                    {
+                        val = true;
+                        break;
+                    }
+                }
+            }
+        }
+        else
+        {
+            long ret = wxExecute(GetStringFromArray(cmd, wxT(" "), false));
+            val = (ret != 0);
+        }
+    }
+    return val;
 }

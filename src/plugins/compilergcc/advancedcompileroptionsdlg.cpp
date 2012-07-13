@@ -9,18 +9,18 @@
 
 #include "sdk.h"
 #ifndef CB_PRECOMP
-#include <wx/checkbox.h>
-#include <wx/choice.h>
-#include <wx/combobox.h>
-#include <wx/intl.h>
-#include <wx/listbox.h>
-#include <wx/sizer.h>
-#include <wx/spinctrl.h>
-#include <wx/textctrl.h>
-#include <wx/textdlg.h>
-#include <wx/xrc/xmlres.h>
-#include "compilerfactory.h"
-#include "globals.h"
+    #include <wx/checkbox.h>
+    #include <wx/choice.h>
+    #include <wx/combobox.h>
+    #include <wx/intl.h>
+    #include <wx/listbox.h>
+    #include <wx/sizer.h>
+    #include <wx/spinctrl.h>
+    #include <wx/textctrl.h>
+    #include <wx/textdlg.h>
+    #include <wx/xrc/xmlres.h>
+    #include "compilerfactory.h"
+    #include "globals.h"
 #endif
 #include "advancedcompileroptionsdlg.h"
 
@@ -387,7 +387,7 @@ void AdvancedCompilerOptionsDlg::OnRegexDefaults(wxCommandEvent& WXUNUSED(event)
         Compiler* compiler = CompilerFactory::GetCompiler(m_CompilerId);
         if (!compiler)
             return;
-        compiler->LoadDefaultRegExArray();
+        compiler->LoadDefaultRegExArray(true);
         m_Regexes = compiler->GetRegExArray();
         while (m_SelectedRegex >= (int)m_Regexes.Count())
             --m_SelectedRegex;

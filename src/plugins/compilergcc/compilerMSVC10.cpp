@@ -36,26 +36,6 @@ Compiler * CompilerMSVC10::CreateCopy()
     return c;
 }
 
-void CompilerMSVC10::Reset()
-{
-    m_Options.ClearOptions();
-    LoadDefaultOptions(GetID());
-
-    LoadDefaultRegExArray();
-
-    m_CompilerOptions.Clear();
-    m_LinkerOptions.Clear();
-    m_LinkLibs.Clear();
-    m_CmdsBefore.Clear();
-    m_CmdsAfter.Clear();
-}
-
-void CompilerMSVC10::LoadDefaultRegExArray()
-{
-    m_RegExes.Clear();
-    LoadRegExArray(GetID());
-}
-
 AutoDetectResult CompilerMSVC10::AutoDetectInstallationDir()
 {
     wxString sep = wxFileName::GetPathSeparator();
@@ -117,8 +97,11 @@ AutoDetectResult CompilerMSVC10::AutoDetectInstallationDir()
         wxString msPsdkKeyValue[2] = { _T("Install Dir"), _T("InstallationFolder") };
         for (int i = 0; i < 2; ++i)
         {
+            if (sdkfound)
+                break;
+
             key.SetName(msPsdkKeyName[i]);
-            if (!sdkfound && key.Exists() && key.Open(wxRegKey::Read))
+            if (key.Exists() && key.Open(wxRegKey::Read))
             {
                 wxString name;
                 long idx;
@@ -142,9 +125,16 @@ AutoDetectResult CompilerMSVC10::AutoDetectInstallationDir()
                 }
                 key.Close();
             }
+        }
 
-            if (sdkfound)
-                break;
+        // take a guess
+        if (!sdkfound)
+        {
+            dir = _T("C:\\Program Files");
+            wxGetEnv(_T("ProgramFiles"), &dir);
+            dir +=  _T("\\Microsoft SDKs\\Windows\\v7.0A");
+            if (wxDirExists(dir))
+                sdkfound = true;
         }
 
         // add include dirs for MS Platform SDK too (let them come before compiler's path)

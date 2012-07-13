@@ -12,7 +12,7 @@
 
 CompilerFlagDlg::CompilerFlagDlg(wxWindow* parent, CompOption* opt, wxArrayString& categ)
 {
-    wxXmlResource::Get()->LoadObject(this,parent,_T("CompilerFlagDlg"),_T("wxDialog"));
+    wxXmlResource::Get()->LoadObject(this, parent, wxT("CompilerFlagDlg"), wxT("wxDialog"));
     NameText = (wxTextCtrl*)FindWindow(XRCID("ID_Name"));
     CompilerText = (wxTextCtrl*)FindWindow(XRCID("ID_Compiler"));
     LinkerText = (wxTextCtrl*)FindWindow(XRCID("ID_Linker"));
@@ -22,8 +22,8 @@ CompilerFlagDlg::CompilerFlagDlg(wxWindow* parent, CompOption* opt, wxArrayStrin
     SupersedeText = (wxTextCtrl*)FindWindow(XRCID("ID_Supersede"));
     ExclusiveToggle = (wxToggleButton*)FindWindow(XRCID("ID_Exclusive"));
 
-    Connect(XRCID("ID_Against"),wxEVT_COMMAND_TEXT_UPDATED,(wxObjectEventFunction)&CompilerFlagDlg::OnAdvancedOption);
-    Connect(XRCID("ID_Exclusive"),wxEVT_COMMAND_TOGGLEBUTTON_CLICKED,(wxObjectEventFunction)&CompilerFlagDlg::OnAdvancedOption);
+    Connect(XRCID("ID_Against"), wxEVT_COMMAND_TEXT_UPDATED, (wxObjectEventFunction)&CompilerFlagDlg::OnAdvancedOption);
+    Connect(XRCID("ID_Exclusive"), wxEVT_COMMAND_TOGGLEBUTTON_CLICKED, (wxObjectEventFunction)&CompilerFlagDlg::OnAdvancedOption);
 
     copt = opt;
     if (!copt->name.IsEmpty())

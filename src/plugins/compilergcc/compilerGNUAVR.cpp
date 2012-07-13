@@ -16,7 +16,7 @@
 #include "compilerGNUAVR.h"
 
 CompilerGNUAVR::CompilerGNUAVR()
-    : Compiler(_("GNU AVR GCC Compiler"),_T("avr-gcc"))
+    : Compiler(_("GNU GCC Compiler for AVR"),_T("avr-gcc"))
 {
     Reset();
 }
@@ -32,26 +32,6 @@ Compiler * CompilerGNUAVR::CreateCopy()
     c->SetExtraPaths(m_ExtraPaths); // wxArrayString doesn't seem to be copied with the default copy ctor...
     return c;
 } // end of CreateCopy
-
-void CompilerGNUAVR::Reset()
-{
-    m_Options.ClearOptions();
-    LoadDefaultOptions(wxT("avr-gcc"));
-
-    LoadDefaultRegExArray();
-
-    m_CompilerOptions.Clear();
-    m_LinkerOptions.Clear();
-    m_LinkLibs.Clear();
-    m_CmdsBefore.Clear();
-    m_CmdsAfter.Clear();
-} // end of Reset
-
-void CompilerGNUAVR::LoadDefaultRegExArray()
-{
-    m_RegExes.Clear();
-    LoadRegExArray(wxT("avr-gcc"));
-} // end of LoadDefaultRegExArray
 
 AutoDetectResult CompilerGNUAVR::AutoDetectInstallationDir()
 {

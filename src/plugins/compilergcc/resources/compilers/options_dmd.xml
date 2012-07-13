@@ -5,7 +5,6 @@
         <Program name="C"         value="dmd.exe"/>
         <Program name="CPP"       value="dmd.exe"/>
         <Program name="LD"        value="dmd.exe"/>
-        <Program name="DBG"       value="indbg.exe"/>
         <Program name="DBGconfig" value=""/>
         <Program name="LIB"       value="lib.exe"/>
         <Program name="WINDRES"   value="rcc.exe"/>
@@ -39,7 +38,6 @@
         <Program name="C"         value="dmd"/>
         <Program name="CPP"       value="dmd"/>
         <Program name="LD"        value="gcc"/>
-        <Program name="DBG"       value="gdb"/>
         <Program name="DBGconfig" value="gdb_debugger:Default"/>
         <Program name="LIB"       value="ar"/>
         <Program name="WINDRES"   value=""/>

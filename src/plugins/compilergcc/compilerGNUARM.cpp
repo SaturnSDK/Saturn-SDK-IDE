@@ -19,7 +19,7 @@
 #include "compilerGNUARM.h"
 
 CompilerGNUARM::CompilerGNUARM()
-    : Compiler(_("GNU ARM GCC Compiler"),_T("arm-elf-gcc"))
+    : Compiler(_("GNU GCC Compiler for ARM"),_T("arm-elf-gcc"))
 {
     Reset();
 }
@@ -34,26 +34,6 @@ Compiler * CompilerGNUARM::CreateCopy()
     Compiler* c = new CompilerGNUARM(*this);
     c->SetExtraPaths(m_ExtraPaths); // wxArrayString doesn't seem to be copied with the default copy ctor...
     return c;
-}
-
-void CompilerGNUARM::Reset()
-{
-    m_Options.ClearOptions();
-    LoadDefaultOptions(wxT("arm-elf-gcc"));
-
-    LoadDefaultRegExArray();
-
-    m_CompilerOptions.Clear();
-    m_LinkerOptions.Clear();
-    m_LinkLibs.Clear();
-    m_CmdsBefore.Clear();
-    m_CmdsAfter.Clear();
-} // end of Reset
-
-void CompilerGNUARM::LoadDefaultRegExArray()
-{
-    m_RegExes.Clear();
-    LoadRegExArray(wxT("arm-elf-gcc"));
 }
 
 AutoDetectResult CompilerGNUARM::AutoDetectInstallationDir()

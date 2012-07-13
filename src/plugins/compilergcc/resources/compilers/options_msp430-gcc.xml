@@ -5,7 +5,6 @@
         <Program name="C"         value="msp430-gcc.exe"/>
         <Program name="CPP"       value="msp430-g++.exe"/>
         <Program name="LD"        value="msp430-g++.exe"/>
-        <Program name="DBG"       value="msp430-insight.exe"/>
         <Program name="DBGconfig" value=""/>
         <Program name="LIB"       value="msp430-ar.exe"/>
         <Program name="WINDRES"   value=""/>
@@ -15,7 +14,6 @@
         <Program name="C"         value="msp430-gcc"/>
         <Program name="CPP"       value="msp430-g++"/>
         <Program name="LD"        value="msp430-g++"/>
-        <Program name="DBG"       value="msp430-insight"/>
         <Program name="DBGconfig" value=""/>
         <Program name="LIB"       value="msp430-ar"/>
         <Program name="WINDRES"   value=""/>

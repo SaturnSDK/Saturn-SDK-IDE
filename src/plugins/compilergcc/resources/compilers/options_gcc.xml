@@ -68,8 +68,12 @@
                 option="-Wswitch-default"/>
         <Option name="Warn whenever a switch statement has an index of enumerated type and lacks a case for one or more of the named codes of that enumeration"
                 option="-Wswitch-enum"/>
-        <Option name="Warn if a user supplied include directory does not exist"
-                option="-Wmissing-include-dirs"/>
+        <if exec="C -dumpversion"
+            regex="[4-9]\.[0-9]\.[0-9]"
+            default="true">
+            <Option name="Warn if a user supplied include directory does not exist"
+                    option="-Wmissing-include-dirs"/>
+        </if>
         <Option name="Warn if a global function is defined without a previous declaration"
                 option="-Wmissing-declarations"/>
         <Option name="Warn if the compiler detects that code will never be executed"

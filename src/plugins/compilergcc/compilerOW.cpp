@@ -48,26 +48,6 @@ CompilerCommandGenerator* CompilerOW::GetCommandGenerator()
     return new CompilerOWGenerator;
 }
 
-void CompilerOW::Reset()
-{
-    m_Options.ClearOptions();
-    LoadDefaultOptions(GetID());
-
-    LoadDefaultRegExArray();
-
-    m_CompilerOptions.Clear();
-    m_LinkerOptions.Clear();
-    m_LinkLibs.Clear();
-    m_CmdsBefore.Clear();
-    m_CmdsAfter.Clear();
-}
-
-void CompilerOW::LoadDefaultRegExArray()
-{
-    m_RegExes.Clear();
-    LoadRegExArray(GetID());
-}
-
 AutoDetectResult CompilerOW::AutoDetectInstallationDir()
 {
     /* Following code is Not necessary as OpenWatcom does not write to

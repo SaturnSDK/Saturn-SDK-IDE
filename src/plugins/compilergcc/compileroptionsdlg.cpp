@@ -211,8 +211,7 @@ CompilerOptionsDlg::CompilerOptionsDlg(wxWindow* parent, CompilerGCC* compiler, 
     m_pProject(project),
     m_pTarget(target),
     m_bDirty(false),
-    m_BuildingTree(false),
-    m_MenuOption(-1)
+    m_BuildingTree(false)
 {
     wxXmlResource::Get()->LoadPanel(this, parent, _T("dlgCompilerOptions"));
 
@@ -404,7 +403,7 @@ void CompilerOptionsDlg::DoFillCompilerDependentSettings()
     DoLoadOptions();
     DoFillVars();
     // by the way we listen to changes in the textctrl, we also end up in the callbacks as
-    // a result of wxTextCtrl::SetValue, the preceeding called methods did some of those -> reset dirty flag
+    // a result of wxTextCtrl::SetValue, the preceding called methods did some of those -> reset dirty flag
     m_bDirty = false;
     m_bFlagsDirty = false;
 } // DoFillCompilerDependentSettings
@@ -1643,7 +1642,7 @@ void CompilerOptionsDlg::OnOptionToggled(wxCommandEvent& event)
         {
             if (!copt->checkAgainst.IsEmpty())
             {
-                wxArrayString check = GetArrayFromString(copt->checkAgainst, _T(" "));
+                wxArrayString check = GetArrayFromString(copt->checkAgainst, wxT(" "));
                 for (size_t i = 0; i < check.Count(); ++i)
                 {
                     CompOption* against = m_Options.GetOptionByOption(check[i]);
@@ -1652,7 +1651,7 @@ void CompilerOptionsDlg::OnOptionToggled(wxCommandEvent& event)
                     if (against && against->enabled)
                     {
                         wxString message = (copt->checkMessage.IsEmpty() ?
-                                  _T("'") + copt->name + _("' conflicts with '") + against->name + _T("'.") :
+                                  wxT("\"") + copt->name + _("\" conflicts with \"") + against->name + wxT("\".") :
                                   copt->checkMessage );
                         AnnoyingDialog dlg(_("Compiler options conflict"),
                                            message,
@@ -1666,7 +1665,7 @@ void CompilerOptionsDlg::OnOptionToggled(wxCommandEvent& event)
             }
             if (copt->supersedes != wxEmptyString)
             {
-                wxArrayString supersede = GetArrayFromString(copt->supersedes, _T(" "));
+                wxArrayString supersede = GetArrayFromString(copt->supersedes, wxT(" "));
                 for (size_t i = 0; i < supersede.Count(); ++i)
                 {
                     for (size_t j = 0; j < m_Options.GetCount(); ++j)
@@ -1680,7 +1679,7 @@ void CompilerOptionsDlg::OnOptionToggled(wxCommandEvent& event)
                     }
                     for (size_t j = 0; j < list->GetCount(); ++j)
                     {
-                        if (list->GetString(j).EndsWith(_T("[") + supersede[i] + _T("]")))
+                        if (list->GetString(j).EndsWith(wxT("[") + supersede[i] + wxT("]")))
                             list->Check(j, false);
                     }
                 }
@@ -2737,22 +2736,29 @@ void CompilerOptionsDlg::OnMyCharHook(wxKeyEvent& event)
     }
 } // OnMyCharHook
 
+int CompilerOptionsDlg::m_MenuOption = -1;
+
 void CompilerOptionsDlg::OnFlagsPopup(wxMouseEvent& event)
 {
     wxCheckListBox* list = XRCCTRL(*this, "lstCompilerOptions", wxCheckListBox);
     wxPoint pos = event.GetPosition();
     int index = (pos == wxDefaultPosition ?
                  list->GetSelection() : list->HitTest(pos));
-    int scroll = list->GetScrollPos(wxVERTICAL);
     list->SetSelection(index);
+    if (pos == wxDefaultPosition) // used keyboard right-click key
+        pos.x = list->GetItemHeight();
+    int scroll = list->GetScrollPos(wxVERTICAL);
     wxMenu* pop = new wxMenu;
     pop->Append(0, _("New flag..."));
     if (index != wxNOT_FOUND)
     {
         pop->Append(1, _("Modify flag..."));
         pop->Append(2, _("Delete flag"));
+        pos.y = (list->GetSelection() - scroll + 1) * list->GetItemHeight();
     }
-    pop->Connect(wxEVT_COMMAND_MENU_SELECTED,(wxObjectEventFunction)&CompilerOptionsDlg::OnFlagsPopupClick);
+    else if (event.GetPosition() == wxDefaultPosition)
+        pos.y = list->GetItemHeight() / 2;
+    pop->Connect(wxEVT_COMMAND_MENU_SELECTED, (wxObjectEventFunction)&CompilerOptionsDlg::OnFlagsPopupClick);
     m_MenuOption = wxNOT_FOUND;
     list->PopupMenu(pop, pos);
     delete pop;
@@ -2789,7 +2795,7 @@ void CompilerOptionsDlg::OnFlagsPopup(wxMouseEvent& event)
                 categ.Add(opt->category);
         }
         if (categ.IsEmpty())
-            categ.Add(_T("General"));
+            categ.Add(wxT("General"));
         CompOption copt;
         if (m_MenuOption == 1)
             copt = *m_Options.GetOptionByName(list->GetString(index));
@@ -2815,12 +2821,12 @@ void CompilerOptionsDlg::OnFlagsPopup(wxMouseEvent& event)
         else
         {
             CompOption* opt = m_Options.GetOptionByName(list->GetString(index));
-            wxString name = copt.name + _T("  [");
+            wxString name = copt.name + wxT("  [");
             if (copt.option.IsEmpty())
                 name += copt.additionalLibs;
             else
                 name += copt.option;
-            name += _T("]");
+            name += wxT("]");
             opt->name           = name;
             opt->option         = copt.option;
             opt->additionalLibs = copt.additionalLibs;

@@ -34,26 +34,6 @@ Compiler * CompilerBCC::CreateCopy()
     return c;
 }
 
-void CompilerBCC::Reset()
-{
-    m_Options.ClearOptions();
-    LoadDefaultOptions(GetID());
-
-    LoadDefaultRegExArray();
-
-    m_CompilerOptions.Clear();
-    m_LinkerOptions.Clear();
-    m_LinkLibs.Clear();
-    m_CmdsBefore.Clear();
-    m_CmdsAfter.Clear();
-}
-
-void CompilerBCC::LoadDefaultRegExArray()
-{
-    m_RegExes.Clear();
-    LoadRegExArray(GetID());
-}
-
 AutoDetectResult CompilerBCC::AutoDetectInstallationDir()
 {
     wxArrayString l_MasterPath_Arr, l_RegKey_Arr;

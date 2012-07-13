@@ -13,8 +13,6 @@ class CompilerGNUAVR : public Compiler
     public:
         CompilerGNUAVR();
         virtual ~CompilerGNUAVR();
-        virtual void Reset();
-        virtual void LoadDefaultRegExArray();
         virtual AutoDetectResult AutoDetectInstallationDir();
     protected:
         virtual Compiler* CreateCopy();

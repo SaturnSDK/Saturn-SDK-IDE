@@ -101,7 +101,9 @@ void DirectCommands::AddCommandsToArray(const wxString& cmds, wxArrayString& arr
 
 static int MySortProjectFilesByWeight(ProjectFile** one, ProjectFile** two)
 {
-    return (*one)->weight - (*two)->weight;
+    int diff = (*one)->weight - (*two)->weight;
+    diff = (diff == 0 ? (*one)->relativeFilename.CmpNoCase((*two)->relativeFilename) : diff);
+    return (diff == 0 ? (*one)->relativeFilename.Cmp((*two)->relativeFilename) : diff);
 }
 
 MyFilesArray DirectCommands::GetProjectFilesSortedByWeight(ProjectBuildTarget* target, bool compile, bool link)

@@ -72,6 +72,7 @@ cp -f src/resources/images/*.png ${RESDIR}/images > /dev/null
 cp -f src/resources/images/settings/*.png ${RESDIR}/images/settings > /dev/null
 cp -f src/resources/images/16x16/*.png ${RESDIR}/images/16x16 > /dev/null
 cp -f plugins/codecompletion/resources/images/*.png ${RESDIR}/images/codecompletion > /dev/null
+cp -f plugins/compilergcc/resources/compilers/*.xml ${RESDIR}/compilers > /dev/null
 
 cp -f ${RESDIR}/*.zip output/share/codeblocks > /dev/null
 cp -f sdk/resources/lexers/lexer_* output/share/codeblocks/lexers > /dev/null

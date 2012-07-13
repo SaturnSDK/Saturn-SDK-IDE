@@ -17,8 +17,6 @@ class CompilerMSVC10 : public Compiler
 public:
     CompilerMSVC10();
     virtual ~CompilerMSVC10();
-    virtual void Reset();
-    virtual void LoadDefaultRegExArray();
     virtual AutoDetectResult AutoDetectInstallationDir();
 
 protected:

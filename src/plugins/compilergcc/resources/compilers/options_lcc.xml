@@ -4,7 +4,6 @@
     <Program name="C"         value="lcc.exe"/>
     <Program name="CPP"       value="lcc.exe"/>
     <Program name="LD"        value="lcclnk.exe"/>
-    <Program name="DBG"       value="cdb.exe"/>
     <Program name="DBGconfig" value=""/>
     <Program name="LIB"       value="lcclib.exe"/>
     <Program name="WINDRES"   value="lrc.exe"/>

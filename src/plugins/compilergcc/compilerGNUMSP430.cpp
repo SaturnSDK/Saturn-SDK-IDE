@@ -40,26 +40,6 @@ Compiler * CompilerGNUMSP430::CreateCopy()
     return c;
 }
 
-void CompilerGNUMSP430::Reset()
-{
-    m_Options.ClearOptions();
-    LoadDefaultOptions(wxT("msp430-gcc"));
-
-    LoadDefaultRegExArray();
-
-    m_CompilerOptions.Clear();
-    m_LinkerOptions.Clear();
-    m_LinkLibs.Clear();
-    m_CmdsBefore.Clear();
-    m_CmdsAfter.Clear();
-}
-
-void CompilerGNUMSP430::LoadDefaultRegExArray()
-{
-    m_RegExes.Clear();
-    LoadRegExArray(wxT("msp430-gcc"));
-}
-
 AutoDetectResult CompilerGNUMSP430::AutoDetectInstallationDir()
 {
     wxString sep = wxFileName::GetPathSeparator();

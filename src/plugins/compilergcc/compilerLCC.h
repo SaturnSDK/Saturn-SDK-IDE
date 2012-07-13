@@ -13,7 +13,6 @@ class CompilerLCC : public Compiler
         virtual ~CompilerLCC();
         virtual bool IsValid();
         virtual void Reset();
-        virtual void LoadDefaultRegExArray();
         virtual AutoDetectResult AutoDetectInstallationDir();
     protected:
         virtual Compiler* CreateCopy();

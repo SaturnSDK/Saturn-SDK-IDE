@@ -129,7 +129,7 @@ class CompilerOptionsDlg : public cbConfigurationPanel
         wxString m_NewProjectOrTargetCompilerId; //!< keeps track of the changes of compiler of the selected project/target
 
         bool m_BuildingTree; //!< flag to ignore tree changing events while building it
-        int  m_MenuOption;
+        static int m_MenuOption;
 
         DECLARE_EVENT_TABLE()
 };

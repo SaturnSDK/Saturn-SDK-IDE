@@ -39,26 +39,6 @@ Compiler * CompilerGNUFortran::CreateCopy()
     return c;
 }
 
-void CompilerGNUFortran::Reset()
-{
-    m_Options.ClearOptions();
-    LoadDefaultOptions(GetID());
-
-    LoadDefaultRegExArray();
-
-    m_CompilerOptions.Clear();
-    m_LinkerOptions.Clear();
-    m_LinkLibs.Clear();
-    m_CmdsBefore.Clear();
-    m_CmdsAfter.Clear();
-}
-
-void CompilerGNUFortran::LoadDefaultRegExArray()
-{
-    m_RegExes.Clear();
-    LoadRegExArray(GetID());
-}
-
 AutoDetectResult CompilerGNUFortran::AutoDetectInstallationDir()
 {
     // try to find MinGW in environment variable PATH first

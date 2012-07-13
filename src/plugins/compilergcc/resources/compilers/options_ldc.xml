@@ -4,7 +4,6 @@
     <Program name="C"         value="ldc"/>
     <Program name="CPP"       value="ldc"/>
     <Program name="LD"        value="ldc"/>
-    <Program name="DBG"       value="gdb"/>
     <Program name="DBGconfig" value="gdb_debugger:Default"/>
     <Program name="LIB"       value="ar"/>
     <Program name="WINDRES"   value=""/>

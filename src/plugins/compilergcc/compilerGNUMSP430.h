@@ -11,8 +11,6 @@ class CompilerGNUMSP430 : public Compiler
     public:
         CompilerGNUMSP430();
         virtual ~CompilerGNUMSP430();
-        virtual void Reset();
-        virtual void LoadDefaultRegExArray();
         virtual AutoDetectResult AutoDetectInstallationDir();
     protected:
         virtual Compiler* CreateCopy();

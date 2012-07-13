@@ -6,7 +6,6 @@
         <Program name="C"         value="icl.exe"/>
         <Program name="CPP"       value="icl.exe"/>
         <Program name="LD"        value="xilink.exe"/>       <!-- Runs Microsoft's link.exe-->
-        <Program name="DBG"       value="idb.exe"/>
         <Program name="DBGconfig" value=""/>
         <Program name="LIB"       value="xilink.exe"/>
         <Program name="WINDRES"   value="rc.exe"/>           <!-- platform SDK is needed for this -->
@@ -186,7 +185,6 @@
         <Program name="C"         value="icc"/>
         <Program name="CPP"       value="icpc"/>
         <Program name="LD"        value="icpc"/>
-        <Program name="DBG"       value="idb"/>
         <Program name="DBGconfig" value=""/>
         <Program name="LIB"       value="ar"/>
         <Program name="WINDRES"   value=""/>

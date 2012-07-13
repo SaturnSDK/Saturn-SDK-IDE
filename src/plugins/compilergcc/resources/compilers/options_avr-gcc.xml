@@ -5,7 +5,6 @@
         <Program name="C"         value="avr-gcc.exe"/>
         <Program name="CPP"       value="avr-g++.exe"/>
         <Program name="LD"        value="avr-g++.exe"/>
-        <Program name="DBG"       value="avr-gdb.exe"/>
         <Program name="DBGconfig" value=""/>
         <Program name="LIB"       value="avr-ar.exe"/>
         <Program name="WINDRES"   value=""/>
@@ -15,7 +14,6 @@
         <Program name="C"         value="avr-gcc"/>
         <Program name="CPP"       value="avr-g++"/>
         <Program name="LD"        value="avr-g++"/>
-        <Program name="DBG"       value="avr-gdb"/>
         <Program name="DBGconfig" value=""/>
         <Program name="LIB"       value="avr-ar"/>
         <Program name="WINDRES"   value=""/>

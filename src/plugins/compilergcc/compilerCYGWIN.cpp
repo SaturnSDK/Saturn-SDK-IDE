@@ -31,21 +31,6 @@ Compiler * CompilerCYGWIN::CreateCopy()
     return c;
 }
 
-void CompilerCYGWIN::Reset()
-{
-    m_Options.ClearOptions();
-    LoadDefaultOptions(GetID());
-
-    LoadDefaultRegExArray();
-
-    m_CompilerOptions.Clear();
-    m_LinkerOptions.Clear();
-    m_LinkLibs.Clear();
-    m_CmdsBefore.Clear();
-    m_CmdsAfter.Clear();
-    SetVersionString();
-}
-
 AutoDetectResult CompilerCYGWIN::AutoDetectInstallationDir()
 {
     AutoDetectResult ret = adrGuessed;

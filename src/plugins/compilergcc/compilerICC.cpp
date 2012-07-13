@@ -41,26 +41,6 @@ Compiler * CompilerICC::CreateCopy()
     return c;
 }
 
-void CompilerICC::Reset()
-{
-    m_Options.ClearOptions();
-    LoadDefaultOptions(GetID());
-
-    LoadDefaultRegExArray();
-
-    m_CompilerOptions.Clear();
-    m_LinkerOptions.Clear();
-    m_LinkLibs.Clear();
-    m_CmdsBefore.Clear();
-    m_CmdsAfter.Clear();
-}
-
-void CompilerICC::LoadDefaultRegExArray()
-{
-    m_RegExes.Clear();
-    LoadRegExArray(GetID());
-}
-
 AutoDetectResult CompilerICC::AutoDetectInstallationDir()
 {
     wxString sep = wxFileName::GetPathSeparator();
@@ -202,13 +182,16 @@ AutoDetectResult CompilerICC::AutoDetectInstallationDir()
     // Try to detect the debugger. If not detected successfully the debugger plugin will
     // complain, so only the autodetection of compiler is considered in return value
     wxString path;
+    wxString dbg;
     if (platform::windows)
     {
+        dbg = _T("idb.exe");
         wxGetEnv(_T("IDB_PATH"), &path);
         path += _T("IDB\\9.0\\IA32");
     }
     else
     {
+        dbg = _T("idb");
         path= _T("/opt/intel/idb/9.0");
         if (wxDirExists(_T("/opt/intel")))
         {
@@ -228,7 +211,7 @@ AutoDetectResult CompilerICC::AutoDetectInstallationDir()
         }
     }
 
-    if (wxFileExists(path + sep + _T("bin") + sep + m_Programs.DBG))
+    if (wxFileExists(path + sep + _T("bin") + sep + dbg))
         m_ExtraPaths.Add(path);
 
     return ret;

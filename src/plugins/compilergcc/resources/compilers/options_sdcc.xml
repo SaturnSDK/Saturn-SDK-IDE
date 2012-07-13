@@ -5,7 +5,6 @@
         <Program name="C"         value="sdcc.exe"/>
         <Program name="CPP"       value="sdcc.exe"/>
         <Program name="LD"        value="sdcc.exe"/>
-        <Program name="DBG"       value="sdcdb.exe"/>
         <Program name="DBGconfig" value=""/>
         <Program name="LIB"       value="sdcclib.exe"/>
         <Program name="WINDRES"   value=""/>
@@ -15,7 +14,6 @@
         <Program name="C"         value="sdcc"/>
         <Program name="CPP"       value="sdcc"/>
         <Program name="LD"        value="sdcc"/>
-        <Program name="DBG"       value="sdcdb"/>
         <Program name="DBGconfig" value=""/>
         <Program name="LIB"       value="sdcclib"/>
         <Program name="WINDRES"   value=""/>

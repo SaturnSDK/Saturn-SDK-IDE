@@ -51,12 +51,6 @@ void CompilerDMD::Reset()
     m_CmdsAfter.Clear();
 }
 
-void CompilerDMD::LoadDefaultRegExArray()
-{
-    m_RegExes.Clear();
-    LoadRegExArray(GetID());
-}
-
 AutoDetectResult CompilerDMD::AutoDetectInstallationDir()
 {
     wxString sep = wxFileName::GetPathSeparator();

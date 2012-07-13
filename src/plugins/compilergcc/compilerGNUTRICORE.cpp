@@ -39,26 +39,6 @@ Compiler * CompilerGNUTRICORE::CreateCopy()
     return c;
 }
 
-void CompilerGNUTRICORE::Reset()
-{
-    m_Options.ClearOptions();
-    LoadDefaultOptions(wxT("tricore-gcc"));
-
-    LoadDefaultRegExArray();
-
-    m_CompilerOptions.Clear();
-    m_LinkerOptions.Clear();
-    m_LinkLibs.Clear();
-    m_CmdsBefore.Clear();
-    m_CmdsAfter.Clear();
-}
-
-void CompilerGNUTRICORE::LoadDefaultRegExArray()
-{
-    m_RegExes.Clear();
-    LoadRegExArray(wxT("tricore-gcc"));
-}
-
 AutoDetectResult CompilerGNUTRICORE::AutoDetectInstallationDir()
 {
     wxString sep = wxFileName::GetPathSeparator();

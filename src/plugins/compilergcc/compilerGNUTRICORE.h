@@ -11,8 +11,6 @@ class CompilerGNUTRICORE : public Compiler
 	public:
 		CompilerGNUTRICORE();
 		virtual ~CompilerGNUTRICORE();
-		virtual void Reset();
-		virtual void LoadDefaultRegExArray();
 		virtual AutoDetectResult AutoDetectInstallationDir();
 	protected:
 		virtual Compiler* CreateCopy();
