@@ -2745,8 +2745,6 @@ void CompilerOptionsDlg::OnFlagsPopup(wxMouseEvent& event)
     int index = (pos == wxDefaultPosition ?
                  list->GetSelection() : list->HitTest(pos));
     list->SetSelection(index);
-    if (pos == wxDefaultPosition) // used keyboard right-click key
-        pos.x = list->GetItemHeight();
     int scroll = list->GetScrollPos(wxVERTICAL);
     wxMenu* pop = new wxMenu;
     pop->Append(0, _("New flag..."));
@@ -2754,10 +2752,7 @@ void CompilerOptionsDlg::OnFlagsPopup(wxMouseEvent& event)
     {
         pop->Append(1, _("Modify flag..."));
         pop->Append(2, _("Delete flag"));
-        pos.y = (list->GetSelection() - scroll + 1) * list->GetItemHeight();
     }
-    else if (event.GetPosition() == wxDefaultPosition)
-        pos.y = list->GetItemHeight() / 2;
     pop->Connect(wxEVT_COMMAND_MENU_SELECTED, (wxObjectEventFunction)&CompilerOptionsDlg::OnFlagsPopupClick);
     m_MenuOption = wxNOT_FOUND;
     list->PopupMenu(pop, pos);
