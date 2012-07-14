@@ -25,11 +25,13 @@
 #endif
 
 #include "tinyxml/tinyxml.h"
+
 #include <wx/dirdlg.h>
 #include <wx/filefn.h>
 #include <wx/fontmap.h>
 #include <wx/msgdlg.h>
 #include <wx/tokenzr.h>
+
 #include <algorithm>
 #include <string>
 
