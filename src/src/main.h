@@ -165,6 +165,7 @@ class MainFrame : public wxFrame
         void OnEditLineTranspose(wxCommandEvent& event);
         void OnEditLineCopy(wxCommandEvent& event);
         void OnEditLinePaste(wxCommandEvent& event);
+        void OnEditLineMove(wxCommandEvent& event);
         void OnEditUpperCase(wxCommandEvent& event);
         void OnEditLowerCase(wxCommandEvent& event);
         void OnEditInsertNewLine(wxCommandEvent& event);
