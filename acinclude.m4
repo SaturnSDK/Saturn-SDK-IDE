@@ -264,6 +264,7 @@ AC_DEFUN([BUILD_CONTRIB_NONE], [
 	AM_CONDITIONAL([BUILD_CSCOPE], [false])
 	AM_CONDITIONAL([BUILD_DOXYBLOCKS], [false])
 	AM_CONDITIONAL([BUILD_DRAGSCROLL], [false])
+	AM_CONDITIONAL([BUILD_EDITORCONFIG], [false])
 	AM_CONDITIONAL([BUILD_EDITORTWEAKS], [false])
 	AM_CONDITIONAL([BUILD_ENVVARS], [false])
 	AM_CONDITIONAL([BUILD_FILEMANAGER], [false])
@@ -303,6 +304,7 @@ AC_DEFUN([BUILD_CONTRIB_ALL], [
 	AM_CONDITIONAL([BUILD_CSCOPE], [true])
 	AM_CONDITIONAL([BUILD_DOXYBLOCKS], [true])
 	AM_CONDITIONAL([BUILD_DRAGSCROLL], [true])
+	AM_CONDITIONAL([BUILD_EDITORCONFIG], [true])
 	AM_CONDITIONAL([BUILD_EDITORTWEAKS], [true])
 	AM_CONDITIONAL([BUILD_ENVVARS], [true])
 	AM_CONDITIONAL([BUILD_FILEMANAGER], [true])
@@ -342,7 +344,7 @@ AC_ARG_WITH(contrib-plugins,
   [                        "all,-help" compiles all contrib plugins except the help plugin ]
   [                        By default, no contrib plugins are compiled ]
   [                        Plugin names are: AutoVersioning, BrowseTracker,byogames,Cccc,CppCheck,cbkoders,codesnippets, ]
-  [                        		     codestat, copystrings, Cscope, DoxyBlocks, dragscroll, EditorTweaks, envvars, ]
+  [                        		     codestat, copystrings, Cscope, DoxyBlocks, dragscroll, EditorConfig, EditorTweaks, envvars, ]
   [                        		     FileManager, headerfixup, help, hexeditor, incsearch, keybinder, libfinder, MouseSap, ]
   [                        		     NassiShneiderman, profiler, regex, ReopenEditor, exporter, spellchecker, symtab, ]
   [                        		     ThreadSearch, ToolsPlus, Valgrind, wxcontrib, wxsmith, wxsmithcontrib, wxsmithaui ],
@@ -384,6 +386,9 @@ do
 		;;
 	dragscroll)
 		AM_CONDITIONAL([BUILD_DRAGSCROLL], [true])
+		;;
+	EditorConfig)
+		AM_CONDITIONAL([BUILD_EDITORCONFIG], [true])
 		;;
 	EditorTweaks)
 		AM_CONDITIONAL([BUILD_EDITORTWEAKS], [true])
@@ -493,6 +498,9 @@ do
 	-dragscroll)
 		AM_CONDITIONAL([BUILD_DRAGSCROLL], [false])
 		;;
+	-EditorConfig)
+		AM_CONDITIONAL([BUILD_EDITORCONFIG], [false])
+		;;
 	-EditorTweaks)
 		AM_CONDITIONAL([BUILD_EDITORTWEAKS], [false])
 		;;
@@ -591,6 +599,7 @@ AC_SUBST(BUILD_CPPCHECK)
 AC_SUBST(BUILD_CSCOPE)
 AC_SUBST(BUILD_DOXYBLOCKS)
 AC_SUBST(BUILD_DRAGSCROLL)
+AC_SUBST(BUILD_EDITORCONFIG)
 AC_SUBST(BUILD_EDITORTWEAKS)
 AC_SUBST(BUILD_ENVVARS)
 AC_SUBST(BUILD_FILEMANAGER)
