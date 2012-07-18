@@ -31,7 +31,7 @@ class wxXmlNode;
     Compiler options: $options
     Linker options: $link_options
     Include dirs: $includes
-    Rsource include dirs: $res_includes
+    Resource include dirs: $res_includes
     Library dirs: $libdirs
     Link libraries: $libs
     Source file: $file
@@ -363,6 +363,7 @@ class DLLIMPORT Compiler : public CompileOptionsBase
         void LoadRegExArray(const wxString& name, bool globalPrecedence = false, int recursion = 0);
 
         bool EvalXMLCondition(const wxXmlNode* node);
+        wxString GetExecName(const wxString& name);
 
         // keeps a copy of current settings (works only the first time it's called)
         void MirrorCurrentSettings();

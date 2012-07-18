@@ -1591,6 +1591,9 @@
 		<Unit filename="plugins/compilergcc/resources/compiler_toolbar_16x16.xrc">
 			<Option target="Compiler" />
 		</Unit>
+		<Unit filename="plugins/compilergcc/resources/compilers/compiler_clang.xml">
+			<Option target="Compiler" />
+		</Unit>
 		<Unit filename="plugins/compilergcc/resources/compilers/options_arm-elf-gcc.xml">
 			<Option target="Compiler" />
 		</Unit>
@@ -1598,6 +1601,9 @@
 			<Option target="Compiler" />
 		</Unit>
 		<Unit filename="plugins/compilergcc/resources/compilers/options_bcc.xml">
+			<Option target="Compiler" />
+		</Unit>
+		<Unit filename="plugins/compilergcc/resources/compilers/options_clang.xml">
 			<Option target="Compiler" />
 		</Unit>
 		<Unit filename="plugins/compilergcc/resources/compilers/options_common_architecture.xml">

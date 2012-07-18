@@ -34,9 +34,9 @@
         <if exec="C -dumpversion"
             regex="4\.[6-9]\.[0-9]|[5-9]\.[0-9]\.[0-9]"
             default="true">
-            <Option name="Intel Core i7 CPU with (MMX, SSE, SSE2, SSE3, SSSE3, SSE4.1, SSE4.2, 64-bit extensions)"
+            <Option name="Intel Core i7 CPU (MMX, SSE, SSE2, SSE3, SSSE3, SSE4.1, SSE4.2, 64-bit extensions)"
                     option="-march=corei7"/>
-            <Option name="Intel Core i7 CPU with (MMX, SSE, SSE2, SSE3, SSSE3, SSE4.1, SSE4.2, AVX, AES, PCLMUL, 64-bit extensions)"
+            <Option name="Intel Core i7 CPU (MMX, SSE, SSE2, SSE3, SSSE3, SSE4.1, SSE4.2, AVX, AES, PCLMUL, 64-bit extensions)"
                     option="-march=corei7-avx"/>
         </if>
         <if exec="C -dumpversion"

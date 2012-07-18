@@ -10,7 +10,7 @@
 
 #include <compilercommandgenerator.h>
 
-//Overriden to fix OpenWatcom Linking Problem (@Biplab)
+//Overridden to fix OpenWatcom Linking Problem (@Biplab)
 
 class CompilerOWGenerator : public CompilerCommandGenerator
 {

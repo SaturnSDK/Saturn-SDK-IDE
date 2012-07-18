@@ -82,6 +82,7 @@
 #include "compilerGNUTRICORE.h"
 #include "compilerGNUFortran.h"
 #include "compilerG95.h"
+#include "compilerXML.h"
 
 #include <scripting/bindings/sc_base_types.h>
 
@@ -398,6 +399,52 @@ void CompilerGCC::OnAttach()
     CompilerFactory::RegisterCompiler(new CompilerGNUPOWERPC);
     CompilerFactory::RegisterCompiler(new CompilerGNUTRICORE);
 #endif
+
+    // register pure XML compilers
+    // user paths first
+    wxDir dir;
+    wxString filename;
+    wxArrayString compilers;
+    wxString path = ConfigManager::GetFolder(sdDataUser) + wxT("/compilers/");
+    if (wxDirExists(path) && dir.Open(path))
+    {
+        bool ok = dir.GetFirst(&filename, wxT("compiler_*.xml"), wxDIR_FILES);
+        while (ok)
+        {
+            compilers.Add(path + filename);
+            ok = dir.GetNext(&filename);
+        }
+    }
+    // global paths next
+    path = ConfigManager::GetFolder(sdDataGlobal) + wxT("/compilers/");
+    if (wxDirExists(path) && dir.Open(path))
+    {
+        bool ok = dir.GetFirst(&filename, wxT("compiler_*.xml"), wxDIR_FILES);
+        while (ok)
+        {
+            for (size_t i = 0; i < compilers.GetCount(); ++i)
+            {
+                if (compilers[i].EndsWith(filename))
+                {
+                    ok = false;
+                    break;
+                }
+            }
+            if (ok) // user compilers of the same name take precedence
+                compilers.Add(path + filename);
+            ok = dir.GetNext(&filename);
+        }
+    }
+    for (size_t i = 0; i < compilers.GetCount(); ++i)
+    {
+        wxXmlDocument compiler;
+        if (!compiler.Load(compilers[i]) || compiler.GetRoot()->GetName() != wxT("CodeBlocks_compiler"))
+            Manager::Get()->GetLogManager()->Log(_("Error: Invalid Code::Blocks compiler definition '") + compilers[i] + wxT("'."));
+        else
+            CompilerFactory::RegisterCompiler(new CompilerXML(compiler.GetRoot()->GetAttribute(wxT("name"), wxEmptyString),
+                                                              compiler.GetRoot()->GetAttribute(wxT("id"), wxEmptyString),
+                                                              compilers[i]));
+    }
 
     // register (if any) user-copies of built-in compilers
     CompilerFactory::RegisterUserCompilers();
@@ -742,7 +789,7 @@ void CompilerGCC::SetupEnvironment()
     wxArrayString extraPaths = compiler->GetExtraPaths();
     wxString      extraPathsBinPath(wxEmptyString);
 
-    // Get configured masterpath, expand macros and remove trailing seperators
+    // Get configured masterpath, expand macros and remove trailing separators
     wxString masterPath = compiler->GetMasterPath();
     Manager::Get()->GetMacrosManager()->ReplaceMacros(masterPath);
     while ( (masterPath.Last() == '\\') || (masterPath.Last() == '/') )
@@ -756,7 +803,7 @@ void CompilerGCC::SetupEnvironment()
         pathList.Add(masterPath + pathSep + _T("bin"));
         pathList.Add(masterPath); // in case there is no "bin" sub-folder
     }
-    // [2] Get configured extrapath(s), expand macros and remove trailing seperators
+    // [2] Get configured extrapath(s), expand macros and remove trailing separators
     for (size_t i=0; i<extraPaths.GetCount(); ++i)
     {
         wxString extraPath = extraPaths[i];
@@ -845,7 +892,7 @@ bool CompilerGCC::StopRunningDebugger()
                 dbg->Stop();
                 break;
             }
-            case wxID_NO: // fallthrough
+            case wxID_NO: // fall through
             default:
                 Manager::Get()->GetLogManager()->Log(_("Aborting (re-)build."), m_PageIndex);
                 return false;
@@ -1658,7 +1705,7 @@ int CompilerGCC::Run(const wxString& target)
 
 int CompilerGCC::Run(ProjectBuildTarget* target)
 {
-    bool commandIsQuoted = false; // remeber if we quoted the command, avoid uneeded quotes, because they break execution with "konsole" under KDE
+    bool commandIsQuoted = false; // remember if we quoted the command, avoid unneeded quotes, because they break execution with "konsole" under KDE
     if (!CheckProject())
     {
         if (Manager::Get()->GetEditorManager()->GetActiveEditor())

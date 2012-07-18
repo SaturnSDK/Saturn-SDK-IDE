@@ -326,36 +326,36 @@ class DLLIMPORT cbProject : public CompileTargetBase
         /** Close all project files.
           * @param dontsave If true, no project file will be saved even if modified.
           * If false, any modified file will be saved (default).
-          * @return True if succesfull, false otherwise.
+          * @return True if successful, false otherwise.
           */
         bool CloseAllFiles(bool dontsave=false);
 
         /** Save all project files.
-          * @return True if succesfull, false otherwise.
+          * @return True if successful, false otherwise.
           */
         bool SaveAllFiles();
 
         /** Save the project.
-          * @return True if succesfull, false otherwise.
+          * @return True if successful, false otherwise.
           */
         bool Save();
 
         /** Save the project under a different name.
           * A dialog pops up for the user to choose a new filename for the project.
-          * @return True if succesfull, false otherwise.
+          * @return True if successful, false otherwise.
           */
         bool SaveAs();
 
         /** Save the project's layout.
           * Layout is the list of open project files, which one is active,
           * where the cursor is located on each one of those, etc.
-          * @return True if succesfull, false otherwise.
+          * @return True if successful, false otherwise.
           */
         bool SaveLayout();
 
         /** Load the project's layout.
           * @see SaveLayout() for info.
-          * @return True if succesfull, false otherwise.
+          * @return True if successful, false otherwise.
           */
         bool LoadLayout();
 

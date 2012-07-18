@@ -1417,7 +1417,7 @@ void CompilerOptionsDlg::OnTreeSelectionChange(wxTreeEvent& event)
 
         if (compiler)
         {   // a new compiler was chosen, proceed as if the user manually selected another compiler
-            // that means set the compilerselection list accordingly
+            // that means set the compiler selection list accordingly
             // and go directly to (On)CompilerChanged
             int NewCompilerIdx = CompilerFactory::GetCompilerIndex(compiler);
             XRCCTRL(*this, "cmbCompiler", wxChoice)->SetSelection(NewCompilerIdx);
@@ -1425,7 +1425,7 @@ void CompilerOptionsDlg::OnTreeSelectionChange(wxTreeEvent& event)
             OnCompilerChanged(Dummy);
         }
         else
-        { // the user cancelled and wants to keep the compiler
+        { // the user canceled and wants to keep the compiler
             if (wxNotebook* nb = XRCCTRL(*this, "nbMain", wxNotebook))
                 nb->Disable();
         }
@@ -2382,7 +2382,7 @@ void CompilerOptionsDlg::OnMoveLibDownClick(wxSpinEvent& /*event*/)
     {
         // do not move downwards if the lib after is selected, too
         // notice here: as started with index+1 (due to GetCount)...
-        // ... substract 1 all the way to achieve the real index operated on
+        // ... subtract 1 all the way to achieve the real index operated on
         if (lstLibs->IsSelected(i-1) && !lstLibs->IsSelected(i))
         {
             wxString lib = lstLibs->GetString(i-1);
@@ -2434,7 +2434,7 @@ void CompilerOptionsDlg::OnMoveDirDownClick(wxSpinEvent& /*event*/)
     {
         // do not move downwards if the dir after is selected, too
         // notice here: as started with index+1 (due to GetCount)...
-        // ... substract 1 all the way to achieve the real index operated on
+        // ... subtract 1 all the way to achieve the real index operated on
         if (lst->IsSelected(i-1) && !lst->IsSelected(i))
         {
             wxString dir = lst->GetString(i-1);
