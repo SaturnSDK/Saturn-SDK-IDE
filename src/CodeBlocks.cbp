@@ -1650,6 +1650,12 @@
 		<Unit filename="plugins\compilergcc\compilerOWgenerator.h">
 			<Option target="Compiler" />
 		</Unit>
+		<Unit filename="plugins\compilergcc\compilerPGIFortran.cpp">
+			<Option target="Compiler" />
+		</Unit>
+		<Unit filename="plugins\compilergcc\compilerPGIFortran.h">
+			<Option target="Compiler" />
+		</Unit>
 		<Unit filename="plugins\compilergcc\compilerSDCC.cpp">
 			<Option target="Compiler" />
 		</Unit>
@@ -1917,6 +1923,9 @@
 			<Option target="Compiler" />
 		</Unit>
 		<Unit filename="plugins\compilergcc\resources\compilers\options_ow.xml">
+			<Option target="Compiler" />
+		</Unit>
+		<Unit filename="plugins\compilergcc\resources\compilers\options_pgfortran.xml">
 			<Option target="Compiler" />
 		</Unit>
 		<Unit filename="plugins\compilergcc\resources\compilers\options_ppc-gcc.xml">

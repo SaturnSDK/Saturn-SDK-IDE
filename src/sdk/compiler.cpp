@@ -163,6 +163,15 @@ void Compiler::Reset()
     SetVersionString(); // Does nothing unless reimplemented
 }
 
+void Compiler::ReloadOptions()
+{
+    if (ConfigManager::LocateDataFile(wxT("compilers/options_") + GetID() + wxT(".xml"), sdDataUser | sdDataGlobal).IsEmpty())
+        return; // Do not clear if the options cannot be reloaded
+    m_Options.ClearOptions();
+    LoadDefaultOptions(GetID());
+    LoadDefaultRegExArray();
+}
+
 void Compiler::LoadDefaultRegExArray(bool globalPrecedence)
 {
     m_RegExes.Clear();

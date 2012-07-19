@@ -160,6 +160,7 @@ Compiler* CompilerFactory::CreateCompilerCopy(Compiler* compiler, const wxString
         newC->m_ID = newName;
         newC->MakeValidID();
     }
+    newC->ReloadOptions();
     RegisterCompiler(newC);
     newC->LoadSettings(_T("/user_sets"));
     #if wxCHECK_VERSION(2, 9, 0)

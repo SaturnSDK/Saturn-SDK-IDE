@@ -1,4 +1,5 @@
 #include <sdk.h>
+#include <wx/textfile.h>
 
 #include "compilerXML.h"
 
@@ -36,6 +37,15 @@ AutoDetectResult CompilerXML::AutoDetectInstallationDir()
     wxXmlNode* node = compiler.GetRoot()->GetChildren();
     int depth = 0;
     SearchMode sm = none;
+    wxString path;
+    wxGetEnv(wxT("PATH"), &path);
+    wxString origPath = path;
+    if (!m_MasterPath.IsEmpty())
+    {
+        path += wxPATH_SEP + m_MasterPath;
+        wxSetEnv(wxT("PATH"), path);
+        m_MasterPath.Clear();
+    }
     while (node)
     {
         if (node->GetName() == wxT("if") && node->GetChildren())
@@ -109,6 +119,25 @@ AutoDetectResult CompilerXML::AutoDetectInstallationDir()
                     AddPath(value, sm);
                 else if (sm == master && ((targ.IsEmpty() && wxDirExists(value + wxFILE_SEP_PATH + wxT("bin"))) || wxFileExists(value + wxFILE_SEP_PATH + wxT("bin") + wxFILE_SEP_PATH + targ)))
                     AddPath(value + wxFILE_SEP_PATH + wxT("bin"), sm);
+            }
+            else if (node->GetAttribute(wxT("file"), &value))
+            {
+                wxString regexp = node->GetAttribute(wxT("regex"), wxEmptyString);
+                int idx = wxAtoi(node->GetAttribute(wxT("index"), wxT("0")));
+                wxRegEx re;
+                if (wxFileExists(value) && re.Compile(regexp))
+                {
+                    wxTextFile file(value);
+                    for (size_t i = 0; i < file.GetLineCount(); ++i)
+                    {
+                        if (re.Matches(file.GetLine(i)))
+                        {
+                            AddPath(re.GetMatch(file.GetLine(i), idx), sm);
+                            if (sm == master && !m_MasterPath.IsEmpty())
+                                break;
+                        }
+                    }
+                }
             }
 #ifdef __WXMSW__ // for wxRegKey
             else if (node->GetAttribute(wxT("registry"), &value))
@@ -184,6 +213,7 @@ AutoDetectResult CompilerXML::AutoDetectInstallationDir()
         }
         node = node->GetNext();
     }
+    wxSetEnv(wxT("PATH"), origPath);
 
     return wxFileExists(m_MasterPath + wxFILE_SEP_PATH + wxT("bin") + wxFILE_SEP_PATH + m_Programs.C) ? adrDetected : adrGuessed;
 }
@@ -194,11 +224,10 @@ bool CompilerXML::AddPath(const wxString& path, int sm)
     {
     case master:
         if (path.AfterLast(wxFILE_SEP_PATH) == wxT("bin"))
-        {
             m_MasterPath = path.BeforeLast(wxFILE_SEP_PATH);
-            return true;
-        }
-        break;
+        else
+            m_MasterPath = path;
+        return true;
     case extra:
         if (m_ExtraPaths.Index(path, !platform::windows) == wxNOT_FOUND)
             m_ExtraPaths.Add(path);

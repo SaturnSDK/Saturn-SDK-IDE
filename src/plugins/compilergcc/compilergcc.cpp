@@ -82,6 +82,7 @@
 #include "compilerGNUTRICORE.h"
 #include "compilerGNUFortran.h"
 #include "compilerG95.h"
+#include "compilerPGIFortran.h"
 #include "compilerXML.h"
 
 #include <scripting/bindings/sc_base_types.h>
@@ -393,6 +394,7 @@ void CompilerGCC::OnAttach()
     CompilerFactory::RegisterCompiler(new CompilerDMD);
     CompilerFactory::RegisterCompiler(new CompilerGNUFortran);
     CompilerFactory::RegisterCompiler(new CompilerG95);
+    CompilerFactory::RegisterCompiler(new CompilerPGIFortran);
 #if defined(__WIN32__) || defined(__linux__)
     CompilerFactory::RegisterCompiler(new CompilerGNUARM);
     CompilerFactory::RegisterCompiler(new CompilerGNUAVR);

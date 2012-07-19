@@ -317,10 +317,14 @@ class DLLIMPORT Compiler : public CompileOptionsBase
         /** @brief Load settings */
         virtual void LoadSettings(const wxString& baseKey);
         /** @brief Reset settings to defaults.
-          * Put initialization code here or leave blank for standard XML loading
+          * Put initialization code here or leave blank for standard XML loading.
           * Call this from the default constructor.
           */
         virtual void Reset();
+        /** @brief Reload option flags (for copied compilers).
+          * Override if not using standard XML loading.
+          */
+        virtual void ReloadOptions();
         /** @brief Try to auto-detect the compiler's installation directory */
         virtual AutoDetectResult AutoDetectInstallationDir() = 0;
 
