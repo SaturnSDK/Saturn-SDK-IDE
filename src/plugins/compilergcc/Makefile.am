@@ -46,6 +46,7 @@ libcompiler_la_SOURCES = advancedcompileroptionsdlg.cpp \
 			compilerGNUMSP430.cpp \
 			compilerGNUPOWERPC.cpp \
 			compilerGNUTRICORE.cpp \
+			compilerPGIFortran.cpp \
 			compilerTcc.cpp \
 			compilerXML.cpp \
 			directcommands.cpp
@@ -78,6 +79,7 @@ noinst_HEADERS = advancedcompileroptionsdlg.h \
 			compilerGNUMSP430.h \
 			compilerGNUPOWERPC.h \
 			compilerGNUTRICORE.h \
+			compilerPGIFortran.h \
 			compilerTcc.h \
 			compilerXML.h \
 			directcommands.h

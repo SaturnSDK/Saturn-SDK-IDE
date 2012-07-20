@@ -22,3 +22,6 @@ EXTRA_DIST = advanced_compiler_options.xrc \
 compiler.zip: $(EXTRA_DIST)
 	PWD=`pwd` cd $(srcdir) && zip $(PWD)/compiler.zip manifest.xml *.xrc images/*.png images/16x16/*.png > /dev/null
 
+compilers_xmldir = $(datadir)/@PACKAGE@/compilers
+
+dist_compilers_xml_DATA = $(srcdir)/compilers/*.xml
