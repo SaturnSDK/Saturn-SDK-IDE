@@ -1544,28 +1544,28 @@
 		<Unit filename="plugins/compilergcc/resources/compilers/compiler_clang.xml">
 			<Option target="Compiler" />
 		</Unit>
-		<Unit filename="plugins\compilergcc\resources\compilers\compiler_dmc.xml">
+		<Unit filename="plugins/compilergcc/resources/compilers/compiler_dmc.xml">
 			<Option target="Compiler" />
 		</Unit>
-		<Unit filename="plugins\compilergcc\resources\compilers\compiler_ldc.xml">
+		<Unit filename="plugins/compilergcc/resources/compilers/compiler_ldc.xml">
 			<Option target="Compiler" />
 		</Unit>
-		<Unit filename="plugins\compilergcc\resources\compilers\compiler_msp430-gcc.xml">
+		<Unit filename="plugins/compilergcc/resources/compilers/compiler_msp430-gcc.xml">
 			<Option target="Compiler" />
 		</Unit>
-		<Unit filename="plugins\compilergcc\resources\compilers\compiler_pgifortran.xml">
+		<Unit filename="plugins/compilergcc/resources/compilers/compiler_pgifortran.xml">
 			<Option target="Compiler" />
 		</Unit>
-		<Unit filename="plugins\compilergcc\resources\compilers\compiler_ppc-gcc.xml">
+		<Unit filename="plugins/compilergcc/resources/compilers/compiler_ppc-gcc.xml">
 			<Option target="Compiler" />
 		</Unit>
-		<Unit filename="plugins\compilergcc\resources\compilers\compiler_sdcc.xml">
+		<Unit filename="plugins/compilergcc/resources/compilers/compiler_sdcc.xml">
 			<Option target="Compiler" />
 		</Unit>
-		<Unit filename="plugins\compilergcc\resources\compilers\compiler_tcc.xml">
+		<Unit filename="plugins/compilergcc/resources/compilers/compiler_tcc.xml">
 			<Option target="Compiler" />
 		</Unit>
-		<Unit filename="plugins\compilergcc\resources\compilers\compiler_tricore-gcc.xml">
+		<Unit filename="plugins/compilergcc/resources/compilers/compiler_tricore-gcc.xml">
 			<Option target="Compiler" />
 		</Unit>
 		<Unit filename="plugins/compilergcc/resources/compilers/options_arm-elf-gcc.xml">
