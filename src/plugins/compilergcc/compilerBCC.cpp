@@ -19,6 +19,7 @@
 CompilerBCC::CompilerBCC()
     : Compiler(_("Borland C++ Compiler (5.5, 5.82)"), _T("bcc"))
 {
+    m_Weight = 20;
     Reset();
 }
 
@@ -29,9 +30,7 @@ CompilerBCC::~CompilerBCC()
 
 Compiler * CompilerBCC::CreateCopy()
 {
-    Compiler* c = new CompilerBCC(*this);
-    c->SetExtraPaths(m_ExtraPaths); // wxArrayString doesn't seem to be copied with the default copy ctor...
-    return c;
+    return (new CompilerBCC(*this));
 }
 
 AutoDetectResult CompilerBCC::AutoDetectInstallationDir()

@@ -82,7 +82,7 @@ wxString Compiler::CommandTypeDescriptions[ctCount] =
     _("Link object files to native executable")
 };
 
-Compiler::Compiler(const wxString& name, const wxString& ID, const wxString& parentID) :
+Compiler::Compiler(const wxString& name, const wxString& ID, const wxString& parentID, int weight) :
     m_Name(name),
     m_ID(ID.Lower()),
     m_ParentID(parentID.Lower()),
@@ -97,6 +97,7 @@ Compiler::Compiler(const wxString& name, const wxString& ID, const wxString& par
     m_Switches.supportsPCH = false;
     m_Switches.forceFwdSlashes = false;
     m_VersionString = wxEmptyString;
+    m_Weight = weight;
 
 #if wxCHECK_VERSION(2, 9, 0)
     Manager::Get()->GetLogManager()->DebugLog(F(_T("Added compiler \"%s\""), m_Name.wx_str()));
@@ -121,6 +122,7 @@ Compiler::Compiler(const Compiler& other) :
     MakeValidID();
 
     m_MasterPath      = other.m_MasterPath;
+    m_ExtraPaths      = other.m_ExtraPaths;
     m_Programs        = other.m_Programs;
     m_Switches        = other.m_Switches;
     m_Options         = other.m_Options;
@@ -134,6 +136,7 @@ Compiler::Compiler(const Compiler& other) :
     m_CmdsAfter       = other.m_CmdsAfter;
     m_RegExes         = other.m_RegExes;
     m_VersionString   = other.m_VersionString;
+    m_Weight          = other.m_Weight;
 
     for (int i = 0; i < ctCount; ++i)
         m_Commands[(CommandType)i] = other.m_Commands[(CommandType)i];

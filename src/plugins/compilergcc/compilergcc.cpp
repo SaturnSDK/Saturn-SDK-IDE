@@ -64,25 +64,17 @@
     #include "compilerMSVC8.h"
     #include "compilerMSVC10.h"
     #include "compilerBCC.h"
-    #include "compilerDMC.h"
     #include "compilerOW.h"
     #include "compilerGNUARM.h"
     #include "compilerGNUAVR.h"
-    #include "compilerGNUMSP430.h"
     #include "compilerCYGWIN.h"
     #include "compilerLCC.h"
 #endif
 #include "compilerICC.h"
-#include "compilerSDCC.h"
-#include "compilerTcc.h"
 #include "compilerGDC.h"
-#include "compilerLDC.h"
 #include "compilerDMD.h"
-#include "compilerGNUPOWERPC.h"
-#include "compilerGNUTRICORE.h"
 #include "compilerGNUFortran.h"
 #include "compilerG95.h"
-#include "compilerPGIFortran.h"
 #include "compilerXML.h"
 
 #include <scripting/bindings/sc_base_types.h>
@@ -380,26 +372,18 @@ void CompilerGCC::OnAttach()
     CompilerFactory::RegisterCompiler(new CompilerMSVC8);
     CompilerFactory::RegisterCompiler(new CompilerMSVC10);
     CompilerFactory::RegisterCompiler(new CompilerBCC);
-    CompilerFactory::RegisterCompiler(new CompilerDMC);
     CompilerFactory::RegisterCompiler(new CompilerOW);
-    CompilerFactory::RegisterCompiler(new CompilerGNUMSP430);
     CompilerFactory::RegisterCompiler(new CompilerCYGWIN);
     CompilerFactory::RegisterCompiler(new CompilerLCC);
 #endif
     CompilerFactory::RegisterCompiler(new CompilerICC);
-    CompilerFactory::RegisterCompiler(new CompilerSDCC);
-    CompilerFactory::RegisterCompiler(new CompilerTcc);
     CompilerFactory::RegisterCompiler(new CompilerGDC);
-    CompilerFactory::RegisterCompiler(new CompilerLDC);
     CompilerFactory::RegisterCompiler(new CompilerDMD);
     CompilerFactory::RegisterCompiler(new CompilerGNUFortran);
     CompilerFactory::RegisterCompiler(new CompilerG95);
-    CompilerFactory::RegisterCompiler(new CompilerPGIFortran);
 #if defined(__WIN32__) || defined(__linux__)
     CompilerFactory::RegisterCompiler(new CompilerGNUARM);
     CompilerFactory::RegisterCompiler(new CompilerGNUAVR);
-    CompilerFactory::RegisterCompiler(new CompilerGNUPOWERPC);
-    CompilerFactory::RegisterCompiler(new CompilerGNUTRICORE);
 #endif
 
     // register pure XML compilers
@@ -443,9 +427,36 @@ void CompilerGCC::OnAttach()
         if (!compiler.Load(compilers[i]) || compiler.GetRoot()->GetName() != wxT("CodeBlocks_compiler"))
             Manager::Get()->GetLogManager()->Log(_("Error: Invalid Code::Blocks compiler definition '") + compilers[i] + wxT("'."));
         else
-            CompilerFactory::RegisterCompiler(new CompilerXML(compiler.GetRoot()->GetAttribute(wxT("name"), wxEmptyString),
-                                                              compiler.GetRoot()->GetAttribute(wxT("id"), wxEmptyString),
-                                                              compilers[i]));
+        {
+            bool val = true;
+            wxString test;
+            if (compiler.GetRoot()->GetAttribute(wxT("platform"), &test))
+            {
+                if (test == wxT("windows"))
+                    val = platform::windows;
+                else if (test == wxT("macosx"))
+                    val = platform::macosx;
+                else if (test == wxT("linux"))
+                    val = platform::linux;
+                else if (test == wxT("freebsd"))
+                    val = platform::freebsd;
+                else if (test == wxT("netbsd"))
+                    val = platform::netbsd;
+                else if (test == wxT("openbsd"))
+                    val = platform::openbsd;
+                else if (test == wxT("darwin"))
+                    val = platform::darwin;
+                else if (test == wxT("solaris"))
+                    val = platform::solaris;
+                else if (test == wxT("unix"))
+                    val = platform::unix;
+            }
+            if (val)
+                CompilerFactory::RegisterCompiler(
+                                   new CompilerXML(compiler.GetRoot()->GetAttribute(wxT("name"), wxEmptyString),
+                                                   compiler.GetRoot()->GetAttribute(wxT("id"), wxEmptyString),
+                                                   compilers[i]));
+        }
     }
 
     // register (if any) user-copies of built-in compilers

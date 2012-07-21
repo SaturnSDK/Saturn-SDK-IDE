@@ -17,6 +17,7 @@
 CompilerDMD::CompilerDMD()
     : Compiler(_("Digital Mars D Compiler"), _T("dmd"))
 {
+    m_Weight = 84;
     Reset();
 }
 
@@ -27,9 +28,7 @@ CompilerDMD::~CompilerDMD()
 
 Compiler * CompilerDMD::CreateCopy()
 {
-    Compiler* c = new CompilerDMD(*this);
-    c->SetExtraPaths(m_ExtraPaths); // wxArrayString doesn't seem to be copied with the default copy ctor...
-    return c;
+    return (new CompilerDMD(*this));
 }
 
 void CompilerDMD::Reset()

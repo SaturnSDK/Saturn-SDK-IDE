@@ -27,6 +27,7 @@
 CompilerGDC::CompilerGDC()
     : Compiler(_("GDC D Compiler"), _T("gdc"))
 {
+    m_Weight = 76;
     Reset();
 }
 
@@ -37,9 +38,7 @@ CompilerGDC::~CompilerGDC()
 
 Compiler * CompilerGDC::CreateCopy()
 {
-    Compiler* c = new CompilerGDC(*this);
-    c->SetExtraPaths(m_ExtraPaths); // wxArrayString doesn't seem to be copied with the default copy ctor...
-    return c;
+    return (new CompilerGDC(*this));
 }
 
 AutoDetectResult CompilerGDC::AutoDetectInstallationDir()

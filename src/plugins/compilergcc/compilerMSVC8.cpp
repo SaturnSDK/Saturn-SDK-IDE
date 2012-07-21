@@ -21,6 +21,7 @@
 CompilerMSVC8::CompilerMSVC8()
     : Compiler(_("Microsoft Visual C++ 2005/2008"), _T("msvc8"))
 {
+    m_Weight = 12;
     Reset();
 }
 
@@ -31,9 +32,7 @@ CompilerMSVC8::~CompilerMSVC8()
 
 Compiler * CompilerMSVC8::CreateCopy()
 {
-    Compiler* c = new CompilerMSVC8(*this);
-    c->SetExtraPaths(m_ExtraPaths); // wxArrayString doesn't seem to be copied with the default copy ctor...
-    return c;
+    return (new CompilerMSVC8(*this));
 }
 
 AutoDetectResult CompilerMSVC8::AutoDetectInstallationDir()

@@ -223,7 +223,7 @@ class DLLIMPORT Compiler : public CompileOptionsBase
 {
     public:
         static const wxString FilePathWithSpaces;
-        Compiler(const wxString& name, const wxString& ID, const wxString& parentID = wxEmptyString);
+        Compiler(const wxString& name, const wxString& ID, const wxString& parentID = wxEmptyString, int weight = 50);
         virtual ~Compiler();
 
         /** @brief Check if the compiler is actually valid (installed). */
@@ -385,6 +385,8 @@ class DLLIMPORT Compiler : public CompileOptionsBase
         wxString            m_ErrorLine;
         wxString            m_Error;
         wxString            m_VersionString;
+
+        int m_Weight; // lower means listed sooner (try to keep between 0 and 100)
     private:
         wxString m_ID;
         wxString m_ParentID; // -1 for builtin compilers, the builtin compiler's ID to derive from for user compilers...

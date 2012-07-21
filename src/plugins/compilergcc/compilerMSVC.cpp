@@ -21,6 +21,7 @@
 CompilerMSVC::CompilerMSVC()
     : Compiler(_("Microsoft Visual C++ Toolkit 2003"), _T("msvctk"))
 {
+    m_Weight = 8;
     Reset();
 }
 
@@ -31,9 +32,7 @@ CompilerMSVC::~CompilerMSVC()
 
 Compiler * CompilerMSVC::CreateCopy()
 {
-    Compiler* c = new CompilerMSVC(*this);
-    c->SetExtraPaths(m_ExtraPaths); // wxArrayString doesn't seem to be copied with the default copy ctor...
-    return c;
+    return (new CompilerMSVC(*this));
 }
 
 AutoDetectResult CompilerMSVC::AutoDetectInstallationDir()

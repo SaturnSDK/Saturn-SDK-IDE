@@ -115,7 +115,13 @@ bool CompilerFactory::CompilerInheritsFrom(Compiler* compiler, const wxString& f
 
 void CompilerFactory::RegisterCompiler(Compiler* compiler)
 {
-    CompilerFactory::Compilers.Add(compiler);
+    size_t idx = CompilerFactory::Compilers.GetCount();
+    for (; idx > 0; --idx)
+    {
+        if (compiler->m_Weight >= Compilers[idx - 1]->m_Weight)
+            break;
+    }
+    CompilerFactory::Compilers.Insert(compiler, idx);
     // if it's the first one, set it as default
     if (!s_DefaultCompiler)
         s_DefaultCompiler = compiler;

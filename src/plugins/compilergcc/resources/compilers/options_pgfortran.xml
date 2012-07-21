@@ -1,12 +1,22 @@
 ﻿<?xml version="1.0"?>
 <!DOCTYPE CodeBlocks_compiler_options>
 <CodeBlocks_compiler_options>
-    <Program name="C"       value="pgfortran"/>
-    <Program name="CPP"     value="pgfortran"/>
-    <Program name="LD"      value="pgfortran"/>
-    <Program name="LIB"     value="ar"/>
-    <Program name="WINDRES" value=""/>
-    <Program name="MAKE"    value="make"/>
+    <if platform="windows">
+        <Program name="C"       value="pgfortran.exe"/>
+        <Program name="CPP"     value="pgfortran.exe"/>
+        <Program name="LD"      value="pgfortran.exe"/>
+        <Program name="LIB"     value="ar.exe"/>
+        <Program name="WINDRES" value=""/>
+        <Program name="MAKE"    value="make.exe"/>
+    </if>
+    <else>
+        <Program name="C"       value="pgfortran"/>
+        <Program name="CPP"     value="pgfortran"/>
+        <Program name="LD"      value="pgfortran"/>
+        <Program name="LIB"     value="ar"/>
+        <Program name="WINDRES" value=""/>
+        <Program name="MAKE"    value="make"/>
+    </else>
 
     <Switch name="includeDirs"             value="-I"/>
     <Switch name="libDirs"                 value="-L"/>
@@ -26,9 +36,11 @@
 
     <Category name="Debug and diagnostics related">
         <Option name="Include debugging information in the object module"
-                option="-g"/>
+                option="-g"
+                supersedes="-gopt"/>
         <Option name="Same as -g, but forces assembly code generation identical to that obtained when -gopt is not present"
-                option="-gopt"/>
+                option="-gopt"
+                supersedes="-g"/>
         <Option name="Instruct the compiler to display all error messages"
                 option="-Minform=inform"
                 supersedes="-Minform=fatal -Minform=severe -Minform=warn"/>

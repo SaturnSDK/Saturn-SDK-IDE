@@ -24,6 +24,7 @@
     #include "manager.h"
     #include "macrosmanager.h"
 #endif
+#include <wx/tooltip.h>
 
 BEGIN_EVENT_TABLE(AutoDetectCompilers, wxScrollingDialog)
     EVT_UPDATE_UI(-1, AutoDetectCompilers::OnUpdateUI)
@@ -38,6 +39,8 @@ AutoDetectCompilers::AutoDetectCompilers(wxWindow* parent)
     wxListCtrl* list = XRCCTRL(*this, "lcCompilers", wxListCtrl);
     if (list)
     {
+        list->Connect(wxEVT_MOTION, wxMouseEventHandler(AutoDetectCompilers::OnMouseMotion));
+        list->SetToolTip(wxEmptyString);
         list->ClearAll();
         list->InsertColumn(0, _("Compiler"), wxLIST_FORMAT_LEFT, 380);
         list->InsertColumn(1, _("Status"),   wxLIST_FORMAT_LEFT, 100);
@@ -138,6 +141,29 @@ void AutoDetectCompilers::OnDefaultClick(wxCommandEvent& /*event*/)
         CompilerFactory::SetDefaultCompiler(idx);
         XRCCTRL(*this, "lblDefCompiler", wxStaticText)->SetLabel(CompilerFactory::GetDefaultCompiler()->GetName());
     }
+}
+
+void AutoDetectCompilers::OnMouseMotion(wxMouseEvent& event)
+{
+    wxListCtrl* list = XRCCTRL(*this, "lcCompilers", wxListCtrl);
+    int flags = 0;
+    int idx = list->HitTest(event.GetPosition(), flags);
+    wxString txt = wxEmptyString;
+    if (idx != wxNOT_FOUND)
+    {
+        wxListItem itm;
+        itm.m_itemId = idx;
+        itm.m_col = 1;
+        itm.m_mask = wxLIST_MASK_TEXT;
+        if (list->GetItem(itm))
+            txt = itm.m_text;
+    }
+    if (txt == wxT("Detected") || txt == wxT("User-defined"))
+        txt = CompilerFactory::GetCompiler(idx)->GetMasterPath();
+    else
+        txt = wxEmptyString;
+    if (txt != list->GetToolTip()->GetTip())
+        list->SetToolTip(txt);
 }
 
 void AutoDetectCompilers::OnUpdateUI(wxUpdateUIEvent& event)

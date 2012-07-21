@@ -15,7 +15,7 @@ class CompilerXML : public Compiler
         virtual Compiler* CreateCopy();
 
     private:
-        bool AddPath(const wxString& path, int sm);
+        bool AddPath(const wxString& pth, int sm, int rmDirs = 0);
 
         wxString m_fileName;
 };

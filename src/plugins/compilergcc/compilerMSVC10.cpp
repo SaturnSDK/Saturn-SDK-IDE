@@ -21,6 +21,7 @@
 CompilerMSVC10::CompilerMSVC10()
     : Compiler(_("Microsoft Visual C++ 2010"), _T("msvc10"))
 {
+    m_Weight = 16;
     Reset();
 }
 
@@ -31,9 +32,7 @@ CompilerMSVC10::~CompilerMSVC10()
 
 Compiler * CompilerMSVC10::CreateCopy()
 {
-    Compiler* c = new CompilerMSVC10(*this);
-    c->SetExtraPaths(m_ExtraPaths); // wxArrayString doesn't seem to be copied with the default copy ctor...
-    return c;
+    return (new CompilerMSVC10(*this));
 }
 
 AutoDetectResult CompilerMSVC10::AutoDetectInstallationDir()

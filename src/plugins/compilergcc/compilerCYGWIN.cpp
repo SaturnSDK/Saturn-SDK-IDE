@@ -17,6 +17,7 @@
 CompilerCYGWIN::CompilerCYGWIN()
     : CompilerMINGW(_("Cygwin GCC"), _T("cygwin"))
 {
+    m_Weight = 32;
     Reset();
 }
 
@@ -26,9 +27,7 @@ CompilerCYGWIN::~CompilerCYGWIN()
 
 Compiler * CompilerCYGWIN::CreateCopy()
 {
-    Compiler* c = new CompilerCYGWIN(*this);
-    c->SetExtraPaths(m_ExtraPaths); // wxArrayString doesn't seem to be copied with the default copy ctor...
-    return c;
+    return (new CompilerCYGWIN(*this));
 }
 
 AutoDetectResult CompilerCYGWIN::AutoDetectInstallationDir()

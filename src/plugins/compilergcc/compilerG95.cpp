@@ -24,6 +24,7 @@
 CompilerG95::CompilerG95()
     : Compiler(_("G95 Fortran Compiler"), _T("g95"))
 {
+    m_Weight = 92;
     Reset();
 }
 
@@ -34,9 +35,7 @@ CompilerG95::~CompilerG95()
 
 Compiler * CompilerG95::CreateCopy()
 {
-    Compiler* c = new CompilerG95(*this);
-    c->SetExtraPaths(m_ExtraPaths); // wxArrayString doesn't seem to be copied with the default copy ctor...
-    return c;
+    return (new CompilerG95(*this));
 }
 
 AutoDetectResult CompilerG95::AutoDetectInstallationDir()

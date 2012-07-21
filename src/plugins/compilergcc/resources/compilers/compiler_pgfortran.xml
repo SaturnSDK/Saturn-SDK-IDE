@@ -1,16 +1,16 @@
 ﻿<?xml version="1.0"?>
 <!DOCTYPE CodeBlocks_compiler>
-<CodeBlocks_compiler name="LLVM Clang Compiler"
-                     id="clang"
-                     weight="52">
+<CodeBlocks_compiler name="PGI Fortran Compiler"
+                     id="pgfortran"
+                     weight="96">
     <Path type="master">
         <Search envVar="PATH"
                 for="C"/>
         <if platform="windows">
-            <Fallback path="C:\MinGW"/>
+            <Fallback path="%ProgramFiles%\PGI\win32"/>
         </if>
         <else>
-            <Fallback path="/usr"/>
+            <Fallback path="/opt/pgi/linux86"/>
         </else>
     </Path>
 </CodeBlocks_compiler>

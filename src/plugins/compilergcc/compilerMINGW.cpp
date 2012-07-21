@@ -31,6 +31,7 @@
 CompilerMINGW::CompilerMINGW(const wxString& name, const wxString& ID)
     : Compiler(name, ID)
 {
+    m_Weight = 4;
     Reset();
 }
 
@@ -41,9 +42,7 @@ CompilerMINGW::~CompilerMINGW()
 
 Compiler * CompilerMINGW::CreateCopy()
 {
-    Compiler* c = new CompilerMINGW(*this);
-    c->SetExtraPaths(m_ExtraPaths); // wxArrayString doesn't seem to be copied with the default copy ctor...
-    return c;
+    return (new CompilerMINGW(*this));
 }
 
 CompilerCommandGenerator* CompilerMINGW::GetCommandGenerator()

@@ -26,6 +26,7 @@
 CompilerICC::CompilerICC()
     : Compiler(_("Intel C/C++ Compiler"), _T("icc"))
 {
+    m_Weight = 40;
     Reset();
 }
 
@@ -36,9 +37,7 @@ CompilerICC::~CompilerICC()
 
 Compiler * CompilerICC::CreateCopy()
 {
-    Compiler* c = new CompilerICC(*this);
-    c->SetExtraPaths(m_ExtraPaths); // wxArrayString doesn't seem to be copied with the default copy ctor...
-    return c;
+    return (new CompilerICC(*this));
 }
 
 AutoDetectResult CompilerICC::AutoDetectInstallationDir()

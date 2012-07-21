@@ -26,6 +26,7 @@ CompilerLCC::CompilerLCC() :
     Compiler(_("LCC Compiler"), _T("lcc")),
     m_RegistryUpdated(false)
 {
+    m_Weight = 36;
     Reset();
 }
 
@@ -36,9 +37,7 @@ CompilerLCC::~CompilerLCC()
 
 Compiler* CompilerLCC::CreateCopy()
 {
-    Compiler* c = new CompilerLCC(*this);
-    c->SetExtraPaths(m_ExtraPaths); // wxArrayString doesn't seem to be copied with the default copy ctor...
-    return c;
+    return (new CompilerLCC(*this));
 }
 
 void CompilerLCC::Reset()

@@ -18,6 +18,7 @@
 CompilerGNUAVR::CompilerGNUAVR()
     : Compiler(_("GNU GCC Compiler for AVR"),_T("avr-gcc"))
 {
+    m_Weight = 60;
     Reset();
 }
 
@@ -28,10 +29,8 @@ CompilerGNUAVR::~CompilerGNUAVR()
 
 Compiler * CompilerGNUAVR::CreateCopy()
 {
-    Compiler* c = new CompilerGNUAVR(*this);
-    c->SetExtraPaths(m_ExtraPaths); // wxArrayString doesn't seem to be copied with the default copy ctor...
-    return c;
-} // end of CreateCopy
+    return (new CompilerGNUAVR(*this));
+}
 
 AutoDetectResult CompilerGNUAVR::AutoDetectInstallationDir()
 {

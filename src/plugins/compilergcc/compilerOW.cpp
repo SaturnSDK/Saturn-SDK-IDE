@@ -28,6 +28,7 @@
 CompilerOW::CompilerOW()
     : Compiler(wxT("OpenWatcom (W32) Compiler"), _T("ow"))
 {
+    m_Weight = 28;
     Reset();
 }
 
@@ -38,9 +39,7 @@ CompilerOW::~CompilerOW()
 
 Compiler * CompilerOW::CreateCopy()
 {
-    Compiler* c = new CompilerOW(*this);
-    c->SetExtraPaths(m_ExtraPaths); // wxArrayString doesn't seem to be copied with the default copy ctor...
-    return c;
+    return (new CompilerOW(*this));
 }
 
 CompilerCommandGenerator* CompilerOW::GetCommandGenerator()

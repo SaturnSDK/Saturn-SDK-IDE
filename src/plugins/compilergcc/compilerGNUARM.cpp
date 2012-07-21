@@ -21,6 +21,7 @@
 CompilerGNUARM::CompilerGNUARM()
     : Compiler(_("GNU GCC Compiler for ARM"),_T("arm-elf-gcc"))
 {
+    m_Weight = 56;
     Reset();
 }
 
@@ -31,9 +32,7 @@ CompilerGNUARM::~CompilerGNUARM()
 
 Compiler * CompilerGNUARM::CreateCopy()
 {
-    Compiler* c = new CompilerGNUARM(*this);
-    c->SetExtraPaths(m_ExtraPaths); // wxArrayString doesn't seem to be copied with the default copy ctor...
-    return c;
+    return (new CompilerGNUARM(*this));
 }
 
 AutoDetectResult CompilerGNUARM::AutoDetectInstallationDir()

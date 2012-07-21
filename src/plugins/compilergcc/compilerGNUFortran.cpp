@@ -24,6 +24,7 @@
 CompilerGNUFortran::CompilerGNUFortran()
     : Compiler(_("GNU Fortran Compiler"), _T("gfortran"))
 {
+    m_Weight = 88;
     Reset();
 }
 
@@ -34,9 +35,7 @@ CompilerGNUFortran::~CompilerGNUFortran()
 
 Compiler * CompilerGNUFortran::CreateCopy()
 {
-    Compiler* c = new CompilerGNUFortran(*this);
-    c->SetExtraPaths(m_ExtraPaths); // wxArrayString doesn't seem to be copied with the default copy ctor...
-    return c;
+    return (new CompilerGNUFortran(*this));
 }
 
 AutoDetectResult CompilerGNUFortran::AutoDetectInstallationDir()

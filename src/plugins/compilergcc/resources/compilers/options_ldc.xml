@@ -1,13 +1,24 @@
 ﻿<?xml version="1.0"?>
 <!DOCTYPE CodeBlocks_compiler_options>
 <CodeBlocks_compiler_options>
-    <Program name="C"         value="ldc"/>
-    <Program name="CPP"       value="ldc"/>
-    <Program name="LD"        value="ldc"/>
-    <Program name="DBGconfig" value="gdb_debugger:Default"/>
-    <Program name="LIB"       value="ar"/>
-    <Program name="WINDRES"   value=""/>
-    <Program name="MAKE"      value="make"/>
+    <if platform="windows">
+        <Program name="C"         value="ldc.exe"/>
+        <Program name="CPP"       value="ldc.exe"/>
+        <Program name="LD"        value="ldc.exe"/>
+        <Program name="DBGconfig" value="gdb_debugger:Default"/>
+        <Program name="LIB"       value="ar.exe"/>
+        <Program name="WINDRES"   value=""/>
+        <Program name="MAKE"      value="make.exe"/>
+    </if>
+    <else>
+        <Program name="C"         value="ldc"/>
+        <Program name="CPP"       value="ldc"/>
+        <Program name="LD"        value="ldc"/>
+        <Program name="DBGconfig" value="gdb_debugger:Default"/>
+        <Program name="LIB"       value="ar"/>
+        <Program name="WINDRES"   value=""/>
+        <Program name="MAKE"      value="make"/>
+    </else>
 
     <Switch name="includeDirs"             value="-I"/>
     <Switch name="libDirs"                 value="-L-L"/>

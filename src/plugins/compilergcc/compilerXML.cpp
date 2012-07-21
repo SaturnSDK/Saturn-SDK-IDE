@@ -1,5 +1,8 @@
 #include <sdk.h>
 #include <wx/textfile.h>
+#ifdef __WXMSW__ // for wxRegKey
+    #include <wx/msw/registry.h>
+#endif // __WXMSW__
 
 #include "compilerXML.h"
 
@@ -16,6 +19,9 @@ enum SearchMode
 CompilerXML::CompilerXML(const wxString& name, const wxString& ID, const wxString& file)
     : Compiler(name, ID), m_fileName(file)
 {
+    wxXmlDocument compiler;
+    compiler.Load(m_fileName);
+    m_Weight = wxAtoi(compiler.GetRoot()->GetAttribute(wxT("weight"), wxT("100")));
     Reset();
 }
 
@@ -25,9 +31,7 @@ CompilerXML::~CompilerXML()
 
 Compiler* CompilerXML::CreateCopy()
 {
-    Compiler* c = new CompilerXML(*this);
-    c->SetExtraPaths(m_ExtraPaths); // wxArrayString doesn't seem to be copied with the default copy ctor...
-    return c;
+    return (new CompilerXML(*this));
 }
 
 AutoDetectResult CompilerXML::AutoDetectInstallationDir()
@@ -101,12 +105,12 @@ AutoDetectResult CompilerXML::AutoDetectInstallationDir()
                     {
                         if ((targ.IsEmpty() && wxDirExists(pathArray[i])) || wxFileExists(pathArray[i] + wxFILE_SEP_PATH + targ))
                         {
-                            if(AddPath(pathArray[i], sm))
+                            if(AddPath(pathArray[i], sm, wxAtoi(compiler.GetRoot()->GetAttribute(wxT("rmDirs"), wxT("0")))))
                                 break;
                         }
                         else if (sm == master && ((targ.IsEmpty() && wxDirExists(value + wxFILE_SEP_PATH + wxT("bin"))) || wxFileExists(pathArray[i] + wxFILE_SEP_PATH + wxT("bin") + wxFILE_SEP_PATH + targ)))
                         {
-                            if(AddPath(pathArray[i] + wxFILE_SEP_PATH + wxT("bin"), sm))
+                            if(AddPath(pathArray[i] + wxFILE_SEP_PATH + wxT("bin"), sm, wxAtoi(compiler.GetRoot()->GetAttribute(wxT("rmDirs"), wxT("0")))))
                                 break;
                         }
                     }
@@ -142,7 +146,16 @@ AutoDetectResult CompilerXML::AutoDetectInstallationDir()
 #ifdef __WXMSW__ // for wxRegKey
             else if (node->GetAttribute(wxT("registry"), &value))
             {
-                // to be written
+                wxRegKey key;
+                wxString dir;
+                key.SetName(value);
+                if (key.Exists() && key.Open(wxRegKey::Read))
+                {
+                    key.QueryValue(node->GetAttribute(wxT("value"), wxEmptyString), dir);
+                    if (!dir.IsEmpty() && wxDirExists(dir))
+                        AddPath(dir, sm);
+                    key.Close();
+                }
             }
 #endif // __WXMSW__
         }
@@ -163,10 +176,16 @@ AutoDetectResult CompilerXML::AutoDetectInstallationDir()
                 {
                     if (child->GetType() == wxXML_TEXT_NODE || child->GetType() == wxXML_CDATA_SECTION_NODE)
                         path << child->GetContent();
-                    else if (node->GetName() == wxT("master"))
+                    else if (child->GetName() == wxT("master"))
                         path << m_MasterPath;
-                    else if (node->GetName() == wxT("separator"))
+                    else if (child->GetName() == wxT("separator"))
                         path << wxFILE_SEP_PATH;
+                    else if (child->GetName() == wxT("envVar"))
+                    {
+                        value = child->GetAttribute(wxT("default"), wxEmptyString);
+                        wxGetEnv(child->GetAttribute(wxT("value"), wxEmptyString), &value);
+                        path << value;
+                    }
                     child = child->GetNext();
                 }
                 AddPath(path.Trim().Trim(false), sm);
@@ -179,7 +198,7 @@ AutoDetectResult CompilerXML::AutoDetectInstallationDir()
             {
             case master:
                 if (m_MasterPath.IsEmpty())
-                    m_MasterPath = value;
+                    AddPath(value, sm);
                 break;
             case extra:
                 if (m_ExtraPaths.IsEmpty())
@@ -215,11 +234,26 @@ AutoDetectResult CompilerXML::AutoDetectInstallationDir()
     }
     wxSetEnv(wxT("PATH"), origPath);
 
-    return wxFileExists(m_MasterPath + wxFILE_SEP_PATH + wxT("bin") + wxFILE_SEP_PATH + m_Programs.C) ? adrDetected : adrGuessed;
+    if (wxFileExists(m_MasterPath + wxFILE_SEP_PATH + wxT("bin") + wxFILE_SEP_PATH + m_Programs.C) ||
+        wxFileExists(m_MasterPath + wxFILE_SEP_PATH + m_Programs.C))
+    {
+        return adrDetected;
+    }
+    for (size_t i = 0; i < m_ExtraPaths.GetCount(); ++i)
+    {
+        if (wxFileExists(m_ExtraPaths[i] + wxFILE_SEP_PATH + m_Programs.C))
+            return adrDetected;
+    }
+    return adrGuessed;
 }
 
-bool CompilerXML::AddPath(const wxString& path, int sm)
+bool CompilerXML::AddPath(const wxString& pth, int sm, int rmDirs)
 {
+    wxFileName fn(pth + wxFILE_SEP_PATH);
+    fn.Normalize(wxPATH_NORM_ENV_VARS|wxPATH_NORM_DOTS);
+    for (int i = rmDirs; i > 0; --i)
+        fn.RemoveLastDir();
+    wxString path = fn.GetPath();
     switch (sm)
     {
     case master:
