@@ -1,20 +1,15 @@
 #include <sdk.h>
+
+#include <wx/arrstr.h>
+#include <wx/filefn.h>
+#include <wx/regex.h>
 #include <wx/textfile.h>
+#include <wx/xml/xml.h>
 #ifdef __WXMSW__ // for wxRegKey
     #include <wx/msw/registry.h>
 #endif // __WXMSW__
 
 #include "compilerXML.h"
-
-enum SearchMode
-{
-    master,
-    extra,
-    include,
-    resource,
-    lib,
-    none
-};
 
 CompilerXML::CompilerXML(const wxString& name, const wxString& ID, const wxString& file)
     : Compiler(name, ID), m_fileName(file)
@@ -105,12 +100,13 @@ AutoDetectResult CompilerXML::AutoDetectInstallationDir()
                     {
                         if ((targ.IsEmpty() && wxDirExists(pathArray[i])) || wxFileExists(pathArray[i] + wxFILE_SEP_PATH + targ))
                         {
-                            if(AddPath(pathArray[i], sm, wxAtoi(compiler.GetRoot()->GetAttribute(wxT("rmDirs"), wxT("0")))))
+                            if (AddPath(pathArray[i], sm, wxAtoi(compiler.GetRoot()->GetAttribute(wxT("rmDirs"), wxT("0")))))
                                 break;
                         }
-                        else if (sm == master && ((targ.IsEmpty() && wxDirExists(value + wxFILE_SEP_PATH + wxT("bin"))) || wxFileExists(pathArray[i] + wxFILE_SEP_PATH + wxT("bin") + wxFILE_SEP_PATH + targ)))
+                        else if (sm == master && (   (targ.IsEmpty() && wxDirExists(value + wxFILE_SEP_PATH + wxT("bin")))
+                                                  || wxFileExists(pathArray[i] + wxFILE_SEP_PATH + wxT("bin") + wxFILE_SEP_PATH + targ)) )
                         {
-                            if(AddPath(pathArray[i] + wxFILE_SEP_PATH + wxT("bin"), sm, wxAtoi(compiler.GetRoot()->GetAttribute(wxT("rmDirs"), wxT("0")))))
+                            if (AddPath(pathArray[i] + wxFILE_SEP_PATH + wxT("bin"), sm))
                                 break;
                         }
                     }

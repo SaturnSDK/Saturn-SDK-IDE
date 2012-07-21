@@ -1796,7 +1796,7 @@
 		<Unit filename="plugins\compilergcc\resources\compilers\compiler_msp430-gcc.xml">
 			<Option target="Compiler" />
 		</Unit>
-		<Unit filename="plugins\compilergcc\resources\compilers\compiler_pgfortran.xml">
+		<Unit filename="plugins\compilergcc\resources\compilers\compiler_pgifortran.xml">
 			<Option target="Compiler" />
 		</Unit>
 		<Unit filename="plugins\compilergcc\resources\compilers\compiler_ppc-gcc.xml">
@@ -1901,7 +1901,7 @@
 		<Unit filename="plugins\compilergcc\resources\compilers\options_ow.xml">
 			<Option target="Compiler" />
 		</Unit>
-		<Unit filename="plugins\compilergcc\resources\compilers\options_pgfortran.xml">
+		<Unit filename="plugins\compilergcc\resources\compilers\options_pgifortran.xml">
 			<Option target="Compiler" />
 		</Unit>
 		<Unit filename="plugins\compilergcc\resources\compilers\options_ppc-gcc.xml">

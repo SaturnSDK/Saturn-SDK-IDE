@@ -3,6 +3,8 @@
 
 #include <compiler.h>
 
+#include <wx/string.h>
+
 class CompilerXML : public Compiler
 {
     public:
@@ -15,6 +17,17 @@ class CompilerXML : public Compiler
         virtual Compiler* CreateCopy();
 
     private:
+
+        enum SearchMode
+        {
+            master,
+            extra,
+            include,
+            resource,
+            lib,
+            none
+        };
+
         bool AddPath(const wxString& pth, int sm, int rmDirs = 0);
 
         wxString m_fileName;

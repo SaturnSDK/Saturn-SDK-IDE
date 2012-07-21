@@ -1295,12 +1295,6 @@
 		<Unit filename="plugins/compilergcc/compilerCYGWIN.h">
 			<Option target="Compiler" />
 		</Unit>
-		<Unit filename="plugins/compilergcc/compilerDMC.cpp">
-			<Option target="Compiler" />
-		</Unit>
-		<Unit filename="plugins/compilergcc/compilerDMC.h">
-			<Option target="Compiler" />
-		</Unit>
 		<Unit filename="plugins/compilergcc/compilerDMD.cpp">
 			<Option target="Compiler" />
 		</Unit>
@@ -1337,24 +1331,6 @@
 		<Unit filename="plugins/compilergcc/compilerGNUFortran.h">
 			<Option target="Compiler" />
 		</Unit>
-		<Unit filename="plugins/compilergcc/compilerGNUMSP430.cpp">
-			<Option target="Compiler" />
-		</Unit>
-		<Unit filename="plugins/compilergcc/compilerGNUMSP430.h">
-			<Option target="Compiler" />
-		</Unit>
-		<Unit filename="plugins/compilergcc/compilerGNUPOWERPC.cpp">
-			<Option target="Compiler" />
-		</Unit>
-		<Unit filename="plugins/compilergcc/compilerGNUPOWERPC.h">
-			<Option target="Compiler" />
-		</Unit>
-		<Unit filename="plugins/compilergcc/compilerGNUTRICORE.cpp">
-			<Option target="Compiler" />
-		</Unit>
-		<Unit filename="plugins/compilergcc/compilerGNUTRICORE.h">
-			<Option target="Compiler" />
-		</Unit>
 		<Unit filename="plugins/compilergcc/compilerICC.cpp">
 			<Option target="Compiler" />
 		</Unit>
@@ -1365,12 +1341,6 @@
 			<Option target="Compiler" />
 		</Unit>
 		<Unit filename="plugins/compilergcc/compilerLCC.h">
-			<Option target="Compiler" />
-		</Unit>
-		<Unit filename="plugins/compilergcc/compilerLDC.cpp">
-			<Option target="Compiler" />
-		</Unit>
-		<Unit filename="plugins/compilergcc/compilerLDC.h">
 			<Option target="Compiler" />
 		</Unit>
 		<Unit filename="plugins/compilergcc/compilerMINGW.cpp">
@@ -1413,18 +1383,6 @@
 			<Option target="Compiler" />
 		</Unit>
 		<Unit filename="plugins/compilergcc/compilerOWgenerator.h">
-			<Option target="Compiler" />
-		</Unit>
-		<Unit filename="plugins/compilergcc/compilerSDCC.cpp">
-			<Option target="Compiler" />
-		</Unit>
-		<Unit filename="plugins/compilergcc/compilerSDCC.h">
-			<Option target="Compiler" />
-		</Unit>
-		<Unit filename="plugins/compilergcc/compilerTcc.cpp">
-			<Option target="Compiler" />
-		</Unit>
-		<Unit filename="plugins/compilergcc/compilerTcc.h">
 			<Option target="Compiler" />
 		</Unit>
 		<Unit filename="plugins/compilergcc/compilerXML.cpp">
@@ -1594,6 +1552,30 @@
 		<Unit filename="plugins/compilergcc/resources/compilers/compiler_clang.xml">
 			<Option target="Compiler" />
 		</Unit>
+		<Unit filename="plugins\compilergcc\resources\compilers\compiler_dmc.xml">
+			<Option target="Compiler" />
+		</Unit>
+		<Unit filename="plugins\compilergcc\resources\compilers\compiler_ldc.xml">
+			<Option target="Compiler" />
+		</Unit>
+		<Unit filename="plugins\compilergcc\resources\compilers\compiler_msp430-gcc.xml">
+			<Option target="Compiler" />
+		</Unit>
+		<Unit filename="plugins\compilergcc\resources\compilers\compiler_pgifortran.xml">
+			<Option target="Compiler" />
+		</Unit>
+		<Unit filename="plugins\compilergcc\resources\compilers\compiler_ppc-gcc.xml">
+			<Option target="Compiler" />
+		</Unit>
+		<Unit filename="plugins\compilergcc\resources\compilers\compiler_sdcc.xml">
+			<Option target="Compiler" />
+		</Unit>
+		<Unit filename="plugins\compilergcc\resources\compilers\compiler_tcc.xml">
+			<Option target="Compiler" />
+		</Unit>
+		<Unit filename="plugins\compilergcc\resources\compilers\compiler_tricore-gcc.xml">
+			<Option target="Compiler" />
+		</Unit>
 		<Unit filename="plugins/compilergcc/resources/compilers/options_arm-elf-gcc.xml">
 			<Option target="Compiler" />
 		</Unit>
@@ -1682,6 +1664,9 @@
 			<Option target="Compiler" />
 		</Unit>
 		<Unit filename="plugins/compilergcc/resources/compilers/options_ow.xml">
+			<Option target="Compiler" />
+		</Unit>
+		<Unit filename="plugins/compilergcc/resources/compilers/options_pgifortran.xml">
 			<Option target="Compiler" />
 		</Unit>
 		<Unit filename="plugins/compilergcc/resources/compilers/options_ppc-gcc.xml">

@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0"?>
 <!DOCTYPE CodeBlocks_compiler>
 <CodeBlocks_compiler name="PGI Fortran Compiler"
-                     id="pgfortran"
+                     id="pgifortran"
                      weight="96">
     <Path type="master">
         <Search envVar="PATH"
