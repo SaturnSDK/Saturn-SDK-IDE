@@ -28,7 +28,7 @@ class CompilerXML : public Compiler
             none
         };
 
-        bool AddPath(const wxString& pth, int sm, int rmDirs = 0);
+        bool AddPath(const wxString& pth, SearchMode sm, int rmDirs = 0);
 
         wxString m_fileName;
 };

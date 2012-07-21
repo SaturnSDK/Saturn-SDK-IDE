@@ -1,9 +1,12 @@
 #include <sdk.h>
 
-#include <wx/arrstr.h>
+#ifndef CB_PRECOMP
+    #include <wx/arrstr.h>
+#endif // CB_PRECOMP
+
 #include <wx/filefn.h>
-#include <wx/regex.h>
 #include <wx/textfile.h>
+#include <wx/regex.h>
 #include <wx/xml/xml.h>
 #ifdef __WXMSW__ // for wxRegKey
     #include <wx/msw/registry.h>
@@ -243,7 +246,7 @@ AutoDetectResult CompilerXML::AutoDetectInstallationDir()
     return adrGuessed;
 }
 
-bool CompilerXML::AddPath(const wxString& pth, int sm, int rmDirs)
+bool CompilerXML::AddPath(const wxString& pth, SearchMode sm, int rmDirs)
 {
     wxFileName fn(pth + wxFILE_SEP_PATH);
     fn.Normalize(wxPATH_NORM_ENV_VARS|wxPATH_NORM_DOTS);
