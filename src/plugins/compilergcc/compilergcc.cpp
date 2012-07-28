@@ -57,22 +57,18 @@
 #ifdef __WXGTK__
 // TODO (mandrav#1#): Find out which compilers exist for linux and adapt this
     #include "compilerGNUARM.h"
-    #include "compilerGNUAVR.h"
 #endif
 #ifdef __WXMSW__
     #include "compilerMSVC.h"
     #include "compilerMSVC8.h"
     #include "compilerMSVC10.h"
-    #include "compilerBCC.h"
     #include "compilerOW.h"
     #include "compilerGNUARM.h"
-    #include "compilerGNUAVR.h"
     #include "compilerCYGWIN.h"
     #include "compilerLCC.h"
 #endif
 #include "compilerICC.h"
 #include "compilerGDC.h"
-#include "compilerDMD.h"
 #include "compilerGNUFortran.h"
 #include "compilerG95.h"
 #include "compilerXML.h"
@@ -371,19 +367,16 @@ void CompilerGCC::OnAttach()
     CompilerFactory::RegisterCompiler(new CompilerMSVC);
     CompilerFactory::RegisterCompiler(new CompilerMSVC8);
     CompilerFactory::RegisterCompiler(new CompilerMSVC10);
-    CompilerFactory::RegisterCompiler(new CompilerBCC);
     CompilerFactory::RegisterCompiler(new CompilerOW);
     CompilerFactory::RegisterCompiler(new CompilerCYGWIN);
     CompilerFactory::RegisterCompiler(new CompilerLCC);
 #endif
     CompilerFactory::RegisterCompiler(new CompilerICC);
     CompilerFactory::RegisterCompiler(new CompilerGDC);
-    CompilerFactory::RegisterCompiler(new CompilerDMD);
     CompilerFactory::RegisterCompiler(new CompilerGNUFortran);
     CompilerFactory::RegisterCompiler(new CompilerG95);
 #if defined(__WIN32__) || defined(__linux__)
     CompilerFactory::RegisterCompiler(new CompilerGNUARM);
-    CompilerFactory::RegisterCompiler(new CompilerGNUAVR);
 #endif
 
     // register pure XML compilers

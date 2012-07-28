@@ -118,7 +118,18 @@ AutoDetectResult CompilerXML::AutoDetectInstallationDir()
             else if (node->GetAttribute(wxT("path"), &value))
             {
                 wxString targ = GetExecName(node->GetAttribute(wxT("for"), wxEmptyString));
-                if ((targ.IsEmpty() && wxDirExists(value)) || wxFileExists(value + wxFILE_SEP_PATH + targ))
+                if (wxIsWild(value))
+                {
+                    path = wxFindFirstFile(value, wxDIR);
+                    if (!path.IsEmpty() &&
+                         ((targ.IsEmpty() && wxDirExists(path)) ||
+                          wxFileExists(path + wxFILE_SEP_PATH + targ) ||
+                          wxFileExists(path + wxFILE_SEP_PATH + wxT("bin") + wxFILE_SEP_PATH + targ)))
+                    {
+                        AddPath(path, sm);
+                    }
+                }
+                else if ((targ.IsEmpty() && wxDirExists(value)) || wxFileExists(value + wxFILE_SEP_PATH + targ))
                     AddPath(value, sm);
                 else if (sm == master && ((targ.IsEmpty() && wxDirExists(value + wxFILE_SEP_PATH + wxT("bin"))) || wxFileExists(value + wxFILE_SEP_PATH + wxT("bin") + wxFILE_SEP_PATH + targ)))
                     AddPath(value + wxFILE_SEP_PATH + wxT("bin"), sm);
@@ -169,7 +180,7 @@ AutoDetectResult CompilerXML::AutoDetectInstallationDir()
                 AddLinkLib(value);
             else if (sm != none)
             {
-                wxString path;
+                path.Clear();
                 wxXmlNode* child = node->GetChildren();
                 while (child)
                 {

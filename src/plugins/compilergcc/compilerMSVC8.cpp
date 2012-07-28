@@ -137,6 +137,24 @@ AutoDetectResult CompilerMSVC8::AutoDetectInstallationDir()
                 break;
         }
 
+        // take a guess
+        if (!sdkfound)
+        {
+            dir = wxT("C:\\Program Files");
+            wxGetEnv(wxT("ProgramFiles"), &dir);
+            dir +=  wxT("\\Microsoft SDKs\\Windows\\v");
+            wxArrayString vers = GetArrayFromString(wxT("7.1;7.0A;7.0;6.1;6.0A;6.0"));
+            for (size_t i = 0; i < vers.GetCount(); ++i)
+            {
+                if (wxDirExists(dir + vers[i]))
+                {
+                    dir += vers[i];
+                    sdkfound = true;
+                    break;
+                }
+            }
+        }
+
         // add include dirs for MS Platform SDK too (let them come before compiler's path)
         if (sdkfound)
         {

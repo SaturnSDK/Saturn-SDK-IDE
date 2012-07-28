@@ -10,10 +10,10 @@
         <Fallback path="C:\dm"/>
     </Path>
     <Path type="include">
-        <Add><master/><separator/>stlport<separator/>stlport</Add>
-        <Add><master/><separator/>include</Add>
+        <Add><master/>\stlport\stlport</Add>
+        <Add><master/>\include</Add>
     </Path>
     <Path type="lib">
-        <Add><master/><separator/>lib</Add>
+        <Add><master/>\lib</Add>
     </Path>
 </CodeBlocks_compiler>

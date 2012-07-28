@@ -1283,22 +1283,10 @@
 		<Unit filename="plugins/compilergcc/advancedcompileroptionsdlg.h">
 			<Option target="Compiler" />
 		</Unit>
-		<Unit filename="plugins/compilergcc/compilerBCC.cpp">
-			<Option target="Compiler" />
-		</Unit>
-		<Unit filename="plugins/compilergcc/compilerBCC.h">
-			<Option target="Compiler" />
-		</Unit>
 		<Unit filename="plugins/compilergcc/compilerCYGWIN.cpp">
 			<Option target="Compiler" />
 		</Unit>
 		<Unit filename="plugins/compilergcc/compilerCYGWIN.h">
-			<Option target="Compiler" />
-		</Unit>
-		<Unit filename="plugins/compilergcc/compilerDMD.cpp">
-			<Option target="Compiler" />
-		</Unit>
-		<Unit filename="plugins/compilergcc/compilerDMD.h">
 			<Option target="Compiler" />
 		</Unit>
 		<Unit filename="plugins/compilergcc/compilerG95.cpp">
@@ -1317,12 +1305,6 @@
 			<Option target="Compiler" />
 		</Unit>
 		<Unit filename="plugins/compilergcc/compilerGNUARM.h">
-			<Option target="Compiler" />
-		</Unit>
-		<Unit filename="plugins/compilergcc/compilerGNUAVR.cpp">
-			<Option target="Compiler" />
-		</Unit>
-		<Unit filename="plugins/compilergcc/compilerGNUAVR.h">
 			<Option target="Compiler" />
 		</Unit>
 		<Unit filename="plugins/compilergcc/compilerGNUFortran.cpp">
@@ -1549,31 +1531,40 @@
 		<Unit filename="plugins/compilergcc/resources/compiler_toolbar_16x16.xrc">
 			<Option target="Compiler" />
 		</Unit>
+		<Unit filename="plugins/compilergcc/resources/compilers/compiler_avr-gcc.xml">
+			<Option target="Compiler" />
+		</Unit>
+		<Unit filename="plugins/compilergcc/resources/compilers/compiler_bcc.xml">
+			<Option target="Compiler" />
+		</Unit>
 		<Unit filename="plugins/compilergcc/resources/compilers/compiler_clang.xml">
 			<Option target="Compiler" />
 		</Unit>
-		<Unit filename="plugins\compilergcc\resources\compilers\compiler_dmc.xml">
+		<Unit filename="plugins/compilergcc/resources/compilers/compiler_dmc.xml">
 			<Option target="Compiler" />
 		</Unit>
-		<Unit filename="plugins\compilergcc\resources\compilers\compiler_ldc.xml">
+		<Unit filename="plugins/compilergcc/resources/compilers/compiler_dmd.xml">
 			<Option target="Compiler" />
 		</Unit>
-		<Unit filename="plugins\compilergcc\resources\compilers\compiler_msp430-gcc.xml">
+		<Unit filename="plugins/compilergcc/resources/compilers/compiler_ldc.xml">
 			<Option target="Compiler" />
 		</Unit>
-		<Unit filename="plugins\compilergcc\resources\compilers\compiler_pgifortran.xml">
+		<Unit filename="plugins/compilergcc/resources/compilers/compiler_msp430-gcc.xml">
 			<Option target="Compiler" />
 		</Unit>
-		<Unit filename="plugins\compilergcc\resources\compilers\compiler_ppc-gcc.xml">
+		<Unit filename="plugins/compilergcc/resources/compilers/compiler_pgifortran.xml">
 			<Option target="Compiler" />
 		</Unit>
-		<Unit filename="plugins\compilergcc\resources\compilers\compiler_sdcc.xml">
+		<Unit filename="plugins/compilergcc/resources/compilers/compiler_ppc-gcc.xml">
 			<Option target="Compiler" />
 		</Unit>
-		<Unit filename="plugins\compilergcc\resources\compilers\compiler_tcc.xml">
+		<Unit filename="plugins/compilergcc/resources/compilers/compiler_sdcc.xml">
 			<Option target="Compiler" />
 		</Unit>
-		<Unit filename="plugins\compilergcc\resources\compilers\compiler_tricore-gcc.xml">
+		<Unit filename="plugins/compilergcc/resources/compilers/compiler_tcc.xml">
+			<Option target="Compiler" />
+		</Unit>
+		<Unit filename="plugins/compilergcc/resources/compilers/compiler_tricore-gcc.xml">
 			<Option target="Compiler" />
 		</Unit>
 		<Unit filename="plugins/compilergcc/resources/compilers/options_arm-elf-gcc.xml">
