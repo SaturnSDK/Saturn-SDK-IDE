@@ -19,10 +19,8 @@ libcompiler_la_LIBADD = $(PLUGIN_WX_LIBS) ../../sdk/libcodeblocks.la \
 				depslib/src/libdepslib.la
 
 libcompiler_la_SOURCES = advancedcompileroptionsdlg.cpp \
-			compilerBCC.cpp \
 			compiler_defs.cpp \
 			compilerCYGWIN.cpp \
-			compilerDMD.cpp \
 			compilererrors.cpp \
 			compilerflagdlg.cpp \
 			compilergcc.cpp \
@@ -38,16 +36,13 @@ libcompiler_la_SOURCES = advancedcompileroptionsdlg.cpp \
 			compilerOWgenerator.cpp \
 			compilerG95.cpp \
 			compilerGNUARM.cpp \
-			compilerGNUAVR.cpp \
 			compilerGNUFortran.cpp \
 			compilerXML.cpp \
 			directcommands.cpp
 
 noinst_HEADERS = advancedcompileroptionsdlg.h \
-			compilerBCC.h \
 			compiler_defs.h \
 			compilerCYGWIN.h \
-			compilerDMD.h \
 			compilererrors.h \
 			compilerflagdlg.h \
 			compilergcc.h \
@@ -63,7 +58,6 @@ noinst_HEADERS = advancedcompileroptionsdlg.h \
 			compilerOW.h \
 			compilerOWgenerator.h \
 			compilerGNUARM.h \
-			compilerGNUAVR.h \
 			compilerGNUFortran.h \
 			compilerXML.h \
 			directcommands.h
