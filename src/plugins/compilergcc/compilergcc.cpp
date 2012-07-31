@@ -3382,7 +3382,9 @@ void CompilerGCC::LogWarningOrError(CompilerLineType lt, cbProject* prj, const w
     wxArrayString errors;
     errors.Add(filename);
     errors.Add(line);
-    errors.Add(msg);
+    wxString msgFix = msg;
+    msgFix.Replace(wxT("\t"), wxT("    "));
+    errors.Add(msgFix);
 
     Logger::level lv = Logger::info;
     if (lt == cltError)
@@ -3390,8 +3392,7 @@ void CompilerGCC::LogWarningOrError(CompilerLineType lt, cbProject* prj, const w
     else if (lt == cltWarning)
         lv = Logger::warning;
 
-    m_pListLog->Append(errors, lv);
-//    m_pListLog->GetListControl()->SetColumnWidth(2, wxLIST_AUTOSIZE);
+    m_pListLog->Append(errors, lv, 2);
 
     // add to error keeping struct
     m_Errors.AddError(lt, prj, filename, line.IsEmpty() ? 0 : atoi(wxSafeConvertWX2MB(line)), msg);
@@ -3642,6 +3643,8 @@ void CompilerGCC::OnJobEnd(size_t procIndex, int exitCode)
             LogWarningOrError(cltNormal, 0, wxEmptyString, wxEmptyString,
                               wxString::Format(_("=== Build finished: %s ==="), msg.wx_str()));
             SaveBuildLog();
+            if (!Manager::IsBatchBuild() && m_pLog->progress)
+                m_pLog->progress->SetValue(0);
         }
         else
         {
@@ -3665,9 +3668,6 @@ void CompilerGCC::OnJobEnd(size_t procIndex, int exitCode)
             Manager::Get()->ProcessEvent(evtSwitch);
 
             m_pListLog->FocusError(m_Errors.GetFirstError());
-            // Build is not completed, so clear the progress bar
-            if (m_pLog->progress)
-                m_pLog->progress->SetValue(0);
         }
         else
         {
