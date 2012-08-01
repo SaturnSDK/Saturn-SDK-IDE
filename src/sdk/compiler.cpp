@@ -1013,11 +1013,9 @@ void Compiler::LoadRegExArray(const wxString& name, bool globalPrecedence, int r
         }
         else if (node->GetName() == wxT("RegEx"))
         {
-            CompilerLineType clt;
             wxString tp = node->GetAttribute(wxT("type"), wxEmptyString);
-            if (tp == wxT("normal"))
-                clt = cltNormal;
-            else if (tp == wxT("warning"))
+            CompilerLineType clt = cltNormal;
+            if      (tp == wxT("warning"))
                 clt = cltWarning;
             else if (tp == wxT("error"))
                 clt = cltError;

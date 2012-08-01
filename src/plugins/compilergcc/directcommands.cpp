@@ -30,10 +30,10 @@
 #include <depslib.h>
 
 DirectCommands::DirectCommands(CompilerGCC* compilerPlugin,
-                               Compiler* compiler,
-                               cbProject* project,
-                               int logPageIndex)
-    : m_doYield(false),
+                               Compiler*    compiler,
+                               cbProject*   project,
+                               int          logPageIndex) :
+    m_doYield(false),
     m_PageIndex(logPageIndex),
     m_pCompilerPlugin(compilerPlugin),
     m_pCompiler(compiler),
@@ -330,20 +330,20 @@ wxArrayString DirectCommands::GetCompileSingleFileCommand(const wxString& filena
 
     wxString compilerCmd = compiler->GetCommand(ctCompileObjectCmd, srcExt);
     compiler->GenerateCommandLine(compilerCmd,
-                                     0,
-                                     0,
-                                     s_filename,
-                                     o_filename,
-                                     o_filename,
-                                     wxEmptyString);
+                                  0,
+                                  0,
+                                  s_filename,
+                                  o_filename,
+                                  o_filename,
+                                  wxEmptyString);
     wxString linkerCmd = compiler->GetCommand(ctLinkConsoleExeCmd, fname.GetExt());
     compiler->GenerateCommandLine(linkerCmd,
-                                     0,
-                                     0,
-                                     wxEmptyString,
-                                     o_filename,
-                                     o_filename,
-                                     wxEmptyString);
+                                  0,
+                                  0,
+                                  wxEmptyString,
+                                  o_filename,
+                                  o_filename,
+                                  wxEmptyString);
 
     if (!compilerCmd.IsEmpty())
     {
@@ -583,8 +583,8 @@ wxArrayString DirectCommands::GetTargetLinkCommands(ProjectBuildTarget* target, 
     if (!fileMissing.IsEmpty())
     {
         wxString warn;
-        warn.Printf(_("WARNING: Target '%s': Unable to resolve %d external dependencies:"),
-                    target->GetFullTitle().wx_str(), fileMissing.Count());
+        warn.Printf(_("WARNING: Target '%s': Unable to resolve %d external dependenc%s:"),
+                    target->GetFullTitle().wx_str(), fileMissing.Count(), wxString(fileMissing.Count() == 1 ? _("y") : _("ies")).wx_str());
         ret.Add(wxString(COMPILER_SIMPLE_LOG) + warn);
         for (size_t i=0; i<fileMissing.Count(); i++)
             ret.Add(wxString(COMPILER_SIMPLE_LOG) + fileMissing[i]);
