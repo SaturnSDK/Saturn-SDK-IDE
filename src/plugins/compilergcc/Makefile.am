@@ -31,6 +31,8 @@ libcompiler_la_SOURCES = advancedcompileroptionsdlg.cpp \
 			compilerMINGW.cpp \
 			compilerMINGWgenerator.cpp \
 			compilerMSVC.cpp \
+			compilerMSVC8.cpp \
+			compilerMSVC10.cpp \
 			compileroptionsdlg.cpp \
 			compilerOW.cpp \
 			compilerOWgenerator.cpp \
@@ -54,6 +56,8 @@ noinst_HEADERS = advancedcompileroptionsdlg.h \
 			compilerMINGW.h \
 			compilerMINGWgenerator.h \
 			compilerMSVC.h \
+			compilerMSVC8.h \
+			compilerMSVC10.h \
 			compileroptionsdlg.h \
 			compilerOW.h \
 			compilerOWgenerator.h \
@@ -62,7 +66,4 @@ noinst_HEADERS = advancedcompileroptionsdlg.h \
 			compilerXML.h \
 			directcommands.h
 
-EXTRA_DIST = compilerMSVC8.h \
-			compilerMSVC10.h \
-			compilerMSVC8.cpp \
-			compilerMSVC10.cpp
+
