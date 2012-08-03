@@ -57,6 +57,8 @@ void CompilerLCC::Reset()
 
 AutoDetectResult CompilerLCC::AutoDetectInstallationDir()
 {
+    wxString compiler; compiler << wxFILE_SEP_PATH << _T("bin") << wxFILE_SEP_PATH << m_Programs.C;
+
 #ifdef __WXMSW__
     wxRegKey key; // defaults to HKCR
     wxString mpHKLM     = wxEmptyString;
@@ -118,8 +120,6 @@ AutoDetectResult CompilerLCC::AutoDetectInstallationDir()
     }
 
     // Verify all path's obtained
-    wxString compiler; compiler << wxFILE_SEP_PATH << _T("bin") << wxFILE_SEP_PATH << m_Programs.C;
-
     if      (wxFileExists(mpHKLM     + compiler))
         m_MasterPath = mpHKLM;
     else if (wxFileExists(mpHKCU     + compiler))
