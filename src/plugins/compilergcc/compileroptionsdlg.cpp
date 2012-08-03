@@ -234,14 +234,6 @@ CompilerOptionsDlg::CompilerOptionsDlg(wxWindow* parent, CompilerGCC* compiler, 
         XRCCTRL(*this, "lblBuildScriptsNote", wxStaticText)->Show(hasBuildScripts);
     }
 
-    wxChoice* cmb = XRCCTRL(*this, "cmbBuildMethod", wxChoice);
-    if (cmb)
-    {
-        // build method is always "direct" now
-        cmb->SetSelection(1);
-        cmb->Enable(false);
-    }
-
     wxTreeCtrl* tree = XRCCTRL(*this, "tcScope", wxTreeCtrl);
     wxSizer* sizer = tree->GetContainingSizer();
     wxNotebook* nb = XRCCTRL(*this, "nbMain", wxNotebook);

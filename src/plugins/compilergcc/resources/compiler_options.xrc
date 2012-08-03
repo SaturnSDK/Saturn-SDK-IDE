@@ -1237,32 +1237,14 @@
 															<flag>wxEXPAND|wxALIGN_LEFT|wxALIGN_TOP</flag>
 															<option>1</option>
 														</object>
-														<object class="sizeritem">
-															<object class="wxStaticText" name="ID_STATICTEXT24">
-																<label>Build method:</label>
-															</object>
-															<flag>wxTOP|wxRIGHT|wxALIGN_LEFT|wxALIGN_TOP</flag>
-															<border>4</border>
-														</object>
-														<object class="sizeritem">
-															<object class="wxChoice" name="cmbBuildMethod">
-																<content>
-																	<item>Work with Makefiles (GNU &quot;make&quot; is required)</item>
-																	<item>Invoke compiler directly</item>
-																</content>
-																<selection>0</selection>
-															</object>
-															<flag>wxEXPAND|wxALIGN_LEFT|wxALIGN_TOP</flag>
-															<option>1</option>
-														</object>
 													</object>
 													<flag>wxALL|wxEXPAND|wxALIGN_LEFT|wxALIGN_TOP</flag>
 													<border>8</border>
 												</object>
 												<object class="sizeritem">
 													<object class="wxCheckBox" name="chkNonPlatComp">
-														<label>Enable non-platform compilers</label>
-														<tooltip>Takes effect on next launch</tooltip>
+														<label>Enable non-platform compilers (requires re-start)</label>
+														<tooltip>Enable to use i.e. cross-platform compilers (takes effect on next launch)</tooltip>
 													</object>
 													<flag>wxBOTTOM|wxLEFT|wxRIGHT|wxEXPAND|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL</flag>
 													<border>8</border>
