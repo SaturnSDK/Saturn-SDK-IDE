@@ -54,19 +54,14 @@
 
 
 #include "compilerMINGW.h"
-#ifdef __WXGTK__
-// TODO (mandrav#1#): Find out which compilers exist for linux and adapt this
-    #include "compilerGNUARM.h"
-#endif
-#ifdef __WXMSW__
-    #include "compilerMSVC.h"
-    #include "compilerMSVC8.h"
-    #include "compilerMSVC10.h"
-    #include "compilerOW.h"
-    #include "compilerGNUARM.h"
-    #include "compilerCYGWIN.h"
-    #include "compilerLCC.h"
-#endif
+#include "compilerGNUARM.h"
+#include "compilerMSVC.h"
+#include "compilerMSVC8.h"
+#include "compilerMSVC10.h"
+#include "compilerOW.h"
+#include "compilerGNUARM.h"
+#include "compilerCYGWIN.h"
+#include "compilerLCC.h"
 #include "compilerICC.h"
 #include "compilerGDC.h"
 #include "compilerGNUFortran.h"
@@ -360,24 +355,26 @@ void CompilerGCC::OnAttach()
 
     for (int i = 0; i < MAX_TARGETS; ++i)
         idMenuSelectTargetOther[i] = wxNewId();
+
+    bool nonPlatComp = Manager::Get()->GetConfigManager(_T("compiler"))->ReadBool(_T("/non_plat_comp"), false);
+
     // register built-in compilers
     CompilerFactory::RegisterCompiler(new CompilerMINGW);
-#ifdef __WXMSW__
-    // can't use platform::windows here due to classes do *not* exist on other platform than windows!
-    CompilerFactory::RegisterCompiler(new CompilerMSVC);
-    CompilerFactory::RegisterCompiler(new CompilerMSVC8);
-    CompilerFactory::RegisterCompiler(new CompilerMSVC10);
-    CompilerFactory::RegisterCompiler(new CompilerOW);
-    CompilerFactory::RegisterCompiler(new CompilerCYGWIN);
-    CompilerFactory::RegisterCompiler(new CompilerLCC);
-#endif
+    if (platform::windows || nonPlatComp)
+    {
+        CompilerFactory::RegisterCompiler(new CompilerMSVC);
+        CompilerFactory::RegisterCompiler(new CompilerMSVC8);
+        CompilerFactory::RegisterCompiler(new CompilerMSVC10);
+        CompilerFactory::RegisterCompiler(new CompilerOW);
+        CompilerFactory::RegisterCompiler(new CompilerCYGWIN);
+        CompilerFactory::RegisterCompiler(new CompilerLCC);
+    }
     CompilerFactory::RegisterCompiler(new CompilerICC);
     CompilerFactory::RegisterCompiler(new CompilerGDC);
     CompilerFactory::RegisterCompiler(new CompilerGNUFortran);
     CompilerFactory::RegisterCompiler(new CompilerG95);
-#if defined(__WIN32__) || defined(__linux__)
-    CompilerFactory::RegisterCompiler(new CompilerGNUARM);
-#endif
+    if (platform::windows || platform::linux || nonPlatComp)
+        CompilerFactory::RegisterCompiler(new CompilerGNUARM);
 
     // register pure XML compilers
     // user paths first
@@ -423,7 +420,7 @@ void CompilerGCC::OnAttach()
         {
             bool val = true;
             wxString test;
-            if (compiler.GetRoot()->GetAttribute(wxT("platform"), &test))
+            if (!nonPlatComp && compiler.GetRoot()->GetAttribute(wxT("platform"), &test))
             {
                 if (test == wxT("windows"))
                     val = platform::windows;

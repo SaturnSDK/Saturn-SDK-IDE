@@ -9,7 +9,7 @@
         <if platform="windows">
             <Search registry="HKEY_LOCAL_MACHINE\Software\Microsoft\Windows\CurrentVersion\Uninstall\SDCC"
                     value="InstallLocation"/>
-            <Fallback path="%ProgramFiles%\tcc"/>
+            <Fallback path="%ProgramFiles%\sdcc"/>
         </if>
         <else>
             <Fallback path="/usr/local"/>

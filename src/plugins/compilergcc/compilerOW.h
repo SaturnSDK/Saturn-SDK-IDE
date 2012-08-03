@@ -3,9 +3,6 @@
  * http://www.gnu.org/licenses/gpl-3.0.html
  */
 
-#ifdef __WXMSW__
-// this compiler is valid only in windows
-
 #ifndef COMPILEROW_H
 #define COMPILEROW_H
 
@@ -27,5 +24,3 @@ class CompilerOW : public Compiler
 };
 
 #endif // COMPILEROW_H
-
-#endif // __WXMSW__

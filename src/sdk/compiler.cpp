@@ -136,7 +136,7 @@ Compiler::Compiler(const Compiler& other) :
     m_CmdsAfter       = other.m_CmdsAfter;
     m_RegExes         = other.m_RegExes;
     m_VersionString   = other.m_VersionString;
-    m_Weight          = other.m_Weight;
+    m_Weight          = 100; // place copied compilers at the end
 
     for (int i = 0; i < ctCount; ++i)
         m_Commands[(CommandType)i] = other.m_Commands[(CommandType)i];
@@ -585,7 +585,11 @@ void Compiler::LoadSettings(const wxString& baseKey)
         tmp.Printf(_T("%s/%s"), baseKey.c_str(), m_ID.c_str());
 
     if (!cfg->Exists(tmp + _T("/name")))
-        return;
+    {
+        tmp.Replace(wxT("-"), wxEmptyString); // try again using previous id format
+        if (!cfg->Exists(tmp + _T("/name")))
+            return;
+    }
 
     wxString sep = wxFileName::GetPathSeparator();
 

@@ -157,6 +157,7 @@ BEGIN_EVENT_TABLE(CompilerOptionsDlg, wxPanel)
     EVT_CHOICE(                XRCID("cmbResDirsPolicy"),               CompilerOptionsDlg::OnDirty)
     EVT_CHOICE(                XRCID("cmbLogging"),                     CompilerOptionsDlg::OnDirty)
     EVT_CHECKBOX(              XRCID("chkAlwaysRunPost"),               CompilerOptionsDlg::OnDirty)
+    EVT_CHECKBOX(              XRCID("chkNonPlatComp"),                 CompilerOptionsDlg::OnDirty)
     EVT_TEXT(                  XRCID("txtCompilerOptions"),             CompilerOptionsDlg::OnDirty)
     EVT_TEXT(                  XRCID("txtCompilerDefines"),             CompilerOptionsDlg::OnDirty)
     EVT_TEXT(                  XRCID("txtLinkerOptions"),               CompilerOptionsDlg::OnDirty)
@@ -566,6 +567,10 @@ void CompilerOptionsDlg::DoFillOthers()
         IgnoreOutput = Manager::Get()->GetConfigManager(_T("compiler"))->ReadArrayString(_T("/ignore_output"));
         ArrayString2ListBox(IgnoreOutput, lst);
     }
+
+    chk = XRCCTRL(*this, "chkNonPlatComp", wxCheckBox);
+    if (chk)
+        chk->SetValue(Manager::Get()->GetConfigManager(_T("compiler"))->ReadBool(_T("/non_plat_comp"), false));
 } // DoFillOthers
 
 void CompilerOptionsDlg::DoFillTree()
@@ -2676,6 +2681,10 @@ void CompilerOptionsDlg::OnApply()
             ListBox2ArrayString(IgnoreOutput, lst);
             Manager::Get()->GetConfigManager(_T("compiler"))->Write(_T("/ignore_output"), IgnoreOutput);
         }
+
+        chk = XRCCTRL(*this, "chkNonPlatComp", wxCheckBox);
+        if (chk)
+            Manager::Get()->GetConfigManager(_T("compiler"))->Write(_T("/non_plat_comp"), (bool)chk->IsChecked());
     }
 
     m_Compiler->SaveOptions();

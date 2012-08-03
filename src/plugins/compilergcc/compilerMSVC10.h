@@ -3,10 +3,6 @@
  * http://www.gnu.org/licenses/gpl-3.0.html
  */
 
-#ifdef __WXMSW__
-// this compiler is valid only in windows
-// for VC10 (VS2010)
-
 #ifndef COMPILERMSVC10_H_
 #define COMPILERMSVC10_H_
 
@@ -24,5 +20,3 @@ protected:
 };
 
 #endif // COMPILERMSVC10_H_
-
-#endif // __WXMSW__

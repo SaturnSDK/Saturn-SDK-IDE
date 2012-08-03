@@ -150,9 +150,10 @@
 																	</object>
 																	<object class="sizeritem">
 																		<object class="wxCheckListBox" name="lstCompilerOptions">
+																			<tooltip>Right-click to setup or edit compiler flags</tooltip>
 																			<style>wxLB_HSCROLL</style>
 																		</object>
-																		<flag>wxTOP|wxLEFT|wxRIGHT|wxEXPAND|wxALIGN_LEFT|wxALIGN_TOP</flag>
+																		<flag>wxALL|wxEXPAND|wxALIGN_LEFT|wxALIGN_TOP</flag>
 																		<border>8</border>
 																		<option>1</option>
 																	</object>
@@ -1256,6 +1257,14 @@
 														</object>
 													</object>
 													<flag>wxALL|wxEXPAND|wxALIGN_LEFT|wxALIGN_TOP</flag>
+													<border>8</border>
+												</object>
+												<object class="sizeritem">
+													<object class="wxCheckBox" name="chkNonPlatComp">
+														<label>Enable non-platform compilers</label>
+														<tooltip>Takes effect on next launch</tooltip>
+													</object>
+													<flag>wxBOTTOM|wxLEFT|wxRIGHT|wxEXPAND|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL</flag>
 													<border>8</border>
 												</object>
 												<object class="sizeritem">

@@ -3,8 +3,6 @@
  * http://www.gnu.org/licenses/gpl-3.0.html
  */
 
-#ifdef __WXMSW__ // For Windows Only
-
 #ifndef COMPILEROWGENERATOR_H
 #define COMPILEROWGENERATOR_H
 
@@ -37,5 +35,3 @@ class CompilerOWGenerator : public CompilerCommandGenerator
 
 
 #endif // COMPILEROWGENERATOR_H
-
-#endif // __WXMSW__

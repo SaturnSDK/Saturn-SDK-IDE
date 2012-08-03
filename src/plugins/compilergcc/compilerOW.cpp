@@ -7,16 +7,12 @@
  * $HeadURL$
  */
 
-#ifdef __WXMSW__
-// this compiler is valid only in windows
-
 #include <sdk.h>
 #include "compilerOW.h"
 #include <wx/intl.h>
 #include <wx/regex.h>
 #include <wx/config.h>
 #include <wx/utils.h>
-#include <wx/msw/registry.h>
 
 #include <logmanager.h>
 #include <manager.h>
@@ -88,5 +84,3 @@ void CompilerOW::SetMasterPath(const wxString& path)
     Compiler::SetMasterPath(path);
     wxSetEnv(wxT("WATCOM"), m_MasterPath);
 }
-
-#endif // __WXMSW__

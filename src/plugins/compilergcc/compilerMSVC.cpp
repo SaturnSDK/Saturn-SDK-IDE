@@ -7,16 +7,15 @@
  * $HeadURL$
  */
 
-#ifdef __WXMSW__
-// this compiler is valid only in windows
-
 #include <sdk.h>
 #include "compilerMSVC.h"
 #include <wx/wx.h>
 #include <wx/intl.h>
 #include <wx/regex.h>
 #include <wx/config.h>
-#include <wx/msw/registry.h>
+#ifdef __WXMSW__
+    #include <wx/msw/registry.h>
+#endif // __WXMSW__
 
 CompilerMSVC::CompilerMSVC()
     : Compiler(_("Microsoft Visual C++ Toolkit 2003"), _T("msvctk"))
@@ -57,6 +56,7 @@ AutoDetectResult CompilerMSVC::AutoDetectInstallationDir()
         AddIncludeDir(m_MasterPath + sep + _T("include"));
         AddLibDir(m_MasterPath + sep + _T("lib"));
 
+#ifdef __WXMSW__
         // add include dirs for MS Platform SDK too
         wxRegKey key; // defaults to HKCR
         key.SetName(_T("HKEY_CURRENT_USER\\Software\\Microsoft\\Win32SDK\\Directories"));
@@ -87,9 +87,8 @@ AutoDetectResult CompilerMSVC::AutoDetectInstallationDir()
                 m_ExtraPaths.Add(dir);
             }
         }
+#endif // __WXMSW__
     }
 
     return wxFileExists(m_MasterPath + sep + _T("bin") + sep + m_Programs.C) ? adrDetected : adrGuessed;
 }
-
-#endif // __WXMSW__

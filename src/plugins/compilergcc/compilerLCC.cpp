@@ -7,9 +7,6 @@
  * $HeadURL$
  */
 
-#ifdef __WXMSW__
-// this compiler is valid only in windows
-
 #include <sdk.h>
 #include "logmanager.h"
 #include "manager.h"
@@ -20,7 +17,9 @@
 #include <wx/fileconf.h>
 #include <wx/msgdlg.h>
 
-#include <wx/msw/registry.h>
+#ifdef __WXMSW__
+    #include <wx/msw/registry.h>
+#endif // __WXMSW__
 
 CompilerLCC::CompilerLCC() :
     Compiler(_("LCC Compiler"), _T("lcc")),
@@ -58,6 +57,7 @@ void CompilerLCC::Reset()
 
 AutoDetectResult CompilerLCC::AutoDetectInstallationDir()
 {
+#ifdef __WXMSW__
     wxRegKey key; // defaults to HKCR
     wxString mpHKLM     = wxEmptyString;
     wxString mpHKCU     = wxEmptyString;
@@ -131,6 +131,7 @@ AutoDetectResult CompilerLCC::AutoDetectInstallationDir()
     else if (wxFileExists(mpCompiler + compiler))
         m_MasterPath = mpCompiler;
     else
+#endif // __WXMSW__
         m_MasterPath = _T("C:\\lcc"); // just a guess; the default installation dir
 
     if (!m_MasterPath.IsEmpty())
@@ -145,6 +146,7 @@ AutoDetectResult CompilerLCC::AutoDetectInstallationDir()
     return wxFileExists(m_MasterPath+compiler) ? adrDetected : adrGuessed;
 }
 
+#ifdef __WXMSW__
 bool CompilerLCC::IsValid()
 {
     if (!m_RegistryUpdated)
@@ -184,5 +186,4 @@ bool CompilerLCC::IsValid()
 
     return Compiler::IsValid();
 }
-
 #endif // __WXMSW__

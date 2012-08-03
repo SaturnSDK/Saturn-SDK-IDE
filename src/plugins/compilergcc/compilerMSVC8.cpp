@@ -7,16 +7,15 @@
  * $HeadURL$
  */
 
-#ifdef __WXMSW__
-// this compiler is valid only in windows
-
 #include <sdk.h>
 #include "compilerMSVC8.h"
 #include <wx/wx.h>
 #include <wx/intl.h>
 #include <wx/regex.h>
 #include <wx/config.h>
-#include <wx/msw/registry.h>
+#ifdef __WXMSW__
+    #include <wx/msw/registry.h>
+#endif // __WXMSW__
 
 CompilerMSVC8::CompilerMSVC8()
     : Compiler(_("Microsoft Visual C++ 2005/2008"), _T("msvc8"))
@@ -84,13 +83,14 @@ AutoDetectResult CompilerMSVC8::AutoDetectInstallationDir()
 
     if (!m_MasterPath.IsEmpty())
     {
-        wxRegKey key; // defaults to HKCR
         bool sdkfound = false;
         wxString dir;
 
         // we need to add the IDE path, as the compiler requires some DLL present there
         m_ExtraPaths.Add(idepath);
 
+#ifdef __WXMSW__
+        wxRegKey key; // defaults to HKCR
         // try to detect Platform SDK (old versions)
         key.SetName(_T("HKEY_CURRENT_USER\\Software\\Microsoft\\Win32SDK\\Directories"));
         if (key.Exists() && key.Open(wxRegKey::Read))
@@ -136,6 +136,7 @@ AutoDetectResult CompilerMSVC8::AutoDetectInstallationDir()
             if (sdkfound)
                 break;
         }
+#endif // __WXMSW__
 
         // take a guess
         if (!sdkfound)
@@ -171,6 +172,7 @@ AutoDetectResult CompilerMSVC8::AutoDetectInstallationDir()
         AddLibDir(m_MasterPath + sep + _T("lib"));
         AddResourceIncludeDir(m_MasterPath + sep + _T("include"));
 
+#ifdef __WXMSW__
         // add extra paths for "Debugging tools" too
         key.SetName(_T("HKEY_CURRENT_USER\\Software\\Microsoft\\DebuggingTools"));
         if (key.Exists() && key.Open(wxRegKey::Read))
@@ -184,9 +186,8 @@ AutoDetectResult CompilerMSVC8::AutoDetectInstallationDir()
             }
         }
         key.Close();
+#endif // __WXMSW__
     }
 
     return wxFileExists(m_MasterPath + sep + _T("bin") + sep + m_Programs.C) ? adrDetected : adrGuessed;
 }
-
-#endif // __WXMSW__
