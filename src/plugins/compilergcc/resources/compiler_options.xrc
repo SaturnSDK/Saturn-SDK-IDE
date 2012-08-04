@@ -153,7 +153,7 @@
 																			<tooltip>Right-click to setup or edit compiler flags</tooltip>
 																			<style>wxLB_HSCROLL</style>
 																		</object>
-																		<flag>wxALL|wxEXPAND|wxALIGN_LEFT|wxALIGN_TOP</flag>
+																		<flag>wxTOP|wxLEFT|wxRIGHT|wxEXPAND|wxALIGN_LEFT|wxALIGN_TOP</flag>
 																		<border>8</border>
 																		<option>1</option>
 																	</object>
@@ -162,7 +162,7 @@
 																			<label>NOTE: Right-click to setup or edit compiler flags.</label>
 																			<fg>#800000</fg>
 																		</object>
-																		<flag>wxLEFT|wxRIGHT|wxALIGN_LEFT|wxALIGN_TOP</flag>
+																		<flag>wxBOTTOM|wxLEFT|wxRIGHT|wxALIGN_LEFT|wxALIGN_TOP</flag>
 																		<border>8</border>
 																	</object>
 																</object>
@@ -1243,8 +1243,8 @@
 												</object>
 												<object class="sizeritem">
 													<object class="wxCheckBox" name="chkNonPlatComp">
-														<label>Enable non-platform compilers (requires re-start)</label>
-														<tooltip>Enable to use i.e. cross-platform compilers (takes effect on next launch)</tooltip>
+														<label>Enable non-platform compilers</label>
+														<tooltip>Enable to use i.e. cross-platform compilers</tooltip>
 													</object>
 													<flag>wxBOTTOM|wxLEFT|wxRIGHT|wxEXPAND|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL</flag>
 													<border>8</border>

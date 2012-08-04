@@ -2622,27 +2622,28 @@ void CompilerOptionsDlg::OnApply()
     //others (projects don't have Other tab)
     if (!m_pProject)
     {
+        ConfigManager* cfg = Manager::Get()->GetConfigManager(_T("compiler"));
         wxCheckBox* chk = XRCCTRL(*this, "chkIncludeFileCwd", wxCheckBox);
         if (chk)
-            Manager::Get()->GetConfigManager(_T("compiler"))->Write(_T("/include_file_cwd"), (bool)chk->IsChecked());
+            cfg->Write(_T("/include_file_cwd"), (bool)chk->IsChecked());
         chk = XRCCTRL(*this, "chkIncludePrjCwd", wxCheckBox);
         if (chk)
-            Manager::Get()->GetConfigManager(_T("compiler"))->Write(_T("/include_prj_cwd"), (bool)chk->IsChecked());
+            cfg->Write(_T("/include_prj_cwd"), (bool)chk->IsChecked());
         chk = XRCCTRL(*this, "chkSaveHtmlLog", wxCheckBox);
         if (chk)
-            Manager::Get()->GetConfigManager(_T("compiler"))->Write(_T("/save_html_build_log"), (bool)chk->IsChecked());
+            cfg->Write(_T("/save_html_build_log"), (bool)chk->IsChecked());
         chk = XRCCTRL(*this, "chkFullHtmlLog", wxCheckBox);
         if (chk)
-            Manager::Get()->GetConfigManager(_T("compiler"))->Write(_T("/save_html_build_log/full_command_line"), (bool)chk->IsChecked());
+            cfg->Write(_T("/save_html_build_log/full_command_line"), (bool)chk->IsChecked());
         chk = XRCCTRL(*this, "chkBuildProgressBar", wxCheckBox);
         if (chk)
         {
-            Manager::Get()->GetConfigManager(_T("compiler"))->Write(_T("/build_progress/bar"), (bool)chk->IsChecked());
+            cfg->Write(_T("/build_progress/bar"), (bool)chk->IsChecked());
         }
         chk = XRCCTRL(*this, "chkBuildProgressPerc", wxCheckBox);
         if (chk)
         {
-            Manager::Get()->GetConfigManager(_T("compiler"))->Write(_T("/build_progress/percentage"), (bool)chk->IsChecked());
+            cfg->Write(_T("/build_progress/percentage"), (bool)chk->IsChecked());
             m_Compiler->m_LogBuildProgressPercentage = chk->IsChecked();
         }
         wxSpinCtrl* spn = XRCCTRL(*this, "spnParallelProcesses", wxSpinCtrl);
@@ -2652,18 +2653,18 @@ void CompilerOptionsDlg::OnApply()
                 cbMessageBox(_("You can't change the number of parallel processes while building!\nSetting ignored..."), _("Warning"), wxICON_WARNING);
             else
             {
-                Manager::Get()->GetConfigManager(_T("compiler"))->Write(_T("/parallel_processes"), (int)spn->GetValue());
+                cfg->Write(_T("/parallel_processes"), (int)spn->GetValue());
                 m_Compiler->ReAllocProcesses();
             }
         }
         spn = XRCCTRL(*this, "spnMaxErrors", wxSpinCtrl);
         if (spn)
-            Manager::Get()->GetConfigManager(_T("compiler"))->Write(_T("/max_reported_errors"), (int)spn->GetValue());
+            cfg->Write(_T("/max_reported_errors"), (int)spn->GetValue());
 
         chk = XRCCTRL(*this, "chkRebuildSeperately", wxCheckBox);
         if (chk)
         {
-            Manager::Get()->GetConfigManager(_T("compiler"))->Write(_T("/rebuild_seperately"), (bool)chk->IsChecked());
+            cfg->Write(_T("/rebuild_seperately"), (bool)chk->IsChecked());
         }
 
         wxListBox* lst = XRCCTRL(*this, "lstIgnore", wxListBox);
@@ -2671,12 +2672,22 @@ void CompilerOptionsDlg::OnApply()
         {
             wxArrayString IgnoreOutput;
             ListBox2ArrayString(IgnoreOutput, lst);
-            Manager::Get()->GetConfigManager(_T("compiler"))->Write(_T("/ignore_output"), IgnoreOutput);
+            cfg->Write(_T("/ignore_output"), IgnoreOutput);
         }
 
         chk = XRCCTRL(*this, "chkNonPlatComp", wxCheckBox);
-        if (chk)
-            Manager::Get()->GetConfigManager(_T("compiler"))->Write(_T("/non_plat_comp"), (bool)chk->IsChecked());
+        if (chk && (chk->IsChecked() != cfg->ReadBool(_T("/non_plat_comp"), false)))
+        {
+            if (m_Compiler->IsRunning())
+                cbMessageBox(_("You can't change the option to enable or disable non-platform compilers while building!\nSetting ignored..."), _("Warning"), wxICON_WARNING);
+            else
+            {
+                cfg->Write(_T("/non_plat_comp"), (bool)chk->IsChecked());
+                CompilerFactory::UnregisterCompilers();
+                m_Compiler->DoRegisterCompilers();
+                m_Compiler->LoadOptions();
+            }
+        }
     }
 
     m_Compiler->SaveOptions();

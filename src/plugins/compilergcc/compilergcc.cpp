@@ -356,101 +356,7 @@ void CompilerGCC::OnAttach()
     for (int i = 0; i < MAX_TARGETS; ++i)
         idMenuSelectTargetOther[i] = wxNewId();
 
-    bool nonPlatComp = Manager::Get()->GetConfigManager(_T("compiler"))->ReadBool(_T("/non_plat_comp"), false);
-
-    // register built-in compilers
-    CompilerFactory::RegisterCompiler(new CompilerMINGW);
-    if (platform::windows || nonPlatComp)
-    {
-        CompilerFactory::RegisterCompiler(new CompilerMSVC);
-        CompilerFactory::RegisterCompiler(new CompilerMSVC8);
-        CompilerFactory::RegisterCompiler(new CompilerMSVC10);
-        CompilerFactory::RegisterCompiler(new CompilerOW);
-        CompilerFactory::RegisterCompiler(new CompilerCYGWIN);
-        CompilerFactory::RegisterCompiler(new CompilerLCC);
-    }
-    CompilerFactory::RegisterCompiler(new CompilerICC);
-    CompilerFactory::RegisterCompiler(new CompilerGDC);
-    CompilerFactory::RegisterCompiler(new CompilerGNUFortran);
-    CompilerFactory::RegisterCompiler(new CompilerG95);
-    if (platform::windows || platform::linux || nonPlatComp)
-        CompilerFactory::RegisterCompiler(new CompilerGNUARM);
-
-    // register pure XML compilers
-    // user paths first
-    wxDir dir;
-    wxString filename;
-    wxArrayString compilers;
-    wxString path = ConfigManager::GetFolder(sdDataUser) + wxT("/compilers/");
-    if (wxDirExists(path) && dir.Open(path))
-    {
-        bool ok = dir.GetFirst(&filename, wxT("compiler_*.xml"), wxDIR_FILES);
-        while (ok)
-        {
-            compilers.Add(path + filename);
-            ok = dir.GetNext(&filename);
-        }
-    }
-    // global paths next
-    path = ConfigManager::GetFolder(sdDataGlobal) + wxT("/compilers/");
-    if (wxDirExists(path) && dir.Open(path))
-    {
-        bool ok = dir.GetFirst(&filename, wxT("compiler_*.xml"), wxDIR_FILES);
-        while (ok)
-        {
-            for (size_t i = 0; i < compilers.GetCount(); ++i)
-            {
-                if (compilers[i].EndsWith(filename))
-                {
-                    ok = false;
-                    break;
-                }
-            }
-            if (ok) // user compilers of the same name take precedence
-                compilers.Add(path + filename);
-            ok = dir.GetNext(&filename);
-        }
-    }
-    for (size_t i = 0; i < compilers.GetCount(); ++i)
-    {
-        wxXmlDocument compiler;
-        if (!compiler.Load(compilers[i]) || compiler.GetRoot()->GetName() != wxT("CodeBlocks_compiler"))
-            Manager::Get()->GetLogManager()->Log(_("Error: Invalid Code::Blocks compiler definition '") + compilers[i] + wxT("'."));
-        else
-        {
-            bool val = true;
-            wxString test;
-            if (!nonPlatComp && compiler.GetRoot()->GetAttribute(wxT("platform"), &test))
-            {
-                if (test == wxT("windows"))
-                    val = platform::windows;
-                else if (test == wxT("macosx"))
-                    val = platform::macosx;
-                else if (test == wxT("linux"))
-                    val = platform::linux;
-                else if (test == wxT("freebsd"))
-                    val = platform::freebsd;
-                else if (test == wxT("netbsd"))
-                    val = platform::netbsd;
-                else if (test == wxT("openbsd"))
-                    val = platform::openbsd;
-                else if (test == wxT("darwin"))
-                    val = platform::darwin;
-                else if (test == wxT("solaris"))
-                    val = platform::solaris;
-                else if (test == wxT("unix"))
-                    val = platform::unix;
-            }
-            if (val)
-                CompilerFactory::RegisterCompiler(
-                                   new CompilerXML(compiler.GetRoot()->GetAttribute(wxT("name"), wxEmptyString),
-                                                   compiler.GetRoot()->GetAttribute(wxT("id"), wxEmptyString),
-                                                   compilers[i]));
-        }
-    }
-
-    // register (if any) user-copies of built-in compilers
-    CompilerFactory::RegisterUserCompilers();
+    DoRegisterCompilers();
 
     AllocProcesses();
 
@@ -915,6 +821,105 @@ void CompilerGCC::LoadOptions()
 {
     // load compiler sets
     CompilerFactory::LoadSettings();
+}
+
+void CompilerGCC::DoRegisterCompilers()
+{
+    bool nonPlatComp = Manager::Get()->GetConfigManager(_T("compiler"))->ReadBool(_T("/non_plat_comp"), false);
+
+    // register built-in compilers
+    CompilerFactory::RegisterCompiler(new CompilerMINGW);
+    if (platform::windows || nonPlatComp)
+    {
+        CompilerFactory::RegisterCompiler(new CompilerMSVC);
+        CompilerFactory::RegisterCompiler(new CompilerMSVC8);
+        CompilerFactory::RegisterCompiler(new CompilerMSVC10);
+        CompilerFactory::RegisterCompiler(new CompilerOW);
+        CompilerFactory::RegisterCompiler(new CompilerCYGWIN);
+        CompilerFactory::RegisterCompiler(new CompilerLCC);
+    }
+    CompilerFactory::RegisterCompiler(new CompilerICC);
+    CompilerFactory::RegisterCompiler(new CompilerGDC);
+    CompilerFactory::RegisterCompiler(new CompilerGNUFortran);
+    CompilerFactory::RegisterCompiler(new CompilerG95);
+    if (platform::windows || platform::linux || nonPlatComp)
+        CompilerFactory::RegisterCompiler(new CompilerGNUARM);
+
+    // register pure XML compilers
+    // user paths first
+    wxDir dir;
+    wxString filename;
+    wxArrayString compilers;
+    wxString path = ConfigManager::GetFolder(sdDataUser) + wxT("/compilers/");
+    if (wxDirExists(path) && dir.Open(path))
+    {
+        bool ok = dir.GetFirst(&filename, wxT("compiler_*.xml"), wxDIR_FILES);
+        while (ok)
+        {
+            compilers.Add(path + filename);
+            ok = dir.GetNext(&filename);
+        }
+    }
+    // global paths next
+    path = ConfigManager::GetFolder(sdDataGlobal) + wxT("/compilers/");
+    if (wxDirExists(path) && dir.Open(path))
+    {
+        bool ok = dir.GetFirst(&filename, wxT("compiler_*.xml"), wxDIR_FILES);
+        while (ok)
+        {
+            for (size_t i = 0; i < compilers.GetCount(); ++i)
+            {
+                if (compilers[i].EndsWith(filename))
+                {
+                    ok = false;
+                    break;
+                }
+            }
+            if (ok) // user compilers of the same name take precedence
+                compilers.Add(path + filename);
+            ok = dir.GetNext(&filename);
+        }
+    }
+    for (size_t i = 0; i < compilers.GetCount(); ++i)
+    {
+        wxXmlDocument compiler;
+        if (!compiler.Load(compilers[i]) || compiler.GetRoot()->GetName() != wxT("CodeBlocks_compiler"))
+            Manager::Get()->GetLogManager()->Log(_("Error: Invalid Code::Blocks compiler definition '") + compilers[i] + wxT("'."));
+        else
+        {
+            bool val = true;
+            wxString test;
+            if (!nonPlatComp && compiler.GetRoot()->GetAttribute(wxT("platform"), &test))
+            {
+                if (test == wxT("windows"))
+                    val = platform::windows;
+                else if (test == wxT("macosx"))
+                    val = platform::macosx;
+                else if (test == wxT("linux"))
+                    val = platform::linux;
+                else if (test == wxT("freebsd"))
+                    val = platform::freebsd;
+                else if (test == wxT("netbsd"))
+                    val = platform::netbsd;
+                else if (test == wxT("openbsd"))
+                    val = platform::openbsd;
+                else if (test == wxT("darwin"))
+                    val = platform::darwin;
+                else if (test == wxT("solaris"))
+                    val = platform::solaris;
+                else if (test == wxT("unix"))
+                    val = platform::unix;
+            }
+            if (val)
+                CompilerFactory::RegisterCompiler(
+                                   new CompilerXML(compiler.GetRoot()->GetAttribute(wxT("name"), wxEmptyString),
+                                                   compiler.GetRoot()->GetAttribute(wxT("id"), wxEmptyString),
+                                                   compilers[i]));
+        }
+    }
+
+    // register (if any) user-copies of built-in compilers
+    CompilerFactory::RegisterUserCompilers();
 }
 
 const wxString& CompilerGCC::GetCurrentCompilerID()
