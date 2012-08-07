@@ -1306,6 +1306,19 @@ void CompilerOptionsDlg::DoSaveCompilerDefinition()
         node->AddChild(new wxXmlNode(wxXML_CDATA_SECTION_NODE, wxEmptyString, tp));
     }
 
+    if (!compiler->m_SortOptions[0].IsEmpty())
+    {
+        node->SetNext(new wxXmlNode(wxXML_ELEMENT_NODE, wxT("Sort")));
+        node = node->GetNext();
+        node->AddAttribute(wxT("CFlags"), compiler->m_SortOptions[0]);
+    }
+    if (!compiler->m_SortOptions[1].IsEmpty())
+    {
+        node->SetNext(new wxXmlNode(wxXML_ELEMENT_NODE, wxT("Sort")));
+        node = node->GetNext();
+        node->AddAttribute(wxT("CPPFlags"), compiler->m_SortOptions[1]);
+    }
+
     wxXmlDocument doc;
     doc.SetVersion(wxT("1.0"));
     doc.SetRoot(root);
@@ -2637,9 +2650,7 @@ void CompilerOptionsDlg::OnApply()
             cfg->Write(_T("/save_html_build_log/full_command_line"), (bool)chk->IsChecked());
         chk = XRCCTRL(*this, "chkBuildProgressBar", wxCheckBox);
         if (chk)
-        {
             cfg->Write(_T("/build_progress/bar"), (bool)chk->IsChecked());
-        }
         chk = XRCCTRL(*this, "chkBuildProgressPerc", wxCheckBox);
         if (chk)
         {
@@ -2663,9 +2674,7 @@ void CompilerOptionsDlg::OnApply()
 
         chk = XRCCTRL(*this, "chkRebuildSeperately", wxCheckBox);
         if (chk)
-        {
             cfg->Write(_T("/rebuild_seperately"), (bool)chk->IsChecked());
-        }
 
         wxListBox* lst = XRCCTRL(*this, "lstIgnore", wxListBox);
         if (lst)

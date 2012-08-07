@@ -126,6 +126,8 @@ Compiler::Compiler(const Compiler& other) :
     m_Programs        = other.m_Programs;
     m_Switches        = other.m_Switches;
     m_Options         = other.m_Options;
+    m_SortOptions[0]  = other.m_SortOptions[0];
+    m_SortOptions[1]  = other.m_SortOptions[1];
     m_IncludeDirs     = MakeUniqueArray(other.m_IncludeDirs,    true);
     m_ResIncludeDirs  = MakeUniqueArray(other.m_ResIncludeDirs, true);
     m_LibDirs         = MakeUniqueArray(other.m_LibDirs,        true);
@@ -944,6 +946,22 @@ void Compiler::LoadDefaultOptions(const wxString& name, int recursion)
                 m_Commands[(int)ctLinkStaticCmd].push_back(tool);
             else if (cmd == wxT("LinkNative"))
                 m_Commands[(int)ctLinkNativeCmd].push_back(tool);
+        }
+        else if (node->GetName() == wxT("Sort"))
+        {
+            wxString flags;
+            if (node->GetAttribute(wxT("CFlags"), &flags))
+            {
+                flags.Replace(wxT("\n"), wxT(" "));
+                flags.Replace(wxT("\r"), wxT(" "));
+                m_SortOptions[0] += wxT(" ") + flags;
+            }
+            else if (node->GetAttribute(wxT("CPPFlags"), &flags))
+            {
+                flags.Replace(wxT("\n"), wxT(" "));
+                flags.Replace(wxT("\r"), wxT(" "));
+                m_SortOptions[1] += wxT(" ") + flags;
+            }
         }
         else if (node->GetName() == wxT("Common"))
         {

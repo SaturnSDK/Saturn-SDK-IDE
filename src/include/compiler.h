@@ -344,6 +344,8 @@ class DLLIMPORT Compiler : public CompileOptionsBase
 
         /** @brief Get the compiler version string */
         const wxString GetVersionString() const { return m_VersionString; };
+
+        wxString m_SortOptions[2]; // m_SortOptions[0] == C-only flags; m_SortOptions[1] == C++-only flags
     protected:
         friend class CompilerFactory;
         Compiler(const Compiler& other); // copy ctor to copy everything but update m_ID

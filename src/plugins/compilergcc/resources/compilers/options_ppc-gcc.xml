@@ -171,4 +171,6 @@
     <Common name="cmds"/>
 
     <Common name="re"/>
+
+    <Common name="sort"/>
 </CodeBlocks_compiler_options>

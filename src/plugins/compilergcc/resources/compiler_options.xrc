@@ -150,7 +150,6 @@
 																	</object>
 																	<object class="sizeritem">
 																		<object class="wxCheckListBox" name="lstCompilerOptions">
-																			<tooltip>Right-click to setup or edit compiler flags</tooltip>
 																			<style>wxLB_HSCROLL</style>
 																		</object>
 																		<flag>wxTOP|wxLEFT|wxRIGHT|wxEXPAND|wxALIGN_LEFT|wxALIGN_TOP</flag>

@@ -563,7 +563,9 @@ void CompilerGCC::BuildModuleMenu(const ModuleType type, wxMenu* menu, const Fil
     else if (data && data->GetKind() == FileTreeData::ftdkProject)
     {
         // popup menu on a project
-        menu->AppendSeparator();
+        wxMenuItem* itm = menu->FindItemByPosition(menu->GetMenuItemCount() - 1);
+        if (itm && !itm->IsSeparator())
+            menu->AppendSeparator();
         menu->Append(idMenuCompileFromProjectManager, _("Build"));
         menu->Append(idMenuRebuildFromProjectManager, _("Rebuild"));
         menu->Append(idMenuCleanFromProjectManager,   _("Clean"));
@@ -3643,7 +3645,8 @@ void CompilerGCC::OnJobEnd(size_t procIndex, int exitCode)
                                             m_Errors.GetCount(cltError), m_Errors.GetCount(cltWarning), mins, secs);
             LogMessage(msg, exitCode == 0 ? cltWarning : cltError, ltAll, exitCode != 0);
             LogWarningOrError(cltNormal, 0, wxEmptyString, wxEmptyString,
-                              wxString::Format(_("=== Build finished: %s ==="), msg.wx_str()));
+                              wxString::Format(_("=== Build %s: %s ==="),
+                                               wxString(exitCode == 0 ? _("finished") : _("failed")).wx_str(), msg.wx_str()));
             SaveBuildLog();
             if (!Manager::IsBatchBuild() && m_pLog->progress)
                 m_pLog->progress->SetValue(0);
