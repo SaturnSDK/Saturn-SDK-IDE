@@ -236,7 +236,7 @@ extern DLLIMPORT bool IsWindowReallyShown(wxWindow* win);
 enum SettingsIconsStyle
 {
     sisLargeIcons    = 0, ///< Large icons (default)
-    sisNoIcons       = 1, ///< No icons, just text
+    sisNoIcons       = 1 ///< No icons, just text
 };
 
 class wxListCtrl;
@@ -278,7 +278,7 @@ inline void NotifyMissingFile(const wxString &name)
     wxString msg;
     msg.Printf(_T("The file %s could not be found.\nPlease check your installation."), name.c_str());
     cbMessageBox(msg);
-};
+}
 
 /// Result values of cbDirAccessCheck()
 enum DirAccessCheck
@@ -311,7 +311,7 @@ namespace platform
     }windows_version_t;
 
     extern DLLIMPORT windows_version_t WindowsVersion();
-};
+}
 
 // returns the real path of a file by resolving symlinks
 // not yet optimal but should do for now
