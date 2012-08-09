@@ -1510,7 +1510,11 @@ void CodeCompletion::EditorEventHook(cbEditor* editor, wxScintillaEvent& event)
             }
             else
             {
-                if (style != wxSCI_C_DEFAULT && style != wxSCI_C_OPERATOR && style != wxSCI_C_IDENTIFIER)
+                if (   style != wxSCI_C_DEFAULT
+                    && style != wxSCI_C_OPERATOR
+                    && style != wxSCI_C_IDENTIFIER
+                    && style != wxSCI_C_WORD2
+                    && style != wxSCI_C_GLOBALCLASS )
                 {
                     event.Skip();
                     return;
@@ -1591,7 +1595,7 @@ void CodeCompletion::RereadOptions()
     m_CCAutoLaunchChars    = cfg->ReadInt(_T("/auto_launch_chars"),     3);
     m_CCAutoLaunch         = cfg->ReadBool(_T("/auto_launch"),          true);
     m_CCLaunchDelay        = cfg->ReadInt(_T("/cc_delay"),              300);
-    m_CCMaxMatches         = cfg->ReadInt(_T("/max/matches"),           16384);
+    m_CCMaxMatches         = cfg->ReadInt(_T("/max_matches"),           16384);
     m_CCAutoAddParentheses = cfg->ReadBool(_T("/auto_add_parentheses"), true);
     m_CCFillupChars        = cfg->Read(_T("/fillup_chars"),             wxEmptyString);
     m_CCAutoSelectOne      = cfg->ReadBool(_T("/auto_select_one"),      false);
@@ -1633,6 +1637,8 @@ void CodeCompletion::LoadTokenReplacements()
 {
     ConfigManagerContainer::StringToStringMap repl;
     Manager::Get()->GetConfigManager(_T("code_completion"))->Read(_T("token_replacements"), &repl);
+
+    // Keep this in sync with CodeCompletion::LoadTokenReplacements()
 
     // for GCC
     repl[_T("_GLIBCXX_STD")]                    = _T("std");
@@ -2194,23 +2200,8 @@ void CodeCompletion::OnSelectedFileReparse(wxCommandEvent& event)
 
 void CodeCompletion::OnAppDoneStartup(CodeBlocksEvent& event)
 {
-    // Let the app startup before parsing
-    // This is to prevent the Splash Screen from delaying so much. By adding
-    // the timer, the splash screen is closed and Code::Blocks doesn't take
-    // so long in starting.
-    m_InitDone = true;
-
-    // Dreaded DDE-open bug related: do not touch the following lines unless for a good reason
-
-    // parse any projects opened through DDE or the command-line
-    cbProject* curProject = Manager::Get()->GetProjectManager()->GetActiveProject();
-    if (curProject && !m_NativeParser.GetParserByProject(curProject))
-        m_NativeParser.CreateParser(curProject);
-
-    // parse any files opened through DDE or the command-line
-    EditorBase* editor = Manager::Get()->GetEditorManager()->GetActiveEditor();
-    if (editor)
-        m_NativeParser.OnEditorActivated(editor);
+    if (!m_InitDone)
+        DoParseOpenedProjectAndActiveEditor();
 
     event.Skip();
 }
@@ -2441,9 +2432,8 @@ void CodeCompletion::OnCCDebugLogger(wxCommandEvent& event)
 void CodeCompletion::OnParserStart(wxCommandEvent& event)
 {
     cbProject* project = static_cast<cbProject*>(event.GetClientData());
-    ParsingType type = static_cast<ParsingType>(event.GetInt());
-
-    if (type == ptCreateParser)
+    ParserCommon::ParserState state = static_cast<ParserCommon::ParserState>(event.GetInt());
+    if (state == ParserCommon::ptCreateParser)
     {
         if (m_CCEnableHeaders)
         {
@@ -2460,8 +2450,8 @@ void CodeCompletion::OnParserStart(wxCommandEvent& event)
 
 void CodeCompletion::OnParserEnd(wxCommandEvent& event)
 {
-    ParsingType type = static_cast<ParsingType>(event.GetInt());
-    if (type == ptCreateParser)
+    ParserCommon::ParserState state = static_cast<ParserCommon::ParserState>(event.GetInt());
+    if (state == ParserCommon::ptCreateParser)
     {
         if (   m_CCEnableHeaders
             && !m_SystemHeadersThreads.empty()
@@ -2529,7 +2519,9 @@ void CodeCompletion::OnEditorTooltip(CodeBlocksEvent& event)
     int style = event.GetInt();
     if (   (style != wxSCI_C_DEFAULT)
         && (style != wxSCI_C_OPERATOR)
-        && (style != wxSCI_C_IDENTIFIER) )
+        && (style != wxSCI_C_IDENTIFIER)
+        && (style != wxSCI_C_WORD2)
+        && (style != wxSCI_C_GLOBALCLASS) )
     {
         event.Skip();
         return;
@@ -2556,6 +2548,7 @@ void CodeCompletion::OnEditorTooltip(CodeBlocksEvent& event)
         CC_LOCKER_TRACK_TT_MTX_LOCK(s_TokensTreeMutex)
 
         int count = 0;
+        size_t tipWidth = 0;
         for (TokenIdxSet::iterator it = result.begin(); it != result.end(); ++it)
         {
             Token* token = tree->at(*it);
@@ -2567,6 +2560,8 @@ void CodeCompletion::OnEditorTooltip(CodeBlocksEvent& event)
 
                 tips.Add(tip);
                 calltip << tip << _T("\n");
+                if (tip.Length() > tipWidth)
+                    tipWidth = tip.Length();
                 ++count;
                 if (count > 32) // allow max 32 matches (else something is definitely wrong)
                 {
@@ -2581,6 +2576,20 @@ void CodeCompletion::OnEditorTooltip(CodeBlocksEvent& event)
         if (!calltip.IsEmpty())
         {
             calltip.RemoveLast(); // last \n
+
+            int lnStart = ed->GetControl()->PositionFromLine(ed->GetControl()->LineFromPosition(pos));
+                         // pos - lnStart   == distance from start of line
+                         //  + tipWidth + 1 == projected virtual position of tip end (with a 1 character buffer) from start of line
+                         //  - (width_of_editor_in_pixels / width_of_character) == distance tip extends past window edge
+                         //       horizontal scrolling is accounted for by PointFromPosition().x
+            int offset = tipWidth + pos + 1 - lnStart -
+                         (ed->GetControl()->GetSize().x - ed->GetControl()->PointFromPosition(lnStart).x) /
+                          ed->GetControl()->TextWidth(wxSCI_STYLE_LINENUMBER, _T("W"));
+            if (offset > 0)
+                pos -= offset;
+            if (pos < lnStart) // do not go to previous line if tip is wider than editor
+                pos = lnStart;
+
             ed->GetControl()->CallTipShow(pos, calltip);
             TRACE(calltip);
         }
@@ -2672,7 +2681,9 @@ void CodeCompletion::DoCodeComplete()
     else if (lineFirstChar == _T(':') && curChar == _T(':'))
         return;
 
-    if (style != wxSCI_C_DEFAULT && style != wxSCI_C_OPERATOR && style != wxSCI_C_IDENTIFIER)
+    if (   style != wxSCI_C_DEFAULT
+        && style != wxSCI_C_OPERATOR
+        && style != wxSCI_C_IDENTIFIER )
         return;
 
     TRACE(_T("DoCodeComplete -> CodeComplete"));
@@ -3248,6 +3259,27 @@ void CodeCompletion::EnableToolbarTools(bool enable)
         m_Scope->Enable(enable);
     if (m_Function)
         m_Function->Enable(enable);
+}
+
+void CodeCompletion::DoParseOpenedProjectAndActiveEditor()
+{
+    // Let the app startup before parsing
+    // This is to prevent the Splash Screen from delaying so much. By adding
+    // the timer, the splash screen is closed and Code::Blocks doesn't take
+    // so long in starting.
+    m_InitDone = true;
+
+    // Dreaded DDE-open bug related: do not touch the following lines unless for a good reason
+
+    // parse any projects opened through DDE or the command-line
+    cbProject* curProject = Manager::Get()->GetProjectManager()->GetActiveProject();
+    if (curProject && !m_NativeParser.GetParserByProject(curProject))
+        m_NativeParser.CreateParser(curProject);
+
+    // parse any files opened through DDE or the command-line
+    EditorBase* editor = Manager::Get()->GetEditorManager()->GetActiveEditor();
+    if (editor)
+        m_NativeParser.OnEditorActivated(editor);
 }
 
 void CodeCompletion::OnCodeCompleteTimer(wxTimerEvent& event)
