@@ -122,6 +122,17 @@ AutoDetectResult CompilerMINGW::AutoDetectInstallationDir()
                 }
 #endif
             }
+            // check for PortableApps.com installation
+            if (!wxFileExists(m_MasterPath + sep + _T("bin") + sep + m_Programs.C))
+            {
+                wxString drive = wxFileName(ConfigManager::GetExecutableFolder()).GetVolume() + wxT(":\\");
+                if (wxFileExists(drive + wxT("PortableApps\\CommonFiles\\MinGW\\bin\\") + m_Programs.C))
+                    m_MasterPath = drive + wxT("PortableApps\\CommonFiles\\MinGW");
+                else if (wxFileExists(drive + wxT("CommonFiles\\MinGW\\bin\\") + m_Programs.C))
+                    m_MasterPath = drive + wxT("CommonFiles\\MinGW");
+                else if (wxFileExists(drive + wxT("MinGW\\bin\\") + m_Programs.C))
+                    m_MasterPath = drive + wxT("MinGW");
+            }
         }
         else
             m_Programs.MAKE = _T("make.exe"); // we distribute "make" not "mingw32-make"

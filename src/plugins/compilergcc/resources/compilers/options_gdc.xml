@@ -45,13 +45,15 @@
         <Option name="Profile code when executed"
                 option="-pg"
                 category="Profiling"
-                additionalLibs="-pg -lgmon"/>
+                additionalLibs="-pg -lgmon"
+                supersedes="-s"/>
     </if>
     <else>
         <Option name="Profile code when executed"
                 option="-pg"
                 category="Profiling"
-                additionalLibs="-pg"/>
+                additionalLibs="-pg"
+                supersedes="-s"/>
     </else>
 
     <Category name="Warnings">

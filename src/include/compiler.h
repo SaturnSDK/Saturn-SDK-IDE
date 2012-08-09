@@ -345,7 +345,12 @@ class DLLIMPORT Compiler : public CompileOptionsBase
         /** @brief Get the compiler version string */
         const wxString GetVersionString() const { return m_VersionString; };
 
-        wxString m_SortOptions[2]; // m_SortOptions[0] == C-only flags; m_SortOptions[1] == C++-only flags
+        void SetCOnlyFlags(const wxString& flags)   { m_SortOptions[0] = flags; };
+        void SetCPPOnlyFlags(const wxString& flags) { m_SortOptions[1] = flags; };
+
+        const wxString& GetCOnlyFlags()   { return m_SortOptions[0]; };
+        const wxString& GetCPPOnlyFlags() { return m_SortOptions[1]; };
+
     protected:
         friend class CompilerFactory;
         Compiler(const Compiler& other); // copy ctor to copy everything but update m_ID
@@ -387,6 +392,7 @@ class DLLIMPORT Compiler : public CompileOptionsBase
         wxString            m_ErrorLine;
         wxString            m_Error;
         wxString            m_VersionString;
+        wxString            m_SortOptions[2]; // m_SortOptions[0] == C-only flags; m_SortOptions[1] == C++-only flags
 
         int m_Weight; // lower means listed sooner (try to keep between 0 and 100)
     private:
@@ -420,6 +426,8 @@ class DLLIMPORT Compiler : public CompileOptionsBase
             CompilerSwitches    Switches;
             CompilerOptions     Options;
             RegExArray          RegExes;
+
+            wxString SortOptions[2];
         };
         MirrorSettings m_Mirror;
         bool           m_Mirrored; // flag to only mirror the settings once

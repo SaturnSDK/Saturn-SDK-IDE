@@ -182,7 +182,7 @@ void BrowseSelector::OnNavigationKey(wxKeyEvent &event)
 
 	long selected = m_listBox->GetSelection();
 	long maxItems = m_listBox->GetCount();
-	long itemToSelect;
+	long itemToSelect = 0;
     LOGIT( _T("OnNavigationKey selected[%d]maxItems[%d]key[%d]"), selected, maxItems, event.GetKeyCode() );
 
 	if( (event.GetKeyCode() == WXK_RIGHT) || (event.GetKeyCode() == WXK_DOWN) )

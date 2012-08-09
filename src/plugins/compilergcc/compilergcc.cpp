@@ -1315,6 +1315,17 @@ int CompilerGCC::DoRunQueue()
         wxString err = wxString::Format(_("Execution of '%s' in '%s' failed."),
                                         cmd->command.wx_str(), wxGetCwd().wx_str());
         LogMessage(err, cltError);
+        LogWarningOrError(cltError, 0, wxEmptyString, wxEmptyString, err);
+        if (!m_CommandQueue.LastCommandWasRun())
+        {
+            wxString msg = wxString::Format(_("%s (%s)"), GetErrWarnStr().wx_str(), GetMinSecStr().wx_str());
+            LogMessage(msg, cltError, ltAll, true);
+            LogWarningOrError(cltNormal, 0, wxEmptyString, wxEmptyString,
+                              wxString::Format(_("=== Build failed: %s ==="), msg.wx_str()));
+            SaveBuildLog();
+            if (!Manager::IsBatchBuild() && m_pLog->progress)
+                m_pLog->progress->SetValue(0);
+        }
         Delete(m_CompilerProcessList.at(procIndex).pProcess);
         m_CommandQueue.Clear();
         ResetBuildState();
@@ -3629,20 +3640,11 @@ void CompilerGCC::OnJobEnd(size_t procIndex, int exitCode)
         while (!m_BuildJobTargetsList.empty())
             m_BuildJobTargetsList.pop();
 
-
-        // long int elapsed = wxGetElapsedTime() / 1000;
-        wxLongLong localTime = wxGetLocalTimeMillis();
-        wxLongLong duration = localTime - m_StartTime;
-        long int elapsed = duration.ToLong();
-        elapsed /= 1000;
-        int mins = elapsed / 60;
-        int secs = (elapsed % 60);
-        wxString msg = wxString::Format(_("Process terminated with status %d (%d minutes, %d seconds)"), exitCode, mins, secs);
+        wxString msg = wxString::Format(_("Process terminated with status %d (%s)"), exitCode, GetMinSecStr().wx_str());
         LogMessage(msg, exitCode == 0 ? cltWarning : cltError, ltAll, exitCode != 0);
         if (!m_CommandQueue.LastCommandWasRun())
         {
-            wxString msg = wxString::Format(_("%d errors, %d warnings (%d minutes, %d seconds)"),
-                                            m_Errors.GetCount(cltError), m_Errors.GetCount(cltWarning), mins, secs);
+            wxString msg = wxString::Format(_("%s (%s)"), GetErrWarnStr().wx_str(), GetMinSecStr().wx_str());
             LogMessage(msg, exitCode == 0 ? cltWarning : cltError, ltAll, exitCode != 0);
             LogWarningOrError(cltNormal, 0, wxEmptyString, wxEmptyString,
                               wxString::Format(_("=== Build %s: %s ==="),
@@ -3717,7 +3719,7 @@ void CompilerGCC::NotifyJobDone(bool showNothingToBeDone)
         return;
 
     m_BuildJob = bjIdle;
-    if (showNothingToBeDone)
+    if (showNothingToBeDone && m_Errors.GetCount(cltError) == 0)
     {
         LogMessage(m_Clean ? _("Done.\n") : _("Nothing to be done (all items are up-to-date).\n"));
         // if message manager is auto-hiding, unlock it (i.e. close it)
@@ -3735,4 +3737,21 @@ void CompilerGCC::NotifyJobDone(bool showNothingToBeDone)
         evt.SetInt(m_LastExitCode);
         Manager::Get()->ProcessEvent(evt);
     }
+}
+
+wxString CompilerGCC::GetErrWarnStr()
+{
+    return wxString::Format(_("%d error%s, %d warning%s"),
+                            m_Errors.GetCount(cltError), wxString(m_Errors.GetCount(cltError) == 1 ? _("") : _("s")).wx_str(),
+                            m_Errors.GetCount(cltWarning), wxString(m_Errors.GetCount(cltWarning) == 1 ? _("") : _("s")).wx_str());
+}
+
+wxString CompilerGCC::GetMinSecStr()
+{
+    long int elapsed = (wxGetLocalTimeMillis() - m_StartTime).ToLong() / 1000;
+    int mins = elapsed / 60;
+    int secs = (elapsed % 60);
+    return wxString::Format(_("%d minute%s, %d second%s"),
+                            mins, wxString(mins == 1 ? _("") : _("s")).wx_str(),
+                            secs, wxString(secs == 1 ? _("") : _("s")).wx_str());
 }

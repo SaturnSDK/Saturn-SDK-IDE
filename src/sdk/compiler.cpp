@@ -378,6 +378,9 @@ void Compiler::MirrorCurrentSettings()
     m_Mirror.CmdsBefore       = m_CmdsBefore;
     m_Mirror.CmdsAfter        = m_CmdsAfter;
 
+    m_Mirror.SortOptions[0] = m_SortOptions[0];
+    m_Mirror.SortOptions[1] = m_SortOptions[1];
+
     m_Mirrored                = true;
 }
 
@@ -541,6 +544,12 @@ void Compiler::SaveSettings(const wxString& baseKey)
             cfg->Write(group + _T("/line"),     rs.line);
     }
 
+    // sorted flags
+    if (m_Mirror.SortOptions[0] != GetCOnlyFlags())
+        cfg->Write(tmp + _T("/sort/C"),   GetCOnlyFlags());
+    if (m_Mirror.SortOptions[1] != GetCPPOnlyFlags())
+        cfg->Write(tmp + _T("/sort/CPP"), GetCPPOnlyFlags());
+
     // custom vars
     wxString configpath = tmp + _T("/custom_variables/");
     cfg->DeleteSubPath(configpath);
@@ -690,7 +699,7 @@ void Compiler::LoadSettings(const wxString& baseKey)
         rs.desc     = cfg->Read(group + _T("/description"));
         rs.lt       = (CompilerLineType)cfg->ReadInt(group + _T("/type"), 0);
         rs.regex    = cfg->Read(group + _T("/regex"));
-        rs.msg[0  ] = cfg->ReadInt(group + _T("/msg1"), 0);
+        rs.msg[0]   = cfg->ReadInt(group + _T("/msg1"), 0);
         rs.msg[1]   = cfg->ReadInt(group + _T("/msg2"), 0);
         rs.msg[2]   = cfg->ReadInt(group + _T("/msg3"), 0);
         rs.filename = cfg->ReadInt(group + _T("/filename"), 0);
@@ -701,6 +710,10 @@ void Compiler::LoadSettings(const wxString& baseKey)
         else
             m_RegExes.Add(rs);
     }
+
+    // sorted flags
+    m_SortOptions[0] = cfg->Read(tmp + _T("/sort/C"), m_SortOptions[0]);
+    m_SortOptions[1] = cfg->Read(tmp + _T("/sort/CPP"), m_SortOptions[1]);
 
     // custom vars
     wxString configpath = tmp + _T("/custom_variables/");
@@ -951,12 +964,14 @@ void Compiler::LoadDefaultOptions(const wxString& name, int recursion)
                 flags.Replace(wxT("\n"), wxT(" "));
                 flags.Replace(wxT("\r"), wxT(" "));
                 m_SortOptions[0] += wxT(" ") + flags;
+                m_SortOptions[0] = MakeUniqueString(GetCOnlyFlags(), wxT(" "));
             }
             else if (node->GetAttribute(wxT("CPPFlags"), &flags))
             {
                 flags.Replace(wxT("\n"), wxT(" "));
                 flags.Replace(wxT("\r"), wxT(" "));
                 m_SortOptions[1] += wxT(" ") + flags;
+                m_SortOptions[1] = MakeUniqueString(GetCPPOnlyFlags(), wxT(" "));
             }
         }
         else if (node->GetName() == wxT("Common"))

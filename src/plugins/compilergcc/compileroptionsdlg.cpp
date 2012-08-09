@@ -1302,17 +1302,17 @@ void CompilerOptionsDlg::DoSaveCompilerDefinition()
         node->AddChild(new wxXmlNode(wxXML_CDATA_SECTION_NODE, wxEmptyString, tp));
     }
 
-    if (!compiler->m_SortOptions[0].IsEmpty())
+    if (!compiler->GetCOnlyFlags().IsEmpty())
     {
         node->SetNext(new wxXmlNode(wxXML_ELEMENT_NODE, wxT("Sort")));
         node = node->GetNext();
-        node->AddAttribute(wxT("CFlags"), compiler->m_SortOptions[0]);
+        node->AddAttribute(wxT("CFlags"), compiler->GetCOnlyFlags());
     }
-    if (!compiler->m_SortOptions[1].IsEmpty())
+    if (!compiler->GetCPPOnlyFlags().IsEmpty())
     {
         node->SetNext(new wxXmlNode(wxXML_ELEMENT_NODE, wxT("Sort")));
         node = node->GetNext();
-        node->AddAttribute(wxT("CPPFlags"), compiler->m_SortOptions[1]);
+        node->AddAttribute(wxT("CPPFlags"), compiler->GetCPPOnlyFlags());
     }
 
     wxXmlDocument doc;
@@ -2762,6 +2762,9 @@ void CompilerOptionsDlg::OnFlagsPopup(wxMouseEvent& event)
         pop->Append(1, _("Modify flag..."));
         pop->Append(2, _("Delete flag"));
     }
+    pop->AppendSeparator();
+    pop->Append(3, _("C - only flags..."));
+    pop->Append(4, _("C++ - only flags..."));
     pop->Connect(wxEVT_COMMAND_MENU_SELECTED, (wxObjectEventFunction)&CompilerOptionsDlg::OnFlagsPopupClick);
     m_MenuOption = wxNOT_FOUND;
     list->PopupMenu(pop, pos);
@@ -2769,7 +2772,41 @@ void CompilerOptionsDlg::OnFlagsPopup(wxMouseEvent& event)
     if (m_MenuOption == wxNOT_FOUND)
         return;
     wxString category;
-    if (m_MenuOption == 2)
+    if (m_MenuOption == 3)
+    {
+        Compiler* compiler = CompilerFactory::GetCompiler(m_CurrentCompilerIdx);
+        wxTextEntryDialog dlg(this, wxT("List flags that will only be used during C compilation"),
+                              wxT("C - only flags"), compiler->GetCOnlyFlags(), wxTextEntryDialogStyle|wxTE_MULTILINE|wxRESIZE_BORDER);
+        dlg.ShowModal();
+        wxString flags = dlg.GetValue();
+        flags.Replace(wxT("\n"), wxT(" "));
+        flags.Replace(wxT("\r"), wxT(" "));
+        flags = MakeUniqueString(flags, wxT(" "));
+        if (flags != compiler->GetCOnlyFlags())
+        {
+            compiler->SetCOnlyFlags(flags);
+            m_bDirty = true;
+        }
+        return;
+    }
+    else if (m_MenuOption == 4)
+    {
+        Compiler* compiler = CompilerFactory::GetCompiler(m_CurrentCompilerIdx);
+        wxTextEntryDialog dlg(this, wxT("List flags that will only be used during C++ compilation"),
+                              wxT("C++ - only flags"), compiler->GetCPPOnlyFlags(), wxTextEntryDialogStyle|wxTE_MULTILINE|wxRESIZE_BORDER);
+        dlg.ShowModal();
+        wxString flags = dlg.GetValue();
+        flags.Replace(wxT("\n"), wxT(" "));
+        flags.Replace(wxT("\r"), wxT(" "));
+        flags = MakeUniqueString(flags, wxT(" "));
+        if (flags != compiler->GetCPPOnlyFlags())
+        {
+            compiler->SetCPPOnlyFlags(flags);
+            m_bDirty = true;
+        }
+        return;
+    }
+    else if (m_MenuOption == 2)
     {
         size_t i = 0;
         for (; i < m_Options.GetCount(); ++i)

@@ -331,9 +331,9 @@ void CompilerCommandGenerator::GenerateCommandLine(wxString&           macro,
     wxString cFlags  = m_CFlags[target];
     wxArrayString remFlags;
     if (compExec == ceC)
-        remFlags = GetArrayFromString(compiler->m_SortOptions[1], wxT(" "));
+        remFlags = GetArrayFromString(compiler->GetCPPOnlyFlags(), wxT(" "));
     else if (compExec == ceCPP)
-        remFlags = GetArrayFromString(compiler->m_SortOptions[0], wxT(" "));
+        remFlags = GetArrayFromString(compiler->GetCOnlyFlags(), wxT(" "));
     if (!remFlags.IsEmpty())
     {
         wxArrayString aCflags = GetArrayFromString(cFlags, wxT(" "));
