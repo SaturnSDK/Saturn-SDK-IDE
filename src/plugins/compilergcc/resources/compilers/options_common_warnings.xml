@@ -4,7 +4,7 @@
     <Category name="Warnings">
         <Option name="In C mode, support all ISO C90 programs. In C++ mode, remove GNU extensions that conflict with ISO C++"
                 option="-ansi"/>
-        <Option name="Enable all compiler warnings (overrides many other settings)"
+        <Option name="Enable all common compiler warnings (overrides many other settings)"
                 option="-Wall"
                 supersedes="-w"/>
         <Option name="Enable extra compiler warnings"

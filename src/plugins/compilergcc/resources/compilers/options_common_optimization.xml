@@ -4,7 +4,7 @@
     <Category name="Optimization">
         <Option name="Strip all symbols from binary (minimizes size)"
                 additionalLibs="-s"
-                supersedes="-g -ggdb"/>
+                supersedes="-g -ggdb -pg"/>
         <Option name="Optimize generated code (for speed)"
                 option="-O"
                 checkAgainst="-g -ggdb"

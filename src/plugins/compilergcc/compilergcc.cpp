@@ -197,7 +197,6 @@ int idMenuClearErrors                              = XRCID("idCompilerMenuClearE
 int idMenuSettings                                 = XRCID("idCompilerMenuSettings");
 
 int idToolTarget                                   = XRCID("idToolTarget");
-int idToolTargetLabel                              = XRCID("idToolTargetLabel");
 
 int idGCCProcess1                                  = wxNewId();
 int idGCCProcess2                                  = wxNewId();
@@ -243,7 +242,6 @@ BEGIN_EVENT_TABLE(CompilerGCC, cbCompilerPlugin)
     EVT_UPDATE_UI(idMenuClearErrors,                   CompilerGCC::OnUpdateUI)
     EVT_UPDATE_UI(idMenuSettings,                      CompilerGCC::OnUpdateUI)
     EVT_UPDATE_UI(idToolTarget,                        CompilerGCC::OnUpdateUI)
-    EVT_UPDATE_UI(idToolTargetLabel,                   CompilerGCC::OnUpdateUI)
 
     EVT_IDLE(                                       CompilerGCC::OnIdle)
     EVT_TIMER(idTimerPollCompiler,                  CompilerGCC::OnTimer)

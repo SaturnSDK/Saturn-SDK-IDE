@@ -2781,6 +2781,7 @@ void CompilerOptionsDlg::OnFlagsPopup(wxMouseEvent& event)
         wxString flags = dlg.GetValue();
         flags.Replace(wxT("\n"), wxT(" "));
         flags.Replace(wxT("\r"), wxT(" "));
+        flags.Replace(wxT("\t"), wxT(" "));
         flags = MakeUniqueString(flags, wxT(" "));
         if (flags != compiler->GetCOnlyFlags())
         {
@@ -2798,6 +2799,7 @@ void CompilerOptionsDlg::OnFlagsPopup(wxMouseEvent& event)
         wxString flags = dlg.GetValue();
         flags.Replace(wxT("\n"), wxT(" "));
         flags.Replace(wxT("\r"), wxT(" "));
+        flags.Replace(wxT("\t"), wxT(" "));
         flags = MakeUniqueString(flags, wxT(" "));
         if (flags != compiler->GetCPPOnlyFlags())
         {

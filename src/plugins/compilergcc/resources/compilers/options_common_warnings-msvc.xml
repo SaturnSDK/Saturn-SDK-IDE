@@ -2,7 +2,7 @@
 <!DOCTYPE CodeBlocks_compiler_options>
 <CodeBlocks_compiler_options>
     <Category name="Warnings">
-        <Option name="Enable all compiler warnings"
+        <Option name="Enable all common compiler warnings"
                 option="/Wall"
                 supersedes="/W1 /W2 /W3 /W4"/>
         <Option name="Enable warnings level 1"

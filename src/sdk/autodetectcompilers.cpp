@@ -40,10 +40,22 @@ AutoDetectCompilers::AutoDetectCompilers(wxWindow* parent)
     if (list)
     {
         list->Connect(wxEVT_MOTION, wxMouseEventHandler(AutoDetectCompilers::OnMouseMotion));
-        list->SetToolTip(wxEmptyString);
         list->ClearAll();
         list->InsertColumn(0, _("Compiler"), wxLIST_FORMAT_LEFT, 380);
         list->InsertColumn(1, _("Status"),   wxLIST_FORMAT_LEFT, 100);
+
+        bool firstRun = true;
+        for (size_t i = 0; i < CompilerFactory::GetCompilersCount(); ++i)
+        {
+            Compiler* compiler = CompilerFactory::GetCompiler(i);
+            if (!compiler)
+                continue;
+            if (!compiler->GetMasterPath().IsEmpty())
+            {
+                firstRun = false; // all master paths are empty on first run
+                break;
+            }
+        }
 
         for (size_t i = 0; i < CompilerFactory::GetCompilersCount(); ++i)
         {
@@ -59,7 +71,7 @@ AutoDetectCompilers::AutoDetectCompilers(wxWindow* parent)
 
             int idx = list->GetItemCount() - 1;
             int highlight = 0;
-            if (path.IsEmpty())
+            if (path.IsEmpty() && !firstRun)
             {
                 // Here, some user-interaction is required not to show this
                 // dialog again on each new start-up of C::B.
@@ -162,7 +174,14 @@ void AutoDetectCompilers::OnMouseMotion(wxMouseEvent& event)
         txt = CompilerFactory::GetCompiler(idx)->GetMasterPath();
     else
         txt = wxEmptyString;
-    if (txt != list->GetToolTip()->GetTip())
+    if (list->GetToolTip())
+    {
+        if (txt.IsEmpty())
+            list->UnsetToolTip();
+        else if (txt != list->GetToolTip()->GetTip())
+            list->SetToolTip(txt);
+    }
+    else if (!txt.IsEmpty())
         list->SetToolTip(txt);
 }
 
