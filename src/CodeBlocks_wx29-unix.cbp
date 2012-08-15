@@ -2387,6 +2387,9 @@
 		<Unit filename="sdk/newfromtemplatedlg.cpp">
 			<Option target="sdk" />
 		</Unit>
+		<Unit filename="sdk/nullptr.cpp">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
 		<Unit filename="sdk/personalitymanager.cpp">
 			<Option target="sdk" />
 		</Unit>
@@ -2520,6 +2523,12 @@
 			<Option target="scintilla" />
 		</Unit>
 		<Unit filename="sdk/resources/lexers/lexer_cg.xml">
+			<Option target="scintilla" />
+		</Unit>
+		<Unit filename="sdk/resources/lexers/lexer_cmake.sample">
+			<Option target="scintilla" />
+		</Unit>
+		<Unit filename="sdk/resources/lexers/lexer_cmake.xml">
 			<Option target="scintilla" />
 		</Unit>
 		<Unit filename="sdk/resources/lexers/lexer_cpp.sample">
