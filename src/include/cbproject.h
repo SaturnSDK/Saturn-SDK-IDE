@@ -10,7 +10,6 @@
 #include <wx/dynarray.h>
 #include <wx/hashmap.h>
 #include <wx/treectrl.h>
-#include <wx/string.h>
 
 #include "settings.h"
 #include "misctreeitemdata.h"
@@ -83,9 +82,9 @@ class DLLIMPORT FileTreeData : public MiscTreeItemData
   */
 enum PCHMode
 {
-    pchSourceDir = 0,   /// In a dir (named by the PCH) on the same level as the source header (default).
-    pchObjectDir,       /// In the objects output dir, along with other object files.
-    pchSourceFile      /// In a file alongside the source header (with .gch appended).
+    pchSourceDir = 0, /// In a dir (named by the PCH) on the same level as the source header (default).
+    pchObjectDir,     /// In the objects output dir, along with other object files.
+    pchSourceFile     /// In a file alongside the source header (with .gch appended).
 };
 
 /** @brief Represents a Code::Blocks project.
@@ -727,12 +726,12 @@ class DLLIMPORT cbProject : public CompileTargetBase
         mutable wxString       m_MakefileExecutionDir;
 
         std::vector<Glob> m_Globs;
-        FilesList        m_Files;
-        ProjectFileArray m_FileArray;
-        wxArrayString    m_ExpandedNodes;
-        wxArrayString    m_SelectedNodes;
-        bool             m_Loaded;
-        wxTreeItemId     m_ProjectNode;
+        FilesList         m_Files;
+        ProjectFileArray  m_FileArray;
+        wxArrayString     m_ExpandedNodes;
+        wxArrayString     m_SelectedNodes;
+        bool              m_Loaded;
+        wxTreeItemId      m_ProjectNode;
 
         wxArrayString m_VirtualFolders; // not saved, just used throughout cbProject's lifetime
 
