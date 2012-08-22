@@ -255,6 +255,12 @@ void CompilerFactory::SaveSettings()
     {
         wxString baseKey = Compilers[i]->GetParentID().IsEmpty() ? _T("/sets") : _T("/user_sets");
         Compilers[i]->SaveSettings(baseKey);
+
+        CodeBlocksEvent event(cbEVT_COMPILER_SETTINGS_CHANGED);
+        event.SetString(Compilers[i]->GetID());
+        event.SetInt(static_cast<int>(i));
+        event.SetClientData(static_cast<void*>(Compilers[i]));
+        Manager::Get()->ProcessEvent(event);
     }
 }
 
@@ -265,6 +271,13 @@ void CompilerFactory::LoadSettings()
     {
         wxString baseKey = Compilers[i]->GetParentID().IsEmpty() ? _T("/sets") : _T("/user_sets");
         Compilers[i]->LoadSettings(baseKey);
+
+        CodeBlocksEvent event(cbEVT_COMPILER_SETTINGS_CHANGED);
+        event.SetString(Compilers[i]->GetID());
+        event.SetInt(static_cast<int>(i));
+        event.SetClientData(static_cast<void*>(Compilers[i]));
+        Manager::Get()->ProcessEvent(event);
+
         if (Compilers[i]->GetMasterPath().IsEmpty())
             needAutoDetection = true;
     }
