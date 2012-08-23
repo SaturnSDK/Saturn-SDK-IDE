@@ -81,7 +81,7 @@
         <Option name="allow deprecated features"
                 option="-fdeprecated"/>
         <Option name="compile in debug code"
-                option="-debug"/>
+                option="-fdebug"/>
         <Option name="inline expand functions"
                 option="-finline-functions"/>
         <Option name="compile release version, which means not generating code for contracts and asserts"

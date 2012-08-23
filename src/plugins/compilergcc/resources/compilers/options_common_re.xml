@@ -203,4 +203,10 @@
            msg="1">
         <![CDATA[([Ii]nfo:[ \t].*)\(auto-import\)]]>
     </RegEx>
+    <RegEx name="Linker warning (different sized sections)"
+           type="warning"
+           msg="2"
+           file="1">
+        <![CDATA[([][{}() \t#%$~[:alnum:]&_:+/\.-]+):[ \t]+(duplicate section.*has different size)]]>
+    </RegEx>
 </CodeBlocks_compiler_options>
