@@ -44,19 +44,6 @@ AutoDetectCompilers::AutoDetectCompilers(wxWindow* parent)
         list->InsertColumn(0, _("Compiler"), wxLIST_FORMAT_LEFT, 380);
         list->InsertColumn(1, _("Status"),   wxLIST_FORMAT_LEFT, 100);
 
-        bool firstRun = true;
-        for (size_t i = 0; i < CompilerFactory::GetCompilersCount(); ++i)
-        {
-            Compiler* compiler = CompilerFactory::GetCompiler(i);
-            if (!compiler)
-                continue;
-            if (!compiler->GetMasterPath().IsEmpty())
-            {
-                firstRun = false; // all master paths are empty on first run
-                break;
-            }
-        }
-
         for (size_t i = 0; i < CompilerFactory::GetCompilersCount(); ++i)
         {
             Compiler* compiler = CompilerFactory::GetCompiler(i);
@@ -71,7 +58,7 @@ AutoDetectCompilers::AutoDetectCompilers(wxWindow* parent)
 
             int idx = list->GetItemCount() - 1;
             int highlight = 0;
-            if (path.IsEmpty() && !firstRun)
+            if (path.IsEmpty() && Manager::Get()->GetConfigManager(wxT("compiler"))->Exists(wxT("/sets/") + compiler->GetID() + wxT("/name")))
             {
                 // Here, some user-interaction is required not to show this
                 // dialog again on each new start-up of C::B.

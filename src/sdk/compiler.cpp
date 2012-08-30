@@ -814,6 +814,16 @@ void Compiler::LoadDefaultOptions(const wxString& name, int recursion)
     int depth = 0;
     wxString categ;
     bool exclu = false;
+
+    wxString baseKey = GetParentID().IsEmpty() ? wxT("/sets") : wxT("/user_sets");
+    ConfigManager* cfg = Manager::Get()->GetConfigManager(wxT("compiler"));
+    wxString cmpKey;
+    cmpKey.Printf(wxT("%s/set%3.3d"), baseKey.c_str(), CompilerFactory::GetCompilerIndex(this) + 1);
+    if (!cfg->Exists(cmpKey + wxT("/name")))
+        cmpKey.Printf(wxT("%s/%s"), baseKey.c_str(), m_ID.c_str());
+    if (!cfg->Exists(cmpKey + wxT("/name")))
+        cmpKey.Replace(wxT("-"), wxEmptyString);
+
     while (node)
     {
         const wxString value = node->GetAttribute(wxT("value"), wxEmptyString);
@@ -837,19 +847,19 @@ void Compiler::LoadDefaultOptions(const wxString& name, int recursion)
         {
             wxString prog = node->GetAttribute(wxT("name"), wxEmptyString);
             if (prog == wxT("C"))
-                m_Programs.C = value;
+                m_Programs.C       = cfg->Read(cmpKey + wxT("/c_compiler"),   value);
             else if (prog == wxT("CPP"))
-                m_Programs.CPP = value;
+                m_Programs.CPP     = cfg->Read(cmpKey + wxT("/cpp_compiler"), value);
             else if (prog == wxT("LD"))
-                m_Programs.LD = value;
+                m_Programs.LD      = cfg->Read(cmpKey + wxT("/linker"),       value);
             else if (prog == wxT("DBGconfig"))
                 m_Programs.DBGconfig = value;
             else if (prog == wxT("LIB"))
-                m_Programs.LIB = value;
+                m_Programs.LIB     = cfg->Read(cmpKey + wxT("/lib_linker"),   value);
             else if (prog == wxT("WINDRES"))
-                m_Programs.WINDRES = value;
+                m_Programs.WINDRES = cfg->Read(cmpKey + wxT("/res_compiler"), value);
             else if (prog == wxT("MAKE"))
-                m_Programs.MAKE = value;
+                m_Programs.MAKE    = cfg->Read(cmpKey + wxT("/make"),         value);
         }
         else if (node->GetName() == wxT("Switch"))
         {
