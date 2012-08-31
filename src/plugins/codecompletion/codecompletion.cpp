@@ -208,11 +208,11 @@ namespace CodeCompletionHelper
     void GetStringFromSet(wxString& str, const StringSet& s, const wxString& separator)
     {
         size_t totalLen = 0;
-        for (StringSet::iterator it = s.begin(); it != s.end(); ++it)
+        for (StringSet::const_iterator it = s.begin(); it != s.end(); ++it)
             totalLen += (*it).Len();
         str.Clear();
         str.Alloc(totalLen + s.size() * separator.Len() + 1);
-        for (StringSet::iterator it = s.begin(); it != s.end(); ++it)
+        for (StringSet::const_iterator it = s.begin(); it != s.end(); ++it)
             str << *it << separator;
     }
 
@@ -845,8 +845,8 @@ int CodeCompletion::CodeComplete()
         || m_NativeParser.LastAISearchWasGlobal() ) // enter even if no match (code-complete C++ keywords)
     {
         if (s_DebugSmartSense)
-            CCLogger::Get()->DebugLog(F(_T("%d results"), result.size()));
-        TRACE(F(_T("%d results"), result.size()));
+            CCLogger::Get()->DebugLog(F(_T("%lu results"), static_cast<unsigned long>(result.size())));
+        TRACE(F(_T("%lu results"), static_cast<unsigned long>(result.size())));
 
         if (result.size() <= m_CCMaxMatches)
         {
@@ -868,9 +868,9 @@ int CodeCompletion::CodeComplete()
 
             CC_LOCKER_TRACK_TT_MTX_LOCK(s_TokensTreeMutex)
 
-            for (TokenIdxSet::iterator it = result.begin(); it != result.end(); ++it)
+            for (TokenIdxSet::const_iterator it = result.begin(); it != result.end(); ++it)
             {
-                Token* token = tree->at(*it);
+                const Token* token = tree->at(*it);
                 if (!token || token->m_Name.IsEmpty())
                     continue;
 
@@ -1161,11 +1161,11 @@ void CodeCompletion::CodeCompleteIncludes()
         wxArrayString& incDirs = GetSystemIncludeDirs(project, project ? project->GetModified() : true);
         for (size_t i = 0; i < incDirs.GetCount(); ++i)
         {
-            SystemHeadersMap::iterator it = m_SystemHeadersMap.find(incDirs[i]);
+            SystemHeadersMap::const_iterator it = m_SystemHeadersMap.find(incDirs[i]);
             if (it != m_SystemHeadersMap.end())
             {
                 const StringSet& headers = it->second;
-                for (StringSet::iterator it = headers.begin(); it != headers.end(); ++it)
+                for (StringSet::const_iterator it = headers.begin(); it != headers.end(); ++it)
                 {
                     const wxString& file = *it;
                     if (file.StartsWith(filename))
@@ -1179,7 +1179,8 @@ void CodeCompletion::CodeCompleteIncludes()
     if (project)
     {
         const wxArrayString localIncludeDirs = GetLocalIncludeDirs(project, buildTargets);
-        for (FilesList::iterator it = project->GetFilesList().begin(); it != project->GetFilesList().end(); ++it)
+        for (FilesList::const_iterator it = project->GetFilesList().begin();
+                                       it != project->GetFilesList().end(); ++it)
         {
             ProjectFile* pf = *it;
             if (pf && FileTypeOf(pf->relativeFilename) == ftHeader)
@@ -1229,8 +1230,8 @@ void CodeCompletion::CodeCompleteIncludes()
         CodeCompletionHelper::GetStringFromSet(final_str, files, _T(" "));
         final_str.RemoveLast(); // remove last space
         control->AutoCompShow(pos - lineStartPos - keyPos, final_str);
-        CCLogger::Get()->DebugLog(F(_T("Get include file count is %d, use time is %d"),
-                                    files.size(), sw.Time()));
+        CCLogger::Get()->DebugLog(F(_T("Get include file count is %lu, use time is %ld"),
+                                    static_cast<unsigned long>(files.size()), sw.Time()));
     }
 }
 
@@ -1814,10 +1815,10 @@ void CodeCompletion::OnGotoFunction(wxCommandEvent& event)
         if (dlg.ShowModal() == wxID_OK)
         {
             wxString sel = dlg.GetStringSelection();
-            Token* token = tmpsearch.GetItem(sel);
+            const Token* token = tmpsearch.GetItem(sel);
             if (ed && token)
             {
-                TRACE(F(_T("OnGotoFunction() : Token '%s' found at line %d."), token->m_Name.wx_str(), token->m_Line));
+                TRACE(F(_T("OnGotoFunction() : Token '%s' found at line %u."), token->m_Name.wx_str(), token->m_Line));
                 ed->GotoTokenPosition(token->m_Line - 1, token->m_Name);
             }
         }
@@ -1893,14 +1894,14 @@ void CodeCompletion::OnGotoDeclaration(wxCommandEvent& event)
         TokenIdxSet tmp = result;
         result.clear();
 
-        for (TokenIdxSet::iterator it = tmp.begin(); it != tmp.end(); ++it)
+        for (TokenIdxSet::const_iterator it = tmp.begin(); it != tmp.end(); ++it)
         {
-            Token* tk = tree->at(*it);
-            if (tk && tk->m_TokenKind == tkClass)
+            const Token* token = tree->at(*it);
+            if (token && token->m_TokenKind == tkClass)
             {
-                tk = tree->at(tree->TokenExists(target, tk->m_Index, tkDestructor));
-                if (tk)
-                    result.insert(tk->m_Index);
+                token = tree->at(tree->TokenExists(target, token->m_Index, tkDestructor));
+                if (token)
+                    result.insert(token->m_Index);
             }
         }
     }
@@ -1908,10 +1909,10 @@ void CodeCompletion::OnGotoDeclaration(wxCommandEvent& event)
     else
     {
         bool isClassOrConstructor = false;
-        for (TokenIdxSet::iterator it = result.begin(); it != result.end(); ++it)
+        for (TokenIdxSet::const_iterator it = result.begin(); it != result.end(); ++it)
         {
-            Token* tk = tree->at(*it);
-            if (tk && (tk->m_TokenKind == tkClass || tk->m_TokenKind == tkConstructor))
+            const Token* token = tree->at(*it);
+            if (token && (token->m_TokenKind == tkClass || token->m_TokenKind == tkConstructor))
             {
                 isClassOrConstructor = true;
                 break;
@@ -1921,12 +1922,12 @@ void CodeCompletion::OnGotoDeclaration(wxCommandEvent& event)
         {
             const bool isConstructor =   CodeCompletionHelper::GetNextNonWhitespaceChar(editor->GetControl(), endPos) == _T('(')
                                       && CodeCompletionHelper::GetLastNonWhitespaceChar(editor->GetControl(), startPos) == _T(':');
-            for (TokenIdxSet::iterator it = result.begin(); it != result.end();)
+            for (TokenIdxSet::const_iterator it = result.begin(); it != result.end();)
             {
-                Token* tk = tree->at(*it);
-                if (isConstructor && tk && tk->m_TokenKind == tkClass)
+                const Token* token = tree->at(*it);
+                if (isConstructor && token && token->m_TokenKind == tkClass)
                     result.erase(it++);
-                else if (!isConstructor && tk && tk->m_TokenKind == tkConstructor)
+                else if (!isConstructor && token && token->m_TokenKind == tkConstructor)
                     result.erase(it++);
                 else
                     ++it;
@@ -1938,18 +1939,15 @@ void CodeCompletion::OnGotoDeclaration(wxCommandEvent& event)
     if (result.size() > 1)
     {
         const size_t curLine = editor->GetControl()->GetCurrentLine() + 1;
-        for (TokenIdxSet::iterator it = result.begin(); it != result.end(); ++it)
+        for (TokenIdxSet::const_iterator it = result.begin(); it != result.end(); ++it)
         {
-            Token* tk = tree->at(*it);
-            if (tk)
+            const Token* token = tree->at(*it);
+            if (token && (token->m_Line == curLine || token->m_ImplLine == curLine) )
             {
-                if (tk->m_Line == curLine || tk->m_ImplLine == curLine)
-                {
-                    const int theOnlyOne = *it;
-                    result.clear();
-                    result.insert(theOnlyOne);
-                    break;
-                }
+                const int theOnlyOne = *it;
+                result.clear();
+                result.insert(theOnlyOne);
+                break;
             }
         }
     }
@@ -1995,28 +1993,28 @@ void CodeCompletion::OnGotoDeclaration(wxCommandEvent& event)
     {
         // TODO: we could parse the line containing the text so
         // if namespaces were included, we could limit the results (and be more accurate)
-        for (TokenIdxSet::iterator it = result.begin(); it != result.end(); ++it)
+        for (TokenIdxSet::const_iterator it = result.begin(); it != result.end(); ++it)
         {
-            Token* sel = tree->at(*it);
-            if (sel)
+            const Token* token = tree->at(*it);
+            if (token)
             {
                 CodeCompletionHelper::GotoDeclarationItem item;
 
                 if (isImpl)
                 {
-                    item.filename = sel->GetImplFilename();
-                    item.line = sel->m_ImplLine - 1;
+                    item.filename = token->GetImplFilename();
+                    item.line     = token->m_ImplLine - 1;
                 }
                 else if (isDecl)
                 {
-                    item.filename = sel->GetFilename();
-                    item.line = sel->m_Line - 1;
+                    item.filename = token->GetFilename();
+                    item.line     = token->m_Line - 1;
                 }
 
                 // only match tokens that have filename info
                 if (!item.filename.empty())
                 {
-                    selections.Add(sel->DisplayName());
+                    selections.Add(token->DisplayName());
                     foundItems.push_back(item);
                 }
             }
@@ -2111,13 +2109,14 @@ void CodeCompletion::OnOpenIncludeFile(wxCommandEvent& event)
     cbProject* project = m_NativeParser.GetProjectByEditor(editor);
     if (project)
     {
-        for (FilesList::iterator it = project->GetFilesList().begin(); it != project->GetFilesList().end(); ++it)
+        for (FilesList::const_iterator it = project->GetFilesList().begin();
+                                       it != project->GetFilesList().end(); ++it)
         {
             ProjectFile* pf = *it;
             if (!pf)
                 continue;
 
-            if (IsSuffixOfPath(NameUnderCursor, pf->file.GetFullPath()))
+            if ( IsSuffixOfPath(NameUnderCursor, pf->file.GetFullPath()) )
                 foundSet.Add(pf->file.GetFullPath());
         }
     }
@@ -2549,9 +2548,9 @@ void CodeCompletion::OnEditorTooltip(CodeBlocksEvent& event)
 
         int count = 0;
         size_t tipWidth = 0;
-        for (TokenIdxSet::iterator it = result.begin(); it != result.end(); ++it)
+        for (TokenIdxSet::const_iterator it = result.begin(); it != result.end(); ++it)
         {
-            Token* token = tree->at(*it);
+            const Token* token = tree->at(*it);
             if (token)
             {
                 wxString tip = token->DisplayName();
@@ -2762,8 +2761,7 @@ int CodeCompletion::DoAllMethodsImpl()
         return -4;
 
     wxArrayString paths = m_NativeParser.GetAllPathsByFilename(ed->GetFilename());
-
-    TokensTree* tree = m_NativeParser.GetParser().GetTokensTree();
+    TokensTree*   tree  = m_NativeParser.GetParser().GetTokensTree();
 
     CC_LOCKER_TRACK_TT_MTX_LOCK(s_TokensTreeMutex)
 
@@ -2771,9 +2769,10 @@ int CodeCompletion::DoAllMethodsImpl()
     TokenFilesSet result;
     for (size_t i = 0; i < paths.GetCount(); ++i)
     {
-        TokenFilesSet result;
-        tree->GetFileMatches(paths[i], result, true, true);
-        for (TokenFilesSet::iterator it = result.begin(); it != result.end(); ++it)
+        CCLogger::Get()->DebugLog(_T("Trying to find matches for: ") + paths[i]);
+        TokenFilesSet result_file;
+        tree->GetFileMatches(paths[i], result_file, true, true);
+        for (TokenFilesSet::const_iterator it = result_file.begin(); it != result_file.end(); ++it)
             result.insert(*it);
     }
 
@@ -2781,7 +2780,7 @@ int CodeCompletion::DoAllMethodsImpl()
     {
         CC_LOCKER_TRACK_TT_MTX_UNLOCK(s_TokensTreeMutex)
 
-        cbMessageBox(_("Can not find any file in parser's database."), _("Warning"), wxICON_WARNING);
+        cbMessageBox(_("Could not find any file match in parser's database."), _("Warning"), wxICON_WARNING);
         return -5;
     }
 
@@ -2790,23 +2789,25 @@ int CodeCompletion::DoAllMethodsImpl()
     wxArrayInt arrint; // for selection (keeps indices)
     typedef std::map<int, std::pair<int, wxString> > ImplMap;
     ImplMap im;
-    for (TokenFilesSet::iterator itf = result.begin(); itf != result.end(); ++itf)
+    for (TokenFilesSet::const_iterator itf = result.begin(); itf != result.end(); ++itf)
     {
-        TokenIdxSet& tokens = tree->m_FilesMap[*itf];
+        const TokenIdxSet* tokens = tree->GetFilesMapByIndex(*itf);
+        if (!tokens) continue;
+
         // loop tokens in file
-        for (TokenIdxSet::iterator its = tokens.begin(); its != tokens.end(); ++its)
+        for (TokenIdxSet::const_iterator its = tokens->begin(); its != tokens->end(); ++its)
         {
-            Token* token = tree->at(*its);
-            if (token && // valid token
-                (token->m_TokenKind & (tkFunction | tkConstructor | tkDestructor)) && // is method
-                token->m_ImplLine == 0) // is un-implemented
+            const Token* token = tree->at(*its);
+            if (   token // valid token
+                && (token->m_TokenKind & (tkFunction | tkConstructor | tkDestructor)) // is method
+                && token->m_ImplLine == 0 ) // is un-implemented
             {
                 im[token->m_Line] = std::make_pair(*its, token->DisplayName());
             }
         }
     }
 
-    for (ImplMap::iterator it = im.begin(); it != im.end(); ++it)
+    for (ImplMap::const_iterator it = im.begin(); it != im.end(); ++it)
     {
         arrint.Add(it->second.first);
         arr.Add(it->second.second);
@@ -2836,11 +2837,11 @@ int CodeCompletion::DoAllMethodsImpl()
         wxArrayInt indices = dlg.GetSelectedIndices();
         for (size_t i = 0; i < indices.GetCount(); ++i)
         {
-            Token* token = tree->at(arrint[indices[i]]);
+            const Token* token = tree->at(arrint[indices[i]]);
             if (!token)
                 continue;
 
-            pos = control->GetCurrentPos();
+            pos  = control->GetCurrentPos();
             line = control->LineFromPosition(pos);
 
             // actual code generation
@@ -2860,7 +2861,7 @@ int CodeCompletion::DoAllMethodsImpl()
                 str << type << _T(" ");
             if (token->m_ParentIndex != -1)
             {
-                Token* parent = tree->at(token->m_ParentIndex);
+                const Token* parent = tree->at(token->m_ParentIndex);
                 if (parent)
                     str << parent->m_Name << _T("::");
             }
@@ -3009,7 +3010,7 @@ void CodeCompletion::OnFunction(wxCommandEvent& /*event*/)
 void CodeCompletion::ParseFunctionsAndFillToolbar()
 {
     TRACE(_T("ParseFunctionsAndFillToolbar() : m_ToolbarNeedReparse=%d, m_ToolbarNeedRefresh=%d, "),
-          m_ToolbarNeedReparse, m_ToolbarNeedRefresh);
+          m_ToolbarNeedReparse?1:0, m_ToolbarNeedRefresh?1:0);
     EditorManager* edMan = Manager::Get()->GetEditorManager();
     if (!edMan) // Closing the app?
         return;
@@ -3055,14 +3056,14 @@ void CodeCompletion::ParseFunctionsAndFillToolbar()
 
         CC_LOCKER_TRACK_TT_MTX_LOCK(s_TokensTreeMutex)
 
-        for (TokenIdxSet::iterator it = result.begin(); it != result.end(); ++it)
+        for (TokenIdxSet::const_iterator it = result.begin(); it != result.end(); ++it)
         {
             const Token* token = tree->at(*it);
             if (token && token->m_ImplLine != 0)
             {
                 FunctionScope fs;
-                fs.StartLine = token->m_ImplLine - 1;
-                fs.EndLine = token->m_ImplLineEnd - 1;
+                fs.StartLine = token->m_ImplLine    - 1;
+                fs.EndLine   = token->m_ImplLineEnd - 1;
                 const size_t fileIdx = tree->InsertFileOrGetIndex(filename);
                 if (token->m_TokenKind & tkAnyFunction && fileIdx == token->m_ImplFileIdx)
                 {
@@ -3097,11 +3098,11 @@ void CodeCompletion::ParseFunctionsAndFillToolbar()
         std::sort(functionsScopes.begin(), functionsScopes.end(), CodeCompletionHelper::LessFunctionScope);
 
         // remove consecutive duplicates
-        FunctionsScopeVec::iterator it;
+        FunctionsScopeVec::const_iterator it;
         it = unique(functionsScopes.begin(), functionsScopes.end(), CodeCompletionHelper::EqualFunctionScope);
         functionsScopes.resize(it - functionsScopes.begin());
 
-        TRACE(F(_T("Found %d namespace locations"), nameSpaces.size()));
+        TRACE(F(_T("Found %lu namespace locations"), static_cast<unsigned long>(nameSpaces.size())));
         /*
         for (unsigned int i = 0; i < nameSpaces.size(); ++i)
             CCLogger::Get()->DebugLog(F(_T("\t%s (%d:%d)"),
@@ -3136,7 +3137,7 @@ void CodeCompletion::ParseFunctionsAndFillToolbar()
         }
     }
 
-    TRACE(F(_T("Parsed %d functionscope items"), m_FunctionsScope.size()));
+    TRACE(F(_T("Parsed %lu functionscope items"), static_cast<unsigned long>(m_FunctionsScope.size())));
     /*
     for (unsigned int i = 0; i < m_FunctionsScope.size(); ++i)
         CCLogger::Get()->DebugLog(F(_T("\t%s%s (%d:%d)"),
@@ -3405,7 +3406,7 @@ void CodeCompletion::OnReparsingTimer(wxTimerEvent& event)
             }
 
             if (reparseCount)
-                CCLogger::Get()->DebugLog(F(_T("Re-parsed %d files."), reparseCount));
+                CCLogger::Get()->DebugLog(F(_T("Re-parsed %lu files."), static_cast<unsigned long>(reparseCount)));
         }
 
         if (files.IsEmpty())

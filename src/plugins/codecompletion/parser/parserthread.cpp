@@ -447,7 +447,7 @@ bool ParserThread::InitTokenizer()
                 m_Filename = m_Buffer;
                 m_FileSize = file.Length();
 
-                TRACE(_T("InitTokenizer() : m_Filename='%s', m_FileSize=%d."), m_Filename.wx_str(), m_FileSize);
+                TRACE(_T("InitTokenizer() : m_Filename='%s', m_FileSize=%u."), m_Filename.wx_str(), m_FileSize);
 
                 bool ret = m_Tokenizer.Init(m_Filename, m_Options.loader);
                 Delete(m_Options.loader);
@@ -463,7 +463,8 @@ bool ParserThread::InitTokenizer()
         {
             // record filename for buffer parsing
             m_Filename = m_Options.fileOfBuffer;
-            m_FileIdx  = m_TokensTree->GetFileIndex(m_Filename);
+            m_FileIdx  = m_TokensTree->InsertFileOrGetIndex(m_Filename);
+
             return m_Tokenizer.InitFromBuffer(m_Buffer, m_Filename, m_Options.initLineOfBuffer);
         }
     }
@@ -1105,14 +1106,14 @@ void ParserThread::DoParse()
     m_Tokenizer.SetState(oldState);
 }
 
-Token* ParserThread::TokenExists(const wxString& name, Token* parent, short int kindMask)
+Token* ParserThread::TokenExists(const wxString& name, const Token* parent, short int kindMask)
 {
     // no critical section needed here:
     // all functions that call this, already entered a critical section.
     return m_TokensTree->at(m_TokensTree->TokenExists(name, parent ? parent->m_Index : -1, kindMask));
 }
 
-Token* ParserThread::TokenExists(const wxString& name, const wxString& baseArgs, Token* parent, TokenKind kind)
+Token* ParserThread::TokenExists(const wxString& name, const wxString& baseArgs, const Token* parent, TokenKind kind)
 {
     // no critical section needed here:
     // all functions that call this, already entered a critical section.
@@ -1304,13 +1305,13 @@ Token* ParserThread::DoAddToken(TokenKind       kind,
         && (   kind & tkAnyFunction
             || newToken->m_Args == args ) )
     {
-        m_TokensTree->m_Modified = true;
+        ; // nothing to do
     }
     else
     {
         newToken = new Token(newname, m_FileIdx, line, ++m_TokensTree->m_TokenTicketCount);
-        TRACE(_T("DoAddToken() : Created token='%s', file_idx=%d, line=%d, ticket="), newname.wx_str(),
-              m_FileIdx, line, m_TokensTree->m_TokenTicketCount);
+        TRACE(_T("DoAddToken() : Created token='%s', file_idx=%u, line=%d, ticket=%lu"), newname.wx_str(),
+              m_FileIdx, line, static_cast<unsigned long>(m_TokensTree->m_TokenTicketCount));
 
         Token* finalParent = localParent ? localParent : m_LastParent;
         if (kind == tkVariable && m_Options.parentIdxOfBuffer != -1)
@@ -1375,7 +1376,7 @@ Token* ParserThread::DoAddToken(TokenKind       kind,
         newToken->m_ImplLine      = line;
         newToken->m_ImplLineStart = implLineStart;
         newToken->m_ImplLineEnd   = implLineEnd;
-        m_TokensTree->m_FilesMap[newToken->m_ImplFileIdx].insert(newToken->m_Index);
+        m_TokensTree->InsertFileMapByIndex(newToken->m_ImplFileIdx, newToken->m_Index);
     }
     TRACE(_T("DoAddToken() : Added/updated token '%s' (%d), kind '%s', type '%s', actual '%s'. Parent is %s (%d)"),
           name.wx_str(), newToken->m_Index, newToken->GetTokenKindString().wx_str(), newToken->m_FullType.wx_str(),
@@ -1759,11 +1760,11 @@ void ParserThread::HandleClass(EClassType ct)
         // -------------------------------------------------------------------
         {
             wxString unnamedTmp;
-            unnamedTmp.Printf(_T("%s%s%d"),
+            unnamedTmp.Printf(_T("%s%s%lu"),
                               g_UnnamedSymbol.wx_str(),
                               ct == ctClass ? _T("Class") :
                               ct == ctUnion ? _T("Union") :
-                              _T("Struct"), ++m_TokensTree->m_StructUnionUnnamedCount);
+                              _T("Struct"), static_cast<unsigned long>(++m_TokensTree->m_StructUnionUnnamedCount));
             Token* newToken = DoAddToken(tkClass, unnamedTmp, lineNr);
             // Maybe it is a bug here. I just fixed it.
             if (!newToken)
@@ -2034,7 +2035,7 @@ void ParserThread::HandleFunction(const wxString& name, bool isOperator)
 
                 // Show message, if skipped buffer is more than 10% of whole buffer (might be a bug in the parser)
                 if (!m_IsBuffer)
-                    TRACE(_T("HandleFunction() : Skipped function '%s' impl. %d lines from %d to %d (file name='%s', file size=%d)."),
+                    TRACE(_T("HandleFunction() : Skipped function '%s' impl. %d lines from %d to %d (file name='%s', file size=%u)."),
                           name.wx_str(), (lineEnd-lineStart), lineStart, lineEnd, m_Filename.wx_str(), m_FileSize);
 
                 break;
@@ -2086,7 +2087,7 @@ void ParserThread::HandleEnum()
         // we have an un-named enum
         if (m_ParsingTypedef)
         {
-            token.Printf(_T("%sEnum%d"), g_UnnamedSymbol.wx_str(), ++m_TokensTree->m_EnumUnnamedCount);
+            token.Printf(_T("%sEnum%lu"), g_UnnamedSymbol.wx_str(), static_cast<unsigned long>(++m_TokensTree->m_EnumUnnamedCount));
             m_LastUnnamedTokenName = token;
         }
         else
@@ -2884,7 +2885,7 @@ bool ParserThread::ResolveTemplateMap(const wxString& typeStr, const wxArrayStri
     size_t tokenCounts = m_TokensTree->FindMatches(parentType, parentResult, true, false, tkClass);
     if (tokenCounts > 0)
     {
-        for (TokenIdxSet::iterator it=parentResult.begin(); it!=parentResult.end(); ++it)
+        for (TokenIdxSet::const_iterator it=parentResult.begin(); it!=parentResult.end(); ++it)
         {
             int id = (*it);
             Token* normalToken = m_TokensTree->at(id);

@@ -3739,7 +3739,7 @@ void CompilerGCC::NotifyJobDone(bool showNothingToBeDone)
 
 wxString CompilerGCC::GetErrWarnStr()
 {
-    return wxString::Format(_("%d error%s, %d warning%s"),
+    return wxString::Format(_("%u error%s, %u warning%s"),
                             m_Errors.GetCount(cltError), wxString(m_Errors.GetCount(cltError) == 1 ? _("") : _("s")).wx_str(),
                             m_Errors.GetCount(cltWarning), wxString(m_Errors.GetCount(cltWarning) == 1 ? _("") : _("s")).wx_str());
 }

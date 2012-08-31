@@ -399,7 +399,7 @@ void CCDebugInfo::DisplayTokenInfo()
     TokensTree* tree = m_Parser->GetTokensTree();
     if (!tree) return;
 
-    Token* parent = tree->at(m_Token->m_ParentIndex);
+    const Token* parent = tree->at(m_Token->m_ParentIndex);
     tree->RecalcInheritanceChain(m_Token);
 
     wxString args     = m_Token->GetFormattedArgs();
@@ -434,11 +434,11 @@ void CCDebugInfo::DisplayTokenInfo()
     FillDescendants();
 
     if (!m_Token->GetFilename().IsEmpty())
-        txtDeclFile->SetLabel(wxString::Format(_T("%s : %d"), m_Token->GetFilename().c_str(), m_Token->m_Line));
+        txtDeclFile->SetLabel(wxString::Format(_T("%s : %u"), m_Token->GetFilename().c_str(), m_Token->m_Line));
     else
         txtDeclFile->SetLabel(wxEmptyString);
     if (!m_Token->GetImplFilename().IsEmpty())
-        txtImplFile->SetLabel(wxString::Format(_("%s : %d (code lines: %d to %d)"), m_Token->GetImplFilename().c_str(), m_Token->m_ImplLine, m_Token->m_ImplLineStart, m_Token->m_ImplLineEnd));
+        txtImplFile->SetLabel(wxString::Format(_("%s : %u (code lines: %u to %u)"), m_Token->GetImplFilename().c_str(), m_Token->m_ImplLine, m_Token->m_ImplLineStart, m_Token->m_ImplLineEnd));
     else
         txtImplFile->SetLabel(wxEmptyString);
     txtUserData->SetLabel(wxString::Format(_T("0x%p"), m_Token->m_UserData));
@@ -451,9 +451,9 @@ void CCDebugInfo::FillChildren()
 
     cmbChildren->Clear();
 
-    for (TokenIdxSet::iterator it = m_Token->m_Children.begin(); it != m_Token->m_Children.end(); ++it)
+    for (TokenIdxSet::const_iterator it = m_Token->m_Children.begin(); it != m_Token->m_Children.end(); ++it)
     {
-        Token* child = tree->at(*it);
+        const Token* child = tree->at(*it);
         const wxString msgInvalidToken = _("<invalid token>");
         cmbChildren->Append(wxString::Format(_T("%s (%d)"), child ? child->m_Name.wx_str() : msgInvalidToken.wx_str(), *it));
     }
@@ -467,9 +467,9 @@ void CCDebugInfo::FillAncestors()
 
     cmbAncestors->Clear();
 
-    for (TokenIdxSet::iterator it = m_Token->m_Ancestors.begin(); it != m_Token->m_Ancestors.end(); ++it)
+    for (TokenIdxSet::const_iterator it = m_Token->m_Ancestors.begin(); it != m_Token->m_Ancestors.end(); ++it)
     {
-        Token* ancestor = tree->at(*it);
+        const Token* ancestor = tree->at(*it);
         const wxString msgInvalidToken = _("<invalid token>");
         cmbAncestors->Append(wxString::Format(_T("%s (%d)"), ancestor ? ancestor->m_Name.wx_str() : msgInvalidToken.wx_str(), *it));
     }
@@ -483,9 +483,9 @@ void CCDebugInfo::FillDescendants()
 
     cmbDescendants->Clear();
 
-    for (TokenIdxSet::iterator it = m_Token->m_Descendants.begin(); it != m_Token->m_Descendants.end(); ++it)
+    for (TokenIdxSet::const_iterator it = m_Token->m_Descendants.begin(); it != m_Token->m_Descendants.end(); ++it)
     {
-        Token* descendant = tree->at(*it);
+        const Token* descendant = tree->at(*it);
         const wxString msgInvalidToken = _("<invalid token>");
         cmbDescendants->Append(wxString::Format(_T("%s (%d)"), descendant ? descendant->m_Name.wx_str() : msgInvalidToken.wx_str(), *it));
     }
@@ -497,9 +497,9 @@ void CCDebugInfo::OnInit(wxInitDialogEvent& /*event*/)
     if (!m_Parser || !m_Parser->GetTokensTree())
         return;
 
-    lblInfo->SetLabel(wxString::Format(_("The parser contains %d tokens, found in %d files"),
-                                       m_Parser->GetTokensTree()->size(),
-                                       m_Parser->GetTokensTree()->m_FilesMap.size()));
+    lblInfo->SetLabel(wxString::Format(_("The parser contains %lu tokens, found in %lu files"),
+                                       static_cast<unsigned long>(m_Parser->GetTokensTree()->size()),
+                                       static_cast<unsigned long>(m_Parser->GetTokensTree()->m_FilesMap.size())));
 
     DisplayTokenInfo();
     FillFiles();
@@ -530,7 +530,7 @@ void CCDebugInfo::OnFindClick(wxCommandEvent& /*event*/)
         TokenIdxSet result;
         for (size_t i = 0; i < tree->size(); ++i)
         {
-            Token* token = tree->at(i);
+            const Token* token = tree->at(i);
             if (token && token->m_Name.Matches(search))
                 result.insert(i);
         }
@@ -543,9 +543,9 @@ void CCDebugInfo::OnFindClick(wxCommandEvent& /*event*/)
             // fill a list and ask the user which token to display
             wxArrayString arr;
             wxArrayInt intarr;
-            for (TokenIdxSet::iterator it = result.begin(); it != result.end(); ++it)
+            for (TokenIdxSet::const_iterator it = result.begin(); it != result.end(); ++it)
             {
-                Token* token = tree->at(*it);
+                const Token* token = tree->at(*it);
                 arr.Add(token->DisplayName());
                 intarr.Add(*it);
             }
@@ -567,7 +567,7 @@ void CCDebugInfo::OnGoAscClick(wxCommandEvent& /*event*/)
         return;
 
     int count = 0;
-    for (TokenIdxSet::iterator it = m_Token->m_Ancestors.begin(); it != m_Token->m_Ancestors.end(); ++it)
+    for (TokenIdxSet::const_iterator it = m_Token->m_Ancestors.begin(); it != m_Token->m_Ancestors.end(); ++it)
     {
         if (count == idx)
             m_Token = m_Parser->GetTokensTree()->at(*it);
@@ -586,7 +586,7 @@ void CCDebugInfo::OnGoDescClick(wxCommandEvent& /*event*/)
         return;
 
     int count = 0;
-    for (TokenIdxSet::iterator it = m_Token->m_Descendants.begin(); it != m_Token->m_Descendants.end(); ++it)
+    for (TokenIdxSet::const_iterator it = m_Token->m_Descendants.begin(); it != m_Token->m_Descendants.end(); ++it)
     {
         if (count == idx)
         {
@@ -614,7 +614,7 @@ void CCDebugInfo::OnGoChildrenClick(wxCommandEvent& /*event*/)
         return;
 
     int count = 0;
-    for (TokenIdxSet::iterator it = m_Token->m_Children.begin(); it != m_Token->m_Children.end(); ++it)
+    for (TokenIdxSet::const_iterator it = m_Token->m_Children.begin(); it != m_Token->m_Children.end(); ++it)
     {
         if (count == idx)
         {
@@ -632,6 +632,7 @@ void CCDebugInfo::OnSave(wxCommandEvent& /*event*/)
 
     wxArrayString saveWhat;
     saveWhat.Add(_("Dump the tokens tree"));
+    saveWhat.Add(_("Dump the serialised tokens tree"));
     saveWhat.Add(_("Dump the file list"));
     saveWhat.Add(_("Dump the list of include directories"));
     saveWhat.Add(_("Dump the token list of files"));
@@ -660,6 +661,19 @@ void CCDebugInfo::OnSave(wxCommandEvent& /*event*/)
             break;
         case 1:
             {
+                wxString tt_ser;
+                { // life time of wxWindowDisabler/wxBusyInfo
+                    wxWindowDisabler disableAll;
+                    wxBusyInfo running(_("Serialising tokens tree... please wait (this may take several seconds)..."),
+                                       Manager::Get()->GetAppWindow());
+
+                    tt_ser = tree->m_Tree.Serialize();
+                }
+                CCDebugInfoHelper::SaveCCDebugInfo(_("Save serialised tokens tree"), tt_ser);
+            }
+            break;
+        case 2:
+            {
                 wxString files;
                 for (size_t i = 0; i < tree->m_FilenamesMap.size(); ++i)
                 {
@@ -671,7 +685,7 @@ void CCDebugInfo::OnSave(wxCommandEvent& /*event*/)
                 CCDebugInfoHelper::SaveCCDebugInfo(_("Save file list"), files);
             }
             break;
-        case 2:
+        case 3:
             {
                 wxString dirs;
                 const wxArrayString& dirsArray = m_Parser->GetIncludeDirs();
@@ -684,7 +698,7 @@ void CCDebugInfo::OnSave(wxCommandEvent& /*event*/)
                 CCDebugInfoHelper::SaveCCDebugInfo(_("Save list of include directories"), dirs);
             }
             break;
-        case 3:
+        case 4:
             {
                 wxString fileTokens;
                 {
@@ -700,9 +714,9 @@ void CCDebugInfo::OnSave(wxCommandEvent& /*event*/)
 
                             TokenIdxSet result;
                             tree->FindTokensInFile(file, result, tkUndefined);
-                            for (TokenIdxSet::iterator it = result.begin(); it != result.end(); ++it)
+                            for (TokenIdxSet::const_iterator it = result.begin(); it != result.end(); ++it)
                             {
-                                Token* token = tree->at(*it);
+                                const Token* token = tree->at(*it);
                                 fileTokens << token->GetTokenKindString() << _T(" ");
                                 if (token->m_TokenKind == tkFunction)
                                     fileTokens << token->m_Name << token->GetFormattedArgs() << _T("\t");
