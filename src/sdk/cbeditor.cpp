@@ -46,6 +46,7 @@
 #include "editor_hooks.h"
 #include "encodingdetector.h"
 #include "filefilters.h"
+#include "infowindow.h"
 #include "projectfileoptionsdlg.h"
 
 const wxString g_EditorModified = _T("*");
