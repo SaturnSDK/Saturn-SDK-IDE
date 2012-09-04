@@ -3,21 +3,22 @@
  * http://www.gnu.org/licenses/lgpl-3.0.html
  */
 
-#ifndef FINDDLG_H
-#define FINDDLG_H
+#ifndef REPLACEDLG_H
+#define REPLACEDLG_H
 
 #include "findreplacebase.h"
 
+class wxComboBox;
 class wxCommandEvent;
 class wxNotebookEvent;
 class wxActivateEvent;
 
-class FindDlg : public FindReplaceBase
+class FindReplaceDlg : public FindReplaceBase
 {
     public:
-        FindDlg(wxWindow* parent, const wxString& initial = wxEmptyString, bool hasSelection = false,
-                bool findInFilesOnly = false, bool findInFilesActive = false);
-        ~FindDlg();
+        FindReplaceDlg(wxWindow* parent, const wxString& initial = wxEmptyString, bool hasSelection = false,
+                   bool findMode = true, bool findReplaceInFilesOnly = false, bool findReplaceInFilesActive = false);
+        ~FindReplaceDlg();
 
         wxString GetFindString() const;
         wxString GetReplaceString() const;
@@ -31,6 +32,7 @@ class FindDlg : public FindReplaceBase
         bool GetAutoWrapSearch() const;
         bool GetFindUsesSelectedText() const;
         bool GetStartFile() const;
+        bool GetMultiLine() const;
         bool GetFixEOLs() const;
 
         int GetDirection() const;
@@ -40,20 +42,28 @@ class FindDlg : public FindReplaceBase
         bool GetHidden() const;         // for find in search path
         wxString GetSearchPath() const; // for find in search path
         wxString GetSearchMask() const; // for find in search path
+        int GetProject() const; // for find in project
+        int GetTarget() const; // for find in project
+
+        bool IsMultiLine() const;
 
     protected:
-        void OnFindChange(wxNotebookEvent& event);
+        void OnReplaceChange(wxNotebookEvent& event);
         void OnRegEx(wxCommandEvent& event);
         void OnActivate(wxActivateEvent& event);
-        void OnBrowsePath(wxCommandEvent& event);
+        void OnMultiChange(wxCommandEvent& event);
+        void OnLimitToChange(wxCommandEvent& event);
         void OnScopeChange(wxCommandEvent& event);
+        void OnBrowsePath(wxCommandEvent& event);
+        void OnSearchProject(wxCommandEvent& event);
 
     private:
-        void UpdateUI();
-
-        bool m_FindInFilesOnly;
+        void FillComboWithLastValues(wxComboBox* combo, const wxString& configKey);
+        void SaveComboValues(wxComboBox* combo, const wxString& configKey);
+        bool m_findReplaceInFilesActive;
+        bool m_findMode;
 
         DECLARE_EVENT_TABLE()
 };
 
-#endif // FINDDLG_H
+#endif // REPLACEDLG_H

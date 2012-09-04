@@ -361,13 +361,8 @@ bool wxsCoder::ApplyChangesEditor(cbEditor* Editor,const wxString& Header,const 
     if ( Position == -1 )
     {
         Manager::Get()->GetLogManager()->DebugLog(F(_("wxSmith: Couldn't find code with header:\n\t\"%s\"\nin file '%s'"),
-            #if wxCHECK_VERSION(2, 9, 0)
-            Header.wx_str(),
-            Editor->GetFilename().wx_str()));
-            #else
-            Header.c_str(),
-            Editor->GetFilename().c_str()));
-            #endif
+                                                    Header.wx_str(),
+                                                    Editor->GetFilename().wx_str()));
         return false;
     }
 
@@ -378,13 +373,9 @@ bool wxsCoder::ApplyChangesEditor(cbEditor* Editor,const wxString& Header,const 
     if ( EndPosition == -1 )
     {
         Manager::Get()->GetLogManager()->DebugLog(F(_("wxSmith: Unfinished block of auto-generated code with header:\n\t\"%s\"\nin file '%s'"),
-            #if wxCHECK_VERSION(2, 9, 0)
-            Header.wx_str(),
-            Editor->GetFilename().wx_str()));
-            #else
-            Header.c_str(),
-            Editor->GetFilename().c_str()));
-            #endif
+                                                    Header.wx_str(),
+                                                    Editor->GetFilename().wx_str()));
+
         return false;
     }
 
@@ -546,12 +537,14 @@ wxString wxsCoder::RebuildCode(wxString& BaseIndentation,const wxChar* Code,int 
         {
             case _T('\n'):
                 {
-                    while (Result.Last() == _T(' ') || Result.Last() == _T('\t'))
+                    while (!Result.IsEmpty() &&
+                           (Result.Last() == _T(' ') || Result.Last() == _T('\t')))
                         Result.RemoveLast();
                     Result << BaseIndentation;
                     break;
                 }
             case _T('\t'): if ( UseTab ) { Result << Tab; break; }
+
             default:       Result << *Code;
         }
         Code++;

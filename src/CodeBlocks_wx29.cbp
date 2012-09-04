@@ -881,10 +881,10 @@
 		<Unit filename="include\filemanager.h">
 			<Option target="sdk" />
 		</Unit>
-		<Unit filename="include\finddlg.h">
+		<Unit filename="include\findreplacebase.h">
 			<Option target="sdk" />
 		</Unit>
-		<Unit filename="include\findreplacebase.h">
+		<Unit filename="include\findreplacedlg.h">
 			<Option target="sdk" />
 		</Unit>
 		<Unit filename="include\genericmultilinenotesdlg.h">
@@ -1062,9 +1062,6 @@
 			<Option target="sdk" />
 		</Unit>
 		<Unit filename="include\projecttemplateloader.h">
-			<Option target="sdk" />
-		</Unit>
-		<Unit filename="include\replacedlg.h">
 			<Option target="sdk" />
 		</Unit>
 		<Unit filename="include\safedelete.h">
@@ -2489,7 +2486,7 @@
 		<Unit filename="sdk\filemanager.cpp">
 			<Option target="sdk" />
 		</Unit>
-		<Unit filename="sdk\finddlg.cpp">
+		<Unit filename="sdk\findreplacedlg.cpp">
 			<Option target="sdk" />
 		</Unit>
 		<Unit filename="sdk\genericmultilinenotesdlg.cpp">
@@ -2672,9 +2669,6 @@
 		<Unit filename="sdk\projecttemplateloader.cpp">
 			<Option target="sdk" />
 		</Unit>
-		<Unit filename="sdk\replacedlg.cpp">
-			<Option target="sdk" />
-		</Unit>
 		<Unit filename="sdk\resources\auto_detect_compilers.xrc">
 			<Option target="sdk" />
 		</Unit>
@@ -2712,9 +2706,6 @@
 			<Option target="sdk" />
 		</Unit>
 		<Unit filename="sdk\resources\external_deps.xrc">
-			<Option target="sdk" />
-		</Unit>
-		<Unit filename="sdk\resources\find_dialog.xrc">
 			<Option target="sdk" />
 		</Unit>
 		<Unit filename="sdk\resources\generic_multi_select.xrc">

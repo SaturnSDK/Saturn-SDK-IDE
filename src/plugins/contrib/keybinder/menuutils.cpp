@@ -50,8 +50,6 @@
 
 // static
 wxMenuBar* wxMenuCmd::m_pMenuBar = NULL;
-extern wxKeyProfileArray* m_pKeyProfArr;  // ptr to key profile array in cbKeybinder
-
 
 // ----------------------------------------------------------------------------
 // Global utility functions
@@ -312,7 +310,11 @@ void wxMenuCmd::Update(wxMenuItem* pSpecificMenuItem) //for __WXGTK__
     if (IsNumericMenuItem(pLclMnuItem))
       return;
 
+#if wxCHECK_VERSION(2, 9, 0)
+    wxString strText = pLclMnuItem->GetItemLabel();
+#else
     wxString strText = pLclMnuItem->GetText();
+#endif
 
     // *bug* 2007/01/19 v1.0.15
     // Dont use  GetLabel to re-establish the menu text. It doesn't
@@ -350,7 +352,11 @@ void wxMenuCmd::Update(wxMenuItem* pSpecificMenuItem) //for __WXGTK__
 
         // no more shortcuts for this menuitem: SetText()
         // will delete the hotkeys associated...
+#if wxCHECK_VERSION(2, 9, 0)
+        pLclMnuItem->SetItemLabel(str);
+#else
         pLclMnuItem->SetText(str);
+#endif
         return;
     }
 
@@ -359,7 +365,11 @@ void wxMenuCmd::Update(wxMenuItem* pSpecificMenuItem) //for __WXGTK__
 
 
     // on GTK, the SetAccel() function doesn't have any effect...
+#if wxCHECK_VERSION(2, 9, 0)
+    pLclMnuItem->SetItemLabel(newtext);
+#else
     pLclMnuItem->SetText(newtext);
+#endif
 
 #ifdef __WXGTK20__
 
@@ -378,7 +388,8 @@ void wxMenuCmd::Update(wxMenuItem* pSpecificMenuItem) // for __WXMSW__
     wxMenuItem* pLclMnuItem = m_pItem;
 
     // Test if caller wants a different menu item than in wxCmd item
-    if (pSpecificMenuItem) pLclMnuItem = pSpecificMenuItem;
+    if (pSpecificMenuItem)
+        pLclMnuItem = pSpecificMenuItem;
 
     // verify menu item has not changed its id or disappeared
     if ( NULL == m_pMenuBar->FindItem(m_nId) )
@@ -559,7 +570,7 @@ void wxMenuCmd::Exec(wxObject *origin, wxEvtHandler *client)
 // --+v0.3---------------------------------------------------------------------
 wxCmd *wxMenuCmd::CreateNew(wxString sCmdName, int id)
 // ----------------------------------------------------------------------------
-{//+v0.3+v0.5
+{
     if (!m_pMenuBar) return NULL;
 
     // search for a matching menu item

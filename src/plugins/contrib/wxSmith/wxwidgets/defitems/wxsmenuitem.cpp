@@ -97,14 +97,9 @@ void wxsMenuItem::OnBuildCreatingCode()
                         // Many parameters are passed in wxMenu::Append, so we call this function
                         // here, not in wxMenu
                         Codef(_T("%MAppend(%I, %t, %O, %t)%s;\n"),
-                            #if wxCHECK_VERSION(2, 9, 0)
-                            m_Label.wx_str(),
-                            m_Help.wx_str(),
-                            #else
-                            m_Label.c_str(),
-                            m_Help.c_str(),
-                            #endif
-                            m_Enabled?_T(""):_T("->Enable(false)"));
+                              m_Label.wx_str(),
+                              m_Help.wx_str(),
+                              m_Enabled?_T(""):_T("->Enable(false)"));
                         break;
                     }
                 }
@@ -130,14 +125,9 @@ void wxsMenuItem::OnBuildCreatingCode()
                     }
 
                     Codef(_T("%C(%E, %I, %t, %t, %s);\n"),
-                        #if wxCHECK_VERSION(2, 9, 0)
-                        Text.wx_str(),
-                        m_Help.wx_str(),
-                        #else
-                        Text.c_str(),
-                        m_Help.c_str(),
-                        #endif
-                        ItemType);
+                          Text.wx_str(),
+                          m_Help.wx_str(),
+                          ItemType);
 
                     if ( !m_Bitmap.IsEmpty() )
                     {
@@ -279,6 +269,11 @@ bool wxsMenuItem::OnXmlRead(TiXmlElement* Element,bool IsXRC,bool IsExtra)
                 if ( Node && (cbC2U(Node->GetText())==_T("1")) )
                 {
                     m_Type = Check;
+                    // Now, we are going to check its state, either checked or not checked
+                    TiXmlElement* checkedNode = Element->FirstChildElement("checked");
+                    if (checkedNode && (cbC2U(checkedNode->GetText())==_T("1")))
+                        m_Checked = true;
+                    // otherwise, the m_Checked will default to false.
                 }
                 else
                 {
