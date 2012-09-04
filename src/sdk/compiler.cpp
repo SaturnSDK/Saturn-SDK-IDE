@@ -843,23 +843,41 @@ void Compiler::LoadDefaultOptions(const wxString& name, int recursion)
                 continue;
             }
         }
-        else if (node->GetName() == wxT("Program"))
+        else if (node->GetName() == wxT("Program")) // configuration is read so execution of renamed programs work, m_Mirror is needed to reset before leaving this function
         {
             wxString prog = node->GetAttribute(wxT("name"), wxEmptyString);
             if (prog == wxT("C"))
-                m_Programs.C       = cfg->Read(cmpKey + wxT("/c_compiler"),   value);
+            {
+                m_Programs.C = cfg->Read(cmpKey + wxT("/c_compiler"), value);
+                m_Mirror.Programs.C = value;
+            }
             else if (prog == wxT("CPP"))
-                m_Programs.CPP     = cfg->Read(cmpKey + wxT("/cpp_compiler"), value);
+            {
+                m_Programs.CPP = cfg->Read(cmpKey + wxT("/cpp_compiler"), value);
+                m_Mirror.Programs.CPP = value;
+            }
             else if (prog == wxT("LD"))
-                m_Programs.LD      = cfg->Read(cmpKey + wxT("/linker"),       value);
+            {
+                m_Programs.LD = cfg->Read(cmpKey + wxT("/linker"), value);
+                m_Mirror.Programs.LD = value;
+            }
             else if (prog == wxT("DBGconfig"))
                 m_Programs.DBGconfig = value;
             else if (prog == wxT("LIB"))
-                m_Programs.LIB     = cfg->Read(cmpKey + wxT("/lib_linker"),   value);
+            {
+                m_Programs.LIB = cfg->Read(cmpKey + wxT("/lib_linker"), value);
+                m_Mirror.Programs.LIB = value;
+            }
             else if (prog == wxT("WINDRES"))
+            {
                 m_Programs.WINDRES = cfg->Read(cmpKey + wxT("/res_compiler"), value);
+                m_Mirror.Programs.WINDRES = value;
+            }
             else if (prog == wxT("MAKE"))
-                m_Programs.MAKE    = cfg->Read(cmpKey + wxT("/make"),         value);
+            {
+                m_Programs.MAKE = cfg->Read(cmpKey + wxT("/make"), value);
+                m_Mirror.Programs.MAKE = value;
+            }
         }
         else if (node->GetName() == wxT("Switch"))
         {
@@ -999,6 +1017,15 @@ void Compiler::LoadDefaultOptions(const wxString& name, int recursion)
             --depth;
         }
         node = node->GetNext();
+    }
+    if (recursion == 0) // reset programs to their actual defaults (customized settings are loaded in a different function)
+    {
+        m_Programs.C       = m_Mirror.Programs.C;
+        m_Programs.CPP     = m_Mirror.Programs.CPP;
+        m_Programs.LD      = m_Mirror.Programs.LD;
+        m_Programs.LIB     = m_Mirror.Programs.LIB;
+        m_Programs.WINDRES = m_Mirror.Programs.WINDRES;
+        m_Programs.MAKE    = m_Mirror.Programs.MAKE;
     }
 }
 
