@@ -6,12 +6,12 @@
 #ifndef REPLACEDLG_H
 #define REPLACEDLG_H
 
+#include <wx/notebook.h>
+
 #include "findreplacebase.h"
 
 class wxComboBox;
 class wxCommandEvent;
-class wxNotebookEvent;
-class wxActivateEvent;
 
 class FindReplaceDlg : public FindReplaceBase
 {
@@ -62,6 +62,7 @@ class FindReplaceDlg : public FindReplaceBase
         void SaveComboValues(wxComboBox* combo, const wxString& configKey);
         bool m_findReplaceInFilesActive;
         bool m_findMode;
+        wxWindow *m_findPage;
 
         DECLARE_EVENT_TABLE()
 };
