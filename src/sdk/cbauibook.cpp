@@ -21,11 +21,9 @@
     #include <wx/app.h>
 #endif
 
-#include <wx/tipwin.h>
+    #include <wx/tooltip.h>
 
 // static
-bool cbAuiNotebook::s_UseTabTooltips = true;
-long cbAuiNotebook::s_DwellTime = 1000;
 bool cbAuiNotebook::s_AllowMousewheel = true;
 cbAuiNotebookArray cbAuiNotebook::s_cbAuiNotebookArray;
 wxString cbAuiNotebook::s_modKeys = _T("Ctrl");
@@ -33,14 +31,6 @@ bool cbAuiNotebook::s_modToAdvance = false;
 int cbAuiNotebook::s_advanceDirection = 1;
 int cbAuiNotebook::s_moveDirection = 1;
 
-static bool PointClose(wxPoint pt1, wxPoint pt2)
-{
-    if (abs(pt1.x - pt2.x) > 3)
-        return false;
-    if (abs(pt1.y - pt2.y) > 3)
-        return false;
-    return true;
-}
 
 BEGIN_EVENT_TABLE(cbAuiNotebook, wxAuiNotebook)
 #if wxCHECK_VERSION(2, 9, 0)
@@ -49,23 +39,20 @@ BEGIN_EVENT_TABLE(cbAuiNotebook, wxAuiNotebook)
     EVT_NAVIGATION_KEY(cbAuiNotebook::OnNavigationKey)
 #endif
     EVT_IDLE(cbAuiNotebook::OnIdle)
+    EVT_AUINOTEBOOK_DRAG_DONE(wxID_ANY, cbAuiNotebook::OnDragDone)
 END_EVENT_TABLE()
 
 cbAuiNotebook::cbAuiNotebook(wxWindow* pParent, wxWindowID id, const wxPoint& pos, const wxSize& size, long style)
         : wxAuiNotebook(pParent, id, pos, size, style),
-          m_pToolTip(nullptr),
-          m_LastMousePosition(wxPoint(-1,-1)),
-          m_LastShownAt(wxPoint(-1,-1)),
-          m_LastTime(0),
 #ifdef __WXMSW__
           m_LastSelected(wxNOT_FOUND),
           m_LastId(0),
 #endif
-          m_AllowToolTips(false),
-          m_OverTabCtrl(false),
+#if !wxCHECK_VERSION(2, 9, 4)
+          m_HasToolTip(false),
+#endif
           m_SetZoomOnIdle(false),
           m_MinimizeFreeSpaceOnIdle(false),
-          m_IdNoteBookTimer(wxNewId()),
           m_TabCtrlSize(wxDefaultSize)
 {
     //ctor
@@ -73,28 +60,21 @@ cbAuiNotebook::cbAuiNotebook(wxWindow* pParent, wxWindowID id, const wxPoint& po
     m_mgr.SetFlags((m_mgr.GetFlags() | wxAUI_MGR_VENETIAN_BLINDS_HINT) & ~wxAUI_MGR_TRANSPARENT_HINT);
 #endif  // #ifdef __WXGTK__
     ConfigManager *cfg = Manager::Get()->GetConfigManager(_T("app"));
-    s_UseTabTooltips = cfg->ReadBool(_T("/environment/tabs_use_tooltips"),true);
-    s_DwellTime = cfg->ReadInt(_T("/environment/tabs_dwell_time"), 1000);
+#if defined __WXMSW__ && wxCHECK_VERSION(2, 9, 4)
+    wxToolTip::SetMaxWidth(-1);
+#endif
     s_AllowMousewheel = cfg->ReadBool(_T("/environment/tabs_use_mousewheel"),true);
     s_modKeys = cfg->Read(_T("/environment/tabs_mousewheel_modifier"),_T("Ctrl"));
     s_modToAdvance = cfg->ReadBool(_T("/environment/tabs_mousewheel_advance"),false);
     cbAuiNotebook::InvertAdvanceDirection(cfg->ReadBool(_T("/environment/tabs_invert_advance"),false));
     cbAuiNotebook::InvertMoveDirection(cfg->ReadBool(_T("/environment/tabs_invert_move"),false));
 
-    m_pDwellTimer = new wxTimer(this, m_IdNoteBookTimer);
-    if (m_pDwellTimer)
-    {
-        Connect(m_IdNoteBookTimer,wxEVT_TIMER,(wxObjectEventFunction)&cbAuiNotebook::OnDwellTimerTrigger);
-        m_pDwellTimer->Start(100,false);
-    }
     if (s_cbAuiNotebookArray.Index(this) == wxNOT_FOUND)
         s_cbAuiNotebookArray.Add(this);
 }
 
 cbAuiNotebook::~cbAuiNotebook()
 {
-    wxDELETE(m_pToolTip);
-    wxDELETE(m_pDwellTimer);
     s_cbAuiNotebookArray.Remove(this);
 }
 
@@ -158,17 +138,28 @@ void cbAuiNotebook::ResetTabCtrlEvents()
 {
     for (size_t i = 0; i < m_TabCtrls.GetCount(); ++i)
     {
+#if !wxCHECK_VERSION(2, 9, 4)
+        m_TabCtrls[i]->Disconnect(wxEVT_MOTION, wxMouseEventHandler(cbAuiNotebook::OnMotion));
+        m_TabCtrls[i]->Connect(wxEVT_MOTION , wxMouseEventHandler(cbAuiNotebook::OnMotion));
+#endif
         m_TabCtrls[i]->Disconnect(wxEVT_LEFT_DCLICK, wxMouseEventHandler(cbAuiNotebook::OnTabCtrlDblClick));
         m_TabCtrls[i]->Connect(wxEVT_LEFT_DCLICK, wxMouseEventHandler(cbAuiNotebook::OnTabCtrlDblClick));
         m_TabCtrls[i]->Disconnect(wxEVT_SIZE, wxSizeEventHandler(cbAuiNotebook::OnResize));
         m_TabCtrls[i]->Connect(wxEVT_SIZE, wxSizeEventHandler(cbAuiNotebook::OnResize));
         m_TabCtrls[i]->Disconnect(wxEVT_MOUSEWHEEL, wxMouseEventHandler(cbAuiNotebook::OnTabCtrlMouseWheel));
+#ifdef __WXMSW__
         m_TabCtrls[i]->Disconnect(wxEVT_ENTER_WINDOW, wxMouseEventHandler(cbAuiNotebook::OnEnterTabCtrl));
         m_TabCtrls[i]->Disconnect(wxEVT_LEAVE_WINDOW, wxMouseEventHandler(cbAuiNotebook::OnLeaveTabCtrl));
-        m_TabCtrls[i]->Connect(wxEVT_ENTER_WINDOW, wxMouseEventHandler(cbAuiNotebook::OnEnterTabCtrl));
-        m_TabCtrls[i]->Connect(wxEVT_LEAVE_WINDOW, wxMouseEventHandler(cbAuiNotebook::OnLeaveTabCtrl));
-        if (s_AllowMousewheel)
-            m_TabCtrls[i]->Connect(wxEVT_MOUSEWHEEL, wxMouseEventHandler(cbAuiNotebook::OnTabCtrlMouseWheel));
+#endif
+        if (GetPageCount() > 1)
+        {
+            if (s_AllowMousewheel)
+                m_TabCtrls[i]->Connect(wxEVT_MOUSEWHEEL, wxMouseEventHandler(cbAuiNotebook::OnTabCtrlMouseWheel));
+#ifdef __WXMSW__
+            m_TabCtrls[i]->Connect(wxEVT_ENTER_WINDOW, wxMouseEventHandler(cbAuiNotebook::OnEnterTabCtrl));
+            m_TabCtrls[i]->Connect(wxEVT_LEAVE_WINDOW, wxMouseEventHandler(cbAuiNotebook::OnLeaveTabCtrl));
+#endif
+        }
     }
 }
 
@@ -232,92 +223,12 @@ void cbAuiNotebook::OnIdle(wxIdleEvent& /*event*/)
 
 }
 
-void cbAuiNotebook::AllowToolTips(bool allow)
+void cbAuiNotebook::OnDragDone(wxAuiNotebookEvent& /*event*/)
 {
-    m_AllowToolTips = allow;
-    if (!m_AllowToolTips)
-    {
-        CancelToolTip();
-        m_StopWatch.Pause();
-    }
-    else
-        m_StopWatch.Start();
-}
-
-void cbAuiNotebook::OnDwellTimerTrigger(wxTimerEvent& /*event*/)
-{
-    if (!wxTheApp->IsActive())
-    {
-        CancelToolTip();
-        return;
-    }
-
-    if (GetPageCount() < 1)
-    {
-        CancelToolTip();
-        wxDELETE(m_pDwellTimer);
-        m_StopWatch.Pause();
-        return;
-    }
-
     UpdateTabControlsArray();
-
-    if ((m_pToolTip == nullptr) && !m_OverTabCtrl)
-        return;
-
-    if (!s_UseTabTooltips || !m_AllowToolTips)
-    {
-        CancelToolTip();
-        return;
-    }
-
-    long curTime = m_StopWatch.Time();
-    wxPoint screenPosition = wxGetMousePosition();
-    wxPoint thePoint;
-    wxWindow* win = 0;
-    bool tabHit = false;
-
-    for (size_t i = 0; i < m_TabCtrls.GetCount(); ++i)
-    {
-        thePoint = screenPosition - m_TabCtrls[i]->GetScreenPosition();
-        if (m_TabCtrls[i]->TabHitTest(thePoint.x, thePoint.y, &win))
-        {
-            tabHit = true;
-            if (PointClose(thePoint, m_LastMousePosition))
-            {
-                if (!PointClose(thePoint, m_LastShownAt))
-                {
-                    if (curTime - m_LastTime > s_DwellTime)
-                    {
-                        ShowToolTip(win);
-                        m_LastShownAt = thePoint;
-                    }
-                    m_LastMousePosition = thePoint;
-                    return;
-                }
-                return;
-            }
-            CancelToolTip();
-            m_LastMousePosition = thePoint;
-            m_LastShownAt = wxPoint(-1,-1);
-            m_LastTime = curTime;
-        }
-        else
-        {
-            if (m_TabCtrls[i]->HasCapture() && !m_TabCtrls[i]->IsDragging())
-                m_TabCtrls[i]->ReleaseMouse();
-        }
-
-    }
-    if (!tabHit)
-    {
-        CancelToolTip();
-#ifdef __WXMSW__
-        RestoreFocus();
-#endif // #ifdef __WXMSW__
-    }
 }
 
+#ifdef __WXMSW__
 void cbAuiNotebook::OnEnterTabCtrl(wxMouseEvent& event)
 {
     if (!wxTheApp->IsActive())
@@ -329,17 +240,13 @@ void cbAuiNotebook::OnEnterTabCtrl(wxMouseEvent& event)
         cbAuiNotebook* nb = (cbAuiNotebook*)tabCtrl->GetParent();
         if (nb)
         {
-            nb->m_OverTabCtrl = true;
-#ifdef __WXMSW__
             if (   s_AllowMousewheel
-                && (nb->m_pToolTip == nullptr)
                 && (nb->m_LastSelected == wxNOT_FOUND)
                 && (nb->m_LastId == 0) )
             {
                 nb->StoreFocus();
                 tabCtrl->SetFocus();
             }
-#endif // #ifdef __WXMSW__
         }
     }
 }
@@ -355,19 +262,12 @@ void cbAuiNotebook::OnLeaveTabCtrl(wxMouseEvent& event)
         cbAuiNotebook* nb = (cbAuiNotebook*)tabCtrl->GetParent();
         if (nb)
         {
-            nb->m_OverTabCtrl = false;
-            if (tabCtrl->HasCapture() && !tabCtrl->IsDragging())
-                tabCtrl->ReleaseMouse();
-#ifdef __WXMSW__
-            if (nb->m_pToolTip == nullptr)
-                nb->RestoreFocus();
-#endif // #ifdef __WXMSW__
+            nb->RestoreFocus();
         }
     }
 
 }
 
-#ifdef __WXMSW__
 bool cbAuiNotebook::IsFocusStored(wxWindow* page)
 {
     wxWindow* win = FindWindowById(m_LastId);
@@ -441,8 +341,6 @@ void cbAuiNotebook::OnTabCtrlMouseWheel(wxMouseEvent& event)
     if (!nb)
         return;
 
-    nb->CancelToolTip();
-    nb->m_LastTime = nb->m_StopWatch.Time();
     nb->SetSelection(nb->GetPageIndex(tabCtrl->GetWindowFromIdx(tabCtrl->GetActivePage())));
 
     bool modkeys = CheckKeyModifier();
@@ -493,51 +391,58 @@ void cbAuiNotebook::OnResize(wxSizeEvent& event)
     event.Skip();
 }
 
-void cbAuiNotebook::ShowToolTip(wxWindow* win)
+#if !wxCHECK_VERSION(2, 9, 4)
+void cbAuiNotebook::OnMotion(wxMouseEvent& event)
 {
-    CancelToolTip();
-    if (win)
+    event.Skip();
+    wxAuiTabCtrl* tabCtrl = (wxAuiTabCtrl*)event.GetEventObject();
+    if (!tabCtrl)
+        return;
+    cbAuiNotebook* nb = (cbAuiNotebook*)tabCtrl->GetParent();
+    if (!nb || !nb->m_HasToolTip)
+        return;
+
+    wxWindow* win = nullptr;
+    if (event.Moving() && tabCtrl->TabHitTest(event.m_x, event.m_y, &win))
     {
-        wxString text = win->GetLabel();
-        if (!text.IsEmpty())
+        if (!win)
         {
-            m_pToolTip = new wxTipWindow(Manager::Get()->GetAppWindow(),text, 640, &m_pToolTip);
-            m_pToolTip->Connect(wxEVT_MOUSEWHEEL, wxMouseEventHandler(cbAuiNotebook::OnToolTipMouseWheel));
+            tabCtrl->UnsetToolTip();
+            return;
         }
+        wxString text(win->GetName());
+        // If the text changes, set it else, keep old, to avoid
+        // 'moving tooltip' effect
+        wxToolTip* tooltip = tabCtrl->GetToolTip();
+        if (!tooltip || tooltip->GetTip() != text)
+            tabCtrl->SetToolTip(text);
     }
+    else
+        tabCtrl->UnsetToolTip();
 }
 
-void cbAuiNotebook::OnToolTipMouseWheel(wxMouseEvent& event)
+bool cbAuiNotebook::SetPageToolTip(size_t idx, const wxString & text )
 {
-    wxTipWindow* win = (wxTipWindow*)event.GetEventObject();
-    if (win)
-        win->Close();
-}
-
-void cbAuiNotebook::CancelToolTip()
-{
-    if (m_pToolTip != nullptr)
+    if (!m_HasToolTip)
     {
-        m_pToolTip->Disconnect(wxEVT_MOUSEWHEEL, wxMouseEventHandler(cbAuiNotebook::OnToolTipMouseWheel));
-        m_pToolTip->Destroy();
+        UpdateTabControlsArray();
     }
-    m_pToolTip = nullptr;
+    m_HasToolTip = true;
+    wxWindow* win = GetPage(idx);
+    if (win && win->GetName() != text)
+        win->SetName(text);
+    else
+        return false;
+    return true;
 }
-
-void cbAuiNotebook::SetTabToolTip(wxWindow* win, wxString msg)
+wxString cbAuiNotebook::GetPageToolTip(size_t idx )
 {
-    if (m_pDwellTimer == nullptr)
-    {
-        m_pDwellTimer = new wxTimer(this, m_IdNoteBookTimer);
-        Connect(m_IdNoteBookTimer,wxEVT_TIMER,(wxObjectEventFunction)&cbAuiNotebook::OnDwellTimerTrigger);
-        m_pDwellTimer->Start(100,false);
-    }
+    wxWindow* win = GetPage(idx);
     if (win)
-        win->SetLabel(msg);
-    AllowToolTips();
-
+        return win->GetName();
+    return wxEmptyString;
 }
-
+#endif
 void cbAuiNotebook::MinimizeFreeSpace()
 {
     if (GetPageCount() < 2)
@@ -871,15 +776,6 @@ wxString cbAuiNotebook::SavePerspective()
 //}
 
 // static functions(common to all cbAuiNotebooks)
-void cbAuiNotebook::UseToolTips(bool use)
-{
-    s_UseTabTooltips = use;
-}
-
-void cbAuiNotebook::SetDwellTime(long time)
-{
-    s_DwellTime = time;
-}
 
 void cbAuiNotebook::AllowScrolling(bool allow)
 {

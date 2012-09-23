@@ -6,6 +6,8 @@
 #ifndef SDK_GLOBALS_H
 #define SDK_GLOBALS_H
 
+#include <vector>
+
 #include "settings.h"
 #include <wx/string.h>
 #include <wx/treectrl.h>
@@ -177,11 +179,14 @@ extern DLLIMPORT wxString GetStringFromPlatforms(int platforms, bool forceSepara
 // see globals.cpp for info on the third argument (bool SeparatorAtEnd)
 extern DLLIMPORT wxString GetStringFromArray(const wxArrayString& array, const wxString& separator = DEFAULT_ARRAY_SEP, bool SeparatorAtEnd = true);
 extern DLLIMPORT wxArrayString GetArrayFromString(const wxString& text, const wxString& separator = DEFAULT_ARRAY_SEP, bool trimSpaces = true);
+extern DLLIMPORT std::vector<wxString> GetVectorFromString(const wxString& text,
+                                                           const wxString& separator = DEFAULT_ARRAY_SEP,
+                                                           bool trimSpaces = true);
 extern DLLIMPORT wxArrayString MakeUniqueArray(const wxArrayString& array, bool caseSens);
 extern DLLIMPORT wxString MakeUniqueString(const wxString& text,  const wxString& separator = DEFAULT_ARRAY_SEP, bool caseSens = true);
 extern DLLIMPORT void AppendArray(const wxArrayString& from, wxArrayString& to);
 
-extern DLLIMPORT wxString UnixFilename(const wxString& filename);
+extern DLLIMPORT wxString UnixFilename(const wxString& filename, wxPathFormat format = wxPATH_NATIVE);
 extern DLLIMPORT void QuoteStringIfNeeded(wxString& str);
 
 /// Escapes spaces and tabs (NOT quoting the string)
@@ -208,6 +213,17 @@ extern DLLIMPORT bool IsSuffixOfPath(wxFileName const & suffix, wxFileName const
 extern DLLIMPORT wxString URLEncode(const wxString &str);
 
 extern DLLIMPORT wxString ExpandBackticks(wxString &str);
+
+/** This function creates a new wxMenu object on the heap and recursively
+  * copies a given menu into it.
+  *
+  * It's up to the user to make sure the returned menu is deleted.
+  *
+  * @param mnu The menu to copy
+  * @param with_accelerators If true, also copies the accelerators (defaults to false).
+  * @return The copied menu or a nullptr, if the menu to copy was empty or NULL
+  */
+extern DLLIMPORT wxMenu* CopyMenu(wxMenu* mnu, bool with_accelerators = false);
 
 /// Check if CommonControls version is at least 6 (XP and up)
 extern DLLIMPORT bool UsesCommonControls6();

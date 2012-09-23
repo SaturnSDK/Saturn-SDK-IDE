@@ -758,9 +758,7 @@ static void CountLineEnds(cbStyledTextCtrl* control, int &linesCR, int &linesLF,
         else if (ch == '\n')
         {
             if (chPrev != '\r')
-            {
                 linesLF++;
-            }
         }
         else if (i > maxLengthDoc)     // stop the loop if the file contains too many characters
             return;
@@ -2461,7 +2459,7 @@ void cbEditor::RefreshBreakpointMarkers()
         {
             for (int ii = 0; ii < debugger->GetBreakpointsCount(); ++ii)
             {
-                cbBreakpoint::ConstPointer bp = debugger->GetBreakpoint(ii);
+                cb::shared_ptr<const cbBreakpoint> bp = debugger->GetBreakpoint(ii);
                 if (bp->GetLocation() == GetFilename())
                 {
                     if (bp->IsEnabled())
@@ -2476,7 +2474,7 @@ void cbEditor::RefreshBreakpointMarkers()
             // all breakpoints for the non active debugger use the other breakpoint marker
             for (int ii = 0; ii < debugger->GetBreakpointsCount(); ++ii)
             {
-                cbBreakpoint::ConstPointer bp = debugger->GetBreakpoint(ii);
+                cb::shared_ptr<const cbBreakpoint> bp = debugger->GetBreakpoint(ii);
                 if (bp->GetLocation() == GetFilename())
                     MarkerToggle(BREAKPOINT_OTHER_MARKER, bp->GetLine() - 1);
             }
@@ -2669,6 +2667,8 @@ void cbEditor::GotoMatchingBrace()
     // if we haven't found it, we 'll search at pos-1 too
     if (matchingBrace == wxSCI_INVALID_POSITION)
         matchingBrace = control->BraceMatch(control->GetCurrentPos() - 1);
+    else
+        ++matchingBrace; // to keep the caret on the same side of the brace
 
     // else look for a matching preprocessor command
     if (matchingBrace == wxSCI_INVALID_POSITION)
@@ -2697,7 +2697,7 @@ void cbEditor::GotoMatchingBrace()
         else if (ppEnd.Matches(control->GetCurLine()))
         {
             int depth = -1; // search backwards
-            for (int i = control->GetCurrentLine() - 1; i > 0; --i)
+            for (int i = control->GetCurrentLine() - 1; i >= 0; --i)
             {
                 if (ppIf.Matches(control->GetLine(i))) // ignore else's, elif's, ...
                     ++depth;

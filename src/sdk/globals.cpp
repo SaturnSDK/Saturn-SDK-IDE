@@ -15,6 +15,7 @@
     #include <wx/filesys.h>
     #include <wx/image.h>
     #include <wx/listctrl.h>
+    #include <wx/menu.h>
 
     #include "cbexception.h"
     #include "configmanager.h" // ReadBool
@@ -65,13 +66,10 @@ int GetPlatformsFromString(const wxString& platforms)
     if (pA || (pW && pU && pM))
         return spAll;
 
-    int p = 0;
-    if (pW)
-        p |= spWindows;
-    if (pU)
-        p |= spUnix;
-    if (pM)
-        p |= spMac;
+    int     p  = 0;
+    if (pW) p |= spWindows;
+    if (pU) p |= spUnix;
+    if (pM) p |= spMac;
     return p;
 }
 
@@ -151,6 +149,38 @@ wxArrayString GetArrayFromString(const wxString& text, const wxString& separator
     return out;
 }
 
+std::vector<wxString> GetVectorFromString(const wxString& text, const wxString& separator, bool trimSpaces)
+{
+    std::vector<wxString> out;
+    wxString search = text;
+    int seplen = separator.Length();
+    while (true)
+    {
+        int idx = search.Find(separator);
+        if (idx == -1)
+        {
+            if (trimSpaces)
+            {
+                search.Trim(false);
+                search.Trim(true);
+            }
+            if (!search.IsEmpty())
+                out.push_back(search);
+            break;
+        }
+        wxString part = search.Left(idx);
+        search.Remove(0, idx + seplen);
+        if (trimSpaces)
+        {
+            part.Trim(false);
+            part.Trim(true);
+        }
+        if (!part.IsEmpty())
+            out.push_back(part);
+    }
+    return out;
+}
+
 wxArrayString MakeUniqueArray(const wxArrayString& array, bool caseSens)
 {
     wxArrayString out;
@@ -181,28 +211,30 @@ void AppendArray(const wxArrayString& from, wxArrayString& to)
         to.Add(from[i]);
 }
 
-wxString UnixFilename(const wxString& filename)
+wxString UnixFilename(const wxString& filename, wxPathFormat format)
 {
     wxString result = filename;
-
-    if (platform::windows)
+    if (format == wxPATH_NATIVE)
+    {
+        if (platform::windows)
+            format = wxPATH_WIN;
+        else
+            format = wxPATH_UNIX;
+    }
+    if (format == wxPATH_WIN) // wxPATH_WIN == wxPATH_DOS == wxPATH_OS2
     {
         bool unc_name = result.StartsWith(_T("\\\\"));
-
-        while (result.Replace(_T("/"), _T("\\")))
-            ;
-        while (result.Replace(_T("\\\\"), _T("\\")))
-            ;
-
+        result.Replace(wxT("/"), wxT("\\"));
+        while (result.Replace(wxT("\\\\"), wxT("\\")))
+            ; // loop for recursive removal of duplicate slashes
         if (unc_name)
-            result = _T("\\") + result;
+            result.Prepend(wxT("\\"));
     }
     else
     {
-        while (result.Replace(_T("\\"), _T("/")))
-            ;
-        while (result.Replace(_T("//"), _T("/")))
-            ;
+        result.Replace(wxT("\\"), wxT("/"));
+        while (result.Replace(wxT("//"), wxT("/")))
+            ; // loop for recursive removal of duplicate slashes
     }
 
     return result;
@@ -423,7 +455,7 @@ void DoSelectRememberedNode(wxTreeCtrl* tree, const wxTreeItemId& parent, wxStri
                 }
                 else
                 {
-                    item=tree->GetNextChild(item, cookie);
+                    item = tree->GetNextChild(item, cookie);
                     DoSelectRememberedNode(tree, item, tmpPath);
                 }
             }
@@ -509,6 +541,7 @@ void SaveTreeState(wxTreeCtrl* tree, const wxTreeItemId& parent, wxArrayString& 
     nodePaths.Clear();
     if (!parent.IsOk() || !tree || !tree->ItemHasChildren(parent) || !tree->IsExpanded(parent))
         return;
+
     wxString tmp;
     if (!DoRememberExpandedNodes(tree, parent, nodePaths, tmp))
         nodePaths.Add(tmp); // just the tree root
@@ -521,16 +554,20 @@ void RestoreTreeState(wxTreeCtrl* tree, const wxTreeItemId& parent, wxArrayStrin
 {
     if (!parent.IsOk() || !tree)
         return;
+
     if (nodePaths.GetCount() == 0)
     {
         tree->Collapse(parent);
         return;
     }
+
     for (unsigned int i = 0; i < nodePaths.GetCount(); ++i)
         DoExpandRememberedNode(tree, parent, nodePaths[i]);
+
     nodePaths.Clear();
     for (unsigned int i = 0; i < selectedItemPaths.GetCount(); ++i)
         DoSelectRememberedNode(tree, tree->GetRootItem(), selectedItemPaths[i]);
+
     selectedItemPaths.Clear();
 }
 
@@ -541,12 +578,10 @@ bool CreateDirRecursively(const wxString& full_path, int perms)
 
     wxArrayString dirs;
     wxString currdir;
+    wxFileName tmp(full_path);
+    currdir = tmp.GetVolume() + tmp.GetVolumeSeparator() + wxFILE_SEP_PATH;
+    dirs = tmp.GetDirs();
 
-    {
-        wxFileName tmp(full_path);
-        currdir = tmp.GetVolume() + tmp.GetVolumeSeparator() + wxFILE_SEP_PATH;
-        dirs = tmp.GetDirs();
-    }
     for (size_t i = 0; i < dirs.GetCount(); ++i)
     {
         currdir << dirs[i];
@@ -572,9 +607,7 @@ wxString ChooseDirectory(wxWindow* parent,
                          bool askToMakeRelative, // relative to initialPath
                          bool showCreateDirButton) // where supported
 {
-    wxDirDialog dlg(parent,
-                    message,
-                    _T(""),
+    wxDirDialog dlg(parent, message, _T(""),
                     (showCreateDirButton ? wxDD_NEW_DIR_BUTTON : 0) | wxRESIZE_BORDER);
     dlg.SetPath(initialPath);
     PlaceWindow(&dlg);
@@ -601,6 +634,7 @@ bool cbRead(wxFile& file, wxString& st, wxFontEncoding encoding)
     st.Empty();
     if (!file.IsOpened())
         return false;
+
     int len = file.Length();
     if (!len)
     {
@@ -653,7 +687,7 @@ bool cbSaveToFile(const wxString& filename, const wxString& contents, wxFontEnco
     return Manager::Get()->GetFileManager()->Save(filename, contents, encoding, bom);
 }
 
-// Saves a TinyXML document correctly, even if the path contains unicode characters.
+// Save a TinyXML document correctly, even if the path contains unicode characters.
 bool cbSaveTinyXMLDocument(TiXmlDocument* doc, const wxString& filename)
 {
     return TinyXML::SaveDocument(filename, doc);
@@ -743,7 +777,7 @@ wxString URLEncode(const wxString &str) // not sure this is 100% standards compl
 {
     wxString ret;
     wxString t;
-    for(unsigned int i = 0; i < str.length(); ++i)
+    for (unsigned int i = 0; i < str.length(); ++i)
     {
         wxChar c = str[i];
         if (  (c >= _T('A') && c <= _T('Z'))
@@ -821,6 +855,26 @@ wxString ExpandBackticks(wxString& str) // backticks are written in-place to str
     return ret; // return a list of the replaced expressions
 }
 
+wxMenu* CopyMenu(wxMenu* mnu, bool with_accelerators)
+{
+    if (!mnu || mnu->GetMenuItemCount() < 1)
+        return nullptr;
+    wxMenu* theMenu = new wxMenu();
+
+    for (size_t i = 0; i < mnu->GetMenuItemCount();++i)
+    {
+        wxMenuItem* tmpItem = mnu->FindItemByPosition(i);
+        wxMenuItem* theItem = new wxMenuItem(NULL,
+                                             tmpItem->GetId(),
+                                             with_accelerators?tmpItem->GetItemLabel():tmpItem->GetItemLabelText(),
+                                             tmpItem->GetHelp(),
+                                             tmpItem->GetKind(),
+                                             CopyMenu(tmpItem->GetSubMenu()));
+        theMenu->Append(theItem);
+    }
+    return theMenu;
+}
+
 bool IsWindowReallyShown(wxWindow* win)
 {
     while (win && win->IsShown())
@@ -892,7 +946,6 @@ bool IsSuffixOfPath(wxFileName const & suffix, wxFileName const & path)
 }
 
 // function to check the common controls version
-// (should it be moved in sdk globals?)
 #ifdef __WXMSW__
 #include <windows.h>
 #include <shlwapi.h>
@@ -1288,9 +1341,7 @@ wxString realpath(const wxString& path)
 int cbMessageBox(const wxString& message, const wxString& caption, int style, wxWindow *parent, int x, int y)
 {
     if (!parent)
-    {
         parent = Manager::Get()->GetAppWindow();
-    }
 
     // Cannot create a wxMessageDialog with a NULL as parent
     if (!parent)

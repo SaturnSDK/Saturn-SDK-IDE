@@ -18,6 +18,7 @@
 				<Option projectLinkerOptionsRelation="2" />
 				<Compiler>
 					<Add option="-DBUILDING_PLUGIN" />
+					<Add directory="../../include/mozilla_chardet" />
 				</Compiler>
 			</Target>
 			<Target title="cctest">
@@ -35,7 +36,7 @@
 				</Compiler>
 			</Target>
 			<Environment>
-				<Variable name="WX_CFG" value="" />
+				<Variable name="WX_CONFIG" value="" />
 				<Variable name="WX_SUFFIX" value="u" />
 				<Variable name="WX_VERSION" value="28" />
 			</Environment>
@@ -47,9 +48,9 @@
 			<Add option="-Wall" />
 			<Add option="-g" />
 			<Add option="-pipe" />
-			<Add option="-mthreads" />
 			<Add option="-fmessage-length=0" />
 			<Add option="-fexceptions" />
+			<Add option="-mthreads" />
 			<Add option="-Winvalid-pch" />
 			<Add option="-DHAVE_W32API_H" />
 			<Add option="-D__WXMSW__" />
@@ -59,14 +60,13 @@
 			<Add option="-DWX_PRECOMP" />
 			<Add option="-DwxUSE_UNICODE" />
 			<Add directory="$(#WX.include)" />
-			<Add directory="$(#WX.lib)/gcc_dll$(WX_CFG)/msw$(WX_SUFFIX)" />
+			<Add directory="$(#WX.lib)/gcc_dll$(WX_CONFIG)/msw$(WX_SUFFIX)" />
 			<Add directory="../../include" />
-			<Add directory="../../include/mozilla_chardet" />
 			<Add directory="../../sdk/wxscintilla/include" />
 		</Compiler>
 		<ResourceCompiler>
 			<Add directory="$(#WX.include)" />
-			<Add directory="$(#WX)/lib/gcc_dll$(WX_CFG)/msw$(WX_SUFFIX)" />
+			<Add directory="$(#WX.lib)/gcc_dll$(WX_CONFIG)/msw$(WX_SUFFIX)" />
 		</ResourceCompiler>
 		<Linker>
 			<Add option="-Wl,--enable-auto-image-base" />
@@ -76,7 +76,7 @@
 			<Add option="-mthreads" />
 			<Add library="codeblocks" />
 			<Add library="wxmsw$(WX_VERSION)$(WX_SUFFIX)" />
-			<Add directory="$(#WX.lib)/gcc_dll$(WX_CFG)" />
+			<Add directory="$(#WX.lib)/gcc_dll$(WX_CONFIG)" />
 			<Add directory="../../devel" />
 		</Linker>
 		<Unit filename="ccoptionsdlg.cpp">
@@ -91,13 +91,13 @@
 		<Unit filename="ccoptionsprjdlg.h">
 			<Option target="Code-completion" />
 		</Unit>
-		<Unit filename="cctest/cctest_app.cpp">
-			<Option target="cctest" />
-		</Unit>
 		<Unit filename="cctest/cctest.cpp">
 			<Option target="cctest" />
 		</Unit>
 		<Unit filename="cctest/cctest.h">
+			<Option target="cctest" />
+		</Unit>
+		<Unit filename="cctest/cctest_app.cpp">
 			<Option target="cctest" />
 		</Unit>
 		<Unit filename="cctest/cctest_frame.cpp">
@@ -237,20 +237,11 @@
 			<wxsmith version="1">
 				<gui name="wxWidgets" src="cctest\cctest_app.cpp" main="-- None --" init_handlers="never" language="CPP" />
 				<resources>
+					<wxFrame wxs="wxsmith/CCTestFrame.wxs" src="cctest\cctest_frame.cpp" hdr="cctest\cctest_frame.h" fwddecl="0" i18n="1" name="CCTestFrame" language="CPP" />
 					<wxScrollingDialog wxs="../../wxsmith/CCDebugInfo.wxs" src="parser/ccdebuginfo.cpp" hdr="parser/ccdebuginfo.h" fwddecl="0" i18n="1" name="CCDebugInfo" language="CPP" />
 				</resources>
-				<wxCCTestFrame wxs="wxsmith/CCTestFrame.wxs" src="cctest\cctest_frame.cpp" hdr="cctest\cctest_frame.h" fwddecl="0" i18n="1" name="CCTestFrame" language="CPP" />
 			</wxsmith>
 			<debugger />
-			<DoxyBlocks>
-				<comment_style block="0" line="0" />
-				<doxyfile_project />
-				<doxyfile_build />
-				<doxyfile_warnings />
-				<doxyfile_output />
-				<doxyfile_dot />
-				<general />
-			</DoxyBlocks>
 		</Extensions>
 	</Project>
 </CodeBlocks_project_file>
